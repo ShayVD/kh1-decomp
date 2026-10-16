@@ -1,0 +1,146 @@
+/* Actor: recovered from M2C_FIELD accesses in 23 matched functions (and
+ * 171 unmatched drafts) that pass
+ * the same first argument to each other (tools/structs.py apply --seed func_00131c08).
+ * Field names are offsets until their meaning is known. */
+#ifndef KH1_ACTOR_H
+#define KH1_ACTOR_H
+
+#include "common.h"
+
+typedef struct Actor {
+    s32 unk000;
+    s32 unk004;
+    s32 unk008;
+    u8 pad00C[0x8];
+    f32 unk014;
+    u8 pad018[0x8];
+    f32 unk020;
+    f32 unk024;
+    f32 unk028;
+    f32 unk02C;
+    s32 unk030;
+    f32 unk034;
+    f32 unk038;
+    u8 pad03C[0x4];
+    f32 unk040;
+    f32 unk044;
+    f32 unk048;
+    u8 pad04C[0x14];
+    f32 unk060;
+    f32 unk064;
+    s32 unk068;
+    s32 unk06C;
+    s32 unk070;
+    u8 pad074[0x14];
+    s32 unk088;
+    s32 unk08C;
+    u8 pad090[0xC];
+    s32 unk09C;
+    u8 pad0A0[0x4];
+    f32 unk0A4;
+    f32 unk0A8;
+    f32 unk0AC;
+    u8 pad0B0[0x68];
+    f32 unk118;
+    u8 pad11C[0x28];
+    s32 unk144;
+    s32 unk148;
+    s32 unk14C;
+    f32 unk150;
+    s32 unk154;
+    u8 pad158[0x4];
+    s32 unk15C;
+    s32 unk160;
+    s32 unk164;
+    s32 unk168;
+    f32 unk16C;
+    f32 unk170;
+    u8 pad174[0x4];
+    s32 unk178;
+    u8 pad17C[0x54];
+    s32 unk1D0;
+    s32 unk1D4;
+    u32 unk1D8;
+    u8 pad1DC[0x4];
+    s32 unk1E0;
+    u8 pad1E4[0x9C];
+    f32 unk280;
+    f32 unk284;
+    s32 unk288;
+    f32 unk28C;
+    s32 unk290;
+    u8 pad294[0x10];
+    f32 unk2A4;
+    u8 pad2A8[0x4];
+    f32 unk2AC;
+    u8 pad2B0[0x4];
+    s32 unk2B4;
+    u8 pad2B8[0x4];
+    f32 unk2BC;
+    f32 unk2C0;
+    f32 unk2C4;
+    s32 unk2C8;
+    u8 pad2CC[0x4];
+    s32 unk2D0;
+    f32 unk2D4;
+    u8 pad2D8[0x6];
+    u16 unk2DE;
+    u8 pad2E0[0x4];
+    f32 unk2E4;
+    u8 pad2E8[0x18];
+    f32 unk300;
+    u8 pad304[0x8];
+    u16 unk30C;
+    u16 unk30E;
+    u16 unk310;
+    u8 pad312[0x12];
+    f32 unk324;
+    u8 pad328[0x38];
+    s32 unk360;
+    u8 pad364[0xC];
+    u64 unk370;
+    u8 pad378[0x14];
+    s32 unk38C;
+    u8 pad390[0x4];
+    s32 unk394;
+    s32 unk398;
+    u8 unk39C;
+    u8 pad39D[0x1];
+    u8 unk39E;
+    u8 pad39F[0x1];
+    s32 unk3A0;
+    u8 pad3A4[0x4];
+    s32 unk3A8;
+    s32 unk3AC;
+    f32 unk3B0;
+    f32 unk3B4;
+    f32 unk3B8;
+    u8 pad3BC[0x8];
+    f32 unk3C4;
+    u8 pad3C8[0x4];
+    s32 unk3CC;
+    s32 unk3D0;
+    f32 unk3D4;
+    u8 pad3D8[0xC];
+    f32 unk3E4;
+    u8 pad3E8[0x2];
+    u16 unk3EA;
+    u8 pad3EC[0x10];
+    f32 unk3FC;
+    s32 unk400;
+    f32 unk404;
+    u8 pad408[0x8];
+    f32 unk410;
+    f32 unk414;
+    u8 pad418[0x8];
+    s32 unk420;
+    u8 pad424[0x1C];
+    u64 unk440;
+    u8 pad448[0x5C];
+    f32 unk4A4;
+} Actor; /* size unknown: at least 0x4A8 */
+
+/* layout check: the last known field must sit at 0x4A4 */
+typedef char Actor_check_4A4[(sizeof(struct Actor) == 0x4A8) ? 1 : -1];
+
+#endif /* KH1_ACTOR_H */

@@ -1,6 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "actor.h"
 
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
@@ -63,31 +64,31 @@ void func_00130578(s32 arg0, s32 arg1, f32 fparg0) {
     func_001302d0(arg0, arg1, 0.0f, fparg0);
 }
 
-void func_00130648(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x290) = 0;
-    M2C_FIELD(arg0, s32 *, 0x288) = 0;
-    M2C_FIELD(arg0, f32 *, 0x28C) = (f32) M2C_FIELD(arg0, f32 *, 0x280);
+void func_00130648(Actor *arg0) {
+    arg0->unk290 = 0;
+    arg0->unk288 = 0;
+    arg0->unk28C = (f32) arg0->unk280;
 }
 
-f32 func_00130dd0(s32 arg0) {
+f32 func_00130dd0(Actor *arg0) {
     f32 var_f0;
     void *temp_a0;
 
     var_f0 = -1.0f;
-    if (M2C_FIELD(arg0, s32 *, 0x164) == 0xBF) {
+    if (arg0->unk164 == 0xBF) {
         temp_a0 = M2C_FIELD(arg0, void **, 0x98);
         var_f0 = M2C_FIELD(temp_a0, f32 *, 0x16C) / M2C_FIELD(temp_a0, f32 *, 0x280);
-        if (M2C_FIELD(arg0, s32 *, 0) & 0x800000) {
+        if (arg0->unk000 & 0x800000) {
             var_f0 = func_0026b9c0(var_f0 + 0.5f, 1.0f);
         }
     }
     return var_f0;
 }
 
-void func_00131c08(void *arg0, f32 fparg0, f32 fparg1, f32 fparg2) {
+void func_00131c08(Actor *arg0, f32 fparg0, f32 fparg1, f32 fparg2) {
     M2C_FIELD(arg0, f32 *, 0x288) = fparg0;
     M2C_FIELD(arg0, s64 *, 0x160) = (s64) (M2C_FIELD(arg0, s64 *, 0x160) | 0x40);
-    M2C_FIELD(arg0, f32 *, 0x28C) = fparg1;
+    arg0->unk28C = fparg1;
     M2C_FIELD(arg0, f32 *, 0x290) = fparg2;
 }
 
@@ -181,21 +182,21 @@ void func_001373f8(void *arg0, f32 fparg0) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((M2C_FIELD(arg0, s32 *, 0) | 0x80) & 0xFFEFFFFF);
 }
 
-void func_00137990(s32 arg0) {
+void func_00137990(Actor *arg0) {
     f32 temp_f0;
     f32 temp_f2;
 
-    temp_f2 = M2C_FIELD(arg0, f32 *, 0x64);
+    temp_f2 = arg0->unk064;
     if (temp_f2 != 0.0f) {
-        temp_f0 = M2C_FIELD(arg0, f32 *, 0x60) + (temp_f2 * D_002BBDFC);
-        M2C_FIELD(arg0, f32 *, 0x60) = temp_f0;
+        temp_f0 = arg0->unk060 + (temp_f2 * D_002BBDFC);
+        arg0->unk060 = temp_f0;
         if (temp_f0 > 1.0f) {
-            M2C_FIELD(arg0, f32 *, 0x60) = 1.0f;
-            M2C_FIELD(arg0, f32 *, 0x64) = 0.0f;
+            arg0->unk060 = 1.0f;
+            arg0->unk064 = 0.0f;
         } else if (temp_f0 < 0.0f) {
-            M2C_FIELD(arg0, f32 *, 0x60) = 0.0f;
-            M2C_FIELD(arg0, f32 *, 0x64) = 0.0f;
-            if (M2C_FIELD(arg0, s32 *, 0) & 8) {
+            arg0->unk060 = 0.0f;
+            arg0->unk064 = 0.0f;
+            if (arg0->unk000 & 8) {
                 func_001247e8(arg0);
             }
         }
@@ -220,28 +221,28 @@ void func_00137d40(void *arg0) {
     }
 }
 
-void func_00138808(s32 arg0, f32 fparg0) {
+void func_00138808(Actor *arg0, f32 fparg0) {
     if (func_00130040(arg0, 0x42) != 0) {
-        M2C_FIELD(arg0, f32 *, 0x3E4) = fparg0;
-        M2C_FIELD(arg0, s32 *, 0x88) = (s32) (M2C_FIELD(arg0, s32 *, 0x88) | 2);
+        arg0->unk3E4 = fparg0;
+        arg0->unk088 = (s32) (arg0->unk088 | 2);
     }
 }
 
-void func_00138948(s32 arg0, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
+void func_00138948(Actor *arg0, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
     func_00138900(arg0, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
-    M2C_FIELD(arg0, s32 *, 0x88) = (s32) (M2C_FIELD(arg0, s32 *, 0x88) | 2);
-    M2C_FIELD(arg0, s32 *, 0x400) = func_00148908(arg0);
+    arg0->unk088 = (s32) (arg0->unk088 | 2);
+    arg0->unk400 = func_00148908(arg0);
 }
 
-void func_001394e8(s32 arg0) {
+void func_001394e8(Actor *arg0) {
     if (func_0014f5c8(arg0) != 0) {
         func_0014f658(arg0, 0x17);
     } else {
         func_0014f658(arg0, 0x16);
     }
     func_00130340(arg0, 0x01000068, 0.0f);
-    M2C_FIELD(arg0, f32 *, 0x404) = 75.0f;
-    M2C_FIELD(arg0, f32 *, 0x2C) = 0.0f;
+    arg0->unk404 = 75.0f;
+    arg0->unk02C = 0.0f;
 }
 
 void func_0013aac0(s32 arg0) {
