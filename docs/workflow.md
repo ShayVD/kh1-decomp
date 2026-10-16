@@ -1,4 +1,4 @@
-# Decompiling: tools and workflow (sessions 2-3)
+# Decompiling: tools and workflow (sessions 2-4)
 
 ## Picking functions: `make rank`
 
@@ -190,9 +190,13 @@ its delay slot is kept even when it is a `nop`. 580 functions that were
 glued to the function before them are now separate (6,331 → 6,911); no
 already-matched function changed boundaries.
 
-Results: 1,793 → 2,5xx matched (see docs/progress.md). The first pass over
-everything ≤100 instructions with the asm fixes matched 710; the rules
-above added more on reruns of the drafts scoring ≤8.
+Results: 1,793 → 2,570 matched (see docs/progress.md): 710 from the first
+pass over everything ≤100 instructions with the asm fixes, 61 from the new
+rules on reruns of the drafts scoring ≤8, 1 from a pass over 101-150
+instructions (327 functions: m2c drafts that big are rarely close), 5 from
+decomp-permuter. Left at the end of session 4 (≤150 instructions): 91
+drafts with score 1-3, 471 with score ≤8, 280 drafts gcc rejects, 246
+unusable m2c output, 34 that need rodata.
 
 Still open (not automated, seen in the score 1-3 queue):
 - `jr ra` delay slot vs a `%lo`-indexed load or `la` macro
@@ -219,6 +223,13 @@ python3 tools/autodecomp.py try func_00123456 --file out/permuter/func_00123456/
 `kh1tool.py asm` with modern binutils (`-march=r5900`; ee-as 2.10 does not
 take `$`-named registers) and writes a `compile.sh` running ee-gcc 2.96 +
 fix-obj. `run` clones decomp-permuter into tools/toolchain/ on first use.
+`batch queue.txt --seconds 120 --write` runs each function in turn and
+writes the verified matches to src/auto/. Session 4: the 40 closest drafts
+of 61-150 instructions, 2 minutes each with 4 jobs: 5 matched (all from
+drafts scoring ≤6 by our measure; the permuter mostly moved statements),
+none from drafts scoring 8 or more. Worth running longer on the
+score ≤8 group only.
+
 The permuter's score is its own (it ignores stack offsets and weights
 register differences lightly): a score-0 output still has to pass
 `autodecomp.py try --file` (which accepts its preprocessed source) and
