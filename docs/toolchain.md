@@ -1,6 +1,6 @@
 # Toolchain
 
-Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, identified in session 1 on the
+Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, locked as the project compiler by the user in session 1. Identified in session 1 on the
 English fan-patched `SLPS_251.98` (see "Confirmed" below). It still has to be
 re-checked against the unpatched retail ELF once that is pinned; the patch
 replaces the ELF, but the probe functions sit in code the translation is
