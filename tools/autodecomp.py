@@ -61,7 +61,7 @@ def _init():
         for a, sg in sig.items():
             n = _names.get(a, f"func_{a:08x}")
             _protos[n] = SIGS.prototype(n, sg)
-        _cc = str(K.TOOLCHAIN_DIR / K.flags_for(_cfg, "src/auto/x.c").compiler / "bin" / "ee-gcc")
+        _cc = str(K.TOOLCHAIN_DIR / K.flags_for(_cfg, _flag_path()).compiler / "bin" / "ee-gcc")
 
 
 def disasm(blob: bytes, addr: int) -> list[str]:
@@ -173,13 +173,19 @@ LAST_BYTES: bytes = b""
 LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last failed compile
 
 
+def _flag_path() -> str:
+    """The source path whose kh1.toml flags drafts are compiled with: a file
+    in the output directory (--out-dir picks e.g. an SDK library's flags)."""
+    return (AUTO_DIR / "x.c").relative_to(ROOT).as_posix()
+
+
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
     """Compile `code`, link .text.<sym> at f.addr, compare with the original.
     The linked bytes are left in LAST_BYTES (for --diff)."""
     global LAST_BYTES, LAST_ERRORS
     LAST_BYTES = b""
     LAST_ERRORS = []
-    fl = K.flags_for(_cfg, "src/auto/x.c")
+    fl = K.flags_for(_cfg, _flag_path())
     cc = K.TOOLCHAIN_DIR / fl.compiler / "bin" / "ee-gcc"
     src, asm, obj, out = (workdir / n for n in ("c.c", "c.s", "c.o", "c.elf"))
     # permuter output is already preprocessed (m2c.h included)
@@ -192,7 +198,8 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         LAST_ERRORS = [(int(m.group(1)) - shift, m.group(2)) for m in
                        re.finditer(r"^[^:\n]*c\.c:(\d+): (.*)$", r.stderr, re.M)]
         return False, "compile error: " + (r.stderr.strip().splitlines() or [""])[-1]
-    asm.write_text(K.split_rodata(asm.read_text()))
+    text = K.split_rodata(asm.read_text())
+    asm.write_text(K.no_fill(text) if fl.no_fill else text)
     r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
                        capture_output=True, text=True)
     if r.returncode:
@@ -441,7 +448,11 @@ def main() -> int:
         q.add_argument("--budget", type=int, default=60, help="permutations tried per function (0 = none)")
         q.add_argument("--max-score", type=int, default=16, help="only search drafts at most this far off")
         q.add_argument("--no-context", action="store_true", help="do not give m2c the guessed prototypes")
+    p.add_argument("--out-dir", help="write matches here instead of src/auto/ (its kh1.toml flags apply)")
     args = ap.parse_args()
+    if getattr(args, "out_dir", None):
+        global AUTO_DIR
+        AUTO_DIR = (ROOT / args.out_dir).resolve()
     OPTS["budget"] = args.budget
     OPTS["max_score"] = args.max_score
     OPTS["context"] = not args.no_context

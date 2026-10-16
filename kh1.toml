@@ -59,3 +59,23 @@ end = "0x00272c70"
 path = "src/sdk/libgcc/_"
 cflags = "-O2 -G0"
 no_fill = true
+
+# Automatic matches of SDK functions that need newlib's unfilled delay slots
+# (tools/autodecomp.py --out-dir src/sdk/nofill).
+[[toolchain.override]]
+path = "src/sdk/nofill/"
+cflags = "-O2 -G0 -fno-builtin"
+no_fill = true
+
+# SCE library code that matches with the older ee-gcc 2.9-991111 (the SDK's
+# own compiler; docs/toolchain.md).
+[[toolchain.override]]
+path = "src/sdk/gcc991111/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+
+[[toolchain.override]]
+path = "src/sdk/gcc991111nf/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+no_fill = true
