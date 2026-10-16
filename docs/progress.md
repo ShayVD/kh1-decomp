@@ -10,20 +10,21 @@ _Last updated 2026-10-16._
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| total | 8 / 5774 | 0.14% | 0.02% | 0 |
+| total | 1254 / 6331 | 19.81% | 3.20% | 0 |
 
 ## By address segment (`[[segment]]` in kh1.toml)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| segment:game | 8 / 5204 | 0.15% | 0.02% | 0 |
-| segment:sdk | 0 / 570 | 0.00% | 0.00% | 0 |
+| segment:game | 1254 / 5629 | 22.28% | 3.55% | 0 |
+| segment:sdk | 0 / 702 | 0.00% | 0.00% | 0 |
 
 ## By source directory (decompiled functions only)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
 | dir:src/anon | 8 / 8 | 100.00% | 100.00% | 0 |
+| dir:src/auto | 1246 / 1246 | 100.00% | 100.00% | 0 |
 
 ## History
 
