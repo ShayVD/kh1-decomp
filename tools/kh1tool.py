@@ -780,9 +780,14 @@ def write_progress_md(cfg, prog) -> None:
     tot = g["total"]
     hist = ROOT / "docs" / "progress-history.tsv"
     today = dt.date.today().isoformat()
-    rows = hist.read_text().splitlines() if hist.exists() else ["date\tmatched\tfunctions\tmatched_bytes\tbytes\tnonmatching"]
-    rows = [r for r in rows if not r.startswith(today)]
-    rows.append(f"{today}\t{tot['matched']}\t{tot['funcs']}\t{tot['matched_bytes']}\t{tot['bytes']}\t{tot['nonmatching']}")
+    # One row per session: `make progress-update SESSION=4` (several sessions
+    # can fall on one day); a rerun replaces the row with the same date+session.
+    session = os.environ.get("SESSION", "")
+    header = "date\tsession\tmatched\tfunctions\tmatched_bytes\tbytes\tnonmatching"
+    rows = hist.read_text().splitlines()[1:] if hist.exists() else []
+    rows = [r for r in rows if r.split("\t")[:2] != [today, session]]
+    rows.append(f"{today}\t{session}\t{tot['matched']}\t{tot['funcs']}\t{tot['matched_bytes']}\t{tot['bytes']}\t{tot['nonmatching']}")
+    rows = [header] + rows
     hist.write_text("\n".join(rows) + "\n")
 
     def table(keys):

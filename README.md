@@ -60,8 +60,9 @@ A function is **done** only when it is byte-identical and objdiff reports
 
 See [docs/workflow.md](docs/workflow.md) for the tools: `make rank` (easiest
 functions first), `kh1tool.py asm`/`m2c` (original asm and a first-draft C),
-`tools/autodecomp.py` (bulk matching of m2c output), and how rodata (switch
-tables, strings) is placed.
+`tools/autodecomp.py` (bulk matching of m2c output with a permutation
+search), `tools/sigs.py` (guessed prototypes), `tools/structs.py` (struct
+recovery), and how rodata (switch tables, strings) is placed.
 
 1. Pick a function with `make rank` (start with small leaf functions).
 2. Write it in a file under `src/`, named `func_XXXXXXXX` or registered in
@@ -69,7 +70,7 @@ tables, strings) is placed.
    `D_XXXXXXXX` (declare them `extern "C"` from C++).
 3. `make objdiff`, open the repo in objdiff, iterate until 100%.
 4. `make` must still pass. Commit.
-5. End of session: `make progress-update` and commit `docs/progress.md`.
+5. End of session: `make progress-update SESSION=N` and commit `docs/progress.md`.
 
 Code must follow [docs/portability.md](docs/portability.md): platform calls go
 through `include/platform/` wrappers and gameplay code never hard-codes PS2
@@ -82,11 +83,12 @@ kh1.toml          target ELF, SHA-256, compiler, flags, progress segments
 functions.tsv     symbol registry
 layout.tsv        function boundaries (generated)
 kh1.ld            link script for the patch-in-place build
-src/              decompiled code (built); src/auto/ = matched m2c output, not cleaned up
+src/              decompiled code (built); src/auto/ = matched m2c output, not cleaned up;
+                  src/hand/ = hand-matched
 nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests
-docs/             findings: toolchain, versions, ELF, SDK, workflow, portability, progress
+docs/             findings: toolchain, versions, ELF, SDK, structs, workflow, portability, progress
 tests/selftest/   synthetic ELF used by `make test`
 ```
 

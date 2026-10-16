@@ -1,5 +1,5 @@
-/* Actor: recovered from M2C_FIELD accesses in 23 matched functions (and
- * 171 unmatched drafts) that pass
+/* Actor: recovered from M2C_FIELD accesses in 0 matched functions (and
+ * 170 unmatched drafts) that pass
  * the same first argument to each other (tools/structs.py apply --seed func_00131c08).
  * Field names are offsets until their meaning is known. */
 #ifndef KH1_ACTOR_H

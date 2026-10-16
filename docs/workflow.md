@@ -119,9 +119,28 @@ python3 tools/autodecomp.py try func_00123456 --diff            # search, then s
 python3 tools/autodecomp.py try func_00123456 --file my.c --diff  # test a hand-written candidate
 ```
 
-Session 3 results: 1,254 → see docs/progress.md. Remaining failures
-are mostly register allocation and scheduling differences, struct copies
-through the stack (m2c writes `sp`), and functions m2c cannot structure.
+Session 3 results: 1,254 → 1,793 matched (+539: 518 from the passes over
+everything ≤100 instructions, 2 by hand in `src/hand/`, the rest from
+re-passes after each new rule). The last pass over the 2,886 functions
+still unmatched at ≤100 instructions: 2,072 compile but differ (about 150
+by a score of 1-3, the hand-work queue in `out/autodecomp/fail/`), 580
+drafts gcc rejects (mostly `sp` used as a value: struct copies through the
+stack, which m2c cannot express; and pointer/int clashes), 189 unusable m2c
+output, 19 need rodata, 10 call libgcc helpers or `MULT_HI` m2c cannot
+write. Functions of 61-100 instructions rarely match automatically (16 of
+630): m2c's control flow and temporaries diverge too much; they need hand
+work or decomp-permuter.
+
+Remaining near-miss patterns seen while hand-matching (not automated yet):
+`*f() = x` where m2c drops the store offset of a struct-returning call;
+stores after a call that m2c turned into a tail call (original returns a
+field in the `jr ra` delay slot); epilogue `ld s0`/`ld ra` order; a 64-bit
+field narrowed on assignment needs an explicit `(s32)` cast
+(`func_0012a030`); `(u32)` on a `u8` before `>>` picks `srlv` over `srav`
+(`func_00171a88`).
+
+Hand-matched code goes in `src/hand/text_XXXX0000.c` (same grouping as
+src/auto/, with names and comments where the meaning is clear).
 
 ## Structs: `tools/structs.py`
 
