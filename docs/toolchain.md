@@ -1,9 +1,10 @@
 # Toolchain
 
-Status: **compiler not yet confirmed against the KH1 ELF** (session 1, step 3
-pending the user's dump). Everything below the "Confirmed" heading is filled
-in once that is done. Until then `kh1.toml` defaults to ee-gcc 2.96 as the
-leading candidate.
+Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, identified in session 1 on the
+English fan-patched `SLPS_251.98` (see "Confirmed" below). It still has to be
+re-checked against the unpatched retail ELF once that is pinned; the patch
+replaces the ELF, but the probe functions sit in code the translation is
+unlikely to touch.
 
 ## Components
 
@@ -70,15 +71,34 @@ mangled names. Verified against ee-gcc 2.96 output by
 ctors/dtors, `T`/`N` back-references). Operators and templates must be
 written already mangled.
 
-## Confirmed
+## Confirmed (session 1, on the patched ELF)
 
-*Pending step 3.*
+Input: `SLPS_251.98` from the crazycatz00 KH1FM English patcher (July 2025),
+SHA-256 `53eca29e315f43f6cb63960f32d1737b2ea3f95e3954d6b7027f4054ca64954d`.
+**Not the target**: the patcher swaps in a modified ELF. Used only because
+the retail ELF was not available yet.
 
 | Item | Value | Evidence |
 |---|---|---|
-| Compiler | | |
-| Flags (game code) | | |
-| Flags (SCE libraries) | | |
-| `-G` / small data | | |
-| Language (C / C++) | | |
-| Test functions matched | | |
+| Compiler | ee-gcc 2.96-ee-001003-1 | 8/8 probe functions byte-identical, objdiff 100% (below). Same probes: ee-gcc 2.9-991111a 5/8, ee-gcc 3.2-040921 1/8. |
+| Fingerprints | all point to 2.96 | 684/684 `div.s` preceded by `nop; nop` (rules out 2.9-99xxxx); callee-saved slots 8 bytes apart in 292/296 frames (rules out 2.9); 384 of 610 short loops padded with `nop` (rules out 3.2); temporaries mostly `$v1`, not `$t5-$t7` (rules out 3.2). |
+| SCE SDK | 2.5.0 | `PsIIlibkernl2500`, `PsIIlibgraph2500`, `PsIIlibpad2 2500`, … banners. SDK 2.5 shipped ee-gcc 2.96. |
+| `.comment` / `GCC:` strings | none | Stripped. No symbol table either. |
+| Flags (game code) | `-O2 -G0` | All probes. Small data is not used (globals are addressed with `lui`/offset, never `$gp`). |
+| Flags (SCE libraries) | not checked yet | |
+| Language | C, probably | Assert-style strings name `.c` files (`ttlib/ui.c`, `ttlib/ui_gauge.c`, `src/decode.c`, `src/sa_task.c`). No gcc2-mangled names found in strings. C++ not ruled out for other modules. |
+| Sibling calls | yes | Tail calls as `ld ra` … `j func` occur; 2.96 at -O2 emits them. |
+
+Probe functions (source in `tests/toolchain_probe/probe.c`): `0x0010ef70`
+struct field and bit update, `0x00111f70` two global stores, `0x00137418`
+float reciprocal into a struct, `0x001882f8` int/float maths, `0x0018ad70`
+four stores, `0x001d5f80` counter + array append, `0x0023d1e0` float divide by
+constant, `0x002466e8` halve and clamp. Addresses are from the patched ELF.
+
+### Quirk: float literals
+
+ee-gcc 2.96 does not always round decimal float literals to the nearest
+float. `0x0023d1e0` divides by `0x3F490FD9` (≈0.785398, a truncated π/4);
+writing `0.785398f` or the correctly-rounded `0.78539806f` gives different
+bits, while `0.7853981f` gives the original.
+When a float constant mismatches by one ULP, try neighbouring literals.

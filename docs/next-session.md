@@ -5,27 +5,27 @@ Paste this to start the next session.
 ---
 
 Continue kh1-decomp (Kingdom Hearts PS2 matching decomp, target Kingdom Hearts
-Final Mix). Read README.md and everything in docs/ first; they are the only
-notes carried between sessions.
+Final Mix, `SLPS_251.98`). Read README.md and everything in docs/ first; they
+are the only notes carried between sessions.
 
 Where we stopped (end of session 1):
-- Target: Final Mix recommended and accepted in principle. The exact serial
-  (SLPS-25198 / 25197 / SLPM-66123) and the SHA-256 are still unpinned in
-  kh1.toml because the dump had not been supplied yet.
-- Repo skeleton builds and its self-tests pass (`make toolchain && make test`).
-  Build model: kh2-style patch-in-place (tools/kh1tool.py), objdiff units,
-  progress tracker (`make progress-update`), no-assets guard, CI.
-- Toolchain: decomp.me ee-gcc builds + Ubuntu binutils-mips-linux-gnu +
-  objdiff-cli 3.7.0. ee-gcc 2.96 is the default candidate; 3.2 is ruled out
-  by date. Fingerprints for telling 2.9-99xxxx / 2.96 / 3.2 apart are in
-  docs/toolchain.md.
+- Repo skeleton builds; `make toolchain && make test` passes. Build model is
+  kh2-style patch-in-place (tools/kh1tool.py) with objdiff units, a progress
+  tracker (`make progress-update`), a no-assets guard and CI.
+- Compiler identified as **ee-gcc 2.96-ee-001003-1, -O2 -G0**: 8/8 probe
+  functions matched at objdiff 100% (tests/toolchain_probe/probe.c). This was
+  measured on a fan-translation-patched ELF, because the patcher replaces the
+  game's ELF and no retail copy was available yet.
+- Not pinned yet: retail SHA-256, layout.tsv, segments, progress baseline.
+- GitHub: the user wants a public repo under ShayVD, created after the target
+  is pinned. Confirm before creating it.
 
 Do next:
-1. With the ELF in the repo root: `make check`, then pin serial + SHA-256 in
-   kh1.toml and docs/target-versions.md.
-2. Step 3 of session 1: identify the compiler (strings, .comment, SCE library
-   banners, codegen fingerprints), then match 3-5 small functions and record
-   the result in docs/toolchain.md "Confirmed". Ask before committing the
-   project to a compiler.
-3. `make layout`, sanity-check function boundaries, define [[segment]]s
-   (game code vs SCE libs vs libgcc), `make progress-update`.
+1. Get the unmodified retail `SLPS_251.98` (from the user's own Final Mix
+   disc/ISO). `make check`, then pin serial + SHA-256 in kh1.toml and
+   docs/target-versions.md.
+2. Re-run the probes against it (tests/toolchain_probe/README.md) and mark the
+   compiler confirmed in docs/toolchain.md.
+3. `make layout`, sanity-check boundaries, define [[segment]]s (game code vs
+   SCE 2.5.0 libs vs libgcc), `make progress-update`, commit.
+4. Create the public GitHub repo and push.

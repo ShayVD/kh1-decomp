@@ -8,14 +8,15 @@ elf = "SLPS_251.98"
 sha256 = ""
 # Optional override of the code range scanned for functions. Empty = use the
 # .text section if present, else the executable PT_LOAD segment.
-text_start = ""
-text_end = ""
+# Measured on the patched ELF (docs/elf-notes.md); re-check on retail.
+text_start = "0x00100000"
+text_end = "0x00272c70"
 # Value of $gp if the game uses small data (-G > 0). Empty = not used.
 gp = ""
 
 [toolchain]
 # A compiler id from tools/toolchains.tsv (decomp.me naming).
-# PENDING step 3: confirmed by compiling test functions against the ELF.
+# ee-gcc 2.96 + -O2 -G0 matched 8/8 probe functions (docs/toolchain.md).
 compiler = "ee-gcc2.96"
 cflags = "-O2 -G0"
 cxxflags = "-O2 -G0 -fno-exceptions -fno-rtti"
