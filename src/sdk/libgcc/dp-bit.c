@@ -353,3 +353,34 @@ SFtype __truncdfsf2(DFtype arg_a) {
 
     return __make_fp(in.class, in.sign, in.normal_exp, sffrac);
 }
+
+USItype __fixunsdfsi(FLO_type arg_a) {
+    fp_number_type a;
+    FLO_union_type au;
+
+    au.value = arg_a;
+    __unpack_d(&au, &a);
+
+    if (iszero(&a)) {
+        return 0;
+    }
+    if (isnan(&a)) {
+        return 0;
+    }
+    if (a.sign) {
+        return 0;
+    }
+    if (isinf(&a)) {
+        return MAX_USI_INT;
+    }
+    if (a.normal_exp < 0) {
+        return 0;
+    }
+    if (a.normal_exp > BITS_PER_SI - 1) {
+        return MAX_USI_INT;
+    } else if (a.normal_exp > (FRACBITS + NGARDS)) {
+        return a.fraction.ll << (a.normal_exp - (FRACBITS + NGARDS));
+    } else {
+        return a.fraction.ll >> ((FRACBITS + NGARDS) - a.normal_exp);
+    }
+}

@@ -15,6 +15,7 @@ typedef unsigned int UDItype __attribute__((mode(DI)));
 typedef int CMPtype __attribute__((mode(SI)));
 
 #define MAX_SI_INT ((SItype) ((unsigned) (~0) >> 1))
+#define MAX_USI_INT ((USItype) ~0)
 #define BITS_PER_SI (4 * 8)
 
 #ifdef FLOAT
