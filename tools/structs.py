@@ -220,6 +220,34 @@ def follow_self(func: str, so: int, fields: dict, struct: str) -> str:
     return func
 
 
+def deref_to_field(members: list[str], cfuncs) -> int:
+    """`T *arg0` used only as `*arg0` -> `void *arg0` with `M2C_FIELD(arg0, T *, 0)`
+    (the struct's first field), so the function can join the struct."""
+    n = 0
+    for name in members:
+        if name not in cfuncs:
+            continue
+        path, params, body = cfuncs[name]
+        m = re.match(r"^([su](?:8|16|32)) \*arg0\b", params)
+        if not m or re.search(r"(?<!\*)\barg0\b|\*arg0\s*(?:\[|\+\+|--)", body.replace("*arg0", "*arg0")):
+            continue
+        if re.search(r"(?<![*\w])arg0\b", body):
+            continue
+        t = m.group(1)
+        text = path.read_text()
+        start = re.search(rf"^\S[^\n;]*?\b{name}\({t} \*arg0", text, re.M)
+        if not start:
+            continue
+        end = text.find("\n}\n", start.start())
+        func = text[start.start():end]
+        func = func.replace(f"{name}({t} *arg0", f"{name}(void *arg0", 1)
+        brace = func.index("{")
+        func = func[:brace] + re.sub(r"\*arg0\b", f"M2C_FIELD(arg0, {t} *, 0)", func[brace:])
+        path.write_text(text[:start.start()] + func + text[end:])
+        n += 1
+    return n
+
+
 def cmd_apply(args) -> int:
     cfg = K.load_config()
     names = {a: s for s, a in K.load_registry().items()}
@@ -227,6 +255,8 @@ def cmd_apply(args) -> int:
     seed = K.find_func(args.seed).addr
     group = next(g for g in groups(cfg).values() if seed in g)
     members = [names.get(x, f"func_{x:08x}") for x in sorted(group)]
+    if args.write and deref_to_field(members, cfuncs):
+        cfuncs = c_functions()
     conv = [n for n in members if n in cfuncs and convertible(cfuncs[n][1], cfuncs[n][2])
             and FIELD_RE.search(cfuncs[n][2])]
     uses: dict[int, Counter] = defaultdict(Counter)

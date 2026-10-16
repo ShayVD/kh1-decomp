@@ -1,6 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "actor.h"
 
 M2C_UNK func_0011a0a0();
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
@@ -116,14 +117,14 @@ s32 func_00133738(void) {
     return 0;
 }
 
-void func_001366d8(void *arg0, s32 arg1, s32 arg2) {
+void func_001366d8(Actor *arg0, s32 arg1, s32 arg2) {
     s32 sp[4];
     f32 temp_f20;
 
-    temp_f20 = func_00135ca0(M2C_FIELD(arg0, f32 *, 0x118));
+    temp_f20 = func_00135ca0(arg0->unk118);
     func_00135df0(arg0, sp);
     func_00267548(sp, sp, arg2);
-    func_00136428(arg0, ~(1 << (arg1 - 1)), M2C_FIELD(arg0, s32 *, 0x394), sp, temp_f20);
+    func_00136428(arg0, ~(1 << (arg1 - 1)), arg0->unk394, sp, temp_f20);
 }
 
 s32 func_00136c98(void) {
