@@ -780,9 +780,14 @@ def write_progress_md(cfg, prog) -> None:
     tot = g["total"]
     hist = ROOT / "docs" / "progress-history.tsv"
     today = dt.date.today().isoformat()
-    rows = hist.read_text().splitlines() if hist.exists() else ["date\tmatched\tfunctions\tmatched_bytes\tbytes\tnonmatching"]
-    rows = [r for r in rows if not r.startswith(today)]
-    rows.append(f"{today}\t{tot['matched']}\t{tot['funcs']}\t{tot['matched_bytes']}\t{tot['bytes']}\t{tot['nonmatching']}")
+    # One row per session: `make progress-update SESSION=4` (several sessions
+    # can fall on one day); a rerun replaces the row with the same date+session.
+    session = os.environ.get("SESSION", "")
+    header = "date\tsession\tmatched\tfunctions\tmatched_bytes\tbytes\tnonmatching"
+    rows = hist.read_text().splitlines()[1:] if hist.exists() else []
+    rows = [r for r in rows if r.split("\t")[:2] != [today, session]]
+    rows.append(f"{today}\t{session}\t{tot['matched']}\t{tot['funcs']}\t{tot['matched_bytes']}\t{tot['bytes']}\t{tot['nonmatching']}")
+    rows = [header] + rows
     hist.write_text("\n".join(rows) + "\n")
 
     def table(keys):
@@ -1062,10 +1067,19 @@ OBJDUMP_LINE_RE = re.compile(r"^\s*([0-9a-f]+):\s+([0-9a-f]{8})\s+(\S+)\s*(.*)$"
 REG_RE = re.compile(r"(?<![\w$.%])(zero|at|v[01]|a[0-3]|t[0-9]|s[0-8]|k[01]|gp|sp|fp|ra|f[0-9]{1,2}|vf[0-9]{1,2}|vi[0-9]{1,2})(?![\w])")
 
 
-def function_asm(cfg, f: Func, names: dict[int, str]) -> str:
+RAM_START, RAM_END = 0x00100000, 0x02000000  # EE main RAM above the kernel
+
+
+# objdump prints o32 names; registers 8-15 are a4-a7, t0-t3 under the EE's
+# EABI, which is what m2c's mipsee target expects (arguments 5-8 in a4-a7).
+EABI_NAMES = {"t0": "a4", "t1": "a5", "t2": "a6", "t3": "a7", "t4": "t0", "t5": "t1", "t6": "t2", "t7": "t3"}
+
+
+def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str:
     """GNU-as listing of one original function in the style m2c and decomp.me
     expect: `glabel`, $-prefixed registers, .L labels for branch targets,
-    func_/D_ names (or functions.tsv names) for calls and %hi/%lo pairs."""
+    func_/D_ names (or functions.tsv names) for calls and %hi/%lo pairs.
+    `eabi` names registers 8-15 a4-a7/t0-t3 (for m2c)."""
     import mips
     orig_path_ = orig_path(cfg)
     out = subprocess.run([f"{BINUTILS}objdump", "-D", "-z", "-m", "mips:5900", "-EL",
@@ -1099,8 +1113,13 @@ def function_asm(cfg, f: Func, names: dict[int, str]) -> str:
                              or o in mips.OP_VU_MEM or o in (mips.OP_LQ, mips.OP_SQ)):
             lui_a, upper = live[base]
             full = (upper + (mips.imm(w) if o != 0x0D else w & 0xFFFF)) & 0xFFFFFFFF
-            hi_of.setdefault(lui_a, full)
-            lo_of[a] = full
+            # gcc builds addresses with lui/addiu, never lui/ori; and an addiu
+            # pair outside EE RAM is a constant (float bits, masks), not data.
+            if o == 0x0D or (o == 0x09 and not RAM_START <= full < RAM_END):
+                pass
+            else:
+                hi_of.setdefault(lui_a, full)
+                lo_of[a] = full
         if o not in mips.OP_STORES and o not in {mips.OP_SPECIAL, mips.OP_REGIMM} | mips.OP_BRANCH:
             live.pop(mips.rt(w), None)
         if o == mips.OP_SPECIAL and not (mips.funct(w) in (0x21, 0x2D) and mips.rd(w) == base):
@@ -1141,7 +1160,7 @@ def function_asm(cfg, f: Func, names: dict[int, str]) -> str:
         if a in labels:
             lines.append(f".L{a:08X}:")
         i = mips.Insn(a, w)
-        ops = REG_RE.sub(lambda m: "$" + m.group(1), ops)
+        ops = REG_RE.sub(lambda m: "$" + (EABI_NAMES.get(m.group(1), m.group(1)) if eabi else m.group(1)), ops)
         if i.branch_target is not None:
             ops = re.sub(r"(0x)?[0-9a-f]+(\s*<[^>]*>)?$", f".L{i.branch_target:08X}", ops)
         elif i.jump_target is not None:
@@ -1191,7 +1210,7 @@ def cmd_m2c(args, cfg) -> int:
     for fn in args.functions:
         f = find_func(fn)
         path = asm_dir / f"{f.addr:08x}.s"
-        path.write_text(".set noat\n.set noreorder\n\n" + function_asm(cfg, f, names))
+        path.write_text(".set noat\n.set noreorder\n\n" + function_asm(cfg, f, names, eabi=True))
         res = subprocess.run([sys.executable, str(m2c), "-t", "mipsee-gcc-c", *args.m2c_args, str(path)],
                              capture_output=True, text=True)
         sys.stdout.write(res.stdout)
