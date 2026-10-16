@@ -101,7 +101,20 @@ extern struct _reent *D_0046A9C8;
             __sinit((fp)->_data);               \
     } while (0)
 
+#include "stdarg.h"
+
+#define INT_MAX 2147483647
+#define EOF (-1)
+
 void _exit(int) __attribute__((noreturn));
+void abort(void);
+int vfprintf(FILE *, const char *, va_list);
+int _vfprintf_r(struct _reent *, FILE *, const char *, va_list);
+int vfiprintf(FILE *, const char *, va_list);
+int _vfiprintf_r(struct _reent *, FILE *, const char *, va_list);
+int fiprintf(FILE *, const char *, ...);
+int _fwalk(struct _reent *, int (*)(FILE *));
+int fflush(FILE *);
 void __sinit(struct _reent *);
 size_t strlen(const char *);
 void *memset(void *, int, size_t);

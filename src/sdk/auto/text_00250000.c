@@ -50,10 +50,6 @@ void __malloc_unlock(void) {
     }
 }
 
-void puts(s32 arg0) {
-    _puts_r(D_0046A9C8, arg0);
-}
-
 s32 func_00250dd0(s32 arg0, s32 arg1) {
     s32 temp_v0;
 

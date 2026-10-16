@@ -5,8 +5,6 @@ int __sread(void *, char *, int);
 int __swrite(void *, const char *, int);
 _fpos_t __sseek(void *, _fpos_t, int);
 int __sclose(void *);
-int fflush(FILE *);
-int _fwalk(struct _reent *, int (*)(FILE *));
 void *_malloc_r(struct _reent *, size_t);
 
 static void std(FILE *ptr, int flags, int file, struct _reent *data) {
