@@ -1,0 +1,71 @@
+/* Matched automatically from m2c output (tools/autodecomp.py); not yet
+ * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
+#include "m2c.h"
+
+M2C_UNK func_0021af38(s32);
+M2C_UNK func_0021b800(s32);
+M2C_UNK func_0021b820();
+M2C_UNK func_0021ccd0(s32, M2C_UNK);
+extern u32 D_003E3D68;
+extern u32 D_00642C58;
+extern void *D_003F34B8;
+
+void func_00216118(void) {
+    if ((u32) D_003E3D68 < (u32) D_00642C58) {
+        D_00642C58 = D_003E3D68;
+    }
+}
+
+s32 func_002192c0(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 4);
+}
+
+s32 func_002192f8(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 8);
+}
+
+s32 func_00219348(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 0x10);
+}
+
+void func_00219370(s32 arg0) {
+    M2C_FIELD(D_003F34B8, s32 *, 0x10) = arg0;
+}
+
+s32 func_00219380(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 0x14);
+}
+
+void func_002193a8(s32 arg0) {
+    M2C_FIELD(D_003F34B8, s32 *, 0x14) = arg0;
+}
+
+s32 func_002193b8(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 0x18);
+}
+
+void func_002193e0(s32 arg0) {
+    M2C_FIELD(D_003F34B8, s32 *, 0x18) = arg0;
+}
+
+s32 func_002193f0(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 0x2C);
+}
+
+void func_00219418(s32 arg0) {
+    M2C_FIELD(D_003F34B8, s32 *, 0x2C) = arg0;
+}
+
+s32 func_0021add8(void) {
+    return M2C_FIELD(D_003F34B8, s32 *, 0x74);
+}
+
+void func_0021cf90(s32 arg0) {
+    func_0021b820();
+    func_0021ccd0(arg0, 0);
+    func_0021af38(arg0);
+}
+
+void func_0021dc20(s32 arg0) {
+    func_0021b800(arg0 + 0x51);
+}

@@ -126,7 +126,7 @@ class Insn:
 
     @property
     def is_syscall(self) -> bool:
-        return op(self.word) == OP_SPECIAL and funct(self.word) in (0x0C, 0x0D)  # syscall, break
+        return op(self.word) == OP_SPECIAL and funct(self.word) == 0x0C  # not `break` (gcc emits it for division by zero)
 
     @property
     def is_sync(self) -> bool:
