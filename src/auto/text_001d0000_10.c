@@ -1,0 +1,54 @@
+/* Matched automatically from m2c output (tools/autodecomp.py); not yet
+ * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
+#include "m2c.h"
+
+M2C_UNK func_00112d80();
+extern s64 D_00389C90[];
+
+s32 func_001d0b68(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x19));
+    return 8;
+}
+
+s32 func_001d3040(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFF7FFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+    return 2;
+}
+
+s32 func_001d30e0(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFEFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+    return 2;
+}
+
+s32 func_001d3430(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFDFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+    return 2;
+}
+
+s32 func_001d3da8(void) {
+    func_00112d80();
+    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x19));
+    return 8;
+}
+
+s32 func_001d6c20(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x2C));
+    return 2;
+}
+
+s32 func_001d6c48(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xF7FFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+    return 2;
+}
+
+void func_001d71f0(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xEFFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+}
+
+void func_001d75a0(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xDFFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+}
+
+void func_001d7768(void) {
+    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xBFFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
+}

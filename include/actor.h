@@ -1,5 +1,5 @@
-/* Actor: recovered from M2C_FIELD accesses in 0 matched functions (and
- * 170 unmatched drafts) that pass
+/* Actor: recovered from M2C_FIELD accesses in 3 matched functions (and
+ * 166 unmatched drafts) that pass
  * the same first argument to each other (tools/structs.py apply --seed func_00131c08).
  * Field names are offsets until their meaning is known. */
 #ifndef KH1_ACTOR_H
@@ -8,8 +8,13 @@
 #include "common.h"
 
 typedef struct Actor {
-    s32 unk000;
-    s32 unk004;
+    union {
+        s64 unk000_64;
+        struct {
+            s32 unk000;
+            s32 unk004;
+        };
+    };
     s32 unk008;
     u8 pad00C[0x8];
     f32 unk014;
@@ -34,7 +39,8 @@ typedef struct Actor {
     u8 pad074[0x14];
     s32 unk088;
     s32 unk08C;
-    u8 pad090[0xC];
+    u8 pad090[0x8];
+    struct Actor *unk098;
     s32 unk09C;
     u8 pad0A0[0x4];
     f32 unk0A4;
@@ -50,8 +56,13 @@ typedef struct Actor {
     s32 unk154;
     u8 pad158[0x4];
     s32 unk15C;
-    s32 unk160;
-    s32 unk164;
+    union {
+        s64 unk160_64;
+        struct {
+            s32 unk160;
+            s32 unk164;
+        };
+    };
     s32 unk168;
     f32 unk16C;
     f32 unk170;

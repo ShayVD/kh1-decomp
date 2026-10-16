@@ -126,8 +126,58 @@ def fix_floats(code: str, cc: str) -> str:
     return FLOAT_RE.sub(sub, code)
 
 
-def preprocess(code: str, sigs: dict[str, str], cc: str) -> str:
-    return fix_floats(fill_params(add_prototypes(code, sigs)), cc)
+def preprocess(code: str, sigs: dict[str, str], cc: str, locals_size: int = 0) -> str:
+    return wide_consts(stack_buffer(fix_floats(fill_params(add_prototypes(code, sigs)), cc), locals_size))
+
+
+SHIFT_CONST_RE = re.compile(r"\((-?(?:0x[0-9A-Fa-f]+|\d+)) << (0x[0-9A-Fa-f]+|\d+)\)")
+
+
+def wide_consts(code: str) -> str:
+    """m2c writes 64-bit constants built with `li; dsll32` as `(0x8000 << 0x22)`,
+    an int shift that overflows. Make the shift 64-bit."""
+    def fix(m: re.Match) -> str:
+        n, k = int(m.group(1), 0), int(m.group(2), 0)
+        if k < 32 and -0x80000000 <= (n << k) <= 0xFFFFFFFF:
+            return m.group(0)
+        return f"((s64) {m.group(1)} << {m.group(2)})"
+    return SHIFT_CONST_RE.sub(fix, code)
+
+
+# --------------------------------------------------------------------------- stack locals
+
+SPVAR_RE = re.compile(r"\bsp([0-9A-F]+)\b")
+SPDECL_RE = re.compile(r"^\s+((?:[su](?:8|16|32|64)|f32|f64|M2C_UNK\d*|void \*|[\w ]+\*)) ?sp([0-9A-F]+)(\[[^\]]*\])?;[^\n]*\n", re.M)
+
+
+def stack_buffer(code: str, locals_size: int) -> str:
+    """m2c writes the address of the frame's bottom as a bare `sp` (a
+    matrix or struct at sp+0 passed by address) and the other words of that
+    object as separate `spXX` variables, some never declared. gcc cannot
+    compile that; declare the whole locals area as one buffer named `sp`
+    instead, and turn `spXX` into `M2C_FIELD(sp, T *, 0xXX)`.
+    `locals_size`: bytes below the callee-saved registers."""
+    if not locals_size or not re.search(r"\bsp\b(?!\s*=)", code):
+        return code
+    start = re.search(r"^\S.*\)\s*\{\s*$", code, re.M)
+    if not start:
+        return code
+    head, body = code[: start.end()], code[start.end():]
+    types = {}
+    for m in SPDECL_RE.finditer(body):
+        if m.group(3):
+            return code  # m2c already declared an array; leave it alone
+        types[int(m.group(2), 16)] = m.group(1).strip()
+    body = SPDECL_RE.sub(lambda m: "" if int(m.group(2), 16) < locals_size else m.group(0), body)
+
+    def field(m: re.Match) -> str:
+        off = int(m.group(1), 16)
+        if off >= locals_size:
+            return m.group(0)
+        t = types.get(off, "M2C_UNK")
+        return f"M2C_FIELD(sp, {t} *, 0x{off:X})"
+    body = SPVAR_RE.sub(field, body)
+    return head + f"\n    s32 sp[{(locals_size + 3) // 4}];" + body
 
 
 # --------------------------------------------------------------------------- variants
@@ -138,6 +188,7 @@ def variants(code: str) -> list[str]:
     # m2c means byte offsets for arithmetic on unknown-typed pointers.
     v = re.sub(r"\*\(&(D_[0-9A-F]{8}) \+ ", r"*(M2C_UNK *)((s8 *)&\1 + ", code)
     v = re.sub(r"(?<!\*\()&(D_[0-9A-F]{8}) ([+-]) ", r"(s8 *)&\1 \2 ", v)
+    v = re.sub(r"(\w) ([+-]) &(D_[0-9A-F]{8})\b", r"\1 \2 (s8 *)&\3", v)  # `i * 4 + &D_X`
     v = re.sub(r"\bM2C_UNK \*(\w+);", r"s8 *\1;", v)
     if v != code:
         out.append(v)
@@ -145,7 +196,113 @@ def variants(code: str) -> list[str]:
     v = scale_increments(code)
     if v != code:
         out.append(v)
-    return out
+    v = rebase_fields(code)
+    if v != code:
+        out.append(v)
+    # globals only used as `M2C_FIELD(&D_X, T *, off)` are arrays of T: gcc
+    # addresses array elements from one base, not symbol+offset each time
+    v = as_arrays(code)
+    if v != code:
+        out.append(v)
+    # all globals volatile / none volatile, as search starting points (the
+    # search toggles one at a time, which misses fixes needing two edits)
+    for v in list(out) + [code]:
+        for w in (re.sub(r"^extern volatile ", "extern ", v, flags=re.M),
+                  re.sub(r"^extern (?!volatile)", "extern volatile ", v, flags=re.M)):
+            if w != v and w != code:
+                out.append(w)
+    return list(dict.fromkeys(out))
+
+
+NARROW_LOAD_RE = re.compile(r"M2C_FIELD\((?:[^(),]|\([^()]*\))+, ([su](?:8|16|32)) \*, (?:0x[0-9A-Fa-f]+|\d+)\)|\*(arg\d+)\b")
+WIDER = {"8": ("s32", "u32", "u64"), "16": ("s32", "u32", "u64"), "32": ("u64", "s64")}
+
+
+def widen_loads(code: str):
+    start = re.search(r"^\S.*\)\s*\{\s*$", code, re.M)
+    if not start:
+        return
+    head, body = code[: start.end()], code[start.end():]
+    narrow_globals = dict((n, t) for t, n in re.findall(r"^extern (?:volatile )?([su](?:8|16|32)) (D_[0-9A-F]{8});$", code, re.M))
+    params = dict((n, t) for t, n in re.findall(r"([su](?:8|16|32)) \*(arg\d+)", head))
+    for m in re.finditer(r"^(\s+)(?!return\b)([^\n;{}]*);$", body, re.M):
+        ind, stmt = m.group(1), m.group(2)
+        cands = []
+        cm = re.match(r"^(\S.*?) ([-+|&^]|<<|>>)= (.+)$", stmt)  # x op= y
+        if cm:
+            for n, t in narrow_globals.items():
+                if cm.group(1) == n:
+                    cands.append((t, n, f"{n} = {{w}} {cm.group(2)} {cm.group(3)}"))
+        rhs_at = stmt.find(" = ") + 3 if " = " in stmt else 0
+        for lm in NARROW_LOAD_RE.finditer(stmt, rhs_at):
+            t = lm.group(1) or params.get(lm.group(2))
+            if t:
+                cands.append((t, lm.group(0), stmt[:lm.start()] + "{w}" + stmt[lm.end():]))
+        for gn, t in narrow_globals.items():
+            for gm in re.finditer(rf"\b{gn}\b", stmt[rhs_at:]):
+                a = rhs_at + gm.start()
+                cands.append((t, gn, stmt[:a] + "{w}" + stmt[a + len(gn):]))
+        yield from _widen(head, body, m, ind, cands)
+    for m in re.finditer(r"^(\s+)(if \(.*\) \{)$", body, re.M):  # loads in a condition
+        ind, stmt = m.group(1), m.group(2)
+        cands = []
+        for lm in NARROW_LOAD_RE.finditer(stmt):
+            t = lm.group(1) or params.get(lm.group(2))
+            if t:
+                a = lm.start()
+                cast = re.search(r"\((?:[su]64|[su]32)\) $", stmt[:a])
+                a0 = cast.start() if cast else a
+                cands.append((t, lm.group(0), stmt[:a0] + "{w}" + stmt[lm.end():]))
+        yield from _widen(head, body, m, ind, cands, semicolon=False)
+
+
+def _widen(head, body, m, ind, cands, semicolon=True):
+    for t, load, new_stmt in cands:
+        for w in WIDER[t[1:]]:
+            decl = f"\n    {w} wide;"
+            nb = (body[: m.start()] + f"{ind}wide = {load};\n{ind}" + new_stmt.replace("{w}", "wide")
+                  + (";" if semicolon else "") + body[m.end():])
+            yield f"widen {w}@{m.start()}", head + decl + nb
+
+
+def rebase_fields(code: str) -> str:
+    """`q = p + 0xA0; ... M2C_FIELD(p, T *, 0xA0)` -> `M2C_FIELD(q, T *, 0)`: one
+    base for a run of stores into a sub-struct (lets store reordering work)."""
+    for m in re.finditer(r"^\s+(\w+) = (\w+) \+ (0x[0-9A-Fa-f]+|\d+);$", code, re.M):
+        new, base, c = m.group(1), m.group(2), int(m.group(3), 0)
+        head, tail = code[: m.end()], code[m.end():]
+
+        def fix(mm: re.Match) -> str:
+            off = int(mm.group(2), 0)
+            if off < c:
+                return mm.group(0)
+            return f"M2C_FIELD({new}, {mm.group(1)} *, 0x{off - c:X})"
+        tail = re.sub(rf"M2C_FIELD\({base}, ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", fix, tail)
+        code = head + tail
+    return code
+
+
+def as_arrays(code: str) -> str:
+    for m in re.finditer(r"^extern (volatile )?M2C_UNK (D_[0-9A-F]{8});$", code, re.M):
+        name = m.group(2)
+        uses = re.findall(rf"\b{name}\b", code)
+        fields = re.findall(rf"M2C_FIELD\(&{name}, (\w+) \*, (0x[0-9A-Fa-f]+|\d+)\)", code)
+        idx = re.findall(rf"\*\((\w+) \*\)\(\(s8 \*\)(?:\(s8 \*\))?&{name} \+ \((.+?) \* (\d+)\)\)", code)
+        idx += [("M2C_UNK", e, n) for e, n in re.findall(rf"\*\(&{name} \+ \((.+?) \* (\d+)\)\)", code)]
+        types = {t for t, _ in fields} | {t for t, _e, _n in idx}
+        if len(types) != 1 or len(uses) != 1 + len(fields) + len(idx):
+            continue
+        t = types.pop()
+        size = SIZES.get(t)
+        if not size or any(int(o, 0) % size for _, o in fields) or any(int(n) != size for _t, _e, n in idx):
+            continue
+        code = code.replace(m.group(0), f"extern {m.group(1) or ''}{t} {name}[];")
+        code = re.sub(rf"M2C_FIELD\(&{name}, \w+ \*, (0x[0-9A-Fa-f]+|\d+)\)",
+                      lambda mm: f"{name}[{int(mm.group(1), 0) // size}]", code)
+        code = re.sub(rf"\*\(&{name} \+ \((.+?) \* \d+\)\)", lambda mm: f"{name}[{mm.group(1)}]", code)
+        code = re.sub(rf"\*\(\w+ \*\)\(\(s8 \*\)(?:\(s8 \*\))?&{name} \+ \((.+?) \* \d+\)\)",
+                      lambda mm: f"{name}[{mm.group(1)}]", code)
+    return code
 
 
 SIZES = {"s8": 1, "u8": 1, "s16": 2, "u16": 2, "s32": 4, "u32": 4, "f32": 4, "s64": 8, "u64": 8,
@@ -189,13 +346,30 @@ def _body_range(lines: list[str]) -> tuple[int, int]:
     return start, len(lines)
 
 
+# Offsets of the original function's stores, in asm order (set per function
+# by autodecomp): a target order for runs of independent stores.
+STORE_HINT: list[int] = []
+
+
 def mutations(code: str):
-    """Yield (description, new code) for single-edit permutations."""
+    """Yield (description, new code) for single-edit permutations, the ones
+    most often right first."""
+    muts = list(_mutations(code))
+    first = ("rebase", "hint", "unvolatile", "volatile")
+    yield from sorted(muts, key=lambda m: next((i for i, p in enumerate(first) if m[0].startswith(p)), len(first)))
+
+
+def _mutations(code: str):
+    v = rebase_fields(code)
+    if v != code:
+        yield "rebase", v
     lines = code.split("\n")
     # volatile globals: gcc then builds the full address (lui/addiu) and
     # accesses offset 0, and keeps the access order
     for m in re.finditer(r"^extern (?!volatile)", code, re.M):
         yield f"volatile@{m.start()}", code[:m.end()] + "volatile " + code[m.end():]
+    for m in re.finditer(r"^extern volatile ", code, re.M):
+        yield f"unvolatile@{m.start()}", code[:m.start()] + "extern " + code[m.end():]
     b0, b1 = _body_range(lines)
     # reorder runs of 3-4 adjacent statements (gcc's scheduler reorders
     # independent stores, so the source order is rarely the asm order)
@@ -217,11 +391,34 @@ def mutations(code: str):
                     for dst, src in zip(stores, order):
                         new[dst] = lines[src]
                     yield f"sortstores@{i}", "\n".join(new)
+        # the run's stores in the order the original stores those offsets,
+        # as is and rotated by one (gcc emits the last independent store first)
+        groups: list[list[int]] = []  # consecutive stores through the same base
+        for k in stores:
+            b = STORE_RE.match(lines[k]).group(1)
+            if groups and groups[-1][-1] == k - 1 and STORE_RE.match(lines[groups[-1][0]]).group(1) == b:
+                groups[-1].append(k)
+            else:
+                groups.append([k])
+        for grp in groups if STORE_HINT else []:
+            if len(grp) < 2:
+                continue
+
+            def pos(k):
+                o = int(STORE_RE.match(lines[k]).group(2), 0)
+                return STORE_HINT.index(o) if o in STORE_HINT else len(STORE_HINT)
+            order = sorted(grp, key=pos)
+            for cand in (order[1:] + order[:1], order, order[-1:] + order[:-1]):
+                if cand != grp:
+                    new = list(lines)
+                    for dst, src in zip(grp, cand):
+                        new[dst] = lines[src]
+                    yield f"hintstores@{grp[0]}", "\n".join(new)
         # gcc tends to emit the last of a run of independent stores first, so
         # rotating the whole run (any length) is the most likely fix
         if j - i >= 3:
             run = lines[i:j]
-            for rot in (run[1:] + run[:1], run[-1:] + run[:-1]):
+            for rot in (run[1:] + run[:1], run[-1:] + run[:-1], run[::-1]):
                 yield f"rot@{i}", "\n".join(lines[:i] + rot + lines[j:])
         for size in (3, 4):
             for w in range(i, j - size + 1):
@@ -264,6 +461,32 @@ def mutations(code: str):
         ind = m.group(1)
         yield (f"ifreturn@{m.start()}", code[:m.start()] + f"{ind}if ({m.group(2)}) {{\n{ind}    return 1;\n"
                f"{ind}}}\n{ind}return 0;" + code[m.end():])
+    # a 64-bit field narrowed on assignment: gcc keeps the 64-bit shift
+    # unless the value is cast first (func_0012a030)
+    for m in re.finditer(r"M2C_FIELD\([^()]*(?:\([^()]*\)[^()]*)*, [su]64 \*, [^)]+\)", code):
+        if code[m.end():].startswith(" >>"):
+            continue
+        for t in ("(s32) ", "(u32) "):
+            yield f"narrow@{m.start()}", code[:m.start()] + t + code[m.start():]
+    for m in re.finditer(r"\((M2C_FIELD\([^;]*?, [su]64 \*, [^)]+\) >> [^)]+)\)", code):
+        yield f"narrowshift@{m.start()}", code[:m.start()] + "(s32) " + code[m.start():]
+    # `(u32)` on a narrow load before `>>` picks srlv over srav (func_00171a88)
+    for m in re.finditer(r"(?<![)\w])((?:M2C_FIELD\([^;]*?, [su](?:8|16) \*, [^)]+\))|\w+\[[^\]]+\]) >> ", code):
+        for t in ("(u32) ", "(s32) "):
+            yield f"shiftcast@{m.start()}", code[:m.start()] + t + code[m.start():]
+    # a void function that really returns the global array it filled in
+    # (`move v0, base` before the return; no caller uses it, so sigs said void)
+    m = re.search(r"^void (\w+\([^)]*\)) \{", code, re.M)
+    if m:
+        for a in re.finditer(r"^extern (?:volatile )?(\w+) (D_[0-9A-F]{8})\[\];$", code, re.M):
+            body = code[m.end():].rstrip()
+            if body.endswith("}") and re.search(rf"\b{a.group(2)}\[", body):
+                yield (f"retarray {a.group(2)}", code[:m.start()] + f"{a.group(1)} *{m.group(1)} {{"
+                       + body[:-1] + f"    return {a.group(2)};\n}}\n")
+    # a narrow value read into a wider local first: gcc then uses the
+    # sign/zero-extending load of the wider type (lb for an s8 kept in an
+    # int, lwu for a u32 kept in a u64, dsrl on it...)
+    yield from widen_loads(code)
     # value <-> void return
     m = re.search(r"^(s32|u32|M2C_UNK) (\w+\([^)]*\)) \{", code, re.M)
     if m and not re.search(r"\breturn\b[^;]*\w", code[m.end():]):

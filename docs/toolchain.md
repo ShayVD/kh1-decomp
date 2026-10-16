@@ -119,3 +119,19 @@ them automatically (docs/workflow.md).
   `t0`-`t3` in objdump's o32 names). Float arguments use `f12`-`f19`
   independently of the integer ones, so int/float order in a prototype does
   not change the code.
+
+## Codegen patterns learned in session 4
+
+- **Arrays vs pointer arithmetic.** `D[3] = x` on `extern s32 D[]` keeps one
+  `lui/addiu` base and stores at `0/4/8/12(base)`; the same stores written as
+  `*(s32 *)((char *)&D + 12)` on a scalar `D` get a base of `D+12` and
+  negative offsets. Globals used like arrays should be declared as arrays.
+- **Wider locals change the load.** An `s8` global decremented through an
+  `int` local loads with `lb`; directly (`D -= 1`) with `lbu`. A `u32` field
+  kept in a `u64` local loads with `lwu`; a `u8` kept in a `u64` and shifted
+  uses `dsrl`. Casting in place (`(u64) *p >> 4`) does not reproduce this.
+- **64-bit constants** (`li v1,0x8000; dsll32 v1,v1,N`) come from 64-bit
+  constant expressions (`(s64) 0x8000 << 0x22`, i.e. 1ULL << 49).
+- **Stack locals** sit at `sp+0` up to the lowest callee-saved slot; there
+  is no outgoing-argument area (EABI: 8 integer + 8 float argument
+  registers).

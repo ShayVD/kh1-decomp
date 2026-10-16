@@ -87,7 +87,7 @@ f32 func_00130dd0(Actor *arg0) {
 
 void func_00131c08(Actor *arg0, f32 fparg0, f32 fparg1, f32 fparg2) {
     M2C_FIELD(arg0, f32 *, 0x288) = fparg0;
-    M2C_FIELD(arg0, s64 *, 0x160) = (s64) (M2C_FIELD(arg0, s64 *, 0x160) | 0x40);
+    arg0->unk160_64 = (s64) (arg0->unk160_64 | 0x40);
     arg0->unk28C = fparg1;
     M2C_FIELD(arg0, f32 *, 0x290) = fparg2;
 }

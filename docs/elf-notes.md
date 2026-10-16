@@ -15,8 +15,11 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
   fixed two scanner bugs: switch jump tables point at case labels right after
   a `jr $ra`, and 55 of those had been taken for function starts; and the
   libkernl syscall stubs (no prologue, reached by tail calls) were merged
-  into their neighbours (92 split out). Now 5,811 functions. It still misses
-  other functions reached only by tail `j`, so expect hand fixes.
+  into their neighbours (92 split out). Now 5,811 functions. Session 4: a tail
+  call (`j` outside the function plus its delay slot) now ends a function
+  when no earlier branch jumps past it, which split 580 functions (wrappers
+  such as libm's `w_*` and small functions after a tail call) from the
+  ones before them: 6,911 functions. Hand fixes are still possible.
 - **36 `.DVP.overlay` sections** plus `.DVP.ovlytab` / `.DVP.ovlystrtab`:
   VU microcode assembled with dvp-as (names like
   `.DVP.overlay..0x0.374643955.7345.0`, some with `unknvma`). These are the

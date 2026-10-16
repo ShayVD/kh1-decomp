@@ -105,7 +105,7 @@ def groups(cfg) -> dict[int, list[int]]:
 
 SIZEOF = {"s8": 1, "u8": 1, "s16": 2, "u16": 2, "s32": 4, "u32": 4, "f32": 4, "s64": 8, "u64": 8,
           "void *": 4, "M2C_UNK": 4}
-PARAM_RE = r"(?:void \*|[su]32 |M2C_UNK )arg0\b"
+PARAM_RE = r"(?:void \*|[su]32 |M2C_UNK |[A-Z]\w* \*)arg0\b"  # untyped, or already a struct
 
 
 def convertible(params: str, body: str) -> bool:
@@ -113,18 +113,27 @@ def convertible(params: str, body: str) -> bool:
     argument or compared with NULL."""
     if not re.match(rf"^{PARAM_RE}", params):
         return False
-    rest = re.sub(r"M2C_FIELD\(arg0, ", "", body)
+    rest = re.sub(r"M2C_FIELD\(arg0, |\barg0->", "", body)
     rest = re.sub(r"(?<=[(,] )arg0(?=[,)])|(?<=\()arg0(?=[,)])|arg0 [!=]= (NULL|0)\b", "", rest)
     return not re.search(r"\barg0\b", rest)
 
 
 def layout_fields(uses: dict[int, Counter]) -> dict[int, str]:
     """offset -> the most common access type, dropping overlaps (the more
-    common offset wins). Accesses with another type keep their M2C_FIELD."""
+    common offset wins). Accesses with another type keep their M2C_FIELD.
+    A 64-bit word also accessed as two 32-bit halves becomes a union: the
+    64-bit type is then stored under the key `(offset, 64)`."""
     single = {o: c.most_common(1)[0][0] for o, c in uses.items() if c.most_common(1)[0][0] in SIZEOF}
+    # 64-bit accesses at an offset whose words are also used as 32-bit fields
+    wide = {}
+    for o, c in uses.items():
+        t64 = next((t for t, _n in c.most_common() if t in ("s64", "u64")), None)
+        if t64 and o % 8 == 0 and (SIZEOF.get(single.get(o)) == 4 or SIZEOF.get(single.get(o + 4)) == 4):
+            wide[o] = t64
+            single.pop(o, None) if SIZEOF.get(single.get(o)) == 8 else None
     by_count = sorted(single, key=lambda o: -sum(uses[o].values()))
     taken: list[tuple[int, int]] = []
-    out = {}
+    out: dict = {}
     for o in by_count:
         size = SIZEOF[single[o]]
         if o % size:
@@ -133,26 +142,110 @@ def layout_fields(uses: dict[int, Counter]) -> dict[int, str]:
             continue
         taken.append((o, o + size))
         out[o] = single[o]
-    return dict(sorted(out.items()))
+    for o, t in wide.items():
+        # both halves must be plain words (or free) for the union
+        if all(out.get(h, "s32") in ("s32", "u32", "f32", "void *") for h in (o, o + 4)) and \
+                not any(b < o + 8 and o < e and b not in (o, o + 4) for b, e in taken):
+            out[(o, 64)] = t
+            for h in (o, o + 4):
+                out.setdefault(h, "s32")
+    return dict(sorted(out.items(), key=lambda kv: kv[0] if isinstance(kv[0], int) else kv[0][0]))
+
+
+def field_name(o: int, t: str, fields: dict) -> str | None:
+    """The struct member that an access of type `t` at offset `o` maps to."""
+    if fields.get(o) == t:
+        return f"unk{o:03X}"
+    if t in ("s64", "u64") and fields.get((o, 64)) == t:
+        return f"unk{o:03X}_64"
+    return None
 
 
 def header_text(name: str, guard: str, fields: dict[int, str], note: str) -> str:
     lines = [f"/* {note} */", f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"', "",
              f"typedef struct {name} {{"]
     pos = 0
-    for o, t in fields.items():
+    unions = {k[0]: t for k, t in fields.items() if isinstance(k, tuple)}
+    plain = {o: t for o, t in fields.items() if isinstance(o, int)}
+    for o, t in plain.items():
         if o > pos:
             lines.append(f"    u8 pad{pos:03X}[0x{o - pos:X}];")
-        ctype = "void *" if t == "void *" else t + " "
+        ctype = t if t.endswith("*") else t + " "
+        if o in unions:
+            hi = plain[o + 4]
+            lines += ["    union {", f"        {unions[o]} unk{o:03X}_64;", "        struct {",
+                      f"            {ctype}unk{o:03X};",
+                      f"            {'void *' if hi == 'void *' else hi + ' '}unk{o + 4:03X};",
+                      "        };", "    };"]
+            pos = o + 8
+            continue
+        if o - 4 in unions:
+            continue
         lines.append(f"    {ctype}unk{o:03X};")
         pos = o + SIZEOF[t]
     lines.append(f"}} {name}; /* size unknown: at least 0x{pos:X} */")
     lines.append("")
-    for o in list(fields)[-1:]:
+    for o in list(plain)[-1:]:
         lines.append(f"/* layout check: the last known field must sit at 0x{o:X} */")
         lines.append(f"typedef char {name}_check_{o:X}[(sizeof(struct {name}) == 0x{pos:X}) ? 1 : -1];")
     lines += ["", f"#endif /* {guard} */", ""]
     return "\n".join(lines)
+
+
+def follow_self(func: str, so: int, fields: dict, struct: str) -> str:
+    """Rewrite accesses through the pointer field at `so` (an object of the
+    same struct): `M2C_FIELD(arg0, void **, so)` -> `arg0->unkSO`, fields
+    of it, and temps that only hold it."""
+    name = f"unk{so:03X}"
+    func = re.sub(rf"M2C_FIELD\(arg0, (?:void \*|[su]32|M2C_UNK|void \*\*) \*?, 0x{so:X}\)", f"arg0->{name}", func)
+    func = func.replace(f"M2C_FIELD(arg0, void **, 0x{so:X})", f"arg0->{name}")
+    bases = [f"arg0->{name}"]
+    for m in re.finditer(rf"^\s+(\w+) = arg0->{name};$", func, re.M):
+        t = m.group(1)
+        decl = re.search(rf"^(\s+)(?:void \*|s32 |u32 |M2C_UNK ){t};$", func, re.M)
+        if not decl or len(re.findall(rf"^\s+{t} = ", func, re.M)) != 1:
+            continue
+        rest = re.sub(rf"M2C_FIELD\({t}, ", "", func.replace(m.group(0), "").replace(decl.group(0), ""))
+        if re.search(rf"\b{t}\b(?!\s*[,)])", rest):  # used other than as a base or call argument
+            continue
+        func = func.replace(decl.group(0), f"{decl.group(1)}{struct} *{t};")
+        bases.append(t)
+
+    def fld(mm: re.Match) -> str:
+        o = int(mm.group(3), 0)
+        n = field_name(o, mm.group(2), fields)
+        return f"{mm.group(1)}->{n}" if n else mm.group(0)
+    for b in bases:
+        func = re.sub(rf"M2C_FIELD\(({re.escape(b)}), ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", fld, func)
+    return func
+
+
+def deref_to_field(members: list[str], cfuncs) -> int:
+    """`T *arg0` used only as `*arg0` -> `void *arg0` with `M2C_FIELD(arg0, T *, 0)`
+    (the struct's first field), so the function can join the struct."""
+    n = 0
+    for name in members:
+        if name not in cfuncs:
+            continue
+        path, params, body = cfuncs[name]
+        m = re.match(r"^([su](?:8|16|32)) \*arg0\b", params)
+        if not m or re.search(r"(?<!\*)\barg0\b|\*arg0\s*(?:\[|\+\+|--)", body.replace("*arg0", "*arg0")):
+            continue
+        if re.search(r"(?<![*\w])arg0\b", body):
+            continue
+        t = m.group(1)
+        text = path.read_text()
+        start = re.search(rf"^\S[^\n;]*?\b{name}\({t} \*arg0", text, re.M)
+        if not start:
+            continue
+        end = text.find("\n}\n", start.start())
+        func = text[start.start():end]
+        func = func.replace(f"{name}({t} *arg0", f"{name}(void *arg0", 1)
+        brace = func.index("{")
+        func = func[:brace] + re.sub(r"\*arg0\b", f"M2C_FIELD(arg0, {t} *, 0)", func[brace:])
+        path.write_text(text[:start.start()] + func + text[end:])
+        n += 1
+    return n
 
 
 def cmd_apply(args) -> int:
@@ -162,6 +255,8 @@ def cmd_apply(args) -> int:
     seed = K.find_func(args.seed).addr
     group = next(g for g in groups(cfg).values() if seed in g)
     members = [names.get(x, f"func_{x:08x}") for x in sorted(group)]
+    if args.write and deref_to_field(members, cfuncs):
+        cfuncs = c_functions()
     conv = [n for n in members if n in cfuncs and convertible(cfuncs[n][1], cfuncs[n][2])
             and FIELD_RE.search(cfuncs[n][2])]
     uses: dict[int, Counter] = defaultdict(Counter)
@@ -182,9 +277,21 @@ def cmd_apply(args) -> int:
                     uses[int(off, 0)][t] += 1
     hdr = K.ROOT / args.header
     if hdr.exists():  # fields already in use by rewritten code must stay
-        for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+);", hdr.read_text(), re.M):
+        for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+)(?:_64)?;", hdr.read_text(), re.M):
             uses[int(off, 16)][t.strip() if t != "void *" else t] += 1000
+    selfs = [int(x, 0) for x in args.self_ptr]
+    for n in conv:  # fields reached through the self pointers count as evidence too
+        for so in selfs:
+            body = cfuncs[n][2]
+            for t, off in re.findall(rf"M2C_FIELD\((?:M2C_FIELD\(arg0, [\w *]+?, 0x{so:X}\)|arg0->unk{so:03X}), ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", body):
+                uses[int(off, 0)][t] += 1
+    for so in selfs:
+        uses.pop(so, None)
     fields = layout_fields(uses)
+    for so in selfs:
+        fields[so] = f"struct {args.struct} *"
+        SIZEOF[f"struct {args.struct} *"] = 4
+    fields = dict(sorted(fields.items(), key=lambda kv: kv[0] if isinstance(kv[0], int) else kv[0][0]))
     guard = "KH1_" + re.sub(r"\W", "_", hdr.stem.upper()) + "_H"
     note = (f"{args.struct}: recovered from M2C_FIELD accesses in {len(conv)} matched functions (and\n"
             f" * {drafts} unmatched drafts) that pass\n"
@@ -209,8 +316,11 @@ def cmd_apply(args) -> int:
 
             def fld(mm: re.Match) -> str:
                 o = int(mm.group(2), 0)
-                return f"arg0->unk{o:03X}" if fields.get(o) == mm.group(1) else mm.group(0)
+                n = field_name(o, mm.group(1), fields)
+                return f"arg0->{n}" if n else mm.group(0)
             func = FIELD_RE.sub(fld, func)
+            for so in selfs:
+                func = follow_self(func, so, fields, args.struct)
             text = text[:start] + func + text[end:]
         inc = f'#include "{hdr.name}"'
         if inc not in text:
@@ -227,6 +337,8 @@ def main() -> int:
         ap.add_argument("--struct", required=True)
         ap.add_argument("--header", required=True, help="e.g. include/actor.h")
         ap.add_argument("--write", action="store_true")
+        ap.add_argument("--self-ptr", action="append", default=[],
+                        help="offset of a pointer to another object of the same struct (repeatable)")
         return cmd_apply(ap.parse_args(sys.argv[2:]))
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--group")

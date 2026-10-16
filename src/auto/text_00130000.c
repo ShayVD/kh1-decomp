@@ -284,8 +284,8 @@ u32 func_0013cf78(void *arg0, s32 arg1) {
     return temp_s0;
 }
 
-void func_0013dfa0(s32 *arg0) {
-    *arg0 &= ~0x4000;
+void func_0013dfa0(Actor *arg0) {
+    arg0->unk000 &= ~0x4000;
 }
 
 void func_0013f0c0(s32 arg0, s32 arg1, s32 arg2) {

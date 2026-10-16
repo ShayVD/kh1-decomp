@@ -298,13 +298,16 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
                     or (o in (17, 18) and (w >> 21) & 31 == 8):
                 off = w & 0xFFFF
                 reach = max(reach, pos + 4 + ((off - 0x10000 if off & 0x8000 else off) << 2))
-            elif o == 2:
+            sibcall = False
+            if o == 2:
                 t = ((pos + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
                 if a <= t < e:
                     reach = max(reach, t)
+                else:
+                    sibcall = True  # tail call: ends the function like `jr $ra`
             elif o == 0 and w & 0x3F in (0x08, 0x09) and w != JR_RA and w & 0x3F == 0x08:
                 break  # jump table: case blocks follow
-            if w == JR_RA and reach <= pos + 4:
+            if (w == JR_RA or sibcall) and reach <= pos + 4:
                 n = pos + 8
                 while n < e and word_at(n) == 0:
                     n += 4
@@ -319,8 +322,8 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
     funcs = []
     for k, a in enumerate(ordered):
         e = ordered[k + 1] if k + 1 < len(ordered) else end
-        while e - 4 > a and word_at(e - 4) == 0 and word_at(e - 8) != JR_RA:
-            e -= 4  # drop alignment padding, keep the delay slot after jr ra
+        while e - 4 > a and word_at(e - 4) == 0 and word_at(e - 8) != JR_RA and word_at(e - 8) >> 26 != 2:
+            e -= 4  # drop alignment padding, keep the delay slot after jr ra / a tail call
         funcs.append(Func(a, e, f"func_{a:08x}"))
     return funcs
 
@@ -1075,6 +1078,11 @@ RAM_START, RAM_END = 0x00100000, 0x02000000  # EE main RAM above the kernel
 EABI_NAMES = {"t0": "a4", "t1": "a5", "t2": "a6", "t3": "a7", "t4": "t0", "t5": "t1", "t6": "t2", "t7": "t3"}
 
 
+# I-type ALU ops and integer loads (incl. ld/lq): the result goes to rt
+GPR_RT_WRITERS = {0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x18, 0x19,
+                  0x1A, 0x1B, 0x1E, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x37}
+
+
 def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str:
     """GNU-as listing of one original function in the style m2c and decomp.me
     expect: `glabel`, $-prefixed registers, .L labels for branch targets,
@@ -1101,10 +1109,16 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
     hi_of: dict[int, int] = {}   # lui addr -> full address
     lo_of: dict[int, int] = {}   # user addr -> full address
     live: dict[int, tuple[int, int]] = {}  # reg -> (lui addr, upper)
+    clobber_at = None
     for a, w, mn, _ops in insns:
         o = mips.op(w)
         if a in labels:
             live.clear()
+        if a == clobber_at:  # the call (after its delay slot) clobbered caller-saved registers
+            for r in [r for r in live if not (16 <= r <= 23 or r in (28, 29, 30))]:
+                del live[r]
+        if o == 0x03 or (o == mips.OP_SPECIAL and mips.funct(w) == 0x09):  # jal / jalr
+            clobber_at = a + 8
         if o == mips.OP_LUI:
             live[mips.rt(w)] = (a, (w & 0xFFFF) << 16)
             continue
@@ -1120,8 +1134,14 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
             else:
                 hi_of.setdefault(lui_a, full)
                 lo_of[a] = full
-        if o not in mips.OP_STORES and o not in {mips.OP_SPECIAL, mips.OP_REGIMM} | mips.OP_BRANCH:
+        # forget a %hi held in a register this instruction overwrites
+        if o in (0x11, 0x12):  # COP1/COP2: only mfc/dmfc/cfc write a GPR (rt)
+            if mips.rs(w) in (0, 1, 2):
+                live.pop(mips.rt(w), None)
+        elif o in GPR_RT_WRITERS:
             live.pop(mips.rt(w), None)
+        elif o == mips.OP_MMI:
+            live.pop(mips.rd(w), None)
         if o == mips.OP_SPECIAL and not (mips.funct(w) in (0x21, 0x2D) and mips.rd(w) == base):
             live.pop(mips.rd(w), None)  # addu/daddu rX,rX,rY keeps rX's %hi (jump tables)
 
