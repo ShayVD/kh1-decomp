@@ -695,3 +695,6 @@ _kill_r	00257898	# hand: _raise_r's SIG_DFL path, _kill_r(ptr, _getpid_r(ptr), s
 _getpid_r	002578f8	# hand: see _kill_r
 memchr	0025632c	# hand: __sfvwrite looks for the first newline with (p, 10, len)
 memmove	0025640c	# hand: __sfvwrite COPY(): (fp->_p, p, n)
+malloc_extend_top	0024f590	# hand: static in newlib mallocr.c; _sbrk_r(nb + top_pad + 16, page rounded), then the alignment correction
+_malloc_trim_r	00255ad0	# hand: newlib mallocr.c malloc_trim; _free_r calls it with top_pad past trim_threshold
+_sbrk_r	00250dd0	# hand: mallocr MORECORE (reent, increment)
