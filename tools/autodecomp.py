@@ -190,6 +190,9 @@ def write_results(matches: dict[int, str]) -> list[Path]:
         n = 0
         while True:
             key = base if n == 0 else f"{base}_{n}"
+            if (AUTO_DIR / f"{key}.c").exists():  # earlier runs' files stay untouched
+                n += 1
+                continue
             unit = files.setdefault(key, {"decls": {}, "funcs": [], "defined": set()})
             fname = _names.get(addr, f"func_{addr:08x}")
             conflict = any(name in unit["decls"] and unit["decls"][name] != d for name, d in decls)
@@ -206,9 +209,6 @@ def write_results(matches: dict[int, str]) -> list[Path]:
     written = []
     for key, unit in sorted(files.items()):
         path = AUTO_DIR / f"{key}.c"
-        old_decls, old_funcs = {}, []
-        if path.exists():
-            sys.exit(f"error: {path} exists; merge by hand or remove it first")
         text = ["/* Matched automatically from m2c output (tools/autodecomp.py); not yet",
                 " * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */",
                 '#include "m2c.h"', ""]
