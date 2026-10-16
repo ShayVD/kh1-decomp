@@ -228,6 +228,14 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
             if is_prologue(word_at(a)):
                 starts.add(a)
 
+    # EE kernel syscall stubs (`li $v1,N; syscall; jr $ra; nop`) sit back to
+    # back with no prologue and are mostly reached through tail calls.
+    for i, w in enumerate(words[1:], 1):
+        if w == 0x0000000C and words[i - 1] >> 16 == 0x2403:
+            a = start + (i - 1) * 4
+            if follows_function_end(a):
+                starts.add(a)
+
     # Switch jump tables: `lui $at,%hi(T); addu $at,$at,$r; lw $r,%lo(T)($at);
     # ... jr $r`, bounded by an earlier `sltiu $x,$y,N`. Their entries point at
     # case labels inside a function (often right after a `jr $ra`), so they
@@ -274,6 +282,38 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
             (p,) = struct.unpack_from("<I", blob, j)
             if start <= p < end and p % 4 == 0 and p not in case_labels and follows_function_end(p):
                 starts.add(p)
+
+    # A `jr $ra` that no earlier branch in the function jumps past ends the
+    # function: whatever follows is a new one reached only by pointer or tail
+    # call (gcc places every block of a function before its last return or
+    # branches to it). Not applied after a jump-table `jr`.
+    ordered = sorted(starts)
+    for k, a in enumerate(ordered):
+        e = ordered[k + 1] if k + 1 < len(ordered) else end
+        reach, pos = a, a
+        while pos < e - 8:
+            w = word_at(pos)
+            o = w >> 26
+            if o in (4, 5, 6, 7, 20, 21, 22, 23) or (o == 1 and (w >> 16) & 31 in (0, 1, 2, 3, 16, 17, 18, 19)) \
+                    or (o in (17, 18) and (w >> 21) & 31 == 8):
+                off = w & 0xFFFF
+                reach = max(reach, pos + 4 + ((off - 0x10000 if off & 0x8000 else off) << 2))
+            elif o == 2:
+                t = ((pos + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+                if a <= t < e:
+                    reach = max(reach, t)
+            elif o == 0 and w & 0x3F in (0x08, 0x09) and w != JR_RA and w & 0x3F == 0x08:
+                break  # jump table: case blocks follow
+            if w == JR_RA and reach <= pos + 4:
+                n = pos + 8
+                while n < e and word_at(n) == 0:
+                    n += 4
+                if n < e:
+                    starts.add(n)
+                    reach = n
+                pos = n
+                continue
+            pos += 4
 
     ordered = sorted(starts)
     funcs = []
