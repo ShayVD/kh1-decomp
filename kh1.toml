@@ -74,6 +74,12 @@ path = "src/sdk/gcc991111/"
 compiler = "ee-gcc2.9-991111a"
 cflags = "-O2 -G0"
 
+# libkernl by hand (SCE code: ee-gcc 2.9-991111).
+[[toolchain.override]]
+path = "src/sdk/libkernl/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+
 [[toolchain.override]]
 path = "src/sdk/gcc991111nf/"
 compiler = "ee-gcc2.9-991111a"

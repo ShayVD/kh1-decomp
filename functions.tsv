@@ -707,3 +707,7 @@ _close	00258848	# hand: _close_r wraps it
 _lseek	00258858	# hand: _lseek_r wraps it
 _read	002587a8	# hand: _read_r wraps it
 _fstat	00258918	# hand: _fstat_r wraps it
+EIntr	0025f380	# hand: ei, returns whether SR.EIE was set
+DIntr	0025f338	# hand: disables interrupts (di until SR.EIE clears), returns whether EIE was set
+__errno	00265180	# hand: returns &_impure_ptr->_errno; _sbrk stores ENOMEM (12) through it
+_sbrk	00258860	# hand: _sbrk_r's callee; moves the heap pointer D_0046AE48 up to EndOfHeap(), ENOMEM past it

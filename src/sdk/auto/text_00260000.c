@@ -106,10 +106,6 @@ void func_00263fa8(void) {
     free(func_00263ee8());
 }
 
-s32 func_00265180(void) {
-    return D_0046A9C8;
-}
-
 M2C_UNK *func_002654e0(void) {
     return &D_0046C500;
 }
