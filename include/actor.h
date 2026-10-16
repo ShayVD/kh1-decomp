@@ -40,7 +40,7 @@ typedef struct Actor {
     s32 unk088;
     s32 unk08C;
     u8 pad090[0x8];
-    struct Actor *unk098;
+    struct Actor *pair; /* +0x098: set both ways by func_00137308(a, b) */
     s32 unk09C;
     u8 pad0A0[0x4];
     f32 unk0A4;

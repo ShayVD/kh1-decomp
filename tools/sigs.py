@@ -70,6 +70,33 @@ def disassemble(cfg) -> dict[int, list[tuple[str, str]]]:
     return funcs
 
 
+# EE kernel syscall stubs (`li v1, N; syscall`) pass their arguments to the
+# kernel, so the scan sees no reads. Integer argument counts from the public
+# ps2sdk kernel.h prototypes.
+SYSCALL_ARGS = {
+    "ResetEE": 1, "SetGsCrt": 3, "Exit": 1, "LoadExecPS2": 3, "ExecPS2": 4,
+    "AddIntcHandler": 3, "AddIntcHandler2": 3, "RemoveIntcHandler": 2, "AddDmacHandler": 3,
+    "AddDmacHandler2": 3, "RemoveDmacHandler": 2, "_EnableIntc": 1, "_DisableIntc": 1,
+    "_EnableDmac": 1, "_DisableDmac": 1, "_iEnableIntc": 1, "_iDisableIntc": 1, "_iEnableDmac": 1,
+    "_iDisableDmac": 1, "CreateThread": 1, "DeleteThread": 1, "StartThread": 2, "ExitThread": 0,
+    "ExitDeleteThread": 0, "TerminateThread": 1, "iTerminateThread": 1, "DisableDispatchThread": 0,
+    "EnableDispatchThread": 0, "ChangeThreadPriority": 2, "iChangeThreadPriority": 2,
+    "RotateThreadReadyQueue": 1, "iRotateThreadReadyQueue": 1, "ReleaseWaitThread": 1,
+    "iReleaseWaitThread": 1, "GetThreadId": 0, "ReferThreadStatus": 2, "iReferThreadStatus": 2,
+    "SleepThread": 0, "WakeupThread": 1, "iWakeupThread": 1, "CancelWakeupThread": 1,
+    "iCancelWakeupThread": 1, "SuspendThread": 1, "iSuspendThread": 1, "ResumeThread": 1,
+    "iResumeThread": 1, "SetupThread": 5, "SetupHeap": 2, "EndOfHeap": 0, "CreateSema": 1,
+    "DeleteSema": 1, "SignalSema": 1, "iSignalSema": 1, "WaitSema": 1, "PollSema": 1, "iPollSema": 1,
+    "ReferSemaStatus": 2, "iReferSemaStatus": 2, "SetOsdConfigParam": 1, "GetOsdConfigParam": 1,
+    "GetGsHParam": 4, "GetGsVParam": 4, "SetGsHParam": 4, "SetGsVParam": 4, "FlushCache": 1,
+    "iFlushCache": 1, "GsGetIMR": 0, "iGsGetIMR": 0, "GsPutIMR": 1, "iGsPutIMR": 1,
+    "SetPgifHandler": 1, "SetVSyncFlag": 2, "SetSyscall": 2, "sceSifDmaStat": 1, "isceSifDmaStat": 1,
+    "sceSifSetDma": 2, "isceSifSetDma": 2, "sceSifSetDChain": 0, "isceSifSetDChain": 0,
+    "sceSifSetReg": 2, "sceSifGetReg": 1, "ExecOSD": 2, "Deci2Call": 2, "PSMode": 0,
+    "MachineType": 0, "GetMemorySize": 0,
+}
+
+
 def analyse(cfg) -> dict[int, tuple[int, int, str]]:
     import mips
     funcs = disassemble(cfg)
@@ -99,6 +126,7 @@ def analyse(cfg) -> dict[int, tuple[int, int, str]]:
     elf = K.require_orig(cfg)
     graphs = {a: _graph(a, insns, elf.read) for a, insns in funcs.items()}
     variadic = {a: v for a, insns in funcs.items() if (v := _variadic(insns))}
+    syscalls = {a: SYSCALL_ARGS[n] for n, a in K.load_registry().items() if n in SYSCALL_ARGS and a in funcs}
     for _ in range(8):
         changed = False
         for a, insns in funcs.items():
@@ -126,6 +154,8 @@ def analyse(cfg) -> dict[int, tuple[int, int, str]]:
                 rt = "s32"
             else:
                 rt = "void" if callers.get(a) else (tail or "void")
+            if a in syscalls:
+                ni, nf = syscalls[a], 0
             new = (ni, nf, rt, a in variadic)
             if new != sig[a]:
                 sig[a] = new

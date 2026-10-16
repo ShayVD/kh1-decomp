@@ -80,7 +80,7 @@ def _spellings(bits: int) -> list[str]:
     out = []
     for b in (bits, bits - 1, bits + 1):
         w = struct.unpack("<f", struct.pack("<I", b & 0xFFFFFFFF))[0]
-        for n in range(6, 13):
+        for n in range(1, 13):
             s = f"{w:.{n}g}"
             if "e" not in s and "." not in s:
                 s += ".0"
@@ -88,10 +88,11 @@ def _spellings(bits: int) -> list[str]:
     # midpoints towards the neighbours (truncating converters)
     for b in (bits - 1, bits + 1):
         w = struct.unpack("<f", struct.pack("<I", b & 0xFFFFFFFF))[0]
-        for n in range(7, 12):
+        for n in range(1, 12):
             s = f"{(v + w) / 2:.{n}g}"
             out.append(s if ("." in s or "e" in s) else s + ".0")
-    return list(dict.fromkeys(out))
+    import math
+    return [x for x in dict.fromkeys(out) if "n" not in x]  # no nan/inf
 
 
 def resolve_floats(bits_list: list[int], cc: str) -> None:
@@ -204,6 +205,15 @@ def variants(code: str) -> list[str]:
     v = as_arrays(code)
     if v != code:
         out.append(v)
+    # counter loops m2c split into a counter and a copy, and callees whose
+    # result is unused declared void (together: func_00157668)
+    # the game's inline square root (bare sqrt.s, no sqrtf call)
+    if re.search(r"\bsqrtf\(", code):
+        out.append(re.sub(r"^f32 sqrtf\(f32\);\n", "", re.sub(r"(?<!\w)sqrtf\(", "PlatSqrtf(", code), flags=re.M))
+    lp = copy_loop(code)
+    for v in (lp, void_callees(code), void_callees(lp)):
+        if v != code:
+            out.append(v)
     # all globals volatile / none volatile, as search starting points (the
     # search toggles one at a time, which misses fixes needing two edits)
     for v in list(out) + [code]:
@@ -355,7 +365,7 @@ def mutations(code: str):
     """Yield (description, new code) for single-edit permutations, the ones
     most often right first."""
     muts = list(_mutations(code))
-    first = ("rebase", "hint", "unvolatile", "volatile")
+    first = ("rebase", "earlyreturn", "forloop", "voidcallee", "narrowand", "hint", "unvolatile", "volatile")
     yield from sorted(muts, key=lambda m: next((i for i, p in enumerate(first) if m[0].startswith(p)), len(first)))
 
 
@@ -470,6 +480,32 @@ def _mutations(code: str):
             yield f"narrow@{m.start()}", code[:m.start()] + t + code[m.start():]
     for m in re.finditer(r"\((M2C_FIELD\([^;]*?, [su]64 \*, [^)]+\) >> [^)]+)\)", code):
         yield f"narrowshift@{m.start()}", code[:m.start()] + "(s32) " + code[m.start():]
+    # a 64-bit value shifted and masked: `(s32) (x >> n) & m` truncates before
+    # the `andi` (dsll32/dsra32 first), as the original does (func_0012aa38)
+    for m in re.finditer(r"\((?:\([su]64\) )?", code):
+        if not re.match(r"\((?:\([su]64\) )", code[m.start():]) and "64 *" not in code[m.start():m.start() + 200]:
+            continue
+        e = _group_end(code, m.start())
+        if e < 0 or not code[e:].startswith(" & ") or " >> " not in code[m.start():e]:
+            continue
+        g = code[m.start():e]
+        if "64" not in g:
+            continue
+        for inner in dict.fromkeys((g, re.sub(r"^\(\([su]64\) ", "(", g))):
+            yield f"narrowand@{m.start()}", code[:m.start()] + "(s32) " + inner + code[e:]
+    v = copy_loop(code)
+    if v != code:
+        yield "forloop", v
+    v = early_return(code)
+    if v != code:
+        yield "earlyreturn", v
+    # an extern whose result is never used: declared void, v0 is free after
+    # the call (func_00157668)
+    for m in re.finditer(r"^(?:extern )?(M2C_UNK|s32|u32|void \*|\? \*) (func_[0-9a-f]{8}|\w+)\(([^)]*)\);", code, re.M):
+        fn = m.group(2)
+        uses = re.findall(rf"(^\s*|[^\n]*?)\b{fn}\(", code[m.end():], re.M)
+        if uses and all(re.fullmatch(r"\s*", u) for u in uses):
+            yield f"voidcallee {fn}", code[:m.start()] + f"void {fn}({m.group(3)});" + code[m.end():]
     # `(u32)` on a narrow load before `>>` picks srlv over srav (func_00171a88)
     for m in re.finditer(r"(?<![)\w])((?:M2C_FIELD\([^;]*?, [su](?:8|16) \*, [^)]+\))|\w+\[[^\]]+\]) >> ", code):
         for t in ("(u32) ", "(s32) "):
@@ -487,7 +523,193 @@ def _mutations(code: str):
     # sign/zero-extending load of the wider type (lb for an s8 kept in an
     # int, lwu for a u32 kept in a u64, dsrl on it...)
     yield from widen_loads(code)
+    # an argument the callee takes as 64-bit: the caller keeps one 64-bit
+    # constant for it and a 64-bit operation (func_001dbcd8)
+    for m in re.finditer(r"^(?:extern )?[\w *]+? (\w+)\(([^)]*)\);", code, re.M):
+        params = [p.strip() for p in m.group(2).split(",")]
+        for i, p_ in enumerate(params):
+            if p_ in ("M2C_UNK", "s32", "u32"):
+                np_ = params[:i] + ["s64"] + params[i + 1:]
+                yield (f"wideparam {m.group(1)}#{i}",
+                       code[:m.start(2)] + ", ".join(np_) + code[m.end(2):])
     # value <-> void return
     m = re.search(r"^(s32|u32|M2C_UNK) (\w+\([^)]*\)) \{", code, re.M)
     if m and not re.search(r"\breturn\b[^;]*\w", code[m.end():]):
         yield "ret->void", code[:m.start()] + f"void {m.group(2)} {{" + code[m.end():]
+
+
+# --------------------------------------------------------------------------- compile-error fixes
+
+DEREF_ERRORS = ("invalid type argument of `unary *'", "void value not ignored", "invalid use of void expression",
+                "called object is not a function")
+
+
+def _group_end(s: str, i: int) -> int:
+    """Index just past the parenthesised group starting at s[i] == '('."""
+    depth = 0
+    for k in range(i, len(s)):
+        if s[k] == "(":
+            depth += 1
+        elif s[k] == ")":
+            depth -= 1
+            if depth == 0:
+                return k + 1
+    return -1
+
+
+def _top_terms(expr: str) -> list[str] | None:
+    """Split `a + b + c` at top-level ' + ' (None if there is no such '+')."""
+    terms, depth, last = [], 0, 0
+    k = 0
+    while k < len(expr):
+        c = expr[k]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif depth == 0 and expr.startswith(" + ", k):
+            terms.append(expr[last:k])
+            last = k + 3
+            k += 3
+            continue
+        k += 1
+    terms.append(expr[last:])
+    return terms if len(terms) > 1 else None
+
+
+CAST_PREFIX_RE = re.compile(r"\((?:[\w ]+\*+|[\w ]+ \(\*+\)\([^)]*\))\)\s*")
+
+
+def fix_int_derefs(line: str, int_names: set[str]) -> str:
+    """m2c writes byte-offset accesses through integers as `*(a + b)`,
+    `*(void *)0x2C5968`, `*var` (var an int) and calls through a table as
+    `*(&D_X + i)(args)`. Make them valid C with byte arithmetic."""
+    out, k = [], 0
+    while k < len(line):
+        c = line[k]
+        prev = line[k - 1] if k else " "
+        if c == "*" and k + 1 < len(line) and line[k + 1] not in " =" and prev not in "*" and not (prev.isalnum() or prev in "_)]"):
+            rest = line[k + 1:]
+            if rest.startswith("*"):  # **x: the inner value is an int too
+                out.append("*(M2C_UNK *)" + fix_int_derefs(rest, int_names))
+                break
+            m = re.match(r"\(void \*\)", rest)
+            if m:
+                out.append("*(M2C_UNK *)")
+                k += 1 + m.end()
+                continue
+            if rest.startswith("("):
+                e = _group_end(rest, 0)
+                inner = rest[1:e - 1] if e > 0 else ""
+                call = e > 0 and rest[e:].startswith("(")
+                if e > 0 and re.fullmatch(r"[\w ]+\*+", inner):  # already a cast
+                    out.append(c)
+                    k += 1
+                    continue
+                if e > 0 and not CAST_PREFIX_RE.match(inner):
+                    terms = _top_terms(inner)
+                    if terms or call:
+                        addr = " + ".join(f"(s32) {t}" if re.fullmatch(r"[\w.]+|&\w+", t.strip()) else f"(s32) ({t})"
+                                          for t in (terms or [inner]))
+                        if call:
+                            out.append(f"(*(M2C_UNK (**)())({addr}))")
+                        else:
+                            out.append(f"*(M2C_UNK *)({addr})")
+                        k += 1 + e
+                        continue
+            m = re.match(r"\w+", rest)
+            if m and m.group(0) in int_names:
+                out.append(f"*(M2C_UNK *){m.group(0)}")
+                k += 1 + m.end()
+                continue
+        out.append(c)
+        k += 1
+    else:
+        return "".join(out)
+    return "".join(out)
+
+
+def int_typed_names(code: str) -> set[str]:
+    names = set(re.findall(r"^\s+(?:volatile )?(?:[su](?:8|16|32|64)|M2C_UNK\d*) (\w+);", code, re.M))
+    names |= set(re.findall(r"^extern (?:volatile )?(?:[su](?:8|16|32|64)|M2C_UNK\d*) (\w+);", code, re.M))
+    head = re.search(r"^\S.*\((.*)\)\s*\{\s*$", code, re.M)
+    if head:
+        names |= set(re.findall(r"(?:[su](?:8|16|32|64)|M2C_UNK\d*) (\w+)(?:,|$)", head.group(1)))
+    return names
+
+
+def fix_compile_errors(code: str, errors: list[tuple[int, str]]) -> str:
+    """Rewrite the lines gcc rejected for dereferencing a non-pointer."""
+    lines = code.split("\n")
+    names = int_typed_names(code)
+    # calls with differing argument counts (m2c inferred a prototype from one
+    # call site): declare the callee without a prototype, unless it takes floats
+    for _ln, msg in errors:
+        m = re.search(r"too (?:few|many) arguments to function `(\w+)'", msg)
+        if m:
+            fn = m.group(1)
+            for i, l in enumerate(lines):
+                d = re.match(rf"^((?:extern )?[\w *]+?\b{fn})\(([^)]*)\);(.*)$", l)
+                if d and "f32" not in d.group(2) and "f64" not in d.group(2):
+                    lines[i] = f"{d.group(1)}();{d.group(3)}"
+    bad = {ln for ln, msg in errors if any(e in msg for e in DEREF_ERRORS)}
+    for ln in sorted(bad):
+        if 0 < ln <= len(lines):
+            lines[ln - 1] = fix_int_derefs(lines[ln - 1], names)
+    return "\n".join(lines)
+
+
+def copy_loop(code: str) -> str:
+    """m2c's `i = C; j = C; do { i += k; f(j); j = i; } while (i < N);` (a
+    counter copied into the argument register) -> `for (i = C; i < N; i += k)
+    { f(i); }` (func_00157668)."""
+    m = re.search(r"^(\s+)(\w+) = ([^;\n]+);\n\1(\w+) = \3;\n\1do \{\n((?:\1    [^\n]*\n)+?)\1    \4 = \2;\n\1\} while \(\2 ([<>!=]=?) ([^;\n]+)\);\n",
+                  code, re.M)
+    if not m:
+        m2 = re.search(r"^(\s+)(\w+) = ([^;\n]+);\n\1(\w+) = \3;\n", code, re.M)
+        if not m2:
+            return code
+        return code
+    ind, var, init, cp, body, op, lim = m.groups()
+    inc = re.search(rf"^{ind}    {var} (\+=|-=) ([^;\n]+);\n", body, re.M)
+    if not inc or re.search(rf"\b{cp}\b", body[:inc.start()]) is None and False:
+        return code
+    if not inc:
+        return code
+    rest = body[:inc.start()] + body[inc.end():]
+    rest = re.sub(rf"\b{cp}\b", var, rest)
+    new = (f"{ind}for ({var} = {init}; {var} {op} {lim}; {var} {inc.group(1)} {inc.group(2)}) {{\n"
+           f"{rest}{ind}}}\n")
+    out = code[:m.start()] + new + code[m.end():]
+    out = re.sub(rf"^\s+[\w ]+\b{cp};\n", "", out, count=1, flags=re.M)
+    return out
+
+
+def void_callees(code: str) -> str:
+    """Declare void every extern function whose result the code never uses."""
+    for m in reversed(list(re.finditer(r"^(?:extern )?(M2C_UNK|s32|u32|void \*|\? \*) (\w+)\(([^)]*)\);", code, re.M))):
+        fn = m.group(2)
+        uses = re.findall(rf"(^\s*|[^\n]*?)\b{fn}\(", code[m.end():], re.M)
+        if uses and all(re.fullmatch(r"\s*", u) for u in uses):
+            code = code[:m.start()] + f"void {fn}({m.group(3)});" + code[m.end():]
+    return code
+
+
+def negate(cond: str) -> str:
+    if cond.startswith("!(") and cond.endswith(")") and _group_end(cond, 1) == len(cond):
+        return cond[2:-1]
+    for a, b in (("==", "!="), ("!=", "=="), (">=", "<"), ("<=", ">"), (" < ", " >= "), (" > ", " <= ")):
+        if cond.count(a) == 1 and "&&" not in cond and "||" not in cond and "(" not in cond:
+            return cond.replace(a, b)
+    return f"!({cond})"
+
+
+def early_return(code: str) -> str:
+    """`if (c) { body } return r; }` at the end of a function ->
+    `if (!c) { return r; } body return r; }` (func_001ece70)."""
+    m = re.search(r"^    if \((.*)\) \{\n((?:        [^\n]*\n)+)    \}\n    (return[^;\n]*;)\n\}\s*$", code, re.M)
+    if not m:
+        return code
+    body = re.sub(r"^    ", "", m.group(2), flags=re.M)
+    return (code[:m.start()] + f"    if ({negate(m.group(1))}) {{\n        {m.group(3)}\n    }}\n"
+            + body + f"    {m.group(3)}\n}}\n")

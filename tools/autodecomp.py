@@ -170,13 +170,15 @@ def resolve(sym: str, registry: dict[str, int]) -> int | None:
 
 
 LAST_BYTES: bytes = b""
+LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last failed compile
 
 
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
     """Compile `code`, link .text.<sym> at f.addr, compare with the original.
     The linked bytes are left in LAST_BYTES (for --diff)."""
-    global LAST_BYTES
+    global LAST_BYTES, LAST_ERRORS
     LAST_BYTES = b""
+    LAST_ERRORS = []
     fl = K.flags_for(_cfg, "src/auto/x.c")
     cc = K.TOOLCHAIN_DIR / fl.compiler / "bin" / "ee-gcc"
     src, asm, obj, out = (workdir / n for n in ("c.c", "c.s", "c.o", "c.elf"))
@@ -186,6 +188,9 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections",
                         f"-I{ROOT / 'include'}", "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode:
+        shift = pre.count("\n")
+        LAST_ERRORS = [(int(m.group(1)) - shift, m.group(2)) for m in
+                       re.finditer(r"^[^:\n]*c\.c:(\d+): (.*)$", r.stderr, re.M)]
         return False, "compile error: " + (r.stderr.strip().splitlines() or [""])[-1]
     asm.write_text(K.split_rodata(asm.read_text()))
     r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
@@ -287,11 +292,20 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
     seen = set(cands)
     scored = []
     with tempfile.TemporaryDirectory() as td:
-        for code in cands:
+        k = 0
+        while k < len(cands):
+            code = cands[k]
+            k += 1
             ok, why = build_and_compare(f, sym, code, Path(td))
             if ok:
                 return addr, True, why, code
             scored.append((why_score(why), why, code))
+            if why.startswith("compile error") and LAST_ERRORS:
+                # dereferences of integers m2c wrote: fix the rejected lines and retry
+                fixed = permute.fix_compile_errors(code, LAST_ERRORS)
+                if fixed != code and fixed not in seen and code.count("M2C_UNK *)") < 40:
+                    seen.add(fixed)
+                    cands.append(fixed)
         scored.sort(key=lambda t: t[0])
         best = scored[0]
         if best[0] > OPTS["max_score"]:
