@@ -4,7 +4,7 @@ A matching decompilation of **Kingdom Hearts** (PS2, 2002), with the long-term
 goal of a native PS Vita port.
 
 Target: **Kingdom Hearts Final Mix**, main executable `SLPS_251.98`
-(SHA-256 pinned in `kh1.toml` once confirmed). See
+(SHA-256 `1993a4da…`, pinned in `kh1.toml`). See
 [docs/target-versions.md](docs/target-versions.md) for why.
 
 Progress: see [docs/progress.md](docs/progress.md).

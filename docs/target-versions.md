@@ -46,13 +46,26 @@ Reasons one might pick another version, recorded for completeness:
 Which exact FM serial is used (25198 vs 25197 vs 66123) is decided by the
 disc the user owns; the SHA-256 of that ELF is what gets pinned.
 
-## Pinned target
-
-*Pending: filled in once the user supplies the SHA-256 of their dump.*
+## Pinned target (session 1)
 
 | Field | Value |
 |---|---|
-| Serial | |
-| ELF file name | |
-| SHA-256 | |
-| Size | |
+| Serial | SLPS-25198 (Kingdom Hearts Final Mix, Japan, retail) |
+| ELF file name | `SLPS_251.98` (root of the disc) |
+| SHA-256 | `1993a4daa9e90205ebd00d332517c5dace3d2411ba0a3952008048b98f5a6298` |
+| MD5 | `766aae5f43130c27c791ad5d1858a5cd` |
+| Size | 3,804,356 bytes |
+| File date on disc | 2002-11-09 |
+
+`make check` verifies a local copy against this hash.
+
+### Fan translation patches are not the target
+
+The crazycatz00 KH1FM English patcher (and ISOs built with it) **replaces**
+`SLPS_251.98` with a modified executable (SHA-256
+`53eca29e315f43f6cb63960f32d1737b2ea3f95e3954d6b7027f4054ca64954d`, same size,
+42,663 bytes differ in 167 ranges, starting around `0x0010C9C8`, including
+code). Contributors must extract the ELF from an unpatched disc. The
+patcher's ReadMe gives the hashes of an untouched Final Mix ISO:
+MD5 `A4BD1B1286B31B29188C6084FDCB3A6E`, SHA-1
+`A91038B9CB1784EA05B6A25E165FF8F12172AFD4`.

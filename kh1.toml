@@ -3,12 +3,12 @@
 
 [target]
 # The user's own dump. Never commit it (see .gitignore).
-# PENDING session 1 step 3: set name + sha256 once the dump is supplied.
+# Kingdom Hearts Final Mix, SLPS-25198 (retail, unpatched). Pinned in session 1.
 elf = "SLPS_251.98"
-sha256 = ""
+sha256 = "1993a4daa9e90205ebd00d332517c5dace3d2411ba0a3952008048b98f5a6298"
 # Optional override of the code range scanned for functions. Empty = use the
 # .text section if present, else the executable PT_LOAD segment.
-# Measured on the patched ELF (docs/elf-notes.md); re-check on retail.
+# End of code in the main section (docs/elf-notes.md).
 text_start = "0x00100000"
 text_end = "0x00272c70"
 # Value of $gp if the game uses small data (-G > 0). Empty = not used.
@@ -31,8 +31,14 @@ asflags = "-G0 -march=r5900 -EL"
 
 # Address ranges used to group the progress tracker. Ranges are half-open
 # [start, end). Functions outside every range are reported under "other".
-# Filled in as the ELF gets mapped (game code, SCE libraries, libgcc, ...).
+# Boundaries from call-graph analysis in session 1 (docs/elf-notes.md).
 [[segment]]
-name = "main"
+name = "game"
 start = "0x00100000"
-end = "0x02000000"
+end = "0x0024f2e0"
+
+# Sony libc + SCE SDK 2.5.0 libraries. Not ported; replaced by the Vita layer.
+[[segment]]
+name = "sdk"
+start = "0x0024f2e0"
+end = "0x00272c70"

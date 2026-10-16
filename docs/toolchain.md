@@ -1,10 +1,10 @@
 # Toolchain
 
-Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, locked as the project compiler by the user in session 1. Identified in session 1 on the
-English fan-patched `SLPS_251.98` (see "Confirmed" below). It still has to be
-re-checked against the unpatched retail ELF once that is pinned; the patch
-replaces the ELF, but the probe functions sit in code the translation is
-unlikely to touch.
+Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, locked as the project compiler by the user in session 1 and **confirmed on the
+pinned retail ELF**: all 8 probe functions are byte-identical and objdiff
+reports 100% (they now live in `src/anon/session1_probes.c` and are rebuilt by
+every `make verify`). The fingerprint survey below was first run on the
+fan-patched ELF before the retail one was available.
 
 ## Components
 
@@ -71,12 +71,11 @@ mangled names. Verified against ee-gcc 2.96 output by
 ctors/dtors, `T`/`N` back-references). Operators and templates must be
 written already mangled.
 
-## Confirmed (session 1, on the patched ELF)
+## Confirmed (session 1)
 
-Input: `SLPS_251.98` from the crazycatz00 KH1FM English patcher (July 2025),
-SHA-256 `53eca29e315f43f6cb63960f32d1737b2ea3f95e3954d6b7027f4054ca64954d`.
-**Not the target**: the patcher swaps in a modified ELF. Used only because
-the retail ELF was not available yet.
+Fingerprints were measured on the fan-patched ELF (SHA-256 `53eca29e…`), then
+the probes were re-run on the retail ELF (SHA-256 `1993a4da…`) with the same
+8/8 result.
 
 | Item | Value | Evidence |
 |---|---|---|
@@ -89,11 +88,11 @@ the retail ELF was not available yet.
 | Language | C, probably | Assert-style strings name `.c` files (`ttlib/ui.c`, `ttlib/ui_gauge.c`, `src/decode.c`, `src/sa_task.c`). No gcc2-mangled names found in strings. C++ not ruled out for other modules. |
 | Sibling calls | yes | Tail calls as `ld ra` … `j func` occur; 2.96 at -O2 emits them. |
 
-Probe functions (source in `tests/toolchain_probe/probe.c`): `0x0010ef70`
+Probe functions (source in `src/anon/session1_probes.c`): `0x0010ef70`
 struct field and bit update, `0x00111f70` two global stores, `0x00137418`
 float reciprocal into a struct, `0x001882f8` int/float maths, `0x0018ad70`
 four stores, `0x001d5f80` counter + array append, `0x0023d1e0` float divide by
-constant, `0x002466e8` halve and clamp. Addresses are from the patched ELF.
+constant, `0x002466e8` halve and clamp. Addresses are identical in the retail ELF.
 
 ### Quirk: float literals
 

@@ -1,3 +1,6 @@
+/* Session 1 compiler-identification probes (docs/toolchain.md). Original
+ * source files unknown, so these live in src/anon/ until placed. */
+
 typedef struct {
     char pad0[128];
     int f80;
