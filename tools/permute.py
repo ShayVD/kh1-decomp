@@ -127,7 +127,21 @@ def fix_floats(code: str, cc: str) -> str:
 
 
 def preprocess(code: str, sigs: dict[str, str], cc: str, locals_size: int = 0) -> str:
-    return stack_buffer(fix_floats(fill_params(add_prototypes(code, sigs)), cc), locals_size)
+    return wide_consts(stack_buffer(fix_floats(fill_params(add_prototypes(code, sigs)), cc), locals_size))
+
+
+SHIFT_CONST_RE = re.compile(r"\((-?(?:0x[0-9A-Fa-f]+|\d+)) << (0x[0-9A-Fa-f]+|\d+)\)")
+
+
+def wide_consts(code: str) -> str:
+    """m2c writes 64-bit constants built with `li; dsll32` as `(0x8000 << 0x22)`,
+    an int shift that overflows. Make the shift 64-bit."""
+    def fix(m: re.Match) -> str:
+        n, k = int(m.group(1), 0), int(m.group(2), 0)
+        if k < 32 and -0x80000000 <= (n << k) <= 0xFFFFFFFF:
+            return m.group(0)
+        return f"((s64) {m.group(1)} << {m.group(2)})"
+    return SHIFT_CONST_RE.sub(fix, code)
 
 
 # --------------------------------------------------------------------------- stack locals
@@ -182,6 +196,9 @@ def variants(code: str) -> list[str]:
     v = scale_increments(code)
     if v != code:
         out.append(v)
+    v = rebase_fields(code)
+    if v != code:
+        out.append(v)
     # globals only used as `M2C_FIELD(&D_X, T *, off)` are arrays of T: gcc
     # addresses array elements from one base, not symbol+offset each time
     v = as_arrays(code)
@@ -195,6 +212,23 @@ def variants(code: str) -> list[str]:
             if w != v and w != code:
                 out.append(w)
     return list(dict.fromkeys(out))
+
+
+def rebase_fields(code: str) -> str:
+    """`q = p + 0xA0; ... M2C_FIELD(p, T *, 0xA0)` -> `M2C_FIELD(q, T *, 0)`: one
+    base for a run of stores into a sub-struct (lets store reordering work)."""
+    for m in re.finditer(r"^\s+(\w+) = (\w+) \+ (0x[0-9A-Fa-f]+|\d+);$", code, re.M):
+        new, base, c = m.group(1), m.group(2), int(m.group(3), 0)
+        head, tail = code[: m.end()], code[m.end():]
+
+        def fix(mm: re.Match) -> str:
+            off = int(mm.group(2), 0)
+            if off < c:
+                return mm.group(0)
+            return f"M2C_FIELD({new}, {mm.group(1)} *, 0x{off - c:X})"
+        tail = re.sub(rf"M2C_FIELD\({base}, ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", fix, tail)
+        code = head + tail
+    return code
 
 
 def as_arrays(code: str) -> str:
@@ -261,8 +295,23 @@ def _body_range(lines: list[str]) -> tuple[int, int]:
     return start, len(lines)
 
 
+# Offsets of the original function's stores, in asm order (set per function
+# by autodecomp): a target order for runs of independent stores.
+STORE_HINT: list[int] = []
+
+
 def mutations(code: str):
-    """Yield (description, new code) for single-edit permutations."""
+    """Yield (description, new code) for single-edit permutations, the ones
+    most often right first."""
+    muts = list(_mutations(code))
+    first = ("rebase", "hint", "unvolatile", "volatile")
+    yield from sorted(muts, key=lambda m: next((i for i, p in enumerate(first) if m[0].startswith(p)), len(first)))
+
+
+def _mutations(code: str):
+    v = rebase_fields(code)
+    if v != code:
+        yield "rebase", v
     lines = code.split("\n")
     # volatile globals: gcc then builds the full address (lui/addiu) and
     # accesses offset 0, and keeps the access order
@@ -291,6 +340,29 @@ def mutations(code: str):
                     for dst, src in zip(stores, order):
                         new[dst] = lines[src]
                     yield f"sortstores@{i}", "\n".join(new)
+        # the run's stores in the order the original stores those offsets,
+        # as is and rotated by one (gcc emits the last independent store first)
+        groups: list[list[int]] = []  # consecutive stores through the same base
+        for k in stores:
+            b = STORE_RE.match(lines[k]).group(1)
+            if groups and groups[-1][-1] == k - 1 and STORE_RE.match(lines[groups[-1][0]]).group(1) == b:
+                groups[-1].append(k)
+            else:
+                groups.append([k])
+        for grp in groups if STORE_HINT else []:
+            if len(grp) < 2:
+                continue
+
+            def pos(k):
+                o = int(STORE_RE.match(lines[k]).group(2), 0)
+                return STORE_HINT.index(o) if o in STORE_HINT else len(STORE_HINT)
+            order = sorted(grp, key=pos)
+            for cand in (order[1:] + order[:1], order, order[-1:] + order[:-1]):
+                if cand != grp:
+                    new = list(lines)
+                    for dst, src in zip(grp, cand):
+                        new[dst] = lines[src]
+                    yield f"hintstores@{grp[0]}", "\n".join(new)
         # gcc tends to emit the last of a run of independent stores first, so
         # rotating the whole run (any length) is the most likely fix
         if j - i >= 3:
@@ -351,6 +423,15 @@ def mutations(code: str):
     for m in re.finditer(r"(?<![)\w])((?:M2C_FIELD\([^;]*?, [su](?:8|16) \*, [^)]+\))|\w+\[[^\]]+\]) >> ", code):
         for t in ("(u32) ", "(s32) "):
             yield f"shiftcast@{m.start()}", code[:m.start()] + t + code[m.start():]
+    # a void function that really returns the global array it filled in
+    # (`move v0, base` before the return; no caller uses it, so sigs said void)
+    m = re.search(r"^void (\w+\([^)]*\)) \{", code, re.M)
+    if m:
+        for a in re.finditer(r"^extern (?:volatile )?(\w+) (D_[0-9A-F]{8})\[\];$", code, re.M):
+            body = code[m.end():].rstrip()
+            if body.endswith("}") and re.search(rf"\b{a.group(2)}\[", body):
+                yield (f"retarray {a.group(2)}", code[:m.start()] + f"{a.group(1)} *{m.group(1)} {{"
+                       + body[:-1] + f"    return {a.group(2)};\n}}\n")
     # value <-> void return
     m = re.search(r"^(s32|u32|M2C_UNK) (\w+\([^)]*\)) \{", code, re.M)
     if m and not re.search(r"\breturn\b[^;]*\w", code[m.end():]):

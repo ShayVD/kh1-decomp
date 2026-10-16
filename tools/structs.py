@@ -170,7 +170,7 @@ def header_text(name: str, guard: str, fields: dict[int, str], note: str) -> str
     for o, t in plain.items():
         if o > pos:
             lines.append(f"    u8 pad{pos:03X}[0x{o - pos:X}];")
-        ctype = "void *" if t == "void *" else t + " "
+        ctype = t if t.endswith("*") else t + " "
         if o in unions:
             hi = plain[o + 4]
             lines += ["    union {", f"        {unions[o]} unk{o:03X}_64;", "        struct {",
@@ -190,6 +190,34 @@ def header_text(name: str, guard: str, fields: dict[int, str], note: str) -> str
         lines.append(f"typedef char {name}_check_{o:X}[(sizeof(struct {name}) == 0x{pos:X}) ? 1 : -1];")
     lines += ["", f"#endif /* {guard} */", ""]
     return "\n".join(lines)
+
+
+def follow_self(func: str, so: int, fields: dict, struct: str) -> str:
+    """Rewrite accesses through the pointer field at `so` (an object of the
+    same struct): `M2C_FIELD(arg0, void **, so)` -> `arg0->unkSO`, fields
+    of it, and temps that only hold it."""
+    name = f"unk{so:03X}"
+    func = re.sub(rf"M2C_FIELD\(arg0, (?:void \*|[su]32|M2C_UNK|void \*\*) \*?, 0x{so:X}\)", f"arg0->{name}", func)
+    func = func.replace(f"M2C_FIELD(arg0, void **, 0x{so:X})", f"arg0->{name}")
+    bases = [f"arg0->{name}"]
+    for m in re.finditer(rf"^\s+(\w+) = arg0->{name};$", func, re.M):
+        t = m.group(1)
+        decl = re.search(rf"^(\s+)(?:void \*|s32 |u32 |M2C_UNK ){t};$", func, re.M)
+        if not decl or len(re.findall(rf"^\s+{t} = ", func, re.M)) != 1:
+            continue
+        rest = re.sub(rf"M2C_FIELD\({t}, ", "", func.replace(m.group(0), "").replace(decl.group(0), ""))
+        if re.search(rf"\b{t}\b(?!\s*[,)])", rest):  # used other than as a base or call argument
+            continue
+        func = func.replace(decl.group(0), f"{decl.group(1)}{struct} *{t};")
+        bases.append(t)
+
+    def fld(mm: re.Match) -> str:
+        o = int(mm.group(3), 0)
+        n = field_name(o, mm.group(2), fields)
+        return f"{mm.group(1)}->{n}" if n else mm.group(0)
+    for b in bases:
+        func = re.sub(rf"M2C_FIELD\(({re.escape(b)}), ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", fld, func)
+    return func
 
 
 def cmd_apply(args) -> int:
@@ -221,7 +249,19 @@ def cmd_apply(args) -> int:
     if hdr.exists():  # fields already in use by rewritten code must stay
         for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+)(?:_64)?;", hdr.read_text(), re.M):
             uses[int(off, 16)][t.strip() if t != "void *" else t] += 1000
+    selfs = [int(x, 0) for x in args.self_ptr]
+    for n in conv:  # fields reached through the self pointers count as evidence too
+        for so in selfs:
+            body = cfuncs[n][2]
+            for t, off in re.findall(rf"M2C_FIELD\((?:M2C_FIELD\(arg0, [\w *]+?, 0x{so:X}\)|arg0->unk{so:03X}), ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)", body):
+                uses[int(off, 0)][t] += 1
+    for so in selfs:
+        uses.pop(so, None)
     fields = layout_fields(uses)
+    for so in selfs:
+        fields[so] = f"struct {args.struct} *"
+        SIZEOF[f"struct {args.struct} *"] = 4
+    fields = dict(sorted(fields.items(), key=lambda kv: kv[0] if isinstance(kv[0], int) else kv[0][0]))
     guard = "KH1_" + re.sub(r"\W", "_", hdr.stem.upper()) + "_H"
     note = (f"{args.struct}: recovered from M2C_FIELD accesses in {len(conv)} matched functions (and\n"
             f" * {drafts} unmatched drafts) that pass\n"
@@ -249,6 +289,8 @@ def cmd_apply(args) -> int:
                 n = field_name(o, mm.group(1), fields)
                 return f"arg0->{n}" if n else mm.group(0)
             func = FIELD_RE.sub(fld, func)
+            for so in selfs:
+                func = follow_self(func, so, fields, args.struct)
             text = text[:start] + func + text[end:]
         inc = f'#include "{hdr.name}"'
         if inc not in text:
@@ -265,6 +307,8 @@ def main() -> int:
         ap.add_argument("--struct", required=True)
         ap.add_argument("--header", required=True, help="e.g. include/actor.h")
         ap.add_argument("--write", action="store_true")
+        ap.add_argument("--self-ptr", action="append", default=[],
+                        help="offset of a pointer to another object of the same struct (repeatable)")
         return cmd_apply(ap.parse_args(sys.argv[2:]))
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--group")

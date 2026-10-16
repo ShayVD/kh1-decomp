@@ -274,6 +274,10 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
         return addr, False, "m2c output not usable", ""
     cands = []
     loc = locals_size(f)
+    import struct as st
+    permute.STORE_HINT[:] = [w & 0xFFFF if not w & 0x8000 else (w & 0xFFFF) - 0x10000
+                             for w in st.unpack(f"<{f.size // 4}I", _orig.read(f.addr, f.size))
+                             if w >> 26 in (0x28, 0x29, 0x2B, 0x3F, 0x39, 0x1F) and (w >> 21) & 31 != 29]
     for c in raw:
         p = permute.preprocess(c, _protos, _cc, loc)
         cands += [p, *permute.variants(p)]
@@ -315,7 +319,8 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
                     if ok:
                         return addr, True, f"match (permuted, {evals} tries)", code
                     sc = why_score(why)
-                    if sc < best[0]:
+                    # normalising rewrites are kept unless they make things worse
+                    if sc < best[0] or (desc == "rebase" and sc == best[0]):
                         best = (sc, why, code)
                         improved = True
                         break
