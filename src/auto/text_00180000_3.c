@@ -1,7 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 extern M2C_UNK D_00364130;
 extern void *D_00615E68;
@@ -39,7 +39,7 @@ s32 func_00181318(void) {
     return var_a2;
 }
 
-void func_00184010(s32 arg0, CompClass *arg1) {
+void pppAngleCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -50,7 +50,7 @@ void func_00184010(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
 }
 
-void func_00184100(s32 arg0, CompClass *arg1) {
+void pppAngMoveCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -61,7 +61,7 @@ void func_00184100(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
 }
 
-void func_001841f0(s32 arg0, CompClass *arg1) {
+void pppAngAcceleCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -72,7 +72,7 @@ void func_001841f0(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
 }
 
-void func_00185b38(s32 arg0, s32 arg1, s32 arg2) {
+void pppMatrixLocFrame(s32 arg0, s32 arg1, s32 arg2) {
     void *temp_s0;
 
     temp_s0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;
@@ -82,7 +82,7 @@ void func_00185b38(s32 arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(D_00615E68, f32 *, 0x48) = (f32) M2C_FIELD(temp_s0, f32 *, 8);
 }
 
-void func_001866b0(s32 arg0, CompClass *arg1) {
+void pppDrawShapeCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -93,7 +93,7 @@ void func_001866b0(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
 
-void func_0018a8f8(s32 arg0, CompClass *arg1) {
+void pppAngMoveLoopCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -104,7 +104,7 @@ void func_0018a8f8(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
 }
 
-void func_0018c610(s32 arg0, CompClass *arg1) {
+void pppKeThTpCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
 
     temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -112,7 +112,7 @@ void func_0018c610(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xC) = 0;
 }
 
-void func_0018ea88(s32 arg0, CompClass *arg1) {
+void pppKeMdlTfdCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -123,7 +123,7 @@ void func_0018ea88(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
 
-void func_0018ef78(s32 arg0, CompClass *arg1) {
+void pppKeMdlTfd2Con(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 

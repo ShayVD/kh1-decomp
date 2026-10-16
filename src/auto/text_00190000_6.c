@@ -1,7 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 M2C_UNK func_00183b20(s32, s32);
 M2C_UNK func_0019e3f0(s32);
@@ -34,15 +34,15 @@ void func_00192f78(s32 arg0) {
     func_001a60e8((s32) sp, 0);
 }
 
-void func_00193178(s32 arg0, CompClass *arg1) {
+void pppKeLnsArndTCon(s32 arg0, PppEntry *arg1) {
     func_001a62a8(arg0 + arg1->offsets[0] + 0xA0);
 }
 
-void func_001931a0(void) {
+void pppKeLnsArndTDes(void) {
 
 }
 
-void func_001933c0(s32 arg0, s32 arg1) {
+void pppKeLnsClmTCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0;
@@ -50,23 +50,23 @@ void func_001933c0(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, s8 *, 8) = 4;
 }
 
-void func_00193690(s32 arg0, CompClass *arg1) {
+void pppKeLnsCrnTCon(s32 arg0, PppEntry *arg1) {
     func_001a6538(arg0 + arg1->offsets[0] + 0xA0);
 }
 
-void func_001936b8(void) {
+void pppKeLnsCrnTDes(void) {
 
 }
 
-void func_00193910(s32 arg0, CompClass *arg1) {
+void pppKeLnsFlsTCon(s32 arg0, PppEntry *arg1) {
     func_001a67a0(arg0 + arg1->offsets[0] + 0xA0);
 }
 
-void func_00193938(void) {
+void pppKeLnsFlsTDes(void) {
 
 }
 
-void func_00194360(void *arg0) {
+void pppKeParMatRFrame(void *arg0) {
     s32 sp[20];    s32 temp_a0;
     s32 temp_s0;
     s32 temp_s1;
@@ -82,11 +82,11 @@ void func_00194360(void *arg0) {
     func_002675a8(D_00615E68 + 0x40, &M2C_FIELD(sp, M2C_UNK *, 0x40));
 }
 
-void func_001985a8(s32 arg0, CompClass *arg1) {
+void pppRyjDrawMatrixWorldCon(s32 arg0, PppEntry *arg1) {
     func_002675b8(arg0 + arg1->offsets[1] + 0xA0, &D_00615E70);
 }
 
-void func_00198648(s32 arg0, CompClass *arg1) {
+void pppRyjDrawMatrixWorldFrontCon(s32 arg0, PppEntry *arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + arg1->offsets[1];
@@ -94,7 +94,7 @@ void func_00198648(s32 arg0, CompClass *arg1) {
     func_002675a8(temp_s0 + 0xB0, &D_003701F0);
 }
 
-void func_00198768(s32 arg0, CompClass *arg1) {
+void pppRyjDrawMatrixWorldNoRotCon(s32 arg0, PppEntry *arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + arg1->offsets[1];
@@ -102,7 +102,7 @@ void func_00198768(s32 arg0, CompClass *arg1) {
     func_002675a8(temp_s0 + 0xB0, &D_003701F0);
 }
 
-void func_0019d8a8(s32 arg0, CompClass *arg1) {
+void pppRyjMegaBirthDes(s32 arg0, PppEntry *arg1) {
     s32 temp_a1;
     s32 temp_a1_2;
     s32 temp_v0;
@@ -126,7 +126,7 @@ void func_0019d8a8(s32 arg0, CompClass *arg1) {
     }
 }
 
-void func_0019ee68(s32 arg0, s32 arg1, void *arg2) {
+void pppRyjMegaPlaceDraw(s32 arg0, s32 arg1, void *arg2) {
     s32 temp_s0;
 
     temp_s0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;

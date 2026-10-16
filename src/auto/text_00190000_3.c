@@ -6,7 +6,7 @@ M2C_UNK memset(s32, M2C_UNK, s32);
 extern s32 D_00615E64;
 s32 func_0017f958(s32, s32);
 
-void func_0019e2f0(s32 arg0, s32 arg1, void *arg2) {
+void pppRyjMegaPlaceFrame(s32 arg0, s32 arg1, void *arg2) {
     s32 temp_a1;
     s32 temp_v0;
     s32 temp_v0_2;

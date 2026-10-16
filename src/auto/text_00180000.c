@@ -1,7 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 M2C_UNK func_00182368();
 M2C_UNK func_00182ec0(s32);
@@ -41,51 +41,51 @@ void func_00183840(s32 arg0) {
     func_00182ec0(arg0);
 }
 
-void func_00183b98(void) {
+void pppKeThLzFrame(void) {
 
 }
 
-void func_00183ba0(void) {
+void pppKeThLzCon(void) {
 
 }
 
-void func_00183ba8(void) {
+void pppKeThLzDes(void) {
 
 }
 
-void func_00183bb0(void) {
+void pppKeThCpFrame(void) {
 
 }
 
-void func_00183bb8(void) {
+void pppKeThCpCon(void) {
 
 }
 
-void func_00183bc0(void) {
+void pppKeThCpDes(void) {
 
 }
 
-void func_00183bc8(void) {
+void pppKeThCpSftFrame(void) {
 
 }
 
-void func_00183bd0(void) {
+void pppKeAccSpdSvFrame(void) {
 
 }
 
-void func_00183bd8(void) {
+void pppKeAccSpdSvCon(void) {
 
 }
 
-void func_00184c88(void) {
+void pppSegmentApFrame(void) {
 
 }
 
-void func_00184c90(void) {
+void pppFaceApFrame(void) {
 
 }
 
-void func_001854f0(s32 arg0, CompClass *arg1) {
+void pppVtMimeDes(s32 arg0, PppEntry *arg1) {
     s32 temp_v0;
     void *temp_s0;
 
@@ -97,11 +97,11 @@ void func_001854f0(s32 arg0, CompClass *arg1) {
     }
 }
 
-void func_00186980(s32 arg0, CompClass *arg1) {
+void pppPointApCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA1) = 0;
 }
 
-void func_00186a98(s32 arg0, CompClass *arg1) {
+void pppPointRApCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA1) = 0;
 }
 
@@ -197,35 +197,35 @@ s8 func_0018a230(s16 arg0, f32 fparg0) {
     return (s8) (s32) ((f32) arg0 * fparg0);
 }
 
-void func_0018a7b0(void) {
+void pppDrawShapeFieldDraw(void) {
 
 }
 
-void func_0018a7b8(void) {
+void pppDrawShapeFieldCon(void) {
 
 }
 
-void func_0018a7c0(void) {
+void pppDrawShapeFieldDes(void) {
 
 }
 
-void func_0018a7c8(void) {
+void pppDrawMdlSeaDraw(void) {
 
 }
 
-void func_0018a7d0(void) {
+void pppDrawMdlSeaCon(void) {
 
 }
 
-void func_0018a7d8(void) {
+void pppDrawMdlSeaDes(void) {
 
 }
 
-void func_0018ac40(s32 arg0, CompClass *arg1) {
+void pppPointLoopCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
 }
 
-void func_0018ac58(s32 arg0, CompClass *arg1) {
+void pppPointLoopReset(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
     void *temp_v0;
@@ -238,11 +238,11 @@ void func_0018ac58(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, f32 *, 8) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 8) - M2C_FIELD(temp_v0, f32 *, 0xC));
 }
 
-void func_0018ad88(s32 arg0, CompClass *arg1) {
+void pppAngleLoopCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
 }
 
-void func_0018ada0(s32 arg0, CompClass *arg1) {
+void pppAngleLoopReset(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
     void *temp_a3;
@@ -255,11 +255,11 @@ void func_0018ada0(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 8) - M2C_FIELD(temp_a3, s32 *, 0xC));
 }
 
-void func_0018aed0(s32 arg0, CompClass *arg1) {
+void pppScaleLoopCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
 }
 
-void func_0018aee8(s32 arg0, CompClass *arg1) {
+void pppScaleLoopReset(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
     void *temp_v0;
@@ -272,31 +272,31 @@ void func_0018aee8(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, f32 *, 8) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 8) - M2C_FIELD(temp_v0, f32 *, 0xC));
 }
 
-void func_0018b000(void) {
+void pppDrawMatrixLoopFrame(void) {
     func_00267328(D_00615E68 + 0x50, &D_00616080, D_00615E68 + 0x10);
 }
 
-void func_0018b060(s32 arg0, CompClass *arg1) {
+void pppDrawMdlLoopCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[2]), s32 *, 0xA0) = 0;
 }
 
-void func_0018b0a0(void) {
+void pppDrawMdlLoopDes(void) {
 
 }
 
-void func_0018b4a0(s32 arg0, CompClass *arg1) {
+void pppDrawMdlLoopZCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[2]), s32 *, 0xA0) = 0;
 }
 
-void func_0018b4e0(void) {
+void pppDrawMdlLoopZDes(void) {
 
 }
 
-void func_0018c520(void) {
+void pppKeThDes(void) {
 
 }
 
-void func_0018c630(s32 arg0, CompClass *arg1) {
+void pppKeThTp2Con(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
 
     temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -304,42 +304,42 @@ void func_0018c630(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0x1C) = 0;
 }
 
-void func_0018ccd8(s32 arg0, CompClass *arg1) {
+void pppKeThHitBornCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA0) = 0;
 }
 
-void func_0018d378(s32 arg0, CompClass *arg1) {
+void pppKeBornRndCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
 }
 
-void func_0018d5a8(s32 arg0, CompClass *arg1) {
+void pppKeBornRnd2Con(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
 }
 
-void func_0018d7c0(s32 arg0, CompClass *arg1) {
+void pppKeBornRnd3Con(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
 }
 
-void func_0018dcf0(s32 arg0, CompClass *arg1) {
+void pppKeBornRnd4Con(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
 }
 
-void func_0018e590(s32 arg0, CompClass *arg1) {
+void pppKeBornPtCmplCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xA0) = 0;
 }
 
-void func_0018fc98(void) {
+void pppKeMdlBmpDraw(void) {
 
 }
 
-void func_0018fca0(void) {
+void pppKeMdlBmpCon(void) {
 
 }
 
-void func_0018fca8(void) {
+void pppKeMdlBmpReset(void) {
 
 }
 
-void func_0018fcb0(void) {
+void pppKeAcmSolidFn18(void) {
 
 }

@@ -11,11 +11,11 @@ extern M2C_UNK D_00616040;
 extern M2C_UNK D_00616080;
 extern s32 D_00615E68;
 
-void func_00185ee8(void) {
+void pppDrawMatrixFrame(void) {
     func_00267328(D_00615E68 + 0x50, &D_00616080, D_00615E68 + 0x10);
 }
 
-void func_00185f18(void) {
+void pppDrawMatrixFrontFrame(void) {
     s32 temp_a0;
 
     func_00267560(D_00615E68 + 0x50, D_00615E68 + 0x10, M2C_FIELD(&D_003701F0, f32 *, 0));

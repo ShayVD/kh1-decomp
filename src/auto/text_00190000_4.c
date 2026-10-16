@@ -1,13 +1,13 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 M2C_UNK func_001a5ca0(void *);
 extern u8 D_00372708;
 extern void *D_00615E60;
 
-void func_00192ee8(s32 arg0, CompClass *arg1) {
+void pppKeLnsLpTCon(s32 arg0, PppEntry *arg1) {
     void *temp_s0;
 
     temp_s0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -21,7 +21,7 @@ void func_00192ee8(s32 arg0, CompClass *arg1) {
     D_00372708 += 1;
 }
 
-void func_0019ba78(s32 arg0, CompClass *arg1) {
+void pppRyjDrawShipolyBoneCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 

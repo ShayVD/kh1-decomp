@@ -1,12 +1,12 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK func_0018a7e0();
-M2C_UNK func_0018a8f8();
-M2C_UNK func_0018aa10();
+M2C_UNK pppMoveLoopCon();
+M2C_UNK pppAngMoveLoopCon();
+M2C_UNK pppSclMoveLoopCon();
 M2C_UNK func_001a8920(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0024edf0(void *, s32);
 M2C_UNK func_002672f8(s32, s32, s32);
@@ -62,125 +62,125 @@ void func_00182e78(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_00183a00(arg0, arg2, arg3);
 }
 
-void func_00185c50(void *arg0) {
+void pppParMatrixFrame(void *arg0) {
     s32 temp_a0;
 
     temp_a0 = D_00615E68 + 0x40;
     func_002672f8(temp_a0, M2C_FIELD(arg0, s32 *, 4) + 0x10, temp_a0);
 }
 
-void func_001860a8(void) {
+void pppDrawMatrixWoodFn14(void) {
 
 }
 
-void func_00186158(s32 arg0, s32 arg1, void *arg2) {
+void pppSMatrixFrame(s32 arg0, s32 arg1, void *arg2) {
     D_00616214 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;
 }
 
-void func_0018a808(void) {
-    func_0018a7e0();
+void pppMoveLoopReset(void) {
+    pppMoveLoopCon();
 }
 
-void func_0018a918(void) {
-    func_0018a8f8();
+void pppAngMoveLoopReset(void) {
+    pppAngMoveLoopCon();
 }
 
-void func_0018aa38(void) {
-    func_0018aa10();
+void pppSclMoveLoopReset(void) {
+    pppSclMoveLoopCon();
 }
 
-void func_0018c658(s32 arg0, CompClass *arg1) {
+void pppKeThResCon(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 3);
 }
 
-void func_0018c688(s32 arg0, CompClass *arg1) {
+void pppKeThRes8Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 8);
 }
 
-void func_0018c6b8(s32 arg0, CompClass *arg1) {
+void pppKeThRes8x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 8);
 }
 
-void func_0018c6e8(s32 arg0, CompClass *arg1) {
+void pppKeThRes8x128Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 0x80, 8);
 }
 
-void func_0018c718(s32 arg0, CompClass *arg1) {
+void pppKeThRes16Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x10);
 }
 
-void func_0018c748(s32 arg0, CompClass *arg1) {
+void pppKeThRes16x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x10);
 }
 
-void func_0018c778(s32 arg0, CompClass *arg1) {
+void pppKeThRes16x64Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 0x40, 0x10);
 }
 
-void func_0018c7a8(s32 arg0, CompClass *arg1) {
+void pppKeThRes24Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x18);
 }
 
-void func_0018c7d8(s32 arg0, CompClass *arg1) {
+void pppKeThRes24x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x18);
 }
 
-void func_0018c808(s32 arg0, CompClass *arg1) {
+void pppKeThRes32Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x20);
 }
 
-void func_0018c838(s32 arg0, CompClass *arg1) {
+void pppKeThRes32x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x20);
 }
 
-void func_0018c868(s32 arg0, CompClass *arg1) {
+void pppKeThRes32x32Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 0x20, 0x20);
 }
 
-void func_0018c898(s32 arg0, CompClass *arg1) {
+void pppKeThRes40Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x28);
 }
 
-void func_0018c8c8(s32 arg0, CompClass *arg1) {
+void pppKeThRes40x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x28);
 }
 
-void func_0018c8f8(s32 arg0, CompClass *arg1) {
+void pppKeThRes48Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x30);
 }
 
-void func_0018c928(s32 arg0, CompClass *arg1) {
+void pppKeThRes48x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x30);
 }
 
-void func_0018c958(s32 arg0, CompClass *arg1) {
+void pppKeThRes64Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x40);
 }
 
-void func_0018c988(s32 arg0, CompClass *arg1) {
+void pppKeThRes64x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x40);
 }
 
-void func_0018c9b8(s32 arg0, CompClass *arg1) {
+void pppKeThRes64x16Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 0x10, 0x40);
 }
 
-void func_0018c9e8(s32 arg0, CompClass *arg1) {
+void pppKeThRes128Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0x80);
 }
 
-void func_0018ca18(s32 arg0, CompClass *arg1) {
+void pppKeThRes128x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0x80);
 }
 
-void func_0018ca48(s32 arg0, CompClass *arg1) {
+void pppKeThRes128x8Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 8, 0x80);
 }
 
-void func_0018ca78(s32 arg0, CompClass *arg1) {
+void pppKeThRes255Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 1, 0xFF);
 }
 
-void func_0018caa8(s32 arg0, CompClass *arg1) {
+void pppKeThRes255x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0xFF);
 }

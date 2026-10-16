@@ -1,7 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 s32 *func_001803b8();
 
@@ -37,7 +37,7 @@ void func_00180e80(void *arg0) {
     M2C_FIELD(arg0, s8 *, 0xA) = 0;
 }
 
-void func_001845a0(s32 arg0, CompClass *arg1) {
+void pppColorCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -49,7 +49,7 @@ void func_001845a0(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
 
-void func_001846b8(s32 arg0, CompClass *arg1) {
+void pppColMoveCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -61,7 +61,7 @@ void func_001846b8(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
 
-void func_001847d0(s32 arg0, CompClass *arg1) {
+void pppColAcceleCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 

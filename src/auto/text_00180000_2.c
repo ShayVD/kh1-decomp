@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_001826a8(M2C_UNK *);
+M2C_UNK pppDesObject(M2C_UNK *);
 M2C_UNK func_00183b20(s32, s32);
 extern s32 D_00615E64;
 
@@ -15,7 +15,7 @@ void func_00182788(void *arg0) {
     if (var_a0 != NULL) {
         do {
             temp_s0 = *var_a0;
-            func_001826a8(var_a0);
+            pppDesObject(var_a0);
             var_a0 = temp_s0;
         } while (var_a0 != NULL);
     }

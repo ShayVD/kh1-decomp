@@ -221,6 +221,10 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
             tgt = ((start + i * 4 + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
             if start <= tgt < end:
                 starts.add(tgt)
+        if op == 2:  # j to a frame-allocating prologue: a function entered by a tail call
+            tgt = ((start + i * 4 + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+            if start <= tgt < end and is_prologue(word_at(tgt)):
+                starts.add(tgt)
         if w == JR_RA:
             a = start + i * 4 + 8
             while word_at(a) == 0:
