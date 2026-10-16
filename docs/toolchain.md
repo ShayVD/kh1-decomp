@@ -101,3 +101,21 @@ float. `0x0023d1e0` divides by `0x3F490FD9` (≈0.785398, a truncated π/4);
 writing `0.785398f` or the correctly-rounded `0.78539806f` gives different
 bits, while `0.7853981f` gives the original.
 When a float constant mismatches by one ULP, try neighbouring literals.
+
+## Codegen patterns learned in session 3 (ee-gcc 2.96 -O2 -G0)
+
+Each of these was the cause of many near misses; tools/permute.py now tries
+them automatically (docs/workflow.md).
+
+- **`volatile` globals**: `lui; addiu; lw/sw 0(reg)` (full address, then
+  offset 0) instead of `lui; lw %lo(sym)(reg)`, and the store is not moved.
+  Many KH1 globals are declared `volatile`.
+- **Independent stores are emitted with the last one first**: source
+  `a=…; b=…; c=…;` comes out as `c, a, b`. To match an asm order, rotate the
+  run left by one.
+- **`if (x) return 1; return 0;`** keeps an `sltu v0,zero,v0`;
+  `return x != 0;` is folded away when `x` is already 0/1 (`x & 1`).
+- **Arguments 5-8** go in registers 8-11 (`a4`-`a7` in EABI names,
+  `t0`-`t3` in objdump's o32 names). Float arguments use `f12`-`f19`
+  independently of the integer ones, so int/float order in a prototype does
+  not change the code.

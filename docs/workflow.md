@@ -1,4 +1,4 @@
-# Decompiling: tools and workflow (session 2)
+# Decompiling: tools and workflow (sessions 2-3)
 
 ## Picking functions: `make rank`
 
@@ -64,6 +64,78 @@ more (of 3,087 tried). Of the 2,779 failures: 1,996 compile but mismatch
 output gcc 2.96 rejects (mostly pointer/int type clashes, easy to fix by
 hand), 212 had m2c errors, 7 need rodata. `out/autodecomp.tsv`-style reports
 are not committed; rerun `batch` (without `--write`) to regenerate one.
+
+## Session 3: what autodecomp does now
+
+Per function: m2c drafts (4 option variants, each with and without
+`--context out/sigs.h`), fixed up by `tools/permute.py`, then a greedy
+search over single edits of the closest draft. A draft's distance is the
+number of words not matched in order against the original
+(`score` in the report; 0 = byte-identical). Defaults: search only drafts
+with score ≤ 16 (`--max-score`), 60 compiles per function (`--budget`), up
+to 3 moves to an equally close draft when stuck.
+
+Fixes applied to every draft (all were systematic causes of mismatches):
+
+- **EABI register names.** The asm handed to m2c used objdump's o32 names,
+  so `$t0-$t3` (registers 8-11, arguments 5-8 on the EE) looked like
+  temporaries. `function_asm(..., eabi=True)` renames 8-15 to
+  `a4-a7`/`t0-t3`, as m2c's mipsee target expects.
+- **Constants are not symbols.** `lui`/`ori` pairs, and `lui`/`addiu` pairs
+  outside EE RAM (`0x00100000`-`0x02000000`), were printed as `%hi/%lo(D_…)`
+  and m2c wrote `&D_F7FFFFFF` for a mask or float bits. Now they stay
+  numbers.
+- **Prototypes.** `tools/sigs.py` guesses every function's argument count
+  (EE ABI: ints in a0-a3, t0-t3; floats in f12-f19, numbered separately)
+  from the registers it reads before writing, with callees' arguments
+  counted at call sites, to a fixpoint; return type from whether any caller
+  reads v0/f0 after the call. Written to `out/sigs.tsv` and `out/sigs.h`
+  (m2c context). Missing declarations are added from it.
+- **Dropped parameters.** m2c omits unused leading parameters
+  (`f(void *arg1)`); they are put back so the others stay in their registers.
+- **Float literals.** ee-gcc 2.96's decimal conversion is off by one ULP for
+  some spellings. Each literal is respelled with one that ee-gcc turns into
+  the original bits (found by compiling candidate spellings once).
+- **Byte-counted pointer arithmetic.** m2c means bytes in `*(&D_X + n)` and
+  in `p += n` on typed pointers; variants rewrite these.
+
+Mutations tried by the search, in order: `volatile` on one extern (gcc then
+emits `lui/addiu` + offset 0 and keeps access order; many globals in KH1 are
+volatile), rotating a run of ≥3 independent statements by one (gcc emits
+the *last* of a run of independent stores first, so the source order is the
+asm order rotated), all orders of 3-4 adjacent statements, swapping two
+adjacent statements or declarations, signedness of one type, a concrete
+type for one `M2C_UNK`, dropping one cast, inlining a temp used once,
+`return a != b;` → `if (a != b) return 1; return 0;` (keeps the `sltu`),
+value → void return.
+
+Speed: m2c runs inside the worker process (`run_m2c`), so the prototype
+context is parsed once; a pass over ~2,900 functions takes about 8 minutes
+on 4 cores. The closest failing draft of every function is saved to
+`out/autodecomp/fail/XXXXXXXX.c` (first line: the result) for hand work:
+
+```sh
+python3 tools/autodecomp.py try func_00123456 --diff            # search, then show original vs ours
+python3 tools/autodecomp.py try func_00123456 --file my.c --diff  # test a hand-written candidate
+```
+
+Session 3 results: 1,254 → see docs/progress.md. Remaining failures
+are mostly register allocation and scheduling differences, struct copies
+through the stack (m2c writes `sp`), and functions m2c cannot structure.
+
+## Structs: `tools/structs.py`
+
+Groups functions that pass their own first argument unchanged to another
+function's first argument (from the machine code; callees reached from
+more than two 64 KiB regions, and SDK code, are treated as generic helpers
+and do not join groups). `tools/structs.py` lists the biggest groups and the
+offsets/types their matched code accesses through `arg0`;
+`tools/structs.py apply --seed func_X --struct Name --header include/name.h --write`
+writes a struct (most common type per offset, overlaps dropped, unmatched
+drafts in `out/autodecomp/fail/` count as evidence) and rewrites the
+group's matched functions whose `arg0` is only used as a field base, a call
+argument or compared with NULL. Accesses with a different type keep their
+`M2C_FIELD`. `make` must stay byte-identical. See docs/structs.md.
 
 ## Rodata (switch tables, strings, float/double constants)
 

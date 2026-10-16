@@ -137,6 +137,7 @@ def variants(code: str) -> list[str]:
     out = []
     # m2c means byte offsets for arithmetic on unknown-typed pointers.
     v = re.sub(r"\*\(&(D_[0-9A-F]{8}) \+ ", r"*(M2C_UNK *)((s8 *)&\1 + ", code)
+    v = re.sub(r"(?<!\*\()&(D_[0-9A-F]{8}) ([+-]) ", r"(s8 *)&\1 \2 ", v)
     v = re.sub(r"\bM2C_UNK \*(\w+);", r"s8 *\1;", v)
     if v != code:
         out.append(v)
@@ -167,10 +168,11 @@ def scale_increments(code: str) -> str:
 
 # --------------------------------------------------------------------------- mutations
 
+STORE_RE = re.compile(r"^\s+M2C_FIELD\(([^,]+), [^,]+, (0x[0-9A-Fa-f]+|\d+)\) = [^;]+;$")
 TYPE_RE = re.compile(r"\b([su])(8|16|32|64)\b")
 UNK_RE = re.compile(r"\bM2C_UNK\b")
 CAST_RE = re.compile(r"\((?:[su](?:8|16|32|64)|f32|M2C_UNK\d*|void \*|[su](?:8|16|32) \*)\) ")
-STMT_RE = re.compile(r"^(\s+)(?!(?:if|else|do|while|for|return|switch|case|default|goto|break|continue)\b)[^\n{}]*;\s*$")
+STMT_RE = re.compile(r"^(\s+)(?!\s)(?!(?:if|else|do|while|for|return|switch|case|default|goto|break|continue)\b)[^\n{}]*;\s*$")
 DECL_LINE_RE = re.compile(r"^(\s+)(?:const |volatile |static |register )*(?:[su](?:8|16|32|64)|f32|f64|M2C_UNK\d*|void|char|int)\b[\s*]+\w+(\[\w*\])?;(\s*/\*.*\*/)?$")
 
 
@@ -202,6 +204,25 @@ def mutations(code: str):
         j = i
         while j < b1 and _plain_stmt(lines[j]) and _indent(lines[j]) == _indent(lines[i]):
             j += 1
+        # stores written in field order (the way people write initialisers)
+        stores = [k for k in range(i, j) if STORE_RE.match(lines[k])]
+        if len(stores) >= 2:
+            def key(k):
+                m = STORE_RE.match(lines[k])
+                return (m.group(1), int(m.group(2), 0))
+            for rev in (False, True):
+                order = sorted(stores, key=key, reverse=rev)
+                if order != stores:
+                    new = list(lines)
+                    for dst, src in zip(stores, order):
+                        new[dst] = lines[src]
+                    yield f"sortstores@{i}", "\n".join(new)
+        # gcc tends to emit the last of a run of independent stores first, so
+        # rotating the whole run (any length) is the most likely fix
+        if j - i >= 3:
+            run = lines[i:j]
+            for rot in (run[1:] + run[:1], run[-1:] + run[:-1]):
+                yield f"rot@{i}", "\n".join(lines[:i] + rot + lines[j:])
         for size in (3, 4):
             for w in range(i, j - size + 1):
                 for perm in itertools.permutations(range(w, w + size)):

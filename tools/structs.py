@@ -180,8 +180,11 @@ def cmd_apply(args) -> int:
                 drafts += 1
                 for t, off in FIELD_RE.findall(p.read_text()):
                     uses[int(off, 0)][t] += 1
-    fields = layout_fields(uses)
     hdr = K.ROOT / args.header
+    if hdr.exists():  # fields already in use by rewritten code must stay
+        for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+);", hdr.read_text(), re.M):
+            uses[int(off, 16)][t.strip() if t != "void *" else t] += 1000
+    fields = layout_fields(uses)
     guard = "KH1_" + re.sub(r"\W", "_", hdr.stem.upper()) + "_H"
     note = (f"{args.struct}: recovered from M2C_FIELD accesses in {len(conv)} matched functions (and\n"
             f" * {drafts} unmatched drafts) that pass\n"
