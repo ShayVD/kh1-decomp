@@ -1,0 +1,10 @@
+# Compilers fetched by tools/setup_toolchain.sh from decomp.me's compiler releases
+# (https://github.com/decompme/compilers). Linux i386 builds only; Windows-only
+# builds (ee-gcc2.95.x, mwcps2) are not listed because they need wine/wibo.
+# id	archive	sha256
+ee-gcc2.96	ee-gcc2.96.tar.xz	0590d2ca9da8f5903889d66761220d14b47a8d14ba987ca53db84a1650a1fd0a
+ee-gcc2.9-990721	ee-gcc2.9-990721.tar.xz	ad2ea68afff2be25d21a1d51a75e8a0eea8f259018e6580622355cd01b95676b
+ee-gcc2.9-991111a	ee-gcc2.9-991111a.tar.xz	f07d1f38afa847197fb816237dbce64e79b2d37b738cb93fa4df3ac7aa1d16f3
+ee-gcc2.9-991111-01	ee-gcc2.9-991111-01.tar.xz	ed684fd98f89d36b0121caab311052089103e3b36241fcef4338cc9ea41c75b8
+ee-gcc3.2-030926	ee-gcc3.2-030926.tar.gz	6b92b61e40f80835b165d14fadd57d4046dbee82195599f791626180fe79b8e9
+ee-gcc3.2-040921	ee-gcc3.2-040921.tar.xz	8c60ca7482523190e999524a7e4de2379dcf7ffee543c1b5663bfdf6a80ebf0f

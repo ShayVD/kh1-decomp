@@ -1,0 +1,53 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tools:
+    # Runs on every PR, no game data needed.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse game data
+        run: tools/check_no_assets.sh
+      - name: Install dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu
+      - name: Toolchain
+        run: make toolchain
+      - name: Self-tests
+        run: make test
+
+  verify:
+    # Byte-for-byte check against the real ELF. Needs a repository secret
+    # KH1_ELF_URL pointing at a private copy of the maintainer's own dump;
+    # skipped when the secret is absent (forks, first setup).
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push'
+    env:
+      KH1_ELF_URL: ${{ secrets.KH1_ELF_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        if: env.KH1_ELF_URL != ''
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu
+      - name: Fetch ELF and verify
+        if: env.KH1_ELF_URL != ''
+        run: |
+          curl -fsSL -o "$(python3 tools/kh1tool.py config target.elf)" "$KH1_ELF_URL"
+          make toolchain
+          make check
+          make verify
+          make report
+          make progress

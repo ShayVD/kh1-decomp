@@ -1,0 +1,37 @@
+# kh1-decomp project configuration. Read by tools/kh1tool.py.
+# Everything target-specific lives here so the tools stay generic.
+
+[target]
+# The user's own dump. Never commit it (see .gitignore).
+# PENDING session 1 step 3: set name + sha256 once the dump is supplied.
+elf = "SLPS_251.98"
+sha256 = ""
+# Optional override of the code range scanned for functions. Empty = use the
+# .text section if present, else the executable PT_LOAD segment.
+text_start = ""
+text_end = ""
+# Value of $gp if the game uses small data (-G > 0). Empty = not used.
+gp = ""
+
+[toolchain]
+# A compiler id from tools/toolchains.tsv (decomp.me naming).
+# PENDING step 3: confirmed by compiling test functions against the ELF.
+compiler = "ee-gcc2.96"
+cflags = "-O2 -G0"
+cxxflags = "-O2 -G0 -fno-exceptions -fno-rtti"
+asflags = "-G0 -march=r5900 -EL"
+
+# Per-directory flag overrides, longest prefix wins, e.g. if the SCE libraries
+# in the ELF were built with different flags than game code.
+# [[toolchain.override]]
+# path = "src/sce/"
+# compiler = "ee-gcc2.96"
+# cflags = "-O2 -G8"
+
+# Address ranges used to group the progress tracker. Ranges are half-open
+# [start, end). Functions outside every range are reported under "other".
+# Filled in as the ELF gets mapped (game code, SCE libraries, libgcc, ...).
+[[segment]]
+name = "main"
+start = "0x00100000"
+end = "0x02000000"

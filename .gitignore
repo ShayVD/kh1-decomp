@@ -1,0 +1,41 @@
+# ---- Game data: NEVER commit any of this. ----
+# Retail executables (the ELF on the disc is named after its serial).
+/SLPS_*
+/SLPM_*
+/SLUS_*
+/SCUS_*
+/SCES_*
+/SLES_*
+/SCAJ_*
+/SLAJ_*
+/SCPS_*
+*.elf
+*.ELF
+# Disc images and dumped archives / extracted assets.
+*.iso
+*.ISO
+*.bin
+*.BIN
+*.cue
+*.img
+*.IMG
+*.idx
+*.IDX
+*.mdf
+*.nrg
+*.chd
+*.cso
+/dump/
+/extracted/
+/assets/
+/data/
+
+# ---- Build outputs and fetched tools ----
+/out/
+/tools/toolchain/
+objdiff.json
+__pycache__/
+*.pyc
+*.o
+*.tmp
+*.log

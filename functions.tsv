@@ -1,0 +1,7 @@
+# Symbol registry: symbol<TAB>address (hex, no 0x).
+# - Plain names for C symbols and data: Heal	00123450
+# - C++ signatures are mangled with gcc 2.9x rules (tools/mangle_gcc2.py):
+#     YS::PROGRESS::CheckFlag(int)	00181500
+# - Every function you decompile, and every symbol decompiled code references
+#   that is not a func_XXXXXXXX / D_XXXXXXXX placeholder, needs a line here.
+# Keep sorted by address.
