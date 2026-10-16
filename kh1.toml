@@ -51,3 +51,11 @@ end = "0x0024f2e0"
 name = "sdk"
 start = "0x0024f2e0"
 end = "0x00272c70"
+
+# libgcc2.c's objects (the 64-bit helpers, one file per L_ macro) were
+# assembled without delay-slot filling, like newlib: `jal; nop` with the
+# argument move before the call. fp-bit/dp-bit were not (docs/sdk.md).
+[[toolchain.override]]
+path = "src/sdk/libgcc/_"
+cflags = "-O2 -G0"
+no_fill = true
