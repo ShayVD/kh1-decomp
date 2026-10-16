@@ -711,3 +711,17 @@ EIntr	0025f380	# hand: ei, returns whether SR.EIE was set
 DIntr	0025f338	# hand: disables interrupts (di until SR.EIE clears), returns whether EIE was set
 __errno	00265180	# hand: returns &_impure_ptr->_errno; _sbrk stores ENOMEM (12) through it
 _sbrk	00258860	# hand: _sbrk_r's callee; moves the heap pointer D_0046AE48 up to EndOfHeap(), ENOMEM past it
+_SyncDCache	002589b0	# hand: index-walks the D-cache, cache 0x14 (writeback-invalidate) on lines in [a0, a1]
+SyncDCache	00258a58	# hand: _SyncDCache on 64-byte-aligned bounds with interrupts off
+iSyncDCache	00258ad8	# hand: _SyncDCache on 64-byte-aligned bounds (no DIntr)
+_InvalidDCache	00258af0	# hand: as _SyncDCache with cache 0x16 (invalidate)
+InvalidDCache	00258b98	# hand: _InvalidDCache with interrupts off
+iInvalidDCache	00258c18	# hand: _InvalidDCache (no DIntr)
+DisableIntc	00258c40	# hand: _DisableIntc syscall with interrupts off, sync
+EnableIntc	00258ca8	# hand: _EnableIntc syscall with interrupts off, sync
+DisableDmac	00258d10	# hand: _DisableDmac syscall with interrupts off, sync
+EnableDmac	00258d78	# hand: _EnableDmac syscall with interrupts off, sync
+iEnableIntc	00258de0	# hand: _iEnableIntc syscall + sync
+iDisableIntc	00258e00	# hand: _iDisableIntc syscall + sync
+iEnableDmac	00258e20	# hand: _iEnableDmac syscall + sync
+iDisableDmac	00258e40	# hand: _iDisableDmac syscall + sync
