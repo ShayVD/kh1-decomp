@@ -30,10 +30,13 @@ asflags = "-G0 -march=r5900 -EL"
 # cflags = "-O2 -G8"
 
 # newlib (libm) is built with -fno-builtin, like newlib's own Makefiles:
-# fabsf stays a call (__kernel_tanf) instead of becoming abs.s.
+# fabsf stays a call (__kernel_tanf) instead of becoming abs.s. Its
+# assembler never filled delay slots itself, only gcc did (no_fill,
+# docs/toolchain.md).
 [[toolchain.override]]
 path = "src/sdk/libm/"
 cflags = "-O2 -G0 -fno-builtin"
+no_fill = true
 
 # Address ranges used to group the progress tracker. Ranges are half-open
 # [start, end). Functions outside every range are reported under "other".
