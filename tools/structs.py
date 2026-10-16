@@ -10,6 +10,8 @@ code reads and writes through arg0 and with what types.
 
   tools/structs.py                  # top groups, with field tables
   tools/structs.py --group func_X   # the group containing func_X
+  tools/structs.py apply --seed func_X --struct Actor --header include/actor.h [--write]
+      # write the struct and rewrite the group's matched functions to use it
 """
 from __future__ import annotations
 
@@ -25,7 +27,7 @@ import mips  # noqa: E402
 import sigs as S  # noqa: E402
 
 FIELD_RE = re.compile(r"M2C_FIELD\(arg0, ([\w ]+?) \*, (0x[0-9A-Fa-f]+|\d+)\)")
-NEAR = 0x4000
+SDK_START = 0x0024F2E0
 DEF_RE = re.compile(r"^\S[^\n;]*?\b(\w+)\(([^)]*)\) \{$", re.M)
 
 
@@ -86,10 +88,14 @@ def groups(cfg) -> dict[int, list[int]]:
             parent[x] = parent[parent[x]]
             x = parent[x]
         return x
-    for a, b in passthrough_edges(cfg):
-        # Only callees close by (likely the same source file): generic helpers
-        # far away take many types and would merge everything.
-        if abs(a - b) < NEAR:
+    edges = passthrough_edges(cfg)
+    regions = defaultdict(set)
+    for a, b in edges:
+        regions[b].add(a >> 16)
+    for a, b in edges:
+        # Generic helpers (called with a0 passed through from all over the
+        # game, or SDK code) take many types and would merge everything.
+        if b < SDK_START and len(regions[b]) <= 2:
             parent[find(a)] = find(b)
     out = defaultdict(list)
     for x in list(parent):
@@ -97,7 +103,128 @@ def groups(cfg) -> dict[int, list[int]]:
     return out
 
 
+SIZEOF = {"s8": 1, "u8": 1, "s16": 2, "u16": 2, "s32": 4, "u32": 4, "f32": 4, "s64": 8, "u64": 8,
+          "void *": 4, "M2C_UNK": 4}
+PARAM_RE = r"(?:void \*|[su]32 |M2C_UNK )arg0\b"
+
+
+def convertible(params: str, body: str) -> bool:
+    """arg0 is a 4-byte parameter used only as a field base, a call
+    argument or compared with NULL."""
+    if not re.match(rf"^{PARAM_RE}", params):
+        return False
+    rest = re.sub(r"M2C_FIELD\(arg0, ", "", body)
+    rest = re.sub(r"(?<=[(,] )arg0(?=[,)])|(?<=\()arg0(?=[,)])|arg0 [!=]= (NULL|0)\b", "", rest)
+    return not re.search(r"\barg0\b", rest)
+
+
+def layout_fields(uses: dict[int, Counter]) -> dict[int, str]:
+    """offset -> the most common access type, dropping overlaps (the more
+    common offset wins). Accesses with another type keep their M2C_FIELD."""
+    single = {o: c.most_common(1)[0][0] for o, c in uses.items() if c.most_common(1)[0][0] in SIZEOF}
+    by_count = sorted(single, key=lambda o: -sum(uses[o].values()))
+    taken: list[tuple[int, int]] = []
+    out = {}
+    for o in by_count:
+        size = SIZEOF[single[o]]
+        if o % size:
+            continue
+        if any(o < e and b < o + size for b, e in taken):
+            continue
+        taken.append((o, o + size))
+        out[o] = single[o]
+    return dict(sorted(out.items()))
+
+
+def header_text(name: str, guard: str, fields: dict[int, str], note: str) -> str:
+    lines = [f"/* {note} */", f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"', "",
+             f"typedef struct {name} {{"]
+    pos = 0
+    for o, t in fields.items():
+        if o > pos:
+            lines.append(f"    u8 pad{pos:03X}[0x{o - pos:X}];")
+        ctype = "void *" if t == "void *" else t + " "
+        lines.append(f"    {ctype}unk{o:03X};")
+        pos = o + SIZEOF[t]
+    lines.append(f"}} {name}; /* size unknown: at least 0x{pos:X} */")
+    lines.append("")
+    for o in list(fields)[-1:]:
+        lines.append(f"/* layout check: the last known field must sit at 0x{o:X} */")
+        lines.append(f"typedef char {name}_check_{o:X}[(sizeof(struct {name}) == 0x{pos:X}) ? 1 : -1];")
+    lines += ["", f"#endif /* {guard} */", ""]
+    return "\n".join(lines)
+
+
+def cmd_apply(args) -> int:
+    cfg = K.load_config()
+    names = {a: s for s, a in K.load_registry().items()}
+    cfuncs = c_functions()
+    seed = K.find_func(args.seed).addr
+    group = next(g for g in groups(cfg).values() if seed in g)
+    members = [names.get(x, f"func_{x:08x}") for x in sorted(group)]
+    conv = [n for n in members if n in cfuncs and convertible(cfuncs[n][1], cfuncs[n][2])
+            and FIELD_RE.search(cfuncs[n][2])]
+    uses: dict[int, Counter] = defaultdict(Counter)
+    for n in conv:
+        for t, off in FIELD_RE.findall(cfuncs[n][2]):
+            uses[int(off, 0)][t] += 1
+    # Unmatched members' closest drafts (autodecomp batch writes them) add
+    # evidence for the layout; only matched code is rewritten.
+    fail_dir = K.OUT / "autodecomp" / "fail"
+    drafts = 0
+    for x in sorted(group):
+        p = fail_dir / f"{x:08x}.c"
+        if names.get(x, f"func_{x:08x}") not in cfuncs and p.exists():
+            m = DEF_RE.search(p.read_text())
+            if m and re.match(rf"^{PARAM_RE}", m.group(2)):
+                drafts += 1
+                for t, off in FIELD_RE.findall(p.read_text()):
+                    uses[int(off, 0)][t] += 1
+    fields = layout_fields(uses)
+    hdr = K.ROOT / args.header
+    guard = "KH1_" + re.sub(r"\W", "_", hdr.stem.upper()) + "_H"
+    note = (f"{args.struct}: recovered from M2C_FIELD accesses in {len(conv)} matched functions (and\n"
+            f" * {drafts} unmatched drafts) that pass\n"
+            f" * the same first argument to each other (tools/structs.py apply --seed {args.seed}).\n"
+            " * Field names are offsets until their meaning is known.")
+    print(f"group {len(group)} functions, {len(conv)} convertible, {drafts} unmatched drafts, {len(fields)} fields")
+    if not args.write:
+        print(header_text(args.struct, guard, fields, note))
+        return 0
+    hdr.write_text(header_text(args.struct, guard, fields, note))
+    files: dict[Path, list[str]] = defaultdict(list)
+    for n in conv:
+        files[cfuncs[n][0]].append(n)
+    for path, fns in files.items():
+        text = path.read_text()
+        for n in fns:
+            m = re.search(rf"^(\S[^\n;]*?\b{n}\()({PARAM_RE})", text, re.M)
+            start = m.start()
+            end = text.find("\n}\n", start)
+            func = text[start:end]
+            func = re.sub(rf"^(\S[^\n;]*?\b{n}\(){PARAM_RE}", rf"\g<1>{args.struct} *arg0", func, count=1, flags=re.M)
+
+            def fld(mm: re.Match) -> str:
+                o = int(mm.group(2), 0)
+                return f"arg0->unk{o:03X}" if fields.get(o) == mm.group(1) else mm.group(0)
+            func = FIELD_RE.sub(fld, func)
+            text = text[:start] + func + text[end:]
+        inc = f'#include "{hdr.name}"'
+        if inc not in text:
+            text = text.replace('#include "m2c.h"\n', f'#include "m2c.h"\n{inc}\n', 1)
+        path.write_text(text)
+        print(f"rewrote {len(fns)} functions in {path.relative_to(K.ROOT)}")
+    return 0
+
+
 def main() -> int:
+    if sys.argv[1:2] == ["apply"]:
+        ap = argparse.ArgumentParser(prog="structs.py apply")
+        ap.add_argument("--seed", required=True, help="a function in the group")
+        ap.add_argument("--struct", required=True)
+        ap.add_argument("--header", required=True, help="e.g. include/actor.h")
+        ap.add_argument("--write", action="store_true")
+        return cmd_apply(ap.parse_args(sys.argv[2:]))
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--group")
     ap.add_argument("--top", type=int, default=5)
