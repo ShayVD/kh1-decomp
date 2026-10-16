@@ -52,6 +52,13 @@ typedef union {
         (i) = gh_u.parts.msw;           \
     } while (0)
 
+#define GET_LOW_WORD(i, d)              \
+    do {                                \
+        ieee_double_shape_type gl_u;    \
+        gl_u.value = (d);               \
+        (i) = gl_u.parts.lsw;           \
+    } while (0)
+
 #define SET_HIGH_WORD(d, v)             \
     do {                                \
         ieee_double_shape_type sh_u;    \
@@ -86,5 +93,9 @@ float __kernel_tanf(float, float, int);
 double __ieee754_sqrt(double);
 double __ieee754_asin(double);
 double __ieee754_atan2(double, double);
+__int32_t __ieee754_rem_pio2(double, double *);
+double __kernel_sin(double, double, int);
+double __kernel_cos(double, double);
+int __kernel_rem_pio2(double *, double *, int, int, int, const __int32_t *);
 
 #endif /* KH1_SDK_FDLIBM_H */

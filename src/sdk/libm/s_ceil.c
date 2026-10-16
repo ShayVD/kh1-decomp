@@ -3,10 +3,7 @@
  * operands to __adddf3 the other way round, which `x + huge` reproduces. */
 #include "fdlibm.h"
 
-/* huge (1.0e300) is a static const in the original's .data, at the address
- * below; a local static would not be placed there. */
-extern const double D_00493380;
-#define huge D_00493380
+static const double huge = 1.0e300;
 
 double ceil(double x) {
     __int32_t i0, i1, j0;
