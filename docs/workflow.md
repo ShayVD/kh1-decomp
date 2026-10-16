@@ -122,8 +122,8 @@ python3 tools/autodecomp.py try func_00123456 --file my.c --diff  # test a hand-
 Session 3 results: 1,254 → 1,793 matched (+539: 518 from the passes over
 everything ≤100 instructions, 2 by hand in `src/hand/`, the rest from
 re-passes after each new rule). The last pass over the 2,886 functions
-still unmatched at ≤100 instructions: 2,072 compile but differ (about 150
-by a score of 1-3, the hand-work queue in `out/autodecomp/fail/`), 580
+still unmatched at ≤100 instructions: 2,072 compile but differ (
+94 by a score of 1-3, the hand-work queue in `out/autodecomp/fail/`), 580
 drafts gcc rejects (mostly `sp` used as a value: struct copies through the
 stack, which m2c cannot express; and pointer/int clashes), 189 unusable m2c
 output, 19 need rodata, 10 call libgcc helpers or `MULT_HI` m2c cannot

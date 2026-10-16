@@ -25,7 +25,7 @@ Where we stopped (end of session 3, 2026-10-16):
 - Structs: `tools/structs.py` groups functions by a0 passed through calls;
   `Actor` (include/actor.h, 90 fields by offset, docs/structs.md) is used
   by 23 matched functions.
-- SDK: 149 names in functions.tsv; session 3 added newlib libc (memcpy,
+- SDK: 152 names in functions.tsv; session 3 added newlib libc (memcpy,
   strlen, printf, malloc, rand…), scePrintf, libpad2/libvib/libpc/libipu
   basics (docs/sdk.md lists what is still unnamed).
 - Progress history now has a session column: `make progress-update SESSION=4`.
@@ -33,7 +33,7 @@ Where we stopped (end of session 3, 2026-10-16):
 Session 4 (phase 2 continues):
 1. Rerun `tools/autodecomp.py batch --max-insns 100` (no --write) to
    regenerate the fail drafts, then hand-match the score 1-3 queue
-   (~150). Turn every pattern that repeats into a permute.py rule (the
+   (94 functions). Turn every pattern that repeats into a permute.py rule (the
    open ones are listed at the end of "Session 3" in docs/workflow.md:
    dropped store offsets on struct-returning calls, lost delay-slot
    returns after calls, 64-bit narrowing casts).
