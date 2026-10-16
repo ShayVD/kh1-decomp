@@ -113,6 +113,19 @@ def run_m2c(argv: list[str]) -> tuple[int, str]:
                 cache[key] = orig(contexts, arch, use_cache=use_cache)
             return cache[key]
         mm.build_typemap = build_typemap
+        # m2c treats the bottom of the frame as outgoing stack arguments (o32
+        # style) when its address is taken with `move rX, $sp`, and turns
+        # stores there into extra call arguments. EE gcc passes 8 int + 8
+        # float arguments in registers; KH1 has no stack-passed arguments,
+        # so the bottom of the frame is always locals.
+        import m2c.translate as mt
+        orig_stack = mt.get_stack_info
+
+        def get_stack_info(*a, **k):
+            info = orig_stack(*a, **k)
+            info.subroutine_arg_top = 0
+            return info
+        mt.get_stack_info = get_stack_info
         _m2c_main = mm
     out, err = io.StringIO(), io.StringIO()
     try:
@@ -229,6 +242,24 @@ def why_score(why: str) -> float:
 _orig = None
 
 
+def locals_size(f: K.Func) -> int:
+    """Bytes of locals at the bottom of the frame: below the lowest
+    callee-saved register slot (or the whole frame if nothing is saved)."""
+    import struct as st
+    words = st.unpack(f"<{f.size // 4}I", _orig.read(f.addr, f.size))
+    if not words or words[0] >> 16 != 0x27BD or not (words[0] & 0x8000):
+        return 0
+    frame = 0x10000 - (words[0] & 0xFFFF)
+    saves = []
+    for w in words[1:16]:
+        op, base, rt = w >> 26, (w >> 21) & 31, (w >> 16) & 31
+        # sd/sq/sw of $16-$23, $30, $31; swc1 of $f20-$f30
+        if base == 29 and ((op in (0x3F, 0x1F, 0x2B) and (16 <= rt <= 23 or rt in (30, 31)))
+                           or (op == 0x39 and rt >= 20)):
+            saves.append(w & 0xFFFF)
+    return min(saves) if saves else frame
+
+
 def try_function(addr: int) -> tuple[int, bool, str, str]:
     """m2c drafts, fixed up, then a greedy search over single-edit
     permutations of the closest one (tools/permute.py)."""
@@ -242,49 +273,64 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
     if not raw:
         return addr, False, "m2c output not usable", ""
     cands = []
+    loc = locals_size(f)
     for c in raw:
-        p = permute.preprocess(c, _protos, _cc)
+        p = permute.preprocess(c, _protos, _cc, loc)
         cands += [p, *permute.variants(p)]
     cands = list(dict.fromkeys(cands))
     seen = set(cands)
-    best = (float("inf"), "", cands[0])
+    scored = []
     with tempfile.TemporaryDirectory() as td:
         for code in cands:
             ok, why = build_and_compare(f, sym, code, Path(td))
             if ok:
                 return addr, True, why, code
-            sc = why_score(why)
-            if sc < best[0] or best[1] == "":
-                best = (sc, why, code)
-        evals = 0
+            scored.append((why_score(why), why, code))
+        scored.sort(key=lambda t: t[0])
+        best = scored[0]
         if best[0] > OPTS["max_score"]:
             return addr, False, best[1], best[2]
-        sideways = 3  # moves to an equally close draft when stuck (e.g. two swaps needed)
-        while best[0] != float("inf") and evals < OPTS["budget"]:
-            improved = False
-            level = None
-            for desc, code in permute.mutations(best[2]):
-                if code in seen:
-                    continue
-                seen.add(code)
-                evals += 1
-                ok, why = build_and_compare(f, sym, code, Path(td))
-                if ok:
-                    return addr, True, f"match (permuted, {evals} tries)", code
-                sc = why_score(why)
-                if sc < best[0]:
-                    best = (sc, why, code)
-                    improved = True
-                    break
-                if sc == best[0] and level is None:
-                    level = (sc, why, code)
-                if evals >= OPTS["budget"]:
-                    break
-            if not improved:
-                if level is None or sideways == 0:
-                    break
-                sideways -= 1
-                best = level
+        # Search from the closest draft, then (with what is left of the
+        # budget) from the closest one that differs in which globals are
+        # volatile: some fixes need that and a reordering together.
+        def volatiles(c):
+            return tuple(re.findall(r"^extern volatile .*$", c, re.M))
+        starts = [best] + [next((t for t in scored[1:] if volatiles(t[2]) != volatiles(best[2])
+                                 and t[0] <= OPTS["max_score"]), None)]
+        evals = 0
+        overall = best
+        for k, start_ in enumerate(s_ for s_ in starts if s_ is not None):
+            best = start_
+            limit = OPTS["budget"] if k else OPTS["budget"] * 2 // 3
+            sideways = 3  # moves to an equally close draft when stuck (e.g. two swaps needed)
+            while best[0] != float("inf") and evals < limit:
+                improved = False
+                level = None
+                for desc, code in permute.mutations(best[2]):
+                    if code in seen:
+                        continue
+                    seen.add(code)
+                    evals += 1
+                    ok, why = build_and_compare(f, sym, code, Path(td))
+                    if ok:
+                        return addr, True, f"match (permuted, {evals} tries)", code
+                    sc = why_score(why)
+                    if sc < best[0]:
+                        best = (sc, why, code)
+                        improved = True
+                        break
+                    if sc == best[0] and level is None:
+                        level = (sc, why, code)
+                    if evals >= limit:
+                        break
+                if not improved:
+                    if level is None or sideways == 0:
+                        break
+                    sideways -= 1
+                    best = level
+            if best[0] < overall[0]:
+                overall = best
+        best = overall
     return addr, False, best[1], best[2]
 
 

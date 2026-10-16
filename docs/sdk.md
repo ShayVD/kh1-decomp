@@ -39,10 +39,17 @@ reached by tail calls); `make layout` now splits them out (92 new entries).
 | `0x00257E00`-`0x002585E0` | libkernl | syscall stub table |
 | `0x00258F08` | libkernl/deci2 | TTY over DECI2 (`"TTY: packet size larger than expect"`) |
 | `0x0025F228`-`0x00260B00` | libkernl | `rom0:UDNL` reboot, TLB setup, `## internel error in libkernl.a!` |
+| `0x00261060`-`0x00262CB0` | libgcc2 | `__muldi3`, 64-bit divide family, `__fixunsdfdi`/`__fixunssfdi` |
+| `0x00262CB0`-`0x00263748`, `0x00264C38`-`0x002650E0` | libgcc fp-bit | soft-float double (the EE FPU is single precision only) |
+| `0x002636A8`-`0x00264C38` | libgcc frame.c (probably) | ULEB128/SLEB128 readers, sema-locked object list, `malloc`/`free`/`abort`; unnamed |
 | `0x00265558`-`0x00266380` | libgraph | `rom0:ROMVER`, `sceGs*` |
 | `0x00266AB0`-`0x00266B20` | libdma | `"libdma: sync timeout"` (two sync functions) |
 | `0x00268098`-`0x00268988` | libdbc | `sceDbc*` |
-| `0x002695F8`-`0x0026AB38` | libcdvd | `sceCd*` |
+| `0x00268AA0`-`0x002692F4` | libpad2 | `scePad2*` |
+| `0x002692F8`-`0x00269464` | libvib | `sceVib*` |
+| `0x002695F8`-`0x0026AD5C` | libcdvd | `sceCd*` |
+| `0x0026AD60`-`0x00270AD4` | libm (newlib, fdlibm) | double and float math; no banner, no strings |
+| `0x00270AD8`-`0x00270B5C` | libpc | `scePcStart`/`scePcStop` |
 | `0x00270B60` | libmc | `sceMcInit` |
 
 ### Session 3 additions (behaviour, not strings)
@@ -69,17 +76,64 @@ unmatched. Named by what they do and how they are called:
 | `scePcStart`, `scePcStop` | `0x00270AD8`, `0x00270B40` | libpc: `mtps`/`mtpc` under `eret`; clear PCCR.CTE |
 | `sceIpuInit`, `sceIpuSync` | `0x002727A0`, `0x002726D0` | libipu: IPU reset, BCLR, SETIQ/SETVQ/SETTH; mode 0 waits on IPU_CTRL.BUSY, mode 1 polls |
 
-Not named yet: the other libpad2 functions (`0x00268CE8`, `0x00268DC0`,
-`0x00268EB0` take (socket, buf), (socket, buf), (socket): probably
-`scePad2GetButtonProfile`, `scePad2Read`, `scePad2GetState`, but the order
-is not proven), libipu's DMA helpers (`0x002723C8`-`0x00272580`,
-`0x00272580` restarts IPU DMA from a saved env, likely
-`sceIpuRestartDMA`), the newlib internals (`_malloc_r` `0x0024F7E8`,
-`_free_r` `0x002557D8`, `_vfprintf_r` `0x002524A0`, `_dtoa_r`
-`0x002541B8`, `__sfvwrite` `0x00255C40`), and the large block
-`0x0026AD60`-`0x00270B40` between libcdvd and libmc (no banner; calls into
-`0x00262F50`-`0x002634E0`), which still needs identifying.
-`func_00268a78` is called in libdbc's bind retry loop (a delay?).
+### Session 4 additions
+
+**The block `0x0026AD60`-`0x00270AD4` is newlib's libm** (fdlibm code), not
+an SCE library: no strings, no RPC binds, no syscalls; just IEEE-754 bit
+tests on the high word and fdlibm's well-known constants (pi/4 high word
+`0x3FE921FB`, float pi/4 `0x3F490FDA`, `1e30` = `0x7149F2C9`, `0.975` =
+`0x3F799999`). The double functions do their arithmetic through libgcc's
+soft-float routines; the float ones use the FPU. The float code uses
+newlib's no-denormal macros (`y` below `0x00800000` counts as zero in
+`fmodf`). Objects are in archive order (`s_*`, `sf_*`, `w_*`, `e_*`, `ef_*`,
+`k_*`, `kf_*`, then `s_floor`...): the 20-byte `w_*` wrappers only tail-jump
+to `__ieee754_*`, which is how the public names are tied to the internals.
+Named: the public functions `atan ceil cos fabs nan sin cosf sinf tanf asin
+atan2 sqrt acosf asinf atan2f fmodf powf sqrtf floor scalbn atanf fabsf
+floorf scalbnf copysign copysignf`, and the internals `__ieee754_*` (atan2,
+rem_pio2, sqrt, acosf, asinf, atan2f, fmodf, powf, rem_pio2f, sqrtf) and
+`__kernel_*` (cos, sin, rem_pio2, cosf, sinf, tanf, rem_pio2f). Evidence per
+function is in functions.tsv. `__ieee754_asin` (`0x0026BA08`) used to be merged
+into the `sqrtf` wrapper; the session 4 layout fix (tail calls end functions)
+split it.
+
+**`0x00262F50`-`0x002634E0` (what libm calls) is gcc's soft-float `fp-bit`**
+in libgcc. Every routine unpacks its operands with `__unpack_d`
+(`0x00264E48`) into a {class, sign, exp, frac} struct and repacks with
+`__pack_d` (`0x00264D70`). `__adddf3`/`__subdf3` share the static add-parts
+routine at `0x00262CF0`; `__muldf3` uses `__muldi3`; `__cmpdf2` is the only
+compare linked and returns `__fpcmp_parts_d` unchecked (game code branches
+on it with `bltz`/`blez`). Also named: `__floatsidf`, `__fixdfsi`,
+`__fixunsdfsi`, `__extendsfdf2` (112 game callers), `__truncdfsf2` (61),
+`__make_dp`, `__make_fp`, `__pack_f`, `__unpack_f`, and from libgcc2
+`__floatdidf`, `__fixunsdfdi`, `__fixunssfdi` and the divide family
+`__divdi3`/`__moddi3`/`__udivdi3`/`__umoddi3` (signed ones negate their
+operands; the `mod` ones keep a remainder slot on the stack). The game code
+uses doubles (`(int)ceil((double)(a*b))` at `0x001E03F0`), so these are
+real dependencies of decompiled code, not dead weight.
+
+**libpad2** (from the one game caller, the pad loop in `func_0011f668`, and the
+16 x 0x330-byte socket table at `0x00670040`):
+
+| Function | Address | Evidence (short) |
+|---|---|---|
+| `scePad2GetState` | `0x00268EB0` | (socket); returns byte 0 of the newer DMA buffer, or asks the device via `sceDbcReceiveData`; the game continues only when it is 1 (`"STABLE"` in `scePad2StateIntToStr`'s table: NOLINK, STABLE, EXECCMD, ERROR) |
+| `scePad2GetButtonProfile` | `0x00268DC0` | (socket, profile); `sceDbcReceiveData` into the caller's 4-byte buffer, then rebuilds the slot's 40-entry button table from the bitmap; called right after GetState |
+| `scePad2Read` | `0x00268CE8` | (socket, buf); copies the newer of the two 128-byte buffers (counter at `+124`), returns the length byte; the game reads digital buttons from `buf[0..1]`, active low |
+
+Not named yet: `0x00268FF0` (socket, data, button) reads one button out of
+the read data using the 40-entry table (bit or 8-bit analog): probably
+`scePad2GetButtonInfo`, but nothing calls it. libpad2's statics:
+`0x002690D0` caches `sceDbcGetDepNumber`, `0x00269128` picks the newer
+buffer, `0x00269190` detects a buffer change, `0x00269210` parses a
+profile bitmap. libgcc `frame.c` (probably, `0x002636A8`-`0x00264C38`),
+libipu's DMA helpers (`0x002723C8`-`0x00272580`, `0x00272580` restarts IPU
+DMA from a saved env, likely `sceIpuRestartDMA`), the newlib internals
+(`_malloc_r` `0x0024F7E8`, `_free_r` `0x002557D8`, `_vfprintf_r`
+`0x002524A0`, `_dtoa_r` `0x002541B8`, `__sfvwrite` `0x00255C40`).
+`func_00268a78` is called in libdbc's bind retry loop: it only adjusts the
+stack and returns (an empty varargs function, probably a disabled debug
+print).
 
 ## Porting note
 

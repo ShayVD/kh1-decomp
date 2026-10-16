@@ -105,7 +105,7 @@ def groups(cfg) -> dict[int, list[int]]:
 
 SIZEOF = {"s8": 1, "u8": 1, "s16": 2, "u16": 2, "s32": 4, "u32": 4, "f32": 4, "s64": 8, "u64": 8,
           "void *": 4, "M2C_UNK": 4}
-PARAM_RE = r"(?:void \*|[su]32 |M2C_UNK )arg0\b"
+PARAM_RE = r"(?:void \*|[su]32 |M2C_UNK |[A-Z]\w* \*)arg0\b"  # untyped, or already a struct
 
 
 def convertible(params: str, body: str) -> bool:
@@ -113,18 +113,27 @@ def convertible(params: str, body: str) -> bool:
     argument or compared with NULL."""
     if not re.match(rf"^{PARAM_RE}", params):
         return False
-    rest = re.sub(r"M2C_FIELD\(arg0, ", "", body)
+    rest = re.sub(r"M2C_FIELD\(arg0, |\barg0->", "", body)
     rest = re.sub(r"(?<=[(,] )arg0(?=[,)])|(?<=\()arg0(?=[,)])|arg0 [!=]= (NULL|0)\b", "", rest)
     return not re.search(r"\barg0\b", rest)
 
 
 def layout_fields(uses: dict[int, Counter]) -> dict[int, str]:
     """offset -> the most common access type, dropping overlaps (the more
-    common offset wins). Accesses with another type keep their M2C_FIELD."""
+    common offset wins). Accesses with another type keep their M2C_FIELD.
+    A 64-bit word also accessed as two 32-bit halves becomes a union: the
+    64-bit type is then stored under the key `(offset, 64)`."""
     single = {o: c.most_common(1)[0][0] for o, c in uses.items() if c.most_common(1)[0][0] in SIZEOF}
+    # 64-bit accesses at an offset whose words are also used as 32-bit fields
+    wide = {}
+    for o, c in uses.items():
+        t64 = next((t for t, _n in c.most_common() if t in ("s64", "u64")), None)
+        if t64 and o % 8 == 0 and (SIZEOF.get(single.get(o)) == 4 or SIZEOF.get(single.get(o + 4)) == 4):
+            wide[o] = t64
+            single.pop(o, None) if SIZEOF.get(single.get(o)) == 8 else None
     by_count = sorted(single, key=lambda o: -sum(uses[o].values()))
     taken: list[tuple[int, int]] = []
-    out = {}
+    out: dict = {}
     for o in by_count:
         size = SIZEOF[single[o]]
         if o % size:
@@ -133,22 +142,50 @@ def layout_fields(uses: dict[int, Counter]) -> dict[int, str]:
             continue
         taken.append((o, o + size))
         out[o] = single[o]
-    return dict(sorted(out.items()))
+    for o, t in wide.items():
+        # both halves must be plain words (or free) for the union
+        if all(out.get(h, "s32") in ("s32", "u32", "f32", "void *") for h in (o, o + 4)) and \
+                not any(b < o + 8 and o < e and b not in (o, o + 4) for b, e in taken):
+            out[(o, 64)] = t
+            for h in (o, o + 4):
+                out.setdefault(h, "s32")
+    return dict(sorted(out.items(), key=lambda kv: kv[0] if isinstance(kv[0], int) else kv[0][0]))
+
+
+def field_name(o: int, t: str, fields: dict) -> str | None:
+    """The struct member that an access of type `t` at offset `o` maps to."""
+    if fields.get(o) == t:
+        return f"unk{o:03X}"
+    if t in ("s64", "u64") and fields.get((o, 64)) == t:
+        return f"unk{o:03X}_64"
+    return None
 
 
 def header_text(name: str, guard: str, fields: dict[int, str], note: str) -> str:
     lines = [f"/* {note} */", f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"', "",
              f"typedef struct {name} {{"]
     pos = 0
-    for o, t in fields.items():
+    unions = {k[0]: t for k, t in fields.items() if isinstance(k, tuple)}
+    plain = {o: t for o, t in fields.items() if isinstance(o, int)}
+    for o, t in plain.items():
         if o > pos:
             lines.append(f"    u8 pad{pos:03X}[0x{o - pos:X}];")
         ctype = "void *" if t == "void *" else t + " "
+        if o in unions:
+            hi = plain[o + 4]
+            lines += ["    union {", f"        {unions[o]} unk{o:03X}_64;", "        struct {",
+                      f"            {ctype}unk{o:03X};",
+                      f"            {'void *' if hi == 'void *' else hi + ' '}unk{o + 4:03X};",
+                      "        };", "    };"]
+            pos = o + 8
+            continue
+        if o - 4 in unions:
+            continue
         lines.append(f"    {ctype}unk{o:03X};")
         pos = o + SIZEOF[t]
     lines.append(f"}} {name}; /* size unknown: at least 0x{pos:X} */")
     lines.append("")
-    for o in list(fields)[-1:]:
+    for o in list(plain)[-1:]:
         lines.append(f"/* layout check: the last known field must sit at 0x{o:X} */")
         lines.append(f"typedef char {name}_check_{o:X}[(sizeof(struct {name}) == 0x{pos:X}) ? 1 : -1];")
     lines += ["", f"#endif /* {guard} */", ""]
@@ -182,7 +219,7 @@ def cmd_apply(args) -> int:
                     uses[int(off, 0)][t] += 1
     hdr = K.ROOT / args.header
     if hdr.exists():  # fields already in use by rewritten code must stay
-        for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+);", hdr.read_text(), re.M):
+        for t, off in re.findall(r"^\s+(void \*|[su](?:8|16|32|64) |f32 )unk([0-9A-F]+)(?:_64)?;", hdr.read_text(), re.M):
             uses[int(off, 16)][t.strip() if t != "void *" else t] += 1000
     fields = layout_fields(uses)
     guard = "KH1_" + re.sub(r"\W", "_", hdr.stem.upper()) + "_H"
@@ -209,7 +246,8 @@ def cmd_apply(args) -> int:
 
             def fld(mm: re.Match) -> str:
                 o = int(mm.group(2), 0)
-                return f"arg0->unk{o:03X}" if fields.get(o) == mm.group(1) else mm.group(0)
+                n = field_name(o, mm.group(1), fields)
+                return f"arg0->{n}" if n else mm.group(0)
             func = FIELD_RE.sub(fld, func)
             text = text[:start] + func + text[end:]
         inc = f'#include "{hdr.name}"'
