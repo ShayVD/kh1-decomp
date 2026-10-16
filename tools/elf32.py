@@ -15,6 +15,8 @@ SHT_SYMTAB = 2
 SHT_NOBITS = 8
 STT_FUNC = 2
 SHN_UNDEF = 0
+SHT_REL = 9
+R_MIPS_32, R_MIPS_26, R_MIPS_HI16, R_MIPS_LO16 = 2, 4, 5, 6
 
 
 @dataclass(frozen=True)
@@ -94,6 +96,24 @@ class Elf:
                 out.append(Symbol(self.data[strtab.offset + name:end].decode("latin-1"),
                                   value, size, info & 0xF, info >> 4, shndx))
         return out
+
+    def relocations(self, target: Section) -> list[tuple[int, int, int]]:
+        """(offset, type, symbol index) for the REL entries that apply to `target`,
+        in file order (MIPS pairs each HI16 with the LO16s that follow it)."""
+        out = []
+        for sec in self.sections:
+            if sec.type != SHT_REL:
+                continue
+            info = struct.unpack_from("<I", self.data, self._shdr_off(sec.index) + 28)[0]
+            if info != target.index:
+                continue
+            for off in range(sec.offset, sec.offset + sec.size, 8):
+                r_off, r_info = struct.unpack_from("<II", self.data, off)
+                out.append((r_off, r_info & 0xFF, r_info >> 8))
+        return out
+
+    def section_bytes(self, sec: Section) -> bytes:
+        return self.data[sec.offset: sec.offset + sec.size]
 
     def _shdr_off(self, index: int) -> int:
         shoff = struct.unpack_from("<I", self.data, 32)[0]

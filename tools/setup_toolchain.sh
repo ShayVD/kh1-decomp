@@ -42,6 +42,19 @@ if [[ ! -x "$DEST/objdiff-cli" ]]; then
   chmod +x "$DEST/objdiff-cli"
 fi
 
+# m2c (https://github.com/matt-kempster/m2c, GPL-3.0): first-draft C for
+# `kh1tool.py m2c`. Optional: the build never needs it.
+M2C_COMMIT="708d2d2cb2698f091a92492b328f73b24209f72d"
+if [[ ! -f "$DEST/m2c/m2c.py" ]]; then
+  echo "fetching m2c ${M2C_COMMIT:0:10}"
+  if git clone -q https://github.com/matt-kempster/m2c.git "$DEST/m2c" \
+      && git -C "$DEST/m2c" checkout -q "$M2C_COMMIT"; then
+    python3 -c "import pycparser" 2>/dev/null || echo "note: m2c needs pycparser (python3 -m pip install pycparser)"
+  else
+    rm -rf "$DEST/m2c"; echo "warning: could not fetch m2c (optional)" >&2
+  fi
+fi
+
 for tool in as ld objcopy objdump nm; do
   command -v "mips-linux-gnu-$tool" >/dev/null || { echo "error: missing mips-linux-gnu-$tool (apt install binutils-mips-linux-gnu)" >&2; exit 1; }
 done
