@@ -42,7 +42,10 @@ printf 'AddCounter\t%s\nD_g_counter\t%s\n' "$(addr AddCounter)" "$(addr g_counte
 cd "$W"
 make --no-print-directory check
 make --no-print-directory layout
-[[ $(grep -c '^0010' layout.tsv) -eq 5 ]] || { echo "selftest: expected 5 functions"; cat layout.tsv; exit 1; }
+[[ $(grep -c '^0010' layout.tsv) -eq 7 ]] || { echo "selftest: expected 7 functions"; cat layout.tsv; exit 1; }
+
+make --no-print-directory rank ARGS="--segment all" | tee rank.log
+grep -q 'getter' rank.log
 
 # Heal + Clear are correct: expect a byte-identical build. Heal also covers a
 # jal to an undecompiled placeholder and a jal to a registry symbol.
@@ -51,6 +54,21 @@ sed -i "s/^\(\(00100000\|[0-9a-f]*\)\t[0-9a-f]*\t[0-9]*\t\)func_$(addr Heal)$/\1
 printf 'Heal\t%s\nClear\t%s\n' "$(addr Heal)" "$(addr Clear)" >> functions.tsv
 make --no-print-directory verify | tee verify1.log
 grep -q '^OK:' verify1.log
+
+# Kind (jump table) + Name (string literals): rodata must be placed at the
+# original addresses, inferred from the code's %hi/%lo pairs.
+cp "$HERE/src/rodata.c" src/
+printf 'Kind\t%s\nName\t%s\n' "$(addr Kind)" "$(addr Name)" >> functions.tsv
+make --no-print-directory verify | tee verify1b.log
+grep -q '^OK:' verify1b.log
+[[ $(tail -n +2 out/gen/rodata.tsv | wc -l) -eq 2 ]] || { echo "selftest: expected 2 rodata blocks"; cat out/gen/rodata.tsv; exit 1; }
+# A wrong string must be caught as a rodata mismatch.
+sed 's/"beta"/"betA"/' "$HERE/src/rodata.c" > src/rodata.c
+if make --no-print-directory verify > verify1c.log 2>&1; then
+  echo "selftest: wrong rodata was not detected" >&2; cat verify1c.log; exit 1
+fi
+grep -q 'RODATA MISMATCH' verify1c.log
+cp "$HERE/src/rodata.c" src/
 
 # A wrong AddCounter must be caught.
 cp "$HERE/src/counter.c" src/
@@ -64,5 +82,5 @@ grep -q '100.00%  src/obj.c  Heal' report.log
 grep -q 'src/counter.c  AddCounter' report.log
 ! grep -q '100.00%  src/counter.c  AddCounter' report.log
 make --no-print-directory progress | tee progress.log
-grep -q 'Functions matched: 2/5' progress.log
+grep -q 'Functions matched: 4/7' progress.log
 echo "selftest: PASS"

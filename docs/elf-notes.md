@@ -11,9 +11,12 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
 - Code runs from `0x00100000` to about `0x00272C70` (last function ends with
   a tail `j` at `0x00272C5C`); data follows. Use
   `text_start/text_end` in kh1.toml rather than the `main` section bounds.
-  The heuristic `make layout` finds 5,774 functions in that range; it
-  misses some functions reached only by tail `j` and merges a few adjacent
-  tiny ones, so expect hand fixes.
+  The heuristic `make layout` found 5,774 functions in session 1. Session 2
+  fixed two scanner bugs: switch jump tables point at case labels right after
+  a `jr $ra`, and 55 of those had been taken for function starts; and the
+  libkernl syscall stubs (no prologue, reached by tail calls) were merged
+  into their neighbours (92 split out). Now 5,811 functions. It still misses
+  other functions reached only by tail `j`, so expect hand fixes.
 - **36 `.DVP.overlay` sections** plus `.DVP.ovlytab` / `.DVP.ovlystrtab`:
   VU microcode assembled with dvp-as (names like
   `.DVP.overlay..0x0.374643955.7345.0`, some with `unknvma`). These are the
@@ -39,3 +42,12 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
   libipu, located by references to their `PsII…2500` version banners. These
   are not ported; the Vita layer replaces them. Finer per-library segments
   can be added later.
+
+## Runtime-loaded code outside the ELF
+
+Game code tail-calls `0x00F20000` (e.g. `func_0012a400` when bit 13 of
+`D_002C5958` is set, with `a0 = 6`), and `func_00111020` passes `&D_00F20000`
+plus a callback to `func_00120748`. `0x00F20000` is beyond the end of `.bss`
+(`0x00675018`), so something is loaded there at run time: an overlay or a
+debug/extra module from the disc. Not investigated yet; it matters for the
+port (it is code the ELF does not contain).

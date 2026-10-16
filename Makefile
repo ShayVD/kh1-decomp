@@ -20,11 +20,11 @@ HEADERS := $(shell find include src -type f -name '*.h' 2>/dev/null)
 # Regenerate the per-source rules only when the set of sources changes.
 $(shell mkdir -p $(GEN); echo "$(SRCS)" | cmp -s - $(GEN)/srclist || echo "$(SRCS)" > $(GEN)/srclist)
 
-ifeq ($(filter clean distclean help toolchain check layout,$(MAKECMDGOALS)),)
+ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS)),)
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout objdiff report progress progress-update toolchain test clean distclean help
+.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help
 
 all: verify
 
@@ -34,6 +34,7 @@ help:
 	@echo "make layout           regenerate layout.tsv from $(ORIG)"
 	@echo "make build            compile src/, link, patch into $(PATCHED)"
 	@echo "make verify           build, then require byte-identical output (default)"
+	@echo "make rank             rank undecompiled game functions, easiest first (ARGS=--help)"
 	@echo "make objdiff          write objdiff.json for the objdiff GUI"
 	@echo "make report           objdiff-cli per-function match report"
 	@echo "make progress         print the progress tracker"
@@ -65,6 +66,9 @@ check: $(ORIG)
 
 layout: $(ORIG)
 	@$(KH1) layout
+
+rank: $(ORIG)
+	@$(KH1) rank $(ARGS)
 
 objdiff: $(PATCHED)
 	@$(KH1) objdiff

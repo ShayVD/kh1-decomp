@@ -228,9 +228,49 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
             if is_prologue(word_at(a)):
                 starts.add(a)
 
+    # EE kernel syscall stubs (`li $v1,N; syscall; jr $ra; nop`) sit back to
+    # back with no prologue and are mostly reached through tail calls.
+    for i, w in enumerate(words[1:], 1):
+        if w == 0x0000000C and words[i - 1] >> 16 == 0x2403:
+            a = start + (i - 1) * 4
+            if follows_function_end(a):
+                starts.add(a)
+
+    # Switch jump tables: `lui $at,%hi(T); addu $at,$at,$r; lw $r,%lo(T)($at);
+    # ... jr $r`, bounded by an earlier `sltiu $x,$y,N`. Their entries point at
+    # case labels inside a function (often right after a `jr $ra`), so they
+    # must not be mistaken for function pointers below.
+    case_labels: set[int] = set()
+    for i, w in enumerate(words):
+        if w >> 26 != 0 or w & 0x3F != 0x08 or (w >> 21) & 31 == 31:
+            continue  # want jr $r, r != ra
+        reg = (w >> 21) & 31
+        lo = hi = None
+        count = None
+        for j in range(i - 1, max(i - 12, -1), -1):
+            x = words[j]
+            if lo is None and x >> 26 == 0x23 and (x >> 16) & 31 == reg:  # lw reg, lo(base)
+                lo, base = x & 0xFFFF, (x >> 21) & 31
+            elif lo is not None and hi is None and x >> 26 == 0x0F and (x >> 16) & 31 == base:
+                hi = x & 0xFFFF
+            elif x >> 26 == 0x0B and count is None:  # sltiu
+                count = x & 0xFFFF
+        if lo is None or hi is None:
+            continue
+        table = ((hi << 16) + (lo - 0x10000 if lo & 0x8000 else lo)) & 0xFFFFFFFF
+        jr_addr = start + i * 4
+        for k in range(count if count else 1024):
+            blob = elf.read(table + k * 4, 4)
+            if blob is None:
+                break
+            (t,) = struct.unpack("<I", blob)
+            if not (start <= t < end) or abs(t - jr_addr) > 0x10000:
+                break
+            case_labels.add(t)
+
     # Code pointers in non-code loaded data (vtables, callback tables). Jump
     # tables also point into code, so only accept addresses that follow a
-    # function end.
+    # function end and are not known case labels.
     for seg in elf.segments:
         if seg.type != PT_LOAD:
             continue
@@ -240,8 +280,40 @@ def find_functions(elf: Elf, start: int, end: int) -> list[Func]:
             if start <= va < end:
                 continue
             (p,) = struct.unpack_from("<I", blob, j)
-            if start <= p < end and p % 4 == 0 and follows_function_end(p):
+            if start <= p < end and p % 4 == 0 and p not in case_labels and follows_function_end(p):
                 starts.add(p)
+
+    # A `jr $ra` that no earlier branch in the function jumps past ends the
+    # function: whatever follows is a new one reached only by pointer or tail
+    # call (gcc places every block of a function before its last return or
+    # branches to it). Not applied after a jump-table `jr`.
+    ordered = sorted(starts)
+    for k, a in enumerate(ordered):
+        e = ordered[k + 1] if k + 1 < len(ordered) else end
+        reach, pos = a, a
+        while pos < e - 8:
+            w = word_at(pos)
+            o = w >> 26
+            if o in (4, 5, 6, 7, 20, 21, 22, 23) or (o == 1 and (w >> 16) & 31 in (0, 1, 2, 3, 16, 17, 18, 19)) \
+                    or (o in (17, 18) and (w >> 21) & 31 == 8):
+                off = w & 0xFFFF
+                reach = max(reach, pos + 4 + ((off - 0x10000 if off & 0x8000 else off) << 2))
+            elif o == 2:
+                t = ((pos + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
+                if a <= t < e:
+                    reach = max(reach, t)
+            elif o == 0 and w & 0x3F in (0x08, 0x09) and w != JR_RA and w & 0x3F == 0x08:
+                break  # jump table: case blocks follow
+            if w == JR_RA and reach <= pos + 4:
+                n = pos + 8
+                while n < e and word_at(n) == 0:
+                    n += 4
+                if n < e:
+                    starts.add(n)
+                    reach = n
+                pos = n
+                continue
+            pos += 4
 
     ordered = sorted(starts)
     funcs = []
@@ -310,8 +382,11 @@ def cmd_gen(args, cfg) -> int:
             cmd = f"$(AS) {fl.asflags} -o $@ {rel}"
         else:
             lang, flags = ("c++", fl.cxxflags) if kind == "cxx" else ("c", fl.cflags)
-            cmd = (f"{tc}/ee-gcc -c -x {lang} {flags} -ffunction-sections $(INCLUDES) "
-                   f"-o $@ {rel} && $(KH1) fix-obj $@")
+            # Compile to assembly, give each function its own .rodata.<fn>
+            # section (split-rodata), then assemble with the same driver.
+            cmd = (f"{tc}/ee-gcc -S -x {lang} {flags} -ffunction-sections $(INCLUDES) "
+                   f"-o $(@:.o=.s) {rel} && $(KH1) split-rodata $(@:.o=.s) && "
+                   f"{tc}/ee-gcc -c -x assembler {flags} -o $@ $(@:.o=.s) && $(KH1) fix-obj $@")
         rules.append(f"{obj}: {rel} $(HEADERS) kh1.toml\n\t@mkdir -p $(dir $@)\n"
                      f"\t@echo CC {rel}\n\t@{cmd}\n")
         objs.append(obj)
@@ -390,6 +465,98 @@ def object_functions(obj: Path) -> list[tuple[str, str]]:
     return out
 
 
+RDATA_RE = re.compile(r"^\s*(\.rdata|\.section\s+\.rodata)\b")
+ENT_RE = re.compile(r"^\s*\.ent\s+([\w.$]+)")
+END_RE = re.compile(r"^\s*\.end\s+([\w.$]+)")
+RODATA_PLACEMENTS = GEN / "rodata.tsv"
+
+
+def split_rodata(text: str) -> str:
+    """gcc 2.96 puts every function's string literals, float/double constants
+    and jump tables into one .rodata per object. Move each function's pieces
+    into .rodata.<function> so they can be linked at their original address
+    one function at a time. Constants are emitted just before the function
+    that uses them (or inside it, for jump tables), so a .rdata block between
+    functions belongs to the next .ent; trailing blocks stay in .rodata."""
+    lines = text.splitlines()
+    ents = [(i, m.group(1)) for i, l in enumerate(lines) if (m := ENT_RE.match(l))]
+    out, cur, k = [], None, 0
+    for i, line in enumerate(lines):
+        if m := ENT_RE.match(line):
+            cur = m.group(1)
+        elif END_RE.match(line):
+            cur = None
+        elif RDATA_RE.match(line):
+            while k < len(ents) and ents[k][0] < i:
+                k += 1
+            owner = cur or (ents[k][1] if k < len(ents) else None)
+            if owner:
+                line = f'\t.section .rodata.{owner},"a",@progbits'
+        out.append(line)
+    return "\n".join(out) + "\n"
+
+
+def cmd_split_rodata(args, cfg) -> int:
+    for p in args.files:
+        path = Path(p)
+        path.write_text(split_rodata(path.read_text()))
+    return 0
+
+
+def sext16(v: int) -> int:
+    v &= 0xFFFF
+    return v - 0x10000 if v & 0x8000 else v
+
+
+def infer_rodata(obj: Path, placed: dict[str, int], orig: Elf) -> tuple[dict[str, int], list[str]]:
+    """Original address of each .rodata.* section in `obj`, inferred from the
+    %hi/%lo pairs that reference it: the original instruction pair at the same
+    offset in the placed function holds the original address, our pair holds
+    the offset inside our section. Returns ({section: addr}, problems)."""
+    from elf32 import R_MIPS_HI16, R_MIPS_LO16
+    elf = Elf.load(obj)
+    syms = elf.symbols()
+    rodata = {sec.index: sec for sec in elf.sections if sec.name.startswith(".rodata")}
+    cands: dict[str, set[int]] = defaultdict(set)
+    for sec in elf.sections:
+        if not sec.name.startswith(".text."):
+            continue
+        fn = sec.name[len(".text."):]
+        if fn not in placed:
+            continue
+        ours = elf.section_bytes(sec)
+        theirs = orig.read(placed[fn], sec.size) or b""
+        if len(theirs) < sec.size:
+            continue
+        last_hi: dict[int, int] = {}
+        for off, typ, si in elf.relocations(sec):
+            if typ == R_MIPS_HI16:
+                last_hi[si] = off
+                continue
+            if typ != R_MIPS_LO16 or si not in last_hi or si >= len(syms):
+                continue
+            sym = syms[si]
+            if sym.shndx not in rodata:
+                continue
+            hi = last_hi[si]
+            ow_hi, ow_lo = (struct.unpack_from("<I", ours, o)[0] for o in (hi, off))
+            tw_hi, tw_lo = (struct.unpack_from("<I", theirs, o)[0] for o in (hi, off))
+            our_off = ((ow_hi & 0xFFFF) << 16) + sext16(ow_lo) + sym.value
+            their_addr = (((tw_hi & 0xFFFF) << 16) + sext16(tw_lo)) & 0xFFFFFFFF
+            cands[rodata[sym.shndx].name].add(their_addr - our_off)
+    found, problems = {}, []
+    for name, addrs in cands.items():
+        if len(addrs) == 1:
+            found[name] = addrs.pop()
+        else:
+            problems.append(f"{obj.name}: {name}: references disagree on its original address "
+                            f"({', '.join(f'0x{a:08x}' for a in sorted(addrs))}); the code does not match yet")
+    for sec in rodata.values():
+        if sec.size and sec.name not in found and sec.name not in cands:
+            problems.append(f"{obj.name}: {sec.name}: no placed function references it; left unplaced")
+    return found, problems
+
+
 def symbol_address(sym: str, registry: dict[str, int]) -> int | None:
     if sym in registry:
         return registry[sym]
@@ -425,12 +592,36 @@ def cmd_link_script(args, cfg) -> int:
         return 1
     placements.sort()
     secs = [f"  .f_{a:08x} 0x{a:08x} : {{ KEEP({obj}(.text.{sym})) }}" for a, sym, obj, _ in placements]
+    rodata_rows = []
+    by_obj: dict[str, dict[str, int]] = defaultdict(dict)
+    for a, sym, obj, _ in placements:
+        by_obj[obj][sym] = a
+    orig = require_orig(cfg) if by_obj else None
+    for obj, placed in sorted(by_obj.items()):
+        found, problems = infer_rodata(ROOT / obj, placed, orig)
+        for msg in problems:
+            print(f"warning: {msg}", file=sys.stderr)
+        for name, addr in sorted(found.items(), key=lambda kv: kv[1]):
+            secs.append(f"  .r_{addr:08x} 0x{addr:08x} : {{ KEEP({obj}({name})) }}")
+            rodata_rows.append((addr, name, obj))
     (GEN / "functions.ld").write_text("/* Auto-generated by tools/kh1tool.py link-script */\n"
                                       + "\n".join(secs) + "\n")
+    RODATA_PLACEMENTS.write_text("addr\tsection\tobject\n" + "".join(
+        f"{a:08x}\t{n}\t{o}\n" for a, n, o in sorted(rodata_rows)))
     PLACEMENTS.write_text("addr\tsymbol\tobject\tsource\n" + "".join(
         f"{a:08x}\t{s}\t{o}\t{r}\n" for a, s, o, r in placements))
-    print(f"link-script: {len(placements)} functions placed")
+    print(f"link-script: {len(placements)} functions, {len(rodata_rows)} rodata blocks placed")
     return 0
+
+
+def load_rodata_placements() -> list[tuple[int, str, str]]:
+    if not RODATA_PLACEMENTS.exists():
+        return []
+    out = []
+    for line in RODATA_PLACEMENTS.read_text().splitlines()[1:]:
+        a, n, o = line.split("\t")
+        out.append((int(a, 16), n, o))
+    return out
 
 
 def load_placements() -> list[tuple[int, str, str, str]]:
@@ -466,9 +657,18 @@ def cmd_patch(args, cfg) -> int:
         code = code + bytes(f.size - len(code))
         off = orig.vaddr_to_offset(addr)
         data[off: off + f.size] = code
+    rodata = load_rodata_placements()
+    for addr, name, obj in rodata:
+        sec = linked.section(f".r_{addr:08x}")
+        off = orig.vaddr_to_offset(addr)
+        if sec is None or off is None or orig.vaddr_to_offset(addr + sec.size - 1) is None:
+            print(f"error: {name} ({obj}) at 0x{addr:08x} is missing or outside the image", file=sys.stderr)
+            return 1
+        data[off: off + sec.size] = linked.data[sec.offset: sec.offset + sec.size]
     PATCHED.parent.mkdir(parents=True, exist_ok=True)
     PATCHED.write_bytes(bytes(data))
-    print(f"patch: {len(placements)} functions written to {PATCHED.relative_to(ROOT)}")
+    print(f"patch: {len(placements)} functions, {len(rodata)} rodata blocks written to "
+          f"{PATCHED.relative_to(ROOT)}")
     return 0
 
 
@@ -494,11 +694,18 @@ def cmd_verify(args, cfg) -> int:
     nonm = [a for a, s in st.items() if s == "nonmatching"]
     for a in nonm:
         print(f"NONMATCHING 0x{a:08x} {names.get(a, '')}")
+    if load_rodata_placements():
+        o_elf, b_elf, linked = Elf(orig), Elf(built), Elf.load(LINKED)
+        for addr, name, obj in load_rodata_placements():
+            size = linked.section(f".r_{addr:08x}").size
+            if o_elf.read(addr, size) != b_elf.read(addr, size):
+                print(f"RODATA MISMATCH 0x{addr:08x} {name} ({obj})")
     if orig == built:
         print(f"OK: {PATCHED.name} is byte-identical to the original "
               f"({sum(1 for s in st.values() if s == 'matched')} decompiled functions)")
         return 0
-    print(f"FAIL: {len(nonm)} decompiled function(s) differ from the original")
+    print(f"FAIL: {len(nonm)} decompiled function(s) differ from the original"
+          + ("" if nonm else " (the difference is in placed rodata or outside decompiled code)"))
     return 1
 
 
@@ -688,6 +895,312 @@ def load_objdiff_report() -> dict[str, float] | None:
     return out
 
 
+# --------------------------------------------------------------------------- rank
+
+HARD_MMI_FUNCTS = {0x04, 0x08, 0x09, 0x28, 0x29, 0x30, 0x31, 0x34, 0x36, 0x37, 0x3C, 0x3E, 0x3F}
+RANK_TSV = OUT / "rank.tsv"
+RANK_COLUMNS = ["addr", "size", "insns", "score", "category", "shape", "twins", "calls", "branches",
+                "loops", "jumptable", "fpu", "frame", "loads", "stores", "flags", "status", "name"]
+
+
+def analyze_function(f: Func, blob: bytes) -> dict:
+    """Size/complexity metrics for one function (see `rank`)."""
+    import mips
+    insns = mips.decode(f.addr, blob)
+    while insns and insns[-1].word == 0 and len(insns) > 1 and insns[-2].word != mips.JR_RA:
+        insns.pop()  # alignment padding
+    m = {"insns": len(insns), "calls": 0, "branches": 0, "loops": 0, "jumptable": 0, "fpu": 0,
+         "frame": 0, "loads": 0, "stores": 0, "tail": 0}
+    flags = set()
+    lui_regs: set[int] = set()
+    shape = []
+    for i in insns:
+        w = i.word
+        o = mips.op(w)
+        masked = w
+        if i.is_jal:
+            m["calls"] += 1
+            masked = w & 0xFC000000
+        elif i.is_jalr:
+            m["calls"] += 1
+        elif i.is_j:
+            tgt = i.jump_target
+            if not (f.addr <= tgt < f.end):
+                m["tail"] += 1
+                masked = w & 0xFC000000
+        elif i.is_jr and not i.is_jr_ra:
+            m["jumptable"] += 1
+        if i.is_branch:
+            m["branches"] += 1
+            if i.branch_target <= i.addr:
+                m["loops"] += 1
+        if i.is_load:
+            m["loads"] += 1
+        if i.is_store:
+            m["stores"] += 1
+        if i.is_fpu:
+            m["fpu"] += 1
+        if i.stack_adjust is not None and i.stack_adjust < 0:
+            m["frame"] = max(m["frame"], -i.stack_adjust)
+        if i.is_vu0:
+            flags.add("vu0")
+        if o in (mips.OP_LQ, mips.OP_SQ):
+            flags.add("lq/sq")
+        if o == mips.OP_MMI and mips.funct(w) in HARD_MMI_FUNCTS:
+            flags.add("mmi")
+        if i.is_cop0:
+            flags.add("cop0")
+        if i.is_syscall:
+            flags.add("syscall")
+        if i.is_sync:
+            flags.add("sync")
+        # Shape: mask call targets and %hi/%lo halves so functions that differ
+        # only in which globals/callees they use hash together.
+        if o == mips.OP_LUI:
+            lui_regs.add(mips.rt(w))
+            masked = w & 0xFFFF0000
+        elif mips.rs(w) in lui_regs and o not in (mips.OP_SPECIAL, mips.OP_REGIMM) and not i.is_branch:
+            masked = w & 0xFFFF0000
+            if mips.rt(w) in lui_regs and o not in mips.OP_STORES:
+                lui_regs.discard(mips.rt(w))
+        shape.append(masked)
+    leaf = m["calls"] == 0 and m["tail"] == 0
+    hard = bool(flags & {"vu0", "lq/sq", "mmi", "cop0", "syscall"})
+    n = m["insns"]
+    if hard:
+        cat = "hard"
+    elif n <= 2 and not m["loads"] and not m["stores"]:
+        cat = "stub"
+    elif leaf and m["branches"] == 0 and m["stores"] == 0 and m["loads"] and n <= 6:
+        cat = "getter"
+    elif leaf and m["branches"] == 0 and m["stores"] and n <= 10:
+        cat = "setter"
+    elif m["calls"] == 0 and m["tail"] == 1 and m["branches"] == 0 and n <= 8:
+        cat = "thunk"
+    elif m["calls"] == 1 and m["branches"] == 0 and n <= 12:
+        cat = "wrapper"
+    elif leaf and m["loops"] and not m["jumptable"]:
+        cat = "loop"
+    elif leaf:
+        cat = "leaf"
+    else:
+        cat = "other"
+    score = n + 2 * m["branches"] + 4 * m["calls"] + 2 * m["tail"] + 10 * m["jumptable"] + 50 * hard
+    m.update(leaf=leaf, category=cat, score=score, flags=",".join(sorted(flags)),
+             shape=hashlib.sha1(struct.pack(f"<{len(shape)}I", *shape)).hexdigest()[:10])
+    return m
+
+
+def decompiled_addrs() -> dict[int, str]:
+    """addr -> 'src' / 'wip' for functions already in src/ or nonmatchings/."""
+    out: dict[int, str] = {}
+    registry = load_registry()
+    for base, tag in ((ROOT / "nonmatchings", "wip"), (ROOT / "src", "src")):
+        for p in sorted(base.rglob("*")):
+            if p.suffix not in SOURCE_SUFFIXES or not p.is_file():
+                continue
+            text = p.read_text(errors="ignore")
+            for m in re.finditer(r"^[A-Za-z_][^;{}()]*?\b(func_([0-9A-Fa-f]{8})|\w+)\s*\([^;{]*\)\s*\{",
+                                 text, re.M):
+                addr = int(m.group(2), 16) if m.group(2) else registry.get(m.group(1))
+                if addr is not None:
+                    out[addr] = tag
+    return out
+
+
+def cmd_rank(args, cfg) -> int:
+    """Rank functions by size/complexity so the easy ones get done first."""
+    elf = require_orig(cfg)
+    done = decompiled_addrs()
+    rows = []
+    for f in load_layout():
+        seg = segment_of(cfg, f.addr)
+        m = analyze_function(f, elf.read(f.addr, f.size))
+        rows.append({"addr": f"{f.addr:08x}", "size": f.size, "segment": seg,
+                     "status": done.get(f.addr, "asm"), "name": f.name, **m})
+    twins: dict[str, int] = defaultdict(int)
+    for r in rows:
+        twins[r["shape"]] += 1
+    for r in rows:
+        r["twins"] = twins[r["shape"]]
+    rows.sort(key=lambda r: (r["score"], r["addr"]))
+    OUT.mkdir(exist_ok=True)
+    with RANK_TSV.open("w") as fh:
+        fh.write("\t".join(["segment", *RANK_COLUMNS]) + "\n")
+        for r in rows:
+            fh.write("\t".join(str(int(v) if isinstance(v, bool) else v)
+                               for v in [r["segment"], *(r[c] for c in RANK_COLUMNS)]) + "\n")
+
+    sel = [r for r in rows
+           if (args.segment == "all" or r["segment"] == args.segment)
+           and (args.all or r["status"] == "asm")
+           and (not args.category or r["category"] in args.category.split(","))
+           and (not args.leaf or r["leaf"])
+           and (args.max_insns is None or r["insns"] <= args.max_insns)]
+    if args.summary:
+        cats: dict[str, list] = defaultdict(lambda: [0, 0, 0])
+        for r in sel:
+            c = cats[r["category"]]
+            c[0] += 1
+            c[1] += r["size"]
+            c[2] += r["status"] != "asm"
+        print(f"{'category':<10} {'funcs':>6} {'bytes':>9} {'done':>5}")
+        for k, (n, b, d) in sorted(cats.items(), key=lambda kv: -kv[1][0]):
+            print(f"{k:<10} {n:>6} {b:>9} {d:>5}")
+        return 0
+    print("addr      insns score category  twins calls br loops  flags          status")
+    for r in sel[: args.limit]:
+        print(f"{r['addr']}  {r['insns']:>5} {r['score']:>5} {r['category']:<9} {r['twins']:>5} "
+              f"{r['calls']:>5} {r['branches']:>2} {r['loops']:>5}  {r['flags'] or '-':<14} {r['status']}")
+    print(f"({len(sel)} functions selected; full table in {RANK_TSV.relative_to(ROOT)})")
+    return 0
+
+
+# --------------------------------------------------------------------------- asm / m2c
+
+OBJDUMP_LINE_RE = re.compile(r"^\s*([0-9a-f]+):\s+([0-9a-f]{8})\s+(\S+)\s*(.*)$")
+REG_RE = re.compile(r"(?<![\w$.%])(zero|at|v[01]|a[0-3]|t[0-9]|s[0-8]|k[01]|gp|sp|fp|ra|f[0-9]{1,2}|vf[0-9]{1,2}|vi[0-9]{1,2})(?![\w])")
+
+
+def function_asm(cfg, f: Func, names: dict[int, str]) -> str:
+    """GNU-as listing of one original function in the style m2c and decomp.me
+    expect: `glabel`, $-prefixed registers, .L labels for branch targets,
+    func_/D_ names (or functions.tsv names) for calls and %hi/%lo pairs."""
+    import mips
+    orig_path_ = orig_path(cfg)
+    out = subprocess.run([f"{BINUTILS}objdump", "-D", "-z", "-m", "mips:5900", "-EL",
+                          f"--start-address=0x{f.addr:x}", f"--stop-address=0x{f.end:x}",
+                          str(orig_path_)], check=True, capture_output=True, text=True).stdout
+    insns = []
+    for line in out.splitlines():
+        m = OBJDUMP_LINE_RE.match(line)
+        if m:
+            insns.append((int(m.group(1), 16), int(m.group(2), 16), m.group(3), m.group(4)))
+    labels = set()
+    for a, w, _mn, _ops in insns:
+        t = mips.Insn(a, w).branch_target
+        if t is not None:
+            labels.add(t)
+        if mips.op(w) == mips.OP_J and f.addr <= mips.Insn(a, w).jump_target < f.end:
+            labels.add(mips.Insn(a, w).jump_target)
+    # %hi/%lo: resolve each lui to the addresses its low halves produce.
+    hi_of: dict[int, int] = {}   # lui addr -> full address
+    lo_of: dict[int, int] = {}   # user addr -> full address
+    live: dict[int, tuple[int, int]] = {}  # reg -> (lui addr, upper)
+    for a, w, mn, _ops in insns:
+        o = mips.op(w)
+        if a in labels:
+            live.clear()
+        if o == mips.OP_LUI:
+            live[mips.rt(w)] = (a, (w & 0xFFFF) << 16)
+            continue
+        base = mips.rs(w)
+        if base in live and (o in (0x09, 0x0D) or o in mips.OP_LOADS or o in mips.OP_STORES
+                             or o in mips.OP_VU_MEM or o in (mips.OP_LQ, mips.OP_SQ)):
+            lui_a, upper = live[base]
+            full = (upper + (mips.imm(w) if o != 0x0D else w & 0xFFFF)) & 0xFFFFFFFF
+            hi_of.setdefault(lui_a, full)
+            lo_of[a] = full
+        if o not in mips.OP_STORES and o not in {mips.OP_SPECIAL, mips.OP_REGIMM} | mips.OP_BRANCH:
+            live.pop(mips.rt(w), None)
+        if o == mips.OP_SPECIAL and not (mips.funct(w) in (0x21, 0x2D) and mips.rd(w) == base):
+            live.pop(mips.rd(w), None)  # addu/daddu rX,rX,rY keeps rX's %hi (jump tables)
+
+    layout = load_layout()
+    lo_text, hi_text = layout[0].addr, layout[-1].end
+    # Jump tables: a %lo load feeding a `jr`. m2c needs the table contents.
+    orig = Elf.load(orig_path_)
+    jtbls: dict[int, list[int]] = {}
+    count = None
+    for k, (a, w, mn, _ops) in enumerate(insns):
+        if mips.op(w) == 0x0B:
+            count = w & 0xFFFF
+        i = mips.Insn(a, w)
+        if i.is_jr and not i.is_jr_ra:
+            for pa, pw, _m, _o in insns[max(0, k - 3): k]:
+                if pa in lo_of and mips.op(pw) == 0x23 and mips.rt(pw) == mips.rs(w):
+                    base, entries = lo_of[pa], []
+                    for n in range(count or 256):
+                        blob = orig.read(base + 4 * n, 4)
+                        t = struct.unpack("<I", blob)[0] if blob else 0
+                        if not (f.addr <= t < f.end):
+                            break
+                        entries.append(t)
+                    jtbls[base] = entries
+                    labels.update(entries)
+
+    def sym(addr: int) -> str:
+        if addr in names:
+            return names[addr]
+        if addr in jtbls:
+            return f"jtbl_{addr:08X}"
+        return f"func_{addr:08x}" if lo_text <= addr < hi_text else f"D_{addr:08X}"
+
+    lines = [f"glabel {names.get(f.addr, f.name)}"]
+    for a, w, mn, ops in insns:
+        if a in labels:
+            lines.append(f".L{a:08X}:")
+        i = mips.Insn(a, w)
+        ops = REG_RE.sub(lambda m: "$" + m.group(1), ops)
+        if i.branch_target is not None:
+            ops = re.sub(r"(0x)?[0-9a-f]+(\s*<[^>]*>)?$", f".L{i.branch_target:08X}", ops)
+        elif i.jump_target is not None:
+            t = i.jump_target
+            ops = f".L{t:08X}" if (i.is_j and f.addr <= t < f.end) else sym(t)
+        elif a in hi_of:
+            ops = re.sub(r"0x[0-9a-f]+$", f"%hi({sym(hi_of[a])})", ops)
+        elif a in lo_of:
+            ops = re.sub(r"(-?0x[0-9a-f]+|-?\d+)(\(\$\w+\))?$",
+                         lambda m: f"%lo({sym(lo_of[a])})" + (m.group(2) or ""), ops)
+        lines.append(f"    /* {a:08X} {w:08X} */ {mn:<10} {ops}".rstrip())
+    for base, entries in sorted(jtbls.items()):
+        lines += ["", ".section .rodata", f"glabel jtbl_{base:08X}"]
+        lines += [f"    .word .L{t:08X}" for t in entries]
+        lines += [".section .text"]
+    return "\n".join(lines) + "\n"
+
+
+def find_func(arg: str) -> Func:
+    registry = load_registry()
+    addr = registry.get(arg)
+    if addr is None:
+        addr = int(arg.removeprefix("func_"), 16)
+    for f in load_layout():
+        if f.addr == addr:
+            return f
+    sys.exit(f"error: no function starts at 0x{addr:08x} in layout.tsv")
+
+
+def cmd_asm(args, cfg) -> int:
+    names = {a: s for s, a in load_registry().items()}
+    for fn in args.functions:
+        print(function_asm(cfg, find_func(fn), names))
+    return 0
+
+
+def cmd_m2c(args, cfg) -> int:
+    """Decompile with m2c (tools/toolchain/m2c, fetched by make toolchain).
+    m2c output is a starting point, never a match."""
+    m2c = TOOLCHAIN_DIR / "m2c" / "m2c.py"
+    if not m2c.exists():
+        sys.exit("error: m2c not installed; run make toolchain")
+    names = {a: s for s, a in load_registry().items()}
+    asm_dir = OUT / "m2c"
+    asm_dir.mkdir(parents=True, exist_ok=True)
+    rc = 0
+    for fn in args.functions:
+        f = find_func(fn)
+        path = asm_dir / f"{f.addr:08x}.s"
+        path.write_text(".set noat\n.set noreorder\n\n" + function_asm(cfg, f, names))
+        res = subprocess.run([sys.executable, str(m2c), "-t", "mipsee-gcc-c", *args.m2c_args, str(path)],
+                             capture_output=True, text=True)
+        sys.stdout.write(res.stdout)
+        if res.returncode:
+            sys.stderr.write(res.stderr)
+            rc = 1
+    return rc
+
+
 # --------------------------------------------------------------------------- main
 
 def main() -> int:
@@ -701,6 +1214,8 @@ def main() -> int:
     sub.add_parser("gen", help="write out/gen/objects.mk and symbols.ld")
     p = sub.add_parser("fix-obj", help="repair ee-as 2.10 symbol tables for modern ld")
     p.add_argument("objects", nargs="+")
+    p = sub.add_parser("split-rodata", help="move each function's constants into .rodata.<fn> (asm in place)")
+    p.add_argument("files", nargs="+")
     sub.add_parser("link-script", help="write out/gen/functions.ld from compiled objects")
     sub.add_parser("patch", help="patch linked functions into a copy of the original")
     sub.add_parser("verify", help="compare out/kh1.elf with the original")
@@ -708,15 +1223,28 @@ def main() -> int:
     p.add_argument("--write", action="store_true")
     sub.add_parser("objdiff", help="write objdiff.json and unit objects")
     sub.add_parser("objdiff-report", help="run objdiff-cli report and print per-function match")
+    p = sub.add_parser("asm", help="print a function's original asm in m2c/decomp.me syntax")
+    p.add_argument("functions", nargs="+", help="func_XXXXXXXX, an address, or a functions.tsv name")
+    p = sub.add_parser("m2c", help="first-draft C for a function with m2c (not a match)")
+    p.add_argument("functions", nargs="+")
+    p.add_argument("--m2c-args", nargs=argparse.REMAINDER, default=[])
+    p = sub.add_parser("rank", help="rank functions by size/complexity (writes out/rank.tsv)")
+    p.add_argument("--segment", default="game", help="segment name from kh1.toml, or 'all' (default: game)")
+    p.add_argument("--category", help="comma-separated: stub,getter,setter,thunk,wrapper,loop,leaf,other,hard")
+    p.add_argument("--leaf", action="store_true", help="only functions that make no calls")
+    p.add_argument("--max-insns", type=int)
+    p.add_argument("--limit", type=int, default=40)
+    p.add_argument("--all", action="store_true", help="include functions already in src/ or nonmatchings/")
+    p.add_argument("--summary", action="store_true", help="count functions per category")
     args = ap.parse_args()
     cfg = load_config()
     if args.cmd == "config":
         print(cfg_get(cfg, args.key))
         return 0
     return {
-        "check": cmd_check, "fix-obj": cmd_fix_obj, "layout": cmd_layout, "gen": cmd_gen, "link-script": cmd_link_script,
+        "check": cmd_check, "fix-obj": cmd_fix_obj, "split-rodata": cmd_split_rodata, "layout": cmd_layout, "gen": cmd_gen, "link-script": cmd_link_script,
         "patch": cmd_patch, "verify": cmd_verify, "progress": cmd_progress,
-        "objdiff": cmd_objdiff, "objdiff-report": cmd_objdiff_report,
+        "objdiff": cmd_objdiff, "objdiff-report": cmd_objdiff_report, "rank": cmd_rank, "asm": cmd_asm, "m2c": cmd_m2c,
     }[args.cmd](args, cfg)
 
 
