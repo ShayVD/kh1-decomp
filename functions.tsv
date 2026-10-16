@@ -725,3 +725,4 @@ iEnableIntc	00258de0	# hand: _iEnableIntc syscall + sync
 iDisableIntc	00258e00	# hand: _iDisableIntc syscall + sync
 iEnableDmac	00258e20	# hand: _iEnableDmac syscall + sync
 iDisableDmac	00258e40	# hand: _iDisableDmac syscall + sync
+quorem	00253f88	# hand: dtoa.c static; (b, S) Bigint quotient digit, calls cmp

@@ -36,28 +36,6 @@ s32 func_00258988(void) {
     return -1;
 }
 
-void func_00258e88(void *arg0) {
-    void *temp_a0;
-
-    M2C_FIELD(arg0, s32 *, 4) = (s32) (M2C_FIELD(arg0, s32 *, 4) + 1);
-    temp_a0 = M2C_FIELD(arg0, void **, 0xC) + 1;
-    M2C_FIELD(arg0, void **, 0xC) = temp_a0;
-    if (temp_a0 == (arg0 + (M2C_FIELD(arg0, s32 *, 0) + 0x10))) {
-        M2C_FIELD(arg0, void **, 0xC) = (void *) (arg0 + 0x10);
-    }
-}
-
-void func_00258ec8(void *arg0) {
-    void *temp_a0;
-
-    M2C_FIELD(arg0, s32 *, 4) = (s32) (M2C_FIELD(arg0, s32 *, 4) - 1);
-    temp_a0 = M2C_FIELD(arg0, void **, 8) + 1;
-    M2C_FIELD(arg0, void **, 8) = temp_a0;
-    if (temp_a0 == (arg0 + (M2C_FIELD(arg0, s32 *, 0) + 0x10))) {
-        M2C_FIELD(arg0, void **, 8) = (void *) (arg0 + 0x10);
-    }
-}
-
 void func_00259468(s32 arg0) {
     if (arg0 == 0xA) {
         func_00259380(0xD);

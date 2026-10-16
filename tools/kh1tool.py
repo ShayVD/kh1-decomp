@@ -500,20 +500,28 @@ def split_rodata(text: str) -> str:
     into .rodata.<function> so they can be linked at their original address
     one function at a time. Constants are emitted just before the function
     that uses them (or inside it, for jump tables), so a .rdata block between
-    functions belongs to the next .ent; trailing blocks stay in .rodata."""
+    functions belongs to the next .ent; blocks inside a function get
+    .rodata.<function>.<n>; trailing blocks stay in .rodata."""
     lines = text.splitlines()
     ents = [(i, m.group(1)) for i, l in enumerate(lines) if (m := ENT_RE.match(l))]
-    out, cur, k = [], None, 0
+    out, cur, k, inner = [], None, 0, 0
     for i, line in enumerate(lines):
         if m := ENT_RE.match(line):
-            cur = m.group(1)
+            cur, inner = m.group(1), 0
         elif END_RE.match(line):
             cur = None
         elif RDATA_RE.match(line):
             while k < len(ents) and ents[k][0] < i:
                 k += 1
             owner = cur or (ents[k][1] if k < len(ents) else None)
-            if owner:
+            if cur:
+                # a block inside the function (a jump table) is its own
+                # section: the assembler's literal pool (`li.d` constants,
+                # in plain .rodata) can sit between it and the strings
+                # before the function (_dtoa_r)
+                inner += 1
+                line = f'\t.section .rodata.{owner}.{inner},"a",@progbits'
+            elif owner:
                 line = f'\t.section .rodata.{owner},"a",@progbits'
         out.append(line)
     return "\n".join(out) + "\n"
