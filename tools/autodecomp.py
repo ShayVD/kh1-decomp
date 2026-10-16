@@ -174,6 +174,7 @@ def resolve(sym: str, registry: dict[str, int]) -> int | None:
 
 
 LAST_BYTES: bytes = b""
+EXTRA_INCLUDES: list[Path] = []  # try --file: the file's own directory
 LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last failed compile
 
 
@@ -196,7 +197,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     pre = "" if re.search(r"\bM2C_UNK;", code) else '#include "m2c.h"\n\n'
     src.write_text(pre + code)
     r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections",
-                        f"-I{ROOT / 'include'}", "-o", str(asm), str(src)], capture_output=True, text=True)
+                        f"-I{ROOT / 'include'}", *[f"-I{d}" for d in EXTRA_INCLUDES], "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode:
         shift = pre.count("\n")
         LAST_ERRORS = [(int(m.group(1)) - shift, m.group(2)) for m in
@@ -452,7 +453,8 @@ def main() -> int:
         q.add_argument("--budget", type=int, default=60, help="permutations tried per function (0 = none)")
         q.add_argument("--max-score", type=int, default=16, help="only search drafts at most this far off")
         q.add_argument("--no-context", action="store_true", help="do not give m2c the guessed prototypes")
-    p.add_argument("--out-dir", help="write matches here instead of src/auto/ (its kh1.toml flags apply)")
+    for q in (p, sub.choices["try"]):
+        q.add_argument("--out-dir", help="write matches here instead of src/auto/ (its kh1.toml flags apply)")
     args = ap.parse_args()
     if getattr(args, "out_dir", None):
         global AUTO_DIR
@@ -471,6 +473,7 @@ def main() -> int:
             if args.file:
                 sym = _names.get(f.addr, f"func_{f.addr:08x}")
                 code = Path(args.file).read_text()
+                EXTRA_INCLUDES[:] = [Path(args.file).resolve().parent]
                 with tempfile.TemporaryDirectory() as td:
                     ok, why = build_and_compare(f, sym, code, Path(td))
                 addr = f.addr

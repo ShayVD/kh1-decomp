@@ -635,3 +635,24 @@ scePcStop	00270b40	# hand: clears the CTE bit (31) of the PCCR with mfps/mtps
 sceMcInit	00270b60	# hand: 'bind error libmc', mcserv/mcman version checks
 sceIpuSync	002726d0	# hand (libipu): mode 0 waits for IPU_CTRL.BUSY (bit 31) to clear, mode 1 returns it
 sceIpuInit	002727a0	# hand: IPU reset (CTRL=0x40000000), BCLR, then SETIQ x2, SETVQ, SETTH with default tables
+_exit	001001c8	# hand: newlib abort() ends with raise(SIGABRT) then this with 1; exit() tail-calls it
+__sfmoreglue	00255598	# hand: newlib findfp.c; _malloc_r(d, 12 + n*88), memset of the FILEs
+__sfp	00255610	# hand: newlib findfp.c; __sinit check, walks __sglue (+0x1D8) for _flags == 0, else __sfmoreglue(d, 4)
+_cleanup_r	00255708	# hand: newlib findfp.c; _fwalk(ptr, fflush)
+_cleanup	00255728	# hand: newlib findfp.c; _cleanup_r(_impure_ptr)
+__sinit	00255748	# hand: newlib findfp.c; __cleanup = _cleanup_r, __sdidinit = 1, std() x3 with flags 4/9/10
+fflush	00255420	# hand: newlib fflush.c; fflush(NULL) is _fwalk(_impure_ptr, fflush)
+_fwalk	00256020	# hand: called with (reent, fflush) by _cleanup_r and fflush(NULL)
+__sread	00257910	# hand: std() _read slot
+__swrite	00257978	# hand: std() _write slot
+__sseek	002579f8	# hand: std() _seek slot
+__sclose	00257a60	# hand: std() _close slot
+__sfvwrite	00255c40	# hand: _puts_r passes (stdout, struct __suio *) with two iovecs
+_malloc_r	0024f7e8	# hand: __sfmoreglue's allocator (reent, size)
+vfiprintf	002516b8	# hand: CHECK_INIT(fp) then tail call to the 766-insn engine, like vfprintf
+_vfiprintf_r	00251730	# hand: vfiprintf's engine (fiprintf from __assert uses it)
+fiprintf	0024f498	# hand: (fp, fmt, ...) -> vfiprintf; __assert's message
+_printf_r	002501e8	# hand: (ptr, fmt, ...) -> _vfprintf_r(ptr, ptr->_stdout, fmt, ap)
+_vfprintf_r	002524a0	# hand: vfprintf's engine
+bsearch	0024f318	# hand: newlib bsearch: (key, base, nmemb, size, compar), halving with compar(key, base + i*size)
+std	00255538	# hand: static in newlib findfp.c; fills a FILE (flags, file, __sread/__swrite/__sseek/__sclose, _data)

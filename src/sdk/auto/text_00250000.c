@@ -91,45 +91,6 @@ s32 func_00252328(s32 arg0, void *arg1) {
     return temp_v0;
 }
 
-void func_00255538(void *arg0, s16 arg1, s16 arg2, s32 arg3) {
-    M2C_FIELD(arg0, s16 *, 0xC) = arg1;
-    M2C_FIELD(arg0, s16 *, 0xE) = arg2;
-    M2C_FIELD(arg0, M2C_UNK **, 0x20) = &func_00257910;
-    M2C_FIELD(arg0, M2C_UNK **, 0x24) = &func_00257978;
-    M2C_FIELD(arg0, M2C_UNK **, 0x28) = &func_002579f8;
-    M2C_FIELD(arg0, M2C_UNK **, 0x2C) = &func_00257a60;
-    M2C_FIELD(arg0, s32 *, 0) = 0;
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 8) = 0;
-    M2C_FIELD(arg0, s32 *, 0x10) = 0;
-    M2C_FIELD(arg0, s32 *, 0x14) = 0;
-    M2C_FIELD(arg0, s32 *, 0x18) = 0;
-    M2C_FIELD(arg0, void **, 0x1C) = arg0;
-    M2C_FIELD(arg0, s32 *, 0x54) = arg3;
-}
-
-s32 func_00255598(s32 arg0, s32 arg1) {
-    s32 temp_s0;
-    s32 temp_v0;
-    s32 temp_v1;
-
-    temp_s0 = arg1 * 0x58;
-    temp_v0 = func_0024f7e8(arg0, temp_s0 + 0xC);
-    temp_v1 = temp_v0 + 0xC;
-    if (temp_v0 == 0) {
-        return temp_v0;
-    }
-    M2C_FIELD(temp_v0, s32 *, 4) = arg1;
-    M2C_FIELD(temp_v0, s32 *, 0) = 0;
-    M2C_FIELD(temp_v0, s32 *, 8) = temp_v1;
-    memset(temp_v1, 0, temp_s0);
-    return temp_v0;
-}
-
-void func_00255728(void) {
-    func_00255708(D_0046A9C8);
-}
-
 M2C_UNK *func_00256148(void) {
     return &D_00491F88;
 }
