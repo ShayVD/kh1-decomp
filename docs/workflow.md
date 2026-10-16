@@ -139,6 +139,91 @@ field narrowed on assignment needs an explicit `(s32)` cast
 (`func_0012a030`); `(u32)` on a `u8` before `>>` picks `srlv` over `srav`
 (`func_00171a88`).
 
+## Session 4: what changed
+
+Two bugs in the asm handed to m2c caused many of session 3's "patterns":
+
+- **`%hi` tracking across calls.** `function_asm` kept a `lui` live in a
+  caller-saved register across a `jal`, so `sw s0,16(v0)` after a call
+  became `%lo(func_00100010)(v0)` and m2c wrote `*f() = x`, dropping the
+  offset (the "dropped store offsets on struct-returning calls" and "lost
+  delay-slot returns" near misses). Calls now clobber caller-saved
+  registers (after the delay slot).
+- **Random registers forgotten.** The "this instruction overwrites rt"
+  check read `rt` out of `jal` targets and FPU/VU instructions, so a live
+  `%hi` was dropped when a call target's bits happened to name it
+  (`lui a0` + `jal` + `addiu a0,a0,%lo` became a plain number). Only
+  instructions that really write a GPR count now.
+
+New handling in autodecomp/permute.py:
+
+- **Stack locals (`sp`).** m2c treated the bottom of the frame as outgoing
+  stack arguments when its address is taken (`move a0, sp`), turning stores
+  into extra call arguments and printing the address as a bare `sp`. EE
+  code passes 8+8 arguments in registers and KH1 has no stack arguments, so
+  `run_m2c` sets m2c's subroutine-argument area to empty, and
+  `permute.stack_buffer` declares the locals area (frame below the
+  callee-saved slots, `autodecomp.locals_size`) as `s32 sp[N]` and rewrites
+  `spXX` to `M2C_FIELD(sp, T *, 0xXX)`. Compile errors: 580 → 209.
+- **64-bit constants.** m2c prints `li; dsll32` constants as
+  `(0x8000 << 0x22)` (an int shift); `wide_consts` makes them `(s64)`.
+- **Global arrays.** A global used only as `M2C_FIELD(&D_X, T *, off)` or
+  byte-indexed `*(&D_X + i * 4)` is declared `extern T D_X[]` and indexed:
+  gcc addresses array elements from one base, not symbol+offset each time.
+- **Store order from the original.** `STORE_HINT` holds the original's
+  store offsets in order; runs of stores through one base are reordered to
+  that order (as is, and rotated: gcc emits the last independent store
+  first). `rebase` first rewrites `M2C_FIELD(p, T *, 0xA0)` to
+  `M2C_FIELD(q, T *, 0)` when `q = p + 0xA0` (sub-struct stores).
+- **Widened loads.** `x = *p` read into a wider local first: an `s8` kept in
+  an `int` gives `lb` (not `lbu`), a `u32` kept in a `u64` gives `lwu`, and a
+  `u8` in a `u64` gives `dsrl` (`func_001162f8`, `func_0012a8c0`).
+- **Returned arrays.** A void function that ends with `move v0, base` really
+  returns the global array it filled (`retarray`).
+- Others: narrowing casts on 64-bit fields, `(u32)` before `>>`, reversed
+  store runs, `volatile` removed as well as added, and the search restarts
+  from the closest draft with the other `volatile` choice.
+
+**Layout.** A tail call (`j` outside the function, then its delay slot)
+now ends a function like `jr $ra` when no earlier branch jumps past it, and
+its delay slot is kept even when it is a `nop`. 580 functions that were
+glued to the function before them are now separate (6,331 → 6,911); no
+already-matched function changed boundaries.
+
+Results: 1,793 → 2,5xx matched (see docs/progress.md). The first pass over
+everything ≤100 instructions with the asm fixes matched 710; the rules
+above added more on reruns of the drafts scoring ≤8.
+
+Still open (not automated, seen in the score 1-3 queue):
+- `jr ra` delay slot vs a `%lo`-indexed load or `la` macro
+  (`lw v0,%lo(D)(v0)` left out of / put into the slot differently from the
+  original; `func_00171078`, `func_00144e88`). Probably a different source
+  shape for array indexing; not found yet.
+- A value kept in `s0` and moved to `a0` (`move s0,zero; move a0,s0`) where
+  m2c propagated the constant (`func_00157668`, `func_001d6080`).
+- `sqrt.s` inline where m2c calls `sqrtf` (`func_00162978`): the original
+  probably used an inline-asm or builtin sqrt.
+- Arguments dropped because tools/sigs.py guessed too few (`func_0021cb88`
+  passes a 6th argument in `t1`).
+
+### decomp-permuter: `tools/permuter.py`
+
+```sh
+python3 tools/permuter.py import func_00123456 [--file draft.c]  # out/permuter/func_00123456/
+python3 tools/permuter.py run func_00123456 -j4 --stop-on-zero
+python3 tools/autodecomp.py try func_00123456 --file out/permuter/func_00123456/output-0-1/source.c
+```
+
+`import` takes the closest autodecomp draft (or `--file`), preprocesses it
+(the permuter parses C with pycparser), assembles the original from
+`kh1tool.py asm` with modern binutils (`-march=r5900`; ee-as 2.10 does not
+take `$`-named registers) and writes a `compile.sh` running ee-gcc 2.96 +
+fix-obj. `run` clones decomp-permuter into tools/toolchain/ on first use.
+The permuter's score is its own (it ignores stack offsets and weights
+register differences lightly): a score-0 output still has to pass
+`autodecomp.py try --file` (which accepts its preprocessed source) and
+`make`.
+
 Hand-matched code goes in `src/hand/text_XXXX0000.c` (same grouping as
 src/auto/, with names and comments where the meaning is clear).
 

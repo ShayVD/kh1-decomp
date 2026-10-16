@@ -214,6 +214,57 @@ def variants(code: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+NARROW_LOAD_RE = re.compile(r"M2C_FIELD\((?:[^(),]|\([^()]*\))+, ([su](?:8|16|32)) \*, (?:0x[0-9A-Fa-f]+|\d+)\)|\*(arg\d+)\b")
+WIDER = {"8": ("s32", "u32", "u64"), "16": ("s32", "u32", "u64"), "32": ("u64", "s64")}
+
+
+def widen_loads(code: str):
+    start = re.search(r"^\S.*\)\s*\{\s*$", code, re.M)
+    if not start:
+        return
+    head, body = code[: start.end()], code[start.end():]
+    narrow_globals = dict((n, t) for t, n in re.findall(r"^extern (?:volatile )?([su](?:8|16|32)) (D_[0-9A-F]{8});$", code, re.M))
+    params = dict((n, t) for t, n in re.findall(r"([su](?:8|16|32)) \*(arg\d+)", head))
+    for m in re.finditer(r"^(\s+)(?!return\b)([^\n;{}]*);$", body, re.M):
+        ind, stmt = m.group(1), m.group(2)
+        cands = []
+        cm = re.match(r"^(\S.*?) ([-+|&^]|<<|>>)= (.+)$", stmt)  # x op= y
+        if cm:
+            for n, t in narrow_globals.items():
+                if cm.group(1) == n:
+                    cands.append((t, n, f"{n} = {{w}} {cm.group(2)} {cm.group(3)}"))
+        rhs_at = stmt.find(" = ") + 3 if " = " in stmt else 0
+        for lm in NARROW_LOAD_RE.finditer(stmt, rhs_at):
+            t = lm.group(1) or params.get(lm.group(2))
+            if t:
+                cands.append((t, lm.group(0), stmt[:lm.start()] + "{w}" + stmt[lm.end():]))
+        for gn, t in narrow_globals.items():
+            for gm in re.finditer(rf"\b{gn}\b", stmt[rhs_at:]):
+                a = rhs_at + gm.start()
+                cands.append((t, gn, stmt[:a] + "{w}" + stmt[a + len(gn):]))
+        yield from _widen(head, body, m, ind, cands)
+    for m in re.finditer(r"^(\s+)(if \(.*\) \{)$", body, re.M):  # loads in a condition
+        ind, stmt = m.group(1), m.group(2)
+        cands = []
+        for lm in NARROW_LOAD_RE.finditer(stmt):
+            t = lm.group(1) or params.get(lm.group(2))
+            if t:
+                a = lm.start()
+                cast = re.search(r"\((?:[su]64|[su]32)\) $", stmt[:a])
+                a0 = cast.start() if cast else a
+                cands.append((t, lm.group(0), stmt[:a0] + "{w}" + stmt[lm.end():]))
+        yield from _widen(head, body, m, ind, cands, semicolon=False)
+
+
+def _widen(head, body, m, ind, cands, semicolon=True):
+    for t, load, new_stmt in cands:
+        for w in WIDER[t[1:]]:
+            decl = f"\n    {w} wide;"
+            nb = (body[: m.start()] + f"{ind}wide = {load};\n{ind}" + new_stmt.replace("{w}", "wide")
+                  + (";" if semicolon else "") + body[m.end():])
+            yield f"widen {w}@{m.start()}", head + decl + nb
+
+
 def rebase_fields(code: str) -> str:
     """`q = p + 0xA0; ... M2C_FIELD(p, T *, 0xA0)` -> `M2C_FIELD(q, T *, 0)`: one
     base for a run of stores into a sub-struct (lets store reordering work)."""
@@ -432,6 +483,10 @@ def _mutations(code: str):
             if body.endswith("}") and re.search(rf"\b{a.group(2)}\[", body):
                 yield (f"retarray {a.group(2)}", code[:m.start()] + f"{a.group(1)} *{m.group(1)} {{"
                        + body[:-1] + f"    return {a.group(2)};\n}}\n")
+    # a narrow value read into a wider local first: gcc then uses the
+    # sign/zero-extending load of the wider type (lb for an s8 kept in an
+    # int, lwu for a u32 kept in a u64, dsrl on it...)
+    yield from widen_loads(code)
     # value <-> void return
     m = re.search(r"^(s32|u32|M2C_UNK) (\w+\([^)]*\)) \{", code, re.M)
     if m and not re.search(r"\breturn\b[^;]*\w", code[m.end():]):

@@ -3,6 +3,7 @@
 
   tools/permuter.py import func_00123456 [--file draft.c]   # out/permuter/func_00123456/
   tools/permuter.py run func_00123456 [-j4] [--stop-on-zero ...]  # runs permuter.py on it
+  tools/permuter.py batch queue.txt --seconds 120 [--write]  # each in turn; keeps verified matches
 
 The starting C is `--file`, else autodecomp's closest failing draft
 (out/autodecomp/fail/XXXXXXXX.c). The directory gets what the permuter wants:
@@ -113,6 +114,63 @@ def cmd_run(args, cfg) -> int:
     return subprocess.run([sys.executable, str(PERMUTER / "permuter.py"), str(d), *args.rest]).returncode
 
 
+def accept(sym: str, addr: int, out_dir: Path) -> str | None:
+    """A permuter output as autodecomp code (the declarations it saw + its
+    function), if it is byte-identical."""
+    import tempfile
+    import autodecomp as A
+    A._init()
+    if A._orig is None:
+        A._orig = K.require_orig(A._cfg)
+    src = (out_dir / "source.c").read_text()
+    m = re.search(rf"^\S[^\n;]*\b{sym}\([^)]*\)\s*\{{", src, re.M)
+    if not m:
+        return None
+    pre = src[: m.start()]  # declarations after the headers' typedefs
+    tail = pre[pre.rfind("typedef"):].split("\n", 1)[1] if "typedef" in pre else pre
+    func = re.sub(r"\)\s*\n\{", ") {", src[m.start():], count=1)
+    code = "\n".join(l for l in tail.splitlines() if l.strip()) + "\n\n" + func.strip() + "\n"
+    with tempfile.TemporaryDirectory() as td:
+        ok, _why = A.build_and_compare(A._layout[addr], sym, code, Path(td))
+    return code if ok else None
+
+
+def cmd_batch(args, cfg) -> int:
+    """Import + run each function for --seconds, keep byte-identical score-0
+    outputs (written to src/auto/ with --write)."""
+    import signal
+    import autodecomp as A
+    ensure_permuter()
+    names = {a: s for s, a in K.load_registry().items()}
+    matches = {}
+    for fn in Path(args.queue).read_text().split():
+        f = K.find_func(fn if fn.startswith("func_") else "func_" + fn)
+        sym = names.get(f.addr, f"func_{f.addr:08x}")
+        ns = argparse.Namespace(function=sym, file=None)
+        if cmd_import(ns, cfg):
+            print(f"{sym} import failed", flush=True)
+            continue
+        d = OUTDIR / sym
+        p = subprocess.Popen([sys.executable, str(PERMUTER / "permuter.py"), str(d), f"-j{args.jobs}",
+                              "--stop-on-zero"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)
+        try:
+            p.wait(args.seconds)
+        except subprocess.TimeoutExpired:
+            os.killpg(p.pid, signal.SIGTERM)
+            p.wait()
+        outs = sorted(d.glob("output-*"), key=lambda o: int(o.name.split("-")[1]))
+        best = outs[0].name.split("-")[1] if outs else "-"
+        code = next((c for o in outs if o.name.startswith("output-0-") for c in [accept(sym, f.addr, o)] if c), None)
+        print(f"{sym} best {best} {'MATCH' if code else ''}", flush=True)
+        if code:
+            matches[f.addr] = code
+    if args.write and matches:
+        for path in A.write_results(matches):
+            print(f"wrote {path.relative_to(ROOT)}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -122,9 +180,14 @@ def main() -> int:
     p = sub.add_parser("run")
     p.add_argument("function")
     p.add_argument("rest", nargs=argparse.REMAINDER)
+    p = sub.add_parser("batch")
+    p.add_argument("queue", help="file with one function (func_X or address) per line")
+    p.add_argument("--seconds", type=int, default=120)
+    p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--write", action="store_true")
     args = ap.parse_args()
     cfg = K.load_config()
-    return {"import": cmd_import, "run": cmd_run}[args.cmd](args, cfg)
+    return {"import": cmd_import, "run": cmd_run, "batch": cmd_batch}[args.cmd](args, cfg)
 
 
 if __name__ == "__main__":
