@@ -29,6 +29,12 @@ asflags = "-G0 -march=r5900 -EL"
 # compiler = "ee-gcc2.96"
 # cflags = "-O2 -G8"
 
+# newlib (libm) is built with -fno-builtin, like newlib's own Makefiles:
+# fabsf stays a call (__kernel_tanf) instead of becoming abs.s.
+[[toolchain.override]]
+path = "src/sdk/libm/"
+cflags = "-O2 -G0 -fno-builtin"
+
 # Address ranges used to group the progress tracker. Ranges are half-open
 # [start, end). Functions outside every range are reported under "other".
 # Boundaries from call-graph analysis in session 1 (docs/elf-notes.md).
