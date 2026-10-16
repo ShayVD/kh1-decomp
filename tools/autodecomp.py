@@ -154,8 +154,12 @@ def m2c_candidates(f: K.Func) -> list[str]:
     return out
 
 
+# m2c's unknown type `?` (declarations, casts, parameters), not a `c ? a : b`.
+UNKNOWN_TYPE_RE = re.compile(r"(^[ \t]*|\(|,[ \t]*|\b(?:extern|static|const)[ \t]+)\?[ \t*)]", re.M)
+
+
 def usable(code: str) -> bool:
-    if "M2C_ERROR" in code or "Decompilation failure" in code or "?" in code.replace("? :", ""):
+    if "M2C_ERROR" in code or "Decompilation failure" in code or UNKNOWN_TYPE_RE.search(code):
         return False
     return set(re.findall(r"\bM2C_\w+", code)) <= ALLOWED_MACROS
 
