@@ -662,3 +662,24 @@ _localeconv_r	00256148	# hand: newlib locale.c; returns the static lconv
 setlocale	00256158	# hand: _setlocale_r(_impure_ptr, category, locale)
 localeconv	00256180	# hand: _localeconv_r(_impure_ptr)
 _mbtowc_r	002562f8	# hand: newlib mbtowc_r.c, C locale only: *pwc = *s, return *s != 0
+Balloc	00256510	# hand: newlib mprec.c; _freelist (+0x4C) of 16 via _calloc_r, Bigint of 4*2^k+20 bytes
+Bfree	002565b8	# hand: newlib mprec.c; pushes onto _freelist[v->_k]
+multadd	002565e8	# hand: newlib mprec.c
+s2b	002566f0	# hand: newlib mprec.c
+hi0bits	00256820	# hand: newlib mprec.c
+lo0bits	002568a0	# hand: newlib mprec.c
+i2b	00256960	# hand: newlib mprec.c
+mult	00256998	# hand: newlib mprec.c
+pow5mult	00256ba8	# hand: newlib mprec.c
+lshift	00256ca8	# hand: newlib mprec.c
+cmp	00256e00	# hand: newlib mprec.c
+diff	00256e68	# hand: newlib mprec.c
+ulp	00256ff8	# hand: newlib mprec.c
+b2d	002570c8	# hand: newlib mprec.c
+d2b	00257260	# hand: newlib mprec.c
+ratio	002573e8	# hand: newlib mprec.c
+_mprec_log10	002574b8	# hand: newlib mprec.c; tens[] at 0x00491FE0 below 24, else repeated *10
+_calloc_r	00257ae0	# hand: Balloc's allocator (reent, n, size)
+__swsetup	00253e60	# hand: newlib wsetup.c
+__smakebuf	002561a0	# hand: __swsetup calls it when _bf._base is NULL
+_free_r	002557d8	# hand: free() is _free_r(_impure_ptr, p) between the malloc locks

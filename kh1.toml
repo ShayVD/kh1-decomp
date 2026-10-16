@@ -79,3 +79,10 @@ path = "src/sdk/gcc991111nf/"
 compiler = "ee-gcc2.9-991111a"
 cflags = "-O2 -G0"
 no_fill = true
+
+# newlib's libc: same build as its libm (no_fill shows in mprec.c's ulp,
+# d2b and ratio; docs/sdk.md).
+[[toolchain.override]]
+path = "src/sdk/libc/"
+cflags = "-O2 -G0 -fno-builtin"
+no_fill = true

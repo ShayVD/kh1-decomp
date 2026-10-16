@@ -95,25 +95,6 @@ void func_00256158(s32 arg0, s32 arg1) {
     func_002560b8(D_0046A9C8, arg0, arg1);
 }
 
-void func_002565b8(void *arg0, void *arg1) {
-    void **temp_v0;
-
-    if (arg1 != NULL) {
-        temp_v0 = (M2C_FIELD(arg1, s32 *, 4) * 4) + M2C_FIELD(arg0, s32 *, 0x4C);
-        M2C_FIELD(arg1, void **, 0) = (void *) *temp_v0;
-        *temp_v0 = arg1;
-    }
-}
-
-s32 func_00256960(s32 arg0, s32 arg1) {
-    void *temp_v0;
-
-    temp_v0 = func_00256510(arg0, 1);
-    M2C_FIELD(temp_v0, s32 *, 0x14) = arg1;
-    M2C_FIELD(temp_v0, s32 *, 0x10) = 1;
-    return (s32) temp_v0;
-}
-
 void raise(s32 arg0) {
     _raise_r(D_0046A9C8, arg0);
 }

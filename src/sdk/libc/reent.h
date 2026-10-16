@@ -76,7 +76,15 @@ struct _reent {
     const char *_current_locale;        /* 0x034 */
     int __sdidinit;                     /* 0x038 */
     void (*__cleanup)(struct _reent *); /* 0x03C */
-    char _pad040[0xA8 - 0x40];          /* mprec, cvt, _new up to _rand_next */
+    /* used by mprec routines */
+    struct _Bigint *_result;            /* 0x040 */
+    int _result_k;                      /* 0x044 */
+    struct _Bigint *_p5s;               /* 0x048 */
+    struct _Bigint **_freelist;         /* 0x04C */
+    /* used by some fp conversion routines */
+    int _cvtlen;                        /* 0x050 */
+    char *_cvtbuf;                      /* 0x054 */
+    char _pad058[0xA8 - 0x58];          /* _new up to _rand_next */
     unsigned long long _rand_next;      /* 0x0A8 */
     char _pad0b0[0x148 - 0xB0];
     struct _atexit *_atexit;            /* 0x148 */
