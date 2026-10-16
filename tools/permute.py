@@ -17,6 +17,7 @@ Two kinds of rewrite:
 """
 from __future__ import annotations
 
+import itertools
 import re
 import struct
 import subprocess
@@ -139,7 +140,29 @@ def variants(code: str) -> list[str]:
     v = re.sub(r"\bM2C_UNK \*(\w+);", r"s8 *\1;", v)
     if v != code:
         out.append(v)
+    # m2c counts pointer increments in bytes even on typed pointers
+    v = scale_increments(code)
+    if v != code:
+        out.append(v)
     return out
+
+
+SIZES = {"s8": 1, "u8": 1, "s16": 2, "u16": 2, "s32": 4, "u32": 4, "f32": 4, "s64": 8, "u64": 8,
+         "M2C_UNK": 4, "void *": 4}
+
+
+def scale_increments(code: str) -> str:
+    """`u32 *p; ... p += 4;` -> `p += 1;` (m2c's increments are byte counts)."""
+    for m in re.finditer(r"^\s+([su](?:8|16|32|64)|f32|M2C_UNK|void \*) \*(\w+);", code, re.M):
+        size, name = SIZES[m.group(1)], m.group(2)
+        if size == 1:
+            continue
+
+        def fix(mm: re.Match) -> str:
+            n = int(mm.group(2), 0)
+            return f"{name} {mm.group(1)}= {n // size};" if n % size == 0 else mm.group(0)
+        code = re.sub(rf"\b{name} ([+-])= (0x[0-9A-Fa-f]+|\d+);", fix, code)
+    return code
 
 
 # --------------------------------------------------------------------------- mutations
@@ -149,6 +172,14 @@ UNK_RE = re.compile(r"\bM2C_UNK\b")
 CAST_RE = re.compile(r"\((?:[su](?:8|16|32|64)|f32|M2C_UNK\d*|void \*|[su](?:8|16|32) \*)\) ")
 STMT_RE = re.compile(r"^(\s+)(?!(?:if|else|do|while|for|return|switch|case|default|goto|break|continue)\b)[^\n{}]*;\s*$")
 DECL_LINE_RE = re.compile(r"^(\s+)(?:const |volatile |static |register )*(?:[su](?:8|16|32|64)|f32|f64|M2C_UNK\d*|void|char|int)\b[\s*]+\w+(\[\w*\])?;(\s*/\*.*\*/)?$")
+
+
+def _indent(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _plain_stmt(line: str) -> bool:
+    return bool(STMT_RE.match(line)) and not DECL_LINE_RE.match(line)
 
 
 def _body_range(lines: list[str]) -> tuple[int, int]:
@@ -163,6 +194,30 @@ def mutations(code: str):
     # accesses offset 0, and keeps the access order
     for m in re.finditer(r"^extern (?!volatile)", code, re.M):
         yield f"volatile@{m.start()}", code[:m.end()] + "volatile " + code[m.end():]
+    b0, b1 = _body_range(lines)
+    # reorder runs of 3-4 adjacent statements (gcc's scheduler reorders
+    # independent stores, so the source order is rarely the asm order)
+    i = b0 + 1
+    while i < b1:
+        j = i
+        while j < b1 and _plain_stmt(lines[j]) and _indent(lines[j]) == _indent(lines[i]):
+            j += 1
+        for size in (3, 4):
+            for w in range(i, j - size + 1):
+                for perm in itertools.permutations(range(w, w + size)):
+                    if list(perm) == list(range(w, w + size)) or perm[0] == w and perm[1] == w + 1:
+                        continue  # identity, or the same as a smaller window
+                    new = lines[:w] + [lines[k] for k in perm] + lines[w + size:]
+                    yield f"perm@{w}", "\n".join(new)
+        i = max(j, i + 1)
+    for i in range(b0 + 1, b1 - 1):
+        a, b = lines[i], lines[i + 1]
+        both_decl = DECL_LINE_RE.match(a) and DECL_LINE_RE.match(b)
+        both_stmt = (STMT_RE.match(a) and STMT_RE.match(b) and not DECL_LINE_RE.match(a)
+                     and not DECL_LINE_RE.match(b))
+        if (both_decl or both_stmt) and len(a) - len(a.lstrip()) == len(b) - len(b.lstrip()):
+            new = lines[:i] + [b, a] + lines[i + 2:]
+            yield f"swap@{i}", "\n".join(new)
     # signedness toggles, one occurrence at a time
     for m in TYPE_RE.finditer(code):
         t = ("u" if m.group(1) == "s" else "s") + m.group(2)
@@ -172,15 +227,6 @@ def mutations(code: str):
             yield f"unk->{t}@{m.start()}", code[:m.start()] + t + code[m.end():]
     for m in CAST_RE.finditer(code):
         yield f"nocast@{m.start()}", code[:m.start()] + code[m.end():]
-    b0, b1 = _body_range(lines)
-    for i in range(b0 + 1, b1 - 1):
-        a, b = lines[i], lines[i + 1]
-        both_decl = DECL_LINE_RE.match(a) and DECL_LINE_RE.match(b)
-        both_stmt = (STMT_RE.match(a) and STMT_RE.match(b) and not DECL_LINE_RE.match(a)
-                     and not DECL_LINE_RE.match(b))
-        if (both_decl or both_stmt) and len(a) - len(a.lstrip()) == len(b) - len(b.lstrip()):
-            new = lines[:i] + [b, a] + lines[i + 2:]
-            yield f"swap@{i}", "\n".join(new)
     # inline temps assigned once and used once
     for m in re.finditer(r"^\s+(temp_\w+) = ([^;\n]+);\s*$\n", code, re.M):
         name, expr = m.group(1), m.group(2)

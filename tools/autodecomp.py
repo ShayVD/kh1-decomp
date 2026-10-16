@@ -48,7 +48,7 @@ _names = None
 _layout = None
 _protos: dict[str, str] = {}
 _cc = ""
-OPTS = {"budget": 40, "context": True, "max_score": 16}
+OPTS = {"budget": 60, "context": True, "max_score": 16}
 
 
 def _init():
@@ -371,7 +371,7 @@ def main() -> int:
     p.add_argument("--from-report", help="only retry the functions this report marks as matching")
     p.add_argument("--only-failed", help="only retry functions this report lists as failing")
     for q in (p, sub.choices["try"]):
-        q.add_argument("--budget", type=int, default=40, help="permutations tried per function (0 = none)")
+        q.add_argument("--budget", type=int, default=60, help="permutations tried per function (0 = none)")
         q.add_argument("--max-score", type=int, default=16, help="only search drafts at most this far off")
         q.add_argument("--no-context", action="store_true", help="do not give m2c the guessed prototypes")
     args = ap.parse_args()
