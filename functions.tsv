@@ -686,3 +686,10 @@ _free_r	002557d8	# hand: free() is _free_r(_impure_ptr, p) between the malloc lo
 _fstat_r	00257bf0	# hand: __smakebuf (reent, fd, struct stat *)
 _isatty	00258910	# hand: __smakebuf asks it about character devices
 _dtoa_r	002541b8	# hand: cvt() in vfprintf.c calls it (reent, value, mode, ndigits, &decpt, &sign, &rve)
+isinf	00257528	# hand: newlib isinf (fdlibm word tests); used by _vfprintf_r
+isnan	00257570	# hand: newlib isnan
+_init_signal_r	002575b0	# hand: newlib signal.c; _sig_func (+0x1D4) = _malloc_r(128), all SIG_DFL
+_signal_r	00257620	# hand: newlib signal.c
+__sigtramp_r	00257778	# hand: newlib signal.c; 1/2/3 for SIG_DFL/SIG_ERR/SIG_IGN
+_kill_r	00257898	# hand: _raise_r's SIG_DFL path, _kill_r(ptr, _getpid_r(ptr), sig)
+_getpid_r	002578f8	# hand: see _kill_r
