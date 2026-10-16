@@ -693,3 +693,5 @@ _signal_r	00257620	# hand: newlib signal.c
 __sigtramp_r	00257778	# hand: newlib signal.c; 1/2/3 for SIG_DFL/SIG_ERR/SIG_IGN
 _kill_r	00257898	# hand: _raise_r's SIG_DFL path, _kill_r(ptr, _getpid_r(ptr), sig)
 _getpid_r	002578f8	# hand: see _kill_r
+memchr	0025632c	# hand: __sfvwrite looks for the first newline with (p, 10, len)
+memmove	0025640c	# hand: __sfvwrite COPY(): (fp->_p, p, n)

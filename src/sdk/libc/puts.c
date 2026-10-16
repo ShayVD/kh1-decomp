@@ -1,18 +1,8 @@
 /* newlib stdio/puts.c. sdk segment. */
 #include "reent.h"
 
-struct __siov {
-    const void *iov_base;
-    size_t iov_len;
-};
+#include "fvwrite.h"
 
-struct __suio {
-    struct __siov *uio_iov;
-    int uio_iovcnt;
-    int uio_resid;
-};
-
-int __sfvwrite(FILE *, struct __suio *);
 
 /* "\n" */
 extern const char D_00491B28[];
