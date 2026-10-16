@@ -210,6 +210,13 @@ def variants(code: str) -> list[str]:
     # the game's inline square root (bare sqrt.s, no sqrtf call)
     if re.search(r"\bsqrtf\(", code):
         out.append(re.sub(r"^f32 sqrtf\(f32\);\n", "", re.sub(r"(?<!\w)sqrtf\(", "PlatSqrtf(", code), flags=re.M))
+    # m2c's `loop_N: ... goto loop_N;` as a real loop: gcc only aligns loop
+    # heads (`.p2align 3`, a nop before the head) for loops it sees as loops,
+    # which shows in ee-gcc 2.9-991111 code (scePad2End)
+    for v in list(out) + [code]:
+        gl = goto_loops(v)
+        if gl != v:
+            out.append(gl)
     lp = copy_loop(code)
     for v in (lp, void_callees(code), void_callees(lp)):
         if v != code:
@@ -683,6 +690,31 @@ def copy_loop(code: str) -> str:
     out = code[:m.start()] + new + code[m.end():]
     out = re.sub(rf"^\s+[\w ]+\b{cp};\n", "", out, count=1, flags=re.M)
     return out
+
+
+def goto_loops(code: str) -> str:
+    """`loop_N:` + body + `goto loop_N;` at the label's own indent -> `for (;;)
+    { body }`, other `goto loop_N;` in the body -> `continue;`. Only when the
+    body has no loop of its own (a `continue` there would bind to it)."""
+    lines = code.split("\n")
+    i = 0
+    while i < len(lines):
+        m = re.fullmatch(r"(loop_\d+):", lines[i].strip())
+        if not m:
+            i += 1
+            continue
+        lab = m.group(1)
+        ind = " " * _indent(lines[i]) if lines[i].startswith(" ") else "    "
+        end = max((j for j in range(i + 1, len(lines)) if lines[j] == f"{ind}goto {lab};"), default=None)
+        body = lines[i + 1:end] if end else None
+        if (body is None or any(re.search(r"\b(do|while|for)\b\s*[({]", l) for l in body)
+                or any(re.search(rf"\b{lab}\b", l) for l in lines[:i] + lines[end + 1:])):
+            i += 1
+            continue
+        body = [("    " + l if l.strip() else l).replace(f"goto {lab};", "continue;") for l in body]
+        lines[i:end + 1] = [f"{ind}for (;;) {{", *body, f"{ind}}}"]
+        i += 1
+    return "\n".join(lines)
 
 
 def void_callees(code: str) -> str:
