@@ -57,7 +57,13 @@ Results per run go to `out/autodecomp.tsv` (match / mismatch / why).
 Mismatches are the hand-work queue; most differ only in register allocation
 or instruction order.
 
-Session 2 results: ≤24 instructions: 938/2,107 matched. See progress.md.
+Session 2 results (game segment): first pass ≤24 instructions 938/2,107;
+after the layout fixes, a pass over everything ≤60 instructions added 308
+more (of 3,087 tried). Of the 2,779 failures: 1,996 compile but mismatch
+(384 of them by only 1-3 words, the best hand-work queue), 563 are m2c
+output gcc 2.96 rejects (mostly pointer/int type clashes, easy to fix by
+hand), 212 had m2c errors, 7 need rodata. `out/autodecomp.tsv`-style reports
+are not committed; rerun `batch` (without `--write`) to regenerate one.
 
 ## Rodata (switch tables, strings, float/double constants)
 
