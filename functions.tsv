@@ -683,3 +683,6 @@ _calloc_r	00257ae0	# hand: Balloc's allocator (reent, n, size)
 __swsetup	00253e60	# hand: newlib wsetup.c
 __smakebuf	002561a0	# hand: __swsetup calls it when _bf._base is NULL
 _free_r	002557d8	# hand: free() is _free_r(_impure_ptr, p) between the malloc locks
+_fstat_r	00257bf0	# hand: __smakebuf (reent, fd, struct stat *)
+_isatty	00258910	# hand: __smakebuf asks it about character devices
+_dtoa_r	002541b8	# hand: cvt() in vfprintf.c calls it (reent, value, mode, ndigits, &decpt, &sign, &rve)
