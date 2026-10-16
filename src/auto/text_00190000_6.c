@@ -1,6 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "compclass.h"
 
 M2C_UNK func_00183b20(s32, s32);
 M2C_UNK func_0019e3f0(s32);
@@ -33,8 +34,8 @@ void func_00192f78(s32 arg0) {
     func_001a60e8((s32) sp, 0);
 }
 
-void func_00193178(s32 arg0, void *arg1) {
-    func_001a62a8(arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0);
+void func_00193178(s32 arg0, CompClass *arg1) {
+    func_001a62a8(arg0 + arg1->offsets[0] + 0xA0);
 }
 
 void func_001931a0(void) {
@@ -49,16 +50,16 @@ void func_001933c0(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, s8 *, 8) = 4;
 }
 
-void func_00193690(s32 arg0, void *arg1) {
-    func_001a6538(arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0);
+void func_00193690(s32 arg0, CompClass *arg1) {
+    func_001a6538(arg0 + arg1->offsets[0] + 0xA0);
 }
 
 void func_001936b8(void) {
 
 }
 
-void func_00193910(s32 arg0, void *arg1) {
-    func_001a67a0(arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0);
+void func_00193910(s32 arg0, CompClass *arg1) {
+    func_001a67a0(arg0 + arg1->offsets[0] + 0xA0);
 }
 
 void func_00193938(void) {
@@ -81,33 +82,33 @@ void func_00194360(void *arg0) {
     func_002675a8(D_00615E68 + 0x40, &M2C_FIELD(sp, M2C_UNK *, 0x40));
 }
 
-void func_001985a8(s32 arg0, void *arg1) {
-    func_002675b8(arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4) + 0xA0, &D_00615E70);
+void func_001985a8(s32 arg0, CompClass *arg1) {
+    func_002675b8(arg0 + arg1->offsets[1] + 0xA0, &D_00615E70);
 }
 
-void func_00198648(s32 arg0, void *arg1) {
+void func_00198648(s32 arg0, CompClass *arg1) {
     s32 temp_s0;
 
-    temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_s0 = arg0 + arg1->offsets[1];
     func_002675a8(temp_s0 + 0xA0, &D_003701D0);
     func_002675a8(temp_s0 + 0xB0, &D_003701F0);
 }
 
-void func_00198768(s32 arg0, void *arg1) {
+void func_00198768(s32 arg0, CompClass *arg1) {
     s32 temp_s0;
 
-    temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_s0 = arg0 + arg1->offsets[1];
     func_002675a8(temp_s0 + 0xA0, &D_003701D0);
     func_002675a8(temp_s0 + 0xB0, &D_003701F0);
 }
 
-void func_0019d8a8(s32 arg0, void *arg1) {
+void func_0019d8a8(s32 arg0, CompClass *arg1) {
     s32 temp_a1;
     s32 temp_a1_2;
     s32 temp_v0;
     void *temp_s0;
 
-    temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 8) + 0xA0;
+    temp_s0 = arg0 + arg1->offsets[2] + 0xA0;
     temp_v0 = M2C_FIELD(temp_s0, s32 *, 0x50);
     if (temp_v0 != 0) {
         func_00183b20(D_00615E64, temp_v0);

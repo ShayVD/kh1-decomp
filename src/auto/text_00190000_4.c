@@ -1,15 +1,16 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "compclass.h"
 
 M2C_UNK func_001a5ca0(void *);
 extern u8 D_00372708;
 extern void *D_00615E60;
 
-void func_00192ee8(s32 arg0, void *arg1) {
+void func_00192ee8(s32 arg0, CompClass *arg1) {
     void *temp_s0;
 
-    temp_s0 = arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0;
+    temp_s0 = arg0 + arg1->offsets[0] + 0xA0;
     func_001a5ca0(temp_s0);
     M2C_FIELD(temp_s0, s32 *, 0x9C) = 0;
     M2C_FIELD(temp_s0, s32 *, 0xA8) = 0;
@@ -20,11 +21,11 @@ void func_00192ee8(s32 arg0, void *arg1) {
     D_00372708 += 1;
 }
 
-void func_0019ba78(s32 arg0, void *arg1) {
+void func_0019ba78(s32 arg0, CompClass *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
-    temp_a0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_a0 = arg0 + arg1->offsets[1];
     temp_a0_2 = temp_a0 + 0xA0;
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
     M2C_FIELD(temp_a0_2, s8 *, 4) = 0;
