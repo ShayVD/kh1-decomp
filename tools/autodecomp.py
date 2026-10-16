@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import difflib
 import os
 import re
 import subprocess
@@ -25,6 +26,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import kh1tool as K  # noqa: E402
+import permute  # noqa: E402
+import sigs as SIGS  # noqa: E402
 from elf32 import Elf  # noqa: E402
 
 ROOT = K.ROOT
@@ -43,28 +46,96 @@ SYM_RE = re.compile(r"^(func_([0-9a-fA-F]{8})|D_([0-9a-fA-F]{8}))$")
 _cfg = None
 _names = None
 _layout = None
+_protos: dict[str, str] = {}
+_cc = ""
+OPTS = {"budget": 40, "context": True, "max_score": 16}
 
 
 def _init():
-    global _cfg, _names, _layout
+    global _cfg, _names, _layout, _protos, _cc
     if _cfg is None:
         _cfg = K.load_config()
         _names = {a: s for s, a in K.load_registry().items()}
         _layout = {f.addr: f for f in K.load_layout()}
+        sig = SIGS.load()
+        for a, sg in sig.items():
+            n = _names.get(a, f"func_{a:08x}")
+            _protos[n] = SIGS.prototype(n, sg)
+        _cc = str(K.TOOLCHAIN_DIR / K.flags_for(_cfg, "src/auto/x.c").compiler / "bin" / "ee-gcc")
+
+
+def disasm(blob: bytes, addr: int) -> list[str]:
+    """objdump one blob as R5900 code; returns 'mnemonic operands' per word."""
+    with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as fh:
+        fh.write(blob)
+        path = fh.name
+    try:
+        r = subprocess.run([f"{K.BINUTILS}objdump", "-D", "-b", "binary", "-m", "mips:5900", "-EL",
+                            f"--adjust-vma=0x{addr:x}", path], capture_output=True, text=True)
+    finally:
+        os.unlink(path)
+    out = []
+    for line in r.stdout.splitlines():
+        m = re.match(r"^\s*[0-9a-f]+:\s+[0-9a-f]{8}\s+(.*)$", line)
+        if m:
+            out.append(re.sub(r"\s+", " ", m.group(1)).strip())
+    return out
+
+
+def print_diff(f: K.Func, ours: bytes) -> None:
+    theirs = _orig.read(f.addr, f.size)
+    a, b = disasm(theirs, f.addr), disasm(ours, f.addr)
+    for i in range(max(len(a), len(b))):
+        x = a[i] if i < len(a) else ""
+        y = b[i] if i < len(b) else ""
+        mark = "  " if x == y else "!="
+        print(f"{f.addr + 4 * i:08x} {mark} {x:<40} {y}")
+
+
+_m2c_main = None
+
+
+def run_m2c(argv: list[str]) -> tuple[int, str]:
+    """Run m2c in this process (much faster than a subprocess per call: the
+    prototype context is parsed once per worker)."""
+    global _m2c_main
+    import contextlib
+    import io
+    if _m2c_main is None:
+        sys.path.insert(0, str(M2C.parent))
+        import m2c.main as mm
+        orig = mm.build_typemap
+        cache = {}
+
+        def build_typemap(contexts, arch, use_cache=True):
+            key = tuple(str(c) for c in contexts)
+            if key not in cache:
+                cache[key] = orig(contexts, arch, use_cache=use_cache)
+            return cache[key]
+        mm.build_typemap = build_typemap
+        _m2c_main = mm
+    out, err = io.StringIO(), io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            rc = _m2c_main.run(_m2c_main.parse_flags(argv))
+    except (Exception, SystemExit):
+        return 1, ""
+    return rc, out.getvalue()
 
 
 def m2c_candidates(f: K.Func) -> list[str]:
-    asm = ".set noat\n.set noreorder\n\n" + K.function_asm(_cfg, f, _names)
+    asm = ".set noat\n.set noreorder\n\n" + K.function_asm(_cfg, f, _names, eabi=True)
     with tempfile.NamedTemporaryFile("w", suffix=".s", delete=False) as fh:
         fh.write(asm)
         path = fh.name
     out = []
+    ctx = [["--context", str(SIGS.SIGS_H)]] if OPTS["context"] and SIGS.SIGS_H.exists() else []
     try:
-        for v in VARIANTS:
-            r = subprocess.run([sys.executable, str(M2C), "-t", "mipsee-gcc-c", *v, path],
-                               capture_output=True, text=True)
-            if r.returncode == 0 and r.stdout not in out:
-                out.append(r.stdout)
+        for c in [[], *ctx]:
+            for v in VARIANTS:
+                rc, text = run_m2c(["-t", "mipsee-gcc-c", *c, *v, path])
+                if rc == 0 and text not in out:
+                    out.append(text)
     finally:
         os.unlink(path)
     return out
@@ -85,8 +156,14 @@ def resolve(sym: str, registry: dict[str, int]) -> int | None:
     return None
 
 
+LAST_BYTES: bytes = b""
+
+
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
-    """Compile `code`, link .text.<sym> at f.addr, compare with the original."""
+    """Compile `code`, link .text.<sym> at f.addr, compare with the original.
+    The linked bytes are left in LAST_BYTES (for --diff)."""
+    global LAST_BYTES
+    LAST_BYTES = b""
     fl = K.flags_for(_cfg, "src/auto/x.c")
     cc = K.TOOLCHAIN_DIR / fl.compiler / "bin" / "ee-gcc"
     src, asm, obj, out = (workdir / n for n in ("c.c", "c.s", "c.o", "c.elf"))
@@ -126,35 +203,89 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     if sec is None:
         return False, "no code"
     ours = linked.section_bytes(sec)
+    LAST_BYTES = ours
     theirs = _orig.read(f.addr, f.size)
     ours_p = ours + bytes(max(0, f.size - len(ours)))
     if len(ours) > f.size or ours_p != theirs:
         diff = sum(1 for i in range(0, min(len(ours), f.size), 4) if ours[i:i + 4] != theirs[i:i + 4])
-        return False, f"mismatch ({len(ours)} vs {f.size} bytes, {diff} words differ)"
+        return False, f"mismatch ({len(ours)} vs {f.size} bytes, {diff} words differ, score {score(ours, theirs)})"
     return True, "match"
+
+
+def score(ours: bytes, theirs: bytes) -> int:
+    """0 for identical code; otherwise how many words are not matched in
+    order (insertions and deletions count once each)."""
+    a = [ours[i:i + 4] for i in range(0, len(ours), 4)]
+    b = [theirs[i:i + 4] for i in range(0, len(theirs), 4)]
+    m = sum(x.size for x in difflib.SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks())
+    return len(a) + len(b) - 2 * m
+
+
+def why_score(why: str) -> float:
+    m = re.search(r"score (\d+)", why)
+    return int(m.group(1)) if m else float("inf")
 
 
 _orig = None
 
 
 def try_function(addr: int) -> tuple[int, bool, str, str]:
+    """m2c drafts, fixed up, then a greedy search over single-edit
+    permutations of the closest one (tools/permute.py)."""
     global _orig
     _init()
     if _orig is None:
         _orig = K.require_orig(_cfg)
     f = _layout[addr]
     sym = _names.get(addr, f"func_{addr:08x}")
-    cands = [c for c in m2c_candidates(f) if usable(c)]
-    if not cands:
+    raw = [c for c in m2c_candidates(f) if usable(c)]
+    if not raw:
         return addr, False, "m2c output not usable", ""
-    last = ""
+    cands = []
+    for c in raw:
+        p = permute.preprocess(c, _protos, _cc)
+        cands += [p, *permute.variants(p)]
+    cands = list(dict.fromkeys(cands))
+    seen = set(cands)
+    best = (float("inf"), "", cands[0])
     with tempfile.TemporaryDirectory() as td:
         for code in cands:
             ok, why = build_and_compare(f, sym, code, Path(td))
             if ok:
                 return addr, True, why, code
-            last = why
-    return addr, False, last, cands[0]
+            sc = why_score(why)
+            if sc < best[0] or best[1] == "":
+                best = (sc, why, code)
+        evals = 0
+        if best[0] > OPTS["max_score"]:
+            return addr, False, best[1], best[2]
+        sideways = 3  # moves to an equally close draft when stuck (e.g. two swaps needed)
+        while best[0] != float("inf") and evals < OPTS["budget"]:
+            improved = False
+            level = None
+            for desc, code in permute.mutations(best[2]):
+                if code in seen:
+                    continue
+                seen.add(code)
+                evals += 1
+                ok, why = build_and_compare(f, sym, code, Path(td))
+                if ok:
+                    return addr, True, f"match (permuted, {evals} tries)", code
+                sc = why_score(why)
+                if sc < best[0]:
+                    best = (sc, why, code)
+                    improved = True
+                    break
+                if sc == best[0] and level is None:
+                    level = (sc, why, code)
+                if evals >= OPTS["budget"]:
+                    break
+            if not improved:
+                if level is None or sideways == 0:
+                    break
+                sideways -= 1
+                best = level
+    return addr, False, best[1], best[2]
 
 
 # --------------------------------------------------------------------------- output
@@ -226,6 +357,8 @@ def main() -> int:
     p = sub.add_parser("try")
     p.add_argument("functions", nargs="+")
     p.add_argument("--show", action="store_true")
+    p.add_argument("--diff", action="store_true", help="original vs ours, per instruction")
+    p.add_argument("--file", help="try this C file instead of m2c output")
     p = sub.add_parser("batch")
     p.add_argument("--segment", default="game")
     p.add_argument("--category")
@@ -236,14 +369,39 @@ def main() -> int:
     p.add_argument("--write", action="store_true", help="write matches into src/auto/")
     p.add_argument("--report", default=str(K.OUT / "autodecomp.tsv"))
     p.add_argument("--from-report", help="only retry the functions this report marks as matching")
+    p.add_argument("--only-failed", help="only retry functions this report lists as failing")
+    for q in (p, sub.choices["try"]):
+        q.add_argument("--budget", type=int, default=40, help="permutations tried per function (0 = none)")
+        q.add_argument("--max-score", type=int, default=16, help="only search drafts at most this far off")
+        q.add_argument("--no-context", action="store_true", help="do not give m2c the guessed prototypes")
     args = ap.parse_args()
+    OPTS["budget"] = args.budget
+    OPTS["max_score"] = args.max_score
+    OPTS["context"] = not args.no_context
+    if not SIGS.SIGS_TSV.exists():
+        SIGS.write(K.load_config())
     _init()
     if args.cmd == "try":
+        global _orig
+        _orig = K.require_orig(_cfg)
         for fn in args.functions:
-            addr, ok, why, code = try_function(K.find_func(fn).addr)
+            f = K.find_func(fn)
+            if args.file:
+                sym = _names.get(f.addr, f"func_{f.addr:08x}")
+                code = Path(args.file).read_text()
+                with tempfile.TemporaryDirectory() as td:
+                    ok, why = build_and_compare(f, sym, code, Path(td))
+                addr = f.addr
+            else:
+                addr, ok, why, code = try_function(f.addr)
+                if args.diff and not ok and code:
+                    with tempfile.TemporaryDirectory() as td:
+                        build_and_compare(f, _names.get(addr, f"func_{addr:08x}"), code, Path(td))
             print(f"{addr:08x}  {'MATCH' if ok else 'FAIL '}  {why}")
             if args.show:
                 print(code)
+            if args.diff and LAST_BYTES:
+                print_diff(f, LAST_BYTES)
         return 0
 
     done = K.decompiled_addrs()
@@ -266,16 +424,25 @@ def main() -> int:
         prev = {int(l.split("\t")[0], 16) for l in Path(args.from_report).read_text().splitlines()[1:]
                 if l.split("\t")[1] == "match"}
         sel = [a for a in sel if a in prev]
+    if args.only_failed:
+        prev = {int(l.split("\t")[0], 16) for l in Path(args.only_failed).read_text().splitlines()[1:]
+                if l.split("\t")[1] == "fail"}
+        sel = [a for a in sel if a in prev]
     sel = sel[: args.limit] if args.limit else sel
     print(f"trying {len(sel)} functions with {args.jobs} jobs", flush=True)
     matches, report = {}, []
     with ProcessPoolExecutor(args.jobs) as ex:
-        for addr, ok, why, code in ex.map(try_function, sel, chunksize=4):
+        for n, (addr, ok, why, code) in enumerate(ex.map(try_function, sel, chunksize=4), 1):
             report.append(f"{addr:08x}\t{'match' if ok else 'fail'}\t{why}")
+            if n % 100 == 0:
+                print(f"  {n}/{len(sel)} done, {len(matches) + ok} matched", flush=True)
             if ok:
                 matches[addr] = code
                 CACHE.mkdir(parents=True, exist_ok=True)
                 (CACHE / f"{addr:08x}.c").write_text(code)
+            elif code:  # closest draft, for hand work (out/autodecomp/fail/)
+                (CACHE / "fail").mkdir(parents=True, exist_ok=True)
+                (CACHE / "fail" / f"{addr:08x}.c").write_text(f"/* {why} */\n" + code)
     Path(args.report).write_text("addr\tresult\tdetail\n" + "\n".join(report) + "\n")
     print(f"matched {len(matches)}/{len(sel)} (report: {args.report})")
     if args.write and matches:
