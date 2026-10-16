@@ -67,6 +67,14 @@ typedef union {
         (d) = sh_u.value;               \
     } while (0)
 
+#define SET_LOW_WORD(d, v)              \
+    do {                                \
+        ieee_double_shape_type sl_u;    \
+        sl_u.value = (d);               \
+        sl_u.parts.lsw = (v);           \
+        (d) = sl_u.value;               \
+    } while (0)
+
 #define INSERT_WORDS(d, ix0, ix1)       \
     do {                                \
         ieee_double_shape_type iw_u;    \
