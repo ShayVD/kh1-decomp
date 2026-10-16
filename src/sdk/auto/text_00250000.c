@@ -126,17 +126,6 @@ void func_002578f8(void) {
     func_00258930();
 }
 
-s32 func_00257bf0(s32 arg0, s32 arg1, s32 arg2) {
-    s32 temp_v0;
-
-    D_00494028 = 0;
-    temp_v0 = func_00258918(arg1, arg2);
-    if ((temp_v0 == -1) && (D_00494028 != 0)) {
-        *(M2C_UNK *)arg0 = (s32) D_00494028;
-    }
-    return temp_v0;
-}
-
 void func_002585e0(void) {
     D_0046AE44 = 0;
 }

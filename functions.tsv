@@ -698,3 +698,12 @@ memmove	0025640c	# hand: __sfvwrite COPY(): (fp->_p, p, n)
 malloc_extend_top	0024f590	# hand: static in newlib mallocr.c; _sbrk_r(nb + top_pad + 16, page rounded), then the alignment correction
 _malloc_trim_r	00255ad0	# hand: newlib mallocr.c malloc_trim; _free_r calls it with top_pad past trim_threshold
 _sbrk_r	00250dd0	# hand: mallocr MORECORE (reent, increment)
+_write_r	00257a80	# hand: __swrite calls it (reent, fd, buf, n)
+_close_r	00257b98	# hand: __sclose tail-calls it (reent, fd)
+_lseek_r	00257c50	# hand: __sseek calls it (reent, fd, off, whence)
+_read_r	00257cb0	# hand: __sread calls it (reent, fd, buf, n)
+_write	00258728	# hand: _write_r wraps it
+_close	00258848	# hand: _close_r wraps it
+_lseek	00258858	# hand: _lseek_r wraps it
+_read	002587a8	# hand: _read_r wraps it
+_fstat	00258918	# hand: _fstat_r wraps it

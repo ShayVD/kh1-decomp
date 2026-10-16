@@ -12,10 +12,6 @@ void srand(s64 arg0) {
     M2C_FIELD(D_0046A9C8, u64 *, 0xA8) = (u64) ((u64) (arg0 << 0x20) >> 0x20);
 }
 
-void func_00257a60(void *arg0) {
-    func_00257b98(M2C_FIELD(arg0, s32 *, 0x54), M2C_FIELD(arg0, s16 *, 0xE));
-}
-
 s32 func_00258918(s32 arg0, void *arg1) {
     M2C_FIELD(arg1, s64 *, 0x48) = 0;
     M2C_FIELD(arg1, s32 *, 4) = 0x2000;
