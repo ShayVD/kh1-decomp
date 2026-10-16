@@ -84,7 +84,7 @@ the probes were re-run on the retail ELF (SHA-256 `1993a4da…`) with the same
 | SCE SDK | 2.5.0 | `PsIIlibkernl2500`, `PsIIlibgraph2500`, `PsIIlibpad2 2500`, … banners. SDK 2.5 shipped ee-gcc 2.96. |
 | `.comment` / `GCC:` strings | none | Stripped. No symbol table either. |
 | Flags (game code) | `-O2 -G0` | All probes. Small data is not used (globals are addressed with `lui`/offset, never `$gp`). |
-| Flags (SCE libraries) | not checked yet | |
+| Flags (SCE libraries) | `-O2 -G0`; SCE code: ee-gcc 2.9-991111a; newlib: 2.96 with `-fno-builtin` and no_fill | session 5, docs/sdk.md |
 | Language | C, probably | Assert-style strings name `.c` files (`ttlib/ui.c`, `ttlib/ui_gauge.c`, `src/decode.c`, `src/sa_task.c`). No gcc2-mangled names found in strings. C++ not ruled out for other modules. |
 | Sibling calls | yes | Tail calls as `ld ra` … `j func` occur; 2.96 at -O2 emits them. |
 
@@ -135,3 +135,20 @@ them automatically (docs/workflow.md).
 - **Stack locals** sit at `sp+0` up to the lowest callee-saved slot; there
   is no outgoing-argument area (EABI: 8 integer + 8 float argument
   registers).
+
+## Session 5: SDK flags and no_fill
+
+The SCE libraries (libkernl, libgraph, libpad2...) were built with ee-gcc
+2.9-991111 (48 matches with `ee-gcc2.9-991111a` that 2.96 could not
+produce). newlib's libc and libm and libgcc2's `_*.c` objects match 2.96
+`-O2 -G0 -fno-builtin` once **no_fill** is applied: their assembler left
+every branch and call delay slot it did not get from the compiler as a
+`nop` (gcc 2.96's own `.set noreorder` blocks are untouched).
+`no_fill()` in tools/kh1tool.py rewrites the compiler's assembly that way; kh1.toml
+turns it on per path (`no_fill = true` in a `[[toolchain.override]]`,
+longest prefix wins). fp-bit (`dp-bit.c`) fills normally.
+
+ee-gcc 2.96 calls double-precision helpers by their GOFAST names
+(`dpadd`, `dpmul`...); the retail build linked libgcc's `__adddf3` etc.
+`LIBCALL_ALIASES` in kh1tool.py resolves each GOFAST name to the original
+routine (same calling convention).

@@ -1,4 +1,4 @@
-# Decompiling: tools and workflow (sessions 2-4)
+# Decompiling: tools and workflow (sessions 2-5)
 
 ## Picking functions: `make rank`
 
@@ -279,3 +279,55 @@ jump table and string literals.
 
 The batch matcher skips candidates that produce rodata (m2c refers to
 strings and constants as `D_` symbols anyway).
+
+## Session 5: what changed
+
+**Layout.** A function entered only by a tail jump (`j`, no `jal`) is now
+its own function (35 more entries, 6,911 → 6,946).
+
+**tools/sigs.py** (argument counts) now builds a CFG with delay slots and
+runs a liveness pass over it instead of a linear scan, so an argument read
+on one path only counts (`func_0021cb88`'s 6th argument in `t1`). It also
+follows jump tables (`lui`/`lw %lo(T)(b)` bounded by `sltiu`), counts the
+named arguments of variadic functions (the ones they do not spill), and
+takes kernel syscall stubs' argument counts from ps2sdk's kernel.h.
+
+**permute.py rules added** (each found in the score 1-3 queue):
+- integer dereferences m2c writes (`*(s32 *) x` on an `int`): the rejected
+  lines are rewritten and recompiled (`fix_compile_errors`);
+- callees called with differing argument counts are declared without a
+  prototype (unless they take floats);
+- float spellings (`0.0f` no longer stops the other rules);
+- the game's inline square root: a bare `sqrt.s`, which `sqrtf` would wrap
+  in a NaN check, is `PlatSqrtf` (include/platform/math.h);
+- counter loops m2c split into a counter and a copy; extern results never
+  used are declared `void` (v0 free after the call, `func_00157668`);
+- early returns (`if (c) { ...; return; }` instead of the inverse);
+- `(s32) (x >> n) & m` on 64-bit values (truncate before `andi`) and a
+  64-bit constant kept for a 64-bit callee argument (`func_001dbcd8`).
+
+**autodecomp.py.** `usable()` rejected every draft containing `?:` (it
+took the ternary for m2c's unknown type `?`); 3 matches and 138 new
+scored drafts after the fix. `--out-dir DIR` (batch and try) compiles
+drafts with that directory's kh1.toml flags (compiler, `-fno-builtin`,
+no_fill), so the same run can target `src/sdk/gcc991111/`. `try --file`
+sees the file's own directory's headers.
+
+**decomp-permuter** on the 172 drafts scoring ≤4: 50 matched (commit
+`auto: 50 permuter matches`).
+
+**Why m2c output is unusable** (the ~200 left): about 150 hit unknown
+types (`?`, m2c could not decide between pointer and int); most of the
+rest are instructions m2c does not model, mainly the unaligned 64-bit
+`ldl/ldr` and `sdl/sdr` pairs (copies of unaligned structs).
+
+**Hand work on the SDK** (docs/sdk.md "Session 5"): libm complete,
+libgcc fp-bit and libgcc2, the libkernl syscall stubs as assembly
+(`src/sdk/libkernl/syscall.s`, one `.section .text.<name>` per stub: the
+build accepts `.s` sources), and most of newlib's libc. Static functions
+need a functions.tsv entry like any other (the build places functions by
+`.text.<name>`).
+
+Results: 2,570 → 3,216 matched; game segment 2,821 / 6,224, SDK 395 / 722.
+A full-game autodecomp pass (`--max-insns 5000`) found few new matches
+(the easy ones are done): the rest needs permuter time or hand work.
