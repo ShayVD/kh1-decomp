@@ -552,6 +552,7 @@ __make_fp	00264d40	# hand: (class, sign, exp, frac) into a parts struct, __pack_
 __pack_d	00264d70	# hand: parts struct to double bits (0x800FFFFF masks); called by every df routine
 __unpack_d	00264e48	# hand: double bits to parts struct; called by every df routine
 __fpcmp_parts_d	00264f08	# hand: compares two parts structs (NaN, inf, zero, sign, exp, frac); only caller __cmpdf2
+_fpadd_parts	00262cf0	# hand: static in gcc fp-bit.c (double build); __adddf3/__subdf3 call it, returns &__thenan_df for inf - inf
 __pack_f	00265028	# hand: parts struct to float bits; only caller __make_fp
 sceGsDefDispEnv	00265608	# error-string prefix
 sceGsPutDrawEnv	00265a40	# error-string prefix
