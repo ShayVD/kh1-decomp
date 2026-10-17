@@ -95,12 +95,4 @@ void func_001a9e70(void) {
     func_001aa918();
 }
 
-void func_001aaed0(void) {
-    func_00265bc0(0, 0);
-    func_00266f38(D_00372908, &D_00373000);
-}
 
-void func_001aaf00(void) {
-    func_00265bc0(0, 0);
-    func_00266f38(D_00372908, &D_00373030);
-}

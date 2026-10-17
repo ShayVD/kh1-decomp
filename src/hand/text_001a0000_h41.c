@@ -875,3 +875,50 @@ s64 func_001c0bf0(s64 x, u32 type) {
     }
     return x;
 }
+
+/* ---- func_001c13e8 (needs func_001c0bf0 above) ---- */
+typedef struct {
+    u8 pad[380]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
+    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
+} VM_1c13e8;
+s32 func_001c13e8(VM_1c13e8 *v, s32 idx) {
+    s8 *a = func_00232cc0(1);
+    s8 *b = func_00232cc0(2);
+    if (idx < 0x800) {
+        a[idx] = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    } else if (idx < 0x900) {
+        idx -= 0x800;
+        *(u8 *)(idx + (u32)a + 0x800) = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    } else if (idx < 0xb00) {
+        idx -= 0x900;
+        if ((s32)(v->flags >> 5) & 1) {
+            D_0038B4C4[idx] = v->stack[v->sp];
+            v->sp--;
+        } else {
+            D_0038ACC4[idx] = v->stack[v->sp];
+            v->sp--;
+        }
+    } else if (idx < 0xc80) {
+        *(u8 *)(idx + (u32)a - 0x200) = v->stack[v->sp];
+        v->sp--;
+    } else if (idx < 0xcc0) {
+        idx -= 0xc80;
+        D_003C39B0[idx] = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    } else if (idx < 0xd00) {
+        idx -= 0xcc0;
+        D_003C39F0[idx] = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    } else if (idx < 0xd40) {
+        idx -= 0xd00;
+        D_003C3A30[idx] = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    } else {
+        idx -= 0xd40;
+        b[idx] = func_001c0bf0(v->stack[v->sp], 2);
+        v->sp--;
+    }
+    return 2;
+}

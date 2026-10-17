@@ -324,15 +324,6 @@ s32 func_00175820(V3 *a, V3 *b, void *pl, V4 *out) {
     return 1;
 }
 
-s32 func_001770b8(void) {
-    switch (D_00575894->x70) {
-    case 0: return D_003623F8 > 1.0f;
-    case 8: return D_003623F8 > 7.0f;
-    case 24: return D_003623F8 > 7.0f;
-    default: return D_003623F8 > 0.1f;
-    }
-}
-
 s32 func_00177168(void) {
     switch (D_00575894->x70) {
     case 0: return D_003623F4 > 1.0f;

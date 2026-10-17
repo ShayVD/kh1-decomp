@@ -55,6 +55,16 @@ f32 sinf(f32);
 f32 cosf(f32);
 
 /* ---- func_0017bc90 ---- */
+extern f32 D_003623F8;
+s32 func_001770b8(void) {
+    switch (D_00575894->x70) {
+    case 0: return D_003623F8 > 1.0f;
+    case 8: return D_003623F8 > 7.0f;
+    case 24: return D_003623F8 > 7.0f;
+    default: return D_003623F8 > 0.1f;
+    }
+}
+
 void func_0017bc90(s32 a0) {
     f32 m[4][4];
     V4 p;
@@ -259,6 +269,49 @@ void func_0017cb88(void) {
 }
 
 /* ---- func_0017d628 ---- */
+typedef struct { V4 a; V4 b; s32 mode; } S690;
+extern S690 D_00362690;
+extern u8 D_002E31B0[];
+f32 func_0012eca8(void *, void *);
+f32 func_00121840(void *, void *);
+void func_002674f0(void *, void *, void *, f32);
+s32 func_001770b8(void);
+void func_0017bfe8(void);
+void func_00267560(void *, void *, f32);
+
+void func_0017cf08(void) {
+    f32 m[4][4];
+    V4 v;
+    V4 v2;
+    V4 v3;
+    Path *path = D_00362438;
+    f32 r, ang, k;
+
+    r = func_0012eca8(D_002E31B0, &D_00362690);
+    func_00267530(&v, &D_00362690, &D_00575940.x30);
+    func_002673b8(&v, &v);
+    func_00267560(&v, &v, r + 100.0f);
+    func_00267518(&D_00362690.b, &v, &D_00362690);
+    func_00267530(&v2, &D_005758E0, &D_005758D0);
+    func_00267530(&v3, &D_00575940.x30, &D_005758D0);
+    ang = func_00121840(&v2, &v3) * 180.0f / 3.141592562f;
+    k = (ang < 0.0f ? 0.0f : (21.19999743f < ang ? 21.19999743f : ang)) / 21.19999743f * 0.5f + 0.5f;
+    func_002674f0(&v, &D_00575940.x30, &D_00362690.b, k);
+    func_00267530(&v, &v, &D_005758E0);
+    func_00267560(&v, &v, D_002BBDFC * 0.04999999795f);
+    func_00267518(&D_005758E0, &D_005758E0, &v);
+    if (D_00575940.x58 < 250.0f && func_001770b8()) D_00362690.mode = 2;
+    else if (400.0f < D_00575940.x58 && func_001770b8()) D_00362690.mode = 1;
+    if (!D_00575940.x65) {
+        if (D_00362690.mode == 1) func_0017cb88();
+        else func_0017bc90(0);
+    }
+    D_00575940.x66 = 0;
+    func_0017bfe8();
+    func_0017b308(m, path->seg, path->n, D_00575940.x40, path->flags & 1);
+    func_0017b250(&D_00575940, m, D_00575940.x48);
+}
+
 typedef struct Box { V4 min; V4 max; void *x20; s32 x24; u8 pad28[8]; } Box;
 extern Box *D_00362430;
 extern void *D_00362434;

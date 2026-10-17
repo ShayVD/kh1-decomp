@@ -412,3 +412,314 @@ void pppKeThSftFrame(PppObjectB *obj, PppThSftKey *key, PppEntry *e) {
     d->h[14] += w->h[14];
     d->h[15] += w->h[15];
 }
+
+/* --- pppKeBornRnd: spawn instances at vertices of a vertex map --- */
+typedef struct {
+    s32 frame;
+    s16 map0;     /* +0x4 */
+    s16 map1;     /* +0x6 */
+    u8 count;     /* +0x8 */
+    u8 mask;      /* +0x9 */
+    u8 rnd;       /* +0xA */
+    u8 padB;
+    s32 slot;     /* +0xC */
+    s32 off0;     /* +0x10 */
+    s32 off1;     /* +0x14 */
+    s32 off2;     /* +0x18 */
+} PppBornRndKey;
+
+typedef struct {
+    u8 pad[0x10];
+    PppMtx m;    /* +0x10 */
+    PppMtx m2;   /* +0x50 */
+    VtxS16 *vtx; /* +0x90 */
+} PppVtxOwner;
+
+s32 func_001a8f30(void);
+void sceVu0CopyMatrix(void *, void *);
+void func_002672f8(void *, void *, void *);
+void func_001a90f8(void *, void *, void *);
+
+
+/* --- pppKeBornRnd4: born-at-random plus spawn at vertices --- */
+typedef struct {
+    s32 frame;
+    s16 n;        /* +0x4 */
+    s16 pad6;
+    f32 speed;    /* +0x8 */
+    u8 c;         /* +0xC */
+    u8 mask;      /* +0xD */
+    u8 b;         /* +0xE */
+    u8 padF;
+    s32 slot;     /* +0x10 */
+    s32 off0;     /* +0x14 */
+    s32 off1;     /* +0x18 */
+    s32 off2;     /* +0x1C */
+    s32 off3;     /* +0x20 */
+    s32 off4;     /* +0x24 */
+} PppBorn4Key;
+
+extern s32 D_00616234;
+void func_0018d7d8(void *owner, PppBorn4Key *key, s16 *pos);
+void func_001a5520(PppObject *, PppBorn4Key *, void *, void *, s16, u8, u8);
+void func_001a9098(void *, f32 *);
+void func_00267530(f32 *, f32 *, f32 *);
+void func_002673b8(f32 *, f32 *);
+void func_00267560(f32 *, f32 *, f32);
+
+void pppKeBornRnd4Frame(PppObject *obj, PppBorn4Key *key, PppEntry *e) {
+    PppObject **pp = &obj;
+    PppVec4 v;
+    u16 *w;
+    s32 rnd;
+    s32 r;
+    VtxMap *m;
+    VtxS16 *va;
+    s32 idx;
+    s32 k;
+
+    if (D_00616234 != 0)
+        return;
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL) && key->mask != 0xFF &&
+        !((func_001a8f30() >> 8) & key->mask)) {
+        if (key->slot == -1 || key->off1 == -1 || key->off3 == -1)
+            return;
+        func_001a5520(obj, key, func_0018d7d8, PPP_WORK(void, obj, e, 0), key->n, key->b, key->c);
+    }
+    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
+        return;
+    r = func_001a8f30();
+    if (key->mask == 0xFF)
+        return;
+    if ((r >> 8) & key->mask)
+        return;
+    if (key->slot == -1 || key->off1 == -1 || key->off3 == -1)
+        return;
+    w = PPP_WORK(u16, obj, e, 0);
+    m = &D_00615E64->maps[key->n];
+    va = ((PppVtxOwner *) D_00615E68)->vtx;
+    if (va == 0)
+        va = D_00615E64->res[m->slot].vtx;
+    rnd = key->b;
+    if (rnd)
+        idx = r % m->n;
+    else
+        idx = *w;
+    for (k = key->c; k > 0; k--) {
+        u8 *inst = inl_spawn(D_00615E60, key->slot, obj);
+        s32 vi = m->map[idx];
+        u8 *d0 = inst + key->off0 + 0xA0;
+        u8 *d2 = inst + key->off2 + 0xA0;
+        u8 *d1 = inst + key->off4 + 0xA0;
+        VtxS16 *p;
+
+        p = &va[vi];
+        v[0] = p->x;
+        v[1] = p->y;
+        v[2] = p->z;
+        v[3] = 1.0f;
+        idx++;
+        func_002672f8(v, D_00615E68->m, v);
+        func_001a9098(d0, v);
+        func_00267530(v, v, D_00615E68->m[3]);
+        func_002673b8(v, v);
+        func_001a9098(d1, v);
+        func_00267560(v, v, key->speed);
+        func_001a9098(d2, v);
+        if (rnd)
+            idx = func_001a8f30() % m->n;
+        else if (idx >= m->n)
+            idx = 0;
+    }
+    *w = idx;
+}
+
+/* --- pppKeMdlTfdUv / Uv2: scrolled texture page upload, then draw --- */
+typedef struct {
+    s32 frame;
+    s32 id;         /* +0x4 */
+    f32 d0[3];      /* +0x8 */
+    s32 u, v;       /* +0x14 */
+    u8 page;        /* +0x1C */
+    u8 pad1D[3];
+    f32 d1[3];      /* +0x20 */
+    f32 d2[3];      /* +0x2C */
+    u8 b38;         /* +0x38 */
+} PppTfdUvKey;
+
+s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
+void func_001a9460(f32, s32, s32, void *);
+void func_001aa6b0(void *, s32, s32, s32);
+void func_001a9790(s32, void *, s32, s32, s32, s32, void *);
+
+void pppKeMdlTfdUvDraw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w[1] += w[2];
+        w[5] += w[6];
+        w[8] += w[9];
+        w[0] += w[1];
+        w[4] += w[5];
+        w[7] += w[8];
+        if (obj->frame == key->frame) {
+            w[0] += key->d0[0];
+            w[1] += key->d0[1];
+            w[2] += key->d0[2];
+            w[4] += key->d1[0];
+            w[5] += key->d1[1];
+            w[6] += key->d1[2];
+            w[7] += key->d2[0];
+            w[8] += key->d2[1];
+            w[9] += key->d2[2];
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w[0], key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, w[4], w[7], 1, 0);
+}
+
+void pppKeMdlTfdUv2Draw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w[1] += w[2];
+        w[5] += w[6];
+        w[8] += w[9];
+        w[0] += w[1];
+        w[4] += w[5];
+        w[7] += w[8];
+        if (obj->frame == key->frame) {
+            w[0] += key->d0[0];
+            w[1] += key->d0[1];
+            w[2] += key->d0[2];
+            w[4] += key->d1[0];
+            w[5] += key->d1[1];
+            w[6] += key->d1[2];
+            w[7] += key->d2[0];
+            w[8] += key->d2[1];
+            w[9] += key->d2[2];
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w[0], key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, w[4], w[7], key->b38, 0);
+}
+
+/* --- pppKeShpTail3Frame --- */
+typedef struct {
+    u16 p0[4], p1[4], v0[4], a0[4], v1[4], a1[4];
+} PppTail3;
+
+typedef struct {
+    s32 frame;
+    u8 pad4[0x1C];
+    PppTail3 d;    /* +0x20 */
+    u8 local;      /* +0x50 */
+} PppTail3Key;
+
+typedef struct {
+    PppTail3 h;
+    PppVec4 v[28]; /* +0x30 */
+    u8 pad1F0[0xA];
+    u8 idx;        /* +0x1FA */
+} PppTail3Work;
+
+void pppKeShpTail3Frame(PppObject *obj, PppTail3Key *key, PppEntry *e) {
+    PppTail3Work *w;
+
+    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
+        return;
+    w = PPP_WORK(PppTail3Work, obj, e, 0);
+    if (obj->frame == 0 && ((u8 *) obj)[0x9D] == 0) {
+        PppVec4 v;
+        f32 *p;
+        s32 n;
+
+        if (key->local) {
+            func_002672f8(v, &D_00615E70, D_00615E68->m[3]);
+            v[3] = 1.0f;
+        } else {
+            func_002675a8(v, D_00615E68->m[3]);
+            v[3] = 1.0f;
+        }
+        p = w->v[0];
+        for (n = 28; n > 0; n--) {
+            func_002675a8(p, v);
+            p += 4;
+        }
+    }
+    if (w->idx == 0)
+        w->idx = 28;
+    w->idx--;
+    if (key->local) {
+        func_002672f8(w->v[w->idx], &D_00615E70, D_00615E68->m[3]);
+        w->v[w->idx][3] = 1.0f;
+    } else {
+        func_002675a8(w->v[w->idx], D_00615E68->m[3]);
+    }
+    w->h.v0[0] += w->h.a0[0]; w->h.p0[0] += w->h.v0[0];
+    w->h.v0[1] += w->h.a0[1]; w->h.p0[1] += w->h.v0[1];
+    w->h.v0[2] += w->h.a0[2]; w->h.p0[2] += w->h.v0[2];
+    w->h.v0[3] += w->h.a0[3]; w->h.p0[3] += w->h.v0[3];
+    w->h.v1[0] += w->h.a1[0]; w->h.p1[0] += w->h.v1[0];
+    w->h.v1[1] += w->h.a1[1]; w->h.p1[1] += w->h.v1[1];
+    w->h.v1[2] += w->h.a1[2]; w->h.p1[2] += w->h.v1[2];
+    w->h.v1[3] += w->h.a1[3]; w->h.p1[3] += w->h.v1[3];
+    if (obj->frame == key->frame) {
+        w->h.p0[0] += key->d.p0[0];
+        w->h.p0[1] += key->d.p0[1];
+        w->h.p0[2] += key->d.p0[2];
+        w->h.p0[3] += key->d.p0[3];
+        w->h.v0[0] += key->d.v0[0];
+        w->h.v0[1] += key->d.v0[1];
+        w->h.v0[2] += key->d.v0[2];
+        w->h.v0[3] += key->d.v0[3];
+        w->h.a0[0] += key->d.a0[0];
+        w->h.a0[1] += key->d.a0[1];
+        w->h.a0[2] += key->d.a0[2];
+        w->h.a0[3] += key->d.a0[3];
+        w->h.p1[0] += key->d.p1[0];
+        w->h.p1[1] += key->d.p1[1];
+        w->h.p1[2] += key->d.p1[2];
+        w->h.p1[3] += key->d.p1[3];
+        w->h.v1[0] += key->d.v1[0];
+        w->h.v1[1] += key->d.v1[1];
+        w->h.v1[2] += key->d.v1[2];
+        w->h.v1[3] += key->d.v1[3];
+        w->h.a1[0] += key->d.a1[0];
+        w->h.a1[1] += key->d.a1[1];
+        w->h.a1[2] += key->d.a1[2];
+        w->h.a1[3] += key->d.a1[3];
+    }
+}

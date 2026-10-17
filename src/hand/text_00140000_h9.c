@@ -658,3 +658,45 @@ s32 func_0014f600(W9Ent *e) {
     }
     return (D_00350D88[e->x70].f0 & 3) == 1;
 }
+
+typedef union { u64 d; s32 w; struct { u32 lo; u32 x:6; u32 kind:4; u32 hi:22; } b; } F8M;
+typedef struct { u8 pad[8]; F8M f8; } Msg9;
+void func_00147138(W9Ent *, s32);
+void func_00153360(W9Ent *, Msg9 *);
+void func_001533d0(W9Ent *, Msg9 *);
+void func_00145008(W9Ent *, s32);
+
+void func_00153500(W9Ent *a, Msg9 *m) {
+    s32 n;
+    if (m->f8.b.kind == 1) func_00147138(a, 4);
+    switch (m->f8.b.kind) {
+    case 2:
+        if (a->x144->w[17].f > 0.0f) {
+            a->x144->w[1].i = 6;
+            return;
+        }
+        func_00152598(a);
+        return;
+    case 3:
+        a->x144->w[2].i = 0;
+        func_001525f0(a);
+        return;
+    }
+    if (func_00153300(a, (W9Obj *)m)) {
+        func_00152598(a);
+        func_00153360(a, m);
+        return;
+    } else {
+        n = m->f8.w;
+        if (n > 0) {
+            a->x144->w[2].i += n;
+            if (a->x144->w[2].i >= a->x144->w[3].i) {
+                func_00145008(a, 0);
+                a->x144->w[1].i = 6;
+            } else {
+                if (func_001532c8((W9Obj *)m)) func_00152598(a);
+                func_001533d0(a, m);
+            }
+        }
+    }
+}
