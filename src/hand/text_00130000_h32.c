@@ -192,3 +192,40 @@ s32 func_001333e0(W32Obj2 *o, s32 i, W32Pair *q) {
     }
     return 0;
 }
+typedef struct {
+    u8 pad00[0x70];
+    u8 x70;
+    u8 pad71[0x74 - 0x71];
+} W32SEnt;
+typedef struct {
+    u8 pad000[4];
+    W32SEnt ent[10];
+    u8 pad48c[0x492 - 0x48C];
+    u8 b492[8];
+    u8 pad49a[0x874 - 0x49A];
+    s32 x874;
+} W32Save;
+extern W32Save *D_00304BE8;
+s32 func_001331d8(s32 i, s32 j, void (*cb)(void));
+void func_00133550(void);
+typedef struct {
+    u8 pad00[0x48];
+    void (*x48)(s32);
+} W32Proc;
+W32Proc *func_001208e0(void (*f)(void));
+void func_00133578(void (*cb)(s32)) {
+    s32 i;
+    s32 n = 0;
+    s32 j;
+    for (i = 0; i < 7; i++) {
+        j = D_00304BE8->b492[i];
+        if (j > 0) {
+            if (func_001331d8(i, j, 0) >= 0) n++;
+        }
+    }
+    if (n > 0) {
+        func_001208e0(func_00133550)->x48 = cb;
+    } else {
+        cb(-1);
+    }
+}
