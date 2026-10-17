@@ -7,7 +7,9 @@ typedef struct { s32 w0; void *obj; s32 pad[2]; f32 a[4]; f32 b[4]; f32 f30; f32
 typedef union { u64 d; struct { s32 lo; s32 head; s32 w8; s32 wC; } s; } TrHdr;
 typedef struct { TrHdr h; Seg16 e[32]; } Trail;
 typedef struct { u8 pad[0x10]; f32 pos[4]; } ObjP;
-typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Cyl;
+typedef struct { s32 type; f32 r; f32 h; u8 padc[4]; f32 pos[4] __attribute__((aligned(16))); } Cyl;
+typedef struct { f32 x, y, z, w; } V4;
+typedef struct { s32 type; f32 r; f32 h; u8 padc[4]; V4 pos; } CylV;
 
 extern Tr700 D_00551700;
 extern Trail D_00551740;
@@ -28,6 +30,15 @@ s32 func_0015dd50(void *, s32);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_00267548(f32 *, f32 *, f32 *);
 f32 func_00267390(f32 *, f32 *);
+s32 func_0015b628(Cyl *, Cyl *);
+typedef struct { u8 b0; u8 type; u16 bone; f32 off; f32 dy; f32 r; f32 h; } CylSrc;
+typedef struct { u8 pad[4]; u8 n4, n5, n6, n7; u8 pad8[0xC]; CylSrc *cyl; } CylHdr;
+typedef struct { u8 pad[0x40]; f32 sx, sy; u8 pad48[0xEC]; CylHdr *hdr; u8 pad138[0x238]; u64 flags; u8 pad378[0x2C]; u32 mask; } CylObj;
+void func_001315c0(void *, s32, void *, f32);
+s32 func_00122ff8(void *);
+s32 func_00123330(void *);
+Cyl *func_00122048(s32, s32);
+void func_001220b8(void *);
 
 Tr700 *func_00159ea8(ObjP *obj, void *a, void *b) {
     D_00551700.obj = obj;
@@ -135,4 +146,83 @@ s32 func_0015b7e8(Cyl *a, Cyl *b) {
         rr = PlatSqrtf(1.0f - rr * rr) * a->r + b->r;
     } else rr = r;
     return d[0] < rr;
+}
+
+s32 func_0015b8e0(CylV *a, CylV *b) {
+    V4 d;
+    f32 s;
+    func_00267530((f32 *)&d, (f32 *)&a->pos, (f32 *)&b->pos);
+    s = a->r + b->r;
+    if (s < d.x) return 0;
+    if (d.x < -s) return 0;
+    if (s < d.z) return 0;
+    if (d.z < -s) return 0;
+    s = a->h + b->h;
+    if (s < d.y || d.y < -s) return 0;
+    return 1;
+}
+
+s32 func_0015b998(Cyl *a, Cyl *b) {
+    s32 r;
+    if (a->type > b->type) {
+        Cyl *t = a;
+        a = b;
+        b = t;
+    }
+    r = 0;
+    switch (a->type) {
+    case 1:
+        switch (b->type) {
+        case 1: r = func_0015b4a8(a, b); break;
+        case 2: r = func_0015b550(a, b); break;
+        case 3: r = func_0015b6c0(a, b); break;
+        }
+        break;
+    case 2:
+        switch (b->type) {
+        case 2: r = func_0015b628(a, b); break;
+        case 3: r = func_0015b7e8(a, b); break;
+        }
+        break;
+    case 3:
+        if (b->type == 3) r = func_0015b8e0((CylV *)a, (CylV *)b);
+        break;
+    }
+    return r;
+}
+
+void func_0015bad0(CylObj *o, CylSrc *src, Cyl *c) {
+    func_001315c0(o, src->bone, c->pos, src->off);
+    c->type = src->type;
+    if ((o->flags >> 45) & 1) {
+        c->pos[1] -= src->dy * o->sy;
+        c->r = src->r * o->sx;
+        c->h = src->h * o->sy;
+    } else {
+        c->pos[1] -= src->dy;
+        c->r = src->r;
+        c->h = src->h;
+    }
+}
+
+s32 func_0015bb88(Cyl *target, CylObj *o, Cyl *out) {
+    Cyl *tmp;
+    CylSrc *e;
+    s32 i;
+    if (!func_00122ff8(o)) return 0;
+    if (!func_00123330(o)) return 0;
+    tmp = func_00122048(32, 16);
+    e = o->hdr->cyl;
+    for (i = 0; i < o->hdr->n5; i++, e++) {
+        if (!(o->mask & (1 << i))) {
+            func_0015bad0(o, e, tmp);
+            if (func_0015b998(target, tmp)) {
+                if (out) *out = *tmp;
+                func_001220b8(tmp);
+                return 1;
+            }
+        }
+    }
+    func_001220b8(tmp);
+    return 0;
 }
