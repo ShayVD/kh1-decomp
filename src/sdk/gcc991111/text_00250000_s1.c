@@ -1340,6 +1340,14 @@ void func_0025aa78(Node *n) {
         } while (!d);
     }
 }
+void func_0025ac40(Q *q) {
+    Node *p;
+    for (;;) {
+        while ((p = func_0025aa20(q)) != 0) func_0025aa78(p);
+        SleepThread();
+    }
+}
+
 int func_0025e160(const char *name, void *buf, unsigned int len) {
     SemaParam sp;
     int res;
