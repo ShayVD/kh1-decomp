@@ -117,3 +117,24 @@ s32 func_00243a20(void) {
     func_002436c0(r);
     return 0;
 }
+
+void func_0024ae00(void *);
+void func_0024af00(void *);
+void func_00243c10(void *, s32, s32, s32, f32, s32);
+
+void func_00243d18(s32 f, void *p, s32 a, s32 b, s32 c, f32 x, s32 d) {
+    if (f) func_0024ae00(p);
+    func_0024af00(p);
+    func_00243c10(p, a, b, c, x, d);
+}
+
+typedef struct { u8 pad[0x10]; s32 unk10; u8 pad14[0xA00 - 0x14]; } Cell;
+typedef struct { Cell c[5]; } Row;
+extern Row D_00656510[3];
+
+void func_002444a0(void) {
+    s32 i, j;
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 5; j++)
+            D_00656510[i].c[j].unk10 = 0;
+}

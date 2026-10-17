@@ -535,3 +535,31 @@ void func_00222ab0(void) {
     }
     func_002072e0(5);
 }
+
+/* needs make: uses rodata */
+
+s32 func_00219158(s32 a0) {
+    switch (a0) {
+    case 0: return D_003F34B8->f0;
+    case 1: return D_003F34B8->f4;
+    case 2: return D_003F34B8->f8;
+    case 3: return D_003F34B8->f10;
+    case 4: return D_003F34B8->f14;
+    case 5: return D_003F34B8->f18;
+    case 6:
+    default: return D_003F34B8->f2c;
+    }
+}
+
+void func_002191f0(s32 a0, s32 a1) {
+    switch (a0) {
+    case 0: D_003F34B8->f0 = a1; break;
+    case 1: D_003F34B8->f4 = a1; break;
+    case 2: D_003F34B8->f8 = a1; break;
+    case 3: D_003F34B8->f10 = a1; break;
+    case 4: D_003F34B8->f14 = a1; break;
+    case 5: D_003F34B8->f18 = a1; break;
+    case 6:
+    default: D_003F34B8->f2c = a1; break;
+    }
+}
