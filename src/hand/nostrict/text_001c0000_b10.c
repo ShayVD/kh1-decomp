@@ -27,9 +27,9 @@ typedef struct {
     s32 ret[8];
     s32 rsp;
     u8 pad31c[0xc];
-    u64 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:54;
-    u8 pad330[0x20];
-} VM;
+    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:22;
+    u8 pad32c[0x24];
+} __attribute__((aligned(8))) VM;
 
 extern Big D_00389C90;
 extern VM D_003A7990[], D_003B4DA0[];
