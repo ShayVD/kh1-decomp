@@ -59,3 +59,96 @@ void pppPointCon(void *obj, PppEntry *e) {
 
     w->x = w->y = w->z = 0.0f;
 }
+
+typedef unsigned int u128 __attribute__((mode(TI)));
+
+/* The object a program runs in: +0x0C is its frame counter, which the
+ * frame callbacks compare with their keyframe's. */
+typedef struct {
+    s32 unk00, unk04, unk08;
+    s32 frame; /* +0x0C */
+} PppObject;
+
+/* A keyframe: the frame it applies at, then the class's values. */
+typedef struct {
+    s32 frame; /* +0x0 */
+    f32 a, b;  /* +0x4, +0x8 */
+} PppKey;
+
+typedef struct {
+    f32 x, y, z;
+    s32 n;
+} PppVtMime;
+
+void pppVtMimeCon(void *obj, PppEntry *e) {
+    PppVtMime *w = PPP_WORK(PppVtMime, obj, e, 0);
+
+    w->x = w->y = w->z = 0.0f;
+    w->n = 0;
+}
+
+void pppDrawMdlTsCon(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
+}
+
+void pppKeMdlTfdUvCon(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
+}
+
+typedef struct {
+    u128 q;     /* +0x00 */
+    s32 i[4];   /* +0x10 */
+    s16 h[2];   /* +0x20 */
+} PppMegaBirthModel;
+
+void pppRyjMegaBirthModelCon(void *obj, PppEntry *e) {
+    PppMegaBirthModel *w = PPP_WORK(PppMegaBirthModel, obj, e, 2);
+
+    w->q = 0;
+    w->i[0] = 0;
+    w->i[1] = 0;
+    w->i[2] = 0;
+    w->i[3] = 0;
+    w->h[0] = 0;
+    w->h[1] = 0;
+}
+
+typedef struct {
+    u128 m[8];
+} PppKekoto;
+
+void pppRyjDrawKekotoCon(void *obj, PppEntry *e) {
+    PppKekoto *w = PPP_WORK(PppKekoto, obj, e, 2);
+    s32 i;
+
+    for (i = 7; i >= 0; i--)
+        w->m[i] = 0;
+}
+
+void pppDrawMdlTs2Con(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
+}
+
+void pppDrawMdlTs3Con(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
+}
+
+void pppKeMdlTfdUv2Con(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
+}
+
+void pppKeMdlTfdUv3Con(void *obj, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+
+    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
+}
