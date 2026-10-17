@@ -708,3 +708,39 @@ void func_0013ee40(W55Ob *o, W55Ev *e, void *q) {
         break;
     }
 }
+
+/* uses rodata. func_001401d8 only matches with func_0013fe28 defined above it. */
+f32 func_0013fe10();
+
+s32 func_0013fe28(W55Ob *o) {
+    f32 t = func_0013fe10(o);
+    s32 r = 0;
+    if (t < 0.015f || t > 0.985f) r = 1;
+    return r;
+}
+
+s32 func_001401d8(W55Ob *o, f32 *d) {
+    f32 r[4];
+    f32 m;
+    s32 k;
+    if (!func_001375f0(o) || d[3] == 0.0f) return 0;
+    k = func_00140070(o, d, r);
+    if (k == 1) {
+        if (!func_0013fe28(o)) {
+            m = fmodf(o->pos[1] + 10.0f, 66.66666412353516f);
+            if (m < 0.0f) m += 66.66666412353516f;
+            r[1] = r[1] + 10.0f - m;
+        }
+        if (func_0015bcb8(o, r)) return 0;
+        func_002675a8(o->pos, r);
+        func_002675a8(o->x148 + 8, r);
+        func_0014f658(o, 10);
+        func_00130398(o, 0x1000013, 4.0f);
+        func_00130578(o, 0x40000011, 0.0f);
+        func_00267560(d, o->x148, -1.0f);
+        d[3] = 0.0f;
+        o->x150 = atan2f(-o->x148[0], -o->x148[2]);
+        o->x148[5] = o->pos[1];
+    }
+    return k;
+}

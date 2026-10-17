@@ -297,18 +297,6 @@ void func_0013fd60(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0x1CC) = (s32) (M2C_FIELD(arg0, s32 *, 0x1CC) | 1);
 }
 
-s32 func_0013fe28(void) {
-    f32 temp_f0;
-    s32 var_v0;
-
-    temp_f0 = func_0013fe10();
-    var_v0 = 0;
-    if ((temp_f0 < 0.015f) || (temp_f0 > 0.985f)) {
-        var_v0 = 1;
-    }
-    return var_v0;
-}
-
 f32 func_0013fe80(f32 fparg0) {
     f32 temp_f0;
     f32 var_f20;
