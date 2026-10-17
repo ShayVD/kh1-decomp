@@ -1,21 +1,135 @@
+/* Hand-matched functions from 0x00100000-0x00108fff (worker 1). */
 #include "common.h"
 
-void func_00262c78(void);
+/* ---- types ---- */
+typedef struct { s32 a, b, c, d; } Q4;
+/* DMA tag pair built by func_00101970. */
+typedef struct { Q4 h; s32 n, x, c, d; } DmaHdr;
+typedef struct { f32 x, y, z; } Vec3;
+/* Flag word D_002BC0A8. */
+typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:1; u32 b5:1; u32 rest:26; } Flags;
+/* Packed attribute word at +16 of the 20-byte entries of D_002A6238. */
+typedef struct {
+    u32 f0:4; u32 f4:4; u32 f8:3; u32 f11:4; u32 f15:3;
+    u32 f18:4; u32 f22:1; u32 f23:5; u32 f28:1; u32 f29:3;
+} EntBits;
+typedef struct { s16 a, b, c, d; u8 pad8[3]; u8 b11; u8 pad12[4]; EntBits bits; } Ent20;
+typedef struct { u8 pad[16]; s32 w16; } Ent20b;
+typedef struct { s32 w0, w4, w8, w12; } Ent16;
+typedef struct { u8 m[64]; u8 v64[16]; u8 v80[16]; s32 w96; } Xf;
+typedef struct { u8 pad0[16]; u64 d16; u8 pad18[8]; u64 d32; u8 pad28[112]; u64 d152; } GsRegs;
+/* Objects returned by func_0011f090 (task/effect slots). */
+typedef struct { u8 pad[16]; u8 b16; u8 b17; } Obj;
+typedef struct { u8 pad[16]; f32 f16; f32 f20; f32 f24; } Fade;
+typedef struct { u8 pad[16]; s32 w16; f32 f20; f32 f24; } Fade2;
+typedef struct { u8 pad[16]; u32 w16; } DmaReq;
+typedef struct { u8 pad[16]; s32 w16, w20, w24, w28; } Blk32;
+typedef struct { u8 pad[16]; s32 w16, w20, w24, w28; u8 pad2[80]; s32 w112, w116, w120, w124; } Blk128;
+
+/* ---- data ---- */
+extern char D_0029B170[];
+extern f32 D_0029B280[];
+extern u8 D_002A4160[];
+extern u8 D_002A4180[];
+extern s32 D_002A3F20;
+extern s32 D_002A3F28;
+extern s32 D_002A3F50[];
+extern u64 D_002A6058;
+extern u8 D_002A6070[];
+extern u64 D_002A6178;
+extern s32 D_002A61F0;
+extern s32 D_002A6204;
+extern s32 D_002A6208;
+extern s32 D_002A6230;
+extern Ent20 *D_002A6238;
+extern Vec3 *D_002A624C;
+extern s32 D_002A6258;
+extern Ent20b *D_002A6274;
+extern s32 D_002A6294;
+extern u16 D_002A62F8[];
+extern GsRegs D_002A6330;
+extern u8 D_002A6500[];
+extern s32 D_002A6B84;
+extern f32 D_002A6C10[];
+extern s32 D_002A6C50;
+extern f32 D_002BBDFC;
+extern s32 D_002BBE14;
+extern s32 D_002BC060[4];
+extern s32 D_002BC070;
+extern s32 D_002BC090, D_002BC094, D_002BC0A0, D_002BC0A4;
+extern Flags D_002BC0A8;
+extern s32 D_002BC0BC;
+extern s32 D_002BC128, D_002BC130, D_002BC134;
+extern u8 D_002BC720[];
+extern u8 D_002BCAF0[];
+extern s32 D_002BCC98;
+extern s32 D_002BCDE8;
+extern s32 D_002C1368[];
+extern s32 D_002C138C;
+extern f32 D_002E2780[];
+extern f32 D_002E2790[];
+extern s32 D_00472150[];
+extern s32 D_0048BFD0[2];
+extern Blk32 D_0048C630;
+extern Blk32 D_0048C690;
+extern s32 D_0048C6F0[];
+extern u8 D_00494320[];
+extern s32 D_00494410[];
+extern u8 D_00494420[];
+extern u8 D_004945E0[];
+extern s32 D_00494894;
+extern f32 D_00494898;
+extern f32 D_004948A0[4];
+extern f32 D_00494A74;
+extern Ent16 *D_00494BA8;
+extern Vec3 D_00494C00[];
+
+/* ---- functions ---- */
+void func_00101bb8(void);
+void func_00103838(void);
+void func_00103920(void);
+void func_00103c48(void);
+s32 func_00104298(f32 *);
+s32 func_00104388(void *);
+void func_001044c0(Xf *);
+void func_00104528(void);
+void func_00104678(void);
+s32 func_00106708(void *);
+s32 func_00106810(void *);
+void func_00106900(void);
+void func_00106910(void);
+s32 func_00106920(void *);
+void func_00106b18(void *);
+void func_00106bd8(char *, s32);
+s32 func_00106db0(DmaReq *);
+s32 func_00106e18(s32);
+void func_001081a0(s32);
+void func_00108f18(s32, s32, void *);
 void func_00109288(void);
 void func_00109770(void);
-
-extern s32 D_0048C6F0[];
-extern s32 D_00472150[];
-
-void func_00100558(void) {
-    func_00262c78();
-    func_00109288();
-    for (;;) func_00109770();
-}
+EntBits *func_0011ab38(s32, s32);
+u8 func_0011ab60(s32, s32);
+void func_0011d3c8(s32, s32, s32);
+void func_0011ef10(s32, void *);
+void func_0011efa8(void *, void *, s32, s32);
+void *func_0011f090(void *, s32, void *);
+s32 func_00142730(s32, s32 *);
+DmaReq *func_0015ed80(s32, void *);
+void func_001761f0(void);
+void func_00176230(void);
+void func_00262c78(void);
+void func_00266f38(s32, u32);
+void func_002673b8(f32 *, f32 *);
+void func_00267530(f32 *, f32 *, f32 *);
+void func_00267578(void *, void *, void *);
+void func_002678b8(void *, void *, void *);
+s32 sceGsSyncPath(s32, s32);
+void iFlushCache(s32);
+void sceVu0MulMatrix(void *, void *, void *);
 
 void func_00100580(s32 idx, s32 *dst) {
     s32 i;
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 2; i++) { 
         dst[0] = D_0048C6F0[idx * 4 + 0];
         dst[1] = D_0048C6F0[idx * 4 + 1];
         dst[2] = D_0048C6F0[idx * 4 + 2];
@@ -26,4 +140,348 @@ void func_00100580(s32 idx, s32 *dst) {
         dst[7] = D_00472150[3];
         dst += 8;
     }
+}
+
+void func_001008e8(void) {
+    func_00106bd8(D_0029B170, 10010);
+    func_001044c0((Xf *)D_00494320);
+    func_00108f18(0, 10010, D_00494320);
+    if (D_002BC0A8.b5 == 1) {
+        func_001044c0((Xf *)(D_00494320 + 128));
+        func_00108f18(1, 10010, D_00494320 + 128);
+    }
+}
+
+void func_00100ae0(void) {
+    D_002BC0A8.b0 = 0;
+    D_002BC0A8.b1 = 0;
+    func_001761f0();
+    func_00176230();
+}
+
+void func_00101628(void) {
+    D_00494410[0] = -1;
+    D_00494410[1] = -1;
+    D_002C1368[0] = 0;
+    D_002C1368[1] = 0;
+    D_002C138C = 0;
+    D_002BCDE8 = 0;
+}
+
+void func_00101728(s32 arg) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        s32 v = D_00494410[i];
+        if (v != D_002A3F50[i] || v == 0) {
+            func_0011d3c8(v, i, arg);
+        }
+    }
+}
+
+void func_00101970(s32 sel, DmaHdr *q, s32 x) {
+    Q4 *q1 = (Q4 *)&q->n;
+    q1->d = 0;
+    q1->c = 0;
+    q->h.d = 0;
+    q->h.c = 0;
+    if (sel == 0) {
+        q->h.a = 0x30000002;
+        q->h.b = (s32)D_002A4160;
+        q1->a = 4;
+    } else {
+        q->h.a = 0x30000002;
+        q->h.b = (s32)D_002A4180;
+        q1->a = 8;
+    }
+    q->x = x;
+}
+
+void func_00101e70(void) {
+    s32 i;
+    func_0011efa8(D_004945E0, D_00494420, 28, 16);
+    for (i = 0; i < D_002A3F20; i++) {
+        Obj *o = func_0011f090(D_004945E0, 120000, func_00101bb8);
+        if (o) {
+            o->b16 = 0;
+            o->b17 = i;
+        }
+    }
+}
+
+void func_00102cc8(s32 *x0, s32 *x1, s32 *y0, s32 *y1) {
+    s32 ox = D_002BC0A0, cx = D_002BC090, oy = D_002BC0A4, cy = D_002BC094;
+    s32 x = (cx + ox) * 16, y = (cy + oy) * 16;
+    *x0 = x - 4096; *x1 = x + 4096; *y0 = y - 3072; *y1 = y + 3072;
+}
+
+void func_001038b0(s32 n) {
+    func_0011ef10(0x280a2, func_00103838);
+    D_00494894 = n * 2;
+    if (n == 0) n = 1;
+    D_00494898 = 255.0f / (f32)(n * 2);
+}
+
+void func_00103988(s32 n) {
+    func_0011ef10(0x280a2, func_00103920);
+    D_00494894 = n * 2;
+    if (n == 0) n = 1;
+    D_00494898 = 255.0f / (f32)(n * 2);
+}
+
+s32 func_001039f8(void) {
+    if (D_002A6204 != 0) {
+        if (D_002A61F0 == 0) D_002A6058 = ((u64)D_002A6204 << 24) | 0x100000000;
+        else D_002A6058 = ((u64)D_002A6204 << 24) | 0x100FFFFFF;
+        func_00106b18(D_002A6070);
+    }
+    return 0;
+}
+
+void func_00104220(void) {
+    D_004948A0[0] = D_004948A0[1] = D_004948A0[3] = 0.0f;
+    D_004948A0[2] = D_00494A74;
+    func_0011ef10(0x280a4, func_00103c48);
+}
+
+s32 func_00104298(f32 *p) {
+    p[4] -= D_002BBDFC;
+    if (p[4] <= 0.0f) {
+        D_002A6178 = 0x100000000;
+        return 4;
+    }
+    D_002A6178 = ((u64)(s32)(p[5] * p[4]) << 24) | 0x100000000;
+    return 0;
+}
+
+void func_00104300(s32 n) {
+    Fade *o;
+    D_002A6208 = 1;
+    o = func_0011f090(D_002BC720, 0, func_00104298);
+    if (o) {
+        o->f16 = (f32)(n * 2);
+        if (n == 0) n = 1;
+        o->f20 = 128.0f / (f32)(n * 2);
+    }
+}
+
+void func_001043f8(s32 n) {
+    Fade2 *o = func_0011f090(D_002BC720, 0, func_00104388);
+    if (o) {
+        D_002A6208 = 1;
+        o->w16 = 0;
+        o->f24 = (f32)(n * 2);
+        if (n == 0) n = 1;
+        o->f20 = 128.0f / (f32)(n * 2);
+    }
+}
+
+void func_001044c0(Xf *p) {
+    func_002678b8(p, D_002BCAF0, p->v64);
+    func_00267578(p, p, p->v80);
+    if (p->w96 != -1) sceVu0MulMatrix(p, (void *)p->w96, p);
+}
+
+void func_001047c8(void) {
+    if (D_002A3F28 != 0) {
+        if (D_002BC128 == 15 && D_002BC130 == 12 && (D_002BC134 == 24 || D_002BC134 == 2)) {
+            func_00104528();
+            return;
+        }
+        func_00104678();
+    } else {
+        func_00104528();
+    }
+}
+
+s32 func_00104a90(s32 i, s32 *out) {
+    Ent20 *e = &D_002A6238[i]; s32 d;
+    out[0] = e->a; out[1] = e->b; out[2] = e->c; out[3] = d = e->d;
+    if (d == -2 || d == -1) return 3; return 4;
+}
+
+void func_00104eb0(s32 i, f32 *out) {
+    Vec3 *v = &D_002A624C[D_002A6238[i].a];
+    out[0] = v->x;
+    out[1] = v->y;
+    out[2] = v->z;
+    out[3] = 1.0f;
+}
+
+s32 func_00105020(void) {
+    s32 i;
+    for (i = 0; i < D_002A6294; i++) {
+        if ((D_002A6274[i].w16 & 0xf6) == 80) return 1;
+    }
+    return 0;
+}
+
+s32 func_00105078(void) {
+    s32 i;
+    for (i = 0; i < D_002A6294; i++) {
+        if ((D_002A6274[i].w16 & 0xf6) == 144) return 1;
+    }
+    return 0;
+}
+
+void func_00105218(void) {
+    s32 i;
+    for (i = 0; i < D_002A6230; i++) func_0011d3c8(D_002A62F8[i], i, 960);
+}
+
+s32 func_00105960(s32 a, s32 b) {
+    s32 sub;
+    s32 idx = func_00142730(a, &sub);
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->b11 == b; }
+    return func_0011ab60(sub, idx) == b;
+}
+
+s32 func_00105b10(s32 sub, s32 idx) {
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f22; }
+    return func_0011ab38(sub, idx)->f22;
+}
+
+s32 func_00105b68(s32 sub, s32 idx) {
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f4; }
+    return func_0011ab38(sub, idx)->f4;
+
+}
+
+s32 func_00105bc0(s32 sub, s32 idx) {
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f18; }
+    return func_0011ab38(sub, idx)->f18;
+
+}
+
+s32 func_00105c18(s32 sub, s32 idx) {
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f28; }
+    return func_0011ab38(sub, idx)->f28;
+
+}
+
+s32 func_00105ce0(s32 id) {
+    s32 i; for (i = 0; i < D_002A6258; i++) { Ent20 *e = &D_002A6238[i]; if (e->b11 == id) return e->bits.f11; } return 0;
+}
+
+void func_00105f28(void) {
+    if (D_002BBE14) {
+        D_002A6330.d32 = 0x131000070;
+        D_002A6330.d16 = 0x131000070;
+    } else {
+        D_002A6330.d32 = 0x31000070;
+        D_002A6330.d16 = 0x31000070;
+    }
+    D_002A6330.d152 = (u64)D_002BC060[0] | ((u64)D_002BC060[1] << 8) | ((u64)D_002BC060[2] << 16) | ((u64)D_002BC060[3] << 24) | 0x100000000;
+    func_00106b18(D_002A6500);
+}
+
+s32 func_001063f8(void) {
+    if (D_002BC070 == 128 && D_002BC0BC == 0 && D_002A6204 == 0) return 0;
+    return 1;
+}
+
+void func_00106780(s32 n) {
+    Fade2 *o;
+    func_00106900();
+    func_00106910();
+    o = func_0011f090(D_002BC720, 0, func_00106708);
+    if (o) {
+        o->w16 = 0;
+        o->f24 = (f32)(n * 2);
+        if (n == 0) n = 1;
+        o->f20 = 128.0f / (f32)(n * 2);
+    }
+}
+
+void func_00106880(s32 n) {
+    Fade *o = func_0011f090(D_002BC720, 0, func_00106810);
+    if (o) {
+        o->f16 = (f32)(n * 2);
+        if (n == 0) n = 1;
+        o->f20 = 128.0f / (f32)(n * 2);
+    }
+}
+
+void func_00106978(s32 n) {
+    Fade2 *o;
+    func_00106900();
+    func_00106910();
+    o = func_0011f090(D_002BC720, 0, func_00106920);
+    if (o) {
+        o->w16 = 0;
+        o->f24 = (f32)(n * 2);
+        if (n == 0) n = 1;
+        o->f20 = 128.0f / (f32)(n * 2);
+    }
+}
+
+void func_00106b58(u32 x) {
+    u32 v = x | 0x80000000;
+    sceGsSyncPath(0, 0);
+    func_00266f38(D_002A6B84, v);
+}
+
+s32 func_00106db0(DmaReq *r) {
+    *(volatile u32 *)0x10009020 = 0;
+    *(volatile u32 *)0x10009030 = r->w16 & 0x0fffffff;
+    *(volatile u32 *)0x1000e010 = 2;
+    iFlushCache(0);
+    *(volatile u32 *)0x10009000 = 0x105;
+    return 2;
+}
+
+void func_00106e98(s32 a) {
+    if (D_002A6C50) func_0015ed80(a, func_00106e18);
+}
+
+s32 func_00107520(s32 i) {
+    Ent16 *e = &D_00494BA8[i]; return (D_002BCC98 & e->w8) != 0;
+}
+
+void func_00107e60(void) {
+    f32 m[4][4] __attribute__((aligned(16)));
+    f32 v[4] __attribute__((aligned(16)));
+    f32 *p = v;
+    func_00267530(p, D_002E2790, D_002E2780);
+    func_002673b8(p, p);
+    func_002678b8(D_002A6C10, D_0029B280, p);
+}
+
+void func_00108180(s32 n) {
+    *(volatile s32 *)&D_002BCC98 = (1 << n) | *(volatile s32 *)&D_002BCC98;
+}
+
+void func_001081a0(s32 n) {
+    *(volatile s32 *)&D_002BCC98 = ~(1 << n) & *(volatile s32 *)&D_002BCC98;
+}
+
+void func_001085e8(s32 a, s32 b) {
+    func_0015ed80(a, func_00106db0)->w16 = b;
+}
+
+void func_00108650(s32 i, s32 n) {
+    f32 d = (f32)(n * 2);
+    D_00494C00[i].x = d;
+    D_00494C00[i].y = 1.0f;
+    D_00494C00[i].z = -(1.0f / d);
+    func_001081a0(i);
+}
+
+void func_001086b8(s32 i, s32 n) {
+    f32 d = (f32)(n * 2);
+    D_00494C00[i].x = d;
+    D_00494C00[i].y = 0.0f;
+    D_00494C00[i].z = 1.0f / d;
+}
+
+void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
+    a[0] = b[0] = D_0048BFD0[0];
+    a[1] = b[1] = D_0048BFD0[1];
+    o->w16 = D_0048C630.w16;
+    o->w20 = (s32)a;
+    o->w24 = D_0048C630.w24;
+    o->w28 = D_0048C630.w28;
+    o->w112 = D_0048C690.w16;
+    o->w116 = (s32)b;
+    o->w120 = D_0048C690.w24;
+    o->w124 = D_0048C690.w28;
 }

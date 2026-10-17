@@ -92,3 +92,10 @@ no_fill = true
 path = "src/sdk/libc/"
 cflags = "-O2 -G0 -fno-builtin"
 no_fill = true
+
+# Game files whose delay slots were left to the assembler (gcc's own
+# filling off): leaf `jr ra` slots stay empty (session 5).
+[[toolchain.override]]
+path = "src/hand/nofill/"
+cflags = "-O2 -G0"
+no_fill = true
