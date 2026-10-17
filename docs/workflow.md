@@ -352,3 +352,44 @@ A full-game autodecomp pass (`--max-insns 5000`) found few new matches
   helpers (src/hand/ppp_rand.c) inline one `vu0Rand()` asm block and match
   in C, so game VU0 code should be tried in C with inline asm before
   exporting it as assembly.
+
+### Session 5, hand-matching at scale
+
+About 1,700 functions were matched by hand in session 5, by parallel
+workers each given a list of 25-50 functions of one size band. What they
+found that the next session needs:
+
+- **Build modes by directory** (kh1.toml overrides). The game was not
+  built with one set of flags; each original source file had its own:
+  - `src/hand/` : `-O2 -G0`, strict aliasing, gcc fills delay slots.
+  - `src/hand/nostrict/` : `-fno-strict-aliasing`. Loads stay after stores
+    through other types. Large parts of the game: 0x13c000-0x149000,
+    ~0x150de0-0x165000, 0x167000-0x174300, 0x18a000-0x1a1000, the script
+    VM around 0x1c08f0-0x1cc208, 0x23f000-0x245a00.
+  - `src/hand/nofill/` : gcc's delay-slot filling off (the assembler
+    fills only what it can: `move a0,v0; jal; nop`). E.g. 0x1d17d0-0x1d1ef0,
+    0x1d5168-0x1d5974, `jal sqrt; nop` code.
+  - `src/hand/nostrict_nofill/` : both (0x236970-0x23d4xx).
+  When a draft is close but loads/stores are reordered, or a fillable slot
+  is a nop, try the other directories before changing the C.
+- **Callee defined earlier in the same file** changes the caller: gcc 2.96
+  knows the callee's register use, so `bnel`/`beqzl` after a call become
+  `bne`/`beqz`. A one-word branch-likely mismatch right after a call means
+  the callee must be defined above the caller, i.e. both were in one
+  original file. Several functions were moved next to their callers for
+  this (e.g. src/hand/text_00240000_gs.c, text_00240000_e8040.c).
+- **`tools/checkfile.py FILE`** compiles a whole file and links every
+  function at its real address, so it sees the callee effect and catches
+  shared-type breakage. `autodecomp.py try` links other functions at
+  0x40000000 (a callee in the same file fails with "relocation truncated").
+- **layout.tsv splits**: some layout symbols were several original
+  functions (a caller ending in `j` to the next, or runs of 8-byte
+  accessors after a switch); split them by hand in layout.tsv (17 split
+  around 0x1efcd8-0x1fd720). Still to split: func_00249c48, func_00233610.
+- **Assembly vs C**: gcc aligns every function to 8 (`.p2align 3`), so a
+  function starting at addr%8==4 came from a .s file (18 of them;
+  src/asm/text_0024e0a4.s). `tools/asm_to_c.py` turns frameless VU0 leaf
+  helpers into C with one `__asm__ volatile` block (src/hand/vu0.c).
+- **Matching idioms** collected by the workers (store order, float
+  literals, u64 flag bitfields, tail-call control, loop shapes) are in
+  docs/matching-tips.md.
