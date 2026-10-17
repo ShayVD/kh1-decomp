@@ -1,9 +1,8 @@
-/* func_00267c10 (libvu0 shadow/projection matrix from light l=(f12..f14) and plane normal n; flag selects point/directional). Mode sdk/gcc991111_01 (nop nop before div.s). Instruction sequence ~matches but FP register allocation differs (orig: mov.s f16,f12 / f15,f13, lz stays in f14, loads into f1-f3; ours moves all 3 params to f17-f19); ours is 1 insn longer. */
 #include "common.h"
 
 void func_00267c10(f32 m[4][4], f32 *n, f32 lx, f32 ly, f32 lz, s32 flag) {
-    f32 nx, ny, nz, d;
     if (flag) {
+        f32 nx, ny, nz, d;
         nx = n[0];
         ny = n[1];
         nz = n[2];
@@ -25,6 +24,7 @@ void func_00267c10(f32 m[4][4], f32 *n, f32 lx, f32 ly, f32 lz, s32 flag) {
         m[2][3] = lz;
         m[3][3] = d - 1.0f;
     } else {
+        f32 nx, ny, nz, d;
         f32 s;
         nx = n[0];
         ny = n[1];
