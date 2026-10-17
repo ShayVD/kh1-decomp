@@ -9,7 +9,9 @@ void func_002673b8(void *, void *);
 typedef struct { u8 pad0[2]; s16 dur; s8 flag; u8 pad5[3]; } AnFrm;
 typedef struct { u8 pad0[6]; s16 n; u8 pad8[8]; AnFrm fr[1]; } Anim;
 typedef struct { Anim *anim; s32 pad; } AnEnt;
-typedef struct { u8 pad0[0x14]; AnEnt *anims; } PppRes;
+typedef struct { u8 pad[0x14]; void *x14; u8 pad18[0xc]; } Ent24;
+typedef struct { s16 a; s16 n; u16 *list; } Grp;
+typedef struct { u8 pad0[0x10]; Ent24 *x10; AnEnt *anims; Grp *grps; } PppRes;
 extern PppRes *D_00615E64;
 typedef struct { f32 x, y, z, w; } FV4;
 extern FV4 D_003701D0;
@@ -126,7 +128,7 @@ typedef struct {
 } LtKey;
 typedef struct { u8 pad[8]; u8 r, g, b, a; } LtCol;
 Light *func_001226f0(s32, s32, s32);
-void func_00267560(FV4 *, FV4 *, f32);
+void func_00267560(void *, void *, f32);
 
 void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     Light **w = (Light **)((u8 *)obj + e->offsets[2] + 0xA0);
@@ -265,4 +267,212 @@ void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
     }
     if (w->active)
         func_001a47b0(w, k, w2);
+}
+
+typedef f32 Mtx4[4][4];
+void sceVu0UnitMatrix(f32 (*)[4]);
+void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
+void func_002678b8(f32 (*)[4], void *, f32 *);
+
+void func_002675a8(f32 *, void *);
+void func_002672f8(f32 *, void *, f32 *);
+extern u8 D_006161C0[];
+extern u8 D_00615EB0[];
+extern f32 D_00616040[4][4];
+
+typedef struct { u8 pad[0xe0]; f32 mul; f32 add; } RkKey;
+typedef struct {
+    u8 pad0[0x28];
+    union { u64 d; s32 i[2]; } r01;
+    s32 r2;
+    u8 pad34[0x54 - 0x34];
+    f32 scale[3];
+} RkObj;
+
+f32 func_001a4a98(void *a0, f32 (*m)[4], RkKey *k, void *a3, RkObj *o) {
+    Mtx4 rm;
+    f32 rot[3];
+    f32 z;
+    s32 i;
+    sceVu0UnitMatrix(m);
+    if (o->r01.d || o->r2) {
+        for (i = 0; i < 3; i++)
+            rot[i] = (f32)o->r01.i[i] * 3.1415926f * 3.0517578125e-05f;
+        func_002678b8(rm, D_006161C0, rot);
+        sceVu0MulMatrix(m, m, rm);
+    }
+    for (i = 0; i < 3; i++)
+        func_00267560(m[i], m[i], o->scale[i]);
+    func_002675a8(m[3], o);
+    func_002672f8(m[3], D_00615EB0, m[3]);
+    m[3][1] *= k->mul;
+    z = m[3][2];
+    m[3][1] += k->add;
+    sceVu0MulMatrix(m, D_00616040, m);
+    return z;
+}
+
+typedef struct { u8 pad[0x90]; u8 *x90; } PppCur;
+extern PppCur *D_00615E68;
+s32 func_001a8f30(void);
+
+void func_001a5520(void *obj, void *key, void (*fn)(void *, void *, void *), u16 *pidx, s16 id, u8 rnd, u8 cnt) {
+    Grp *g = &D_00615E64->grps[id];
+    u8 *base = D_00615E68->x90;
+    s32 idx;
+
+    if (base == NULL)
+        base = D_00615E64->x10[g->a].x14;
+    if (rnd)
+        idx = func_001a8f30() % g->n;
+    else
+        idx = *pidx;
+    for (; cnt != 0; cnt--) {
+        fn(obj, key, base + g->list[idx++] * 6);
+        if (rnd)
+            idx = func_001a8f30() % g->n;
+        else if (idx >= g->n)
+            idx = 0;
+    }
+    *pidx = idx;
+}
+
+void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
+extern Mtx4 D_00615FC0;
+extern u8 D_00575A00[];
+
+typedef union { u32 w; struct { u8 r, g, b, a; } c; } Rgba;
+typedef struct {
+    Mtx4 m;
+    u8 pad40[0x3c];
+    f32 alpha;
+    f32 pos[3];
+    u8 pad8c[3];
+    u8 useMtx;
+} DmObj;
+typedef struct { DmObj *obj; void *mdl; u8 data[1]; } DmSrc;
+typedef struct { DmSrc *src; Rgba col; f32 (*mtx)[4]; f32 scale; f32 *scl; } DmArg;
+typedef struct {
+    void *mdl;
+    void *data;
+    u8 pad8[0xa];
+    s16 id;
+    Rgba col;
+    s32 x18, x1c;
+    f32 (*mtx)[4];
+    u8 pad24[8];
+    s32 x2c;
+    u8 pad30[0x10];
+} DmCtx;
+void func_001a56a0(DmCtx *);
+void func_001a5740(DmCtx *);
+
+void func_001a60e8(DmArg *a, s32 id) {
+    Mtx4 m;
+    DmCtx c;
+    DmSrc *s = a->src;
+    DmObj *o = s->obj;
+
+    if (o == (DmObj *)D_00575A00)
+        return;
+    if (s->mdl == NULL)
+        return;
+    if (o->alpha == 0.0f)
+        return;
+    if (o->useMtx) {
+        sceVu0CopyMatrix(m, o->m);
+    } else {
+        sceVu0UnitMatrix(m);
+        m[3][0] = D_00615FC0[3][0] + o->pos[0];
+        m[3][1] = D_00615FC0[3][1] + o->pos[1];
+        m[3][2] = D_00615FC0[3][2] + o->pos[2];
+    }
+    m[0][0] *= a->scale;
+    m[1][1] *= a->scale;
+    func_00267560(m[0], m[0], a->scl[0]);
+    func_00267560(m[1], m[1], a->scl[1]);
+    func_00267560(m[2], m[2], a->scl[2]);
+    sceVu0MulMatrix(m, a->mtx, m);
+    c.col = a->col;
+    c.col.c.a = c.col.c.a * o->alpha;
+    c.mdl = s->mdl;
+    c.data = s->data;
+    func_001a56a0(&c);
+    c.id = id;
+    c.mtx = m;
+    c.x2c = 0;
+    c.x18 = 0;
+    c.x1c = 0;
+    func_001a5740(&c);
+}
+
+typedef struct { DmSrc *src; Rgba col; f32 (*mtx)[4]; f32 scale; u16 w, h; f32 *scl; } DmArg2;
+typedef struct {
+    void *mdl;
+    void *data;
+    u8 pad8[0xa];
+    s16 id;
+    Rgba col;
+    s32 x18;
+    s16 x1c, x1e;
+    f32 (*mtx)[4];
+    u8 pad24[8];
+    s32 x2c;
+    u8 pad30[0x10];
+} DmCtx2;
+typedef struct {
+    u8 pad0[0x30];
+    f32 r3[4], r0[4], r1[4], r2[4];
+    u8 pad70[0xc];
+    f32 alpha;
+    f32 pos[3];
+    u8 pad8c[3];
+    u8 useMtx;
+    u8 pad90[0x14];
+    f32 size;
+} DmObj2;
+
+void func_001a62c0(DmArg2 *a, s32 id) {
+    Mtx4 m;
+    DmCtx2 c;
+    DmSrc *s = a->src;
+    DmObj2 *o = (DmObj2 *)s->obj;
+    f32 f, t;
+
+    if (o == (DmObj2 *)D_00575A00)
+        return;
+    if (s->mdl == NULL)
+        return;
+    if (o->alpha == 0.0f)
+        return;
+    func_002675a8(m[0], o->r0);
+    func_002675a8(m[1], o->r1);
+    func_002675a8(m[2], o->r2);
+    func_002675a8(m[3], o->r3);
+    f = a->scale * o->size / (f32)a->w;
+    func_00267560(m[0], m[0], -f);
+    func_00267560(m[1], m[1], f);
+    if (!o->useMtx) {
+        m[3][0] = D_00615FC0[3][0] + o->pos[0];
+        m[3][1] = D_00615FC0[3][1] + o->pos[1];
+        m[3][2] = D_00615FC0[3][2] + o->pos[2];
+    }
+    func_00267560(m[0], m[0], a->scl[0]);
+    func_00267560(m[1], m[1], a->scl[1]);
+    func_00267560(m[2], m[2], a->scl[2]);
+    sceVu0MulMatrix(m, a->mtx, m);
+    c.col = a->col;
+    f = o->size / (f32)a->h;
+    t = 1.0f < f ? 1.0f : f;
+    c.col.c.a = c.col.c.a * o->alpha * t;
+    c.mdl = s->mdl;
+    c.data = s->data;
+    func_001a56a0((DmCtx *)&c);
+    c.id = id;
+    c.mtx = m;
+    c.x2c = 0;
+    c.x18 = 0;
+    c.x1c = 0;
+    c.x1e = 0;
+    func_001a5740((DmCtx *)&c);
 }
