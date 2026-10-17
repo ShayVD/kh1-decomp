@@ -225,6 +225,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         defsyms += ["--defsym", f"{u}=0x{a:08x}"]
     ld_script = workdir / "c.ld"
     ld_script.write_text(f"SECTIONS {{ .f 0x{f.addr:08x} : {{ *(.text.{sym}) }}\n"
+                         "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n"
                          "  .other 0x40000000 : { *(.text .text.* .data .bss .rodata*) }\n"
                          "  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
     r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out),

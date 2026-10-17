@@ -46,7 +46,7 @@ secs = ''
 for fn in funcs:
     a = A.resolve(fn, reg)
     secs += f"  .f_{fn} 0x{a:08x} : {{ *(.text.{fn}) }}\n"
-(td/'c.ld').write_text("SECTIONS {\n" + secs + "  .other 0x40000000 : { *(.text .data .bss .rodata*) }\n  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
+(td/'c.ld').write_text("SECTIONS {\n" + secs + "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n  .other 0x40000000 : { *(.text .data .bss .rodata*) }\n  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
 r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out), "-T", str(td/'c.ld'), *defs, str(obj)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 L = Elf.load(out)

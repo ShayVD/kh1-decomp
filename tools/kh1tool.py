@@ -470,8 +470,50 @@ def fix_object(path: Path) -> bool:
         if struct.unpack_from("<I", data, hdr + 28)[0] != first_global:
             struct.pack_into("<I", data, hdr + 28, first_global)
             changed = True
+    if strip_context_only(data, path):
+        changed = True
     if changed:
         path.write_bytes(bytes(data))
+    return changed
+
+
+def is_ctx_section(name: str) -> bool:
+    """Sections of CONTEXT_ONLY functions (include/common.h): .ctx, and the
+    .ctx.rodata.* that split_rodata gives their constants and jump tables."""
+    return name == ".ctx" or name.startswith(".ctx.")
+
+
+def strip_context_only(data: bytearray, path: Path) -> bool:
+    """A CONTEXT_ONLY function is compiled only so gcc 2.96 knows its
+    register use when it compiles the callers below it (the callee-earlier
+    effect, docs/context-only-plan.md); its code is never placed. Every
+    global or weak symbol defined in a .ctx section becomes an undefined
+    global, so callers resolve to the original address (symbols.ld) or to the
+    real matched definition in another file. weak keeps ee-as from turning
+    calls into relocations against the .ctx section symbol; a static
+    CONTEXT_ONLY function would, which is an error."""
+    elf = Elf(bytes(data), path)
+    ctx = {sec.index for sec in elf.sections if is_ctx_section(sec.name)}
+    if not ctx:
+        return False
+    changed = False
+    for sec in elf.sections:
+        if sec.type != SHT_SYMTAB:
+            continue
+        for i in range(sec.size // 16):
+            off = sec.offset + i * 16
+            info, shndx = data[off + 12], struct.unpack_from("<H", data, off + 14)[0]
+            if shndx in ctx and info >> 4 in (1, 2):  # GLOBAL, WEAK
+                struct.pack_into("<IIBBH", data, off + 4, 0, 0, (1 << 4) | (info & 0xF), 0, 0)
+                changed = True
+    syms = elf.symbols()
+    for sec in elf.sections:
+        if is_ctx_section(sec.name) or not sec.name.startswith((".text", ".rodata", ".data")):
+            continue
+        for _off, _typ, si in elf.relocations(sec):
+            if si < len(syms) and syms[si].type == 3 and syms[si].shndx in ctx:  # STT_SECTION
+                raise SystemExit(f"error: {path}: {sec.name} refers to a static CONTEXT_ONLY "
+                                 f"function or its data; make it non-static")
     return changed
 
 
@@ -492,6 +534,7 @@ def object_functions(obj: Path) -> list[tuple[str, str]]:
 
 
 RDATA_RE = re.compile(r"^\s*(\.rdata|\.section\s+\.rodata)\b")
+SECTION_RE = re.compile(r"^\s*(?:\.section\s+([\w.$]+)|(\.text|\.data|\.rdata|\.bss)\b)")
 ENT_RE = re.compile(r"^\s*\.ent\s+([\w.$]+)")
 END_RE = re.compile(r"^\s*\.end\s+([\w.$]+)")
 RODATA_PLACEMENTS = GEN / "rodata.tsv"
@@ -507,6 +550,15 @@ def split_rodata(text: str) -> str:
     .rodata.<function>.<n>; trailing blocks stay in .rodata."""
     lines = text.splitlines()
     ents = [(i, m.group(1)) for i, l in enumerate(lines) if (m := ENT_RE.match(l))]
+    # CONTEXT_ONLY functions (section .ctx): their rodata is .ctx.rodata.*,
+    # which is never placed (see fix_object).
+    ctx_funcs, sec = set(), ".text"
+    for line in lines:
+        if m := SECTION_RE.match(line):
+            sec = m.group(1) or m.group(2)
+        elif m := ENT_RE.match(line):
+            if is_ctx_section(sec):
+                ctx_funcs.add(m.group(1))
     out, cur, k, inner = [], None, 0, 0
     for i, line in enumerate(lines):
         if m := ENT_RE.match(line):
@@ -517,15 +569,16 @@ def split_rodata(text: str) -> str:
             while k < len(ents) and ents[k][0] < i:
                 k += 1
             owner = cur or (ents[k][1] if k < len(ents) else None)
+            prefix = ".ctx.rodata" if owner in ctx_funcs else ".rodata"
             if cur:
                 # a block inside the function (a jump table) is its own
                 # section: the assembler's literal pool (`li.d` constants,
                 # in plain .rodata) can sit between it and the strings
                 # before the function (_dtoa_r)
                 inner += 1
-                line = f'\t.section .rodata.{owner}.{inner},"a",@progbits'
+                line = f'\t.section {prefix}.{owner}.{inner},"a",@progbits'
             elif owner:
-                line = f'\t.section .rodata.{owner},"a",@progbits'
+                line = f'\t.section {prefix}.{owner},"a",@progbits'
         out.append(line)
     return "\n".join(out) + "\n"
 
@@ -1069,7 +1122,11 @@ def decompiled_addrs() -> dict[int, str]:
             for m in re.finditer(r"^[A-Za-z_][^;{}()]*?\b(func_([0-9A-Fa-f]{8})|\w+)\s*\([^;{]*\)\s*\{",
                                  text, re.M):
                 addr = int(m.group(2), 16) if m.group(2) else registry.get(m.group(1))
-                if addr is not None:
+                if addr is None:
+                    continue
+                if m.group(0).startswith("CONTEXT_ONLY"):
+                    out.setdefault(addr, "wip")  # a copy for its callers, not a match
+                else:
                     out[addr] = tag
     return out
 

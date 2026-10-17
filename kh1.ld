@@ -17,6 +17,11 @@ SECTIONS
     *(.sbss .sbss.* .bss .bss.* .scommon COMMON)
   }
 
+  /* CONTEXT_ONLY bodies (include/common.h): compiled so callers below them
+   * match, never placed or patched. Kept below 0x10000000 so their own jal
+   * instructions reach the game's code; outside the game image. */
+  .ctx 0x0f000000 : { *(.ctx .ctx.*) }
+
   /DISCARD/ : {
     *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) *(.gnu.attributes)
     *(.MIPS.abiflags) *(.note*) *(.gcc_compiled*)
