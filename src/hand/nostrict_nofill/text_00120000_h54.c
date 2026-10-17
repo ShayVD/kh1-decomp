@@ -111,3 +111,57 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
     if (func_0012eaf8(a->f0)) s |= 0x10000;
     return s;
 }
+
+extern S31b0 *D_00525288;
+extern s32 D_0052528C;
+extern S31b0 D_00524F80[];
+extern s32 func_0012f3d0(A9 *);
+extern s32 func_0012f040(E9 *, s32);
+extern s32 func_002192c0(void);
+extern void func_0012fc58(void);
+extern void func_0012f5c0(S31b0 *);
+
+/* Ring of S31b0 entries: push. */
+void func_0012f560(S31b0 *v) {
+    if (D_00525288 == 0) {
+        D_00525288 = D_00524F80;
+        D_0052528C = 0;
+    } else {
+        D_00525288++;
+    }
+    *D_00525288 = *v;
+    D_0052528C++;
+}
+
+/* Ring of S31b0 entries: step back (wrapping) and read. */
+void func_0012f690(S31b0 *out) {
+    s32 n = D_0052528C;
+    if (n == 1) {
+        out->f0 = 0;
+        return;
+    }
+    if (D_00525288 == D_00524F80) {
+        S31b0 *q = D_00525288 - 1;
+        D_00525288 = q + n;
+    } else {
+        D_00525288--;
+    }
+    *out = *D_00525288;
+}
+
+void func_0012f700(Q8 *q) {
+    S31b0 cur; cur.f0 = 0;
+    switch (D_002E31B8) {
+    case 0: if (q->f8 & 0x400) func_0012f3d0((A9 *)&cur); break;
+    case 1: case 2: case 4:
+        if (q->f8 & 0x400) { if (func_0012f040((E9 *)D_002E31B0.f0, D_002E31B0.f4)) cur = D_002E31B0; }
+        break;
+    case 3:
+        if (func_002192c0() == 1) { if (!(q->f4 & 0x400)) goto snd; }
+        else if (q->f8 & 0x400) { snd: func_0011d768(69); func_0012fc58(); break; }
+        if (q->f8 & 0x800) func_0012f5c0(&cur);
+        else if (q->f8 & 0x20000) func_0012f690(&cur);
+        break;
+    }
+    if (cur.f0) { if (!D_00525288) func_0012f560(&cur); func_0012fb20(&cur, 3); }
+}

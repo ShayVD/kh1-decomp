@@ -97,11 +97,6 @@ void func_00157648(void *arg0) {
     func_001575b0(M2C_FIELD(M2C_FIELD(arg0, void **, 0x6C), s8 *, 0xBD));
 }
 
-void func_00157a00(s32 arg0) {
-    func_00157910();
-    func_001358b8(arg0, 0x23);
-}
-
 u16 func_001586d8(s32 arg0) {
     return M2C_FIELD(((arg0 * 2) + D_00304BE8), u16 *, 0x848);
 }

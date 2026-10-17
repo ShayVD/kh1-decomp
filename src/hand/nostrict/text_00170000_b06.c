@@ -122,6 +122,69 @@ void func_0017bc90(s32 a0) {
     D_00575940.x50 = dir;
 }
 
+/* ---- func_0017c550 ---- */
+f32 fabsf(f32);
+f32 func_0017c110(s32, f32);
+
+void func_0017c550(void) {
+    f32 m[4][4];
+    V4 p;
+    struct { s32 idx; f32 t; } q;
+/*P*/
+    Path *path = D_00362438;
+    s32 loop;
+    u64 k;
+    f32 dir;
+    f32 base;
+    f32 a;
+    f32 d0;
+    f32 d;
+    f32 t0;
+    s32 i0;
+/*Q*/
+
+    if (D_00575940.x66 == 3) return;
+    loop = 0;
+    if (path->flags & 1) loop = 1;
+    k = *(u64 *)&D_002C5BB0 & 0x300000000000ULL;
+    dir = 0.0f;
+    if (k == 0x100000000000ULL) {
+        dir = 1.0f;
+        D_00575940.x66 = 1;
+    } else if (k == 0x200000000000ULL) {
+        dir = -1.0f;
+        D_00575940.x66 = 1;
+    } else {
+        D_00575940.x66 = 0;
+    }
+    if (D_00575940.x66 != 1) return;
+    a = func_00124d28(&D_005758D0, &D_00575940.x30);
+    base = a;
+    q.idx = D_00575940.x40;
+    q.t = D_00575940.x48;
+    func_0017b308(m, path->seg, path->n, q.idx, loop);
+    d0 = func_0017c110(q.idx, q.t);
+    while (fabsf(func_00120c88(a - base)) < D_002BBDFC * 0.01745329099f) {
+        t0 = q.t;
+        i0 = q.idx;
+        func_0017b250(&p, m, t0);
+        a = func_00124d28(&p, &D_00575940.x30);
+        if (func_0017b4f8(&q.idx, &q.t, dir * 10.0f)) func_0017b308(m, path->seg, path->n, q.idx, loop);
+        if (i0 == q.idx && q.t == t0) break;
+    }
+    d = func_0017c110(q.idx, q.t);
+    if (d > 150.0f || (d < 150.0f && d0 < d)) {
+        D_00575940.x40 = q.idx;
+        D_00575940.x44 = q.idx;
+        D_00575940.x48 = q.t;
+        D_00575940.x4c = q.t;
+        func_0017b308(m, path->seg, path->n, q.idx, loop);
+        func_0017b250(&D_00575940.x10, m, q.t);
+    } else {
+        D_00575940.x5c = 30.0f;
+    }
+}
+
 /* ---- func_0017cb88 ---- */
 f32 func_00120c18(void *);
 

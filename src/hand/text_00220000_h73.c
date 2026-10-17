@@ -210,6 +210,31 @@ void func_0022f818(void) {
     }
 }
 
+extern s32 D_00646A1C;
+extern s32 D_00646A28;
+extern s32 D_00647638;
+void func_001ef7b0(s32);
+void func_0011d768(s32);
+
+void func_0022fba8(void) {
+    s32 *p = &D_00646A1C;
+    if (*p > 0) {
+        s32 *q = &D_00646A28;
+        func_0011d768(8);
+        func_001ef7b0(func_001ee728(*p) * *q);
+        if (D_00646A24 < D_003E3D6C) {
+            s32 o = (s32)D_00647634;
+            ((u8 *)(D_00647638 + o))[0x22] = 0;
+        } else {
+            D_00304BE8->cnt[*p] -= *q;
+        }
+        func_0022f818();
+    } else {
+        func_0011d768(4);
+    }
+    D_00646A28 = 1;
+}
+
 extern s32 D_003F7A64;
 extern s32 D_003F7A68;
 extern s32 D_00646A00, D_00646A04;

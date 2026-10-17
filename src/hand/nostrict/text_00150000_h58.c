@@ -985,3 +985,117 @@ void func_0015ae48(s32 i, u32 k) {
     }
 }
 
+
+void func_00157910(void *, s32, s32);
+void func_00157a00(void *a, s32 v, s32 b) {
+    func_00157910(a, v, b);
+    func_001358b8(a, 35);
+}
+typedef struct { s8 id; s8 w; } Ent12;
+typedef struct { u8 b0; Ent12 e[5]; } Rec12;
+extern s32 D_003519B0[];
+extern s32 D_002BC128, D_002BC130, D_002BC134;
+Rec12 *func_001477c8(s32);
+void func_00157a00(void *, s32, s32);
+void func_00157a30(Act *a, s32 k, Act *b) {
+    s32 cand[5];
+    s32 n = 0;
+    Rec12 *t = func_001477c8(D_003519B0[a->x130->x4c]) + k;
+    s32 r = func_00176850() * 100.0f;
+    s32 i;
+    s32 v;
+    if (D_002BC128 == 3 && D_002BC130 == 2 && D_002BC134 == D_002BC130) b = 0;
+    for (i = 0; i < 5; i++) {
+        switch (t->e[i].id) {
+        case -2:
+            v = -1;
+            break;
+        case -1:
+            continue;
+        case -3:
+            if (!func_00122ff8(b)) continue;
+            if (b->x130->x4c >= 10) continue;
+            if (b->x130->x4c == a->x130->x4c) continue;
+            if (r < t->e[i].w) {
+                func_00157a00(a, b->x130->x4c, t->b0);
+                return;
+            }
+            continue;
+        default:
+            v = t->e[i].id;
+            break;
+        }
+        if (t->e[i].w > 0) {
+            r -= t->e[i].w;
+            if (r < 0) {
+                if (v >= 0) func_00157a00(a, v, t->b0);
+                return;
+            }
+        } else {
+            cand[n] = v;
+            n++;
+        }
+    }
+    if (n > 0) {
+        v = cand[(s32)(func_00176850() * n)];
+        if (v >= 0) func_00157a00(a, v, t->b0);
+    }
+}
+
+typedef struct { u8 b[32]; } E551970;
+extern E551970 D_00551970[];
+extern s32 D_00351AC0;
+
+char *func_0015b060(void) {
+    E551970 *r = &D_00551970[D_00351AC0++];
+    if (D_00351AC0 >= 32) D_00351AC0 = 0;
+    return (char *)r;
+}
+
+/* needs make: uses rodata */
+typedef struct { s32 x0; char *x4; } R478a0;
+extern s32 D_00351B20[][2];
+extern s32 D_002BBDE4;
+char *func_00147808(s32);
+R478a0 *func_001478a0(s32);
+void func_00244670(s32, char *, char *);
+void func_0015b098(s32 a, s32 *ids) {
+    char *buf[2];
+    s32 i;
+    R478a0 *r;
+    for (i = 0; i < 2; i++) {
+        buf[i] = 0;
+        if (ids[i] == 0) continue;
+        if (ids[i] >= 0) {
+            if (ids[i] < 8) {
+                char *b = func_0015b060();
+                buf[i] = b;
+                strcpy(b, func_00147808(D_00351B20[ids[i]][i]));
+                continue;
+            }
+        }
+        r = func_001478a0(ids[i] & ~0x80);
+        buf[i] = func_0015b060();
+        switch (D_002BBDE4) {
+        case 0:
+        case 4:
+        case 7:
+            strcpy(buf[i], r->x4);
+            strcat(buf[i], func_00147808(344));
+            break;
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+            strcpy(buf[i], func_00147808(344));
+            strcat(buf[i], r->x4);
+            strcat(buf[i], "h");
+            break;
+        case 3:
+            strcpy(buf[i], func_00147808(344));
+            strcat(buf[i], r->x4);
+            break;
+        }
+    }
+    if (buf[0]) func_00244670(a, buf[0], buf[1]);
+}

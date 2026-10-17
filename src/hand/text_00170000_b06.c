@@ -228,3 +228,164 @@ void func_0017a958(void) {
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     if (!func_001772c8(D_00575894)) func_00176f08(1, 30.0f);
 }
+
+/* ---- func_0017e170 ---- */
+typedef struct { V4 x0; s32 x10; f32 x14[4]; f32 x24[4]; u8 pad34[0x44 - 0x34]; s32 x44; } CamB;
+extern CamB D_005759B0;
+
+s32 func_0017e170(s32 a0)
+{
+    Ray ray;
+    V4 v40;
+    V4 v50;
+    V4 v60;
+    f32 m[4][4];
+    f32 y;
+    f32 d;
+    f32 a;
+    s32 i;
+    s32 first;
+    s32 n;
+
+    first = 1;
+    n = 4;
+    d = D_005759B0.x24[a0];
+    y = D_00362680.y;
+    if (D_005759B0.x44 == 0) {
+        for (i = 0; i < 5; i++) {
+            a = y + d * ((f32)i / (f32)n);
+            func_002675a8(&v40, &v50);
+            func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
+            func_00267810(m, m, func_00120c88(a));
+            func_002675a8(&v60, D_002C58A0);
+            v60.z = D_00362680.w;
+            func_002672f8(&v60, m, &v60);
+            func_00267518(&v50, &D_005759B0, &v60);
+            v50.w = 1.0f;
+            if (first) {
+                func_002675a8(&v40, &v50);
+                first = 0;
+            } else {
+                func_002675a8(&ray.a, &v40);
+                func_00267530(&ray.b, &v50, &v40);
+                if (func_00119688(&ray) != -1) {
+                    return 1;
+                }
+            }
+        }
+    } else {
+        a = y + d;
+        func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
+        func_00267810(m, m, func_00120c88(a));
+        func_002675a8(&v60, D_002C58A0);
+        v60.z = D_00362680.w;
+        func_002672f8(&v60, m, &v60);
+        func_00267518(&v50, &D_005759B0, &v60);
+        v50.w = 1.0f;
+    }
+    func_002675a8(&ray.a, &D_005759B0);
+    func_00267530(&ray.b, &v50, &D_005759B0);
+    return func_00119688(&ray) != -1;
+}
+
+/* ---- func_0017e428 ---- */
+f32 fabsf(f32);
+
+extern s32 D_00362420;
+extern V4 D_00362600;
+extern f32 D_00362610[];
+extern V4 D_002E2780;
+extern V4 D_002E2790;
+void func_0012fc58(void);
+void func_00267560(void *, void *, f32);
+s32 func_0017dbb8(void);
+void func_00177900(void *, void *, f32);
+
+s32 func_0017e428(V4 *a, V4 *b)
+{
+    s32 tab[2];
+    f32 cur;
+    f32 ang;
+    f32 t;
+    f32 d;
+    f32 spd;
+    s32 i;
+    s32 best;
+    s32 prev;
+    s32 next;
+    s32 n;
+
+    func_0012fc58();
+    D_00362420 = 1;
+    D_005759B0.x10 = 4;
+    func_00267518(&D_005759B0, a, b);
+    func_00267560(&D_005759B0, &D_005759B0, 0.5f);
+    func_00267518(&D_005759B0, &D_005759B0, &D_00362600);
+    D_00362680.y = func_00124d28(&D_002E2780, &D_002E2790);
+    cur = D_00362680.y;
+    ang = func_00124d28(a, b);
+    D_005759B0.x44 = func_0017dbb8();
+    if (D_005759B0.x44 != 0) {
+        D_00362680.y = ang;
+        cur = D_00362680.y;
+        func_00177900(&D_002E2780, &D_002E2790, cur);
+        func_002675a8(&D_002E2790, &D_005759B0);
+        spd = 0.0f;
+    } else {
+        spd = 16.0f;
+    }
+    for (i = 0; i < 4; i++) {
+        t = func_00120c88(D_00362610[i] + ang);
+        D_005759B0.x14[i] = t;
+        d = t - cur;
+        D_005759B0.x24[i] = d;
+        if (3.141592801f < fabsf(d)) {
+            if (d < 0.0f) {
+                D_005759B0.x24[i] = d + 6.2831855f;
+            } else {
+                D_005759B0.x24[i] = d - 6.2831855f;
+            }
+        }
+    }
+    best = 0;
+    for (i = 1; i < 4; i++) {
+        if (fabsf(D_005759B0.x24[i]) < fabsf(D_005759B0.x24[best])) {
+            best = i;
+        }
+    }
+    if (func_0017e170(best) == 0) {
+        D_005759B0.x10 = best;
+    } else {
+        prev = best - 1;
+        next = best + 1;
+        if (prev < 0) {
+            prev = 3;
+        }
+        n = 0;
+        if (next < 4) {
+            n = next;
+        }
+        if (fabsf(D_005759B0.x24[prev]) < fabsf(D_005759B0.x24[n])) {
+            tab[0] = prev;
+            tab[1] = n;
+        } else {
+            tab[0] = n;
+            tab[1] = prev;
+        }
+        for (i = 0; i < 2; i++) {
+            if (func_0017e170(tab[i]) == 0) {
+                D_005759B0.x10 = tab[i];
+                break;
+            }
+        }
+        if (D_005759B0.x10 == 4) {
+            n = (n + 1 < 4) ? n + 1 : 0;
+            if (func_0017e170(n) == 0) {
+                D_005759B0.x10 = n;
+            }
+        }
+    }
+    func_00176f08(7, spd);
+    D_005758C4 = 0;
+    return D_005759B0.x10;
+}
