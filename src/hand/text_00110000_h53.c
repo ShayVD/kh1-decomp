@@ -528,3 +528,143 @@ s32 func_00126838(u8 *o, s32 *a, V53 *v) {
     }
     return 18;
 }
+
+void *memset(void *, s32, u32);
+typedef struct { u8 type; u8 pad1[2]; s8 flag; s32 a, b; } C3190b;
+extern C3190b D_002E3190;
+extern u8 D_002C5BB0[];
+extern V53 D_004F7800;
+extern s32 (*D_002E27D4)(u8 *, u8 *, V53 *);
+s32 func_00137618(u8 *, V53 *);
+void func_00124e08(u8 *o, u8 *p, V53 *out);
+void func_00126f18(u8 *, u8 *, V53 *);
+u8 *func_0013dfb8(u8 *, V53 *);
+void func_00126c10(u8 *, V53 *);
+void func_001586a8(s32);
+
+void func_001271b0(u8 *o, V53 *v) {
+    V53 s;
+    u8 *p;
+    if (func_00137618(o, v)) {
+        func_00124e08(o, D_002C5BB0, v);
+        func_002675a8(&D_004F7800, v);
+        if (D_002E27D4) {
+            if (D_002E27D4(o, D_002C5BB0, v)) func_00126f18(o, D_002C5BB0, v);
+        } else {
+            func_00126f18(o, D_002C5BB0, v);
+        }
+    }
+    if (D_002E3190.flag & 1) {
+        if ((FLD(s32, o, 0x164) == 7 || FLD(s32, o, 0x164) == 12) && (FLD(s32, o, 0x70) == 0 || FLD(s32, o, 0x70) == 12)) {
+            FLD(u32, o, 0) &= ~4;
+            func_002675a8(&s, &D_002C58A0);
+            p = func_0013dfb8(o, &s);
+            if (p) FLD(f32, o, 0x3b0) = FLD(f32, p, 4) = 2.0f;
+        }
+    } else if (D_002E3190.type) {
+        func_00126c10(o, v);
+    }
+    memset(&D_002E3190, 0, 12);
+    p = FLD(u8 *, o, 0x14c);
+    if (p && FLD(u8 *, p, 0x2c) && (FLD(u32, FLD(u8 *, p, 0x2c), 4) & 1)) func_001586a8(11);
+}
+
+/* needs make: uses rodata */
+extern V53 D_002C5C70;
+void func_002675a8(V53 *, V53 *);
+void func_00267548(V53 *, V53 *, V53 *);
+
+void func_00122588(u8 *o) {
+    V53 *acc = (V53 *)(o + 0x430);
+    V53 d;
+    Light53 *l;
+    s32 i;
+    u32 mask = 0;
+    f32 dist, r;
+    func_002675a8(acc, &D_002C5C70);
+    l = D_002C5C80;
+    for (i = 0; i < 31; i++, l++) {
+        if (l->flags & 0x11) continue;
+        switch (l->type) {
+        case 1:
+            func_00267548(acc, acc, &l->col);
+            break;
+        case 2:
+            mask |= 1 << i;
+            break;
+        case 3:
+            mask |= 1 << i;
+            break;
+        case 4:
+            mask |= 1 << i;
+            break;
+        case 5:
+            func_00267530(&d, (V53 *)(o + 0x10), &l->pos);
+            dist = func_00120bf8(&d);
+            r = l->radius;
+            if (dist < r) {
+                func_002674f0(&d, &l->col, &D_002C5C70, cosf(dist / r * 3.1415928f * 0.5f));
+                func_00267548(acc, acc, &d);
+            }
+            break;
+        }
+    }
+    *(u32 *)(o + 0x420) = mask;
+}
+
+#define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
+extern s32 D_002E27A8;
+extern f32 D_002C58D0[4][4];
+extern V53 D_002C58A0;
+extern f32 D_004F77E0;
+void func_00267810(f32 (*)[4], f32 (*)[4], f32);
+void func_00124d58(V53 *, V53 *, f32, f32);
+
+void func_00124e08(u8 *o, u8 *p, V53 *out) {
+    f32 m[4][4];
+    V53 v;
+    switch (D_002E27A8) {
+    case 2:
+        func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+        func_002672f8(out, m, (V53 *)(o + 0x30));
+        out->y = out->w = 0.0f;
+        return;
+    case 11:
+        if (FLD(f32, p, 0x44) <= 0.0f) {
+            func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+            func_002672f8(out, m, (V53 *)(o + 0x20));
+            out->y = 0.0f;
+            func_002673b8(out, out);
+            out->w = -FLD(f32, p, 0x44);
+            return;
+        }
+        if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
+            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
+        } else {
+            func_002675a8(out, o + 0x20);
+        }
+        out->y = 0.0f;
+        func_002673b8(out, out);
+        out->w = 0.0f;
+        return;
+    }
+    func_002675a8(&v, p + 0x60);
+    switch (FLD(s32, o, 0x70)) {
+    case 10:
+    case 13:
+    case 15:
+        break;
+    case 18:
+        v.y = 0.0f;
+        break;
+    case 29:
+        func_002675a8(out, &v);
+        out->w = FLD(f32, p, 0x4c);
+        return;
+    default:
+        v.z = v.y;
+        v.y = 0.0f;
+        break;
+    }
+    func_00124d58(&v, out, D_004F77E0, FLD(f32, p, 0x4c));
+}
