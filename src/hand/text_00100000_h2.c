@@ -1,0 +1,189 @@
+/* Hand-matched functions (worker 2). Grouped by address; the original
+ * translation units are not known yet. */
+#include "common.h"
+
+/* 4x4 matrix pair: a[] from the caller's matrix, b[] from D_002BC170. */
+typedef struct {
+    s32 pad[2];
+    s32 a[16];
+    s32 b[16];
+} MatPair;
+
+extern s32 D_002BC170[4][4];
+
+void func_00108be8(s32 unused, s32 m[4][4], MatPair *d) {
+    s32 i, j, k = 0;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            d->a[k] = m[i][j];
+            d->b[k] = D_002BC170[i][j];
+            k++;
+        }
+    }
+}
+
+void func_00108c58(s32 m[4][4], MatPair *d) {
+    s32 i, j, k = 0;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            d->a[k] = m[i][j];
+            d->b[k] = D_002BC170[i][j];
+            k++;
+        }
+    }
+}
+
+void iFlushCache(s32);
+
+/* Restart the VIF1 DMA channel on the chain at arg+0x10. */
+s32 func_00108d90(void *arg) {
+    *(volatile u32 *)0x10009020 = 0;
+    *(volatile u32 *)0x10009030 = *(u32 *)((u8 *)arg + 0x10) & 0x0FFFFFFF;
+    *(volatile u32 *)0x1000E010 = 2;
+    iFlushCache(0);
+    *(volatile u32 *)0x10009000 = 0x145;
+    return 2;
+}
+
+/* sceGsLoadImage / sceGsStoreImage packets (0x70 bytes). */
+typedef struct {
+    u64 q[14];
+} GsImagePacket;
+
+void FlushCache(s32);
+s32 sceGsSyncPath(s32, s32);
+void func_002660c0(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16);
+s32 sceGsExecStoreImage(GsImagePacket *, void *);
+void *func_001559f0(s32, s32);
+
+extern void *D_002B677C;
+
+s32 func_0010a058(void) {
+    GsImagePacket si;
+    void **p;
+
+    func_002660c0(&si, 0x1a00, 8, 1, 0, 0, 512, 384);
+    FlushCache(0);
+    sceGsSyncPath(0, 0);
+    p = &D_002B677C;
+    *p = func_001559f0(62, 2);
+    sceGsExecStoreImage(&si, *p);
+    return 4;
+}
+
+extern s32 D_002BC070;
+extern s32 D_002B6774;
+void func_001038b0(s32);
+s32 func_0011ef10(s32, s32 (*)(void));
+
+s32 func_0010a0d8(void) {
+    D_002B6774 = 1;
+    if (D_002BC070 != 128) func_001038b0(1);
+    return func_0011ef10(0x2e630, func_0010a058);
+}
+
+void func_00106b18(void *);
+void *func_00121e28(s32, void **);
+extern u8 D_002B6760[];
+extern void *D_002B6778;
+void func_0010a3e8(void) {
+    GsImagePacket si;
+    func_00106b18(D_002B6760);
+    func_002660c0(&si, 0x3600, 4, 1, 0, 0, 256, 192);
+    FlushCache(0);
+    sceGsSyncPath(0, 0);
+    D_002B6778 = func_00121e28(0x24000, &D_002B6778);
+    sceGsExecStoreImage(&si, D_002B6778);
+}
+extern u64 D_002B70B0[];
+extern s32 D_00495250;
+void func_0010a4d8(u64 *, s32, s32, s32, s32, s32, s32);
+s32 func_0010a550(u64 *p, s32 a1, s32 a2, s32 a3, s32 a4, s32 idx, s32 a6) {
+    p[0] = D_002B70B0[idx];
+    p[1] = 0;
+    p += 2;
+    func_0010a4d8(p, a2, a6, a4, 4, a3, D_00495250);
+    ((s32 *)p)[7] = 0x8000;
+    ((s32 *)p)[19] = 0x8000;
+    return a1 + 13;
+}
+extern u8 D_00495210[];
+void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
+void func_0010b190(u8 *p) {
+    func_00267b08(D_00495210, 512.0f, 1.0f, 1.0f,
+                  *(f32 *)(p + 0x30) + 2048.0f, *(f32 *)(p + 0x34) + 2048.0f,
+                  1.0f, 16777000.0f, 2.0f, 4000000.0f);
+}
+
+/* Callbacks run by the semaphore-driven thread func_0010c0c8. */
+typedef struct {
+    void (*fn)(s32);
+    s32 arg;
+    s32 done;
+} SemaCb;
+extern SemaCb D_002B75A0[2];
+extern s32 D_00495260;
+s32 WaitSema(s32);
+void func_0010c0c8(void) {
+    s32 i;
+    for (;;) {
+        WaitSema(D_00495260);
+        for (i = 0; i < 2; i++) {
+            if (D_002B75A0[i].fn) {
+                D_002B75A0[i].fn(D_002B75A0[i].arg);
+                D_002B75A0[i].done = 1;
+            }
+        }
+    }
+}
+void func_0010c170(void (*fn)(s32), s32 arg) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        if (!D_002B75A0[i].fn) {
+            D_002B75A0[i].fn = fn;
+            D_002B75A0[i].arg = arg;
+            D_002B75A0[i].done = 0;
+            return;
+        }
+    }
+}
+void func_0010c1b8(void (*fn)(s32)) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        if (fn == D_002B75A0[i].fn) {
+            D_002B75A0[i].fn = 0;
+            D_002B75A0[i].arg = 0;
+            D_002B75A0[i].done = 0;
+            return;
+        }
+    }
+}
+
+extern u8 D_0048CD50[];
+extern u8 D_00495280[];
+s32 func_001205f0(void *, void *);
+void *memcpy(void *, const void *, u32);
+
+void *func_0010c3c0(void) {
+    void *p = func_001559f0(52, 12);
+    s32 n = func_001205f0(D_0048CD50, p);
+    return memcpy(D_00495280, p, n);
+}
+
+extern GsImagePacket D_002BC1B0;
+extern s32 D_002BD118;
+void sceGsSetDefLoadImage(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16);
+s32 sceGsExecLoadImage(GsImagePacket *, void *);
+
+s32 func_0010c4b0(void) {
+    switch (D_002BD118) {
+    case 5:
+    case 6:
+        return 0;
+    }
+    sceGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 0, 0, 0, 256, 256);
+    sceGsSyncPath(0, 0);
+    FlushCache(0);
+    sceGsExecLoadImage(&D_002BC1B0, D_00495280);
+    return 0;
+}
