@@ -911,6 +911,36 @@ void func_0010e430(Fade *f) {
     }
 }
 
+/* func_0010a248 only matches with func_00109f88 defined above it. */
+extern u8 D_002BC210[];
+extern s32 D_002B677C;
+extern f32 D_0049517C;
+extern s32 func_00106978(s32);
+
+void func_00109f88(void) {
+    sceGsSetDefLoadImage(D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
+    FlushCache(0);
+    sceGsSyncPath(0, 0);
+    sceGsExecLoadImage(D_002BC1B0, (void *)D_002B677C);
+    sceGsSetDefLoadImage(D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
+    FlushCache(0);
+    sceGsSyncPath(0, 0);
+    sceGsExecLoadImage(D_002BC210, (void *)(D_002B677C + 0x48000));
+}
+
+s32 func_0010a248(void) {
+    switch (D_00495180) {
+    case 0: func_00106978(32); D_00495180++; D_0049517C = 64.0f;
+    case 1:
+        if (!(D_0049517C <= 0.0f)) {
+            func_00109f88(); D_002B6668 = 0x180808080ull;
+            func_00106b18(D_002B66B0); D_0049517C -= D_002BBDFC; return 0;
+        }
+        D_002B6774 = 0; return 4;
+    }
+    return 0;
+}
+
 /* needs make: uses rodata */
 void func_00100670(u32 arg0, s32 arg1) {
     Obj10 *o = func_0015ed80(arg1, func_00108d90);
