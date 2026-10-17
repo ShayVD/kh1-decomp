@@ -123,3 +123,13 @@ cflags = "-O2 -G0 -fno-strict-aliasing"
 path = "src/hand/nostrict_nofill/"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 no_fill = true
+
+# Game files where gcc's global CSE was off: loads the original repeats are
+# merged by gcse with the normal flags (session 6; func_0014b550, func_001ca368).
+[[toolchain.override]]
+path = "src/hand/nogcse/"
+cflags = "-O2 -G0 -fno-gcse"
+
+[[toolchain.override]]
+path = "src/hand/nostrict_nogcse/"
+cflags = "-O2 -G0 -fno-strict-aliasing -fno-gcse"
