@@ -13,12 +13,3 @@ typedef struct {
 extern W9Blk D_00550400[];
 extern u8 D_00FE0000[];
 
-u8 *func_001559f0(s32 i, s32 n) {
-    W9Blk *p = &D_00550400[i];
-    s32 j;
-    for (j = 0; j < n; j++) {
-        p[j].h.b.b0 = -1;
-        p[j].h.b.b2 = 0;
-    }
-    return D_00FE0000 + (i << 18);
-}

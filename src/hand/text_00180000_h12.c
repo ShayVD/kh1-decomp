@@ -1,6 +1,8 @@
 /* ppp manager and component callbacks, by hand (worker 12). */
 #include "common.h"
 
+extern u8 D_00616040[];
+
 /* D_00364130: 256 effect managers of 0xC0 bytes. */
 typedef struct {
     u8 pad[0xFC];
@@ -345,10 +347,12 @@ typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 void sceVu0UnitMatrix(PppMtx);
 void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
+void sceVu0CopyMatrix(PppMtx, PppMtx);
 
 typedef struct {
     u8 pad[0x10];
-    PppMtx m;
+    PppMtx m;    /* +0x10 */
+    PppMtx m2;   /* +0x50 */
 } PppMtxOwner;
 
 extern PppMtxOwner *D_00615E68;
@@ -386,4 +390,215 @@ void pppEiWindFunCon(void *obj, PppEntry *e) {
     w->w0.i = 0;
     w->w1 = 0;
     w->a = w->b = w->c = w->w0.f;
+}
+
+/* Pointer-valued fields below are typed s32 so that loads and stores
+ * through them alias like the original. */
+typedef struct {
+    u8 pad[0x12];
+    u16 unk12;
+} PppAnmHdr;
+
+typedef struct {
+    s32 hdr;   /* a PppAnmHdr * */
+    s32 unk4;
+} PppAnmEnt;
+
+typedef struct {
+    u8 pad[0x14];
+    PppAnmEnt *anms;   /* +0x14 */
+} PppAnmSet;
+
+extern PppAnmSet *D_00615E64;
+
+typedef struct {
+    s32 frame;
+    s32 id;    /* +0x4 */
+} PppAnmKey;
+
+typedef struct {
+    s32 p0;
+    s32 cur;  /* +0x4 */
+    u16 unk8;
+    u8 unkA;
+} PppAnmWork;
+
+void func_00191fc8(PppObject *obj, PppAnmKey *k, PppEntry *e) {
+    PppAnmWork *w = (PppAnmWork *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    PppAnmEnt *a;
+
+    if (k->frame != obj->frame)
+        return;
+    w->p0 = (s32) obj + e->offsets[1] + 0xA0;
+    if (k->id == 0xFFFF) {
+        w->cur = 0;
+        return;
+    }
+    a = &D_00615E64->anms[k->id];
+    if ((s32) a != w->cur) {
+        u16 t;
+
+        w->cur = (s32) a;
+        t = ((PppAnmHdr *) a->hdr)->unk12;
+        w->unkA = 0;
+        w->unk8 = t;
+    }
+}
+
+void func_001a6518(PppAnmWork *, PppAnmEnt *);
+
+void func_001924a8(PppObject *obj, PppAnmKey *k, PppEntry *e) {
+    PppAnmWork *w = (PppAnmWork *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    PppAnmEnt *a;
+
+    if (k->frame != obj->frame)
+        return;
+    w->p0 = (s32) obj + e->offsets[1] + 0xA0;
+    if (k->id == 0xFFFF) {
+        w->cur = 0;
+        return;
+    }
+    a = &D_00615E64->anms[k->id];
+    if ((s32) a == w->cur)
+        return;
+    func_001a6518(w, a);
+}
+
+void func_00192708(PppObject *obj, PppAnmKey *k, PppEntry *e) {
+    PppAnmWork *w = (PppAnmWork *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    PppAnmEnt *a;
+
+    if (k->frame != obj->frame)
+        return;
+    w->p0 = (s32) obj + e->offsets[1] + 0xA0;
+    if (k->id == 0xFFFF) {
+        w->cur = 0;
+        return;
+    }
+    a = &D_00615E64->anms[k->id];
+    if ((s32) a != w->cur) {
+        u16 t;
+
+        w->cur = (s32) a;
+        t = ((PppAnmHdr *) a->hdr)->unk12;
+        w->unkA = 0;
+        w->unk8 = t;
+    }
+}
+
+typedef struct {
+    u8 pad[0x10];
+    u8 unk10[0x10];
+    f32 unk20;
+    s32 unk24;
+    f32 unk28;
+    u16 unk2C;
+} PppCbSrc2;
+
+typedef struct {
+    PppCbSrc2 *src;
+    s32 unk4;
+    void *tbl;
+    f32 unkC;
+    u16 unk10;
+    u16 unk12;
+    void *sub;
+} PppCbArg2;
+
+void func_001a6550(PppCbArg2 *, s32);
+
+void func_001936c0(PppCbSrc2 *p) {
+    PppCbArg2 a;
+
+    a.unk4 = p->unk24;
+    a.unkC = p->unk20;
+    a.unk10 = (u32) p->unk28;
+    a.src = p;
+    a.unk12 = p->unk2C;
+    a.tbl = D_00616040;
+    a.sub = p->unk10;
+    func_001a6550(&a, 0);
+}
+
+typedef struct {
+    s32 frame;
+    PppWord a, b;
+} PppKeyF2;
+
+typedef struct {
+    PppWord a;
+    s32 tgt;
+} PppHitBall;
+
+typedef struct {
+    PppWord a, b;
+    s32 tgt;
+} PppGrvTgt;
+
+void pppKeGrvTgtFrame(PppObject *obj, PppKeyF2 *k, PppEntry *e) {
+    if (obj->frame == k->frame) {
+        PppGrvTgt *w = (PppGrvTgt *) ((u8 *) obj + e->offsets[1] + 0xA0);
+        w->a.f = k->a.f;
+        w->b.f = k->b.f;
+        w->tgt = (s32) obj + e->offsets[0] + 0xA0;
+    }
+}
+
+void pppKeHitBallFrame(PppObject *obj, PppKeyF2 *k, PppEntry *e) {
+    if (obj->frame == k->frame) {
+        PppHitBall *w = (PppHitBall *) ((u8 *) obj + e->offsets[1] + 0xA0);
+        w->tgt = (s32) obj + e->offsets[0] + 0xA0;
+        w->a.f = k->a.f;
+    }
+}
+
+extern PppMtx D_00615FC0;
+
+void pppKeDMatFrame(void *obj, void *k, PppEntry *e) {
+    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[1] + 0xA0);
+
+    sceVu0MulMatrix(D_00615E68->m2, D_00615FC0, D_00615E68->m);
+    sceVu0CopyMatrix(w, D_00615E68->m2);
+    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
+}
+
+f32 func_0019baf8(void);
+
+s8 func_0019bb40(u8 a) {
+    f32 f = func_0019baf8();
+
+    return (f32) (a * 2) * f - (f32) (a >> 1);
+}
+
+typedef struct {
+    u8 pad[0x50];
+    s32 unk50;
+    s32 unk54;
+    s32 unk58;
+} PppBb98A;
+
+typedef struct {
+    u8 pad[0xC9];
+    u8 unkC9;
+    u8 padCA[2];
+    u8 unkCC;
+} PppBb98B;
+
+s32 func_0019bb98(PppBb98A *p, PppBb98B *q) {
+    if (p->unk50 == 0)
+        return 0;
+    if ((u8) (q->unkCC - 1) < 2 && p->unk54 == 0)
+        return 0;
+    if (q->unkC9 != 0 && p->unk58 == 0)
+        return 0;
+    return 1;
+}
+
+extern PppMtx D_00615EB0;
+
+void func_0019cfc0(PppMtx out, PppBb98B *q, PppMtx m) {
+    if (q->unkCC != 0)
+        return;
+    sceVu0MulMatrix(out, m, D_00615E68->m);
+    sceVu0MulMatrix(out, D_00615EB0, out);
 }

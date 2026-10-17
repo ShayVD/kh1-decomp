@@ -60,6 +60,9 @@ typedef struct {
 
 void func_001c4640(Msg *m);
 void func_001c6720(void);
+
+extern s32 D_002BC080[4];
+extern s32 D_002BC090, D_002BC094, D_002BC098, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE04;
 extern Big D_00389C90;
 
 s32 func_001cc210(VM *vm) {
@@ -375,5 +378,33 @@ s32 func_001cdbc8(VM *vm) {
     m.v[3] = 1.0f;
     func_001c4640(&m);
     vm->sp--;
+    return 2;
+}
+
+
+
+s32 func_001cde38(void) {
+    D_002BBE04 = 1;
+    D_002BC080[0] = 128;
+    D_002BC080[1] = 128;
+    D_002BC080[2] = 128;
+    D_002BC080[3] = 64;
+    D_002BC090 = 256;
+    D_002BC094 = 192;
+    D_002BC098 = 0;
+    D_002BC09C = 1;
+    D_002BC0A0 = 0;
+    D_002BC0A4 = 0;
+    return 2;
+}
+
+s32 func_001cdf00(VM *vm) {
+    Msg m;
+    m.type = 17;
+    m.val = (u32)vm->stk[vm->sp - 1];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp];
+    func_001c4640(&m);
+    vm->sp -= 2;
     return 2;
 }

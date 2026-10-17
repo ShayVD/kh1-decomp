@@ -4,6 +4,3 @@
 
 extern u8 D_00533BA0[];
 
-u8 *func_001477c8(s32 a) {
-    return D_00533BA0 + a;
-}
