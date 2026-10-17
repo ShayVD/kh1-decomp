@@ -124,6 +124,16 @@ s32 func_001ecb08(s32, s32, s32);
 void func_0011d240(s32, s32, void *, s32);
 void func_0011db50(s32 *, s32 *);
 
+typedef struct {
+    s32 n;
+    s32 x4[5];
+    s32 off; /* byte offset of the payload from the header */
+} RelHdr;
+extern s32 D_004DBC28[][64][36];
+extern s32 D_00351BD0;
+extern s32 D_002BC170[4][4];
+void func_001089d0(void *);
+
 void func_00104f10(void *, void *);
 void func_00104eb0(void *, void *);
 void func_001047c8(void);
@@ -147,10 +157,29 @@ void func_0011ef10(s32, void *);
 void func_0011c698(void);
 void func_0011d688(s32);
 
+/* Taking &a (an ADDRESSOF that gcc later folds away) is what keeps the
+ * original from turning the call into a sibcall. */
+void func_001149b0(RelHdr *a) {
+    s32 *p = &a->off;
+    RelHdr **pp = &a;
+    if ((*pp)->n >= 2) func_001089d0((u8 *)a + *p);
+}
+
 s32 func_001149e8(s32 a0, u8 *a1, s32 a2, s32 a3) {
     void *p = a1 + *(s32 *)(a1 + 0x20);
     func_00108fd0(D_004D9370++, a2, a0, p, a3);
     return 1;
+}
+
+void func_00114db0(s32 a0, s32 (*a1)[4]) {
+    s32 i, j, k = 0;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            D_004DBC28[D_00351BD0][a0][k] = a1[i][j];
+            D_004DBC28[D_00351BD0][a0][k + 16] = D_002BC170[i][j];
+            k++;
+        }
+    }
 }
 
 void func_001150d8(u8 *a) {

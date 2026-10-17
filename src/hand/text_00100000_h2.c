@@ -75,6 +75,7 @@ extern s32 D_002BC070;
 extern s32 D_002B6774;
 void func_001038b0(s32);
 s32 func_0011ef10(s32, s32 (*)(void));
+s32 func_0010a058(void);
 
 s32 func_0010a0d8(void) {
     D_002B6774 = 1;
@@ -558,4 +559,58 @@ void func_001130a0(s32 i, f32 *d) {
     d[1] = D_004D92F0[i][1];
     d[2] = D_004D92F0[i][2];
     d[3] = D_004D92F0[i][3];
+}
+typedef struct { s32 id; u8 pad[0x3c]; } Ent40;
+extern Ent40 *D_002BCDA0;
+extern s32 D_002BCDA4;
+
+s32 func_001130e0(void) {
+    s32 i;
+    for (i = 0; i < D_002BCDA4; i++) {
+        if (D_002BC130 == D_002BCDA0[i].id) return i;
+    }
+    return 1000;
+}
+extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
+void func_00113a00(void) {
+    D_004D934C = 205;
+    D_004D9350 = 135;
+    D_004D9354 = 50;
+    D_004D9358 = 128;
+    D_004D935C = 76;
+    D_004D9360 = 128;
+}
+typedef struct {
+    u8 pad[0xc0];
+    void *owner;
+    u8 pad2[0xc];
+} Obj_D0;
+typedef struct {
+    u8 pad[0x90];
+} Obj_90;
+extern Obj_D0 D_00494D80[];
+extern Obj_90 D_00494F20[];
+void func_00108a60(s32, void *, Obj_D0 *, Obj_90 *, Obj_90 *);
+void func_001089f8(Obj_D0 *, void *);
+void func_001089d0(void *);
+void func_00108cf8(void *p, s32 i, void *q) {
+    D_00494D80[i].owner = p;
+    func_00108a60(i, q, &D_00494D80[i], &D_00494F20[i], &D_00494F20[i + 2]);
+    func_001089f8(&D_00494D80[i], p);
+    func_001089d0(p);
+}
+
+/* The 0xd0-byte object of func_00108b60/func_00108cf8 (two 0x60 slots,
+ * owner at +0xc0), seen as rows of s32. */
+typedef struct {
+    s32 v[2][24];
+} SlotRows;
+
+extern s32 D_0048C6F0[][4];
+
+void func_00108970(SlotRows *a, s32 i, s32 j) {
+    a->v[i][0] = D_0048C6F0[j][0];
+    a->v[i][1] = D_0048C6F0[j][1];
+    a->v[i][2] = D_0048C6F0[j][2];
+    a->v[i][3] = D_0048C6F0[j][3];
 }
