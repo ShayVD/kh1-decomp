@@ -1,8 +1,14 @@
 #include "common.h"
 typedef struct {
+    u8 pad0[0x370];
+    u64 f370;
+} Ent;
+typedef struct {
     s32 x0;
-    void *ent;
-    u8 pad8[0x68];
+    Ent *ent;
+    u8 pad8[0x60];
+    f32 f68;
+    s32 f6c;
     s32 code;
     u8 pad74[8];
     s32 lbl[64];
@@ -12,7 +18,18 @@ typedef struct {
     u8 pad2f4[0x34];
     u64 flags;
 } VM;
-typedef struct { u8 st[4]; u8 x4[12]; u16 tbl[8][256]; s32 cnt[8]; s8 ids[4]; u8 pad1034[0x3070 - 0x1034]; union { u64 x; s32 i[2]; } f3070; union { u64 x; s32 i[2]; } f3078; } Str;
+typedef struct {
+    u8 type;
+    u64 val:24;
+    s32 x;
+    s32 a8;
+    s32 ac;
+    f32 v[4];
+} Msg;
+void func_001c4640(Msg *m);
+double sin(double);
+double cos(double);
+typedef struct { u8 st[4]; u8 x4[12]; u16 tbl[8][256]; s32 cnt[8]; s8 ids[4]; u8 pad1034[0x3034 - 0x1034]; s32 f3034; s32 f3038; u8 pad303c[0x3070 - 0x303c]; union { u64 x; s32 i[2]; } f3070; union { u64 x; s32 i[2]; } f3078; u8 pad3080[0x316c - 0x3080]; s32 f316c; } Str;
 extern Str D_00389C90;
 extern s32 D_00389C80;
 extern char *D_00388480[];
@@ -135,5 +152,89 @@ s32 func_001cf5d0(VM *vm) {
         break;
     }
     vm->sp -= 2;
+    return 2;
+}
+
+typedef struct { void *p; u8 pad[0x34c]; } Obj350;
+extern Obj350 D_003C3A70[];
+extern s32 D_003C54F0;
+extern Obj350 D_003A7990[];
+extern s32 D_003B4D90;
+extern Obj350 D_0038D170[];
+extern s32 D_0039A570;
+extern Obj350 D_0039A580[];
+extern s32 D_003A7980;
+s32 func_00123488(void *);
+s32 func_001d0b90(VM *vm) {
+    Msg m;
+    s32 i;
+    m.type = 13;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    if (D_00389C90.f316c) {
+        for (i = 0; i < D_003C54F0; i++) {
+            if (func_00123488(D_003C3A70[i].p)) { m.x = (s32)D_003C3A70[i].p; func_001c4640(&m); }
+        }
+    } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
+        if (D_00389C90.f3038 == 0) {
+            for (i = 0; i < D_003B4D90; i++) {
+                if (func_00123488(D_003A7990[i].p)) { m.x = (s32)D_003A7990[i].p; func_001c4640(&m); }
+            }
+        } else {
+            for (i = 0; i < D_003A7980; i++) {
+                if (func_00123488(D_0039A580[i].p)) { m.x = (s32)D_0039A580[i].p; func_001c4640(&m); }
+            }
+        }
+    } else {
+        if (D_00389C90.f3034 == 0) {
+            for (i = 0; i < D_0039A570; i++) {
+                if (func_00123488(D_0038D170[i].p)) { m.x = (s32)D_0038D170[i].p; func_001c4640(&m); }
+            }
+        } else {
+            for (i = 0; i < D_003A7980; i++) {
+                if (func_00123488(D_0039A580[i].p)) { m.x = (s32)D_0039A580[i].p; func_001c4640(&m); }
+            }
+        }
+    }
+    return 2;
+}
+
+s32 func_001d0dd0(VM *vm) {
+    Msg m;
+    s32 i;
+    m.type = 14;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    if (D_00389C90.f316c) {
+        for (i = 0; i < D_003C54F0; i++) {
+            if (func_00123488(D_003C3A70[i].p)) { m.x = (s32)D_003C3A70[i].p; func_001c4640(&m); }
+        }
+    } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
+        if (D_00389C90.f3038 == 0) {
+            for (i = 0; i < D_003B4D90; i++) {
+                if (func_00123488(D_003A7990[i].p)) { m.x = (s32)D_003A7990[i].p; func_001c4640(&m); }
+            }
+        } else {
+            for (i = 0; i < D_003A7980; i++) {
+                if (func_00123488(D_0039A580[i].p)) { m.x = (s32)D_0039A580[i].p; func_001c4640(&m); }
+            }
+        }
+    } else {
+        if (D_00389C90.f3034 == 0) {
+            for (i = 0; i < D_0039A570; i++) {
+                if (func_00123488(D_0038D170[i].p)) { m.x = (s32)D_0038D170[i].p; func_001c4640(&m); }
+            }
+        } else {
+            for (i = 0; i < D_003A7980; i++) {
+                if (func_00123488(D_0039A580[i].p)) { m.x = (s32)D_0039A580[i].p; func_001c4640(&m); }
+            }
+        }
+    }
     return 2;
 }

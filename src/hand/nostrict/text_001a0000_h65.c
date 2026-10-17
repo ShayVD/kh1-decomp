@@ -476,3 +476,123 @@ void func_001a62c0(DmArg2 *a, s32 id) {
     c.x1e = 0;
     func_001a5740((DmCtx *)&c);
 }
+
+typedef struct { DmSrc *src; Rgba col; f32 (*mtx)[4]; f32 scale; u16 w; u8 mx, my; f32 *scl; } DmArg3;
+
+void func_001a6550(DmArg3 *a, s32 id) {
+    Mtx4 m;
+    DmCtx2 c;
+    DmSrc *s = a->src;
+    DmObj2 *o = (DmObj2 *)s->obj;
+    f32 f, r, sc;
+
+    if (o == (DmObj2 *)D_00575A00)
+        return;
+    if (s->mdl == NULL)
+        return;
+    if (o->alpha == 0.0f)
+        return;
+    r = 0.0f;
+    f = o->size / (f32)a->w;
+    if (!(1.0f < f))
+        r = 1.0f - f;
+    if (o->useMtx) {
+        sceVu0CopyMatrix(m, (f32 (*)[4])o);
+    } else {
+        sceVu0UnitMatrix(m);
+        m[3][0] = D_00615FC0[3][0] + o->pos[0];
+        m[3][1] = D_00615FC0[3][1] + o->pos[1];
+        m[3][2] = D_00615FC0[3][2] + o->pos[2];
+    }
+    sc = a->scale;
+    m[0][0] = sc;
+    switch (a->mx) {
+    case 1:
+        m[0][0] = sc * r;
+        break;
+    case 2:
+        m[0][0] = f * sc + sc;
+        break;
+    }
+    m[1][1] = sc;
+    switch (a->my) {
+    case 1:
+        m[1][1] = sc * r;
+        break;
+    case 2:
+        m[1][1] = f * sc + sc;
+        break;
+    }
+    func_00267560(m[0], m[0], a->scl[0]);
+    func_00267560(m[1], m[1], a->scl[1]);
+    sceVu0MulMatrix(m, a->mtx, m);
+    c.col = a->col;
+    c.col.c.a = c.col.c.a * o->alpha * r;
+    c.mdl = s->mdl;
+    c.data = s->data;
+    func_001a56a0((DmCtx *)&c);
+    c.id = id;
+    c.mtx = m;
+    c.x2c = 0;
+    c.x18 = 0;
+    c.x1c = 0;
+    c.x1e = 0;
+    func_001a5740((DmCtx *)&c);
+}
+
+typedef struct { u8 a[0x20]; u8 b[0x10]; } NdSlot;
+typedef struct Nd {
+    struct Nd *next;
+    struct Nd **pprev;
+    u8 pad8[0x2c];
+    u16 idx;
+    u8 pad36[8];
+    u16 fl;
+    NdSlot sl[1];
+} Nd;
+typedef struct { Nd *first; u8 fl; } NdHead;
+typedef struct { u8 pad[4]; Nd *free; } NdPool;
+typedef struct { NdHead *h; void *x4; void *x8; NdPool *pool; void *x10; void *x14; } NdArg;
+typedef struct { Mtx4 m; Nd *n; void *x4; NdPool *pool; void *x8; } NdCtx;
+void func_001a9098(void *, void *);
+void func_001a7c50(NdCtx *);
+void func_001a8828(Nd *);
+
+void func_001a8ae8(NdArg *a) {
+    NdHead *h = a->h;
+    NdCtx c;
+    Nd *n, *cur;
+    s32 fl = 0;
+
+    if (h->fl & 2) {
+        fl = 0x20;
+        h->fl &= ~2;
+    }
+    sceVu0UnitMatrix(c.m);
+    c.x4 = a->x4;
+    c.pool = a->pool;
+    c.x8 = a->x8;
+    n = h->first;
+    while (n) {
+        if (n->fl & 0x200) {
+            func_001a9098(n->sl[n->idx].a, a->x10);
+            func_001a9098(n->sl[n->idx].b, a->x14);
+        }
+        if (n->fl & 0x100)
+            n->fl |= fl;
+        c.n = n;
+        func_001a7c50(&c);
+        if (n->fl & 0x10) {
+            cur = n;
+            n = n->next;
+            if (cur->next)
+                cur->next->pprev = cur->pprev;
+            *cur->pprev = cur->next;
+            func_001a8828(cur);
+            cur->next = a->pool->free;
+            a->pool->free = cur;
+        } else {
+            n = n->next;
+        }
+    }
+}
