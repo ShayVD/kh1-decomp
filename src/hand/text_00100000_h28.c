@@ -886,6 +886,22 @@ s32 func_0010d388(char *buf, const char *fmt, ...) {
     return n;
 }
 
+typedef struct {
+    u16 pad0;
+    u16 n;
+    u8 pad[0x180c];
+    f32 w[1];
+} WeightBlk;
+
+/* 1 if every weight at +0x1810 is zero. */
+s32 func_0010ce00(WeightBlk *b) {
+    s32 i;
+    for (i = 0; i < b->n; i++) {
+        if (b->w[i] != 0.0f) return 0;
+    }
+    return 1;
+}
+
 void func_0010e430(Fade *f) {
     switch (f->state) {
     case 1:
@@ -906,6 +922,43 @@ void func_0010e430(Fade *f) {
         if (f->cb != NULL) {
             f->cnt++;
             f->cb(f->cnt, f->arg);
+        }
+        break;
+    }
+}
+
+typedef struct { u16 x0; u8 pad2[10]; u8 xc; } W29Sub;
+typedef struct { u8 pad0[0x12]; u8 x12; u8 pad13[0xd]; W29Sub *x20; s32 x24; } W29Obj;
+typedef struct { u32 lo:13; u32 b13:1; u32 hi:18; } F29;
+extern F29 D_002C5958;
+void func_00106d48(s32);
+s32 func_0010c540(s32, s32 *);
+void func_0010ce50(W29Obj *, s32);
+s32 func_0010d0c0(W29Sub *, W29Obj *);
+void func_0010d470(W29Obj *, W29Sub *);
+W29Sub *func_00121e28(s32, W29Sub **);
+
+void func_0010e4f0(W29Obj *o) {
+    s32 n, r;
+    s32 buf[2];
+    if (D_002C1304 == 1) return;
+    if (D_002C5958.b13 == 1) return;
+    switch (o->x12) {
+    case 0:
+        if (o->x20 == NULL) {
+            o->x20 = func_00121e28(0x1890, &o->x20);
+        }
+        func_0010d470(o, o->x20);
+        o->x12 = 1;
+        o->x20->xc = 0;
+    case 1:
+        n = func_0010d0c0(o->x20, o);
+        func_0010ce50(o, n);
+        r = func_0010c540(n, buf);
+        func_0010cb80((GlyphStr *)o->x20, n, buf[0], (TextBox *)o->x24);
+        func_00106d48(r);
+        if (n == o->x20->x0 && func_0010ce00((WeightBlk *)o->x20)) {
+            func_0010e430((Fade *)o);
         }
         break;
     }

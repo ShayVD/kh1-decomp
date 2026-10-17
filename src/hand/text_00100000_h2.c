@@ -190,22 +190,6 @@ s32 func_0010c4b0(void) {
 }
 
 typedef struct {
-    u16 pad0;
-    u16 n;
-    u8 pad[0x180c];
-    f32 w[1];
-} WeightBlk;
-
-/* 1 if every weight at +0x1810 is zero. */
-s32 func_0010ce00(WeightBlk *b) {
-    s32 i;
-    for (i = 0; i < b->n; i++) {
-        if (b->w[i] != 0.0f) return 0;
-    }
-    return 1;
-}
-
-typedef struct {
     u8 pad[10];
     u16 a;
     u8 pad2[4];

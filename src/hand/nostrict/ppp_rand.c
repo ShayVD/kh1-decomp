@@ -478,3 +478,60 @@ f32 func_0018a258(u8 twice) {
         r = (r - vu0Rand()) * 0.5f;
     return r;
 }
+
+/* The vector classes with char / short components (pppSRand*CVFrame,
+ * pppSRand*HCVFrame): on their keyframe they draw one random number per
+ * component into the work area, then add the scaled amplitude to the four
+ * values in the object. They follow the draw functions above (the callees
+ * must be defined earlier for these to match). */
+
+typedef struct {
+    s32 frame;
+    s32 dst;
+    s8 amp[4];  /* +0x8 */
+    u8 twice;   /* +0xC */
+} PppSRandCVKey;
+
+typedef struct {
+    s32 frame;
+    s32 dst;
+    s16 amp[4]; /* +0x8 */
+    u8 twice;   /* +0x10 */
+} PppSRandHCVKey;
+
+s8 func_00189818(s8, f32);
+s8 func_00189a18(s8, f32);
+s8 func_00189c20(s8, f32);
+s8 func_00189e28(s16, f32);
+s8 func_0018a028(s16, f32);
+s8 func_0018a230(s16, f32);
+
+#define PPP_SRAND_CV(name, keyT, valT, rnd, add)                           \
+    void name(PppObject *obj, keyT *key, PppEntry *e) {                    \
+        f32 *w;                                                            \
+        valT *v;                                                           \
+                                                                           \
+        if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))      \
+            return;                                                        \
+        if (key->frame != obj->frame)                                      \
+            return;                                                        \
+        w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);                   \
+        w[0] = rnd(key->twice);                                            \
+        w[1] = rnd(key->twice);                                            \
+        w[2] = rnd(key->twice);                                            \
+        w[3] = rnd(key->twice);                                            \
+        v = (valT *) &D_00575A00;                                          \
+        if (key->dst != -1)                                                \
+            v = (valT *) ((u8 *) obj + key->dst + 0xA0);                   \
+        v[0] += add(key->amp[0], w[0]);                                    \
+        v[1] += add(key->amp[1], w[1]);                                    \
+        v[2] += add(key->amp[2], w[2]);                                    \
+        v[3] += add(key->amp[3], w[3]);                                    \
+    }
+
+PPP_SRAND_CV(pppSRandCVFrame, PppSRandCVKey, u8, func_00189848, func_00189818)
+PPP_SRAND_CV(pppSRandUpCVFrame, PppSRandCVKey, u8, func_00189a40, func_00189a18)
+PPP_SRAND_CV(pppSRandDownCVFrame, PppSRandCVKey, u8, func_00189c48, func_00189c20)
+PPP_SRAND_CV(pppSRandHCVFrame, PppSRandHCVKey, u16, func_00189e58, func_00189e28)
+PPP_SRAND_CV(pppSRandUpHCVFrame, PppSRandHCVKey, u16, func_0018a050, func_0018a028)
+PPP_SRAND_CV(pppSRandDownHCVFrame, PppSRandHCVKey, u16, func_0018a258, func_0018a230)

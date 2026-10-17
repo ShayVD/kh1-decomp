@@ -497,15 +497,6 @@ void func_0012ba30(s32 arg0) {
     func_0013cec8(arg0 + 8);
 }
 
-void func_0012ba48(s32 arg0) {
-    s32 temp_s1;
-
-    temp_s1 = D_00514F14;
-    D_00514F14 = arg0;
-    func_0013cfe8(arg0 + 8, 0, arg0);
-    D_00514F14 = temp_s1;
-}
-
 s32 func_0012eaf8(void *arg0) {
     return M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), s32 *, 4) & 0x1000;
 }

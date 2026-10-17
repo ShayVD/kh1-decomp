@@ -344,24 +344,6 @@ void func_0015db80(u32 *a) {
     func_0014f658(a, 19);
 }
 
-typedef struct { u8 pad[8]; f32 f8; } EntDC;
-/* the union keeps the p10 reload after the float store */
-typedef struct { u8 pad[0x10]; union { EntDC *p; f32 f; } p10; } HdrDC;
-typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x114]; HdrDC *h; } ObjDC;
-typedef struct { f32 a[4]; f32 b[4]; u8 pad[0x10]; s16 r; u8 pad2[0xE]; } Ray;
-s32 func_0015dc50(ObjDC *o) {
-    Ray r;
-    HdrDC *h;
-    func_002675a8(r.a, o->pos);
-    h = o->h;
-    r.a[1] -= h->p10.p->f8;
-    r.b[0] = r.b[2] = 0.0f;
-    r.b[1] = h->p10.p->f8;
-    r.b[3] = 1.0f;
-    func_00118548(&r);
-    return r.r;
-}
-
 RetDA *func_0015e0a8(ObjDA *a, f32 *v) {
     RetDA *r = func_0014cb90(a);
     r->f4.f = 4.0f;

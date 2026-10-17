@@ -512,6 +512,54 @@ void func_0015dac0(CylObj *o) {
     func_00267560(o->x3C0, o->vel, 4.0f);
 }
 
+typedef struct { u8 pad[8]; f32 f8; } EntDC;
+/* the union keeps the p10 reload after the float store */
+typedef struct { u8 pad[0x10]; union { EntDC *p; f32 f; } p10; } HdrDC;
+typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x114]; HdrDC *h; } ObjDC;
+typedef struct { f32 a[4]; f32 b[4]; u8 pad[0x10]; s16 r; u8 pad2[0xE]; } Ray;
+void func_00118548(Ray *);
+s32 func_0015dc50(void *vo) {
+    ObjDC *o = vo;
+    Ray r;
+    HdrDC *h;
+    func_002675a8(r.a, o->pos);
+    h = o->h;
+    r.a[1] -= h->p10.p->f8;
+    r.b[0] = r.b[2] = 0.0f;
+    r.b[1] = h->p10.p->f8;
+    r.b[3] = 1.0f;
+    func_00118548(&r);
+    return r.r;
+}
+
+s32 func_0015dd50(void *vo, f32 *v) {
+    CylObj *o = vo;
+    s32 r;
+    f32 z, d[4], dd;
+    if (D_002C5C54 == 0) {
+        if ((func_001375f0(o) || !((s32)(o->x160.d >> 2) & 1)) && !(o->x160.w & 1)) {
+            r = func_0015dc50(o);
+            o->p148->x120 = r;
+            if (r >= 0) {
+                func_002675a8(o->p148->x110, D_002C58A0);
+                z = 0.0f;
+                if (z < v[3]) {
+                    func_0015dcc8(o, d);
+                    dd = func_00267390(d, v);
+                    if (z < dd) {
+                        f32 f;
+                        if (0.7999999523162842f < v[3]) f = o->p6C->f8; else f = o->p6C->f4;
+                        func_00267e90(o->p148->x110, d, f * dd);
+                    }
+                }
+                func_0014f658(o, 12);
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 s32 func_0015dff8(CylObj *o, s32 flag) {
     s32 r;
     f32 d[4];

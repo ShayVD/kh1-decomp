@@ -114,7 +114,12 @@ void func_00145008(W34Pl8 *, s32);
 typedef struct { u8 pad[0x68]; s32 x68; } W34P68;
 void func_00147ed8(s32, s32, s32, f32 *);
 void func_001247e8(void *);
-void func_00151cd0(W34Pl8 *);
+void func_00151cd0(W34Pl8 *o) {
+    f32 v[4] __attribute__((aligned(16)));
+    func_001315c0(o, 0x8003, v, 0.0f);
+    func_00147ed8(((W34P68 *)o)->x68, 0, 20000, v);
+    func_001247e8(o);
+}
 void func_002673b8(f32 *, f32 *);
 void func_00156260(W34Pl8 *, f32 *);
 void func_00151d20(W34Pl8 *o) {
@@ -139,6 +144,40 @@ void func_00151d20(W34Pl8 *o) {
             }
         }
         func_001350d0(e);
+    }
+}
+typedef struct { s32 x0; s32 x4; f32 x8; s32 xc; s32 x10; } W34St20;
+typedef struct { u32 x0; u8 pad4[0x6c]; s32 x70; u8 pad74[0x144 - 0x74]; W34St20 *x144; u8 pad148[0x4a0 - 0x148]; void (*x4a0)(); } W34Pl9;
+W34St20 *func_00121e28(s32, W34St20 **);
+void func_001520e0();
+s32 func_00151fa0(W34Pl9 *);
+void func_001520c0(W34Pl9 *);
+s32 func_00152140(W34Pl9 *o) {
+    W34St20 *s = o->x144;
+    if (!s) {
+        s = func_00121e28(20, &o->x144);
+        s->x0 = 0; s->x4 = 0; s->x8 = 0.0f; s->xc = 0; s->x10 = 0;
+        o->x4a0 = func_001520e0;
+    }
+    if (o->x0 & 0x400) {
+        switch (o->x70) {
+        case 0:
+            if (s->x8 >= 60.0f) func_00151cd0((W34Pl8 *)o);
+            else func_00147138((W34Pl8 *)o, 2);
+            s->x4 = 0;
+            break;
+        case 2:
+            s->x8 = 0.0f;
+            break;
+        }
+    }
+    func_00151d20((W34Pl8 *)o);
+    switch (o->x70) {
+    case 0:
+        return func_00151fa0(o);
+    case 2:
+        func_001520c0(o);
+        break;
     }
 }
 typedef struct { u8 pad[0x30]; f32 x30[4]; u8 pad40[0x58]; s32 x98; u8 pad9c[0x150 - 0x9c]; f32 x150; } W34Pl10;

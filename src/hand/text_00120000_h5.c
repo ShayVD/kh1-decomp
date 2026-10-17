@@ -62,7 +62,8 @@ extern s32 D_002E31A8;
 extern Node D_004F8310[64];
 extern u8 D_002E2F20[];
 extern u8 D_00524F20[32];
-extern s32 D_00514F10;
+extern union { Node *p; u64 x; } D_00514F10;
+extern Node *D_00514F14;
 extern u8 D_00514F20[];
 extern struct { u8 pad[4]; u32 f4; u32 f8; s32 f0c; } D_002E2FD8;
 extern u32 D_00524F44;
@@ -411,7 +412,7 @@ void func_0012b738(void) {
     q = D_00524F20;
     q += 31;
     for (i = 31; i >= 0; i--) *q-- = 0;
-    D_00514F10 = 0;
+    D_00514F10.p = 0;
 }
 
 /* Allocate a node and append it to a's chain. */
@@ -435,6 +436,42 @@ void func_0012b9b0(Node *a) {
         a->flags &= ~1ULL;
         a = a->next;
     } while (a);
+}
+
+s32 func_0013cfe8(void *, s32, Node *);
+s32 func_0012ba48(Node *n) {
+    Node *t = D_00514F14;
+    s32 r;
+    D_00514F14 = n;
+    r = func_0013cfe8((u8 *)n + 8, 0, n);
+    D_00514F14 = t;
+    return r;
+}
+
+s32 func_0012ba98(Node *a) {
+    Node *save = D_00514F10.p;
+    Node *n, *prev;
+    s32 cnt;
+    D_00514F10.p = a;
+    if ((a->flags & 2) && func_0012ba48(a) < 0) a->flags &= ~2;
+    prev = a;
+    cnt = 0;
+    for (n = a->next; n; n = n->next) {
+        if (!(n->flags & 2)) {
+            n->flags &= ~1;
+            prev->next = n->next;
+        } else {
+            if ((n->flags & 8) || func_0012ba48(n) < 0) n->flags |= 8;
+            else cnt++;
+            prev = n;
+        }
+    }
+    D_00514F10.p = save;
+    if (!(a->flags & 2) && cnt == 0) {
+        func_0012b9b0(a);
+        return -1;
+    }
+    return 0;
 }
 
 typedef struct E4 {

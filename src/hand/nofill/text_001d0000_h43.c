@@ -38,6 +38,13 @@ typedef struct {
     f32 v30[4];
 } Fx;
 typedef struct {
+    s32 key;
+    s32 x4;
+    s32 x8;
+    s32 xc;
+    f32 v[2][4];
+} __attribute__((aligned(8))) E48;
+typedef struct {
     u8 pad0[0x3070];
     union { u64 x; s32 i[2]; } f3070;
     union { u64 x; s32 i[2]; } f3078;
@@ -53,6 +60,10 @@ typedef struct {
     s32 step3[3];
     u8 pad3140[0x18];
     void *f3158;
+    u8 pad315c[0x1c];
+    s32 n3178;
+    s32 pad317c;
+    E48 ent3180[1];
 } Big;
 extern Big D_00389C90;
 typedef struct { s32 v[3]; s32 f0c; } Cam;
@@ -174,5 +185,19 @@ s32 func_001d58c8(VM *vm) {
     for (i = 0; i < n; i++, p++) {
         if (p->key == (s32)D_00389C90.f3158) p->val = 0;
     }
+    return 2;
+}
+
+/* needs make: uses rodata */
+double sin(double);
+double cos(double);
+s32 func_001d4c08(VM *vm) {
+    f32 r = sin(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+s32 func_001d4cb8(VM *vm) {
+    f32 r = cos(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
+    vm->stk[vm->sp] = r;
     return 2;
 }
