@@ -41,29 +41,3 @@ void func_00243a90(void) {
   }
 }
 
-void func_002489c8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6, s32 arg7, f32 fparg0) {
-  s32 sp[8];
-  s32 temp_s7;
-  s32 var_a1;
-  s32 var_s0;
-  s32 var_s1;
-  var_s0 = arg1;
-  *((s32 *) (((s8 *) sp) + 0x10)) = arg7;
-  var_s1 = 6;
-  temp_s7 = var_s0;
-  do
-  {
-    var_a1 = var_s0;
-    var_s0 += 0xC0;
-    var_s1 -= 1;
-    func_00248840(arg0, var_a1, arg2, arg4, arg5);
-    var_a1 = var_s0;
-  }
-  while (var_s1 >= 0);
-  func_00248840(arg0, var_a1, arg3, arg4, arg5);
-  if (arg6 != 0)
-  {
-    func_0024ac08(temp_s7, sp);
-    func_002488a8(arg4 + (*((M2C_UNK *) (((s8 *) sp) + 0x0))), arg5 + (*((M2C_UNK *) (((s8 *) sp) + 0x4))), arg6, *((s32 *) (((s8 *) sp) + 0x10)), fparg0);
-  }
-}
