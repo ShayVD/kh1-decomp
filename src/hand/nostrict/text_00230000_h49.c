@@ -108,10 +108,13 @@ void func_002415f0(Obj5 *o) {
 }
 typedef struct { u8 pad[0x44]; s32 unk44; u8 pad48[0xBE - 0x48]; u16 unkBE; } Prof;
 typedef struct { u8 pad[0x6C]; Prof *unk6C; } Ch3;
+/* The 0xD00-byte slots of D_00651E50 (see text_00230000_h26.c). */
 typedef struct {
     s32 unk0;
     Ch3 *unk4;
-    u8 pad8[0x9E0 - 8];
+    u8 pad8[0x9C - 8];
+    void *unk9C;
+    u8 padA0[0x9E0 - 0xA0];
     s32 unk9E0;
     f32 unk9E4;
     u8 pad9E8[4];
@@ -120,7 +123,10 @@ typedef struct {
     f32 unkA00;
     u8 padA04[4];
     u8 unkA08[0x10];
-    u8 padA18[0xD00 - 0xA18];
+    u8 padA18[0xA2C - 0xA18];
+    s32 unkA2C;
+    s32 unkA30;
+    u8 unkA34[0xD00 - 0xA34];
 } Slot3;
 typedef struct { s32 on[8]; Slot3 e[5]; } SlotTbl3;
 extern SlotTbl3 D_00651E50;
