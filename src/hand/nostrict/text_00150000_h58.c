@@ -329,6 +329,92 @@ Node768 *func_00156768(V4 *pos, Out768 *o) {
     return o->p;
 }
 
+/* ---- func_001568e8 (needs func_00156768 defined above) ---- */
+typedef struct { u8 x0; u8 pad1[7]; f32 x8; f32 xc; u8 pad10[0x10]; f32 x20[3]; f32 x2c_; } B4Q68;
+typedef struct { u8 pad[0x160]; f32 x160[4]; } B4H160;
+typedef struct B4A68 {
+    u8 pad0[0x50]; f32 x50[4]; u8 pad60[0x98 - 0x60]; struct B4A68 *x98; u8 pad9c[0xc0 - 0x9c]; f32 xc0[4];
+    u8 padd0[0x148 - 0xd0]; B4H160 *x148;
+} B4A68;
+extern u32 D_002C5978;
+extern f32 D_002C58B0[];
+void func_002673b8(void *, void *);
+void func_00267370(void *, void *, void *);
+void func_00267e90(void *, void *, f32);
+s32 func_0014f5c8(void *);
+f32 sinf(f32);
+#define D_002C5958 (*(u32 *)&D_002C5958)
+void func_001568e8(B4A68 *e, f32 *out) {
+    f32 buf[12];
+    f32 d[4];
+    f32 c[4];
+    B4Q68 *q;
+    f32 sp;
+    f32 tgt;
+    f32 cur;
+    f32 t;
+    s32 r;
+    f32 f;
+    func_002675a8(out, D_002C58B0);
+    if (!D_00551600) return;
+    if ((D_002C5958 >> 15) & 1) return;
+    if ((D_002C5978 >> 13) & 1) return;
+    if (!e->x148) return;
+    if (!e->x98) q = (B4Q68 *)func_00156768((V4 *)e->x50, (Out768 *)buf);
+    else q = (B4Q68 *)func_00156768((V4 *)e->x98->x50, (Out768 *)buf);
+    if (!q) {
+        if (e->x148->x160[3] == 0.0f) return;
+        func_002675a8(d, e->x148->x160);
+        tgt = 0.0f;
+        sp = D_002BBDFC * 0.199999988079071044921875f;
+    } else {
+        sp = q->x2c_ * D_002BBDFC;
+        tgt = q->xc;
+        switch (q->x0) {
+        case 1:
+            func_002675a8(d, q->x20);
+            break;
+        case 2:
+            func_00267530(d, q->x20, e->x50);
+            func_002673b8(d, d);
+            break;
+        }
+        if (0.0f < q->x8) {
+            f = 1.0f - buf[8] / q->x8;
+            if (!(0.0f < f)) f = 0.0f;
+            tgt *= sinf(f * 3.1415928f * 0.5f);
+        }
+    }
+    func_00267560(d, d, sp);
+    func_00267518(d, e->x148->x160, d);
+    cur = e->x148->x160[3];
+    if (cur < tgt) {
+        cur += sp;
+        if (tgt < cur) cur = tgt;
+    } else if (tgt < cur) {
+        cur -= sp;
+        if (cur < 0.0f) cur = 0.0f;
+    }
+    func_002673b8(d, d);
+    d[3] = 1.0f;
+    func_00267560(e->x148->x160, d, cur);
+    func_00267560(out, e->x148->x160, D_002BBDFC);
+    if (func_0014f5c8(e)) return;
+    if (func_0014f600(e)) {
+        out[1] = 0.0f;
+        return;
+    }
+    out[1] = 0.0f;
+    t = out[3];
+    func_002673b8(out, out);
+    func_00267370(c, e->xc0, out);
+    func_002673b8(c, c);
+    func_00267370(out, c, e->xc0);
+    func_002673b8(out, out);
+    func_00267e90(out, out, t);
+}
+#undef D_002C5958
+
 /* ---- func_001584c0 ---- */
 extern V4 D_00351A20, D_005516D0;
 void func_002673b8(void *, void *);

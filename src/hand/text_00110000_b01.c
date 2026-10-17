@@ -501,6 +501,87 @@ void func_00125dc8(Obj25 *o, u32 mode, f32 *v) {
     if (mode == 4) func_00148768(o->x68, 2, o, 48, 0.8f);
 }
 
+/* 0x126c10 (needs func_00125dc8 defined above) */
+typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V53;
+#define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
+typedef struct { s32 a, b; } P8;
+typedef struct { u8 type; P8 p; } C3190;
+extern C3190 D_002E3190;
+void *memset(void *, s32, u32);
+void func_0013ed88(u8 *, C3190 *, V53 *);
+void func_0013ee40(u8 *, C3190 *, V53 *);
+s32 func_00126360(u8 *, s32 *, V53 *);
+s32 func_00126838(u8 *, s32 *, V53 *);
+s32 func_001269d8(u8 *, s32 *, V53 *);
+void func_00126ba0(u8 *, s32 *, V53 *);
+s32 func_00125b68(u8 *);
+void func_00125be8(u8 *, P8 *);
+s32 func_0012f040(s32, s32);
+
+void func_00126c10(u8 *o, V53 *v) {
+    P8 s;
+    u8 *p;
+    func_0013ed88(o, &D_002E3190, v);
+    switch (D_002E3190.type) {
+    case 1:
+        if (FLD(u32, o, 0x1cc) & 0x400000) {
+            p = FLD(u8 *, o, 0x14c);
+            if (FLD(s32, p, 0x30) == 0) break;
+            FLD(u8, p, 0x29)++;
+        } else {
+            FLD(u8, FLD(u8 *, o, 0x14c), 0x29) = 1;
+        }
+        if (func_0012f040(D_002E3190.p.a, D_002E3190.p.b)) {
+            s = D_002E3190.p;
+        } else {
+            s.a = 0;
+            s.b = 0;
+        }
+        FLD(P8, FLD(u8 *, o, 0x14c), 0x34) = s;
+        switch (FLD(s32, o, 0x70)) {
+        case 0:
+            func_00125dc8((Obj25 *)o, func_00126360(o, (s32 *)&s, v), (f32 *)v);
+            break;
+        case 2:
+            func_00125dc8((Obj25 *)o, func_00126838(o, (s32 *)&s, v), (f32 *)v);
+            break;
+        case 8:
+            func_00126ba0(o, (s32 *)&s, v);
+            func_00125dc8((Obj25 *)o, func_00126838(o, (s32 *)&s, v) + 3, (f32 *)v);
+            break;
+        case 24:
+            func_00126ba0(o, (s32 *)&s, v);
+            func_00125dc8((Obj25 *)o, func_001269d8(o, (s32 *)&s, v), (f32 *)v);
+            break;
+
+        case 12:
+            func_00125dc8((Obj25 *)o, 59, (f32 *)v);
+            break;
+        }
+        break;
+    case 3:
+        func_0013ee40(o, &D_002E3190, v);
+        break;
+    case 2:
+        if (func_00125b68(o)) {
+            func_00125be8(o, &D_002E3190.p);
+        } else {
+            func_0013ee40(o, &D_002E3190, v);
+        }
+        break;
+    case 99:
+        FLD(u8, FLD(u8 *, o, 0x14c), 0x29)++;
+        func_00125dc8((Obj25 *)o, 62, (f32 *)v);
+        break;
+    default:
+        func_0013ee40(o, &D_002E3190, v);
+        break;
+    }
+    memset(&D_002E3190, 0, 12);
+}
+#undef FLD
+
+
 /* Split out of func_0011d7e0 / func_0011de90's old layout entries. */
 void func_0011db50(s32 *a, s32 *b) {
     if (*a < 0) *a = 0;
