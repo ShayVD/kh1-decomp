@@ -19,7 +19,7 @@ extern s32 D_003E3D68;
 extern u16 D_003E3CD0[];
 s32 func_00149440(s32, s32);
 s32 func_001ee7c8(void);
-void func_001efc10(s32);
+u8 *func_001efc10(s32);
 
 void func_001ee650(s32 a) {
     if (a > 16) a = 0;
@@ -234,5 +234,272 @@ s32 func_001ef3a0(s32 i) {
 s32 func_001ef408(void) {
     s32 n;
     for (n = 0; n < 48 && D_00304BE8->list599[n]; n++);
+    return n;
+}
+
+s32 func_001ef450(s32 i, s32 a) {
+    s32 n = 0, k;
+    Member *m = &D_00304BE8->m[i];
+    u8 c;
+    for (k = 0; k < 48 && (c = m->name[k]); k++) {
+        if ((c & ~0x80) == a) n++;
+    }
+    return n;
+}
+
+s32 func_001ef4c0(s32 a) {
+    s32 n = 0, k;
+    u8 c;
+    for (k = 0; k < 48 && (c = D_00304BE8->list599[k]); k++) {
+        if ((c & ~0x80) == a) n++;
+    }
+    return n;
+}
+
+typedef struct { u8 pad[0xe0]; s32 xe0; } S3D70;
+extern S3D70 D_003E3D70[];
+s32 func_001ef680(s32);
+
+s32 func_001ef720(s32 i) {
+    S3D70 *e = &D_003E3D70[i];
+    s32 r = e->xe0 - func_001ef680(i);
+    if (r < 0) r = 0;
+    return r;
+}
+
+typedef struct { u8 pad[0x1c]; s32 x1c; } S34B8;
+extern S34B8 *D_003F34B8;
+
+void func_001ef7b0(s32 a) {
+    S34B8 *p = D_003F34B8;
+    p->x1c += a;
+    if (p->x1c < 0) p->x1c = 0;
+    else if ((u32)p->x1c > 99999) p->x1c = 99999;
+}
+
+void func_001ef7f0(s32 a) {
+    S34B8 *p = D_003F34B8;
+    p->x1c -= a;
+    if (p->x1c < 0) p->x1c = 0;
+    else if ((u32)p->x1c > 99999) p->x1c = 99999;
+}
+
+void *func_0013daf8(s32);
+s32 func_00122ff8(void *);
+
+void *func_001ef8f8(s32 i) {
+    void *p = func_0013daf8(D_00304BE8->party[i]);
+    if (p && func_00122ff8(p)) goto ok;
+    return 0;
+ok:
+    return p;
+}
+
+extern u16 *D_0063F748;
+extern u8 *D_0063F744;
+
+u8 *func_001efbb8(s32 a) {
+    return D_0063F744 + D_0063F748[a - 1];
+}
+
+typedef struct { u8 pad[0x10]; s32 x10; s32 x14; } Tbl;
+
+u8 *func_001efcb0(Tbl *t, s32 a) {
+    u16 *o = (u16 *)((u8 *)t + t->x10);
+    return (u8 *)t + t->x14 + o[a - 1];
+}
+
+typedef struct { u16 id; u8 pad[4]; u8 x6; u8 x7; } E8E28;
+extern E8E28 *D_003E8E28;
+extern s32 D_003E8E2C;
+
+s32 func_001eff50(s32 a) {
+    s32 i;
+    E8E28 *e = D_003E8E28;
+    for (i = 0; i < D_003E8E2C; i++, e++) {
+        if (e->id == a) return i;
+    }
+    return 0;
+}
+
+s32 func_001f0600(s32 i, s32 b) {
+    return ((D_003E8E28[i].x6 << 4) * b / 18) >> 4;
+}
+
+typedef struct Obj {
+    u8 pad[0xc];
+    struct Obj *x0c;
+    struct Obj *next;
+    struct Obj *x14;
+    struct Obj *x18;
+    struct Obj *x1c;
+    struct Obj *x20;
+    u8 pad24[0x7c - 0x24];
+    s32 x7c;
+    u8 pad80[0x8c - 0x80];
+    s32 x8c;
+    u8 pad90[0xf0 - 0x90];
+} Obj;
+
+extern Obj D_0063F758[];
+extern s32 D_003F1A60, D_003F1A64;
+extern Obj *D_00640DD8, *D_00640DDC;
+void func_001efb78(s32);
+void func_001efb98(s32);
+void func_001fd708(void);
+void func_001f3680(Obj *);
+void func_001f3698(Obj *, s32);
+
+void func_001f3110(void) {
+    s32 i;
+    Obj *p = D_0063F758;
+    for (i = 24; i > 0; i--, p++) p->x8c = 0;
+    D_00640DD8 = 0;
+    D_00640DDC = 0;
+    D_003F1A60 = 0x80e6e6e6;
+    D_003F1A64 = 320;
+    func_001efb78(0);
+    func_001efb98(0);
+    func_001fd708();
+}
+
+s32 func_001f36b8(Obj *p) {
+    if (!p) return -1;
+    switch (p->x8c) {
+    case 0: return 0;
+    case 4: case 5: break;
+    default: func_001f3680(p);
+    }
+    return 0;
+}
+
+s32 func_001f3708(Obj *p, s32 a) {
+    if (!p) return -1;
+    switch (p->x8c) {
+    case 0: return 0;
+    case 4: case 5: break;
+    default: func_001f3698(p, a);
+    }
+    return 0;
+}
+
+s32 func_001f3758(Obj *p) {
+    if (!p) return -1;
+    for (; p; p = p->next) {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default: func_001f3680(p);
+        }
+    }
+    return 0;
+}
+
+s32 func_001f37c0(Obj *p, s32 a) {
+    if (!p) return -1;
+    for (; p; p = p->next) {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default: func_001f3698(p, a);
+        }
+    }
+    return 0;
+}
+
+s32 func_001f3840(Obj *p) {
+    if (!p) return -1;
+    while (p->x0c) p = p->x0c;
+    do {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default: func_001f3680(p);
+        }
+        p = p->next;
+    } while (p);
+    return 0;
+}
+
+void func_001f3b00(s32 a) {
+    s32 i;
+    Obj *p = D_0063F758;
+    for (i = 24; i > 0; i--, p++) {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default:
+            if (p->x7c == a) func_001f3680(p);
+        }
+    }
+}
+
+void func_001f3b88(s32 a, s32 b) {
+    s32 i;
+    Obj *p = D_0063F758;
+    for (i = 24; i > 0; i--, p++) {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default:
+            if (p->x7c == a) func_001f3698(p, b);
+        }
+    }
+}
+
+void func_001f3c20(void) {
+    s32 i;
+    Obj *p = D_0063F758;
+    for (i = 24; i > 0; i--, p++) {
+        switch (p->x8c) {
+        case 0: break;
+        case 4: case 5: break;
+        default: func_001f3680(p);
+        }
+    }
+}
+
+
+void func_001f3d70(Obj *p) {
+    Obj **h;
+    Obj *t;
+    if (!p->x14) return;
+    p->x14->x18 = p->x18;
+    if (p->x18) p->x18->x14 = p->x14;
+    p->x14 = 0;
+    h = &D_00640DD8;
+    t = *h;
+    p->x18 = t;
+    t->x14 = p;
+    *h = p;
+}
+
+void func_001f3dc0(Obj *p) {
+    Obj **h = &D_00640DDC;
+    Obj *t = *h;
+    if (t && t != p) {
+        if (p->x1c) p->x1c->x20 = p->x20;
+        if (p->x20) p->x20->x1c = p->x1c;
+        t = *h;
+        p->x1c = 0;
+        p->x20 = t;
+        t->x1c = p;
+    }
+    D_00640DDC = p;
+}
+
+void func_001f3f48(Obj *a, Obj *b) {
+    while (a->next) a = a->next;
+    while (b->x0c) b = b->x0c;
+    a->next = b;
+    b->x0c = a;
+}
+
+s32 func_001f4110(void) {
+    s32 i, n = 0;
+    Obj *p = D_0063F758;
+    for (i = 0; i < 24; i++, p++) {
+        if (p->x8c) n++;
+    }
     return n;
 }
