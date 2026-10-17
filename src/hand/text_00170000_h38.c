@@ -333,20 +333,6 @@ s32 func_00177168(void) {
     }
 }
 
-f32 func_00177680(V4 *a, V4 *b) {
-    V4 p, q;
-    func_002675a8(&q, b);
-    q.y -= 10.0f;
-    func_002675a8(&p, b);
-    p.y += D_003624B8;
-    if (func_00177608(a, &q, &p)) {
-        func_00267530(&p, a, b);
-        return func_00120bf8(&p);
-    }
-    func_002675a8(a, &p);
-    return 0.0f;
-}
-
 void func_00178e10(void) {
     if (func_001375d8(D_00575894)) return;
     if (0.0f < D_005758C4) return;
