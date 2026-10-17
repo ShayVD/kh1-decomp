@@ -27,7 +27,7 @@ orig = K.require_orig(cfg)
 reg = K.load_registry()
 td = Path(tempfile.mkdtemp())
 asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
-r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
+r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 text = K.split_rodata(asm.read_text())
 asm.write_text(K.no_fill(text) if fl.no_fill else text)

@@ -198,7 +198,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     # permuter output is already preprocessed (m2c.h included)
     pre = "" if re.search(r"\bM2C_UNK;", code) else '#include "m2c.h"\n\n'
     src.write_text(pre + code)
-    r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections",
+    r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), "-ffunction-sections",
                         f"-I{ROOT / 'include'}", *[f"-I{d}" for d in EXTRA_INCLUDES], "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode:
         shift = pre.count("\n")

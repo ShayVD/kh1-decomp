@@ -9,8 +9,13 @@ typedef unsigned short     u16;
 typedef signed short       s16;
 typedef unsigned int       u32;
 typedef signed int         s32;
+#ifdef KH1_N32 /* src/hand/n32*: -mabi=n32 makes long 32-bit (kh1.toml) */
+typedef unsigned long long u64;
+typedef signed long long   s64;
+#else
 typedef unsigned long      u64; /* EE ABI: long is 64-bit */
 typedef signed long        s64;
+#endif
 typedef float              f32;
 
 #ifndef NULL
