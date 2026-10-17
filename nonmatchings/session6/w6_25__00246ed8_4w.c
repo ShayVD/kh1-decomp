@@ -1,0 +1,89 @@
+/* ~4w off (size 492 vs 500): orig has 'addiu v0,s3,48; move s5,v0' copy for &p->unk30 (ours addiu s5 directly) and temps v0/v1 swapped in q = d - n + 5 (same as 00245b08). nostrict; needs CONTEXT_ONLY 00246cf0 (fixes bnez) + 00246ea8 above. */
+#include "common.h"
+typedef struct { u64 lo, hi; } QW;
+extern u8 D_00351E10[];
+extern QW *D_00668F80;
+extern QW *D_00668F84;
+extern u8 D_002E26C0[];
+extern u8 D_00426820[];
+extern u8 D_004267F0[];
+typedef struct { u8 pad[0xC0]; } Item;
+typedef struct { u8 pad0[0x10]; u8 unk10[0x10]; s32 unk20; u8 pad24[0xC]; Item unk30; Item unkF0; Item items[10]; } Pan2;
+typedef struct { s32 x, y, z, w; } V4;
+s32 func_00249580(void *);
+void func_00237a48(V4 *, void *, void *, s32);
+void func_00249558(V4 *, V4 *);
+void func_00246dc0(Item *, void *, s32, s32, f32);
+void func_00237018(void *, s32, s32);
+void func_0024ae00(void *);
+void func_0024af00(void *);
+CONTEXT_ONLY s32 func_00246cf0(s32 arg0, s32 *arg1) {
+    s32 *var_a1;
+    s32 temp_lo;
+    s32 var_s0;
+    s32 var_t9;
+    var_s0 = 5;
+    var_t9 = 0;
+    temp_lo = arg0 / 10000;
+    arg1[0] = temp_lo;
+    arg1[1] = arg0 % 10000 / 1000;
+    arg1[2] = arg0 % 1000 / 100;
+    arg1[3] = arg0 % 100 / 10;
+    arg1[4] = arg0 % 10;
+    if (temp_lo == 0) {
+        var_a1 = arg1;
+loop_2:
+        var_t9 += 1;
+        var_a1 += 1;
+        var_s0 -= 1;
+        if (var_t9 < 4) {
+            if (*var_a1 == 0) {
+                goto loop_2;
+            }
+        }
+    }
+    return var_s0;
+}
+CONTEXT_ONLY void func_00246ea8(s32 arg0, Item *arg1) {
+    if (arg0 != 0) {
+        func_0024ae00(arg1);
+    }
+    func_0024af00(arg1);
+}
+
+void func_00246ed8(s32 a, Pan2 *p) {
+    s32 d[5];
+    V4 v;
+    s32 i, n, y;
+    s32 *q;
+    void *u;
+    Item *t30, *tF0;
+    for (n = 0; n < 10; n++) func_00246ea8(a, &p->items[n]);
+    t30 = &p->unk30;
+    tF0 = &p->unkF0;
+    u = p->unk10;
+    func_00246ea8(a, t30);
+    func_00246ea8(a, tF0);
+    if (!func_00249580(u)) {
+    n = func_00246cf0(p->unk20, d);
+    func_00237a48(&v, D_002E26C0, u, 1);
+    func_00249558(&v, &v);
+    v.x = v.x - n * 8 - 25;
+    v.y -= 20;
+    a = v.x;
+    y = v.y - 20;
+    D_00668F84 = (QW *)D_00351E10;
+    D_00668F80 = (QW *)(D_00351E10 + 0x10);
+    func_00246dc0(t30, D_004267F0, a, y, 1.0f);
+    a += 43;
+    if (n > 0) {
+        q = d - n + 5;
+        do {
+            func_00246dc0(&p->items[*q++], D_00426820, a, y, 1.0f);
+            a += 13;
+        } while (--n);
+    }
+    func_00246dc0(tF0, D_004267F0, a + 2, y, 1.0f);
+    func_00237018(D_00668F84, D_00668F80 - D_00668F84, 1);
+    }
+}
