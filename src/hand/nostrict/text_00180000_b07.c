@@ -820,6 +820,114 @@ void pppKeShpDttDraw(PppObject *obj, PppDttKey *key, PppEntry *e) {
     }
 }
 
+/* --- pppKeTkFadeDraw: build a faded 256-entry CLUT and upload it --- */
+typedef struct {
+    s32 frame;
+    s32 id;       /* +0x4 */
+    f32 d[3];     /* +0x8 */
+    u32 col0;     /* +0x14 */
+    u32 col1;     /* +0x18 */
+} PppTkFadeKey;
+
+typedef struct {
+    u8 pad0[0xC];
+    s32 lo;       /* +0xC */
+    s32 hi;       /* +0x10 */
+} TkRes;
+
+typedef struct {
+    u32 clut[256];
+    s8 tbl[32];
+} TkBuf;
+
+extern u128 D_00372770[2];
+extern s8 D_00372790[];
+void *func_001aa950(s32);
+void func_001aa9d0(s32);
+void func_00267518(f32 *, f32 *, f32 *);
+void func_002674b0(f32 *, f32 *, f32);
+void FlushCache(s32);
+s32 sceGsExecLoadImage(void *, void *);
+s32 sceGsSyncPath(s32, s32);
+
+void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 0);
+    PppVec4 b;
+    PppVec4 a;
+    u8 li[96];
+    TkBuf *buf;
+    u32 *p;
+    u32 c0, c1;
+    u64 tex;
+    s32 n, i;
+    f32 sc;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w[1] += w[2];
+        w[0] += w[1];
+        if (obj->frame == key->frame) {
+            w[0] += key->d[0];
+            w[1] += key->d[1];
+            w[2] += key->d[2];
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    buf = func_001aa950(0x420);
+    ((u128 *) buf->tbl)[0] = D_00372770[0];
+    ((u128 *) buf->tbl)[1] = D_00372770[1];
+    {
+        TkRes *r = (TkRes *) &D_00615E64->res[key->id];
+        c1 = key->col1;
+        tex = ((u64) r->hi << 32) | r->lo;
+        c0 = key->col0;
+        n = w[0];
+    }
+    if (n < 0) {
+        if (n < -256)
+            n = -256;
+        n += 256;
+        p = &buf->clut[(n & 0xE0) + D_00372790[n & 0x1F]];
+        for (i = n; i < 256; i++) {
+            *p = c0;
+            p += buf->tbl[i & 0x1F];
+        }
+        i = 0;
+        sc = n;
+        p = buf->clut;
+    } else {
+        if (n >= 256)
+            n = 255;
+        p = buf->clut;
+        for (i = 0; i < n; i++) {
+            *p = c1;
+            p += buf->tbl[i & 0x1F];
+        }
+        sc = 256.0f - n;
+        n = 256;
+    }
+    a[0] = (s32) (c1 & 0xFF);
+    a[1] = (s32) ((c1 >> 8) & 0xFF);
+    a[2] = (s32) ((c1 >> 16) & 0xFF);
+    a[3] = (s32) (c1 >> 24);
+    b[0] = (s32) (c0 & 0xFF);
+    b[1] = (s32) ((c0 >> 8) & 0xFF);
+    b[2] = (s32) ((c0 >> 16) & 0xFF);
+    b[3] = (s32) (c0 >> 24);
+    func_00267530(b, b, a);
+    func_002674b0(b, b, sc);
+    for (; i < n; i++) {
+        *p = ((u32) a[3] << 24) | ((u32) a[2] << 16) | ((u32) a[1] << 8) | (u32) a[0];
+        func_00267518(a, a, b);
+        p += buf->tbl[i & 0x1F];
+    }
+    sceGsSetDefLoadImage(li, (u16) ((tex >> 37) & 0x3FFF), 4, (u16) ((tex >> 51) & 0xF), 0, 0, 16, 16);
+    FlushCache(0);
+    sceGsExecLoadImage(li, buf);
+    sceGsSyncPath(0, 0);
+    func_001aa9d0(0x420);
+}
+
 /* --- pppDrawMdlTs3Draw --- */
 typedef struct {
     u32 flags;  /* +0x0 */
