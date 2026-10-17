@@ -297,3 +297,62 @@ void func_0010fea0(void) {
     if (D_002BBDEC == 1.0f) D_004D90F0 = 0x14996c4;
     else D_004D90F0 = 0x112a84e;
 }
+typedef struct {
+    u64 q[2];
+    u32 w16;
+    u32 pad;
+    u64 q3[2];
+} DispEnv;
+extern DispEnv D_004D8EC0;
+extern s32 D_004D90FC;
+void sceGsDefDispEnv(DispEnv *, s16, s16, s16, s16, s16);
+void func_00265980(DispEnv *);
+void func_0010fee8(s32 w, s32 h) {
+    D_004D90FC = 0;
+    sceGsDefDispEnv(&D_004D8EC0, 1, w, h, 0, 0);
+    D_004D8EC0.w16 &= ~0x1ff;
+    FlushCache(0);
+    sceGsSyncPath(0, 0);
+    func_00265980(&D_004D8EC0);
+}
+extern u64 D_002BC918;
+extern u8 D_002BC980[];
+void func_0010fee8(s32, s32);
+void func_0010ff60(s32 a) {
+    D_002BC918 = (u64)a | ((u64)a << 8) | ((u64)a << 16) | ((u64)1 << 31) | ((u64)1 << 32);
+    func_00106b18(D_002BC980);
+    func_0010fee8(512, 447);
+}
+void func_00265350(s32, s32, s32, s32);
+void func_0010ffe0(void) {
+    func_00265350(1, 1, 2, 0);
+    *(volatile u64 *)0x120000d0 = 0;
+    func_00265980(&D_004D8EC0);
+}
+extern f32 D_002BBDEC;
+extern volatile s32 D_002BBDF0;
+extern volatile s32 D_002BBDF8;
+extern f32 D_002BBDFC;
+extern s32 D_002BBE10;
+extern s32 D_002BBE0C;
+extern f32 D_002BCAF0[4][4];
+extern s32 D_002BD110;
+void sceVu0UnitMatrix(f32 (*)[4]);
+void func_00110458(void) {
+    D_002BBDF0 = 0;
+    D_002BBDF8 = 0;
+    D_002BBE10 = 0;
+    D_002BBE0C = 0;
+    D_002BBDFC = D_002BBDEC;
+    sceVu0UnitMatrix(D_002BCAF0);
+    D_002B6774 = 0;
+    D_002BD110 = 0;
+}
+
+extern s32 D_002BCAE0;
+s32 D_00F20000(s32, s32); /* code at a fixed address (overlay) */
+
+s32 func_00111090(void) {
+    if (!D_002BCAE0) return 0;
+    return D_00F20000(2, 0);
+}
