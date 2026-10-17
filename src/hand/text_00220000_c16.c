@@ -18,7 +18,8 @@ typedef struct O98 {
     s32 x10;
     u8 pad14[0x24 - 0x14];
     union { s32 i; u16 h; } x24;
-    u8 p0[0x90 - 0x28];
+    u8 p0[0x8c - 0x28];
+    s32 x8c;
     s32 x90;
     u8 p1[0xa0 - 0x94];
     f32 xa0;

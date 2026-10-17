@@ -1206,32 +1206,6 @@ int func_0025fff8(int a, char b) {
     return Deci2Call(-7, buf);
 }
 
-/* needs make: uses rodata (its strings and doubles at 0x00492170) */
-void func_00259530(double d) {
-    int e = 0;
-    int e2;
-    if (d < 0) {
-        d = 0 - d;
-        D_0046AE50('-');
-    }
-    if (d < 0.1) {
-        while (d < 0.1) {
-            d *= 10.0;
-            e--;
-        }
-    } else if (d >= 1.0) {
-        while (d >= 1.0) {
-            d /= 10.0;
-            e++;
-        }
-    }
-    e2 = func_002594a0((unsigned long) (d * 1000000.0));
-    func_00259c88("0.%d", e2);
-    if (e >= 0)
-        func_00259c88("e+%d", e);
-    else
-        func_00259c88("e%d", e);
-}
 int func_0025c7f0(const char *name, int a) {
     SemaParam sp;
     int res;
@@ -1879,4 +1853,31 @@ int func_0025b588(const char *name, int flags, ...) {
     p->w[1] |= flags;
     SignalSema(D_0046AEE0);
     return r;
+}
+
+/* needs make: uses rodata (its strings and doubles at 0x00492170) */
+void func_00259530(double d) {
+    int e = 0;
+    int e2;
+    if (d < 0) {
+        d = 0 - d;
+        D_0046AE50('-');
+    }
+    if (d < 0.1) {
+        while (d < 0.1) {
+            d *= 10.0;
+            e--;
+        }
+    } else if (d >= 1.0) {
+        while (d >= 1.0) {
+            d /= 10.0;
+            e++;
+        }
+    }
+    e2 = func_002594a0((unsigned long) (d * 1000000.0));
+    func_00259c88("0.%d", e2);
+    if (e >= 0)
+        func_00259c88("e+%d", e);
+    else
+        func_00259c88("e%d", e);
 }
