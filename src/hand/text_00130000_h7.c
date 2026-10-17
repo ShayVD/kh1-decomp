@@ -469,16 +469,6 @@ void func_001412f8(W7Pl *o, s32 n) {
     }
 }
 
-s32 func_00141448(s32 a, s32 b, s32 max) {
-    s32 v = a + b;
-    if (max < v) {
-        v = max;
-    } else if (v < 0) {
-        v = 0;
-    }
-    return v;
-}
-
 void func_00141720(W7Pl *o) {
     W7Lv *p = o->x6c.p;
     s32 x, t;

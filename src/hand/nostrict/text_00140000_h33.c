@@ -153,7 +153,7 @@ typedef struct { u8 x0, x1, x2; } Item;
 typedef struct { u32 type:8; u32 id:16; u32 hi:8; s32 w4; } Cmd;
 typedef struct { u8 id; u8 pad[3]; s32 w4; s32 w8; } Cmd8;
 typedef struct { f32 x, y, z; s32 w; } V4;
-typedef struct { u8 pad[0xE8]; f32 fe8; u8 padec[4]; f32 ff0; } Cfg;
+typedef struct { u8 pad[0x88]; f32 f88; u8 pad8c[0xE8 - 0x8C]; f32 fe8; u8 padec[4]; f32 ff0; } Cfg;
 typedef struct { u8 pad[0x54]; s8 b54; } Sub130;
 typedef struct { u8 pad[0x130]; Sub130 *p130; } Obj130;
 typedef struct { u8 pad[0x3C]; s32 w3c; s32 w40; } S6C;
@@ -912,4 +912,50 @@ Blk7c *func_00148a60(Act *o, s32 fl) {
         }
     }
     return k;
+}
+
+/* func_00141468 and func_00141540 only match with func_00141448 defined
+ * above them. */
+typedef struct { u8 b0; u8 b1; u8 b2; u8 b3; } S1C8;
+typedef struct { u32 flags; u8 pad4[0x38]; s32 w3c; s32 w40; u8 pad44[0xC8 - 0x44]; S1C8 *pc8; } St6C;
+typedef struct { u8 pad[0x44]; s32 w44; s32 w48; u8 pad4c[0xC8 - 0x4C]; S1C8 *pc8; } St6Cb;
+extern St6C D_00304C70;
+typedef struct { u8 pad[0x4C]; u16 h4c; } S130b;
+typedef struct { u8 pad[0x6C]; St6C *p6c; u8 pad70[0x18]; u32 w88; u8 pad8c[0x130 - 0x8C]; S130b *p130; } O1468;
+
+s32 func_00141448(s32 a, s32 b, s32 max) {
+    s32 v = a + b;
+    if (max < v) {
+        v = max;
+    } else if (v < 0) {
+        v = 0;
+    }
+    return v;
+}
+
+s32 func_00141468(O1468 *o, s32 x) {
+    St6C *s = o->p6c;
+    s32 v;
+    if (s == 0 || s == &D_00304C70) return 0;
+    v = func_00141448(s->w3c, x, s->w40);
+    if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
+        v = s->w3c + (s32)((v - s->w3c) * D_00308CDC->f88);
+    }
+    s->w3c = v;
+    s->flags &= ~4;
+    if (s->pc8) s->pc8->b1 = v;
+    return v;
+}
+
+s32 func_00141540(O1468 *o, s32 x) {
+    St6Cb *s = (St6Cb *)o->p6c;
+    s32 v;
+    if (s == 0 || s == (St6Cb *)&D_00304C70) return 0;
+    v = func_00141448(s->w44, x, s->w48);
+    if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
+        v = s->w44 + (s32)((v - s->w44) * D_00308CDC->f88);
+    }
+    s->w44 = v;
+    if (s->pc8) s->pc8->b3 = v;
+    return v;
 }
