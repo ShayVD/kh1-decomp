@@ -253,3 +253,23 @@ None of these are ported. The Vita layer replaces each library behind the
   - func_002607e4 (a lone `jr ra`; the layout now gives it 4 bytes and func_002607e8 the rest).
   - func_00265190 (strncpy using MMI).
 - 991111 shapes: declare the byte-copy destination pointer inside the loop body; busy-wait is `i = 0x10000; while (--i != -1);`.
+
+## Session 6
+
+- libgcc frame.c (unwind, 0x263840-0x264258) matches in src/sdk/auto
+  (2.96, strict, fill). `__muldf3`/`__divdf3` match once `__pack_d` is not
+  defined in the same file: the session-5 branch-likely mismatch was the
+  callee-above effect from dp-bit.c. `__pack_f` needs
+  `normal_exp >= EXPBIAS + 2`.
+- newlib `_vfprintf_r` (0x2524a0) and `_vfiprintf_r` are newlib 1.8-era,
+  built with FLOATING_POINT and `_NO_LONGLONG`; they keep the precedence
+  bug `_double || flags & ALT == 0`. strtol (0x272a00) is 2.96 with fill.
+- ee-gcc 991111: struct store order follows alias sets (declare SIF struct
+  fields all u32/int); reorg never puts a volatile load in a delay slot;
+  sceGsSyncPath's cfc2 result needs `register u32 r asm("$6")`.
+- libkernl tty registers are volatile. libcdvd: scePrintf/sceSifInitRpc
+  return void; D_0046C624-D_0046C654 are often volatile.
+- Hand-written asm, not C: func_00260738 (cache loop + sync),
+  func_002607e4 (lone `jr ra`), func_00265190 (MMI strncpy),
+  func_002654f0 (VU0 cfc2/ctc2), DIntr, func_00260b00 (t9 live across
+  calls). scePcStart/scePcStop are in src/sdk/libpc.s.

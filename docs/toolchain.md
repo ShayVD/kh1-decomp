@@ -152,3 +152,36 @@ ee-gcc 2.96 calls double-precision helpers by their GOFAST names
 (`dpadd`, `dpmul`...); the retail build linked libgcc's `__adddf3` etc.
 `LIBCALL_ALIASES` in kh1tool.py resolves each GOFAST name to the original
 routine (same calling convention).
+
+## Session 6: more build modes
+
+| Directory | Flags | Where |
+|---|---|---|
+| src/hand/nogcse | `-fno-gcse` | ~0x10c720-0x10ed20, 0x142e30-0x14b550, 0x2114f0-0x214f50 |
+| src/hand/nostrict_nogcse | `-fno-strict-aliasing -fno-gcse` | 0x156e88, 0x1cf348, 0x1f9e48-0x1fbcd8, 0x24f098 |
+| src/hand/n32 (+ _nogcse, _nostrict) | ccflags `-mabi=n32 -DKH1_N32` (C -> asm only) | 0x20dd38-0x2173xx |
+| src/sdk/gcc991111_as296 | 991111a cc1, 2.96 driver's gas | some libkernl (0x259380, 0x2594a0) |
+
+- **gcse sign**: the original repeats a load, a global base `lui/addiu`, or
+  a constant (0.0f) across branches that gcse would merge.
+- **n32 sign**: the original keeps `lui; addiu; addu` for symbol+register
+  where 2.96 o32 folds to `lw sym(reg)`. Under n32 `long` is 32-bit, so
+  common.h makes u64/s64 `long long` when `KH1_N32` is set. n32 saves only
+  even FP registers, so a function saving `$f21` is not n32 (0x1f9xxx).
+  0x212cc0, 0x2134c8 and 0x217000 mix folded offset-0 loads with split
+  addresses for symbol+offset; no flag reproduces both (tried
+  -msplit-addresses, o64, 64, long64, half-pic, embedded-data, older
+  ee-gcc): probably a patched compiler.
+- **as296**: 991111a's gas leaves `jr` delay slots empty; 2.96's fills them.
+  All existing 991111/libkernl files also match with 2.96 gas, so the
+  group could be switched wholesale (not done).
+- func_001c1718 matches only with `-fno-sched-interblock` (sched1 does
+  interblock motion only in functions with <= 10 basic blocks); no mode was
+  added, the source probably has one more block.
+- More region facts: 0x11f000-0x127xxx nostrict; 0x13bb20-0x13c2f0 nofill;
+  0x152c28-0x159c10 strict, 0x15ad08 and 0x15ea98-0x15f128 nostrict;
+  0x17b000-0x183b20 nostrict; 0x186000-0x19a000 nostrict except
+  0x18e348-0x18e588 nostrict_nofill; 0x1a2d40, 0x1a5740 nostrict;
+  nofill 0x1d5b58-0x1e0xxx; 0x1fade0-0x1fcdc8 nostrict; 0x1ff488-0x2040f8
+  nostrict; 0x225ea8 nostrict; 0x22f000-0x234910 strict; 0x238768-0x2412xx
+  nostrict; 0x249xxx-0x24bxxx strict; 0x24d618 nofill.

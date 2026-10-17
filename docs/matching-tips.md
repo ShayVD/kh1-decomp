@@ -285,3 +285,28 @@ the store-order searches.
 - `python3 tools/checkfile.py FILE -v` lists each differing word.
 
 Flagged (hand-written asm, not C): func_001996d0 and func_0019a828 (whole-function VU0, matched with inline asm), func_00115940 (VU0 macro mode), func_001bfac8 (context switch), func_001aa1f8/func_001aa448 (sq $zero). func_001a67f0 and func_001a72c8 are GNU nested functions of func_001a7718.
+
+## Session 6 tips (full list: docs/worker-brief.md "Session 6")
+
+- **Callee above**: a one-word `bnel`/`bne` or register difference near a
+  call means a callee was defined above the caller. Put a CONTEXT_ONLY copy
+  (or `{}` stub) of each callee above it in turn; the one that matters is
+  often not the nearest call.
+- **Callee return type**: void vs s32 on a callee changes the caller's
+  register allocation and slot filling even when the result is unused.
+  Sweep callee return types on every near miss (several matches this way).
+- **Mode first**: before reshaping C, try nogcse (repeated loads/constants),
+  n32 (unfolded `lui; addiu; addu` symbol bases, 0x20dxxx-0x217xxx) and
+  the nostrict/nofill combinations.
+- **Statement order**: when only store/assignment order is off, permute or
+  hill-climb the statements (tools/matching/perm.py, hill4.py, popt.py)
+  instead of reasoning about the scheduler.
+- **Shared tails**: a store or return shared by several paths just before
+  the epilogue is the last source statement reached by `goto`; duplicating
+  an early `if (c) return G;` lets gcc merge return paths.
+- **Extra variables** raise reference counts: a separate variable for a
+  repeated sum, a local holding a shared divisor or a constant set before a
+  branch, or a local array plus pointer can reproduce the original's
+  spills and delay slots.
+- **Real loops**: a symbol base hoisted into a register (then rebuilt at the
+  use) comes from loop.c on a real `for` loop; goto loops do not do it.
