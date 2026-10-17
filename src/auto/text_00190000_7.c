@@ -13,7 +13,7 @@ extern M2C_UNK D_0061E780;
 extern M2C_UNK D_0061E7C0;
 extern s32 D_00615E68;
 
-void func_00194af8(void) {
+void pppKeDMatPhtFrame(void) {
     M2C_UNK *temp_a0;
 
     func_00267328(&D_0061E780, &D_00615FC0, &D_0061E7C0);
@@ -25,7 +25,7 @@ void func_00194af8(void) {
     func_00267328(temp_a0, &D_00616040, temp_a0);
 }
 
-void func_001985d8(s32 arg0, s32 arg1, void *arg2) {
+void pppRyjDrawMatrixWorldFrame(s32 arg0, s32 arg1, void *arg2) {
     M2C_UNK *temp_a0;
     M2C_UNK *temp_a0_2;
 

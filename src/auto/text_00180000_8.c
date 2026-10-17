@@ -10,7 +10,7 @@ extern M2C_UNK D_00616040;
 extern f32 D_00615FC0[];
 extern void *D_00615E68;
 
-void func_00185fb8(void) {
+void pppDrawMatrixNoRotFrame(void) {
     void *temp_a0;
 
     func_00267560(D_00615E68 + 0x50, D_00615E68 + 0x10, M2C_FIELD(&D_003701F0, f32 *, 0));

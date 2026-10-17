@@ -61,7 +61,7 @@ def _init():
         for a, sg in sig.items():
             n = _names.get(a, f"func_{a:08x}")
             _protos[n] = SIGS.prototype(n, sg)
-        _cc = str(K.TOOLCHAIN_DIR / K.flags_for(_cfg, "src/auto/x.c").compiler / "bin" / "ee-gcc")
+        _cc = str(K.TOOLCHAIN_DIR / K.flags_for(_cfg, _flag_path()).compiler / "bin" / "ee-gcc")
 
 
 def disasm(blob: bytes, addr: int) -> list[str]:
@@ -154,13 +154,19 @@ def m2c_candidates(f: K.Func) -> list[str]:
     return out
 
 
+# m2c's unknown type `?` (declarations, casts, parameters), not a `c ? a : b`.
+UNKNOWN_TYPE_RE = re.compile(r"(^[ \t]*|\(|,[ \t]*|\b(?:extern|static|const)[ \t]+)\?[ \t*)]", re.M)
+
+
 def usable(code: str) -> bool:
-    if "M2C_ERROR" in code or "Decompilation failure" in code or "?" in code.replace("? :", ""):
+    if "M2C_ERROR" in code or "Decompilation failure" in code or UNKNOWN_TYPE_RE.search(code):
         return False
     return set(re.findall(r"\bM2C_\w+", code)) <= ALLOWED_MACROS
 
 
 def resolve(sym: str, registry: dict[str, int]) -> int | None:
+    # ee-gcc's GOFAST libcall names (dptoli, litodp, ...) are libgcc routines
+    sym = K.LIBCALL_ALIASES.get(sym, sym)
     if sym in registry:
         return registry[sym]
     m = SYM_RE.match(sym)
@@ -170,24 +176,37 @@ def resolve(sym: str, registry: dict[str, int]) -> int | None:
 
 
 LAST_BYTES: bytes = b""
+EXTRA_INCLUDES: list[Path] = []  # try --file: the file's own directory
+LAST_ERRORS: list[tuple[int, str]] = []  # (line in `code`, message) of the last failed compile
+
+
+def _flag_path() -> str:
+    """The source path whose kh1.toml flags drafts are compiled with: a file
+    in the output directory (--out-dir picks e.g. an SDK library's flags)."""
+    return (AUTO_DIR / "x.c").relative_to(ROOT).as_posix()
 
 
 def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bool, str]:
     """Compile `code`, link .text.<sym> at f.addr, compare with the original.
     The linked bytes are left in LAST_BYTES (for --diff)."""
-    global LAST_BYTES
+    global LAST_BYTES, LAST_ERRORS
     LAST_BYTES = b""
-    fl = K.flags_for(_cfg, "src/auto/x.c")
+    LAST_ERRORS = []
+    fl = K.flags_for(_cfg, _flag_path())
     cc = K.TOOLCHAIN_DIR / fl.compiler / "bin" / "ee-gcc"
     src, asm, obj, out = (workdir / n for n in ("c.c", "c.s", "c.o", "c.elf"))
     # permuter output is already preprocessed (m2c.h included)
     pre = "" if re.search(r"\bM2C_UNK;", code) else '#include "m2c.h"\n\n'
     src.write_text(pre + code)
     r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections",
-                        f"-I{ROOT / 'include'}", "-o", str(asm), str(src)], capture_output=True, text=True)
+                        f"-I{ROOT / 'include'}", *[f"-I{d}" for d in EXTRA_INCLUDES], "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode:
+        shift = pre.count("\n")
+        LAST_ERRORS = [(int(m.group(1)) - shift, m.group(2)) for m in
+                       re.finditer(r"^[^:\n]*c\.c:(\d+): (.*)$", r.stderr, re.M)]
         return False, "compile error: " + (r.stderr.strip().splitlines() or [""])[-1]
-    asm.write_text(K.split_rodata(asm.read_text()))
+    text = K.split_rodata(asm.read_text())
+    asm.write_text(K.no_fill(text) if fl.no_fill else text)
     r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
                        capture_output=True, text=True)
     if r.returncode:
@@ -287,11 +306,20 @@ def try_function(addr: int) -> tuple[int, bool, str, str]:
     seen = set(cands)
     scored = []
     with tempfile.TemporaryDirectory() as td:
-        for code in cands:
+        k = 0
+        while k < len(cands):
+            code = cands[k]
+            k += 1
             ok, why = build_and_compare(f, sym, code, Path(td))
             if ok:
                 return addr, True, why, code
             scored.append((why_score(why), why, code))
+            if why.startswith("compile error") and LAST_ERRORS:
+                # dereferences of integers m2c wrote: fix the rejected lines and retry
+                fixed = permute.fix_compile_errors(code, LAST_ERRORS)
+                if fixed != code and fixed not in seen and code.count("M2C_UNK *)") < 40:
+                    seen.add(fixed)
+                    cands.append(fixed)
         scored.sort(key=lambda t: t[0])
         best = scored[0]
         if best[0] > OPTS["max_score"]:
@@ -427,7 +455,12 @@ def main() -> int:
         q.add_argument("--budget", type=int, default=60, help="permutations tried per function (0 = none)")
         q.add_argument("--max-score", type=int, default=16, help="only search drafts at most this far off")
         q.add_argument("--no-context", action="store_true", help="do not give m2c the guessed prototypes")
+    for q in (p, sub.choices["try"]):
+        q.add_argument("--out-dir", help="write matches here instead of src/auto/ (its kh1.toml flags apply)")
     args = ap.parse_args()
+    if getattr(args, "out_dir", None):
+        global AUTO_DIR
+        AUTO_DIR = (ROOT / args.out_dir).resolve()
     OPTS["budget"] = args.budget
     OPTS["max_score"] = args.max_score
     OPTS["context"] = not args.no_context
@@ -442,6 +475,7 @@ def main() -> int:
             if args.file:
                 sym = _names.get(f.addr, f"func_{f.addr:08x}")
                 code = Path(args.file).read_text()
+                EXTRA_INCLUDES[:] = [Path(args.file).resolve().parent]
                 with tempfile.TemporaryDirectory() as td:
                     ok, why = build_and_compare(f, sym, code, Path(td))
                 addr = f.addr

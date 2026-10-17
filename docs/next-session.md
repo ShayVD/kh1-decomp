@@ -9,51 +9,35 @@ Final Mix, retail `SLPS_251.98`, SHA-256 1993a4da…). Read README.md and
 everything in docs/ first; they are the only notes carried between sessions.
 My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-Where we stopped (end of session 4, 2026-10-16):
-- 2,570 / 6,911 functions matched (37.2% of functions, 9.4% of code bytes),
-  all byte-identical and objdiff 100% (docs/progress.md). The function count
-  grew from 6,331 because `make layout` now ends a function at a tail call
-  (580 functions had been glued to the one before them).
-- docs/workflow.md "Session 4": two asm-export bugs fixed (`%hi` kept across
-  calls, `rt` misread from `jal`/FPU instructions), which caused most
-  session 3 near misses; `sp` stack locals (m2c's outgoing-argument area
-  disabled, locals as `s32 sp[N]`); new permute rules (64-bit shifted
-  constants, global arrays, store order taken from the original with
-  rebased sub-struct stores, widened loads, returned arrays, volatile
-  restarts).
-- `tools/permuter.py` drives decomp-permuter (import / run / batch with
-  verified acceptance). 5 of the 40 closest 61-150 instruction drafts
-  matched in 2 minutes each.
-- Structs (docs/structs.md): `Actor` has unions for its 64-bit words
-  (+0x000, +0x160) and `+0x98` is `Actor *` (29 functions). New `CompClass`
-  (include/compclass.h): ~224 component class records of 0x28 bytes, nine
-  callback slots plus `s32 *offsets` at +0xC; 99 functions take it.
-- SDK (docs/sdk.md): 0x0026AD60-0x00270AD4 is newlib libm (fdlibm), and
-  0x00262F50-0x002634E0 is libgcc soft-float (fp-bit) plus the 64-bit
-  divide family; 71 new names, including scePad2Read/GetState/GetButtonProfile.
+Where we stopped (end of session 5, 2026-10-16):
+- 3,216 / 6,946 functions matched (46.3% of functions, 14.8% of code
+  bytes), all byte-identical and objdiff 100% (docs/progress.md). Game
+  segment 2,821 / 6,224; SDK 395 / 722.
+- docs/workflow.md "Session 5": sigs.py does CFG liveness (jump tables,
+  variadic functions, syscall stubs); new permute rules (integer
+  dereferences, inline `sqrt.s` as `PlatSqrtf`, counter loops, void
+  callees, early returns, 64-bit masks); the ternary bug in `usable()`;
+  decomp-permuter matched 50 of the 172 drafts scoring ≤4.
+- docs/structs.md: session 4's CompClass is the ppp effect system
+  (include/ppp.h: `PppClass` table `D_00370200`, slots frame/draw/con/
+  reset/des named from their callers; `PppEntry`). `Actor +0x98` is `pair`.
+- docs/sdk.md "Session 5": SCE libraries are ee-gcc 2.9-991111; newlib is
+  2.96 + `-fno-builtin` + no_fill (its assembler never filled delay
+  slots). libm, libgcc, the syscall stubs and most of libc match; four
+  one-word-off drafts are in nonmatchings/.
 
-Session 5 (phase 2 continues):
-1. Rerun `tools/autodecomp.py batch --max-insns 100` (no --write) to
-   regenerate out/autodecomp/fail/, then work the 91 drafts with score 1-3.
-   The open patterns are listed at the end of "Session 4" in
-   docs/workflow.md (jr-ra delay slot vs `%lo`-indexed loads, values kept
-   in `s0`, inline `sqrt.s`, too few guessed arguments). Turn each one
-   that repeats into a permute.py rule.
-2. Run `tools/permuter.py batch` longer (5-10 minutes each) on the 471
-   drafts scoring ≤8, and on the 61-150 instruction drafts scoring ≤8.
-3. The 280 drafts gcc rejects: group the errors (pointer/int clashes,
-   `invalid type argument of unary *`) and fix the common ones in
-   permute.preprocess. Also 246 functions where m2c's output is unusable:
-   find out why (jump tables? `M2C_ERROR`?).
-4. Fix tools/sigs.py where it guesses too few arguments (`func_0021cb88`
-   passes a 6th one in `t1`).
-5. CompClass: work out what the nine slots do (look at who calls through
-   them, and which slots are filled for which classes) and name them;
-   find what `base` is. Name Actor fields where behaviour makes their
-   meaning clear (position/velocity floats at 0x280-0x290?).
-6. Start on the SDK segment (0/720): libm and the libgcc soft-float
-   routines are plain C and should go through autodecomp the same way
-   (`--segment sdk`); check their flags first (docs/toolchain.md: "Flags
-   (SCE libraries): not checked yet").
-7. End with `make progress-update SESSION=5`, commit, open a PR, and
+Session 6 (phase 2 continues):
+1. Permuter: run `tools/permuter.py batch` on the drafts scoring 5-10
+   (out/autodecomp/fail/), 5 minutes each; then the 138 drafts the ternary
+   fix made scoreable.
+2. Game hand work: the score 1-3 drafts the rules do not fix. Look for
+   new repeating patterns and turn them into permute.py rules.
+3. The ~150 functions m2c cannot type (`?`): try giving m2c the callee
+   prototypes from sigs.py / functions.tsv, and the struct headers.
+   The ~50 with `ldl/ldr`/`sdl/sdr` pairs: these are unaligned struct
+   copies; write them by hand (`__builtin_memcpy` of a packed struct?).
+4. SDK leftovers (docs/sdk.md): SCE libraries with 991111 by hand (start
+   with libgraph and libpad2, which have names); libc's `_vfprintf_r`,
+   `_dtoa_r`; the MMI string functions (decide inline asm vs `.s`).
+5. End with `make progress-update SESSION=6`, commit, open a PR, and
    refresh this prompt.

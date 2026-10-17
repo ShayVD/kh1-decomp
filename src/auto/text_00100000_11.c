@@ -14,17 +14,6 @@ extern M2C_UNK D_002BC210;
 extern s32 D_002B677C;
 void *func_00121e28(M2C_UNK, void *);
 
-void func_00109f88(void) {
-    sceGsSetDefLoadImage(&D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC1B0, D_002B677C);
-    sceGsSetDefLoadImage(&D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC210, D_002B677C + 0x48000);
-}
-
 void func_0010eee0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 sp[4];
     M2C_FIELD(sp, void * *, 0x0) = func_00121e28(0x2C, sp);

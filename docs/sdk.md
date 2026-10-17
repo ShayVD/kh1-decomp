@@ -135,6 +135,69 @@ DMA from a saved env, likely `sceIpuRestartDMA`), the newlib internals
 stack and returns (an empty varargs function, probably a disabled debug
 print).
 
+### Session 5: matching the SDK
+
+395 of 722 SDK functions match. Where they live:
+
+| Directory | What | Flags (kh1.toml overrides) |
+|---|---|---|
+| `src/sdk/libm/` | newlib libm, all 44 | `-fno-builtin`, no_fill |
+| `src/sdk/libgcc/` | fp-bit (`dp-bit.c`, normal filling) and libgcc2 `_*.c` objects | `_*.c`: no_fill |
+| `src/sdk/libkernl/syscall.s` | the 162 syscall stubs, as assembly | |
+| `src/sdk/libc/` | newlib libc by hand | `-fno-builtin`, no_fill |
+| `src/sdk/auto/`, `src/sdk/gcc991111/` | autodecomp matches (57 with 2.96, 48 more with ee-gcc 2.9-991111a) | per directory |
+| `nonmatchings/sdk_*.c` | `__muldf3`, `__divdf3`, `__pack_f`, `d2b` | one word off each |
+
+**Compiler.** The SCE libraries were built with ee-gcc 2.9-991111 (a fact
+from the ethteck/kh1 notes; nothing else is taken from that repository,
+which has no license): `src/sdk/gcc991111/` matched 48 functions 2.96 could
+not. newlib (libc, libm, libgcc) matches with 2.96 plus **no_fill**: its
+assembler never filled a branch delay slot with an instruction from before
+the branch (`jal x; nop`), which `no_fill()` in tools/kh1tool.py reproduces on the
+compiler's output (docs/toolchain.md).
+
+**libgcc2.** Each of `__divdi3`/`__moddi3`/`__udivdi3`/`__umoddi3` is its
+own object that inlines `__udivmoddi4` and carries a private `__clz_tab`
+copy (`D_00492430`/`530`/`630`/`730`; each file sets `CLZ_TAB`). longlong.h
+is the 32-bit one (`__ll_B` is `(USItype) 1 << 16`; a 64-bit shift gives
+`dsll32`). `__muldf3`, `__divdf3` and `__pack_f` differ from the original
+by one branch-likely choice that no flag or compiler tried reproduces.
+
+**newlib libc details that matter for matching:**
+- `abort` is `while (1) { raise(6); _exit(1); }`, not noreturn (`__assert`
+  sibcalls it); `rand` reads `_REENT` once into a local.
+- This newlib's `CHECK_INIT` sets `fp->_data` (from `_REENT`) before
+  testing `__sdidinit`; `__sfvwrite` has no `nldist = 0`.
+- dlmalloc: `MALLOC_ALIGNMENT` 16, the extra `next_bin` step for
+  `idx < MAX_SMALLBIN`, `long_sub_size_t`, `idx2binblock` as an unsigned
+  long shift. `sbrked_mem` must be `current_mallinfo.arena` (a struct
+  field; as a plain int gcc reorders its stores). `_sbrk_r` takes an int.
+  State: `av_` `D_0046A9D0`, `trim_threshold` `D_0046ADD8`, `top_pad`
+  `D_0046ADE0`, `sbrk_base` `D_0046ADE8`, `max_sbrked_mem` `D_0046ADF0`,
+  `max_total_mem` `D_0046ADF8`, `current_mallinfo` `D_0046AE00`.
+  `_calloc_r` is a separate object (MALLOC_ZERO unrolled).
+- The low-level `_read`/`_write` return int; `_read_r`/`_write_r` widen to
+  long. errno is `D_00494028`.
+- `struct _reent` offsets (src/sdk/libc/reent.h): `_stdout` 8, `_stderr`
+  12, `__sdidinit` 0x38, `__cleanup` 0x3C, mprec's `_result` 0x40 /
+  `_result_k` 0x44 / `_p5s` 0x48 / `_freelist` 0x4C, `_cvtlen` 0x50,
+  `_cvtbuf` 0x54, `_rand_next` 0xA8, `_atexit` 0x148, `_atexit0` 0x14C,
+  `_sig_func` 0x1D4, `__sglue` 0x1D8, `__sf[3]` 0x1E4 (88-byte FILEs,
+  `_data` at 84).
+- EE varargs: `__builtin_va_list` with `__builtin_stdarg_start`
+  (src/sdk/libc/stdarg.h); `long` is 64-bit.
+- String literals the C references are `D_` externs (`"C"` `D_00491FC8`,
+  `"\n"` `D_00491B28`...), declared in the .c file: the build only resolves
+  `D_` names it finds in .c files.
+
+The MMI string functions (`memcmp`, `memcpy`, `memset`, `strcat`,
+`strcmp`, `strcpy`, `strlen`, `strncmp`, `memchr`, `memmove`) are
+assembly in src/sdk/libc/string.s (tools/asm_export.py): six of them start
+4 bytes off the 8-byte alignment gcc gives every function, so the
+originals were `.s` files. `_dtoa_r` and `quorem` are matched in C.
+
+Left in libc: `_vfprintf_r`, `_vfiprintf_r`, `d2b`.
+
 ## Porting note
 
 None of these are ported. The Vita layer replaces each library behind the

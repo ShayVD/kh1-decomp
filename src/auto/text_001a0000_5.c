@@ -12,7 +12,7 @@ extern M2C_UNK D_00615EB0;
 extern M2C_UNK D_00616040;
 extern s32 D_00615E68;
 
-void func_001a2090(s32 arg0, s32 arg1, void *arg2) {
+void pppRyjDrawMatrixWorldDttFrFrame(s32 arg0, s32 arg1, void *arg2) {
     s32 sp[16];    void *temp_a0;
     void *temp_s1;
 

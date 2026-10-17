@@ -185,13 +185,6 @@ void func_001eebb0(s32 arg0) {
     func_001efc10(0xA7);
 }
 
-u8 func_001ef5c0(s32 arg0) {
-    if (arg0 != 0) {
-        return *func_001478a0(arg0 & ~0x80);
-    }
-    return 0U;
-}
-
 s32 func_001efe68(void) {
     return func_001efd98() + 1;
 }

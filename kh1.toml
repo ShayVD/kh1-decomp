@@ -29,6 +29,15 @@ asflags = "-G0 -march=r5900 -EL"
 # compiler = "ee-gcc2.96"
 # cflags = "-O2 -G8"
 
+# newlib (libm) is built with -fno-builtin, like newlib's own Makefiles:
+# fabsf stays a call (__kernel_tanf) instead of becoming abs.s. Its
+# assembler never filled delay slots itself, only gcc did (no_fill,
+# docs/toolchain.md).
+[[toolchain.override]]
+path = "src/sdk/libm/"
+cflags = "-O2 -G0 -fno-builtin"
+no_fill = true
+
 # Address ranges used to group the progress tracker. Ranges are half-open
 # [start, end). Functions outside every range are reported under "other".
 # Boundaries from call-graph analysis in session 1 (docs/elf-notes.md).
@@ -42,3 +51,62 @@ end = "0x0024f2e0"
 name = "sdk"
 start = "0x0024f2e0"
 end = "0x00272c70"
+
+# libgcc2.c's objects (the 64-bit helpers, one file per L_ macro) were
+# assembled without delay-slot filling, like newlib: `jal; nop` with the
+# argument move before the call. fp-bit/dp-bit were not (docs/sdk.md).
+[[toolchain.override]]
+path = "src/sdk/libgcc/_"
+cflags = "-O2 -G0"
+no_fill = true
+
+# Automatic matches of SDK functions that need newlib's unfilled delay slots
+# (tools/autodecomp.py --out-dir src/sdk/nofill).
+[[toolchain.override]]
+path = "src/sdk/nofill/"
+cflags = "-O2 -G0 -fno-builtin"
+no_fill = true
+
+# SCE library code that matches with the older ee-gcc 2.9-991111 (the SDK's
+# own compiler; docs/toolchain.md).
+[[toolchain.override]]
+path = "src/sdk/gcc991111/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+
+# libkernl by hand (SCE code: ee-gcc 2.9-991111).
+[[toolchain.override]]
+path = "src/sdk/libkernl/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+
+[[toolchain.override]]
+path = "src/sdk/gcc991111nf/"
+compiler = "ee-gcc2.9-991111a"
+cflags = "-O2 -G0"
+no_fill = true
+
+# newlib's libc: same build as its libm (no_fill shows in mprec.c's ulp,
+# d2b and ratio; docs/sdk.md).
+[[toolchain.override]]
+path = "src/sdk/libc/"
+cflags = "-O2 -G0 -fno-builtin"
+no_fill = true
+
+# Game files whose delay slots were left to the assembler (gcc's own
+# filling off): leaf `jr ra` slots stay empty (session 5).
+[[toolchain.override]]
+path = "src/hand/nofill/"
+cflags = "-O2 -G0"
+no_fill = true
+
+# Game files built without strict aliasing (loads stay after stores
+# through other types; the script VM around 0x001C08F0, session 5).
+[[toolchain.override]]
+path = "src/hand/nostrict/"
+cflags = "-O2 -G0 -fno-strict-aliasing"
+
+[[toolchain.override]]
+path = "src/hand/nostrict_nofill/"
+cflags = "-O2 -G0 -fno-strict-aliasing"
+no_fill = true

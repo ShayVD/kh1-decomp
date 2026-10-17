@@ -37,23 +37,20 @@ To extend: rerun `tools/structs.py apply --seed func_00131c08 --struct Actor
 header from all evidence and only rewrites functions still using
 `M2C_FIELD(arg0, …)`), then `make`.
 
-## `CompClass` (include/compclass.h), session 4
+## `PppClass` / `PppEntry` (include/ppp.h), session 5
 
-A component "class" record, 0x28 bytes. About 224 of them sit in arrays in
-data between `0x00304B5C` and `0x00425BB4` (consecutive records 0x28 apart;
-found by scanning for 10-word records whose words are all 0 or function
-starts except `+0xC`, which points into `0x004xxxxx` data). `+0xC` is
-`s32 *offsets`, an array of byte offsets; the other nine words are
-callbacks (or 0), e.g. `0x003715F4`: `{func_0018c630, 0, 0, &D_0048F278,
-func_0018ccf0, 0…}`.
+Session 4's "CompClass" is the ppp particle/effect program system. The
+0x28-byte records are `PppClass` entries of the class table `D_00370200`
+(236 records indexed by class id, record 0 empty); word 0 points to the
+class name (`"pppMove"`, `"pppDrawMdl"`...). The 0x10-byte record whose
+`+0xC` is `s32 *offsets` is a program's component, `PppEntry`
+{cls, stride, data, offsets}. `func_00182d58` relocates a loaded program
+(class ids become `&D_00370200[id]`). The slots, from their callers:
+`+0x04` frame (every frame, `fn(obj, data, entry)`), `+0x0C` draw,
+`+0x1C` con (object created), `+0x20` reset (timer back to 0), `+0x24`
+des (before free), each `fn(obj, entry)`; `+0x08` and `+0x10` are never
+set, `+0x14` (returns a float) is set by 3 classes and `+0x18` by
+`pppKeAcmSolid` only. The callbacks find their data at
+`obj + entry->offsets[0]`, so the data behind it has a per-class type.
 
-The callbacks are called as `fn(base, class)` and find their data at
-`base + class->offsets[i]` (`arg0 + *M2C_FIELD(arg1, s32 **, 0xC)` in m2c
-output: the "component family" around `0x00180000`-`0x001A5000`). The
-same function serves every object that embeds the component, so the data
-behind the offset has no single type: it differs per class (often a
-sub-struct at `+0xA0`). 99 matched functions take `CompClass *arg1`
-(rewritten with a one-off script: `arg1` used only as
-`*M2C_FIELD(arg1, s32 **, 0xC)` / `M2C_FIELD(M2C_FIELD(arg1, void **, 0xC),
-s32 *, 4n)`). What each slot is for (init, update, draw…) and what `base`
-is (probably an Actor or a part of one) are not known yet.
+`Actor +0x098` is `pair`: `func_00137308(a, b)` sets it both ways.

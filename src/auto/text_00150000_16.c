@@ -45,13 +45,6 @@ void func_00150d70(void) {
     } while (var_s1 >= 0);
 }
 
-void func_00151cd0(Actor *arg0) {
-    s32 sp[4];
-    func_001315c0(arg0, 0x8003, (s32) sp, 0.0f);
-    func_00147ed8(arg0->unk068, 0, 0x4E20, (s32) sp);
-    func_001247e8(arg0);
-}
-
 void func_001523e8(s32 arg0, s32 arg1) {
     func_002675a8(arg1, &D_002C58A0);
 }

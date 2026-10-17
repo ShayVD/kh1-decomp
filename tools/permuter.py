@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Set up decomp-permuter (simonlindholm/decomp-permuter) runs for ee-gcc 2.96.
+"""Set up decomp-permuter (simonlindholm/decomp-permuter) runs (ee-gcc 2.96
+by default; `--out-dir src/sdk/libkernl` uses that directory's kh1.toml
+compiler, flags and no_fill).
 
   tools/permuter.py import func_00123456 [--file draft.c]   # out/permuter/func_00123456/
   tools/permuter.py run func_00123456 [-j4] [--stop-on-zero ...]  # runs permuter.py on it
-  tools/permuter.py batch queue.txt --seconds 120 [--write]  # each in turn; keeps verified matches
+  tools/permuter.py batch queue.txt --seconds 120 [--write] [--out-dir DIR]  # each in turn; keeps verified matches
 
 The starting C is `--file`, else autodecomp's closest failing draft
 (out/autodecomp/fail/XXXXXXXX.c). The directory gets what the permuter wants:
@@ -68,12 +70,13 @@ def cmd_import(args, cfg) -> int:
         return 1
     d = OUTDIR / sym
     d.mkdir(parents=True, exist_ok=True)
-    fl = K.flags_for(cfg, "src/auto/x.c")
+    out_dir = getattr(args, "out_dir", None) or "src/auto"
+    fl = K.flags_for(cfg, f"{out_dir}/x.c")
     tc = K.TOOLCHAIN_DIR / fl.compiler / "bin"
     # base.c: preprocessed, since the permuter parses it with pycparser
     raw = d / "raw.c"
     raw.write_text('#include "m2c.h"\n\n' + strip_draft(src.read_text()))
-    r = subprocess.run([str(tc / "ee-gcc"), "-E", "-P", "-x", "c", f"-I{ROOT / 'include'}",
+    r = subprocess.run([str(tc / "ee-gcc"), "-E", "-P", "-x", "c", f"-I{ROOT / 'include'}", f"-I{ROOT / out_dir}",
                         "-D__attribute__(x)=", str(raw)], capture_output=True, text=True)
     if r.returncode:
         print(r.stderr, file=sys.stderr)
@@ -91,9 +94,15 @@ def cmd_import(args, cfg) -> int:
     if r.returncode:
         print(r.stderr, file=sys.stderr)
         return 1
+    if fl.no_fill:  # as the build does it: compile to assembly, unfill, assemble
+        nf = (f'"{sys.executable}" -c "import sys; sys.path.insert(0, \'{ROOT / "tools"}\'); import kh1tool as K; '
+              f'p = sys.argv[1]; t = open(p).read(); open(p, \'w\').write(K.no_fill(K.split_rodata(t)))" "$3.s"')
+        build = (f'"{tc / "ee-gcc"}" -S -x c {fl.cflags} "$1" -o "$3.s" && {nf} && '
+                 f'"{tc / "ee-gcc"}" -c -x assembler {fl.cflags} "$3.s" -o "$3" && rm -f "$3.s" && ')
+    else:
+        build = f'"{tc / "ee-gcc"}" -c -x c {fl.cflags} "$1" -o "$3" && '
     (d / "compile.sh").write_text(
-        "#!/bin/bash\n# invoked as: compile.sh input.c -o output.o\n"
-        f'"{tc / "ee-gcc"}" -c -x c {fl.cflags} "$1" -o "$3" && '
+        "#!/bin/bash\n# invoked as: compile.sh input.c -o output.o\n" + build +
         f'"{sys.executable}" "{ROOT / "tools" / "kh1tool.py"}" fix-obj "$3" >/dev/null\n')
     os.chmod(d / "compile.sh", 0o755)
     (d / "settings.toml").write_text(
@@ -137,7 +146,7 @@ def accept(sym: str, addr: int, out_dir: Path) -> str | None:
 
 def cmd_batch(args, cfg) -> int:
     """Import + run each function for --seconds, keep byte-identical score-0
-    outputs (written to src/auto/ with --write)."""
+    outputs (written to src/auto/ as each is found, with --write)."""
     import signal
     import autodecomp as A
     ensure_permuter()
@@ -146,7 +155,7 @@ def cmd_batch(args, cfg) -> int:
     for fn in Path(args.queue).read_text().split():
         f = K.find_func(fn if fn.startswith("func_") else "func_" + fn)
         sym = names.get(f.addr, f"func_{f.addr:08x}")
-        ns = argparse.Namespace(function=sym, file=None)
+        ns = argparse.Namespace(function=sym, file=None, out_dir=args.out_dir)
         if cmd_import(ns, cfg):
             print(f"{sym} import failed", flush=True)
             continue
@@ -165,9 +174,9 @@ def cmd_batch(args, cfg) -> int:
         print(f"{sym} best {best} {'MATCH' if code else ''}", flush=True)
         if code:
             matches[f.addr] = code
-    if args.write and matches:
-        for path in A.write_results(matches):
-            print(f"wrote {path.relative_to(ROOT)}")
+            if args.write:  # as found, so a long batch that is stopped keeps its matches
+                for path in A.write_results({f.addr: code}):
+                    print(f"wrote {path.relative_to(ROOT)}", flush=True)
     return 0
 
 
@@ -177,6 +186,7 @@ def main() -> int:
     p = sub.add_parser("import")
     p.add_argument("function")
     p.add_argument("--file")
+    p.add_argument("--out-dir", help="compile with this source directory's kh1.toml flags (default src/auto)")
     p = sub.add_parser("run")
     p.add_argument("function")
     p.add_argument("rest", nargs=argparse.REMAINDER)
@@ -185,7 +195,11 @@ def main() -> int:
     p.add_argument("--seconds", type=int, default=120)
     p.add_argument("--jobs", type=int, default=4)
     p.add_argument("--write", action="store_true")
+    p.add_argument("--out-dir", help="flags and destination directory for matches (default src/auto)")
     args = ap.parse_args()
+    if getattr(args, "out_dir", None):
+        import autodecomp as A
+        A.AUTO_DIR = (ROOT / args.out_dir).resolve()
     cfg = K.load_config()
     return {"import": cmd_import, "run": cmd_run, "batch": cmd_batch}[args.cmd](args, cfg)
 

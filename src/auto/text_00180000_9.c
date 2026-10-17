@@ -1,10 +1,10 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 
-void func_0018d000(s32 arg0, CompClass *arg1) {
+void pppKeThSftCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 

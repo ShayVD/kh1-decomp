@@ -1,0 +1,71 @@
+#include "common.h"
+
+typedef struct { u8 pad[0x40]; s32 h; s32 pad44; s32 w; } Stat;
+typedef struct { u8 pad[0x6C]; Stat *st; } Ent6C;
+typedef struct { s32 type; Ent6C *e; } Obj4;
+typedef struct { s32 pad[2]; s32 x; s32 y; } G4A20;
+
+extern s32 D_00440994;
+extern G4A20 D_00454A20;
+
+f32 func_00236970(u32 *arg0) {
+    *arg0 = (u64)*arg0 * 0x41C64E6D + 12345;
+    return (f32)*arg0 * 2.3283064365386963e-10f;
+}
+
+f32 func_002369e8(u32 arg0) {
+    arg0 = (u64)arg0 * 0x41C64E6D + 12345;
+    return (f32)arg0 * 2.3283064365386963e-10f;
+}
+
+s32 func_00236e40(u32 *p) {
+    if (p[2] > 0xFFFF28) return 1;
+    if (p[0] > 0xFFFF) return 1;
+    return p[1] > 0xFFFF;
+}
+
+s32 func_00236e80(u32 *a, u32 *b, u32 *c, u32 *d) {
+    if (func_00236e40(a)) return 1;
+    if (func_00236e40(b)) return 1;
+    if (func_00236e40(c)) return 1;
+    return func_00236e40(d) != 0;
+}
+
+s32 func_002389f0(s32 n) {
+    s32 i;
+    s32 s = 0;
+    for (i = 0; i < n; i++) {
+        if (i == 5) s += 0x4440;
+        else if (i == 8) s += 0x4440;
+        else if (i == 9) s += 0x1440;
+        else s += (u32)(i - 11) < 10 ? 0x1440 : 0x2080;
+    }
+    return D_00440994 + s;
+}
+
+s32 func_0023d490(Obj4 *a) {
+    s32 r;
+    if (a->type == 4) {
+        s32 x = D_00454A20.x;
+        s32 y = D_00454A20.y;
+        r = 0;
+        if (y >= 25) r = 1;
+        if (x >= 4) r = 1;
+        if (y >= 49) r = 2;
+        if (x >= 7) r = 2;
+        return r;
+    }
+    if (a->type == 3) return 2;
+    {
+        Stat *s = a->e->st;
+        s32 h = s->h;
+        s32 w;
+        if (h >= 37) return 2;
+        w = s->w;
+        if (w >= 7) return 2;
+        if (h >= 19) return 1;
+        if (w >= 4) return 1;
+        return 0;
+    }
+}
+

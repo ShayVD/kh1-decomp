@@ -1,7 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 extern M2C_UNK D_003701D0;
 extern M2C_UNK D_003701E0;
@@ -15,7 +15,7 @@ void func_001a5490(s32, s32);
 void func_001a5fd0(s32, s32, s32);
 void func_001a60d0(s32);
 
-void func_00191fa8(s32 arg0, CompClass *arg1) {
+void pppKeLnsLpReset(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
 
     temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -50,7 +50,7 @@ void func_00192208(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 
-void func_00192468(s32 arg0, s32 arg1) {
+void pppKeLnsClmCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + *M2C_FIELD(arg1, s32 **, 0xC) + 0xA0;
@@ -58,7 +58,7 @@ void func_00192468(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, s8 *, 8) = 4;
 }
 
-void func_00192f50(s32 arg0, CompClass *arg1) {
+void pppKeLnsLpTReset(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
 
     temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -66,7 +66,7 @@ void func_00192f50(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0xA8) = 0;
 }
 
-void func_00194340(s32 arg0, CompClass *arg1) {
+void pppKeMatSNCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
 
     temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
@@ -75,7 +75,7 @@ void func_00194340(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0x88) = 0;
 }
 
-void func_00194868(s32 arg0, CompClass *arg1) {
+void pppKeTkFadeCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -86,7 +86,7 @@ void func_00194868(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
 
-void func_00196178(s32 arg0, CompClass *arg1) {
+void pppKeMdlTfd3Con(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -97,7 +97,7 @@ void func_00196178(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
 
-void func_00196490(s32 arg0, CompClass *arg1) {
+void pppDrawShapeXCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -108,7 +108,7 @@ void func_00196490(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
 
-void func_00198af0(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -118,7 +118,7 @@ void func_00198af0(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_00198cc0(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldXZYCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -128,7 +128,7 @@ void func_00198cc0(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_00198e90(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldYXZCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -138,7 +138,7 @@ void func_00198e90(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_00199060(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldYZXCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -148,7 +148,7 @@ void func_00199060(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_00199230(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldZXYCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -158,7 +158,7 @@ void func_00199230(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_00199400(s32 arg0, s32 arg1) {
+void pppRyjMatrixWorldZYXCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
@@ -168,7 +168,7 @@ void func_00199400(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
 
-void func_0019a7b8(s32 arg0, CompClass *arg1) {
+void pppRyjDrawShipolyCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -180,7 +180,7 @@ void func_0019a7b8(s32 arg0, CompClass *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
 
-void func_0019f048(s32 arg0, void *arg1) {
+void pppRyjMegaPlaceModelCon(s32 arg0, void *arg1) {
     void *temp_a0;
     void *temp_v1;
 
@@ -190,7 +190,7 @@ void func_0019f048(s32 arg0, void *arg1) {
     M2C_FIELD(temp_a0, s32 *, 4) = (s32) (M2C_FIELD(temp_a0, s32 *, 4) + 1);
 }
 
-void func_0019f0d0(s32 arg0, void *arg1) {
+void pppRyjMegaPlaceLampCon(s32 arg0, void *arg1) {
     void *temp_a0;
     void *temp_v1;
 

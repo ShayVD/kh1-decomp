@@ -1,11 +1,11 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "compclass.h"
+#include "ppp.h"
 
 extern volatile void *D_00615E60;
 
-void func_001a35a8(s32 arg0, CompClass *arg1) {
+void pppRyjMegaBirthFilterCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
@@ -20,7 +20,7 @@ void func_001a35a8(s32 arg0, CompClass *arg1) {
     M2C_FIELD(D_00615E60, s8 *, 0xB3) = 1;
 }
 
-void func_001a5028(s32 arg0, CompClass *arg1) {
+void pppRyjMegaBirthModelFilterCon(s32 arg0, PppEntry *arg1) {
     void *temp_a0;
     void *temp_a0_2;
 
