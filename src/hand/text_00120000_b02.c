@@ -215,6 +215,120 @@ void func_00130898(Ob8 *o, Ct8 *c) {
     if (o->f170 == 0.0f) func_00130210(o, o->f160.b.hi);
 }
 
+typedef struct { u8 p0[0x54]; s8 b54; } Y12;
+typedef struct { u8 p0[0x4c]; u16 h4c; } Z12;
+typedef struct { u8 p0[0x130]; Y12 *f130; } X12;
+typedef struct { u8 p0[0x14]; s32 f14; u8 p18[8]; s32 f20; s32 f24; u8 p28[0x44 - 0x28]; s32 f44; s32 f48; s32 f4c; s32 f50; } P12;
+typedef struct {
+    u8 p0[0x2c];
+    s32 f2c;
+    union { u64 d; struct { s32 f30; X12 *f34; } s; } u30;
+    u8 p38[0x5c - 0x38];
+    P12 *f5c;
+    u8 p60[0x94 - 0x60];
+    f32 f94;
+    s32 f98;
+    u8 p9c[0xac - 0x9c];
+    f32 fac;
+} A12;
+typedef struct {
+    u8 p0[0x3c];
+    s32 f3c;
+    u8 p40[0x50 - 0x40];
+    s32 f50;
+    u8 p54[0x78 - 0x54];
+    f32 f78[8];
+    f32 f98;
+    u8 p9c[0xc0 - 0x9c];
+    u16 hc0;
+    u16 hc2;
+} Q12;
+typedef struct { u8 p0[0x170]; union { u64 d; struct { u32 lo; u32 b0 : 4; u32 b36 : 1; } b; } f170; } R12;
+typedef struct {
+    u8 p0[6];
+    u8 f6;
+    u8 p7[0x6c - 7];
+    Q12 *f6c;
+    u8 p70[0x88 - 0x70];
+    s32 f88;
+    u8 p8c[0x148 - 0x8c];
+    R12 *f148;
+    u8 p14c[0x370 - 0x14c];
+    u64 f370;
+} B12;
+extern u16 *D_003044A0;
+extern f32 func_00176850(void);
+extern s32 func_00122ff8(X12 *);
+extern void func_001586a8(s32);
+extern s32 func_0013bf68(void);
+#define CALC12(q, v) ((s32)((f32)(q)->f3c * ((f32)(v) / 100.0f) * (q)->f98))
+s32 func_00134ba8(A12 *a, B12 *b, u32 *fl) {
+    s32 v;
+    s32 hi;
+    s32 lo;
+    s32 m;
+    Q12 *q;
+    s32 i;
+
+    switch (b->f6) {
+    case 4:
+    case 5:
+    case 9:
+    case 10:
+        if (a->u30.s.f34 && a->u30.s.f34->f130->b54 == 1) return 0;
+        return a->f5c->f44;
+    }
+    if (((b->f370 >> 37) & 3) == 2) {
+        v = a->f2c + a->f5c->f48;
+        lo = a->f5c->f4c;
+        hi = a->f5c->f50;
+    } else {
+        v = a->f2c + a->f5c->f14;
+        lo = a->f5c->f20;
+        hi = a->f5c->f24;
+    }
+    if (!b->f6c || !v) return 0;
+    if (func_00176850() < a->f94) {
+        v += a->f98;
+        *fl |= 0x20;
+        if (func_00122ff8(a->u30.s.f34) && !((Z12 *)a->u30.s.f34->f130)->h4c) func_001586a8(8);
+    }
+    m = (s32)(a->u30.d >> 6) & 0xf;
+    switch (m) {
+    case 9:
+    case 11:
+    case 12:
+        return v;
+    case 8:
+        m = CALC12(b->f6c, v) < (b->f6c->hc0 > 1 ? b->f6c->hc0 : 1) ? (b->f6c->hc0 > 1 ? b->f6c->hc0 : 1) : CALC12(b->f6c, v);
+        return m;
+    }
+    q = b->f6c;
+    i = v - q->f50;
+    if (i < 0) i = 0;
+    else if (i >= D_003044A0[0]) i = D_003044A0[0] - 1;
+    v = D_003044A0[i + 1];
+    if (lo) {
+        lo = (f32)lo * a->fac;
+        if (v < lo) v = lo;
+    }
+    if (hi) {
+        hi = (f32)hi * a->fac;
+        if (hi < v) v = hi;
+    }
+    if (q->hc0 && v < q->hc0) v = q->hc0;
+    else if (q->hc2 && q->hc2 < v) v = q->hc2;
+    v = (f32)v * q->f78[(s32)(a->u30.d >> 6) & 0xf];
+    if (b->f88 & 8) v /= 2;
+    if (((b->f370 >> 37) & 3) == 1) {
+        if (func_0013bf68()) v *= 2;
+    }
+    if (b->f148 && b->f148->f170.b.b36) {
+        if (v >= b->f6c->f3c) v = b->f6c->f3c - 1;
+    }
+    return v ? v : 1;
+}
+
 /* needs make: uses rodata */
 typedef struct { u8 p0[5]; u8 f5; u8 p6[0xe]; s32 f14; } Md9;
 typedef struct { u8 p0[2]; u16 f2; f32 f4; f32 f8; } Bn9;
