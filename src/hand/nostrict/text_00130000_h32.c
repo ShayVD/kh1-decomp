@@ -109,3 +109,63 @@ s32 func_00139cb8(W32Fig *o, W32Msg *m) {
     func_00139c28(o, m);
     return 1;
 }
+typedef struct {
+    u8 pad00[0x30];
+    f32 x30;
+    f32 x34;
+    f32 x38;
+    f32 x3c;
+} W32Spr;
+typedef struct {
+    u16 flags;
+    u8 pad02[0x10 - 0x2];
+    f32 x10;
+} W32Fade;
+extern f32 D_002BBDFC;
+W32Spr *func_001226f0(s32 a, s32 b, s32 c);
+void func_00122768(W32Spr *s);
+extern W32Spr *D_0052AD54;
+void func_00100ab0(void);
+s32 func_0013b4e8(W32Fade *f) {
+    f32 t;
+    if (f->flags & 0x10) {
+        W32Spr *s = func_001226f0(1, 9, 0);
+        D_0052AD54 = s;
+        s->x30 = s->x34 = s->x38 = 0.0f;
+        D_0052AD54->x3c = 1.0f;
+        func_00100ab0();
+        f->x10 = 60.0f;
+    }
+    f->x10 -= D_002BBDFC;
+    t = f->x10 / 60.0f;
+    if (t <= 0.0f) {
+        func_00122768(D_0052AD54);
+        return 4;
+    }
+    D_0052AD54->x30 = D_0052AD54->x34 = D_0052AD54->x38 = 1.0f - t;
+    return 0;
+}
+typedef struct {
+    f32 dur;
+    s32 (*fn)(void);
+} W32Step;
+typedef struct {
+    W32Step *cur;
+    s32 n;
+    s32 idx;
+    f32 t;
+} W32Seq;
+s32 func_0013be00(W32Seq *s) {
+    W32Step *nx;
+    if (s->idx == 0 && s->t == 0.0f && s->cur->fn) s->cur->fn();
+    s->t += D_002BBDFC;
+    while (s->cur->dur <= s->t) {
+        if (s->idx + 1 >= s->n) return 0;
+        nx = s->cur + 1;
+        if (nx->fn && nx->fn() == 0) return 1;
+        s->cur = nx;
+        s->t = 0.0f;
+        s->idx++;
+    }
+    return 1;
+}

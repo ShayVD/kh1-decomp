@@ -416,3 +416,146 @@ void func_00112c20(s32 i) {
     D_002A3F3C = func_001137c8(D_002A3F3C, 0x80);
     func_00120748(buf, D_002A3F3C, func_00112c08, 0);
 }
+
+typedef struct { s32 a, b; } W29P8;
+typedef struct { W29P8 p; u8 pad[0x88]; } W29Cell;
+extern const W29P8 D_0048BFD0;
+extern W29Cell D_004DBC20[2][64];
+typedef struct { u8 b[0x50]; } W29E50;
+extern W29E50 D_004D9380[2];
+extern W29E50 D_004D9420[][2];
+void func_00114c18(void *, s32, s32);
+
+void func_00114e50(void) {
+    s32 i, j;
+    for (i = 0; i < 64; i++) {
+        for (j = 0; j < 2; j++) {
+            D_004DBC20[j][i].p.a = D_0048BFD0.a;
+            D_004DBC20[j][i].p.b = D_0048BFD0.b;
+        }
+    }
+    func_00114c18(D_004D9380, -1, 2);
+    for (j = 0; j < 64; j++) func_00114c18(&D_004D9420[j], j, 2);
+}
+
+typedef struct { u8 pad[0x10]; void *x10; } W29Task;
+typedef struct { s32 x0; u8 pad[0xc]; } W29E10;
+extern s32 D_00351BD0;
+extern W29E10 D_003044D8[];
+void func_00108d90(void);
+W29Task *func_0015ed80(void *, void (*)(void));
+void func_00114db0(s32, s32);
+
+void func_00114f50(void *a, s32 i) {
+    if (i == -1) {
+        func_0015ed80(a, func_00108d90)->x10 = &D_004D9380[D_00351BD0];
+        return;
+    }
+    func_00114db0(i, D_003044D8[i].x0);
+    func_0015ed80(a, func_00108d90)->x10 = &D_004D9420[i][D_00351BD0];
+}
+
+static inline f32 w29_dot(void *a, void *b) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vmul.xyz $vf5xyz, $vf4xyz, $vf5xyz\n"
+        "vaddy.x $vf5x, $vf5x, $vf5y\n"
+        "vaddz.x $vf5x, $vf5x, $vf5z\n"
+        "qmfc2 $2, $vf5\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(a), "r"(b) : "$2");
+    return r;
+}
+
+static inline void w29_scale(void *d, void *s, f32 t) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lw $8, 0(%2)\n"
+        "qmtc2 $8, $vf5\n"
+        "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
+        "sqc2 $vf4, 0(%0)\n"
+        : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+}
+
+static inline void w29_add(void *d, void *a, void *b) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vadd.xyzw $vf6xyzw, $vf4xyzw, $vf5xyzw\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(a), "r"(b) : "memory");
+}
+
+s32 func_00115200(void *p0, void *dir, void *p1, void *n, void *out) {
+    f32 den, t;
+    den = w29_dot(n, dir);
+    if (den >= 0.0f) return 0;
+    t = (w29_dot(n, p1) - w29_dot(n, p0)) / den;
+    if (t > 1.0f) return 0;
+    w29_scale(out, dir, t);
+    w29_add(out, out, p0);
+    return 1;
+}
+
+typedef struct { f32 v[4]; } __attribute__((aligned(16))) W29V4;
+void func_00104f10(void *, W29V4 *);
+void func_00104eb0(void *, W29V4 *);
+
+s32 func_001152c8(void *obj, void *p0, void *dir, void *out) {
+    W29V4 nrm, pt;
+    f32 den, t;
+    func_00104f10(obj, &nrm);
+    den = w29_dot(&nrm, dir);
+    if (den >= 0.0f) return 0;
+    func_00104eb0(obj, &pt);
+    t = (w29_dot(&nrm, &pt) - w29_dot(&nrm, p0)) / den;
+    if (t < 0.0f) return 0;
+    if (t > 1.0f) return 0;
+    w29_scale(out, dir, t);
+    w29_add(out, out, p0);
+    return 1;
+}
+
+static inline void w29_sub(void *d, void *a, void *b) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vsub.xyzw $vf6xyzw, $vf4xyzw, $vf5xyzw\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(a), "r"(b) : "memory");
+}
+
+static inline void w29_outer(void *d, void *a, void *b) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vopmula.xyz ACC, $vf4, $vf5\n"
+        "vopmsub.xyz $vf6, $vf5, $vf4\n"
+        "vsub.w $vf6w, $vf6w, $vf6w\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(a), "r"(b) : "memory");
+}
+
+extern s32 D_002BD150[];
+extern s32 D_002BD160[];
+s32 func_00104ae0(void *, W29V4 *);
+
+s32 func_00115600(void *obj, void *p) {
+    W29V4 e, d, c, v[4];
+    s32 n, i, *idx;
+    n = func_00104ae0(obj, v);
+    if (n == 3) idx = D_002BD150;
+    else idx = D_002BD160;
+    for (i = 0; i < n; i++) {
+        w29_sub(&e, &v[idx[i]], &v[i]);
+        w29_sub(&d, p, &v[i]);
+        w29_outer(&c, &e, &d);
+        if (c.v[1] < 0.0f) return 0;
+    }
+    return 1;
+}

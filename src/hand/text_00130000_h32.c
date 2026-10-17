@@ -666,6 +666,161 @@ void func_00139ff8(W32Mot *o) {
     func_002675a8(o->x20, o->x30);
     o->x2c = 0;
 }
+typedef struct {
+    u8 pad00[0x4C];
+    u16 x4c;
+} W32Pi;
+typedef struct {
+    u32 flags;
+    u8 pad004[0x130 - 0x4];
+    W32Pi *x130;
+} W32Ply;
+void func_00123460(W32Ply *p);
+void func_00135800(W32Ply *p, f32 a, f32 b);
+s32 func_0012f040(void *o, s32 a);
+s32 func_0013c318(s32 k);
+void func_002414a8(s32 a, s32 b);
+void func_0013a810(void) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        W32Ply *p = (W32Ply *)D_002E26A0[i + 1];
+        if (p == 0) continue;
+        if (p->flags & 0x8000) continue;
+        func_00123460(p);
+        func_00135800(p, 0.0f, 0.0f);
+        func_00135800(p, 1.0f, 30.0f);
+        p->flags &= ~0x1000000;
+        func_001373f8((W32Obj2 *)p, 30.0f);
+        if (func_0012f040((void *)p, -1)) func_002414a8(func_0013c318(p->x130->x4c), 1);
+    }
+}
+typedef struct {
+    u8 pad00[0x30];
+    f32 x30;
+    f32 x34;
+    f32 x38;
+    f32 x3c;
+} W32Spr;
+typedef struct {
+    u16 flags;
+    u8 pad02[0x10 - 0x2];
+    f32 x10;
+} W32Fade;
+extern W32Spr *D_0052AD00;
+W32Spr *func_001226f0(s32 a, s32 b, s32 c);
+void func_00122768(W32Spr *s);
+void func_00100ae0(void);
+s32 func_0013ab30(W32Fade *f) {
+    if (f->flags & 0x10) {
+        D_0052AD00 = func_001226f0(1, 9, 0);
+        D_0052AD00->x3c = 1.0f;
+        f->x10 = 50.0f;
+    }
+    f->x10 -= D_002BBDFC;
+    if (f->x10 <= 0.0f) {
+        func_00122768(D_0052AD00);
+        func_00100ae0();
+        return 4;
+    }
+    D_0052AD00->x30 = D_0052AD00->x34 = D_0052AD00->x38 = f->x10 / 50.0f;
+    return 0;
+}
+extern s32 D_0052AE54;
+extern s32 D_0052AE50;
+extern s32 D_00304B00[];
+extern s32 D_00304B40;
+extern s32 D_00304B44;
+extern char D_0048DCB0[];
+extern void *D_0052AE5C;
+void D_00F20000(s32 a, s32 b);
+s32 func_001ecfd8(void);
+void func_00157668(void);
+s32 sprintf(char *buf, const char *fmt, ...);
+s32 func_00120748(char *name, void *dst, void (*cb)(void), s32 d);
+void func_0013b1a0(void);
+void func_0013b238(void);
+void func_0011ef10(s32 a, void (*f)(void));
+s32 func_0013b3d0(void) {
+    char buf[32];
+    if (D_0052AE54 != 2 || func_001ecfd8()) return 0;
+    func_00157668();
+    D_0052AE54 = 3;
+    sprintf(buf, D_0048DCB0, D_00304B00[D_0052AE50], D_00304B40);
+    func_00120748(buf, D_0052AE5C, 0, 0);
+    sprintf(buf, D_0048DCB0, D_00304B00[D_0052AE50], D_00304B44);
+    func_00120748(buf, (void *)D_00F20000, func_0013b1a0, 0);
+    func_0011ef10(0xB798, func_0013b238);
+    return 1;
+}
+extern s32 D_0052AE54;
+extern void *D_0052AE5C;
+void func_00155b70(void *p);
+void func_00155be0(void *p);
+void func_001763f0(void *p);
+void func_00146928(s32 a);
+void func_00146a68(void *p, s32 a, void (*cb)(void), s32 b);
+void func_0013ba08(void);
+void func_0013ba18(s32 size, s32 b, W32Hdr *h) {
+    s32 *st;
+    if (h->off[1] - h->off[0] > 0) func_00155b70((u8 *)h + h->off[0]);
+    if (h->off[2] - h->off[1] > 0) func_00155be0((u8 *)h + h->off[1]);
+    if (h->off[3] - h->off[2] > 0) func_00155be0((u8 *)h + h->off[2]);
+    if (h->off[5] - h->off[4] > 0) func_001763f0((u8 *)h + h->off[4]);
+    st = &D_0052AE54;
+    *st = 1;
+    if (h->off[7] - h->off[6] > 0) {
+        func_00146928(-7);
+        func_00146a68((u8 *)h + h->off[6], -7, func_0013ba08, 0);
+    } else {
+        *st = 2;
+    }
+    D_0052AE5C = (void *)((((u32)h + size + 0x7F) >> 7) << 7);
+}
+void func_0011ef58(void (*f)(void));
+void func_0013b958(void);
+void func_00133708(void);
+void func_00100ab0(void);
+extern s32 D_00304B84;
+extern u32 D_00304B78;
+void func_0013bd08(void) {
+    u32 *f = &D_002C5958;
+    u32 *g;
+    if ((*f >> 13) & 1) {
+        D_00F20000(2, 0);
+        func_0011ef58(func_0013b958);
+        func_002414a8(0, 1);
+        func_002414a8(1, 2);
+        func_002414a8(2, 2);
+    }
+    if (*f & 0x104000) {
+        func_00133708();
+        func_00100ab0();
+    }
+    g = &D_00304B78;
+    *f &= ~0x2000;
+    *f &= ~0x4000;
+    *f &= ~0x100000;
+    *g &= ~8;
+    D_00304B84 = 0;
+}
+typedef struct { u16 x0; u16 x2; } W32Ent;
+extern W32Ent *func_001478a0(s32 id);
+void func_0013bfb8(u8 *a) {
+    s32 i, j;
+    u8 t;
+    for (i = 47; i > 0; i--) {
+        if (a[i] == 0) continue;
+        for (j = 0; j < i; j++) {
+            W32Ent *p = func_001478a0(a[j]);
+            W32Ent *q = func_001478a0(a[j + 1]);
+            if (p->x2 > q->x2) {
+                t = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = t;
+            }
+        }
+    }
+}
 /* needs make: uses rodata */
 typedef struct {
     u8 pad00[6];
