@@ -16,6 +16,7 @@ import kh1tool as K
 import autodecomp as A
 from elf32 import Elf
 ROOT = Path(__file__).resolve().parent.parent
+VERBOSE = '-v' in sys.argv[2:]  # list each differing word
 src = Path(sys.argv[1]).resolve()
 A._init()
 cfg = A._cfg
@@ -59,3 +60,7 @@ for fn in funcs:
     else:
         d = sum(1 for i in range(0, min(len(ours), f.size), 4) if ours[i:i+4] != theirs[i:i+4])
         print(f"{a:08x} FAIL {len(ours)} vs {f.size}, {d} words differ")
+        if VERBOSE:
+            for i in range(0, min(len(ours), f.size), 4):
+                if ours[i:i+4] != theirs[i:i+4]:
+                    print(f"  {a+i:08x} ours {ours[i:i+4][::-1].hex()} orig {theirs[i:i+4][::-1].hex()}")
