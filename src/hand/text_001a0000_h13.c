@@ -542,3 +542,22 @@ u8 *func_001bfe50(u8 *a) {
     func_001bfcd8();
     return r;
 }
+
+/* needs make: uses rodata */
+
+/* Jump table (jtbl_00490070); checked word-for-word except the table relocs. */
+s32 func_001bb260(s32 a) {
+    switch (a) {
+    case 3: return 0;
+    case 4: return 1;
+    case 11: return 2;
+    case 5: return 3;
+    case 8: return 4;
+    case 9: return 6;
+    case 10: return 5;
+    case 13: return 7;
+    case 15: return 8;
+    case 16: return 9;
+    }
+    return 0;
+}

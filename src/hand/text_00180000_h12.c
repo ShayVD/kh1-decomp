@@ -602,3 +602,317 @@ void func_0019cfc0(PppMtx out, PppBb98B *q, PppMtx m) {
     sceVu0MulMatrix(out, m, D_00615E68->m);
     sceVu0MulMatrix(out, D_00615EB0, out);
 }
+
+typedef unsigned int u128 __attribute__((mode(TI)));
+
+extern PppMtx D_0061E2D0;
+typedef struct {
+    PppMtx m;   /* +0x00 */
+    u128 q;     /* +0x40 */
+    s32 i[4];   /* +0x50 */
+    s16 h[2];   /* +0x60 */
+} PppMegaBirth;
+
+void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
+    PppMegaBirth *w = (PppMegaBirth *) ((u8 *) obj + e->offsets[2] + 0xA0);
+
+    sceVu0UnitMatrix(w->m);
+    w->q = 0;
+    w->i[0] = 0;
+    w->i[1] = 0;
+    w->i[2] = 0;
+    w->i[3] = 0;
+    w->h[0] = 0;
+    w->h[1] = 0;
+    sceVu0UnitMatrix(D_0061E2D0);
+}
+
+typedef struct {
+    s32 unk0;
+    s32 n;
+} PppTblHdr;
+
+typedef struct {
+    s32 unk0, unk4;
+    s32 key;    /* +0x8 */
+    u8 pad[0x44];
+} PppTblEnt;
+
+typedef struct {
+    s32 unk0;
+    PppTblHdr *hdr;   /* +0x4 */
+    PppTblEnt *ent;   /* +0x8 */
+} PppTbl;
+
+extern PppTbl D_0035E710;
+
+PppTblEnt *func_0019dfc8(s32 key) {
+    PppTblEnt *e = D_0035E710.ent;
+    PppTblEnt *r = NULL;
+    s32 i;
+
+    if (e != NULL) {
+        for (i = 0; i < D_0035E710.hdr->n; i++, e++) {
+            if (key == e->key) {
+                r = e;
+                break;
+            }
+        }
+    }
+    return r;
+}
+
+s32 func_0019e028(void *, void *);
+s32 func_0019e108(void *, void *);
+s32 func_0019e1e8(void *, void *);
+
+void pppRyjMegaPlaceShapeFrame(void *obj, void *k, PppEntry *e) {
+    u8 *w = (u8 *) obj + e->offsets[1] + 0xA0;
+
+    if (*w == 0) {
+        if (func_0019e028((u8 *) obj + e->offsets[0] + 0xA0, k))
+            *w = 1;
+    }
+}
+
+void pppRyjMegaPlaceModelFrame(void *obj, void *k, PppEntry *e) {
+    u8 *w = (u8 *) obj + e->offsets[1] + 0xA0;
+
+    if (*w == 0) {
+        if (func_0019e108((u8 *) obj + e->offsets[0] + 0xA0, k))
+            *w = 1;
+    }
+}
+
+void pppRyjMegaPlaceLampFrame(void *obj, void *k, PppEntry *e) {
+    u8 *w = (u8 *) obj + e->offsets[1] + 0xA0;
+
+    if (*w == 0) {
+        if (func_0019e1e8((u8 *) obj + e->offsets[0] + 0xA0, k))
+            *w = 1;
+    }
+}
+
+f32 func_0019f100(void);
+
+s8 func_0019f148(u8 a) {
+    f32 f;
+
+    func_0019f100();
+    f = func_0019f100();
+    return (f32) (a * 2) * f - (f32) (a >> 1);
+}
+
+typedef struct {
+    u8 pad[0x10];
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+} PppF1a8A;
+
+typedef struct {
+    u8 pad[0x101];
+    u8 unk101;
+    u8 pad102[4];
+    u8 unk106;
+} PppF1a8B;
+
+s32 func_0019f1a8(PppF1a8A *p, PppF1a8B *q) {
+    if (p->unk10 == 0)
+        return 0;
+    if (q->unk106 != 0 && p->unk14 == 0)
+        return 0;
+    if (q->unk101 != 0 && p->unk18 == 0)
+        return 0;
+    return 1;
+}
+
+void func_00122768(void *);
+
+void pppRyjLightDes(void *obj, PppEntry *e) {
+    void **w = (void **) ((u8 *) obj + e->offsets[2] + 0xA0);
+
+    if (*w) {
+        func_00122768(*w);
+        *w = NULL;
+    }
+}
+
+typedef struct {
+    PppMtx out;   /* +0x00 */
+    PppMtx local; /* +0x40 */
+} PppDttWork;
+
+void pppRyjDrawMatrixWorldDttFrame(void *obj, void *k, PppEntry *e) {
+    PppDttWork *w = (PppDttWork *) ((u8 *) obj + e->offsets[1] + 0xA0);
+
+    sceVu0MulMatrix(D_00615E68->m2, w->local, D_00615E68->m);
+    sceVu0MulMatrix(D_00615E68->m2, D_00615EB0, D_00615E68->m2);
+    sceVu0CopyMatrix(w->out, D_00615E68->m2);
+    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
+}
+
+f32 func_001a2178(void);
+
+s8 func_001a21c0(u8 a) {
+    f32 f;
+
+    f = func_001a2178();
+    return (f32) (a * 2) * f - (f32) (a >> 1);
+}
+
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+} PppA2218A;
+
+typedef struct {
+    u8 pad[0xB6];
+    u8 unkB6;
+} PppA2218B;
+
+s32 func_001a2218(PppA2218A *p, PppA2218B *q) {
+    if (p->unk0 == 0)
+        return 0;
+    if (q->unkB6 != 0 && p->unk4 == 0)
+        return 0;
+    return 1;
+}
+
+f32 func_001a3650(void);
+
+s8 func_001a3698(u8 a) {
+    f32 f;
+
+    f = func_001a3650();
+    return (f32) (a * 2) * f - (f32) (a >> 1);
+}
+
+typedef struct {
+    u8 pad[0xF2];
+    u8 unkF2;
+} PppA36f0B;
+
+s32 func_001a36f0(PppA2218A *p, PppA36f0B *q) {
+    if (p->unk0 == 0)
+        return 0;
+    if (q->unkF2 != 0 && p->unk4 == 0)
+        return 0;
+    return 1;
+}
+
+extern f32 D_003732D0[]; /* sine table, 4096 entries per turn */
+
+void func_001a50d0(f32 m[4][4], u32 a) {
+    f32 s = D_003732D0[(a >> 4) & 0xFFF];
+    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
+
+    m[0][0] = 1.0f;
+    m[1][0] = 0.0f;
+    m[2][0] = 0.0f;
+    m[3][0] = 0.0f;
+    m[0][1] = 0.0f;
+    m[1][1] = c;
+    m[2][1] = -s;
+    m[3][1] = 0.0f;
+    m[0][2] = 0.0f;
+    m[1][2] = s;
+    m[2][2] = c;
+    m[3][2] = 0.0f;
+    m[0][3] = 0.0f;
+    m[1][3] = 0.0f;
+    m[2][3] = 0.0f;
+    m[3][3] = 1.0f;
+}
+
+void func_001a5150(f32 m[4][4], u32 a) {
+    f32 s = D_003732D0[(a >> 4) & 0xFFF];
+    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
+
+    m[0][0] = c;
+    m[1][0] = 0.0f;
+    m[2][0] = s;
+    m[3][0] = 0.0f;
+    m[0][1] = 0.0f;
+    m[1][1] = 1.0f;
+    m[2][1] = 0.0f;
+    m[3][1] = 0.0f;
+    m[0][2] = -s;
+    m[1][2] = 0.0f;
+    m[2][2] = c;
+    m[3][2] = 0.0f;
+    m[0][3] = 0.0f;
+    m[1][3] = 0.0f;
+    m[2][3] = 0.0f;
+    m[3][3] = 1.0f;
+}
+
+void func_001a51d0(f32 m[4][4], u32 a) {
+    f32 s = D_003732D0[(a >> 4) & 0xFFF];
+    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
+
+    m[0][0] = c;
+    m[1][0] = -s;
+    m[2][0] = 0.0f;
+    m[3][0] = 0.0f;
+    m[0][1] = s;
+    m[1][1] = c;
+    m[2][1] = 0.0f;
+    m[3][1] = 0.0f;
+    m[0][2] = 0.0f;
+    m[1][2] = 0.0f;
+    m[2][2] = 1.0f;
+    m[3][2] = 0.0f;
+    m[0][3] = 0.0f;
+    m[1][3] = 0.0f;
+    m[2][3] = 0.0f;
+    m[3][3] = 1.0f;
+}
+
+typedef struct {
+    s16 unk0;
+    s16 dur;    /* +0x2 */
+    s8 flags;   /* +0x4 */
+    u8 pad[3];
+} PppAnimKey;
+
+typedef struct {
+    s16 pad[3];
+    s16 n;              /* +0x6 */
+    u8 pad8[8];
+    PppAnimKey keys[1]; /* +0x10 */
+} PppAnimHdr;
+
+typedef struct {
+    PppAnimHdr *hdr;
+} PppAnim;
+
+typedef struct {
+    u16 time;
+    u8 idx;
+} PppAnimState;
+
+typedef struct {
+    PppAnim *anim;
+    PppAnimState *st;
+} PppAnimPlayer;
+
+void func_001a56a0(PppAnimPlayer *p) {
+    PppAnimState *st = p->st;
+    PppAnimKey *k = &p->anim->hdr->keys[st->idx];
+
+    st->time += 512;
+    if ((s16) st->time >= k->dur) {
+        st->time -= k->dur;
+        st->idx++;
+        if (st->idx >= p->anim->hdr->n) {
+            if (k->flags & 0x80) {
+                st->idx = 0;
+                st->time = 0;
+                return;
+            }
+            st->time = 0;
+            st->idx--;
+        }
+    }
+}
