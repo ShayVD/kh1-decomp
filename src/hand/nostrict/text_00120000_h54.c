@@ -1,0 +1,343 @@
+#include "common.h"
+typedef struct {
+    s32 f0; s32 f4; s32 f8;
+    s8 c[4]; s8 d[4];
+    s32 f14;
+    s8 e[4]; s8 f[4];
+    s32 f20; s32 f24; s32 f28; s32 f2c; s32 f30; s32 f34;
+    u64 f38; u64 f40;
+} Pkt;
+typedef struct { f32 f0; f32 f4; u8 pad[8]; s32 f10; s32 f14; s32 f18; } Cam;
+extern Cam D_002BC0F0;
+extern s32 D_004F82C0;
+extern s32 D_004F82C4;
+typedef struct { s32 f4; s32 f0; } L14c;
+typedef struct { u32 f0; u8 pad[0x114]; f32 f118; u8 p2[0x14c-0x11c]; s32 *f14c; u8 p3[0x15c-0x150]; s32 f15c; u8 p4[0x390-0x160]; s32 f390; } E1;
+extern f32 func_00135ca0(f32);
+extern void func_001621e0(s32, s32, Pkt *, E1 *);
+void func_00127960(E1 *e, s32 a1, s32 a2) {
+    Pkt p;
+    s32 i;
+    s32 *q;
+    u64 k;
+    if (e->f0 & 0x100) {
+        p.c[0] = 0x80;
+        p.c[1] = 0x80;
+        p.c[2] = 0x80;
+        p.c[3] = 0x80;
+        p.f0 = 0x101;
+        p.d[0] = D_002BC0F0.f10;
+        p.d[1] = D_002BC0F0.f14;
+        p.d[2] = D_002BC0F0.f18;
+        p.d[3] = func_00135ca0(e->f118);
+    } else {
+        p.f0 = 0x101;
+        p.c[3] = a2;
+        p.c[0] = 0; p.c[1] = 0; p.c[2] = 0;
+        p.d[0] = 0x80; p.d[1] = 0x80;
+        p.d[2] = 0x80;
+        p.d[3] = 0xff;
+    }
+    p.f4 = 0;
+    q = &D_004F82C0;
+    p.f8 = D_004F82C4 + *q;
+    *q += 10;
+    p.f20 = 0;
+    p.f28 = e->f390;
+    if (e->f390 & 0x40000000) p.f28 = -1;
+    p.f2c = 0;
+    if (e->f14c && e->f14c[0] && (e->f0 & 0x4000)) {
+        p.f14 = e->f14c[1];
+        for (i = 0; i < 4; i++) {
+            p.e[i] = p.c[i];
+            p.f[i] = p.d[i];
+        }
+    } else {
+        p.f14 = 0;
+    }
+    k = 0x1000401d0LL;
+    p.f38 = 0x3a0001c0;
+    p.f40 = k;
+    p.f30 = 0;
+    p.f34 = 0;
+    func_001621e0(e->f15c, a1, &p, e);
+}
+typedef struct { f32 x, y, z, w; } V4;
+typedef struct { V4 a; V4 b; V4 c; s16 f30; s16 pad32; s32 f34; } Ray2;
+typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 fc; V4 v10; V4 v20; u8 pad30[0x10]; } Lt2;
+extern Lt2 D_002C5C80[31];
+typedef union { u64 x; struct { u32 lo:24; u32 b3:8; u32 b4:8; u32 k:2; u32 hi:22; } b; } F370;
+typedef struct { u8 pad[0x50]; V4 pos; u8 p60[0x2c4-0x60]; f32 f2c4; u8 p2c8[4]; s32 f2cc; u8 p2d0[0x320-0x2d0]; V4 v320; u8 p330[0x370-0x330]; F370 f370; } E2;
+extern s32 func_001232f0(E2 *);
+extern void func_002675a8(V4 *, V4 *);
+extern void func_00267530(V4 *, V4 *, V4 *);
+extern void func_00121fc4(V4 *, V4 *);
+extern void func_00118668(Ray2 *);
+extern void func_00127c20(E2 *, V4 *, f32);
+void func_00128218(E2 *e, f32 k) {
+    V4 v;
+    Ray2 r;
+    Lt2 *l;
+    s32 i;
+    if (e->f370.b.k == 3) return;
+    if (!func_001232f0(e)) {
+        func_002675a8(&r.a, &e->pos);
+        r.b.w = r.a.w = 1.0f;
+        r.b.x = 0;
+        r.b.z = 0;
+        r.a.y -= e->f2c4;
+        r.b.y = e->f2c4 + 300.0f;
+        func_00118668(&r);
+        if (r.f30 < 0) return;
+        func_002675a8(&e->v320, &r.c);
+        e->f2cc = r.f34;
+    }
+    k *= e->f370.b.b3 * 0.0078125f;
+    l = D_002C5C80;
+    for (i = 0; i < 31; i++, l++) {
+        if (!(l->flags & 4)) continue;
+        switch (l->type) {
+        case 2:
+            func_002675a8(&v, &l->v20);
+            v.w = 1.0f;
+            func_00127c20(e, &v, k);
+            break;
+        case 3:
+        case 5:
+            func_002675a8(&v, &e->pos);
+            v.y -= e->f2c4;
+            func_00267530(&v, &v, &l->v10);
+            func_00121fc4(&v, &v);
+            if (v.w < l->fc && v.y > 0.5f) {
+                v.w = 1.0f;
+                func_00127c20(e, &v, k);
+            }
+            break;
+        }
+    }
+}
+typedef struct { u8 pad[0x4c]; u16 f4c; } I3;
+typedef struct { u32 f0; u8 p4[0x2c]; f32 f30[3]; f32 f3c; f32 f40[2]; u8 p48[0xc0-0x48]; V4 fc0; u8 pd0[0x130-0xd0]; I3 *f130; u8 p134[0x2d4-0x134]; f32 f2d4; u8 p2d8[0x350-0x2d8]; s32 f350[3]; } E3;
+typedef struct { u8 p0[4]; s32 *rot; u8 p8[4]; f32 *scl; } R3;
+extern s32 D_0029B410;
+extern s8 D_002E2FB8[];
+extern V4 D_002C58A0;
+extern s32 func_00176578(s32, s32, u32, s64);
+extern R3 *func_00147ed8(s32, s32, s32, f32 *);
+extern void func_00267370(V4 *, V4 *, V4 *);
+extern void func_002673b8(V4 *, V4 *);
+extern void func_00121a78(V4 *, f32 *);
+R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
+    V4 m;
+    V4 a;
+    V4 b;
+    V4 pad;
+    f32 ang[3];
+    s32 j;
+    s32 idx;
+    R3 *r;
+    s32 i;
+    if (!D_0029B410) return 0;
+    if (e->f130->f4c < 20) j = D_002E2FB8[e->f130->f4c];
+    else j = 16;
+    if (j < 0) return 0;
+    idx = func_00176578(D_0029B410, 1 << kind, c, 1 << j);
+    r = 0;
+    if (idx < 0) goto end;
+    switch (kind) {
+    case 0:
+        ang[0] = 0;
+        ang[1] = e->f3c;
+        ang[2] = 0;
+        break;
+    case 10: case 11: case 12:
+        ang[0] = 0;
+        ang[1] = e->f3c;
+        ang[2] = 0;
+        if (e->f0 & 0x400000) out[1] = e->f2d4;
+        break;
+    default:
+        func_00267530(&a, &D_002C58A0, &e->fc0);
+        func_00267370(&b, (V4 *)e->f30, &a);
+        func_002673b8(&b, &b);
+        func_00267370(&m, &a, &b);
+        func_002673b8(&m, &m);
+        func_00121a78(&m, ang);
+        break;
+    }
+    r = func_00147ed8(D_0029B410, idx, 10000, out);
+    if (r) {
+        r->rot[0] = (u16)(s32)(ang[0] / 6.2831855f * 65536.0f);
+        r->rot[1] = (u16)(s32)(ang[1] / 6.2831855f * 65536.0f);
+        r->rot[2] = (u16)(s32)(ang[2] / 6.2831855f * 65536.0f);
+        for (i = 0; i < 3; i++) r->scl[i] = e->f350[i] * 0.0078125f;
+        r->scl[3] = 1.0f;
+    }
+end:
+    return r;
+}
+typedef struct { u8 pad[0x4c]; u16 f4c; } I4;
+typedef struct { u8 pad[0x6c]; u32 *f6c; } O4;
+typedef struct { u8 pad[0x130]; I4 *f130; u8 p134[0x164-0x134]; s32 f164; } A4;
+typedef struct { s32 state; s32 f4; s32 f8; O4 *fc; u8 p10[0x20]; s32 f30; } W4;
+typedef struct { u8 pad[0x10]; A4 *f10; u8 p14[8]; f32 f1c; W4 *f20; } T4;
+extern f32 D_002BBDFC;
+extern s32 D_00350CE0;
+extern void *D_002E26A0[3];
+extern s32 func_00122ff8(void *);
+extern s32 func_001375d8(A4 *);
+extern void func_001315c0(A4 *, s32, f32 *, f32);
+extern void func_0013c9e0(s32, s32);
+extern void func_0012c238(A4 *, s32, void *);
+extern void func_001586a8(s32);
+extern void func_00121eb0(W4 *);
+s32 func_0012c328(T4 *t) {
+    W4 *w = t->f20;
+    s32 done;
+    s32 i;
+    f32 buf[4];
+    if (w->f30 == 0xfff) w->f30 = t->f10->f164;
+    t->f1c -= D_002BBDFC;
+    if (!func_00122ff8(t->f10) || func_001375d8(t->f10)) goto kill;
+    done = 0;
+    switch (w->state) {
+    case 0:
+        if (t->f1c < 0.0f) {
+            A4 *a = t->f10;
+            if (a->f164 == w->f30) {
+                u16 k = a->f130->f4c;
+                func_001315c0(a, k == 6 ? 29 : 28, buf, k == 9 ? 3.0f : 1.0f);
+                func_00147ed8(D_00350CE0, w->f4, 20000, buf);
+            }
+            w->state = 1;
+            t->f1c = 30.0f;
+        }
+        break;
+    case 1:
+        if (w->fc) {
+            if (!func_00122ff8(w->fc) || (*w->fc->f6c >> 2 & 1)) {
+kill:
+                done = 1;
+                func_0013c9e0(w->f8, t->f10->f130->f4c);
+                break;
+            }
+        }
+        if (t->f1c < 0.0f) {
+            A4 *a;
+            done = 1;
+            a = t->f10;
+            if (w->fc) {
+                func_0012c238(a, w->f8, w->fc);
+                a = t->f10;
+            } else {
+                for (i = 0; i < 3; i++) {
+                    if (D_002E26A0[i]) {
+                        func_0012c238(a, w->f8, D_002E26A0[i]);
+                        a = t->f10;
+                    }
+                }
+            }
+            if (a->f130->f4c == 0) func_001586a8(12);
+        }
+        break;
+    }
+    if (done) {
+        func_00121eb0(w);
+        return 4;
+    }
+    return 0;
+}
+
+typedef struct { s32 f0; s32 f4; s32 f8; s32 fc; volatile s32 n; u8 ids[8]; } Q5;
+typedef struct { s32 f0; s32 f4; s32 f8; s32 fc; s32 n; u8 ids[8]; } L5;
+typedef struct { u8 pad[0x7d0]; s8 f7d0[7]; u8 p7d7[0x874-0x7d7]; u32 f874; } W5;
+extern Q5 D_002E3010;
+extern L5 D_002E3080;
+extern W5 *D_00304BE8;
+extern u32 D_00304B78;
+extern u32 D_002C5958;
+extern u32 D_002E31A8;
+extern void func_0013ab08() __attribute__((weak));
+extern void func_0012cb40(Q5 *, s32, s32);
+extern s32 func_0013a910(s32);
+void func_0012d188(s32 a0, u32 *a1) {
+    s32 buf[7];
+    s32 n, i, m;
+    Q5 *q = &D_002E3010;
+    L5 *l;
+    if (func_0013ab08 && (D_00304B78 >> 3 & 1)) {
+        func_0012cb40(q, q->n++, 79);
+        return;
+    }
+    l = &D_002E3080;
+    n = 0;
+    m = -1;
+    for (i = 0; i < 7; i++) {
+        s32 v = D_00304BE8->f7d0[i];
+        if (v != -1) {
+            l->ids[n] = v + 47;
+            buf[n] = v;
+            if (func_0013a910(v)) m &= ~(1 << n);
+            n++;
+        }
+    }
+    l->n = n;
+    if (n > 0) {
+        n = q->n++;
+        func_0012cb40(q, n, 6);
+        if ((D_00304BE8->f874 & 4) || (D_002C5958 >> 13 & 1) || (D_002E31A8 >> 1 & 1)) {
+            q->f4 |= 1 << n;
+            q->f8 |= 1 << n;
+        } else if (m == -1) {
+            q->f4 |= 1 << n;
+        }
+    }
+    l->f8 = m;
+    l->f4 = m;
+}
+
+typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
+extern Q38 D_002E2FD8[7];
+extern u8 D_00524F68[];
+typedef struct { u8 pad[0x21]; u8 n; u8 f22[1]; } T7;
+typedef struct { u8 pad[0xc8]; T7 *fc8; } U7;
+typedef struct { u8 pad[0x6c]; U7 *f6c; } A7;
+extern void func_0012ccb0(s32);
+void func_0012d6c0(A7 *a0, u32 *a1) {
+    Q38 *g;
+    Q38 *p;
+    T7 *t;
+    s32 m, cnt, i;
+    if (D_00304BE8->f874 & 0x10) return;
+    g = D_002E2FD8;
+    func_0012cb40((Q5 *)g, 2, 3);
+    p = &g[2];
+    p->f8 = 0;
+    m = -1;
+    p->f4 = 0;
+    i = 0;
+    t = a0->f6c->fc8;
+    cnt = 0;
+    for (; i < t->n; i++) {
+        if (t->f22[i]) {
+            D_00524F68[cnt] = i;
+            m &= ~(1 << cnt);
+            p->ids[cnt] = t->f22[i] + 30;
+            cnt++;
+        }
+    }
+    p->n = cnt;
+    if (cnt > 0) {
+        if (!(p->fc < cnt)) p->fc = cnt - 1;
+        if (!(D_00304BE8->f874 & 2)) {
+            if (!(*a1 >> 6 & 1)) {
+                m = -1;
+                g->f4 |= 4;
+            }
+            p->f8 = m;
+            p->f4 = m;
+            return;
+        }
+    }
+    do { func_0012ccb0(2); } while (0);
+}

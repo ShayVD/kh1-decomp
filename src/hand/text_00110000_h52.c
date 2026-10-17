@@ -373,3 +373,335 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
     }
     return 1;
 }
+
+typedef struct { V4_52 pts[512]; V4_52 tmp; s32 ids[512]; } Hits52;
+extern s32 D_002BD250[];
+void *func_00122048(s32, s32);
+void func_001220b8(void *);
+s32 func_001152c8(s32, void *, void *, void *);
+s32 func_001198c8(s32, s32, f32 *);
+
+static inline void v52_copy(void *d, void *s) {
+    __asm__ volatile(
+        "lq $6, 0(%1)\n"
+        "sq $6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(s) : "$6", "memory");
+}
+
+static inline f32 v52_dist2(f32 *a, f32 *b) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf6, 0(%1)\n"
+        "lqc2 $vf4, 0(%2)\n"
+        "vsub.xyzw $vf5xyzw, $vf6xyzw, $vf4xyzw\n"
+        "vmove.xyzw $vf4xyzw, $vf5xyzw\n"
+        "vmul.xyz $vf5xyz, $vf4xyz, $vf5xyz\n"
+        "vaddy.x $vf5x, $vf5x, $vf5y\n"
+        "vaddz.x $vf5x, $vf5x, $vf5z\n"
+        "qmfc2 $2, $vf5\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(a), "r"(b) : "$2");
+    return r;
+}
+
+s32 func_00117c08(s32 n, f32 *p, void *dir, f32 *out) {
+    Hits52 *w;
+    s32 i, cnt, id;
+    s32 *q;
+    f32 d, bd;
+    cnt = 0;
+    w = func_00122048(sizeof(Hits52), 4);
+    for (i = 0; i < n; i++) {
+        id = D_002BD250[i];
+        if (func_001152c8(id, p, dir, w->tmp) && func_001198c8(-1, id, w->tmp)) {
+            v52_copy(w->pts[cnt], w->tmp);
+            w->ids[cnt] = id;
+            cnt++;
+        }
+    }
+    i = 0;
+    if (cnt != 0) {
+        bd = 1e12f;
+        id = 0;
+        for (; i < cnt; i++) {
+            d = v52_dist2(p, w->pts[i]);
+            if (d < bd) {
+                bd = d;
+                id = i;
+            }
+        }
+        v52_copy(out, w->pts[id]);
+        i = w->ids[id];
+        func_001220b8(w);
+        return i;
+    }
+    func_001220b8(w);
+    return -1;
+}
+
+typedef struct { V4_52 pos; V4_52 dir; V4_52 out; s16 x30; s32 x34; } Ray52;
+typedef struct { u8 pad[0x18]; u16 x18; u8 pad1a[6]; V4_52 x20; V4_52 x30; } RayW52;
+extern s32 D_002C1304;
+extern s32 D_002A62EC;
+void func_001195d8(Ray52 *, RayW52 *);
+s32 func_0011c338(RayW52 *, Ray52 *, f32 *, f32 *, s32, s32 *);
+void func_00116368(void *, s32);
+void func_00117db0(); /* called with 1 and 2 args */
+void func_002675a8(void *, void *);
+
+static inline f32 v52_dist(f32 *a, f32 *b) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf6, 0(%1)\n"
+        "lqc2 $vf4, 0(%2)\n"
+        "vsub.xyzw $vf5xyzw, $vf6xyzw, $vf4xyzw\n"
+        "vmove.xyzw $vf4xyzw, $vf5xyzw\n"
+        "vmul.xyz $vf5xyz, $vf4xyz, $vf5xyz\n"
+        "vaddy.x $vf5x, $vf5x, $vf5y\n"
+        "vaddz.x $vf5x, $vf5x, $vf5z\n"
+        "vsqrt Q, $vf5x\n"
+        "vwaitq\n"
+        "vaddq.x $vf5x, $vf0x, Q\n"
+        "qmfc2 $2, $vf5\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(a), "r"(b) : "$2");
+    return r;
+}
+
+void func_00118060(Ray52 *o, s32 a1, s32 a2, s32 a3) {
+    s32 hit;
+    s32 r1, r2;
+    RayW52 *w;
+    if (D_002C1304 == 1) {
+        o->x30 = o->x34 = -1;
+        return;
+    }
+    o->x34 = -1;
+    r1 = -1;
+    w = func_00122048(64, 4);
+    func_001195d8(o, w);
+    if (a2 == 0) r1 = func_0011c338(w, o, o->dir, w->x20, a3, &hit);
+    if (D_002A62EC == 0) func_00116368(w, a1);
+    else func_00117db0(w, a1);
+    r2 = func_00117c08(w->x18, o->pos, o->dir, w->x30);
+    if (r1 != -1) {
+        if (r2 == -1) {
+            func_002675a8(o->out, w->x20);
+            o->x30 = r1;
+            o->x34 = hit;
+        } else if (v52_dist(o->pos, w->x20) < v52_dist(o->pos, w->x30)) {
+            func_002675a8(o->out, w->x20);
+            o->x30 = r1;
+            o->x34 = hit;
+        } else {
+            func_002675a8(o->out, w->x30);
+            o->x30 = r2;
+        }
+    } else {
+            func_002675a8(o->out, w->x30);
+            o->x30 = r2;
+    }
+    func_001220b8(w);
+}
+
+s32 func_00115600(s32, f32 *);
+void func_00115408(s32, f32 *, f32 *, s32);
+
+s32 func_00118230(s32 n, f32 *p, f32 *lim, f32 *out) {
+    f32 h;
+    s32 *buf;
+    s32 i, cnt, best, id;
+    f32 d, bd;
+    cnt = 0;
+    best = -1;
+    buf = func_00122048(0x800, 4);
+    for (i = 0; i < n; i++) {
+        id = D_002BD250[i];
+        if (func_00115600(id, p)) {
+            buf[cnt] = id;
+            cnt++;
+        }
+    }
+    bd = lim[1];
+    for (i = 0; i < cnt; i++) {
+        func_00115408(buf[i], p, &h, 0);
+        d = fabsf(p[1] - h);
+        if (d < bd) {
+            out[1] = h;
+            bd = d;
+            best = buf[i];
+        }
+    }
+    out[0] = p[0];
+    out[2] = p[2];
+    func_001220b8(buf);
+    return best;
+}
+
+void func_00118378(Ray52 *o, s32 a1, s32 a2, s32 a3) {
+    s32 hit;
+    s32 r1, r2;
+    RayW52 *w;
+    if (D_002C1304 == 1) {
+        o->x30 = o->x34 = -1;
+        return;
+    }
+    o->x34 = -1;
+    r1 = -1;
+    w = func_00122048(64, 4);
+    func_001195d8(o, w);
+    if (a2 == 0) r1 = func_0011c338(w, o, o->dir, w->x20, a3, &hit);
+    if (D_002A62EC == 0) func_00116368(w, a1);
+    else func_00117db0(w, a1);
+    r2 = func_00118230(w->x18, o->pos, o->dir, w->x30);
+    if (r1 != -1) {
+        if (r2 == -1) {
+            func_002675a8(o->out, w->x20);
+            o->x30 = r1;
+            o->x34 = hit;
+        } else if (v52_dist(o->pos, w->x20) < v52_dist(o->pos, w->x30)) {
+            func_002675a8(o->out, w->x20);
+            o->x30 = r1;
+            o->x34 = hit;
+        } else {
+            func_002675a8(o->out, w->x30);
+            o->x30 = r2;
+        }
+    } else {
+            func_002675a8(o->out, w->x30);
+            o->x30 = r2;
+    }
+    func_001220b8(w);
+}
+
+typedef struct { f32 mn[3]; f32 mx[3]; u16 cnt; } Box52;
+typedef struct { V4_52 pos; V4_52 dir; f32 x20; f32 x24; } Probe52;
+extern f32 D_002C1250;
+void func_00267518(void *, void *, void *);
+s32 func_00119a20(s32, void *, void *, void *, f32 *);
+s32 func_00119ad8(s32, s32, void *, void *, void *, f32 *);
+
+s32 func_001186a8(Probe52 *o) {
+    V4_52 pt, x, n;
+    Box52 box;
+    s32 ids[512];
+    s32 i, cnt, id;
+    cnt = 0;
+    D_002C1250 = o->x20 - 0.0079999999f;
+    func_00267518(pt, o->pos, o->dir);
+    pt[1] -= o->x24;
+    box.mn[0] = pt[0] - D_002C1250;
+    box.mn[2] = pt[2] - D_002C1250;
+    box.mn[1] = pt[1] - D_002C1250;
+    box.mx[0] = pt[0] + D_002C1250;
+    box.mx[1] = pt[1] + D_002C1250;
+    box.mx[2] = pt[2] + D_002C1250;
+    func_00116368(&box, 2);
+    for (i = 0; i < box.cnt; i++) {
+        id = D_002BD250[i];
+        func_00104f10(id, n);
+        if (func_00119a20(id, n, pt, x, &D_002C1250)) return id;
+        ids[cnt] = id;
+        cnt++;
+    }
+    for (i = 0; i < cnt; i++) {
+        id = ids[i];
+        func_00104f10(id, n);
+        if (func_00119ad8(-1, id, n, pt, x, &D_002C1250)) return id;
+    }
+    return 0xffff;
+}
+
+typedef struct { V4_52 a; V4_52 b; f32 r; s32 x24; u8 pad[0x58]; } Sph52;
+s32 func_0011b6a0(Sph52 *, f32 *, s32);
+void func_001047c8(void);
+void func_00104528(void);
+
+s32 func_00118b58(Probe52 *o) {
+    V4_52 pt, x, n;
+    Box52 box;
+    s32 ids[512];
+    Sph52 s;
+    s32 i, cnt, id;
+    o->dir[3] = o->pos[3] = 1.0f;
+    D_002C1250 = o->x20 - 0.0079999999f;
+    func_00267518(pt, o->pos, o->dir);
+    s.r = o->x20;
+    s.x24 = 0;
+    if (func_0011b6a0(&s, pt, 1)) return 1;
+    func_001047c8();
+    box.mn[0] = pt[0] - o->x20;
+    box.mn[2] = pt[2] - o->x20;
+    box.mn[1] = pt[1] - o->x24;
+    box.mx[0] = pt[0] + o->x20;
+    box.mx[1] = pt[1] + o->x24;
+    box.mx[2] = pt[2] + o->x20;
+    if (D_002A62EC == 0) func_00116368(&box, 7);
+    else func_00117db0(&box);
+    x[3] = 1.0f;
+    cnt = 0;
+    for (i = 0; i < box.cnt; i++) {
+        id = D_002BD250[i];
+        func_00104f10(id, n);
+        if (func_00119a20(id, n, pt, x, &D_002C1250)) {
+            func_00104528();
+            return 1;
+        }
+        ids[cnt] = id;
+        cnt++;
+    }
+    for (i = 0; i < cnt; i++) {
+        id = ids[i];
+        func_00104f10(id, n);
+        if (func_00119ad8(-1, id, n, pt, x, &D_002C1250)) {
+            func_00104528();
+            return 1;
+        }
+    }
+    func_00104528();
+    return 0;
+}
+
+typedef struct { Plane52 *tbl; u8 pad[60]; } Grp52;
+extern Grp52 D_004E2458[];
+typedef struct { u8 pad[0x10]; s32 x10; u8 pad14[0xc]; s32 x20; } Mdl52;
+typedef struct { Mdl52 *m; u8 pad[12]; } MdlEnt52;
+extern MdlEnt52 D_003044DC[];
+typedef struct { u8 pad[0x18]; s16 cnt; } Qry52;
+void func_001158c8(Qry52 *);
+s32 func_0011ab88(s32, s32, Qry52 *);
+
+s32 *func_0011af48(s32 g, Qry52 *q, s32 mode, s32 *out) {
+    Mdl52 *m;
+    u16 *list;
+    Plane52 *tbl;
+    s32 cnt, i, id;
+    cnt = 0;
+    m = D_003044DC[g].m;
+    tbl = D_004E2458[g].tbl;
+    m = (Mdl52 *)((u8 *)m + m->x10);
+    list = (u16 *)((u8 *)m + m->x20);
+    func_001158c8(q);
+    for (i = 0; i < list[0]; i++) {
+        u32 *w;
+        id = list[i + 1];
+        w = (u32 *)&tbl[id].bf;
+        switch (mode) {
+        case 0:
+            if (!(*w & 0x106) && func_0011ab88(g, id, q)) {
+                out[cnt] = id;
+                cnt++;
+            }
+            break;
+        case 1:
+            if ((*w & 0x406) == 0x400 && func_0011ab88(g, id, q)) {
+                out[cnt] = id;
+                cnt++;
+            }
+            break;
+        }
+    }
+    q->cnt = cnt;
+    return out + cnt;
+}
