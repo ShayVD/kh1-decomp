@@ -9,7 +9,11 @@ void func_002673b8(void *, void *);
 typedef struct { u8 pad0[2]; s16 dur; s8 flag; u8 pad5[3]; } AnFrm;
 typedef struct { u8 pad0[6]; s16 n; u8 pad8[8]; AnFrm fr[1]; } Anim;
 typedef struct { Anim *anim; s32 pad; } AnEnt;
-typedef struct { u8 pad[0x14]; void *x14; u8 pad18[0xc]; } Ent24;
+typedef f32 Mtx4[4][4];
+typedef struct { u32 flags; u8 pad04[0x12]; u16 h16; } DMdl;
+typedef struct { u8 pad[0x14]; void *x14; u8 pad18[4]; DMdl *mdl; s32 x20; } Ent24;
+typedef struct { u8 pad[0x10]; Mtx4 m; Mtx4 m2; u8 *x90; s32 x94; } PppMtxOwner;
+extern PppMtxOwner *D_00615E68;
 typedef struct { s16 a; s16 n; u16 *list; } Grp;
 typedef struct { u8 pad0[0x10]; Ent24 *x10; AnEnt *anims; Grp *grps; } PppRes;
 extern PppRes *D_00615E64;
@@ -269,7 +273,6 @@ void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
         func_001a47b0(w, k, w2);
 }
 
-typedef f32 Mtx4[4][4];
 void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void func_002678b8(f32 (*)[4], void *, f32 *);
@@ -312,8 +315,6 @@ f32 func_001a4a98(void *a0, f32 (*m)[4], RkKey *k, void *a3, RkObj *o) {
     return z;
 }
 
-typedef struct { u8 pad[0x90]; u8 *x90; } PppCur;
-extern PppCur *D_00615E68;
 s32 func_001a8f30(void);
 
 void func_001a5520(void *obj, void *key, void (*fn)(void *, void *, void *), u16 *pidx, s16 id, u8 rnd, u8 cnt) {
@@ -595,4 +596,117 @@ void func_001a8ae8(NdArg *a) {
             n = n->next;
         }
     }
+}
+
+double atan(double);
+
+s32 func_001a8d88(f32 *v, f32 *out) {
+    f32 x = v[0];
+    f32 y = v[1];
+    f32 r = x * y;
+
+    if (0.0f < r) {
+        r = 0.0f;
+        if (!(0.0f < x))
+            r = -3.1415926f;
+        r = r + atan(y / x);
+    } else if (r < 0.0f) {
+        r = 1.5707963f;
+        if (!(0.0f < y))
+            r = -1.5707963f;
+        r = r - atan(x / y);
+    } else if (x != 0.0f) {
+        r = 0.0f < x ? 0.0f : 3.1415926f;
+    } else {
+        if (y == 0.0f)
+            return 0;
+        r = !(0.0f < y) ? -1.5707963f : 1.5707963f;
+    }
+    *out = r;
+    return 1;
+}
+
+typedef struct {
+    s32 flags;
+    void *p04;
+    u16 h08;
+    u8 b0A;
+    s16 h0C;
+    s16 h0E;
+    s32 w10;
+    s32 w14;
+    u8 r, g, b, a;
+    s32 w1C;
+    void *p20;
+    void *p24;
+    void *p28;
+    void *p2C;
+    void *p30;
+    s32 w34;
+    u8 *w38;
+    s32 w3C;
+    s32 w40;
+    void *p44;
+    u8 pad48[0x18];
+} DParam;
+extern u8 D_00616240[];
+extern u8 D_00616140[];
+extern u8 D_00616100[];
+extern s32 D_00616224;
+s32 func_001aaf88(DMdl *, DParam *, s32);
+
+void func_001a9790(s32 id, u16 *col, s32 h, s32 x, s32 y, u8 fl, void *p) {
+    Mtx4 m;
+    DParam c;
+    Ent24 *s;
+    DMdl *md;
+
+    if (id == 0xffff)
+        return;
+    s = &D_00615E64->x10[id];
+    md = s->mdl;
+    c.flags = 0;
+    if (fl & 2) {
+        c.flags = 4;
+        if (!(md->flags & 1))
+            c.flags |= 8;
+    } else {
+        if (fl & 1)
+            c.flags = 128;
+        if (!(md->flags & 1))
+            c.flags |= 8;
+    }
+    if (!(md->flags & 2))
+        c.flags |= 16;
+    if (fl & 4)
+        c.flags |= 0x200;
+    if (fl & 8)
+        c.flags |= 0x100;
+    if (fl & 0x10) {
+        c.flags |= 0x2000;
+        c.p30 = m;
+        sceVu0MulMatrix(m, D_00615FC0, D_00615E68->m);
+    }
+    c.p44 = (fl & 0x20) ? p : 0;
+    c.h08 = md->h16;
+    c.w1C = 0;
+    c.w38 = D_00615E68->x90;
+    c.w3C = D_00615E68->x94;
+    c.h0C = 0;
+    c.p04 = D_00616240;
+    c.h0E = h;
+    c.w10 = x << 16;
+    c.w14 = y << 16;
+    c.w40 = 0;
+    c.b0A = 0;
+    c.r = col[0] >> 7;
+    c.g = col[1] >> 7;
+    c.b = col[2] >> 7;
+    c.a = col[3] >> 7;
+    c.p20 = D_00615E68->m2;
+    c.p24 = D_00616140;
+    c.p28 = D_00616100;
+    c.p2C = D_00615E68->m;
+    c.w34 = D_00616224;
+    D_00616224 = func_001aaf88(md, &c, s->x20);
 }
