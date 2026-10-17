@@ -234,6 +234,33 @@ extern W6Pair D_0052A110[];
 
 void func_001350d0(W6Cell *c);
 
+typedef struct {
+    u8 pad000[0x38C];
+    u32 x38c;
+    u32 x390;
+    u32 x394;
+} W6Ch2;
+
+typedef struct {
+    u8 pad00[8];
+    s32 id;
+    u8 pad0c[4];
+} W6Ent16;
+
+typedef struct {
+    u32 flags;
+    u8 pad04[0x2C - 0x4];
+    f32 f2c;
+    u8 pad30[0x88 - 0x30];
+    u32 x88;
+} W6Flg;
+
+extern f32 D_002BC0F0[];
+extern f32 D_002BC120;
+extern f32 D_002BC124;
+extern s32 D_003044D0;
+extern W6Ent16 D_003044D8[];
+
 //@ func_00130040
 s32 func_00130040(W6Obj *o, s32 i) {
     if (o->s1d0.p == 0) {
@@ -531,4 +558,73 @@ void func_00135978(W6Ch *c, s32 a, s32 b) {
     if (b-- > 0) {
         c->x390 |= 1 << b;
     }
+}
+//@ func_001359c0
+void func_001359c0(W6Ch2 *c, s32 a, s32 b) {
+    if (a-- > 0) {
+        c->x38c &= ~(1 << a);
+    }
+    if (b-- > 0) {
+        c->x390 &= ~(1 << b);
+    }
+}
+
+//@ func_00135a10
+void func_00135a10(W6Ch2 *c, s32 a) {
+    if (a-- > 0) {
+        c->x394 |= 1 << a;
+    }
+}
+
+//@ func_00135a38
+void func_00135a38(W6Ch2 *c, s32 a) {
+    if (a-- > 0) {
+        c->x394 &= ~(1 << a);
+    }
+}
+
+//@ func_00135ca0
+f32 func_00135ca0(f32 x) {
+    f32 r;
+    if (D_002BC0F0[0] <= x) {
+        return D_002BC120;
+    }
+    if (D_002BC0F0[1] < x) {
+        r = D_002BC120 + D_002BC124 / x;
+        if (r < 0.0f) {
+            r = 0.0f;
+        } else if (255.0f < r) {
+            r = 255.0f;
+        }
+    } else {
+        r = 255.0f;
+    }
+    return r;
+}
+
+//@ func_00137450
+s32 func_00137450(s32 id) {
+    s32 i;
+    for (i = 0; i < D_003044D0; i++) {
+        if (D_003044D8[i].id == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+//@ func_001375f0
+s32 func_001375f0(W6Flg *f) {
+    return !(f->flags & 4) && !(f->x88 & 0x20);
+}
+
+//@ func_00137718
+s32 func_00137718(W6Flg *f) {
+    if (f->flags & 4) {
+        return 0;
+    }
+    if (f->f2c == 0.0f) {
+        return 0;
+    }
+    return 1;
 }
