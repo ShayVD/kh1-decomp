@@ -187,7 +187,7 @@ void func_0023ca48(s32 a0, s32 a1, s32 x, s32 y, f32 s) {
     for (i = 0; i < 4; i++) {
         D_00651210.c[i].w = D_00651210.c[i].w * s;
     }
-    D_00651200 = func_002388b8(&D_00651210, 1, D_00651200);
+    D_00651200 = (u8 *)func_002388b8(&D_00651210, 1, (s32)D_00651200);
 }
 extern u8 D_00454558[], D_00454570[], D_00454580[], D_00454598[], D_004545B0[], D_004545C8[], D_004545E0[], D_004545F8[];
 void func_0024afc0(void *, void *, s32);
@@ -233,4 +233,50 @@ s32 func_0023d700(s32 a0, s32 a1, s32 x, s32 y, s32 q, f32 s) {
         D_00651D70.c[i].w = D_00651D70.c[i].w * s;
     }
     return func_002388b8(&D_00651D70, 1, q);
+}
+
+/* needs make: uses rodata */
+
+extern s32 D_002E31B0;
+extern u32 D_002E31B8;
+extern s32 D_002E31BC;
+extern s32 D_00651BD0;
+void func_0023c1b0(s32 *, s32, s32);
+void func_0023c5c8(s32 *, s32, s32);
+void func_0023cee8(void);
+void func_0023cf08(void);
+
+void func_0023c7a0(void) {
+    s32 f = 0;
+    s32 m = 0;
+    s32 *p;
+    s32 c;
+    switch (D_002E31B8) {
+    case 0:
+        m = 0;
+        break;
+    case 3:
+        if (D_002E31B0 == 0) { m = 0; break; }
+        f = 1;
+        func_0023cee8();
+        switch (D_002E31BC) {
+        case 0: m = 1; break;
+        case 1: m = 2; break;
+        case 2: m = 3; break;
+        }
+        break;
+    case 1:
+    case 2:
+    case 4:
+        m = 4;
+        break;
+    }
+    p = &D_00651BD0;
+    c = *p != m;
+    if (m != 0) {
+        func_0023c5c8(&D_002E31B0, m, c);
+        func_0023c1b0(&D_002E31B0, 0, 0);
+    }
+    if (f == 0) func_0023cf08();
+    *p = m;
 }

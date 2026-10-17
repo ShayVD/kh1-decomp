@@ -618,3 +618,156 @@ void func_002329a0(Scr *arg0, s32 arg1, s32 arg2) {
     D_0064770C = func_001f31a8(&D_003F7EA0, 0);
     func_0011ef10(0x2C01A, func_00232960);
 }
+
+
+typedef struct { s32 type; s32 id; s32 a[6]; } Cmd;
+extern Cmd D_006477B0[64];
+extern s32 D_00647FB0;
+extern s32 D_00647FB8;
+extern s32 D_00647FBC;
+extern s32 D_00647FC4;
+
+s32 func_00233d08(s32 id) {
+    s32 i, x;
+    if (id != 0) {
+        i = D_00647FBC;
+        while (i != D_00647FB8) {
+            x = D_006477B0[i].id;
+            i++;
+            i &= 63;
+            if (x == id) {
+                goto found;
+            }
+        }
+        if (D_00647FB0 == 0 || D_00647FC4 != id) {
+            goto none;
+        }
+    found:
+        return 1;
+    }
+    if (D_00647FB8 != D_00647FBC || D_00647FB0 != 0) {
+        goto found;
+    }
+none:
+    return 0;
+}
+
+
+extern s32 D_00647FC0;
+
+s32 func_00234098(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 2;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[4] = arg4;
+    return id;
+}
+
+
+s32 func_00234148(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 3;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_006477B0[i].a[4] = arg4;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[5] = arg5;
+    return id;
+}
+
+
+s32 func_00234440(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 8;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_006477B0[i].a[4] = arg4;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[5] = arg5;
+    return id;
+}
+
+
+s32 func_002345a0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 10;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_006477B0[i].a[4] = arg4;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[5] = arg5;
+    return id;
+}
+
+
+s32 func_00234668(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 11;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_006477B0[i].a[4] = arg4;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[5] = arg5;
+    return id;
+}
+
+
+
+s32 func_00234730(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+    s32 i = D_00647FB8;
+    s32 id = D_00647FC0;
+    D_006477B0[i].type = 9;
+    D_00647FB8 = (i + 1) & 63;
+    D_006477B0[i].id = id;
+    D_006477B0[i].a[0] = arg0;
+    D_006477B0[i].a[1] = arg1;
+    D_006477B0[i].a[2] = arg2;
+    D_006477B0[i].a[3] = arg3;
+    D_00647FC0 = id + 1;
+    D_006477B0[i].a[4] = arg4;
+    return id;
+}
+
+
+typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
+void func_002672f8(V4 *, void *, V4 *);
+void func_002674d0(V4 *, V4 *, f32);
+s32 func_00267ef0(V4 *, V4 *, V4 *);
+
+void func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
+    V4 v[3];
+    func_002672f8(&v[0], m, a);
+    func_002672f8(&v[1], m, b);
+    func_002672f8(&v[2], m, c);
+    func_002674d0(&v[0], &v[0], v[0].w);
+    func_002674d0(&v[1], &v[1], v[1].w);
+    func_002674d0(&v[2], &v[2], v[2].w);
+    func_00267ef0(&v[0], &v[1], &v[2]);
+}
