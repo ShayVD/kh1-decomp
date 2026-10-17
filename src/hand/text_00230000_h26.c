@@ -128,13 +128,122 @@ void func_00243d18(s32 f, void *p, s32 a, s32 b, s32 c, f32 x, s32 d) {
     func_00243c10(p, a, b, c, x, d);
 }
 
-typedef struct { u8 pad[0x10]; s32 unk10; u8 pad14[0xA00 - 0x14]; } Cell;
+/* Three rows of five 0xA00-byte cells, with a used count per row. */
+typedef struct { s32 on; u8 pad4[0xA00 - 4]; } Cell;
 typedef struct { Cell c[5]; } Row;
-extern Row D_00656510[3];
+typedef struct {
+    s32 n[4];   /* +0x0 */
+    Row r[3];   /* +0x10 */
+} Grid;
+extern Grid D_00656510;
 
 void func_002444a0(void) {
     s32 i, j;
     for (i = 0; i < 3; i++)
         for (j = 0; j < 5; j++)
-            D_00656510[i].c[j].unk10 = 0;
+            D_00656510.r[i].c[j].on = 0;
+}
+
+s32 func_002448d8(void) {
+    s32 i, j;
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < D_00656510.n[i]; j++)
+            if ((&D_00656510.r[0])[i].c[j].on) return 1;
+    return 0;
+}
+
+typedef struct { s32 id; s32 arg; s32 on; f32 t; s32 unk10; s32 unk14; } Req;
+extern Req D_006627B0;
+void func_00245238(s32 id, s32 arg) {
+    Req *r = &D_006627B0;
+    r->unk10 = 1;
+    if (r->on == 0 || r->id != id) {
+        r->id = id;
+        r->arg = arg;
+        r->on = 1;
+        r->t = 1.0f;
+    }
+}
+void func_00245280(s32 id, s32 arg) {
+    Req *r = &D_006627B0;
+    r->unk10 = 1;
+    r->unk14 = 1;
+    if (r->on == 0 || r->id != id) {
+        r->id = id;
+        r->arg = arg;
+        r->on = 1;
+        r->t = 1.0f;
+    }
+}
+
+/* Ten 0x860-byte channels: a free one, else the oldest. */
+typedef struct { s32 used; s32 age; u8 pad8[0x860 - 8]; } Snd;
+extern Snd D_00662A30[10];
+
+Snd *func_002457c8(void) {
+    Snd *best = 0;
+    s32 max = -1;
+    s32 i;
+    Snd *p = D_00662A30;
+    for (i = 0; i < 10; i++, p++)
+        if (p->used == 0) return p;
+    for (i = 0; i < 10; i++) {
+        p = &D_00662A30[i];
+        if (max < p->age) {
+            max = p->age;
+            best = p;
+        }
+    }
+    return best;
+}
+
+void func_002458e0(void) {
+    s32 i;
+    for (i = 0; i < 10; i++) D_00662A30[i].used = 0;
+}
+
+typedef struct { u8 pad[0x4C]; u16 unk4C; } Info;
+typedef struct { u8 pad[0x130]; Info *unk130; } Act;
+typedef struct { s32 a, b, c, d; } Q4;
+extern Q4 D_00668040[2];
+s32 func_0013daa8(s32);
+
+Q4 *func_00245f58(Act *a) {
+    s32 i = func_0013daa8(a->unk130->unk4C) != 1;
+    return &D_00668040[i];
+}
+
+void func_002464f8(s32 *out) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        switch (D_00668040[i].a) {
+        case 0: out[i] = 0; break;
+        case 4: out[i] = 0; break;
+        case 5: out[i] = 0; break;
+        case 6: out[i] = 0; break;
+        default: out[i] = 1; break;
+        }
+    }
+}
+
+/* Splits x into five 300-wide steps, halved. */
+void func_00246658(s32 x, s32 *out) {
+    s32 t[5];
+    s32 i;
+    for (i = 0; i < 5; i++) out[i] = 0;
+    for (i = 0; i < 5; i++) {
+        if (x >= 0) {
+            t[i] = x + 1;
+            if (x + 1 > 300) t[i] = 300;
+            x -= 300;
+            out[i] = t[i] / 2;
+        }
+    }
+}
+
+typedef struct { u64 a; s32 unk8; u8 pad[0xC0 - 12]; } Blk;
+
+void func_00246708(Blk *d, Blk *s, s32 v) {
+    *d = *s;
+    d->unk8 = v;
 }
