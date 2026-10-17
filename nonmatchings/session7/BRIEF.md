@@ -85,3 +85,21 @@ permuter in session 6. Spend your effort on things session 6 did NOT do:
 2. Near misses saved (path, words off, what is off).
 3. Skipped with a short reason.
 4. New facts (regions, flags, struct layouts, layout splits), one line each.
+
+## Added during session 7 (from finished workers)
+- Rows without a session-6 draft may still have a session-5 draft (column 6) or none:
+  start from `kh1tool.py m2c` then. Rows of 0x25xxxx-0x272xxx are SDK: use the sdk/ modes.
+- sched1 moves instructions across blocks only in functions with <= 10 basic blocks:
+  writing a shared tail in both branches adds blocks and stops the motion (jump2 merges
+  the copies again, so the size does not change). Source-level alternative to
+  -fno-sched-interblock (func_001d0380).
+- `bnez; move v0,zero; li v0,1` epilogues: a `goto r1;` to a shared `r1: return 1;`
+  label stops if-conversion to sltiu (func_00135bb0).
+- Index loops `f(&p->items[d[5 - n + i]])` beat pointer walks `q = d - n + 5; do..while`
+  (func_00245b08). Moving `x++` into a later `else if (++x >= n)` changes sched1 order.
+- Writing an inline helper's body out in place, with function-level locals, changes the
+  argument registers (func_0018e348). Ternary min helper vs if-clamp changes FP regs.
+- Returning a callee's result instead of void keeps v0 live (func_0023fad0). A constant
+  local as s32 instead of u64 changes s-register allocation (func_0020b6a8).
+- Mode `hand/nostrict_norcse` (-fno-strict-aliasing -fno-rerun-cse-after-loop) exists now
+  (func_0012d468).

@@ -1,4 +1,4 @@
-/* func_0023ec88 5w off (nostrict, rodata-free; ctx e160+d528 above, run with wqb03_rr 00491560 for d528 jtbl): f20/f21 swap between the 3pi/2 limit and the saved angle copy; product should land in f13. */
+/* session 7 w2: func_0023ec88 (CONTEXT_ONLY func_0023e160 and func_0023d528 above). */
 #include "common.h"
 typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
 typedef struct { s32 a, b, c, d; u8 pad[0xC0 - 0x10]; } __attribute__((aligned(8))) Big;
@@ -132,11 +132,10 @@ s32 func_0023ec88(Obj *e, s32 buf) {
     }
     if (e->unkA18 == 0) return buf;
     k *= n;
-    v = k;
-    w = k;
-    if (v > 4.712388038635254f) v = 4.712388038635254f;
-    buf = func_0023e160(e->unk80, e->unk90 + 0x10, &q, buf, 0.0f, v, e->unkA1C);
-    if (w <= 4.712388038635254f) return buf;
+    v = 4.712388038635254f;
+    if (v < k) { w = k; k = v; } else w = k;
+    buf = func_0023e160(e->unk80, e->unk90 + 0x10, &q, buf, 0.0f, k, e->unkA1C);
+    if (w <= v) return buf;
     if (e->unk0 == 0 || e->unk0 == 4) step = 26;
     else step = 17;
     func_0023d528(e, p1, p2);

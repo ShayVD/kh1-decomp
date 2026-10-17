@@ -1,4 +1,4 @@
-/* func_0017f1c8 nostrict, 25 words off: top-of-function reg assignment (orig v0=d, t0=copy) and li in beqz slot. */
+/* session 7 w2: func_0017f1c8 (nostrict). Returning the symbol again ('return &D_00575870;' instead of 'return d;') gives the v0/t0 copy and the slot layout. */
 #include "common.h"
 typedef struct { f32 x, y, z; } V3;
 typedef struct { V3 a; V3 b; f32 c; u8 x1c, x1d, x1e; } S870;
@@ -32,5 +32,5 @@ S870 *func_0017f1c8(void) {
     } else {
         d->x1d = 0;
     }
-    return d;
+    return &D_00575870;
 }
