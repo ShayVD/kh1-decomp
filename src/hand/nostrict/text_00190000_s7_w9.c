@@ -1,4 +1,3 @@
-/* func_0019bbf0, nostrict: 26 words in checkfile = 8 rodata (jump tables) + 18 real: v0/v1 swaps in the key->type 6..9 (vertex-set) path around 0x19c1bc-0x19c340 (*ip loaded into v1 vs orig a0). Session-5 draft c06b__bbf0p unchanged; tried ip/vi expression variants. */
 #include "common.h"
 
 typedef struct { s16 x, y, z; } MgV6;
@@ -53,7 +52,7 @@ void func_002673b8(f32 *, f32 *);
 void func_00267e90(MgPart *, f32 *, f32);
 
 
-f32 func_0019baf8(void) {
+CONTEXT_ONLY f32 func_0019baf8(void) {
     f32 ret;
 
     __asm__ volatile(
@@ -78,24 +77,27 @@ f32 func_0019baf8(void) {
     return ret;
 }
 
-s8 func_0019bb40(u8 a) {
+CONTEXT_ONLY s8 func_0019bb40(u8 a) {
     f32 f = func_0019baf8();
 
     return (f32) (a * 2) * f - (f32) (a >> 1);
 }
 
 #define R func_0019baf8()
+/* rodata (jump tables at 0x0048FBF0) */
+#define TAIL(E) { v = tbl[E]; t = v.x; p->pos[0] = (f32)t * key->sc[0]; u = v.y; p->pos[1] = (f32)u * key->sc[1]; p->pos[2] = (f32)v.z * key->sc[2]; }
 void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
     f32 vec[4] __attribute__((aligned(16)));
     f32 ang[4] __attribute__((aligned(16)));
     f32 m[4][4] __attribute__((aligned(16)));
-    MgV6 v;
     MgKey *key = (MgKey *)keyi;
     f32 rng = key->b27;
     f32 rng2 = 2.0f * rng;
     s32 i;
     s32 t;
+    s32 u;
     f32 f, h, r1, r2, r3, r4, r;
+    MgV6 v;
 
     memset(p, 0, sizeof(MgPart));
     if (a)
@@ -199,8 +201,8 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
         default:
             if (obj->h62 >= (s16)s->n)
                 obj->h62 = 0;
-            { s32 k = obj->h62++; ip = s->idx; ip += k; }
-            goto got;
+            { s32 k = s->idx[obj->h62++]; TAIL(k); }
+            goto ty;
         case 1:
             R;
             r = R;
@@ -220,12 +222,8 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
         }
         if (obj->h62 >= (s16)s->n)
             obj->h62 = 0;
-        ip = (u16 *)((s32)(r * (f32)(s16)s->n) * 2 + (u32)s->idx);
-    got:
-        v = tbl[*ip];
-        p->pos[0] = (f32)v.x * key->sc[0];
-        p->pos[1] = (f32)v.y * key->sc[1];
-        p->pos[2] = (f32)v.z * key->sc[2];
+        { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; TAIL(k); }
+    ty:
         if ((u8)(key->type - 8) < 2)
             func_002673b8(p->dir, p->pos);
         break;
