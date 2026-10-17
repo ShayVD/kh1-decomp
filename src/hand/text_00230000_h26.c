@@ -1,21 +1,6 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 26). */
 #include "common.h"
 
-extern u8 D_00426970[];
-extern u8 D_0042B790[];
-extern u8 D_004305B0[];
-void func_00249a48(void *, s32);
-
-void func_0023d698(s32 a) {
-    if (a == 0) {
-        func_00249a48(D_00426970, 1);
-    } else if (a == 1) {
-        func_00249a48(D_0042B790, 1);
-    } else {
-        func_00249a48(D_004305B0, 1);
-    }
-}
-
 typedef struct { u8 pad[0xA24]; s32 unkA24; u8 padA28[8]; s32 unkA30; } Obj3;
 extern f32 D_002BBDFC;
 

@@ -186,6 +186,144 @@ void func_002410b8(Obj *o) {
     func_00237018(*bp, *pp - *bp, 1);
 }
 
+/* func_0023d698 and func_002414a8 (moved here) and func_002410b8 must be defined above func_002416a8 for it to match. */
+extern u8 D_00426970[];
+extern u8 D_0042B790[];
+extern u8 D_004305B0[];
+void func_00249a48(void *, s32);
+
+void func_0023d698(s32 a) {
+    if (a == 0) {
+        func_00249a48(D_00426970, 1);
+    } else if (a == 1) {
+        func_00249a48(D_0042B790, 1);
+    } else {
+        func_00249a48(D_004305B0, 1);
+    }
+}
+
+typedef struct { u8 pad[0xA1C]; f32 unkA1C; f32 unkA20; u8 padA24[0xD00 - 0xA24]; } Slot1C;
+extern Slot1C D_00651E70[];
+
+void func_002414a8(s32 i, s32 a) {
+    Slot1C *e = &D_00651E70[i];
+    switch (a) {
+    case 0:
+        e->unkA1C = 1.0f;
+        e->unkA20 = -0.0999999940395355224609375f;
+        break;
+    case 1:
+        e->unkA20 = 0.0999999940395355224609375f;
+        e->unkA1C = 0.0f;
+        break;
+    case 2:
+        e->unkA1C = 1.0f;
+        e->unkA20 = 0.0f;
+        break;
+    case 3:
+        e->unkA20 = 0.0f;
+        e->unkA1C = 0.0f;
+        break;
+    }
+}
+
+typedef struct { u8 pad[0x6C]; void *unk6C; } OwA;
+typedef struct {
+    s32 unk0;
+    OwA *unk4;
+    u8 pad8[0x80 - 8];
+    s32 unk80[4];
+    u8 pad90[0xA1C - 0x90];
+    f32 unkA1C;
+    u8 padA20[0xA2C - 0xA20];
+    s32 unkA2C;
+    u8 padA30[0xA88 - 0xA30];
+    f32 *unkA88;
+    f32 *unkA8C;
+    u8 padA90[0xD00 - 0xA90];
+} EntA;
+typedef struct {
+    s32 used[8];
+    EntA ent[5];
+    s32 unk4120;
+    s32 unk4124;
+} G51E50;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } QA;
+extern G51E50 D_00651E50;
+extern QA D_00651C00;
+typedef struct { u32 b0:3; u32 b3:1; u32 rest:28; } F2C5958;
+extern F2C5958 D_002C5958;
+void func_00241560(void);
+void func_00241a38(s32);
+void func_0023d1a0(void);
+void func_00240fa0(EntA *);
+void func_002415f0(EntA *);
+void func_00249950(f32 *, f32, f32);
+void func_00242c08(OwA *, s32, s32 *, f32);
+void func_00241260(EntA *);
+void func_00249820(s32 *, s32 *);
+
+s32 func_002416a8(void) {
+    s32 t[4];
+    s32 i;
+    f32 a, b;
+    EntA *e;
+    func_00241560();
+    if (D_00651E50.unk4124 == 0 && D_002C5958.b3 == 1) {
+        func_002414a8(0, 3);
+        func_002414a8(1, 3);
+        func_002414a8(2, 3);
+    } else if (D_00651E50.unk4124 == 1 && !D_002C5958.b3) {
+        func_002414a8(0, 2);
+        func_002414a8(1, 2);
+        func_002414a8(2, 2);
+        func_00241a38(0);
+        func_00241a38(1);
+        func_00241a38(2);
+    }
+    D_00651E50.unk4124 = D_002C5958.b3;
+    if (D_00651E50.unk4124) {
+        func_0023d1a0();
+        return 0;
+    }
+    func_002370c8(&D_00651C00);
+    D_00651C00.unkE0 = 5;
+    D_00651C00.unk60 = 0x30003;
+    func_00237018(&D_00651C00, 22, 1);
+    for (i = 0; i < 5; i++) {
+        if (D_00651E50.used[i] == 0) continue;
+        e = &D_00651E50.ent[i];
+        if (e->unk0 == 4) {
+            func_0023d698(0);
+            func_00240fa0(e);
+            func_002415f0(e);
+        } else if (e->unk0 == 3) {
+            a = *e->unkA88;
+            func_00249950(e->unkA88, 0.0f, 65000.0f);
+            if (e->unkA8C) {
+                b = *e->unkA8C;
+                func_00249950(e->unkA8C, 0.0f, 65000.0f);
+            }
+            func_0023d698(1);
+            func_002410b8((Obj *)e);
+            func_00242c08(e->unk4, 0, e->unk80, e->unkA1C);
+            *e->unkA88 = a;
+            if (e->unkA8C) *e->unkA8C = b;
+        } else {
+            func_0023d698(0);
+            func_00241260(e);
+            if (e->unk0 == 0) {
+                func_00242c08(e->unk4, e->unkA2C, e->unk80, e->unkA1C);
+            } else {
+                func_00249820(t, e->unk80);
+                t[1]--;
+                func_00242c08(e->unk4, 0, t, e->unkA1C);
+            }
+        }
+    }
+    return 0;
+}
+
 typedef struct { s32 x, y, z, w; } V4;
 typedef struct { s32 w, h; u8 pad[8]; u8 clut[0x400]; u8 img[1]; } Img;
 typedef struct { u8 pad[0x140]; Img *unk140; } ObG;
