@@ -722,3 +722,127 @@ void func_00237318(void) {
     D_006480D0[43] = 0x3BULL;
     func_00237018(D_006480D0, 22, 1);
 }
+
+/* needs make: uses rodata */
+typedef int u128 __attribute__((mode(TI)));
+extern u128 D_003F8380[];
+extern u128 D_003F8F80[];
+extern u128 D_003F9F80[];
+extern u128 D_003FA380[];
+extern u128 D_003FA780[];
+extern u128 D_0040E780[];
+extern u128 D_0040EB80[];
+
+static inline void clr(u128 *p, s32 n) { for (; n > 0; n--) *p++ = 0; }
+
+s32 func_00232ad0(s32 a) {
+
+    switch (a) {
+    case -1:
+        clr(D_003F8380, 5824);
+        return 0;
+    case 0:
+        clr(D_003F8380, 192);
+        return 0;
+    case 1:
+        clr(D_003F8F80, 256);
+        return 0;
+    case 2:
+        clr(D_003F9F80, 64);
+        return 0;
+    case 3:
+        clr(D_003FA380, 64);
+        return 0;
+    case 4:
+        clr(D_003FA780, 5120);
+        return 0;
+    case 5:
+        clr(D_0040E780, 64);
+        return 0;
+    case 6:
+        clr(D_0040EB80, 64);
+        return 0;
+    }
+    return -1;
+}
+extern s32 D_00647FB4, D_00647FB0, D_00647FC4, D_00647FC8, D_00647FD4, D_00647FD8, D_00647FF0;
+extern s32 D_00425C10, D_00425C14, D_00425CA8, D_00425CAC;
+extern void (*D_00648034)(s32);
+s32 func_002718d0(s32, s32, s32, s32, s32, s32);
+s32 func_002715a0(s32, s32, s32 *);
+
+s32 func_00235228(void) {
+    s32 *pc = &D_00647FB4;
+    s32 v, r;
+    switch (*pc) {
+    case 0:
+        r = func_002718d0(D_00425C10, D_00425C14, (s32)"*", 0, D_00425CAC, D_00425CA8);
+        (*pc)++;
+        return r;
+    case 1:
+        if (func_002715a0(1, 0, &D_00647FC8) != 0) (*pc)++;
+        break;
+    case 2:
+        v = D_00647FC8;
+        if (v >= 0) {
+            D_00425CAC = v;
+            D_00647FF0 = 0;
+        } else if (v == -2) {
+            D_00425CAC = -1;
+            D_00647FF0 = 1;
+        } else if (v == -4) {
+            D_00425CAC = -1;
+            D_00647FF0 = 2;
+        } else {
+            D_00425CAC = -1;
+            D_00647FF0 = 3;
+        }
+        D_00647FB0 = 0;
+        D_00647FD8 = D_00647FD4;
+        if (D_00648034 != 0) D_00648034(D_00647FC4);
+        break;
+    }
+}
+extern s32 D_00648020;
+
+extern s32 D_0064800C;
+s32 func_00271cc8(s32, s32, s32);
+
+s32 func_00235d70(void) {
+    s32 *pc = &D_00647FB4;
+    s32 r;
+    switch (*pc) {
+    case 0:
+        r = func_00271cc8(D_00425C10, D_00425C14, D_00648020);
+        (*pc)++;
+        return r;
+    case 1:
+        if (func_002715a0(1, 0, &D_00647FC8) != 0) (*pc)++;
+        break;
+    case 2:
+        switch (D_00647FC8) {
+        case 0:
+            D_0064800C = 0;
+            break;
+        case -2:
+            D_0064800C = 1;
+            break;
+        case -4:
+            D_0064800C = 2;
+            break;
+        case -5:
+            D_0064800C = 3;
+            break;
+        case -6:
+            D_0064800C = 4;
+            break;
+        default:
+            D_0064800C = 5;
+            break;
+        }
+        D_00647FB0 = 0;
+        D_00647FD8 = D_00647FD4;
+        if (D_00648034 != 0) D_00648034(D_00647FC4);
+        break;
+    }
+}
