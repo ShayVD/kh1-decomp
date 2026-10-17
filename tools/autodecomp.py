@@ -207,7 +207,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         return False, "compile error: " + (r.stderr.strip().splitlines() or [""])[-1]
     text = K.split_rodata(asm.read_text())
     asm.write_text(K.no_fill(text) if fl.no_fill else text)
-    r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
+    r = subprocess.run([str(K.TOOLCHAIN_DIR / (fl.as_compiler or fl.compiler) / "bin" / "ee-gcc"), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
                        capture_output=True, text=True)
     if r.returncode:
         return False, "assemble error"

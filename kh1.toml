@@ -80,6 +80,14 @@ path = "src/sdk/libkernl/"
 compiler = "ee-gcc2.9-991111a"
 cflags = "-O2 -G0"
 
+# 991111a cc1 assembled by the ee-gcc 2.96 driver's gas, which fills jr delay
+# slots that 991111a gas leaves empty (session 6, libkernl-style SCE code).
+[[toolchain.override]]
+path = "src/sdk/gcc991111_as296/"
+compiler = "ee-gcc2.9-991111a"
+as_compiler = "ee-gcc2.96"
+cflags = "-O2 -G0"
+
 [[toolchain.override]]
 path = "src/sdk/gcc991111nf/"
 compiler = "ee-gcc2.9-991111a"

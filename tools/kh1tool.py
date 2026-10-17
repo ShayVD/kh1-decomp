@@ -91,6 +91,7 @@ class Flags:
     asflags: str
     no_fill: bool = False  # gas never fills delay slots in .set reorder code (split-rodata --no-fill)
     ccflags: str = ""      # extra flags for the C -> assembly step only (not the assembler)
+    as_compiler: str = ""  # toolchain whose driver assembles compiled C (default: compiler)
 
 
 def flags_for(cfg: dict, rel: str) -> Flags:
@@ -104,7 +105,7 @@ def flags_for(cfg: dict, rel: str) -> Flags:
         return base
     return Flags(best.get("compiler", base.compiler), best.get("cflags", base.cflags),
                  best.get("cxxflags", best.get("cflags", base.cxxflags)), best.get("asflags", base.asflags),
-                 bool(best.get("no_fill", False)), best.get("ccflags", ""))
+                 bool(best.get("no_fill", False)), best.get("ccflags", ""), best.get("as_compiler", ""))
 
 
 # --------------------------------------------------------------------------- tables
@@ -401,6 +402,7 @@ def cmd_gen(args, cfg) -> int:
         kind = SOURCE_SUFFIXES[src.suffix]
         fl = flags_for(cfg, rel)
         tc = f"$(TOOLCHAIN)/{fl.compiler}/bin"
+        atc = f"$(TOOLCHAIN)/{fl.as_compiler or fl.compiler}/bin"
         if kind == "asm":
             cmd = f"$(AS) {fl.asflags} -o $@ {rel}"
         else:
@@ -409,7 +411,7 @@ def cmd_gen(args, cfg) -> int:
             # section (split-rodata), then assemble with the same driver.
             cmd = (f"{tc}/ee-gcc -S -x {lang} {flags} {fl.ccflags} -ffunction-sections $(INCLUDES) "
                    f"-o $(@:.o=.s) {rel} && $(KH1) split-rodata {'--no-fill ' if fl.no_fill else ''}$(@:.o=.s) && "
-                   f"{tc}/ee-gcc -c -x assembler {flags} -o $@ $(@:.o=.s) && $(KH1) fix-obj $@")
+                   f"{atc}/ee-gcc -c -x assembler {flags} -o $@ $(@:.o=.s) && $(KH1) fix-obj $@")
         rules.append(f"{obj}: {rel} $(HEADERS) kh1.toml\n\t@mkdir -p $(dir $@)\n"
                      f"\t@echo CC {rel}\n\t@{cmd}\n")
         objs.append(obj)

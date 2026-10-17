@@ -31,7 +31,7 @@ r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.sp
 if r.returncode: print(r.stderr); sys.exit(1)
 text = K.split_rodata(asm.read_text())
 asm.write_text(K.no_fill(text) if fl.no_fill else text)
-r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)], capture_output=True, text=True)
+r = subprocess.run([str(K.TOOLCHAIN_DIR / (fl.as_compiler or fl.compiler) / "bin" / "ee-gcc"), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 K.fix_object(obj)
 elf = Elf.load(obj)
