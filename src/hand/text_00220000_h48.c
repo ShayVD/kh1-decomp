@@ -1,5 +1,6 @@
 #include "common.h"
 
+typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 a, b, c, d; } Q4;
 typedef struct { u8 pad0[0xA0]; f32 xa0; u8 pad[0x10]; s32 xb4; u8 pad2[2]; u16 xba; u8 pad3[4]; u16 xc0; u8 pad4[0xA]; u16 xcc; u8 pad5[2]; s16 xd0; s16 xd2; } Obj;
 
@@ -770,4 +771,29 @@ void func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
     func_002674d0(&v[1], &v[1], v[1].w);
     func_002674d0(&v[2], &v[2], v[2].w);
     func_00267ef0(&v[0], &v[1], &v[2]);
+}
+
+
+typedef struct { s32 x, y, z, w; } I4;
+
+f32 func_00237a48(I4 *out, void *m, V4 *in, s32 raw) {
+    V4 v;
+    f32 r;
+    func_002672f8(&v, m, in);
+    r = 1.0f / v.w;
+    v.x *= r;
+    v.y *= r;
+    v.z *= r;
+    if (raw == 0) {
+        out->x = v.x * 16.0f;
+        out->y = v.y * 16.0f;
+        out->z = v.z * 16.0f;
+        out->w = v.w * 16.0f;
+    } else {
+        out->z = v.z;
+        out->x = v.x * 16.0f;
+        out->y = v.y * 16.0f;
+        out->w = v.w;
+    }
+    return r;
 }
