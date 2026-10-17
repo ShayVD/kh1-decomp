@@ -39,3 +39,6 @@ __pycache__/
 *.o
 *.tmp
 *.log
+
+# scratch copies from try harnesses (the build skips dot-files)
+src/**/.*.c
