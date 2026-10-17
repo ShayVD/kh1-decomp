@@ -694,3 +694,64 @@ void func_001ca800(void) {
 }
 #undef D_003C5510
 #undef B
+
+typedef struct {
+    s32 x0;
+    s32 x4;
+    u8 pad8[0x68];
+    s32 code;
+    u8 pad74[8];
+    s32 lbl[64];
+    s32 pc;
+    s32 sp;
+    s32 stk[92];
+    u8 pad2f4[0x34];
+    u64 flags;
+} VM_c91e8;
+typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4_c91e8;
+typedef struct {
+    union {
+        u64 flags;
+        struct { s32 lo; f32 dur0; f32 dur1; } s;
+    } u;
+    u8 pad10[8];
+    f32 t0;
+    f32 t1;
+    u8 pad20[0xc];
+    s32 x2c;
+    u8 pad30[0x10];
+    V4_c91e8 p40;
+    V4_c91e8 p50;
+    V4_c91e8 p60;
+    V4_c91e8 p70;
+    V4_c91e8 p80;
+    u8 pad90[0x10];
+    f32 r[3];
+    s32 xac;
+    f32 fb0;
+    s32 xb4;
+    u8 padb8[8];
+    V4_c91e8 v0;
+    V4_c91e8 a, b, c, d, e;
+    f32 f50;
+    f32 f54;
+} Cam_c91e8;
+#define D_003C5510 (*(Cam_c91e8 *)&D_003C5510)
+s32 func_001c91e8(VM_c91e8 *vm) {
+    if (vm->stk[vm->sp] > 0) {
+        func_001c6890();
+        D_003C5510.xb4 = 0;
+        D_003C5510.u.flags |= 0x100;
+        D_003C5510.r[0] = vm->stk[vm->sp - 4];
+        D_003C5510.r[1] = vm->stk[vm->sp - 3];
+        D_003C5510.r[2] = vm->stk[vm->sp - 2];
+        D_003C5510.xac = vm->stk[vm->sp - 1];
+        D_003C5510.fb0 = vm->stk[vm->sp] * 2.0f;
+        func_002675a8(&D_003C5510.v0, &D_003C5510.a);
+    } else {
+        D_003C5510.u.flags &= ~0x100;
+    }
+    vm->sp -= 5;
+    return 2;
+}
+#undef D_003C5510
