@@ -418,4 +418,4 @@ found that the next session needs:
   /tmp paths before use. wqb03_rr.py is not safe to run in parallel.
 - `autodecomp.py --diff` uses objdump without `-z`, which hides nop runs;
   for big functions count differences with an LCS, not difflib.
-- Results: 6,415 -> see docs/progress.md.
+- Results: 6,415 -> 6,729 / 6,988 functions (96.3%), 70.4% -> 80.2% of code bytes; game 6,032 / 6,266, SDK 697 / 722.

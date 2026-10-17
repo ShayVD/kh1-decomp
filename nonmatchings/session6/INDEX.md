@@ -7,7 +7,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_00__00102118_211w.c: func_00102118: 211 words off (score 46; most of it is a 4-insn shift), mode hand. Was 344. Fixes found: Task2 and the func_0015ed80 object are ONE struct type (union at 0x10/0x14: f10/p10, f14/p14), w
 - w6_00__00102a48_108w.c: ~108 words off (mode hand): loop lacks the 3 short-loop nops of the original; packet-fill constants/scheduling differ (orig folds 1<<32 with constant coords: 1<<32|0x8fe0, 1<<32|0x6fe0, 0xc5f0<<17). P
 - w6_00__00103c48_35w.c: func_00103c48: 35 words off, mode hand. Still off: loop2 (sin-table z loop) register allocation and div/div1 order (orig: div s0 first; mflo t6=dx, mflo1 t5=dy), packet outer counter in t0 vs t2. Stru
-- w6_00__00104908_2w.c: 2 words off (hand): store order 6308[2]/[1]/6318[2] permuted; orig: 6318[0],6308[0],6324,6308[2],6308[1],6318[2],6318[1]
 - w6_00__00104ae0_70w.c: 70 words off (hand/nostrict; strict similar): regalloc/sched: orig keeps n in v0 (li v0,3/4), loads indices v[0..3] in order after base. Size equal.
 - w6_00__00105288_109w.c: ~109 words off (hand, strict): orig hoists all %hi luis into many regs incl. s0/s1/s6 (7 saved regs), keeps h in a0, mode in s2; loops count down with bound loaded once.
 - w6_00__00105d88_80w.c: ~80 words off (hand): orig uses 3 s-regs for hoisted luis; loop copies (move v1,a0; move a0,t0) suggest inlined helpers; first loop counts down on u32 n.
@@ -29,7 +28,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_02__00110618_256w.c: func_00110618 draft, ~256 words off (1064 vs 1072 bytes), mode hand. FP register allocation differs: original keeps d=f20 n=f21 fa*n=f22 fb=f24 a=f25 in callee-saved regs and spills px,py,pz,l,r,-r*n,
 - w6_02__00110ce0_9w.c: 9w off (hand, strict): sd D_002BC9B0 and its b[] loads scheduled earlier than orig (orig: lw b1,b0,b2; sd after li a1). 32-byte frame needs an unused local.
 - w6_02__00110e68_15w.c: 15w off (hand, strict): s0/s1/s2 permutation only (orig s0=p, s1=&amp[i], s2=i).
-- w6_02__00111510_2w.c: 2w off (hand, strict): bnel a3,v0 + i++ at latch vs orig plain bne with i++ in slot. Context stubs of 00111480/00111380/001113f8 do not change it.
 - w6_02__001124f8_18w.c: 18w off (hand, strict): only the block after func_001124c0 differs: regs a0/a1/a2 rotated (orig index->a1, &D_002BCB30 hi->a0, &D_002A3F50->a2).
 - w6_02__001137f8_27w.c: 27w off (hand, strict): only the prologue load/constant scheduling and color-or register choice differ; stores and calls match.
 - w6_02__00113e28_8w.c: 8w off (hand, any mode): needs func_00113df8 above (CONTEXT_ONLY, included). Only the printf tail differs: ++D value lands in a2 then move a1 (orig computes it directly in a1).
@@ -39,7 +37,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_03__0011a410_144w.c: func_0011a410: ~144 words off (hand, strict). Structure and VU0 helpers right; orig keeps i*64 in s4 and base in s3 and computes slot addresses differently (dead dup addu a1). Second loop nop/alignmen
 - w6_03__0011ab88_3w.c: func_0011ab88: 3 words off (hand, strict): last triangle test compiles to beq->end/move zero/b/li 1 instead of orig bnel->end(li 1)/b end(move zero). The 5-word variant (tri: '!= goto one; return 0;')
 - w6_03__0011b220_9w.c: 9 words off: in the 2nd loop s2/s3 swapped (n=&n[0] should be s2, f=&rec[id].f s3); 1st loop and size match. Mode hand (strict; nofill same).
-- w6_04__0011ecd8_5w.c: func_0011ecd8: 5 words off (strict hand, rodata 0x48d1c0). Orig keeps only lui of "ds2o.irx" in s0 and redoes addiu a0,s0,lo for both calls; ours hoists full address into s0 and the volatile store lan
 - w6_04__00120cf8_7w.c: func_00120cf8: 7 words off (nostrict or strict, same). Only t0/t1 swap: hoisted divisor constant 3 vs &m[i][i] in the cross-product loop.
 - w6_04__00123488_64w.c: func_00123488: ~64 words off (nostrict). Same code, different block layout: orig places default-loop "return e" stub after case 0, case-0 switch reloads li 1, dispatch var in a0.
 - w6_04__00125240_8w.c: 8 words off; hand/nostrict; func_00124c68 takes one f32 (53.0f); reg/block order differences remain (blkperm best)
@@ -51,19 +48,13 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_05__00133000_26w.c: func_00133000: 26 words off (nostrict). Original builds &D_00525368[i] with the la/at macro form and keeps t->f0 in v0; ours uses lui/addiu/addu into a3.
 - w6_05__00135a68_34w.c: 34w off (12 bytes short): nostrict. Loop 1 matches; original loop 2 (h<0) uses i in t0 and four address regs (addu a2,a1,a3 / addu v0,a3,a1 / move v1,a2 / move a1,v1), 1.0f store last. Tried pointer c
 - w6_05__00135bb0_12w.c: 12w off (8 bytes short): nostrict. Original ends with bnez v0/move v0,zero/li v0,1 (gcc gives sltiu for every return form tried), and around func_0012ec88 has move a1,s1 before beqz (a0 in beqz slot, 
-- w6_05__001369e8_4w.c: 4w off: nostrict. Regs right; original schedules ld v1,880(s0)/lw a0 before li v0,0x8000/dsll. Bitfield form (b35=1) keeps order but swaps v0/v1 (5w).
-- w6_05__00137330_4w.c: 4w off: nostrict. Regs right but stores emitted n0,n1,p0,p1; original order p0,p1,n1,n0 (n0 in jal delay slot). Store-order permutations swap v0/v1 instead.
 - w6_06__001395d8_18w.c: 18w off (nostrict): FP register choice only (f4/f5 and f0/f2/f3 assignments in the >60 branches). Logic/layout right.
 - w6_06__0013a440_11w.c: 11w off (nostrict): only s4/s5 swap between param lv and buf (global-alloc prio 0.2439 vs 0.2474).
 - w6_06__00140838_6w.c: 6w off (nostrict, any mode): flag block lw/li/ld/or/sd regs v1/a1/a0 vs ours a1/a0/v1 at 0x140920; tried temps, bitfields, inline, goto shapes, callee-above stubs
 - w6_06__00140960_2w.c: rodata (jtbl at 0x48e1f0; test with tools/matching/wqb03_rr.py 0048e1f0). 2w off (nostrict): k=3/4 cross product sub.s result in f1 (ours) vs f0 (orig) at 0x140b00.
 - w6_06__00141608_49w.c: ~49w off (nostrict): gcc folds D->m[id] with id==0 known (original keeps move a0,v1 + full id*0x74 calc), plus return-0 block layout and clamp/blezl shape differ. Unfinished.
-- w6_06__001429f8_3w.c: 3w off (nostrict or strict): first block loads a->z into f1 (reused) instead of f3; all orders of the x/z/y stores and temps tried
-- w6_06__00144810_2w.c: 2w off (any mode): o->p148 pointer for the fb0 test loaded into v1, original v0 (0x144844/48). Tried temps, literal 0.0f, comparison forms, callee-above stubs.
 - w6_06__00144d08_12w.c: 12w off (nostrict): uses register f32 z asm("$f12") (not acceptable as final) to keep 0.0 in f12 across the if/else (plain local gets const-propagated: 52w). Remaining: constants a(f1)/s(f20) material
-- w6_06__001453a8_4w.c: 4w off (nostrict): in the case 1/2 blocks li a1,0x8003 and move a2,sp scheduled in swapped order. Tried proto float positions, ret types, case orders, lim placement.
 - w6_06__00149c80_22w.c: 22w off (nostrict): param i and id = func_00147840(..)->x6 swap s1/s2 (global-alloc prio: id 0.414 vs i 0.403); sprintf arg scheduling follows. Logic/structure otherwise right.
-- w6_07__0014b9e0_2w.c: func_0014b9e0: 2 words off (nostrict, filled): sched2 puts mov.s $f12 before 'move a1,s4' at the func_00267e90 call (0x14ba98/0x14baa0 swapped).
 - w6_07__0014cdc8_9w.c: func_0014cdc8: 9 words off (hand, strict): else-branch FP register choice (orig 0.5->f5, x14->f2, 20->f4, result f2).
 - w6_07__001502e8_2w.c: func_001502e8: 2 words off (nostrict, filled): case 0 tail, a->x130 pointer gets v0 instead of a0 (lw 304(s1) / lh 72).
 - w6_07__001519c0_ndiff19.c: func_001519c0: rodata jtbl_0048E4C0 (check with rr.py 0048e4c0). ndiff 19 (hand): orig keeps the D_00351530 entry in a0 and recomputes (v & 0xffff) >> 4 with an andi in each case; ours drops the andi.
@@ -83,8 +74,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_09__001763f0_7w.c: 7w off (nostrict/strict same): prologue copies: orig s2=a0 (base), s0=s2 (walker), entry test lw 12(s2); ours s0=a0, s2=s0, lw 12(a0)
 - w6_09__00176c60_18w.c: 18w off (nostrict): register allocation only (orig v1=e,a1=&D,v0=e copy; ours v0/a3)
 - w6_09__00177488_83w.c: ~83w (structure): nostrict. Orig loop entered via b to the top-calls block placed at the bottom (L59C), constants 1000/40 not hoisted; every C form tried (while-comma, goto into for/do) compiles to th
-- w6_09__00177ac0_2w.c: 00177ac0: 2w off, nostrict (no ctx). Only: orig 'bnez v0(b)' at 0x177d40 jumps to the 'beqz v0' test after the func_001770b8 call (0x177d58) and the a==0,b==0 path jumps straight to end; ours jumps in
-- w6_09__00179d30_3w.c: 3w off (nostrict): sched order of li.s 40.0 (f3) vs move a1,sp before first bc1f
 - w6_09__0017b4f8_70w.c: 0017b4f8: 70w off (356 vs 364 bytes), nostrict. Ours hoists seg base +12; nl via andi not sltu; decrement via v0=i-1 bgezl in orig.
 - w6_10__0017b668_regs.c: func_0017b668 (mode hand or nostrict, no callees): structure exact, only reg alloc: sched1 hoists the p load above the copy of param end out of a1, so p gets a3 instead of a1 (orig: p=a1,k=a3,flags=t0
 - w6_10__0017f1c8_25w.c: func_0017f1c8 nostrict, 25 words off: top-of-function reg assignment (orig v0=d, t0=copy) and li in beqz slot.
@@ -106,7 +95,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_12__001aab98_8w.c: rodata (string at 0x48FE30); 8 words off in mode hand/nostrict (test: tools/matching/wqb03_rr.py 0048fe30): only the last (n6) block allocates count/t/v to a3/a0/a2 instead of a2/a3/a0.
 - w6_12__001b9f78_10w.c: 10 words off (mode hand): register choice only; orig gives copy counter/i a0 and c a2, and reuses s1 (p) as &p->n (addiu s1,s1,4).
 - w6_12__001ba520_20w.c: 20 words off (hand/nostrict): scheduling/regalloc of the pad-bit block (old/nw/~ temps get a0/a1/a3 in orig, D_00621308 base a2). Copy uses (&D_00621220.l[0])[1] = D_002BCA70 (same-symbol dest needed 
-- w6_12__001bb6d0_1w.c: 1 word off: original uses dsrl for the second >>2 (u8 kept in a u64 somewhere?); ours srl. mode hand (strict)
 - w6_13__001bc530_183w.c: func_001bc530: strict. ~183 insns off by sequence diff. The lq/sq are caller-save spills of t7/t9 across the jal; ours spills t4/t5. Min/max register allocation differs (orig x0=s6 y0=s5 z0=s4 x1=s2 y
 - w6_13__001bc900_51w.c: func_001bc900: strict, rodata jtbl 0x4900C0 (test with tools/matching/wqb03_rr.py 004900C0). 51 words off (ndiff 30): frame 208 vs 192 because loop 2 makes a giv s6=a+2 for p[i].rot (orig: addu v1,s4,
 - w6_13__001bd090_61w.c: func_001bd090: strict. ~61 insns off by sequence diff (972 vs 988 bytes, so the word count is inflated). Constant regs: the original keeps 1 in s4 and 2 in s3 with the piece ptr in s2, and l.flag=1 us
@@ -121,7 +109,6 @@ Not built. File names are `<worker dir>__<addr>_<N>w.c`; N is words off (by posi
 - w6_14__001cb738_20w.c: func_001cb738: ~20 words off (src/hand; same in nostrict). Sibling of cb3c0; scheduling/register order of the D_00389C80/D_00389C90/D_003C5640 address setup and final stores.
 - w6_14__001cd2d8_16w.c: func_001cd2d8: 16 words off, mode hand/nofill (session-5 draft unchanged). Off: v0/v1 swap for sp vs type=2 and x4/ang store order; all orders of the Msg stores tried.
 - w6_14__001cd600_20w.c: func_001cd600: 20 words off, mode hand/nogcse (strict). Off: which stack value gets the direct vs copied address reg/FP reg (orig x->f0,z->f1,y->f2) and flags ld/or/sd scheduled too early. Same 3-valu
-- w6_14__001cdc58_2w.c: func_001cdc58: 2 words off (strict src/hand, vm16.inc types). sw x (4) and sw zero (24) swapped around the jal delay slot; all statement orders give the same.
 - w6_14__001cf348_19w.c: func_001cf348: 19 words (score 6) off, mode hand/nostrict_nogcse. The loop-top copy 't = base' (re-set at loop end) is what stops the giv/invariant hoist. Off: 'move s0,zero' is scheduled early instea
 - w6_14__001cf3e0_19w.c: func_001cf3e0: 19 words (score 6), nostrict_nogcse; same as 001cf348.
 - w6_14__001cf960_12w.c: func_001cf960: 12 words off (src/hand). Off: flags ld/or/sd uses v1/v0 swapped and sd scheduled before the Msg stores; flags position in source has no effect.

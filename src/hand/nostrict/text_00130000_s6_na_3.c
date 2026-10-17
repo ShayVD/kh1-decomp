@@ -1,5 +1,5 @@
-/* 4w off (nostrict): in the case 1/2 blocks li a1,0x8003 and move a2,sp scheduled in swapped order. Tried proto float positions, ret types, case orders, lim placement. */
 #include "common.h"
+
 typedef struct { f32 x, y, z, w; } V4f;
 typedef struct { u8 pad[0x4c]; u16 x4c; } T5i;
 typedef struct {
@@ -24,14 +24,14 @@ s32 func_001453a8(T5o *o, V4f *p, s32 mode) {
     if (!(o->flags & 0x8000) || (o->x88 & 0x20)) return 0;
     switch (mode) {
     case 1:
-        lim = 14400.0f;
         func_001315c0(o, 0x8003, &t, 0.0f);
         func_00267530(&t, &t, p);
+        lim = 14400.0f;
         break;
     case 2:
-        lim = 40000.0f;
         func_001315c0(o, 0x8003, &t, 0.0f);
         func_00267530(&t, &t, p);
+        lim = 40000.0f;
         break;
     case 0:
     default:

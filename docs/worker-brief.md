@@ -517,3 +517,10 @@ Raw notes, one line per finding, grouped by worker list. The session-6 worker br
 - Stack slots that look like locals may be caller-save spills; local array + pointer reproduced them.
 - 0x1f5fe0: LERP macro; inline per-case temps fixed FP regalloc; popt.py greedy permutation 663->338.
 - wqb03_rr.py is not parallel-safe with RO set.
+### NA
+- void->s32 callee return types fixed 1cdc58 (func_001c4640), 1369e8 (func_00114a38), 137330 (func_0012bce0); the permuter finds these by mutating prototypes, so read its prototypes.
+- `for (i = 0; i < 2; i++) f("lit");` is fully unrolled: sign is %hi of the string kept in an s-reg with `addiu a0,s0,%lo` repeated (0x11ecd8, nofill).
+- One chained assignment of six -1 stores in a brute-forced order (104908). Brute-forcing orders with many copies of a function in one compile is cheap (~5000 variants in 3 s).
+- Moving a constant assignment after calls (1453a8), a float argument in a temp (179d30), a zero variable for a loop test (14b9e0) all change scheduling.
+- `if (...) goto r0;` instead of `return 0` (144810); `if ((b || a) && f())` (177ac0); u16 var gives dsrl (1bb6d0).
+- 0x1429f8, 0x144810, 0x179d30, 0x1369e8 match in strict as well as nostrict.

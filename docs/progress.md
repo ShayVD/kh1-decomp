@@ -10,24 +10,24 @@ _Last updated 2026-10-17._
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| total | 6415 / 6986 | 91.83% | 70.38% | 0 |
+| total | 6729 / 6988 | 96.29% | 80.17% | 0 |
 
 ## By address segment (`[[segment]]` in kh1.toml)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| segment:game | 5749 / 6264 | 91.78% | 69.85% | 0 |
-| segment:sdk | 666 / 722 | 92.24% | 75.35% | 0 |
+| segment:game | 6032 / 6266 | 96.27% | 79.03% | 0 |
+| segment:sdk | 697 / 722 | 96.54% | 90.91% | 0 |
 
 ## By source directory (decompiled functions only)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
 | dir:src/anon | 8 / 8 | 100.00% | 100.00% | 0 |
-| dir:src/asm | 22 / 22 | 100.00% | 100.00% | 0 |
+| dir:src/asm | 23 / 23 | 100.00% | 100.00% | 0 |
 | dir:src/auto | 2824 / 2824 | 100.00% | 100.00% | 0 |
-| dir:src/hand | 2895 / 2895 | 100.00% | 100.00% | 0 |
-| dir:src/sdk | 666 / 666 | 100.00% | 100.00% | 0 |
+| dir:src/hand | 3177 / 3177 | 100.00% | 100.00% | 0 |
+| dir:src/sdk | 697 / 697 | 100.00% | 100.00% | 0 |
 
 ## History
 
