@@ -27,11 +27,11 @@ orig = K.require_orig(cfg)
 reg = K.load_registry()
 td = Path(tempfile.mkdtemp())
 asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
-r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
+r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 text = K.split_rodata(asm.read_text())
 asm.write_text(K.no_fill(text) if fl.no_fill else text)
-r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)], capture_output=True, text=True)
+r = subprocess.run([str(K.TOOLCHAIN_DIR / (fl.as_compiler or fl.compiler) / "bin" / "ee-gcc"), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 K.fix_object(obj)
 elf = Elf.load(obj)
@@ -46,7 +46,7 @@ secs = ''
 for fn in funcs:
     a = A.resolve(fn, reg)
     secs += f"  .f_{fn} 0x{a:08x} : {{ *(.text.{fn}) }}\n"
-(td/'c.ld').write_text("SECTIONS {\n" + secs + "  .other 0x40000000 : { *(.text .data .bss .rodata*) }\n  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
+(td/'c.ld').write_text("SECTIONS {\n" + secs + "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n  .other 0x40000000 : { *(.text .data .bss .rodata*) }\n  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
 r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out), "-T", str(td/'c.ld'), *defs, str(obj)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 L = Elf.load(out)

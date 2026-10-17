@@ -65,7 +65,7 @@ void func_002673b8(f32 *, f32 *);
 void func_00267370(f32 *, f32 *, f32 *);
 void func_00267e90(f32 *, f32 *, f32);
 
-f32 func_0019f100(void) {
+CONTEXT_ONLY f32 func_0019f100(void) {
     f32 ret;
 
     __asm__ volatile(
@@ -90,7 +90,7 @@ f32 func_0019f100(void) {
     return ret;
 }
 
-s8 func_0019f148(u8 a) {
+CONTEXT_ONLY s8 func_0019f148(u8 a) {
     f32 f;
 
     func_0019f100();
@@ -122,7 +122,7 @@ s8 func_0019f148(u8 a) {
         } \
     } while (0)
 
-void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
+CONTEXT_ONLY void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
     f32 vec[4] __attribute__((aligned(16)));
     f32 ang[4] __attribute__((aligned(16)));
     f32 m[4][4] __attribute__((aligned(16)));

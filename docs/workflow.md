@@ -393,3 +393,29 @@ found that the next session needs:
 - **Matching idioms** collected by the workers (store order, float
   literals, u64 flag bitfields, tail-call control, loop shapes) are in
   docs/matching-tips.md.
+
+## Session 6: what changed
+
+- **CONTEXT_ONLY bodies** (docs/context-only-plan.md): a callee copied above
+  its caller with `CONTEXT_ONLY` gives gcc its register use without placing
+  it. Unmatched drafts and `{}` stubs both work. Dozens of session-5
+  "needs X above" callers landed this way. Probe *every* callee, not only
+  the call before the bad branch.
+- **Build modes added** (docs/toolchain.md "Session 6"): `src/hand/nogcse`,
+  `nostrict_nogcse`, `n32`, `n32_nogcse`, `n32_nostrict`, and
+  `src/sdk/gcc991111_as296`. kh1.toml overrides gained `ccflags` (flags for
+  the C -> asm step only) and `as_compiler` (the toolchain whose driver
+  assembles the compiled C). checkfile and `autodecomp.py try` honour both.
+- **Layout splits**: func_001136d8 (0x1136d8 + 0x113768), func_001dd5c0
+  (0x1dd5c0 + 0x1ddbf8); func_00100558 is 40 bytes.
+- **Assembly**: crt0's `func_00100008` (src/asm/crt0_start.s) and libpc's
+  scePcStart/scePcStop (src/sdk/libpc.s), exported with tools/asm_export.py.
+- **Near misses**: nonmatchings/session6/INDEX.md (one line per draft: words
+  off, mode, what is off). NOTES.md there is the raw worker log.
+- **tools/matching/** gained hill4.py (hill-climb statement order scored by
+  words differing), perm.py (exhaustive permutation of a small block) and
+  popt.py (greedy permutation of statement runs). Fix their hard-coded
+  /tmp paths before use. wqb03_rr.py is not safe to run in parallel.
+- `autodecomp.py --diff` uses objdump without `-z`, which hides nop runs;
+  for big functions count differences with an LCS, not difflib.
+- Results: 6,415 -> 6,729 / 6,988 functions (96.3%), 70.4% -> 80.2% of code bytes; game 6,032 / 6,266, SDK 697 / 722.

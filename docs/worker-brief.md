@@ -439,3 +439,88 @@ other functions (e.g. a struct layout you found).
 - (c11) A parameter reused as an accumulator (`val = x*16 + 0x7000; ... val += adv;`) instead of a separate local fixed every s-register swap in the text drawers.
 - (c11) Window drawers that call func_001f4570 or func_001f45e0 need the callee defined above them: test them with a stub. /tmp/claude-0/s/c11/hill3.py NAME FILE DIR ITERS SEED is a hill climb that keeps dependencies intact (set CHK=1 to score with checkfile).
 - Do not delete dot-files in src/hand that you did not create; other workers' hill-climb files live there.
+
+## Session 6: facts and tricks from the workers
+
+Raw notes, one line per finding, grouped by worker list. The session-6 worker brief (CONTEXT_ONLY, output layout) is nonmatchings/session6/BRIEF.md. Region/mode facts are also in docs/toolchain.md "Session 6", SDK facts in docs/sdk.md.
+
+### Lists L00-L28, N32
+- (L06) -fno-gcse modes: func_0014b550; signs: repeated `ld` reloads or 0.0f held across branches that gcse merges. Region 0x142e30-0x14b550 maybe. 0x13bb20-0x13c2f0 nofill.
+- (L06) Address in s-reg: `pp = &D; *pp = f(...);` right before the store.
+- (L04) 0x11f000-0x127xxx nostrict (fill on). Callee-above effect may need a callee at a join point, not the obvious one: probe every callee. `goto done` instead of break rotates a while loop like the original.
+- (L04) `if (k == 3) idx = j; else idx = ...;` stops constant hoisting; constants in if/else chain give bnel+lui/ori, a variable gives movn.
+- (L03) Callee returning u64 (`hit << n`) changes callers; cast at call site when one caller treats it as s32. `"=&r"` early-clobber on VU0 asm outputs fixes register choice. Unused 16-byte local fixes frame size.
+- (L02) Layout: func_001136d8 is two functions (0x1136d8, 0x113768). Callee return type void vs s32 toggles register allocation: try per callee. `h = t/216000; t = t%216000;` (h unused) keeps an extra move.
+- (L08) Locals declared inside a static inline are not hoisted by the loop pass; move stack arrays into an inline helper when the original recomputes `addiu aN,sp,K` in the loop. Rodata floats as `extern f32 D_0048xxxx` resolve via symbols.ld.
+- (L05) Unmatched drafts work as CONTEXT_ONLY context (0012e4b0 over the e1b0 draft, 00130f18 over the 0660 draft). 8-aligned union for a u64 queue word gives ld/dsrl32 + ld/and/or/sd.
+- (L00) Layout: func_00100558 is 40 bytes (b delay-slot nop). Implicit declaration of callees fixed two functions. Inline helper that modifies its own params gives "sll; move; addiu" copies.
+- (L09) A redundant explicit `else` makes loop.c move `found = 1; break;` exit stubs ahead of the loop (213w -> match). nostrict reaches at least 0x1784c8. func_00171078: gas split a macro `lw sym(reg)` into the jr slot (lui; addu; jr; lw %lo); not reproduced in C.
+- (L07) autodecomp --diff hides nop runs (objdump shows `...`); use objdump -z. 0x156e88 nostrict_nogcse. Volatile function-pointer member stops jalr slot filling. Loop-invariant constants get registers in statement order. 0x152c28-0x159c10 strict; 0x15ad08, 0x15ea98-0x15f128 nostrict. lq/sq u128 zero stores are C (func_0015f128).
+- (L01) nogcse region ~0x10c720-0x10ed20 (func_0010e610 nostrict_nogcse; c f38/ec08 near in nogcse). Sign: global base lui/addiu recomputed before each loop. ee-gcc does not unroll: unrolled code is in the source. sched1 interblock can hoist a compare above a branch (no source fix found).
+- (L12) '=r' constraint on an f32 asm output makes gcc emit the mtc1 itself. 0x1a2d40/0x1a5740 nostrict. func_001aadf0 (21 insns) never attempted.
+- (L10) 0x17b000-0x183b20 nostrict. Separate byte counter (off += sizeof(E)) for two induction vars. A constant hoisted before a loop means the return tail was inside the loop (for(;;){...; return;}).
+- (L11) 0x186000-0x19a000 nostrict except 0x18e348-0x18e588 nostrict_nofill. VU0 helper asm needs .set noreorder/.set reorder or gas pulls sqc2 into jr ra slot. Entry-pointer lookups for shape tables.
+- (L15) Layout: func_001dd5c0 contains func_001ddbf8 (split). Nofill 0x1d5b58-0x1e0xxx. func_001c4640 prototype must return s32. Loop form for(...; i = k){ k = i+1; ...} stops strength reduction.
+- (L13) Unused local array gives bigger frame and stops a tail call. sched1 does interblock motion only in functions with <=10 basic blocks (func_001c1718 matches with -fno-sched-interblock; probably the source has one more block). jump2 cross-jumping runs after sched2.
+- (L14) Script-VM 3-value stack pops (95f8, 99a8, cd600, c8a00) share one open problem: address copy chain vs FP register order. cf348/cf3e0 near in nostrict_nogcse. D_003C5510+0x28 is f32.
+- (L21) n32 mode for the no-`la rd,sym(rs)` region 0x20dd38-0x2173xx. nogcse region 0x2114f0-0x214f50. Check callee arg counts in the callee asm. `case 2: default:` for beq1/slti2 trees. Cross-jumped tails come from duplicated source.
+- (L16) message builders need `s32 func_001c4640(Msg *)`. Copy a var to stop fold_range_test merging `a==-2||a==-3||a==-4`. Global-pointer locals in s-regs give full lui+addiu.
+- (L24) `G = *f()` keeps G's address in an s-reg across the call; `h = f(); G = *h;` puts lui/addiu after it. 0x238768-0x2412xx nostrict. Separate id counter to get countdown loops.
+- (L18) 0x1fade0-0x1fcdc8 nostrict. Locals declared inside case blocks get s-registers first. func_001f9e48/001fa8b0 show the unfolded table base (lui+addiu) sign: try n32 mode.
+- (L23) Several layouts of one symbol in a file: #define X X_sN + __asm__("X") label. 0x22f000-0x234910 strict. Draw-call callees as s32 not void. Writing an indexed global expression out in full per argument gives pointer-copy move chains.
+- (L25) Strings used in a static inline are emitted where the helper is defined (sets rodata order). 0x249xxx-0x24bxxx strict, 0x24d618 nofill, 0x24f098 nostrict_nogcse. Dead statements (unused loads, dead divides) can fix scheduling.
+- (N32) 0x20dd38-0x20e27c fully n32 (6 matched). 0x212cc0, 0x2134c8, 0x217000 mix folded offset-0 symbol loads (lw sym(reg)) with split addresses for symbol+offset; no mode gives both: probably a patched compiler. Tried -msplit-addresses, o64, 64, long64, half-pic, embedded-data, older ee-gcc.
+- (L19) 0x1ff488-0x2040f8 nostrict. Leftover dead li 100/li 10 from div-by-zero checks count the source's div/mod expressions. Object pointer in s8 makes sched2 treat its loads as frame loads (ordered against spills).
+- (L28 SDK) libcdvd: scePrintf/sceSifInitRpc return void; globals D_0046C628/630/634/654/624 often volatile. strtol (0x272a00) is ee-gcc 2.96 with fill (src/sdk/auto), not newlib no_fill. ctype table indexed (D_00491A18 + 1)[c].
+
+### L22
+- Callee return type changes caller regalloc even when unused: declare s32 func_001f9438, 001fc308, 0011d768, 002345a0, 001fb428.
+- Crossjump: shared error store before epilogue = last source statement reached by goto; `bnel` w/ code in slot from `if (q==1){...} D=-4; return;`.
+- Permuting store statements finds scheduler-bound store order (a698).
+- Passing incoming a0 to a no-param call keeps a0 live (eef8).
+- func_0021d860 standalone replaces the #if 0 copy in text_00210000_c15.c.
+- Save struct D_00304BE8: party idx +0x48E, item counts +0x499 (max 99); members 0x74 bytes from +4, item count +0x21, slots +0x22.
+### L26
+- New mode sdk/gcc991111_as296 (as_compiler override): 991111a cc1 + 2.96 gas, which fills jr delay slots. Worker says all existing gcc991111/libkernl files still match with 2.96 gas.
+- newlib vfprintf built with _NO_LONGLONG; tty regs are volatile.
+### L27
+- frame.c unwind (0x263840-0x264258) matches in sdk/auto (2.96 strict).
+- __muldf3/__divdf3 match once __pack_d is not defined in the same file (callee-above from dp-bit.c was the session-5 mismatch).
+- __pack_f: `normal_exp >= EXPBIAS + 2` for beqzl.
+- 991111 struct store order follows alias sets: declare SIF struct fields all u32/int.
+- 991111 reorg never puts a volatile load in a delay slot; sceGsSyncPath cfc2 needs `register u32 r asm("$6")`.
+- sceGsDefDispEnv smode2: nested if with separate stores (ternary gives movn/movz).
+- Asm-only: func_00260738 (cache loop), func_002607e4 (jr ra stub), func_00265190 (MMI strncpy), func_002654f0 (VU0 cfc2/ctc2).
+### G1
+- nostrict: reusing one pointer var across different globals loses its alias base -> conservative load-after-store order (241d60).
+- autodecomp --diff objdump lacks -z (hides nop runs); difflib misaligns big functions, use LCS.
+- D_004D5300 = D_00495280 + 0x40080 (s8 glyph width table).
+- 0010d470 glyph stores: `g = &b->g[n++]; g->x = ...`.
+### NB
+- void->s32 callee return type matched 1cdcb8 (func_001c4640) and 24d1c8 (func_001f31a8): sweep callee return types on every near miss.
+- Wrong epilogue lw v0/ld ra or arg-move order: duplicate the early `if (c) return G;` before the call.
+- Shared constant divisor in a local set before the branch moves the li into the delay slot (1f0448).
+- 1e0ab0/1e0d98/1e10f8 (2w): shared `r4: return 4;` label + volatile store fixes slots; volatile costs the %lo fold.
+- First sched pass moves `$2=const` return sets across blocks (e6038).
+- permuter scores mislead with CONTEXT_ONLY copies and rodata.
+### F9
+- 0x1f9e48-0x1fbcd8 is nostrict_nogcse; fd858 hand/nostrict with gcse. n32 does not apply here (saves $f21, lui at float consts).
+- "Unfolded table base" = loop.c hoisting a symbol address out of a real for loop (goto loops don't).
+- Digit loops: `dig[n] = val % 10; val /= 10; n++;`.
+- Extra separate variables raise ref counts and can force the original's spills (fbcd8 179->58w).
+- s16 vs u16 for masked fields: s16 gives `li -16; and`.
+- hill4.py (hill-climb statement order by words-differ) and perm.py (exhaustive small blocks) in tools/matching (paths may need fixing).
+- Cross-jumping after reload is active at -O2; missed merges hint at a different regalloc.
+### G2
+- 0x225ea8 nostrict; 0x2524a0 = newlib _vfprintf_r with FLOATING_POINT + _NO_LONGLONG (keeps `_double || flags & ALT == 0` bug).
+- func_00233ef8 takes 1 arg; request functions near 0x234018 return s32.
+- Stack slots that look like locals may be caller-save spills; local array + pointer reproduced them.
+- 0x1f5fe0: LERP macro; inline per-case temps fixed FP regalloc; popt.py greedy permutation 663->338.
+- wqb03_rr.py is not parallel-safe with RO set.
+### NA
+- void->s32 callee return types fixed 1cdc58 (func_001c4640), 1369e8 (func_00114a38), 137330 (func_0012bce0); the permuter finds these by mutating prototypes, so read its prototypes.
+- `for (i = 0; i < 2; i++) f("lit");` is fully unrolled: sign is %hi of the string kept in an s-reg with `addiu a0,s0,%lo` repeated (0x11ecd8, nofill).
+- One chained assignment of six -1 stores in a brute-forced order (104908). Brute-forcing orders with many copies of a function in one compile is cheap (~5000 variants in 3 s).
+- Moving a constant assignment after calls (1453a8), a float argument in a temp (179d30), a zero variable for a loop test (14b9e0) all change scheduling.
+- `if (...) goto r0;` instead of `return 0` (144810); `if ((b || a) && f())` (177ac0); u16 var gives dsrl (1bb6d0).
+- 0x1429f8, 0x144810, 0x179d30, 0x1369e8 match in strict as well as nostrict.

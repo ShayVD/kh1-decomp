@@ -80,6 +80,14 @@ path = "src/sdk/libkernl/"
 compiler = "ee-gcc2.9-991111a"
 cflags = "-O2 -G0"
 
+# 991111a cc1 assembled by the ee-gcc 2.96 driver's gas, which fills jr delay
+# slots that 991111a gas leaves empty (session 6, libkernl-style SCE code).
+[[toolchain.override]]
+path = "src/sdk/gcc991111_as296/"
+compiler = "ee-gcc2.9-991111a"
+as_compiler = "ee-gcc2.96"
+cflags = "-O2 -G0"
+
 [[toolchain.override]]
 path = "src/sdk/gcc991111nf/"
 compiler = "ee-gcc2.9-991111a"
@@ -123,3 +131,34 @@ cflags = "-O2 -G0 -fno-strict-aliasing"
 path = "src/hand/nostrict_nofill/"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 no_fill = true
+
+# Game files where gcc's global CSE was off: loads the original repeats are
+# merged by gcse with the normal flags (session 6; func_0014b550, func_001ca368).
+[[toolchain.override]]
+path = "src/hand/nogcse/"
+cflags = "-O2 -G0 -fno-gcse"
+
+[[toolchain.override]]
+path = "src/hand/nostrict_nogcse/"
+cflags = "-O2 -G0 -fno-strict-aliasing -fno-gcse"
+
+
+# Around 0x20dd38-0x2173xx the original never adds a symbol to a register with
+# one `la rd,sym(rs)` macro (it keeps lui/addiu + addu). -mabi=n32 on the
+# C -> asm step only (not the assembler) reproduces that; it stands in for
+# whatever compiler variant those files really used (session 6). long is
+# 32-bit under n32; KH1_N32 makes common.h define s64/u64 as long long.
+[[toolchain.override]]
+path = "src/hand/n32/"
+cflags = "-O2 -G0"
+ccflags = "-mabi=n32 -DKH1_N32"
+
+[[toolchain.override]]
+path = "src/hand/n32_nogcse/"
+cflags = "-O2 -G0 -fno-gcse"
+ccflags = "-mabi=n32 -DKH1_N32"
+
+[[toolchain.override]]
+path = "src/hand/n32_nostrict/"
+cflags = "-O2 -G0 -fno-strict-aliasing"
+ccflags = "-mabi=n32 -DKH1_N32"

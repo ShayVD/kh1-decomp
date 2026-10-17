@@ -198,7 +198,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
     # permuter output is already preprocessed (m2c.h included)
     pre = "" if re.search(r"\bM2C_UNK;", code) else '#include "m2c.h"\n\n'
     src.write_text(pre + code)
-    r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), "-ffunction-sections",
+    r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), "-ffunction-sections",
                         f"-I{ROOT / 'include'}", *[f"-I{d}" for d in EXTRA_INCLUDES], "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode:
         shift = pre.count("\n")
@@ -207,7 +207,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         return False, "compile error: " + (r.stderr.strip().splitlines() or [""])[-1]
     text = K.split_rodata(asm.read_text())
     asm.write_text(K.no_fill(text) if fl.no_fill else text)
-    r = subprocess.run([str(cc), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
+    r = subprocess.run([str(K.TOOLCHAIN_DIR / (fl.as_compiler or fl.compiler) / "bin" / "ee-gcc"), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)],
                        capture_output=True, text=True)
     if r.returncode:
         return False, "assemble error"
@@ -225,6 +225,7 @@ def build_and_compare(f: K.Func, sym: str, code: str, workdir: Path) -> tuple[bo
         defsyms += ["--defsym", f"{u}=0x{a:08x}"]
     ld_script = workdir / "c.ld"
     ld_script.write_text(f"SECTIONS {{ .f 0x{f.addr:08x} : {{ *(.text.{sym}) }}\n"
+                         "  .ctx 0x0f000000 : { *(.ctx .ctx.*) }\n"
                          "  .other 0x40000000 : { *(.text .text.* .data .bss .rodata*) }\n"
                          "  /DISCARD/ : { *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) } }\n")
     r = subprocess.run([f"{K.BINUTILS}ld", "-EL", "--no-warn-mismatch", "-e", "0", "-o", str(out),
