@@ -726,3 +726,6 @@ iDisableIntc	00258e00	# hand: _iDisableIntc syscall + sync
 iEnableDmac	00258e20	# hand: _iEnableDmac syscall + sync
 iDisableDmac	00258e40	# hand: _iDisableDmac syscall + sync
 quorem	00253f88	# hand: dtoa.c static; (b, S) Bigint quotient digit, calls cmp
+sceVu0MulMatrix	00267328	# hand: libvu0; m0 = m1 x m2, four vmula/vmadd columns (lqc2 m1 rows, loop over m2)
+sceVu0CopyMatrix	002675b8	# hand: libvu0; four lq/sq of 16 bytes
+sceVu0UnitMatrix	00267620	# hand: libvu0; vf0-derived identity (w=1, vmr32 rotations) stored to 4 rows
