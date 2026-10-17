@@ -108,7 +108,7 @@ void func_0014f798(Mv *, f32 *);
 void func_001568e8(Mv *, f32 *);
 void func_001564e0(Mv *, f32 *);
 
-/* needs make: uses rodata */
+/* needs make: uses rodata (switch jump table) */
 void func_00143eb8(Mv *o, f32 *v) {
     f32 t[4];
     MvFn fn;
@@ -169,6 +169,7 @@ s32 func_0014f600(St *);
 void func_0012c698(St *);
 s32 func_001443a8(St *);
 
+/* needs make: uses rodata (switch jump table) */
 s32 func_00144060(St *o) {
     s32 s1;
     StFn fn;
@@ -667,11 +668,17 @@ typedef struct {
     f32 pos[4];
     u8 pad20[0x10];
     union { u64 d; struct { u32 lo; Tg3c *tg; } s; } u30;
-    u8 pad38[0x70 - 0x38];
+    u8 pad38[0x54 - 0x38];
+    u32 w54;
+    u8 pad58[4];
+    s32 w5c;
+    u8 pad60[0x70 - 0x60];
     f32 v70[4];
-    u8 pad80[0xa8 - 0x80];
+    u8 pad80[0x9c - 0x80];
+    u32 w9c;
+    u8 padA0[0xa8 - 0xa0];
     s8 ba8;
-    u8 pada9;
+    s8 ba9;
     s8 baa;
 } Hm;
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x10]; f32 v30[4]; } Hs;
@@ -709,4 +716,39 @@ void func_0014ac50(Hm *o, Hs *s, f32 *out) {
         out[2] = cosf(a);
     }
     out[3] = 1.0f;
+}
+
+typedef struct { u8 pad[0x3e0]; u32 w3e0; } Hp;
+typedef struct { s32 w0; Hp *p4; u8 pad8[4]; Hm *m; f32 v10[4]; f32 v20[4]; } Hz;
+extern s32 D_00350CE0;
+s32 func_0014af60(Hm *, Hm *);
+s32 func_0014b090(Hm *, Hm *);
+s32 func_0014a330(Hm *, s32, f32 *, f32 *);
+void func_002674f0(f32 *, f32 *, f32 *, f32);
+void func_00147ed8(s32, s32, s32, f32 *);
+void func_0014ac00(Hm *, s32);
+
+void func_0014b3e0(Hz *x, Hz *y) {
+    f32 t[4];
+    Hm *m1 = x->m;
+    Hm *m2 = y->m;
+    s32 a, b, ra, rb;
+
+    if (!func_0014af60(m1, m2)) return;
+    if (!func_0014af60(m2, m1)) return;
+    a = func_0014b090(m1, m2);
+    rb = 0;
+    ra = 0;
+    if (a > 0) ra = func_0014a330(m1, a, x->v10, y->v10);
+    b = func_0014b090(m2, m1);
+    if (b > 0) rb = func_0014a330(m2, b, y->v10, x->v10);
+    if (a <= 0 && b <= 0) return;
+    if (a == 0) {
+        func_0014ac00(m1, b);
+    } else if (b == 0) {
+        func_0014ac00(m2, a);
+    }
+    if (ra || rb) return;
+    func_002674f0(t, x->v20, y->v20, 0.5f);
+    func_00147ed8(D_00350CE0, (a | b) < 32 ? 10 : 11, 20000, t);
 }
