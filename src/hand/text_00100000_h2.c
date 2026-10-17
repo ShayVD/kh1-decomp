@@ -285,3 +285,15 @@ s32 func_0010eb78(u8 *s) {
     } while (run);
     return cnt;
 }
+void func_0010f5f8(void) {
+    sceGsSyncPath(0, 0);
+    *(volatile u64 *)0x12000000 = 0xff03;
+    *(volatile u64 *)0x12000070 = 0x11b0;
+    *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;
+}
+extern f32 D_002BBDEC;
+extern volatile s32 D_004D90F0;
+void func_0010fea0(void) {
+    if (D_002BBDEC == 1.0f) D_004D90F0 = 0x14996c4;
+    else D_004D90F0 = 0x112a84e;
+}
