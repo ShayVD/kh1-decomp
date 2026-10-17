@@ -974,3 +974,118 @@ Chk59 *func_001681b8(Chk59 *c, u32 tag) {
     }
     return c;
 }
+
+typedef struct { u8 pad[0x70]; s32 x70; } O87d8;
+typedef struct {
+    u8 pad0[4];
+    f32 *x4;
+    u8 pad8[0x38 - 8];
+    u64 x38;
+    u8 pad40[0xa4 - 0x40];
+    f32 xa4;
+    u8 pada8[0xdc - 0xa8];
+    f32 xdc;
+    u8 pade0[0xfc - 0xe0];
+    f32 xfc;
+    u8 pad100[0x12c - 0x100];
+    f32 x12c;
+} Q87d8;
+
+void func_001687d8(O87d8 *o, Q87d8 *q, s32 k) {
+    switch (k) {
+    case 0:
+        if (o->x70 == 8) {
+            if ((s32)(q->x38 >> 7) & 1) {
+                if (q->x4[3] < q->xfc) {
+                    q->x12c = 10.0f;
+                    return;
+                }
+                q->x12c = 0.0f;
+                return;
+            }
+            if ((s32)q->x38 & 1) {
+                q->x12c = 20.0f;
+                return;
+            }
+            if (q->xfc <= q->x4[5]) {
+                q->x12c = 0.0f;
+                return;
+            }
+            if (q->x4[4] <= q->xfc) {
+                q->x12c = 20.0f;
+                return;
+            }
+            q->x12c = 10.0f;
+            return;
+        } else {
+            u64 f = q->x38;
+            if ((s32)(f >> 7) & 1) {
+                if (q->x4[0] < q->xfc) {
+                    q->x12c = 10.0f;
+                } else {
+                    q->x12c = 0.0f;
+                }
+            } else if ((s32)q->x38 & 1) {
+                q->x12c = 20.0f;
+            } else if (q->xfc <= q->x4[2]) {
+                q->x12c = 0.0f;
+            } else if (q->x4[1] <= q->xfc) {
+                q->x12c = 20.0f;
+            } else {
+                q->x12c = 10.0f;
+            }
+            if (((s32)(f >> 19) & 1) && q->x4[0] < fabsf(q->xa4)) {
+                q->x12c = 10.0f;
+            }
+            if (((s32)(f >> 14) & 1) && q->xfc < q->x4[0]) {
+                q->x12c = 0.0f;
+            }
+        }
+        break;
+    case 1:
+        if (q->x4[1] <= q->xdc) {
+            q->x12c = 20.0f;
+            return;
+        }
+        q->x12c = 10.0f;
+        break;
+    }
+}
+
+
+/* needs make: uses rodata */
+typedef struct { u16 idx; u16 kind; f32 v; } Key59;
+typedef struct { u8 pad[0x14]; u32 *flags; u8 pad18[0x34 - 0x18]; s32 nk; Key59 *k; } Anim59;
+void func_00162cd0(f32 *, f32 *, M64_59 *);
+
+void func_00164ba8(Ent63 *e, Anim59 *a) {
+    s32 i, j;
+    for (i = 0; i < (*e->x0)->n; i++) {
+        for (j = 0; j < 3; j++) {
+            e->x150[i].m[0][j] = (*e->x0)->src[i].a[j];
+            e->x150[i].m[2][j] = (*e->x0)->src[i].b[j];
+            e->x150[i].m[3][j] = (*e->x0)->src[i].c[j];
+        }
+    }
+    for (j = 0; j < a->nk; j++) {
+        u32 kind = a->k[j].kind;
+        f32 v = a->k[j].v;
+        switch (kind) {
+        case 1: case 2: case 3:
+            e->x150[a->k[j].idx].m[-1][kind + 3] = v;
+            break;
+        case 4: case 5: case 6:
+            e->x150[a->k[j].idx].m[1][kind] = v;
+            break;
+        case 7: case 8: case 9:
+            e->x150[a->k[j].idx].m[1][kind + 1] = v;
+            break;
+        }
+    }
+    for (i = 0; i < (*e->x0)->n; i++) {
+        u32 f = a->flags[i];
+        if (!(f >> 26 & 1) && (f >> 25 & 1)) {
+            func_00162cd0(e->x150[i].m[2], e->x150[i].m[3], &e->x158[i]);
+        }
+    }
+}
