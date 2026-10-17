@@ -109,58 +109,6 @@ void func_00125cf0(E3 *e, f32 k, f32 lim) {
     }
 }
 
-typedef struct { u8 pad[0x10]; f32 f10[16]; } E4;
-typedef struct { u8 pad[0x28]; s32 f28, f2c, f30, f34, f38; } C4;
-extern f32 D_002E27CC;
-extern f32 D_002E27D0;
-extern f32 D_004F77F0;
-extern f32 D_004F77F4;
-extern f32 func_00267390(f32 *, f32 *);
-
-void func_00126108(E4 *e, f32 *dir, f32 *pos, f32 a, C4 *c, f32 b) {
-    f32 v[4];
-    f32 d;
-    func_00267530(v, pos, e->f10);
-    v[1] = 0.0f;
-    func_00121fc4(v, v);
-    v[3] = v[3] * b - a;
-    d = func_00267390(v, dir);
-    if (D_004F77F4 < d) {
-        if (v[3] < D_002E27D0) {
-            c->f38++;
-            if (v[3] < D_002E27CC) c->f34++;
-        }
-    } else if (D_004F77F0 < d) {
-        if (v[3] < D_002E27CC) c->f2c++;
-    }
-    if (D_002E27C8 & 1) c->f28 = c->f2c;
-}
-
-typedef struct { u8 pad[0x370]; u64 f370; } E5;
-typedef struct { u8 pad[0xc]; s32 fc; } C5;
-typedef struct { u64 flags; u8 pad8[4]; f32 fc; f32 f10[8]; u64 f30; } O5;
-extern O5 *func_0014a398(O5 *);
-
-void func_00126238(E5 *e, C5 *c, void *s) {
-    void *p;
-    s32 i;
-    O5 *o;
-    f32 v[4];
-    p = 0;
-    while ((p = func_00123158(e, p)) != 0) {
-        i = -1;
-        while ((i = func_0012ee70(p, i)) >= 0) {
-            f32 f = func_0012ec60((s32)p, i, v);
-            func_00126108((E4 *)e, (f32 *)c, v, f, s, 1.0f);
-        }
-    }
-    o = 0;
-    while ((o = func_0014a398(o)) != 0) {
-        if (((s32)(o->flags >> 12) & 3) != ((s32)(e->f370 >> 37) & 3) && ((s32)(o->f30 >> 10) & 1))
-            func_00126108((E4 *)e, (f32 *)c, o->f10, o->fc, s, 0.25f);
-    }
-    c->fc = 0;
-}
 
 typedef struct { u8 pad[336]; } A6;
 typedef struct { u8 pad[544]; } B6;
