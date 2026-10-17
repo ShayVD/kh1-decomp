@@ -119,6 +119,212 @@ void func_00267518(f32 *, f32 *, f32 *);
 void func_002678b8(Mtx, Mtx, f32 *);
 extern Mtx D_006161C0;
 
+f32 func_001a3650(void) {
+    f32 ret;
+
+    __asm__ volatile(
+        "addi $8, $0, -1\n"
+        "qmtc2 $8, $vf2\n"
+        "vrxor R, $vf2x\n"
+        "vrnext.x $vf1x, R\n"
+        "vrxor R, $vf2x\n"
+        "vrnext.x $vf1x, R\n"
+        "vrxor R, $vf2x\n"
+        "vrnext.x $vf1x, R\n"
+        "vrxor R, $vf2x\n"
+        "vrnext.x $vf1x, R\n"
+        "vrxor R, $vf2x\n"
+        "vrnext.x $vf1x, R\n"
+        "vitof0.x $vf2x, $vf2x\n"
+        "vadd.x $vf1x, $vf1x, $vf2x\n"
+        "qmfc2 %0, $vf1\n"
+        : "=&r"(ret)
+        : 
+        : "$8", "memory");
+    return ret;
+}
+s8 func_001a3698(u8);
+void func_00267e90(f32 *, f32 *, f32);
+void func_00267518(f32 *, f32 *, f32 *);
+void func_00267530(f32 *, f32 *, f32 *);
+void func_002673b8(f32 *, f32 *);
+f32 func_00267390(f32 *, f32 *);
+void func_002678b8(f32 (*)[4], f32 (*)[4], f32 *);
+void func_002672f8(f32 *, f32 (*)[4], f32 *);
+void func_00267560(f32 *, f32 *, f32);
+extern f32 D_00615F70[4];
+extern f32 D_006161C0[4][4];
+extern u8 D_0061E730[];
+
+void func_001a3720(Em *e, Pt *p, Sub *s) {
+    s32 i;
+    s32 r;
+    f32 f;
+
+    p->col[0] = func_001a3698(e->col[0]);
+    p->col[1] = func_001a3698(e->col[1]);
+    p->col[2] = func_001a3698(e->col[2]);
+    p->col[3] = func_001a3698(e->col[3]);
+    if (e->fade) {
+        p->fl.b = e->fade;
+        p->fl.x |= 0x200;
+    }
+    p->rot[0] = e->rot[0];
+    p->rot[1] = e->rot[1];
+    p->rot[2] = e->rot[2];
+    p->rotv[0] = e->rotv[0];
+    p->rotv[1] = e->rotv[1];
+    p->rotv[2] = e->rotv[2];
+    if (e->rfl) {
+        if (e->rfl & 0x20) {
+            r = func_001a3650() * (f32)e->rr[0];
+            p->rr[2] = r;
+            p->rr[1] = r;
+            p->rr[0] = r;
+            if ((u8)(e->rfl & 1)) {
+                if (e->rfl & 2) {
+                    if (func_001a3650() > 0.5) {
+                        for (i = 0; i < 3; i++) p->rr[i] = -p->rr[i];
+                    }
+                }
+            } else if (e->rfl & 2) {
+                for (i = 0; i < 3; i++) p->rr[i] = -p->rr[i];
+            }
+        } else {
+            p->rr[0] = func_001a3650() * (f32)e->rr[0];
+            p->rr[1] = func_001a3650() * (f32)e->rr[1];
+            p->rr[2] = func_001a3650() * (f32)e->rr[2];
+            if ((u8)(e->rfl & 1)) {
+                if (e->rfl & 2) {
+                    for (i = 0; i < 3; i++) {
+                        if (func_001a3650() > 0.5) p->rr[i] = -p->rr[i];
+                    }
+                }
+            } else if (e->rfl & 2) {
+                for (i = 0; i < 3; i++) p->rr[i] = -p->rr[i];
+            }
+        }
+    }
+    if (e->rfl & 4) {
+        for (i = 0; i < 3; i++) p->rot[i] += p->rr[i];
+    }
+    if (e->rfl & 8) {
+        for (i = 0; i < 3; i++) p->rotv[i] += p->rr[i];
+    }
+    for (i = 0; i < 3; i++) {
+        if (p->rot[i] > 0x7fff || p->rot[i] < -0x8000) p->rot[i] %= 0x8000;
+    }
+    p->sc[0] = e->sc[0];
+    p->sc[1] = e->sc[1];
+    p->sc[2] = e->sc[2];
+    p->scv[0] = e->scv[0];
+    p->scv[1] = e->scv[1];
+    p->scv[2] = e->scv[2];
+    if (e->sfl) {
+        if (e->sfl & 0x20) {
+            f = func_001a3650() * e->sr[0];
+            p->sr[2] = f;
+            p->sr[1] = f;
+            p->sr[0] = f;
+            if ((u8)(e->sfl & 1)) {
+                if (e->sfl & 2) {
+                    if (func_001a3650() > 0.5) {
+                        for (i = 0; i < 3; i++) p->sr[i] = -p->sr[i];
+                    }
+                }
+            } else if (e->sfl & 2) {
+                for (i = 0; i < 3; i++) p->sr[i] = -p->sr[i];
+            }
+        } else {
+            p->sr[0] = func_001a3650() * e->sr[0];
+            p->sr[1] = func_001a3650() * e->sr[1];
+            p->sr[2] = func_001a3650() * e->sr[2];
+            if ((u8)(e->sfl & 1)) {
+                if (e->sfl & 2) {
+                    for (i = 0; i < 3; i++) {
+                        if (func_001a3650() > 0.5) p->sr[i] = -p->sr[i];
+                    }
+                }
+            } else if (e->sfl & 2) {
+                for (i = 0; i < 3; i++) p->sr[i] = -p->sr[i];
+            }
+        }
+    }
+    if (e->sfl & 4) {
+        for (i = 0; i < 3; i++) p->sc[i] += p->sr[i];
+    }
+    if (e->sfl & 8) {
+        for (i = 0; i < 3; i++) p->scv[i] += p->sr[i];
+    }
+    p->f78 = e->fc4;
+    if (e->fcc != 0.0f) {
+        p->f78 += (e->fcc + e->fcc) * func_001a3650() - e->fcc;
+    }
+    p->f7c = e->f98;
+    p->f80 = e->fa8;
+    p->f84 = e->f9c;
+    p->f88 = e->fac;
+    if (e->afl) {
+        if (e->afl & 0x20) {
+            f = func_001a3650() * e->fa4;
+            p->f90 = f;
+            p->f8c = f;
+            if ((u8)(e->afl & 1)) {
+                if (e->afl & 2) {
+                    if (func_001a3650() > 0.5) {
+                        p->f8c = -p->f8c;
+                        p->f90 = -p->f90;
+                    }
+                }
+            } else if (e->afl & 2) {
+                p->f8c = -p->f8c;
+                p->f90 = -p->f90;
+            }
+        } else {
+            p->f8c = func_001a3650() * e->fa4;
+            p->f90 = func_001a3650() * e->fb4;
+            if ((u8)(e->afl & 1)) {
+                if (e->afl & 2) {
+                    if (func_001a3650() > 0.5) p->f8c = -p->f8c;
+                    if (func_001a3650() > 0.5) p->f90 = -p->f90;
+                }
+            } else if (e->afl & 2) {
+                p->f8c = -p->f8c;
+                p->f90 = -p->f90;
+            }
+        }
+    }
+    if (e->afl & 4) {
+        p->f7c += p->f8c;
+        p->f80 += p->f90;
+    }
+    if (e->afl & 8) {
+        p->f84 += p->f8c;
+        p->f88 += p->f90;
+    }
+    p->life = e->life ? e->life : 0xffff;
+    if (s) {
+        s->b[0] = e->f14[0];
+        s->b[1] = e->f14[1];
+        s->b[2] = e->f14[2];
+        s->b[3] = e->f14[3];
+    }
+    p->f94 = 0;
+    switch (e->mode) {
+    case 1:
+        if (func_001a3650() > 0.5f) p->sc[0] = -p->sc[0];
+        break;
+    case 2:
+        if (func_001a3650() > 0.5f) p->sc[1] = -p->sc[1];
+        break;
+    case 3:
+        if (func_001a3650() > 0.5f) p->sc[0] = -p->sc[0];
+        if (func_001a3650() > 0.5f) p->sc[1] = -p->sc[1];
+        break;
+    }
+}
+
+
 void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
     f32 v0[4] __attribute__((aligned(16)));
     f32 v10[4] __attribute__((aligned(16)));
