@@ -247,3 +247,26 @@ u32 func_00111be8(void) {
         return (u32)r;
     }
 }
+
+extern s32 D_004D925C;
+extern s32 D_002BCC1C;
+extern s32 D_004D9254;
+extern volatile u32 D_002BBDF0;
+extern u32 D_004D9250;
+
+s32 func_00111cb8(void) {
+    switch (D_004D925C) {
+    case 2:
+        return 4;
+    case 0:
+        if (D_002BCC1C < D_004D9254) {
+            D_002BCC1C = (f32)(D_002BBDF0 - D_004D9250) * D_002BBDEC;
+            return 0;
+        }
+        D_002BCC1C = D_004D9254;
+        return 4;
+    case 1:
+        return 0;
+    }
+    return 0;
+}

@@ -564,6 +564,20 @@ void func_00138e58(W32Src *o, W32Tgt *t) {
     }
     t->flags |= 2;
 }
+void func_00138f28(W32Src *o, W32Tgt *t, f32 d);
+void func_00139040(W32Src *o, W32Tgt *t, f32 d);
+void func_00139170(W32Src *o, W32Tgt *t) {
+    f32 d;
+    if (func_001389c0(o, t)) {
+        func_00138c30(o, t);
+    } else {
+        d = func_00267390(o->x30, t->x10);
+        if (func_0014f5c8(o)) func_00138f28(o, t, d);
+        else if (func_0014f600(o)) func_00139040(o, t, d);
+        else func_00138f28(o, t, d);
+    }
+    t->flags |= 2;
+}
 /* needs make: uses rodata */
 typedef struct {
     u8 pad00[6];
