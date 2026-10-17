@@ -209,11 +209,6 @@ typedef struct {
     } u;
 } W7Stack;
 
-void func_0013cec8(W7Stack *q, void *src, u32 n) {
-    memcpy(q->u.p, src, n);
-    q->u.p += n >> 2;
-    *q->u.p++ = n;
-}
 
 u32 func_0013cf28(W7Stack *q, void *dst) {
     u32 n = *--q->u.p;
