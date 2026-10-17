@@ -176,3 +176,112 @@ the store-order searches.
   layout.tsv and write each function separately.
 - From batch 49: 0x239xxx-0x23dxxx is nofill; 0x23f700-0x245a00 nostrict. A register never set before a call is usually a pass-through argument (the callee takes more args).
 - From batch 48: 0x236970-0x23d4xx is nostrict_nofill. GIF tag stores: source order is the reverse of the store order.
+
+## Large functions (81+ instructions), session 5
+
+- From batch 51: keep `(x+40)*16` unfolded with a local `x2 = px + 40`.
+  A global loop bound reloaded every iteration: the stores in the loop are
+  raw pointer stores, not struct members. `for (i = 0; i < n; i = j) { j =
+  i + 1; ... }` gives the `t7 = i+1 ... i = t7` copy pattern. switch beats
+  if/else chains for beqz/beq/b test order.
+- From batch 52: cross-jumped code (one shared call/tail in the asm): write the whole block in every case/branch. Keep an out-param's address in a saved reg: make it an array element (`f32 h[2]`, &h[1]).
+- From batch 55: 0x13b000-0x143000 nostrict. Shared fail label `if (a || b) { fail: return 0; }` turns bnel into bne. One constant register stored several times: stores come out in reverse source order. Use `break` instead of `return` to avoid a tail call.
+- From batch 56: a branch-likely (bnezl/bc1tl) where the original has a plain branch with a filled slot is usually the callee-defined-earlier effect: check which call precedes it and whether that callee is (or can be) defined above in the same file. Switch on {1,2} lowered as ==1,<2,==2: add a dummy `case 0:` next to `default:`.
+- A function can need nofill even inside a filled region (sign: `b` + nop slot, nops before div.s). Try src/hand/nofill.
+- `lbu; andi 1; beqz` without `andi 0xff`: declare the field s8 and test `x & 1`.
+- Switch case order changes jump-table block layout; permute cases with var.py {{P:...}}. `||` inside {{...}} alternatives breaks the split.
+- `o->x = p->y = 2.0f` stores p->y first. `(f32)(u32)` gives srl/bltzl/add.s sequence. Pi = 3.1415928f.
+- Clamps with movz/movn: use static inline min/max helpers, `min(max(1,t),m)`.
+- Range test `(u32)(x - 9) < 2` instead of `x==9||x==10`.
+- Locals get stack slots in declaration order; declare an arg block at sp+0 first.
+- Clearing 2 bits of a u64 field: two separate `&=` statements through a local pointer.
+- Float literal off by an ulp: write value + 1/4 ulp (0.99f->0x3f7d70a3 needs extra digits).
+- Shared `return 0` block: `goto end`. Zero block before main body: `if (!n) { zero: r = 0; } else {...}`.
+- Switch needs >=5 cases for a jump table; add empty cases.
+- Chained `a = b = 0.0f` gives one mtc1 zero; chain order matters.
+- A float arg loaded before a0 means the callee takes the float first.
+- `volatile` stops delay-slot filling; prefer non-volatile globals / `f32 *dt = &D_x;` for addiu+lwc1 0(reg).
+- Local tables copied with ldl/sdl are aggregate initializers; read contents from the ELF.
+- Byte clamp movz form: `s->b = s->b + 2 > 100 ? 100 : s->b + 2;`.
+- An unprototyped float-returning callee silently becomes an int call: always prototype f32 callees.
+- `p = (T *)((u8 *)p + n); p++;` as two statements can fix registers.
+- lq/sq copies through $8-$11 need inline asm (struct copy gives ld/sd).
+- Single-exit `move v0,zero` epilogue: `goto end; end: return 0;` plus direct `return 1;` (a ret variable lands in a saved reg).
+- Callee return type s32 vs void changes caller register allocation.
+- 8-byte unaligned copies via `*(P8 *)&...` give ldl/ldr/sdl/sdr.
+- `if (X) return 0; break;` + final `return 1` gives branch-likely shape.
+- `x == 0` vs `!x` on a pointer can change register allocation and beqzl/beqz; try both.
+- Early-return on a test giving wrong branch-likely: nest the rest as `if (!t) {...} return 0;`.
+- `func(...) >= expr` evaluates call before load; swap sides to reverse.
+- Table lookups: go through an element-pointer temp (`T *r = &tbl[i]; x = r->f;`) to fix v0/v1 swaps.
+- u8 = u8 * f32 gives the 0x4f000000 compare / or 0x80000000 sequence.
+- Shared store in a delay slot: write the shared statement in both if/else branches.
+- Self tail recursion compiles to a goto loop (`if (j+1 < hi) f(j+1, hi);`).
+- Loop pointer moved into a saved reg before the loop: two variables (`T *base = D_x; T *e; ... e = base;` before the loop).
+- Switch assigning one var: `k = -1; switch (x) {...}` with no default gives li in the range-check delay slot.
+- Several stores of one value: the last store of each value is scheduled first.
+- `fl = 0; if (b) fl |= 1;` gives sltu/movn. abs() gives bltzl/negu.
+- addu operand order: arithmetic on (u32) keeps it; pointer arithmetic reorders.
+- Keep `li 1; bne` compare: `(... & 1) == 1U`. Plain `== 1` folds to beqz.
+- Callee-saved reg for a global's address: `void **pp = &D_x;` before the first call.
+- A u64 flag word as `union { u64 x; s32 i[2]; }` stops s32 loads moving above the flag store.
+- Inline helper called twice rebuilds its constants per call like the original.
+- EABI varargs: `ap = (char*)__builtin_next_arg(fn) - 8*(8 - __builtin_args_info(2));` then `{char *p = ap; ap += 8; x = *(s32*)p;}`.
+- Several layouts of one global in a file: `extern u8 D_X[];` once, then `#define D_X (*(T *)&D_X)` / `#undef` around each function.
+- Spill-slot order follows declaration order; declare locals in slot order. `(n-1) << 4` vs `* 16` can differ.
+- `i = 0x10000; while (i--);` gives the 4x-unrolled countdown.
+- Switch range check then redundant beqzl+nops: `if (c < N) { switch (c) {...; default: s++;} } else {...}`.
+- `default: return;` first in a switch avoids a tail call.
+- `a + (b - 0x7000)` folds; write `x = a + (u32)(b - 0x7000);` to keep the addiu separate.
+- A global pointer read inside a loop gets hoisted with its own lui; pre-loading into a local shares the lui across loops.
+- `lhu` after `sw` to the same s32 global: `*(u16 *)&D_x`.
+- Global counter kept in a register through a loop: write plain global code (`D = 0; for (...) D++;`); a local counter breaks it.
+- `jal f; lui; addiu s0; sw v0,0(s0)`: write `t = f(a); p = &G; *p = t;`.
+- Tail call returning a value: make the function s32 and `return f(...)`.
+- Stop `(n-1)*16` folding with a separate local `m = n - 1`.
+- Loop ending `li sN,2 ... bgez sN`: write `for (i = 2; i >= 0; i--)`.
+- Stop GCSE merging an address: spell it as another symbol + offset (`D_x[-2]`).
+- Bucket list walk: `if (bk->head) { p = bk->head; do { ...; if (p->next == 0) break; p = p->next; } while (1); }`.
+- Same constant loaded in both branches before a shared compare: assign inside each branch.
+- `volatile u64` packet arrays keep sd store order.
+- `for (j = 0; j < n; j++)` with j unused gives blezl + countdown register loop.
+- Write the compare with the global first (`G >= x`) to load the global first.
+- `python3 tools/checkfile.py FILE -v` lists every differing word (ours vs orig).
+- `sb; jal; nop` with other slots filled: volatile global + nofill dir (func_0024d7b0).
+- f(D_x = 20) shares one register for arg and store. Rodata strings already used by an earlier function: `extern char D_xxx[]`.
+- Hidden function boundary: layout size bigger than ours by a tail after `jr ra` (N vs M bytes, 0 words differ) = separate function; write it in a comment block and report the split.
+- `b` into loop body + early-out then-block before the loop top: `do { ...; if (x) break; ... } while (0);`.
+- Wrong bc1f/bc1fl or arg-move order before a call can mean the callee's arg count is wrong.
+- A 15-byte ldl/ldr copy + index loop = local `struct {s8 k,a,b;} tbl[5] = {...}` walked with `for (i = 0; tbl[i].k >= 0; i++)`.
+- Shared non-tail call after an if block: `else goto call; ... goto end; call: f(...); end:;`.
+- `(tb->x - 1)[id]` gives `lhu -2(v0)`; `tb->x[id-1]` does not.
+- `break` vs `return 0` inside switch cases changes registers/scheduling.
+- u32 bitfields directly in an 8-byte-aligned struct (holds a u64) are accessed with ld/sd (dsll/dsra32 reads); a nested bitfield struct gives lw.
+- Shared float var across switch cases leaks f12 preference; use a block-local result per case.
+- Float -> u8 store needs an explicit (s32) cast to avoid the unsigned 0x4f000000 sequence.
+- `if (!p || !v) return 0;` vs two ifs changes v0/v1.
+- Short-loop nops before a closing bnez are gcc padding; write the bare loop.
+- Several zero stores in the wrong order: try a chained `a = b = c = 0;` placed after other stores.
+- Brute-force the order of zero-initialisations when s-regs swap (120 orders is cheap).
+- Reloc loops over 16-byte entries: take a field pointer inside the loop (`pp = &t->e[i].xc; *pp = (s32)t + *pp;`), separate pointer per loop.
+- Two out-params reloaded in wrong order: make them one local struct `struct {s32 idx; f32 t;} q;` and pass `&q.idx, &q.t`.
+- `li 4; cvt.s.w` divisor: `s32 n = 4; ... (f32)i / (f32)n`.
+- Big setup blocks: hill-climb each block of stores/loads separately, then combine the .best results.
+- Stack-param functions: which params get s-registers follows use counts; extra references to one param change spills.
+- Inline result assigned in a plain statement shares one stack slot across expansions; inside an if-condition/void inline/return each gets its own slot.
+- Cross-jumped switch case bodies: write them as an inline taking constant index args.
+- `x >= K` emits c.le.s with swapped operands; `!(x < K)` becomes `x < K`.
+- 16-byte GIF register packet: struct of u64 bitfield regs, write data words with `*(u128 *)&D.field = K` (por/lui/sq then sd).
+- `(X + 1) << 4` keeps the addiu before the shift; `* 16` folds.
+- Byte-to-float from a u32 colour: cast to (s32) first.
+- Float param position in a prototype affects caller scheduling; check the callee's real arg order.
+- Double literal equal to (double)(float)pi: write `3.1415927410125732421875`.
+- Static chain in $v0 (`move v0,sp` before calling a local helper) = GNU C nested function; write the helper inside its parent's body.
+- Chained slti range checks: `switch (t) { case 4 ... 8: ... }` with GNU case ranges.
+- `lhu; srl 8; andi 0xf` in a loop: u16 bitfield (`u16 r0:8, r1:4, r2:4`).
+- Run of single-bit `and`s on one u64 with one ld/sd: 1-bit u64 bitfield assignments in increasing bit order.
+- 64 unexplained frame bytes: an unused local array.
+- Unexpected `jal __extendsfdf2`: a callee lacks a prototype above that point.
+- `python3 tools/checkfile.py FILE -v` lists each differing word.
+
+Flagged (hand-written asm, not C): func_001996d0 and func_0019a828 (whole-function VU0, matched with inline asm), func_00115940 (VU0 macro mode), func_001bfac8 (context switch), func_001aa1f8/func_001aa448 (sq $zero). func_001a67f0 and func_001a72c8 are GNU nested functions of func_001a7718.
