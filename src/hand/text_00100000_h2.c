@@ -435,11 +435,11 @@ void func_00111340(Src *s, s32 i) {
     ((CtxRows *)D_002BCB60)->m[i][6] = s->z;
     ((CtxRows *)D_002BCB60)->m[i][7] = s->w;
 }
-extern void *D_002E26A0[3];
+extern Src *D_002E26A0[3];
 void func_00111480(void);
 
 void func_00111380(void) {
-    void *p;
+    Src *p;
     func_00111480();
     p = D_002E26A0[0];
     if (p) func_00111340(p, 0);
@@ -536,4 +536,26 @@ s32 func_00112e08(void) {
     D_002BCDC8.b = D_002BC130;
     D_002BCDC8.c = D_002BCDA8;
     return func_00109558(6);
+}
+
+/* Saved copies of the three D_002E26A0 objects' positions. */
+extern f32 D_004D92F0[3][4];
+void func_00113048(void) {
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        Src *s = D_002E26A0[i];
+        if (s) {
+            D_004D92F0[i][0] = s->x;
+            D_004D92F0[i][1] = s->y;
+            D_004D92F0[i][2] = s->z;
+            D_004D92F0[i][3] = s->w;
+        }
+    }
+}
+
+void func_001130a0(s32 i, f32 *d) {
+    d[0] = D_004D92F0[i][0];
+    d[1] = D_004D92F0[i][1];
+    d[2] = D_004D92F0[i][2];
+    d[3] = D_004D92F0[i][3];
 }
