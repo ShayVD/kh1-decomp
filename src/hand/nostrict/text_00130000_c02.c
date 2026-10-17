@@ -368,9 +368,218 @@ void func_00136d38(C02Obj *o)
     }
 }
 
+typedef f32 C02V4[4] __attribute__((aligned(16)));
+
+typedef f32 C02M4[4][4] __attribute__((aligned(16)));
+
+typedef struct {
+    s32 cnt;
+    s32 mesh;
+    s32 *list;
+} C02GEnt;
+
+typedef struct {
+    f32 min[3];
+    f32 max[3];
+    s32 x18;
+    s32 n;
+    C02GEnt e[8];
+} C02GBox;
+
+typedef struct {
+    u16 poly;
+    u16 i0;
+    u16 i1;
+} C02Edge;
+
+typedef struct {
+    u8 pad00[0x90];
+    s32 x90;
+    void *x94;
+} C02Hit;
+
+typedef struct {
+    u8 pad00[0x10];
+    C02V4 pos;
+    u8 pad20[0x2C - 0x20];
+    f32 x2c;
+    u8 pad30[0x148 - 0x30];
+    u8 *x148;
+    u8 pad14c[0x2C0 - 0x14C];
+    f32 x2c0;
+    u8 pad2c4[0x324 - 0x2C4];
+    f32 x324;
+} C02Ob3;
+
+typedef struct {
+    u8 *p;
+    u8 pad[12];
+} C02MSlot;
+
+extern C02MSlot D_003044E0[];
+extern u8 D_002C58A0[];
+
+f32 func_0015ca50(C02Ob3 *o);
+f32 func_0015ca70(C02Ob3 *o);
+void func_001178d0(C02GBox *b);
+void func_002675a8(void *dst, void *src);
+void func_00267530(void *dst, void *a, void *b);
+void func_00105a30(s32 mesh, s32 id, f32 *out);
+s32 func_00105ad0(s32 mesh, s32 id, C02V4 *out);
+s32 func_00117948(C02Edge *e, s32 n, s32 *list, s32 mesh);
+f32 func_00121550(f32 *out, f32 *p0, f32 *d0, f32 *p1, f32 *d1);
+f32 func_00120c18(f32 *v);
+void func_002674f0(f32 *out, f32 *a, f32 *b, f32 t);
+void func_002673b8(void *dst, void *src);
+void func_0015cac0(C02Ob3 *o, f32 *p, f32 *n, f32 *out);
+s32 func_0015bcb8(C02Ob3 *o, f32 *p);
+void func_00267440(void *dst, void *src);
+void func_002672f8(void *dst, void *m, void *v);
+void sceVu0CopyMatrix(void *dst, void *src);
+void func_002673f8(void *dst, void *src);
+s32 func_0015cb48(C02Ob3 *o);
+s32 func_0014f658(C02Ob3 *o, s32 st);
+void func_00130340(C02Ob3 *o, s32 f, f32 x);
+void func_00130578(C02Ob3 *o, s32 f, f32 x);
+
+s32 func_0015cc48(C02Ob3 *o, f32 *pos)
+{
+    C02GBox box;
+    C02V4 d;
+    C02V4 pc;
+    C02V4 verts[4];
+    C02Edge q;
+    C02M4 m;
+    C02V4 tri;
+    C02V4 hit;
+    C02V4 edge;
+    C02V4 bn;
+    C02V4 bp;
+    C02V4 be;
+    struct {
+        s32 mesh;
+        s32 id;
+        f32 dist;
+    } bst;
+    s32 *list;
+    s32 j;
+    s32 i;
+    s32 cnt;
+    f32 r, a, b, top, t, dist;
+    s32 k, nv, mesh;
+    s32 *lp;
+    u8 *mo;
+    f32 *n;
+
+    r = o->x2c0 + 30.0f;
+    a = func_0015ca50(o);
+    b = func_0015ca70(o);
+    box.min[0] = o->pos[0] - r;
+    box.min[1] = (o->pos[1] - a) + -30.0f;
+    box.min[2] = o->pos[2] - r;
+    box.max[0] = o->pos[0] + r;
+    box.max[1] = (o->pos[1] - a) + 60.0f;
+    box.max[2] = o->pos[2] + r;
+    top = (o->x324 - a) - b;
+    if (top < box.max[1]) {
+        box.max[1] = top;
+        if (top < box.min[1])
+            return 0;
+    }
+    func_001178d0(&box);
+    if (box.n == 0)
+        return 0;
+    func_002675a8(pc, pos);
+    bst.dist = r;
+    for (i = 0; i < box.n; i++) {
+        cnt = box.e[i].cnt;
+        list = box.e[i].list;
+        mesh = box.e[i].mesh;
+        for (j = 0; j < cnt; j++) {
+            lp = &list[j];
+            func_00105a30(mesh, *lp, tri);
+            if (tri[1] > -0.5f)
+                continue;
+            q.poly = *lp;
+            nv = func_00105ad0(mesh, *lp, verts);
+            for (k = 0; k < nv; k++) {
+                f32 *v0, *v1;
+                s32 k2;
+                q.i0 = k;
+                k2 = (k + 1) % nv;
+                q.i1 = k2;
+                v0 = verts[k];
+                v1 = verts[k2];
+                func_00267530(edge, v1, v0);
+                func_00267530(d, o->pos, v1);
+                if (edge[0] * d[2] - edge[2] * d[0] < 0.0f)
+                    continue;
+                if (!func_00117948(&q, cnt, list, mesh))
+                    continue;
+                d[0] = edge[2];
+                d[1] = 0;
+                d[2] = -edge[0];
+                t = func_00121550(hit, v0, edge, o->pos, d);
+                if (hit[1] < box.min[1])
+                    continue;
+                if (box.max[1] < hit[1])
+                    continue;
+                if (t < 0.0f)
+                    continue;
+                if (1.0f < t)
+                    continue;
+                func_00267530(d, hit, o->pos);
+                dist = func_00120c18(d);
+                if (bst.dist <= dist)
+                    continue;
+                func_002675a8(bn, tri);
+                func_002674f0(bp, v1, v0, t);
+                func_002675a8(be, edge);
+                bst.mesh = mesh;
+                bst.id = *lp;
+                bst.dist = dist;
+            }
+        }
+    }
+    if (r <= bst.dist)
+        return 0;
+    func_002673b8(edge, be);
+    edge[3] = 0;
+    func_0015cac0(o, bp, edge, hit);
+    if (func_0015bcb8(o, hit))
+        return 0;
+    mo = 0;
+    if (bst.mesh != -1)
+        mo = D_003044E0[bst.mesh].p;
+    ((C02Hit *)o->x148)->x90 = bst.id;
+    ((C02Hit *)o->x148)->x94 = mo;
+    bn[3] = 0;
+    if (mo == 0) {
+        f32 *n0 = bn;
+        func_002675a8(o->x148 + 0x70, bp);
+        func_002675a8(o->x148 + 0x60, n0);
+        func_002675a8(o->x148 + 0x80, edge);
+    } else {
+        func_00267440(m, mo + 0xD0);
+        n = bn;
+        func_002672f8(o->x148 + 0x70, m, bp);
+        sceVu0CopyMatrix(m, mo + 0xD0);
+        func_002675a8(m[3], D_002C58A0);
+        func_002673f8(m, m);
+        func_002672f8(o->x148 + 0x60, m, n);
+        func_002672f8(o->x148 + 0x80, m, edge);
+    }
+    func_0015cb48(o);
+    func_0014f658(o, 15);
+    func_00130340(o, 0x100000E, 0.0f);
+    func_00130578(o, 0x4000000D, 0.0f);
+    pos[3] = 0.0f;
+    o->x2c = 0.0f;
+    return 1;
+}
+
 /* needs make: uses rodata */
 
-typedef f32 C02V4[4] __attribute__((aligned(16)));
 
 typedef struct {
     C02V4 v00;      /* 0x2A0 */
