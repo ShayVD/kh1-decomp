@@ -202,3 +202,29 @@ Left in libc: `_vfprintf_r`, `_vfiprintf_r`, `d2b`.
 
 None of these are ported. The Vita layer replaces each library behind the
 `include/platform/` wrappers (docs/portability.md).
+
+## Session 5: libkernl SIF RPC and file I/O (0x2594a0-0x260000)
+
+- Built with ee-gcc 2.9-991111a, -O2 -G0, normal delay-slot fill (src/sdk/gcc991111/).
+- 991111 sibcalls only void calls whose result is unused, frameless (`lui; j f; lw`). `return f(x)` uses jal plus a frame.
+- 991111 pads loops under 6 instructions with nops. The SDK delay loop `i = 0x100000; do i--; while (i != -1);` is plain C.
+- 991111 has no `__builtin_va_list`. Use `typedef char *va_list;` and `va_start(v,l)` as `v = (char *)__builtin_next_arg(l) - 8*(8 - __builtin_args_info(2))`; an int va_arg is `*(int *)ap`.
+- Store and load order follows type-based aliasing. sceSifSetDma descriptors must be all-word structs `{u32 src, dest; int size, attr;}`. RPC client and packet fields must be words with an int sema.
+- An inlined GetThreadId (`li $3,-47; syscall`) appears in func_0025fd10 and func_0025fe28. It is written as a two-instruction asm statement.
+- File I/O request block at D_0066C780: `{sema, int *res, size, args}`, with args from +12. Commands seen:
+  - 0 open: send size 1048.
+  - 2 read: 32.
+  - 4 lseek: 28.
+  - 13 chstat: i+81.
+  - 14 mount: 3088.
+  - 17 two-name: 2060.
+  - 20 mount with flag: 3092.
+  - 22 64-bit lseek: 32.
+  - 23 devctl: 2076.
+  - 24 two-name: 2060.
+  - 25 name + buffer: 2060.
+  - 26 ioctl2-like: 1056.
+- File mode bit 0x8000 is nowait: the semaphore goes into the 32-entry table D_0046AE58 and `-sema` is sent. Handler func_0025add8 (cmd 0x80000011) signals it. Bit 0x20000000 skips the read-buffer flush.
+- sceSifInitRpc registers handlers 0x80000008/9/a/c. The file I/O init (func_0025b2f0) registers 0x80000011 and 0x80000013, binds 0x80000001 into D_0066DA40 and asks fno 255 for the version.
+- Hand-written asm left out: func_00258c30 (mfc0), func_0025b2c0 (sync/ei), DIntr.
+- func_0025ac40 and func_0025fb60 end in an infinite loop whose delay-slot nop fills the 4-byte gap after them. Their layout entries now include it.
