@@ -194,7 +194,7 @@ s32 func_0015b998(Cyl *a, Cyl *b) {
 void func_0015bad0(CylObj *o, CylSrc *src, Cyl *c) {
     func_001315c0(o, src->bone, c->pos, src->off);
     c->type = src->type;
-    if ((o->flags >> 45) & 1) {
+    if ((s32)(o->flags >> 45) & 1) {
         c->pos[1] -= src->dy * o->sy;
         c->r = src->r * o->sx;
         c->h = src->h * o->sy;
@@ -209,8 +209,8 @@ s32 func_0015bb88(Cyl *target, CylObj *o, Cyl *out) {
     Cyl *tmp;
     CylSrc *e;
     s32 i;
-    if (!func_00122ff8(o)) return 0;
-    if (!func_00123330(o)) return 0;
+    if (!func_00122ff8(o)) goto fail;
+    if (!func_00123330(o)) goto fail;
     tmp = func_00122048(32, 16);
     e = o->hdr->cyl;
     for (i = 0; i < o->hdr->n5; i++, e++) {
@@ -224,5 +224,6 @@ s32 func_0015bb88(Cyl *target, CylObj *o, Cyl *out) {
         }
     }
     func_001220b8(tmp);
+fail:
     return 0;
 }

@@ -472,3 +472,122 @@ s32 func_00156d88(Obj156d88 *a, Arg156d88 *b, s32 c) {
     }
     return 0;
 }
+
+/* ---- func_001576a8 ---- */
+typedef struct { u8 pad[0x74]; s32 w74; } S6C_1576a8;
+typedef struct { u8 pad[0x6C]; S6C_1576a8 *p6C; } Act1576a8;
+typedef struct { s8 b0, b1, b2, b3; Act1576a8 *w4; s32 w8; s32 wC; s32 w10; } E551670;
+s32 func_00122ff8(Act1576a8 *);
+void func_0011dcf0(void *, s32 *, s32 *);
+void func_001ed7d8(s32, s32, s32, s32);
+void func_001ed6f0(s32, s32, s32);
+
+void func_001576a8(E551670 *e) {
+    f32 v[4];
+    s32 x, y;
+    f32 b, d;
+    if (func_00122ff8(e->w4)) {
+        func_001315c0((s32)e->w4, e->w4->p6C->w74, v, 0.0f);
+        func_0011dcf0(v, &x, &y);
+        b = (f32)e->w10;
+        d = 16383.0f - b;
+        x = b + d * ((f32)x / 16383.0f);
+        y = b + d * ((f32)y / 16383.0f);
+        if (e->b1 == 0) {
+            func_001ed7d8(e->b2, e->b3, x, y);
+        } else {
+            func_001ed6f0(e->wC, x, y);
+        }
+    }
+}
+
+/* ---- func_00157818 ---- */
+typedef struct { u8 pad[0x4C]; u16 h4C; } S130_157818;
+typedef struct { u8 pad[0x6C]; s32 w6C; u8 pad70[0x4D]; s8 idx; } S6C_157818;
+typedef struct { u8 pad[0x6C]; S6C_157818 *p6C; u8 pad70[0xC0]; S130_157818 *p130; u8 pad134[0x374]; s32 *tbl; } Obj157818;
+extern E551670 D_00551670[];
+extern s8 D_005516C0[];
+void func_00157648(void);
+
+E551670 *func_00157818(Obj157818 *a, s32 k) {
+    E551670 *e;
+    u32 h;
+    s8 v;
+    func_00157648();
+    if ((D_002C5958 >> 20) & 1) return 0;
+    e = &D_00551670[a->p6C->idx];
+    h = a->p130->h4C;
+    if (h < 10) {
+        v = D_005516C0[h];
+        if (v < 0) return 0;
+        e->b2 = v;
+        e->b1 = 0;
+    } else {
+        if (a->tbl == 0 || k >= *a->tbl) return 0;
+        e->b1 = 1;
+        e->wC = (s32)a->tbl + a->tbl[k + 1];
+    }
+    e->b3 = k;
+    e->w4 = (Act1576a8 *)a;
+    e->b0 = 2;
+    e->w10 = a->p6C->w6C;
+    return e;
+}
+
+/* ---- func_00157dc8 ---- */
+typedef struct { s8 b0; u8 f0:1; u8 f1:7; u8 pad[32]; } E551608;
+extern E551608 D_00551608[];
+s32 func_0011ef38(void *);
+void func_0011ef10(s32, void *);
+void func_00157c60(void);
+
+void func_00157dc8(void) {
+    s32 i;
+    for (i = 0; i < 3; i++) {
+        D_00551608[i].b0 = -1;
+        D_00551608[i].f0 = 0;
+    }
+    for (i = 0; i < 10; i++) {
+        D_005516C0[i] = -1;
+    }
+    for (i = 0; i < 4; i++) {
+        D_00551670[i].b0 = 0;
+    }
+    if (func_0011ef38(func_00157c60) == 0) {
+        func_0011ef10(0x23669, func_00157c60);
+    }
+}
+
+/* ---- func_00157ea8 ---- */
+typedef struct {
+    s32 w0;
+    u8 pad4[0xC];
+    Vec154768 v10;
+    u8 pad20[0x1C];
+    f32 f3C;
+    u8 pad40[0x124];
+    s32 w164;
+    u8 pad168[4];
+    f32 f16C;
+    u8 pad170[0x1E0];
+    s32 w350[4];
+    u8 pad360[0x10];
+    u64 d370;
+} Obj157ea8;
+typedef struct { u8 pad[4]; f32 f4; } Ret157ea8;
+
+void func_00157ea8(Obj157ea8 *a) {
+    Obj157ea8 *p;
+    s32 i;
+    a->w0 |= 0x02000270;
+    a->d370 &= ~(3ULL << 37);
+    p = (Obj157ea8 *)D_002E26A0[0];
+    if (func_00122ff8((Act1576a8 *)p)) {
+        func_002675a8(&a->v10, &p->v10);
+        func_00137688(a, p->f3C);
+        for (i = 0; i < 4; i++) {
+            a->w350[i] = p->w350[i];
+        }
+        ((Ret157ea8 *)func_00130340(a, p->w164, 0.0f))->f4 = p->f16C;
+    }
+}
