@@ -22,20 +22,6 @@ extern s32 D_00616214;
 void func_00183a00(s32, s32, s32);
 void memset(s32, s32, s32);
 
-void func_00180ab8(void *arg0, s16 arg1) {
-    s32 sp[24];
-    s16 var_v1;
-
-    var_v1 = M2C_FIELD(arg0, s16 *, 0);
-    if (var_v1 >= 0x3800) {
-        var_v1 = (var_v1 + arg1) - 0x3800;
-    }
-    sceGsSetDefLoadImage(sp, var_v1, M2C_FIELD(arg0, s16 *, 4), M2C_FIELD(arg0, s16 *, 6), M2C_FIELD(arg0, s16 *, 8), M2C_FIELD(arg0, s16 *, 0xA), M2C_FIELD(arg0, s16 *, 0xC), M2C_FIELD(arg0, s16 *, 0xE));
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(sp, arg0 + 0x20);
-}
-
 void func_001812d0(void *arg0) {
     s32 sp[16];
     func_00267328(sp, &D_002BBFA0, &D_00615E70);

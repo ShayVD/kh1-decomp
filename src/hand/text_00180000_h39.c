@@ -93,6 +93,39 @@ s32 sceGsSyncPath(s32, s32);
 void sceGsSetDefLoadImage(H39LoadImage *, s16, s16, s16, s16, s16, s16, s16);
 s32 sceGsExecLoadImage(H39LoadImage *, void *);
 
+typedef struct { s16 dbp, b, c, d, e, f, g, h; s32 pad[4]; u8 data[1]; } AB;
+void func_00180ab8(AB *a, s16 base) {
+    H39LoadImage li; s16 v = a->dbp;
+    if (v >= 0x3800) v = v + base - 0x3800;
+    sceGsSetDefLoadImage(&li, v, a->c, a->d, a->e, a->f, a->g, a->h);
+    FlushCache(0); sceGsSyncPath(0, 0);
+    sceGsExecLoadImage(&li, a->data);
+}
+
+s32 *func_001803b8(s32 *);
+s32 *func_001803c0(s32 *, s32);
+/* needs func_00180ab8 defined above */
+void func_00180c20(s32 *data, u8 *mask, s16 base) {
+    s32 *p;
+    s32 n;
+    s32 i;
+    u8 m;
+
+    i = 0;
+    m = 0;
+    p = func_001803c0(func_001803b8(data), 1);
+    n = *p++;
+    for (; i < n; i++, m >>= 1) {
+        void *s = (void *) *p++;
+        s32 k = i >> 3;
+        s32 j = i & 7;
+        if (!j)
+            m = mask[k];
+        if (m & 1)
+            func_00180ab8(s, base);
+    }
+}
+
 void func_00180b40(H39Img *img, s16 base) {
     H39LoadImage li;
     s16 dbp = img->dbp;

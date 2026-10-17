@@ -725,7 +725,7 @@ s32 func_0014af60(Hm *, Hm *);
 s32 func_0014b090(Hm *, Hm *);
 s32 func_0014a330(Hm *, s32, f32 *, f32 *);
 void func_002674f0(f32 *, f32 *, f32 *, f32);
-void func_00147ed8(s32, s32, s32, f32 *);
+s32 func_00147ed8(s32, s32, s32, f32 *);
 void func_0014ac00(Hm *, s32);
 
 void func_0014b3e0(Hz *x, Hz *y) {
@@ -751,4 +751,136 @@ void func_0014b3e0(Hz *x, Hz *y) {
     if (ra || rb) return;
     func_002674f0(t, x->v20, y->v20, 0.5f);
     func_00147ed8(D_00350CE0, (a | b) < 32 ? 10 : 11, 20000, t);
+}
+
+extern void *D_002E26A0[];
+#define FLD(p, T, off) (*(T *)((u8 *)(p) + (off)))
+s32 func_00148768(s32, s32, void *, s32, f32);
+void func_0011d1e0(s32, s32, void *, s32);
+void func_00145188(void *a, f32 f) {
+    void *t = FLD(FLD(a, void *, 0x148), void *, 0x154);
+    if ((t == 0 || *FLD(t, u8 *, 0x10) != 0) && !(D_002C5958 & 0x104000)) {
+        FLD(FLD(a, void *, 0x148), s32, 0x154) = func_00148768(D_00350CE0, 0x16, a, 0x8003, 0.0f);
+        if (a == D_002E26A0[0]) {
+            func_0011d1e0(0xA8, FLD(a, s32, 4) + 1, (u8 *)a + 0x10, 0);
+        }
+    }
+    FLD(FLD(a, void *, 0x148), f32, 0x158) = f;
+}
+#undef FLD
+
+
+extern void *D_002E26A0[];
+s32 func_001453a8(void *, f32 *, s32);
+void func_001ef7b0(s32);
+void func_00141468(void *, s32);
+void func_00141608(void *, s32);
+void func_00244a10(void *, s32);
+void func_001473a8(s32, s32, f32 *);
+
+void *func_00145aa0(Bo *o, f32 *pos) {
+    f32 t[4];
+    f32 d[4];
+    s32 i;
+    void *e;
+    f32 h = D_00304DB0[o->u.s.idx].h;
+
+    func_002675a8(t, pos);
+    t[1] += h;
+    for (i = 0; i < 3; i++) {
+        e = D_002E26A0[i];
+        if (e == 0) continue;
+        if (!func_001453a8(e, t, (u16)(o->u.d >> 2) & 3)) continue;
+        switch (o->u.s.idx) {
+        case 0: func_001ef7b0(1); break;
+        case 1: func_001ef7b0(5); break;
+        case 2: func_001ef7b0(20); break;
+        case 3: func_00141468(e, 1); break;
+        case 4: func_00141468(e, 5); break;
+        case 5: func_00141608(e, 2); break;
+        case 6: func_00141608(e, 15); break;
+        }
+        func_001315c0(e, 0x8003, t, 0.0f);
+        func_00267530(d, pos, t);
+        func_00121fc4(o->vel, d);
+        if (D_00304DB0[o->u.s.idx].f4 > 0.0f) {
+            func_00145188(e, D_00304DB0[o->u.s.idx].f4);
+        }
+        if (D_00304DB0[o->u.s.idx].f10 > 0) {
+            func_00244a10(e, D_00304DB0[o->u.s.idx].f10);
+        }
+        func_001473a8(D_00304DB0[o->u.s.idx].f8, 0, (f32 *)((u8 *)e + 0x50));
+        return e;
+    }
+    return 0;
+}
+
+typedef struct {
+    u64 d0;
+    union { u64 x; struct { u32 lo; u32 b0:5; u32 f37:1; u32 rest:26; } b; } d8;
+    f32 v10[4];
+    s32 w20;
+} Hr;
+typedef struct { u8 pad[0xc]; Hm *m; f32 pos[4]; } Hx;
+typedef struct { u8 pad[4]; Hs *s; s32 w8; u8 padc[4]; f32 pos[4]; } Hy;
+Hr *func_001354b8(Hm *, Hs *);
+void func_0014ac00(Hm *, s32);
+void func_0014a238(f32 *, f32 *, f32 *);
+void func_00134870(Hs *, Hr *, f32 *);
+void *func_0014a1b0(Hm *, s32, f32 *);
+void func_00147d50(void *, f32 *);
+void func_0012bd00(void *, Hs *);
+
+typedef struct { u8 pad[0x28]; s32 x28; } W8Z5c;
+typedef struct { u8 pad[8]; s32 x8; u8 padc[0x5c - 0xc]; W8Z5c *x5c; } W8Z;
+s32 func_00176578(s32, s32, s32, s32);
+void *func_0014a1b0(Hm *m, s32 b, f32 *c) {
+    W8Z *z = (W8Z *)m;
+    s32 r;
+    s32 res;
+    if (!z->x8) return 0;
+    if (z->x5c->x28 < 0) return 0;
+    r = func_00176578(z->x8, b != 4 ? b : 2, 1 << z->x5c->x28, 0);
+    res = 0;
+    if (r >= 0) res = func_00147ed8(z->x8, r, -10000, c);
+    return (void *)res;
+}
+
+void func_0014ade0(Hx *x, Hy *y) {
+    f32 t[4];
+    Hm *m = x->m;
+    Hr *r;
+    void *q;
+    s32 k;
+    s32 v;
+
+    r = func_001354b8(m, y->s);
+    if (!r) return;
+    k = 4;
+    if (*(u32 *)y->s & 0x1000080) {
+        v = m->ba8;
+    } else {
+        k = 64;
+        if (r->d8.b.f37) {
+            v = m->baa;
+        } else {
+            v = m->ba8;
+            k = 1;
+        }
+    }
+    func_0014ac00(m, k);
+    r->w20 = y->w8;
+    func_0014ac50(m, y->s, r->v10);
+    func_0014a238(x->pos, y->pos, t);
+    func_00134870(y->s, r, t);
+    if ((s32)(r->d0 >> 4) & 1) return;
+    if (!m->w8) return;
+    q = func_0014a1b0(m, k, t);
+    if (q) {
+        func_00147d50(q, r->v10);
+        func_0012bd00(q, y->s);
+    }
+    if (((s32)(m->d0 >> 22) & 1) && v >= 0) {
+        func_00146fb8((Pf *)m->u30.s.tg, 0, v);
+    }
 }

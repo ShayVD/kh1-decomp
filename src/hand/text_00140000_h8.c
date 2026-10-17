@@ -126,7 +126,7 @@ W8P *func_0014a398(W8P *p);
 void func_0014aa50(u32 m);
 void func_0014aab0(W8P *p);
 void func_002674f0(f32 *, void *, void *, f32);
-void func_0014b768(W8P *, f32 *, f32 *);
+s32 func_0014b768(W8P *, f32 *, f32 *);
 void func_0014c130();
 typedef struct { u8 pad[0x100]; union { f32 f; u64 x; struct { u64 lo:32; u64 b32:1; u64 r:31; } b; } x100; } W8A148;
 typedef struct { u8 pad[0x148]; W8A148 *x148; u8 pad14c[0x1cc - 0x14c]; u32 x1cc; u8 pad1d0[0x3c0 - 0x1d0]; u8 x3c0[0x14]; f32 x3d4; } W8Act;
@@ -446,17 +446,6 @@ void func_0014a090(void) {
     D_0054C434 = 0;
 }
 
-s32 func_0014a1b0(W8Z *z, s32 b, s32 c) {
-    s32 r;
-    s32 res;
-    if (!z->x8) return 0;
-    if (z->x5c->x28 < 0) return 0;
-    r = func_00176578(z->x8, b != 4 ? b : 2, 1 << z->x5c->x28, 0);
-    res = 0;
-    if (r >= 0) res = func_00147ed8(z->x8, r, -10000, c);
-    return res;
-}
-
 W8P *func_0014a398(W8P *p) {
     if (p == 0) p = D_0054C440;
     else p++;
@@ -519,6 +508,64 @@ void func_0014b958(W8P *p) {
         func_002674f0(b, p->x10, p->x40, 0.5f);
         func_0014b768(p, a, b);
     }
+}
+
+/* 0x14bba8 (needs func_0014b958 defined above) */
+typedef struct {
+    union { u64 flags; s32 w; } u;
+    u8 pad8[4];
+    f32 f0c;
+    f32 v10[4];
+    s32 i20;
+    f32 f24;
+    f32 f28;
+    u8 pad2c[0x34-0x2c];
+    s32 i34;
+    u8 pad38[0x3c-0x38];
+    f32 f3c;
+    f32 v40[4];
+    u8 pad50[0x54-0x50];
+    s32 i54;
+    u8 pad58[0x70-0x58];
+    f32 v70[4];
+    f32 v80[4];
+    s32 i90;
+} Src57;
+typedef struct { s32 kind; s32 a4; s32 a8; s32 src; s32 a10; f32 f14; f32 f18; s32 pad1c; f32 v[4]; } Ent57;
+void func_001315c0(s32, s32, f32 *, f32);
+s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n);
+s32 func_0014bba8(Src57 *s, Ent57 *tbl, s32 cnt) {
+    s32 k;
+
+    if ((s->u.w & 3) == 1) {
+        func_001315c0(s->i90, s->i20, s->v10, s->f24);
+    }
+    k = (s32)(s->u.flags >> 17) & 7;
+    if (k != 1 && k != 4 && k != 2 && ((s32)(s->u.flags >> 16) & 1)) {
+        cnt += func_0014b9e0(s, s->v10, s->v70, s->f0c, s->f0c, tbl, cnt);
+    }
+    switch (s->u.w & 3) {
+    case 0:
+        func_002675a8(s->v40, s->v10);
+        k = (s32)(s->u.flags >> 17) & 7;
+        if (k == 1 || k == 4 || k == 2 || !((s32)(s->u.flags >> 16) & 1)) {
+            cnt += func_0014b9e0(s, s->v10, s->v10, s->f0c, s->f0c, tbl, cnt);
+        }
+        break;
+    case 1:
+        func_001315c0(s->i90, s->i20, s->v40, s->f28);
+        cnt += func_0014b9e0(s, s->v10, s->v40, s->f0c, s->f0c, tbl, cnt);
+        break;
+    case 2:
+        cnt += func_0014b9e0(s, s->v10, s->v40, s->f0c, s->f3c, tbl, cnt);
+        break;
+    }
+    if (!((s32)(s->u.flags >> 20) & 1)) {
+        if ((s->u.w & 3) != 2 || func_0014b768((W8P *)s, s->v40, s->v10)) {
+            func_0014b958((W8P *)s);
+        }
+    }
+    return cnt;
 }
 
 void func_0014c330(void) {
