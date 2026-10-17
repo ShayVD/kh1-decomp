@@ -217,6 +217,10 @@ def variants(code: str) -> list[str]:
         gl = goto_loops(v)
         if gl != v:
             out.append(gl)
+    # float stores of one constant as a chained assignment: gcc then keeps
+    # the value in an FPU register (`mtc1 zero` + swc1) instead of `sw zero`
+    # (pppPointCon: `w->x = w->y = w->z = 0.0f`)
+    out += chain_stores(code)
     lp = copy_loop(code)
     for v in (lp, void_callees(code), void_callees(lp)):
         if v != code:
@@ -689,6 +693,24 @@ def copy_loop(code: str) -> str:
            f"{rest}{ind}}}\n")
     out = code[:m.start()] + new + code[m.end():]
     out = re.sub(rf"^\s+[\w ]+\b{cp};\n", "", out, count=1, flags=re.M)
+    return out
+
+
+CHAIN_RE = re.compile(r"^(\s+)([^=\n;]+?) = (-?\d+\.\d*f);\n(?:\1[^=\n;]+? = \3;\n)+", re.M)
+
+
+def chain_stores(code: str) -> list[str]:
+    """Runs of 2-4 consecutive `lhs = <float literal>;` lines -> one
+    `a = b = c = lit;` per order of the left-hand sides."""
+    import itertools
+    out = []
+    for m in CHAIN_RE.finditer(code):
+        ind, lit = m.group(1), m.group(3)
+        lhs = [l.strip()[: -len(f" = {lit};")] for l in m.group(0).splitlines()]
+        if not 2 <= len(lhs) <= 4:
+            continue
+        for perm in itertools.permutations(lhs):
+            out.append(code[:m.start()] + f"{ind}{' = '.join(perm)} = {lit};\n" + code[m.end():])
     return out
 
 
