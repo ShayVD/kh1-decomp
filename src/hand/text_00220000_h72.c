@@ -26,12 +26,15 @@ typedef struct O98 {
     u8 p2[0xb0 - 0xa4];
     s32 xb0;
     s32 xb4;
-    u8 p3[0xc4 - 0xb8];
+    u8 p3[0xba - 0xb8];
+    s16 xba;
+    u8 p3b[0xc4 - 0xbc];
     u16 xc4;
     u8 p4[0xca - 0xc6];
     s16 xca;
     s16 xcc;
-    u8 p5[0xd2 - 0xce];
+    s16 xce;
+    u8 p5[0xd2 - 0xd0];
     s16 xd2;
     u8 p6[0xd8 - 0xd4];
     s16 xd8;
@@ -127,6 +130,11 @@ extern s32 D_00643748;
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 void func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00206370(void *, s32, s32, s32, s32, s32, s32, s32, s32);
+typedef struct { u8 pad[0x48e]; u8 x48e[3]; u8 x491; } P491;
+extern P491 *D_00304BE8;
+extern s32 D_003F6E28;
+void func_001f3840(void *);
+void func_0013c778(s32, s32, s32);
 
 void func_002214a8(void *a0) {
     s32 i, j, y, r, k;
@@ -679,4 +687,37 @@ void func_00228330(void *a0) {
     x += w;
     w = (u32)(c * 33536) / 60;
     if (c) func_00206370(a0, 8, x >> 8, 6, w >> 8, 0x80d98659, 0x80d98659, 0x80d98659, 0x80d98659);
+}
+
+void func_00228588(O98 *a0) {
+    u8 buf[4];
+    s32 i, j, c;
+    if (func_001f42b8()) {
+        if (D_00425BC8->x8 & 0x4000) {
+            func_001f36b8(a0);
+            func_0011d768(3);
+        } else {
+            func_001fdfd0(a0);
+            func_0020bd18(a0, 8);
+            if (func_001fe570(a0)) {
+                switch (func_001fd538(a0)) {
+                case 0:
+                    func_001f3840(a0);
+                    func_0020be10(16);
+                    D_003F6E28 = 1;
+                    j = 1;
+                    for (i = 1; i < 4 && (c = D_00304BE8->x48e[i]) != 255; i++) {
+                        if ((u32)(c - 1) < 2) buf[j++] = c;
+                    }
+                    for (; j < 4; j += 2) buf[j] = -1;
+                    func_0013c778(buf[1], buf[2], buf[3]);
+                    break;
+                case 1:
+                    func_001f36b8(a0);
+                    break;
+                }
+            }
+        }
+    }
+    func_00207c28(a0, 365);
 }
