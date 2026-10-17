@@ -3,24 +3,24 @@
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct { V4 a; V4 b; V4 c; V4 d; } Ray;
 typedef struct {
-    s32 x0; u8 pad4[0x30 - 4]; f32 x30[3]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 x64;
+    s32 x0; u8 pad4[0x10 - 4]; V4 x10; u8 pad20[0x10]; f32 x30[3]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 x64;
     u8 pad68[0x70 - 0x68]; s32 x70; u8 pad74[0xd0 - 0x74]; f32 xd0[4][4];
 } ActB;
 typedef struct { u32 x0, x4; u64 x8; u8 pad10[0x44 - 0x10]; f32 x44; } PadB;
 typedef struct { f32 x, y, z, len; } Seg;
 typedef struct Path {
-    s32 n; f32 x4; f32 x8; u8 padc[8]; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
+    s32 n; f32 x4; f32 x8; f32 xc; u8 pad10[4]; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
 } Path;
 typedef struct Cam {
     V4 x0; V4 x10; V4 x20; V4 x30;
-    s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; u8 pad58[4]; f32 x5c; f32 x60;
+    s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam;
 extern Path *D_00362438;
 extern Cam D_00575940;
 void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);
-s32 func_0017b860(void *, V4 *, f32 *, s32 *);
+s32 func_0017b860(s32, V4 *, f32 *, s32 *);
 s32 func_0017b4f8(s32 *, f32 *, f32);
 extern ActB *D_00575894;
 extern s32 D_00575890;
@@ -39,6 +39,8 @@ s32 func_00118b58(void *);
 s32 func_00119688(void *);
 f32 func_00124d28(V4 *, V4 *);
 void func_00176f08(s32, f32);
+void func_0017bc90(s32);
+void func_0017cb88(void);
 void func_00267768(void *, void *, f32);
 void func_00267810(void *, void *, f32);
 void func_002672f8(void *, void *, void *);
