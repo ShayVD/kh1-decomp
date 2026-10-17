@@ -64,6 +64,10 @@ extern s32 D_002A61F0;
 extern s32 D_0062A210;
 extern s32 D_002E27A8;
 extern u64 D_0038CD00;
+typedef struct { s32 f0; s32 f4; s32 f8; } S5AD0;
+typedef struct { s32 f0; s32 f4; s32 f8; u8 padc[0x24]; s32 a30[15]; s32 f6c; } S5BB0;
+extern volatile S5AD0 D_002C5AD0;
+extern volatile S5BB0 D_002C5BB0;
 typedef struct Node { s32 x0; s32 f4; } Node;
 
 void func_001e1418(s32, s32);
@@ -368,6 +372,39 @@ s32 func_001d6628(VM *vm) {
 s32 func_001d69d0(VM *vm) {
     func_00105d38(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
     vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d6b70(VM *vm) {
+    if (!((s32)(D_0038CD00 >> 58) & 1)) return 4;
+    D_002C5AD0.f8 = 0;
+    D_002C5AD0.f4 = 0;
+    D_002C5BB0.f6c = 0;
+    D_002C5BB0.f4 = 0;
+    D_002C5BB0.f8 = 0;
+    D_002C5BB0.a30[0] = 0;
+    D_002C5BB0.a30[1] = 0;
+    D_002C5BB0.a30[2] = 0;
+    D_002C5BB0.a30[3] = 0;
+    D_002C5BB0.a30[4] = 0;
+    D_002C5BB0.a30[5] = 0;
+    D_002C5BB0.a30[6] = 0;
+    D_002C5BB0.a30[7] = 0;
+    D_002C5BB0.a30[8] = 0;
+    D_002C5BB0.a30[9] = 0;
+    D_002C5BB0.a30[10] = 0;
+    D_002C5BB0.a30[11] = 0;
+    D_002C5BB0.a30[12] = 0;
+    D_002C5BB0.a30[13] = 0;
+    D_002C5BB0.a30[14] = 0;
+    return 0;
+}
+
+s32 func_001d6cf0(VM *vm) {
+    Node *p;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (func_00123618(p->f4) >= 300 && func_00123618(p->f4) < 351) func_001248e8(p->f4);
+    }
     return 2;
 }
 
