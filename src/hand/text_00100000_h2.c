@@ -187,3 +187,101 @@ s32 func_0010c4b0(void) {
     sceGsExecLoadImage(&D_002BC1B0, D_00495280);
     return 0;
 }
+
+typedef struct {
+    u16 pad0;
+    u16 n;
+    u8 pad[0x180c];
+    f32 w[1];
+} WeightBlk;
+
+/* 1 if every weight at +0x1810 is zero. */
+s32 func_0010ce00(WeightBlk *b) {
+    s32 i;
+    for (i = 0; i < b->n; i++) {
+        if (b->w[i] != 0.0f) return 0;
+    }
+    return 1;
+}
+
+typedef struct {
+    u8 pad[10];
+    u16 a;
+    u8 pad2[4];
+} El16;
+
+typedef struct {
+    u8 pad[0x18];
+    f32 add;
+    u8 pad2[4];
+    El16 *e;
+} Fader;
+
+/* Raise e[1..n].a by f->add, clamping at 128. */
+void func_0010ce50(Fader *f, s32 n) {
+    El16 *e;
+    if (n <= 0) return;
+    e = f->e + 1;
+    do {
+        if (e->a < 128) e->a = e->a + f->add;
+        else e->a = 128;
+        e++;
+    } while (--n);
+}
+typedef struct {
+    u8 pad[0xc];
+    f32 v;
+} E16;
+typedef struct { u16 n; u16 pad; f32 a; f32 b; u8 pad2[4]; E16 e[1]; } Acc;
+void func_0010cf38(Acc *);
+s32 func_0010d0c0(Acc *p) {
+    s32 i;
+    f32 sum, lim;
+    func_0010cf38(p);
+    lim = p->b;
+    if (p->a <= lim) return p->n;
+    sum = 0.0f;
+    for (i = 0; i < p->n; i++) {
+        sum += p->e[i].v;
+        if (lim <= sum) return i + 1;
+    }
+    return 1;
+}
+
+extern u8 D_0048CF20[];
+extern u8 D_004D6B10[];
+
+void *func_0010fc98(void) {
+    void *p = func_001559f0(52, 12);
+    s32 n = func_001205f0(D_0048CF20, p);
+    return memcpy(D_004D6B10, p, n);
+}
+
+/* Read the little-endian s16 after buf[*pos], advancing *pos by 2. */
+s16 func_0010d438(s32 *pos, u8 *buf) {
+    s32 i = *pos;
+    s32 lo = buf[++i];
+    s32 hi = buf[++i];
+    *pos = i;
+    return lo + (hi << 8);
+}
+s32 func_0010eb78(u8 *s) {
+    s32 cnt = 0, run = 1, i = 0;
+    u8 c;
+    do {
+        c = s[i];
+        if (c < 32) {
+            if (c < 9) {
+                if (c == 0) run = 0;
+                else if (c == 4) run = 0;
+            } else if (c == 15) {
+                i++;
+                if (s[i] == 1) cnt++;
+            } else {
+                i++;
+            }
+        }
+        i++;
+    } while (run);
+    return cnt;
+}

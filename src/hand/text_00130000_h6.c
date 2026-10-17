@@ -176,6 +176,64 @@ f32 func_001348e0(W6Mgr *m, W6Kind *k);
 void *memset(void *d, s32 c, u32 n);
 
 
+typedef struct W6Q {
+    u8 pad00[0x24];
+    s32 seq;
+    u32 mask;
+    u8 pad2c[0x30 - 0x2C];
+    struct W6Q *next;
+} W6Q;
+
+typedef struct {
+    u8 pad000[0x3E0];
+    u32 mask;
+    u8 pad3e4[0x3E8 - 0x3E4];
+    u16 n;
+    u8 pad3ea[0x3EC - 0x3EA];
+    W6Q *head;
+} W6QMgr;
+
+typedef struct {
+    u8 pad[0x40];
+} W6Cell;
+
+typedef struct {
+    u8 pad000[0x3EC];
+    s32 x3ec;
+    u8 pad3f0[0x4B0 - 0x3F0];
+} W6Big;
+
+typedef struct {
+    u8 pad00[0x50];
+    s16 h50;
+} W6Sub;
+
+typedef struct {
+    u8 pad000[0x60];
+    f32 x60;
+    f32 x64;
+    u8 pad068[0x130 - 0x68];
+    W6Sub *sub;
+    u8 pad134[0x38C - 0x134];
+    u32 x38c;
+    u32 x390;
+    u8 pad394[0x3A0 - 0x394];
+    s32 x3a0;
+} W6Ch;
+
+typedef struct {
+    s32 a;
+    s32 b;
+} W6Pair;
+
+extern W6Cell D_005267C0[];
+extern W6Cell D_005277C0[];
+extern W6Big D_002C64A0[];
+extern s32 D_0052A150;
+extern W6Pair D_0052A110[];
+
+void func_001350d0(W6Cell *c);
+
 //@ func_00130040
 s32 func_00130040(W6Obj *o, s32 i) {
     if (o->s1d0.p == 0) {
@@ -416,4 +474,61 @@ W6Blk *func_00134f80(W6Blk *b, s32 n) {
         }
     }
     return 0;
+}
+//@ func_00135000
+void func_00135000(W6QMgr *m, W6Q *q) {
+    W6Q *p = m->head;
+    if (p == 0) {
+        m->head = q;
+    } else {
+        while (p->next != 0) {
+            p = p->next;
+        }
+        p->next = q;
+    }
+    m->mask |= q->mask;
+    q->seq = ++m->n;
+}
+
+//@ func_001356a8
+void func_001356a8(void) {
+    W6Big *p;
+    s32 i;
+    for (i = 0; i < 64; i++) {
+        func_001350d0(&D_005267C0[i]);
+    }
+    for (i = 0; i < 128; i++) {
+        func_001350d0(&D_005277C0[i]);
+    }
+    p = D_002C64A0;
+    for (i = 0; i < 96; i++, p++) {
+        p->x3ec = 0;
+    }
+}
+
+//@ func_001357b8
+W6Pair *func_001357b8(void) {
+    s32 v = D_0052A150;
+    D_0052A150 = (v + 1) % 8;
+    return &D_0052A110[v];
+}
+
+//@ func_00135800
+void func_00135800(W6Ch *c, f32 x, f32 t) {
+    if (0.0f < t) {
+        c->x64 = (x - c->x60) / t;
+    } else {
+        c->x60 = x;
+        c->x64 = 0.0f;
+    }
+}
+
+//@ func_00135978
+void func_00135978(W6Ch *c, s32 a, s32 b) {
+    if (a-- > 0) {
+        c->x38c |= 1 << a;
+    }
+    if (b-- > 0) {
+        c->x390 |= 1 << b;
+    }
 }

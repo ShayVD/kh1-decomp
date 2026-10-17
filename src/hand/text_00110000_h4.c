@@ -1,4 +1,5 @@
 #include "common.h"
+#include "platform/math.h"
 
 extern volatile s32 D_002BBDE0;
 extern s32 D_002C1310[];
@@ -118,3 +119,69 @@ void func_00120438(s32 a, s32 b) {
     while (sceCdDiskReady(1) != 2 || func_00269da8(a, b) == 0) func_0011fd40();
 }
 
+
+typedef struct { u8 pad[68]; s32 x44; s32 x48; } Ent4C;
+extern Ent4C D_004E4528[];
+s32 func_0011f2d0(Ent4C *);
+
+s32 func_001207f8(s32 id) {
+    s32 i;
+    Ent4C *e = D_004E4528;
+    for (i = 0; i < 16; i++, e++) {
+        if (func_0011f2d0(e) && (id == -1 || id == e->x44)) return 1;
+    }
+    return 0;
+}
+
+extern Pool D_004E49E8;
+extern s32 D_004E4520;
+void func_0011efa8(Pool *, void *, s32, s32);
+void func_00120038(Slot *);
+
+void func_00120aa0(void) {
+    s32 i;
+    Slot *s;
+    func_0011efa8(&D_004E49E8, D_004E4528, 76, 16);
+    D_004E4520 = 0;
+    s = D_004F3230;
+    for (i = 15; i >= 0; i--) func_00120038(s++);
+}
+
+extern char D_0048D288[];
+extern u8 D_004F35B0[];
+void sceSifInitRpc(s32);
+void func_0025b550(void);
+s32 sceCdInit(s32);
+void func_0026a728(s32);
+s32 func_0025f228(char *);
+s32 func_0025f1f0(void);
+void func_001101e8(void);
+void func_002696b8(s32, void *, s32);
+void func_00120b10(void) {
+    sceSifInitRpc(0);
+    func_0025b550();
+    sceCdInit(0);
+    func_0026a728(2);
+    while (!func_0025f228(D_0048D288));
+    while (!func_0025f1f0());
+    func_001101e8();
+    sceSifInitRpc(0);
+    sceCdInit(0);
+    func_0026a728(2);
+    func_002696b8(0, D_004F35B0, 4096);
+}
+
+f32 func_00267390(void *, void *);
+f32 func_00120bf8(void *a) {
+    return PlatSqrtf(func_00267390(a, a));
+}
+
+f32 func_00120c88(f32 a) {
+    s32 i;
+    for (i = 0; i < 1024; i++) {
+        if (a > ((f32)3.141592653589793)) a -= ((f32)6.283185307179586);
+        else if (a < -((f32)3.141592653589793)) a += ((f32)6.283185307179586);
+        else break;
+    }
+    return a;
+}
