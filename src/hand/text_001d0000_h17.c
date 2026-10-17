@@ -1,0 +1,434 @@
+#include "common.h"
+
+/* Script VM handlers: value stack at +0x184, top index at +0x180. */
+typedef struct {
+    u8 pad0[0x18];
+    f32 f18;
+} Sub130;
+typedef struct {
+    u8 pad0[0x10];
+    f32 pos[3];
+    u8 pad1c[0x50 - 0x1c];
+    f32 p50[3];
+    u8 pad5c[0x130 - 0x5c];
+    Sub130 *f130;
+    u8 pad134[0x164 - 0x134];
+    s32 f164;
+} Actor;
+typedef struct {
+    s32 x0;
+    Actor *obj;
+    u8 pad8[0x178];
+    s32 sp;
+    s32 stk[92];
+    f32 f2f4;
+    u8 pad2f8[0x30];
+    union { u64 x; s32 i[2]; } flags;
+    f32 f330;
+} VM;
+typedef struct {
+    u8 pad0[0x3040];
+    s32 f3040;
+    u8 pad3044[0x1c];
+    s32 *f3060;
+    u8 pad3064[0xc];
+    union { u64 x; s32 i[2]; u8 c; } f3070;
+    s32 w[8]; /* 0x3078 */
+    u8 pad3098[0x3384 - 0x3098];
+    struct { void *id; s32 f4; s32 f8; s32 fc; s32 f10; s32 f14; } e3384[8];
+} Big;
+extern Big D_00389C90;
+typedef struct {
+    u8 type;
+    u64 val:24;
+    s32 x;
+    s32 a8;
+    s32 ac;
+    f32 v[4];
+} Msg;
+void func_001c4640(Msg *m);
+typedef struct { u8 pad0[0x48e]; u8 a48e[11]; u8 a499[1]; } Save;
+extern Save *D_00304BE8;
+typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;
+typedef struct { u8 pad0[0x6c]; Sub6c *f6c; } Sub4;
+typedef struct { u8 pad0[4]; Sub4 *f4; u8 pad8[0x318 - 8]; s32 f318; } Ent;
+Ent *func_001e98d0(s32, s32);
+Ent *func_001e9b98(s32, s32);
+
+extern f32 D_0038CDDC;
+typedef struct { u8 pad[0x20]; f32 f20; f32 f24; } S2BC0F0;
+extern S2BC0F0 D_002BC0F0;
+extern void *D_002E26A0;
+extern s32 D_0037A378;
+extern s32 D_002A61F0;
+extern s32 D_0062A210;
+extern s32 D_002E27A8;
+extern u64 D_0038CD00;
+typedef struct Node { s32 x0; s32 f4; } Node;
+
+void func_001e1418(s32, s32);
+void func_001e1438(s32, s32);
+void func_0014f9b0(void *, f32 *, f32);
+void func_0014fa38(void *, f32);
+s32 func_001059d0(void *);
+void func_00176ba8(s32, s32);
+void func_00103988(s32);
+void func_0011ef10(s32, void (*)());
+void func_001d5060();
+s32 func_00123298(void);
+Node *func_001230a0(Node *);
+Node *func_00123220(Node *);
+s32 func_00123618(s32);
+void func_001248e8(s32);
+void func_0013c638(s32, s32);
+void func_0013c778(s32, s32, s32);
+s32 func_0024d490(void);
+void func_00104268(f32, f32);
+void func_00105d38(s32, s32);
+s32 func_00131de0(s32, s32);
+void func_00124218(s32);
+
+s32 func_001d2588(VM *vm) {
+    func_001e1418(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d25d8(VM *vm) {
+    func_001e1438(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d2628(VM *vm) {
+    s32 sp = vm->sp;
+    f32 v = vm->stk[sp];
+    vm->sp = sp - 1;
+    D_0038CDDC = v / 100.0f;
+    return 2;
+}
+
+s32 func_001d2720(VM *vm) {
+    D_002BC0F0.f20 = vm->stk[vm->sp - 1];
+    D_002BC0F0.f24 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d2ab8(VM *vm) {
+    f32 v[4];
+    if (vm->obj) {
+        v[3] = 1.0f;
+        v[0] = vm->stk[vm->sp - 3];
+        v[1] = vm->stk[vm->sp - 2];
+        v[2] = vm->stk[vm->sp - 1];
+        func_0014f9b0(vm->obj, v, (f32)vm->stk[vm->sp] * 2);
+    }
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d2c08(VM *vm) {
+    if (vm->obj) {
+        func_0014fa38(vm->obj, (f32)vm->stk[vm->sp] * 2);
+    }
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001d2fd8(VM *vm) {
+    D_00389C90.f3070.x |= 0x800000000000ULL;
+    D_00389C90.w[1] = vm->stk[vm->sp - 1] + 256;
+    D_00389C90.w[2] = vm->stk[vm->sp] + 192;
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d3078(VM *vm) {
+    D_00389C90.f3070.x |= 0x1000000000000ULL;
+    D_00389C90.w[3] = vm->stk[vm->sp - 1] + 256;
+    D_00389C90.w[4] = vm->stk[vm->sp] + 192;
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d33c8(VM *vm) {
+    D_00389C90.f3070.x |= 0x2000000000000ULL;
+    D_00389C90.w[5] = vm->stk[vm->sp - 1] + 256;
+    D_00389C90.w[6] = vm->stk[vm->sp] + 192;
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d3858(VM *vm) {
+    s32 v = D_00304BE8->a499[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];
+    if (v >= 100) D_00304BE8->a499[vm->stk[vm->sp - 1]] = 99;
+    else if (v < 0) D_00304BE8->a499[vm->stk[vm->sp - 1]] = 0;
+    else D_00304BE8->a499[vm->stk[vm->sp - 1]] += vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d3948(VM *vm) {
+    void *d = D_002E26A0;
+    vm->sp++;
+    if (d) vm->stk[vm->sp] = func_001059d0(d);
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001d39b0(VM *vm) {
+    s32 x = D_00389C90.f3040 + D_00389C90.f3060[vm->stk[vm->sp]];
+    if (!(D_0037A378 & 1)) {
+        func_00176ba8(x, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3aa8(VM *vm) {
+    Msg m;
+    Actor *o = vm->obj;
+    if (o) {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = o->p50[0];
+        m.v[1] = o->p50[1];
+        m.v[2] = o->p50[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d3bb0(VM *vm) {
+    if (vm->obj) {
+        vm->obj->f130->f18 = vm->stk[vm->sp];
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3be8(VM *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        vm->stk[vm->sp] = vm->obj->f130->f18;
+    }
+    return 2;
+}
+
+s32 func_001d40b0(VM *vm) {
+    s32 i = vm->stk[vm->sp];
+    if (i < 4) vm->stk[vm->sp] = D_00304BE8->a48e[i];
+    return 2;
+}
+
+s32 func_001d42f0(VM *vm) {
+    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->f318;
+    return 2;
+}
+
+s32 func_001d43d8(VM *vm) {
+    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->f4->f6c->f3c;
+    return 2;
+}
+
+s32 func_001d4448(VM *vm) {
+    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->f4->f6c->f44;
+    return 2;
+}
+
+s32 func_001d4610(VM *vm) {
+    Ent *e = func_001e9b98((s32)(vm->flags.x >> 5) & 1, D_00304BE8->a48e[vm->stk[vm->sp]]);
+    if (e) vm->stk[vm->sp] = e->f318;
+    return 2;
+}
+
+s32 func_001d4710(VM *vm) {
+    Msg m;
+    vm->flags.x &= ~1ULL;
+    vm->flags.x &= ~0x40ULL;
+    vm->flags.x &= ~0x200ULL;
+    m.type = 18;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5090(VM *vm) {
+    D_002A61F0 = 1;
+    func_00103988(vm->stk[vm->sp]);
+    D_0062A210 = vm->stk[vm->sp];
+    func_0011ef10(50000, func_001d5060);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d5278(VM *vm) {
+    Msg m;
+    m.type = 33;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d52c0(VM *vm) {
+    Msg m;
+    m.type = 34;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5350(VM *vm) {
+    vm->sp++;
+    if (vm->obj) vm->stk[vm->sp] = vm->obj->f164;
+    return 2;
+}
+
+s32 func_001d54a8(VM *vm) {
+    if (func_00123298() <= 0) return 2;
+    return 4;
+}
+
+s32 func_001d5618(VM *vm) {
+    s32 n = 0;
+    Node *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->f4) == 0xcd) n++;
+    }
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d56a8(VM *vm) {
+    vm->sp++;
+    if (D_002E27A8 == 2) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001d56f0(VM *vm) {
+    Msg m;
+    m.type = 37;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5738(VM *vm) {
+    Msg m;
+    m.type = 38;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5780(VM *vm) {
+    func_0013c638(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d5b00(VM *vm) {
+    func_0013c778(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d6348(VM *vm) {
+    s32 n = 0;
+    Node *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->f4) == vm->stk[vm->sp]) n++;
+    }
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d6628(VM *vm) {
+    if (!func_0024d490()) return 4;
+    return 2;
+}
+
+s32 func_001d69d0(VM *vm) {
+    func_00105d38(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d6e70(VM *vm) {
+    s32 i = -1;
+    while ((i = func_00131de0(i, vm->stk[vm->sp])) != -1) func_00124218(i);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7238(VM *vm) {
+    if ((s32)(D_0038CD00 >> 60) & 1) return 4;
+    return 2;
+}
+
+s32 func_001d7258(VM *vm) {
+    Msg m;
+    Actor *o = vm->obj;
+    if (o) {
+        m.x = vm->x0;
+        m.type = 39;
+        m.val = 0;
+        m.v[0] = o->pos[0];
+        m.v[1] = o->pos[1] - 20.0f;
+        m.v[2] = o->pos[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d72e0(VM *vm) {
+    vm->flags.x |= 0x4000;
+    vm->f330 = (f32)vm->stk[vm->sp] * 2;
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7438(VM *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (D_00389C90.e3384[i].id == 0 || D_00389C90.e3384[i].id == vm->obj) {
+            D_00389C90.e3384[i].id = vm->obj;
+            D_00389C90.e3384[i].f8 = vm->stk[vm->sp - 1];
+            D_00389C90.e3384[i].f10 = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d74b8(VM *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (D_00389C90.e3384[i].id == 0 || D_00389C90.e3384[i].id == vm->obj) {
+            D_00389C90.e3384[i].id = vm->obj;
+            D_00389C90.e3384[i].f14 = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 1;
+    return 2;
+}
