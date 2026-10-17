@@ -75,7 +75,9 @@ typedef struct {
 } PppSlotE;
 
 struct PppSys {
-    u8 pad00[0x54];
+    u8 pad00[0x44];
+    f32 scale;         /* +0x44 */
+    u8 pad48[0xC];
     s32 end;           /* +0x54 */
     s32 time;          /* +0x58 */
     s32 prev;          /* +0x5C */
@@ -217,4 +219,171 @@ s32 func_00183958(PppSys *s) {
         return 0;
     }
     return s->time >= s->end;
+}
+
+/* A block heap: blocks are linked both ways; "used" and the byte count at
+ * +0xC are typed as pointers so their stores order like the original. */
+typedef struct PppBlk {
+    struct PppBlk *next;  /* +0x0 */
+    struct PppBlk *prev;  /* +0x4 */
+    struct PppBlk *used;             /* +0x8 */
+    s32 pad;
+} PppBlk;
+
+typedef struct {
+    PppBlk *unk0;
+    PppBlk *first;  /* +0x4 */
+    PppBlk *last;   /* +0x8 */
+    PppBlk *unkC;
+} PppHeap;
+
+void func_00183a00(PppHeap *h, PppBlk *mem, s32 size) {
+    h->first = mem;
+    h->unk0 = NULL;
+    h->last = (PppBlk *) ((u8 *) mem + size - 16);
+    mem->prev = NULL;
+    mem->next = h->last;
+    mem->used = NULL;
+    {
+        PppBlk *l = h->last;
+        PppBlk *f = h->first;
+        l->used = (PppBlk *) 1;
+        l->prev = f;
+        l->next = NULL;
+    }
+    h->unkC = NULL;
+}
+
+void func_00183b20(PppHeap *h, u8 *p) {
+    PppBlk *b = (PppBlk *) (p - 16);
+    PppBlk *q;
+
+    b->used = NULL;
+    h->unk0 = b;
+    h->unkC = (PppBlk *) ((s32) h->unkC - ((s32) b->next - (s32) b));
+    q = b->prev;
+    if (q != NULL && q->used == NULL) {
+        q->next = b->next;
+        b->next->prev = q;
+        b = q;
+    }
+    {
+        PppBlk *n = b->next;
+        if (n->used == NULL) {
+            b->next = n->next;
+            n->next->prev = b;
+        }
+    }
+}
+
+typedef struct {
+    u8 pad[0xE];
+    u8 hook;     /* +0xE */
+} PppProgHdr;
+
+typedef struct {
+    s32 unk0, unk4;
+    PppProgHdr *hdr;  /* +0x8 */
+} PppHookObj;
+
+typedef struct {
+    s32 unk0;
+    s32 arg;     /* +0x4 */
+} PppHookData;
+
+typedef void (*PppHookFn)(PppHookObj *, s32);
+extern PppHookFn *D_00616220;
+
+void pppDrawHookDraw(PppHookObj *obj, PppHookData *data, PppEntry *e) {
+    *(s32 *) ((u8 *) obj + e->offsets[0] + 0xA0) = data->arg;
+    if (D_00616220) {
+        PppHookFn fn = D_00616220[obj->hdr->hook];
+        if (fn)
+            fn(obj, data->arg);
+    }
+}
+
+/* The object a program runs in: +0x0C is its frame counter. */
+typedef struct {
+    s32 unk00, unk04, unk08;
+    s32 frame; /* +0x0C */
+} PppObject;
+
+/* A work-area word: float stores through it may alias the int frame
+ * counters (the original reloads them after the stores). */
+typedef union {
+    f32 f;
+    s32 i;
+} PppWord;
+
+typedef struct {
+    s32 frame;
+    s32 pad[2];
+    f32 x, y, z;  /* +0xC */
+} PppVtMimeKey;
+
+typedef struct {
+    PppWord x, y, z;
+    s32 n;
+} PppVtMime;
+
+void pppVtMimeFrame(PppObject *obj, PppVtMimeKey *k, PppEntry *e) {
+    PppVtMime *w = (PppVtMime *) ((u8 *) obj + e->offsets[0] + 0xA0);
+
+    if (D_0061621C != 0 || (D_00615E60->unkB0 & 0xFF0000FF00ULL))
+        return;
+    w->y.f += w->z.f;
+    w->x.f += w->y.f;
+    if (k->frame == obj->frame) {
+        w->x.f += k->x;
+        w->y.f += k->y;
+        w->z.f += k->z;
+    }
+}
+
+typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
+
+void sceVu0UnitMatrix(PppMtx);
+void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
+
+typedef struct {
+    u8 pad[0x10];
+    PppMtx m;
+} PppMtxOwner;
+
+extern PppMtxOwner *D_00615E68;
+
+typedef struct {
+    s32 frame;
+    f32 scale;  /* +0x4 */
+    f32 max;    /* +0x8 */
+} PppYSclKey;
+
+void pppChrYSclXYZMatrixFrame(void *obj, PppYSclKey *k, PppEntry *e) {
+    PppMtx m;
+    f32 s;
+
+    sceVu0UnitMatrix(m);
+    s = D_00615E60->scale;
+    m[1][1] = s + s * k->scale;
+    if (k->max < m[1][1])
+        m[1][1] = k->max;
+    m[0][0] = m[1][1] = m[2][2];
+    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+}
+
+typedef struct {
+    s32 pad[3];
+    PppWord w0;  /* +0x0C */
+    s32 w1;      /* +0x10 */
+    s32 pad2;
+    f32 a, b, c; /* +0x18 */
+} PppWind;
+
+void pppEiWindFunCon(void *obj, PppEntry *e) {
+    PppWind *w = (PppWind *) ((u8 *) obj + e->offsets[0] + 0xA0);
+
+    w->w0.i = 0;
+    w->w1 = 0;
+    w->a = w->b = w->c = w->w0.f;
 }
