@@ -199,6 +199,211 @@ void func_00165cf8(f32 *pos, C03Mdl *o, C03Bits *b, f32 f) {
     func_00121e28((*o->p0)->n * 64, &o->p158);
 }
 
+typedef struct C03Act C03Act;
+typedef struct { u8 pad[0x4C]; u16 h4C; } C03Ch130;
+typedef struct {
+    u8 pad00[0x10];
+    f32 pos[4];          /* 0x10 */
+    u8 pad20[0x70 - 0x20];
+    s32 w70;             /* 0x70 */
+    u8 pad74[0x130 - 0x74];
+    C03Ch130 *p130;      /* 0x130 */
+    u8 pad134[0x164 - 0x134];
+    s32 w164;            /* 0x164 */
+    u8 pad168[0x370 - 0x168];
+    u64 f370;            /* 0x370 */
+} C03Chr;
+typedef struct { C03Chr *p; s32 i; } C03Tgt;
+typedef struct C03AW {
+    u8 pad00[0x18];
+    s32 n18;             /* 0x18 */
+    C03Act *p1C;         /* 0x1C */
+    u8 pad20[0x38 - 0x20];
+    u64 w38;             /* 0x38 */
+    u8 pad40[4];
+    void (*cb44)(C03Chr *, struct C03AW *);   /* 0x44 */
+    u8 pad48[4];
+    s32 w4C;             /* 0x4C */
+    u32 w50;             /* 0x50 */
+    s32 w54;             /* 0x54 */
+    u8 pad58[0x64 - 0x58];
+    f32 f64;             /* 0x64 */
+    u8 pad68[0x74 - 0x68];
+    C03Act *p74;         /* 0x74 */
+    s32 n78;             /* 0x78 */
+    C03Act *hist[2];     /* 0x7C */
+    u8 pad84[0x90 - 0x84];
+    C03Tgt t90;          /* 0x90 */
+    C03Chr *p98;         /* 0x98 */
+} C03AW;
+struct C03Act {
+    s32 x0;
+    u32 fl;
+    s32 (*cb)(C03Chr *, C03AW *, C03Act *, s32);
+    s32 pad;
+};
+typedef struct { u8 pad[0xBC]; f32 fBC; u8 padC0[0xCC - 0xC0]; f32 fCC; } C03Prm;
+
+extern s32 D_0035BCA8[];
+extern C03Act *D_00575328[];
+extern C03Prm D_0035AE80;
+extern s32 D_0035BCB0;
+
+s32 func_00170dd8(u16, s32);
+u32 func_001627e8(s32);
+s32 func_00123368(C03Chr *);
+s32 func_00141200(C03Chr *, s32);
+s32 func_0012f040(C03Chr *, s32);
+void func_0012ec60(C03Chr *, s32, f32 *);
+s32 func_0012ee70(C03Chr *, s32);
+C03Chr *func_00123158(C03Chr *, C03Chr *);
+void func_00171b18(C03Chr *, C03AW *);
+f32 func_00267390(f32 *, f32 *);
+void func_00267530(f32 *, f32 *, f32 *);
+
+static inline s32 inl_1890(C03Chr *a, C03AW *b, s32 v) {
+    s32 w = v;
+    if (w < 3 && v >= 0) return 1;
+    return v == b->w4C;
+}
+
+static inline s32 inl_18b8(C03Chr *a, C03AW *b, s32 v) {
+    s32 w = v;
+    if (v < 124 && w >= 117) return 1;
+    return v == b->w4C;
+}
+
+static inline s32 inl_18e0(C03Chr *a, C03AW *b, s32 v) {
+    s32 w = v;
+    if (v >= 0 && (v < 3 || (v < 131 && w >= 124))) return 1;
+    return v == b->w4C;
+}
+
+static inline s32 inl_ok(C03Chr *e, C03AW *w, u32 fl) {
+    s32 ok;
+    switch (e->w70) {
+    case 0:
+        if (!inl_1890(e, w, e->w164)) { ok = 0; break; }
+        if (fl & 6) { ok = 0; break; }
+        goto yes;
+    case 8:
+        if (!inl_18b8(e, w, e->w164)) { ok = 0; break; }
+        if (fl & 3) { ok = 0; break; }
+        goto yes;
+    case 24:
+        if (!inl_18e0(e, w, e->w164)) { ok = 0; break; }
+        if (fl & 5) { ok = 0; break; }
+        goto yes;
+    default:
+        ok = 0;
+        break;
+    }
+    goto out;
+yes:
+    ok = 1;
+out:
+    return ok;
+}
+
+static inline s32 inl_same(C03AW *w) {
+    s32 j;
+    for (j = 1; j < 2; j++) if (w->hist[0] != w->hist[j]) break;
+    return j < 2;
+}
+
+static inline s32 inl_t(C03Chr *e, C03AW *w) {
+    s32 t = -1;
+    if (w->n78 > 0 && w->hist[0]) t = func_00170dd8(e->p130->h4C, w->hist[0]->x0);
+    return t;
+}
+
+s32 func_0016a3f8(C03Chr *e, C03AW *w) {
+    C03Act *last;
+    s32 again;
+    C03Act *sel;
+    C03Act *a;
+    C03Act *cur;
+    u32 m;
+    s32 n, i, j, kv, t, r;
+
+    cur = w->p74;
+    if (cur && (s32)((s64)(w->w38 << 31) >> 32) & 1) {
+        w->w54++;
+        if (inl_ok(e, w, cur->fl)) {
+            if (cur->cb(e, w, cur, 1)) return w->p74->cb(e, w, w->p74, 2);
+        }
+        w->w38 &= ~2;
+    }
+    func_00171b18(e, w);
+    w->w38 &= ~0x20000;
+    w->w54 = 0;
+    if (w->w50 >= 2) return 0;
+    if (w->n78 >= 2) {
+        for (j = 1; j < 2; j++) if (w->hist[0] != w->hist[j]) break;
+        if (j >= 2) { last = w->hist[0]; goto got; }
+    }
+    last = 0;
+got:
+    sel = 0;
+    again = 0;
+    for (m = 0; m < 2; m++) {
+        kv = D_0035BCA8[m];
+        n = 0;
+        if (kv == 1) {
+            t = inl_t(e, w);
+            if (t == 1) {
+                if (!(func_001627e8(100) & 7)) again = t;
+                break;
+            }
+        }
+        for (i = 0; i < w->n18; i++) {
+            a = &w->p1C[i];
+            if (func_00170dd8(e->p130->h4C, a->x0) != kv) continue;
+            if (!inl_ok(e, w, a->fl)) continue;
+            if (a->cb && a->cb(e, w, a, 1)) {
+                if (a != last) {
+                    if (n < 128) D_00575328[n++] = a;
+                } else again = 1;
+            }
+        }
+        if (n > 0) {
+            { C03Act **tb = D_00575328; i = func_001627e8(n << 12) >> 12; sel = tb[i]; }
+            break;
+        }
+    }
+    if (!sel) {
+        if (again || !(func_001627e8(100) & 0xF)) {
+            kv = D_0035BCB0;
+            n = 0;
+            for (i = 0; i < w->n18; i++) {
+                a = &w->p1C[i];
+                if (func_00170dd8(e->p130->h4C, a->x0) != kv) continue;
+                if (!inl_ok(e, w, a->fl)) continue;
+                if (a->cb && a->cb(e, w, a, 1) && a != last && n < 128) D_00575328[n++] = a;
+            }
+            if (n > 0) sel = D_00575328[func_001627e8(n << 12) >> 12];
+
+        }
+    }
+    if (sel) {
+        if (w->cb44) {
+            w->cb44(e, w);
+            w->cb44 = 0;
+        }
+        w->w50++;
+        r = sel->cb(e, w, sel, 2);
+        for (j = 1; j > 0; j--) w->hist[j] = w->hist[j - 1];
+        w->hist[0] = sel;
+        w->p74 = sel;
+        if (++w->n78 >= 3) w->n78 = 2;
+        return r;
+    } else {
+        r = 0;
+        w->n78 = w->n78 - 1 < 0 ? 0 : w->n78 - 1;
+    }
+    return r;
+}
+
 /* needs make: uses rodata */
 
 extern C03Mtx D_00573F10[];
