@@ -356,3 +356,120 @@ s32 func_00111090(void) {
     if (!D_002BCAE0) return 0;
     return D_00F20000(2, 0);
 }
+
+typedef struct {
+    s32 w[8];
+} V32;
+
+/* Object at *D_002BCB60. */
+typedef struct {
+    u8 pad0[0x10];
+    s32 w10[12];
+    s32 w40;
+    s32 w44;
+    s32 w48;
+    V32 blk;
+    u8 flags[234];
+    u8 pad156[2];
+    s32 w158;
+    s32 w15c;
+} Ctx;
+extern Ctx *D_002BCB60;
+void func_00111288(void);
+void func_001112b8(void) {
+    s32 i;
+    func_00111288();
+    for (i = 0; i < 234; i++) D_002BCB60->flags[i] = 0;
+    D_002BCB60->w40 = 0;
+    D_002BCB60->w44 = 0;
+    D_002BCB60->w10[0] = 0;
+    D_002BCB60->w10[1] = 0;
+    D_002BCB60->w10[2] = 0;
+    D_002BCB60->w10[3] = 0;
+    D_002BCB60->w10[4] = 0;
+    D_002BCB60->w10[5] = 0;
+    D_002BCB60->w10[6] = 0;
+    D_002BCB60->w10[7] = 0;
+    D_002BCB60->w10[8] = 0;
+    D_002BCB60->w10[9] = 0;
+    D_002BCB60->w10[10] = 0;
+    D_002BCB60->w10[11] = 0;
+    D_002BCB60->w158 = 0;
+}
+
+typedef struct {
+    u8 pad[0x30];
+    s32 w[8];
+    u8 pad2[0x10];
+} Slot60;
+
+typedef struct {
+    Slot60 e[2];
+    void *owner;
+} SlotObj;
+
+/* Header with self-relative offsets at +0x84 and +0x94. */
+typedef struct {
+    u8 pad[0x80];
+    s32 h[8];
+} SlotHdr;
+extern s32 D_00351BD0;
+void func_00108b60(SlotHdr *h, SlotObj *o) {
+    o->e[D_00351BD0].w[0] = h->h[0];
+    o->e[D_00351BD0].w[1] = h->h[1] + (s32)h;
+    o->e[D_00351BD0].w[2] = h->h[2];
+    o->e[D_00351BD0].w[3] = h->h[3];
+    o->e[D_00351BD0].w[4] = h->h[4];
+    o->e[D_00351BD0].w[5] = h->h[5] + (s32)h;
+    o->e[D_00351BD0].w[6] = h->h[6];
+    o->e[D_00351BD0].w[7] = h->h[7];
+    o->owner = h;
+}
+/* Same object as *D_002BCB60 above, seen as rows of 4 floats. */
+typedef struct { f32 m[1][4]; } CtxRows;
+typedef struct { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
+
+void func_00111340(Src *s, s32 i) {
+    ((CtxRows *)D_002BCB60)->m[i][4] = s->x;
+    ((CtxRows *)D_002BCB60)->m[i][5] = s->y;
+    ((CtxRows *)D_002BCB60)->m[i][6] = s->z;
+    ((CtxRows *)D_002BCB60)->m[i][7] = s->w;
+}
+extern void *D_002E26A0[3];
+void func_00111480(void);
+
+void func_00111380(void) {
+    void *p;
+    func_00111480();
+    p = D_002E26A0[0];
+    if (p) func_00111340(p, 0);
+    p = D_002E26A0[1];
+    if (p) func_00111340(p, 1);
+    p = D_002E26A0[2];
+    if (p) func_00111340(p, 2);
+}
+
+extern s32 D_002BC128, D_002BC130, D_002BCDA8;
+V32 *func_0017f1c8(void);
+void func_00111480(void) {
+    Ctx *c = D_002BCB60;
+    c->w40 = D_002BC128;
+    c->w44 = D_002BC130;
+    c->w48 = D_002BCDA8;
+    c->blk = *func_0017f1c8();
+}
+s32 func_00111798(void) {
+    if (D_002BCB60) return D_002BCB60->w15c;
+    return 0;
+}
+
+extern s32 D_004D925C, D_004D9250, D_002BCC1C, D_004D9254;
+s32 func_00111cb8(void);
+s32 func_00111d90(s32 a) {
+    D_004D925C = 0;
+    D_004D9250 = D_002BBDF0;
+    D_002BCC1C = 0;
+    if (!a) D_004D9254 = 0x34b84;
+    else D_004D9254 = 0x14996c4;
+    return func_0011ef10(0x2c04c, func_00111cb8);
+}
