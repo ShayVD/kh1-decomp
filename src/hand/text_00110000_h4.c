@@ -179,9 +179,239 @@ f32 func_00120bf8(void *a) {
 f32 func_00120c88(f32 a) {
     s32 i;
     for (i = 0; i < 1024; i++) {
-        if (a > ((f32)3.141592653589793)) a -= ((f32)6.283185307179586);
-        else if (a < -((f32)3.141592653589793)) a += ((f32)6.283185307179586);
+        if (a > 3.1415928f) a -= 6.2831856f;
+        else if (a < -3.1415928f) a += 6.2831856f;
         else break;
     }
     return a;
+}
+
+typedef struct { f32 x, y, z, w; } Vec4;
+void func_00267530(Vec4 *, Vec4 *, Vec4 *);
+void func_00267370(Vec4 *, Vec4 *, Vec4 *);
+void func_00121fc4(Vec4 *, Vec4 *);
+void func_00120f70(Vec4 *pts, Vec4 *out) {
+    Vec4 d[2];
+    s32 i;
+    for (i = 0; i < 2; i++) func_00267530(&d[i], &pts[i + 1], &pts[i]);
+    d[1].w = d[0].w = 1.0f;
+    func_00267370(out, &d[0], &d[1]);
+    func_00121fc4(out, out);
+}
+
+s32 func_00267ea8(Vec4 *);
+s32 func_00121120(Vec4 *v) {
+    s32 r = 0;
+    if (v->z < 0.0f || func_00267ea8(v)) r = 1;
+    return r;
+}
+
+f32 func_001214e0(f32 *a, f32 *b, f32 t) {
+    s32 i = (s32)t;
+    f32 f = t - (f32)i;
+    return ((((b[i + 1] - b[i]) * f + b[i] * 3.0f) * f + ((a[i + 1] - a[i]) - (b[i] * 2.0f + b[i + 1]))) * f) + a[i];
+}
+
+void func_00267c10(Vec4 *, void *, s32, f32, f32, f32);
+void func_00267e90(Vec4 *, Vec4 *, f32);
+
+void func_00121620(Vec4 *m, void *a1, f32 x, f32 y, f32 z, f32 w) {
+    func_00267c10(m, a1, 0, x, y, z);
+    func_00267e90(&m[3], &m[3], w);
+}
+
+void func_00121668(f32 d[4][4], f32 s[4][4]) {
+    d[0][0] = s[0][0]; d[0][1] = s[1][0]; d[0][2] = s[2][0]; d[0][3] = 0.0f;
+    d[1][0] = s[0][1]; d[1][1] = s[1][1]; d[1][2] = s[2][1]; d[1][3] = 0.0f;
+    d[2][0] = s[0][2]; d[2][1] = s[1][2]; d[2][2] = s[2][2]; d[2][3] = 0.0f;
+    d[3][0] = 0.0f; d[3][1] = 0.0f; d[3][2] = 0.0f; d[3][3] = 1.0f;
+}
+
+extern f32 D_002BBDFC;
+
+f32 func_001216d8(f32 a, f32 b, f32 c) {
+    f32 d = func_00120c88(b - a);
+    c *= D_002BBDFC;
+    if (d > c) d = c;
+    else if (d < -c) d = -c;
+    return func_00120c88(a + d);
+}
+
+void func_00121958(Vec4 *d, Vec4 *s, f32 *k) {
+    s32 i;
+    for (i = 0; i < 3; i++) func_00267e90(&d[i], &s[i], *k++);
+}
+
+/* Heap block table: 512 entries, D_004F6DB0 (the rover) sits right after it. */
+typedef struct Block { u32 f0; u32 addr; u32 size; u32 owner; u32 next; } Block;
+extern Block D_004F45B0[];
+extern Block *D_004F6DB0;
+extern u8 D_009A0000[];
+
+Block *func_00121d00(void) {
+    Block *p = D_004F6DB0;
+    s32 i;
+    for (i = 1; i < 512; i++) {
+        p++;
+        if (p >= &D_004F45B0[512]) p = &D_004F45B0[1];
+        if (p->addr == 0) { D_004F6DB0 = p; return p; }
+    }
+    return 0;
+}
+
+Block *func_00121d60(u32 size) {
+    Block *p = D_004F45B0;
+    Block *n;
+    while ((n = (Block *)p->next) != 0) {
+        if (n->addr - (p->addr + p->size) >= size) return p;
+        p = n;
+    }
+    if ((u32)D_009A0000 - (p->addr + p->size) >= size) return p;
+    return 0;
+}
+
+Block *func_00121de0(u32 addr) {
+    Block *p;
+    for (p = (Block *)D_004F45B0[0].next; p; p = (Block *)p->next) {
+        if (p->addr == addr) return p;
+    }
+    return 0;
+}
+
+u32 func_00121e28(u32 size, u32 *out) {
+    Block *b, *p;
+    size = (size + 127) & ~127;
+    b = func_00121d00();
+    p = func_00121d60(size);
+    b->addr = p->addr + p->size;
+    if (out) *out = b->addr;
+    b->size = size;
+    b->owner = (u32)out;
+    b->f0 = 0;
+    b->next = p->next;
+    p->next = (u32)b;
+    return b->addr;
+}
+
+void func_00121ee0(u32 addr) {
+    Block *prev = D_004F45B0;
+    Block *p;
+    while ((p = (Block *)prev->next) != 0 && p->addr != addr) prev = p;
+    if (p->owner) *(u32 *)p->owner = 0;
+    p->owner = 0;
+    p->addr = 0;
+    prev->next = p->next;
+}
+
+extern u32 *D_004F6EB8;
+
+u32 func_00122048(u32 size, u32 align) {
+    u32 *p = D_004F6EB8;
+    u32 *old = p;
+    u32 v;
+    p += 2;
+    D_004F6EB8 = p;
+    v = (old[1] + align - 1) / align * align;
+    p[0] = v;
+    if (size) D_004F6EB8[1] = v + size;
+    else D_004F6EB8[1] = 0x70004000;
+    return v;
+}
+
+typedef struct { s32 a; s32 b; s32 c; u8 pad[36]; Vec4 v; } Ent40;
+extern Ent40 D_002C5C80[];
+extern Vec4 D_002C5C60;
+void func_002675a8(Vec4 *, Vec4 *);
+
+Ent40 *func_001226f0(s32 a, s32 b, s32 c) {
+    s32 i;
+    Ent40 *e = D_002C5C80;
+    for (i = 0; i < 31; i++, e++) {
+        if (e->a == 0) {
+            e->a = a; e->b = b; e->c = c;
+            func_002675a8(&e->v, &D_002C5C60);
+            return e;
+        }
+    }
+    return 0;
+}
+
+typedef struct { u8 pad[0x44]; f32 f44; u8 pad2[0x16]; u8 b5e; u8 b5f; } Sub130;
+typedef struct {
+    u32 flags; u8 pad[0x12c]; Sub130 *p130; u8 pad2[0x18]; s32 x14c; s32 pad3; s32 x154;
+    u8 pad4[0x78]; s32 x1d0; u8 pad5[0x19c]; u64 x370;
+} Obj;
+
+void func_00122f20(Obj *o, s32 *out) {
+    out[0] = o->x154;
+    if (o->x14c) out[1] = *(s32 *)o->x14c; else out[1] = 0;
+    out[2] = o->x1d0;
+}
+
+s32 func_00122fd0(Obj *o) {
+    s32 r = 0;
+    if (o->p130->b5f) {
+        if (!(o->flags & 0x2000000)) r = 1;
+    }
+    return r;
+}
+
+s32 func_00122ff8(Obj *o) {
+    s32 r = 0;
+    if (o) {
+        if ((o->x370 & 0x300000000) == 0x100000000) r = 1;
+    }
+    return r;
+}
+
+/* Actor table: 1200-byte entries from D_002C64A0 up to D_002E26A0. */
+typedef struct Act {
+    u8 pad0[6]; u8 b6; u8 pad7[0x6d]; struct Act *x74; s32 x78; s32 pad7c; s32 x80;
+    u8 pad84[0x2ec];
+    union { u64 x370; struct { u32 lo0; u32 lo : 5; u32 kind : 2; u32 hi : 25; } b370; } u370;
+    u8 pad378[0x138];
+} Act;
+extern Act D_002C64A0[];
+extern Act D_002E26A0[];
+Act *func_001230a0(Act *a);
+s32 func_00123118(s32, Act *);
+
+void func_00123030(Act *x, Act *a1, s32 a2) {
+    Act *a;
+    x->x74 = a1;
+    x->x78 = a2;
+    a = 0;
+    while ((a = func_001230a0(a)) != 0) a->x80 = 0;
+    while ((a = func_001230a0(a)) != 0) {
+        if (a->x74) a->x74->x80++;
+    }
+}
+
+Act *func_001230a0(Act *a) {
+    if (a == 0) a = D_002C64A0; else a++;
+    for (; a < D_002E26A0; a++) {
+        if ((a->u370.x370 & 0x300000000) == 0x100000000) return a;
+    }
+    return 0;
+}
+
+Act *func_00123158(s32 k, Act *a) {
+    while ((a = func_001230a0(a)) != 0) {
+        if (func_00123118(k, a)) return a;
+    }
+    return 0;
+}
+
+Act *func_001231b8(Act *x, Act *a) {
+    while ((a = func_001230a0(a)) != 0) {
+        if (x != a && x->u370.b370.kind == a->u370.b370.kind) return a;
+    }
+    return 0;
+}
+
+Act *func_00123220(Act *a) {
+    while ((a = func_001230a0(a)) != 0) {
+        if (a->b6 == 2 || a->b6 == 9 || a->b6 == 10 || a->u370.b370.kind == 2) return a;
+    }
+    return 0;
 }

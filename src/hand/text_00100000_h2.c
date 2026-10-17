@@ -473,3 +473,13 @@ s32 func_00111d90(s32 a) {
     else D_004D9254 = 0x14996c4;
     return func_0011ef10(0x2c04c, func_00111cb8);
 }
+
+extern s32 D_004D9258;
+s32 func_00111e00(void);
+s32 func_00111ef0(s32 sec, s32 b) {
+    D_004D9258 = b;
+    D_004D925C = 0;
+    D_004D9250 = D_002BBDF0;
+    D_002BCC1C = D_004D9254 = sec * 60;
+    return func_0011ef10(0x2c04c, func_00111e00);
+}
