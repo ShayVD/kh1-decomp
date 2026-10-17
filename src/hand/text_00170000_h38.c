@@ -536,38 +536,6 @@ void func_00180180(Hdr *h, Ref *r, s16 dx, s16 dy) {
     }
 }
 
-extern V4A D_00615FC0[4];
-extern V4A D_00615EB0[4];
-extern V4A D_00615E70[4];
-extern V4A D_00616010[3]; /* rows 1..3 of a matrix starting 16 bytes earlier */
-extern V4A D_00616040[4];
-extern V4A D_00616080[4];
-extern V4A D_006160C0[4];
-
-void func_00180280(void) {
-    V4A b, a, c;
-    func_00182870();
-    sceVu0MulMatrix(D_00615FC0, D_00615EB0, D_00615E70);
-    sceVu0MulMatrix(D_00616080, D_00616040, D_00615FC0);
-    a.v.x = D_00615FC0[1].v.x;
-    a.v.y = D_00615FC0[1].v.y;
-    a.v.z = D_00615FC0[1].v.z;
-    a.v.w = 0.0f;
-    func_002673b8(&a, &a);
-    D_00616010[0].q = a.q;
-    b.v.x = a.v.y;
-    b.v.y = -a.v.x;
-    b.v.z = 0.0f;
-    b.v.w = 0.0f;
-    func_002673b8(&b, &b);
-    D_00616010[-1].q = b.q;
-    func_00267370(&c, &b, &a);
-    func_002673b8(&c, &c);
-    D_00616010[1].q = c.q;
-    D_00616010[2].q = D_00615FC0[3].q;
-    sceVu0MulMatrix(D_006160C0, D_00616040, &D_00616010[-1]);
-}
-
 typedef struct Obj {
     u8 pad0[0x8c];
     s32 x8c;    /* 0x8C */
