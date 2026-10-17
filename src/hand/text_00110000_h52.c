@@ -114,3 +114,262 @@ void func_00110a48(f32 x) {
                   0.7999999523162842f, 0.839999854564666748046875f, 2048.0f, 2048.0f, 1.0f, 16777000.0f, 1.0f,
                   400000000.0f, D_004D90F8);
 }
+
+extern s32 D_002BD118;
+extern s32 D_002BD11C;
+typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 b3 : 1; u32 b4 : 1; u32 rest : 27; } Bits52;
+extern s32 D_004D9320;
+extern Bits52 D_002C5958;
+extern Bits52 D_0037A378;
+extern s32 D_002C1308, D_002C130C;
+extern volatile s32 D_002BBDE0;
+extern s32 D_002BC070, D_002BC0BC, D_002A6204;
+s32 func_001336a0(void);
+
+s32 func_001140a0(void) {
+    s32 *p;
+    if (D_004D9320 == 0) {
+        p = &D_002BD118;
+        *p = 0;
+        if (D_002C5958.b0 == 1) *p = 2;
+        if (D_002C5958.b4 == 1) *p = 2;
+        if (D_0037A378.b1 == 1) *p = 1;
+        if (D_0037A378.b3 == 1) *p = 3;
+        if (D_002BD11C == 1) *p = D_002BD11C;
+        if (D_002C1308) *p = 4;
+        if (D_002C130C) *p = 5;
+        if (D_002BBDE0 == 5) *p = 7;
+        if (func_001336a0()) *p = 2;
+        if (*p == 0) {
+            if (D_002BC070 != 128 || D_002BC0BC || D_002A6204) D_002BD118 = 1;
+        }
+    }
+    return D_002BD118;
+}
+
+typedef struct { s32 v[4]; } V4i52;
+typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; V4i52 x30; V4i52 x40; } Ent52;
+typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; u8 pad[0x30]; } Tpl52;
+typedef struct { u8 b[0x90]; } E90_52;
+extern Tpl52 D_0048C630, D_0048C690;
+extern V4i52 D_0048C6F0[];
+extern V4i52 D_00472150, D_00486300;
+extern E90_52 D_004DBC20[2][64];
+
+void func_00114c18(Ent52 *o, s32 idx, s32 col) {
+    s32 i;
+    if (idx == -1) {
+        o[0].x14 = D_0048C630.x14;
+        o[1].x14 = D_0048C690.x14;
+    } else {
+        o[0].x14 = &D_004DBC20[0][idx];
+        o[1].x14 = &D_004DBC20[1][idx];
+    }
+    o[0].x10 = D_0048C630.x10;
+    o[0].x18 = D_0048C630.x18;
+    o[0].x1c = D_0048C630.x1c;
+    o[1].x10 = D_0048C690.x10;
+    o[1].x18 = D_0048C690.x18;
+    o[1].x1c = D_0048C690.x1c;
+    o[0].x20.v[0] = D_0048C630.x20.v[0];
+    o[0].x20.v[1] = D_0048C630.x20.v[1];
+    o[0].x20.v[2] = D_0048C630.x20.v[2];
+    o[0].x20.v[3] = D_0048C630.x20.v[3];
+    o[1].x20.v[0] = D_0048C690.x20.v[0];
+    o[1].x20.v[1] = D_0048C690.x20.v[1];
+    o[1].x20.v[2] = D_0048C690.x20.v[2];
+    o[1].x20.v[3] = D_0048C690.x20.v[3];
+    for (i = 0; i < 2; i++) {
+        o[i].a.v[0] = D_0048C6F0[col].v[0];
+        o[i].a.v[1] = D_0048C6F0[col].v[1];
+        o[i].a.v[2] = D_0048C6F0[col].v[2];
+        o[i].a.v[3] = D_0048C6F0[col].v[3];
+        o[i].x40.v[0] = D_00472150.v[0];
+        o[i].x40.v[1] = D_00472150.v[1];
+        o[i].x40.v[2] = D_00472150.v[2];
+        o[i].x40.v[3] = D_00472150.v[3];
+        o[i].x30.v[0] = D_00486300.v[0];
+        o[i].x30.v[1] = D_00486300.v[1];
+        o[i].x30.v[2] = D_00486300.v[2];
+        o[i].x30.v[3] = D_00486300.v[3];
+    }
+}
+
+typedef f32 V4_52[4] __attribute__((aligned(16)));
+typedef struct { u32 lo : 11; u32 k : 4; u32 m : 3; u32 x40 : 4; u32 hi : 10; } Bf52;
+typedef struct { f32 a, b, c, d; Bf52 bf; } Plane52;
+extern Plane52 *D_002A6238;
+void func_00104eb0(s32, V4_52);
+void func_00104f10(s32, V4_52);
+s32 func_00104ae0(s32, V4_52 *);
+f32 fabsf(f32);
+
+static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vsub.xyzw $vf6xyzw, $vf4xyzw, $vf5xyzw\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(a), "r"(b) : "memory");
+}
+
+static inline void v52_cross(f32 *d, f32 *a, f32 *b) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vopmula.xyz ACC, $vf4xyz, $vf5xyz\n"
+        "vopmsub.xyz $vf6xyz, $vf5xyz, $vf4xyz\n"
+        "vsub.w $vf6w, $vf6w, $vf6w\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(a), "r"(b) : "memory");
+}
+
+static inline void v52_normalize(f32 *d, f32 *s) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
+        "vaddy.x $vf5x, $vf5x, $vf5y\n"
+        "vaddz.x $vf5x, $vf5x, $vf5z\n"
+        "vsqrt Q, $vf5x\n"
+        "vwaitq\n"
+        "vaddq.x $vf5x, $vf0x, Q\n"
+        "vdiv Q, $vf0w, $vf5x\n"
+        "vsub.xyzw $vf6xyzw, $vf0xyzw, $vf0xyzw\n"
+        "vwaitq\n"
+        "vmulq.xyz $vf6xyz, $vf4xyz, Q\n"
+        "sqc2 $vf6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(s) : "memory");
+}
+
+static inline f32 v52_dot(f32 *a, f32 *b) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lqc2 $vf5, 0(%2)\n"
+        "vmul.xyz $vf5xyz, $vf4xyz, $vf5xyz\n"
+        "vaddy.x $vf5x, $vf5x, $vf5y\n"
+        "vaddz.x $vf5x, $vf5x, $vf5z\n"
+        "qmfc2 $2, $vf5\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(a), "r"(b) : "$2");
+    return r;
+}
+
+void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
+    V4_52 pt, e, f, n;
+    V4_52 v[4];
+    f32 d;
+    func_00104eb0(id, pt);
+    func_00104f10(id, n);
+    if (mode != 1 && fabsf(n[1]) > 0.0999999940395355224609375f) {
+        *out = (-D_002A6238[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
+        return;
+    }
+    func_00104ae0(id, v);
+    v52_sub(e, v[0], v[1]);
+    v52_sub(f, v[2], v[1]);
+    v52_cross(n, e, f);
+    v52_normalize(n, n);
+    d = v52_dot(n, pt);
+    if (n[1] != 0.0f) {
+        *out = (d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
+    } else {
+        *out = 1000000.0f;
+    }
+}
+
+extern s32 D_002A62E8;
+extern V4_52 *D_002A3F48;
+typedef struct { u8 pad[0x28]; s32 x28; s32 x2c; u8 pad30[4]; f32 x34; u8 pad38[4]; u16 x3c; u8 pad3e[2]; V4_52 x40; u8 pad50[0x18]; f32 x68; } Src52;
+typedef struct { V4_52 p; s32 x10[4]; s32 x20; f32 x24; s32 x28; f32 x2c; V4_52 x30; s32 x40; } Dst52;
+void func_001150d8(void);
+void func_002675a8(void *, void *);
+void func_001156f0(s32, void *);
+void func_0011aac8(s32, void *, s32);
+Bf52 *func_0011ab38(); /* called with 2 and 3 args */
+
+void func_00117710(Src52 *a, Dst52 *b) {
+    s32 id;
+    Bf52 *bp;
+    s32 k;
+    a->x34 = 123456.0f;
+    if (a->x28 >= 0) return;
+    if (D_002A62E8) func_001150d8();
+    func_002675a8(b->x30, D_002A3F48);
+    id = a->x3c;
+    a->x28 &= 0x7fffffff;
+    b->x40 = 0;
+    if (id == 0xffff) {
+        func_002675a8(b, a->x40);
+        b->x20 = 0;
+        b->x24 = 1.0f;
+        b->x28 = 0;
+        b->x2c = 1.0f;
+
+        return;
+    }
+    b->p[0] = a->x40[0];
+    b->p[1] = a->x68;
+    b->p[2] = a->x40[2];
+    b->p[3] = 1.0f;
+    if (a->x2c == -1) {
+        func_001156f0(id, b);
+        b->x40 = D_002A6238[id].bf.x40;
+        k = D_002A6238[id].bf.k;
+    } else {
+        func_0011aac8(id, b, a->x2c);
+        bp = func_0011ab38(a->x2c, id);
+        b->x40 = bp->x40;
+        k = bp->k;
+    }
+    func_002675a8(b->x30, D_002A3F48[k]);
+}
+
+extern s32 D_002BD150[];
+extern s32 D_002BD160[];
+typedef struct { s16 v[10]; } PolyV52;
+typedef struct { u16 poly; u16 i0; u16 i1; } Edge52;
+s32 func_00104a90(s32, s32 *);
+void func_0011a818(s32 *, s32 *, Edge52 *);
+s32 func_0011a7c0(s32, s32, s32 *);
+
+s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
+    s32 v[4];
+    s32 a, b;
+    s32 i, j, cnt, id;
+    s32 *idx;
+    u32 *f, *g;
+    if (grp == -1) {
+        s32 ta = ((PolyV52 *)D_002A6238)[e->poly].v[e->i0];
+        s32 tb = ((PolyV52 *)D_002A6238)[e->poly].v[e->i1];
+        a = ta;
+        b = tb;
+        for (i = 0; i < n; i++) {
+            id = list[i];
+            f = (u32 *)&D_002A6238[id].bf;
+            if (e->poly == id) continue;
+            cnt = func_00104a90(id, v);
+            if (cnt == 3) idx = D_002BD150;
+            else idx = D_002BD160;
+            for (j = 0; j < cnt; j++) {
+                if (b == v[j] && a == v[idx[j]]) return (*f & 0x406) != 0x400;
+            }
+        }
+        return 1;
+    }
+    func_0011a818(&a, &b, e);
+    for (i = 0; i < n; i++) {
+        id = list[i];
+        g = (u32 *)func_0011ab38(grp, id, grp);
+        if (e->poly == id) continue;
+        cnt = func_0011a7c0(grp, id, v);
+        idx = cnt == 3 ? D_002BD150 : D_002BD160;
+        for (j = 0; j < cnt; j++) {
+            if (b == v[j] && a == v[idx[j]]) return (*g & 0x406) != 0x400;
+        }
+    }
+    return 1;
+}
