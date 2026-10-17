@@ -247,3 +247,67 @@ void func_00246708(Blk *d, Blk *s, s32 v) {
     *d = *s;
     d->unk8 = v;
 }
+
+/* Ten 0x930-byte slots: a free one, else the oldest. */
+typedef struct { s32 used; s32 age; u8 pad8[0x930 - 8]; } Fx;
+extern Fx D_0045FAC0[10];
+
+void func_00247350(void) {
+    s32 i;
+    for (i = 0; i < 10; i++) D_0045FAC0[i].used = 0;
+}
+
+Fx *func_00247388(void) {
+    s32 max = -1;
+    Fx *best = 0;
+    s32 i;
+    Fx *p;
+    for (i = 0; i < 10; i++) {
+        p = &D_0045FAC0[i];
+        if (p->used == 0) return p;
+    }
+    for (i = 0; i < 10; i++) {
+        p = &D_0045FAC0[i];
+        if (max < p->age) {
+            max = p->age;
+            best = p;
+        }
+    }
+    return best;
+}
+
+s32 func_002474a8(void) {
+    s32 i;
+    for (i = 0; i < 10; i++)
+        if (D_0045FAC0[i].used) return 1;
+    return 0;
+}
+
+typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; } Mdl;
+extern s32 D_006693B0[8];
+extern s32 D_00669390[8];
+extern s32 D_006693D0[7];
+extern u8 D_006692C0[];
+void func_002474e8(s32, void *, s32, s32, f32);
+void func_002476a0(Mdl *);
+void func_00247930(Mdl *);
+void func_00247b50(Mdl *m) {
+    s32 i;
+    for (i = 0; i < 8; i++)
+        func_002474e8(D_006693B0[i], D_006692C0, m->unk24, m->unk28, 1.0f);
+    func_002476a0(m);
+    func_00247930(m);
+}
+void func_00247bd0(Mdl *m) {
+    s32 i;
+    for (i = 0; i < 8; i++)
+        func_002474e8(D_00669390[i], D_006692C0, m->unk24, m->unk28, 1.0f);
+    func_002476a0(m);
+    func_00247930(m);
+}
+void func_00247c50(Mdl *m) {
+    s32 i;
+    for (i = 0; i < 7; i++)
+        func_002474e8(D_006693D0[i], D_006692C0, m->unk24, m->unk28, 1.0f);
+    func_002476a0(m);
+}
