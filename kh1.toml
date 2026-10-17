@@ -149,3 +149,8 @@ ccflags = "-mabi=n32 -DKH1_N32"
 path = "src/hand/n32_nogcse/"
 cflags = "-O2 -G0 -fno-gcse"
 ccflags = "-mabi=n32 -DKH1_N32"
+
+[[toolchain.override]]
+path = "src/hand/n32_nostrict/"
+cflags = "-O2 -G0 -fno-strict-aliasing"
+ccflags = "-mabi=n32 -DKH1_N32"
