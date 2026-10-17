@@ -1,0 +1,36 @@
+/* func_0017f1c8 nostrict, 25 words off: top-of-function reg assignment (orig v0=d, t0=copy) and li in beqz slot. */
+#include "common.h"
+typedef struct { f32 x, y, z; } V3;
+typedef struct { V3 a; V3 b; f32 c; u8 x1c, x1d, x1e; } S870;
+typedef struct { u8 pad[0x1c]; u8 x1c; } P1c;
+extern V3 D_002E2780;
+extern V3 D_002E2790;
+extern f32 D_002E27A0;
+extern s32 D_002E27A8;
+extern S870 D_00575870;
+extern P1c *D_00362434;
+extern P1c *D_00362438;
+
+S870 *func_0017f1c8(void) {
+    S870 *d = &D_00575870;
+    d->a.x = D_002E2780.x;
+    d->a.y = D_002E2780.y;
+    d->a.z = D_002E2780.z;
+    d->b.x = D_002E2790.x;
+    d->b.y = D_002E2790.y;
+    d->b.z = D_002E2790.z;
+    d->c = D_002E27A0;
+    d->x1c = *(u8 *)&D_002E27A8;
+    if (D_002E27A8 == 9) {
+        if (D_00362434) {
+            d->x1d = D_00362434->x1c;
+            d->x1e = 0;
+        } else if (D_00362438) {
+            d->x1d = D_00362438->x1c;
+            d->x1e = 1;
+        }
+    } else {
+        d->x1d = 0;
+    }
+    return d;
+}
