@@ -12,6 +12,3 @@ void func_001f3698(void *arg0, s32 arg1) {
     M2C_FIELD(arg0, s64 *, 0x40) = (s64) (M2C_FIELD(arg0, s64 *, 0x40) | ((s64) 0x8000 << 0x11));
 }
 
-s32 func_001fe558(void *arg0) {
-    return (M2C_FIELD(arg0, s64 *, 0xD0) & ((s64) -1 << 0x20)) != 0;
-}
