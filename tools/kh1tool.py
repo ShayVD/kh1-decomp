@@ -153,7 +153,10 @@ def load_registry() -> dict[str, int]:
 
 def iter_sources() -> list[Path]:
     src = ROOT / "src"
-    return sorted(p for p in src.rglob("*") if p.suffix in SOURCE_SUFFIXES and p.is_file())
+    # dot-files are scratch copies (try harnesses); KH1_SKIP: a regex of paths to leave out
+    skip = re.compile(os.environ["KH1_SKIP"]) if os.environ.get("KH1_SKIP") else None
+    return sorted(p for p in src.rglob("*") if p.suffix in SOURCE_SUFFIXES and p.is_file()
+                  and not p.name.startswith(".") and not (skip and skip.search(str(p.relative_to(ROOT)))))
 
 
 def obj_for(src: Path) -> Path:

@@ -190,9 +190,13 @@ by one branch-likely choice that no flag or compiler tried reproduces.
   `"\n"` `D_00491B28`...), declared in the .c file: the build only resolves
   `D_` names it finds in .c files.
 
-Left in libc: the MMI string functions (`memcpy`, `strlen`... use
-`pcpyld`, `psubb`, `lq`/`sq`: inline asm or `.s`), `_vfprintf_r`,
-`_vfiprintf_r`, `_dtoa_r`, `quorem` (`0x00253F88`), `d2b`.
+The MMI string functions (`memcmp`, `memcpy`, `memset`, `strcat`,
+`strcmp`, `strcpy`, `strlen`, `strncmp`, `memchr`, `memmove`) are
+assembly in src/sdk/libc/string.s (tools/asm_export.py): six of them start
+4 bytes off the 8-byte alignment gcc gives every function, so the
+originals were `.s` files. `_dtoa_r` and `quorem` are matched in C.
+
+Left in libc: `_vfprintf_r`, `_vfiprintf_r`, `d2b`.
 
 ## Porting note
 

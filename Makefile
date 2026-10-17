@@ -14,7 +14,10 @@ GEN       := out/gen
 PATCHED   := out/kh1.elf
 LINKED    := out/linked.elf
 
-SRCS    := $(shell find src -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.cc' -o -name '*.s' \) 2>/dev/null | sort)
+SRCS    := $(shell find src -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.cc' -o -name '*.s' \) -not -name '.*' 2>/dev/null | sort)
+ifneq ($(KH1_SKIP),)
+SRCS    := $(shell echo "$(SRCS)" | tr ' ' '\n' | grep -Ev '$(KH1_SKIP)')
+endif
 HEADERS := $(shell find include src -type f -name '*.h' 2>/dev/null)
 
 # Regenerate the per-source rules only when the set of sources changes.

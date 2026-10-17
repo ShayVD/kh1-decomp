@@ -36,7 +36,8 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
   (`0x0024F210` calls `0x001560F8`); from `0x0024F2E0` on, functions only call
   printf internals and SDK code. Includes hand-written assembly at
   `0x0024E0F0`-`0x0024EBF8` (`sq` context save, `lq`/VU0 macro code, LZ-style
-  decoders using `addu t4,zero,a0` idioms): these need `.s` files, not C.
+  decoders using `addu t4,zero,a0` idioms): these need `.s` files, not C
+(session 5: src/asm/text_0024e0a4.s).
   Also contains the HDD install code (`hdd0:`, `pfs0:kingdom.img`,
   `PP.SLPS-25198.0.KINGDOM`) and memory card paths (`BISLPS-25198-xx`).
 - **sdk** `0x0024F2E0`-`0x00272C70` (570 functions): Sony libc (printf at
