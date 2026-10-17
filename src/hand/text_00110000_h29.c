@@ -439,7 +439,7 @@ void func_00114e50(void) {
 }
 
 typedef struct { u8 pad[0x10]; void *x10; } W29Task;
-typedef struct { s32 x0; u8 pad[0xc]; } W29E10;
+typedef struct { s32 x0; u8 pad[8]; u32 b0:1; u32 rest:31; } W29E10;
 extern s32 D_00351BD0;
 extern W29E10 D_003044D8[];
 void func_00108d90(void);
@@ -559,3 +559,163 @@ s32 func_00115600(void *obj, void *p) {
     }
     return 1;
 }
+
+typedef struct { s32 f; u8 pad[12]; } W29Mark;
+typedef struct { u8 hdr[8]; W29Mark e[1]; } W29MarkTbl;
+extern W29MarkTbl *D_004E0420;
+extern s32 D_004E0428[];
+extern u16 **D_002A623C;
+extern s32 D_002BD170;
+s32 func_00104940(void *, s32 *, s32);
+
+s32 func_00115d58(void *a) {
+    s32 buf[1024];
+    s32 n, i, j, k, cnt;
+    u16 *l;
+    n = func_00104940(a, buf, 1024);
+    if (n == -1) return D_002BD170;
+    cnt = 0;
+    for (i = 0; i < n; i++) {
+        l = D_002A623C[buf[i]];
+        if (l == (u16 *)-1) continue;
+        k = l[0];
+        for (j = 0; j < k; j++) {
+            u16 id = l[j + 1];
+            if (D_004E0420->e[id].f == 0) {
+                D_004E0420->e[id].f = 1;
+                D_004E0428[cnt++] = id;
+            }
+        }
+    }
+    for (k = 0; k < cnt; k++) D_004E0420->e[D_004E0428[k]].f = 0;
+    D_002BD170 = cnt;
+    return cnt;
+}
+
+static inline void w29_copy(void *d, void *s) {
+    __asm__ volatile(
+        "lq $6, 0(%1)\n"
+        "sq $6, 0(%0)\n"
+        "nop\n"
+        : : "r"(d), "r"(s) : "$6", "memory");
+}
+
+extern W29V4 D_002BD1E0;
+
+s32 func_00118db0(void *p, W29V4 *v) {
+    W29V4 c, prev, e[4];
+    s32 i;
+    s32 *idx = D_002BD160;
+    for (i = 0; i < 4; i++) w29_sub(&e[i], &v[i], p);
+    w29_copy(&prev, &D_002BD1E0);
+    for (i = 0; i < 4; i++) {
+        w29_outer(&c, &e[i], &e[idx[i]]);
+        if (w29_dot(&prev, &c) < 0.0f) return 0;
+        w29_copy(&prev, &c);
+    }
+    return 1;
+}
+
+typedef struct { f32 mn[3]; f32 mx[3]; } W29Box;
+void func_00267518(W29V4 *, W29V4 *, W29V4 *);
+
+void func_001195d8(W29V4 *a, W29Box *b) {
+    W29V4 t;
+    func_00267518(&t, a, a + 1);
+    {
+        f32 p, q; q = t.v[0]; p = a->v[0];
+        if (q > p) { b->mn[0] = p; b->mx[0] = q; }
+        else { b->mx[0] = p; b->mn[0] = q; }
+    }
+    {
+        f32 p, q; q = t.v[1]; p = a->v[1];
+        if (q > p) { b->mn[1] = p; b->mx[1] = q; }
+        else { b->mx[1] = p; b->mn[1] = q; }
+    }
+    {
+        f32 p = a->v[2], q = t.v[2];
+        if (p < q) { b->mn[2] = p; b->mx[2] = q; }
+        else { b->mx[2] = p; b->mn[2] = q; }
+    }
+}
+
+static inline void w29_scale4(void *d, void *s, f32 t) {
+    __asm__ volatile(
+        "lqc2 $vf4, 0(%1)\n"
+        "lw $8, 0(%2)\n"
+        "qmtc2 $8, $vf5\n"
+        "vmulx.xyzw $vf6xyzw, $vf4xyzw, $vf5x\n"
+        "sqc2 $vf6, 0(%0)\n"
+        : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+}
+
+typedef struct { f32 n[3]; f32 d; s32 x10; } W29Plane;
+extern W29Plane *D_002A6238;
+s32 func_001198c8(s32, s32, void *);
+
+s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {
+    W29V4 t;
+    f32 d;
+    d = w29_dot(p, n) + D_002A6238[i].d;
+    if (*maxd < d) return 0;
+    w29_scale4(&t, n, d);
+    w29_sub(out, p, &t);
+    return func_001198c8(-1, i, out) != 0;
+}
+
+extern s32 D_003044D0;
+extern u8 D_002BF250[];
+typedef struct { u32 h; s32 i; void *p; } W29Lnk;
+typedef struct { u8 pad[0x18]; u16 x18; u8 pad1a[2]; s32 x1c; W29Lnk l[1]; } W29Grp;
+s32 func_0011a728(W29Grp *, s32);
+void func_0011a410(s32);
+void *func_0011af48(s32, W29Grp *, s32, void *);
+
+void func_0011b108(W29Grp *g, s32 k) {
+    void *prev = D_002BF250;
+    s32 i;
+    for (i = 0; i < D_003044D0; i++) {
+        if (D_003044D8[i].b0 != 1 && func_0011a728(g, i)) {
+            void *r;
+            func_0011a410(i);
+            r = func_0011af48(i, g, 1, prev);
+            if (g->x18 != 0) {
+                g->x1c++;
+                g->l[k].h = g->x18;
+                g->l[k].i = i;
+                g->l[k].p = prev;
+                k++;
+            }
+            prev = r;
+        }
+    }
+}
+
+/* needs make: uses rodata */
+typedef struct { u8 pad[0x158]; s32 x158; } W29Ply;
+extern W29Ply *D_002BCB60;
+void func_0013c7d8(s32);
+
+void func_001119d0(void) {
+    switch (D_002BC128) {
+    case 5:
+        if (D_002BCB60->x158 & 0x8) func_0013c7d8(3);
+        break;
+    case 8:
+        if (D_002BCB60->x158 & 0x20) func_0013c7d8(5);
+        break;
+    case 9:
+        if (D_002BCB60->x158 & 0x40) func_0013c7d8(6);
+        break;
+    case 10:
+        if (D_002BCB60->x158 & 0x80) func_0013c7d8(7);
+        break;
+    case 13:
+        if (D_002BCB60->x158 & 0x100) func_0013c7d8(8);
+        break;
+    case 15:
+        if (D_002BCB60->x158 & 0x200) func_0013c7d8(9);
+        break;
+    }
+}
+
