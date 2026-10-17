@@ -116,7 +116,7 @@ void func_0017eb88(void);
 void func_001252f8(void);
 void func_00156c18(s32 a);
 void func_001590a8(void);
-extern s32 D_002E26A0;
+extern void *D_002E26A0[3];
 extern f32 D_00304C40;
 void func_00132550(void) {
     W32Rec *r;
@@ -133,7 +133,7 @@ void func_00132550(void) {
         }
     }
     if (D_00525298.x20) func_0017d9c8(D_00525298.x20);
-    if (D_002E26A0) func_0017eb88();
+    if (D_002E26A0[0]) func_0017eb88();
     func_001252f8();
     func_00156c18(D_00525298.x28);
     func_001590a8();
@@ -578,6 +578,94 @@ void func_00139170(W32Src *o, W32Tgt *t) {
     }
     t->flags |= 2;
 }
+typedef struct {
+    u8 pad00[0x28];
+    f32 x28;
+    f32 x2c;
+    f32 x30;
+    f32 x34;
+} W32Prm;
+typedef struct {
+    u8 pad00[0xC4];
+    f32 xc4;
+} W32Scl;
+typedef struct {
+    u8 pad00[0x30];
+    f32 x30[4];
+    u8 pad40[0x6C - 0x40];
+    W32Scl *x6c;
+    u8 pad70[0x3C0 - 0x70];
+    f32 x3c0[4];
+} W32Act;
+typedef struct {
+    u8 pad00[0x40];
+    u32 x40;
+} W32Atk;
+typedef struct {
+    u8 pad00[0x8];
+    s32 x8;
+    u8 pad0c[0x2C - 0xC];
+    W32Atk *x2c;
+} W32Hit;
+extern f32 D_002C58A0[4];
+extern W32Prm *D_00308CDC;
+void func_00267530(f32 *d, f32 *a, f32 *b);
+void func_00156260(W32Act *o, f32 *v);
+s32 func_00130340(W32Act *o, u32 f, f32 x);
+void *func_00130578(void *o, s32 k, f32 f);
+void func_001399a8(W32Act *o, W32Hit *h) {
+    f32 v[4] __attribute__((aligned(16)));
+    u32 f = h->x2c->x40;
+    if (h->x8 < 0 && (f & 0x400000)) {
+        f32 t;
+        func_00267530(v, D_002C58A0, o->x30);
+        t = (f32)-h->x8 * D_00308CDC->x28;
+                v[3] = (t < D_00308CDC->x2c ? t : D_00308CDC->x2c) * o->x6c->xc4;
+        func_00156260(o, v);
+        f &= ~0x400000;
+    }
+    func_00130340(o, f | 0x1000000, 0.0f);
+    func_00130578(o, 0x40000000, 8.0f);
+}
+typedef struct {
+    u8 pad00[0xC];
+    void (*xc)(void);
+} W32Ev;
+typedef struct {
+    u8 pad000[0x20];
+    f32 x20[3];
+    s32 x2c;
+    f32 x30[4];
+    u8 pad040[0x88 - 0x40];
+    u32 x88;
+    u8 pad08c[0x164 - 0x8C];
+    s32 x164;
+    u8 pad168[0x3D0 - 0x168];
+    s32 x3d0;
+    u8 pad3d4[0x3EA - 0x3D4];
+    u16 x3ea;
+} W32Mot;
+void func_00130398(W32Mot *o, s32 k, f32 f);
+void func_00138948(void);
+void func_00139ff8(W32Mot *o) {
+    s32 b = o->x3ea;
+    s32 m = o->x164;
+    W32Ev *e;
+    if (m == b || m == b + 1) {
+        func_00130398(o, b + 2, 0.0f);
+        e = func_00130578(o, o->x3ea + 3, 0.0f);
+        if (o->x88 & 2) e->xc = func_00138948;
+    } else if (m == b + 5 || m == b + 6) {
+        func_00130398(o, b + 7, 0.0f);
+        e = func_00130578(o, o->x3ea + 8, 0.0f);
+        if (o->x88 & 2) e->xc = func_00138948;
+    } else {
+        func_00130398(o, (o->x3d0 + 7) | 0x1000000, 0.0f);
+        func_00130578(o, 0x40000000, 8.0f);
+    }
+    func_002675a8(o->x20, o->x30);
+    o->x2c = 0;
+}
 /* needs make: uses rodata */
 typedef struct {
     u8 pad00[6];
@@ -606,4 +694,17 @@ void func_001371f0(W32Kind *o) {
         j->cb = func_00136768;
         break;
     }
+}
+void func_0014cce0(W32Act *o, f32 f);
+void func_00267560(f32 *d, f32 *s, f32 f);
+void func_00139a90(W32Act *o, W32Hit *h) {
+    func_00130340(o, (h->x2c->x40 & ~0x400000) | 0x1000000, 0.0f);
+    func_00130578(o, 0x40000006, 0.0f);
+    func_0014cce0(o, 20.0f);
+    if (h->x8 < 0) {
+                f32 t = (f32)h->x8 / 100.0f * D_00308CDC->x30;
+        func_00267560(o->x3c0, o->x30, (-D_00308CDC->x34 < t ? t : -D_00308CDC->x34) * o->x6c->xc4);
+        return;
+    }
+    func_002675a8(o->x3c0, D_002C58A0);
 }

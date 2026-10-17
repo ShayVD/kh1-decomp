@@ -230,11 +230,11 @@ void func_001116b0(s32 id, s32 row) {
     }
 }
 
-u32 func_00111b08(void);
+u32 func_00111b08(u32);
 
-u32 func_00111be8(void) {
+u32 func_00111be8(u32 a) {
     u32 t, h, m, s;
-    t = func_00111b08();
+    t = func_00111b08(a);
     h = t / 216000;
     t = t % 216000;
     m = t / 3600;
@@ -269,4 +269,150 @@ s32 func_00111cb8(void) {
         return 0;
     }
     return 0;
+}
+
+extern void (*D_004D9258)(void);
+
+s32 func_00111e00(void) {
+    switch (D_004D925C) {
+    case 2:
+        return 4;
+    case 0:
+        if (D_002BCC1C > 0) {
+            D_002BCC1C = (f32)D_004D9254 - (f32)(D_002BBDF0 - D_004D9250) * D_002BBDEC;
+            return 0;
+        }
+        D_002BCC1C = 0;
+        D_004D9258();
+        return 4;
+    case 1:
+        return 0;
+    }
+    return 0;
+}
+
+typedef struct { s32 f, s, m, h; } W29Time;
+typedef struct {
+    s32 x0, x4, x8, xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30;
+    W29Time t[2];
+} W29Clock;
+extern W29Clock D_004D9288;
+s32 func_00111b10(s32);
+s32 func_00111b48(s32);
+s32 func_00111b90(s32);
+
+void func_00112018(s32 which, s32 t) {
+    s32 h, m, s, f;
+    if (t < 0) t = 0;
+    h = func_00111b10(t);
+    m = func_00111b48(t);
+    s = func_00111b90(t);
+    f = func_00111be8(t);
+    if (which == 0) {
+        D_004D9288.t[0].f = f;
+        D_004D9288.t[0].s = s;
+        D_004D9288.t[0].m = m;
+        D_004D9288.t[0].h = h;
+    } else {
+        D_004D9288.t[1].f = f;
+        D_004D9288.t[1].s = s;
+        D_004D9288.t[1].m = m;
+        D_004D9288.t[1].h = h;
+    }
+}
+
+extern s32 D_002BCC20;
+extern s32 D_004D9260;
+extern s32 D_004D9274;
+extern s32 D_004D9280;
+void func_002485b8(W29Clock *);
+void func_001120c8(void);
+void func_0011ef10(s32, void (*)(void));
+
+void func_00112150(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, s32 a7, s32 s0, s32 s8) {
+    D_004D9288.x20 = a1;
+    D_004D9288.x0 = a0;
+    D_004D9260 = a4;
+    D_004D9288.x30 = a2;
+    D_004D9288.x4 = a3;
+    D_004D9288.x18 = a5;
+    D_004D9288.xc = a6;
+    D_004D9288.x8 = s8;
+    D_004D9288.x24 = s0;
+    D_004D9288.x1c = D_002BCC20;
+    D_004D9288.x28 = 0;
+    func_00112018(0, D_002BCC1C);
+    func_00112018(1, D_004D9260);
+    D_004D9288.x2c = a7;
+    D_004D9288.x10 = D_002BCC20;
+    D_004D9288.x14 = D_004D9274;
+    func_002485b8(&D_004D9288);
+    D_004D9280 = 0;
+    func_0011ef10(0x280A0, func_001120c8);
+}
+
+extern s32 D_002BCDB4, D_002BCDB8, D_002BCDBC, D_002BCDC0, D_002BCDC4, D_002BCDD8;
+extern void *D_004D92DC;
+extern u8 D_009A0000[];
+extern u8 D_002BCCA0[];
+extern s32 D_002BC138;
+extern s32 D_002BC128;
+void func_00112320(void);
+void func_00176170(void);
+void func_001761b0(void);
+void func_001124f8(void);
+void func_00112928(void);
+void func_00112820(void);
+void func_00112968(void);
+void func_00120748(void *, void *, void (*)(void), s32);
+
+s32 func_001129c8(void) {
+    if (D_002BCDBC == 1 && D_002BCDC0 == 0) return 0;
+    func_00112320();
+    D_002BCDB4 = 0;
+    D_002BCDB8 = 0;
+    D_002BCDC4 = 1;
+    D_004D92DC = D_009A0000;
+    func_00176170();
+    func_001761b0();
+    if (D_002BC138 == D_002BC128) D_002BCDB4 = 1;
+    if (D_002BCDB4 == 1) {
+        func_001124f8();
+        if (D_002BCDD8) func_00112928();
+        else func_00112820();
+    } else {
+        func_00120748(D_002BCCA0, D_004D92DC, func_00112968, 0);
+    }
+    return 4;
+}
+
+typedef struct { u32 lo:13; u32 b13:1; u32 hi:18; } W29Flg;
+typedef struct { s32 x0; u8 pad[0x3c]; } W29Rec40;
+extern W29Flg D_002C5958;
+extern W29Rec40 *D_002BCDA0;
+extern W29Rec40 *D_002BCDAC;
+extern s32 D_002BC13C;
+extern void *D_002A3F3C;
+extern char D_002BCCE0[];
+extern char D_0048D008[];
+void func_00112400(s32);
+char *strcpy(char *, const char *);
+char *strcat(char *, const char *);
+void *func_001559f0(s32, s32);
+void *func_001137c8(void *, s32);
+void func_00112c08(void);
+
+void func_00112c20(s32 i) {
+    char buf[64];
+    s32 id;
+    if (D_002C5958.b13 == 1) return;
+    id = D_002BCDAC[D_002BCDA0[i].x0].x0;
+    if (D_002BC13C == id) return;
+    D_002BCDBC = 1;
+    func_00112400(id);
+    strcpy(buf, D_002BCCE0);
+    strcat(buf, D_0048D008);
+    D_002A3F3C = func_001559f0(0x34, 8);
+    D_002A3F3C = func_001137c8(D_002A3F3C, 0x80);
+    func_00120748(buf, D_002A3F3C, func_00112c08, 0);
 }

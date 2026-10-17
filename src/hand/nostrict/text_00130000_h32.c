@@ -71,3 +71,41 @@ W32Node *func_00133868(W32List *l, W32V32 *v) {
     }
     return 0;
 }
+typedef struct W32Fig {
+    u64 x0;
+    u8 pad008[0x7C - 0x8];
+    struct W32Fig *x7c;
+    u8 pad080[0x144 - 0x80];
+    s32 x144;
+    u8 pad148[0x370 - 0x148];
+    u64 x370;
+} W32Fig;
+typedef struct {
+    u8 pad00[4];
+    W32Fig *x4;
+} W32Msg;
+typedef struct {
+    void *p;
+    s32 n;
+} W32Dsc;
+extern u32 D_002C5958;
+void func_0012bce0(s32 h, s32 a, s32 b, W32Dsc *d, s32 *r);
+void func_001349d0(W32Fig *o);
+void func_00139c28(W32Fig *o, W32Msg *m);
+s32 func_00139cb8(W32Fig *o, W32Msg *m) {
+    if ((o->x0 & 0x1000088) || ((s32)(o->x370 >> 51) & 1)) return 0;
+    if (D_002C5958 & 0x4100000) return 0;
+    if (m->x4) {
+        o->x7c = (((s32)(m->x4->x370 >> 37) & 3) == 1) ? m->x4 : 0;
+    }
+    if (((s32)(o->x370 >> 48) & 1) && o->x144) {
+        W32Dsc d[1];
+        d[0].p = &m;
+        d[0].n = 4;
+        func_0012bce0(o->x144, 0, 1, d, 0);
+    } else {
+        func_001349d0(o);
+    }
+    func_00139c28(o, m);
+    return 1;
+}
