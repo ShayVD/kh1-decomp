@@ -607,7 +607,7 @@ void func_001478e0(void) {
     }
 }
 
-typedef struct { u8 pad[4]; u8 b[8]; u8 padc[0x74 - 0xc]; } Ent74;
+typedef struct { u8 pad[4]; u8 b[8]; u8 padc[0x24]; u8 c[8]; u8 pad38[0x74 - 0x38]; } Ent74;
 typedef struct { u8 pad[0x40]; s32 w40; s32 w44; s32 w48; u8 pad4c[0xf0 - 0x4c]; } StBuf;
 extern Ent74 *D_00304BE8;
 typedef struct { u8 b0, b1, b2, b3; s16 h4; s16 h6; } Itm;
@@ -657,4 +657,51 @@ s32 func_00149440(s32 kind, s32 id) {
         break;
     }
     return r;
+}
+
+typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x1c]; f32 ang; } Tg3c;
+typedef struct {
+    u64 d0;
+    u8 pad8[8];
+    f32 pos[4];
+    u8 pad20[0x10];
+    union { u64 d; struct { u32 lo; Tg3c *tg; } s; } u30;
+    u8 pad38[0x70 - 0x38];
+    f32 v70[4];
+} Hm;
+typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x10]; f32 v30[4]; } Hs;
+f32 sinf(f32);
+f32 atan2f(f32, f32);
+f32 cosf(f32);
+f32 func_00120c88(f32);
+void func_002673b8(f32 *, f32 *);
+
+void func_0014ac50(Hm *o, Hs *s, f32 *out) {
+    f32 a;
+
+    if ((s32)(o->d0 >> 6) & 1) {
+        func_00267530(out, s->pos, o->pos);
+        out[1] = 0.0f;
+        func_00121fc4(out, out);
+        if (out[3] == 0.0f) {
+            func_00267530(out, D_002C58A0, s->v30);
+        }
+    } else if (((s32)(o->u30.d >> 10) & 1) || !o->u30.s.tg) {
+        func_00267530(out, o->pos, o->v70);
+        out[1] = 0.0f;
+        func_002673b8(out, out);
+    } else {
+        func_00267530(out, s->pos, o->u30.s.tg->pos);
+        out[1] = 0.0f;
+        a = func_00120c88(atan2f(out[0], out[2]) - o->u30.s.tg->ang);
+        if (a > 0.7853982f) {
+            a = 0.7853982f;
+        } else if (a < -0.7853982f) {
+            a = -0.7853982f;
+        }
+        a = func_00120c88(o->u30.s.tg->ang + a);
+        out[0] = sinf(a);
+        out[2] = cosf(a);
+    }
+    out[3] = 1.0f;
 }
