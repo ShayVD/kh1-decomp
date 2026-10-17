@@ -25,23 +25,8 @@ void func_00242be0(void) {
     D_00652898 = 1;
 }
 
-void func_0024a450(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) | 0x80);
-    M2C_FIELD(arg0, s32 *, 0x88) = (s32) (M2C_FIELD(arg0, s32 *, 0x88) | 2);
-}
-
-void func_0024a470(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x88) = 0;
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) & ~0x80);
-}
-
 s32 func_0024a488(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x88);
-}
-
-void func_0024a698(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x9C) = 0;
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) & ~0x10);
 }
 
 s32 func_0024a6b0(void *arg0) {

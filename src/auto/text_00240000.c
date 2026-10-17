@@ -182,50 +182,8 @@ s32 func_00249da0(s32 arg0) {
     return arg0 + 0x10;
 }
 
-void func_0024a088(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) | 8);
-    M2C_FIELD(arg0, s32 *, 0x74) = (s32) (M2C_FIELD(arg0, s32 *, 0x74) | 2);
-}
-
-void func_0024a0a8(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x74) = 0;
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) & ~8);
-}
-
-void func_0024a0c0(void *arg0) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + 0x64;
-    M2C_FIELD(temp_a0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 0x64) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0x10) = (s32) (M2C_FIELD(temp_a0, s32 *, 0x10) & ~4);
-}
-
 s32 func_0024a1c0(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x74);
-}
-
-void func_0024a2e0(void *arg0) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + 0x78;
-    M2C_FIELD(temp_a0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 0x78) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0x10) = (s32) (M2C_FIELD(temp_a0, s32 *, 0x10) & ~4);
-}
-
-void func_0024a568(void *arg0) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + 0x8C;
-    M2C_FIELD(temp_a0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 0x8C) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0x10) = (s32) (M2C_FIELD(temp_a0, s32 *, 0x10) & ~4);
-}
-
-void func_0024a678(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x60) = (s32) (M2C_FIELD(arg0, s32 *, 0x60) | 0x10);
-    M2C_FIELD(arg0, s32 *, 0x9C) = (s32) (M2C_FIELD(arg0, s32 *, 0x9C) | 2);
 }
 
 void func_0024ac08(void *arg0, void *arg1) {
