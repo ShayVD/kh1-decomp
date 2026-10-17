@@ -197,3 +197,174 @@ void func_00136d38(C02Obj *o)
         }
     }
 }
+
+/* needs make: uses rodata */
+
+typedef f32 C02V4[4] __attribute__((aligned(16)));
+
+typedef struct {
+    C02V4 v00;      /* 0x2A0 */
+    C02V4 v10;      /* 0x2B0 */
+    u8 pad20[0x28 - 0x20];
+    u32 x28;        /* 0x2C8 */
+    u8 pad2c[0x30 - 0x2C];
+    u32 x30;        /* 0x2D0 */
+    u8 pad34[0x3E - 0x34];
+    u16 x3e;        /* 0x2DE */
+    C02V4 v40;      /* 0x2E0 */
+    u8 pad50[0x6E - 0x50];
+    u16 x6e;        /* 0x30E */
+    u8 pad70[0x80 - 0x70];
+} C02Mv;
+
+typedef struct {
+    u8 pad00[4];
+    u32 x4;
+} C02Desc2;
+
+typedef struct {
+    u8 pad00[0x90];
+    s32 x90;
+} C02Tgt;
+
+typedef struct C02Ob2 {
+    u32 x0;
+    u8 pad04[0x70 - 0x4];
+    s32 x70;
+    u8 pad74[0x90 - 0x74];
+    u64 x90;
+    u8 pad98[0x130 - 0x98];
+    C02Desc2 *desc;
+    u8 pad134[0x148 - 0x134];
+    C02Tgt *x148;
+    u8 pad14c[0x2A0 - 0x14C];
+    C02Mv mv;
+    u8 pad320[0x370 - 0x320];
+    union {
+        u64 w;
+        struct {
+            u64 lo : 53;
+            u64 b53 : 1;
+            u64 b54 : 2;
+            u64 b56 : 1;
+            u64 b57 : 1;
+            u64 hi : 6;
+        } b;
+    } fl;
+    u8 pad378[0x398 - 0x378];
+    s32 x398;
+} C02Ob2;
+
+typedef struct {
+    s32 a;
+    s32 b;
+    C02Ob2 *p;
+    s32 c;
+} C02Slot;
+
+extern C02Slot D_003044D8[];
+extern u8 D_002C58A0[];
+
+void func_002675a8(void *dst, void *src);
+void func_00267530(void *dst, void *a, void *b);
+u64 func_001166e8(C02Mv *m);
+s32 func_00143080(C02Ob2 *o, f32 *v);
+void func_00142fe0(C02Ob2 *o, C02Ob2 *p);
+void func_0014d070(C02Ob2 *o, f32 *v);
+f32 func_00121748(void *a, f32 *v);
+f32 func_00120bf8(void *a);
+
+void func_00143180(C02Ob2 *o, f32 *v)
+{
+    C02V4 d;
+    C02Mv save;
+    C02Mv tmp;
+    u32 fl0;
+    s32 i, n;
+    u16 k;
+
+    if ((o->desc->x4 & 0x2000) && ((s32)(o->fl.w >> 53) & 1) && o->x398 == 0
+        && v[0] == 0.0f && v[1] == 0.0f && v[2] == 0.0f)
+        return;
+    fl0 = o->mv.x30;
+    for (;;) {
+        func_002675a8(o->mv.v10, v);
+        o->mv.v10[3] = 1.0f;
+        save = o->mv;
+        func_002675a8(save.v40, o->mv.v00);
+        if (o->x0 & 0x100) {
+            if (!func_00143080(o, v)) {
+                o->mv = save;
+                func_002675a8(o->mv.v40, o->mv.v00);
+            }
+        } else {
+            n = 0;
+            o->x90 = func_001166e8(&o->mv);
+            for (i = 0; i < 32; i++) {
+                if ((o->x90 >> i) & 1) {
+                    if (i > 0) {
+                        func_00142fe0(o, D_003044D8[i - 1].p);
+                        if ((s32)(D_003044D8[i - 1].p->fl.w >> 57) & 1)
+                            n++;
+                    } else {
+                        n++;
+                    }
+                }
+            }
+            if (n >= 2) {
+                tmp = o->mv;
+                func_002675a8(tmp.v00, tmp.v40);
+                func_002675a8(tmp.v10, D_002C58A0);
+                if (func_001166e8(&tmp)) {
+                    o->mv = save;
+                    o->mv.x28 |= 0x80000000;
+                }
+            }
+        }
+        switch (o->x70) {
+        case 2:
+        case 3:
+            func_0014d070(o, v);
+            break;
+        case 10:
+            func_00267530(o->mv.v10, o->mv.v40, o->mv.v00);
+            if (v[0] != 0.0f || v[2] != 0.0f) {
+                if (o->mv.x3e == 0xFFFF || func_00121748(o->mv.v10, v) < 1.0f) {
+                    v[2] = 0.0f;
+                    v[0] = 0.0f;
+                    continue;
+                }
+            } else if (o->mv.x3e == 0xFFFF) {
+                func_002675a8(v, D_002C58A0);
+                func_002675a8(o->mv.v40, o->mv.v00);
+                o->mv.x3e = 0;
+            }
+            break;
+        case 15:
+            func_00267530(d, o->mv.v40, o->mv.v00);
+            if (func_00120bf8(d) > 15.0f)
+                o->x148->x90 = 0xFFFF;
+            func_002675a8(o->mv.v40, o->mv.v00);
+            break;
+        case 18:
+            if (o->mv.x6e == 0xFFFF) {
+                if (o->mv.x30 & 0x20) {
+                    o->mv.x6e = 0;
+                } else if (!(fl0 & 0x20)) {
+                    if (v[0] == 0.0f && v[2] == 0.0f) {
+                        func_002675a8(o->mv.v40, o->mv.v00);
+                        o->mv.x6e = 0;
+                    } else {
+                        v[0] = v[2] = 0.0f;
+                        continue;
+                    }
+                }
+            }
+            break;
+        }
+        break;
+    }
+    func_00267530(v, o->mv.v40, o->mv.v00);
+    o->fl.b.b53 = 1;
+    o->fl.b.b56 = 1;
+}
