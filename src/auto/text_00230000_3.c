@@ -85,23 +85,6 @@ void func_00237660(s32 arg0, s32 arg1, s32 arg2) {
     func_00237600(arg0);
 }
 
-void func_00239778(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, f32 fparg0) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-        if (arg2 != 0) {
-            func_0024ae00(arg2);
-        }
-    }
-    func_0024af00(arg1);
-    if (arg2 != 0) {
-        func_0024af00(arg2);
-    }
-    func_00239630(arg1, arg3, arg4, arg5, fparg0);
-    if (arg2 != 0) {
-        func_00239630(arg2, arg3, arg4, arg5, fparg0);
-    }
-}
-
 void func_0023c5a8(s32 arg0) {
     *(M2C_UNK *)((s8 *)&D_00651310 + (arg0 * 0xE0)) = 0;
 }

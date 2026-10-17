@@ -38,7 +38,7 @@ typedef struct O98 {
     s16 xca;
     s16 xcc;
     s16 xce;
-    u8 p5[0xd2 - 0xd0];
+    s16 xd0;
     s16 xd2;
     u8 p6[0xd8 - 0xd4];
     s16 xd8;
@@ -82,7 +82,8 @@ extern s32 D_006437C8[];
 extern s32 D_006437D0[];
 extern s32 D_006437DC;
 extern s32 D_006437E4;
-extern s32 D_006450C0[];
+typedef struct { u8 pad0[8]; u64 x8; u8 pad10[0x10]; char name[0x20]; } Dir40;
+extern Dir40 *D_006450C0[];
 extern Save3C D_00645250[];
 extern void *D_00646990;
 s32 func_001ee428(s32);
