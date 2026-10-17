@@ -88,3 +88,32 @@ Slot *func_00241b60(s32 i, s32 b) {
     func_002414a8(i, 1);
     return p;
 }
+
+typedef struct { s32 a, b, c; } Vec12;
+typedef struct { s32 cap; Vec12 *buf; s32 wr; s32 rd; } Vec12Queue;
+/* The current record, then the queue of pending ones. */
+typedef struct {
+    s32 on;         /* +0x0 */
+    Vec12 v;        /* +0x4 */
+    s32 unk10;
+    Vec12Queue q;   /* +0x14 */
+} Vec12Mgr;
+extern Vec12Mgr D_006561D0;
+s32 func_00243208(Vec12Queue *, Vec12 *);
+s32 func_00243278(Vec12Queue *, Vec12 *);
+void func_00243690(Vec12 *);
+void func_002436c0(s32);
+
+s32 func_00243a20(void) {
+    Vec12 v;
+    s32 r = 0;
+    Vec12Mgr *s = &D_006561D0;
+    if (s->on == 0) {
+        if (!func_00243208(&s->q, &v)) return 0;
+        func_00243690(&v);
+    } else {
+        r = func_00243278(&s->q, &v) != 0;
+    }
+    func_002436c0(r);
+    return 0;
+}
