@@ -80,3 +80,79 @@ void func_001bdb58(void) {
     func_001b9e40(7, a[7]);
     func_001b9e40(8, a[8]);
 }
+
+
+typedef struct { s8 x, y, z, w; } C4;
+extern C4 D_0037A130[16];
+typedef struct { u16 h0; u16 r0 : 4; u16 r1 : 4; u16 r2 : 4; u16 r3 : 4; } Ori_1bbf88;
+
+void func_001bbf88(Ori_1bbf88 *o, s32 axis, s32 dir) {
+    C4 a, b, c, t;
+    s32 i;
+
+    a = D_0037A130[o->r0];
+    b = D_0037A130[o->r1];
+    c = D_0037A130[o->r2];
+    switch (axis) {
+    case 0:
+        switch (dir) {
+        case -1:
+            t.x = a.x; t.y = -a.z; t.z = a.y; a = t;
+            t.x = b.x; t.y = -b.z; t.z = b.y; b = t;
+            t.x = c.x; t.y = -c.z; t.z = c.y; c = t;
+            break;
+        case 1:
+            t.x = a.x; t.y = a.z; t.z = -a.y; a = t;
+            t.x = b.x; t.y = b.z; t.z = -b.y; b = t;
+            t.x = c.x; t.y = c.z; t.z = -c.y; c = t;
+            break;
+        }
+        break;
+    case 1:
+        switch (dir) {
+        case 1:
+            t.x = -a.z; t.y = a.y; t.z = a.x; a = t;
+            t.x = -b.z; t.y = b.y; t.z = b.x; b = t;
+            t.x = -c.z; t.y = c.y; t.z = c.x; c = t;
+            break;
+        case -1:
+            t.x = a.z; t.y = a.y; t.z = -a.x; a = t;
+            t.x = b.z; t.y = b.y; t.z = -b.x; b = t;
+            t.x = c.z; t.y = c.y; t.z = -c.x; c = t;
+            break;
+        }
+        break;
+    case 2:
+        switch (dir) {
+        case -1:
+            t.x = -a.y; t.y = a.x; t.z = a.z; a = t;
+            t.x = -b.y; t.y = b.x; t.z = b.z; b = t;
+            t.x = -c.y; t.y = c.x; t.z = c.z; c = t;
+            break;
+        case 1:
+            t.x = a.y; t.y = -a.x; t.z = a.z; a = t;
+            t.x = b.y; t.y = -b.x; t.z = b.z; b = t;
+            t.x = c.y; t.y = -c.x; t.z = c.z; c = t;
+            break;
+        }
+        break;
+    }
+    for (i = 0; i < 6; i++) {
+        if (D_0037A130[i].x == a.x && D_0037A130[i].y == a.y && D_0037A130[i].z == a.z) {
+            o->r0 = i;
+            break;
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (D_0037A130[i].x == b.x && D_0037A130[i].y == b.y && D_0037A130[i].z == b.z) {
+            o->r1 = i;
+            break;
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (D_0037A130[i].x == c.x && D_0037A130[i].y == c.y && D_0037A130[i].z == c.z) {
+            o->r2 = i;
+            break;
+        }
+    }
+}

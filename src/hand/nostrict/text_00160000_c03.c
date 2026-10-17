@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker c03). Built without strict aliasing. */
 #include "common.h"
+#include "platform/math.h"
 
 /* ---- func_00164f18 ---- */
 typedef union { s32 w; struct { u16 lo, hi; } h; } C03Key;
@@ -81,12 +82,29 @@ typedef struct { u8 pad[0x90]; s32 x90[4]; } C03Sk8;
 typedef struct { C03Ids *p; s32 pad[3]; } C03HdE;
 typedef struct { s16 n; s16 pad2; s32 x4; C03Sk8 *p8; s32 xC; C03HdE e[1]; } C03Hdr;
 typedef struct { u32 lo:21; u32 k:2; u32 hi:9; } C03BF;
-typedef struct { u8 pad[0x10]; s32 n10; C03BF *p14; } C03Bits;
+typedef struct { u16 idx; u8 type; u8 pad3[3]; } C03Ch;
+typedef struct { f32 t[3]; s32 parent; f32 r[3]; f32 s[3]; } C03Jnt;
+typedef struct { f32 t[4]; f32 x[4]; f32 r[4]; f32 s[4]; } C03Pose;
+typedef struct {
+    u8 pad[0x10];
+    s32 n10;             /* 0x10 */
+    C03BF *p14;          /* 0x14 */
+    s32 n18;             /* 0x18 */
+    C03Ch *p1C;          /* 0x1C */
+    s32 n20;             /* 0x20 */
+    C03Ch *p24;          /* 0x24 */
+    void *p28;           /* 0x28 */
+    s32 n2C;             /* 0x2C */
+    C03Jnt *p30;         /* 0x30 */
+} C03Bits;
 typedef struct { s16 h0; s16 h2; u8 pad4[0xC]; f32 v10[4]; f32 v20[4]; } C03Lnk;
 typedef struct {
     C03Hdr **p0;         /* 0x0 */
     C03Bits *p4;         /* 0x4 */
-    u8 pad8[0xA0 - 0x8];
+    f32 f8;              /* 0x8 */
+    u32 wC;              /* 0xC */
+    u8 pad10[0x90 - 0x10];
+    f32 v90[4];          /* 0x90 */
     f32 vA0[4];          /* 0xA0 */
     f32 vB0[4];          /* 0xB0 */
     f32 vC0[4];          /* 0xC0 */
@@ -110,7 +128,7 @@ void func_00121f30(void *, void *);
 void func_001625c8(C03Mtx *, C03Mtx *);
 void func_00162848(f32 *, C03Mtx *, f32 *);
 void func_00164ba8(C03Mdl *, C03Bits *);
-void func_001655e0(f32 *, C03Mdl *, f32, C03Bits *);
+void func_001655e0(f32 (*)[4], C03Mdl *, f32, C03Bits *);
 void func_002675a8(f32 *, f32 *);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 
@@ -167,7 +185,7 @@ void func_00165cf8(f32 *pos, C03Mdl *o, C03Bits *b, f32 f) {
     for (i = 0; i < (*o->p0)->n; i++) func_002675a8(o->p164[i], o->p150[i][0]);
     func_00121e28((*o->p0)->n * 64, &o->p158);
     func_00164ba8(o, b);
-    func_001655e0(pos, o, f, b);
+    func_001655e0((f32 (*)[4])pos, o, f, b);
     func_002675a8(o->vC0, o->vA0);
     o->p160 = o->p158;
     func_00121f30(o->p158, &o->p160);
@@ -179,4 +197,125 @@ void func_00165cf8(f32 *pos, C03Mdl *o, C03Bits *b, f32 f) {
         else func_00162848(o->p16C[i].v20, &m, o->p154[o->p16C[i].h0 + 2][3]);
     }
     func_00121e28((*o->p0)->n * 64, &o->p158);
+}
+
+/* needs make: uses rodata */
+
+extern C03Mtx D_00573F10[];
+extern f32 D_00574F10[4];
+extern f32 D_00574F20[4];
+
+void func_001626f0(f32 *, f32 *, f32 *, C03Mtx);
+void func_00162c5c(C03Mtx, C03Mtx, C03Mtx);
+void func_00163490(C03Mdl *);
+void func_001636d0(C03Mdl *, C03Bits *);
+f32 func_00164768(void *, C03Ch *, s32);
+void func_00165450(C03Mdl *, C03Bits *, f32);
+f32 func_00267390(f32 *, f32 *);
+void func_002674b0(f32 *, f32 *, f32);
+void sceVu0UnitMatrix(f32 (*)[4]);
+
+static inline f32 inl_wrap(f32 v) {
+    for (;;) {
+        if (v > 3.14159251f) { v -= 6.28318501f; continue; }
+        if (v < -3.14159251f) { v += 6.28318501f; continue; }
+        break;
+    }
+    return v;
+}
+
+void func_001655e0(f32 (*pos)[4], C03Mdl *o, f32 f, C03Bits *b) {
+    C03Mtx m;
+    s32 fi;
+    s32 i, k;
+    f32 v;
+    C03Jnt *jp;
+    C03Mtx *mp;
+    s32 j;
+
+    fi = f * 256.0f;
+    D_00574F20[0] = PlatSqrtf(func_00267390(pos[0], pos[0]));
+    D_00574F20[1] = PlatSqrtf(func_00267390(pos[1], pos[1]));
+    D_00574F20[2] = PlatSqrtf(func_00267390(pos[2], pos[2]));
+    if (o->p4 != b && b) func_00164ba8(o, b);
+    o->p4 = b;
+    o->wC &= 0xFFFF;
+    o->f8 = f;
+    sceVu0CopyMatrix(D_00573F10[0], pos);
+    D_00573F10[0][1][0] = -D_00573F10[0][1][0];
+    D_00573F10[0][1][1] = -D_00573F10[0][1][1];
+    D_00573F10[0][1][2] = -D_00573F10[0][1][2];
+    D_00573F10[0][2][0] = -D_00573F10[0][2][0];
+    D_00573F10[0][2][1] = -D_00573F10[0][2][1];
+    D_00573F10[0][2][2] = -D_00573F10[0][2][2];
+    sceVu0CopyMatrix(o->mD0, D_00573F10[0]);
+    func_002674b0(D_00573F10[0][0], D_00573F10[0][0], D_00574F20[0]);
+    func_002674b0(D_00573F10[0][1], D_00573F10[0][1], D_00574F20[1]);
+    func_002674b0(D_00573F10[0][2], D_00573F10[0][2], D_00574F20[2]);
+    D_00574F10[0] = D_00573F10[0][3][0];
+    D_00574F10[1] = D_00573F10[0][3][1];
+    D_00574F10[2] = D_00573F10[0][3][2];
+    o->vA0[2] = D_00573F10[0][3][2] = o->vA0[1] = D_00573F10[0][3][1] = o->vA0[0] = D_00573F10[0][3][0] = 0.0f;
+    if (b) {
+        for (i = 0; i < b->n18; i++) {
+            v = func_00164768(b->p28, &b->p1C[i], fi);
+            k = b->p1C[i].type & 0xF;
+            switch (k) {
+            case 1: case 2: case 3:
+                ((C03Pose *)o->p150)[b->p1C[i].idx].t[k - 1] = v;
+                break;
+            case 4: case 5: case 6:
+                v = inl_wrap(v);
+                ((C03Pose *)o->p150)[b->p1C[i].idx].r[k - 4] = v;
+                break;
+            case 7: case 8: case 9:
+                ((C03Pose *)o->p150)[b->p1C[i].idx].s[k - 7] = v;
+                break;
+            }
+        }
+        for (i = 0; i < b->n20; i++) {
+            v = func_00164768(b->p28, &b->p24[i], fi);
+            k = b->p24[i].type & 0xF;
+            switch (k) {
+            case 1: case 2: case 3:
+                b->p30[b->p24[i].idx].t[k - 1] = v;
+                break;
+            case 4: case 5: case 6:
+                v = inl_wrap(v);
+                b->p30[b->p24[i].idx].r[k - 4] = v;
+                break;
+            case 7: case 8: case 9:
+                b->p30[b->p24[i].idx].s[k - 7] = v;
+                break;
+            }
+        }
+        jp = &b->p30[1];
+        for (j = 1; j < b->n2C; j++, jp++) {
+            func_001626f0(jp->t, jp->r, jp->s, m);
+            func_00162c5c(D_00573F10[j], D_00573F10[jp->parent], m);
+        }
+        o->vA0[0] = D_00573F10[b->n2C - 1][3][0] * D_00574F20[0];
+        o->vA0[1] = D_00573F10[b->n2C - 1][3][1] * D_00574F20[1];
+        o->vA0[2] = D_00573F10[b->n2C - 1][3][2] * D_00574F20[2];
+        func_001636d0(o, b);
+        func_00165450(o, b, f);
+    } else {
+        func_00163490(o);
+    }
+    if (fabsf(D_00574F20[0] - 1.0f) > 0.005f || fabsf(D_00574F20[1] - 1.0f) > 0.005f
+        || fabsf(D_00574F20[2] - 1.0f) > 0.005f) {
+        sceVu0UnitMatrix(m);
+        m[0][0] = D_00574F20[0];
+        m[1][1] = D_00574F20[1];
+        m[2][2] = D_00574F20[2];
+        for (i = 0; i < (*o->p0)->n; i++) func_00162c5c(o->p154[i], m, o->p154[i]);
+    }
+    o->v90[0] = o->vA0[0] + D_00574F10[0];
+    o->v90[1] = o->vA0[1] + D_00574F10[1];
+    o->v90[2] = o->vA0[2] + D_00574F10[2];
+    for (i = 0; i < (*o->p0)->n; i++) {
+        o->p154[i][3][0] += D_00574F10[0];
+        o->p154[i][3][1] += D_00574F10[1];
+        o->p154[i][3][2] += D_00574F10[2];
+    }
 }
