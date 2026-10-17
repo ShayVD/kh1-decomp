@@ -101,3 +101,43 @@ void func_0020d7d8(Obj7d8 *a0) {
     func_001f9438(a0, 0, 0x80, 0xE, a0->x24, 0xF, 0x801EC8C8);
     func_002079c8(a0);
 }
+
+typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
+extern u32 D_003E3D68;
+extern u8 *D_00304BE8;
+extern s32 D_00641378[];
+extern s32 D_00641278[][16];
+
+void func_0020eb98(void) {
+    u32 i;
+    s32 j;
+    for (i = 0; i < D_003E3D68; i++) {
+        E4BE8 *e = (E4BE8 *)(D_00304BE8 + D_00304BE8[0x48e + i] * 0x74);
+        D_00641378[i] = e->n;
+        for (j = 0; j < D_00641378[i]; j++) {
+            D_00641278[i][j] = e->v[j];
+        }
+    }
+}
+
+u32 func_0020f260(s32);
+
+void func_0020f290(s32 *a, s32 l, s32 r) {
+    s32 i, j, t;
+    u32 p;
+    p = func_0020f260(a[(l + r) / 2]);
+    i = l;
+    j = r;
+    for (;;) {
+        while (func_0020f260(a[i]) < p) i++;
+        while (p < func_0020f260(a[j])) j--;
+        if (i >= j) break;
+        t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+        i++;
+        j--;
+    }
+    if (l < i - 1) func_0020f290(a, l, i - 1);
+    if (j + 1 < r) func_0020f290(a, j + 1, r);
+}
