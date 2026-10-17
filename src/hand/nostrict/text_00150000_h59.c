@@ -826,3 +826,151 @@ void func_00165450(E5450 *e, void *a, f32 t) {
     k = func_00164e00(a, 0x70000, t);
     if (k && k->on) e->xC |= 0x800000;
 }
+
+typedef struct { u8 pad[0x1c]; u32 n; s8 **ids; u8 *map; } Tbl59;
+typedef struct { u8 id; s8 x1; u8 pad2[2]; s32 busy; f32 x8; f32 xC; u32 *p; } Slot59;
+typedef struct { u8 pad[0x10]; Tbl59 *t10; Tbl59 *t14; Slot59 s[1]; } Own59;
+typedef struct { u8 pad[8]; s32 x8; } Res59;
+Tbl59 *func_001684e0(s32);
+
+static inline Tbl59 *inl_tbl59(Own59 *o, Res59 *r) {
+    if (r) {
+        if (!o->t14) o->t14 = func_001684e0(r->x8);
+        return o->t14;
+    }
+    return o->t10;
+}
+
+s32 func_00167978(Own59 *o, Res59 *r, u32 n) {
+    Tbl59 *t1 = inl_tbl59(o, r);
+    Tbl59 *t;
+    s32 id = -1;
+    s32 k;
+    u32 f;
+    u32 *p;
+    if (t1) {
+        id = n - 1024;
+        if (n < 1024) id = t1->map[n] - 1;
+    }
+    if (id < 0) return 3;
+    t = inl_tbl59(o, r);
+    if (!t) return 3;
+    if ((u32)id >= t->n) return 3;
+    k = *t->ids[id];
+    p = o->s[k].p;
+    if (!p || o->s[k].id != id) return 4;
+    f = *p & 0xf;
+    if (f == 2) return 2;
+    if (!o->s[k].busy) return f == 3 ? 2 : 1;
+    return 0;
+}
+
+typedef struct { u16 x0; u16 x2; u16 x4; s16 x6; } Hd59;
+s32 func_001627e8(s32);
+
+void func_00167ac0(Own59 *o, Res59 *r, u32 n) {
+    Tbl59 *t1 = inl_tbl59(o, r);
+    Tbl59 *t;
+    s32 id = -1;
+    s32 k;
+    Hd59 *h;
+    s32 v;
+    if (t1) {
+        id = n - 1024;
+        if (n < 1024) id = t1->map[n] - 1;
+    }
+    if (id >= 0) {
+    t = inl_tbl59(o, r);
+    if (t && (u32)id < t->n) {
+    k = *t->ids[id];
+    o->s[k].id = id;
+    o->s[k].x1 = 1;
+    o->s[k].busy = (s32)t->ids[id];
+    o->s[k].x8 = 0;
+    h = (Hd59 *)(t->ids[id] + 4);
+    o->s[k].p = (u32 *)h;
+    if (h->x4 == 0) v = h->x2;
+    else v = h->x2 + func_001627e8(h->x4 + 1);
+    o->s[k].xC = v;
+    }
+    }
+}
+
+void func_00167d70(Own59 *o, f32 dt) {
+    s32 i;
+    u32 f;
+    s32 v;
+    Hd59 *h;
+    if (dt <= 0.0f) return;
+    for (i = 0; i < 5; i++) {
+        if (!o->s[i].p) continue;
+        f = *o->s[i].p & 0xf;
+        if (f == 2) continue;
+        if (f == 3) {
+            if (o->s[i].busy) {
+                o->s[i].p = o->s[i].p + ((Hd59 *)o->s[i].p)->x6 * 2;
+            } else {
+                o->s[i].p = 0;
+                continue;
+            }
+        }
+        if (o->s[i].x1) {
+            o->s[i].x1 = 0;
+            continue;
+        }
+        o->s[i].x8 += dt;
+        if (o->s[i].xC <= o->s[i].x8) {
+            do {
+                o->s[i].x8 -= o->s[i].xC;
+                o->s[i].p += 2;
+                f = *o->s[i].p & 0xf;
+                if (f == 3) {
+                    if (!o->s[i].busy) {
+                        o->s[i].p = 0;
+                        break;
+                    }
+                    o->s[i].p = o->s[i].p + ((Hd59 *)o->s[i].p)->x6 * 2;
+                } else if (f == 2) {
+                    break;
+                }
+                h = (Hd59 *)o->s[i].p;
+                if (h->x4 == 0) v = h->x2;
+                else v = h->x2 + func_001627e8(h->x4 + 1);
+                o->s[i].xC = v;
+            } while (o->s[i].xC <= o->s[i].x8);
+        }
+    }
+}
+
+typedef struct { u32 tag; u32 size; } Chk59;
+
+static inline s32 inl_known59(u32 t) {
+    switch (t) {
+    case 0x4A424F4D:
+    case 0x41584554:
+    case 0x454E4F42:
+    case 0x4E544D4D:
+    case 0x4C535255:
+    case 0x564E454D:
+        return 1;
+    }
+    return 0;
+}
+
+static inline Chk59 *inl_next59(Chk59 *c) {
+    if (inl_known59(c->tag)) {
+        c = (Chk59 *)((u8 *)c + c->size + 8);
+        if (inl_known59(c->tag)) return c;
+    }
+    return 0;
+}
+
+Chk59 *func_001681b8(Chk59 *c, u32 tag) {
+    for (; c; c = inl_next59(c)) {
+        if (c->tag == tag) break;
+    }
+    if (c) {
+        if (c->size == 0) return 0;
+    }
+    return c;
+}
