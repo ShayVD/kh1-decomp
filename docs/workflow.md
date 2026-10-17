@@ -331,3 +331,24 @@ need a functions.tsv entry like any other (the build places functions by
 Results: 2,570 → 3,216 matched; game segment 2,821 / 6,224, SDK 395 / 722.
 A full-game autodecomp pass (`--max-insns 5000`) found few new matches
 (the easy ones are done): the rest needs permuter time or hand work.
+
+### Session 5, second half
+
+- **permute.py**: `goto_loops()` turns m2c's `goto` loops into real loops
+  (both compilers align a real loop head, `.p2align 3`, which shows as a
+  nop before it; m2c's goto loops get none); `chain_stores()` writes
+  consecutive float-constant stores as one chained assignment
+  (`a = b = 0.0f` keeps 0 in an FPU register, `mtc1 zero`/`swc1`, where
+  separate stores give `sw zero`).
+- **kh1tool.py split_rodata** names a function's inner rodata blocks
+  `.rodata.<fn>.<n>` (`_dtoa_r` has several).
+- **Strict aliasing**: the game was built with it (gcc 2.96's -O2 default).
+  `-fno-strict-aliasing` breaks 7 matched functions; drafts that need the
+  original's reloads need the real field types instead.
+- **tools/asm_export.py** writes functions as `.word` assembly (libvu0).
+- **VU0 code in game C**: inline asm assembles with ee-as if written in its
+  syntax: `vrxor R, $vf2x` and `vrnext.x $vf1x, R` (no `$` on R; the other
+  macro instructions take `$vfN`). The pppRand*Frame classes and their
+  helpers (src/hand/ppp_rand.c) inline one `vu0Rand()` asm block and match
+  in C, so game VU0 code should be tried in C with inline asm before
+  exporting it as assembly.
