@@ -662,12 +662,17 @@ s32 func_00149440(s32 kind, s32 id) {
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x1c]; f32 ang; } Tg3c;
 typedef struct {
     u64 d0;
-    u8 pad8[8];
+    s32 w8;
+    u8 padc[4];
     f32 pos[4];
     u8 pad20[0x10];
     union { u64 d; struct { u32 lo; Tg3c *tg; } s; } u30;
     u8 pad38[0x70 - 0x38];
     f32 v70[4];
+    u8 pad80[0xa8 - 0x80];
+    s8 ba8;
+    u8 pada9;
+    s8 baa;
 } Hm;
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x10]; f32 v30[4]; } Hs;
 f32 sinf(f32);
