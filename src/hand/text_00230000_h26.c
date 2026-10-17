@@ -311,3 +311,169 @@ void func_00247c50(Mdl *m) {
         func_002474e8(D_006693D0[i], D_006692C0, m->unk24, m->unk28, 1.0f);
     func_002476a0(m);
 }
+
+extern s32 D_00669388[2];
+extern u8 D_00669320[];
+void func_002474e8(s32, void *, s32, s32, f32);
+void func_002480d8(void) {
+    s32 i;
+    for (i = 0; i < 2; i++)
+        func_002474e8(D_00669388[i], D_00669320, 0, 0, 1.0f);
+}
+void func_00248678(Vec12Queue *q, Vec12 *v) {
+    if (q->wr != q->cap) {
+        q->buf[q->wr] = *v;
+        q->wr++;
+    }
+}
+s32 func_002486c8(Vec12Queue *q, Vec12 *v) {
+    if (q->wr == q->rd)
+        return 0;
+    *v = q->buf[q->rd];
+    q->rd++;
+    if (q->wr == q->rd) {
+        q->rd = 0;
+        q->wr = 0;
+    }
+    return 1;
+}
+s32 func_00248738(Vec12Queue *q, Vec12 *v) {
+    if (q->wr == q->rd)
+        return 0;
+    *v = q->buf[q->rd];
+    return 1;
+}
+
+extern Vec12Mgr D_00669700;
+void func_00248b58(s32);
+
+void func_00248b28(Vec12 *v) {
+    D_00669700.unk10 = 0;
+    D_00669700.v = *v;
+    D_00669700.on = 1;
+}
+
+/* Needs func_002486c8/func_00248738 defined above it. */
+s32 func_00248e30(void) {
+    Vec12 v;
+    s32 r = 0;
+    Vec12Mgr *s = &D_00669700;
+    if (s->on == 0) {
+        if (!func_002486c8(&s->q, &v)) return 0;
+        func_00248b28(&v);
+    } else {
+        r = func_00248738(&s->q, &v) != 0;
+    }
+    func_00248b58(r);
+    return 0;
+}
+
+typedef struct { f32 val; f32 speed; } Fade;
+extern s32 D_002C5960;
+
+/* Steps a fade by speed*dt (unless paused): 2 when it reaches 0, 1 when it
+ * reaches 128. */
+s32 func_002492e8(Fade *p, s32 dt) {
+    if (p->speed != 0.0f) {
+        if (!(D_002C5960 & 1)) p->val += p->speed * (f32)dt;
+        if (p->val <= 0.0f) {
+            p->val = 0.0f;
+            p->speed = 0.0f;
+            return 2;
+        }
+        if (p->val >= 128.0f) {
+            p->val = 128.0f;
+            p->speed = 0.0f;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+typedef struct {
+    u64 a : 14;
+    u64 p0 : 23;
+    u64 b : 14;
+    u64 p1 : 13;
+} Bits;
+typedef struct {
+    u8 pad[0x28];
+    Bits bits;
+} Obj5;
+
+void func_00249d50(Obj5 *e, s32 a, s32 b) {
+    Bits *p = &e->bits;
+    p->a = a;
+    p->b = b;
+}
+
+typedef struct {
+    u64 lo : 20;
+    u64 f20 : 6;
+    u64 mid : 30;
+    u64 f56 : 5;
+    u64 f61 : 3;
+} Tag;
+typedef struct { u8 pad[0x18]; u64 unk18; } Src;
+void func_0024a6b8(Tag *, void *, u64);
+void func_0024aa48(void *a, Tag *t, Src *s) {
+    func_0024a6b8(t, a, s->unk18);
+    t->f56 = 0;
+    t->f61 = 1;
+    t->f20 = 0x13;
+}
+
+/* Runs func_0024e0f0 with the globals at 0x0046A03C..0x0046A048 loaded from a
+ * parameter block; the ones at +0x40 and +0x48 are restored after. */
+typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;
+extern Prm *D_00669A18[8];
+extern s32 D_0046A03C, D_0046A040, D_0046A044, D_0046A048;
+void func_0024e0f0(s32, s32, s32);
+void func_0024b228(s32 i, s32 a, s32 b, s32 c) {
+    Prm *p = D_00669A18[i];
+    s32 o40, o48, t10, t18;
+    D_0046A03C = p->unkC;
+    o40 = D_0046A040;
+    o48 = D_0046A048;
+    t10 = p->unk10;
+    D_0046A044 = p->unk14;
+    t18 = p->unk18;
+    D_0046A040 = t10;
+    D_0046A048 = t18;
+    func_0024e0f0(a, b, c);
+    D_0046A040 = o40;
+    D_0046A048 = o48;
+}
+void func_0024b6d0(Prm *p, s32 a, s32 b, s32 c) {
+    s32 o40, o48, t10, t18;
+    D_0046A03C = p->unkC;
+    o40 = D_0046A040;
+    o48 = D_0046A048;
+    t10 = p->unk10;
+    D_0046A044 = p->unk14;
+    t18 = p->unk18;
+    D_0046A040 = t10;
+    D_0046A048 = t18;
+    func_0024e0f0(a, b, c);
+    D_0046A040 = o40;
+    D_0046A048 = o48;
+}
+
+s32 func_0024b778(s32 n) {
+    s32 a = n * 32;
+    a += n * 0x10320;
+    return (a + 1511) & ~63;
+}
+
+/* needs make: uses rodata */
+
+void func_002407b0(u8 *e, s32 k) {
+    switch (k) {
+    case 0: *(void **)(e + 0x9C) = e + 0xA0; break;
+    case 1: *(void **)(e + 0x9C) = e + 0x160; break;
+    case 2: *(void **)(e + 0x9C) = e + 0x220; break;
+    case 3: *(void **)(e + 0x9C) = e + 0x2E0; break;
+    case 4: *(void **)(e + 0x9C) = e + 0x3A0; break;
+    }
+    func_0024ae00(*(void **)(e + 0x9C));
+}
