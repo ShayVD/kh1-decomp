@@ -214,3 +214,130 @@ void func_00130898(Ob8 *o, Ct8 *c) {
     o->n--;
     if (o->f170 == 0.0f) func_00130210(o, o->f160.b.hi);
 }
+
+/* needs make: uses rodata */
+typedef struct { u8 p0[5]; u8 f5; u8 p6[0xe]; s32 f14; } Md9;
+typedef struct { u8 p0[2]; u16 f2; f32 f4; f32 f8; } Bn9;
+typedef struct { u8 p0[0x24]; f32 f24; f32 f28; } Rg9;
+typedef struct { u8 p0[0x18]; Rg9 *f18; } Ln9;
+typedef struct {
+    u8 p0[0x10];
+    V4 f10;
+    u8 p20[0x24];
+    f32 f44;
+    u8 p48[8];
+    V4 f50;
+    u8 p60[0x70];
+    f32 fd0[4][4];
+    u8 p110[0x134 - 0x110];
+    Md9 *f134;
+    u8 p138[0x14c - 0x138];
+    Ln9 *f14c;
+    u8 p150[0x15c - 0x150];
+    s32 f15c;
+    u8 p160[0x370 - 0x160];
+    u64 f370;
+} Ob9;
+typedef struct { f32 a[4]; V4 pos; } Tm9;
+extern V4 D_002C58A0;
+extern void func_002675a8(V4 *, V4 *);
+extern void func_00267518(V4 *, V4 *, V4 *);
+extern void func_002672f8(V4 *, f32 (*)[4], V4 *);
+extern Bn9 *func_0015c960(Ob9 *, s32, s32, s32);
+extern void func_0015bad0(Ob9 *, s32, Tm9 *);
+extern void func_0012ec88(Ob9 *, V4 *);
+extern s32 func_00131558(Ob9 *, s32);
+extern void func_00162218(s32, s32, V4 *, f32);
+void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
+    V4 v;
+    Tm9 tm;
+    s32 mdl;
+    Bn9 *b;
+    Ln9 *ln;
+    Rg9 *rg;
+    Md9 *md;
+
+    if (!o || !((s32)(o->f370 >> 32) & 1)) {
+        func_002675a8(out, &D_002C58A0);
+        return;
+    }
+    if (id & 0x8000) {
+        md = o->f134;
+        mdl = (md && md->f5) ? md->f14 : 0;
+        switch (id) {
+        case 0x8005:
+            b = func_0015c960(o, 1, -1, 0);
+            if (!b) b = func_0015c960(o, 0, -1, 0);
+            if (!b) b = (Bn9 *)mdl;
+            if (!b) {
+                func_002675a8(out, &o->f10);
+                break;
+            }
+            func_001315c0(o, b->f2, out, b->f4);
+            out->y -= b->f8 * o->f44;
+            break;
+        case 0x8003:
+            if (mdl) {
+                func_0015bad0(o, mdl, &tm);
+                func_002675a8(out, &tm.pos);
+            } else {
+                func_002675a8(out, &o->f50);
+            }
+            break;
+        case 0x8004:
+            if (mdl) {
+                func_0015bad0(o, mdl, &tm);
+                func_002675a8(out, &tm.pos);
+                out->y -= tm.a[2];
+            } else {
+                func_002675a8(out, &o->f50);
+            }
+            break;
+        case 0x8007:
+            func_0012ec88(o, out);
+            break;
+        case 0x8006:
+            if (mdl) {
+                func_0015bad0(o, mdl, &tm);
+                func_002675a8(out, &tm.pos);
+                out->y -= tm.a[2] * 1.5f;
+            } else {
+                func_002675a8(out, &o->f50);
+            }
+            break;
+        default:
+            *(s32 *)&v.x = 0;
+            *(s32 *)&v.y = 0;
+            *(s32 *)&v.w = 0;
+            v.z = t * 100.0f;
+            switch (id) {
+            case 0x8002:
+                func_002675a8(out, &o->f50);
+                break;
+            case 0x8008:
+                v.x = v.z;
+                *(s32 *)&v.z = 0;
+                func_002675a8(out, &o->f50);
+                break;
+            default:
+                func_002675a8(out, &o->f10);
+                break;
+            }
+            func_002672f8(&v, o->fd0, &v);
+            func_00267518(out, out, &v);
+            break;
+        }
+    } else {
+        if (id == 48) {
+            ln = o->f14c;
+            if (ln) {
+                rg = ln->f18;
+                t = rg->f28 + t * (rg->f24 - rg->f28);
+            }
+        }
+        id = func_00131558(o, id);
+        if (id <= 0) func_002675a8(out, &o->f10);
+        else func_00162218(o->f15c, id, out, t);
+    }
+    out->w = 1.0f;
+}

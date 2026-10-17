@@ -447,6 +447,89 @@ void func_00144958(B3Ob *o, f32 *v) {
     func_00144810(o, v);
 }
 
+typedef struct {
+    f32 x0[4];
+    f32 x10[4];
+    f32 x20, x24;
+    s32 x28, x2c;
+    u32 x30;
+    u8 pad34[0x40 - 0x34];
+    f32 x40[4];
+} B3Col;
+typedef struct {
+    u8 pad0[0x10];
+    union {
+        u64 x;
+        struct { u16 lo; u16 x12; u16 x14; u8 x16; u8 x17; } s;
+        struct { u64 b0:2; u64 kind:16; u64 rest:46; } b;
+    } x10;
+    f32 x18;
+    s32 x1c;
+    f32 x20[4];
+} B3Pj;
+typedef struct { f32 x0; s32 x4, x8, xc, x10; } B3PjInf;
+extern B3PjInf D_00304DB0[];
+extern B3Col *D_00531B60;
+extern f32 D_002C58A0[4];
+void func_00116660(B3Col *);
+void func_001166e8(B3Col *);
+void func_00121fc4(f32 *, f32 *);
+void func_00267560(f32 *, f32 *, f32);
+void func_00267530(f32 *, f32 *, f32 *);
+void func_001473a8(s32, s32, f32 *);
+f32 fabsf(f32);
+
+void func_00145528(B3Pj *o, f32 *v) {
+    f32 t[4];
+    f32 f;
+
+    if (o->x10.s.x12) {
+        o->x10.s.x12--;
+        return;
+    }
+    f = D_00304DB0[o->x10.s.x14].x0;
+    func_00116660(D_00531B60);
+    D_00531B60->x20 = 55.0f;
+    D_00531B60->x24 = 60.0f;
+    func_002675a8(D_00531B60->x0, v);
+    D_00531B60->x0[1] += f;
+    D_00531B60->x28 = 33;
+    if (o->x10.x & 0x10) {
+        func_002675a8(D_00531B60->x10, D_002C58A0);
+        o->x10.x &= ~0x10;
+    } else {
+        func_00121fc4(t, o->x20);
+        if (45.0f < t[3]) func_00267560(o->x20, t, 45.0f);
+        func_002675a8(D_00531B60->x10, o->x20);
+        D_00531B60->x10[3] = 1.0f;
+    }
+    func_001166e8(D_00531B60);
+    if (0.0f <= o->x20[1] && !(D_00531B60->x30 & 1)) {
+        if (5.0f < o->x20[1]) {
+            o->x20[1] *= -0.8f;
+            if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0[o->x10.s.x14].xc, 0, D_00531B60->x40);
+        } else {
+            func_002675a8(o->x20, D_002C58A0);
+            if (D_00531B60->x2c == -1) {
+                o->x10.s.x16 = 1;
+            } else {
+                o->x10.s.x12 = 30;
+            }
+        }
+    } else {
+        func_00267530(t, D_00531B60->x40, D_00531B60->x0);
+        if (0.1f < fabsf(t[0] - o->x20[0])) o->x20[0] = -o->x20[0];
+        if (0.1f < fabsf(t[2] - o->x20[2])) o->x20[2] = -o->x20[2];
+    }
+    func_002675a8(v, D_00531B60->x40);
+    v[1] -= f;
+    v[3] = 1.0f;
+    o->x20[1] += 3.0f;
+    o->x20[0] *= 0.95f;
+    o->x20[2] *= 0.95f;
+    if (0.0f < o->x20[1]) o->x10.x |= 2;
+}
+
 /* needs make: uses rodata */
 void func_00141720(B3Ob *);
 void func_0012bd98(B3Ob *, s32, u32, f32 *);
@@ -613,5 +696,108 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
     }
     func_00121fc4(q, q);
     q[3] = 0.0f;
+}
+
+typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
+extern B3Pj D_0052EB60[];
+extern B3PjE D_0035C710[];
+extern f32 *D_00531B68;
+extern f32 D_002C58D0[4];
+extern f32 D_00306840;
+void func_00145858(B3Pj *, B3PjE *);
+s32 func_00145aa0(B3Pj *, B3PjE *);
+void func_00267810(f32 *, f32 *, f32);
+void func_002672f8(f32 *, f32 *, f32 *);
+void func_00267e40(f32 *, f32 *);
+void func_00267e90(f32 *, f32 *, f32);
+void func_001315c0(s32, s32, f32 *, f32);
+void func_00267518(f32 *, f32 *, f32 *);
+
+s32 func_00145ce8(B3Pj *o) {
+    f32 t[4];
+    f32 u[4];
+    f32 m[16];
+    f32 s, r, a;
+    B3PjE *e = &D_0035C710[o - D_0052EB60];
+
+    switch (o->x10.s.x16) {
+    case 0:
+        switch ((u16)(o->x10.x >> 2) & 3) {
+        case 0:
+            func_00145528(o, e->x0);
+            break;
+        case 1:
+            func_00145858(o, e);
+            break;
+        case 2:
+            o->x10.x |= 2;
+            o->x10.s.x16 = 1;
+            break;
+        }
+    case 1:
+        if (o->x10.x & 2) {
+            if ((o->x1c = func_00145aa0(o, e))) {
+                o->x10.s.x16 = 2;
+                o->x18 = 40.0f;
+                break;
+            }
+        }
+        if (0.0f < o->x18) {
+            o->x18 -= D_002BBDFC;
+            if (o->x18 <= 0.0f || (D_00531B68 && e->x0[1] > D_00531B68[2])) {
+                o->x10.s.x16 = 3;
+                o->x18 = 12.0f;
+            }
+        }
+        break;
+    case 2:
+        r = o->x18 / 40.0f;
+        s = o->x20[3] * r;
+        a = 30.0f / s;
+        func_00267810(m, D_002C58D0, (a < 0.59341193735599518f) ? a : 0.59341193735599518f);
+        func_002672f8(u, m, o->x20);
+        func_00267e40(o->x20, u);
+        func_00267e90(u, o->x20, s);
+        func_001315c0(o->x1c, 0x8003, t, 0.0f);
+        func_00267518(e->x0, t, u);
+        e->x10 = r;
+        o->x18 -= D_002BBDFC;
+        if (o->x18 <= 0.0f) {
+            e->x18 &= ~0x100;
+            return 4;
+        }
+        break;
+    case 3:
+        r = o->x18 / 12.0f;
+        e->x10 = r;
+        o->x18 -= D_002BBDFC;
+        if (o->x18 <= 0.0f) {
+            e->x18 &= ~0x100;
+            return 4;
+        }
+        break;
+    case 4:
+        if (o->x18 < 0.0f) {
+            e->x18 |= 0x200;
+        } else {
+            r = o->x18 / D_00306840;
+            e->x10 = r;
+        }
+        o->x18 = o->x18 - 1.0f;
+        break;
+    case 5:
+        e->x18 &= ~0x200;
+        if (o->x18 < 0.0f) {
+            e->x10 = 1.0f;
+            o->x18 = 900.0f;
+            o->x10.s.x16 = 0;
+        } else {
+            r = o->x18 / D_00306840;
+            e->x10 = 1.0f - r;
+            o->x18 = o->x18 - 1.0f;
+        }
+        break;
+    }
+    return 0;
 }
 
