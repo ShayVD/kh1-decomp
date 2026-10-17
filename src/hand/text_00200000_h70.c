@@ -562,3 +562,22 @@ void func_002127e0(void) {
         if (v > 0) D_00642818[i] = v;
     }
 }
+
+typedef u32 (*KF3de0)(s32);
+extern KF3de0 D_003F3DE0[];
+void func_00213e50(u8 *a, s32 lo, s32 hi, s32 k) {
+    s32 i, j;
+    u32 p;
+    u8 t;
+    i = lo;
+    j = hi;
+    p = D_003F3DE0[k](a[(lo + hi) / 2]);
+    for (;;) {
+        while (D_003F3DE0[k](a[i]) < p) i++;
+        while (p < D_003F3DE0[k](a[j])) j--;
+        if (i >= j) break;
+        t = a[i]; a[i++] = a[j]; a[j--] = t;
+    }
+    if (lo < i - 1) func_00213e50(a, lo, i - 1, k);
+    if (j + 1 < hi) func_00213e50(a, j + 1, hi, k);
+}

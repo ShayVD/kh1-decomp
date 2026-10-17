@@ -95,7 +95,7 @@ void func_00216640(void *a) {
     }
 }
 typedef struct { s32 *p; s32 n; } PN;
-typedef struct { s32 x0; u8 pad4[0x20 - 4]; u8 x20[1]; } S34B8;
+typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
 extern S4BE8 *D_00304BE8;
@@ -259,4 +259,104 @@ void func_00218f88(void *a) {
         }
     }
     D_00642CE8 = (s32)a;
+}
+
+extern s32 D_00642D28;
+extern s32 D_003F4790[];
+s32 func_001fd538(void *);
+void func_00206690(void *, s32, s32, s32);
+void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
+
+void func_00219a88(Obj2 *a) {
+    Obj2 *o;
+    s32 v, s, i, y;
+    if (func_001f42b8(a)) {
+        if (D_00425BC8->x8 & 0x4000) {
+            func_001f3758(a);
+            func_0011d768(3);
+        } else {
+            func_001fdfd0(a);
+            func_0020bd18(a, 8);
+            D_003F34B8->x0 = func_001fd538(a);
+            if ((o = a->x10)) {
+                func_001fd858(o);
+                v = func_001fd518(o);
+                D_00642D28 = v;
+                if ((o = o->x10)) o->x24 = v;
+            }
+            if (func_001fe570(a)) func_001f3758(a);
+        }
+    }
+    func_00206690(a, -75, 12, 76);
+    func_002078f0(a, 11, 0, 2, 0, 0, 142, 71, 294);
+    s = func_001fd538(a);
+    y = 148;
+    for (i = 0; i < 2; i++) {
+        func_002078f0(a, i == s, 2, 2, y, 0, 106, y + 53, D_003F4790[i]);
+        y += 112;
+    }
+}
+
+extern s32 D_003F4798[];
+
+void func_00219c18(Obj2 *a) {
+    Obj2 *o;
+    s32 v, s, i, y;
+    if (func_001f42b8(a)) {
+        if (D_00425BC8->x8 & 0x4000) {
+            func_001f3758(a);
+            func_0011d768(3);
+        } else {
+            func_001fdfd0(a);
+            func_0020bd18(a, 8);
+            D_003F34B8->x4 = func_001fd538(a);
+            if ((o = a->x10)) {
+                func_001fd858(o);
+                v = func_001fd518(o);
+                D_00642D28 = v;
+                if ((o = o->x10)) o->x24 = v;
+            }
+            if (func_001fe570(a)) func_001f3758(a);
+        }
+    }
+    func_00206690(a, -75, 12, 76);
+    func_002078f0(a, 11, 0, 2, 0, 0, 142, 71, 299);
+    s = func_001fd538(a);
+    y = 148;
+    for (i = 0; i < 2; i++) {
+        func_002078f0(a, i == s, 2, 2, y, 0, 106, y + 53, D_003F4798[i]);
+        y += 112;
+    }
+}
+
+extern s32 D_003F47A0[];
+
+void func_00219da8(Obj2 *a) {
+    Obj2 *o;
+    s32 v, s, i, y;
+    if (func_001f42b8(a)) {
+        if (D_00425BC8->x8 & 0x4000) {
+            func_001f3758(a);
+            func_0011d768(3);
+        } else {
+            func_001fdfd0(a);
+            func_0020bd18(a, 8);
+            D_003F34B8->x8 = func_001fd538(a);
+            if ((o = a->x10)) {
+                func_001fd858(o);
+                v = func_001fd518(o);
+                D_00642D28 = v;
+                if ((o = o->x10)) o->x24 = v;
+            }
+            if (func_001fe570(a)) func_001f3758(a);
+        }
+    }
+    func_00206690(a, -75, 12, 76);
+    func_002078f0(a, 11, 0, 2, 0, 0, 142, 71, 303);
+    s = func_001fd538(a);
+    y = 148;
+    for (i = 0; i < 2; i++) {
+        func_002078f0(a, i == s, 2, 2, y, 0, 106, y + 53, D_003F47A0[i]);
+        y += 112;
+    }
 }
