@@ -1,5 +1,6 @@
 #include "ppp.h"
 
+typedef int u128 __attribute__((mode(TI)));
 typedef void (*H39CompFn)(void *, PppEntry *);
 
 /* The current matrix object (D_00615E68): +0x10 its matrix, +0x50 a
@@ -107,8 +108,25 @@ typedef struct {
     u8 pad84[0x2C];
     u64 flags;              /* +0xB0 */
 } H39PSys;
-extern s32 D_00615E64;
-H39Inst *func_0017f958(s32, s32);
+typedef struct {
+    s16 unk00;
+    s16 dur;    /* +0x2 */
+    s8 flags;   /* +0x4 */
+    u8 pad5[3];
+} H39ShFrm;
+typedef struct {
+    u8 pad[6];
+    s16 n;      /* +0x6 */
+    u8 pad8[8];
+    H39ShFrm frm[1]; /* +0x10 */
+} H39Shape;
+typedef struct { H39Shape *shape; s32 unk04; } H39ShEnt;
+typedef struct {
+    u8 pad00[0x14];
+    H39ShEnt *shapes;  /* +0x14 */
+} H39ShSys;
+extern H39ShSys *D_00615E64;
+H39Inst *func_0017f958(H39ShSys *, s32);
 void pppConComponents(H39Inst *);
 /* Makes an instance of the slot's program and links it into the
  * system's list, which is sorted by program priority (+0x24). */
@@ -155,7 +173,7 @@ done:
     return inst;
 }
 
-void func_00183b20(s32, H39Inst *);
+void func_00183b20(H39ShSys *, H39Inst *);
 
 void pppDesObject(H39Inst *obj) {
     H39Slot2 *slot = obj->slot;
@@ -255,7 +273,6 @@ void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
         : "$2", "$3", "memory");
 }
 
-typedef int u128 __attribute__((mode(TI)));
 
 void func_00183be0(f32 (*)[4], f32 *);
 void func_001a5250(f32 (*)[4], f32 *);
@@ -354,4 +371,286 @@ void pppDrawMdlTsFrame(PppObject *obj, H39TsKey *key, PppEntry *e) {
         w[4] += key->d[4];
         w[5] += key->d[5];
     }
+}
+
+typedef struct {
+    s32 frame;
+    s32 slot;   /* +0x4: program slot to start, -1 none */
+    s32 off;    /* +0x8: work offset of its position */
+    u8 every;   /* +0xC */
+} H39PApKey;
+
+/* Every `every` frames, starts the slot's program at work 0's position. */
+void pppPointApFrame(PppObject *obj, H39PApKey *key, PppEntry *e) {
+    f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    u8 *w = (u8 *) obj + e->offsets[1] + 0xA0;
+    H39Inst *inst;
+    H39Slot2 *s;
+    f32 *out;
+
+    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
+        return;
+    if (w[1] == 0) {
+        if (key->slot == -1)
+            return;
+        inst = NULL;
+        s = &D_00615E60->slots[key->slot];
+        if (s != NULL) {
+            inst = func_00182588(D_00615E60, s);
+            inst->unk04 = (s32) obj;
+        }
+        out = (f32 *) ((u8 *) inst + key->off + 0xA0);
+        out[0] = pos[0];
+        out[1] = pos[1];
+        out[2] = pos[2];
+        w[1] = key->every;
+    }
+    w[1]--;
+}
+
+/* --- The float-vector random classes (pppSRand*FVFrame): on the first
+ * frame they draw one random number per component into the work area, then
+ * add amp * r - amp (amp * r for Up/Down) to the vector in the object. */
+
+extern f32 D_00575A00;
+
+typedef struct {
+    s32 frame;
+    s32 dst;    /* +0x4: work offset of the value, -1: scratch */
+    f32 amp[3]; /* +0x8 */
+    u8 twice;   /* +0x14 */
+} H39RandFVKey;
+
+f32 func_001892a8(u8);
+f32 func_00189470(u8);
+f32 func_00189648(u8);
+f32 func_00189298(f32, f32);
+f32 func_00189468(f32, f32);
+f32 func_00189640(f32, f32);
+
+#define H39_SRAND_FV(name, rnd, add)                                       \
+    void name(PppObject *obj, H39RandFVKey *key, PppEntry *e) {            \
+        f32 *w;                                                            \
+        f32 *v;                                                            \
+                                                                           \
+        if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))    \
+            return;                                                        \
+        if (obj->frame == 0) {                                             \
+            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
+            w[0] = rnd(key->twice);                                        \
+            w[1] = rnd(key->twice);                                        \
+            w[2] = rnd(key->twice);                                        \
+        } else {                                                           \
+            if (key->frame != obj->frame)                                  \
+                return;                                                    \
+            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
+        }                                                                  \
+        if (key->dst != -1)                                                \
+            v = (f32 *) ((u8 *) obj + key->dst + 0xA0);                    \
+        else                                                               \
+            v = &D_00575A00;                                               \
+        v[0] += add(key->amp[0], w[0]);                                    \
+        v[1] += add(key->amp[1], w[1]);                                    \
+        v[2] += add(key->amp[2], w[2]);                                    \
+    }
+
+H39_SRAND_FV(pppSRandFVFrame, func_001892a8, func_00189298)
+H39_SRAND_FV(pppSRandUpFVFrame, func_00189470, func_00189468)
+H39_SRAND_FV(pppSRandDownFVFrame, func_00189648, func_00189640)
+
+
+/* --- Depth sorting of the effect objects (D_00364130, 256 of 0xC0). */
+
+typedef union {
+    u128 q;
+    f32 f[4];
+} H39Q;
+
+typedef struct H39Obj {
+    H39Q pos;   /* +0x00 */
+    u8 pad10[0x86 - 0x10];
+    u16 flags;  /* +0x86 */
+    u8 pad88[0xB0 - 0x88];
+    u8 mode;    /* +0xB0: 1 always behind, 2 always in front */
+    u8 padb1[0xC0 - 0xB1];
+} H39Obj;
+
+extern H39Obj D_00364130[256];
+extern f32 D_00615EB0[4][4];
+
+/* Quicksort of a[lo..hi] into descending order, moving b along. */
+void func_001814b0(f32 *a, H39Obj **b, s32 lo, s32 hi) {
+    f32 p = a[(lo + hi) / 2];
+    s32 i = lo;
+    s32 j = hi;
+
+    for (;;) {
+        while (p < a[i])
+            i++;
+        while (a[j] < p)
+            j--;
+        if (i >= j)
+            break;
+        {
+            f32 t = a[i];
+            H39Obj *u;
+
+            a[i] = a[j];
+            a[j] = t;
+            u = b[i];
+            b[i] = b[j];
+            b[j] = u;
+        }
+        i++;
+        j--;
+    }
+    if (lo < i - 1)
+        func_001814b0(a, b, lo, i - 1);
+    if (j + 1 < hi)
+        func_001814b0(a, b, j + 1, hi);
+}
+
+/* Lists the live objects far to near (by view depth) into list; returns
+ * how many. */
+s32 func_00181608(H39Obj **list) {
+    f32 depth[256];
+    H39Q v;
+    H39Obj *e = D_00364130;
+    H39Obj **l = list;
+    s32 n = 0;
+    s32 i;
+
+    for (i = 0; i < 256; i++, e++) {
+        if (e->flags) {
+            switch (e->mode) {
+            case 1:
+                depth[n] = 1000000.0f;
+                break;
+            case 2:
+                depth[n] = 0.0f;
+                break;
+            default:
+                v.q = e->pos.q;
+                v.f[3] = 1.0f;
+                func_002672f8(v.f, D_00615EB0, v.f);
+                depth[n] = v.f[2];
+                break;
+            }
+            *l++ = e;
+            n++;
+        }
+    }
+    if (n >= 2)
+        func_001814b0(depth, list, 0, n - 1);
+    return n;
+}
+
+/* --- Program loading. A loaded program file holds, from +0x110, a header
+ * (+8/+0xC: offsets of the class-id table and the pointer table) and from
+ * +0x10 a chain of programs, each starting with the offset of the next
+ * (0 ends it; the last link is cleared). */
+
+typedef struct {
+    s32 cls;     /* class id -> PppClass * */
+    s32 stride;
+    s32 data;    /* offset -> pointer */
+    s32 offsets; /* offset -> pointer */
+} H39REnt;
+
+typedef struct H39RProg {
+    union {
+        s32 off;
+        struct H39RProg *p;
+    } next;          /* +0x0 */
+    u8 pad04[0x22];
+    s16 n;           /* +0x26 */
+    H39REnt ent[1];  /* +0x28 */
+} H39RProg;
+
+typedef struct {
+    s32 unk00, unk04;
+    s32 offA;        /* +0x8: count, then class ids to turn into pointers */
+    s32 offB;        /* +0xC: count, then offsets to turn into pointers */
+    H39RProg first;  /* +0x10 */
+} H39RHdr;
+
+void pppRelocProgram(H39RHdr *h, PppClass *classes) {
+    H39RProg *p;
+    s32 *ta;
+    s32 *tb;
+    s32 na;
+    s32 nb;
+    s32 i, j, k;
+    s32 off;
+
+    /* Moving the parameter itself (not a new variable) keeps &h->first
+     * as h + 0x10. */
+    h = (H39RHdr *) ((u8 *) h + 0x110);
+    ta = (s32 *) ((u8 *) h + h->offA);
+    tb = (s32 *) ((u8 *) h + h->offB);
+    na = *ta++;
+    nb = *tb++;
+    p = &h->first;
+
+    off = p->next.off;
+    if (off == 0)
+        return;
+    for (;;) {
+        H39REnt *e;
+        H39RProg *q;
+
+        p->next.p = (H39RProg *) ((u8 *) h + off);
+        for (i = 0; i < p->n; i++) {
+            e = &p->ent[i];
+            e->data = (s32) h + e->data;
+            e->cls = (s32) &classes[e->cls];
+            e->offsets = (s32) h + e->offsets;
+        }
+        q = p->next.p;
+        if (q->next.off == 0)
+            break;
+        p = q;
+        off = q->next.off;
+    }
+    p->next.p = NULL;
+    for (j = 0; j < na; j++)
+        ta[j] = (s32) &classes[ta[j]];
+    for (k = 0; k < nb; k++)
+        tb[k] += (s32) h;
+}
+
+typedef struct { s32 frame; s32 id; u16 speed; } H39ShKey;
+typedef struct { u16 time, frame, prev; } H39ShW;
+void pppDrawShapeFrame(PppObject *obj, H39ShKey *key, PppEntry *e) {
+    H39ShW *w;
+    H39Shape *sh;
+    H39ShFrm *f;
+    u16 cur;
+    H39ShEnt *se;
+    s8 fl;
+
+    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
+        return;
+    w = (H39ShW *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    if (key->id == 0xFFFF)
+        return;
+    cur = w->frame;
+    se = &D_00615E64->shapes[key->id];
+    sh = se->shape;
+    f = &sh->frm[w->prev];
+    w->prev = cur;
+    w->time += key->speed;
+    if (w->time < f->dur)
+        return;
+    w->time -= f->dur;
+    w->frame = cur + 1;
+    if (w->frame < sh->n)
+        return;
+    fl = f->flags;
+    w->time = 0;
+    if (fl & 0x80) {
+        w->frame = 0;
+        return;
+    }
+    w->frame--;
 }
