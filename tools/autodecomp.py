@@ -165,6 +165,8 @@ def usable(code: str) -> bool:
 
 
 def resolve(sym: str, registry: dict[str, int]) -> int | None:
+    # ee-gcc's GOFAST libcall names (dptoli, litodp, ...) are libgcc routines
+    sym = K.LIBCALL_ALIASES.get(sym, sym)
     if sym in registry:
         return registry[sym]
     m = SYM_RE.match(sym)

@@ -258,7 +258,30 @@ s32 func_001ef4c0(s32 a) {
 
 typedef struct { u8 pad[0xe0]; s32 xe0; } S3D70;
 extern S3D70 D_003E3D70[];
-s32 func_001ef680(s32);
+u8 *func_001478a0(s32);
+
+u8 func_001ef5c0(s32 arg0) {
+    if (arg0 != 0) {
+        return *func_001478a0(arg0 & ~0x80);
+    }
+    return 0U;
+}
+
+s32 func_001ef680(s32 i) {
+    s32 n = 0, k = 0;
+    u8 *p = D_00304BE8->m[i].name;
+    u8 c;
+loop:
+    if (k >= 48) goto end;
+    k++;
+    c = *p++;
+    if (!c) goto end;
+    if (c & 0x80) goto loop;
+    n += func_001ef5c0(c);
+    goto loop;
+end:
+    return n;
+}
 
 s32 func_001ef720(s32 i) {
     S3D70 *e = &D_003E3D70[i];
