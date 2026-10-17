@@ -86,6 +86,19 @@ compiler = "ee-gcc2.9-991111a"
 cflags = "-O2 -G0"
 no_fill = true
 
+# libvu0 code that needs the later ee-gcc 2.9-991111-01, which puts
+# `nop; nop` before div.s where 991111a does not (session 5).
+[[toolchain.override]]
+path = "src/sdk/gcc991111_01/"
+compiler = "ee-gcc2.9-991111-01"
+cflags = "-O2 -G0"
+
+# libgcc frame.c registration functions: ee-gcc 2.96 without strict
+# aliasing (store order; session 5).
+[[toolchain.override]]
+path = "src/sdk/nostrict/"
+cflags = "-O2 -G0 -fno-strict-aliasing"
+
 # newlib's libc: same build as its libm (no_fill shows in mprec.c's ulp,
 # d2b and ratio; docs/sdk.md).
 [[toolchain.override]]
