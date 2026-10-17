@@ -1,10 +1,10 @@
-/* Hand-matched functions, 0x001742b0..0x001803f0 (worker 38).
- * This file was built without strict aliasing. */
+/* Hand-matched functions, 0x001742b0..0x00176ba8 (worker 38) that need
+ * -fno-strict-aliasing. The rest are in ../text_00170000_h38.c. */
 #include "common.h"
 
 typedef struct { f32 x, y, z; } V3;
 
-/* per-state parameter block (Ob->x160->xc) */
+/* --- actor state handlers (Wk = owner, Ob = actor) --- */
 typedef struct Prm {
     s32 x0;         /* 0x00 */
     u8 pad4[0x10];
@@ -14,12 +14,11 @@ typedef struct Prm {
     f32 x20;        /* 0x20 */
 } Prm;
 typedef struct { u8 pad[0xc]; Prm *xc; } P160;
-typedef struct { u8 pad[0x50]; f32 x50; } P40;
 
 typedef struct Ob {
     u8 pad0[0x38];
     u64 flags;      /* 0x38 */
-    P40 *x40;       /* 0x40 */
+    void *x40;      /* 0x40 */
     u8 pad44[4];
     s32 x48;        /* 0x48 */
     s32 x4c;        /* 0x4C */
@@ -37,32 +36,13 @@ typedef struct Ob {
 } Ob;
 
 typedef struct Wk {
-    u8 pad0[0x144];
-    Ob *x144;       /* 0x144 */
-    u8 pad148[0x160 - 0x148];
+    u8 pad0[0x160];
     s32 x160;       /* 0x160 */
     s32 x164;       /* 0x164 */
 } Wk;
 
-extern u8 D_0035C2B0[];
-extern u8 D_0035C410[];
-
 s32 func_00171118(s32, s32);
 void func_00171790(Wk *, Ob *);
-s32 func_00171a88(Wk *, Ob *, s32);
-f32 func_00171aa8(f32, f32);
-s32 func_00171ae8(Wk *, Ob *);
-s16 *func_00171b80(Wk *, Ob *, s32);
-void func_00170f90(void);
-void func_00170fa8(Wk *, Ob *, void *, void *, f32);
-void func_00148a40(Wk *, s32);
-s32 func_0016b670(Wk *, Ob *, s32, s32);
-s32 func_0016c480(Wk *, Ob *, s32, s32);
-s32 func_0016c650(Wk *, Ob *, s32, s32);
-s32 func_0016cb98(Wk *, Ob *, s32, s32);
-s32 func_0016d040(Wk *, Ob *, s32, s32);
-s32 func_0016d2d0(Wk *, Ob *, s32, s32);
-s32 func_0016d768(Wk *, Ob *, s32, s32);
 void func_00130340(Wk *, s32, f32);
 void func_00267e90(f32, f32 *, V3 *);
 f32 func_00162c20(f32 *);
@@ -86,121 +66,6 @@ void func_001742b0(Wk *w, Ob *o) {
     o->x12c = func_00162c20(v);
     o->x120 = v[0];
     o->x128 = v[2];
-}
-
-s32 func_001743b0(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 39)) return 0;
-        if (!((s32)(o->flags >> 2) & 1)) return 0;
-        return func_0016b670(w, o, a2, 1);
-    case 2:
-        func_00148a40(w, 0);
-        func_0016b670(w, o, a2, 2);
-        func_00170fa8(w, o, func_00170f90, D_0035C2B0, 30.0f);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_001744b8(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 40)) return 0;
-        return func_0016c480(w, o, a2, 1);
-    case 2:
-        func_0016c480(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_00174570(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 41)) return 0;
-        return func_0016c650(w, o, a2, 1);
-    case 2:
-        func_0016c650(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_00174628(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 42)) return 0;
-        return func_0016cb98(w, o, a2, 1);
-    case 2:
-        func_0016cb98(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_001746e0(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 43)) return 0;
-        return func_0016d040(w, o, a2, 1);
-    case 2:
-        func_0016d040(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_00174968(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 45)) return 0;
-        return func_0016d2d0(w, o, a2, 1);
-    case 2:
-        func_0016d2d0(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-s32 func_00174a20(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 46)) return 0;
-        return func_0016d768(w, o, a2, 1);
-    case 2:
-        func_0016d768(w, o, a2, a3);
-        return 1;
-    }
-    return 1;
-}
-
-void func_00174ad8(Wk *w) {
-    Ob *o = w->x144;
-    Prm *q;
-    if ((s32)(o->flags >> 17) & 1) {
-        o->flags &= ~0x20000ULL;
-        return;
-    }
-    q = o->x160->xc;
-    o->x68 = func_00171aa8(q->x14, q->x18);
-    o->x4c = *func_00171b80(w, o, q->x0);
-    if (func_00171ae8(w, o)) o->x40->x50 = q->x1c;
-    o->x164 = 1;
 }
 
 s32 func_00174b90(Wk *w, Ob *o, s32 a2) {
@@ -256,37 +121,126 @@ void func_00174ca8(Wk *w, Ob *o) {
     o->x128 = v[2];
 }
 
-s32 func_00174db0(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 47)) return 0;
-        if (!((s32)(o->flags >> 2) & 1)) return 0;
-        return func_0016b670(w, o, a2, 1);
-    case 2:
-        func_00148a40(w, 0);
-        func_0016b670(w, o, a2, 2);
-        func_00170fa8(w, o, func_00170f90, D_0035C410, 30.0f);
-        return 1;
+/* --- GS packets --- */
+typedef struct { s32 a, b, c, d; } V16;
+typedef struct { u64 a, b; } Q16;
+typedef struct Pkt {
+    u16 x0;
+    u8 x2;
+    u8 x3;
+    s32 x4;
+    u8 pad8[0x68 - 8];
+    u64 x68;
+    u8 pad70[8];
+    u64 x78;
+    u8 pad80[0xf0 - 0x80];
+    u64 xf0;
+    u8 padf8[8];
+    u64 x100;
+} Pkt;
+typedef struct { u64 *x0; } P10;
+typedef struct Spr {
+    u8 pad0[0xa];
+    u16 xa;
+    u8 padc[4];
+    P10 *x10;
+} Spr;
+typedef struct { s32 a, b; u8 *c; u8 *d; } Hd16;
+typedef struct Fil {
+    s32 x0;
+    s32 x4;
+    s32 x8;
+    s32 xc;
+    s32 x10;
+    s32 x14;
+    s32 x18;
+    s32 x1c;
+    s32 x20;
+} Fil;
+typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; } Sub;
+
+extern Q16 D_0035C430;
+extern Q16 D_0035C450;
+extern Pkt D_0035C4A0;
+extern Pkt D_0035C550;
+extern Hd16 D_005757A0;
+extern V16 D_00575790;
+extern s32 D_0035C420;
+extern u8 *D_0035C424;
+extern s32 D_0035C428;
+extern u8 *D_0035C42C;
+extern u8 D_0035C440[];
+extern u8 D_0035C460[];
+extern u8 D_0035C490[];
+
+s32 func_00266c08(s32);
+void func_00266f38(s32, Pkt *);
+s32 sceGsSyncPath(s32, s32);
+void func_0015fa20(void *);
+void func_001623f8(void *, s32, V16 *);
+void func_002675a8(void *, void *);
+
+s32 func_00175600(Spr *s) {
+    Pkt *p;
+    if ((u16)(s->xa - 3) >= 2) return 0;
+    func_00266f38(func_00266c08(2), &D_0035C4A0);
+    p = (Pkt *)((u32)&D_0035C550 | 0x20000000);
+    if (s->xa == 4) {
+        p->x68 = D_0035C430.a;
+        p->x78 = D_0035C430.b;
+    } else {
+        p->x68 = D_0035C450.a;
+        p->x78 = D_0035C450.b;
     }
-    return 1;
+    p->xf0 = s->x10->x0[0];
+    p->x100 = s->x10->x0[1];
+    sceGsSyncPath(0, 0);
+    func_0015fa20(&D_005757A0);
+    sceGsSyncPath(0, 0);
+    func_00266f38(func_00266c08(2), &D_0035C550);
+    return 0;
 }
 
-s32 func_00174eb8(Wk *w, Ob *o, s32 a2, s32 a3) {
-    switch (a3) {
-    case 0:
-        return 0;
-    case 1:
-        if (!func_00171a88(w, o, 48)) return 0;
-        if (!((s32)(o->flags >> 2) & 1)) return 0;
-        return func_0016b670(w, o, a2, 1);
-    case 2:
-        func_00148a40(w, 0);
-        func_0016b670(w, o, a2, 2);
-        func_00170fa8(w, o, func_00170f90, D_0035C410, 30.0f);
-        return 1;
-    }
-    return 1;
+void func_00175708(void *a0, Fil *f) {
+    Sub *s;
+    D_005757A0 = *(Hd16 *)((u8 *)f + f->x8);
+    D_005757A0.c = (u8 *)f + f->x10;
+    D_005757A0.d = (u8 *)f + f->x18;
+    s = (Sub *)((u8 *)f + f->x20);
+    D_0035C420 = s->x0;
+    D_0035C424 = (u8 *)s + s->x4;
+    D_0035C428 = s->x8;
+    D_0035C42C = (u8 *)s + s->xc;
+    func_001623f8(a0, 16, &D_00575790);
+    func_002675a8(D_0035C440, D_0035C490);
+    func_002675a8(D_0035C460, D_0035C490);
+    D_0035C4A0.x0 = 10;
+    D_0035C550.x0 = 16;
+    D_0035C550.x4 = 0;
+    D_0035C550.x3 = 112;
+    D_0035C4A0.x3 = 112;
+    D_0035C4A0.x4 = 0;
 }
 
+/* --- 44-byte records at D_005757B0 built from a type-20 header --- */
+typedef struct { s32 type; s32 x4; s32 off[2]; s32 x10[2]; } H20;
+typedef struct { u8 *a; u8 *b; s32 c; s32 d; s32 e; } E20;
+typedef struct { H20 *h; E20 e[2]; } S44;
+extern S44 D_005757B0[];
+void *memset(void *, s32, u32);
+
+void func_00176ba8(H20 *h, s32 i) {
+    S44 *s;
+    s32 j;
+    E20 *e;
+    if (h->type != 20) return;
+    s = &D_005757B0[i];
+    memset(s, 0, 44);
+    s->h = h;
+    for (j = 0, e = s->e; j < 2; j++, e++) {
+        e->a = e->b = (u8 *)(h->off[j] + (s32)h);
+        e->c = h->x10[j];
+        e->d = 0;
+        e->e = 0;
+    }
+}

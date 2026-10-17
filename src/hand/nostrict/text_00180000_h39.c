@@ -157,3 +157,34 @@ void pppDesObject(H39Inst *obj) {
         slot->last = obj->next;
     func_00183b20(D_00615E64, obj);
 }
+
+typedef union { f32 f[4]; } H39V4 __attribute__((aligned(16)));
+typedef struct { u8 pad[0x80]; H39Slot2 *slots; } H39Sys80;
+typedef struct { u8 pad[0xC]; s32 slot; s32 off; } H39NKey;
+extern H39Sys80 *D_00615E60;
+extern u8 *D_00615E68;
+void func_002672f8(H39V4 *, void *, H39V4 *);
+void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
+    H39V4 v;
+    H39Inst *inst;
+    H39Slot2 *s;
+    f32 *out;
+
+    if (key->slot == -1)
+        return;
+    inst = NULL;
+    s = &D_00615E60->slots[key->slot];
+    if (s != NULL) {
+        inst = func_00182588(D_00615E60, s);
+        inst->unk04 = owner;
+    }
+    v.f[0] = pos[0];
+    v.f[1] = pos[1];
+    v.f[2] = pos[2];
+    v.f[3] = 1.0f;
+    func_002672f8(&v, D_00615E68 + 0x10, &v);
+    out = (f32 *) ((u8 *) inst + key->off + 0xA0);
+    out[0] = v.f[0];
+    out[1] = v.f[1];
+    out[2] = v.f[2];
+}

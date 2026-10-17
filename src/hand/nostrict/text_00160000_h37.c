@@ -119,6 +119,46 @@ extern void func_00124060(Obj130x *, s32);
 extern void func_00135800(Obj130x *, f32, f32);
 extern void func_001373f8(Obj130x *, f32);
 
+typedef struct { s32 w0; u8 pad4[0x10]; f32 f14, f18, f1C, f20, f24; } Sub170C;
+typedef struct { u8 pad[0xC]; Sub170C *pC; } Sub170;
+typedef struct { u8 pad[0x50]; f32 f50; } Sub40;
+typedef struct { u8 pad[0x38]; u64 w38; Sub40 *p40; u8 pad44[4]; void *w48; s32 w4C; u8 pad50[0x18]; f32 f68; u8 pad6C[0x24]; ObjBD40 *w90; u8 pad94[0x2C]; f32 vC0[4]; u8 padD0[0x50]; f32 f120, f124, f128, f12C; u8 pad130[0x34]; f32 f164; u8 pad168[8]; Sub170 *p170; s32 w174; s32 w178; } Wk144;
+typedef struct { u8 pad[0x14]; f32 f14; u8 pad18[0x58]; s32 w70; u8 pad74[0xD0]; Wk144 *p144; u8 pad148[0x18]; s32 w160; s32 w164; } Obj144;
+typedef struct { u8 pad[0xC]; void *cb; } Task0C;
+typedef struct { u8 pad[0x30]; s32 w30; } Res30;
+typedef struct { u8 pad[4]; s32 w4; } Res04;
+extern u8 D_0035BE40[];
+extern Task0C *func_00130578(Obj144 *, s32, f32);
+extern void func_00148a40(Obj144 *, s32);
+extern void func_00170fa8(Obj144 *, Wk144 *, void *, void *, f32);
+extern s32 func_00170f90();
+extern void func_001731f8();
+extern Res04 *func_0013dbe0(Obj144 *, s32);
+extern Res30 *func_001477c8(s32);
+extern void func_001412f8(Obj144 *, s32);
+
+extern s32 func_00171a88(Obj144 *, Wk144 *, s32);
+extern s32 func_0016b670(Obj144 *, Wk144 *, s32, s32);
+
+extern void func_0014f658(Obj144 *, s32);
+
+extern f32 func_00171aa8(f32, f32);
+extern s32 func_00171ae8(Obj144 *, Wk144 *);
+
+extern s32 func_00171118(ObjBD40 *, s32);
+extern void func_00171790(Obj2C4 *, Lock90 *);
+
+extern u8 D_0035C080[];
+extern void func_00267e90(f32 *, f32 *, f32);
+
+extern u8 D_0035C130[];
+extern s32 func_0016ce10(Obj144 *, Wk144 *, s32, s32);
+extern s32 func_0016d768(Obj144 *, Wk144 *, s32, s32);
+
+typedef struct { u8 pad[0x38]; u64 w38; Sub40 *p40; u8 pad44[4]; void *w48; s32 w4C; u8 pad50[0x18]; f32 f68; u8 pad6C[0xF4]; Sub170 *p160; s32 w164; } Wk160;
+typedef struct { u8 pad[0x144]; Wk160 *p144; u8 pad148[0x18]; s32 w160; s32 w164; } Obj160;
+extern s32 func_0016cb98(Obj144 *, Wk144 *, s32, s32);
+
 /* ---- functions ---- */
 
 Key16 *func_001676f8(Obj677 *o, u32 key, s32 *idx, f32 lo, f32 hi) {
@@ -431,4 +471,375 @@ void func_00171d80(Obj130x *o, Wk70 *w, s32 k) {
     w->w60 = 0;
     if (D_002E27A8 == 2) w->f70 = 600.0f;
     else w->f70 = 240.0f;
+}
+
+s32 func_00172df8(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 29)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035BE40, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00172f00(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 30)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035BE40, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173008(Obj144 *o, Wk144 *w, Sub170 *k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 31)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        if (w->w90 == 0) return 0;
+        return func_0016b670(o, w, (s32)k, 1);
+    case 2:
+        w->p170 = k;
+        w->w38 |= 0x800;
+        func_0014f658(o, 50);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_001730f0(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 29)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035BE40, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+void func_001731f8(Obj144 *o) {
+    Wk144 *w = o->p144;
+    Sub170C *c;
+    if ((s32)((s64)(w->w38 << 15) >> 32) & 1) {
+        w->w38 &= ~0x20000LL;
+        return;
+    }
+    c = w->p170->pC;
+    w->f68 = func_00171aa8(c->f14, c->f18);
+    w->w4C = *(s16 *)func_00171b80((Obj14C *)o, (Arg3C *)w, c->w0);
+    if (func_00171ae8(o, w)) w->p40->f50 = c->f1C;
+    w->w174 = 1;
+}
+
+void func_00173360(Obj144 *o) {
+    Wk144 *w = o->p144;
+    s32 st = o->w70;
+    if (!func_00171118(w->w90, -1)) {
+        st = 0;
+    } else {
+        w->w38 |= 0x100000;
+        func_00171790((Obj2C4 *)o, (Lock90 *)w);
+    }
+    switch (w->w174) {
+    case 0:
+        if (!(o->w160 & 1) && o->w164 != 206) st = 0;
+        break;
+    case 1:
+        if ((o->w160 & 1) || o->w164 == w->w4C) {
+            if (w->f68 <= 0.0f) st = 0;
+        } else {
+            st = 0;
+        }
+        break;
+    }
+    if (o->w70 != st) func_0014f658(o, st);
+}
+
+s32 func_001734f8(Obj144 *o, Wk144 *w, s32 mode) {
+    s32 r = 0;
+    switch (mode) {
+    case 1:
+        switch (w->w174) {
+        case 0:
+            if (!(o->w160 & 1) && o->w164 != 206) r = 1;
+            break;
+        case 1:
+            if (!(o->w160 & 1) && o->w164 != w->w4C) r = 1;
+            break;
+        }
+        break;
+    case 2:
+        r = w->w48 == 0;
+        break;
+    }
+    if (r == 1) {
+        w->w38 = ((w->w38 & ~0x800LL) | 0x20000) & ~0x200LL;
+        w->w48 = 0;
+        if (o->w164 == 206 || o->w164 == w->w4C) func_00130340((Obj3D0 *)o, w->w178, 8.0f);
+    }
+    return r;
+}
+
+void func_00173610(Obj144 *o, Wk144 *w) {
+    f32 v[4];
+    Sub170C *c = w->p170->pC;
+    if (!func_00171118(w->w90, -1)) {
+        w->w48 = 0;
+        return;
+    }
+    w->w38 |= 0x100000;
+    func_00171790((Obj2C4 *)o, (Lock90 *)w);
+    switch (w->w174) {
+    case 0:
+        return;
+    case 1:
+        if (w->f68 <= 0.0f) w->w48 = 0;
+        w->w38 |= 0x1000;
+        if (o->w70 == 8) w->w38 |= 0x200;
+        func_00267e90(v, w->vC0, c->f20);
+        w->f124 = v[1];
+        v[1] = 0.0f;
+        w->f12C = func_00162c20(v);
+        w->f120 = v[0];
+        w->f128 = v[2];
+        break;
+    }
+}
+
+s32 func_00173758(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 33)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035C080, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173860(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 34)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035C080, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173968(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 35)) return 0;
+        return func_0016ce10(o, w, k, 1);
+    case 2:
+        func_0016ce10(o, w, k, 2);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173a20(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 36)) return 0;
+        return func_0016d768(o, w, k, 1);
+    case 2:
+        func_0016d768(o, w, k, 2);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173af0(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 37)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035C130, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173bf8(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 38)) return 0;
+        if (!((s32)((s64)(w->w38 << 30) >> 32) & 1)) return 0;
+        return func_0016b670(o, w, k, 1);
+    case 2:
+        func_00148a40(o, 0);
+        func_0016b670(o, w, k, 2);
+        func_00170fa8(o, w, func_00170f90, D_0035C130, 30.0f);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173ec0(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 50)) return 0;
+        return func_0016cb98(o, w, k, 1);
+    case 2:
+        func_0016cb98(o, w, k, 2);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00173f78(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 51)) return 0;
+        return func_0016ce10(o, w, k, 1);
+    case 2:
+        func_0016ce10(o, w, k, 2);
+        return 1;
+    }
+    return 1;
+}
+
+s32 func_00174030(Obj144 *o, Wk144 *w, s32 k, s32 mode) {
+    switch (mode) {
+    case 0:
+        return 0;
+    case 1:
+        if (!func_00171a88(o, w, 52)) return 0;
+        return func_0016d768(o, w, k, 1);
+    case 2:
+        func_0016d768(o, w, k, 2);
+        return 1;
+    }
+    return 1;
+}
+
+void func_001740e8(Obj160 *o) {
+    Wk160 *w = o->p144;
+    Sub170C *c;
+    if ((s32)((s64)(w->w38 << 15) >> 32) & 1) {
+        w->w38 &= ~0x20000LL;
+        return;
+    }
+    c = w->p160->pC;
+    w->f68 = func_00171aa8(c->f14, c->f18);
+    w->w4C = *(s16 *)func_00171b80((Obj14C *)o, (Arg3C *)w, c->w0);
+    if (func_00171ae8((Obj144 *)o, (Wk144 *)w)) w->p40->f50 = c->f1C;
+    w->w164 = 1;
+}
+
+s32 func_001741a0(Obj160 *o, Wk160 *w, s32 mode) {
+    s32 r = 0;
+    switch (mode) {
+    case 1:
+        switch (w->w164) {
+        case 0:
+            if (!(o->w160 & 1) && o->w164 != 202) r = 1;
+            break;
+        case 1:
+            if (!(o->w160 & 1) && o->w164 != w->w4C) r = 1;
+            break;
+        }
+        break;
+    case 2:
+        r = w->w48 == 0;
+        break;
+    }
+    if (r == 1) {
+        w->w38 = (w->w38 & ~0x800LL) | 0x20000;
+        w->w48 = 0;
+        if (o->w164 == 202 || o->w164 == w->w4C) func_00130340((Obj3D0 *)o, 0x40000000, 8.0f);
+    }
+    return r;
+}
+
+/* needs make: uses rodata */
+extern void memset(void *, s32, s32);
+extern s32 func_0013c968(s32, s32);
+extern u8 D_00575788[8];
+
+void func_0016f7b8(void) {
+    s32 i;
+    s32 k;
+    memset(D_00575788, 0, 8);
+    for (i = 0; i < 64; i++) {
+        switch (i) {
+        case 29: case 30: case 31: case 32: case 63:
+            k = 2; break;
+        case 33: case 34: case 35: case 36:
+            k = 3; break;
+        case 37: case 38:
+            k = 5; break;
+        case 39: case 40: case 41: case 42: case 43:
+            k = 7; break;
+        case 44: case 45: case 46:
+            k = 8; break;
+        case 47: case 48:
+            k = 9; break;
+        case 49: case 50: case 51: case 52:
+            k = 6; break;
+        default:
+            k = -1; break;
+        }
+        if (k >= 0) {
+            s32 b = i >> 3;
+            s32 m = i & 7;
+            if (func_0013c968(i, k)) D_00575788[b] |= 1 << m;
+        }
+    }
 }
