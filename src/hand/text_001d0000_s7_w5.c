@@ -1,0 +1,27 @@
+#include "common.h"
+typedef struct {
+    void *obj;
+    u8 pad4[0x17c];
+    s32 stk[105];
+} Sub;
+typedef struct {
+    s32 x0;
+    union {
+        Sub s;
+        struct { void *obj; u8 pad[0x178]; s32 sp; } h;
+    } u;
+} VM;
+typedef struct { u8 pad0[0x1c]; u8 n; u8 it[0x74 - 0x1d]; } ChrB;
+extern u8 *D_00304BE8;
+s32 func_001db658(VM *vm) {
+    Sub *s = &vm->u.s;
+    s32 i = vm->u.h.sp;
+    s32 j;
+    for (j = 0; j < ((ChrB *)D_00304BE8)[s->stk[i - 1]].n; j++) {
+        u8 *p = (u8 *)((u32)(j + s->stk[i - 1] * 0x74) + (u32)D_00304BE8) + 29;
+        if (*p == 0) { *p = s->stk[i]; break; }
+        
+    }
+    vm->u.h.sp -= 2;
+    return 2;
+}
