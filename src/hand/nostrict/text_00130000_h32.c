@@ -32,3 +32,42 @@ W32Args *func_001332f0(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
     t->x2c = h;
     return p;
 }
+typedef struct { u64 a, b, c, d; } W32V32;
+typedef struct W32Node {
+    s32 used;
+    s32 x4;
+    u8 pad08[0x10 - 0x8];
+    W32V32 v;
+    u8 pad30[0x50 - 0x30];
+    struct W32Node *prev;
+    struct W32Node *next;
+    u8 pad58[0x60 - 0x58];
+} W32Node;
+typedef struct {
+    u8 pad000[0x440];
+    W32Node *head;
+} W32List;
+extern W32Node D_00525A40[32];
+W32Node *func_00133868(W32List *l, W32V32 *v) {
+    W32Node *n = D_00525A40;
+    W32Node *p;
+    s32 i;
+    for (i = 0; i < 32; i++, n++) {
+        if (n->used == 0) {
+            if (l->head == 0) {
+                l->head = n;
+                n->prev = 0;
+            } else {
+                for (p = l->head; p->next; p = p->next);
+                p->next = n;
+                n->prev = p;
+            }
+            n->used = 1;
+            n->v = *v;
+            n->next = 0;
+            n->x4 = 0;
+            return n;
+        }
+    }
+    return 0;
+}
