@@ -833,3 +833,34 @@ void func_00157400(void (*cb)(s32)) {
         cb(-1);
     }
 }
+
+/* needs make: uses rodata */
+/* ---- func_00158b88 (switch jump table) ---- */
+s32 func_00158af0(s32, s32);
+
+s32 func_00158b88(s32 a, u8 *b) {
+    switch (*b) {
+    case 0x4B:
+        return func_00158af0(a, 0);
+    case 0x4D:
+    case 0x4E:
+        return D_00F20000(7, 0);
+    case 0x57:
+        return func_00158af0(a, 1);
+    case 0x58:
+    case 0x59:
+        return D_00F20000(8, 0);
+    case 0x5E:
+        return func_00158af0(a, 2);
+    case 0x5F:
+    case 0x60:
+        return D_00F20000(9, 0);
+    case 0x5A:
+        return func_00158af0(a, 3);
+    case 0x5B:
+        return D_00F20000(11, 0);
+    case 0x52:
+        func_00158af0(a, 4);
+        break;
+    }
+}
