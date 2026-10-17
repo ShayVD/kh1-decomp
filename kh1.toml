@@ -162,3 +162,22 @@ ccflags = "-mabi=n32 -DKH1_N32"
 path = "src/hand/n32_nostrict/"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 ccflags = "-mabi=n32 -DKH1_N32"
+
+# Session 7: single extra gcc flags found by tools/matching/flagsweep.py. Each
+# makes one or more near-miss drafts byte-identical; the original file was
+# probably built with that flag (or by a compiler whose pass behaved the same).
+[[toolchain.override]]
+path = "src/hand/nosi/"
+cflags = "-O2 -G0 -fno-sched-interblock"
+
+[[toolchain.override]]
+path = "src/hand/nogcse_nosi/"
+cflags = "-O2 -G0 -fno-gcse -fno-sched-interblock"
+
+[[toolchain.override]]
+path = "src/hand/nogcse_nosib/"
+cflags = "-O2 -G0 -fno-gcse -fno-optimize-sibling-calls"
+
+[[toolchain.override]]
+path = "src/hand/faddr/"
+cflags = "-O2 -G0 -fforce-addr"

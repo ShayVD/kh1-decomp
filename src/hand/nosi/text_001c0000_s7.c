@@ -1,9 +1,5 @@
-/* func_001c1718: matches ONLY when compiled with -fno-sched-interblock (or -fno-sched-spec)
-   plus CONTEXT_ONLY func_001c0bf0 above (strict mode). With normal -O2 it is 32 words off:
-   sched1 interblock speculatively hoists `li a1,4` and the index shifts. Our version has 10
-   basic blocks at sched1 = one region; the original must have had >10 (or the file used
-   no interblock). */
 #include "common.h"
+/* func_001c1718: matches with -fno-sched-interblock (session 7 flag sweep); CONTEXT_ONLY func_001c0bf0 above. */
 typedef struct {
     u8 pad[380]; s32 pc; s32 sp; s32 stack[33]; s32 regs[26]; s32 vars[32]; s32 vidx;
     s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;

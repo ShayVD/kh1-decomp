@@ -1,5 +1,5 @@
-/* func_0010cf38: 26w off (struct 5), mode hand/nogcse (also nostrict_nogcse; plain hand/nostrict much worse). Only the final if/else layout differs: original keeps the zero-store tail (b ret; sw zero) as fall-through of c.le/bc1fl and the first 'cf20 && <1e6' path branches to it (bc1tl ret); here the final zero path is threaded instead (bc1tl ret) and the original's extra nop slot is missing (8 bytes short). Without the goto, the cross-jump goes the other way (31w). */
 #include "common.h"
+/* func_0010cf38: matches with -fno-gcse -fno-optimize-sibling-calls (session 7 flag sweep; the function has no tail call, the flag only changes how the return paths are laid out). */
 typedef struct {
     u16 x0; u16 x2; u8 pad4[4]; f32 x8; u8 padc[0x1810 - 0xc]; f32 t[16]; f32 v[16];
 } Seq;

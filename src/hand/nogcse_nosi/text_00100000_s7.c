@@ -1,5 +1,5 @@
-/* func_0010ec08: 15w off (registers only, same size/structure), mode hand/nogcse (also nostrict_nogcse). Off: sched1 interblock-hoists the 'c < 9' sltiu above the 'c < 32' branch, making it a global pseudo that takes a0; so q goes to a3 instead of a0, go to t0 instead of a3, consts 4/15/1 shift t2/t1/t0 -> t3/t2/t1. Tried u8/s32/u16 c, case ranges, if-shapes, loop forms, init orders. */
 #include "common.h"
+/* func_0010ec08: matches with -fno-gcse -fno-sched-interblock (session 7 flag sweep). */
 extern void *memcpy(void *, const void *, u32);
 
 void func_0010ec08(u8 *src, u8 *dst, s32 n) {

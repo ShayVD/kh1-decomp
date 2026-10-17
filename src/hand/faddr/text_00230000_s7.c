@@ -1,5 +1,5 @@
-/* func_00231ea0: 2w off, strict hand. sched tie in loop prelude: orig sll v1,s0,2 before lui s7,0x8027; ours reversed. Callee-above (00231cd0/00231dd0) no effect. */
 #include "common.h"
+/* func_00231ea0: matches with -fforce-addr (session 7 flag sweep; without it one lui is scheduled after the sll it precedes in the original). */
 
 typedef struct { u16 id; u16 x2; u8 x4; u8 x5; } E6;
 typedef struct { u8 pad[0x90]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W17;

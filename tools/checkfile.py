@@ -5,11 +5,12 @@
 has its effect), and compare each against the original ELF.
 
   tools/checkfile.py src/hand/FILE.c
+  KH1_EXTRA_CCFLAGS="-fno-sched-interblock" tools/checkfile.py ...   (extra C -> asm flags)
 
 Prints MATCH or FAIL per function. A function that uses rodata (jump
 tables, strings, float constants) differs only in the words that address
 it, since rodata is not placed here; `make` places it."""
-import sys, re, subprocess, tempfile
+import os, sys, re, subprocess, tempfile
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import kh1tool as K
@@ -27,7 +28,7 @@ orig = K.require_orig(cfg)
 reg = K.load_registry()
 td = Path(tempfile.mkdtemp())
 asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
-r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
+r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), *os.environ.get("KH1_EXTRA_CCFLAGS", "").split(), "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
 if r.returncode: print(r.stderr); sys.exit(1)
 text = K.split_rodata(asm.read_text())
 asm.write_text(K.no_fill(text) if fl.no_fill else text)
