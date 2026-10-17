@@ -560,7 +560,7 @@ void func_001130a0(s32 i, f32 *d) {
     d[2] = D_004D92F0[i][2];
     d[3] = D_004D92F0[i][3];
 }
-typedef struct { s32 id; u8 pad[0x3c]; } Ent40;
+typedef struct { s32 id; u8 pad4[0xc]; f32 v[3][4]; } Ent40;
 extern Ent40 *D_002BCDA0;
 extern s32 D_002BCDA4;
 
@@ -570,6 +570,55 @@ s32 func_001130e0(void) {
         if (D_002BC130 == D_002BCDA0[i].id) return i;
     }
     return 1000;
+}
+
+/* These three only match with func_001130a0 defined above them. */
+extern s32 D_002BCDD8;
+extern s32 D_002BCDDC;
+extern s32 D_002BBE1C;
+void func_00104fd0(s32, f32 *);
+void func_00111590(s32, f32 *);
+
+void func_00113138(f32 *out) {
+    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
+    if (D_002BCDA8 < D_002BCDA4) {
+        out[0] = D_002BCDA0[D_002BCDA8].v[0][0];
+        out[1] = D_002BCDA0[D_002BCDA8].v[0][1];
+        out[2] = D_002BCDA0[D_002BCDA8].v[0][2];
+        out[3] = D_002BCDA0[D_002BCDA8].v[0][3];
+        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(0, out);
+        if (D_002BBE1C == 1) func_00111590(0, out);
+    } else {
+        func_00104fd0(0, out);
+    }
+}
+
+void func_00113270(f32 *out) {
+    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
+    if (D_002BCDA8 < D_002BCDA4) {
+        out[0] = D_002BCDA0[D_002BCDA8].v[1][0];
+        out[1] = D_002BCDA0[D_002BCDA8].v[1][1];
+        out[2] = D_002BCDA0[D_002BCDA8].v[1][2];
+        out[3] = D_002BCDA0[D_002BCDA8].v[1][3];
+        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(1, out);
+        if (D_002BBE1C == 1) func_00111590(1, out);
+    } else {
+        func_00104fd0(0, out);
+    }
+}
+
+void func_001133a0(f32 *out) {
+    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
+    if (D_002BCDA8 < D_002BCDA4) {
+        out[0] = D_002BCDA0[D_002BCDA8].v[2][0];
+        out[1] = D_002BCDA0[D_002BCDA8].v[2][1];
+        out[2] = D_002BCDA0[D_002BCDA8].v[2][2];
+        out[3] = D_002BCDA0[D_002BCDA8].v[2][3];
+        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(2, out);
+        if (D_002BBE1C == 1) func_00111590(2, out);
+    } else {
+        func_00104fd0(0, out);
+    }
 }
 extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
 void func_00113a00(void) {
