@@ -181,3 +181,7 @@ cflags = "-O2 -G0 -fno-gcse -fno-optimize-sibling-calls"
 [[toolchain.override]]
 path = "src/hand/faddr/"
 cflags = "-O2 -G0 -fforce-addr"
+
+[[toolchain.override]]
+path = "src/hand/nostrict_norcse/"
+cflags = "-O2 -G0 -fno-strict-aliasing -fno-rerun-cse-after-loop"

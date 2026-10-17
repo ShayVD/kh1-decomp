@@ -1,5 +1,6 @@
-/* func_0018e348, nostrict_nofill: 4 words off. First inl_spawn result lands in a0, orig a2 (orig's pseudo conflicts with a0). Tried prototypes, stubs above, else-zero, expression forms. pppKeBornPtCmplFrame below MATCHES with this above. */
 #include "common.h"
+
+/* func_0018e348 (session 7, w3): the slot spawn is written out twice with shared locals (an inline helper gave the first result a0 instead of a2). */
 #include "ppp.h"
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -22,17 +23,6 @@ extern s32 D_0061621C;
 extern PppSystem *D_00615E60;
 
 u8 *func_00182588(PppSystem *, PppSlot *);
-
-static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
-    PppSlot *s = &sys->slots[id];
-    u8 *i = 0;
-
-    if (s) {
-        i = func_00182588(sys, s);
-        *(void **) (i + 4) = o;
-    }
-    return i;
-}
 
 typedef struct { f32 x, y, z, w; } V4;
 
@@ -64,7 +54,15 @@ void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
     BornWork *w;
     f32 t, s;
 
-    inst = inl_spawn(D_00615E60, key->slot, obj);
+    {
+        PppSystem *sys = D_00615E60;
+        PppSlot *sl = &sys->slots[key->slot];
+        inst = 0;
+        if (sl) {
+            inst = func_00182588(sys, sl);
+            *(void **) (inst + 4) = obj;
+        }
+    }
     d = inst + key->off + 0xA0;
     func_001a9098(d, (u8 *) obj + e->offsets[1] + 0xA0);
 
@@ -78,7 +76,15 @@ void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
         s = w->f8;
         while (0.0f < t) {
             u8 *d2;
-            inst = inl_spawn(D_00615E60, key->slot, obj);
+            {
+                PppSystem *sys = D_00615E60;
+                PppSlot *sl = &sys->slots[key->slot];
+                inst = 0;
+                if (sl) {
+                    inst = func_00182588(sys, sl);
+                    *(void **) (inst + 4) = obj;
+                }
+            }
             d2 = inst + key->off + 0xA0;
             func_00267560(&c, &b, s * t);
             t -= 1.0f;
@@ -88,10 +94,3 @@ void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
     w->p = d;
 }
 
-void pppKeBornPtCmplFrame(void *obj, BornKey *key, PppEntry *e) {
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->slot == -1 || key->off10 == -1)
-        return;
-    do { func_0018e348(obj, key, e); } while (0);
-}

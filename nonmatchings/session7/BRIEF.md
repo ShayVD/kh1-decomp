@@ -42,8 +42,12 @@ permuter in session 6. Spend your effort on things session 6 did NOT do:
   SN 2.95.2-273a/274, 2.95.3-107) fail all six functions that match in src/hand/n32 under
   2.96 -mabi=n32. In 0x212cc0 the remaining split `la; addiu 64; addu` site
   (D_003E3D70[k].x40) reads like a pointer temporary in the source, not an ABI effect.
-- func_001c1718 matches with any of -fno-sched-interblock, -fno-sched-spec or
-  -fno-schedule-insns (sched1 off for that file?).
+- The first sweep matched 4 drafts with one extra flag; they now have build modes:
+  `hand/nosi` (-fno-sched-interblock: func_001c1718), `hand/nogcse_nosi`
+  (func_0010ec08), `hand/nogcse_nosib` (-fno-gcse -fno-optimize-sibling-calls:
+  func_0010cf38), `hand/faddr` (-fforce-addr: func_00231ea0). -fno-sched-interblock also
+  brought func_001d0380 to 6 words, func_00144d08 to 15 and func_00240910 to 17: when sched1
+  hoists an instruction across a branch where the original does not, try it.
 
 ## Where your output goes
 - Your own directory: WDIR (create it). Keep helpers there.

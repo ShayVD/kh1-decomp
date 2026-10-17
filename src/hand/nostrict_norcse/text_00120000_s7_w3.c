@@ -1,4 +1,4 @@
-/* func_0012d468: 2 words off (nostrict, src/hand/nostrict). Loop-2 preheader: addiu s6,sp,32 (lp=list) scheduled before addiu s4,a0,20 (q->ids giv); original has them swapped. Needs CONTEXT_ONLY func_0012ccb0 + func_0012d368 above (included). With k=list[i] instead the order is right but s4/s6 swap (6w). */
+/* func_0012d468 matches in hand/nostrict only with -fno-rerun-cse-after-loop (without it: s4/s6 swap, 6w). Includes CONTEXT_ONLY func_0012cb40, func_0012ccb0, func_0012d368. */
 #include "common.h"
 typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
 typedef struct { s32 f0, f4; } S31b0;
@@ -54,8 +54,6 @@ void func_0012d468(s32 a0, u32 *a1) {
     s32 list[8];
     s32 fl[8];
     s32 mask, n, i, k;
-    s32 *lp;
-    u8 *ip;
     O8 *o;
     Q38 *q;
     Q38 *base;
@@ -81,9 +79,8 @@ void func_0012d468(s32 a0, u32 *a1) {
     if ((*a1 >> 5) & 1) {
         i = 0;
         if (n > 0) {
-            lp = list;
             do {
-                k = *lp++;
+                k = list[i];
                 if (func_00133000(a0, k)) {
                     o = func_001478c8(q->ids[i]);
                     if (func_00122ff8(D_002E31B0.f0) && (o->f0 & 8)) {

@@ -1,5 +1,6 @@
-/* func_0023f250 8w off (nostrict, CONTEXT_ONLY d528 above, jtbl rodata 00491560 for the ctx d528 -> run with wqb03_rr 00491560): in both setup branches orig schedules the cur load/clamp (a3) before max (s6); ours the reverse. Statement/decl order and min-helpers tried. */
 #include "common.h"
+
+/* func_0023f250 (session 7, w3): includes a CONTEXT_ONLY copy of func_0023d528 (its jump table goes to .ctx.rodata). */
 typedef struct { u64 lo, hi; } QW;
 typedef struct { s32 v[48]; } __attribute__((aligned(8))) Spr;
 typedef struct { u8 pad[0x18]; u64 unk18; } Tex;
@@ -86,8 +87,8 @@ QW *func_0023f250(Obj *o, QW *r) {
     f32 f, t;
     if (o->unk0 == 4) {
         f = 0.06544983386993408203125f;
-        cur = D_00454A20.xc;
         max = D_00454A20.x4;
+        cur = D_00454A20.xc;
         step = 8;
         base = 72;
     } else {
@@ -95,8 +96,8 @@ QW *func_0023f250(Obj *o, QW *r) {
         f = 0.087266445159912109375f;
         step = 6;
         base = 54;
-        cur = p->unk40;
         max = p->unk3C;
+        cur = p->unk40;
         if (max > 120) max = 120;
         if (cur > 120) cur = 120;
     }
@@ -141,4 +142,27 @@ QW *func_0023f250(Obj *o, QW *r) {
         c.v[2] = c.v[2] * (t + 0.0625f);
         return func_0023d700(&c, o->unk70, b[0], b[1], r, o->unkA1C);
     }
+}
+
+/* func_0023fad0 (session 7, w3): returns the last func_0023e160 result (keeps v0 live, so 128 goes to v1). */
+typedef struct { s32 x, y, z, w; } I4b;
+typedef struct { s32 c[4]; } __attribute__((aligned(16))) Col;
+typedef struct { u8 pad[0x40]; s32 v[2]; } R90;
+typedef struct {
+    u8 pad[0x80]; s32 c[2]; u8 p88[8]; R90 *x90; u8 p94[0xA00 - 0x94];
+    f32 xa00, xa04, xa08, xa0c; u8 pa10[0xC]; f32 xa1c;
+} Ofad0;
+extern Col D_00491600;
+I4b *func_0023e160(s32 *c, s32 *r, s32 *col, I4b *d, f32 a0, f32 a1, f32 al);
+I4b *func_0023fad0(Ofad0 *o, I4b *d) {
+    Col q = D_00491600;
+    d = func_0023e160(o->c, o->x90->v, q.c, d, 0.0f, o->xa00, o->xa1c);
+    if (o->xa0c != 0.0f) {
+        q.c[2] = 128;
+        q.c[1] = 128;
+        q.c[0] = 128;
+        q.c[3] = o->xa08;
+        return func_0023e160(o->c, o->x90->v, q.c, d, o->xa00, o->xa04, o->xa1c);
+    }
+    return d;
 }
