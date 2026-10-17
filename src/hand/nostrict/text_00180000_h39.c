@@ -2,6 +2,17 @@
 
 typedef void (*H39CompFn)(void *, PppEntry *);
 
+/* The current matrix object (D_00615E68): +0x10 its matrix, +0x50 a
+ * second (drawing) matrix. */
+typedef struct {
+    u8 pad[0x10];
+    f32 m[4][4];  /* +0x10 */
+    f32 m2[4][4]; /* +0x50 */
+} H39MObj;
+
+extern H39MObj *D_00615E68;
+void func_002672f8(f32 *, f32 (*)[4], f32 *);
+
 /* A texture header inside a sprite record (+0x10): +8/+0xC are offsets
  * from itself to its pixels and palette, +0x10..+0x14 its sizes. */
 typedef struct {
@@ -168,8 +179,6 @@ void pppDesObject(H39Inst *obj) {
 typedef union { f32 f[4]; } H39V4 __attribute__((aligned(16)));
 typedef struct { u8 pad[0xC]; s32 slot; s32 off; } H39NKey;
 extern H39PSys *D_00615E60;
-extern u8 *D_00615E68;
-void func_002672f8(H39V4 *, void *, H39V4 *);
 void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
     H39V4 v;
     H39Inst *inst;
@@ -188,7 +197,7 @@ void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
     v.f[1] = pos[1];
     v.f[2] = pos[2];
     v.f[3] = 1.0f;
-    func_002672f8(&v, D_00615E68 + 0x10, &v);
+    func_002672f8(v.f, D_00615E68->m, v.f);
     out = (f32 *) ((u8 *) inst + key->off + 0xA0);
     out[0] = v.f[0];
     out[1] = v.f[1];
@@ -244,4 +253,105 @@ void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
         :
         : "r"(w), "r"(D_00615E60->col)
         : "$2", "$3", "memory");
+}
+
+typedef int u128 __attribute__((mode(TI)));
+
+void func_00183be0(f32 (*)[4], f32 *);
+void func_001a5250(f32 (*)[4], f32 *);
+void func_001a52e0(f32 (*)[4], f32 *);
+void func_001a5370(f32 (*)[4], f32 *);
+void func_001a5400(f32 (*)[4], f32 *);
+void func_001a5490(f32 (*)[4], f32 *);
+
+/* Scales the xyz of a matrix row in VU0. */
+static inline void h39ScaleRow(f32 *row, f32 s) {
+    __asm__ volatile(
+        "qmtc2 %1, $vf9\n"
+        "lqc2 $vf10, 0(%0)\n"
+        "vmulx.xyz $vf10xyz, $vf10xyz, $vf9x\n"
+        "sqc2 $vf10, 0(%0)\n"
+        :
+        : "r"(row), "r"(s));
+}
+
+/* The matrix classes: work 0 is the position, 1 the rotation (made into
+ * the matrix by the class's rotation order), 2 the scale. */
+#define H39_MATRIX_FRAME(name, rot)                                       \
+    void name(void *obj, void *key, PppEntry *e) {                        \
+        f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);           \
+        f32 *ang = (f32 *) ((u8 *) obj + e->offsets[1] + 0xA0);           \
+        f32 *scl = (f32 *) ((u8 *) obj + e->offsets[2] + 0xA0);           \
+                                                                          \
+        rot(D_00615E68->m, ang);                                          \
+        h39ScaleRow(D_00615E68->m[0], scl[0]);                            \
+        h39ScaleRow(D_00615E68->m[1], scl[1]);                            \
+        h39ScaleRow(D_00615E68->m[2], scl[2]);                            \
+        D_00615E68->m[3][0] = pos[0];                                     \
+        D_00615E68->m[3][1] = pos[1];                                     \
+        D_00615E68->m[3][2] = pos[2];                                     \
+    }
+
+H39_MATRIX_FRAME(pppMatrixFrame, func_00183be0)
+H39_MATRIX_FRAME(pppMatrixXZYFrame, func_001a5250)
+H39_MATRIX_FRAME(pppMatrixYZXFrame, func_001a52e0)
+H39_MATRIX_FRAME(pppMatrixYXZFrame, func_001a5370)
+H39_MATRIX_FRAME(pppMatrixZXYFrame, func_001a5400)
+H39_MATRIX_FRAME(pppMatrixZYXFrame, func_001a5490)
+
+void sceVu0UnitMatrix(f32 (*)[4]);
+
+void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
+    f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);
+    f32 *scl = (f32 *) ((u8 *) obj + e->offsets[1] + 0xA0);
+
+    sceVu0UnitMatrix(D_00615E68->m);
+    D_00615E68->m[0][0] = scl[0];
+    D_00615E68->m[1][1] = scl[1];
+    D_00615E68->m[2][2] = scl[2];
+    D_00615E68->m[3][0] = pos[0];
+    D_00615E68->m[3][1] = pos[1];
+    D_00615E68->m[3][2] = pos[2];
+}
+
+extern f32 D_003701F0[3];
+extern f32 D_006160C0[4][4];
+extern f32 D_00616080[4][4];
+void func_00267560(f32 *, f32 *, f32);
+void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
+
+void pppDrawMatrixWoodFrame(void) {
+    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], D_003701F0[0]);
+    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], D_003701F0[1]);
+    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], D_003701F0[2]);
+    *(u128 *) D_00615E68->m2[3] = *(u128 *) D_00615E68->m[3];
+    sceVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
+    func_002672f8(D_00615E68->m2[3], D_00616080, D_00615E68->m[3]);
+}
+
+typedef struct {
+    s32 frame;
+    s32 unk04;
+    f32 d[6]; /* +0x8 */
+} H39TsKey;
+
+/* Work 2: two (value, speed, accel) triples, stepped every frame; the
+ * keyframe adds to all six. */
+void pppDrawMdlTsFrame(PppObject *obj, H39TsKey *key, PppEntry *e) {
+    f32 *w = (f32 *) ((u8 *) obj + e->offsets[2] + 0xA0);
+
+    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
+        return;
+    w[1] += w[2];
+    w[0] += w[1];
+    w[4] += w[5];
+    w[3] += w[4];
+    if (key->frame == obj->frame) {
+        w[0] += key->d[0];
+        w[1] += key->d[1];
+        w[2] += key->d[2];
+        w[3] += key->d[3];
+        w[4] += key->d[4];
+        w[5] += key->d[5];
+    }
 }
