@@ -86,11 +86,6 @@ void func_00245ad8(s32 arg0, s32 arg1) {
     func_0024af00(arg1);
 }
 
-void func_00246020(void) {
-    D_00668040[0] = 0;
-    D_00668040[4] = 0;
-}
-
 void func_00246a70(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     D_00668370[3] = arg2;
     D_00668370[4] = arg3;
