@@ -61,19 +61,6 @@ void func_00141138(void) {
     func_0014f830(0xB, 0x101, &func_00141018, NULL, &func_00141078, &func_0014f778, &func_0014f828, 0, NULL);
 }
 
-void func_00145188(s32 arg0, f32 fparg0) {
-    void *temp_v0;
-
-    temp_v0 = M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), void **, 0x154);
-    if (((temp_v0 == NULL) || (*M2C_FIELD(temp_v0, u8 **, 0x10) != 0)) && !(D_002C5958 & 0x104000)) {
-        M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), void **, 0x154) = func_00148768(D_00350CE0, 0x16, arg0, 0x8003, 0.0f);
-        if (arg0 == D_002E26A0) {
-            func_0011d1e0(0xA8, M2C_FIELD(arg0, s32 *, 4) + 1, arg0 + 0x10, 0);
-        }
-    }
-    M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), f32 *, 0x158) = fparg0;
-}
-
 void func_00145240(Actor *arg0) {
     s32 temp_v1;
 

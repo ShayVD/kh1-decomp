@@ -365,21 +365,3 @@ void func_00207598(void) {
     }
 }
 
-/* needs make: uses rodata */
-s32 func_001f4570(Obj *o) {
-    switch (o->kind) {
-    case 0:
-    case 1:
-    case 2:
-    default:
-        return o->pos + o->size / 2;
-    case 3:
-    case 5:
-    case 7:
-        return o->pos;
-    case 4:
-    case 6:
-    case 8:
-        return o->pos + o->size - 16;
-    }
-}

@@ -559,34 +559,6 @@ s32 func_0012eb08(s32 *p) {
     return 0;
 }
 
-/* Ring of V8 entries: push. */
-void func_0012f560(V8 *v) {
-    if (D_00525288 == 0) {
-        D_00525288 = D_00524F80;
-        D_0052528C = 0;
-    } else {
-        D_00525288++;
-    }
-    *D_00525288 = *v;
-    D_0052528C++;
-}
-
-/* Ring of V8 entries: step back (wrapping) and read. */
-void func_0012f690(V8 *out) {
-    s32 n = D_0052528C;
-    if (n == 1) {
-        out->a = 0;
-        return;
-    }
-    if (D_00525288 == D_00524F80) {
-        V8 *q = D_00525288 - 1;
-        D_00525288 = q + n;
-    } else {
-        D_00525288--;
-    }
-    *out = *D_00525288;
-}
-
 void func_0012fa98(void) {
     f32 a[4];
     f32 b[4];

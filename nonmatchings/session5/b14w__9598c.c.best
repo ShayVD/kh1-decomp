@@ -1,0 +1,72 @@
+#include "common.h"
+typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd;
+typedef struct { s32 u, v; u64 pad; s32 x, y, z, f; } UV;
+typedef struct { u64 h[14]; u64 rgba, q; UV v[2]; } Pk;
+extern u8 D_00642D30[];
+extern u8 D_00642DE0[];
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
+u64 *func_00122048(s32, s32);
+s32 sceGsSyncPath(s32, s32);
+void func_001220b8(void *);
+s32 func_001f4570(Wnd *);
+s32 func_001f45e0(Wnd *);
+
+void func_00219598(Wnd *o, s32 x, s32 y) {
+    u64 *buf;
+    Pk *s;
+    void *u;
+    s32 cx, cy;
+    f32 fx, fy;
+    x <<= 4;
+    y <<= 4;
+    func_00266f38(func_00266c08(2), D_00642D30);
+    func_00266f38(func_00266c08(2), D_00642DE0);
+    buf = func_00122048(1024, 128);
+    s = (Pk *)(buf + 2);
+/*P*/
+    s->h[9] = 20;
+    s->h[2] = 0x4000D;
+    s->h[5] = 63;
+    s->v[1].u = 2168;
+    s->v[1].y = o->xb4 + y + 1360;
+    s->h[3] = 71;
+    s->h[0] = 0x5000000000008001;
+    s->rgba = (u32)(o->x90 << 24 | 0x808080);
+    s->h[4] = 0;
+    s->v[1].z = 0x100000;
+    s->v[0].f = 0x8000;
+    s->h[1] = 0xEEEEE;
+    s->v[0].x = o->xb0 + x;
+    s->v[0].z = 0x100000;
+    s->h[10] = 68;
+    s->h[7] = 6;
+    s->h[13] = 0x4343E;
+    s->h[11] = 66;
+    s->v[1].x = o->xb0 + x + 2160;
+    s->v[1].v = 1368;
+    s->h[6] = 0x2006D005E1313600;
+    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    s->h[12] = 0x50AB400000008001;
+    s->v[0].v = 24;
+    s->q = 1;
+    s->v[0].y = o->xb4 + y;
+    s->v[1].f = 0;
+    s->h[8] = 97;
+    s->v[0].u = 24;
+/*Q*/
+    if (o->x48 & 1) {
+        cx = func_001f4570(o);
+        cy = func_001f45e0(o);
+        fx = cx;
+        fy = cy;
+        s->v[0].x = fx + (f32)(s->v[0].x - cx) * o->sx;
+        s->v[0].y = fy + (f32)(s->v[0].y - cy) * o->sy;
+        s->v[1].x = fx + (f32)(s->v[1].x - cx) * o->sx;
+        s->v[1].y = fy + (f32)(s->v[1].y - cy) * o->sy;
+    }
+    buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(buf);
+}

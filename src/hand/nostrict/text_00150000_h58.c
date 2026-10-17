@@ -329,6 +329,92 @@ Node768 *func_00156768(V4 *pos, Out768 *o) {
     return o->p;
 }
 
+/* ---- func_001568e8 (needs func_00156768 defined above) ---- */
+typedef struct { u8 x0; u8 pad1[7]; f32 x8; f32 xc; u8 pad10[0x10]; f32 x20[3]; f32 x2c_; } B4Q68;
+typedef struct { u8 pad[0x160]; f32 x160[4]; } B4H160;
+typedef struct B4A68 {
+    u8 pad0[0x50]; f32 x50[4]; u8 pad60[0x98 - 0x60]; struct B4A68 *x98; u8 pad9c[0xc0 - 0x9c]; f32 xc0[4];
+    u8 padd0[0x148 - 0xd0]; B4H160 *x148;
+} B4A68;
+extern u32 D_002C5978;
+extern f32 D_002C58B0[];
+void func_002673b8(void *, void *);
+void func_00267370(void *, void *, void *);
+void func_00267e90(void *, void *, f32);
+s32 func_0014f5c8(void *);
+f32 sinf(f32);
+#define D_002C5958 (*(u32 *)&D_002C5958)
+void func_001568e8(B4A68 *e, f32 *out) {
+    f32 buf[12];
+    f32 d[4];
+    f32 c[4];
+    B4Q68 *q;
+    f32 sp;
+    f32 tgt;
+    f32 cur;
+    f32 t;
+    s32 r;
+    f32 f;
+    func_002675a8(out, D_002C58B0);
+    if (!D_00551600) return;
+    if ((D_002C5958 >> 15) & 1) return;
+    if ((D_002C5978 >> 13) & 1) return;
+    if (!e->x148) return;
+    if (!e->x98) q = (B4Q68 *)func_00156768((V4 *)e->x50, (Out768 *)buf);
+    else q = (B4Q68 *)func_00156768((V4 *)e->x98->x50, (Out768 *)buf);
+    if (!q) {
+        if (e->x148->x160[3] == 0.0f) return;
+        func_002675a8(d, e->x148->x160);
+        tgt = 0.0f;
+        sp = D_002BBDFC * 0.199999988079071044921875f;
+    } else {
+        sp = q->x2c_ * D_002BBDFC;
+        tgt = q->xc;
+        switch (q->x0) {
+        case 1:
+            func_002675a8(d, q->x20);
+            break;
+        case 2:
+            func_00267530(d, q->x20, e->x50);
+            func_002673b8(d, d);
+            break;
+        }
+        if (0.0f < q->x8) {
+            f = 1.0f - buf[8] / q->x8;
+            if (!(0.0f < f)) f = 0.0f;
+            tgt *= sinf(f * 3.1415928f * 0.5f);
+        }
+    }
+    func_00267560(d, d, sp);
+    func_00267518(d, e->x148->x160, d);
+    cur = e->x148->x160[3];
+    if (cur < tgt) {
+        cur += sp;
+        if (tgt < cur) cur = tgt;
+    } else if (tgt < cur) {
+        cur -= sp;
+        if (cur < 0.0f) cur = 0.0f;
+    }
+    func_002673b8(d, d);
+    d[3] = 1.0f;
+    func_00267560(e->x148->x160, d, cur);
+    func_00267560(out, e->x148->x160, D_002BBDFC);
+    if (func_0014f5c8(e)) return;
+    if (func_0014f600(e)) {
+        out[1] = 0.0f;
+        return;
+    }
+    out[1] = 0.0f;
+    t = out[3];
+    func_002673b8(out, out);
+    func_00267370(c, e->xc0, out);
+    func_002673b8(c, c);
+    func_00267370(out, c, e->xc0);
+    func_002673b8(out, out);
+    func_00267e90(out, out, t);
+}
+#undef D_002C5958
+
 /* ---- func_001584c0 ---- */
 extern V4 D_00351A20, D_005516D0;
 void func_002673b8(void *, void *);
@@ -985,3 +1071,117 @@ void func_0015ae48(s32 i, u32 k) {
     }
 }
 
+
+void func_00157910(void *, s32, s32);
+void func_00157a00(void *a, s32 v, s32 b) {
+    func_00157910(a, v, b);
+    func_001358b8(a, 35);
+}
+typedef struct { s8 id; s8 w; } Ent12;
+typedef struct { u8 b0; Ent12 e[5]; } Rec12;
+extern s32 D_003519B0[];
+extern s32 D_002BC128, D_002BC130, D_002BC134;
+Rec12 *func_001477c8(s32);
+void func_00157a00(void *, s32, s32);
+void func_00157a30(Act *a, s32 k, Act *b) {
+    s32 cand[5];
+    s32 n = 0;
+    Rec12 *t = func_001477c8(D_003519B0[a->x130->x4c]) + k;
+    s32 r = func_00176850() * 100.0f;
+    s32 i;
+    s32 v;
+    if (D_002BC128 == 3 && D_002BC130 == 2 && D_002BC134 == D_002BC130) b = 0;
+    for (i = 0; i < 5; i++) {
+        switch (t->e[i].id) {
+        case -2:
+            v = -1;
+            break;
+        case -1:
+            continue;
+        case -3:
+            if (!func_00122ff8(b)) continue;
+            if (b->x130->x4c >= 10) continue;
+            if (b->x130->x4c == a->x130->x4c) continue;
+            if (r < t->e[i].w) {
+                func_00157a00(a, b->x130->x4c, t->b0);
+                return;
+            }
+            continue;
+        default:
+            v = t->e[i].id;
+            break;
+        }
+        if (t->e[i].w > 0) {
+            r -= t->e[i].w;
+            if (r < 0) {
+                if (v >= 0) func_00157a00(a, v, t->b0);
+                return;
+            }
+        } else {
+            cand[n] = v;
+            n++;
+        }
+    }
+    if (n > 0) {
+        v = cand[(s32)(func_00176850() * n)];
+        if (v >= 0) func_00157a00(a, v, t->b0);
+    }
+}
+
+typedef struct { u8 b[32]; } E551970;
+extern E551970 D_00551970[];
+extern s32 D_00351AC0;
+
+char *func_0015b060(void) {
+    E551970 *r = &D_00551970[D_00351AC0++];
+    if (D_00351AC0 >= 32) D_00351AC0 = 0;
+    return (char *)r;
+}
+
+/* needs make: uses rodata */
+typedef struct { s32 x0; char *x4; } R478a0;
+extern s32 D_00351B20[][2];
+extern s32 D_002BBDE4;
+char *func_00147808(s32);
+R478a0 *func_001478a0(s32);
+void func_00244670(s32, char *, char *);
+void func_0015b098(s32 a, s32 *ids) {
+    char *buf[2];
+    s32 i;
+    R478a0 *r;
+    for (i = 0; i < 2; i++) {
+        buf[i] = 0;
+        if (ids[i] == 0) continue;
+        if (ids[i] >= 0) {
+            if (ids[i] < 8) {
+                char *b = func_0015b060();
+                buf[i] = b;
+                strcpy(b, func_00147808(D_00351B20[ids[i]][i]));
+                continue;
+            }
+        }
+        r = func_001478a0(ids[i] & ~0x80);
+        buf[i] = func_0015b060();
+        switch (D_002BBDE4) {
+        case 0:
+        case 4:
+        case 7:
+            strcpy(buf[i], r->x4);
+            strcat(buf[i], func_00147808(344));
+            break;
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+            strcpy(buf[i], func_00147808(344));
+            strcat(buf[i], r->x4);
+            strcat(buf[i], "h");
+            break;
+        case 3:
+            strcpy(buf[i], func_00147808(344));
+            strcat(buf[i], r->x4);
+            break;
+        }
+    }
+    if (buf[0]) func_00244670(a, buf[0], buf[1]);
+}

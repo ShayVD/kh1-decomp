@@ -415,56 +415,6 @@ f32 func_0019f100(void) {
     return ret;
 }
 
-f32 func_001a2178(void) {
-    f32 ret;
-
-    __asm__ volatile(
-        "addi $8, $0, -1\n"
-        "qmtc2 $8, $vf2\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vitof0.x $vf2x, $vf2x\n"
-        "vadd.x $vf1x, $vf1x, $vf2x\n"
-        "qmfc2 %0, $vf1\n"
-        : "=&r"(ret)
-        : 
-        : "$8", "memory");
-    return ret;
-}
-
-f32 func_001a3650(void) {
-    f32 ret;
-
-    __asm__ volatile(
-        "addi $8, $0, -1\n"
-        "qmtc2 $8, $vf2\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vitof0.x $vf2x, $vf2x\n"
-        "vadd.x $vf1x, $vf1x, $vf2x\n"
-        "qmfc2 %0, $vf1\n"
-        : "=&r"(ret)
-        : 
-        : "$8", "memory");
-    return ret;
-}
-
 void func_001a9080(s32 a0, s32 a1) {
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"

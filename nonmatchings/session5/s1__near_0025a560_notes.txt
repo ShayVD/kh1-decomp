@@ -1,0 +1,8 @@
+sceSifCallRpc (near_0025a560.c, still 2 words) - session s1d findings:
+- haifa sched2, block after the null check: at t=4 (last = cd->arg store) the ready list holds cd->pkt and cd->id;
+  the original picks pkt, ours picks id in every order tried.
+- Tried: all 4!/5! orders of the cd stores (with and without a local `id = pk->id` read first), u32/int/void*
+  for cd.pkt/id/end/arg/server and pk.pkt/id/cd/recv/server (1024 and 512 combos), PkW* for cd->pkt: best is 2.
+- Pointer-typed fields do NOT alias u32 here (a void* cd->arg lets the pk->id load go first; a void*/Pk* cd->pkt
+  drops to the end of the block), so the stores have to stay int/u32.
+- Helper: the dump of sched2 with -dR -dS shows the ready lists; -fsched-verbose adds nothing on 991111a.

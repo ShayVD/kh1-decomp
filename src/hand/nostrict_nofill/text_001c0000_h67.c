@@ -15,7 +15,8 @@ typedef struct {
     s32 pc;
     s32 sp;
     s32 stk[92];
-    u8 pad2f4[0x34];
+    f32 f2f4;
+    u8 pad2f8[0x30];
     u64 flags;
 } VM;
 typedef struct {

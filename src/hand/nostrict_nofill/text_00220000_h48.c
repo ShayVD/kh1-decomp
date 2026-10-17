@@ -196,3 +196,46 @@ void func_00239558(s32 id, s32 x, s32 y, s32 c) {
     D_006488F0 = func_001f0638(D_006488F0, 1, *(s32 *)&col, ((x * 16 + 0x7100) >> 4) - 0x700,
                                ((y * 16 + 0x7420) >> 4) - 0x740, func_00147808(func_001478c8(id)->x4));
 }
+
+typedef struct Pk74 { struct Pk74 *next; s32 type; } Pk74;
+typedef struct { Pk74 *head; s32 pad; } Bk74;
+typedef struct { s32 bits; Bk74 *tbl; } Ht74;
+s32 *func_002378c8(Pk74 *, s32 *, s32);
+s32 *func_00237d48(Pk74 *, s32 *, s32);
+s32 *func_00237ec0(Pk74 *, s32 *, s32);
+
+void func_002380c0(Ht74 *h, s32 *b0, s32 *b1, s32 a3, s32 a4) {
+    s32 *buf = b0;
+    s32 n = 1 << h->bits;
+    Bk74 *bk = h->tbl;
+    s32 *r, *q, *prev, *last;
+    Pk74 *p;
+    s32 i;
+    for (i = 0; i < n; i++, bk++) {
+        last = 0;
+        if (bk->head != 0) {
+            p = bk->head;
+            r = buf;
+            do {
+                prev = r;
+                if (p->type == 2) r = func_002378c8(p, r, a4);
+                else if (p->type == 1) r = (s32 *)func_00237790((Item *)p, (u128 *)r, (void *)a4);
+                else if (p->type == 3) r = func_00237d48(p, r, a4);
+                else if (p->type == 4) r = func_00237ec0(p, r, 0);
+                if (prev != r) last = prev;
+                if (p->next == 0) break;
+                p = p->next;
+            } while (1);
+            if (r != buf) {
+                *last |= 0x70000000;
+                q = (s32 *)func_00266c08(2);
+                *q |= 0x40;
+                FlushCache(0);
+                sceGsSyncPath(0, 0);
+                func_00266f38((s32)q, (u32)buf);
+                buf = (buf == b0) ? b1 : b0;
+            }
+        }
+    }
+    sceGsSyncPath(0, 0);
+}

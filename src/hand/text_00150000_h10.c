@@ -268,12 +268,6 @@ void func_0015ac58(Obj15A *a) {
     func_002675a8(a->x3C0, D_002C58B0);
 }
 
-E551970 *func_0015b060(void) {
-    E551970 *r = &D_00551970[D_00351AC0++];
-    if (D_00351AC0 >= 32) D_00351AC0 = 0;
-    return r;
-}
-
 typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Coll;
 s32 func_0015b628(Coll *a, Coll *b) {
     f32 d[4];

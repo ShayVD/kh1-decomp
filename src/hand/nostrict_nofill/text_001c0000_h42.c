@@ -69,3 +69,23 @@ s32 func_001ce880(VM *vm) {
     return 2;
 }
 
+
+/* needs make: uses rodata */
+double atan2(double, double);
+void func_001ce4b8(VM *vm) {
+    Ent *e = vm->ent;
+    Msg m;
+    f32 a = atan2(e->rot[0], e->rot[2]) * 180.0 / 3.1415927410125732421875;
+    if ((vm->f6c < 0.0f && a < vm->f68) || (0.0f < vm->f6c && vm->f68 < a)) {
+        vm->flags &= ~2;
+    } else {
+        m.type = 4;
+        m.val = 1;
+        m.x = vm->x0;
+        m.v[0] = 0.0f;
+        m.v[1] = a + vm->f6c;
+        m.v[2] = 0.0f;
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+}

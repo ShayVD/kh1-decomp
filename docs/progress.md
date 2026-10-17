@@ -4,29 +4,30 @@ Regenerate with `make progress-update` at the end of each session and commit the
 A function counts as matched only when its rebuilt bytes are identical to the original
 and objdiff reports 100% for it.
 
-_Last updated 2026-10-16._
+_Last updated 2026-10-17._
 
 ## Overall
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| total | 3216 / 6946 | 46.30% | 14.79% | 0 |
+| total | 6415 / 6986 | 91.83% | 70.38% | 0 |
 
 ## By address segment (`[[segment]]` in kh1.toml)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| segment:game | 2821 / 6224 | 45.32% | 12.29% | 0 |
-| segment:sdk | 395 / 722 | 54.71% | 38.29% | 0 |
+| segment:game | 5749 / 6264 | 91.78% | 69.85% | 0 |
+| segment:sdk | 666 / 722 | 92.24% | 75.35% | 0 |
 
 ## By source directory (decompiled functions only)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
 | dir:src/anon | 8 / 8 | 100.00% | 100.00% | 0 |
-| dir:src/auto | 2811 / 2811 | 100.00% | 100.00% | 0 |
-| dir:src/hand | 2 / 2 | 100.00% | 100.00% | 0 |
-| dir:src/sdk | 395 / 395 | 100.00% | 100.00% | 0 |
+| dir:src/asm | 22 / 22 | 100.00% | 100.00% | 0 |
+| dir:src/auto | 2824 / 2824 | 100.00% | 100.00% | 0 |
+| dir:src/hand | 2895 / 2895 | 100.00% | 100.00% | 0 |
+| dir:src/sdk | 666 / 666 | 100.00% | 100.00% | 0 |
 
 ## History
 

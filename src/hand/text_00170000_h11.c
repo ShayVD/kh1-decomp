@@ -205,14 +205,6 @@ s32 func_001772c8(Actor *o) {
     return o->x70 == 18;
 }
 
-s32 func_00177358(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
-    switch (o->x70) {
-    case 0: case 8: case 24: return 1;
-    }
-    return 0;
-}
-
 s32 func_001773b0(void) {
     Actor **p = &D_00575894;
     s32 k;

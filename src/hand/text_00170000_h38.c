@@ -324,15 +324,6 @@ s32 func_00175820(V3 *a, V3 *b, void *pl, V4 *out) {
     return 1;
 }
 
-s32 func_001770b8(void) {
-    switch (D_00575894->x70) {
-    case 0: return D_003623F8 > 1.0f;
-    case 8: return D_003623F8 > 7.0f;
-    case 24: return D_003623F8 > 7.0f;
-    default: return D_003623F8 > 0.1f;
-    }
-}
-
 s32 func_00177168(void) {
     switch (D_00575894->x70) {
     case 0: return D_003623F4 > 1.0f;
@@ -340,20 +331,6 @@ s32 func_00177168(void) {
     case 24: return D_003623F4 > 7.0f;
     default: return D_003623F4 > 0.1f;
     }
-}
-
-f32 func_00177680(V4 *a, V4 *b) {
-    V4 p, q;
-    func_002675a8(&q, b);
-    q.y -= 10.0f;
-    func_002675a8(&p, b);
-    p.y += D_003624B8;
-    if (func_00177608(a, &q, &p)) {
-        func_00267530(&p, a, b);
-        return func_00120bf8(&p);
-    }
-    func_002675a8(a, &p);
-    return 0.0f;
 }
 
 void func_00178e10(void) {
@@ -543,38 +520,6 @@ void func_00180180(Hdr *h, Ref *r, s16 dx, s16 dy) {
             if (v >= 0x3d40) e->x14 = (w & 0xfff8001f) + ((v + oy) << 5);
         }
     }
-}
-
-extern V4A D_00615FC0[4];
-extern V4A D_00615EB0[4];
-extern V4A D_00615E70[4];
-extern V4A D_00616010[3]; /* rows 1..3 of a matrix starting 16 bytes earlier */
-extern V4A D_00616040[4];
-extern V4A D_00616080[4];
-extern V4A D_006160C0[4];
-
-void func_00180280(void) {
-    V4A b, a, c;
-    func_00182870();
-    sceVu0MulMatrix(D_00615FC0, D_00615EB0, D_00615E70);
-    sceVu0MulMatrix(D_00616080, D_00616040, D_00615FC0);
-    a.v.x = D_00615FC0[1].v.x;
-    a.v.y = D_00615FC0[1].v.y;
-    a.v.z = D_00615FC0[1].v.z;
-    a.v.w = 0.0f;
-    func_002673b8(&a, &a);
-    D_00616010[0].q = a.q;
-    b.v.x = a.v.y;
-    b.v.y = -a.v.x;
-    b.v.z = 0.0f;
-    b.v.w = 0.0f;
-    func_002673b8(&b, &b);
-    D_00616010[-1].q = b.q;
-    func_00267370(&c, &b, &a);
-    func_002673b8(&c, &c);
-    D_00616010[1].q = c.q;
-    D_00616010[2].q = D_00615FC0[3].q;
-    sceVu0MulMatrix(D_006160C0, D_00616040, &D_00616010[-1]);
 }
 
 typedef struct Obj {

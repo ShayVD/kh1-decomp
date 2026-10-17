@@ -191,6 +191,59 @@ s32 func_00149090(u32 id, s32 add) {
     return 0;
 }
 
+/* 0x149170: use a recovery item (needs func_00148fb0 defined above) */
+typedef struct { u8 x0, x1, x2, x3, x4, x5, x6, x7; u8 pad8[0x6c]; } W34Mem8;
+typedef struct { u8 pad[6]; s16 x6; } C4R;
+C4R *func_00147840(s32);
+s32 func_00149170(s32 a, u32 b) {
+    C4R *q;
+    W34Mem8 *p;
+    s32 r;
+    s32 v;
+
+    q = func_00147840(a);
+    p = (((b >> 16) & 0xff) == 1 && (b & 0xffff) < 10) ? (W34Mem8 *)&D_00304BE8->m[b & 0xffff] : 0;
+    r = 0;
+    switch (a) {
+    case 1: case 2: case 6:
+        if (func_00148fb0(b, q->x6)) r = 2;
+        break;
+    case 142:
+        if (func_00148fb0(b, 9999)) r = 2;
+        break;
+    case 3: case 7:
+        if (func_00149090(b, q->x6)) r = 4;
+        break;
+    case 143:
+        r = func_00148fb0(b, 9999) ? 8 : 0;
+        if (func_00149090(b, q->x6)) r |= 8;
+        break;
+    case 4: case 8: case 144:
+        r = func_00148fb0(b, 9999) ? 8 : 0;
+        if (func_00149090(b, 9999)) r |= 8;
+        break;
+    case 152:
+        if (p && p->x6 < 100) {
+            p->x6 = (p->x6 + q->x6 > 100) ? 100 : p->x6 + q->x6;
+            r = 16;
+        }
+        break;
+    case 153:
+        if (p && p->x7 < 100) {
+            p->x7 = (p->x7 + q->x6 > 100) ? 100 : p->x7 + q->x6;
+            r = 32;
+        }
+        break;
+    case 154:
+        if (p && p->x5 < 100) {
+            p->x5 = (p->x5 + q->x6 > 100) ? 100 : p->x5 + q->x6;
+            r = 64;
+        }
+        break;
+    }
+    return r;
+}
+
 /* 0x149860 */
 void func_00149860(W34Obj *o) {
     W34E3C *e = o->x14c;

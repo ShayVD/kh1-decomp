@@ -191,12 +191,6 @@ void func_00176078(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_00175be0(&D_00360F30, arg0, arg1, -1, arg3, arg2, 3);
 }
 
-void func_0017b200(void) {
-    func_002675a8(&D_003626C0, &D_005758D0);
-    func_002675a8(&D_003626C0 + 0x10, &D_005758E0);
-    M2C_FIELD(&D_003626C0, s32 *, 0x20) = 1;
-}
-
 s32 func_0017dbb8(void) {
     if (D_002E27A8 == 9) {
         D_0036244C = D_00362434;
