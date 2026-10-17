@@ -104,7 +104,8 @@ void func_0020d7d8(Obj7d8 *a0) {
 
 typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
 extern u32 D_003E3D68;
-extern u8 *D_00304BE8;
+typedef struct { u8 pad[0x48e]; u8 x48e[11]; u8 x499[256]; } G4BE8;
+extern G4BE8 *D_00304BE8;
 extern s32 D_00641378[];
 extern s32 D_00641278[][16];
 
@@ -112,11 +113,33 @@ void func_0020eb98(void) {
     u32 i;
     s32 j;
     for (i = 0; i < D_003E3D68; i++) {
-        E4BE8 *e = (E4BE8 *)(D_00304BE8 + D_00304BE8[0x48e + i] * 0x74);
+        E4BE8 *e = (E4BE8 *)((u8 *)D_00304BE8 + D_00304BE8->x48e[i] * 0x74);
         D_00641378[i] = e->n;
         for (j = 0; j < D_00641378[i]; j++) {
             D_00641278[i][j] = e->v[j];
         }
+    }
+}
+
+extern s32 D_00641BAC;
+extern s32 D_00641C10[];
+extern s32 D_00642010[];
+extern s32 D_00642410;
+s32 func_001ef270(s32, s32);
+void func_0020f290(s32 *, s32, s32);
+
+void func_00211da0(void) {
+    s32 i;
+    D_00642410 = 0;
+    for (i = 1; i < 256; i++) {
+        if (D_00304BE8->x499[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
+            D_00641C10[D_00642410] = i;
+            D_00642410++;
+        }
+    }
+    func_0020f290(D_00641C10, 0, D_00642410 - 1);
+    for (i = 0; i < D_00642410; i++) {
+        D_00642010[i] = D_00304BE8->x499[D_00641C10[i]];
     }
 }
 
@@ -140,4 +163,37 @@ void func_0020f290(s32 *a, s32 l, s32 r) {
     }
     if (l < i - 1) func_0020f290(a, l, i - 1);
     if (j + 1 < r) func_0020f290(a, j + 1, r);
+}
+
+extern s32 D_00641BC4;
+extern s32 D_00641BD0;
+extern s32 D_00641BD4;
+extern s32 D_00641BF0[];
+extern s32 D_00641C10[];
+extern s32 D_00642410;
+
+void func_002122b8(void) {
+    s32 i;
+    s32 n;
+    s32 k = D_00641BD0 + D_00641BD4;
+    if (D_00642410 >= k && D_00641BF0[D_00641BC4] == D_00641C10[k]) return;
+    for (i = 0; i < D_00642410; i++) {
+        if (D_00641C10[i] == D_00641BF0[D_00641BC4]) {
+            n = D_00642410;
+            if (n < 7) {
+                D_00641BD0 = 0;
+                D_00641BD4 = i;
+                return;
+            }
+            n -= 7;
+            if (i < n) {
+                D_00641BD0 = i;
+                D_00641BD4 = 0;
+                return;
+            }
+            D_00641BD0 = n;
+            D_00641BD4 = i - n;
+            return;
+        }
+    }
 }
