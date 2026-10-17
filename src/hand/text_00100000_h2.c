@@ -483,3 +483,57 @@ s32 func_00111ef0(s32 sec, s32 b) {
     D_002BCC1C = D_004D9254 = sec * 60;
     return func_0011ef10(0x2c04c, func_00111e00);
 }
+typedef struct {
+    u8 pad[0x10];
+    s32 w10;
+    s32 w14;
+    s32 w18;
+    s32 w1c;
+} Hud;
+extern Hud D_004D9288;
+extern s32 D_002BCC1C, D_004D9260, D_002BCC20, D_004D9274, D_004D9280;
+void func_00112018(s32, s32);
+s32 func_001120c8(void) {
+    func_00112018(0, D_002BCC1C);
+    func_00112018(1, D_004D9260);
+    if (D_002BCC20 < 0) D_002BCC20 = 0;
+    if (D_004D9274 < 0) D_004D9274 = 0;
+    D_004D9288.w10 = D_002BCC20;
+    D_004D9288.w14 = D_004D9274;
+    D_004D9288.w1c = D_002BCC20;
+    return D_004D9280 ? 4 : 0;
+}
+typedef struct { s32 a, b; } Pair;
+extern volatile u32 D_002C5958;
+extern Pair D_002BC148;
+void func_0012cac8(s32, s32);
+void func_00112d28(void);
+void func_001c1f60(void);
+s32 func_00112cf8(void);
+s32 func_00109558(s32);
+s32 func_00112d80(void) {
+    func_0012cac8(2, 0);
+    func_0012cac8(6, 0);
+    D_002C5958 |= 0x80000;
+    func_00112d28();
+    func_001c1f60();
+    func_0011ef10(0x2e630, func_00112cf8);
+    D_002BC148.a = D_002BC128;
+    D_002BC148.b = D_002BC130;
+    return func_00109558(4);
+}
+typedef struct { s32 a, b, c; } Trip;
+extern Trip D_002BCDC8;
+
+void func_00113048(void);
+s32 func_00112e08(void) {
+    D_002C5958 |= 0x80000;
+    func_00112d28();
+    func_001c1f60();
+    func_00113048();
+    func_0011ef10(0x2e630, func_00112cf8);
+    D_002BCDC8.a = D_002BC128;
+    D_002BCDC8.b = D_002BC130;
+    D_002BCDC8.c = D_002BCDA8;
+    return func_00109558(6);
+}

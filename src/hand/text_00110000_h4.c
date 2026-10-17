@@ -415,3 +415,22 @@ Act *func_00123220(Act *a) {
     }
     return 0;
 }
+
+/* needs make: uses rodata */
+/* "%3d" at D_0048D110, "amusic/music" at D_0048D118 (inlined strcpy). */
+int sprintf(char *, const char *, ...);
+char *strcat(char *, const char *);
+char *strcpy(char *, const char *);
+extern char D_0048D198[]; /* ".bgm", shared with a later function */
+
+void func_0011ea40(s32 n, char *out) {
+    char buf[80];
+    sprintf(buf, "%3d", n);
+    if (buf[0] == ' ') {
+        buf[0] = '0';
+        if (buf[1] == ' ') buf[1] = '0';
+    }
+    strcpy(out, "amusic/music");
+    strcat(out, buf);
+    strcat(out, D_0048D198);
+}
