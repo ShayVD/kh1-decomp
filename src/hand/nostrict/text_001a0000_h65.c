@@ -2,11 +2,16 @@
 #include "ppp.h"
 
 void *memset(void *, s32, u32);
-void *func_0017f958(s32, s32);
+void *func_0017f958(void *, s32);
 s32 func_0019f1a8(void *, void *);
 void func_001a0628(void *, void *, void *);
 void func_002673b8(void *, void *);
-extern s32 D_00615E64;
+typedef struct { u8 pad0[2]; s16 dur; s8 flag; u8 pad5[3]; } AnFrm;
+typedef struct { u8 pad0[6]; s16 n; u8 pad8[8]; AnFrm fr[1]; } Anim;
+typedef struct { Anim *anim; s32 pad; } AnEnt;
+typedef struct { u8 pad0[0x14]; AnEnt *anims; } PppRes;
+extern PppRes *D_00615E64;
+typedef struct { f32 x, y, z, w; } FV4;
 
 typedef struct {
     f32 x, y, z, w;
@@ -103,4 +108,162 @@ void func_001a1158(UvSrc *s, V4f *v) {
     v[2].x = u1;
     v[0].y = 0.01f;
     v[0].x = u0;
+}
+typedef struct { f32 x, y, z, w; } LtV4;
+typedef struct {
+    u8 pad0[0xc];
+    f32 intensity;
+    LtV4 pos;
+    LtV4 dir;
+    LtV4 col;
+} Light;
+typedef struct {
+    u8 pad0[4];
+    f32 x, y, z;
+    f32 f10;
+    u8 type, b15, b16, b17;
+} LtKey;
+typedef struct { u8 pad[8]; u8 r, g, b, a; } LtCol;
+extern LtV4 D_003701D0;
+Light *func_001226f0(s32, s32, s32);
+void func_00267560(LtV4 *, LtV4 *, f32);
+
+void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
+    Light **w = (Light **)((u8 *)obj + e->offsets[2] + 0xA0);
+    Light *l = *w;
+    LtV4 *p;
+    LtCol *c;
+    s32 fl = 0;
+    if (k->b15) fl |= 1;
+    if (k->b16) fl |= 2;
+    if (k->b17) fl |= 4;
+    if (l == NULL) {
+        *w = func_001226f0(k->type, fl, 0);
+        if (*w == NULL)
+            return;
+        l = *w;
+    }
+    p = (LtV4 *)((u8 *)obj + e->offsets[1] + 0xA0);
+    c = (LtCol *)((u8 *)obj + e->offsets[0] + 0xA0);
+    l->pos.x = p->x + D_003701D0.x;
+    l->pos.y = p->y + D_003701D0.y;
+    l->pos.z = p->z + D_003701D0.z;
+    l->pos.w = 1.0f;
+    l->dir.x = k->x;
+    l->dir.y = k->y;
+    l->dir.z = k->z;
+    l->dir.w = 1.0f;
+    l->col.x = c->r;
+    l->col.y = c->g;
+    l->col.z = c->b;
+    l->col.w = c->a;
+    func_00267560(&l->col, &l->col, 0.00392156851f);
+    l->intensity = k->f10;
+}
+
+extern FV4 D_00615F70;
+extern FV4 D_003701D0;
+void func_00267530(FV4 *, FV4 *, FV4 *);
+
+typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x38]; } MbPart;
+typedef struct { u8 pad[0x20]; } MbSub;
+typedef struct { MbPart *parts; MbSub *subs; s32 n; f32 alpha; u16 timer; u8 active; } MbWork;
+typedef struct { u8 pad0[0xe]; u16 n; u8 pad10[0xac - 0x10]; f32 dist; f32 fade; u8 test; u8 padb5; u8 sub; } MbfKey;
+
+s32 func_001a2218(MbWork *, MbfKey *);
+void func_001a2d40(MbWork *, MbfKey *, void *);
+
+static inline f32 vlen3_w65(FV4 *v) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf10, 0(%1)\n"
+        "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
+        "vaddx.y $vf10y, $vf10y, $vf10x\n"
+        "vaddy.z $vf10z, $vf10z, $vf10y\n"
+        "vsqrt Q, $vf10z\n"
+        "vwaitq\n"
+        "vaddq.x $vf10x, $vf0x, Q\n"
+        "qmfc2 $2, $vf10\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(v) : "$2", "memory");
+    return r;
+}
+
+void pppRyjMegaBirthFilterFrame(void *obj, MbfKey *k, PppEntry *e) {
+    MbWork *w = (MbWork *)((u8 *)obj + e->offsets[2] + 0xA0);
+    void *w2 = (u8 *)obj + e->offsets[1] + 0xA0;
+    FV4 d;
+    f32 len, r;
+
+    if (w->parts == NULL) {
+        w->n = k->n;
+        w->parts = func_0017f958(D_00615E64, w->n * 0x60);
+        if (w->parts != NULL)
+            memset(w->parts, 0, w->n * 0x60);
+        if (k->sub) {
+            w->subs = func_0017f958(D_00615E64, w->n << 5);
+            if (w->subs != NULL)
+                memset(w->subs, 0, w->n << 5);
+        }
+    }
+    if (!func_001a2218(w, k))
+        return;
+    if (k->test) {
+        func_00267530(&d, &D_00615F70, &D_003701D0);
+        len = vlen3_w65(&d);
+        if (k->dist < len) {
+            w->active = 0;
+        } else {
+            w->active = 1;
+            r = k->dist - len;
+            if (r < k->fade)
+                w->alpha = r / k->fade;
+            else
+                w->alpha = 1.0f;
+        }
+    }
+    if (w->active)
+        func_001a2d40(w, k, w2);
+}
+
+typedef struct { MbPart *parts; MbSub *subs; s32 n; f32 alpha; u16 timer; u8 active; } MbmWork;
+typedef struct { u8 pad0[0xa]; u16 n; u8 padc[0xe8 - 0xc]; f32 dist; f32 fade; u8 test; u8 padf1; u8 sub; } MbmfKey;
+s32 func_001a36f0(MbmWork *, MbmfKey *);
+void func_001a47b0(MbmWork *, MbmfKey *, void *);
+
+void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
+    MbmWork *w = (MbmWork *)((u8 *)obj + e->offsets[2] + 0xA0);
+    void *w2 = (u8 *)obj + e->offsets[1] + 0xA0;
+    FV4 d;
+    f32 len, r;
+
+    if (w->parts == NULL) {
+        w->n = k->n;
+        w->parts = func_0017f958(D_00615E64, w->n * 0xA0);
+        if (w->parts != NULL)
+            memset(w->parts, 0, w->n * 0xA0);
+        if (k->sub) {
+            w->subs = func_0017f958(D_00615E64, w->n << 5);
+            if (w->subs != NULL)
+                memset(w->subs, 0, w->n << 5);
+        }
+    }
+    if (!func_001a36f0(w, k))
+        return;
+    if (k->test) {
+        func_00267530(&d, &D_00615F70, &D_003701D0);
+        len = vlen3_w65(&d);
+        if (k->dist < len) {
+            w->active = 0;
+        } else {
+            w->active = 1;
+            r = k->dist - len;
+            if (r < k->fade)
+                w->alpha = r / k->fade;
+            else
+                w->alpha = 1.0f;
+        }
+    }
+    if (w->active)
+        func_001a47b0(w, k, w2);
 }
