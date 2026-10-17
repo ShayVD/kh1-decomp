@@ -523,3 +523,46 @@ s32 func_001772f8(Actor *o) {
     }
     return 0;
 }
+
+typedef struct { u8 pad[0x20]; } Rec32;
+typedef struct E30 {
+    u8 pad0[0x20];
+    void *x20;
+    s32 x24;
+    u8 pad28[8];
+} E30;
+typedef struct Hdr {
+    u8 x0, x1, x2, x3;
+    s32 x4, x8, xc;
+    f32 x10, x14, x18;
+} Hdr;
+extern Hdr *D_00362424;
+extern s32 D_00362440, D_00362448;
+extern Rec32 *D_00362428;
+extern Rec *D_0036242C;
+extern E30 *D_00362430;
+extern f32 D_00362674;
+
+void func_0017d9c8(Hdr *h) {
+    s32 i;
+    if ((D_002C5960 >> 4) & 1) return;
+    D_00362434 = 0;
+    D_00362438 = 0;
+    D_00362424 = h;
+    D_00362440 = h->x1;
+    D_00362444 = h->x2;
+    D_00362448 = h->x3;
+    D_00362428 = (Rec32 *)(h->x4 + (s32)h);
+    D_0036242C = (Rec *)(h->x8 + (s32)h);
+    D_00362430 = (E30 *)(h->xc + (s32)h);
+    for (i = 0; i < D_00362448; i++) {
+        E30 *e = &D_00362430[i];
+        if ((s32)e->x20 < 0) e->x20 = 0;
+        else if (e->x24 & 2) e->x20 = func_0017adf8(D_0036242C, (s32)e->x20);
+        else e->x20 = &D_00362428[(s32)e->x20];
+    }
+    D_00362660[0] = D_00362424->x10;
+    D_00362660[3] = D_00362424->x14;
+    D_00362674 = D_00362424->x18;
+    func_0017f178();
+}

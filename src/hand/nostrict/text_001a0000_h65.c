@@ -12,6 +12,7 @@ typedef struct { Anim *anim; s32 pad; } AnEnt;
 typedef struct { u8 pad0[0x14]; AnEnt *anims; } PppRes;
 extern PppRes *D_00615E64;
 typedef struct { f32 x, y, z, w; } FV4;
+extern FV4 D_003701D0;
 
 typedef struct {
     f32 x, y, z, w;
@@ -61,10 +62,10 @@ void pppRyjMegaBirthModelFrame(void *obj, MbmK *k, PppEntry *e) {
         func_001a0628(w, k, w2);
 }
 
-typedef struct { f32 x, y, z, w; } V4f;
+
 typedef struct { u8 pad[0x31]; u8 a, b, c; } UvSrc;
 
-void func_001a1158(UvSrc *s, V4f *v) {
+void func_001a1158(UvSrc *s, FV4 *v) {
     f32 u0, u1, a, h, f;
     switch (s->a) {
     case 1: a = 0.49f; break;
@@ -109,13 +110,13 @@ void func_001a1158(UvSrc *s, V4f *v) {
     v[0].y = 0.01f;
     v[0].x = u0;
 }
-typedef struct { f32 x, y, z, w; } LtV4;
+
 typedef struct {
     u8 pad0[0xc];
     f32 intensity;
-    LtV4 pos;
-    LtV4 dir;
-    LtV4 col;
+    FV4 pos;
+    FV4 dir;
+    FV4 col;
 } Light;
 typedef struct {
     u8 pad0[4];
@@ -124,14 +125,13 @@ typedef struct {
     u8 type, b15, b16, b17;
 } LtKey;
 typedef struct { u8 pad[8]; u8 r, g, b, a; } LtCol;
-extern LtV4 D_003701D0;
 Light *func_001226f0(s32, s32, s32);
-void func_00267560(LtV4 *, LtV4 *, f32);
+void func_00267560(FV4 *, FV4 *, f32);
 
 void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     Light **w = (Light **)((u8 *)obj + e->offsets[2] + 0xA0);
     Light *l = *w;
-    LtV4 *p;
+    FV4 *p;
     LtCol *c;
     s32 fl = 0;
     if (k->b15) fl |= 1;
@@ -143,7 +143,7 @@ void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
             return;
         l = *w;
     }
-    p = (LtV4 *)((u8 *)obj + e->offsets[1] + 0xA0);
+    p = (FV4 *)((u8 *)obj + e->offsets[1] + 0xA0);
     c = (LtCol *)((u8 *)obj + e->offsets[0] + 0xA0);
     l->pos.x = p->x + D_003701D0.x;
     l->pos.y = p->y + D_003701D0.y;
@@ -162,7 +162,6 @@ void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
 }
 
 extern FV4 D_00615F70;
-extern FV4 D_003701D0;
 void func_00267530(FV4 *, FV4 *, FV4 *);
 
 typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x38]; } MbPart;
