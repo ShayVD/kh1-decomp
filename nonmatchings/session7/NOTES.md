@@ -184,3 +184,9 @@
 - 001e0ab0 4w (same cause as 001e10f8): reorg's fill_simple_delay_slots scans the bgtz fall-through past the sw and steals `li v0,4`; in the original $2 must be live at the target or the scan stops at the sw.
 - pi must be written 3.1415927410125732f (3.1415927f gives 0x40490fda). wqb03_rr.py ignores KH1_EXTRA_CCFLAGS (patched copy /tmp/claude-0/s7/w30/rr.py).
 - Near misses: 001ca368 70w (gcse reuses f+f), 001f0148 8w, 001aab98 8w, 00101bb8 2w, 001ca0f8 7w, 0024ddf8 9w (sched1 moves the "SLPS" lui across jalr), 00130660 7w (priority tie), 0013a440 11w, 00152928 12w, 001395d8 18w, 00116368 22w, 001137f8 27w, 0020b6a8 4w.
+
+## w20 (render/window functions)
+- Independently matched 00209030/002091b8 (same as w19).
+- GS packet builders 0x1ff488-0x200648 (nostrict): stores to the packet stay ordered against loads from o and the table, so the lhu/lw positions in a store flood give the source statement order exactly. Float declaration order (not assignment order) decides FP registers: `f32 fcy, fcx, sy, sx;`.
+- Near misses: 001ff488 27w (sx/sy read into locals first, `B = Y + ph*16` before `R = X + pw*16`, `u32 func_001edd88`; left: X in v1 and its v[0].x store before the xb4 load), 00200648 240w at the right size (one `u64 *pk` for header and vertices, `t = D_003F2BD8[type]` late, ad word 0xeeeee, u32 colours; vertices rebuilt with tools/matching/asm_sim.py).
+- Not attempted: 001c53c8, 001e1c20 (3x3 filter, >50 spill slots), 001f94f0 (recursive text interpreter), 00208458.
