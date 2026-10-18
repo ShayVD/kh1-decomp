@@ -88,3 +88,9 @@
 - 00141608: testing the u16 field directly (no local) stops cse folding m[0].
 - tools/matching/batch/ (batch.py, anneal2.py, bf.py): compile 150-300 renamed variants of one function in one file and link them all at the same address; typedefs above the `/*UNIT*/` marker. Paths inside may point at /tmp/claude-0/s7/w13: fix before use.
 - Still stuck at 1-4 words after two workers each: 0010ed20, 0025add8, 0020b6a8, 00141608, 0025a560, 001d9268, 001e6038, 00269830, 00126f18, 001502e8, 00140960, 00101bb8, 00237d48.
+
+## w17 (remaining big no-draft C)
+- Matched func_00218218 (hand, rodata): func_001f9438 and func_001f94f0 must return s32.
+- `t = k < 8;` before calls then `if (t) switch (k)` reproduces an sltiu hoisted above them. A duplicated tail call wrapped in a static inline is not cross-jumped. A macro (not inline) keeps &v sp-based.
+- Separate identical case bodies give equality tests instead of a range test. Re-tests in delay slots point to jump threading (-fno-thread-jumps helps 00169688 partly: 9w).
+- 0x166xxx-0x169xxx is nostrict.
