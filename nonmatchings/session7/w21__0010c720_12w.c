@@ -1,4 +1,4 @@
-/* func_0010c720: 26 words off (same size, was 217w), mode hand. Levers: (1) the screen/texture coordinates go through inline helpers that reassign their params (xyz: x = x*16 + 0x7000, uv: x = x*16 + 8 called with col*24 / col*24+24); combine leaves two identical shifts that reload-cse turns into `move` + in-place addiu, as in the original; (2) `*pp = p + 6; return;` at the end of the id >= 10000 branch too (jump2 merges the copies after sched2, which keeps the epilogue order). Still off: prologue sched2 order (dsll t1 = a<<24 scheduled first, li 0x100808080 chain one slot early) and the reorg beqz/beqzl choice in both switch decision trees (k>9 -> default is likely in the original, page>=2 is not). flagsweep: nothing better. */
+/* func_0010c720: 12 words off (same size; w18 draft was 26w), mode hand. New: an empty `do { } while (0);` (e.g. a compiled-out assert macro) right before `p = *pp;` puts a loop-note scheduling barrier there; sched2 then issues the param moves first and dsll/dli late like the original. Still off: (1) prologue: ours schedules lw s1,0(s8) before the dli/dsll chain and move a2,t0 before sd s1/s7/ra; the original looks as if dsll/dli were only not-ready at cycle 0 (a no-op `t1 = t1` param copy surviving into sched2 would do it; combine always folds ours); (2) reorg beqz/beqzl choice in both switch trees (unchanged by case/default/arity/prototype/declaration-order variants; removing the func_0010c5c8 call flips tree 2, so it is resource.c liveness through the call path). flagsweep: nothing. */
 #include "common.h"
 extern u16 D_002BB5C0[];
 extern u8 D_002C4C20[];
@@ -29,6 +29,7 @@ void func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, u64 a, s32 w) {
     s32 row = 0, col = 0;
     s32 k, off, page, sx, sy, n;
 
+    do { } while (0);
     p = *pp;
     p[1] = (a << 24) | 0x100808080ULL;
     if (id >= 10000) {

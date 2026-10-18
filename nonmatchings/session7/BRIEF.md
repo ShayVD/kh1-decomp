@@ -103,3 +103,4 @@ permuter in session 6. Spend your effort on things session 6 did NOT do:
   local as s32 instead of u64 changes s-register allocation (func_0020b6a8).
 - Mode `hand/nostrict_norcse` (-fno-strict-aliasing -fno-rerun-cse-after-loop) exists now
   (func_0012d468).
+- Never write sleep/until polling loops: they stop on a permission prompt while the user is away. Run long jobs with run_in_background and wait for the notification, or check a log once with tail and keep working.

@@ -111,3 +111,8 @@
 - Stuck: 0016bfe8/0016bb68 (allocation priorities e<t<pointer, 2000 variants), 001cfc28 (sched1 late `sw m.x`, 900 orders), 00135a68 (goto loop; four separate v[i] address copies CSE into one), 00169f28 (size off by 8).
 - Tools left in /tmp/claude-0/s7/w19 (combo.py `@{a§b}@` choices, pflip.py prototype flips, dump.py global-alloc priorities) were not copied into the repo.
 - w19 ran `pkill -f "anneal2.py f4778.b.c"` once (its own processes only).
+
+## w21 (w18 near misses)
+- 0010c720 at 12w (hand): an empty `do { } while (0);` before `p = *pp;` is a full sched1/sched2 barrier (plain C, like a compiled-out assert), which fixes most of the prologue order. Left: `lw s1,0(s8)` before the dli/dsll chain, `move a2,t0` before the saves, and beqz/beqzl in both switch trees (depends on liveness down the call path; removing the func_0010c5c8 call flips tree 2).
+- 001ffb30 at 226w (hand/nostrict) with the right size and frame: `ub = (u32)buf & 0x0fffffff; ub |= 0x80000000;` (one variable set twice) gives the original stack slots. Left: store schedule; constants 22/66/67 hoisted into s5-s7 in the original.
+- 00102118 still 28w. An extra `move` comes from copying a pointer in an earlier block (`o2 = o;`) and loading through o2: CSE pass 1 misses it, gcse substitutes, CSE pass 2 turns the load into a copy. Here it lands before the float conversion, not after it (CSE does not follow the then-arm's jump).
