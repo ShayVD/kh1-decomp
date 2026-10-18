@@ -94,3 +94,7 @@ src/<mode>/.WTAG_x.c; checkfile.py can take minutes under load).
   global directly instead of through a pointer local (001b9f78); identical arms on a live pointer
   around a single test to add refs to one hoisted constant (00169f28); count-up fill loops that
   loop.c reverses (001f31a8).
+- Stack words at the bottom of the frame read/written at every use, in a function with all
+  s-registers busy, are probably SPILLED SCALAR LOCALS, not a struct or array: declare them as
+  plain locals (001bd090, the last "compiler difference", matched this way). A dead set of a
+  variable that is live elsewhere delays if-conversion to the ce pass.
