@@ -141,3 +141,8 @@
 - Near misses: DIntr 0025f338 4w (C + cop0 asm; loop.c hoists the 0x10000 mask), sceDbcCreateSocket 002682a8 7w (`i = 0;` first), sceCdInit 0026a250 7w.
 - sceGsExecStoreImage 00266380 12w: buf/rest s5/s6 is global-alloc priority (floor_log2(refs)*refs/live_length; read with -dl -dg); the source probably has one more buf reference that jump2 merges.
 - 991111a emits `.p2align 3` before a loop label only with loop notes; a goto loop gets none.
+
+## w24 (smallest game leftovers)
+- Matched (hand): 00240910 (`r = 0;` before the range test; each arm `if (D.used[N]) { p = &D.ent[N]; goto set; }`, then `return r; set: r = p; return r;` — a shared `set:` label is not if-converted), 00181fe0 (index loop `e = &D[i]`, not a pointer walk: the `move vX,sN; addiu sN,vX,K` step is loop.c's giv), 001cb3c0 (`extern u8 *D_00388480[]`, a pointer array, drops the strict-alias dependency on later s32 loads; tbl store as `((u16 *)b)[8 + n*256 + k]`), 001763f0 (`base = (s32)h; ...; h = (H63 *)base;` makes base the cse class head).
+- Matched (hand/nostrict): 001cf348 (w22's 001cf3e0 shape with `s32 n`), 001cd600 (VM handler family: union view, stack values into f32 locals first, then `o2 = s->obj;` so the reload survives as a copy).
+- Near miss 001df9c0 6w (hand/nostrict). Unchanged: 00176c60 18w, 0010ed20 4w, 001e3a00 4w, 00249718 12w, 00113e28 8w, 00125240 8w, 00214a68 22w, 002376c8 37w (k==1/k==3 if-converted, k==2 a branch).
