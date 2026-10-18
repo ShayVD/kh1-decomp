@@ -191,3 +191,17 @@
   test an undereferenced pointer); combine folds la + addu + lw into `lw sym+off(reg)` via the
   lo_sum's REG_EQUAL unless a block boundary or a second use intervenes; in identical arms sched1
   counts head-block values as ready at cycle 0.
+
+## s11w15 (001cfc28 001c5ee8 001502e8 00169688 001fbcd8): 1 match
+- 001c5ee8 (hand): s11w6's 7w draft plus identical arms on `if (i > 0)` (bgtz, no compare insn)
+  in the else of `if (i == 0)`: `Ent *q = &D.ent[i-1]; if (i > 0) { D.ent[i-1].lk.next = &D.ent[i];
+  e->lk.next = 0; } else { same } e->lk.prev = q;` (i 11 refs beats lk); `e->lk.prev` stays outside
+  (the giv would gain refs); e->v[0]/v[1] in e-> form (loop under the movable threshold); the dead
+  `i = 0;` at the end is needed.
+- 001cfc28 1w (best stays w6): sched2 ties go to the lower LUID (= sched1 order); `f32 one = 1.0f;`
+  at the top lets update_equiv_regs move the li.s next to its use; volatile type/v[3] fixes the
+  swap (hack) but the 1.0 then gets f0. Finding file w15__001cfc28_6w_finding.c.
+- 001502e8 2w: C and Q tie (2 refs, same life); needs an extra insn between their loads or a 3rd
+  ref on Q. 00169688 4w: `.p2align 3,,7` label padding plus case 10's two-copy cross-jump.
+  001fbcd8 15: 1250-variant share/split sweep; shared v needs live length > ~100.
+- Facts: > 10 basic blocks makes sched1 use single-block regions for the whole function.
