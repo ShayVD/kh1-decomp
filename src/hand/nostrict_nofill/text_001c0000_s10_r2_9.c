@@ -1,4 +1,4 @@
-/* 001c53c8 near miss (w13, s9): LCS 81 (session-5 draft c09b__near_53c8.c was LCS 150, 1928 vs 1980 bytes; now right size 1980), hand/nostrict, no context (file also holds the session-5 batch's other drafts). Changes: q split into `Vec q0; Vec q1;` (q1's address is the hoisted s3 and the q loops become index loops like the original), and the compare value is its own variable reused for t - c0: `x = (f32)e->c; if (t == x) ...; c0 = x; x = t - c0; dt = c1 - c0; u = x / dt;` (gives the original's mov.s copy and sub/sub/div order). Left: global-alloc puts x in $f4 (orig $f0: x avoids f0-f3/f5 because the conflicting c0/c1 prefer them), s5/s6/s7 permutation (the loop.c copy of the D_0037A380 base, prio 0.029, beats the q20/q30 pointers; orig lower), i/e->next in a1/a3 vs a2/a1, case 0/1 loop setup order, and the swc1 x E0F4 store that orig leaves out of the jal func_001c5168 delay slot. */
+/* func_001c53c8 (hand/nostrict_nofill, no context). s10 r2_9 from r2_6__001c53c8_42w.c: (1) `u = (t - c0) / dt;` instead of reassigning x (c0 outlives x, so cse keeps c0 in the sub: FP regs exact); (2) `k = 0;` before the block-local `Elem *m = e->next;` (move a3,zero first); (3) the b==2 arm writes out the q20/q30 memcpys + call + return instead of `goto tail` (jump2 merges them; +2 refs each lifts &q20/&q30 over the loop base copy: s5/s6/s7). */
 #include "common.h"
 
 typedef struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, rest:27; } Bits;
@@ -209,9 +209,8 @@ void func_001c53c8(f32 t) {
         if (t < c1) {
             if (((s8 *)&e->b)[1] == 2) {
                 c0 = x;
-                x = t - c0;
                 dt = c1 - c0;
-                u = x / dt;
+                u = (t - c0) / dt;
                 u2 = u * u;
                 u3 = u * u2;
                 for (k = 0; k < 3; k++) {
@@ -220,54 +219,50 @@ void func_001c53c8(f32 t) {
                 }
                 D_0037A380.x60 = herm(u, u2, u3, dt, e->f[2], n->f[2], e->f[1], n->f[0]);
                 D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], n->f[5], e->f[4], n->f[3]);
-                goto tail;
+                __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16); __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16); func_001c5168(); return;
             }
             switch (((s8 *)&e->b)[3]) {
             case 0:
             case 1:
                 c0 = x;
-                x = t - c0;
                 dt = c1 - c0;
-                u = x / dt;
+                u = (t - c0) / dt;
                 u2 = u * u;
                 u3 = u * u2;
                 func_001e9fe8(&r, &e->m[10]);
                 func_001e9f18(&q0, &e->m[5], &r, e->f[2]);
                 func_001e9fe8(&r, &e->next->m[10]);
                 func_001e9f18(&q1, &e->next->m[5], &r, e->next->f[2]);
-                n = e->next;
-                for (k = 0; k < 3; k++) {
-                    D_0037A380.q10[k] = herm(u, u2, u3, dt, e->m[5][k], n->m[5][k], e->m[4][k], n->m[3][k]);
-                    q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], n->m[0][k]);
+                k = 0; { Elem *m = e->next;
+                for (; k < 3; k++) {
+                    D_0037A380.q10[k] = herm(u, u2, u3, dt, e->m[5][k], m->m[5][k], e->m[4][k], m->m[3][k]);
+                    q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], m->m[0][k]);
                 }
-                D_0037A380.q40[2] = herm(u, u2, u3, dt, e->m[10][2], n->m[10][2], e->m[9][2], n->m[8][2]);
+                D_0037A380.q40[2] = herm(u, u2, u3, dt, e->m[10][2], m->m[10][2], e->m[9][2], m->m[8][2]); }
                 D_0037A380.x60 = func_001e9e58(&q0, &D_0037A380.q10);
                 func_001e9d00(&D_0037A380.q40, &D_0037A380.q10, &q0, D_0037A380.q40[2]);
-                n = e->next;
-                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], n->f[5], e->f[4], n->f[3]);
-            tail:
+                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], e->next->f[5], e->f[4], e->next->f[3]);
                 __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16);
                 __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16);
                 func_001c5168();
                 return;
             case 2:
                 c0 = x;
-                x = t - c0;
                 dt = c1 - c0;
-                u = x / dt;
+                u = (t - c0) / dt;
                 u2 = u * u;
                 u3 = u * u2;
                 func_001e9fe8(&r, &e->m[10]);
                 func_001e9f18(&q0, &e->m[5], &r, e->f[2]);
                 func_001e9fe8(&r, &e->next->m[10]);
                 func_001e9f18(&q1, &e->next->m[5], &r, e->next->f[2]);
-                n = e->next;
-                for (k = 0; k < 3; k++) {
-                    q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], n->m[0][k]);
-                    D_0037A380.q40[k] = herm(u, u2, u3, dt, e->m[10][k], n->m[10][k], e->m[9][k], n->m[8][k]);
+                k = 0; { Elem *m = e->next;
+                for (; k < 3; k++) {
+                    q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], m->m[0][k]);
+                    D_0037A380.q40[k] = herm(u, u2, u3, dt, e->m[10][k], m->m[10][k], e->m[9][k], m->m[8][k]);
                 }
-                D_0037A380.x60 = herm(u, u2, u3, dt, e->f[2], n->f[2], e->f[1], n->f[0]);
-                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], n->f[5], e->f[4], n->f[3]);
+                D_0037A380.x60 = herm(u, u2, u3, dt, e->f[2], m->f[2], e->f[1], m->f[0]);
+                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], m->f[5], e->f[4], m->f[3]); }
                 __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16);
                 __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16);
                 func_001e9fe8(&r, &D_0037A380.q40);

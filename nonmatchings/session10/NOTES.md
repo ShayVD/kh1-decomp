@@ -142,3 +142,9 @@
 - Matched 00166248 (hand/nostrict): session9 r2_1 draft plus CONTEXT_ONLY `{}` stubs of func_00164ba8 and func_001655e0 (not func_00121e28: all three give 2w). Entry bltz no longer bltzl.
 - 0010ba98 27 -> 21 LCS (r2_10__0010ba98_21w.c): `extern s32 func_0010ea00(void);`.
 - Facts: gcc 2.96 does not learn a callee's register use from a body above the caller; the only effect is REG_EH_REGION 0 on calls to functions defined in the file, so a `{}` stub works as well as a copied body (docs/context-only-plan.md's "register use" explanation is wrong). Stubs can hurt: try subsets, not only all.
+## r2_9 (001c53c8 00106ed0 001bd090 0010d470 001636d0)
+- Matched 001c53c8 (hand/nostrict_nofill): r2_6's 42 LCS draft plus (a) `u = (t - c0) / dt;` instead of reassigning x (fixes all FP registers), (b) `k = 0;` before the block-local `{ Elem *m = e->next; ... }`, (c) the b==2 arm's memcpys, call and return written out instead of `goto tail` (refs lift &q20/&q30 above the loop base copy).
+- 00106ed0 71: the original computes q8+i*32 twice from one sll (v[0] as q8+i32, v[4] as (i32+q8)+16).
+- 001bd090 74: still a compiler difference: the original keeps the first store and if-converts with a fresh zero pseudo (a post-combine ifcvt with a memory destination); 2.96 only converts at jump1 and flow deletes the first store; 990721/991111 variants keep a branch.
+- 0010d470 330 (hand/nofill/nosi, rodata 0x48cdf0): a one-register shift (c in a2 vs t0) runs through the function. 001636d0 414: the original spills pp; ours gets REG_EQUIV from update_equiv_regs (every set is sp+16).
+- Facts: writing a goto tail out is a priority lever even though jump2 re-merges it; update_equiv_regs gives REG_EQUIV when all sets are the same frame address.
