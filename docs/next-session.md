@@ -13,7 +13,7 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
   - SDK: 705 / 722.
 - New this session (docs/workflow.md "Session 7", docs/toolchain.md "Session 7"):
   - Hand-written asm exported as .s (VU0 renderers, sq clears, context switch, libkernl asm, the exception trampoline).
-  - tools/matching/flagsweep.py (one extra gcc flag per try) and six flag build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr, nostrict_norcse, norlo.
+  - tools/matching/flagsweep.py (one extra gcc flag per try) and seven flag build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr, nostrict_norcse, norlo, fmam.
   - The n32 "mixed addressing" question is answered: nested sub-struct indexing (`D[k].s.d`) in plain o32, not a compiler. Eight other period ee-gcc builds were tested and match nothing.
   - The ppp Tail-draw VU0 family matched as C with VU0 helpers as `#define` inline-asm macros.
   - tools/matching/hc_checkfile.py (fast hill-climb) and tools/matching/batch/ (hundreds of variants per compile).

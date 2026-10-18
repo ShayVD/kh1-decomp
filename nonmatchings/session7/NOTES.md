@@ -102,3 +102,12 @@
 - Writing the final store twice, with `return;` in one branch, keeps sched2 from mixing it into the epilogue (jump2 merges the copies).
 - Near misses: 0010c720 26w (prologue order, beqz/beqzl slots in both switch trees), 00102118 28w (`lw s0,16(s0)` vs `move s0,s3`; every copy variant propagates back), 001ffb30 259w (size 1280 vs 1288, frame 96 vs 112: a direction only; the first stores v[16].y / v[21].x right after the Y/R computations give the 0x0fff spill).
 - 001a7c50 is a two-register allocation-priority swap; 0010d470, 001f5fe0, 00110618 not attempted in depth.
+
+## w19 (untouched leftovers)
+- Matched 00208ea8, 00209030, 002091b8 (siblings; callees func_001f9438/001f94f0/001f9e48 return s32; 002091b8 reads `rows = o->ce + 1` before `cnt = o->cc`), 00232390 (func_0020dd38 takes 6 args, `y = 63;` before the func_001fc308 call, func_001fc308 is void), 001c8a00 (VM stack pops: read the values into f32 locals first, x=stk[sp-2], y=stk[sp-1], f=stk[sp-3], z=stk[sp]).
+- func_001eb7b0 matches only with -fmove-all-movables (new mode src/hand/fmam): the flag changes the order of giv-init copies from the second loop pass; source fix: compare through r (`c < r->s.tbl[a + 1][j]`), not q. 2w without the flag.
+- sceGsSyncPath 00265bc0 fits sdk/gcc991111_as296 (right size, 51w left), like sceGsExecStoreImage.
+- Near misses: 001cf3e0 2w (nogcse; sched1 puts i++ before addu), 001eb7b0 no-flag 2w, 001f4778 2w (sched2 swaps two stores; 5040 store orders and 1500 declaration orders fail), 001fb428 79w, 00265bc0 51w.
+- Stuck: 0016bfe8/0016bb68 (allocation priorities e<t<pointer, 2000 variants), 001cfc28 (sched1 late `sw m.x`, 900 orders), 00135a68 (goto loop; four separate v[i] address copies CSE into one), 00169f28 (size off by 8).
+- Tools left in /tmp/claude-0/s7/w19 (combo.py `@{a§b}@` choices, pflip.py prototype flips, dump.py global-alloc priorities) were not copied into the repo.
+- w19 ran `pkill -f "anneal2.py f4778.b.c"` once (its own processes only).

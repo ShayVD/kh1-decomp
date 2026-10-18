@@ -441,7 +441,7 @@ found that the next session needs:
   one file and links them all at one address (batch.py; anneal2.py for
   multi-group permutation annealing). Fix the scratch paths inside before use.
 - New build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr,
-  nostrict_norcse, norlo (docs/toolchain.md).
+  nostrict_norcse, norlo, fmam (docs/toolchain.md).
 - Workers: nonmatchings/session7/BRIEF.md (brief) and NOTES.md (findings per
   worker); near misses are nonmatchings/session7/<worker>__<addr>_<N>w.c.
 - Drafts of functions that are now matched were removed from nonmatchings/

@@ -189,3 +189,7 @@ cflags = "-O2 -G0 -fno-strict-aliasing -fno-rerun-cse-after-loop"
 [[toolchain.override]]
 path = "src/hand/norlo/"
 cflags = "-O2 -G0 -fno-rerun-loop-opt"
+
+[[toolchain.override]]
+path = "src/hand/fmam/"
+cflags = "-O2 -G0 -fmove-all-movables"
