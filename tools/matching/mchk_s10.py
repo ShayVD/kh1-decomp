@@ -1,4 +1,4 @@
-# mchk.py [-e "extra flags"] SRC...: checkfile for many files with one init; also writes WDIR/last.s
+# mchk.py [-e "extra flags"] SRC...: checkfile for many files with one init; also writes $WDIR/last.s (WDIR env, default /tmp)
 import os, sys, subprocess, tempfile
 from pathlib import Path
 ROOT = Path('/home/claude/kh1-decomp'); sys.path.insert(0, str(ROOT/'tools'))
@@ -14,7 +14,7 @@ def check(src):
     r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), *extra, "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode: print(src.name, r.stderr[-1500:]); return
     text = K.split_rodata(asm.read_text()); text = K.no_fill(text) if fl.no_fill else text
-    asm.write_text(text); Path('/tmp/claude-0/s10/w2/last.s').write_text(text)
+    asm.write_text(text); Path(os.environ.get('WDIR', '/tmp')+'/last.s').write_text(text)
     r = subprocess.run([str(K.TOOLCHAIN_DIR / (fl.as_compiler or fl.compiler) / "bin" / "ee-gcc"), "-c", "-x", "assembler", *fl.cflags.split(), "-o", str(obj), str(asm)], capture_output=True, text=True)
     if r.returncode: print(r.stderr); return
     K.fix_object(obj); elf = Elf.load(obj)

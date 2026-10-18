@@ -35,3 +35,12 @@
 - 00105d88 7w: loop-2 pointer 9 refs/13 live beats counter j 7/11; needs <=7 refs or an 8th j ref.
 - 00120cf8 7w: constant 3 at 10 refs/62 live vs &m[i][i] 5/19; needs 11 refs or life <=57.
 - Facts: f32-typed zero fields add fwd deps in strict mode; `void *` fields get true deps on later void* stack loads.
+## w8 (0024c950 0019f1f0 00110e68 001c95f8 001166e8 00214a68 001f31a8): no matches
+- 0024c950 15 LCS stock (9 with 991111a gas): local-alloc ranks kk (movn counts read+write: 4 refs) above the D_00669A5C load, so kk takes v0. Making kk global gives the load v1. A `yy += kk` fold reaches 13 LCS by coincidence (not the shape).
+- 00110e68 15w: global-alloc amp .57, i .41, p .30; p needs 16+ weighted refs.
+- 00214a68 16 LCS: original hoists only the lui into the inner preheader; exits filled from fall-through suggest a real loop. Conflict unresolved.
+- 001f31a8 17w: local-alloc, c0 word needs v1 (sd c0 early in sched1). Siblings func_001f3110/001f3dc0.
+- 001c95f8 15w: separate address pseudos for x,y,z; local-alloc ties. Sibling func_001c8878.
+- 0019f1f0 15 LCS: m[3][3] = 1.0f inside the cross-jumped tail breaks cross-jumping.
+- 001166e8 16w: id*5 qty prio 26.7 beats element qty 25; one more element ref would flip it.
+- Fact: lcs_s8.py with the assembler path swapped (ASC=compiler) measures other gas versions.

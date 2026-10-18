@@ -1,6 +1,7 @@
 # hill-climb statement order between /*P*/ and /*Q*/ ; usage hc_f.py BASE ITERS SEED
+# Session 10 (w2): edit the scratch path/mode below and the address it checks before use; needs WDIR.
 import subprocess, os, sys, random, re
-W='/tmp/claude-0/s10/w2'; R='/home/claude/kh1-decomp'
+import os; W=os.environ['WDIR']; R='/home/claude/kh1-decomp'
 sys.path.insert(0, R+'/tools'); 
 base = open(sys.argv[1]).read(); iters = int(sys.argv[2]); random.seed(int(sys.argv[3]))
 lines = base.split('\n'); i0 = lines.index('/*P*/'); i1 = lines.index('/*Q*/'); blk = lines[i0+1:i1]
