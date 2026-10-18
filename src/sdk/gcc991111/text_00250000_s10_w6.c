@@ -1,7 +1,5 @@
-/* 0025b2f0 sdk/gcc991111, 6w (same size): only prologue sd order (orig sd s0; lui s0; sd s1; sd ra; ...; ours sd s1; sd s0; sd ra; lui s0). Context: session-5 header = lines 1-217 of src/sdk/gcc991111/text_00250000_s1.c (inlined below). int SignalSema(int) fixes the v0/v1 temp (session 5 had 8w). CONTEXT_ONLY callee stubs and flags: no effect. */
-/* SCE SDK leftovers (libkernl: SIF/DECI2/file I/O helpers), matched with
- * ee-gcc 2.9-991111a -O2 -G0. sdk segment, session s1. */
 #include "common.h"
+/* func_0025b2f0: D_0066DAC0 is the Hook {fn ptr; int} that func_0025b2c0 receives; the two field stores then have different alias sets, which drops their sched2 dependence and fixes the prologue save order. Header copied from src/sdk/gcc991111/text_00250000_s1.c. */
 
 typedef char *va_list;
 #define va_start(v, l) (v = (char *) __builtin_next_arg(l) - 8 * (8 - __builtin_args_info(2)))
@@ -169,7 +167,8 @@ int func_0025b1e8(int);
 int func_0025b2f0(void);
 extern int D_0046AED8;
 typedef struct { int a, b; } Pair;
-extern Pair D_0066DAC0;
+typedef struct { void (*func)(int); int arg; } Hook;
+extern Hook D_0066DAC0;
 int iWakeupThread(int);
 int iSuspendThread(int);
 typedef struct {
@@ -229,10 +228,10 @@ int func_0025b2f0(void) {
     int st, i;
     E16 *e;
     Client *c;
-    Pair *p = &D_0066DAC0;
+    Hook *p = &D_0066DAC0;
     sceSifInitRpc(0);
-    p->a = 0;
-    p->b = 0;
+    p->func = 0;
+    p->arg = 0;
     st = DIntr();
     func_00260400(0x80000011, func_0025add8, D_0066DA80);
     func_00260400(0x80000013, func_0025b2c0, p);
