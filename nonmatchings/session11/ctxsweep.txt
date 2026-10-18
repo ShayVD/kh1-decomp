@@ -1,0 +1,72 @@
+00101bb8 hand/nostrict None base [2, 2, 692, 692] callees 5 changed 14 errs 3 better {}
+00102118 hand None base [6, 9, 2144, 2144] callees 3 changed 8 errs 2 better {}
+00103c48 hand None base [19, 20, 1496, 1496] callees 13 changed 38 errs 2 better {}
+00105288 hand None base [28, 32, 580, 580] callees 7 changed 22 errs 4 better {}
+00105d88 hand None base [7, 7, 416, 416] callees 0 changed 0 errs 0 better {}
+00106ed0 hand None base [71, 99, 592, 588] callees 0 changed 0 errs 0 better {}
+00107548 hand/nostrict None base [118, 179, 1428, 1388] callees 8 changed 23 errs 5 better {}
+00107c48 hand/nostrict_nogcse None base [38, 43, 232, 232] callees 0 changed 0 errs 0 better {}
+0010b390 hand/nostrict None base [12, 12, 816, 816] callees 3 changed 10 errs 0 better {}
+0010ba98 hand None base [23, 24, 760, 760] callees 5 changed 15 errs 1 better {}
+0010d470 hand/nostrict None base [430, 946, 4088, 3968] callees 14 changed 33 errs 10 better {}
+00110618 hand None base [136, 247, 1072, 1072] callees 2 changed 0 errs 0 better {}
+00110e68 hand None base [14, 15, 352, 352] callees 4 changed 13 errs 0 better {}
+001137f8 hand None base [11, 22, 516, 516] callees 7 changed 0 errs 1 better {}
+0011b220 hand None base [7, 7, 1152, 1152] callees 5 changed 13 errs 7 better {}
+00120cf8 hand None base [5, 7, 500, 500] callees 3 changed 8 errs 0 better {}
+00125240 hand/nostrict None base [8, 8, 180, 180] callees 4 changed 0 errs 0 better {}
+00135a68 hand None base [33, 34, 272, 284] callees 0 changed 0 errs 0 better {}
+001502e8 hand/nostrict None base [2, 2, 888, 888] callees 10 changed 26 errs 4 better {}
+00152928 hand None base [25, 146, 632, 640] callees 7 changed 21 errs 2 better {'S:func_00152648': [20, 144], 'S:ALL': [21, 144], 'S:ALL-func_00152880': [24, 143], 'S:ALL-func_00145008': [21, 144], 'S:ALL-func_001315c0': [21, 144], 'S:ALL-func_00120c88': [21, 144], 'S:ALL-func_00147138': [20, 144], 'S:ALL-func_00105c18': [21, 144], 'SR:func_00152880': [21, 144], 'SR:func_00152648': [27, 144], 'SR:func_00145008': [21, 144], 'SR:func_001315c0': [21, 144], 'SR:func_00147138': [21, 144]}
+001636d0 hand/nostrict None base [414, 817, 4248, 4248] callees 17 changed 55 errs 2 better {'S:func_001625c8': [413, 816], 'S:ALL-func_00267e90': [413, 816], 'S:ALL-func_00162c5c': [413, 816], 'S:ALL-func_00162cd0': [413, 816], 'R:func_002675a8': [427, 816], 'SR:func_002675a8': [427, 816]}
+00166570 hand/nostrict None base [21, 322, 4168, 4176] callees 17 changed 58 errs 0 better {'R:func_00162848': [67, 163], 'SR:func_00162848': [67, 164]}
+00169688 hand/nostrict 0048e870 base [20, 356, 2192, 2208] callees 11 changed 31 errs 4 better {}
+00169f28 hand 0048e8e0 base [6, 6, 1228, 1228] callees 3 changed 7 errs 6 better {}
+00192958 hand/nostrict None base [17, 21, 1200, 1200] callees 8 changed 24 errs 2 better {}
+00199ac8 hand/nostrict_nofill None base [30, 34, 1992, 1992] callees 8 changed 23 errs 1 better {}
+0019ab38 hand/nostrict_nofill None base [24, 40, 2332, 2332] callees 9 changed 25 errs 3 better {}
+0019f1f0 hand/nostrict 0048fcb0 base [7, 28, 3996, 3996] callees 7 changed 18 errs 1 better {}
+001b9f78 hand None base [3, 3, 228, 228] callees 2 changed 4 errs 1 better {}
+001ba520 hand None base [15, 16, 472, 472] callees 0 changed 0 errs 0 better {}
+001bd090 hand None base [77, 235, 972, 988] callees 3 changed 8 errs 3 better {}
+001c2ec8 hand None base [0, 0, 1344, 1344] callees 9 changed 26 errs 6 better {'S:srand': [0, 0], 'S:func_001ee200': [0, 0], 'S:func_001c29d8': [0, 0], 'S:func_001c6720': [0, 0], 'S:func_001cab48': [0, 0], 'S:func_001c2d20': [0, 0], 'S:func_001c1ce8': [0, 0], 'S:func_001c1cf8': [0, 0], 'S:func_0011ef10': [0, 0], 'S:ALL': [0, 0], 'S:ALL-srand': [0, 0], 'S:ALL-func_001ee200': [0, 0], 'S:ALL-func_001c29d8': [0, 0], 'S:ALL-func_001c6720': [0, 0], 'S:ALL-func_001cab48': [0, 0], 'S:ALL-func_001c2d20': [0, 0], 'S:ALL-func_001c1ce8': [0, 0], 'S:ALL-func_001c1cf8': [0, 0], 'S:ALL-func_0011ef10': [0, 0], 'R:srand': [0, 0], 'SR:srand': [0, 0], 'R:func_001cab48': [0, 0], 'SR:func_001cab48': [0, 0], 'R:func_001c2d20': [0, 0], 'SR:func_001c2d20': [0, 0], 'R:func_0011ef10': [0, 0]}
+001c3b10 hand/nostrict None base [4, 13, 1672, 1672] callees 10 changed 29 errs 5 better {}
+001c5ee8 hand None base [11, 11, 952, 952] callees 1 changed 2 errs 0 better {}
+001c62a0 hand None base [242, 256, 1148, 1148] callees 1 changed 2 errs 0 better {}
+001c95f8 hand None base [14, 15, 200, 200] callees 1 changed 0 errs 0 better {}
+001c99a8 hand None base [9, 10, 288, 288] callees 1 changed 0 errs 0 better {}
+001cf960 hand None base [3, 7, 248, 248] callees 1 changed 0 errs 0 better {}
+001cfc28 hand None base [12, 18, 264, 264] callees 2 changed 4 errs 1 better {}
+001db718 hand None base [40, 54, 368, 368] callees 0 changed 0 errs 0 better {}
+001e0ab0 hand None base [3, 4, 692, 692] callees 2 changed 5 errs 0 better {}
+001e10f8 hand None base [0, 0, 752, 752] callees 2 changed 5 errs 0 better {'S:func_001e07a8': [0, 0], 'S:func_001e05a8': [0, 0], 'S:ALL': [0, 0], 'R:func_001e07a8': [0, 0], 'SR:func_001e07a8': [0, 0], 'R:func_001e05a8': [0, 0], 'SR:func_001e05a8': [0, 0]}
+001e1838 hand/nofill None base [154, 204, 888, 960] callees 5 changed 15 errs 0 better {}
+001eddc0 hand None base [9, 13, 380, 380] callees 0 changed 0 errs 0 better {}
+001f18e8 hand/nofill None base [17, 54, 1288, 1288] callees 3 changed 9 errs 2 better {}
+001f1fc8 hand/nostrict_nofill 00490a80 base [4, 5, 1636, 1636] callees 6 changed 16 errs 5 better {}
+001f2630 hand/nofill None base [4, 3, 1056, 1056] callees 5 changed 14 errs 3 better {}
+001f31a8 hand 00490af0 base [16, 17, 808, 808] callees 2 changed 4 errs 2 better {}
+001f5fe0 hand/nofill None base [278, 1456, 8504, 8488] callees 4 changed 9 errs 2 better {}
+001fa8b0 hand/nostrict_nogcse None base [12, 17, 1064, 1064] callees 8 changed 20 errs 9 better {}
+001fb428 hand/nostrict_nogcse None base [10, 15, 1832, 1832] callees 8 changed 20 errs 9 better {}
+001fbcd8 hand/nostrict_nogcse None base [17, 20, 1580, 1580] callees 8 changed 20 errs 9 better {}
+001fd858 hand/nostrict None base [197, 452, 1952, 1908] callees 1 changed 2 errs 0 better {}
+001fe1b8 hand None base [65, 124, 580, 588] callees 0 changed 0 errs 0 better {}
+001ffb30 hand/nostrict None base [31, 85, 1288, 1288] callees 6 changed 0 errs 3 better {}
+00200038 hand/nostrict None base [254, 326, 1548, 1548] callees 7 changed 18 errs 7 better {}
+00200e28 hand/nostrict None base [30, 77, 1556, 1556] callees 5 changed 2 errs 3 better {}
+00202678 hand/nostrict None base [7, 40, 2376, 2376] callees 8 changed 21 errs 9 better {}
+00214a68 hand None base [16, 25, 184, 184] callees 0 changed 0 errs 0 better {}
+00216890 hand None base [24, 28, 1484, 1484] callees 15 changed 43 errs 10 better {}
+00217000 hand/nostrict None base [8, 25, 1168, 1168] callees 15 changed 42 errs 8 better {}
+0021e120 hand/nostrict None base [12, 27, 1000, 1000] callees 9 changed 25 errs 7 better {}
+0023a968 hand/nostrict None base [25, 40, 1384, 1384] callees 4 changed 15 errs 1 better {}
+00249718 hand None base [3, 10, 156, 156] callees 0 changed 0 errs 0 better {}
+0024c950 hand/nofill None base [9, 11, 1172, 1172] callees 6 changed 20 errs 0 better {}
+0025a560 hand BASE cc: ore '->' token
+/home/claude/kh1-decomp/src/hand/.r2_10_sw.c:56: warning: data definition has no type or storage class
+/home/claude/kh1-decomp/src/hand/.r2_10_sw.c:57: parse error before '->' token
+/home/claude/kh1-decomp/src/hand/.r2_10_sw.c:57: warning: data definition has no type or storage class
+
+00260610 sdk/gcc991111 None base [13, 14, 296, 296] callees 2 changed 6 errs 0 better {}
+00265608 sdk/gcc991111 None base [9, 15, 884, 884] callees 4 changed 11 errs 3 better {}
