@@ -190,3 +190,11 @@
 - GS packet builders 0x1ff488-0x200648 (nostrict): stores to the packet stay ordered against loads from o and the table, so the lhu/lw positions in a store flood give the source statement order exactly. Float declaration order (not assignment order) decides FP registers: `f32 fcy, fcx, sy, sx;`.
 - Near misses: 001ff488 27w (sx/sy read into locals first, `B = Y + ph*16` before `R = X + pw*16`, `u32 func_001edd88`; left: X in v1 and its v[0].x store before the xb4 load), 00200648 240w at the right size (one `u64 *pk` for header and vertices, `t = D_003F2BD8[type]` late, ad word 0xeeeee, u32 colours; vertices rebuilt with tools/matching/asm_sim.py).
 - Not attempted: 001c53c8, 001e1c20 (3x3 filter, >50 spill slots), 001f94f0 (recursive text interpreter), 00208458.
+
+## w31 (200-300 insn set)
+- Matched 00123488 (hand): every `return 0;` as `goto r0;` with one `r0: return 0;` at the end (keeps `move v0,zero` after loops and stops cse reusing a nearby `li 1`), and the case-1 loop exits with `goto found;` to a shared `found: return e;`.
+- Mix return forms per test: plain `return 0;` where the original sets v0 early (ce hoist), `goto r0` elsewhere (00168618 now 4w).
+- `goto out` instead of break keeps an unrotated `for(;;)` with `b top` at the bottom (expand_end_loop only moves exit tests that jump to the loop's own end label): 00232e08 now 33w at the right size.
+- Hoisting a global load into a local can change the saved-register count and frame: check size, not only loop shape (00105d88 33w).
+- 001e0d98: `goto r4` / `r4: return 4;` fixes the bgtz-slot nop but leaves an extra block.
+- Unchanged: 001edfb8 32w, 001e32d8 4w, 002177c8 5w, 0011b220 9w, 001124f8 18w, 001502e8 2w, 001cd2d8 16w, 00166248 43w, 0021e120 20w, 001f31a8 17w, 00233168 17w.
