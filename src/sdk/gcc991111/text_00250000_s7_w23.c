@@ -1,6 +1,9 @@
-/* func_0025db10 lseek64: ~1 insn off (572 vs 568 bytes): extra 'lui s6,0x67' (hi of D_0066DA40) duplicated into both slot-search paths instead of one in the bne delay slot; same issue as session5 near_0025b990. Mode sdk/gcc991111 (991111-01 identical). Loop shape, decl order, callee-above ctx tried: no effect. */
-/* SCE SDK leftovers (libkernl: SIF/DECI2/file I/O helpers), matched with
- * ee-gcc 2.9-991111a -O2 -G0. sdk segment, session s1. */
+#include "common.h"
+/* w23: func_0025db10 (fio lseek64). Context = header of src/sdk/gcc991111/text_00250000_s6_26.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/func_0025b218); the session-6 draft matches as is with it. */
+/* libkernl file I/O (lseek, read, write), ee-gcc 2.9-991111a -O2 -G0. sdk segment,
+ * session 6. Types copied from text_00250000_s1.c; these functions sit after
+ * func_0025b810 there (the CONTEXT_ONLY callees are copies of its definitions).
+ * The nowait semaphore table D_0046AE58 is volatile. */
 #include "common.h"
 
 typedef char *va_list;
@@ -215,7 +218,26 @@ typedef struct { u8 a, b; } Ev;
 typedef struct { u32 x0; u32 cnt; Ev ev[512]; } EvQ;
 extern EvQ D_0066E1B8;
 
-extern int D_0046AEE4; extern int D_0046AE58[];
+
+extern int D_0046AEE4;
+extern volatile int D_0046AE58[];
+extern u8 D_0066D400[];
+
+CONTEXT_ONLY E16 *func_0025ad68(u32 i) {
+    E16 *p;
+    func_0025ac80();
+    WaitSema(D_0046AEE0);
+    if (i >= 32) {
+        SignalSema(D_0046AEE0);
+        return 0;
+    }
+    p = &D_0066D840[i];
+    SignalSema(D_0046AEE0);
+    return p;
+}
+
+CONTEXT_ONLY void func_0025b218(void) { SignalSema(D_0046AEDC); }
+
 long func_0025db10(int fd, long ofs, int whence) {
     SemaParam sp;
     long res;

@@ -133,3 +133,11 @@
 - In switch-heavy code write case bodies in asm order. Jump table 0x48D090 has an empty `case 9:`.
 - `ColE *ep = &D_002A6238[i]` in a tail stops the table reload. A bare `sqrt.s` is PlatSqrtf; u32 bitfields keep `== 1` compares, u64 masks give lbu+dsrl.
 - wqb03_rr.py runs in ~0.2 s, usable in hill-climb loops for rodata functions.
+
+## w23 (SDK leftovers)
+- **The asm-barrier cases were volatile globals**: the libcdvd state words D_0046C610-D_0046C658 are volatile; written as volatile accesses in sdk/gcc991111_as296 (991111a reorg keeps volatile accesses out of delay slots, 2.96 gas fills them), func_002695f8, 00269830, 002698c8, sceCdRead 0026a7f0 and 0026a9d0 match (src/sdk/gcc991111_as296/text_00260000_s7_w23.c). Which accesses are volatile differs per function: see the file. Try this before any barrier.
+- lseek64 0025db10 matches unchanged with the header of text_00250000_s6_26.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/0025b218).
+- `make rank` lists the libc statics __sbprintf (00251600, 00252370), cvt 00253b10, exponent 00253cd0 as unmatched, but they are placed and matched: the rank scan resolves a function name through the registry, which misses `#define name func_X` renames. Their status in rank is wrong, not the build.
+- Near misses: DIntr 0025f338 4w (C + cop0 asm; loop.c hoists the 0x10000 mask), sceDbcCreateSocket 002682a8 7w (`i = 0;` first), sceCdInit 0026a250 7w.
+- sceGsExecStoreImage 00266380 12w: buf/rest s5/s6 is global-alloc priority (floor_log2(refs)*refs/live_length; read with -dl -dg); the source probably has one more buf reference that jump2 merges.
+- 991111a emits `.p2align 3` before a loop label only with loop notes; a goto loop gets none.
