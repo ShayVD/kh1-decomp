@@ -33,3 +33,28 @@ are fine to rediscover and write up in our own words.
 - **License:** none, so all rights reserved by default. Read for ideas only;
   ask the maintainers before copying anything, and consider coordinating since
   both projects match the same Final Mix ELF.
+
+## Yannis100/vita-port-skill
+
+<https://github.com/Yannis100/vita-port-skill>, reviewed 2026-10-18 (MIT,
+single author, first published 2026-10). An AI-agent "skill" plus reference
+notes for porting games to the Vita. Not run or installed; read only.
+
+- **Useful for phase 5:** VitaSDK/CMake setup, memory budget (256 MiB, up to
+  365 MiB with `ATTRIBUTE2=12`), a startup settings file (heap, stack,
+  clocks), VPK packaging and a VPK checker script, on-device debugging
+  (vitacompanion, vita-parse-core), and a write-up of the Halo CE Vita port
+  (decompilation + custom GXM backend, precompiled shader bank, null-GXM
+  Linux build), which is the closest model to our route.
+- **Useful now:** the PS2 FPU and host-build notes, written up as rules 7 and
+  8 in docs/portability.md.
+- **Not relevant:** Android .so loaders, Java/TeaVM, OpenGL-to-vitaGL ports.
+  Nothing on matching or on VU1/GS documentation.
+- **PS2 projects it points to** (all early/experimental, worth checking at
+  phase 3): ValdiaKun/TimeSplitters (VIF/VU1 interpreter capturing GIF
+  packets), mirou1611/AstraRecomp (PS2 static recomp + Vita runtime),
+  SandstoneDev/universal-ps2-recompiler (PS2 to PSP).
+- **Caveats:** many "verified" entries point at work-in-progress repos, and
+  the skill says its SDK facts go stale. Treat it as a reference. Plan: load
+  it as a skill (or copy its CMake template and VPK checker, with credit) when
+  phase 5 starts.

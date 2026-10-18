@@ -31,3 +31,20 @@ rewrite matched code.
    on-disk/in-memory structures that must keep their layout.
 6. **Endianness** is little on both platforms; alignment rules differ only for
    128-bit types, which are platform code.
+7. **Floating point is not IEEE on the EE.** The R5900 FPU flushes denormals
+   to zero, has no infinities or NaNs (overflow saturates to the largest
+   finite value), and rounds toward zero. ARM VFP/NEON on the Vita is IEEE by
+   default, so the same matched code can produce slightly different results.
+   For the Vita build: compile game code with `-ffp-contract=off` (no fused
+   multiply-add), and keep any code whose behaviour depends on these edge cases
+   (physics, collision, replays, anything compared for equality) easy to find,
+   so a clamping/rounding helper can be added there if bugs show up. Do not
+   add such helpers to matched PS2 code. Source: the PS2 recompiler notes in
+   vita-port-skill (see docs/related-projects.md); not yet tested on our code.
+8. **Plan a desktop host build with a null renderer.** Halo CE's Vita port
+   (a decompilation, like ours) builds the game for Linux against a GPU layer
+   that does nothing, to measure CPU cost and catch crashes without hardware.
+   The `Plat` wrappers make the same thing possible here: a `null` platform
+   that implements every wrapper as a no-op or a file read lets phase 4/5 run
+   the game logic on a PC first. Keep wrappers narrow enough that a stub of
+   each is a few lines.
