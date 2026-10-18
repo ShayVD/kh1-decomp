@@ -68,3 +68,9 @@
 - `(x*14 + 0x7fff) << 5` keeps `lui at,0xf; ori; addu`; `x*448 + 0xfffe0` gets narrowed.
 - sched1 moves an insn across calls when all its pseudos live across calls (func_001f1fc8 `h = sc<<4`).
 - Prototypes: func_001f40a0 takes 2 args; func_00211da0, func_002127e0 are void(void); func_001f1fc8 returns s32 and recurses for case 10.
+
+## w15 (big far drafts)
+- Matched 0020f530 and 0020ff80 (src/hand/text_00200000_s7_w15.c): a goto structure inside `while (1)` reproduces a duplicated exit test (loop.c leaves it alone); a field as `union { s32 i; u16 h[2]; }` makes 32-bit stores alias u16 loads and delays them in sched1.
+- A jump2 cross-jump running opposite to ours means the source had an explicit goto to a shared label.
+- `if (i < N) { do {...} while (i < N); }` fills delay slots differently from `if (N)`. The `for (i = 0; i < N; i = j) { j = i + 1; ... }` form defeats strength reduction.
+- A moving pointer (`qq++`, `qq += k`) keeps in-place `addiu v0,v0,16`.
