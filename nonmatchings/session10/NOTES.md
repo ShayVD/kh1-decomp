@@ -105,3 +105,16 @@
 - 00212cc0 7 -> 6w (r2_1__00212cc0_6w.c): identical arms `if (cur) m = i == sel; else m = i == sel;` give sel/lim/a s6/s7/s8. Left: cur and the t[j+24] giv swap s1/s2.
 - Union sweep: no gains (001c2ec8, 001c99a8, 00152928, others keep deliberate unions). 001db718: loop 1's pretest moves above LOOP_BEG; best stays 40.
 - Facts: decompiler goto tails are often duplicated statements merged by jump2 (writing them out raises refs at no cost). A goto into a do-while(0) loop gives "multiple entry points": loop.c skips it. Identical-arm conditions must be on a live register (a condition on &array folds).
+## r2_5 (00200038 001fd858 001e1838 00107548 001bc530): no matches
+- 001bc530 98 -> 80 LCS (r2_5__001bc530_80w.c): walking pointer `pc = a->p;` before `first = 0;`, `for (...; i++, pc++)`; early-return stores x,y,z,w; hill-climbed post-loop order. Left: y0/y1 swap, float tail reloads. r2_5__001bc530_86w_regs.c has all six min/max registers right (priority-targeted climb) but a worse float block: combine the two.
+- 00200038 254: combine_givs gives a DEST_REG pointer giv with a non-constant addend +1 over benefit-0 address givs, so the base sits at b+0; the original's base +416 needs a positive-benefit giv at q+416 with q a separate biv.
+- 001e1838 161: not nofill (the original fills slots). Row constant 0x48000 spilled; column +768 added separately.
+- 00107548 118: case 0 and case 1 differ (two vs one lui/addiu pairs for ++D_00494BA0), so the arms are not identical source.
+- Facts: walking pointers written before the loop put their init with the other inits; a hill-climb scored by global-alloc priority order (.lreg) finds register orders an LCS climb misses.
+## r2_4 (00169f28 001fb428 001fe1b8 00135a68 00200e28 001ffb30): no matches
+- 00169f28 12 -> 6w (r2_4__00169f28_6w.c): the search loop in a `static inline s32 inl_find(e, w)` with block-local arrays and plain `continue` fails (frame addresses into arg regs unhoisted, fails thread to `i += 10`). Left: best/0.1f swap f20/f21 (best .13 vs constant .07).
+- 001fb428 54 -> 10 LCS (r2_4__001fb428_10w.c, nostrict_nogcse): w11's 001f18e8 fixes plus dropping y1 (`yy + sz16` inline twice). Left: neg-block `li 22` slot, digit-loop x0-ax/x1-ax order.
+- 001ffb30 106 -> 31 LCS (r2_4__001ffb30_31w.c): 00200648 style (one PF struct, index-order vertices) then a header hill-climb. Left: the 0x0fff0000 ub mask half placed right after the buf call.
+- 00200e28 44 -> 30 LCS (r2_4__00200e28_30w.c): old structure with QH header and hill-climbed temps.
+- 001fe1b8 59: cse1 swaps an adjacent `P = a0; O = P` param copy; combine merges it when P dies. 00135a68 33: four address registers look like loop/giv copies.
+- Facts: a `continue` loop inside a static inline keeps frame args unhoisted and threads fails to the increment; a value-returning inline forces `move v0,0; b join`. Floods: plain index order, then climb only header/temporaries/first vertices.

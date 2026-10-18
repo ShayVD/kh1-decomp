@@ -5,12 +5,14 @@ ROOT = Path('/home/claude/kh1-decomp'); sys.path.insert(0, str(ROOT/'tools'))
 import kh1tool as K, autodecomp as A
 from elf32 import Elf
 A._init(); cfg = A._cfg; orig = K.require_orig(cfg); reg = K.load_registry()
+import atexit, shutil
+_TD = Path(tempfile.mkdtemp(prefix='kh1chk_')); atexit.register(shutil.rmtree, _TD, True)  # one scratch dir per process, reused
 extra = []
 import difflib
 def check(src, only=None):
     src = Path(src).resolve(); fl = K.flags_for(cfg, str(src.relative_to(ROOT)))
     cc = K.TOOLCHAIN_DIR / fl.compiler / "bin" / "ee-gcc"
-    td = Path(tempfile.mkdtemp()); asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
+    td = _TD; asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
     r = subprocess.run([str(cc), "-S", "-x", "c", *fl.cflags.split(), *fl.ccflags.split(), *extra, "-ffunction-sections", f"-I{ROOT/'include'}", f"-I{src.parent}", "-o", str(asm), str(src)], capture_output=True, text=True)
     if r.returncode: print(src.name, r.stderr[-1500:]); return
     text = K.split_rodata(asm.read_text()); text = K.no_fill(text) if fl.no_fill else text
