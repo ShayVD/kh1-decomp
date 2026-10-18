@@ -100,3 +100,8 @@
 - Near misses: 00214a68 22->16 (inner goto loop with explicit `u8 *p`, `s32 i`; `s32 *cnt = D_00642C78;` before the outer loop), 0021e120 14->12 LCS (LCS-scored hill-climb of the header).
 - Stuck: 0019ab38/00199ac8 (cse1 folds `du = k` to 0; the `same` reload needs a label at reload time), 0010b390 12w, 001137f8 11, 00217000 8, 00102118 17 (cse2 load-to-copy needs a followable join), 00166570 21.
 - Facts: a long-hill-climbed store order can be a local optimum: try plain index order first. A lui hoisted into an inner preheader with addiu/addu left in the loop means a goto loop plus gcse PRE of the high part. LCS hill-climb helper hl.py (tools/matching/hl_s9.py).
+## r2_2 (round 2: 0010ed20 00169688 001e0ab0 001e0d98 001e10f8 001f1fc8 00177488 001fe1b8 00152928 001fa8b0)
+- Matched 00177488 (hand/nostrict): w5's 4w draft plus a compiled-out assert after the join call: `#define ASSERT(x) do { } while (0)`, `lim = 20.0f; func_002675a8(out, a); ASSERT(hit); goto test;`.
+- 001fe1b8 65 -> 59 LCS, right size (588): reuse one generic local for v then lim (combine loses the zero-extension: `li -16; and` and the nop come back). Left: o/a argument registers.
+- Stuck: 0010ed20 4w, 001e0ab0/0d98/10f8 4w (likely the original's bgtz target label was not a BLOCK_HEAD, so find_basic_block returns -1), 00169688 4w, 001f1fc8 5w (sched2 groups stores by fwd-dep count first), 00152928, 001fa8b0.
+- Facts: `do { } while (0)` right after a call starts a new block, so gcse's hoisted setups go there and the call's sched1 priority drops. jump2 does not cross-jump a block ending in a fall-through call (sibling pass USE). hill_s8.py bugs: rr form is `FILE MODE ITERS SEED ADDR FUNC`; its validity check counts struct field names as variables (rename such locals).
