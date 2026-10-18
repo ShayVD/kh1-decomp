@@ -434,7 +434,10 @@ found that the next session needs:
   left the .s. func_001b8198 is different: only its shell is gcc; its ~10 render
   loop bodies are hand-written (`addi`, dead MMI writes, unfilled delay slots, raw
   `c2` words, fixed t1-t9 roles), probably register-asm variables plus large
-  `__asm__` blocks. The other renderers in vu0_render_{1,2}.s are untested.
+  `__asm__` blocks. w28 triaged the other six (001b6910, 001ae010, 001b1ab8,
+  001afac0, 001ab0e0, 001b3870) the same way: all hand-written inside (`addi`/`add`/`sub`
+  and `bne $zero,$x` across >90% of the body, fixed t2-t9 loop roles, unfilled slots,
+  DMA polling loops, args copied to t-registers). Their .s stand-ins are the final form.
 - **tools/matching/flagsweep.py**: single-flag sweep over drafts and modes
   (docs/toolchain.md "Session 7"). `KH1_EXTRA_CCFLAGS` in tools/checkfile.py.
   The draft's file name must contain the 8-digit address.

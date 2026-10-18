@@ -154,3 +154,7 @@
 - `d < 0 && d >= -2` folds to sltu; `switch (d) { case -1: case -2: }` gives bgez+slti.
 - Only integer form `(i << 6) + (u32)base` gives `addu rd, shift, base`; pointer arithmetic puts the base first.
 - A pointer declared inside the loop body stops strength reduction of that giv. An s8 union byte gives one andi; a u8 gives lbu+andi+andi 0xff. A 4-byte u8 struct copied by value gives lwl/lwr/swl/swr.
+
+## w28 (VU0 renderer triage)
+- The six other renderers (001b6910, 001ae010, 001b1ab8, 001afac0, 001ab0e0, 001b3870) are hand-written inside a gcc shell, like 001b8198: `addi`/`add`/`sub` and `bne $zero,$x` (gcc writes `bnez`) across >90% of each body, fixed t2/t5-t9 loop roles, unfilled `b; nop` slots, DMA polls of 0x1000A000 with four nops, args copied to t-registers at entry, a doubled `jr $v1; nop; nop`. gcc 2.96 has no asm goto, so the loops cannot be split into C + asm. The .s stand-ins are the final form.
+- Raw `c2` words (e.g. 0x4B9C29FF) are vclipw-type ops our disassembler does not decode; on their own they are not evidence of hand-writing.
