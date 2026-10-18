@@ -1,12 +1,11 @@
-/* 002106b8: 76 words off by LCS (was 163 in w10 draft), mode hand, rodata 00490e30 (verify with rr.py). Size 3040 vs 3084. Store orders: branches 1/3 xd0,xd2,xb8,xd8,xc2,x88; middle branch xd0,xd2,xda,xd8,xb8,xc2,x88,x70,xc6. Left: 3-way block shared by case 0/3 (w[2]) and case 1/4 (w[0]) has s4/s5 swap (likely an inline/macro), missing jal func_001f40a0 near 0x210bc8, loop tail at 0x210c9c-0x210cd4 laid out differently, tail switch at 0x211138. */
-/* 364w, mode hand, rodata 00490e30 (rr.py). 3072 vs 3084 bytes: s4/s5 swapped (shift vs hi(D_003E3D68)); 12 bytes short in the case 1/4 + case 2 shared tails (scheduling of xd0/xd8/xc2/x88/xb8/xd2 stores). */
-/* rodata */
 #include "common.h"
+
+/* rodata: jump tables at 0x00490e30. Matched from session-9 r2_7 draft + a dead `n = D_003E3D68;` in the case-4 arm (gives gcse a partially available hi(D_003E3D68), so PRE puts lui s5 in both arms). */
 typedef struct Ob Ob;
 struct Ob {
     u8 pad0[0x24];
     Ob *x24, *x28;
-    s32 x2c;
+    Ob *x2c;
     u8 pad30[0x70 - 0x30];
     s32 x70;
     u8 pad74[0x88 - 0x74];
@@ -66,6 +65,7 @@ void func_0020dd38(Ob *, s32, s32, s32, s32, s32);
 s32 func_001ee5f0(s32);
 s32 func_001efbb8(s32);
 
+/* rodata */
 void func_002106b8(Ob *o) {
     Ob *w[3];
     s32 n;
@@ -105,10 +105,10 @@ void func_002106b8(Ob *o) {
                 }
                 sel = D_00641250.x4;
             }
-            w[0]->xce = n;
             w[0]->xd2 = sel * 16;
             w[0]->xcc = n;
             w[0]->xba = n * 448 - 32;
+            w[0]->xce = n;
             w[1] = func_001f31a8(D_003F3A50, 6);
             if (w[1] == 0) break;
             func_001f3e48(w[1], w[0]);
@@ -148,7 +148,7 @@ void func_002106b8(Ob *o) {
                     }
                     func_001f40a0(w[2], 0x40000000);
                     w[2]->x24 = (Ob *)sel;
-                    w[2]->x2c = D_00641224;
+                    w[2]->x2c = (Ob *)D_00641224;
                 }
             }
             func_001f3dc0(w[0]);
@@ -164,6 +164,7 @@ void func_002106b8(Ob *o) {
                 sel = D_00641250.x0;
             } else {
                 sel = D_00641250.x4;
+                n = D_003E3D68;
                 shift = 1;
             }
             if (sel < D_003E3D68) {
@@ -198,7 +199,7 @@ void func_002106b8(Ob *o) {
             func_001f40a0(w[0], 0x40000000);
             w[0]->x24 = (Ob *)sel;
             w[0]->x28 = (Ob *)1;
-            w[0]->x2c = D_00641224;
+            w[0]->x2c = (Ob *)D_00641224;
             func_001f40a0(w[0], 0x60000000);
             w[1] = func_001f31a8(D_003F39F0, 6);
             if (w[1] == 0) break;
@@ -221,13 +222,13 @@ void func_002106b8(Ob *o) {
             func_0020f3c8();
             func_0020fbe0();
             if (D_00641228 == -2) {
+            z5:
                 D_00641224 = 0;
-            } else if (D_00641228 == -1 && D_00641388 == 0) {
-                D_00641224 = 0;
-            } else {
-                D_00641224 = 1;
-                goto c1;
+                break;
             }
+            if (D_00641228 == -1 && D_00641388 == 0) goto z5;
+            D_00641224 = 1;
+            goto c1;
             break;
         }
     }
@@ -275,9 +276,7 @@ void func_002106b8(Ob *o) {
         }
         func_00207830(o, 11, 2, 351, 71, 122, v);
         func_00206690(o, 473, 83, 39);
-        if (D_00641240 != -1) v = func_001ee5f0(D_00304BE8->x48e[D_00641240]);
-        else v = func_001efbb8(56);
-        func_00207870(o, 11, 1, 11, 99, 122, v);
+        func_00207870(o, 11, 1, 11, 99, 122, D_00641240 != -1 ? func_001ee5f0(D_00304BE8->x48e[D_00641240]) : func_001efbb8(56));
         func_00206690(o, 0, 111, 11);
         break;
     case 5:
@@ -310,6 +309,8 @@ void func_002106b8(Ob *o) {
             func_00206690(o, 0, 111, 11);
             func_00207870(o, 11, 1, 11, 99, 122, func_001ee5f0(D_00304BE8->x48e[D_00641240]));
             func_00206690(o, 133, 111, 379);
+            break;
+        case 2:
             break;
         }
         break;
