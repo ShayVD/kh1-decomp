@@ -1,4 +1,4 @@
-/* rodata */ /* func_001f0868: 2 words off (right size) in hand/nofill, rodata jump table at 0x490a20 (check with rr.py 00490a20). Only sched2: orig 'lhu t4,2(s1); dsll32 a3; lhu t3,4(s1); dsll32 a1,a1,24', ours puts dsll32 a1 before lhu t3. Keys: sibling Q/d[] header style, case 15 falls into case 7's str+=2 tail, sibling-style done block, decl order cx..h; argp; defcol (sets 52/56 spill slots). Flag sweep: none. */
+/* func_001f0868: hand/nostrict_nofill (w10 draft unchanged; it was checked in hand/nofill only). Rodata jump table at 0x490a20. */
 #include "common.h"
 
 typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
@@ -39,6 +39,7 @@ s32 func_001f0148(u8 *, s32);
         break; \
     }
 
+/* rodata */
 Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
     u64 *d;
     Q *p, *start, *tag;

@@ -198,3 +198,10 @@
 - Hoisting a global load into a local can change the saved-register count and frame: check size, not only loop shape (00105d88 33w).
 - 001e0d98: `goto r4` / `r4: return 4;` fixes the bgtz-slot nop but leaves an extra block.
 - Unchanged: 001edfb8 32w, 001e32d8 4w, 002177c8 5w, 0011b220 9w, 001124f8 18w, 001502e8 2w, 001cd2d8 16w, 00166248 43w, 0021e120 20w, 001f31a8 17w, 00233168 17w.
+
+## w32 (300-600 insn set)
+- Matched 00109770 (hand, rodata jtbl 0x48cce0): the inl_fin static inline as a plain-brace macro, stores in the order D_002A6B80=1; D_002BBDE0=k; D_00495160=0; D_002BBE14=0; D_002BBE04=3; D_002BBE18=0; then the calls.
+- Matched 001fea38 (hand, strict): the two packet header stores after func_0011fb38 through `typedef union { u64 d; f32 f; } QU;` (`((QU*)q)[0].d`), which keeps a later f32 field load from being hoisted above them.
+- Matched 001f0868 (hand/nostrict_nofill, rodata 0x490a20): w10's 2w draft unchanged; it had only been tried in hand/nofill. Test both nofill modes for the text renderers near it (001f1fc8 is 5w in nostrict_nofill).
+- `do { } while (0)` adds no ref weight for global-alloc (refs are weighted by CFG loop depth).
+- Unchanged: 00212cc0 (sel needs 5+ weighted refs), 002287f8 8w, 0023a968 39w, 002040f8 37w, 00103c48 35w, 001fbcd8/0022eef8/00199ac8, 001f18e8.
