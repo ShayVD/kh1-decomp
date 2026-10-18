@@ -225,3 +225,9 @@
 - A long-lived constant variable set before a loop (`u64 one1 = 1;`) becomes a `li` right before its store, which moves the store late. local-alloc runs after sched1, so register choice follows sched1's order.
 - `pc = &g->col; pc[1] = 1;` folds back to `[g+0x18]` (no new dependence) but changes register assignment.
 - Unchanged: 001f1fc8 5w (~60k variants), 00202678 40w, 0019ab38 32w, 00216890 138w (spill slots). tools/matching/anneal3.py: dependency-aware anneal (/*P*/../*Q*/ groups keep def/use order).
+
+## w38 (mid-large leftovers)
+- No matches. Near misses: 00105288 50w (right size; loop 2 reads its pointer through a different expression than the top store, `((s32 *)&D_002A6274)[1]`, which stops gcse PRE keeping %hi in an s-register across calls), 0016ea58 63w (two index variables in the fill loop so each address gets its own shift chain and is strength-reduced), 001c5ee8 67w, 001bd090 144w (right size).
+- A loop giv is reduced only if its benefit beats the add cost; two addresses sharing one `j<<4` stay unreduced ("giv ... not worth while" in the loop dump).
+- Our first jump pass already turns `x = a; if (c) x = b;` into a conditional move (also for stack stores) and deletes the first store; a separate `move vX,zero` plus a surviving first store in the original means the later post-combine if-conversion did it.
+- Global data loaded through a pointer type gets alias set 0, so loop.c never hoists that load in strict mode. ee-gcc writes -d dumps for files with inline asm too.
