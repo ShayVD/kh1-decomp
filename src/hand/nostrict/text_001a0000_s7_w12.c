@@ -1,4 +1,3 @@
-/* ~114 words off, mostly regalloc (mode hand/nostrict, rodata jtbl at 0x48FD70, test with tools/matching/wqb03_rr.py 0048fd70). Orig: flag->s6, out->s7, o->s8, base & parent spilled to 160/164(sp); ours spills out/flag. Also the parent/no-parent func_002672f8 calls are cross-jumped in orig. */
 #include "common.h"
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
@@ -35,6 +34,7 @@ typedef struct {
     u8 pad54[0x6C - 0x54];
     f32 scale[3];
 } K09d0;
+/* rodata */
 void func_001a09d0(PppMtx base, PppMtx m, O09d0 *o, K09d0 *k, PppMtx parent, PppMtx out, u8 flag) {
     PppVec4 tmp;
     PppMtx t;
@@ -63,15 +63,17 @@ void func_001a09d0(PppMtx base, PppMtx m, O09d0 *o, K09d0 *k, PppMtx parent, Ppp
             func_002675a8(tmp, m[3]);
             sceVu0MulMatrix(m, D_00615FC0, m);
             func_002672f8(m[3], base, tmp);
+            if (flag) sceVu0CopyMatrix(out, m);
+            sceVu0MulMatrix(m, D_00616040, m);
         } else {
             sceVu0MulMatrix(t, parent, D_00615E68->m);
             sceVu0MulMatrix(t, D_00615EB0, t);
             func_002675a8(tmp, m[3]);
             sceVu0MulMatrix(m, D_00615FC0, m);
             func_002672f8(m[3], t, tmp);
+            if (flag) sceVu0CopyMatrix(out, m);
+            sceVu0MulMatrix(m, D_00616040, m);
         }
-        if (flag) sceVu0CopyMatrix(out, m);
-        sceVu0MulMatrix(m, D_00616040, m);
         break;
     case 1: case 3: case 5: case 7: case 9:
         func_002672f8(tmp, base, m[3]);

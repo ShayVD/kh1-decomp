@@ -47,3 +47,16 @@
 - Matched 001a9c30 (C + one inline asm block, register variables for its operands, `"=m"(buf[0])` output for the 16-byte stack result).
 - func_00260d00 is hand-written (exception trampoline): exported to src/sdk/libkernl_exc.s.
 - Every other VU0/MMI function in the list is gcc output: the ppp Tail-draw family (00190810, 00197278, 0018fee8, 00196930, 00191248, 00197cf8) uses VU0 helpers that must be `#define` macros; 001830a0 and 00192958 are plain C (their lq/sq are 128-bit caller-saves / TImode constants); 0018f268, 001a12f0, 001166e8, 001636d0 are C with short asm blocks or none.
+
+## w11 (ppp Tail-draw family)
+- Matched pppStepPrograms 001830a0, pppKeShpTail2Draw 00190810, Tail2XDraw 00197278, TailDraw 0018fee8, TailXDraw 00196930 (src/hand/nostrict/text_00180000_s7_w11.c): C with VU0 helpers as `#define` macros of inline asm. So whole-function VU0 code in the game can be C; the big renderers exported as .s this session (func_001b8198 ...) may be too.
+- A local struct whose address goes to a static inline helper makes the inliner copy sp into a pseudo (`move aN,sp`); CSE folds it back except at blocks starting a new CSE path.
+- A BLKmode local's slot is rounded up to 16 bytes. Matrix copies per if/else arm as four u128 assignments give lq/sq (struct assignment gives ld/sd).
+- `f(pos, v[i++])` puts i+1 in that call's delay slot. `u32 rnd = (rnd*2061+7) & 0xFFFF; rnd / 65535.0f` gives the unsigned-convert sequence.
+
+## w12 (drafts 98-200 words off)
+- Matched 001a09d0 (tail copied into each branch), 001a99e8 (masks before shifts `(r & 0x7ff0000) >> 16` so each AND gets its own andi; block-scoped u64 locals keep daddiu+dsll32/dsra32), 00119ad8 (copy + `return 1` in each branch; branch-local variables).
+- CSE swaps equal-valued variables for the longest-lived one (`best = 0`, `i = 0`); a separate variable in the other branch fixed a delay slot.
+- `while (!done && ...)` keeps a set-done block inside the loop; `break` lets loop.c move it out.
+- A switch on 512/640 gives li 640 + xor/movn; if/else gives xori.
+- w12 ran `pkill -f "hill4.py func_00102a48"` once (only its own processes).

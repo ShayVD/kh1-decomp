@@ -1,4 +1,3 @@
-/* func_00119ad8: ~200 words off (hand, strict): structure/helpers right, register allocation differs (orig keeps cnt in s8, hits pointer as t1 giv with TImode caller-saves). Draft only. */
 #include "common.h"
 typedef f32 V4[4] __attribute__((aligned(16)));
 typedef int u128 __attribute__((mode(TI)));
@@ -78,9 +77,9 @@ s32 func_00119ad8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
     V4 hits[4];
     f32 t;
     s32 nhit;
-    s32 cnt, i, best;
+    s32 cnt, i, best, bk;
     s32 *idx;
-    f32 r2, dd, min;
+    f32 r2, dd, min, m1;
     f32 *src;
     r2 = *maxd * *maxd;
     nhit = 0;
@@ -100,30 +99,31 @@ s32 func_00119ad8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
             vaddv(e1, e1, D_002C12E0);
             vaddv(e0, e0, D_002C12E0);
             if (!func_001197e0(e1, e0, out)) {
-                vcopy(hits[nhit], out);
-                nhit++;
+                vcopy(hits[nhit++], out);
             }
         }
     }
     if (nhit) {
         best = 0;
-        min = 1.0e12f;
+        m1 = 1.0e12f;
         for (i = 0; i < nhit; i++) {
             vsubv(out, p, hits[i]);
             dd = vdot(out, out);
-            if (dd < min) { min = dd; best = i; }
+            if (dd < m1) { m1 = dd; best = i; }
         }
-        src = hits[best];
+        vcopy(out, hits[best]);
+        return 1;
     } else {
-        best = cnt;
+        bk = cnt;
         min = r2;
         for (i = 0; i < cnt; i++) {
             dd = vdist2(p, pts[i]);
-            if (dd <= min) { min = dd; best = i; }
+            if (dd <= min) { min = dd; bk = i; }
         }
-        if (best == cnt) return 0;
-        src = pts[best];
+        if (cnt != bk) {
+            vcopy(out, pts[bk]);
+            return 1;
+        }
     }
-    vcopy(out, src);
-    return 1;
+    return 0;
 }
