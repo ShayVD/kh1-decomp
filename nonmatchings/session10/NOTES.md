@@ -137,3 +137,8 @@
 - 00102118 6 LCS: `o2 = o` gives `move s0,s3` but in the store block; cse never follows into the conversion's join label.
 - 00192958 17, 001f18e8 17: no gain (a do-while(0) after the second call keeps `tag = p + 5` after it but drags other insns).
 - Facts: loop.c inserts a reduced giv's init after the hoisted constants and its increment before the biv increment; making a giv's destination a user variable used outside the loop stops its reduction.
+## r2_10 (automated CONTEXT_ONLY-stub and return-type sweep over 232 drafts, tools/matching/ctxsweep_s10.py)
+- Matched 001166e8 (hand, rodata 0x48D090): session8 w20 draft with `s32 func_00104f10(s32, f32 *);` (void in every other file: check returns per TU).
+- Matched 00166248 (hand/nostrict): session9 r2_1 draft plus CONTEXT_ONLY `{}` stubs of func_00164ba8 and func_001655e0 (not func_00121e28: all three give 2w). Entry bltz no longer bltzl.
+- 0010ba98 27 -> 21 LCS (r2_10__0010ba98_21w.c): `extern s32 func_0010ea00(void);`.
+- Facts: gcc 2.96 does not learn a callee's register use from a body above the caller; the only effect is REG_EH_REGION 0 on calls to functions defined in the file, so a `{}` stub works as well as a copied body (docs/context-only-plan.md's "register use" explanation is wrong). Stubs can hurt: try subsets, not only all.

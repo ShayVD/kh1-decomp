@@ -1,5 +1,4 @@
-/* 001166e8 near miss (w20, from w17's 67w draft): 16 words off by wqb03_rr.py 0048D090, mode hand (strict), right size 4136. Changes from w17: (1) tail written `if (D_002A6238[best1].xA) { ep = &D_002A6238[best1]; ...` instead of `ep = &D_002A6238[best1]; if (ep->xA)` (fixes the 8 missing bytes: the index add, best1 reload after the D_002A6238 load, and every branch offset after it; 67w -> 20w); (2) `return acc1 | acc0;` in the best1 == -1 early return too (both returns now acc1 | acc0); (3) first loop `u8 kd` instead of `s32 kd` (s16/u16 also work): with s32 the bitfield extract writes kd twice (srl into kd, andi kd) so the temp is kd itself; a narrower kd gets its own srl temp in v0. Left: both hit-test blocks after func_00104f10 (8 words each): local-alloc picks the tied id*5 pair (sll/addu, 20 weighted refs over ~3 insns) before the tied D_002A6238 load/element address pair (25 refs over ~4 insns), so the id*5 chain gets v0; the original gives the load/address v0. Needs the address pair one ref more or one insn shorter. Rest of w17 header: */
-/* 001166e8 near miss (w17): 67 words off by wqb03_rr.py 48d090 (LCS 35; w15's draft was 487 / LCS 169), mode hand (strict), rodata jtbl_0048D090/0048D0C0, size 4128 vs 4136. Changes from w15's draft: (1) tail b15 test reads the flags word through a char-aliased union, `b = (((ColW *)&ep->f)->w >> 15) & 1; if (b == 1)` (ColW = union { u32 w; u8 c[4]; }): the load then depends on every store before it, so sched1 keeps the original's x38, x3A, st, lw order; with the ColF bitfield the load was hoisted above the stores, reload needed a 4th spill reg (a3) at o->x3A = best1 and the round-robin spill choice shifted every later reload; a separate `b` keeps `li 1; bne` (in one expression fold makes it bnez); (2) `return acc0 | acc1;` in the best1 == -1 early return, `return acc1 | acc0;` at the end; (3) `i = 0` before and `n = 0` after the first copy at again2, `n = 0; i = 0;` before the second box query; (4) hit tests: block-local `s32 x = D_002A6238[id].xA;` instead of reusing k; (5) kind in a block-local `s32 kd` per loop body instead of k. Left: v0/v1 swap in both hit-test blocks (orig gives the D_002A6238 load/ep v0, ours gives the id*5 chain v0: local-alloc priority), first-loop kind temp tied to kd (orig srl into v0, andi into v1), early-return ld registers, tail ep = best1*20 + D (orig adds index first and reloads best1 after the D_002A6238 load: 8 bytes short). */
+/* rodata */ /* func_001166e8 (r2_10 s10): MATCH by wqb03_rr.py 0048D090, mode hand (strict). session8 w20 16w draft with `s32 func_00104f10(s32, f32 *);` instead of void (lever 2: callee return type). */
 #include "common.h"
 
 typedef struct {
@@ -65,7 +64,7 @@ extern s32 D_002BD250[];
 extern ColE *D_002A6238;
 
 void func_00104eb0(s32, f32 *);
-void func_00104f10(s32, f32 *);
+s32 func_00104f10(s32, f32 *);
 s32 func_00115158(f32 *, f32 *, f32 *);
 void func_00115408(s32, f32 *, f32 *, s32);
 s32 func_00115600(s32, f32 *);

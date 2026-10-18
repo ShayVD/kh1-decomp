@@ -1,4 +1,4 @@
-/* 4w (LCS; 816 vs 808 bytes), hand/nostrict, no context. Same as the s6 while-loop draft; what is off is reorg only: the entry test becomes bltzl filled from the target (move a0,s0), where the orig has a plain bltz whose delay slot takes move s1,zero from the fallthrough giv inits (orig init order s1,s5,s4,s3,s2; ours s5..s1). The branch has REG_BR_PROB 3999 (unlikely); likely cause is mark_target_live_regs/find_basic_block seeing the s-regs live at the target, which blocks a non-annulled fill. Inner/outer loop shape changes (13 variants) did not move it. */
+/* func_00166248 (r2_10 s10): MATCH, hand/nostrict. session9 r2_1 4w draft plus CONTEXT_ONLY {} stubs of func_00164ba8 and func_001655e0 above it (both matched in src/hand/nostrict/text_00150000_h59.c and text_00160000_c03.c; a stub for func_00121e28 must NOT be added: it costs 2w). With the stubs the calls get REG_EH_REGION 0 and the entry bltz is no longer bltzl. */
 #include "common.h"
 /* ---- func_00165cf8 ---- */
 typedef f32 C03Mtx[4][4];
@@ -52,8 +52,8 @@ void func_00121eb0(void *);
 void func_00121f30(void *, void *);
 void func_001625c8(C03Mtx *, C03Mtx *);
 void func_00162848(f32 *, C03Mtx *, f32 *);
-void func_00164ba8(C03Mdl *, C03Bits *);
-void func_001655e0(f32 (*)[4], C03Mdl *, f32, C03Bits *);
+CONTEXT_ONLY void func_00164ba8(C03Mdl * p0, C03Bits * p1) {}
+CONTEXT_ONLY void func_001655e0(f32 (*p0)[4], C03Mdl * p1, f32 p2, C03Bits * p3) {}
 void func_002675a8(f32 *, f32 *);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 
