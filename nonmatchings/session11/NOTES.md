@@ -78,3 +78,17 @@
 - 00249718 3: all split points, per-arm t2/t3, preloads: global-alloc t3 above t2.
 - 00202678 7 (sched1 2-issue, loads prio 5), 0024c950 9 (kk vs load in local-alloc),
   0021e120 12, 00265608 9 (OR tree H chain): no change.
+
+## s11w9 (001fb428 001fa8b0 001f18e8 001ffb30 001fe1b8): 1 match
+- 001fb428 (hand/nostrict_nogcse): `t = w*sz/18` as one function-level variable for the neg block
+  and the digit loop (a global pseudo, so local-alloc cannot tie it to `x0 + t`); neg block
+  declares only `Glyph *g;`, the loop `Glyph *g; s32 x1;` (10 -> 3), then a neg-block hill-climb.
+- 001f18e8 16 (w9__001f18e8_16w.c): neg-block climb (`g->x4c = 0` after `g->x40 = cx = i + s`).
+  Left: prologue order, `tag = p + 5` hoisted above the 2nd call, `lhu f2` before `sw x34`.
+- 001fa8b0 12: loop pass 2 hoists %hi(D_003E8E28) (life 3 counts the deleted lo_sum note);
+  sibling func_001f12c0 keeps its la local in v0.
+- 001fe1b8 59: find_reg pass 0 skips a0 for `a` because o prefers it; cse canonicalises param
+  loads through the longer-lived copy o and combine folds the param copy.
+- 001ffb30 31: the 0x0fff0000 lui still issues before `p = buf + 16` (reload gives it v0).
+- Facts: after sched1 interblock speculation life info is recomputed, so a variable whose only
+  use moved into one block becomes local-alloc's.
