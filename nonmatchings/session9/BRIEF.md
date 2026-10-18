@@ -85,3 +85,19 @@ choosing a source shape that changes that pass's input:
   the closest first; a draft that drops from 300 to 30 words is real progress worth saving.
 - Functions without a draft (0012e1b0, 001c53c8): start from `python3 tools/kh1tool.py m2c`.
 - Do not stop after the sweep: give every function in your list a real attempt, closest first.
+
+## Round 2 (second pass, fresh eyes)
+Every function on your list was attempted in round 1 of this session by another worker;
+read nonmatchings/session9/NOTES.md (their diagnosis) and nonmatchings/session9/*ADDR*
+(their saved draft) before anything else. Use WTAG r2_N; WDIR /tmp/claude-0/s9/r2_N.
+- **Sibling port first.** Round 1's best lever (5 of 15 matches): find already-matched
+  functions in src/ that touch the same globals, call the same callees or build the same
+  message/packet type (`grep -rl D_XXXXXXXX src/`, same 64 KiB region, same callee list),
+  and rewrite the draft in that sibling's style: plain globals instead of pointer locals,
+  the sibling's struct/array declarations and types (`u8 X[][112]`, bitfields, aligned(8)),
+  its store order, its helper-free written-out loops, its constants inline.
+- Then the round-1 levers in NOTES.md (shared `goto` tails to cut refs, call results in
+  their own local, re-reading a pointer argument instead of a local copy, `= 0` next to the
+  loop, chained assignments for store order, two-insn arms to block if-conversion).
+- A different angle beats repeating round 1's: if round 1 swept statement orders, change
+  types, declarations and expression shapes instead.
