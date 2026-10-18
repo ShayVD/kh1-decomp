@@ -48,3 +48,9 @@ rewrite matched code.
    that implements every wrapper as a no-op or a file read lets phase 4/5 run
    the game logic on a PC first. Keep wrappers narrow enough that a stub of
    each is a few lines.
+
+## Known absolute addresses in matched code
+
+- func_00171078 (src/hand/text_00170000_s9_w9.c) reads `((s32 *)0x35BD40)[i]`: the original
+  used a hard-coded address (the delay-slot fill proves it). Phase 4 must turn it back into
+  `D_0035BD40`.

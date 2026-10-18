@@ -409,3 +409,44 @@ the dumps; prio_s8.py prints global-alloc priorities.
   with identical call arguments (0011a410).
 - Probes, not fixes: `-fno-expensive-optimizations` for global-alloc ties; an empty
   `do { } while (0)` as a block boundary.
+
+## Session 9 tips (full list: nonmatchings/session9/NOTES.md)
+
+- **Sibling port first**: find matched functions with the same globals, callees or message/packet
+  type and copy their style: plain globals instead of pointer locals or a precomputed `s`
+  (001e3a00, 001e6038), the sibling's types (`u8 X[][112]`, `u32 val:24` + aligned(8), flat
+  `s32 D[]` read as `[k*2]`/`[k*2+1]`), its store order (001cd2d8, 00219598, 00176c60,
+  00219f98, 001edfb8).
+- **Store floods**: try plain index order with fields in struct order and temporaries computed
+  at first use before any hill-climb (001ff488). Local-alloc gives packet header constants
+  registers in sched1's store order; a pseudo's REG_EQUIV memory is the store where it dies.
+- **Refs and priorities**: a shared `goto` tail cuts a variable's refs (one store instead of two)
+  and can cross a floor_log2 step (001e32d8 8->7 refs, 00266380, 00142e30 `goto end; ... end:
+  return d;`). Re-reading `*px` instead of a local copy gives a late gcse pseudo that loses
+  exact ties (0024bce8). Reusing an existing long-lived local (loop counter, `val`, `col`) for a
+  temp changes global-alloc order where a fresh local does not (00192958, 001f18e8, 0024be88).
+  One function-level counter for two loops outranks a giv (00237b30). REG_N_REFS weights loop
+  uses x2, and every `continue` adds a latch.
+- **Block boundaries**: a compiled-out `ASSERT(x) do { } while (0)` right after a call starts a
+  new block and drops the call's sched1 priority (00177488). Two-insn then-arms
+  (`{ T *t = e; p = t; }`) block jump1 if-conversion; arm order picks which tests become movz
+  (002376c8). 00249718's original had a block boundary that left no code.
+- **Types**: an s32 param used as `(u64)a << N` keeps dsll out of sched2 cycle 0 (0010c720);
+  u64 global fields as a bitfield struct (`lo:37, b37:1, hi:26`) alias s32 loads just enough,
+  a union with s32[2] is too strong (001ca0f8/001ca368).
+- **Chained assignment** `a = b = v` computes a's address then b's, stores b then a; it also
+  decides which add reload_cse turns into a move (00176c60, 0010ea70).
+- **Constants**: routing a constant through a local (`c = 256; X = c;`) moves its li in sched1
+  (0021b4c8). `c = 1; c <<= t;` keeps a constant inside a loop (loop.c only hoists single sets).
+- **Callees**: read printf format strings before giving it more arguments; a register that looks
+  like an argument can be a free temporary (00113e28). CONTEXT_ONLY callees fix beqz/beqzl per
+  call path (0010c720).
+- **Scheduler facts**: insns made ready together by a call issue in reverse source order in
+  sched1 (991111a: lowest LUID first in sched2); a store whose value dies there (weight -1)
+  beats a weight-0 store whatever the order; EE sched1 issues at most 2 insns per cycle; a dead
+  division's trap_if is a full sched1 barrier; in a multi-block region an insn made ready later
+  inherits INSN_TICK from earlier blocks.
+- **Reload**: the first "Spilling for insn N" in -dg fixes the reload register for the whole
+  function, so a small reorder can move 100+ words; spill slots follow declaration order.
+- **Tools**: count big drafts by LCS and re-measure old drafts in every mode (0010d470: 338 in
+  hand vs 430 in nostrict); tools/matching/hl_s9.py is an LCS hill-climb.

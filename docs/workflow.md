@@ -480,3 +480,39 @@ found that the next session needs:
   compiler split a `la` macro after jump2 and let dbr fill the slot (no 2.96 pass does);
   0025b2f0 (save order at equal priority); 001bd090 (a late if-converted store).
 - Stale drafts of matched functions were removed from nonmatchings/.
+
+## Session 9: what changed
+
+- **24 matches** (6,876 -> 6,900 / 6,988; 91.0% -> 92.0% of code bytes), by 13 round-1 workers
+  (one per list band) and 8 round-2 workers that retried the leftovers with fresh eyes
+  (brief: nonmatchings/session9/BRIEF.md; findings per worker: nonmatchings/session9/NOTES.md;
+  short version: docs/matching-tips.md "Session 9 tips"). No new build modes or flags.
+- **Biggest lever: sibling ports.** About a third of the matches came from rewriting a draft in
+  the style of an already-matched function that touches the same globals, callees or packet
+  type (plain globals instead of pointer locals, the sibling's array/struct declarations, its
+  store order). `grep -rl D_XXXXXXXX src/` before reading dumps.
+- **Plain index order for store floods**: 001ff488 matched only after throwing away a
+  hill-climbed order and writing the GS vertex flood in index/field order.
+- **Callee-prototype sweep** (arity_s8.py on every callee) found three more real prototypes
+  (printf with one argument in 00113e28, one-argument func_00118608, `void func_00115d18(void)`).
+- **0w only with a hack** (kept in nonmatchings/session9 as near misses, not counted):
+  DIntr 0025f338 (`__asm__(".p2align 3")` before the loop label), Tail3Draw 00191248 and
+  Tail3XDraw 00197cf8 (an inline reading other locals through a struct cast of the first local:
+  undefined behaviour tied to the frame layout), 0010a780 (needs an assembler post-pass).
+- **Assembler/compiler differences, now with evidence**: the original assembler moved a `%lo`
+  `la` tail into an empty `jal` slot (0010a780; the binary has no `lui;addiu;jal;nop`) but did
+  not move the `addu` of `la rd,K(rs)` into a `b` slot (0024c950: `lui;ori;addu;b;nop`, never
+  `ori;b;addu`). Stock 2.96 gas does the opposite on both counts and 991111a gas matches the
+  second but is worse elsewhere, so the original gas is neither. tools/matching/pp_la_s9.py
+  and lcs_pp_s9.py reproduce 0010a780 with a post-pass (a candidate build-mode feature, not
+  used by the build). func_00171078 was not a compiler difference: it reads a table through a
+  hard-coded address (`((s32 *)0x35BD40)[i]`), so gas fills the slot with the reloc-free tail.
+  0025b2f0 (prologue save order) and 001bd090 (a movn if-conversion keeping the earlier store)
+  are still suspects.
+- **New tools** in tools/matching/: hl_s9.py (dependency-aware hill-climb scored by LCS; cheap,
+  ~0.1 s per compile), gentrees_s9.py / ortree_s9.py (enumerate OR-tree shapes of a packed
+  constant; gcc reassociates OR chains), pp_la_s9.py + lcs_pp_s9.py (assembler post-pass
+  proof for 0010a780). hill_s8.py: its rr form is `FILE MODE ITERS SEED ADDR FUNC`, and its
+  validity check counts struct field names as variables (rename a local that shares a field
+  name).
+- Stale drafts of the 24 matched functions were removed from nonmatchings/.

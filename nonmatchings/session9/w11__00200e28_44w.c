@@ -1,0 +1,96 @@
+/* 00200e28: 44 words off by LCS (s7 103), hand/nostrict, same size 1556. New: `idx <<= 5;` between the 1st and 2nd func_00266f38 lines and e = (u16 *)((u8 *)D_003F2BD8 + idx) after the 3rd (prologue now exact), header QH stores in natural order 0a,0b,1a..5b (constant loads now exact), vertex 0 fields hill-climbed to q, v, rgba, x, f, y, z, u (others in field order), tag size computed from (qq + 146) without bumping qq (computed early like orig). Still off: sched1 places x/y shifts and the C[0]/e[0] loads of vertex 0 differently around the tag stores (statement order of tag/shift lines has no effect: if-conversion of the w clamp happens before sched1, one block). */
+#include "common.h"
+typedef struct { u64 a, b; } Q;
+typedef struct { u64 rgba, q; s32 u, v, p0, p1; s32 x, y, z, f; } Vt;
+typedef struct { u16 e[16]; } Ent;
+typedef struct { Q tag; Vt v[24]; } Pk;
+typedef struct { Q QH[6]; } H;
+extern Ent D_003F2BD8[];
+extern u8 D_003F2670[], D_003F2720[], D_003F1E70[];
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
+u64 *func_00122048(s32, s32);
+s32 sceGsSyncPath(s32, s32);
+void func_001220b8(void *);
+
+void func_00200e28(s32 idx, s32 x, s32 y, s32 w, u32 *C) {
+#define QH ((Q *)qq)
+    u64 *buf;
+    u64 *qq;
+    void *u;
+    u16 *e;
+    s32 X0, X1;
+    s32 X2, X3;
+    s32 Y0, Y1;
+    func_00266f38(func_00266c08(2), D_003F2670);
+    idx <<= 5;
+    func_00266f38(func_00266c08(2), D_003F2720);
+    func_00266f38(func_00266c08(2), D_003F1E70);
+    e = (u16 *)((u8 *)D_003F2BD8 + idx);
+    qq = func_00122048(1536, 128);
+    buf = qq++;
+    qq++;
+    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    QH[0].a = 0x5000000000000001;
+    QH[0].b = 0xeeeee;
+    QH[1].a = 0;
+    QH[1].b = 63;
+    QH[2].a = 0x7bf8621413d7c;
+    QH[2].b = 6;
+    QH[3].a = 0x4007bf8001300000;
+    QH[3].b = 22;
+    QH[4].a = 0x7bf8001400000;
+    QH[4].b = 22;
+    QH[5].a = 68;
+    QH[5].b = 66;
+    qq += 12;
+#define p ((Pk *)qq)
+    p->tag.a = 0x30ae400000008018;
+    p->tag.b = 0x43e;
+
+    x <<= 4;
+    y <<= 4;
+    w <<= 4;
+    if (w < 832) w = 832;
+    X0 = x + 0x7000;
+    X1 = x + 0x71a0;
+    Y0 = y + 0x7400;
+    Y1 = y + 0x75a0;
+    X3 = X0 + w;
+    X2 = X3 - 416;
+    p->v[0].q = 1;
+    p->v[0].v = e[2];
+    p->v[0].rgba = C[0];
+    p->v[0].x = X0;
+    p->v[0].f = 0x8000;
+    p->v[0].y = Y0;
+    p->v[0].z = 0x100000;
+    p->v[0].u = e[0];
+    p->v[1].rgba = C[1]; p->v[1].q = 1; p->v[1].u = e[0]; p->v[1].v = e[6]; p->v[1].x = X0; p->v[1].y = Y1; p->v[1].z = 0x100000; p->v[1].f = 0x8000;
+    p->v[2].rgba = C[0]; p->v[2].q = 1; p->v[2].u = e[4]; p->v[2].v = e[2]; p->v[2].x = X1; p->v[2].y = Y0; p->v[2].z = 0x100000; p->v[2].f = 0;
+    p->v[3].rgba = C[1]; p->v[3].q = 1; p->v[3].u = e[4]; p->v[3].v = e[6]; p->v[3].x = X1; p->v[3].y = Y1; p->v[3].z = 0x100000; p->v[3].f = 0;
+    p->v[4].rgba = C[0]; p->v[4].q = 1; p->v[4].u = 472; p->v[4].v = 600; p->v[4].x = X1; p->v[4].y = Y0; p->v[4].z = 0x100000; p->v[4].f = 0x8000;
+    p->v[5].rgba = C[1]; p->v[5].q = 1; p->v[5].u = 472; p->v[5].v = 1000; p->v[5].x = X1; p->v[5].y = Y1; p->v[5].z = 0x100000; p->v[5].f = 0x8000;
+    p->v[6].rgba = C[0]; p->v[6].q = 1; p->v[6].u = 872; p->v[6].v = 600; p->v[6].x = X2; p->v[6].y = Y0; p->v[6].z = 0x100000; p->v[6].f = 0;
+    p->v[7].rgba = C[1]; p->v[7].q = 1; p->v[7].u = 872; p->v[7].v = 1000; p->v[7].x = X2; p->v[7].y = Y1; p->v[7].z = 0x100000; p->v[7].f = 0;
+    p->v[8].rgba = C[0]; p->v[8].q = 1; p->v[8].u = e[8]; p->v[8].v = e[10]; p->v[8].x = X2; p->v[8].y = Y0; p->v[8].z = 0x100000; p->v[8].f = 0x8000;
+    p->v[9].rgba = C[1]; p->v[9].q = 1; p->v[9].u = e[8]; p->v[9].v = e[14]; p->v[9].x = X2; p->v[9].y = Y1; p->v[9].z = 0x100000; p->v[9].f = 0x8000;
+    p->v[10].rgba = C[0]; p->v[10].q = 1; p->v[10].u = e[12]; p->v[10].v = e[10]; p->v[10].x = X3; p->v[10].y = Y0; p->v[10].z = 0x100000; p->v[10].f = 0;
+    p->v[11].rgba = C[1]; p->v[11].q = 1; p->v[11].u = e[12]; p->v[11].v = e[14]; p->v[11].x = X3; p->v[11].y = Y1; p->v[11].z = 0x100000; p->v[11].f = 0;
+    p->v[12].rgba = C[2]; p->v[12].q = 1; p->v[12].u = e[1]; p->v[12].v = e[3]; p->v[12].x = X0; p->v[12].y = Y0; p->v[12].z = 0x100000; p->v[12].f = 0x8000;
+    p->v[13].rgba = C[3]; p->v[13].q = 1; p->v[13].u = e[1]; p->v[13].v = e[7]; p->v[13].x = X0; p->v[13].y = Y1; p->v[13].z = 0x100000; p->v[13].f = 0x8000;
+    p->v[14].rgba = C[2]; p->v[14].q = 1; p->v[14].u = e[5]; p->v[14].v = e[3]; p->v[14].x = X1; p->v[14].y = Y0; p->v[14].z = 0x100000; p->v[14].f = 0;
+    p->v[15].rgba = C[3]; p->v[15].q = 1; p->v[15].u = e[5]; p->v[15].v = e[7]; p->v[15].x = X1; p->v[15].y = Y1; p->v[15].z = 0x100000; p->v[15].f = 0;
+    p->v[16].rgba = C[2]; p->v[16].q = 1; p->v[16].u = 1816; p->v[16].v = 600; p->v[16].x = X1; p->v[16].y = Y0; p->v[16].z = 0x100000; p->v[16].f = 0x8000;
+    p->v[17].rgba = C[3]; p->v[17].q = 1; p->v[17].u = 1816; p->v[17].v = 1000; p->v[17].x = X1; p->v[17].y = Y1; p->v[17].z = 0x100000; p->v[17].f = 0x8000;
+    p->v[18].rgba = C[2]; p->v[18].q = 1; p->v[18].u = 2216; p->v[18].v = 600; p->v[18].x = X2; p->v[18].y = Y0; p->v[18].z = 0x100000; p->v[18].f = 0;
+    p->v[19].rgba = C[3]; p->v[19].q = 1; p->v[19].u = 2216; p->v[19].v = 1000; p->v[19].x = X2; p->v[19].y = Y1; p->v[19].z = 0x100000; p->v[19].f = 0;
+    p->v[20].rgba = C[2]; p->v[20].q = 1; p->v[20].u = e[9]; p->v[20].v = e[11]; p->v[20].x = X2; p->v[20].y = Y0; p->v[20].z = 0x100000; p->v[20].f = 0x8000;
+    p->v[21].rgba = C[3]; p->v[21].q = 1; p->v[21].u = e[9]; p->v[21].v = e[15]; p->v[21].x = X2; p->v[21].y = Y1; p->v[21].z = 0x100000; p->v[21].f = 0x8000;
+    p->v[22].rgba = C[2]; p->v[22].q = 1; p->v[22].u = e[13]; p->v[22].v = e[11]; p->v[22].x = X3; p->v[22].y = Y0; p->v[22].z = 0x100000; p->v[22].f = 0;
+    p->v[23].rgba = C[3]; p->v[23].q = 1; p->v[23].u = e[13]; p->v[23].v = e[15]; p->v[23].x = X3; p->v[23].y = Y1; p->v[23].z = 0x100000; p->v[23].f = 0;
+    buf[0] = (((s32)(qq + 146) - (s32)buf) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(buf);
+}

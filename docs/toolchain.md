@@ -230,3 +230,13 @@ jr slot) is the only such case in the binary. Assembling 2.96's output with ever
 installed gas (2.96, 990721, 991111, 991111a, 991111b, 991111-01, dtls13010, SN
 2.95.2) leaves the slot empty; -msplit-addresses and n32 do not split the load.
 Unresolved.
+
+## Session 9: the original assembler is not stock 2.96 gas
+
+Two delay-slot facts from the binary (docs/workflow.md "Session 9"): the original assembler
+filled an empty `jal` slot with the `addiu %lo` tail of an `la` macro (0010a780; no
+`lui;addiu;jal;nop` anywhere in the ELF), and did not fill a `b` slot with the `addu` of
+`la rd,K(rs)` (0024c950). Stock 2.96 gas fills slots only with relocation-free macro tails
+(so `((T *)0xADDR)[i]` gets its `lw` in the `jr` slot: func_00171078), and 991111a/-01 gas
+differ elsewhere. No installed assembler reproduces both; tools/matching/pp_la_s9.py shows
+a post-pass that does the first. Not adopted as a build mode yet: only one function needs it.
