@@ -237,3 +237,11 @@
 - Why CONTEXT_ONLY callees matter: 2.96 marks a call to an already-compiled function with `REG_EH_REGION 0` (cannot throw); reorg's liveness scan stops at calls that might throw, so more registers count as live and beqzl/beql is chosen.
 - 001e0ab0/001e0d98/001e10f8 still 4w after ~60 shapes: the steal is blocked only by a CODE_LABEL between bgtz and sw, a volatile/asm insn there, or $2 live at the target. `static void *p = &&fail;` reproduces the original exactly, but the binary has no such data word, so it is not the real source. Deleted user labels become NOTE_INSN_DELETED_LABEL and do not block reorg.
 - 00237d48 2w: sched2 ties go to the lower LUID; the loop-hoisted `&t2` has a later LUID than the pre-loop inits, so in the original d/i were probably giv inits from loop.c, not source statements. 00101bb8 2w unchanged.
+
+## w37 (register-tie re-sweep with the w34 lever)
+- Matched 00130660, 001395d8 (hand/nostrict), 001cac98, 00151e28 (hand, strict).
+  - Raise a variable's refs by reusing it for a constant in another branch: `k = 0.0f;` in the else (00130660 puts k in f20, e in f21); `lim = 10.0f; ... lim = 25.0f;` (00151e28).
+  - A function-level variable used in two parallel branches goes to global-alloc and stops the consumer tying to it (001395d8: `g = ...; o->x480 = g*0.9f+0.1f;` in both halves). Block-local declarations do the opposite (00151e28's n per branch).
+  - 001cac98 is strict, not nostrict: field `union { u64 x; s32 i[2]; }` written with `.x |=`, stores a, fn, b.
+- A p+4 giv inherits p's call-argument preference (expand_preferences).
+- Near misses: 001b9f78 9w, 001e32d8 2w. Unchanged: 001e3a00 (sched1), 001c95f8/001c99a8, 00249718, 0013a440, 00142e30, 0011b220, 0024bce8 (exact tie), 002287f8, 00110e68, 00176c60, 00149c80, 0010ed20.

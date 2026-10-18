@@ -1,4 +1,3 @@
-/* func_00151e28: ~30 words off (hand): FP reg swap f1/f2 for 25.0f vs d[0], and the shared tail (bc1fl ret0; li v0,1) shape differs. */
 #include "common.h"
 
 typedef struct { u8 pad[0x4c]; u16 x4c; } C130g;
@@ -24,24 +23,31 @@ f32 fabsf(f32);
 s32 func_00151e28(Og *o) {
     f32 d[4];
     Tg *t = o->x8;
-    f32 n;
-    s32 r;
+    f32 x;
+    f32 lim;
 
     if (!t || t->x98 || t->x70 || t->x130->x4c || (t->x0 & 4)) return 0;
     func_00267530(d, o->pos, t->pos);
-    if (fabsf(d[1]) > 10.0f) return 0;
-    if (fabsf(d[0]) < 25.0f) {
-        n = o->x8->x38;
-        if (0.94f < n && 0.0f < d[2]) return 1;
+    lim = 10.0f;
+    if (fabsf(d[1]) > lim) return 0;
+    lim = 25.0f;
+    x = d[0];
+    if (fabsf(x) < lim) {
+        f32 n = o->x8->x38;
+        if (0.94f < n && 0.0f < d[2]) goto r1;
         if (!(n < -0.94f)) return 0;
-        if (d[2] >= 0.0f) return 0;
+        if (!(d[2] < 0.0f)) goto r0;
         return 1;
-    } else if (fabsf(d[2]) < 25.0f) {
-        n = o->x8->x30;
-        if (0.94f < n && 0.0f < d[0]) return 1;
+    } else if (fabsf(d[2]) < lim) {
+        f32 n = o->x8->x30;
+        if (0.94f < n && 0.0f < x) goto r1;
         if (!(n < -0.94f)) return 0;
-        if (d[0] >= 0.0f) return 0;
+        if (!(x < 0.0f)) goto r0;
         return 1;
     }
+    return 0;
+r1:
+    return 1;
+r0:
     return 0;
 }

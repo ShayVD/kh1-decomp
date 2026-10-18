@@ -1,4 +1,3 @@
-/* 18w off (nostrict): FP register choice only (f4/f5 and f0/f2/f3 assignments in the >60 branches). Logic/layout right. */
 #include "common.h"
 typedef struct {
     u8 pad0[0x20];
@@ -23,17 +22,17 @@ void *func_00130578(O95 *, s32, f32);
 void func_0014f658(O95 *, s32);
 void func_001395d8(O95 *o) {
     f32 f;
+    f32 g;
     if ((u32)(o->x70 - 22) < 2) {
         f = o->x404 - D_002BBDFC;
         o->x404 = f;
         if (f > 60.0f) {
-            f -= 60.0f;
             o->x24 = 1.0f;
             o->x2c = 40.0f;
             o->x20 = 0.0f;
             o->x28 = 0.0f;
-            f = f / 15.0f;
-            o->x480 = f * 0.9f + 0.1f;
+            g = (f - 60.0f) / 15.0f;
+            o->x480 = g * 0.9f + 0.1f;
         } else if (f > 0.0f) {
             o->x2c = 0.0f;
             o->x480 = 0.1f;
@@ -54,11 +53,11 @@ void func_001395d8(O95 *o) {
             }
         }
     } else if (o->x164 == 102) {
-        f32 h = o->x404;
-        h -= D_002BBDFC;
+        f32 h = o->x404 - D_002BBDFC;
         o->x404 = h;
         if (h > 60.0f) {
-            o->x480 = (h - 60.0f) * 0.125f * 0.9f + 0.1f;
+            g = (h - 60.0f) * 0.125f;
+            o->x480 = g * 0.9f + 0.1f;
         } else if (h > 0.0f) {
             o->x480 = 0.1f;
         } else {
