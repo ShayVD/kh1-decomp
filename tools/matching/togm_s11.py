@@ -8,7 +8,7 @@ s = open(base).read()
 parts = re.split('(' + '|'.join(re.escape(a) for a in sorted(alts, key=len, reverse=True)) + ')', s)
 idx = list(range(1, len(parts), 2))
 state = [alts.index(parts[k]) for k in idx]
-p = os.path.join(os.path.dirname(os.path.abspath(base)), '.s11w18_tog.c')
+p = os.path.join(os.path.dirname(os.path.abspath(base)), '.s11tog_%d.c' % os.getpid())
 def build(st):
     q = parts[:]
     for k, b in zip(idx, st): q[k] = alts[b]

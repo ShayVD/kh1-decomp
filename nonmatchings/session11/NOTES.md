@@ -307,3 +307,17 @@
 - 00102118: still 6w (s10 w9). w22__00102118_72w_finding.c shows a hand u32 conversion gives the join-block `move s0,s3`, but cse1 then carries the D_002A3E20 address across.
 - 001137f8 (11): sched1 priority of the 1<<32 constant (24 vs 26/27) puts it last, in t0. 720 orders tried.
 - 00192958 (17): zbuf/scissor u128 constants tie in local-alloc; lower qty wins.
+
+## s11w24 (00106ed0, 001c62a0, 001e1838)
+- 001c62a0: 59w (was 153) with an unnatural c4 address probe (w24__001c62a0_59w.c); 80w natural (w24__001c62a0_80w.c), both nostrict at the right size 1148. Inline `rd2(&e->lk, p)` makes the field address one value. Left: the original hoists a second &D_0037A380 pseudo that gets no register and reload rematerialises it (`lui s6`) in the f block. Chaotic: one-line changes swing 60 to 200.
+- 001e1838 is a NOFILL function (`move a0,v0; jal; nop` slots; gcc's own fills survive nofill). 107w nofill, right size 960 (w24__001e1838_107w.c). Left: giv for (192+sy)*1536 needs 0x48000 in a hoisted spilled pseudo.
+- 00106ed0: in strict code a block of f32 accesses through different bases keeps exact source order, and pointer-global loads wait on earlier f32 stores. True order: `*p7=1; t=*p23; *p23=1; v[0]; v[1]; v[4]; *p11, *p15, *p19, h[27]`, both pointer globals read before `*p23`. w18's 41w draft has v[4]/v[1] and p11/p15 swapped (wrong basin). w24__00106ed0_47w_order.c has the right order and an exact prologue; left: a third s-reg (592 bytes) because the loop-bound copy loses t9.
+- Fact: a spilled pseudo with a constant equivalent is rematerialised at its use; an in-loop `la` can be an unallocated hoisted invariant.
+- togm_s11.py temp name is now per-pid (was a shared .s11w18_tog.c).
+
+## s11w25 (00110e68, 00107c48, 001cfc28, 00249718), no gains
+- 00110e68 (2): x must be a global pseudo (local x ties to the dying D[i] load and outranks *p for $f1). w25__00110e68_2w_xglobal.c is the diagnosis draft.
+- 00107c48 (3): any combine-folded test works like the dead test (hack). Left: local-alloc tie between %hi and the load quantity; sched1 priority won't issue the param copy before the lw.
+- 001cfc28 (1): sched2 tie between li.s and `dsll v1,8` on every key; sched1 LUID decides; li.s goes at t=2.
+- 00249718 (3): inline `cub(Seg3 *s, k, t, t2, t3)` gives the exact schedule but one-block registers (11).
+- Facts: global-alloc live lengths follow sched1 order, not RTL order. Inline helpers taking (struct base, const index) give fixed-offset loads; a sub-struct pointer keeps addu bases.
