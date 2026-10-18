@@ -1,4 +1,4 @@
-/* func_00241260 (hand/nostrict): 580 vs 584 bytes. NEW: a CONTEXT_ONLY copy of func_0023fd58 (from text_00240000_h75.c) above it fixes the bnez/beqz-with-nop shape around the func_0023fd58 call (callee-above effect). Still off: the tex-packet block (orig stores p[1] via s2=p+1, stores D60->hi via a copy a0 of p, then reloads D60 for D60++), beqzl vs beqz after func_0023dfd8 (callee func_0023dfd8 in nostrict_nofill/text_00230000_h74.c probably also above in the original file; a stub did nothing). */
+/* func_00241260 (hand/nostrict, session 7 w36): MATCH. Needs CONTEXT_ONLY copies of func_0023fd58 and func_0023d528 (the latter fixes beqzl -> beqz after func_0023dfd8), and func_00240ae0 declared as (void *, s32, s32, f32, QW *): with the QW * last, the a3 load is emitted after the $f12 load and lands in the jal slot. */
 #include "common.h"
 typedef struct { u64 lo, hi; } QW;
 typedef struct { u8 pad[0x44]; s32 unk44; u8 pad48[0xBE - 0x48]; u16 unkBE; } Prof;
@@ -34,7 +34,6 @@ extern u8 D_00351E10[];
 extern QW *D_00651D60;
 extern QW *D_00651D64;
 extern f32 D_002BBDFC;
-void func_0023d528(Obj *, s32 *, s32 *);
 QW *func_0023d700(Spr *, Tex *, s32, s32, QW *, f32);
 void func_002492d0(void *, f32, f32, f32, f32);
 s32 func_002492e8(void *, s32);
@@ -47,11 +46,61 @@ QW *func_002403d0(Obj *, QW *);
 QW *func_0023f920(Obj *, QW *);
 QW *func_0023f688(Obj *, QW *);
 QW *func_0023dfd8(Obj *, QW *);
-QW *func_00240ae0(void *, s32, s32, QW *, f32);
+QW *func_00240ae0(void *, s32, s32, f32, QW *);
 QW *func_00237008(s32, u64, QW *);
 void func_00236fd8(QW *, QW *);
 void func_00237018(void *, s32, s32);
 
+typedef struct { s32 x, y, z, w; } T16;
+typedef struct { s32 unk0; u8 pad4[0x90]; s32 unk94; u8 pad98[4]; void *unk9C; } Ob9C;
+extern T16 D_00454600[];
+extern T16 D_00454650[];
+extern T16 D_00454680[];
+extern T16 D_004546C0[];
+extern T16 D_00454700[];
+void func_0024ac08(void *, s32 *);
+CONTEXT_ONLY void func_0023d528(Obj *ov, s32 *p1, s32 *p2) {
+    Ob9C *o = (Ob9C *)ov;
+    s32 r[2];
+    register T16 *t asm("$5");
+    switch (o->unk0) {
+    case 0:
+        t = D_00454650;
+        p1[0] = D_00454600[0].x;
+        p1[1] = D_00454600[0].y;
+        goto idx;
+    case 1:
+        p1[0] = D_00454600[1].x;
+        p1[1] = D_00454600[1].y;
+        p2[0] = D_00454680[0].x;
+        p2[1] = D_00454680[0].y;
+        break;
+    case 2:
+        p1[0] = D_00454600[2].x;
+        p1[1] = D_00454600[2].y;
+        p2[0] = D_004546C0[0].x;
+        p2[1] = D_004546C0[0].y;
+        break;
+    case 3:
+        t = D_00454700;
+        p1[0] = D_00454600[3].x;
+        p1[1] = D_00454600[3].y;
+        goto idx;
+    case 4:
+        t = D_00454650;
+        p1[0] = D_00454600[4].x;
+        p1[1] = D_00454600[4].y;
+    idx:
+        p2[0] = t[o->unk94].x;
+        p2[1] = t[o->unk94].y;
+        break;
+    }
+    if (o->unk9C != 0) {
+        func_0024ac08(o->unk9C, r);
+        p2[0] += r[0];
+        p2[1] += r[1];
+    }
+}
 QW *func_0023fb90(Obj *, QW *);
 CONTEXT_ONLY QW *func_0023fd58(Obj *o, QW *r) {
     s32 n = o->unk4->unk6C->unkBE;
@@ -79,6 +128,10 @@ CONTEXT_ONLY QW *func_0023fd58(Obj *o, QW *r) {
     return r;
 }
 
+static inline void qset(QW *q, u64 lo, u64 hi) {
+    q->lo = lo;
+    q->hi = hi;
+}
 void func_00241260(Obj *o) {
     s32 a[4];
     s32 b[2];
@@ -91,13 +144,13 @@ void func_00241260(Obj *o) {
     D_00651D60 = func_0023dfc0(o, D_00651D60);
     func_00237018(D_00651D64, D_00651D60 - D_00651D64, 1);
     D_00651D64 = p;
-    p[1].lo = 0x1000000000008001;
-    p[1].hi = 14;
+    { QW *t = p + 1; u64 lo = 0x1000000000008001; t->hi = 14; t->lo = lo; }
     p += 2;
     D_00651D60 = p;
-    D_00651D60->lo = o->unk70->unk18;
+    q = D_00651D60;
+    q->lo = o->unk70->unk18;
     D_00651D60->hi = 6;
-    D_00651D60 = *(QW * volatile *)&D_00651D60 + 1;
+    D_00651D60++;
     if (o->unkA18) D_00651D60 = func_0023f920(o, D_00651D60);
     D_00651D60 = func_0023f688(o, D_00651D60);
     if (o->unk0 == 0 && o->unk4->unk130->unk4C == 0 && o->unkA18) D_00651D60 = func_0023fd58(o, D_00651D60);
@@ -108,8 +161,8 @@ void func_00241260(Obj *o) {
         D_00651D60 = q + 1;
         D_00651D60 = func_00237008(0x42, 0x8000000048, q + 1);
         func_00236fd8(q, D_00651D60);
-        D_00651D60 = func_00240ae0(o->unk520, b[0], b[1], D_00651D60, o->unkA1C);
-        q = func_00240ae0(o->unk780, b[0], b[1], D_00651D60, o->unkA1C);
+        D_00651D60 = func_00240ae0(o->unk520, b[0], b[1], o->unkA1C, D_00651D60);
+        q = func_00240ae0(o->unk780, b[0], b[1], o->unkA1C, D_00651D60);
         D_00651D60 = q + 1;
         D_00651D60 = func_00237008(0x42, 0x8000000044, q + 1);
         func_00236fd8(q, D_00651D60);

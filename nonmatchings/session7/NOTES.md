@@ -231,3 +231,9 @@
 - A loop giv is reduced only if its benefit beats the add cost; two addresses sharing one `j<<4` stay unreduced ("giv ... not worth while" in the loop dump).
 - Our first jump pass already turns `x = a; if (c) x = b;` into a conditional move (also for stack stores) and deletes the first store; a separate `move vX,zero` plus a surviving first store in the original means the later post-combine if-conversion did it.
 - Global data loaded through a pointer type gets alias set 0, so loop.c never hoists that load in strict mode. ee-gcc writes -d dumps for files with inline asm too.
+
+## w36 (reorg trio, 2-3w ties)
+- Matched 00241260 (hand/nostrict): a CONTEXT_ONLY copy of func_0023d528 above it (turns beqzl into beqz) and func_00240ae0 declared `(void *, s32, s32, f32, QW *)`: an f32 argument goes in $f12 wherever it sits, so parameter order only changes the order the argument loads are emitted.
+- Why CONTEXT_ONLY callees matter: 2.96 marks a call to an already-compiled function with `REG_EH_REGION 0` (cannot throw); reorg's liveness scan stops at calls that might throw, so more registers count as live and beqzl/beql is chosen.
+- 001e0ab0/001e0d98/001e10f8 still 4w after ~60 shapes: the steal is blocked only by a CODE_LABEL between bgtz and sw, a volatile/asm insn there, or $2 live at the target. `static void *p = &&fail;` reproduces the original exactly, but the binary has no such data word, so it is not the real source. Deleted user labels become NOTE_INSN_DELETED_LABEL and do not block reorg.
+- 00237d48 2w: sched2 ties go to the lower LUID; the loop-hoisted `&t2` has a later LUID than the pre-loop inits, so in the original d/i were probably giv inits from loop.c, not source statements. 00101bb8 2w unchanged.
