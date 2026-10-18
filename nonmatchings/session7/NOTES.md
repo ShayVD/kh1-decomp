@@ -212,3 +212,9 @@
 - Separate per-field address registers `h+(i*128+K)` need the index in a local (`k7 = k + 28`); `h[i*32+7]` gets distributed by pointer_int_sum.
 - QW packet writers: a u64 constant local declared first and hi stored before lo sets the sd order.
 - Near misses: 00241260 3w (beqzl vs beqz, two insns swapped around the first func_00240ae0 jal), 00219598 17w, 00106ed0 123w.
+
+## w34 (200-300 insn set, second pass)
+- **Main lever: a function-level variable that is also used in another block** is not tied by local-alloc (local-alloc takes only pseudos with exactly one death), which fixes "output takes its input's register" ties. Matched 00140960 (hand/nostrict, rodata 0x48e1f0: both cross products assigned to one function-level `f32 c`), 00168618 (hand/nostrict: the `e->b8 = 1` tails as `t = e->u.w; t |= 0x100; e->u.w = t;` with function-level `u64 t` and a union field), 001bc900 (hand, rodata 0x4900c0: `{ s32 off = i * 12 + 0x70; ... }` removes the a+2 giv; the tier() inline replaced by plain code on function-level t).
+- In local-alloc an input dying in an insn conflicts with that insn's output unless tied; in global-alloc they never conflict.
+- `t = x; if (t < A) t = 1; else if (t < B) t = 2; else t = 3;` gives `xori rX,rX,0x0` + movn/movz (also 00120170, 00141448, 001e8a50).
+- Unchanged: 001502e8 2w, 001e32d8 4w (840 orders), 002177c8 5w, 0010b390 22w, 001fa8b0 17w, 00106000 37w, 001cb440 41w, 001bd090, 0012e1b0, 0010ba98, 001c5ee8. Not attempted: 0011a410, 001e1838, 001bc530, 001c62a0.

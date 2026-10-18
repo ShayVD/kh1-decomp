@@ -1,5 +1,6 @@
 /* func_001bc900: strict, rodata jtbl 0x4900C0 (test with tools/matching/wqb03_rr.py 004900C0). 51 words off (ndiff 30): frame 208 vs 192 because loop 2 makes a giv s6=a+2 for p[i].rot (orig: addu v1,s4,s0; lhu 2(v1)) needing extra s7; b6 tier movn/movz order and lv tier reg a0 vs a1 differ. */
 #include "common.h"
+/* func_001bc900 (s7 w34): MATCH with wqb03_rr.py 004900C0 (rodata jtbl 0x4900C0), mode hand. From the s6 51w draft: (1) loop 2 reads rot as *(u16 *)((u8 *)a + off + 2) with a block-local s32 off = i * 12 + 0x70 (no a+2 giv, frame 192); (2) the size tier written out with the function-level t: t = total; if (t < 75) t = 1; else if (t < 150) t = 2; else t = 3; (gives the param-copy move, xori 0 and t in a1 in the lv block too). */
 typedef struct { u16 pos; u16 rot; u16 id; u16 x6; u8 pad8[4]; } CdPiece;
 typedef struct { s32 x0; u16 n; u16 m; u8 pad8[4]; u8 c12; u8 pad13[0x50 - 13]; char name[32]; u8 pad70[0x70 - 0x70]; CdPiece p[(0xF70 - 0x70) / 12]; } CdEnt;
 typedef struct { f32 x, y, z, w; } V4;
@@ -21,7 +22,7 @@ s32 func_001ba3f0(s32);
 ItemInfo *func_001bb658(s32);
 s32 func_001bb678(void);
 void func_001bc530(V4 *, V4 *, V4 *, CdEnt *);
-static inline s32 tier(s32 x) { s32 r; r = x < 150 ? 2 : 3; if (x < 75) r = 1; return r; }
+/* rodata */
 void func_001bc900(CdEnt *a, Out *o) {
     V4 v;
     s32 cnt[16];
@@ -60,12 +61,14 @@ void func_001bc900(CdEnt *a, Out *o) {
         cnt[it->type] = 1;
         if (it->type != 1) total = total + it->f24;
     }
-    o->b6 = tier(total);
+    t = total;
+    if (t < 75) t = 1; else if (t < 150) t = 2; else t = 3;
+    o->b6 = t;
     if (cnt[2]) {
         flag = 1;
         for (i = 0; i < a->n; i++) {
             if (func_001bb658(a->p[i].id - 1)->type == 2) {
-                if (((a->p[i].rot >> 8) & 0xf) == 4) flag = 0;
+                { s32 off = i * 12 + 0x70; if (((*(u16 *)((u8 *)a + off + 2) >> 8) & 0xf) == 4) flag = 0; }
             }
         }
     } else {
