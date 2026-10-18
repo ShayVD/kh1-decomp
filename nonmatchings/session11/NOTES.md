@@ -145,3 +145,16 @@
   four address registers look like gcse PRE copies (stores in separate blocks at gcse time).
 - Facts: sched2 ties at equal priority prefer a memory-unit li.s over an ALU insn. Tool:
   tools/matching/cf4_s11.py (identical-arm contents x statement orders, in-process).
+
+## s11w12 (00200e28 001e1838 00110618 001fd858): no matches
+- 00200e28 30 -> 27 LCS (w12__00200e28_27w.c, hand/nostrict, hill-climbed) and a natural 38-LCS
+  version (w12__00200e28_38w_natural.c: 00200648 types, header in struct order, one pointer `q`
+  advanced in place). Left: sched2 ALU order of the shifts and li constants.
+- 001e1838 154 -> 110 LCS at the right size (w12__001e1838_110w.c, hand, a probe): byte 0 through
+  a flat u8 index, bytes 1-2 through `Px {u8 c[3];} (*)[512]` (132 at size 960 alone), pi as
+  3.1415928f (gcc 2.96 turns 3.1415927f into 0x40490fda). Left: loop.c giv structure (listed in
+  the file).
+- 00110618 136 (w14 probe stays): the original also spills n2. 001fd858 197: a0 still holds o at
+  the first func_001fe1b8 call in the original.
+- Facts: sched2 hoists insns using only callee-saved registers across calls into the prologue;
+  floods want one packet pointer advanced in place; climbers keyed by line text need unique lines.
