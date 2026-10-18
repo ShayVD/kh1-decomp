@@ -131,3 +131,17 @@
   `{ s32 *q = &D_00642C74[1]; q += k; (*q)++; }` gives the body (12) but loop.c hoists the lui.
 - Facts: cross-jumping runs after sched2, so written-out tails merge only if sched2 ordered them
   the same.
+
+## s11w6 (001c5ee8 001cfc28 001fbcd8 001db718 00135a68): no matches, three closer
+- 001cfc28 12 -> 1 LCS (w6__001cfc28_1w.c, hand): identical one-statement arms
+  `if (vm) m.x = r->x4->x4; else m.x = r->x4->x4;` (a load + store = 2 insns per arm, so they
+  survive to sched2): the m.x store gets its own sched1 block and escapes the stale INSN_TICK of
+  the func_001e98d0 call. Left: sched2 cycle-5 tie at priority 3, `dsll v1,v1,8` vs `li.s $f1,1.0`.
+- 001c5ee8 11 -> 7 (w6__001c5ee8_7w.c): loop.c move_movables stops hoisting the `&ent[i].v[k]`
+  invariants once the loop passes ~105 real insns (threshold drops per move); `e->field` forms
+  bring it to 103 with s11w1's identical arms kept. Left: i/lk a2/a3 swap (lk .1929 > i .1776).
+- 001fbcd8 17 -> 15 (w6__001fbcd8_15w.c, hand/nostrict): neg-block climb; left: global-alloc order.
+- 001db718 40: natural loops hoist &stk[sp]; the phony do/while(0) shape is 68. 00135a68 33: the
+  four address registers look like gcse PRE copies (stores in separate blocks at gcse time).
+- Facts: sched2 ties at equal priority prefer a memory-unit li.s over an ALU insn. Tool:
+  tools/matching/cf4_s11.py (identical-arm contents x statement orders, in-process).
