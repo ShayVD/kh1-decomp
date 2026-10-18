@@ -20,3 +20,11 @@
 - 0020b6a8: sched2 tie-break goes to the insn with more forward dependences; stores with an extra anti dependence sink late.
 - 00169688: right size with rr.py; ours cross-jumps to the tail at 0x169870, original 0x169ef8, and keeps case 10 as `b; ld v1,48(a2); nop`.
 - Facts: pass order jump2 (27) after sched2 (25), dbr 29. A pseudo whose REG_EQUAL constant becomes REG_EQUIV in update_equiv_regs gets its live length doubled for global-alloc priority (00142e30: `z = 0.0f` 8/49 -> 8/76, below d). sched1 interblock priorities are computed per block.
+
+## w2 (1-5 word list B)
+- Matched 0011ab88 (hand): one function-level `s32 m;` takes the masked VU0 flags in two blocks (`m = vsubflags(...) & 0xe0; if (m != 0xe0) goto one;`), so m goes to global-alloc and the asm output no longer wins v0 through a tie.
+- Matched 001ea268 (hand): one counter for the copy loop (`dst[len + i] = src[i]`, `dst[i + len] = 0`); the smaller loop body pushes the dst+len invariant over loop.c's pass-1 hoist threshold.
+- Matched 0025c0f8 fio ioctl (sdk/gcc991111): header of text_00250000_s7_w23.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/0025b218) fixes the slot search; the 1 kept in s5 is a local `one = 1` CSE'd into the case-1 compare, kept alive by `if (one) D_0066C744 = arg;` (artificial but plain C, same family as `two = 2` in 0010a5d0).
+- Near misses: w2__00246ed8_101w.c (one instruction short: original's `addiu v0,s3,48; move s5,v0` gcse PRE copy), w2__0025f338_3w.c (DIntr; needs an asm `.p2align 3`, hack-adjacent; mfc0/mask registers swapped in the loop).
+- Stuck: 001e6038 (sched1: `return 4` v0 set must come after insn 25), 001f2630/001f1fc8 (store-order source orders flip allocation), 0024bce8 (exact global-alloc tie, 3 refs / 56 insns each).
+- Facts: a tied local-alloc pair adds refs (floor_log2(n1+n2)*(n1+n2)/len), so it usually beats a short constant; an entry-block constant in an s-register used only in a compare is a CSE'd local `x = K` that needs another use to survive delete_trivially_dead_insns; `-fsched-verbose=4 -dS` prints each cycle's ready list in rank order (last is issued next); checkfile runs in ~0.2 s.
