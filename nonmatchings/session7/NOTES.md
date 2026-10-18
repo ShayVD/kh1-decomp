@@ -205,3 +205,10 @@
 - Matched 001f0868 (hand/nostrict_nofill, rodata 0x490a20): w10's 2w draft unchanged; it had only been tried in hand/nofill. Test both nofill modes for the text renderers near it (001f1fc8 is 5w in nostrict_nofill).
 - `do { } while (0)` adds no ref weight for global-alloc (refs are weighted by CFG loop depth).
 - Unchanged: 00212cc0 (sel needs 5+ weighted refs), 002287f8 8w, 0023a968 39w, 002040f8 37w, 00103c48 35w, 001fbcd8/0022eef8/00199ac8, 001f18e8.
+
+## w33 (delay-slot pair, small leftovers)
+- Matched 00102a48 (hand): w12's draft plus chained assignments for repeated values (`D[9]=D[15]=D[21]=D[27]=rgba(c,0x40);`), with the xyz stores in index order. Chained assignment controls sched store order when one value is stored several times.
+- 001e0ab0/001e10f8 (4w): pass 1 fill_simple puts `li` into the `b` slot; fill_eager on the bgtz then finds the fall-through owned, the sw can't move, and steal_delay_list_from_fallthrough takes `li v0,4`. Ways to block it: a used label between bgtz and sw (fall-through not owned), $2 live at the target, or an asm/label/jump before the SEQUENCE. Unused labels are deleted early. Only these three sibling functions have the pattern.
+- Separate per-field address registers `h+(i*128+K)` need the index in a local (`k7 = k + 28`); `h[i*32+7]` gets distributed by pointer_int_sum.
+- QW packet writers: a u64 constant local declared first and hi stored before lo sets the sd order.
+- Near misses: 00241260 3w (beqzl vs beqz, two insns swapped around the first func_00240ae0 jal), 00219598 17w, 00106ed0 123w.
