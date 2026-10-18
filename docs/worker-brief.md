@@ -527,6 +527,12 @@ Raw notes, one line per finding, grouped by worker list. The session-6 worker br
 
 ## Session 7
 
+
 The session-7 brief is nonmatchings/session7/BRIEF.md and every worker's findings
 are in nonmatchings/session7/NOTES.md (condensed); docs/matching-tips.md "Session 7
 tips" is the short version.
+
+## Session 8
+
+The session-8 brief is nonmatchings/session8/BRIEF.md and every worker's findings are in
+nonmatchings/session8/NOTES.md; docs/matching-tips.md "Session 8 tips" is the short version.
