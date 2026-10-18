@@ -43,3 +43,6 @@ __pycache__/
 # scratch copies from try harnesses (the build skips dot-files)
 src/**/.*
 *.c.best
+
+# gcc -d RTL dumps from matching work
+*.c.[0-9]*.*
