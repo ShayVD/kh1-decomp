@@ -205,3 +205,18 @@
   ref on Q. 00169688 4w: `.p2align 3,,7` label padding plus case 10's two-copy cross-jump.
   001fbcd8 15: 1250-variant share/split sweep; shared v needs live length > ~100.
 - Facts: > 10 basic blocks makes sched1 use single-block regions for the whole function.
+
+## s11w13 (00120cf8 00105d88 0011b220 00125240 00107c48 0010b390 00110e68): 2 matches
+- 0011b220 (hand): one function-level `RFlg *f` shared by both loops, and the VU0 scale helper
+  with separate dst/src operands (`vscale2(n, n, scale)`, the sceVu0ScaleVector form): every extra
+  asm "r" operand is a use, &n1 24 -> 32 refs, allocated before f.
+- 0010b390 (hand/nostrict): anim branches 2-4 convert into a block-local `f32 c = (f32)...;`, the
+  function-level f only in branch 1 (brute force over block-local/function-level per branch).
+- 00107c48 19 -> 7 (w13__00107c48_7w.c, hand/nostrict, 8 bytes long): the i*16 temp in the dead
+  `arg` variable, `base[n].w0/.w4` with `n++`. Left: the `arg = (Ent16 *)i` copy in both arms.
+- 00110e68 14 -> 5 (w13__00110e68_5w.c, hand): identical arms `if (p) { *p *= x; } else { *p *= x; }`
+  (p 16 refs). Left: the *p load sits after add.s inside the arm.
+- 00120cf8 5, 00105d88 7, 00125240 8: unchanged.
+- Facts: set_preference also records (set X (op Y ..)) first-operand preferences; expand_binop
+  makes the target op0 (`p = base + p` gives `addu p,p,base`); combine merges `x = $a0; y = x`
+  when x dies there (not across blocks).
