@@ -70,3 +70,14 @@ src/<mode>/.WTAG_x.c; checkfile.py can take minutes under load).
 2. Near misses saved (path, LCS words off, what is off).
 3. Stuck, with the reason (the pass responsible, if found), and the levers tried.
 4. New facts, one line each.
+
+## Found so far in session 11 (s11w1: 5 matches in 0x1c0000)
+- u64 flags words as bitfields placed directly in the owning struct (`u64 b0:1, b1:1, rest:62;`)
+  instead of a punning union: the store gets the struct's alias set (001cf960, 001c99a8). Old
+  "FP local-alloc / LUID tie" diagnoses were really union alias-set-0 accesses.
+- A pointer into the middle of a word block as a different symbol (`extern s32 D_002C5950[];
+  fl = &D_002C5950[2];` for D_002C5958) makes a different RTL address, so gcse does not share
+  it with a direct access (001c2ec8).
+- Identical arms of one store each merge before register allocation (no refs gained); arms of
+  two stores survive to jump2.
+- Re-measure in strict mode: 001c3b10 was a strict function all along.
