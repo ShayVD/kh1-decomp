@@ -58,3 +58,11 @@
 - 001cfc28 18w: the late `sw m.x` inherits the stale INSN_TICK of the func_001e98d0 call group; a do{}while(0) after it fixes the store but gives constant 29 v1.
 - 00103c48 19 LCS: div temps (mflo into v1 plus a copy). 001fbcd8 20w: x2/v register choice; 160 reuse combinations. 00166570 21 LCS: block-local pa/pb gives `move s2,s0` but loses m40's address. 00199ac8 24 LCS (session8 w9 draft is the real best; session9 w8 measures 30).
 - Facts: unions used for type punning make every access alias set 0: split the types and keep the union only where punning happens. A store that becomes ready inside a block inherits the stale INSN_TICK of the last call group. A gcse-surviving copy: `o2 = o` in an earlier cse1 path and a load through it after a store (cse2 makes it a move).
+## w10 (0019ab38 00216890 0023a968 0010ba98 00105288 00107c48 0016ea58): no matches
+- 00107c48 29 -> 25 LCS stock (w10__00107c48_25w.c, hand/nostrict, no flags): q and r computed inside `if (*p != 0)` stops strength reduction ("not every iteration") while sched1 still hoists the sll/addu: loop body exact. Left: allocation order (original allocates i first). -fno-rerun-cse-after-loop gives the original prologue (cse2 decides it).
+- 0010ba98 27w (finding file 32w): `w = t->win;` after `w->cb(e, f24)` + `func_0010b6c0(w)` in case 2 fixes the cb arg order, but the final cprop then folds the top PRE copy.
+- 0019ab38 24w: original's `move t4,t0` is a real RTL copy cse1/gcse missed; no shape found.
+- 00216890 24w: arg order from sched2. 0023a968 25w: `P.y + h + t + 20` gives the add order but swaps the multiply chains.
+- 00105288 28w: EE sched1 keeps lw;op;sw chains in source order even when they cannot alias; retyping globals changes nothing.
+- 0016ea58 31w: the loop is exactly matched func_001711d0's body (three `continue` tests): probably a non-static `inline` func_001711d0 (gcc defers inline output; it sits after 0016ea58). Pasting it in gives 65 LCS (global-alloc moves). Promising direction.
+- Facts: 2.96 gcse PRE runs once then one cprop; a PRE copy survives only if w or R is modified later in the same block.
