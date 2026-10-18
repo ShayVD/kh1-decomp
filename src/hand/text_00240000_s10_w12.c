@@ -1,7 +1,8 @@
-/* func_0024be88: 167 words off (right size) in hand; 130 with -fno-cse-follow-jumps -freduce-all-givs. Off: lui-hoisted global address regs s5/s6/s7 permuted (A560/A548/A544), loop hoists constant 7 into s8 where orig rematerializes li 7; the else-if (D_0046A544 == 1) reuses the earlier A544 load (orig reloads; -fno-cse-follow-jumps fixes that part). */
 #include "common.h"
-typedef struct { u32 w; } BEnt;
-typedef struct { s16 lo; s16 id; } BEntH;
+
+/* func_0024be88: entries are bitfield structs (signed 4-bit dx, col, row, s16 id); compiled-out
+   assert at the start of the D_0046A54C != 0 branch (stops cse following the jump). */
+typedef struct { s32 dx:4; u32 col:4; u32 row:4; u32 pad:4; s32 id:16; } BF;
 extern s32 D_0046A540;
 extern s32 D_0046A544;
 extern s32 D_0046A548;
@@ -30,10 +31,9 @@ void func_0024be88(void *a0)
     s32 snd;
     s32 max;
     s32 n;
-    u32 *p;
+    BF *p;
     s16 id;
-    u32 w;
-    s32 col, row, off, x, y, x2;
+    s32 col, row, off, x;
     u32 color;
 
     old = D_0046A540;
@@ -67,9 +67,9 @@ void func_0024be88(void *a0)
         if (++D_0046A544 > max) D_0046A544 = max;
     done:
         if (func_0024be58() & 8) {
-            D_0046A554 = 4;
             D_0046A544 = 0;
             D_0046A548 = 4;
+            D_0046A554 = 4;
         }
     }
     func_0024bce8(&D_0046A544, &D_0046A548);
@@ -88,9 +88,9 @@ void func_0024be88(void *a0)
         if (D_0046A54C == 0) {
             if (D_0046A550 != D_0046A548) D_0046A554 = D_0046A548;
             if (D_0046A544 == 1 && (u32)(D_0046A550 - 3) < 2) D_0046A548 = D_0046A554;
-        }
-        if (D_0046A54C != 0 && D_0046A544 == 1) {
-            D_0046A554 = D_0046A548;
+        } else {
+            do { } while (0);
+            if (D_0046A544 == 1) D_0046A554 = D_0046A548;
         }
         snd = 1;
         D_0046A54C = D_0046A544;
@@ -100,12 +100,11 @@ void func_0024be88(void *a0)
         if (D_0046A548 == 3) D_0046A558 = 1;
         if (D_0046A548 == 4) D_0046A560 = 1;
     }
-    p = D_0046A568[D_0046A540];
-    while (((BEntH *)p)->id != -10) {
-        id = ((BEntH *)p)->id;
-        w = *p;
-        col = (w >> 4) & 0xf;
-        row = (w >> 8) & 0xf;
+    p = (BF *)D_0046A568[D_0046A540];
+    while (p->id != -10) {
+        id = p->id;
+        col = p->col;
+        row = p->row;
         color = 0x80808080;
         if (D_0046A544 == col && D_0046A548 == row) {
             color = 0x8036F040;
@@ -122,12 +121,12 @@ void func_0024be88(void *a0)
             if (off < 7) off = 7 - off / 2;
             else off = 0;
         } else off = 0;
-        x = (col * 2 + ((s32)(*p << 28) >> 28)) * 16;
-        y = row * 32 + 156;
-        x2 = x + 127;
-        if (id > 0) func_001fade0(a0, x2 + off, y + D_00669A70, id, 15, color);
+        x = (col * 2 + p->dx) * 16;
+        row = row * 32 + 156;
+        col = x + 127;
+        if (id > 0) func_001fade0(a0, col + off, row + D_00669A70, id, 15, color);
         if (color == 0x8036F040 && D_0046A544 != 0)
-            func_001fefc8(a0, x + 123, y + D_00669A70 - 4, 26, 26);
+            func_001fefc8(a0, x + 123, row + D_00669A70 - 4, 26, 26);
         p++;
     }
     if (snd == 1) func_0011d768(1);
