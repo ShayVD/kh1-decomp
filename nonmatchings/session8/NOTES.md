@@ -65,3 +65,12 @@
 - Stuck: 00149c80 (global-alloc tie 0.403 vs 0.414), 001cfc28 (x load latency; a `do {} while (0)` hack helps), 00219598 (s-register constants come from register pressure, hoisted by sched2), 001fa8b0, 00214a68, 00116368; no new lead on 001f31a8, 001ba520, 001fbcd8, 0021e120, 0010b390.
 - Facts: check every callee's arity against its asm (tools/matching/arity_s8.py lists the argument registers a function reads first). cse_around_loop replaces a field reload in a rotated loop test with the latch's stored value: a goto loop testing at the bottom keeps the reload. sched2 hoists constants that got s-registers under pressure to the function start. `do {} while (0)` makes a phony loop with no invariant motion. rr.py --diff prints original on the left, checkfile -v ours first.
 - Tools: tools/matching/dump_s8.py SRC [flags] (dumps under $WDIR/d with the file's mode flags), rtl_s8.py (one line per insn view of a dump).
+
+## w8 (25-35 word drafts)
+- Matched 001d63e8 (hand): plain `VM { s32 x0; Sub s; }` struct (w6's), `D.n--` written in both arms of `k < D.n`, `k = i + 1;` in both arms of the key compare.
+- Matched 00232e08 (hand): one variable reused for both byte-swapped halves (`q = a / 10 + 0x824f; q = ((q & 0xff) << 8) | (q >> 8); D.xda = q; q = a % 10 + 0x824f; ...`).
+- Near misses: w8__00105d88_7w.c (was 33w; globals as pointers to one-field structs get hoisted; loop 2 counter/p swap left), w8__001eddc0_13w.c (was 27w), w8__00260610_15w.c (was 25w), w8__001137f8_22w.c (was 27w).
+- 0010a780: our jump2 merges two `lo_sum` sets into one `la t2` (nop in the jal slot); the original split it back into `lui; addiu` after jump2 and dbr filled the slot. Points at a split pass between jump2 and dbr in the original compiler, which would also explain func_00171078. Not fixable from source.
+- 0025b2f0: every save at priority 12; looks like a compiler difference.
+- 00166570: the original recomputes m40[0]/m80[0] after the loop; something keeps gcse from treating them as available. Not found.
+- Facts: a value set before a compare written in both arms moves after the branch in RTL and still lands in the delay slot. One variable reused through temp -> store chains serialises them in sched1. In strict mode an `s32 *` global is reloaded every iteration when the loop stores s32; a pointer to a one-field struct is hoisted. `for (i = 0; n != 0; n--, i++)` counts on n with no copy. Four or-ed shifted terms in one expression are regrouped by combine: build in separate statements.

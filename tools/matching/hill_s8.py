@@ -24,7 +24,7 @@ def valid(p):
         if dv: seen.add(dv)
     fx = [l for l in p if '/*FIX*/' in l]
     return fx == [l for l in stmts if '/*FIX*/' in l]
-tmp = f'{R}/src/{mode}/.w5_h{seed}.c'
+tmp = f'{R}/src/{mode}/.{os.environ.get('WTAG','hc')}_h{seed}.c'
 def score(p):
     open(tmp, 'w').write(s[:a] + '\n'.join(p) + '\n' + s[b:])
     if rr:
