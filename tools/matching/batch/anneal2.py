@@ -1,7 +1,7 @@
 # anneal2.py FILE MODE FNAME ITERS BATCH SEED [extra flags]
 # FILE: prefix, line '/*UNIT*/', then unit (inline helpers + function). Groups of lines between /*P*/ and /*Q*/ are permuted (within group).
 import sys, random, re
-sys.path.insert(0, '/tmp/claude-0/s7/w13/tools')
+sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
 import batch
 f, mode, fname = sys.argv[1:4]
 iters, B, seed = int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6])

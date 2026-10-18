@@ -2,7 +2,7 @@
 # like anneal2 but dependency-aware: lines in a /*P*/../*Q*/ group keep def->use order
 # (a line defining x stays before lines using x and vice versa); /*FIX*/ lines keep their mutual order.
 import sys, random, re
-sys.path.insert(0, '/tmp/claude-0/s7/w35/tools')
+sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
 import batch
 f, mode, fname = sys.argv[1:4]
 iters, B, seed = int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6])

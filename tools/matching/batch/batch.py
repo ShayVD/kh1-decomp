@@ -13,11 +13,11 @@ def score(prefix, fname, bodies, mode, extra=(), tag='b', ro=None):
     src = prefix + '\n'
     for k, b in enumerate(bodies):
         src += re.sub(r'\b%s\b' % fname, f'{fname}__v{k}', b) + '\n'
-    t = ROOT/'src'/mode/f'.w13_{tag}_{os.getpid()}.c'
+    t = ROOT/'src'/mode/f'.batch_{tag}_{os.getpid()}.c'
     t.write_text(src)
     fl = K.flags_for(cfg, str(t.relative_to(ROOT)))
     cc = K.TOOLCHAIN_DIR/fl.compiler/'bin'/'ee-gcc'
-    td = Path(tempfile.mkdtemp(dir='/tmp/claude-0/s7/w13/tmp'))
+    td = Path(tempfile.mkdtemp())
     asm, obj, out = td/'c.s', td/'c.o', td/'c.elf'
     r = subprocess.run([str(cc), '-S', '-x', 'c', *fl.cflags.split(), *fl.ccflags.split(), *extra, '-ffunction-sections', f'-I{ROOT/"include"}', f'-I{t.parent}', '-o', str(asm), str(t)], capture_output=True, text=True)
     t.unlink()

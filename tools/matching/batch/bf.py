@@ -1,5 +1,5 @@
 # bf.py MODE FNAME FILE... : score files (same prefix before /*UNIT*/) in one compile batch
-import sys; sys.path.insert(0,'/tmp/claude-0/s7/w13/tools'); import batch
+import sys; sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__))); import batch
 mode, fn = sys.argv[1:3]; fs = sys.argv[3:]
 P=None; U=[]
 for f in fs:
