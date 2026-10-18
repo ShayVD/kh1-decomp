@@ -1,4 +1,3 @@
-/* func_001f4778 near miss, hand/nostrict: 20 words differ (sequence-diff 25), measured with the return-0 CONTEXT_ONLY 4570 stub below; the real 4570 body also gives 25. Only the order of trunc.w.s/sw pairs in the P..Q vertex block differs: original trunc order Yh, X, Xw, Y32, Yh32, X128, Y, X32, X160, Xw32, Y128, Y160; ours swaps Y/Xw and Y32/X160. 4 hill-climb seeds found nothing better. */
 #include "common.h"
 typedef struct { u64 a, b; } Q;
 typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x68-0x4c]; u32 *x68; u8 pad6c[0x74-0x6c]; f32 sx, sy; u8 pad7c[0x88-0x7c]; s32 x88; u8 pad8c[0x90-0x8c]; s32 x90; u8 pad94[0xb0-0x94]; s32 xb0, xb4; s16 xb8, xba; } Wnd4;
@@ -16,6 +15,8 @@ s32 func_001f45e0(Wnd4 *);
 s32 sceGsSyncPath(s32, u16);
 void func_001220b8(void *);
 
+
+/* func_001f4778: per-vertex transform; shared coordinates copied from the vertex already transformed (cse turns the reloads into register copies) */
 void func_001f4778(Wnd4 *o) {
     u64 *buf;
     Pk4 *s;
@@ -64,44 +65,20 @@ void func_001f4778(Wnd4 *o) {
         sy = o->sy;
         fx = cx;
         fy = cy;
-/*P*/
-        X = fx + (f32)(s->v[0].x - cx) * sx;
-        Y128 = fy + (f32)(s->v[0].y - cy) * sy;
-        s->v[0].x = X;
-        Yh = fy + (f32)(s->v[1].y - cy) * sy;
-        X128 = fx + (f32)(s->v[2].x - cx) * sx;
-        Y = fy + (f32)(s->v[2].y - cy) * sy;
-        Xw = fx + (f32)(s->v[4].x - cx) * sx;
-        X32 = fx + (f32)(s->v[6].x - cx) * sx;
-        s->v[2].x = X128;
-        Y160 = fy + (f32)(s->v[6].y - cy) * sy;
-        Yh32 = fy + (f32)(s->v[7].y - cy) * sy;
-        X160 = fx + (f32)(s->v[8].x - cx) * sx;
-        s->v[1].y = Yh;
-        s->v[6].x = X32;
-        s->v[9].x = X160;
-        s->v[3].x = X128;
-        s->v[0].y = Y128;
-        s->v[7].y = Yh32;
-        s->v[6].y = Y160;
-        s->v[3].y = Yh;
-        s->v[7].x = X32;
-        s->v[1].x = X;
-        s->v[2].y = Y;
-        s->v[8].x = X160;
-        s->v[5].y = Yh;
-        s->v[4].y = Y;
-        s->v[11].y = Yh32;
-        s->v[4].x = Xw;
-        Y32 = fy + (f32)(s->v[8].y - cy) * sy;
-        s->v[10].y = Y32;
-        Xw32 = fx + (f32)(s->v[10].x - cx) * sx;
-        s->v[9].y = Yh32;
-        s->v[10].x = Xw32;
-        s->v[8].y = Y32;
-        s->v[5].x = Xw;
-        s->v[11].x = Xw32;
-/*Q*/
+#define TX(k) s->v[k].x = fx + (f32)(s->v[k].x - cx) * sx
+#define TY(k) s->v[k].y = fy + (f32)(s->v[k].y - cy) * sy
+        TX(0); TY(0);
+        s->v[1].x = s->v[0].x; TY(1);
+        TX(2); TY(2);
+        s->v[3].x = s->v[2].x; s->v[3].y = s->v[1].y;
+        TX(4); s->v[4].y = s->v[2].y;
+        s->v[5].x = s->v[4].x; s->v[5].y = s->v[1].y;
+        TX(6); TY(6);
+        s->v[7].x = s->v[6].x; TY(7);
+        TX(8); TY(8);
+        s->v[9].x = s->v[8].x; s->v[9].y = s->v[7].y;
+        TX(10); s->v[10].y = s->v[8].y;
+        s->v[11].x = s->v[10].x; s->v[11].y = s->v[7].y;
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     func_00266f38(func_00266c08(2), u);

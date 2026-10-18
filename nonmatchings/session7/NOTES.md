@@ -116,3 +116,11 @@
 - 0010c720 at 12w (hand): an empty `do { } while (0);` before `p = *pp;` is a full sched1/sched2 barrier (plain C, like a compiled-out assert), which fixes most of the prologue order. Left: `lw s1,0(s8)` before the dli/dsll chain, `move a2,t0` before the saves, and beqz/beqzl in both switch trees (depends on liveness down the call path; removing the func_0010c5c8 call flips tree 2).
 - 001ffb30 at 226w (hand/nostrict) with the right size and frame: `ub = (u32)buf & 0x0fffffff; ub |= 0x80000000;` (one variable set twice) gives the original stack slots. Left: store schedule; constants 22/66/67 hoisted into s5-s7 in the original.
 - 00102118 still 28w. An extra `move` comes from copying a pointer in an earlier block (`o2 = o;`) and loading through o2: CSE pass 1 misses it, gcse substitutes, CSE pass 2 turns the load into a copy. Here it lands before the float conversion, not after it (CSE does not follow the then-arm's jump).
+
+## w22 (2-3 word near misses)
+- Matched 001cf3e0 (hand, not nogcse): `t = base;` once before the loop, and inside it `t = base; func_00155be0((u8 *)t + *(s32 *)((u8 *)t + i * 4 + 8)); t = 0;`. t set twice in the loop stops loop.c hoisting and strength reduction; the mention outside makes cse keep t canonical; the copy fills sched2's first cycle.
+- Matched 001f4778 (hand/nostrict): write the packet vertex by vertex, transforming each coordinate in place (`TX(k)`/`TY(k)`), and copy shared coordinates from the vertex already done (`s->v[1].x = s->v[0].x;`); cse turns the reloads into copies and the natural order gives the original store order.
+- r5900 dual issue: an insn made ready by a cost-0 anti-dependence issues in the same cycle unless another insn takes that cycle's first slot.
+- Every insn after a call depends on the return-value copy, so whatever sched1 moved into that block issues right after it (001e6038, 3w: `return 4` value hoisted into block 0, -fno-sched-interblock fixes it but breaks the lui hoists).
+- loop.c hoists a cheap invariant only if threshold*savings*lifetime >= loop insns (threshold about 2*(1+free regs) without calls); in big loops it moves only in the rerun pass, after giv init (001ea268, 3w).
+- 0011ab88 (3w, v0/v1 swap) and 001f2630 (3w) unchanged. ee-gcc writes no -d dumps for files with inline-asm helpers like 0011ab88's.
