@@ -81,3 +81,16 @@ src/<mode>/.WTAG_x.c; checkfile.py can take minutes under load).
 - Identical arms of one store each merge before register allocation (no refs gained); arms of
   two stores survive to jump2.
 - Re-measure in strict mode: 001c3b10 was a strict function all along.
+
+## More session-11 levers (matches since the first note)
+- Reuse ONE variable for a value and quantities derived from it (`n = x; n = (n + 15) / 16;` and
+  later the index): one pseudo, no preference leak (00260610). One function-level variable for a
+  value computed in two blocks (001fb428).
+- Accumulators (`a += dy`) instead of `j * dy`: gcse cprop never propagates a copy into a mult
+  insn (00103c48). An s32 parameter cast to the pointer local and reused as the loop counter
+  (`f(s32 i) { T *arg = (T *)i; for (i = 0; ...)`) gives a `move aN,a0` in the first slot.
+- volatile on a subset of struct fields orders those stores against each other only
+  (sceSifCallRpc); a struct without a u16 member to drop an alias conflict (00101bb8); read the
+  global directly instead of through a pointer local (001b9f78); identical arms on a live pointer
+  around a single test to add refs to one hoisted constant (00169f28); count-up fill loops that
+  loop.c reverses (001f31a8).
