@@ -94,3 +94,11 @@
 - `t = k < 8;` before calls then `if (t) switch (k)` reproduces an sltiu hoisted above them. A duplicated tail call wrapped in a static inline is not cross-jumped. A macro (not inline) keeps &v sp-based.
 - Separate identical case bodies give equality tests instead of a range test. Re-tests in delay slots point to jump threading (-fno-thread-jumps helps 00169688 partly: 9w).
 - 0x166xxx-0x169xxx is nostrict.
+
+## w18 (giant functions)
+- Matched func_00259698 (libkernl printf engine, sdk/gcc991111, rodata jump table D_004921A0): the two fmt registers come from gcse PRE; one common `fmt++` after the if/else (not one per case) and `fmt[2]` read before the digit test.
+- 2.96 gcse moves loads/stores only for fixed-address memory, and no copy propagation runs after PRE, so PRE copies survive.
+- Inline helpers that reassign their params (`x = x*16 + K`) give the original's `move` + in-place addiu (combine leaves duplicate shifts, post-reload CSE turns them into moves); for *384 pass `col*24` into a `*16+8` helper.
+- Writing the final store twice, with `return;` in one branch, keeps sched2 from mixing it into the epilogue (jump2 merges the copies).
+- Near misses: 0010c720 26w (prologue order, beqz/beqzl slots in both switch trees), 00102118 28w (`lw s0,16(s0)` vs `move s0,s3`; every copy variant propagates back), 001ffb30 259w (size 1280 vs 1288, frame 96 vs 112: a direction only; the first stores v[16].y / v[21].x right after the Y/R computations give the 0x0fff spill).
+- 001a7c50 is a two-register allocation-priority swap; 0010d470, 001f5fe0, 00110618 not attempted in depth.
