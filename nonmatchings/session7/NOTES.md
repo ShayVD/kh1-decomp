@@ -146,3 +146,11 @@
 - Matched (hand): 00240910 (`r = 0;` before the range test; each arm `if (D.used[N]) { p = &D.ent[N]; goto set; }`, then `return r; set: r = p; return r;` — a shared `set:` label is not if-converted), 00181fe0 (index loop `e = &D[i]`, not a pointer walk: the `move vX,sN; addiu sN,vX,K` step is loop.c's giv), 001cb3c0 (`extern u8 *D_00388480[]`, a pointer array, drops the strict-alias dependency on later s32 loads; tbl store as `((u16 *)b)[8 + n*256 + k]`), 001763f0 (`base = (s32)h; ...; h = (H63 *)base;` makes base the cse class head).
 - Matched (hand/nostrict): 001cf348 (w22's 001cf3e0 shape with `s32 n`), 001cd600 (VM handler family: union view, stack values into f32 locals first, then `o2 = s->obj;` so the reload survives as a copy).
 - Near miss 001df9c0 6w (hand/nostrict). Unchanged: 00176c60 18w, 0010ed20 4w, 001e3a00 4w, 00249718 12w, 00113e28 8w, 00125240 8w, 00214a68 22w, 002376c8 37w (k==1/k==3 if-converted, k==2 a branch).
+
+## w25 (VU0 renderers as C)
+- Matched func_00115940 (hand) and func_001606d0 (4,332 bytes, hand/nostrict) as C + VU0 `#define` macros with operands (VSUB_MAC, VU_LOAD_MTX, VU_MUL_MTX); both removed from the .s stand-ins.
+- func_001b8198: gcc shell, hand-written loop bodies (20 `addi`, dead `paddw` before `lui`, `bnez; nop` where gcc would movz, 36 raw `c2` words, fixed t1-t9 roles, leaf). Not attempted.
+- A cfc2 MAC-flag test needs `"=&r"` plus `register s32 r asm("$2")` outputs; either alone fails.
+- `d < 0 && d >= -2` folds to sltu; `switch (d) { case -1: case -2: }` gives bgez+slti.
+- Only integer form `(i << 6) + (u32)base` gives `addu rd, shift, base`; pointer arithmetic puts the base first.
+- A pointer declared inside the loop body stops strength reduction of that giv. An s8 union byte gives one andi; a u8 gives lbu+andi+andi 0xff. A 4-byte u8 struct copied by value gives lwl/lwr/swl/swr.

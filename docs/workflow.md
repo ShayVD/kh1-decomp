@@ -422,15 +422,19 @@ found that the next session needs:
 
 ## Session 7: what changed
 
-- **Hand-written asm exported** with tools/asm_export.py: src/asm/vu0_render_{1,2,3}.s
+- **Hand-written asm exported** with tools/asm_export.py: src/asm/vu0_render_{1,2}.s
   (VU0 renderers func_001b8198, 001b6910, 001b1ab8, 001afac0, 001b3870, 001ab0e0,
   001ae010, 001606d0, 00115940), src/asm/text_001aa1f8.s (sq $zero clears, the
   func_001bfac8 context switch), src/sdk/libkernl_asm.s, src/sdk/libkernl_exc.s.
   Caveat found later in the session: the ppp Tail-draw functions, which look just
   like the renderers (gcc frame, VU0 runs between C), matched as **C with VU0
   helpers as `#define` macros of inline asm** (src/hand/nostrict/text_00180000_s7_w11.c).
-  The renderers in vu0_render_{1,2,3}.s are probably C of the same kind; they are .s
-  stand-ins until someone rewrites them (they are 1,000-3,100 instructions each).
+  Later still, func_00115940 and func_001606d0 matched as C + VU0 macros
+  (src/hand/text_00110000_s7_w25.c, src/hand/nostrict/text_00160000_s7_w25.c) and
+  left the .s. func_001b8198 is different: only its shell is gcc; its ~10 render
+  loop bodies are hand-written (`addi`, dead MMI writes, unfilled delay slots, raw
+  `c2` words, fixed t1-t9 roles), probably register-asm variables plus large
+  `__asm__` blocks. The other renderers in vu0_render_{1,2}.s are untested.
 - **tools/matching/flagsweep.py**: single-flag sweep over drafts and modes
   (docs/toolchain.md "Session 7"). `KH1_EXTRA_CCFLAGS` in tools/checkfile.py.
   The draft's file name must contain the 8-digit address.
