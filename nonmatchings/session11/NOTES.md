@@ -158,3 +158,21 @@
   the first func_001fe1b8 call in the original.
 - Facts: sched2 hoists insns using only callee-saved registers across calls into the prologue;
   floods want one packet pointer advanced in place; climbers keyed by line text need unique lines.
+
+## s11w11 (001bd090 00106ed0 00107548): no matches; 001bd090 is NOT a compiler difference
+- 001bd090 74 -> 68 LCS (w11__001bd090_68w.c, hand): the 69-block is exact with
+  `func_001ba3f0(68); do { } while (0); t = func_001ba3f0(69); k = 5; l.a = 3; l.cnt = 0;
+  if (t > 0) { l.a = k; i = 1; }` (k and the dead `i = 1` are unnatural). Traced in dumps and gdb:
+  2.96 runs if-conversion after jump1, after cse2, and as the "ce" pass after life1/combine. The
+  original is ce's output, which needs (1) a one-insn then-arm at ce time (5 already in a pseudo),
+  (2) both early passes to fail (a second then-arm insn, dead, that life1 deletes), (3) insn_b not
+  right before the jump (the `l.cnt = 0` store between), so noce_try_cmove_arith reloads l.a and
+  postreload makes it `li v0,3`, keeping the first store. The `move v1,zero` is ce's fresh zero
+  pseudo (no cse after ce). Open: the natural source for "pre-loaded 5 + dead extra arm insn".
+  volatile makes ce refuse (side_effects_p).
+- 00106ed0 71 -> 70 (w11__00106ed0_70w.c, right size and frame): v[4] as
+  `{ s32 o = i * 32 + 16; *(f32 *)(o + (s32)q8) = *p19; }`, v[0] base-first `(s32)q8 + o0`
+  (rtx_equal_p is order-sensitive, so reload_cse does not turn the second add into a move).
+  Left: i (.85) vs p7 (.80) in global-alloc.
+- 00107548 118 -> 114 (w11__00107548_114w.c, hand/nostrict): same address trick for Pt x/y/z.
+- tools/matching/hc_s11.py now respects `*p` loads/stores (w11's version).

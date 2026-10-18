@@ -2,7 +2,7 @@
 import os, sys, re, random, io, contextlib, tempfile, shutil
 sys.path.insert(0, '/home/claude/kh1-decomp/tools/matching')
 f, fn, iters, seed = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]); random.seed(seed)
-_d = tempfile.mkdtemp(prefix='s11w2hc_')
+_d = tempfile.mkdtemp(prefix='s11hc_')
 if os.environ.get('RO'):
     import lchkro_s10 as L; L.tempfile.mkdtemp = lambda *a, **k: _d
 else: import lchk_s10 as L
@@ -20,6 +20,13 @@ def info(l):
 INF = {l: info(l) for l in stmts}; op = {l: i for i, l in enumerate(stmts)}
 def valid(p):
     pos = {l: i for i, l in enumerate(p)}
+    import re as _re
+    for x in p:
+        m = _re.match(r'\s*\*(p\d+) = 1\.0f;', x)
+        if not m: continue
+        for y in p:
+            if y is x: continue
+            if _re.search(r'=[^;]*\*' + m.group(1) + r'\b', y) and pos[y] > pos[x]: return False
     for x in p:
         dx, ux, _ = INF[x]
         for y in p:
@@ -28,7 +35,7 @@ def valid(p):
             dep = (dx and (dx in uy or dx == dy)) or (dy and dy in ux) or ('/*FIX*/' in x and '/*FIX*/' in y)
             if dep and pos[x] > pos[y]: return False
     return True
-tmp = os.path.join(os.path.dirname(os.path.abspath(f)), '.s11w2_hc%d.c' % seed)
+tmp = os.path.join(os.path.dirname(os.path.abspath(f)), '.s11w11_hc%d.c' % seed)
 def score(p):
     open(tmp, 'w').write(s[:a] + '\n'.join(p) + '\n' + s[b:])
     o = io.StringIO()
