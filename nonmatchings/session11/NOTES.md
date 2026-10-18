@@ -106,3 +106,14 @@
 - 00200e28 30: not seriously attempted (nostrict single-block flood).
 - Facts: read global-alloc priority straight off .lreg "used R times across L insns"; a reload
   scratch register adds an output dep that reorders argument moves (check "Reloads for insn").
+
+## s11w7 (00103c48 0010ba98 00107c48 00105288 00166570): 1 match
+- 00103c48 (hand): z loop with accumulators `a += dy` / `b += dx` instead of `j*dy` / `m*dx`
+  (19 -> 11), reusing `i` as the row counter (-> 2), table value read before `sc` (-> 0).
+  gcse cprop never propagates a copy into a mult insn, so `dy = tmp; j * dy` kept the copy and the
+  divide temp went `mflo v0; move t6,v0`; with an add use it is folded and gets `mflo t6`.
+- 00107c48 25 -> 19 LCS (w7__00107c48_19w.c, hand/nostrict, no flags): `s32 func_00107c48(s32 i)
+  { Ent16 *arg = (Ent16 *)i; ... for (i = 0; ...)` (param reused as counter) gives the original
+  prologue's `move a1,a0` slot. Left: i ends in a2 (the i*16 temp takes a0 in local-alloc).
+- 0010ba98 21: cprop pass 2 folds the PRE copy of t->win. 00105288 28: local optimum (4000 moves).
+  00166570 21: original recomputes sp+64/sp+128 after the loop; `move s6,s2; move s2,s0` missing.
