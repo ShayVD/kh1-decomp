@@ -176,3 +176,18 @@
   Left: i (.85) vs p7 (.80) in global-alloc.
 - 00107548 118 -> 114 (w11__00107548_114w.c, hand/nostrict): same address trick for Pt x/y/z.
 - tools/matching/hc_s11.py now respects `*p` loads/stores (w11's version).
+
+## s11w14 (00249718 00202678 001eddc0 00217000 0024c950 0021e120 0023a968): no matches
+- 0023a968 22 -> 10 LCS (w14__0023a968_10w.c, hand, RO 4914a0, CONTEXT_ONLY func_0023a720 stub):
+  one function-level `s32 last2 = p.y + h + t + 20;` used in case 3 and case 4 (global pseudo, no
+  call crossing) stops local-alloc tying the +20 to a multiply chain; case 3 exact. Left: case 4's
+  three address locals rotated (a3/a2/t0 vs t0/a3/a2), p.y load after the sll.
+- 001eddc0 finding (58w, register permutation only): one s32 `f` carries a.r, the channel-0 sum
+  and the channel-1/2 conversions: exact opcodes and branch choices. Best stays w2's 8.
+- 00217000 finding (12w): `tbl = D_003F2C40;` in the head block, only the x10 load in identical
+  arms: the split la in one register as in the original. Best stays 8.
+- 00249718 3 (~45 shapes), 00202678 7, 0024c950 9, 0021e120 12: unchanged.
+- Facts: -fdelete-null-pointer-checks folds `if (o)` after an o-> dereference (identical arms must
+  test an undereferenced pointer); combine folds la + addu + lw into `lw sym+off(reg)` via the
+  lo_sum's REG_EQUAL unless a block boundary or a second use intervenes; in identical arms sched1
+  counts head-block values as ready at cycle 0.
