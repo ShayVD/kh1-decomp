@@ -422,14 +422,14 @@ found that the next session needs:
 
 ## Session 7: what changed
 
-- **Hand-written asm exported** with tools/asm_export.py: src/asm/vu0_render.s
+- **Hand-written asm exported** with tools/asm_export.py: src/asm/vu0_render_{1,2,3}.s
   (VU0 renderers func_001b8198, 001b6910, 001b1ab8, 001afac0, 001b3870, 001ab0e0,
   001ae010, 001606d0, 00115940), src/asm/text_001aa1f8.s (sq $zero clears, the
   func_001bfac8 context switch), src/sdk/libkernl_asm.s, src/sdk/libkernl_exc.s.
   Caveat found later in the session: the ppp Tail-draw functions, which look just
   like the renderers (gcc frame, VU0 runs between C), matched as **C with VU0
   helpers as `#define` macros of inline asm** (src/hand/nostrict/text_00180000_s7_w11.c).
-  The renderers in vu0_render.s are probably C of the same kind; they are .s
+  The renderers in vu0_render_{1,2,3}.s are probably C of the same kind; they are .s
   stand-ins until someone rewrites them (they are 1,000-3,100 instructions each).
 - **tools/matching/flagsweep.py**: single-flag sweep over drafts and modes
   (docs/toolchain.md "Session 7"). `KH1_EXTRA_CCFLAGS` in tools/checkfile.py.
