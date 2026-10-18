@@ -358,3 +358,11 @@
 - 0019f1f0 (7): confirmed the empty bltz slot needs a CODE_LABEL right after bltz (own_thread_p fails); no natural source.
 - 001f18e8 (16): tag = p+5 hoisted above the 2nd call since its pseudos cross calls; `do {} while (0)` after the call holds it but also the col conversion (32w).
 - Facts: sched1 gives insns touching non-call-crossing pseudos an anti-dep on the last call. Loop notes are a full sched1 barrier. loop.c moved_once needs 2x savings in the outer loop. Sets after a loop exit used in another block are never moved. REG_BR_PROB: EQ-zero test of a load 3999, slt vs nonzero constant 5000 (fills from target, beql). Each division gets its own li pseudo and trap_if.
+
+## s11w27 (00120cf8, 00105d88, 00125240, 001fe1b8, 001fa8b0)
+- 001fe1b8: 59 -> 2w (w27__001fe1b8_2w.c, hand, right size 588). Param `s32 a` reused; `s32 r = 0; Scr *o = (Scr *)a; ... a = r; return a;` makes a cse's canonical register (lives longest), keeping `move a1,a0`. Mask and temp split per part (f/g, t/u); part-2 limit `a = (o->cc - o->ce) << 4;`. Left: first load `lhu a0,210(a0)` goes through P; original uses o (a1).
+- 00120cf8 (5): the original hoists `li 3` in loop pass 2 and `li 1` in pass 1; ours both in pass 1. `j < (n = 3)` with `k % n` gives the right registers but the li stays in the loop.
+- 00105d88 (7): global-alloc priority (loop-2 pointer 2.08 vs counter 1.27); original uses one counter register in loops 1 and 2.
+- 00125240 (8): FP local-alloc; needed post-sched1 lives: 1e4 < x/6, -1e4 > x/6, 1.0 > x/4 and > 1.5 * (-1e4).
+- 001fa8b0 (12): no gain.
+- Facts: cse copy swap only fires when the previous insn sets the copy source; canonical register depends on REGNO_LAST_UID. Splitting a many-block mask/temp per region halves refs (global-alloc priority lever). update_equiv_regs doesn't move a constant within one block.
