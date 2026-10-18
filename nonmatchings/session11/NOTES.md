@@ -351,3 +351,10 @@
 - 0024c950 (9, nofill): dead set of a live variable moves if-conversion to ce and gives the load v0, but ce adds `xori v0,v0,0` and kk lands in v1 (13w).
 - 001eddc0 (8), 00265608 (9): no gain; gcc991111's sched has no RTL-earliest effect and no -fsched-verbose.
 - Facts: an empty `do { } while (0)` is a sched1 barrier (loop note), not a block boundary, for ordering constants. In store floods sched1 issues li's in RTL order and local-alloc ranks them by li-to-store distance, so a fresh climb from index order can find a better basin. A pointer to a constant symbol live across a call is not folded into `lw sym+off(reg)` and takes an s-register.
+
+## s11w29 (0019f1f0, 00202678, 00214a68, 001fbcd8, 001f18e8), no gains
+- 00214a68: w29__00214a68_14w_loopshape.c (nosi, 192 vs 184) has the original inner-loop shape: a real `do {} while (1);` puts the lui in the inner preheader (outer move refused by moved_once); `q = &D_00642C74[1];` before the `*p == 0` test and `q += k; (*q)++;` after it keeps lo_sum/addu in the loop. Left: i/k<<2 registers swapped; the `i >= 48` exit has REG_BR_PROB 5000 so reorg fills from the target (beqzl).
+- 00202678 (7): o loads can't pass the a/100, b/100 spill stores (nostrict); the original needs 6 loads before the first div, sched1 allows 4. Strict gives the right load placement but 148w.
+- 0019f1f0 (7): confirmed the empty bltz slot needs a CODE_LABEL right after bltz (own_thread_p fails); no natural source.
+- 001f18e8 (16): tag = p+5 hoisted above the 2nd call since its pseudos cross calls; `do {} while (0)` after the call holds it but also the col conversion (32w).
+- Facts: sched1 gives insns touching non-call-crossing pseudos an anti-dep on the last call. Loop notes are a full sched1 barrier. loop.c moved_once needs 2x savings in the outer loop. Sets after a loop exit used in another block are never moved. REG_BR_PROB: EQ-zero test of a load 3999, slt vs nonzero constant 5000 (fills from target, beql). Each division gets its own li pseudo and trap_if.
