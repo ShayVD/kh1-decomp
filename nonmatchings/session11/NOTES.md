@@ -244,3 +244,14 @@
 - Facts: insns made ready in the same cycle as the one just scheduled are appended unsorted
   (RTL-earliest wins over higher priority); INSN_REG_WEIGHT ranks before the dependence class;
   `-fsched-verbose=9` prints dep count / priority / cost per insn.
+
+## s11w16 (00199ac8/0019ab38 00216890 0010ba98 00166570 00105288): no matches, no new bests
+- 0010ba98 21: 16384 `w->` vs `t->win->` x reassignment combinations; floor 21. The final gcse
+  CPROP rewrites the PRE copy `215 = w` back to w at three uses; cprop only skips a use if the reg
+  is set earlier in that block, or the copy's source/destination is set later in its own block.
+- 00199ac8/0019ab38 22: cse folds `du = k` within one block; reload_cse does not make `li 0` a
+  copy; the original's `move t4,t0` must be created after constant propagation.
+- 00216890 24: sched2 argument-move ties: moves reading a register get an extra forward dep on
+  the first insn after the next call (constants do not), deciding order and the bnel.
+- 00105288 28: sibling pointer types give 69; the original hoists h[12]/h[13] above a store.
+- 00166570 21: m40/m80 direct: 56; frame addresses are not PRE expressions (cse or loop keeps them).
