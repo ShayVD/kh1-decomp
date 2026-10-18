@@ -74,3 +74,11 @@
 - 0025b2f0: every save at priority 12; looks like a compiler difference.
 - 00166570: the original recomputes m40[0]/m80[0] after the loop; something keeps gcse from treating them as available. Not found.
 - Facts: a value set before a compare written in both arms moves after the branch in RTL and still lands in the delay slot. One variable reused through temp -> store chains serialises them in sched1. In strict mode an `s32 *` global is reloaded every iteration when the loop stores s32; a pointer to a one-field struct is hoisted. `for (i = 0; n != 0; n--, i++)` counts on n with no copy. Four or-ed shifted terms in one expression are regrouped by combine: build in separate statements.
+
+## w9 (large functions A)
+- Matched 0022eef8 (hand): generic variables reused across blocks: the item id `D_00646A0C[D_00646A14]` in `idx` (the list loop's variable), the func_001ee708 result and the later `a0->x90` in `id`; `D_00304BE8->items[idx]` instead of a byte offset.
+- Matched 00106000 (hand, jtbl 0x48cc80): rgba inline computes `w = r | 1<<32` before `v = b<<16 | g<<8`; the else store via a block-local `u64 *q = &D_002A6658; *q = rgba(&D_002BC070);` in both branches; case 2 order `w=; D[4]=; D[6]=; x=; y=; D[22]=; D[23]=`.
+- Near misses: w9__00199ac8_24w.c, w9__0019ab38_24w.c (hand/nostrict_nofill; `k = 0` just before the while loop), w9__00103c48_19w.c (loop index renames fix the packet loop; div/div1 order left), w9__00107c48_29w.c (right size; loop.c strength-reduces i*16, original recomputes it).
+- Stuck: 00219f98 (row blocks need `addu a1,k8,base; move v1,a1`; every form gives a `la` macro), 002040f8 (really 19w by LCS), 00202678 (really 7w: one sched1 decision, o->xb4 load priority 5).
+- Facts: count large drafts by LCS (tools/matching/lcs_s8.py). One register where two variables seem used means a reused generic name. Brute-force loop index names over all loops. Of two divisions in a row the first gets div1. Statement order inside a static inline decides sched for every caller. A `&sym[k]` pointer is a `la` macro; split lui/addiu/addu needs address legitimization or a separate symbol value. Declaration order of unused locals matters.
+- Tools: tools/matching/lcs_s8.py (checkfile with LCS word diff), prio_s8.py (global-alloc priorities from -dl/-dg), cc_s8.py (compile with a mode's flags, dumps in $WDIR/d).
