@@ -255,3 +255,18 @@
   the first insn after the next call (constants do not), deciding order and the bnel.
 - 00105288 28: sibling pointer types give 69; the original hoists h[12]/h[13] above a store.
 - 00166570 21: m40/m80 direct: 56; frame addresses are not PRE expressions (cse or loop keeps them).
+
+## s11w18 (00106ed0 00107548 001c62a0 00200038): no matches, two big drops
+- 00106ed0 70 -> 41 LCS (w18__00106ed0_41w.c, hand, right size/frame): then-block offsets
+  (k+92, k+44, k+60, k+76) block-local inside the `if` (sched1 interblock lifts them in priority
+  order); prologue `D_00494BB0 = h[0]; sub = ...; D_002A6C50 = 0;` then .a/.b/.d/.c;
+  `q = D_00494BAC; q8 = q + 8;` assigned after `*p7 = 1.0f` (fixes i vs p7). Left: s0/s1 swap,
+  k+60/k+76 swap, early D_00494BA8 load, prologue flood order.
+- 001c62a0 238 -> 153 (w18__001c62a0_153w.c, hand/nostrict, right size): j loop as two pointers
+  advanced in place `{ f32 *v = &e->v[5]; f32 *d = &D_0037A380.e.x; for (j..) { *v++ += add[j];
+  *d++ = set[j]; } }`; `e->` vs `D_0037A380.ent[i].` greedily per field. 120 LCS but 12 bytes
+  long: w18__001c62a0_120w_size.c (the original's giv grouping).
+- 00107548 114, 00200038 254: unchanged (the original's q+416 giv not reproduced).
+- Facts: assigning a pointer local after a store instead of as an initialiser moves an index's
+  last use in sched1 (fixed a global-alloc order); tools/matching/togm_s11.py greedy-toggles
+  alternative spellings per occurrence.
