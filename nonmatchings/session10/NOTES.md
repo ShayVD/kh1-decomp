@@ -118,3 +118,9 @@
 - 00200e28 44 -> 30 LCS (r2_4__00200e28_30w.c): old structure with QH header and hill-climbed temps.
 - 001fe1b8 59: cse1 swaps an adjacent `P = a0; O = P` param copy; combine merges it when P dies. 00135a68 33: four address registers look like loop/giv copies.
 - Facts: a `continue` loop inside a static inline keeps frame args unhoisted and threads fails to the increment; a value-returning inline forces `move v0,0; b join`. Floods: plain index order, then climb only header/temporaries/first vertices.
+## r2_6 (nofill-mode drafts 0024c950 001c53c8 001f5fe0 001c62a0): no matches
+- 001c53c8 78 -> 42 LCS (r2_6__001c53c8_42w.c, hand/nostrict_nofill, right size): the post-call `n = e->next` reload as a block-local `{ Elem *m = e->next; ... }` in case 0/1 and case 2. Left: an s5/s6/s7 permutation (a loop.c base copy r195 outranks &q20/&q30); FP x/c0/c1 in f4/f0/f1 vs f0/f1/f2 because expand_preferences gives c0/c1 dt's caller-saved preferences.
+- 0024c950 9 LCS: local-alloc kk .57 > address pair .42 > load .2; the load needs a hard-reg suggestion or 4+ refs. 60 orders, 8 types, reuse of 8 locals, flag sweep: nothing.
+- 001f5fe0 276 LCS hand/nofill with rodata at 0x490c70 (tools/matching/lchkro_s10.py): the then-blocks must differ somewhere before jump2 (uniform blocks over-merge). Jump2 cross-jumps only against the target label's fall-through predecessor.
+- 001c62a0 242: loop.c giv structure read off the original (four reduced givs t4, t7, t5, s4); ldl/sdl on both sides rule out aligned types.
+- Facts: global.c expand_preferences runs before prune_preferences, so a call-crossing pseudo leaks caller-saved preferences to its feeders. Any dying input can be tied to the output in local-alloc (lui/addiu pairs add refs). A post-call reload into the same variable makes one long pseudo; the original often used a fresh block-local one.
