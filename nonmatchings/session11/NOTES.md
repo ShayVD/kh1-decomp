@@ -321,3 +321,12 @@
 - 001cfc28 (1): sched2 tie between li.s and `dsll v1,8` on every key; sched1 LUID decides; li.s goes at t=2.
 - 00249718 (3): inline `cub(Seg3 *s, k, t, t2, t3)` gives the exact schedule but one-block registers (11).
 - Facts: global-alloc live lengths follow sched1 order, not RTL order. Inline helpers taking (struct base, const index) give fixed-offset loads; a sub-struct pointer keeps addu bases.
+
+## s11w23 (00265608, 0021e120, 001ffb30, 00135a68, 001db718)
+- MATCH 001ffb30 (nostrict): from r2_4's 31w, `p = (PF *)func_00122048(1024, 128); buf = (u64 *)p; p = (PF *)(buf + 2);` (p takes the call value first). That moves p=buf+16 before the 0x0fff0000 constant (29w); a fresh hc_s11 climb of the header gave 2, then swapping the v[1]/v[3] `.u = 424` stores gave 0.
+- Lever: after a call's return copy, the RTL-earliest insn depending on it only by a cost-0 anti-dependence issues in the same cycle, ahead of higher-priority dependents. Set the variable from the call value first to change that.
+- Lever: fix the head of a flood block, then re-climb from scratch; old optima are built around the wrong head.
+- 0021e120: 8w (w23__0021e120_8w.c). Left: the 63 constant li issues after 66 and gets t1; original has 63 right after 0x5000.
+- 00265608 (9): original issues H=(h-1)<<44 right after div, before off[] loads; sched2 priority 7 vs 10/9.
+- 00135a68 (33, 12 bytes short): original needs separate v+i*16 pseudos that reload_cse makes into moves; cse1 always forms one.
+- 001db718 (40): `j = 0; if (X) do {...} while (j < 48 && X);` makes both loops phony like the original, but the X test lands at the loop top (60).
