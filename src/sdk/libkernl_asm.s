@@ -1,4 +1,4 @@
-/* SCE libkernl / libvu0 hand-written assembly (docs/sdk.md Session 6): func_00260738 cache line loop + sync, func_002607e4 a lone jr ra (addr%8==4, so a .s file), func_00265190 MMI strncpy, func_002654f0 VU0 cfc2/ctc2, DIntr (di until Status.EIE clears), func_00260b00 (t9 live across calls). Words with their disassembly (tools/asm_export.py). */
+/* SCE libkernl / libvu0 hand-written assembly (docs/sdk.md Session 6): func_00260738 cache line loop + sync, func_002607e4 a lone jr ra (addr%8==4, so a .s file), func_00265190 MMI strncpy, func_002654f0 VU0 cfc2/ctc2, func_00260b00 (t9 live across calls). Words with their disassembly (tools/asm_export.py). */
 	.set	noreorder
 	.set	noat
 
@@ -206,30 +206,6 @@ func_002654f0:  /* 0x002654F0 */
 	.word	0x03E00008  /* 00265550 jr $ra */
 	.word	0xAC670000  /* 00265554 sw $a3,0($v1) */
 	.end	func_002654f0
-
-	.section	.text.DIntr,"ax",@progbits
-	.globl	DIntr
-	.ent	DIntr
-DIntr:  /* 0x0025F338 */
-	.word	0x40036000  /* 0025F338 mfc0 $v1,c0_sr */
-	.word	0x3C020001  /* 0025F33C lui $v0,0x1 */
-	.word	0x00621824  /* 0025F340 and $v1,$v1,$v0 */
-	.word	0x1060000B  /* 0025F344 beqz $v1,.L0025F374 */
-	.word	0x0003202B  /* 0025F348 sltu $a0,$zero,$v1 */
-	.word	0x00000000  /* 0025F34C nop */
-	.word	0x42000039  /* 0025F350 di */
-	.word	0x0000040F  /* 0025F354 sync.p */
-	.word	0x40026000  /* 0025F358 mfc0 $v0,c0_sr */
-	.word	0x3C030001  /* 0025F35C lui $v1,0x1 */
-	.word	0x00431024  /* 0025F360 and $v0,$v0,$v1 */
-	.word	0x1440FFFA  /* 0025F364 bnez $v0,.L0025F350 */
-	.word	0x00000000  /* 0025F368 nop */
-	.word	0x03E00008  /* 0025F36C jr $ra */
-	.word	0x0080102D  /* 0025F370 move $v0,$a0 */
-	.word	0x0000202D  /* 0025F374 move $a0,$zero */
-	.word	0x03E00008  /* 0025F378 jr $ra */
-	.word	0x0080102D  /* 0025F37C move $v0,$a0 */
-	.end	DIntr
 
 	.section	.text.func_00260b00,"ax",@progbits
 	.globl	func_00260b00

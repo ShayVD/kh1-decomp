@@ -1,4 +1,13 @@
-/* func_0010a780: 69w off (struct diff 28, same size), mode hand/nostrict, func_0010a550 CONTEXT_ONLY above. Fixed from s5 draft: for(i=0;i<nx;i++) loops, case 4 before case 1 in the in-loop switches, header via u64 *q = buf+1. Remaining: header scheduling (cnt in v1, sw of cnt*13+0x70000001 before the sd pair), and the jal in the inner mode==1 loop leaves its slot empty (orig has addiu t2 there) which shifts 0x10ac7c..0x10acdc by one word. */
+/* kh1-decomp session 10, worker w1: func_0010a780 (hand/nostrict), plain C
+   and stock 2.96 gas. CONTEXT_ONLY func_0010a550 above it.
+   The `lui t2; jal; addiu t2,%lo(D_002B67F0)` tail: jump2 cross-jumps the
+   two arms' lo_sum sets into one `la $10,D_002B67F0` (REG_EQUAL), which gcc
+   leaves to gas in a reorder-mode jal. ee-as 2.96 moves the la's addiu into
+   the jal slot only when the symbol is defined earlier in the same file (an
+   undefined extern gets a variant frag: it might be small data). So the
+   original file defined the D_002B67F0 vertex table above this function.
+   It is a CONTEXT_ONLY data definition here (weak, .ctx: the build makes it
+   undefined again, so it resolves to 0x002B67F0). */
 #include "common.h"
 
 typedef int u128 __attribute__((mode(TI)));
@@ -17,7 +26,10 @@ CONTEXT_ONLY s32 func_0010a550(u64 *p, s32 a1, s32 a2, s32 a3, s32 a4, s32 idx, 
     return a1 + 13;
 }
 
-extern u8 D_002B67F0[], D_002B6830[], D_002B6870[], D_002B68B0[], D_002B68F0[];
+/* Values are irrelevant to the match (only the definition matters) and are
+   left zero: the real table stays in the user's ELF. */
+CONTEXT_ONLY f32 D_002B67F0[4][4] = { { 0 } };
+extern u8 D_002B6830[], D_002B6870[], D_002B68B0[], D_002B68F0[];
 extern u8 D_002B6930[], D_002B6970[], D_002B69B0[], D_002B69F0[], D_002B6A30[], D_002B6A70[];
 extern u8 D_002B6AB0[], D_002B6AF0[], D_002B6B30[], D_002B6B70[], D_002B6BB0[], D_002B6BF0[], D_002B6C30[], D_002B6C70[];
 extern u8 D_002B6CB0[], D_002B6CF0[], D_002B6D30[], D_002B6D70[];
@@ -35,10 +47,11 @@ void func_0010a780(Win *win, void *a1, u128 *buf, s32 a3, s32 mode) {
     *buf = 0;
     if (mode == 1) {
         cnt = (nx + 2) * (ny + 2);
+        *(u32 *)buf = cnt * 13 + 0x70000001;
     } else {
         cnt = (nx + ny) * 2 + 4;
+        *(u32 *)buf = cnt * 13 + 0x70000001;
     }
-    *(u32 *)buf = cnt * 13 + 0x70000001;
     q = (u64 *)(buf + 1);
     q[0] = (cnt | 0x8000) | ((u64)a3 << 47) | 0xd000400000000000;
     q[1] = 0x4124124124128;
