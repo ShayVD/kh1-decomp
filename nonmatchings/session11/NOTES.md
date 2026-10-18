@@ -62,3 +62,19 @@
 - Not attempted: 001fb428, 001fa8b0, 001f18e8 (17w: `tag = p + 5` after the 2nd call: no gain).
 - Tools: tools/matching/lc_s11.py (LCS count), ld_s11.py (aligned diff), hc_s11.py (in-process
   hill-climb, ~0.3 s per variant); RO env for rodata, one reused temp dir.
+
+## s11w5 (0025a560 00249718 00202678 00217000 0024c950 00265608 0021e120 00260610 00214a68): 1 match
+- sceSifCallRpc 0025a560 (sdk/gcc991111): client fields pkt, end, arg as `volatile u32`; read
+  `int id = pk->id;` first, then store arg, pkt, id, end. Volatile orders a store only against
+  other volatile accesses, so the plain id store lands between pkt and end. sema/server must not
+  be volatile.
+- 00214a68 16 -> 8 LCS (w5__00214a68_8w.c): inner counter as `s32 *cnt = &D_00642C74[1];`
+  (middle-of-symbol pointer, s11w1's trick) stops gcse sharing the la. Left: loop.c hoists cnt's
+  lui out of the outer loop; i>=48 exit beqzl vs beqz.
+- 00260610 14 -> 4 LCS (w5__00260610_4w.c, sdk/gcc991111): reuse `n` as the handler index in both
+  branches. Left: `size` gets a0 from size+30's preference.
+- 00217000 9 (finding file): `off = sel * 20; cd = D_00642CD8 * 4;` before the identical arms
+  fixes the `move t2,v0`; tbl/off then swap v0/a0. Best stays s7 w29's 8.
+- 00249718 3: all split points, per-arm t2/t3, preloads: global-alloc t3 above t2.
+- 00202678 7 (sched1 2-issue, loads prio 5), 0024c950 9 (kk vs load in local-alloc),
+  0021e120 12, 00265608 9 (OR tree H chain): no change.
