@@ -218,3 +218,10 @@
 - In local-alloc an input dying in an insn conflicts with that insn's output unless tied; in global-alloc they never conflict.
 - `t = x; if (t < A) t = 1; else if (t < B) t = 2; else t = 3;` gives `xori rX,rX,0x0` + movn/movz (also 00120170, 00141448, 001e8a50).
 - Unchanged: 001502e8 2w, 001e32d8 4w (840 orders), 002177c8 5w, 0010b390 22w, 001fa8b0 17w, 00106000 37w, 001cb440 41w, 001bd090, 0012e1b0, 0010ba98, 001c5ee8. Not attempted: 0011a410, 001e1838, 001bc530, 001c62a0.
+
+## w35 (large leftovers)
+- 0010a780 at 27w (hand/nostrict, needs CONTEXT_ONLY func_0010a550): write the u32 header store in each mode branch. Left: the mode==1 inner calls cross-jump into one tail with `la t2; jal; nop` vs the original's `lui t2; jal; addiu t2,%lo` (no installed gas fills it).
+- sched2 keeps sched1's order among ready stores (it renumbers from sched1's output), so fix sched1's order. sched1 puts ready stores whose value register dies there first, in source order; stores of still-live values go after.
+- A long-lived constant variable set before a loop (`u64 one1 = 1;`) becomes a `li` right before its store, which moves the store late. local-alloc runs after sched1, so register choice follows sched1's order.
+- `pc = &g->col; pc[1] = 1;` folds back to `[g+0x18]` (no new dependence) but changes register assignment.
+- Unchanged: 001f1fc8 5w (~60k variants), 00202678 40w, 0019ab38 32w, 00216890 138w (spill slots). tools/matching/anneal3.py: dependency-aware anneal (/*P*/../*Q*/ groups keep def/use order).
