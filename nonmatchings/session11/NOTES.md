@@ -339,3 +339,8 @@
 - 00169688 (4w): gdb on cc1 (has line info) shows find_cross_jump stops at the L_skip label left by the inlined Tail before return; the label is threaded only in jump2's 2nd iteration, after jump_chain is fixed. `if (o->x70 == 2) return 1;` in both copies merges them but moves return-1 into case 10 (424w). w26__00169688_370w_finding.c.
 - 001502e8 (2w): needs life(Q) < life(C) under the fixed 3-element exchange in local-alloc; no source found.
 - Tool: gdb breakpoints on cc1 statics (find_cross_jump, jump_optimize_1) take typed expressions; the 8th jump_optimize_1 call is jump2.
+
+## s11w28 (00106ed0, 001e1838, 001cfc28), no gains
+- 00106ed0: original reuses one register for k+92, k+60, k+28, k+76; only a reused-variable shape (`o` for those then *pd, `w` for k+44 then *pb) gives the original test-block instruction order (w28__00106ed0_86w_order.c, 592 bytes). Registers come out permuted because a variable that dies more than once is never local-alloc'd. That test block + w24's then-block gives 63 at the right size 588 (not saved).
+- 001cfc28 (1w): li.s would need to become ready at t>=8 for dsll to win the sched2 tie on register weight; nothing float is available there.
+- Facts: multiply-set variables that die more than once go to global-alloc after locals. Reusing one variable for a run of temporaries forces their sched1 order through anti/output deps. In sched1, the insn carrying REG_DEAD of a shared base gets weight 0 and wins equal-priority ties; declaration order decides which insn carries the death. Sched2 tie keys usually tie for reg-reg insns, leaving LUID.
