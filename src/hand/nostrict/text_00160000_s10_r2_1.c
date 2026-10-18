@@ -1,5 +1,5 @@
-/* func_0016ea58: 83 words off (right size) in hand/nostrict. Fixed s5 draft semantics (d1<d2 branch tests w1->f64/w1->p90, d2<d1 tests w2). Off: w1/w2 get s5/s6 instead of s4/s5 (hi(D_00575088) takes s4, orig s6); the 40-entry history fill loop in the original is a strength-reduced index loop (base+624/base+636 pointers) that only -freduce-all-givs reproduces (6e_3 form). */
 #include "common.h"
+/* func_0016ea58 (hand/nostrict): the target search is matched func_001711d0 written as a static inline helper (inl_001711d0, its exact body); the set1/set2 gotos written out as separate w1->w38 |= 8 / w2->w38 |= 8 statements (jump2 cross-jumps them; the extra refs give w1/w2 s4/s5 over the hoisted const 2), the d2<d1 arm as one && / || condition, w2 = 0 before w1 = 0. */
 
 typedef struct { f32 x, y, z, w; } V4EA;
 typedef struct { u8 pad0[0x38]; u64 w38; u8 pad40[0x24]; f32 f64; u8 pad68[0x28]; void *p90; } WkEA;
@@ -82,23 +82,20 @@ s32 func_0016ea58(void) {
     s32 i, j, n;
     f32 d1, d2, k;
     for (i = 2; i >= 0; i--) D_0035BD40[i] = 0;
-    w1 = 0;
     w2 = 0;
+    w1 = 0;
     if (func_00122ff8(D_002E26A0[0])) D_0035BD40[0] = D_002E26A0[0];
     if (func_00122ff8(D_002E26A0[1]) && (w1 = D_002E26A0[1]->p144) != 0) D_0035BD40[1] = D_002E26A0[1];
     if (func_00122ff8(D_002E26A0[2]) && (w2 = D_002E26A0[2]->p144) != 0) D_0035BD40[2] = D_002E26A0[2];
 
-    if (D_0035BD40[0] == 0) return 0;
-    if (D_0035BD40[1] == 0 && D_0035BD40[2] == 0) return 0;
+    if (D_0035BD40[0] == 0 || (D_0035BD40[1] == 0 && D_0035BD40[2] == 0)) return 0;
     func_0016e0d0(1);
     D_0057508C = 0;
     if (D_00575088 == 0) {
-        V4EA *q = &D_00575090[39];
-        f32 *pw = &D_00575090[39].w;
-        for (j = 39; j >= 0; j--) {
-            func_002675a8(q--, &D_0035BD40[0]->pos);
-            *pw = D_0035BD40[0]->f3C;
-            pw -= 4;
+        n = 39;
+        for (i = 39; i >= 0; i--) {
+            func_002675a8(&D_00575090[n--], &D_0035BD40[0]->pos);
+            D_00575090[i].w = D_0035BD40[0]->f3C;
         }
         D_00575088 = 1;
     } else {
@@ -132,11 +129,11 @@ s32 func_0016ea58(void) {
             if (w2 != 0 && func_0012f040(D_0035BD40[2], -1)) d2 = func_001629b0(&D_00575080.tgt->pos, &D_0035BD40[2]->pos);
             else d2 = D_0048E950;
             if (d1 < d2) {
-                if (w2 != 0 && w1->f64 > 0.0f && w1->p90 == D_00575080.tgt) goto set2;
-                goto set1;
+                if (w2 != 0 && w1->f64 > 0.0f && w1->p90 == D_00575080.tgt) w2->w38 |= 8;
+                else w1->w38 |= 8;
             } else if (d2 < d1) {
-                if (w1 != 0 && w2->f64 > 0.0f && w2->p90 == D_00575080.tgt) goto set1;
-                goto set2;
+                if (w1 != 0 && w2->f64 > 0.0f && w2->p90 == D_00575080.tgt) w1->w38 |= 8;
+                else w2->w38 |= 8;
             }
         } else if (w1 != 0) {
             if (w2 != 0) {
@@ -144,24 +141,19 @@ s32 func_0016ea58(void) {
                 d2 = func_001629b0(&D_0035BD40[0]->pos, &D_0035BD40[2]->pos);
                 k = D_0035AE80.fC8 * D_0035AE80.fC8;
                 if (d1 < k && d2 < k) {
-                    if (w2->f64 < w1->f64) goto set2;
-                    goto set1;
+                    if (w2->f64 < w1->f64) w2->w38 |= 8;
+                    else w1->w38 |= 8;
                 } else if (d2 < d1) {
-                    if (!(w2->f64 > 0.0f)) goto set2;
-                    if ((s32)w2->w38 & 1) goto set1;
-                    if (!(d2 < D_0035AE80.fC8 * D_0035AE80.fC8)) goto set2;
-                    goto set1;
+                    if (w2->f64 > 0.0f && ((s32)w2->w38 & 1 || d2 < D_0035AE80.fC8 * D_0035AE80.fC8)) w1->w38 |= 8;
+                    else w2->w38 |= 8;
                 } else {
-                    if (!(w1->f64 > 0.0f)) goto set1;
-                    if ((s32)w1->w38 & 1) goto set2;
-                    if (d1 < D_0035AE80.fC8 * D_0035AE80.fC8) goto set2;
-                    goto set1;
+                    if (!(w1->f64 > 0.0f)) w1->w38 |= 8;
+                    else if ((s32)w1->w38 & 1) w2->w38 |= 8;
+                    else if (d1 < D_0035AE80.fC8 * D_0035AE80.fC8) w2->w38 |= 8;
+                    else w1->w38 |= 8;
                 }
-            }
-        set1:
-            w1->w38 |= 8;
+            } else w1->w38 |= 8;
         } else if (w2 != 0) {
-        set2:
             w2->w38 |= 8;
         }
     }
