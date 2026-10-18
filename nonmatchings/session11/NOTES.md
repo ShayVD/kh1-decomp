@@ -31,3 +31,18 @@
   001ba520 15: 288 flag-block orders, sibling decls. 00192958 17: TImode constant tie.
 - Facts: `do { } while (0)` does not loop-weight REG_N_REFS; plain-global access over a pointer
   local again (sibling-port lesson).
+
+## s11w3 (00101bb8 00120cf8 00102118 00105d88 0011b220 00125240 001137f8 0010b390 00110e68): 1 match
+- 00101bb8 (hand, strict; older drafts were nostrict): `Tex` without a u16 member (`u32 n:16`
+  bitfield, `u32 spd:16`), so reading n no longer depends on the u16 prev/frame stores; the
+  func_0015ed80 object uses 00102118's `union { f32; void * }` fields (alias set 0 keeps loads
+  after the h->a/h->b stores); callee prototypes take `void *`.
+- 00120cf8 5 (w3__00120cf8_5w.c): &m[i][i] .526 vs divisor constant 3 .484 in global-alloc.
+- 00102118 6: `move s0,s3` copy of h after the u32 conversion (cse2 blocked by the branch).
+- 00105d88 7: reversed counter j (7/11) loses to giv p (9/13). 0011b220 7: f2 must rank below
+  &n2 (w3__0011b220_9w_finding.c). 00125240 8: FP local-alloc, 1e4 life too long (300 orders).
+- 001137f8 11: prologue load order (colour words must stay separate symbols). 0010b390 12: branch
+  1's conversion in f3 (something holds f2 in the original). 00110e68 14: p needs ~16 refs.
+- Facts: a bitfield read gets the containing struct's alias set (no u16 member = no conflict
+  with u16 stores); a packed `struct { u32 v:16; }` cast is a quick probe for alias theories;
+  an invariant placed after a giv init in the preheader was hoisted by loop pass 2.
