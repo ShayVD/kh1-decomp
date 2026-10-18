@@ -1,4 +1,6 @@
-/* func_00212cc0: hand (strict), 23 words off (s6 draft 32). D_003E3D70[k].x40 site written as off = k*57+16; ((s32 *)D_003E3D70 + off)[3]/[2]: now gives the orig's separate addiu 64 and la base, but folds +12 into the base (la sym+12) and computes the two addresses with commuted addu instead of addu+move copy. Also s6/s7/s8 permutation (sel/lim/a) in the final loop; decl order, loop forms and P/Q statement order do not change it. */
+/* func_00212cc0 (hand), s10 r2_7. From r2_1's 6w draft: `func_002114f0(o, m, 0, cur, 166, v); cur += 28;` (cur passed directly, no copy b) and `j++; i++;` (j first:
+   loop.c then initialises the t[j+24] giv before cur, so the giv gets s1 and cur s2 as the original), with the identical-arm `if (j) m = i == sel; else m = i == sel;`
+   (jump2 merges the arms; the copies give sel the refs it needs for s6). Natural spellings of m without the identical arms are 7w. */
 #include "common.h"
 
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x17]; u8 x1c[0x58]; } T74c;
@@ -6,7 +8,8 @@ typedef struct { T74c e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; } G4BE8c;
 extern G4BE8c *D_00304BE8;
 typedef struct { u8 pad[8]; s32 f8; } S5bc8c;
 extern S5bc8c *D_00425BC8;
-typedef struct { u8 pad[0x40]; s32 x40[4]; u8 pad2[0xe4 - 0x50]; } E3D70c;
+typedef struct { s32 a, b, c, d; } S4c;
+typedef struct { u8 pad[0x40]; S4c s; u8 pad2[0xe4 - 0x50]; } E3D70c;
 extern E3D70c D_003E3D70[];
 typedef struct {
     u8 pad0[0x10]; void *x10; u8 pad14[0x14]; s32 x28; s32 x2c;
@@ -101,7 +104,8 @@ void func_00212cc0(Obj2cc0 *o) {
                                 func_001f3e48((void *)w[1], (void *)w[0]);
                                 if ((w[2] = func_001f31a8(D_003F3BA0, 6))) {
                                     func_001f3e48((void *)w[2], (void *)w[1]);
-{ s32 off = D_00641BAC * 57 + 16; ((Obj2cc0 *)w[2])->x28 = ((s32 *)D_003E3D70 + off)[3]; ((Obj2cc0 *)w[2])->x2c = ((s32 *)D_003E3D70 + off)[2]; }
+                                    ((Obj2cc0 *)w[2])->x28 = D_003E3D70[D_00641BAC].s.d;
+                                    ((Obj2cc0 *)w[2])->x2c = D_003E3D70[D_00641BAC].s.c;
                                     if (D_00641BC4 != 3) {
                                         if ((w[3] = func_001f31a8(D_003F3B70, 1))) {
                                             func_001f3e48((void *)w[3], (void *)w[2]);
@@ -167,12 +171,11 @@ done:
         if (j == 0) v = D_00641BF0[D_00641BC4];
         else v = t[j + 24];
         m = 2;
-        if (a) m = i == sel;
-        b = cur;
+        if (a) { if (j) m = i == sel; else m = i == sel; }
+        func_002114f0(o, m, 0, cur, 166, v);
         cur += 28;
-        func_002114f0(o, m, 0, b, 166, v);
-        i++;
         j++;
+        i++;
     }
     func_001f8f30();
 }

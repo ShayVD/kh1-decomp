@@ -124,3 +124,9 @@
 - 001f5fe0 276 LCS hand/nofill with rodata at 0x490c70 (tools/matching/lchkro_s10.py): the then-blocks must differ somewhere before jump2 (uniform blocks over-merge). Jump2 cross-jumps only against the target label's fall-through predecessor.
 - 001c62a0 242: loop.c giv structure read off the original (four reduced givs t4, t7, t5, s4); ldl/sdl on both sides rule out aligned types.
 - Facts: global.c expand_preferences runs before prune_preferences, so a call-crossing pseudo leaks caller-saved preferences to its feeders. Any dying input can be tied to the output in local-alloc (lui/addiu pairs add refs). A post-call reload into the same variable makes one long pseudo; the original often used a fresh block-local one.
+## r2_7 (0012e1b0 001c2ec8 00212cc0 001502e8 00101bb8 001f2630 0025a560)
+- Matched 0012e1b0 (hand/nostrict_nofill): r2_1's 1w draft plus a CONTEXT_ONLY copy of leaf func_0012dd38 above it (REG_EH_REGION 0 lets reorg's live scan pass the call, see v0 set, and use plain beqz).
+- Matched 00212cc0 (hand): r2_1's identical arms `if (j) m = i == sel; else m = i == sel;` (odd source, flagged in the file), `func_002114f0(o, m, 0, cur, 166, v); cur += 28;`, and `j++; i++;` (loop.c sets up reduced pointers in increment order).
+- 001c2ec8 1w: a block-scope extern redeclaration still shares the RTL (same symbol string). Needs a struct base below 0x2C5958 or a symbol_ref gcse treats as different.
+- 001502e8 2w: qtys with a hard-reg suggestion sort first; an a0 suggestion on C would fix it (no source found). 00101bb8 2w, 0025a560 2w (an enum or void* id field drops the id store too far), 001f2630 3w (`k8 = 0x8000` before the loop gives weight 0 but shifts reload: 18w).
+- Facts: in 991111 an enum field has its own alias set. A constant held in a user variable across a loop is rematerialised per use with weight 0.
