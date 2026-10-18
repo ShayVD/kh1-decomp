@@ -130,3 +130,10 @@
 - 001c2ec8 1w: a block-scope extern redeclaration still shares the RTL (same symbol string). Needs a struct base below 0x2C5958 or a symbol_ref gcse treats as different.
 - 001502e8 2w: qtys with a hard-reg suggestion sort first; an a0 suggestion on C would fix it (no source found). 00101bb8 2w, 0025a560 2w (an enum or void* id field drops the id store too far), 001f2630 3w (`k8 = 0x8000` before the loop gives weight 0 but shifts reload: 18w).
 - Facts: in 991111 an enum field has its own alias set. A constant held in a user variable across a loop is rematerialised per use with weight 0.
+## r2_3 (0010ea70 001b9f78 00102118 001c3b10 00192958 001f18e8)
+- Matched 0010ea70 (hand): x1c as f32 (`O->x1c = 0.0f`: f32 output deps against the B-> stores raise its sched2 rank) and the exhaustively found order x18, x20, xc, x1c, xe, x28, h4, then `B->x30 = B->x34 = B->x70 = B->x74 = O->x18`.
+- 001c3b10 8 -> 4 LCS (r2_3__001c3b10_4w.c): one j++ and `done[j] = 1` per case (reduced giv init after the hoisted constants), `p = &msgs[j]` reusing user variable p (not replaceable -> not reduced), block-local temps in the x18 loop. Left: `sw x316c` must issue before `lw x3148` in sched2; lwc1 x18 before x14.
+- 001b9f78 3w: i = 0 must be before the branch (reorg rejects the fall-through), but then global-alloc gives the e-giv a0 (i 1.615 vs giv 1.6875).
+- 00102118 6 LCS: `o2 = o` gives `move s0,s3` but in the store block; cse never follows into the conversion's join label.
+- 00192958 17, 001f18e8 17: no gain (a do-while(0) after the second call keeps `tag = p + 5` after it but drags other insns).
+- Facts: loop.c inserts a reduced giv's init after the hoisted constants and its increment before the biv increment; making a giv's destination a user variable used outside the loop stops its reduction.
