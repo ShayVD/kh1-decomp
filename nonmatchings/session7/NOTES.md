@@ -164,3 +164,11 @@
 - In 2.96 a volatile global store always comes out as `addiu reg; sw 0(reg)` (no lo_sum folding into volatile mems), so it cannot be 001e10f8's barrier (4w without the asm; something stops reorg filling the bgtz slot with `li v0,4`).
 - A pointer-returning callee changes argument setup order (f12 li.s before `move a0`).
 - Near miss 0010ea70 8w (hand). Unchanged: 001c95f8 15w / 001c99a8 10w (FP regs), 001d9268 2w, 0017b668, 001b9f78 10w, 001aa0e0 7w, 001cf960 7w, 0021b4c8 9w, 00249618 10w, 001effc0 11w, 00107c48.
+
+## w27 (80-125 insn game set)
+- Matched 0016fc60 and 0017b4f8 (hand/nostrict, both also in hand), 00238258 (hand/nostrict_nofill).
+  - 0016fc60: inline helper tail `if (p == 0 || !func_00122ff8(p)) return 0; return func_0012f040(p, part);` gives bnezl/b.
+  - 0017b4f8: `((SegL *)((u8 *)p + 0x2c))[i].len` (a member array at an offset that is not a multiple of the element size folds as (p+12)+(i+2)*16; cast the base instead), block-local `{ s32 f = p->flags & 1; nl = f != 0; }` keeps andi+sltu, `t = *pt; t += dt * inv;` loads straight into t.
+  - 00238258: a dead second set of the loop pointer (`o = d;` or `o = 0;` after its uses) stops loop.c making it a giv.
+- Global-alloc: a priority difference under 1 (x10000 scale) is a tie, won by the lower pseudo number (0024bce8: y0 vs -10).
+- Near miss 001ba520 20w. Unchanged: 00237d48 2w, 001cac98 6w, 00115758 7w, 00120cf8 7w, 00142e30 8w, 00110ce0 9w, 00110e68 15w, 00177488, 001eddc0 27w, 00151e28, 00149c80, 002384e0 (needs src alias base unknown), 00246ed8, 001db718, 001519c0 (nogcse + HImode struct local gives the per-case andi; size 476 vs 464).

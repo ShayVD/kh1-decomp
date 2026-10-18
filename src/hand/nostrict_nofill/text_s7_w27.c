@@ -1,5 +1,7 @@
 #include "common.h"
+/* func_00238258: MATCH hand/nostrict_nofill */
 typedef int u128 __attribute__((mode(TI)));
+typedef struct { u64 a, b; } U64x2;
 typedef struct Nd { struct Nd *next; s32 type; u8 pad8[8]; u128 v[3]; u128 n[3]; u64 t0, t1; u128 c[3]; } Nd;
 typedef struct { Nd *head; s32 pad; } NBk;
 typedef struct { s32 bits; NBk *tbl; } NHt;
@@ -29,10 +31,10 @@ void func_00238258(NHt *h, s32 a1, u128 *dst, s32 a3, s32 a4) {
                     pv = d;
                     pn = p->n;
                     pc = p->c;
-                    d = (u128 *)((k << 4) + (s32)dst);
-                    ((u64 *)d)[0] = p->t0;
-                    d++;
-                    ((u64 *)d)[-1] = p->t1;
+                    o = (u128 *)((k << 4) + (s32)dst);
+                    ((u64 *)o)[0] = p->t0;
+                    d = o + 1;
+                    ((u64 *)o)[1] = p->t1;
                     for (j = 0; j < 3; j++) {
                         func_00267560(&t1, pc, func_00237a48(&t0, a4, pv, 1));
                         func_002675f0(&t2, pn);
@@ -43,6 +45,7 @@ void func_00238258(NHt *h, s32 a1, u128 *dst, s32 a3, s32 a4) {
                         *d++ = y;
                         *d++ = z; }
                     }
+                    o = d;
                     k += 10;
                     num++;
                 }
