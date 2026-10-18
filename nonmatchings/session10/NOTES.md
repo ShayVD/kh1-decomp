@@ -93,3 +93,8 @@
 - 00110618 167 -> 136 LCS (w14__00110618_136w_probe.c, unnatural order: a probe): separate `sxd2`/`syd2` temps pinned between calls. Left: FP registers in the prologue, fb never gets f24.
 - 00200038 254: loop.c base giv (ours b+0, original b+416). 001fd858 197: needs a second pseudo for o that crosses no call (a0 still o at the first fe1b8 call). 001c62a0 242: loop.c giv choice. 001f5fe0 is 278 in hand/nofill (vs 324 hand): mode unsettled.
 - Facts: sched1 never moves an insn past a call if it uses/sets a pseudo with REG_N_CALLS_CROSSED == 0 (pin temps between calls). `x << 4` vs `x * 16` change later clamps. Tool: tools/matching/hl2_s10.py (hill-climb with calls fixed, stores free within their call interval; lines need unique text).
+## r2_2 (gas/data delay-slot sweep): no matches
+- The symbol-known lever (CONTEXT_ONLY data above the function) helps no other remaining draft (72 swept with tools/matching/slot_s10.py; two get worse).
+- Stock ee-as with `-g` fills no reorder-mode slot: same counts as kh1tool's no_fill and as 991111a gas. So "nofill" TUs were probably built with -g, and 0024c950's 991111a-gas evidence just means it is a nofill function. Five drafts improve in nofill modes: 0024c950 15 -> 9 (hand/nofill, right size), 001c53c8 81 -> 78, 0012e1b0 39 -> 37 (hand/nostrict_nofill), 001e1838 161 -> 154 (hand/nofill, size off), 001f5fe0 324 -> 278 (hand/nofill, rodata, 16 bytes long). Saved as r2_2__*_nofill.c. 00103c48 and 0019f1f0 are filled functions.
+- 001c53c8's empty jal slot after an absolute `s.s` macro: nofill, not a symbol question.
+- 0024c950 9 LCS left: local-alloc v0/a0 swap (kk 4 refs vs load 2). 00217000 8 LCS: the original's interleaved same-register lui/addiu means one tied local quantity, not a global tbl.
