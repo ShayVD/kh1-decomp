@@ -44,3 +44,11 @@
 - 0019f1f0 15 LCS: m[3][3] = 1.0f inside the cross-jumped tail breaks cross-jumping.
 - 001166e8 16w: id*5 qty prio 26.7 beats element qty 25; one more element ref would flip it.
 - Fact: lcs_s8.py with the assembler path swapped (ASC=compiler) measures other gas versions.
+## w7 (0021e120 0010b390 001fa8b0 00249718 00152928 001eddc0 00260610): no matches
+- 00249718 12 -> 3 LCS (w7__00249718_3w_samearms.c): `t2 = t * t; if (o) { X } else { X }` with identical arms (jump2 merges them after sched2, size unchanged) makes t2/t3 global: every FP register right. Left: `mul t3` issues before the four row-0 loads. Identical arms are odd source (maybe an #ifdef'd debug difference). w7__00249718_8w.c: schedule exact, t2/t3 swap f5/f6.
+- 0021e120 12w: header constants 0x5000..8001 and 63 swap registers in local-alloc. Siblings func_00219598, func_0021b860: worse.
+- 001fa8b0 12w: loop pass 2 hoists %hi(D_003E8E28); original keeps it local (would need 129+ real insns in the loop).
+- 00260610 14w: `size` takes a0 from size+30's preference; 9 shapes, all sdk modes.
+- 0010b390 12w: D needs f4; `if (o)` folded by -fdelete-null-pointer-checks after a deref.
+- 001eddc0 13w: conversion result f (1.76) beats a.r (0.2) for a0.
+- Facts: identical `if (c) {X} else {X}` arms survive to sched2 and are merged by jump2 at no cost: a way to make local pseudos global. loop.c pass 2 gives each hi/lo_sum load life 2; with calls the hoist threshold is ~64*life*savings vs real insns.
