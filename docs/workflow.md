@@ -519,7 +519,7 @@ found that the next session needs:
 
 ## Session 10: what changed
 
-- **Matches** by 14 round-1 workers (one per list band) and 10 round-2 workers that used the new
+- **16 matches** (6,900 -> 6,916 / 6,988; 92.0% -> 93.7% of code bytes) by 14 round-1 workers (one per list band) and 10 round-2 workers that used the new
   levers (brief: nonmatchings/session10/BRIEF.md; findings: nonmatchings/session10/NOTES.md; short
   version: docs/matching-tips.md "Session 10 tips"). Two container losses with 14 workers at once:
   run at most about 5 workers together on this machine.
