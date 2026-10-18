@@ -8,9 +8,9 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## Where we stopped (end of session 7, 2026-10-18)
 
-- **6,792 / 6,988 functions matched**: 97.2% of functions, 87.1% of code bytes. All are byte-identical and objdiff 100% (docs/progress.md).
-  - Game: 6,087 / 6,266.
-  - SDK: 705 / 722.
+- **6,831 / 6,988 functions matched**: 97.8% of functions, 88.5% of code bytes. All are byte-identical and objdiff 100% (docs/progress.md).
+  - Game: 6,119 / 6,266.
+  - SDK: 712 / 722.
 - New this session (docs/workflow.md "Session 7", docs/toolchain.md "Session 7"):
   - Hand-written asm exported as .s (VU0 renderers, sq clears, context switch, libkernl asm, the exception trampoline).
   - tools/matching/flagsweep.py (one extra gcc flag per try) and eight flag build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr, nostrict_norcse, norlo, fmam, nostrict_nosib.
@@ -19,7 +19,7 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
   - tools/matching/hc_checkfile.py (fast hill-climb) and tools/matching/batch/ (hundreds of variants per compile).
 - **nonmatchings/session7/NOTES.md** has every worker finding; docs/matching-tips.md "Session 7 tips" is the short version. The worker brief is nonmatchings/session7/BRIEF.md.
 
-## What is left (196 functions)
+## What is left (157 functions)
 
 Run `make rank` for the full list (status `wip`/`asm`).
 

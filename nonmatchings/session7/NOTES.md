@@ -86,7 +86,7 @@
 - Matched func_00182ec0: read the value tested next into a local before the branch (`void *dr = c->draw;`) so reorg fills the beqz slot from the fall-through.
 - 00142e30: a return-value local assigned before an early-exit test gets f0 (non-likely bc1t/beq slots match); left: z/d callee-saved swap.
 - 00141608: testing the u16 field directly (no local) stops cse folding m[0].
-- tools/matching/batch/ (batch.py, anneal2.py, bf.py): compile 150-300 renamed variants of one function in one file and link them all at the same address; typedefs above the `/*UNIT*/` marker. Paths inside may point at /tmp/claude-0/s7/w13: fix before use.
+- tools/matching/batch/ (batch.py, anneal2.py, bf.py): compile 150-300 renamed variants of one function in one file and link them all at the same address; typedefs above the `/*UNIT*/` marker. (paths fixed later in the session; anneal3.py is the dependency-aware variant from w35).
 - Still stuck at 1-4 words after two workers each: 0010ed20, 0025add8, 0020b6a8, 00141608, 0025a560, 001d9268, 001e6038, 00269830, 00126f18, 001502e8, 00140960, 00101bb8, 00237d48.
 
 ## w17 (remaining big no-draft C)
