@@ -95,3 +95,8 @@
 - 00105288 35->28 (func_00115d18 is `void(void)`; `D_002A6284 = (s32)h + h[16]; func_00115d18();`), 00192958 43->34 (`j = o->b8D + 1;` reusing the loop counter j), 0024c950 15 (9 at the right size with the 991111a assembler), 0023a968 25.
 - Stuck: 0019f1f0 15, 00107c48 29, 0010ba98 27, 00135a68 33, 001db718 40, 00169f28 52.
 - Facts: reusing an existing long-lived local (a loop counter) for a short temp changes global-alloc order; a fresh local does not. The original assembler does not move the addu of `la rd,K(rs)` into a b slot (binary has `lui;ori;addu;b;nop`, never `ori;b;addu`); 991111a gas behaves like this but is worse elsewhere, so the original gas is neither. In 2.96 jump2 runs after sched2.
+## r2_4 (round 2: 0019ab38 00199ac8 0021e120 0010b390 001137f8 00214a68 00217000 00166570 001ff488 00102118)
+- Matched 001ff488 (hand/nostrict): threw away the hill-climbed store order; vertex flood in plain index order v[0]..v[23], fields u,v,x,y,z,f per vertex, each corner coordinate computed just before its first use, header and tag2/regs2 before the flood.
+- Near misses: 00214a68 22->16 (inner goto loop with explicit `u8 *p`, `s32 i`; `s32 *cnt = D_00642C78;` before the outer loop), 0021e120 14->12 LCS (LCS-scored hill-climb of the header).
+- Stuck: 0019ab38/00199ac8 (cse1 folds `du = k` to 0; the `same` reload needs a label at reload time), 0010b390 12w, 001137f8 11, 00217000 8, 00102118 17 (cse2 load-to-copy needs a followable join), 00166570 21.
+- Facts: a long-hill-climbed store order can be a local optimum: try plain index order first. A lui hoisted into an inner preheader with addiu/addu left in the loop means a goto loop plus gcse PRE of the high part. LCS hill-climb helper hl.py (tools/matching/hl_s9.py).
