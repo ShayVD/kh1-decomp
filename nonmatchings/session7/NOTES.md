@@ -158,3 +158,9 @@
 ## w28 (VU0 renderer triage)
 - The six other renderers (001b6910, 001ae010, 001b1ab8, 001afac0, 001ab0e0, 001b3870) are hand-written inside a gcc shell, like 001b8198: `addi`/`add`/`sub` and `bne $zero,$x` (gcc writes `bnez`) across >90% of each body, fixed t2/t5-t9 loop roles, unfilled `b; nop` slots, DMA polls of 0x1000A000 with four nops, args copied to t-registers at entry, a doubled `jr $v1; nop; nop`. gcc 2.96 has no asm goto, so the loops cannot be split into C + asm. The .s stand-ins are the final form.
 - Raw `c2` words (e.g. 0x4B9C29FF) are vclipw-type ops our disassembler does not decode; on their own they are not evidence of hand-writing.
+
+## w26 (mid-size game leftovers)
+- Matched (hand/nostrict file; 00140838 and 00141608 also match in hand): 00140838 (a separate failure tail per failing test, `o->p148->d30 |= (u64)0x8000<<17; return 0;`, even though jump2 later cross-jumps them), 00141608 (the three early-return tests joined into one `||` chain returning `s->xbe`: the shared label starts a new cse block, so the field reload survives), 00144d08 (no register asm: `fb0 <= 0.0f`, and each branch duplicates `fb4 = a; func_00130398(o,k,0.0f); fbc = 4.0f;` so cse reuses the test's 0.0f for $f12; duplicating only the call fails).
+- In 2.96 a volatile global store always comes out as `addiu reg; sw 0(reg)` (no lo_sum folding into volatile mems), so it cannot be 001e10f8's barrier (4w without the asm; something stops reorg filling the bgtz slot with `li v0,4`).
+- A pointer-returning callee changes argument setup order (f12 li.s before `move a0`).
+- Near miss 0010ea70 8w (hand). Unchanged: 001c95f8 15w / 001c99a8 10w (FP regs), 001d9268 2w, 0017b668, 001b9f78 10w, 001aa0e0 7w, 001cf960 7w, 0021b4c8 9w, 00249618 10w, 001effc0 11w, 00107c48.
