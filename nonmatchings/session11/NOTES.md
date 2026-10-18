@@ -220,3 +220,16 @@
 - Facts: set_preference also records (set X (op Y ..)) first-operand preferences; expand_binop
   makes the target op0 (`p = base + p` gives `addu p,p,base`); combine merges `x = $a0; y = x`
   when x dies there (not across blocks).
+
+## s11w17 (001bd090): MATCHED, not a compiler difference
+- 001bd090 (hand): the five stack words at 0..16(sp) are plain `s32 num, b, maxid, cnt, flag`
+  spilled by global-alloc (all of s0-s8 busy), not a local struct. The first `sw 3` is the spill
+  store of `num = 3`, `li v0,3` is reload_cse rewriting its reload; constant s-registers and
+  `flag = 1`'s fresh li follow. The 69 arm `if (func_001ba3f0(69) > 0) { num = 5; lv = 2; }` has a
+  dead set of `lv` (a variable live elsewhere) that life1 deletes, so jump1-ifcvt fails and the ce
+  pass converts with a fresh zero pseudo. A variable used nowhere else is removed too early.
+  Order: case 61-63 `flag = 1; cnt++;`, latch `f += it->f24; b += it->b14;`, lv block
+  `if (maxid == 0) lv = 0; else { ... }`.
+- Facts: bottom-of-frame words read/written at every use in a function with all s-registers busy
+  are probably spilled scalars, not a struct; loop-depth weighting (each in-loop use counts 2)
+  orders hoisted constants in global-alloc.
