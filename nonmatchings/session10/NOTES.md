@@ -28,3 +28,10 @@
 - 001c5ee8 11w: hoisted &ent[0].lk has 5 refs, needs 7 (a third use in the loop).
 - 001137f8 11 LCS: one sched1 block with calls; prologue order from load priorities.
 - Facts: real struct types for globals (fn pointer + int) change alias sets and remove store-store deps; a giv set from `p + 4` where p dies inherits p's call-arg preference; `if (n) { i = 0; do..while }` shortens the counter's life by two insns vs for.
+## w4 (0010ed20 00169688 0010ea70 00105d88 00120cf8)
+- Matched 0010ed20 (hand/nostrict): `extern s32 func_00106b18(void *);` (the matched siblings already had s32) plus a hill-climbed store order. When the call sets v0, sched2 sinks `sb v0` (the constant 1) to the end of the store group.
+- 0010ea70 6 -> 2w (w4__0010ea70_2w.c): same prototype, `f32 x14 = 0.0f` (extra fwd deps make `sw x14` issue after `sb x13`). Left: sched2 issues `sh h4` (9 fwd deps) where the original has `sw x1c`.
+- 00169688 4w: jump2 cross-jumping (needs `b L+4; ld v1,48(a2); nop`). Siblings func_00169008/00169210.
+- 00105d88 7w: loop-2 pointer 9 refs/13 live beats counter j 7/11; needs <=7 refs or an 8th j ref.
+- 00120cf8 7w: constant 3 at 10 refs/62 live vs &m[i][i] 5/19; needs 11 refs or life <=57.
+- Facts: f32-typed zero fields add fwd deps in strict mode; `void *` fields get true deps on later void* stack loads.
