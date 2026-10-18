@@ -40,3 +40,12 @@
 - Stuck: 001c99a8/001c95f8 FP local-alloc exact ties; 001fe1b8 is really 124 raw words off (580 vs 588 bytes).
 - Facts: every back edge to a loop header counts as a nested loop in 2.96 flow, so a switch dispatch inside a loop gets loop_depth = number of latches and refs are weighted depth+1; splitting merged case labels adds latches (jump2 re-merges the bodies). Copying a param into a local shortens its live length. sched1 prefers an argument copy that kills its source (INSN_REG_WEIGHT) before LUID. A test-at-top `for` keeps hoisted invariants after the pre-header calls.
 - Tool: tools/matching/hill_s8.py (dependency-respecting hill-climb over /*P*/../*Q*/ lines with checkfile, or rr.py with `RO FUNC`; set WDIR; the first marker must be inside the target function).
+
+## w6 (11-16 word drafts)
+- Matched 0013a440 (hand/nostrict): parameter order `(Ea4 *o, s32 *w, f32 range, s32 lv)`; the f32 entry copy now comes before lv's, so lv's live length is 40 not 41 and its priority (0.250) beats buf (0.2474).
+- Matched 002384e0 (hand/nostrict): `u32 srca` parameter cast to `Ent70 *` inside (no alias base, so the lq stays after the stack stores); t[0][3], t[1][3], t[2][3] zeroed in that order.
+- Matched 001df9c0 (hand, strict): plain struct `VM { s32 x0; Sub s; }`, not a union with a u8 array; `vm->s.sp = i - 4`.
+- Matched 001effc0 (hand, jtbl 0x490960): w5's separate case bodies trick.
+- Near miss w6__00152928_13w.c (finding: gcse PRE makes the `move a1,a2` copy but the second copy-prop round removes it).
+- Stuck: 0016bb68/0016bfe8 (global-alloc t 0.75 > arr 0.52 > e 0.19), 00110e68 (p needs priority over amp/i), 00266380 (buf needs one more weight-1 ref; jump2 merges four of the five rest computations), 001cd2d8 (REG_EQUIV constant moved next to its use wins v0), 00249718 (FP: 1.0f hoisted by sched1), 0010c720 (sched2 prologue around the barrier; reorg liveness).
+- Facts: an f32 parameter's position changes the entry-copy order and so integer params' live lengths. An integer param cast to a pointer has no alias base: its loads stay ordered after stack-local stores. A union containing a u8 array gets char's alias set and conflicts with everything even in strict mode. update_equiv_regs moves a single-use constant set next to its use only across blocks. sched1 checks INSN_REG_WEIGHT before LUID. rr.py needs `--out-dir` under the repo (src/<mode>/.WTAG_rr).
