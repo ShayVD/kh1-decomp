@@ -270,3 +270,16 @@
 - Facts: assigning a pointer local after a store instead of as an initialiser moves an index's
   last use in sched1 (fixed a global-alloc order); tools/matching/togm_s11.py greedy-toggles
   alternative spellings per occurrence.
+
+## s11w20 (00110e68 00107c48 001cfc28 00120cf8 001502e8): no matches, two closer
+- 00110e68 5 -> 2 LCS (w20__00110e68_2w.c, hand): `*p` load and `v = *p * x` in the head,
+  identical arms on the parameter `a` each holding `*p++ = v`, x as
+  `(1.0f - D[i]) * cosf(*ph) + D[i]`. Left: x ties to t (operand 0): `add.s $f20,$f20,$f2` vs
+  `add.s $f2,$f2,$f20`. Alternative 2w: x function-level set in block 0 (loop exact, block-0
+  compare in f2 vs f0).
+- 00107c48 7 -> 3 at the right size (w20__00107c48_3w_deadtest.c, hand/nostrict; uses a dead
+  `if ((i << 4) & 8) return 0;` = hack): keeping i live past `arg = (Ent16 *)i` stops combine
+  merging the param copy. Left: block-0 `lui v0 / lw v1` swapped.
+- 001cfc28 1w, 00120cf8 5 (the 3 is hoisted by loop pass 2 in the original), 001502e8 2: unchanged.
+- Facts: combine does not merge `i = a0` into `arg = i` while i is used later; sched1 builds
+  interblock regions only for loops; local-alloc ties `x = a + b` to operand 0 when it dies there.
