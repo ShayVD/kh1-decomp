@@ -283,3 +283,18 @@
 - 001cfc28 1w, 00120cf8 5 (the 3 is hoisted by loop pass 2 in the original), 001502e8 2: unchanged.
 - Facts: combine does not merge `i = a0` into `arg = i` while i is used later; sched1 builds
   interblock regions only for loops; local-alloc ties `x = a + b` to operand 0 when it dies there.
+
+## s11w21 (00110618 001636d0 001fd858 0010d470): no matches, structural findings
+- 00110618 natural structure (w21__00110618_163w_natural.c; climbed 158): two written-out
+  sceVu0ViewScreenMatrix bodies (SDK expression shapes for az/cz, one work matrix `mt`) and three
+  static inline sceVu0ViewClipMatrix calls: identical opcode multiset, right size, exactly the
+  original's spill set. Left: all FP pseudos are local-alloc's (one block): fa/d/n/fan order.
+  The s10 w14 probe (136, unnatural) is still lower.
+- 001636d0 finding (438): update_equiv_regs gives pp REG_EQUIV because every set is sp+16; one set
+  copied from another pseudo (`pv = pos; ... pp = pv;`) makes pp spill with the original's
+  pattern. Left: j/par swapped. s7's 414 stays best.
+- 001fd858 197: no spilled scalars (frame saves only s0-s3/ra); the up-path smoothing tail
+  cross-jumps into the down path's copy. 0010d470 330: spill slots already match; case 24 and
+  25-31 PUT copies merge ~17 words too early in ours.
+- Tools: tools/matching/slt_s11.py (per-slot store/load counts), var_s11.py (string-replacement
+  variants, ` | ` separates edits, `@k@` picks the k-th match).
