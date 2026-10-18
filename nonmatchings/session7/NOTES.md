@@ -60,3 +60,11 @@
 - `while (!done && ...)` keeps a set-done block inside the loop; `break` lets loop.c move it out.
 - A switch on 512/640 gives li 640 + xor/movn; if/else gives xori.
 - w12 ran `pkill -f "hill4.py func_00102a48"` once (only its own processes).
+
+## w10 (large no-draft C)
+- Matched 001dd5c0 with -fno-rerun-loop-opt (mode hand/norlo).
+- **The "n32 mixed addressing" is source shape**: in o32 src/hand a nested sub-struct with a variable index, `D_003E3D70[k].s.d` (sub-struct at 0x40), gives `la; addiu 64; addu; lw 12()`; flat `.a[3]`, pointer temporaries and casts fold it. func_002134c8 is 2w off in plain o32 hand.
+- The element type of a local array decides reloads after stores (`s32 w[4]` + casts vs `Ob *w[3]`).
+- `(x*14 + 0x7fff) << 5` keeps `lui at,0xf; ori; addu`; `x*448 + 0xfffe0` gets narrowed.
+- sched1 moves an insn across calls when all its pseudos live across calls (func_001f1fc8 `h = sc<<4`).
+- Prototypes: func_001f40a0 takes 2 args; func_00211da0, func_002127e0 are void(void); func_001f1fc8 returns s32 and recurses for case 10.

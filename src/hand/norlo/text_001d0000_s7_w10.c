@@ -1,4 +1,5 @@
-/* func_001dd5c0 (hand, rodata jtbl at 0x4907b0): 1 word off: case 9 loop compare is sltiu (u32 j) where orig has slti; a signed counter gets reversed into a countdown loop. Layout symbol also holds a hidden second function at 0x1ddbf8 (see end). */
+#include "common.h"
+/* func_001dd5c0: MATCH in hand with -fno-rerun-loop-opt (rodata jump table at 0x4907b0, verified with wqb03_rr). Without the flag the second loop pass reverses the case-9 counter j into a countdown. */
 typedef struct { u8 pad0[0x14]; s32 f14; } Sub14c;
 typedef struct { u8 pad0[0x10]; f32 pos[3]; u8 pad1c[0x14c - 0x1c]; Sub14c *f14c; } Ob5;
 typedef struct { s32 x0; Ob5 *f4; } HS5;
@@ -26,6 +27,7 @@ E60 *func_001760f0(s32);
 E60 *func_001760b0(s32);
 void func_00176310(E60 *);
 s32 func_001765f8(E60 *);
+/* rodata */
 s32 func_001dd5c0(Hd5 *t) {
     E60 *e;
     Hd5 *n;
@@ -91,7 +93,7 @@ s32 func_001dd5c0(Hd5 *t) {
         n->f1c = 0;
         break;
     case 9:
-        { u32 j; for (j = 0; j < 8; j++) { if (D_0062A608[j] == t->f28) func_00176310(&D_0062A428[j]); } }
+        { s32 j; for (j = 0; j < 8; j++) { if (D_0062A608[j] == t->f28) func_00176310(&D_0062A428[j]); } }
         
         return 4;
     case 10:
