@@ -89,3 +89,9 @@
 - 001c99a8 10w: source order Z,Y,X gives the original FP regs; reload_cse keeps the first-scheduled copy of the repeated sp*4 add.
 - Stuck: 00101bb8 2w (real prototypes func_00101970(s32, DmaHdr*, s32), func_00101a18(Tex*, u8, Q*)), 001502e8 2w, 0025a560 2w, 001f2630 3w, 00125240 8w, 0011b220 9w (f would need 4 refs), 001b9f78 9w, 001c5ee8 11w (refs from loop.c inits).
 - Facts: a shared goto tail can cut a tied pseudo's refs across a floor_log2 step. A sched1 store whose value dies at it (weight -1) beats a weight-0 store whatever the source order. An unlikely branch can still become branch-likely when fall-through regs look live at the target.
+## r2_5 (round 2, large A + 6-30w; LCS before -> after)
+- Matched 00219f98 (hand, rodata 0x490f20, CONTEXT_ONLY func_00219380): flat `extern s32 D_003F4C68[], D_003F4C78[]` read as `[k*2]` and `[k*2+1]`, p0 before p1 (reload_cse turns the second add into a move).
+- Matched 001edfb8 (hand): sibling port of func_001f86e0's GS packet tail (src/hand/text_001f0000_s6_17.c): `Q {u64 a,b;}`, `p = func_00122048(1024,128); buf = p; p = buf + 1;`, uncached ub pointer, `func_0011fb38(64, packed, p+1)` returning the end pointer. Look for this packet idiom in other 0x1e/0x1f near misses.
+- 00105288 35->28 (func_00115d18 is `void(void)`; `D_002A6284 = (s32)h + h[16]; func_00115d18();`), 00192958 43->34 (`j = o->b8D + 1;` reusing the loop counter j), 0024c950 15 (9 at the right size with the 991111a assembler), 0023a968 25.
+- Stuck: 0019f1f0 15, 00107c48 29, 0010ba98 27, 00135a68 33, 001db718 40, 00169f28 52.
+- Facts: reusing an existing long-lived local (a loop counter) for a short temp changes global-alloc order; a fresh local does not. The original assembler does not move the addu of `la rd,K(rs)` into a b slot (binary has `lui;ori;addu;b;nop`, never `ori;b;addu`); 991111a gas behaves like this but is worse elsewhere, so the original gas is neither. In 2.96 jump2 runs after sched2.
