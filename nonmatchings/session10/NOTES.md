@@ -52,3 +52,9 @@
 - 0010b390 12w: D needs f4; `if (o)` folded by -fdelete-null-pointer-checks after a deref.
 - 001eddc0 13w: conversion result f (1.76) beats a.r (0.2) for a0.
 - Facts: identical `if (c) {X} else {X}` arms survive to sched2 and are merged by jump2 at no cost: a way to make local pseudos global. loop.c pass 2 gives each hi/lo_sum load life 2; with calls the hoist threshold is ~64*life*savings vs real insns.
+## w9 (00102118 001cfc28 00103c48 001ba520 001fbcd8 00166570 00199ac8): no matches
+- 00102118 17 -> 6 LCS (w9__00102118_6w.c): Task2 with plain f32 fields (only Obj keeps the unions): field access through a union member gets alias set 0 and conflicted with the D_002A3E20 loads; plus `do { } while (0);` between `h->c = 0` and `h->d = 0`. Left: original has `move s0,s3` (hh copy of h surviving gcse cprop).
+- 001ba520 20 -> 16w (w9__001ba520_16w.c): Lt as a plain struct aligned(8) instead of a union with u64 d[14]. Left: flags-block issue order/registers and store order w10,w4,wC,w8.
+- 001cfc28 18w: the late `sw m.x` inherits the stale INSN_TICK of the func_001e98d0 call group; a do{}while(0) after it fixes the store but gives constant 29 v1.
+- 00103c48 19 LCS: div temps (mflo into v1 plus a copy). 001fbcd8 20w: x2/v register choice; 160 reuse combinations. 00166570 21 LCS: block-local pa/pb gives `move s2,s0` but loses m40's address. 00199ac8 24 LCS (session8 w9 draft is the real best; session9 w8 measures 30).
+- Facts: unions used for type punning make every access alias set 0: split the types and keep the union only where punning happens. A store that becomes ready inside a block inherits the stale INSN_TICK of the last call group. A gcse-surviving copy: `o2 = o` in an earlier cse1 path and a load through it after a store (cse2 makes it a move).
