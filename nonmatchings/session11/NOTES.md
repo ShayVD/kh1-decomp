@@ -92,3 +92,17 @@
 - 001ffb30 31: the 0x0fff0000 lui still issues before `p = buf + 16` (reload gives it v0).
 - Facts: after sched1 interblock speculation life info is recomputed, so a variable whose only
   use moved into one block becomes local-alloc's.
+
+## s11w8 (0019ab38 00216890 0023a968 00199ac8 00200e28): no matches
+- 0023a968 23 -> 22 LCS (w8__0023a968_22w.c, hand, CONTEXT_ONLY func_0023a720 stub, RO 4914a0):
+  case 3 as `if (p.y + h + t >= 349)` (h chain v1, t chain v0); the original also has
+  `addiu v0,v1,20`, and putting `+ 20` back swaps the chains.
+- 0019ab38 / 00199ac8: the s8 w9 drafts are 22 with rodata placed. Finding files (28): `k = 0;`
+  right after `d = seg - same;` gives the original's bgtz + `move t0,zero` slot; then cse1 folds
+  `du = k` (the original keeps `move t4,t0`, the ref k needs to beat the hoisted 0x80000000).
+  Also: an extra `lw 4184(sp)` reload of `same`, db vs 0.0f f2/f3, a fix_truncsfsi2 scratch
+  reload putting the a1 arg move first.
+- 00216890 24: sched2 argument-order tie at the first func_001f9438 call (21 variants).
+- 00200e28 30: not seriously attempted (nostrict single-block flood).
+- Facts: read global-alloc priority straight off .lreg "used R times across L insns"; a reload
+  scratch register adds an output dep that reorders argument moves (check "Reloads for insn").
