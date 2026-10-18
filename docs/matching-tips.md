@@ -362,3 +362,50 @@ Flagged (hand-written asm, not C): func_001996d0 and func_0019a828 (whole-functi
 - **Prototypes keep paying off**: callee return types (s32 vs void), arity, and the
   position of an f32 parameter (it always goes in $f12, but the order the argument
   loads are emitted follows the parameter order).
+
+## Session 8 tips (full list: nonmatchings/session8/NOTES.md)
+
+Most session-8 matches came from reading gcc's dumps (`-dS -dR -dl -dg -dL`,
+`-fsched-verbose=5`; 991111a spells it `-fsched-verbose-5`) to find the pass that
+differs, then changing that pass's input. tools/matching/cc_s8.py and dump_s8.py write
+the dumps; prio_s8.py prints global-alloc priorities.
+
+- **Count big drafts by LCS** (tools/matching/lcs_s8.py): position counts overstate
+  them badly (002040f8 was "37w", really 19; 00202678 "40w", really 7).
+- **Reuse a generic variable** (`idx`, `id`, `i`, `head`, `e`) across blocks or loops:
+  one long-lived pseudo goes to global-alloc with lower priority and stops ties
+  (0022eef8, 001a7c50, 002287f8, 001aab98, 0011ab88, 001519c0, 00232e08, 00246ed8).
+  The opposite also works: a variable declared block-local in one branch only (002040f8).
+- **Parameters**: copy a param into a local (`s32 i = start;`), move an f32 param in the
+  prototype (changes the entry-copy order and live lengths), or take an integer param
+  and cast it to a pointer inside (no alias base) (0017b668, 00249618, 0013a440, 002384e0).
+- **Callee prototypes**: check every callee's arity against its asm
+  (tools/matching/arity_s8.py) and its return type. A callee that sets v0 removes the
+  sched2 anti-dependences a call takes on unset registers (001aa0e0: s32
+  sceGsSetDefLoadImage; 001124f8, 0016bb68/0016bfe8, sceGsSyncPath, 001e3a00).
+- **Scheduler ties**: rank is priority, then INSN_REG_WEIGHT (sched1, before reload),
+  then forward-dependence count, then LUID. A store through `union { u64; s32[2]; }`
+  gains output deps (0020b6a8); `goto out` to a shared return moves `move v0,sN` out of
+  the block (sceCdInit); `void *` fields do not alias s32 (sceDbcCreateSocket).
+- **nostrict code**: every load/store order between stack and pointer accesses is the
+  source order, so read the statements straight off the original asm (0018f268).
+- **Strict code with plain structs**: a union containing a u8 array conflicts with
+  everything; a "nostrict" near miss can be strict code with plain structs or
+  union-of-s32 fields (001d9268, 001df9c0, 001d63e8, 001166e8).
+- **Switches in loops**: each case label with its own copy of `s += n; break;` adds loop
+  latches and raises the weight of dispatch pseudos (001f0148, 001effc0). Each
+  `continue` adds a latch too.
+- **Spilled variables**: compound statements (`fl |= 0x40; fl &= 0xf7ff;`) give in-place
+  reloads; separate early returns instead of `||` reload where the original does (001a7c50).
+- **Copies that survive**: a gcse PRE copy (`move aN,aM`) survives when its source is set
+  again on some path: reassign the pointer local (`it = &p->a; ...; it = &p->b;`), or a
+  dead set of another variable from it (0025add8, 00246ed8). An entry-block constant in an
+  s-register used only in a compare is a CSE'd local `one = 1` (0025c0f8).
+- **loop.c**: merging counters that step together shrinks the loop under the hoist
+  threshold (001ea268); a test-at-top `for` keeps hoisted invariants after the
+  pre-header calls (0024ddf8); `-dL` "giv ... not worth while" explains strength reduction.
+- Address operand order: integer arithmetic `(T *)((s32)(i * sizeof + K) + (s32)D)`
+  gives index-first addu, `&D[i]` forms base-first, and pointer forms of `&D[i].e` CSE
+  with identical call arguments (0011a410).
+- Probes, not fixes: `-fno-expensive-optimizations` for global-alloc ties; an empty
+  `do { } while (0)` as a block boundary.
