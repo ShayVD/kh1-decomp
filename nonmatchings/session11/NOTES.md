@@ -298,3 +298,12 @@
   25-31 PUT copies merge ~17 words too early in ours.
 - Tools: tools/matching/slt_s11.py (per-slot store/load counts), var_s11.py (string-replacement
   variants, ` | ` separates edits, `@k@` picks the k-th match).
+
+## s11w22 (00102118, 00152928, 001137f8, 001ba520, 00192958)
+- MATCH 00152928 (nostrict): `p = a->x144;` hoisted after `f1c +=`; dead `p = 0;` before `if (a->x90 == 0) goto set;` (a cse skip-block join) keeps the gcse PRE copy `move a1,a2` alive, because CPROP pass 2 sees a set of p on one path. Life1 deletes the dead set. Real-body CONTEXT_ONLY func_00152648 for the reorg slot fill.
+- Lever: a PRE copy that CPROP2 removes survives if its source gets a dead set on one path, in a block cse1 can't fold (skip_blocks join, multi-use label).
+- cse skip_blocks crosses an if-then (no else), not the builtin unsigned-conversion diamond. gcse cprop replaces copies inside store MEM addresses too.
+- 001ba520: 10w (was 15), w22__001ba520_10w.c; the original stores w10 first, store weights push it last.
+- 00102118: still 6w (s10 w9). w22__00102118_72w_finding.c shows a hand u32 conversion gives the join-block `move s0,s3`, but cse1 then carries the D_002A3E20 address across.
+- 001137f8 (11): sched1 priority of the 1<<32 constant (24 vs 26/27) puts it last, in t0. 720 orders tried.
+- 00192958 (17): zbuf/scissor u128 constants tie in local-alloc; lower qty wins.
