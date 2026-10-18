@@ -57,3 +57,11 @@
 - Near misses: w4__001ca0f8_8w.c (local-alloc order and sched2 LUID tie want opposite source orders), w4__001cf960_7w.c (sched1: `ld flags` priority 9 loses to `sd m(0)`; needs 13+).
 - Stuck (global-alloc): 00212cc0 (sel between lim 2162 and cnt 2222), 00115758 (exact tie 2188), 00120cf8 (constant 3 needs 11 refs or life <= 56); 00113e28 (sched1 interblock hoist of `a1 = D+2`), 00125240 (local-alloc FP), 0010ea70 (sched1 `sw x14` of $0 ranked late).
 - Facts: sched ties go priority, then forward-dependence count, then LUID (`-fsched-verbose=5` region table; 991111a spells it `-fsched-verbose-5`). `goto out` to a shared return moves `move v0,sN` into the `b` slot via reorg, removing a v0 anti-dep. `void *` fields do not alias s32 under strict aliasing. Fixing local-alloc by statement order can break a sched2 LUID tie the other way: check both passes.
+
+## w7 (17-22 word drafts)
+- Matched 001124f8 (hand): func_001ed170 takes one argument (`s32 func_001ed170(s32)`, called with D_002C1380); the draft had it void(void).
+- Matched 00233168 (hand, rodata 0x491350): case 7 as a goto loop with the index in a local (`k = q->n; goto t7; i7: k = q->n + 1; q->n = k; if (k >= 99) goto done; t7: if (!q->flag[k]) goto i7;`).
+- Near miss w7__00176c60_16w.c (all registers right; b3/b2 address add order and a reload_cse copy left).
+- Stuck: 00149c80 (global-alloc tie 0.403 vs 0.414), 001cfc28 (x load latency; a `do {} while (0)` hack helps), 00219598 (s-register constants come from register pressure, hoisted by sched2), 001fa8b0, 00214a68, 00116368; no new lead on 001f31a8, 001ba520, 001fbcd8, 0021e120, 0010b390.
+- Facts: check every callee's arity against its asm (tools/matching/arity_s8.py lists the argument registers a function reads first). cse_around_loop replaces a field reload in a rotated loop test with the latch's stored value: a goto loop testing at the bottom keeps the reload. sched2 hoists constants that got s-registers under pressure to the function start. `do {} while (0)` makes a phony loop with no invariant motion. rr.py --diff prints original on the left, checkfile -v ours first.
+- Tools: tools/matching/dump_s8.py SRC [flags] (dumps under $WDIR/d with the file's mode flags), rtl_s8.py (one line per insn view of a dump).
