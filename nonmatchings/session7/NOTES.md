@@ -124,3 +124,12 @@
 - Every insn after a call depends on the return-value copy, so whatever sched1 moved into that block issues right after it (001e6038, 3w: `return 4` value hoisted into block 0, -fno-sched-interblock fixes it but breaks the lui hoists).
 - loop.c hoists a cheap invariant only if threshold*savings*lifetime >= loop insns (threshold about 2*(1+free regs) without calls); in big loops it moves only in the rerun pass, after giv init (001ea268, 3w).
 - 0011ab88 (3w, v0/v1 swap) and 001f2630 (3w) unchanged. ee-gcc writes no -d dumps for files with inline-asm helpers like 0011ab88's.
+
+## w14 (Tail3 + VU0 C functions)
+- No matches. Near misses (hand/nostrict, right size): 00191248 Tail3Draw 314w (w11's 344w draft has a closer normalised diff; keep both), 0018f268 MdlDttDraw 94w (C + two VU0 asm blocks; `andi v1,a2,0xff` before the mode chain left), 001a12f0 50w (packet-header setup), 001636d0 817w (needs an empty asm at the end of inner case 0 for size: a hack), 001166e8 843w (score with wqb03_rr.py 0048D090; o/fp s2/s3 swap).
+- `move aN,sp; lw off(aN)` means a locals struct at sp+0 passed by address to a static inline; size it to keep the frame.
+- Address held in a register across blocks: compute the pointer in the entry block. `f32 inv[2]` keeps two floats in stack slots.
+- Re-test `i < 4` at each site instead of caching it (001a12f0 176 -> 55w). `n = k - 1;` as its own statement keeps `addiu -1; sll`.
+- In switch-heavy code write case bodies in asm order. Jump table 0x48D090 has an empty `case 9:`.
+- `ColE *ep = &D_002A6238[i]` in a tail stops the table reload. A bare `sqrt.s` is PlatSqrtf; u32 bitfields keep `== 1` compares, u64 masks give lbu+dsrl.
+- wqb03_rr.py runs in ~0.2 s, usable in hill-climb loops for rodata functions.
