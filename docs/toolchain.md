@@ -185,3 +185,48 @@ routine (same calling convention).
   nofill 0x1d5b58-0x1e0xxx; 0x1fade0-0x1fcdc8 nostrict; 0x1ff488-0x2040f8
   nostrict; 0x225ea8 nostrict; 0x22f000-0x234910 strict; 0x238768-0x2412xx
   nostrict; 0x249xxx-0x24bxxx strict; 0x24d618 nofill.
+
+## Session 7: extra flags, other compilers, the n32 question
+
+**Single extra flags.** `tools/matching/flagsweep.py` retries a draft under each
+build mode with one of ~35 gcc 2.96 flags added (`KH1_EXTRA_CCFLAGS`, honoured by
+tools/checkfile.py). Over all 203 drafts it found 4 matches, and workers found
+two more; each became a mode:
+
+| Directory | Flags | Functions |
+|---|---|---|
+| src/hand/nosi | `-fno-sched-interblock` | func_001c1718 (`-fno-sched-spec` / `-fno-schedule-insns` also work) |
+| src/hand/nogcse_nosi | `-fno-gcse -fno-sched-interblock` | func_0010ec08 |
+| src/hand/nogcse_nosib | `-fno-gcse -fno-optimize-sibling-calls` | func_0010cf38 (no tail call; the flag only changes return-path layout) |
+| src/hand/faddr | `-fforce-addr` | func_00231ea0 |
+| src/hand/nostrict_norcse | `-fno-strict-aliasing -fno-rerun-cse-after-loop` | func_0012d468 |
+| src/hand/norlo | `-fno-rerun-loop-opt` | func_001dd5c0 |
+| src/hand/fmam | `-fmove-all-movables` | func_001eb7b0 |
+| src/hand/nostrict_nosib | `-fno-strict-aliasing -fno-optimize-sibling-calls` | func_00170170 |
+
+These are the simplest flags that reproduce the bytes, not proven makefile flags.
+sched1 interblock motion only happens in functions with <= 10 basic blocks, and a
+source-level alternative exists (duplicate a tail in both branches: func_001d0380
+matched that way without a flag), so a flag mode may hide a source shape.
+Flags gcc 2.96 rejects: -fno-crossjumping, -fno-if-conversion, -fno-loop-optimize,
+-fno-merge-constants, -mbranch-likely, -mno-mmi.
+
+**Other period compilers.** decomp.me also ships ee-gcc 2.9-991111 (plain),
+991111b-r4 (Windows), 991111-01-dtls13010 and the SN Systems builds 2.95.2-273a,
+2.95.2-274, 2.95.3-107/114/136 (Windows; they run under wibo 0.7.0,
+github.com/decompals/wibo). None reproduces the six functions that match in
+src/hand/n32 under 2.96 `-mabi=n32` (all 40-70 words off, n32 flags or not). Not
+wired into setup_toolchain.sh: they matched nothing.
+
+**The n32 "mixed addressing" question is answered: it is source shape, not a
+compiler.** In plain o32 src/hand, a nested sub-struct with a variable index,
+`D_003E3D70[k].s.d` (a struct at +0x40), gives `la D; addiu 64; addu; lw 12()`,
+because the element address is CSE'd between two field loads; a single flat
+access always folds into `lw sym+off(reg)`. func_002134c8 matches in plain hand;
+func_00212cc0 is 7 words off (only an s-register choice) and func_00217000 56.
+
+**func_00171078** (`lui; addu; jr; lw %lo` with the macro load's last word in the
+jr slot) is the only such case in the binary. Assembling 2.96's output with every
+installed gas (2.96, 990721, 991111, 991111a, 991111b, 991111-01, dtls13010, SN
+2.95.2) leaves the slot empty; -msplit-addresses and n32 do not split the load.
+Unresolved.

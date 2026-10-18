@@ -310,3 +310,55 @@ Flagged (hand-written asm, not C): func_001996d0 and func_0019a828 (whole-functi
   spills and delay slots.
 - **Real loops**: a symbol base hoisted into a register (then rebuilt at the
   use) comes from loop.c on a real `for` loop; goto loops do not do it.
+
+## Session 7 tips (full list: nonmatchings/session7/NOTES.md)
+
+- **Sweep flags** on any near miss (tools/matching/flagsweep.py); six functions
+  matched with one extra flag, and a flag that fixes a draft points at the source
+  shape to look for (e.g. -fno-sched-interblock: duplicate the tail per branch).
+- **Duplicate shared tails per path** (plain-brace macro, not do-while(0)):
+  cross-jumping re-merges them, but registers and spills follow the original.
+- **Block-local variables**: declare a variable separately in each branch (or per
+  case) to make it a local pseudo; this changes FP/GPR choice (func_00267c10,
+  00119ad8). Block-local copies of stored values fix sched1 store order
+  (002134c8).
+- **Shared `goto` return labels** stop if-conversion (`bnez; move v0,zero; li v0,1`
+  instead of sltiu) and the ce pass hoisting `return K` blocks.
+- **Callee prototypes** keep paying: void vs s32 return, real arity (00218218,
+  00101048, 0015a348).
+- **Struct-copy fields**: read them through separate s32 locals (0019bbf0).
+- **Masks before shifts** for u64 fields: `(r & 0x7ff0000) >> 16` gets its own andi.
+- **Nested sub-struct indexing** `D[k].s.d` keeps `la; addiu K; addu` split.
+- **Read the next-tested value into a local** before a branch to steer reorg's
+  delay-slot fill (00182ec0).
+- **VU0 code in game C**: helpers as `#define` macros of inline asm, not static
+  inline; `"=m"(buf[0])` outputs for 16-byte stack results; lq/sq around calls
+  are 128-bit caller-saves.
+- An empty `__asm__ volatile("")` barrier reaching 0 words is a hint, not a match.
+
+### Later in session 7
+
+- **Register ties: change which allocator gets the pseudo.** local-alloc takes only
+  pseudos with one death and ties an insn's output to a dying input. A variable
+  declared at function level and used in another block (or reused for a constant in
+  another branch) goes to global-alloc and is not tied; a block-local one goes the
+  other way. This fixed about ten "output took its input's register" near misses.
+  Global-alloc priority is floor_log2(refs)*refs/live_length; differences under 1
+  (x10000) are ties won by the lower pseudo number. Read them with `-dl -dg`.
+- **Asm-barrier drafts**: look for volatile globals first (the libcdvd state words
+  were volatile; build in sdk/gcc991111_as296). `do { } while (0);` is a plain-C
+  scheduling barrier.
+- **CONTEXT_ONLY callees** change delay slots: calls to an already-compiled function
+  get `REG_EH_REGION 0`, so reorg's liveness scan goes past them (beqz vs beqzl).
+- **Return shapes**: one `r0: return 0;` label at the end, `goto out` instead of
+  `break` (unrotated loop), a separate failure tail per test, `||` chains of early
+  returns; each reproduced a different original layout.
+- **Store order**: sched1 issues ready stores whose value dies first, in source
+  order; sched2 keeps sched1's order. Chained assignment `D[a]=D[b]=v` sets the order
+  of repeated stores. In GS packet floods, load positions give the source order.
+- **Loops**: a dead second set of a loop pointer stops it becoming a giv; separate
+  index variables per address get each one strength-reduced; a pointer declared in
+  the loop body is not reduced.
+- **Prototypes keep paying off**: callee return types (s32 vs void), arity, and the
+  position of an f32 parameter (it always goes in $f12, but the order the argument
+  loads are emitted follows the parameter order).
