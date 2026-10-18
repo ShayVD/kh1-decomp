@@ -492,3 +492,42 @@ the dumps; prio_s8.py prints global-alloc priorities.
   loop.c treats a loop as phony when the first insn after LOOP_BEG is not a label; jump2
   cross-jumps only against the target label's fall-through predecessor; expand_preferences leaks a
   call-crossing pseudo's caller-saved preferences to its feeders.
+
+## Session 11 tips (full list: nonmatchings/session11/NOTES.md)
+
+- **Alias sets, again**: u64 bitfields in a struct instead of punning unions; a struct without a
+  u16 member to drop one alias conflict; volatile on a subset of fields (volatile accesses order
+  only against each other); plain globals instead of pointer locals.
+- **Same address, different RTL**: `extern s32 D_002C5950[]; &D_002C5950[2]` (a pointer into the
+  middle of a symbol) makes gcse treat it as a different address.
+- **Refs without code**: identical arms on a live, not-yet-dereferenced pointer or on `i > 0`;
+  extra inline-asm "r" operands; one variable reused for related values; accumulators instead of
+  multiplies (gcse cprop never propagates into a mult).
+- **Dead sets that steer passes** (removed by life1, cost no code):
+  - A dead `p = 0;` on one path into a skip_blocks join or a multi-use label keeps a gcse PRE copy
+    (`move aN,aM`) that CPROP pass 2 would otherwise delete (00152928).
+  - A dead set of a variable live elsewhere moves if-conversion to the ce pass (001bd090).
+- **Spilled scalars, not stack structs**, when the original if-converts stores (001bd090).
+- **Call value first**: `p = f(); buf = p; p = buf + 2;` changes which insn issues in the same
+  cycle as the return-value copy (cost-0 anti-dependence), without moving statements (001ffb30).
+- **Floods**: once the block head is right, re-climb from scratch, starting from plain index order;
+  old optima are built around the wrong head (001ffb30 31 -> 0, 0021e120 8 -> 6). An empty
+  `do { } while (0)` is a sched1 barrier (a loop note, not a block boundary) that fixes the order
+  of constant li's. sched1 issues stores whose value dies first, in source order; read which
+  values stay live off the original's sched2 order.
+- **Strict f32 blocks keep source order**: a block of f32 accesses through different bases is
+  scheduled in exact source order, and pointer-global loads wait on earlier f32 stores; read the
+  order straight off the original before climbing (00106ed0).
+- **Loops**: a count-up fill loop that loop.c reverses; a real inner `do {} while (1);` keeps an
+  invariant in the inner preheader (loop.c moved_once); sets after a loop exit used in another
+  block are never moved; `j = 0; if (X) do {...} while (j < 48 && X);` makes loop.c call a loop
+  phony.
+- **Modes**: `move a0,v0; jal; nop` slots mean a nofill function; gcc's own filled slots survive
+  nofill, so they are not evidence against it (001e1838). tools/matching/modesweep_s11.py
+  re-measures a draft in every mode.
+- **Debugging cc1**: cc1 2.96 has line info; gdb breakpoints on statics (find_cross_jump,
+  jump_optimize_1, the 8th call is jump2) take typed expressions such as `e1->fld[0].rtint`.
+- **Facts**: a variable that dies more than once is never local-alloc'd; global-alloc live lengths
+  follow sched1 order; REG_BR_PROB is 3999 for an EQ-zero test of a load and 5000 for `slt`
+  against a nonzero constant (fills from the target, beql); gcse cprop replaces copies even inside
+  store MEM addresses; cse skip_blocks crosses an if-then but not the unsigned-conversion diamond.
