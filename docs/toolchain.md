@@ -231,7 +231,7 @@ installed gas (2.96, 990721, 991111, 991111a, 991111b, 991111-01, dtls13010, SN
 2.95.2) leaves the slot empty; -msplit-addresses and n32 do not split the load.
 Unresolved.
 
-## Session 9: the original assembler is not stock 2.96 gas
+## Session 9: the original assembler is not stock 2.96 gas (corrected in session 10)
 
 Two delay-slot facts from the binary (docs/workflow.md "Session 9"): the original assembler
 filled an empty `jal` slot with the `addiu %lo` tail of an `la` macro (0010a780; no
@@ -240,3 +240,20 @@ filled an empty `jal` slot with the `addiu %lo` tail of an `la` macro (0010a780;
 (so `((T *)0xADDR)[i]` gets its `lw` in the `jr` slot: func_00171078), and 991111a/-01 gas
 differ elsewhere. No installed assembler reproduces both; tools/matching/pp_la_s9.py shows
 a post-pass that does the first. Not adopted as a build mode yet: only one function needs it.
+
+**Session 10 correction: it is stock 2.96 gas.** Both facts have a plain explanation, so no
+post-pass build mode is needed (pp_la_s9.py is obsolete):
+- ee-as 2.96 fills a reorder-mode jal/jr/b slot with the last word of an `la sym`/`lw sym`
+  macro only when `sym` is already known at that point in the file: defined earlier (even weak
+  in `.ctx`), `.comm` before use, `.extern sym,size`, or absolute. An undefined extern of unknown
+  size (it might be small data), a later definition or a trailing `.comm` leaves the slot empty.
+  So 0010a780's original file defined D_002B67F0 above the function; the repo does it with a
+  zero-initialised CONTEXT_ONLY definition (src/hand/nostrict/text_00100000_s10_w1.c).
+- Stock ee-as given `-g` (the driver passes it for any `-g` compile) sets mips_optimize=1 and
+  fills no reorder-mode slot at all: the same output as kh1tool's `no_fill`, and as 991111a gas
+  on these drafts. So 0024c950 is simply a nofill function, and "nofill" translation units were
+  probably built with `-g`. 0012e1b0, 001c53c8 and 0024c950 turned out to be nofill functions
+  (two of them matched in nofill modes).
+- 0025b2f0's "prologue save order" (991111) was a type (a Hook struct), not a compiler difference.
+  001bd090 is the last compiler-difference suspect (a post-combine if-conversion that keeps an
+  earlier store).
