@@ -172,3 +172,9 @@
   - 00238258: a dead second set of the loop pointer (`o = d;` or `o = 0;` after its uses) stops loop.c making it a giv.
 - Global-alloc: a priority difference under 1 (x10000 scale) is a tie, won by the lower pseudo number (0024bce8: y0 vs -10).
 - Near miss 001ba520 20w. Unchanged: 00237d48 2w, 001cac98 6w, 00115758 7w, 00120cf8 7w, 00142e30 8w, 00110ce0 9w, 00110e68 15w, 00177488, 001eddc0 27w, 00151e28, 00149c80, 002384e0 (needs src alias base unknown), 00246ed8, 001db718, 001519c0 (nogcse + HImode struct local gives the per-case andi; size 476 vs 464).
+
+## w29 (large near misses)
+- 00169688 at 4w (hand/nostrict, no flag): case 10 as `if ((D & 1) || (hi & 1)) {...}`; case 25 tests through `s32 *pd = &D_002C5958;`, which stops the jump threading (so -fno-thread-jumps is not needed). Left: case 10's `b L+4; ld v1; nop` is a jump2 cross-jump of two copies; ours cross-jumps into case 13's tail instead (jump2 takes the first jump with 2+ matching insns, not the longest).
+- 00217000 at 25w, right size: `if (a) tbl = D_003F2C40; else tbl = D_003F2C40; c = tbl[sel].x10;` (same pointer in both arms stops combine folding sym+16; jump2 deletes the branch) gives the split `la; addu; lw 16(reg)`.
+- 00166570: the `move s6,s2; move s2,s0` are loop-hoisted m40/m80 addresses turned into copies by cse2; naming them in the loop keeps them live after it (gcse), unlike the original. 0019f1f0: the late `li.s 1.0` looks like reload rematerialisation; sched1 always hoists ours.
+- A label after a barrier gets `.p2align 3`: a stray `b L; nop; L:` in the original means a jump + barrier before that label. Volatile accesses are never folded by combine, so they cannot block jump threading.
