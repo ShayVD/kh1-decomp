@@ -12,3 +12,11 @@
   - A "nostrict" near miss can be strict code with union-of-s32 field types: try plain hand with unions.
   - 991111a gcse copy propagation removes plain register copies; a surviving `move` means a non-copy op or a copy whose source/dest is set again in the block.
   - `-dS -fsched-verbose=5` shows sched1 priorities and the issue table; `-dl` gives global-alloc refs and live lengths.
+
+## w3 (reorg trio and 4w ties)
+- No matches. Near misses: w3__0010ed20_4w.c (hand/nostrict: every register right now, only the x10/x13/x4/xc store order from sched1 left), w3__00142e30_8w.c (nostrict_nogcse + CONTEXT_ONLY func_00142cf0: only z/d callee-saved swap; cause below).
+- 001e0ab0/0d98/10f8: reorg fill_eager steals `li v0,4` from the bgtz fall-through whenever v0 is dead at the target; only a surviving label between sw and li, a volatile/asm insn, or v0 live at the target stops it. __builtin_expect, goto tails, -g variants: no.
+- 001e3a00: sched1 picks the then-branch move on priority (7 vs 4), not LUID; the original scheduled the else move first.
+- 0020b6a8: sched2 tie-break goes to the insn with more forward dependences; stores with an extra anti dependence sink late.
+- 00169688: right size with rr.py; ours cross-jumps to the tail at 0x169870, original 0x169ef8, and keeps case 10 as `b; ld v1,48(a2); nop`.
+- Facts: pass order jump2 (27) after sched2 (25), dbr 29. A pseudo whose REG_EQUAL constant becomes REG_EQUIV in update_equiv_regs gets its live length doubled for global-alloc priority (00142e30: `z = 0.0f` 8/49 -> 8/76, below d). sched1 interblock priorities are computed per block.
