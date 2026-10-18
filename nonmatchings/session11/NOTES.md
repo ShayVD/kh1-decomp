@@ -46,3 +46,19 @@
 - Facts: a bitfield read gets the containing struct's alias set (no u16 member = no conflict
   with u16 stores); a packed `struct { u32 v:16; }` cast is a quick probe for alias theories;
   an invariant placed after a giv init in the preheader was hoisted by loop pass 2.
+
+## s11w2 (001e0ab0/0d98/10f8 001f1fc8 001f2630 001eddc0 001fb428 001fa8b0 001f31a8 001f18e8): 1 match
+- 001f31a8 (hand, rodata 0x490af0): block-1 store order with `c0 = 0` right after the u40 stores
+  (c0 word in v1), the two 1.0f stores after `x70 = 1`, block 2 `x90 = 128; state = 1; x94 = 0;`
+  after x88, and the fill loop as a count-UP `for (j = 0; j < 16; j++) p->xdc[j] = 64;` (loop.c
+  reverses it into the binary's 15..0 count-down, with `li 64` before `li 15`).
+- 001eddc0 8 LCS (w2__001eddc0_8w.c): struct params copied `b = b0; a = a0;` (b first) gives the
+  original's param-store order; left: conversion temp f (1.76) takes a0.
+- 001e0ab0 twins 4w: reorg steal_delay_list_from_fallthrough takes `li v0,4`; only a live label
+  between bgtz and sw (fall-through not owned) or v0 live at the target stops it. `&&label` dead
+  local does not keep the label.
+- 001f1fc8 4w, 001f2630 3-4w: sched2 store order sorts by dependent count (3 for call-clobbered
+  registers the call does not set, 2 for v0/s-regs), ties by sched1 order.
+- Not attempted: 001fb428, 001fa8b0, 001f18e8 (17w: `tag = p + 5` after the 2nd call: no gain).
+- Tools: tools/matching/lc_s11.py (LCS count), ld_s11.py (aligned diff), hc_s11.py (in-process
+  hill-climb, ~0.3 s per variant); RO env for rodata, one reused temp dir.
