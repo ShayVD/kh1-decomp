@@ -28,3 +28,15 @@
 - Near misses: w2__00246ed8_101w.c (one instruction short: original's `addiu v0,s3,48; move s5,v0` gcse PRE copy), w2__0025f338_3w.c (DIntr; needs an asm `.p2align 3`, hack-adjacent; mfc0/mask registers swapped in the loop).
 - Stuck: 001e6038 (sched1: `return 4` v0 set must come after insn 25), 001f2630/001f1fc8 (store-order source orders flip allocation), 0024bce8 (exact global-alloc tie, 3 refs / 56 insns each).
 - Facts: a tied local-alloc pair adds refs (floor_log2(n1+n2)*(n1+n2)/len), so it usually beats a short constant; an entry-block constant in an s-register used only in a compare is a CSE'd local `x = K` that needs another use to survive delete_trivially_dead_insns; `-fsched-verbose=4 -dS` prints each cycle's ready list in rank order (last is issued next); checkfile runs in ~0.2 s.
+
+## w5 (8-15 word drafts)
+- Matched 001aab98 (hand/nostrict, rodata 0x48fe30): typed destination pointers declared once at function level and reused across six loops (lower global-alloc priority than the per-block sums).
+- Matched 001f0148 (hand, jtbl 0x4909c0): each case label gets its own copy of `s += n; break;` (see the loop-depth fact below).
+- Matched 002287f8 (hand): `k = D_00643720[D_006436D0]; switch (k)`, k reused so cur^k wins v1.
+- Matched 00110ce0 (hand): colour packed by `static inline void mk(u64 *o, ...)` called as `mk(&D_002BC9B0, ...)`; needs an unused `s32 unused[4];` for the 32-byte frame.
+- Matched 0024ddf8 (hand, rodata 0x4919d8): `for (i = 0; memcmp("SLPS", p = s + i, 4) != 0; i++);` with `i = 0` after the calls.
+- Matched 00249618 (hand/nogcse): `Seg3 *out = dst;` param copy, inner loop `p->v[j]` / `&out->s[j]`, increments `i++, p++, out++`.
+- Near misses: w5__0021b4c8_8w.c, w5__0011b220_9w.c (REG_EQUIV fp+16 halves &n's priority), w5__001b9f78_10w.c (giv inherits a0 preference), w5__00177488_18w.c (session-7 9w draft still closer).
+- Stuck: 001c99a8/001c95f8 FP local-alloc exact ties; 001fe1b8 is really 124 raw words off (580 vs 588 bytes).
+- Facts: every back edge to a loop header counts as a nested loop in 2.96 flow, so a switch dispatch inside a loop gets loop_depth = number of latches and refs are weighted depth+1; splitting merged case labels adds latches (jump2 re-merges the bodies). Copying a param into a local shortens its live length. sched1 prefers an argument copy that kills its source (INSN_REG_WEIGHT) before LUID. A test-at-top `for` keeps hoisted invariants after the pre-header calls.
+- Tool: tools/matching/hill_s8.py (dependency-respecting hill-climb over /*P*/../*Q*/ lines with checkfile, or rr.py with `RO FUNC`; set WDIR; the first marker must be inside the target function).
