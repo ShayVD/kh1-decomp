@@ -271,8 +271,8 @@ None of these are ported. The Vita layer replaces each library behind the
   return void; D_0046C624-D_0046C654 are often volatile.
 - Hand-written asm, not C: func_00260738 (cache loop + sync),
   func_002607e4 (lone `jr ra`), func_00265190 (MMI strncpy),
-  func_002654f0 (VU0 cfc2/ctc2), DIntr, func_00260b00 (t9 live across
-  calls). scePcStart/scePcStop are in src/sdk/libpc.s.
+  func_002654f0 (VU0 cfc2/ctc2), func_00260b00 (t9 live across
+  calls). DIntr was matched as C in session 10 (below). scePcStart/scePcStop are in src/sdk/libpc.s.
 
 ## Session 7
 
@@ -290,3 +290,13 @@ None of these are ported. The Vita layer replaces each library behind the
   nonmatchings/session7/w4__*_asmbarrier.c). The original probably had a real
   side effect there.
 - `int SignalSema(int)` / `void scePrintf` prototypes change v0 use after the call.
+
+## Session 10
+
+- DIntr (0x25f338) is C, not asm: the shape of the DIntr copy inlined into `_sbrk`
+  (src/sdk/libkernl/kernl.c): `eie &= 0x10000; if (eie) { do { di; sync.p; mfc0 t; t &= 0x10000; }
+  while (t); } return eie != 0;` with no separate result local (src/sdk/gcc991111_as296/
+  text_00250000_s10_w1.c). Its .s stand-in was removed from src/sdk/libkernl_asm.s.
+- func_0025b2f0 (file I/O init): D_0066DAC0 is the `{ void (*func)(int); int arg; }` Hook that
+  func_0025b2c0 takes; with that type the two field stores get different alias sets and the
+  prologue save order matches (src/sdk/gcc991111/text_00250000_s10_w6.c).

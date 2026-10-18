@@ -516,3 +516,21 @@ found that the next session needs:
   validity check counts struct field names as variables (rename a local that shares a field
   name).
 - Stale drafts of the 24 matched functions were removed from nonmatchings/.
+
+## Session 10: what changed
+
+- **16 matches** (6,900 -> 6,916 / 6,988; 92.0% -> 93.7% of code bytes) by 14 round-1 workers (one per list band) and 10 round-2 workers that used the new
+  levers (brief: nonmatchings/session10/BRIEF.md; findings: nonmatchings/session10/NOTES.md; short
+  version: docs/matching-tips.md "Session 10 tips"). Two container losses with 14 workers at once:
+  run at most about 5 workers together on this machine.
+- **The four hack-only functions are real matches**: DIntr (C shape of its `_sbrk` inline copy),
+  Tail3Draw/Tail3XDraw (GNU C nested inline helper; flagged), 0010a780 (CONTEXT_ONLY data
+  definition, values zeroed). The session-9 assembler-difference theory was wrong (docs/toolchain.md
+  "Session 10 correction"); no post-pass build mode is needed.
+- **New tools** in tools/matching/: mchk_s10.py (checkfile for many files after one warm init,
+  ~0.2 s each), lchk_s10.py (same, scored by LCS, ~0.04 s), lchkro_s10.py (LCS with rodata at
+  $RO), hcf_s10.py and hl2_s10.py (statement hill-climbs; hl2 keeps calls fixed and stores inside
+  their call interval), slot_s10.py (delay-slot / gas-symbol sweep), ctxsweep_s10.py (CONTEXT_ONLY
+  stub and callee-return sweep). Set WDIR; edit hard-coded paths in hcf/ctxsweep before use.
+  checkfile.py itself can take minutes under load: iterate with these.
+- Stale drafts of matched functions were removed from nonmatchings/.

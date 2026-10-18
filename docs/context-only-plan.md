@@ -18,12 +18,19 @@ void func_0019cb88(...) { ... func_0019bbf0(o, 1) ... }   /* the real match */
 ```
 `CONTEXT_ONLY` (include/common.h) is `__attribute__((weak, section(".ctx")))`.
 
-- The copy is compiled, so gcc knows its register use, but it is never placed or patched
+- The copy is compiled but never placed or patched
   and does not count as decompiled. Calls to it resolve to the original address
   (symbols.ld), or to the real definition when another file has one, so a matched
   function can have CONTEXT_ONLY copies in any number of files.
-- Only the register use matters: a matched body copied from another file, or an
-  unmatched callee's closest draft, both work. A `{}` stub is enough for probing.
+- What changes the caller is not register use (session 10, r2_10: gcc 2.96 does not learn a
+  callee's register use from a body above the caller). Calls to any function defined in the
+  file get a `REG_EH_REGION 0` note, so reorg's live-register scan passes the call (beqz vs
+  beqzl, filled vs annulled slots). A `{}` stub therefore works as well as a copied body.
+  Stubs can also hurt: try subsets of callees, not only all of them (00166248).
+- The same weak `.ctx` trick works for data (session 10, 0010a780): a zero-initialised
+  CONTEXT_ONLY definition of a global above the function makes gas treat the symbol as
+  known, so it fills a jal slot with the `addiu %lo` tail of an `la`. Never put the game's
+  real data values in the repo; they do not affect the match.
 - Never `static`: ee-as 2.10 turns calls to a global defined in another section of the
   same object into relocations against the section symbol; `weak` keeps them against
   the function symbol. fix-obj rejects a .text/.rodata/.data relocation against a .ctx

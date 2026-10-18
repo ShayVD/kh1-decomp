@@ -450,3 +450,45 @@ the dumps; prio_s8.py prints global-alloc priorities.
   function, so a small reorder can move 100+ words; spill slots follow declaration order.
 - **Tools**: count big drafts by LCS and re-measure old drafts in every mode (0010d470: 338 in
   hand vs 430 in nostrict); tools/matching/hl_s9.py is an LCS hill-climb.
+
+## Session 10 tips (full list: nonmatchings/session10/NOTES.md)
+
+- **Types decide alias sets.** Give a global the real struct type its callee takes (0025b2f0:
+  a `{ fn ptr; int }` Hook, not `{ int a, b }`); split punning unions into plain structs and keep
+  a union only where punning really happens (field access through a union member is alias set 0
+  and conflicts with everything: 00102118, 001ba520); packed words as bitfield structs
+  (0024be88: `{ s32 dx:4; u32 col:4; u32 row:4; u32 pad:4; s32 id:16; }` fixed a whole
+  global-alloc permutation); an f32-typed zero field (`= 0.0f`, still `sw $zero`) gains output
+  deps that raise its sched2 rank (0010ea70).
+- **Callee returns per TU**: void vs s32 decides sched2 store order when the call sets v0
+  (0010ed20, s32 func_00106b18) and must be checked in each file (001166e8 needs
+  `s32 func_00104f10`, void everywhere else). tools/matching/ctxsweep_s10.py sweeps it.
+- **CONTEXT_ONLY stubs** work through REG_EH_REGION 0, not register use: a `{}` stub is enough,
+  and a subset can beat all of them (00166248, 0012e1b0's beqz vs beqzl).
+- **Write goto tails out.** Shared `goto` tails in decompiler output are often duplicated
+  statements in the original, re-merged by jump2 cross-jumping; the copies raise REG_N_REFS at no
+  code cost (0016ea58, 0012e1b0, 001c53c8). Identical `if (c) {X} else {X}` arms do the same for
+  block structure: they survive to sched2 and make pseudos global (00212cc0, 00249718; odd source,
+  flag it in the file).
+- **Inline helpers**: a non-static or static inline copy of a matched function's body (0016ea58
+  inlines func_001711d0); inlined calls put constant args straight into hard registers and keep
+  frame addresses unhoisted (00169f28); a GNU C nested inline function reading the caller's
+  locals gives `move a3,sp; lw off(a3)` and replaces frame-overlay struct casts (Tail3Draw).
+- **Block-local reloads**: a post-call `n = e->next` into the same variable makes one long
+  pseudo; the original often used a fresh block-local one (001c53c8). A function-level variable
+  set in two blocks goes to global-alloc; block-local moves it to local-alloc (001f18e8).
+- **Dead reads and data**: a dead read of a global in one arm makes PRE place its `lui` in both
+  arms (002106b8). A delay slot next to `la sym` that the original fills means `sym` was defined
+  above the function: add a zero-initialised CONTEXT_ONLY data definition (0010a780).
+- **Modes**: an unfilled slot the original leaves next to a macro usually means a nofill
+  function (stock gas with -g); re-measure drafts in nofill modes (0012e1b0, 001c53c8).
+- **Floods** (00200648 177 -> 0): plain index order with fields in struct order, compute every
+  temporary from o-> before the packet stores (nostrict), `W = pw << 4; if (W < 832) W = 832;`
+  (a shift, not *16), then hill-climb only small blocks.
+- **Expression shape**: `u = (t - c0) / dt` instead of reassigning `x = t - c0` keeps c0 live
+  (001c53c8 FP registers); `j++; i++;` order sets loop.c's giv setup order (00212cc0); q/r
+  computed inside `if (*p)` stop strength reduction but still get hoisted by sched1 (00107c48).
+- **Facts**: sched1 never moves an insn past a call if it uses a pseudo that crosses no call;
+  loop.c treats a loop as phony when the first insn after LOOP_BEG is not a label; jump2
+  cross-jumps only against the target label's fall-through predecessor; expand_preferences leaks a
+  call-crossing pseudo's caller-saved preferences to its feeders.
