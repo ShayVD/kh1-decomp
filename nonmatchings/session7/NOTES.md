@@ -74,3 +74,10 @@
 - A jump2 cross-jump running opposite to ours means the source had an explicit goto to a shared label.
 - `if (i < N) { do {...} while (i < N); }` fills delay slots differently from `if (N)`. The `for (i = 0; i < N; i = j) { j = i + 1; ... }` form defeats strength reduction.
 - A moving pointer (`qq++`, `qq += k`) keeps in-place `addiu v0,v0,16`.
+
+## w16 (n32-region trio)
+- Matched func_002134c8 in plain o32 hand: block locals for the stored values (`s16 a = ...; s16 b = ...; u16 c = ...;`) fix the store order. sched1 tie-break: a store whose value and base register both die there wins.
+- 00212cc0 is 7w with the sub-struct trick (`D_003E3D70[k].s.d / .s.c`, 4-int struct at +0x40): only the s6/s7/s8 choice in the final loop is left (global-alloc priority).
+- The split `la; lw off(reg)` shape needs CSE of the element address between two field loads; a single access always folds.
+- A separate pointer per if-group stops jump2 cross-jumping two tails (00217000, now 56w). `n2 = ...; k = n2;` reproduces a leftover `move sN,v0`.
+- tools/matching/hc_checkfile.py: hill-climber scored by checkfile (`ADDR=<addr> SZPEN=0 hc_checkfile.py FILE MODE TAG ITERS SEED`, lines between /*P*/ and /*Q*/, /*FIX*/ keeps order).

@@ -26,6 +26,9 @@ FLAGS = """-fno-sched-interblock -fno-sched-spec -fsched-spec-load -fno-schedule
 -fno-delete-null-pointer-checks""".split()
 MODES = ["hand", "hand/nostrict", "hand/nofill", "hand/nostrict_nofill", "hand/nogcse",
          "hand/nostrict_nogcse", "hand/n32", "hand/n32_nogcse", "hand/n32_nostrict"]
+SDK_MODES = ["sdk/gcc991111", "sdk/gcc991111nf", "sdk/gcc991111_01", "sdk/gcc991111_as296",
+             "sdk/libc", "sdk/nofill", "sdk/nostrict", "sdk/auto"]
+SDK_START = 0x0024F2E0
 
 
 def check(path: Path, addr: str, flag: str):
@@ -43,20 +46,21 @@ def check(path: Path, addr: str, flag: str):
     return 99999, "error"
 
 
-def modes_for(text: str):
+def modes_for(text: str, addr: str):
     first = text.splitlines()[0] if text else ""
-    found = [m for m in sorted(MODES, key=len, reverse=True) if re.search(r"\b" + re.escape(m) + r"\b", first)]
+    sdk = int(addr, 16) >= SDK_START
+    found = [m for m in sorted(SDK_MODES if sdk else MODES, key=len, reverse=True) if re.search(r"\b" + re.escape(m) + r"\b", first)]
     seen = []
     for m in found:
         if not any(m in s for s in seen):
             seen.append(m)
-    return seen or ["hand", "hand/nostrict"]
+    return seen or (["sdk/gcc991111", "sdk/libc"] if sdk else ["hand", "hand/nostrict"])
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-j", type=int, default=4)
-    ap.add_argument("--modes", default="")
+    ap.add_argument("--modes", default="", help="comma list, or 'all' (every game or SDK mode)")
     ap.add_argument("--flags", default="")
     ap.add_argument("drafts", nargs="+")
     a = ap.parse_args()
@@ -71,9 +75,14 @@ def main():
         text = Path(d).read_text(errors="replace")
         if "common.h" not in text:
             text = '#include "common.h"\n' + text
-        for mode in (a.modes.split(",") if a.modes else modes_for(text)):
+        if a.modes == "all":
+            modes = SDK_MODES if int(addr, 16) >= SDK_START else MODES
+        else:
+            modes = a.modes.split(",") if a.modes else modes_for(text, addr)
+        for mode in modes:
             n += 1
             p = ROOT / "src" / mode / f".fs_{addr}_{n}.c"
+            p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(text)
             for fl in [""] + flags:
                 jobs.append((d, addr, mode, p, fl))
