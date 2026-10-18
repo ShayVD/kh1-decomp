@@ -117,3 +117,17 @@
   prologue's `move a1,a0` slot. Left: i ends in a2 (the i*16 temp takes a0 in local-alloc).
 - 0010ba98 21: cprop pass 2 folds the PRE copy of t->win. 00105288 28: local optimum (4000 moves).
   00166570 21: original recomputes sp+64/sp+128 after the loop; `move s6,s2; move s2,s0` missing.
+
+## s11w10 (00260610 001f2630 001f1fc8 001e0ab0 twins 00214a68 0019f1f0): 1 match
+- 00260610 (sdk/gcc991111): one variable `n` for everything: `n = pkt[0]; if (n == 0) return 0;
+  n = (n + 15) / 16;`, the copy count, then the handler index; no separate `size` local (it no
+  longer inherits a0 from size+30's preference).
+- 0019f1f0 finding (w10__0019f1f0_23w_finding.c): case 0 jumps to the shared s->idx[...] load and
+  the m[3][3] 1.0f li.s sits in that block: `id = s->idx[...]; goto tl;` reproduces the merge
+  point; then the idx base gets one register for both paths (original v0 / a1). Best stays 7.
+- 001f2630, 001f1fc8: volatile fields (136 pairs) no gain; volatile through a pointer changes other
+  code (26 vs 4 at the same position). 001e0ab0 twins: the state store is lo_sum, not volatile;
+  still steal_delay_list_from_fallthrough. 00214a68: real inner loops 24-39; goto loop with
+  `{ s32 *q = &D_00642C74[1]; q += k; (*q)++; }` gives the body (12) but loop.c hoists the lui.
+- Facts: cross-jumping runs after sched2, so written-out tails merge only if sched2 ordered them
+  the same.
