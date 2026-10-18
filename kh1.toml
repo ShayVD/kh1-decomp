@@ -193,3 +193,7 @@ cflags = "-O2 -G0 -fno-rerun-loop-opt"
 [[toolchain.override]]
 path = "src/hand/fmam/"
 cflags = "-O2 -G0 -fmove-all-movables"
+
+[[toolchain.override]]
+path = "src/hand/nostrict_nosib/"
+cflags = "-O2 -G0 -fno-strict-aliasing -fno-optimize-sibling-calls"

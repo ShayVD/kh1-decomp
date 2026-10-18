@@ -202,6 +202,7 @@ two more; each became a mode:
 | src/hand/nostrict_norcse | `-fno-strict-aliasing -fno-rerun-cse-after-loop` | func_0012d468 |
 | src/hand/norlo | `-fno-rerun-loop-opt` | func_001dd5c0 |
 | src/hand/fmam | `-fmove-all-movables` | func_001eb7b0 |
+| src/hand/nostrict_nosib | `-fno-strict-aliasing -fno-optimize-sibling-calls` | func_00170170 |
 
 These are the simplest flags that reproduce the bytes, not proven makefile flags.
 sched1 interblock motion only happens in functions with <= 10 basic blocks, and a

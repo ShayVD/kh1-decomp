@@ -178,3 +178,9 @@
 - 00217000 at 25w, right size: `if (a) tbl = D_003F2C40; else tbl = D_003F2C40; c = tbl[sel].x10;` (same pointer in both arms stops combine folding sym+16; jump2 deletes the branch) gives the split `la; addu; lw 16(reg)`.
 - 00166570: the `move s6,s2; move s2,s0` are loop-hoisted m40/m80 addresses turned into copies by cse2; naming them in the loop keeps them live after it (gcse), unlike the original. 0019f1f0: the late `li.s 1.0` looks like reload rematerialisation; sched1 always hoists ours.
 - A label after a barrier gets `.p2align 3`: a stray `b L; nop; L:` in the original means a jump + barrier before that label. Volatile accesses are never folded by combine, so they cannot block jump threading.
+
+## w30 (125-200 insn game set)
+- Matched 00126f18 (callee `f32 func_0014cc88(Obj3d0 *, f32)`), 00172998 (shared `r0: return 0` / `r1: return 1` labels, `r = 0` before the range tests that `goto out`) in hand/nostrict; pppPointRApFrame 00186ab0 in hand (VU0 random helper as a statement macro ending in `qmfc2 %0,$vf1` that writes a local, not a static inline returning f32); 00170170 (rodata jtbl 0x48ea00) needs -fno-optimize-sibling-calls in nostrict: new mode src/hand/nostrict_nosib.
+- 001e0ab0 4w (same cause as 001e10f8): reorg's fill_simple_delay_slots scans the bgtz fall-through past the sw and steals `li v0,4`; in the original $2 must be live at the target or the scan stops at the sw.
+- pi must be written 3.1415927410125732f (3.1415927f gives 0x40490fda). wqb03_rr.py ignores KH1_EXTRA_CCFLAGS (patched copy /tmp/claude-0/s7/w30/rr.py).
+- Near misses: 001ca368 70w (gcse reuses f+f), 001f0148 8w, 001aab98 8w, 00101bb8 2w, 001ca0f8 7w, 0024ddf8 9w (sched1 moves the "SLPS" lui across jalr), 00130660 7w (priority tie), 0013a440 11w, 00152928 12w, 001395d8 18w, 00116368 22w, 001137f8 27w, 0020b6a8 4w.

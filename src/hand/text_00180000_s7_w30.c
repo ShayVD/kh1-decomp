@@ -1,5 +1,5 @@
-/* pppPointRApFrame 00186ab0, nostrict: 20 words off, FP register allocation only (orig keeps 32768.0f in f1, ours f5; everything else shifted). Structure/int regs match. */
 #include "common.h"
+/* pppPointRApFrame 0x186ab0: MATCH hand (and hand/nostrict). The VU0 random helper as a statement macro writing a local (not a static inline returning f32): the two 32768.0f constants then stay separate pseudos, and post-reload cse reuses f1. */
 #include "ppp.h"
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -35,30 +35,23 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
     return i;
 }
 
-static inline f32 vu0Rand(void) {
-    f32 r;
-
-    __asm__ volatile(
-        "addi $8, $0, -1\n"
-        "qmtc2 $8, $vf2\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vrxor R, $vf2x\n"
-        "vrnext.x $vf1x, R\n"
-        "vitof0.x $vf2x, $vf2x\n"
-        "vadd.x $vf1x, $vf1x, $vf2x\n"
-        "qmfc2 %0, $vf1\n"
-        : "=r"(r)
-        :
-        : "$8");
-    return r;
-}
+#define VU0_RAND(r) __asm__ volatile( \
+        "addi $8, $0, -1\n" \
+        "qmtc2 $8, $vf2\n" \
+        "vrxor R, $vf2x\n" \
+        "vrnext.x $vf1x, R\n" \
+        "vrxor R, $vf2x\n" \
+        "vrnext.x $vf1x, R\n" \
+        "vrxor R, $vf2x\n" \
+        "vrnext.x $vf1x, R\n" \
+        "vrxor R, $vf2x\n" \
+        "vrnext.x $vf1x, R\n" \
+        "vrxor R, $vf2x\n" \
+        "vrnext.x $vf1x, R\n" \
+        "vitof0.x $vf2x, $vf2x\n" \
+        "vadd.x $vf1x, $vf1x, $vf2x\n" \
+        "qmfc2 %0, $vf1\n" \
+        : "=r"(r) : : "$8")
 
 typedef struct {
     s32 frame;
@@ -82,7 +75,7 @@ void pppPointRApFrame(void *obj, PtRApKey *key, PppEntry *e) {
     u8 *inst;
     f32 *d0, *d1;
     u32 a;
-    f32 s, co, x, y, z;
+    f32 s, co, x, y, z, r;
 
     if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
         return;
@@ -91,12 +84,14 @@ void pppPointRApFrame(void *obj, PtRApKey *key, PppEntry *e) {
         if (key->slot == -1)
             return;
         inst = inl_spawn(D_00615E60, key->slot, obj);
-        a = (s32) (vu0Rand() * 32768.0f - 16384.0f);
+        VU0_RAND(r);
+        a = (s32) (r * 32768.0f - 16384.0f);
         s = D_003732D0[(a >> 4) & 0xFFF];
         co = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
         y = s * key->r;
         co = co * key->r;
-        a = (s32) (vu0Rand() * 32768.0f * 2.0f);
+        VU0_RAND(r);
+        a = (s32) (r * 32768.0f * 2.0f);
         x = D_003732D0[(a >> 4) & 0xFFF] * co;
         z = co * D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
         d0 = (f32 *) (inst + key->off0 + 0xA0);
