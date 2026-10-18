@@ -273,3 +273,20 @@ None of these are ported. The Vita layer replaces each library behind the
   func_002607e4 (lone `jr ra`), func_00265190 (MMI strncpy),
   func_002654f0 (VU0 cfc2/ctc2), DIntr, func_00260b00 (t9 live across
   calls). scePcStart/scePcStop are in src/sdk/libpc.s.
+
+## Session 7
+
+- Hand-written asm exported: src/sdk/libkernl_asm.s (func_00260738 cache loop,
+  func_002607e4, func_00265190 MMI strncpy, func_002654f0 VU0 cfc2/ctc2, DIntr,
+  func_00260b00) and src/sdk/libkernl_exc.s (func_00260d00, the exception
+  trampoline: sq of every GPR through $k0, mfhi1/mflo1/mfsa, cop0, eret).
+- libvu0 shadow matrix func_00267c10 matches in sdk/gcc991111_01 once nx, ny, nz
+  and d are declared separately in each branch (block-local pseudos).
+- sceGsExecStoreImage (0x266380) needs sdk/gcc991111_as296 (991111a's reorg never
+  puts a volatile store in a delay slot; 2.96 gas fills it): 12 words off, a
+  buf/rest s5/s6 swap (nonmatchings/session7/w6__00266380_12w.c).
+- libcdvd 0x2695f8, sceCdRead 0x26a7f0 and 0x2698c8 match byte for byte only with
+  an empty `__asm__ volatile("")` between two global stores (not accepted; kept as
+  nonmatchings/session7/w4__*_asmbarrier.c). The original probably had a real
+  side effect there.
+- `int SignalSema(int)` / `void scePrintf` prototypes change v0 use after the call.

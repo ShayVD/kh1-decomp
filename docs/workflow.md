@@ -419,3 +419,30 @@ found that the next session needs:
 - `autodecomp.py --diff` uses objdump without `-z`, which hides nop runs;
   for big functions count differences with an LCS, not difflib.
 - Results: 6,415 -> 6,729 / 6,988 functions (96.3%), 70.4% -> 80.2% of code bytes; game 6,032 / 6,266, SDK 697 / 722.
+
+## Session 7: what changed
+
+- **Hand-written asm exported** with tools/asm_export.py: src/asm/vu0_render.s
+  (VU0 renderers func_001b8198, 001b6910, 001b1ab8, 001afac0, 001b3870, 001ab0e0,
+  001ae010, 001606d0, 00115940), src/asm/text_001aa1f8.s (sq $zero clears, the
+  func_001bfac8 context switch), src/sdk/libkernl_asm.s, src/sdk/libkernl_exc.s.
+  Caveat found later in the session: the ppp Tail-draw functions, which look just
+  like the renderers (gcc frame, VU0 runs between C), matched as **C with VU0
+  helpers as `#define` macros of inline asm** (src/hand/nostrict/text_00180000_s7_w11.c).
+  The renderers in vu0_render.s are probably C of the same kind; they are .s
+  stand-ins until someone rewrites them (they are 1,000-3,100 instructions each).
+- **tools/matching/flagsweep.py**: single-flag sweep over drafts and modes
+  (docs/toolchain.md "Session 7"). `KH1_EXTRA_CCFLAGS` in tools/checkfile.py.
+  The draft's file name must contain the 8-digit address.
+- **tools/matching/hc_checkfile.py**: fast hill-climb scored by checkfile
+  (`ADDR=<addr> SZPEN=0 hc_checkfile.py FILE MODE TAG ITERS SEED`; lines to permute
+  between `/*P*/` and `/*Q*/`, `/*FIX*/` keeps relative order).
+- **tools/matching/batch/**: compiles 150-300 renamed variants of one function in
+  one file and links them all at one address (batch.py; anneal2.py for
+  multi-group permutation annealing). Fix the scratch paths inside before use.
+- New build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr,
+  nostrict_norcse, norlo (docs/toolchain.md).
+- Workers: nonmatchings/session7/BRIEF.md (brief) and NOTES.md (findings per
+  worker); near misses are nonmatchings/session7/<worker>__<addr>_<N>w.c.
+- Drafts of functions that are now matched were removed from nonmatchings/
+  (many session-5 drafts were stale).

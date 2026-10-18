@@ -524,3 +524,9 @@ Raw notes, one line per finding, grouped by worker list. The session-6 worker br
 - Moving a constant assignment after calls (1453a8), a float argument in a temp (179d30), a zero variable for a loop test (14b9e0) all change scheduling.
 - `if (...) goto r0;` instead of `return 0` (144810); `if ((b || a) && f())` (177ac0); u16 var gives dsrl (1bb6d0).
 - 0x1429f8, 0x144810, 0x179d30, 0x1369e8 match in strict as well as nostrict.
+
+## Session 7
+
+The session-7 brief is nonmatchings/session7/BRIEF.md and every worker's findings
+are in nonmatchings/session7/NOTES.md (condensed); docs/matching-tips.md "Session 7
+tips" is the short version.

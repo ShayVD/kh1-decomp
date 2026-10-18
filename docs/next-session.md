@@ -6,35 +6,32 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 6, 2026-10-17)
+## Where we stopped (end of session 7, 2026-10-18)
 
-- **6,729 / 6,988 functions matched**: 96.3% of functions, 80.2% of code bytes. All are byte-identical and objdiff 100% (docs/progress.md).
-  - Game: 6,032 / 6,266.
-  - SDK: 697 / 722.
-- New this session (docs/workflow.md "Session 6"):
-  - CONTEXT_ONLY bodies (docs/context-only-plan.md): a callee's copy above its caller, compiled but never placed.
-  - Build modes src/hand/nogcse, nostrict_nogcse, n32, n32_nogcse, n32_nostrict and src/sdk/gcc991111_as296, through the new kh1.toml override keys `ccflags` and `as_compiler` (docs/toolchain.md "Session 6").
-  - Statement-order search scripts in tools/matching/ (hill4.py, perm.py, popt.py).
-- **docs/worker-brief.md** "Session 6" has every worker finding; docs/matching-tips.md "Session 6 tips" is the short version. The session-6 worker brief is nonmatchings/session6/BRIEF.md.
+- **6,792 / 6,988 functions matched**: 97.2% of functions, 87.1% of code bytes. All are byte-identical and objdiff 100% (docs/progress.md).
+  - Game: 6,087 / 6,266.
+  - SDK: 705 / 722.
+- New this session (docs/workflow.md "Session 7", docs/toolchain.md "Session 7"):
+  - Hand-written asm exported as .s (VU0 renderers, sq clears, context switch, libkernl asm, the exception trampoline).
+  - tools/matching/flagsweep.py (one extra gcc flag per try) and six flag build modes: src/hand/nosi, nogcse_nosi, nogcse_nosib, faddr, nostrict_norcse, norlo.
+  - The n32 "mixed addressing" question is answered: nested sub-struct indexing (`D[k].s.d`) in plain o32, not a compiler. Eight other period ee-gcc builds were tested and match nothing.
+  - The ppp Tail-draw VU0 family matched as C with VU0 helpers as `#define` inline-asm macros.
+  - tools/matching/hc_checkfile.py (fast hill-climb) and tools/matching/batch/ (hundreds of variants per compile).
+- **nonmatchings/session7/NOTES.md** has every worker finding; docs/matching-tips.md "Session 7 tips" is the short version. The worker brief is nonmatchings/session7/BRIEF.md.
 
-## What is left (259 functions)
+## What is left (196 functions)
 
-About 219 have drafts and about 40 are asm-only. Run `make rank` for the full list (status `wip`).
+Run `make rank` for the full list (status `wip`/`asm`).
 
-1. **Near-miss drafts**: nonmatchings/session6/, 200 files with INDEX.md (words off, mode, what is off), plus nonmatchings/session5/. Many are 2-5 words off and resisted mode sweeps, callee stubs, return-type sweeps and the permuter. A fresh look, brute-force statement orders, or a patched-compiler idea are what is left.
-2. **Large functions still unmatched** (400+ instructions): func_001f5fe0 (338w off), func_00166570 (59w), func_0019f1f0 (46w), func_0010d470 (180 of 992 by sequence), func_00219f98 (30w), func_0019bbf0, func_001a7c50, func_001a12f0, func_00202678, func_0022eef8 (32w), func_0019ab38, func_0010a780, func_00102118, func_002040f8, func_00199ac8, func_001c53c8, func_0016ea58, func_001fd858, func_0020ff80, func_001fb428 (86w), func_001830a0, func_0018fee8, func_0020f530, func_001c3b10, func_00197278, and sceGsExecStoreImage (func_00266380).
-3. **The n32 mixed-addressing functions** 0x212cc0, 0x2134c8 and 0x217000: no flag reproduces folded offset-0 loads plus split symbol+offset addresses (docs/toolchain.md). Probably a patched or differently configured ee-gcc; investigate before hand work.
-4. **SDK leftovers**: lseek64 (1w), ioctl (4w), sceGsDefDispEnv, sceGsSyncPath, sceGsExecStoreImage, sceDbcCreateSocket, the libvu0 shadow matrix (nonmatchings/session6/w6_27__*), and the sceCd* functions.
-5. **Hand-written asm (do not force into C)**: these should become `.s` files with tools/asm_export.py, as crt0_start.s and libpc.s did this session.
-   - VU0 macro renderers: func_001b8198, func_001b6910, func_001b1ab8, func_001afac0, func_001b3870, func_001ab0e0, func_001ae010, func_001606d0, func_001996d0, func_0019a828, func_00115940.
-   - Context switch func_001bfac8; `sq $zero` func_001aa1f8 / func_001aa448.
-   - SDK: func_00260738, func_002607e4, func_00265190, func_002654f0, DIntr, func_00260b00 (docs/sdk.md "Session 6").
-6. **Unresolved single cases**: func_001c1718 matches only with `-fno-sched-interblock` (find the extra source block or add a mode); func_00171078 (gas split a macro load into the `jr` slot).
+1. **Closest near misses** (1-7 words, each worked by two or three workers): nonmatchings/session7/ and nonmatchings/session6/ for 0025db10, 0025add8, 00101bb8, 00237d48, 00126f18, 001502e8, 00140960, 00269830, 0025a560, 001d9268, 002134c8's siblings, 001f0868 (2w), 001e6038, 0011ab88, 001ea268, 001f2630, 00141608, 0010ed20, 0020b6a8, 00170170, 001fea38, 00212cc0 (7w, s-reg priority only). Mostly register-allocation ties: new structural ideas are needed, not more statement permutation.
+2. **asm-barrier cases**: 002695f8, 0026a7f0 (sceCdRead), 002698c8, 001e10f8 reach 0 words only with an empty `__asm__ volatile("")`: find the real side effect (volatile access, inline helper call).
+3. **VU0 renderers in src/asm/vu0_render.s** (func_001b8198 and 8 others, 1,000-3,100 instructions) are .s stand-ins; the Tail-draw family showed this kind of code is C + inline-asm macros. Rewriting them is the largest byte gain left. Also Tail3Draw 00191248 / Tail3XDraw 00197cf8 (near misses), 0018f268, 001a12f0, 001166e8, 001636d0.
+4. **Large functions**: func_001f5fe0 (2,122 insns), func_0010d470, func_001a7c50, func_00102118, func_00166570 (27w), func_0019f1f0 (28w), func_00217000 (56w), func_00169688 (11w), func_0019ab38, func_00219f98, func_0022eef8, func_002040f8, func_0010a780, func_001fd858, func_00200e28, func_00107548, func_00259698 (printf engine), func_001ffb30, 001ff488/00200648/00208458 (GS-packet floods), 001c3b10, 001cc640.
+5. **Unresolved single case**: func_00171078 (macro load split into the jr slot; no gas reproduces it).
 
-## Session 7 plan
+## Session 8 plan
 
-1. Export the hand-written asm in item 5 as `.s` files so they count, and decide on the n32 mixed-addressing question (item 3).
-2. Work nonmatchings/session6/INDEX.md, smallest word count first, brute-forcing statement orders and callee prototypes.
-3. Attempt the large functions in item 2, starting from their near-miss drafts.
-4. Finish the SDK leftovers.
-5. End with `make progress-update SESSION=7`, commit, open a PR, and refresh this prompt.
+1. Rewrite one VU0 renderer from vu0_render.s as C with the Tail-draw macros; if it works, do the rest.
+2. Work the closest near misses with structural rewrites from the asm.
+3. Attempt the large functions, starting from the near-miss drafts.
+4. End with `make progress-update SESSION=8`, commit, open a PR, and refresh this prompt.
