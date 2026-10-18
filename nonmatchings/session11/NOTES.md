@@ -233,3 +233,14 @@
 - Facts: bottom-of-frame words read/written at every use in a function with all s-registers busy
   are probably spilled scalars, not a struct; loop-depth weighting (each in-loop use counts 2)
   orders hoisted constants in global-alloc.
+
+## s11w19 (0023a968 001eddc0 00217000 00202678): 1 match
+- 0023a968 (hand, rodata 0x4914A0, CONTEXT_ONLY copy of func_0023a720): w14's draft plus case 4 as
+  `{ s32 py; x = p[k*2] + 11; h = o->x10 * 22; py = p[k*2+1]; t = a[k] * 22;
+  last2 = py + h + t + 20; if (last2 >= 369) y = 348 - h; else y = py + t; }`.
+- 00217000 8 (w19__00217000_8w.c): one-block tail `c = D_003F2C40[sel].x10;` also fixes
+  `move t2,v0`; combine still folds the table address; li 2 / li 5 order is a ready-list effect.
+- 001eddc0 8, 00202678 7: unchanged (~70 / hill-climb).
+- Facts: insns made ready in the same cycle as the one just scheduled are appended unsorted
+  (RTL-earliest wins over higher priority); INSN_REG_WEIGHT ranks before the dependence class;
+  `-fsched-verbose=9` prints dep count / priority / cost per insn.
