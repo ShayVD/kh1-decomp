@@ -330,3 +330,12 @@
 - 00265608 (9): original issues H=(h-1)<<44 right after div, before off[] loads; sched2 priority 7 vs 10/9.
 - 00135a68 (33, 12 bytes short): original needs separate v+i*16 pseudos that reload_cse makes into moves; cse1 always forms one.
 - 001db718 (40): `j = 0; if (X) do {...} while (j < 48 && X);` makes both loops phony like the original, but the X test lands at the loop top (60).
+
+## s11w26 (001f2630, 001f1fc8, twins 001e0ab0/0d98/10f8, 00169688, 001502e8), no gains
+- Store floods: sched1 issues stores whose value dies first (weight -1), in source order; in sched2, stores with values in call-clobbered regs keep sched1 order. Read the original's sched2 order to infer which values stayed live.
+- 001f2630 (3w best stays w2): the x2c store must leave 0x8000 live. A `k8 = 0x8000` variable gives the right store order except x20, but loop.c hoists it and reload re-creates `li` per use, and allocation of the temporaries shifts (24w). w26__001f2630_41w_finding.c.
+- 001f1fc8 (5w best stays w32): same model; u64 k1 constant merges back into li.
+- Twins 001e0ab0/0d98/10f8 (4w): no hidden jump table. Reorg's steal is blocked only by a CODE_LABEL between bgtz and sw (or find_basic_block -1); no plain C gives one that survives jump2. Static &&label is the only 0w form (hack).
+- 00169688 (4w): gdb on cc1 (has line info) shows find_cross_jump stops at the L_skip label left by the inlined Tail before return; the label is threaded only in jump2's 2nd iteration, after jump_chain is fixed. `if (o->x70 == 2) return 1;` in both copies merges them but moves return-1 into case 10 (424w). w26__00169688_370w_finding.c.
+- 001502e8 (2w): needs life(Q) < life(C) under the fixed 3-element exchange in local-alloc; no source found.
+- Tool: gdb breakpoints on cc1 statics (find_cross_jump, jump_optimize_1) take typed expressions; the 8th jump_optimize_1 call is jump2.
