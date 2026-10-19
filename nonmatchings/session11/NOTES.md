@@ -519,3 +519,9 @@
 
 ## s11w59-s11w62 (lost)
 - The container was restarted twice under load (~48) while these ran; only w60's near miss survived: w60__00125240_6w.c (8 -> 6w, strict, flagged dead FP test `if (p[-1].x < -1e4f) y = 0;`; all FP registers match; left: the D_004F77E0 store's lui takes v0 instead of a1 and the sched2 store order differs).
+
+## s11w60 (00125240, 001eddc0, 001137f8), resumed after the restart
+- 00125240: 6w (w60__00125240_6w.c, above). D_004F77E0 itself as the test operand with if/else gives the lui a1 (gcse shares the HIGH, the 2nd use stops update_equiv_regs) but breaks the FP side (10w).
+- 001eddc0: w60__001eddc0_9w_finding.c: ch0's conversion in its own variable g with `if ((f32)(s32)g < t) pa = 0;` before g's first set makes g live from entry, so a.r gets a0 as in the original; but g then conflicts with the incoming a0/a1 and takes a2 (orig a1), so reorg fills bc1f from the fall-through. Best stays s11w2's 8.
+- 001137f8 (11): sched1 ranks the 1<<32 movdi (insn 29) low, it issues last and takes t0 (orig a2); all 60 orders, barriers, temporaries, split statements: no gain.
+- Facts: a dead test's target must stay non-trivially-dead until cse (`v = const; f(v)` folds; `y = 53.0f; f(y)` works); an FP test on a value with REG_EQUAL folds at jump; a test comparing against a stored constant makes that constant cross blocks; a single-use HIGH that gcse shared is moved back down by update_equiv_regs, a second use keeps it global; with if/else cse doesn't carry an address across the join (gcse still shares the HIGH), with if-then cse shares the lo_sum; reading a variable before its first set makes it live from entry (lower priority, but conflicts with incoming parameter registers).
