@@ -461,3 +461,9 @@
 - 00105288: 28 -> 2w (w47__00105288_2w.c, strict, right size 580): D_002A6280 as a member of `typedef struct { u8 *p; } P1;` (a plain extern global access is alias set 0 and conflicts with every load); h[12]/h[13] read into locals q/m before the D_002A6288 store; store order 6280, 6288, 6298, 62A8. Left: one sched2 cycle, `sw D_002A6288` (prio 67) before `addu a1,a0,a1` (26); needs equal priority via an output dep, which costs an s-register so far.
 - 00135a68: w47__00135a68_33w_finding.c at the right size 284: dead FP tests with else between the loop-2 stores keep four separate (plus i16 v) pseudos (the original's move chain), but the tests survive to sched1 and serialise the stores. Needs a split present at cse1/gcse but gone before sched1 (idea: a condition only cse2 can fold).
 - Facts: only component refs (struct members) get real alias sets. A pointer-member store conflicts with a load through the same pointer type: a chosen dependence edge. sched2 tie after priority: independent of the last scheduled insn wins.
+
+## s11w48 (00106ed0, 001ba520, 00125240)
+- 00106ed0: 41 -> 31w (w48__00106ed0_31w.c, strict, right size 588): w18's loop; prologue one statement per store; `sub = ...` before `D_00494BB0 = h[0]`; h[31] read early into f32 `w31`; `D_002A6C50 = 0;` last (bc1t slot). Left: prologue lui order and 12(a0)/12(a1); test block k+60/k+76; then-block still in w18's basin.
+- The 592-byte third s-register is reload's GR scratch for fix_truncsfsi2 when no caller-saved reg is free (i*16 lives long in sched1), not a pseudo losing t9. Check "Reloads for insn" in .greg.
+- 001ba520: a dead FP test after `l->s.w4 = nw;` gives the original nor/and order but the split reloads v[] from the stack (472 -> 492+).
+- Facts: pointer-typed globals read as alias set 0 in strict mode; a union read also delays a float load to the same ready time. Split chained assignments into one store per statement before climbing.
