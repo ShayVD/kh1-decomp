@@ -23,3 +23,6 @@ offset	end	decision	reason
 1f9860	1f986c	accept	InitTLB descriptor D_0046C4C0 (func_00260b00): pointers to the three TLB entry tables
 21f318	-	accept	D_00491F88 (returned by func_00256148): circular list head, points inside its own object
 1f7a9c	-	accept	newlib struct _reent at D_0046A6D8 (_impure_ptr D_0046A9C8): +0x34 _current_locale points at the 1-char locale name (below the str rule's 2-char minimum)
+1719e8	173268	reject	D_003E4658: 0x310 Glyph records {u16 code, f2, f4; u8 w, f7} (func_001efaa8 sets D_003E8E28 = &D_003E4658, n = 0x310; text_001f0000_s8_w5.c indexes it); u16 pairs equal to function starts by chance (session 14 review: 5 func, 3 ftab)
+1764a0	1765e0	reject	D_003E9110: SmG {u16 u, v} digit glyph table (func_001fbcd8, text_001f0000_s11_w42.c); one u16 pair equals a function start (session 14 review)
+095c04	095d50	reject	D_00308874: s32 offset table + byte records func_00147790 hands to func_00176ba8 (H20 header data); packed bytes equal a function start (session 14 review)
