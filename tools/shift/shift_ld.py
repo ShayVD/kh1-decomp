@@ -518,9 +518,11 @@ def cmd_gen(a) -> int:
         *text,
         "",
         *data,
-        "  _gp = _edata;     /* crt0: $gp, and where it starts clearing */",
-        "  _fbss = _edata;",
+        "  _gp = _edata;     /* crt0: $gp, and where it starts clearing */" if not a.bss_pad else
+        "  _gp = D_BSS - 0x30;",
+        "  _fbss = _gp;",
         f"  .bss ALIGN({bss_align}) (NOLOAD) : {{",
+        *([f"    . += 0x{a.bss_pad:x};  /* --bss-pad experiment */"] if a.bss_pad else []),
         "    D_BSS = .;",
         f"    . += 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
         "    _end = .;",
@@ -605,6 +607,7 @@ def main() -> int:
                    help="emit data_relocs.tsv rows with tier <= N as relocations (0: none)")
     g.add_argument("--subst-obj", action="append", default=[], metavar="OBJ=VARIANT",
                    help="link VARIANT instead of OBJ (KH1_SHIFTABLE builds)")
+    g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")
     g.add_argument("--ovl-labels", default=None, help="function starts the table names (__dr_ labels)")

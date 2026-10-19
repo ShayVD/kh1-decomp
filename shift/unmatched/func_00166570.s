@@ -985,7 +985,7 @@ func_00166570:  /* 0x00166570 */
 	.word	0x84C20000  /* 0016734C lh $v0,0($a2) */
 	.word	0x0442002A  /* 00167350 bltzl $v0,.L001673FC */
 	.word	0x3C040000  /* 00167354 lui $a0,0x57 */
-	.reloc	.-4, R_MIPS_HI16, D_00570000
+	.reloc	.-4, R_MIPS_HI16, D_00574F20
 	.word	0x0000482D  /* 00167358 move $t1,$zero */
 	.word	0x8FA20180  /* 0016735C lw $v0,384($sp) */
 	.word	0x3C07BFFF  /* 00167360 lui $a3,0xbfff */
@@ -996,7 +996,6 @@ func_00166570:  /* 0x00166570 */
 	.word	0x00031900  /* 00167374 sll $v1,$v1,0x4 */
 	.word	0x00661821  /* 00167378 addu $v1,$v1,$a2 */
 	.word	0x8C820000  /* 0016737C lw $v0,0($a0) */
-	.reloc	.-4, R_MIPS_LO16, D_00570000
 	.word	0x84640000  /* 00167380 lh $a0,0($v1) */
 	.word	0x8C480004  /* 00167384 lw $t0,4($v0) */
 	.word	0x8FA20180  /* 00167388 lw $v0,384($sp) */
@@ -1028,11 +1027,11 @@ func_00166570:  /* 0x00166570 */
 	.word	0x0443FFDA  /* 001673F0 bgezl $v0,.L0016735C */
 	.word	0x8E840000  /* 001673F4 lw $a0,0($s4) */
 	.word	0x3C040000  /* 001673F8 lui $a0,0x57 */
-	.reloc	.-4, R_MIPS_HI16, D_00570000+0x4f20
+	.reloc	.-4, R_MIPS_HI16, D_00574F20
 	.word	0x3C013F80  /* 001673FC lui $at,0x3f80 */
 	.word	0x44810800  /* 00167400 mtc1 $at,$f1 */
 	.word	0x24820000  /* 00167404 addiu $v0,$a0,20256 */
-	.reloc	.-4, R_MIPS_LO16, D_00570000+0x4f20
+	.reloc	.-4, R_MIPS_LO16, D_00574F20
 	.word	0x3C013BA3  /* 00167408 lui $at,0x3ba3 */
 	.word	0x3421D70A  /* 0016740C ori $at,$at,0xd70a */
 	.word	0x44811000  /* 00167410 mtc1 $at,$f2 */
