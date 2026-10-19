@@ -430,3 +430,8 @@
 - 001f2630: w40__001f2630_35w_order_finding.c: plain constants with store order x30(f2+w) x34(f4+288) x44 x10 x14 x2c give the exact store order and loop registers, but `a0 = 2` issues before cy+h and reload picks v1 for h (size 1064).
 - 001f1fc8 (2), 0024c950 (9), 00105d88 (7): no gain.
 - Facts: `(f32)(s32)ptr < fpload` gives free refs to an int pseudo. A dead FP test survives to the allocators only when an explicit jump follows its empty arm (break, then-arm before else, case end); if the target is just the next label, life1 deletes it. The dead-set variable must be used elsewhere. A store's sched1 weight is -1 only if its value's RTL-last use is that store.
+
+## s11w44 (00214a68, 001ba520)
+- MATCH 00214a68 (nosi), FLAGGED dead set + dead FP test: w41's draft without its three tests, keeping `if (i >= 48) { p = 0; break; }`, plus `if ((f32)(i * i) < 0.0f) c = 0;` right after `i++;` in the inner loop (c dead in the loop). Inner-loop refs count with loop-depth weight, so i beats k<<2; the test sits where both the ids giv and the lui are live so their order holds.
+- 001ba520: w44__001ba520_15w_volatile.c: volatile on w4/w8/wC/w10 gives the exact store order; left: sched1 ranks ~nw above t. Best stays w22's 10w.
+- Facts: a dead FP test in an inner loop is fine for loop.c if its target is dead in the loop. Put dead tests where both rival pseudos are live. `(f32)(i * i)` gives two refs in one insn (cse merges repeated (f32)i).
