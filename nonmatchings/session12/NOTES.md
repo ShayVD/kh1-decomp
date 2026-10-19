@@ -38,3 +38,20 @@
   loop-note barrier is the first insn after the notes in source order; pick a long-latency one.
 - Helpers (copied to tools/matching/): dif_s12.py (LCS + word diff), cc_s12.sh (-da dumps, EXTRA
   flags), deps_s12.py (forward deps per insn from a sched2 dump), pref_s12.sh (global-alloc prefs).
+
+## s12w1: 001cfc28, 001f2630, 001f1fc8, 001f18e8 (no matches, no better drafts)
+- Re-verified: 001cfc28 w6 1w (strict), 001f2630 w32 1w LCS (nofill), 001f1fc8 w32 2w (nofill,
+  RO=00490a80), 001f18e8 w52 2w (nofill, flagged dead FP test).
+- 001cfc28: in sched1, insns with no in-block predecessor issue at t=0-4 and ignore the call's
+  tick; the li.s 1.0 gets a low LUID and wins the sched2 tie with `dsll v1,8`. A dead FP test plus
+  the identical arms makes 11 blocks (> the 10-block interblock limit: single-block regions,
+  23-60w); without arms, all 40320 orders give 11w at best. `do {} while (0)` barrier: 3w at best
+  (5040 orders). w54's f0/f1 swap: the 1.0 qty (2 refs / 2 insns) always outranks r140/r141.
+- 001f18e8: kk=0xeeee is a REG_EQUIV constant with no hard reg; reload re-creates it before its
+  single use and it ranks first in sched2. `k3 = 63` before `k9 = 1` fixes li order but lengthens
+  63's life (20 vs 18 insns) and local-alloc gives it t0 (19w). Climbs bottom at 2w.
+- 001f2630 / 001f1fc8: any dead FP test anywhere in the loop changes global-alloc for the whole
+  function (205w+ / 183w+); the split lever is unusable in these glyph renderers. Memory typing
+  cannot help (one base, different offsets, never conflict).
+- Helpers: tools/matching/permx_s12.py (full or random statement permutations),
+  hcx_s12.py (hill-climb keeping each set before its use).
