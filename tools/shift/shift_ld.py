@@ -19,6 +19,9 @@ else PROVIDEd at its original address), this script links:
   `.incbin` chunks of out/shift/data/main.bin), with holes where compiled
   `.rodata.*` sections (out/gen/rodata.tsv) are placed at the same blob
   offset. D_BLOB is its start.
+- Variables defined in C (out/gen/data.tsv, phase 4): one in the data range
+  fills a hole at its blob offset, like compiled rodata; one in the bss range
+  is placed at its offset from D_BSS inside .bss. Both move with data/bss.
 - .bss: NOBITS, D_BSS at its start, sized like the original (up to _end).
 - Every name the objects reference but do not define gets an explicit,
   position-independent definition: code addresses become a label
@@ -63,6 +66,7 @@ class Placed:
     section: str
     size: int
     align: int
+    region: str = ""   # variables defined in C: "data" or "bss"
 
 
 def rel(p: Path | str) -> str:
@@ -173,6 +177,20 @@ def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Plac
         sec = e.section(name)
         out.append(Placed(addr, name, obj, name, sec.size, addralign(e, sec.index)))
     return sorted(out, key=lambda r: r.addr)
+
+
+def collect_variables(elves) -> list[Placed]:
+    """Variables C defines (out/gen/data.tsv): .data.<name> sections at their original
+    address, with the region ('data' or 'bss') kept in Placed.section's suffix."""
+    out = []
+    for addr, name, obj, size, region in K.load_data_placements():
+        obj = SUBST.get(obj, obj)
+        e = elves(obj)
+        sec = e.section(f".data.{name}")
+        if sec is None or sec.size != size:
+            sys.exit(f"error: {obj}: .data.{name} missing or resized since `make`; run `make` first")
+        out.append(Placed(addr, name, obj, sec.name, size, addralign(e, sec.index), region))
+    return sorted(out, key=lambda v: v.addr)
 
 
 def gap_statement(prev_end: int, start: int, align: int) -> tuple[str | None, bool]:
@@ -299,24 +317,32 @@ def cmd_gen(a) -> int:
     drafts, draft_rows, asm_objs, discard = pick_drafts(a, asm_objs, elves, registry)
     funcs, errors = collect_functions(asm_objs, registry, elves, drafts)
     rodata = collect_rodata(elves, funcs, asm_objs)
+    variables = collect_variables(elves)
+    data_vars = [v for v in variables if v.region == "data"]
+    bss_vars = [v for v in variables if v.region == "bss"]
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
     blob_obj = rel(a.blob_obj)
 
-    for r in rodata:
+    for r in rodata + data_vars:
         if not (blob_start <= r.addr and r.addr + r.size <= blob_end):
             errors.append(f"{r.obj}: {r.section} at 0x{r.addr:08x} is outside the data blob")
+    for v in bss_vars:
+        if not (bss_start <= v.addr and v.addr + v.size <= image_end):
+            errors.append(f"{v.obj}: {v.section} at 0x{v.addr:08x} is outside .bss (0x{bss_start:08x}-)")
     # A block that lies inside an earlier one is a merged copy (two files with
     # the same assert string: the original linker kept one). The first one
     # fills the hole; the copies get a non-allocated (INFO) section at the same blob offset,
     # so their references resolve there and their bytes are not loaded twice.
     primary, dups = [], []
-    for r in rodata:
+    for r in sorted(rodata + data_vars, key=lambda x: x.addr):
         if primary and r.addr < primary[-1].addr + primary[-1].size:
             p = primary[-1]
             if r.addr + r.size <= p.addr + p.size:
                 dups.append(r)
+            elif r.region or p.region:
+                errors.append(f"{r.section} ({r.obj}) overlaps {p.section} ({p.obj})")
             else:
                 errors.append(f"rodata {r.section} ({r.obj}) overlaps {p.section} ({p.obj})")
             continue
@@ -324,7 +350,7 @@ def cmd_gen(a) -> int:
 
     # Every global definition in a placed section, and every undefined reference.
     placed_secs: dict[tuple[str, str], int] = {(f.obj, f.section): f.addr for f in funcs}
-    placed_secs.update({(r.obj, r.section): r.addr for r in rodata})
+    placed_secs.update({(r.obj, r.section): r.addr for r in rodata + variables})
     defined: dict[str, tuple[int | None, str]] = {}
     undefined: dict[str, str] = {}
     all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs + list(drafts.values())))
@@ -552,7 +578,10 @@ def cmd_gen(a) -> int:
             print(f"error: {r.section} at 0x{r.addr:08x} is not {r.align}-aligned", file=sys.stderr)
             return 1
         data.append(f"    KEEP({r.obj}({r.section}))  /* 0x{r.addr:08x} */")
-        expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
+        if r.region:
+            expected.append((r.addr, "data", r.name))
+        else:
+            expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
         cur = r.addr + r.size
     emit_chunk(blob_end)
     if drafts:
@@ -584,6 +613,13 @@ def cmd_gen(a) -> int:
         print("error: .bss start is not an alignment of the data end", file=sys.stderr)
         return 1
 
+    # Variables C defines in the bss range: at their offset from D_BSS (zero-initialised,
+    # so their input sections only reserve space in the NOLOAD output section).
+    bss_lines = []
+    for v in bss_vars:
+        bss_lines.append(f"    . = D_BSS + 0x{v.addr - bss_start:x};")
+        bss_lines.append(f"    KEEP({v.obj}({v.section}))  /* 0x{v.addr:08x} */")
+        expected.append((v.addr, "bss", v.name))
     out = [
         "/* Auto-generated by tools/shift/shift_ld.py: link script of the shiftable",
         " * build (docs/shiftable-plan.md). No PROVIDE: every name is defined here",
@@ -601,7 +637,8 @@ def cmd_gen(a) -> int:
         f"  .bss ALIGN({bss_align}) (NOLOAD) : {{",
         *([f"    . += 0x{a.bss_pad:x};  /* --bss-pad experiment */"] if a.bss_pad else []),
         "    D_BSS = .;",
-        f"    . += 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
+        *bss_lines,
+        f"    . = D_BSS + 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
         "    _end = .;",
         "  }",
         "",
@@ -650,7 +687,8 @@ def cmd_gen(a) -> int:
         for f in funcs if f.obj in variant_objs))
     print(f"shift-ld: {len(funcs)} functions ({len(asm_objs)} extra asm objects), {len(rodata)} rodata holes, "
           f"{chunk} blob chunks, {len(dups)} merged rodata copies; defined {kinds['alias']} aliases + {kinds['label']} mid-function labels, "
-          f"{kinds['data']} data + {kinds['bss']} bss names, {kinds['abs']} absolute (outside the image)")
+          f"{kinds['data']} data + {kinds['bss']} bss names, {kinds['abs']} absolute (outside the image)"
+          + (f"; {len(data_vars)} data + {len(bss_vars)} bss variables defined in C" if variables else ""))
     print(f"shift-ld: mode {a.mode}: {n_words} data relocations (tier <= {a.reloc_tier}) as .word sym+addend"
           + (f", {in_holes} rows inside rodata holes skipped" if in_holes else "")
           + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"

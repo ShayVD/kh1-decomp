@@ -5,6 +5,13 @@ OFFSET, ITOP, DIRECT...), one per line.
 
   python3 -I tools/vu/vif_chain.py [--elf SLPS_251.98] [--one] ADDR [ADDR ...]
 
+  python3 -I tools/vu/vif_chain.py --file MODEL --rel BASE [--one] OFF [OFF ...]
+
+--file walks a chain inside a model or map file extracted from the user's disc
+(tools/shift/extract_kingdom.py): OFF is a file offset, and the address word of
+each REF/NEXT/CALL tag is taken relative to BASE (the game adds the address of
+the mesh header it relocates, docs/structs.md "Model files"). --stream decodes
+OFF as bare VIF codes (no DMA tags) up to --end.
 --one decodes only the tag at ADDR (for REF fragments the game splices
 into bigger chains, e.g. 00486300). ADDR is the address of the first DMA tag (what the game writes to D1_TADR
 or passes to sceDmaSend, e.g. 0048c630, 0048c770, 00272cf0, 00272e20).
@@ -54,6 +61,14 @@ class Image:
             if v <= a < v + f:
                 return struct.unpack_from("<I", self.d, o + a - v)[0]
         raise KeyError(hex(a))
+
+
+class FlatImage(Image):
+    """A model/map file: offset 0 = address 0; no code range."""
+
+    def __init__(self, path: Path):  # noqa: super().__init__ reads an ELF
+        self.d = path.read_bytes()
+        self.segs = [(0, 0, len(self.d))]
 
 
 class Vif:
@@ -111,11 +126,15 @@ class Vif:
             out.append(f"{at:08x}  {s}{irq}")
 
 
-def walk(img: Image, t: int, max_tags: int = 256) -> None:
+def walk(img: Image, t: int, max_tags: int = 256, rel: int | None = None) -> None:
+    """rel: address words are offsets from rel (a file walked with --file)."""
+    code_end = CODE_END if rel is None else -1
     vif, stack = Vif(), []
     for _ in range(max_tags):
         lo, hi = img.w(t), img.w(t + 4)
         qwc, tid, addr = lo & 0xFFFF, lo >> 28 & 7, hi & 0x7FFFFFF0
+        if rel is not None and tid in (2, 3, 4, 5):
+            addr += rel
         out: list[str] = []
         inline = tid in (1, 2, 5, 6, 7)
         print(f"{t:08x} tag {TAGS[tid]} qwc={qwc}" + ("" if inline else f" addr={addr:08x}"))
@@ -123,7 +142,7 @@ def walk(img: Image, t: int, max_tags: int = 256) -> None:
             vif.stream(img, t + 8, t + 16 + qwc * 16, out)
         else:
             vif.stream(img, t + 8, t + 16, out)
-            if addr < CODE_END:
+            if addr < code_end:
                 out.append("(target is a placeholder patched at run time; not followed)")
             else:
                 vif.stream(img, addr, addr + qwc * 16, out)
@@ -144,7 +163,7 @@ def walk(img: Image, t: int, max_tags: int = 256) -> None:
             if not stack:
                 return
             t = stack.pop()
-        if not img.ok(t) or t < CODE_END:
+        if not img.ok(t) or t < code_end:
             print(f"    (next tag {t:08x} is outside the static image; stop)")
             return
     if max_tags > 1:
@@ -155,10 +174,24 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--elf", default=str(REPO / "SLPS_251.98"))
     ap.add_argument("--one", action="store_true", help="decode only the tag at ADDR")
+    ap.add_argument("--file", help="a model/map file instead of the ELF (offsets, see above)")
+    ap.add_argument("--rel", default="0", help="--file: base the tags' address words are relative to (hex)")
+    ap.add_argument("--stream", action="store_true", help="decode bare VIF codes from ADDR to --end")
+    ap.add_argument("--end", default=None, help="--stream: end offset (hex)")
     ap.add_argument("addr", nargs="+", help="address of the first DMA tag (hex)")
     args = ap.parse_args()
-    img = Image(Path(args.elf))
+    img = FlatImage(Path(args.file)) if args.file else Image(Path(args.elf))
+    if args.stream:
+        for a in args.addr:
+            out: list[str] = []
+            Vif().stream(img, int(a, 16), int(args.end, 16) if args.end else len(img.d), out)
+            print("\n".join(out[:400]) + ("\n(400 codes shown)" if len(out) > 400 else ""))
+        return
     for a in args.addr:
+        if args.file:
+            print(f"== chain at file offset {int(a, 16):08x} (addresses relative to {int(args.rel, 16):#x})")
+            walk(img, int(a, 16), 1 if args.one else 256, int(args.rel, 16))
+            continue
         print(f"== chain {int(a, 16):08x}")
         walk(img, int(a, 16), 1 if args.one else 256)
 

@@ -7,8 +7,17 @@ typedef struct { u8 pad[0x10]; s32 fl; } Tri368;
 typedef struct { u8 pad[0x18]; u16 cnt; } Out368;
 extern s32 D_002C12C4;
 extern s32 D_004E0428[];
-extern void (*D_002BD178[])(s32, s32 *);
-extern void (*D_002BD1A8[])(s32, s32 *);
+/* Per-kind triangle callbacks for func_00116368: D_002BD178 for nodes inside the box,
+ * D_002BD1A8 for nodes that only overlap it (defined here: only this file uses them). */
+void func_00115e90(s32, s32 *), func_00115ed0(s32, s32 *), func_00115f10(s32, s32 *), func_00115f50(s32, s32 *), func_00115f90(s32, s32 *), func_00115fd8(s32, s32 *), func_00116020(s32, s32 *), func_00116060(s32, s32 *), func_001160b0(s32, s32 *), func_001160f0(s32, s32 *), func_00116130(s32, s32 *), func_00116160(s32, s32 *), func_00116198(s32, s32 *), func_001161d0(s32, s32 *), func_00116200(s32, s32 *), func_00116240(s32, s32 *), func_00116278(s32, s32 *), func_001162b0(s32, s32 *), func_001162f8(s32, s32 *), func_00116330(s32, s32 *);
+void (*D_002BD178[11])(s32, s32 *) = {
+    func_00115e90, func_00115ed0, func_00115f10, func_00115f50, func_00115f90, func_00115fd8,
+    func_00116020, func_00115f50, func_00116060, func_001160b0, func_001160f0,
+};
+void (*D_002BD1A8[11])(s32, s32 *) = {
+    func_00116130, func_00116160, func_00116198, func_001161d0, func_00116200, func_00116240,
+    func_00116278, func_001161d0, func_001162b0, func_001162f8, func_00116330,
+};
 extern Box368 D_002C1260;
 extern Node368 **D_002A6244;
 extern Tri368 *D_002A6238;
