@@ -1142,3 +1142,77 @@ SHIFT_DATA_SHIFT=0x21000`, 128 KB over the slot) boots and plays with the retail
 test ELF. The real growth (code from C rewrites, bigger tables) can now come from anywhere: the slot
 limit is gone for PCSX2 and for a burned DVD-5 (about 3.5 GB used). Options 2-5 above are only needed
 for a fixed-size disc layout.
+
+## Session 16: Phase 4 begins (data defined in C)
+
+The goal of phase 4: gameplay C stops naming data by address (`extern u8 D_006489E0[]`) and owns it
+instead, so data can move freely and, later, compile for a host. `make` stays byte-identical.
+
+### Mechanism
+
+- **`-fdata-sections -fno-common`** on every C object (kh1tool gen), except paths listed in
+  `kh1.toml [toolchain] data_sections_skip` (`src/sdk/`: newlib's static const tables change layout
+  under it). Each global gets its own `.data.<name>` section; with `-fno-common` zero-initialised
+  globals also land in `.data.<name>`, not `.comm`. `static` variables still go to plain `.bss` and
+  cannot be placed; the link-script step refuses any stray .data/.bss/.sdata/.sbss.
+- **Placement**: a variable named `D_XXXXXXXX` (or listed in functions.tsv) is placed at that address
+  by the matching link script (`.d_ADDR ADDR : { KEEP(obj(.data.name)) }`; out/gen/data.tsv). A
+  variable in the data range is written into the image by `patch` and checked by `verify` ("DATA
+  MISMATCH"); one in the bss range must be all zero (patch refuses otherwise). Overlaps, addresses
+  outside the image and unnamed variables are errors.
+- **Shiftable**: shift_ld.py places data-range variables into the matching hole of the data blob and
+  bss-range ones at `D_BSS + off`, so M0/M1/M2/M12 are unchanged.
+- **`SHIFT_FLOAT=1`** (m1/m2/m12; output dir gets `-float`): C-defined variables leave the original
+  layout. A floated data variable leaves a gap in the blob and is placed after it
+  (`__float_data_start`); floated bss goes after the original bss (`__float_bss_start`), and
+  `D_00675018` (the old `_end`) becomes `_end`. shift_ld refuses if a blob pointer or another D_ name
+  lands inside a floated variable. shift_cmp maps the floated pieces through the inverse map, plus
+  `_end`.
+- **`tools/shift/data_owners.py`** (needs `make shift`; ~80 s): per D_ name the region, extent to the
+  next anchor, reach, referencing files, blob pointers in, and a verdict (`single`, `single+p`,
+  `shared`); `--file SRC` lists one file's names. Writes out/shift/data_owners.tsv.
+
+### First conversions
+
+- `src/hand/nostrict/text_00230000_s6_24.c` (the menu objects func_0023b570 builds): 62 single-owner
+  bss buffers became definitions (`u8 D_006489E0[0x240] ALIGNED(16);`, sizes from the extent).
+  Shared names and the game-data tables it reads stay extern.
+- `src/hand/text_00110000_s9_w8.c`: the two collision-query handler tables `D_002BD178` and
+  `D_002BD1A8` (11 function pointers each) are now initialised C arrays.
+- Link-script: "64 variables (2 data, 62 bss)". `make`: byte-identical. M0 and M12: OK.
+  M12 + `SHIFT_FLOAT=1`: compare OK, overlay fixups OK, LO16 0; `D_002BD178` moved to 0x495050,
+  `D_006489E0` to 0x681620, `_end` 0x6889A0.
+
+**Runtime** (PCSX2 2.8.2, `KH1_BIG.iso` with the M12-float ELF appended): boots, title, loads the
+End of the World save, walks, main menu, Items and Status all work. func_0023b570 runs from the menu
+init func_00236f18 at boot, and func_00116368 (the tables' user) is the collision query every walk
+step calls, so both conversions ran.
+
+### Counts (data_owners.py, session 16)
+
+| region | single | single+p | shared |
+| --- | ---: | ---: | ---: |
+| bss | 399 | 0 | 839 |
+| data | 1,262 | 36 | 842 |
+
+50 of the single-owner data names are pointer-only tables (every word a code or data address), e.g.
+`D_00469FD8`, `D_00469FF8`, `D_0046A018` (text_00240000_h75.c), `D_0036245C`, `D_003C5898`.
+
+### Plan for the rest
+
+1. **Single-owner bss (399)** -> definitions in the owning file, sizes from the extent column
+   (check reach <= extent; round to the element type). Mechanical; batch per file, `make` after each.
+2. **Pointer-only single-owner tables (50)** -> initialised arrays of function/data pointers in their
+   owner, as with D_002BD178. Data pointers in them name other D_ symbols, which is fine.
+3. **Shared names** -> one definition in a common module per subsystem (`src/data/*.c`) plus a
+   header declaration, so every user includes the same type. Start with the bss ones (no bytes).
+4. **Numeric tables and strings (game data)** stay out of the repo. They become per-symbol pieces cut
+   from the extracted blob at build time (`.incbin` of `out/extract/data/<name>.bin`, like the blob
+   today), so each can float on its own.
+5. **Float per piece**: once a range has no anchors left inside it, SHIFT_FLOAT moves it; the data
+   relocations in data_relocs.tsv that point into it are retargeted at the new symbol instead of
+   `D_BLOB+x` / `D_BSS+x`.
+6. `single+p` (36): define in place first; float only after step 5 retargets their blob pointers.
+
+The end state is a link where no `D_BLOB`/`D_BSS` offset is left, which is also what a host build
+needs.

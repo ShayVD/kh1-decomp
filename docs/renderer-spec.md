@@ -25,6 +25,7 @@ Conventions:
 | `python3 -I tools/vu/find_vu1.py SLPS_251.98 --summary N` | opcode histogram of program N and its fixed (`vi00`-based) VU memory accesses |
 | `python3 -I tools/vu/vif_chain.py ADDR...` | walks a static DMA chain and prints its tags and VIF commands (STCYCL, UNPACK layout, MPG, MSCAL/MSCNT, BASE/OFFSET); `--one` decodes a single spliced tag. New in this session |
 | `python3 -I tools/vu/gs_packets.py --callers --layout layout.tsv` | decodes every static GS packet passed to the GIF send wrapper `func_00106b18`, register by register |
+| `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
 
 A quick way to see the differences between programs is to diff two `--disasm`
@@ -73,12 +74,12 @@ address 0. Sizes are in instructions.
 
 | P | Size | Carrier (DMA tag) | Uploaded by | Role |
 | --- | --- | --- | --- | --- |
-| 0 | 400 | REF `0x0048C6F0` (table index 0) | `func_00100580(0,..)`, `func_00114c18`, `func_00108970` | A: textured strips, culling, clipping, no fog |
-| 1 | 368 | REF `0x0048C710` (table index 2) | no static `func_00100580(2,..)` call seen | A: float-STQ strips, no backface cull (see 2.2) |
-| 2 | 413 | REF `0x0048C700` (table index 1) and inside the templates `0x0048C630`/`0x0048C690` | `func_00100580(1,..)`, `func_00108a60`/`func_00108900`, `func_00114c18` | A: P0 + per-vertex fog |
+| 0 | 400 | REF `0x0048C6F0` (table index 0) | `func_00100580(0,..)`, `func_00108970` (generic copier) | A: textured strips, culling, clipping, no fog |
+| 1 | 368 | REF `0x0048C710` (table index 2) | `func_00114c18(.., 2)` (chains `D_004D9380`/`D_004D9420`) | A: float-STQ strips, no backface cull; the projected-shadow receivers (§3.4) |
+| 2 | 413 | REF `0x0048C700` (table index 1) and inside the templates `0x0048C630`/`0x0048C690` | `func_00100580(1,..)`, `func_001148c8` -> `func_00108a60(.., 1, ..)` (objects `D_002A6C60`: area props, session 16) | A: P0 + per-vertex fog |
 | 3 | 468 | REF `0x0048C720` (table index 3) | `func_00100580(3,..)` | A: P2 + env-map and UV-scroll texture coordinates |
-| 4 | 373 | REF `0x0048C730` (table index 4) | table | A: P0 without backface culling (double-sided) |
-| 5 | 72 | REF `0x0048C740` (table index 5) | table | A: single-colour mesh, no clip or cull |
+| 4 | 373 | REF `0x0048C730` (table index 4) | `func_00108cf8(.., 4)` | A: P0 without backface culling (double-sided); the two map meshes of the `.bin` (docs/structs.md) |
+| 5 | 72 | REF `0x0048C740` (table index 5) | `func_001148c8` (objects `D_002AA060`) | A: single-colour mesh, no clip or cull; prop shadow silhouettes (§3.4) |
 | 6 | 431 | REF `0x0048C750` (table index 6) | `func_00100580(6,..)` | A: P0 + spherical point light (inferred) |
 | 7 | 413 | REF `0x0048C760` (table index 7) | table | A: P2 with the batch PRIM forced to a fixed value |
 | 8 | 105 | CNT `0x0048C770` (complete chain) | `func_00103c48` | standalone 25x25 textured height-grid demo/effect |
@@ -485,10 +486,78 @@ with `tools/vu/gsdump.py` (never commit dumps or their output). 4 vsyncs,
 
   The second row is a **256x256 off-screen pass**: flat untextured strips
   drawn into their own colour and 16-bit Z buffer, then read back as the
-  `TBP0=0x3A00` CT32 256x256 texture. Inferred: character shadow textures
-  (silhouettes rendered from the light), which would be renderer B's
-  P19/P20 projected-texture programs of question 4. Not yet confirmed by
-  following the readback draws.
+  `TBP0=0x3A00` CT32 256x256 texture. Session 16 followed it in the code:
+  it is the **projected character shadow** (§3.4).
+
+**Field dump (session 16).** A second dump, of End of the World walking in a
+plain field (shiftable M12 + `SHIFT_FLOAT=1` build), gives the same picture:
+55,021 kicks; map draws are `TRISTRIP|IIP|TME|FGE|ABE` ST/RGBAQ/XYZF2 with
+TEX0 TBP `0x3600` PSMT8 128x128, CBP `0x3700` CLD=1, CLAMP, `ATST=GEQUAL
+AREF=120`, Z GEQUAL, `COLCLAMP=1`, `DTHE=0`. The shadow pass is still there
+with no fight on screen (3,047 untextured XYZ2 strip kicks, `ATST=GREATER
+AREF=0`; TEX0 left at `0x3A00`), so it is drawn every frame for every
+character near the ground. Uploads: 94 PSMT8 128x128 and 146 CT32 16x16
+CLUTs. Display as in §3.1 (DISPFB2 FBW 512 PSMCT24, MAGH 5).
+
+### 3.4 The off-screen buffer at `0x3A0000` (session 16, static)
+
+Three users of the 256 x 256 CT32 area at block `0x3A00` (FBP `0x1D0`), all
+render-to-texture:
+
+1. **Projected shadows** (`func_00127c20`, per character within 300 units
+   of the ground below it, `func_00128218`). Draw-list keys from 60000 up:
+   - `D_004F7820[size]` (built once by `func_001284a0`; 3 window sizes
+     `D_002E27E0[0..2]`, chosen by actor `x370` bits 40-41): FRAME_1 and
+     FRAME_2 = FBP `0x1D0`, FBW 4 (256), CT32, `FBMSK=1`; ZBUF = ZBP `0x1C0`
+     (`0x380000`), PSMZ16S; XYOFFSET (1920, 1920), so (2048, 2048) maps to the
+     buffer centre; SCISSOR = a centred w x w window; one untextured SPRITE
+     with RGBA 0 clears the window; then `TEST_1/2 = ATE GREATER AREF 0,
+     ZTE GEQUAL`.
+   - The silhouette: `func_00127b98` builds a light-space matrix
+     (`func_00267930` from the light direction) and draws the actor's model
+     with colour (0, 0, 0, a), `a = (1 - height/300) * 64 * scale`.
+     Characters go through renderer B (`func_00127960` -> `func_001606d0`
+     with `Prm.x38` = {ZBUF `0x3A0001C0`, FRAME `0x1_000401D0`}, `Prm.x0 =
+     0x101`, so `x48` = 16, + 4 when the model has the alternate part table:
+     P18, or P10); props with the bit `x370 >> 39` go through renderer A P5
+     (`func_00127b18` -> `func_001149e8`, the prop's +0x20 mesh). Both
+     contexts point at the buffer, so either renderer lands there.
+   - `D_004F7C10[size]` (`func_00128738`): FRAME_1 = FBP `0x1B0`
+     (`0x360000`, the 0x3600 texture slot as CT32 256 wide); the window is
+     copied there with a bilinear SPRITE from `TEX0_1 = 0x3A00` (CT32,
+     256x256, `TCC=1`), `ALPHA (Cs-Cd)*As+Cd`; then the 3D state is
+     restored for both contexts (FRAME `0x800D0`, ZBUF `0x31000070`,
+     XYOFFSET `(0x7000, 0x7400)`, SCISSOR 512x384) and context 2 is set up
+     to sample the result: `TEX0_2` = `0x3600` CT32 256x256, bilinear,
+     `CLAMP_2 = REGION_CLAMP` to the window minus one texel (the per-draw
+     MINU/MAXU windows of §3.3), `ALPHA_2 = (Cs-Cd)*As+Cd`, `TEST_2 ATE
+     GREATER AREF 0, ZTE GEQUAL`.
+   - The receivers: `func_00114f18` collects the collision faces inside the
+     shadow volume's box, and `func_00127568` writes them as a renderer A
+     batch for **P1** (`func_00114f50` queues the `D_004D9380`/`D_004D9420`
+     chain, program table index 2): positions, colour 128.0, STQ as floats
+     (the shadow projection of each vertex, `/ size + 0.5`), strip flag in
+     STQ.w, GIF tag PRIM `TRISTRIP|IIP|TME|ABE|CTXT2` (`0x312E4000`). Faces
+     whose normal has a non-negative dot product with the light direction
+     are skipped. So the floor under the
+     character is redrawn darkened by the silhouette texture.
+   Port: render the silhouette into a 256x256 texture from the light, blur by
+   one bilinear copy, and draw it as a projected decal on the ground
+   triangles (or use a real shadow map).
+2. **Texture crossfade** (`func_00135ed0`, a renderer B step-3 callback set
+   by `func_00136428`): after step 2 uploaded the part's texture to `0x3600`,
+   it copies it into `0x3A0000` (SPRITE, alpha = the callback argument),
+   uploads texture `index + count/2` of the same model to `0x3600`/`0x3700`,
+   blends it over the copy with `ALPHA (Cd-Cs)*Ad+Cs`, restores the 3D state
+   and sets `TEX0_1 = 0x3A00` CT32, so the part is drawn with a mix of its two
+   textures (inferred: facial expression or damage blend).
+3. **Eye overlay** (`func_00175600`, step-3 callback for parts with id 3 and
+   4): `D_0035C4A0` copies the part's 128x128 texture into `0x3A0000` at
+   double size, then `D_0035C550` draws a 64x64 sprite from the model's
+   `URSL` image at a position that `func_001752a0` moves each frame toward
+   the camera as seen from bone 46 (`x154 + 0xB80`, at most 0.015 per frame),
+   restores the 3D state and sets `TEX0_1 = 0x3A00` (256x256 CT32,
+   `REGION_CLAMP`). Inferred: pupils that follow the camera.
 
 ## 4. Per-frame packet flow
 
@@ -558,8 +627,9 @@ is the step):
    If `x48 & 4`, skip to step 4 after a cache flush.
 2. GS state on GIF:
    - entries flagged `x4 & 8`: a small A+D packet `D_00351C40` with two
-     values from the model, `s->x0->x0`/`x8` (inferred: ZBUF_1 and FRAME_1,
-     since `func_0015f488` writes the same two fields to those registers);
+     values from the draw instance, `s->x0->x0`/`x8` = ZBUF_1 and FRAME_1
+     (session 16: they are the caller's `Prm.x38`/`x40`, copied by
+     `func_001606d0`; the shadow pass passes the `0x3A0000` buffer here);
    - otherwise `func_0015f488` + `func_0015f8c8` build `D_00573AC0`: CLUT
      upload (BITBLTBUF to block `0x3700`, CT32 16x16), texture upload (PSMT8
      to block `0x3600`, size from the image header, `REF` into the model's
@@ -567,8 +637,9 @@ is the step):
      ALPHA_1, ZBUF_1, FOGCOL, FRAME_1, CLAMP_1` (template in
      `func_0015f128`). `a->x5` selects the translucent pass values (3.2).
 3. Optional model callback `s->x0->x40(&D_0055C680, ...)` with a description
-   of the texture slot (block `0x3600`/`0x3700`, size, format 19 = PSMT8).
-   Inferred: texture animation or palette effects.
+   of the texture slot (block `0x3600`/`0x3700`, size, format 19 = PSMT8,
+   part id, texture index). The two callbacks render into `0x3A0000` and
+   point `TEX0_1` at it (§3.4).
 4. Send the mesh chain `table[byte7].x18` on VIF1 (TTE on).
 5. Busy-wait until VIF1 is idle (`VIF1_STAT & 0x1F000003 == 0`) and VU1 is
    stopped (`VPU_STAT` bit 8 via `cfc2 vi29`), then finish.
@@ -629,6 +700,16 @@ interrupt-driven executor becomes a plain loop.
    `func_0015ff78` step 4) and walk it with `vif_chain.py` logic; then
    document the file headers (`+0x80..0x9C` relocated tags) in
    docs/structs.md.
+   *Session 16:* the file headers and names are in docs/structs.md ("Model
+   files"): map meshes come from `<ww>00_<nn>.bin` (8 bbox corners + the two
+   tags at +0x80/+0x90), characters from `*.mdls` chunk chains (`MOBJ`
+   header, texture records, part table, per-part mesh chain).
+   `tools/vu/model_header.py` parses them. The renderer B chain was checked
+   on a model embedded in the ELF: one `CNT` with `STCYCL 1,1; UNPACK V4-32
+   -> 0 +TOPS`, a command stream of `{op, arg}` records (0 = matrix slot for
+   bone `arg`, filled by `func_0015fd20`; 1/2 = vertex group with byte
+   length; 0x8000 = end). Still open: the renderer A strip stream behind the
+   +0x90 tag, and checking the derived file names against KINGDOM.IDX.
 2. ~~Per-mesh GS state~~ Partly answered by §3.3: CLAMP/CLAMP for most
    meshes, REGION_CLAMP atlas windows for context-2 draws. Still open: where
    in the model file those values live.
@@ -636,17 +717,33 @@ interrupt-driven executor becomes a plain loop.
 4. P19/P20 (`fl & 8`) and P10 (`v` bit 2): which game objects use them
    (shadows? effects? §3.3's 256x256 off-screen pass is the likely
    consumer). Breakpoint on `func_0015fc00` and log `fl`/`x48`.
+   *Session 16:* `fl & 8` is the entry's bit for parts whose id is set in
+   the caller's mask `Prm.x2c` (`func_001606d0`); the shadow silhouettes
+   use `Prm.x0 = 0x101`, i.e. `x48` = 16 (+4 with the alternate part
+   table): P18 or P10, not P19/P20 (§3.4). Which callers set `Prm.x2c`
+   is still open; the dump's `ATST GREATER AREF 0` for the silhouettes
+   does not match step 2's `ATST GEQUAL AREF=x2c`, so a run should confirm
+   which path they take.
 5. P21's rotation order and angle units, and how `func_00162c5c` composes
    the parent matrix. Needed for exact skeleton poses.
-6. What renderer B's step-3 callback (`s->x0->x40`) does with the texture
-   slot description (CLUT animation, scrolling, render-to-texture?).
-7. P1's exact input (float STQ, colour scale from the batch tag) and which
-   chain uses it (table index 2 via `func_00100580`; `func_00100580(1, ...)`
-   actually selects P2: the table order is P0, P2, P1, P3, ...). Map every
-   `func_00100580`/`func_00114c18` call to its program.
+6. ~~What renderer B's step-3 callback (`s->x0->x40`) does~~ Answered
+   (§3.4): render-to-texture into `0x3A0000`, then `TEX0_1 = 0x3A00`.
+   Two callbacks, both chosen in `func_00136428`: `func_00135ed0` (blend
+   texture i with texture i + count/2) and `func_00175600` (eye sprites
+   from the `URSL` chunk on parts 3 and 4).
+7. ~~P1's input and which chain uses it~~ Answered (§3.4): the shadow
+   receivers (`func_00114c18(.., 2)` chains, batches from
+   `func_00127568`: float xyz + 1.0, colour 128.0 x 4, STQ floats with the
+   strip flag in STQ.w as `+-1.0` with the low bits `0x20`). Map meshes use
+   P4 (`func_00108cf8(.., 4)`), area props P2 and prop silhouettes P5
+   (`func_001148c8`).
 8. The `REFE` chains at `D_0046E120`..`D_00482260` (renderer A, cases 0/1/3
    of `func_00107d30`): what they draw (sky? the "far" layer?). Static
    walk with `vif_chain.py` once their placeholders are understood.
+   *Session 16:* the case 0/1 chains (`+0x20` of each) are patched by
+   `func_00106ed0` from section 1 of the map `.bin` (its tag table and
+   per-texture records), so they carry per-map data (inferred: texture
+   state for the map meshes). Case 3 not traced.
 9. VSync and frame pacing: the constants in `func_0010fea0`, the 30/60 fps
    switch (`D_002BBDEC`), and where the main loop waits for the vertical
    blank.

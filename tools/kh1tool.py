@@ -41,6 +41,7 @@ TOOLCHAIN_DIR = ROOT / "tools" / "toolchain"
 LINKED = OUT / "linked.elf"
 PATCHED = OUT / "kh1.elf"
 PLACEMENTS = GEN / "placements.tsv"
+DATA_PLACEMENTS = GEN / "data.tsv"
 OBJDIFF_DIR = OUT / "objdiff"
 OBJDIFF_JSON = ROOT / "objdiff.json"
 BINUTILS = os.environ.get("KH1_BINUTILS_PREFIX", "mips-linux-gnu-")
@@ -48,6 +49,7 @@ BINUTILS = os.environ.get("KH1_BINUTILS_PREFIX", "mips-linux-gnu-")
 SOURCE_SUFFIXES = {".c": "c", ".cpp": "cxx", ".cc": "cxx", ".s": "asm", ".S": "asm"}
 ADDR_REF_RE = re.compile(r"\b(?:func|D)_([0-9A-Fa-f]{8})\b")
 PLACEHOLDER_RE = re.compile(r"^func_([0-9A-Fa-f]{8})(?:__.*)?$")
+DATA_NAME_RE = re.compile(r"^D_([0-9A-Fa-f]{8})$")
 
 JR_RA = 0x03E00008
 
@@ -396,6 +398,7 @@ def cmd_gen(args, cfg) -> int:
     """Write out/gen/objects.mk (per-source compile rules) and symbols.ld."""
     GEN.mkdir(parents=True, exist_ok=True)
     rules, objs = [], []
+    skip_dsec = cfg["toolchain"].get("data_sections_skip", [])
     for src in iter_sources():
         rel = src.relative_to(ROOT).as_posix()
         obj = obj_for(src).relative_to(ROOT).as_posix()
@@ -409,7 +412,10 @@ def cmd_gen(args, cfg) -> int:
             lang, flags = ("c++", fl.cxxflags) if kind == "cxx" else ("c", fl.cflags)
             # Compile to assembly, give each function its own .rodata.<fn>
             # section (split-rodata), then assemble with the same driver.
-            cmd = (f"{tc}/ee-gcc -S -x {lang} {flags} {fl.ccflags} -ffunction-sections $(INCLUDES) "
+            # Game code: each global variable in its own section (.data.<name>), so a
+            # table defined in C can be placed at its original address (data_placements).
+            dsec = "" if rel.startswith(tuple(skip_dsec)) else " -fdata-sections -fno-common"
+            cmd = (f"{tc}/ee-gcc -S -x {lang} {flags} {fl.ccflags} -ffunction-sections{dsec} $(INCLUDES) "
                    f"-o $(@:.o=.s) {rel} && $(KH1) split-rodata {'--no-fill ' if fl.no_fill else ''}$(@:.o=.s) && "
                    f"{atc}/ee-gcc -c -x assembler {flags} -o $@ $(@:.o=.s) && $(KH1) fix-obj $@")
         rules.append(f"{obj}: {rel} $(HEADERS) kh1.toml\n\t@mkdir -p $(dir $@)\n"
@@ -681,6 +687,54 @@ def symbol_address(sym: str, registry: dict[str, int]) -> int | None:
     return int(m.group(1), 16) if m else None
 
 
+def object_data(obj: Path) -> tuple[list[tuple[str, str, int]], list[str]]:
+    """Global variables defined in C (-fdata-sections: section .data.<name>, phase 4):
+    (symbol, section, size) for each, and the names of any other non-empty data
+    sections (statics in plain .data/.bss, which cannot be placed)."""
+    elf = Elf.load(obj)
+    out, stray = [], []
+    by_sec: dict[int, list] = defaultdict(list)
+    for s in elf.symbols():
+        if s.shndx and s.shndx < len(elf.sections) and s.bind in (1, 2) and s.name:
+            by_sec[s.shndx].append(s)
+    for sec in elf.sections:
+        if not sec.size or sec.flags & 2 == 0:  # SHF_ALLOC
+            continue
+        if sec.name.startswith(".data."):
+            name = sec.name[len(".data."):]
+            if not any(x.name == name and x.value == 0 for x in by_sec.get(sec.index, [])):
+                stray.append(sec.name)
+                continue
+            out.append((name, sec.name, sec.size))
+        elif sec.name in (".data", ".bss", ".sdata", ".sbss") or sec.name.startswith((".bss.", ".sdata.", ".sbss.")):
+            stray.append(sec.name)
+    return out, stray
+
+
+def data_region(cfg, orig: Elf, addr: int, size: int) -> str | None:
+    """'data' (file-backed, after code), 'bss' (in the load segment but not in the
+    file), or None if [addr, addr+size) is not inside one of them."""
+    text_end = parse_int(cfg["target"]["text_end"])
+    seg = next(s for s in orig.segments if s.type == PT_LOAD and s.vaddr <= text_end < s.vaddr + s.memsz)
+    if not (text_end <= addr and addr + size <= seg.vaddr + seg.memsz):
+        return None
+    file_end = seg.vaddr + seg.filesz
+    if addr + size <= file_end:
+        return "data"
+    return "bss" if addr >= file_end else None
+
+
+def load_data_placements() -> list[tuple[int, str, str, int, str]]:
+    """(addr, symbol, object, size, region) of the variables C defines (out/gen/data.tsv)."""
+    if not DATA_PLACEMENTS.exists():
+        return []
+    out = []
+    for line in DATA_PLACEMENTS.read_text().splitlines()[1:]:
+        a, n, o, sz, reg = line.split("\t")
+        out.append((int(a, 16), n, o, int(sz, 16), reg))
+    return out
+
+
 def cmd_link_script(args, cfg) -> int:
     """After compiling: pin each function's section at its original address."""
     registry = load_registry()
@@ -707,8 +761,40 @@ def cmd_link_script(args, cfg) -> int:
     if errors:
         print("\n".join(f"error: {e}" for e in errors), file=sys.stderr)
         return 1
+    # Variables defined in C (phase 4): each .data.<name> at the address of <name>.
+    data_rows = []
+    orig_d = None
+    for src in iter_sources():
+        obj = obj_for(src)
+        rel = src.relative_to(ROOT).as_posix()
+        if src.suffix not in (".c", ".cpp", ".cc"):
+            continue
+        found, stray = object_data(obj)
+        for sec in stray:
+            errors.append(f"{rel}: data section {sec} cannot be placed: define each variable as a "
+                          f"non-static global with a D_XXXXXXXX or functions.tsv name")
+        for name, sec, size in found:
+            m = DATA_NAME_RE.match(name)
+            addr = registry.get(name, int(m.group(1), 16) if m else None)
+            if addr is None:
+                errors.append(f"{rel}: variable {name} has no address (name it D_XXXXXXXX or add it to functions.tsv)")
+                continue
+            orig_d = orig_d or require_orig(cfg)
+            region = data_region(cfg, orig_d, addr, size)
+            if region is None:
+                errors.append(f"{rel}: {name} (0x{addr:08x}, 0x{size:x} bytes) is not inside the data or bss of the image")
+                continue
+            data_rows.append((addr, name, obj.relative_to(ROOT).as_posix(), size, region, rel))
+    data_rows.sort()
+    for (a1, n1, _o1, s1, _r1, f1), (a2, n2, _o2, _s2, _r2, f2) in zip(data_rows, data_rows[1:]):
+        if a1 + s1 > a2:
+            errors.append(f"{n1} ({f1}, 0x{a1:08x}+0x{s1:x}) overlaps {n2} ({f2}, 0x{a2:08x})")
+    if errors:
+        print("\n".join(f"error: {e}" for e in errors), file=sys.stderr)
+        return 1
     placements.sort()
     secs = [f"  .f_{a:08x} 0x{a:08x} : {{ KEEP({obj}(.text.{sym})) }}" for a, sym, obj, _ in placements]
+    secs += [f"  .d_{a:08x} 0x{a:08x} : {{ KEEP({obj}(.data.{n})) }}" for a, n, obj, _s, _r, _f in data_rows]
     rodata_rows = []
     by_obj: dict[str, dict[str, int]] = defaultdict(dict)
     for a, sym, obj, _ in placements:
@@ -727,7 +813,11 @@ def cmd_link_script(args, cfg) -> int:
         f"{a:08x}\t{n}\t{o}\n" for a, n, o in sorted(rodata_rows)))
     PLACEMENTS.write_text("addr\tsymbol\tobject\tsource\n" + "".join(
         f"{a:08x}\t{s}\t{o}\t{r}\n" for a, s, o, r in placements))
-    print(f"link-script: {len(placements)} functions, {len(rodata_rows)} rodata blocks placed")
+    DATA_PLACEMENTS.write_text("addr\tsymbol\tobject\tsize\tregion\n" + "".join(
+        f"{a:08x}\t{n}\t{o}\t{sz:x}\t{reg}\n" for a, n, o, sz, reg, _f in data_rows))
+    nb = sum(1 for r in data_rows if r[4] == "bss")
+    print(f"link-script: {len(placements)} functions, {len(rodata_rows)} rodata blocks placed"
+          + (f", {len(data_rows)} variables ({len(data_rows) - nb} data, {nb} bss)" if data_rows else ""))
     return 0
 
 
@@ -782,10 +872,26 @@ def cmd_patch(args, cfg) -> int:
             print(f"error: {name} ({obj}) at 0x{addr:08x} is missing or outside the image", file=sys.stderr)
             return 1
         data[off: off + sec.size] = linked.data[sec.offset: sec.offset + sec.size]
+    variables = load_data_placements()
+    for addr, name, obj, size, region in variables:
+        sec = linked.section(f".d_{addr:08x}")
+        if sec is None or sec.addr != addr or sec.size != size:
+            print(f"error: {name} ({obj}): section .d_{addr:08x} missing from linked ELF", file=sys.stderr)
+            return 1
+        body = linked.data[sec.offset: sec.offset + sec.size] if sec.type != 8 else bytes(size)
+        if region == "bss":
+            if any(body):
+                print(f"error: {name} ({obj}) is in .bss (0x{addr:08x}) but has a non-zero initialiser",
+                      file=sys.stderr)
+                return 1
+            continue  # not in the file; zero at startup
+        off = orig.vaddr_to_offset(addr)
+        data[off: off + size] = body
     PATCHED.parent.mkdir(parents=True, exist_ok=True)
     PATCHED.write_bytes(bytes(data))
-    print(f"patch: {len(placements)} functions, {len(rodata)} rodata blocks written to "
-          f"{PATCHED.relative_to(ROOT)}")
+    print(f"patch: {len(placements)} functions, {len(rodata)} rodata blocks"
+          + (f", {sum(1 for v in variables if v[4] == 'data')} data variables" if variables else "")
+          + f" written to {PATCHED.relative_to(ROOT)}")
     return 0
 
 
@@ -817,12 +923,17 @@ def cmd_verify(args, cfg) -> int:
             size = linked.section(f".r_{addr:08x}").size
             if o_elf.read(addr, size) != b_elf.read(addr, size):
                 print(f"RODATA MISMATCH 0x{addr:08x} {name} ({obj})")
+    if load_data_placements():
+        o_elf, b_elf = Elf(orig), Elf(built)
+        for addr, name, obj, size, region in load_data_placements():
+            if region == "data" and o_elf.read(addr, size) != b_elf.read(addr, size):
+                print(f"DATA MISMATCH 0x{addr:08x} {name} ({obj})")
     if orig == built:
         print(f"OK: {PATCHED.name} is byte-identical to the original "
               f"({sum(1 for s in st.values() if s == 'matched')} decompiled functions)")
         return 0
     print(f"FAIL: {len(nonm)} decompiled function(s) differ from the original"
-          + ("" if nonm else " (the difference is in placed rodata or outside decompiled code)"))
+          + ("" if nonm else " (the difference is in placed rodata or data, or outside decompiled code)"))
     return 1
 
 

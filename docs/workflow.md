@@ -687,3 +687,24 @@ found that the next session needs:
 - Matching (1 worker, s15m1): no new matches. 00125240 5 -> 3 words flagged (right size 180). Closed
   angles: ee-gcc 991111 builds (much worse; 001eddc0 needs 2.96's inline fixuns), -g variants
   (identical code), ~30 more flags. nonmatchings/session15/NOTES.md; helpers tools/matching/*_s15.py.
+
+## Session 16: what changed
+
+- **Phase 4 started** (docs/shiftable-plan.md "Session 16"): C objects are built with
+  `-fdata-sections -fno-common` (except `src/sdk/`, `kh1.toml data_sections_skip`); variables named
+  `D_XXXXXXXX` are placed at their address by the link script and checked by `verify`. 64 variables are
+  now C definitions (text_00230000_s6_24.c bss buffers, text_00110000_s9_w8.c handler tables).
+  `include/common.h` has `ALIGNED(n)`.
+- `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` moves C-defined variables off the original layout; it plays
+  in PCSX2 (save load, walk, menus). `tools/shift/data_owners.py` lists who uses each data name.
+- Rebuild from scratch (`rm -rf out/build`) after changing compiler flags in kh1.toml: make does not
+  track flags.
+- `pgrep -f PATTERN` inside a `while` loop matches the loop's own command line; use a pid instead.
+- **Phase 3**: model file headers in docs/structs.md "Model files" (static, worker s16r1, with
+  `tools/vu/model_header.py`), then checked against real files and a RAM dump. The 256x256 off-screen
+  pass is the projected character shadow (renderer-spec §3.4). Field GS dump in renderer-spec §3.3.
+  `tools/vu/vif_chain.py --file F --rel BASE --stream` walks VIF data in a file or RAM dump.
+- PCSX2 savestates (`.p2s`) are zips of zstd members that Python's zipfile cannot read: copy the
+  member's raw bytes and run `zstd -d`. The PCSX2 snaps/sstates folders can be pointed at
+  Downloads/kh1-test with Browse (the text fields are read-only); reset them to the defaults after.
+- **Matching** (s16m1): func_00166570 matched (frame-pointer copy lever, docs/matching-tips.md).

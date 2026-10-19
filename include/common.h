@@ -29,6 +29,10 @@ typedef float              f32;
  * original address. Must not be static. */
 #define CONTEXT_ONLY __attribute__((weak, section(".ctx")))
 
+/* Alignment of a variable defined in C (phase 4): DMA packets and VU data need
+ * 16 bytes (qword), wherever the shiftable build puts them. */
+#define ALIGNED(n) __attribute__((aligned(n)))
+
 /* Build targets: KH1_PS2 for the matching build (default), KH1_VITA later. */
 #if !defined(KH1_VITA) && !defined(KH1_PS2)
 #define KH1_PS2 1

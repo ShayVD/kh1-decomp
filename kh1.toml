@@ -21,6 +21,11 @@ compiler = "ee-gcc2.96"
 cflags = "-O2 -G0"
 cxxflags = "-O2 -G0 -fno-exceptions -fno-rtti"
 asflags = "-G0 -march=r5900 -EL"
+# Game C is compiled with -fdata-sections -fno-common (session 16), so each global
+# variable gets its own .data.<name> section that the build places at its original
+# address (docs/shiftable-plan.md "Phase 4"). Not for these paths: newlib's static
+# const tables would move into .rodata.<name> and change the matched SDK objects.
+data_sections_skip = ["src/sdk/"]
 
 # Per-directory flag overrides, longest prefix wins, e.g. if the SCE libraries
 # in the ELF were built with different flags than game code.

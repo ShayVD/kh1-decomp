@@ -49,7 +49,7 @@ MAP_REST = re.compile(r"^\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s+(\S+)$")
 MAP_OUT = re.compile(r"^(\.\S+|/DISCARD/)\b")
 
 
-def read_map(path: Path) -> dict[tuple[str, str], tuple[int, int, str]]:
+def read_map(path: Path, outs: tuple[str, ...] = (".text", ".data")) -> dict[tuple[str, str], tuple[int, int, str]]:
     """(object, input section) -> (address, size, output section), for .text and .data.
     Each mode has its own blob.o; it is keyed as `out/shift/blob.o`."""
     out = Norm()
@@ -60,7 +60,7 @@ def read_map(path: Path) -> dict[tuple[str, str], tuple[int, int, str]]:
             cur_out = m.group(1)
             pending = None
             continue
-        if cur_out not in (".text", ".data"):
+        if cur_out not in outs:
             continue
         m = MAP_ONE.match(line)
         if m:
@@ -128,8 +128,14 @@ class AddrMap:
         self.p = sorted(pieces)
         self.starts = [x[0] for x in self.p]
         self.ends = ends  # inclusive end pieces: (ref end, new end) for boundary values
+        self.extra: dict[int, int] = {}  # boundary values with one more valid image (_end, SHIFT_FLOAT)
 
     def fwd(self, a: int) -> set[int]:
+        if a in self.extra:
+            return self._fwd(a) | {self.extra[a]}
+        return self._fwd(a)
+
+    def _fwd(self, a: int) -> set[int]:
         i = bisect.bisect_right(self.starts, a) - 1
         out = set()
         if i >= 0 and a < self.p[i][1]:
@@ -180,9 +186,24 @@ class Links:
             nxt = secs[i + 1][0] if i + 1 < len(secs) and secs[i + 1][4] == osec else out_end[osec]
             pieces.append((ra, max(nxt, ra + size), na))
         pieces.append((rsym["_edata"], rsym["D_BSS"], nsym["_edata"]))
-        pieces.append((rsym["D_BSS"], rsym["_end"], nsym["D_BSS"]))
+        # .bss moves with D_BSS, except variables C defines that NEW links elsewhere
+        # (SHIFT_FLOAT): each is its own piece, and the rest of .bss is split around them.
+        rb, nb = (read_map(d / "kh1-shift.map", (".bss",)) for d in (ref, new))
+        delta = nsym["D_BSS"] - rsym["D_BSS"]
+        floated = sorted((r[0], r[0] + r[1], nb[k][0]) for k, r in rb.items()
+                         if r[1] and k in nb and nb[k][0] - r[0] != delta)
+        cur = rsym["D_BSS"]
+        for fa, fe, na in floated:
+            if fa > cur:
+                pieces.append((cur, fa, cur + delta))
+            pieces.append((fa, fe, na))
+            cur = fe
+        pieces.append((cur, rsym["_end"], cur + delta))
+        self.floated_bss = floated
         self.secs = secs
         self.amap = AddrMap(pieces, [])
+        if floated:  # the floated variables sit before the new _end (crt0's clear end, heap start)
+            self.amap.extra[rsym["_end"]] = nsym["_end"]
 
 
 def sext(v: int) -> int:
