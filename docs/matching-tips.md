@@ -585,3 +585,47 @@ the dumps; prio_s8.py prints global-alloc priorities.
   10 blocks and 100 insns; a dead test adds 2 blocks and can switch it to single-block regions.
 - Never name a worker helper after a stdlib module (`glob.py` shadowed the stdlib and restarted the
   container twice); run helpers with `python3 -I` and at most 3 workers at once.
+
+## Session 12 tips (full list: nonmatchings/session12/NOTES.md)
+
+Session 12's matches came from the register allocators and the scheduler ties that feed them, not
+from dead code. Read the allocation first, then find the source change.
+
+- **Simulate local-alloc**: tools/matching/la3_s12.py reads a `.lreg` dump and reproduces local-alloc
+  exactly on a block (two passes: suggested regs first, then widened intervals
+  `[b-2+b%2, d+2-d%2)`; order v0..t7, s0..s7, t8, t9, s8; call-crossing qtys get s regs only).
+  tools/matching/osrch_s12.py anneals the smallest sched1-order change that reaches a target
+  allocation; that tells you which insn has to move (001137f8, 0024c950).
+- **Qty priority** = floor_log2(refs) * refs / (death - birth). With exactly 3 qtys in a block,
+  local-alloc's hand-sort compares qty numbers instead of priorities (qty 1 never goes first); 2
+  or 4+ qtys use qsort. Add or remove one block-local pseudo to switch (001db718).
+- **Take a temp out of local-alloc**: make it a function-level variable set in two blocks;
+  global-alloc then assigns it after all local qtys (0019f1f0). Global-alloc priority is an
+  integer; ties go to the lower regno; one extra inner-loop insn (a store in both arms that jump2
+  merges later) can flip a tie (00120cf8).
+- **LUID ties in sched1**: ready insns of equal priority issue lowest LUID first. A base pointer
+  local set at the top (`u64 *p = D_X;`) gives its HIGH a low LUID and wins ties against
+  constants (001137f8). Header constants in u64 variables set at the top fix li order
+  independently of store order (00200e28, 001f18e8).
+- **Loop.c as a scheduler**: an invariant written at its use inside the loop is hoisted to the
+  END of the preheader, after other hoisted insns (0024c950). A user variable set at the top of
+  an inner loop to an invariant symbol address is hoisted with REG_EQUIV, which keeps gcse PRE off
+  its HIGH (00216890). Dropping one hoisted insn can reorder reload for the whole preheader.
+  A gcse self-copy (`e = n; ... n = e;`) blocks a pass-1 hoist and is deleted before pass 2
+  (00120cf8, flagged).
+- **Loop rotation**: `if (X) for (;;) { body; if (++j >= N) goto out; if (!X) break; }` leaves a
+  `jump start` block that takes gcse PRE's insertion, so loop.c treats the loop as phony and
+  hoists nothing (001db718).
+- **Spill slots** follow pseudo number: indexing an array in the loop (a loop giv) instead of a
+  pointer local moves a slot (0024c950). Global-alloc's find_reg steals a local's hard reg when a
+  global has none.
+- **One variable set twice** when two values share a register across separate live ranges in the
+  original (00110618: 149 -> 93).
+- **Shared call tails** written out at each goto let cse1 delete the arg move (001fd858). jump2
+  cross-jumping needs >= 2 matching insns and follows jump_chain order.
+- **Switches**: `case 0: default:` first and GNU case ranges (`case 2 ... 28:`) reproduce jump
+  table layout (001f94f0); case order changes which invariants loop.c hoists.
+- **gcc991111 (SDK)**: reassociates OR trees of local-variable leaves like inline expressions;
+  search trees by the produced shape. Its local-alloc can be traced in gdb without debug info
+  (tools/matching/gdb_s12/bq9.sh).
+- **Scoring**: `objdump -d` hides zero words unless given `-z`; count nops.
