@@ -32,7 +32,7 @@ void func_001f3d58(void *, s32);
 s32 func_001f3758(void *);
 void func_001ff488(void *, s32, s32, s32, s32, s32);
 s32 func_001f4378(void *);
-void func_001f9438(void *, s32, s32, s32, s32, s32, s32);
+s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 void func_002066b0(void *, s32, s32, s32, s32, s32);
 s32 func_001f0118(s32, s32);
 void func_002053e8(void *, s32, s32, s32, s32, s32);
@@ -115,48 +115,41 @@ void func_00216890(Ob1 *o) {
             }
         }
     }
-    y = 57;
     func_001ff488(o, -148, 28, 490, n * 26 + 12, 0x60000000);
+    y = 57;
     sel = func_001f4378(o);
-    {
-    s32 *pp;
-    pp = p;
     for (i = 0; i < n; i++) {
-        j = *pp;
+        j = p[i];
         if (k == 2 && j == 7) str = 255;
         else str = D_003F4380[j];
         ty = y - 15;
         func_001f9438(o, 0, -136, ty, str, 15, 0x8080C0C0);
         func_002066b0(o, -136, y, 466, 0x80323232, 0x80323232);
-        {
-        s32 **q = &D_003F43C8[j];
-        s32 *r = &D_003F4200[k][j];
         for (m = 0; m < 3; m++) {
-            switch (D_00642CD8) {
-            case 4:
-                v = D_003F4200[k][j];
-                break;
-            
+            c = D_00642CD8;
+            switch (c) {
+            case 0:
             default:
-                v = D_003F41E8[D_00642CD8][j];
+                w = 2 - D_003F41E8[c][j];
+                break;
+            case 4:
+                w = 2 - D_003F4200[k][j];
                 break;
             case 5:
-                v = func_00170dd8(k, j);
+                w = 2 - func_00170dd8(k, j);
                 break;
             }
+            str = D_003F43C8[j][m];
             x = D_003F4508[m];
-            str = (*q)[m];
             col = 0x40E6E6E6;
-            if (m == 2 - v) {
+            if (m == w) {
                 w = func_001f0118(str, 15) + 2;
-                func_002053e8(o, x - 2, y - 17, w + 4, 19, (sel && i == D_00642CDC) ? 0x80303080 : 0x80303030);
+                col = (sel && i == D_00642CDC) ? 0x80303080 : 0x80303030;
+                func_002053e8(o, x - 2, y - 17, w + 4, 19, col);
                 col = 0x80E6E6E6;
             }
             func_001f9438(o, 0, x, ty, str, 15, col);
         }
-        }
         y += 26;
-        pp++;
-    }
     }
 }

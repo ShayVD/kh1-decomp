@@ -168,3 +168,19 @@
   merged a.r/sum global loses a0 to join-block locals.
 - 001ba520 stays 10w (sched1 store order, not allocation). 00166570 not retried (gcse PRE).
 - Helper: tools/matching/gdb_s12/rlall.gdb (every insn's reload regs and last_spill_reg).
+
+## s12w12: 00216890 MATCHED (natural), 0024c950 stays 5w
+- 00216890: src/hand/text_00210000_s12_s12w12.c. From s12w9's finding, but with no q or tb locals:
+  index directly in the inner loop (`c = D_00642CD8; switch (c) { case 0: default: w = 2 -
+  D_003F41E8[c][j]; ... } str = D_003F43C8[j][m];`). loop.c still hoists &D_003F43C8[j] to the
+  inner preheader as REG_EQUIV (HIGH stays tied). Without the hoisted tb lo_sum, q's insn issues
+  before `k*8 + k` in sched1, so reload and global-alloc follow the original.
+- 0024c950: ~25 more attempts, stays 5w. The A40 HIGH must find v0/v1/a0 busy when allocated;
+  every test form puts its int temp in v1 over [10,18], overlapping the A68 HIGH [6,20]. Closest
+  structure: `(f32)D_00669A5C < (f32)(D_00669A5C + t)` (6w; temp ties into the load's qty).
+- Facts: in sched1 an insn setting a pseudo that crosses no call depends on the last call; a
+  call-crossing invariant hoisted into the same preheader has priority 1 and loses slots by LUID
+  to earlier hoisted insns, so dropping one hoisted insn can reorder reload for the whole
+  preheader. A dead-test temp that is its source's last use ties into that qty (refs without a
+  new GPR temp). Local-alloc conflict ranges run born_index..dead_index (about 2 indices past
+  birth/death each side); qtys sharing an endpoint conflict.
