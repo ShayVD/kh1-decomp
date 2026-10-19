@@ -75,3 +75,21 @@
   Switch case order changes which invariants loop.c hoists in pass 2 and their LUID order.
 - gdb helpers: tools/matching/gdb_s12/ (la.sh/laall.sh FILE BLOCK: local-alloc quantities;
   rl*.sh: reload register per insn and last_spill_reg).
+
+## s12w5: 001db718 MATCHED (natural), 001c62a0 stays 56w
+- 001db718 (40w before): src/hand/text_001d0000_s12_s12w5.c. Each table scan is
+  `j = 0; if (X) { for (;;) { b = ...; if (match) { arr[..] = (u8)(b << 1) >> 1; goto end; }
+  if (++j >= 48) goto end; if (!X) break; } }`. expand_end_loop rotates it; the leftover
+  `jump start` block takes gcse PRE's insertion, so loop.c treats the loop as phony and hoists
+  nothing (as in the original). `(u8)(b << 1) >> 1` (plain C, clears bit 7) gives the stored value
+  its own pseudo, making `b & 0x7f` block-local (4 qtys).
+- 001c62a0: 56w re-verified (hand/nostrict, size 1148); ~12 attempts no better. Most of the gap is
+  the f/lk block: original uses an i*224 giv plus a second &D_0037A380 base rematerialised as
+  `lui s6`. One-line edits swing it 56 -> 150w.
+- Facts: **local-alloc sort bug with exactly 3 qtys in a block**: the hand-sort compares qty
+  numbers 0/1/2 instead of qty_order entries, so qty 1 is never allocated first; 2 or 4+ qtys use
+  qsort by priority. Fix by adding/removing one block-local pseudo. Trace: break on find_free_reg
+  (tools/matching/gdb_s12/gtrace.sh + ffr_gdb.py). expand_end_loop (2.9x) does not rotate a loop
+  whose last condition is one conditional jump followed by `goto end`; it only finds exits in the
+  first ~30 insns; `goto label_after_loop` is not an exit, `break` is. Phony-loop recipe:
+  `if (X) for (;;) { body; if (++j >= N) goto out; if (!X) break; }`.
