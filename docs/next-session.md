@@ -22,7 +22,7 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 Run `make rank` for the list (status `wip` in out/rank.tsv). Counts are LCS words from the best draft (NOTES.md has the diagnosis for each).
 
 1. **1-2 words**: 001cfc28 (1, sched2 LUID tie), 001f2630 (1, nofill store order), 00105288 (2, one sched2 cycle), 001f1fc8 (2, nofill), 001f18e8 (2, nofill li order, flagged test).
-2. **4-11 words**: 00120cf8 (4), 00169688 (4, jump2 cross-jump), 0021e120 (6), 0019f1f0 (2, w57 draft: li.s placement in a shared tail), 00125240 (6, w60 draft), 001eddc0 (8), 0024c950 (8, nofill), 00265608 (9, SDK gcc991111: dead float tests don't work there), 001ba520 (10), 001137f8 (11).
+2. **4-11 words**: 00120cf8 (4), 00169688 (4, jump2 cross-jump), 0021e120 (3, w61 draft), 0019f1f0 (2, w57 draft: li.s placement in a shared tail), 00125240 (6, w60 draft), 001eddc0 (8), 0024c950 (8, nofill), 00265608 (9, SDK gcc991111: dead float tests don't work there), 001ba520 (10), 001137f8 (11).
 3. **17-60 words**: 00192958 (17), 00166570 (21), 00216890 (13, w58 draft), 00200e28 (26, w59 draft), 00106ed0 (31), 001db718 (40), 001c62a0 (59 with a probe, 80 natural).
 4. **Large**: 001e1838 (107, nofill), 00107548 (114), 00110618 (158), 001f5fe0 (278, nofill), 00200038 (326), 0010d470 (338), 001636d0 (~420), 001fd858 (452).
 

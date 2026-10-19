@@ -563,7 +563,12 @@ found that the next session needs:
   container to load ~48 with 1.7 GB of 16 GB free, and it was restarted twice (all in-flight work lost;
   `make progress-update` was OOM-killed in objdiff before that). Run at most 3 workers at once, each with
   one compile or hill-climb process in the foreground, and check /proc/loadavg and MemAvailable before
-  spawning more. Commit worker results as soon as they report.
+  spawning more. Commit worker results as soon as they report. The trigger was a worker helper
+  named `glob.py` in its work directory: every python started there imported it instead of the stdlib
+  module, and it launched more checks, so processes multiplied (load ~98). Never name a helper after a
+  stdlib module; run helpers with `python3 -I`.
+- tools/matching/gclimb_s11.py: token climb that moves each constant's set (`kN = C;`) and its store
+  separately, so li order and store order change independently (took 0021e120 from 6 to 3 words).
 - **Tool traps**: variant scripts replace the first match, which can be inside a header comment
   (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
 - A container restart mid-session lost no work because every match was pushed as it landed.
