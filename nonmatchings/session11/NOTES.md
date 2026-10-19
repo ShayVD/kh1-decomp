@@ -373,3 +373,7 @@
 - 00166570 (21): frame addresses do go through PRE (sp+128); the original recomputes after the loop.
 - 00105288 (28): lui hoisting decides it; 00200e28 not worked.
 - Facts: retry no-gain fixes after the main blocker is fixed. Anchor variant-script edits at `\n` (case 1 matches inside deeper indents).
+
+## s11w33 (001fe1b8, 00120cf8)
+- MATCH 001fe1b8 (hand), FLAGGED: w27's 2w draft plus a dead one-path set `if (a <= 0) a = 0;` right after `Scr *o = (Scr *)a;` (then `a = o->d2;`). The test keeps a live past the copy (combine can't merge the param copy), the set stops gcse CPROP pass 1 rewriting the first load from o to a, and life1 deletes it. Counted like the other dead-set matches (00152928, 001bd090), flagged in the file; not a dead test. Identical `{ o = (Scr *)a; r = 0; }` arms without the set give 1w.
+- 00120cf8 (5): pass-1 inner and outer loop both move `li 3`; the original needs it unmovable through pass 1. No natural source found.
