@@ -149,3 +149,22 @@
   follows jump_chain order (earlier jumps lose their tail). Stray nops before labels after
   barriers are `.p2align 3,,7`. Spill slots are assigned in regno order. gcse records a copy only
   if neither side is modified later in the block; cprop skips regs set earlier in the block.
+
+## s12w9: allocator levers on 001f18e8, 001eddc0, 0024c950, 00216890, 001ba520, 00166570
+- 0024c950: 8 -> 5w (s12w9__0024c950_5w_flagged.c, hand/nofill, size 1172, flagged dead FP test).
+  All 5040 orders of the kk block + test: `t = 11; if (D_00669A5C) t = 0; D_00669A6C = x;
+  D_00669A68 = x; p = D_00669A40; yy = y + t; if ((f32)D_00669A5C < (f32)(D_00669A5C + 1)) c = 0;
+  else n = 0;`. Left: the test's int temp `D_00669A5C + 1` (local, life 2, prio 5000) takes v1
+  before the A68 lui/addiu pair (2000), so A68 a1 / A40 high v1 (original A68 v1, A40 a1);
+  `sw A68` issues after the p spill.
+- 00216890: finding only (s12w9__00216890_19w_finding.c, 19w; best stays s12w4's 11w). `s32 **q;`
+  at outer level, `q = &D_003F43C8[j];` at the top of the inner loop body: loop.c hoists it with
+  REG_EQUIV, gcse PRE leaves the HIGH alone, reload emits the original's tied lui/addiu. Left:
+  reload handles insn 1270 (k loads) before 1263 (q); ty/chain swap s7/s8.
+- 001f18e8 stays 2w (sched2 order li 1 / li 63; registers right). A constant set before a dead FP
+  test and used once after is update_equiv_regs-moved next to its use (life 2); two such
+  constants never overlap and share a register.
+- 001eddc0 stays 2w: local qtys allocated while a global is live go into its conflict set, so a
+  merged a.r/sum global loses a0 to join-block locals.
+- 001ba520 stays 10w (sched1 store order, not allocation). 00166570 not retried (gcse PRE).
+- Helper: tools/matching/gdb_s12/rlall.gdb (every insn's reload regs and last_spill_reg).
