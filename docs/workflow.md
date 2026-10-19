@@ -537,15 +537,15 @@ found that the next session needs:
 
 ## Session 11: what changed
 
-- **37 matches** (6,916 -> 6,953 / 6,988; 93.7% -> 95.9% of code bytes) by about 60 workers, at most
+- **39 matches** (6,916 -> 6,955 / 6,988; 93.7% -> 96.2% of code bytes) by about 60 workers, at most
   5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
   short version: docs/matching-tips.md "Session 11 tips").
-- **Flagged matches**: 20 of the 37 rely on source that does nothing and is deleted by the
+- **Flagged matches**: 22 of the 39 rely on source that does nothing and is deleted by the
   compiler. Each file says so in a comment; they are byte-identical, but probably not the original
   source:
   - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
   - dead float tests such as `if ((f32)x < 0.0f) v = 0;`: 00249718, 00110e68, 0010ba98, 001fa8b0,
-    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68, 00105d88 (integer identical-arm tests), 00102118 (cse2-folded
+    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68, 00199ac8, 0019ab38 (live-length steering), 00105d88 (integer identical-arm tests), 00102118 (cse2-folded
     `if (x != (s32)t)` tests);
   - a never-true test with the whole body copied into both arms (reorg sees stale flow2 liveness):
     001e0ab0, 001e0d98, 001e10f8;
