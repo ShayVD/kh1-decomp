@@ -6,27 +6,29 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 12, 2026-10-19)
+## Where we stopped (end of session 13, 2026-10-19)
 
-- **6,972 / 6,988 functions matched**: 99.77% of functions, 98.27% of code bytes. All are byte-identical and objdiff 100% (docs/progress.md).
-  - Game: 6,251 / 6,266. SDK: 721 / 722.
-- Session 12 matched 10 with 19 workers, at most 3 at a time (docs/workflow.md "Resource limit"): 001db718, 00216890, 001137f8, 0024c950, 001ba520, 001f94f0, 00208458, 001e1c20 (natural); 0019f1f0, 00120cf8 (flagged). Brief: nonmatchings/session12/BRIEF.md; every finding: nonmatchings/session12/NOTES.md; short version: docs/matching-tips.md "Session 12 tips".
-- **Flagged matches count** (user decision in session 12). Each keeps a comment naming its trick; docs/workflow.md "Session 12" lists them.
-- Main levers this session: register-allocator analysis. tools/matching/la4_s12.py (GPR, handles mult/div) / la3f_s12.py (FP) simulate local-alloc exactly from a .lreg dump; osrch_s12.py finds the minimal sched1-order change that reaches a target allocation. Then: base-pointer local set first (wins sched1 LUID ties), invariant written at its use inside a loop (hoisted to the end of the preheader), a variable set twice is never local-alloc'd, temps made function-level leave local-alloc, the 3-qty hand-sort bug, header constants in u64 variables (li order), array index instead of pointer local (spill-slot order). gdb tracers in tools/matching/gdb_s12/.
-- `make rank` status `asm` means "no C placed", not "in src/asm"; session 11's list missed 3 never-drafted functions (all three now matched). For the true list compare layout.tsv with out/gen/placements.tsv.
-- **docs/shiftable-plan.md**: plan for a relinkable build that boots in PCSX2 (the road to the Vita port). Milestones M0 (symbolic relink at original addresses, byte-identical), M1 (code moved), M2 (data moved) are testable in the container; booting is on my machine. Main risk: the title-screen/movie overlays (dktitle.x, dkmovie.x) may call the main ELF by absolute address.
+- **6,972 / 6,988 functions matched**: 99.77% of functions, 98.27% of code bytes (docs/progress.md). Game 6,251 / 6,266, SDK 721 / 722. No new matches in session 13 (4 matching workers, one at a time).
+- **Shiftable build: M0, M1 and M2 pass statically** (docs/shiftable-plan.md, the three "Session 13" sections; docs/workflow.md "Session 13").
+  - `make shift` links a fresh ELF (no patching, no PROVIDE inside the image) from our objects, symbolic asm, `shift/unmatched/*.s` (the 16 unmatched functions, symbolic asm, not counted), `shift/aliases.ld` and the data blob cut from my ELF into out/ at build time. M0 is byte-identical except 2 words of the `KH1_SHIFTABLE` func_00171078 variant (`SHIFT_VARIANTS=0` for strict).
+  - `make shift SHIFT_MODE=m1` rotates all code; `m2` moves data and bss by 0x1000. tools/shift/shift_cmp.py (inverse-map comparator) passes both.
+  - `data_relocs.tsv` (addresses and names only): 9,330 accepted pointers, DMA chains walked, 0 ambiguous words left; reviewed overrides in tools/shift/data_reloc_overrides.tsv. Not reviewed one by one: 649 lone function-start words and 423 string pointers.
+  - tools/shift/scan_overlay.py FILE.x lists an overlay's references into the main ELF.
+- **Not yet done (needs me)**: scan `dktitle.x` / `dkmovie.x` from my disc, then boot M0, M1, M2 in PCSX2 (Boot ELF, ISO mounted) to the title screen. Results go in docs/shiftable-plan.md.
+- Matching findings: nonmatchings/session13/NOTES.md, docs/matching-tips.md "Session 13 tips"; gdb tracers in tools/matching/gdb_s13/ (edit hard-coded paths).
 
 ## What is left (16 functions)
 
-Best drafts are in nonmatchings/session12/ (newest), then session11/10/9/8/7. Counts are LCS words (true LCS for the large ones).
+Best drafts in nonmatchings/session13/ (newest), then session12/11/10/9/8/7. LCS words.
 
-1. **1-5 words**: 001cfc28 (1, sched2 LUID tie: li.s has no in-block predecessor), 001f2630 (1, nofill), 001f1fc8 (2, nofill), 001f18e8 (2, flagged), 001eddc0 (2, flagged), 0021e120 (3), 00125240 (5 flagged; 8 natural with every GPR right).
-2. **9-56 words**: 00265608 (9, SDK gcc991111), 00192958 (17, reload spill rotation), 00166570 (21, gcse PRE of call-arg addresses), 00200e28 (24), 001c62a0 (56).
-3. **Large**: 00110618 (93), 001fd858 (112), 0010d470 (179), 001636d0 (410, registers/spill slots only).
+1. **1-5 words**: 001fd858 (1, flagged: bnezl at 0x654 is a reorg liveness decision proven unreachable from this layout), 001cfc28 (1), 001f2630 (1, nofill), 001f1fc8 (2, nofill), 001f18e8 (2), 001eddc0 (2), 0021e120 (3), 00125240 (5 flagged; 8 natural).
+2. **9-56 words**: 00265608 (9, SDK gcc991111: trap_if scheduling), 00192958 (17), 00166570 (21), 00200e28 (24), 001c62a0 (56).
+3. **Large**: 00110618 (93), 0010d470 (179: copy-loop invariant registers, WD base must not take a3), 001636d0 (410).
 
-## Session 13 plan (two tracks, at most 3 workers)
+## Session 14 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Matching (1 worker at a time)**: closest first with the session-12 allocator tools; then the large ones section by section.
-2. **Shiftable build (2 workers)**, following docs/shiftable-plan.md: step 1 (`asm_export.py --symbolic`, the patch-in-place build must stay byte-identical), steps 2-3 (asm export of the unmatched functions into src/shift/, alias table, no PROVIDE fallback inside the image), steps 6-7 (`kh1-shift.ld`, ELF writer, `make shift`) to reach **M0**. Keep the shift build separate from `make`; never commit game data (the data blob is extracted from my ELF at build time into out/).
-3. If time allows, the `scan-overlay` tool so I can check dktitle.x / dkmovie.x from my own disc.
-4. End with `make progress-update SESSION=13`, commit, open a PR, and refresh this prompt.
+1. **Runtime**: if I report overlay-scan or PCSX2 results, fix what they show first (pin overlay imports, missed pointers).
+2. **Shiftable, next**: review the 649 lone function-start and 423 string rows; an `out/shift` build of each near-miss draft swapped in for its asm export (static diff only); then M1+M2 combined.
+3. **Matching (1 worker)**: 0010d470 and 00110618 section by section; the rest only with a new angle not in NOTES.
+4. **Phase 3 start (1 worker, if time)**: document VU1 microcode programs and GS modes as a renderer spec in docs/ (not matching code).
+5. End with `make progress-update SESSION=14`, commit, open a PR, and refresh this prompt.
