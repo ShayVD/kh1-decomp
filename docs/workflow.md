@@ -534,3 +534,28 @@ found that the next session needs:
   stub and callee-return sweep). Set WDIR; edit hard-coded paths in hcf/ctxsweep before use.
   checkfile.py itself can take minutes under load: iterate with these.
 - Stale drafts of matched functions were removed from nonmatchings/.
+
+## Session 11: what changed
+
+- **32 matches** (6,916 -> 6,948 / 6,988; 93.7% -> 95.6% of code bytes) by about 50 workers, at most
+  5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
+  short version: docs/matching-tips.md "Session 11 tips").
+- **Flagged matches**: 15 of the 32 rely on source that does nothing and is deleted by the
+  compiler. Each file says so in a comment; they are byte-identical, but probably not the original
+  source:
+  - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
+  - dead float tests such as `if ((f32)x < 0.0f) v = 0;`: 00249718, 00110e68, 0010ba98, 001fa8b0,
+    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68;
+  - identical if/else arms (as in session 10): 00169f28.
+- **001bd090 is a real match**, not a compiler difference (docs/toolchain.md "Session 11 correction").
+- **00202678 is a strict function** with union-typed fields, not a nostrict one: re-measure
+  "nostrict" drafts in strict mode when the original issues a load above a store it would conflict
+  with under nostrict.
+- **New tools** in tools/matching/: modesweep_s11.py (every mode x flag combo for a draft),
+  lc_s11.py / ld_s11.py (LCS scorers; export RO for rodata), hc_s11.py (statement hill-climb that
+  respects loads/stores), var_s11.py (variant runner), togm_s11.py (toggle sweep; temp file is now
+  per-pid), cf4_s11.py, slt_s11.py. Worker helper scripts (insertion sweeps, priority dumps,
+  side-by-side listings) were left in /tmp and are described in NOTES.md; rewrite as needed.
+- **Tool traps**: variant scripts replace the first match, which can be inside a header comment
+  (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
+- A container restart mid-session lost no work because every match was pushed as it landed.

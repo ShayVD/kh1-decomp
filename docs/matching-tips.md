@@ -531,3 +531,30 @@ the dumps; prio_s8.py prints global-alloc priorities.
   follow sched1 order; REG_BR_PROB is 3999 for an EQ-zero test of a load and 5000 for `slt`
   against a nonzero constant (fills from the target, beql); gcse cprop replaces copies even inside
   store MEM addresses; cse skip_blocks crosses an if-then but not the unsigned-conversion diamond.
+
+### Session 11, later levers
+
+- **Dead float tests** (flag them): `if ((f32)x < y) v = 0;`, with v used somewhere else in the
+  function. EE has no FP conditional move, so the branch survives sched1 and both register
+  allocators, and flow2 deletes it with no code left. It needs an explicit jump after the empty arm
+  (add `else w = 0;` with another dead set if needed). Uses:
+  - free refs for allocator priority: a load or a cast in the condition adds refs (cse merges
+    repeated identical casts; use `(f32)(i * i)`, `(f32)(s32)ptr`, `p[-1]`); refs are weighted by
+    loop depth (1/2/3);
+  - making a variable global by reading it in a later block (00110e68, 001fa8b0);
+  - lengthening a variable's live range by reading it at the end of its block (001fbcd8);
+  - more than 3 local quantities switches local-alloc from the fixed exchange to qsort (001502e8);
+  - a dead set in a loop-exit arm (`if (i >= 48) { p = 0; break; }`) flips branch prediction from
+    beqzl to beqz (00214a68).
+  - Not in gcc991111 (SDK): it keeps the tests.
+- **A split that is gone before sched1**: `x = (s32)v; ... if (x != (s32)v) { k = 2; k = 3; } else
+  k = 1;` splits blocks for cse1/gcse, then gcse cprop and cse2 fold it (00135a68).
+- **Redundant conditional set** (`if (f) w = t->win;` where w already equals that) kills a gcse copy
+  on one path (0010ba98). An unused `T *p = SYM;` at entry stops combine folding a later `la`
+  (00217000).
+- **Alias sets of globals**: a plain extern global access is alias set 0 (conflicts with
+  everything); a struct-member global gets a real set (00105288: 28 -> 2). Union-typed fields are
+  alias set 0 too: a strict function can look like a nostrict one (00202678). Stores to one base at
+  different constant offsets, and two different global symbols, never conflict whatever the type.
+- **Fill vs nofill**: `mtc1; b; cvt.s.w` (cvt in the branch slot) is a gas fill, so the function
+  is in a fill mode (00199ac8).
