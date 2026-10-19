@@ -313,3 +313,19 @@
   the symbol written directly folds k*3 into the constant. A constant pointer local without a
   hard reg is rematerialised by reload at each use. Spill-slot order reveals expansion temps.
   Setting a loop invariant before a `for` gives it a LUID before the loop init.
+
+## s12w19: 001f2630, 001f1fc8, 001f18e8, 001eddc0 (no matches; best drafts unchanged)
+- 001f2630 (s12w19__001f2630_7w_finding.c): every value but 0x8000 already has the original's
+  register in the 1w draft. x2c must follow x14 in sched1 (sched2 keeps sched1 order within the
+  3-dependent store group); 0x8000 needs life <= 12 to beat f4+288 (5714) for a1, but its li can
+  issue no later than right after cy+h: life 14, a tie, lost on qty number.
+- 001f1fc8 (s12w19__001f1fc8_11w_finding.c, hoisted k1): reload re-creates `li a1,1` in the
+  original's slot; the 3 wrong regs need cy+h before the d0 `or` and after the 921 ior (~26 order
+  inversions, no single-statement lever).
+- 001f18e8: registers all right; sched2 needs li 63 early in LUID but local-alloc needs it born
+  late. 001eddc0: not retried (global-alloc preference merge, see s11w67/s12w2/s12w9).
+- Facts: in sched2 every store of a call-clobbered reg has 3 forward dependents, callee-saved 2.
+  tools/matching/la4_s12.py: la3 plus ties inside a PARALLEL's first SET and no local pseudos in
+  regs >= 64 (HI/LO); exact on blocks with mult/div. update_equiv_regs moves a REG_EQUIV constant
+  next to its use only when set and used in different blocks with REG_N_REFS == 2 (never inside a
+  loop, where depth doubles refs).
