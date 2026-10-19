@@ -61,3 +61,21 @@
   dead tests are removed too early. find_cross_jump stops i1 at a CODE_LABEL but skips labels on i2.
 - gdb tracers: tools/matching/gdb_s13/ (la: local-alloc qtys; ga/ga2: global find_reg incl. FP; rg:
   reorg; cj: cross-jump). The .sh files hard-code /tmp/claude-0/s13/s13w3 paths: edit before use.
+
+## s13w4: 001fd858 stays 1w (reorg proof); 0010d470 stays 179w
+- 001fd858 (s13w3__001fd858_1w_flagged.c, header now records the proof): forcing v0 into
+  opposite_needed at fill_slots_from_thread for insn 1635 (gdb, tools/matching/gdb_s13/frc.py) gives
+  the original's bnel. v0 can never be live there: mark_target_live_regs ANDs two methods (block scan
+  + find_dead_or_set_registers; liveness at the first jump target) and both drop v0 at the fe408 call
+  reached via `b L170; b done`. Nothing reads v0 on that path in the final layout. Likely the original
+  reorg saw a different transient state; the cc1 reorg.c differs from gccsrc (extra modified_in_p,
+  side_effects_p, ~26-31 lines off). 11 clamp-shape variants: none better.
+- 0010d470: original keeps c2=a3, c=t0. Ours: c2 (pseudo 100, refs 48, len 37) is the 3rd allocno and
+  takes a1 (no conflicting allocno prefers a1-a3). Adding the copy loop's `c2 = sub[k]` (253w) makes
+  a0-a3 preferred by others, so c2 gets t0. Copy-loop invariants differ (orig 0x40080=t3, WD base=t5,
+  &59E4=t7, &59E8=a0, 0x80000000=t6, k=t2; ours t4, a3, a2, t6, t5, k=t3); WD base taking a3 moves the
+  &g[m] copy to a0: the main lever left.
+- Facts: a likely branch whose slot sets a call-clobbered reg needs a real reader of it before the
+  next call on the fallthrough path. fill_simple_delay_slots runs over all jumps (calls first) before
+  fill_eager. regs_someone_prefers = full preferences of conflicting lower-priority allocnos minus the
+  allocno's own; find_reg's first pass excludes them.

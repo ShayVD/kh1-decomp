@@ -593,3 +593,24 @@ found that the next session needs:
   tools/matching/gdb_s12/; all findings in nonmatchings/session12/NOTES.md and
   docs/matching-tips.md "Session 12 tips".
 - docs/shiftable-plan.md: plan for a relinkable ("shiftable") build that boots in PCSX2.
+
+## Session 13: what changed
+
+- **Shiftable build reached M0, M1 and M2 (static)** (docs/shiftable-plan.md, "Session 13" sections).
+  `make shift` links a fresh ELF from the objects, the symbolic asm, `shift/unmatched/*.s` (the 16
+  unmatched functions as symbolic asm exports; not built or counted by `make`), `shift/aliases.ld`
+  and the data blob cut from the user's ELF into out/shift/data/ (never committed); no PROVIDE
+  inside the image. `make shift SHIFT_MODE=m1` rotates all code, `m2` moves data/bss by 0x1000; the
+  inverse-map comparator (tools/shift/shift_cmp.py) passes both. Data pointers: `data_relocs.tsv`
+  (addresses and names only) from tools/shift/find_data_relocs.py, with reviewed overrides in
+  tools/shift/data_reloc_overrides.tsv; DMA chains walked, 0 ambiguous words left.
+- tools/asm_export.py `--symbolic` / `--regen`: the 11 word-exported .s files now carry `.reloc`
+  (binutils as; ee-as 2.10 lacks `.reloc` but never assembles .s files). %hi/%lo pairing is a
+  data-flow pass (`analyze_asm` in kh1tool.py). Mid-function labels func_001001d8, func_00260f40;
+  the four libc statics are global via top-level `__asm__(".globl ...")`.
+- `KH1_SHIFTABLE` variant for func_00171078 (tools/shift/variants.py builds it only for the shift
+  build). tools/shift/scan_overlay.py checks a user's .x overlay for references into the main ELF.
+- `make toolchain` now fetches every compiler kh1.toml names.
+- Matching: no new matches (4 workers, one at a time). 001fd858 went 112 -> 1w flagged (25w
+  natural); its last word is proven to be a reorg liveness decision plain source cannot reach.
+  Findings: nonmatchings/session13/NOTES.md; tracers in tools/matching/gdb_s13/.
