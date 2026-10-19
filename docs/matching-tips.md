@@ -558,3 +558,30 @@ the dumps; prio_s8.py prints global-alloc priorities.
   different constant offsets, and two different global symbols, never conflict whatever the type.
 - **Fill vs nofill**: `mtc1; b; cvt.s.w` (cvt in the branch slot) is a gas fill, so the function
   is in a fill mode (00199ac8).
+
+## Session 11, final levers (s11w62-s11w75)
+
+- **Memory-dependence typing (strict mode)** decides which loads wait on which stores, in sched1 and
+  sched2 separately. `struct *h; h->f` accesses are MEM_IN_STRUCT, `u32 *h; h[k]` are not. A scalar
+  global (direct VAR_DECL, `mem/f`) does not wait on varying-address in_struct stores in sched1
+  (fixed_scalar_and_varying_struct_p) but does in sched2 (hard-reg addresses). A one-field struct
+  (`typedef struct { f32 f; } F1;`) makes an access in_struct; a 4-byte enum field
+  (`typedef enum { EZ } EN; typedef struct { EN v; } IE;`) gives a field its own alias set; a
+  one-member union gives alias set 0 (imitates nostrict inside strict, then unwrap single fields).
+  Matched 00105288, 00106ed0 and 00107548's tail.
+- **33-ref flush**: haifa flushes its pending memory lists at the 33rd memory reference in a block;
+  that ref becomes a barrier, so a store flood splits into fixed chunks (00200038). Climb within
+  chunks, not across them.
+- **Large functions**: work section by section, or case by case in jump-table order with per-case
+  sizes (tools/matching/jt_s11.py); score with a true DP LCS (tools/matching/tlcs_s11.py), since
+  difflib misaligns on big functions. 001e1838, 001f5fe0 (8.5 KB) and 00200038 matched this way.
+- **Live-length steering**: global-alloc ties move with live length, so a dead FP test placed where
+  the pseudo to drop is live (and its rival is not) flips them (00199ac8, 0019ab38).
+- **Symbol + constant**: load the symbol into a local pointer and index with int offsets to stop
+  cse folding `D + 0x48000` into the symbol (001e1838).
+- **Loop giv base**: to move a reduced giv base off 0, make the multi-use pointer point at the
+  wanted offset (`p = &blk[i].v[11].x; p[-92] = ...`), 00200038.
+- **Interblock regions**: haifa schedules a loop-free function as one region only if it has at most
+  10 blocks and 100 insns; a dead test adds 2 blocks and can switch it to single-block regions.
+- Never name a worker helper after a stdlib module (`glob.py` shadowed the stdlib and restarted the
+  container twice); run helpers with `python3 -I` and at most 3 workers at once.

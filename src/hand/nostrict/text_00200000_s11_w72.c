@@ -1,0 +1,203 @@
+#include "common.h"
+/* func_00200038 (hand/nostrict), s11w72. FLAGGED unnatural shape: every store in the strip loop
+ * goes through s32 *p = &blk[i].v[11].x (the last vertex's XYZF qword) with negative indices.
+ * loop.c's combine_givs then picks that pointer (it inherits the i*432 chain benefit) as the
+ * reduced giv, giving the original's base register blk+416 (addiu t8,s6,528). Any b->field
+ * form makes b itself (blk + i*432, no-constant addend +1) the base at offset 0.
+ * Natural parts: header qword pairs, flood in struct order after `r = g = b = c` (b, g, r),
+ * (x0 + w) written inline (its temp gives the original's stack-slot order), y1 = y + h in each
+ * arm, `i` declared between cnt and k (it becomes the dbra counter at 28(sp)). */typedef struct {
+    u8 pad0[0x48];
+    s32 x48;
+    u8 pad4c[0x74 - 0x4c];
+    f32 sx, sy;
+    u8 pad7c[0x90 - 0x7c];
+    s32 x90;
+    f32 x94;
+    u8 pad98[0xb0 - 0x98];
+    s32 xb0, xb4;
+    u8 padb8[0xbe - 0xb8];
+    s16 xbe, xc0, xc2, xc4;
+    u8 padc6[0xcc - 0xc6];
+    s16 xcc, xce;
+    u16 xd0;
+    s16 xd2;
+    u8 padd4[0xdc - 0xd4];
+    u8 xdc[16];
+} Wnd2;
+typedef struct { u64 a, b; } QW;
+typedef struct { s32 u, v, p0, p1; s32 x, y, z, f; } UVXY;
+typedef struct { u64 tag, regs; s32 r, g, b, a; u64 tag2, regs2; UVXY v[12]; } Blk;
+extern u8 D_003F1E70[];
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
+u64 *func_00122048(s32, s32);
+s32 sceGsSyncPath(s32, s32);
+void func_001220b8(void *);
+s32 func_001f4570(Wnd2 *);
+s32 func_001f45e0(Wnd2 *);
+
+void func_00200038(Wnd2 *o) {
+    void *u;
+    s32 fl;
+    s32 cx;
+    s32 cy;
+    s32 h;
+    s32 fz;
+    s32 a;
+    s32 cnt;
+    s32 i;
+    s32 k;
+    u64 *buf;
+    QW *q;
+    s32 *p;
+    Blk *blk;
+    s32 c;
+    s32 n;
+    s32 n1;
+    s32 w;
+    s32 off;
+    s32 y;
+    s32 y1;
+    s32 x0;
+    s32 X0;
+    s32 X1;
+    s32 X2;
+    s32 X3;
+    s32 Y0;
+    s32 Y1;
+    f32 sx;
+    f32 sy;
+    if (o->xcc == 0) return;
+    func_00266f38(func_00266c08(2), D_003F1E70);
+    buf = func_00122048(1024, 128);
+    q = (QW *)(buf + 2);
+    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    q->a = 0x50ab400000000001;
+    q->b = 0xeeeee;
+    q++;
+    q->b = 63;
+    q->a = 0;
+    q++;
+    q->a = 0x7bf8621413d7c;
+    q->b = 6;
+    q++;
+    q->a = 0x4007bf8001300000;
+    q->b = 22;
+    q++;
+    q->a = 0x7bf8001400000;
+    q->b = 22;
+    q++;
+    q->a = 68;
+    q->b = 66;
+    q++;
+    n = o->xce;
+    n1 = n + 1;
+    cnt = n;
+    h = o->xc4;
+    k = ((s16)o->xd0 >> 4) % n1;
+    w = o->xc2;
+    fz = (w < 832) << 15;
+    off = h * (o->xd0 & 0xf) / 16;
+    x0 = o->xb0 + o->xbe;
+    y = o->xb4 + o->xc0 - off;
+    if (off) cnt++;
+    fl = o->x48 & 1;
+    a = o->x90;
+    if (fl) {
+        cx = func_001f4570(o);
+        cy = func_001f45e0(o);
+        sx = o->sx;
+        sy = o->sy;
+    }
+    blk = (Blk *)q;
+    for (i = 0; i < cnt; i++, q += 27) {
+        p = &blk[i].v[11].x;
+        ((u64 *)p)[-52] = 0x1000000000008001;
+        ((u64 *)p)[-51] = 1;
+        c = o->xdc[k];
+        p[-98] = c;
+        p[-99] = c;
+        p[-100] = c;
+        p[-97] = a;
+        ((u64 *)p)[-48] = 0x200000000000800c;
+        ((u64 *)p)[-47] = 0x43;
+        p[-92] = 24;
+        p[-91] = 600;
+        p[-86] = 0x100000;
+        p[-85] = 0x8000;
+        p[-84] = 424;
+        p[-83] = 1000;
+        p[-78] = 0x100000;
+        p[-77] = 0;
+        p[-76] = 472;
+        p[-75] = 600;
+        p[-70] = 0x100000;
+        p[-69] = 0x8000;
+        p[-68] = 872;
+        p[-67] = 1000;
+        p[-62] = 0x100000;
+        p[-61] = fz;
+        p[-60] = 920;
+        p[-59] = 600;
+        p[-54] = 0x100000;
+        p[-53] = 0x8000;
+        p[-52] = 1320;
+        p[-51] = 1000;
+        p[-46] = 0x100000;
+        p[-45] = 0;
+        p[-44] = 1368;
+        p[-43] = 600;
+        p[-38] = 0x100000;
+        p[-37] = 0x8000;
+        p[-36] = 1768;
+        p[-35] = 1000;
+        p[-30] = 0x100000;
+        p[-29] = 0;
+        p[-28] = 1816;
+        p[-27] = 600;
+        p[-22] = 0x100000;
+        p[-21] = 0x8000;
+        p[-20] = 2216;
+        p[-19] = 1000;
+        p[-14] = 0x100000;
+        p[-13] = fz;
+        p[-12] = 2264;
+        p[-11] = 600;
+        p[-6] = 0x100000;
+        p[-5] = 0x8000;
+        p[-4] = 2664;
+        p[-3] = 1000;
+        p[2] = 0x100000;
+        p[3] = 0;
+        if (fl) {
+            y1 = y + h;
+            X0 = (f32)cx + (f32)(x0 - cx) * sx;
+            Y0 = (f32)cy + (f32)(y - cy) * sy;
+            X1 = (f32)cx + (f32)(x0 + 416 - cx) * sx;
+            Y1 = (f32)cy + (f32)(y1 - cy) * sy;
+            X2 = (f32)cx + (f32)((x0 + w) - 416 - cx) * sx;
+            X3 = (f32)cx + (f32)((x0 + w) - cx) * sx;
+            p[-88] = p[-40] = X0; p[-87] = p[-39] = Y0;
+            p[-80] = p[-32] = X1; p[-79] = p[-31] = Y1;
+            p[-72] = p[-24] = X1; p[-71] = p[-23] = Y0;
+            p[-64] = p[-16] = X2; p[-63] = p[-15] = Y1;
+            p[-56] = p[-8] = X2; p[-55] = p[-7] = Y0;
+            p[-48] = p[0] = X3; p[-47] = p[1] = Y1;
+        } else {
+            y1 = y + h;
+            p[-88] = p[-40] = x0; p[-87] = p[-39] = y;
+            p[-80] = p[-32] = x0 + 416; p[-79] = p[-31] = y1;
+            p[-72] = p[-24] = x0 + 416; p[-71] = p[-23] = y;
+            p[-64] = p[-16] = (x0 + w) - 416; p[-63] = p[-15] = y1;
+            p[-56] = p[-8] = (x0 + w) - 416; p[-55] = p[-7] = y;
+            p[-48] = p[0] = (x0 + w); p[-47] = p[1] = y1;
+        }
+        y = y1;
+        k = (k + 1) % n1;
+    }
+    buf[0] = (((s32)q - (s32)buf) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(buf);
+}
