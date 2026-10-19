@@ -714,3 +714,26 @@ number-like neighbours and no pointer neighbour found only template callbacks.
   overwritten at run time (like the NEXT at 0x48CAD0) is relocated anyway (harmless).
 - Runtime remains the real test (PCSX2, M0 then M1 then M2); `SHIFT_RELOC_TIER=2` is now
   the same as 3.
+
+## Session 13: first PCSX2 runs (user's machine, 2026-10-19)
+
+- Booting an ELF with "Start File" (even the retail SLPS_251.98) dies with "Jump to unaligned address
+  (PC 0xffffffff)": use `tools/shift/patch_iso.py ISO ELF OUT.iso` (copy of the user's disc with our ELF,
+  minimal headers, in place of SLPS_251.98) and boot the ISO normally.
+- **M0 boots to the title screen** from the relinked ELF.
+- **M1** (code rotated) dies at boot before any picture with the same 0xffffffff jump. **M2** (data +0x1000)
+  sets up 512x447 video, then "Jump to unmapped recLUT page (PC 0x70030c00)" or PC 0x00000001.
+- Cause (confirmed statically): every EE overlay on the disc is linked against the main ELF by absolute
+  address. `tools/shift/extract_kingdom.py` + `scan_overlay.py` on the user's disc (12 overlays, all at
+  0x00F20000): dkmovie.x 137 jal / 14 %hi-%lo / 719 words; dktitle.x 292 / 85 / 219; gb.x 1584 / 138 / 5480;
+  wm.x 2994 / 281 / 7390; xs_genie.x, xs_simba.x ~6,000 words each; the small ones 30-250 jal. Calls go to
+  SDK and game functions (FlushCache, sprintf, sceGsSyncPath, func_0025b588 ...) and %hi/%lo to data.
+  The main ELF passes no function table. So moving any referenced function or datum breaks the overlays;
+  dkmovie.x runs first at boot (logo movie), which explains M1's early crash. A residual static scan of
+  the main ELF found no other missed pointers (unrelocated data words that equal moved code addresses
+  are numbers/bytecode; the 29 code `lui/ori` code-range values are sizes/offsets).
+- Options: (1) pin every overlay-referenced function and datum at its original address (fast, constrains
+  layout); (2) load-time fixups: a per-overlay relocation table generated at build time from the user's
+  disc into out/ (never committed), applied by a KH1_SHIFTABLE hook after each overlay load
+  (func_00120748 / func_001205f0 callers); (3) decompile the overlays as extra link units (needed for
+  the Vita port eventually; ~2.4 MB of code).
