@@ -1,5 +1,10 @@
-/* func_0019f1f0: hand/nostrict, rodata 0048FCB0, CONTEXT_ONLY func_0019f100/func_0019f148 above. 33 words off (s6: 46). Case 6-9: each c8 path writes the whole v=tbl[k]/m[3] tail (crossjumped like the original), fixing the *ip/idx registers; the 1.0f store now sits after the join (orig: lui 0x3f80 inside the tail; putting it in the tail makes sched1 hoist it, 594+). Still off: v.x/v.y/v.z lh v0/v1 swap (same as func_0019bbf0), bltz delay-slot nop vs li s0,2, func_002672f8 a1/a2 arg order. */
 #include "common.h"
+/* rodata (RO=0048FCB0), hand/nostrict. s12w8: func_0019f1f0 from s12w2's 8w finding (two
+   empty do { } while (0) barriers per TAIL copy (after the int loads, before the stores) reproduce the original sched order); the FP
+   register swap is fixed by making fz, fu and one function-level variables (set in both TAIL
+   copies, so global-alloc assigns them after local-alloc: ft takes f1 locally, then fu f2,
+   fz f3, one f4 by global priority) and multiplying in place (`fu *= key->sc[1]`).
+   func_0019f100 / func_0019f148 are CONTEXT_ONLY copies (matched in src/hand). */
 
 typedef struct { s16 x, y, z; } MgV6;
 typedef struct { s16 h0; u16 n; u16 *idx; } MgSet;
@@ -66,7 +71,7 @@ void func_002673b8(f32 *, f32 *);
 void func_00267370(f32 *, f32 *, f32 *);
 void func_00267e90(f32 *, f32 *, f32);
 
-f32 func_0019f100(void) {
+CONTEXT_ONLY f32 func_0019f100(void) {
     f32 ret;
 
     __asm__ volatile(
@@ -91,7 +96,7 @@ f32 func_0019f100(void) {
     return ret;
 }
 
-s8 func_0019f148(u8 a) {
+CONTEXT_ONLY s8 func_0019f148(u8 a) {
     f32 f;
 
     func_0019f100();
@@ -100,7 +105,7 @@ s8 func_0019f148(u8 a) {
 }
 
 #define R func_0019f100()
-#define ORTHO do { \
+#define ORTHO { \
         p->m[1][0] *= key->sc[0]; \
         p->m[1][1] *= key->sc[1]; \
         p->m[1][2] *= key->sc[2]; \
@@ -109,11 +114,11 @@ s8 func_0019f148(u8 a) {
         func_002673b8(z, z); \
         func_00267370(p->m[0], z, y); \
         func_002673b8(p->m[0], p->m[0]); \
-    } while (0)
+    }
 #define TAIL(E) { \
         v = tbl[E]; \
-        p->m[3][0] = (f32)v.x * key->sc[0]; \
-        p->m[3][1] = (f32)v.y * key->sc[1]; \
+        t = v.x; p->m[3][0] = (f32)t * key->sc[0]; \
+        u = v.y; p->m[3][1] = (f32)u * key->sc[1]; \
         p->m[3][2] = (f32)v.z * key->sc[2]; \
             }
 #define TAIL2 { \
@@ -125,6 +130,7 @@ s8 func_0019f148(u8 a) {
         } \
     }
 
+/* FLAGGED: empty do { } while (0) sched barriers in the TAIL copies */
 void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
     f32 vec[4] __attribute__((aligned(16)));
     f32 ang[4] __attribute__((aligned(16)));
@@ -134,7 +140,8 @@ void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
     f32 rng = key->b27;
     f32 rng2 = 2.0f * rng;
     s32 i;
-    f32 f, r;
+    s32 t, u, k;
+    f32 f, r, fz, fu, one;
 
     memset(p, 0, sizeof(MgPart2));
     if (a)
@@ -242,7 +249,7 @@ void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
         default:
             if (obj->h22 >= (s16)s->n)
                 obj->h22 = 0;
-            { s32 k = s->idx[obj->h22++]; TAIL(k); }
+            { s32 k = s->idx[obj->h22++]; { f32 ft, s0; s32 z; v = tbl[k]; t = v.x; ft = (f32)t; s0 = key->sc[0]; z = v.z; u = v.y; do { } while (0); fz = (f32)z; one = 1.0f; fu = (f32)u; do { } while (0); p->m[3][0] = ft * s0; fu *= key->sc[1]; p->m[3][1] = fu; fz *= key->sc[2]; p->m[3][2] = fz; p->m[3][3] = one; } }
             goto ty;
         case 1:
             R;
@@ -263,9 +270,13 @@ void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
         }
         if (obj->h22 >= (s16)s->n)
             obj->h22 = 0;
-        { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; TAIL(k); }
+        { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; { f32 ft, s0; s32 z; v = tbl[k]; t = v.x; ft = (f32)t; s0 = key->sc[0]; z = v.z; u = v.y; do { } while (0); fz = (f32)z; one = 1.0f; fu = (f32)u; do { } while (0); p->m[3][0] = ft * s0; fu *= key->sc[1]; p->m[3][1] = fu; fz *= key->sc[2]; p->m[3][2] = fz; p->m[3][3] = one; } }
     ty:
-        TAIL2;
+        if ((u8)(key->type - 8) < 2) {
+            f32 *y = p->m[1], *z = p->m[2];
+            func_002673b8(y, p->m[3]);
+            ORTHO;
+        }
         break;
     }
     }

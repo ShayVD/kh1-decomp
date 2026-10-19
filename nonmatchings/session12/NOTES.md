@@ -93,3 +93,18 @@
   whose last condition is one conditional jump followed by `goto end`; it only finds exits in the
   first ~30 insns; `goto label_after_loop` is not an exit, `break` is. Phony-loop recipe:
   `if (X) for (;;) { body; if (++j >= N) goto out; if (!X) break; }`.
+
+## s12w8: 0019f1f0 MATCHED (flagged), 3-qty lever swept
+- 0019f1f0: src/hand/nostrict/text_00190000_s12_s12w8.c (rodata RO=0048FCB0). FLAGGED: two empty
+  `do { } while (0)` sched barriers per TAIL copy (after the int loads, before the stores), from
+  s12w2's 8w finding. The ft/fu FP swap (a 13-qty block, qsort) is fixed by making fz, fu and one
+  function-level variables set in both TAIL copies and multiplied in place (`fu *= key->sc[1]`):
+  they become global pseudos, local-alloc handles only ft (f1), global-alloc gives fu f2, fz f3,
+  one f4.
+- The 3-qty sort bug had nothing to work on in 001cfc28 (7 qtys; 1w is a sched2 LUID tie),
+  00125240 (10-11 qtys; x outranks 1e4), 00120cf8 (registers already match), 00200e28 (one block,
+  96 qtys), 00192958 (only 3-qty block already matches).
+- Inverse lever: move block-local temps into function-level variables set in two blocks to take
+  them out of local-alloc (global-alloc assigns them after all local qtys, by global priority).
+- Helper: tools/matching/gdb_s12/blkq.sh FILE [flags] (+ blkq_gdb.py): every block's qty count,
+  first_reg, priority, phys reg, birth/death in one gdb run.
