@@ -491,3 +491,8 @@
 - sched2 li order ties go by LUID (sched1 order); 63 can only outrank d0 in local-alloc by being born 3+ insns later, which puts it last in sched2. Confirmed dead end with 2 refs each.
 - update_equiv_regs moves a once-set, once-used global constant pseudo's li to just before its use (it becomes local, life 1) — why 0xeeee looks local. cse folds every use of a constant pseudo it sees, so dead tests can't add refs to 63 in its block. Untried: a surviving tied copy `B = A` to give 63 four refs.
 - Integer tests with identical multi-set arms split blocks through sched2 and leave no code after jump2 (pseudos set in the arms become global).
+
+## s11w54 (00105288, 001cfc28), no gains
+- 00105288: sched2 memory edges are a superset of sched1's (after reload, hard-reg addresses lose reg_base_value). The /12 trap_if is a sched2-only edge route (store -> trap -> load if sched1 moves the load after the trap) but sched1 can't place the trap first with w47's types.
+- 001cfc28: w54__001cfc28_7w_finding.c: `f32 one = 1.0f; ... m.v[3] = one;` (no volatile) gives the right dsll/li.s order, but update_equiv_regs moves the li next to its use, so 1.0 lives 1 insn and takes f0. Needs the li.s after the dsll but 4+ insns before its swc1.
+- Facts: anti/output deps cost 0 on MIPS. sched2 tie keys: class vs last insn, dependents, LUID. A call's stale INSN_TICK applies only to insns with an in-block predecessor.
