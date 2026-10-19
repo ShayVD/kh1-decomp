@@ -218,3 +218,104 @@ Risks, biggest first:
    are complete). Weak `.ctx` symbols must never be the definition that wins.
 8. **Runtime testing is only on the user's machine**; this container can prove
    relocation correctness, not boot.
+
+## Session 13: M0
+
+**Status: M0 passes.** `make shift` links a fresh ELF symbolically at the original addresses
+and its loaded image equals the original byte for byte.
+
+```
+make -j2          # the normal build first (unchanged, still byte-identical)
+make shift        # extract data, link out/shift/kh1-shift.elf, run the M0 check
+make shift SHIFT_ASM_DIR=<dir> SHIFT_ALIASES=<file>   # with committed asm exports / alias table
+```
+
+Last lines of `make shift` (6,972 placed + 16 exported functions):
+
+```
+shift-ld: 6988 functions (1 extra asm objects), 230 rodata holes, 174 blob chunks, 1 merged rodata copies; defined 53 aliases + 2 mid-function labels, 2113 data + 1221 bss names, 21 absolute (outside the image)
+shift-ld: note: explicit padding 0x00100000-0x00100008 before func_00100008 (no alignment explains it)
+shift-elf: out/shift/kh1-shift.elf: load 0x00100000, file-backed 0x394050, memsz 0x575018, entry 0x00100008, 10407 symbols
+M0 OK: kh1-shift.elf loads byte-identical to the original: 0x00100000-0x00675018, entry 0x00100008, .bss 0x00494080+0x1e0f98
+M0 OK: 10379 functions, labels and D_ names at their original addresses
+```
+
+What runs (all outputs under `out/shift/`, gitignored; nothing extracted is committed):
+
+1. `tools/shift/extract_data.py`: checks the SHA-256, checks the headers (one PT_LOAD at
+   0x100000, one PROGBITS `main` ending at 0x494050, the 0x18 bytes the PT_LOAD carries
+   past it are zero, `.bss` at 0x494080), writes `data/main.bin` = 0x272C70-0x494050 and
+   `data/image.json` (entry, sizes, e_flags, the `.reginfo` words).
+2. Unplaced functions: with `SHIFT_ASM_DIR` empty (today), `shift_ld.py missing` lists the
+   16 layout functions no source places and `tools/asm_export.py` writes them to
+   `asm/unplaced.s` (position-dependent `.word`s, correct only at the original addresses;
+   **temporary**). With `SHIFT_ASM_DIR=<dir>` every `<dir>/*.s` is assembled instead; their
+   `.text.<fn>` sections are placed by name (functions.tsv or `func_XXXXXXXX`) and their
+   `.rodata.*` (symbolic jump tables) are located from the `%hi/%lo` pairs like
+   `kh1tool link-script` does, so they land as holes at their blob offset.
+3. `tools/shift/shift_ld.py gen` writes `kh1-shift.ld`, `blob.s`, `objects.lst` and
+   `expected.tsv` (original address of every function, label and D_ name, for the check):
+   - `.text 0x100000`: every `.text.<fn>` (out/gen/placements.tsv + extra asm objects) in
+     address order. Gaps are `. = ALIGN(n)` with the smallest power of two that gives the
+     original start (69 statements: 8, 16, 32, 64; 3,400-odd gaps are the sections' own
+     8-alignment); only the 8 zero bytes before crt0 are an explicit `. += 8`. Every layout
+     function must be present exactly once.
+   - `.data ALIGN(16)`: `D_BLOB`, then `blob.s` chunks (`.incbin "out/shift/data/main.bin",
+     off, len`, one section each, alignment 1) around the 229 compiled rodata blocks of
+     out/gen/rodata.tsv, at the same offsets. One block is a merged copy
+     (`ttlib/ui.c` assert string, `.rodata.func_00249fb0` and `.rodata.func_0024a300` at
+     0x491848; the original linker kept one): the second goes to a non-allocated `(INFO)`
+     section at `D_BLOB + off`, so its references resolve there and it is not loaded.
+   - `_gp = _fbss = _edata` (0x494050, crt0's $gp and clear start), `.bss ALIGN(128)
+     (NOLOAD)`: `D_BSS`, size up to `_end` = 0x675018 (includes the `.reginfo` slot).
+   - Every name an object references but no placed section defines gets an explicit
+     definition: in code, a label next to its function (`name = .;` / `name = . + off;`):
+     53 aliases (GOFAST names, `func_00250054`=memset, the libc statics 00251600 etc.) and
+     2 mid-function entries (`func_001001d8`, `func_00260f40`); data `D_X = D_BLOB + off`
+     (2,113); bss `D_X = D_BSS + off` (1,221, `D_BSS - off` for 0x494050-0x494080);
+     absolute only outside the image (21: low kernel RAM 0x9B38-0xAC20, 0x6A0000,
+     0x720000, 0x820000, 0x9A0000, 0xF20000, 0xFE0000, 0x1CE0000, GS 0x12000000).
+     `SHIFT_ALIASES` files are `INCLUDE`d and their names skipped here (still checked).
+   - **No PROVIDE.** A name with no address is a generator error; a name the script misses
+     is an ld `undefined reference` (tested by deleting a line); a reference to unplaced
+     rodata is an ld "defined in discarded section" error (tested). `.ctx*` and unplaced
+     `.rodata*` go to `/DISCARD/`; stray `.text/.data/.bss` input to `.shift_orphan`, which
+     `shift_elf.py write` requires to be empty. `.ctx` symbols are already undefined in the
+     objects (`fix-obj`), so they never win.
+4. `ld -T kh1-shift.ld @objects.lst` (map in `kh1-shift.map`), then
+   `tools/shift/shift_elf.py write`: a fresh ELF (PT_LOAD at file offset 0x80, align 0x80,
+   RWE, memsz to `_end`; PT_MIPS_REGINFO with `_gp`; original e_flags; sections .text,
+   .data, .bss, .reginfo and a symbol table with every function and D_ name for debuggers).
+   Its filesz is 0x394050 (the original's 0x394068 includes 0x18 zero bytes; same image).
+5. `shift_elf.py verify` (M0): loads both ELFs like the loader (file bytes, zeros to
+   memsz) and compares load address, entry, image end, .bss start and every byte, then
+   checks every name of `expected.tsv` and D_BLOB/D_BSS in the linked symbol table. On a
+   mismatch it prints the first differing words as `0xADDR name+off original new`.
+
+What is temporary (switch to s13s1's outputs when merged):
+
+- `out/shift/asm/unplaced.s` (asm_export of the 16 unmatched functions from the user's
+  ELF): replace with `SHIFT_ASM_DIR=<their committed dir>` (make it the Makefile default).
+- The 12 `.s` files in src/ are still the position-dependent `.word` versions; M0 passes
+  with them, M1 does not. Nothing in the shift tools changes when they become `.reloc`.
+- Aliases: derived here from the address of each undefined name (registry/placeholder),
+  as in-section labels. With `SHIFT_ALIASES=<their file>` those names come from the file.
+
+What remains for M1/M2:
+
+- **The data blob has no relocations yet** (step 5, `data_relocs.tsv`). M1 (code moves)
+  breaks every function pointer and asm jump table in the blob; M2 every data pointer.
+  `blob.s` is already chunked, so a relocation becomes `.word sym+addend` between chunks.
+- Any asm still at fixed addresses (today: all 12 src `.s` files and the temporary
+  export) breaks M1. The M0 check cannot see that (identical at the original addresses);
+  an M1 link will.
+- M1 rotation must keep each gap's `ALIGN(n)` meaning: moving text by a multiple of 64
+  keeps every gap; the data blob needs a delta that is a multiple of 0x1000 (plan 1d), and
+  `.bss` is `ALIGN(128)` after the data.
+- The merged rodata copy (`.rodup_00491848`, INFO section) is pinned to `D_BLOB + off`:
+  fine while the primary block stays in the blob at that offset.
+- crt0 still hard-codes 0x494050/0x494080/0x675018 and the stack/heap; `_gp`, `_fbss`,
+  `_end`, `D_BSS` exist as linker symbols for when crt0 is symbolic (M2 moves data and bss).
+- func_00171078's literal `0x35BD40` (plan 1a) still needs the `KH1_SHIFTABLE` switch
+  before M2.
+- Step 8 (inverse-map comparator) and the M1/M2 link variants are not written.
