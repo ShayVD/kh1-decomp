@@ -423,3 +423,10 @@
 - 00214a68: 8 -> 5w (w41__00214a68_5w.c, nosi, right size 184, flagged): exit arm `if (i >= 48) { p = 0; break; }` turns beqzl into beqz (the dead set in the exit arm makes the loop heuristic predict toward the loop; after life1 jump inverts it); three dead tests `if ((f32)(i + n) < 0.0f) p = 0;` give i 17 refs (a1). Left: the tests lengthen the ids giv's life so it swaps a3/t0 with the inner-loop lui.
 - Twins: bgtz REG_BR_PROB 6001, dead FP tests vanish with their label in flow2; no route. 00265608: gcc991111 does NOT delete dead FP tests (884 -> 908), so the lever is 2.96-only.
 - Facts: REG_BR_PROB EQ 3999, GT0 6001, GE vs nonzero 5000. A dead FP test needs a target variable used elsewhere. Global-alloc priority ~ log2(refs)*refs/live length, refs weighted by loop depth. cse merges repeated (f32)i into one ref. FP compares in a loop body change loop.c decisions.
+
+## s11w40 (allocator-priority dead tests)
+- MATCH 001502e8 (nostrict), FLAGGED dead FP test: from session8 w1's 2w, case-0 tail `{ s32 m = a->x130->x48; S144e *q = a->x144; q->x4 = m; if ((f32)(s32)q < q->x8) t = 0; }`. More than 3 local quantities switch local-alloc to qsort; the cvt of q and the q->x8 load give Q extra refs. N v0, Q v1, C a0.
+- 00107c48: 2w (w40__00107c48_2w.c, flagged): w34's draft plus `if ((f32)D_00351BD0 < 0.0f) j = 0;` after `arg = (Ent16 *)i;`. Left: `lui v0` vs original `lui v1`.
+- 001f2630: w40__001f2630_35w_order_finding.c: plain constants with store order x30(f2+w) x34(f4+288) x44 x10 x14 x2c give the exact store order and loop registers, but `a0 = 2` issues before cy+h and reload picks v1 for h (size 1064).
+- 001f1fc8 (2), 0024c950 (9), 00105d88 (7): no gain.
+- Facts: `(f32)(s32)ptr < fpload` gives free refs to an int pseudo. A dead FP test survives to the allocators only when an explicit jump follows its empty arm (break, then-arm before else, case end); if the target is just the next label, life1 deletes it. The dead-set variable must be used elsewhere. A store's sched1 weight is -1 only if its value's RTL-last use is that store.
