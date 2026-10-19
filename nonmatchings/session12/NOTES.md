@@ -202,3 +202,27 @@
   (0x08111ef0); statics next_qty 0x082233f8, qty_phys_reg 0x082233fc (short*), qty_n_refs
   0x08223410, qty_birth 0x08223418, qty_death 0x0822341c, qty_size 0x08223420, qty_first_reg
   0x08223434 (tools/matching/gdb_s12/bq9.sh + bq9.py).
+
+## s12w10: 001137f8 MATCHED (natural); 00200e28, 00192958, 001c62a0 unchanged
+- 001137f8: src/hand/text_00110000_s12_s12w10.c. Store base as a pointer local initialised first
+  (`u64 *p = D_002BCE00;`), then `a =`, `col = 934C`, `col |= 9358`, `b =`, `col |= 9354/9350`
+  (4 of 120 orders with p first reach 0). Sched1 HIGHs all have priority 27 and the base HIGH ties
+  at 24 with the 1<<32 / 0x100D17A88 constants; ties go to the lowest LUID, so p first puts the
+  base HIGH ahead of both constants and local-alloc gets the original's registers.
+- 00200e28 stays 25: two single-statement moves give 5 of 6 role values the original's register
+  (d8 after the tag statement; `v[0].u.z = e[0];` before regs2), but TLCS rises to 35 (climbed
+  order); clb6 from there bottoms at 31.
+- 00192958 stays 17: the swapped TI constants (zbuf/scissor) are REG_EQUIV constants that reload
+  substitutes with spill registers ("Using reg 9 for reload 1"), so it is reload spill rotation,
+  not local-alloc priority.
+- **Local-alloc simulator** tools/matching/la2.py: reads a .lreg dump and reproduces local-alloc
+  exactly on single-block functions (107/107 pseudos on 00200e28). Rules: two passes (qtys with
+  suggestions try only suggested regs on their exact interval; the rest try a widened interval
+  [b-2+b%2, d+2-d%2) then the exact one; the widened one is marked busy); lifetimes
+  [2n_set, 2n_death); outputs tie to a dying direct operand of the same size (not inside mem or
+  sign_extend); order v0..t7, s0..s7, t8, t9, s8; call-crossing qtys get s regs only; an unused
+  v0 call result does not block v0.
+- tools/matching/osrch_s12.py DUMP LO HI '{reg:"name"}': anneals a minimal change to the sched1
+  order that reaches a target allocation (found 001137f8: 5 swaps pointing at the base HIGH LUID).
+- Base-pointer lever: a pointer local set at the top gives the base HIGH a low LUID, so it wins
+  sched1 priority ties against constants.
