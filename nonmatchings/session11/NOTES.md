@@ -456,3 +456,8 @@
 - 00199ac8: copy 407 is inl_alpha's `d` parameter hoisted by loop.c; dead tests on d get cprop'd to reg 101, so they can't add refs to 407. Loop-invariant dead tests get hoisted and cost pseudos (62w). Lengthening du needs +15 insns.
 - 0024c950: w45's test splits the loop preheader so the A68 address copy goes global (a1). Without it only the load/kk v0/a0 swap is wrong; local-alloc allocates kk before the load even when kk is global.
 - Facts: dead tests can't give refs to an inline parameter copy. A dead test before a loop moves preheader movables after it. ld_s11.py and var.py need RO exported.
+
+## s11w47 (00105288, 00135a68, others not reached)
+- 00105288: 28 -> 2w (w47__00105288_2w.c, strict, right size 580): D_002A6280 as a member of `typedef struct { u8 *p; } P1;` (a plain extern global access is alias set 0 and conflicts with every load); h[12]/h[13] read into locals q/m before the D_002A6288 store; store order 6280, 6288, 6298, 62A8. Left: one sched2 cycle, `sw D_002A6288` (prio 67) before `addu a1,a0,a1` (26); needs equal priority via an output dep, which costs an s-register so far.
+- 00135a68: w47__00135a68_33w_finding.c at the right size 284: dead FP tests with else between the loop-2 stores keep four separate (plus i16 v) pseudos (the original's move chain), but the tests survive to sched1 and serialise the stores. Needs a split present at cse1/gcse but gone before sched1 (idea: a condition only cse2 can fold).
+- Facts: only component refs (struct members) get real alias sets. A pointer-member store conflicts with a load through the same pointer type: a chosen dependence edge. sched2 tie after priority: independent of the last scheduled insn wins.
