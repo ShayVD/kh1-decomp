@@ -399,3 +399,9 @@
 - 001f2630: w36__001f2630_3w_plainfix.c has every block register right, only store order off. x2c must sit in sched1's weight -1 group (LUID order x34 x44 x10 x14 x2c); with a plain constant that order breaks global alloc, with k8 + dead set local-alloc gives f4+288 the a1 (the li fills an idle alu slot right after the call, so k8 lives long).
 - 001f1fc8: the one store can follow x38 only if its value stays live (weight 0, hoisted constant); hoisted shape gives cy+h a1 instead of t0.
 - Facts: sched1 store rank = priority, reg weight (-1 if value dies), dependents, LUID. A pseudo set after a call depends only on that call, so its li can't be delayed. Same-block vs other-block dead set of a constant variable gives identical code.
+
+## s11w38 (FP dead-set tests)
+- MATCH 0010ba98 (hand strict, rodata), FLAGGED: w34's 2w draft, the end-of-arm `w = t->win;` replaced by `if (t->dx < 0.0f) w = t->win;` at the start of the shared `case 0: case 3:` arm (a redundant conditional set kills the copy on one path, so CPROP2 leaves the load on the PRE register: `lhu v0,16(a0)`). w34's dead `w = 0;` stays.
+- MATCH 00110e68 (hand strict), FLAGGED: w20's identical arms, w25's `x = D[i] + (1.0f - D[i]) * cosf(*ph);`, plus `if (x < p[-1]) v = 0;` at the end of the loop body: x becomes global (read in a later block), and the p[-1] load gives p its 17th ref so it wins s0.
+- 001cfc28 (1), 001502e8 (2), 00125240 (8), 00120cf8 (5), 001eddc0 (8): no gain. FP tests on values cse knows are folded; a new FP quantity in a 3-quantity block switches local-alloc from the 3-element exchange to qsort.
+- Facts: a dead FP test's compare operands are free extra refs. A conditional set to the value already held kills a gcse copy on one path. FP tests against a new constant in a loop hoist it into a callee-saved register (+12 bytes).
