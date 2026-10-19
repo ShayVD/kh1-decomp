@@ -441,3 +441,7 @@
 - 0024c950: 9 -> 8w (w45__0024c950_8w.c, nofill, flagged): `if ((f32)D_00669A5C < (f32)(D_00669A5C + 1)) t = 0; else n = 0;` after `D_00669A6C = x;` gives the load 4 refs (v0, kk a0). Left: the branch splits off `p = D_00669A40` and the preheader; several %hi registers off.
 - 001f2630/001f1fc8: the x2c constant store is ready when its li issues and outranks the others in the weight -1 group by LUID; no lever without a block split.
 - Facts: var.py/ins.py replace the FIRST match, which can be inside a header comment (strip comments before sweeps). A dead-set else arm keeps the explicit jump without changing behaviour. A dead FP test targeting an unused variable is deleted by jump1 even with an else.
+
+## s11w43 (00199ac8 and big permutation targets)
+- 00199ac8: 22 -> 19w (w43__00199ac8_19w.c, hand/NOSTRICT fill mode, RO=48fb70, size right, 4 flagged dead FP tests). Left: du (.130) outranks the case-6 hoisted copy of d (.120), swapping t3/t4 everywhere.
+- Facts: join one-line ifs with their bodies before insertion sweeps (/tmp/claude-0/s11/s11w43/bin/join.py). Ref weights 1/2/3 by loop depth; a hoisted invariant used once in the loop has 5 refs. A dead FP test before a branch on a spilled pseudo leaves a CODE_LABEL that stops reload reusing its register. `mtc1; b; cvt.s.w` is a gas fill (floatsisf2 is one 8-byte insn), so the function is a fill-mode one.
