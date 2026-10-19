@@ -1,4 +1,9 @@
-/* func_00102118: 9 words off by position, 6 by LCS (was 28/17), mode hand. New: t (Task2) has plain f32 fields (struct { f32 f10; } u10 etc.), only Obj keeps the f32/void* unions: a direct union-member access has alias set 0, so t->u14.f14 = 0 conflicted with the D_002A3E20 loads in cases 0/2 (fixes both case blocks). Plus a compiled-out do{}while(0) between h->c and h->d. Left: hh->a = 4 goes through hh = o->u10.p10 (lw s0,16(s0)); the original has move s0,s3 (a copy of h that survives gcse cprop) in the bnez slot, and the c/d store vs lui/addiu order at the two joins follows from it. Not found: o2 copies, store after the conversion, hand-written u32 conversion, hh = h. */
+/* func_00102118 (hand). FLAGGED DEAD CODE: `x = (s32)t;` at entry and `if (x != (s32)t) h = 0;` /
+   `if (x < (s32)t) h = 0;` right after `hh = h;` in the two conversion join blocks (never true;
+   gcse cprop turns x into t, cse2 folds the test, jump deletes the arm before life1). They keep
+   the gcse copy `hh = h` (the original's `move s0,s3` in the bnez slot); the two tests must differ.
+   Section 2: `{ s32 four = 4; do { } while (0); hh->a = four; }` makes the hh->a store the sched1
+   barrier insn (first insn after the loop notes), so h->b and the a1 argument issue together. */
 #include "common.h"
 
 typedef struct { s32 w[12]; } B48;
@@ -59,8 +64,9 @@ s32 func_00102118(Task2 *t) {
     Hdr *h;
     void *buf;
     Buf48 *bb;
-    Hdr *hh;
+    Hdr *hh; s32 x; s32 (*fn)(void *);
 
+    x = (s32)t;
     switch (t->state) {
     case 0:
         t->u14.f14 = 0.0f;
@@ -124,7 +130,7 @@ s32 func_00102118(Task2 *t) {
     a = D_002A45D0[v % 32];
     b = D_002A4650[v % 32] + v / 32 * 32;
     u = 129.0f - t->u10.f10;
-    hh = o->u10.p10;
+    hh = h; if (x != (s32)t) h = 0;
     if (D_002A3E20[t->id].d == 0) {
         func_00101fc8(0, u, a, b, buf);
     } else {
@@ -132,10 +138,11 @@ s32 func_00102118(Task2 *t) {
     }
     hh->a = 4;
     h->b = (s32)buf;
-    h->c = 0;
     do { } while (0);
+    fn = func_00101f80;
+    h->c = 0;
     h->d = 0;
-    o = func_0015ed80(0x15f90 + k, func_00101f80);
+    o = func_0015ed80(0x15f90 + k, fn);
     bb = func_00121e28(48, &o->u10.p10);
     o->u10.p10 = bb;
     if (D_002A3E20[t->id].d == 0) {
@@ -158,16 +165,15 @@ s32 func_00102118(Task2 *t) {
     }
     o->u10.p10 = h;
     u = t->u10.f10 + 1.0f;
-    hh = o->u10.p10;
+    hh = h; if (x < (s32)t) h = 0;
     if (D_002A3E20[t->id].d == 0) {
         func_00101fc8(1, u, a, b, buf);
     } else {
         func_00102070(1, u, a, b, buf);
     }
-    hh->a = 4;
+    { s32 four = 4; do { } while (0); hh->a = four; }
     h->b = (s32)buf;
     h->c = 0;
-    do { } while (0);
     h->d = 0;
     o = func_0015ed80(0x15f93 + k, func_00101f80);
     bb = func_00121e28(48, &o->u10.p10);

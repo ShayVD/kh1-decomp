@@ -537,15 +537,16 @@ found that the next session needs:
 
 ## Session 11: what changed
 
-- **36 matches** (6,916 -> 6,952 / 6,988; 93.7% -> 95.8% of code bytes) by about 50 workers, at most
+- **37 matches** (6,916 -> 6,953 / 6,988; 93.7% -> 95.9% of code bytes) by about 60 workers, at most
   5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
   short version: docs/matching-tips.md "Session 11 tips").
-- **Flagged matches**: 19 of the 36 rely on source that does nothing and is deleted by the
+- **Flagged matches**: 20 of the 37 rely on source that does nothing and is deleted by the
   compiler. Each file says so in a comment; they are byte-identical, but probably not the original
   source:
   - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
   - dead float tests such as `if ((f32)x < 0.0f) v = 0;`: 00249718, 00110e68, 0010ba98, 001fa8b0,
-    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68, 00105d88 (integer identical-arm tests);
+    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68, 00105d88 (integer identical-arm tests), 00102118 (cse2-folded
+    `if (x != (s32)t)` tests);
   - a never-true test with the whole body copied into both arms (reorg sees stale flow2 liveness):
     001e0ab0, 001e0d98, 001e10f8;
   - identical if/else arms (as in session 10): 00169f28.
@@ -558,6 +559,11 @@ found that the next session needs:
   respects loads/stores), var_s11.py (variant runner), togm_s11.py (toggle sweep; temp file is now
   per-pid), cf4_s11.py, slt_s11.py. Worker helper scripts (insertion sweeps, priority dumps,
   side-by-side listings) were left in /tmp and are described in NOTES.md; rewrite as needed.
+- **Resource limit**: 5 workers with background hill-climbs and side-by-side builds pushed the
+  container to load ~48 with 1.7 GB of 16 GB free, and it was restarted twice (all in-flight work lost;
+  `make progress-update` was OOM-killed in objdiff before that). Run at most 3 workers at once, each with
+  one compile or hill-climb process in the foreground, and check /proc/loadavg and MemAvailable before
+  spawning more. Commit worker results as soon as they report.
 - **Tool traps**: variant scripts replace the first match, which can be inside a header comment
   (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
 - A container restart mid-session lost no work because every match was pushed as it landed.
