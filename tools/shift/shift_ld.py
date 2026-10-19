@@ -90,7 +90,7 @@ def objects_mk_objs() -> list[str]:
         sys.exit("error: out/gen/objects.mk missing; run `make` first")
     for line in mk.read_text().splitlines():
         if line.startswith("OBJS :="):
-            return line.split(":=", 1)[1].split()
+            return [SUBST.get(o, o) for o in line.split(":=", 1)[1].split()]
     return []
 
 
@@ -111,9 +111,13 @@ class Elves:
         return self.cache[obj]
 
 
+SUBST: dict[str, str] = {}  # object -> variant object (KH1_SHIFTABLE builds, tools/shift/variants.py)
+
+
 def collect_functions(asm_objs: list[str], registry, elves) -> tuple[list[Placed], list[str]]:
     funcs, errors = [], []
     for addr, sym, obj, _src in K.load_placements():
+        obj = SUBST.get(obj, obj)
         e = elves(obj)
         sec = e.section(f".text.{sym}")
         funcs.append(Placed(addr, sym, obj, sec.name, sec.size, addralign(e, sec.index)))
@@ -148,7 +152,7 @@ def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Plac
     .rodata.* of the extra asm objects (symbolic jump tables), located the
     same way kh1tool link-script does it: from the %hi/%lo pairs that
     reference them, compared with the original code."""
-    rows = list(K.load_rodata_placements())
+    rows = [(ad, n, SUBST.get(o, o)) for ad, n, o in K.load_rodata_placements()]
     if asm_objs:
         orig = K.require_orig(K.load_config())
         for obj in asm_objs:
@@ -198,10 +202,38 @@ def cmd_missing(a) -> int:
     return 0
 
 
+def load_data_relocs(path: Path, max_tier: int, layout_addr: dict[str, int]) -> tuple[dict[int, tuple], list[str]]:
+    """data_relocs.tsv rows with tier <= max_tier: {original word address:
+    (symbol, addend, high bits, text target address or None)}."""
+    out, errors = {}, []
+    if max_tier <= 0 or not path.exists():
+        return out, errors
+    for line in path.read_text().splitlines():
+        if not line or line.startswith(("#", "offset")):
+            continue
+        off, typ, sym, addend, tier, _reason = line.split("\t")
+        addr = f"{0x00272C70 + int(off, 16):08x}"  # offsets are from the original D_BLOB
+        if tier == "x" or int(tier) > max_tier:
+            continue
+        hi = int(typ.split("+", 1)[1], 16) if "+" in typ else 0
+        add = int(addend, 16)
+        if sym in ("D_BLOB", "D_BSS"):
+            out[int(addr, 16)] = (sym, add, hi, None)
+        elif sym in layout_addr:
+            out[int(addr, 16)] = (sym, add, hi, layout_addr[sym] + add)
+        else:
+            errors.append(f"{path.name}: {addr}: unknown target symbol {sym}")
+    return out, errors
+
+
 def cmd_gen(a) -> int:
     img = load_image()
     registry = K.load_registry()
     elves = Elves()
+    for spec in a.subst_obj:
+        old, new = spec.split("=", 1)
+        SUBST[rel(old)] = rel(new)
+    out_dir = Path(a.out_dir)
     asm_objs = [rel(o) for o in a.asm_obj]
     funcs, errors = collect_functions(asm_objs, registry, elves)
     rodata = collect_rodata(elves, funcs, asm_objs)
@@ -291,7 +323,7 @@ def cmd_gen(a) -> int:
             tail.append(f"{name} = D_BLOB + 0x{addr - blob_start:x};")
             kinds["data"] += 1
             expected.append((addr, "data", name))
-        elif blob_end <= addr < image_end:
+        elif blob_end <= addr <= image_end:
             off = addr - bss_start
             tail.append(f"{name} = D_BSS {'+' if off >= 0 else '-'} 0x{abs(off):x};")
             kinds["bss"] += 1
@@ -299,6 +331,32 @@ def cmd_gen(a) -> int:
         else:
             tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
             kinds["abs"] += 1
+    # Data relocations (data_relocs.tsv): pointers in the blob become `.word sym+addend`.
+    # Code targets get a label at their function (__dr_XXXXXXXX = function start).
+    drel, drel_err = load_data_relocs(Path(a.data_relocs), a.reloc_tier,
+                                      {f.name: f.addr for f in K.load_layout()})
+    errors += drel_err
+    hole_ranges = sorted((r.addr, r.addr + r.size) for r in primary)
+    in_holes = 0
+    for w_addr in list(drel):
+        i = bisect.bisect_right(hole_ranges, (w_addr, 1 << 40)) - 1
+        if i >= 0 and w_addr < hole_ranges[i][1]:
+            del drel[w_addr]  # now a compiled/asm rodata block with its own relocations
+            in_holes += 1
+    dr_labels: dict[int, str] = {}
+    for w_addr, (sym, add, hi, target) in drel.items():
+        if target is None:
+            continue
+        i = bisect.bisect_right(starts, target) - 1
+        f = funcs[i] if i >= 0 else None
+        if f is None or target >= f.addr + max(f.size, 4) + 8:
+            errors.append(f"data reloc at 0x{w_addr:08x}: target 0x{target:08x} is in no placed function")
+            continue
+        if f.addr not in dr_labels:
+            dr_labels[f.addr] = f"__dr_{f.addr:08x}"
+            labels.setdefault(f.addr, []).append((dr_labels[f.addr], 0))
+        drel[w_addr] = (dr_labels[f.addr], target - f.addr, hi, target)
+
     if errors:
         print("\n".join(f"error: {e}" for e in errors), file=sys.stderr)
         return 1
@@ -307,7 +365,27 @@ def cmd_gen(a) -> int:
     padded = []
     text = [f"  .text 0x{load:08x} : {{", "    _ftext = .;"]
     pos = load
-    for f in funcs:
+    order = list(funcs)
+    split = None
+    if a.mode == "m1":
+        # Rotate: the last functions (from a 64-aligned start) go to the front.
+        # Each block keeps its offsets modulo 64, so every `. = ALIGN(n)` keeps its meaning.
+        last_end = funcs[-1].addr + funcs[-1].size
+        prev_end = {g.addr: f.addr + f.size for f, g in zip(funcs, funcs[1:])}
+
+        def fits(sp: int) -> bool:  # the rotated text must still end before the fixed data
+            return -(-(load + last_end - sp) // 64) * 64 + (prev_end[sp] - load) <= blob_start
+        cands = [f.addr for f in funcs[1:] if f.addr % 64 == 0 and last_end - f.addr >= a.m1_min and fits(f.addr)]
+        if not cands:
+            print("error: m1: no 64-aligned function start leaves enough to move", file=sys.stderr)
+            return 1
+        split = max(cands)
+        order = [f for f in funcs if f.addr >= split] + [f for f in funcs if f.addr < split]
+        pos = split
+    for f in order:
+        if split is not None and f.addr == funcs[0].addr:
+            text.append(f"    . = ALIGN(64);  /* m1: end of the rotated block 0x{split:08x}- */")
+            pos = load
         stmt, explicit = gap_statement(pos, f.addr, f.align)
         if not stmt and pos != f.addr and f.addr in labels:
             stmt = f". = ALIGN({f.align});"  # so `.` is the function start for its labels
@@ -325,6 +403,10 @@ def cmd_gen(a) -> int:
     text.append("  } =0")
     data_addr = f"ALIGN({stmt[len('. = ALIGN('):-2]})" if stmt and not explicit else (
         "." if not stmt else None)
+    if a.mode == "m1":
+        data_addr = f"0x{blob_start:08x}"  # data fixed; ld fails if the rotated text overruns it
+    elif a.mode == "m2" and data_addr is not None:
+        data_addr = f"{data_addr} + 0x{a.data_shift:x}"
     if data_addr is None:
         print(f"error: gap 0x{pos:08x}-0x{blob_start:08x} between code and data has no alignment", file=sys.stderr)
         return 1
@@ -336,12 +418,29 @@ def cmd_gen(a) -> int:
     cur = blob_start
     chunk = 0
 
+    drel_addrs = sorted(drel)
+    n_words = 0
+
     def emit_chunk(upto: int) -> None:
-        nonlocal cur, chunk
+        nonlocal cur, chunk, n_words
         if upto > cur:
             sec = f".blob.{chunk:04d}"
-            blob_s.append(f'\t.section {sec},"aw",@progbits\n'
-                          f'\t.incbin "{rel(a.blob)}", 0x{cur - blob_start:x}, 0x{upto - cur:x}')
+            # `.align 0`: no automatic alignment of .word (the chunk may start unaligned)
+            blob_s.append(f'\t.section {sec},"aw",@progbits\n\t.align 0')
+            i = bisect.bisect_left(drel_addrs, cur)
+            p = cur
+            while i < len(drel_addrs) and drel_addrs[i] + 4 <= upto:
+                w = drel_addrs[i]
+                if w > p:
+                    blob_s.append(f'\t.incbin "{rel(a.blob)}", 0x{p - blob_start:x}, 0x{w - p:x}')
+                sym, add, hi, _t = drel[w]
+                off = add + hi
+                blob_s.append(f"\t.word {sym}{'+' if off >= 0 else '-'}0x{abs(off):x}")
+                n_words += 1
+                p = w + 4
+                i += 1
+            if upto > p:
+                blob_s.append(f'\t.incbin "{rel(a.blob)}", 0x{p - blob_start:x}, 0x{upto - p:x}')
             data.append(f"    KEEP({blob_obj}({sec}))  /* 0x{cur:08x} */")
             chunk += 1
             cur = upto
@@ -413,15 +512,26 @@ def cmd_gen(a) -> int:
         *tail,
         "",
     ]
-    SHIFT.mkdir(parents=True, exist_ok=True)
-    write(a.out_ld, "\n".join(out))
-    write(a.out_blob, "\n".join(blob_s) + "\n")
-    write(SHIFT / "objects.lst", "\n".join(all_objs + [blob_obj]) + "\n")
-    write(SHIFT / "expected.tsv", "addr\tkind\tname\n" + "".join(
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write(out_dir / "kh1-shift.ld", "\n".join(out))
+    write(out_dir / "blob.s", "\n".join(blob_s) + "\n")
+    write(out_dir / "objects.lst", "\n".join(all_objs + [blob_obj]) + "\n")
+    write(out_dir / "expected.tsv", "addr\tkind\tname\n" + "".join(
         f"{ad:08x}\t{k}\t{n}\n" for ad, k, n in sorted(expected)))
+    variant_objs = set(SUBST.values())
+    nexts = {f.addr: g.addr for f, g in zip(funcs, funcs[1:])}
+    write(out_dir / "variants.tsv", "addr\tend\tname\tobject\n" + "".join(
+        f"{f.addr:08x}\t{nexts.get(f.addr, f.addr + f.size):08x}\t{f.name}\t{f.obj}\n"
+        for f in funcs if f.obj in variant_objs))
     print(f"shift-ld: {len(funcs)} functions ({len(asm_objs)} extra asm objects), {len(rodata)} rodata holes, "
           f"{chunk} blob chunks, {len(dups)} merged rodata copies; defined {kinds['alias']} aliases + {kinds['label']} mid-function labels, "
           f"{kinds['data']} data + {kinds['bss']} bss names, {kinds['abs']} absolute (outside the image)")
+    print(f"shift-ld: mode {a.mode}: {n_words} data relocations (tier <= {a.reloc_tier}) as .word sym+addend"
+          + (f", {in_holes} rows inside rodata holes skipped" if in_holes else "")
+          + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"
+             if split is not None else "")
+          + (f"; data and bss shifted by 0x{a.data_shift:x}" if a.mode == "m2" else "")
+          + (f"; variant objects: {', '.join(sorted(variant_objs))}" if variant_objs else ""))
     for p in padded:
         print(f"shift-ld: note: explicit padding {p} (no alignment explains it)")
     return 0
@@ -442,10 +552,21 @@ def main() -> int:
                    help="extra object with .text.<fn> sections (asm export of unplaced functions)")
     g.add_argument("--aliases", action="append", default=[], help="file of `alias = canonical;` lines")
     g.add_argument("--blob", default=str(SHIFT / "data" / "main.bin"))
-    g.add_argument("--blob-obj", default=str(SHIFT / "blob.o"))
-    g.add_argument("--out-ld", default=str(SHIFT / "kh1-shift.ld"))
-    g.add_argument("--out-blob", default=str(SHIFT / "blob.s"))
+    g.add_argument("--out-dir", default=str(SHIFT), help="where the script, blob.s, objects.lst go")
+    g.add_argument("--blob-obj", default=None, help="default: OUT_DIR/blob.o")
+    g.add_argument("--mode", choices=("m0", "m1", "m2"), default="m0",
+                   help="m0: original addresses; m1: rotate the text (data fixed); m2: data+bss moved")
+    g.add_argument("--m1-min", type=lambda x: int(x, 0), default=0x10000,
+                   help="m1: move at least this many bytes of code to the front")
+    g.add_argument("--data-shift", type=lambda x: int(x, 0), default=0x1000, help="m2: data/bss delta")
+    g.add_argument("--data-relocs", default=str(K.ROOT / "data_relocs.tsv"))
+    g.add_argument("--reloc-tier", type=int, default=3,
+                   help="emit data_relocs.tsv rows with tier <= N as relocations (0: none)")
+    g.add_argument("--subst-obj", action="append", default=[], metavar="OBJ=VARIANT",
+                   help="link VARIANT instead of OBJ (KH1_SHIFTABLE builds)")
     a = ap.parse_args()
+    if a.cmd == "gen" and a.blob_obj is None:
+        a.blob_obj = str(Path(a.out_dir) / "blob.o")
     return cmd_missing(a) if a.cmd == "missing" else cmd_gen(a)
 
 

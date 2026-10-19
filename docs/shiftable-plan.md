@@ -414,3 +414,170 @@ the main code, %hi/%lo pairs and aligned words pointing into 0x00100000-0x006750
 from layout.tsv / functions.tsv, with a summary. Raw files load at --base; an ELF is
 detected by its header. Self-test on a synthetic blob: `python3 -I tests/scan_overlay_test.py`
 (not wired into `make test`, which is the Makefile's).
+
+## Session 13: data relocations, M1/M2
+
+**Status: M0, M1 and M2 pass statically** (with s13s1's symbolic asm, the 9,523 accepted
+data relocations and the KH1_SHIFTABLE variant of func_00171078). Runtime is untested
+(PCSX2 runs only on the user's machine, plan section 3).
+
+```
+make -j2 && make shift                 # M0 (as before), now with the data relocations
+make shift SHIFT_MODE=m1               # builds M0 first, then code rotated, data fixed; comparator
+make shift SHIFT_MODE=m2               # builds M0 first, then data+bss moved by 0x1000; comparator
+make shift SHIFT_RELOC_TIER=1|2|3|0    # which data_relocs.tsv rows become relocations (default 3, 0 none)
+make shift SHIFT_VARIANTS=0            # no KH1_SHIFTABLE objects: strict byte-identical M0
+make data-relocs                       # regenerate data_relocs.tsv (needs `make`)
+```
+
+### Step 5: `data_relocs.tsv` (tools/shift/find_data_relocs.py)
+
+Committed table, one row per pointer-like word of the data blob (compiled rodata holes
+excluded: they carry their own relocations): `offset` (from D_BLOB = 0x272C70), `type`
+(`R_MIPS_32`, or `R_MIPS_32+0x20000000` / `+0x30000000` for a mirrored pointer), `symbol`
+(the layout name of the function holding the target, `D_BLOB` or `D_BSS`), `addend`,
+`tier`, `reason`. Rejected candidates are listed with tier `x`, their reason, and `-` for
+symbol/addend, so no non-pointer value is recorded; unaligned-target noise (1,256 words)
+is counted, not listed. 13,197 rows, 463 KB (under check_no_assets' 512 KiB: if it
+grows, drop the rejected rows first). The header lists every reason code.
+
+Inputs: the original image, layout.tsv, out/gen/rodata.tsv, out/gen/symbols.ld (D_ names
+src uses), and a fast linear tracker over the whole original code (~1 s) that records
+%hi/%lo addresses code builds (`lui` + `addiu`/load/store, never `ori`: gcc builds
+addresses with addiu, so ori pairs are constants) and words code loads and then calls
+through (`jalr`/`jr`) or dereferences, per variable or indexed table. Jump tables of the
+asm and unmatched functions come from `kh1tool.analyze_asm` + `asm_export.more_jtbls`, as
+the symbolic export finds them: 146 entries, exactly the 7 tables s13s1 listed (0x48CE00
+32, 0x48CE80 36, 0x48FE80/0x48FEF0/0x48FF40 8 each, 0x48FF60 33, 0x490A80 21).
+
+15,509 candidates (aligned words whose value is in 0x00100000-0x00675018, plus 0x20/0x30
+mirrors of 16-aligned data/bss addresses):
+
+| tier | words | reasons |
+|---|---|---|
+| 1 | 2,049 | calltab 879 (function start in a table code calls through), func 657 (lone function start), ftab 367 (run of >=3 starts), jtbl 146 (asm jump tables) |
+| 2 | 7,200 | dma 6,369 (address word after a REF/NEXT/... DMA tag, qword aligned; 0x2A0000 and 0x460000-0x48FFFF), str 448 (string start), ptab 263 (table/variable code dereferences; self-linked lists at 0x46A9xx), func-s16 79, dref 30 (address code builds), stride 10, bref 1 |
+| 3 | 274 | near 111 (target within 64 KiB of the word, not s16-like: lists, records), dptr-run 63 / bptr-run 18 (next to other pointer words), dptr 40 / bptr 42 (isolated, no rule against: **the real ambiguous remainder**) |
+| x | 4,930 | s16 2,063, unaligned 1,256 (not listed), into-func 1,073, mirror-x 376, colour 58, vucode 53, ascii 34, mipscode 17 |
+
+Rules for the ambiguous words, in order: stride (accepted pointers at x-S and x+S,
+S = 8..64), vucode (a VU nop word 0x8000033C/0x000002FF within 4 words), ascii, s16
+(both halves |s16| < 0x1000 or the value repeats >= 8 times, with s16 pairs or colours
+next to it; 0x00430048 alone appears 1,119 times in the vertex/packet region
+0x320000-0x350000), mipscode (>= 3 neighbours decode as common EE instructions), colour
+(0x00BBGGRR with two equal channels among such words, or RGBA with alpha 0x80/0xFF/
+0x40/0x7F next to it), near, float (all neighbours plausible floats), then run /
+isolated. A word into a function that is not a known asm jump table is rejected
+(into-func: crt0's 0x1001xx numbers, s16 data); into-table (inside an asm function, next
+to distinct words into it) is the escape hatch, 0 rows today. Mirrors: no 0x20/0x30
+candidate targets an address code builds (they are ctype/ASCII tables, 0x20202020,
+0x30303030), so none is accepted; the type exists for when one is found.
+
+Estimate of what is left: the ~80 isolated tier-3 words (dptr/bptr) are the least
+certain accepted rows (several look like sizes, e.g. 0x003FF000, 0x00580000: a false
+accept corrupts a number when data moves); the ~130 run/near rows are probably right; on
+the reject side, colour/ascii/mipscode/vucode (162) and the s16 rejects in regions that
+also hold pointer lists are where a real pointer could hide. So **~300-400 words**
+deserve a human look before M2 is trusted at run time, down from the 1,500-2,000
+estimated in 1d. The DMA rows assume the tags are real (6,368 REF with qwc 0, 1 NEXT).
+
+Found while classifying: the blob holds MIPS code around 0x46A000-0x46C000 (lui/addiu/lw
+patterns next to self-linked lists) as well as VU microcode (0x273000-0x278000 and
+others). If that MIPS code is copied elsewhere and run, its own absolute addresses are
+not image addresses and need nothing; if it runs in place, it is position-dependent.
+Worth disassembling that range.
+
+### Linking them (shift_ld.py)
+
+`shift_ld.py gen --data-relocs data_relocs.tsv --reloc-tier N` (default 3): each blob
+chunk between two rodata holes is one section of `.incbin` pieces and `.word sym+addend`
+lines (`.align 0` after `.section`: no auto-alignment of `.word`, a chunk can start
+unaligned). Code targets use a label `__dr_XXXXXXXX = .;` that the script defines at the
+target's function (like the alias labels; static functions work too); data targets
+`D_BLOB + off`, bss `D_BSS + off`. Rows inside a rodata hole are skipped (counted).
+M0 passes: 9,523 words emitted symbolically, same bytes.
+
+Other changes: `D_00675018` (crt0's heap start = `_end`) is now `D_BSS + 0x1e0f98`, not an
+absolute (the image end is inclusive); `__dr_` labels are left out of the output ELF's
+symbol table; new options `--out-dir`, `--mode`, `--m1-min`, `--data-shift`,
+`--subst-obj OBJ=VARIANT`; `variants.tsv` in the output dir; ld runs with `-q` so the
+relocations stay in the linked ELF for the comparator.
+
+### KH1_SHIFTABLE (step 9, func_00171078)
+
+`src/hand/text_00170000_s9_w9.c` reads `D_0035BD40[*b ^ 3]` under `#ifdef KH1_SHIFTABLE`
+and the literal `((s32 *)0x35BD40)` otherwise (normal build unchanged, byte-identical).
+`tools/shift/variants.py build` compiles every source that mentions KH1_SHIFTABLE again
+with `-DKH1_SHIFTABLE` (the exact rule of out/gen/objects.mk) into out/shift/variants/,
+and the shift build links that object instead. The symbolic version is 4 bytes longer
+(gas does not move an instruction with a %lo fixup into the `jr ra` delay slot: `lw`
+before `jr`, then `nop`); it still fits before func_00171098, so the M0 check allows
+differences inside a variant's slot and says so (`M0 OK: except 2 words inside
+KH1_SHIFTABLE variants by design`). `SHIFT_VARIANTS=0` gives the strict byte-identical
+M0; with it, M2 reports exactly this hard-coded address
+(`text_00170000_s9_w9.c: 0x00171084 lui/mem 0x0035bd40`), which is the check working.
+
+crt0: s13s1's symbolic crt0_start.s relocates 0x494050/0x494080/0x675018 against
+D_00494050 (= `D_BSS - 0x30` = `_gp`), D_00494080 (`D_BSS`) and D_00675018 (`_end`), so
+they move in M2. The stack (0x1FE0000) and heap size stay absolute, as planned.
+
+### Step 8: M1, M2 and the inverse-map comparator (tools/shift/shift_cmp.py)
+
+- **M1**: the text is rotated at the largest 64-aligned function start that moves at least
+  `--m1-min` (0x10000) bytes and still fits before the fixed data (0x257D40: 0x1AF24 bytes
+  to the front, the rest after `. = ALIGN(64)`); `.data` stays at 0x272C70. Every function
+  moves; the entry goes to 0x11AF48. **M2**: `.data ALIGN(16) + 0x1000`, so data, `_gp`
+  and .bss move by 0x1000 (.bss at 0x495080).
+- `shift_cmp.py --ref out/shift --new out/shift/m1|m2` (run by `make shift
+  SHIFT_MODE=...`) compares with the M0 link, which is itself checked against the
+  original. The address map comes from the two link maps: each input section (function,
+  blob chunk, rodata block) is a piece; padding moves with the piece before it;
+  `_edata..D_BSS` and .bss move with D_BSS; outside the image nothing moves; an address
+  at a piece boundary may map with either neighbour (end pointers). Per piece:
+  1. every relocated field of REF (`ld -q`), read at its new place, must be the REF value
+     through the map: R_MIPS_32 words, R_MIPS_26 targets, HI16/LO16 pairs as full
+     addresses (a LO16 pairs with the HI16 of the same symbol and register, the latest
+     before it, else after it);
+  2. every other byte must be identical;
+  3. position-dependent code: unrelocated `j`/`jal`, and unrelocated `lui` +
+     addiu/load/store (or `ori` in asm with an aligned value; `addu rX,rX,idx` keeps the
+     %hi), whose address moved;
+  4. informational: unrelocated data words whose value is an address that moved, grouped
+     by their data_relocs.tsv reason. A real pointer among them is a run-time bug.
+  Failures of 1-3 are listed per source file (each asm export and the data blob are
+  their own groups); exit status 1.
+- Sensitivity checks: the old position-dependent export (`SHIFT_ASM_DIR=`) fails M1 with
+  274 absolute `jal`s, all attributed to that one file; SHIFT_VARIANTS=0 fails M2 with the
+  func_00171078 literal; an early bug (0x20202020 ctype words accepted as mirrored
+  pointers, because a C constant built with lui/ori was taken as an address) showed up
+  as 15 relocated blob fields that did not map back.
+
+Results:
+
+```
+M1 OK: 7391 input sections (6988 moved), relocated fields checked: HI16/LO16 17075, R_MIPS_26 21418, R_MIPS_32 12197
+  relocated fields that do not map back: none; other bytes differing: none; position-dependent code: none
+  (86 unrelocated lui/ori pairs ignored as constants: in C, or an unaligned value in asm)
+  data words not relocated whose value is a moved address: 2397
+    (into-func 1066, unaligned targets 1043, 0x20/0x30 mirrors into code 288)
+M2 OK: 7391 input sections (403 moved), same counts, nothing failing
+  data words not relocated whose value is a moved address: 4089
+    (s16 2063, unaligned 1256, mirror-x 376, mirrors not candidates 232, colour 58, vucode 53, ascii 34, mipscode 17)
+```
+
+What remains:
+
+- The comparator proves the relocations that exist; it cannot prove that the rejected
+  data words are not pointers (check 4). The ~300-400 words named under step 5 need
+  review, ideally with typed recovery: which code reads each table and what it does with
+  the word (the tracker here follows one load; struct strides and pointers passed to
+  functions are not followed).
+- Accepted tier-3 rows can be false (numbers): only M2 exposes them, as wrong numbers at
+  run time. `SHIFT_RELOC_TIER=2` builds without them for comparison.
+- The 6,369 DMA rows depend on the tag reading; the packets should be parsed properly
+  (tag chains, VIF codes) before M2 is trusted in PCSX2.
+- Embedded MIPS code around 0x46A000-0x46C000 (step 5).
+- Overlays (`dktitle.x` ...): `scan_overlay.py` on the user's files decides whether M1/M2
+  can boot at all (plan risk 1).
+- Runtime: M0, then M1, then M2 in PCSX2 on the user's machine (out/shift/kh1-shift.elf,
+  out/shift/m1/kh1-shift.elf, out/shift/m2/kh1-shift.elf).
