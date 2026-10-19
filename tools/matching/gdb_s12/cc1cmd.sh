@@ -1,6 +1,7 @@
 #!/bin/bash
+H=$(cd "$(dirname "$0")" && pwd)  # usage: pass an absolute path to the C file
 # prints cc1 command for hand mode on file $1
-cd /tmp/claude-0/s12/s12w4/dumps
+D=${GDBS12_DIR:-/tmp/gdb_s12}; mkdir -p $D; cd $D
 python3 -I - "$1" <<'PY'
 import sys, subprocess
 sys.path.insert(0, '/home/claude/kh1-decomp/tools'); import kh1tool as K
