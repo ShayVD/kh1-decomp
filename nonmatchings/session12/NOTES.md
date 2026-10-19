@@ -244,3 +244,25 @@
   constants lose half their global priority). sched1 recomputes REG_LIVE_LENGTH per region
   (real insns only); .lreg numbers are post-sched1. Inner-loop `do {} while (0)` wrappers do not
   change REG_N_REFS loop depth.
+
+## s12w14: 0024c950 MATCHED (natural, the dead test is gone); 00200e28 25 -> 24
+- 0024c950: src/hand/nofill/text_00240000_s12_s12w14.c. `h = 11; if (D_00669A5C) h = 0;`, no yy
+  variable, the call takes `y + h + 1` inside the loop (loop.c hoists `y + h` to the end of the
+  preheader, so t lives longer: load v0, t a0, A68 HIGH v1, A40 HIGH a1; la3 + osrch pointed at
+  this); stores `D_00669A68 = x;` then `D_00669A6C = x;`; loop indexes `D_00669A40[i]` instead of
+  pointer p (a loop giv gets a higher pseudo number, and spill slots follow pseudo number).
+- 00200e28: 24w true LCS (s12w14__00200e28_24w_tlcs.c, hand/strict): every header constant a u64
+  variable set at the top in the original's li order, then a store-order climb; li sequence now
+  exact. Off: d8 and 68 li early, sd80/sd48 order, `sll w`/`slti` late, local-alloc group.
+- 0021e120 stays 3w: with all-local allocation the target looks unreachable (store classes by
+  overlap with later Vx stores; sd 0 first makes 5000 die earliest, it takes a2 not t1).
+- 001f18e8 stays 2w: needs a filler insn between li 4000 and li 63; sched1 always puts
+  `tag = p + 5` in the free ALU slot of the sd 8 cycle.
+- tools/matching/la3_s12.py: la2 with fixes (hard regs are regno < 80 so $fcc0 is not a pseudo;
+  SF/DF/CC qtys left out of the GPR pool; int/float operands never tie; .lreg refs lines have no
+  ";;" prefix). Exact on 0024c950's join block, 0021e120 block 0 (37/37), 00200e28 (96/96).
+- Levers: write an invariant expression at its use inside the loop to delay it in sched1 (loop.c
+  hoists it to the end of the preheader); index arrays in the loop instead of pointer locals to
+  move spill slots; set header constants in u64 variables at the top to fix li order independent
+  of store order. With one memory unit, the second issue slot of each store cycle goes to the
+  best-ranked ready ALU insn. REG_EQUIV constant sets move next to their use after sched1.
