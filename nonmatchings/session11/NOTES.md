@@ -405,3 +405,9 @@
 - MATCH 00110e68 (hand strict), FLAGGED: w20's identical arms, w25's `x = D[i] + (1.0f - D[i]) * cosf(*ph);`, plus `if (x < p[-1]) v = 0;` at the end of the loop body: x becomes global (read in a later block), and the p[-1] load gives p its 17th ref so it wins s0.
 - 001cfc28 (1), 001502e8 (2), 00125240 (8), 00120cf8 (5), 001eddc0 (8): no gain. FP tests on values cse knows are folded; a new FP quantity in a 3-quantity block switches local-alloc from the 3-element exchange to qsort.
 - Facts: a dead FP test's compare operands are free extra refs. A conditional set to the value already held kills a gcse copy on one path. FP tests against a new constant in a loop hoist it into a callee-saved register (+12 bytes).
+
+## s11w39 (block-split sweep: 0021e120, 00202678, 001137f8, 00192958, 00106ed0), no gains
+- 0021e120: w39__0021e120_6w_h0.c (6w, other basin): `u64 h0 = 0x5000000000008001;` set first, stored later, makes li 5000 issue first. Left: 66/97/68 order, li 30ae early, first store. Original header is one sched1 block; splits cost 17-115w.
+- 00202678: a split before `a100 = a / 100` puts the o-> loads before the divs but makes a, b, ys global (244w).
+- 001137f8 (11), 00192958 (17), 00106ed0: splits only made things worse; params/address pseudos live across a split become global.
+- Facts: integer two-set dead arms are gone before cse2 (act on cse1/gcse only). `(f32)x < 0.0f` is a free splitter like an f32 variable. Splits pay only where the cross-block pseudos are global in the original anyway. A constant set into a variable first and stored later issues first (one-constant lever).
