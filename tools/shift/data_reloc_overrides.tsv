@@ -1,0 +1,25 @@
+# Reviewed decisions for tools/shift/find_data_relocs.py (docs/shiftable-plan.md, "Session 13: reloc review").
+# offset/end: from D_BLOB = 0x00272c70, end exclusive ('-' = the one word at offset).
+# reject: the accepted/ambiguous candidate words of the range become tier x (override-x);
+# accept: the tier-3 words of the range (a one-word entry: also a rejected word) become tier 2 (override).
+# Typed evidence only; no data values here.
+offset	end	decision	reason
+049f10	049fac	reject	D_002BCB80: 39 records {s8 a, b, c, d} that func_00111510 compares as bytes
+052d20	052e10	reject	D_002C5990: 30 records {u32 mask, val}; func_0011f628 ANDs/ORs them (bit masks)
+1761c0	176430	reject	D_003E8E30: 13 x u32[12] RGBA colours (func_001f54f8: t[n] | alpha into GIF vertices)
+1769d0	-	reject	D_003E9630+0x10: u16 x10/x12 of a spawn template (func_001f31a8 WA; x0 is set at run time)
+1769f0	17e9f0	reject	D_003E9660: 2048 qwc of 4-bit texels, uploaded by a REF tag func_0011fbb0 builds (BITBLTBUF/TRXREG 256x256)
+17e9f0	17edf0	reject	D_003F1660: 64 qwc of texels, uploaded by func_0011fbb0 (16x16)
+1f95e0	1f9850	reject	TLB entry tables (EntryHi, PageMask, EntryLo0/1) of libkernel InitTLB (func_00260b00 via D_0046C4C0): virtual addresses, not image pointers
+21a390	-	reject	D_0048D000: the text of a short string the sprintf code in text_00110000_11 uses, not a pointer
+1f7458	1f78b8	reject	five s16 tables (0xe0 bytes each) listed at D_0046A568; func_0024d1c8 reads them as s16
+184fd8	1850a0	reject	D_003F7C48: 6-byte records {u16 id; u8 b2, n, flag, b5} (text_00220000_h48, text_00200000_s7_w19)
+0702b0	0702b8	accept	object descriptor D_002E2F20 (stored as a pointer by func_0012b738): both words point at {func, n} function tables
+0ffa48	-	accept	record of the D_00370200 table: {string pointer, handler} like its siblings (string/function rows around it)
+180658	180698	accept	D_003F32C8[]: spawn templates text_00200000_s6_20 passes to func_001f31a8 (WA *)
+181488	1814d8	accept	D_003F40F8[k].p: pointer field of {p, n} records (text_00210000_h71 and siblings)
+1838f8	18391c	accept	D_003F6568[s]: spawn templates passed to func_001f31a8 (WA *) in text_00220000_h72
+1f7a6c	1f7a78	accept	newlib struct _reent at D_0046A6D8: _stdin, _stdout, _stderr point at the three FILE objects
+1f9860	1f986c	accept	InitTLB descriptor D_0046C4C0 (func_00260b00): pointers to the three TLB entry tables
+21f318	-	accept	D_00491F88 (returned by func_00256148): circular list head, points inside its own object
+1f7a9c	-	accept	newlib struct _reent at D_0046A6D8 (_impure_ptr D_0046A9C8): +0x34 _current_locale points at the 1-char locale name (below the str rule's 2-char minimum)
