@@ -55,3 +55,23 @@
   cannot help (one base, different offsets, never conflict).
 - Helpers: tools/matching/permx_s12.py (full or random statement permutations),
   hcx_s12.py (hill-climb keeping each set before its use).
+
+## s12w4: 00216890, 00192958, 00166570, 00200e28 (no matches)
+- 00216890: 13 -> 11 words (s12w4__00216890_11w.c, hand, size 1484). `str = (*q)[m];` before
+  `x = D_003F4508[m];`; `s32 **tb = D_003F41E8;` right after q (loop.c hoists its lo_sum, leaving
+  2 local quantities in block 42); cases ordered `case 0: default:`, 4, 5 (chain pointer born
+  late, beats ty for s7). Left: reload round-robin one step behind in the preheader, `move s2,zero`
+  misplaced. Cause (gdb on reload): the original needs the D_003F43C8 HIGH as a local quantity in
+  block 42, i.e. gcse PRE did not hoist it; ours PRE-copies it onto the outer-loop entry edge.
+- 00192958 stays 17: TI constants need live lengths 5000d < 1 < sc < xy < zbuf < frame; ours tie
+  zbuf/xy/sc at 28. Permutations, early local defs, two climbs: no gain.
+- 00166570 stays 21: gcse PRE reuses pre-loop sp+64/sp+128 after the loop; original recomputes.
+- 00200e28 stays 25: all diffs before the 33-ref flush (local-alloc family).
+- Facts: local-alloc with exactly 3 quantities allocated qty 0 first even when qty 1 had 3x the
+  priority (gdb); dropping to 2 quantities fixes the exchange. After a call issues, anti-dependent
+  local sets fill the call's cycle in source order. Global-alloc priority is an integer (ties go to
+  the lower regno). Reload never uses the insn's own output reg for an input reload, so
+  `lui rX; addiu rX,rX,lo` feeding the same output reg means a local HIGH tied to its lo_sum.
+  Switch case order changes which invariants loop.c hoists in pass 2 and their LUID order.
+- gdb helpers: tools/matching/gdb_s12/ (la.sh/laall.sh FILE BLOCK: local-alloc quantities;
+  rl*.sh: reload register per insn and last_spill_reg).
