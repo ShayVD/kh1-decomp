@@ -417,3 +417,9 @@
 - 00166570: w37__00166570_56w_finding.c gives the original preheader (m40/m80 used directly in the loop); PRE also reuses post-loop addresses so address pseudos stay live across the loop.
 - 001ba520, 001fa8b0 (nogcse mode), 001fbcd8 (global-alloc needs v's life ~100), 001f18e8: no dead-set angle.
 - Facts: $1 (at) is the soft frame pointer; frame addresses are PRE-available everywhere. CPROP ignores a set of the copy source earlier in the same block (kills must be in a predecessor block). Dead sets inside a loop body are seen by loop.c. .lreg live lengths come from after sched1.
+
+## s11w41 (twins, 0019f1f0, 00214a68, 001fa8b0, 00265608, 00125240)
+- MATCH 001fa8b0 (nostrict_nogcse), FLAGGED dead FP test: from s9 w6's 12w, `cm = c - 32; k = D_003E8D40[cm];` plus `if ((f32)cm < (f32)n) a = 0;` right after `x40 = xx + a;` (a dead after). cm becomes global, so local-alloc no longer puts the c-32 chain in v0.
+- 00214a68: 8 -> 5w (w41__00214a68_5w.c, nosi, right size 184, flagged): exit arm `if (i >= 48) { p = 0; break; }` turns beqzl into beqz (the dead set in the exit arm makes the loop heuristic predict toward the loop; after life1 jump inverts it); three dead tests `if ((f32)(i + n) < 0.0f) p = 0;` give i 17 refs (a1). Left: the tests lengthen the ids giv's life so it swaps a3/t0 with the inner-loop lui.
+- Twins: bgtz REG_BR_PROB 6001, dead FP tests vanish with their label in flow2; no route. 00265608: gcc991111 does NOT delete dead FP tests (884 -> 908), so the lever is 2.96-only.
+- Facts: REG_BR_PROB EQ 3999, GT0 6001, GE vs nonzero 5000. A dead FP test needs a target variable used elsewhere. Global-alloc priority ~ log2(refs)*refs/live length, refs weighted by loop depth. cse merges repeated (f32)i into one ref. FP compares in a loop body change loop.c decisions.
