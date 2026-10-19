@@ -643,3 +643,16 @@ from dead code. Read the allocation first, then find the source change.
   the top register down; the evicted pseudo goes to memory (00110618).
 - In gcc991111 a division is div + trap_if and sched1 moves the trap first; flow2, sched2, then jump2.
 - None of ~45 single extra gcc flags helps any of the 7 closest drafts.
+
+## Session 16 tips (nonmatchings/session16/NOTES.md)
+
+- **Hide a frame address from gcse with a pointer copy** (matched func_00166570): when two uses of
+  the same `$fp`-based address (`&arr[1]`, `&arr[2]`) get linked by gcse/PRE and the original rebuilds
+  it, compute one use from a local `T *p = arr;` (arr at frame offset 0). `p` is a REG copy of a hard
+  register, which gcse does not hash and CPROP does not propagate; it gets REG_EQUIV `$fp`, no hard
+  register, and reload puts `sp` back, so it costs nothing in the output. cse1/cse2 still fold it within
+  one extended basic block, so set `p` in a different block from the uses.
+- Separate frame arrays that sit at offsets 0/64/128 can be one array (`G2Mtx mm[3]`) with the same
+  frame: this changes which addresses gcse sees as related.
+- Scalar declaration order matters where global-alloc ties decide (00166570: 21-127 words over 200
+  orders) and does nothing in single-block local-alloc functions (00200e28).

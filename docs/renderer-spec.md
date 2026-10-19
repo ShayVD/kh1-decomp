@@ -489,6 +489,16 @@ with `tools/vu/gsdump.py` (never commit dumps or their output). 4 vsyncs,
   `TBP0=0x3A00` CT32 256x256 texture. Session 16 followed it in the code:
   it is the **projected character shadow** (§3.4).
 
+**Field dump (session 16).** A second dump, of End of the World walking in a
+plain field (shiftable M12 + `SHIFT_FLOAT=1` build), gives the same picture:
+55,021 kicks; map draws are `TRISTRIP|IIP|TME|FGE|ABE` ST/RGBAQ/XYZF2 with
+TEX0 TBP `0x3600` PSMT8 128x128, CBP `0x3700` CLD=1, CLAMP, `ATST=GEQUAL
+AREF=120`, Z GEQUAL, `COLCLAMP=1`, `DTHE=0`. The shadow pass is still there
+with no fight on screen (3,047 untextured XYZ2 strip kicks, `ATST=GREATER
+AREF=0`; TEX0 left at `0x3A00`), so it is drawn every frame for every
+character near the ground. Uploads: 94 PSMT8 128x128 and 146 CT32 16x16
+CLUTs. Display as in §3.1 (DISPFB2 FBW 512 PSMCT24, MAGH 5).
+
 ### 3.4 The off-screen buffer at `0x3A0000` (session 16, static)
 
 Three users of the 256 x 256 CT32 area at block `0x3A00` (FBP `0x1D0`), all

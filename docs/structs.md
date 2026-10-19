@@ -243,6 +243,32 @@ count, bit 3 = `Prm.x2c` has the part's bit (`fl & 8`: P19/P20 and the
 ZBUF/FRAME-only GS packet), bits 4-7 = `g`; +5 translucent pass; +6 texture index;
 +7 `4*i + 1`; +0x28 key.
 
+### Checked against real files and RAM (session 16, PCSX2)
+
+Files pulled from the user's disc (never committed): `tw00_01.bin`/`.img`, `tw01.ard`, `tw.wdt`,
+`xa_ex_4030.mdls`; RAM from a PCSX2 savestate (`.p2s` is a zip of zstd members, method 93: extract
+the raw member and run `zstd -d`; `eeMemory.bin` is the 32 MB EE RAM, `vu1Memory.bin` VU1 data).
+
+- **Map `.bin`**: the section sizes chain exactly; a mesh section is `REF qwc x 16 + 0xC0` bytes. In
+  RAM (End of the World field) the file sits at `0x9B2E80`, version 10. Its mesh DMA tags are **not**
+  relocated in place (they still hold `+0xA0`/`+0xC0`): the code relocates copies.
+- **Renderer A VIF batch** (inside the REF at +0x90): `UNPACK V4-32 num=1 -> 0 +TOPS` (header qword),
+  `STCYCL cl=3 wl=1`, `UNPACK V4-32 num=N -> 1` (xyzw), `UNPACK V4-8 usn -> 2` (RGBA8), `UNPACK V2-16
+  -> 3` (ST), `MSCNT`; repeated per batch. Textures are inline as `FLUSH` + `DIRECT` (PATH2): 5
+  qwords of GIF setup + the image, then 5 + 65 for the CLUT, then 4. The REF at +0x80 (qwc 2, data at
+  +0xA0) is `STCYCL 1,1; UNPACK V4-32 num=1 -> 0; MSCNT`.
+- **`.mdls`** (`xa_ex_4030`): 6 PSMT8 128x128 textures (qwc 1024 each), pixels 0x18000 bytes, CLUTs
+  0x1800 bytes.
+- **MOBJ in RAM**: the chunk offset fields are relocated **in place** to absolute addresses. 12 MOBJs
+  live in that field: three characters (7 textures, ~0x75000-0x84000 bytes) at `0xFE0080`,
+  `0x12E0080`, `0x1520080`; six at `0xD00E00`-`0xD88E80`; and the embedded ex_6050 at its data address
+  (`D_002E31F0`, + the build's data shift).
+- **Character mesh chain**: one `CNT` qwc 239, `STCYCL 1,1; UNPACK V4-32 num=238 +TOPS; MSCNT`. The
+  stream opens with op 0 records (bones 0x21, 0x20, 0x43), each followed by 7 empty qwords (lit:
+  matrix + 3 light rows, filled per frame), then op 1 with arg 0x1A0. Skipping op 1 by `arg` bytes
+  lands on an op 8 at +0x1930, so the record length rule above is not exact yet (`tools/vu/vif_chain.py
+  --file F --rel BASE --stream` walks these).
+
 ### `URSL` (eye overlay, `func_00175708`)
 
 +0x08 rel image header (16 bytes, uploaded by `func_0015fa20`), +0x10 rel
