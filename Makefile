@@ -44,7 +44,8 @@ help:
 	@echo "make progress-update  rewrite docs/progress.md + history (end of session)"
 	@echo "make test             tool self-tests (no game ELF needed)"
 	@echo "make shift            shiftable build: fresh ELF linked symbolically, M0 check (docs/shiftable-plan.md)"
-	@echo "make shift SHIFT_MODE=m1|m2   code rotated / data moved, inverse-map comparator against M0"
+	@echo "make shift SHIFT_MODE=m1|m2|m12   code rotated / data moved / both, inverse-map comparator against M0"
+	@echo "make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1   near-miss C drafts in place of their asm exports (static diff)"
 	@echo "make data-relocs      regenerate data_relocs.tsv (pointers in the data blob)"
 
 $(ORIG):
@@ -111,12 +112,15 @@ SHIFT         := out/shift
 SHIFT_ASM_DIR ?= shift/unmatched
 SHIFT_ALIASES ?= shift/aliases.ld
 # SHIFT_MODE: m0 = original addresses (byte-identical check), m1 = code rotated
-# (data fixed), m2 = data and bss moved by 0x1000; m1/m2 build m0 first and run the
-# inverse-map comparator against it. SHIFT_RELOC_TIER: data_relocs.tsv rows with
+# (data fixed), m2 = data and bss moved by 0x1000, m12 = both; m1/m2/m12 build m0 first
+# and run the inverse-map comparator against it. SHIFT_DRAFTS=1 (moved modes only, into
+# out/shift/<mode>-drafts): link the near-miss C drafts of shift/drafts.tsv in place of
+# their asm exports and report a static word diff (tools/shift/drafts.py); never matched. SHIFT_RELOC_TIER: data_relocs.tsv rows with
 # tier <= N become relocations (0 = none). SHIFT_VARIANTS=0: no KH1_SHIFTABLE objects.
 SHIFT_MODE       ?= m0
 SHIFT_RELOC_TIER ?= 3
 SHIFT_VARIANTS   ?= 1
+SHIFT_DRAFTS     ?= 0
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
 # (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
 # with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
@@ -124,12 +128,14 @@ SHIFT_OVERLAYS   ?= out/overlays
 SHIFT_OVL_TIER   ?= 2
 SHIFT_OVL_FIXUPS ?= 1
 SHIFT_PY      := $(PY) -I
-SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE))
+SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE)$(if $(filter 1,$(SHIFT_DRAFTS)),-drafts))
 ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
 
 shift: $(PATCHED)
 ifneq ($(SHIFT_MODE),m0)
-	@$(MAKE) --no-print-directory shift SHIFT_MODE=m0
+	@$(MAKE) --no-print-directory shift SHIFT_MODE=m0 SHIFT_DRAFTS=0
+else ifeq ($(SHIFT_DRAFTS),1)
+	$(error SHIFT_DRAFTS=1 needs SHIFT_MODE=m1, m2 or m12: drafts are not at the original addresses)
 endif
 	@mkdir -p $(SHIFT)/asm $(SHIFT_OUT)
 	@$(SHIFT_PY) tools/shift/extract_data.py
@@ -157,20 +163,25 @@ endif
 		vdef="--define KH1_OVL_FIXUPS"; vdir=$(SHIFT_OUT)/variants; \
 	fi; \
 	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build --out-dir $$vdir $$vdef)"; fi; \
+	drafts=""; if [ "$(SHIFT_DRAFTS)" = 1 ]; then drafts="$$($(SHIFT_PY) tools/shift/drafts.py build --out-dir $(SHIFT_OUT)/drafts)"; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s
 	@$(LD) -EL -q --no-warn-mismatch -T $(SHIFT_OUT)/kh1-shift.ld -Map $(SHIFT_OUT)/kh1-shift.map \
 		-o $(SHIFT_OUT)/kh1-shift.linked.elf @$(SHIFT_OUT)/objects.lst
 	@$(SHIFT_PY) tools/shift/shift_elf.py write --linked $(SHIFT_OUT)/kh1-shift.linked.elf --out $(SHIFT_OUT)/kh1-shift.elf
+	@$(SHIFT_PY) tools/shift/lo16_check.py --link $(SHIFT_OUT)
 ifeq ($(SHIFT_MODE),m0)
 	@$(SHIFT_PY) tools/shift/shift_elf.py verify
 else
 	@$(SHIFT_PY) tools/shift/shift_cmp.py --ref $(SHIFT) --new $(SHIFT_OUT)
 ifeq ($(SHIFT_OVL_FIXUPS),1)
 	@$(SHIFT_PY) tools/shift/ovl_proof.py --ref $(SHIFT) --new $(SHIFT_OUT) --overlays $(SHIFT_OVERLAYS)
+endif
+ifeq ($(SHIFT_DRAFTS),1)
+	@$(SHIFT_PY) tools/shift/drafts.py report --ref $(SHIFT) --new $(SHIFT_OUT)
 endif
 endif
 
