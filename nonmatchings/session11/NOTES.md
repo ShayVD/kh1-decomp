@@ -486,3 +486,8 @@
 ## s11w52 (001f18e8)
 - 001f18e8: 9 -> 2w (w52__001f18e8_2w.c, nofill, right size 1288, flagged dead FP test): `u64 cl; cl = col;` between the two calls (keeps lw + dsll32/dsrl32, not lwu); `kk = 0xeeee;` then `if ((f32)nd < 0.0f) neg = 0; else n = 0;` right after `func_001efb98(0)` (keeps `tag = p + 5` after the call); constants k4..k9 assigned early, stored later, so li 63 is born last and gets v1. Left: sched2 li order `li t1,1` vs `li v1,63`; original probably has an extra ref on the 63 pseudo.
 - Facts: combine merges a stack-param load with its zero-extension (lwu) only with no call between. Spill stores to sp are ordered against every s1-based store in sched2. 64-bit constants are one insn until gas.
+
+## s11w53 (001f18e8 2w), no gain
+- sched2 li order ties go by LUID (sched1 order); 63 can only outrank d0 in local-alloc by being born 3+ insns later, which puts it last in sched2. Confirmed dead end with 2 refs each.
+- update_equiv_regs moves a once-set, once-used global constant pseudo's li to just before its use (it becomes local, life 1) — why 0xeeee looks local. cse folds every use of a constant pseudo it sees, so dead tests can't add refs to 63 in its block. Untried: a surviving tied copy `B = A` to give 63 four refs.
+- Integer tests with identical multi-set arms split blocks through sched2 and leave no code after jump2 (pseudos set in the arms become global).
