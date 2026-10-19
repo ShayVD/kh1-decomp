@@ -576,3 +576,9 @@ found that the next session needs:
 - **Tool traps**: variant scripts replace the first match, which can be inside a header comment
   (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
 - A container restart mid-session lost no work because every match was pushed as it landed.
+
+## Session 12: what changed
+
+- **Flagged matches count** (user decision, 2026-10-19): byte-identical matches that rely on a dead
+  store, a dead float test, identical if/else arms or a never-true test stay in src/ and count as
+  matched. Each keeps a comment naming the trick so a later pass can replace it with cleaner source.
