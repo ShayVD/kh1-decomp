@@ -1,16 +1,22 @@
-/* 00106ed0 4 LCS (4 pos), hand (strict), right size 588, no context (s11w71; was w48 31). Loop and then-block exact. Lever: every h access and q->v store goes through a one-field struct F1 (HL/HS/QS macros, MEM_IN_STRUCT), so the D_00494BAC/BA8 scalar-global loads (mem/f, fixed after canonicalisation) no longer wait on the *p7 / h stores in sched1 (fixed_scalar_and_varying_struct_p); e = D_00494BA8 read first; then-block f32 ops in the original order; the integer statements and the prologue stores are hill-climbed (hc_s11), so the order is unnatural (D_002A6C50 = 0 mid-prologue, e->c store after *p15 = 1). Left: D_00472180.a must precede y = sub->b (the original's sub->b load waits on all four .a stores) but moving it there swaps the h[0]/D_00472180/D_0046E140 address registers in sched1 (10w); D_00472180.c/.d and D_0047A200.a slots follow. Declaring a prologue global as plain s32 (scalar store, sched2-only edge) scrambles the prologue (19-28w). */
+/* func_00106ed0: MATCH (hand, strict), no context. s11w71, from w48's 31w draft. Natural shape apart from climbed statement orders (no dead statements, no flags, no asm). Alias-set levers: h accesses and q->v stores go through a one-field struct F1 (MEM_IN_STRUCT), so the D_00494BAC/BA8 scalar-global loads are not ordered behind the h stores in sched1 (fixed_scalar_and_varying_struct_p); the four prologue tables use structs with a 4-byte enum EN (its own alias set) and sub->b is read as EN, so the load waits only on the EN-typed stores and their output deps fix the sched2 store order; block-local pointers to the four tables, declared in the order 761C0, 7A200, 6E140, 72180, set the address registers and the lo_sum order. */
 #include "common.h"
 typedef struct { s32 a, b, c, d; } Ent16;
 typedef struct { u8 pad[8]; f32 v[6]; } Ent32;
-extern Ent16 D_0046E140, D_00472180, D_004761C0, D_0047A200;
+typedef enum { EZ } EN;
+typedef struct { EN a; s32 b; EN c, d; } EntD;
+typedef struct { EN a, b, c, d; } EntE;
+typedef struct { s32 a; EN b; s32 c, d; } EntLb;
+extern EntE D_0046E140;
+extern EntE D_00472180;
+extern EntD D_004761C0;
+extern EntE D_0047A200;
 extern Ent16 D_0046E150[1024];
 extern Ent32 D_00472190[];
 extern Ent16 *D_00494BA8;
 #define BA8 D_00494BA8
 typedef struct { f32 f; } F1;
-#define ST(g,f,o,v) (g.f = (v))
 #define SA sub->a
-#define SB sub->b
+#define SB ((EntLb *)sub)->b
 #define HL(p) (((F1 *)(p))->f)
 #define HS(p,v) (((F1 *)(p))->f = (v))
 #define HS27 ((F1 *)&h[i * 32 + 27])->f = 1.0f
@@ -31,26 +37,30 @@ void func_00106ed0(f32 *h, s32 sz) {
 sub = (Ent16 *)(((s32 *)h)[1] + (s32)h);
 D_00494BB0 = ((s32 *)h)[0];
 
+{
+EntD *p004761C0 = &D_004761C0;
+EntE *p0047A200 = &D_0047A200, *p0046E140 = &D_0046E140, *p00472180 = &D_00472180;
 x = SA;
-ST(D_004761C0,a,0,x);
-ST(D_0047A200,a,0,x);
-ST(D_0046E140,a,0,x);
-ST(D_00472180,d,3,0);
+p00472180->a = x;
+p0046E140->a = x;
+p0047A200->a = x;
+p004761C0->a = x;
 y = SB + (s32)h;
-ST(D_004761C0,c,2,0);
-ST(D_00472180,b,1,y);
-ST(D_0046E140,b,1,y);
-ST(D_0047A200,b,1,y);
-ST(D_00472180,c,2,0);
-ST(D_0046E140,d,3,0);
-ST(D_0047A200,d,3,0);
-ST(D_0046E140,c,2,0);
-ST(D_004761C0,d,3,0);
-ST(D_00472180,a,0,x);
+p00472180->b = y;
+p0046E140->b = y;
+p0047A200->b = y;
+p00472180->d = 0;
+p0046E140->d = 0;
+p0047A200->d = 0;
 w31 = h[31];
-ST(D_004761C0,b,1,y);
-ST(D_0047A200,c,2,0);
+p004761C0->b = y;
+p004761C0->d = 0;
 D_002A6C50 = 0;
+p00472180->c = 0;
+p0046E140->c = 0;
+p0047A200->c = 0;
+p004761C0->c = 0;
+}
 
     if (w31 != 1.0f) {
         D_002A6C50 = (s32)w31 - 20;
