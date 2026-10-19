@@ -130,3 +130,22 @@
 - Helpers: tools/matching/sc6_s12.py (true-LCS scorer, -d aligned diff), clb6_s12.py
   (statement-order climber with true LCS, dependency/call constraints, optional TEMP annealing).
   Both use $WDIR for scratch.
+
+## s12w7: 001636d0, 001fd858 (no matches)
+- 001fd858: 186 -> 112 true-LCS words (s12w7__001fd858_112w_tlcs.c, hand/nostrict, size 1908
+  right). Shared `call:` tail written out at each of its 3 gotos (`r = func_001fe1b8((Scr*)o);
+  goto done;`; cse1 deletes the `move a0,s0`, 186 -> 123); `o->d6 = 0; goto done;` in the d0<=0
+  and d0=t arms (115); in DE8 `o->d0 = max; goto clampA;` with clampA before `r = 1; o->d6 = 0;`
+  in DE4 (112). Off: entry global-alloc priority (cc copy .435 > (s16)ce .29, pad .326 > d0 .22);
+  DE4/DE8 tail 2 cross-jumped the wrong way (a dead set fixes it, 108w, but jump1 store-flag
+  converts DE8, size 1924); clampA sched2 order; smoothing-tail registers; 0x2c HIGH PRE copies.
+- 001636d0 stays 410 (s7 draft, hand/nostrict, 4248): opcode sequence identical, every word off
+  is a register or spill slot. The original lacks gcse cprop of `j = i` (keeps a j*64 giv copy
+  spilled at 364(sp)), gcse PRE sharing `(s2 & 3)` with the switch index, and pp REG_EQUIV.
+  -fno-gcse reproduces the first two but breaks the entry (429-439). Open: the original does not
+  cross-jump the asm-identical inner case 0/1 tails (0xe78-0xeb4 vs 0xf54-0xf8c).
+- Facts: a shared call tail written out per goto lets cse1 follow-jumps delete the arg move.
+  jump2 cross-jumping needs >= 2 matching insns for jump-to-jump tails. Cross-jump direction
+  follows jump_chain order (earlier jumps lose their tail). Stray nops before labels after
+  barriers are `.p2align 3,,7`. Spill slots are assigned in regno order. gcse records a copy only
+  if neither side is modified later in the block; cprop skips regs set earlier in the block.
