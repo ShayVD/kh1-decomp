@@ -451,3 +451,8 @@
 - 00120cf8: 5 -> 4w (w42__00120cf8_4w.c, flagged): `n = 3;` at the top of the outer body, `k % n`, `if ((f32)n < 0.0f) n = 0;` after the inner loop. Left: li 3 not hoisted to the outer preheader; outer giv sll.
 - Others no gain: 0019f1f0 needs a used label after bltz (case ranges all group into one node); 001eddc0 priority gap too large.
 - Facts: re-climb statement order after a dead test fixes priorities. Under nostrict a store before a load pins the load behind it in sched2; loads first frees sched2.
+
+## s11w46 (00199ac8 19w, 0024c950 8w), no gains
+- 00199ac8: copy 407 is inl_alpha's `d` parameter hoisted by loop.c; dead tests on d get cprop'd to reg 101, so they can't add refs to 407. Loop-invariant dead tests get hoisted and cost pseudos (62w). Lengthening du needs +15 insns.
+- 0024c950: w45's test splits the loop preheader so the A68 address copy goes global (a1). Without it only the load/kk v0/a0 swap is wrong; local-alloc allocates kk before the load even when kk is global.
+- Facts: dead tests can't give refs to an inline parameter copy. A dead test before a loop moves preheader movables after it. ld_s11.py and var.py need RO exported.
