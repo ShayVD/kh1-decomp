@@ -1,6 +1,10 @@
-/* 0x107548 hand/nostrict: same size 1388, pos 270, lcs 255. Loop 'for(i=0;i<N;i=j){j=i+1;...}' blocks strength reduction; remaining: duplicated lui/addiu of D_00494BA0, stack-resident locals */
-/* func_00107548: ~293 words off (session5 draft was 279), mode hand. Facts: r dispatch is a switch(r){case 0/1/default}; tbl and w->t0/t1 copies are s32 word copies indexed (i+1)*4 / n*4 (orig keeps (i+1)*4 spilled at 4(sp), n*4 in s5); orig does NOT strength-reduce i (recomputes i<<4, i<<5, i<<7 each iteration) but still hoists 16.0f into f20; src, z0, z1, last0, last1 live on the stack. Unsolved: why loop strength reduction is off. */
 #include "common.h"
+
+/* func_00107548 (s11w74, hand/strict). FLAGGED dead statement: the dead FP test
+ * "if ((f32)i < 0.0f) b = 0;" in the loop (from s11w66) is removed by flow2 and leaves no code;
+ * it only lengthens the loop so loop.c does not hoist &D_00494BA4 (144 words off without it).
+ * The tail needs no barriers in strict mode: D_00494BE0 as a one-field struct with a 4-byte enum
+ * field (own alias set), sources as P8 globals, destinations through s32 pointers. */
 
 typedef struct { s32 a, b; } P8;
 typedef struct { P8 v; s32 c, d; } E16;
@@ -21,7 +25,10 @@ void func_001073f0(s32, f32 *);
 
 extern s32 D_00351BD0;
 extern E16 D_0047A210[], D_00472190[], D_004761D0[], D_0046E150[];
+typedef enum { EZ } EN;
+typedef struct { EN v; } IE;
 extern P8 D_00472150, D_0047A1D0;
+extern IE D_00494BE0;
 extern s32 D_0029B2F4, D_0029B2F8, D_0029B2FC, D_0029B300;
 extern f32 D_002BBFE0[4][4];
 extern Flags D_002BC0A8;
@@ -31,14 +38,15 @@ extern s32 D_00494BA0, D_00494BA4;
 extern Ent *D_00494BA8;
 extern Pt *D_00494BAC;
 extern s32 D_00494BB0;
-extern s32 D_00494BE0;
 
 void func_00107548(f32 (*mtx)[4], Src *src) {
+    s32 k;
     Work *w;
     f32 *z0, *z1;
     s32 *tbl;
     s32 last0, last1;
     s32 i, j, r, n;
+    s32 *st, *b;
 
     w = func_00122048(0x70, 0x10);
     z0 = func_00122048(0x1000, 4);
@@ -50,80 +58,90 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
         w->t0 = D_004761D0;
         w->t1 = D_0046E150;
     }
-    D_0029B2F8 = 0;
-    D_0029B300 = 0;
     D_0029B2F4 = 0;
+    D_0029B2F8 = 0;
     D_0029B2FC = 0;
+    D_0029B300 = 0;
     w->w = 1.0f;
     sceVu0MulMatrix(w->m, D_002BBFE0, mtx);
-    tbl = (s32 *)((u8 *)src + src->off);
+    tbl = (s32 *)(src->off + (s32)src);
     D_00494BA0 = 0;
     last0 = 0;
     D_00494BA4 = 0;
     last1 = 0;
-    D_00494AA0[0] = 0;
+        D_00494AA0[0] = 0;
     D_00494B20[0] = 0;
-    for (i = 0; i < D_00494BB0; i = j) {
+        for (i = 0; i < D_00494BB0; i = j) {
         j = i + 1;
+        k = j * 4;
         if (func_00107520(i)) {
             r = func_00107ab8(w->m, src->e[i]);
-            D_00494BA8[i].state = 2;
+            b = &D_00494BA8->state; st = b + i * 4;
+            *st = 2;
+            if ((f32)i < 0.0f) b = 0; /* dead FP test (flagged) */
             switch (r) {
             case 0:
-                if (tbl[j * 4] != 0) {
-                    D_00494BA8[i].state = 1;
-                    n = D_0029B2FC;
+                if (tbl[k] != 0) {
+                    *st = 1;
+                    { s32 n = D_0029B2FC * 4;
                     if (D_002BC0A8.b2) {
-                        w->p[0] = D_00494BAC[i].x;
-                        w->p[1] = D_00494BAC[i].y;
-                        w->p[2] = D_00494BAC[i].z;
+                        { Pt *pt = D_00494BAC; f32 *q8 = (f32 *)((s32)pt + 8);
+                        { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
+                        { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
+                        { s32 o = i * 32 + 16; w->p[2] = *(f32 *)(o + (s32)q8); } }
                         func_002672f8(w->v, w->m, w->p);
                         z0[D_0029B2FC] = w->v[2] * 16.0f;
-                        if (last0 != D_00494BA8[i].key) {
+                        { s32 *kb = &D_00494BA8->key; s32 *key = kb + i * 4;
+                        if (last0 != *key) {
                             D_00494AA0[++D_00494BA0] = 0;
                         }
                         D_00494AA0[D_00494BA0 - 1]++;
-                        last0 = D_00494BA8[i].key;
+                        last0 = *key; }
                     }
-                    ((s32 *)w->t0)[n * 4] = tbl[j * 4];
-                    ((s32 *)w->t0)[n * 4 + 1] = tbl[j * 4 + 1];
-                    D_0029B2FC++;
+                    { s32 *d = (s32 *)(n * 4 + (s32)w->t0); d[0] = tbl[k]; d[1] = tbl[k + 1]; }
+                    D_0029B2FC++; }
                 }
                 break;
             case 1:
-                if (tbl[j * 4] != 0) {
-                    D_00494BA8[i].state = r;
-                    n = D_0029B2F4;
+                if (tbl[k] != 0) {
+                    *st = r;
+                    { s32 n = D_0029B2F4 * 4;
                     if (D_002BC0A8.b2) {
-                        w->p[0] = D_00494BAC[i].x;
-                        w->p[1] = D_00494BAC[i].y;
-                        w->p[2] = D_00494BAC[i].z;
+                        { Pt *pt = D_00494BAC; f32 *q8 = (f32 *)((s32)pt + 8);
+                        { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
+                        { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
+                        { s32 o = i * 32 + 16; w->p[2] = *(f32 *)(o + (s32)q8); } }
                         func_002672f8(w->v, w->m, w->p);
                         z1[D_0029B2F4] = w->v[2] * 16.0f;
-                        if (last1 != D_00494BA8[i].key) {
+                        { s32 *kb = &D_00494BA8->key; s32 *key = kb + i * 4;
+                        if (last1 != *key) {
                             D_00494B20[++D_00494BA4] = 0;
                         }
                         D_00494B20[D_00494BA4 - 1]++;
-                        last1 = D_00494BA8[i].key;
+                        last1 = *key; }
                     }
-                    ((s32 *)w->t1)[n * 4] = tbl[j * 4];
-                    ((s32 *)w->t1)[n * 4 + 1] = tbl[j * 4 + 1];
-                    D_0029B2F4++;
+                    { s32 *d = (s32 *)(n * 4 + (s32)w->t1); d[0] = tbl[k]; d[1] = tbl[k + 1]; }
+                    D_0029B2F4++; }
                 }
                 break;
             default:
-                D_00494BA8[i].state = 0;
+                *st = 0;
                 break;
             }
         } else {
-            D_00494BA8[i].state = 0;
+            { s32 *sb = &D_00494BA8->state; sb[i * 4] = 0; }
         }
     }
-    ((s32 *)w->t1)[D_0029B2F4 * 4] = D_00472150.a;
-    ((s32 *)w->t1)[D_0029B2F4 * 4 + 1] = D_00472150.b;
-    D_00494BE0 = 0;
-    ((s32 *)w->t0)[D_0029B2FC * 4] = D_0047A1D0.a;
-    ((s32 *)w->t0)[D_0029B2FC * 4 + 1] = D_0047A1D0.b;
+    {
+        s32 *d, *e;
+        d = (s32 *)(D_0029B2F4 * 16 + (s32)w->t1);
+        d[0] = D_00472150.a;
+        d[1] = D_00472150.b;
+        D_00494BE0.v = 0;
+        e = (s32 *)(D_0029B2FC * 16 + (s32)w->t0);
+        e[0] = D_0047A1D0.a;
+        e[1] = D_0047A1D0.b;
+    }
     if (D_002BC0A8.b2) {
         if (D_0029B2FC != 0) {
             func_001072c0(D_0029B2FC, z0);
