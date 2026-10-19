@@ -477,3 +477,8 @@
 ## s11w51 (strict+union remeasure), no gains
 - None of 00200e28, 0021e120, 00199ac8/0019ab38, 00135a68, 001c62a0, 00166570 is a strict-with-unions function: when strict keeps the original order its edges equal nostrict's. 00199ac8/0019ab38 in strict need union ShipolyEnt fields to get back to 19/22w.
 - Fact: try unions only where the original issues a load ABOVE a store it would conflict with under nostrict. Under strict, members of two different structs never conflict.
+
+## s11w49 (00105288, 00135a68)
+- MATCH 00135a68 (nostrict), FLAGGED dead tests: loops 1 and 2 share counter i; loop 1 uses `k = ((i & 1) << 1) - 1; v[i][0] = r * k;`; `x = (s32)v;` at entry; three `if (x != (s32)v) { k = 2; k = 3; } else k = 1;` between the loop-2 stores (two-set arm stops jump1 if-conversion, else stops cse1 skipping, so cse1/gcse see four blocks and make separate v+i*16 pseudos; gcse cprop turns x into v, cse2 folds the test, the jump pass deletes it before sched1); `o = i * 16; *(f32 *)((s32)v + o)` for v[i][0] gives v+i16 operand order.
+- 00105288 (2w): needs a 92->106 dependence (sw 6280 -> lw h[3]) in sched2 only; the same edge in sched1 costs an s-register. The original must differ in sched1 order too.
+- Facts: a split that lives through cse1/gcse/cse2 and is gone before life1: compare a copy of a param with the param. Empty-arm conditional jumps survive until flow2 here. `o = i * 16; *(T *)((s32)v + o)` keeps v+o operand order. trap_if is a full sched barrier.
