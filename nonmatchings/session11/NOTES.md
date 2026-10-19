@@ -377,3 +377,9 @@
 ## s11w33 (001fe1b8, 00120cf8)
 - MATCH 001fe1b8 (hand), FLAGGED: w27's 2w draft plus a dead one-path set `if (a <= 0) a = 0;` right after `Scr *o = (Scr *)a;` (then `a = o->d2;`). The test keeps a live past the copy (combine can't merge the param copy), the set stops gcse CPROP pass 1 rewriting the first load from o to a, and life1 deletes it. Counted like the other dead-set matches (00152928, 001bd090), flagged in the file; not a dead test. Identical `{ o = (Scr *)a; r = 0; }` arms without the set give 1w.
 - 00120cf8 (5): pass-1 inner and outer loop both move `li 3`; the original needs it unmovable through pass 1. No natural source found.
+
+## s11w32 (001f2630, 001f1fc8, 0021e120, 001137f8, 00192958)
+- 001f2630: 3 -> 1w (w32__001f2630_1w.c, nofill, session9/w2 context): fresh hc climb from struct-offset order. Left: x2c=0x8000 store issues right after `sd d[1]`, original after `sw t0,20`. w32__001f2630_7w_order.c has the exact store order (`k8 = 0x8000` in the block plus a dead `k8 = 0x8000;` in the '\n' branch so loop.c won't hoist it) but registers t0/a2/a1 instead of a1/t0/a2.
+- 001f1fc8: 4 -> 2w (w32__001f1fc8_2w.c, nofill, RO=00490a80): plain struct-offset store order. Left: one=1 store issues 3rd (original after x38), x30 out of place. w32__001f1fc8_11w_hoist.c: hoisted `u64 k1 = 1` before the loop puts the one store exactly right (block registers off).
+- 0021e120 (6): original sched1 order should be 5000 < 63 < 2006 < 97 < 68 < 66; every way of getting it changes local-alloc.
+- Facts: `do {} while (0)` inside a for(;;) body is not a usable barrier. To set a constant store's issue order without moving its li: assign the variable early, store late, dead-set it in another branch of the loop (two sets: loop.c won't hoist). Some flood constants in the original were loop-invariant (hoisted, re-created by reload, store weight 0). A constant store issues as soon as its li is ready.
