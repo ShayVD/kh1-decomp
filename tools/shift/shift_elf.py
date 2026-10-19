@@ -95,7 +95,7 @@ def cmd_write(a) -> int:
     strtab = bytearray(b"\0")
     local, glob = [], []
     for s in linked.symbols():
-        if not s.name or s.type in (3, 4) or s.name.startswith((".L", "$")):
+        if not s.name or s.type in (3, 4) or s.name.startswith((".L", "$", "__dr_")):
             continue
         if s.bind == 0 and s.type != 2:
             continue
@@ -220,6 +220,15 @@ def cmd_verify(a) -> int:
             for off in range(base & ~3, min(base + step, n), 4):
                 if o_mem[off: off + 4] != n_mem[off: off + 4]:
                     diffs.append(off)
+    # KH1_SHIFTABLE variants (tools/shift/variants.py) may differ inside their own slot
+    variants = []
+    vt = Path(a.elf).parent / "variants.tsv"
+    if vt.exists():
+        for line in vt.read_text().splitlines()[1:]:
+            ad, end, name, _obj = line.split("\t")
+            variants.append((int(ad, 16), int(end, 16), name))
+    by_design = [d for d in diffs if any(lo <= o_lo + d < hi for lo, hi, _n in variants)]
+    diffs = [d for d in diffs if d not in set(by_design)]
     if diffs:
         fails.append(f"image: {len(diffs)} differing words; first ones:")
         for off in diffs[:a.max_diffs]:
@@ -251,9 +260,13 @@ def cmd_verify(a) -> int:
         print("M0 FAIL")
         print("\n".join(fails))
         return 1
-    print(f"M0 OK: {Path(a.elf).name} loads byte-identical to the original: "
+    print(f"M0 OK: {Path(a.elf).name} loads {'byte-identical to' if not by_design else 'identical (see below) to'} the original: "
           f"0x{n_lo:08x}-0x{n_lo + len(n_mem):08x}, entry 0x{new.entry:08x}, .bss 0x{nb.addr:08x}+0x{nb.size:x}")
     print(f"M0 OK: {checked} functions, labels and D_ names at their original addresses")
+    if by_design:
+        names = sorted({n for lo, hi, n in variants if any(lo <= o_lo + d < hi for d in by_design)})
+        print(f"M0 OK: except {len(by_design)} words inside KH1_SHIFTABLE variants by design "
+              f"({', '.join(names)}; SHIFT_VARIANTS=0 for a strict byte-identical image)")
     return 0
 
 
