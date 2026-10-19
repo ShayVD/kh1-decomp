@@ -299,3 +299,17 @@
 - Facts: local-alloc ties an output to a dying second operand of a commutative insn (gdb on
   combine_regs). tools/matching/la3f_s12.py: la3 extended to FP (SF/DF qtys get f0-f19, f20-f30
   even for call-crossing), exact on 00125240.
+
+## s12w18: 001e1c20 MATCHED (natural, 473w -> 0 in one worker)
+- src/hand/nofill/text_001e0000_s12_s12w18.c (rodata RO=00490840; hand mode is 7w only because it
+  fills the first jal slot). Four changes: (1) local image pointer set AFTER the call
+  (`func_001e1480(); img = IMG;`) and pixel access `(&img[y*512+x])[o]`, so memory_address builds
+  `A = img + idx*3` then A+1536, A+3 as separate regs (before the call: 209w); (2) `line =
+  &img[99*512]` set once before the outer loop (loop.c makes q the s8 giv; its LUID beats `y = 100`
+  in the sched1 tie); (3) builtin `abs()` (MIPS abssi2 is one insn with a bltzl/negu template, no
+  block split; `if (v < 0) v = -v;` becomes slti/movn); (4) three result variables
+  `r = abs(SUMX) + abs(SUMY);` with natural 9-term sums (392 -> 209, all spill slots right).
+- Facts: a pointer local holding a symbol makes `(&img[i])[k]` expand to separate A + k*3 regs;
+  the symbol written directly folds k*3 into the constant. A constant pointer local without a
+  hard reg is rematerialised by reload at each use. Spill-slot order reveals expansion temps.
+  Setting a loop invariant before a `for` gives it a LUID before the loop init.
