@@ -271,7 +271,8 @@ func_00260b00:  /* 0x00260B00 */
 	.word	0x0331102A  /* 00260BAC slt $v0,$t9,$s1 */
 	.word	0x5440FFF7  /* 00260BB0 bnezl $v0,.L00260B90 */
 	.word	0x8E050000  /* 00260BB4 lw $a1,0($s0) */
-	.word	0x2650C4C0  /* 00260BB8 addiu $s0,$s2,-15168 */
+	.word	0x26500000  /* 00260BB8 addiu $s0,$s2,-15168 */
+	.reloc	.-4, R_MIPS_LO16, D_0046C4C0
 	.word	0x8E020004  /* 00260BBC lw $v0,4($s0) */
 	.word	0x03228821  /* 00260BC0 addu $s1,$t9,$v0 */
 	.word	0x2A230031  /* 00260BC4 slti $v1,$s1,49 */
@@ -302,7 +303,8 @@ func_00260b00:  /* 0x00260B00 */
 	.word	0x0331102A  /* 00260C14 slt $v0,$t9,$s1 */
 	.word	0x5440FFF7  /* 00260C18 bnezl $v0,.L00260BF8 */
 	.word	0x8E050000  /* 00260C1C lw $a1,0($s0) */
-	.word	0x2650C4C0  /* 00260C20 addiu $s0,$s2,-15168 */
+	.word	0x26500000  /* 00260C20 addiu $s0,$s2,-15168 */
+	.reloc	.-4, R_MIPS_LO16, D_0046C4C0
 	.word	0xAE19000C  /* 00260C24 sw $t9,12($s0) */
 	.word	0x40993000  /* 00260C28 mtc0 $t9,c0_wired */
 	.word	0x0000040F  /* 00260C2C sync.p */

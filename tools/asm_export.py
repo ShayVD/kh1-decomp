@@ -103,30 +103,194 @@ def function_relocs(an: K.FuncAnalysis, f: K.Func, namer: Namer, warn: list[str]
                 rel[a] = (0x03FFFFFF, "R_MIPS_26", expr(*namer.code(t)))
             else:
                 warn.append(f"{f.name}: 0x{a:08x} jump to 0x{t:08x} outside the code, left absolute")
-    users: dict[int, list[int]] = {}
-    for u, lui in an.lo_hi.items():
-        users.setdefault(lui, []).append(u)
-    for lui, us in sorted(users.items()):
-        us.sort()
-        targets = [an.lo_of[u] for u in us]
-        if not all(IMAGE_LO <= t <= IMAGE_HI for t in targets):
-            if any(IMAGE_LO <= t <= IMAGE_HI for t in targets):
-                warn.append(f"{f.name}: lui 0x{lui:08x} feeds targets in and outside the image, left absolute")
+    lo_luis, full_of = flow_pairs(an, f, warn)
+    # connected groups of luis and the low halves they reach; each group is
+    # relocated against one symbol (the first target's)
+    parent: dict[int, int] = {}
+
+    def find(x: int) -> int:
+        while parent.setdefault(x, x) != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    for u, ls in lo_luis.items():
+        for l in ls:
+            parent[find(l)] = find(u)
+    groups: dict[int, list[int]] = {}
+    for x in parent:
+        groups.setdefault(find(x), []).append(x)
+    hi_set = {l for ls in lo_luis.values() for l in ls}
+    for members in groups.values():
+        luis = sorted(m for m in members if m in hi_set)
+        us = sorted(m for m in members if m in lo_luis)
+        targets = {u: full_of[u] for u in us}
+        if not all(IMAGE_LO <= t <= IMAGE_HI for t in targets.values()):
+            if any(IMAGE_LO <= t <= IMAGE_HI for t in targets.values()):
+                warn.append(f"{f.name}: luis {', '.join(f'0x{l:08x}' for l in luis)} feed targets in and "
+                            f"outside the image, left absolute")
             continue
-        sym, off0 = namer.target(targets[0])
-        base = targets[0] - off0
-        if len(set(targets)) > 1:
-            warn.append(f"{f.name}: lui 0x{lui:08x} shared by {len(set(targets))} targets "
-                        f"({', '.join(f'0x{t:08x}' for t in sorted(set(targets)))}); all relative to {sym}")
-        rel[lui] = (0xFFFF, "R_MIPS_HI16", expr(sym, an.hi_of[lui] - base))
-        for u, t in zip(us, targets):
-            rel[u] = (0xFFFF, "R_MIPS_LO16", expr(sym, t - base))
+        sym, off0 = namer.target(targets[us[0]])
+        base = targets[us[0]] - off0
+        if len(set(targets.values())) > 1:
+            warn.append(f"{f.name}: luis {', '.join(f'0x{l:08x}' for l in luis)} shared by "
+                        f"{len(set(targets.values()))} targets "
+                        f"({', '.join(f'0x{t:08x}' for t in sorted(set(targets.values())))}); all relative to {sym}")
+        for l in luis:
+            first = min(u for u in us if l in lo_luis[u])
+            rel[l] = (0xFFFF, "R_MIPS_HI16", expr(sym, targets[first] - base))
+        for u in us:
+            rel[u] = (0xFFFF, "R_MIPS_LO16", expr(sym, targets[u] - base))
+        # the linear tracker (kh1tool analyze_asm) must agree where it found a pair
+        for u in us:
+            if u in an.lo_hi and (an.lo_hi[u] not in lo_luis[u] or an.lo_of[u] != targets[u]):
+                warn.append(f"{f.name}: 0x{u:08x}: flow and linear %hi/%lo trackers disagree")
     check_pairing(rel, f, warn)
     for a, w, _mn, _ops in an.insns:
         if mips.op(w) == mips.OP_LUI and a not in rel and IMAGE_LO >> 16 <= (w & 0xFFFF) <= IMAGE_HI >> 16:
             warn.append(f"{f.name}: lui 0x{a:08x} (0x{w & 0xFFFF:x}) left absolute: no tracked low half "
                         f"(a constant, a dead value, or address arithmetic the tracker misses)")
     return rel
+
+
+
+BRANCH_LIKELY = {0x14, 0x15, 0x16, 0x17}
+CALLER_SAVED = [r for r in range(1, 32) if not (16 <= r <= 23 or r in (28, 29, 30))]
+
+
+def gpr_written(w: int) -> tuple[int | None, bool]:
+    """(GPR an instruction writes, keeps_hi): keeps_hi for addu/daddu rX,rX,rY,
+    which keeps rX's %hi (jump-table indexing), as in kh1tool's tracker."""
+    o = mips.op(w)
+    if o in (0x11, 0x12):
+        return (mips.rt(w), False) if mips.rs(w) in (0, 1, 2) else (None, False)
+    if o in K.GPR_RT_WRITERS:
+        return mips.rt(w), False
+    if o == mips.OP_MMI:
+        return mips.rd(w), False
+    if o == mips.OP_JAL:
+        return 31, False
+    if o == mips.OP_REGIMM and mips.rt(w) in (0x10, 0x11, 0x12, 0x13):
+        return 31, False
+    if o == mips.OP_SPECIAL:
+        if mips.funct(w) in (0x21, 0x2D) and mips.rd(w) == mips.rs(w):
+            return mips.rd(w), True
+        return mips.rd(w), False
+    return None, False
+
+
+def flow_pairs(an: K.FuncAnalysis, f: K.Func, warn: list[str]) -> tuple[dict[int, set[int]], dict[int, int]]:
+    """%hi/%lo pairing by reaching definitions over the function's control
+    flow (delay slots, likely branches, jump tables, caller-saved registers
+    clobbered by calls). The linear tracker forgets a lui at every label, so
+    it misses a %hi hoisted out of a loop or kept across a branch.
+    Returns (low-half user addr -> lui addrs reaching it, user -> full address)."""
+    ins = [(a, w) for a, w, _m, _o in an.insns]
+    n = len(ins)
+    idx = {a: k for k, (a, _w) in enumerate(ins)}
+    jt_targets = sorted({t for es in an.jtbls.values() for t in es})
+    # edges: k -> [(succ, clobber)]
+    succ: list[list[tuple[int, bool]]] = [[] for _ in range(n)]
+    for k, (a, w) in enumerate(ins):
+        i = mips.Insn(a, w)
+        o = mips.op(w)
+        is_ct = i.is_branch or o in (mips.OP_J, mips.OP_JAL) or i.is_jr or i.is_jalr
+        if not is_ct:
+            if o == 0x10 and (w & 0x3F) == 0x18 and mips.rs(w) == 0x10:  # eret
+                continue
+            if k + 1 < n:
+                succ[k].append((k + 1, False))
+            continue
+        d = k + 1  # delay slot
+        likely = o in BRANCH_LIKELY or (o == mips.OP_REGIMM and mips.rt(w) in (0x02, 0x03, 0x12, 0x13)) or \
+            (o in (0x11, 0x12) and mips.rs(w) == 0x08 and mips.rt(w) & 2)
+        if d < n:
+            succ[k].append((d, False))
+        if likely and k + 2 < n:
+            succ[k].append((k + 2, False))  # not taken: the delay slot is skipped
+        if d >= n:
+            continue
+        outs: list[tuple[int, bool]] = []
+        uncond = (o == 0x04 and mips.rs(w) == 0 and mips.rt(w) == 0) or \
+            (o == mips.OP_REGIMM and mips.rt(w) == 0x01 and mips.rs(w) == 0)
+        if i.branch_target is not None:
+            t = i.branch_target
+            if t in idx:
+                outs.append((idx[t], False))
+            if (o == mips.OP_REGIMM and mips.rt(w) in (0x10, 0x11, 0x12, 0x13)):  # bal: a call
+                outs = [(k + 2, True)] if k + 2 < n else []
+            elif not uncond and not likely and k + 2 < n:
+                outs.append((k + 2, False))
+        elif o == mips.OP_J:
+            t = i.jump_target
+            if t in idx:
+                outs.append((idx[t], False))
+        elif o == mips.OP_JAL or i.is_jalr:
+            if k + 2 < n:
+                outs.append((k + 2, True))
+        elif i.is_jr and not i.is_jr_ra:
+            outs += [(idx[t], False) for t in jt_targets if t in idx]
+        succ[d] += outs
+    # forward data flow: state = reg -> frozenset of lui indices
+    # (code nothing reaches, e.g. after an eret, is an entry point of its own)
+    state_in: list[dict[int, frozenset] | None] = [None] * n
+    work: list[int] = []
+    for root in range(n):
+        if state_in[root] is not None:
+            continue
+        state_in[root] = {}
+        work.append(root)
+        _flow(work, state_in, succ, ins)
+    lo_luis: dict[int, set[int]] = {}
+    full_of: dict[int, int] = {}
+    for k, (a, w) in enumerate(ins):
+        st = state_in[k]
+        if st is None:
+            continue
+        o = mips.op(w)
+        base = mips.rs(w)
+        if base not in st or not (o in (0x09, 0x0D) or o in mips.OP_LOADS or o in mips.OP_STORES
+                                  or o in mips.OP_VU_MEM or o in (mips.OP_LQ, mips.OP_SQ)):
+            continue
+        fulls = {(ins[l][1] & 0xFFFF) << 16 for l in st[base]}
+        fulls = {(u + (mips.imm(w) if o != 0x0D else w & 0xFFFF)) & 0xFFFFFFFF for u in fulls}
+        full = min(fulls)
+        if o == 0x0D or (o == 0x09 and not K.RAM_START <= full < K.RAM_END):
+            continue
+        if len(fulls) > 1:
+            warn.append(f"{f.name}: 0x{a:08x} is reached by luis with different values; left absolute")
+            continue
+        lo_luis[a] = {ins[l][0] for l in st[base]}
+        full_of[a] = full
+    return lo_luis, full_of
+
+
+def _flow(work, state_in, succ, ins) -> None:
+    while work:
+        k = work.pop()
+        st = dict(state_in[k])
+        a, w = ins[k]
+        if mips.op(w) == mips.OP_LUI:
+            st[mips.rt(w)] = frozenset([k])
+        else:
+            r, keep = gpr_written(w)
+            if r and not keep:
+                st.pop(r, None)
+        for s2, clob in succ[k]:
+            out = st
+            if clob:
+                out = {r: v for r, v in st.items() if r not in CALLER_SAVED}
+            cur = state_in[s2]
+            if cur is None:
+                state_in[s2] = dict(out)
+                work.append(s2)
+            else:
+                changed = False
+                for r, v in out.items():
+                    if not v <= cur.get(r, frozenset()):
+                        cur[r] = cur.get(r, frozenset()) | v
+                        changed = True
+                if changed:
+                    work.append(s2)
 
 
 def _addend(e: str) -> tuple[str, int]:

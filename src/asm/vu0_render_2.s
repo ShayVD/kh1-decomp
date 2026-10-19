@@ -3120,7 +3120,8 @@ func_001b3870:  /* 0x001B3870 */
 	.word	0x00000000  /* 001B68C0 nop */
 	.word	0x00000000  /* 001B68C4 nop */
 	.word	0x1440FFF9  /* 001B68C8 bnez $v0,.L001B68B0 */
-	.word	0x27C32EA0  /* 001B68CC addiu $v1,$s8,11936 */
+	.word	0x27C30000  /* 001B68CC addiu $v1,$s8,11936 */
+	.reloc	.-4, R_MIPS_LO16, D_00372EA0
 	.word	0xDFBE00F8  /* 001B68D0 ld $s8,248($sp) */
 	.word	0x80620000  /* 001B68D4 lb $v0,0($v1) */
 	.word	0x7BB000A0  /* 001B68D8 lq $s0,160($sp) */
@@ -3656,7 +3657,8 @@ func_001ab0e0:  /* 0x001AB0E0 */
 	.word	0x83230001  /* 001AB8A4 lb $v1,1($t9) */
 	.word	0x2C620008  /* 001AB8A8 sltiu $v0,$v1,8 */
 	.word	0x104009C6  /* 001AB8AC beqz $v0,.L001ADFC8 */
-	.word	0x3C020037  /* 001AB8B0 lui $v0,0x37 */
+	.word	0x3C020000  /* 001AB8B0 lui $v0,0x37 */
+	.reloc	.-4, R_MIPS_HI16, D_00372EA0
 	.word	0x00031080  /* 001AB8B4 sll $v0,$v1,0x2 */
 	.word	0x3C030000  /* 001AB8B8 lui $v1,%hi(jtbl_0048FE80) */
 	.reloc	.-4, R_MIPS_HI16, D_0048FE80
@@ -6165,7 +6167,8 @@ func_001ab0e0:  /* 0x001AB0E0 */
 	.word	0x1000F639  /* 001ADFC0 b .L001AB8A8 */
 	.word	0x83230001  /* 001ADFC4 lb $v1,1($t9) */
 	.word	0x7BB000A0  /* 001ADFC8 lq $s0,160($sp) */
-	.word	0x24432EA0  /* 001ADFCC addiu $v1,$v0,11936 */
+	.word	0x24430000  /* 001ADFCC addiu $v1,$v0,11936 */
+	.reloc	.-4, R_MIPS_LO16, D_00372EA0
 	.word	0x7BB100B0  /* 001ADFD0 lq $s1,176($sp) */
 	.word	0x80620000  /* 001ADFD4 lb $v0,0($v1) */
 	.word	0x7BB200C0  /* 001ADFD8 lq $s2,192($sp) */
@@ -6496,7 +6499,8 @@ func_001ae010:  /* 0x001AE010 */
 	.word	0x10400005  /* 001AE4A0 beqz $v0,.L001AE4B8 */
 	.word	0x24020004  /* 001AE4A4 li $v0,4 */
 	.word	0x10600009  /* 001AE4A8 beqz $v1,.L001AE4D0 */
-	.word	0x27C22EA0  /* 001AE4AC addiu $v0,$s8,11936 */
+	.word	0x27C20000  /* 001AE4AC addiu $v0,$s8,11936 */
+	.reloc	.-4, R_MIPS_LO16, D_00372EA0
 	.word	0x10000574  /* 001AE4B0 b .L001AFA84 */
 	.word	0xDFBE0058  /* 001AE4B4 ld $s8,88($sp) */
 	.word	0x10620293  /* 001AE4B8 beq $v1,$v0,.L001AEF08 */
@@ -6504,7 +6508,8 @@ func_001ae010:  /* 0x001AE010 */
 	.word	0x106203C7  /* 001AE4C0 beq $v1,$v0,.L001AF3E0 */
 	.word	0x24050006  /* 001AE4C4 li $a1,6 */
 	.word	0x1000056D  /* 001AE4C8 b .L001AFA80 */
-	.word	0x27C22EA0  /* 001AE4CC addiu $v0,$s8,11936 */
+	.word	0x27C20000  /* 001AE4CC addiu $v0,$s8,11936 */
+	.reloc	.-4, R_MIPS_LO16, D_00372EA0
 	.word	0x3C022000  /* 001AE4D0 lui $v0,0x2000 */
 	.word	0x34420009  /* 001AE4D4 ori $v0,$v0,0x9 */
 	.word	0x3C038035  /* 001AE4D8 lui $v1,0x8035 */
