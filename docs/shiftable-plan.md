@@ -856,3 +856,83 @@ so about 2-6 KB of headroom is left; growth beyond that needs another way onto t
 
 Not exercised yet: anything after the first 3D scene (gb.x, wm.x, xl_limit.x, xs_*.x),
 Load, Special Movie, and the HDD path.
+
+## Session 14: runtime in PCSX2, and a wrong-relocation bug (2026-10-19)
+
+Shay's save (End of the World, LV100) was imported into a PCSX2 memory card with `mymcplus`
+(`.max` import); PCSX2's memory-card folder points at `Downloads/kh1-test/memcards` on that machine.
+
+| what | M1 | M2 |
+|---|---|---|
+| title, Load (incl. unformatted-card message), Special Movie | ok | ok (title, Load) |
+| New Game, settings, opening movie, Dive to the Heart | ok | not re-run |
+| load save at End of the World, magic (Firaga) | ok | ok |
+| save to the memory card (file 05), and load that file in M0 | ok | — |
+| world map (wm.x), gummi flight (gb.x) and back, warp drive | ok | ok |
+| Halloween Town, Guillotine Gate landing | **broken, fixed below** | **broken, fixed below** |
+
+Summons (xs_*.x) and xl_limit.x are still unexercised at runtime: KH1 only allows summons with
+enemies present (M0 refuses them in the same spots), and none were in reach of the landing points.
+
+### The Halloween Town bug: fake %lo relocations from delay-slot flow
+
+Symptom: M1 and M2 drew large flat untextured polygons and no characters at the Halloween Town
+landing (Sora missing at the End of the World save point too); M0 fine, same camera.
+
+Bisected at runtime with `shift_ld.py --bss-pad N` (experiment only: M0 layout, nothing moved,
+.bss/$gp/`_end` pushed up by N inside the NOLOAD .bss):
+
+- N = 0xb600 (what M1/M2's overlay table adds): broken exactly like M1/M2;
+- N = 0x10000: identical to M0.
+
+So something depended on bss addresses modulo 64 KB: a %lo. Cause in `tools/asm_export.py`
+`flow_pairs`: every delay slot also got the ordinary fall-through edge, so a `lui` in the delay
+slot of a branch-likely (executed only when taken) reached the not-taken path, and a plain
+`lw $v0,0($a0)` (a struct load) became `%lo(D_00570000)`:
+
+```
+00167350 bltzl $v0,.L001673FC
+00167354  lui $a0,%hi(...)        <- runs only when taken
+...
+0016737C lw $v0,0($a0)            <- $a0 = *(s4), not the lui; was R_MIPS_LO16 D_00570000
+```
+
+Fix: a delay slot's successors come only from its branch (taken target; plus k+2 for an
+ordinary conditional branch). Regenerated `shift/unmatched/`: 4 fake relocations gone in
+func_00166570, func_001636d0 (both .bss, the runtime bug) and func_0010d470 (data, would have
+broken M2 elsewhere); the lui in func_00166570 now pairs with its real low half (D_00574F20).
+Fixed M1 and M2 render Halloween Town identically to M0 (same frame).
+
+Lesson: `shift_cmp.py` and `ovl_proof.py` check that every relocated field maps back, so they
+cannot see a relocation that is wrong but self-consistent. Only a runtime run with a shift that is
+not a multiple of 64 KB (or a register-flow check per LO16) catches it. `overlay_relocs.py` already
+had the correct delay-slot rule.
+
+### Overlay ambiguous fields: reviewed (session 14)
+
+All 67 `ambiguous` entries in `ovl_report.txt` (user's disc) were read in context; none is an
+address, so leaving them unpatched is correct:
+
+- `lui/ori` "code-range" values (14): buffer sizes and offsets added to an allocated base
+  (dkmovie.x 0x003AB87F, 0x00123800, 0x00124800, 0x00162780, 0x00286F80, all `addu reg, v0` or
+  stored as sizes), 64-bit GIF tag / GS register words built with `dsll32` (dktitle.x, wm.x
+  0x002A4000), colours with an alpha byte or'ed in after `sll 0x18` (gb.x/wm.x 0x002747B8,
+  wm.x 0x004D3F28), unaligned odd values (0x00531531, 0x00535310, 0x00193C7F, 0x00323280),
+  and a VIF/GIF flag word (xs_dh_break.x 0x00100100).
+- `lui` 0x0010/0x0020/0x0044/0x0050 with no low half (24): allocation sizes passed to
+  func_001bb500 (`lui a0,0x44; li a1,128`), bit masks for 64-bit GS register fields next to
+  `0xf0ffffff`/`0xfff0ffff` masks, and `0x500000 - s0` size arithmetic in dkmovie.x.
+- tier-3 data words in gb.x/wm.x (27): RGB colour tables (0x00346900 next to 0x00301010,
+  0x00101010), s16 pairs inside records whose neighbours are overlay-internal pointers
+  (0x00400140, 0x00510050), byte tables (0x00303600, 0x002F2E00, 0x00393938 ...), and ASCII
+  (0x00303630 = "060\0" inside a string list). xs_dh_break.x's two words are inside
+  compressed/texture bytes.
+
+### Disc scan for code pointers (session 14)
+
+All 3,326 KINGDOM.IDX entries (KINGDOM.IDX at LBA 2450, 57,344 bytes; base LBA 282 = SYSTEM.CNF)
+were decompressed and scanned for aligned words equal to a main-ELF function start and for `jal`
+words to one. Only the 12 known overlays and copies of the main ELF hold significant `jal`
+counts: there is no other code file on the disc. Function-pointer hits in data files are round
+values (noise). So a disc file holding main-ELF code addresses is not a known risk for M1. (A C
+scanner was used; pure Python was too slow for one 180 s shell call on the user's machine.)
