@@ -411,3 +411,9 @@
 - 00202678: a split before `a100 = a / 100` puts the o-> loads before the divs but makes a, b, ys global (244w).
 - 001137f8 (11), 00192958 (17), 00106ed0: splits only made things worse; params/address pseudos live across a split become global.
 - Facts: integer two-set dead arms are gone before cse2 (act on cse1/gcse only). `(f32)x < 0.0f` is a free splitter like an f32 variable. Splits pay only where the cross-block pseudos are global in the original anyway. A constant set into a variable first and stored later issues first (one-constant lever).
+
+## s11w37 (dead-set sweep: 001ba520, 001fa8b0, 001fbcd8, 001f18e8, 00166570, 00199ac8/0019ab38), no gains
+- 00199ac8: w37__00199ac8_44w_finding.c is the first source keeping the `du = k` copy and the `move zero` bgtz slot (`i3 = 0;` in the first b5 block, `k = i3;` after `d = seg - same;`, `du = k;`). Left: a global-alloc permutation (k outranks the case-loop counter m after sched1 halves k's live length).
+- 00166570: w37__00166570_56w_finding.c gives the original preheader (m40/m80 used directly in the loop); PRE also reuses post-loop addresses so address pseudos stay live across the loop.
+- 001ba520, 001fa8b0 (nogcse mode), 001fbcd8 (global-alloc needs v's life ~100), 001f18e8: no dead-set angle.
+- Facts: $1 (at) is the soft frame pointer; frame addresses are PRE-available everywhere. CPROP ignores a set of the copy source earlier in the same block (kills must be in a predecessor block). Dead sets inside a loop body are seen by loop.c. .lreg live lengths come from after sched1.
