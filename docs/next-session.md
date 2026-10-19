@@ -14,7 +14,9 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
   - `make shift SHIFT_MODE=m1` rotates all code; `m2` moves data and bss by 0x1000. tools/shift/shift_cmp.py (inverse-map comparator) passes both.
   - `data_relocs.tsv` (addresses and names only): 9,330 accepted pointers, DMA chains walked, 0 ambiguous words left; reviewed overrides in tools/shift/data_reloc_overrides.tsv. Not reviewed one by one: 649 lone function-start words and 423 string pointers.
   - tools/shift/scan_overlay.py FILE.x lists an overlay's references into the main ELF.
-- **Not yet done (needs me)**: scan `dktitle.x` / `dkmovie.x` from my disc, then boot M0, M1, M2 in PCSX2 (Boot ELF, ISO mounted) to the title screen. Results go in docs/shiftable-plan.md.
+- **Runtime (PCSX2 on my Mac, 2026-10-19)**: M0, M1 and M2 all boot to the title screen and, through New Game and the opening movie, to the Station of Awakening. M1/M2 needed load-time overlay fixups (tools/shift/overlay_relocs.py, shift/ovl_fixup.c, proof in tools/shift/ovl_proof.py): the 12 disc overlays call the main ELF by absolute address, 7,658 fields patched on load, 67 ambiguous ones left alone (out/shift/<mode>/ovl_report.txt). See docs/shiftable-plan.md "Session 13: overlay fixups" and "PCSX2 runs with overlay fixups".
+  - How to test: `make shift SHIFT_MODE=m1`, then `tools/shift/patch_iso.py MY.iso out/shift/m1/kh1-shift.elf KH1_M1.iso` and boot the ISO (booting a bare ELF crashes even for retail). `tools/shift/extract_kingdom.py MY.iso --overlays --out out/overlays` pulls the overlays for the fixup table. Only 2-6 KB of the ELF's disc slot is left.
+  - If a later area crashes, the debugger variable `kh1_ovl_status` holds {hash, result, entries, loads fixed}; result -3 means that overlay was left unpatched.
 - Matching findings: nonmatchings/session13/NOTES.md, docs/matching-tips.md "Session 13 tips"; gdb tracers in tools/matching/gdb_s13/ (edit hard-coded paths).
 
 ## What is left (16 functions)
@@ -27,7 +29,7 @@ Best drafts in nonmatchings/session13/ (newest), then session12/11/10/9/8/7. LCS
 
 ## Session 14 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Runtime**: if I report overlay-scan or PCSX2 results, fix what they show first (pin overlay imports, missed pointers).
+1. **Runtime**: play further into M1/M2 (Destiny Islands, Traverse Town, a world map / gummi load, Load and Special Movie) and fix what crashes; review the 67 ambiguous overlay fields; plan room on the disc for a bigger ELF.
 2. **Shiftable, next**: review the 649 lone function-start and 423 string rows; an `out/shift` build of each near-miss draft swapped in for its asm export (static diff only); then M1+M2 combined.
 3. **Matching (1 worker)**: 0010d470 and 00110618 section by section; the rest only with a new angle not in NOTES.
 4. **Phase 3 start (1 worker, if time)**: document VU1 microcode programs and GS modes as a renderer spec in docs/ (not matching code).
