@@ -1,4 +1,10 @@
-/* 00169688 hand/nostrict, rodata jtbl_0048E870 (wqb03_rr.py 0048E870): same size, 11 words by sequence diff (9 with -fno-thread-jumps; ~110 by position from a 1-word shift). Off: case 10 orig has 'beqz v0,ret1; li v0,1; b L+4; ld v1' (hi test in v0, the ld duplicated before the &= block) where ours falls into the block and tests in v1; case 25 the first Ok() chain is jump-threaded into GETDIR's else part by ours (orig re-tests D_002C5958 in the delay slots: -fno-thread-jumps fixes it). Keys: GETDIR as a macro (inline helper keeps &v in s0), Tail() as a static inline (stops crossjumping of the func_0013dfb8 tails), x120.x = x120.z = 0.0f chained, case 13 written 'else if (D & 1) { ... } else { y = 0 }', case 15 'goto m10' into case 13's -10 store, case 2 ends with break (return 0 at the end), hi word read as u64 bitfield (lwu; dsll32; dsra32). */
+/* func_00169688 (hand/nostrict), rodata jtbl_0048E870 (verify with wqb03_rr.py 0048E870), s11w64. Natural, no flagged code.
+   From session9 w3's 4w draft; new: case 10 as two paths that each load p = o->x148 and jump to one
+   shared block: `if (!(D & 1)) { p = o->x148; if (hi & 1) goto c10b; goto r1; } p = o->x148; c10b: B; r1: return 1;`
+   The hi path's `goto c10b` is not a jump to the next insn (the D path's p load sits between), so it
+   survives jump2 and reorg fills it from c10b (`b L+4; ld v1,48(a2)`); the bnez to the D path gets the hi
+   path's p load in its slot and is redirected past the duplicate load. r1 sits after B's fall-through, so
+   jump.c does not hoist `li v0,1` above the hi test (the test keeps v0). */
 #include "common.h"
 typedef struct { f32 x, y, z, w; } Vec;
 typedef struct { f32 a, b, c; } Lim;
@@ -104,10 +110,7 @@ s32 func_00169688(Obj *o, Wk *w) {
             } else {
                 w->x38.x |= 0x40000;
                 w->x58++;
-                if (o->x70 != 2) {
-                    func_0013dfb8(o, &w->x120);
-                    return 1;
-                }
+                Tail(o, w);
             }
         } else {
             w->x120.y = 0.0f;
@@ -125,14 +128,20 @@ s32 func_00169688(Obj *o, Wk *w) {
         } else {
             w->x120.y = 10.0f;
         }
-        p = o->x148;
-        if (!(D_002C5958 & 1) && !((s32)p->x30.b.hi & 1)) {
-            return 1;
+        if (!(D_002C5958 & 1)) {
+            p = o->x148;
+            if ((s32)p->x30.b.hi & 1) {
+                goto c10b;
+            }
+            goto r1;
         }
+        p = o->x148;
+    c10b:
         p->x30.x &= ~0x100000000;
         w->x38.x |= 0x40000;
         w->x58++;
         Tail(o, w);
+    r1:
         return 1;
     case 15:
         GETDIR(o, w, &v, r);
@@ -209,9 +218,10 @@ s32 func_00169688(Obj *o, Wk *w) {
         }
         break;
     case 25:
-        if ((D_002C5958 & 1) && w->x90 != 0 && w->x94 >= 0 && !(w->x38.i & 1)) {
+        { s32 *pd = &D_002C5958;
+        if ((*pd & 1) && w->x90 != 0 && w->x94 >= 0 && !(w->x38.i & 1)) {
             func_00171790(o, w);
-        }
+        } }
         GETDIR(o, w, &v, r);
         v.y = 0.0f;
         v.w = func_00162c20(&v);
