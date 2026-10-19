@@ -383,3 +383,8 @@
 - 001f1fc8: 4 -> 2w (w32__001f1fc8_2w.c, nofill, RO=00490a80): plain struct-offset store order. Left: one=1 store issues 3rd (original after x38), x30 out of place. w32__001f1fc8_11w_hoist.c: hoisted `u64 k1 = 1` before the loop puts the one store exactly right (block registers off).
 - 0021e120 (6): original sched1 order should be 5000 < 63 < 2006 < 97 < 68 < 66; every way of getting it changes local-alloc.
 - Facts: `do {} while (0)` inside a for(;;) body is not a usable barrier. To set a constant store's issue order without moving its li: assign the variable early, store late, dead-set it in another branch of the loop (two sets: loop.c won't hoist). Some flood constants in the original were loop-invariant (hoisted, re-created by reload, store weight 0). A constant store issues as soon as its li is ready.
+
+## s11w35 (dead-set sweep: 0021e120, 00217000, 00202678, 0019f1f0, 001eddc0, 00214a68, 0024c950, 00265608)
+- MATCH 00217000 (nostrict), FLAGGED dead set: from w30's 6w, `E20 *tbl = D_003F2C40;` at entry (never used) and `tbl = D_003F2C40; c = tbl[sel].x10;` after the third draw call. gcse shares the entry HIGH (reg 96) with the late la; life1 deletes the dead entry LO_SUM; the late LO_SUM reads a HIGH from another block, so combine can't fold it. Gives `lui a0 / addiu a0 / addu / lw s0,16(v0)` at size 1168.
+- Fact: dead sets do nothing inside one block (cse folds them); the set must be in a different block from the use so gcse makes the copy.
+- No gain on the rest; 0024c950 kk local-alloc priority stands; 001eddc0 has no branches besides fixuns diamonds.
