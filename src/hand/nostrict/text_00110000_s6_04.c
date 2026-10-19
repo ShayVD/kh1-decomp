@@ -159,6 +159,9 @@ CdReq30 *func_001204a0(char *, u8 *);
 void func_0011fd40(void);
 void func_00120038(CdReq30 *);
 s32 FlushCache(s32);
+#ifdef KH1_OVL_FIXUPS
+void kh1_ovl_flush0(CdReq30 *); /* shift build only (shift/ovl_fixup.c): overlay fixups + FlushCache(0) */
+#endif
 s32 func_001205f0(char *name, u8 *buf) {
     CdReq30 *r = func_001204a0(name, buf);
     while (r->result < 0) {
@@ -167,7 +170,11 @@ s32 func_001205f0(char *name, u8 *buf) {
     }
     D_002C5C48 = r->result;
     func_00120038(r);
+#ifdef KH1_OVL_FIXUPS
+    kh1_ovl_flush0(r); /* relocate an overlay before it is flushed and run; same size as FlushCache(0) */
+#else
     FlushCache(0);
+#endif
     FlushCache(2);
     return D_002C5C48;
 }

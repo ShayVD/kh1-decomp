@@ -737,3 +737,108 @@ number-like neighbours and no pointer neighbour found only template callbacks.
   disc into out/ (never committed), applied by a KH1_SHIFTABLE hook after each overlay load
   (func_00120748 / func_001205f0 callers); (3) decompile the overlays as extra link units (needed for
   the Vita port eventually; ~2.4 MB of code).
+
+## Session 13: overlay fixups (worker s13s5)
+
+The fix for the M1/M2 boot crashes above, option (2): the overlays are patched at load time from a
+table the shift build generates from the user's own disc. M0 and `make` are unchanged (`make` 6,972/6,988
+byte-identical; M0 OK).
+
+### Pieces
+
+- `tools/shift/overlay_relocs.py` reads the user's overlays from `SHIFT_OVERLAYS` (default
+  `out/overlays`, made by `extract_kingdom.py`; absent -> an empty table) and finds every reference into
+  the main image 0x00100000-0x00675018:
+  - code/data split by recursive descent from the entry (calls, tail `j`, jump tables bound by their
+    `sltiu`, internal function pointers: strong starts `addiu sp,-N` first, then weak ones, gap fill,
+    `.text` assumed contiguous);
+  - `jal`/`j` fields; %hi/%lo pairs by a "must" flow analysis per function (no fall-through out of delay
+    slots, `move` and `addu rX,rX,rY` keep the %hi, calls clobber caller-saved registers; a lui reaching a
+    low half by two different values is not paired);
+  - aligned data words outside code, classified with the tiers/rules of `find_data_relocs.py` plus
+    overlay rules (resource files loaded through func_001763f0 are skipped, ASCII before strings, DMA
+    words not on a walked chain are tier 3). Default `--tier 2` (tier 3 is reported only).
+  Output (all under `out/shift/<mode>/`, never committed): `ovl_fixups.s`, `ovl_labels.txt`,
+  `ovl_fixups.json`, `ovl_report.txt` (per overlay: fixups, mid-function targets, rejections, ambiguous).
+- `ovl_fixups.s` holds no overlay bytes: per overlay {name hash (func_001200f8), size, entries, targets};
+  entry = kind<<30 | target index<<18 | word offset (J26 0, WORD 1, HI16 2, LO16 3 + the word offset of
+  its lui); HI16 entries before LO16; targets = `.word __dr_XXXXXXXX+off, 0xOLD` (or `D_BLOB`/`D_BSS`+off),
+  so the linker supplies each new address. Header 'KHOF', version 1. Ends at `kh1_ovl_fixups_end`.
+- `shift/ovl_fixup.c` (shift build only, portable C: byte-wise little-endian reads, no EE code except the
+  `FlushCache` call): `kh1_ovl_apply_hash()` verifies every field holds its original address (pass 0;
+  else -3, nothing written; this also refuses a second application or another disc version), then
+  rewrites (jal/j field, %hi with carry, %lo against its rewritten %hi, words).
+  `kh1_ovl_flush0(req)` is the EE hook.
+- Hook sites, `#ifdef KH1_OVL_FIXUPS` (built only by `variants.py --define KH1_OVL_FIXUPS` for M1/M2):
+  `func_00120678` (async read task, src/hand/text_00110000_h30.c) and `func_001205f0` (sync read,
+  src/hand/nostrict/text_00110000_s6_04.c) call `kh1_ovl_flush0(r)` in place of their `FlushCache(0)`:
+  same size (the variant only swaps `move a0,zero` for `move a0,sN` and the jal target), so no
+  function grows and M1's 12 bytes of rotation slack are untouched. It runs after the data is in memory,
+  before `FlushCache(2)` and before any code jumps to it.
+- Identification: a CD request carries no name. The hook looks up KINGDOM.IDX in memory
+  (`D_004E4A00[D_002C5C30]`, {hash, flags, LSN, size}) for the entry with the request's size and LSN
+  (or LSN + `D_004F3200`, the HDD path) and applies the table entry with that hash. Files not in the table
+  (all non-overlays) cost one index scan. `kh1_ovl_status[4]` = {hash, result, entries, loads fixed}.
+- Link: `shift_ld.py --ovl-fixups --ovl-hook --ovl-labels` puts both objects in `.data` after the blob
+  (`__ovl_fixup_start..__ovl_fixup_end`), then pads so `_edata`..`D_BSS` keeps its 0x30 distance (crt0
+  clears from `D_BSS - 0x30`, which must not reach the table). M1: table 0xaf48 bytes at 0x00494640, hook
+  at 0x00494548; .bss/$gp/_end move up by 0xb600 (`_end` 0x00680618; heap end 0x0068a618 stays below the
+  fixed buffers at 0x006A0000). M2: same, +0x1000.
+- `shift_cmp.py` keys variant objects as the objects they replace, and accepts exactly the hook's
+  `jal FlushCache(0)` -> `jal kh1_ovl_flush0(req)` (2 sites); `Links` is shared with the proof.
+- `tools/shift/ovl_proof.py` (run by `make shift` for M1/M2): reads the table back from the linked ELF,
+  applies it with a Python model and with the real `ovl_fixup.c` compiled for the host
+  (`ovl_hook_host.c`, `-DKH1_OVL_HOST`), requires both to agree, then checks every patched field through
+  the M0 -> new address map (LO16 as the full pair, HI16 through its LO16s, J26 in its 256 MB segment),
+  every other word unchanged, a second application refused, an unknown name ignored, and one
+  `jal kh1_ovl_flush0` in each loader function.
+
+### Counts (user's disc, 12 overlays, all at 0x00F20000)
+
+| overlay | jal | j | hi/lo pairs | words | mid-fn | ambiguous | fixup entries |
+|---|---|---|---|---|---|---|---|
+| dkmovie.x | 136 | 14 | 13 | 0 | 4 | 6 | 176 |
+| dktitle.x | 292 | 13 | 99 | 0 | 13 | 5 | 493 |
+| gb.x | 1584 | 42 | 148 | 0 | 132 | 18 | 1950 |
+| wm.x | 2994 | 94 | 296 | 0 | 157 | 34 | 3698 |
+| xl_limit.x | 245 | 19 | 54 | 0 | 0 | 0 | 376 |
+| xs_bambi.x | 33 | 3 | 9 | 0 | 0 | 0 | 54 |
+| xs_dh_break.x | 43 | 3 | 11 | 0 | 0 | 3 | 70 |
+| xs_dumbo.x | 176 | 10 | 33 | 0 | 0 | 0 | 252 |
+| xs_genie.x | 150 | 12 | 23 | 0 | 0 | 0 | 208 |
+| xs_mushu.x | 77 | 4 | 20 | 0 | 0 | 0 | 125 |
+| xs_simba.x | 120 | 8 | 27 | 0 | 0 | 1 | 180 |
+| xs_tink.x | 52 | 4 | 9 | 0 | 0 | 0 | 76 |
+| total | 5902 | 226 | 742 | 0 | 306 | 67 | 7658 |
+
+- No data word is accepted at tier <= 2. The ~19,400 rejected words are almost all inside resource
+  files embedded in the overlays (xs_genie/xs_simba/gb/wm); the earlier scan's thousands of "words" were
+  these plus code.
+- Mid-function targets: all 306 are `func_0024e1d0+0x298` (0x0024E468), a second entry point in the asm
+  blob text_0024e0a4.s; they map through the containing function + offset.
+- Ambiguous (67, not fixed): `lui/ori` code-range constants (GS register values etc.), `lui` 0x0010 / 0x0020
+  / 0x0044 / 0x0050 with no low half (sizes), and tier-3 words in wm.x/gb.x (`dptr-run`/`bptr`: colours,
+  s16 records, bytes, text). Listed in `ovl_report.txt`.
+- What the overlays read from the main ELF by fixed address: only through the fixed fields above (jal/j to
+  SDK and game functions, %hi/%lo to data and bss). No overlay reads a table of main-ELF pointers that
+  the analysis found.
+
+### Static proof
+
+M1 (text rotated) and M2 (data +0x1000) both: `shift_cmp` OK with 2 accepted hook sites; overlay fixups
+OK for all 12 overlays (C hook = model, every patched field maps back, all other words unchanged).
+With no overlays (`SHIFT_OVERLAYS` empty or absent) the table is empty and the hook is a no-op.
+
+### Unproven (to check in PCSX2)
+
+- References the analysis missed: code not reached by descent (only via pointers it did not find),
+  the 67 ambiguous items, tier-3 words, pointers built arithmetically. Any of these breaks only if its
+  target moved (M2 moves data only).
+- The runtime identification (index lookup by LSN/size) and that every overlay load goes through
+  func_00120678 or func_001205f0; the HDD path (LSN - D_004F3200) is not exercised on PCSX2 by default.
+- The base 0x00F20000 is assumed for every overlay (true on this disc; a different load address would
+  fail verification, -3, and leave the file unpatched).
+- M1/M2 move .bss, $gp and `_end` up by the table (+0xb600): anything that assumes bss addresses (save
+  states, cheats) or a heap end below 0x0068a618 is not covered by the static check.
+- Overlay code that runs before the first load completes (none expected) or overlays reloaded over
+  themselves without a fresh read (pass 0 refuses a second patch, so a reload from disc is fine).

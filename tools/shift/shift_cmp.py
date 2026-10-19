@@ -83,6 +83,11 @@ class Norm(dict):
         obj, sec = key
         if obj.startswith("out/shift/") and obj.endswith("/blob.o"):
             obj = "out/shift/blob.o"
+        if obj.startswith("out/shift/") and "/variants/" in obj:
+            # KH1_SHIFTABLE / KH1_OVL_FIXUPS variant objects (out/shift/[<mode>/]variants/<obj>)
+            # stand in for <obj>: key them as the object they replace, so the same input
+            # section matches whether or not a mode builds a variant of its file
+            obj = obj.split("/variants/", 1)[1]
         super().__setitem__((obj, sec), value)
 
 
@@ -140,6 +145,35 @@ class AddrMap:
         return a not in self.fwd(a)
 
 
+
+class Links:
+    """The REF (M0) and NEW links and the old -> new address map between them
+    (also used by tools/shift/ovl_proof.py)."""
+
+    def __init__(self, ref: Path, new: Path):
+        self.ref_elf, self.new_elf = (Elf.load(d / "kh1-shift.linked.elf") for d in (ref, new))
+        self.ref_map, self.new_map = (read_map(d / "kh1-shift.map") for d in (ref, new))
+        self.ref_img, self.new_img = Image(self.ref_elf), Image(self.new_elf)
+        self.rsym = rsym = {s.name: s.value for s in self.ref_elf.symbols() if s.name}
+        self.nsym = nsym = {s.name: s.value for s in self.new_elf.symbols() if s.name}
+        missing = [k for k in self.ref_map if k not in self.new_map]
+        if missing:
+            raise ValueError(f"{len(missing)} input sections of the M0 link are not in this link, e.g. {missing[:3]}")
+        secs = sorted((r[0], r[1], self.new_map[k][0], k, r[2]) for k, r in self.ref_map.items() if r[1])
+        out_end = {}
+        for s in self.ref_elf.sections:
+            if s.name in (".text", ".data"):
+                out_end[s.name] = s.addr + s.size
+        pieces = []
+        for i, (ra, size, na, key, osec) in enumerate(secs):
+            nxt = secs[i + 1][0] if i + 1 < len(secs) and secs[i + 1][4] == osec else out_end[osec]
+            pieces.append((ra, max(nxt, ra + size), na))
+        pieces.append((rsym["_edata"], rsym["D_BSS"], nsym["_edata"]))
+        pieces.append((rsym["D_BSS"], rsym["_end"], nsym["D_BSS"]))
+        self.secs = secs
+        self.amap = AddrMap(pieces, [])
+
+
 def sext(v: int) -> int:
     return v - 0x10000 if v & 0x8000 else v
 
@@ -152,29 +186,13 @@ def main() -> int:
     ap.add_argument("--examples", type=int, default=3)
     a = ap.parse_args()
     mode = a.new.name.upper()
-    ref_elf, new_elf = (Elf.load(d / "kh1-shift.linked.elf") for d in (a.ref, a.new))
-    ref_map, new_map = (read_map(d / "kh1-shift.map") for d in (a.ref, a.new))
-    ref_img, new_img = Image(ref_elf), Image(new_elf)
-    rsym = {s.name: s.value for s in ref_elf.symbols() if s.name}
-    nsym = {s.name: s.value for s in new_elf.symbols() if s.name}
-
-    # ---- pieces
-    missing = [k for k in ref_map if k not in new_map]
-    if missing:
-        print(f"{mode} FAIL: {len(missing)} input sections of the M0 link are not in this link, e.g. {missing[:3]}")
+    try:
+        L = Links(a.ref, a.new)
+    except ValueError as e:
+        print(f"{mode} FAIL: {e}")
         return 1
-    secs = sorted((r[0], r[1], new_map[k][0], k, r[2]) for k, r in ref_map.items() if r[1])
-    out_end = {}
-    for s in ref_elf.sections:
-        if s.name in (".text", ".data"):
-            out_end[s.name] = s.addr + s.size
-    pieces = []
-    for i, (ra, size, na, key, osec) in enumerate(secs):
-        nxt = secs[i + 1][0] if i + 1 < len(secs) and secs[i + 1][4] == osec else out_end[osec]
-        pieces.append((ra, max(nxt, ra + size), na))
-    pieces.append((rsym["_edata"], rsym["D_BSS"], nsym["_edata"]))
-    pieces.append((rsym["D_BSS"], rsym["_end"], nsym["D_BSS"]))
-    amap = AddrMap(pieces, [])
+    ref_elf, new_elf, ref_map, new_map = L.ref_elf, L.new_elf, L.ref_map, L.new_map
+    ref_img, new_img, rsym, nsym, secs, amap = L.ref_img, L.new_img, L.rsym, L.nsym, L.secs, L.amap
 
     # ---- relocations of REF, per input section
     relocs = []
@@ -188,6 +206,12 @@ def main() -> int:
         i = bisect.bisect_right(secs, (ref_addr, 1 << 40)) - 1
         return source_of(secs[i][3][0]) if i >= 0 else "?"
 
+    # Input sections whose size differs from M0 (a shift-only hook that grew a
+    # function) cannot be compared; they are listed. The KH1_OVL_FIXUPS hook does not
+    # grow anything: it swaps a jal FlushCache for a jal kh1_ovl_flush0 (accepted below).
+    hooked = [(ra, key[1]) for ra, size, na, key, osec in secs if new_map[key][1] != size]
+    hook_from, hook_to = rsym.get("FlushCache"), nsym.get("kh1_ovl_flush0")
+    hooked_at = {ra for ra, _n in hooked}
     bad_fields = collections.defaultdict(list)
     bad_bytes = collections.defaultdict(list)
     absolute = collections.defaultdict(list)
@@ -195,6 +219,8 @@ def main() -> int:
     unpaired = 0
     consts = 0
     for ra, size, na, (obj, isec), osec in secs:
+        if ra in hooked_at:
+            continue
         src = source_of(obj)
         lo_i, hi_i = bisect.bisect_left(roffs, ra), bisect.bisect_left(roffs, ra + size)
         rs_ = relocs[lo_i:hi_i]
@@ -222,6 +248,20 @@ def main() -> int:
                 nt_ = ((na + o + 4) & 0xF0000000) | ((nw & 0x3FFFFFF) << 2)
                 ok = nt_ in amap.fwd(rt_)
                 what = f"jump 0x{rt_:08x} -> 0x{nt_:08x}"
+                if not ok and hook_to is not None and rt_ == hook_from and nt_ == hook_to:
+                    # the argument (delay slot or the word before) passes the request
+                    # instead of 0: move a0,zero -> move a0,rX
+                    for ao in (o + 4, o - 4):
+                        if 0 <= ao and ao + 4 <= size:
+                            rd_ = struct.unpack_from("<I", rb, ao)[0]
+                            nd_ = struct.unpack_from("<I", nb, ao)[0]
+                            if rd_ == 0x0000202D and nd_ & ~(0x1F << 21) == 0x0000202D:
+                                fields[ao] = 0xFFFFFFFF
+                                checked["KH1_OVL_FIXUPS hook (jal FlushCache(0) -> kh1_ovl_flush0(req))"] += 1
+                                ok = True
+                                break
+                    if ok:
+                        continue
             elif typ == R_MIPS_HI16:
                 fields[o] = 0xFFFF
                 continue  # checked through its low halves
@@ -352,6 +392,9 @@ def main() -> int:
         print(f"  {title}: {sum(len(v) for v in d.values())} in {len(d)} files")
         for src, items in sorted(d.items(), key=lambda kv: -len(kv[1])):
             print(f"    {len(items):6d}  {src}: " + "; ".join(items[:a.examples]))
+    if hooked:
+        print(f"  not compared (KH1_OVL_FIXUPS hook added, size differs from M0 by design): "
+              + ", ".join(n for _a, n in hooked))
     group("relocated fields that do not map back", bad_fields)
     group("other bytes differing", bad_bytes)
     group("position-dependent code (unrelocated address that moved)", absolute)
