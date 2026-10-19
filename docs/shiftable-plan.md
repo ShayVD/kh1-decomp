@@ -415,6 +415,38 @@ from layout.tsv / functions.tsv, with a summary. Raw files load at --base; an EL
 detected by its header. Self-test on a synthetic blob: `python3 -I tests/scan_overlay_test.py`
 (not wired into `make test`, which is the Makefile's).
 
+### Step 9b: getting the overlays off the disc (KINGDOM.IDX / KINGDOM.IMG)
+
+`python3 -I tools/shift/extract_kingdom.py GAME.iso --overlays --out DIR` (or `NAME...`,
+`--list`) writes the files the game loads by name; standalone, Python >= 3.10 stdlib.
+Self-test: `python3 -I tests/extract_kingdom_test.py`. Format, from the code:
+
+- **Index**: func_00120ba0 does `sceCdSearchFile("\\SYSTEM.CNF;1")` -> D_004F3208 (base
+  LSN); func_0011fe20 reads `\\KINGDOM.IDX;1` into D_004E4A00: up to 3,584 entries
+  `{u32 hash, u32 flags (bit 0 = compressed), u32 sector, u32 size}`, stop at sector=size=0,
+  `sector += base`. So **LBA = LBA(SYSTEM.CNF) + sector**; KINGDOM.IMG has no directory
+  entry, only its own index entry "kingdom.img" (D_004F3200, used for the HDD copy
+  `pfs0:kingdom.img` in func_001202c0: offset = (LBA - D_004F3200) * 2048).
+- **Lookup** func_00120190: `bsearch(hash(name), D_004E4A00, count, 16, func_00120170)`
+  (unsigned compare on the hash). **Hash** func_001200f8: `h = (h << 1) ^ ((c << 16) % 0x11021)`
+  over the signed chars of the name as passed (case-sensitive, e.g. "dktitle.x").
+- **Read** func_001204a0 -> func_001201d0: ceil(size / 2048) sectors; if flag bit 0,
+  func_00120040 decodes in place, backwards: last byte = escape key, the 3 bytes before =
+  output size (len-2 = bits 0-7); bytes read backwards: literal, or key + 0 = literal key,
+  or key + n + (count - 3) = copy count bytes from n bytes above the output pointer.
+- **Overlays** (all at 0x00F20000, entry = first byte, `int entry(int cmd, int arg)`; no
+  function table is passed, so any call back into the main ELF is by absolute address):
+  `dktitle.x` (func_00109770, async func_00120748 -> cb func_00109630: FlushCache(2),
+  entry(0, 0)), `dkmovie.x` (func_00111020(mode)
+  -> cb func_00110fc8: entry(0, mode)), `xl_limit.x` (func_00158df8 -> cb func_00158db0, which only
+  flags it loaded; entry(7/8/9/11, 0) from the same file's code), `xs_dh_break.x` (func_001d09d8 -> cb func_001d09a0:
+  entry(0, 0); also func_002335d8(i) sync via D_00425BC0[i]), `gb.x` / `wm.x` (func_001ba7e0 /
+  func_001ba870 -> func_001b9c60: sync func_001205f0, FlushCache, `entry()` with no
+  arguments), summons `xs_{dumbo,bambi,genie,tink,mushu,simba}.x` (func_0013b3d0:
+  sprintf("%s%s", D_00304B00[i], ".x"), cb func_0013b1a0; the matching `.dbt` goes to
+  D_0052AE5C). About 15 other sites call entry(cmd 1-11, arg) on whichever overlay is
+  resident; arg is 0, a mode, or a pointer into main-ELF data. 0xF20000 is also a plain buffer (image/*.rgb, ...).
+
 ## Session 13: data relocations, M1/M2
 
 **Status: M0, M1 and M2 pass statically** (with s13s1's symbolic asm, the 9,523 accepted
