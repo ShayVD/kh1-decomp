@@ -435,3 +435,9 @@
 - MATCH 00214a68 (nosi), FLAGGED dead set + dead FP test: w41's draft without its three tests, keeping `if (i >= 48) { p = 0; break; }`, plus `if ((f32)(i * i) < 0.0f) c = 0;` right after `i++;` in the inner loop (c dead in the loop). Inner-loop refs count with loop-depth weight, so i beats k<<2; the test sits where both the ids giv and the lui are live so their order holds.
 - 001ba520: w44__001ba520_15w_volatile.c: volatile on w4/w8/wC/w10 gives the exact store order; left: sched1 ranks ~nw above t. Best stays w22's 10w.
 - Facts: a dead FP test in an inner loop is fine for loop.c if its target is dead in the loop. Put dead tests where both rival pseudos are live. `(f32)(i * i)` gives two refs in one insn (cse merges repeated (f32)i).
+
+## s11w45 (00107c48, 0024c950, 001f2630, 001f1fc8)
+- MATCH 00107c48 (nostrict), FLAGGED dead FP test + dead set: w40's draft with `if ((f32)(s32)&D_00351BD0 < 0.0f) i = 0; else if (i != 0) { i = 0; n = 0; }`. The else gives the explicit jump so the test survives; the address lo_sum keeps the %hi live into the next block, so global-alloc gives it v1: `lui v1; lw v0,7120(v1)`.
+- 0024c950: 9 -> 8w (w45__0024c950_8w.c, nofill, flagged): `if ((f32)D_00669A5C < (f32)(D_00669A5C + 1)) t = 0; else n = 0;` after `D_00669A6C = x;` gives the load 4 refs (v0, kk a0). Left: the branch splits off `p = D_00669A40` and the preheader; several %hi registers off.
+- 001f2630/001f1fc8: the x2c constant store is ready when its li issues and outranks the others in the weight -1 group by LUID; no lever without a block split.
+- Facts: var.py/ins.py replace the FIRST match, which can be inside a header comment (strip comments before sweeps). A dead-set else arm keeps the explicit jump without changing behaviour. A dead FP test targeting an unused variable is deleted by jump1 even with an else.
