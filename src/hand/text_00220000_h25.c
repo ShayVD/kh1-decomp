@@ -9,7 +9,7 @@ typedef struct { u8 pad[0xCC]; u16 cc; u16 ce; u16 d0; s16 d2; } Obj;
 typedef struct { u8 pad[0x25]; u8 n; u8 ids[0x4E]; } Ent74;
 typedef struct { u8 pad[0xE]; u8 e, f; u8 pad2[0xE]; u8 e2, f2; } Str82A8;
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
-typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; } Pkt;
+typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
 
 void func_0011d768(s32);
 void func_001ba358(s32, s32);
@@ -111,7 +111,7 @@ extern s32 D_00648038[5];
 extern f32 D_00648050[5];
 u128 D_00648070[0x6] ALIGNED(16);
 extern Slot D_00651310[10];
-extern Pkt D_00650F40;
+Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200;
 extern u128 *D_00651204;
 

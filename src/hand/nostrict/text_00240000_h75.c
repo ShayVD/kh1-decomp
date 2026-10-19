@@ -248,9 +248,9 @@ typedef struct {
     s32 unk4120;
     s32 unk4124;
 } G51E50;
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } QA;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } QA;
 extern G51E50 D_00651E50;
-extern QA D_00651C00;
+QA D_00651C00 ALIGNED(64);
 typedef struct { u32 b0:3; u32 b3:1; u32 rest:28; } F2C5958;
 extern F2C5958 D_002C5958;
 void func_00241560(void);
@@ -405,8 +405,8 @@ typedef struct {
 typedef struct { s32 cnt[4]; Ent e[3][5]; s32 stamp[3]; s32 frame; } Tbl;
 extern Tbl D_00656510;
 
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Pk;
-extern Pk D_006562C0;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pk;
+Pk D_006562C0 ALIGNED(64);
 extern QW *D_00656420;
 QW *D_00656424 ALIGNED(4);
 void func_002370c8(void *);

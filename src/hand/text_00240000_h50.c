@@ -10,7 +10,7 @@ typedef struct { u8 pad[0x60]; Q4 q[4]; Q4 r[4]; } Panel;
 typedef int u128 __attribute__((mode(TI)));
 
 /* Render-packet headers set up before func_00237018 (D_00667DF0, D_006697C0). */
-typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; } S7df0;
+typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
 typedef struct { u8 pad[0x4c]; u16 id; } S130;
 typedef struct { u8 pad[0x130]; S130 *p; } SC;
 typedef struct { u8 pad[0xc]; SC *c; } SArg;
@@ -73,7 +73,7 @@ extern u8 D_0045D248[];
 Panel D_00667F60 ALIGNED(32);
 Q4 *D_00667F50 ALIGNED(16);
 Q4 *D_00667F54 ALIGNED(4);
-extern S7df0 D_00667DF0;
+S7df0 D_00667DF0 ALIGNED(16);
 extern Q4 D_00351E10[];
 extern u8 D_00668040[];
 extern u8 D_0045D280[];
@@ -99,7 +99,7 @@ Panel D_00669620 ALIGNED(32);
 extern Q4 *D_00669610;
 extern s32 D_00469C94;
 extern s32 D_00469C98;
-extern S7df0 D_006697C0;
+S7df0 D_006697C0 ALIGNED(64);
 extern Q4 *D_00669920;
 Q4 *D_00669924 ALIGNED(4);
 extern void *D_00669A10[];

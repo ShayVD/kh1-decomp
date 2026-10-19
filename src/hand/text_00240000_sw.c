@@ -8,10 +8,10 @@ typedef struct {
 } Mgr;
 typedef struct { u8 pad[0x9C]; s32 unk9C; } UiObj;
 typedef struct { UiObj *p; u8 pad[0x1C]; } UiEnt;
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Pkt;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pkt;
 extern Mgr D_00669700;
 extern UiEnt D_00669760[3];
-extern Pkt D_006694B0;
+Pkt D_006694B0 ALIGNED(16);
 QW *D_00669614 ALIGNED(4);
 extern QW *D_00669610;
 extern QW D_00351E10[];

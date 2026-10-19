@@ -18,9 +18,9 @@ typedef struct {
     Blk b9E0;
 } S8370;
 typedef struct { s32 a, b, c, d; } Q4;
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Q;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 extern S8370 D_00668370;
-extern Q D_00668120;
+Q D_00668120 ALIGNED(32);
 Q4 *D_00668284 ALIGNED(4);
 extern Q4 *D_00668280;
 extern Q4 D_00351E10[];

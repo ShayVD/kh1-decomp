@@ -285,9 +285,9 @@ void func_00244be0(s32 a0, s32 y, s32 z) {
     func_00244968((s32)&D_00662300[0], (s32)D_004267F0, cy, z);
     func_00244968((s32)(a0 < 2 ? &D_00662300[1] : &D_00662300[2]), (s32)D_004267F0, cy, z);
 }
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[8]; u64 unk70; u8 pad78[0xE0 - 0x78]; u64 unkE0; } Q70;
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; } Q;
-extern Q70 D_0065FB30;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[8]; u64 unk70; u8 pad78[0xE0 - 0x78]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q70;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
+Q70 D_0065FB30 ALIGNED(16);
 QW *D_0065FC94 ALIGNED(4);
 void func_002370c8(void *);
 void func_00244960(void);
@@ -385,7 +385,7 @@ void func_002453e8(s32 a0, f32 f) {
     }
 }
 
-extern Q D_00662560;
+Q D_00662560 ALIGNED(32);
 QW *D_006626C4 ALIGNED(4);
 
 void func_00245508(s32 a0, f32 f) {
