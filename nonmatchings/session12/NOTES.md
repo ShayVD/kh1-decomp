@@ -184,3 +184,21 @@
   preheader. A dead-test temp that is its source's last use ties into that qty (refs without a
   new GPR temp). Local-alloc conflict ranges run born_index..dead_index (about 2 indices past
   birth/death each side); qtys sharing an endpoint conflict.
+
+## s12w11: 00265608, 001f2630, 001f1fc8, 0021e120 (no matches)
+- 00265608: finding s12w11__00265608_26w_finding.c (sdk/gcc991111, size 884; best stays s9 w11 9w).
+  The source tree `((M|X)|(Y|H))|W` (inline or u64 leaf locals) folds to the original's OR shape
+  with the right cross-jump (98 of 1680 ordered trees). Only allocation is off: the original
+  needs Y > W > X > mult > H priority (the H-first order `div, addiu a3, lw a1, dsll32, lw v1`);
+  ours issues both off[] loads first because the trap_if at t=1 is a barrier with anti-dep cost
+  1, so they are ready at t=2. No source shape found for that.
+- 001f2630 1w: stores in a big flood wait on the last s32 load, then issue by LUID; constant li's
+  fill stall slots in LUID order. The original's store positions need impossible lives
+  (cy+h < 0x8000 < f4+288 < 22). 001f1fc8 2w: same mechanism for `one`.
+- 0021e120 3w: 22 positions of `p[0] = k0;`: earlier fixes sd-0 vs 88 but swaps k0/66 (t0/t1)
+  because 66's store then dies at 170, conflicting with the 0x100000 qty born at 172.
+- Facts: gcc991111 reassociates OR trees of local-variable leaves like inline expressions (search
+  by produced shape). gcc991111 local-alloc traced without debug info: break block_alloc
+  (0x08111ef0); statics next_qty 0x082233f8, qty_phys_reg 0x082233fc (short*), qty_n_refs
+  0x08223410, qty_birth 0x08223418, qty_death 0x0822341c, qty_size 0x08223420, qty_first_reg
+  0x08223434 (tools/matching/gdb_s12/bq9.sh + bq9.py).

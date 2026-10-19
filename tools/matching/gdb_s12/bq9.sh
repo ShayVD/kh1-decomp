@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /home/claude/kh1-decomp; C=tools/toolchain/ee-gcc2.9-991111a/lib/gcc-lib/ee/2.9-ee-991111-01/cc1
+timeout 300 gdb -batch -x "$(dirname "$0")"/bq9.py --args $C $1 -G0 -lang-c -Iinclude -quiet -undef -D__GNUC__=2 -D__GNUC_MINOR__=9 -Dmips -DMIPSEL -DR5900 -D_mips -D_MIPSEL -D_R5900 -D__mips__ -D__MIPSEL__ -D__R5900__ -D___mips__ -D__mips -D__MIPSEL -D__R5900 -D___mips -D__OPTIMIZE__ -D__LANGUAGE_C -D_LANGUAGE_C -DLANGUAGE_C "-D__SIZE_TYPE__=unsigned int" "-D__PTRDIFF_TYPE__=int" -D__LONG_MAX__=9223372036854775807L -U__mips -D__mips=3 -D__mips64 -D__mips_eabi -D__mips_single_float -ffunction-sections -O2 -o /dev/null 2>&1 | grep "^BLK"
