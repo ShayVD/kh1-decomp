@@ -537,10 +537,10 @@ found that the next session needs:
 
 ## Session 11: what changed
 
-- **42 matches** (6,916 -> 6,958 / 6,988; 93.7% -> 96.4% of code bytes) by about 60 workers, at most
+- **43 matches** (6,916 -> 6,959 / 6,988; 93.7% -> 97.0% of code bytes) by about 60 workers, at most
   5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
   short version: docs/matching-tips.md "Session 11 tips").
-- **Flagged matches**: 22 of the 42 rely on source that does nothing and is deleted by the
+- **Flagged matches**: 22 of the 43 rely on source that does nothing and is deleted by the
   compiler. Each file says so in a comment; they are byte-identical, but probably not the original
   source:
   - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
@@ -569,6 +569,8 @@ found that the next session needs:
   stdlib module; run helpers with `python3 -I`.
 - tools/matching/gclimb_s11.py: token climb that moves each constant's set (`kN = C;`) and its store
   separately, so li order and store order change independently (took 0021e120 from 6 to 3 words).
+- tools/matching/jt_s11.py: per-case block sizes ours vs original from both jump tables, the fastest way
+  to spot over- or under-merged switch cases (matched the 8.5 KB 001f5fe0; edit the address constants).
 - **Tool traps**: variant scripts replace the first match, which can be inside a header comment
   (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
 - A container restart mid-session lost no work because every match was pushed as it landed.
