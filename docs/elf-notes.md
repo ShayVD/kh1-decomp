@@ -23,7 +23,8 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
 - **36 `.DVP.overlay` sections** plus `.DVP.ovlytab` / `.DVP.ovlystrtab`:
   VU microcode assembled with dvp-as (names like
   `.DVP.overlay..0x0.374643955.7345.0`, some with `unknvma`). These are the
-  VU1/VU0 programs to document as the renderer spec in phase 3.
+  VU1/VU0 programs: 22 programs, documented in docs/renderer-spec.md
+  (session 14).
 - Statically linked SCE libraries, SDK 2.5.0: libkernl, libgraph, libdma,
   libipu, libpad2, libdbc, libvib, libcdvd, libpc, libmc.
 - Source file names that survive in asserts: `ttlib/ui.c`, `ttlib/ui_gauge.c`,

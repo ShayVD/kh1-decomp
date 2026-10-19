@@ -528,7 +528,6 @@ func_0010d470:  /* 0x0010D470 */
 	.word	0x0C000000  /* 0010DBB4 jal func_00147808 */
 	.reloc	.-4, R_MIPS_26, func_00147808
 	.word	0x94440000  /* 0010DBB8 lhu $a0,0($v0) */
-	.reloc	.-4, R_MIPS_LO16, D_002BBAB0+0x4550
 	.word	0x10000030  /* 0010DBBC b .L0010DC80 */
 	.word	0x0040A82D  /* 0010DBC0 move $s5,$v0 */
 	.word	0x00000000  /* 0010DBC4 nop */
@@ -553,8 +552,7 @@ func_0010d470:  /* 0x0010D470 */
 	.word	0x8C440000  /* 0010DBF8 lw $a0,%lo(D_002BBAB8)($v0) */
 	.reloc	.-4, R_MIPS_LO16, D_002BBAB8
 	.word	0x10000020  /* 0010DBFC b .L0010DC80 */
-	.word	0x8C550000  /* 0010DC00 lw $s5,4($v0) */
-	.reloc	.-4, R_MIPS_LO16, D_002BBAB8+0x454c
+	.word	0x8C550004  /* 0010DC00 lw $s5,4($v0) */
 	.word	0x00000000  /* 0010DC04 nop */
 	.word	0x3C030000  /* 0010DC08 lui $v1,%hi(D_002BBABC) */
 	.reloc	.-4, R_MIPS_HI16, D_002BBABC

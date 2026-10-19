@@ -110,8 +110,7 @@ func_001636d0:  /* 0x001636D0 */
 	.word	0x00852821  /* 0016384C addu $a1,$a0,$a1 */
 	.word	0x00962021  /* 00163850 addu $a0,$a0,$s6 */
 	.word	0x0080302D  /* 00163854 move $a2,$a0 */
-	.word	0x24840000  /* 00163858 addiu $a0,$a0,16 */
-	.reloc	.-4, R_MIPS_LO16, D_00573F10-0x3f00
+	.word	0x24840010  /* 00163858 addiu $a0,$a0,16 */
 	.word	0x24A50010  /* 0016385C addiu $a1,$a1,16 */
 	.word	0x0C000000  /* 00163860 jal func_001627d0 */
 	.reloc	.-4, R_MIPS_26, func_001627d0

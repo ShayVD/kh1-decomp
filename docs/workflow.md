@@ -614,3 +614,51 @@ found that the next session needs:
 - Matching: no new matches (4 workers, one at a time). 001fd858 went 112 -> 1w flagged (25w
   natural); its last word is proven to be a reorg liveness decision plain source cannot reach.
   Findings: nonmatchings/session13/NOTES.md; tracers in tools/matching/gdb_s13/.
+
+## Session 14: what changed
+
+- **Runtime (PCSX2, user's Mac, through computer use)**: M1 and M2 now play through the title,
+  Load, Special Movie, New Game to Dive to the Heart, a real save (End of the World), magic, the
+  world map (wm.x), gummi flight (gb.x), warp drive and Halloween Town, saving to and reloading from
+  the memory card. Summons/xl_limit.x not exercised (need enemies). Table in docs/shiftable-plan.md
+  "Session 14".
+- **Bug fixed: fake %lo relocations** (tools/asm_export.py `flow_pairs`): a lui in a branch-likely
+  delay slot was treated as reaching the not-taken path, so struct loads got `R_MIPS_LO16`. Broke
+  Halloween Town in M1/M2 because their .bss moves by 0xb600 (not a multiple of 64 KB).
+  `shift/unmatched/` regenerated (4 relocations gone). Static checks cannot see a self-consistent
+  wrong relocation; runtime with an odd shift does.
+- `tools/shift/shift_ld.py --bss-pad N`: experiment option (NOLOAD pad before .bss, nothing else
+  moves) used to bisect the bug at runtime.
+- Shiftable review: 10 lone data relocations rejected as chance matches (glyph, digit, H20 tables);
+  the rest of the 1,136 lone func/str rows were read and kept (docs/shiftable-plan.md, "Lone function
+  and string relocations").
+- `make shift SHIFT_MODE=m12`: code rotated and data/bss moved together; shift_cmp and ovl_proof pass.
+- `make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1`: the 16 near-miss C drafts of shift/drafts.tsv linked in
+  place of their asm exports (out/shift/m12-drafts/, never matched or counted); tools/shift/drafts.py
+  reports per function whether it links and a static word diff (all 16 link).
+- tools/shift/lo16_check.py (every `make shift`): each LO16's base register must come from its lui
+  on every path; 0 findings now, and it finds the 4 fake relocations of the pre-fix exports.
+- Disc room: the patched ELF has 2-6 KB left in its slot; options (append to the ISO, split PT_LOADs
+  at zero runs, smaller overlay table, loader stub) in docs/shiftable-plan.md "Disc room".
+- Phase 3 tools: tools/vu/find_vu1.py lists the 22 VU microprograms in the user's ELF, their DMA
+  carriers and uploaders, and disassembles one on request; tools/vu/gs_packets.py decodes the GS
+  register writes of the static GIF packets. Output derives from the user's ELF: never commit it.
+- Testing on the user's machine: test ISOs in Downloads/kh1-test (KH1_M0/M1/M2.iso patched in place
+  with `tools/shift/patch_iso.py ORIGINAL.iso NEW.ELF KH1_Mx.iso --in-place`); memory card
+  Downloads/kh1-test/memcards/KH1_FM_save.ps2 built with `mymcplus` from the user's .max save.
+  PCSX2 keys: arrows = D-pad, WASD = left stick, L = Circle (confirm), K = Cross (back), I/J =
+  Triangle/Square, Q/E = L1/R1, 1/3 = L2/R2, Return = Start, F1/F3 = save/load state; hold keys
+  0.15-0.2 s. World map: K closes the drive menu, then the stick moves the cursor (W then A reaches
+  Halloween Town from End of the World).
+- `make shift SHIFT_MODE=m12`: code rotated AND data/bss moved (+0x1000; .bss +0xc600 with the
+  overlay table). `SHIFT_DRAFTS=1` (m2/m12 only: drafts grow the text by 0x140) links each
+  near-miss C draft in place of its asm export and reports a static word diff (never counted).
+- tools/shift/lo16_check.py (runs in every `make shift`, fails the build): every LO16's base
+  register must be the paired lui's result on every path. 0 problems on 17,071 fields; it finds
+  exactly the 4 fake relocations on the pre-fix exports.
+- Disc room for a bigger ELF: options in docs/shiftable-plan.md (recommended: append the ELF at
+  the end of the ISO; not implemented).
+- docs/renderer-spec.md: VU1 renderers (P0-P7 field strip meshes, P10-P20 skinned characters),
+  GS modes, per-frame DMA flow, mapping to a modern API; tools/vu/vif_chain.py walks a DMA chain.
+- Matching: no new matches. 0010d470 179 -> 170w natural (129w unnatural probe), 00110618 stays
+  93w; nonmatchings/session14/NOTES.md; gdb global-alloc tracer tools/matching/gdb_s14/.

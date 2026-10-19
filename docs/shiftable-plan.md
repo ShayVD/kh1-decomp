@@ -856,3 +856,242 @@ so about 2-6 KB of headroom is left; growth beyond that needs another way onto t
 
 Not exercised yet: anything after the first 3D scene (gb.x, wm.x, xl_limit.x, xs_*.x),
 Load, Special Movie, and the HDD path.
+
+## Session 14: runtime in PCSX2, and a wrong-relocation bug (2026-10-19)
+
+Shay's save (End of the World, LV100) was imported into a PCSX2 memory card with `mymcplus`
+(`.max` import); PCSX2's memory-card folder points at `Downloads/kh1-test/memcards` on that machine.
+
+| what | M1 | M2 |
+|---|---|---|
+| title, Load (incl. unformatted-card message), Special Movie | ok | ok (title, Load) |
+| New Game, settings, opening movie, Dive to the Heart | ok | not re-run |
+| load save at End of the World, magic (Firaga) | ok | ok |
+| save to the memory card (file 05), and load that file in M0 | ok | — |
+| world map (wm.x), gummi flight (gb.x) and back, warp drive | ok | ok |
+| Halloween Town, Guillotine Gate landing | **broken, fixed below** | **broken, fixed below** |
+
+Summons (xs_*.x) and xl_limit.x are still unexercised at runtime: KH1 only allows summons with
+enemies present (M0 refuses them in the same spots), and none were in reach of the landing points.
+
+### The Halloween Town bug: fake %lo relocations from delay-slot flow
+
+Symptom: M1 and M2 drew large flat untextured polygons and no characters at the Halloween Town
+landing (Sora missing at the End of the World save point too); M0 fine, same camera.
+
+Bisected at runtime with `shift_ld.py --bss-pad N` (experiment only: M0 layout, nothing moved,
+.bss/$gp/`_end` pushed up by N inside the NOLOAD .bss):
+
+- N = 0xb600 (what M1/M2's overlay table adds): broken exactly like M1/M2;
+- N = 0x10000: identical to M0.
+
+So something depended on bss addresses modulo 64 KB: a %lo. Cause in `tools/asm_export.py`
+`flow_pairs`: every delay slot also got the ordinary fall-through edge, so a `lui` in the delay
+slot of a branch-likely (executed only when taken) reached the not-taken path, and a plain
+`lw $v0,0($a0)` (a struct load) became `%lo(D_00570000)`:
+
+```
+00167350 bltzl $v0,.L001673FC
+00167354  lui $a0,%hi(...)        <- runs only when taken
+...
+0016737C lw $v0,0($a0)            <- $a0 = *(s4), not the lui; was R_MIPS_LO16 D_00570000
+```
+
+Fix: a delay slot's successors come only from its branch (taken target; plus k+2 for an
+ordinary conditional branch). Regenerated `shift/unmatched/`: 4 fake relocations gone in
+func_00166570, func_001636d0 (both .bss, the runtime bug) and func_0010d470 (data, would have
+broken M2 elsewhere); the lui in func_00166570 now pairs with its real low half (D_00574F20).
+Fixed M1 and M2 render Halloween Town identically to M0 (same frame).
+
+Lesson: `shift_cmp.py` and `ovl_proof.py` check that every relocated field maps back, so they
+cannot see a relocation that is wrong but self-consistent. Only a runtime run with a shift that is
+not a multiple of 64 KB (or a register-flow check per LO16) catches it. `overlay_relocs.py` already
+had the correct delay-slot rule.
+
+### Overlay ambiguous fields: reviewed (session 14)
+
+All 67 `ambiguous` entries in `ovl_report.txt` (user's disc) were read in context; none is an
+address, so leaving them unpatched is correct:
+
+- `lui/ori` "code-range" values (14): buffer sizes and offsets added to an allocated base
+  (dkmovie.x 0x003AB87F, 0x00123800, 0x00124800, 0x00162780, 0x00286F80, all `addu reg, v0` or
+  stored as sizes), 64-bit GIF tag / GS register words built with `dsll32` (dktitle.x, wm.x
+  0x002A4000), colours with an alpha byte or'ed in after `sll 0x18` (gb.x/wm.x 0x002747B8,
+  wm.x 0x004D3F28), unaligned odd values (0x00531531, 0x00535310, 0x00193C7F, 0x00323280),
+  and a VIF/GIF flag word (xs_dh_break.x 0x00100100).
+- `lui` 0x0010/0x0020/0x0044/0x0050 with no low half (24): allocation sizes passed to
+  func_001bb500 (`lui a0,0x44; li a1,128`), bit masks for 64-bit GS register fields next to
+  `0xf0ffffff`/`0xfff0ffff` masks, and `0x500000 - s0` size arithmetic in dkmovie.x.
+- tier-3 data words in gb.x/wm.x (27): RGB colour tables (0x00346900 next to 0x00301010,
+  0x00101010), s16 pairs inside records whose neighbours are overlay-internal pointers
+  (0x00400140, 0x00510050), byte tables (0x00303600, 0x002F2E00, 0x00393938 ...), and ASCII
+  (0x00303630 = "060\0" inside a string list). xs_dh_break.x's two words are inside
+  compressed/texture bytes.
+
+### Disc scan for code pointers (session 14)
+
+All 3,326 KINGDOM.IDX entries (KINGDOM.IDX at LBA 2450, 57,344 bytes; base LBA 282 = SYSTEM.CNF)
+were decompressed and scanned for aligned words equal to a main-ELF function start and for `jal`
+words to one. Only the 12 known overlays and copies of the main ELF hold significant `jal`
+counts: there is no other code file on the disc. Function-pointer hits in data files are round
+values (noise). So a disc file holding main-ELF code addresses is not a known risk for M1. (A C
+scanner was used; pure Python was too slow for one 180 s shell call on the user's machine.)
+
+### Lone function and string relocations: reviewed (session 14)
+
+All 1,136 lone-pointer rows of `data_relocs.tsv` were dumped with their context (649 `func`, 64
+`func-s16`, 423 `str`; the dump: target, the address code builds that the word belongs to and the
+functions that build it, the next code-built address, the 6 words on each side with their reasons,
+the target's direct `jal` count, for strings the text). Filters picked 208 suspects (no accepted
+pointer next to it, number-like neighbours, a target that code also calls directly, short or
+non-alphanumeric strings); all 208 were read.
+
+- **Rejected (e07f611, 10 words, 3 override ranges):** chance matches inside typed byte/u16
+  records: the glyph table D_003E4658 (`{u16 code, f2, f4; u8 w, f7}`, 5 func + 3 ftab), the
+  SmG digit-glyph table D_003E9110 (1), the H20 header/offset data D_00308874 (1).
+- **Confirmed (the other 198 suspects), by kind:**
+  - object/menu templates 0x3F3200-0x3F7EA0 (func_001f31a8's WA): a callback at +0x0 or +0x30
+    whose target nothing calls directly (`jal` count 0), next to `{0, 4, s16 x, y...}` fields;
+    the `str` hits there are WA* arrays (D_003F32C8[] ...) whose target template starts with
+    printable bytes;
+  - state tables 0x35BD50-0x35C408 (func_00172010, func_00172d90, func_00173740 ...): 16-byte
+    records `{0, n, flags, handler}`; handlers are reached only through the table (or are the
+    shared default func_0016b670);
+  - the libkernel syscall tables at 0x46AF04, 0x46B6C4, 0x46BE4C, 0x46C214 (session 13 kcode);
+  - string tables: the 2-character names at 0x2BCC28 (func_00112270), the overlay name
+    "xs_dh_break.x" at 0x425BC0 next to its handler table, a `{.., "...x", ftab}` record at
+    0x304B44.
+- `data_relocs.tsv` is unchanged beyond e07f611 (642 func, 64 func-s16, 423 str accepted). The
+  dump tool was a throwaway; the rule set did not change.
+
+## Session 14: M12, SHIFT_DRAFTS and a LO16 check
+
+### M12: code rotated and data/bss moved (`make shift SHIFT_MODE=m12`)
+
+`shift_ld.py --mode m12`: the text is rotated like M1 and `.data` is placed at
+`blob_start + --data-shift` (0x1000) like M2, so every function, every data byte, `_gp`, .bss and
+`_end` move (bss by 0xc600 with the overlay table: not a multiple of 64 KB). The rotation point is
+chosen against the moved data start, so it differs from M1's (0x262A00, 0x10264 bytes to the
+front). Output `out/shift/m12/`.
+
+```
+M12 OK: 7391 input sections (7391 moved), relocated fields checked: HI16/LO16 17071, KH1_OVL_FIXUPS hook 2, R_MIPS_26 21416, R_MIPS_32 11994
+  entry 0x00100008 -> 0x00110288 ok; _gp 0x00494050 -> 0x004a0650, D_BSS 0x00494080 -> 0x004a0680
+M12 overlay fixups OK: 12 overlays, table 0xaf48 bytes at 0x00495640 ...
+```
+
+Also: a function that grows (KH1_SHIFTABLE variant, or a draft) now costs exactly what it pushes
+the next function by (`ALIGN(64) + start % 64`), not a flat 64 bytes; m2 refuses growth larger
+than `--data-shift`. Runtime: not run yet (PCSX2 is on the user's machine).
+
+### SHIFT_DRAFTS (`make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1`)
+
+Links the near-miss C drafts listed in `shift/drafts.tsv` (16 rows: name, C file under
+nonmatchings/, the src/ directory whose compile rule builds it, LCS words its header claims) in
+place of their `shift/unmatched/` asm exports, into `out/shift/<mode>-drafts/`. Never matched
+code and never counted: `make` does not build them, and the result is a static word diff, not a
+behaviour claim (the earlier draft of this table had a `static: equiv` column; it was not backed
+by a review and was dropped).
+
+- `tools/shift/drafts.py build` compiles each draft with the exact `kh1tool gen` rule of its
+  mode (flags from kh1.toml), checks one `.text.<name>` and no data, prints the
+  `--draft-obj NAME=OBJ` arguments; a failure keeps the asm export (`compile.tsv`).
+- `shift_ld.py --draft-obj`: the draft's `.text.<name>` takes the asm export's place in the
+  layout (a longer draft pushes later code by multiples of 64, a shorter one leaves padding); its
+  `.rodata*` (jump tables) goes after the blob (`__draft_rodata_start`); an asm object whose
+  functions are all drafted is left out, a partly drafted one has those sections discarded. A
+  draft with an undefined name nothing defines and no address is refused per function
+  (`no-link`, asm export kept). The asm version's jump tables stay in the blob, relocated
+  against the draft's start (self-consistent, unused). Needs a moved mode; with m1 the text has
+  no room before the fixed data once a draft grows, so use m2 or m12.
+- `shift_cmp.py` maps a drafted function as one piece (start to start) and skips its bytes;
+  everything else is checked as usual. `ovl_proof.py` and the LO16 check run as usual.
+- `drafts.py report` (run by make): per function, words of the asm export vs the draft with
+  relocated fields masked (difflib LCS, so a little above the headers' true-DP counts), the same
+  over instruction kinds only (registers and immediates ignored), and whether the `jal`/`j`
+  targets are the same (mapped M0 -> NEW).
+
+Result (m12, all 16 compile and link; the text grows by 0x140, from func_0010d470 +0x98,
+func_00110618 +0x10, func_00125240 +4; func_00166570 is 8 bytes shorter):
+
+| function | orig words | draft words | off | kinds off | calls |
+|---|---|---|---|---|---|
+| func_0010d470 | 992 | 1030 | 239 | 91 | same 22 |
+| func_00110618 | 268 | 272 | 98 | 59 | same 10 |
+| func_00125240 | 45 | 46 | 5 | 2 | same 5 |
+| func_001636d0 | 1062 | 1062 | 416 | 125 | same 84 |
+| func_00166570 | 1044 | 1042 | 22 | 6 | same 75 |
+| func_00192958 | 300 | 300 | 17 | 1 | same 7 |
+| func_001c62a0 | 287 | 287 | 58 | 9 | same 1 |
+| func_001cfc28 | 66 | 66 | 1 | 1 | same 2 |
+| func_001eddc0 | 95 | 95 | 2 | 2 | same 0 |
+| func_001f18e8 | 322 | 322 | 2 | 0 | same 3 |
+| func_001f1fc8 | 409 | 409 | 2 | 1 | same 14 |
+| func_001f2630 | 264 | 264 | 1 | 0 | same 15 |
+| func_001fd858 | 477 | 477 | 1 | 1 | same 5 |
+| func_00200e28 | 389 | 389 | 24 | 16 | same 11 |
+| func_0021e120 | 250 | 250 | 3 | 2 | same 14 |
+| sceGsDefDispEnv | 221 | 221 | 9 | 6 | same 4 |
+
+`M12-DRAFTS OK` (everything but the 16 drafted functions maps back), overlay fixups OK, LO16
+check 0. A "kinds off" of 0-2 means the draft differs in registers/scheduling only; the larger
+ones (0010d470, 00110618, 001636d0, 00200e28) differ in code shape and are the ones to run at
+runtime first if drafts are ever tried in PCSX2. Several drafts are FLAGGED in their headers
+(dead tests kept for matching); none of that is checked here.
+
+### LO16 base check (`tools/shift/lo16_check.py`, run by every `make shift`)
+
+The 22ec674 bug (a fake `%lo` on a struct load) is invisible to shift_cmp and ovl_proof: the
+field maps back because the relocation itself is what moves it. The new check reads the linked
+ELF (`ld -q` relocations) and, for every R_MIPS_LO16, walks the control flow backwards along every
+path until the base register is written. Each path must end in a `lui` with an R_MIPS_HI16
+(passing through `addu rX,rX,rY`, `move`, and a stack spill/restore of the register); the
+function entry, a call that clobbers a caller-saved base, any other write, or an unrelocated
+lui is a finding, and `make shift` fails on it. Control flow as in the fixed `flow_pairs`
+(delay slots only from their branch, likely branches skip the slot when not taken), calls return
+to k+2 with caller-saved registers clobbered, and each `jr` goes to the entries of its own jump
+table (the `lui/lw %lo(T)` before it; all in-function R_MIPS_32 targets if it is not found).
+Unreachable words (the nop after `b`) are not paths. About 3.5 s for the whole link.
+
+- Current tree (m0, m1, m2, m12, m12-drafts): 17,071 LO16 fields (17,074 with drafts),
+  **0 findings**.
+- Sensitivity: with the `shift/unmatched/` exports from before 22ec674 it reports exactly the
+  4 fake relocations of that fix (func_0010d470 x2: `$v0` clobbered by a call; func_001636d0 and
+  func_00166570: `$a0` written by a load on some path).
+- Before the per-table `jr` edges and the spill rule it had 1,248 and then 13 false positives in
+  compiled C (state machines whose `switch` re-dispatches through a second table; libc
+  functions that spill a %hi with `sq`/`lq`); both were checker imprecision, not bad relocations.
+- Not covered: the HI16 side (a lui whose low halves are wrong is caught only through them), and
+  the overlay fixups' own %hi/%lo pairing (overlay_relocs.py, already the correct delay-slot rule).
+
+### Disc room for a bigger ELF
+
+`patch_iso.py` overwrites SLPS_251.98 in place, so the ELF must fit the retail file's sectors:
+3,805,184 bytes. Minimal ELF sizes now: M0 3,752,168 (53 KB left), M1 3,798,760 (6.4 KB), M2 and
+M12 3,802,856 (2.3 KB), M12 with drafts 3,803,240 (1.9 KB). M1 adds the overlay table and hook
+(0xb600 bytes with alignment); M2/M12 add the 0x1000 data shift as file-backed zeros. Options, roughly
+in order of effort:
+
+1. **Append the ELF at the end of the image** (`patch_iso.py --append`, to write): put the file in
+   new sectors after the last one, point its ISO 9660 directory record (LBA and size, both byte
+   orders) there, and raise the PVD volume space size. No size limit for PCSX2; a burned DVD-5
+   still has room (the image is about 3.5 GB). If the disc also carries UDF descriptors, their
+   file entry for SLPS_251.98 must be updated too or stay unused (the PS2 BIOS and PCSX2 read ISO
+   9660). Recommended first: simplest, and it removes the limit for every later build.
+2. **Several PT_LOAD segments** (in `minimal_elf`): split at the long zero runs of the data
+   (17 runs of >= 4 KB, 1,054,481 bytes in all; the largest 0x4B2CB at 0x37A375) and at the M2
+   gap, each run becoming the `memsz - filesz` tail of a segment. Saves up to ~1 MB with no game
+   change, **if** the loader zero-fills each segment's tail: PCSX2's fast-boot loader and the
+   BIOS `LoadExecPS2` both need checking (crt0 only clears .bss). Test with M0 first.
+3. **Smaller overlay table**: 7,658 entries x 4 bytes plus 529 targets x 8 bytes. Dropping the
+   per-target "old address" word (check the overlay by its name hash and size instead) and
+   delta-encoding word offsets as u16 would roughly halve 44 KB. Or move the table to its own
+   file read at boot.
+4. **A free gap inside the image**: list every ISO 9660 extent and look for unused sector runs
+   (padding before KINGDOM.IMG, dummy files); size unknown until scanned on the user's disc.
+5. **A loader stub**: a small ELF in the slot reads the real ELF (from an appended file, or
+   compressed: M1 compresses to about 1.05 MB with zlib -9) and jumps to it. Needs CD/IOP calls
+   in the stub; the right answer for real hardware with a size budget, the most work.
+
+Rotation slack and M2's 0x1000 are not a budget: growth in code or data comes out of the same
+disc slot, so option 1 (for testing) or 2 (if it boots) should come before any larger change.

@@ -236,14 +236,18 @@ def flow_pairs(an: K.FuncAnalysis, f: K.Func, warn: list[str]) -> tuple[dict[int
     jt_targets = sorted({t for es in an.jtbls.values() for t in es})
     # edges: k -> [(succ, clobber)]
     succ: list[list[tuple[int, bool]]] = [[] for _ in range(n)]
+    slot = False  # ins[k] is a delay slot: its successors come from the branch
     for k, (a, w) in enumerate(ins):
         i = mips.Insn(a, w)
         o = mips.op(w)
         is_ct = i.is_branch or o in (mips.OP_J, mips.OP_JAL) or i.is_jr or i.is_jalr
+        in_slot, slot = slot, is_ct
         if not is_ct:
             if o == 0x10 and (w & 0x3F) == 0x18 and mips.rs(w) == 0x10:  # eret
                 continue
-            if k + 1 < n:
+            # a delay slot falls through only on a not-taken ordinary branch (added below);
+            # after a likely branch it runs only on the taken path
+            if k + 1 < n and not in_slot:
                 succ[k].append((k + 1, False))
             continue
         d = k + 1  # delay slot
