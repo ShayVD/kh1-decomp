@@ -170,7 +170,7 @@ stored after the part table), `URSL` (eye overlay, `func_00175708`, below).
 | +0x10 / +0x14 | rel / size | pixel data; record j's pixels start after the previous records' `qwc*16` bytes |
 | +0x18 / +0x1C | rel / size | CLUTs, 1024 bytes (256 x CT32) per texture record |
 | +0x20 / +0x24 | rel / size | part table `t` (the main mesh) |
-| +0x28 / +0x2C | rel / nonzero | alternative part table `t2` (shares `t`'s bones). Used when the draw asks for it (`Prm.x0 & 1`), which also sets `x48` bit 2 = the no-clip programs P10/P13 (inferred: low-detail or shadow mesh) |
+| +0x28 / +0x2C | rel / nonzero | alternative part table `t2` (shares `t`'s bones): the **shadow mesh**. Used when the draw asks for it (`Prm.x0 & 1`, only the shadow pass `func_00127960`), which also sets `x48` bit 2. Its parts have `g = 2`: XYZ-only vertices, drawn by P10 into the `0x3A0000` buffer (session 17, confirmed in RAM: the three characters' `t2` tables have one part each, all `g = 2`, and their shadow draw instances use them) |
 | +0x30 / +0x34 | rel / nonzero | object list: rel offsets terminated by -1; each entry has 7 self-relative pointers (+0x14, +0x1C, +0x24, +0x28, +0x30, +0x38, +0x3C) and +0x3C points at 12-byte {id (-1 ends), x4, rel x8} records (purpose unknown) |
 
 After relocation the six offset words hold pointers, and an `Obj->x0` of the
@@ -192,7 +192,7 @@ draw code reads `+0x20` as `{t, -, t2, +0x2C}` (inferred from
 | Off | Type | Meaning |
 | --- | --- | --- |
 | +0x00 | s16 | bone count n (matrices built per draw: 64 bytes each, 128 when lit) |
-| +0x04 | rel t | bone table, 48 bytes per bone: 3 x vec (inferred: scale (1,1,1), rotation, translation, as P21 consumes rotation), then u32: low bits parent (all ones = none), bit 30 = the bone gets its own matrix |
+| +0x04 | rel t | bone table, 48 bytes per bone: scale (w = bone index), rotation (Euler radians, X then Y then Z, renderer-spec §2.4; max |a| = pi in RAM), translation, then u32: bits 0-9 parent (0x3FF = none), bit 30 = the bone gets its own matrix |
 | +0x08 | rel t | unknown block (its `+0x08` becomes the second model's bone count) |
 | +0x0C | s32 | part count |
 | +0x10 + 16*i | part record | below |
@@ -206,20 +206,23 @@ read +0x10/+0x14/+0x18):
 | --- | --- | --- |
 | +0x0 | u8 | flags: bit 0 = also draw a translucent pass (second entry with `x5 = 1`, `ATST LESS`) |
 | +0x1 | u8 | part id: bit index into the draw's hide mask `Prm.x28` and flag mask `Prm.x2c`; passed to the step-3 callback as `D_0055C680.xa` |
-| +0x2 | u8 | `g`: entry `x4 >> 4`; bit 1 selects the 4-qword matrix slots in `func_0015fd20`, and `fl >> 4` bits 0-1 enter the program choice (renderer-spec §2.3) |
+| +0x2 | u8 | `g`: entry `x4 >> 4`, the mesh layout. Bit 1 = XYZ-only vertices and 5-qword matrix records (`func_0015fd20`), and lets `x48` bit 2 through; bit 0 = skinned vertices (program choice bit 1). 0 = 3-qword vertices, 8-qword matrix records (renderer-spec §2.3) |
 | +0x3 | u8 | written at load with the low byte of +0x4 (the texture index); read as entry `x6`: the attachment slot (`D_0055BEC0[x6]`) and the texture index handed to the step-3 callback (`D_0055C680.xc`) |
 | +0x4 | u32 -> ptr | texture record index -> pointer |
 | +0x8 | u32 -> ptr | index of the record whose CLUT is used -> pointer |
 | +0xC | rel t | mesh DMA chain, sent with TTE in step 4 |
 
-**Mesh chain** (checked on the embedded model): a DMA `CNT` whose VIF words
-are `STCYCL 1,1; UNPACK V4-32 n -> 0 +TOPS`, so the whole command stream of
-renderer-spec §2.3 lands at TOPS. Records start with a qword `{u32 op, u32
-arg, ...}`: op 0 = matrix slot for bone `arg` (+ the draw's bone base
-`DObj.x18`), followed by 4 qwords (matrix) or 7 (matrix + 3 light rows, lit
-draws) that `func_0015fd20` fills each frame from the draw's matrix buffer;
-op 1/2 = vertex group, `arg` = byte length to skip, `.z` = vertex count, a
-GIF tag (`REGS 0x412`) follows; op 0x8000 with arg 0 = end.
+**Mesh chain** (session 17: rule settled and checked on every mesh in RAM,
+renderer-spec §2.3 "Input"): DMA `CNT` packets (the last may be `END`), each
+`STCYCL 1,1; UNPACK V4-32 n -> 0 +TOPS; MSCNT` with `n` = qwc - 1. The
+unpacked qwords are records `{u32 op, u32 arg, u32 z, u32 w}`: op 0 = matrix
+slot `z` for bone `arg` (+ the draw's bone base `DObj.x18`), 1 + 4 qwords when
+`g & 2`, else 1 + 7 (`func_0015fd20` fills 4 or, for lit draws, 7 each
+frame); op 1 = vertex group, `arg` = record length in bytes, `z` = vertex
+count, `w` = strip parity, a GIF tag follows; op 2 (skinned only) = bone index
+list of `arg` bytes; op 0x8000 = end of the packet, `arg` = 48 (bytes to the
+next packet's first record) or 0 (end of the mesh). `tools/vu/rb_stream.py`
+decodes and checks them.
 
 **Draw instance** (`DObj`, `D_0055C698.obj[parity][78]`, filled by
 `func_001606d0` from the caller's 0x48-byte parameter block `Prm`; this is
@@ -236,12 +239,18 @@ GIF tag (`REGS 0x412`) follows; op 0x8000 with arg 0 = end.
 | +0x30-0x38 | s32 x3 | `Prm.x10..x12` | FOGCOL RGB |
 | +0x3C | s32 | `Prm.x13 << 4` | VU qw6.w (fog bits) |
 | +0x40 / +0x44 | fn / arg | `Prm.x20 / x24` | step-3 callback `x40(&D_0055C680, x44)` |
-| +0x48 | u8 | `Prm.x0` | program bits: 16 if `x0 & 0x100`, 8 if `x0 & 0x200`, +4 with `t2`, +1 lit |
+| +0x48 | u8 | `Prm.x0` | program bits: 16 if `x0 & 0x100` (box inside the guard band), else 8 if `x0 & 0x200` (clip), +4 with `t2` (`x0 & 1`), +1 lit (`Prm.x4` set and no `t2`) |
 
 Draw entries (`Dsl`, `dsl[parity][480]`): +0 DObj, +4 bits 0-2 attachment
 count, bit 3 = `Prm.x2c` has the part's bit (`fl & 8`: P19/P20 and the
 ZBUF/FRAME-only GS packet), bits 4-7 = `g`; +5 translucent pass; +6 texture index;
 +7 `4*i + 1`; +0x28 key.
+
+The masks come from the actor (`func_00136428`, session 17): `Prm.x28` =
+`o->x38c` (parts hidden), `Prm.x2c` = `o->x394` (parts drawn screen-mapped
+by P19/P20; set and cleared only by script commands through `func_00135a10`
+/ `func_00135a38`, bit `n - 1` for part `n`); the shadow pass uses `o->x390`
+as its hide mask (`-1` when bit 30 is set).
 
 ### Checked against real files and RAM (session 16, PCSX2)
 
@@ -268,6 +277,15 @@ the raw member and run `zstd -d`; `eeMemory.bin` is the 32 MB EE RAM, `vu1Memory
   matrix + 3 light rows, filled per frame), then op 1 with arg 0x1A0. Skipping op 1 by `arg` bytes
   lands on an op 8 at +0x1930, so the record length rule above is not exact yet (`tools/vu/vif_chain.py
   --file F --rel BASE --stream` walks these).
+  *Session 17:* settled. Op 1 is exactly `arg` bytes; +0x1930 is past the end of that 239-qword packet
+  (0xEF0 bytes), so the walk had run over the packet's `0x8000` record, whose `arg` (48) steps over
+  the `MSCNT` qword and the next DMA tag to the next packet's first record. `tools/vu/rb_stream.py FILE
+  --scan --ram` walks all 15 model chunks of the new savestate (12 `MOBJ`, 3 `MENV` weapons; 50 parts,
+  390 packets, 7,530 records, 24,854 vertices) with zero errors; `--mobj 80` does the same for
+  `xa_ex_4030.mdls` (7 parts) and the ELF's three embedded models also pass. Only ops 0, 1 and 0x8000
+  occur; every main part has `g = 0`, every alternate (shadow) part `g = 2`, no part is skinned.
+  The savestate (session 16 M12-float build, End of the World) also shows the draw instances: see
+  renderer-spec §2.3.1.
 
 ### `URSL` (eye overlay, `func_00175708`)
 

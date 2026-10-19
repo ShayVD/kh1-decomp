@@ -26,6 +26,7 @@ Conventions:
 | `python3 -I tools/vu/vif_chain.py ADDR...` | walks a static DMA chain and prints its tags and VIF commands (STCYCL, UNPACK layout, MPG, MSCAL/MSCNT, BASE/OFFSET); `--one` decodes a single spliced tag. New in this session |
 | `python3 -I tools/vu/gs_packets.py --callers --layout layout.tsv` | decodes every static GS packet passed to the GIF send wrapper `func_00106b18`, register by register |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
+| `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
 
 A quick way to see the differences between programs is to diff two `--disasm`
@@ -242,15 +243,29 @@ toward `FOGCOL` by `(255 - F)`.
 | +16 | P18 | P12 | P13 | P14 |
 | +20 | P10 | P10 | P13 | P13 |
 
-So bit 0 = lighting, bit 1 = skinning, bit 2 = a no-clip fast path (P10, or
-P13 with lighting dropped), bit 3 = full clipping (no skinned+lit clipping
-variant: P14 is used), bit 4 = P18 for the plain case. Bits 3 and 4 never
-appear together (the table has 24 entries). The meanings are inferred from
-the programs each index selects.
+So bit 0 = lighting, bit 1 = skinning (from the part's `g & 1`), bit 2 = the
+alternate mesh (`Prm.x0 & 1` with a model that has `t2`; kept only for parts
+with `g & 2`, whose records hold XYZ-only vertices: P10; the table gives
+P13 for `g = 3`, which no data uses and whose 8-qword matrix records would not
+match the EE's 5), bit 3 = full clipping (`Prm.x0 & 0x200`), bit 4 = the object's box
+is known to be inside the guard band (`Prm.x0 & 0x100`), so the unlit program
+P18 drops the `CLIPW` test (there is no lit or skinned variant without it:
+P12, P13, P14 are reused). Bits 3 and 4 never appear together (the table has
+24 entries; `func_001606d0` tests `0x100` first). *Session 17:* these meanings
+come from the callers (§2.3.1) and the program bodies (P18 and P19 are the
+only B programs without `CLIPW`, P10 has no culling at all); the savestate's
+draw instances (§2.3.1) confirm bits 2 and 4.
 
-If `fl & 8`, the program is `P19` (if `x48 & 0x10`) or `P20`, which are
-shorter, write VU qw1 themselves (`ISW 1(vi00)`) and use `0.5` constants
-(inferred: shadow or projected-texture variant; open question 4).
+If `fl & 8`, the program is `P19` (if `x48 & 0x10`) or `P20` (with `CLIPW`).
+*Session 17:* both take the normal 3-qword vertices but ignore the vertex ST
+and the material colour: they store 0x80 x 4 into VU qw1 and write
+`S = (x - 2048) / 512 + 0.5`, `T = (y - 2048) / 384 + 0.5`, `Q = 1` from the
+projected position (qw7 constants, `LOI 0.5`), i.e. **screen-mapped texture
+coordinates**: the part shows whatever texture is bound, stretched over the
+512x384 screen. Step 2 sends only ZBUF/FRAME for these entries (no texture
+upload, no TEST/ALPHA), so the bound texture is the previous draw's or one a
+step-3 callback set (not determined statically). Inferred use: a see-through
+or refraction-like part effect.
 
 **VU1 memory map** (per draw header: chain `0x00272CF0`, `UNPACK V4-32 9 ->
 @0`, patched by `func_0015f798` before sending):
@@ -267,27 +282,48 @@ shorter, write VU qw1 themselves (`ISW 1(vi00)`) and use `0.5` constants
 | 0x1E0 / 0x200 past TOPS | output buffer (`vi03 = top + 0x1E0` in P13, `+0x200` in P10; others not checked) |
 
 **Input** (TOPS, `BASE 64 / OFFSET 240` or `BASE 0 / OFFSET 256`) is a
-**command stream** that the program interprets. As far as the code shows:
+**command stream** of records. *Session 17:* the record rule is settled from
+the EE walker `func_0015fd20` (which fills the matrix records each frame) and
+the dispatch code of P10-P20, and checked on every mesh in the savestate (12
+`MOBJ` + 3 `MENV`, 50 parts, 390 DMA packets, 7,530 records), on
+`xa_ex_4030.mdls` and on the three models embedded in the ELF, with zero
+misparses (`tools/vu/rb_stream.py`).
 
-- A header word: `.x` = opcode/count, `.z` = vertex or matrix count, `.w` =
-  second count. The opcode selects:
-  - "load matrix into a register slot": 3 slots of 4 qwords, vf05-08,
-    vf12-15 and vf19-22. Lit programs also keep a 3x3 light matrix per slot
-    (vf09-11, vf16-18, vf23-25);
-  - "vertex group";
-  - "end and kick": `ISWR` of the ADC/EOP word into the output, then
-    `XGKICK`.
-- The matrix index per vertex (`vi07`) is either a slot (0-2) or, when it is
-  `>= 0x100`, a VU memory address relative to the stream (`lq 1..4(vi07+vi06)`),
-  so larger palettes are read from VU memory (inferred: a bone palette
-  uploaded with the mesh).
-- **Skinning** (P13, P14, P17): a vertex is `k` weighted influences. Each
-  influence is a position already multiplied by its weight (`xyz * w`, w =
-  weight) in the bone's space. The program does `ACC = sum(M_bone_i * p_i)`
-  (`MULAX`... for the first, `MADDAX`... for the rest), then `MADDI` with I=0
-  to finish. This is the "vertices stored per bone" layout (KH2's MDLX
-  format looks similar; not checked).
-- STQ per vertex (float, `MULQ`). Colour = VU qw1 (unlit) or the lit colour.
+A mesh chain is DMA `CNT` packets (the last may be `END`), each `STCYCL 1,1;
+UNPACK V4-32 n -> 0 +TOPS; MSCNT`; `n` is the packet's qwc minus 1 (the last
+qword holds the `MSCNT`). Every record starts with a qword `{u32 op, u32 arg,
+u32 z, u32 w}`:
+
+| op | Meaning | Length |
+| --- | --- | --- |
+| 0 | load matrix slot `z` (0-2: vf05-08, vf12-15, vf19-22) with bone `arg` (+ the draw's bone base `DObj.x18`); lit programs take the 3 light rows after it (vf09-11...). In skinned programs `w = 1` marks the record as the palette base (`vi06`) and `w >= 2` skips the load | 1 + 4 qwords when the part's `g & 2`, else 1 + 7 (lit or not: unlit draws copy 4 and skip 7) |
+| 1 | vertex group: `z` vertices, `w` = winding parity of the first triangle (`vi05`), then a GIF tag (`NLOOP = z`) and the vertices | `arg` bytes |
+| 2 | bone index list for the skinned programs: `z` qwords of 4 indexes each, read in order as the influences are processed | `arg` bytes (= 16 * (1 + z)) |
+| 0x8000 | end of packet: write the EOP word, `XGKICK`, wait for the next `MSCNT` | `arg` = bytes to the next packet's first record (48: this qword, the `MSCNT` qword and the next DMA tag), 0 = end of mesh |
+
+The VU programs never read `arg`: they step by `z` and the vertex size. The
+EE walker uses only `arg`, and spins forever on any other opcode, so there is
+no op 8 (session 16's op 8 at `+0x1930` lay past the end of the 239-qword
+packet it was read from). Matrix slots stay loaded across packets: most
+packets after the first load nothing.
+
+Vertex layouts (qwords per vertex; the first qword's `w` is the matrix slot,
+or `>= 0x100` for a palette entry at `vi06 + (w - 0x100) + 1..4`):
+
+- `g & 3 == 0`: 3 qwords: normal (xyz) + slot, position (xyz, w = 1.0), STQ
+  floats (S, T, 1.0). GIF tag `TRISTRIP|IIP|TME|FGE|ABE`, REGS `0x412`. Every
+  main part table in the savestate uses it.
+- `g & 2`: 1 qword: position + slot. GIF tag `TRISTRIP`, `REGS = XYZ2`, the
+  untextured strips of the shadow pass (§3.3). The alternate part tables use
+  it.
+- `g & 1` (skinned, P13/P14/P17; layout read from P13, no such part in the
+  savestate or the files at hand): 1 qword whose `w` = influence count `k`,
+  then `k` weighted positions (`xyz * weight`, w = weight) whose bones come
+  from the op 2 list, then STQ. The program does `ACC = sum(M_bone_i * p_i)`
+  (`MULAX`... for the first, `MADDAX`... for the rest), then `MADDI` with
+  I = 0 to finish: the "vertices stored per bone" layout.
+
+Colour = VU qw1 (unlit) or the lit colour.
 
 **Lighting** (P12, P14, P16): `n' = Lmat(slot) * n` (3 directional lights,
 3x3), `n' = max(n', 0)`, `c = Cmat * n' + ambient` (`MULAX/MADDAY/MADDAZ` by
@@ -313,6 +349,40 @@ fog F, so qw6.w is the per-draw fog value shifted left by 4 (inferred; the
 default `0xFF` gives F = 15). A GIF tag comes from the stream (`vf31`, stored
 first).
 
+#### 2.3.1 Who sets the program bits (session 17, static unless marked)
+
+`func_001606d0` (via `func_001621e0` or `func_00161de8`) has six callers in
+the main ELF. Overlays and the runtime code at `0x00F20000` were not searched.
+
+| Caller | `Prm.x0` | `Prm.x2c` | Objects |
+| --- | --- | --- | --- |
+| `func_00136428` (from `func_001368e8`, `func_00136768`) | `0x100` when `o->x370` bit 49 is clear and `func_00121000` finds all 8 corners of the box `func_00135a68(o->x410 radius, o->x414 height)` in front (w >= 1) and inside 0..4095 after projection; `0x200` when the spawn record `o->x130->x4 & 4`; never bit 0 | `o->x394` | field actors (inferred from the callers: characters, NPCs, objects) |
+| `func_00127960` | `0x101` | 0 | projected shadows (§3.4) |
+| `func_00209e18`, `func_0020a518`, `func_0020a758` (`D_003F3530`, initialised by `func_0020a248`) | 0 | 0 | party models drawn in a menu (keys 60001 up) |
+| `func_0021af38` (`D_00643020`, `text_00210000_h71.c`) | 0 | 0 | one more menu model (key 60000) |
+
+`o->x394` is a per-actor part mask: `func_00135a10(o, n)` sets bit `n - 1`,
+`func_00135a38` clears it. Their only callers are script commands: entries
+77/78 of the command table at `0x002E2810` (8-byte `{fn, argc}` records,
+reached through the descriptor `D_002E2F20` that `func_0012b738` puts into
+the 64 script nodes `D_004F8310`), via `func_00129e08`/`func_00129e28`, and
+opcodes 402/403 of the script VM table at `0x003D9FE0` (`func_001d6780`,
+`func_001d67c8`, which pop the part number from the VM stack and use the VM's
+actor). So P19/P20 appear only when an event or field script asks for them.
+The other masks follow the same pattern: `x38c` = parts hidden in the normal
+draw (`Prm.x28`), `x390` = parts hidden in the shadow (`func_00127960`).
+
+*Confirmed in the session 17 savestate* (End of the World field, PCSX2, both
+frames of the draw-instance array): the three party characters (spawn
+classes 0, 1, 2; the models at `0xFE0080`, `0x12E0080`, `0x1520080`) draw
+with `x48 = 0x10` (box inside, bit 0 clear: **unlit** in this field), so their parts use
+P18; their weapons (the `MENV` second models) also `0x10`; their shadows use
+`x48 = 0x14` with the alternate part tables (all parts `g = 2`), so P10, with
+ZBUF `0x3A0001C0`/FRAME `0x1_000401D0`; one class-200 object draws with
+`x48 = 0` (P11). All four actors have `x394 = 0` and spawn flags without
+bit 2 (as do the other spawn records next to them), so no P15-P17 or P19/P20
+in that frame.
+
 ### 2.4 Other programs
 
 - **P8** (`func_00103c48`, a scheduler task at key `0x280A4`, returns 4): a
@@ -331,14 +401,35 @@ first).
 - **P9**: `LQ 0(vi00)` then `RINIT R`. VU1's random generator is seeded once;
   no rendering program uses `RNEXT`/`RGET`, so a port can ignore it.
 - **P21 (VU0)**, called from `func_00162cd0` (`src/hand/vu0.c`, `VCALLMS 0`)
-  for every bone in the skeleton build (`text_00150000_h59.c`, around
-  `func_00162cd0(e->x150[i].m[2], e->x150[i].m[3], w)`). Input vf1 = rotation
-  (Euler angles); constants at VU0 qw0-9 (polynomial coefficients); it
-  returns rotation rows in vf26-28 and the caller appends the translation. It
-  evaluates sin/cos by polynomial and builds a rotation matrix (inferred from
-  the powers `vf06^n` times the coefficient vectors and the `SQRT`s). Port:
-  replace it with a plain Euler-to-matrix function; confirm the rotation order
-  against `func_00162cd0`'s callers (open question 5).
+  for every bone in the skeleton build (`func_00163490`,
+  `text_00150000_h59.c`: `func_00162cd0(e->x150[i].m[2], e->x150[i].m[3],
+  w)`, and `func_00164ba8`). Input vf1 = rotation. *Session 17* (the
+  constants are in the savestate's VU0 memory, qw0-17):
+  - **Units: radians.** If all three angles are 0 it returns the identity
+    (qw0-3). Otherwise, per axis, `t = pi/2 - |a|` (qw5 = pi/2), `cos a =
+    sin t` by the odd Taylor series to `t^9` (qw6-9 = -1/6, 1/120, -1/5040,
+    1/362880, slightly tuned), `|sin a| = sqrt(1 - cos^2 a)` and the sign of
+    `a` from the table qw10-17 (indexed by the sign bits). Valid for |a| <= pi;
+    the bone tables in RAM stay inside that (max |a| = pi on Sora's model).
+  - **Order: X, then Y, then Z.** It builds `Rx` rows `(1,0,0) (0,cx,sx)
+    (0,-sx,cx)`, `Ry` rows `(cy,0,-sy) (0,1,0) (sy,0,cy)`, `Rz` rows
+    `(cz,sz,0) (-sz,cz,0) (0,0,1)` and returns the rows of `Rx * Ry * Rz`
+    (row-vector product) in vf26-28. In the sceVu0 layout (`v' = m[0] x +
+    m[1] y + m[2] z + m[3]`) that is `R = Rz(z) * Ry(y) * Rx(x)` in
+    column-vector math, all right-handed: the same as `sceVu0RotMatrix` on an
+    identity matrix. `func_00162cd0` stores vf26-28 as rows 0-2 and the
+    translation (w = 1.0) as row 3.
+  - **Composition** (`func_00163490`): `func_00162c5c(out, A, B)` is `out =
+    A * B` (each row of B transformed by A, like `sceVu0MulMatrix`). Per bone
+    i with parent p: `L = [R(rot_i) | t_i]` (P21); `G_i = G_p * L` with `G`
+    the unscaled chain (`D_00351E10[]`, root `D_00573F10`); the accumulated
+    scale `S_i = S_p * s_i` (component-wise, `func_001627d0`); the world
+    matrix `W_i` (`x154[i]`) = rows 0-2 of `G_i` scaled by `S_i.x/y/z`
+    (`func_00267e90`) and row 3 = `W_p * t_i` (`func_00162848`, the
+    parent's *scaled* matrix). So scale is not inherited through rotation
+    (no shear), but positions are scaled by the parents.
+  Port: a CPU Euler (XYZ, radians) to matrix function plus this composition;
+  no VU0 needed.
 
 ## 3. GS state
 
@@ -624,7 +715,9 @@ is the step):
 0. `func_0015f798`: patch the header chain `0x00272CF0` (colour, light block,
    qw6.w) and send it on VIF1 (`UNPACK 9 -> VU 0`).
 1. `func_0015fc00`: send the selected program (`MPG; MSCAL 0; BASE; OFFSET`).
-   If `x48 & 4`, skip to step 4 after a cache flush.
+   If `x48 & 4`, fill the matrix records (`func_0015fd20`) and skip to step
+   4: no GS state and no texture are sent, so the alternate (shadow) mesh
+   draws with whatever state its caller set up (§3.4).
 2. GS state on GIF:
    - entries flagged `x4 & 8`: a small A+D packet `D_00351C40` with two
      values from the draw instance, `s->x0->x0`/`x8` = ZBUF_1 and FRAME_1
@@ -675,7 +768,7 @@ interrupt-driven executor becomes a plain loop.
 | Fog F = clamp(A + B/w) | per-vertex fog factor `f = F/255`, `mix(fogColor, color, f)` in the fragment shader |
 | Renderer B matrix slots and palette | bone matrix UBO/SSBO; skinning in the vertex shader with weights pre-split from the per-bone weighted positions (`p_i = xyz_i / w_i`, weight `w_i`) |
 | B lighting (3 parallel lights + ambient, clamp 255) | vertex-shader lighting with the same clamps (saturate before scaling) |
-| P21 (VU0 Euler -> matrix) | CPU function |
+| P21 (VU0 Euler -> matrix) | CPU function: `Rz * Ry * Rx`, radians, composition as in §2.4 |
 | PSMT4/8 + CLUT | decode to RGBA8 at load (or use a palette texture + shader lookup if CLUT animation is used: renderer B callback step 3, open question 6) |
 | per-draw texture upload to block `0x3600` | cache decoded textures by source pointer and CLUT |
 | `ALPHA (Cs-Cd)*As+Cd` | `SRC_ALPHA, ONE_MINUS_SRC_ALPHA` with As scaled ×2 (0x80 = 1.0) |
@@ -710,6 +803,12 @@ interrupt-driven executor becomes a plain loop.
    bone `arg`, filled by `func_0015fd20`; 1/2 = vertex group with byte
    length; 0x8000 = end). Still open: the renderer A strip stream behind the
    +0x90 tag, and checking the derived file names against KINGDOM.IDX.
+   *Session 17:* the renderer B record rule is settled (§2.3 "Input"): op 0
+   is 5 or 8 qwords by the part's `g & 2`, ops 1/2 are `arg` bytes, 0x8000
+   carries the byte step to the next packet (48) or 0 at the end of the
+   mesh, and no other opcode exists. `tools/vu/rb_stream.py` walks every
+   mesh in a RAM dump, a `.mdls` or the ELF with zero misparses. Still open
+   for B: a skinned (`g & 1`) part to check the P13 layout on real data.
 2. ~~Per-mesh GS state~~ Partly answered by §3.3: CLAMP/CLAMP for most
    meshes, REGION_CLAMP atlas windows for context-2 draws. Still open: where
    in the model file those values live.
@@ -724,8 +823,26 @@ interrupt-driven executor becomes a plain loop.
    is still open; the dump's `ATST GREATER AREF 0` for the silhouettes
    does not match step 2's `ATST GEQUAL AREF=x2c`, so a run should confirm
    which path they take.
-5. P21's rotation order and angle units, and how `func_00162c5c` composes
-   the parent matrix. Needed for exact skeleton poses.
+   *Session 17:* mostly answered (§2.3.1). P10 is the alternate mesh
+   (`g & 2`, XYZ-only strips) drawn by the shadow pass; confirmed in the
+   savestate (shadow draw instances `x48 = 0x14`, alternate tables all
+   `g = 2`). The `AREF` mismatch is explained by step 1: entries with
+   `x48 & 4` skip step 2 entirely, so the silhouettes keep the shadow
+   buffer state of `D_004F7820` (`ATST GREATER AREF 0`). `Prm.x0 & 0x100` =
+   the actor's box projects inside the guard band (`func_00121000`), `0x200`
+   = spawn flag `o->x130->x4 & 4` (static only: no actor in the savestate
+   has it). `Prm.x2c` = actor `x394`, set only by two script commands
+   (table `0x002E2810` entries 77/78, VM opcodes 402/403), so P19/P20
+   (screen-mapped texture, §2.3) are script-driven; which scripts use them,
+   and which texture is bound when they draw, is still open (needs the
+   script files or a run that triggers them). Overlays were not searched.
+5. ~~P21's rotation order and angle units, and how `func_00162c5c` composes
+   the parent matrix.~~ *Session 17:* answered (§2.4): radians, `R = Rz *
+   Ry * Rx` (X applied first), `func_00162c5c(out, A, B)` = `A * B`, world =
+   parent's unscaled chain times the local matrix, then rows scaled by the
+   accumulated scale and the position taken through the parent's scaled
+   matrix. Static, with the VU0 constants read from the savestate; not yet
+   checked numerically against a posed skeleton in RAM.
 6. ~~What renderer B's step-3 callback (`s->x0->x40`) does~~ Answered
    (§3.4): render-to-texture into `0x3A0000`, then `TEX0_1 = 0x3A00`.
    Two callbacks, both chosen in `func_00136428`: `func_00135ed0` (blend

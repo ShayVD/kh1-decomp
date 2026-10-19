@@ -11,7 +11,8 @@ OFFSET, ITOP, DIRECT...), one per line.
 (tools/shift/extract_kingdom.py): OFF is a file offset, and the address word of
 each REF/NEXT/CALL tag is taken relative to BASE (the game adds the address of
 the mesh header it relocates, docs/structs.md "Model files"). --stream decodes
-OFF as bare VIF codes (no DMA tags) up to --end.
+OFF as bare VIF codes (no DMA tags) up to --end. Renderer B mesh chains
+(the command stream inside the UNPACK data) are decoded by rb_stream.py.
 --one decodes only the tag at ADDR (for REF fragments the game splices
 into bigger chains, e.g. 00486300). ADDR is the address of the first DMA tag (what the game writes to D1_TADR
 or passes to sceDmaSend, e.g. 0048c630, 0048c770, 00272cf0, 00272e20).
