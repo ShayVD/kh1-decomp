@@ -473,3 +473,7 @@
 - 001f18e8: 16 -> 9w (w50__001f18e8_9w.c, nofill, right size): `((UF *)&g->x34)->i = f4 + 288;` and `((UF *)&g->x44)->i = cy + h;` keep the lhu loads before those stores; `g->x4c = 0;` after x48. Left: `tag = p + 5` issues before `jal 1efb98`.
 - No lever for 001f2630/001f1fc8 (same-base different-offset stores never conflict), 001137f8 (distinct globals are proven disjoint before alias sets), 00192958, 0021e120, 00200e28.
 - Facts: a "nostrict" function may be strict with union fields; loads stuck behind spill stores in sched2 point to strict. A union-typed store after a load adds exactly one chosen edge.
+
+## s11w51 (strict+union remeasure), no gains
+- None of 00200e28, 0021e120, 00199ac8/0019ab38, 00135a68, 001c62a0, 00166570 is a strict-with-unions function: when strict keeps the original order its edges equal nostrict's. 00199ac8/0019ab38 in strict need union ShipolyEnt fields to get back to 19/22w.
+- Fact: try unions only where the original issues a load ABOVE a store it would conflict with under nostrict. Under strict, members of two different structs never conflict.
