@@ -337,8 +337,10 @@ sceVu0UnitMatrix:  /* 0x00267620 */
 	.globl	func_00267648
 	.ent	func_00267648
 func_00267648:  /* 0x00267648 */
-	.word	0x3C080047  /* 00267648 lui $t0,%hi(D_0046C580) */
-	.word	0x2508C580  /* 0026764C addiu $t0,$t0,%lo(D_0046C580) */
+	.word	0x3C080000  /* 00267648 lui $t0,%hi(D_0046C580) */
+	.reloc	.-4, R_MIPS_HI16, D_0046C580
+	.word	0x25080000  /* 0026764C addiu $t0,$t0,%lo(D_0046C580) */
+	.reloc	.-4, R_MIPS_LO16, D_0046C580
 	.word	0xD9050000  /* 00267650 lqc2 $vf5,0($t0) */
 	.word	0x4A26333D  /* 00267654 vmr32.w $vf6w,$vf6w */
 	.word	0x4B060100  /* 00267658 vaddx.x $vf4x,$vf0x,$vf6x */
@@ -380,14 +382,16 @@ func_002676c0:  /* 0x002676C0 */
 	.word	0x45000004  /* 002676D4 bc1f .L002676E8 */
 	.word	0x00000000  /* 002676D8 nop */
 	.word	0x460C0300  /* 002676DC add.s $f12,$f0,$f12 */
-	.word	0x08099DBC  /* 002676E0 j .L002676F0 */
+	.word	0x08000000  /* 002676E0 j .L002676F0 */
+	.reloc	.-4, R_MIPS_26, func_002676c0+0x30
 	.word	0x24070001  /* 002676E4 li $a3,1 */
 	.word	0x460C0301  /* 002676E8 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 002676EC move $a3,$zero */
 	.word	0x44086000  /* 002676F0 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 002676F4 qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 002676F8 move $a2,$ra */
-	.word	0x0C099D92  /* 002676FC jal func_00267648 */
+	.word	0x0C000000  /* 002676FC jal func_00267648 */
+	.reloc	.-4, R_MIPS_26, func_00267648
 	.word	0x00000000  /* 00267700 nop */
 	.word	0x00C0F82D  /* 00267704 move $ra,$a2 */
 	.word	0x4BE62B3C  /* 00267708 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -427,14 +431,16 @@ func_00267768:  /* 0x00267768 */
 	.word	0x45000004  /* 0026777C bc1f .L00267790 */
 	.word	0x00000000  /* 00267780 nop */
 	.word	0x460C0300  /* 00267784 add.s $f12,$f0,$f12 */
-	.word	0x08099DE6  /* 00267788 j .L00267798 */
+	.word	0x08000000  /* 00267788 j .L00267798 */
+	.reloc	.-4, R_MIPS_26, func_00267768+0x30
 	.word	0x24070001  /* 0026778C li $a3,1 */
 	.word	0x460C0301  /* 00267790 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 00267794 move $a3,$zero */
 	.word	0x44086000  /* 00267798 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 0026779C qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 002677A0 move $a2,$ra */
-	.word	0x0C099D92  /* 002677A4 jal func_00267648 */
+	.word	0x0C000000  /* 002677A4 jal func_00267648 */
+	.reloc	.-4, R_MIPS_26, func_00267648
 	.word	0x00000000  /* 002677A8 nop */
 	.word	0x00C0F82D  /* 002677AC move $ra,$a2 */
 	.word	0x4BE62B3C  /* 002677B0 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -475,14 +481,16 @@ func_00267810:  /* 0x00267810 */
 	.word	0x45000004  /* 00267824 bc1f .L00267838 */
 	.word	0x00000000  /* 00267828 nop */
 	.word	0x460C0300  /* 0026782C add.s $f12,$f0,$f12 */
-	.word	0x08099E10  /* 00267830 j .L00267840 */
+	.word	0x08000000  /* 00267830 j .L00267840 */
+	.reloc	.-4, R_MIPS_26, func_00267810+0x30
 	.word	0x24070001  /* 00267834 li $a3,1 */
 	.word	0x460C0301  /* 00267838 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 0026783C move $a3,$zero */
 	.word	0x44086000  /* 00267840 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 00267844 qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 00267848 move $a2,$ra */
-	.word	0x0C099D92  /* 0026784C jal func_00267648 */
+	.word	0x0C000000  /* 0026784C jal func_00267648 */
+	.reloc	.-4, R_MIPS_26, func_00267648
 	.word	0x00000000  /* 00267850 nop */
 	.word	0x00C0F82D  /* 00267854 move $ra,$a2 */
 	.word	0x4BE62B3C  /* 00267858 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -719,9 +727,11 @@ func_00267fe0:  /* 0x00267FE0 */
 	.word	0x35080002  /* 0026800C ori $t0,$t0,0x2 */
 	.word	0x48C8E000  /* 00268010 ctc2 $t0,$vi28 */
 	.word	0x0000040F  /* 00268014 sync.p */
-	.word	0x3C040047  /* 00268018 lui $a0,%hi(D_0046C590) */
+	.word	0x3C040000  /* 00268018 lui $a0,%hi(D_0046C590) */
+	.reloc	.-4, R_MIPS_HI16, D_0046C590
 	.word	0x3C051000  /* 0026801C lui $a1,0x1000 */
-	.word	0x2484C590  /* 00268020 addiu $a0,$a0,%lo(D_0046C590) */
+	.word	0x24840000  /* 00268020 addiu $a0,$a0,%lo(D_0046C590) */
+	.reloc	.-4, R_MIPS_LO16, D_0046C590
 	.word	0x34A54000  /* 00268024 ori $a1,$a1,0x4000 */
 	.word	0x78820000  /* 00268028 lq $v0,0($a0) */
 	.word	0x7CA20000  /* 0026802C sq $v0,0($a1) */

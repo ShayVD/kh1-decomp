@@ -106,8 +106,8 @@ test:
 # ELF into out/shift/asm/ (build output only). SHIFT_ALIASES: files of
 # `alias = canonical;` lines.
 SHIFT         := out/shift
-SHIFT_ASM_DIR ?=
-SHIFT_ALIASES ?=
+SHIFT_ASM_DIR ?= shift/unmatched
+SHIFT_ALIASES ?= shift/aliases.ld
 SHIFT_PY      := $(PY) -I
 ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
 

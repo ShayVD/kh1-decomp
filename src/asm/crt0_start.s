@@ -75,10 +75,14 @@ func_00100008:  /* 0x00100008 */
 	.word	0x46010018  /* 00100110 adda.s $f0,$f1 */
 	.word	0x0000040F  /* 00100114 sync.p */
 	.word	0x44C0F800  /* 00100118 ctc1 $zero,c1_fcsr */
-	.word	0x3C020049  /* 0010011C lui $v0,%hi(D_00494050) */
-	.word	0x3C030067  /* 00100120 lui $v1,%hi(D_00675018) */
-	.word	0x24424050  /* 00100124 addiu $v0,$v0,%lo(D_00494050) */
-	.word	0x24635018  /* 00100128 addiu $v1,$v1,%lo(D_00675018) */
+	.word	0x3C020000  /* 0010011C lui $v0,%hi(D_00494050) */
+	.reloc	.-4, R_MIPS_HI16, D_00494050
+	.word	0x3C030000  /* 00100120 lui $v1,%hi(D_00675018) */
+	.reloc	.-4, R_MIPS_HI16, D_00675018
+	.word	0x24420000  /* 00100124 addiu $v0,$v0,%lo(D_00494050) */
+	.reloc	.-4, R_MIPS_LO16, D_00494050
+	.word	0x24630000  /* 00100128 addiu $v1,$v1,%lo(D_00675018) */
+	.reloc	.-4, R_MIPS_LO16, D_00675018
 	.word	0x7C400000  /* 0010012C sq $zero,0($v0) */
 	.word	0x00000000  /* 00100130 nop */
 	.word	0x0043082B  /* 00100134 sltu $at,$v0,$v1 */
@@ -86,36 +90,50 @@ func_00100008:  /* 0x00100008 */
 	.word	0x00000000  /* 0010013C nop */
 	.word	0x1420FFFA  /* 00100140 bnez $at,.L0010012C */
 	.word	0x24420010  /* 00100144 addiu $v0,$v0,16 */
-	.word	0x3C040049  /* 00100148 lui $a0,%hi(D_00494050) */
+	.word	0x3C040000  /* 00100148 lui $a0,%hi(D_00494050) */
+	.reloc	.-4, R_MIPS_HI16, D_00494050
 	.word	0x3C0501FE  /* 0010014C lui $a1,%hi(D_01FE0000) */
 	.word	0x3C060002  /* 00100150 lui $a2,0x2 */
-	.word	0x3C070049  /* 00100154 lui $a3,%hi(D_00494080) */
-	.word	0x3C080010  /* 00100158 lui $t0,%hi(func_001001d0) */
-	.word	0x24844050  /* 0010015C addiu $a0,$a0,%lo(D_00494050) */
+	.word	0x3C070000  /* 00100154 lui $a3,%hi(D_00494080) */
+	.reloc	.-4, R_MIPS_HI16, D_00494080
+	.word	0x3C080000  /* 00100158 lui $t0,%hi(func_001001d0) */
+	.reloc	.-4, R_MIPS_HI16, func_001001d0
+	.word	0x24840000  /* 0010015C addiu $a0,$a0,%lo(D_00494050) */
+	.reloc	.-4, R_MIPS_LO16, D_00494050
 	.word	0x24A50000  /* 00100160 addiu $a1,$a1,%lo(D_01FE0000) */
 	.word	0x24C60000  /* 00100164 addiu $a2,$a2,0 */
-	.word	0x24E74080  /* 00100168 addiu $a3,$a3,%lo(D_00494080) */
-	.word	0x250801D0  /* 0010016C addiu $t0,$t0,%lo(func_001001d0) */
+	.word	0x24E70000  /* 00100168 addiu $a3,$a3,%lo(D_00494080) */
+	.reloc	.-4, R_MIPS_LO16, D_00494080
+	.word	0x25080000  /* 0010016C addiu $t0,$t0,%lo(func_001001d0) */
+	.reloc	.-4, R_MIPS_LO16, func_001001d0
 	.word	0x0080E02D  /* 00100170 move $gp,$a0 */
 	.word	0x2403003C  /* 00100174 li $v1,60 */
 	.word	0x0000000C  /* 00100178 syscall */
 	.word	0x0040E82D  /* 0010017C move $sp,$v0 */
-	.word	0x3C040067  /* 00100180 lui $a0,%hi(D_00675018) */
+	.word	0x3C040000  /* 00100180 lui $a0,%hi(D_00675018) */
+	.reloc	.-4, R_MIPS_HI16, D_00675018
 	.word	0x3C050001  /* 00100184 lui $a1,0x1 */
-	.word	0x24845018  /* 00100188 addiu $a0,$a0,%lo(D_00675018) */
+	.word	0x24840000  /* 00100188 addiu $a0,$a0,%lo(D_00675018) */
+	.reloc	.-4, R_MIPS_LO16, D_00675018
 	.word	0x24A5A000  /* 0010018C addiu $a1,$a1,-24576 */
 	.word	0x2403003D  /* 00100190 li $v1,61 */
 	.word	0x0000000C  /* 00100194 syscall */
-	.word	0x0C097D70  /* 00100198 jal func_0025f5c0 */
+	.word	0x0C000000  /* 00100198 jal func_0025f5c0 */
+	.reloc	.-4, R_MIPS_26, func_0025f5c0
 	.word	0x00000000  /* 0010019C nop */
-	.word	0x0C0960F8  /* 001001A0 jal FlushCache */
+	.word	0x0C000000  /* 001001A0 jal FlushCache */
+	.reloc	.-4, R_MIPS_26, FlushCache
 	.word	0x0000202D  /* 001001A4 move $a0,$zero */
 	.word	0x42000038  /* 001001A8 ei */
-	.word	0x3C020049  /* 001001AC lui $v0,%hi(D_00494080) */
-	.word	0x24424080  /* 001001B0 addiu $v0,$v0,%lo(D_00494080) */
+	.word	0x3C020000  /* 001001AC lui $v0,%hi(D_00494080) */
+	.reloc	.-4, R_MIPS_HI16, D_00494080
+	.word	0x24420000  /* 001001B0 addiu $v0,$v0,%lo(D_00494080) */
+	.reloc	.-4, R_MIPS_LO16, D_00494080
 	.word	0x8C440000  /* 001001B4 lw $a0,0($v0) */
-	.word	0x0C040156  /* 001001B8 jal func_00100558 */
+	.word	0x0C000000  /* 001001B8 jal func_00100558 */
+	.reloc	.-4, R_MIPS_26, func_00100558
 	.word	0x24450004  /* 001001BC addiu $a1,$v0,4 */
-	.word	0x08097E6A  /* 001001C0 j func_0025f9a8 */
+	.word	0x08000000  /* 001001C0 j func_0025f9a8 */
+	.reloc	.-4, R_MIPS_26, func_0025f9a8
 	.word	0x0040202D  /* 001001C4 move $a0,$v0 */
 	.end	func_00100008

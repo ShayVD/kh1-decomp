@@ -112,3 +112,9 @@ int vfprintf(FILE *fp, const char *fmt0, va_list ap) {
     CHECK_INIT(fp);
     return _vfprintf_r(fp->_data, fp, fmt0, ap);
 }
+
+/* Other files call the statics cvt, exponent and __sbprintf by their
+ * placeholder names; make the names global so the shiftable link resolves
+ * them here instead of a PROVIDE (docs/shiftable-plan.md 1a). No effect on
+ * the code. */
+__asm__(".globl func_00253b10\n\t.globl func_00253cd0\n\t.globl func_00252370");

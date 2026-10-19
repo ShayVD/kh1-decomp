@@ -319,3 +319,98 @@ What remains for M1/M2:
 - func_00171078's literal `0x35BD40` (plan 1a) still needs the `KH1_SHIFTABLE` switch
   before M2.
 - Step 8 (inverse-map comparator) and the M1/M2 link variants are not written.
+
+## Session 13 status (worker s13s1: steps 1-3, 9a)
+
+### Step 1: symbolic asm (done; `make` byte-identical, 6,972 / 6,988)
+
+- `tools/asm_export.py --symbolic` keeps every `.word` and adds, after each relocated word,
+  `.reloc .-4, R_MIPS_26|R_MIPS_HI16|R_MIPS_LO16, sym[+-0xOFF]` with the field zeroed (the
+  addend sits in the expression; gas writes it in place, REL style). `--regen FILE.s ...`
+  rewrites existing exports in place (same header, functions, section names).
+- **`.reloc` works**: every `.s` in the build is assembled by binutils `as` (`$(AS)`,
+  2.42 here; `kh1tool gen` never sends `.s` files to the ee-gcc drivers), which takes
+  `.reloc`. ee-as 2.10 (`ee-gcc -c -x assembler`) rejects it ("Unknown pseudo-op:
+  `.reloc'"); no fallback to mnemonics was needed. Keep any shift-build assembly of these
+  files on binutils `as` too.
+- Targets: code -> the function containing it as the build names it (out/gen/placements.tsv,
+  then functions.tsv, else `func_XXXXXXXX`) + offset; data/bss -> `D_XXXXXXXX` of the exact
+  address, addend 0. Relocated range is 0x00100000-0x00675018 **inclusive**: crt0 uses
+  `D_00675018` (end of .bss, SetupHeap start), `D_00494050` (`_gp`, start of the .bss clear)
+  and `D_00494080` (`_args`); define them base + offset like every other D_. Addresses
+  outside (stack `D_01FE0000`, 0x6A0000+ buffers, low kernel RAM, hardware) stay absolute.
+- %hi/%lo pairing: reaching definitions over each function's control flow (delay slots,
+  likely branches, jump tables, call clobbers), checked against kh1tool's linear tracker
+  (now `analyze_asm`, same `asm` output). The flow pass found pairs the linear tracker
+  missed (a %hi hoisted out of a loop or set in a delay slot: 14 in src/, more in the
+  unmatched functions). A lui shared by low halves of different addresses is relocated
+  against the first target's symbol (4 cases, all in unmatched functions; listed on stderr).
+  Every HI16 is checked to pair (GNU ld: next LO16 against the same symbol) with a LO16 of
+  the same addend. Luis in the image range left absolute are listed: all are lui/ori
+  constants (0x28/0x41 in vu0_render, 0x10/0x20/0x43 flags in unmatched game code).
+- Regenerated: `src/asm/{crt0,crt0_start,text_001aa1f8,text_0024e0a4,vu0_render_1,vu0_render_2}.s`,
+  `src/sdk/{libkernl_asm,libkernl_exc,libpc}.s`, `src/sdk/libc/string.s`,
+  `src/sdk/libvu0/vu0.s` (11 files; `src/sdk/libkernl/syscall.s` is mnemonic and has no
+  relocations). 389 relocations (91 R_MIPS_26, 144 HI16, 154 LO16); the 16 unmatched
+  exports have 548 (272 / 133 / 143).
+- Labels: global `func_001001d8` (crt0.s, inside func_001001d0) and `func_00260f40`
+  (libkernl_exc.s, inside func_00260d00), added by `--regen` for every `func_` address
+  C code names inside an exported function. The libc statics are made global with a
+  top-level `__asm__(".globl ...")`: func_00251600 in `src/sdk/libc/vfiprintf.c`,
+  func_00252370 / func_00253b10 / func_00253cd0 in `src/sdk/libc/vfprintf.c`.
+- Jump tables inside word-exported code (entries in the data blob; the data-reloc step
+  must relocate them, R_MIPS_32 against the function + offset):
+
+  | table | entries | function |
+  |---|---|---|
+  | 0x0048CE00 | 32 | func_0010d470 (unmatched) |
+  | 0x0048CE80 | 36 | func_0010d470 (unmatched) |
+  | 0x0048FE80 | 8 | func_001ab0e0 (vu0_render_2.s) |
+  | 0x0048FEF0 | 8 | func_001afac0 (vu0_render_1.s) |
+  | 0x0048FF40 | 8 | func_001b1ab8 (vu0_render_1.s) |
+  | 0x0048FF60 | 33 | func_001b3870 (vu0_render_2.s) |
+  | 0x00490A80 | 21 | func_001f1fc8 (unmatched) |
+
+  Other indirect jumps in the exports: `jr $s0` in func_0024e18c (return address built
+  with %hi/%lo of func_0024e18c+0x20, relocated), jalr through registers loaded from data.
+
+### Step 2: unmatched functions (done)
+
+- The true list (layout.tsv minus placements.tsv): **16** functions, 25,964 bytes:
+  0010d470 00110618 00125240 001636d0 00166570 00192958 001c62a0 001cfc28 001eddc0
+  001f18e8 001f1fc8 001f2630 001fd858 00200e28 0021e120 00265608 (= sceGsDefDispEnv).
+- Exports: **`shift/unmatched/func_XXXXXXXX.s`**, one per function, section
+  `.text.<name>` (`sceGsDefDispEnv` for 00265608, else `func_XXXXXXXX`). Top-level `shift/`
+  because both the Makefile (`find src`) and kh1tool (`src.rglob`) see everything under
+  src/; nothing under shift/ is built, PROVIDEd or counted by `make`/`make progress`.
+  Regenerate after a build with `python3 -I tools/shift/export_unmatched.py` (it also
+  deletes the file of a function that got matched).
+- They reference D_ names that src/ never uses (e.g. D_004D59E4), so symbols.ld does not
+  PROVIDE them: the shift link must define every undefined `D_XXXXXXXX` from its name.
+- `python3 -I tools/shift/verify_exports.py FILES.s [--delta D]` assembles exports, links
+  each at its address (+D, with every image symbol +D) and compares with the original (or
+  the original with each relocated field moved by D). All 27 files (16 + 11) pass at
+  D = 0, 0x12348 and -0x7ff8; it proves the relocations present are right, not that none
+  is missing.
+
+### Step 3: aliases and the PROVIDE check (done)
+
+- `python3 -I tools/shift/aliases.py` (after `make`) writes **`shift/aliases.ld`**: 51
+  lines `alias = canonical;` (GOFAST `dpadd = __adddf3` ..., `func_00250054 = memset`,
+  `func_002583e0 = FlushCache`, `_sbrk_r = func_00250dd0`, ...). A name inside a function
+  would get `alias = func + 0xOFF;` (none today). INCLUDE it in kh1-shift.ld.
+- `python3 -I tools/shift/provide_check.py [--list]`: what the shift link would still take
+  from a PROVIDE inside 0x00100000-0x00675018 when it links every src/ object, the
+  unmatched exports and the aliases. Today: **0 non-D_ names**; 2,140 `D_` in data
+  (0x272C70-0x494068) and 1,239 `D_` in .bss (incl. D_00675018), all to be defined as
+  base + offset. Exit status 1 if anything else appears.
+- Cross-check: all src/ objects + shift/unmatched + aliases.ld link with a sequential test
+  script and only out-of-image PROVIDEs plus D_ names, with no undefined reference.
+
+### Step 9a: overlay scanner (tool done, no data here)
+
+`python3 -I tools/shift/scan_overlay.py FILE.x [--base 0xF20000] [--all]` lists jal/j into
+the main code, %hi/%lo pairs and aligned words pointing into 0x00100000-0x00675018, named
+from layout.tsv / functions.tsv, with a summary. Raw files load at --base; an ELF is
+detected by its header. Self-test on a synthetic blob: `python3 -I tests/scan_overlay_test.py`
+(not wired into `make test`, which is the Makefile's).

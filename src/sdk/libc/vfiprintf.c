@@ -35,3 +35,8 @@ int vfiprintf(FILE *fp, const char *fmt0, va_list ap) {
     CHECK_INIT(fp);
     return _vfiprintf_r(fp->_data, fp, fmt0, ap);
 }
+
+/* Other files call the static __sbprintf by its placeholder name; make the
+ * name global so the shiftable link resolves it here instead of a PROVIDE
+ * (docs/shiftable-plan.md 1a). No effect on the code. */
+__asm__(".globl func_00251600");
