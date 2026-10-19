@@ -607,6 +607,9 @@ CdReq *func_001204a0(char *name, u8 *buf) {
 extern u32 D_002C5C48;
 s32 func_00146878(void);
 void func_00120038(CdReq *);
+#ifdef KH1_OVL_FIXUPS
+void kh1_ovl_flush0(CdReq *); /* shift build only (shift/ovl_fixup.c): overlay fixups + FlushCache(0) */
+#endif
 
 s32 func_00120678(LoadTask *t) {
     CdReq *r;
@@ -620,7 +623,11 @@ s32 func_00120678(LoadTask *t) {
     t->wait--;
     if ((s32)r->result < 0) return 8;
     D_002C5C48 = r->result;
+#ifdef KH1_OVL_FIXUPS
+    kh1_ovl_flush0(r); /* relocate an overlay before it is flushed and run; same size as FlushCache(0) */
+#else
     FlushCache(0);
+#endif
     FlushCache(2);
     if (t->cb) t->cb(r->result, t->user, r->buf);
     func_00120038(r);

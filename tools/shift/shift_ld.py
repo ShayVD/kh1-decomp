@@ -266,7 +266,8 @@ def cmd_gen(a) -> int:
     defined: dict[str, tuple[int | None, str]] = {}
     undefined: dict[str, str] = {}
     all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs))
-    for obj in all_objs:
+    hook_objs = [rel(a.ovl_hook)] if a.ovl_hook else []  # its references (D_ names) need definitions too
+    for obj in all_objs + hook_objs:
         e = elves(obj)
         for s in e.symbols():
             if s.bind not in (1, 2) or not s.name:
@@ -283,6 +284,10 @@ def cmd_gen(a) -> int:
                 defined[s.name] = (addr, obj)
 
     script_defined = {"D_BLOB", "D_BSS", "_ftext", "_etext", "_fdata", "_edata", "_gp", "_fbss", "_end"}
+    # the overlay fixup hook and table (M1/M2) define their own names (kh1_ovl_loaded...)
+    for o in (a.ovl_hook, a.ovl_fixups):
+        if o:
+            script_defined |= {x.name for x in elves(rel(o)).symbols() if x.bind in (1, 2) and x.shndx}
     alias_lines, alias_names = read_aliases(a.aliases)
     # Labels go next to the function containing them; data/bss/absolute at the end.
     starts = [f.addr for f in funcs]
@@ -357,6 +362,19 @@ def cmd_gen(a) -> int:
             labels.setdefault(f.addr, []).append((dr_labels[f.addr], 0))
         drel[w_addr] = (dr_labels[f.addr], target - f.addr, hi, target)
 
+    # Overlay fixups (KH1_OVL_FIXUPS, M1/M2): the table names main-ELF functions as
+    # __dr_XXXXXXXX labels (+ offset for mid-function targets): define them too.
+    ovl_objs = [rel(o) for o in (a.ovl_hook, a.ovl_fixups) if o]
+    if a.ovl_labels:
+        fstarts = {f.addr for f in funcs}
+        for line in Path(a.ovl_labels).read_text().split():
+            fa = int(line, 16)
+            if fa not in fstarts:
+                errors.append(f"{a.ovl_labels}: 0x{fa:08x} is not a placed function start")
+            elif fa not in dr_labels:
+                dr_labels[fa] = f"__dr_{fa:08x}"
+                labels.setdefault(fa, []).append((dr_labels[fa], 0))
+
     if errors:
         print("\n".join(f"error: {e}" for e in errors), file=sys.stderr)
         return 1
@@ -367,6 +385,15 @@ def cmd_gen(a) -> int:
     pos = load
     order = list(funcs)
     split = None
+    # A KH1_SHIFTABLE variant may be longer than its original slot (M1/M2 only: the
+    # KH1_OVL_FIXUPS hook adds a call): the functions after it move by a multiple of 64
+    # (`. = ALIGN(64) + start % 64`), so every later `. = ALIGN(n)` keeps its meaning.
+    grown = [f for f, g in zip(funcs, funcs[1:]) if f.addr + f.size > g.addr]
+    if grown and a.mode == "m0":
+        print("error: m0: " + ", ".join(f"{f.name} ({f.obj})" for f in grown) + " longer than the original slot",
+              file=sys.stderr)
+        return 1
+    growth = 64 * len(grown)
     if a.mode == "m1":
         # Rotate: the last functions (from a 64-aligned start) go to the front.
         # Each block keeps its offsets modulo 64, so every `. = ALIGN(n)` keeps its meaning.
@@ -374,7 +401,7 @@ def cmd_gen(a) -> int:
         prev_end = {g.addr: f.addr + f.size for f, g in zip(funcs, funcs[1:])}
 
         def fits(sp: int) -> bool:  # the rotated text must still end before the fixed data
-            return -(-(load + last_end - sp) // 64) * 64 + (prev_end[sp] - load) <= blob_start
+            return -(-(load + last_end - sp) // 64) * 64 + (prev_end[sp] - load) + growth <= blob_start
         cands = [f.addr for f in funcs[1:] if f.addr % 64 == 0 and last_end - f.addr >= a.m1_min and fits(f.addr)]
         if not cands:
             print("error: m1: no 64-aligned function start leaves enough to move", file=sys.stderr)
@@ -386,7 +413,10 @@ def cmd_gen(a) -> int:
         if split is not None and f.addr == funcs[0].addr:
             text.append(f"    . = ALIGN(64);  /* m1: end of the rotated block 0x{split:08x}- */")
             pos = load
-        stmt, explicit = gap_statement(pos, f.addr, f.align)
+        if pos > f.addr:  # the previous function grew (see `grown`)
+            stmt, explicit = f". = ALIGN(64) + 0x{f.addr % 64:x};  /* the previous function grew */", False
+        else:
+            stmt, explicit = gap_statement(pos, f.addr, f.align)
         if not stmt and pos != f.addr and f.addr in labels:
             stmt = f". = ALIGN({f.align});"  # so `.` is the function start for its labels
         if stmt:
@@ -405,6 +435,8 @@ def cmd_gen(a) -> int:
         "." if not stmt else None)
     if a.mode == "m1":
         data_addr = f"0x{blob_start:08x}"  # data fixed; ld fails if the rotated text overruns it
+    elif a.mode == "m2" and growth:
+        data_addr = f"0x{blob_start + a.data_shift:08x}"  # the delta stays data_shift; ld fails on an overrun
     elif a.mode == "m2" and data_addr is not None:
         data_addr = f"{data_addr} + 0x{a.data_shift:x}"
     if data_addr is None:
@@ -454,6 +486,14 @@ def cmd_gen(a) -> int:
         expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
         cur = r.addr + r.size
     emit_chunk(blob_end)
+    if ovl_objs:
+        # The overlay fixup hook and its table, after the blob. The end keeps the
+        # original distance to .bss (crt0 clears from D_BSS - 0x30, $gp is set there):
+        # `. = ALIGN(128) + blob_end % 128`, so the table is never cleared.
+        data += ["    . = ALIGN(16);", "    __ovl_fixup_start = .;"]
+        data += [f"    KEEP({o}(.text .text.* .rodata .rodata.* .data .data.* .sdata .sdata.* "
+                 f".bss .bss.* .sbss .sbss.* .scommon COMMON .ovl_fixups))" for o in ovl_objs]
+        data += ["    __ovl_fixup_end = .;", "    . = ALIGN(128);", f"    . += 0x{blob_end % 128:x};"]
     data += ["    _edata = .;", "  } =0"]
     rodup = []
     for r in dups:
@@ -515,7 +555,7 @@ def cmd_gen(a) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     write(out_dir / "kh1-shift.ld", "\n".join(out))
     write(out_dir / "blob.s", "\n".join(blob_s) + "\n")
-    write(out_dir / "objects.lst", "\n".join(all_objs + [blob_obj]) + "\n")
+    write(out_dir / "objects.lst", "\n".join(all_objs + [blob_obj] + ovl_objs) + "\n")
     write(out_dir / "expected.tsv", "addr\tkind\tname\n" + "".join(
         f"{ad:08x}\t{k}\t{n}\n" for ad, k, n in sorted(expected)))
     variant_objs = set(SUBST.values())
@@ -531,7 +571,8 @@ def cmd_gen(a) -> int:
           + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"
              if split is not None else "")
           + (f"; data and bss shifted by 0x{a.data_shift:x}" if a.mode == "m2" else "")
-          + (f"; variant objects: {', '.join(sorted(variant_objs))}" if variant_objs else ""))
+          + (f"; variant objects: {', '.join(sorted(variant_objs))}" if variant_objs else "")
+          + (f"; overlay fixups: {', '.join(ovl_objs)}" if ovl_objs else ""))
     for p in padded:
         print(f"shift-ld: note: explicit padding {p} (no alignment explains it)")
     return 0
@@ -564,6 +605,9 @@ def main() -> int:
                    help="emit data_relocs.tsv rows with tier <= N as relocations (0: none)")
     g.add_argument("--subst-obj", action="append", default=[], metavar="OBJ=VARIANT",
                    help="link VARIANT instead of OBJ (KH1_SHIFTABLE builds)")
+    g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
+    g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")
+    g.add_argument("--ovl-labels", default=None, help="function starts the table names (__dr_ labels)")
     a = ap.parse_args()
     if a.cmd == "gen" and a.blob_obj is None:
         a.blob_obj = str(Path(a.out_dir) / "blob.o")

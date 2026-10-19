@@ -117,6 +117,12 @@ SHIFT_ALIASES ?= shift/aliases.ld
 SHIFT_MODE       ?= m0
 SHIFT_RELOC_TIER ?= 3
 SHIFT_VARIANTS   ?= 1
+# Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
+# (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
+# with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
+SHIFT_OVERLAYS   ?= out/overlays
+SHIFT_OVL_TIER   ?= 2
+SHIFT_OVL_FIXUPS ?= 1
 SHIFT_PY      := $(PY) -I
 SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE))
 ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
@@ -139,9 +145,20 @@ endif
 			$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/asm/unplaced.s.o $(SHIFT)/asm/unplaced.s; \
 		fi; \
 	fi; \
-	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build)"; fi; \
+	ovl=""; vdef=""; vdir=$(SHIFT)/variants; \
+	if [ "$(SHIFT_MODE)" != m0 ] && [ "$(SHIFT_OVL_FIXUPS)" = 1 ]; then \
+		$(SHIFT_PY) tools/shift/overlay_relocs.py --overlays $(SHIFT_OVERLAYS) --out-dir $(SHIFT_OUT) \
+			--tier $(SHIFT_OVL_TIER); \
+		$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/ovl_fixups.o $(SHIFT_OUT)/ovl_fixups.s; \
+		$(TOOLCHAIN)/ee-gcc2.96/bin/ee-gcc -S -x c -O2 -G0 -o $(SHIFT_OUT)/ovl_fixup.s shift/ovl_fixup.c; \
+		$(TOOLCHAIN)/ee-gcc2.96/bin/ee-gcc -c -x assembler -O2 -G0 -o $(SHIFT_OUT)/ovl_fixup.o $(SHIFT_OUT)/ovl_fixup.s; \
+		$(KH1) fix-obj $(SHIFT_OUT)/ovl_fixup.o; \
+		ovl="--ovl-fixups $(SHIFT_OUT)/ovl_fixups.o --ovl-hook $(SHIFT_OUT)/ovl_fixup.o --ovl-labels $(SHIFT_OUT)/ovl_labels.txt"; \
+		vdef="--define KH1_OVL_FIXUPS"; vdir=$(SHIFT_OUT)/variants; \
+	fi; \
+	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build --out-dir $$vdir $$vdef)"; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s
@@ -152,6 +169,9 @@ ifeq ($(SHIFT_MODE),m0)
 	@$(SHIFT_PY) tools/shift/shift_elf.py verify
 else
 	@$(SHIFT_PY) tools/shift/shift_cmp.py --ref $(SHIFT) --new $(SHIFT_OUT)
+ifeq ($(SHIFT_OVL_FIXUPS),1)
+	@$(SHIFT_PY) tools/shift/ovl_proof.py --ref $(SHIFT) --new $(SHIFT_OUT) --overlays $(SHIFT_OVERLAYS)
+endif
 endif
 
 data-relocs: $(PATCHED)
