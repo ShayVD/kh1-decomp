@@ -388,3 +388,9 @@
 - MATCH 00217000 (nostrict), FLAGGED dead set: from w30's 6w, `E20 *tbl = D_003F2C40;` at entry (never used) and `tbl = D_003F2C40; c = tbl[sel].x10;` after the third draw call. gcse shares the entry HIGH (reg 96) with the late la; life1 deletes the dead entry LO_SUM; the late LO_SUM reads a HIGH from another block, so combine can't fold it. Gives `lui a0 / addiu a0 / addu / lw s0,16(v0)` at size 1168.
 - Fact: dead sets do nothing inside one block (cse folds them); the set must be in a different block from the use so gcse makes the copy.
 - No gain on the rest; 0024c950 kk local-alloc priority stands; 001eddc0 has no branches besides fixuns diamonds.
+
+## s11w34 (dead-set sweep: 001cfc28, 00110e68, 001502e8, 00107c48, 00249718, 0010ba98, ...)
+- MATCH 00249718 (hand, strict), FLAGGED dead set: plain straight-line t2/t3/rows code with `if (t < 0) t2 = 0;` right before `t2 = t * t;`. EE has no FP cmov, so jump1 can't if-convert an FP test; the empty branch survives sched1 and both allocators (3 blocks, t used across blocks), then flow2 deletes it. Any FP test on t with a dead set of t2/t3 gives 0w; an integer test gives 6w.
+- 0010ba98: 7 -> 2w (w34__0010ba98_2w.c, strict, RO=0048cd30): dead `w = 0;` before `func_0010b170(t->win)` in case 0 keeps the bb0 PRE copy; inner switch as `case 1, case 2, case 0: case 3:` (shared label stops cse1 following in) with a real `w = t->win;` ending the shared arm. Left: `lhu v0,16(a0)` comes out 16(a1).
+- 00107c48: 3w with a dead SET instead of w20's dead test (w34__00107c48_3w_deadset.c): `if (i != 0) { i = 0; n = 0; }` (two sets survive to combine; one set becomes a cmov in jump1). Left: block-0 lui/lw register swap.
+- Facts: an FP-condition dead-set test changes block structure through allocation at no code cost (flow2 deletes it). Integer one-set arms become cmovs in jump1. Shared case labels act as a cse1 kill point. lchkro_s10 and variant runners need RO exported.
