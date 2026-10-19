@@ -537,10 +537,10 @@ found that the next session needs:
 
 ## Session 11: what changed
 
-- **41 matches** (6,916 -> 6,957 / 6,988; 93.7% -> 96.4% of code bytes) by about 60 workers, at most
+- **42 matches** (6,916 -> 6,958 / 6,988; 93.7% -> 96.4% of code bytes) by about 60 workers, at most
   5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
   short version: docs/matching-tips.md "Session 11 tips").
-- **Flagged matches**: 22 of the 41 rely on source that does nothing and is deleted by the
+- **Flagged matches**: 22 of the 42 rely on source that does nothing and is deleted by the
   compiler. Each file says so in a comment; they are byte-identical, but probably not the original
   source:
   - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
