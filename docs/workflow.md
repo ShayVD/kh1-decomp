@@ -534,3 +534,45 @@ found that the next session needs:
   stub and callee-return sweep). Set WDIR; edit hard-coded paths in hcf/ctxsweep before use.
   checkfile.py itself can take minutes under load: iterate with these.
 - Stale drafts of matched functions were removed from nonmatchings/.
+
+## Session 11: what changed
+
+- **46 matches** (6,916 -> 6,962 / 6,988; 93.7% -> 97.2% of code bytes) by about 75 workers, at most
+  5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
+  short version: docs/matching-tips.md "Session 11 tips").
+- **Flagged matches**: 23 of the 46 rely on source that does nothing and is deleted by the
+  compiler. Each file says so in a comment; they are byte-identical, but probably not the original
+  source:
+  - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
+  - dead float tests such as `if ((f32)x < 0.0f) v = 0;`: 00249718, 00110e68, 0010ba98, 001fa8b0,
+    001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68, 00199ac8, 0019ab38 (live-length steering), 00107548 (loop test), 00105d88 (integer identical-arm tests), 00102118 (cse2-folded
+    `if (x != (s32)t)` tests);
+  - a never-true test with the whole body copied into both arms (reorg sees stale flow2 liveness):
+    001e0ab0, 001e0d98, 001e10f8;
+  - identical if/else arms (as in session 10): 00169f28.
+- **00200038** is counted as natural but uses an unusual shape: strip-loop stores through
+  `s32 *p = &blk[i].v[11].x;` with negative indices, to get loop.c's blk+416 giv base.
+- **001bd090 is a real match**, not a compiler difference (docs/toolchain.md "Session 11 correction").
+- **00202678 is a strict function** with union-typed fields, not a nostrict one: re-measure
+  "nostrict" drafts in strict mode when the original issues a load above a store it would conflict
+  with under nostrict.
+- **New tools** in tools/matching/: modesweep_s11.py (every mode x flag combo for a draft),
+  lc_s11.py / ld_s11.py (LCS scorers; export RO for rodata), hc_s11.py (statement hill-climb that
+  respects loads/stores), var_s11.py (variant runner), togm_s11.py (toggle sweep; temp file is now
+  per-pid), cf4_s11.py, slt_s11.py. Worker helper scripts (insertion sweeps, priority dumps,
+  side-by-side listings) were left in /tmp and are described in NOTES.md; rewrite as needed.
+- **Resource limit**: 5 workers with background hill-climbs and side-by-side builds pushed the
+  container to load ~48 with 1.7 GB of 16 GB free, and it was restarted twice (all in-flight work lost;
+  `make progress-update` was OOM-killed in objdiff before that). Run at most 3 workers at once, each with
+  one compile or hill-climb process in the foreground, and check /proc/loadavg and MemAvailable before
+  spawning more. Commit worker results as soon as they report. The trigger was a worker helper
+  named `glob.py` in its work directory: every python started there imported it instead of the stdlib
+  module, and it launched more checks, so processes multiplied (load ~98). Never name a helper after a
+  stdlib module; run helpers with `python3 -I`.
+- tools/matching/gclimb_s11.py: token climb that moves each constant's set (`kN = C;`) and its store
+  separately, so li order and store order change independently (took 0021e120 from 6 to 3 words).
+- tools/matching/jt_s11.py: per-case block sizes ours vs original from both jump tables, the fastest way
+  to spot over- or under-merged switch cases (matched the 8.5 KB 001f5fe0; edit the address constants).
+- **Tool traps**: variant scripts replace the first match, which can be inside a header comment
+  (strip comments first); join one-line `if`s with their bodies before insertion sweeps.
+- A container restart mid-session lost no work because every match was pushed as it landed.

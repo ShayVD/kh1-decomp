@@ -257,3 +257,11 @@ post-pass build mode is needed (pp_la_s9.py is obsolete):
 - 0025b2f0's "prologue save order" (991111) was a type (a Hook struct), not a compiler difference.
   001bd090 is the last compiler-difference suspect (a post-combine if-conversion that keeps an
   earlier store).
+
+### Session 11 correction
+
+- 001bd090 is a real match (src/hand/text_001b0000_s11_w17.c), not a compiler difference. The
+  late if-conversion that keeps the earlier store is the ce pass (after life1/combine) working on
+  spilled scalar locals; the session-10 drafts used stack structs, which the ce pass leaves alone.
+  A dead set of a variable that is live elsewhere also delays if-conversion to the ce pass.
+  No compiler-difference suspects remain: every unmatched function is a source-shape problem.
