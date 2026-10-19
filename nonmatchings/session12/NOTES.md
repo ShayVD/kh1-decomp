@@ -266,3 +266,19 @@
   move spill slots; set header constants in u64 variables at the top to fix li order independent
   of store order. With one memory unit, the second issue slot of each store cycle goes to the
   best-ranked ready ALU insn. REG_EQUIV constant sets move next to their use after sched1.
+
+## s12w16: 001f94f0 and 00208458 MATCHED (natural, never drafted before); 001e1c20 440w
+- 001f94f0: src/hand/nostrict/text_001f0000_s12_s12w16.c (rodata RO=00490D90, 84-byte jump table).
+  `case 0: default:` first and a case range (`case 2 ... 28:`) reproduce the table and layout.
+- 00208458: src/hand/nostrict/text_00200000_s12_s12w16.c. Needs a u32 color and nostrict; an int
+  cx inside the float loop makes gcse hoist a mov.s copy (changes global-alloc, needed).
+- 001e1c20 (3x3 filter): s12w16__001e1c20_440w.c (hand/nofill, RO=00490840, size 2180 vs 2128)
+  and s12w16__001e1c20_473w_natural.c (natural 9-term sums, pointers p/q, size 2004; kernel spill
+  order matches, so the source form is probably right). Kernels are local initialised arrays at
+  0x490840; `D_003DB028 = 0x180808080LL; func_001e1480();` then y 100..283, x 200..311; row 99 is
+  the line buffer. Allocation in the ~300-insn pixel block is off (q not in s8).
+- Facts: gcc 2.96 fold reorders a natural 9-term `u_i*a[i]` sum into
+  ((0+7)+(5+2))+((1+3)+(4+6))+8 (explicit parentheses give a different order). A field access on
+  an extern array folds the offset into the symbol constant; a pointer variable keeps separate
+  pseudos. Swapping float local declaration order swaps f20/f21. `(X+w)-32` inline lets cse reuse
+  X+w; a separate temp does not.

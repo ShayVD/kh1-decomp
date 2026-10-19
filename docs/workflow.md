@@ -584,3 +584,12 @@ found that the next session needs:
   matched. Each keeps a comment naming the trick so a later pass can replace it with cleaner source.
 - Flagged in session 12: 0019f1f0 (empty `do { } while (0)` sched barriers), 00120cf8 (no-op
   save/restore of a loop divisor that gcse turns into a self-copy).
+- **`make rank` status**: `asm` means "no C placed" (the function is still the original asm), not
+  "lives in src/asm"; `wip` only means a draft file was found. Session 11's list used `wip` and
+  missed three never-drafted functions (001e1c20, 001f94f0, 00208458). For the true unmatched list
+  compare layout.tsv with out/gen/placements.tsv.
+- New levers and tools: local-alloc simulator (tools/matching/la3_s12.py, exact on single blocks)
+  plus osrch_s12.py (minimal sched1-order change for a target allocation); gdb tracers in
+  tools/matching/gdb_s12/; all findings in nonmatchings/session12/NOTES.md and
+  docs/matching-tips.md "Session 12 tips".
+- docs/shiftable-plan.md: plan for a relinkable ("shiftable") build that boots in PCSX2.
