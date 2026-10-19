@@ -442,8 +442,53 @@ inferred). `FOGCOL` is set per draw from `a->x0->x30/34/38`
 (`func_0015f488`) or from the global `D_002BC0F0` (`func_0015f388`).
 
 **Dither, colour clamp, PABE, FBA, SCANMSK**: only `SCANMSK=0` is written
-(`D_002A65C0`, end of frame). DTHE/COLCLAMP keep their reset values (dither
-off? open question 3).
+by the static packets (`D_002A65C0`, end of frame). The GS dump (§3.3) shows
+`DTHE=0` and `COLCLAMP=1`: no dithering, colours clamp.
+
+### 3.3 Captured GS state (PCSX2 GS dump, session 15)
+
+One `.gs.zst` dump of a fight in Agrabah (game-over screen fading in), read
+with `tools/vu/gsdump.py` (never commit dumps or their output). 4 vsyncs,
+41,107 vertex kicks under 108 distinct states.
+
+- **Display**: PMODE EN2 only; DISPFB2 FBP 0, FBW 512, PSMCT24; DISPLAY2
+  DW=2560 MAGH=5 (512 pixels), DH=447 (448 lines); SMODE2 INT=1 FFMD=0.
+  This matches §3.1.
+- **Global registers** (answers question 3): `DTHE=0` (dither **off**),
+  `COLCLAMP=1` (clamp), `PABE=0`, `PRMODECONT=1`, `SCANMSK=0`. TEXA is
+  switched between `TA0=0/TA1=128`, `TA0=128/TA1=0` and `128/128`.
+- **The GIF stream is one merged stream.** PCSX2 2.8 records every
+  transfer with path byte 3 here, so the dump cannot say which path sent
+  what. Uploads are IMAGE tags inside it: 364 in 4 vsyncs (3.2 MB), mostly
+  PSMT8 128x128 (120) and 16x16 CT32 CLUTs (180), i.e. the per-draw texture
+  slot of §3.1 is real and busy.
+- **Empty tags**: 1,216 `NLOOP=0, EOP=1` tags. The `XYZ2`-only strips leave
+  one vertex qword past NLOOP, which the GS reads as an empty tag. A port's
+  GIF parser has to accept them.
+- **Per-mesh state** (answers question 2 for this scene): almost all 3D
+  uses `CLAMP_1 = CLAMP/CLAMP`; 72 kicks use `REPEAT/REPEAT`. Context 2
+  draws (renderer A's clipped fans and the effects) use `REGION_CLAMP` with
+  per-draw MINU/MAXU windows (0..127, 128..255, 176..239, 65..191,
+  256..383) and one `REGION_REPEAT` (mask 255): **texture atlases**, so the
+  wrap window comes with the mesh. TEX1 is bilinear everywhere except 796
+  kicks of point sampling; `LCM=1` with `MXL=0` (no mips) on the 256x256
+  draws.
+- **Most-used states**:
+
+| Kicks | PRIM | Texture | ALPHA / TEST | Target |
+| --- | --- | --- | --- | --- |
+| 20.6k | `TRISTRIP|IIP|TME|FGE|ABE` | PSMT8 128x128 at `0x3600`, CLUT `0x3700` | blend; `ATST=GEQUAL AREF=120`, Z GEQUAL (renderer B pass 1) | `0x1A0000` 512x384 CT32, Z24 at `0xE0000` |
+| 16.3k | `TRISTRIP` (XYZ2 only, no texture, no colour per vertex) | none | blend; `ATST=GREATER AREF=0` | **`0x3A0000`, FBW 256, CT32, `FBMSK=1`; Z16S at `0x380000`; XYOFFSET 1920; scissor windows 124/192/252 pixels** |
+| 4.7k | `TRISTRIP|IIP|TME|FGE|ABE` | same slot | `(0-0)*FIX+Cs` (opaque) | 3D target |
+| 387 | same | same | `ATST=LESS AREF=128` | renderer B pass 2 |
+| 1.5k | `TRIFAN`/`TRISTRIP ... CTXT2` | atlases (region clamp) | `TEST_2 ATST=GREATER AREF=16` | 3D target |
+
+  The second row is a **256x256 off-screen pass**: flat untextured strips
+  drawn into their own colour and 16-bit Z buffer, then read back as the
+  `TBP0=0x3A00` CT32 256x256 texture. Inferred: character shadow textures
+  (silhouettes rendered from the light), which would be renderer B's
+  P19/P20 projected-texture programs of question 4. Not yet confirmed by
+  following the readback draws.
 
 ## 4. Per-frame packet flow
 
@@ -584,14 +629,13 @@ interrupt-driven executor becomes a plain loop.
    `func_0015ff78` step 4) and walk it with `vif_chain.py` logic; then
    document the file headers (`+0x80..0x9C` relocated tags) in
    docs/structs.md.
-2. Per-mesh GS state for renderer A (TEX0, CLAMP, ALPHA): not in the ELF, so
-   presumably in the model data next to the mesh (inferred). Same capture
-   as 1.
-3. DTHE (dither) and COLCLAMP values after `sceGsResetGraph`, and whether
-   the game relies on dithering for gradients (check `libgraph`'s reset in
-   `func_00265350`).
+2. ~~Per-mesh GS state~~ Partly answered by §3.3: CLAMP/CLAMP for most
+   meshes, REGION_CLAMP atlas windows for context-2 draws. Still open: where
+   in the model file those values live.
+3. ~~DTHE and COLCLAMP~~ Answered (§3.3): dither off, colour clamp on.
 4. P19/P20 (`fl & 8`) and P10 (`v` bit 2): which game objects use them
-   (shadows? effects?). Breakpoint on `func_0015fc00` and log `fl`/`x48`.
+   (shadows? effects? §3.3's 256x256 off-screen pass is the likely
+   consumer). Breakpoint on `func_0015fc00` and log `fl`/`x48`.
 5. P21's rotation order and angle units, and how `func_00162c5c` composes
    the parent matrix. Needed for exact skeleton poses.
 6. What renderer B's step-3 callback (`s->x0->x40`) does with the texture

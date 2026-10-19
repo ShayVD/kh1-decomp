@@ -13,7 +13,7 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
   - Played in session 15: save loading, area changes, world map, warp drive, Agrabah fights, summons (Simba in M12, Genie in the drafts build), game over and Continue, Halloween Town. Shay judged that enough; Trinity Limit skipped. Traverse Town not reached (world-map cursor route unknown).
   - **Disc room solved**: `tools/shift/patch_iso.py --append` writes the ELF after the end of the volume (ISO 9660 record + PVD size, UDF anchor copied, retail slot zeroed). `make shift SHIFT_MODE=m12 SHIFT_DATA_SHIFT=0x21000` builds a test ELF 128 KB over the old slot; it boots.
   - How to test: `make shift SHIFT_MODE=m12`, then `tools/shift/patch_iso.py MY.iso out/shift/m12/kh1-shift.elf KH1_BIG.iso --append` (add `--in-place` on an existing copy) and boot it in PCSX2. Test ISOs, save card, keys and PCSX2 quirks: docs/workflow.md "Session 14" and "Session 15".
-- **Phase 3**: tools/vu/gsdump.py summarises a PCSX2 GS dump (GIF formats, GS state per draw, uploads, display registers); findings in docs/renderer-spec.md. Still open: the mesh file formats (VIF data is not in a GS dump: needs a VIF/DMA capture or a breakpoint at func_00108d90 / func_0015ff78), P10/P19/P20 triggers, P21 rotation order.
+- **Phase 3**: tools/vu/gsdump.py summarises a PCSX2 GS dump (GIF formats, GS state per draw, uploads, display registers); findings in docs/renderer-spec.md §3.3 (dither off, colour clamp, atlas region clamps, a 256x256 off-screen pass that looks like shadow textures). Only a fight dump arrived; a field dump is still worth taking. Still open: the mesh file formats (VIF data is not in a GS dump: needs a VIF/DMA capture or a breakpoint at func_00108d90 / func_0015ff78), P10/P19/P20 triggers, P21 rotation order.
 
 ## What is left (16 functions)
 
@@ -26,7 +26,7 @@ Best drafts in nonmatchings/session15/, session14/ and session13/ (newest), then
 ## Session 16 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Phase 4 (shiftable cleanup) begins**: the build no longer depends on the original layout at runtime, and the disc slot is gone. Start replacing absolute-address idioms in gameplay C (D_XXXXXXXX externs for tables that only one module uses become real definitions in C; first one source file end to end, then a plan for the rest) without breaking `make` (the matching build stays byte-identical).
-2. **Phase 3**: capture the VIF side of one field mesh and one character mesh (PCSX2 debugger breakpoint, or a memory dump at the DMA kick) and describe the model file headers in docs/structs.md; close the renderer spec's open questions with the GS dump findings.
+2. **Phase 3**: capture the VIF side of one field mesh and one character mesh (PCSX2 debugger breakpoint, or a memory dump at the DMA kick) and describe the model file headers in docs/structs.md; follow the 256x256 off-screen pass to the draws that sample it (shadows?) and take a GS dump of a plain field.
 3. **Matching (1 worker, only with a new angle)**: the 9-56 word group (00192958, 00166570, 00200e28).
 4. Runtime: only for new shiftable changes (Traverse Town if the map route is found).
 5. End with `make progress-update SESSION=16`, commit, open a PR, and refresh this prompt.

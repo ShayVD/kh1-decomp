@@ -11,7 +11,8 @@ command). PCSX2 2.x dump layout: u32 0xFFFFFFFF, u32 header size, a header of 9 
 screenshot, the GS freeze state (not decoded here), the 8 KB privileged registers, then
 packets: 0 = transfer (u8 path, u32 size, data), 1 = vsync (u8 field), 2 = FIFO read
 (u32 size), 3 = privileged registers (8 KB). Path: 0 = PATH1 (old: data ends at VU1
-memory end), 1 = PATH2, 2 = PATH3, 3 = PATH1.
+memory end), 1 = PATH2, 2 = PATH3, 3 = PATH1. PCSX2 2.8 writes the merged GIF stream with
+byte 3 for everything, so the label says nothing about the real path.
 
 General GS registers set before the dump starts live in the freeze state, which this tool
 does not parse: a draw before the first write of a register shows that register as "?".
@@ -60,8 +61,8 @@ def parse(d: bytes):
     hsize = struct.unpack_from("<I", d, 4)[0]
     h = struct.unpack_from("<9I", d, 8)
     ver, ssize, soff, slen, crc, sw, sh, shoff, shlen = h
-    base = 8 + 36
-    serial = d[base + soff:base + soff + slen].decode("latin1", "replace")
+    # Offsets in the header are from its start (byte 8): serial, then the screenshot (RGBA8).
+    serial = d[8 + soff:8 + soff + slen].decode("latin1", "replace")
     p = 8 + hsize
     state = d[p:p + ssize]
     p += ssize
@@ -121,6 +122,8 @@ class Gs:
         self.globals: dict[str, set] = collections.defaultdict(set)
         self.seq: list[tuple] = []              # per-draw-call (state key, kicks) in order
         self._last = None
+        self.empty = 0                          # NLOOP=0 tags
+        self.pending: dict[int, bytes] = {}     # path -> start of a tag still waiting for data
 
     def set(self, name: str, v: int):
         if name == "PRIM":
@@ -158,12 +161,24 @@ class Gs:
             self.kick()
 
     def run(self, path: int, data: bytes):
+        """Feed one transfer. A GIF packet can be split across transfers of the same path,
+        so a tag whose data has not all arrived waits in a per-path buffer."""
+        data = self.pending.pop(path, b"") + data
         p = 0
         while p + 16 <= len(data):
             lo, hi = struct.unpack_from("<QQ", data, p)
-            p += 16
             nloop, eop, pre, prim, flg, nreg = (bits(lo, 0, 15), bits(lo, 15, 1), bits(lo, 46, 1),
                                                  bits(lo, 47, 11), bits(lo, 58, 2), bits(lo, 60, 4) or 16)
+            need = 16 * (nloop * nreg if flg == 0 else -(-nloop * nreg // 2) if flg == 1 else nloop)
+            if p + 16 + need > len(data):
+                self.pending[path] = data[p:]
+                return
+            p += 16
+            if nloop == 0:
+                # No data follows. The real GS reads these too: the VU1 strip programs leave
+                # one vertex qword past NLOOP, which then parses as an empty tag (EOP set).
+                self.empty += 1
+                continue
             regs = [hi >> (4 * i) & 15 for i in range(nreg)]
             if flg == 0:
                 if pre:
@@ -172,8 +187,6 @@ class Gs:
                               prim_str(prim) if pre else "")] += 1
                 for _ in range(nloop):
                     for r in regs:
-                        if p + 16 > len(data):
-                            return
                         a, b = struct.unpack_from("<QQ", data, p)
                         p += 16
                         self.packed(r, a, b)
@@ -184,8 +197,6 @@ class Gs:
                               prim_str(prim) if pre else "")] += 1
                 n = nloop * nreg
                 for i in range(n):
-                    if p + 8 > len(data):
-                        return
                     v = struct.unpack_from("<Q", data, p)[0]
                     p += 8
                     r = regs[i % nreg]
@@ -260,6 +271,7 @@ def main() -> None:
     print("\nGIF tag formats (path, mode, registers, PRIM if PRE): tags")
     for (path, mode, regs, prim), n in gs.formats.most_common():
         print(f"  {n:6}  {path} {mode:7} {' '.join(regs)}  {prim}")
+    print(f"  {gs.empty:6}  empty tags (NLOOP=0)")
     print(f"\nglobal registers written: " + ("none" if not gs.globals else ""))
     for n, vals in sorted(gs.globals.items()):
         print(f"  {n}: {'; '.join(sorted(vals))}")
