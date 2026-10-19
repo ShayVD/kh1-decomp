@@ -3,7 +3,7 @@ import sys, os, subprocess, re
 W=os.environ.get('WDIR','/tmp/sc6_s12'); os.makedirs(W,exist_ok=True); os.environ['WDIR']=W
 args=[a for a in sys.argv[1:] if not a.startswith('-')]; fl=[a for a in sys.argv[1:] if a.startswith('-')]
 os.environ['RO']=args[2] if len(args)>2 else '0'
-sys.path.insert(0,W+'/bin'); import lro6 as L
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import lro6_s12 as L
 addr=args[1]
 r=L.check(args[0], addr)
 if not r: print('FAIL'); sys.exit(1)

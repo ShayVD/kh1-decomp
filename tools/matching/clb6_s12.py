@@ -5,7 +5,7 @@ import sys, random, re, os, subprocess
 W=os.environ.get('WDIR','/tmp/clb6_s12')+'/'; os.makedirs(W,exist_ok=True); os.environ['WDIR']=W
 tpl=open(sys.argv[1]).read(); out=sys.argv[2]; addr=sys.argv[3]; N=int(sys.argv[4]); random.seed(int(sys.argv[5]))
 os.environ['RO']=sys.argv[6] if len(sys.argv)>6 else '0'
-sys.path.insert(0,W+'bin'); import lro6 as L
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import lro6_s12 as L
 from elf32 import Elf
 orig=open('/home/claude/kh1-decomp/SLPS_251.98','rb').read()
 st=[l.rstrip('\n') for l in open(sys.argv[1]+'.stm') if l.strip()]
