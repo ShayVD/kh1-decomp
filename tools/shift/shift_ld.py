@@ -1,0 +1,453 @@
+#!/usr/bin/env python3
+"""Generate the link script of the shiftable build (docs/shiftable-plan.md, step 6).
+
+  python3 -I tools/shift/shift_ld.py missing
+      print the layout functions no source places (input for an asm export)
+  python3 -I tools/shift/shift_ld.py gen [--asm-obj O ...] [--aliases F ...]
+      write out/shift/kh1-shift.ld, out/shift/blob.s, out/shift/objects.lst,
+      out/shift/expected.tsv
+
+Unlike kh1.ld (every function pinned at its original address, everything
+else PROVIDEd at its original address), this script links:
+
+- .text: every placed `.text.<fn>` section in original address order, with
+  no fixed addresses. Gaps are reproduced with `. = ALIGN(n)` (the smallest
+  power of two that gives the original start), so moving the whole text by a
+  multiple of 64 keeps them; only a gap no alignment explains becomes
+  `. += n` (reported).
+- .data: the file-backed data after code as one blob (out/shift/blob.s,
+  `.incbin` chunks of out/shift/data/main.bin), with holes where compiled
+  `.rodata.*` sections (out/gen/rodata.tsv) are placed at the same blob
+  offset. D_BLOB is its start.
+- .bss: NOBITS, D_BSS at its start, sized like the original (up to _end).
+- Every name the objects reference but do not define gets an explicit,
+  position-independent definition: code addresses become a label
+  `name = . + off;` next to the function that contains them (aliases,
+  mid-function entry points, statics referenced by placeholder), data
+  `D_X = D_BLOB + off`, bss `D_X = D_BSS + off`. Only addresses outside the
+  image (fixed buffers, kernel RAM, hardware registers) stay absolute.
+  There is no PROVIDE: a name with no definition is a link error.
+- .ctx (CONTEXT_ONLY copies) and unplaced rodata are discarded (a reference
+  to them from placed code is a link error); stray .text/.data/.bss input
+  goes to .shift_orphan, which shift_elf.py requires to be empty.
+
+Paths of extra inputs are parameters, so the exports and alias table of the
+symbolic-asm work (s13s1) drop in without changing this script."""
+from __future__ import annotations
+
+import argparse
+import bisect
+import json
+import re
+import struct
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+TOOLS = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(TOOLS))
+import kh1tool as K  # noqa: E402
+from elf32 import Elf  # noqa: E402
+
+SHIFT = K.OUT / "shift"
+DATA_RE = re.compile(r"^D_([0-9A-Fa-f]{8})$")
+ALIAS_RE = re.compile(r"^\s*([A-Za-z_.$][\w.$]*)\s*=\s*[^;]+;")
+MAX_ALIGN = 4096
+
+
+@dataclass
+class Placed:
+    addr: int          # original address
+    name: str          # symbol (function) or section (rodata)
+    obj: str           # object path relative to the repo root
+    section: str
+    size: int
+    align: int
+
+
+def rel(p: Path | str) -> str:
+    p = Path(p)
+    try:
+        return p.resolve().relative_to(K.ROOT.resolve()).as_posix()
+    except ValueError:
+        return p.as_posix()
+
+
+def addralign(elf: Elf, index: int) -> int:
+    return struct.unpack_from("<I", elf.data, elf._shdr_off(index) + 32)[0] or 1
+
+
+def name_address(name: str, registry: dict[str, int]) -> int | None:
+    if name in registry:
+        return registry[name]
+    m = K.PLACEHOLDER_RE.match(name) or DATA_RE.match(name)
+    return int(m.group(1), 16) if m else None
+
+
+def objects_mk_objs() -> list[str]:
+    mk = K.GEN / "objects.mk"
+    if not mk.exists():
+        sys.exit("error: out/gen/objects.mk missing; run `make` first")
+    for line in mk.read_text().splitlines():
+        if line.startswith("OBJS :="):
+            return line.split(":=", 1)[1].split()
+    return []
+
+
+def load_image() -> dict:
+    p = SHIFT / "data" / "image.json"
+    if not p.exists():
+        sys.exit("error: out/shift/data/image.json missing; run tools/shift/extract_data.py")
+    return json.loads(p.read_text())
+
+
+class Elves:
+    def __init__(self):
+        self.cache: dict[str, Elf] = {}
+
+    def __call__(self, obj: str) -> Elf:
+        if obj not in self.cache:
+            self.cache[obj] = Elf.load(K.ROOT / obj)
+        return self.cache[obj]
+
+
+def collect_functions(asm_objs: list[str], registry, elves) -> tuple[list[Placed], list[str]]:
+    funcs, errors = [], []
+    for addr, sym, obj, _src in K.load_placements():
+        e = elves(obj)
+        sec = e.section(f".text.{sym}")
+        funcs.append(Placed(addr, sym, obj, sec.name, sec.size, addralign(e, sec.index)))
+    for obj in asm_objs:
+        e = elves(obj)
+        for sec in e.sections:
+            if not sec.name.startswith(".text.") or not sec.size:
+                continue
+            sym = sec.name[len(".text."):]
+            addr = name_address(sym, registry)
+            if addr is None:
+                errors.append(f"{obj}: {sec.name}: no address for {sym}")
+                continue
+            funcs.append(Placed(addr, sym, obj, sec.name, sec.size, addralign(e, sec.index)))
+    funcs.sort(key=lambda f: f.addr)
+    layout = {f.addr: f for f in K.load_layout()}
+    seen: dict[int, Placed] = {}
+    for f in funcs:
+        if f.addr in seen:
+            errors.append(f"0x{f.addr:08x} placed twice: {seen[f.addr].obj} and {f.obj}")
+        seen[f.addr] = f
+        if f.addr not in layout:
+            errors.append(f"{f.obj}: {f.name} at 0x{f.addr:08x} is not a function start in layout.tsv")
+    for a, lf in sorted(layout.items()):
+        if a not in seen:
+            errors.append(f"layout function {lf.name} (0x{a:08x}) has no code in the shift build")
+    return funcs, errors
+
+
+def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Placed]:
+    """Compiled rodata placed by the normal build (out/gen/rodata.tsv), plus
+    .rodata.* of the extra asm objects (symbolic jump tables), located the
+    same way kh1tool link-script does it: from the %hi/%lo pairs that
+    reference them, compared with the original code."""
+    rows = list(K.load_rodata_placements())
+    if asm_objs:
+        orig = K.require_orig(K.load_config())
+        for obj in asm_objs:
+            placed = {f.name: f.addr for f in funcs if f.obj == obj}
+            found, problems = K.infer_rodata(K.ROOT / obj, placed, orig)
+            for msg in problems:
+                print(f"warning: {msg}", file=sys.stderr)
+            rows += [(addr, name, obj) for name, addr in found.items()]
+    out = []
+    for addr, name, obj in rows:
+        e = elves(obj)
+        sec = e.section(name)
+        out.append(Placed(addr, name, obj, name, sec.size, addralign(e, sec.index)))
+    return sorted(out, key=lambda r: r.addr)
+
+
+def gap_statement(prev_end: int, start: int, align: int) -> tuple[str | None, bool]:
+    """Statement that takes the location counter from prev_end to start,
+    given the input section's own alignment. (stmt, explicit_padding)."""
+    if start < prev_end:
+        raise ValueError(f"overlap: previous ends at 0x{prev_end:08x}, next starts at 0x{start:08x}")
+    nat = -(-prev_end // align) * align
+    if nat == start:
+        return None, False
+    a = 8
+    while a <= MAX_ALIGN:
+        if -(-prev_end // a) * a == start:
+            return f". = ALIGN({a});", False
+        a *= 2
+    return f". += 0x{start - prev_end:x};", True
+
+
+def read_aliases(paths: list[str]) -> tuple[list[str], set[str]]:
+    lines, names = [], set()
+    for p in paths:
+        for line in Path(p).read_text().splitlines():
+            m = ALIAS_RE.match(line)
+            if m:
+                names.add(m.group(1))
+        lines.append(f"INCLUDE {rel(p)}")
+    return lines, names
+
+
+def cmd_missing(a) -> int:
+    placed = {addr for addr, *_ in K.load_placements()}
+    print(" ".join(f.name for f in K.load_layout() if f.addr not in placed))
+    return 0
+
+
+def cmd_gen(a) -> int:
+    img = load_image()
+    registry = K.load_registry()
+    elves = Elves()
+    asm_objs = [rel(o) for o in a.asm_obj]
+    funcs, errors = collect_functions(asm_objs, registry, elves)
+    rodata = collect_rodata(elves, funcs, asm_objs)
+    load, text_end = img["load"], img["text_end"]
+    blob_start, blob_end = img["data_start"], img["data_end"]
+    bss_start, image_end = img["bss_start"], img["image_end"]
+    blob_obj = rel(a.blob_obj)
+
+    for r in rodata:
+        if not (blob_start <= r.addr and r.addr + r.size <= blob_end):
+            errors.append(f"{r.obj}: {r.section} at 0x{r.addr:08x} is outside the data blob")
+    # A block that lies inside an earlier one is a merged copy (two files with
+    # the same assert string: the original linker kept one). The first one
+    # fills the hole; the copies get a non-allocated (INFO) section at the same blob offset,
+    # so their references resolve there and their bytes are not loaded twice.
+    primary, dups = [], []
+    for r in rodata:
+        if primary and r.addr < primary[-1].addr + primary[-1].size:
+            p = primary[-1]
+            if r.addr + r.size <= p.addr + p.size:
+                dups.append(r)
+            else:
+                errors.append(f"rodata {r.section} ({r.obj}) overlaps {p.section} ({p.obj})")
+            continue
+        primary.append(r)
+
+    # Every global definition in a placed section, and every undefined reference.
+    placed_secs: dict[tuple[str, str], int] = {(f.obj, f.section): f.addr for f in funcs}
+    placed_secs.update({(r.obj, r.section): r.addr for r in rodata})
+    defined: dict[str, tuple[int | None, str]] = {}
+    undefined: dict[str, str] = {}
+    all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs))
+    for obj in all_objs:
+        e = elves(obj)
+        for s in e.symbols():
+            if s.bind not in (1, 2) or not s.name:
+                continue
+            if s.shndx == 0:
+                undefined.setdefault(s.name, obj)
+                continue
+            sec = e.sections[s.shndx].name if s.shndx < len(e.sections) else None
+            base = placed_secs.get((obj, sec))
+            addr = base + s.value if base is not None else None
+            if s.name in defined and defined[s.name][0] is not None and addr is not None and s.bind == 1:
+                errors.append(f"{s.name} defined twice: {defined[s.name][1]} and {obj}")
+            if s.name not in defined or addr is not None:
+                defined[s.name] = (addr, obj)
+
+    script_defined = {"D_BLOB", "D_BSS", "_ftext", "_etext", "_fdata", "_edata", "_gp", "_fbss", "_end"}
+    alias_lines, alias_names = read_aliases(a.aliases)
+    # Labels go next to the function containing them; data/bss/absolute at the end.
+    starts = [f.addr for f in funcs]
+    labels: dict[int, list[tuple[str, int]]] = {}
+    tail: list[str] = []
+    kinds = {"label": 0, "alias": 0, "data": 0, "bss": 0, "abs": 0}
+    expected: list[tuple[int, str, str]] = []
+    for name in sorted(undefined):
+        if name in script_defined:
+            continue
+        if name in alias_names:  # defined by the alias file; still checked by the M0 verifier
+            addr = name_address(K.LIBCALL_ALIASES.get(name, name), registry)
+            if addr is not None and load <= addr < text_end:
+                expected.append((addr, "label", name))
+            continue
+        if name in defined:
+            if defined[name][0] is None:
+                errors.append(f"{name} (used by {undefined[name]}) is defined only in an unplaced section of "
+                              f"{defined[name][1]}")
+            continue
+        target = K.LIBCALL_ALIASES.get(name)
+        addr = name_address(target, registry) if target else name_address(name, registry)
+        if target and target in defined and defined[target][0] is not None:
+            addr = defined[target][0]
+        if addr is None:
+            errors.append(f"{name} (used by {undefined[name]}) has no address and no definition")
+            continue
+        if load <= addr < text_end:
+            i = bisect.bisect_right(starts, addr) - 1
+            f = funcs[i] if i >= 0 else None
+            if f is None or addr >= f.addr + max(f.size, 4):
+                errors.append(f"{name} = 0x{addr:08x} (used by {undefined[name]}) is in code but in no placed function")
+                continue
+            labels.setdefault(f.addr, []).append((name, addr - f.addr))
+            kinds["alias" if addr == f.addr else "label"] += 1
+            expected.append((addr, "label", name))
+        elif blob_start <= addr < blob_end:
+            tail.append(f"{name} = D_BLOB + 0x{addr - blob_start:x};")
+            kinds["data"] += 1
+            expected.append((addr, "data", name))
+        elif blob_end <= addr < image_end:
+            off = addr - bss_start
+            tail.append(f"{name} = D_BSS {'+' if off >= 0 else '-'} 0x{abs(off):x};")
+            kinds["bss"] += 1
+            expected.append((addr, "bss", name))
+        else:
+            tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
+            kinds["abs"] += 1
+    if errors:
+        print("\n".join(f"error: {e}" for e in errors), file=sys.stderr)
+        return 1
+
+    # ---- .text
+    padded = []
+    text = [f"  .text 0x{load:08x} : {{", "    _ftext = .;"]
+    pos = load
+    for f in funcs:
+        stmt, explicit = gap_statement(pos, f.addr, f.align)
+        if not stmt and pos != f.addr and f.addr in labels:
+            stmt = f". = ALIGN({f.align});"  # so `.` is the function start for its labels
+        if stmt:
+            text.append(f"    {stmt}")
+        if explicit:
+            padded.append(f"0x{pos:08x}-0x{f.addr:08x} before {f.name}")
+        for name, off in sorted(labels.get(f.addr, []), key=lambda t: (t[1], t[0])):
+            text.append(f"    {name} = . + 0x{off:x};" if off else f"    {name} = .;")
+        text.append(f"    KEEP({f.obj}({f.section}))  /* 0x{f.addr:08x} */")
+        expected.append((f.addr, "func", f.name))
+        pos = f.addr + f.size
+    stmt, explicit = gap_statement(pos, blob_start, 1)
+    text.append("    _etext = .;")
+    text.append("  } =0")
+    data_addr = f"ALIGN({stmt[len('. = ALIGN('):-2]})" if stmt and not explicit else (
+        "." if not stmt else None)
+    if data_addr is None:
+        print(f"error: gap 0x{pos:08x}-0x{blob_start:08x} between code and data has no alignment", file=sys.stderr)
+        return 1
+
+    # ---- .data: blob chunks and compiled rodata holes
+    blob_s = ["/* Auto-generated by tools/shift/shift_ld.py: the original data, cut around",
+              " * the compiled rodata blocks. Build input only; main.bin is never committed. */"]
+    data = [f"  .data {data_addr} : {{", "    _fdata = .;", "    D_BLOB = .;"]
+    cur = blob_start
+    chunk = 0
+
+    def emit_chunk(upto: int) -> None:
+        nonlocal cur, chunk
+        if upto > cur:
+            sec = f".blob.{chunk:04d}"
+            blob_s.append(f'\t.section {sec},"aw",@progbits\n'
+                          f'\t.incbin "{rel(a.blob)}", 0x{cur - blob_start:x}, 0x{upto - cur:x}')
+            data.append(f"    KEEP({blob_obj}({sec}))  /* 0x{cur:08x} */")
+            chunk += 1
+            cur = upto
+
+    for r in primary:
+        emit_chunk(r.addr)
+        if r.addr % r.align:
+            print(f"error: {r.section} at 0x{r.addr:08x} is not {r.align}-aligned", file=sys.stderr)
+            return 1
+        data.append(f"    KEEP({r.obj}({r.section}))  /* 0x{r.addr:08x} */")
+        expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
+        cur = r.addr + r.size
+    emit_chunk(blob_end)
+    data += ["    _edata = .;", "  } =0"]
+    rodup = []
+    for r in dups:
+        rodup.append(f"  .rodup_{r.addr:08x} (D_BLOB + 0x{r.addr - blob_start:x}) (INFO) : "
+                    f"{{ KEEP({r.obj}({r.section})) }}  /* copy of the block at 0x{r.addr:08x} */")
+        expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
+    bss_gap = bss_start - blob_end
+    bss_align = next((n for n in (8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096)
+                      if -(-blob_end // n) * n == bss_start), None) if bss_gap else 1
+    if bss_align is None:
+        print("error: .bss start is not an alignment of the data end", file=sys.stderr)
+        return 1
+
+    out = [
+        "/* Auto-generated by tools/shift/shift_ld.py: link script of the shiftable",
+        " * build (docs/shiftable-plan.md). No PROVIDE: every name is defined here",
+        " * or by an object, or the link fails. */",
+        f"ENTRY({next(f.name for f in funcs if f.addr == img['entry'])})",
+        "",
+        "SECTIONS",
+        "{",
+        *text,
+        "",
+        *data,
+        "  _gp = _edata;     /* crt0: $gp, and where it starts clearing */",
+        "  _fbss = _edata;",
+        f"  .bss ALIGN({bss_align}) (NOLOAD) : {{",
+        "    D_BSS = .;",
+        f"    . += 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
+        "    _end = .;",
+        "  }",
+        "",
+        "",
+        "  /* Merged rodata copies: same blob offset as the block they duplicate, not loaded. */",
+        *rodup,
+        "",
+        "  /* Must stay empty (shift_elf.py checks): code or data nobody placed. */",
+        "  .shift_orphan 0x40000000 : {",
+        "    *(.text .text.* .gnu.linkonce.t.*)",
+        "    *(.data .data.* .sdata .sdata.* .lit4 .lit8 .gnu.linkonce.d.*)",
+        "    *(.sbss .sbss.* .bss .bss.* .scommon COMMON)",
+        "  }",
+        "",
+        "  /DISCARD/ : {",
+        "    *(.ctx .ctx.*)",
+        "    *(.rodata .rodata.* .gnu.linkonce.r.*)",
+        "    *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) *(.gnu.attributes)",
+        "    *(.MIPS.abiflags) *(.note*) *(.gcc_compiled*)",
+        "  }",
+        "}",
+        "",
+        "/* Aliases from the symbolic-asm work (alias = canonical;). */",
+        *alias_lines,
+        "",
+        "/* Data and bss names: blob/bss base + offset; fixed addresses outside the image. */",
+        *tail,
+        "",
+    ]
+    SHIFT.mkdir(parents=True, exist_ok=True)
+    write(a.out_ld, "\n".join(out))
+    write(a.out_blob, "\n".join(blob_s) + "\n")
+    write(SHIFT / "objects.lst", "\n".join(all_objs + [blob_obj]) + "\n")
+    write(SHIFT / "expected.tsv", "addr\tkind\tname\n" + "".join(
+        f"{ad:08x}\t{k}\t{n}\n" for ad, k, n in sorted(expected)))
+    print(f"shift-ld: {len(funcs)} functions ({len(asm_objs)} extra asm objects), {len(rodata)} rodata holes, "
+          f"{chunk} blob chunks, {len(dups)} merged rodata copies; defined {kinds['alias']} aliases + {kinds['label']} mid-function labels, "
+          f"{kinds['data']} data + {kinds['bss']} bss names, {kinds['abs']} absolute (outside the image)")
+    for p in padded:
+        print(f"shift-ld: note: explicit padding {p} (no alignment explains it)")
+    return 0
+
+
+def write(path: Path, text: str) -> None:
+    path = Path(path)
+    if not path.exists() or path.read_text() != text:
+        path.write_text(text)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("missing", help="print layout functions with no placed code")
+    g = sub.add_parser("gen", help="write the link script, blob.s and object list")
+    g.add_argument("--asm-obj", action="append", default=[],
+                   help="extra object with .text.<fn> sections (asm export of unplaced functions)")
+    g.add_argument("--aliases", action="append", default=[], help="file of `alias = canonical;` lines")
+    g.add_argument("--blob", default=str(SHIFT / "data" / "main.bin"))
+    g.add_argument("--blob-obj", default=str(SHIFT / "blob.o"))
+    g.add_argument("--out-ld", default=str(SHIFT / "kh1-shift.ld"))
+    g.add_argument("--out-blob", default=str(SHIFT / "blob.s"))
+    a = ap.parse_args()
+    return cmd_missing(a) if a.cmd == "missing" else cmd_gen(a)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

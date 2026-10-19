@@ -27,7 +27,7 @@ ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS))
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help
+.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift
 
 all: verify
 
@@ -43,6 +43,7 @@ help:
 	@echo "make progress         print the progress tracker"
 	@echo "make progress-update  rewrite docs/progress.md + history (end of session)"
 	@echo "make test             tool self-tests (no game ELF needed)"
+	@echo "make shift            shiftable build: fresh ELF linked symbolically, M0 check (docs/shiftable-plan.md)"
 
 $(ORIG):
 	@echo "error: $(ORIG) not found. Copy the ELF from your own disc to the repo root." >&2
@@ -98,8 +99,43 @@ test:
 	@tests/selftest.sh
 	@tools/check_no_assets.sh && echo "no-assets check: PASS"
 
+# ---- Shiftable build (docs/shiftable-plan.md). Separate from `make`, which it
+# needs first (objects, out/gen/placements.tsv and rodata.tsv). Writes only
+# under out/shift/. SHIFT_ASM_DIR: directory of symbolic asm exports of the
+# functions no source places; empty = a temporary export from the original
+# ELF into out/shift/asm/ (build output only). SHIFT_ALIASES: files of
+# `alias = canonical;` lines.
+SHIFT         := out/shift
+SHIFT_ASM_DIR ?=
+SHIFT_ALIASES ?=
+SHIFT_PY      := $(PY) -I
+ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
+
+shift: $(PATCHED)
+	@mkdir -p $(SHIFT)/asm
+	@$(SHIFT_PY) tools/shift/extract_data.py
+	@set -e; rm -f $(SHIFT)/asm/*.o; \
+	if [ -n "$(SHIFT_ASM_DIR)" ]; then \
+		for s in $(SHIFT_ASM_DIR)/*.s; do $(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/asm/$$(basename $$s).o $$s; done; \
+	else \
+		missing="$$($(SHIFT_PY) tools/shift/shift_ld.py missing)"; \
+		if [ -n "$$missing" ]; then \
+			echo "shift: temporary asm export of $$(echo $$missing | wc -w) unplaced functions"; \
+			$(SHIFT_PY) tools/asm_export.py $(SHIFT)/asm/unplaced.s $$missing \
+				--header "temporary export for the shift build (out/ only, never commit)"; \
+			$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/asm/unplaced.s.o $(SHIFT)/asm/unplaced.s; \
+		fi; \
+	fi; \
+	$(SHIFT_PY) tools/shift/shift_ld.py gen $$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
+		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
+	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/blob.o $(SHIFT)/blob.s
+	@$(LD) -EL --no-warn-mismatch -T $(SHIFT)/kh1-shift.ld -Map $(SHIFT)/kh1-shift.map \
+		-o $(SHIFT)/kh1-shift.linked.elf @$(SHIFT)/objects.lst
+	@$(SHIFT_PY) tools/shift/shift_elf.py write
+	@$(SHIFT_PY) tools/shift/shift_elf.py verify
+
 clean:
-	rm -rf out/build $(PATCHED) $(LINKED) $(GEN) out/objdiff
+	rm -rf out/build $(PATCHED) $(LINKED) $(GEN) out/objdiff out/shift
 
 distclean:
 	rm -rf out objdiff.json
