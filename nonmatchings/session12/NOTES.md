@@ -108,3 +108,25 @@
   them out of local-alloc (global-alloc assigns them after all local qtys, by global priority).
 - Helper: tools/matching/gdb_s12/blkq.sh FILE [flags] (+ blkq_gdb.py): every block's qty count,
   first_reg, priority, phys reg, birth/death in one gdb run.
+
+## s12w6: 00110618, 0010d470 (no matches, both improved; true LCS words of the original unmatched)
+- 00110618: 149 -> 93 (s12w6__00110618_93w_tlcs.c, hand/strict, size 1088 vs 1072). sx2/sy2 are
+  the same variables as sxd/syd (one pseudo set twice: f28/f29 in the original); an early
+  `f32 fbn = -n + fb;` used by the second ViewScreen body. Matrix-store order is hill-climbed
+  (not natural). Off: fb gets no register (global-alloc's find_reg hands f24 to fbn, fb reloads
+  from 256(sp) 3x); fbn's local alloc fails (l chain takes f28, a long-lived 1.0f takes f26);
+  swapped pairs sxd/syd, cz/az. The rest is local-alloc priority in one ~150-insn block.
+- 0010d470: 196 -> 179 (s12w6__0010d470_179w_tlcs.c, hand/strict, RO=48cdf0, size 4120 vs 3968),
+  all natural: case 10 reads its middle byte into c2; `if (str[pos] == 0) {...} else scale =
+  o->x14;` (bnezl + lwc1); PUT_TAIL stores y, col, a, sc; final stores n, nl, w, x8. Off: c2 in
+  a1 instead of a3 (one global c2 for every byte read in cases 9-15, 25 and the copy loop; it
+  needs global priority below the copy-loop givs, ~1.7), so case 24's PUT copy is not
+  cross-jumped into case 25 (52 words); case 9 address form; copy-loop registers.
+- Facts: `objdump -d` hides zero words ("...") unless given -z: nops drop out of LCS counts built
+  on its output. Global-alloc's find_reg steals a hard reg from local pseudos with lower refs per
+  live length when a global finds none (they go to memory). Local qty priority =
+  floor_log2(refs)*refs/(death-birth) exactly. Two values sharing one register across separate
+  live ranges in the original: try one variable set twice.
+- Helpers: tools/matching/sc6_s12.py (true-LCS scorer, -d aligned diff), clb6_s12.py
+  (statement-order climber with true LCS, dependency/call constraints, optional TEMP annealing).
+  Both use $WDIR for scratch.
