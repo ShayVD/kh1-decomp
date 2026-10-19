@@ -179,6 +179,12 @@ def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Plac
     return sorted(out, key=lambda r: r.addr)
 
 
+def float_align(addr: int) -> int:
+    """A floated variable keeps the alignment its original address had, up to a cache
+    line (64): DMA and SIF buffers rely on it, whatever the C declaration says."""
+    return min(addr & -addr, 64)
+
+
 def collect_variables(elves) -> list[Placed]:
     """Variables C defines (out/gen/data.tsv): .data.<name> sections at their original
     address, with the region ('data' or 'bss') kept in Placed.section's suffix."""
@@ -324,7 +330,22 @@ def cmd_gen(a) -> int:
     if a.float_vars:
         if a.mode == "m0":
             sys.exit("error: --float-vars needs a moved mode: floated variables are not at their original address")
-        floating = {v.name for v in variables}
+        floating = {v.name for v in variables} - set(a.float_skip)
+        # Floated bss goes after the original .bss and pushes _end (crt0's heap start) up;
+        # the game's fixed arenas start at 0x006A0000 (func_0014a090) and crt0's heap is
+        # 0xA000 bytes from _end, so only a budget of bss floats: smallest first, the large
+        # buffers stay at their D_BSS offset (shift_cmp checks _end + heap < the arena).
+        budget, kept = a.float_bss_budget, []
+        for v in sorted(bss_vars, key=lambda v: (v.size, v.addr)):
+            if v.size + 16 <= budget:
+                budget -= v.size + 16
+            else:
+                floating.discard(v.name)
+                kept.append(v)
+        if kept:
+            print(f"shift-ld: --float-vars: {len(kept)} bss variables over the 0x{a.float_bss_budget:x} budget "
+                  f"stay at their D_BSS offset (largest {max(kept, key=lambda v: v.size).name}, "
+                  f"0x{sum(v.size for v in kept):x} bytes)")
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
@@ -615,7 +636,9 @@ def cmd_gen(a) -> int:
     if fl_data:
         # --float-vars: the variables in their own place after the blob
         data += ["    __float_data_start = .;"]
-        data += [f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */" for v in fl_data]
+        for v in fl_data:
+            data += [f"    . = ALIGN({float_align(v.addr)});",
+                     f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */"]
     if drafts:
         # SHIFT_DRAFTS: the drafts' own rodata (jump tables, constants) after the blob;
         # the asm version's tables in the blob stay, unused by the draft.
@@ -650,6 +673,7 @@ def cmd_gen(a) -> int:
     bss_lines, bss_tail = [], []
     for v in bss_vars:
         if v.name in floating:  # after the original .bss, before _end (crt0 clears up to _end)
+            bss_tail.append(f"    . = ALIGN({float_align(v.addr)});")
             bss_tail.append(f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */")
             continue
         bss_lines.append(f"    . = D_BSS + 0x{v.addr - bss_start:x};")
@@ -782,6 +806,10 @@ def main() -> int:
     g.add_argument("--float-vars", action="store_true",
                    help="moved modes: link the variables C defines away from their original place "
                         "(data after the blob, bss after the original .bss); phase 4")
+    g.add_argument("--float-skip", action="append", default=[], metavar="NAME",
+                   help="--float-vars: leave NAME at its original place (bisecting a runtime failure)")
+    g.add_argument("--float-bss-budget", type=lambda x: int(x, 0), default=0x10000,
+                   help="--float-vars: at most this many bytes of bss float (smallest variables first)")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")

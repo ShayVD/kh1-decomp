@@ -417,7 +417,11 @@ def main() -> int:
                     break
 
     # ---- report
-    ok = not bad_fields and not bad_bytes and not absolute
+    # crt0 starts a 0xA000-byte heap at _end; the game's fixed arenas begin at 0x006A0000
+    # (func_0014a090's pools, then 0x720000, ...): a link whose heap reaches them corrupts both
+    heap_end = nsym.get("_end", 0) + 0xA000
+    arena_clash = nsym.get("_end", 0) > 0x006A0000
+    ok = not bad_fields and not bad_bytes and not absolute and not arena_clash
     ent_ok = new_elf.entry in amap.fwd(ref_elf.entry)
     sym_ok = all(nsym[n] in amap.fwd(rsym[n]) for n in ("_gp", "D_BLOB", "D_BSS", "_end"))
     ok = ok and ent_ok and sym_ok
@@ -442,6 +446,10 @@ def main() -> int:
     if L.drafted:
         print(f"  not compared (SHIFT_DRAFTS: near-miss C drafts in place of their asm exports, never matched; "
               f"static diff by tools/shift/drafts.py report): {len(L.drafted)} functions")
+    if heap_end > 0x006A0000:
+        print(f"  {'FAIL' if arena_clash else 'warning'}: _end 0x{nsym['_end']:08x} + crt0's 0xA000 heap = "
+              f"0x{heap_end:08x} reaches the fixed arena at 0x006a0000 (func_0014a090); "
+              "float less bss (SHIFT_FLOAT_BSS_BUDGET) or use a smaller SHIFT_DATA_SHIFT")
     group("relocated fields that do not map back", bad_fields)
     group("other bytes differing", bad_bytes)
     group("position-dependent code (unrelocated address that moved)", absolute)

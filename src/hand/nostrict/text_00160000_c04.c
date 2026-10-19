@@ -251,8 +251,8 @@ typedef struct {
     u8 padE0[0x64]; WkE3 *p144;
 } ChrE3;
 
-V4E3 D_00575060[2] ALIGNED(16);
-V4E3 D_00575030[2] ALIGNED(16);
+extern V4E3 D_00575060[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
+extern V4E3 D_00575030[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
 extern ChrE3 *D_0035BD40[3];
 extern V4E3 D_0035BD20[2];
 

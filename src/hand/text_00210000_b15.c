@@ -782,8 +782,6 @@ void func_002335d8(s32 i) {
     D_00F20000(0, 0);
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-extern u8 D_00491390[];
-s32 D_00425BC0[0x1] ALIGNED(16) = {
-    (s32)D_00491390,
-};
+/* D_00425BC0 stays extern: func_002335d8 indexes it with i, and D_00425BC4 (named by
+ * text_001d0000.c) is its next entry, so the table is longer than its extent; floating
+ * it alone hung the SHIFT_FLOAT build at boot (session 17). */

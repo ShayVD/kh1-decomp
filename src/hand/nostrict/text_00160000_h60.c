@@ -126,7 +126,7 @@ extern void *D_00574FC0[20];
 extern s32 D_00575010;
 s32 D_00575014 ALIGNED(4);
 extern f32 D_00575020[][4];
-f32 D_00575050[0x1][4] ALIGNED(16);
+extern f32 D_00575050[][4]; /* stays extern: indexed by i like D_00575020[i]; the extent (one row) is unsure */
 extern P870 D_00575080;
 extern s32 D_00575088;
 extern s32 D_0057508C;
