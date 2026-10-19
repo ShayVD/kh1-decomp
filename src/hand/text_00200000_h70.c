@@ -581,3 +581,18 @@ void func_00213e50(u8 *a, s32 lo, s32 hi, s32 k) {
     if (lo < i - 1) func_00213e50(a, lo, i - 1, k);
     if (j + 1 < hi) func_00213e50(a, j + 1, hi, k);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F31A0[];
+extern u8 D_003F31A8[];
+extern u8 D_003F31B0[];
+extern u8 D_003F31C0[];
+f32 *D_003F31D0[0x4] ALIGNED(16) = {
+    (void *)D_003F31A0, (void *)D_003F31A8, (void *)D_003F31B0, (void *)D_003F31C0,
+};
+void func_00213d80();
+void func_00213db8();
+void func_00213e18();
+KF3de0 D_003F3DE0[0x4] ALIGNED(16) = {
+    (void *)func_00213d80, (void *)func_00213db8, (void *)func_00213e18, 0,
+};

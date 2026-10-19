@@ -719,3 +719,5 @@ void func_001119d0(void) {
     }
 }
 
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+s32 D_002BD170 ALIGNED(16) = 0;

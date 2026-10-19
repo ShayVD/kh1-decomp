@@ -260,3 +260,7 @@ void func_00139da8(W55ObB *o) {
         }
     }
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048DCB8[];
+s32 D_00304B68 ALIGNED(8) = (s32)D_0048DCB8;

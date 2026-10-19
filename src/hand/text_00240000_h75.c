@@ -205,3 +205,41 @@ s32 func_0024db78(s32 size) {
     D_0046A614 = 80;
     return D_0046A674;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_0024b508();
+void func_0024b520();
+void func_0024b538();
+void func_0024b550();
+void func_0024b568();
+void func_0024b580();
+void func_0024b598();
+void func_0024b5b0();
+void *D_00469FF8[0x8] ALIGNED(8) = {
+    (void *)func_0024b508, (void *)func_0024b520, (void *)func_0024b538, (void *)func_0024b550,
+    (void *)func_0024b568, (void *)func_0024b580, (void *)func_0024b598, (void *)func_0024b5b0,
+};
+void func_0024b2c8();
+void func_0024b2f8();
+void func_0024b328();
+void func_0024b358();
+void func_0024b388();
+void func_0024b3b8();
+void func_0024b3e8();
+void func_0024b418();
+s32 D_00469FD8[0x8] ALIGNED(8) = {
+    (s32)func_0024b2c8, (s32)func_0024b2f8, (s32)func_0024b328, (s32)func_0024b358,
+    (s32)func_0024b388, (s32)func_0024b3b8, (s32)func_0024b3e8, (s32)func_0024b418,
+};
+void func_0024b610();
+void func_0024b628();
+void func_0024b640();
+void func_0024b658();
+void func_0024b670();
+void func_0024b688();
+void func_0024b6a0();
+void func_0024b6b8();
+void *D_0046A018[0x8] ALIGNED(8) = {
+    (void *)func_0024b610, (void *)func_0024b628, (void *)func_0024b640, (void *)func_0024b658,
+    (void *)func_0024b670, (void *)func_0024b688, (void *)func_0024b6a0, (void *)func_0024b6b8,
+};

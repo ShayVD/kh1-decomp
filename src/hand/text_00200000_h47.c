@@ -797,3 +797,17 @@ void func_0020f3c8(void) {
     if (D_00641388) func_0020f290(D_00641390, 0, D_00641388 - 1);
     if (D_00641790) func_0020f290(D_00641798, 0, D_00641790 - 1);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F5B30[];
+extern u8 D_003F5BA0[];
+extern u8 D_003F5BE0[];
+s32 D_003F5C08[0x4] ALIGNED(8) = {
+    (s32)D_003F5BE0, (s32)D_003F5BA0, (s32)D_003F5B30, 0,
+};
+extern u8 D_00491030[];
+extern u8 D_00491048[];
+extern u8 D_00491060[];
+s32 D_003F5C50[0x4] ALIGNED(16) = {
+    (s32)D_00491060, (s32)D_00491048, (s32)D_00491030, 0,
+};

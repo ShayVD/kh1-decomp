@@ -20,7 +20,7 @@ M2C_UNK func_00267e90(void *, void *, f32);
 extern M2C_UNK D_002E26C0;
 extern M2C_UNK D_00469F90;
 extern M2C_UNK D_00469FA0;
-extern M2C_UNK D_0046A058;
+extern M2C_UNK D_0046A058[];
 extern M2C_UNK D_00491840;
 extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
@@ -283,3 +283,15 @@ s32 func_0024dd98(s32 *arg0) {
     }
     return var_s1;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_004918B8[];
+extern u8 D_004918C8[];
+extern u8 D_004918D8[];
+extern u8 D_004918E8[];
+extern u8 D_004918F8[];
+extern u8 D_00491900[];
+M2C_UNK D_0046A058[0x6] ALIGNED(8) = {
+    (s32)D_00491900, (s32)D_004918F8, (s32)D_004918E8, (s32)D_004918D8,
+    (s32)D_004918C8, (s32)D_004918B8,
+};

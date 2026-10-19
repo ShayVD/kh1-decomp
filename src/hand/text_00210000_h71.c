@@ -981,3 +981,25 @@ s32 func_0021fd90(Ob4 *a) {
     k = func_0021fd88(a->x24);
     return func_0010edb0(x, y, 256, D_00643424 * 2, a->x90, func_001c2df0(D_003F3518, k));
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F5FC0[];
+extern u8 D_003F61B0[];
+extern u8 D_003F6330[];
+extern u8 D_003F6620[];
+extern u8 D_003F6710[];
+extern u8 D_003F6800[];
+u8 *D_003F59E8[0x6] ALIGNED(8) = {
+    (void *)D_003F61B0, (void *)D_003F6710, (void *)D_003F5FC0, (void *)D_003F6330,
+    (void *)D_003F6800, (void *)D_003F6620,
+};
+void func_0021faf8();
+void func_00220580();
+void func_002210b0();
+void func_00222b40();
+void func_002234a8();
+void func_00223938();
+void (*D_003F5A00[0x6])(Obj *) ALIGNED(16) = {
+    (void *)func_00220580, (void *)func_002234a8, (void *)func_0021faf8, (void *)func_002210b0,
+    (void *)func_00223938, (void *)func_00222b40,
+};

@@ -1113,3 +1113,9 @@ void pppStepPrograms(PppSysS *sys, s32 draw) {
     }
 }
 
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_0019cd90();
+void func_001a0778();
+PppStepFn D_003701C0[0x4] ALIGNED(16) = {
+    (void *)func_0019cd90, (void *)func_001a0778, 0, 0,
+};

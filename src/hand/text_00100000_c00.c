@@ -298,3 +298,7 @@ s32 func_00114280(void) {
 end:
     return D_002BBE08;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_0024e078();
+s32 (*D_0046A6A4)(void) ALIGNED(4) = (void *)func_0024e078;

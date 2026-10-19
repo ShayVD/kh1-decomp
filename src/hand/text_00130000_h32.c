@@ -863,3 +863,9 @@ void func_00139a90(W32Act *o, W32Hit *h) {
     }
     func_002675a8(o->x3c0, D_002C58A0);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048DCA0[];
+s32 D_00304B40 ALIGNED(16) = (s32)D_0048DCA0;
+extern u8 D_0048DCA8[];
+s32 D_00304B44 ALIGNED(4) = (s32)D_0048DCA8;

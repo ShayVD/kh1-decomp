@@ -237,3 +237,29 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     }
     return 0;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F3AE0[];
+extern u8 D_003F3DB0[];
+extern u8 D_003F4020[];
+extern u8 D_003F4680[];
+extern u8 D_003F4760[];
+extern u8 D_003F4CC0[];
+extern u8 D_003F5AC0[];
+extern u8 D_003F6D40[];
+s32 D_003F32C8[0x8] ALIGNED(8) = {
+    (s32)D_003F3AE0, (s32)D_003F3DB0, (s32)D_003F4020, (s32)D_003F4680,
+    (s32)D_003F4760, (s32)D_003F5AC0, (s32)D_003F4CC0, (s32)D_003F6D40,
+};
+void func_002112f8();
+void func_00213c90();
+void func_002160a8();
+void func_00217f58();
+void func_00218f88();
+void func_0021ad08();
+void func_0021daa0();
+void func_002293f0();
+void (*D_003F32E8[0x8])(N *) ALIGNED(8) = {
+    (void *)func_002112f8, (void *)func_00213c90, (void *)func_002160a8, (void *)func_00217f58,
+    (void *)func_00218f88, (void *)func_0021daa0, (void *)func_0021ad08, (void *)func_002293f0,
+};

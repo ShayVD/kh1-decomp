@@ -990,3 +990,19 @@ void func_00224030(void) {
     D_0064375C++;
     D_003F34C8--;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F63C0[];
+extern u8 D_003F63F0[];
+extern u8 D_003F6420[];
+extern u8 D_003F6450[];
+extern u8 D_003F6480[];
+extern u8 D_003F64B0[];
+extern u8 D_003F64E0[];
+extern u8 D_003F6510[];
+extern u8 D_003F6540[];
+s32 D_003F6568[0xa] ALIGNED(8) = {
+    (s32)D_003F63C0, (s32)D_003F63F0, (s32)D_003F6420, (s32)D_003F6450,
+    (s32)D_003F6480, (s32)D_003F64B0, (s32)D_003F64E0, (s32)D_003F6510,
+    (s32)D_003F6540, 0,
+};

@@ -59,3 +59,7 @@ s32 func_00149c80(s32 i, s32 a) {
     func_00120748(buf, e->x10, func_00149bd0, 0);
     return 1;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048E418[];
+s32 D_00350D14 ALIGNED(4) = (s32)D_0048E418;

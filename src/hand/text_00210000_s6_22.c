@@ -1314,3 +1314,22 @@ found:
 err:
     D_00646A18 = -1;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F48D8[];
+extern u8 D_003F4908[];
+extern u8 D_003F4918[];
+extern u8 D_003F4928[];
+extern u8 D_003F4948[];
+extern u8 D_003F4968[];
+extern u8 D_003F4988[];
+extern u8 D_003F49A8[];
+extern u8 D_003F49C8[];
+extern u8 D_003F49E8[];
+extern u8 D_003F4A08[];
+extern u8 D_003F4A28[];
+R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
+    (void *)D_003F48D8, (void *)D_003F4908, (void *)D_003F4918, (void *)D_003F4928,
+    (void *)D_003F4948, (void *)D_003F4968, (void *)D_003F4988, (void *)D_003F49A8,
+    (void *)D_003F49C8, (void *)D_003F49E8, (void *)D_003F4A08, (void *)D_003F4A28,
+};

@@ -1005,3 +1005,17 @@ void func_001705c0(void *e, Wk705 *w) {
     }
 }
 
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_00172010();
+void func_00172d90();
+void func_00173740();
+void func_00173ad8();
+void func_00173ea8();
+void func_00174398();
+void func_00174950();
+void func_00174d98();
+void (*D_0035BC80[0xa])(Obj70 *, Wk70 *) ALIGNED(16) = {
+    0, (void *)func_00172010, (void *)func_00172d90, (void *)func_00173740,
+    0, (void *)func_00173ad8, (void *)func_00173ea8, (void *)func_00174398,
+    (void *)func_00174950, (void *)func_00174d98,
+};

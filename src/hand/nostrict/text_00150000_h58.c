@@ -1186,3 +1186,15 @@ void func_0015b098(s32 a, s32 *ids) {
     }
     if (buf[0]) func_00244670(a, buf[0], buf[1]);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_00152880();
+void func_00152928();
+void func_00152e10();
+void func_00152f10();
+void func_001531c0();
+void func_00153210();
+void (*D_00351970[0x8])(void *) ALIGNED(16) = {
+    (void *)func_00153210, (void *)func_00152f10, (void *)func_00152ff8, (void *)func_00152e10,
+    (void *)func_00152928, (void *)func_001531c0, (void *)func_00152880, 0,
+};

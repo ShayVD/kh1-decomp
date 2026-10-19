@@ -668,3 +668,23 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
     }
     func_00124d58(&v, out, D_004F77E0, FLD(f32, p, 0x4c));
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_0024e088();
+void (*D_0046A6A8)(s32) ALIGNED(8) = (void *)func_0024e088;
+extern u8 D_0048D2C8[];
+extern u8 D_0048D2D0[];
+extern u8 D_0048D2D8[];
+extern u8 D_0048D2E0[];
+extern u8 D_0048D2E8[];
+extern u8 D_0048D2F0[];
+extern u8 D_0048D2F8[];
+extern u8 D_0048D300[];
+extern u8 D_0048D308[];
+extern u8 D_0048D310[];
+extern u8 D_0048D318[];
+char *D_002C6460[0xb] ALIGNED(16) = {
+    (void *)D_0048D318, (void *)D_0048D310, (void *)D_0048D308, (void *)D_0048D300,
+    (void *)D_0048D2F8, (void *)D_0048D2F0, (void *)D_0048D2E8, (void *)D_0048D2E0,
+    (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
+};

@@ -630,3 +630,7 @@ s32 func_00149678(void) {
         return 1;
     }
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048E408[];
+s32 D_00350D10 ALIGNED(16) = (s32)D_0048E408;
