@@ -1201,11 +1201,20 @@ GPR_RT_WRITERS = {0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x18, 0x19,
                   0x1A, 0x1B, 0x1E, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x37}
 
 
-def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str:
-    """GNU-as listing of one original function in the style m2c and decomp.me
-    expect: `glabel`, $-prefixed registers, .L labels for branch targets,
-    func_/D_ names (or functions.tsv names) for calls and %hi/%lo pairs.
-    `eabi` names registers 8-15 a4-a7/t0-t3 (for m2c)."""
+@dataclass
+class FuncAnalysis:
+    """What function_asm knows about one original function (also used by
+    tools/asm_export.py --symbolic): the objdump lines, branch/jump labels,
+    the %hi/%lo tracker's result and the jump tables it found."""
+    insns: list            # (addr, word, mnemonic, operands)
+    labels: set            # in-function branch / jump / jump-table targets
+    hi_of: dict            # lui addr -> full address (of its first low half)
+    lo_of: dict            # low-half user addr -> full address
+    lo_hi: dict            # low-half user addr -> the lui addr it pairs with
+    jtbls: dict            # table address -> entries (in-function addresses)
+
+
+def analyze_asm(cfg, f: Func) -> FuncAnalysis:
     import mips
     orig_path_ = orig_path(cfg)
     out = subprocess.run([f"{BINUTILS}objdump", "-D", "-z", "-m", "mips:5900", "-EL",
@@ -1226,6 +1235,7 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
     # %hi/%lo: resolve each lui to the addresses its low halves produce.
     hi_of: dict[int, int] = {}   # lui addr -> full address
     lo_of: dict[int, int] = {}   # user addr -> full address
+    lo_hi: dict[int, int] = {}   # user addr -> lui addr
     live: dict[int, tuple[int, int]] = {}  # reg -> (lui addr, upper)
     clobber_at = None
     for a, w, mn, _ops in insns:
@@ -1252,6 +1262,7 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
             else:
                 hi_of.setdefault(lui_a, full)
                 lo_of[a] = full
+                lo_hi[a] = lui_a
         # forget a %hi held in a register this instruction overwrites
         if o in (0x11, 0x12):  # COP1/COP2: only mfc/dmfc/cfc write a GPR (rt)
             if mips.rs(w) in (0, 1, 2):
@@ -1263,8 +1274,6 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
         if o == mips.OP_SPECIAL and not (mips.funct(w) in (0x21, 0x2D) and mips.rd(w) == base):
             live.pop(mips.rd(w), None)  # addu/daddu rX,rX,rY keeps rX's %hi (jump tables)
 
-    layout = load_layout()
-    lo_text, hi_text = layout[0].addr, layout[-1].end
     # Jump tables: a %lo load feeding a `jr`. m2c needs the table contents.
     orig = Elf.load(orig_path_)
     jtbls: dict[int, list[int]] = {}
@@ -1285,6 +1294,19 @@ def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str
                         entries.append(t)
                     jtbls[base] = entries
                     labels.update(entries)
+    return FuncAnalysis(insns, labels, hi_of, lo_of, lo_hi, jtbls)
+
+
+def function_asm(cfg, f: Func, names: dict[int, str], eabi: bool = False) -> str:
+    """GNU-as listing of one original function in the style m2c and decomp.me
+    expect: `glabel`, $-prefixed registers, .L labels for branch targets,
+    func_/D_ names (or functions.tsv names) for calls and %hi/%lo pairs.
+    `eabi` names registers 8-15 a4-a7/t0-t3 (for m2c)."""
+    import mips
+    an = analyze_asm(cfg, f)
+    insns, labels, hi_of, lo_of, jtbls = an.insns, an.labels, an.hi_of, an.lo_of, an.jtbls
+    layout = load_layout()
+    lo_text, hi_text = layout[0].addr, layout[-1].end
 
     def sym(addr: int) -> str:
         if addr in names:

@@ -19,7 +19,8 @@ func_001aa1f8:  /* 0x001AA1F8 */
 	.word	0x30D2FFFF  /* 001AA220 andi $s2,$a2,0xffff */
 	.word	0x1040004F  /* 001AA224 beqz $v0,.L001AA364 */
 	.word	0xFFBF00E8  /* 001AA228 sd $ra,232($sp) */
-	.word	0x0C06AA54  /* 001AA22C jal func_001aa950 */
+	.word	0x0C000000  /* 001AA22C jal func_001aa950 */
+	.reloc	.-4, R_MIPS_26, func_001aa950
 	.word	0x24040800  /* 001AA230 li $a0,2048 */
 	.word	0x00122C00  /* 001AA234 sll $a1,$s2,0x10 */
 	.word	0x0040802D  /* 001AA238 move $s0,$v0 */
@@ -30,7 +31,8 @@ func_001aa1f8:  /* 0x001AA1F8 */
 	.word	0x0000402D  /* 001AA24C move $t0,$zero */
 	.word	0x0000482D  /* 001AA250 move $t1,$zero */
 	.word	0x240A0010  /* 001AA254 li $t2,16 */
-	.word	0x0C0997B6  /* 001AA258 jal sceGsSetDefLoadImage */
+	.word	0x0C000000  /* 001AA258 jal sceGsSetDefLoadImage */
+	.reloc	.-4, R_MIPS_26, sceGsSetDefLoadImage
 	.word	0x240B0010  /* 001AA25C li $t3,16 */
 	.word	0x26030100  /* 001AA260 addiu $v1,$s0,256 */
 	.word	0x3C023000  /* 001AA264 lui $v0,0x3000 */
@@ -93,9 +95,11 @@ func_001aa1f8:  /* 0x001AA1F8 */
 	.word	0x12800004  /* 001AA348 beqz $s4,.L001AA35C */
 	.word	0xAC442000  /* 001AA34C sw $a0,8192($v0) */
 	.word	0x0000202D  /* 001AA350 move $a0,$zero */
-	.word	0x0C0996F0  /* 001AA354 jal sceGsSyncPath */
+	.word	0x0C000000  /* 001AA354 jal sceGsSyncPath */
+	.reloc	.-4, R_MIPS_26, sceGsSyncPath
 	.word	0x0000282D  /* 001AA358 move $a1,$zero */
-	.word	0x0C06AA74  /* 001AA35C jal func_001aa9d0 */
+	.word	0x0C000000  /* 001AA35C jal func_001aa9d0 */
+	.reloc	.-4, R_MIPS_26, func_001aa9d0
 	.word	0x24040800  /* 001AA360 li $a0,2048 */
 	.word	0xDFB000C0  /* 001AA364 ld $s0,192($sp) */
 	.word	0xDFB100C8  /* 001AA368 ld $s1,200($sp) */
@@ -123,7 +127,8 @@ func_001aa448:  /* 0x001AA448 */
 	.word	0xFFB500E8  /* 001AA46C sd $s5,232($sp) */
 	.word	0xFFB600F0  /* 001AA470 sd $s6,240($sp) */
 	.word	0xFFBF00F8  /* 001AA474 sd $ra,248($sp) */
-	.word	0x0C06AA54  /* 001AA478 jal func_001aa950 */
+	.word	0x0C000000  /* 001AA478 jal func_001aa950 */
+	.reloc	.-4, R_MIPS_26, func_001aa950
 	.word	0x00A0A02D  /* 001AA47C move $s4,$a1 */
 	.word	0x0040802D  /* 001AA480 move $s0,$v0 */
 	.word	0x00112C00  /* 001AA484 sll $a1,$s1,0x10 */
@@ -134,7 +139,8 @@ func_001aa448:  /* 0x001AA448 */
 	.word	0x0000402D  /* 001AA498 move $t0,$zero */
 	.word	0x0000482D  /* 001AA49C move $t1,$zero */
 	.word	0x240A0010  /* 001AA4A0 li $t2,16 */
-	.word	0x0C0997B6  /* 001AA4A4 jal sceGsSetDefLoadImage */
+	.word	0x0C000000  /* 001AA4A4 jal sceGsSetDefLoadImage */
+	.reloc	.-4, R_MIPS_26, sceGsSetDefLoadImage
 	.word	0x240B0010  /* 001AA4A8 li $t3,16 */
 	.word	0x26040800  /* 001AA4AC addiu $a0,$s0,2048 */
 	.word	0x3C038000  /* 001AA4B0 lui $v1,0x8000 */
@@ -175,7 +181,8 @@ func_001aa448:  /* 0x001AA448 */
 	.word	0x1000002F  /* 001AA53C b .L001AA5FC */
 	.word	0x2A950000  /* 001AA540 slti $s5,$s4,0 */
 	.word	0x00000000  /* 001AA544 nop */
-	.word	0x0C0996F0  /* 001AA548 jal sceGsSyncPath */
+	.word	0x0C000000  /* 001AA548 jal sceGsSyncPath */
+	.reloc	.-4, R_MIPS_26, sceGsSyncPath
 	.word	0x0000282D  /* 001AA54C move $a1,$zero */
 	.word	0x26040110  /* 001AA550 addiu $a0,$s0,272 */
 	.word	0x3C082000  /* 001AA554 lui $t0,0x2000 */
@@ -227,9 +234,11 @@ func_001aa448:  /* 0x001AA448 */
 	.word	0x5440FFCE  /* 001AA60C bnezl $v0,.L001AA548 */
 	.word	0x0000202D  /* 001AA610 move $a0,$zero */
 	.word	0x0000282D  /* 001AA614 move $a1,$zero */
-	.word	0x0C0996F0  /* 001AA618 jal sceGsSyncPath */
+	.word	0x0C000000  /* 001AA618 jal sceGsSyncPath */
+	.reloc	.-4, R_MIPS_26, sceGsSyncPath
 	.word	0x0000202D  /* 001AA61C move $a0,$zero */
-	.word	0x0C06AA74  /* 001AA620 jal func_001aa9d0 */
+	.word	0x0C000000  /* 001AA620 jal func_001aa9d0 */
+	.reloc	.-4, R_MIPS_26, func_001aa9d0
 	.word	0x24040C00  /* 001AA624 li $a0,3072 */
 	.word	0xDFB000C0  /* 001AA628 ld $s0,192($sp) */
 	.word	0xDFB100C8  /* 001AA62C ld $s1,200($sp) */
@@ -247,10 +256,14 @@ func_001aa448:  /* 0x001AA448 */
 	.globl	func_001bfac8
 	.ent	func_001bfac8
 func_001bfac8:  /* 0x001BFAC8 */
-	.word	0x3C040038  /* 001BFAC8 lui $a0,%hi(D_0037A170) */
-	.word	0x8C84A170  /* 001BFACC lw $a0,%lo(D_0037A170)($a0) */
-	.word	0x3C020038  /* 001BFAD0 lui $v0,%hi(D_0037A164) */
-	.word	0x8C42A164  /* 001BFAD4 lw $v0,%lo(D_0037A164)($v0) */
+	.word	0x3C040000  /* 001BFAC8 lui $a0,%hi(D_0037A170) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A170
+	.word	0x8C840000  /* 001BFACC lw $a0,%lo(D_0037A170)($a0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A170
+	.word	0x3C020000  /* 001BFAD0 lui $v0,%hi(D_0037A164) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A164
+	.word	0x8C420000  /* 001BFAD4 lw $v0,%lo(D_0037A164)($v0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A164
 	.word	0x000218C0  /* 001BFAD8 sll $v1,$v0,0x3 */
 	.word	0x00832820  /* 001BFADC add $a1,$a0,$v1 */
 	.word	0x8CA50000  /* 001BFAE0 lw $a1,0($a1) */
@@ -290,20 +303,27 @@ func_001bfac8:  /* 0x001BFAC8 */
 	.word	0x00000000  /* 001BFB68 nop */
 	.word	0x00000000  /* 001BFB6C nop */
 	.word	0x8C850000  /* 001BFB70 lw $a1,0($a0) */
-	.word	0x0C070118  /* 001BFB74 jal func_001c0460 */
+	.word	0x0C000000  /* 001BFB74 jal func_001c0460 */
+	.reloc	.-4, R_MIPS_26, func_001c0460
 	.word	0x78BD00D0  /* 001BFB78 lq $sp,208($a1) */
 	.word	0x00000000  /* 001BFB7C nop */
-	.word	0x3C040038  /* 001BFB80 lui $a0,%hi(D_0037A170) */
-	.word	0x8C84A170  /* 001BFB84 lw $a0,%lo(D_0037A170)($a0) */
+	.word	0x3C040000  /* 001BFB80 lui $a0,%hi(D_0037A170) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A170
+	.word	0x8C840000  /* 001BFB84 lw $a0,%lo(D_0037A170)($a0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A170
 	.word	0x20020000  /* 001BFB88 addi $v0,$zero,0 */
 	.word	0x000218C0  /* 001BFB8C sll $v1,$v0,0x3 */
 	.word	0x00832820  /* 001BFB90 add $a1,$a0,$v1 */
 	.word	0x8CA30004  /* 001BFB94 lw $v1,4($a1) */
 	.word	0x8CA50000  /* 001BFB98 lw $a1,0($a1) */
-	.word	0x3C010038  /* 001BFB9C lui $at,%hi(D_0037A164) */
-	.word	0xAC22A164  /* 001BFBA0 sw $v0,%lo(D_0037A164)($at) */
-	.word	0x3C010038  /* 001BFBA4 lui $at,%hi(D_0037A168) */
-	.word	0xAC23A168  /* 001BFBA8 sw $v1,%lo(D_0037A168)($at) */
+	.word	0x3C010000  /* 001BFB9C lui $at,%hi(D_0037A164) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A164
+	.word	0xAC220000  /* 001BFBA0 sw $v0,%lo(D_0037A164)($at) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A164
+	.word	0x3C010000  /* 001BFBA4 lui $at,%hi(D_0037A168) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A168
+	.word	0xAC230000  /* 001BFBA8 sw $v1,%lo(D_0037A168)($at) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A168
 	.word	0x78B00000  /* 001BFBAC lq $s0,0($a1) */
 	.word	0x78B10010  /* 001BFBB0 lq $s1,16($a1) */
 	.word	0x78B20020  /* 001BFBB4 lq $s2,32($a1) */
@@ -341,23 +361,35 @@ func_001bfac8:  /* 0x001BFAC8 */
 	.word	0x0040F809  /* 001BFC34 jalr $v0 */
 	.word	0x78A50150  /* 001BFC38 lq $a1,336($a1) */
 	.word	0x00000000  /* 001BFC3C nop */
-	.word	0x3C040038  /* 001BFC40 lui $a0,%hi(D_0037A170) */
-	.word	0x8C84A170  /* 001BFC44 lw $a0,%lo(D_0037A170)($a0) */
+	.word	0x3C040000  /* 001BFC40 lui $a0,%hi(D_0037A170) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A170
+	.word	0x8C840000  /* 001BFC44 lw $a0,%lo(D_0037A170)($a0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A170
 	.word	0x8C850000  /* 001BFC48 lw $a1,0($a0) */
 	.word	0x78BD00D0  /* 001BFC4C lq $sp,208($a1) */
-	.word	0x3C040038  /* 001BFC50 lui $a0,%hi(D_0037A168) */
-	.word	0x8C84A168  /* 001BFC54 lw $a0,%lo(D_0037A168)($a0) */
-	.word	0x0C06FFE8  /* 001BFC58 jal func_001bffa0 */
+	.word	0x3C040000  /* 001BFC50 lui $a0,%hi(D_0037A168) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A168
+	.word	0x8C840000  /* 001BFC54 lw $a0,%lo(D_0037A168)($a0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A168
+	.word	0x0C000000  /* 001BFC58 jal func_001bffa0 */
+	.reloc	.-4, R_MIPS_26, func_001bffa0
 	.word	0x00000000  /* 001BFC5C nop */
 	.word	0x00000000  /* 001BFC60 nop */
-	.word	0x3C020038  /* 001BFC64 lui $v0,%hi(D_0037A164) */
-	.word	0x8C42A164  /* 001BFC68 lw $v0,%lo(D_0037A164)($v0) */
-	.word	0x3C040038  /* 001BFC6C lui $a0,%hi(D_0037A170) */
-	.word	0x8C84A170  /* 001BFC70 lw $a0,%lo(D_0037A170)($a0) */
-	.word	0x0806FED4  /* 001BFC74 j .L001BFB50 */
+	.word	0x3C020000  /* 001BFC64 lui $v0,%hi(D_0037A164) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A164
+	.word	0x8C420000  /* 001BFC68 lw $v0,%lo(D_0037A164)($v0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A164
+	.word	0x3C040000  /* 001BFC6C lui $a0,%hi(D_0037A170) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A170
+	.word	0x8C840000  /* 001BFC70 lw $a0,%lo(D_0037A170)($a0) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A170
+	.word	0x08000000  /* 001BFC74 j .L001BFB50 */
+	.reloc	.-4, R_MIPS_26, func_001bfac8+0x88
 	.word	0x00000000  /* 001BFC78 nop */
 	.word	0x00000000  /* 001BFC7C nop */
-	.word	0x3C030038  /* 001BFC80 lui $v1,%hi(D_0037A174) */
+	.word	0x3C030000  /* 001BFC80 lui $v1,%hi(D_0037A174) */
+	.reloc	.-4, R_MIPS_HI16, D_0037A174
 	.word	0x03E00008  /* 001BFC84 jr $ra */
-	.word	0x8C62A174  /* 001BFC88 lw $v0,%lo(D_0037A174)($v1) */
+	.word	0x8C620000  /* 001BFC88 lw $v0,%lo(D_0037A174)($v1) */
+	.reloc	.-4, R_MIPS_LO16, D_0037A174
 	.end	func_001bfac8

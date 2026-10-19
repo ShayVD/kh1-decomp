@@ -6,7 +6,8 @@
 	.globl	_exit
 	.ent	_exit
 _exit:  /* 0x001001C8 */
-	.word	0x08097E6A  /* 001001C8 j func_0025f9a8 */
+	.word	0x08000000  /* 001001C8 j func_0025f9a8 */
+	.reloc	.-4, R_MIPS_26, func_0025f9a8
 	.word	0x0000202D  /* 001001CC move $a0,$zero */
 	.end	_exit
 
@@ -16,9 +17,12 @@ _exit:  /* 0x001001C8 */
 func_001001d0:  /* 0x001001D0 */
 	.word	0x24030023  /* 001001D0 li $v1,35 */
 	.word	0x0000000C  /* 001001D4 syscall */
+	.globl	func_001001d8
+func_001001d8:  /* mid-function entry point */
 	.word	0x27BDFFF0  /* 001001D8 addiu $sp,$sp,-16 */
 	.word	0xFFBF0000  /* 001001DC sd $ra,0($sp) */
-	.word	0x0C041B04  /* 001001E0 jal func_00106c10 */
+	.word	0x0C000000  /* 001001E0 jal func_00106c10 */
+	.reloc	.-4, R_MIPS_26, func_00106c10
 	.word	0x00000000  /* 001001E4 nop */
 	.word	0xDFBF0000  /* 001001E8 ld $ra,0($sp) */
 	.word	0x0000102D  /* 001001EC move $v0,$zero */
