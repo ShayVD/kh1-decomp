@@ -524,7 +524,7 @@ s32 func_00112e08(void) {
 }
 
 /* Saved copies of the three D_002E26A0 objects' positions. */
-extern f32 D_004D92F0[3][4];
+f32 D_004D92F0[3][4] ALIGNED(16);
 void func_00113048(void) {
     s32 i;
     for (i = 0; i < 3; i++) {

@@ -117,7 +117,7 @@ typedef struct {
     s32 x44;
 } W9Blk;
 extern W9Blk D_00550400[];
-extern W9Blk D_005512A0[];
+W9Blk D_005512A0[0xc] ALIGNED(32);
 extern u8 D_00FE0000[];
 extern u8 D_01CE0000[];
 

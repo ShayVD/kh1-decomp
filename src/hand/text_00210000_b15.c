@@ -645,7 +645,7 @@ extern Rec *D_00647790;
 extern s32 D_00647794;
 extern s32 D_00647798;
 extern u8 *D_0064779C;
-extern s32 D_006477A0;
+s32 D_006477A0 ALIGNED(16);
 extern f32 D_006477A4;
 extern f32 D_002BBDFC;
 

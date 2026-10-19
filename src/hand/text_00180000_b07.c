@@ -180,7 +180,7 @@ typedef struct {
     V12 a[16];
 } SEA0;
 
-extern PObj *D_00575A10[];
+PObj *D_00575A10[0x10c] ALIGNED(16);
 extern PCur D_003701B0;
 extern void *D_00370130;
 extern u8 D_00370140[];

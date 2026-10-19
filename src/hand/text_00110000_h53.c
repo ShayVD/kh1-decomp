@@ -322,7 +322,7 @@ void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
 
 typedef struct { u8 pad[0x130]; u8 *name; } Obj53;
 extern s32 D_002C648C;
-extern char D_004F7150[][32];
+char D_004F7150[0x4][32] ALIGNED(16);
 extern char *D_002C6460[];
 extern char D_0048D320[], D_0048D328[], D_0048D330[];
 extern u8 D_00491A18[];

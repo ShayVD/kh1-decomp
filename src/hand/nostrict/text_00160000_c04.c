@@ -251,8 +251,8 @@ typedef struct {
     u8 padE0[0x64]; WkE3 *p144;
 } ChrE3;
 
-extern V4E3 D_00575060[2];
-extern V4E3 D_00575030[2];
+V4E3 D_00575060[2] ALIGNED(16);
+V4E3 D_00575030[2] ALIGNED(16);
 extern ChrE3 *D_0035BD40[3];
 extern V4E3 D_0035BD20[2];
 

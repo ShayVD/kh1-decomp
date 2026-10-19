@@ -47,7 +47,7 @@ extern s32 D_006314CC;
 extern s32 D_006314D0;
 extern s32 D_006314D8;
 extern s32 D_006314DC;
-extern s32 D_0063F248;
+s32 D_0063F248 ALIGNED(8);
 extern s32 D_0063F540;
 extern void *D_003F34B8;
 s32 func_0011e340(M2C_UNK);

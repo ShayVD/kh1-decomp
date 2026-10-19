@@ -75,7 +75,7 @@ extern Blk32 D_0048C690;
 extern s32 D_0048C6F0[];
 extern u8 D_00494320[];
 extern s32 D_00494410[];
-extern u8 D_00494420[];
+u8 D_00494420[0x1c0] ALIGNED(32);
 extern u8 D_004945E0[];
 extern s32 D_00494894;
 extern f32 D_00494898;

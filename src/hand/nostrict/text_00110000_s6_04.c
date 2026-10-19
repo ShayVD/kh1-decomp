@@ -31,7 +31,7 @@ extern PadSt D_002C5AD0[];
 extern PadSt D_002C5BB0;
 extern s32 D_004E4280;
 extern s32 D_004E44C0[];
-extern Prof D_004E44C8[];
+Prof D_004E44C8[0x2] ALIGNED(8);
 extern s32 D_004E44F0;
 extern V4 D_002C58B0;
 extern u8 D_002C5A80[];

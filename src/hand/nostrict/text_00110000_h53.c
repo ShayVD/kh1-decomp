@@ -120,7 +120,7 @@ typedef struct Obj3d {
     u8 pad1d0[0x1a0];
     F3d f;
 } Obj3d;
-extern W3d D_004F71D0[];
+W3d D_004F71D0[0x3] ALIGNED(16);
 extern G3d *D_00304BE8;
 extern s32 D_002BC128, D_002BC130, D_002BC134;
 s32 func_001499a0(void);

@@ -4,7 +4,7 @@
 typedef struct { u64 lo, hi; } QW;
 extern u8 D_00351E10[];
 extern QW *D_00668F80;
-extern QW *D_00668F84;
+QW *D_00668F84 ALIGNED(4);
 extern u8 D_002E26C0[];
 extern u8 D_00426820[];
 extern u8 D_004267F0[];

@@ -336,7 +336,7 @@ s32 func_00113fa8(void) {
 /* ---- 00114a38 ---- */
 typedef struct { u8 *data; s32 *hdr; s32 pad8[2]; f32 m[4][4]; f32 pad50[3][4]; f32 v[8][4]; } Obj110;
 typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
-extern Obj110 *D_004D9368;
+Obj110 *D_004D9368 ALIGNED(8);
 extern s32 D_004D936C;
 extern f32 D_002BBFA0[4][4];
 extern f32 D_0029B280[4][4];

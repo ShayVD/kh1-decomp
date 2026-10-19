@@ -42,7 +42,7 @@ extern s32 D_00362440;
 extern s32 D_00362448;
 extern s32 D_00362710;
 extern s32 D_00616228;
-extern s32 D_00616238;
+s32 D_00616238 ALIGNED(8);
 extern void *D_00575894;
 f32 func_001629e8();
 s32 func_00219308();

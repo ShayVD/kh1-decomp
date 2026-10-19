@@ -75,7 +75,7 @@ extern s32 D_002C1394;
 extern s32 D_002C5950;
 extern s32 D_002C596C;
 extern s32 D_004D9244;
-extern s32 D_004D9248;
+s32 D_004D9248 ALIGNED(8);
 extern s32 D_004D925C;
 extern s32 D_004D9274;
 extern s32 D_004D92E0;

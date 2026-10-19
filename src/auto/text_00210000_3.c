@@ -18,7 +18,7 @@ extern M2C_UNK D_00642F60;
 extern s32 D_003F34D0;
 extern s32 D_003F34E0;
 extern s32 D_003F5C20;
-extern s32 D_006430EC;
+s32 D_006430EC ALIGNED(4);
 extern s32 D_006430F0;
 extern s32 D_006430F8;
 extern s32 D_00643100;

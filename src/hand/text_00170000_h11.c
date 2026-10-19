@@ -283,7 +283,7 @@ s32 func_0017b170(void) {
 extern u64 D_002C5BB0;
 typedef struct { u8 pad[0x18]; s32 x18; } S18;
 extern S18 *D_00362438;
-extern u8 D_005759A4;
+u8 D_005759A4 ALIGNED(4);
 s32 func_001770b8(void);
 s32 func_0017b7e8(void) {
     if (!(D_002C5BB0 & 0x300000000000ULL)) {

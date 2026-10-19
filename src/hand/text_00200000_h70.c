@@ -8,7 +8,7 @@ typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
 extern S3530 D_003F3530;
 extern s32 D_003F3870;
 extern B64 D_003F3050[];
-extern B64 D_00640E40[];
+B64 D_00640E40[0x9] ALIGNED(64);
 extern f32 D_002BBDFC;
 s32 func_001301d8(void *, s32, s32, s32);
 void func_00161de8(s32, void *, void *, s32);

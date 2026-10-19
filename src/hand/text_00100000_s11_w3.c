@@ -7,7 +7,7 @@ typedef struct { u8 pad[0x10]; union { f32 f10; void *p10; } u10; union { f32 f1
 typedef struct { u8 pad[0x10]; u8 state; u8 idx; u16 prev; u16 frame; u16 max; f32 t; } Anim;
 extern Tex D_0029B420[];
 extern f32 D_002BBDFC;
-extern s32 D_004945F0;
+s32 D_004945F0 ALIGNED(16);
 Obj10 *func_0015ed80(s32, void (*)(void));
 void func_001019c8(void);
 void *func_00121e28(s32, void *);

@@ -67,7 +67,7 @@ extern s32 D_0062A220;
 extern s32 D_0062A224;
 extern s32 D_0062A628;
 extern u8 D_0062A630[];
-extern u8 D_0062A640[];
+u8 D_0062A640[0x5000] ALIGNED(64);
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0011ef10(s32, void (*)());
 void func_001dd148();

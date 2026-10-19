@@ -229,13 +229,13 @@ extern f32 D_00306844;
 extern f32 D_00306848;
 extern LdEnt D_00531B70[128];
 extern u8 D_00531F70[];
-extern u8 D_00531F80[];
+u8 D_00531F80[0xc00] ALIGNED(64);
 extern s32 D_00532B80;
 extern Ent32 D_00532B90[128];
 extern s32 D_00533B90;
 extern u16 D_00307226[];
 extern u16 D_003085D8[];
-extern u8 D_0054C160[];
+u8 D_0054C160[0x50] ALIGNED(32);
 
 /* ---- functions ---- */
 Item *func_00147840(s32);

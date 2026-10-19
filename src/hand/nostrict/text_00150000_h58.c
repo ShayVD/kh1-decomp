@@ -416,7 +416,8 @@ void func_001568e8(B4A68 *e, f32 *out) {
 #undef D_002C5958
 
 /* ---- func_001584c0 ---- */
-extern V4 D_00351A20, D_005516D0;
+extern V4 D_00351A20;
+V4 D_005516D0 ALIGNED(16);
 void func_002673b8(void *, void *);
 void func_00267370(void *, void *, void *);
 f32 func_001376e8(void *, void *);
@@ -1129,7 +1130,7 @@ void func_00157a30(Act *a, s32 k, Act *b) {
 }
 
 typedef struct { u8 b[32]; } E551970;
-extern E551970 D_00551970[];
+E551970 D_00551970[0x20] ALIGNED(16);
 extern s32 D_00351AC0;
 
 char *func_0015b060(void) {

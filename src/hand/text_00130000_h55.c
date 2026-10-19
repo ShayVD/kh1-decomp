@@ -146,7 +146,7 @@ extern s32 D_00304B00[];
 extern s32 D_00304B68;
 extern char D_0048DCB0[];
 extern u8 D_0052AD68[];
-extern u8 D_0052AD78[];
+u8 D_0052AD78[0xc0] ALIGNED(8);
 f32 func_0013bb20(void);
 void func_00141540(s32 a, s32 b);
 void func_001575b0(s32 a);

@@ -16,7 +16,7 @@ extern s32 D_0037A15C;
 extern s32 D_0037A160;
 extern s32 D_0037A168;
 extern s32 D_0037A16C;
-extern s32 D_00621318;
+s32 D_00621318 ALIGNED(8);
 extern s32 D_00623214;
 extern s32 D_00623218;
 extern s32 D_00623220;

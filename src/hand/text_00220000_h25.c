@@ -109,7 +109,7 @@ extern s32 D_0064801C;
 extern s32 (*D_00648034)(s32);
 extern s32 D_00648038[5];
 extern f32 D_00648050[5];
-extern u128 D_00648070[];
+u128 D_00648070[0x6] ALIGNED(16);
 extern Slot D_00651310[10];
 extern Pkt D_00650F40;
 extern u128 *D_00651200;

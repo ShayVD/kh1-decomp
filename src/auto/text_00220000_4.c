@@ -32,7 +32,7 @@ extern s32 D_003F34C8;
 extern s32 D_003F34D4;
 extern s32 D_003F34FC;
 extern s32 D_00643660;
-extern s32 D_006436C8;
+s32 D_006436C8 ALIGNED(8);
 extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_00646990;

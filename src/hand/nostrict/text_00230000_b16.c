@@ -241,11 +241,14 @@ typedef struct {
     Sub sub;
     s32 cnt;
 } S61D0;
-extern Gm *D_00656230, *D_00656254, *D_00656278, *D_0065629C;
+extern Gm *D_00656230;
+Gm *D_00656254 ALIGNED(4);
+Gm *D_00656278 ALIGNED(8);
+Gm *D_0065629C ALIGNED(4);
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Q;
 extern S61D0 D_006561D0;
 extern Q D_00655F80;
-extern QW *D_006560E4;
+QW *D_006560E4 ALIGNED(4);
 extern QW *D_006560E0;
 extern QW D_00351E10[];
 extern u8 D_004267C0[], D_004267F0[];

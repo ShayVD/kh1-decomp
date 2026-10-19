@@ -7,9 +7,9 @@
 #include "common.h"
 extern s32 D_003DB060;
 extern s32 D_0062F6D0;
-extern s32 D_0062F640;
-extern s32 D_0062F644;
-extern s32 D_0062F648;
+s32 D_0062F640 ALIGNED(16);
+s32 D_0062F644 ALIGNED(4);
+s32 D_0062F648 ALIGNED(8);
 extern f32 D_003DACB0;
 extern f32 D_003DACB4;
 extern s32 D_003DACB8;
@@ -19,14 +19,14 @@ extern u8 D_003DAF60[];
 void func_001e0608(void);
 void func_001e05a8(void *);
 extern s32 D_003DB064;
-extern s32 D_0062F64C;
-extern s32 D_0062F650;
-extern s32 D_0062F654;
+s32 D_0062F64C ALIGNED(4);
+s32 D_0062F650 ALIGNED(16);
+s32 D_0062F654 ALIGNED(4);
 void func_001e07a8(s32);
 extern s32 D_003DB06C;
-extern s32 D_0062F664;
-extern s32 D_0062F668;
-extern s32 D_0062F66C;
+s32 D_0062F664 ALIGNED(4);
+s32 D_0062F668 ALIGNED(8);
+s32 D_0062F66C ALIGNED(4);
 
 s32 func_001e0ab0(void) {
     f32 f;

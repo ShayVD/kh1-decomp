@@ -12,7 +12,7 @@ typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Pk
 extern Mgr D_00669700;
 extern UiEnt D_00669760[3];
 extern Pkt D_006694B0;
-extern QW *D_00669614;
+QW *D_00669614 ALIGNED(4);
 extern QW *D_00669610;
 extern QW D_00351E10[];
 extern u8 D_004267C0[];

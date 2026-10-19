@@ -131,8 +131,8 @@ void func_00216ea8(void) {
 }
 
 extern s32 D_00642CF0[];
-extern s32 D_00642D10;
-extern s32 D_00642D14;
+s32 D_00642D10 ALIGNED(16);
+s32 D_00642D14 ALIGNED(4);
 s32 func_0013c360(s32);
 
 void func_00218020(s32 n) {
@@ -858,14 +858,14 @@ void func_00220338(void *a) {
     else o[2]->xcc = 4;
     o[2]->xd2 = D_0064341C << 4;
 }
-extern s32 D_006435E8[];
-extern s32 D_00643610[];
-extern s32 D_00643638[];
+s32 D_006435E8[0xa] ALIGNED(8);
+s32 D_00643610[0xa] ALIGNED(16);
+s32 D_00643638[0xa] ALIGNED(8);
 extern s32 D_0064342C;
 extern s32 D_00643430[];
 extern s32 D_003F61E0[];
-extern s32 D_006435BC;
-extern s32 D_006435C0[];
+s32 D_006435BC ALIGNED(4);
+s32 D_006435C0[0xa] ALIGNED(16);
 extern s32 D_003F5C3C;
 s32 func_001eb318(s32);
 

@@ -29,7 +29,7 @@ extern M2C_UNK D_00669714;
 extern M2C_UNK D_00669A18;
 extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
-extern s32 D_00654570[];
+s32 D_00654570[0x33d] ALIGNED(16);
 extern s32 D_006627B0[];
 extern s32 D_00668370[];
 extern volatile s32 D_00668040[];

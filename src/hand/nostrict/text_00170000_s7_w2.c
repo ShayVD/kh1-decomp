@@ -7,7 +7,7 @@ extern V3 D_002E2780;
 extern V3 D_002E2790;
 extern f32 D_002E27A0;
 extern s32 D_002E27A8;
-extern S870 D_00575870;
+S870 D_00575870 ALIGNED(16);
 extern P1c *D_00362434;
 extern P1c *D_00362438;
 

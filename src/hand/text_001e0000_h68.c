@@ -56,7 +56,7 @@ extern Cb D_006305C0;
 extern Big498 D_003DC498;
 extern Big20 D_00389C90;
 extern u8 D_0062F760[];
-extern u8 D_0062F900[];
+u8 D_0062F900[0x100] ALIGNED(64);
 extern s32 D_003DC478;
 extern s32 D_003DC47C;
 extern s32 D_003DC480;

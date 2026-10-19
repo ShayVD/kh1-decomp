@@ -361,7 +361,7 @@ s32 func_00136bc0(W32Job *j) {
     }
     return 0;
 }
-extern s32 D_0052ABF0[2][32];
+s32 D_0052ABF0[2][32] ALIGNED(16);
 extern s32 D_0052ACF0[2];
 extern s32 D_0052ACF8;
 void func_001337e0(s32 a, s32 b, s32 c);
@@ -706,7 +706,7 @@ typedef struct {
     u8 pad02[0x10 - 0x2];
     f32 x10;
 } W32Fade;
-extern W32Spr *D_0052AD00;
+W32Spr *D_0052AD00 ALIGNED(16);
 W32Spr *func_001226f0(s32 a, s32 b, s32 c);
 void func_00122768(W32Spr *s);
 void func_00100ae0(void);

@@ -40,7 +40,7 @@ typedef struct {
     f32 t;
 } Ctx698;
 void func_001315c0(s32, s32, Vec3 *, f32);
-extern f32 *D_0062A430;
+f32 *D_0062A430 ALIGNED(16);
 extern f32 *D_0062A428;
 typedef struct { u8 pad0[0x10]; f32 x, y, z; } Obj9c0;
 extern u64 D_0038CD00;

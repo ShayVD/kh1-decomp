@@ -214,7 +214,7 @@ void func_0023cfe8(u8 *o, s32 k, s32 a) {
         break;
     }
 }
-extern Pkt D_00651D70;
+Pkt D_00651D70 ALIGNED(16);
 
 s32 func_0023d700(s32 a0, s32 a1, s32 x, s32 y, s32 q, f32 s) {
     s32 i;
