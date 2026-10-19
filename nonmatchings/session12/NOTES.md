@@ -282,3 +282,20 @@
   an extern array folds the offset into the symbol constant; a pointer variable keeps separate
   pseudos. Swapping float local declaration order swaps f20/f21. `(X+w)-32` inline lets cse reuse
   X+w; a separate temp does not.
+
+## s12w17: 001ba520 MATCHED (natural); 00125240, 001cfc28 analysis
+- 001ba520: src/hand/text_001b0000_s12_s12w17.c. One mask variable `n` for `~old` and then `~nw`
+  (set twice, dies twice: never local-alloc'd), so `t = nw & n` is not tied to it and gets v0;
+  `wC = old & n` ties to old. Flag block: `old = l->s.w4; nw = D_00621300; l->s.w4 = nw; n = ~old;
+  t = nw & n; l->s.w8 = t; n = ~nw; l->s.w10 = t; l->s.wC = old & n;`, then v[] in plain order.
+- 00125240: natural 8w (s12w17__00125240_8w_natural.c): every insn and GPR right, only x vs 1e4
+  swap f0/f1. In sched1 the EE puts FP constant loads (movsf) on the memory unit; with one shared
+  1.0 the constants take t1/t3/t5 and x is fixed at t4, so x's live length <= 24 (priority >= 5000)
+  vs 1e4 >= 6 (<= 3333): x always wins f0. Likely no natural single-block shape; best stays 5w
+  flagged.
+- 001cfc28: sched2 ties dsll and li.s on priority, reg class and dependent count, so LUID (sched1
+  order) decides; li.s has no in-block predecessor and the memory unit is free at t2. Needs a
+  dependence plain C does not provide.
+- Facts: local-alloc ties an output to a dying second operand of a commutative insn (gdb on
+  combine_regs). tools/matching/la3f_s12.py: la3 extended to FP (SF/DF qtys get f0-f19, f20-f30
+  even for call-crossing), exact on 00125240.
