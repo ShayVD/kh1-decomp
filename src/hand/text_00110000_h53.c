@@ -670,8 +670,7 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-void func_0024e088();
-void (*D_0046A6A8)(s32) ALIGNED(8) = (void *)func_0024e088;
+/* D_0046A6A8 stays extern: the dktitle.x overlay also writes it (two %lo fields), so it is shared. */
 extern u8 D_0048D2C8[];
 extern u8 D_0048D2D0[];
 extern u8 D_0048D2D8[];
