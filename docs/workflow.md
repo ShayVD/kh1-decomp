@@ -662,3 +662,28 @@ found that the next session needs:
   GS modes, per-frame DMA flow, mapping to a modern API; tools/vu/vif_chain.py walks a DMA chain.
 - Matching: no new matches. 0010d470 179 -> 170w natural (129w unnatural probe), 00110618 stays
   93w; nonmatchings/session14/NOTES.md; gdb global-alloc tracer tools/matching/gdb_s14/.
+
+## Session 15: what changed
+
+- **Runtime (PCSX2 on the user's Mac)**: M12, M12 with `SHIFT_DRAFTS=1` and a 3.93 MB M12 booted from
+  an appended ELF all play: save loading, area changes, world map and warp drive, Agrabah fights,
+  summons (Simba in M12, Genie in the drafts build), game over and Continue, Halloween Town. Table in
+  docs/shiftable-plan.md "Session 15". Trinity Limit and Traverse Town not reached.
+- **`tools/shift/patch_iso.py --append`**: the ELF goes after the end of the volume (ISO 9660 record and
+  PVD volume size updated, UDF anchor copied, retail slot zeroed); re-patching reuses the sectors;
+  without `--append` an appended image goes back to the slot. The disc-slot size limit is gone.
+- `make shift SHIFT_MODE=m2|m12 SHIFT_DATA_SHIFT=N` (default 0x1000; output `out/shift/<mode>-ds<N>/`):
+  move data/bss by N, e.g. 0x21000 to build an ELF bigger than the retail slot.
+- `shift/drafts.tsv`: func_00125240 now uses the session 15 draft (3 words, right size).
+- **tools/vu/gsdump.py**: summarises a PCSX2 single-frame GS dump (Tools > Save Single Frame GS Dump):
+  GIF tag formats per path, every GS state with its vertex count, uploads, privileged registers.
+  PCSX2 writes dumps to its own `snaps` folder under ~/Library, which the folder tools cannot open: the
+  user has to copy them into Downloads/kh1-test first. Needs `zstd` (apt) or the `zstandard` module.
+- PCSX2 on the Mac pauses when its window loses focus (status bar "Paused"; System > Pause unticks it).
+  Holding a key for more than ~0.15 s on the title screen can skip New Game/Load; wait ~5 s after Start
+  before pressing Down. World map: the drive menu is open on arrival and the stick moves the cursor
+  straight away (no need to close it with Cross); W from End of the World reaches the warp hole, then A,
+  A (Neverland, Halloween Town), A (warp hole), S (Agrabah).
+- Matching (1 worker, s15m1): no new matches. 00125240 5 -> 3 words flagged (right size 180). Closed
+  angles: ee-gcc 991111 builds (much worse; 001eddc0 needs 2.96's inline fixuns), -g variants
+  (identical code), ~30 more flags. nonmatchings/session15/NOTES.md; helpers tools/matching/*_s15.py.

@@ -1072,7 +1072,7 @@ M12 3,802,856 (2.3 KB), M12 with drafts 3,803,240 (1.9 KB). M1 adds the overlay 
 (0xb600 bytes with alignment); M2/M12 add the 0x1000 data shift as file-backed zeros. Options, roughly
 in order of effort:
 
-1. **Append the ELF at the end of the image** (`patch_iso.py --append`, to write): put the file in
+1. **Append the ELF at the end of the image** (`patch_iso.py --append`, written and booted in session 15; see "Session 15" below): put the file in
    new sectors after the last one, point its ISO 9660 directory record (LBA and size, both byte
    orders) there, and raise the PVD volume space size. No size limit for PCSX2; a burned DVD-5
    still has room (the image is about 3.5 GB). If the disc also carries UDF descriptors, their
@@ -1095,3 +1095,50 @@ in order of effort:
 
 Rotation slack and M2's 0x1000 are not a budget: growth in code or data comes out of the same
 disc slot, so option 1 (for testing) or 2 (if it boots) should come before any larger change.
+
+## Session 15: M12, drafts and an appended ELF in PCSX2 (2026-10-19)
+
+Same setup as session 14 (Shay's save, PCSX2 2.8.2 on the Mac, memory cards in
+`Downloads/kh1-test/memcards`). Test ISOs now: `KH1_M0.iso`, `KH1_M12.iso` (M12 in the retail slot),
+`KH1_BIG.iso` (appended ELF; holds whatever was patched last, the drafts build at the end of the session).
+
+| what | M12 | M12, data +0x21000 (3.93 MB, appended) | M12 + SHIFT_DRAFTS (appended) |
+|---|---|---|---|
+| boot, title, Load, save at End of the World | ok | ok | ok |
+| area change (End of the World) | ok | — | ok |
+| world map (wm.x), warp drive, landing menu | ok | ok | ok |
+| Agrabah (storage room, Main Street, Plaza), fights, pots | ok | — | ok |
+| summon in a fight | ok (Simba, xs_simba.x) | — | ok (Genie, xs_genie.x) |
+| game over and Continue | ok | — | ok |
+| Halloween Town, Guillotine Square landing | — | ok (textured, characters) | — |
+
+Not run: Trinity Limit (`xl_limit.x` is also loaded by func_00158ec8 whenever a field allows it, so
+its load path ran in every field above; Shay judged the rest enough). Traverse Town was not reached
+(the world-map cursor would not go past the warp holes left of Agrabah with keyboard input; it needs
+a diagonal or another route). The drafts build was the one with the session 14 00125240 draft (5 words,
+184 bytes); `shift/drafts.tsv` now points at the 3-word session 15 draft (180 bytes), which links and
+passes the static checks but was not booted.
+
+Summons need enemies on screen and Donald/Goofy kill Agrabah's small Heartless within a second, and
+the party menu only swaps members (no solo party). What worked: land at the storage room, walk out
+into Main Street and open Magic > Summon in the same batch as the walk, before the party engages.
+
+### `patch_iso.py --append` (disc room, option 1)
+
+The ELF goes in new sectors after the last sector of the volume: the ISO 9660 directory record of
+SLPS_251.98 gets the new LBA and size (both byte orders), the PVD volume space size (offset 80, both
+byte orders) grows to cover it, and the UDF anchor that sat in the last sector (the disc is a UDF
+bridge: anchors at 256 and N-1) is copied to the new last sector. The UDF side is not otherwise
+changed (its file entry still points at the retail slot and its partition ends at the old end); the
+BIOS and PCSX2 boot through ISO 9660. The retail slot is zeroed, so a working boot can only have read
+the appended copy. Patching an already-appended OUT reuses the same sectors and truncates the image to
+the new end; patching without `--append` puts an appended OUT back into the retail slot (volume size
+and length restored). Checked in the container with a genisoimage `-udf` image (isoinfo extracts the
+appended file byte-identical; append, re-append, back to slot, append again), and in PCSX2 with
+KH1_BIG.iso: a 3,933,928-byte M12 (data and bss moved by 0x21000, `make shift SHIFT_MODE=m12
+SHIFT_DATA_SHIFT=0x21000`, 128 KB over the slot) boots and plays with the retail slot zeroed.
+
+`SHIFT_DATA_SHIFT` (Makefile, m2/m12; default 0x1000, output dir gets `-ds<N>`) is how to make a big
+test ELF. The real growth (code from C rewrites, bigger tables) can now come from anywhere: the slot
+limit is gone for PCSX2 and for a burned DVD-5 (about 3.5 GB used). Options 2-5 above are only needed
+for a fixed-size disc layout.
