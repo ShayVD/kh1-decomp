@@ -226,3 +226,21 @@
   order that reaches a target allocation (found 001137f8: 5 swaps pointing at the base HIGH LUID).
 - Base-pointer lever: a pointer local set at the top gives the base HIGH a low LUID, so it wins
   sched1 priority ties against constants.
+
+## s12w13: 00120cf8 MATCHED (flagged); 00125240, 00166570 unchanged
+- 00120cf8: src/hand/text_00120000_s12_s12w13.c. FLAGGED: a no-op save/restore of the divisor in
+  the inner body (`n = 3;` top of outer body, `s32 e = n;` top of inner body, `n = e;` at its end).
+  gcse cprop rewrites `n = e` to `(set n n)`, which survives loop pass 1 as a second set (outer
+  loop refuses to hoist n), then delete_trivially_dead_insns removes it between the passes and
+  pass 2 hoists `li 3` after the giv inits. The `== 1` test stores in both arms (plain C): one more
+  inner-loop insn at sched1 makes n and &m[i][i] tie in global-alloc (lower regno wins); jump2
+  merges the stores.
+- 00125240 stays 5w: chaining the 1.0 stores shares the pseudo but x/1e4 swap f0/f1; a no-else
+  test with a climbed order gets every FP reg right but leaves the 77E0 lui late (6w).
+- 00166570 stays 21w: at -O2 expand_call puts every `(plus sp N)` call arg in a pseudo, so gcse
+  always sees these addresses; no source change keeps PRE away.
+- Facts: loop.c refuses to move regs created during the same pass (REGNO >= max_reg_before_loop).
+  update_equiv_regs doubles REG_LIVE_LENGTH for pseudos with a REG_EQUIV constant (hoisted
+  constants lose half their global priority). sched1 recomputes REG_LIVE_LENGTH per region
+  (real insns only); .lreg numbers are post-sched1. Inner-loop `do {} while (0)` wrappers do not
+  change REG_N_REFS loop depth.

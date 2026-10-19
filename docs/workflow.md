@@ -582,3 +582,5 @@ found that the next session needs:
 - **Flagged matches count** (user decision, 2026-10-19): byte-identical matches that rely on a dead
   store, a dead float test, identical if/else arms or a never-true test stay in src/ and count as
   matched. Each keeps a comment naming the trick so a later pass can replace it with cleaner source.
+- Flagged in session 12: 0019f1f0 (empty `do { } while (0)` sched barriers), 00120cf8 (no-op
+  save/restore of a loop divisor that gcse turns into a self-copy).
