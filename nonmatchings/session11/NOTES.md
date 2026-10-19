@@ -394,3 +394,8 @@
 - 0010ba98: 7 -> 2w (w34__0010ba98_2w.c, strict, RO=0048cd30): dead `w = 0;` before `func_0010b170(t->win)` in case 0 keeps the bb0 PRE copy; inner switch as `case 1, case 2, case 0: case 3:` (shared label stops cse1 following in) with a real `w = t->win;` ending the shared arm. Left: `lhu v0,16(a0)` comes out 16(a1).
 - 00107c48: 3w with a dead SET instead of w20's dead test (w34__00107c48_3w_deadset.c): `if (i != 0) { i = 0; n = 0; }` (two sets survive to combine; one set becomes a cmov in jump1). Left: block-0 lui/lw register swap.
 - Facts: an FP-condition dead-set test changes block structure through allocation at no code cost (flow2 deletes it). Integer one-set arms become cmovs in jump1. Shared case labels act as a cse1 kill point. lchkro_s10 and variant runners need RO exported.
+
+## s11w36 (001f2630, 001f1fc8 finishers), no gains
+- 001f2630: w36__001f2630_3w_plainfix.c has every block register right, only store order off. x2c must sit in sched1's weight -1 group (LUID order x34 x44 x10 x14 x2c); with a plain constant that order breaks global alloc, with k8 + dead set local-alloc gives f4+288 the a1 (the li fills an idle alu slot right after the call, so k8 lives long).
+- 001f1fc8: the one store can follow x38 only if its value stays live (weight 0, hoisted constant); hoisted shape gives cy+h a1 instead of t0.
+- Facts: sched1 store rank = priority, reg weight (-1 if value dies), dependents, LUID. A pseudo set after a call depends only on that call, so its li can't be delayed. Same-block vs other-block dead set of a constant variable gives identical code.
