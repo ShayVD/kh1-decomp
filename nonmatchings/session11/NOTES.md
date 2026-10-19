@@ -445,3 +445,9 @@
 ## s11w43 (00199ac8 and big permutation targets)
 - 00199ac8: 22 -> 19w (w43__00199ac8_19w.c, hand/NOSTRICT fill mode, RO=48fb70, size right, 4 flagged dead FP tests). Left: du (.130) outranks the case-6 hoisted copy of d (.120), swapping t3/t4 everywhere.
 - Facts: join one-line ifs with their bodies before insertion sweeps (/tmp/claude-0/s11/s11w43/bin/join.py). Ref weights 1/2/3 by loop depth; a hoisted invariant used once in the loop has 5 refs. A dead FP test before a branch on a spilled pseudo leaves a CODE_LABEL that stops reload reusing its register. `mtc1; b; cvt.s.w` is a gas fill (floatsisf2 is one 8-byte insn), so the function is a fill-mode one.
+
+## s11w42 (001cfc28, 00120cf8, 0019f1f0, 00125240, 001eddc0, 001fbcd8, 001f18e8)
+- MATCH 001fbcd8 (nostrict), FLAGGED dead FP test: from s11w6's 15w, one shared v (neg block and digit loop), loop's own x3 instead of x2, `if ((f32)v < 0.0f) i = 0;` at the end of the neg block (lengthens v so it ranks below the loop temps), neg-block loads first in order u, v, gw, gh.
+- 00120cf8: 5 -> 4w (w42__00120cf8_4w.c, flagged): `n = 3;` at the top of the outer body, `k % n`, `if ((f32)n < 0.0f) n = 0;` after the inner loop. Left: li 3 not hoisted to the outer preheader; outer giv sll.
+- Others no gain: 0019f1f0 needs a used label after bltz (case ranges all group into one node); 001eddc0 priority gap too large.
+- Facts: re-climb statement order after a dead test fixes priorities. Under nostrict a store before a load pins the load behind it in sched2; loads first frees sched2.
