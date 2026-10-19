@@ -103,7 +103,11 @@ def function_relocs(an: K.FuncAnalysis, f: K.Func, namer: Namer, warn: list[str]
                 rel[a] = (0x03FFFFFF, "R_MIPS_26", expr(*namer.code(t)))
             else:
                 warn.append(f"{f.name}: 0x{a:08x} jump to 0x{t:08x} outside the code, left absolute")
-    lo_luis, full_of = flow_pairs(an, f, warn)
+    lo_luis, full_of = flow_pairs(an, f, [])
+    if more_jtbls(an, f, full_of):  # tables the linear tracker missed: redo the flow with their edges
+        lo_luis, full_of = flow_pairs(an, f, warn)
+    else:
+        lo_luis, full_of = flow_pairs(an, f, warn)
     # connected groups of luis and the low halves they reach; each group is
     # relocated against one symbol (the first target's)
     parent: dict[int, int] = {}
@@ -151,6 +155,48 @@ def function_relocs(an: K.FuncAnalysis, f: K.Func, namer: Namer, warn: list[str]
                         f"(a constant, a dead value, or address arithmetic the tracker misses)")
     return rel
 
+
+
+def more_jtbls(an: K.FuncAnalysis, f: K.Func, full_of: dict[int, int]) -> bool:
+    """Jump tables kh1tool's pattern (a %lo load right before the jr) misses,
+    e.g. `addiu v1,a0,%lo(tbl); addu v0,v0,v1; lw a0,0(v0); jr a0`: the last
+    %lo address in the data before a jr through a register other than ra,
+    entries read from the original while they point into the function
+    (at most the bound of a preceding sltiu). Added to an.jtbls."""
+    orig = _orig_elf()
+    found = False
+    for k, (a, w, _m, _o) in enumerate(an.insns):
+        i = mips.Insn(a, w)
+        if not i.is_jr or i.is_jr_ra:
+            continue
+        prev = [x for x in an.insns[max(0, k - 8): k]]
+        base = next((full_of[pa] for pa, _pw, _pm, _po in reversed(prev)
+                     if pa in full_of and 0x00272C70 <= full_of[pa] < 0x00494068), None)
+        if base is None or base in an.jtbls:
+            continue
+        bound = next((pw & 0xFFFF for pa, pw, _pm, _po in reversed(an.insns[max(0, k - 16): k])
+                      if mips.op(pw) == 0x0B), 256)
+        entries = []
+        for n in range(bound):
+            t = int.from_bytes(orig.read(base + 4 * n, 4) or b"\0\0\0\0", "little")
+            if not f.addr <= t < f.end:
+                break
+            entries.append(t)
+        if entries:
+            an.jtbls[base] = entries
+            an.labels.update(entries)
+            found = True
+    return found
+
+
+_ORIG = None
+
+
+def _orig_elf():
+    global _ORIG
+    if _ORIG is None:
+        _ORIG = K.require_orig(K.load_config())
+    return _ORIG
 
 
 BRANCH_LIKELY = {0x14, 0x15, 0x16, 0x17}
