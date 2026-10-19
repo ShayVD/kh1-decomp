@@ -467,3 +467,9 @@
 - The 592-byte third s-register is reload's GR scratch for fix_truncsfsi2 when no caller-saved reg is free (i*16 lives long in sched1), not a pseudo losing t9. Check "Reloads for insn" in .greg.
 - 001ba520: a dead FP test after `l->s.w4 = nw;` gives the original nor/and order but the split reloads v[] from the stack (472 -> 492+).
 - Facts: pointer-typed globals read as alias set 0 in strict mode; a union read also delays a float load to the same ready time. Split chained assignments into one store per statement before climbing.
+
+## s11w50 (alias-member/union sweep)
+- MATCH 00202678 (hand, STRICT, no hacks): it was a strict function. From s8 w12's 7w nostrict draft moved to strict (148w), then alias set 0 via unions only where the original keeps nostrict-style ordering: `UQ = union { u64 d; s32 w[2]; }` for Q header stores and H2 tag/regs, `UQ *buf`, Wnd `UF x90` and `UF sx` (`UF = union { s32 i; f32 f; }`). 148 -> 112 -> 26 -> 2 -> 1 -> 0.
+- 001f18e8: 16 -> 9w (w50__001f18e8_9w.c, nofill, right size): `((UF *)&g->x34)->i = f4 + 288;` and `((UF *)&g->x44)->i = cy + h;` keep the lhu loads before those stores; `g->x4c = 0;` after x48. Left: `tag = p + 5` issues before `jal 1efb98`.
+- No lever for 001f2630/001f1fc8 (same-base different-offset stores never conflict), 001137f8 (distinct globals are proven disjoint before alias sets), 00192958, 0021e120, 00200e28.
+- Facts: a "nostrict" function may be strict with union fields; loads stuck behind spill stores in sched2 point to strict. A union-typed store after a load adds exactly one chosen edge.
