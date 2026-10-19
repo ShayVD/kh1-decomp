@@ -366,3 +366,10 @@
 - 00125240 (8): FP local-alloc; needed post-sched1 lives: 1e4 < x/6, -1e4 > x/6, 1.0 > x/4 and > 1.5 * (-1e4).
 - 001fa8b0 (12): no gain.
 - Facts: cse copy swap only fires when the previous insn sets the copy source; canonical register depends on REGNO_LAST_UID. Splitting a many-block mask/temp per region halves refs (global-alloc priority lever). update_equiv_regs doesn't move a constant within one block.
+
+## s11w31 (0010ba98, 00199ac8/0019ab38, 00166570, 00200e28, 00105288)
+- 0010ba98: 21 -> 7w with a flagged dead set (w31__0010ba98_7w_hack.c, strict, RO=0048cd30, right size 760). `extern s32 func_0010ea00(P20 *)` called with t->p20 (check callee arity in its asm); `w = t->win;` after cb; join stores f54 then f50; case-1 tail f50, f54, state; hack `w = 0; w = t->win;` at the end of the c==1 arm kills the post-call PRE copy for CPROP2. Each fix only pays off once the kill is in. Left: bb0 PRE copy R = w (`move a0,a1` in the dispatch slot); needs a set of w inside bb0 that cse1 doesn't fold. 2048-combination sweep floor 7.
+- 00199ac8/0019ab38 (22): db vs hoisted 0.0f is a global-alloc priority question (db .124 vs zeros .089/.062); `du = k` copy must be created after gcse.
+- 00166570 (21): frame addresses do go through PRE (sp+128); the original recomputes after the loop.
+- 00105288 (28): lui hoisting decides it; 00200e28 not worked.
+- Facts: retry no-gain fixes after the main blocker is fixed. Anchor variant-script edits at `\n` (case 1 matches inside deeper indents).
