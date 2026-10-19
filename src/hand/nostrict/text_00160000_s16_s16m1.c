@@ -1,4 +1,11 @@
-/* func_00166570: hand/nostrict. ~27 words off by sequence diff (s6: ~59 seq-diff lines), 4168 vs 4176 bytes. Fixed from s6: the bone-chain while loop uses pointer locals pa = m40, pb = m80 declared after the two sceVu0CopyMatrix calls: the gcse PRE reuse of sp+128 and the 1023 reload are gone and the loop body now matches. Still off: the original copies the pre-loop m40/m80 address regs (s2/s0) into the loop regs (move s6,s2; move s2,s0: 2 missing words), so m0 lands in s8 instead of s6 on the other path. */
+/* func_00166570: MATCHED (session 16, s16m1), hand/nostrict. From s7 w7's 21w draft: the three
+ * work matrices are one local array mm[3] (same frame offsets 0/64/128), the bone-chain loop uses
+ * mm[1]/mm[2] directly (s11w37's preheader), and a pointer mp = mm, set after `bones = ...`, is used
+ * for the two post-loop mm[2][0]/mm[1][0] arguments. mp is a REG copy of the soft frame pointer:
+ * gcse neither hashes it as an expression nor copy-propagates a hard register, so (plus mp 128) /
+ * (plus mp 64) are not PRE-redundant with the pre-loop (plus $fp N); mp gets REG_EQUIV $fp, no hard
+ * register, and reload rematerialises it as sp: the original's fresh `addiu a1,sp,128 / addiu
+ * a2,sp,64` after the loop and the `move s6,s2; move s2,s0` preheader copies. */
 #include "common.h"
 #include "platform/math.h"
 
@@ -72,9 +79,8 @@ static inline void inl_scl(G2Mtx d, G2Mtx s, f32 *v) {
 
 #define INL2(a, b, o, p) do { func_00162c5c(a, (o)->p15C[p], a); func_00162c5c(b, (o)->p160[p], b); } while (0)
 void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
-    G2Mtx m0;
-    G2Mtx m40;
-    G2Mtx m80;
+    G2Mtx mm[3];
+    G2Mtx *mp;
     f32 v[4];
     f32 w[4];
     f32 e[4];
@@ -121,6 +127,7 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
     }
     lnk = o->p16C;
     bones = (*o->p0)->bones;
+    mp = mm;
     for (i = 0; i < (*o->p0)->n; i++) {
         func_002674f0(o->p150[i][0], o->p168[i], o->p164[i], f);
         if (bones[i].b.par == 0x3FF) {
@@ -146,8 +153,8 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
                 func_001625c8(o->p154[bones[i].b.par], m100);
                 func_00162848(v, m100, v);
                 { f32 ln = o->p150[i][0][0] * bones[i + 1].t[0]; func_00162d00(v, 0, o->p158[i], 0, w, ln, 0.0f, 0.0f, 0.0f); }
-                inl_scl(m0, o->p158[i], o->p150[i][0]);
-                func_00162c5c(o->p154[i], o->p154[bones[i].b.par], m0);
+                inl_scl(mm[0], o->p158[i], o->p150[i][0]);
+                func_00162c5c(o->p154[i], o->p154[bones[i].b.par], mm[0]);
                 func_00162848(o->p154[i][3], o->p154[bones[i].b.par], o->p150[i][3]);
                 o->p154[i][3][3] = 1.0f;
                 func_001628a0(o->p158[i], o->p154[i], o->p150[i][1]);
@@ -199,19 +206,19 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
                                   ln, o->p150[i][0][0] * s1[0] * bones[i + 2].t[0], 0.0f, s1[3]);
                 }
                 lnk++;
-                inl_scl(m0, o->p158[i], o->p150[i][0]);
-                func_00162c5c(o->p154[i], o->p154[bones[i].b.par], m0);
+                inl_scl(mm[0], o->p158[i], o->p150[i][0]);
+                func_00162c5c(o->p154[i], o->p154[bones[i].b.par], mm[0]);
                 func_00162848(o->p154[i][3], o->p154[bones[i].b.par], o->p150[i][3]);
                 o->p154[i][3][3] = 1.0f;
                 func_001628a0(o->p158[i], o->p154[i], o->p150[i][1]);
-                sceVu0UnitMatrix(m0);
-                m0[0][0] = 1.0f / o->p150[i][0][0];
-                m0[1][1] = 1.0f / o->p150[i][0][1];
-                m0[2][2] = 1.0f / o->p150[i][0][2];
-                func_00162c5c(m0, m0, o->p158[i + 1]);
+                sceVu0UnitMatrix(mm[0]);
+                mm[0][0][0] = 1.0f / o->p150[i][0][0];
+                mm[0][1][1] = 1.0f / o->p150[i][0][1];
+                mm[0][2][2] = 1.0f / o->p150[i][0][2];
+                func_00162c5c(mm[0], mm[0], o->p158[i + 1]);
                 func_001627d0(o->p150[i + 1][1], o->p150[i][0], o->p150[i + 1][0]);
-                inl_scl(m0, m0, o->p150[i + 1][1]);
-                func_00162c5c(o->p154[i + 1], o->p154[i], m0);
+                inl_scl(mm[0], mm[0], o->p150[i + 1][1]);
+                func_00162c5c(o->p154[i + 1], o->p154[i], mm[0]);
                 func_00162848(o->p154[i + 1][3], o->p154[i], bones[i + 1].t);
                 o->p154[i + 1][3][3] = 1.0f;
                 func_001628a0(o->p158[i + 1], o->p154[i + 1], o->p150[i + 1][1]);
@@ -221,31 +228,31 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
         }
         par = bones[i].b.par;
         if (bones[i].b.flag) {
-            sceVu0CopyMatrix(m40, o->p15C[i]);
-            sceVu0CopyMatrix(m80, o->p160[i]);
-            { f32 (*pa)[4] = m40, (*pb)[4] = m80;
+            sceVu0CopyMatrix(mm[1], o->p15C[i]);
+            sceVu0CopyMatrix(mm[2], o->p160[i]);
+            {
             while (par != 0x3FF && !bones[par].b.flag) {
-                func_00162c5c(pa, o->p15C[par], pa);
-                func_00162c5c(pb, o->p160[par], pb);
+                func_00162c5c(mm[1], o->p15C[par], mm[1]);
+                func_00162c5c(mm[2], o->p160[par], mm[2]);
                 par = bones[par].b.par;
             } }
-            func_00267e60(m0[3], m80[3], m40[3], f);
-            func_00267e60(m0[0], m80[0], m40[0], f);
-            func_00162c20(m0[0]);
-            func_00267e60(m0[1], m80[1], m40[1], f);
-            func_00162c20(m0[1]);
-            func_00267370(m0[2], m0[0], m0[1]);
-            func_00162c20(m0[2]);
-            func_00267370(m0[1], m0[2], m0[0]);
-            func_00162c20(m0[1]);
+            func_00267e60(mm[0][3], mm[2][3], mm[1][3], f);
+            func_00267e60(mm[0][0], mp[2][0], mp[1][0], f);
+            func_00162c20(mm[0][0]);
+            func_00267e60(mm[0][1], mm[2][1], mm[1][1], f);
+            func_00162c20(mm[0][1]);
+            func_00267370(mm[0][2], mm[0][0], mm[0][1]);
+            func_00162c20(mm[0][2]);
+            func_00267370(mm[0][1], mm[0][2], mm[0][0]);
+            func_00162c20(mm[0][1]);
             if (par == 0x3FF) {
-                func_00162c5c(o->p158[i], D_00573F10[0], m0);
+                func_00162c5c(o->p158[i], D_00573F10[0], mm[0]);
                 inl_scl(o->p154[i], o->p158[i], o->p150[i][1]);
-                func_00162848(o->p154[i][3], D_00573F10[0], m0[3]);
+                func_00162848(o->p154[i][3], D_00573F10[0], mm[0][3]);
             } else {
-                func_00162c5c(o->p158[i], o->p158[par], m0);
+                func_00162c5c(o->p158[i], o->p158[par], mm[0]);
                 inl_scl(o->p154[i], o->p158[i], o->p150[i][1]);
-                func_00162848(o->p154[i][3], o->p154[par], m0[3]);
+                func_00162848(o->p154[i][3], o->p154[par], mm[0][3]);
             }
         }
     }
@@ -254,11 +261,11 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
     }
     if (fabsf(D_00574F20[0] - 1.0f) > 0.005f || fabsf(D_00574F20[1] - 1.0f) > 0.005f
         || fabsf(D_00574F20[2] - 1.0f) > 0.005f) {
-        sceVu0UnitMatrix(m40);
-        m40[0][0] = D_00574F20[0];
-        m40[1][1] = D_00574F20[1];
-        m40[2][2] = D_00574F20[2];
-        for (i = 0; i < (*o->p0)->n; i++) func_00162c5c(o->p154[i], m40, o->p154[i]);
+        sceVu0UnitMatrix(mm[1]);
+        mm[1][0][0] = D_00574F20[0];
+        mm[1][1][1] = D_00574F20[1];
+        mm[1][2][2] = D_00574F20[2];
+        for (i = 0; i < (*o->p0)->n; i++) func_00162c5c(o->p154[i], mm[1], o->p154[i]);
     }
     for (i = 0; i < (*o->p0)->n; i++) {
         o->p154[i][3][0] += D_00574F10[0];

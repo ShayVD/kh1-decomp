@@ -124,6 +124,9 @@ SHIFT_DRAFTS     ?= 0
 # SHIFT_DATA_SHIFT (m2/m12): how far .data/.bss move; a larger value makes a bigger ELF
 # (file-backed zeros), e.g. to test tools/shift/patch_iso.py --append. Output gets -dsN.
 SHIFT_DATA_SHIFT ?= 0x1000
+# SHIFT_FLOAT=1 (moved modes; output gets -float): the variables C defines leave their
+# original place (data after the blob, bss after the original .bss); phase 4.
+SHIFT_FLOAT      ?= 0
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
 # (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
 # with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
@@ -131,12 +134,12 @@ SHIFT_OVERLAYS   ?= out/overlays
 SHIFT_OVL_TIER   ?= 2
 SHIFT_OVL_FIXUPS ?= 1
 SHIFT_PY      := $(PY) -I
-SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE)$(if $(filter 1,$(SHIFT_DRAFTS)),-drafts)$(if $(filter-out 0x1000,$(SHIFT_DATA_SHIFT)),-ds$(SHIFT_DATA_SHIFT)))
+SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE)$(if $(filter 1,$(SHIFT_DRAFTS)),-drafts)$(if $(filter 1,$(SHIFT_FLOAT)),-float)$(if $(filter-out 0x1000,$(SHIFT_DATA_SHIFT)),-ds$(SHIFT_DATA_SHIFT)))
 ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
 
 shift: $(PATCHED)
 ifneq ($(SHIFT_MODE),m0)
-	@$(MAKE) --no-print-directory shift SHIFT_MODE=m0 SHIFT_DRAFTS=0
+	@$(MAKE) --no-print-directory shift SHIFT_MODE=m0 SHIFT_DRAFTS=0 SHIFT_FLOAT=0
 else ifeq ($(SHIFT_DRAFTS),1)
 	$(error SHIFT_DRAFTS=1 needs SHIFT_MODE=m1, m2 or m12: drafts are not at the original addresses)
 endif
@@ -168,7 +171,7 @@ endif
 	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build --out-dir $$vdir $$vdef)"; fi; \
 	drafts=""; if [ "$(SHIFT_DRAFTS)" = 1 ]; then drafts="$$($(SHIFT_PY) tools/shift/drafts.py build --out-dir $(SHIFT_OUT)/drafts)"; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

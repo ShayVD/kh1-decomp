@@ -320,6 +320,11 @@ def cmd_gen(a) -> int:
     variables = collect_variables(elves)
     data_vars = [v for v in variables if v.region == "data"]
     bss_vars = [v for v in variables if v.region == "bss"]
+    floating = set()
+    if a.float_vars:
+        if a.mode == "m0":
+            sys.exit("error: --float-vars needs a moved mode: floated variables are not at their original address")
+        floating = {v.name for v in variables}
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
@@ -424,11 +429,29 @@ def cmd_gen(a) -> int:
         else:
             tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
             kinds["abs"] += 1
+    # A floated variable leaves its original place: nothing else may point inside it
+    # (another D_ name defined as blob/bss base + offset, or a blob pointer).
+    fl_ranges = sorted((v.addr, v.addr + v.size, v.name) for v in variables if v.name in floating)
+    def in_floated(addr: int):
+        i = bisect.bisect_right(fl_ranges, (addr, 1 << 40, "")) - 1
+        return fl_ranges[i][2] if i >= 0 and addr < fl_ranges[i][1] else None
+    for line in tail:
+        m = re.match(r"(\S+) = D_(BLOB|BSS) ([+-]) 0x([0-9a-f]+);", line)
+        if m:
+            base = blob_start if m.group(2) == "BLOB" else bss_start
+            ad = base + (int(m.group(4), 16) if m.group(3) == "+" else -int(m.group(4), 16))
+            if in_floated(ad):
+                errors.append(f"--float-vars: {m.group(1)} (0x{ad:08x}) points inside {in_floated(ad)}")
     # Data relocations (data_relocs.tsv): pointers in the blob become `.word sym+addend`.
     # Code targets get a label at their function (__dr_XXXXXXXX = function start).
     drel, drel_err = load_data_relocs(Path(a.data_relocs), a.reloc_tier,
                                       {f.name: f.addr for f in K.load_layout()})
     errors += drel_err
+    for w_addr, (sym, add, _hi, _t) in drel.items():
+        if sym in ("D_BLOB", "D_BSS"):
+            ad = (blob_start if sym == "D_BLOB" else bss_start) + add
+            if in_floated(ad):
+                errors.append(f"--float-vars: the blob word at 0x{w_addr:08x} points inside {in_floated(ad)}")
     hole_ranges = sorted((r.addr, r.addr + r.size) for r in primary)
     in_holes = 0
     for w_addr in list(drel):
@@ -577,6 +600,10 @@ def cmd_gen(a) -> int:
         if r.addr % r.align:
             print(f"error: {r.section} at 0x{r.addr:08x} is not {r.align}-aligned", file=sys.stderr)
             return 1
+        if r.name in floating:  # its old place stays a zero gap; the variable goes after the blob
+            data.append(f"    . += 0x{r.size:x};  /* {r.name} floated */")
+            cur = r.addr + r.size
+            continue
         data.append(f"    KEEP({r.obj}({r.section}))  /* 0x{r.addr:08x} */")
         if r.region:
             expected.append((r.addr, "data", r.name))
@@ -584,6 +611,11 @@ def cmd_gen(a) -> int:
             expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
         cur = r.addr + r.size
     emit_chunk(blob_end)
+    fl_data = [v for v in data_vars if v.name in floating]
+    if fl_data:
+        # --float-vars: the variables in their own place after the blob
+        data += ["    __float_data_start = .;"]
+        data += [f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */" for v in fl_data]
     if drafts:
         # SHIFT_DRAFTS: the drafts' own rodata (jump tables, constants) after the blob;
         # the asm version's tables in the blob stay, unused by the draft.
@@ -598,7 +630,7 @@ def cmd_gen(a) -> int:
         data += [f"    KEEP({o}(.text .text.* .rodata .rodata.* .data .data.* .sdata .sdata.* "
                  f".bss .bss.* .sbss .sbss.* .scommon COMMON .ovl_fixups))" for o in ovl_objs]
         data += ["    __ovl_fixup_end = .;"]
-    if ovl_objs or drafts:
+    if ovl_objs or drafts or fl_data:
         data += ["    . = ALIGN(128);", f"    . += 0x{blob_end % 128:x};"]
     data += ["    _edata = .;", "  } =0"]
     rodup = []
@@ -615,11 +647,20 @@ def cmd_gen(a) -> int:
 
     # Variables C defines in the bss range: at their offset from D_BSS (zero-initialised,
     # so their input sections only reserve space in the NOLOAD output section).
-    bss_lines = []
+    bss_lines, bss_tail = [], []
     for v in bss_vars:
+        if v.name in floating:  # after the original .bss, before _end (crt0 clears up to _end)
+            bss_tail.append(f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */")
+            continue
         bss_lines.append(f"    . = D_BSS + 0x{v.addr - bss_start:x};")
         bss_lines.append(f"    KEEP({v.obj}({v.section}))  /* 0x{v.addr:08x} */")
         expected.append((v.addr, "bss", v.name))
+    if bss_tail:
+        # crt0 clears .bss up to D_00675018 and starts the heap there: it must be the new _end
+        tail = [("D_00675018 = _end;  /* heap start: after the floated bss variables */"
+                 if t.startswith("D_00675018 = ") else t) for t in tail]
+        bss_tail = [f"    . = D_BSS + 0x{image_end - bss_start:x};", "    . = ALIGN(16);",
+                    "    __float_bss_start = .;"] + bss_tail
     out = [
         "/* Auto-generated by tools/shift/shift_ld.py: link script of the shiftable",
         " * build (docs/shiftable-plan.md). No PROVIDE: every name is defined here",
@@ -639,6 +680,7 @@ def cmd_gen(a) -> int:
         "    D_BSS = .;",
         *bss_lines,
         f"    . = D_BSS + 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
+        *bss_tail,
         "    _end = .;",
         "  }",
         "",
@@ -688,7 +730,8 @@ def cmd_gen(a) -> int:
     print(f"shift-ld: {len(funcs)} functions ({len(asm_objs)} extra asm objects), {len(rodata)} rodata holes, "
           f"{chunk} blob chunks, {len(dups)} merged rodata copies; defined {kinds['alias']} aliases + {kinds['label']} mid-function labels, "
           f"{kinds['data']} data + {kinds['bss']} bss names, {kinds['abs']} absolute (outside the image)"
-          + (f"; {len(data_vars)} data + {len(bss_vars)} bss variables defined in C" if variables else ""))
+          + (f"; {len(data_vars)} data + {len(bss_vars)} bss variables defined in C" if variables else "")
+          + (f" ({len(floating)} floated)" if floating else ""))
     print(f"shift-ld: mode {a.mode}: {n_words} data relocations (tier <= {a.reloc_tier}) as .word sym+addend"
           + (f", {in_holes} rows inside rodata holes skipped" if in_holes else "")
           + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"
@@ -736,6 +779,9 @@ def main() -> int:
                    help="emit data_relocs.tsv rows with tier <= N as relocations (0: none)")
     g.add_argument("--subst-obj", action="append", default=[], metavar="OBJ=VARIANT",
                    help="link VARIANT instead of OBJ (KH1_SHIFTABLE builds)")
+    g.add_argument("--float-vars", action="store_true",
+                   help="moved modes: link the variables C defines away from their original place "
+                        "(data after the blob, bss after the original .bss); phase 4")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")
