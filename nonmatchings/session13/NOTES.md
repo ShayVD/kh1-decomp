@@ -39,3 +39,25 @@
 - 00200e28 (24w) and 001c62a0 (56w) re-verified only.
 - Facts: gcc991111 runs flow2, sched2, then jump2 (cross-jumping after sched2). It expands a division
   as div + trap_if, and sched1 moves the trap ahead of the div; the trap counts toward issue rate 2.
+
+## s13w3: 001fd858 112w -> 1w (flagged) / 25w (natural); 00110618 stays 93w
+- s13w3__001fd858_1w_flagged.c (hand/nostrict, size 1908 right, CONTEXT_ONLY fe1b8/fe408/fe4e0): a dead
+  float test `if ((f32)r < 0.0f) t = 0;` at the join of the 0x300 if/else chain before `goto fade`.
+  Last word: 0x654 original `bnezl` (annulled), ours `bnez`: reorg fill_slots_from_thread annul decision
+  (fallthrough opposite_needed is [a0,s0,s1,sp], no v0). Pos-clamp variants b-e worse.
+- s13w3__001fd858_25w_natural.c (no tricks, 1900 vs 1908): fade cross-jump direction (DE8 into DE4)
+  needs the forwarder. Natural changes 112 -> 25: d6>0 smoothing written out in up and down paths;
+  `s32 f = o->d0 & 0xf` set in all 4 smoothing places; separate m and m2 masks; `max = o->ce << 4`
+  before the `y0 > 0` test; in pos f, t, then max; DE4/DE8 clamp tails written out (no goto clampA).
+- 00110618 (one basic block): our fbn (refs 5) fails local-alloc and takes f24 in global-alloc by
+  evicting fb's local qty (global.c "kick out poorly used local regs"), so fb lives in memory; global
+  sxd gets f31 by copy preference (eviction scan runs top-down). The original likely evicted l's f28.
+  Tried libvu0-style inline ViewScreen/ViewClip (172), az in stores (174), no fbn (161), az after
+  UnitMatrix (139, climbed 107).
+- Facts: in a single-block function sched1 moves long-lived values across calls; temps stay between
+  neighbouring calls. local-alloc ties combine pseudo chains into one qty. jump2 cross-jumping of
+  duplicated code adds refs before regalloc. One variable for two lives unions their conflicts. A dead
+  FP test at an if/else join leaves a forwarder jump2 still sees (flips cross-jump direction); integer
+  dead tests are removed too early. find_cross_jump stops i1 at a CODE_LABEL but skips labels on i2.
+- gdb tracers: tools/matching/gdb_s13/ (la: local-alloc qtys; ga/ga2: global find_reg incl. FP; rg:
+  reorg; cj: cross-jump). The .sh files hard-code /tmp/claude-0/s13/s13w3 paths: edit before use.
