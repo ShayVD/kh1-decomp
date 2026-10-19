@@ -581,3 +581,104 @@ What remains:
   can boot at all (plan risk 1).
 - Runtime: M0, then M1, then M2 in PCSX2 on the user's machine (out/shift/kh1-shift.elf,
   out/shift/m1/kh1-shift.elf, out/shift/m2/kh1-shift.elf).
+
+## Session 13: reloc review (worker s13s4)
+
+**Status: tier 3 is empty; M0, M1 and M2 pass** with the regenerated `data_relocs.tsv`
+(9,330 accepted words, was 9,523: 193 false accepts removed, none of the earlier rejects
+turned out to be a pointer). Every word is now decided by a rule with code evidence or by
+a reviewed override; nothing is "accepted because nothing argues against it".
+
+| tier | before | after | reasons after |
+|---|---|---|---|
+| 1 | 2,049 | 2,245 | calltab 879, func 649, ftab 367, **dma-chain 204**, jtbl 146 |
+| 2 | 7,200 | 7,085 | dma 6,210, str 423, ptab 263, **typed 70**, func-s16 64, **override 24**, dref 20, stride 10, bref 1 |
+| 3 | 274 | **0** | |
+| x | 4,930 | 5,838 | resfile 3,954, into-func 527, unaligned 423, mirror-x 376, payload 130, s16 75, kcode 73, spawn-tmpl 68, script 59, colour 54, override-x 43, ascii 30, vucode 23, gifregs 3 |
+
+(`resfile` words and unaligned-target noise are counted, not listed, so the file is
+412 KB with 10,697 rows; shift_cmp's check 4 shows them as "not listed".)
+
+### 1. DMA packets: walked and validated
+
+- **Kicks.** The tracker records the chain address passed to `sceDmaSend`
+  (func_00266f38, a1; chain mode CHCR 0x105), to the game's VIF1 wrapper func_00106b18
+  (a0), also as a tail call (`j`), and stores to a channel's `D<n>_TADR` (0x1000x030,
+  built with lui/ori; the `& 0x0FFFFFFF` mask and `move` keep the address).
+  66 heads, 52 in the blob (the rest are bss buffers built at run time).
+- **Walk.** From each head, tag by tag (REF/REFS: next qword; CNT/END/NEXT/CALL/RET per
+  the DMAC rules), 229 tags. Chains end in END or REFE; most heads in 0x2A6000-0x2BD100
+  are single REFE tags, 0x3F1A70.. are zero REFE placeholders filled at run time. One
+  chain (0x48C770, kicked by func_00103c48 through D1_TADR) ends in a NEXT whose ADDR
+  (D_0048CAD4) code overwrites with the run-time packet before the kick: the static
+  value is a placeholder, relocating it is harmless.
+- **Tag tables.** A qword is a tag when: bits 16-25, PCE and IRQ are zero; id is
+  REF/REFS/REFE/NEXT/CALL; ADDR is 16-aligned inside the image; the upper 64 bits are 0
+  or VIF codes; for REF*, ADDR + 16*qwc stays inside the blob and the payload's first
+  qword is two VIF codes or a GIFtag (NLOOP > 0, FLG != 3); NEXT/CALL ADDR holds a tag.
+  Tag-shaped qwords are grouped in runs (gap <= 0x80); a run holding an address code
+  builds is a template table (code copies the tag + ADDR into its packets, e.g.
+  func_001081c8 copies D_004862D0[0..1]; func_00106ed0 resets the 6 x 1024-entry
+  tables at 0x46E150...; their 6,153 `REF qwc 0 -> 0x4862A0` entries point at the null
+  REF there). Unreferenced tag-shaped runs (5 qwords) are not used as evidence: they
+  are sizes and s16 pairs (0x400000 at 0x2C5A74, 0x3E0000...).
+- **Result.** All 6,369 old `dma` rows are confirmed (140 on walked chains, 6,229 in
+  referenced tag tables); 45 REFE ADDR words (were near/dref) are now typed. Payloads
+  (what REF tags point at, what CNT/END/NEXT carry) are rejected (`payload`, 130 words):
+  that removed 26 false accepts: GIFtag REGS 0x00535310 (17, read as a bss pointer),
+  VU microcode words equal to string starts (8 `str`), a GS SCISSOR value. Rule:
+  `dma-chain` tier 1, `dma` tier 2, `payload` x.
+
+### 2. The code at 0x46A000-0x46C000 and 0x3E65E0
+
+- **0x46AF18 (0x7A8), 0x46B6E0 (0x740), 0x46BE20 (0x28), 0x46BE90 (0x330)** are the
+  libkernel kernel patches: func_0025f6d0 / func_0025fa88 / func_00260938 temporarily
+  install a copy routine as syscall 0x5A (tables D_0046B6C0, D_0046BE48, D_0046C210:
+  {syscall, handler}), copy each blob to **0x80074000, 0x80076000, 0x00082000,
+  0x80075000** (func_0025f610 / func_0025fa30 / func_002608d0 (dest, src, size)),
+  flush the caches and register the copied entry points. The code runs only there.
+  Disassembled: every `lui` is 0x8007 (its own kseg0 home), 0x1000/0xB000/0xBC00 (I/O),
+  0x0008, 0xFFFF or 0x7000 (scratchpad); every `j`/`jal` targets 0x8007xxxx. **No
+  reference to the main image: position-independent with respect to it; nothing to
+  relocate.** The syscall tables' handler words (func_0025f620 etc.) are image
+  pointers and are relocated (`func`). The tracker now finds these copies itself
+  (`kcode`, 73 words rejected, all were already rejected).
+- The rest of 0x46A000-0x46C000 is libc/SDK data: function tables, the newlib `_reent`
+  (D_0046A6D8, whose stdin/stdout/stderr and `_current_locale` are pointers, now
+  accepted), malloc's self-linked bins (0x46A9D0..., `ptab`), s16 tables
+  (0x46A0C8-0x46A528, rejected: two false accepts there), the InitTLB tables
+  (0x46C250-0x46C4C0: EntryHi values like 0x00400000 are virtual addresses, rejected).
+- **0x3E65E0 is not MIPS**: it is inside the message byte stream D_003E5ED8 that
+  func_001efb18 / func_001efc10 index with u16 offsets (D_003E890E); the `mipscode`
+  match was chance. Rejected as `script`.
+
+### 3. The ambiguous remainder: new rules and evidence
+
+| rule | evidence | words |
+|---|---|---|
+| `resfile` | 0x308CE0-0x348CE0 and 0x348CE0-0x350CE0 are model/motion files embedded in the data; func_00148e60 passes them to func_001763f0, which adds the base to the offsets inside (`*p += base`). The file holds offsets and numbers. **83 false accepts removed** (func 5, func-s16 11, str 15, dptr/bptr/near/run 52): in M1 the func words would have been rewritten | 3,954 |
+| `script` | byte streams handed to the script VM (func_0010ef70, func_001c4198), the message parser func_001c2d20 and func_001efb18; range = base to the next address code builds; applies to ambiguous words and to lone function starts (4-byte script ops equal to func_00110218) | 59 |
+| `spawn-tmpl` | u16/s16 fields (+0xC..+0x20) of the object spawn templates func_001f31a8 takes (`{callback, 0, n < 0x100, s16 xc, xe, u16 x10...}`): 0x00400200, 0x00450160...; also a func-s16 at 0x3F72F8 | 68 |
+| `gifregs` | REGS field of a GIFtag with valid NLOOP/FLG/NREG before it | 3 |
+| `typed` | `extern T *D_x[...]` / `(*D_x[])()` declarations in src (288 typed ranges, explicit dimensions or up to the next code-built address; s16/u16/f32 arrays with explicit size as non-pointer evidence). **0 contradictions** with the rules: no rejected word lies in a declared pointer array, no accepted word in a declared s16/f32 array | 70 |
+| overrides | `tools/shift/data_reloc_overrides.tsv` (offset, end, accept/reject, reason; no values), 19 entries (10 reject, 9 accept) for typed evidence a rule cannot see: E4 byte records (D_002BCB80), mask table (D_002C5990), RGBA colour table (D_003E8E30), the two textures func_0011fbb0 uploads (0x3E9660, 2048 qwc; 0x3F1660, 64 qwc: a tier-1 func and a dref were pixels), TLB tables, s16 tables, D_003F7C48 byte records; accepts for `_reent`, InitTLB's table pointers, D_003F40F8[k].p, D_003F32C8[] / D_003F6568[] (WA *), the object descriptor D_002E2F20, a D_00370200 record, a list head | 24 accepted, 43 rejected |
+
+Also: tracker fixes (`move`/`and` keep an address, `li` constants, `j` tail calls) and
+value repeats for the s16 test now count the region rejects (otherwise removing the
+resource file from the pool turned two s16 words at 0x305540 into `dptr`).
+
+**Undecided: 0.** The colour/ascii/vucode/s16 rejects outside the typed regions were
+re-read (all numbers, text, VU code or s16 pairs); sweeps for accepted words with
+number-like neighbours and no pointer neighbour found only template callbacks.
+
+### What is still open
+
+- Tier 1/2 rows were not reviewed one by one: 649 lone `func` and 423 `str` words could
+  still hide chance matches outside the regions above (every one found so far was inside
+  a typed region: resource file, script, texture, s16 table, spawn template).
+- Region ends that come from "the next address code builds" (scripts, resource files)
+  are heuristic; the src-declaration check found no contradiction.
+- The DMA payload rule trusts the tag's qwc; a template table whose static tags are
+  overwritten at run time (like the NEXT at 0x48CAD0) is relocated anyway (harmless).
+- Runtime remains the real test (PCSX2, M0 then M1 then M2); `SHIFT_RELOC_TIER=2` is now
+  the same as 3.
