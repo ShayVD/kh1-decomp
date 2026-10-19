@@ -537,15 +537,17 @@ found that the next session needs:
 
 ## Session 11: what changed
 
-- **32 matches** (6,916 -> 6,948 / 6,988; 93.7% -> 95.6% of code bytes) by about 50 workers, at most
+- **35 matches** (6,916 -> 6,951 / 6,988; 93.7% -> 95.7% of code bytes) by about 50 workers, at most
   5 at a time (brief: nonmatchings/session11/BRIEF.md; every finding: nonmatchings/session11/NOTES.md;
   short version: docs/matching-tips.md "Session 11 tips").
-- **Flagged matches**: 15 of the 32 rely on source that does nothing and is deleted by the
+- **Flagged matches**: 18 of the 35 rely on source that does nothing and is deleted by the
   compiler. Each file says so in a comment; they are byte-identical, but probably not the original
   source:
   - dead stores: 00152928, 001fe1b8, 00217000, 001c5ee8, 001bd090;
   - dead float tests such as `if ((f32)x < 0.0f) v = 0;`: 00249718, 00110e68, 0010ba98, 001fa8b0,
     001502e8, 00214a68, 00107c48, 001fbcd8, 00135a68;
+  - a never-true test with the whole body copied into both arms (reorg sees stale flow2 liveness):
+    001e0ab0, 001e0d98, 001e10f8;
   - identical if/else arms (as in session 10): 00169f28.
 - **001bd090 is a real match**, not a compiler difference (docs/toolchain.md "Session 11 correction").
 - **00202678 is a strict function** with union-typed fields, not a nostrict one: re-measure

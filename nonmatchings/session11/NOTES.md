@@ -496,3 +496,8 @@
 - 00105288: sched2 memory edges are a superset of sched1's (after reload, hard-reg addresses lose reg_base_value). The /12 trap_if is a sched2-only edge route (store -> trap -> load if sched1 moves the load after the trap) but sched1 can't place the trap first with w47's types.
 - 001cfc28: w54__001cfc28_7w_finding.c: `f32 one = 1.0f; ... m.v[3] = one;` (no volatile) gives the right dsll/li.s order, but update_equiv_regs moves the li next to its use, so 1.0 lives 1 insn and takes f0. Needs the li.s after the dsll but 4+ insns before its swc1.
 - Facts: anti/output deps cost 0 on MIPS. sched2 tie keys: class vs last insn, dependents, LUID. A call's stale INSN_TICK applies only to insns with an in-block predecessor.
+
+## s11w55 (reorg label problems)
+- MATCH 001e0ab0, 001e0d98, 001e10f8 (hand, one file), FLAGGED dead test with duplicated arms: `{ s32 t = TIMER; if (t <= 0) { STATE = 0; return 4; } if (t == (s32)&TIMER) { REST } else { REST } }` where REST is the whole rest of the body. flow2 counts the read of t (v0) at the bgtz target, so reorg's stale liveness stops it stealing `li v0,4` into the bgtz slot; jump2 cross-jumps the arms and deletes the test. The compare must need no constant and must not fold in cse (`(s32)&global` is free when the address is already in a register).
+- 0019f1f0 (7): the stolen insn is `li s0,2` (i); the same trick needs a dead read of i on a path from the bltz target; tried placements break allocation. 00169688: the original case 10 has a jump-to-next left by jump2's last iteration; untested.
+- Facts: reorg's target liveness is the stale flow2 live_at_start (scan stops at the first call). 0-use CODE_LABELs never survive to mach.
