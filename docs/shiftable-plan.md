@@ -842,3 +842,17 @@ With no overlays (`SHIFT_OVERLAYS` empty or absent) the table is empty and the h
   states, cheats) or a heap end below 0x0068a618 is not covered by the static check.
 - Overlay code that runs before the first load completes (none expected) or overlays reloaded over
   themselves without a fresh read (pass 0 refuses a second patch, so a reload from disc is fine).
+
+## Session 13: PCSX2 runs with overlay fixups (2026-10-19)
+
+M1 and M2 rebuilt at 3f7cff4, patched into copies of the user's disc with
+`tools/shift/patch_iso.py` (minimal ELF: M1 3,798,760 B, M2 3,802,856 B, slot 3,805,184 B,
+so about 2-6 KB of headroom is left; growth beyond that needs another way onto the disc).
+
+| build | boot / logos | title | New Game → opening movie → Station of Awakening |
+|---|---|---|---|
+| M1 (code moved) | ok (was: PC 0xffffffff at boot) | ok | ok |
+| M2 (data moved) | ok | ok | ok |
+
+Not exercised yet: anything after the first 3D scene (gb.x, wm.x, xl_limit.x, xs_*.x),
+Load, Special Movie, and the HDD path.
