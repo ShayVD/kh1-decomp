@@ -46,3 +46,7 @@ src/**/.*
 
 # gcc -d RTL dumps from matching work
 *.c.[0-9]*.*
+
+# Worker worktrees and toolchain symlinks
+/.claude/worktrees/
+/tools/toolchain

@@ -629,3 +629,17 @@ from dead code. Read the allocation first, then find the source change.
   search trees by the produced shape. Its local-alloc can be traced in gdb without debug info
   (tools/matching/gdb_s12/bq9.sh).
 - **Scoring**: `objdump -d` hides zero words unless given `-z`; count nops.
+
+## Session 13 tips
+
+- A likely branch (`bnezl`) whose slot sets a call-clobbered register needs a real reader of that
+  register before the next call on the fallthrough path: reorg's mark_target_live_regs ANDs two
+  liveness methods and both stop at the first clobbering call (001fd858; gdb proof in NOTES).
+- A dead FP test at an if/else-chain join leaves a forwarder jump2 still sees and flips the
+  cross-jump direction; integer dead tests are removed too early to do this.
+- Writing duplicated code out (no `goto` to a shared tail) and one variable per life (separate masks)
+  took 001fd858 from 112 to 25 words naturally.
+- global-alloc can evict a local-alloc'd hard reg ("kick out poorly used local regs"), scanning from
+  the top register down; the evicted pseudo goes to memory (00110618).
+- In gcc991111 a division is div + trap_if and sched1 moves the trap first; flow2, sched2, then jump2.
+- None of ~45 single extra gcc flags helps any of the 7 closest drafts.

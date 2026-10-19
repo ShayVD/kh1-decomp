@@ -221,7 +221,8 @@ strcat:  /* 0x00250F40 */
 	.word	0x00000000  /* 00251044 nop */
 	.word	0x5440FFFA  /* 00251048 bnezl $v0,.L00251034 */
 	.word	0x24840001  /* 0025104C addiu $a0,$a0,1 */
-	.word	0x0C09446C  /* 00251050 jal strcpy */
+	.word	0x0C000000  /* 00251050 jal strcpy */
+	.reloc	.-4, R_MIPS_26, strcpy
 	.word	0x00000000  /* 00251054 nop */
 	.word	0x0200102D  /* 00251058 move $v0,$s0 */
 	.word	0x7BBF0010  /* 0025105C lq $ra,16($sp) */

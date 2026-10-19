@@ -13,7 +13,9 @@ OBJDIFF_VERSION="3.7.0"
 OBJDIFF_SHA256="68b0f6bbbeefccfc4aaa970bc04dfe04bfd1575514972952cf493f251131a8cf"
 
 if [[ $# -eq 0 ]]; then
-  set -- "$(python3 "$ROOT/tools/kh1tool.py" config toolchain.compiler)"
+  # Every compiler kh1.toml names (the default and the per-directory overrides).
+  # shellcheck disable=SC2046
+  set -- $(grep -oP '^\s*(as_)?compiler\s*=\s*"\K[^"]+' "$ROOT/kh1.toml" | sort -u)
 fi
 
 mkdir -p "$DEST"

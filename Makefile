@@ -27,7 +27,7 @@ ifeq ($(filter clean distclean help toolchain check layout rank,$(MAKECMDGOALS))
 -include $(GEN)/objects.mk
 endif
 
-.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help
+.PHONY: all build verify check layout rank objdiff report progress progress-update toolchain test clean distclean help shift data-relocs
 
 all: verify
 
@@ -43,6 +43,9 @@ help:
 	@echo "make progress         print the progress tracker"
 	@echo "make progress-update  rewrite docs/progress.md + history (end of session)"
 	@echo "make test             tool self-tests (no game ELF needed)"
+	@echo "make shift            shiftable build: fresh ELF linked symbolically, M0 check (docs/shiftable-plan.md)"
+	@echo "make shift SHIFT_MODE=m1|m2   code rotated / data moved, inverse-map comparator against M0"
+	@echo "make data-relocs      regenerate data_relocs.tsv (pointers in the data blob)"
 
 $(ORIG):
 	@echo "error: $(ORIG) not found. Copy the ELF from your own disc to the repo root." >&2
@@ -98,8 +101,64 @@ test:
 	@tests/selftest.sh
 	@tools/check_no_assets.sh && echo "no-assets check: PASS"
 
+# ---- Shiftable build (docs/shiftable-plan.md). Separate from `make`, which it
+# needs first (objects, out/gen/placements.tsv and rodata.tsv). Writes only
+# under out/shift/. SHIFT_ASM_DIR: directory of symbolic asm exports of the
+# functions no source places; empty = a temporary export from the original
+# ELF into out/shift/asm/ (build output only). SHIFT_ALIASES: files of
+# `alias = canonical;` lines.
+SHIFT         := out/shift
+SHIFT_ASM_DIR ?= shift/unmatched
+SHIFT_ALIASES ?= shift/aliases.ld
+# SHIFT_MODE: m0 = original addresses (byte-identical check), m1 = code rotated
+# (data fixed), m2 = data and bss moved by 0x1000; m1/m2 build m0 first and run the
+# inverse-map comparator against it. SHIFT_RELOC_TIER: data_relocs.tsv rows with
+# tier <= N become relocations (0 = none). SHIFT_VARIANTS=0: no KH1_SHIFTABLE objects.
+SHIFT_MODE       ?= m0
+SHIFT_RELOC_TIER ?= 3
+SHIFT_VARIANTS   ?= 1
+SHIFT_PY      := $(PY) -I
+SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE))
+ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
+
+shift: $(PATCHED)
+ifneq ($(SHIFT_MODE),m0)
+	@$(MAKE) --no-print-directory shift SHIFT_MODE=m0
+endif
+	@mkdir -p $(SHIFT)/asm $(SHIFT_OUT)
+	@$(SHIFT_PY) tools/shift/extract_data.py
+	@set -e; rm -f $(SHIFT)/asm/*.o; \
+	if [ -n "$(SHIFT_ASM_DIR)" ]; then \
+		for s in $(SHIFT_ASM_DIR)/*.s; do $(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/asm/$$(basename $$s).o $$s; done; \
+	else \
+		missing="$$($(SHIFT_PY) tools/shift/shift_ld.py missing)"; \
+		if [ -n "$$missing" ]; then \
+			echo "shift: temporary asm export of $$(echo $$missing | wc -w) unplaced functions"; \
+			$(SHIFT_PY) tools/asm_export.py $(SHIFT)/asm/unplaced.s $$missing \
+				--header "temporary export for the shift build (out/ only, never commit)"; \
+			$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT)/asm/unplaced.s.o $(SHIFT)/asm/unplaced.s; \
+		fi; \
+	fi; \
+	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build)"; fi; \
+	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants \
+		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
+		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
+	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s
+	@$(LD) -EL -q --no-warn-mismatch -T $(SHIFT_OUT)/kh1-shift.ld -Map $(SHIFT_OUT)/kh1-shift.map \
+		-o $(SHIFT_OUT)/kh1-shift.linked.elf @$(SHIFT_OUT)/objects.lst
+	@$(SHIFT_PY) tools/shift/shift_elf.py write --linked $(SHIFT_OUT)/kh1-shift.linked.elf --out $(SHIFT_OUT)/kh1-shift.elf
+ifeq ($(SHIFT_MODE),m0)
+	@$(SHIFT_PY) tools/shift/shift_elf.py verify
+else
+	@$(SHIFT_PY) tools/shift/shift_cmp.py --ref $(SHIFT) --new $(SHIFT_OUT)
+endif
+
+data-relocs: $(PATCHED)
+	@$(SHIFT_PY) tools/shift/find_data_relocs.py
+
 clean:
-	rm -rf out/build $(PATCHED) $(LINKED) $(GEN) out/objdiff
+	rm -rf out/build $(PATCHED) $(LINKED) $(GEN) out/objdiff out/shift
 
 distclean:
 	rm -rf out objdiff.json
