@@ -153,6 +153,17 @@ class Links:
     def __init__(self, ref: Path, new: Path):
         self.ref_elf, self.new_elf = (Elf.load(d / "kh1-shift.linked.elf") for d in (ref, new))
         self.ref_map, self.new_map = (read_map(d / "kh1-shift.map") for d in (ref, new))
+        # SHIFT_DRAFTS: a draft's .text.<name> stands in for the asm export's section of
+        # that name (drafts.tsv, written by shift_ld.py); it is mapped, never compared.
+        self.drafted: dict[tuple[str, str], str] = {}
+        dt = new / "drafts.tsv"
+        if dt.exists():
+            for line in dt.read_text().splitlines()[1:]:
+                name, _addr, status, draft, asm = line.split("\t")[:5]
+                key = (draft, f".text.{name}")
+                if status == "linked" and key in self.new_map:
+                    self.new_map[(asm, key[1])] = self.new_map.pop(key)
+                    self.drafted[(asm, key[1])] = draft
         self.ref_img, self.new_img = Image(self.ref_elf), Image(self.new_elf)
         self.rsym = rsym = {s.name: s.value for s in self.ref_elf.symbols() if s.name}
         self.nsym = nsym = {s.name: s.value for s in self.new_elf.symbols() if s.name}
@@ -211,7 +222,9 @@ def main() -> int:
     # grow anything: it swaps a jal FlushCache for a jal kh1_ovl_flush0 (accepted below).
     hooked = [(ra, key[1]) for ra, size, na, key, osec in secs if new_map[key][1] != size]
     hook_from, hook_to = rsym.get("FlushCache"), nsym.get("kh1_ovl_flush0")
-    hooked_at = {ra for ra, _n in hooked}
+    hooked = [(ra, n) for ra, n in hooked if not any(k[1] == n for k in L.drafted)]
+    drafted_at = {ra for ra, size, na, key, osec in secs if key in L.drafted}
+    hooked_at = {ra for ra, _n in hooked} | drafted_at
     bad_fields = collections.defaultdict(list)
     bad_bytes = collections.defaultdict(list)
     absolute = collections.defaultdict(list)
@@ -395,6 +408,9 @@ def main() -> int:
     if hooked:
         print(f"  not compared (KH1_OVL_FIXUPS hook added, size differs from M0 by design): "
               + ", ".join(n for _a, n in hooked))
+    if L.drafted:
+        print(f"  not compared (SHIFT_DRAFTS: near-miss C drafts in place of their asm exports, never matched; "
+              f"static diff by tools/shift/drafts.py report): {len(L.drafted)} functions")
     group("relocated fields that do not map back", bad_fields)
     group("other bytes differing", bad_bytes)
     group("position-dependent code (unrelocated address that moved)", absolute)

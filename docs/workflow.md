@@ -629,7 +629,17 @@ found that the next session needs:
   wrong relocation; runtime with an odd shift does.
 - `tools/shift/shift_ld.py --bss-pad N`: experiment option (NOLOAD pad before .bss, nothing else
   moves) used to bisect the bug at runtime.
-- Shiftable review: 10 lone data relocations rejected as chance matches (glyph, digit, H20 tables).
+- Shiftable review: 10 lone data relocations rejected as chance matches (glyph, digit, H20 tables);
+  the rest of the 1,136 lone func/str rows were read and kept (docs/shiftable-plan.md, "Lone function
+  and string relocations").
+- `make shift SHIFT_MODE=m12`: code rotated and data/bss moved together; shift_cmp and ovl_proof pass.
+- `make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1`: the 16 near-miss C drafts of shift/drafts.tsv linked in
+  place of their asm exports (out/shift/m12-drafts/, never matched or counted); tools/shift/drafts.py
+  reports per function whether it links and a static word diff (all 16 link).
+- tools/shift/lo16_check.py (every `make shift`): each LO16's base register must come from its lui
+  on every path; 0 findings now, and it finds the 4 fake relocations of the pre-fix exports.
+- Disc room: the patched ELF has 2-6 KB left in its slot; options (append to the ISO, split PT_LOADs
+  at zero runs, smaller overlay table, loader stub) in docs/shiftable-plan.md "Disc room".
 - Phase 3 tools: tools/vu/find_vu1.py lists the 22 VU microprograms in the user's ELF, their DMA
   carriers and uploaders, and disassembles one on request; tools/vu/gs_packets.py decodes the GS
   register writes of the static GIF packets. Output derives from the user's ELF: never commit it.

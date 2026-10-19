@@ -114,19 +114,25 @@ class Elves:
 SUBST: dict[str, str] = {}  # object -> variant object (KH1_SHIFTABLE builds, tools/shift/variants.py)
 
 
-def collect_functions(asm_objs: list[str], registry, elves) -> tuple[list[Placed], list[str]]:
+def collect_functions(asm_objs: list[str], registry, elves,
+                      drafts: dict[str, str] | None = None) -> tuple[list[Placed], list[str]]:
+    """drafts: function name -> draft object (SHIFT_DRAFTS); its `.text.<name>` takes the
+    place of the asm export's section of that name."""
     funcs, errors = [], []
+    drafts = drafts or {}
     for addr, sym, obj, _src in K.load_placements():
         obj = SUBST.get(obj, obj)
         e = elves(obj)
         sec = e.section(f".text.{sym}")
         funcs.append(Placed(addr, sym, obj, sec.name, sec.size, addralign(e, sec.index)))
-    for obj in asm_objs:
+    for obj in asm_objs + list(drafts.values()):
         e = elves(obj)
         for sec in e.sections:
             if not sec.name.startswith(".text.") or not sec.size:
                 continue
             sym = sec.name[len(".text."):]
+            if (sym in drafts) != (obj in drafts.values()):
+                continue  # an asm export the draft replaces
             addr = name_address(sym, registry)
             if addr is None:
                 errors.append(f"{obj}: {sec.name}: no address for {sym}")
@@ -226,6 +232,61 @@ def load_data_relocs(path: Path, max_tier: int, layout_addr: dict[str, int]) -> 
     return out, errors
 
 
+def pick_drafts(a, asm_objs: list[str], elves, registry):
+    """SHIFT_DRAFTS: {name: draft object} for the drafts that can link, one row per
+    draft for drafts.tsv, the asm objects still needed, and the asm sections to discard.
+    A draft whose undefined names have no definition and no address stays out (status
+    `no-link`); its asm export is linked instead."""
+    if not a.draft_obj:
+        return {}, [], asm_objs, []
+    if a.mode == "m0":
+        sys.exit("error: SHIFT_DRAFTS needs a moved mode (m1, m2 or m12): drafts are not at the original addresses")
+    owner: dict[str, str] = {}  # text section name -> asm object
+    known: set[str] = set()  # names some linked object defines
+    for obj in objects_mk_objs() + asm_objs:
+        for s in elves(obj).symbols():
+            if s.name and s.shndx and s.bind in (1, 2):
+                known.add(s.name)
+    for obj in asm_objs:
+        for sec in elves(obj).sections:
+            if sec.name.startswith(".text.") and sec.size:
+                owner[sec.name] = obj
+    alias_names = read_aliases(a.aliases)[1]
+    drafts, rows = {}, []
+    for spec in a.draft_obj:
+        name, obj = spec.split("=", 1)
+        obj = rel(obj)
+        sec = f".text.{name}"
+        if sec not in owner:
+            rows.append([name, "-", "no-link", obj, "-", "no asm export defines " + sec])
+            continue
+        unresolved = []
+        for s in elves(obj).symbols():
+            if s.shndx or not s.name or s.bind not in (1, 2):
+                continue
+            n = s.name
+            target = K.LIBCALL_ALIASES.get(n, n)
+            if n in known or n in alias_names or target in known or name_address(target, registry) is not None:
+                continue
+            unresolved.append(n)
+        addr = name_address(name, registry)
+        if unresolved:
+            rows.append([name, f"{addr:08x}", "no-link", obj, owner[sec],
+                         "undefined: " + ", ".join(sorted(unresolved))])
+            continue
+        drafts[name] = obj
+        rows.append([name, f"{addr:08x}", "linked", obj, owner[sec], ""])
+    keep, discard = [], []
+    for obj in asm_objs:
+        mine = [s for s, o in owner.items() if o == obj]
+        gone = [s for s in mine if s[len(".text."):] in drafts]
+        if mine and len(gone) == len(mine):
+            continue  # every function of this export is drafted: leave the object out
+        keep.append(obj)
+        discard += [(obj, s) for s in gone]
+    return drafts, rows, keep, discard
+
+
 def cmd_gen(a) -> int:
     img = load_image()
     registry = K.load_registry()
@@ -235,7 +296,8 @@ def cmd_gen(a) -> int:
         SUBST[rel(old)] = rel(new)
     out_dir = Path(a.out_dir)
     asm_objs = [rel(o) for o in a.asm_obj]
-    funcs, errors = collect_functions(asm_objs, registry, elves)
+    drafts, draft_rows, asm_objs, discard = pick_drafts(a, asm_objs, elves, registry)
+    funcs, errors = collect_functions(asm_objs, registry, elves, drafts)
     rodata = collect_rodata(elves, funcs, asm_objs)
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
@@ -265,7 +327,7 @@ def cmd_gen(a) -> int:
     placed_secs.update({(r.obj, r.section): r.addr for r in rodata})
     defined: dict[str, tuple[int | None, str]] = {}
     undefined: dict[str, str] = {}
-    all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs))
+    all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs + list(drafts.values())))
     hook_objs = [rel(a.ovl_hook)] if a.ovl_hook else []  # its references (D_ names) need definitions too
     for obj in all_objs + hook_objs:
         e = elves(obj)
@@ -393,15 +455,18 @@ def cmd_gen(a) -> int:
         print("error: m0: " + ", ".join(f"{f.name} ({f.obj})" for f in grown) + " longer than the original slot",
               file=sys.stderr)
         return 1
-    growth = 64 * len(grown)
-    if a.mode == "m1":
+    # each grown function pushes what follows to the next 64-byte boundary (+ its offset mod 64)
+    nxt_of = {f.addr: g for f, g in zip(funcs, funcs[1:])}
+    growth = sum(-(-(f.addr + f.size) // 64) * 64 - (nxt_of[f.addr].addr // 64) * 64 for f in grown)
+    data_limit = blob_start + (a.data_shift if a.mode in ("m2", "m12") else 0)
+    if a.mode in ("m1", "m12"):
         # Rotate: the last functions (from a 64-aligned start) go to the front.
         # Each block keeps its offsets modulo 64, so every `. = ALIGN(n)` keeps its meaning.
         last_end = funcs[-1].addr + funcs[-1].size
         prev_end = {g.addr: f.addr + f.size for f, g in zip(funcs, funcs[1:])}
 
         def fits(sp: int) -> bool:  # the rotated text must still end before the fixed data
-            return -(-(load + last_end - sp) // 64) * 64 + (prev_end[sp] - load) + growth <= blob_start
+            return -(-(load + last_end - sp) // 64) * 64 + (prev_end[sp] - load) + growth <= data_limit
         cands = [f.addr for f in funcs[1:] if f.addr % 64 == 0 and last_end - f.addr >= a.m1_min and fits(f.addr)]
         if not cands:
             print("error: m1: no 64-aligned function start leaves enough to move", file=sys.stderr)
@@ -435,7 +500,11 @@ def cmd_gen(a) -> int:
         "." if not stmt else None)
     if a.mode == "m1":
         data_addr = f"0x{blob_start:08x}"  # data fixed; ld fails if the rotated text overruns it
-    elif a.mode == "m2" and growth:
+    elif a.mode == "m12" or (a.mode == "m2" and growth):
+        if a.mode == "m2" and load + (text_end - load) + growth > data_limit:
+            print(f"error: m2: the text grew by 0x{growth:x}, more than --data-shift 0x{a.data_shift:x}",
+                  file=sys.stderr)
+            return 1
         data_addr = f"0x{blob_start + a.data_shift:08x}"  # the delta stays data_shift; ld fails on an overrun
     elif a.mode == "m2" and data_addr is not None:
         data_addr = f"{data_addr} + 0x{a.data_shift:x}"
@@ -486,6 +555,12 @@ def cmd_gen(a) -> int:
         expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
         cur = r.addr + r.size
     emit_chunk(blob_end)
+    if drafts:
+        # SHIFT_DRAFTS: the drafts' own rodata (jump tables, constants) after the blob;
+        # the asm version's tables in the blob stay, unused by the draft.
+        data += ["    . = ALIGN(16);", "    __draft_rodata_start = .;"]
+        data += [f"    KEEP({o}(.rodata .rodata.*))" for o in drafts.values()]
+        data += ["    __draft_rodata_end = .;"]
     if ovl_objs:
         # The overlay fixup hook and its table, after the blob. The end keeps the
         # original distance to .bss (crt0 clears from D_BSS - 0x30, $gp is set there):
@@ -493,7 +568,9 @@ def cmd_gen(a) -> int:
         data += ["    . = ALIGN(16);", "    __ovl_fixup_start = .;"]
         data += [f"    KEEP({o}(.text .text.* .rodata .rodata.* .data .data.* .sdata .sdata.* "
                  f".bss .bss.* .sbss .sbss.* .scommon COMMON .ovl_fixups))" for o in ovl_objs]
-        data += ["    __ovl_fixup_end = .;", "    . = ALIGN(128);", f"    . += 0x{blob_end % 128:x};"]
+        data += ["    __ovl_fixup_end = .;"]
+    if ovl_objs or drafts:
+        data += ["    . = ALIGN(128);", f"    . += 0x{blob_end % 128:x};"]
     data += ["    _edata = .;", "  } =0"]
     rodup = []
     for r in dups:
@@ -540,6 +617,7 @@ def cmd_gen(a) -> int:
         "  }",
         "",
         "  /DISCARD/ : {",
+        *[f"    {o}({sec})  /* replaced by a SHIFT_DRAFTS draft */" for o, sec in discard],
         "    *(.ctx .ctx.*)",
         "    *(.rodata .rodata.* .gnu.linkonce.r.*)",
         "    *(.reginfo) *(.mdebug*) *(.pdr) *(.comment) *(.gnu.attributes)",
@@ -558,6 +636,11 @@ def cmd_gen(a) -> int:
     write(out_dir / "kh1-shift.ld", "\n".join(out))
     write(out_dir / "blob.s", "\n".join(blob_s) + "\n")
     write(out_dir / "objects.lst", "\n".join(all_objs + [blob_obj] + ovl_objs) + "\n")
+    draft_tsv = out_dir / "drafts.tsv"
+    if draft_rows:
+        write(draft_tsv, "name\taddr\tstatus\tdraft\treplaces\tnote\n" + "".join("\t".join(r) + "\n" for r in draft_rows))
+    elif draft_tsv.exists():
+        draft_tsv.unlink()
     write(out_dir / "expected.tsv", "addr\tkind\tname\n" + "".join(
         f"{ad:08x}\t{k}\t{n}\n" for ad, k, n in sorted(expected)))
     variant_objs = set(SUBST.values())
@@ -572,9 +655,13 @@ def cmd_gen(a) -> int:
           + (f", {in_holes} rows inside rodata holes skipped" if in_holes else "")
           + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"
              if split is not None else "")
-          + (f"; data and bss shifted by 0x{a.data_shift:x}" if a.mode == "m2" else "")
+          + (f"; data and bss shifted by 0x{a.data_shift:x}" if a.mode in ("m2", "m12") else "")
           + (f"; variant objects: {', '.join(sorted(variant_objs))}" if variant_objs else "")
-          + (f"; overlay fixups: {', '.join(ovl_objs)}" if ovl_objs else ""))
+          + (f"; overlay fixups: {', '.join(ovl_objs)}" if ovl_objs else "")
+          + (f"; text grew by 0x{growth:x}" if growth else ""))
+    if draft_rows:
+        print(f"shift-ld: SHIFT_DRAFTS: {len(drafts)} drafts linked in place of their asm exports"
+              + "".join(f"; {r[0]} {r[2]}: {r[5]}" for r in draft_rows if r[2] != "linked"))
     for p in padded:
         print(f"shift-ld: note: explicit padding {p} (no alignment explains it)")
     return 0
@@ -597,8 +684,12 @@ def main() -> int:
     g.add_argument("--blob", default=str(SHIFT / "data" / "main.bin"))
     g.add_argument("--out-dir", default=str(SHIFT), help="where the script, blob.s, objects.lst go")
     g.add_argument("--blob-obj", default=None, help="default: OUT_DIR/blob.o")
-    g.add_argument("--mode", choices=("m0", "m1", "m2"), default="m0",
-                   help="m0: original addresses; m1: rotate the text (data fixed); m2: data+bss moved")
+    g.add_argument("--mode", choices=("m0", "m1", "m2", "m12"), default="m0",
+                   help="m0: original addresses; m1: rotate the text (data fixed); m2: data+bss moved; "
+                        "m12: both (text rotated, data+bss moved by --data-shift)")
+    g.add_argument("--draft-obj", action="append", default=[], metavar="NAME=OBJ",
+                   help="SHIFT_DRAFTS: link OBJ's .text.NAME (a near-miss C draft, tools/shift/drafts.py) "
+                        "in place of the asm export of NAME; not with m0")
     g.add_argument("--m1-min", type=lambda x: int(x, 0), default=0x10000,
                    help="m1: move at least this many bytes of code to the front")
     g.add_argument("--data-shift", type=lambda x: int(x, 0), default=0x1000, help="m2: data/bss delta")
