@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern M2C_UNK D_006627E0;
+M2C_UNK D_006627E0[0x58] ALIGNED(32);
 extern s32 D_00662A30;
 s32 sceGsSyncPath(s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00237018(s32, s32, s32);

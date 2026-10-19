@@ -17,7 +17,7 @@ M2C_UNK strcpy(s32, s32);
 extern M2C_UNK D_002BCC28;
 extern M2C_UNK D_002C5A88;
 extern M2C_UNK D_004E2458;
-extern M2C_UNK D_004E42C0;
+M2C_UNK D_004E42C0[0x80] ALIGNED(64);
 extern M2C_UNK func_001129c8;
 extern M2C_UNK func_0011e700;
 extern s32 D_002A62F0;
