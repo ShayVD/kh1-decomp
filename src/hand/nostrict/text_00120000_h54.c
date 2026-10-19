@@ -651,7 +651,7 @@ extern Lst17 D_00525298;
 extern Ent17 *D_00525354;
 s32 D_00525358 ALIGNED(8);
 #define INC17 { s32 *p17 = &D_00525358; (*p17)++; }
-extern void (*D_00525290)(void);
+void (*D_00525290)(void) ALIGNED(16);
 extern s32 D_002BC134;
 extern void func_00157400(void (*)(s32));
 extern void func_0014a058(void (*)(s32));

@@ -654,7 +654,7 @@ s32 func_00120748(char *name, s32 buf, void (*cb)(void), s32 wait) {
 }
 
 extern char D_0048D278[] __attribute__((aligned(8)));
-extern char D_004E4500[] __attribute__((aligned(8)));
+char D_004E4500[0x20] __attribute__((aligned(8)));
 extern u8 D_00491A18[];
 u32 strlen(const char *);
 

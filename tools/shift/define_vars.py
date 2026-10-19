@@ -131,6 +131,9 @@ def plan_file(src: Path, rows: list[tuple[int, str, int]]):
     for addr, name, extent in rows:
         hits = [i for i, ln in enumerate(lines)
                 if ln.startswith("extern") and re.search(r"\b" + name + r"\b", ln)]
+        if not hits and re.search(r"^(?!extern|typedef|return)[A-Za-z_][\w \t*]*?\b" + name + r"\b",
+                                  text, re.M):
+            continue  # already a definition
         if len(hits) != 1:
             manual.append((name, f"{len(hits)} file-scope extern lines"))
             continue

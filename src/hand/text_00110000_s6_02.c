@@ -20,7 +20,7 @@ void func_00114880(void) {
 
 /* ---- 0010f658 ---- */
 extern u8 D_002BBCC0[];
-extern s32 D_004D5B0C;
+s32 D_004D5B0C ALIGNED(4);
 s32 sceGsSyncPath(s32, s32);
 s32 func_00106b18(void *);
 void func_001104e0(void);
