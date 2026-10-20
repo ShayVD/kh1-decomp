@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0054.h"
 
 typedef struct {
     union { u64 flags; s32 w; } u;

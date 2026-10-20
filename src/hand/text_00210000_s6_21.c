@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct Win {
     u8 pad0[0x24]; struct Win *x24; s32 x28; u8 pad2c[0xB4 - 0x2C]; s32 xB4; u16 pB8; s16 xBA;
     u8 padBC[0xCC - 0xBC]; s16 xCC; s16 xCE; s16 xD0; s16 xD2;

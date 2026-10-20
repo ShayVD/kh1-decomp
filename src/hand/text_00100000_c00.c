@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 
 f32 cosf(f32);
 f32 sinf(f32);

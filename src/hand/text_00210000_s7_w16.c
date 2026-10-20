@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* func_002134c8: matched (w16, session 7) in plain o32 hand: block-local u16/s16 values, stores ordered xd2, xcc, xce, xba. */
 typedef struct {
     u8 pad0[0x28];

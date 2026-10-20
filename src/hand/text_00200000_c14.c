@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
 typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;

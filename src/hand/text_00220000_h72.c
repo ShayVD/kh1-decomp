@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct { s32 a, b, c, d; } S4;
 extern S4 D_003E8E08;
 void func_0021b820(void);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0057.h"
 /* func_0016ea58 (hand/nostrict): the target search is matched func_001711d0 written as a static inline helper (inl_001711d0, its exact body); the set1/set2 gotos written out as separate w1->w38 |= 8 / w2->w38 |= 8 statements (jump2 cross-jumps them; the extra refs give w1/w2 s4/s5 over the hoisted const 2), the d2<d1 arm as one && / || condition, w2 = 0 before w1 = 0. */
 
 typedef struct { f32 x, y, z, w; } V4EA;

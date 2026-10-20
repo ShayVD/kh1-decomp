@@ -1,5 +1,6 @@
 /* Hand-matched functions in 0x001a0000-0x001c0000 (worker 13). */
 #include "common.h"
+#include "data/bss_0062.h"
 
 /* Singly linked free list: pool->free at +4. */
 typedef struct Node { struct Node *next; } Node;

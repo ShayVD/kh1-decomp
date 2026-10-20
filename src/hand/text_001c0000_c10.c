@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0063.h"
 
 typedef struct {
     u8 pad[0xa80];

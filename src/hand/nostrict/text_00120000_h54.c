@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004F.h"
+#include "data/bss_0052.h"
 typedef struct {
     s32 f0; s32 f4; s32 f8;
     s8 c[4]; s8 d[4];

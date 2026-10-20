@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
  * Built without strict aliasing (several of these need the reloads). */
 

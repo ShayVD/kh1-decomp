@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct {
     s32 magic;

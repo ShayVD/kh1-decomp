@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004F.h"
 typedef struct { s16 id; u8 pad[18]; } E7810;
 extern E7810 *D_004F7810;
 extern u32 *D_00308CDC;

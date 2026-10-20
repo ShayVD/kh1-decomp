@@ -1198,3 +1198,7 @@ void (*D_00351970[0x8])(void *) ALIGNED(16) = {
     (void *)func_00153210, (void *)func_00152f10, (void *)func_00152ff8, (void *)func_00152e10,
     (void *)func_00152928, (void *)func_001531c0, (void *)func_00152880, 0,
 };
+
+/* At the end, not with the includes: declaring D_005516C0 earlier changes how func_0015b060 forms
+   the D_00551970 address (gcc 2.96 rtx ordering), so the header comes after the code here. */
+#include "data/bss_0055.h"

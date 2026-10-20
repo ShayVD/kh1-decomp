@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* 00217000 (hand/nostrict, no context). From s11w30's 6w draft. FLAGGED dead set: `E20 *tbl = D_003F2C40;` at entry is dead (tbl reassigned after the third draw call, before its only use); life1 deletes it, but it stops combine folding the la into lui/addu/lw sym+16. */
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; struct Obj *x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct { u8 pad[4]; u32 x4; u32 x8; u32 xc; u32 x10; } Cfg;

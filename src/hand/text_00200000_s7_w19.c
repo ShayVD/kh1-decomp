@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* func_00208ea8: needs s32 func_001f9438 (return type). */
 typedef struct {
     u8 pad0[0xbe];

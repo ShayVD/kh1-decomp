@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0063.h"
 /* Script VM handlers: obj at +4, top index at +0x180, value stack at +0x184.
  * The stack is indexed off &vm->u.s (vm+4) with a local copy of sp. */
 typedef struct {

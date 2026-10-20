@@ -1,5 +1,6 @@
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0057.h"
 
 typedef struct { u8 pad[0x10]; f32 f10; u8 pad14[0x28]; s32 w3C; s32 w40; s32 w44; } ChrHp;
 typedef struct { u8 pad[0x38]; u64 w38; } Wk144;

@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_0064.h"
+#include "data/bss_0065.h"
 
 /* ---- h_ok.c */
 typedef int u128 __attribute__((mode(TI)));

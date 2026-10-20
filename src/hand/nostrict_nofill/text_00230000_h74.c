@@ -1,5 +1,7 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 74). */
 #include "common.h"
+#include "data/bss_0064.h"
+#include "data/bss_0065.h"
 
 typedef struct Pk { struct Pk *next; s32 type; } Pk;
 typedef struct { Pk *head; s32 pad; } Bk;

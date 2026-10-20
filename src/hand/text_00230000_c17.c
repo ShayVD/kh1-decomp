@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0065.h"
 
 typedef struct { u8 b[192]; } Spr17;
 typedef struct {

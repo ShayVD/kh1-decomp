@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 /* 16-byte list entries; the D_00667F50/D_00667F54-style globals are
  * [end, begin) pointers into such lists. */

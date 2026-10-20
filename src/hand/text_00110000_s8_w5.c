@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 typedef struct { f32 a[4]; s32 b[3]; } CamS;
 extern CamS D_002BC0F0;
 extern f32 D_004D90F8;

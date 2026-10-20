@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0052.h"
 
 /* Hand-matched functions 0x0012b7a8-0x0012fcd0 (session 6, worker 05). Nostrict region. */
 

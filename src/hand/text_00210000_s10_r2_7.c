@@ -2,6 +2,7 @@
    loop.c then initialises the t[j+24] giv before cur, so the giv gets s1 and cur s2 as the original), with the identical-arm `if (j) m = i == sel; else m = i == sel;`
    (jump2 merges the arms; the copies give sel the refs it needs for s6). Natural spellings of m without the identical arms are 7w. */
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x17]; u8 x1c[0x58]; } T74c;
 typedef struct { T74c e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; } G4BE8c;

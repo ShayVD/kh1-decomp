@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x130000 (worker 32). */
 #include "common.h"
+#include "data/bss_0052.h"
 
 typedef struct {
     s32 id;

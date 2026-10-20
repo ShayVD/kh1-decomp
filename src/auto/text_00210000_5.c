@@ -1,6 +1,7 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "data/bss_0064.h"
 
 M2C_UNK func_001f92b0(s32, M2C_UNK, M2C_UNK, s32, M2C_UNK, M2C_UNK);
 extern s32 D_00642C2C;

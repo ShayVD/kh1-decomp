@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* func_00219f98 (rodata jtbl 0x490f20, verify with wqb03_rr.py 00490f20). CONTEXT_ONLY func_00219380 above. Key: D_003F4C68/78 as flat s32 arrays read [k*2] then [k*2+1] (base + (k*8+4) gives the addu/move copy pair). */
 typedef struct ObjT {
     u8 pad[0xD2];

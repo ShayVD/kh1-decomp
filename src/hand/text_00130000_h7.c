@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_0052.h"
+#include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x145000 (worker 7). */
 
 typedef struct {

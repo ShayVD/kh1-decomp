@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* func_00231ea0: matches with -fforce-addr (session 7 flag sweep; without it one lui is scheduled after the sll it precedes in the original). */
 
 typedef struct { u16 id; u16 x2; u8 x4; u8 x5; } E6;

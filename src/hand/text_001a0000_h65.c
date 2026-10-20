@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 typedef struct { u8 b[64]; } Blk64;
 typedef struct { u8 pad[0x9c20]; Blk64 a; u8 pad2[0xa420 - 0x9c60]; Blk64 b; } SaveRow;

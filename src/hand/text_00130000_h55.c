@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x139000-0x13c000 (worker 55). */
 #include "common.h"
+#include "data/bss_0052.h"
 
 extern u32 D_002C5958;
 extern u32 D_00304B84;

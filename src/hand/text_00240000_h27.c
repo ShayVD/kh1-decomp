@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 #define BREAK() __asm__ volatile("break")
 

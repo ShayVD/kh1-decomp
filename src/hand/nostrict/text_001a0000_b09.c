@@ -1,5 +1,6 @@
 #include "common.h"
 #include "ppp.h"
+#include "data/bss_0061.h"
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));

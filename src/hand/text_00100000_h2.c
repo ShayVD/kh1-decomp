@@ -1,6 +1,8 @@
 /* Hand-matched functions (worker 2). Grouped by address; the original
  * translation units are not known yet. */
 #include "common.h"
+#include "data/bss_0049.h"
+#include "data/bss_004D.h"
 
 /* 4x4 matrix pair: a[] from the caller's matrix, b[] from D_002BC170. */
 typedef struct {

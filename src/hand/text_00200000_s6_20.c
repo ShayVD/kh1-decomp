@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct N { u8 pad[0x10]; struct N *x10; u8 pad14[0x10]; s32 x24; f32 x28; u8 pad2c[0x90 - 0x2c]; s32 x90; f32 x94; u8 pad98[0xa0 - 0x98]; f32 xa0; u8 pada4[0xcc - 0xa4]; s16 xcc; s16 xce; } N;
 typedef struct { u8 pad[8]; s32 x8; } P5BC8;
 extern P5BC8 *D_00425BC8;

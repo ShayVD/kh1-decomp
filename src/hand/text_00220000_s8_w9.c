@@ -1,5 +1,6 @@
 /* func_0022eef8 (hand): block A item id in idx (shared with the list loop), func_001ee708 result / x90 save in id (shared with the loop), D_00304BE8->items[idx]. */
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct {
     s32 magic;

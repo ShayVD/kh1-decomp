@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* Sections were separate scratch files; their local typedefs carry a _qN suffix and
    conflicting extern/prototype declarations use __asm__ labels so each function keeps
    the exact declarations it matched with. func_0022a698 rodata (0x491260) was verified

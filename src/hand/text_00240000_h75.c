@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 typedef struct { s32 dur; u8 pad[0xc]; f32 v[4][4]; } Frame50;
 typedef struct { s32 time; s32 idx; s32 n; Frame50 *fr; } Anim50;

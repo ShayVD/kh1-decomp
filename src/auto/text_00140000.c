@@ -2,6 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "actor.h"
+#include "data/bss_0054.h"
 
 M2C_UNK func_0011d3c8(u16, s32, M2C_UNK);
 M2C_UNK func_001252f8();

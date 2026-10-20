@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004E.h"
+#include "data/bss_004F.h"
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 id, x4, x8, handle, x10; u8 active, x15, kind, x17; } SndSlot;
 typedef struct { s32 x0, x4, x8; } Slot12;

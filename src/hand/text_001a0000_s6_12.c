@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) QV;
 s32 func_001a8f30(void) {
     f32 r;

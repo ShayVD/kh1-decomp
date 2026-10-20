@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0057.h"
 
 /* ---- func_00169f28 ---- */
 /* rodata */

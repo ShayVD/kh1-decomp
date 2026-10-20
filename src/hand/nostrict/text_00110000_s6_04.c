@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004E.h"
+#include "data/bss_004F.h"
 typedef struct Node { u16 type; u16 f2; s32 key; struct Node *next; s32 data; } Node;
 typedef struct { u16 size; u16 count; u8 *base; Node *head; u8 *cur; } Pool;
 u8 *func_0011efe8(Pool *p);

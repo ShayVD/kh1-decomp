@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker c04), built without strict aliasing. */
 #include "common.h"
+#include "data/bss_0057.h"
 
 typedef struct { s16 h0; s16 pad2; s32 w4; f32 f8; } Res8;
 typedef struct { u8 pad[4]; s32 w4; } Res04;

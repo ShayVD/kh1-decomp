@@ -1,5 +1,6 @@
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0062.h"
 typedef struct {
     struct {
         s32 w0, w4, w8, wC, w10;

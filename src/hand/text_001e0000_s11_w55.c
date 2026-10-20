@@ -5,6 +5,7 @@
    includes t's register (v0), so reorg's steal_delay_list_from_fallthrough may not move
    `li v0,4` from the `b` slot into the bgtz slot (bgtz keeps its nop, as in the original). */
 #include "common.h"
+#include "data/bss_0062.h"
 extern s32 D_003DB060;
 extern s32 D_0062F6D0;
 s32 D_0062F640 ALIGNED(16);

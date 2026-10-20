@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct { u8 pad[0xcc]; s32 active; } E3530;
 typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
 extern S3530 D_003F3530;

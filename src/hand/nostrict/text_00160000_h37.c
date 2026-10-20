@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x167000-0x175000 (worker 37), built without strict aliasing. */
 #include "common.h"
+#include "data/bss_0057.h"
 
 /* ---- shared types ---- */
 typedef union { s32 w; struct { u16 lo, hi; } h; } Key677;

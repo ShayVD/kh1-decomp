@@ -1,5 +1,6 @@
 /* worker b06: hand-matched camera functions 0x001784c8..0x0017e428 */
 #include "common.h"
+#include "data/bss_0057.h"
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct { V4 a; V4 b; V4 c; V4 d; } Ray;
 typedef struct {

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 r:29; } f; u8 c[4]; } F5968;
 extern F5968 D_002C5968;
 

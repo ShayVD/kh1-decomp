@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x153000-0x15a000 (worker 35). Built without
  * strict aliasing. */
 #include "common.h"
+#include "data/bss_0055.h"
 
 /* ---- func_00153418 ---- */
 typedef union { u64 d; s32 w; struct { u32 lo; u32 x:6; u32 kind:4; u32 hi:22; } b; } F8_153418;

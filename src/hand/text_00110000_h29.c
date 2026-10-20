@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004D.h"
+#include "data/bss_004E.h"
 typedef struct { u16 x0; u8 pad2[10]; u8 xc; } W29Sub;
 typedef struct {
     s32 x0;

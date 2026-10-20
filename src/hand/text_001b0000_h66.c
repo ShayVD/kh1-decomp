@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 double asin(double);
 double cos(double);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 void func_002672f8(void *, void *, void *);
 void *func_00232cc0(s32);
 void *func_001ba9d8(s32);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004F.h"
 
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V53;
 

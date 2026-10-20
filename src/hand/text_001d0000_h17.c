@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 /* Script VM handlers: value stack at +0x184, top index at +0x180. */
 typedef struct {

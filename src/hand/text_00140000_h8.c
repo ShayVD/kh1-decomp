@@ -1,5 +1,7 @@
 /* Hand-matched functions near 0x145000-0x14C600 (worker 8). */
 #include "common.h"
+#include "data/bss_0053.h"
+#include "data/bss_0054.h"
 
 typedef struct W8Node { u8 pad[8]; struct W8Node *next; u8 pad2[10]; u8 x16; u8 p17; f32 x18; } W8Node;
 extern W8Node *D_0052EB58;

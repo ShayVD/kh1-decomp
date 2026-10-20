@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct ObjT {
     u8 pad[0x24];
     struct ObjT *x24; /* holds a byte id; pointer type matches the original aliasing */

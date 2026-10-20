@@ -1,5 +1,6 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 49), delay-slot filling off. */
 #include "common.h"
+#include "data/bss_0064.h"
 
 void func_00239860(s32, s32, s32, s32, f32, s32, s32, s32);
 void func_00239b90(s32, s32, s32, s32, f32, s32, s32, s32);

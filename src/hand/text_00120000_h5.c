@@ -1,4 +1,7 @@
 #include "common.h"
+#include "data/bss_004F.h"
+#include "data/bss_0051.h"
+#include "data/bss_0052.h"
 
 /* Hand-matched functions, 0x00123298-0x0012fb18 (worker 5). */
 

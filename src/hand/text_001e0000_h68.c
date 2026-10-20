@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 a, b, c, d; } Q4;

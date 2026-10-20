@@ -1,0 +1,11 @@
+/* Definitions of the shared bss names in include/data/bss_0063.h. */
+#include "data/bss_0063.h"
+
+u8 D_00630380[0x30] ALIGNED(16);
+s32 D_006314CC ALIGNED(4);
+s32 D_006314D0 ALIGNED(16);
+s32 D_006314D4 ALIGNED(4);
+s32 D_006314D8 ALIGNED(8);
+s32 D_006314DC ALIGNED(4);
+s32 D_00631560 ALIGNED(16);
+s32 D_0063F540 ALIGNED(16);

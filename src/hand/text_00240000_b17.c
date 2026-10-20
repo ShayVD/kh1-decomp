@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 /* UI quad packet builder (ttlib/ui.c). Ui is the 0xC0-byte element read by
  * func_0024ac68: rect at +0x0, uv rect at +0x10, 4x4 colours at +0x20,

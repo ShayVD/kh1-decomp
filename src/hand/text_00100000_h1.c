@@ -1,5 +1,6 @@
 /* Hand-matched functions from 0x00100000-0x00108fff (worker 1). */
 #include "common.h"
+#include "data/bss_0049.h"
 
 /* ---- types ---- */
 typedef struct { s32 a, b, c, d; } Q4;

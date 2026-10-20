@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0049.h"
 
 /* func_00107548 (s11w74, hand/strict). FLAGGED dead statement: the dead FP test
  * "if ((f32)i < 0.0f) b = 0;" in the loop (from s11w66) is removed by flow2 and leaves no code;

@@ -1,6 +1,7 @@
 /* State setters at 0x233610-0x2336e4 (layout symbol func_00233610 split
  * into eight functions). */
 #include "common.h"
+#include "data/bss_0064.h"
 extern void *D_00425BC8;
 extern u8 D_002C5AD0[];
 extern s32 D_00647780, D_00647784, D_00647788;

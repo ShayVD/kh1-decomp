@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0049.h"
 
 typedef __builtin_va_list va_list;
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));

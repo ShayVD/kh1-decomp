@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x148BC0-0x14EE00 (worker 34). */
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0054.h"
 
 /* ---- shared data ---- */
 extern f32 D_002BBDFC;

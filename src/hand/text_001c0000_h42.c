@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 typedef struct Ent2 {
     u8 pad0[0x10];
