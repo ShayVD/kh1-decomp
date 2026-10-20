@@ -1689,3 +1689,95 @@ why: users disagree, a struct type, no C user, merged). 8,048 `.word` relocation
 - A label shares the piece's section: reach_check and cover_check see the piece, not the label. A user
   that declares an inner name larger than the rest of the piece is not checked by merge_pieces.py;
   cover_check would flag the variable after it ("inside D_inner"), and it lists none today.
+
+## Session 20: the data float (SHIFT_FLOAT_DATA_BUDGET ?= 0x4000)
+
+`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` now floats 0x4000 bytes of data by default: 753 data names and
+112 bss runs (1,217 variables), `_end` 0x688824 (`_end + 0xA000` leaves 0xD7DC below 0x6A0000). In PCSX2
+(KH1_BIG.iso, ELF appended, KH1_F20_Q4000) it boots, the load menu text is right, save 05 loads, and
+walking, attacking, the main menu and Items work. The world map and a fight were not run on this build.
+`make` stays byte-identical. Each finding below was found by boot bisection and is now a static rule or
+a float_keep entry.
+
+### The crash (session 19, F19D): tables declared 0x40, copied 0x4000 deep
+
+Bisection (`SHIFT_FLOAT_ONLY_DATA`, below) on the session 19 rules: 0x2000 (457 names) plays, 0x4000
+crashes PCSX2 within ~15 s of loading save 05; the 66 names between them split to 16. D_00472190,
+D_004761D0 and D_0047A210 are declared 0x40 bytes, but func_001072c0 and func_001073f0 copy
+`D_00494AA0[i]` words at a time from `&D_X[b]` with b growing through the whole table, about 0x4000
+bytes (D_004721D0, D_00476210, D_0047A250 are the 0x3FC0-0x3FD0-byte tails, still blob names). Floated
+alone, the copy reads whatever follows the head (inferred: the copied data feeds the renderer, and the
+emulator dies on what it gets). reach_check missed it in two ways, both fixed:
+- **`&D_X[i]` passed to a call** was not an access: only exact addresses and argument values were
+  recorded at call sites. Now an IDX argument is an indexed access from its base, bounded only when the
+  index has a bound, the callee's reach from that argument is known, and the callee does not walk or
+  index that argument (`wide` arguments: an ARG combined with an unknown value, or joined with another
+  offset of itself, propagated up through callers). memcpy and memset stay with their byte counts.
+- **idx-base**: session 18's idx-next keeps the next name when it floats. When the indexed base floats
+  and the next name stays in the blob, the array now runs into a blob name, so the base stays too
+  (`--no-idx-base` turns it off).
+
+### Three more hazards as more data floated
+
+- **A staging arena** (black field, HUD only, after the save loads): D_003F8380 ... D_0040EB80 are seven
+  parts of one 0x16C00-byte area. func_00232ad0(-1) clears it all from D_003F8380 with one pointer walk,
+  func_00232ad0(0..6) clears each part, and a getter in text_00220000_h25.c hands out each part's address.
+  The four 0x400-byte parts floated. All seven are in float_keep.txt.
+- **A stored buffer pointer** (garbled text on the load menu and in the command menu; the pattern changes
+  every boot): func_001e* stores `&D_003E4658` and 0x310 into D_003E8E28/2C. D_003E4658 is declared 8
+  bytes, so the next names (D_003E4660 ... D_003E46A8) are inside the buffer. New rule: **an address that
+  a `sw`/`sd` stores is an unbounded indexed base** (204 addresses; idx-next and idx-base then keep it and
+  its neighbour; `--no-stored`). This generalises session 19's packet-buffer note.
+- **Parallel object/table records** (hangs while loading the save): D_0046E120/40/50, D_00472160/80/90,
+  D_004761A0/C0/D0, D_0047A1E0/A200/A210 are a 0x20-byte object, a 0x10-byte entry and the 0x4000 table
+  above (with a 0x10-byte header before the last three). `o->p = cond ? D_00472160 : D_0046E120` is a
+  join reach_check turns into an unknown index, so the stored-address rule does not see it. One
+  `float_holes.py` run on a savestate of the hang showed writes into the old places of D_004761A0 and
+  D_004761C0. All eleven names are in float_keep.txt. These four records want to be merged pieces
+  (merge_pieces.py) so they float as wholes.
+- **Uncached alias** (rule only, `--no-uncached`): a name whose address is built with 0x20000000 or
+  0x30000000 ORed in keeps itself and the next name. It finds session 19's D_00573AC0 by itself and adds
+  D_0046D800 (sceCd's 0x440-byte buffer, which sceCdInit and friends reach uncached).
+
+### Pointer-table-only names stay (SHIFT_FLOAT_PTR_ONLY ?= 0)
+
+Names whose only users are pieces' `.word`s (data_owners.py files column all `src/data/*.s`: 466 names, the
+entries s20d1 warned about) stay in place by default. With them floated, the load menu drops the digit of
+"スロット1"/"スロット2" (the rest plays); D_0048F700 ... D_0048F870 (0x10-byte entries of a data_0037.s
+table) were the new names in that build. Not bisected further. `SHIFT_FLOAT_PTR_ONLY=1` floats them.
+
+### Budget refill
+
+Every name taken out of the float lets the budget pull in the next-smallest ones, so each fix exposed new
+names (twice: the hang above came from 157 names the pointer-only rule freed room for). After a rule
+change, boot the default build again before calling it tested; compare floated sets with the ELF's own
+symbols (D_ names whose address moved by other than the common data delta).
+
+### The bss budget
+
+With the new rules only 6 bss names are over the 0x11800 budget, and the smallest of them alone
+(D_00533BA0, 0x14014 bytes) is larger than the arena room left: 0x16000 builds the same ELF as 0x11800.
+The bss float is now limited by the keep rules, not the budget.
+
+### Tools
+
+- `SHIFT_FLOAT_ONLY_DATA="names"` (shift_ld `--float-only-data`; `@FILE` reads names from a file): only
+  these data names float (bss as usual). Bisect with the floated list of a good build plus half the
+  suspects; `SHIFT_FLOAT_SKIP` changes the set through the budget refill.
+- reach_check.py: `--no-idx-base`, `--no-stored`, `--no-uncached` turn the session 20 rules off one by one.
+  On the default (no `--ld`) run it keeps 1,928 names (987 in session 19).
+
+### Bisection log (PCSX2, save 05; the load menu shows text bugs before loading)
+
+| ELF | build | result |
+|---|---|---|
+| F20_D0x4000U | s19 rules + uncached, data 0x4000 | PCSX2 crashes after loading |
+| F20_D0x2000 | s19 rules, data 0x2000 (457 names) | plays |
+| F20_A / B1 | 0x2000 set + 33 / + 17 of the 66 | play (culprit in the last 16) |
+| F20_N0 / N0x4000 | indexed-argument + idx-base rules, data 0 / 0x4000 | plays / black field |
+| F20_NX | N0x4000 without the four 0x400-byte arena parts | plays |
+| F20_M4000 | s20d1's pieces merged, data 0x4000 (835 names) | field draws, text garbled |
+| F20_T1 ... T7 | bisection of the 528 new names | T7 (8 names) garbled: D_003E4658 |
+| F20_S4000 | + stored rule | plays; slot digit missing on the load menu |
+| F20_P4000 | + pointer-table-only kept | load menu right; hangs loading the save |
+| F20_Q4000 | + the record names in float_keep (the default now) | plays (field, walk, attack, menus) |
