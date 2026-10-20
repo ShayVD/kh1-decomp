@@ -1765,7 +1765,7 @@ The bss float is now limited by the keep rules, not the budget.
   these data names float (bss as usual). Bisect with the floated list of a good build plus half the
   suspects; `SHIFT_FLOAT_SKIP` changes the set through the budget refill.
 - reach_check.py: `--no-idx-base`, `--no-stored`, `--no-uncached` turn the session 20 rules off one by one.
-  On the default (no `--ld`) run it keeps 1,928 names (987 in session 19).
+  On the default (no `--ld`) run it keeps 1,928 names; the session 19 rules keep 761 on the same pieces.
 
 ### Bisection log (PCSX2, save 05; the load menu shows text bugs before loading)
 

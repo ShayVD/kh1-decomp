@@ -710,3 +710,13 @@ from dead code. Read the allocation first, then find the source change.
   values in big one-block functions (00200e28's header, 00110618's FP values) take that register out of the
   pool for every other quantity, and everything else moves (100+ words). Use pins on short-lived values only.
 
+
+## Session 20
+
+- 00125240 (3w): the natural draft (no dead float test) with its three FP constants pinned
+  (`register f32 k asm("$f0")`, -1e4 in $f2, 1.0 in $f3) gets every register right; the leftover is the
+  order of two `lui`s (D_004F77E0, D_002E27A4) from sched1, plus one late store. Pins on full addresses
+  dissolve. Draft: nonmatchings/session20/s20m1__00125240_3w_pins.c (same count as the flagged one).
+- 001c62a0 (16w): three registers swapped by global-alloc priority (original base > b > lk0); b looks
+  like a loop-reduced value of i seeded from the hoisted base. 00200e28 (24w): store order in one block,
+  closed for pins.
