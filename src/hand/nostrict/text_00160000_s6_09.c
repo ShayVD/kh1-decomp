@@ -393,3 +393,5 @@ void func_0017b308(V4 *out, V4 *seg, s32 n, s32 i, s32 loop) {
     }
 }
 #include "data/bss_0057_mixed.h"
+#include "data/data_0035.h"
+#include "data/data_0036.h"

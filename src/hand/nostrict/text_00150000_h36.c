@@ -809,3 +809,5 @@ s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
     func_00267e60(out, v, o->m154[par][3], t);
     return ((*o->skel)->bones[par].x2C >> 30) & 1 ? -1 : 0;
 }
+#include "data/data_002C.h"
+#include "data/data_0035.h"

@@ -1152,3 +1152,4 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
     if (!(o->f88 & 2)) o->f3e4 = c;
     e->f0 |= 2;
 }
+#include "data/data_002E.h"

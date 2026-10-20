@@ -36,3 +36,5 @@ s32 func_001e9048(s32 arg0) {
     }
     return 4;
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

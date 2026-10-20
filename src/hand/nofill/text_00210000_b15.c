@@ -69,3 +69,4 @@ void func_0022dfd8(Ob3 *a) {
         y += 28;
     }
 }
+#include "data/data_003F.h"

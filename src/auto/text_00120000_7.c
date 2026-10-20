@@ -19,3 +19,4 @@ s32 func_001251a0(void) {
     func_00110c30();
     return 0;
 }
+#include "data/data_002C.h"

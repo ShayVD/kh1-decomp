@@ -830,3 +830,6 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
 }
 #include "data/bss_004D_typed.h"
 #include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_0030.h"

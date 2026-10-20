@@ -105,3 +105,4 @@ void func_0024e8d4();
 M2C_UNK D_00469FC8[0x4] ALIGNED(8) = {
     (s32)func_0024b0c8, (s32)func_0024e75c, (s32)func_0024e8d4, 0,
 };
+#include "data/data_0046.h"

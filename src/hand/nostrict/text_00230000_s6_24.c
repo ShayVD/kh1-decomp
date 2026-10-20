@@ -468,3 +468,4 @@ s32 func_00240810(Ob810 *o) {
     }
     return r;
 }
+#include "data/data_0044.h"

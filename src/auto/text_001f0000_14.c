@@ -39,3 +39,4 @@ s32 func_001f9398(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
 void func_001f93b8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     func_001f9e48(arg0, arg1, arg2, arg3, arg4, arg5, D_003F1A60);
 }
+#include "data/data_003F.h"

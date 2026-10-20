@@ -269,3 +269,4 @@ void func_00219f98(void *a) {
     }
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

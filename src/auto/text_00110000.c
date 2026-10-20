@@ -429,3 +429,5 @@ void func_0011fd40(void) {
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"

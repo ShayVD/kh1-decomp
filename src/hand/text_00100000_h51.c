@@ -247,3 +247,4 @@ void func_0010c5c8(u64 *p, s32 mode, s32 psm) {
 #include "data/bss_0049_mixed.h"
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"
+#include "data/data_002B.h"

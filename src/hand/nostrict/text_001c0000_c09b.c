@@ -285,3 +285,4 @@ s32 func_001c7c18(VMa *vm) {
     vm->sp -= 3;
     return 2;
 }
+#include "data/data_003C.h"

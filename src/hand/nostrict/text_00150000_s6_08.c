@@ -748,3 +748,4 @@ void *D_00351BE0[0x18] ALIGNED(32) = {
     (void *)D_00277AE0, (void *)D_002736B0, (void *)D_00273B30, (void *)D_00274110,
     (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
 };
+#include "data/data_0035.h"

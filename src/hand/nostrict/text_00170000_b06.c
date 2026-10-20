@@ -449,3 +449,5 @@ s32 func_0017c190(void) {
     return 1;
 }
 #include "data/bss_0057_typed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

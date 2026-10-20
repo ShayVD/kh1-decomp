@@ -266,3 +266,6 @@ void func_00139da8(W55ObB *o) {
 extern u8 D_0048DCB8[];
 s32 D_00304B68 ALIGNED(8) = (s32)D_0048DCB8;
 #include "data/bss_0052_mixed.h"
+#include "data/data_002B.h"
+#include "data/data_0030.h"
+#include "data/data_0048.h"

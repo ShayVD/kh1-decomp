@@ -155,3 +155,4 @@ void func_00216890(Ob1 *o) {
     }
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

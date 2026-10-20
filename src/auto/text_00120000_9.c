@@ -114,3 +114,4 @@ s32 func_0012cc38(s32 arg0, s32 arg1) {
     }
     return 0;
 }
+#include "data/data_002C.h"

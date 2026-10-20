@@ -89,3 +89,4 @@ void func_0020a248(s32 idx) {
         e->xc0 = 0;
     }
 }
+#include "data/data_002B.h"

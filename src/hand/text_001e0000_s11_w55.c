@@ -214,3 +214,4 @@ s32 func_001e10f8(void) {
 ret0:
     return 0;
 }
+#include "data/data_003D.h"

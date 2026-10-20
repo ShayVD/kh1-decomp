@@ -401,3 +401,5 @@ s32 func_001ddf98(VM *vm) {
     return 2;
 }
 #include "data/bss_0062_mixed.h"
+#include "data/data_0038.h"
+#include "data/data_003F.h"

@@ -707,3 +707,4 @@ void func_00267810();
 void (*D_00372750[0x4])(Mtx, A7c50 *, f32) ALIGNED(16) = {
     (void *)func_00267768, (void *)func_00267810, (void *)func_002676c0, 0,
 };
+#include "data/data_0037.h"

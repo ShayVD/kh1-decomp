@@ -254,3 +254,4 @@ s32 func_0024e078(void) {
 void func_0024f070(void) {
     func_00149c80(M2C_FIELD(D_0066AA84, u16 *, 0x4C), &func_0024f008);
 }
+#include "data/data_0046.h"

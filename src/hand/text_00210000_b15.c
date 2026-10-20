@@ -786,3 +786,5 @@ void func_002335d8(s32 i) {
 /* D_00425BC0 stays extern: func_002335d8 indexes it with i, and D_00425BC4 (named by
  * text_001d0000.c) is its next entry, so the table is longer than its extent; floating
  * it alone hung the SHIFT_FLOAT build at boot (session 17). */
+#include "data/data_003F.h"
+#include "data/data_0042.h"

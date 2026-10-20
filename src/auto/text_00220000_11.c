@@ -31,3 +31,4 @@ void func_002297a0(unsigned int arg0) {
   }
   *((s16 *) (((s8 *) func_0011ef10(0x270FF, &func_0020d2f8)) + 2)) = arg0;
 }
+#include "data/data_003F.h"

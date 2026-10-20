@@ -11,3 +11,4 @@ void func_001e3f00(void) {
     D_003DC48C = 0;
     D_003DC490 = 1;
 }
+#include "data/data_003D.h"

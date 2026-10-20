@@ -562,3 +562,5 @@ s32 func_001bb260(s32 a) {
     }
     return 0;
 }
+#include "data/data_0037.h"
+#include "data/data_0048.h"

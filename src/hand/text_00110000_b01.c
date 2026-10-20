@@ -602,3 +602,5 @@ void func_0011e1c8(s32 x) {
     D_004E39F8[i].b = 2;
 }
 
+#include "data/data_002C.h"
+#include "data/data_003F.h"

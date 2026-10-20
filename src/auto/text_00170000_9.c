@@ -55,3 +55,5 @@ void func_0017c110(s32 arg0, f32 fparg0) {
     func_00267530(&M2C_FIELD(sp, M2C_UNK *, 0x40), &D_00575970, &M2C_FIELD(sp, M2C_UNK *, 0x40));
     func_00120c18(&M2C_FIELD(sp, M2C_UNK *, 0x40));
 }
+#include "data/data_0035.h"
+#include "data/data_0036.h"

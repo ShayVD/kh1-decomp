@@ -154,3 +154,4 @@ void func_001fd4c0(s32 arg0, s32 arg1, s32 arg2) {
     func_001fd5e0(arg0, arg1);
     func_001fd610(arg0, arg2);
 }
+#include "data/data_003F.h"

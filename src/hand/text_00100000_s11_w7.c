@@ -151,3 +151,4 @@ s32 func_00103c48(void) {
     return 4;
 }
 #include "data/bss_0049_mixed.h"
+#include "data/data_0037.h"

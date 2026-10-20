@@ -31,3 +31,5 @@ void func_0017ebd0(void) {
     D_00362450 = 0;
     D_00362454 = 0;
 }
+#include "data/data_002E.h"
+#include "data/data_0036.h"

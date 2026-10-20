@@ -739,3 +739,5 @@ void func_00150930(Chr57_0930 *o, Chr57_0930 *t, f32 *v) {
     func_001376e8(o, v);
 }
 #include "data/bss_0054_typed.h"
+#include "data/data_002B.h"
+#include "data/data_0035.h"

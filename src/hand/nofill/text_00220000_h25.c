@@ -69,3 +69,4 @@ s32 func_0023d490(Obj4 *a) {
     }
 }
 
+#include "data/data_0044.h"

@@ -759,3 +759,5 @@ search:
 
 #include "data/bss_0061_mixed.h"
 #include "data/bss_0061_typed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

@@ -111,3 +111,4 @@ void func_00231ea0(W17 *w) {
     func_001fc308(w, y - 8, 230, 0, 0, 7, 0, 0x80808080, 0x80808080);
     func_001fb428(w, 1, 0, 0, y + 33, 269, func_001ef0c0(id), 15, 0x80808080);
 }
+#include "data/data_003F.h"

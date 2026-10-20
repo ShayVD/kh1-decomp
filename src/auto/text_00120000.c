@@ -519,3 +519,6 @@ s32 func_0012ffd0(void *arg0) {
 }
 #include "data/bss_0051_mixed.h"
 #include "data/data_0029.h"
+#include "data/data_002B.h"
+#include "data/data_002E.h"
+#include "data/data_0035.h"

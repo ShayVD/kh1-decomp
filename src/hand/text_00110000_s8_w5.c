@@ -39,3 +39,4 @@ void func_00110ce0(void) {
         if (D_002A3F60[i][1] > 1.0f) D_002A3F60[i][1] -= 1.0f;
     }
 }
+#include "data/data_002B.h"

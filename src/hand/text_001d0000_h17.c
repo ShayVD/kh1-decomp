@@ -471,3 +471,4 @@ s32 func_001d74b8(VM *vm) {
     return 2;
 }
 #include "data/data_002A.h"
+#include "data/data_002E.h"

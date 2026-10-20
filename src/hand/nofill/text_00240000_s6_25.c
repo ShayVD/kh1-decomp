@@ -41,3 +41,4 @@ void func_0024d618(s32 sema) {
     }
 }
 
+#include "data/data_0046.h"

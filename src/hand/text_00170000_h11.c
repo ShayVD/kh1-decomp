@@ -559,3 +559,5 @@ void func_0017d9c8(Hdr *h) {
     func_0017f178();
 }
 #include "data/bss_0057_mixed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

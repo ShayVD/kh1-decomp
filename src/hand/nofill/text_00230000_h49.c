@@ -280,3 +280,4 @@ void func_0023c7a0(void) {
     if (f == 0) func_0023cf08();
     *p = m;
 }
+#include "data/data_002E.h"

@@ -306,3 +306,6 @@ s32 (*D_0046A6A4)(void) ALIGNED(4) = (void *)func_0024e078;
 #include "data/bss_0049_mixed.h"
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_003F.h"

@@ -817,3 +817,8 @@ void func_001ef950(void)
     sceGsSyncPath(0, 0);
 }
 
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003B.h"
+#include "data/data_003D.h"
+#include "data/data_003E.h"

@@ -689,3 +689,7 @@ char *D_002C6460[0xb] ALIGNED(16) = {
     (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
 };
 #include "data/bss_004F_typed.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_002E.h"
+#include "data/data_0049.h"

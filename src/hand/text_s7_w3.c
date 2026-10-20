@@ -127,3 +127,4 @@ s32 func_001d0380(VM2 *vm) {
 r8:
     return 8;
 }
+#include "data/data_002B.h"

@@ -564,3 +564,4 @@ void func_002191f0(s32 a0, s32 a1) {
     default: D_003F34B8->f2c = a1; break;
     }
 }
+#include "data/data_003F.h"

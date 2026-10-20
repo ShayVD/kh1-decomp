@@ -74,3 +74,4 @@ void func_001aa948(void) {
 
 }
 #include "data/bss_0061_mixed.h"
+#include "data/data_002B.h"

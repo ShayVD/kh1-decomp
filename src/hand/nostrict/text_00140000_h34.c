@@ -292,3 +292,4 @@ void func_00152f10(W34Pl14 *o) {
         o->x144->x1c = 12.0f;
     }
 }
+#include "data/data_0030.h"

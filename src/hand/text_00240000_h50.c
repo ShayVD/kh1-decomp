@@ -644,3 +644,5 @@ s32 func_0024d8f0(void) {
     return 0;
 }
 #include "data/bss_0066_typed.h"
+#include "data/data_002C.h"
+#include "data/data_0046.h"

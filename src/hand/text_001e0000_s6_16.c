@@ -161,3 +161,7 @@ s32 func_001e99e8(s32 kind, E848b *p) {
     }
     return -1;
 }
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003B.h"
+#include "data/data_003C.h"

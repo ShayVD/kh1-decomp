@@ -383,3 +383,8 @@ s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
     }
     return 0;
 }
+#include "data/data_0037.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003B.h"
+#include "data/data_003C.h"

@@ -408,3 +408,4 @@ s32 func_001cdf00(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/data_002B.h"

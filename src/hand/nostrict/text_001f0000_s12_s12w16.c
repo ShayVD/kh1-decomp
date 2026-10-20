@@ -292,3 +292,5 @@ end:
     D_003F2BD4 = (y - oy) >> 4;
     return (cx - ox) >> 4;
 }
+#include "data/data_003E.h"
+#include "data/data_003F.h"

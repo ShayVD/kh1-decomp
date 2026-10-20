@@ -92,3 +92,5 @@ s32 func_001eeac0(s32 arg0) {
     var_v0 = 0;
     return var_v0;
 }
+#include "data/data_003D.h"
+#include "data/data_003E.h"

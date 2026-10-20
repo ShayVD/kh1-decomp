@@ -528,3 +528,6 @@ void func_00133a88(void) {
         if (c) func_001c4788(c);
     }
 }
+#include "data/data_002C.h"
+#include "data/data_002E.h"
+#include "data/data_0030.h"

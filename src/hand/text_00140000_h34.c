@@ -601,3 +601,4 @@ void func_0014ed30(W34Act4 *o) {
         if (D_0054F448 >> i & 1) D_0054F450[i].xc = D_0054F450[i].x8;
     }
 }
+#include "data/data_002C.h"

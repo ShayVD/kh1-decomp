@@ -342,3 +342,5 @@ void func_001fea38(WinA *o) {
     func_001220b8(p);
 }
 #include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"

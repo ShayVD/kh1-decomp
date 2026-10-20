@@ -42,3 +42,5 @@ void func_0017eb20(void) {
     D_00362448 = 0;
     func_0017e8a0();
 }
+#include "data/data_002E.h"
+#include "data/data_0036.h"

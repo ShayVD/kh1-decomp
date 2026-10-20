@@ -807,3 +807,7 @@ void func_001247e8(Obj123 *o) {
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004F_mixed.h"
 #include "data/bss_004F_typed.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_0035.h"
+#include "data/data_0049.h"

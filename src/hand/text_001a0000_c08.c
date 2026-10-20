@@ -400,3 +400,6 @@ s32 func_001c1f80(void) {
 #undef D_00389C90
 #undef D_002C5BB0
 #undef D_002C5958
+#include "data/data_0037.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"

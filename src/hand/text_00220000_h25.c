@@ -557,3 +557,4 @@ void *func_00232cc0(u32 arg0) {
 }
 
 #include "data/bss_0064_typed.h"
+#include "data/data_003F.h"

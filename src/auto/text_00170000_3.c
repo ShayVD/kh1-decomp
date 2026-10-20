@@ -26,3 +26,4 @@ s32 func_0017f8e0(void) {
     }
     return 0;
 }
+#include "data/data_0036.h"

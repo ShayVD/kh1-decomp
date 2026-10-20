@@ -1334,3 +1334,5 @@ R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
     (void *)D_003F4948, (void *)D_003F4968, (void *)D_003F4988, (void *)D_003F49A8,
     (void *)D_003F49C8, (void *)D_003F49E8, (void *)D_003F4A08, (void *)D_003F4A28,
 };
+#include "data/data_003F.h"
+#include "data/data_0042.h"

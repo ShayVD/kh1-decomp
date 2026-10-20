@@ -222,3 +222,4 @@ void func_0021faf8(s32 arg0) {
 void func_0021ff50(void *arg0) {
     func_00206ea8(M2C_FIELD(arg0, s32 *, 0x24));
 }
+#include "data/data_003F.h"

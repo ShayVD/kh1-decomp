@@ -131,3 +131,5 @@ void func_001efb58(s32 arg0) {
 s32 func_001efb68(void) {
     return (s32) D_0063F740 >> 4;
 }
+#include "data/data_003D.h"
+#include "data/data_003F.h"

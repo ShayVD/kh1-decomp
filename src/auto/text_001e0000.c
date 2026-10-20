@@ -332,3 +332,5 @@ void func_001efd98(void) {
 void func_001effa0(void) {
     func_001effc0(func_001efbb8());
 }
+#include "data/data_003D.h"
+#include "data/data_003E.h"

@@ -1008,3 +1008,4 @@ s32 D_003F6568[0xa] ALIGNED(8) = {
     (s32)D_003F6540, 0,
 };
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

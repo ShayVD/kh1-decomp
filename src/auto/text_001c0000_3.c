@@ -69,3 +69,4 @@ s32 func_001cfed8(void) {
     D_002C5958 = D_002C5958 & ~4 & 0xF7FFFFFF;
     return 2;
 }
+#include "data/data_003C.h"

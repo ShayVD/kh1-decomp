@@ -667,3 +667,5 @@ end:
 #undef SV_CLOSE
 #undef SV_CHECK
 #undef SV_CHECK5
+#include "data/data_003F.h"
+#include "data/data_0042.h"

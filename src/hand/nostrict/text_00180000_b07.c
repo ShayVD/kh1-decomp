@@ -1008,3 +1008,4 @@ void pppDrawMdlTs3Draw(PppObject *obj, PppTs3Key *key, PppEntry *e) {
     p.b4C = 0;
     D_00616224 = func_001aaf88((s32 *) m, &p, s->arg);
 }
+#include "data/data_0037.h"

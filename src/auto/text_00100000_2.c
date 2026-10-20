@@ -136,3 +136,4 @@ void func_0010fe90(void) {
     D_004D9240 = 1;
 }
 #include "data/data_002A.h"
+#include "data/data_002B.h"

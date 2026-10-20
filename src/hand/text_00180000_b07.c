@@ -310,3 +310,4 @@ void func_00181b30(void) {
     func_001220b8(h);
 }
 #include "data/bss_0061_mixed.h"
+#include "data/data_0037.h"

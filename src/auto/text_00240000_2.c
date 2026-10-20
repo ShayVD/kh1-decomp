@@ -93,3 +93,4 @@ void func_0024e088(s32 arg0) {
 s32 func_0024e098(void) {
     return D_0046A680;
 }
+#include "data/data_0046.h"

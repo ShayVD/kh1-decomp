@@ -166,3 +166,4 @@ void func_0012f700(Q8 *q) {
     }
     if (cur.f0) { if (!D_00525288) func_0012f560(&cur); func_0012fb20(&cur, 3); }
 }
+#include "data/data_002E.h"

@@ -126,3 +126,6 @@ void func_001c4808(s32 a, u32 b) {
         func_001c3770((s8 *)D_002BCC90, b - 100);
     }
 }
+#include "data/data_002B.h"
+#include "data/data_003B.h"
+#include "data/data_003C.h"

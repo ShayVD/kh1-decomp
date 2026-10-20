@@ -296,3 +296,4 @@ void func_002287f8(void *arg0) {
         func_00207830(arg0, c, 2, 0, y, 122, D_003F6CC8[k]);
     }
 }
+#include "data/data_003F.h"

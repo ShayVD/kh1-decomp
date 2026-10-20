@@ -59,3 +59,4 @@ s32 func_0014d778(void *arg0, s32 arg1) {
 s32 func_0014f828(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x70);
 }
+#include "data/data_0030.h"

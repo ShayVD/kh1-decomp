@@ -49,3 +49,5 @@ void func_0011e4d0(void) {
 void func_0011e9d8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_0011e8d0(1, arg0, arg1, arg2, 0, arg3);
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

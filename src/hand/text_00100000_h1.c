@@ -488,3 +488,5 @@ void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"

@@ -26,3 +26,4 @@ s32 func_0011c698(void) {
         return 0;
     }
 }
+#include "data/data_003F.h"

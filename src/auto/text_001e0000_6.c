@@ -265,3 +265,5 @@ void func_001efaa8(void) {
 void func_001efbe0(s32 arg0, s32 arg1) {
     func_001efd20(func_001efbb8(), arg1);
 }
+#include "data/data_003D.h"
+#include "data/data_003E.h"

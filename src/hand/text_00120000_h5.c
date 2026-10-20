@@ -577,3 +577,4 @@ void func_0012fa98(void) {
         *o = r;
     }
 }
+#include "data/data_002E.h"

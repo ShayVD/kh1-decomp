@@ -159,3 +159,4 @@ s32 func_001dfaa0(void *arg0) {
     return 2;
 }
 #include "data/data_0029.h"
+#include "data/data_002B.h"

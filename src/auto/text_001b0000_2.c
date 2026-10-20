@@ -205,3 +205,4 @@ void func_001bfca0(s32 arg0) {
 s32 func_001bfcb0(void) {
     return D_0037A16C + (D_0037A168 * 0x30) + 0x10;
 }
+#include "data/data_0037.h"

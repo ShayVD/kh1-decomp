@@ -367,3 +367,4 @@ s32 func_001fd848(void) {
     return D_00640DE0;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

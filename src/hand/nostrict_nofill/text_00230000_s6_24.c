@@ -57,3 +57,4 @@ void func_00238a70(void) {
     }
 }
 #include "data/bss_0064_typed.h"
+#include "data/data_0044.h"

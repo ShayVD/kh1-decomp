@@ -1015,3 +1015,5 @@ void (*D_0035BC80[0xa])(Obj70 *, Wk70 *) ALIGNED(16) = {
     0, (void *)func_00173ad8, (void *)func_00173ea8, (void *)func_00174398,
     (void *)func_00174950, (void *)func_00174d98,
 };
+#include "data/data_002B.h"
+#include "data/data_0035.h"

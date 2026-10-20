@@ -71,3 +71,4 @@ void func_001136a8(void) {
     func_00122198(D_002BCDF0, &func_00113688);
 }
 #include "data/data_002A.h"
+#include "data/data_002B.h"
