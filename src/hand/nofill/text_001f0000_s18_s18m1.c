@@ -181,3 +181,4 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     D_0063F750 = (cy - 0x7400) >> 4;
     return p;
 }
+#include "data/data_003E.h"

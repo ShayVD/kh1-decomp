@@ -872,3 +872,5 @@ s32 func_00235d70(void) {
         break;
     }
 }
+#include "data/data_003F.h"
+#include "data/data_0042.h"

@@ -31,3 +31,5 @@ s32 func_00113768(void) {
     func_00120748(D_002BCD60, t, func_001136d8, 0);
     return 4;
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

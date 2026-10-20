@@ -14,3 +14,4 @@ s32 func_001e2678(void) {
     D_003DAD3C += D_003DAD40;
     return (temp_v1 > 0) ? 0 : 4;
 }
+#include "data/data_003D.h"

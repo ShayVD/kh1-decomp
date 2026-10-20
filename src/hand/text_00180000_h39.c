@@ -347,3 +347,4 @@ void pppVertexAttendFrame(H39VObj *obj, H39VKey *key, PppEntry *e) {
     out[2] = v.f[2];
 }
 #include "data/bss_0061_typed.h"
+#include "data/data_002E.h"

@@ -432,3 +432,7 @@ s32 func_001cc1c0(VM *v) {
 }
 #include "data/bss_0062_mixed.h"
 #include "data/bss_0062_typed.h"
+#include "data/data_0036.h"
+#include "data/data_0037.h"
+#include "data/data_003C.h"
+#include "data/data_003F.h"

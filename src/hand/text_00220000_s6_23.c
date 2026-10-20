@@ -712,3 +712,4 @@ void func_00234910(void) {
     }
 }
 
+#include "data/data_003F.h"

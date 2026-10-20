@@ -123,3 +123,4 @@ void func_002177c8(Obj *a) {
         y += 28;
     }
 }
+#include "data/data_003F.h"

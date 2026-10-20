@@ -78,3 +78,4 @@ s32 func_001cdc58(VM *vm) {
     func_001c4640(&m);
     return 2;
 }
+#include "data/data_002B.h"

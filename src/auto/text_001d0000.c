@@ -1388,3 +1388,6 @@ s32 func_001dfe50(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
     return 2;
 }
+#include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_003F.h"

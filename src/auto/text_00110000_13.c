@@ -57,3 +57,4 @@ void func_0011fb48(s32 arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(arg0, s64 *, 8) = 0xE;
     M2C_FIELD(arg0, s64 *, 0) = (s64) ((((s32) (arg2 - arg0) >> 4) - 1) | ((s64) arg1 << 0xF) | ((s64) 0x8000 << 0x2D));
 }
+#include "data/data_002A.h"

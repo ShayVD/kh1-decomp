@@ -148,3 +148,4 @@ void func_001f2eb8(void) {
     D_003F1A68 = 0;
     func_001f3110();
 }
+#include "data/data_003E.h"

@@ -114,3 +114,4 @@ void func_0023d128(s32 arg0) {
 void func_0023dfc0(void) {
     func_0023dd48();
 }
+#include "data/data_003F.h"

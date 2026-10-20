@@ -391,3 +391,5 @@ s32 func_001da5b0(VM *vm) {
     vm->sp -= 3;
     return 2;
 }
+#include "data/data_002B.h"
+#include "data/data_0038.h"

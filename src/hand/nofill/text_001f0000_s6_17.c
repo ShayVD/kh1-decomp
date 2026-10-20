@@ -239,3 +239,4 @@ done:
     D_0063F750 = (cy - 0x7400) >> 4;
     return p;
 }
+#include "data/data_003E.h"

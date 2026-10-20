@@ -103,3 +103,4 @@ void func_001c5ee8(s32 *p) {
     func_0011ef10(50000, func_001c5db8);
     i = 0; /* dead store kept: needed for the match */
 }
+#include "data/data_003C.h"

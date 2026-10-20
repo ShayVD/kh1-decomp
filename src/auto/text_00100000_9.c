@@ -367,3 +367,5 @@ void func_0010ffb8(s32 *arg0, s32 *arg1) {
     *arg0 = D_004D8EC0[6] & 0xFFF;
     *arg1 = ((u32) D_004D8EC0[6] >> 0xC) & 0x7FF;
 }
+#include "data/data_002A.h"
+#include "data/data_002B.h"

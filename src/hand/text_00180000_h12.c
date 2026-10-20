@@ -908,3 +908,4 @@ void func_001a56a0(PppAnimPlayer *p) {
         }
     }
 }
+#include "data/data_0037.h"

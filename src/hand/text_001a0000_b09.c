@@ -278,3 +278,4 @@ void func_001c29d8(void) {
     D_0037A378.b1 = 0;
     D_0037A378.b5 = 0;
 }
+#include "data/data_0037.h"

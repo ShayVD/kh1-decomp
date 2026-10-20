@@ -524,3 +524,4 @@ void func_001655e0(f32 (*pos)[4], C03Mdl *o, f32 f, C03Bits *b) {
         o->p154[i][3][2] += D_00574F10[2];
     }
 }
+#include "data/data_0035.h"

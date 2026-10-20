@@ -767,3 +767,4 @@ void *D_003F71C8[0x6] ALIGNED(8) = {
     (void *)D_003F7170, (void *)D_003F7140, (void *)D_003F7100, (void *)D_003F70C0,
     (void *)D_003F7090, 0,
 };
+#include "data/data_003F.h"

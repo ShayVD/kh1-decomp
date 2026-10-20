@@ -109,3 +109,4 @@ s32 func_00119ef8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
     vsubv(out, p, t);
     return func_001198c8(a0, a1, out) != 0;
 }
+#include "data/data_002B.h"

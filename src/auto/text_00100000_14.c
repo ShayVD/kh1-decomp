@@ -101,3 +101,5 @@ void *func_0010fce8(s32 arg0, s32 arg1) {
   new_var = ((s8 *) (temp_v0 + (arg1 * 8))) + 0x10;
   return temp_v0 + (*((s32 *) new_var));
 }
+#include "data/data_002A.h"
+#include "data/data_0035.h"

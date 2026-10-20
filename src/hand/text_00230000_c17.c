@@ -103,3 +103,4 @@ void func_00239e30(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f3
         D_00449908.t[mode] = m->cur;
     }
 }
+#include "data/data_0044.h"

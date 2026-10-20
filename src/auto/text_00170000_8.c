@@ -229,3 +229,5 @@ void func_0017f9a8(void) {
     func_001a9f88();
     func_001aa858();
 }
+#include "data/data_0035.h"
+#include "data/data_0036.h"

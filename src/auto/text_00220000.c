@@ -176,3 +176,4 @@ void func_0022fc88(s32 arg0) {
     func_0022f818();
     D_00646A28 = 1;
 }
+#include "data/data_003F.h"

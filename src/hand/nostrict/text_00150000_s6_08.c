@@ -700,3 +700,4 @@ void *D_00351BE0[0x18] ALIGNED(32) = {
     (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
 };
 #include "data/bss_0057_typed.h"
+#include "data/data_0035.h"

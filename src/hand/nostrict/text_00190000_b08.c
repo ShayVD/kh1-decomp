@@ -1593,3 +1593,4 @@ void func_0019b460(PppObject *obj, BoneKey *key, PppEntry *e) {
     if (r->w0 == r->w8 * 2 + 2)
         func_0019ab38(r, key, w);
 }
+#include "data/data_0037.h"

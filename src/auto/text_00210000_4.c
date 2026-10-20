@@ -14,3 +14,4 @@ s32 func_0021daa0(s32 arg0) {
     D_00642EA4 = 0;
     return func_0021b4a0();
 }
+#include "data/data_003E.h"

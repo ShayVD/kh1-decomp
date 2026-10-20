@@ -558,3 +558,5 @@ void func_0017d9c8(Hdr *h) {
     D_00362674 = D_00362424->x18;
     func_0017f178();
 }
+#include "data/data_002E.h"
+#include "data/data_0036.h"

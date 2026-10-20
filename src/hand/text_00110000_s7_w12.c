@@ -127,3 +127,4 @@ s32 func_00119ad8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
     }
     return 0;
 }
+#include "data/data_002B.h"

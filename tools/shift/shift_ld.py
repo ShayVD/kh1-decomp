@@ -475,6 +475,22 @@ def cmd_gen(a) -> int:
                 kept += r
                 keep_runs.append(id(r))
         bss_runs = [r for r in bss_runs if id(r) not in keep_runs]
+        # Floated data goes after the blob and pushes .bss (and _end) up as much: a budget
+        # of it floats, smallest first (cost: size rounded up to its alignment; they are
+        # packed by alignment below, so the padding stays inside that bound).
+        dbudget, dkept = a.float_data_budget, []
+        for v in sorted((v for v in data_vars if v.name in floating), key=lambda v: (v.size, v.addr)):
+            al = float_align(v.addr)
+            cost = -(-v.size // al) * al
+            if cost <= dbudget:
+                dbudget -= cost
+            else:
+                dkept.append(v)
+        floating -= {v.name for v in dkept}
+        if dkept:
+            print(f"shift-ld: --float-vars: {len(dkept)} data variables over the 0x{a.float_data_budget:x} budget "
+                  f"stay in the blob (0x{sum(v.size for v in dkept):x} bytes); "
+                  f"{sum(1 for v in data_vars if v.name in floating)} float")
         if kept:
             print(f"shift-ld: --float-vars: {len(kept)} bss variables over the 0x{a.float_bss_budget:x} budget "
                   f"stay at their D_BSS offset (largest {max(kept, key=lambda v: v.size).name}, "
@@ -497,6 +513,20 @@ def cmd_gen(a) -> int:
     drel, drel_err = load_data_relocs(Path(a.data_relocs), a.reloc_tier,
                                       {f.name: f.addr for f in K.load_layout()})
     errors += drel_err
+    # Phase 4 step 5: a blob word that points into a variable an object defines (C, or a
+    # data piece of src/data/*.s) is a relocation against that variable, so it follows
+    # the variable when it floats (same value when it does not).
+    var_ranges = sorted((v.addr, v.addr + v.size, v.name) for v in variables)
+    var_starts = [r[0] for r in var_ranges]
+    n_retarget = 0
+    for w_addr, (sym, add, hi, t) in list(drel.items()):
+        if sym not in ("D_BLOB", "D_BSS"):
+            continue
+        ad = (blob_start if sym == "D_BLOB" else bss_start) + add
+        i = bisect.bisect_right(var_starts, ad) - 1
+        if i >= 0 and ad < var_ranges[i][1]:
+            drel[w_addr] = (var_ranges[i][2], ad - var_ranges[i][0], hi, t)
+            n_retarget += 1
     for w_addr, (sym, add, _hi, _t) in drel.items():
         if sym in ("D_BLOB", "D_BSS"):
             ad = (blob_start if sym == "D_BLOB" else bss_start) + add
@@ -661,7 +691,8 @@ def cmd_gen(a) -> int:
             expected.append((r.addr, "rodata", f"{r.obj}:{r.section}"))
         cur = r.addr + r.size
     emit_chunk(blob_end)
-    fl_data = [v for v in data_vars if v.name in floating]
+    # largest alignment first: no padding between the floated variables beyond the budget's bound
+    fl_data = sorted((v for v in data_vars if v.name in floating), key=lambda v: (-float_align(v.addr), v.addr))
     if fl_data:
         # --float-vars: the variables in their own place after the blob
         data += ["    __float_data_start = .;"]
@@ -791,6 +822,7 @@ def cmd_gen(a) -> int:
           + (f" ({len(floating)} floated)" if floating else ""))
     print(f"shift-ld: mode {a.mode}: {n_words} data relocations (tier <= {a.reloc_tier}) as .word sym+addend"
           + (f", {in_holes} rows inside rodata holes skipped" if in_holes else "")
+          + (f", {n_retarget} retargeted at the variable they point into" if n_retarget else "")
           + (f"; text rotated at 0x{split:08x} (0x{funcs[-1].addr + funcs[-1].size - split:x} bytes to the front)"
              if split is not None else "")
           + (f"; data and bss shifted by 0x{a.data_shift:x}" if a.mode in ("m2", "m12") else "")
@@ -847,6 +879,8 @@ def main() -> int:
                    help="--float-vars: only these bss variables float (bisecting a runtime failure)")
     g.add_argument("--float-bss-budget", type=lambda x: int(x, 0), default=0x10000,
                    help="--float-vars: at most this many bytes of bss float (smallest variables first)")
+    g.add_argument("--float-data-budget", type=lambda x: int(x, 0), default=0x4000,
+                   help="--float-vars: at most this many bytes of data variables float (smallest first)")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")

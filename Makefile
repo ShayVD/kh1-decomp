@@ -56,6 +56,15 @@ $(ORIG):
 $(GEN)/objects.mk $(GEN)/symbols.ld: $(GEN)/srclist $(SRCS) kh1.toml functions.tsv tools/kh1tool.py
 	@$(KH1) gen
 
+# Data pieces (phase 4, step 4): src/data/data_*.s name each shared data table as a
+# PIECE, an .incbin of out/data/pieces/<name>.bin cut from the user's ELF here (never
+# committed). Their objects wait for the cut.
+PIECE_SRCS   := $(filter src/data/data_%.s,$(SRCS))
+PIECES_STAMP := out/data/pieces.stamp
+$(PIECES_STAMP): $(ORIG) $(PIECE_SRCS) tools/shift/cut_pieces.py
+	@$(PY) -I tools/shift/cut_pieces.py --stamp $@ $(PIECE_SRCS)
+$(patsubst %,out/build/%.o,$(PIECE_SRCS)): $(PIECES_STAMP) include/data/piece.inc
+
 build: $(PATCHED)
 
 $(PATCHED): $(ORIG) layout.tsv kh1.ld $(GEN)/symbols.ld $(OBJS) tools/kh1tool.py
@@ -133,6 +142,9 @@ SHIFT_FLOAT      ?= 0
 # objects), reach_check.py (displacements, calls, arrays indexed into the next name) and
 # tools/shift/float_keep.txt (IOP-written blocks). Session 18: 0x10000 plays in PCSX2.
 SHIFT_FLOAT_BSS_BUDGET ?= 0x10000
+# SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
+# data goes after the blob and pushes .bss and _end up by as much (same arena limit).
+SHIFT_FLOAT_DATA_BUDGET ?= 0x4000
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
 # SHIFT_FLOAT_ONLY: if set, only these bss names float (bisecting; the budget still applies).
@@ -185,7 +197,7 @@ endif
 			> $(SHIFT_OUT)/float_reach.log 2>&1; cat $(SHIFT_OUT)/float_reach.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

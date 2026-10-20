@@ -91,3 +91,4 @@ void func_0010e8d0(void) {
     func_0010c438(0x3FEA, &D_002BB9A0);
     func_0010c438(0x3FEB, &D_002BB9E0);
 }
+#include "data/data_002A.h"

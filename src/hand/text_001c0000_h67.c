@@ -550,3 +550,8 @@ s32 func_001dde08(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003B.h"
+#include "data/data_003C.h"
+#include "data/data_003D.h"

@@ -227,3 +227,4 @@ void func_0021e8d8(Obj *o) {
     }
     if (D_00643118 == 2) func_0021e120(o, 416, 88, D_00643274);
 }
+#include "data/data_003F.h"

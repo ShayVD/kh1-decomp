@@ -68,3 +68,4 @@ s32 func_001e6038(void) {
     return 0;
 }
 #include "data/bss_0063_mixed.h"
+#include "data/data_003D.h"

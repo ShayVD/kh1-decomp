@@ -514,3 +514,4 @@ void func_00225330(O98 *arg0) {
     func_001f8f30();
 }
 #include "data/bss_0064_typed.h"
+#include "data/data_003F.h"

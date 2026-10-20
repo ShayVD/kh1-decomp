@@ -70,3 +70,5 @@ void func_001124f8(void) {
     }
     D_002E27A4 = 0;
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

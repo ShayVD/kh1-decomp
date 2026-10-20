@@ -120,3 +120,4 @@ s32 func_0010ba98(Task *t) {
 }
 
 
+#include "data/data_002B.h"

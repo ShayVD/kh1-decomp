@@ -118,3 +118,4 @@ void func_0017f110(void) {
     D_00362674 = M2C_FIELD(&D_003626F8, f32 *, 8);
     func_0017f178();
 }
+#include "data/data_0036.h"

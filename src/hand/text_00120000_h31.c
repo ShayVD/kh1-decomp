@@ -665,3 +665,5 @@ u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
 }
 #include "data/bss_004F_mixed.h"
 #include "data/bss_004F_typed.h"
+#include "data/data_002B.h"
+#include "data/data_002E.h"

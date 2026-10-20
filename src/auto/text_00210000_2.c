@@ -69,3 +69,4 @@ void func_0021d318(void) {
     D_003F351C += 1;
     D_003F34C8 -= 1;
 }
+#include "data/data_003F.h"

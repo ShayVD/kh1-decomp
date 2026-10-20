@@ -168,3 +168,6 @@ void func_001c2ec8(s8 *p, s32 a1) {
     }
 }
 #include "data/bss_0062_mixed.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003C.h"

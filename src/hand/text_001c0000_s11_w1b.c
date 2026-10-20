@@ -219,3 +219,4 @@ s32 func_001c3b10(Task *t) {
     FLUSH();
     return 0;
 }
+#include "data/data_003C.h"

@@ -47,3 +47,4 @@ void func_001aa918(void) {
     D_00372F28 = 0;
 }
 #include "data/bss_0061_mixed.h"
+#include "data/data_0037.h"

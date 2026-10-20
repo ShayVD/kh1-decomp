@@ -96,3 +96,5 @@ void func_00106000(s32 a) {
     }
     func_00106b18(D_002A65C0);
 }
+#include "data/data_002A.h"
+#include "data/data_002B.h"

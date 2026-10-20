@@ -835,3 +835,5 @@ s32 func_001fe5a0(Fade2 *o) {
     return 0;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003E.h"
+#include "data/data_003F.h"

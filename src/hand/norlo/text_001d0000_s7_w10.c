@@ -163,3 +163,4 @@ void func_001ddbf8(void) {
     D_00389C90.f3070 &= ~(1ULL << 44);
 }
 */
+#include "data/data_0029.h"

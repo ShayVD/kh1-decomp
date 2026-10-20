@@ -767,7 +767,9 @@ def cmd_link_script(args, cfg) -> int:
     for src in iter_sources():
         obj = obj_for(src)
         rel = src.relative_to(ROOT).as_posix()
-        if src.suffix not in (".c", ".cpp", ".cc"):
+        # C sources, and the data pieces of src/data/*.s (phase 4 step 4: PIECE, one
+        # .incbin section per name, tools/shift/define_pieces.py)
+        if src.suffix not in (".c", ".cpp", ".cc") and not (src.suffix == ".s" and rel.startswith("src/data/")):
             continue
         found, stray = object_data(obj)
         for sec in stray:

@@ -56,3 +56,4 @@ s32 func_001e9418(void) {
     func_0011ef10(0x2BF20, func_001e93c8);
     return 0;
 }
+#include "data/data_003D.h"

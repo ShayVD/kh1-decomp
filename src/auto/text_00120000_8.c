@@ -833,3 +833,5 @@ s32 func_0012f1d0(s32 arg0, s32 arg1) {
     return func_0012f0f8(arg0, (s32) sp, 0);
 }
 #include "data/bss_0051_mixed.h"
+#include "data/data_002C.h"
+#include "data/data_0035.h"

@@ -59,3 +59,4 @@ void func_0020eb20(void *arg0) {
         func_001f94f0(arg0, 0, 0xAE, 0xC, temp_s1, 0x11, 0x80C87850);
     }
 }
+#include "data/data_003F.h"

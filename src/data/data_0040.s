@@ -1,0 +1,9 @@
+/* Shared data names 0040xxxx as pieces of the user's ELF (phase 4, step 4;
+ * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
+ * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
+ * the ELF at build time: no game bytes are in the repo. Declarations: the header
+ * include/data/data_0040.h (names whose C users agree on the type). */
+	.include "include/data/piece.inc"
+
+	PIECE D_0040E780, 0x400, 16  /* untyped: users disagree: u128 D_0040E780[] | u8 D_0040E780[] */
+	PIECE D_0040EB80, 0x400, 16  /* untyped: users disagree: u128 D_0040EB80[] | u8 D_0040EB80[] */

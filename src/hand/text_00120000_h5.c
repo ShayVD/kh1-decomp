@@ -567,3 +567,4 @@ void func_0012fa98(void) {
     }
 }
 #include "data/bss_004F_typed.h"
+#include "data/data_002E.h"

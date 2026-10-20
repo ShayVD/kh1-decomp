@@ -75,3 +75,4 @@ void func_00229820(void) {
     D_00643708 = 0;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

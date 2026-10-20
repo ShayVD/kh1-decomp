@@ -43,3 +43,5 @@ void func_0017eb20(void) {
     func_0017e8a0();
 }
 #include "data/bss_0057_mixed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

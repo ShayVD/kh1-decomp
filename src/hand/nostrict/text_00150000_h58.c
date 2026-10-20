@@ -1202,3 +1202,6 @@ void (*D_00351970[0x8])(void *) ALIGNED(16) = {
 /* At the end, not with the includes: declaring D_005516C0 earlier changes how func_0015b060 forms
    the D_00551970 address (gcc 2.96 rtx ordering), so the header comes after the code here. */
 #include "data/bss_0055.h"
+#include "data/data_0029.h"
+#include "data/data_002B.h"
+#include "data/data_002E.h"

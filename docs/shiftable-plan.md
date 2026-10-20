@@ -1455,3 +1455,86 @@ and most hand files say `PppMtxOwner *`). These can be upgraded later, like sess
 `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` passes: shift_cmp OK, the 12 overlay fixup proofs OK, LO16 0.
 594 C variables float in 109 runs, 333 stay in place (cover_check, reach_check, float_keep), and 153 bss
 are over the 0x10000 budget. `_end` is 0x68f524. Not run in PCSX2 yet.
+
+## Session 19: Phase 4 step 4, shared data pieces (worker s19d2)
+
+Shared *data* names (the file-backed region 0x272C70-0x494050) are now per-symbol pieces of the
+user's ELF. `make` stays byte-identical; the M12 float build floats them one by one. No game bytes
+enter the repo: the sources name an address, a size and, for pointers, a relocation.
+
+### Mechanism
+
+- **`include/data/piece.inc`**: `PIECE name, size, align` puts one name in its own section
+  `.data.<name>` (global, `.type @object`, `.size`) as an `.incbin` of `out/data/pieces/<name>.bin`,
+  and fails the assembly if the file is not `size` bytes. A piece that holds pointers is written
+  `PIECE_BEGIN name, size, align` / `PIECE_BYTES name, off, len` (original bytes) / `.word sym+addend` /
+  `PIECE_END name, size`. The section alignment is `min(lowbit(addr), lowbit(size), 16)`: MIPS gas pads a
+  section to its alignment, so it must divide the size (a floated piece is aligned by its old address
+  in shift_ld anyway). `.align 0` turns off gas's automatic `.word` alignment.
+- **`tools/shift/cut_pieces.py`** (Makefile, before the piece objects assemble): reads the PIECE lines
+  of `src/data/data_*.s`, checks the ELF's SHA-256 against kh1.toml and writes each piece's bytes to
+  `out/data/pieces/` (only when they change; `out/data/pieces.stamp`).
+- **Placement**: `kh1tool link-script` now also takes the `.data.*` sections of `src/data/*.s`, so a piece
+  is a row of out/gen/data.tsv like a C variable: `make` places it at its address, `patch` writes it,
+  `verify` compares it. shift_ld, cover_check and reach_check treat it like any C-defined variable.
+- **`tools/shift/define_pieces.py [--verdict V] [--pointers] [--limit N] [--apply]`**: picks the names.
+  The extent is data_owners.py's, clamped at the next variable in out/gen/data.tsv, the next compiled
+  rodata block (rodata.tsv, sizes from the objects) and the end of the data (data_owners.py's own anchors
+  do not include C-defined names; this works around it without touching it). A name is skipped when it
+  starts inside such a block, when a C user declares it larger than the extent (probe compile), or, in
+  the default mode, when any data_relocs.tsv row lies in the extent. `--pointers` takes those: an
+  accepted row becomes `.word` (a code target by its function name, or `func_XXXXXXXX` for an unnamed
+  one; a data/bss target as `variable+offset` when it lies inside a defined variable or a piece of the
+  same run, else as its `D_XXXXXXXX` name; both links resolve these, the matching one through the
+  PROVIDEs kh1tool gen derives from the `.s` text); a rejected (tier x) row stays bytes.
+- **Types**: when every C user outside src/sdk/ declares the name the same way with a basic type, the
+  declaration goes to `include/data/data_XXXX.h` and those users include it at their end (only if the file
+  still compiles with it, as define_shared.py does). Otherwise the PIECE line carries an
+  `/* untyped: ... */` comment saying why (users disagree, a struct type, no file-scope extern).
+- **Step 5, retargeting** (shift_ld): a data_relocs blob word whose target lies inside any defined variable
+  (C or piece) is emitted as `.word variable+offset` instead of `D_BLOB+x` / `D_BSS+x`, so it follows the
+  variable when it floats (6 words today). Words inside pieces are relocations of their own (above).
+- **Overlay fixups** (overlay_relocs.py): an overlay field that points into a defined variable names that
+  variable in the fixup table, so overlay code follows a floated piece. This was needed at once:
+  dktitle.x builds `%hi/%lo(D_002A3F44)`, and ovl_proof failed when that piece floated.
+- **`SHIFT_FLOAT_DATA_BUDGET ?= 0x4000`** (shift_ld `--float-data-budget`): floated data goes after the
+  blob and pushes .bss and `_end` up by as much, against the same 0x6A0000 arena as the bss budget.
+  Data variables float smallest first (cost: size rounded up to its alignment) and are packed by
+  alignment, largest first, so the padding stays within the cost. With it `_end` is 0x693EA4 and
+  `_end + 0xA000` stays below 0x6A0000 (no heap warning).
+
+### Counts
+
+- 809 shared data names are pieces in 26 modules `src/data/data_0029.s` ... `data_0049.s` (734 without
+  pointers, 75 from `--pointers`: 59 with 166 `.word` relocations, 16 whose rows are all rejected).
+  404 are declared in `include/data/data_XXXX.h` (294 user files include a header); 405 are untyped.
+  `make`: link-script "1838 variables (845 data, 993 bss)", byte-identical.
+- 34 shared data names stay extern: 33 are declared larger than their extent by some user (a field named
+  on its own, or indexed past it), and D_00494050 has an empty extent (the end of the data).
+- M12 float (`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`; compare, overlay fixups and LO16 OK): 493 of the
+  809 pieces float (37 of them with pointers), 290 stay in place (cover_check: 121 right after a name no
+  declaration sizes, 42 inside another declared object; reach_check: 127 more), 26 data variables are over
+  the budget (0x3A696 bytes, the big tables). 511 data variables float in all.
+- `HI16/LO16 sym+addend just outside a floated variable 2`: dtoa.c's `tens[k - 1]` folds to
+  `D_00491FE0 - 8`; that piece floats, and shift_cmp accepts it as before.
+
+### Hazards and notes
+
+- The pieces have not been run in PCSX2 yet. The float build is the first where game tables (not just
+  pointer tables) move; boot it with `SHIFT_FLOAT_DATA_BUDGET=0` to compare (data stays, bss floats as in
+  session 18), then bisect the data with smaller budgets.
+- A piece's `.word D_XXXXXXXX` (and the 6 retargeted blob words) is a reference data_owners.py now sees:
+  the target's files column can list `src/data/data_XXXX.s` (or the blob), which changes its verdict and
+  keeps define_shared.py, which wants only `.c` users, off it.
+- Declared types that are structs (`Glyph`, `PN`, `Tex4440` ...) need the type moved to a shared header
+  first (type_move.py) before a header can declare the piece.
+
+### Left
+
+- The 34 shared names above; the 1,368 single-owner data names (`single` 1,226, `single+p` 142) can go
+  through the same tool (`--verdict single --verdict single+p`, then `--pointers`): a dry run gives 1,015
+  pieces plus the pointer ones.
+- The untyped pieces want a type once their users agree; the pieces kept in place by cover_check's "after
+  an unsized name" rule float once that name is sized (a piece or a C definition).
+- The data budget: the end state packs the blob (no gaps left by floated pieces), which needs every
+  `D_BLOB + x` name and pointer gone first.

@@ -244,3 +244,4 @@ void func_00176ba8(H20 *h, s32 i) {
         e->e = 0;
     }
 }
+#include "data/data_0035.h"

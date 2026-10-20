@@ -49,3 +49,4 @@ void func_0024bce8(s32 *px, s32 *py) {
     *px = D_0046A54C;
     *py = D_0046A550;
 }
+#include "data/data_0046.h"

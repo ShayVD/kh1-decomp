@@ -320,3 +320,4 @@ void func_0020ec50(ObjE *o) {
     func_001f8f30();
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

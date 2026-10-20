@@ -702,3 +702,4 @@ void func_00153500(W9Ent *a, Msg9 *m) {
     }
 }
 #include "data/bss_0055_mixed.h"
+#include "data/data_002B.h"

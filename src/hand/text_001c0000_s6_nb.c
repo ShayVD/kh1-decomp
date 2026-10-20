@@ -156,3 +156,5 @@ void func_0024d1c8(s16 *src, s32 a, s32 b, s32 c) {
     func_001f31a8(D_0046A5E0, 1);
 }
 #include "data/bss_0066_mixed.h"
+#include "data/data_003E.h"
+#include "data/data_0046.h"

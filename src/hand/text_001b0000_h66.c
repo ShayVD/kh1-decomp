@@ -756,3 +756,9 @@ s32 func_001c91e8(VM_c91e8 *vm) {
     return 2;
 }
 #undef D_003C5510
+#include "data/data_002B.h"
+#include "data/data_002E.h"
+#include "data/data_0037.h"
+#include "data/data_0038.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"

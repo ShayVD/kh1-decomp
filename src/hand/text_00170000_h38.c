@@ -553,3 +553,5 @@ void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
         o->x92 = 0;
     }
 }
+#include "data/data_002E.h"
+#include "data/data_0036.h"

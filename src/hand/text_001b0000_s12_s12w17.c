@@ -53,3 +53,4 @@ void func_001ba520(void) {
 
 #include "data/bss_0062_mixed.h"
 #include "data/bss_0062_typed.h"
+#include "data/data_0037.h"

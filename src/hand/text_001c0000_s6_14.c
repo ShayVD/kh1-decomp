@@ -76,3 +76,4 @@ s32 func_001c9e20(VM *vm) {
     D_003C5510.u.s.f14 = a * 2.0f;
     return 2;
 }
+#include "data/data_0036.h"
