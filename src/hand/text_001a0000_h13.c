@@ -44,7 +44,7 @@ s32 func_001a93e0(IdList *l) {
     return c;
 }
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+#include "data/types/shared.h"
 extern u128 D_0061E8B0;
 extern s32 D_00372908;
 s32 sceGsSyncPath(s32, s32);
@@ -63,10 +63,7 @@ void func_001aa008(void) {
 }
 
 /* GS packet chain tags: 16-byte DMA tags; next at +4, list tail at +8. */
-typedef union GsTag {
-    u128 q;
-    struct { u32 w0; union GsTag *next; union GsTag *tail; u32 w3; } s;
-} GsTag;
+#include "data/types/text_001a0000_h13.h"
 extern GsTag D_0061EEA0[];  /* 16 priority list heads (followed by the tag pool) */
 extern GsTag D_0061EFA0[];  /* 256 priority list heads */
 GsTag D_0061FFA0[0x30] ALIGNED(32);
@@ -562,3 +559,4 @@ s32 func_001bb260(s32 a) {
     }
     return 0;
 }
+#include "data/bss_0061_typed.h"

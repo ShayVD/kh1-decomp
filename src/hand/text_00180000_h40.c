@@ -6,13 +6,10 @@
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+#include "data/types/shared.h"
 
 /* A 16-byte aligned VU0 vector. */
-typedef union {
-    f32 f[4];
-    u128 q;
-} PppQv;
+#include "data/types/text_00180000_h40.h"
 
 extern PppQv D_00615FC0[4];
 extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
@@ -159,8 +156,6 @@ void pppSclMoveLoopFrame(PppObject *obj, PppFVecKey *key, PppEntry *e) {
         pos->z += vel->z;
     }
 }
-
-typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 typedef struct {
     u8 pad[0x10];

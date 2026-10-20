@@ -179,6 +179,15 @@ def apply(plans) -> None:
 
 KIND_RANK = {"exact": 0, "fill": 1, "pad": 2}
 
+# Types more than one moved header needs (u128, PppMtx) live in one shared
+# header; a plan whose type is there has tsrc (SHARED, type) and moves nothing.
+SHARED = "include/data/types/shared.h"
+
+
+def tkey(f: str) -> str:
+    """The include/data/types/<key>.h a plan's type comes from."""
+    return "shared" if f == SHARED else type_move.header_name(ROOT / f)
+
 
 def defined_names() -> set[str]:
     t = ROOT / "out/gen/data.tsv"
@@ -203,20 +212,17 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         if any(not x.endswith(".c") or x.startswith("src/sdk/") for x in files):
             continue
         rows.append((int(f[0], 16), f[1], int(f[3], 16), int(f[4], 16), files))
-    # data_owners.py only sees references to D_ symbols; a name defined in C is
-    # referenced through its section from its own file, so it is no anchor
-    # there. Clamp each extent at the next C-defined variable (a fill then ends
-    # right at it; adjacent C bss variables float as one block, so code that
-    # walks from one into the next still finds it).
+    # data_owners.py counts the C-defined variables (out/gen/data.tsv) as anchors, so
+    # no extent runs over one; an extent that does means data_owners.tsv is older
+    # than the last `make`.
     import bisect
     defs = sorted(int(ln.split("\t")[0], 16)
                   for ln in (ROOT / "out/gen/data.tsv").read_text().splitlines()[1:])
-    clamped = set()
-    for k, (addr, name, ext, reach, files) in enumerate(rows):
+    for addr, name, ext, reach, files in rows:
         i = bisect.bisect_right(defs, addr)
         if i < len(defs) and defs[i] < addr + ext:
-            rows[k] = (addr, name, defs[i] - addr, reach, files)
-            clamped.add(name)
+            sys.exit(f"error: {name}'s extent runs over the C variable at {defs[i]:08x}; "
+                     "rerun tools/shift/data_owners.py")
     skip, cands = [], {}
     probes: dict[str, dict[str, str]] = {}
     for addr, name, ext, reach, files in rows:
@@ -301,7 +307,9 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         tsrc = None
         if not opts and types and sopts:
             for score, tspec, decl, d, kind, size, bt, fns in sorted(sopts, key=lambda o: o[0]):
-                for f in sorted(fns, key=lambda f: not f.startswith("src/hand/")):
+                if bt in type_move.header_types(ROOT / SHARED):
+                    tsrc = (SHARED, bt)
+                for f in [] if tsrc else sorted(fns, key=lambda f: not f.startswith("src/hand/")):
                     hp = type_move.header_path(ROOT / f)
                     if hp.exists():
                         ok = bt in type_move.header_types(hp)
@@ -318,8 +326,6 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
             skip.append((name, "; ".join(why)))
             continue
         _sc, tspec, decl, d, kind, size = min(opts)
-        if name in clamped:
-            kind += "/clamped"
         out.append((addr, name, files, tspec, decl, d, kind, size, ext, align_for(addr, size), tsrc))
     if types:
         out, more = settle_types(out)
@@ -337,6 +343,9 @@ def settle_types(plans):
     moved: dict[str, set] = {}  # src -> type names its header defines
     bad: dict[str, str] = {}
     for f, ts in per_src.items():
+        if f == SHARED:
+            moved[f] = type_move.header_types(ROOT / SHARED)
+            continue
         src = ROOT / f
         hp = type_move.header_path(src)
         if hp.exists():
@@ -371,7 +380,7 @@ def settle_types(plans):
                     for n in type_move.header_types(ROOT / "include/data/types" / f"{m.group(1)}.h"):
                         mod_types[mod][n] = m.group(1)
         have = mod_types[mod]
-        key = type_move.header_name(ROOT / f)
+        key = tkey(f)
         clash = {n for n in moved[f] if have.get(n, key) != key}
         if clash:
             skip.append((p[1], f"type names {sorted(clash)} from {f} clash with another file's in {mod}"))
@@ -407,6 +416,8 @@ def apply_mixed(plans) -> None:
         if len(p) > 10 and p[10]:
             srcs.setdefault(p[10][0], set()).add(p[10][1])
     for f, ts in sorted(srcs.items()):
+        if f == SHARED:
+            continue
         src = ROOT / f
         if type_move.header_path(src).exists():
             continue
@@ -427,7 +438,7 @@ def apply_mixed(plans) -> None:
             oinc = [ln for ln in hdr.read_text().splitlines() if ln.startswith('#include "data/types/')]
         new = [f"extern {p[3]} {p[4]};" for p in ps]
         decls = sorted(set(old + new), key=lambda ln: re.search(r"D_([0-9A-F]{8})", ln).group(1))
-        tinc = sorted(set(oinc) | {f'#include "data/types/{type_move.header_name(ROOT / p[10][0])}.h"'
+        tinc = sorted(set(oinc) | {f'#include "data/types/{tkey(p[10][0])}.h"'
                                     for p in ps if len(p) > 10 and p[10]})
         m2c = any(re.search(r"\bM2C_UNK", ln) for ln in decls)
         what = "whose users disagree on the type" if kind == "mixed" else "declared with a moved type"

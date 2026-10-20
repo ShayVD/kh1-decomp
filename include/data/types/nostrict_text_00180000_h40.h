@@ -5,7 +5,7 @@
 #include "common.h"
 #include "ppp.h"
 
-typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
+#include "data/types/shared.h"
 typedef struct {
     f32 pos[3];
     f32 dist;   /* +0xC */
