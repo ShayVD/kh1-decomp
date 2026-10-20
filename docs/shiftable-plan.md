@@ -1781,3 +1781,55 @@ The bss float is now limited by the keep rules, not the budget.
 | F20_S4000 | + stored rule | plays; slot digit missing on the load menu |
 | F20_P4000 | + pointer-table-only kept | load menu right; hangs loading the save |
 | F20_Q4000 | + the record names in float_keep (the default now) | plays (field, walk, attack, menus) |
+
+## Session 21: neighbour+offset names (addend_check) and looser reach_check
+
+### The Agrabah walls: D_002A6274 read as D_002A6278's neighbour
+
+The session 20 default (KH1_F20_Q4000, data 0x4000) reaches the world map and warps to Agrabah, but there
+Sora walks through the walls into the void (the screen looks black or flashing). Bisection with
+`SHIFT_FLOAT_ONLY_DATA` (save 06 in Agrabah, walk into a wall) isolated one name:
+
+| ELF | floated data | result |
+|---|---|---|
+| F21_D0 | none | walls hold |
+| F21_A, A1, A1a, A1a2x, A1a2xa | halves of the Q4000 set | through the walls |
+| F21_A1a1 | the other quarter | walls hold |
+| F21_P1, P1a | narrower halves | through the walls |
+| F21_S6274 | D_002A6274 alone | through the walls |
+
+D_002A6274 is the collision header's triangle pointer (func_00105288 fills D_002A6270 ... D_002A62AC from
+the loaded header). Every code reference was relocated, nothing read the old address, and its value at run
+time was right. The stray read is in the same function: func_00105288 walks the fix-up list through
+`((s32 *)&D_002A6274)[1]`, which is D_002A6278 but assembles to `%hi/%lo(D_002A6274+4)` (the matching form:
+`p = (s32 *)D_002A6278` changes the schedule). With D_002A6274 floated the load reads 4 bytes past its new
+place, so the room's collision list is never fixed up. Static checks miss it because the relocation is
+correct for the symbol it names; shift_cmp counted it ("HI16/LO16 sym+addend just outside a floated
+variable 1") but does not fail on it.
+
+**addend_check.py** (run by `make shift SHIFT_FLOAT=1`, output `float_addend.txt`): reads the m0 link
+(`ld -q` keeps relocations) and, for each HI16/LO16 pair and R_MIPS_32 against a D_ name, works out the
+addend; when sym+addend lands outside [sym, next name), it keeps both names. 72 names on the current tree
+(D_002A6274/78, D_002C5950/58, D_0035AE80 + three, D_00651E50 + two, ...). Q4000 also floated D_002C5958
+alone (its base D_002C5950 stays): a latent hazard of the same kind. D_002A6274/78 are in keep_check.py.
+
+### reach_check (worker s21r1)
+
+Default run keeps 1,832 names (was 1,928). Each rule has a `--no-*` switch (SHIFT_REACH_FLAGS):
+- `--no-countdown` (1,864 without it): a pointer walk capped by a decrementing counter (`bgtz`/`bne`/`bgez`),
+  or an up-counter from an exact start (`addiu; slti; bne`), gets the trip count as bound (one back edge,
+  one way in). func_00232ad0's clears end exactly at +0x16C00 / +0x400.
+- `--no-join` (1,836): a join of exact addresses outside a loop head is a set of up to 8 addresses;
+  accesses, stores and call arguments go to each. func_00107d30's `o->p = c ? A : B` now stores all six
+  record addresses, so the session 20 records are found without float_keep.
+- `--no-arg-join` (1,946): an argument joined with an unrelated value is not a walk of that argument.
+- `--no-block-bound` (1,875): `&B[i]` passed to memcpy/memset/pool init is bounded by its count.
+- Coverage fixes (they add keeps): `--no-hi-index` (1,640 without it; `D[i]` as `lui` + `addu` + `%lo` was
+  not seen) and `--no-switch` (1,779; jump tables are read from the ELF and case bodies are analysed).
+  `lq` clears its register. Turn these two off to bisect a boot problem they might hide behind.
+- The largest group left is arguments to callees that walk or store them (strcat, scePrintf,
+  sceSifCallRpc buffers, DMA addresses such as func_00266f38's): real hazards, kept.
+- **keep_check.py** lists the runtime-bisected names (sessions 18-21); the float build fails if one is not
+  kept (unless SHIFT_REACH_FLAGS is set). tests/reach_check_test.py is in `make test`.
+
+With both: 721 data names and 118 bss runs float (1,230 variables); `keep_check: 35/35`.

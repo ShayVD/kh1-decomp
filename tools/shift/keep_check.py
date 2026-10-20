@@ -5,7 +5,7 @@
 
 The float build keeps a name in place when cover_check.py, reach_check.py, float_keep.txt or the
 pointer-table-only rule lists it (the union is float_covered.txt). The names below hung, crashed or
-garbled the game when they floated (docs/shiftable-plan.md, sessions 18-20). A reach_check rule
+garbled the game when they floated (docs/shiftable-plan.md, sessions 18-21). A reach_check rule
 change must not let one of them float again; `make shift SHIFT_FLOAT=1` runs this check and fails
 when one is missing. A name with a tail is needed only while its tail stays in place (the head of a
 0x4000-byte table declared 0x40 bytes: when the tail floats with it, the copy reads the right bytes).
@@ -28,6 +28,8 @@ RUNTIME = [
     ("D_00472190", "D_004721D0", "s20: 0x4000-byte table declared 0x40 (func_001073f0)"),
     ("D_004761D0", "D_00476210", "s20: 0x4000-byte table declared 0x40 (func_001072c0)"),
     ("D_0047A210", "D_0047A250", "s20: 0x4000-byte table declared 0x40"),
+    ("D_002A6274", None, "s21: read as D_002A6274+4 for D_002A6278 (Agrabah walls; addend_check)"),
+    ("D_002A6278", None, "s21: the name reached through D_002A6274+4"),
     ("D_003E4658", None, "s20: stored buffer pointer, 0x310 bytes (garbled text)"),
 ] + [(f"D_{a:08X}", None, "s20: inside D_003E4658's 0x310-byte buffer")
      for a in range(0x003E4660, 0x003E46A9, 8)] + [
