@@ -109,6 +109,7 @@ toolchain:
 test:
 	@$(PY) tools/test_mangle_gcc2.py
 	@tests/selftest.sh
+	@$(PY) -I tests/reach_check_test.py
 	@tools/check_no_assets.sh && echo "no-assets check: PASS"
 
 # ---- Shiftable build (docs/shiftable-plan.md). Separate from `make`, which it
@@ -153,7 +154,14 @@ SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
 # records, and pointer-table-only names kept (docs/shiftable-plan.md "Session 20: the data float").
 # _end is 0x688824; _end + 0xA000 leaves 0xD7DC below 0x6A0000.
 SHIFT_FLOAT_DATA_BUDGET ?= 0x4000
-# SHIFT_REACH_FLAGS: extra reach_check.py options (--no-bounds: the session 18 idx-next rule).
+# SHIFT_REACH_FLAGS: extra reach_check.py options, each turning one rule off for bisecting:
+# --no-bounds (the session 18 idx-next rule), --no-idx-base, --no-stored, --no-uncached (session 20),
+# --no-countdown (pointer walks capped by a loop counter), --no-join (a join of addresses is one base +
+# an index), --no-arg-join (an argument joined with another value counts as walked), --no-block-bound
+# (&B[i] passed to memcpy/memset is unbounded), --no-hi-index (ignore D[i] as lui + addu + %lo) and
+# --no-switch (no jump tables, no case code) (session 21; docs/shiftable-plan.md). keep_check.py then
+# checks that the names the PCSX2 bisections found are still kept; it fails the build only when
+# SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
@@ -215,7 +223,8 @@ endif
 		cat $(SHIFT_OUT)/float_addend.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
-			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; fi; \
+			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; \
+		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)" ]; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
 		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
