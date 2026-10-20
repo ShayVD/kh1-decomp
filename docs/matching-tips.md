@@ -720,3 +720,14 @@ from dead code. Read the allocation first, then find the source change.
 - 001c62a0 (16w): three registers swapped by global-alloc priority (original base > b > lk0); b looks
   like a loop-reduced value of i seeded from the hoisted base. 00200e28 (24w): store order in one block,
   closed for pins.
+
+## Session 23 (nonmatchings/session23-match/NOTES.md)
+
+- No new matches; all nine holdouts are now stuck in a single compiler pass (sched2 dependences,
+  global-alloc priority, reorg liveness, jump2 cross-jumping) with the source shape and most registers right.
+- To keep a loop-invariant address computed inside the loop, avoid giving cse1 an older related
+  constant whose last use is that computation (force_movables hoists it; 001c62a0).
+- Spill slot order follows declaration order of the spilled user variables; use it to tell which
+  locals the original declared (001636d0).
+- A partial tail shared between two switch cases is jump2 cross-jumping two identical full copies;
+  writing one shared copy in source (goto, merged cases) over-merges (0010d470).
