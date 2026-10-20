@@ -297,3 +297,4 @@ void func_0013cb98(void) {
     for (i = 0; i < 7; i++) D_00304BE8->b.x48e[i] = 1;
     for (i = 0; i < 3; i++) b->x840[i] = -1;
 }
+#include "data/data_0030.h"

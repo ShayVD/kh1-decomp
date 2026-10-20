@@ -745,3 +745,4 @@ void func_00132c70(s32 a0, void (*cb)(void)) {
 #include "data/data_0029.h"
 #include "data/data_002B.h"
 #include "data/data_0030.h"
+#include "data/data_002E.h"

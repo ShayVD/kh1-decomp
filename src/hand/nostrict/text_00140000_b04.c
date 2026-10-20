@@ -1242,3 +1242,4 @@ void func_00161a08(B4Hd *h) {
 #include "data/bss_0057_mixed.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
+#include "data/data_0035.h"

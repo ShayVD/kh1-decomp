@@ -573,3 +573,4 @@ s32 func_001e8de8(VM *vm) {
 #include "data/data_0029.h"
 #include "data/data_002B.h"
 #include "data/data_003D.h"
+#include "data/data_002C.h"

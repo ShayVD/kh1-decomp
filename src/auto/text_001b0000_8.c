@@ -89,3 +89,5 @@ void func_001bf290(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0) = 0;
 }
 #include "data/data_0037.h"
+#include "data/data_0048.h"
+#include "data/data_0049.h"

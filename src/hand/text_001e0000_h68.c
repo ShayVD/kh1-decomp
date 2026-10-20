@@ -822,3 +822,4 @@ void func_001ef950(void)
 #include "data/data_003B.h"
 #include "data/data_003D.h"
 #include "data/data_003E.h"
+#include "data/data_0049.h"

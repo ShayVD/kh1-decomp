@@ -724,3 +724,4 @@ s32 func_002455c0(void) {
 }
 #include "data/bss_0065_mixed.h"
 #include "data/bss_0066_typed.h"
+#include "data/data_0045.h"

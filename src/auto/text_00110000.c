@@ -431,3 +431,4 @@ void func_0011fd40(void) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"
+#include "data/data_0048.h"

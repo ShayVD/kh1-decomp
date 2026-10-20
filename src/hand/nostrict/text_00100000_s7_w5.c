@@ -48,3 +48,4 @@ void func_0010a5d0(s32 a0, u8 *p, s32 n, s32 mode, s32 sub) {
     }
 }
 
+#include "data/data_002B.h"

@@ -334,3 +334,4 @@ void func_0016fd98(EntF *e, WkF *w) {
         w->l90.part = -1;
     }
 }
+#include "data/data_0048.h"

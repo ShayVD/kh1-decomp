@@ -76,3 +76,4 @@ void func_0024b058(void *arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     M2C_FIELD(arg0, s32 *, 0xD8) = -0x100;
     M2C_FIELD(arg0, s32 *, 0xDC) = 0;
 }
+#include "data/data_0045.h"

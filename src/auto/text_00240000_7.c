@@ -296,3 +296,4 @@ M2C_UNK D_0046A058[0x6] ALIGNED(8) = {
     (s32)D_004918C8, (s32)D_004918B8,
 };
 #include "data/data_0046.h"
+#include "data/data_0049.h"

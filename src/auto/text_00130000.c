@@ -311,3 +311,4 @@ s32 func_0013fc08(void) {
 void func_0013fe10(Actor *arg0) {
     func_0013fd88(arg0->unk014);
 }
+#include "data/data_0048.h"

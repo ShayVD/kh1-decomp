@@ -61,3 +61,4 @@ s32 func_0014b550(Eb5 *a, Eb5 *list, s32 n) {
     }
     return cnt;
 }
+#include "data/data_0035.h"

@@ -21,3 +21,4 @@ void func_0022bcb8(int arg0) {
   }
   *((s16 *) (((s8 *) func_0011ef10(0x2BFE7, &func_0022bc28)) + 2)) = arg0;
 }
+#include "data/data_003F.h"

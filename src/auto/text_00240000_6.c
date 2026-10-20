@@ -32,3 +32,4 @@ void func_00248ea0(void) {
         func_0011ef10(0x29811, &func_00248e30);
     }
 }
+#include "data/data_0046.h"

@@ -127,3 +127,4 @@ void func_0020b338(void) {
     func_0011fbb0(0x3640, 1, 0, 0, 0, 0x10, 0x10, 0x40, D_002BCC94 + 0x1700, &D_00641130);
 }
 #include "data/data_002B.h"
+#include "data/data_003F.h"

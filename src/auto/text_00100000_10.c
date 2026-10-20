@@ -118,3 +118,5 @@ void func_0010fc38(void) {
     memcpy(&D_004D5B10, temp_v0, func_001205f0(&D_0048CF10, temp_v0));
     func_0010fbe0(&D_004D5B10);
 }
+#include "data/data_002B.h"
+#include "data/data_0048.h"

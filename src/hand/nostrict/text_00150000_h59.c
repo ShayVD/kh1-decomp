@@ -1075,3 +1075,4 @@ void func_00164ba8(Ent63 *e, Anim59 *a) {
 }
 #include "data/bss_0057_mixed.h"
 #include "data/bss_0056_typed.h"
+#include "data/data_0035.h"

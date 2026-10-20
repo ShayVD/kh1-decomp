@@ -1005,3 +1005,4 @@ void (*D_003F5A00[0x6])(Obj *) ALIGNED(16) = {
     (void *)func_00223938, (void *)func_00222b40,
 };
 #include "data/data_003F.h"
+#include "data/data_003E.h"

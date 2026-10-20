@@ -281,3 +281,4 @@ void func_0023c7a0(void) {
     *p = m;
 }
 #include "data/data_002E.h"
+#include "data/data_0045.h"

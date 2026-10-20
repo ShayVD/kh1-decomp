@@ -170,3 +170,4 @@ s32 func_0016ea58(void) {
     return 0;
 }
 #include "data/bss_0057_typed.h"
+#include "data/data_0048.h"

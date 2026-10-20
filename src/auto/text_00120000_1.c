@@ -25,3 +25,4 @@ void func_00120ba0(void) {
 void func_00124d08(void) {
     func_00124c68(D_004F77E4);
 }
+#include "data/data_0048.h"

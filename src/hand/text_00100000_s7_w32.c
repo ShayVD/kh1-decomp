@@ -345,3 +345,4 @@ void func_001fea38(WinA *o) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"
+#include "data/data_0048.h"

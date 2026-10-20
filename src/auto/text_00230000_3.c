@@ -111,3 +111,4 @@ s32 func_0023f688(s32 arg0, s32 arg1) {
     }
     return func_0023f250(arg0, func_0023f0d8(arg0, arg1));
 }
+#include "data/data_0044.h"

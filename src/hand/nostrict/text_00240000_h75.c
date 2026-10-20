@@ -692,3 +692,6 @@ void func_00247930(Clk *c) {
     sprintf(buf, "%02d", c->unk44);
     func_002475d0(x, y, col, 0.7999999523162842f, buf, D_00467408);
 }
+#include "data/data_0045.h"
+#include "data/data_0046.h"
+#include "data/data_0049.h"

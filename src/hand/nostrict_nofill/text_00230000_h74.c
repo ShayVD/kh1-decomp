@@ -550,3 +550,4 @@ s32 func_0023dd48(Obj *g, s32 buf) {
     return buf;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_0045.h"

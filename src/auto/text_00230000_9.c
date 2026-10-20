@@ -44,3 +44,4 @@ s8 *func_00233118(u32 arg0) {
     D_003F8350[15] = (s8) ((arg0 % 10U) + 0x30);
     return D_003F8350;
 }
+#include "data/data_003F.h"
