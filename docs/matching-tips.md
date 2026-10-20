@@ -705,4 +705,8 @@ from dead code. Read the allocation first, then find the source change.
   or when the value is built in the pinned reg itself (`t = (f32)c; t = t + t;`). A plain `r = a + b;` or
   a halfword load with every use in the same block is expanded into a pseudo and copied to the hard reg,
   and cse dissolves it: the output is identical to the unpinned one. Check the asm before a long sweep.
+- Pinning a loop pointer that holds a constant address (001c62a0: `register f32 *d asm("$10"); d = &D.e.x;`
+  inside the outer loop) survives cse and fixed a three-register rotation (39 -> 16 words). Pins of whole-function
+  values in big one-block functions (00200e28's header, 00110618's FP values) take that register out of the
+  pool for every other quantity, and everything else moves (100+ words). Use pins on short-lived values only.
 

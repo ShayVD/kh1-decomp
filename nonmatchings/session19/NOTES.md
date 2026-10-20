@@ -61,3 +61,40 @@ later block) or the value is built in place in the pinned reg (`t = x; t = t + t
 ### Not tried
 001fd858 (reorg annul proof in s13w4/s15: a v0 reader would add code), 00125240 (s18m2: a HIGH), 001636d0 and
 0010d470 (no time left after the three matches).
+
+## s19m1, second round: 00200e28, 001c62a0, 00110618 (no matches; 001c62a0 39 -> 16)
+
+| function | mode | before | after | draft |
+|---|---|---|---|---|
+| 001c62a0 | hand/nostrict | 39 | **16** | s19m1__001c62a0_16w.c (drafts.tsv updated; c8c982c) |
+| 00200e28 | hand | 24 | 24 | - |
+| 00110618 | hand | 93 | 93 | - |
+
+### 001c62a0: 39 -> 16
+- The inner j-loop destination pointer `d = &D.e.x` (a constant address set inside the outer loop) as
+  `register f32 *d asm("$10")` (t2, the original's register): 39 -> 23. The pin survives: its value is a
+  constant address, not a copy of a pseudo.
+- Then `f32 *v;` without an initializer, set after d (`d = ...; v = (f32 *)(b + 336);`): 23 -> 16. j goes back
+  to t3 and v to a3, as in the original.
+- Left: the original keeps the &D base copy in s1 all loop long (d = s1+80, b = `move s4,s1`, i's
+  `move s0,zero` in the prologue). Ours has b in s1, the base in t8, &ent[0].lk in s4, and d = t6-160 (cse
+  rebases it).
+- Worse or equal on top of 16: b pinned to s4 23; i pinned to s0 196 (loop.c loses the i*224 giv); j pinned
+  to t3 125; v pinned to a3 29-127; `i = 0;` before the guard 17 (i then in s1, b in s0, the prologue
+  `move s0,zero` right); a pinned s1 base copy `base = &D; b = base;` 16 (dissolved); with
+  `d = base + 80` 178; &ent[0].lk pinned to t8, in the arm or before the loop, 17-26.
+
+### 00200e28 stays 24 (pins look unreachable here)
+- s18m2 had pinned the two wrong-register constants (6, d8) alone. This round pinned every header constant to
+  its original register (22 t4, 5000 a2, eeeee t1, 63 t2, k4 v1, 6 t5, k6 a0, d8 t0, 68 a1, 66 t3), the
+  0021e120 recipe. Result 132. All but one 75-131; single pins 25-117.
+- With all pins and the sets in the original's li order the header li sequence is almost exact, but the
+  flood below shifts (a0 = 2 for the later func_00266c08 call is cse'd early, the 30ae/1086 constants
+  change registers): 131. pclimb_s15 (3000 steps) over the pinned header: best 116.
+- The pinned sets do not change the flood's local-alloc. They only change sched1 order, and the 24w
+  draft's leftovers are flood store order and local-alloc ties. Closed for this lever.
+
+### 00110618 stays 93 (pins look unreachable)
+- One-block FP global-alloc puzzle (see session 14). Pins of az f31, cz f30, sxd f28, syd f29, fbn f28 (all
+  singles and pairs, plus all four) and fb copied into a pinned f24: 144-204 words, size 1036-1176. A pinned
+  callee-saved FP reg leaves the pool for the whole function, so every other local qty moves. No angle found.
