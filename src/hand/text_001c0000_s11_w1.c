@@ -167,3 +167,4 @@ void func_001c2ec8(s8 *p, s32 a1) {
         func_0011ef10(50002, func_001c2778);
     }
 }
+#include "data/bss_0062_mixed.h"

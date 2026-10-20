@@ -79,7 +79,7 @@ typedef struct { u8 pad[0x32]; u8 x32; } S1BB0;
 extern Cfg *D_00425BC8;
 extern s32 D_00641BA4, D_00641BA8, D_00641BC0, D_00641BC4, D_00641BD0, D_00641BD4, D_00641C00, D_00641C08, D_00642410;
 extern s32 D_00641C10[], D_00641BE0[], D_00641BF0[], D_00642010[];
-extern S1BB0 *D_00641BB0;
+extern S1BB0 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
 extern f32 D_002BBDFC;
 s32 func_001f42b8(O15 *);
 void func_001f3758(O15 *);

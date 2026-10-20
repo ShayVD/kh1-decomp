@@ -43,7 +43,7 @@ extern s32 D_0046A558;
 extern s32 D_0046A55C;
 extern s32 D_0046A560;
 extern s32 D_0046A5D8;
-extern s16 D_00669A40[8];
+extern s16 D_00669A40[8]; /* src/data/bss_0066.c: s16 D_00669A40[0xc] */
 extern s32 D_00669A60;
 extern s32 D_00669A64;
 extern s32 D_00669A7C;
@@ -118,7 +118,7 @@ void func_0024a300(UiB *u, s32 (*out)[4]) {
 }
 
 typedef struct { void *unk0; void *unk4; s32 unk8; u8 *unkC; u8 *unk10; u8 *unk14; s32 unk18; void *unk1C; s32 unk20; void *unk24; } Task;
-extern Task *D_00669A18[8];
+extern Task *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern void *D_00469FF8[];
 extern s32 D_00469FD8[];
 extern void *D_0046A018[];

@@ -32,7 +32,7 @@ void func_00239d20(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, f32 f
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 Q D_00648790 ALIGNED(16);
 extern u8 D_00351E10[];
-extern u8 *D_006488F0;
+extern u8 *D_006488F0; /* src/data/bss_0064.c: s32 D_006488F0 */
 extern u8 *D_006488F4;
 void func_002370c8(void *);
 void func_00237018(void *, s32, s32);
@@ -117,9 +117,9 @@ void func_0023b4b8(s32 a) {
 }
 typedef struct { s32 unk0; u8 pad[0xDC]; } Ent0E0;
 Q D_00650DE0 ALIGNED(32);
-extern u8 *D_00651200;
+extern u8 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u8 *D_00651204;
-extern Ent0E0 D_00651310[];
+extern Ent0E0 D_00651310[]; /* src/data/bss_0065.c: Slot D_00651310[10] */
 void func_0023c270(Ent0E0 *);
 
 s32 func_0023c400(void) {
@@ -167,8 +167,7 @@ void func_0023c968(void) {
     func_0023cf30();
 }
 
-typedef struct { s32 x, y, z, w; } I4;
-typedef struct { u8 pad[0x60]; I4 c[4]; I4 p[4]; } Pkt;
+#include "data/types/nofill_text_00230000_h49.h"
 extern Pkt D_00651210;
 void func_0024aa48(s32, Pkt *, s32);
 s32 func_002388b8(Pkt *, s32, s32);

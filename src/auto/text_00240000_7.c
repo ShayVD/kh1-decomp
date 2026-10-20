@@ -26,7 +26,7 @@ extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
 extern M2C_UNK D_006561E4;
 extern M2C_UNK D_00669714;
-extern M2C_UNK D_00669A18;
+extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);

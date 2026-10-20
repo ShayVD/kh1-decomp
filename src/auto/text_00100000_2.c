@@ -16,7 +16,7 @@ extern s32 D_002BC0BC;
 extern s32 D_002BC734;
 extern s32 D_002BC738;
 extern s32 D_00494894;
-extern s32 D_00494A88;
+extern s32 D_00494A88; /* src/data/bss_0049.c: f32 D_00494A88 */
 extern s32 D_00494A90;
 extern s32 D_00494A94;
 extern s32 D_00494A98;

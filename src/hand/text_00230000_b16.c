@@ -20,7 +20,7 @@ typedef struct {
 } S8370;
 typedef struct { s32 a, b, c, d; } Q4;
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
-extern S8370 D_00668370;
+extern S8370 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
 Q D_00668120 ALIGNED(32);
 Q4 *D_00668284 ALIGNED(4);
 extern Q4 *D_00668280;
@@ -81,7 +81,7 @@ void func_00246750(s32 a0) {
 }
 
 typedef struct { u8 pad[0x24]; s32 x; s32 y; s32 on; u8 pad30[4]; s32 v34; s32 v38; s32 v3C; s32 v40; } Clk;
-extern void *D_00669358[];
+extern void *D_00669358[]; /* src/data/bss_0066.c: u8 D_00669358[0x30] */
 u8 D_006692F0[0x18] ALIGNED(16);
 void func_00247678(s32, s32 *, s32 *);
 void func_002474e8(void *, void *, s32, s32, f32);

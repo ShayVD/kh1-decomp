@@ -8,3 +8,4 @@ extern u8 D_00575788[]; /* bit array, 8 flags per byte */
 s32 func_00171a88(s32 arg0, s32 arg1, s32 bit) {
     return ((u32) D_00575788[bit >> 3] >> (bit & 7)) & 1;
 }
+#include "data/bss_0057_mixed.h"

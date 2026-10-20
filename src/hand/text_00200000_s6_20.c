@@ -264,3 +264,4 @@ void (*D_003F32E8[0x8])(N *) ALIGNED(8) = {
     (void *)func_002112f8, (void *)func_00213c90, (void *)func_002160a8, (void *)func_00217f58,
     (void *)func_00218f88, (void *)func_0021daa0, (void *)func_0021ad08, (void *)func_002293f0,
 };
+#include "data/bss_0064_mixed.h"

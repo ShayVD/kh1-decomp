@@ -172,7 +172,7 @@ typedef struct { u8 pad[8]; s32 x8; } P5BC8;
 extern P5BC8 *D_00425BC8;
 extern void *D_00641BA0;
 extern s32 D_00641BA4, D_00641BA8, D_00641BAC, D_00641BC4;
-extern u8 *D_00641BB0;
+extern u8 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
 extern u32 D_003E3D68;
 extern u8 D_003F3CC0[];
 s32 func_001f42b8(void *);

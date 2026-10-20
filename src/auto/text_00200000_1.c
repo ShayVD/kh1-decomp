@@ -12,3 +12,4 @@ void func_0020bb90(s32 arg0, s32 arg1) {
     D_00641210 = (f32) arg0;
     D_00641214 = (f32) arg1;
 }
+#include "data/bss_0064_mixed.h"

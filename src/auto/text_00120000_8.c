@@ -115,8 +115,8 @@ M2C_UNK func_00267e90(s32, s32, f32);
 extern M2C_UNK D_002C58D0;
 extern M2C_UNK D_002C5C80;
 extern M2C_UNK D_002E2700;
-extern M2C_UNK D_004E49E8;
-extern M2C_UNK D_004F8270;
+extern M2C_UNK D_004E49E8; /* src/data/bss_004E.c: u8 D_004E49E8[0x18] */
+extern M2C_UNK D_004F8270; /* src/data/bss_004F.c: D6 D_004F8270[0x5] */
 extern M2C_UNK func_001274c8;
 extern f32 D_002BBDFC;
 extern f32 D_002E27A4;
@@ -832,3 +832,4 @@ s32 func_0012f1d0(s32 arg0, s32 arg1) {
     func_001315c0(arg1, 0x8003, (s32) sp, 0.0f);
     return func_0012f0f8(arg0, (s32) sp, 0);
 }
+#include "data/bss_0051_mixed.h"

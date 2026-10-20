@@ -5,7 +5,7 @@
 
 M2C_UNK func_00183b20(s32, s32);
 extern M2C_UNK D_00372800;
-extern M2C_UNK D_00575A00;
+extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern f32 D_002BC120;
 extern f32 D_002BC124;
 extern s32 D_00372760;
@@ -73,3 +73,4 @@ void func_001aa910(void) {
 void func_001aa948(void) {
 
 }
+#include "data/bss_0061_mixed.h"

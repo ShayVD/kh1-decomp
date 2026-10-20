@@ -108,7 +108,7 @@ typedef struct { u8 pad0[0x10]; s32 x10; } S3110;
 extern Pad *D_00425BC8;
 extern s32 D_00643250;
 extern s32 D_00643274;
-extern S3110 *D_00643110;
+extern S3110 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_00643114;
 extern s32 D_00643118;
 extern u8 D_003F5E30[];

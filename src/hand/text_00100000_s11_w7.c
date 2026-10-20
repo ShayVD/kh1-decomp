@@ -150,3 +150,4 @@ s32 func_00103c48(void) {
     func_00121ee0(pkt);
     return 4;
 }
+#include "data/bss_0049_mixed.h"

@@ -3,11 +3,8 @@
 
 typedef __builtin_va_list va_list;
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
-typedef struct { u8 x[0x60]; } E60;
-typedef struct { u8 x[0x90]; } E90;
-typedef struct { u8 x[32]; } E32;
+#include "data/types/text_00100000_h28.h"
 typedef struct { u16 code; u16 v; u16 x; u16 y; u16 lw; u16 w; u16 padc[2]; } Glyph;
-typedef struct { E60 e[2]; u8 pad[0x10]; } ED0;
 typedef struct { f32 a, b, c, d; s32 e, f, g; s32 h; f32 near_, far_; s32 i, j; } __attribute__((aligned(8))) View30;
 typedef struct { f32 a, b, c, d; } F16;
 typedef struct { f32 x, y, z; } Vec3;
@@ -63,7 +60,7 @@ extern Flags D_002BC0A8;
 extern Flags D_0037A378;
 extern Grid *D_002A6234;
 extern Mtx D_00495190;
-extern Mtx D_00495210;
+extern Mtx D_00495210; /* src/data/bss_0049.c: u8 D_00495210[0x40] */
 extern Obj10 *func_0015ed80(s32, void (*)(void));
 extern Pad8 D_002BCA00;
 extern Pkt D_002B6490;
@@ -133,15 +130,15 @@ extern s32 D_0048CB28[];
 extern s32 D_0048CB70[];
 extern s32 D_0048CBB8[];
 extern s32 D_00494410[2];
-extern s32 D_004948B0[4][4];
-extern s32 D_004948F0[4][4];
+extern s32 D_004948B0[4][4]; /* src/data/bss_0049.c: f32 D_004948B0[4][4] */
+extern s32 D_004948F0[4][4]; /* src/data/bss_0049.c: f32 D_004948F0[4][4] */
 s32 D_00494930[4][4] ALIGNED(16);
 s32 D_00494970[4][4] ALIGNED(16);
 extern s32 D_00494A7C;
 extern s32 D_00494A80;
 extern s32 D_00494A84;
-extern s32 D_00494AA0[];
-extern s32 D_00494B20[];
+extern s32 D_00494AA0[]; /* src/data/bss_0049.c: s32 D_00494AA0[32] */
+extern s32 D_00494B20[]; /* src/data/bss_0049.c: s32 D_00494B20[32] */
 extern s32 D_00494BA0;
 extern s32 D_00494BA4;
 s32 D_00495174 ALIGNED(4);
@@ -1017,3 +1014,4 @@ void func_00100670(u32 arg0, s32 arg1) {
     }
 }
 
+#include "data/bss_0049_typed.h"

@@ -569,3 +569,4 @@ u64 func_0011b6a0(ColObj *o, f32 *pos, s32 a2) {
     return res;
 }
 
+#include "data/bss_004E_mixed.h"

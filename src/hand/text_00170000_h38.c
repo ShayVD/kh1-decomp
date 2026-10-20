@@ -87,8 +87,8 @@ typedef struct { u32 x0; u32 x4; } Pad;
 extern Actor *D_00575894;
 extern s32 D_00575890;
 extern f32 D_005758C4;
-extern V4 D_005758D0;
-extern V4 D_005758E0;
+extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
+extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 f32 D_0057590C ALIGNED(4);
 extern S920 D_00575920;
 extern Cam D_00575940;

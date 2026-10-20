@@ -30,3 +30,4 @@ void func_00115d18(void) {
         var_v0 += 4;
     } while (var_a0 >= 0);
 }
+#include "data/bss_004E_mixed.h"

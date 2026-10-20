@@ -16,7 +16,7 @@ typedef union {
 } PppQv;
 
 extern PppQv D_00615FC0[4];
-extern PppQv D_00616040[4];
+extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 typedef struct {
     s32 unk0;
@@ -33,7 +33,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 typedef struct {
     s32 unk00, unk04, unk08;
@@ -86,7 +86,7 @@ typedef struct {
     PppIVec v; /* +0x4 */
 } PppIVecKey;
 
-typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
+#include "data/types/nostrict_text_00180000_h40.h"
 
 typedef struct {
     u8 pad[0x10];
@@ -210,7 +210,7 @@ void pppMatrixLoopZYXFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][2] = t->z;
 }
 
-extern f32 D_00575A00;
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 
 typedef struct {
     s32 frame;
@@ -601,7 +601,7 @@ typedef struct {
     PppShapeEnt *shapes; /* +0x14 */
 } PppRes;
 
-extern PppRes *D_00615E64;
+extern PppRes *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 typedef struct {
     s32 frame;
@@ -648,7 +648,7 @@ void pppDrawShapeXFrame(PppObject *obj, PppShapeKey *key, PppEntry *e) {
         w->cur--;
 }
 
-extern PppMtx D_00615EB0;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 void func_00267548(f32 *, f32 *, f32 *);
 
 void pppRyjDrawMatrixWorldNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
@@ -702,12 +702,6 @@ typedef struct {
     u8 h, w, y;  /* +0x21 */
 } PppTexMode2;
 
-typedef struct {
-    f32 pos[3];
-    f32 dist;   /* +0xC */
-    u8 pad10[8];
-    u64 flags;  /* +0x18 */
-} PppLight;
 
 extern PppLight D_0035C710[256];
 extern PppLight *D_0061E310[256];

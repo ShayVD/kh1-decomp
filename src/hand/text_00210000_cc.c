@@ -60,3 +60,4 @@ void func_0021f900(void *a) {
     func_0021f410(a);
     *p = 0;
 }
+#include "data/bss_0064_mixed.h"

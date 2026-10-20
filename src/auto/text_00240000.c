@@ -21,8 +21,8 @@ extern s32 D_0046A60C;
 extern s32 D_0046A67C;
 extern s32 D_00662540;
 s32 D_006627B8 ALIGNED(8);
-extern s32 D_00668370;
-extern s32 D_00669350;
+extern s32 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
+extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 extern s32 D_00669A38;
 extern s32 D_00669A3C;
 extern u32 D_002C5AD8;

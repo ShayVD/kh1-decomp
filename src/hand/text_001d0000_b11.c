@@ -424,3 +424,4 @@ void func_001e6f28(void) {
         break;
     }
 }
+#include "data/bss_0063_mixed.h"

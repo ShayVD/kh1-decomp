@@ -364,7 +364,7 @@ typedef struct Obj {
     u8 pad90[0xf0 - 0x90];
 } Obj;
 
-extern Obj D_0063F758[];
+extern Obj D_0063F758[]; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern s32 D_003F1A60, D_003F1A64;
 extern Obj *D_00640DD8, *D_00640DDC;
 void func_001efb78(s32);
@@ -526,3 +526,4 @@ s32 func_001f4110(void) {
     }
     return n;
 }
+#include "data/bss_0063_mixed.h"

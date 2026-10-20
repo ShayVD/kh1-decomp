@@ -6,7 +6,7 @@
 typedef struct S31b0 { s32 f0, f4; } S31b0;
 extern S31b0 D_002E31B0;
 extern void *D_002E26A0[3];
-extern void *D_00524F58[];
+extern void *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
 extern u32 D_002C5958;
 extern u32 D_002E27C8;
 extern s32 D_002E31B8;
@@ -112,9 +112,7 @@ void func_00125cf0(E3 *e, f32 k, f32 lim) {
 }
 
 
-typedef struct { u8 pad[336]; } A6;
-typedef struct { u8 pad[544]; } B6;
-typedef struct { u8 x[16]; } D6;
+#include "data/types/text_00120000_h31.h"
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 extern D6 D_004F8270[];
@@ -245,7 +243,7 @@ void func_0012c698(E12 *e) {
 }
 
 extern s32 D_002E3160[];
-extern volatile u32 D_00524F44;
+extern volatile u32 D_00524F44; /* src/data/bss_0052.c: u32 D_00524F44 */
 extern void func_0012cb40(Q14 *, s32, s32);
 
 static inline s32 add(Q14 *q, s32 x) {
@@ -340,7 +338,7 @@ void func_0012d818(void) {
     D_002E3138 = 1;
 }
 
-extern volatile s32 D_00524F48;
+extern volatile s32 D_00524F48; /* src/data/bss_0052.c: s32 D_00524F48 */
 extern s32 D_00524F4C;
 extern void func_0023b4b8(s32);
 
@@ -485,9 +483,8 @@ s32 func_0012f0f8(void *p, void *q, u32 mode) {
     return r;
 }
 
-typedef struct { s32 a, b; } P5c0;
 extern P5c0 D_00524F80[];
-extern P5c0 *D_00525288;
+extern P5c0 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern s32 D_0052528C;
 extern void func_0012f3d0(P5c0 *);
 extern void func_0012f560(P5c0 *);
@@ -666,3 +663,5 @@ u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
     if ((w >> 15) & 1) v |= 0x4000000;
     return r | v;
 }
+#include "data/bss_004F_mixed.h"
+#include "data/bss_004F_typed.h"

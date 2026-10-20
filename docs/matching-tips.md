@@ -669,3 +669,23 @@ from dead code. Read the allocation first, then find the source change.
   changing the output (001c62a0: 122 insns hoists 3 invariants, 117 hoists 4).
 - Integer offsets (`s32 off = i*224 + 432; f32 *f = (f32 *)((u8 *)&D + off);`) reproduce per-entry
   address shapes that pointer arithmetic on the struct folds away.
+
+## Session 18 tips (nonmatchings/session18/NOTES.md)
+
+- **Local register variable lever** (matched 001f18e8): `register u64 k3 asm("$3");` in plain C
+  takes one constant's register choice away from local-alloc, so the statement order that gives the
+  right schedule can be climbed without the allocator picking the wrong register. Combine it with a
+  statement-order climb.
+- It only holds for constants (or values cse cannot see through). A pinned copy of a computed value
+  is dissolved by cse and the output is identical to the unpinned one.
+- A pinned constant in a block that also moves call arguments into the same hard register gets an
+  output dependence on them, which moves that argument setup earlier (0021e120's leftover word).
+- The loop insn-count lever (session 17) helped none of the ten loop drafts. It can only stop hoists
+  and giv reductions, never add them.
+- Correction (s18m2): a pinned computed value survives when the pinned set is the operation's own
+  result (a truncate or a shift). Only a pinned copy of a value that already has a pseudo is dissolved.
+  This matched 00192958: two TI header constants were pinned to a1/a3, and the scy0 chain was split into
+  pinned `e` (u64, a1), `t = e` (s32, a3) and `u = t << 4` (a1). It also works under gcc991111
+  (sceGsDefDispEnv: 9 -> 7 words).
+- What a pin cannot fix is scheduling order. In 00200e28 and 00125240 the leftover words are an issue
+  order or a `lui`, and pins there made things worse.

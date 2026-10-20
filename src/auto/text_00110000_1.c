@@ -13,7 +13,7 @@ M2C_UNK func_0011c9a0();
 M2C_UNK func_0011f090(M2C_UNK *, s32, s32);
 M2C_UNK func_0011f320(M2C_UNK *, s32);
 M2C_UNK func_001edb48(M2C_UNK);
-extern M2C_UNK D_004E3A48;
+extern M2C_UNK D_004E3A48; /* src/data/bss_004E.c: u8 D_004E3A48[0x10] */
 extern void *D_002BCB60;
 s32 func_0011f2e0(M2C_UNK *, s32);
 

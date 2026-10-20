@@ -36,3 +36,4 @@ s32 func_001be5d0(s32 arg0) {
 s32 func_001be600(s32 arg0) {
     return arg0 + (func_001bb740() * 2) + 1;
 }
+#include "data/bss_0062_mixed.h"

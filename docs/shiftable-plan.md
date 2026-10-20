@@ -1254,7 +1254,7 @@ link script places each at its address.
   includes it at the end.
 - **Overlay-shared**: `D_0046A6A8` is written by dktitle.x; floated, the overlay fixup proof fails.
   Stays extern.
-- **Fields named on their own**: `D_005759A4`/`D_005759A6` are fields x64/x66 of the camera struct at
+- **Fields named on their own** (more in "Session 18"): `D_005759A4`/`D_005759A6` are fields x64/x66 of the camera struct at
   `D_00575940` (another file declares `Cam`, sizeof 0x68). Defined in C they are fine, floated they leave
   the struct. Likewise D_0046A6A4 inside D_0046A688, D_0057590C inside D_00575900 (20 more:
   cover_check.py). This is what hung the bss float at boot.
@@ -1286,3 +1286,81 @@ link script places each at its address.
 - **Boot tests can mislead**: one build showed "No Image" after 30 s and booted on a second try; wait
   45 s and retry a hang once before believing it. Check which ELF is really on the device
   (`shasum`): a local file of the same name had been rebuilt, and the bisection compared against it.
+
+## Session 18: bss floats again (SHIFT_FLOAT_BSS_BUDGET ?= 0x10000)
+
+`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` floats up to 0x10000 bytes of bss by default again (155 runs,
+`_end` 0x68f4c4). In PCSX2 (KH1_BIG.iso, ELF appended) it reaches the title, loads the End of the World
+save, walks, attacks, casts, and opens the main menu. No fight yet: there were no enemies near that save
+point. `make` stays byte-identical.
+
+### What hung the title (three new hazard patterns)
+
+- **Displacement from another object's base.** `addiu a0,%lo(D_X)` then `lw 0x4(a0)` reaches a name
+  that no relocation mentions (D_00575014 inside D_00575010; D_00656254/78/9C, the 0x24-byte entries of
+  D_00656230). `tools/shift/reach_check.py` runs a constant propagation over every function's CFG
+  (original ELF, plus the overlays) and also follows call arguments: each function's reach from its
+  argument registers, propagated through callees, is applied at every call site that passes an address.
+  memcpy, memset and the pool init func_0011efa8 are checked with their byte counts.
+- **An array indexed past its declared end into the next name.** `D_00550400` (0x48-byte entries) is
+  walked for i < 64, and D_005512A0 is entries 52..63 under its own name. reach_check keeps every floated
+  name that is the next anchor after an indexed base in another piece (`idx-next`). That also covers
+  pointer walks: a register that holds different addresses on two paths into a join becomes base +
+  unknown. This rule is conservative and keeps about 110 names in place.
+- **IOP-written blocks.** The sound driver's RPC status block `D_0063D640` (0x2000 bytes, its address is
+  sent to the IOP in text_001e0000_h68.c) is written by DMA. D_0063F248 (+0x1c08) and D_0063F540
+  (+0x1f00) are fields of it, polled after FlushCache(0). No static check sees these, so they are listed in
+  `tools/shift/float_keep.txt`. D_0063F540 was the last culprit.
+
+The float build now keeps 171 names in place (cover_check, reach_check and float_keep). reach_check's
+list is written to `out/shift/<mode>-float/float_reach.txt`, and the log shows each access it found.
+
+### Tools
+
+- `tools/shift/reach_check.py [--ld LINK.ld] [--out FILE] [--all] [--debug ADDR]`: the check above. With
+  no `--ld`, every C-defined variable is its own piece, which is conservative inside floated runs.
+- `tools/shift/float_holes.py STATE.p2s`: reads eeMemory.bin from a PCSX2 state saved with
+  System > Save State > Save To File (into Downloads/kh1-test, no folder change needed). It lists every
+  floated variable whose old place, which should be all zero, has been written. This found D_005512A0 and
+  D_0063F248 from one hung boot.
+- `SHIFT_FLOAT_ONLY="names"` (shift_ld `--float-only`) floats only those bss names. Bisect with it:
+  `SHIFT_FLOAT_SKIP` lets the budget pull in the next-smallest runs, so the tested set changes.
+
+### Bisection log (PCSX2, about 2 min per boot)
+
+| budget / set | runs | title |
+| --- | ---: | --- |
+| 0x10000 (reach_check v1: displacements and calls) | 170 | no |
+| 0x10000 (+ idx-next, the 2 stale-write names kept) | 156 | no (no stale writes left) |
+| 0x400 | 15 | yes |
+| 0x800 / 0x1000 / 0x2000 | 30 / 59 / 109 | no |
+| 0x400 set + 7 names (D_00641BA4 ... D_00642EA4) | 22 | yes |
+| 0x400 set + D_005516E8 D_006257D4 D_006277E4 D_0062F6D0 | 19 | yes |
+| 0x10000 with D_0063F248, D_0063F540 kept | 155 | **yes** (title, save, walk, attack, magic, menu) |
+
+### Phase 4 step 3: shared names whose users disagree on the type (worker s18d1)
+
+- 387 more shared bss names are C definitions. That makes 1,029 C-defined variables (36 data, 993 bss),
+  and `make` stays byte-identical. By type: 277 basic types, 10 multi-dimensional or pointer arrays, and
+  100 struct types. The struct typedefs, with the file-local types they use, moved verbatim into
+  `include/data/types/<dir>_<stem>.h` (52 hand files; `tools/shift/type_move.py`).
+- Each definition goes into `src/data/bss_XXXX.c` and its declaration into `include/data/bss_XXXX_mixed.h`
+  (basic types) or `bss_XXXX_typed.h` (structs). A user whose declaration agrees includes that header at
+  the end of the file, after all code, and only if the file still compiles with it (`-fsyntax-only`). A user
+  that disagrees keeps its own extern with a `/* src/data/bss_XXXX.c: <type> */` comment.
+- `tools/shift/define_shared.py --mixed [--types] [--exclude NAME]` picks one declaration per name: exact
+  before fill before pad, a real type before M2C_UNK, hand files first, then the most users. The chosen one
+  must cover every other complete declaration.
+- **Hazard: data_owners.py does not use C-defined names as anchors.** A definition is referenced through its
+  own section, so the reference never names the D_ symbol. That means extents in data_owners.tsv can run over
+  existing definitions (D_0054B808 into D_0054B818). define_shared.py clamps each extent at the next C-defined
+  variable. data_owners.py itself still needs out/gen/data.tsv added as anchors.
+- 74 names were skipped. 37 have no declaration that fits the extent, and 25 have a declaration larger
+  than the extent (a field named on its own). 6 have an extent that is not a multiple of the element, 3 have
+  no single file-scope extern, and 3 clash on a type name in bss_0061 (`u128`, `PppMtx`; they need one shared
+  header). For 2, one element fills the whole extent (indexed past it).
+- The float build after it floats 577 C variables in 120 runs. 314 are kept in place, and 138 bss stay over
+  the budget. In PCSX2 it reaches the title, loads the save, walks, attacks and opens the menu
+  (KH1_F18D.ELF).
+- Some batch-1 names got a basic type (`u8 D_00495210[0x40]`) although a hand file's struct (`Mtx`) also
+  fits; these can be upgraded later.

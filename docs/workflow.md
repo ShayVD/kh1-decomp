@@ -725,3 +725,22 @@ found that the next session needs:
   (docs/matching-tips.md "Session 17").
 - **Phase 3**: character command stream record rule settled on 7,530 records; program-bit triggers
   and P21 rotation order (docs/renderer-spec.md, docs/structs.md, `tools/vu/rb_stream.py`).
+
+## Session 18: what changed
+
+- **Matching**: func_001f18e8 (s18m1) and func_00192958 (s18m2) matched with local register variables
+  that pin a constant or an operation's result (`register u64 k3 asm("$3")`, docs/matching-tips.md
+  "Session 18"). 6,975 / 6,988 matched.
+- **Phase 4 step 3**: 387 more shared bss names are C definitions (1,029 in total; docs/shiftable-plan.md
+  "Session 18").
+- **bss float** works again with the default budget of 0x10000 (docs/shiftable-plan.md "Session 18"),
+  using `tools/shift/reach_check.py`, `tools/shift/float_holes.py` and `tools/shift/float_keep.txt`.
+- **PCSX2 loop**: the same as session 17, plus these:
+  - `patch_iso.py --append --in-place` appends a new copy on every call, so KH1_BIG.iso grows by 3.8 MB
+    each boot. Recreate it from the original ISO when it gets large.
+  - System > Save State > Save To File writes a `.p2s` straight into Downloads/kh1-test. Stage it and run
+    `float_holes.py` on it.
+  - On the title, Down then L (Circle) opens Load; L picks slot 1 and the End of the World save. Return
+    (Start) opens the main menu in the field, and K (Cross) closes it.
+- **Restarts**: the container restarted twice this session. Commit worker results as soon as they report:
+  a finished worker's report survives in its task output file, but its in-flight work does not.

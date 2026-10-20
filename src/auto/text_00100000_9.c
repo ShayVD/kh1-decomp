@@ -43,7 +43,7 @@ extern M2C_UNK D_002BBD48;
 extern M2C_UNK D_002BBD90;
 extern M2C_UNK D_002BC210;
 extern M2C_UNK D_002BC720;
-extern M2C_UNK D_004945E0;
+extern M2C_UNK D_004945E0; /* src/data/bss_0049.c: u8 D_004945E0[0x10] */
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_00101048;
 extern M2C_UNK func_0010a120;
@@ -57,12 +57,12 @@ extern s32 D_0048C630[];
 extern s32 D_0048C690[];
 extern s32 D_00495180;
 extern s32 D_00495254;
-extern u32 D_004D8EC0[];
+extern u32 D_004D8EC0[]; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
 extern volatile M2C_UNK D_002E2700;
 extern volatile M2C_UNK D_002E2740;
 extern volatile s32 D_002BBDE0;
 extern volatile s32 D_002BC070[];
-extern volatile s32 D_00494410[];
+extern volatile s32 D_00494410[]; /* src/data/bss_0049.c: s32 D_00494410[2] */
 extern volatile s32 D_00495160;
 extern volatile s32 D_00495164;
 extern volatile s32 D_00495258;

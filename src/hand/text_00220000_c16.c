@@ -83,10 +83,10 @@ extern s32 D_006437C8[];
 extern s32 D_006437D0[];
 extern s32 D_006437DC;
 extern s32 D_006437E4;
-typedef struct { u8 pad0[8]; u64 x8; u8 pad10[0x10]; char name[0x20]; } Dir40;
+#include "data/types/text_00220000_c16.h"
 extern Dir40 *D_006450C0[];
 extern Save3C D_00645250[];
-extern void *D_00646990;
+extern void *D_00646990; /* src/data/bss_0064.c: s32 D_00646990 */
 s32 func_001ee428(s32);
 s32 func_001ee440(s32);
 void *func_001f31a8(void *, s32);
@@ -397,12 +397,12 @@ typedef struct {
 } Sys1E10;
 extern Sys1E10 D_00351E10;
 extern s32 D_006436D4;
-extern s32 D_006436D8[];
-extern s32 D_006436E0[];
+extern s32 D_006436D8[]; /* src/data/bss_0064.c: s32 D_006436D8[2] */
+extern s32 D_006436E0[]; /* src/data/bss_0064.c: s32 D_006436E0[2] */
 extern s32 D_006436E8;
 extern s32 D_00643734;
 extern s32 D_0064373C;
-extern void *D_00643740;
+extern void *D_00643740; /* src/data/bss_0064.c: s32 D_00643740 */
 extern s32 D_00643750;
 extern u8 D_003F6980[];
 extern u8 D_003F69B0[];
@@ -523,3 +523,4 @@ void func_00225330(O98 *arg0) {
     }
     func_001f8f30();
 }
+#include "data/bss_0064_typed.h"

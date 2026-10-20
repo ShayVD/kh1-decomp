@@ -7,8 +7,8 @@ M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 extern M2C_UNK D_002C58A0;
 M2C_UNK D_0052A158[0x240] ALIGNED(8);
-extern M2C_UNK D_0052AA58;
-extern M2C_UNK D_0052ACF0;
+extern M2C_UNK D_0052AA58; /* src/data/bss_0052.c: u8 D_0052AA58[0x10] */
+extern M2C_UNK D_0052ACF0; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
 extern M2C_UNK func_00138130;
 extern M2C_UNK func_00138258;
 extern M2C_UNK func_00138718;

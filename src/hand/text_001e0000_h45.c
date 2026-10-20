@@ -26,21 +26,7 @@ typedef struct {
 
 /* Menu window (0xb0 bytes); D_0062F6E0/D_0062F790/D_0062F840 and
  * D_00630300/D_006303B0/D_00630460 are runs of these. */
-typedef struct {
-    s32 x0;
-    s16 h4, h6, h8, ha, hc, he;
-    u8 pad10[0xc];
-    f32 f1c;
-    u8 pad20[0x10];
-    f32 f30, f34;
-    u8 pad38[8];
-    f32 f40, f44;
-    u8 pad48[0x48];
-    u8 b90;
-    u8 pad91[3];
-    f32 f94;
-    u8 pad98[0x18];
-} Win;
+#include "data/types/text_001e0000_h45.h"
 
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
 typedef struct { s32 x0; s32 x4; u8 pad[0xcc]; } E212;
@@ -71,9 +57,9 @@ extern E212 D_003DB718[];
 extern Pair20 D_002E26A0;
 extern Win D_0062F6E0;
 extern Win D_0062F790;
-extern Win D_0062F840;
+extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
 extern Win D_00630300;
-extern Win D_006303B0;
+extern Win D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern Win D_00630460;
 extern Win D_00631570;
 extern char D_003DD290[][6];
@@ -118,7 +104,7 @@ extern u8 D_00630380[];
 extern u8 D_006304E0[];
 extern u8 D_00630510[];
 extern u8 D_006305D0[][10];
-extern u8 D_006307C8[];
+extern u8 D_006307C8[]; /* src/data/bss_0063.c: char D_006307C8[0x800] */
 extern u8 D_00F20000[];
 f32 D_006314E0[0x8][4] ALIGNED(32);
 extern volatile s32 D_002C5958;
@@ -880,3 +866,4 @@ s32 func_001eb698(VM *vm) {
     vm->u.h.sp -= 3;
     return 2;
 }
+#include "data/bss_0063_typed.h"

@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern int D_003E3D68;
-extern volatile u32 D_00641BC4;
+extern volatile u32 D_00641BC4; /* src/data/bss_0064.c: s32 D_00641BC4 */
 
 void func_00213d00(void) {
   u32 new_var;

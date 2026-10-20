@@ -12,7 +12,7 @@ M2C_UNK func_0022dee0(M2C_UNK);
 extern M2C_UNK D_0038D170;
 extern M2C_UNK D_0039A580;
 extern M2C_UNK D_00490620;
-extern M2C_UNK D_0062A630;
+extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_001c1df8;
 extern M2C_UNK func_001d09a0;

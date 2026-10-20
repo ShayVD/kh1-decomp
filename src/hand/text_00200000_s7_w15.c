@@ -91,7 +91,7 @@ u32 func_002073f0(s32);
 void func_00207428(ObjE *, s32, s32);
 void func_00207870(ObjE *, s32, s32, s32, s32, s32, s32);
 extern u8 D_003F39F0[];
-extern ObjE *D_00641220;
+extern ObjE *D_00641220; /* src/data/bss_0064.c: s32 D_00641220 */
 extern s32 D_0064122C, D_0064126C, D_00641270, D_00641B98;
 extern u32 D_00641250[];
 extern s32 D_00641378[];

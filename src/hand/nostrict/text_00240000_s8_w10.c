@@ -3,7 +3,7 @@
    init calls and the draw loop (its kill keeps the gcse PRE copy for &p->unk30). */
 typedef struct { u64 lo, hi; } QW;
 extern u8 D_00351E10[];
-extern QW *D_00668F80;
+extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
 QW *D_00668F84 ALIGNED(4);
 extern u8 D_002E26C0[];
 extern u8 D_00426820[];

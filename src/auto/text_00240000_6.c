@@ -13,7 +13,7 @@ extern M2C_UNK D_00468E10;
 extern M2C_UNK D_00469C20;
 extern M2C_UNK D_00469C48;
 extern M2C_UNK D_00469C70;
-extern M2C_UNK D_00669760;
+extern M2C_UNK D_00669760; /* src/data/bss_0066.c: UiEnt D_00669760[3] */
 extern M2C_UNK func_00248e30;
 extern s32 D_00669700;
 s32 func_0011ef38(M2C_UNK *);

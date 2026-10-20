@@ -81,7 +81,7 @@ typedef struct {
     u8 a;
 } T2Col;
 
-extern T2Sys *D_00615E64;
+extern T2Sys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 extern T2MtxOwner *D_00615E68;
 
@@ -89,11 +89,11 @@ extern s32 D_00616224;
 
 extern f32 D_003701F0[];
 
-extern PppMtx D_00615EB0;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 
 extern PppMtx D_00615FC0;
 
-extern PppMtx D_00616040;
+extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 void func_00267530(f32 *, f32 *, f32 *);
 
@@ -928,11 +928,11 @@ typedef void (*PppStepFn)(PppObjS *, void *, PppEnt *);
 
 extern s32 D_0061621C;
 
-extern PppSysS *D_00615E60;
+extern PppSysS *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 #define D_00615E68 (*(PppObjS **) &D_00615E68)
 
-extern s32 D_00616234[1];
+extern s32 D_00616234[1]; /* src/data/bss_0061.c: s32 D_00616234 */
 
 extern PppStepFn D_003701C0[];
 

@@ -4,7 +4,7 @@
 
 M2C_UNK sceSifCallRpc(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK, s32);
 extern M2C_UNK D_003E3C88;
-extern M2C_UNK D_00633640;
+extern M2C_UNK D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 
 s32 func_001ed978(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     M2C_FIELD(&D_00633640, s32 *, 0) = arg0;

@@ -13,11 +13,11 @@ extern M2C_UNK D_00449990;
 extern M2C_UNK D_0044A800;
 extern M2C_UNK D_0044A810;
 extern M2C_UNK D_0044A820;
-extern M2C_UNK D_00648038;
+extern M2C_UNK D_00648038; /* src/data/bss_0064.c: s32 D_00648038[0x6] */
 extern M2C_UNK D_00648050;
-extern M2C_UNK D_00651310;
-extern M2C_UNK D_00651BD8;
-extern M2C_UNK D_00651BE8;
+extern M2C_UNK D_00651310; /* src/data/bss_0065.c: Slot D_00651310[10] */
+extern M2C_UNK D_00651BD8; /* src/data/bss_0065.c: void *D_00651BD8[0x4] */
+extern M2C_UNK D_00651BE8; /* src/data/bss_0065.c: void *D_00651BE8[0x6] */
 extern M2C_UNK func_0023ceb0;
 extern s32 D_00454A24;
 extern s8 D_00425C48;

@@ -130,7 +130,7 @@ extern f32 D_006411F4;
 extern f32 D_006411F8;
 extern s32 D_006411FC;
 extern f32 D_00641200;
-extern f32 D_00641204;
+extern f32 D_00641204; /* src/data/bss_0064.c: s32 D_00641204 */
 extern f32 D_00641208;
 extern f32 D_0064120C;
 extern f32 D_00641210;

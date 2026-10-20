@@ -104,10 +104,10 @@ typedef struct {
 } Txt;
 typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
 
-extern s32 D_00635640[][8];
+extern s32 D_00635640[][8]; /* src/data/bss_0063.c: s32 D_00635640[1024][8] */
 extern s32 D_003E3CB0;
 extern char D_00490928[];
-extern s32 D_00633640;
+extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern u8 D_003E3C88[];
 extern s32 D_003E3D68;
 extern s32 D_003E3D6C;
@@ -834,3 +834,4 @@ s32 func_001fe5a0(Fade2 *o) {
     if (o->bc == 2) { o->bc = 0; return 1; }
     return 0;
 }
+#include "data/bss_0064_mixed.h"

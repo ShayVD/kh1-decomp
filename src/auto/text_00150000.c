@@ -24,7 +24,7 @@ M2C_UNK func_00216180();
 M2C_UNK func_00232ad0(M2C_UNK);
 extern f32 D_002BBDFC;
 extern s32 D_00304BE8;
-extern s32 D_00551600;
+extern s32 D_00551600; /* src/data/bss_0055.c: u8 *D_00551600 */
 extern s32 D_00559DB0;
 extern s32 D_0055BDE0;
 s32 func_001320a8();

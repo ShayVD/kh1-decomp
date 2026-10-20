@@ -24,8 +24,8 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
-extern f32 D_00575A00;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 
 f32 func_00187df0(f32, f32);
 f32 func_00187f98(f32, f32);
@@ -130,7 +130,7 @@ typedef struct {
     s32 unk94;      /* +0x94 */
 } VtxCur;
 
-extern VtxSys *D_00615E64;
+extern VtxSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern VtxCur *D_00615E68;
 extern s32 D_00616234;
 void *func_0017f958(VtxSys *, s32);

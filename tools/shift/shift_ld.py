@@ -335,6 +335,9 @@ def cmd_gen(a) -> int:
             covered = set(Path(a.float_skip_file).read_text().split())
             floating -= covered
             print(f"shift-ld: --float-vars: {len(covered)} variables inside another declared object stay in place")
+        if a.float_only:  # bisecting: only these bss variables float (data variables still do)
+            floating = {v.name for v in variables if v.name in floating
+                        and (v.name in a.float_only or v.addr < img["bss_start"])}
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
@@ -840,6 +843,8 @@ def main() -> int:
                    help="--float-vars: names (one per line) that stay in place: tools/shift/cover_check.py --out")
     g.add_argument("--float-skip", action="append", default=[], metavar="NAME",
                    help="--float-vars: leave NAME at its original place (bisecting a runtime failure)")
+    g.add_argument("--float-only", action="append", default=[], metavar="NAME",
+                   help="--float-vars: only these bss variables float (bisecting a runtime failure)")
     g.add_argument("--float-bss-budget", type=lambda x: int(x, 0), default=0x10000,
                    help="--float-vars: at most this many bytes of bss float (smallest variables first)")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")

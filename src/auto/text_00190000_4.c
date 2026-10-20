@@ -33,3 +33,4 @@ void pppRyjDrawShipolyBoneCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
     M2C_FIELD(D_00615E60, s8 *, 0xB3) = 1;
 }
+#include "data/bss_0061_mixed.h"

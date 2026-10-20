@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern M2C_UNK D_00304E40;
-extern M2C_UNK D_00533BA0;
+extern M2C_UNK D_00533BA0; /* src/data/bss_0053.c: u8 D_00533BA0[0x14000] */
 
 void *func_00144e88(s32 arg0) {
     return (s8 *)&D_00304E40 + (arg0 * 0xD);

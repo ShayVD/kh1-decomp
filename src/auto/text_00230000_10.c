@@ -8,7 +8,7 @@ extern M2C_UNK D_00425F80;
 extern M2C_UNK D_00425F88;
 extern s32 D_002C5958;
 extern s32 D_00425F78;
-extern volatile s64 D_006477B0;
+extern volatile s64 D_006477B0; /* src/data/bss_0064.c: Cmd D_006477B0[64] */
 void func_00237660(s32, s32, s32);
 void func_0023b570(void);
 void func_0023c968(void);

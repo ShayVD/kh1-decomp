@@ -11,3 +11,4 @@ void func_0013b9c8(s32 arg0) {
     temp_v1 = M2C_FIELD(D_0052AE58, s32 *, 8);
     func_00132260(arg0, (s32) (D_0052AE58 + M2C_FIELD(D_0052AE58, s32 *, 4)), (s32) (((M2C_FIELD(D_0052AE58, s32 *, 0xC) - temp_v1) <= 0) ? NULL : (D_0052AE58 + temp_v1)));
 }
+#include "data/bss_0052_mixed.h"

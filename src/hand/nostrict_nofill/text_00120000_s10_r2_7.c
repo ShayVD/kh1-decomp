@@ -7,7 +7,7 @@ typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; } O8;
 typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern Q8 D_002E2FD8[7];
 extern Q8 *D_002E3170[];
-extern Q8 **D_00524F40;
+extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 extern O8 *D_002E319C;
 extern O8 *D_002E31A0;
 extern O8 *func_001478c8(s32);

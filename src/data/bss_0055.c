@@ -1,6 +1,19 @@
 /* Definitions of the shared bss names in include/data/bss_0055.h. */
 #include "data/bss_0055.h"
+#include "data/bss_0055_mixed.h"
+#include "data/bss_0055_typed.h"
 
 s8 D_005516C0[0x10] ALIGNED(16);
 s32 D_005516E8 ALIGNED(8);
 f32 D_00551D74 ALIGNED(4);
+u8 *D_00551600 ALIGNED(16);
+s32 *D_005516E4 ALIGNED(4);
+s32 D_005516EC ALIGNED(4);
+s32 D_00559DB0 ALIGNED(16);
+s32 D_0055BDE0 ALIGNED(16);
+u8 D_0055C698[0xda58] ALIGNED(8);
+E550400 D_00550400[0x34] ALIGNED(64);
+E551670 D_00551670[0x4] ALIGNED(16);
+Beb78 D_00551D90[0x2] ALIGNED(16);
+DmaChcr *D_0055C640 ALIGNED(16);
+DmaChcr *D_0055C644 ALIGNED(4);

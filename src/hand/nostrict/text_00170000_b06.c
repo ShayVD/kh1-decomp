@@ -1,6 +1,6 @@
 /* worker b06: hand-matched camera functions (built without strict aliasing) */
 #include "common.h"
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/nostrict_text_00170000_b06.h"
 typedef struct { V4 a; V4 b; V4 c; V4 d; } Ray;
 typedef struct {
     s32 x0; u8 pad4[0x10 - 4]; V4 x10; u8 pad20[0x10]; f32 x30[3]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 x64;
@@ -26,8 +26,8 @@ extern ActB *D_00575894;
 extern s32 D_00575890;
 extern f32 D_005758C0;
 extern f32 D_005758C4;
-extern V4 D_005758D0;
-extern V4 D_005758E0;
+extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
+extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 extern V4 D_00362680;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
@@ -320,7 +320,6 @@ extern s32 D_00362448;
 extern s32 D_00362424;
 extern s32 D_002E27A8;
 extern u32 D_002C5960;
-typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S920;
 extern S920 D_00575920;
 
 s32 func_0017d628(void) {
@@ -449,3 +448,4 @@ s32 func_0017c190(void) {
     if (path->x4 < D_003625E4) return 0;
     return 1;
 }
+#include "data/bss_0057_typed.h"

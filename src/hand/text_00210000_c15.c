@@ -15,7 +15,7 @@ extern s32 D_00643794;
 extern s32 D_003F6E30;
 extern s32 D_003F34C8;
 extern s32 D_00643790;
-extern u8 D_00643760[];
+extern u8 D_00643760[]; /* src/data/bss_0064.c: s32 D_00643760[0x4] */
 extern u8 D_003F6890[];
 extern u8 D_003F6860[];
 s32 func_001f42b8(Obj *);

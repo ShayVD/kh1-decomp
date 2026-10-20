@@ -11,8 +11,8 @@ extern M2C_UNK D_00426850;
 extern M2C_UNK D_00469FC8[];
 M2C_UNK D_00669070[0x58] ALIGNED(16);
 extern s32 D_00469F60;
-extern s32 D_00662A30;
-extern s32 D_00669350;
+extern s32 D_00662A30; /* src/data/bss_0066.c: E860 D_00662A30[10] */
+extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 s32 func_0023d700(s32, s32, s32, s32, s32, f32);
 s32 memcpy(s32, s32, s32);
 

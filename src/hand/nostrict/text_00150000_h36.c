@@ -88,10 +88,10 @@ extern volatile s32 D_00559DB8;
 extern volatile s32 D_00559DB4;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
-extern GsBuf D_00551D90[];
+extern GsBuf D_00551D90[]; /* src/data/bss_0055.c: Beb78 D_00551D90[0x2] */
 GsBuf2 D_00559DC0[0x2] ALIGNED(64);
-extern GsBuf2 *D_0055BDE0;
-extern GsBuf *D_00559DB0;
+extern GsBuf2 *D_0055BDE0; /* src/data/bss_0055.c: s32 D_0055BDE0 */
+extern GsBuf *D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
 extern s32 D_00351BD0;
 extern volatile s32 D_00559DBC;
 extern void *D_00351BC8;
@@ -101,7 +101,7 @@ s32 DisableDmac(s32);
 s32 EnableDmac(s32);
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0015eea0();
-typedef struct { u32 dir:1; u32 b1:1; u32 mod:2; u32 asp:2; u32 tte:1; u32 tie:1; u32 rest:24; } DmaChcr;
+#include "data/types/nostrict_text_00150000_h36.h"
 DmaChcr *func_00266c08(s32);
 void func_00266f38(void *, void *);
 extern u8 D_00278680[], D_00272C70[];

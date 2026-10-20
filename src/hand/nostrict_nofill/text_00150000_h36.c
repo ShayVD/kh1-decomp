@@ -8,8 +8,8 @@ typedef struct { u32 w0; u8 pad[396]; } E56A0F0;
 
 extern DmaChcr *D_0055C644;
 extern DmaChcr *D_0055C640;
-extern E56A0F0 D_0056A0F0[];
-extern u32 D_005739F8[];
+extern E56A0F0 D_0056A0F0[]; /* src/data/bss_0056.c: Ent59 D_0056A0F0[96] */
+extern u32 D_005739F8[]; /* src/data/bss_0057.c: s32 D_005739F8[0x32] */
 extern u8 D_0055C698[];
 
 DmaChcr *func_00266c08(s32);
@@ -28,3 +28,4 @@ void func_00162500(void) {
     memset(D_0055C698, 0, 0xDA58);
     func_0011ef10(0x2E630, func_00160370)->h2 = -1;
 }
+#include "data/bss_0055_mixed.h"

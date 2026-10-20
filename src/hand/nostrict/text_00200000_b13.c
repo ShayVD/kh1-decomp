@@ -779,3 +779,4 @@ void func_0020b3d8(Wnd2 *w, s32 px, s32 py) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
+#include "data/bss_0064_mixed.h"

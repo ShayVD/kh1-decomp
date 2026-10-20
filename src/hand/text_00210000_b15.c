@@ -17,7 +17,7 @@ typedef struct Ob {
 typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
 typedef struct { u8 pad[16]; void *x10; } P10;
 extern Cfg *D_00425BC8;
-extern P10 *D_006433F0;
+extern P10 *D_006433F0; /* src/data/bss_0064.c: s32 D_006433F0 */
 extern s32 D_00643418;
 extern s32 D_0064341C;
 extern s32 D_00643420;
@@ -278,7 +278,7 @@ void func_00223a90(void *a) {
         func_00207870(a, i == sel, 1, 0, y, 122, func_001ee5f0(buf[i]));
 }
 
-extern P10 *D_006436A0;
+extern P10 *D_006436A0; /* src/data/bss_0064.c: s32 D_006436A0 */
 extern s32 D_006436B8;
 extern s32 D_006436BC;
 extern s32 D_006436C0;
@@ -639,13 +639,13 @@ typedef struct { u32 a; s32 b; u32 c; } Rec;
 extern Cfg D_002C5AD0;
 extern Cfg D_00647710;
 extern s32 D_00647780;
-extern Rec *D_00647784;
+extern Rec *D_00647784; /* src/data/bss_0064.c: s32 D_00647784 */
 extern s32 D_00647788;
 extern s32 D_0064778C;
-extern Rec *D_00647790;
+extern Rec *D_00647790; /* src/data/bss_0064.c: s32 D_00647790 */
 extern s32 D_00647794;
 extern s32 D_00647798;
-extern u8 *D_0064779C;
+extern u8 *D_0064779C; /* src/data/bss_0064.c: s32 D_0064779C */
 s32 D_006477A0 ALIGNED(16);
 extern f32 D_006477A4;
 extern f32 D_002BBDFC;

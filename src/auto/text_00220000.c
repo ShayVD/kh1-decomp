@@ -33,8 +33,8 @@ extern s32 D_00643694;
 extern s32 D_00643698;
 extern s32 D_0064369C;
 extern s32 D_006436A0;
-extern s32 D_00646A20;
-extern s32 D_00646A24;
+extern s32 D_00646A20; /* src/data/bss_0064.c: u32 D_00646A20 */
+extern s32 D_00646A24; /* src/data/bss_0064.c: u32 D_00646A24 */
 extern s32 D_00646A28;
 extern s32 D_00647644;
 s32 func_001f42b8();

@@ -207,3 +207,4 @@ void func_0017ffd8(TexHdr *h, TexRef *r, s16 x, s16 y) {
         p++;
     }
 }
+#include "data/bss_0057_mixed.h"

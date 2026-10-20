@@ -6,11 +6,11 @@ M2C_UNK func_002672f8(s32, M2C_UNK *, s32);
 M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_00267560(s32, s32, f32);
 extern M2C_UNK D_003701F0;
-extern M2C_UNK D_00615EB0;
+extern M2C_UNK D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern M2C_UNK D_00615FC0;
-extern M2C_UNK D_00616040;
+extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern M2C_UNK D_0061E780;
-extern M2C_UNK D_0061E7C0;
+extern M2C_UNK D_0061E7C0; /* src/data/bss_0061.c: PppMtx D_0061E7C0 */
 extern s32 D_00615E68;
 
 void pppKeDMatPhtFrame(void) {

@@ -106,7 +106,7 @@ join:
     }
     func_0011fec0();
 }
-typedef struct { s32 x0; u32 flags; u32 lsn; u32 size; } FileEnt;
+#include "data/types/nostrict_text_00110000_s6_04.h"
 extern FileEnt D_004E4A00[];
 extern s32 D_002C5C30;
 extern u32 D_004F3200;
@@ -202,8 +202,8 @@ void func_00121a78(f32 m[4][4], f32 *out) {
     out[2] = atan2f(t[2][1], t[2][0]);
 }
 typedef struct { s32 x0; void *x4; s32 x8; s32 xc; s32 x10; } E20;
-extern E20 D_004F45B0[];
-extern E20 *D_004F6DB0;
+extern E20 D_004F45B0[]; /* src/data/bss_004F.c: Block D_004F45B0[0x200] */
+extern E20 *D_004F6DB0; /* src/data/bss_004F.c: Block *D_004F6DB0 */
 extern u8 D_00820000[];
 s32 func_00121b98(void);
 typedef struct { s16 x0; s16 x2; } Tsk;
@@ -352,3 +352,5 @@ void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
     }
     *(u64 *)base = (((u8 *)q - (u8 *)base + 15) / 16 - 1) | 0x70000000;
 }
+#include "data/bss_004E_mixed.h"
+#include "data/bss_004E_typed.h"

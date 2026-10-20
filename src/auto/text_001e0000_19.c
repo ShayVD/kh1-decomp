@@ -6,7 +6,7 @@ M2C_UNK func_0010ef70(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0011e9a8(M2C_UNK *, s32);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 extern M2C_UNK D_003DD2F0;
-extern M2C_UNK D_00631570;
+extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
 extern M2C_UNK func_001e8628;
 extern M2C_UNK func_001e86e8;
 extern M2C_UNK func_001e92b8;

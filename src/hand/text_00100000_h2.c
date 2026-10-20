@@ -290,7 +290,7 @@ typedef struct {
     u32 pad;
     u64 q3[2];
 } DispEnv;
-extern DispEnv D_004D8EC0;
+extern DispEnv D_004D8EC0; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
 extern s32 D_004D90FC;
 void sceGsDefDispEnv(DispEnv *, s16, s16, s16, s16, s16);
 void func_00265980(DispEnv *);
@@ -477,7 +477,7 @@ typedef struct {
     s32 w18;
     s32 w1c;
 } Hud;
-extern Hud D_004D9288;
+extern Hud D_004D9288; /* src/data/bss_004D.c: W29Clock D_004D9288 */
 extern s32 D_002BCC1C, D_004D9260, D_002BCC20, D_004D9274, D_004D9280;
 void func_00112018(s32, s32);
 s32 func_001120c8(void) {
@@ -623,8 +623,8 @@ typedef struct {
 typedef struct {
     u8 pad[0x90];
 } Obj_90;
-extern Obj_D0 D_00494D80[];
-extern Obj_90 D_00494F20[];
+extern Obj_D0 D_00494D80[]; /* src/data/bss_0049.c: ED0 D_00494D80[0x2] */
+extern Obj_90 D_00494F20[]; /* src/data/bss_0049.c: E90 D_00494F20[0x2][2] */
 void func_00108a60(s32, void *, Obj_D0 *, Obj_90 *, Obj_90 *);
 void func_001089f8(Obj_D0 *, void *);
 void func_001089d0(void *);
@@ -649,3 +649,4 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
     a->v[i][2] = D_0048C6F0[j][2];
     a->v[i][3] = D_0048C6F0[j][3];
 }
+#include "data/bss_0049_mixed.h"

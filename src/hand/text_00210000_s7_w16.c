@@ -21,12 +21,12 @@ extern s32 D_00641BB8;
 extern s32 D_00641BBC;
 extern s32 D_00641BC0;
 extern s32 D_00641BC4;
-extern u16 D_00641BC8;
-extern u16 D_00641BCC;
-extern u16 D_00641BD0;
-extern u16 D_00641BD4;
-extern u16 D_00641BD8;
-extern u16 D_00641BDC;
+extern u16 D_00641BC8; /* src/data/bss_0064.c: s32 D_00641BC8 */
+extern u16 D_00641BCC; /* src/data/bss_0064.c: s32 D_00641BCC */
+extern u16 D_00641BD0; /* src/data/bss_0064.c: s32 D_00641BD0 */
+extern u16 D_00641BD4; /* src/data/bss_0064.c: s32 D_00641BD4 */
+extern u16 D_00641BD8; /* src/data/bss_0064.c: s32 D_00641BD8 */
+extern u16 D_00641BDC; /* src/data/bss_0064.c: s32 D_00641BDC */
 extern s32 D_00641BF0[];
 extern s32 D_00641C00;
 extern s32 D_00642410;

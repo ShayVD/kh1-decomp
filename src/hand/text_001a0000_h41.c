@@ -59,8 +59,8 @@ void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void func_002676c0(f32 (*)[4], f32 (*)[4], f32);
 void func_002675a8(f32 *, void *);
 extern f32 D_003701F0[2];
-extern f32 D_00615EB0[4][4];
-extern f32 D_00616040[4][4];
+extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
+extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 typedef struct { u8 pad[44]; f32 rot; u8 pad2[8]; f32 sx, sy; } Spr;
 typedef struct { u8 pad[164]; f32 sc, of; } Cam;
 
@@ -154,7 +154,7 @@ static inline f32 vlen3_1a47b0(V4_1a47b0 *v) {
 
 typedef struct { u8 pad[0xB0]; u64 flags; } PppSys;
 extern s32 D_0061621C;
-extern PppSys *D_00615E60;
+extern PppSys *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 typedef struct { u8 pad[32]; u16 alive; u8 pad2[126]; } Ptcl;
 typedef struct { u8 pad[32]; } PtclX;
 typedef struct { Ptcl *p; PtclX *x; s32 n; u8 pad[4]; u16 cnt; } PGrp;
@@ -421,10 +421,10 @@ void func_001ba108(u8 *p, s32 k) {
 typedef struct { u8 p0[4]; u8 f4; u8 p5[23]; } It28;
 typedef struct { s32 n; u8 p4[12]; It28 e[1]; } ItTbl;
 extern ItTbl D_00377848;
-extern ItTbl *D_00623210;
+extern ItTbl *D_00623210; /* src/data/bss_0062.c: s32 *D_00623210 */
 extern s32 D_00623214;
 extern s32 D_00623218;
-extern It28 *D_0062321C;
+extern It28 *D_0062321C; /* src/data/bss_0062.c: s32 D_0062321C */
 
 void func_001bb580(void) {
     s32 i, j;
@@ -482,7 +482,7 @@ typedef struct { u8 id; u8 pad[3]; s32 n; } IdCnt;
 extern s32 D_00625748;
 extern IdCnt D_00625750[];
 typedef struct { u8 p0[80]; u8 name[32]; } Chr_1be010;
-extern void *D_006257D0;
+extern void *D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 extern s32 D_00625640;
 extern u8 D_00623ED4[][96];
 void func_001b9e40(s32, s32);

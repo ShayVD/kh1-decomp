@@ -607,7 +607,7 @@ typedef struct { B4Obj *x0; u32 x4; u8 pad8[0x28 - 8]; s32 x28; } B4Dsl;
 typedef struct B4Ln { struct B4Ln *x0; B4Obj *x4; } B4Ln;
 typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; s32 x10; B4Pr x14[2][72]; u8 pad494[4]; B4Obj x498[2][78]; B4Dsl x3558[2][480]; } B4Gl;
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } B4Task;
-extern B4Gl D_0055C698;
+extern B4Gl D_0055C698; /* src/data/bss_0055.c: u8 D_0055C698[0xda58] */
 B4Ln *D_005739F0 ALIGNED(16);
 B4Ln D_005736F0[0x60] ALIGNED(16);
 void func_00121eb0(void *);
@@ -1008,8 +1008,8 @@ typedef struct {
 typedef struct { B4Src2 *x0; u8 x4; s8 x5; s8 x6; u8 x7; } B4Drw2;
 typedef struct { u8 pad[0x10]; B4Drw2 *x10; u32 x14; } B4Dm;
 typedef struct { u16 x0; u8 x2; u8 x3; s32 x4; u8 pad8[0x170 - 8]; u64 x170; u8 pad178[8]; u64 x180; } B4Gp;
-extern B4Chcr *D_0055C644;
-extern B4Chcr *D_0055C640;
+extern B4Chcr *D_0055C644; /* src/data/bss_0055.c: DmaChcr *D_0055C644 */
+extern B4Chcr *D_0055C640; /* src/data/bss_0055.c: DmaChcr *D_0055C640 */
 extern u8 D_00351C40[];
 extern u8 D_00573AC0[];
 void func_0015f798(B4Dm *);
@@ -1242,3 +1242,5 @@ void func_00161a08(B4Hd *h) {
     if (r) func_00175708(h, r);
     D_00351BC8(0);
 }
+#include "data/bss_0054_mixed.h"
+#include "data/bss_0057_mixed.h"

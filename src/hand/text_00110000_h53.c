@@ -458,7 +458,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
 }
 
-typedef f32 M53[4][4] __attribute__((aligned(16)));
+#include "data/types/text_00110000_h53.h"
 extern f32 D_004F7650, D_002E27A4, D_004F77E0;
 extern V53 D_002E2780, D_002E2790, D_002E26B0;
 extern s32 D_002C5950;
@@ -534,7 +534,7 @@ void *memset(void *, s32, u32);
 typedef struct { u8 type; u8 pad1[2]; s8 flag; s32 a, b; } C3190b;
 extern C3190b D_002E3190;
 extern u8 D_002C5BB0[];
-extern V53 D_004F7800;
+extern V53 D_004F7800; /* src/data/bss_004F.c: f32 D_004F7800[0x4] */
 extern s32 (*D_002E27D4)(u8 *, u8 *, V53 *);
 s32 func_00137618(u8 *, V53 *);
 void func_00124e08(u8 *o, u8 *p, V53 *out);
@@ -688,3 +688,4 @@ char *D_002C6460[0xb] ALIGNED(16) = {
     (void *)D_0048D2F8, (void *)D_0048D2F0, (void *)D_0048D2E8, (void *)D_0048D2E0,
     (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
 };
+#include "data/bss_004F_typed.h"

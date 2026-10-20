@@ -614,23 +614,7 @@ done:
     return p;
 }
 
-typedef struct { f32 a[4], b[4], c[3]; u32 par; } S48_59;
-typedef struct { f32 m[4][4]; } M64_59;
-typedef struct { s16 n; u8 pad2[2]; S48_59 *src; } Mdl59;
-typedef struct {
-    void *x0;
-    u8 pad4[0x150 - 0x4];
-    M64_59 *x150;
-    M64_59 *x154;
-    M64_59 *x158;
-    u8 pad15c[0x170 - 0x15c];
-    Mdl59 *x170;
-    s32 x174;
-    s32 x178;
-    s32 x17c;
-    void *x180;
-    u8 pad184[0x190 - 0x184];
-} Ent59;
+#include "data/types/nostrict_text_00150000_h59.h"
 typedef struct { u8 pad0[8]; s32 x8; u8 padc[0x20 - 0xc]; Mdl59 *x20; u8 pad24[4]; s32 x28; u8 pad2c[4]; s32 x30; } Src17c0;
 extern Ent59 D_0056A0F0[96];
 void *memset(void *, s32, u32);
@@ -673,7 +657,7 @@ typedef struct {
     u8 pad494[0x3558 - 0x494];
     E44_59 e[2][480];
 } G698;
-extern G698 D_0055C698;
+extern G698 D_0055C698; /* src/data/bss_0055.c: u8 D_0055C698[0xda58] */
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } Tk62;
 void func_001606d0(void);
 Tk62 *func_0015ee78(s32, void *);
@@ -1089,3 +1073,5 @@ void func_00164ba8(Ent63 *e, Anim59 *a) {
         }
     }
 }
+#include "data/bss_0057_mixed.h"
+#include "data/bss_0056_typed.h"

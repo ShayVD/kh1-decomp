@@ -38,7 +38,7 @@ extern s32 D_003F6E24;
 extern s32 D_003F6E2C;
 extern u8 D_003F6FD0[];
 extern s32 D_003F6FF8[];
-extern Q4 D_00643720;
+extern Q4 D_00643720; /* src/data/bss_0064.c: s32 D_00643720[0x4] */
 extern s32 D_00643730;
 extern s32 D_006437C4;
 
@@ -322,7 +322,7 @@ extern s32 D_00646A18;
 extern u32 D_00646A20;
 extern s32 D_00646A28;
 extern s32 D_00647634;
-extern u8 *D_00647638;
+extern u8 *D_00647638; /* src/data/bss_0064.c: s32 D_00647638 */
 extern s32 D_0064763C;
 void func_001ef7f0(s32);
 void func_0022ebf8(s32);
@@ -350,7 +350,7 @@ extern u32 D_00646A24;
 extern s32 D_00646A30[];
 extern s32 D_00647630;
 extern s32 D_00646E30[];
-extern u8 *D_00647230[];
+extern u8 *D_00647230[]; /* src/data/bss_0064.c: s32 D_00647230[0x100] */
 u32 func_001ef7a0(void);
 
 void func_0022fa58(s32 i) {
@@ -545,7 +545,7 @@ extern u8 D_003F7D60[];
 extern u8 D_003F7E70[];
 extern s32 D_00647648;
 extern s32 D_0064764C;
-extern Obj *D_00647650;
+extern Obj *D_00647650; /* src/data/bss_0064.c: s32 D_00647650 */
 extern s32 D_00647654;
 extern s32 D_00647658;
 void func_001ef830(void);
@@ -592,9 +592,9 @@ extern s32 D_003F7EC8;
 extern Win D_003F7EA0;
 extern s32 D_006476F8;
 extern s32 D_006476FC;
-extern Scr *D_00647700;
-extern void *D_00647704;
-extern void *D_00647708;
+extern Scr *D_00647700; /* src/data/bss_0064.c: u16 *D_00647700 */
+extern void *D_00647704; /* src/data/bss_0064.c: u8 *D_00647704 */
+extern void *D_00647708; /* src/data/bss_0064.c: s32 D_00647708 */
 extern void *D_0064770C;
 void func_00232960(void);
 

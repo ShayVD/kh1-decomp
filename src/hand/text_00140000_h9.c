@@ -117,7 +117,7 @@ typedef struct {
     char name[0x20];
     s32 x44;
 } W9Blk;
-extern W9Blk D_00550400[];
+extern W9Blk D_00550400[]; /* src/data/bss_0055.c: E550400 D_00550400[0x34] */
 W9Blk D_005512A0[0xc] ALIGNED(32);
 extern u8 D_00FE0000[];
 extern u8 D_01CE0000[];
@@ -317,7 +317,7 @@ typedef struct {
     s32 x4;
     u8 pad8[0x38];
 } W9Slot64;
-extern W9Slot64 D_0054F750[];
+extern W9Slot64 D_0054F750[]; /* src/data/bss_0054.c: Slot57_15d0 D_0054F750[8] */
 extern s32 D_0054F740;
 extern W9Tab12 *D_0054F950;
 void func_00151808(void) {
@@ -638,7 +638,7 @@ typedef struct {
     s8 b3;
     u8 pad4[0x10];
 } W9Tab20;
-extern W9Tab20 D_00551670[];
+extern W9Tab20 D_00551670[]; /* src/data/bss_0055.c: E551670 D_00551670[0x4] */
 s32 func_00157528(W9Ent *e) {
     W9Tab20 *q = &D_00551670[e->x6c->xbd];
     if (!q->b0) return -1;
@@ -701,3 +701,5 @@ void func_00153500(W9Ent *a, Msg9 *m) {
         }
     }
 }
+#include "data/bss_0054_mixed.h"
+#include "data/bss_0055_mixed.h"

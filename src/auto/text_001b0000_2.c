@@ -3,9 +3,9 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-extern M2C_UNK D_00623230;
+extern M2C_UNK D_00623230; /* src/data/bss_0062.c: Ent D_00623230[0xc0] */
 extern M2C_UNK D_00623E40;
-extern M2C_UNK D_00625750;
+extern M2C_UNK D_00625750; /* src/data/bss_0062.c: IdCnt D_00625750[0x10] */
 extern s32 *D_00623210;
 extern s32 D_002BC140;
 extern s32 D_002BC144;
@@ -25,7 +25,7 @@ extern s32 D_00623224;
 extern s32 D_00623228;
 extern s32 D_00623E30;
 extern s32 D_00625748;
-extern s32 D_006257D0;
+extern s32 D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0(f32);
 s32 func_001ba458(s32);

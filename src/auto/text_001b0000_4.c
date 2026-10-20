@@ -4,7 +4,7 @@
 
 extern M2C_UNK D_00009C00;
 M2C_UNK D_00623200[0x4] ALIGNED(16);
-extern M2C_UNK D_00625648;
+extern M2C_UNK D_00625648; /* src/data/bss_0062.c: s32 D_00625648[0x40] */
 extern s32 D_0037A150;
 extern s32 D_0037A154;
 extern s8 D_002C5AD0;

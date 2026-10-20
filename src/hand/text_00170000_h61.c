@@ -319,7 +319,7 @@ extern V4 D_003624E0;
 extern V4 D_003624F0;
 extern f32 D_00362500;
 extern u32 D_002C5960;
-extern s32 D_00575920;
+extern s32 D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
 extern s32 D_00362420;
 void func_00124c68(f32);
 void func_0012fc58(void);

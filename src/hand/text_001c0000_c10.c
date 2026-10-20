@@ -8,7 +8,7 @@ typedef struct {
     u8 c[10];
     u8 d[40];
 } Save;
-typedef struct { char *a; char *b; } Pair;
+#include "data/types/text_001c0000_c10.h"
 typedef struct {
     s32 n;
     char str[50][32];
@@ -401,3 +401,5 @@ void func_001e65d0(void) {
     func_0010bd90(D_00630300, func_001e64e0);
     D_003DD28C = 0;
 }
+#include "data/bss_0063_mixed.h"
+#include "data/bss_0063_typed.h"

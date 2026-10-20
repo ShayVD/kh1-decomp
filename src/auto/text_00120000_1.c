@@ -10,7 +10,7 @@ M2C_UNK func_00124c68(f32);
 M2C_UNK func_00269fd0(M2C_UNK);
 M2C_UNK func_0026a530(M2C_UNK);
 extern M2C_UNK D_0048D2A0;
-extern M2C_UNK D_004F2A00;
+extern M2C_UNK D_004F2A00; /* src/data/bss_004F.c: char D_004F2A00[0x800] */
 extern f32 D_004F77E4;
 extern s32 D_004F3208;
 

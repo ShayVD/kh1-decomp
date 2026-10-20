@@ -78,7 +78,7 @@ typedef struct { u8 id; u8 b1; u8 b2; u8 b3; u8 b4; } BoxHd57_f1b8;
 typedef union { u64 flags; BoxHd57_f1b8 c; } BoxU57_f1b8;
 typedef struct { BoxU57_f1b8 u; u8 pad8[8]; f32 lo[4]; f32 hi[4]; } Box57_f1b8;
 typedef struct { u8 pad0[3]; u8 x3; u8 n; u8 x5; u8 pad6[0xa]; Box57_f1b8 box[1]; } BoxSet57_f1b8;
-typedef struct { u32 b0:1; u32 b1:1; u32 rest:30; f32 f4; f32 f8; f32 fc; s32 x10; s32 x14; } Grp57_f1b8;
+#include "data/types/text_00140000_h57.h"
 typedef struct { u8 pad0[8]; f32 f8; } Prm57_f410;
 typedef struct {
     s32 flags;
@@ -738,3 +738,4 @@ void func_00150930(Chr57_0930 *o, Chr57_0930 *t, f32 *v) {
     func_0014f658(o, 3);
     func_001376e8(o, v);
 }
+#include "data/bss_0054_typed.h"

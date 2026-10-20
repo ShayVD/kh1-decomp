@@ -200,7 +200,7 @@ void func_001837a8(PppSys *s) {
 }
 
 extern s32 D_0061621C;
-extern PppSys *D_00615E60;
+extern PppSys *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 s32 func_00183958(PppSys *s) {
     s32 t;
@@ -278,22 +278,14 @@ void func_00183b20(PppHeap *h, u8 *p) {
     }
 }
 
-typedef struct {
-    u8 pad[0xE];
-    u8 hook;     /* +0xE */
-} PppProgHdr;
+#include "data/types/text_00180000_h12.h"
 
-typedef struct {
-    s32 unk0, unk4;
-    PppProgHdr *hdr;  /* +0x8 */
-} PppHookObj;
 
 typedef struct {
     s32 unk0;
     s32 arg;     /* +0x4 */
 } PppHookData;
 
-typedef void (*PppHookFn)(PppHookObj *, s32);
 extern PppHookFn *D_00616220;
 
 void pppDrawHookDraw(PppHookObj *obj, PppHookData *data, PppEntry *e) {
@@ -409,7 +401,7 @@ typedef struct {
     PppAnmEnt *anms;   /* +0x14 */
 } PppAnmSet;
 
-extern PppAnmSet *D_00615E64;
+extern PppAnmSet *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 typedef struct {
     s32 frame;
@@ -594,7 +586,7 @@ s32 func_0019bb98(PppBb98A *p, PppBb98B *q) {
     return 1;
 }
 
-extern PppMtx D_00615EB0;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 
 void func_0019cfc0(PppMtx out, PppBb98B *q, PppMtx m) {
     if (q->unkCC != 0)

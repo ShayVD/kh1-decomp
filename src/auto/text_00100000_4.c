@@ -56,3 +56,4 @@ void func_0010a470(void) {
     sceGsSyncPath(0, 0);
     sceGsExecLoadImage(&D_002BC1B0, D_002B6778);
 }
+#include "data/bss_0049_mixed.h"

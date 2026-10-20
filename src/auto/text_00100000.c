@@ -34,17 +34,17 @@ extern M2C_UNK D_0029B280;
 extern M2C_UNK D_002B74D0;
 extern M2C_UNK D_002B74E0;
 extern M2C_UNK D_002B74F0;
-extern M2C_UNK D_004941D0;
-extern M2C_UNK D_00494210;
-extern M2C_UNK D_00494250;
-extern M2C_UNK D_00494290;
-extern M2C_UNK D_004942D0;
-extern M2C_UNK D_00494320;
+extern M2C_UNK D_004941D0; /* src/data/bss_0049.c: E32 D_004941D0[0x2] */
+extern M2C_UNK D_00494210; /* src/data/bss_0049.c: E32 D_00494210[0x2] */
+extern M2C_UNK D_00494250; /* src/data/bss_0049.c: E32 D_00494250[0x2] */
+extern M2C_UNK D_00494290; /* src/data/bss_0049.c: E32 D_00494290[0x2] */
+extern M2C_UNK D_004942D0; /* src/data/bss_0049.c: E32 D_004942D0[0x2] */
+extern M2C_UNK D_00494320; /* src/data/bss_0049.c: u8 D_00494320[0x80] */
 M2C_UNK D_004943A0[0x11] ALIGNED(32);
-extern M2C_UNK D_00494878;
-extern M2C_UNK D_004951D0;
+extern M2C_UNK D_00494878; /* src/data/bss_0049.c: u8 D_00494878[0x18] */
+extern M2C_UNK D_004951D0; /* src/data/bss_0049.c: u8 D_004951D0[0x40] */
 f32 D_004943E4 ALIGNED(4);
-extern f32 D_00494A70;
+extern f32 D_00494A70; /* src/data/bss_0049.c: volatile f32 D_00494A70 */
 extern f32 D_00494A74;
 extern s32 D_002A6258;
 extern s32 D_002A6B84;
@@ -56,13 +56,13 @@ extern s32 D_002BC130;
 extern s32 D_002BC734;
 extern s32 D_002BC738;
 extern s32 D_002BCDD8;
-extern s32 D_00494890;
+extern s32 D_00494890; /* src/data/bss_0049.c: f32 D_00494890 */
 extern s32 D_00494A94;
 extern s32 D_00494A98;
 extern s32 D_00495260;
 extern s32 D_004D5AF4;
 extern s32 D_004D5AF8;
-extern s32 D_004D5AFC;
+extern s32 D_004D5AFC; /* src/data/bss_004D.c: f32 D_004D5AFC */
 extern void *D_002A6238;
 s32 func_00111090();
 

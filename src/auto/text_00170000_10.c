@@ -8,7 +8,7 @@ extern M2C_UNK D_002C58D0;
 extern M2C_UNK D_0035BD40;
 extern M2C_UNK D_00362660;
 extern M2C_UNK D_00362670;
-extern M2C_UNK D_00575310;
+extern M2C_UNK D_00575310; /* src/data/bss_0057.c: TalkEA D_00575310 */
 extern f32 D_005758C0;
 extern s32 D_002E26A0;
 extern s32 D_0035C6F0;

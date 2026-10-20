@@ -1,5 +1,5 @@
 #include "common.h"
-typedef struct { f32 x, y, z, w; } V4f;
+#include "data/types/nostrict_nogcse_text_00240000_s6_25.h"
 typedef struct { u8 pad[0x55]; s8 x55; } EntInfo;
 typedef struct { u8 pad[0x10]; V4f pos; u8 pad20[0x1c]; f32 x3c; u8 pad40[0xf0]; EntInfo *info; } Ent;
 typedef struct { s32 x0; u8 pad[0x48]; u16 id; u8 pad4e[6]; s8 kind; s8 x55; } Obj;
@@ -44,3 +44,4 @@ void func_0024f098(Req *r, void (*cb)(void)) {
         cb();
     }
 }
+#include "data/bss_0066_typed.h"

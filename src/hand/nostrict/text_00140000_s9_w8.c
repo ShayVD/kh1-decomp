@@ -4,18 +4,7 @@ typedef struct { u8 x0[6]; u8 x6; u8 x7; } Q9c;
 typedef struct { u8 pad[0x2c]; Q9c x2c; u8 pad34[0x74 - 0x34]; } M9c;
 typedef struct { u8 pad[4]; M9c m[10]; } S9c;
 extern S9c *D_00304BE8;
-typedef struct {
-    u32 used : 1;
-    u32 state : 2;
-    u32 b3 : 1;
-    u32 rest : 28;
-    s32 x4;
-    s32 x8;
-    u8 padc[4];
-    s32 x10;
-    u8 pad14[8];
-    s32 x1c;
-} Ent9c;
+#include "data/types/nostrict_text_00140000_s9_w8.h"
 typedef struct { u8 pad[6]; s16 x6; } R9c;
 extern Ent9c D_0054C1B0[];
 extern void *D_00350CE8[];
@@ -63,3 +52,4 @@ s32 func_00149c80(s32 i, s32 a) {
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 extern u8 D_0048E418[];
 s32 D_00350D14 ALIGNED(4) = (s32)D_0048E418;
+#include "data/bss_0054_typed.h"

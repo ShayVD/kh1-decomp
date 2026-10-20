@@ -178,3 +178,4 @@ void func_0020fee8(void *arg0) {
         func_002073b0(1, arg0);
     }
 }
+#include "data/bss_0064_mixed.h"

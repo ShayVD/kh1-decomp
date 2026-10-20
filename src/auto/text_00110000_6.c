@@ -31,8 +31,8 @@ extern s32 D_002C1378;
 extern s32 D_003F34A4;
 extern s32 D_003F720C;
 extern s32 D_004D9320;
-extern s32 D_004D9330;
-extern s32 D_004E44C0;
+extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
+extern s32 D_004E44C0; /* src/data/bss_004E.c: s32 D_004E44C0[0x2] */
 extern s8 D_002BCB68;
 extern s8 D_002C1260;
 extern volatile s32 D_002BBDF4;

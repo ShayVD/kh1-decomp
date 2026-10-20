@@ -77,40 +77,13 @@ typedef struct {
     u8 pad30[0x144-0x30];
     Ev57_0ec8 *ev;
 } Obj57_0ec8;
-typedef struct Slot57_15d0 Slot57_15d0;
-typedef struct {
-    s32 flags;
-    u8 pad4[0x10-4];
-    f32 v10[4];
-    f32 f20;
-    f32 f24;
-    f32 f28;
-    u8 pad2c[0x40-0x2c];
-    f32 f40;
-    f32 f44;
-    f32 f48;
-    u8 pad4c[0x144-0x4c];
-    Slot57_15d0 *slot;
-} Obj57_15d0;
-struct Slot57_15d0 {
-    s32 x0;
-    Obj57_15d0 *obj;
-    void *owner;
-    u8 padc[0x20-0xc];
-    f32 f20;
-    f32 f24;
-    s32 age;
-    s32 x2c;
-    f32 f30;
-    s32 x34;
-    u8 pad38[0x40-0x38];
-};
+#include "data/types/nostrict_text_00140000_h57.h"
 typedef struct { s32 id; f32 f4; } Kind57_15d0;
 typedef struct { u8 pad0[3]; u8 b3; } Q57_15d0;
 
 extern u32 D_002C5958;
 extern Src57_c130 D_0054C440[64];
-extern s32 D_0054F440;
+extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
 extern f32 D_0054F444;
@@ -338,3 +311,4 @@ s32 func_001515d0(void *owner, f32 *pos, s32 type) {
     }
     return func_0014f658(o, 20);
 }
+#include "data/bss_0054_typed.h"

@@ -73,7 +73,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 u8 *func_00182588(PppSystem *, PppSlot *);
 
@@ -89,7 +89,7 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
     return i;
 }
 
-extern PppMdlBank *D_00615E64;
+extern PppMdlBank *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern u8 D_00616240[];
 extern u8 D_00616140[];
 extern u8 D_00616100[];
@@ -131,7 +131,7 @@ extern V4F D_00615E70;
 V4F D_00615E80 ALIGNED(16);
 V4F D_00615E90 ALIGNED(16);
 V4F D_00615EA0 ALIGNED(16);
-extern V4F D_00615F70;
+extern V4F D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 extern f32 D_003701F0[3];
 extern s32 D_003701E0[3];
 extern u8 D_003701D0[];

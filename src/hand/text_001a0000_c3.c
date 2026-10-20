@@ -30,7 +30,7 @@ s8 func_001a21c0(u8 a);
 
 typedef struct { u8 pad0[6]; s16 n; } P9Shape;
 typedef struct { u8 pad0[0x14]; struct { P9Shape *s; s32 pad; } *shapes; } P9Res;
-extern P9Res *D_00615E64;
+extern P9Res *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 typedef struct {
     u8 pad0[4];

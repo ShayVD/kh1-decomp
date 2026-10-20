@@ -176,7 +176,7 @@ s32 func_00131e40(s32 a);
 extern u32 D_002C5958;
 s32 func_00123488(s32 id);
 s32 func_0012ba98(s32 a);
-extern W6Trip D_00526640[];
+extern W6Trip D_00526640[]; /* src/data/bss_0052.c: W32E12 D_00526640[32] */
 extern W6Lim *D_00308CDC;
 void func_00133920(W6Mgr *m, W6Link *l);
 f32 func_001348e0(W6Mgr *m, W6Kind *k);
@@ -233,8 +233,8 @@ typedef struct {
     s32 b;
 } W6Pair;
 
-extern W6Cell D_005267C0[];
-extern W6Cell D_005277C0[];
+extern W6Cell D_005267C0[]; /* src/data/bss_0052.c: QD D_005267C0[0x40] */
+extern W6Cell D_005277C0[]; /* src/data/bss_0052.c: QD D_005277C0[0x80] */
 extern W6Big D_002C64A0[];
 extern s32 D_0052A150;
 W6Pair D_0052A110[0x8] ALIGNED(16);
@@ -387,7 +387,7 @@ typedef struct {
 
 extern u32 D_00304B78;
 extern f32 D_00304B7C;
-extern W6Blob *D_0052AE5C;
+extern W6Blob *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
 extern s32 D_0052AE54;
 extern u32 D_002C5978;
 
@@ -413,7 +413,7 @@ void func_0014f778(void);
 void func_0014f828(void);
 void func_0014f830(s32 a, s32 b, s32 c, s32 d, void (*e)(void), void (*f)(void), void (*g)(void), s32 h, s32 i);
 
-extern W6Chan D_00525368[];
+extern W6Chan D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
 extern s32 D_003041E4[][3][3];
 extern u32 D_00304318[];
 extern u8 D_00720000[];

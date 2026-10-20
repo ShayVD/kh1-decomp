@@ -43,7 +43,7 @@ extern Str D_00389C90;
 extern s32 D_00389C80;
 extern char *D_00388480[];
 typedef struct { u64 d[22]; } Win;
-extern Win D_00629E70[];
+extern Win D_00629E70[]; /* src/data/bss_0062.c: Ent176 D_00629E70[4] */
 extern s32 D_0037A378;
 void func_0010ef70(Win *, char *, void *);
 s32 func_001cbd80();
@@ -428,8 +428,8 @@ s32 func_001dedd8(Task *o) {
     return 0;
 }
 
-extern void *D_0062A220;
-extern void *D_0062A224;
+extern void *D_0062A220; /* src/data/bss_0062.c: s32 D_0062A220 */
+extern void *D_0062A224; /* src/data/bss_0062.c: s32 D_0062A224 */
 extern u8 D_0062A630[];
 s32 func_00176040(void *, void *, s32, s32);
 Q10 *func_001760d0(s32);

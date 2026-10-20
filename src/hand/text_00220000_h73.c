@@ -166,7 +166,7 @@ extern Base4BE8 *D_00304BE8;
 extern u32 D_003E3D6C;
 extern u32 D_00646A24;
 extern s32 D_00647630;
-extern u8 *D_00647634;
+extern u8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
 extern s32 D_00646A30[];
 extern s32 D_00646E30[];
 extern s32 D_00647230[];
@@ -238,7 +238,7 @@ void func_0022fba8(void) {
 extern s32 D_003F7A64;
 extern s32 D_003F7A68;
 extern s32 D_00646A00, D_00646A04;
-extern s32 *D_00646A08;
+extern s32 *D_00646A08; /* src/data/bss_0064.c: u16 *D_00646A08 */
 extern s32 *D_00646A0C;
 extern void *D_00646A10;
 extern s32 D_00646A28;

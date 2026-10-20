@@ -9,9 +9,9 @@ extern M2C_UNK D_003F3420;
 extern s32 D_00640E28;
 extern s32 D_006411E0;
 extern s32 D_006411FC;
-extern s32 D_00641210;
-extern s32 D_00641214;
-extern s32 D_00641218;
+extern s32 D_00641210; /* src/data/bss_0064.c: f32 D_00641210 */
+extern s32 D_00641214; /* src/data/bss_0064.c: f32 D_00641214 */
+extern s32 D_00641218; /* src/data/bss_0064.c: f32 D_00641218 */
 extern void *D_003F34B8;
 s32 func_001ee7a8();
 

@@ -11,7 +11,7 @@ extern BigE D_00389C90;
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb;
 Cb D_0062A1E0 ALIGNED(16);
 typedef struct { u8 pad[176]; } E176;
-extern E176 D_00629E70[];
+extern E176 D_00629E70[]; /* src/data/bss_0062.c: Ent176 D_00629E70[4] */
 typedef struct { s32 x0; u8 pad4[0x17c]; s32 sp; s32 stk[33]; s32 x20c; } VMe;
 void func_001cac60();
 void func_0010f558(void *, void *, s32);

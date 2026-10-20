@@ -198,3 +198,4 @@ s32 func_00169f28(E9F *e, W9F *w) {
 r0:
     return 0;
 }
+#include "data/bss_0057_mixed.h"

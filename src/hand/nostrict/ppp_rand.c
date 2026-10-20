@@ -46,8 +46,8 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
-extern f32 D_00575A00;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 
 /* A float in [0, 1) from VU0's random register. */
 static inline f32 vu0Rand(void) {

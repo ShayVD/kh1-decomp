@@ -321,8 +321,7 @@ typedef struct { u8 pad[0x130]; void *p130; } Pl1557d0;
 extern Pl1557d0 *D_002E26A0[];
 extern u32 D_002C5958;
 typedef struct { u32 lo:18; u32 b18:1; u32 hi:13; } F2C5958_1557d0;
-typedef union { s32 w; struct { s8 id; u8 n; } b; } E550400W;
-typedef struct { E550400W h; char name[0x40]; s32 w44; } E550400;
+#include "data/types/nostrict_text_00150000_h35.h"
 extern E550400 D_00550400[];
 void func_00146928(s32);
 void func_00155760(void *);
@@ -475,9 +474,6 @@ s32 func_00156d88(Obj156d88 *a, Arg156d88 *b, s32 c) {
 }
 
 /* ---- func_001576a8 ---- */
-typedef struct { u8 pad[0x74]; s32 w74; } S6C_1576a8;
-typedef struct { u8 pad[0x6C]; S6C_1576a8 *p6C; } Act1576a8;
-typedef struct { s8 b0, b1, b2, b3; Act1576a8 *w4; s32 w8; s32 wC; s32 w10; } E551670;
 s32 func_00122ff8(Act1576a8 *);
 void func_0011dcf0(void *, s32 *, s32 *);
 void func_001ed7d8(s32, s32, s32, s32);
@@ -865,3 +861,5 @@ s32 func_00158b88(s32 a, u8 *b) {
         break;
     }
 }
+#include "data/bss_0055_mixed.h"
+#include "data/bss_0055_typed.h"

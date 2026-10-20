@@ -48,3 +48,4 @@ void func_0021b4c8(s32 n) {
         D_003F3504 = 0;
     }
 }
+#include "data/bss_0064_mixed.h"

@@ -4,7 +4,7 @@
 #include "data/bss_0054.h"
 
 typedef struct W8Node { u8 pad[8]; struct W8Node *next; u8 pad2[10]; u8 x16; u8 p17; f32 x18; } W8Node;
-extern W8Node *D_0052EB58;
+extern W8Node *D_0052EB58; /* src/data/bss_0052.c: Snd *D_0052EB58 */
 void func_00150d70(void);
 extern s32 D_00304E3C;
 extern u8 D_0052EB50[], D_0052EB60[];
@@ -43,7 +43,7 @@ s32 func_00147240(s32, s32);
 void func_002675a8(void *, void *);
 void func_0011d1e0(s32, s32, void *, s32);
 W8S78 *func_001473a8(s32 a, s32 b, void *c);
-extern W8S78 D_00532B90[];
+extern W8S78 D_00532B90[]; /* src/data/bss_0053.c: Ent32 D_00532B90[128] */
 typedef struct { u8 pad[0x34]; s32 x34; } W8Y2;
 typedef struct { u8 pad[0x18]; W8Y2 *x18; } W8Y1;
 typedef struct { u8 pad[0x14c]; W8Y1 *x14c; } W8Y;
@@ -55,8 +55,8 @@ typedef struct { u8 pad[0x8]; f32 *x8; W8Fc *xc; u8 pad10[0x14 - 0x10]; u32 x14;
 typedef struct { u8 pad[0x2c]; f32 x2c; } W8F2c;
 typedef struct { f32 m[4][4]; W8O60 sub; s32 x7c; s32 x80; W8F2c *x84; } W8Mdl;
 extern W8Mdl D_0054C120;
-extern W8O60 D_00547C00[];
-extern W8O60 *D_0054B800;
+extern W8O60 D_00547C00[]; /* src/data/bss_0054.c: W34Mdl3C D_00547C00[256] */
+extern W8O60 *D_0054B800; /* src/data/bss_0054.c: W34Mdl3C *D_0054B800 */
 void func_00147e08(W8O60 *, W8Mdl *);
 u8 *func_001623e0(s32);
 void sceVu0CopyMatrix(void *, void *);
@@ -88,9 +88,9 @@ extern s32 D_00350CE8[];
 typedef struct { u8 pad[88]; } W8E88;
 u8 *func_001477c8(s32 a);
 typedef struct { u32 x0; s32 x4; u8 pad8[4]; s32 xc; s32 x10; u8 pad14[0xc]; } W8E32;
-extern W8E32 D_0054C1B0[];
+extern W8E32 D_0054C1B0[]; /* src/data/bss_0054.c: Ent9c D_0054C1B0[0x3] */
 extern u32 D_0054C434;
-extern W8O60 D_0054C218[];
+extern W8O60 D_0054C218[]; /* src/data/bss_0054.c: W34E3C D_0054C218[0x9] */
 typedef struct { u8 pad[4]; s32 x4; s32 x8; u8 padc[4]; s32 x10; } W8Q;
 extern char D_0048E410[];
 extern s32 D_00350D10;
@@ -636,3 +636,5 @@ s32 func_00149678(void) {
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 extern u8 D_0048E408[];
 s32 D_00350D10 ALIGNED(16) = (s32)D_0048E408;
+#include "data/bss_0052_mixed.h"
+#include "data/bss_0054_mixed.h"

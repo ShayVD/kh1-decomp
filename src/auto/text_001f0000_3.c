@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern void *D_00640DD8;
+extern void *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
 
 void *func_001f4260(void) {
     void *temp_v0;

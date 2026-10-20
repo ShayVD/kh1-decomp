@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK func_002672f8();
-extern M2C_UNK D_004F6EC0;
+extern M2C_UNK D_004F6EC0; /* src/data/bss_004F.c: TPool D_004F6EC0 */
 extern M2C_UNK func_00122430;
 s32 func_0011f090(s32, s32, s32);
 s32 func_002675a8(s32, s32);

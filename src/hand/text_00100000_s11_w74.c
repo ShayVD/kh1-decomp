@@ -36,8 +36,8 @@ extern Flags D_002BC0A8;
 extern s32 D_00494AA0[32];
 extern s32 D_00494B20[32];
 extern s32 D_00494BA0, D_00494BA4;
-extern Ent *D_00494BA8;
-extern Pt *D_00494BAC;
+extern Ent *D_00494BA8; /* src/data/bss_0049.c: Ent16 *D_00494BA8 */
+extern Pt *D_00494BAC; /* src/data/bss_0049.c: Ent32 *D_00494BAC */
 extern s32 D_00494BB0;
 
 void func_00107548(f32 (*mtx)[4], Src *src) {
@@ -155,3 +155,4 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
     func_001220b8(z0);
     func_001220b8(w);
 }
+#include "data/bss_0049_mixed.h"

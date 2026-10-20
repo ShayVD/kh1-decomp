@@ -456,15 +456,7 @@ void func_00144958(B3Ob *o, f32 *v) {
     func_00144810(o, v);
 }
 
-typedef struct {
-    f32 x0[4];
-    f32 x10[4];
-    f32 x20, x24;
-    s32 x28, x2c;
-    u32 x30;
-    u8 pad34[0x40 - 0x34];
-    f32 x40[4];
-} B3Col;
+#include "data/types/nostrict_text_00130000_b03.h"
 typedef struct {
     u8 pad0[0x10];
     union {
@@ -834,7 +826,7 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
 }
 
 typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
-extern B3Pj D_0052EB60[];
+extern B3Pj D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
 extern B3PjE D_0035C710[];
 extern f32 *D_00531B68;
 extern f32 D_002C58D0[4];
@@ -1038,3 +1030,5 @@ call:
 end:;
 }
 
+#include "data/bss_0053_mixed.h"
+#include "data/bss_0053_typed.h"

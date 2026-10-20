@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK D_006627E0[0x58] ALIGNED(32);
-extern s32 D_00662A30;
+extern s32 D_00662A30; /* src/data/bss_0066.c: E860 D_00662A30[10] */
 s32 sceGsSyncPath(s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00237018(s32, s32, s32);
 void func_002370c8(s32);

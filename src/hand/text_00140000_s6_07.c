@@ -160,7 +160,7 @@ void func_00153e80(A3e80 *a) {
 typedef struct { s8 id; u8 n; u8 x2; u8 x3; u8 pad[0x44 - 4]; s32 x44; } E5878;
 typedef struct { u8 pad[0x1c]; s32 off; s32 end; u8 rest[0x40000 - 0x24]; } R5878;
 extern s32 D_002C5958;
-extern E5878 D_00550400[];
+extern E5878 D_00550400[]; /* src/data/bss_0055.c: E550400 D_00550400[0x34] */
 extern R5878 D_00FE0000[];
 void func_00146928(s32);
 void func_00146b90(void *, s32, s32, s32);

@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK func_001ed000(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-extern s32 D_00633640;
+extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 
 s32 func_001ed520(s32 arg0) {
     func_001ed000(0xD, arg0, 0, 0, 0, 0, 0, 0);

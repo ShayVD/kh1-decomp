@@ -175,7 +175,7 @@ void func_0023a490(s32 a0, Btn *b, s32 x, s32 y, f32 f) {
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 typedef struct { s32 x, y, z, w; } __attribute__((aligned(16))) I4;
 typedef struct { u8 pad0[4]; f32 t; u8 pad8[8]; u8 sub[0xC8]; s32 d8[2]; } Ob;
-extern Spr6 D_00651210;
+extern Spr6 D_00651210; /* src/data/bss_0065.c: Pkt D_00651210 */
 extern s32 D_00651200;
 extern f32 D_002BBDFC;
 extern u8 D_002E26C0[];
@@ -218,10 +218,10 @@ s32 func_0023c270(Ob *o) {
     return 0;
 }
 
-extern void *D_006512F0;
-extern void *D_006512F4;
-extern void *D_006512F8;
-extern void *D_006512FC;
+extern void *D_006512F0; /* src/data/bss_0065.c: u8 *D_006512F0 */
+extern void *D_006512F4; /* src/data/bss_0065.c: u8 *D_006512F4 */
+extern void *D_006512F8; /* src/data/bss_0065.c: u8 *D_006512F8 */
+extern void *D_006512FC; /* src/data/bss_0065.c: u8 *D_006512FC */
 
 void func_0023c5c8(s32 *d, s32 kind, s32 show) {
     I4 sc;
@@ -549,3 +549,4 @@ s32 func_0023dd48(Obj *g, s32 buf) {
     }
     return buf;
 }
+#include "data/bss_0064_mixed.h"

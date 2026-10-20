@@ -8,7 +8,7 @@ typedef struct { void *obj; u8 pad4[0x178]; s32 sp; s32 stk[100]; } Sub;
 typedef struct { s32 x0; Sub s; } VM;
 typedef struct { f32 x, y, z; } V3;
 typedef struct { u8 pad0[0x10]; V3 pos; } O10;
-extern V3 *D_0062A428;
+extern V3 *D_0062A428; /* src/data/bss_0062.c: u8 D_0062A428[0x8] */
 
 s32 func_001df9c0(VM *vm) {
     O10 *o = vm->s.obj;

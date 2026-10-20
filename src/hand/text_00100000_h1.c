@@ -83,7 +83,7 @@ extern f32 D_00494898;
 extern f32 D_004948A0[4];
 extern f32 D_00494A74;
 extern Ent16 *D_00494BA8;
-extern Vec3 D_00494C00[];
+extern Vec3 D_00494C00[]; /* src/data/bss_0049.c: V3 D_00494C00[0x20] */
 
 /* ---- functions ---- */
 void func_00101bb8(void);
@@ -486,3 +486,4 @@ void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
     o->w120 = D_0048C690.w24;
     o->w124 = D_0048C690.w28;
 }
+#include "data/bss_0049_mixed.h"

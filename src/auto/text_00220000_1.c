@@ -74,3 +74,4 @@ void func_00229820(void) {
     D_006436D0 = 0;
     D_00643708 = 0;
 }
+#include "data/bss_0064_mixed.h"

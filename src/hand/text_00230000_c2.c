@@ -7,7 +7,7 @@ extern u8 D_002C5AD0[];
 extern s32 D_00647780, D_00647784, D_00647788;
 extern s32 D_0064778C, D_00647790, D_00647794;
 extern s32 D_00647798, D_0064779C;
-extern s32 D_006477A4;
+extern s32 D_006477A4; /* src/data/bss_0064.c: f32 D_006477A4 */
 void func_002336d8(void);
 
 void func_00233610(void) {

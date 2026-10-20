@@ -18,7 +18,7 @@ extern M2C_UNK D_002C58B0;
 extern M2C_UNK D_002E31B0;
 extern M2C_UNK D_00351B60;
 extern M2C_UNK D_00351B88;
-extern M2C_UNK D_0054F970;
+extern M2C_UNK D_0054F970; /* src/data/bss_0054.c: u8 D_0054F970[0x10] */
 M2C_UNK D_0054F980[0x2a0] ALIGNED(64);
 extern M2C_UNK D_00551608;
 extern M2C_UNK func_00150660;
@@ -31,7 +31,7 @@ extern M2C_UNK func_00156188;
 extern f32 D_002BBDFC;
 extern s32 D_00350CE0;
 extern s32 D_005516E8;
-extern s8 D_00550400;
+extern s8 D_00550400; /* src/data/bss_0055.c: E550400 D_00550400[0x34] */
 extern s8 D_00FE0000;
 extern u8 D_002E3190;
 extern volatile s32 D_00351BC0;

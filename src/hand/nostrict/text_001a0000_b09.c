@@ -12,7 +12,7 @@ typedef struct { FdShape *shape; s32 unk4; } FdShapeEnt;
 typedef struct { u32 flags; u8 pad04[0x12]; u16 unk16; } MfMdl;
 typedef struct { s32 pad0[7]; MfMdl *mdl; s32 unk20; } MfSlot;
 typedef struct { u8 pad00[0x10]; MfSlot *slots; FdShapeEnt *shapes; } PppSys9;
-extern PppSys9 *D_00615E64;
+extern PppSys9 *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern volatile s32 D_00616224;
 
 typedef struct {
@@ -313,7 +313,7 @@ typedef struct {
 } C5Obj;
 typedef struct { C5Obj *obj; u32 col; PppMtx *m; f32 xc; f32 x10; f32 *x14; } C5Arg;
 
-extern f32 D_00575A00;
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern f32 D_00615FF8;
 extern f32 D_00615FC0[4][4];
 void sceVu0CopyMatrix(PppMtx, void *);

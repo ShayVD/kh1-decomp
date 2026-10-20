@@ -51,16 +51,16 @@ static inline s32 inl_00168318(u32 *p) {
 
 typedef struct { u32 flags; u8 pad[0x140]; s32 w144; } ObjBD40;
 typedef struct Node57 { s32 id; s32 mask; s32 (*cb)(ObjBD40 *, s32, s32, s32); s32 arg; struct Node57 *next; } Node57;
-extern Node57 *D_00575780;
-extern Node57 *D_00575784;
+extern Node57 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
+extern Node57 *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
 extern ObjBD40 *D_0035BD40[];
 
 extern ObjBD40 *D_002E26A0[];
 extern s32 func_00122ff8(ObjBD40 *);
 extern void func_0016f3d0(ObjBD40 *, s32);
 typedef struct { s32 a, b; } P8;
-extern P8 D_00575310[];
-extern Node57 D_00575528[];
+extern P8 D_00575310[]; /* src/data/bss_0057.c: TalkEA D_00575310 */
+extern Node57 D_00575528[]; /* src/data/bss_0057.c: Node6F D_00575528[30] */
 
 extern u32 D_002C5958;
 extern f32 D_0048E9EC;

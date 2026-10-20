@@ -40,7 +40,7 @@ s32 func_001cdcb8(VM *vm) {
 
 /* func_001ecc68: early `return G;` duplicated before the call (crossjump) */
 extern s32 D_003E3C80;
-extern s32 D_00633640;
+extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 void func_001ed000(s32, u8 *, s32, s32, s32, s32, s32, s32);
 
 s32 func_001ecc68(u8 *p, s32 a, s32 b, s32 c) {
@@ -155,3 +155,4 @@ void func_0024d1c8(s16 *src, s32 a, s32 b, s32 c) {
     D_0046A53C = 0;
     func_001f31a8(D_0046A5E0, 1);
 }
+#include "data/bss_0066_mixed.h"

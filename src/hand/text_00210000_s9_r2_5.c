@@ -268,3 +268,4 @@ void func_00219f98(void *a) {
             func_001fc308(a, 335, y, 0, 0, 15, 0, 0x80808080, 0x80808080);
     }
 }
+#include "data/bss_0064_mixed.h"

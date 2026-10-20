@@ -149,12 +149,7 @@ void func_0015ad08(Aad08 *a) {
 }
 
 
-typedef  struct Nea98 {
-    u16 x0;
-    u8 pad2[6];
-    struct Nea98 *x8;
-    s32 (*volatile xc)(struct Nea98 *);
-} Nea98;
+#include "data/types/nostrict_text_00140000_s6_07.h"
 Nea98 *D_00551D80 ALIGNED(16);
 volatile s32 D_00559DB8 ALIGNED(8);
 extern volatile s32 D_00559DB4;
@@ -181,9 +176,8 @@ s32 func_0015ea98(void) {
 }
 
 
-typedef struct { u8 pad[8]; Nea98 *x8; s32 xc; u8 buf[0x4000]; } Beb78;
 extern Beb78 D_00551D90[];
-extern Beb78 * D_00559DB0;
+extern Beb78 * D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
 volatile s32 D_00559DBC ALIGNED(4);
 extern  s32 D_00351BD0;
 void func_002583e0(s32);
@@ -266,7 +260,7 @@ typedef struct {
     GifTag gif;
     u64 ad[18];
 } Pk2;
-extern DmaTag D_00573AC0;
+extern DmaTag D_00573AC0; /* src/data/bss_0057.c: u8 D_00573AC0[0x10] */
 extern Pk1 D_00573AD0[7];
 extern Pk2 D_00573E40;
 
@@ -326,3 +320,4 @@ void func_0015f128(void) {
     D_00573E40.ad[16] = 5;
     D_00573E40.ad[17] = 8;
 }
+#include "data/bss_0055_typed.h"

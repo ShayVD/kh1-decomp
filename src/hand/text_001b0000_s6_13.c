@@ -29,10 +29,9 @@ typedef struct {
     char name[32];
     u8 pad84[12];
 } Out;
-typedef struct { u8 b0, b1, b2, b3, b4, b5, b6, b7, b8; u8 pad9[7]; } Ent;
+#include "data/types/text_001b0000_s6_13.h"
 typedef struct { u8 pad[4]; u8 type; u8 pad5[2]; u8 b7; u8 pad8[5]; u8 b13; u8 pad14[10]; f32 f24; } ItemInfo;
-typedef struct { u8 pad[0xF70]; } CdEnt;
-extern CdEnt *D_006257D0;
+extern CdEnt *D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 extern CdEnt D_00621320, D_00622290;
 extern Out D_00623E40[];
 extern s32 D_00625640, D_00625648[], D_00623E30, D_00623228;

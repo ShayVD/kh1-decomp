@@ -17,7 +17,7 @@ typedef struct { u8 pad[0x10]; Mtx4 m; Mtx4 m2; u8 *x90; s32 x94; } PppMtxOwner;
 extern PppMtxOwner *D_00615E68;
 typedef struct { s16 a; s16 n; u16 *list; } Grp;
 typedef struct { u8 pad0[0x10]; Ent24 *x10; AnEnt *anims; Grp *grps; } PppRes;
-extern PppRes *D_00615E64;
+extern PppRes *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 typedef struct { f32 x, y, z, w; } FV4;
 extern FV4 D_003701D0;
 
@@ -168,7 +168,7 @@ void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     l->intensity = k->f10;
 }
 
-extern FV4 D_00615F70;
+extern FV4 D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 void func_00267530(FV4 *, FV4 *, FV4 *);
 
 typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x38]; } MbPart;
@@ -282,7 +282,7 @@ void func_002675a8(f32 *, void *);
 void func_002672f8(f32 *, void *, f32 *);
 extern u8 D_006161C0[];
 extern u8 D_00615EB0[];
-extern f32 D_00616040[4][4];
+extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 typedef struct { u8 pad[0xe0]; f32 mul; f32 add; } RkKey;
 typedef struct {
@@ -711,3 +711,4 @@ void func_001a9790(s32 id, u16 *col, s32 h, s32 x, s32 y, u8 fl, void *p) {
     c.w34 = D_00616224;
     D_00616224 = func_001aaf88(md, &c, s->x20);
 }
+#include "data/bss_0057_mixed.h"

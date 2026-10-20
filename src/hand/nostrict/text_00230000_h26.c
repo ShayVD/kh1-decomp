@@ -54,3 +54,4 @@ void func_0024b1f0(void) {
     s32 i;
     for (i = 0; i < 8; i++) D_00669A18[i] = 0;
 }
+#include "data/bss_0066_mixed.h"

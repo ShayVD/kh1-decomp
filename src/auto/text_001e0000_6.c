@@ -31,8 +31,8 @@ extern s32 D_003DC488;
 extern s32 D_003DC490;
 extern s32 D_003E8E2C;
 extern s32 D_0062F6D0;
-extern s32 D_00633640;
-extern s8 D_0062F810;
+extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
+extern s8 D_0062F810; /* src/data/bss_0062.c: u8 D_0062F810[0x30] */
 extern void *D_003F34B8;
 s32 func_0010e3f0(s32);
 s32 func_00147840(s32);

@@ -400,3 +400,4 @@ s32 func_001ddf98(VM *vm) {
     if ((s32)(D_0038CD00 >> 44) & 1) return 4;
     return 2;
 }
+#include "data/bss_0062_mixed.h"

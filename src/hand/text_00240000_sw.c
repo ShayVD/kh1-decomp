@@ -6,14 +6,13 @@ typedef struct {
     V12 v;
     s32 unk10;
 } Mgr;
-typedef struct { u8 pad[0x9C]; s32 unk9C; } UiObj;
-typedef struct { UiObj *p; u8 pad[0x1C]; } UiEnt;
+#include "data/types/text_00240000_sw.h"
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pkt;
 extern Mgr D_00669700;
 extern UiEnt D_00669760[3];
 Pkt D_006694B0 ALIGNED(16);
 QW *D_00669614 ALIGNED(4);
-extern QW *D_00669610;
+extern QW *D_00669610; /* src/data/bss_0066.c: Q4 *D_00669610 */
 extern QW D_00351E10[];
 extern u8 D_004267C0[];
 extern u8 D_004267F0[];

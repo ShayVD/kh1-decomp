@@ -17,7 +17,7 @@ extern M2C_UNK D_0045E1B8;
 extern M2C_UNK D_0045E1C0;
 extern M2C_UNK D_0045E1C8;
 extern M2C_UNK D_0045E1E0;
-extern M2C_UNK D_00668370;
+extern M2C_UNK D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
 extern M2C_UNK func_00246aa8;
 extern s32 D_006561D0;
 extern s32 D_00669700;

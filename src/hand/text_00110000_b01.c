@@ -212,8 +212,8 @@ extern s32 D_002C1370;
 extern s32 D_003F34A4;
 extern s32 D_002C1360;
 extern s32 D_002C1384;
-extern V4_01 D_004E3A20;
-extern V4_01 D_004E3A30;
+extern V4_01 D_004E3A20; /* src/data/bss_004E.c: V4 D_004E3A20 */
+extern V4_01 D_004E3A30; /* src/data/bss_004E.c: V4 D_004E3A30 */
 s32 func_00104f10(f32 *, V4_01);
 s32 func_00119fc0(f32 *, V4_01, V4_01, V4_01, f32 *);
 s32 func_00119ad8(s32, f32 *, V4_01, V4_01, V4_01, f32 *);
@@ -302,10 +302,10 @@ typedef struct { s32 a, b; } Pr01;
 extern s32 D_004E3A18;
 extern s32 D_004E3A1C;
 extern s32 D_004E3A40;
-extern Pr01 D_004E39F8[];
-extern Sl01 *D_004E3454;
+extern Pr01 D_004E39F8[]; /* src/data/bss_004E.c: Pair D_004E39F8[0x4] */
+extern Sl01 *D_004E3454; /* src/data/bss_004E.c: Slot12 *D_004E3454 */
 extern s32 D_004E344C;
-extern Snd01 *D_004E3450;
+extern Snd01 *D_004E3450; /* src/data/bss_004E.c: SndSlot *D_004E3450 */
 void func_0011dc28(Snd01 *, s32 *, s32 *);
 void func_0011dba0(s32 *, s32 *, s32, s32);
 void func_0011dc98(Snd01 *);

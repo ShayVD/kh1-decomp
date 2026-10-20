@@ -244,3 +244,5 @@ void func_0010c5c8(u64 *p, s32 mode, s32 psm) {
     case 3: *p = (u64)(tbp + 1) << 37 | 0x2000000665423800; break;
     }
 }
+#include "data/bss_0049_mixed.h"
+#include "data/bss_004D_mixed.h"

@@ -19,7 +19,7 @@ M2C_UNK sceGsSetDefLoadImage(void *, s32, u32, u8, s32, s32, s16, s16);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_003701D0;
 extern M2C_UNK D_003701F0;
-extern M2C_UNK D_00575A00;
+extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern M2C_UNK D_00615E70;
 s32 func_001aab98(s32, s32, s32, s32, s32, s32, s32, s32, f32, f32, f32, f32, f32, f32, f32, f32);
 

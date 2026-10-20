@@ -4,7 +4,7 @@ typedef struct { u8 pad[0x32]; u8 x32; } B32;
 extern s32 D_003F34C0;
 extern s32 D_003F34C8;
 extern s32 D_00641BA8;
-extern B32 *D_00641BB0;
+extern B32 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
 extern s32 D_00641BE0[];
 extern s32 D_00641BF0[];
 extern s32 D_00641C04;

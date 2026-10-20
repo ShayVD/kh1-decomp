@@ -134,3 +134,4 @@ void func_0024be88(void *a0)
     if (snd == 2) func_0011d768(3);
     if (snd == 3) func_0011d768(2);
 }
+#include "data/bss_0066_mixed.h"

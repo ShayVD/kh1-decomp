@@ -365,7 +365,7 @@ s32 func_001eced0(s32 id) {
     return 0;
 }
 
-extern s8 D_0063F640[];
+extern s8 D_0063F640[]; /* src/data/bss_0063.c: u8 D_0063F640[256] */
 s32 func_001ecf40(s8 *dst) {
     s32 i;
     s8 *p;

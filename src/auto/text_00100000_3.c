@@ -29,8 +29,8 @@ extern s32 D_00494A90;
 extern s32 D_00494A94;
 extern s32 D_00495188;
 extern s32 D_00495260;
-extern s32 D_004D5B00;
-extern s32 D_004D5B08;
+extern s32 D_004D5B00; /* src/data/bss_004D.c: u32 D_004D5B00 */
+extern s32 D_004D5B08; /* src/data/bss_004D.c: u32 D_004D5B08 */
 extern void *D_002A6238;
 extern volatile s32 D_002C5968;
 extern volatile s32 D_00495258;

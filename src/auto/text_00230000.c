@@ -11,7 +11,7 @@ M2C_UNK func_0023dd48();
 extern s32 D_003F7A64;
 extern s32 D_003F7E94;
 extern s32 D_0044A820;
-extern s32 D_00646A10;
+extern s32 D_00646A10; /* src/data/bss_0064.c: void *D_00646A10 */
 extern s32 D_00647650;
 extern s32 D_00647654;
 extern s32 D_00647658;

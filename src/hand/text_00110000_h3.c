@@ -72,23 +72,10 @@ typedef struct {
 extern Ent2458 D_004E2458[];
 
 /* Sound-slot table: D_004E344C entries of 24 bytes at *D_004E3450. */
-typedef struct {
-    s32 id;
-    s32 x4;
-    s32 x8;
-    s32 handle;
-    s32 x10;
-    u8 active;
-    u8 x15;
-    u8 kind;
-    u8 x17;
-} SndSlot;
+#include "data/types/text_00110000_h3.h"
 extern s32 D_004E344C;
 extern SndSlot *D_004E3450;
 extern SndSlot D_004E3458[];
-typedef struct {
-    s32 x0, x4, x8;
-} Slot12;
 extern Slot12 *D_004E3454;
 extern void (*D_004E3430)(void);
 extern s32 D_004E2430[64][16];
@@ -467,3 +454,4 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
     *a1 += a2;
     func_0011db50(a0, a1);
 }
+#include "data/bss_004E_typed.h"

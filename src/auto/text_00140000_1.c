@@ -8,3 +8,4 @@ void *func_00147840();
 s32 func_00147860(void) {
     return D_00547BA4 + (M2C_FIELD(func_00147840(), s16 *, 6) * 0x16);
 }
+#include "data/bss_0054_mixed.h"

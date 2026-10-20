@@ -6,8 +6,8 @@ M2C_UNK *func_001ba9d8(s32);
 M2C_UNK func_001ba108(M2C_UNK *, s32);
 M2C_UNK func_001bcd10(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_001bd880(M2C_UNK *);
-extern M2C_UNK D_00621320;
-extern M2C_UNK D_00622290;
+extern M2C_UNK D_00621320; /* src/data/bss_0062.c: CdEnt D_00621320 */
+extern M2C_UNK D_00622290; /* src/data/bss_0062.c: CdEnt D_00622290 */
 extern s32 D_0037A16C;
 s32 func_001ba3f0(M2C_UNK);
 s32 func_001ba980();

@@ -159,7 +159,7 @@ typedef struct {
     s32 n[4];   /* +0x0 */
     Row r[3];   /* +0x10 */
 } Grid;
-extern Grid D_00656510;
+extern Grid D_00656510; /* src/data/bss_0065.c: Tbl D_00656510 */
 
 void func_002444a0(void) {
     s32 i, j;
@@ -202,7 +202,7 @@ void func_00245280(s32 id, s32 arg) {
 
 /* Ten 0x860-byte channels: a free one, else the oldest. */
 typedef struct { s32 used; s32 age; u8 pad8[0x860 - 8]; } Snd;
-extern Snd D_00662A30[10];
+extern Snd D_00662A30[10]; /* src/data/bss_0066.c: E860 D_00662A30[10] */
 
 Snd *func_002457c8(void) {
     Snd *best = 0;
@@ -229,7 +229,7 @@ void func_002458e0(void) {
 typedef struct { u8 pad[0x4C]; u16 unk4C; } Info;
 typedef struct { u8 pad[0x130]; Info *unk130; } Act;
 typedef struct { s32 a, b, c, d; } Q4;
-extern Q4 D_00668040[2];
+extern Q4 D_00668040[2]; /* src/data/bss_0066.c: u8 D_00668040[0x20] */
 s32 func_0013daa8(s32);
 
 Q4 *func_00245f58(Act *a) {
@@ -310,7 +310,7 @@ s32 func_002474a8(void) {
 typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; } Mdl;
 extern s32 D_006693B0[8];
 extern s32 D_00669390[8];
-extern s32 D_006693D0[7];
+extern s32 D_006693D0[7]; /* src/data/bss_0066.c: u8 D_006693D0[0x20] */
 u8 D_006692C0[0x18] ALIGNED(16);
 void func_002474e8(s32, void *, s32, s32, f32);
 void func_002476a0(Mdl *);
@@ -450,7 +450,7 @@ void func_0024aa48(void *a, Tag *t, Src *s) {
 /* Runs func_0024e0f0 with the globals at 0x0046A03C..0x0046A048 loaded from a
  * parameter block; the ones at +0x40 and +0x48 are restored after. */
 typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;
-extern Prm *D_00669A18[8];
+extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A03C, D_0046A040, D_0046A044, D_0046A048;
 void func_0024e0f0(s32, s32, s32);
 void func_0024b228(s32 i, s32 a, s32 b, s32 c) {
