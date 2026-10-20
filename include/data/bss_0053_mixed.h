@@ -7,6 +7,7 @@
 #include "common.h"
 
 extern f32 *D_00531B68;
+extern s32 D_00532B80;
 extern u8 D_00533BA0[];
 
 #endif /* KH1_DATA_BSS_0053_MIXED_H */

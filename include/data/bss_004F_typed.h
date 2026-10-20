@@ -10,6 +10,7 @@
 #include "data/types/text_00110000_h4.h"
 #include "data/types/text_00110000_h53.h"
 #include "data/types/text_00120000_h31.h"
+#include "data/types/text_00120000_h5.h"
 
 extern Block D_004F45B0[];
 extern Block *D_004F6DB0;
@@ -21,5 +22,6 @@ extern E7810 *D_004F7810;
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 extern D6 D_004F8270[];
+extern Node D_004F8310[64];
 
 #endif /* KH1_DATA_BSS_004F_TYPED_H */
