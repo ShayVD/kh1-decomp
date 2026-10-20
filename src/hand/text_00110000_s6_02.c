@@ -434,3 +434,4 @@ void func_00116628(Ent628 *e) {
     e->x3e = -1;
     e->x3a = -1;
 }
+#include "data/data_0029.h"

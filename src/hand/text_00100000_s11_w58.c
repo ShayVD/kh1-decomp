@@ -192,3 +192,4 @@ s32 func_00102118(Task2 *t) {
     func_00106bd8(D_002A45C0, 0x15f96 + k);
     return 0;
 }
+#include "data/data_0029.h"

@@ -281,3 +281,4 @@ void func_0011e8a0(s32 arg0, s32 arg1, s32 arg2) {
     func_0011cbe0(1, arg2, D_002C137C, &func_0011e7f8);
 }
 #include "data/bss_004D_mixed.h"
+#include "data/data_002A.h"

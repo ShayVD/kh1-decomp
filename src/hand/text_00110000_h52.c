@@ -829,3 +829,4 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
     return rs[bi];
 }
 #include "data/bss_004D_typed.h"
+#include "data/data_002A.h"

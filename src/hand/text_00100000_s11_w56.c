@@ -40,3 +40,4 @@ void func_00105d88(u8 *h) {
         }
     }
 }
+#include "data/data_002A.h"

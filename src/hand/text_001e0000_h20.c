@@ -570,3 +570,4 @@ s32 func_001e8de8(VM *vm) {
     return 2;
 }
 #include "data/bss_0062_typed.h"
+#include "data/data_0029.h"

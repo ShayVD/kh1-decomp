@@ -246,3 +246,5 @@ void func_00107120(s32 *k, u32 *v, s32 n, s32 w) {
     func_00107120(k, v, cnt, w);
     func_00107120(lk + 1, lv + w, n - cnt - 1, w);
 }
+#include "data/data_0029.h"
+#include "data/data_002A.h"

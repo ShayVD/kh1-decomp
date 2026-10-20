@@ -224,3 +224,4 @@ void func_0010f8a0(void) {
 void func_0010f8b8(void) {
     D_004D5B08 = D_002C5968;
 }
+#include "data/data_002A.h"

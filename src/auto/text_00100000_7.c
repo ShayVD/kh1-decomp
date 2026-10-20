@@ -64,3 +64,4 @@ void func_00104678(void) {
     D_002A626C = D_002A62E4;
     D_002A62EC = 1;
 }
+#include "data/data_002A.h"

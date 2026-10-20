@@ -272,3 +272,4 @@ void func_0010f8d0(s32 arg0) {
 void func_0010fd18(void) {
     func_0010fce8(D_002BC128, D_002BC130);
 }
+#include "data/data_002A.h"

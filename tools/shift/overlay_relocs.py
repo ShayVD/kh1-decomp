@@ -171,6 +171,10 @@ class Main:
             for m in re.finditer(r"PROVIDE\(D_[0-9A-Fa-f]{8} = 0x([0-9a-f]{8})\)", symld.read_text()):
                 self.cf.refs.add(int(m.group(1), 16))
         self.blob = FDR.Blob(self.image, self.load)
+        # Variables an object defines (C, or src/data/*.s pieces; out/gen/data.tsv): a target
+        # inside one is named by it, so the fixup follows it when SHIFT_FLOAT moves it.
+        self.vars = sorted((a, a + sz, n) for a, n, _o, sz, _r in K.load_data_placements())
+        self.var_starts = [v[0] for v in self.vars]
 
     def func_of(self, v: int) -> K.Func | None:
         i = bisect.bisect_right(self.starts, v) - 1
@@ -193,6 +197,9 @@ class Main:
             f = self.layout[i]
             note = "" if v == f.addr else ("inside" if v < f.end else "padding")
             return f"__dr_{f.addr:08x}", v - f.addr, note
+        i = bisect.bisect_right(self.var_starts, v) - 1
+        if k in ("data", "bss") and i >= 0 and v < self.vars[i][1]:
+            return self.vars[i][2], v - self.vars[i][0], ""
         if k == "data":
             return "D_BLOB", v - DATA_LO, ""
         return "D_BSS", v - BSS_LO, ""

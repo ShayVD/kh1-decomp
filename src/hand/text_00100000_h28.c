@@ -1015,3 +1015,5 @@ void func_00100670(u32 arg0, s32 arg1) {
 }
 
 #include "data/bss_0049_typed.h"
+#include "data/data_0029.h"
+#include "data/data_002A.h"

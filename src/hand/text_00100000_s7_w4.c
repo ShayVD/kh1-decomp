@@ -141,3 +141,4 @@ typedef struct {
 s32 func_0011e368(s32, s32);
 
 s32 func_001e8da0(VM2 *vm) { s32 r = func_0011e368(vm->stk[vm->sp - 1], vm->stk[vm->sp]); if (r != 0) return r = 4; return 2; }
+#include "data/data_002A.h"

@@ -742,3 +742,4 @@ void func_00132c70(s32 a0, void (*cb)(void)) {
     D_00525354 = (Ent17 *)D_00525298.base;
     func_00132a78(0);
 }
+#include "data/data_0029.h"

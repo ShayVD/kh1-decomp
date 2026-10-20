@@ -470,3 +470,4 @@ s32 func_001d74b8(VM *vm) {
     vm->sp -= 1;
     return 2;
 }
+#include "data/data_002A.h"

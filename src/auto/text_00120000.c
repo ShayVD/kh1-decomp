@@ -518,3 +518,4 @@ s32 func_0012ffd0(void *arg0) {
     return var_v0;
 }
 #include "data/bss_0051_mixed.h"
+#include "data/data_0029.h"
