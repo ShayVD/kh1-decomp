@@ -652,3 +652,4 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
 #include "data/bss_0049_mixed.h"
 #include "data/data_002B.h"
 #include "data/data_0035.h"
+#include "data/data_0048.h"

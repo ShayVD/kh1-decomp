@@ -1,4 +1,4 @@
-/* Shared data names 003Fxxxx as pieces of the user's ELF (phase 4, step 4;
+/* Data names 003Fxxxx as pieces of the user's ELF (phase 4, step 4;
  * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
  * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
  * the ELF at build time: no game bytes are in the repo. Declarations: the header
@@ -19,6 +19,29 @@
 	PIECE D_003F2BD4, 0x4, 4
 	PIECE D_003F2BD8, 0x68, 8  /* untyped: element size does not divide the extent */
 	PIECE D_003F2C40, 0x10, 16  /* untyped: users disagree: E20 D_003F2C40[] | M2C_UNK D_003F2C40 | S2C40 D_003F2C40[] | s8 D_003F2C40 */
+	PIECE D_003F2C50, 0x4, 4
+	PIECE D_003F2C54, 0x258, 4
+	PIECE D_003F2EAC, 0x64, 4
+	PIECE D_003F2F10, 0x78, 8
+	PIECE D_003F2F88, 0x28, 8
+	PIECE D_003F2FB0, 0x28, 8
+	PIECE D_003F2FD8, 0x38, 8
+	PIECE D_003F3010, 0x40, 16
+	PIECE D_003F3050, 0x100, 16  /* untyped: type B64 is not a common.h basic type */
+	PIECE D_003F3150, 0x28, 8
+	PIECE D_003F3178, 0x28, 8
+	PIECE D_003F31A0, 0x8, 8
+	PIECE D_003F31A8, 0x8, 8
+	PIECE D_003F31B0, 0x10, 16
+	PIECE D_003F31C0, 0x10, 16
+	PIECE D_003F31E0, 0x10, 16
+	PIECE D_003F31F0, 0x10, 16
+	PIECE D_003F3258, 0x28, 8
+	PIECE D_003F32A8, 0x20, 8
+	PIECE D_003F3308, 0x28, 8
+	PIECE D_003F3358, 0x18, 8
+	PIECE D_003F3398, 0x10, 8
+	PIECE D_003F33A8, 0x18, 8
 	PIECE_BEGIN D_003F3448, 0x20, 8  /* untyped: users disagree: s32 D_003F3448[] | u8 *D_003F3448[] */
 	.word D_003F33F0
 	.word D_003F33C0
@@ -53,21 +76,26 @@
 	PIECE D_003F34FC, 0x4, 4
 	PIECE D_003F3500, 0x4, 4
 	PIECE D_003F3504, 0x4, 4
+	PIECE D_003F3508, 0x4, 4
 	PIECE D_003F350C, 0x4, 4
 	PIECE D_003F3510, 0x4, 4
 	PIECE D_003F3514, 0x4, 4
 	PIECE D_003F3518, 0x4, 4
 	PIECE D_003F351C, 0x4, 4
 	PIECE D_003F3520, 0x10, 16
+	PIECE D_003F37A0, 0xd0, 16
 	PIECE D_003F3870, 0x10, 16
 	PIECE_BEGIN D_003F38E0, 0x30, 16
 	.word func_0020da00
 	PIECE_BYTES D_003F38E0, 0x4, 0x2c
 	PIECE_END D_003F38E0, 0x30
+	PIECE D_003F3940, 0x20, 16
+	PIECE D_003F3960, 0x20, 16
 	PIECE_BEGIN D_003F3980, 0x28, 8
 	.word func_0020e408
 	PIECE_BYTES D_003F3980, 0x4, 0x24
 	PIECE_END D_003F3980, 0x28
+	PIECE D_003F39A8, 0x18, 8
 	PIECE_BEGIN D_003F39C0, 0x30, 16
 	.word func_0020e588
 	PIECE_BYTES D_003F39C0, 0x4, 0x2c
@@ -109,10 +137,12 @@
 	.word func_00212c20
 	PIECE_BYTES D_003F3CC0, 0x4, 0x2c
 	PIECE_END D_003F3CC0, 0x30
+	PIECE D_003F3E18, 0x18, 8
 	PIECE_BEGIN D_003F3E90, 0x28, 8
 	.word func_00214590
 	PIECE_BYTES D_003F3E90, 0x4, 0x24
 	PIECE_END D_003F3E90, 0x28
+	PIECE D_003F3EB8, 0x18, 8
 	PIECE_BEGIN D_003F3ED0, 0x30, 16
 	.word func_002145d8
 	PIECE_BYTES D_003F3ED0, 0x4, 0x2c
@@ -125,6 +155,14 @@
 	.word func_002149f0
 	PIECE_BYTES D_003F3F30, 0x4, 0x2c
 	PIECE_END D_003F3F30, 0x30
+	PIECE D_003F4050, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F4068, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F4080, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F4098, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F40A8, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F40C0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F40D0, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F40E8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_003F40F8, 0x50, 8  /* untyped: type PN is not a common.h basic type */
 	PIECE_BYTES D_003F40F8, 0x0, 0x8
 	.word D_003F4050
@@ -144,6 +182,10 @@
 	.word D_003F40E8
 	PIECE_BYTES D_003F40F8, 0x4c, 0x4
 	PIECE_END D_003F40F8, 0x50
+	PIECE D_003F4148, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F4170, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F4198, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F41C0, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_003F41E8, 0x18, 8
 	.word D_003F4148
 	.word D_003F4170
@@ -154,6 +196,8 @@
 	PIECE D_003F4200, 0x168, 8
 	PIECE D_003F4368, 0x18, 8
 	PIECE D_003F4380, 0x28, 8
+	PIECE D_003F43A8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F43B8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_003F43C8, 0x28, 8
 	.word D_003F43A8
 	.word D_003F43B8
@@ -176,6 +220,7 @@
 	.word func_002163e0
 	PIECE_BYTES D_003F4460, 0x4, 0x24
 	PIECE_END D_003F4460, 0x28
+	PIECE D_003F4488, 0x18, 8
 	PIECE_BEGIN D_003F44A0, 0x28, 8
 	.word func_002165e0
 	PIECE_BYTES D_003F44A0, 0x4, 0x24
@@ -185,21 +230,79 @@
 	.word func_00216640
 	PIECE_BYTES D_003F44E0, 0x4, 0x24
 	PIECE_END D_003F44E0, 0x28
+	PIECE D_003F4508, 0x18, 8
+	PIECE D_003F45A8, 0x18, 8
+	PIECE D_003F46B0, 0x20, 16
+	PIECE D_003F4790, 0x8, 8
+	PIECE D_003F4798, 0x8, 8
+	PIECE D_003F47A0, 0x8, 8
 	PIECE D_003F47A8, 0x10, 8  /* untyped: users disagree: M2C_UNK D_003F47A8 | u8 D_003F47A8[] */
+	PIECE D_003F47B8, 0x38, 8
+	PIECE D_003F4818, 0x30, 8
+	PIECE D_003F4848, 0x30, 8
+	PIECE D_003F4878, 0x30, 8
+	PIECE D_003F48A8, 0x30, 8
+	PIECE D_003F48D8, 0x30, 8
+	PIECE D_003F4908, 0x10, 8
+	PIECE D_003F4918, 0x10, 8
+	PIECE D_003F4928, 0x20, 8
+	PIECE D_003F4948, 0x20, 8
+	PIECE D_003F4968, 0x20, 8
+	PIECE D_003F4988, 0x20, 8
+	PIECE D_003F49A8, 0x20, 8
+	PIECE D_003F49C8, 0x20, 8
+	PIECE D_003F49E8, 0x20, 8
+	PIECE D_003F4A08, 0x20, 8
+	PIECE D_003F4A28, 0x20, 8
+	PIECE D_003F4A78, 0x30, 8
+	PIECE D_003F4AA8, 0x68, 8  /* untyped: type P2_q0 is not a common.h basic type */
+	PIECE D_003F4BD0, 0x20, 16
+	PIECE D_003F4C18, 0x20, 8
+	PIECE D_003F4C38, 0x20, 8
+	PIECE D_003F4C58, 0x10, 8
+	PIECE D_003F4C68, 0x10, 8
+	PIECE D_003F4C78, 0x18, 8
 	PIECE D_003F4CF0, 0x338, 8  /* untyped: users disagree: Spr D_003F4CF0[] | Spr_q0 D_003F4CF0[] */
+	PIECE D_003F5028, 0xb8, 8
 	PIECE D_003F50E0, 0x2e0, 16  /* untyped: users disagree: s32 D_003F50E0[]; unparsed in 1 file(s) */
 	PIECE D_003F53C0, 0x2e0, 16
 	PIECE D_003F56A0, 0x170, 16
+	PIECE D_003F5810, 0x170, 16
+	PIECE D_003F5980, 0x10, 16
+	PIECE D_003F5990, 0x10, 16
 	PIECE D_003F59A0, 0x4, 4  /* untyped: users disagree: f32 D_003F59A0[] | u8 D_003F59A0[] */
 	PIECE D_003F59A4, 0xc, 4
 	PIECE D_003F59B0, 0x4, 4
 	PIECE D_003F59B4, 0x4, 4
 	PIECE D_003F59B8, 0x8, 8
+	PIECE D_003F59C0, 0x8, 8
+	PIECE D_003F59C8, 0x8, 8
 	PIECE D_003F59D0, 0x18, 8
+	PIECE D_003F5A18, 0x18, 8
+	PIECE D_003F5AE8, 0x48, 8
+	PIECE D_003F5B58, 0x48, 8
+	PIECE D_003F5BC8, 0x18, 8
 	PIECE D_003F5C18, 0x4, 4  /* untyped: users disagree: s32 D_003F5C18 | s32 D_003F5C18[] */
+	PIECE D_003F5C1C, 0x4, 4
+	PIECE D_003F5C20, 0x4, 4
+	PIECE D_003F5C24, 0x4, 4
+	PIECE D_003F5C28, 0x4, 4
+	PIECE D_003F5C2C, 0x4, 4
+	PIECE D_003F5C34, 0x4, 4
+	PIECE D_003F5C38, 0x4, 4
+	PIECE D_003F5C3C, 0x8, 4
+	PIECE D_003F5C44, 0xc, 4
+	PIECE D_003F5E00, 0x30, 16  /* untyped: type C16 is not a common.h basic type */
+	PIECE D_003F5E58, 0x8, 8
+	PIECE D_003F5F18, 0x18, 8
 	PIECE D_003F5FF0, 0x80, 16  /* untyped: users disagree: M2C_UNK D_003F5FF0 | s32 D_003F5FF0[] */
+	PIECE D_003F6070, 0x80, 16
 	PIECE D_003F61E0, 0x90, 16  /* untyped: users disagree: M2C_UNK D_003F61E0 | s32 D_003F61E0[] */
+	PIECE D_003F6360, 0x30, 16
 	PIECE D_003F6740, 0x18, 8
+	PIECE D_003F6758, 0x18, 8
+	PIECE D_003F6770, 0x18, 8
+	PIECE D_003F6788, 0x18, 8
 	PIECE D_003F6828, 0x18, 8
 	PIECE D_003F6840, 0x14, 4
 	PIECE D_003F6854, 0xc, 4
@@ -228,14 +331,20 @@
 	.word func_00224ee8
 	PIECE_BYTES D_003F6A70, 0x4, 0x2c
 	PIECE_END D_003F6A70, 0x30
+	PIECE D_003F6B28, 0x18, 8
+	PIECE D_003F6B98, 0x8, 8
+	PIECE D_003F6BC8, 0x8, 8
 	PIECE_BEGIN D_003F6BD0, 0x28, 8
 	.word func_00228078
 	PIECE_BYTES D_003F6BD0, 0x4, 0x24
 	PIECE_END D_003F6BD0, 0x28
+	PIECE D_003F6BF8, 0x8, 8
+	PIECE D_003F6C90, 0x10, 16
 	PIECE_BEGIN D_003F6CA0, 0x28, 8
 	.word func_00228760
 	PIECE_BYTES D_003F6CA0, 0x4, 0x24
 	PIECE_END D_003F6CA0, 0x28
+	PIECE D_003F6CC8, 0x18, 8
 	PIECE_BEGIN D_003F6CE0, 0x30, 16
 	.word func_002287f8
 	PIECE_BYTES D_003F6CE0, 0x4, 0x2c
@@ -244,6 +353,8 @@
 	.word func_00229088
 	PIECE_BYTES D_003F6D40, 0x4, 0x24
 	PIECE_END D_003F6D40, 0x28
+	PIECE D_003F6D68, 0x18, 8
+	PIECE D_003F6DA8, 0x18, 8
 	PIECE_BEGIN D_003F6E18, 0xc, 4  /* untyped: users disagree: s32 D_003F6E18[] | void *D_003F6E18[] */
 	.word D_003F6DF0
 	.word D_003F6DC0
@@ -257,32 +368,64 @@
 	.word func_002298e0
 	PIECE_BYTES D_003F6E40, 0x4, 0x2c
 	PIECE_END D_003F6E40, 0x30
+	PIECE D_003F6F58, 0x18, 8
+	PIECE D_003F6FC8, 0x8, 8
+	PIECE D_003F6FF8, 0x8, 8
 	PIECE_BEGIN D_003F7000, 0x28, 8
 	.word func_0022b3c8
 	PIECE_BYTES D_003F7000, 0x4, 0x24
 	PIECE_END D_003F7000, 0x28
+	PIECE D_003F7028, 0x8, 8
+	PIECE D_003F70E8, 0x18, 8
+	PIECE D_003F7128, 0x18, 8
+	PIECE D_003F71E0, 0x18, 8
+	PIECE D_003F71F8, 0x14, 4
 	PIECE D_003F720C, 0x4, 4
 	PIECE D_003F7210, 0x18, 8
+	PIECE D_003F7228, 0x8, 8
+	PIECE D_003F7230, 0x8, 8
 	PIECE D_003F7238, 0x8, 8  /* untyped: users disagree: s32 D_003F7238[] | u8 D_003F7238[] */
+	PIECE D_003F7240, 0x8, 8
+	PIECE D_003F7248, 0x8, 8
+	PIECE D_003F7308, 0x18, 8
 	PIECE D_003F73A4, 0xc, 4
+	PIECE D_003F7500, 0x10, 16
+	PIECE D_003F7598, 0x8, 8
+	PIECE D_003F7628, 0x8, 8
 	PIECE D_003F76B4, 0x4, 4
 	PIECE D_003F76B8, 0x4, 4
 	PIECE D_003F76BC, 0x4, 4
+	PIECE D_003F76C0, 0x50, 16
+	PIECE D_003F7710, 0x10, 16
 	PIECE D_003F7774, 0x4, 4
 	PIECE D_003F7778, 0x8, 8
 	PIECE D_003F7780, 0x10, 16
 	PIECE D_003F7790, 0x10, 16
 	PIECE D_003F77A0, 0x10, 16
 	PIECE D_003F77B0, 0x100, 16  /* untyped: users disagree: T78D8 D_003F77B0[8] | u8 D_003F77B0[8][32] */
+	PIECE D_003F78D8, 0x108, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_003F7A64, 0x4, 4
 	PIECE D_003F7A68, 0x8, 8  /* untyped: users disagree: s32 D_003F7A68; unparsed in 1 file(s) */
 	PIECE D_003F7A70, 0x1d8, 8  /* untyped: users disagree: E7A70 D_003F7A70[] | T7A70 D_003F7A70[] */
 	PIECE D_003F7C48, 0xc8, 8  /* untyped: users disagree: E6 D_003F7C48[] | E7C48 D_003F7C48[] | T7C48 D_003F7C48[] */
+	PIECE D_003F7D10, 0x20, 16
+	PIECE D_003F7D30, 0x10, 16
+	PIECE D_003F7D40, 0x10, 16
+	PIECE D_003F7D50, 0x10, 16
+	PIECE D_003F7D88, 0xe8, 8  /* untyped: type T7D88 is not a common.h basic type */
 	PIECE D_003F7E94, 0x4, 4
 	PIECE D_003F7E98, 0x8, 8
 	PIECE D_003F7EC4, 0x4, 4
 	PIECE D_003F7EC8, 0x8, 8
 	PIECE D_003F7ED0, 0x3c8, 8  /* untyped: users disagree: S7ED0 D_003F7ED0 | u8 D_003F7ED0[] */
+	PIECE D_003F8298, 0x10, 8
+	PIECE D_003F82A8, 0x28, 8  /* untyped: type Str82A8 is not a common.h basic type */
+	PIECE D_003F82D0, 0x20, 16
+	PIECE D_003F82F0, 0x20, 16
+	PIECE D_003F8310, 0x20, 16
+	PIECE D_003F8330, 0x20, 16
+	PIECE D_003F8350, 0x20, 16
+	PIECE D_003F8370, 0x10, 16
 	PIECE D_003F8380, 0xc00, 16  /* untyped: users disagree: u128 D_003F8380[] | u8 D_003F8380[] */
 	PIECE D_003F8F80, 0x1000, 16  /* untyped: users disagree: u128 D_003F8F80[] | u8 D_003F8F80[] */
 	PIECE D_003F9F80, 0x400, 16  /* untyped: users disagree: u128 D_003F9F80[] | u8 D_003F9F80[] */

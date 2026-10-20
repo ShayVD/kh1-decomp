@@ -435,3 +435,5 @@ void func_0011ea40(s32 n, char *out) {
     strcat(out, D_0048D198);
 }
 #include "data/bss_004F_mixed.h"
+#include "data/data_002C.h"
+#include "data/data_0048.h"

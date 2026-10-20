@@ -157,3 +157,4 @@ s32 func_0016bfe8(ObjB *o, WkB *w, s32 unused, s32 mode) {
     }
     return 1;
 }
+#include "data/data_0035.h"

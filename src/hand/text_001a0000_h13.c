@@ -562,3 +562,4 @@ s32 func_001bb260(s32 a) {
 #include "data/bss_0061_typed.h"
 #include "data/data_0037.h"
 #include "data/data_0048.h"
+#include "data/data_0049.h"

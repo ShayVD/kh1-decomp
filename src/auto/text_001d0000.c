@@ -1391,3 +1391,5 @@ s32 func_001dfe50(void *arg0) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/data_003F.h"
+#include "data/data_0038.h"
+#include "data/data_0042.h"

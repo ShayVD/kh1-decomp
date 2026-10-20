@@ -1,4 +1,4 @@
-/* Shared data names 002Axxxx as pieces of the user's ELF (phase 4, step 4;
+/* Data names 002Axxxx as pieces of the user's ELF (phase 4, step 4;
  * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
  * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
  * the ELF at build time: no game bytes are in the repo. Declarations: the header
@@ -9,7 +9,9 @@
 	PIECE D_002A3F20, 0x4, 4
 	PIECE D_002A3F24, 0x4, 4
 	PIECE D_002A3F28, 0x4, 4
+	PIECE D_002A3F2C, 0x4, 4
 	PIECE D_002A3F30, 0x4, 4  /* untyped: users disagree: s32 *D_002A3F30 | s32 D_002A3F30 */
+	PIECE D_002A3F34, 0x4, 4
 	PIECE D_002A3F38, 0x4, 4
 	PIECE D_002A3F3C, 0x4, 4  /* untyped: users disagree: Hdr *D_002A3F3C | s32 D_002A3F3C | void *D_002A3F3C */
 	PIECE D_002A3F40, 0x4, 4
@@ -18,6 +20,34 @@
 	PIECE D_002A3F50, 0x10, 16  /* untyped: users disagree: s32 D_002A3F50 | s32 D_002A3F50[2] | s32 D_002A3F50[] | volatile s32 D_002A3F50[] */
 	PIECE D_002A3F60, 0x100, 16  /* untyped: users disagree: F16 D_002A3F60[16] | f32 D_002A3F60[16][4] | s32 D_002A3F60[4][4][4] */
 	PIECE D_002A4060, 0x100, 16  /* untyped: users disagree: F16 D_002A4060[16] | V4f D_002A4060[16] | f32 D_002A4060[16][4] */
+	PIECE D_002A4160, 0x20, 16
+	PIECE D_002A4180, 0x20, 16
+	PIECE D_002A45D0, 0x80, 16
+	PIECE D_002A4650, 0x80, 16
+	PIECE D_002A4730, 0x20, 16
+	PIECE D_002A4750, 0x20, 16
+	PIECE D_002A4770, 0x20, 16
+	PIECE D_002A4790, 0x20, 16
+	PIECE D_002A47B0, 0x20, 16
+	PIECE D_002A47D0, 0x20, 16
+	PIECE D_002A47F0, 0x20, 16
+	PIECE D_002A4810, 0x20, 16
+	PIECE D_002A4830, 0x20, 16
+	PIECE D_002A4850, 0x20, 16
+	PIECE D_002A4870, 0x20, 16
+	PIECE D_002A4890, 0x20, 16
+	PIECE D_002A48B0, 0x20, 16
+	PIECE D_002A48D0, 0x30, 16
+	PIECE D_002A4F60, 0x60, 16
+	PIECE D_002A52B0, 0x30, 16
+	PIECE D_002A5CE0, 0x2f0, 16
+	PIECE D_002A5FE0, 0x30, 16
+	PIECE D_002A6058, 0x18, 8
+	PIECE D_002A6080, 0x10, 16
+	PIECE D_002A6090, 0x10, 16
+	PIECE D_002A60A0, 0x10, 16
+	PIECE D_002A60B0, 0x10, 16
+	PIECE D_002A60C0, 0x10, 16
 	PIECE D_002A6178, 0x68, 8
 	PIECE D_002A61F0, 0x4, 4
 	PIECE D_002A61F4, 0x4, 4
@@ -81,6 +111,10 @@
 	PIECE D_002A6308, 0x10, 8  /* untyped: users disagree: IVec3 D_002A6308 | s32 D_002A6308[3] */
 	PIECE D_002A6318, 0xc, 4  /* untyped: users disagree: IVec3 D_002A6318 | s32 D_002A6318[3] */
 	PIECE D_002A6324, 0xc, 4  /* untyped: users disagree: Grid *D_002A6324 | s32 D_002A6324 */
+	PIECE D_002A6330, 0x1d0, 16  /* untyped: type GsRegs is not a common.h basic type */
+	PIECE D_002A6658, 0x238, 8
+	PIECE D_002A68A0, 0xc0, 16
+	PIECE D_002A6970, 0x60, 16
 	PIECE D_002A6B80, 0x4, 4
 	PIECE D_002A6B84, 0x8c, 4
 	PIECE D_002A6C10, 0x40, 16  /* untyped: users disagree: f32 D_002A6C10[] | s32 D_002A6C10[4][4] */

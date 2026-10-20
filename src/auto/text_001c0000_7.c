@@ -10,3 +10,4 @@ extern M2C_UNK func_001ca9f8;
 void func_001caa20(void) {
     func_0010ef70(&D_0062A130, &D_003C5808, &func_001ca9f8);
 }
+#include "data/data_003C.h"

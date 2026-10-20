@@ -426,3 +426,4 @@ s32 func_00240400(Ga *e, s32 buf) {
     }
     return buf;
 }
+#include "data/data_0045.h"

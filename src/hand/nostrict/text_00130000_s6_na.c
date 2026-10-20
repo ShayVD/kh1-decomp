@@ -168,3 +168,4 @@ s32 func_00137330(Ob7 *o, s32 a, s32 b) {
 }
 
 #include "data/data_002E.h"
+#include "data/data_0036.h"

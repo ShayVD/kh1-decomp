@@ -692,3 +692,4 @@ char *D_002C6460[0xb] ALIGNED(16) = {
 #include "data/data_002C.h"
 #include "data/data_002E.h"
 #include "data/data_0049.h"
+#include "data/data_0048.h"

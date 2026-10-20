@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared data names as per-symbol pieces of the user's ELF (phase 4, step 4).
+"""Data names as per-symbol pieces of the user's ELF (phase 4, step 4).
 
   python3 -I tools/shift/define_pieces.py [--owners out/shift/data_owners.tsv]
                                           [--verdict shared] [--name D_X ...]
@@ -267,7 +267,7 @@ def apply(plans) -> None:
             have[name] = piece_lines(addr, name, ext, header, why, words)
         body = [ln for n in sorted(have, key=lambda n: int(n[2:], 16)) for ln in have[n]]
         src.write_text("\n".join([
-            f"/* Shared data names {mod[5:]}xxxx as pieces of the user's ELF (phase 4, step 4;",
+            f"/* Data names {mod[5:]}xxxx as pieces of the user's ELF (phase 4, step 4;",
             " * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an",
             " * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from",
             " * the ELF at build time: no game bytes are in the repo. Declarations: the header",
@@ -283,7 +283,7 @@ def apply(plans) -> None:
         guard = f"KH1_DATA_{mod.upper()}_H"
         m2c = any(re.search(r"\bM2C_UNK", ln) for ln in decls)
         hdr.write_text("\n".join([
-            f"/* Shared data names {mod[5:]}xxxx: pieces of the user's ELF defined in",
+            f"/* Data names {mod[5:]}xxxx: pieces of the user's ELF defined in",
             f" * src/data/{mod}.s (phase 4, tools/shift/define_pieces.py). Only names whose",
             " * C users agree on the type are declared here; users include this at their end. */",
             f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"',

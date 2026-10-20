@@ -460,3 +460,4 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/data_0035.h"
+#include "data/data_0048.h"

@@ -41,3 +41,4 @@ void func_00243a90(void) {
   }
 }
 
+#include "data/data_0045.h"

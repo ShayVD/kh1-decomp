@@ -502,3 +502,4 @@ void func_002407b0(u8 *e, s32 k) {
     func_0024ae00(*(void **)(e + 0x9C));
 }
 #include "data/data_0046.h"
+#include "data/data_0045.h"

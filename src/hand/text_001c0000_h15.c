@@ -409,3 +409,4 @@ s32 func_001cdf00(VM *vm) {
     return 2;
 }
 #include "data/data_002B.h"
+#include "data/data_003C.h"

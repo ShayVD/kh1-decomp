@@ -813,3 +813,4 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
     (s32)D_00491060, (s32)D_00491048, (s32)D_00491030, 0,
 };
 #include "data/data_003F.h"
+#include "data/data_0049.h"

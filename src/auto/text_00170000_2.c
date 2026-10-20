@@ -71,3 +71,4 @@ void func_0017f910(M2C_UNK *arg0, s32 arg1) {
     D_0061622C = &D_00575E40;
     D_00616230 = 0x20000;
 }
+#include "data/data_0036.h"

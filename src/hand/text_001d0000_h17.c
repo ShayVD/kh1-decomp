@@ -472,3 +472,4 @@ s32 func_001d74b8(VM *vm) {
 }
 #include "data/data_002A.h"
 #include "data/data_002E.h"
+#include "data/data_0038.h"

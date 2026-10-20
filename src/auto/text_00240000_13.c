@@ -14,3 +14,4 @@ s32 func_0024b178(void *arg0) {
    wide = M2C_FIELD(arg0, u8 *, 1);
     return wide + (M2C_FIELD(arg0, u8 *, 4) << 0x18) + ((M2C_FIELD(arg0, u8 *, 3) << 0x10) + (M2C_FIELD(arg0, u8 *, 2) << 8));
 }
+#include "data/data_0049.h"

@@ -221,3 +221,4 @@ void func_00218218(Obj *a) {
     }
 }
 #include "data/bss_0064_mixed.h"
+#include "data/data_003F.h"

@@ -177,3 +177,4 @@ s32 func_0012dd38(void) {
     }
     return *(M2C_UNK *)var_a0;
 }
+#include "data/data_002E.h"

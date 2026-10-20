@@ -44,3 +44,4 @@ void func_0015dcc8(void *arg0, M2C_UNK *arg1) {
     func_00267370(arg1, &D_00351BB0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
     func_002673b8(arg1, arg1);
 }
+#include "data/data_0035.h"

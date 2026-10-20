@@ -80,3 +80,4 @@ int func_0023d1e0(float x)
     return x / 0.7853981f; /* original constant is 0x3F490FD9 */
 }
 #include "data/bss_004D_mixed.h"
+#include "data/data_0038.h"

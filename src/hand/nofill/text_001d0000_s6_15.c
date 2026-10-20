@@ -196,3 +196,4 @@ s32 func_001e0528(VM *vm) {
     vm->sp--;
     return 2;
 }
+#include "data/data_003D.h"

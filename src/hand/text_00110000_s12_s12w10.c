@@ -58,3 +58,4 @@ void func_001137f8(void) {
     *(volatile u64 *)0x12000070 = 0x11b0;
     *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;
 }
+#include "data/data_002B.h"

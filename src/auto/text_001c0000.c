@@ -222,3 +222,4 @@ s32 func_001cfa78(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
     return 2;
 }
+#include "data/data_0038.h"

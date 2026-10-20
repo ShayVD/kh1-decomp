@@ -63,3 +63,4 @@ s32 func_001c0310(s32 prio, void *fn, ...) {
     D_0037A16C[n].q16 = 0;
     return n;
 }
+#include "data/data_0049.h"

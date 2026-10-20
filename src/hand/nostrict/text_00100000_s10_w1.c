@@ -184,3 +184,4 @@ void func_0010a780(Win *win, void *a1, u128 *buf, s32 a3, s32 mode) {
     }
 }
 
+#include "data/data_002B.h"

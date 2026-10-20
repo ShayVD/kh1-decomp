@@ -1,4 +1,4 @@
-/* Shared data names 002Axxxx: pieces of the user's ELF defined in
+/* Data names 002Axxxx: pieces of the user's ELF defined in
  * src/data/data_002A.s (phase 4, tools/shift/define_pieces.py). Only names whose
  * C users agree on the type are declared here; users include this at their end. */
 #ifndef KH1_DATA_DATA_002A_H
@@ -10,9 +10,39 @@
 extern s32 D_002A3F20;
 extern s32 D_002A3F24;
 extern s32 D_002A3F28;
+extern s32 D_002A3F2C;
+extern s32 D_002A3F34;
 extern s32 D_002A3F38;
 extern s32 D_002A3F40;
 extern s32 D_002A3F44;
+extern u8 D_002A4160[];
+extern u8 D_002A4180[];
+extern s32 D_002A45D0[];
+extern s32 D_002A4650[];
+extern u8 D_002A4730[];
+extern u8 D_002A4750[];
+extern u8 D_002A4770[];
+extern u8 D_002A4790[];
+extern u8 D_002A47B0[];
+extern u8 D_002A47D0[];
+extern u8 D_002A47F0[];
+extern u8 D_002A4810[];
+extern u8 D_002A4830[];
+extern u8 D_002A4850[];
+extern u8 D_002A4870[];
+extern u8 D_002A4890[];
+extern u8 D_002A48B0[];
+extern u8 D_002A48D0[];
+extern volatile u64 D_002A4F60[];
+extern u64 D_002A52B0[];
+extern u8 D_002A5CE0[];
+extern u8 D_002A5FE0[];
+extern u64 D_002A6058;
+extern f32 D_002A6080[4];
+extern f32 D_002A6090[4];
+extern f32 D_002A60A0[4];
+extern f32 D_002A60B0[4];
+extern f32 D_002A60C0[4];
 extern u64 D_002A6178;
 extern s32 D_002A61F0;
 extern s32 D_002A61F4;
@@ -48,6 +78,9 @@ extern s32 D_002A62E8;
 extern s32 D_002A62EC;
 extern s32 D_002A62F0;
 extern u16 D_002A62F8[];
+extern u64 D_002A6658;
+extern u64 D_002A68A0[];
+extern u64 D_002A6970[];
 extern s32 D_002A6B80;
 extern s32 D_002A6B84;
 extern s32 D_002A6C50;

@@ -1,4 +1,4 @@
-/* Shared data names 003Exxxx as pieces of the user's ELF (phase 4, step 4;
+/* Data names 003Exxxx as pieces of the user's ELF (phase 4, step 4;
  * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
  * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
  * the ELF at build time: no game bytes are in the repo. Declarations: the header
@@ -9,11 +9,24 @@
 	PIECE D_003E3CB0, 0x8, 8
 	PIECE D_003E3CB8, 0x18, 8
 	PIECE D_003E3CF8, 0x28, 8  /* untyped: users disagree: M2C_UNK D_003E3CF8 | s32 D_003E3CF8[] */
+	PIECE D_003E3D20, 0x28, 8
+	PIECE D_003E3D48, 0x10, 8
+	PIECE D_003E3D58, 0x10, 8
 	PIECE D_003E3D68, 0x4, 4  /* untyped: users disagree: int D_003E3D68 | s32 D_003E3D68 | u32 D_003E3D68 | unsigned int D_003E3D68 */
 	PIECE D_003E3D6C, 0x4, 4  /* untyped: users disagree: s32 D_003E3D6C | u32 D_003E3D6C */
 	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
 	PIECE D_003E3E50, 0x808, 8  /* untyped: users disagree: M2C_UNK D_003E3E50 | RecE0 D_003E3E50[] */
+	PIECE D_003E4660, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4668, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4670, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4678, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4680, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4688, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4690, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E4698, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003E46A0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_003E5ED8, 0x2a36, 2  /* untyped: users disagree: M2C_UNK D_003E5ED8 | u8 D_003E5ED8[] */
+	PIECE D_003E890E, 0x2, 2
 	PIECE_BEGIN D_003E8CD0, 0x8, 8  /* untyped: type Glyph is not a common.h basic type */
 	.word D_003E46B8
 	PIECE_BYTES D_003E8CD0, 0x4, 0x4
@@ -32,6 +45,7 @@
 	PIECE_END D_003E8CD8, 0x28
 	PIECE D_003E8D00, 0x4, 4
 	PIECE D_003E8D04, 0x24, 4  /* untyped: users disagree: s32 D_003E8D04[]; unparsed in 1 file(s) */
+	PIECE D_003E8D28, 0x18, 8
 	PIECE D_003E8D40, 0xc0, 16
 	PIECE D_003E8E00, 0x4, 4
 	PIECE D_003E8E04, 0x4, 4

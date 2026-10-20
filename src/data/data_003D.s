@@ -1,18 +1,23 @@
-/* Shared data names 003Dxxxx as pieces of the user's ELF (phase 4, step 4;
+/* Data names 003Dxxxx as pieces of the user's ELF (phase 4, step 4;
  * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
  * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
  * the ELF at build time: no game bytes are in the repo. Declarations: the header
  * include/data/data_003D.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
+	PIECE D_003D97E0, 0x800, 16
 	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[] */
 	PIECE D_003DABD4, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD4 | Tbl *D_003DABD4 | s32 D_003DABD4 */
+	PIECE D_003DABD8, 0x68, 8  /* untyped: element size does not divide the extent */
+	PIECE D_003DAC40, 0x60, 16
 	PIECE D_003DACA0, 0x10, 16  /* untyped: users disagree: Tbl *D_003DACA0 | s32 D_003DACA0 */
 	PIECE D_003DACB0, 0x4, 4
 	PIECE D_003DACB4, 0x4, 4
 	PIECE D_003DACB8, 0x4, 4
 	PIECE D_003DACBC, 0x4, 4
+	PIECE D_003DACCC, 0x4, 4
 	PIECE D_003DACD0, 0x8, 8
+	PIECE D_003DACD8, 0x60, 8
 	PIECE D_003DAD38, 0x4, 4
 	PIECE D_003DAD3C, 0x4, 4  /* untyped: users disagree: f32 D_003DAD3C | s32 D_003DAD3C */
 	PIECE D_003DAD40, 0x4, 4
@@ -29,11 +34,38 @@
 	.word D_003DAF70
 	PIECE_BYTES D_003DB050, 0x8, 0x8
 	PIECE_END D_003DB050, 0x10
+	PIECE D_003DB060, 0x4, 4
+	PIECE D_003DB064, 0x8, 4
+	PIECE D_003DB06C, 0x4, 4
+	PIECE D_003DB070, 0x8, 8
+	PIECE D_003DB078, 0x6a0, 8  /* untyped: type E212 is not a common.h basic type */
+	PIECE D_003DB718, 0x350, 8  /* untyped: type E212 is not a common.h basic type */
 	PIECE D_003DBA68, 0x300, 8  /* untyped: users disagree: M2C_UNK D_003DBA68 | u8 D_003DBA68[] */
+	PIECE D_003DBD68, 0x300, 8
+	PIECE D_003DC068, 0x40, 8
+	PIECE D_003DC0A8, 0x40, 8
+	PIECE D_003DC0E8, 0x40, 8
+	PIECE D_003DC128, 0x80, 8
+	PIECE D_003DC1A8, 0x40, 8
+	PIECE D_003DC1E8, 0x40, 8
+	PIECE D_003DC228, 0x40, 8
+	PIECE D_003DC268, 0x40, 8
 	PIECE D_003DC2A8, 0x10, 8  /* untyped: users disagree: char D_003DC2A8[] | u8 D_003DC2A8[] */
+	PIECE D_003DC2C8, 0x18, 8
+	PIECE D_003DC2E0, 0x18, 8
+	PIECE D_003DC2F8, 0x20, 8
+	PIECE D_003DC318, 0x20, 8
+	PIECE D_003DC338, 0x20, 8
+	PIECE D_003DC358, 0x10, 8
 	PIECE D_003DC368, 0x8, 8
 	PIECE D_003DC370, 0x10, 16  /* untyped: users disagree: char D_003DC370[] | u8 D_003DC370[] */
+	PIECE D_003DC380, 0x10, 16
 	PIECE D_003DC390, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003DC390 | u8 D_003DC390[] */
+	PIECE D_003DC3C0, 0x10, 16
+	PIECE D_003DC3D0, 0x38, 8
+	PIECE D_003DC408, 0x20, 8
+	PIECE D_003DC428, 0x38, 8
+	PIECE D_003DC460, 0x8, 8
 	PIECE D_003DC468, 0x8, 8
 	PIECE D_003DC470, 0x4, 4
 	PIECE D_003DC474, 0x4, 4
@@ -47,12 +79,25 @@
 	PIECE D_003DC494, 0x4, 4
 	PIECE D_003DCB10, 0x80, 16  /* untyped: users disagree: char D_003DCB10[][32] | u8 D_003DCB10[][32] */
 	PIECE D_003DCB90, 0x180, 16  /* untyped: users disagree: char D_003DCB90[] | char D_003DCB90[][32] */
+	PIECE D_003DCD10, 0x60, 16
 	PIECE D_003DCD70, 0x80, 16  /* untyped: users disagree: M2C_UNK D_003DCD70 | u8 D_003DCD70[] */
+	PIECE D_003DCDF0, 0x40, 16
+	PIECE D_003DCE30, 0x40, 16
+	PIECE D_003DCE70, 0x40, 16
+	PIECE D_003DCEB0, 0x40, 16
+	PIECE D_003DCFF0, 0x40, 16
+	PIECE D_003DD030, 0x40, 16
+	PIECE D_003DD070, 0x140, 16
+	PIECE D_003DD1B0, 0x28, 8
+	PIECE D_003DD1D8, 0x18, 8
+	PIECE D_003DD1F0, 0x20, 16
 	PIECE D_003DD210, 0x10, 16
+	PIECE D_003DD220, 0x10, 16
 	PIECE D_003DD230, 0x8, 8  /* untyped: users disagree: char D_003DD230[] | u8 D_003DD230[] */
 	PIECE D_003DD238, 0x8, 8
 	PIECE D_003DD240, 0x8, 8
 	PIECE D_003DD248, 0x8, 8
+	PIECE D_003DD250, 0x8, 8
 	PIECE D_003DD258, 0x4, 4  /* untyped: users disagree: s32 D_003DD258; unparsed in 1 file(s) */
 	PIECE D_003DD25C, 0x4, 4
 	PIECE D_003DD260, 0x4, 4
@@ -65,7 +110,11 @@
 	PIECE D_003DD284, 0x4, 4
 	PIECE D_003DD288, 0x4, 4
 	PIECE D_003DD28C, 0x4, 4  /* untyped: users disagree: s32 D_003DD28C; unparsed in 1 file(s) */
+	PIECE D_003DD290, 0x60, 16
+	PIECE D_003DD2F0, 0x18, 8
 	PIECE D_003DD308, 0x4, 4
 	PIECE D_003DD30C, 0x4, 4
 	PIECE D_003DD310, 0x4, 4
 	PIECE D_003DD314, 0x4, 4
+	PIECE D_003DD318, 0x4, 4
+	PIECE D_003DD31C, 0x4, 4
