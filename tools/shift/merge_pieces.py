@@ -18,6 +18,14 @@ bytes that were no piece get theirs from data_relocs.tsv, as define_pieces.py
 variable C defines or a compiled rodata block. Absorbed pieces leave their
 module; their header declarations stay (a label is declared like a variable).
 
+--group D_X:SIZE merges the pieces from D_X through D_X + SIZE into one piece whatever the
+declarations say (a record the runtime showed is one object: session 20's object/table records,
+the staging arena). --split does the same for every chain split_check.py reports (adjacent
+pieces cut at a non-16-aligned boundary with a .word pointing at one of them), from the chain's
+first piece to the end of its last, so the pair floats as one object instead of staying in place.
+With either, only those groups are merged. The plan reads out/gen/data.tsv (placed
+variables) from the last `make`: run `make` after each --apply before planning the next.
+
 Without --apply only the plan is printed. Nothing here reads game bytes."""
 from __future__ import annotations
 
@@ -94,10 +102,31 @@ def piece_text(p: Piece) -> list[str]:
     return out
 
 
+def split_chains(mods) -> dict[str, int]:
+    """split_check.py's pairs as whole objects: each maximal run of adjacent pieces whose inner
+    boundaries are not 16-aligned, when a .word points at one of them -> (first piece, run size)."""
+    pointed = {e.split("+")[0].strip("() ") for _h, ps in mods.values() for p in ps for _o, e in p.words}
+    out: dict[str, int] = {}
+    for _h, ps in mods.values():
+        ps = sorted(ps, key=lambda q: q.addr)
+        i = 0
+        while i < len(ps):
+            j = i
+            while j + 1 < len(ps) and ps[j].addr + ps[j].size == ps[j + 1].addr and ps[j + 1].addr % 16:
+                j += 1
+            run = ps[i:j + 1]
+            if j > i and any(q.name in pointed or any(n in pointed for _o, n in q.labels) for q in run):
+                out[ps[i].name] = ps[j].addr + ps[j].size - ps[i].addr
+            i = j + 1
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--owners", default=str(ROOT / "out/shift/data_owners.tsv"))
     ap.add_argument("--name", action="append", default=[])
+    ap.add_argument("--group", action="append", default=[], metavar="D_X:SIZE")
+    ap.add_argument("--split", action="store_true")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
     owners = Path(a.owners)
@@ -113,6 +142,13 @@ def main() -> int:
     for src in sorted((ROOT / "src/data").glob("data_*.s")):
         mods[src.stem] = read_module(src)
     pieces = {p.name: (mod, p) for mod, (_h, ps) in mods.items() for p in ps}
+    if a.group or a.split:
+        big = {}
+        for g in a.group:
+            n, sz = g.split(":")
+            big[n] = int(sz, 0)
+        if a.split:
+            big.update(split_chains(mods))
     blocks = DP.placed_blocks()  # (start, end, what): variables and compiled rodata
     names = {}  # every D_ name data_owners.py knows, by address
     for ln in owners.read_text().splitlines()[1:]:
@@ -155,7 +191,8 @@ def main() -> int:
         for n in inner:
             _mod, q = pieces[n]
             d = q.addr - x
-            p.labels.append((d, n))
+            if n != name:  # the group's first piece is the merged piece itself
+                p.labels.append((d, n))
             p.labels += [(d + o, ln) for o, ln in q.labels]
             p.words += [(d + o, e) for o, e in q.words]
             covered.append((q.addr, q.addr + q.size))

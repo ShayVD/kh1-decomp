@@ -40,28 +40,33 @@
 	.word func_0020c070
 	PIECE_BYTES D_003F3200, 0x4, 0x2c
 	PIECE_END D_003F3200, 0x30
-	PIECE_BEGIN D_003F3230, 0x28, 8
+	PIECE_BEGIN D_003F3230, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3230, D_003F3258 */
 	.word func_0020c150
 	PIECE_BYTES D_003F3230, 0x4, 0x24
-	PIECE_END D_003F3230, 0x28
-	PIECE D_003F3258, 0x28, 8
-	PIECE_BEGIN D_003F3280, 0x28, 8
+	PIECE_LABEL D_003F3230, D_003F3258, 0x28
+	PIECE_BYTES D_003F3230, 0x28, 0x28
+	PIECE_END D_003F3230, 0x50
+	PIECE_BEGIN D_003F3280, 0x48, 8  /* untyped: merged (a user declares it larger than the next name): D_003F3280, D_003F32A8 */
 	.word func_0020c168
 	PIECE_BYTES D_003F3280, 0x4, 0x24
-	PIECE_END D_003F3280, 0x28
-	PIECE D_003F32A8, 0x20, 8
+	PIECE_LABEL D_003F3280, D_003F32A8, 0x28
+	PIECE_BYTES D_003F3280, 0x28, 0x20
+	PIECE_END D_003F3280, 0x48
 	PIECE D_003F3308, 0x28, 8
-	PIECE_BEGIN D_003F3330, 0x28, 8
+	PIECE_BEGIN D_003F3330, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3330, D_003F3358 */
 	.word func_0020c1c8
 	PIECE_BYTES D_003F3330, 0x4, 0x24
-	PIECE_END D_003F3330, 0x28
-	PIECE D_003F3358, 0x18, 8
-	PIECE_BEGIN D_003F3370, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_LABEL D_003F3330, D_003F3358, 0x28
+	PIECE_BYTES D_003F3330, 0x28, 0x18
+	PIECE_END D_003F3330, 0x40
+	PIECE_BEGIN D_003F3370, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3370, D_003F3398, D_003F33A8 */
 	.word func_0020ca68
 	PIECE_BYTES D_003F3370, 0x4, 0x24
-	PIECE_END D_003F3370, 0x28
-	PIECE D_003F3398, 0x10, 8
-	PIECE D_003F33A8, 0x18, 8
+	PIECE_LABEL D_003F3370, D_003F3398, 0x28
+	PIECE_BYTES D_003F3370, 0x28, 0x10
+	PIECE_LABEL D_003F3370, D_003F33A8, 0x38
+	PIECE_BYTES D_003F3370, 0x38, 0x18
+	PIECE_END D_003F3370, 0x50
 	PIECE_BEGIN D_003F33C0, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_0020ce78
 	PIECE_BYTES D_003F33C0, 0x4, 0x2c
@@ -284,50 +289,67 @@
 	.word func_00216078
 	PIECE_BYTES D_003F4020, 0x4, 0x2c
 	PIECE_END D_003F4020, 0x30
-	PIECE D_003F4050, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F4068, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F4080, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F4098, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F40A8, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_003F4050, 0x30, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4050, D_003F4068 */
+	PIECE_BYTES D_003F4050, 0x0, 0x18
+	PIECE_LABEL D_003F4050, D_003F4068, 0x18
+	PIECE_BYTES D_003F4050, 0x18, 0x18
+	PIECE_END D_003F4050, 0x30
+	PIECE_BEGIN D_003F4080, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4080, D_003F4098, D_003F40A8 */
+	PIECE_BYTES D_003F4080, 0x0, 0x18
+	PIECE_LABEL D_003F4080, D_003F4098, 0x18
+	PIECE_BYTES D_003F4080, 0x18, 0x10
+	PIECE_LABEL D_003F4080, D_003F40A8, 0x28
+	PIECE_BYTES D_003F4080, 0x28, 0x18
+	PIECE_END D_003F4080, 0x40
 	PIECE D_003F40C0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F40D0, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F40E8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_003F40F8, 0x50, 8  /* untyped: type PN is not a common.h basic type */
-	PIECE_BYTES D_003F40F8, 0x0, 0x8
+	PIECE_BEGIN D_003F40D0, 0xa0, 16  /* untyped: merged (a user declares it larger than the next name): D_003F40D0, D_003F40E8, D_003F40F8, D_003F4148 */
+	PIECE_BYTES D_003F40D0, 0x0, 0x18
+	PIECE_LABEL D_003F40D0, D_003F40E8, 0x18
+	PIECE_BYTES D_003F40D0, 0x18, 0x10
+	PIECE_LABEL D_003F40D0, D_003F40F8, 0x28
+	PIECE_BYTES D_003F40D0, 0x28, 0x8
 	.word D_003F4050
-	PIECE_BYTES D_003F40F8, 0xc, 0x4
+	PIECE_BYTES D_003F40D0, 0x34, 0x4
 	.word D_003F4068
-	PIECE_BYTES D_003F40F8, 0x14, 0x4
+	PIECE_BYTES D_003F40D0, 0x3c, 0x4
 	.word D_003F4080
-	PIECE_BYTES D_003F40F8, 0x1c, 0xc
+	PIECE_BYTES D_003F40D0, 0x44, 0xc
 	.word D_003F4098
-	PIECE_BYTES D_003F40F8, 0x2c, 0x4
+	PIECE_BYTES D_003F40D0, 0x54, 0x4
 	.word D_003F40A8
-	PIECE_BYTES D_003F40F8, 0x34, 0x4
+	PIECE_BYTES D_003F40D0, 0x5c, 0x4
 	.word D_003F40C0
-	PIECE_BYTES D_003F40F8, 0x3c, 0x4
+	PIECE_BYTES D_003F40D0, 0x64, 0x4
 	.word D_003F40D0
-	PIECE_BYTES D_003F40F8, 0x44, 0x4
+	PIECE_BYTES D_003F40D0, 0x6c, 0x4
 	.word D_003F40E8
-	PIECE_BYTES D_003F40F8, 0x4c, 0x4
-	PIECE_END D_003F40F8, 0x50
-	PIECE D_003F4148, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F4170, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F4198, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F41C0, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_003F41E8, 0x18, 8
+	PIECE_BYTES D_003F40D0, 0x74, 0x4
+	PIECE_LABEL D_003F40D0, D_003F4148, 0x78
+	PIECE_BYTES D_003F40D0, 0x78, 0x28
+	PIECE_END D_003F40D0, 0xa0
+	PIECE_BEGIN D_003F4170, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4170, D_003F4198 */
+	PIECE_BYTES D_003F4170, 0x0, 0x28
+	PIECE_LABEL D_003F4170, D_003F4198, 0x28
+	PIECE_BYTES D_003F4170, 0x28, 0x28
+	PIECE_END D_003F4170, 0x50
+	PIECE_BEGIN D_003F41C0, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F41C0, D_003F41E8 */
+	PIECE_BYTES D_003F41C0, 0x0, 0x28
+	PIECE_LABEL D_003F41C0, D_003F41E8, 0x28
 	.word D_003F4148
 	.word D_003F4170
 	.word D_003F4198
 	.word D_003F41C0
-	PIECE_BYTES D_003F41E8, 0x10, 0x8
-	PIECE_END D_003F41E8, 0x18
+	PIECE_BYTES D_003F41C0, 0x38, 0x8
+	PIECE_END D_003F41C0, 0x40
 	PIECE D_003F4200, 0x168, 8
 	PIECE D_003F4368, 0x18, 8
-	PIECE D_003F4380, 0x28, 8
-	PIECE D_003F43A8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003F43B8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_003F43C8, 0x28, 8
+	PIECE_BEGIN D_003F4380, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4380, D_003F43A8, D_003F43B8, D_003F43C8 */
+	PIECE_BYTES D_003F4380, 0x0, 0x28
+	PIECE_LABEL D_003F4380, D_003F43A8, 0x28
+	PIECE_BYTES D_003F4380, 0x28, 0x10
+	PIECE_LABEL D_003F4380, D_003F43B8, 0x38
+	PIECE_BYTES D_003F4380, 0x38, 0x10
+	PIECE_LABEL D_003F4380, D_003F43C8, 0x48
 	.word D_003F43A8
 	.word D_003F43B8
 	.word D_003F43B8
@@ -337,8 +359,8 @@
 	.word D_003F43A8
 	.word D_003F43A8
 	.word D_003F43A8
-	PIECE_BYTES D_003F43C8, 0x24, 0x4
-	PIECE_END D_003F43C8, 0x28
+	PIECE_BYTES D_003F4380, 0x6c, 0x4
+	PIECE_END D_003F4380, 0x70
 	PIECE D_003F43F0, 0x18, 8
 	PIECE D_003F4408, 0x28, 8
 	PIECE_BEGIN D_003F4430, 0x30, 16
@@ -850,27 +872,30 @@
 	PIECE_BYTES D_003F6D40, 0x4, 0x24
 	PIECE_END D_003F6D40, 0x28
 	PIECE D_003F6D68, 0x18, 8
-	PIECE_BEGIN D_003F6D80, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_003F6D80, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F6D80, D_003F6DA8 */
 	.word func_00229150
 	PIECE_BYTES D_003F6D80, 0x4, 0x24
-	PIECE_END D_003F6D80, 0x28
-	PIECE D_003F6DA8, 0x18, 8
+	PIECE_LABEL D_003F6D80, D_003F6DA8, 0x28
+	PIECE_BYTES D_003F6D80, 0x28, 0x18
+	PIECE_END D_003F6D80, 0x40
 	PIECE_BEGIN D_003F6DC0, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_00229220
 	PIECE_BYTES D_003F6DC0, 0x4, 0x2c
 	PIECE_END D_003F6DC0, 0x30
-	PIECE_BEGIN D_003F6DF0, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_003F6DF0, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F6DF0, D_003F6E18, D_003F6E24, D_003F6E28, D_003F6E2C */
 	.word func_002292a8
 	PIECE_BYTES D_003F6DF0, 0x4, 0x24
-	PIECE_END D_003F6DF0, 0x28
-	PIECE_BEGIN D_003F6E18, 0xc, 4  /* untyped: users disagree: s32 D_003F6E18[] | void *D_003F6E18[] */
+	PIECE_LABEL D_003F6DF0, D_003F6E18, 0x28
 	.word D_003F6DF0
 	.word D_003F6DC0
 	.word D_003F6D80
-	PIECE_END D_003F6E18, 0xc
-	PIECE D_003F6E24, 0x4, 4
-	PIECE D_003F6E28, 0x4, 4  /* untyped: users disagree: s32 D_003F6E28; unparsed in 1 file(s) */
-	PIECE D_003F6E2C, 0x4, 4
+	PIECE_LABEL D_003F6DF0, D_003F6E24, 0x34
+	PIECE_BYTES D_003F6DF0, 0x34, 0x4
+	PIECE_LABEL D_003F6DF0, D_003F6E28, 0x38
+	PIECE_BYTES D_003F6DF0, 0x38, 0x4
+	PIECE_LABEL D_003F6DF0, D_003F6E2C, 0x3c
+	PIECE_BYTES D_003F6DF0, 0x3c, 0x4
+	PIECE_END D_003F6DF0, 0x40
 	PIECE D_003F6E30, 0x10, 16
 	PIECE_BEGIN D_003F6E40, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003F6E40 | u8 D_003F6E40[] */
 	.word func_002298e0
@@ -1128,8 +1153,18 @@
 	PIECE D_003F8330, 0x20, 16
 	PIECE D_003F8350, 0x20, 16
 	PIECE D_003F8370, 0x10, 16
-	PIECE D_003F8380, 0xc00, 16  /* untyped: users disagree: u128 D_003F8380[] | u8 D_003F8380[] */
-	PIECE D_003F8F80, 0x1000, 16  /* untyped: users disagree: u128 D_003F8F80[] | u8 D_003F8F80[] */
-	PIECE D_003F9F80, 0x400, 16  /* untyped: users disagree: u128 D_003F9F80[] | u8 D_003F9F80[] */
-	PIECE D_003FA380, 0x400, 16  /* untyped: users disagree: u128 D_003FA380[] | u8 D_003FA380[] */
-	PIECE D_003FA780, 0x14000, 16  /* untyped: users disagree: u128 D_003FA780[] | u8 D_003FA780[] */
+	PIECE_BEGIN D_003F8380, 0x16c00, 16  /* untyped: merged (a user declares it larger than the next name): D_003F8380, D_003F8F80, D_003F9F80, D_003FA380, D_003FA780, D_0040E780, D_0040EB80 */
+	PIECE_BYTES D_003F8380, 0x0, 0xc00
+	PIECE_LABEL D_003F8380, D_003F8F80, 0xc00
+	PIECE_BYTES D_003F8380, 0xc00, 0x1000
+	PIECE_LABEL D_003F8380, D_003F9F80, 0x1c00
+	PIECE_BYTES D_003F8380, 0x1c00, 0x400
+	PIECE_LABEL D_003F8380, D_003FA380, 0x2000
+	PIECE_BYTES D_003F8380, 0x2000, 0x400
+	PIECE_LABEL D_003F8380, D_003FA780, 0x2400
+	PIECE_BYTES D_003F8380, 0x2400, 0x14000
+	PIECE_LABEL D_003F8380, D_0040E780, 0x16400
+	PIECE_BYTES D_003F8380, 0x16400, 0x400
+	PIECE_LABEL D_003F8380, D_0040EB80, 0x16800
+	PIECE_BYTES D_003F8380, 0x16800, 0x400
+	PIECE_END D_003F8380, 0x16c00

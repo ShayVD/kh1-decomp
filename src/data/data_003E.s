@@ -29,19 +29,37 @@
 	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
 	PIECE D_003E3E50, 0x808, 8  /* untyped: users disagree: M2C_UNK D_003E3E50 | RecE0 D_003E3E50[] */
 	PIECE D_003E4658, 0x8, 8
-	PIECE D_003E4660, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4668, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4670, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4678, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4680, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4688, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4690, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E4698, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E46A0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E46A8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E46B8, 0x1820, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003E5ED8, 0x2a36, 2  /* untyped: users disagree: M2C_UNK D_003E5ED8 | u8 D_003E5ED8[] */
-	PIECE D_003E890E, 0x2, 2
+	PIECE_BEGIN D_003E4660, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4660, D_003E4668 */
+	PIECE_BYTES D_003E4660, 0x0, 0x8
+	PIECE_LABEL D_003E4660, D_003E4668, 0x8
+	PIECE_BYTES D_003E4660, 0x8, 0x8
+	PIECE_END D_003E4660, 0x10
+	PIECE_BEGIN D_003E4670, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4670, D_003E4678 */
+	PIECE_BYTES D_003E4670, 0x0, 0x8
+	PIECE_LABEL D_003E4670, D_003E4678, 0x8
+	PIECE_BYTES D_003E4670, 0x8, 0x8
+	PIECE_END D_003E4670, 0x10
+	PIECE_BEGIN D_003E4680, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4680, D_003E4688 */
+	PIECE_BYTES D_003E4680, 0x0, 0x8
+	PIECE_LABEL D_003E4680, D_003E4688, 0x8
+	PIECE_BYTES D_003E4680, 0x8, 0x8
+	PIECE_END D_003E4680, 0x10
+	PIECE_BEGIN D_003E4690, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4690, D_003E4698 */
+	PIECE_BYTES D_003E4690, 0x0, 0x8
+	PIECE_LABEL D_003E4690, D_003E4698, 0x8
+	PIECE_BYTES D_003E4690, 0x8, 0x8
+	PIECE_END D_003E4690, 0x10
+	PIECE_BEGIN D_003E46A0, 0x4270, 16  /* untyped: merged (a user declares it larger than the next name): D_003E46A0, D_003E46A8, D_003E46B8, D_003E5ED8, D_003E890E */
+	PIECE_BYTES D_003E46A0, 0x0, 0x8
+	PIECE_LABEL D_003E46A0, D_003E46A8, 0x8
+	PIECE_BYTES D_003E46A0, 0x8, 0x10
+	PIECE_LABEL D_003E46A0, D_003E46B8, 0x18
+	PIECE_BYTES D_003E46A0, 0x18, 0x1820
+	PIECE_LABEL D_003E46A0, D_003E5ED8, 0x1838
+	PIECE_BYTES D_003E46A0, 0x1838, 0x2a36
+	PIECE_LABEL D_003E46A0, D_003E890E, 0x426e
+	PIECE_BYTES D_003E46A0, 0x426e, 0x2
+	PIECE_END D_003E46A0, 0x4270
 	PIECE D_003E8910, 0x3c0, 16
 	PIECE_BEGIN D_003E8CD0, 0x8, 8  /* untyped: type Glyph is not a common.h basic type */
 	.word D_003E46B8

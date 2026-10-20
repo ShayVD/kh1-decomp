@@ -18,36 +18,27 @@ D_0063F540
 D_00573AC0
 D_00573AD0
 #
-# A staging arena of seven buffers, D_003F8380 ... D_0040EB80 (0x16C00 bytes): func_00232ad0(-1)
-# clears all of it from D_003F8380 with one pointer walk (5824 qwords), func_00232ad0(0..6) clears
-# each part and the getter in text_00220000_h25.c hands out each part's address. reach_check sees the
-# walk as unbounded and keeps only the next name. With the four 0x400-byte parts floated (data budget
-# 0x4000, session 20), save 05 loads but the field and party are not drawn (black screen, HUD only).
+# A staging arena of seven buffers, one piece since session 23 (merge_pieces.py --group D_003F8380:0x16C00):
+# func_00232ad0(-1) clears all 0x16C00 bytes from D_003F8380 with one pointer walk, func_00232ad0(0..6)
+# clears each part and the getter in text_00220000_h25.c hands out each part's address. With the four
+# 0x400-byte parts floated (session 20), save 05 loads but the field and party are not drawn. As one
+# piece it is far over the data budget; kept so a budget change cannot float it untested.
 D_003F8380
-D_003F8F80
-D_003F9F80
-D_003FA380
-D_003FA780
-D_0040E780
-D_0040EB80
 #
-# Four parallel records of a 0x20-byte object, a 0x10-byte entry and a 0x4000-byte table
-# (D_0046E120/40/50, D_00472160/80/90, D_004761A0/C0/D0, D_0047A1E0/A200/A210, with a 0x10-byte
-# header before the last three). func_001* stores `cond ? D_00472160 : D_0046E120` (and the
-# D_0047A1E0 / D_004761A0 pair) into an object, a join reach_check cannot follow. With them floated
-# (data budget 0x4000, session 20), loading save 05 hangs; float_holes.py shows writes into the old
-# places of D_004761A0 and D_004761C0.
-D_0046E100
+# Six VIF1 DMA chains of 0x4040 bytes at D_0046E120 + k * 0x4040 (k = 0..5), each one piece since
+# session 23: a 0x20-byte object (two ref tags: D_0048BFD0 qwc 9, D_0048C060 qwc 42), a 0x10-byte
+# entry and a 0x4010-byte table of ref tags that C fills each frame, ending in an end tag (the
+# "headers" session 20 saw before three of them, D_00472150 / D_0047A1D0, are that end tag).
+# func_00107d30 stores `D_00351BD0 ? D_00472160 : D_0046E120` (and the other pairs) into the object
+# func_00106db0 kicks (VIF1 TADR). Floating pieces of them hung loading save 05 (session 20). Floating
+# D_0046E120 and D_00472160 whole (KH1_F23_REC2) loads save 06 but hangs entering Gate Plaza, with no
+# stale writes in a savestate (float_holes.py): the cause is not found yet.
 D_0046E120
-D_0046E140
-D_00472150
 D_00472160
-D_00472180
 D_004761A0
-D_004761C0
-D_0047A1D0
 D_0047A1E0
-D_0047A200
+D_0047E220
+D_00482260
 #
 # (Session 21 kept libcdvd's state words D_0046C610 ... D_0046C658 and D_0046C680 here as a guess for
 # the Agrabah alley bug; session 22 found the real cause (D_0048BFD0, split_check.py). Session 23
