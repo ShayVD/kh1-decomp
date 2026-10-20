@@ -7,6 +7,7 @@
 #include "common.h"
 
 extern s32 D_003044D0;
+extern s32 D_00304B00[];
 extern f32 D_00304B7C;
 extern f32 D_00304C40;
 extern f32 D_00304D54;

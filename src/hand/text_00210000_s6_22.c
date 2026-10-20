@@ -1336,3 +1336,4 @@ R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
 };
 #include "data/data_003F.h"
 #include "data/data_0042.h"
+#include "data/data_003E.h"

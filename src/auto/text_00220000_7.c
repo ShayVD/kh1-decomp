@@ -278,3 +278,4 @@ void func_0022a5d8(s32 arg0) {
         func_0020bda8(0x10);
     }
 }
+#include "data/data_003F.h"

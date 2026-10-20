@@ -346,3 +346,4 @@ void func_001efc80(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 }
 #include "data/data_003D.h"
 #include "data/data_003F.h"
+#include "data/data_003E.h"

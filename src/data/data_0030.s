@@ -11,6 +11,15 @@
 	PIECE D_003044DC, 0x4, 4  /* untyped: users disagree: MdlEnt52 D_003044DC[]; unparsed in 2 file(s) */
 	PIECE D_003044E0, 0x5f8, 8  /* untyped: users disagree: B3Tbl D_003044E0[] | C02MSlot D_003044E0[] | MdlEnt D_003044E0[] */
 	PIECE D_00304AD8, 0x8, 8  /* untyped: users disagree: O15 *D_00304AD8 | W32Obj3 *D_00304AD8 | s32 D_00304AD8 */
+	PIECE_BEGIN D_00304B00, 0x20, 16
+	.word D_0048DC90
+	.word D_0048DC80
+	.word D_0048DC70
+	.word D_0048DC68
+	.word D_0048DC58
+	.word D_0048DC48
+	PIECE_BYTES D_00304B00, 0x18, 0x8
+	PIECE_END D_00304B00, 0x20
 	PIECE D_00304B6C, 0x4, 4  /* untyped: users disagree: s32 D_00304B6C; unparsed in 1 file(s) */
 	PIECE D_00304B78, 0x4, 4  /* untyped: users disagree: W55Bf D_00304B78 | s32 D_00304B78 | u32 D_00304B78 */
 	PIECE D_00304B7C, 0x4, 4

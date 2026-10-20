@@ -214,3 +214,4 @@ void func_002134c8(Ob *o) {
         break;
     }
 }
+#include "data/data_003F.h"

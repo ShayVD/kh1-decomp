@@ -7,6 +7,7 @@
 #include "common.h"
 
 extern s32 D_00469F60;
+extern s32 D_0046A048;
 extern s32 D_0046A53C;
 extern s32 D_0046A540;
 extern s32 D_0046A544;

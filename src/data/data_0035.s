@@ -12,11 +12,16 @@
 	PIECE D_00350D80, 0x8, 8
 	PIECE D_00350D88, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D88 | MvTab D_00350D88[] | S88 D_00350D88[] | Tb20 D_00350D88[] | W55Ent32 D_00350D88[] | W9Tab32 D_00350D88[] | s8 D_00350D88 | volatile M2C_UNK D_00350D88 */
 	PIECE D_00350D94, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D94; unparsed in 1 file(s) */
+	PIECE D_00351530, 0x400, 16  /* untyped: users disagree: H1530 D_00351530[] | u16 D_00351530[512] */
 	PIECE D_003519E0, 0x20, 16  /* untyped: users disagree: S3519E0 D_003519E0 | s32 D_003519E0[] */
 	PIECE D_00351A30, 0x10, 16  /* untyped: users disagree: P2 D_00351A30[] | u8 D_00351A30[] */
 	PIECE D_00351A48, 0x8, 8  /* untyped: users disagree: s32 D_00351A48; unparsed in 1 file(s) */
 	PIECE D_00351BC0, 0x4, 4  /* untyped: users disagree: s32 D_00351BC0 | volatile s32 D_00351BC0 */
 	PIECE D_00351BC4, 0x4, 4  /* untyped: users disagree: s32 D_00351BC4 | volatile s32 D_00351BC4 */
+	PIECE_BEGIN D_00351BC8, 0x8, 8  /* untyped: users disagree: void *D_00351BC8; unparsed in 4 file(s) */
+	.word func_002583e0
+	.word func_00258a58
+	PIECE_END D_00351BC8, 0x8
 	PIECE D_00351BD0, 0x10, 16
 	PIECE D_00351E50, 0x9030, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0035AF20, 0x20, 16  /* untyped: users disagree: u8 D_0035AF20; unparsed in 1 file(s) */

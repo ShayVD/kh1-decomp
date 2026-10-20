@@ -10,6 +10,11 @@
 	PIECE D_0046A03C, 0x4, 4  /* untyped: users disagree: s32 D_0046A03C | u8 *D_0046A03C */
 	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040 */
 	PIECE D_0046A044, 0x4, 4  /* untyped: users disagree: s32 D_0046A044 | u8 *D_0046A044 */
+	PIECE_BEGIN D_0046A048, 0x10, 8
+	PIECE_BYTES D_0046A048, 0x0, 0x8
+	.word func_0024d1c8
+	PIECE_BYTES D_0046A048, 0xc, 0x4
+	PIECE_END D_0046A048, 0x10
 	PIECE D_0046A53C, 0x4, 4
 	PIECE D_0046A540, 0x4, 4
 	PIECE D_0046A544, 0x4, 4
@@ -20,6 +25,14 @@
 	PIECE D_0046A558, 0x4, 4
 	PIECE D_0046A55C, 0x4, 4
 	PIECE D_0046A560, 0x8, 8
+	PIECE_BEGIN D_0046A568, 0x18, 8  /* untyped: users disagree: E *D_0046A568[] | u32 *D_0046A568[] */
+	.word D_0046A0C8
+	.word D_0046A1A8
+	.word D_0046A288
+	.word D_0046A368
+	.word D_0046A448
+	PIECE_BYTES D_0046A568, 0x14, 0x4
+	PIECE_END D_0046A568, 0x18
 	PIECE D_0046A5BC, 0x4, 4
 	PIECE D_0046A5D8, 0x8, 8
 	PIECE D_0046A608, 0x4, 4  /* untyped: users disagree: s32 D_0046A608 | u32 D_0046A608 */
@@ -27,14 +40,22 @@
 	PIECE D_0046A610, 0x4, 4
 	PIECE D_0046A614, 0x4, 4
 	PIECE D_0046A618, 0x8, 8
+	PIECE D_0046A628, 0x18, 8  /* untyped: users disagree: M2C_UNK D_0046A628 | char D_0046A628[] */
 	PIECE D_0046A650, 0x10, 16  /* untyped: users disagree: M2C_UNK D_0046A650 | char D_0046A650[] */
 	PIECE D_0046A674, 0x4, 4
 	PIECE D_0046A67C, 0x4, 4
 	PIECE D_0046A680, 0x8, 8
+	PIECE_BEGIN D_0046A9C8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_0046A6D8
+	PIECE_BYTES D_0046A9C8, 0x4, 0x4
+	PIECE_END D_0046A9C8, 0x8
 	PIECE D_0046AE28, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE2C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE30, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE44, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046AE50, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word func_00259468
+	PIECE_END D_0046AE50, 0x4
 	PIECE D_0046AE54, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE58, 0x80, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AED8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */

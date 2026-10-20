@@ -22,7 +22,7 @@ sys.path.insert(0, str(TOOLS))
 import kh1tool as K  # noqa: E402
 from elf32 import Elf  # noqa: E402
 
-PIECE_RE = re.compile(r"^\s*PIECE\s+D_([0-9A-F]{8})\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*,\s*(\d+)")
+PIECE_RE = re.compile(r"^\s*PIECE(?:_BEGIN)?\s+D_([0-9A-F]{8})\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*,\s*(\d+)")
 
 
 def main() -> int:

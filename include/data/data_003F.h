@@ -5,6 +5,7 @@
 #define KH1_DATA_DATA_003F_H
 
 #include "common.h"
+#include "m2c.h"
 
 extern s32 D_003F1A60;
 extern s32 D_003F1A64;
@@ -35,13 +36,36 @@ extern s32 D_003F3518;
 extern s32 D_003F351C;
 extern s32 D_003F3520;
 extern s32 D_003F3870;
+extern u8 D_003F38E0[];
+extern u8 D_003F3980[];
+extern u8 D_003F39C0[];
+extern u8 D_003F39F0[];
+extern u8 D_003F3B70[];
+extern u8 D_003F3BA0[];
+extern u8 D_003F3BD0[];
+extern u8 D_003F3C00[];
+extern u8 D_003F3C30[];
+extern u8 D_003F3C60[];
+extern u8 D_003F3C90[];
+extern u8 D_003F3CC0[];
+extern u8 D_003F3E90[];
+extern u8 D_003F3ED0[];
+extern u8 D_003F3F00[];
+extern u8 D_003F3F30[];
+extern s32 *D_003F41E8[];
 extern s32 D_003F4200[][9];
 extern s32 D_003F4368[];
 extern s32 D_003F4380[];
+extern s32 *D_003F43C8[];
 extern s32 D_003F43F0[];
 extern s32 D_003F4408[];
+extern u8 D_003F4430[];
+extern u8 D_003F4460[];
+extern u8 D_003F44A0[];
 extern s32 D_003F44C8[];
+extern u8 D_003F44E0[];
 extern f32 D_003F53C0[];
+extern u16 D_003F56A0[];
 extern s32 D_003F59A4;
 extern f32 D_003F59B0;
 extern s32 D_003F59B4;
@@ -51,9 +75,18 @@ extern s32 D_003F6740[];
 extern s32 D_003F6828[];
 extern s32 D_003F6840[];
 extern s32 D_003F6854;
+extern u8 D_003F6860[];
+extern u8 D_003F68C0[];
+extern u8 D_003F68F0[];
+extern M2C_UNK D_003F6950;
+extern u8 D_003F6BD0[];
+extern u8 D_003F6CA0[];
+extern u8 D_003F6CE0[];
+extern u8 D_003F6D40[];
 extern s32 D_003F6E24;
 extern s32 D_003F6E2C;
 extern s32 D_003F6E30;
+extern u8 D_003F7000[];
 extern s32 D_003F720C;
 extern u8 D_003F7210[];
 extern s32 D_003F73A4;

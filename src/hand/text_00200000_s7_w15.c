@@ -416,3 +416,4 @@ void func_0020ff80(ObjE *o) {
         }
     }
 }
+#include "data/data_003F.h"

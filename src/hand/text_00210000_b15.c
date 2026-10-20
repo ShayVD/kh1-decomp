@@ -788,3 +788,4 @@ void func_002335d8(s32 i) {
  * it alone hung the SHIFT_FLOAT build at boot (session 17). */
 #include "data/data_003F.h"
 #include "data/data_0042.h"
+#include "data/data_003E.h"

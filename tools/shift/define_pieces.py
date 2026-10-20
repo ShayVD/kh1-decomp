@@ -48,7 +48,8 @@ from define_shared import BASIC, base_type, compiles_with, user_decl  # noqa: E4
 from elf32 import Elf  # noqa: E402
 
 BLOB_START, BLOB_END = 0x00272C70, 0x00494050
-PIECE_RE = re.compile(r"^\s*PIECE\s+(D_[0-9A-F]{8})\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*,\s*(\d+)")
+PIECE_RE = re.compile(r"^\s*PIECE(_BEGIN)?\s+(D_[0-9A-F]{8})\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*,\s*(\d+)")
+PLACEHOLDER = re.compile(r"^func_[0-9A-Fa-f]{8}$")
 
 
 def module(addr: int) -> str:
@@ -78,19 +79,43 @@ def placed_blocks() -> list[tuple[int, int, str]]:
     return sorted(out)
 
 
-def reloc_words() -> list[int]:
-    out = []
+def reloc_rows() -> dict[int, tuple]:
+    """data_relocs.tsv: {word address: (type, symbol, addend, tier)}."""
+    out = {}
     for line in (ROOT / "data_relocs.tsv").read_text().splitlines():
         if not line or line.startswith(("#", "offset")):
             continue
-        out.append(BLOB_START + int(line.split("\t")[0], 16))
-    return sorted(out)
+        off, typ, sym, add, tier, _r = line.split("\t")
+        out[BLOB_START + int(off, 16)] = (typ, sym, add, tier)
+    return out
 
 
-def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str]):
+def word_expr(row, vars_: list[tuple[int, int, str]], layout: dict[str, int], registry: dict[str, int]) -> str:
+    """The `.word` operand for an accepted data_relocs row: a code target by its function
+    name (or func_XXXXXXXX), a data/bss target by the variable it lies in (name+offset)
+    or by its D_ name. Both links resolve these names (PROVIDE / shift_ld)."""
+    typ, sym, add, _tier = row
+    hi = int(typ.split("+", 1)[1], 16) if "+" in typ else 0
+    add = int(add, 16)
+    if sym in ("D_BLOB", "D_BSS"):
+        t = (BLOB_START if sym == "D_BLOB" else 0x00494080) + add
+        i = bisect.bisect_right([v[0] for v in vars_], t) - 1
+        if i >= 0 and t < vars_[i][1]:
+            base, off = vars_[i][2], t - vars_[i][0]
+        else:
+            base, off = f"D_{t:08X}", 0
+    else:
+        base = sym if (sym in registry or PLACEHOLDER.match(sym)) else f"func_{layout[sym]:08x}"
+        off = add
+    off += hi
+    return base + (f"+0x{off:x}" if off > 0 else (f"-0x{-off:x}" if off < 0 else ""))
+
+
+def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], pointers: bool = False):
     blocks = placed_blocks()
     bstarts = [b[0] for b in blocks]
-    words = reloc_words()
+    relocs = reloc_rows()
+    words = sorted(relocs)
     done = {b[2] for b in blocks}
     rows, skip = [], []
     for ln in owners.read_text().splitlines()[1:]:
@@ -112,9 +137,15 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str]):
             skip.append((f[1], "empty extent"))
             continue
         j = bisect.bisect_left(words, addr - 3)
-        if j < len(words) and words[j] < end:
-            skip.append((f[1], f"data_relocs row at 0x{words[j]:08x} inside the extent"))
+        inside = words[j:bisect.bisect_left(words, end)]
+        if inside and not pointers:
+            skip.append((f[1], f"data_relocs row at 0x{inside[0]:08x} inside the extent"))
             continue
+        if inside and (inside[0] < addr or inside[-1] + 4 > end):
+            skip.append((f[1], "a data_relocs word straddles the extent"))
+            continue
+        if pointers and not inside:
+            continue  # the default mode's
         rows.append((addr, f[1], ext, [x for x in f[7].split(";") if x]))
     # declarations of the C users outside src/sdk/
     decls_of: dict[str, dict[tuple, list]] = {}
@@ -178,12 +209,39 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str]):
                   (f"; unparsed in {len(unknown.get(name, []))} file(s)" if name in unknown else "")
         cfiles = sorted({fn for fns in ds.values() for fn in fns})
         out.append((addr, name, ext, files, header, why, cfiles))
+    if pointers:
+        # the pointers become `.word` relocations; targets inside a variable (defined, or a
+        # piece of this run) are named by it, so they follow it when it floats
+        import kh1tool as K
+        layout = {f.name: f.addr for f in K.load_layout()}
+        registry = K.load_registry()
+        vars_ = sorted([(a, a + int(sz, 16), n) for a, n, sz in
+                        ((int(ln.split("\t")[0], 16), ln.split("\t")[1], ln.split("\t")[3])
+                         for ln in (ROOT / "out/gen/data.tsv").read_text().splitlines()[1:])]
+                       + [(p[0], p[0] + p[2], p[1]) for p in out])
+        out = [p + ([(w - p[0], word_expr(relocs[w], vars_, layout, registry))
+                     for w in words[bisect.bisect_left(words, p[0]):bisect.bisect_left(words, p[0] + p[2])]
+                     if relocs[w][3] != "x"],) for p in out]
+    else:
+        out = [p + ([],) for p in out]
     return out, skip
 
 
-def piece_lines(addr: int, name: str, ext: int, header, why: str) -> list[str]:
+def piece_lines(addr: int, name: str, ext: int, header, why: str, words) -> list[str]:
     note = "" if header else f"  /* untyped: {why} */"
-    return [f"\tPIECE {name}, 0x{ext:x}, {piece_align(addr, ext)}{note}"]
+    if not words:
+        return [f"\tPIECE {name}, 0x{ext:x}, {piece_align(addr, ext)}{note}"]
+    out = [f"\tPIECE_BEGIN {name}, 0x{ext:x}, {piece_align(addr, ext)}{note}"]
+    pos = 0
+    for off, expr in words:
+        if off > pos:
+            out.append(f"\tPIECE_BYTES {name}, 0x{pos:x}, 0x{off - pos:x}")
+        out.append(f"\t.word {expr}")
+        pos = off + 4
+    if ext > pos:
+        out.append(f"\tPIECE_BYTES {name}, 0x{pos:x}, 0x{ext - pos:x}")
+    out.append(f"\tPIECE_END {name}, 0x{ext:x}")
+    return out
 
 
 def apply(plans) -> None:
@@ -194,10 +252,20 @@ def apply(plans) -> None:
         src = ROOT / "src/data" / f"{mod}.s"
         hdr = ROOT / "include/data" / f"{mod}.h"
         old_lines = src.read_text().splitlines() if src.exists() else []
-        have = {m.group(1): ln for ln in old_lines if (m := PIECE_RE.match(ln))}
-        for addr, name, ext, _f, header, why, _c in ps:
-            have[name] = piece_lines(addr, name, ext, header, why)[0]
-        body = [have[n] for n in sorted(have, key=lambda n: int(n[2:], 16))]
+        have: dict[str, list[str]] = {}
+        cur = None
+        for ln in old_lines:
+            m = PIECE_RE.match(ln)
+            if m:
+                have[m.group(2)] = [ln]
+                cur = m.group(2) if m.group(1) else None
+            elif cur:
+                have[cur].append(ln)
+                if ln.strip().startswith("PIECE_END"):
+                    cur = None
+        for addr, name, ext, _f, header, why, _c, words in ps:
+            have[name] = piece_lines(addr, name, ext, header, why, words)
+        body = [ln for n in sorted(have, key=lambda n: int(n[2:], 16)) for ln in have[n]]
         src.write_text("\n".join([
             f"/* Shared data names {mod[5:]}xxxx as pieces of the user's ELF (phase 4, step 4;",
             " * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an",
@@ -247,14 +315,17 @@ def main() -> int:
     ap.add_argument("--name", action="append", default=[])
     ap.add_argument("--exclude", action="append", default=[])
     ap.add_argument("--limit", type=int, default=0, help="at most N pieces (lowest addresses first)")
+    ap.add_argument("--pointers", action="store_true",
+                    help="only names whose extent holds accepted data_relocs rows: they become .word relocations")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
-    plans, skip = plan(Path(a.owners), set(a.verdict or ["shared"]), a.name, set(a.exclude))
+    plans, skip = plan(Path(a.owners), set(a.verdict or ["shared"]), a.name, set(a.exclude), a.pointers)
     if a.limit:
         plans = sorted(plans)[:a.limit]
-    for addr, name, ext, files, header, why, _c in sorted(plans):
+    for addr, name, ext, files, header, why, _c, words in sorted(plans):
         t = f"{header[0]} {header[1]}" if header else f"(untyped: {why})"
-        print(f"{module(addr)}\t{name}\t0x{ext:x}\t{len(files)} users\t{t}")
+        w = f"\t{len(words)} pointers: " + " ".join(e for _o, e in words[:4]) if words else ""
+        print(f"{module(addr)}\t{name}\t0x{ext:x}\t{len(files)} users\t{t}{w}")
     for n, why in skip:
         print(f"-\t{n}\tskip\t{why}")
     typed = sum(1 for p in plans if p[4])
