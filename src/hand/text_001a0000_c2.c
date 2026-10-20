@@ -63,3 +63,4 @@ s32 func_001aaf88(DMdl *m, DParam *p, s32 n) {
     }
     return r;
 }
+#include "data/data_0037.h"

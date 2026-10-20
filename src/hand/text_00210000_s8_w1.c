@@ -18,7 +18,7 @@ extern s32 D_00642CCC;
 extern u16 D_00642CD0; /* src/data/bss_0064.c: s32 D_00642CD0 */
 extern s32 D_00642CD8;
 extern U32H D_00642CDC; /* src/data/bss_0064.c: s32 D_00642CDC */
-extern U32H D_00642CE0;
+extern U32H D_00642CE0; /* src/data/bss_0064.c: s32 D_00642CE0 */
 extern PN D_003F40F8[];
 extern S34B8 *D_003F34B8;
 extern s32 D_003F43F0[];
@@ -123,3 +123,4 @@ void func_002177c8(Obj *a) {
         y += 28;
     }
 }
+#include "data/data_003F.h"

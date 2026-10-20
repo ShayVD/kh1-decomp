@@ -10,6 +10,7 @@ extern u8 *D_00551600;
 extern s32 *D_005516E4;
 extern s32 D_005516EC;
 extern s32 D_00559DB0;
+extern volatile s32 D_00559DB4;
 extern s32 D_0055BDE0;
 extern u8 D_0055C698[];
 

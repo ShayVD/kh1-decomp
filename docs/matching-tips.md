@@ -689,3 +689,24 @@ from dead code. Read the allocation first, then find the source change.
   (sceGsDefDispEnv: 9 -> 7 words).
 - What a pin cannot fix is scheduling order. In 00200e28 and 00125240 the leftover words are an issue
   order or a `lui`, and pins there made things worse.
+
+## Session 19 tips (nonmatchings/session19/NOTES.md)
+
+- **Re-run old findings with a pin** (matched 001cfc28, 001eddc0, 0021e120): look for older findings and
+  hacked drafts whose header says "order right, only register X wrong". Before session 18 nothing could
+  fix that, but a local register variable can. 001eddc0: drop the dead tests (they were there only to work
+  around a global-alloc choice) and pin the a.r load to a0. 001cfc28: on s11w15's volatile finding, pin
+  the c*2.0f chain to f0.
+- **Pin every argument register the header shares** (0021e120): a pinned constant set after a call that
+  passes arguments in the same hard reg puts an output dependence on that argument move and raises its
+  priority. Pin the other header constants that use that call's argument registers too (a2/a3 next to t0),
+  so all those moves rise together and keep source order.
+- A pin on a computed value survives only when cse cannot see all its uses (a use in a later basic block)
+  or when the value is built in the pinned reg itself (`t = (f32)c; t = t + t;`). A plain `r = a + b;` or
+  a halfword load with every use in the same block is expanded into a pseudo and copied to the hard reg,
+  and cse dissolves it: the output is identical to the unpinned one. Check the asm before a long sweep.
+- Pinning a loop pointer that holds a constant address (001c62a0: `register f32 *d asm("$10"); d = &D.e.x;`
+  inside the outer loop) survives cse and fixed a three-register rotation (39 -> 16 words). Pins of whole-function
+  values in big one-block functions (00200e28's header, 00110618's FP values) take that register out of the
+  pool for every other quantity, and everything else moves (100+ words). Use pins on short-lived values only.
+

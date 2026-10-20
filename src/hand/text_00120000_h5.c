@@ -38,18 +38,7 @@ typedef struct S3c0 { u8 pad[0x3c0]; u8 f3c0[16]; } S3c0;
 typedef struct V8 { s32 a, b; } V8;
 
 /* 0x730-byte list node (pool D_004F8310[64], chained through next). */
-typedef struct Node {
-    union {
-        u64 flags;
-        u8 b[8];
-    };
-    u8 pad008[0xc];
-    struct Node *f14;
-    void *f18;
-    u8 pad01c[0x720 - 0x1c];
-    struct Node *next;
-    u8 pad724[0x730 - 0x724];
-} Node;
+#include "data/types/text_00120000_h5.h"
 
 typedef struct S31b0 { s32 f0, f4; } S31b0;
 typedef struct S31a0 { u8 pad[0xc]; u16 f0c; u16 f0e; } S31a0;
@@ -577,3 +566,5 @@ void func_0012fa98(void) {
         *o = r;
     }
 }
+#include "data/bss_004F_typed.h"
+#include "data/data_002E.h"

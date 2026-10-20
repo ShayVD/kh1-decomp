@@ -1,6 +1,6 @@
 /* func_00241260 (hand/nostrict, session 7 w36): MATCH. Needs CONTEXT_ONLY copies of func_0023fd58 and func_0023d528 (the latter fixes beqzl -> beqz after func_0023dfd8), and func_00240ae0 declared as (void *, s32, s32, f32, QW *): with the QW * last, the a3 load is emitted after the $f12 load and lands in the jal slot. */
 #include "common.h"
-typedef struct { u64 lo, hi; } QW;
+#include "data/types/nostrict_text_00240000_s7_w36.h"
 typedef struct { u8 pad[0x44]; s32 unk44; u8 pad48[0xBE - 0x48]; u16 unkBE; } Prof;
 typedef struct { u8 pad[0x4C]; u16 unk4C; } C130;
 typedef struct { u8 pad[0x6C]; Prof *unk6C; u8 pad70[0x130 - 0x70]; C130 *unk130; } Chr;

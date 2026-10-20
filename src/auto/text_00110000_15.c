@@ -33,3 +33,4 @@ void func_00112d28(void) {
     func_0011d4e0(0x168);
     func_00101728(0x168);
 }
+#include "data/data_0048.h"

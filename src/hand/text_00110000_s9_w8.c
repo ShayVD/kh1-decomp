@@ -74,3 +74,4 @@ void func_00116368(Out368 *o, s32 k) {
     }
     o->cnt = *(u16 *)&D_002C12C4;
 }
+#include "data/data_002C.h"

@@ -319,7 +319,7 @@ typedef struct {
 } W9Slot64;
 extern W9Slot64 D_0054F750[]; /* src/data/bss_0054.c: Slot57_15d0 D_0054F750[8] */
 extern s32 D_0054F740;
-extern W9Tab12 *D_0054F950;
+extern W9Tab12 *D_0054F950; /* src/data/bss_0054.c: void *D_0054F950 */
 void func_00151808(void) {
     s32 i;
     for (i = 7; i >= 0; i--) D_0054F750[i].x4 = 0;
@@ -701,5 +701,5 @@ void func_00153500(W9Ent *a, Msg9 *m) {
         }
     }
 }
-#include "data/bss_0054_mixed.h"
 #include "data/bss_0055_mixed.h"
+#include "data/data_002B.h"

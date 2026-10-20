@@ -19,3 +19,4 @@ void func_00228760(s32 arg0) {
     func_001f9010(0x17);
     func_001f9438(arg0, 0, 0xAE, 0xC, var_s0, 0x11, 0x8078C850);
 }
+#include "data/data_003F.h"

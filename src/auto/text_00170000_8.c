@@ -41,7 +41,7 @@ extern M2C_UNK D_0035FB20;
 extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00362660;
 extern M2C_UNK D_00575010; /* src/data/bss_0057.c: s32 D_00575010 */
-extern M2C_UNK D_005757B0;
+extern M2C_UNK D_005757B0; /* src/data/bss_0057.c: T44 D_005757B0[0x2] */
 extern M2C_UNK D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
 extern M2C_UNK D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 extern M2C_UNK D_005759B0;
@@ -229,3 +229,5 @@ void func_0017f9a8(void) {
     func_001a9f88();
     func_001aa858();
 }
+#include "data/data_0035.h"
+#include "data/data_0036.h"

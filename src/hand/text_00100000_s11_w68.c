@@ -72,3 +72,4 @@ void func_00105288(H *h, s32 mode) {
     func_00105218();
     func_001050d0();
 }
+#include "data/data_002A.h"

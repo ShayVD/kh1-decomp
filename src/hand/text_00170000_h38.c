@@ -84,7 +84,7 @@ typedef struct Cam {
 typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S920;
 typedef struct { u32 x0; u32 x4; } Pad;
 
-extern Actor *D_00575894;
+extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern s32 D_00575890;
 extern f32 D_005758C4;
 extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
@@ -553,3 +553,5 @@ void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
         o->x92 = 0;
     }
 }
+#include "data/data_002E.h"
+#include "data/data_0036.h"

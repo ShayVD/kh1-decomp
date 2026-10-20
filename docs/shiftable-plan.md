@@ -1364,3 +1364,243 @@ list is written to `out/shift/<mode>-float/float_reach.txt`, and the log shows e
   (KH1_F18D.ELF).
 - Some batch-1 names got a basic type (`u8 D_00495210[0x40]`) although a hand file's struct (`Mtx`) also
   fits; these can be upgraded later.
+
+## Session 19: data_owners anchors and the skipped shared names (worker s19d1)
+
+`make` stays byte-identical after every batch. 1,080 variables are now C definitions (36 data, 1,044 bss),
+51 more than session 18.
+
+### data_owners.py: C-defined variables are anchors
+
+- `tools/shift/data_owners.py` reads out/gen/data.tsv (`--data-tsv`). Every C-defined variable is an anchor,
+  and a reference through a section symbol (how a file reaches its own definition) is counted for the
+  C variable that holds the target. So the defining file shows up among a variable's users, and a variable
+  no other file names gets a row too.
+- Against the M0 link: 154 extents shrank, and 332 C variables that only their own file references now have
+  rows (1,025 of 1,029 C variables have one; the other 4 are not referenced at all). No extent runs over a
+  C variable any more. bss `single` went from 99 to 399, because the defining files now count as users.
+- define_shared.py's clamp is gone. In its place is a check that stops with "rerun data_owners.py" when an
+  extent runs over a C variable, which means data_owners.tsv is older than the last `make`. It found nothing.
+- cover_check.py reads data_owners.tsv for "the name just below". With the C variables as rows, 7 names it
+  used to keep in place now float: D_002BD1A8, D_003F32E8, D_003F5A00, D_00469FD8, D_00469FF8, D_0046A018
+  and D_006202A0. Each one now sits right after a C variable whose size is known. Check them in PCSX2
+  (title, menu, the world map) before trusting them.
+- The fixed extents changed no skip reason by themselves. All 76 names define_shared.py --mixed listed were
+  still skipped: the 73 from session 18 (74 there) plus the 3 bss_0061 type clashes.
+
+### One shared type header (bss_0061)
+
+- `include/data/types/shared.h` defines `u128` (`unsigned int`, mode TI) and `PppMtx` once. The h39 and
+  nostrict h40 type headers, text_00180000_h40.c and text_001a0000_h13.c include it instead of defining
+  them. text_00170000_s6_10.c's own `typedef int u128` became `unsigned`, matching the header it includes
+  (gcc 2.96 accepts a repeated identical typedef, but not one that differs). The code is unchanged.
+- define_shared.py: a type that shared.h defines needs no move (tsrc `include/data/types/shared.h`), and
+  type_move.py copies a source's `#include "data/types/shared.h"` into the header it writes.
+- With that, D_00616010 (`PppQv[3]`), D_0061E780 (`PppMtx`) and D_0061EEA0 (`GsTag[0x10]`) are defined.
+- D_005759B0 hits the same problem with `V4`. text_00170000_b06.c and the nostrict b06 header each define
+  an anonymous `struct { f32 x, y, z, w; } V4`, and two anonymous structs are different types even with the
+  same fields. It needs `V4` in shared.h and `CamB` moved by hand. It stays skipped for now.
+
+### define_shared.py --relax (with --mixed and --name)
+
+- **pad-align**: a declaration smaller than the extent, where the rest is only alignment: the next anchor
+  is the first 8- or 16-aligned address after it. The code's reach must fit, and no other name may land
+  inside the extent. Taken addresses and sized arrays are allowed, because reach_check keeps a name in place
+  when code reaches past it through a pointer.
+- **fill-floor**: `T D[]` filled with floor(extent / sizeof T) elements when the remainder is only
+  alignment. D_00645250 is `Save3C[99]`, and 99 is also the loop bound in text_00210000_s6_22.c.
+- It also reads repeated identical `extern` lines, function pointers `T (*D)(args)` and `T *volatile D`.
+  A user whose externs all declare some pointer counts as 4 bytes for a pad.
+- With `--name`, names whose users agree go through this path too. The default mode refuses repeated
+  extern lines, volatile types and struct types.
+- `Save3C` moved by hand into include/data/types/text_00220000_c16.h, because that header already existed.
+
+### Counts
+
+| batch | names |
+| --- | ---: |
+| bss_0061 clashes (shared.h) | 3 |
+| --relax on the skipped names: 12 pad-align, 2 fill-floor, 1 fill, 4 pad | 19 |
+| --relax with function and volatile pointers: 3 exact, 3 pad, 2 pad-align, 1 fill-floor | 9 |
+| --relax on the default mode's skipped names: 9 exact, 3 fill, 8 pad-align | 20 |
+
+Some picks have a basic type where a hand file has a better one, for example `s32 D_00615E68` (36 users,
+and most hand files say `PppMtxOwner *`). These can be upgraded later, like session 18's.
+
+### Still skipped (45 of the 76, plus 7 other shared names from the default mode)
+
+- **Another name lies inside the object** (a declaration is larger than the extent; a field named on its
+  own), 25 names: D_00494BC0, D_004DBC20, D_004E2430, D_00525298, D_00525328, D_0052EB50, D_0054C440,
+  D_00573E40, D_005758F0, D_00575900, D_00575940, D_00615E70, D_00615FC0, D_0062F6E0, D_0062F790,
+  D_00630300, D_00630460, D_006305C0, D_00641250, D_00643020, D_00647FE8, D_00651E50, D_006561D0,
+  D_006627B0, D_00669700. Defining these needs the enclosing object in C, with the inner names as fields or
+  link-script aliases (`D_inner = D_outer + off`), and shift_ld must accept those inside a floated variable.
+- **The name is part of a larger object**, 9 names: D_004E2450 and D_004E2458 (inside `s32 D_004E2430[64][16]`),
+  D_00575970 (inside `Cam D_00575940`), D_00615FF8 (inside `PppMtx D_00615FC0`), D_00651E70 and
+  D_00655264 (inside D_00651E50, which code reaches up to +0x4124), D_00623E49, D_006298F8, D_00629924.
+- **Indexed past the extent, or rows that do not fit it**, 6 names: D_00575020, D_006305D0 (one element
+  fills the extent), D_0054F438 (0x18-byte elements, extent 8), D_00623E40 and D_00623ED4 (96-byte rows
+  that overlap D_00623E49), D_006298F0 (0xb0-byte objects, extent 6).
+- **The declared type is too small, or the layout is unclear**, 3 names: D_00551740 (the code reaches
+  +0x224, but the struct is 0x210), D_00631620 (`Pkt620` is 0x1960 of a 0x2020 extent, and its address is
+  passed on as a DMA packet), D_00656230 (`Gm *` in the hand file, but session 18 found 0x24-byte entries).
+- **Inside the IOP-written block** D_0063D640: D_0063EE40.
+- **Type clash**: D_005759B0 (`V4`, see above). D_00668280 is a clash too (`Q4`, from the default mode's list).
+- The other names from the default mode's list that stay skipped: D_004F3208, D_00551700, D_00616000,
+  D_0062F670, D_00642EB0 and D_00642F60. Each is a scalar or M2C_UNK in a much larger extent, or a
+  declaration larger than the extent.
+
+### Float build
+
+`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` passes: shift_cmp OK, the 12 overlay fixup proofs OK, LO16 0.
+594 C variables float in 109 runs, 333 stay in place (cover_check, reach_check, float_keep), and 153 bss
+are over the 0x10000 budget. `_end` is 0x68f524. Not run in PCSX2 yet.
+
+## Session 19: Phase 4 step 4, shared data pieces (worker s19d2)
+
+Shared *data* names (the file-backed region 0x272C70-0x494050) are now per-symbol pieces of the
+user's ELF. `make` stays byte-identical; the M12 float build floats them one by one. No game bytes
+enter the repo: the sources name an address, a size and, for pointers, a relocation.
+
+### Mechanism
+
+- **`include/data/piece.inc`**: `PIECE name, size, align` puts one name in its own section
+  `.data.<name>` (global, `.type @object`, `.size`) as an `.incbin` of `out/data/pieces/<name>.bin`,
+  and fails the assembly if the file is not `size` bytes. A piece that holds pointers is written
+  `PIECE_BEGIN name, size, align` / `PIECE_BYTES name, off, len` (original bytes) / `.word sym+addend` /
+  `PIECE_END name, size`. The section alignment is `min(lowbit(addr), lowbit(size), 16)`: MIPS gas pads a
+  section to its alignment, so it must divide the size (a floated piece is aligned by its old address
+  in shift_ld anyway). `.align 0` turns off gas's automatic `.word` alignment.
+- **`tools/shift/cut_pieces.py`** (Makefile, before the piece objects assemble): reads the PIECE lines
+  of `src/data/data_*.s`, checks the ELF's SHA-256 against kh1.toml and writes each piece's bytes to
+  `out/data/pieces/` (only when they change; `out/data/pieces.stamp`).
+- **Placement**: `kh1tool link-script` now also takes the `.data.*` sections of `src/data/*.s`, so a piece
+  is a row of out/gen/data.tsv like a C variable: `make` places it at its address, `patch` writes it,
+  `verify` compares it. shift_ld, cover_check and reach_check treat it like any C-defined variable.
+- **`tools/shift/define_pieces.py [--verdict V] [--pointers] [--limit N] [--apply]`**: picks the names.
+  The extent is data_owners.py's, clamped at the next variable in out/gen/data.tsv, the next compiled
+  rodata block (rodata.tsv, sizes from the objects) and the end of the data (data_owners.py's own anchors
+  do not include C-defined names; this works around it without touching it). A name is skipped when it
+  starts inside such a block, when a C user declares it larger than the extent (probe compile), or, in
+  the default mode, when any data_relocs.tsv row lies in the extent. `--pointers` takes those: an
+  accepted row becomes `.word` (a code target by its function name, or `func_XXXXXXXX` for an unnamed
+  one; a data/bss target as `variable+offset` when it lies inside a defined variable or a piece of the
+  same run, else as its `D_XXXXXXXX` name; both links resolve these, the matching one through the
+  PROVIDEs kh1tool gen derives from the `.s` text); a rejected (tier x) row stays bytes.
+- **Types**: when every C user outside src/sdk/ declares the name the same way with a basic type, the
+  declaration goes to `include/data/data_XXXX.h` and those users include it at their end (only if the file
+  still compiles with it, as define_shared.py does). Otherwise the PIECE line carries an
+  `/* untyped: ... */` comment saying why (users disagree, a struct type, no file-scope extern).
+- **Step 5, retargeting** (shift_ld): a data_relocs blob word whose target lies inside any defined variable
+  (C or piece) is emitted as `.word variable+offset` instead of `D_BLOB+x` / `D_BSS+x`, so it follows the
+  variable when it floats (6 words today). Words inside pieces are relocations of their own (above).
+- **Overlay fixups** (overlay_relocs.py): an overlay field that points into a defined variable names that
+  variable in the fixup table, so overlay code follows a floated piece. This was needed at once:
+  dktitle.x builds `%hi/%lo(D_002A3F44)`, and ovl_proof failed when that piece floated.
+- **`SHIFT_FLOAT_DATA_BUDGET`** (shift_ld `--float-data-budget`; the worker used 0x4000, the default is 0
+  since the PCSX2 test in "Session 19: runtime" below): floated data goes after the
+  blob and pushes .bss and `_end` up by as much, against the same 0x6A0000 arena as the bss budget.
+  Data variables float smallest first (cost: size rounded up to its alignment) and are packed by
+  alignment, largest first, so the padding stays within the cost. With it `_end` is 0x693EA4 and
+  `_end + 0xA000` stays below 0x6A0000 (no heap warning).
+
+### Counts
+
+- 809 shared data names are pieces in 26 modules `src/data/data_0029.s` ... `data_0049.s` (734 without
+  pointers, 75 from `--pointers`: 59 with 166 `.word` relocations, 16 whose rows are all rejected).
+  404 are declared in `include/data/data_XXXX.h` (294 user files include a header); 405 are untyped.
+  `make`: link-script "1838 variables (845 data, 993 bss)", byte-identical.
+- 34 shared data names stay extern: 33 are declared larger than their extent by some user (a field named
+  on its own, or indexed past it), and D_00494050 has an empty extent (the end of the data).
+- M12 float (`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`; compare, overlay fixups and LO16 OK): 493 of the
+  809 pieces float (37 of them with pointers), 290 stay in place (cover_check: 121 right after a name no
+  declaration sizes, 42 inside another declared object; reach_check: 127 more), 26 data variables are over
+  the budget (0x3A696 bytes, the big tables). 511 data variables float in all.
+- `HI16/LO16 sym+addend just outside a floated variable 2`: dtoa.c's `tens[k - 1]` folds to
+  `D_00491FE0 - 8`; that piece floats, and shift_cmp accepts it as before.
+
+### Hazards and notes
+
+- With 0x4000 of floated data, PCSX2 itself crashes a few seconds after loading a save (twice); with 0
+  the same build plays. See "Session 19: runtime" below; the bisection is still to do.
+- A piece's `.word D_XXXXXXXX` (and the 6 retargeted blob words) is a reference data_owners.py now sees:
+  the target's files column can list `src/data/data_XXXX.s` (or the blob), which changes its verdict and
+  keeps define_shared.py, which wants only `.c` users, off it.
+- Declared types that are structs (`Glyph`, `PN`, `Tex4440` ...) need the type moved to a shared header
+  first (type_move.py) before a header can declare the piece.
+
+### Left
+
+- The 34 shared names above; the 1,368 single-owner data names (`single` 1,226, `single+p` 142) can go
+  through the same tool (`--verdict single --verdict single+p`, then `--pointers`): a dry run gives 1,015
+  pieces plus the pointer ones.
+- The untyped pieces want a type once their users agree; the pieces kept in place by cover_check's "after
+  an unsized name" rule float once that name is sized (a piece or a C definition).
+- The data budget: the end state packs the blob (no gaps left by floated pieces), which needs every
+  `D_BLOB + x` name and pointer gone first.
+
+## Session 19: runtime, reach_check bounds and the bss budget (0x11800)
+
+### reach_check bounds the indexed accesses
+
+Session 18's `idx-next` rule kept every floated name that an indexed access from the name just below
+could reach, because the index was unknown. reach_check now carries an upper bound for small values and
+uses it (`analyse()` docstring):
+- `andi` gives a bound, and so do `lbu` (0xFF) and `lhu` (0xFFFF). Shifts and multiplies by a constant
+  scale it, and `addu`/`addiu` add bounds together.
+- A `slti`/`sltiu`/`slt`/`sltu` result tested by `beq`/`bne` against $0 bounds the operand on the taken
+  edge. A loop counter or a pointer walk (base, then base + stride on the back edge) that such a test caps
+  is IDX with the largest offset. Growth that is not capped widens to unbounded after two rounds.
+- An `idx` access now reports the largest byte it can reach (`ub + imm`), or None. In main(), a base whose
+  bounded accesses all end before the next name drops its `idx-next` keep ("# N indexed bases have
+  bounded accesses that end before the next name": 71).
+- `SHIFT_REACH_FLAGS=--no-bounds` brings back the session 18 rule (for bisecting).
+
+On the 1,029 floated variables the bounds rule keeps 276 names instead of 285. Nine names float that did
+not before: D_005516D0, D_005739F8, D_00573AC0, D_00575090, D_00575310, D_005758D0, D_005758E0,
+D_006469B8 and D_006469D0.
+
+### A hazard no static check sees: the GIF packet buffer
+
+With the bounds, the build hung when loading a save (KH1_F19B). With `--no-bounds` it played (F19C).
+Bisecting the nine names (`SHIFT_FLOAT_ONLY`) found D_00573AC0. func_00162428 and its neighbours store
+`D_00573AC0 | 0x20000000` (the uncached alias) into D_0055C648, and func_0015f8c8 builds a GIF packet
+through that pointer. The packet runs far past D_00573AC0's declared 0x10 bytes (D_00573E40.call sends it
+with qwc 0x50). Nothing follows a stored pointer, so no check can see that the next names are part of the
+buffer. Session 18 kept it only by chance: a loop over D_005739F8 ends next to it. D_00573AC0 and
+D_00573AD0 are now in float_keep.txt. General rule: **a name whose address is stored (especially with
+0x20000000 or 0x30000000 ORed in) is a buffer of unknown size.** A future reach_check pass could flag every
+`or`/`lui 0x2000` of a floated address.
+
+### The bss budget and the arena
+
+- `SHIFT_FLOAT_BSS_BUDGET ?= 0x11800` (was 0x10000). With the data float off, `_end` is 0x691424 (0x695124 with 0x4000 of data) and
+  `_end + 0xA000` stays below 0x6A0000. With no data float, the arena leaves room for about 0x4BDC more, so about 0x16000 of
+  bss. 0x15000 was booted only before the packet-buffer fix, so it is untested with the current keep
+  list.
+- `SHIFT_FLOAT_DATA_BUDGET ?= 0` (was 0x4000 in s19d2's merge). With 0x4000 (KH1_F19D: 493 pieces float),
+  the build reaches the title, but PCSX2 itself crashes a few seconds after loading save 05. This happened
+  twice: the emulator closes, it does not just hang. With the data budget at 0 (F19E: "548 data variables
+  over the 0x0 budget stay in the blob", 110 bss runs float), the build loads the save, warps to Agrabah
+  and walks. The cause is not known. A crash of the emulator rather than a hang points at a DMA or VIF
+  transfer built from a moved table (inferred). Next: bisect with smaller data budgets (0x800, 0x2000) and
+  `SHIFT_FLOAT_ONLY`.
+
+### Runtime log (PCSX2, End of the World save 05 and an Agrabah fight)
+
+| ELF | build | result |
+|---|---|---|
+| F19A | session 18 rules, bss 0x10000 | title, save, Agrabah fight: OK (the Phase 3 dump, renderer-spec §6) |
+| F19B | bounds, bss 0x15000 | hangs loading the save |
+| F19C | `--no-bounds`, bss 0x15000 | OK |
+| F19X / F19X2 | bisection of the nine names | D_00573AC0 in: hang; out: OK |
+| F19D | merged, bounds + keep, bss 0x11800, data 0x4000 | title OK, PCSX2 crashes after loading the save |
+| F19E | the same with data 0 (the default now) | save, field, world map, Agrabah: OK |
+
+### Notes
+
+- **Fresh clone trap**: the float build needs out/shift/data_owners.tsv, which only
+  `tools/shift/data_owners.py` writes (after `make shift`). Without it cover_check fails with a missing
+  file. Run data_owners.py once after the first `make shift`.
+- `patch_iso.py --append --in-place` reuses its earlier appended sectors when the ELF fits, so KH1_BIG.iso
+  did not grow this session (this corrects the session 18 note).

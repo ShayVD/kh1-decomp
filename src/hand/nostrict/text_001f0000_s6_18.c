@@ -442,3 +442,5 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
     func_001220b8(buf);
     return x + (W >> 4);
 }
+#include "data/data_003E.h"
+#include "data/data_003F.h"

@@ -53,3 +53,4 @@ s32 func_00149c80(s32 i, s32 a) {
 extern u8 D_0048E418[];
 s32 D_00350D14 ALIGNED(4) = (s32)D_0048E418;
 #include "data/bss_0054_typed.h"
+#include "data/data_0048.h"

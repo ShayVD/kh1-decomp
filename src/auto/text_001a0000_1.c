@@ -8,3 +8,4 @@ s32 func_00266c08(M2C_UNK);
 void func_001a9e90(void) {
     D_00372908 = func_00266c08(2);
 }
+#include "data/data_0037.h"

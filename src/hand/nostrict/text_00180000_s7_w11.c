@@ -83,7 +83,7 @@ typedef struct {
 
 extern T2Sys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
-extern T2MtxOwner *D_00615E68;
+extern T2MtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 
 extern s32 D_00616224;
 

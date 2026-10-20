@@ -14,7 +14,7 @@ typedef f32 Mtx4[4][4];
 typedef struct { u32 flags; u8 pad04[0x12]; u16 h16; } DMdl;
 typedef struct { u8 pad[0x14]; void *x14; u8 pad18[4]; DMdl *mdl; s32 x20; } Ent24;
 typedef struct { u8 pad[0x10]; Mtx4 m; Mtx4 m2; u8 *x90; s32 x94; } PppMtxOwner;
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 typedef struct { s16 a; s16 n; u16 *list; } Grp;
 typedef struct { u8 pad0[0x10]; Ent24 *x10; AnEnt *anims; Grp *grps; } PppRes;
 extern PppRes *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */

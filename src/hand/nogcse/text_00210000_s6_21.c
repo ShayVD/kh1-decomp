@@ -48,3 +48,4 @@ void func_00214f50(void) {
         }
     }
 }
+#include "data/data_003F.h"

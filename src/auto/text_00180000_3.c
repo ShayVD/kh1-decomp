@@ -4,7 +4,7 @@
 #include "ppp.h"
 
 extern M2C_UNK D_00364130;
-extern void *D_00615E68;
+extern void *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 s32 func_00180f18(s32, s32, s32, s32);
 void func_00267620(s32);
 

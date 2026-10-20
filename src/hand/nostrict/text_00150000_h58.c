@@ -842,7 +842,7 @@ s32 func_00154e38(Act *a, s32 k, s32 b, s32 c) {
 }
 
 /* ---- func_001571a8 ---- */
-typedef struct { s8 b0; u8 b1; char name[32]; } E1608;
+#include "data/types/nostrict_text_00150000_h58.h"
 extern E1608 D_00551608[];
 extern s8 D_005516C0[];
 extern s32 D_002BC128;
@@ -1202,3 +1202,6 @@ void (*D_00351970[0x8])(void *) ALIGNED(16) = {
 /* At the end, not with the includes: declaring D_005516C0 earlier changes how func_0015b060 forms
    the D_00551970 address (gcc 2.96 rtx ordering), so the header comes after the code here. */
 #include "data/bss_0055.h"
+#include "data/data_0029.h"
+#include "data/data_002B.h"
+#include "data/data_002E.h"

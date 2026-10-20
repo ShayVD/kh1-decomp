@@ -86,7 +86,7 @@ r0:
 
 typedef struct { f32 x, y, z, w; } V4_9d;
 typedef struct { u8 pad[0x10]; V4_9d pos; } Act9d;
-extern Act9d *D_00575894;
+extern Act9d *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern V4_9d D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
 extern V4_9d D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 extern f32 D_002E27A0;
@@ -167,3 +167,4 @@ s32 func_00137330(Ob7 *o, s32 a, s32 b) {
     return r;
 }
 
+#include "data/data_002E.h"

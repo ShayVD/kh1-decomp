@@ -265,3 +265,7 @@ block_8:
     }
     return var_f0;
 }
+#include "data/data_002B.h"
+#include "data/data_002E.h"
+#include "data/data_0035.h"
+#include "data/data_0036.h"

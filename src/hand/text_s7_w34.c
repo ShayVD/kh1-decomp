@@ -15,7 +15,7 @@ typedef struct {
 typedef struct { u8 pad0[12]; s32 lv; u8 b16; u8 pad17[19]; u8 b36; u8 pad37[11]; } Stat;
 typedef struct { u8 pad[4]; u8 type; u8 pad5[19]; f32 f24; } ItemInfo;
 extern CdEnt D_00622290;
-extern u8 D_00625640;
+extern u8 D_00625640; /* src/data/bss_0062.c: s32 D_00625640 */
 void func_001bd090(CdEnt *, Stat *);
 s32 func_001bcd10(CdEnt *, CdEnt *);
 s32 func_001ba3f0(s32);

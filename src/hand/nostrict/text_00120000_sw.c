@@ -84,7 +84,7 @@ typedef struct { s16 id; u8 pad[18]; } C01Ent20;
 
 extern f32 D_002E27CC;
 extern f32 D_002E27D0;
-extern C01Ent20 *D_004F7810;
+extern C01Ent20 *D_004F7810; /* src/data/bss_004F.c: E7810 *D_004F7810 */
 
 f32 func_00176850(void);
 s32 func_001562d0(C01Obj2 *, C01Vec *);

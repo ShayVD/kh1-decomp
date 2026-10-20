@@ -34,3 +34,4 @@ S870 *func_0017f1c8(void) {
     }
     return &D_00575870;
 }
+#include "data/data_002E.h"

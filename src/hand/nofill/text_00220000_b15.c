@@ -113,3 +113,4 @@ void func_0022db98(Ob3 *a) {
         y += 28;
     }
 }
+#include "data/data_003F.h"

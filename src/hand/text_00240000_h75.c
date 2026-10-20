@@ -244,3 +244,4 @@ void *D_0046A018[0x8] ALIGNED(8) = {
     (void *)func_0024b610, (void *)func_0024b628, (void *)func_0024b640, (void *)func_0024b658,
     (void *)func_0024b670, (void *)func_0024b688, (void *)func_0024b6a0, (void *)func_0024b6b8,
 };
+#include "data/data_0046.h"

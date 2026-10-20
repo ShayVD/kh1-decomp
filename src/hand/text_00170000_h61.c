@@ -45,7 +45,7 @@ extern V4 D_00362680;
 extern V4 D_00362660;
 extern f32 D_0036266C;
 extern f32 D_0036268C;
-extern Cam *D_00575894;
+extern Cam *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern V4 D_00362560, D_00362570;
 extern V4 D_003625A0, D_003625B0;
 extern V4 D_003625F0;
@@ -664,3 +664,5 @@ void func_00179ee8(void) {
 #undef D_00575890
 #undef D_00575920
 #undef D_002C5958
+#include "data/data_002E.h"
+#include "data/data_0036.h"

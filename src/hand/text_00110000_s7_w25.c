@@ -61,3 +61,4 @@ void func_00115940(s32 id) {
     }
     D_002BD250[D_002C12C4++] = id;
 }
+#include "data/data_002C.h"

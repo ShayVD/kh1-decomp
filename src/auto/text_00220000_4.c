@@ -349,3 +349,4 @@ void func_0022e2c0(s32 arg0) {
 void func_0022eaa0(void) {
     func_001efb78(0);
 }
+#include "data/data_003F.h"

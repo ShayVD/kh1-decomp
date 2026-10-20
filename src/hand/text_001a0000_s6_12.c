@@ -96,7 +96,7 @@ typedef union Tag {
     u128 q;
     struct { s32 tag; union Tag *next; union Tag *self; s32 pad; } s;
 } Tag;
-extern Tag D_0061EEA0[];
+extern Tag D_0061EEA0[]; /* src/data/bss_0061.c: GsTag D_0061EEA0[0x10] */
 extern u8 D_0061E800[];
 extern u8 D_0061E8B0[];
 void func_001aa6b0(void *, s32, s32, s32);

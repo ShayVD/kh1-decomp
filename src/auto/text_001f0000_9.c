@@ -16,3 +16,4 @@ void func_001f35a8(s32 arg0, s32 arg1) {
     M2C_FIELD(&D_003E9630, s32 *, 8) = arg0;
     func_001f31a8(&D_003E9630, 6);
 }
+#include "data/data_003E.h"

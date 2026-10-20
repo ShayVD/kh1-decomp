@@ -160,3 +160,5 @@ done:
     D_003F2BD0 = (xx - ox) >> 4;
     D_003F2BD4 = (yy - org) >> 4;
 }
+#include "data/data_003E.h"
+#include "data/data_003F.h"

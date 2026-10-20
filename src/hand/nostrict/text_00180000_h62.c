@@ -131,7 +131,7 @@ typedef struct {
 } VtxCur;
 
 extern VtxSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-extern VtxCur *D_00615E68;
+extern VtxCur *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern s32 D_00616234;
 void *func_0017f958(VtxSys *, s32);
 

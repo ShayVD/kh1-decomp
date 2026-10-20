@@ -201,3 +201,5 @@ s32 func_001d4cb8(VM *vm) {
     vm->stk[vm->sp] = r;
     return 2;
 }
+#include "data/data_0039.h"
+#include "data/data_003A.h"

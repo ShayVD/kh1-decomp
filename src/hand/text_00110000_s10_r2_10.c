@@ -469,3 +469,5 @@ done:
     func_002675a8(o->out, cur);
     return acc1 | acc0;
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

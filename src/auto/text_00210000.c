@@ -191,3 +191,5 @@ void func_0021fb10(void) {
 s32 func_0021fd88(s32 arg0) {
     return arg0;
 }
+#include "data/data_002B.h"
+#include "data/data_003F.h"

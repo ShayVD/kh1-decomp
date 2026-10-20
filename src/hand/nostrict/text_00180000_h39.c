@@ -11,7 +11,7 @@ typedef struct {
     f32 m2[4][4]; /* +0x50 */
 } H39MObj;
 
-extern H39MObj *D_00615E68;
+extern H39MObj *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 void func_002672f8(f32 *, f32 (*)[4], f32 *);
 
 /* A texture header inside a sprite record (+0x10): +8/+0xC are offsets

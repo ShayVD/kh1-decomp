@@ -98,3 +98,5 @@ void func_00179690(void) {
     }
     M2C_FIELD(D_00575894, f32 *, 0x64) = 1.0f;
 }
+#include "data/bss_0057_mixed.h"
+#include "data/data_0035.h"

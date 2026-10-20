@@ -36,7 +36,7 @@ typedef struct {
     PppMtx m;
     PppMtx m2;
 } PppMtxOwner;
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 
 typedef struct {

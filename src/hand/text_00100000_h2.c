@@ -650,3 +650,5 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
     a->v[i][3] = D_0048C6F0[j][3];
 }
 #include "data/bss_0049_mixed.h"
+#include "data/data_002B.h"
+#include "data/data_0035.h"

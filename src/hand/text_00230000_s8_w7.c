@@ -141,3 +141,4 @@ s32 func_00233168(void) {
 end:
     return 0;
 }
+#include "data/data_0042.h"

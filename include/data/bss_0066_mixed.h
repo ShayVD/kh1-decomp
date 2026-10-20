@@ -20,5 +20,7 @@ extern s32 D_00669920;
 extern void *D_00669A10[];
 extern s32 D_00669A18[8];
 extern s16 D_00669A40[];
+extern void (*D_0066AA80)(void);
+extern s32 *D_0066AA84;
 
 #endif /* KH1_DATA_BSS_0066_MIXED_H */

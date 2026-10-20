@@ -287,3 +287,4 @@ block_9:
     return M2C_FIELD(var_s0, f32 *, 0xC);
 }
 #include "data/bss_0052_mixed.h"
+#include "data/data_002E.h"

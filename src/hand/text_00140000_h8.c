@@ -638,3 +638,4 @@ extern u8 D_0048E408[];
 s32 D_00350D10 ALIGNED(16) = (s32)D_0048E408;
 #include "data/bss_0052_mixed.h"
 #include "data/bss_0054_mixed.h"
+#include "data/data_0048.h"

@@ -1,0 +1,27 @@
+/* Shared data names 0037xxxx: pieces of the user's ELF defined in
+ * src/data/data_0037.s (phase 4, tools/shift/define_pieces.py). Only names whose
+ * C users agree on the type are declared here; users include this at their end. */
+#ifndef KH1_DATA_DATA_0037_H
+#define KH1_DATA_DATA_0037_H
+
+#include "common.h"
+
+extern s8 D_00372790[];
+extern s32 D_00372908;
+extern s8 D_00372EA0;
+extern s8 D_00372F28;
+extern f32 D_003732D0[];
+extern s32 D_003772D0;
+extern s32 D_003772DC;
+extern s32 D_003773EC;
+extern s32 D_0037A128;
+extern s32 D_0037A150;
+extern s32 D_0037A154;
+extern s32 D_0037A15C;
+extern s32 D_0037A160;
+extern s32 D_0037A164;
+extern s32 D_0037A168;
+extern s32 D_0037A174;
+extern s32 D_0037A190;
+
+#endif /* KH1_DATA_DATA_0037_H */

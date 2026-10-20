@@ -454,3 +454,7 @@ void func_0010b6c0(Win *w) {
     func_00106b18(D_002B74C0);
 }
 
+#include "data/data_0029.h"
+#include "data/data_002B.h"
+#include "data/data_0035.h"
+#include "data/data_003F.h"

@@ -745,3 +745,6 @@ s32 func_001401d8(W55Ob *o, f32 *d) {
     return k;
 }
 #include "data/bss_0052_typed.h"
+#include "data/data_0029.h"
+#include "data/data_002B.h"
+#include "data/data_0030.h"

@@ -923,3 +923,6 @@ s32 func_001c13e8(VM_1c13e8 *v, s32 idx) {
     }
     return 2;
 }
+#include "data/data_0037.h"
+#include "data/data_0038.h"
+#include "data/data_0048.h"

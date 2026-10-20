@@ -54,3 +54,4 @@ s32 func_00107c48(s32 i) {
     return n;
 }
 #include "data/bss_0049_typed.h"
+#include "data/data_0035.h"

@@ -64,16 +64,56 @@ def module(addr: int) -> str:
     return f"bss_{addr >> 16:04X}"
 
 
-def user_decl(path: Path, name: str):
+def user_decl(path: Path, name: str, repeat: bool = False):
+    """(type, declarator) of path's file-scope extern of name. With repeat,
+    several extern lines are fine when they all declare it the same way."""
     lines = path.read_text().splitlines()
     hits = [ln for ln in lines if ln.startswith("extern") and re.search(r"\b" + name + r"\b", ln)]
-    if len(hits) != 1:
+    if len(hits) != 1 and not (repeat and hits):
         return None, f"{path.relative_to(ROOT)}: {len(hits)} file-scope extern lines"
-    pe = parse_extern(hits[0], name)
-    if not pe:
-        return None, f"{path.relative_to(ROOT)}: declaration not understood"
-    tspec, decls, i = pe
-    return (norm(tspec), norm(decls[i])), None
+    got = set()
+    for ln in hits:
+        pe = parse_extern(ln, name)
+        if not pe and repeat:
+            d = extra_decl(ln, name)
+            if d:
+                got.add(d)
+                continue
+        if not pe:
+            return None, f"{path.relative_to(ROOT)}: declaration not understood"
+        tspec, decls, i = pe
+        got.add((norm(tspec), norm(decls[i])))
+    if len(got) != 1:
+        return None, f"{path.relative_to(ROOT)}: {len(hits)} extern lines that disagree"
+    return got.pop(), None
+
+
+TAIL = r"\s*;\s*(/\*.*\*/|//.*)?$"
+TYPE = r"((?:(?:const|volatile|unsigned|signed|struct|union|enum)\s+)*[A-Za-z_]\w*)"
+
+
+def extra_decl(line: str, name: str):
+    """(type, declarator) for two forms parse_extern does not read (--relax):
+    a function pointer `T (*D)(args)` and a volatile pointer `T *volatile D`."""
+    n = re.escape(name)
+    m = re.match(r"^extern\s+" + TYPE + r"\s*\(\s*\*\s*" + n + r"\s*\)\s*\(([^()]*)\)" + TAIL, line)
+    if m:
+        return norm(m.group(1)), f"(*{name})({norm(m.group(2))})"
+    m = re.match(r"^extern\s+" + TYPE + r"\s*\*\s*volatile\s+" + n + TAIL, line)
+    if m:
+        return norm(m.group(1)), f"*volatile {name}"
+    return None
+
+
+def pointer_only(path: Path, name: str) -> bool:
+    """Every file-scope extern of name in path declares a pointer (or function
+    pointer), whatever its type: 4 bytes. For --relax pads with unread users."""
+    n = re.escape(name)
+    hits = [ln for ln in path.read_text().splitlines()
+            if ln.startswith("extern") and re.search(r"\b" + n + r"\b", ln)]
+    return bool(hits) and all(
+        re.search(r"(\*\s*(volatile\s+)?" + n + r"|\(\s*\*\s*" + n + r"\s*\)\s*\([^()]*\))"
+                  r"\s*(__asm__\s*\(\s*\"\w+\"\s*\))?\s*;", ln) for ln in hits)
 
 
 def plan(owners: Path, names: list[str]):
@@ -177,7 +217,23 @@ def apply(plans) -> None:
         path.write_text("".join(lines))
 
 
-KIND_RANK = {"exact": 0, "fill": 1, "pad": 2}
+KIND_RANK = {"exact": 0, "fill": 1, "pad": 2, "fill-floor": 3, "pad-align": 4}
+
+
+def align_slack(addr: int, used: int, ext: int) -> bool:
+    """The extent past `used` bytes is only alignment: the next anchor is the
+    first 8- or 16-aligned address at or after addr + used."""
+    end = addr + ext
+    return any(ext - used < a and end % a == 0 for a in (8, 16))
+
+# Types more than one moved header needs (u128, PppMtx) live in one shared
+# header; a plan whose type is there has tsrc (SHARED, type) and moves nothing.
+SHARED = "include/data/types/shared.h"
+
+
+def tkey(f: str) -> str:
+    """The include/data/types/<key>.h a plan's type comes from."""
+    return "shared" if f == SHARED else type_move.header_name(ROOT / f)
 
 
 def defined_names() -> set[str]:
@@ -189,10 +245,12 @@ def base_type(tspec: str) -> str:
     return re.sub(r"\b(volatile|const)\s+", "", tspec).strip()
 
 
-def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
-    """Names whose users disagree: pick one declaration (see the module doc)."""
+def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=(), relax: bool = False):
+    """Names whose users disagree: pick one declaration (see the module doc).
+    relax (session 19) adds pad-align and fill-floor, reads repeated identical
+    extern lines, and takes names whose users agree when they are named."""
     done = defined_names()
-    rows = []
+    rows, others = [], {}
     for ln in owners.read_text().splitlines()[1:]:
         f = ln.split("\t")
         if f[2] != "bss" or f[6] != "shared" or f[1] in done or f[1] in exclude:
@@ -203,32 +261,30 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         if any(not x.endswith(".c") or x.startswith("src/sdk/") for x in files):
             continue
         rows.append((int(f[0], 16), f[1], int(f[3], 16), int(f[4], 16), files))
-    # data_owners.py only sees references to D_ symbols; a name defined in C is
-    # referenced through its section from its own file, so it is no anchor
-    # there. Clamp each extent at the next C-defined variable (a fill then ends
-    # right at it; adjacent C bss variables float as one block, so code that
-    # walks from one into the next still finds it).
+        others[f[1]] = f[8] if len(f) > 8 else ""
+    # data_owners.py counts the C-defined variables (out/gen/data.tsv) as anchors, so
+    # no extent runs over one; an extent that does means data_owners.tsv is older
+    # than the last `make`.
     import bisect
     defs = sorted(int(ln.split("\t")[0], 16)
                   for ln in (ROOT / "out/gen/data.tsv").read_text().splitlines()[1:])
-    clamped = set()
-    for k, (addr, name, ext, reach, files) in enumerate(rows):
+    for addr, name, ext, reach, files in rows:
         i = bisect.bisect_right(defs, addr)
         if i < len(defs) and defs[i] < addr + ext:
-            rows[k] = (addr, name, defs[i] - addr, reach, files)
-            clamped.add(name)
+            sys.exit(f"error: {name}'s extent runs over the C variable at {defs[i]:08x}; "
+                     "rerun tools/shift/data_owners.py")
     skip, cands = [], {}
     probes: dict[str, dict[str, str]] = {}
     for addr, name, ext, reach, files in rows:
         decls: dict[tuple, list] = {}
         unknown = []
         for fn in files:
-            d, _why = user_decl(ROOT / fn, name)
+            d, _why = user_decl(ROOT / fn, name, relax)
             if d:
                 decls.setdefault(d, []).append(fn)
             else:
                 unknown.append(fn)
-        if len(decls) < 2 and not unknown:
+        if len(decls) < 2 and not unknown and not (relax and names):
             continue  # agreeing names are the default mode's
         if not decls:
             skip.append((name, "no user has a single file-scope extern"))
@@ -252,6 +308,8 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
     out = []
     for name, (addr, ext, reach, files, decls, unknown) in sorted(cands.items(), key=lambda kv: kv[1][0]):
         taken = any(address_taken((ROOT / f).read_text(), name) for f in files)
+        # unread users that only declare a pointer are 4 bytes: no obstacle to a pad
+        unread = [f for f in unknown if not (relax and pointer_only(ROOT / f, name))]
         opts, why, sopts = [], [], []
         # the definition must cover every complete declaration (a user writing
         # `s32 D[2]` reads D[1] even if another writes `s32 D`)
@@ -262,7 +320,8 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         for (tspec, decl), fns in decls.items():
             tag = f"{tspec} {decl}"
             bt = base_type(tspec)
-            if not re.fullmatch(r"\**\w+(\[[^\]]*\])?(\[[^\]]+\])*", decl):
+            if not (re.fullmatch(r"\**\w+(\[[^\]]*\])?(\[[^\]]+\])*", decl)
+                    or (relax and re.fullmatch(r"\(\*\w+\)\([^()]*\)|\*volatile \w+", decl))):
                 why.append(f"{tag}: declarator not handled")
                 continue
             sz = sizes.get((fns[0], name))
@@ -270,18 +329,27 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
                 why.append(f"{tag}: no size")
                 continue
             if "[]" in decl:
-                if ext % sz:
+                if (ext % sz and relax and not others[name] and ext // sz >= 2
+                        and align_slack(addr, ext // sz * sz, ext)):
+                    d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill-floor", ext // sz * sz
+                elif ext % sz:
                     why.append(f"{tag}: extent not a multiple of {sz:#x}")
                     continue
-                if ext == sz:
+                elif ext == sz:
                     why.append(f"{tag}: one element fills the extent (users index past it)")
                     continue
-                d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
+                else:
+                    d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
             elif sz == ext:
                 d, kind, size = decl, "exact", sz
-            elif (sz < ext and "[" not in decl and not taken and not unknown
+            elif (sz < ext and "[" not in decl and not taken and not (unread if sz >= 4 else unknown)
                   and reach <= max(sz, 4)):
                 d, kind, size = decl, "pad", sz
+            elif (relax and sz < ext and not (unread if sz >= 4 else unknown) and not others[name] and reach <= max(sz, 4)
+                    and align_slack(addr, sz, ext)):
+                # taken, or a sized array: the slack is only alignment, and reach_check
+                # keeps the name in place if code reaches past it through a pointer
+                d, kind, size = decl, "pad-align", sz
             else:
                 why.append(f"{tag}: sizeof {sz:#x} vs extent {ext:#x}")
                 continue
@@ -301,7 +369,9 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         tsrc = None
         if not opts and types and sopts:
             for score, tspec, decl, d, kind, size, bt, fns in sorted(sopts, key=lambda o: o[0]):
-                for f in sorted(fns, key=lambda f: not f.startswith("src/hand/")):
+                if bt in type_move.header_types(ROOT / SHARED):
+                    tsrc = (SHARED, bt)
+                for f in [] if tsrc else sorted(fns, key=lambda f: not f.startswith("src/hand/")):
                     hp = type_move.header_path(ROOT / f)
                     if hp.exists():
                         ok = bt in type_move.header_types(hp)
@@ -318,8 +388,6 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
             skip.append((name, "; ".join(why)))
             continue
         _sc, tspec, decl, d, kind, size = min(opts)
-        if name in clamped:
-            kind += "/clamped"
         out.append((addr, name, files, tspec, decl, d, kind, size, ext, align_for(addr, size), tsrc))
     if types:
         out, more = settle_types(out)
@@ -337,6 +405,9 @@ def settle_types(plans):
     moved: dict[str, set] = {}  # src -> type names its header defines
     bad: dict[str, str] = {}
     for f, ts in per_src.items():
+        if f == SHARED:
+            moved[f] = type_move.header_types(ROOT / SHARED)
+            continue
         src = ROOT / f
         hp = type_move.header_path(src)
         if hp.exists():
@@ -371,7 +442,7 @@ def settle_types(plans):
                     for n in type_move.header_types(ROOT / "include/data/types" / f"{m.group(1)}.h"):
                         mod_types[mod][n] = m.group(1)
         have = mod_types[mod]
-        key = type_move.header_name(ROOT / f)
+        key = tkey(f)
         clash = {n for n in moved[f] if have.get(n, key) != key}
         if clash:
             skip.append((p[1], f"type names {sorted(clash)} from {f} clash with another file's in {mod}"))
@@ -407,6 +478,8 @@ def apply_mixed(plans) -> None:
         if len(p) > 10 and p[10]:
             srcs.setdefault(p[10][0], set()).add(p[10][1])
     for f, ts in sorted(srcs.items()):
+        if f == SHARED:
+            continue
         src = ROOT / f
         if type_move.header_path(src).exists():
             continue
@@ -427,7 +500,7 @@ def apply_mixed(plans) -> None:
             oinc = [ln for ln in hdr.read_text().splitlines() if ln.startswith('#include "data/types/')]
         new = [f"extern {p[3]} {p[4]};" for p in ps]
         decls = sorted(set(old + new), key=lambda ln: re.search(r"D_([0-9A-F]{8})", ln).group(1))
-        tinc = sorted(set(oinc) | {f'#include "data/types/{type_move.header_name(ROOT / p[10][0])}.h"'
+        tinc = sorted(set(oinc) | {f'#include "data/types/{tkey(p[10][0])}.h"'
                                     for p in ps if len(p) > 10 and p[10]})
         m2c = any(re.search(r"\bM2C_UNK", ln) for ln in decls)
         what = "whose users disagree on the type" if kind == "mixed" else "declared with a moved type"
@@ -505,9 +578,11 @@ def main() -> int:
     ap.add_argument("--types", action="store_true",
                     help="with --mixed: allow file-local types, moved to include/data/types/")
     ap.add_argument("--exclude", action="append", default=[], help="leave this name alone")
+    ap.add_argument("--relax", action="store_true",
+                    help="with --mixed: pad-align, fill-floor, repeated extern lines (session 19)")
     a = ap.parse_args()
     if a.mixed:
-        plans, skip = plan_mixed(Path(a.owners), a.name, a.types, set(a.exclude))
+        plans, skip = plan_mixed(Path(a.owners), a.name, a.types, set(a.exclude), a.relax)
     else:
         plans, skip = plan(Path(a.owners), a.name)
     kinds: dict[str, int] = {}

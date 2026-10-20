@@ -867,3 +867,7 @@ s32 func_001eb698(VM *vm) {
     return 2;
 }
 #include "data/bss_0063_typed.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_003D.h"
+#include "data/data_003F.h"

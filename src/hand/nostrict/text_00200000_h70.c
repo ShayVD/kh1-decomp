@@ -323,3 +323,4 @@ void func_002163e0(N *a0) {
         func_00207870(a0, i == sel, 2, 0, y, 122, t);
     }
 }
+#include "data/data_003F.h"

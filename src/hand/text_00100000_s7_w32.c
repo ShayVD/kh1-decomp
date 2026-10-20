@@ -341,3 +341,7 @@ void func_001fea38(WinA *o) {
     sceGsSyncPath(0, 0);
     func_001220b8(p);
 }
+#include "data/bss_0049_mixed.h"
+#include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"

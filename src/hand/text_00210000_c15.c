@@ -374,3 +374,4 @@ void func_0021d9a8(void *a) {
 void func_0021d9c8(void) {
     func_0021b418();
 }
+#include "data/data_003F.h"

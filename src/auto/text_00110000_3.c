@@ -171,3 +171,4 @@ void func_0011c9c0(void) {
     func_001edba0();
     func_00101628();
 }
+#include "data/data_002B.h"

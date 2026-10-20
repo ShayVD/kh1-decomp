@@ -956,3 +956,6 @@ s32 func_00141540(O1468 *o, s32 x) {
     if (s->pc8) s->pc8->b3 = v;
     return v;
 }
+#include "data/bss_0053_mixed.h"
+#include "data/data_002B.h"
+#include "data/data_0030.h"

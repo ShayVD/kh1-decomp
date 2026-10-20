@@ -347,7 +347,7 @@ typedef struct {
     PppMtx m2;   /* +0x50 */
 } PppMtxOwner;
 
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 
 typedef struct {
     s32 frame;
@@ -908,3 +908,4 @@ void func_001a56a0(PppAnimPlayer *p) {
         }
     }
 }
+#include "data/data_0037.h"

@@ -18,3 +18,4 @@ void func_001aa9e8(void) {
 
     D_00372F28 = wide - 1;
 }
+#include "data/data_0037.h"

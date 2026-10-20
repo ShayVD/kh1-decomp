@@ -75,7 +75,7 @@ extern u32 D_00524F44;
 extern s32 D_00524F48;
 extern s32 D_00524F4C;
 extern void (*D_00524F74)(void);
-extern f32 D_00524F78;
+extern f32 D_00524F78; /* src/data/bss_0052.c: s32 D_00524F78 */
 extern u32 D_002C5958;
 extern f32 D_002BBDFC;
 extern u32 D_002C5BB8;
@@ -1152,3 +1152,4 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
     if (!(o->f88 & 2)) o->f3e4 = c;
     e->f0 |= 2;
 }
+#include "data/data_002E.h"

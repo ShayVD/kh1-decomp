@@ -697,3 +697,6 @@ s32 func_001e24c8(VM *vm) {
 }
 
 #include "data/bss_0062_mixed.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003D.h"

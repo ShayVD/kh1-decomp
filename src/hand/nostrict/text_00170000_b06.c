@@ -22,7 +22,7 @@ void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);
 s32 func_0017b860(s32, V4 *, f32 *, s32 *);
 s32 func_0017b4f8(s32 *, f32 *, f32);
-extern ActB *D_00575894;
+extern ActB *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern s32 D_00575890;
 extern f32 D_005758C0;
 extern f32 D_005758C4;
@@ -449,3 +449,5 @@ s32 func_0017c190(void) {
     return 1;
 }
 #include "data/bss_0057_typed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

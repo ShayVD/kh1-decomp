@@ -156,3 +156,5 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
     func_001220b8(w);
 }
 #include "data/bss_0049_mixed.h"
+#include "data/data_0029.h"
+#include "data/data_0035.h"

@@ -25,7 +25,7 @@ extern s32 D_00532B80;
 extern s32 D_00547BA0;
 extern s32 D_00547BA8;
 extern s32 D_00547BAC;
-extern s32 D_00547BB0;
+extern s32 D_00547BB0; /* src/data/bss_0054.c: void *volatile D_00547BB0 */
 extern s32 D_0054F44C;
 s32 func_001477c8(M2C_UNK);
 s32 func_001ecfd8(M2C_UNK);
@@ -137,4 +137,4 @@ void func_0014ec10(s32 arg0) {
 void func_0014ec38(s32 arg0) {
     D_0054F44C |= 1 << (arg0 - 1);
 }
-#include "data/bss_0054_mixed.h"
+#include "data/bss_0053_mixed.h"

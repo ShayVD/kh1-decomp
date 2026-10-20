@@ -641,7 +641,7 @@ s32 *func_001809b8(s32 *p, u8 *mask) {
 #define func_0017f910 func_0017f910_2058
 #define func_0017f9a8 func_0017f9a8_2058
 #define func_00183a00 func_00183a00_2058
-typedef int u128 __attribute__((mode(TI)));
+typedef unsigned int u128 __attribute__((mode(TI)));
 typedef struct { u8 pad[0x10]; void *x10; void *x14; void *x18; } Pmgr;
 typedef struct E0C0 {
     u8 pad0[0x86];
@@ -759,3 +759,5 @@ search:
 
 #include "data/bss_0061_mixed.h"
 #include "data/bss_0061_typed.h"
+#include "data/data_002E.h"
+#include "data/data_0036.h"

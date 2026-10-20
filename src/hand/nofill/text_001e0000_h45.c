@@ -40,3 +40,7 @@ void func_001e9d00(Vec3 *out, Vec3 *a, Vec3 *b, f32 r) {
     out->y = atan2f(a->x - b->x, a->z - b->z);
     out->z = r;
 }
+#include "data/data_0039.h"
+#include "data/data_003A.h"
+#include "data/data_003B.h"
+#include "data/data_003C.h"

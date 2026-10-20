@@ -455,3 +455,4 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
     }
     out->w = 1.0f;
 }
+#include "data/data_002E.h"

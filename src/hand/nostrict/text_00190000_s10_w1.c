@@ -89,7 +89,7 @@ typedef struct {
 } T2Col;
 
 extern T2Sys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-extern T2MtxOwner *D_00615E68;
+extern T2MtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern s32 D_00616224;
 extern f32 D_003701F0[];
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
@@ -745,3 +745,4 @@ end:
     w->t += key->tstep;
     func_001aa9d0(384);
 }
+#include "data/data_0037.h"

@@ -109,3 +109,4 @@ void func_0023d1a0(void) {
         D_00651E50[4168] = 0;
     }
 }
+#include "data/data_003F.h"

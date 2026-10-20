@@ -482,3 +482,5 @@ C01Act *func_00124218(u32 id) {
     return a;
 }
 #undef D_00304BE8
+#include "data/data_002C.h"
+#include "data/data_0035.h"

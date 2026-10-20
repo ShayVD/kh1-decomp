@@ -49,3 +49,4 @@ s32 func_001e1c20(void) {
     func_001e05a8(D_003DB050);
     return 0;
 }
+#include "data/data_003D.h"

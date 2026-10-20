@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern unsigned int D_003E3D68;
-extern volatile u32 D_00642D18;
+extern volatile u32 D_00642D18; /* src/data/bss_0064.c: s32 D_00642D18 */
 
 void func_002190e8(void) {
   u32 temp_a0;

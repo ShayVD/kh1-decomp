@@ -215,3 +215,5 @@ void func_001fb428(Txt9 *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s3
     D_003F2BD0 = (val - ox) >> 4;
     D_003F2BD4 = (yy - oy) >> 4;
 }
+#include "data/data_003E.h"
+#include "data/data_003F.h"

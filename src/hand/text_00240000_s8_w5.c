@@ -84,3 +84,4 @@ s32 func_0024ddf8(void) {
     D_0046A614 = 130;
     return D_0046A67C;
 }
+#include "data/data_0046.h"

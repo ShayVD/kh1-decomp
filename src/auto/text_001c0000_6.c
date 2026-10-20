@@ -48,3 +48,4 @@ s32 func_001cef80(void) {
     D_00389C90[1551] = (s64) (D_00389C90[1551] & ~1);
     return 2;
 }
+#include "data/data_0037.h"

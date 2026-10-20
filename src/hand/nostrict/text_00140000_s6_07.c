@@ -321,3 +321,4 @@ void func_0015f128(void) {
     D_00573E40.ad[17] = 8;
 }
 #include "data/bss_0055_typed.h"
+#include "data/data_0035.h"

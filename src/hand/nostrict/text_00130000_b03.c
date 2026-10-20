@@ -1032,3 +1032,5 @@ end:;
 
 #include "data/bss_0053_mixed.h"
 #include "data/bss_0053_typed.h"
+#include "data/data_002C.h"
+#include "data/data_0030.h"

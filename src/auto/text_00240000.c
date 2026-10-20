@@ -19,7 +19,7 @@ extern s32 D_00469F60;
 extern s32 D_0046A53C;
 extern s32 D_0046A60C;
 extern s32 D_0046A67C;
-extern s32 D_00662540;
+extern s32 D_00662540; /* src/data/bss_0066.c: Hud D_00662540 */
 s32 D_006627B8 ALIGNED(8);
 extern s32 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
 extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
@@ -27,7 +27,7 @@ extern s32 D_00669A38;
 extern s32 D_00669A3C;
 extern u32 D_002C5AD8;
 extern u32 D_002C5AE0;
-extern void *D_0066AA84;
+extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
 s32 *func_00245f58();
 s32 func_0023feb8();
 s32 func_0023ff38(void *, s32);
@@ -254,3 +254,4 @@ s32 func_0024e078(void) {
 void func_0024f070(void) {
     func_00149c80(M2C_FIELD(D_0066AA84, u16 *, 0x4C), &func_0024f008);
 }
+#include "data/data_0046.h"

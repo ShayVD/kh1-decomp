@@ -56,6 +56,15 @@ $(ORIG):
 $(GEN)/objects.mk $(GEN)/symbols.ld: $(GEN)/srclist $(SRCS) kh1.toml functions.tsv tools/kh1tool.py
 	@$(KH1) gen
 
+# Data pieces (phase 4, step 4): src/data/data_*.s name each shared data table as a
+# PIECE, an .incbin of out/data/pieces/<name>.bin cut from the user's ELF here (never
+# committed). Their objects wait for the cut.
+PIECE_SRCS   := $(filter src/data/data_%.s,$(SRCS))
+PIECES_STAMP := out/data/pieces.stamp
+$(PIECES_STAMP): $(ORIG) $(PIECE_SRCS) tools/shift/cut_pieces.py
+	@$(PY) -I tools/shift/cut_pieces.py --stamp $@ $(PIECE_SRCS)
+$(patsubst %,out/build/%.o,$(PIECE_SRCS)): $(PIECES_STAMP) include/data/piece.inc
+
 build: $(PATCHED)
 
 $(PATCHED): $(ORIG) layout.tsv kh1.ld $(GEN)/symbols.ld $(OBJS) tools/kh1tool.py
@@ -131,8 +140,17 @@ SHIFT_FLOAT      ?= 0
 # floated bss pushes _end and crt0's 0xA000-byte heap towards the fixed arena at 0x006A0000.
 # Names that are really parts of another object stay in place: cover_check.py (declared
 # objects), reach_check.py (displacements, calls, arrays indexed into the next name) and
-# tools/shift/float_keep.txt (IOP-written blocks). Session 18: 0x10000 plays in PCSX2.
-SHIFT_FLOAT_BSS_BUDGET ?= 0x10000
+# tools/shift/float_keep.txt (IOP-written blocks, a packet buffer). Session 18: 0x10000 plays in
+# PCSX2; session 19: 0x11800 plays (title, save load, field) with the reach_check bounds and
+# float_keep's packet buffer. The arena limit leaves room for about 0x16000 with no data float.
+SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
+# SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
+# data goes after the blob and pushes .bss and _end up by as much (same arena limit).
+# Off by default: session 19's 0x4000 reaches the title but PCSX2 crashes after loading a save
+# (docs/shiftable-plan.md, "Session 19: runtime"). Bisect with smaller budgets before raising it.
+SHIFT_FLOAT_DATA_BUDGET ?= 0
+# SHIFT_REACH_FLAGS: extra reach_check.py options (--no-bounds: the session 18 idx-next rule).
+SHIFT_REACH_FLAGS ?=
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
 # SHIFT_FLOAT_ONLY: if set, only these bss names float (bisecting; the budget still applies).
@@ -181,11 +199,11 @@ endif
 	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build --out-dir $$vdir $$vdef)"; fi; \
 	drafts=""; if [ "$(SHIFT_DRAFTS)" = 1 ]; then drafts="$$($(SHIFT_PY) tools/shift/drafts.py build --out-dir $(SHIFT_OUT)/drafts)"; fi; \
 	if [ "$(SHIFT_FLOAT)" = 1 ]; then $(SHIFT_PY) tools/shift/cover_check.py --out $(SHIFT_OUT)/float_covered.txt > $(SHIFT_OUT)/float_covered.log; \
-		$(SHIFT_PY) tools/shift/reach_check.py --elf $(ORIG) --overlays $(SHIFT_OVERLAYS) --out $(SHIFT_OUT)/float_reach.txt \
+		$(SHIFT_PY) tools/shift/reach_check.py $(SHIFT_REACH_FLAGS) --elf $(ORIG) --overlays $(SHIFT_OVERLAYS) --out $(SHIFT_OUT)/float_reach.txt \
 			> $(SHIFT_OUT)/float_reach.log 2>&1; cat $(SHIFT_OUT)/float_reach.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

@@ -111,3 +111,4 @@ void func_0021fb28(void) {
 void func_0021fd60(s32 arg0) {
     func_0021b800(*(M2C_UNK *)((s8 *)&D_003F5FF0 + (arg0 * 4)) + 0x20);
 }
+#include "data/data_003F.h"

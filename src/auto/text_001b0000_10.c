@@ -154,3 +154,4 @@ void func_001be8a8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
     func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x60), sp, arg1);
     func_00267930(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x60), &M2C_FIELD(sp, M2C_UNK *, 0x40), &M2C_FIELD(sp, M2C_UNK *, 0x50));
 }
+#include "data/data_0037.h"

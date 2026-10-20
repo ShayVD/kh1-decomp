@@ -527,3 +527,5 @@ s32 func_001f4110(void) {
     return n;
 }
 #include "data/bss_0063_mixed.h"
+#include "data/data_003E.h"
+#include "data/data_003F.h"

@@ -23,7 +23,7 @@ typedef struct {
 
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615FC0;
 
 typedef struct {
@@ -1008,3 +1008,4 @@ void pppDrawMdlTs3Draw(PppObject *obj, PppTs3Key *key, PppEntry *e) {
     p.b4C = 0;
     D_00616224 = func_001aaf88((s32 *) m, &p, s->arg);
 }
+#include "data/data_0037.h"

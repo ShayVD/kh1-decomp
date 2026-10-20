@@ -886,3 +886,6 @@ void func_0014ade0(Hx *x, Hy *y) {
     }
 }
 #include "data/bss_0053_mixed.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"
+#include "data/data_0030.h"

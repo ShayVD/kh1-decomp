@@ -9,8 +9,14 @@ every D_ name the code references, the addresses code builds from it (HI16/LO16
 pairs, R_MIPS_32 words), the source files those references come from, and the
 data-blob pointers (data_relocs.tsv rows, emitted as `.word D_BLOB+x` /
 `D_BSS+x`) that point into it. An object's extent is from its own address to
-the next "anchor" (any D_ name's address or any data pointer's target): an
-upper bound on its size, since nothing else is known to start before it.
+the next "anchor" (any D_ name's address, any data pointer's target, or any
+variable C defines, out/gen/data.tsv): an upper bound on its size, since
+nothing else is known to start before it.
+
+A C-defined variable is referenced from its own file through its section
+(the relocation names a section symbol, not D_X); those references are
+counted for the variable that contains the target, so its own file shows up
+among its users and the variable is an anchor even if no other file names it.
 
 Rows (one per D_ name, by address): addr, region (data/bss), extent, max
 offset code reaches from it (built address - addr, +4), files (`;`), number of
@@ -43,15 +49,34 @@ sys.path.insert(0, str(TOOLS / "shift"))
 import kh1tool as K  # noqa: E402
 import mips  # noqa: E402
 from elf32 import R_MIPS_32, R_MIPS_HI16, R_MIPS_LO16, Elf  # noqa: E402
+
+STT_SECTION = 3
 from shift_cmp import read_map, sext, source_of  # noqa: E402
 
 BLOB_START, BSS_START, IMAGE_END = 0x00272C70, 0x00494080, 0x00675018
 DATA_RE = re.compile(r"^D_([0-9A-Fa-f]{8})$")
 
 
-def code_refs(link: Path):
+def c_defined(path: Path) -> list[tuple[int, int, str]]:
+    """(address, size, name) of the variables C defines (out/gen/data.tsv)."""
+    if not path.exists():
+        return []
+    out = []
+    for ln in path.read_text().splitlines()[1:]:
+        f = ln.split("\t")
+        out.append((int(f[0], 16), int(f[3], 16), f[1]))
+    return sorted(out)
+
+
+def code_refs(link: Path, cdefs: list[tuple[int, int, str]] = ()):
     """(target address, D_ name, source file) for every reference in .text and
-    compiled rodata to a D_ name inside the image."""
+    compiled rodata to a D_ name inside the image; references through a section
+    symbol count for the C-defined variable (cdefs) holding the target."""
+    cstarts = [c[0] for c in cdefs]
+
+    def cvar_at(addr: int):
+        i = bisect.bisect_right(cstarts, addr) - 1
+        return cdefs[i][2] if i >= 0 and addr < cdefs[i][0] + max(cdefs[i][1], 1) else None
     elf = Elf.load(link / "kh1-shift.linked.elf")
     syms = elf.symbols()
     smap = read_map(link / "kh1-shift.map")
@@ -74,7 +99,8 @@ def code_refs(link: Path):
             return struct.unpack_from("<I", body, addr - sec.addr)[0]
         for off, typ, si in rel:
             name = syms[si].name if si < len(syms) else ""
-            if not DATA_RE.match(name):
+            secsym = si < len(syms) and syms[si].type == STT_SECTION
+            if not DATA_RE.match(name) and not (secsym and cdefs):
                 continue
             if typ == R_MIPS_32:
                 target = word(off)
@@ -94,6 +120,10 @@ def code_refs(link: Path):
                 target = (((word(hi) & 0xFFFF) << 16) + sext(w & 0xFFFF)) & 0xFFFFFFFF
             else:
                 continue
+            if secsym:
+                name = cvar_at(target)
+                if name is None:
+                    continue
             if BLOB_START <= target <= IMAGE_END:
                 out.append((target, name, src_at(off)))
     return out
@@ -113,13 +143,16 @@ def blob_ptrs(path: Path) -> list[tuple[int, int]]:
     return out
 
 
-def analyse(link: Path, relocs: Path):
-    refs = code_refs(link)
+def analyse(link: Path, relocs: Path, data_tsv: Path):
+    cdefs = c_defined(data_tsv)
+    refs = code_refs(link, cdefs)
     ptrs = blob_ptrs(relocs)
+    caddr = {n: a for a, _s, n in cdefs}
     names: dict[str, int] = {}
     for _t, n, _s in refs:
-        names[n] = int(DATA_RE.match(n).group(1), 16)
-    anchors = sorted(set(names.values()) | {t for _w, t in ptrs} | {BSS_START, IMAGE_END})
+        names[n] = caddr[n] if n in caddr else int(DATA_RE.match(n).group(1), 16)
+    anchors = sorted(set(names.values()) | {t for _w, t in ptrs} | set(caddr.values())
+                     | {BSS_START, IMAGE_END})
     by_target = sorted(refs)
     targets = [r[0] for r in by_target]
     ptr_targets = sorted(t for _w, t in ptrs)
@@ -146,12 +179,14 @@ def main() -> int:
     ap.add_argument("--link", type=Path, default=K.OUT / "shift")
     ap.add_argument("--data-relocs", type=Path, default=K.ROOT / "data_relocs.tsv")
     ap.add_argument("--out", type=Path, default=K.OUT / "shift" / "data_owners.tsv")
+    ap.add_argument("--data-tsv", type=Path, default=K.OUT / "gen" / "data.tsv",
+                    help="the C-defined variables (anchors; `make` writes it)")
     ap.add_argument("--file", help="only the names this source file references")
     ap.add_argument("--summary", action="store_true", help="counts per verdict and region, best files")
     a = ap.parse_args()
     if not (a.link / "kh1-shift.linked.elf").exists():
         sys.exit("error: no M0 link; run `make shift` first")
-    rows = analyse(a.link, a.data_relocs)
+    rows = analyse(a.link, a.data_relocs, a.data_tsv)
     a.out.write_text("addr\tname\tregion\textent\treach\tptrs_in\tverdict\tfiles\tothers_inside\n" + "".join(
         f"{r['addr']:08x}\t{r['name']}\t{r['region']}\t0x{r['extent']:x}\t0x{r['reach']:x}\t{r['ptrs']}\t"
         f"{r['verdict']}\t{';'.join(r['files'])}\t{';'.join(r['others'])}\n" for r in rows))

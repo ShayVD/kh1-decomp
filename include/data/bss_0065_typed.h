@@ -8,6 +8,7 @@
 #include "data/types/nofill_text_00230000_h49.h"
 #include "data/types/nostrict_text_00230000_s6_24.h"
 #include "data/types/nostrict_text_00240000_h75.h"
+#include "data/types/nostrict_text_00240000_s7_w36.h"
 #include "data/types/text_00230000_s11_w19.h"
 #include "data/types/text_00240000_s6_25.h"
 
@@ -15,6 +16,8 @@ extern Ob17 D_00650120[];
 extern Ob570 D_00650C00;
 extern Pkt D_00651210;
 extern Slot D_00651310[10];
+extern QW *D_00651D60;
+extern QW *D_00651D64;
 extern Tbl D_00656510;
 extern Obj D_0065FD80[5][10];
 

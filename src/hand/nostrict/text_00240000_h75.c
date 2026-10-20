@@ -606,7 +606,7 @@ void func_00244670(Chr2 *o, s32 a, s32 b) {
 }
 
 typedef struct { u32 unk0; s32 unk4; s32 unk8; u8 padC[8]; void *unk14; } St;
-extern St D_00662540;
+extern St D_00662540; /* src/data/bss_0066.c: Hud D_00662540 */
 extern u8 D_00662300[];
 s32 func_001ef7a0(void);
 s32 func_00122ff8(void *);

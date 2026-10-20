@@ -720,3 +720,7 @@ void func_001119d0(void) {
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 s32 D_002BD170 ALIGNED(16) = 0;
 #include "data/bss_004D_typed.h"
+#include "data/data_002A.h"
+#include "data/data_002B.h"
+#include "data/data_0030.h"
+#include "data/data_0035.h"

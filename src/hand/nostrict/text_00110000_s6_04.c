@@ -354,3 +354,4 @@ void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
 }
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004E_typed.h"
+#include "data/data_002C.h"

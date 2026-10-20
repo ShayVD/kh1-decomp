@@ -6,9 +6,11 @@
 
 #include "common.h"
 #include "data/types/nostrict_nogcse_text_00240000_s6_25.h"
+#include "data/types/nostrict_text_00230000_h49.h"
 #include "data/types/text_00240000_h50.h"
 #include "data/types/text_00240000_sw.h"
 
+extern Hud D_00662540;
 extern E860 D_00662A30[10];
 extern B192 D_00668060;
 extern Q4 *D_00668F80;

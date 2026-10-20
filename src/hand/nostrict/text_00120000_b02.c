@@ -429,3 +429,5 @@ void func_00138400(O16 *o) {
     t->f14 = fn;
 }
 #include "data/bss_0052_typed.h"
+#include "data/data_002B.h"
+#include "data/data_002C.h"

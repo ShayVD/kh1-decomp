@@ -49,3 +49,4 @@ void func_0012a338(void **arg0) {
     temp_a1 = *arg0;
     M2C_FIELD(temp_a1, s64 *, 0x370) = (s64) (M2C_FIELD(temp_a1, s64 *, 0x370) | ((s64) 0x8000 << 0x25));
 }
+#include "data/data_0035.h"

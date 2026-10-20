@@ -199,3 +199,5 @@ s32 func_001cc640(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/data_002B.h"
+#include "data/data_003C.h"

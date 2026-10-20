@@ -11,6 +11,7 @@
 
 extern SndSlot *D_004E3450;
 extern Slot12 *D_004E3454;
+extern SndSlot D_004E3458[];
 extern Pair D_004E39F8[];
 extern V4 D_004E3A20;
 extern V4 D_004E3A30;
