@@ -232,6 +232,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             st[t] = (LT, s, mips.imm(w) if o == 0x0A else mips.imm(w) & 0xFFFFFFFF) if s not in (0, t) else (UB, 1)
         elif o in WIDTH:
             b = st.get(s)
+            if o in (0x2B, 0x3F) and isinstance(st.get(t), int) and t != 0:  # sw/sd of an address
+                ev.append((ins.addr, st[t], None, 0, "stored"))
             if isinstance(b, int):
                 ev.append((ins.addr, b, mips.imm(w), WIDTH[o], "mem"))
             elif isinstance(b, tuple) and b[0] == IDX:
@@ -437,6 +439,8 @@ def main() -> int:
                     help="ignore index bounds: every indexed base keeps the next name (session 18 rule)")
     ap.add_argument("--no-idx-base", action="store_true",
                     help="do not keep a floated indexed base whose next name stays in place (session 20 rule)")
+    ap.add_argument("--no-stored", action="store_true",
+                    help="do not treat a stored address as an unbounded indexed base (session 20 rule)")
     ap.add_argument("--no-uncached", action="store_true",
                     help="do not keep names whose uncached alias is built (session 20 rule)")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
@@ -486,6 +490,7 @@ def main() -> int:
     sites: list = []  # (caller name, callee, j, address)
     passidx: list = []  # (caller name, callee, j, base, bound of the offset or None)
     wide_args: dict[int, set] = {}  # function -> arguments it walks or indexes
+    stored: set[int] = set()  # addresses some function stores to memory
     uncached: dict[int, set] = {}  # address -> functions that build its 0x20000000/0x30000000 alias
 
     def check(name, base, disp, width, kind):
@@ -529,6 +534,15 @@ def main() -> int:
                 continue
             if kind == "uncached":
                 uncached.setdefault(base, set()).add(name)
+                continue
+            if kind == "stored":
+                # an address stored to memory is used through a pointer no check follows, often with
+                # a length stored next to it (func_001e* keeps &D_003E4658 and 0x310 in D_003E8E28/2C,
+                # and D_003E4658 is declared 8 bytes): its extent is unknown, like an unbounded index
+                if not a.no_stored:
+                    stored.add(base)
+                    idx_all.setdefault(base, set()).add(name)
+                    idx_end[base] = None
                 continue
             if kind == "idx":
                 idx_all.setdefault(base, set()).add(name)
@@ -633,6 +647,7 @@ def main() -> int:
             if v == a.debug:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
+    print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
     print(f"# {len(bounded)} indexed bases have bounded accesses that end before the next name",
           file=sys.stderr)
