@@ -123,10 +123,14 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     work = [0]
     seen_out = set()
     grow: dict[tuple, int] = {}
+    wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
 
     def join(i, k, v, u):
         if u == v:
             return v
+        for t_ in (v, u):
+            if isinstance(t_, tuple) and t_[0] == ARG:
+                wide.add(t_[1])
         a, b = _idx(v), _idx(u)
         if a is not None and b is not None and abs(a[0] - b[0]) < 0x10000:
             base = min(a[0], b[0])
@@ -198,6 +202,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             b = st.get(s)
             if isinstance(b, tuple) and b[0] == HI:  # %hi + %lo: a relocated address (shift_cmp maps it)
                 st[t] = (b[1] + mips.imm(w)) & 0xFFFFFFFF
+                if st[t] >> 28 in (2, 3) and BLOB_START <= st[t] & 0x0FFFFFFF < IMAGE_END + 0x10000:
+                    ev.append((ins.addr, st[t] & 0x0FFFFFFF, None, 0, "uncached"))
             elif isinstance(b, int):
                 v = (b + mips.imm(w)) & 0xFFFFFFFF
                 if (w & 0xFFFF) != 0 or s != t:
@@ -241,8 +247,19 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     st.pop(t, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x21, 0x2D, 0x20, 0x2C, 0x25):  # addu daddu add dadd or
             x, y = st.get(s), st.get(t)
+            if mips.funct(w) in (0x25, 0x21, 0x2D) and d != 0:  # base | 0x20000000: the uncached alias
+                xv = x[1] if isinstance(x, tuple) and x[0] == HI else x
+                yv = y[1] if isinstance(y, tuple) and y[0] == HI else y
+                for b, m in ((xv, yv), (yv, xv)):
+                    if isinstance(b, int) and isinstance(m, int) and m in (0x20000000, 0x30000000) \
+                            and BLOB_START <= b < IMAGE_END + 0x10000:
+                        ev.append((ins.addr, b, None, 0, "uncached"))
             x = None if isinstance(x, tuple) and x[0] in (HI, LT) else x
             y = None if isinstance(y, tuple) and y[0] in (HI, LT) else y
+            if s != 0 and t != 0:
+                for p_, q_ in ((x, y), (y, x)):
+                    if isinstance(p_, tuple) and p_[0] == ARG and not isinstance(q_, int):
+                        wide.add(p_[1])
             if t == 0 or s == 0:  # a move
                 v = x if t == 0 else y
                 if v is None:
@@ -264,6 +281,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st.pop(d, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x23, 0x2F):  # subu dsubu
             x = st.get(s)
+            if isinstance(x, tuple) and x[0] == ARG:
+                wide.add(x[1])
             if _idx(x) is not None and d != 0:
                 st[d] = (IDX, _idx(x)[0], None)
             else:
@@ -322,6 +341,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         if True:
             for j, r in enumerate(ARG_REGS):
                 v = st.get(r)
+                a_ = _idx(v)
+                if a_ is not None:  # &D_X[i] passed to a call: an indexed access the callee makes (session 20)
+                    ev.append(("passidx", target, j, a_[0], a_[1], ins.addr))
                 if (isinstance(v, int) and v > 0x10000) or (isinstance(v, tuple) and v[0] == ARG):
                     ev.append(("pass", target, j, v, ins.addr))
         return ev
@@ -377,6 +399,11 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if e not in seen_out:
                 seen_out.add(e)
                 yield e
+        if not work and args:
+            for k in sorted(wide):
+                if ("argwide", k) not in seen_out:
+                    seen_out.add(("argwide", k))
+                    yield ("argwide", k)
         if not work and starts:
             # unreached code: start fresh at the next listed label
             for j in sorted(starts):
@@ -408,6 +435,10 @@ def main() -> int:
                     help="the M0 link, for the addresses of every D_ name")
     ap.add_argument("--no-bounds", action="store_true",
                     help="ignore index bounds: every indexed base keeps the next name (session 18 rule)")
+    ap.add_argument("--no-idx-base", action="store_true",
+                    help="do not keep a floated indexed base whose next name stays in place (session 20 rule)")
+    ap.add_argument("--no-uncached", action="store_true",
+                    help="do not keep names whose uncached alias is built (session 20 rule)")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
@@ -453,6 +484,9 @@ def main() -> int:
     own: dict[int, dict[int, list[int]]] = {}  # function -> arg -> [lo, hi) reached from it
     passes: dict[int, list] = {}  # function -> [(callee, j, ("arg", k, off))]
     sites: list = []  # (caller name, callee, j, address)
+    passidx: list = []  # (caller name, callee, j, base, bound of the offset or None)
+    wide_args: dict[int, set] = {}  # function -> arguments it walks or indexes
+    uncached: dict[int, set] = {}  # address -> functions that build its 0x20000000/0x30000000 alias
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -475,6 +509,14 @@ def main() -> int:
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
                 r[0], r[1] = min(r[0], off), max(r[1], off + width)
                 continue
+            if e[0] == "argwide":
+                wide_args.setdefault(fstart, set()).add(e[1])
+                continue
+            if e[0] == "passidx":
+                _p, callee, j, base, ub, _pc = e
+                if BLOB_START <= base < IMAGE_END + 0x10000:
+                    passidx.append((name, callee, j, base, ub))
+                continue
             if e[0] == "pass":
                 _p, callee, j, v, _pc = e
                 if isinstance(v, tuple):
@@ -484,6 +526,9 @@ def main() -> int:
                 continue
             pc, base, disp, width, kind = e
             if not (BLOB_START <= base < IMAGE_END + 0x10000):
+                continue
+            if kind == "uncached":
+                uncached.setdefault(base, set()).add(name)
                 continue
             if kind == "idx":
                 idx_all.setdefault(base, set()).add(name)
@@ -513,12 +558,35 @@ def main() -> int:
         if not changed:
             break
     fname = {s_: n_ for s_, _e, n_ in funcs}
+    for _round in range(12):  # an argument passed on to a callee that walks it is walked too
+        changed = False
+        for f, ps in passes.items():
+            for callee, j, k, _off in ps:
+                if j in wide_args.get(callee, ()) and k not in wide_args.get(f, ()):
+                    wide_args.setdefault(f, set()).add(k)
+                    changed = True
+        if not changed:
+            break
     for name, callee, j, v in sites:
         c = reach.get(callee, {}).get(j)
         if callee in BLOCK_CALLS:  # their own byte count is checked at the call
             continue
         if c and c[1] - c[0] <= 0x40000:
             check(name, v, c[0], c[1] - c[0], f"arg{j}:{fname.get(callee, hex(callee))}:")
+    # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
+    # B + bound(i) + hi; unbounded when either is unknown (block functions count their bytes).
+    for name, callee, j, base, ub in passidx:
+        c = reach.get(callee, {}).get(j)
+        if ub is not None and c and c[1] - c[0] <= 0x40000 and c[0] >= 0 \
+                and j not in wide_args.get(callee, ()) and callee not in BLOCK_CALLS:
+            end = base + ub + c[1]
+        else:
+            end = None
+        idx_all.setdefault(base, set()).add(name)
+        if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
+            idx_end[base] = end
+        if piece(base)[0] is not None:
+            idx.setdefault(base, set()).add(name)
     # An array indexed from B may run past the next name: D_00550400[i] for i < 64 (0x48-byte
     # entries) covers D_005512A0, which is entries 52..63 under its own name (session 18,
     # found from the stale writes in a RAM dump). A floated variable that is the next name
@@ -536,6 +604,21 @@ def main() -> int:
             continue  # every indexed access from base is bounded and ends before the next name
         if pn is not None and pn != piece(base)[0] and nxt - base <= 0x10000:
             hits.setdefault((base, piece(base)[1], nxt, nn, "idx-next", 0), set()).update(fs)
+        elif not a.no_idx_base and pn is None and piece(base)[0] is not None and nxt - base <= 0x10000:
+            # the base floats and the next name stays: the array runs on into a name of the blob
+            # (D_00472190 is declared 0x40, func_001073f0 copies 0x4000 bytes through it; session 20)
+            hits.setdefault((base, piece(base)[1], nxt, nn, "idx-base", 0), set()).update(fs)
+    # A name whose uncached alias (| 0x20000000 or 0x30000000) is built is a DMA/GIF buffer whose real
+    # size no declaration gives: func_00162428 stores D_00573AC0 | 0x20000000 and func_0015f8c8 writes a
+    # 0x500-byte packet through it (session 19). The base stays in place, and so does the next name.
+    if not a.no_uncached:
+        for base, fs in sorted(uncached.items()):
+            i = bisect.bisect_right(anchors, base)
+            nxt = anchors[i] if i < len(anchors) else base
+            pb, nb = piece(base)
+            pn, nn = piece(nxt)
+            if pb is not None or pn is not None:
+                hits.setdefault((base, nb, nxt, nn, "uncached", 0), set()).update(fs)
     for (base, nb, tgt, nt, kind, width), fs in sorted(hits.items()):
         print(f"{base:08x} ({nb or 'in place'}) -> {tgt:08x} ({nt or 'in place'})\t{kind}{width or ''}\t"
               + " ".join(sorted(fs)[:6]) + (f" +{len(fs) - 6}" if len(fs) > 6 else ""))
@@ -550,6 +633,7 @@ def main() -> int:
             if v == a.debug:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
+    print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
     print(f"# {len(bounded)} indexed bases have bounded accesses that end before the next name",
           file=sys.stderr)
     print(f"# {len(reach)} functions reach from their arguments, {len(sites)} call sites pass an address",
