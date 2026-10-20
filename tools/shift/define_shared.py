@@ -363,13 +363,21 @@ def settle_types(plans):
             skip.append((p[1], bad[f]))
             continue
         mod = module(p[0])
-        have = mod_types.setdefault(mod, {})
-        clash = {n for n in moved[f] if have.get(n, f) != f}
+        if mod not in mod_types:  # the type headers an earlier run already put in this module
+            mod_types[mod] = {}
+            th = ROOT / "include/data" / f"{mod}_typed.h"
+            if th.exists():
+                for m in re.finditer(r'#include "data/types/(\w+)\.h"', th.read_text()):
+                    for n in type_move.header_types(ROOT / "include/data/types" / f"{m.group(1)}.h"):
+                        mod_types[mod][n] = m.group(1)
+        have = mod_types[mod]
+        key = type_move.header_name(ROOT / f)
+        clash = {n for n in moved[f] if have.get(n, key) != key}
         if clash:
             skip.append((p[1], f"type names {sorted(clash)} from {f} clash with another file's in {mod}"))
             continue
         for n in moved[f]:
-            have[n] = f
+            have[n] = key
         out.append(p)
     return out, skip
 
