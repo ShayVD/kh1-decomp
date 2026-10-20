@@ -51,8 +51,8 @@ static inline s32 inl_00168318(u32 *p) {
 
 typedef struct { u32 flags; u8 pad[0x140]; s32 w144; } ObjBD40;
 typedef struct Node57 { s32 id; s32 mask; s32 (*cb)(ObjBD40 *, s32, s32, s32); s32 arg; struct Node57 *next; } Node57;
-extern Node57 *D_00575780;
-extern Node57 *D_00575784;
+extern Node57 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
+extern Node57 *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
 extern ObjBD40 *D_0035BD40[];
 
 extern ObjBD40 *D_002E26A0[];

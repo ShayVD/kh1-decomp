@@ -290,7 +290,7 @@ void func_001564e0(Act *a, V4 *o) {
 typedef struct { u8 pad[0x60]; } Sub768;
 typedef struct { union { u64 d; struct { u8 b0, n; } s; } u; u8 pad8[8]; V4 pos; u8 pad20[0x10]; Sub768 sub[1]; } Node768;
 typedef struct { Node768 *p; u8 pad4[0xc]; V4 v; f32 d; s32 idx; } Out768;
-extern Node768 *D_00551600;
+extern Node768 *D_00551600; /* src/data/bss_0055.c: u8 *D_00551600 */
 s32 func_001566d8(Sub768 *, V4 *);
 Node768 *func_00156768(V4 *pos, Out768 *o) {
     Node768 *p = D_00551600;
@@ -487,7 +487,7 @@ extern s16 D_002C595A;
 extern u32 D_002E31A8;
 extern s32 D_00351A48;
 extern u8 D_00351A40[];
-extern u32 D_005516EC;
+extern u32 D_005516EC; /* src/data/bss_0055.c: s32 D_005516EC */
 void func_0012ccb0(s32);
 s32 func_00158780(s32);
 void func_00158960(void) {
@@ -947,7 +947,7 @@ s32 func_00157c60(void) {
 
 /* ---- func_00158ec8 ---- */
 typedef struct { u8 pad[0x1c]; s32 x1c; } R16E4;
-extern R16E4 *D_005516E4;
+extern R16E4 *D_005516E4; /* src/data/bss_0055.c: s32 *D_005516E4 */
 extern s32 D_00351A48;
 s32 func_00158c78(void);
 void *func_00155a50(void);

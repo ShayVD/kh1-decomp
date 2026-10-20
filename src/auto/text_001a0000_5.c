@@ -8,8 +8,8 @@ M2C_UNK func_00267328(void *, M2C_UNK *, void *);
 M2C_UNK func_00267560(s32, s32, f32);
 M2C_UNK func_002675b8(void *, s32);
 M2C_UNK func_00267620(void *);
-extern M2C_UNK D_00615EB0;
-extern M2C_UNK D_00616040;
+extern M2C_UNK D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
+extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern s32 D_00615E68;
 
 void pppRyjDrawMatrixWorldDttFrFrame(s32 arg0, s32 arg1, void *arg2) {

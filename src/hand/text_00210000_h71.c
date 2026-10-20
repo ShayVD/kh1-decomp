@@ -22,9 +22,9 @@ typedef struct { u8 pad[16]; s32 x10; } E20;
 extern Cfg *D_00425BC8;
 extern s32 D_00642C94;
 extern s32 D_00642C9C;
-extern u16 D_00642CC8;
+extern u16 D_00642CC8; /* src/data/bss_0064.c: s32 D_00642CC8 */
 extern s32 D_00642CD0;
-extern u16 D_00642CD4;
+extern u16 D_00642CD4; /* src/data/bss_0064.c: s32 D_00642CD4 */
 extern u8 D_003F4460[];
 extern u8 D_003F4430[];
 extern s32 D_003F44C8[];
@@ -710,7 +710,7 @@ void func_0021e670(Ed *a) {
     func_0021af38(a);
 }
 
-extern Obj2 *D_00643110;
+extern Obj2 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_0064324C;
 extern s32 D_00643200[];
 extern s32 D_00643118;

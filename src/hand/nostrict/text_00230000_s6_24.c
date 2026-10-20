@@ -310,7 +310,7 @@ typedef struct { u64 d[24]; } B192;
 typedef struct { s32 a, b; } P8;
 typedef struct { s32 used, x4, x8, pad; B192 blk; s32 xd0, xd4; P8 xd8; } Slot;
 extern Slot D_00651310[10];
-extern B192 *D_00651300;
+extern B192 *D_00651300; /* src/data/bss_0065.c: u8 *D_00651300 */
 Slot *func_0023c228(void);
 
 /* ---- c3.c */

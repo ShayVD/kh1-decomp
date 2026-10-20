@@ -24,8 +24,8 @@ typedef struct {
     u64 flags;      /* +0xB0 */
 } PppSystem;
 
-extern PppSystem *D_00615E60;
-extern f32 D_00575A00;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern s32 D_0061621C;
 extern s32 D_00616234;
 
@@ -130,7 +130,7 @@ typedef struct {
     PppAnimRef *anims; /* +0x14 */
 } PppMdlBank;
 
-extern PppMdlBank *D_00615E64;
+extern PppMdlBank *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern u8 D_00616240[];
 extern u8 D_00616140[];
 extern u8 D_00616100[];

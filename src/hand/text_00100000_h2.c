@@ -290,7 +290,7 @@ typedef struct {
     u32 pad;
     u64 q3[2];
 } DispEnv;
-extern DispEnv D_004D8EC0;
+extern DispEnv D_004D8EC0; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
 extern s32 D_004D90FC;
 void sceGsDefDispEnv(DispEnv *, s16, s16, s16, s16, s16);
 void func_00265980(DispEnv *);
@@ -649,3 +649,4 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
     a->v[i][2] = D_0048C6F0[j][2];
     a->v[i][3] = D_0048C6F0[j][3];
 }
+#include "data/bss_0049_mixed.h"

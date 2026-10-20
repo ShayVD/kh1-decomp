@@ -256,7 +256,7 @@ void func_001ba4a8(void) {
 }
 
 /* Declared as a real 2-D array: a cast to s32 (*)[2] does not match. */
-extern s32 D_00621308[][2];
+extern s32 D_00621308[][2]; /* src/data/bss_0062.c: s32 D_00621308[4] */
 
 void func_001ba778(s32 i, s32 a, s32 b) {
     D_00621308[i][0] = a;

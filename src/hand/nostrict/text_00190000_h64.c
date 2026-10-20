@@ -26,7 +26,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 typedef struct {
     s32 unk00, unk04, unk08;
@@ -86,7 +86,7 @@ typedef struct {
     PppShapeEnt *shapes; /* +0x14 */
 } DSys;
 
-extern DSys *D_00615E64;
+extern DSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 /* Parameter block of func_001aaf88 (model draw). */
 typedef struct {
@@ -123,7 +123,7 @@ extern u8 D_00616240[];
 extern u8 D_00616140[];
 extern u8 D_00616100[];
 extern s32 D_00616224;
-extern f32 D_00575A00;
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern PppMtx D_00615FC0, D_00615E70, D_00615EB0, D_00616000, D_00616040;
 extern f32 D_003701F0[3];
 extern f32 D_003701D0[4];

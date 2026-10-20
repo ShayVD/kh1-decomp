@@ -62,7 +62,7 @@ typedef struct { u16 n; u8 pad[0xe]; W29Ent e[1]; } W29Tbl;
 typedef struct { u8 pad[0x88]; u16 x88; u8 pad8a[0x16]; W29Tbl *xa0; } W29Mdl;
 typedef struct { s32 a, b; } W29Pair;
 typedef struct { s32 x0, x4; } W29Cnt;
-extern W29Pair *D_004D5AF4;
+extern W29Pair *D_004D5AF4; /* src/data/bss_004D.c: s32 D_004D5AF4 */
 
 void func_0010f258(W29Cnt *c, W29Mdl *m) {
     s32 idx[32];
@@ -254,7 +254,7 @@ extern s32 D_004D925C;
 extern s32 D_002BCC1C;
 extern s32 D_004D9254;
 extern volatile u32 D_002BBDF0;
-extern u32 D_004D9250;
+extern u32 D_004D9250; /* src/data/bss_004D.c: s32 D_004D9250 */
 
 s32 func_00111cb8(void) {
     switch (D_004D925C) {
@@ -564,7 +564,7 @@ s32 func_00115600(void *obj, void *p) {
 
 typedef struct { s32 f; u8 pad[12]; } W29Mark;
 typedef struct { u8 hdr[8]; W29Mark e[1]; } W29MarkTbl;
-extern W29MarkTbl *D_004E0420;
+extern W29MarkTbl *D_004E0420; /* src/data/bss_004E.c: M2C_UNK *D_004E0420 */
 extern s32 D_004E0428[];
 extern u16 **D_002A623C;
 extern s32 D_002BD170;

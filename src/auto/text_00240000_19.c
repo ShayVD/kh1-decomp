@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern M2C_UNK D_00669350;
+extern M2C_UNK D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 
 s32 func_002485f0(void) {
     s32 temp_a1;

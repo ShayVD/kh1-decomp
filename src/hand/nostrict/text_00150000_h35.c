@@ -865,3 +865,4 @@ s32 func_00158b88(s32 a, u8 *b) {
         break;
     }
 }
+#include "data/bss_0055_mixed.h"

@@ -229,7 +229,7 @@ void func_002458e0(void) {
 typedef struct { u8 pad[0x4C]; u16 unk4C; } Info;
 typedef struct { u8 pad[0x130]; Info *unk130; } Act;
 typedef struct { s32 a, b, c, d; } Q4;
-extern Q4 D_00668040[2];
+extern Q4 D_00668040[2]; /* src/data/bss_0066.c: u8 D_00668040[0x20] */
 s32 func_0013daa8(s32);
 
 Q4 *func_00245f58(Act *a) {
@@ -310,7 +310,7 @@ s32 func_002474a8(void) {
 typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; } Mdl;
 extern s32 D_006693B0[8];
 extern s32 D_00669390[8];
-extern s32 D_006693D0[7];
+extern s32 D_006693D0[7]; /* src/data/bss_0066.c: u8 D_006693D0[0x20] */
 u8 D_006692C0[0x18] ALIGNED(16);
 void func_002474e8(s32, void *, s32, s32, f32);
 void func_002476a0(Mdl *);
@@ -450,7 +450,7 @@ void func_0024aa48(void *a, Tag *t, Src *s) {
 /* Runs func_0024e0f0 with the globals at 0x0046A03C..0x0046A048 loaded from a
  * parameter block; the ones at +0x40 and +0x48 are restored after. */
 typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;
-extern Prm *D_00669A18[8];
+extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A03C, D_0046A040, D_0046A044, D_0046A048;
 void func_0024e0f0(s32, s32, s32);
 void func_0024b228(s32 i, s32 a, s32 b, s32 c) {

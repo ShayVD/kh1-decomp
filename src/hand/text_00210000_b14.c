@@ -43,7 +43,7 @@ extern Cfg *D_00425BC8;
 extern s32 D_00641BA4;
 extern s32 D_00641BAC;
 extern s32 D_00641BB0;
-extern u8 *D_00641BB4;
+extern u8 *D_00641BB4; /* src/data/bss_0064.c: s32 D_00641BB4 */
 extern s32 D_00641BC0;
 extern s32 D_00641BD8;
 extern s32 D_00641BDC;
@@ -54,7 +54,7 @@ extern void *D_00642C20;
 extern s32 D_00642C24;
 extern s32 D_00642C28;
 extern s32 D_00642C2C;
-extern Sub *D_00642C30;
+extern Sub *D_00642C30; /* src/data/bss_0064.c: s32 D_00642C30 */
 s32 D_00642C34 ALIGNED(4);
 s32 D_00642C38 ALIGNED(8);
 extern s32 D_00642C3C;
@@ -75,10 +75,10 @@ extern s32 D_00642C94;
 extern s32 D_00642C98;
 extern s32 D_00642C9C;
 extern s32 D_00642CA0;
-extern u16 D_00642CC8;
+extern u16 D_00642CC8; /* src/data/bss_0064.c: s32 D_00642CC8 */
 extern s32 D_00642CCC;
-extern u16 D_00642CD0;
-extern u16 D_00642CD4;
+extern u16 D_00642CD0; /* src/data/bss_0064.c: s32 D_00642CD0 */
+extern u16 D_00642CD4; /* src/data/bss_0064.c: s32 D_00642CD4 */
 
 s32 func_00132f88(s32);
 s32 func_0013c288(s32);

@@ -1,5 +1,6 @@
 /* Definitions of the shared bss names in include/data/bss_004F.h. */
 #include "data/bss_004F.h"
+#include "data/bss_004F_mixed.h"
 
 u32 D_004F3200 ALIGNED(16);
 f32 D_004F7650 ALIGNED(16);
@@ -8,3 +9,7 @@ f32 D_004F77F0 ALIGNED(16);
 f32 D_004F77F4 ALIGNED(4);
 s32 D_004F82C0 ALIGNED(16);
 s32 D_004F82C4 ALIGNED(4);
+char D_004F2A00[0x800] ALIGNED(64);
+u32 *D_004F6EB8 ALIGNED(8);
+f32 D_004F7800[0x4] ALIGNED(16);
+u8 D_004F82D0[0x40] ALIGNED(16);

@@ -273,7 +273,7 @@ typedef struct {
     u8 pad[0xB7];
     u8 bB7;
 } PppSystemB7;
-extern PppSystemB *D_00615E60;
+extern PppSystemB *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 extern s32 D_0061621C;
 extern u8 *D_002E26A0;
 

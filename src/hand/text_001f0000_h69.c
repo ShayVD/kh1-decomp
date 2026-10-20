@@ -38,8 +38,8 @@ typedef struct {
 } Wn;
 
 extern Pad *D_00425BC8;
-extern u32 D_00640DF0;
-extern u32 D_00640DF4;
+extern u32 D_00640DF0; /* src/data/bss_0064.c: s32 D_00640DF0 */
+extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
 extern u32 D_00640DF8;
 
 void func_0011d768(s32);

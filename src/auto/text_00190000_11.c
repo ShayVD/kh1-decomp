@@ -8,7 +8,7 @@ M2C_UNK func_00267560(s32, s32, f32);
 M2C_UNK func_002675b8(s32, s32);
 extern M2C_UNK D_003701F0;
 extern M2C_UNK D_00615FC0;
-extern M2C_UNK D_00616040;
+extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern s32 D_00615E68;
 
 void pppKeDMatFrFrame(s32 arg0, s32 arg1, void *arg2) {

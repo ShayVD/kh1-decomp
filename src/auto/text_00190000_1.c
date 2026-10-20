@@ -29,3 +29,4 @@ void pppRyjMegaPlaceDes(s32 arg0, PppEntry *arg1) {
         M2C_FIELD(temp_s0, s32 *, 0x14) = 0;
     }
 }
+#include "data/bss_0061_mixed.h"

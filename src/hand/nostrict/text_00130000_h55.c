@@ -94,12 +94,12 @@ extern s32 D_002E3194;
 extern f32 D_00304C40;
 extern u32 D_0037A378;
 extern u8 D_0052AD68[];
-extern W55Ob *D_0052AE38;
+extern W55Ob *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 W55Ob *D_0052AE3C ALIGNED(4);
 f32 D_0052AE40[4] ALIGNED(16);
 extern s32 D_0052AE54;
-extern W55Hdr *D_0052AE58;
-extern W55Hd5 *D_0052AE5C;
+extern W55Hdr *D_0052AE58; /* src/data/bss_0052.c: void *D_0052AE58 */
+extern W55Hd5 *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
 extern s32 D_0052AE60;
 f32 D_0052AE68 ALIGNED(8);
 extern W55Cache D_0052CB20[4];

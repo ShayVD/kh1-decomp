@@ -69,3 +69,4 @@ void func_0021cf90(s32 arg0) {
 void func_0021dc20(s32 arg0) {
     func_0021b800(arg0 + 0x51);
 }
+#include "data/bss_0064_mixed.h"

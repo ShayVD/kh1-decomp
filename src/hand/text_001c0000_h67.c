@@ -428,8 +428,8 @@ s32 func_001dedd8(Task *o) {
     return 0;
 }
 
-extern void *D_0062A220;
-extern void *D_0062A224;
+extern void *D_0062A220; /* src/data/bss_0062.c: s32 D_0062A220 */
+extern void *D_0062A224; /* src/data/bss_0062.c: s32 D_0062A224 */
 extern u8 D_0062A630[];
 s32 func_00176040(void *, void *, s32, s32);
 Q10 *func_001760d0(s32);

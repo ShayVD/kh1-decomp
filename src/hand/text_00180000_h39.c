@@ -221,15 +221,15 @@ typedef struct {
     u128 r[4];
 } H39Mtx;
 
-extern H39Mtx D_00615EB0;
+extern H39Mtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 H39Mtx D_00615EF0 ALIGNED(16);
 extern H39Mtx D_00615F30;
-extern u128 D_00615F70;
+extern u128 D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 extern u128 D_00615F80;
 u128 D_00615F90 ALIGNED(16);
 u128 D_00615FA0 ALIGNED(16);
 f32 D_00615FB0 ALIGNED(16);
-extern H39Mtx D_00616040;
+extern H39Mtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern H39Mtx D_00616180;
 extern f32 D_002E27A0;
 void sceVu0CopyMatrix(H39Mtx *, H39Mtx *);
@@ -271,7 +271,7 @@ typedef struct H39Sys {
     u8 pad86[0x2A];
     u64 flags;         /* +0xB0 */
 } H39Sys;
-extern H39Sys *D_00615E60;
+extern H39Sys *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 extern s32 D_0061621C;
 void pppStepPrograms(void);
 void func_001823d8(H39Sys *);
@@ -327,7 +327,7 @@ typedef struct {
 } H39VKey;
 /* D_00615E64 as the current texture system: +0x10 the slots, +0x18 the
  * vertex maps. */
-extern H39VSys *D_00615E64;
+extern H39VSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 void func_002672f8(H39V4 *, void *, H39V4 *);
 void pppVertexAttendFrame(H39VObj *obj, H39VKey *key, PppEntry *e) {
     H39V4 v;

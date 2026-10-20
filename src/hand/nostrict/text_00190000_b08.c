@@ -24,7 +24,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 typedef struct {
     s32 unk00, unk04, unk08;
@@ -53,7 +53,7 @@ typedef struct {
     void *shapes;
 } DSys;
 
-extern DSys *D_00615E64;
+extern DSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern s32 D_00616224;
 s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_001a9460(f32, s32, s32, void *);
@@ -139,7 +139,7 @@ typedef struct {
     PppShapeEnt *shapes;
 } DSysS;
 s32 func_001b8198(void *, DShpParam *, s32);
-extern PppMtx D_00616040;
+extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 void func_00267518(f32 *, f32 *, f32 *);
 
 typedef struct {

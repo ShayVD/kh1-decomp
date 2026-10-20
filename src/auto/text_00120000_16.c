@@ -4,7 +4,7 @@
 
 M2C_UNK func_00267518(s32, s32, s32);
 extern M2C_UNK D_002C5C80;
-extern volatile M2C_UNK *D_004F6EB8;
+extern volatile M2C_UNK *D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern volatile M2C_UNK D_004F6DB8;
 s32 func_001425d0(s32);
 s32 func_00266c08(s32);

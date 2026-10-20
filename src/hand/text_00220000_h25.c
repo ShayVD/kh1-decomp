@@ -79,17 +79,17 @@ extern u8 D_006436A8[];
 extern s32 D_006436B8;
 extern s32 D_006436D0;
 extern s32 D_006436D4;
-extern P2 D_006436D8;
-extern P2 D_006436E0;
+extern P2 D_006436D8; /* src/data/bss_0064.c: s32 D_006436D8[2] */
+extern P2 D_006436E0; /* src/data/bss_0064.c: s32 D_006436E0[2] */
 extern s32 D_006436E8;
 extern s32 D_006436EC;
 extern s32 D_006436F0;
-extern P2 D_006436F8;
-extern P2 D_00643700;
+extern P2 D_006436F8; /* src/data/bss_0064.c: s32 D_006436F8[2] */
+extern P2 D_00643700; /* src/data/bss_0064.c: s32 D_00643700[2] */
 extern s32 D_00643708;
 extern s32 D_0064370C;
 extern void *D_00643718;
-extern u16 D_00643730;
+extern u16 D_00643730; /* src/data/bss_0064.c: s32 D_00643730 */
 extern s32 D_006437C4;
 extern s32 D_00646A18;
 extern s32 D_00646A28;
@@ -108,13 +108,13 @@ extern s32 D_00647FD4;
 extern s32 D_00647FD8;
 extern s32 D_0064801C;
 extern s32 (*D_00648034)(s32);
-extern s32 D_00648038[5];
+extern s32 D_00648038[5]; /* src/data/bss_0064.c: s32 D_00648038[0x6] */
 extern f32 D_00648050[5];
 u128 D_00648070[0x6] ALIGNED(16);
 extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
-extern u128 *D_00651200;
-extern u128 *D_00651204;
+extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
+extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
 
 void func_00223418(void) {
     s32 i;

@@ -6,7 +6,7 @@ typedef struct {
     u64 flags;
 } PppSystem;
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 typedef struct {
     s16 off;
     s16 dur;
@@ -27,7 +27,7 @@ typedef struct {
     u8 pad00[0x14];
     PppShapeEnt *shapes;
 } DSysS;
-extern DSysS *D_00615E64;
+extern DSysS *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 typedef struct {
     f32 pos[4];
     f32 vel[4];

@@ -673,7 +673,7 @@ typedef struct {
     u8 pad494[0x3558 - 0x494];
     E44_59 e[2][480];
 } G698;
-extern G698 D_0055C698;
+extern G698 D_0055C698; /* src/data/bss_0055.c: u8 D_0055C698[0xda58] */
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } Tk62;
 void func_001606d0(void);
 Tk62 *func_0015ee78(s32, void *);
@@ -1089,3 +1089,4 @@ void func_00164ba8(Ent63 *e, Anim59 *a) {
         }
     }
 }
+#include "data/bss_0057_mixed.h"

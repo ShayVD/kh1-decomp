@@ -110,7 +110,7 @@ typedef struct { u8 pad0[3]; u8 b3; } Q57_15d0;
 
 extern u32 D_002C5958;
 extern Src57_c130 D_0054C440[64];
-extern s32 D_0054F440;
+extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
 extern f32 D_0054F444;

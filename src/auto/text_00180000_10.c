@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern M2C_UNK D_00575A00;
+extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern s32 D_0061621C;
 extern void *D_00615E60;
 f32 func_0018ac28(s32, s32);
@@ -323,3 +323,4 @@ void pppScaleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
         }
     }
 }
+#include "data/bss_0061_mixed.h"

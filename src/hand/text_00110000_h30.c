@@ -807,3 +807,5 @@ void func_001247e8(Obj123 *o) {
     if (!o->fl.b.b54) D_00350D80 -= o->info->x59;
     func_0014ed30(o);
 }
+#include "data/bss_004E_mixed.h"
+#include "data/bss_004F_mixed.h"

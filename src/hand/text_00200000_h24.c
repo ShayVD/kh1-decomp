@@ -79,7 +79,7 @@ extern s32 D_006411FC;
 extern f32 D_00641200;
 extern s32 D_00641204;
 extern f32 D_00641208;
-extern s32 D_0064120C;
+extern s32 D_0064120C; /* src/data/bss_0064.c: f32 D_0064120C */
 extern f32 D_00641218;
 
 void func_0020be10(s32 a0) {
@@ -287,7 +287,7 @@ void func_00211698(void) {
 void func_001f9010(s32);
 extern s32 D_00641BCC, D_00641BC8;
 typedef struct { u8 pad[24]; u8 a[26]; u8 b; } S1BB0;
-extern S1BB0 *D_00641BB0;
+extern S1BB0 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
 s32 func_001eebd8(s32);
 s32 func_001eec00(s32);
 void func_001f94f0(s32, s32, s32, s32, s32, s32, s32);
@@ -362,7 +362,7 @@ void func_002161e8(s32 a0, s32 a1) {
     for (i = 0; i < 9; i++) func_00170d60(a0, i, p[i]);
 }
 
-extern u32 D_00642CCC;
+extern u32 D_00642CCC; /* src/data/bss_0064.c: s32 D_00642CCC */
 void func_00216280(void);
 void func_00217fb0(void) {
     u32 *p = &D_00642CCC;

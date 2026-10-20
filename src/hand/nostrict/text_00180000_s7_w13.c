@@ -14,7 +14,7 @@ typedef struct { Prog *prog; Obj *obj; s32 val; u16 cnt; s8 idx; u8 padf; } Slot
 typedef struct { u8 pad[0xB0]; u64 flags; } PppSystem;
 typedef struct { u8 pad0[0x68]; s32 nslot; u8 pad6c[0x80 - 0x6c]; Slot *slots; } PSys;
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 extern Obj *D_00615E68;
 void pppResetComponents(Obj *);
 

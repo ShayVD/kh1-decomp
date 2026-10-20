@@ -30,7 +30,7 @@ extern W32Tbl D_00525298;
 extern W32Tbl D_005252C8;
 extern W32Tbl D_005252F8;
 extern W32Tbl D_00525328;
-extern W32Rec *D_00525354;
+extern W32Rec *D_00525354; /* src/data/bss_0052.c: s32 D_00525354 */
 extern s32 D_0052535C;
 extern void (*D_00525360)(void);
 
@@ -150,7 +150,7 @@ typedef struct {
     u32 x14;
     void (*x18)(void);
 } W32Chan;
-extern W32Chan D_00525368[];
+extern W32Chan D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
 extern s32 D_003041F0[][3][3];
 void func_001330c8(s32 a);
 s32 func_001477c8(s32 a);

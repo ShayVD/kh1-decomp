@@ -50,3 +50,4 @@ s32 func_0020d2f8(void) {
     func_0020d2a0();
     return 4;
 }
+#include "data/bss_0064_mixed.h"

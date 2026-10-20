@@ -36,12 +36,12 @@ M2C_UNK func_002675a8(void *, s32);
 M2C_UNK func_00267e90(s32, s32, f32);
 extern M2C_UNK D_00304C70;
 extern M2C_UNK D_00350D88;
-extern M2C_UNK D_0054B808;
+extern M2C_UNK D_0054B808; /* src/data/bss_0054.c: u8 D_0054B808[0x10] */
 extern M2C_UNK func_001468b0;
 extern f32 D_002BBDFC;
 extern s32 D_002E26A0;
-extern s32 D_0052CB18;
-extern s32 D_0054F440;
+extern s32 D_0052CB18; /* src/data/bss_0052.c: u32 D_0052CB18 */
+extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 extern volatile M2C_UNK D_00304D64;
 s32 func_00122ff8(s32);
 s32 func_001477e0(s32);

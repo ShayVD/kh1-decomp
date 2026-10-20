@@ -15,9 +15,9 @@ extern void *D_00642C90;
 extern s32 D_00642C94;
 extern s32 D_00642C98;
 extern s32 D_00642CCC;
-extern u16 D_00642CD0;
+extern u16 D_00642CD0; /* src/data/bss_0064.c: s32 D_00642CD0 */
 extern s32 D_00642CD8;
-extern U32H D_00642CDC;
+extern U32H D_00642CDC; /* src/data/bss_0064.c: s32 D_00642CDC */
 extern U32H D_00642CE0;
 extern PN D_003F40F8[];
 extern S34B8 *D_003F34B8;

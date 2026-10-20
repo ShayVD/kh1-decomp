@@ -240,3 +240,4 @@ void func_002380c0(Ht74 *h, s32 *b0, s32 *b1, s32 a3, s32 a4) {
     }
     sceGsSyncPath(0, 0);
 }
+#include "data/bss_0064_mixed.h"

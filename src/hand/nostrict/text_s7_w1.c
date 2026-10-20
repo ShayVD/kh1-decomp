@@ -2,7 +2,7 @@
 
 typedef struct { u64 lo, hi; } QW;
 extern u8 D_00351E10[];
-extern QW *D_00662940;
+extern QW *D_00662940; /* src/data/bss_0066.c: s32 D_00662940 */
 QW *D_00662944 ALIGNED(4);
 extern u8 D_002E26C0[];
 extern u8 D_00426820[];
@@ -186,13 +186,13 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 u8 *func_00182588(PppSystem *, PppSlot *);
 
 /* Start an instance of program slot `id` owned by `o`. */
 
-extern PppMdlBank *D_00615E64;
+extern PppMdlBank *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 
 static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
     PppSlot *s = &sys->slots[id];

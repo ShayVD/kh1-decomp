@@ -156,3 +156,4 @@ void pppRyjMegaBirthPrizeCon(void) {
     M2C_FIELD(D_00615E60, s8 *, 0xB3) = 1;
     M2C_FIELD(D_00615E60, s8 *, 0xB0) = 1;
 }
+#include "data/bss_0061_mixed.h"

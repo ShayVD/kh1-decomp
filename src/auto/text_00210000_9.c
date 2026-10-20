@@ -19,3 +19,4 @@ void func_00217750(s32 arg0) {
     func_001f9010(0x17);
     func_001f9438(arg0, 0, 0xAE, 0xC, var_s1, 0x11, 0x80C87850);
 }
+#include "data/bss_0064_mixed.h"

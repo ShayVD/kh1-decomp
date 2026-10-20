@@ -558,3 +558,4 @@ void func_0017d9c8(Hdr *h) {
     D_00362674 = D_00362424->x18;
     func_0017f178();
 }
+#include "data/bss_0057_mixed.h"

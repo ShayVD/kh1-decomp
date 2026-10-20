@@ -2,7 +2,7 @@
 
 /* Menu window, 0xb0 bytes (full layout in src/hand/text_001e0000_h45.c). */
 typedef struct { u8 b[0xb0]; } Win;
-extern Win D_0062F840;
+extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
 extern u8 D_0062F810[];
 extern s32 D_003DC484;
 extern u8 D_003DC3C0[];
@@ -67,3 +67,4 @@ s32 func_001e6038(void) {
     }
     return 0;
 }
+#include "data/bss_0063_mixed.h"

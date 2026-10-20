@@ -3,7 +3,7 @@
 #include "m2c.h"
 #include "ppp.h"
 
-extern volatile void *D_00615E60;
+extern volatile void *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 s16 rand();
 
 void pppKeShpTailCon(s32 arg0, PppEntry *arg1) {

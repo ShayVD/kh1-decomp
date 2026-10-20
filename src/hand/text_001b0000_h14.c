@@ -431,3 +431,4 @@ s32 func_001cc1c0(VM *v) {
     D_006298F8[k].h = val;
     return 2;
 }
+#include "data/bss_0062_mixed.h"

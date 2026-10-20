@@ -66,7 +66,7 @@ extern Node D_004F8310[64];
 extern u8 D_002E2F20[];
 extern u8 D_00524F20[32];
 extern union { Node *p; u64 x; } D_00514F10;
-extern Node *D_00514F14;
+extern Node *D_00514F14; /* src/data/bss_0051.c: s32 D_00514F14 */
 extern u8 D_00514F20[];
 extern struct { u8 pad[4]; u32 f4; u32 f8; s32 f0c; } D_002E2FD8;
 extern u32 D_00524F44;

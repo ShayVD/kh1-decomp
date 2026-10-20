@@ -352,7 +352,7 @@ void func_0017e768(void) {
 #define D_00575894 D_00575894_f510
 extern void *D_00575894 __asm__("D_00575894");
 extern s32 D_002E27A8;
-extern s32 D_005758C4;
+extern s32 D_005758C4; /* src/data/bss_0057.c: f32 D_005758C4 */
 extern s32 D_00362424;
 extern void *D_0036244C;
 extern void *D_00362454;
@@ -757,3 +757,4 @@ search:
     }
 }
 
+#include "data/bss_0061_mixed.h"

@@ -50,7 +50,7 @@ extern Win D_0062F790;
 extern Win D_00630300;
 extern Win D_006303B0;
 extern Win D_00630460;
-extern Win D_00630510;
+extern Win D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern SaveB *D_00304BE8;
 extern Cb D_0062F8F0;
 extern Cb D_006305C0;
@@ -107,8 +107,8 @@ extern s32 D_003DD310;
 extern s32 D_003DD314;
 extern char D_006305D0[][10];
 extern u8 D_006304E0[];
-extern s8 D_006307C8[];
-extern u8 D_00630FC8[];
+extern s8 D_006307C8[]; /* src/data/bss_0063.c: char D_006307C8[0x800] */
+extern u8 D_00630FC8[]; /* src/data/bss_0063.c: char D_00630FC8[0x100] */
 extern E848 D_0038D170[];
 extern s32 D_0039A570;
 extern E848 D_0039A580[];

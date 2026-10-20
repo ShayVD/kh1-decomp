@@ -5,11 +5,11 @@
 M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
 M2C_UNK func_001ed000(M2C_UNK, s32, s32, s32, s32, s32, M2C_UNK, M2C_UNK);
 extern M2C_UNK D_00630460;
-extern M2C_UNK D_00630510;
+extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern s32 D_002C5BB8;
 extern s32 D_003DD28C;
 extern s32 D_003E3C80;
-extern s32 D_00633640;
+extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 
 s32 func_001e6eb0(void) {
     s32 var_v0;

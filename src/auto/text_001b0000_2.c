@@ -25,7 +25,7 @@ extern s32 D_00623224;
 extern s32 D_00623228;
 extern s32 D_00623E30;
 extern s32 D_00625748;
-extern s32 D_006257D0;
+extern s32 D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0(f32);
 s32 func_001ba458(s32);

@@ -183,7 +183,7 @@ s32 func_0015ea98(void) {
 
 typedef struct { u8 pad[8]; Nea98 *x8; s32 xc; u8 buf[0x4000]; } Beb78;
 extern Beb78 D_00551D90[];
-extern Beb78 * D_00559DB0;
+extern Beb78 * D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
 volatile s32 D_00559DBC ALIGNED(4);
 extern  s32 D_00351BD0;
 void func_002583e0(s32);
@@ -266,7 +266,7 @@ typedef struct {
     GifTag gif;
     u64 ad[18];
 } Pk2;
-extern DmaTag D_00573AC0;
+extern DmaTag D_00573AC0; /* src/data/bss_0057.c: u8 D_00573AC0[0x10] */
 extern Pk1 D_00573AD0[7];
 extern Pk2 D_00573E40;
 

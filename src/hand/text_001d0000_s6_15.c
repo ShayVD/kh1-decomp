@@ -159,3 +159,4 @@ s32 func_001df890(VM *vm) {
     vm->sp--;
     return 2;
 }
+#include "data/bss_0062_mixed.h"

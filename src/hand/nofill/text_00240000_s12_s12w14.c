@@ -82,3 +82,4 @@ void func_0024c950(void *a) {
     func_001fc308(a, 452, D_00669A78 + 328, 0, 0, 18, 0, cc, cc);
     func_001fc308(a, 464, D_00669A78 + 323, 0, 0, 9, 0, cc, cc);
 }
+#include "data/bss_0066_mixed.h"

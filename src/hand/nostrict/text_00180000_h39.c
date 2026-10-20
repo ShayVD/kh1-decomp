@@ -125,7 +125,7 @@ typedef struct {
     u8 pad00[0x14];
     H39ShEnt *shapes;  /* +0x14 */
 } H39ShSys;
-extern H39ShSys *D_00615E64;
+extern H39ShSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 H39Inst *func_0017f958(H39ShSys *, s32);
 void pppConComponents(H39Inst *);
 /* Makes an instance of the slot's program and links it into the
@@ -196,7 +196,7 @@ void pppDesObject(H39Inst *obj) {
 
 typedef union { f32 f[4]; } H39V4 __attribute__((aligned(16)));
 typedef struct { u8 pad[0xC]; s32 slot; s32 off; } H39NKey;
-extern H39PSys *D_00615E60;
+extern H39PSys *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
     H39V4 v;
     H39Inst *inst;
@@ -333,7 +333,7 @@ void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
 
 extern f32 D_003701F0[3];
 extern f32 D_006160C0[4][4];
-extern f32 D_00616080[4][4];
+extern f32 D_00616080[4][4]; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
 void func_00267560(f32 *, f32 *, f32);
 void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 
@@ -412,7 +412,7 @@ void pppPointApFrame(PppObject *obj, H39PApKey *key, PppEntry *e) {
  * frame they draw one random number per component into the work area, then
  * add amp * r - amp (amp * r for Up/Down) to the vector in the object. */
 
-extern f32 D_00575A00;
+extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 
 typedef struct {
     s32 frame;
@@ -476,7 +476,7 @@ typedef struct H39Obj {
 } H39Obj;
 
 extern H39Obj D_00364130[256];
-extern f32 D_00615EB0[4][4];
+extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 
 /* Quicksort of a[lo..hi] into descending order, moving b along. */
 void func_001814b0(f32 *a, H39Obj **b, s32 lo, s32 hi) {

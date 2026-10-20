@@ -6,7 +6,7 @@ M2C_UNK func_00267328(void *, M2C_UNK *, void *);
 M2C_UNK func_00267548(void *, void *, M2C_UNK *);
 M2C_UNK func_00267560(void *, void *, f32);
 extern M2C_UNK D_003701F0;
-extern M2C_UNK D_00616040;
+extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern f32 D_00615FC0[];
 extern void *D_00615E68;
 

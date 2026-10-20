@@ -101,7 +101,7 @@ void func_001e4990();
 void func_00232aa8(void);
 extern s32 D_003DD25C;
 extern s32 D_003DD258;
-extern u8 D_006314C8;
+extern u8 D_006314C8; /* src/data/bss_0063.c: s8 D_006314C8 */
 void func_001e4d50();
 extern s32 D_003DD28C;
 extern u8 D_00630510[];

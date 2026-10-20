@@ -24,10 +24,10 @@ M2C_UNK sceGsExecLoadImage(void *, M2C_UNK *);
 M2C_UNK sceGsSetDefLoadImage(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_00425CE0;
-extern M2C_UNK D_006480D0;
+extern M2C_UNK D_006480D0; /* src/data/bss_0064.c: u64 D_006480D0[0x2c] */
 extern M2C_UNK D_00648230;
 extern s32 D_003F7A64;
-extern s32 D_0064770C;
+extern s32 D_0064770C; /* src/data/bss_0064.c: void *D_0064770C */
 extern s32 D_00651E50[];
 f32 func_0011d790(M2C_UNK, s32);
 s32 func_00122ff8(s32);

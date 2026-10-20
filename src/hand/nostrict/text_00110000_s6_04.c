@@ -352,3 +352,4 @@ void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
     }
     *(u64 *)base = (((u8 *)q - (u8 *)base + 15) / 16 - 1) | 0x70000000;
 }
+#include "data/bss_004E_mixed.h"

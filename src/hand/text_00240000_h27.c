@@ -133,3 +133,4 @@ s32 func_0024dad0(s32 a0, s32 n) {
     if ((s32)(v >> 18) < n) return 0;
     return 1;
 }
+#include "data/bss_0066_mixed.h"

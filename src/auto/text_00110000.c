@@ -44,8 +44,8 @@ M2C_UNK func_00232ad0(M2C_UNK);
 M2C_UNK func_00232d60();
 M2C_UNK func_00266a10(M2C_UNK *);
 extern M2C_UNK D_0048CF30;
-extern M2C_UNK D_004E3A48;
-extern M2C_UNK D_004F2A00;
+extern M2C_UNK D_004E3A48; /* src/data/bss_004E.c: u8 D_004E3A48[0x10] */
+extern M2C_UNK D_004F2A00; /* src/data/bss_004F.c: char D_004F2A00[0x800] */
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_00110218;
 extern M2C_UNK func_00110fc8;
@@ -427,3 +427,4 @@ void func_0011fd40(void) {
     func_001220d0();
     func_001104e0();
 }
+#include "data/bss_004D_mixed.h"

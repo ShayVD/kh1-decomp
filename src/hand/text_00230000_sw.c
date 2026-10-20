@@ -37,3 +37,4 @@ void func_00233db0(s32 id) {
         }
     }
 }
+#include "data/bss_0064_mixed.h"

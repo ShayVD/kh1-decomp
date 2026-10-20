@@ -8,3 +8,4 @@ void func_001ddbf8(void)
     func_001763f0(D_0062A220);
     D_00389C90.f3070 &= ~(1ULL << 44);
 }
+#include "data/bss_0062_mixed.h"

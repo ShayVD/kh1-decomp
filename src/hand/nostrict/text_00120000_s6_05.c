@@ -62,7 +62,7 @@ typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
 extern Q8 *D_002E3170[8];
-extern Q8 **D_00524F40;
+extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 extern O8 *D_002E319C;
 extern O8 *D_002E31A0;
 extern Ent *D_002E26A0;
@@ -82,7 +82,7 @@ extern u32 D_002C5BB8;
 extern S88 D_00350D88[];
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
-extern V8 *D_00525288;
+extern V8 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern f32 D_002E2780[];
 
 /* ---- functions ---- */

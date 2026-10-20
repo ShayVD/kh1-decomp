@@ -27,3 +27,4 @@ void func_00184cb8(s32 arg0, void *arg1, void *arg2) {
         M2C_FIELD(temp_v0_4, f32 *, 8) = (f32) M2C_FIELD(arg2, s16 *, 4);
     }
 }
+#include "data/bss_0061_mixed.h"

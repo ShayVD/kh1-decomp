@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern void *D_00640DD8;
+extern void *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
 
 s32 func_001f3d10(void *arg0) {
     if ((arg0 != NULL) && (((u32) (M2C_FIELD(arg0, s32 *, 0x8C) - 4) < 2U) || ((s32) ((u64) ((s64) M2C_FIELD(arg0, u32 *, 0x44) << 0x20) >> 0x20) & 1))) {

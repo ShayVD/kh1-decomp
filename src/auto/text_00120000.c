@@ -38,7 +38,7 @@ extern s32 D_002BBE04;
 extern s32 D_002E31A8;
 extern s32 D_00304B78;
 extern s32 D_00350D7C;
-extern s32 D_004F6EB8;
+extern s32 D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern s32 D_00514F10;
 extern s32 D_00514F14;
 extern u32 D_002BBDE4;
@@ -517,3 +517,4 @@ s32 func_0012ffd0(void *arg0) {
     }
     return var_v0;
 }
+#include "data/bss_0051_mixed.h"

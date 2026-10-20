@@ -4,7 +4,7 @@
 #include "data/bss_0064.h"
 
 extern s32 D_006411FC;
-extern s32 D_00641218;
+extern s32 D_00641218; /* src/data/bss_0064.c: f32 D_00641218 */
 
 void func_0020be50(void) {
     D_006411FC = 3;

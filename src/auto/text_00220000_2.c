@@ -11,8 +11,8 @@ M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0020be10(M2C_UNK);
 extern M2C_UNK D_003F6360;
 extern M2C_UNK D_003F6788;
-extern M2C_UNK D_006436F8;
-extern M2C_UNK D_00643700;
+extern M2C_UNK D_006436F8; /* src/data/bss_0064.c: s32 D_006436F8[2] */
+extern M2C_UNK D_00643700; /* src/data/bss_0064.c: s32 D_00643700[2] */
 extern M2C_UNK func_00223de0;
 extern s32 D_003F34A4;
 extern s32 D_003F34C0;

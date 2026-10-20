@@ -73,7 +73,7 @@ typedef struct {
     Q16_25 x38;
 } Prm25;
 
-extern Gl25 D_0055C698;
+extern Gl25 D_0055C698; /* src/data/bss_0055.c: u8 D_0055C698[0xda58] */
 s32 D_0055BE00[48] ALIGNED(64);
 s32 D_0055BEC0[48][5] ALIGNED(64);
 void *D_0055C280[48][5] ALIGNED(64);

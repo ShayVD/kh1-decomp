@@ -169,3 +169,4 @@ s32 func_0013be00(W32Seq *s) {
     }
     return 1;
 }
+#include "data/bss_0052_mixed.h"

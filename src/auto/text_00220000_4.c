@@ -28,7 +28,7 @@ M2C_UNK func_0021ccd0(s32, M2C_UNK);
 extern M2C_UNK D_003F61E0;
 extern M2C_UNK D_003F70E8;
 extern f32 D_002BBDFC;
-extern f32 D_006469B8[];
+extern f32 D_006469B8[]; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
 extern s32 D_003F34C8;
 extern s32 D_003F34D4;
 extern s32 D_003F34FC;
@@ -38,7 +38,7 @@ extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_00646990;
 extern void *D_00425BC8;
-extern void *D_00643428;
+extern void *D_00643428; /* src/data/bss_0064.c: s32 D_00643428 */
 s32 func_001efc10(M2C_UNK);
 s32 func_001f42b8();
 s32 func_001f4390();

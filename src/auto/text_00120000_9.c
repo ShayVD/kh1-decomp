@@ -22,7 +22,7 @@ extern M2C_UNK func_00120170;
 extern f32 D_002BBDFC;
 extern f32 D_002E2700[];
 extern s32 D_002C5C30;
-extern s32 D_00524F44;
+extern s32 D_00524F44; /* src/data/bss_0052.c: u32 D_00524F44 */
 f32 atan2f(f32, f32);
 f32 func_00120c88(f32);
 s32 func_001200f8();

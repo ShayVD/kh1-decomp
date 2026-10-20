@@ -15,7 +15,7 @@ typedef union {
 } PppQv;
 
 extern PppQv D_00615FC0[4];
-extern PppQv D_00616040[4];
+extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 typedef struct {
     s32 unk0;
@@ -32,7 +32,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 typedef struct {
     s32 unk00, unk04, unk08;
@@ -386,7 +386,7 @@ typedef struct {
     PppIVec prev;  /* +0x80 */
 } PppMatSN;
 
-extern PppMatSN *D_00616214;
+extern PppMatSN *D_00616214; /* src/data/bss_0061.c: s32 D_00616214 */
 extern u128 D_003727B0;
 
 void pppKeMatSNFrame(PppObject *obj, void *key, PppEntry *e) {
@@ -473,7 +473,7 @@ typedef struct {
     u16 prev;   /* +0x4 */
 } PppShapeWork;
 
-extern PppMtx D_00615EB0;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 void func_00267548(f32 *, f32 *, f32 *);
 
 extern f32 D_003701D0[4];

@@ -31,3 +31,4 @@ void func_0020bda8(s32 arg0) {
     D_00641208 = D_00641218;
     D_0064120C = 128.0f;
 }
+#include "data/bss_0064_mixed.h"

@@ -17,3 +17,4 @@ void func_0012fc20(void) {
     D_0052528C = 0;
     D_002E31BC = 0;
 }
+#include "data/bss_0052_mixed.h"

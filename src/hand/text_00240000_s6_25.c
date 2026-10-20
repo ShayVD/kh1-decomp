@@ -88,7 +88,7 @@ void func_00243e58(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
 /* 244d00 */
 typedef struct { u8 pad[0x60]; s32 fl; u8 pad64[0xC0 - 0x64]; } Obj;
 extern Obj D_0065FD80[5][10];
-extern Obj D_00662300[3];
+extern Obj D_00662300[3]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
 void func_0024a568(Obj *);
 void func_0024a678(Obj *);
 void func_0024a0c0(Obj *);
@@ -283,7 +283,7 @@ extern s32 D_0046A03C;
 extern s32 D_0046A040;
 extern s32 D_0046A044;
 extern s32 D_0046A048;
-extern Prm *D_00669A18[8];
+extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 void func_0024e1d0(void);
 void func_0024b448(s32 i) {
     s32 o40, o48, t10, t18;
@@ -337,3 +337,4 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
         p += w;
     }
 }
+#include "data/bss_0065_mixed.h"

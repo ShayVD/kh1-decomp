@@ -218,10 +218,10 @@ s32 func_0023c270(Ob *o) {
     return 0;
 }
 
-extern void *D_006512F0;
-extern void *D_006512F4;
-extern void *D_006512F8;
-extern void *D_006512FC;
+extern void *D_006512F0; /* src/data/bss_0065.c: u8 *D_006512F0 */
+extern void *D_006512F4; /* src/data/bss_0065.c: u8 *D_006512F4 */
+extern void *D_006512F8; /* src/data/bss_0065.c: u8 *D_006512F8 */
+extern void *D_006512FC; /* src/data/bss_0065.c: u8 *D_006512FC */
 
 void func_0023c5c8(s32 *d, s32 kind, s32 show) {
     I4 sc;
@@ -549,3 +549,4 @@ s32 func_0023dd48(Obj *g, s32 buf) {
     }
     return buf;
 }
+#include "data/bss_0064_mixed.h"

@@ -65,3 +65,4 @@ void func_0020b6a8(void) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
+#include "data/bss_0064_mixed.h"

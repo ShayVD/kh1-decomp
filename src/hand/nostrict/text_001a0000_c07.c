@@ -25,7 +25,7 @@ typedef struct {
 } Arg57c0;
 
 extern Mtx D_00615FC0;
-extern Mtx D_00616040;
+extern Mtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 void sceVu0CopyMatrix(Mtx, Mtx);
 void sceVu0UnitMatrix(Mtx);
 void sceVu0MulMatrix(Mtx, Mtx, Mtx);

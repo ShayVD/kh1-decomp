@@ -20,7 +20,7 @@ typedef struct {
 } PppSystem;
 
 extern s32 D_0061621C;
-extern PppSystem *D_00615E60;
+extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 u8 *func_00182588(PppSystem *, PppSlot *);
 

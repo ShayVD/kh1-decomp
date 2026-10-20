@@ -401,3 +401,4 @@ void func_001e65d0(void) {
     func_0010bd90(D_00630300, func_001e64e0);
     D_003DD28C = 0;
 }
+#include "data/bss_0063_mixed.h"

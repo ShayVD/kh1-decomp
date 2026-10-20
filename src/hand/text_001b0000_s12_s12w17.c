@@ -63,3 +63,4 @@ void func_001ba520(void) {
     l->s.bn[1] = v[1] / v[3];
 }
 
+#include "data/bss_0062_mixed.h"

@@ -11,7 +11,7 @@ typedef struct { s16 h0; u16 n; u16 *idx; } MgSet;
 typedef struct { u8 pad[0x14]; MgV6 *v; u8 pad18[0xC]; } MgSlot;
 typedef struct { u8 pad[0x10]; MgSlot *slots; u8 pad14[4]; MgSet *sets; } MgSys;
 typedef struct { u8 pad[0x10]; f32 m10[4][4]; u8 pad50[0x40]; MgV6 *v90; } MgCur;
-extern MgSys *D_00615E64;
+extern MgSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern MgCur *D_00615E68;
 extern f32 D_00615E70[4][4];
 

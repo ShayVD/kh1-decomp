@@ -30,3 +30,4 @@ void func_00182788(void *arg0) {
 void func_001839f8(void) {
 
 }
+#include "data/bss_0061_mixed.h"

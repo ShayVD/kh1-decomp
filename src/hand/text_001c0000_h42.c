@@ -362,7 +362,7 @@ typedef struct {
     u8 pad98[0x18];
 } __attribute__((aligned(8))) Obj;
 extern Obj D_006298F0[];
-extern Obj D_0062A130;
+extern Obj D_0062A130; /* src/data/bss_0062.c: u8 D_0062A130[0xb0] */
 extern Obj D_00629E70[];
 void func_001cab48(void) {
     s32 i;

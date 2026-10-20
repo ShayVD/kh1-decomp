@@ -76,3 +76,4 @@ void func_0021f7d8(s32 arg0) {
     func_0021ccd0(arg0, 1);
     func_0021af38(arg0);
 }
+#include "data/bss_0064_mixed.h"

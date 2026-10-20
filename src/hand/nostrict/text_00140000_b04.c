@@ -607,7 +607,7 @@ typedef struct { B4Obj *x0; u32 x4; u8 pad8[0x28 - 8]; s32 x28; } B4Dsl;
 typedef struct B4Ln { struct B4Ln *x0; B4Obj *x4; } B4Ln;
 typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; s32 x10; B4Pr x14[2][72]; u8 pad494[4]; B4Obj x498[2][78]; B4Dsl x3558[2][480]; } B4Gl;
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } B4Task;
-extern B4Gl D_0055C698;
+extern B4Gl D_0055C698; /* src/data/bss_0055.c: u8 D_0055C698[0xda58] */
 B4Ln *D_005739F0 ALIGNED(16);
 B4Ln D_005736F0[0x60] ALIGNED(16);
 void func_00121eb0(void *);
@@ -1242,3 +1242,5 @@ void func_00161a08(B4Hd *h) {
     if (r) func_00175708(h, r);
     D_00351BC8(0);
 }
+#include "data/bss_0054_mixed.h"
+#include "data/bss_0057_mixed.h"

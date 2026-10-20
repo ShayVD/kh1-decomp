@@ -319,7 +319,7 @@ void func_0021d860(void *a) {
 
 extern u8 *D_006431F0[3];
 extern s32 D_00643200[3];
-extern s32 D_00643278[3];
+extern s32 D_00643278[3]; /* src/data/bss_0064.c: s32 D_00643278[0x6] */
 extern u8 D_00643128[];
 extern u8 D_00643160[];
 extern u8 D_006431B0[];
@@ -422,7 +422,7 @@ typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad_q5;
 typedef struct { u8 pad0[0x24]; s32 x24; u8 pad28[0x40 - 0x28]; s32 x40; u8 pad44[0xa0 - 0x44]; f32 xa0; u8 pada4[0xd8 - 0xa4]; s16 xd8, xda; } Eff_q5;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110_q5;
 extern Pad_q5 *D_00425BC8;
-extern S3110_q5 *D_00643110;
+extern S3110_q5 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_0064324C;
 extern s32 D_00643268[];
 extern s32 D_00643258[];
@@ -928,7 +928,7 @@ Dir40_q7 D_00643800[0x63] ALIGNED(64);
 s32 D_00646994 ALIGNED(4);
 extern s32 D_00646998;
 u32 D_0064699C ALIGNED(4);
-extern u32 D_006469A0;
+extern u32 D_006469A0; /* src/data/bss_0064.c: s32 D_006469A0 */
 s32 D_0064524C ALIGNED(4);
 extern u8 D_003F6F70[];
 extern u8 D_003F6F30[];
@@ -1265,9 +1265,9 @@ extern s32 D_00646A18;
 extern u32 D_00646A20;
 extern s32 D_00646A28;
 extern u32 D_003E3D6C;
-extern EbMember_q8 *D_00647634;
+extern EbMember_q8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
 extern s32 D_00647638;
-extern u32 D_0064763C;
+extern u32 D_0064763C; /* src/data/bss_0064.c: s32 D_0064763C */
 s32 func_001ee708(s32);
 u32 func_001ef7a0(void);
 s32 func_001ee9e0(s32);

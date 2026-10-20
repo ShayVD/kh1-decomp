@@ -4,7 +4,7 @@
 #include "data/bss_0057.h"
 
 M2C_UNK func_00175a48();
-extern M2C_UNK *D_0061622C;
+extern M2C_UNK *D_0061622C; /* src/data/bss_0061.c: s32 D_0061622C */
 M2C_UNK D_00575E40[0x8000] ALIGNED(64);
 extern M2C_UNK func_00175af0;
 extern M2C_UNK func_00175b70;

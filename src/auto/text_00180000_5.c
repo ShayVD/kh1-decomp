@@ -170,3 +170,4 @@ void pppKeThRes255Con(s32 arg0, PppEntry *arg1) {
 void pppKeThRes255x4Con(s32 arg0, PppEntry *arg1) {
     func_001a8920(arg0 + arg1->offsets[0] + 0xA0, 4, 0xFF);
 }
+#include "data/bss_0061_mixed.h"

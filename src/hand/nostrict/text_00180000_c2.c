@@ -9,11 +9,11 @@ void func_00267370(V4A *, V4A *, V4A *);
 void func_002673b8(V4A *, V4A *);
 void sceVu0MulMatrix(V4A *, V4A *, V4A *);
 extern V4A D_00615FC0[4];
-extern V4A D_00615EB0[4];
+extern V4A D_00615EB0[4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern V4A D_00615E70[4];
 extern V4A D_00616010[3]; /* rows 1..3 of a matrix starting 16 bytes earlier */
-extern V4A D_00616040[4];
-extern V4A D_00616080[4];
+extern V4A D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
+extern V4A D_00616080[4]; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
 extern V4A D_006160C0[4];
 
 void func_00180280(void *o) {

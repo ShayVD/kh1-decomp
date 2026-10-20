@@ -8,8 +8,8 @@ typedef struct {
     PppMtx m2;
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68;
-extern PppMtx D_00615EB0;
-extern PppMtx D_00616040;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
+extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern f32 D_003701F0[3];
 void sceVu0UnitMatrix(PppMtx);
 void func_002676c0(PppMtx, PppMtx, f32);
@@ -300,7 +300,7 @@ typedef struct {
 } P2830;
 
 extern f32 D_00615F70[4];
-extern f32 D_006161C0[4];
+extern f32 D_006161C0[4]; /* src/data/bss_0061.c: u8 D_006161C0[0x40] */
 extern u8 D_0061E720[];
 f32 func_001a2178(void);
 void func_001a2248(E2830 *, P2830 *, f32 *);

@@ -1,5 +1,15 @@
 /* Definitions of the shared bss names in include/data/bss_0065.h. */
 #include "data/bss_0065.h"
+#include "data/bss_0065_mixed.h"
 
 f32 D_00650DD0 ALIGNED(16);
 f32 D_00650DD4 ALIGNED(4);
+s32 D_00651200 ALIGNED(16);
+u8 *D_00651204 ALIGNED(4);
+u8 *D_006512F0 ALIGNED(16);
+u8 *D_006512F4 ALIGNED(4);
+u8 *D_006512F8 ALIGNED(8);
+u8 *D_006512FC ALIGNED(4);
+u8 *D_00651300 ALIGNED(16);
+s32 D_006560E0 ALIGNED(16);
+s32 D_00656420 ALIGNED(16);

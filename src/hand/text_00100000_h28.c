@@ -63,7 +63,7 @@ extern Flags D_002BC0A8;
 extern Flags D_0037A378;
 extern Grid *D_002A6234;
 extern Mtx D_00495190;
-extern Mtx D_00495210;
+extern Mtx D_00495210; /* src/data/bss_0049.c: u8 D_00495210[0x40] */
 extern Obj10 *func_0015ed80(s32, void (*)(void));
 extern Pad8 D_002BCA00;
 extern Pkt D_002B6490;
@@ -140,8 +140,8 @@ s32 D_00494970[4][4] ALIGNED(16);
 extern s32 D_00494A7C;
 extern s32 D_00494A80;
 extern s32 D_00494A84;
-extern s32 D_00494AA0[];
-extern s32 D_00494B20[];
+extern s32 D_00494AA0[]; /* src/data/bss_0049.c: s32 D_00494AA0[32] */
+extern s32 D_00494B20[]; /* src/data/bss_0049.c: s32 D_00494B20[32] */
 extern s32 D_00494BA0;
 extern s32 D_00494BA4;
 s32 D_00495174 ALIGNED(4);

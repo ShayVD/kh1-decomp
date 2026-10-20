@@ -366,3 +366,4 @@ void func_00207598(void) {
     }
 }
 
+#include "data/bss_0064_mixed.h"

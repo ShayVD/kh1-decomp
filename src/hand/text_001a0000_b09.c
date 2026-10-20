@@ -66,7 +66,7 @@ void func_001a9460(f32 t, u32 c0, u32 c1, u32 *dst) {
 }
 
 typedef struct { s32 x0; u16 x4; u8 pad6[6]; u8 xc; u8 padd[0xF70 - 0xD]; } BbEnt;
-extern BbEnt *D_006257D0;
+extern BbEnt *D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 BbEnt *func_001ba9d8(s32);
 s32 func_001baad0(void);
 void func_001baaa8(s32);

@@ -53,3 +53,4 @@ void pppKeThDraw(void *obj, ThKey *k, PppEntry *e) {
     func_001a8c40(w, D_00616080, v, &w->s, D_00616224, t1, t2);
 }
 
+#include "data/bss_0061_mixed.h"

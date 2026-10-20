@@ -40,14 +40,14 @@ extern s32 D_0064123C;
 extern s32 D_00641240;
 extern s32 D_00641248;
 extern B50 D_00641250;
-extern u16 D_00641258;
-extern u16 D_0064125C;
-extern u16 D_00641260;
-extern u16 D_00641264;
-extern u16 D_00641268;
-extern u16 D_0064126C;
-extern u16 D_00641270;
-extern u16 D_00641274;
+extern u16 D_00641258; /* src/data/bss_0064.c: s32 D_00641258 */
+extern u16 D_0064125C; /* src/data/bss_0064.c: s32 D_0064125C */
+extern u16 D_00641260; /* src/data/bss_0064.c: s32 D_00641260 */
+extern u16 D_00641264; /* src/data/bss_0064.c: s32 D_00641264 */
+extern u16 D_00641268; /* src/data/bss_0064.c: s32 D_00641268 */
+extern u16 D_0064126C; /* src/data/bss_0064.c: s32 D_0064126C */
+extern u16 D_00641270; /* src/data/bss_0064.c: s32 D_00641270 */
+extern u16 D_00641274; /* src/data/bss_0064.c: s32 D_00641274 */
 extern s32 D_00641388;
 s32 func_001f42b8(Ob *);
 Ob *func_001f31a8(void *, s32);

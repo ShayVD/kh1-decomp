@@ -27,8 +27,8 @@ extern ActB *D_00575894;
 extern s32 D_00575890;
 extern f32 D_005758C0;
 extern f32 D_005758C4;
-extern V4 D_005758D0;
-extern V4 D_005758E0;
+extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
+extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 extern V4 D_00362680;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;

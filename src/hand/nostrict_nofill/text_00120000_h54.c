@@ -16,7 +16,7 @@ extern S31b0 D_002E31B0;
 extern s32 D_002E31B8;
 extern Q8 D_002E30B8;
 extern Q8 *D_002E3170[];
-extern Q8 **D_00524F40;
+extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 extern s32 D_00524F58[];
 extern s32 D_002E3160[];
 extern O8 *func_001478c8(s32);
@@ -113,7 +113,7 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
     return s;
 }
 
-extern S31b0 *D_00525288;
+extern S31b0 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern s32 D_0052528C;
 extern S31b0 D_00524F80[];
 extern s32 func_0012f3d0(A9 *);

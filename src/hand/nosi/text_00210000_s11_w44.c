@@ -30,3 +30,4 @@ void func_00214a68(void) {
         }
     }
 }
+#include "data/bss_0064_mixed.h"

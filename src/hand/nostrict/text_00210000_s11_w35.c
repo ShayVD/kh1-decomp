@@ -146,3 +146,4 @@ draw:
     func_001fc308(a, 16, 7, 0, 0, 15, 0, c, c);
     func_001fc308(a, 316, 7, 0, 0, 16, 0, c, c);
 }
+#include "data/bss_0064_mixed.h"

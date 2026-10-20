@@ -392,3 +392,4 @@ void func_0017b308(V4 *out, V4 *seg, s32 n, s32 i, s32 loop) {
         func_00267530(&out[2], &out[3], &a);
     }
 }
+#include "data/bss_0057_mixed.h"

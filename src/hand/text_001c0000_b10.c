@@ -633,3 +633,4 @@ s32 func_001cb120(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/bss_0062_mixed.h"

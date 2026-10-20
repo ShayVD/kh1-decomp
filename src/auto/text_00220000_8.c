@@ -174,3 +174,4 @@ s32 func_00229d58(s32 arg0) {
     }
     return func_00207bb0(arg0, 0x1A8);
 }
+#include "data/bss_0064_mixed.h"

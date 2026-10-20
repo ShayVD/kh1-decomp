@@ -134,8 +134,8 @@ extern s32 D_0057508C;
 extern f32 D_00575090[40][4];
 extern P86F D_00575310[];
 extern Node6F D_00575528[30];
-extern Node6F *D_00575780;
-extern Node6F *D_00575784;
+extern Node6F *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
+extern Node6F *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
 f32 cosf(f32);
 s32 func_00105ad0(s32, s32, Hit68 *);
 void func_00118608(Ray68 *);

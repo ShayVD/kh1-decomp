@@ -7,7 +7,7 @@ typedef struct { s32 x0; Ob5 *f4; } HS5;
 typedef struct { f32 *f0; s32 *f4; f32 *f8; f32 *fc; u8 *f10; s32 f14; u8 pad18[60 - 0x18]; } E60;
 typedef struct { u8 pad0[0x10]; void *f10; HS5 *f14; s32 f18; f32 f1c; u8 pad20[8]; s32 f28; s32 f2c; f32 f30; u8 pad34[0xc]; f32 f40[3]; } Hd5;
 extern u8 D_0062A630[];
-extern E60 D_0062A428[];
+extern E60 D_0062A428[]; /* src/data/bss_0062.c: u8 D_0062A428[0x8] */
 extern s32 D_0062A608[];
 extern s32 D_0037A378;
 extern s32 D_0062A220, D_0062A224, D_0029B418, D_0029B41C, D_0029B410, D_0029B414, D_00350CE0;

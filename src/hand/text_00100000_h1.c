@@ -486,3 +486,4 @@ void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
     o->w120 = D_0048C690.w24;
     o->w124 = D_0048C690.w28;
 }
+#include "data/bss_0049_mixed.h"

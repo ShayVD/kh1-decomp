@@ -5,7 +5,7 @@
 
 extern M2C_UNK D_003701D0;
 extern M2C_UNK D_003701E0;
-extern void *D_00615E64;
+extern void *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 void func_00183be0(s32, s32);
 void func_001a5250(s32, s32);
 void func_001a52e0(s32, s32);

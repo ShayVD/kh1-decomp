@@ -133,7 +133,7 @@ s32 func_001207f8(s32 id) {
     return 0;
 }
 
-extern Pool D_004E49E8;
+extern Pool D_004E49E8; /* src/data/bss_004E.c: u8 D_004E49E8[0x18] */
 extern s32 D_004E4520;
 void func_0011efa8(Pool *, void *, s32, s32);
 void func_00120038(Slot *);
@@ -434,3 +434,4 @@ void func_0011ea40(s32 n, char *out) {
     strcat(out, buf);
     strcat(out, D_0048D198);
 }
+#include "data/bss_004F_mixed.h"

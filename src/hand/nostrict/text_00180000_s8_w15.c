@@ -87,10 +87,10 @@ typedef struct {
 
 extern s32 D_0061621C;
 typedef struct { u8 pad[0xB0]; u64 pad_b0; } DttPad;
-extern DttPad *D_00615E60;
-extern DttSys *D_00615E64;
+extern DttPad *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
+extern DttSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern struct { u8 pad[0x90]; s16 *verts; } *D_00615E68;
-extern f32 D_00616040[4][4];
+extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern u8 *D_00616224;
 extern s32 D_00616228;
 extern f32 D_003701F0[];

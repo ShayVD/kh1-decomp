@@ -122,7 +122,7 @@ extern s32 D_003F7A68;
 extern u16 *D_00646A08;
 extern s32 *D_00646A0C;
 extern s32 D_00646A14;
-extern s32 D_00646A20;
+extern s32 D_00646A20; /* src/data/bss_0064.c: u32 D_00646A20 */
 extern s32 D_00646A28;
 extern s32 D_00647644;
 extern void (*D_00646A00)(s32);

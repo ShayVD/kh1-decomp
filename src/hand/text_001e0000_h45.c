@@ -71,9 +71,9 @@ extern E212 D_003DB718[];
 extern Pair20 D_002E26A0;
 extern Win D_0062F6E0;
 extern Win D_0062F790;
-extern Win D_0062F840;
+extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
 extern Win D_00630300;
-extern Win D_006303B0;
+extern Win D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern Win D_00630460;
 extern Win D_00631570;
 extern char D_003DD290[][6];
@@ -118,7 +118,7 @@ extern u8 D_00630380[];
 extern u8 D_006304E0[];
 extern u8 D_00630510[];
 extern u8 D_006305D0[][10];
-extern u8 D_006307C8[];
+extern u8 D_006307C8[]; /* src/data/bss_0063.c: char D_006307C8[0x800] */
 extern u8 D_00F20000[];
 f32 D_006314E0[0x8][4] ALIGNED(32);
 extern volatile s32 D_002C5958;

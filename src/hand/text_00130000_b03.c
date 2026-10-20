@@ -132,7 +132,7 @@ f32 D_0052AD20[4] ALIGNED(16);
 f32 D_0052AD30[4] ALIGNED(16);
 f32 D_0052AD40[4] ALIGNED(16);
 f32 D_0052AD50 ALIGNED(16);
-extern u8 *D_0052AE38;
+extern u8 *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 f32 atan2f(f32, f32);
 f32 cosf(f32);
 f32 func_00120bf8(f32 *);

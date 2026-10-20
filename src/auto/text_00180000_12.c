@@ -68,3 +68,4 @@ void pppChrXSclXYZMatrixFrame(s32 arg0, void *arg1) {
   *((f32 *) (((s8 *) sp) + 0x28)) = new_var;
   func_00267328(temp_a0, sp, temp_a0);
 }
+#include "data/bss_0061_mixed.h"

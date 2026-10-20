@@ -420,7 +420,7 @@ typedef struct {
 } Spr;
 extern Spr D_0035C710[];
 extern u8 D_0052EB50[];
-extern Bo D_0052EB60[];
+extern Bo D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
 Bo *func_0011f090(void *, s32, void *);
 void func_00145ce8();
 
@@ -885,3 +885,4 @@ void func_0014ade0(Hx *x, Hy *y) {
         func_00146fb8((Pf *)m->u30.s.tg, 0, v);
     }
 }
+#include "data/bss_0053_mixed.h"

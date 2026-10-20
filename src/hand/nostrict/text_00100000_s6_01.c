@@ -312,7 +312,7 @@ extern u8 D_004951D0[];
 extern s32 D_002BBE18;
 extern u8 D_002B73B0[], D_002B73E0[], D_002B7490[], D_002B7450[], D_002B74C0[];
 extern u8 D_002B67D0[], D_002B67E0[];
-extern void *D_00495250;
+extern void *D_00495250; /* src/data/bss_0049.c: s32 D_00495250 */
 extern void func_0010b208(void *, void *, void *);
 extern s32 func_00121e28(s32, s32 *);
 extern void func_0010b190(Win *);

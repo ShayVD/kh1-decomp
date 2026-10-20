@@ -43,3 +43,4 @@ void pppRyjMegaPlaceFrame(s32 arg0, s32 arg1, void *arg2) {
         }
     }
 }
+#include "data/bss_0061_mixed.h"

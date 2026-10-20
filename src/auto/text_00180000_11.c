@@ -72,3 +72,4 @@ void pppChrSclYMatrixFrame(s32 arg0, void *arg1) {
     temp_a0 = D_00615E68 + 0x10;
     func_00267328(temp_a0, sp, temp_a0);
 }
+#include "data/bss_0061_mixed.h"

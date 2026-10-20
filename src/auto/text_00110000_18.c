@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK func_00102a48(M2C_UNK, M2C_UNK);
-extern s32 D_004D9330;
+extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
 
 s32 func_00113ee0(void) {
   int *new_var2;

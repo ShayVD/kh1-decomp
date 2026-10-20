@@ -513,7 +513,7 @@ void func_00137ab8(E22 *e) {
 
 typedef struct O23 { u8 p0[0x8c]; s32 f8c; u8 p90[0x370 - 0x90]; u64 f370; u8 p378[0x398 - 0x378]; struct O23 *f398; u8 p39c[0x4b0 - 0x39c]; } O23;
 extern O23 D_002C64A0[96];
-extern s32 D_0052ACF0[];
+extern s32 D_0052ACF0[]; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
 extern s32 D_0052ACF8;
 extern s32 D_003044D0;
 extern s32 D_0052AA68;
@@ -650,7 +650,7 @@ s32 func_001323a0(E16 *e, Hdr16 *h) {
 typedef struct { s32 f0; u32 f4; u8 p8[0x4c]; s8 f54; u8 p55[0x78 - 0x55]; } Ent17;
 typedef struct { u8 p[0xc]; s32 n; Ent17 *base; } Lst17;
 extern Lst17 D_00525298;
-extern Ent17 *D_00525354;
+extern Ent17 *D_00525354; /* src/data/bss_0052.c: s32 D_00525354 */
 s32 D_00525358 ALIGNED(8);
 #define INC17 { s32 *p17 = &D_00525358; (*p17)++; }
 void (*D_00525290)(void) ALIGNED(16);

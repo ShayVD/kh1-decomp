@@ -834,7 +834,7 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
 }
 
 typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
-extern B3Pj D_0052EB60[];
+extern B3Pj D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
 extern B3PjE D_0035C710[];
 extern f32 *D_00531B68;
 extern f32 D_002C58D0[4];
@@ -1038,3 +1038,4 @@ call:
 end:;
 }
 
+#include "data/bss_0053_mixed.h"

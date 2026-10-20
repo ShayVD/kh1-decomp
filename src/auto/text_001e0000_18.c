@@ -25,9 +25,9 @@ extern M2C_UNK D_003E1150;
 extern M2C_UNK D_003E12E0;
 extern M2C_UNK D_0062F670;
 extern M2C_UNK D_0062F6E0;
-extern M2C_UNK D_006303B0;
+extern M2C_UNK D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern M2C_UNK D_00630460;
-extern M2C_UNK D_00630510;
+extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern M2C_UNK D_006310C8;
 extern M2C_UNK D_00631148;
 extern M2C_UNK D_006311C8;

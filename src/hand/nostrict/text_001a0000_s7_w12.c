@@ -9,10 +9,10 @@ typedef struct {
     s32 unk94;
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68;
-extern PppMtx D_00615EB0;
+extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern PppMtx D_00615FC0;
 extern PppMtx D_00616000;
-extern PppMtx D_00616040;
+extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 void func_002672f8(f32 *, PppMtx, f32 *);
 void func_002675a8(f32 *, f32 *);
 void func_00267560(f32 *, f32 *, f32);

@@ -5,7 +5,7 @@ extern Pad52 D_002C5AD0;
 typedef struct { s32 min, max; void (*fn)(s32); } Range52;
 typedef struct { s32 a, b; } Pair52;
 extern s32 D_004D5AF8;
-extern Pair52 *D_004D5AF4;
+extern Pair52 *D_004D5AF4; /* src/data/bss_004D.c: s32 D_004D5AF4 */
 extern s32 D_002BBBA0;
 extern s32 D_002C5BB8;
 void func_0011d768(s32);
@@ -62,7 +62,7 @@ extern s32 D_002BCC24;
 extern volatile s32 D_002BBDF0;
 extern volatile u32 D_002BBDF4;
 extern volatile s32 D_002BBDF8;
-extern volatile u32 D_004D90F0;
+extern volatile u32 D_004D90F0; /* src/data/bss_004D.c: volatile s32 D_004D90F0 */
 extern volatile s32 D_004D90F4;
 s32 func_00111798(void);
 void func_001117b8(void);

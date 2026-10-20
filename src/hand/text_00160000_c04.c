@@ -8,8 +8,8 @@ typedef struct {
 } CamC4;
 
 extern CamC4 *D_00575894;
-extern V4 D_005758D0;
-extern V4 D_005758E0;
+extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
+extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 V4 D_00575810 ALIGNED(16);
 extern V4 D_002C58A0;
 extern f32 D_002BBDFC;
@@ -113,7 +113,7 @@ typedef struct { V4 a; V4 b; f32 r; u8 pad24[0xC]; V4 out; } SweepC4;
 typedef struct { V4 r[4]; } M4;
 typedef struct { u8 pad[8]; s32 w8; } PadC4;
 
-extern u32 D_00575890;
+extern u32 D_00575890; /* src/data/bss_0057.c: s32 D_00575890 */
 extern f32 D_005758C4;
 extern V4 D_00362670;
 extern V4 D_002E2780;

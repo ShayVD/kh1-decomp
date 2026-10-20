@@ -11,7 +11,7 @@ typedef struct {
     u8 pad6[0x6E];
     Ent9f78 e[1];
 } S9f78;
-extern S9f78 D_006202A0;
+extern S9f78 D_006202A0; /* src/data/bss_0062.c: u8 D_006202A0[0xf70] */
 extern s32 D_00377648[];
 extern u8 *D_00377748[];
 void func_001be820(void *, s32);

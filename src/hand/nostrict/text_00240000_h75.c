@@ -407,7 +407,7 @@ extern Tbl D_00656510;
 
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pk;
 Pk D_006562C0 ALIGNED(64);
-extern QW *D_00656420;
+extern QW *D_00656420; /* src/data/bss_0065.c: s32 D_00656420 */
 QW *D_00656424 ALIGNED(4);
 void func_002370c8(void *);
 void func_00237018(void *, s32, s32);
@@ -535,9 +535,9 @@ extern u8 D_00467398[];
 extern u8 D_004673C0[];
 extern u8 D_004673E8[];
 extern u8 D_00669358[];
-extern u8 D_00669388[];
-extern u8 D_00669390[];
-extern u8 D_006693B0[];
+extern u8 D_00669388[]; /* src/data/bss_0066.c: s32 D_00669388[2] */
+extern u8 D_00669390[]; /* src/data/bss_0066.c: s32 D_00669390[8] */
+extern u8 D_006693B0[]; /* src/data/bss_0066.c: s32 D_006693B0[8] */
 extern u8 D_006693D0[];
 u64 D_006692D8 ALIGNED(8);
 u64 D_00669308 ALIGNED(8);

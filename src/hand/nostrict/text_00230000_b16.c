@@ -249,7 +249,7 @@ typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 t
 extern S61D0 D_006561D0;
 Q D_00655F80 ALIGNED(64);
 QW *D_006560E4 ALIGNED(4);
-extern QW *D_006560E0;
+extern QW *D_006560E0; /* src/data/bss_0065.c: s32 D_006560E0 */
 extern QW D_00351E10[];
 extern u8 D_004267C0[], D_004267F0[];
 void func_002370c8(Q *);

@@ -2,7 +2,7 @@
 
 /* needs make: uses rodata (jump table). func_00246320 only matches with func_00246020 defined above it. */
 typedef struct { u32 state; f32 t; s32 x8; s32 xc; } E8040;
-extern E8040 D_00668040[];
+extern E8040 D_00668040[]; /* src/data/bss_0066.c: u8 D_00668040[0x20] */
 s32 func_001375d8(s32);
 void func_00246020(void) {
     D_00668040[1].state = 0;
