@@ -1,4 +1,4 @@
-/* 001f18e8 2w LCS (2 pos; was 9), hand/nofill, no context, right size 1288. s11w52, FLAGGED dead FP test: s11w50 9w + `u64 cl = col;` between the two calls (no lwu), `kk = 0xeeee;` then `if ((f32)nd < 0.0f) neg = 0; else n = 0;` right after the 2nd call (block split: tag = p + 5 stays after jal 1efb98; flow2 deletes the test), constants k4..k9 assigned early and stored later (one-constant lever) so li 63 is born last in sched1 (local-alloc gives 63 v1, d0 a0), post-call order hill-climbed. Every register and store right; left only: sched2 issues li t1,1 in the slot after li eeee and li v1,63 last (original: li v1,63 there, li t1,1 last). li order in sched2 follows sched1 order, and with these lengths 63 must be born last for local-alloc; the original likely has an extra ref on the 63 pseudo or another structure. */
+/* func_001f18e8: MATCHED (session 18, s18m1), hand/nofill. From s11w52's 2w draft (nonmatchings/session11/w52__001f18e8_2w.c). FLAGGED: keeps s11w52's dead FP test after the second call, and the 63 header constant is a local register variable `register u64 k3 asm("$3")` (plain C, no inline asm). With k3 pinned to v1, `k3 = 63;` can be set right after the d[0] store (li 63 born early, so sched2 issues it in the slot after li 0xeeee as in the original) without local-alloc moving it to t0; `d[9] = 1;` written last puts li t1,1 after li 66. Without the pin: 6 words; without the dead test: 6 words. */
 #include "common.h"
 
 typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
@@ -36,8 +36,8 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     s32 f4;
     u8 f7;
     s32 i;
-    u64 k4, k5, k6, k7, k9;
-    u64 kk;
+    u64 k4, k5, k6, k7;
+    u64 kk; register u64 k3 asm("$3");
     u64 cl;
 
     neg = 0;
@@ -48,21 +48,21 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     if ((f32)nd < 0.0f) neg = 0; else n = 0;
     d = (u64 *)p;
     d[0] = 0x4000000000000001;
+    k3 = 63;
     tag = p + 5;
-    k9 = 1;
     k4 = 0x4007ff8001300000;
     k5 = 22;
     d[1] = kk;
     k6 = 68;
+    d[3] = k3;
     k7 = 66;
-    d[3] = 63;
     d[4] = k4;
     d[2] = 0;
     d[5] = k5;
     d[6] = k6;
     d[7] = k7;
     d[8] = cl;
-    d[9] = k9;
+    d[9] = 1;
     p += 6;
     start = p;
 
