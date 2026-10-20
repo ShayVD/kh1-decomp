@@ -52,10 +52,20 @@
 	PIECE_END D_00351BC8, 0x8
 	PIECE D_00351BD0, 0x10, 16
 	PIECE D_00351C40, 0x1d0, 16
-	PIECE D_00351E50, 0x9030, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0035AF20, 0x20, 16  /* untyped: users disagree: u8 D_0035AF20; unparsed in 1 file(s) */
-	PIECE D_0035AF40, 0x114, 4  /* untyped: users disagree: f32 D_0035AF40; unparsed in 1 file(s) */
-	PIECE D_0035B054, 0xc2c, 4  /* untyped: users disagree: f32 D_0035B054; unparsed in 1 file(s) */
+	PIECE_BEGIN D_00351E10, 0x9070, 16  /* untyped: merged (a user declares it larger than the next name): D_00351E50 */
+	PIECE_BYTES D_00351E10, 0x0, 0x40
+	PIECE_LABEL D_00351E10, D_00351E50, 0x40
+	PIECE_BYTES D_00351E10, 0x40, 0x9030
+	PIECE_END D_00351E10, 0x9070
+	PIECE_BEGIN D_0035AE80, 0xe00, 16  /* untyped: merged (a user declares it larger than the next name): D_0035AF20, D_0035AF40, D_0035B054 */
+	PIECE_BYTES D_0035AE80, 0x0, 0xa0
+	PIECE_LABEL D_0035AE80, D_0035AF20, 0xa0
+	PIECE_BYTES D_0035AE80, 0xa0, 0x20
+	PIECE_LABEL D_0035AE80, D_0035AF40, 0xc0
+	PIECE_BYTES D_0035AE80, 0xc0, 0x114
+	PIECE_LABEL D_0035AE80, D_0035B054, 0x1d4
+	PIECE_BYTES D_0035AE80, 0x1d4, 0xc2c
+	PIECE_END D_0035AE80, 0xe00
 	PIECE D_0035BCA8, 0x8, 8
 	PIECE D_0035BCB0, 0x8, 8
 	PIECE_BEGIN D_0035BCB8, 0x10, 8  /* untyped: type C03Act is not a common.h basic type */
@@ -314,7 +324,11 @@
 	PIECE D_0035C470, 0x10, 16
 	PIECE D_0035C480, 0x10, 16
 	PIECE D_0035C490, 0x10, 16  /* untyped: users disagree: V4 D_0035C490 | u8 D_0035C490[] */
-	PIECE D_0035C550, 0x110, 16  /* untyped: type Pkt is not a common.h basic type */
+	PIECE_BEGIN D_0035C4A0, 0x1c0, 16  /* untyped: merged (a user declares it larger than the next name): D_0035C550 */
+	PIECE_BYTES D_0035C4A0, 0x0, 0xb0
+	PIECE_LABEL D_0035C4A0, D_0035C550, 0xb0
+	PIECE_BYTES D_0035C4A0, 0xb0, 0x110
+	PIECE_END D_0035C4A0, 0x1c0
 	PIECE D_0035C660, 0x90, 16  /* untyped: type V4 is not a common.h basic type */
 	PIECE D_0035C6F0, 0x4, 4
 	PIECE D_0035C6F4, 0x4, 4

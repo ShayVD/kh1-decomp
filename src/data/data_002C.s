@@ -24,7 +24,11 @@
 	PIECE D_002C1364, 0x4, 4
 	PIECE D_002C1368, 0x8, 8  /* untyped: users disagree: s32 D_002C1368[]; unparsed in 1 file(s) */
 	PIECE D_002C1370, 0x8, 8
-	PIECE D_002C137C, 0x4, 4
+	PIECE_BEGIN D_002C1378, 0x8, 8  /* untyped: merged (a user declares it larger than the next name): D_002C137C */
+	PIECE_BYTES D_002C1378, 0x0, 0x4
+	PIECE_LABEL D_002C1378, D_002C137C, 0x4
+	PIECE_BYTES D_002C1378, 0x4, 0x4
+	PIECE_END D_002C1378, 0x8
 	PIECE D_002C1380, 0x4, 4
 	PIECE D_002C1384, 0x4, 4
 	PIECE D_002C1388, 0x4, 4
@@ -39,23 +43,44 @@
 	PIECE D_002C58D0, 0x40, 16  /* untyped: users disagree: C01Mat D_002C58D0 | M2C_UNK D_002C58D0 | M4 D_002C58D0 | Mtx D_002C58D0 | V4 D_002C58D0[4] | f32 D_002C58D0[4] | f32 D_002C58D0[4][4] | f32 D_002C58D0[] | u8 D_002C58D0[] */
 	PIECE D_002C5910, 0x40, 16  /* untyped: users disagree: f32 D_002C5910[4][4] | s32 D_002C5910[4][4] */
 	PIECE D_002C5950, 0x8, 8
-	PIECE D_002C595A, 0x6, 2  /* untyped: users disagree: s16 D_002C595A | u16 D_002C595A */
+	PIECE_BEGIN D_002C5958, 0x8, 8  /* untyped: merged (a user declares it larger than the next name): D_002C595A */
+	PIECE_BYTES D_002C5958, 0x0, 0x2
+	PIECE_LABEL D_002C5958, D_002C595A, 0x2
+	PIECE_BYTES D_002C5958, 0x2, 0x6
+	PIECE_END D_002C5958, 0x8
 	PIECE D_002C5960, 0x8, 8  /* untyped: users disagree: Fl5960 D_002C5960 | s32 D_002C5960 | u32 D_002C5960 */
 	PIECE D_002C5968, 0x4, 4  /* untyped: users disagree: F5968 D_002C5968 | volatile Bits8 D_002C5968 | volatile F5968 D_002C5968 | volatile Flags5968 D_002C5968 | volatile HddSt D_002C5968 | volatile Sema5968 D_002C5968 | volatile s32 D_002C5968 */
 	PIECE D_002C596C, 0x4, 4
 	PIECE D_002C5970, 0x8, 8  /* untyped: users disagree: f32 D_002C5970; unparsed in 1 file(s) */
-	PIECE D_002C597A, 0x6, 2
+	PIECE_BEGIN D_002C5978, 0x8, 8  /* untyped: merged (a user declares it larger than the next name): D_002C597A */
+	PIECE_BYTES D_002C5978, 0x0, 0x2
+	PIECE_LABEL D_002C5978, D_002C597A, 0x2
+	PIECE_BYTES D_002C5978, 0x2, 0x6
+	PIECE_END D_002C5978, 0x8
 	PIECE D_002C5980, 0x10, 16
 	PIECE D_002C5990, 0xf0, 16  /* untyped: type MaskEnt is not a common.h basic type */
 	PIECE D_002C5A80, 0x8, 8
 	PIECE D_002C5A88, 0x48, 8
-	PIECE D_002C5AD2, 0x2, 2  /* untyped: element size does not divide the extent */
-	PIECE D_002C5AD4, 0x4, 4  /* untyped: users disagree: s32 D_002C5AD4 | u32 D_002C5AD4 */
-	PIECE D_002C5AD8, 0x8, 8  /* untyped: users disagree: s32 D_002C5AD8 | u32 D_002C5AD8 */
-	PIECE D_002C5AE0, 0x64, 4  /* untyped: users disagree: u32 D_002C5AE0; unparsed in 1 file(s) */
-	PIECE D_002C5B44, 0x6c, 4
-	PIECE D_002C5BB4, 0x4, 4  /* untyped: users disagree: s32 D_002C5BB4 | u32 D_002C5BB4 */
-	PIECE D_002C5BB8, 0x68, 8  /* untyped: users disagree: s32 D_002C5BB8 | u32 D_002C5BB8 | u64 D_002C5BB8; unparsed in 1 file(s) */
+	PIECE_BEGIN D_002C5AD0, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_002C5AD2, D_002C5AD4, D_002C5AD8, D_002C5AE0, D_002C5B44 */
+	PIECE_BYTES D_002C5AD0, 0x0, 0x2
+	PIECE_LABEL D_002C5AD0, D_002C5AD2, 0x2
+	PIECE_BYTES D_002C5AD0, 0x2, 0x2
+	PIECE_LABEL D_002C5AD0, D_002C5AD4, 0x4
+	PIECE_BYTES D_002C5AD0, 0x4, 0x4
+	PIECE_LABEL D_002C5AD0, D_002C5AD8, 0x8
+	PIECE_BYTES D_002C5AD0, 0x8, 0x8
+	PIECE_LABEL D_002C5AD0, D_002C5AE0, 0x10
+	PIECE_BYTES D_002C5AD0, 0x10, 0x64
+	PIECE_LABEL D_002C5AD0, D_002C5B44, 0x74
+	PIECE_BYTES D_002C5AD0, 0x74, 0x6c
+	PIECE_END D_002C5AD0, 0xe0
+	PIECE_BEGIN D_002C5BB0, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_002C5BB4, D_002C5BB8 */
+	PIECE_BYTES D_002C5BB0, 0x0, 0x4
+	PIECE_LABEL D_002C5BB0, D_002C5BB4, 0x4
+	PIECE_BYTES D_002C5BB0, 0x4, 0x4
+	PIECE_LABEL D_002C5BB0, D_002C5BB8, 0x8
+	PIECE_BYTES D_002C5BB0, 0x8, 0x68
+	PIECE_END D_002C5BB0, 0x70
 	PIECE D_002C5C20, 0x4, 4
 	PIECE D_002C5C24, 0x4, 4
 	PIECE D_002C5C28, 0x4, 4
@@ -76,4 +101,8 @@
 	PIECE D_002C6450, 0x10, 16  /* untyped: users disagree: V4 D_002C6450 | f32 D_002C6450[4] */
 	PIECE D_002C648C, 0x4, 4
 	PIECE D_002C6490, 0x10, 16  /* untyped: type V53 is not a common.h basic type */
-	PIECE D_002C6814, 0x1be8c, 4  /* untyped: type A2 is not a common.h basic type */
+	PIECE_BEGIN D_002C64A0, 0x1c200, 16  /* untyped: merged (a user declares it larger than the next name): D_002C6814 */
+	PIECE_BYTES D_002C64A0, 0x0, 0x374
+	PIECE_LABEL D_002C64A0, D_002C6814, 0x374
+	PIECE_BYTES D_002C64A0, 0x374, 0x1be8c
+	PIECE_END D_002C64A0, 0x1c200

@@ -12,8 +12,13 @@
 	PIECE D_003E1CB0, 0x1a50, 16
 	PIECE D_003E3700, 0x580, 16
 	PIECE D_003E3C80, 0x8, 8
-	PIECE D_003E3CB0, 0x8, 8
-	PIECE D_003E3CB8, 0x18, 8
+	PIECE_BEGIN D_003E3C88, 0x48, 8  /* untyped: merged (a user declares it larger than the next name): D_003E3CB0, D_003E3CB8 */
+	PIECE_BYTES D_003E3C88, 0x0, 0x28
+	PIECE_LABEL D_003E3C88, D_003E3CB0, 0x28
+	PIECE_BYTES D_003E3C88, 0x28, 0x8
+	PIECE_LABEL D_003E3C88, D_003E3CB8, 0x30
+	PIECE_BYTES D_003E3C88, 0x30, 0x18
+	PIECE_END D_003E3C88, 0x48
 	PIECE D_003E3CD0, 0x28, 8
 	PIECE D_003E3CF8, 0x28, 8  /* untyped: users disagree: M2C_UNK D_003E3CF8 | s32 D_003E3CF8[] */
 	PIECE D_003E3D20, 0x28, 8
@@ -64,8 +69,13 @@
 	PIECE D_003E8E28, 0x4, 4  /* untyped: users disagree: E8E28 *D_003E8E28 | Glyph *D_003E8E28 | M2C_UNK *D_003E8E28 | s32 D_003E8E28 */
 	PIECE D_003E8E2C, 0x4, 4
 	PIECE D_003E8E30, 0x270, 16  /* untyped: users disagree: E8E30 D_003E8E30[] | u32 D_003E8E30[][12]; unparsed in 1 file(s) */
-	PIECE D_003E90AC, 0x58, 4
-	PIECE D_003E9104, 0xc, 4
+	PIECE_BEGIN D_003E90A0, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_003E90AC, D_003E9104 */
+	PIECE_BYTES D_003E90A0, 0x0, 0xc
+	PIECE_LABEL D_003E90A0, D_003E90AC, 0xc
+	PIECE_BYTES D_003E90A0, 0xc, 0x58
+	PIECE_LABEL D_003E90A0, D_003E9104, 0x64
+	PIECE_BYTES D_003E90A0, 0x64, 0xc
+	PIECE_END D_003E90A0, 0x70
 	PIECE D_003E9110, 0x28, 8  /* untyped: type SmG is not a common.h basic type */
 	PIECE D_003E9138, 0x118, 8  /* untyped: type Spr is not a common.h basic type */
 	PIECE D_003E9250, 0x3e0, 16  /* untyped: type BigG is not a common.h basic type */

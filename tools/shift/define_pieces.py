@@ -117,6 +117,9 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
     relocs = reloc_rows()
     words = sorted(relocs)
     done = {b[2] for b in blocks}
+    # inner names of a merged piece (tools/shift/merge_pieces.py): labels in it
+    for src in (ROOT / "src/data").glob("data_*.s"):
+        done |= set(re.findall(r"^\s*PIECE_LABEL\s+D_[0-9A-F]{8}\s*,\s*(D_[0-9A-F]{8})", src.read_text(), re.M))
     rows, skip = [], []
     for ln in owners.read_text().splitlines()[1:]:
         f = ln.split("\t")

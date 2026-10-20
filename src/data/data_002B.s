@@ -217,7 +217,11 @@
 	PIECE D_002BC020, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BC020 | s32 D_002BC020[4][4] */
 	PIECE D_002BC060, 0x10, 16
 	PIECE D_002BC070, 0x10, 16  /* untyped: users disagree: Col D_002BC070 | s32 D_002BC070 | volatile s32 D_002BC070[] */
-	PIECE D_002BC08C, 0x4, 4
+	PIECE_BEGIN D_002BC080, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC08C */
+	PIECE_BYTES D_002BC080, 0x0, 0xc
+	PIECE_LABEL D_002BC080, D_002BC08C, 0xc
+	PIECE_BYTES D_002BC080, 0xc, 0x4
+	PIECE_END D_002BC080, 0x10
 	PIECE D_002BC090, 0x4, 4
 	PIECE D_002BC094, 0x4, 4
 	PIECE D_002BC098, 0x4, 4  /* untyped: users disagree: f32 D_002BC098 | s32 D_002BC098 */
@@ -225,7 +229,11 @@
 	PIECE D_002BC0A0, 0x4, 4
 	PIECE D_002BC0A4, 0x4, 4
 	PIECE D_002BC0A8, 0x8, 8  /* untyped: users disagree: Fl0A8 D_002BC0A8 | Flags D_002BC0A8 | s32 D_002BC0A8 | u32 D_002BC0A8 */
-	PIECE D_002BC0BC, 0x4, 4
+	PIECE_BEGIN D_002BC0B0, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC0BC */
+	PIECE_BYTES D_002BC0B0, 0x0, 0xc
+	PIECE_LABEL D_002BC0B0, D_002BC0BC, 0xc
+	PIECE_BYTES D_002BC0B0, 0xc, 0x4
+	PIECE_END D_002BC0B0, 0x10
 	PIECE D_002BC0C0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0C0 | View30 D_002BC0C0 */
 	PIECE D_002BC0F0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0F0 | Cam D_002BC0F0 | Cam0 D_002BC0F0 | CamS D_002BC0F0 | S2BC0F0 D_002BC0F0 | View30 D_002BC0F0 | f32 D_002BC0F0[] | s32 D_002BC0F0[] */
 	PIECE D_002BC120, 0x4, 4
@@ -239,8 +247,16 @@
 	PIECE D_002BC140, 0x4, 4  /* untyped: users disagree: s32 D_002BC140 | void *D_002BC140 | volatile s8 *D_002BC140 */
 	PIECE D_002BC144, 0x4, 4  /* untyped: users disagree: s32 D_002BC144 | void *D_002BC144 | volatile s8 *D_002BC144 */
 	PIECE D_002BC148, 0x28, 8  /* untyped: users disagree: Pair D_002BC148 | s32 D_002BC148[4] */
-	PIECE D_002BC190, 0x20, 16  /* untyped: users disagree: M2C_UNK D_002BC190 | f32 D_002BC190[] */
-	PIECE D_002BC210, 0x60, 16  /* untyped: users disagree: M2C_UNK D_002BC210 | u8 D_002BC210[] */
+	PIECE_BEGIN D_002BC170, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC190 */
+	PIECE_BYTES D_002BC170, 0x0, 0x20
+	PIECE_LABEL D_002BC170, D_002BC190, 0x20
+	PIECE_BYTES D_002BC170, 0x20, 0x20
+	PIECE_END D_002BC170, 0x40
+	PIECE_BEGIN D_002BC1B0, 0xc0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC210 */
+	PIECE_BYTES D_002BC1B0, 0x0, 0x60
+	PIECE_LABEL D_002BC1B0, D_002BC210, 0x60
+	PIECE_BYTES D_002BC1B0, 0x60, 0x60
+	PIECE_END D_002BC1B0, 0xc0
 	PIECE D_002BC270, 0xb0, 16
 	PIECE D_002BC320, 0x400, 16
 	PIECE D_002BC720, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002BC720 | u8 D_002BC720[] */
@@ -267,8 +283,13 @@
 	.word D_002BC990
 	PIECE_BYTES D_002BC9F0, 0x8, 0x8
 	PIECE_END D_002BC9F0, 0x10
-	PIECE D_002BCA04, 0x6c, 4
-	PIECE D_002BCA70, 0x70, 16  /* untyped: type Lt is not a common.h basic type */
+	PIECE_BEGIN D_002BCA00, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BCA04, D_002BCA70 */
+	PIECE_BYTES D_002BCA00, 0x0, 0x4
+	PIECE_LABEL D_002BCA00, D_002BCA04, 0x4
+	PIECE_BYTES D_002BCA00, 0x4, 0x6c
+	PIECE_LABEL D_002BCA00, D_002BCA70, 0x70
+	PIECE_BYTES D_002BCA00, 0x70, 0x70
+	PIECE_END D_002BCA00, 0xe0
 	PIECE D_002BCAE0, 0x10, 16
 	PIECE D_002BCAF0, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BCAF0 | f32 D_002BCAF0[4][4] | u8 D_002BCAF0[] */
 	PIECE D_002BCB30, 0x4, 4
