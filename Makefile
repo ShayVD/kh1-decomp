@@ -139,7 +139,8 @@ SHIFT_FLOAT      ?= 0
 # SHIFT_FLOAT_BSS_BUDGET: bytes of floated bss (smallest runs first); the rest stays in place, since
 # floated bss pushes _end and crt0's 0xA000-byte heap towards the fixed arena at 0x006A0000.
 # Names that are really parts of another object stay in place: cover_check.py (declared
-# objects), reach_check.py (displacements, calls, arrays indexed into the next name) and
+# objects), reach_check.py (displacements, calls, arrays indexed into the next name),
+# addend_check.py (a name reached as its neighbour plus an offset, %lo(D_002A6274+4)) and
 # tools/shift/float_keep.txt (IOP-written blocks, a packet buffer). Session 18: 0x10000 plays in
 # PCSX2; session 19: 0x11800 plays (title, save load, field) with the reach_check bounds and
 # float_keep's packet buffer. Session 20: with the stricter reach_check rules only 6 large bss names
@@ -210,6 +211,8 @@ endif
 	if [ "$(SHIFT_FLOAT)" = 1 ]; then $(SHIFT_PY) tools/shift/cover_check.py --out $(SHIFT_OUT)/float_covered.txt > $(SHIFT_OUT)/float_covered.log; \
 		$(SHIFT_PY) tools/shift/reach_check.py $(SHIFT_REACH_FLAGS) --elf $(ORIG) --overlays $(SHIFT_OVERLAYS) --out $(SHIFT_OUT)/float_reach.txt \
 			> $(SHIFT_OUT)/float_reach.log 2>&1; cat $(SHIFT_OUT)/float_reach.txt >> $(SHIFT_OUT)/float_covered.txt; \
+		$(SHIFT_PY) tools/shift/addend_check.py --link $(SHIFT) --out $(SHIFT_OUT)/float_addend.txt > $(SHIFT_OUT)/float_addend.log; \
+		cat $(SHIFT_OUT)/float_addend.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
 			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; fi; \
