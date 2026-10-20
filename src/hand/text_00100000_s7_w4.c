@@ -71,7 +71,7 @@ typedef struct { u8 pad[0xd0]; u8 xd0; } S6c;
 typedef struct { u8 pad[0x6c]; S6c *x6c; u8 pad70[0xdc]; S14c *x14c; u8 pad150[0x14]; s32 x164; } Obj164;
 typedef struct { s16 x0; u8 pad[18]; } E20;
 typedef struct { u8 a, b; } Pair8;
-extern E20 *D_004F7810;
+extern E20 *D_004F7810; /* src/data/bss_004F.c: E7810 *D_004F7810 */
 extern Pair8 D_002E27C0[4];
 extern f32 D_002E27CC, D_002E27D0;
 void func_00126238(Obj164 *, s32, s32 *);

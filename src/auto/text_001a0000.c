@@ -16,7 +16,7 @@ extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern M2C_UNK D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 extern M2C_UNK D_00615F80; /* src/data/bss_0061.c: u128 D_00615F80 */
 extern M2C_UNK D_0061E720; /* src/data/bss_0061.c: u8 D_0061E720[0x10] */
-extern M2C_UNK D_0061E730;
+extern M2C_UNK D_0061E730; /* src/data/bss_0061.c: u8 D_0061E730[0x50] */
 extern s32 D_00372908;
 extern s32 D_00615E64;
 

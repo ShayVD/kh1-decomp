@@ -5,6 +5,7 @@
 #define KH1_DATA_BSS_004F_TYPED_H
 
 #include "common.h"
+#include "data/types/nofill_text_00110000_h53.h"
 #include "data/types/text_00110000_h30.h"
 #include "data/types/text_00110000_h4.h"
 #include "data/types/text_00110000_h53.h"
@@ -16,6 +17,7 @@ extern TPool D_004F6EC0;
 extern M53 D_004F7660[];
 extern M53 D_004F76E0[];
 extern M53 D_004F7760[];
+extern E7810 *D_004F7810;
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 extern D6 D_004F8270[];

@@ -81,3 +81,4 @@ s32 func_001bc4a8(void) {
 void func_001be5b0(void) {
     func_001bd470();
 }
+#include "data/bss_0062_mixed.h"

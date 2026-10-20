@@ -87,7 +87,7 @@ extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
 extern f32 D_0054F444;
-extern s32 D_0054F738;
+extern s32 D_0054F738; /* src/data/bss_0054.c: f32 D_0054F738 */
 extern Pl57_0ec8 *D_002E26A0;
 extern f32 D_002C58B0[];
 extern Slot57_15d0 D_0054F750[8];

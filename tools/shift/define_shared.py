@@ -64,16 +64,23 @@ def module(addr: int) -> str:
     return f"bss_{addr >> 16:04X}"
 
 
-def user_decl(path: Path, name: str):
+def user_decl(path: Path, name: str, repeat: bool = False):
+    """(type, declarator) of path's file-scope extern of name. With repeat,
+    several extern lines are fine when they all declare it the same way."""
     lines = path.read_text().splitlines()
     hits = [ln for ln in lines if ln.startswith("extern") and re.search(r"\b" + name + r"\b", ln)]
-    if len(hits) != 1:
+    if len(hits) != 1 and not (repeat and hits):
         return None, f"{path.relative_to(ROOT)}: {len(hits)} file-scope extern lines"
-    pe = parse_extern(hits[0], name)
-    if not pe:
-        return None, f"{path.relative_to(ROOT)}: declaration not understood"
-    tspec, decls, i = pe
-    return (norm(tspec), norm(decls[i])), None
+    got = set()
+    for ln in hits:
+        pe = parse_extern(ln, name)
+        if not pe:
+            return None, f"{path.relative_to(ROOT)}: declaration not understood"
+        tspec, decls, i = pe
+        got.add((norm(tspec), norm(decls[i])))
+    if len(got) != 1:
+        return None, f"{path.relative_to(ROOT)}: {len(hits)} extern lines that disagree"
+    return got.pop(), None
 
 
 def plan(owners: Path, names: list[str]):
@@ -177,7 +184,14 @@ def apply(plans) -> None:
         path.write_text("".join(lines))
 
 
-KIND_RANK = {"exact": 0, "fill": 1, "pad": 2}
+KIND_RANK = {"exact": 0, "fill": 1, "pad": 2, "fill-floor": 3, "pad-align": 4}
+
+
+def align_slack(addr: int, used: int, ext: int) -> bool:
+    """The extent past `used` bytes is only alignment: the next anchor is the
+    first 8- or 16-aligned address at or after addr + used."""
+    end = addr + ext
+    return any(ext - used < a and end % a == 0 for a in (8, 16))
 
 # Types more than one moved header needs (u128, PppMtx) live in one shared
 # header; a plan whose type is there has tsrc (SHARED, type) and moves nothing.
@@ -198,10 +212,12 @@ def base_type(tspec: str) -> str:
     return re.sub(r"\b(volatile|const)\s+", "", tspec).strip()
 
 
-def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
-    """Names whose users disagree: pick one declaration (see the module doc)."""
+def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=(), relax: bool = False):
+    """Names whose users disagree: pick one declaration (see the module doc).
+    relax (session 19) adds pad-align and fill-floor, reads repeated identical
+    extern lines, and takes names whose users agree when they are named."""
     done = defined_names()
-    rows = []
+    rows, others = [], {}
     for ln in owners.read_text().splitlines()[1:]:
         f = ln.split("\t")
         if f[2] != "bss" or f[6] != "shared" or f[1] in done or f[1] in exclude:
@@ -212,6 +228,7 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         if any(not x.endswith(".c") or x.startswith("src/sdk/") for x in files):
             continue
         rows.append((int(f[0], 16), f[1], int(f[3], 16), int(f[4], 16), files))
+        others[f[1]] = f[8] if len(f) > 8 else ""
     # data_owners.py counts the C-defined variables (out/gen/data.tsv) as anchors, so
     # no extent runs over one; an extent that does means data_owners.tsv is older
     # than the last `make`.
@@ -229,12 +246,12 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
         decls: dict[tuple, list] = {}
         unknown = []
         for fn in files:
-            d, _why = user_decl(ROOT / fn, name)
+            d, _why = user_decl(ROOT / fn, name, relax)
             if d:
                 decls.setdefault(d, []).append(fn)
             else:
                 unknown.append(fn)
-        if len(decls) < 2 and not unknown:
+        if len(decls) < 2 and not unknown and not (relax and names):
             continue  # agreeing names are the default mode's
         if not decls:
             skip.append((name, "no user has a single file-scope extern"))
@@ -276,18 +293,27 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
                 why.append(f"{tag}: no size")
                 continue
             if "[]" in decl:
-                if ext % sz:
+                if (ext % sz and relax and not others[name] and ext // sz >= 2
+                        and align_slack(addr, ext // sz * sz, ext)):
+                    d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill-floor", ext // sz * sz
+                elif ext % sz:
                     why.append(f"{tag}: extent not a multiple of {sz:#x}")
                     continue
-                if ext == sz:
+                elif ext == sz:
                     why.append(f"{tag}: one element fills the extent (users index past it)")
                     continue
-                d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
+                else:
+                    d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
             elif sz == ext:
                 d, kind, size = decl, "exact", sz
             elif (sz < ext and "[" not in decl and not taken and not unknown
                   and reach <= max(sz, 4)):
                 d, kind, size = decl, "pad", sz
+            elif (relax and sz < ext and not unknown and not others[name] and reach <= max(sz, 4)
+                    and align_slack(addr, sz, ext)):
+                # taken, or a sized array: the slack is only alignment, and reach_check
+                # keeps the name in place if code reaches past it through a pointer
+                d, kind, size = decl, "pad-align", sz
             else:
                 why.append(f"{tag}: sizeof {sz:#x} vs extent {ext:#x}")
                 continue
@@ -516,9 +542,11 @@ def main() -> int:
     ap.add_argument("--types", action="store_true",
                     help="with --mixed: allow file-local types, moved to include/data/types/")
     ap.add_argument("--exclude", action="append", default=[], help="leave this name alone")
+    ap.add_argument("--relax", action="store_true",
+                    help="with --mixed: pad-align, fill-floor, repeated extern lines (session 19)")
     a = ap.parse_args()
     if a.mixed:
-        plans, skip = plan_mixed(Path(a.owners), a.name, a.types, set(a.exclude))
+        plans, skip = plan_mixed(Path(a.owners), a.name, a.types, set(a.exclude), a.relax)
     else:
         plans, skip = plan(Path(a.owners), a.name)
     kinds: dict[str, int] = {}

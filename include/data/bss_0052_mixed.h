@@ -12,6 +12,7 @@ extern u32 D_00524F44;
 extern s32 D_00524F48;
 extern s32 D_00524F58[];
 extern s32 D_00524F74;
+extern s32 D_00524F78;
 extern s32 D_00525288;
 extern s32 D_00525354;
 extern s32 D_00525360;

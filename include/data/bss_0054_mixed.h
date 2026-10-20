@@ -13,6 +13,8 @@ extern s32 D_00547BAC;
 extern u8 D_0054B808[];
 extern s32 D_0054C438;
 extern u32 D_0054F440;
+extern f32 D_0054F738;
+extern void *D_0054F950;
 extern u8 D_0054F970[];
 
 #endif /* KH1_DATA_BSS_0054_MIXED_H */

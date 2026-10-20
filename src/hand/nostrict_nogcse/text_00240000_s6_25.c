@@ -7,7 +7,7 @@ typedef struct { u8 pad[0x491]; u8 cur; } Sys;
 typedef struct { u8 pad[3]; u8 id; } Req;
 extern Sys *D_00304BE8;
 extern V4f D_0066AA90;
-extern Obj *D_0066AA84;
+extern Obj *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
 extern void (*D_0066AA80)(void);
 Ent *func_0013daf8(u8);
 void func_002675a8(V4f *, V4f *);
