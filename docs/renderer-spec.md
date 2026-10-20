@@ -836,6 +836,13 @@ interrupt-driven executor becomes a plain loop.
    (screen-mapped texture, §2.3) are script-driven; which scripts use them,
    and which texture is bound when they draw, is still open (needs the
    script files or a run that triggers them). Overlays were not searched.
+   *Session 19:* a RAM dump during an Agrabah fight (Pot Spiders and
+   bandits, float build F19A) shows only P10, P11 and P18 drawn. There are
+   no P19/P20, no P15-P17, no lit programs and still no skinned (`g & 1`)
+   part, even with enemies on screen. The x48 = 20 (0x14) entries with
+   `g = 0` drop bit 2 and run as P18. So a normal fight does not trigger
+   the script-driven `Prm.x2c` path; a cutscene or a boss is the next
+   place to look.
 5. ~~P21's rotation order and angle units, and how `func_00162c5c` composes
    the parent matrix.~~ *Session 17:* answered (§2.4): radians, `R = Rz *
    Ry * Rx` (X applied first), `func_00162c5c(out, A, B)` = `A * B`, world =

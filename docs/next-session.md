@@ -6,30 +6,33 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 18, 2026-10-20)
+## Where we stopped (end of session 19, 2026-10-20)
 
-- **6,975 / 6,988 functions matched**: 99.81% of functions, 98.72% of code bytes (docs/progress.md). Session 18 matched func_001f18e8 and func_00192958 with a new lever: local register variables that pin a constant or an operation's result (docs/matching-tips.md "Session 18"). sceGsDefDispEnv (00265608) improved from 9 to 7 words.
-- **bss floats again by default** (`SHIFT_FLOAT_BSS_BUDGET ?= 0x10000`, docs/shiftable-plan.md "Session 18"). The float build reaches the title, loads the End of the World save, walks, attacks, casts magic and opens the menus in PCSX2. No fight has been tested yet: there are no enemies near that save point.
-  - `tools/shift/reach_check.py` keeps names in place when code reaches them from another object: displacements, call arguments, and arrays indexed into the next name.
-  - `tools/shift/float_holes.py STATE.p2s` lists stale writes at old addresses, from a state saved with System > Save State > Save To File.
-  - `tools/shift/float_keep.txt` keeps the sound IOP's status block (D_0063D640 + 0x1c08 / 0x1f00) in place.
-  - `SHIFT_FLOAT_ONLY` is for bisecting.
-- **Phase 4 step 3**: 1,029 variables are C definitions (36 data, 993 bss). 387 shared names whose users disagreed on the type now have one definition each (`define_shared.py --mixed --types`, `type_move.py`, headers `include/data/bss_XXXX_{mixed,typed}.h` and `include/data/types/`). 74 were skipped, with the reasons in shiftable-plan.
-- **Known tool bug**: `data_owners.py` misses C-defined names as anchors, so its extents run over existing definitions. define_shared.py clamps around it.
+- **6,978 / 6,988 functions matched**: 99.86% of functions, 98.83% of code bytes (docs/progress.md). Session 19 matched 001cfc28, 0021e120 and 001eddc0 by putting session 18's register pins on older drafts whose schedule was already right (docs/matching-tips.md "Session 19"). Pins on computed values dissolve when cse sees all their uses; 001f2630 and 001f1fc8 look closed for that lever (nonmatchings/session19/NOTES.md).
+- **Float build** (docs/shiftable-plan.md, the three "Session 19" sections):
+  - The bss budget is now `SHIFT_FLOAT_BSS_BUDGET ?= 0x11800`; `_end` is 0x691424.
+  - reach_check bounds indexed accesses, so 9 more names float.
+  - D_00573AC0, a GIF packet buffer reached only through a stored pointer, is in float_keep.txt.
+  - The build plays: it loads the save, crosses the world map and lands in Agrabah. An Agrabah fight was tested on the session 18 rules (F19A).
+- **Phase 4 step 4**: 809 shared data names are per-symbol `.incbin` pieces cut from the user's ELF at build time (`src/data/data_XXXX.s`, `tools/shift/cut_pieces.py`). data_owners.py now anchors on C definitions, and more shared names are C definitions.
+- **The data float is off** (`SHIFT_FLOAT_DATA_BUDGET ?= 0`). With 0x4000 (493 pieces), PCSX2 itself crashes a few seconds after loading a save; the cause is unknown.
+- **Phase 3 fight dump**: an Agrabah fight draws only P10/P11/P18. It shows no P19/P20 and still no skinned part (renderer-spec §6 item 4).
+- **Fresh clone trap**: run `tools/shift/data_owners.py` after the first `make shift`, before a float build.
 
-## What is left (13 functions)
+## What is left (10 functions)
 
-Best drafts are in nonmatchings/session18/ and older. Counts are LCS words.
+Best drafts are in nonmatchings/session19/ and older. Counts are LCS words.
 
-1. **1-3 words**: 001fd858 (1, reorg liveness), 001cfc28 (1), 001f2630 (1, nofill), 001f1fc8 (2, nofill), 001eddc0 (2), 0021e120 (3; the s18m1 pinned basin is in nonmatchings/session18), 00125240 (3 flagged; the leftover is a `lui`).
-2. **7-39 words**: 00265608 (7, SDK gcc991111), 00200e28 (24), 001c62a0 (39).
+1. **1-3 words**: 001fd858 (1, reorg liveness), 001f2630 (1, nofill; pins exhausted), 001f1fc8 (2, nofill; pins exhausted), 00125240 (3 flagged; the leftover is a `lui`).
+2. **7-24 words**: 00265608 (7, SDK gcc991111), 001c62a0 (16; s19m1 draft in nonmatchings/session19), 00200e28 (24).
 3. **Large**: 00110618 (93), 0010d470 (170 natural), 001636d0 (400).
 
-## Session 19 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 20 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Runtime**: a fight in the float build. Take the world map to Agrabah (docs/workflow.md "Session 15" route), or use a save with enemies nearby. Do the Phase 3 RAM dump for the P10/P19/P20 triggers during that fight.
-2. **Fix data_owners.py anchors** (add out/gen/data.tsv), then retry the 37 + 25 skipped shared names and the 3 type clashes in bss_0061 (one shared `u128`/`PppMtx` header).
-3. **Phase 4 step 4**: start on shared *data* (game tables stay out of the repo: per-symbol `.incbin` pieces cut from the user's ELF at build time).
-4. **Make reach_check less conservative**: use declared sizes from cover_check to drop `idx-next` hits whose array ends before the next name. Then raise the budget past 0x10000 while `_end + 0xA000` stays under the 0x6A0000 arena.
-5. **Matching (1 worker)**: the register-pin lever on 001cfc28 / 001f2630 / 0021e120 with new statement orders, or a new angle for 001636d0 / 0010d470.
-6. End with `make progress-update SESSION=19`, commit, open a PR, and refresh this prompt.
+1. **Bisect the data float crash**: try data budgets of 0x800 and 0x2000, then `SHIFT_FLOAT_ONLY` on the culprit range. Boot each in PCSX2 and load save 05. Look for tables that DMA or VIF code reads by address (inferred cause).
+2. **Raise the bss budget** towards 0x16000 (the arena limit with no data float). Boot-test each step: 0x15000 is untested since the packet-buffer fix.
+3. **reach_check**: flag floated names whose address is stored with 0x20000000/0x30000000 ORed in (uncached buffers like D_00573AC0).
+4. **Phase 4**: the 1,368 single-owner data names as pieces (`--verdict single --verdict single+p`, then `--pointers`), and the 34 shared names that stay extern.
+5. **Matching (1 worker)**: 001c62a0 (16w) and 00200e28 (24w) with register pins, or the `lui` in 00125240.
+6. **Runtime (optional)**: a cutscene or boss fight dump for P19/P20 and a skinned part.
+7. End with `make progress-update SESSION=20`, commit, open a PR, and refresh this prompt.

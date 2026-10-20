@@ -744,3 +744,26 @@ found that the next session needs:
     (Start) opens the main menu in the field, and K (Cross) closes it.
 - **Restarts**: the container restarted twice this session. Commit worker results as soon as they report:
   a finished worker's report survives in its task output file, but its in-flight work does not.
+
+## Session 19: what changed
+
+- **Matching**: func_001cfc28, func_0021e120 and func_001eddc0 matched (s19m1) by applying session 18's
+  register pins to older drafts whose schedule was already right (docs/matching-tips.md "Session 19",
+  nonmatchings/session19/NOTES.md). 6,978 / 6,988 matched. 001f2630 and 001f1fc8 look closed for pins.
+- **Phase 4**: data_owners.py anchors on C definitions (`--data-tsv`) and 809 shared data names are
+  build-time `.incbin` pieces (docs/shiftable-plan.md, the three "Session 19" sections). The data float
+  is off by default because it crashes PCSX2 after a save load.
+- **reach_check bounds** and `SHIFT_FLOAT_BSS_BUDGET ?= 0x11800`; the GIF packet buffer D_00573AC0 is in
+  float_keep.txt.
+- **PCSX2 loop**, in addition to session 18's:
+  - Agrabah: at a save point open Save (Up, L), then Gummi Ship (Down, Down, L) and L to confirm. On the
+    world map press W, W (the warp hole), A, A, A, S for Agrabah, then L (Warp Drive) and L to land. The
+    storage room exit is not straight ahead: walk around the room to find the curtain.
+  - Hold keys 0.15-0.2 s; a shorter tap on the title can be missed.
+  - Keep each computer_batch at 50 s of waits or less. A PCSX2 crash closes the game window and shows the
+    game list.
+  - `.p2s` members use zip method 93 (zstd): read the raw member and run `zstd -d`.
+  - The fresh-clone trap: run `tools/shift/data_owners.py` after the first `make shift`, or the float
+    build stops in cover_check.
+  - Donald and Goofy kill enemies before a dump can be taken: set their Customize AI to "rarely" in the
+    menu.

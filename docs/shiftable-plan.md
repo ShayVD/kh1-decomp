@@ -1497,7 +1497,8 @@ enter the repo: the sources name an address, a size and, for pointers, a relocat
 - **Overlay fixups** (overlay_relocs.py): an overlay field that points into a defined variable names that
   variable in the fixup table, so overlay code follows a floated piece. This was needed at once:
   dktitle.x builds `%hi/%lo(D_002A3F44)`, and ovl_proof failed when that piece floated.
-- **`SHIFT_FLOAT_DATA_BUDGET ?= 0x4000`** (shift_ld `--float-data-budget`): floated data goes after the
+- **`SHIFT_FLOAT_DATA_BUDGET`** (shift_ld `--float-data-budget`; the worker used 0x4000, the default is 0
+  since the PCSX2 test in "Session 19: runtime" below): floated data goes after the
   blob and pushes .bss and `_end` up by as much, against the same 0x6A0000 arena as the bss budget.
   Data variables float smallest first (cost: size rounded up to its alignment) and are packed by
   alignment, largest first, so the padding stays within the cost. With it `_end` is 0x693EA4 and
@@ -1520,9 +1521,8 @@ enter the repo: the sources name an address, a size and, for pointers, a relocat
 
 ### Hazards and notes
 
-- The pieces have not been run in PCSX2 yet. The float build is the first where game tables (not just
-  pointer tables) move; boot it with `SHIFT_FLOAT_DATA_BUDGET=0` to compare (data stays, bss floats as in
-  session 18), then bisect the data with smaller budgets.
+- With 0x4000 of floated data, PCSX2 itself crashes a few seconds after loading a save (twice); with 0
+  the same build plays. See "Session 19: runtime" below; the bisection is still to do.
 - A piece's `.word D_XXXXXXXX` (and the 6 retargeted blob words) is a reference data_owners.py now sees:
   the target's files column can list `src/data/data_XXXX.s` (or the blob), which changes its verdict and
   keeps define_shared.py, which wants only `.c` users, off it.
@@ -1538,3 +1538,69 @@ enter the repo: the sources name an address, a size and, for pointers, a relocat
   an unsized name" rule float once that name is sized (a piece or a C definition).
 - The data budget: the end state packs the blob (no gaps left by floated pieces), which needs every
   `D_BLOB + x` name and pointer gone first.
+
+## Session 19: runtime, reach_check bounds and the bss budget (0x11800)
+
+### reach_check bounds the indexed accesses
+
+Session 18's `idx-next` rule kept every floated name that an indexed access from the name just below
+could reach, because the index was unknown. reach_check now carries an upper bound for small values and
+uses it (`analyse()` docstring):
+- `andi` gives a bound, and so do `lbu` (0xFF) and `lhu` (0xFFFF). Shifts and multiplies by a constant
+  scale it, and `addu`/`addiu` add bounds together.
+- A `slti`/`sltiu`/`slt`/`sltu` result tested by `beq`/`bne` against $0 bounds the operand on the taken
+  edge. A loop counter or a pointer walk (base, then base + stride on the back edge) that such a test caps
+  is IDX with the largest offset. Growth that is not capped widens to unbounded after two rounds.
+- An `idx` access now reports the largest byte it can reach (`ub + imm`), or None. In main(), a base whose
+  bounded accesses all end before the next name drops its `idx-next` keep ("# N indexed bases have
+  bounded accesses that end before the next name": 71).
+- `SHIFT_REACH_FLAGS=--no-bounds` brings back the session 18 rule (for bisecting).
+
+On the 1,029 floated variables the bounds rule keeps 276 names instead of 285. Nine names float that did
+not before: D_005516D0, D_005739F8, D_00573AC0, D_00575090, D_00575310, D_005758D0, D_005758E0,
+D_006469B8 and D_006469D0.
+
+### A hazard no static check sees: the GIF packet buffer
+
+With the bounds, the build hung when loading a save (KH1_F19B). With `--no-bounds` it played (F19C).
+Bisecting the nine names (`SHIFT_FLOAT_ONLY`) found D_00573AC0. func_00162428 and its neighbours store
+`D_00573AC0 | 0x20000000` (the uncached alias) into D_0055C648, and func_0015f8c8 builds a GIF packet
+through that pointer. The packet runs far past D_00573AC0's declared 0x10 bytes (D_00573E40.call sends it
+with qwc 0x50). Nothing follows a stored pointer, so no check can see that the next names are part of the
+buffer. Session 18 kept it only by chance: a loop over D_005739F8 ends next to it. D_00573AC0 and
+D_00573AD0 are now in float_keep.txt. General rule: **a name whose address is stored (especially with
+0x20000000 or 0x30000000 ORed in) is a buffer of unknown size.** A future reach_check pass could flag every
+`or`/`lui 0x2000` of a floated address.
+
+### The bss budget and the arena
+
+- `SHIFT_FLOAT_BSS_BUDGET ?= 0x11800` (was 0x10000). With the data float off, `_end` is 0x691424 (0x695124 with 0x4000 of data) and
+  `_end + 0xA000` stays below 0x6A0000. With no data float, the arena leaves room for about 0x4BDC more, so about 0x16000 of
+  bss. 0x15000 was booted only before the packet-buffer fix, so it is untested with the current keep
+  list.
+- `SHIFT_FLOAT_DATA_BUDGET ?= 0` (was 0x4000 in s19d2's merge). With 0x4000 (KH1_F19D: 493 pieces float),
+  the build reaches the title, but PCSX2 itself crashes a few seconds after loading save 05. This happened
+  twice: the emulator closes, it does not just hang. With the data budget at 0 (F19E: "548 data variables
+  over the 0x0 budget stay in the blob", 110 bss runs float), the build loads the save, warps to Agrabah
+  and walks. The cause is not known. A crash of the emulator rather than a hang points at a DMA or VIF
+  transfer built from a moved table (inferred). Next: bisect with smaller data budgets (0x800, 0x2000) and
+  `SHIFT_FLOAT_ONLY`.
+
+### Runtime log (PCSX2, End of the World save 05 and an Agrabah fight)
+
+| ELF | build | result |
+|---|---|---|
+| F19A | session 18 rules, bss 0x10000 | title, save, Agrabah fight: OK (the Phase 3 dump, renderer-spec §6) |
+| F19B | bounds, bss 0x15000 | hangs loading the save |
+| F19C | `--no-bounds`, bss 0x15000 | OK |
+| F19X / F19X2 | bisection of the nine names | D_00573AC0 in: hang; out: OK |
+| F19D | merged, bounds + keep, bss 0x11800, data 0x4000 | title OK, PCSX2 crashes after loading the save |
+| F19E | the same with data 0 (the default now) | save, field, world map, Agrabah: OK |
+
+### Notes
+
+- **Fresh clone trap**: the float build needs out/shift/data_owners.tsv, which only
+  `tools/shift/data_owners.py` writes (after `make shift`). Without it cover_check fails with a missing
+  file. Run data_owners.py once after the first `make shift`.
+- `patch_iso.py --append --in-place` reuses its earlier appended sectors when the ELF fits, so KH1_BIG.iso
+  did not grow this session (this corrects the session 18 note).

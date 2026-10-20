@@ -9,3 +9,11 @@
 # IOP's write at D_0063F248's old place).
 D_0063F248
 D_0063F540
+#
+# The renderer's GIF packet buffer: func_00162428 and friends store D_00573AC0 | 0x20000000
+# (uncached) into D_0055C648 and func_0015f8c8 builds the packet through that pointer, far
+# past D_00573AC0's 0x10 bytes (D_00573E40.call sends it with qwc 0x50). No static check
+# follows a stored pointer; session 18's idx-next rule kept it by chance (a loop over
+# D_005739F8 ends next to it). Floated alone, loading a save hangs (session 19 bisection).
+D_00573AC0
+D_00573AD0
