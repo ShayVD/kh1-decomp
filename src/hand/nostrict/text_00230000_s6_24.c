@@ -61,10 +61,9 @@ void func_002399f0(s32 a0, void *a1, void *a2, s32 dx, s32 dy, s32 *src, f32 s) 
 }
 
 /* ---- q7.c */
-typedef struct { u64 b[24]; } Spr570;
-typedef struct { u8 pad[0x40]; Spr570 s0; Spr570 s1; s32 x1c0; u8 pad1c4[0x1d0 - 0x1c4]; } Ob570;
+#include "data/types/nostrict_text_00230000_s6_24.h"
 typedef struct { s32 cur; s32 t[6]; u8 rest[132 - 28]; } St570;
-extern Ob570 D_00650120[];
+extern Ob570 D_00650120[]; /* src/data/bss_0065.c: Ob17 D_00650120[0x6] */
 extern Ob570 D_00650C00;
 extern St570 D_00449908;
 extern u8 D_004409A0[], D_00443180[], D_004419B0[], D_00444A70[], D_00446240[], D_004478F0[], D_00448FA0[], D_00449530[];
@@ -306,9 +305,6 @@ void func_0023bb98(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f3
 }
 
 /* ---- hc4.c */
-typedef struct { u64 d[24]; } B192;
-typedef struct { s32 a, b; } P8;
-typedef struct { s32 used, x4, x8, pad; B192 blk; s32 xd0, xd4; P8 xd8; } Slot;
 extern Slot D_00651310[10];
 extern B192 *D_00651300; /* src/data/bss_0065.c: u8 *D_00651300 */
 Slot *func_0023c228(void);

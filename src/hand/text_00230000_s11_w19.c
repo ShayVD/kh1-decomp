@@ -6,7 +6,7 @@ typedef struct {
     s32 cur; s32 t[6]; s32 a[6]; s32 p[12]; s32 b[6]; f32 f7c; f32 f80;
 } St17;
 typedef struct { s32 x0; u8 pad4[8]; s32 xc; s32 x10; } It17;
-typedef struct { u8 b[0x1d0]; } Ob17;
+#include "data/types/text_00230000_s11_w19.h"
 extern St17 D_00449908;
 extern s32 D_002C5960;
 extern f32 D_002BBDFC;
@@ -135,3 +135,4 @@ s32 func_0023a968(void) {
     } while (1);
     return 0;
 }
+#include "data/bss_0065_typed.h"

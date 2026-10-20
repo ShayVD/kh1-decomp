@@ -2,7 +2,7 @@
 #include "common.h"
 #include "data/bss_0049.h"
 typedef struct { s32 a, b, c, d; } Ent16;
-typedef struct { u8 pad[8]; f32 v[6]; } Ent32;
+#include "data/types/text_00100000_s11_w71.h"
 typedef enum { EZ } EN;
 typedef struct { EN a; s32 b; EN c, d; } EntD;
 typedef struct { EN a, b, c, d; } EntE;

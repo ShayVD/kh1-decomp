@@ -52,7 +52,7 @@ extern Win D_006303B0;
 extern Win D_00630460;
 extern Win D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern SaveB *D_00304BE8;
-extern Cb D_0062F8F0;
+extern Cb D_0062F8F0; /* src/data/bss_0062.c: Cb20 D_0062F8F0 */
 extern Cb D_006305C0;
 extern Big498 D_003DC498;
 extern Big20 D_00389C90;

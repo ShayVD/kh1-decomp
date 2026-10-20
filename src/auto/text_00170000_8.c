@@ -46,7 +46,7 @@ extern M2C_UNK D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
 extern M2C_UNK D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 extern M2C_UNK D_005759B0;
 extern f32 D_00362680;
-extern s32 D_00575310;
+extern s32 D_00575310; /* src/data/bss_0057.c: TalkEA D_00575310 */
 f32 acosf(f32);
 f32 func_00120c18(void *);
 s32 func_001770b8();

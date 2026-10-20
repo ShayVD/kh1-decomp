@@ -32,17 +32,7 @@ W32Args *func_001332f0(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
     t->x2c = h;
     return p;
 }
-typedef struct { u64 a, b, c, d; } W32V32;
-typedef struct W32Node {
-    s32 used;
-    s32 x4;
-    u8 pad08[0x10 - 0x8];
-    W32V32 v;
-    u8 pad30[0x50 - 0x30];
-    struct W32Node *prev;
-    struct W32Node *next;
-    u8 pad58[0x60 - 0x58];
-} W32Node;
+#include "data/types/nostrict_text_00130000_h32.h"
 typedef struct {
     u8 pad000[0x440];
     W32Node *head;
@@ -170,3 +160,4 @@ s32 func_0013be00(W32Seq *s) {
     return 1;
 }
 #include "data/bss_0052_mixed.h"
+#include "data/bss_0052_typed.h"

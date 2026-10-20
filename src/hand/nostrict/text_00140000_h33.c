@@ -185,15 +185,11 @@ typedef struct {
     u8 pad40[0x150 - 0x40];
     f32 f150;
 } O2cf0;
-typedef struct Snd { u8 pad[8]; struct Snd *next; u8 padc[0xA]; u8 st; u8 pad17; f32 f18; } Snd;
+#include "data/types/nostrict_text_00140000_h33.h"
 typedef struct { u8 pad[0x80]; s32 w80; } Blk;
 typedef struct { f32 p; s32 id; } Drop;
 typedef struct { s32 n[7]; Drop d[3]; } DropTbl;
-typedef struct { s32 n0; s32 n4; s32 n8; u8 padc[4]; u8 data[1]; } LdHdr;
 typedef struct { u8 pad[0x10]; s16 h10; s16 st; LdHdr *hdr; void (*cb)(s32); s32 arg; } LdTask;
-typedef struct { s32 id; LdHdr *h; } LdEnt;
-typedef struct { u64 used:1; u64 b1:1; u64 b2:1; u64 rest:61; } EntF;
-typedef struct { union { u64 d; EntF f; struct { u32 lo; s32 id; } w; } u; s16 n; u8 pad[0x16]; } Ent32;
 typedef struct { s16 h0; s16 h2; } Prc;
 typedef struct { f32 m[4][4]; u8 buf[0x3C]; s32 w7c; s32 w80; s32 w84; } MdlBlk;
 typedef struct { V4f *pos; V3i *rot; } RotObj;
@@ -224,7 +220,7 @@ extern u32 D_002E27C8;
 extern Snd *D_0052EB58;
 extern Snd D_0052EB50;
 extern s32 D_00531B64;
-extern Blk *D_00531B60;
+extern Blk *D_00531B60; /* src/data/bss_0053.c: B3Col *D_00531B60 */
 extern f32 D_00306840;
 extern f32 D_00306844;
 extern f32 D_00306848;

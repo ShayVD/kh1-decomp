@@ -26,21 +26,7 @@ typedef struct {
 
 /* Menu window (0xb0 bytes); D_0062F6E0/D_0062F790/D_0062F840 and
  * D_00630300/D_006303B0/D_00630460 are runs of these. */
-typedef struct {
-    s32 x0;
-    s16 h4, h6, h8, ha, hc, he;
-    u8 pad10[0xc];
-    f32 f1c;
-    u8 pad20[0x10];
-    f32 f30, f34;
-    u8 pad38[8];
-    f32 f40, f44;
-    u8 pad48[0x48];
-    u8 b90;
-    u8 pad91[3];
-    f32 f94;
-    u8 pad98[0x18];
-} Win;
+#include "data/types/text_001e0000_h45.h"
 
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
 typedef struct { s32 x0; s32 x4; u8 pad[0xcc]; } E212;
@@ -880,3 +866,4 @@ s32 func_001eb698(VM *vm) {
     vm->u.h.sp -= 3;
     return 2;
 }
+#include "data/bss_0063_typed.h"

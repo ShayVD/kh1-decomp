@@ -692,7 +692,7 @@ typedef struct {
         struct { u8 type; u8 pad[3]; s16 time; s16 frame; } s;
     } u;        /* +0x18 */
 } PrizeObj;
-extern PrizeObj *D_0061E310[];
+extern PrizeObj *D_0061E310[]; /* src/data/bss_0061.c: PppLight *D_0061E310[256] */
 extern s32 D_0061E710;
 extern PppMtx D_00615EB0;
 void func_0019dac8(void);

@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern f32 D_002BBDFC;
-extern s8 D_00551670;
+extern s8 D_00551670; /* src/data/bss_0055.c: E551670 D_00551670[0x4] */
 f32 atan2f(f32, f32);
 s32 func_00130340(s32, s32, f32);
 s32 func_00130578(s32, s32, f32);

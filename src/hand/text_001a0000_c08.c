@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_0062.h"
 
-typedef struct { u8 id; u8 pad[3]; u32 n; } IdCnt;
+#include "data/types/text_001a0000_c08.h"
 extern s32 D_00625748;
 extern IdCnt D_00625750[];
 void func_001b9e40(s32, s32);

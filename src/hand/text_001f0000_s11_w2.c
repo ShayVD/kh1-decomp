@@ -36,7 +36,7 @@ typedef struct {
     u16 x10, x12, x14, x16, x18, x1a, x1c, x1e, x20;
 } WA;
 
-extern W D_0063F758[24];
+extern W D_0063F758[24]; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern W *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
 extern u8 D_00490AE0[];
 s32 func_002366d8(s32, s32);

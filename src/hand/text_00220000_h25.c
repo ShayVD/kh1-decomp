@@ -4,7 +4,7 @@
 typedef int u128 __attribute__((mode(TI)));
 
 /* 64-entry command ring at D_006477B0 (head D_00647FB8, id counter D_00647FC0) */
-typedef struct { s32 type; s32 id; s32 a[6]; } Cmd;
+#include "data/types/text_00220000_h25.h"
 typedef struct { s32 a, b; } P2;
 typedef struct { u8 pad[0xCC]; u16 cc; u16 ce; u16 d0; s16 d2; } Obj;
 typedef struct { u8 pad[0x25]; u8 n; u8 ids[0x4E]; } Ent74;
@@ -556,3 +556,4 @@ void *func_00232cc0(u32 arg0) {
     return 0;
 }
 
+#include "data/bss_0064_typed.h"

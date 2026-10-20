@@ -28,10 +28,10 @@ extern M2C_UNK D_0062F6E0;
 extern M2C_UNK D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern M2C_UNK D_00630460;
 extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
-extern M2C_UNK D_006310C8;
-extern M2C_UNK D_00631148;
-extern M2C_UNK D_006311C8;
-extern M2C_UNK D_00631248;
+extern M2C_UNK D_006310C8; /* src/data/bss_0063.c: Pair D_006310C8[0x10] */
+extern M2C_UNK D_00631148; /* src/data/bss_0063.c: Pair D_00631148[0x10] */
+extern M2C_UNK D_006311C8; /* src/data/bss_0063.c: Pair D_006311C8[0x10] */
+extern M2C_UNK D_00631248; /* src/data/bss_0063.c: Pair D_00631248[0x50] */
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_001e10b8;
 extern M2C_UNK func_001e4990;

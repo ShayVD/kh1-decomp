@@ -28,7 +28,7 @@ typedef struct Win {
     s16 xb8, xba, xbc, xbe, xc0, xc2, xc4, xc6, xc8, xca, xcc, xce, xd0, xd2, xd4, xd6, xd8, xda;
     u8 xdc[16];
 } Win;
-extern Win D_0063F758[];
+extern Win D_0063F758[]; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern Win *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
 extern Win *D_00640DDC; /* src/data/bss_0064.c: s32 D_00640DDC */
 extern f32 D_002BBDFC;

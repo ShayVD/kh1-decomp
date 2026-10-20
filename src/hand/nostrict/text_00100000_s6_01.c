@@ -2,7 +2,7 @@
 #include "data/bss_0049.h"
 typedef struct { s32 w0, w4, w8, w12; } Ent16;
 typedef struct { s32 pad[2]; s32 a[16]; s32 b[16]; s32 pad2[2]; } M144;
-typedef struct { f32 x, y, z; } V3;
+#include "data/types/nostrict_text_00100000_s6_01.h"
 extern s32 D_00351BD0;
 extern M144 D_002B5260[];
 extern M144 D_002B2E60[];
@@ -305,7 +305,6 @@ typedef struct {
     u8 pad48[8];
     f32 f50, f54;
 } Win;
-typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 typedef struct { u8 pad[0x1c]; f32 ry; } Rot;
 extern Mtx D_00495190, D_00495210;
 extern u8 D_004951D0[];

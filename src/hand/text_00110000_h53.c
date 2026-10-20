@@ -458,7 +458,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
 }
 
-typedef f32 M53[4][4] __attribute__((aligned(16)));
+#include "data/types/text_00110000_h53.h"
 extern f32 D_004F7650, D_002E27A4, D_004F77E0;
 extern V53 D_002E2780, D_002E2790, D_002E26B0;
 extern s32 D_002C5950;
@@ -688,3 +688,4 @@ char *D_002C6460[0xb] ALIGNED(16) = {
     (void *)D_0048D2F8, (void *)D_0048D2F0, (void *)D_0048D2E8, (void *)D_0048D2E0,
     (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
 };
+#include "data/bss_004F_typed.h"

@@ -37,7 +37,7 @@ extern char D_003DCB90[];
 extern char D_003DD230[];
 extern char D_003DD278[];
 extern char D_006305DA[][10];
-extern StrPair D_006310C8[];
+extern StrPair D_006310C8[]; /* src/data/bss_0063.c: Pair D_006310C8[0x10] */
 extern u8 D_006304E0[];
 SvA80 *func_00232cc0(s32);
 void func_001ea128(char *, char *);

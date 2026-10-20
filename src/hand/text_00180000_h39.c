@@ -215,11 +215,8 @@ s32 func_00181368(s32 t) {
     return 0;
 }
 
-typedef int u128 __attribute__((mode(TI)));
+#include "data/types/text_00180000_h39.h"
 
-typedef struct {
-    u128 r[4];
-} H39Mtx;
 
 extern H39Mtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 H39Mtx D_00615EF0 ALIGNED(16);
@@ -349,3 +346,4 @@ void pppVertexAttendFrame(H39VObj *obj, H39VKey *key, PppEntry *e) {
     out[1] = v.f[1];
     out[2] = v.f[2];
 }
+#include "data/bss_0061_typed.h"

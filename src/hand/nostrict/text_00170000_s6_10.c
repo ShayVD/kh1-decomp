@@ -758,3 +758,4 @@ search:
 }
 
 #include "data/bss_0061_mixed.h"
+#include "data/bss_0061_typed.h"

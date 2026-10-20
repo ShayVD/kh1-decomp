@@ -11,7 +11,7 @@ typedef struct { u8 pad[0x10]; GsTexHdr h; } GsTex;
 typedef struct { u8 b[0x4440]; } Tex4440;
 typedef struct { u8 b[0x1440]; } Tex1440;
 typedef struct { Tex1440 t; u8 pad[6000 - 0x1440]; } Tex6000;
-typedef struct { u8 b[32]; } Slot32;
+#include "data/types/nostrict_nofill_text_00230000_s6_24.h"
 extern s32 D_00440994;
 extern GsTexHdr D_00426790, D_004267C0, D_004267F0, D_00426850, D_00426880, D_004268B0, D_00426820, D_00431D20, D_004268E0, D_00426910, D_00426940;
 extern Tex4440 D_00426970, D_0042B790;
@@ -56,3 +56,4 @@ void func_00238a70(void) {
         j++;
     }
 }
+#include "data/bss_0064_typed.h"

@@ -1,6 +1,7 @@
 /* Definitions of the shared bss names in include/data/bss_004D.h. */
 #include "data/bss_004D.h"
 #include "data/bss_004D_mixed.h"
+#include "data/bss_004D_typed.h"
 
 s32 D_004D5AF8 ALIGNED(8);
 f32 D_004D90F8 ALIGNED(8);
@@ -40,3 +41,10 @@ void *D_004D92DC ALIGNED(4);
 s32 D_004D9320 ALIGNED(16);
 u32 D_004D9330 ALIGNED(16);
 s32 D_004D9364 ALIGNED(4);
+Mtx52 D_004D8E40 ALIGNED(64);
+Mtx52 D_004D8E80 ALIGNED(64);
+Mtx52 D_004D9100 ALIGNED(64);
+Mtx52 D_004D9140 ALIGNED(64);
+Mtx52 D_004D9180 ALIGNED(64);
+Mtx52 D_004D91C0 ALIGNED(64);
+W29Clock D_004D9288 ALIGNED(8);

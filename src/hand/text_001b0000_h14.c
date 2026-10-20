@@ -23,9 +23,8 @@ typedef struct {
     u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u8 pad44[8]; s32 m[3];
     u8 pad64[32]; f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3]; f32 save;
 } Tween;
-typedef struct { u64 a, b, c, d; } Msg;
+#include "data/types/text_001b0000_h14.h"
 typedef struct { f32 x, y, z, w; } V4;
-typedef struct { u8 pad[176]; } Ent176;
 
 /* ---- data ---- */
 extern Slot *D_0037A16C;
@@ -432,3 +431,4 @@ s32 func_001cc1c0(VM *v) {
     return 2;
 }
 #include "data/bss_0062_mixed.h"
+#include "data/bss_0062_typed.h"

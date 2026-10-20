@@ -4,7 +4,7 @@
 
 extern M2C_UNK D_002E26C0;
 extern M2C_UNK D_00431D20;
-extern M2C_UNK D_00668060;
+extern M2C_UNK D_00668060; /* src/data/bss_0066.c: B192 D_00668060 */
 f32 func_00237a48(s32, s32, s32, s32);
 s32 func_00249580(s32);
 void func_001315c0(s32, s32, s32, f32);

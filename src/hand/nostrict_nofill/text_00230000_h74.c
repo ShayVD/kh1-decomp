@@ -175,7 +175,7 @@ void func_0023a490(s32 a0, Btn *b, s32 x, s32 y, f32 f) {
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 typedef struct { s32 x, y, z, w; } __attribute__((aligned(16))) I4;
 typedef struct { u8 pad0[4]; f32 t; u8 pad8[8]; u8 sub[0xC8]; s32 d8[2]; } Ob;
-extern Spr6 D_00651210;
+extern Spr6 D_00651210; /* src/data/bss_0065.c: Pkt D_00651210 */
 extern s32 D_00651200;
 extern f32 D_002BBDFC;
 extern u8 D_002E26C0[];

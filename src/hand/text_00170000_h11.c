@@ -73,7 +73,7 @@ extern Actor *D_00575894;
 extern Actor *D_002E26A0;
 extern u32 D_002C5960;
 extern s32 D_002E27A8;
-extern s32 D_00575920;
+extern s32 D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
 extern f32 D_005758D0[4];
 extern f32 D_005758E0[4];
 extern f32 D_00362684;

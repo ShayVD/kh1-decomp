@@ -1,6 +1,7 @@
 /* Definitions of the shared bss names in include/data/bss_0064.h. */
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
+#include "data/bss_0064_typed.h"
 
 s32 D_00640DE0 ALIGNED(16);
 s32 D_00640E28 ALIGNED(8);
@@ -301,3 +302,6 @@ s32 D_00648038[0x6] ALIGNED(8);
 u64 D_006480D0[0x2c] ALIGNED(16);
 s32 D_006488F0 ALIGNED(16);
 u8 *D_006431F0[0x4] ALIGNED(16);
+Dir40 *D_006450C0[0x63] ALIGNED(64);
+Cmd D_006477B0[64] ALIGNED(16);
+Slot32 D_00648230[0xc] ALIGNED(16);

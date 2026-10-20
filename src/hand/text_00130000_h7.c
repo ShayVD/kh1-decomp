@@ -520,8 +520,8 @@ typedef struct {
     W7Kv e[256];
 } W7Tbl;
 
-extern W7Tbl *D_0052EB40;
-extern W7Tbl D_0052CB20[4];
+extern W7Tbl *D_0052EB40; /* src/data/bss_0052.c: W55Cache *D_0052EB40 */
+extern W7Tbl D_0052CB20[4]; /* src/data/bss_0052.c: W55Cache D_0052CB20[4] */
 extern s32 D_0052EB44;
 
 void func_001421d0(s32 k, s32 v) {

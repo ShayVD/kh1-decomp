@@ -115,7 +115,7 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
 
 extern S31b0 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern s32 D_0052528C;
-extern S31b0 D_00524F80[];
+extern S31b0 D_00524F80[]; /* src/data/bss_0052.c: P5c0 D_00524F80[0x61] */
 extern s32 func_0012f3d0(A9 *);
 extern s32 func_0012f040(E9 *, s32);
 extern s32 func_002192c0(void);

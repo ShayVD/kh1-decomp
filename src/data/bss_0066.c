@@ -1,6 +1,7 @@
 /* Definitions of the shared bss names in include/data/bss_0066.h. */
 #include "data/bss_0066.h"
 #include "data/bss_0066_mixed.h"
+#include "data/bss_0066_typed.h"
 
 s32 D_00669A38 ALIGNED(8);
 s32 D_00669A3C ALIGNED(4);
@@ -29,3 +30,11 @@ s32 D_00669920 ALIGNED(16);
 s32 D_00669A18[8] ALIGNED(8);
 s16 D_00669A40[0xc] ALIGNED(16);
 void *D_00669A10[0x2] ALIGNED(16);
+E860 D_00662A30[10] ALIGNED(16);
+B192 D_00668060 ALIGNED(32);
+Q4 *D_00668F80 ALIGNED(16);
+Q4 *D_006691D0 ALIGNED(16);
+Q4 *D_006691D4 ALIGNED(4);
+Q4 *D_00669610 ALIGNED(16);
+UiEnt D_00669760[3] ALIGNED(32);
+V4f D_0066AA90 ALIGNED(16);

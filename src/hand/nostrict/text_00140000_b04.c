@@ -1008,8 +1008,8 @@ typedef struct {
 typedef struct { B4Src2 *x0; u8 x4; s8 x5; s8 x6; u8 x7; } B4Drw2;
 typedef struct { u8 pad[0x10]; B4Drw2 *x10; u32 x14; } B4Dm;
 typedef struct { u16 x0; u8 x2; u8 x3; s32 x4; u8 pad8[0x170 - 8]; u64 x170; u8 pad178[8]; u64 x180; } B4Gp;
-extern B4Chcr *D_0055C644;
-extern B4Chcr *D_0055C640;
+extern B4Chcr *D_0055C644; /* src/data/bss_0055.c: DmaChcr *D_0055C644 */
+extern B4Chcr *D_0055C640; /* src/data/bss_0055.c: DmaChcr *D_0055C640 */
 extern u8 D_00351C40[];
 extern u8 D_00573AC0[];
 void func_0015f798(B4Dm *);

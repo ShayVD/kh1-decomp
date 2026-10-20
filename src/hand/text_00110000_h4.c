@@ -243,7 +243,7 @@ void func_00121958(Vec4 *d, Vec4 *s, f32 *k) {
 }
 
 /* Heap block table: 512 entries, D_004F6DB0 (the rover) sits right after it. */
-typedef struct Block { u32 f0; u32 addr; u32 size; u32 owner; u32 next; } Block;
+#include "data/types/text_00110000_h4.h"
 extern Block D_004F45B0[];
 extern Block *D_004F6DB0;
 extern u8 D_009A0000[];
@@ -435,3 +435,4 @@ void func_0011ea40(s32 n, char *out) {
     strcat(out, D_0048D198);
 }
 #include "data/bss_004F_mixed.h"
+#include "data/bss_004F_typed.h"

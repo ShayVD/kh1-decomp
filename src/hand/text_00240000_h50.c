@@ -3,7 +3,7 @@
 
 /* 16-byte list entries; the D_00667F50/D_00667F54-style globals are
  * [end, begin) pointers into such lists. */
-typedef struct { s32 a, b, c, d; } Q4;
+#include "data/types/text_00240000_h50.h"
 
 /* Panel state blocks (D_00667F60, D_00668290, D_00668F90, D_006691E0). */
 typedef struct { u8 pad[0x60]; Q4 q[4]; Q4 r[4]; } Panel;
@@ -18,9 +18,7 @@ typedef struct { u8 pad[0xc]; SC *c; } SArg;
 
 typedef struct { u32 state; s32 cnt; u8 pad[0x18]; u8 sub[1]; } S5cd0;
 typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
-typedef struct { u8 pad0[0x20]; u8 a[0xc0]; u8 b[0x780]; } E860;
 typedef struct { u8 pad0[0x30]; u8 a[0xc0]; u8 b[0xc0]; u8 c[0x780]; } E930;
-typedef struct { u64 x[24]; } B192;
 typedef struct { u8 pad[0x180]; B192 b; } L240;
 typedef struct { u32 state; f32 t; s32 x8; s32 xc; s32 x10; u8 pad[0xa8c]; s32 xaa0; } S8370;
 typedef struct { u8 r, g, b, a; } RGBA;
@@ -645,3 +643,4 @@ s32 func_0024d8f0(void) {
     }
     return 0;
 }
+#include "data/bss_0066_typed.h"

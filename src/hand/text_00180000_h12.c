@@ -278,22 +278,14 @@ void func_00183b20(PppHeap *h, u8 *p) {
     }
 }
 
-typedef struct {
-    u8 pad[0xE];
-    u8 hook;     /* +0xE */
-} PppProgHdr;
+#include "data/types/text_00180000_h12.h"
 
-typedef struct {
-    s32 unk0, unk4;
-    PppProgHdr *hdr;  /* +0x8 */
-} PppHookObj;
 
 typedef struct {
     s32 unk0;
     s32 arg;     /* +0x4 */
 } PppHookData;
 
-typedef void (*PppHookFn)(PppHookObj *, s32);
 extern PppHookFn *D_00616220;
 
 void pppDrawHookDraw(PppHookObj *obj, PppHookData *data, PppEntry *e) {

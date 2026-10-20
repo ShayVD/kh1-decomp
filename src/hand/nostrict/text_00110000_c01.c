@@ -142,8 +142,8 @@ extern u8 D_002BBFA0[];
 extern C01Mat D_002C58D0;
 extern s32 D_002E27E0[];
 extern u8 D_002E2800[];
-extern C01E150 D_004F7820[];
-extern C01E220 D_004F7C10[];
+extern C01E150 D_004F7820[]; /* src/data/bss_004F.c: A6 D_004F7820[3] */
+extern C01E220 D_004F7C10[]; /* src/data/bss_004F.c: B6 D_004F7C10[3] */
 extern s32 D_004F82C0;
 extern s32 D_004F82C4;
 void func_001274c8(void);

@@ -7,7 +7,7 @@ M2C_UNK func_001f3698(void *, s32);
 M2C_UNK func_001f5fe0();
 M2C_UNK func_001f8170(void *);
 extern M2C_UNK D_00490AE0;
-extern M2C_UNK D_0063F758;
+extern M2C_UNK D_0063F758; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern f32 D_002BBDFC;
 extern s32 D_003E8E28;
 extern s32 D_003F1A60;

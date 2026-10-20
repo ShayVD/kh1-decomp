@@ -7,7 +7,7 @@ extern M2C_UNK D_00009B38;
 extern M2C_UNK D_00009B3C;
 extern M2C_UNK D_00009B40;
 extern M2C_UNK D_00009C00;
-extern M2C_UNK D_00621320;
+extern M2C_UNK D_00621320; /* src/data/bss_0062.c: CdEnt D_00621320 */
 s32 func_001ba9d8(s32);
 s32 func_001baad0(void);
 s32 func_001bcd10(s32, s32);

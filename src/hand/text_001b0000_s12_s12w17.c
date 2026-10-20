@@ -1,19 +1,7 @@
 #include "common.h"
 #include "platform/math.h"
 #include "data/bss_0062.h"
-typedef struct {
-    struct {
-        s32 w0, w4, w8, wC, w10;
-        u8 pad14[0x1C];
-        f32 a[4];
-        f32 b[4];
-        f32 an[2];
-        u8 pad58[8];
-        f32 bn[2];
-        u8 pad68[8];
-    } s;
-} __attribute__((aligned(8))) Lt;
-typedef struct { Lt l[2]; } Lt2;
+#include "data/types/text_001b0000_s12_s12w17.h"
 extern Lt2 D_00621220;
 extern Lt2 D_002BCA00;
 extern s32 D_003772D0;
@@ -64,3 +52,4 @@ void func_001ba520(void) {
 }
 
 #include "data/bss_0062_mixed.h"
+#include "data/bss_0062_typed.h"

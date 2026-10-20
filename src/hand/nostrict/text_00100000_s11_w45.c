@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/bss_0049.h"
-typedef struct { s32 w0, w4, w8, w12; } Ent16;
+#include "data/types/nostrict_text_00100000_s11_w45.h"
 typedef struct { s32 a, b; } P8;
 extern s32 D_00351BD0;
 extern Ent16 *D_00494BA8;
@@ -53,3 +53,4 @@ s32 func_00107c48(s32 i) {
     base[n].w4 = D_0047A1D0.b;
     return n;
 }
+#include "data/bss_0049_typed.h"

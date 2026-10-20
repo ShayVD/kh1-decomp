@@ -5,7 +5,7 @@
 M2C_UNK func_00121eb0(s32);
 M2C_UNK func_00167f68(s32, void *);
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_0056A0F0;
+extern M2C_UNK D_0056A0F0; /* src/data/bss_0056.c: Ent59 D_0056A0F0[96] */
 s32 func_001617c0();
 s32 func_001681b8(s32, s32);
 

@@ -86,7 +86,7 @@ void func_00243e58(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
 }
 
 /* 244d00 */
-typedef struct { u8 pad[0x60]; s32 fl; u8 pad64[0xC0 - 0x64]; } Obj;
+#include "data/types/text_00240000_s6_25.h"
 extern Obj D_0065FD80[5][10];
 extern Obj D_00662300[3]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
 void func_0024a568(Obj *);

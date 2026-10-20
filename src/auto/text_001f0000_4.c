@@ -6,7 +6,7 @@ M2C_UNK func_001f0148(s32, s32);
 M2C_UNK func_001f15f0(s32, s32, s32, s32, s32, s32, s32);
 M2C_UNK func_001f1f58(M2C_UNK, s32, s32, s32, s32, s32);
 M2C_UNK func_001f3698(M2C_UNK *, s32);
-extern M2C_UNK D_0063F758;
+extern M2C_UNK D_0063F758; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern f32 D_002BBDFC;
 s32 func_001efbb8();
 s32 func_001eff50(s32);

@@ -363,7 +363,7 @@ typedef struct {
 } __attribute__((aligned(8))) Obj;
 extern Obj D_006298F0[];
 extern Obj D_0062A130; /* src/data/bss_0062.c: u8 D_0062A130[0xb0] */
-extern Obj D_00629E70[];
+extern Obj D_00629E70[]; /* src/data/bss_0062.c: Ent176 D_00629E70[4] */
 void func_001cab48(void) {
     s32 i;
     for (i = 0; i < 8; i++) {

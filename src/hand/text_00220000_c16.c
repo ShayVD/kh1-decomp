@@ -83,7 +83,7 @@ extern s32 D_006437C8[];
 extern s32 D_006437D0[];
 extern s32 D_006437DC;
 extern s32 D_006437E4;
-typedef struct { u8 pad0[8]; u64 x8; u8 pad10[0x10]; char name[0x20]; } Dir40;
+#include "data/types/text_00220000_c16.h"
 extern Dir40 *D_006450C0[];
 extern Save3C D_00645250[];
 extern void *D_00646990; /* src/data/bss_0064.c: s32 D_00646990 */
@@ -523,3 +523,4 @@ void func_00225330(O98 *arg0) {
     }
     func_001f8f30();
 }
+#include "data/bss_0064_typed.h"

@@ -7,9 +7,9 @@ M2C_UNK func_002675b8(M2C_UNK *, void *);
 extern M2C_UNK D_002E26C0;
 extern M2C_UNK D_002E2700;
 extern M2C_UNK D_002E2740;
-extern M2C_UNK D_004F7660;
-extern M2C_UNK D_004F76E0;
-extern M2C_UNK D_004F7760;
+extern M2C_UNK D_004F7660; /* src/data/bss_004F.c: M53 D_004F7660[0x2] */
+extern M2C_UNK D_004F76E0; /* src/data/bss_004F.c: M53 D_004F76E0[0x2] */
+extern M2C_UNK D_004F7760; /* src/data/bss_004F.c: M53 D_004F7760[0x2] */
 extern s32 D_002C5950;
 
 s32 func_001251a0(void) {

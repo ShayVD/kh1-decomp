@@ -293,11 +293,7 @@ s32 func_00111e00(void) {
     return 0;
 }
 
-typedef struct { s32 f, s, m, h; } W29Time;
-typedef struct {
-    s32 x0, x4, x8, xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30;
-    W29Time t[2];
-} W29Clock;
+#include "data/types/text_00110000_h29.h"
 extern W29Clock D_004D9288;
 s32 func_00111b10(s32);
 s32 func_00111b48(s32);
@@ -723,3 +719,4 @@ void func_001119d0(void) {
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 s32 D_002BD170 ALIGNED(16) = 0;
+#include "data/bss_004D_typed.h"

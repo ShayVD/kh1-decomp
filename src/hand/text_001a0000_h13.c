@@ -246,7 +246,7 @@ s32 func_001ba458(s32 a) {
 }
 
 typedef struct { u64 x[14]; } Blk112;
-extern Blk112 D_00621220;
+extern Blk112 D_00621220; /* src/data/bss_0062.c: Lt2 D_00621220 */
 extern Blk112 D_002C5AD0;
 void func_001ba520(void);
 

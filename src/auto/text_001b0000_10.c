@@ -25,7 +25,7 @@ M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
 M2C_UNK func_00267930(s32, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK memset(s32, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_00621220;
+extern M2C_UNK D_00621220; /* src/data/bss_0062.c: Lt2 D_00621220 */
 extern M2C_UNK D_00625648; /* src/data/bss_0062.c: s32 D_00625648[0x40] */
 extern s32 D_003772D0;
 extern s32 D_003772DC;

@@ -3,9 +3,9 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-extern M2C_UNK D_00623230;
+extern M2C_UNK D_00623230; /* src/data/bss_0062.c: Ent D_00623230[0xc0] */
 extern M2C_UNK D_00623E40;
-extern M2C_UNK D_00625750;
+extern M2C_UNK D_00625750; /* src/data/bss_0062.c: IdCnt D_00625750[0x10] */
 extern s32 *D_00623210;
 extern s32 D_002BC140;
 extern s32 D_002BC144;

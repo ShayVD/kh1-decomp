@@ -49,20 +49,8 @@ typedef struct {
     s32 x18;
     void (*x1c)(s32);
 } W34E32;
-extern W34E32 D_0054C1B0[];
-typedef struct {
-    s32 x0;
-    u8 x4[4];
-    u8 x8[0xc];
-    s32 x14;
-    s32 x18;
-    u8 pad1c[0xc];
-    u8 x28;
-    u8 x29;
-    u8 pad2a[2];
-    s32 x2c;
-    u8 pad30[0xc];
-} W34E3C;
+extern W34E32 D_0054C1B0[]; /* src/data/bss_0054.c: Ent9c D_0054C1B0[0x3] */
+#include "data/types/text_00140000_h34.h"
 extern W34E3C D_0054C218[];
 extern u32 D_0054C434;
 typedef struct { u8 pad[0x4c]; u16 x4c; } W34O130;
@@ -135,7 +123,6 @@ dec:
 }
 
 /* 0x148F08 */
-typedef struct { u8 pad[0x14]; s32 x14; u8 pad18[0x24]; } W34Mdl3C;
 extern W34Mdl3C D_00547C00[256];
 extern W34Mdl3C *D_0054B800;
 extern u8 D_0054B808[];
@@ -583,7 +570,7 @@ s32 func_0014e5b8(f32 *p) {
 
 /* 0x14EC60 */
 typedef struct { s32 x0; s32 x4; f32 x8; f32 xc; s32 x10; s32 x14; } W34Grp;
-extern W34Grp D_0054F450[];
+extern W34Grp D_0054F450[]; /* src/data/bss_0054.c: Grp57_f1b8 D_0054F450[0x1f] */
 void func_0014ec60(s32 g) {
     W34Grp *e = &D_0054F450[g - 1];
     s32 n = 0;

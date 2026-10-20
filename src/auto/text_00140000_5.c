@@ -9,7 +9,7 @@ M2C_UNK func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK *, M2C_UNK *
 M2C_UNK func_00176310(M2C_UNK *);
 M2C_UNK func_002675a8(s32, s32);
 extern M2C_UNK D_002E26A0;
-extern M2C_UNK D_00547C00;
+extern M2C_UNK D_00547C00; /* src/data/bss_0054.c: W34Mdl3C D_00547C00[256] */
 extern M2C_UNK func_00144350;
 extern M2C_UNK func_00144958;
 extern M2C_UNK func_00144ce0;

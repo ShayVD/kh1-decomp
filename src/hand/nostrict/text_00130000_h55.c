@@ -57,8 +57,7 @@ typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4
 typedef struct { u8 x0, x1; s8 x2; } W55EvInf;
 typedef struct { f32 pos[4]; u8 pad10[0x10]; f32 x20; f32 x24; s32 x28; } W55Col;
 typedef struct { f32 pos[4]; f32 dir[4]; f32 hit[4]; s16 id; s16 pad32; s32 x34; } W55Ray;
-typedef struct { s32 a, b; } W55Pr;
-typedef struct { s32 key; s32 age; W55Pr e[256]; } W55Cache;
+#include "data/types/nostrict_text_00130000_h55.h"
 typedef struct {
     s32 x0;
     f32 x4, x8;
@@ -745,3 +744,4 @@ s32 func_001401d8(W55Ob *o, f32 *d) {
     }
     return k;
 }
+#include "data/bss_0052_typed.h"

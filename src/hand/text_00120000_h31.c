@@ -112,9 +112,7 @@ void func_00125cf0(E3 *e, f32 k, f32 lim) {
 }
 
 
-typedef struct { u8 pad[336]; } A6;
-typedef struct { u8 pad[544]; } B6;
-typedef struct { u8 x[16]; } D6;
+#include "data/types/text_00120000_h31.h"
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 extern D6 D_004F8270[];
@@ -485,7 +483,6 @@ s32 func_0012f0f8(void *p, void *q, u32 mode) {
     return r;
 }
 
-typedef struct { s32 a, b; } P5c0;
 extern P5c0 D_00524F80[];
 extern P5c0 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern s32 D_0052528C;
@@ -667,3 +664,4 @@ u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
     return r | v;
 }
 #include "data/bss_004F_mixed.h"
+#include "data/bss_004F_typed.h"

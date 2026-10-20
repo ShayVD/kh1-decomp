@@ -1171,7 +1171,7 @@ typedef struct {
     f32 x, y, z, w;
 } PppSortEnt;
 
-extern PppSortEnt *D_0061E310[];
+extern PppSortEnt *D_0061E310[]; /* src/data/bss_0061.c: PppLight *D_0061E310[256] */
 
 /* Quicksort of D_0061E310 by ->w, largest first. The second recursive
  * call is a tail call that gcc turns into a jump. */

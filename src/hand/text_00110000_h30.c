@@ -4,7 +4,7 @@
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 id, x4, x8, handle, x10; u8 active, x15, kind, x17; } SndSlot;
 typedef struct { s32 x0, x4, x8; } Slot12;
-typedef struct { s32 a, b; } Pair;
+#include "data/types/text_00110000_h30.h"
 extern s32 D_004E344C;
 extern SndSlot *D_004E3450;
 extern Slot12 *D_004E3454;
@@ -21,7 +21,6 @@ void func_001ed460(s32, void *, s32);
 void func_001ed658(s32, void *, s32);
 void *func_0011ef10(s32, void *);
 s32 func_0011cba0(void);
-typedef f32 V4[4] __attribute__((aligned(16)));
 extern V4 D_004E3A20;
 extern V4 D_004E3A30;
 typedef struct { u32 b0 : 1; u32 rest : 31; } Bits5958;
@@ -33,8 +32,6 @@ void func_0011c7c0(s32, s32, s32);
 void func_0011c7a8(s32, s32, s32, s32, s32, s32);
 int sprintf(char *, const char *, ...);
 char *strcat(char *, const char *);
-typedef struct TNode { u16 flags; u16 mask; s32 key; struct TNode *next; s32 (*fn)(struct TNode *); } TNode;
-typedef struct { u16 size; u16 count; u8 *base; TNode *head; TNode *cur; } TPool;
 TNode *func_0011f058(TPool *, TNode *);
 typedef struct {
     u16 active;
@@ -809,3 +806,4 @@ void func_001247e8(Obj123 *o) {
 }
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004F_mixed.h"
+#include "data/bss_004F_typed.h"

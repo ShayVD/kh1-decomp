@@ -49,6 +49,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools/shift"))
 from define_vars import address_taken, align_for, parse_extern, probe_sizes  # noqa: E402
+import type_move  # noqa: E402
 
 BASIC = {"s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64", "f32", "f64",
          "int", "char", "short", "long", "float", "double", "unsigned", "M2C_UNK",
@@ -188,13 +189,13 @@ def base_type(tspec: str) -> str:
     return re.sub(r"\b(volatile|const)\s+", "", tspec).strip()
 
 
-def plan_mixed(owners: Path, names: list[str]):
+def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=()):
     """Names whose users disagree: pick one declaration (see the module doc)."""
     done = defined_names()
     rows = []
     for ln in owners.read_text().splitlines()[1:]:
         f = ln.split("\t")
-        if f[2] != "bss" or f[6] != "shared" or f[1] in done:
+        if f[2] != "bss" or f[6] != "shared" or f[1] in done or f[1] in exclude:
             continue
         if names and f[1] not in names:
             continue
@@ -251,7 +252,7 @@ def plan_mixed(owners: Path, names: list[str]):
     out = []
     for name, (addr, ext, reach, files, decls, unknown) in sorted(cands.items(), key=lambda kv: kv[1][0]):
         taken = any(address_taken((ROOT / f).read_text(), name) for f in files)
-        opts, why = [], []
+        opts, why, sopts = [], [], []
         # the definition must cover every complete declaration (a user writing
         # `s32 D[2]` reads D[1] even if another writes `s32 D`)
         big = max([sizes.get((fns[0], name), 0) for (t, dcl), fns in decls.items() if "[]" not in dcl] + [0])
@@ -272,8 +273,8 @@ def plan_mixed(owners: Path, names: list[str]):
                 if ext % sz:
                     why.append(f"{tag}: extent not a multiple of {sz:#x}")
                     continue
-                if ext == sz and "][" in decl:
-                    why.append(f"{tag}: one row fills the extent (the rows run past it)")
+                if ext == sz:
+                    why.append(f"{tag}: one element fills the extent (users index past it)")
                     continue
                 d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
             elif sz == ext:
@@ -290,19 +291,86 @@ def plan_mixed(owners: Path, names: list[str]):
             if "[" in d and addr % 8 and size % 8:
                 why.append(f"{tag}: array at an address that is not 8-aligned")
                 continue
-            if bt not in BASIC:
-                why.append(f"{tag}: type {bt} not basic (fits: {kind})")
-                continue
             score = (KIND_RANK[kind], bt == "M2C_UNK",
                      -sum(f.startswith("src/hand/") for f in fns), -len(fns), "volatile" in tspec, tag)
+            if bt not in BASIC:
+                why.append(f"{tag}: type {bt} not basic (fits: {kind})")
+                sopts.append((score, tspec, decl, d, kind, size, bt, fns))
+                continue
             opts.append((score, tspec, decl, d, kind, size))
+        tsrc = None
+        if not opts and types and sopts:
+            for score, tspec, decl, d, kind, size, bt, fns in sorted(sopts, key=lambda o: o[0]):
+                for f in sorted(fns, key=lambda f: not f.startswith("src/hand/")):
+                    hp = type_move.header_path(ROOT / f)
+                    if hp.exists():
+                        ok = bt in type_move.header_types(hp)
+                    else:
+                        ok = type_move.plan(ROOT / f, [bt])[0] is not None
+                    if ok:
+                        tsrc = (f, bt)
+                        break
+                if tsrc:
+                    opts.append((score, tspec, decl, d, kind, size))
+                    why.append(f"{tag}: type from {tsrc[0]}")
+                    break
         if not opts:
             skip.append((name, "; ".join(why)))
             continue
         _sc, tspec, decl, d, kind, size = min(opts)
         if name in clamped:
             kind += "/clamped"
-        out.append((addr, name, files, tspec, decl, d, kind, size, ext, align_for(addr, size)))
+        out.append((addr, name, files, tspec, decl, d, kind, size, ext, align_for(addr, size), tsrc))
+    if types:
+        out, more = settle_types(out)
+        skip += more
+    return out, skip
+
+
+def settle_types(plans):
+    """One type move per source file; no two moved type sets in a module may
+    define the same name (the typed header includes them all)."""
+    per_src: dict[str, set] = {}
+    for p in plans:
+        if p[10]:
+            per_src.setdefault(p[10][0], set()).add(p[10][1])
+    moved: dict[str, set] = {}  # src -> type names its header defines
+    bad: dict[str, str] = {}
+    for f, ts in per_src.items():
+        src = ROOT / f
+        hp = type_move.header_path(src)
+        if hp.exists():
+            names = type_move.header_types(hp)
+            if ts - names:
+                bad[f] = f"{hp.relative_to(ROOT)} exists without {sorted(ts - names)}"
+            moved[f] = names
+            continue
+        take, info = type_move.plan(src, sorted(ts))
+        if take is None:
+            bad[f] = f"type move from {f}: {info}"
+            continue
+        names = set()
+        for k in take:
+            names |= info[k][4]
+        moved[f] = names
+    out, skip, mod_types = [], [], {}
+    for p in plans:
+        if not p[10]:
+            out.append(p)
+            continue
+        f = p[10][0]
+        if f in bad:
+            skip.append((p[1], bad[f]))
+            continue
+        mod = module(p[0])
+        have = mod_types.setdefault(mod, {})
+        clash = {n for n in moved[f] if have.get(n, f) != f}
+        if clash:
+            skip.append((p[1], f"type names {sorted(clash)} from {f} clash with another file's in {mod}"))
+            continue
+        for n in moved[f]:
+            have[n] = f
+        out.append(p)
     return out, skip
 
 
@@ -318,26 +386,52 @@ def compiles_with(src: Path, inc: str) -> bool:
         return r.returncode == 0
 
 
+def hkey(p) -> str:
+    """The header a mixed plan's declaration goes to: bss_XXXX_mixed (basic
+    types) or bss_XXXX_typed (types moved to include/data/types/)."""
+    return f"{module(p[0])}_{'typed' if len(p) > 10 and p[10] else 'mixed'}"
+
+
 def apply_mixed(plans) -> None:
-    mods: dict[str, list] = {}
+    # move the types first (one header per source file)
+    srcs: dict[str, set] = {}
     for p in plans:
-        mods.setdefault(module(p[0]), []).append(p)
-    for mod, ps in mods.items():
-        guard = f"KH1_DATA_{mod.upper()}_MIXED_H"
-        hdr = ROOT / "include/data" / f"{mod}_mixed.h"
+        if len(p) > 10 and p[10]:
+            srcs.setdefault(p[10][0], set()).add(p[10][1])
+    for f, ts in sorted(srcs.items()):
+        src = ROOT / f
+        if type_move.header_path(src).exists():
+            continue
+        take, info = type_move.plan(src, sorted(ts))
+        type_move.apply(src, take, info)
+        print(f"types\t{f}\t{type_move.header_path(src).relative_to(ROOT)}", file=sys.stderr)
+    heads: dict[str, list] = {}
+    for p in plans:
+        heads.setdefault(hkey(p), []).append(p)
+    for key, ps in heads.items():
+        mod, kind = key.rsplit("_", 1)
+        guard = f"KH1_DATA_{key.upper()}_H"
+        hdr = ROOT / "include/data" / f"{key}.h"
         src = ROOT / "src/data" / f"{mod}.c"
-        old = []
+        old, oinc = [], []
         if hdr.exists():  # keep the declarations already there
             old = [ln for ln in hdr.read_text().splitlines() if ln.startswith("extern ")]
+            oinc = [ln for ln in hdr.read_text().splitlines() if ln.startswith('#include "data/types/')]
         new = [f"extern {p[3]} {p[4]};" for p in ps]
         decls = sorted(set(old + new), key=lambda ln: re.search(r"D_([0-9A-F]{8})", ln).group(1))
+        tinc = sorted(set(oinc) | {f'#include "data/types/{type_move.header_name(ROOT / p[10][0])}.h"'
+                                    for p in ps if len(p) > 10 and p[10]})
         m2c = any(re.search(r"\bM2C_UNK", ln) for ln in decls)
-        h = [f"/* Shared bss names {ps[0][0] >> 16:04X}xxxx whose users disagree on the type", " * (phase 4, tools/shift/define_shared.py --mixed). Users that agree include", " * this at their end; the others keep their own extern. */",
+        what = "whose users disagree on the type" if kind == "mixed" else "declared with a moved type"
+        h = [f"/* Shared bss names {ps[0][0] >> 16:04X}xxxx {what}",
+             " * (phase 4, tools/shift/define_shared.py --mixed). Users that agree include",
+             " * this at their end; the others keep their own extern. */",
              f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"']
         h += ['#include "m2c.h"'] if m2c else []
+        h += tinc
         h += [""] + decls + ["", f"#endif /* {guard} */", ""]
         hdr.write_text("\n".join(h))
-        hdr_inc = f'#include "data/{mod}_mixed.h"'
+        hdr_inc = f'#include "data/{key}.h"'
         if src.exists():
             text = src.read_text()
         else:
@@ -353,13 +447,13 @@ def apply_mixed(plans) -> None:
         text += "".join(f"{p[3]} {p[5]} ALIGNED({p[9]});\n" for p in ps)
         src.write_text(text)
     # files that already include a header that just grew must still compile
-    for mod in mods:
-        line = f'#include "data/{mod}_mixed.h"\n'
+    for key in heads:
+        line = f'#include "data/{key}.h"\n'
         for path in sorted((ROOT / "src").rglob("*.c")):
             text = path.read_text(errors="replace")
             if line in text and "src/data/" not in str(path) and not compiles_with(path, None):
                 path.write_text(text.replace(line, ""))
-                print(f"drop\t{path.relative_to(ROOT)}\tdata/{mod}_mixed.h", file=sys.stderr)
+                print(f"drop\t{path.relative_to(ROOT)}\tdata/{key}.h", file=sys.stderr)
     # users: include where the file still compiles, else mark the extern
     users: dict[str, list] = {}
     for p in plans:
@@ -367,8 +461,8 @@ def apply_mixed(plans) -> None:
             users.setdefault(f, []).append(p)
     for f, ps in sorted(users.items()):
         path = ROOT / f
-        for mod in sorted({module(p[0]) for p in ps}):
-            inc = f"data/{mod}_mixed.h"
+        for key in sorted({hkey(p) for p in ps}):
+            inc = f"data/{key}.h"
             text = path.read_text()
             if f'#include "{inc}"' in text:
                 continue
@@ -380,7 +474,7 @@ def apply_mixed(plans) -> None:
                 continue
             lines = text.splitlines(keepends=True)
             for p in ps:
-                if module(p[0]) != mod:
+                if hkey(p) != key:
                     continue
                 hits = [i for i, ln in enumerate(lines)
                         if ln.startswith("extern") and re.search(r"\b" + p[1] + r"\b", ln)]
@@ -390,10 +484,9 @@ def apply_mixed(plans) -> None:
                 pe = parse_extern(ln.rstrip("\n"), p[1])
                 if (pe and len(pe[1]) == 1 and "/*" not in ln and "//" not in ln
                         and (norm(pe[0]), norm(pe[1][0])) != (p[3], p[4])):
-                    lines[hits[0]] = ln.rstrip("\n") + f" /* src/data/{mod}.c: {p[3]} {p[5]} */\n"
+                    lines[hits[0]] = ln.rstrip("\n") + f" /* src/data/{module(p[0])}.c: {p[3]} {p[5]} */\n"
             path.write_text("".join(lines))
             print(f"keep\t{f}\t{inc}", file=sys.stderr)
-
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -401,8 +494,14 @@ def main() -> int:
     ap.add_argument("--name", action="append", default=[])
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--mixed", action="store_true", help="names whose users disagree on the type")
+    ap.add_argument("--types", action="store_true",
+                    help="with --mixed: allow file-local types, moved to include/data/types/")
+    ap.add_argument("--exclude", action="append", default=[], help="leave this name alone")
     a = ap.parse_args()
-    plans, skip = (plan_mixed if a.mixed else plan)(Path(a.owners), a.name)
+    if a.mixed:
+        plans, skip = plan_mixed(Path(a.owners), a.name, a.types, set(a.exclude))
+    else:
+        plans, skip = plan(Path(a.owners), a.name)
     kinds: dict[str, int] = {}
     for p in plans:
         kinds[p[6]] = kinds.get(p[6], 0) + 1

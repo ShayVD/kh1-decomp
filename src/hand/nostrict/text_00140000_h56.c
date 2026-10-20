@@ -358,7 +358,7 @@ typedef struct {
     s32 w1c;
     f32 vel[4];
 } Bo;
-extern Hit *D_00531B60;
+extern Hit *D_00531B60; /* src/data/bss_0053.c: B3Col *D_00531B60 */
 extern HtTab D_00304DB0[];
 extern f32 D_002C58A0[];
 void func_00116660(Hit *);
@@ -526,7 +526,7 @@ typedef struct {
     Tgt *tgt;
     u8 pad10[0x10];
 } Snd32;
-extern Snd32 D_00532B90[];
+extern Snd32 D_00532B90[]; /* src/data/bss_0053.c: Ent32 D_00532B90[128] */
 extern u8 D_00531F70[];
 extern s32 D_00532B80;
 s32 func_0011d6f0(u16, s32);

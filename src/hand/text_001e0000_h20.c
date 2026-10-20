@@ -70,7 +70,7 @@ extern s32 D_003DC490;
 extern u8 D_003DC1E8[];
 typedef struct { u8 pad0[0x44]; f32 f44; u8 pad48[0x38]; u8 sub[0x80]; } Mgr20;
 extern Mgr20 D_0062F790;
-typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
+#include "data/types/text_001e0000_h20.h"
 extern Cb20 D_0062F8F0;
 void func_001e2f98();
 void func_001e2f88();
@@ -569,3 +569,4 @@ s32 func_001e8de8(VM *vm) {
     vm->u.h.sp -= 2;
     return 2;
 }
+#include "data/bss_0062_typed.h"

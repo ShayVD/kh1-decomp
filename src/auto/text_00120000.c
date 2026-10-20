@@ -26,7 +26,7 @@ M2C_UNK func_0026b9a8(f32, f32);
 M2C_UNK func_00270b40();
 extern M2C_UNK D_002E2F28;
 extern M2C_UNK D_002E2F34;
-extern M2C_UNK D_004F6EC0;
+extern M2C_UNK D_004F6EC0; /* src/data/bss_004F.c: TPool D_004F6EC0 */
 M2C_UNK D_004F6ED0[0xa0] ALIGNED(16);
 extern M2C_UNK func_00120908;
 extern f32 D_002BBDFC;

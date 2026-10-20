@@ -95,7 +95,7 @@ s32 func_00110218(void) {
     return 0;
 }
 
-typedef f32 Mtx52[4][4] __attribute__((aligned(16)));
+#include "data/types/text_00110000_h52.h"
 extern Mtx52 D_002BBE20, D_002BBE60, D_002BBEA0, D_002BBEE0, D_002BBF20, D_002BBF60;
 extern Mtx52 D_004D8E40, D_004D9100, D_004D9140, D_004D9180, D_004D91C0, D_004D8E80;
 extern f32 D_004D90F8;
@@ -828,3 +828,4 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
     *og = gs[bi];
     return rs[bi];
 }
+#include "data/bss_004D_typed.h"

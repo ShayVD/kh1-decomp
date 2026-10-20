@@ -249,7 +249,7 @@ void func_00244968(s32 a0, s32 a1, s32 x, s32 y) {
 typedef struct { u8 b[0xC0]; } Spr0C0;
 typedef struct { s32 unk0; s32 unk4; s32 unk8; s32 unkC; s32 unk10; s32 unk14; } Hud;
 extern Hud D_00662540;
-extern Spr0C0 D_0065FD80[5][10];
+extern Spr0C0 D_0065FD80[5][10]; /* src/data/bss_0065.c: Obj D_0065FD80[5][10] */
 extern Spr0C0 D_00662300[]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
 void func_0024ae90(Spr0C0 *);
 

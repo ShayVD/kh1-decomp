@@ -3,11 +3,8 @@
 
 typedef __builtin_va_list va_list;
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
-typedef struct { u8 x[0x60]; } E60;
-typedef struct { u8 x[0x90]; } E90;
-typedef struct { u8 x[32]; } E32;
+#include "data/types/text_00100000_h28.h"
 typedef struct { u16 code; u16 v; u16 x; u16 y; u16 lw; u16 w; u16 padc[2]; } Glyph;
-typedef struct { E60 e[2]; u8 pad[0x10]; } ED0;
 typedef struct { f32 a, b, c, d; s32 e, f, g; s32 h; f32 near_, far_; s32 i, j; } __attribute__((aligned(8))) View30;
 typedef struct { f32 a, b, c, d; } F16;
 typedef struct { f32 x, y, z; } Vec3;
@@ -1017,3 +1014,4 @@ void func_00100670(u32 arg0, s32 arg1) {
     }
 }
 
+#include "data/bss_0049_typed.h"

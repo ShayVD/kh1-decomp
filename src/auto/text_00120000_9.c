@@ -17,7 +17,7 @@ M2C_UNK func_00267e90(void *, s32, f32);
 extern M2C_UNK D_002C58D0;
 extern M2C_UNK D_002C5C80;
 extern M2C_UNK D_002E2FD8;
-extern M2C_UNK D_004E4A00;
+extern M2C_UNK D_004E4A00; /* src/data/bss_004E.c: FileEnt D_004E4A00[0xe00] */
 extern M2C_UNK func_00120170;
 extern f32 D_002BBDFC;
 extern f32 D_002E2700[];

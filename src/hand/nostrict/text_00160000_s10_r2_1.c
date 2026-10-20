@@ -2,12 +2,7 @@
 #include "data/bss_0057.h"
 /* func_0016ea58 (hand/nostrict): the target search is matched func_001711d0 written as a static inline helper (inl_001711d0, its exact body); the set1/set2 gotos written out as separate w1->w38 |= 8 / w2->w38 |= 8 statements (jump2 cross-jumps them; the extra refs give w1/w2 s4/s5 over the hoisted const 2), the d2<d1 arm as one && / || condition, w2 = 0 before w1 = 0. */
 
-typedef struct { f32 x, y, z, w; } V4EA;
-typedef struct { u8 pad0[0x38]; u64 w38; u8 pad40[0x24]; f32 f64; u8 pad68[0x28]; void *p90; } WkEA;
-typedef struct { u32 flags; u8 pad4[0xC]; V4EA pos; u8 pad20[0x1C]; f32 f3C; u8 pad40[0x104]; WkEA *p144; } ChrEA;
-typedef struct { u8 pad0[0x10]; V4EA pos; u8 pad20[0x350]; u64 f370; } EntEA;
-typedef struct { EntEA *tgt; s32 part; } LockEA;
-typedef struct { u8 pad0[8]; s32 *p8; s32 (*fC)(ChrEA *, WkEA *); s32 *p10; s32 (*f14)(ChrEA *, WkEA *); } TalkEA;
+#include "data/types/nostrict_text_00160000_s10_r2_1.h"
 typedef struct { u8 pad[0xC8]; f32 fC8; } PrmEA;
 
 extern ChrEA *D_0035BD40[3];
@@ -174,3 +169,4 @@ s32 func_0016ea58(void) {
     }
     return 0;
 }
+#include "data/bss_0057_typed.h"

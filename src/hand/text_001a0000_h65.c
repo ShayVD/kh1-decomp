@@ -22,7 +22,7 @@ s32 func_001bafb0(s32 i, Blk64 *src) {
 /* needs make: uses rodata */
 
 typedef struct { u8 id; u8 b; u8 pad[2]; s32 c; } Ent8;
-extern Ent8 D_00625750[];
+extern Ent8 D_00625750[]; /* src/data/bss_0062.c: IdCnt D_00625750[0x10] */
 extern s32 D_00625748;
 u8 func_001be600(s32);
 s32 func_001b9df0(s32);

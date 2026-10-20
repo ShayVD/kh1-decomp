@@ -1,6 +1,7 @@
 /* Definitions of the shared bss names in include/data/bss_0061.h. */
 #include "data/bss_0061.h"
 #include "data/bss_0061_mixed.h"
+#include "data/bss_0061_typed.h"
 
 u8 D_00616100[0x40] ALIGNED(64);
 u8 D_00616140[0x40] ALIGNED(64);
@@ -19,3 +20,9 @@ s32 D_0061622C ALIGNED(4);
 s32 D_00616234 ALIGNED(4);
 u8 D_0061E720[0x10] ALIGNED(16);
 f32 D_006160C0[4][4] ALIGNED(64);
+H39Mtx D_00615F30 ALIGNED(16);
+u128 D_00615F80 ALIGNED(16);
+H39Mtx D_00616180 ALIGNED(64);
+PppHookFn *D_00616220 ALIGNED(16);
+PppLight *D_0061E310[256] ALIGNED(16);
+PppMtx D_0061E7C0 ALIGNED(64);

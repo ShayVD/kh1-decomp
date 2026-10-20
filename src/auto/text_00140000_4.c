@@ -9,7 +9,7 @@ M2C_UNK func_001477c8(s32);
 M2C_UNK func_001ed128(M2C_UNK, s32);
 extern M2C_UNK D_00304C70;
 extern M2C_UNK D_00308C70;
-extern M2C_UNK D_00531B70;
+extern M2C_UNK D_00531B70; /* src/data/bss_0053.c: LdEnt D_00531B70[128] */
 extern M2C_UNK D_0054B808; /* src/data/bss_0054.c: u8 D_0054B808[0x10] */
 extern M2C_UNK func_0013fd10;
 extern M2C_UNK func_0013fd20;

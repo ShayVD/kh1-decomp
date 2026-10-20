@@ -58,12 +58,7 @@ typedef struct {
     f32 f68; u8 pad6C[0x24]; void *p90; u8 pad94[0x2C]; f32 vC0[4]; u8 padD0[0x50]; f32 v120[4];
 } Wk6E;
 typedef struct { f32 p[4]; f32 d[4]; f32 hit[4]; s16 h; u8 pad32[0xE]; } Ray6E;
-typedef struct {
-    s32 w0; u8 pad4[0x34];
-    union { u64 w; struct { u32 lo; u32 *p3C; } s; } w38;
-    u64 *p40; u8 pad44[4]; s32 w48; u8 pad4c[0x44]; s32 w90; s32 w94;
-} Wk6F3;
-typedef struct Node6F { s32 id; s32 mask; s32 (*cb)(void *, Wk6F3 *, s32, s32); s32 arg; struct Node6F *next; } Node6F;
+#include "data/types/nostrict_text_00160000_h60.h"
 typedef struct { s32 w0; u8 pad4[4]; u8 *p8; u8 *pC; u8 pad10[0x54]; f32 f64; } Wk6F8;
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x50]; s32 w70; } Ent6FA;
 typedef struct { u8 pad[8]; f32 f8; } Sub6FA;
@@ -128,11 +123,11 @@ extern s32 D_00575010;
 s32 D_00575014 ALIGNED(4);
 extern f32 D_00575020[][4];
 extern f32 D_00575050[][4]; /* stays extern: indexed by i like D_00575020[i]; the extent (one row) is unsure */
-extern P870 D_00575080;
+extern P870 D_00575080; /* src/data/bss_0057.c: LockEA D_00575080 */
 extern s32 D_00575088;
 extern s32 D_0057508C;
 extern f32 D_00575090[40][4];
-extern P86F D_00575310[];
+extern P86F D_00575310[]; /* src/data/bss_0057.c: TalkEA D_00575310 */
 extern Node6F D_00575528[30];
 extern Node6F *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
 extern Node6F *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */

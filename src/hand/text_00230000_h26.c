@@ -159,7 +159,7 @@ typedef struct {
     s32 n[4];   /* +0x0 */
     Row r[3];   /* +0x10 */
 } Grid;
-extern Grid D_00656510;
+extern Grid D_00656510; /* src/data/bss_0065.c: Tbl D_00656510 */
 
 void func_002444a0(void) {
     s32 i, j;
@@ -202,7 +202,7 @@ void func_00245280(s32 id, s32 arg) {
 
 /* Ten 0x860-byte channels: a free one, else the oldest. */
 typedef struct { s32 used; s32 age; u8 pad8[0x860 - 8]; } Snd;
-extern Snd D_00662A30[10];
+extern Snd D_00662A30[10]; /* src/data/bss_0066.c: E860 D_00662A30[10] */
 
 Snd *func_002457c8(void) {
     Snd *best = 0;

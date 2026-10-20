@@ -81,7 +81,7 @@ extern f32 D_002BBDFC;
 extern u32 D_002C5BB8;
 extern S88 D_00350D88[];
 extern s32 D_0052528C;
-extern V8 D_00524F80[];
+extern V8 D_00524F80[]; /* src/data/bss_0052.c: P5c0 D_00524F80[0x61] */
 extern V8 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
 extern f32 D_002E2780[];
 
@@ -997,8 +997,7 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
     func_00167d70(o->x15c, dt);
 }
 
-typedef struct { f32 x, y, z, w; } V4D;
-typedef struct { u8 p0[0xc]; u32 fc; u8 p10[0x28 - 0x10]; s32 f28; } PD;
+#include "data/types/nostrict_text_00120000_s6_05.h"
 typedef struct { u8 p0[0x10]; V4D f10; } XD;
 typedef struct {
     u32 b0:12;
@@ -1016,23 +1015,6 @@ typedef struct {
     PD *f5c;
 } AD;
 typedef struct { u8 p0[5]; u8 f5; u8 p6[0x14 - 6]; f32 *f14; } ID;
-typedef struct QD {
-    u32 used:1;
-    u32 b1:1;
-    u32 k:2;
-    u32 b4:28;
-    s32 f4;
-    union { struct { s32 f8; u32 fc; } w; struct { u32 lo; u32 c0:5; u32 c5:7; u32 n:4; u32 c16:16; } b; u64 d; } u8;
-    V4D f10;
-    s32 f20;
-    s32 seq;
-    u32 mask;
-    PD *f2c;
-    struct QD *next;
-    s32 f34;
-    s32 f38;
-    u8 p3c[4];
-} QD;
 typedef struct {
     u8 p0[0x10];
     V4D f10;

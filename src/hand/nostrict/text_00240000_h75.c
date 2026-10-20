@@ -381,28 +381,7 @@ void func_00242ef8(ObG *o, s32 n, s32 a2, s32 *pos, s32 *col) {
     func_001220b8(buf);
 }
 
-typedef struct {
-    s32 unk0;
-    u8 pad4[4];
-    s32 unk8;
-    s32 unkC;
-    s32 unk10;
-    s32 unk14;
-    s32 unk18;
-    s32 unk1C;
-    s32 unk20;
-    s32 unk24;
-    u8 pad28[0x30 - 0x28];
-    u8 unk30[0x300];
-    u8 unk330[0x180];
-    u8 unk4B0[0x480];
-    u8 unk930[0x9F0 - 0x930];
-    f32 unk9F0;
-    void *unk9F4;
-    void *unk9F8;
-    u8 pad9FC[4];
-} Ent;
-typedef struct { s32 cnt[4]; Ent e[3][5]; s32 stamp[3]; s32 frame; } Tbl;
+#include "data/types/nostrict_text_00240000_h75.h"
 extern Tbl D_00656510;
 
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pk;
@@ -482,8 +461,8 @@ void func_00244500(void) {
     if (func_0011ef38(func_00244298) == 0) func_0011ef10(0x29811, func_00244298);
 }
 
-extern QW *D_006691D0;
-extern QW *D_006691D4;
+extern QW *D_006691D0; /* src/data/bss_0066.c: Q4 *D_006691D0 */
+extern QW *D_006691D4; /* src/data/bss_0066.c: Q4 *D_006691D4 */
 typedef struct { s32 v[4]; } C4;
 typedef struct { s32 x0, y0, x1, y1, u0, v0, u1, v1; C4 c[4]; u8 pad60[0x40]; u64 unkA0; } Spr2;
 extern Spr2 D_006693F0;

@@ -12,7 +12,7 @@ extern f32 D_002BBDFC;
 extern s32 D_00351BD0;
 extern u32 D_002A6208;
 extern u64 D_002A6178;
-extern volatile char D_00494C00;
+extern volatile char D_00494C00; /* src/data/bss_0049.c: V3 D_00494C00[0x20] */
 extern volatile unsigned char D_002A6C60;
 void *func_0015ed80(s32, M2C_UNK *);
 void func_00108b60(s32, void *);

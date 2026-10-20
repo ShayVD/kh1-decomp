@@ -33,7 +33,7 @@ W34Prt *func_0014a908(W34EObj *o) {
 }
 typedef struct { s32 x0; u8 pad4[0x1c]; f32 x20[4]; } W34Tgt;
 typedef struct { s32 x0; W34Tgt *x4; u8 pad8[4]; f32 xc; f32 x10[4]; u8 pad20[0x20]; } W34Lk;
-extern W34Lk D_0054F750[8];
+extern W34Lk D_0054F750[8]; /* src/data/bss_0054.c: Slot57_15d0 D_0054F750[8] */
 extern f32 D_00306840;
 void func_00150de0(s32 a) {
     W34Lk *e = D_0054F750;

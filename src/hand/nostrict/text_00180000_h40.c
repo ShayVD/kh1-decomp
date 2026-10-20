@@ -86,7 +86,7 @@ typedef struct {
     PppIVec v; /* +0x4 */
 } PppIVecKey;
 
-typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
+#include "data/types/nostrict_text_00180000_h40.h"
 
 typedef struct {
     u8 pad[0x10];
@@ -702,12 +702,6 @@ typedef struct {
     u8 h, w, y;  /* +0x21 */
 } PppTexMode2;
 
-typedef struct {
-    f32 pos[3];
-    f32 dist;   /* +0xC */
-    u8 pad10[8];
-    u64 flags;  /* +0x18 */
-} PppLight;
 
 extern PppLight D_0035C710[256];
 extern PppLight *D_0061E310[256];

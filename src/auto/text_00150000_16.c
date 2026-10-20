@@ -11,7 +11,7 @@ M2C_UNK func_00267560(void *, void *, f32);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
 M2C_UNK func_00267e40(s32, s32);
 extern M2C_UNK D_002C58A0;
-extern M2C_UNK D_0054F750;
+extern M2C_UNK D_0054F750; /* src/data/bss_0054.c: Slot57_15d0 D_0054F750[8] */
 extern M2C_UNK D_0054F970; /* src/data/bss_0054.c: u8 D_0054F970[0x10] */
 f32 func_0015ca50(void *);
 s32 func_00130398(s32, s32, f32);

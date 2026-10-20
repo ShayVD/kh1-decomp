@@ -2,29 +2,8 @@
 #include "common.h"
 #include "data/bss_0052.h"
 
-typedef struct {
-    s32 id;
-    u32 flags;
-    s32 x8;
-    u8 pad0c[0x4C - 0xC];
-    u16 key;
-    u8 pad4e[0x58 - 0x4E];
-    u8 x58;
-    u8 pad59[0x78 - 0x59];
-} W32Rec;
+#include "data/types/text_00130000_h32.h"
 
-typedef struct {
-    u8 pad00[0xC];
-    s32 n;
-    W32Rec *recs;
-    s32 x14;
-    s32 x18;
-    s32 x1c;
-    s32 x20;
-    s32 x24;
-    s32 x28;
-    u8 pad2c[0x30 - 0x2C];
-} W32Tbl;
 
 extern W32Tbl D_00525298;
 extern W32Tbl D_005252C8;
@@ -230,12 +209,11 @@ void func_00133578(void (*cb)(s32)) {
         cb(-1);
     }
 }
-typedef struct { s32 x0; s32 x4; s32 x8; } W32E12;
 typedef struct {
     s32 used;
     u8 pad04[0x60 - 0x4];
 } W32Slot;
-extern W32Slot D_00525A40[32];
+extern W32Slot D_00525A40[32]; /* src/data/bss_0052.c: W32Node D_00525A40[32] */
 extern W32E12 D_00526640[32];
 void func_00133a88(void);
 void func_00133738(void);
@@ -517,7 +495,7 @@ typedef struct {
     u64 x370;
 } W32Obj3;
 extern s32 D_0052AA68;
-extern W32Obj3 *D_0052AA70[];
+extern W32Obj3 *D_0052AA70[]; /* src/data/bss_0052.c: O15 *D_0052AA70[0x60] */
 extern W32Obj3 *D_00304AD8;
 extern f32 D_002BBDFC;
 void func_002675a8(f32 *d, f32 *s);
