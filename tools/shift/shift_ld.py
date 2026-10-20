@@ -179,6 +179,9 @@ def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Plac
     return sorted(out, key=lambda r: r.addr)
 
 
+FLOAT_PAD_WORD = 0xA5C35A3C  # --float-pad: data pads hold this word; bss pads stay zero
+
+
 def float_align(addr: int) -> int:
     """A floated variable keeps the alignment its original address had, up to a cache
     line (64): DMA and SIF buffers rely on it, whatever the C declaration says."""
@@ -705,6 +708,9 @@ def cmd_gen(a) -> int:
         for v in fl_data:
             data += [f"    . = ALIGN({float_align(v.addr)});",
                      f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */"]
+            if a.float_pad:  # sentinel words after the variable: tools/shift/float_pads.py finds writes into them
+                data += [f"    __fpad_{v.name} = .;"]
+                data += [f"    LONG(0x{FLOAT_PAD_WORD:08x})"] * (a.float_pad // 4)
     if drafts:
         # SHIFT_DRAFTS: the drafts' own rodata (jump tables, constants) after the blob;
         # the asm version's tables in the blob stay, unused by the draft.
@@ -743,6 +749,8 @@ def cmd_gen(a) -> int:
         for v in r:
             bss_tail.append(f"    . = __float_run{k} + 0x{v.addr - r[0].addr:x};")
             bss_tail.append(f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */")
+        if a.float_bss_pad:  # zeroed by crt0 with the rest of .bss: float_pads.py reports non-zero bytes
+            bss_tail += [f"    __fpad_{r[-1].name} = .;", f"    . += 0x{a.float_bss_pad:x};"]
     for v in bss_vars:
         if v.name in floating:
             continue
@@ -889,11 +897,18 @@ def main() -> int:
                    help="--float-vars: at most this many bytes of bss float (smallest variables first)")
     g.add_argument("--float-data-budget", type=lambda x: int(x, 0), default=0x4000,
                    help="--float-vars: at most this many bytes of data variables float (smallest first)")
+    g.add_argument("--float-pad", type=lambda x: int(x, 0), default=0, metavar="N",
+                   help="--float-vars: N bytes (multiple of 4) after each floated data variable (sentinel words) "
+                        "and each floated bss run (zero), named __fpad_<name>; tools/shift/float_pads.py")
+    g.add_argument("--float-bss-pad", type=lambda x: int(x, 0), default=None, metavar="N",
+                   help="--float-pad for the bss runs only (default: --float-pad)")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")
     g.add_argument("--ovl-labels", default=None, help="function starts the table names (__dr_ labels)")
     a = ap.parse_args()
+    if getattr(a, "float_bss_pad", 0) is None:
+        a.float_bss_pad = a.float_pad
     if a.cmd == "gen" and a.blob_obj is None:
         a.blob_obj = str(Path(a.out_dir) / "blob.o")
     return cmd_missing(a) if a.cmd == "missing" else cmd_gen(a)
