@@ -669,3 +669,16 @@ from dead code. Read the allocation first, then find the source change.
   changing the output (001c62a0: 122 insns hoists 3 invariants, 117 hoists 4).
 - Integer offsets (`s32 off = i*224 + 432; f32 *f = (f32 *)((u8 *)&D + off);`) reproduce per-entry
   address shapes that pointer arithmetic on the struct folds away.
+
+## Session 18 tips (nonmatchings/session18/NOTES.md)
+
+- **Local register variable lever** (matched 001f18e8): `register u64 k3 asm("$3");` in plain C
+  takes one constant's register choice away from local-alloc, so the statement order that gives the
+  right schedule can be climbed without the allocator picking the wrong register. Combine it with a
+  statement-order climb.
+- It only holds for constants (or values cse cannot see through). A pinned copy of a computed value
+  is dissolved by cse and the output is identical to the unpinned one.
+- A pinned constant in a block that also moves call arguments into the same hard register gets an
+  output dependence on them, which moves that argument setup earlier (0021e120's leftover word).
+- The loop insn-count lever (session 17) helped none of the ten loop drafts. It can only stop hoists
+  and giv reductions, never add them.
