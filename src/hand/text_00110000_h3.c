@@ -1,6 +1,8 @@
 /* Hand-matched functions in 0x00114000-0x0011e000 (worker h3). Grouped by
  * address; the original translation units are not known yet. */
 #include "common.h"
+#include "data/bss_004D.h"
+#include "data/bss_004E.h"
 
 typedef int u128 __attribute__((mode(TI)));
 

@@ -729,3 +729,22 @@ done:
     w->w50 = 0;
     return 1;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_00272E20[];
+extern u8 D_002732A0[];
+extern u8 D_002736B0[];
+extern u8 D_00273B30[];
+extern u8 D_00274110[];
+extern u8 D_002747C0[];
+extern u8 D_002757A0[];
+extern u8 D_00276870[];
+extern u8 D_00277AE0[];
+void *D_00351BE0[0x18] ALIGNED(32) = {
+    (void *)D_002732A0, (void *)D_002736B0, (void *)D_00273B30, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+    (void *)D_002747C0, (void *)D_002757A0, (void *)D_00276870, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+    (void *)D_00277AE0, (void *)D_002736B0, (void *)D_00273B30, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+};

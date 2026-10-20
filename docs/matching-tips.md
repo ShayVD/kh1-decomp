@@ -656,3 +656,16 @@ from dead code. Read the allocation first, then find the source change.
   frame: this changes which addresses gcse sees as related.
 - Scalar declaration order matters where global-alloc ties decide (00166570: 21-127 words over 200
   orders) and does nothing in single-block local-alloc functions (00200e28).
+
+## Session 17 tips (nonmatchings/session17/NOTES.md)
+
+- The session 16 frame-pointer copy lever only helps when gcse links an `$fp`-based address; it did
+  not apply to 00200e28 (one basic block), 00110618 (FP register allocation) or 001c62a0 (gcse links
+  a symbol HIGH, not `$fp`).
+- loop.c hoists an invariant only if `threshold * savings * lifetime >= insn_count`, and the threshold
+  drops with each hoist, so the loop's insn count at loop pass 2 decides how many invariants move.
+- Count-tuning lever: a `static inline` helper adds parameter and return copies that loop.c counts
+  but that are gone from the final code. Wrapping a read in one tunes the loop insn count without
+  changing the output (001c62a0: 122 insns hoists 3 invariants, 117 hoists 4).
+- Integer offsets (`s32 off = i*224 + 432; f32 *f = (f32 *)((u8 *)&D + off);`) reproduce per-entry
+  address shapes that pointer arithmetic on the struct folds away.

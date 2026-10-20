@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0053.h"
 void func_002675a8(f32 *, f32 *);
 void func_00267518(f32 *, f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);

@@ -124,7 +124,7 @@ typedef struct {
 extern f32 D_002BBDFC;
 W32Spr *func_001226f0(s32 a, s32 b, s32 c);
 void func_00122768(W32Spr *s);
-extern W32Spr *D_0052AD54;
+W32Spr *D_0052AD54 ALIGNED(4);
 void func_00100ab0(void);
 s32 func_0013b4e8(W32Fade *f) {
     f32 t;

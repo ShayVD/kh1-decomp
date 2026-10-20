@@ -10,7 +10,7 @@ typedef struct {
 extern CamC4 *D_00575894;
 extern V4 D_005758D0;
 extern V4 D_005758E0;
-extern V4 D_00575810;
+V4 D_00575810 ALIGNED(16);
 extern V4 D_002C58A0;
 extern f32 D_002BBDFC;
 extern f32 D_003624BC;

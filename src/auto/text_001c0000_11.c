@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern volatile M2C_UNK D_00629920;
+volatile M2C_UNK D_00629920 ALIGNED(16);
 
 s32 func_001ccda8(s32 arg0) {
   void *temp_a1;

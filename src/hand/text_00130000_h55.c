@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x139000-0x13c000 (worker 55). */
 #include "common.h"
+#include "data/bss_0052.h"
 
 extern u32 D_002C5958;
 extern u32 D_00304B84;
@@ -146,7 +147,7 @@ extern s32 D_00304B00[];
 extern s32 D_00304B68;
 extern char D_0048DCB0[];
 extern u8 D_0052AD68[];
-extern u8 D_0052AD78[];
+u8 D_0052AD78[0xc0] ALIGNED(8);
 f32 func_0013bb20(void);
 void func_00141540(s32 a, s32 b);
 void func_001575b0(s32 a);
@@ -260,3 +261,7 @@ void func_00139da8(W55ObB *o) {
         }
     }
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048DCB8[];
+s32 D_00304B68 ALIGNED(8) = (s32)D_0048DCB8;

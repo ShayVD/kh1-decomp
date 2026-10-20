@@ -605,7 +605,7 @@ void func_0019cfc0(PppMtx out, PppBb98B *q, PppMtx m) {
 
 typedef unsigned int u128 __attribute__((mode(TI)));
 
-extern PppMtx D_0061E2D0;
+PppMtx D_0061E2D0 ALIGNED(16);
 typedef struct {
     PppMtx m;   /* +0x00 */
     u128 q;     /* +0x40 */

@@ -1,5 +1,6 @@
 /* func_0021f900 only matches with its callee func_0021f410 defined above it. */
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct {
     u8 pad[0xA0];
     f32 xa0;

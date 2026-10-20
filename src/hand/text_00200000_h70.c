@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct { u8 b[64]; } B64;
 typedef struct {
     u8 pad0[0x14]; s32 x14; u8 x18[0x10]; u8 x28[8]; s32 x30; s32 x34; u8 pad38[4]; s32 x3c;
@@ -8,7 +9,7 @@ typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
 extern S3530 D_003F3530;
 extern s32 D_003F3870;
 extern B64 D_003F3050[];
-extern B64 D_00640E40[];
+B64 D_00640E40[0x9] ALIGNED(64);
 extern f32 D_002BBDFC;
 s32 func_001301d8(void *, s32, s32, s32);
 void func_00161de8(s32, void *, void *, s32);
@@ -581,3 +582,18 @@ void func_00213e50(u8 *a, s32 lo, s32 hi, s32 k) {
     if (lo < i - 1) func_00213e50(a, lo, i - 1, k);
     if (j + 1 < hi) func_00213e50(a, j + 1, hi, k);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F31A0[];
+extern u8 D_003F31A8[];
+extern u8 D_003F31B0[];
+extern u8 D_003F31C0[];
+f32 *D_003F31D0[0x4] ALIGNED(16) = {
+    (void *)D_003F31A0, (void *)D_003F31A8, (void *)D_003F31B0, (void *)D_003F31C0,
+};
+void func_00213d80();
+void func_00213db8();
+void func_00213e18();
+KF3de0 D_003F3DE0[0x4] ALIGNED(16) = {
+    (void *)func_00213d80, (void *)func_00213db8, (void *)func_00213e18, 0,
+};

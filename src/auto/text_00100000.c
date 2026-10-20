@@ -1,6 +1,8 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
+#include "data/bss_0049.h"
+#include "data/bss_004D.h"
 
 M2C_UNK D_00F20000(M2C_UNK, M2C_UNK);
 M2C_UNK func_00100580(M2C_UNK, M2C_UNK *);
@@ -38,10 +40,10 @@ extern M2C_UNK D_00494250;
 extern M2C_UNK D_00494290;
 extern M2C_UNK D_004942D0;
 extern M2C_UNK D_00494320;
-extern M2C_UNK D_004943A0;
+M2C_UNK D_004943A0[0x11] ALIGNED(32);
 extern M2C_UNK D_00494878;
 extern M2C_UNK D_004951D0;
-extern f32 D_004943E4;
+f32 D_004943E4 ALIGNED(4);
 extern f32 D_00494A70;
 extern f32 D_00494A74;
 extern s32 D_002A6258;

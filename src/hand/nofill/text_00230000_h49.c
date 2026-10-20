@@ -1,5 +1,6 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 49), delay-slot filling off. */
 #include "common.h"
+#include "data/bss_0064.h"
 
 void func_00239860(s32, s32, s32, s32, f32, s32, s32, s32);
 void func_00239b90(s32, s32, s32, s32, f32, s32, s32, s32);
@@ -28,8 +29,8 @@ void func_00239d20(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, f32 f
     if (a2 != 0) func_00239b90(a1, a3, a4, a5, f, 0, a6, 0);
 }
 
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; } Q;
-extern Q D_00648790;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
+Q D_00648790 ALIGNED(16);
 extern u8 D_00351E10[];
 extern u8 *D_006488F0;
 extern u8 *D_006488F4;
@@ -115,7 +116,7 @@ void func_0023b4b8(s32 a) {
     }
 }
 typedef struct { s32 unk0; u8 pad[0xDC]; } Ent0E0;
-extern Q D_00650DE0;
+Q D_00650DE0 ALIGNED(32);
 extern u8 *D_00651200;
 extern u8 *D_00651204;
 extern Ent0E0 D_00651310[];
@@ -214,7 +215,7 @@ void func_0023cfe8(u8 *o, s32 k, s32 a) {
         break;
     }
 }
-extern Pkt D_00651D70;
+Pkt D_00651D70 ALIGNED(16);
 
 s32 func_0023d700(s32 a0, s32 a1, s32 x, s32 y, s32 q, f32 s) {
     s32 i;

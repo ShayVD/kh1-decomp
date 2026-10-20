@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x157000-0x176000 (worker 10). */
 #include "common.h"
+#include "data/bss_0055.h"
 
 /* ---- shared types ---- */
 typedef struct { s8 b0, b1, b2, b3; s32 w4; s32 w8; s32 wC; s32 w10; } E551670;

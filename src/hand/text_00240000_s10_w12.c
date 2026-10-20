@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 /* func_0024be88: entries are bitfield structs (signed 4-bit dx, col, row, s16 id); compiled-out
    assert at the start of the D_0046A54C != 0 branch (stops cse following the jump). */

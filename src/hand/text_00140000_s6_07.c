@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "platform/math.h"
+#include "data/bss_0054.h"
 
 void func_00121fc4(f32 *, f32 *);
 void func_00267560(f32 *, f32 *, f32);

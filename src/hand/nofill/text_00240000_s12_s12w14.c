@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 extern s32 D_00669A70;
 extern s32 D_00669A74;
 extern s32 D_00669A78;

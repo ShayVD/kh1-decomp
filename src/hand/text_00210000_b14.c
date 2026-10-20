@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct { s32 a, b, c, d; } S4;
 typedef struct { u8 pad[0x40]; s32 x40; u8 p44[4]; s32 x48; s32 x4c; s32 x50; u8 p54[0xE0 - 0x54]; s32 xe0; } Rec;
@@ -54,13 +55,13 @@ extern s32 D_00642C24;
 extern s32 D_00642C28;
 extern s32 D_00642C2C;
 extern Sub *D_00642C30;
-extern s32 D_00642C34;
-extern s32 D_00642C38;
+s32 D_00642C34 ALIGNED(4);
+s32 D_00642C38 ALIGNED(8);
 extern s32 D_00642C3C;
-extern s32 D_00642C40;
+s32 D_00642C40 ALIGNED(16);
 extern s32 D_00642C44;
-extern s32 D_00642C4C;
-extern s32 D_00642C50;
+s32 D_00642C4C ALIGNED(4);
+s32 D_00642C50 ALIGNED(16);
 extern s32 D_00642C54;
 extern u32 D_00642C58;
 extern s32 D_00642C5C;

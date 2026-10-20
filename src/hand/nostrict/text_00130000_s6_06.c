@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0052.h"
 /* Hand-matched functions (session 6, worker w606), all -fno-strict-aliasing. */
 
 /* Hand-matched functions near 0x13C000-0x145000 (worker 7). */

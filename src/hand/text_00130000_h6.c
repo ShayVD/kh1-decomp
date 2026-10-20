@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x130000 (worker 6). */
 #include "common.h"
+#include "data/bss_0052.h"
 
 typedef struct {
     s32 a;
@@ -236,7 +237,7 @@ extern W6Cell D_005267C0[];
 extern W6Cell D_005277C0[];
 extern W6Big D_002C64A0[];
 extern s32 D_0052A150;
-extern W6Pair D_0052A110[];
+W6Pair D_0052A110[0x8] ALIGNED(16);
 
 void func_001350d0(W6Cell *c);
 
@@ -399,7 +400,7 @@ void FlushCache(s32 mode);
 s32 D_00F20000(s32 a, s32 b);
 void func_0013a810(void);
 
-extern u8 D_0052AD58[];
+u8 D_0052AD58[0x10] ALIGNED(8);
 extern u8 D_0052AD68[];
 extern u8 D_00304B48[];
 

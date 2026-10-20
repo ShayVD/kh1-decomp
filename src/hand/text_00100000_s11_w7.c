@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0049.h"
 
 /* func_00103c48 (hand): s8 w9/w12 19w draft plus: the z loop indexes the sine table with accumulators (a += dy per row, b += dx per column, instead of j*dy and m*dx) so the dx/dy copies are cprop'd into adds and the divide temps go straight to their LO/LO1 mflo targets; the row counter reuses i; the row's table value is read before sc. */
 
@@ -22,7 +23,8 @@ extern u8 D_002A5FD0[], D_002A6110[];
 extern f32 D_003732D0[];
 extern volatile f32 D_00494A70;
 extern f32 D_004948A0[4], D_002A60C0[4];
-extern f32 D_004948B0[4][4], D_004948F0[4][4], D_004949B0[4][4], D_004949F0[4][4];
+extern f32 D_004948B0[4][4], D_004948F0[4][4], D_004949F0[4][4];
+f32 D_004949B0[4][4] ALIGNED(16);
 extern f32 D_002A6080[4], D_002A6090[4], D_002A60A0[4], D_002A60B0[4];
 extern u8 D_0048C770[];
 extern u32 *D_0048CAD4;

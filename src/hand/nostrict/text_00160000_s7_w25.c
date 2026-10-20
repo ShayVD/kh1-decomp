@@ -74,9 +74,9 @@ typedef struct {
 } Prm25;
 
 extern Gl25 D_0055C698;
-extern s32 D_0055BE00[48];
-extern s32 D_0055BEC0[48][5];
-extern void *D_0055C280[48][5];
+s32 D_0055BE00[48] ALIGNED(64);
+s32 D_0055BEC0[48][5] ALIGNED(64);
+void *D_0055C280[48][5] ALIGNED(64);
 
 u32 func_00121e28(u32, void *);
 f32 func_00267390(f32 *, f32 *);

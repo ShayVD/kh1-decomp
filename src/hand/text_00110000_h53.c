@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004F.h"
 
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V53;
 
@@ -322,7 +323,7 @@ void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
 
 typedef struct { u8 pad[0x130]; u8 *name; } Obj53;
 extern s32 D_002C648C;
-extern char D_004F7150[][32];
+char D_004F7150[0x4][32] ALIGNED(16);
 extern char *D_002C6460[];
 extern char D_0048D320[], D_0048D328[], D_0048D330[];
 extern u8 D_00491A18[];
@@ -668,3 +669,22 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
     }
     func_00124d58(&v, out, D_004F77E0, FLD(f32, p, 0x4c));
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+/* D_0046A6A8 stays extern: the dktitle.x overlay also writes it (two %lo fields), so it is shared. */
+extern u8 D_0048D2C8[];
+extern u8 D_0048D2D0[];
+extern u8 D_0048D2D8[];
+extern u8 D_0048D2E0[];
+extern u8 D_0048D2E8[];
+extern u8 D_0048D2F0[];
+extern u8 D_0048D2F8[];
+extern u8 D_0048D300[];
+extern u8 D_0048D308[];
+extern u8 D_0048D310[];
+extern u8 D_0048D318[];
+char *D_002C6460[0xb] ALIGNED(16) = {
+    (void *)D_0048D318, (void *)D_0048D310, (void *)D_0048D308, (void *)D_0048D300,
+    (void *)D_0048D2F8, (void *)D_0048D2F0, (void *)D_0048D2E8, (void *)D_0048D2E0,
+    (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
+};

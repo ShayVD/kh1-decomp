@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x148BC0-0x14EE00 (worker 34). */
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0054.h"
 
 /* ---- shared data ---- */
 extern f32 D_002BBDFC;
@@ -138,7 +139,7 @@ typedef struct { u8 pad[0x14]; s32 x14; u8 pad18[0x24]; } W34Mdl3C;
 extern W34Mdl3C D_00547C00[256];
 extern W34Mdl3C *D_0054B800;
 extern u8 D_0054B808[];
-extern u8 D_0054B818[];
+u8 D_0054B818[0x908] ALIGNED(8);
 void func_00148f08(void) {
     s32 i;
     for (i = 0; i < 256; i++) D_00547C00[i].x14 = 0;

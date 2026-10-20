@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; union { struct Obj *p; s32 i; s16 h; } x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct { u8 pad[4]; u32 x4; u32 x8; u32 xc; u32 x10; } Cfg;
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;

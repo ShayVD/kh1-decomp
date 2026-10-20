@@ -2,16 +2,17 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "actor.h"
+#include "data/bss_0052.h"
 
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_00133920();
 M2C_UNK func_001c4788(s32);
 extern M2C_UNK D_003042F0;
-extern M2C_UNK D_00304BF0;
+extern M2C_UNK D_00304BF0[];
 extern M2C_UNK D_00525368;
 extern M2C_UNK D_0052536C;
-extern M2C_UNK D_00529800;
+M2C_UNK D_00529800[0x240] ALIGNED(64);
 extern M2C_UNK D_0052A100;
 extern M2C_UNK D_0052AE70;
 extern M2C_UNK func_00136c98;
@@ -310,3 +311,20 @@ f32 func_0013fe80(f32 fparg0) {
     }
     return var_f20;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048DDA0[];
+extern u8 D_0048DDA8[];
+extern u8 D_0048DDB8[];
+extern u8 D_0048DDC0[];
+extern u8 D_0048DDC8[];
+extern u8 D_0048DDD0[];
+extern u8 D_0048DDD8[];
+extern u8 D_0048DDE0[];
+extern u8 D_0048DDE8[];
+extern u8 D_0048DDF0[];
+M2C_UNK D_00304BF0[0xa] ALIGNED(16) = {
+    (s32)D_0048DDF0, (s32)D_0048DDE8, (s32)D_0048DDE0, (s32)D_0048DDD8,
+    (s32)D_0048DDD0, (s32)D_0048DDC8, (s32)D_0048DDC0, (s32)D_0048DDB8,
+    (s32)D_0048DDA8, (s32)D_0048DDA0,
+};

@@ -1,5 +1,6 @@
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0057.h"
 
 typedef struct { u8 pad[0x10]; f32 f10; u8 pad14[0x28]; s32 w3C; s32 w40; s32 w44; } ChrHp;
 typedef struct { u8 pad[0x38]; u64 w38; } Wk144;
@@ -124,9 +125,9 @@ extern s32 D_00574FB4;
 extern s32 D_00574FB8;
 extern void *D_00574FC0[20];
 extern s32 D_00575010;
-extern s32 D_00575014;
+s32 D_00575014 ALIGNED(4);
 extern f32 D_00575020[][4];
-extern f32 D_00575050[][4];
+extern f32 D_00575050[][4]; /* stays extern: indexed by i like D_00575020[i]; the extent (one row) is unsure */
 extern P870 D_00575080;
 extern s32 D_00575088;
 extern s32 D_0057508C;
@@ -1005,3 +1006,17 @@ void func_001705c0(void *e, Wk705 *w) {
     }
 }
 
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_00172010();
+void func_00172d90();
+void func_00173740();
+void func_00173ad8();
+void func_00173ea8();
+void func_00174398();
+void func_00174950();
+void func_00174d98();
+void (*D_0035BC80[0xa])(Obj70 *, Wk70 *) ALIGNED(16) = {
+    0, (void *)func_00172010, (void *)func_00172d90, (void *)func_00173740,
+    0, (void *)func_00173ad8, (void *)func_00173ea8, (void *)func_00174398,
+    (void *)func_00174950, (void *)func_00174d98,
+};

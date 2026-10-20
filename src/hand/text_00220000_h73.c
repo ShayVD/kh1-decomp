@@ -579,6 +579,7 @@ s32 func_00236450(void) {
 }
 
 #include "platform/math.h"
+#include "data/bss_0064.h"
 typedef f32 MTX[4][4] __attribute__((aligned(16)));
 typedef f32 VEC[4] __attribute__((aligned(16)));
 typedef struct {

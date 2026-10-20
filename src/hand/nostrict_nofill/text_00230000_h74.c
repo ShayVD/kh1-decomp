@@ -1,5 +1,7 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 74). */
 #include "common.h"
+#include "data/bss_0064.h"
+#include "data/bss_0065.h"
 
 typedef struct Pk { struct Pk *next; s32 type; } Pk;
 typedef struct { Pk *head; s32 pad; } Bk;
@@ -117,8 +119,8 @@ void func_00239b90(void *a0, void *a1, s32 dx, s32 dy, f32 s, s32 scale, s32 (*s
     D_006488F0 = func_002388b8(&D_00648900, 1, D_006488F0);
 }
 
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; } Q;
-extern Q D_00648630;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
+Q D_00648630 ALIGNED(16);
 extern u8 D_00351E10[];
 extern u8 *D_006488F4;
 typedef struct { u8 pad[0x1C4]; s32 unk1C4; } Obj1C4;
@@ -255,7 +257,7 @@ void func_0023c5c8(s32 *d, s32 kind, s32 show) {
     func_0024af00(s);
 }
 
-extern Q D_006510A0;
+Q D_006510A0 ALIGNED(32);
 extern u8 *D_00651204;
 extern void *D_00651BE8[];
 extern void *D_00651BD8[];

@@ -1,6 +1,7 @@
 /* Hand-matched functions (worker b07). Built without strict aliasing. */
 #include "common.h"
 #include "ppp.h"
+#include "data/bss_0061.h"
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
@@ -127,9 +128,9 @@ typedef struct {
 } MObj;
 
 extern V4F D_00615E70;
-extern V4F D_00615E80;
-extern V4F D_00615E90;
-extern V4F D_00615EA0;
+V4F D_00615E80 ALIGNED(16);
+V4F D_00615E90 ALIGNED(16);
+V4F D_00615EA0 ALIGNED(16);
 extern V4F D_00615F70;
 extern f32 D_003701F0[3];
 extern s32 D_003701E0[3];

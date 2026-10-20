@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 r:29; } f; u8 c[4]; } F5968;
 extern F5968 D_002C5968;
 
@@ -20,7 +21,7 @@ void func_00114880(void) {
 
 /* ---- 0010f658 ---- */
 extern u8 D_002BBCC0[];
-extern s32 D_004D5B0C;
+s32 D_004D5B0C ALIGNED(4);
 s32 sceGsSyncPath(s32, s32);
 s32 func_00106b18(void *);
 void func_001104e0(void);
@@ -336,7 +337,7 @@ s32 func_00113fa8(void) {
 /* ---- 00114a38 ---- */
 typedef struct { u8 *data; s32 *hdr; s32 pad8[2]; f32 m[4][4]; f32 pad50[3][4]; f32 v[8][4]; } Obj110;
 typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
-extern Obj110 *D_004D9368;
+Obj110 *D_004D9368 ALIGNED(8);
 extern s32 D_004D936C;
 extern f32 D_002BBFA0[4][4];
 extern f32 D_0029B280[4][4];

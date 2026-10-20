@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 /* func_001c2ec8 (s11w1): the op loop reaches D_002C5958 as &D_002C5950[2], a different RTL address (const (plus D_002C5950 8)) from the top `D_002C5958 |= 0xc`, so gcse PRE does not share the two and the hoisted lui/addiu orders as in the original. */
 typedef struct {
     u8 pad0[0x1034];

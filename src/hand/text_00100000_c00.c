@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 
 f32 cosf(f32);
 f32 sinf(f32);
@@ -85,8 +86,8 @@ extern volatile s32 D_002BBE08;
 extern s32 D_002B6774;
 extern s32 D_004D9334;
 extern u32 D_002BD118;
-extern s32 D_004D933C;
-extern s32 D_004D9338;
+s32 D_004D933C ALIGNED(4);
+s32 D_004D9338 ALIGNED(8);
 extern s32 D_004D9340;
 extern volatile s32 D_004D9364;
 extern s32 D_002BBE0C;
@@ -96,7 +97,7 @@ extern volatile s32 D_002C5AD0[3];
 extern s32 D_004D9348, D_004D9344, D_004D9354, D_004D934C, D_004D9350, D_004D9358, D_004D935C, D_004D9360;
 extern volatile s32 D_002C1308;
 extern s32 D_002C130C;
-extern s32 D_004D9324;
+s32 D_004D9324 ALIGNED(4);
 extern u32 D_004D9330;
 extern s32 D_002C5AD8;
 extern s32 D_002C596C;
@@ -298,3 +299,7 @@ s32 func_00114280(void) {
 end:
     return D_002BBE08;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_0024e078();
+s32 (*D_0046A6A4)(void) ALIGNED(4) = (void *)func_0024e078;

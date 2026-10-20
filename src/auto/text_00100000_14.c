@@ -6,7 +6,7 @@ M2C_UNK func_00108cd0(void *, void *);
 extern M2C_UNK D_002AD460;
 extern M2C_UNK D_002BC190;
 extern M2C_UNK D_004D6B10;
-extern M2C_UNK D_004D6B20;
+M2C_UNK D_004D6B20[0x8c8] ALIGNED(32);
 extern M2C_UNK func_00108d90;
 extern f32 D_002BBDFC;
 extern s32 D_00351BD0;

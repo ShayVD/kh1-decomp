@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
 extern u64 D_002BCE00[];
 extern u8 D_002BD100[];

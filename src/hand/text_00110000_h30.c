@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004E.h"
+#include "data/bss_004F.h"
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 id, x4, x8, handle, x10; u8 active, x15, kind, x17; } SndSlot;
 typedef struct { s32 x0, x4, x8; } Slot12;
@@ -7,7 +9,7 @@ extern s32 D_004E344C;
 extern SndSlot *D_004E3450;
 extern Slot12 *D_004E3454;
 extern SndSlot D_004E3458[];
-extern Slot12 D_004E3818[];
+Slot12 D_004E3818[0x28] ALIGNED(8);
 extern Pair D_004E39F8[];
 void *func_001559f0(s32, s32);
 typedef struct { s32 off, size; } Chunk;
@@ -403,7 +405,8 @@ typedef struct { u16 type; s16 f2; } NodeHd;
 extern V4 D_002C58D0[4];
 extern s32 D_002C5950;
 extern s32 D_002C596C;
-extern u8 D_004E3A48[], D_004E3A58[];
+extern u8 D_004E3A48[];
+u8 D_004E3A58[0x828] ALIGNED(8);
 void sceVu0UnitMatrix(V4 *);
 void func_0011efa8(void *, void *, s32, s32);
 void func_0015ec68(void);
@@ -653,7 +656,7 @@ s32 func_00120748(char *name, s32 buf, void (*cb)(void), s32 wait) {
 }
 
 extern char D_0048D278[] __attribute__((aligned(8)));
-extern char D_004E4500[] __attribute__((aligned(8)));
+char D_004E4500[0x20] __attribute__((aligned(8)));
 extern u8 D_00491A18[];
 u32 strlen(const char *);
 

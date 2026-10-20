@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct { u8 pad[0xcc]; s32 active; } E3530;
 typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
 extern S3530 D_003F3530;
@@ -797,3 +798,17 @@ void func_0020f3c8(void) {
     if (D_00641388) func_0020f290(D_00641390, 0, D_00641388 - 1);
     if (D_00641790) func_0020f290(D_00641798, 0, D_00641790 - 1);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F5B30[];
+extern u8 D_003F5BA0[];
+extern u8 D_003F5BE0[];
+s32 D_003F5C08[0x4] ALIGNED(8) = {
+    (s32)D_003F5BE0, (s32)D_003F5BA0, (s32)D_003F5B30, 0,
+};
+extern u8 D_00491030[];
+extern u8 D_00491048[];
+extern u8 D_00491060[];
+s32 D_003F5C50[0x4] ALIGNED(16) = {
+    (s32)D_00491060, (s32)D_00491048, (s32)D_00491030, 0,
+};

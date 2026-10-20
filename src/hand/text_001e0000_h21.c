@@ -1,5 +1,6 @@
 #include "common.h"
 #include "platform/math.h"
+#include "data/bss_0063.h"
 
 typedef struct { s32 x, y; u8 pad[0x18]; } Vtx20;
 typedef struct { u8 pad[0x60]; Vtx20 v[4]; } S631620;

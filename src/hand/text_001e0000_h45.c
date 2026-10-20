@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_0062.h"
+#include "data/bss_0063.h"
 
 /* Script VM handlers: obj at +4, top index at +0x180, value stack at +0x184.
  * The stack is indexed off &vm->u.s (vm+4) with a local copy of sp. */
@@ -118,7 +120,7 @@ extern u8 D_00630510[];
 extern u8 D_006305D0[][10];
 extern u8 D_006307C8[];
 extern u8 D_00F20000[];
-extern f32 D_006314E0[][4];
+f32 D_006314E0[0x8][4] ALIGNED(32);
 extern volatile s32 D_002C5958;
 
 int sprintf(char *, const char *, ...);

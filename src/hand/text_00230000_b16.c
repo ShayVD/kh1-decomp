@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct { u64 a; s32 unk8; u8 pad[0xC0 - 12]; } Blk;
 typedef struct {
@@ -18,10 +19,10 @@ typedef struct {
     Blk b9E0;
 } S8370;
 typedef struct { s32 a, b, c, d; } Q4;
-typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; } Q;
+typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 extern S8370 D_00668370;
-extern Q D_00668120;
-extern Q4 *D_00668284;
+Q D_00668120 ALIGNED(32);
+Q4 *D_00668284 ALIGNED(4);
 extern Q4 *D_00668280;
 extern Q4 D_00351E10[];
 extern u8 D_004268B0[], D_004267F0[];
@@ -81,7 +82,7 @@ void func_00246750(s32 a0) {
 
 typedef struct { u8 pad[0x24]; s32 x; s32 y; s32 on; u8 pad30[4]; s32 v34; s32 v38; s32 v3C; s32 v40; } Clk;
 extern void *D_00669358[];
-extern u8 D_006692F0[];
+u8 D_006692F0[0x18] ALIGNED(16);
 void func_00247678(s32, s32 *, s32 *);
 void func_002474e8(void *, void *, s32, s32, f32);
 

@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_0052.h"
+#include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x145000 (worker 7). */
 
 typedef struct {
@@ -484,7 +486,7 @@ typedef struct {
     u8 pad[0xE4];
 } W7Fx;
 
-extern W7Fx D_0052AE98[32];
+W7Fx D_0052AE98[32] ALIGNED(8);
 extern u32 D_0052CB18;
 void func_001418b8(W7Fx *p);
 

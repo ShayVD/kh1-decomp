@@ -120,7 +120,7 @@ typedef struct {
     C03Lnk *p16C;        /* 0x16C */
 } C03Mdl;
 
-extern s16 D_00574F30[];
+s16 D_00574F30[0x40] ALIGNED(16);
 
 void *func_00121e28(s32, void *);
 void func_00121eb0(void *);

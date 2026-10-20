@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004F.h"
+#include "data/bss_0052.h"
 typedef struct {
     s32 f0; s32 f4; s32 f8;
     s8 c[4]; s8 d[4];
@@ -649,9 +651,9 @@ typedef struct { s32 f0; u32 f4; u8 p8[0x4c]; s8 f54; u8 p55[0x78 - 0x55]; } Ent
 typedef struct { u8 p[0xc]; s32 n; Ent17 *base; } Lst17;
 extern Lst17 D_00525298;
 extern Ent17 *D_00525354;
-extern s32 D_00525358;
+s32 D_00525358 ALIGNED(8);
 #define INC17 { s32 *p17 = &D_00525358; (*p17)++; }
-extern void (*D_00525290)(void);
+void (*D_00525290)(void) ALIGNED(16);
 extern s32 D_002BC134;
 extern void func_00157400(void (*)(s32));
 extern void func_0014a058(void (*)(s32));
@@ -694,7 +696,7 @@ typedef struct { s32 f0, f4, f8; } G18;
 extern G18 D_002E2F28;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern s32 D_00525294;
+s32 D_00525294 ALIGNED(4);
 extern void func_00132790(s32, s32, Lst18 *);
 extern void func_001134d8(s32);
 extern void *memset(void *, s32, u32);

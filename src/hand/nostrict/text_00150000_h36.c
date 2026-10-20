@@ -89,7 +89,7 @@ extern volatile s32 D_00559DB4;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
 extern GsBuf D_00551D90[];
-extern GsBuf2 D_00559DC0[];
+GsBuf2 D_00559DC0[0x2] ALIGNED(64);
 extern GsBuf2 *D_0055BDE0;
 extern GsBuf *D_00559DB0;
 extern s32 D_00351BD0;

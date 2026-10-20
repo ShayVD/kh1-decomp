@@ -416,7 +416,8 @@ void func_001568e8(B4A68 *e, f32 *out) {
 #undef D_002C5958
 
 /* ---- func_001584c0 ---- */
-extern V4 D_00351A20, D_005516D0;
+extern V4 D_00351A20;
+V4 D_005516D0 ALIGNED(16);
 void func_002673b8(void *, void *);
 void func_00267370(void *, void *, void *);
 f32 func_001376e8(void *, void *);
@@ -1129,7 +1130,7 @@ void func_00157a30(Act *a, s32 k, Act *b) {
 }
 
 typedef struct { u8 b[32]; } E551970;
-extern E551970 D_00551970[];
+E551970 D_00551970[0x20] ALIGNED(16);
 extern s32 D_00351AC0;
 
 char *func_0015b060(void) {
@@ -1185,3 +1186,19 @@ void func_0015b098(s32 a, s32 *ids) {
     }
     if (buf[0]) func_00244670(a, buf[0], buf[1]);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+void func_00152880();
+void func_00152928();
+void func_00152e10();
+void func_00152f10();
+void func_001531c0();
+void func_00153210();
+void (*D_00351970[0x8])(void *) ALIGNED(16) = {
+    (void *)func_00153210, (void *)func_00152f10, (void *)func_00152ff8, (void *)func_00152e10,
+    (void *)func_00152928, (void *)func_001531c0, (void *)func_00152880, 0,
+};
+
+/* At the end, not with the includes: declaring D_005516C0 earlier changes how func_0015b060 forms
+   the D_00551970 address (gcc 2.96 rtx ordering), so the header comes after the code here. */
+#include "data/bss_0055.h"

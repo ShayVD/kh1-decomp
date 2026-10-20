@@ -1,5 +1,6 @@
 /* func_0012d468 matches in hand/nostrict only with -fno-rerun-cse-after-loop (without it: s4/s6 swap, 6w). Includes CONTEXT_ONLY func_0012cb40, func_0012ccb0, func_0012d368. */
 #include "common.h"
+#include "data/bss_0052.h"
 typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
 typedef struct { s32 f0, f4; } S31b0;
 typedef struct { u16 f0; u8 p2[0xc]; u16 fe; } O8;

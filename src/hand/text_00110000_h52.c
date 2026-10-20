@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004D.h"
 typedef struct { u16 active; u8 x2, x3; u32 cur; union { u64 d; u32 w; } press; u64 rep; } Pad52;
 extern Pad52 D_002C5AD0;
 typedef struct { s32 min, max; void (*fn)(s32); } Range52;

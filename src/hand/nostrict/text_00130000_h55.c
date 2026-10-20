@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x13b000-0x143000 (worker 55), built without strict aliasing. */
 #include "common.h"
+#include "data/bss_0052.h"
 
 typedef struct { u8 pad[8]; f32 x8; f32 xc; } W55Dim;
 typedef struct { u8 pad[0x10]; W55Dim *x10; } W55Mdl;
@@ -94,13 +95,13 @@ extern f32 D_00304C40;
 extern u32 D_0037A378;
 extern u8 D_0052AD68[];
 extern W55Ob *D_0052AE38;
-extern W55Ob *D_0052AE3C;
-extern f32 D_0052AE40[4];
+W55Ob *D_0052AE3C ALIGNED(4);
+f32 D_0052AE40[4] ALIGNED(16);
 extern s32 D_0052AE54;
 extern W55Hdr *D_0052AE58;
 extern W55Hd5 *D_0052AE5C;
 extern s32 D_0052AE60;
-extern f32 D_0052AE68;
+f32 D_0052AE68 ALIGNED(8);
 extern W55Cache D_0052CB20[4];
 extern W55Cache *D_0052EB40;
 extern s32 D_0052EB44;

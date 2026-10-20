@@ -1,5 +1,6 @@
 /* Hand-matched functions in 0x001a0000-0x001c0000 (worker 13). */
 #include "common.h"
+#include "data/bss_0062.h"
 
 /* Singly linked free list: pool->free at +4. */
 typedef struct Node { struct Node *next; } Node;
@@ -68,7 +69,7 @@ typedef union GsTag {
 } GsTag;
 extern GsTag D_0061EEA0[];  /* 16 priority list heads (followed by the tag pool) */
 extern GsTag D_0061EFA0[];  /* 256 priority list heads */
-extern GsTag D_0061FFA0[];  /* 16 priority list heads */
+GsTag D_0061FFA0[0x30] ALIGNED(32);
 
 void func_001aa650(void) {
     void *p = D_0061EEA0;

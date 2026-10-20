@@ -876,7 +876,12 @@ def cmd_patch(args, cfg) -> int:
     for addr, name, obj, size, region in variables:
         sec = linked.section(f".d_{addr:08x}")
         if sec is None or sec.addr != addr or sec.size != size:
-            print(f"error: {name} ({obj}): section .d_{addr:08x} missing from linked ELF", file=sys.stderr)
+            if sec is None:
+                print(f"error: {name} ({obj}): section .d_{addr:08x} missing from linked ELF", file=sys.stderr)
+            else:
+                print(f"error: {name} ({obj}): section .d_{addr:08x} is {sec.size:#x} bytes at 0x{sec.addr:08x}, "
+                      f"expected {size:#x} at 0x{addr:08x} (an array the compiler aligns to 8 at an address "
+                      "that is not, padded at the end?)", file=sys.stderr)
             return 1
         body = linked.data[sec.offset: sec.offset + sec.size] if sec.type != 8 else bytes(size)
         if region == "bss":

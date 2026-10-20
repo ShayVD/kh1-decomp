@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 
 /* 16-byte list entries; the D_00667F50/D_00667F54-style globals are
  * [end, begin) pointers into such lists. */
@@ -10,7 +11,7 @@ typedef struct { u8 pad[0x60]; Q4 q[4]; Q4 r[4]; } Panel;
 typedef int u128 __attribute__((mode(TI)));
 
 /* Render-packet headers set up before func_00237018 (D_00667DF0, D_006697C0). */
-typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; } S7df0;
+typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
 typedef struct { u8 pad[0x4c]; u16 id; } S130;
 typedef struct { u8 pad[0x130]; S130 *p; } SC;
 typedef struct { u8 pad[0xc]; SC *c; } SArg;
@@ -70,38 +71,38 @@ extern u8 D_0045BC10[];
 extern E860 D_00662A30[10];
 extern u8 D_0045D240[];
 extern u8 D_0045D248[];
-extern Panel D_00667F60;
-extern Q4 *D_00667F50;
-extern Q4 *D_00667F54;
-extern S7df0 D_00667DF0;
+Panel D_00667F60 ALIGNED(32);
+Q4 *D_00667F50 ALIGNED(16);
+Q4 *D_00667F54 ALIGNED(4);
+S7df0 D_00667DF0 ALIGNED(16);
 extern Q4 D_00351E10[];
 extern u8 D_00668040[];
 extern u8 D_0045D280[];
 extern u8 D_0045D6D0[];
 extern B192 D_00668060;
-extern Panel D_00668290;
+Panel D_00668290 ALIGNED(16);
 extern Q4 *D_00668280;
 extern S8370 D_00668370;
 extern f32 D_002BBDFC;
-extern Panel D_00668F90;
+Panel D_00668F90 ALIGNED(16);
 extern Q4 *D_00668F80;
 extern u8 D_0045E1F0[];
 extern E930 D_0045FAC0[10];
 extern u8 D_0045FA80[];
 extern u8 D_0045FA88[];
 extern u8 D_0045FA90[];
-extern Panel D_006691E0;
+Panel D_006691E0 ALIGNED(32);
 extern Q4 *D_006691D0;
 extern Q4 *D_006691D4;
 extern s32 D_00467408;
 extern s32 D_0046740C;
-extern Panel D_00669620;
+Panel D_00669620 ALIGNED(32);
 extern Q4 *D_00669610;
 extern s32 D_00469C94;
 extern s32 D_00469C98;
-extern S7df0 D_006697C0;
+S7df0 D_006697C0 ALIGNED(64);
 extern Q4 *D_00669920;
-extern Q4 *D_00669924;
+Q4 *D_00669924 ALIGNED(4);
 extern void *D_00669A10[];
 extern u8 D_004267F0[];
 extern V4 D_00491830;

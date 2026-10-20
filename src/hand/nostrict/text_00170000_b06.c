@@ -393,7 +393,7 @@ s32 func_0017d628(void) {
 
 /* ---- zz_ro_func_0017c190 ---- */
 /* needs make: uses rodata (-0.0f folded from the clamp, at 0x0048EAE4) */
-extern V4 D_00575860;
+V4 D_00575860 ALIGNED(16);
 extern f32 D_003625E4;
 f32 func_00267390(void *, void *);
 void func_002673b8(void *, void *);

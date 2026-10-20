@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 /* Script VM (sp at +0x180, value stack at +0x184). */
 typedef struct {

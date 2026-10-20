@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern M2C_UNK D_00009C00;
-extern M2C_UNK D_00623200;
+M2C_UNK D_00623200[0x4] ALIGNED(16);
 extern M2C_UNK D_00625648;
 extern s32 D_0037A150;
 extern s32 D_0037A154;

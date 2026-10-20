@@ -1,6 +1,8 @@
 /* Hand-matched functions (worker 2). Grouped by address; the original
  * translation units are not known yet. */
 #include "common.h"
+#include "data/bss_0049.h"
+#include "data/bss_004D.h"
 
 /* 4x4 matrix pair: a[] from the caller's matrix, b[] from D_002BC170. */
 typedef struct {
@@ -524,7 +526,7 @@ s32 func_00112e08(void) {
 }
 
 /* Saved copies of the three D_002E26A0 objects' positions. */
-extern f32 D_004D92F0[3][4];
+f32 D_004D92F0[3][4] ALIGNED(16);
 void func_00113048(void) {
     s32 i;
     for (i = 0; i < 3; i++) {

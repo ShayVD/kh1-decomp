@@ -24,7 +24,7 @@ s32 StartThread(s32, void *);
 void func_0024d618(void *);
 void func_0024d7b0(void);
 void func_00269960(void *, s32);
-extern u8 D_00669A80[];
+u8 D_00669A80[0x1000] ALIGNED(64);
 extern u8 D_00494050[];
 
 /* Starts the thread at func_0024d618 (4 KB stack at D_00669A80, priority

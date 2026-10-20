@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 /* rodata: jump tables at 0x00490e30. Matched from session-9 r2_7 draft + a dead `n = D_003E3D68;` in the case-4 arm (gives gcse a partially available hi(D_003E3D68), so PRE puts lui s5 in both arms). */
 typedef struct Ob Ob;

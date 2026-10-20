@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct ObjT {
     u8 pad[0x24];
     struct ObjT *x24; /* holds a byte id; pointer type matches the original aliasing */
@@ -131,8 +132,8 @@ void func_00216ea8(void) {
 }
 
 extern s32 D_00642CF0[];
-extern s32 D_00642D10;
-extern s32 D_00642D14;
+s32 D_00642D10 ALIGNED(16);
+s32 D_00642D14 ALIGNED(4);
 s32 func_0013c360(s32);
 
 void func_00218020(s32 n) {
@@ -858,14 +859,14 @@ void func_00220338(void *a) {
     else o[2]->xcc = 4;
     o[2]->xd2 = D_0064341C << 4;
 }
-extern s32 D_006435E8[];
-extern s32 D_00643610[];
-extern s32 D_00643638[];
+s32 D_006435E8[0xa] ALIGNED(8);
+s32 D_00643610[0xa] ALIGNED(16);
+s32 D_00643638[0xa] ALIGNED(8);
 extern s32 D_0064342C;
 extern s32 D_00643430[];
 extern s32 D_003F61E0[];
-extern s32 D_006435BC;
-extern s32 D_006435C0[];
+s32 D_006435BC ALIGNED(4);
+s32 D_006435C0[0xa] ALIGNED(16);
 extern s32 D_003F5C3C;
 s32 func_001eb318(s32);
 
@@ -981,3 +982,25 @@ s32 func_0021fd90(Ob4 *a) {
     k = func_0021fd88(a->x24);
     return func_0010edb0(x, y, 256, D_00643424 * 2, a->x90, func_001c2df0(D_003F3518, k));
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F5FC0[];
+extern u8 D_003F61B0[];
+extern u8 D_003F6330[];
+extern u8 D_003F6620[];
+extern u8 D_003F6710[];
+extern u8 D_003F6800[];
+u8 *D_003F59E8[0x6] ALIGNED(8) = {
+    (void *)D_003F61B0, (void *)D_003F6710, (void *)D_003F5FC0, (void *)D_003F6330,
+    (void *)D_003F6800, (void *)D_003F6620,
+};
+void func_0021faf8();
+void func_00220580();
+void func_002210b0();
+void func_00222b40();
+void func_002234a8();
+void func_00223938();
+void (*D_003F5A00[0x6])(Obj *) ALIGNED(16) = {
+    (void *)func_00220580, (void *)func_002234a8, (void *)func_0021faf8, (void *)func_002210b0,
+    (void *)func_00223938, (void *)func_00222b40,
+};

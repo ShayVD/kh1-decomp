@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_004D.h"
+#include "data/bss_004E.h"
 typedef struct { u16 x0; u8 pad2[10]; u8 xc; } W29Sub;
 typedef struct {
     s32 x0;
@@ -123,7 +125,7 @@ typedef struct {
     } tag;
     W29Ad r[31];
 } W29Env;
-extern W29Env D_004D8EF0;
+W29Env D_004D8EF0 ALIGNED(16);
 extern u64 D_002BC750[];
 extern u64 D_002BC7C0[];
 extern u64 D_002BC830[];
@@ -422,8 +424,8 @@ typedef struct { W29P8 p; u8 pad[0x88]; } W29Cell;
 extern const W29P8 D_0048BFD0;
 extern W29Cell D_004DBC20[2][64];
 typedef struct { u8 b[0x50]; } W29E50;
-extern W29E50 D_004D9380[2];
-extern W29E50 D_004D9420[][2];
+W29E50 D_004D9380[2] ALIGNED(64);
+W29E50 D_004D9420[0x40][2] ALIGNED(32);
 void func_00114c18(void *, s32, s32);
 
 void func_00114e50(void) {
@@ -719,3 +721,5 @@ void func_001119d0(void) {
     }
 }
 
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+s32 D_002BD170 ALIGNED(16) = 0;

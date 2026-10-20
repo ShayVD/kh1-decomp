@@ -91,7 +91,7 @@ void func_0011fb78(Q128 *p, u64 a1, Q128 *end) {
 }
 
 typedef struct { u32 flags; u8 pad[44]; s32 x30; s32 x34; } Slot;
-extern Slot D_004F3230[];
+Slot D_004F3230[0x10] ALIGNED(16);
 extern s32 D_002C5C44;
 Slot *func_0011ffd0(void) {
     s32 i;
@@ -121,7 +121,7 @@ void func_00120438(s32 a, s32 b) {
 
 
 typedef struct { u8 pad[68]; s32 x44; s32 x48; } Ent4C;
-extern Ent4C D_004E4528[];
+Ent4C D_004E4528[0x10] ALIGNED(8);
 s32 func_0011f2d0(Ent4C *);
 
 s32 func_001207f8(s32 id) {
@@ -148,7 +148,7 @@ void func_00120aa0(void) {
 }
 
 extern char D_0048D288[];
-extern u8 D_004F35B0[];
+u8 D_004F35B0[0x1000] ALIGNED(16);
 void sceSifInitRpc(s32);
 void func_0025b550(void);
 s32 sceCdInit(s32);

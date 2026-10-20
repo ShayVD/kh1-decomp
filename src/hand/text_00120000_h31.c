@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/bss_0051.h"
+#include "data/bss_0052.h"
 
 /* shared declarations */
 typedef struct S31b0 { s32 f0, f4; } S31b0;

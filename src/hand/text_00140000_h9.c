@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x14D000-0x158000 (worker 9). */
 #include "common.h"
+#include "data/bss_0054.h"
 
 typedef struct {
     u8 pad0[0x10];
@@ -117,7 +118,7 @@ typedef struct {
     s32 x44;
 } W9Blk;
 extern W9Blk D_00550400[];
-extern W9Blk D_005512A0[];
+W9Blk D_005512A0[0xc] ALIGNED(32);
 extern u8 D_00FE0000[];
 extern u8 D_01CE0000[];
 

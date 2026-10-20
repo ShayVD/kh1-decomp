@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x153000-0x15a000 (worker 35). Built without
  * strict aliasing. */
 #include "common.h"
+#include "data/bss_0055.h"
 
 /* ---- func_00153418 ---- */
 typedef union { u64 d; s32 w; struct { u32 lo; u32 x:6; u32 kind:4; u32 hi:22; } b; } F8_153418;
@@ -594,7 +595,7 @@ void func_00157ea8(Obj157ea8 *a) {
 
 /* ---- func_00157f70 ---- */
 typedef struct { u8 pad[0x30]; f32 f30; f32 f34; } S5516E0;
-extern S5516E0 *D_005516E0;
+S5516E0 *D_005516E0 ALIGNED(16);
 typedef struct { f32 f0, f4, f8, fC; s32 w10, w14, w18; } S2BC0F0;
 extern S2BC0F0 D_002BC0F0;
 typedef struct { s32 w0, w4, w8; } S3519E0;
@@ -768,7 +769,7 @@ void func_00159808(Obj159808 *a, Vec154768 *b) {
 /* ---- func_00159b48 ---- */
 typedef struct { s32 w0; s32 idx; u8 pad8[8]; Vec154768 e[32]; } S551740;
 extern S551740 D_00551740;
-extern f32 D_00551734;
+f32 D_00551734 ALIGNED(4);
 f32 func_00120bf8(void *);
 
 void func_00159b48(Vec154768 *p) {

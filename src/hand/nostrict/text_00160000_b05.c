@@ -49,7 +49,7 @@ typedef struct {
     union { u64 w; struct { u64 lo:32; u64 m:8; u64 z:16; u64 hi:8; } b; } w80;
     Ent7 *x88; s32 x8c; Tg7 *p90; u8 pad94[0x48]; f32 fDC;
 } Wk7;
-extern Ent7 *D_00574FB0;
+Ent7 *D_00574FB0 ALIGNED(16);
 
 static inline s32 inl_ok(Ent7 *e, s32 K) {
     switch (e->w70) {

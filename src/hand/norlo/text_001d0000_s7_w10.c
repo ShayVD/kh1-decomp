@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 /* func_001dd5c0: MATCH in hand with -fno-rerun-loop-opt (rodata jump table at 0x4907b0, verified with wqb03_rr). Without the flag the second loop pass reverses the case-9 counter j into a countdown. */
 typedef struct { u8 pad0[0x14]; s32 f14; } Sub14c;
 typedef struct { u8 pad0[0x10]; f32 pos[3]; u8 pad1c[0x14c - 0x1c]; Sub14c *f14c; } Ob5;

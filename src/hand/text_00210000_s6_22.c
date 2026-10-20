@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 /* Sections were separate scratch files; their local typedefs carry a _qN suffix and
    conflicting extern/prototype declarations use __asm__ labels so each function keeps
    the exact declarations it matched with. func_0022a698 rodata (0x491260) was verified
@@ -917,18 +918,18 @@ void func_00225288(void *);
 extern s32 D_006437D8;
 extern s32 D_006437E0;
 extern s32 D_006469A4;
-extern s32 D_006469A8;
-extern s32 D_006469AC;
+s32 D_006469A8 ALIGNED(8);
+s32 D_006469AC ALIGNED(4);
 extern s32 D_00425C18;
 extern u32 D_00425C1C;
 extern s32 D_00425C20;
 extern s32 D_00425CAC;
-extern Dir40_q7 D_00643800[];
-extern s32 D_00646994;
+Dir40_q7 D_00643800[0x63] ALIGNED(64);
+s32 D_00646994 ALIGNED(4);
 extern s32 D_00646998;
-extern u32 D_0064699C;
+u32 D_0064699C ALIGNED(4);
 extern u32 D_006469A0;
-extern s32 D_0064524C;
+s32 D_0064524C ALIGNED(4);
 extern u8 D_003F6F70[];
 extern u8 D_003F6F30[];
 extern u8 D_003F8380[];
@@ -1314,3 +1315,22 @@ found:
 err:
     D_00646A18 = -1;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F48D8[];
+extern u8 D_003F4908[];
+extern u8 D_003F4918[];
+extern u8 D_003F4928[];
+extern u8 D_003F4948[];
+extern u8 D_003F4968[];
+extern u8 D_003F4988[];
+extern u8 D_003F49A8[];
+extern u8 D_003F49C8[];
+extern u8 D_003F49E8[];
+extern u8 D_003F4A08[];
+extern u8 D_003F4A28[];
+R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
+    (void *)D_003F48D8, (void *)D_003F4908, (void *)D_003F4918, (void *)D_003F4928,
+    (void *)D_003F4948, (void *)D_003F4968, (void *)D_003F4988, (void *)D_003F49A8,
+    (void *)D_003F49C8, (void *)D_003F49E8, (void *)D_003F4A08, (void *)D_003F4A28,
+};

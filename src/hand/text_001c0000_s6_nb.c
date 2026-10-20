@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0066.h"
 /* func_001cdcb8: needs func_001c4640 declared non-void (s32) */
 typedef struct { u8 pad0[0x10]; f32 pos[3]; } Actor;
 typedef struct {

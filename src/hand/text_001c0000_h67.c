@@ -48,7 +48,7 @@ extern s32 D_0037A378;
 void func_0010ef70(Win *, char *, void *);
 s32 func_001cbd80();
 extern u8 D_003C5650[];
-extern char D_0062A1F0[];
+char D_0062A1F0[0x20] ALIGNED(16);
 
 s32 func_001cb7d0(VM *vm) {
     s32 val = vm->stk[vm->sp];
@@ -507,7 +507,7 @@ s32 func_001e08d8(void) {
 char *strcpy(char *, const char *);
 char *strcat(char *, const char *);
 int sprintf(char *, const char *, ...);
-extern char D_0062A228[];
+char D_0062A228[0x100]; /* no ALIGNED: a known 8-byte alignment turns the strcpy below into ld/sd moves */
 extern char D_0062A328[];
 extern char D_003DABD8[][6];
 s32 func_001ddc48();

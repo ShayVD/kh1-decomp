@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 typedef struct Ob {
     u8 pad[0x24];
     s32 x24;
@@ -645,7 +646,7 @@ extern Rec *D_00647790;
 extern s32 D_00647794;
 extern s32 D_00647798;
 extern u8 *D_0064779C;
-extern s32 D_006477A0;
+s32 D_006477A0 ALIGNED(16);
 extern f32 D_006477A4;
 extern f32 D_002BBDFC;
 
@@ -781,3 +782,7 @@ void func_002335d8(s32 i) {
     func_001205f0(D_00425BC0[i], D_00F20000);
     D_00F20000(0, 0);
 }
+
+/* D_00425BC0 stays extern: func_002335d8 indexes it with i, and D_00425BC4 (named by
+ * text_001d0000.c) is its next entry, so the table is longer than its extent; floating
+ * it alone hung the SHIFT_FLOAT build at boot (session 17). */

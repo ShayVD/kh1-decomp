@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0052.h"
 
 /* Hand-matched functions 0x0012b7a8-0x0012fcd0 (session 6, worker 05). Nostrict region. */
 
@@ -1051,7 +1052,7 @@ typedef struct {
 typedef struct GD { u8 p0[0x88]; u32 f88; } GD;
 extern QD D_005267C0[];
 extern QD D_005277C0[];
-extern QD D_005297C0;
+QD D_005297C0 ALIGNED(64);
 extern s32 D_00350CE0;
 extern QD *func_00134f80(QD *, s32);
 extern void func_00135000(BD *, QD *);

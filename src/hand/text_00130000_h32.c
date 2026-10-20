@@ -1,5 +1,6 @@
 /* Hand-matched functions near 0x130000 (worker 32). */
 #include "common.h"
+#include "data/bss_0052.h"
 
 typedef struct {
     s32 id;
@@ -361,7 +362,7 @@ s32 func_00136bc0(W32Job *j) {
     }
     return 0;
 }
-extern s32 D_0052ABF0[2][32];
+s32 D_0052ABF0[2][32] ALIGNED(16);
 extern s32 D_0052ACF0[2];
 extern s32 D_0052ACF8;
 void func_001337e0(s32 a, s32 b, s32 c);
@@ -706,7 +707,7 @@ typedef struct {
     u8 pad02[0x10 - 0x2];
     f32 x10;
 } W32Fade;
-extern W32Spr *D_0052AD00;
+W32Spr *D_0052AD00 ALIGNED(16);
 W32Spr *func_001226f0(s32 a, s32 b, s32 c);
 void func_00122768(W32Spr *s);
 void func_00100ae0(void);
@@ -863,3 +864,9 @@ void func_00139a90(W32Act *o, W32Hit *h) {
     }
     func_002675a8(o->x3c0, D_002C58A0);
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048DCA0[];
+s32 D_00304B40 ALIGNED(16) = (s32)D_0048DCA0;
+extern u8 D_0048DCA8[];
+s32 D_00304B44 ALIGNED(4) = (s32)D_0048DCA8;

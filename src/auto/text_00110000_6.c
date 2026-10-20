@@ -14,10 +14,10 @@ M2C_UNK sceDbcInit();
 M2C_UNK scePad2Init(M2C_UNK);
 M2C_UNK scePcStart(M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK strcpy(s32, s32);
-extern M2C_UNK D_002BCC28;
+extern M2C_UNK D_002BCC28[];
 extern M2C_UNK D_002C5A88;
 extern M2C_UNK D_004E2458;
-extern M2C_UNK D_004E42C0;
+M2C_UNK D_004E42C0[0x80] ALIGNED(64);
 extern M2C_UNK func_001129c8;
 extern M2C_UNK func_0011e700;
 extern s32 D_002A62F0;
@@ -381,3 +381,30 @@ s32 func_0011fad0(void) {
     scePcStart(0x8000F8DE, 0, 0);
     return 0;
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048CF70[];
+extern u8 D_0048CF78[];
+extern u8 D_0048CF80[];
+extern u8 D_0048CF88[];
+extern u8 D_0048CF90[];
+extern u8 D_0048CF98[];
+extern u8 D_0048CFA0[];
+extern u8 D_0048CFA8[];
+extern u8 D_0048CFB0[];
+extern u8 D_0048CFB8[];
+extern u8 D_0048CFC0[];
+extern u8 D_0048CFC8[];
+extern u8 D_0048CFD0[];
+extern u8 D_0048CFD8[];
+extern u8 D_0048CFE0[];
+extern u8 D_0048CFE8[];
+extern u8 D_0048CFF0[];
+M2C_UNK D_002BCC28[0x16] ALIGNED(8) = {
+    (s32)D_0048CFF0, (s32)D_0048CFE8, (s32)D_0048CFE0, (s32)D_0048CFD8,
+    (s32)D_0048CFD0, (s32)D_0048CFC8, (s32)D_0048CFC0, (s32)D_0048CFB8,
+    (s32)D_0048CFB0, (s32)D_0048CFA8, (s32)D_0048CFA0, (s32)D_0048CF98,
+    (s32)D_0048CF90, (s32)D_0048CF88, (s32)D_0048CFB8, (s32)D_0048CF80,
+    (s32)D_0048CF78, (s32)D_0048CFB8, (s32)D_0048CFB8, (s32)D_0048CFB8,
+    (s32)D_0048CF70, 0,
+};

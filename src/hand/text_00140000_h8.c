@@ -1,5 +1,7 @@
 /* Hand-matched functions near 0x145000-0x14C600 (worker 8). */
 #include "common.h"
+#include "data/bss_0053.h"
+#include "data/bss_0054.h"
 
 typedef struct W8Node { u8 pad[8]; struct W8Node *next; u8 pad2[10]; u8 x16; u8 p17; f32 x18; } W8Node;
 extern W8Node *D_0052EB58;
@@ -630,3 +632,7 @@ s32 func_00149678(void) {
         return 1;
     }
 }
+
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_0048E408[];
+s32 D_00350D10 ALIGNED(16) = (s32)D_0048E408;

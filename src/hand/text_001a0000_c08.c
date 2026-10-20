@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 
 typedef struct { u8 id; u8 pad[3]; u32 n; } IdCnt;
 extern s32 D_00625748;

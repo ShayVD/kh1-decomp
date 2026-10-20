@@ -2,7 +2,8 @@
 /* func_00106000 (hand, rodata jtbl 0x48cc80: verified with rr.py). rgba inline computes w = r | 1<<32 before v; the else-branch D_002A6658 store goes through a block-local u64 *q; case 2 computes x/y after the [4]/[6] stores. */
 typedef struct { s32 r, g, b; volatile s32 a; } Col;
 extern Col D_002BC0B0, D_002BC070;
-extern s32 D_002BC730, D_002A6208, D_002A6B80, D_002BBE04, D_002BC740, D_002BC744, D_00494A78;
+extern s32 D_002BC730, D_002A6208, D_002A6B80, D_002BBE04, D_002BC740, D_002BC744;
+s32 D_00494A78 ALIGNED(8);
 extern volatile s32 D_002BBDF8;
 extern u64 D_002A6970[], D_002A68A0[], D_002A6658;
 extern u8 D_002A69D0[], D_002A61E0[], D_002A6540[], D_002A6890[], D_002A6580[], D_002A6960[], D_002A65C0[];

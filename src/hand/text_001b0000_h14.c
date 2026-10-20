@@ -1,5 +1,6 @@
 /* Hand-matched functions from 0x001bfed8-0x001cc208 (worker 14). */
 #include "common.h"
+#include "data/bss_0062.h"
 
 /* ---- types ---- */
 /* 48-byte slots of the table D_0037A16C points to. */

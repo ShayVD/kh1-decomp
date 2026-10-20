@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker c04), built without strict aliasing. */
 #include "common.h"
+#include "data/bss_0057.h"
 
 typedef struct { s16 h0; s16 pad2; s32 w4; f32 f8; } Res8;
 typedef struct { u8 pad[4]; s32 w4; } Res04;
@@ -251,8 +252,8 @@ typedef struct {
     u8 padE0[0x64]; WkE3 *p144;
 } ChrE3;
 
-extern V4E3 D_00575060[2];
-extern V4E3 D_00575030[2];
+extern V4E3 D_00575060[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
+extern V4E3 D_00575030[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
 extern ChrE3 *D_0035BD40[3];
 extern V4E3 D_0035BD20[2];
 

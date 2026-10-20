@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef struct {
     s32 magic;
@@ -250,15 +251,15 @@ extern s32 D_003F7778;
 extern f32 D_002BBDFC;
 extern s32 D_006469D0;
 extern s32 D_006469D4;
-extern f32 D_006469D8;
+f32 D_006469D8 ALIGNED(8);
 extern s32 D_006469DC;
-extern f32 D_006469E0;
+f32 D_006469E0 ALIGNED(16);
 extern s32 D_006469E4;
-extern f32 D_006469E8;
+f32 D_006469E8 ALIGNED(8);
 extern s32 D_006469EC;
-extern f32 D_006469F0;
+f32 D_006469F0 ALIGNED(16);
 extern s32 D_006469F4;
-extern f32 D_006469F8;
+f32 D_006469F8 ALIGNED(8);
 extern char D_003F76C0[][20];
 extern s32 D_003F7710[];
 void func_001fd648(void *, s32);

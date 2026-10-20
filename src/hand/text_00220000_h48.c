@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 a, b, c, d; } Q4;
@@ -756,4 +757,13 @@ s32 func_00234730(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     return id;
 }
 
-
+/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F7090[];
+extern u8 D_003F70C0[];
+extern u8 D_003F7100[];
+extern u8 D_003F7140[];
+extern u8 D_003F7170[];
+void *D_003F71C8[0x6] ALIGNED(8) = {
+    (void *)D_003F7170, (void *)D_003F7140, (void *)D_003F7100, (void *)D_003F70C0,
+    (void *)D_003F7090, 0,
+};

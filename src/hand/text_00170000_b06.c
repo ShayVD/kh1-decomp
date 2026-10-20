@@ -1,5 +1,6 @@
 /* worker b06: hand-matched camera functions 0x001784c8..0x0017e428 */
 #include "common.h"
+#include "data/bss_0057.h"
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct { V4 a; V4 b; V4 c; V4 d; } Ray;
 typedef struct {
@@ -55,7 +56,7 @@ f32 sinf(f32);
 f32 cosf(f32);
 
 /* ---- func_00178a98 ---- */
-extern f32 D_005758F8;
+f32 D_005758F8 ALIGNED(8);
 extern f32 D_003624C8;
 extern f32 D_003624CC;
 extern f32 D_003624D0;
@@ -100,8 +101,8 @@ void func_00178a98(void) {
 }
 
 /* ---- func_00179a80 ---- */
-extern f32 D_0057582C;
-extern f32 D_00575830;
+f32 D_0057582C ALIGNED(4);
+f32 D_00575830 ALIGNED(16);
 extern V4 D_00362510;
 void func_001315c0(void *, s32, void *, f32);
 void sceVu0MulMatrix(void *, void *, void *);
@@ -150,10 +151,10 @@ void func_00179a80(void) {
 }
 
 /* ---- func_0017a958 ---- */
-extern V4 D_00575840;
-extern f32 D_00575850;
-extern f32 D_00575854;
-extern f32 D_00575858;
+V4 D_00575840 ALIGNED(16);
+f32 D_00575850 ALIGNED(16);
+f32 D_00575854 ALIGNED(4);
+f32 D_00575858 ALIGNED(8);
 extern V4 D_003625C0;
 extern V4 D_003625D0;
 extern f32 D_003625E0;

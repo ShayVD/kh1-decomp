@@ -9,7 +9,7 @@ typedef struct {
 } BigE;
 extern BigE D_00389C90;
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb;
-extern Cb D_0062A1E0;
+Cb D_0062A1E0 ALIGNED(16);
 typedef struct { u8 pad[176]; } E176;
 extern E176 D_00629E70[];
 typedef struct { s32 x0; u8 pad4[0x17c]; s32 sp; s32 stk[33]; s32 x20c; } VMe;

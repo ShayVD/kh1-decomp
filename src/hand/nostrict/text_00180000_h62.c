@@ -1,6 +1,7 @@
 /* ppp classes and manager helpers, by hand (worker 62). Built without
  * strict aliasing (see src/hand/nostrict). */
 #include "ppp.h"
+#include "data/bss_0061.h"
 
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))

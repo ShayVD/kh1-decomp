@@ -2,6 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "actor.h"
+#include "data/bss_0055.h"
 
 M2C_UNK RemoveDmacHandler(M2C_UNK, s32);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
@@ -18,7 +19,7 @@ extern M2C_UNK D_002E31B0;
 extern M2C_UNK D_00351B60;
 extern M2C_UNK D_00351B88;
 extern M2C_UNK D_0054F970;
-extern M2C_UNK D_0054F980;
+M2C_UNK D_0054F980[0x2a0] ALIGNED(64);
 extern M2C_UNK D_00551608;
 extern M2C_UNK func_00150660;
 extern M2C_UNK func_00150b70;

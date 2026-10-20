@@ -1,5 +1,6 @@
 #include "common.h"
 #include "ppp.h"
+#include "data/bss_0061.h"
 
 void *memset(void *, s32, u32);
 void *func_0017f958(void *, s32);

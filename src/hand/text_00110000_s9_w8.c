@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_004E.h"
 /* func_00116368 (hand): both id loops written out with function-level `s32 id; s32 *fl;` shared by the two loops (global pseudos: fl is not tied to the address chain, gets a1 by copy preference; id ends in a1). */
 typedef struct { f32 min[3]; f32 max[3]; u16 n; u16 ids[1]; } Node368;
 typedef struct { f32 v[4]; } V4q;

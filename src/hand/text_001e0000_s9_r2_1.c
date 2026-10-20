@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/bss_0062.h"
 typedef struct { u8 pad[0x44]; f32 f44; } Win;
 extern s32 D_003F7A68;
 extern s32 D_003DC478;
