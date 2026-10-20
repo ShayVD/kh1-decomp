@@ -30,3 +30,21 @@ D_003FA380
 D_003FA780
 D_0040E780
 D_0040EB80
+#
+# Four parallel records of a 0x20-byte object, a 0x10-byte entry and a 0x4000-byte table
+# (D_0046E120/40/50, D_00472160/80/90, D_004761A0/C0/D0, D_0047A1E0/A200/A210, with a 0x10-byte
+# header before the last three). func_001* stores `cond ? D_00472160 : D_0046E120` (and the
+# D_0047A1E0 / D_004761A0 pair) into an object, a join reach_check cannot follow. With them floated
+# (data budget 0x4000, session 20), loading save 05 hangs; float_holes.py shows writes into the old
+# places of D_004761A0 and D_004761C0.
+D_0046E100
+D_0046E120
+D_0046E140
+D_00472150
+D_00472160
+D_00472180
+D_004761A0
+D_004761C0
+D_0047A1D0
+D_0047A1E0
+D_0047A200
