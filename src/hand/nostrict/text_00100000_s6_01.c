@@ -458,3 +458,4 @@ void func_0010b6c0(Win *w) {
 #include "data/data_002B.h"
 #include "data/data_0035.h"
 #include "data/data_003F.h"
+#include "data/data_0048.h"

@@ -151,6 +151,15 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
     decls_of: dict[str, dict[tuple, list]] = {}
     unknown: dict[str, list] = {}
     need: dict[str, dict[str, str]] = {}
+    others: dict[str, list] = {}
+    wanted = {r[1] for r in rows}
+    mentions: dict[str, list[str]] = {}
+    for p in sorted((ROOT / "src").rglob("*.c")):
+        rel = str(p.relative_to(ROOT))
+        if rel.startswith("src/sdk/"):
+            continue
+        for n in set(re.findall(r"\bD_[0-9A-F]{8}\b", p.read_text(errors="replace"))) & wanted:
+            mentions.setdefault(n, []).append(rel)
     for addr, name, ext, files in rows:
         ds: dict[tuple, list] = {}
         for fn in files:
@@ -162,6 +171,14 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
             else:
                 unknown.setdefault(name, []).append(fn)
         decls_of[name] = ds
+        # files that declare the name but are not users (CONTEXT_ONLY code, an unlinked
+        # variant): they may include the header too, so their extern must agree with it
+        for fn in mentions.get(name, ()):
+            if fn in files:
+                continue
+            d, _why = user_decl(ROOT / fn, name)
+            if d and d not in ds:
+                others.setdefault(name, []).append((fn, d))
         for (_t, decl), fns in ds.items():
             need.setdefault(fns[0], {})[name + "__" + str(len(need.get(fns[0], {})))] = \
                 f"{name}[0]" if "[]" in decl else name
@@ -190,7 +207,10 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
             continue
         header = None
         why = ""
-        if len(ds) == 1 and name not in unknown:
+        if len(ds) == 1 and name in others:
+            why = "a non-user file declares it otherwise: " + " | ".join(
+                f"{fn}: {t} {d}" for fn, (t, d) in others[name])
+        elif len(ds) == 1 and name not in unknown:
             (tspec, decl), _fns = next(iter(ds.items()))
             if base_type(tspec) not in BASIC:
                 why = f"type {tspec} is not a common.h basic type"

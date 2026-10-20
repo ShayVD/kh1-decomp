@@ -7,6 +7,7 @@
 #include "common.h"
 #include "m2c.h"
 
+extern s32 D_00425BC0[];
 extern s32 D_00425BC4;
 extern s32 D_00425C08[];
 extern s32 D_00425C18;

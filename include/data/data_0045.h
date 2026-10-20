@@ -81,6 +81,7 @@ extern u8 D_0045D240[];
 extern u8 D_0045D248[];
 extern u8 D_0045D280[];
 extern u8 D_0045D6D0[];
+extern M2C_UNK D_0045D6E0;
 extern M2C_UNK D_0045E190;
 extern M2C_UNK D_0045E198;
 extern M2C_UNK D_0045E1A0;

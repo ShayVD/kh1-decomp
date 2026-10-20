@@ -26,6 +26,31 @@
 	PIECE D_00362450, 0x4, 4  /* untyped: users disagree: Path *D_00362450 | s32 D_00362450 */
 	PIECE D_00362454, 0x4, 4  /* untyped: users disagree: s32 D_00362454 | void *D_00362454 */
 	PIECE D_00362458, 0x4, 4  /* untyped: type Fn8 is not a common.h basic type */
+	PIECE_BEGIN D_0036245C, 0x5c, 4  /* untyped: type Fn8 is not a common.h basic type */
+	PIECE_BYTES D_0036245C, 0x0, 0x4
+	.word func_00178ef8
+	PIECE_BYTES D_0036245C, 0x8, 0x4
+	.word func_00179700
+	.word func_00179690
+	.word func_00179ee8
+	PIECE_BYTES D_0036245C, 0x18, 0x4
+	.word func_0017a510
+	PIECE_BYTES D_0036245C, 0x20, 0x4
+	.word func_0017a6c0
+	PIECE_BYTES D_0036245C, 0x28, 0x4
+	.word func_0017a7b0
+	PIECE_BYTES D_0036245C, 0x30, 0x4
+	.word func_0017df08
+	PIECE_BYTES D_0036245C, 0x38, 0x4
+	.word func_0017a958
+	PIECE_BYTES D_0036245C, 0x40, 0x4
+	.word func_0017d5d0
+	PIECE_BYTES D_0036245C, 0x48, 0x4
+	.word func_0017dd00
+	PIECE_BYTES D_0036245C, 0x50, 0x4
+	.word func_00179a80
+	PIECE_BYTES D_0036245C, 0x58, 0x4
+	PIECE_END D_0036245C, 0x5c
 	PIECE D_003624B8, 0x4, 4
 	PIECE D_003624BC, 0x4, 4
 	PIECE D_003624C0, 0x4, 4

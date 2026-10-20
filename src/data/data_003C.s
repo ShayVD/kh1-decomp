@@ -39,3 +39,4 @@
 	PIECE D_003C5830, 0x40, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_003C5870, 0x20, 16
 	PIECE D_003C5890, 0x8, 8
+	PIECE D_003C58E0, 0x13f00, 16

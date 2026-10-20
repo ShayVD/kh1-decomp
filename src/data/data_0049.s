@@ -23,6 +23,30 @@
 	PIECE D_00490910, 0x18, 8
 	PIECE D_00490928, 0x18, 8
 	PIECE D_00490940, 0x20, 16
+	PIECE_BEGIN D_00490A80, 0x60, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word func_001f1fc8+0x608
+	.word func_001f1fc8+0x1e0
+	.word func_001f1fc8+0x220
+	.word func_001f1fc8+0x208
+	.word func_001f1fc8+0x278
+	.word func_001f1fc8+0x288
+	.word func_001f1fc8+0x298
+	.word func_001f1fc8+0x2a8
+	.word func_001f1fc8+0x2d8
+	.word func_001f1fc8+0x310
+	.word func_001f1fc8+0x330
+	.word func_001f1fc8+0x378
+	.word func_001f1fc8+0x3c0
+	.word func_001f1fc8+0x3d8
+	.word func_001f1fc8+0x400
+	.word func_001f1fc8+0x428
+	.word func_001f1fc8+0x608
+	.word func_001f1fc8+0x430
+	.word func_001f1fc8+0x460
+	.word func_001f1fc8+0x430
+	.word func_001f1fc8+0x460
+	PIECE_BYTES D_00490A80, 0x54, 0xc
+	PIECE_END D_00490A80, 0x60
 	PIECE D_00490AE0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_00490AE0 | u8 D_00490AE0[] */
 	PIECE D_00490F10, 0x10, 16
 	PIECE D_00490F58, 0x18, 8
@@ -66,11 +90,13 @@
 	PIECE D_00491A18, 0x108, 8
 	PIECE D_00491B28, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491B30, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00491B40, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491B50, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491B68, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491B70, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491B88, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491D20, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00491D30, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491D40, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491D48, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491D50, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -79,6 +105,19 @@
 	PIECE D_00491D88, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491DA8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491DB0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_00491F88, 0x30, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_00491FC0
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	.word D_00491FB8
+	PIECE_BYTES D_00491F88, 0x28, 0x8
+	PIECE_END D_00491F88, 0x30
 	PIECE D_00491FB8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491FC8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491FE0, 0xc8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -93,6 +132,9 @@
 	PIECE D_00492380, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492388, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004923B0, 0x38, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_004923E8, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00492400, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00492418, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492430, 0x100, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492530, 0x100, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492630, 0x100, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -104,9 +146,11 @@
 	PIECE D_00492930, 0x38, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492968, 0x30, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492998, 0x30, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_004929C8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004929D8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004929E8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004929F8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00492A08, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492A18, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492A28, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492A38, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -119,6 +163,7 @@
 	PIECE D_00492B30, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492C50, 0x40, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492C90, 0x38, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00492CC8, 0x30, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492CF8, 0x40, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492D38, 0x38, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00492E60, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -142,6 +187,7 @@
 	PIECE D_00493078, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493098, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004930D8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_004930E0, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493108, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493128, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493140, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -153,6 +199,7 @@
 	PIECE D_004931C8, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_004931D8, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493200, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_00493218, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493238, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493248, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00493258, 0x20, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */

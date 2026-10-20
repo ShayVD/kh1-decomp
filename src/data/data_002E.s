@@ -25,6 +25,10 @@
 	PIECE D_002E27E0, 0x10, 16
 	PIECE D_002E27F0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002E2800, 0x10, 16
+	PIECE_BEGIN D_002E2F20, 0x8, 8
+	.word D_002E2810
+	.word D_00362340
+	PIECE_END D_002E2F20, 0x8
 	PIECE D_002E2F28, 0xc, 4  /* untyped: users disagree: G18 D_002E2F28 | M2C_UNK D_002E2F28 */
 	PIECE D_002E2F34, 0x84, 4
 	PIECE D_002E2FB8, 0x17, 1
@@ -47,3 +51,4 @@
 	PIECE D_002E31B8, 0x4, 4  /* untyped: users disagree: s32 D_002E31B8 | u32 D_002E31B8 */
 	PIECE D_002E31BC, 0x2c, 4
 	PIECE D_002E31E8, 0x8, 8
+	PIECE D_002E31F0, 0x20000, 16

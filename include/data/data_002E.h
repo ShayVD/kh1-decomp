@@ -11,6 +11,7 @@ extern f32 D_002E27A0;
 extern s32 D_002E27A8;
 extern s32 D_002E27E0[];
 extern u8 D_002E2800[];
+extern u8 D_002E2F20[];
 extern M2C_UNK D_002E2F34;
 extern s8 D_002E2FB8[];
 extern M2C_UNK D_002E2FCF;
@@ -19,5 +20,6 @@ extern s32 D_002E3160[];
 extern s32 D_002E3194;
 extern s32 D_002E31BC;
 extern void *D_002E31E8;
+extern M2C_UNK D_002E31F0;
 
 #endif /* KH1_DATA_DATA_002E_H */

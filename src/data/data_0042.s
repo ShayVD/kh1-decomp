@@ -6,6 +6,9 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_00425B80, 0x40, 16  /* untyped: users disagree: M2C_UNK D_00425B80 | S5B80 D_00425B80 | SvF D_00425B80 */
+	PIECE_BEGIN D_00425BC0, 0x4, 4
+	.word D_00491390
+	PIECE_END D_00425BC0, 0x4
 	PIECE D_00425BC4, 0x4, 4
 	PIECE D_00425BC8, 0x8, 8  /* untyped: users disagree: Cfg *D_00425BC8 | F8 *D_00425BC8 | G5bc8 *D_00425BC8 | G5bc8e *D_00425BC8 | P5BC8 *D_00425BC8 | Pad *D_00425BC8 | Pad8 *D_00425BC8 | S5bc8 *D_00425BC8 | S5bc8c *D_00425BC8 | s32 *D_00425BC8 | void *D_00425BC8; unparsed in 2 file(s) */
 	PIECE D_00425C08, 0x8, 8

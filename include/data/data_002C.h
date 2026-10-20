@@ -23,6 +23,8 @@ extern s32 D_002C1388;
 extern s32 D_002C138C;
 extern s32 D_002C1390;
 extern s32 D_002C1394;
+extern u8 D_002C13A0[];
+extern u8 D_002C4C20[];
 extern volatile s32 D_002C58C0;
 extern s32 D_002C5950;
 extern s32 D_002C596C;

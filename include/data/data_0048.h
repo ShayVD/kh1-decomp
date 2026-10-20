@@ -7,6 +7,7 @@
 #include "common.h"
 #include "m2c.h"
 
+extern s32 D_004862D0[2];
 extern s32 D_0048C068[][16];
 extern s32 D_0048C0E8[][16];
 extern s32 D_0048C1E8[];
@@ -16,6 +17,7 @@ extern s32 D_0048C418[][16];
 extern s32 D_0048C518[];
 extern s32 D_0048C558[];
 extern u8 D_0048C770[];
+extern u32 *D_0048CAD4;
 extern s32 D_0048CAE0[];
 extern s32 D_0048CB28[];
 extern s32 D_0048CB70[];
@@ -46,6 +48,7 @@ extern u8 D_0048CFE0[];
 extern u8 D_0048CFE8[];
 extern u8 D_0048CFF0[];
 extern M2C_UNK D_0048CFF8;
+extern M2C_UNK D_0048D000;
 extern char D_0048D008[];
 extern char D_0048D010[];
 extern char D_0048D128[];
@@ -55,6 +58,7 @@ extern char D_0048D198[];
 extern char D_0048D1A0[];
 extern char D_0048D1B8[];
 extern char D_0048D260[];
+extern char D_0048D288[];
 extern M2C_UNK D_0048D2A0;
 extern u8 D_0048D2C8[];
 extern u8 D_0048D2D0[];

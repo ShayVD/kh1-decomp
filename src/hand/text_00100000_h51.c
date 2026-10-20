@@ -249,3 +249,4 @@ void func_0010c5c8(u64 *p, s32 mode, s32 psm) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/data_0048.h"
+#include "data/data_002C.h"

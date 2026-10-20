@@ -31,6 +31,8 @@
 	PIECE D_002C138C, 0x4, 4
 	PIECE D_002C1390, 0x4, 4
 	PIECE D_002C1394, 0xc, 4
+	PIECE D_002C13A0, 0x3880, 16
+	PIECE D_002C4C20, 0xc80, 16
 	PIECE D_002C58A0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002C58A0 | V4 D_002C58A0 | V4 D_002C58A0[] | V4f D_002C58A0 | f32 D_002C58A0[4] | f32 D_002C58A0[] | u8 D_002C58A0[]; unparsed in 6 file(s) */
 	PIECE D_002C58B0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002C58B0 | V4 D_002C58B0 | V4D0 D_002C58B0 | V53 D_002C58B0 | f32 D_002C58B0[4] | f32 D_002C58B0[] | u8 D_002C58B0[] */
 	PIECE D_002C58C0, 0x10, 16
@@ -44,6 +46,7 @@
 	PIECE D_002C5970, 0x8, 8  /* untyped: users disagree: f32 D_002C5970; unparsed in 1 file(s) */
 	PIECE D_002C597A, 0x6, 2
 	PIECE D_002C5980, 0x10, 16
+	PIECE D_002C5990, 0xf0, 16  /* untyped: type MaskEnt is not a common.h basic type */
 	PIECE D_002C5A80, 0x8, 8
 	PIECE D_002C5A88, 0x48, 8
 	PIECE D_002C5AD2, 0x2, 2  /* untyped: element size does not divide the extent */

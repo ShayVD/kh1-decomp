@@ -1021,3 +1021,5 @@ void func_00100670(u32 arg0, s32 arg1) {
 #include "data/data_002C.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/data_0046.h"
+#include "data/data_0047.h"

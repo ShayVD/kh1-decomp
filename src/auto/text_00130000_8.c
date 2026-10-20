@@ -154,3 +154,4 @@ void func_0013bef0(s32 arg0) {
     func_00137688(arg0, func_001376e8());
 }
 #include "data/data_0030.h"
+#include "data/data_002E.h"

@@ -6,6 +6,10 @@
 
 #include "common.h"
 
+extern char D_0029B170[];
+extern u8 D_0029B1C0[];
+extern u8 D_0029B200[];
+extern u8 D_0029B260[];
 extern f32 D_0029B270;
 extern s32 D_0029B2F0;
 extern s32 D_0029B2F4;

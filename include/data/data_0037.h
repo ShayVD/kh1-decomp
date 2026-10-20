@@ -9,6 +9,7 @@
 
 extern u8 D_00370140[];
 extern u8 D_00370170[];
+extern u8 D_00370200[];
 extern u8 D_00372708;
 extern s32 D_00372760;
 extern s8 D_00372790[];
@@ -28,6 +29,8 @@ extern void *D_003773DC;
 extern void *D_003773E0;
 extern void *D_003773E4;
 extern s32 D_003773EC;
+extern M2C_UNK D_00378A48;
+extern M2C_UNK D_00379C78;
 extern s32 D_0037A128;
 extern s32 D_0037A14C;
 extern s32 D_0037A150;

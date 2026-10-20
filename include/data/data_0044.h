@@ -13,6 +13,7 @@ extern u8 D_004419B0[];
 extern u8 D_00443180[];
 extern u8 D_00444A70[];
 extern u8 D_00446240[];
+extern u8 D_004478F0[];
 extern u8 D_00448FA0[];
 extern u8 D_00449530[];
 extern u8 D_004497A0[];

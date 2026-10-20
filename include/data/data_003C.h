@@ -37,5 +37,6 @@ extern u8 D_003C57E0[];
 extern M2C_UNK D_003C5808;
 extern s32 D_003C5870[];
 extern s32 D_003C5890;
+extern char D_003C58E0[][256];
 
 #endif /* KH1_DATA_DATA_003C_H */

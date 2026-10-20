@@ -40,3 +40,4 @@ found:
     D_002A49A0[55] = xyz(0x8fe0 + o, 0x8be0);
     func_00106b18(D_002A4B60);
 }
+#include "data/data_002A.h"
