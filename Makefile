@@ -127,9 +127,11 @@ SHIFT_DATA_SHIFT ?= 0x1000
 # SHIFT_FLOAT=1 (moved modes; output gets -float): the variables C defines leave their
 # original place (data after the blob, bss after the original .bss); phase 4.
 SHIFT_FLOAT      ?= 0
-# SHIFT_FLOAT_BSS_BUDGET: bytes of floated bss (smallest first); the rest stays in place, since
+# SHIFT_FLOAT_BSS_BUDGET: bytes of floated bss (smallest runs first); the rest stays in place, since
 # floated bss pushes _end and crt0's 0xA000-byte heap towards the fixed arena at 0x006A0000.
-SHIFT_FLOAT_BSS_BUDGET ?= 0x10000
+# 0 by default: with bss floated the game runs but never draws the title (session 17; some bss
+# names are still fields of larger objects that cover_check.py does not see).
+SHIFT_FLOAT_BSS_BUDGET ?= 0
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
@@ -175,8 +177,9 @@ endif
 	fi; \
 	variants=""; if [ "$(SHIFT_VARIANTS)" = 1 ]; then variants="$$($(SHIFT_PY) tools/shift/variants.py build --out-dir $$vdir $$vdef)"; fi; \
 	drafts=""; if [ "$(SHIFT_DRAFTS)" = 1 ]; then drafts="$$($(SHIFT_PY) tools/shift/drafts.py build --out-dir $(SHIFT_OUT)/drafts)"; fi; \
+	if [ "$(SHIFT_FLOAT)" = 1 ]; then $(SHIFT_PY) tools/shift/cover_check.py --out $(SHIFT_OUT)/float_covered.txt > $(SHIFT_OUT)/float_covered.log; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

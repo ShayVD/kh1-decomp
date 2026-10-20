@@ -331,21 +331,10 @@ def cmd_gen(a) -> int:
         if a.mode == "m0":
             sys.exit("error: --float-vars needs a moved mode: floated variables are not at their original address")
         floating = {v.name for v in variables} - set(a.float_skip)
-        # Floated bss goes after the original .bss and pushes _end (crt0's heap start) up;
-        # the game's fixed arenas start at 0x006A0000 (func_0014a090) and crt0's heap is
-        # 0xA000 bytes from _end, so only a budget of bss floats: smallest first, the large
-        # buffers stay at their D_BSS offset (shift_cmp checks _end + heap < the arena).
-        budget, kept = a.float_bss_budget, []
-        for v in sorted(bss_vars, key=lambda v: (v.size, v.addr)):
-            if v.size + 16 <= budget:
-                budget -= v.size + 16
-            else:
-                floating.discard(v.name)
-                kept.append(v)
-        if kept:
-            print(f"shift-ld: --float-vars: {len(kept)} bss variables over the 0x{a.float_bss_budget:x} budget "
-                  f"stay at their D_BSS offset (largest {max(kept, key=lambda v: v.size).name}, "
-                  f"0x{sum(v.size for v in kept):x} bytes)")
+        if a.float_skip_file:  # inside another declared object (cover_check.py): moving it breaks the object
+            covered = set(Path(a.float_skip_file).read_text().split())
+            floating -= covered
+            print(f"shift-ld: --float-vars: {len(covered)} variables inside another declared object stay in place")
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
@@ -450,6 +439,43 @@ def cmd_gen(a) -> int:
         else:
             tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
             kinds["abs"] += 1
+    bss_runs: list[list[Placed]] = []
+    if a.float_vars:
+        # Floated bss goes after the original .bss and pushes _end (crt0's heap start) up;
+        # the game's fixed arenas start at 0x006A0000 (func_0014a090) and crt0's heap is
+        # 0xA000 bytes from _end, so only a budget of bss floats. Variables with no other
+        # name between them form a run that floats or stays as one block, at the same
+        # offsets: code that walks one buffer into the next (the s6_24 menu objects) keeps
+        # working. Smallest runs first; the large ones stay at their D_BSS offset
+        # (shift_cmp checks _end + heap < the arena).
+        others = sorted(ad for ad, k, n in expected if k == "bss")
+        run: list[Placed] = []
+        for v in bss_vars:
+            if v.name not in floating:
+                if run:
+                    bss_runs.append(run)
+                run = []
+                continue
+            if run and bisect.bisect_left(others, v.addr) != bisect.bisect_left(others, run[-1].addr + 1):
+                bss_runs.append(run)
+                run = []
+            run.append(v)
+        if run:
+            bss_runs.append(run)
+        span = lambda r: r[-1].addr + r[-1].size - r[0].addr
+        budget, kept, keep_runs = a.float_bss_budget, [], []
+        for r in sorted(bss_runs, key=lambda r: (span(r), r[0].addr)):
+            if span(r) + 64 <= budget:
+                budget -= span(r) + 64
+            else:
+                floating -= {v.name for v in r}
+                kept += r
+                keep_runs.append(id(r))
+        bss_runs = [r for r in bss_runs if id(r) not in keep_runs]
+        if kept:
+            print(f"shift-ld: --float-vars: {len(kept)} bss variables over the 0x{a.float_bss_budget:x} budget "
+                  f"stay at their D_BSS offset (largest {max(kept, key=lambda v: v.size).name}, "
+                  f"0x{sum(v.size for v in kept):x} bytes); {len(bss_runs)} runs float")
     # A floated variable leaves its original place: nothing else may point inside it
     # (another D_ name defined as blob/bss base + offset, or a blob pointer).
     fl_ranges = sorted((v.addr, v.addr + v.size, v.name) for v in variables if v.name in floating)
@@ -671,10 +697,14 @@ def cmd_gen(a) -> int:
     # Variables C defines in the bss range: at their offset from D_BSS (zero-initialised,
     # so their input sections only reserve space in the NOLOAD output section).
     bss_lines, bss_tail = [], []
-    for v in bss_vars:
-        if v.name in floating:  # after the original .bss, before _end (crt0 clears up to _end)
-            bss_tail.append(f"    . = ALIGN({float_align(v.addr)});")
+    for k, r in enumerate(bss_runs):  # after the original .bss, before _end (crt0 clears up to _end)
+        al = max(float_align(v.addr) for v in r)
+        bss_tail += [f"    . = ALIGN({al}) + 0x{r[0].addr % al:x};", f"    __float_run{k} = .;"]
+        for v in r:
+            bss_tail.append(f"    . = __float_run{k} + 0x{v.addr - r[0].addr:x};")
             bss_tail.append(f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */")
+    for v in bss_vars:
+        if v.name in floating:
             continue
         bss_lines.append(f"    . = D_BSS + 0x{v.addr - bss_start:x};")
         bss_lines.append(f"    KEEP({v.obj}({v.section}))  /* 0x{v.addr:08x} */")
@@ -806,6 +836,8 @@ def main() -> int:
     g.add_argument("--float-vars", action="store_true",
                    help="moved modes: link the variables C defines away from their original place "
                         "(data after the blob, bss after the original .bss); phase 4")
+    g.add_argument("--float-skip-file", metavar="FILE",
+                   help="--float-vars: names (one per line) that stay in place: tools/shift/cover_check.py --out")
     g.add_argument("--float-skip", action="append", default=[], metavar="NAME",
                    help="--float-vars: leave NAME at its original place (bisecting a runtime failure)")
     g.add_argument("--float-bss-budget", type=lambda x: int(x, 0), default=0x10000,
