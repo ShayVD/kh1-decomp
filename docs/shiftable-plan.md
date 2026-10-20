@@ -1216,3 +1216,73 @@ step calls, so both conversions ran.
 
 The end state is a link where no `D_BLOB`/`D_BSS` offset is left, which is also what a host build
 needs.
+
+## Session 17: Phase 4 steps 1-3 (data defined in C)
+
+`make` stays byte-identical throughout. 642 variables are now C definitions (606 bss, 36 data); the
+link script places each at its address.
+
+### Tools
+
+- **`tools/shift/define_vars.py`** (step 1): single-owner bss `extern` -> definition in the owner.
+  Sizes come from the compiler (a probe copy of the file with `int __kh1sz_N = sizeof(...)`), checked
+  against the extent: `exact`, `fill` (`T D[]` filled to the extent), `pad` (a scalar nobody takes the
+  address of; the rest of the extent is padding), else `manual`. `ALIGNED(min(lowbit(addr), 16, or 64
+  for objects of 64+ bytes))`. 205 automatic, 19 m2c `M2C_UNK D[n]` buffers, 14 menu sprite packets
+  (0x160-byte objects: `u8 tail[0x160 - 0xE8]` added to the local packet type), 3 by hand. About 25
+  stay manual (sizeof larger than the extent, `__asm__` label tricks in s6_10, indexed types).
+- **`tools/shift/define_ptr_tables.py`** (step 2): single-owner tables whose every word is an accepted
+  pointer (data_relocs.tsv) or zero become initialised arrays, appended at the end of the owner (where
+  every function is declared); the extern stays where it was. 34 tables plus the session 16 pair.
+- **`tools/shift/define_shared.py`** (step 3): a shared bss name that every user declares with the same
+  basic type gets one definition in `src/data/bss_XXXX.c` (XXXX = address bits 31..16) and one
+  declaration in `include/data/bss_XXXX.h`. Users include the header and keep their own identical
+  extern for now, so the compiler checks them against the definition. 306 names; 490 left (users
+  disagree on the type: 369; struct/typedef types; size vs extent).
+- **`tools/shift/cover_check.py`**: lists C-defined variables that sit inside another declared object,
+  or right after a name no C declaration sizes. Run by every SHIFT_FLOAT build; shift_ld keeps those in
+  place (`--float-skip-file`). 48 today.
+
+### Hazards found (all keep `make` identical; they only matter when data moves)
+
+- **gcc alignment**: an array at an address that is not 8-aligned, with a size that is not a multiple
+  of 8, gets `.align 3` and a padded section: placement fails. Both tools skip those.
+- **Known alignment changes code**: `ALIGNED(8)` on `D_0062A228` turned a builtin `strcpy` into ld/sd
+  moves (two functions stopped matching). That one has no ALIGNED.
+- **Declaration order changes code**: including `data/bss_0055.h` at the top of text_00150000_h58.c
+  (declaring D_005516C0 earlier) changed how func_0015b060 forms the D_00551970 address; that file
+  includes it at the end.
+- **Overlay-shared**: `D_0046A6A8` is written by dktitle.x; floated, the overlay fixup proof fails.
+  Stays extern.
+- **Fields named on their own**: `D_005759A4`/`D_005759A6` are fields x64/x66 of the camera struct at
+  `D_00575940` (another file declares `Cam`, sizeof 0x68). Defined in C they are fine, floated they leave
+  the struct. Likewise D_0046A6A4 inside D_0046A688, D_0057590C inside D_00575900 (20 more:
+  cover_check.py). This is what hung the bss float at boot.
+- **Indexed past the extent**: D_00425BC0 (func_002335d8 indexes it; D_00425BC4, named by
+  text_001d0000.c, is its next entry) and the D_00575030/50/60 arrays stay extern.
+- **Arena**: crt0 calls SetupHeap(_end, 0xA000), and the game's fixed arenas start at 0x006A0000
+  (`func_0014a090`), then 0x720000, 0x820000, 0x9A0000, 0xF20000 (overlays), 0xFE0000, 0x1CE0000.
+  Floating all bss pushed `_end` to 0x6C7400 and hung at boot. shift_cmp now fails when `_end` passes
+  0x6A0000 and warns when `_end + 0xA000` does.
+
+### Float build changes
+
+- shift_ld: floated pieces align to `min(lowbit(addr), 64)`; C bss variables with no other name between
+  them float as one block at the same offsets (code walks from one menu object into the next); a
+  budget of bss (`SHIFT_FLOAT_BSS_BUDGET`, smallest runs first) floats, the rest stays at its D_BSS
+  offset; `SHIFT_FLOAT_SKIP` names stay in place.
+- shift_cmp accepts a HI16/LO16 field up to 0x40 outside a floated piece with the same delta
+  (`D_003F31D0[x-1]` in h70.c).
+- **`SHIFT_FLOAT_BSS_BUDGET` defaults to 0.** With bss floated (budget 0x10000, covered names kept) the
+  game runs at 60 fps but never draws the title: more hidden struct fields to find. Bisect with
+  `SHIFT_FLOAT_BSS_BUDGET=0x400` (17 small names) and `SHIFT_FLOAT_SKIP`.
+
+### Runtime (PCSX2, KH1_BIG.iso with the M12-float ELF appended)
+
+- Build with 9 floated tables, no bss: title, save load in End of the World, walking, main menu, Items,
+  Status, attacks and Fire, the world map (gummi overlay) and a warp to Halloween Town.
+- Final build (35 tables floated, bss in place, covered names kept): title, save load, walk, attack,
+  main menu.
+- **Boot tests can mislead**: one build showed "No Image" after 30 s and booted on a second try; wait
+  45 s and retry a hang once before believing it. Check which ELF is really on the device
+  (`shasum`): a local file of the same name had been rebuilt, and the bisection compared against it.

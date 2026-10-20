@@ -708,3 +708,20 @@ found that the next session needs:
   member's raw bytes and run `zstd -d`. The PCSX2 snaps/sstates folders can be pointed at
   Downloads/kh1-test with Browse (the text fields are read-only); reset them to the defaults after.
 - **Matching** (s16m1): func_00166570 matched (frame-pointer copy lever, docs/matching-tips.md).
+
+## Session 17: what changed
+
+- **Phase 4 steps 1-3** (docs/shiftable-plan.md "Session 17"): 642 C-defined variables (606 bss, 36
+  data), tools `define_vars.py`, `define_ptr_tables.py`, `define_shared.py`, `cover_check.py`, all in
+  tools/shift/. Shared bss lives in `src/data/bss_XXXX.c` with headers in `include/data/`.
+- The float build keeps bss in place by default (`SHIFT_FLOAT_BSS_BUDGET ?= 0`); data floats.
+- **PCSX2 loop from the cloud**: copy the ELF to /mnt/project-files/kh1-runtime/sNN/, `device_commit_files`
+  it to Downloads/kh1-test, System > Shut Down Without Saving (186,162), run `patch_iso.py ... --append
+  --in-place` there, then System > Start File, cmd+shift+G, the ISO path, Return twice. Wait 45 s; a
+  "No Image" boot can succeed on a retry. Keys: arrows D-pad, WASD stick, L = Circle, K = Cross,
+  Return = Start. A computer_batch call must keep its waits under 50 s.
+- A bisection must compare against the exact ELF on the device (`shasum` both sides).
+- **Matching** (s17m1): no new match; 001c62a0 draft 56 -> 39 words; loop insn-count lever
+  (docs/matching-tips.md "Session 17").
+- **Phase 3**: character command stream record rule settled on 7,530 records; program-bit triggers
+  and P21 rotation order (docs/renderer-spec.md, docs/structs.md, `tools/vu/rb_stream.py`).
