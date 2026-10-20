@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared data names as per-symbol pieces of the user's ELF (phase 4, step 4).
+"""Data names as per-symbol pieces of the user's ELF (phase 4, step 4).
 
   python3 -I tools/shift/define_pieces.py [--owners out/shift/data_owners.tsv]
                                           [--verdict shared] [--name D_X ...]
@@ -117,6 +117,9 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
     relocs = reloc_rows()
     words = sorted(relocs)
     done = {b[2] for b in blocks}
+    # inner names of a merged piece (tools/shift/merge_pieces.py): labels in it
+    for src in (ROOT / "src/data").glob("data_*.s"):
+        done |= set(re.findall(r"^\s*PIECE_LABEL\s+D_[0-9A-F]{8}\s*,\s*(D_[0-9A-F]{8})", src.read_text(), re.M))
     rows, skip = [], []
     for ln in owners.read_text().splitlines()[1:]:
         f = ln.split("\t")
@@ -151,6 +154,15 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
     decls_of: dict[str, dict[tuple, list]] = {}
     unknown: dict[str, list] = {}
     need: dict[str, dict[str, str]] = {}
+    others: dict[str, list] = {}
+    wanted = {r[1] for r in rows}
+    mentions: dict[str, list[str]] = {}
+    for p in sorted((ROOT / "src").rglob("*.c")):
+        rel = str(p.relative_to(ROOT))
+        if rel.startswith("src/sdk/"):
+            continue
+        for n in set(re.findall(r"\bD_[0-9A-F]{8}\b", p.read_text(errors="replace"))) & wanted:
+            mentions.setdefault(n, []).append(rel)
     for addr, name, ext, files in rows:
         ds: dict[tuple, list] = {}
         for fn in files:
@@ -162,6 +174,14 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
             else:
                 unknown.setdefault(name, []).append(fn)
         decls_of[name] = ds
+        # files that declare the name but are not users (CONTEXT_ONLY code, an unlinked
+        # variant): they may include the header too, so their extern must agree with it
+        for fn in mentions.get(name, ()):
+            if fn in files:
+                continue
+            d, _why = user_decl(ROOT / fn, name)
+            if d and d not in ds:
+                others.setdefault(name, []).append((fn, d))
         for (_t, decl), fns in ds.items():
             need.setdefault(fns[0], {})[name + "__" + str(len(need.get(fns[0], {})))] = \
                 f"{name}[0]" if "[]" in decl else name
@@ -190,7 +210,10 @@ def plan(owners: Path, verdicts: set[str], names: list[str], exclude: set[str], 
             continue
         header = None
         why = ""
-        if len(ds) == 1 and name not in unknown:
+        if len(ds) == 1 and name in others:
+            why = "a non-user file declares it otherwise: " + " | ".join(
+                f"{fn}: {t} {d}" for fn, (t, d) in others[name])
+        elif len(ds) == 1 and name not in unknown:
             (tspec, decl), _fns = next(iter(ds.items()))
             if base_type(tspec) not in BASIC:
                 why = f"type {tspec} is not a common.h basic type"
@@ -267,7 +290,7 @@ def apply(plans) -> None:
             have[name] = piece_lines(addr, name, ext, header, why, words)
         body = [ln for n in sorted(have, key=lambda n: int(n[2:], 16)) for ln in have[n]]
         src.write_text("\n".join([
-            f"/* Shared data names {mod[5:]}xxxx as pieces of the user's ELF (phase 4, step 4;",
+            f"/* Data names {mod[5:]}xxxx as pieces of the user's ELF (phase 4, step 4;",
             " * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an",
             " * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from",
             " * the ELF at build time: no game bytes are in the repo. Declarations: the header",
@@ -283,7 +306,7 @@ def apply(plans) -> None:
         guard = f"KH1_DATA_{mod.upper()}_H"
         m2c = any(re.search(r"\bM2C_UNK", ln) for ln in decls)
         hdr.write_text("\n".join([
-            f"/* Shared data names {mod[5:]}xxxx: pieces of the user's ELF defined in",
+            f"/* Data names {mod[5:]}xxxx: pieces of the user's ELF defined in",
             f" * src/data/{mod}.s (phase 4, tools/shift/define_pieces.py). Only names whose",
             " * C users agree on the type are declared here; users include this at their end. */",
             f"#ifndef {guard}", f"#define {guard}", "", '#include "common.h"',

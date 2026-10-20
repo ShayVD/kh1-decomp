@@ -617,3 +617,4 @@ s32 func_001cfd30(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/data_003C.h"

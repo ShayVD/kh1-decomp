@@ -136,3 +136,5 @@ void func_0010c720(s32 x, s32 y, s32 id, u64 **pp, s32 arg4, s32 a, s32 w) {
     }
     *pp = p + 6;
 }
+#include "data/data_002B.h"
+#include "data/data_002C.h"

@@ -160,3 +160,4 @@ void func_001e9f18(void *arg0, void *arg1, void *arg2, f32 fparg0) {
     M2C_FIELD(arg0, f32 *, 8) = (f32) (temp_f3 + M2C_FIELD(arg1, f32 *, 8));
 }
 #include "data/data_003D.h"
+#include "data/data_003E.h"

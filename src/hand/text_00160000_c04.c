@@ -287,3 +287,4 @@ void func_00178ef8(void) {
     D_00362680.y = func_00124d28(&D_005758D0, &D_005758E0);
     func_001773b0();
 }
+#include "data/data_0036.h"

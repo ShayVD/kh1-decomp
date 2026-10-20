@@ -58,3 +58,4 @@ void func_0010a470(void) {
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_0035.h"
+#include "data/data_002B.h"

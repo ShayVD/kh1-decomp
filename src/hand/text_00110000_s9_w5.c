@@ -34,3 +34,4 @@ void func_00113e28(s32 a) {
     D_004D9328++;
     printf(D_0048D010);
 }
+#include "data/data_0048.h"

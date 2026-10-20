@@ -767,3 +767,24 @@ found that the next session needs:
     build stops in cover_check.
   - Donald and Goofy kill enemies before a dump can be taken: set their Customize AI to "rarely" in the
     menu.
+
+## Session 20: what changed
+
+- **Data float on by default** (`SHIFT_FLOAT_DATA_BUDGET ?= 0x4000`, 753 data names; plays in PCSX2). The
+  session 19 crash was three 0x4000-byte tables declared 0x40 (D_00472190 and twins). reach_check gained
+  four rules (indexed arguments to calls, idx-base, stored addresses, uncached aliases) and float_keep.txt
+  two groups (a staging arena, four object/table records); names only pointer tables name stay in place
+  (`SHIFT_FLOAT_PTR_ONLY ?= 0`). Details and the bisection log: docs/shiftable-plan.md "Session 20: the
+  data float".
+- **Phase 4 step 4 done for single-owner data** (worker s20d1): 2,581 data pieces, `merge_pieces.py` with
+  `PIECE_LABEL`; only D_0046A688 and D_00494050 stay extern. docs/shiftable-plan.md "Session 20: Phase 4".
+- **Matching** (s20m1): no new matches; 00125240 is 3w with a natural body and FP pins (no dead test),
+  001c62a0 16w is a global-alloc priority order, 00200e28 24w looks closed for pins
+  (nonmatchings/session20/NOTES.md).
+- **Bisecting a float build**: `SHIFT_FLOAT_ONLY_DATA=@FILE` (names one per line) floats only those data
+  names. Take the floated list of a build that plays (the ELF's D_ symbols whose address moved by other
+  than the common data delta) and add half of the suspects. Each boot is about 3 minutes: text bugs show
+  on the load menu before loading, so a garbled-text check does not need the save. Every name kept in
+  place lets the budget pull in new ones: boot the default build again after any rule change.
+- **Worktree workers start on a stale commit** (816f161, session 14) with `isolation: worktree`: both
+  workers had to `git reset --hard` to the session base first. Tell workers to check `git log -1` first.

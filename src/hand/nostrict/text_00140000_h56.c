@@ -889,3 +889,4 @@ void func_0014ade0(Hx *x, Hy *y) {
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
+#include "data/data_0048.h"

@@ -339,3 +339,5 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
 }
 #include "data/bss_0065_mixed.h"
 #include "data/data_0046.h"
+#include "data/data_0045.h"
+#include "data/data_0049.h"

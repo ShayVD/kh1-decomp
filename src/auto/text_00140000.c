@@ -138,3 +138,5 @@ void func_0014ec38(s32 arg0) {
     D_0054F44C |= 1 << (arg0 - 1);
 }
 #include "data/bss_0053_mixed.h"
+#include "data/data_0030.h"
+#include "data/data_0034.h"

@@ -142,19 +142,28 @@ SHIFT_FLOAT      ?= 0
 # objects), reach_check.py (displacements, calls, arrays indexed into the next name) and
 # tools/shift/float_keep.txt (IOP-written blocks, a packet buffer). Session 18: 0x10000 plays in
 # PCSX2; session 19: 0x11800 plays (title, save load, field) with the reach_check bounds and
-# float_keep's packet buffer. The arena limit leaves room for about 0x16000 with no data float.
+# float_keep's packet buffer. Session 20: with the stricter reach_check rules only 6 large bss names
+# are over 0x11800, and 0x16000 floats nothing more (the next one is 0x14014 bytes).
 SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
 # SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
 # data goes after the blob and pushes .bss and _end up by as much (same arena limit).
-# Off by default: session 19's 0x4000 reaches the title but PCSX2 crashes after loading a save
-# (docs/shiftable-plan.md, "Session 19: runtime"). Bisect with smaller budgets before raising it.
-SHIFT_FLOAT_DATA_BUDGET ?= 0
+# Session 20: 0x4000 (753 data names) plays in PCSX2 (title, load menu, save 05, field, menus) with
+# reach_check's indexed-argument, idx-base, stored and uncached rules, float_keep's arena and table
+# records, and pointer-table-only names kept (docs/shiftable-plan.md "Session 20: the data float").
+# _end is 0x688824; _end + 0xA000 leaves 0xD7DC below 0x6A0000.
+SHIFT_FLOAT_DATA_BUDGET ?= 0x4000
 # SHIFT_REACH_FLAGS: extra reach_check.py options (--no-bounds: the session 18 idx-next rule).
 SHIFT_REACH_FLAGS ?=
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
 # SHIFT_FLOAT_ONLY: if set, only these bss names float (bisecting; the budget still applies).
 SHIFT_FLOAT_ONLY ?=
+# SHIFT_FLOAT_ONLY_DATA: if set, only these data names float (@FILE reads names from FILE; bisecting).
+SHIFT_FLOAT_ONLY_DATA ?=
+# SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word names (no code user). Off by
+# default since session 20: entries a pointer table points at one by one (D_0048F700 ...) can be walked
+# by stride, and floating them drops a digit from the load menu's slot labels.
+SHIFT_FLOAT_PTR_ONLY ?= 0
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
 # (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
 # with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
@@ -201,9 +210,11 @@ endif
 	if [ "$(SHIFT_FLOAT)" = 1 ]; then $(SHIFT_PY) tools/shift/cover_check.py --out $(SHIFT_OUT)/float_covered.txt > $(SHIFT_OUT)/float_covered.log; \
 		$(SHIFT_PY) tools/shift/reach_check.py $(SHIFT_REACH_FLAGS) --elf $(ORIG) --overlays $(SHIFT_OVERLAYS) --out $(SHIFT_OUT)/float_reach.txt \
 			> $(SHIFT_OUT)/float_reach.log 2>&1; cat $(SHIFT_OUT)/float_reach.txt >> $(SHIFT_OUT)/float_covered.txt; \
-		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; fi; \
+		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; \
+		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
+			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

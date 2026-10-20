@@ -62,3 +62,4 @@ void func_0021f900(void *a) {
 }
 #include "data/bss_0064_mixed.h"
 #include "data/data_003E.h"
+#include "data/data_003F.h"

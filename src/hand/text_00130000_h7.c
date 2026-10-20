@@ -714,3 +714,4 @@ void func_00145008(W7Ch *o, s32 k) {
     func_00144eb0(v, buf);
 }
 #include "data/bss_0052_mixed.h"
+#include "data/data_0030.h"

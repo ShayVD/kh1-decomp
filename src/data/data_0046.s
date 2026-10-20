@@ -1,12 +1,37 @@
-/* Shared data names 0046xxxx as pieces of the user's ELF (phase 4, step 4;
+/* Data names 0046xxxx as pieces of the user's ELF (phase 4, step 4;
  * tools/shift/define_pieces.py). Each PIECE is its own section .data.<name>, an
  * .incbin of out/data/pieces/<name>.bin that tools/shift/cut_pieces.py cuts from
  * the ELF at build time: no game bytes are in the repo. Declarations: the header
  * include/data/data_0046.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
+	PIECE D_004656A0, 0x930, 16
+	PIECE D_00465FD0, 0x1b0, 16
+	PIECE D_00466180, 0x630, 16
+	PIECE D_004667B0, 0x630, 16
+	PIECE D_00466DE0, 0x570, 16
+	PIECE D_00467350, 0x38, 8
+	PIECE D_00467388, 0x10, 8
+	PIECE D_00467398, 0x28, 8
+	PIECE D_004673C0, 0x28, 8
+	PIECE D_004673E8, 0x20, 8
 	PIECE D_00467408, 0x4, 4  /* untyped: users disagree: s32 D_00467408 | void *D_00467408 */
+	PIECE D_0046740C, 0x4, 4
+	PIECE D_00467410, 0xe10, 16
+	PIECE D_00468220, 0xbf0, 16
+	PIECE D_00468E10, 0xe10, 16
+	PIECE D_00469C20, 0x28, 8
+	PIECE D_00469C48, 0x28, 8
+	PIECE D_00469C70, 0x24, 4
+	PIECE D_00469C94, 0x4, 4
+	PIECE D_00469C98, 0x8, 8
+	PIECE D_00469CA0, 0x2b0, 16
+	PIECE D_00469F50, 0x10, 16
 	PIECE D_00469F60, 0x30, 16
+	PIECE D_00469F90, 0x10, 16
+	PIECE D_00469FA0, 0x10, 16
+	PIECE D_00469FB0, 0x18, 8  /* untyped: type PsmEnt is not a common.h basic type */
+	PIECE D_0046A038, 0x4, 4  /* untyped: type Prm is not a common.h basic type */
 	PIECE D_0046A03C, 0x4, 4  /* untyped: users disagree: s32 D_0046A03C | u8 *D_0046A03C */
 	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040 */
 	PIECE D_0046A044, 0x4, 4  /* untyped: users disagree: s32 D_0046A044 | u8 *D_0046A044 */
@@ -15,6 +40,19 @@
 	.word func_0024d1c8
 	PIECE_BYTES D_0046A048, 0xc, 0x4
 	PIECE_END D_0046A048, 0x10
+	PIECE D_0046A070, 0x10, 16
+	PIECE D_0046A080, 0x40, 16
+	PIECE D_0046A0C0, 0x8, 8
+	PIECE D_0046A0C8, 0x4a, 2  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A112, 0x96, 2
+	PIECE D_0046A1A8, 0x4a, 2  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A1F2, 0x96, 2
+	PIECE D_0046A288, 0x4a, 2  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A2D2, 0x96, 2
+	PIECE D_0046A368, 0x4a, 2  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A3B2, 0x96, 2
+	PIECE D_0046A448, 0x92, 2  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A4DA, 0x62, 2
 	PIECE D_0046A53C, 0x4, 4
 	PIECE D_0046A540, 0x4, 4
 	PIECE D_0046A544, 0x4, 4
@@ -33,26 +71,71 @@
 	.word D_0046A448
 	PIECE_BYTES D_0046A568, 0x14, 0x4
 	PIECE_END D_0046A568, 0x18
+	PIECE D_0046A580, 0x8, 8
+	PIECE D_0046A588, 0x8, 8
+	PIECE D_0046A590, 0x8, 8
+	PIECE D_0046A598, 0x8, 8
+	PIECE D_0046A5A0, 0x8, 8
+	PIECE D_0046A5A8, 0x14, 4
 	PIECE D_0046A5BC, 0x4, 4
+	PIECE D_0046A5C0, 0x10, 16
+	PIECE D_0046A5D0, 0x8, 8
 	PIECE D_0046A5D8, 0x8, 8
+	PIECE_BEGIN D_0046A5E0, 0x28, 8
+	.word func_0024cfa0
+	PIECE_BYTES D_0046A5E0, 0x4, 0x24
+	PIECE_END D_0046A5E0, 0x28
 	PIECE D_0046A608, 0x4, 4  /* untyped: users disagree: s32 D_0046A608 | u32 D_0046A608 */
 	PIECE D_0046A60C, 0x4, 4
 	PIECE D_0046A610, 0x4, 4
 	PIECE D_0046A614, 0x4, 4
 	PIECE D_0046A618, 0x8, 8
+	PIECE D_0046A620, 0x8, 8
 	PIECE D_0046A628, 0x18, 8  /* untyped: users disagree: M2C_UNK D_0046A628 | char D_0046A628[] */
+	PIECE D_0046A640, 0x10, 16
 	PIECE D_0046A650, 0x10, 16  /* untyped: users disagree: M2C_UNK D_0046A650 | char D_0046A650[] */
+	PIECE D_0046A660, 0x14, 4
 	PIECE D_0046A674, 0x4, 4
+	PIECE D_0046A678, 0x4, 4
 	PIECE D_0046A67C, 0x4, 4
 	PIECE D_0046A680, 0x8, 8
+	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word func_0024e088
+	PIECE_END D_0046A6A8, 0x4
+	PIECE D_0046A6AC, 0x4, 4
+	PIECE D_0046A6B0, 0x28, 8
+	PIECE_BEGIN D_0046A6D8, 0x1e4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046A6D8, 0x0, 0x4
+	.word D_0046A8BC
+	.word D_0046A914
+	.word D_0046A96C
+	PIECE_BYTES D_0046A6D8, 0x10, 0x24
+	.word D_00491B20
+	PIECE_BYTES D_0046A6D8, 0x38, 0x1ac
+	PIECE_END D_0046A6D8, 0x1e4
+	PIECE D_0046A8BC, 0x58, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A914, 0x58, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A96C, 0x5c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0046A9C8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word D_0046A6D8
 	PIECE_BYTES D_0046A9C8, 0x4, 0x4
 	PIECE_END D_0046A9C8, 0x8
+	PIECE D_0046A9D0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046ADD8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046ADE0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046ADE8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046ADF0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046ADF8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046AE00, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE28, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE2C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE30, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046AE40, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AE44, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046AE48, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_00675018
+	PIECE_END D_0046AE48, 0x4
+	PIECE D_0046AE4C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0046AE50, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_00259468
 	PIECE_END D_0046AE50, 0x4
@@ -62,16 +145,82 @@
 	PIECE D_0046AEDC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AEE0, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AEE4, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046AEE8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_00492338
+	PIECE_END D_0046AEE8, 0x4
 	PIECE D_0046AEEC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046AEF0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_00492340
+	PIECE_BYTES D_0046AEF0, 0x4, 0x4
+	PIECE_END D_0046AEF0, 0x8
+	PIECE D_0046AEF8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046AF00, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046AF00, 0x0, 0x4
+	.word func_0025f428
+	PIECE_BYTES D_0046AF00, 0x8, 0x4
+	.word func_0025f3f0
+	PIECE_END D_0046AF00, 0x10
 	PIECE D_0046AF10, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046AF14, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046AF18, 0x7a8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046B6C0, 0x18, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046B6C0, 0x0, 0x4
+	.word func_0025f620
+	PIECE_BYTES D_0046B6C0, 0x8, 0x10
+	PIECE_END D_0046B6C0, 0x18
+	PIECE_BEGIN D_0046B6D8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046B6D8, 0x0, 0x4
+	.word func_0025f790
+	PIECE_END D_0046B6D8, 0x8
+	PIECE D_0046B6E0, 0x740, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046BE20, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046BE48, 0x40, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046BE48, 0x0, 0x4
+	.word func_0025fa40
+	PIECE_BYTES D_0046BE48, 0x8, 0x38
+	PIECE_END D_0046BE48, 0x40
+	PIECE D_0046BE88, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046BE8C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046BE90, 0x330, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C1C0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C1C8, 0x40, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C208, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046C210, 0x40, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046C210, 0x0, 0x4
+	.word func_002608e0
+	PIECE_BYTES D_0046C210, 0x8, 0x38
+	PIECE_END D_0046C210, 0x40
+	PIECE D_0046C250, 0xd0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C320, 0x120, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C440, 0x80, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046C4C0, 0x1c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BYTES D_0046C4C0, 0x0, 0x10
+	.word D_0046C250
+	.word D_0046C320
+	.word D_0046C440
+	PIECE_END D_0046C4C0, 0x1c
+	PIECE_BEGIN D_0046C4DC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_00494038
+	PIECE_END D_0046C4DC, 0x4
+	PIECE D_0046C4E0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C500, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C510, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C530, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C550, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C580, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C590, 0x40, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C5D0, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C5D8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046C5E0, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	.word D_004930D0
+	.word D_004930C8
+	.word D_004930C0
+	.word D_004930B8
+	PIECE_BYTES D_0046C5E0, 0x10, 0x20
+	PIECE_END D_0046C5E0, 0x30
 	PIECE D_0046C610, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C614, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C618, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C61C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C620, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C624, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -84,9 +233,2084 @@
 	PIECE D_0046C640, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C644, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C648, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C64C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C650, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C654, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046C658, 0x28, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C680, 0x80, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C700, 0x1000, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046D700, 0xc0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046D7C0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046D7D0, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046D800, 0x440, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046DC40, 0x408, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046E048, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046E090, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046E094, 0x1c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046E0B0, 0x50, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046E100, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046E120, 0x20, 16
+	PIECE_BYTES D_0046E120, 0x0, 0x4
+	.word D_0048BFD0
+	PIECE_BYTES D_0046E120, 0x8, 0xc
+	.word D_0048C060
+	PIECE_BYTES D_0046E120, 0x18, 0x8
+	PIECE_END D_0046E120, 0x20
+	PIECE_BEGIN D_0046E140, 0x10, 16  /* untyped: type EntE is not a common.h basic type */
+	PIECE_BYTES D_0046E140, 0x0, 0x4
+	.word D_004862A0
+	PIECE_BYTES D_0046E140, 0x8, 0x8
+	PIECE_END D_0046E140, 0x10
+	PIECE_BEGIN D_0046E150, 0x4000, 16  /* untyped: merged (a user declares it larger than the next name): D_0046E190 */
+	PIECE_BYTES D_0046E150, 0x0, 0x4
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38, 0x8
+	PIECE_LABEL D_0046E150, D_0046E190, 0x40
+	PIECE_BYTES D_0046E150, 0x40, 0x4
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x108, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x118, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x128, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x138, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x148, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x158, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x168, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x178, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x188, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x198, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x208, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x218, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x228, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x238, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x248, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x258, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x268, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x278, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x288, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x298, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x308, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x318, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x328, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x338, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x348, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x358, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x368, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x378, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x388, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x398, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x408, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x418, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x428, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x438, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x448, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x458, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x468, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x478, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x488, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x498, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x4f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x508, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x518, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x528, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x538, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x548, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x558, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x568, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x578, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x588, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x598, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x5f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x608, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x618, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x628, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x638, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x648, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x658, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x668, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x678, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x688, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x698, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x6f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x708, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x718, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x728, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x738, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x748, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x758, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x768, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x778, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x788, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x798, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x7f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x808, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x818, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x828, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x838, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x848, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x858, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x868, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x878, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x888, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x898, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x8f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x908, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x918, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x928, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x938, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x948, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x958, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x968, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x978, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x988, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x998, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x9f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xa98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xaa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xab8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xac8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xad8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xae8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xaf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xb98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xba8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xbb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xbc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xbd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xbe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xbf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xc98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xca8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xcb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xcc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xcd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xce8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xcf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xd98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xda8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xdb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xdc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xdd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xde8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xdf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xe98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xea8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xeb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xec8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xed8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xee8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xef8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xf98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xfa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xfb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xfc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xfd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xfe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0xff8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1008, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1018, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1028, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1038, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1048, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1058, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1068, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1078, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1088, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1098, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x10f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1108, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1118, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1128, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1138, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1148, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1158, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1168, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1178, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1188, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1198, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x11f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1208, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1218, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1228, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1238, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1248, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1258, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1268, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1278, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1288, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1298, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x12f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1308, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1318, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1328, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1338, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1348, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1358, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1368, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1378, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1388, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1398, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x13f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1408, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1418, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1428, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1438, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1448, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1458, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1468, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1478, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1488, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1498, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x14f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1508, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1518, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1528, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1538, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1548, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1558, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1568, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1578, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1588, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1598, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x15f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1608, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1618, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1628, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1638, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1648, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1658, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1668, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1678, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1688, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1698, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x16f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1708, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1718, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1728, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1738, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1748, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1758, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1768, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1778, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1788, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1798, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x17f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1808, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1818, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1828, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1838, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1848, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1858, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1868, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1878, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1888, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1898, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x18f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1908, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1918, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1928, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1938, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1948, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1958, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1968, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1978, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1988, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1998, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x19f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1a98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1aa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ab8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ac8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ad8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ae8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1af8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1b98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ba8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1bb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1bc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1bd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1be8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1bf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1c98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ca8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1cb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1cc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1cd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ce8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1cf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1d98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1da8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1db8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1dc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1dd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1de8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1df8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1e98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ea8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1eb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ec8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ed8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ee8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ef8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1f98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1fa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1fb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1fc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1fd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1fe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x1ff8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2008, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2018, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2028, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2038, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2048, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2058, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2068, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2078, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2088, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2098, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x20f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2108, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2118, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2128, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2138, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2148, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2158, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2168, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2178, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2188, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2198, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x21f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2208, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2218, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2228, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2238, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2248, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2258, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2268, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2278, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2288, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2298, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x22f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2308, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2318, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2328, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2338, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2348, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2358, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2368, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2378, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2388, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2398, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x23f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2408, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2418, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2428, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2438, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2448, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2458, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2468, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2478, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2488, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2498, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x24f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2508, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2518, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2528, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2538, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2548, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2558, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2568, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2578, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2588, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2598, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x25f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2608, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2618, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2628, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2638, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2648, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2658, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2668, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2678, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2688, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2698, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x26f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2708, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2718, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2728, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2738, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2748, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2758, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2768, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2778, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2788, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2798, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x27f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2808, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2818, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2828, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2838, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2848, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2858, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2868, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2878, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2888, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2898, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x28f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2908, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2918, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2928, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2938, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2948, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2958, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2968, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2978, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2988, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2998, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x29f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2a98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2aa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ab8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ac8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ad8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ae8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2af8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2b98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ba8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2bb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2bc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2bd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2be8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2bf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2c98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ca8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2cb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2cc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2cd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ce8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2cf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2d98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2da8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2db8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2dc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2dd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2de8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2df8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2e98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ea8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2eb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ec8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ed8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ee8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ef8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2f98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2fa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2fb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2fc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2fd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2fe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x2ff8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3008, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3018, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3028, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3038, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3048, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3058, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3068, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3078, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3088, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3098, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x30f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3108, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3118, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3128, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3138, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3148, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3158, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3168, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3178, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3188, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3198, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x31f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3208, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3218, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3228, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3238, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3248, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3258, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3268, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3278, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3288, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3298, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x32f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3308, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3318, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3328, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3338, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3348, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3358, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3368, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3378, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3388, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3398, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x33f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3408, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3418, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3428, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3438, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3448, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3458, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3468, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3478, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3488, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3498, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x34f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3508, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3518, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3528, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3538, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3548, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3558, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3568, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3578, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3588, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3598, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x35f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3608, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3618, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3628, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3638, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3648, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3658, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3668, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3678, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3688, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3698, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x36f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3708, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3718, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3728, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3738, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3748, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3758, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3768, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3778, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3788, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3798, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x37f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3808, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3818, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3828, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3838, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3848, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3858, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3868, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3878, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3888, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3898, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x38f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3908, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3918, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3928, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3938, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3948, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3958, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3968, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3978, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3988, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3998, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39a8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39b8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39c8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39d8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39e8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x39f8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3a98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3aa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ab8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ac8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ad8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ae8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3af8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3b98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ba8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3bb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3bc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3bd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3be8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3bf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3c98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ca8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3cb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3cc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3cd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ce8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3cf8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3d98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3da8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3db8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3dc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3dd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3de8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3df8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3e98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ea8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3eb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ec8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ed8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ee8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ef8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f08, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f18, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f28, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f38, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f48, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f58, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f68, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f78, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f88, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3f98, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3fa8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3fb8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3fc8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3fd8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3fe8, 0xc
+	.word D_004862A0
+	PIECE_BYTES D_0046E150, 0x3ff8, 0x8
+	PIECE_END D_0046E150, 0x4000

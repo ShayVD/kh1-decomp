@@ -24,3 +24,4 @@ void func_001e8728(void) {
 void func_001e92e0(void) {
     func_0010ef70(&D_00631570, &D_003DD2F0, &func_001e92b8);
 }
+#include "data/data_003D.h"

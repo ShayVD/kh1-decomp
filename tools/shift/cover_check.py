@@ -19,6 +19,7 @@ stay at their D_BSS / blob offset while the rest floats."""
 from __future__ import annotations
 
 import argparse
+import bisect
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -78,8 +79,13 @@ def main() -> int:
     sized = {n for _b, _s, n, _f in objs} | {n for _a, n, _s, _o in defined}
     anchors = sorted((int(l.split("\t")[0], 16), l.split("\t")[1])
                      for l in (ROOT / "out/shift/data_owners.tsv").read_text().splitlines()[1:])
+    # a name inside a defined variable (a PIECE_LABEL of a merged piece) ends with it
+    dranges = sorted((a, a + s) for a, _n, s, _o in defined)
+    for ad, n in anchors:
+        j = bisect.bisect_right(dranges, (ad, 1 << 40)) - 1
+        if j >= 0 and ad < dranges[j][1]:
+            sized.add(n)
     addrs = [x[0] for x in anchors]
-    import bisect
     for addr, name, size, obj in sorted(defined):
         if name in hits:
             continue

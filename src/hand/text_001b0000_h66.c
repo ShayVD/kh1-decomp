@@ -762,3 +762,4 @@ s32 func_001c91e8(VM_c91e8 *vm) {
 #include "data/data_0038.h"
 #include "data/data_0039.h"
 #include "data/data_003A.h"
+#include "data/data_003C.h"

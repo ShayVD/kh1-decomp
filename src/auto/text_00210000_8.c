@@ -55,3 +55,4 @@ void func_00217f58(s32 arg0) {
     D_00642C90 = arg0;
     D_00642C94 = 0;
 }
+#include "data/data_003F.h"

@@ -92,3 +92,4 @@ void func_0023a8d0(s32 arg0) {
     }
     func_0024af00(M2C_FIELD(arg0, s32 *, 0x1C0));
 }
+#include "data/data_0042.h"

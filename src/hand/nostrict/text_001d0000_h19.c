@@ -19,3 +19,4 @@ s32 func_001dbdc8(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
+#include "data/data_0049.h"

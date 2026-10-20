@@ -338,6 +338,12 @@ def cmd_gen(a) -> int:
         if a.float_only:  # bisecting: only these bss variables float (data variables still do)
             floating = {v.name for v in variables if v.name in floating
                         and (v.name in a.float_only or v.addr < img["bss_start"])}
+        if a.float_only_data:  # bisecting: only these data variables float (bss variables still do)
+            only = set()
+            for x in a.float_only_data:
+                only |= set(Path(x[1:]).read_text().split()) if x.startswith("@") else {x}
+            floating = {v.name for v in variables if v.name in floating
+                        and (v.name in only or v.addr >= img["bss_start"])}
     load, text_end = img["load"], img["text_end"]
     blob_start, blob_end = img["data_start"], img["data_end"]
     bss_start, image_end = img["bss_start"], img["image_end"]
@@ -877,6 +883,8 @@ def main() -> int:
                    help="--float-vars: leave NAME at its original place (bisecting a runtime failure)")
     g.add_argument("--float-only", action="append", default=[], metavar="NAME",
                    help="--float-vars: only these bss variables float (bisecting a runtime failure)")
+    g.add_argument("--float-only-data", action="append", default=[], metavar="NAME",
+                   help="--float-vars: only these data variables float (@FILE: names one per line; bisecting)")
     g.add_argument("--float-bss-budget", type=lambda x: int(x, 0), default=0x10000,
                    help="--float-vars: at most this many bytes of bss float (smallest variables first)")
     g.add_argument("--float-data-budget", type=lambda x: int(x, 0), default=0x4000,

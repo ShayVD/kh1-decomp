@@ -328,3 +328,5 @@ M2C_UNK D_00304BF0[0xa] ALIGNED(16) = {
     (s32)D_0048DDD0, (s32)D_0048DDC8, (s32)D_0048DDC0, (s32)D_0048DDB8,
     (s32)D_0048DDA8, (s32)D_0048DDA0,
 };
+#include "data/data_0030.h"
+#include "data/data_0048.h"

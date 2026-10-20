@@ -12,3 +12,4 @@ void *func_00144e88(s32 arg0) {
 void *func_001477c8(s32 arg0) {
     return (s8 *)&D_00533BA0 + arg0;
 }
+#include "data/data_0030.h"

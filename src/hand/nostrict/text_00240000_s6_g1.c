@@ -140,3 +140,4 @@ void func_00241d60(void) {
         }
     }
 }
+#include "data/data_0045.h"
