@@ -174,9 +174,7 @@ s32 func_00181318(void);
 s32 func_00181368(s32);
 void func_00182c10(Ppp *, s32, s32);
 void func_00182840(Ppp *);
-typedef struct { s32 type; s32 x4; s32 off[2]; s32 x10[2]; } H20;
-typedef struct { u8 *a; u8 *b; s32 c; f32 d; f32 e; } F20;
-typedef struct { H20 *h; F20 e[2]; } T44;
+#include "data/types/nostrict_text_00170000_h61.h"
 extern T44 D_005757B0[];
 extern f32 D_002BBDFC;
 extern u8 D_002C5AD2[][112];

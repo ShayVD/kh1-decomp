@@ -67,7 +67,7 @@ typedef struct {
     s32 unk90;
     s32 unk94;
 } PppMtxOwner;
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615E70;
 void func_002672f8(f32 *, PppMtx, f32 *);
 void func_002675a8(f32 *, f32 *);

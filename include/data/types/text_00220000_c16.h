@@ -5,5 +5,14 @@
 #include "common.h"
 
 typedef struct { u8 pad0[8]; u64 x8; u8 pad10[0x10]; char name[0x20]; } Dir40;
+typedef struct {
+    s32 magic;
+    s32 ver;
+    s32 x8;
+    s32 xC;
+    s32 x10;
+    char name[36];
+    s32 x38;
+} Save3C;
 
 #endif /* KH1_DATA_TYPES_TEXT_00220000_C16_H */

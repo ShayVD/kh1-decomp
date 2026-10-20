@@ -8,6 +8,7 @@
 
 extern void *D_00615E60;
 extern s32 D_00615E64;
+extern s32 D_00615E68;
 extern u8 D_00615EB0[];
 extern f32 D_00615F70[4];
 extern u8 D_00616040[];
@@ -19,5 +20,6 @@ extern s32 D_0061621C;
 extern s32 D_0061622C;
 extern s32 D_00616234;
 extern u8 D_0061E720[];
+extern u8 D_0061E730[];
 
 #endif /* KH1_DATA_BSS_0061_MIXED_H */

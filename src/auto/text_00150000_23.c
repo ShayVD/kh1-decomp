@@ -36,3 +36,4 @@ void func_001566a8(void) {
   ;
   *func_00156628() &= new_var;
 }
+#include "data/bss_0054_mixed.h"

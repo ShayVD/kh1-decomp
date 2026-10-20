@@ -461,7 +461,7 @@ typedef struct { u16 qwc; u8 b2; u8 id; u32 addr; u32 pad[2]; } DT59;
 typedef struct { DT59 dma; GT59 tag; AD59 ad[4]; GT59 img; DT59 ref; } Pk59;
 typedef struct { u8 x0, x1; u8 pad[2]; u16 w, h; } Img59;
 typedef struct { u8 pad[4]; u8 n; u8 pad5[3]; u32 data[4]; Img59 *img[4]; } Src59;
-extern Pk59 *D_0055C648;
+extern Pk59 *D_0055C648; /* src/data/bss_0055.c: B4Pk *D_0055C648 */
 
 void func_0015f8c8(Src59 *s, s32 k) {
     s32 i;

@@ -7,7 +7,7 @@ typedef struct {
     u8 pad0[0x10]; V4 x10; u8 pad20[0x10]; V4 x30; u8 pad40[0x30]; s32 x70; u8 pad74[0x5C]; V4 xD0; u8 padE0[0x2E0]; V4 x3c0;
 } CamC4;
 
-extern CamC4 *D_00575894;
+extern CamC4 *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
 extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 V4 D_00575810 ALIGNED(16);

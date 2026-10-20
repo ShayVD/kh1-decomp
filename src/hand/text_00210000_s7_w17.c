@@ -220,3 +220,4 @@ void func_00218218(Obj *a) {
         break;
     }
 }
+#include "data/bss_0064_mixed.h"

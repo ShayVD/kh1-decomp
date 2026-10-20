@@ -285,7 +285,7 @@ typedef struct { f32 x0, x4, x8, xc, x10; s32 x14; } S5900;
 typedef struct { f32 x0, x4, x8, xc; } S2680b;
 typedef struct { u8 pad[0x3C]; f32 x3c; } S5894;
 extern S5900 D_00575900;
-extern S5894 *D_00575894;
+extern S5894 *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern S2680b D_00362680;
 extern f32 D_0036266C;
 extern f32 D_005758D0[4];
@@ -392,4 +392,3 @@ void func_0017b308(V4 *out, V4 *seg, s32 n, s32 i, s32 loop) {
         func_00267530(&out[2], &out[3], &a);
     }
 }
-#include "data/bss_0057_mixed.h"

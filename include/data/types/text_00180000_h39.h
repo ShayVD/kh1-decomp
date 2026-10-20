@@ -4,7 +4,7 @@
 
 #include "ppp.h"
 
-typedef int u128 __attribute__((mode(TI)));
+#include "data/types/shared.h"
 typedef struct {
     u128 r[4];
 } H39Mtx;

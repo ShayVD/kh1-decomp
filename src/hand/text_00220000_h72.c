@@ -58,7 +58,7 @@ s32 func_001ec6f8(s32, s32);
 typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8;
 typedef struct { u8 pad[0x10]; s32 x10; } P10;
 extern F8 *D_00425BC8;
-extern P10 *D_00643660;
+extern P10 *D_00643660; /* src/data/bss_0064.c: s32 D_00643660 */
 extern u8 D_00643668[];
 extern s32 D_00643674;
 extern s32 D_00643678;
@@ -1007,4 +1007,3 @@ s32 D_003F6568[0xa] ALIGNED(8) = {
     (s32)D_003F6480, (s32)D_003F64B0, (s32)D_003F64E0, (s32)D_003F6510,
     (s32)D_003F6540, 0,
 };
-#include "data/bss_0064_mixed.h"

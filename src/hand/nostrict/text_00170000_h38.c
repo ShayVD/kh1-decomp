@@ -226,7 +226,7 @@ void func_00175708(void *a0, Fil *f) {
 typedef struct { s32 type; s32 x4; s32 off[2]; s32 x10[2]; } H20;
 typedef struct { u8 *a; u8 *b; s32 c; s32 d; s32 e; } E20;
 typedef struct { H20 *h; E20 e[2]; } S44;
-extern S44 D_005757B0[];
+extern S44 D_005757B0[]; /* src/data/bss_0057.c: T44 D_005757B0[0x2] */
 void *memset(void *, s32, u32);
 
 void func_00176ba8(H20 *h, s32 i) {

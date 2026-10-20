@@ -513,11 +513,7 @@ void func_0015e178(B4E5 *e, s32 unused, f32 *v) {
     e->x3b0 = func_00121b08(e->x3b0);
 }
 
-typedef struct {
-    u16 x0; u8 x2; u8 x3; s32 x4; u8 pad8[0x20 - 8]; u64 x20; u8 pad28[8]; u64 x30; u8 pad38[8]; u64 x40;
-    u8 pad48[0x60 - 0x48]; union { u64 x; struct { u64 lo:15; u64 r:49; } b; } x60; u8 pad68[8];
-    u16 x70; u8 x72; u8 x73; s32 x74; u8 pad78[8];
-} B4Pk;
+#include "data/types/nostrict_text_00140000_b04.h"
 typedef struct { u16 x0; u8 x2; u8 x3; u16 x4; u16 x6; s32 x8; } B4Tx;
 typedef struct { u8 pad[0xc]; s32 xc; } B4Tc;
 typedef struct { u8 pad[0xd]; u8 xd; u8 pade[2]; B4Tx *x10; B4Tc *x14; } B4Rec;

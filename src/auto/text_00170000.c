@@ -209,3 +209,4 @@ void func_0017f970(void) {
         func_001a9f88();
     }
 }
+#include "data/bss_0057_mixed.h"

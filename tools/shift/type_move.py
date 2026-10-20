@@ -12,7 +12,7 @@ verbatim, to include/data/types/<name>.h (the path under src/ without hand/,
 "/" -> "_", so variants differ). SRC includes that header where the
 first moved statement was. Types emit no code, so the object is unchanged
 (`make` checks it). The header copies SRC's own `#include` lines that live in
-include/ (common.h, m2c.h, ...), so it compiles on its own.
+include/ (common.h, m2c.h, data/types/shared.h, ...), so it compiles on its own.
 
 Refused (printed, nothing written): a TYPE SRC does not define at file scope,
 a header that already exists, a statement that is inside `#if` (it would lose
@@ -206,7 +206,8 @@ def apply(src: Path, take: list[int], info) -> Path:
     incs = []
     for ln in text.splitlines():
         m = re.match(r'\s*#\s*include\s+[<"]([^>"]+)[>"]', ln)
-        if m and (ROOT / "include" / m.group(1)).exists() and not m.group(1).startswith("data/"):
+        if m and (ROOT / "include" / m.group(1)).exists() and (not m.group(1).startswith("data/")
+                                                                    or m.group(1) == "data/types/shared.h"):
             incs.append(f'#include "{m.group(1)}"')
     body = [text[info[k][0]:info[k][1]] for k in take]
     rel = src.relative_to(ROOT)

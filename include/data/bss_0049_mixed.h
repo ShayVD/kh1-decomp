@@ -17,8 +17,11 @@ extern volatile f32 D_00494A70;
 extern f32 D_00494A88;
 extern s32 D_00494AA0[32];
 extern s32 D_00494B20[32];
+extern volatile s32 D_00495160;
+extern volatile s32 D_00495164;
 extern u8 D_004951D0[];
 extern u8 D_00495210[];
 extern s32 D_00495250;
+extern volatile s32 D_00495258;
 
 #endif /* KH1_DATA_BSS_0049_MIXED_H */

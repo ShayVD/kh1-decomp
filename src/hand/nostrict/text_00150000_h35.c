@@ -533,7 +533,7 @@ E551670 *func_00157818(Obj157818 *a, s32 k) {
 
 /* ---- func_00157dc8 ---- */
 typedef struct { s8 b0; u8 f0:1; u8 f1:7; u8 pad[32]; } E551608;
-extern E551608 D_00551608[];
+extern E551608 D_00551608[]; /* src/data/bss_0055.c: E1608 D_00551608[0x3] */
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
 void func_00157c60(void);
@@ -862,4 +862,3 @@ s32 func_00158b88(s32 a, u8 *b) {
     }
 }
 #include "data/bss_0055_mixed.h"
-#include "data/bss_0055_typed.h"

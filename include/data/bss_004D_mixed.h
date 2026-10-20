@@ -13,6 +13,7 @@ extern u32 D_004D5B08;
 extern u8 D_004D6B10[];
 extern s32 D_004D8EC0[];
 extern volatile s32 D_004D90F0;
+extern volatile s32 D_004D90F4;
 extern s32 D_004D9250;
 extern s32 D_004D9258;
 extern s32 D_004D925C;

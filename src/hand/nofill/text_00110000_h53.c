@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/bss_004F.h"
-typedef struct { s16 id; u8 pad[18]; } E7810;
+#include "data/types/nofill_text_00110000_h53.h"
 extern E7810 *D_004F7810;
 extern u32 *D_00308CDC;
 extern f32 D_002E27CC;
@@ -17,3 +17,4 @@ void func_00127340(void) {
     D_002E27D0 = D_00308CDC[3];
     D_004F7810 = func_001477c8(0xa9f0);
 }
+#include "data/bss_004F_typed.h"

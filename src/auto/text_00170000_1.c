@@ -10,7 +10,7 @@ extern s32 D_002E27A8;
 extern s32 D_0036244C;
 extern s32 D_00362450;
 extern s32 D_00362454;
-extern s32 D_00575894;
+extern s32 D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern void *D_00362438;
 
 void func_001761b0(void) {

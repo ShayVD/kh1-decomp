@@ -74,7 +74,7 @@ typedef struct {
 } KkGs;
 
 extern KkSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-extern KkCam *D_00615E68;
+extern KkCam *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern KkMtx D_00615FC0;
 extern KkMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern KkGs D_0061E800;

@@ -1364,3 +1364,94 @@ list is written to `out/shift/<mode>-float/float_reach.txt`, and the log shows e
   (KH1_F18D.ELF).
 - Some batch-1 names got a basic type (`u8 D_00495210[0x40]`) although a hand file's struct (`Mtx`) also
   fits; these can be upgraded later.
+
+## Session 19: data_owners anchors and the skipped shared names (worker s19d1)
+
+`make` stays byte-identical after every batch. 1,080 variables are now C definitions (36 data, 1,044 bss),
+51 more than session 18.
+
+### data_owners.py: C-defined variables are anchors
+
+- `tools/shift/data_owners.py` reads out/gen/data.tsv (`--data-tsv`). Every C-defined variable is an anchor,
+  and a reference through a section symbol (how a file reaches its own definition) is counted for the
+  C variable that holds the target. So the defining file shows up among a variable's users, and a variable
+  no other file names gets a row too.
+- Against the M0 link: 154 extents shrank, and 332 C variables that only their own file references now have
+  rows (1,025 of 1,029 C variables have one; the other 4 are not referenced at all). No extent runs over a
+  C variable any more. bss `single` went from 99 to 399, because the defining files now count as users.
+- define_shared.py's clamp is gone. In its place is a check that stops with "rerun data_owners.py" when an
+  extent runs over a C variable, which means data_owners.tsv is older than the last `make`. It found nothing.
+- cover_check.py reads data_owners.tsv for "the name just below". With the C variables as rows, 7 names it
+  used to keep in place now float: D_002BD1A8, D_003F32E8, D_003F5A00, D_00469FD8, D_00469FF8, D_0046A018
+  and D_006202A0. Each one now sits right after a C variable whose size is known. Check them in PCSX2
+  (title, menu, the world map) before trusting them.
+- The fixed extents changed no skip reason by themselves. All 76 names define_shared.py --mixed listed were
+  still skipped: the 73 from session 18 (74 there) plus the 3 bss_0061 type clashes.
+
+### One shared type header (bss_0061)
+
+- `include/data/types/shared.h` defines `u128` (`unsigned int`, mode TI) and `PppMtx` once. The h39 and
+  nostrict h40 type headers, text_00180000_h40.c and text_001a0000_h13.c include it instead of defining
+  them. text_00170000_s6_10.c's own `typedef int u128` became `unsigned`, matching the header it includes
+  (gcc 2.96 accepts a repeated identical typedef, but not one that differs). The code is unchanged.
+- define_shared.py: a type that shared.h defines needs no move (tsrc `include/data/types/shared.h`), and
+  type_move.py copies a source's `#include "data/types/shared.h"` into the header it writes.
+- With that, D_00616010 (`PppQv[3]`), D_0061E780 (`PppMtx`) and D_0061EEA0 (`GsTag[0x10]`) are defined.
+- D_005759B0 hits the same problem with `V4`. text_00170000_b06.c and the nostrict b06 header each define
+  an anonymous `struct { f32 x, y, z, w; } V4`, and two anonymous structs are different types even with the
+  same fields. It needs `V4` in shared.h and `CamB` moved by hand. It stays skipped for now.
+
+### define_shared.py --relax (with --mixed and --name)
+
+- **pad-align**: a declaration smaller than the extent, where the rest is only alignment: the next anchor
+  is the first 8- or 16-aligned address after it. The code's reach must fit, and no other name may land
+  inside the extent. Taken addresses and sized arrays are allowed, because reach_check keeps a name in place
+  when code reaches past it through a pointer.
+- **fill-floor**: `T D[]` filled with floor(extent / sizeof T) elements when the remainder is only
+  alignment. D_00645250 is `Save3C[99]`, and 99 is also the loop bound in text_00210000_s6_22.c.
+- It also reads repeated identical `extern` lines, function pointers `T (*D)(args)` and `T *volatile D`.
+  A user whose externs all declare some pointer counts as 4 bytes for a pad.
+- With `--name`, names whose users agree go through this path too. The default mode refuses repeated
+  extern lines, volatile types and struct types.
+- `Save3C` moved by hand into include/data/types/text_00220000_c16.h, because that header already existed.
+
+### Counts
+
+| batch | names |
+| --- | ---: |
+| bss_0061 clashes (shared.h) | 3 |
+| --relax on the skipped names: 12 pad-align, 2 fill-floor, 1 fill, 4 pad | 19 |
+| --relax with function and volatile pointers: 3 exact, 3 pad, 2 pad-align, 1 fill-floor | 9 |
+| --relax on the default mode's skipped names: 9 exact, 3 fill, 8 pad-align | 20 |
+
+Some picks have a basic type where a hand file has a better one, for example `s32 D_00615E68` (36 users,
+and most hand files say `PppMtxOwner *`). These can be upgraded later, like session 18's.
+
+### Still skipped (45 of the 76, plus 7 other shared names from the default mode)
+
+- **Another name lies inside the object** (a declaration is larger than the extent; a field named on its
+  own), 25 names: D_00494BC0, D_004DBC20, D_004E2430, D_00525298, D_00525328, D_0052EB50, D_0054C440,
+  D_00573E40, D_005758F0, D_00575900, D_00575940, D_00615E70, D_00615FC0, D_0062F6E0, D_0062F790,
+  D_00630300, D_00630460, D_006305C0, D_00641250, D_00643020, D_00647FE8, D_00651E50, D_006561D0,
+  D_006627B0, D_00669700. Defining these needs the enclosing object in C, with the inner names as fields or
+  link-script aliases (`D_inner = D_outer + off`), and shift_ld must accept those inside a floated variable.
+- **The name is part of a larger object**, 9 names: D_004E2450 and D_004E2458 (inside `s32 D_004E2430[64][16]`),
+  D_00575970 (inside `Cam D_00575940`), D_00615FF8 (inside `PppMtx D_00615FC0`), D_00651E70 and
+  D_00655264 (inside D_00651E50, which code reaches up to +0x4124), D_00623E49, D_006298F8, D_00629924.
+- **Indexed past the extent, or rows that do not fit it**, 6 names: D_00575020, D_006305D0 (one element
+  fills the extent), D_0054F438 (0x18-byte elements, extent 8), D_00623E40 and D_00623ED4 (96-byte rows
+  that overlap D_00623E49), D_006298F0 (0xb0-byte objects, extent 6).
+- **The declared type is too small, or the layout is unclear**, 3 names: D_00551740 (the code reaches
+  +0x224, but the struct is 0x210), D_00631620 (`Pkt620` is 0x1960 of a 0x2020 extent, and its address is
+  passed on as a DMA packet), D_00656230 (`Gm *` in the hand file, but session 18 found 0x24-byte entries).
+- **Inside the IOP-written block** D_0063D640: D_0063EE40.
+- **Type clash**: D_005759B0 (`V4`, see above). D_00668280 is a clash too (`Q4`, from the default mode's list).
+- The other names from the default mode's list that stay skipped: D_004F3208, D_00551700, D_00616000,
+  D_0062F670, D_00642EB0 and D_00642F60. Each is a scalar or M2C_UNK in a much larger extent, or a
+  declaration larger than the extent.
+
+### Float build
+
+`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` passes: shift_cmp OK, the 12 overlay fixup proofs OK, LO16 0.
+594 C variables float in 109 runs, 333 stay in place (cover_check, reach_check, float_keep), and 153 bss
+are over the 0x10000 budget. `_end` is 0x68f524. Not run in PCSX2 yet.

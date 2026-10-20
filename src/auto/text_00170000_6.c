@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern s32 D_002E26A0;
-extern s32 D_00575894;
+extern s32 D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 s32 func_0017d628(void);
 s32 func_0017ecf8(void);
 void func_00176f08(s32, f32);
