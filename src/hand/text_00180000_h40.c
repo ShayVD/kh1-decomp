@@ -163,7 +163,7 @@ typedef struct {
     PppMtx m2;   /* +0x50 */
 } PppMtxOwner;
 
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 
 void func_00183be0(PppMtx, void *);
 void func_001a5250(PppMtx, PppFVec *);

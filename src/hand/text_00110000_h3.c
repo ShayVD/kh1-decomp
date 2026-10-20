@@ -455,3 +455,4 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
     func_0011db50(a0, a1);
 }
 #include "data/bss_004E_typed.h"
+#include "data/bss_004E_mixed.h"

@@ -22,3 +22,4 @@ void func_00199908(void *arg0, void *arg1, void *arg2) {
         func_002672f8(arg2, &D_00615E70, arg2);
     }
 }
+#include "data/bss_0061_mixed.h"

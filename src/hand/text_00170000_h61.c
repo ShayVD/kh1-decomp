@@ -45,7 +45,7 @@ extern V4 D_00362680;
 extern V4 D_00362660;
 extern f32 D_0036266C;
 extern f32 D_0036268C;
-extern Cam *D_00575894;
+extern Cam *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern V4 D_00362560, D_00362570;
 extern V4 D_003625A0, D_003625B0;
 extern V4 D_003625F0;

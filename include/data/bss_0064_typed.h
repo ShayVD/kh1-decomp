@@ -10,6 +10,7 @@
 #include "data/types/text_00220000_h25.h"
 
 extern Dir40 *D_006450C0[];
+extern Save3C D_00645250[];
 extern Cmd D_006477B0[64];
 extern Slot32 D_00648230[];
 

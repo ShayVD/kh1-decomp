@@ -74,6 +74,11 @@ def user_decl(path: Path, name: str, repeat: bool = False):
     got = set()
     for ln in hits:
         pe = parse_extern(ln, name)
+        if not pe and repeat:
+            d = extra_decl(ln, name)
+            if d:
+                got.add(d)
+                continue
         if not pe:
             return None, f"{path.relative_to(ROOT)}: declaration not understood"
         tspec, decls, i = pe
@@ -81,6 +86,34 @@ def user_decl(path: Path, name: str, repeat: bool = False):
     if len(got) != 1:
         return None, f"{path.relative_to(ROOT)}: {len(hits)} extern lines that disagree"
     return got.pop(), None
+
+
+TAIL = r"\s*;\s*(/\*.*\*/|//.*)?$"
+TYPE = r"((?:(?:const|volatile|unsigned|signed|struct|union|enum)\s+)*[A-Za-z_]\w*)"
+
+
+def extra_decl(line: str, name: str):
+    """(type, declarator) for two forms parse_extern does not read (--relax):
+    a function pointer `T (*D)(args)` and a volatile pointer `T *volatile D`."""
+    n = re.escape(name)
+    m = re.match(r"^extern\s+" + TYPE + r"\s*\(\s*\*\s*" + n + r"\s*\)\s*\(([^()]*)\)" + TAIL, line)
+    if m:
+        return norm(m.group(1)), f"(*{name})({norm(m.group(2))})"
+    m = re.match(r"^extern\s+" + TYPE + r"\s*\*\s*volatile\s+" + n + TAIL, line)
+    if m:
+        return norm(m.group(1)), f"*volatile {name}"
+    return None
+
+
+def pointer_only(path: Path, name: str) -> bool:
+    """Every file-scope extern of name in path declares a pointer (or function
+    pointer), whatever its type: 4 bytes. For --relax pads with unread users."""
+    n = re.escape(name)
+    hits = [ln for ln in path.read_text().splitlines()
+            if ln.startswith("extern") and re.search(r"\b" + n + r"\b", ln)]
+    return bool(hits) and all(
+        re.search(r"(\*\s*(volatile\s+)?" + n + r"|\(\s*\*\s*" + n + r"\s*\)\s*\([^()]*\))"
+                  r"\s*(__asm__\s*\(\s*\"\w+\"\s*\))?\s*;", ln) for ln in hits)
 
 
 def plan(owners: Path, names: list[str]):
@@ -275,6 +308,8 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=(), 
     out = []
     for name, (addr, ext, reach, files, decls, unknown) in sorted(cands.items(), key=lambda kv: kv[1][0]):
         taken = any(address_taken((ROOT / f).read_text(), name) for f in files)
+        # unread users that only declare a pointer are 4 bytes: no obstacle to a pad
+        unread = [f for f in unknown if not (relax and pointer_only(ROOT / f, name))]
         opts, why, sopts = [], [], []
         # the definition must cover every complete declaration (a user writing
         # `s32 D[2]` reads D[1] even if another writes `s32 D`)
@@ -285,7 +320,8 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=(), 
         for (tspec, decl), fns in decls.items():
             tag = f"{tspec} {decl}"
             bt = base_type(tspec)
-            if not re.fullmatch(r"\**\w+(\[[^\]]*\])?(\[[^\]]+\])*", decl):
+            if not (re.fullmatch(r"\**\w+(\[[^\]]*\])?(\[[^\]]+\])*", decl)
+                    or (relax and re.fullmatch(r"\(\*\w+\)\([^()]*\)|\*volatile \w+", decl))):
                 why.append(f"{tag}: declarator not handled")
                 continue
             sz = sizes.get((fns[0], name))
@@ -306,10 +342,10 @@ def plan_mixed(owners: Path, names: list[str], types: bool = False, exclude=(), 
                     d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
             elif sz == ext:
                 d, kind, size = decl, "exact", sz
-            elif (sz < ext and "[" not in decl and not taken and not unknown
+            elif (sz < ext and "[" not in decl and not taken and not (unread if sz >= 4 else unknown)
                   and reach <= max(sz, 4)):
                 d, kind, size = decl, "pad", sz
-            elif (relax and sz < ext and not unknown and not others[name] and reach <= max(sz, 4)
+            elif (relax and sz < ext and not (unread if sz >= 4 else unknown) and not others[name] and reach <= max(sz, 4)
                     and align_slack(addr, sz, ext)):
                 # taken, or a sized array: the slack is only alignment, and reach_check
                 # keeps the name in place if code reaches past it through a pointer

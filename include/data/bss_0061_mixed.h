@@ -8,6 +8,7 @@
 
 extern void *D_00615E60;
 extern s32 D_00615E64;
+extern s32 D_00615E68;
 extern u8 D_00615EB0[];
 extern f32 D_00615F70[4];
 extern u8 D_00616040[];

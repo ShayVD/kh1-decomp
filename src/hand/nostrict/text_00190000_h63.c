@@ -48,7 +48,7 @@ typedef struct {
     s32 unk90, unk94;
 } PppMtxOwner;
 
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615FC0;
 void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 

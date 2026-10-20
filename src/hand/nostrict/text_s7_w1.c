@@ -136,7 +136,7 @@ typedef struct {
 
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 
-extern PppMtxOwner *D_00615E68;
+extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615FC0;
 
 typedef struct {

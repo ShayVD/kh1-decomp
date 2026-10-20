@@ -1,16 +1,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
 
-typedef struct {
-    s32 magic;
-    s32 ver;
-    s32 x8;
-    s32 xC;
-    s32 x10;
-    char name[36];
-    s32 x38;
-} Save3C;
-
 typedef struct { s32 a, b, c, d; } S4;
 extern S4 D_003E8E08;
 typedef struct O98 {

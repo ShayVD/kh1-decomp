@@ -133,7 +133,7 @@ void pppRyjMegaBirthFilterDraw(void *obj, FdKey *k, PppEntry *e) {
 }
 
 typedef struct { u8 pad[0x10]; PppMtx m; PppMtx m2; s32 unk90; s32 unk94; } MfMtxOwner;
-extern MfMtxOwner *D_00615E68;
+extern MfMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern u8 D_00616240[];
 
 typedef struct {

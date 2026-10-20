@@ -69,7 +69,7 @@ typedef struct { f32 x, y, z; } V3;
 typedef struct { s32 a, b, c; } V12;
 
 extern E0C0 D_00364130[256];
-extern Actor *D_00575894;
+extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern Actor *D_002E26A0;
 extern u32 D_002C5960;
 extern s32 D_002E27A8;
@@ -558,4 +558,3 @@ void func_0017d9c8(Hdr *h) {
     D_00362674 = D_00362424->x18;
     func_0017f178();
 }
-#include "data/bss_0057_mixed.h"
