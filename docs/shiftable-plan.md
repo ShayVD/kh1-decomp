@@ -1845,11 +1845,19 @@ With both: 721 data names and 118 bss runs float (1,230 variables); `keep_check:
   session 20 pointer-table-only rule reads data_owners.tsv, where these now have a C owner, so it missed
   them. **tools/shift/ptr_only.py** lists every name that only a C pointer table names (108); the float build
   keeps them with the rest (SHIFT_FLOAT_PTR_ONLY=0).
-- **KH1_F21_RB** (with ptr_only; 690 data names, `_end` 0x6913E4): the storage room draws, a fight
-  (Pot Spider) works, but the alley behind the right-hand door shows pots floating in the sky (C2a drew it).
-  The suspects are the 115 RB names outside C1, C2a and C2b1 (refill names, C2b2b and the 11 non-table names
-  of C2b2a). X1 (good set + those 11) and X2 (good set + the other 104) are built, not booted: the PCSX2
-  connection dropped.
-- Quick tests: load save 06, hold back 7 s (storage room wall view), then right 6 s (through the right door
-  into the alley; buildings must draw). The door to Gate Plaza is on the left wall by a big red pot.
+- **KH1_F21_RB** (with ptr_only; 690 data names, `_end` 0x6913E4): the storage room draws and a fight
+  (Pot Spider) works, but in the alley behind the right-hand door the buildings vanish when the camera faces
+  away from the wall (pots and party float in the sky). Bisection there does not converge: each half of the
+  677 floated data names (H1, H2, with bss 0x11800) draws the alley, the whole set does not. Keeping libcdvd's
+  state block (float_keep.txt, RC) did not change it.
+- **The bss float is the other half**: the same 677 data names with `SHIFT_FLOAT_BSS_BUDGET=0` (RCB0,
+  `_end` 0x685598) draw everything; bss 0x4000 (111 of 118 runs, `_end` 0x687CA4) does not, so it is not
+  `_end` or heap room. D0 (bss 0x11800, no data) draws everything too. Something overruns into, or reads
+  past, a neighbour that only some layouts put next to it. **Default is now data 0x4000 with bss 0**
+  (identical to RCB0).
+- Next step (not done): pad each floated name (e.g. 0x40 bytes of a sentinel), reproduce in the alley,
+  save a state and look for a pad that changed; that names the overrunning object without bisection.
+- Quick test: load save 06, hold back 7 s (storage room wall view), right 6 s (through the right door
+  into the alley), forward 5 s, back 4 s: the camera then faces away from the wall and the buildings must
+  draw. A first glance at the alley is not enough. The door to Gate Plaza is on the left wall by a big red pot.
 

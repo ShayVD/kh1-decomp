@@ -146,7 +146,9 @@ SHIFT_FLOAT      ?= 0
 # PCSX2; session 19: 0x11800 plays (title, save load, field) with the reach_check bounds and
 # float_keep's packet buffer. Session 20: with the stricter reach_check rules only 6 large bss names
 # are over 0x11800, and 0x16000 floats nothing more (the next one is 0x14014 bytes).
-SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
+# Session 21: with data floated too, bss 0x11800 and 0x4000 leave Agrabah's alley buildings undrawn
+# from some angles (layout-dependent; data 0x4000 with bss 0 and bss 0x11800 with no data both draw it).
+SHIFT_FLOAT_BSS_BUDGET ?= 0
 # SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
 # data goes after the blob and pushes .bss and _end up by as much (same arena limit).
 # Session 20: 0x4000 (753 data names) plays in PCSX2 (title, load menu, save 05, field, menus) with

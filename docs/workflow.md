@@ -798,6 +798,10 @@ found that the next session needs:
 - **reach_check** (worker s21r1): countdown bounds, stored joins, arg-join, block bounds, plus two
   coverage fixes (hi-index, switch tables); 1,928 -> 1,832 kept. keep_check.py fails the float build when a
   runtime-bisected name would float.
+- **ptr_only.py**: names only a C pointer table names (define_ptr_tables.py moved those tables into C) stay
+  in place like the session 20 pointer-table-only names; floated, Agrabah's storage room walls went black.
+- **Float defaults are now data 0x4000, bss 0** (`SHIFT_FLOAT_BSS_BUDGET ?= 0`): data and bss floated together
+  lose Agrabah's alley buildings from some angles, a layout-dependent hazard bisection could not pin down.
 - **PCSX2 test memcard**: save 05 is Traverse Town, save 06 is in Agrabah (the load menu's cursor starts on
   06; no Down press). The Agrabah walk test: walk into a wall; floated-collision bugs drop Sora into the
   void. The world map warp and a fight are the other runtime checks.

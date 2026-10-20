@@ -11,9 +11,10 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 - **6,978 / 6,988 functions matched**: 99.86% of functions, 98.83% of code bytes (docs/progress.md). Session 21 matched nothing new. 00265608 (sceGsDefDispEnv) is now 4 words with two more register pins; the 2 words left in each block are a sched2 dependence that plain C did not change. 001fd858 stays at 1 word (nonmatchings/session21/NOTES.md).
 - **The Agrabah wall bug is fixed**: the session 20 float build (Q4000) reached the world map and warped to Agrabah, but Sora walked through the walls. Bisection isolated D_002A6274. func_00105288 reads D_002A6278 as `((s32 *)&D_002A6274)[1]`, which assembles as `%lo(D_002A6274+4)`, so floating the base alone broke the read. The new **tools/shift/addend_check.py** keeps both names of every such pair (72 names). Details: docs/shiftable-plan.md "Session 21".
 - **reach_check is less conservative** (worker s21r1): countdown bounds, stored joins (`cond ? A : B`), arg-join and block bounds, plus two coverage fixes (`D[i]` as lui+addu+%lo, and switch case bodies). It keeps 1,832 names instead of 1,928. **keep_check.py** fails the float build if any of the 35 names found by bisection would float.
-- **The default float build now floats 721 data names and 118 bss runs** (1,230 variables). Budgets 0x6000 (852 data names, `_end` 0x693464) and 0x8000 (870, `_end` 0x6951E4; 0xE1C left below the arena) build and link. Their ELFs are KH1_F21_RA0x6000/0x8000 in Downloads/kh1-test/s21.
-- **Not booted yet**: the combined default build (KH1_F21_RA, already appended to KH1_BIG.iso) and the two larger budgets. The PCSX2 game window was minimised during the session and could not be restored from computer use.
-- **Test memcard**: save 05 is Traverse Town and save 06 is in Agrabah. The load menu's cursor starts on save 06. The walk test is to walk Sora into a wall.
+- **Two runtime hazards fixed with new keep rules**: names that only C pointer tables name (**tools/shift/ptr_only.py**, 108 names; floated, Agrabah's storage room walls went black), and libcdvd's state block in float_keep.txt (precaution, it did not change the alley).
+- **One hazard is open**: with data and bss floated together, the buildings in the Agrabah alley behind the storage room's right-hand door vanish when the camera faces away from the wall. It depends on the layout: each half of the data float draws fine, the whole set does not, and the same data with no bss float (or bss with no data) draws fine. **The default is now data 0x4000, bss 0** (`SHIFT_FLOAT_BSS_BUDGET ?= 0`; KH1_F21_RCB0, which plays: walls, scenery, a fight). Details and the test route: docs/shiftable-plan.md "Session 21".
+- Data budgets 0x6000/0x8000 (with bss 0x11800) build but were not booted; with the open hazard they are moot until it is found.
+- **Test memcard**: save 05 is Traverse Town and save 06 is in Agrabah. The load menu's cursor starts on save 06. The walk test is to walk Sora into a wall; the scenery test is the alley route in shiftable-plan.md "Session 21".
 
 ## What is left (10 functions)
 
@@ -25,8 +26,8 @@ Best drafts are in nonmatchings/session21/ and older. Counts are LCS words.
 
 ## Session 22 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Boot KH1_F21_RA** (the default build) in PCSX2. Load save 06 in Agrabah, do the walk test and a fight, then load save 05 and check the world map. Then boot 0x6000 and 0x8000 the same way. If one fails, bisect with `SHIFT_FLOAT_ONLY_DATA`. Also try turning off reach_check's new relaxations (`--no-countdown`, `--no-join`, ...) one at a time.
-2. **Raise the default budget** to the largest one that plays. With the four records found statically now, check whether their float_keep.txt group can go.
+1. **Find the layout-dependent overrun**: add a pad option to shift_ld (e.g. 0x40 bytes of a sentinel after each floated name), build data 0x4000 + bss 0x11800 with pads, reproduce in the alley (route in shiftable-plan.md "Session 21"), save a state and look for a pad that changed. Fix it with a keep rule, then raise the bss budget back.
+2. **Then raise the budgets** (data 0x6000/0x8000) and boot each with the alley route, Gate Plaza, the world map and a fight.
 3. **Float the kept records as wholes** (merge_pieces.py on the four object/table records and the staging arena). Then try floating the pointer-table-only names with their table, bisecting D_0048F700 ... for the missing digit.
 4. **Phase 4**: D_0046A688 (needs D_0046A6A4 out of C) and types for the 1,229 untyped pieces.
 5. **Matching (1 worker)**: 00125240 (3w) or 001c62a0 (16w).
