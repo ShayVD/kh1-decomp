@@ -133,8 +133,8 @@ extern s32 D_0048CB28[];
 extern s32 D_0048CB70[];
 extern s32 D_0048CBB8[];
 extern s32 D_00494410[2];
-extern s32 D_004948B0[4][4];
-extern s32 D_004948F0[4][4];
+extern s32 D_004948B0[4][4]; /* src/data/bss_0049.c: f32 D_004948B0[4][4] */
+extern s32 D_004948F0[4][4]; /* src/data/bss_0049.c: f32 D_004948F0[4][4] */
 s32 D_00494930[4][4] ALIGNED(16);
 s32 D_00494970[4][4] ALIGNED(16);
 extern s32 D_00494A7C;

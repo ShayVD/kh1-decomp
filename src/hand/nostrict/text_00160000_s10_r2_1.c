@@ -14,7 +14,7 @@ extern ChrEA *D_0035BD40[3];
 extern ChrEA *D_002E26A0[3];
 extern s32 D_00575088;
 extern s32 D_0057508C;
-extern V4EA D_00575090[40];
+extern V4EA D_00575090[40]; /* src/data/bss_0057.c: f32 D_00575090[40][4] */
 extern u32 D_002C5958;
 extern u32 D_002E3168;
 extern LockEA D_002E31B0;

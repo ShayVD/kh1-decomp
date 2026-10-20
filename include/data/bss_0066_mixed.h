@@ -17,6 +17,7 @@ extern s32 D_00669390[8];
 extern s32 D_006693B0[8];
 extern u8 D_006693D0[];
 extern s32 D_00669920;
+extern void *D_00669A10[];
 extern s32 D_00669A18[8];
 extern s16 D_00669A40[];
 

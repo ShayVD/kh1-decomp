@@ -9,6 +9,7 @@
 extern s32 D_005739F8[];
 extern u8 D_00573AC0[];
 extern s32 D_00575010;
+extern f32 D_00575090[40][4];
 extern void *D_00575780;
 extern void *D_00575784;
 extern u8 D_00575788[8];

@@ -12,6 +12,7 @@ extern u8 D_00615EB0[];
 extern f32 D_00615F70[4];
 extern u8 D_00616040[];
 extern u8 D_00616080[];
+extern f32 D_006160C0[4][4];
 extern u8 D_006161C0[];
 extern s32 D_00616214;
 extern s32 D_0061621C;

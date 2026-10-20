@@ -14,7 +14,7 @@ extern M2C_UNK D_00525368;
 extern M2C_UNK D_0052536C;
 M2C_UNK D_00529800[0x240] ALIGNED(64);
 extern M2C_UNK D_0052A100; /* src/data/bss_0052.c: u8 D_0052A100[0x10] */
-extern M2C_UNK D_0052AE70;
+extern M2C_UNK D_0052AE70; /* src/data/bss_0052.c: void *D_0052AE70[0xa] */
 extern M2C_UNK func_00136c98;
 extern f32 D_002BBDFC;
 extern s32 D_00304BE8;

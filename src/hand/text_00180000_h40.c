@@ -478,7 +478,7 @@ void func_00267548(f32 *, f32 *, f32 *);
 
 extern f32 D_003701D0[4];
 extern PppQv D_00616010[3];
-extern PppMtx D_006160C0;
+extern PppMtx D_006160C0; /* src/data/bss_0061.c: f32 D_006160C0[4][4] */
 
 void func_002675a8(f32 *, f32 *);
 void func_00267370(f32 *, f32 *, f32 *);

@@ -261,10 +261,7 @@ def plan_mixed(owners: Path, names: list[str]):
         for (tspec, decl), fns in decls.items():
             tag = f"{tspec} {decl}"
             bt = base_type(tspec)
-            if bt not in BASIC:
-                why.append(f"{tag}: type {bt} not basic")
-                continue
-            if decl.count("[") > 1 or ("[" in decl and decl.startswith("*")):
+            if not re.fullmatch(r"\**\w+(\[[^\]]*\])?(\[[^\]]+\])*", decl):
                 why.append(f"{tag}: declarator not handled")
                 continue
             sz = sizes.get((fns[0], name))
@@ -275,7 +272,10 @@ def plan_mixed(owners: Path, names: list[str]):
                 if ext % sz:
                     why.append(f"{tag}: extent not a multiple of {sz:#x}")
                     continue
-                d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]"), "fill", ext
+                if ext == sz and "][" in decl:
+                    why.append(f"{tag}: one row fills the extent (the rows run past it)")
+                    continue
+                d, kind, size = decl.replace("[]", f"[{ext // sz:#x}]", 1), "fill", ext
             elif sz == ext:
                 d, kind, size = decl, "exact", sz
             elif (sz < ext and "[" not in decl and not taken and not unknown
@@ -289,6 +289,9 @@ def plan_mixed(owners: Path, names: list[str]):
                 continue
             if "[" in d and addr % 8 and size % 8:
                 why.append(f"{tag}: array at an address that is not 8-aligned")
+                continue
+            if bt not in BASIC:
+                why.append(f"{tag}: type {bt} not basic (fits: {kind})")
                 continue
             score = (KIND_RANK[kind], bt == "M2C_UNK",
                      -sum(f.startswith("src/hand/") for f in fns), -len(fns), "volatile" in tspec, tag)
@@ -308,7 +311,7 @@ def compiles_with(src: Path, inc: str) -> bool:
     from define_vars import CC
     with tempfile.TemporaryDirectory() as td:
         p = Path(td) / src.name
-        p.write_text(src.read_text() + f'\n#include "{inc}"\n')
+        p.write_text(src.read_text() + (f'\n#include "{inc}"\n' if inc else ""))
         r = subprocess.run([str(CC), "-fsyntax-only", "-x", "c", "-O2", "-G0", "-fno-common",
                             f"-I{ROOT/'include'}", f"-I{ROOT/'src'}", f"-I{src.parent}", str(p)],
                            capture_output=True, text=True)
@@ -349,6 +352,14 @@ def apply_mixed(plans) -> None:
             text += "\n"
         text += "".join(f"{p[3]} {p[5]} ALIGNED({p[9]});\n" for p in ps)
         src.write_text(text)
+    # files that already include a header that just grew must still compile
+    for mod in mods:
+        line = f'#include "data/{mod}_mixed.h"\n'
+        for path in sorted((ROOT / "src").rglob("*.c")):
+            text = path.read_text(errors="replace")
+            if line in text and "src/data/" not in str(path) and not compiles_with(path, None):
+                path.write_text(text.replace(line, ""))
+                print(f"drop\t{path.relative_to(ROOT)}\tdata/{mod}_mixed.h", file=sys.stderr)
     # users: include where the file still compiles, else mark the extern
     users: dict[str, list] = {}
     for p in plans:

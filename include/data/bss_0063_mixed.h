@@ -14,6 +14,7 @@ extern char D_006307C8[];
 extern char D_00630FC8[];
 extern s8 D_006314C8;
 extern u32 D_00633640[2048];
+extern s32 D_00635640[1024][8];
 extern u8 D_0063F640[256];
 extern u8 *D_0063F744;
 extern u16 *D_0063F748;

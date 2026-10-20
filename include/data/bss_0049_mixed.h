@@ -11,6 +11,8 @@ extern s32 D_00494410[2];
 extern u8 D_004945E0[];
 extern u8 D_00494878[];
 extern f32 D_00494890;
+extern f32 D_004948B0[4][4];
+extern f32 D_004948F0[4][4];
 extern volatile f32 D_00494A70;
 extern f32 D_00494A88;
 extern s32 D_00494AA0[32];

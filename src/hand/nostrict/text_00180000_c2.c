@@ -14,7 +14,7 @@ extern V4A D_00615E70[4];
 extern V4A D_00616010[3]; /* rows 1..3 of a matrix starting 16 bytes earlier */
 extern V4A D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern V4A D_00616080[4]; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
-extern V4A D_006160C0[4];
+extern V4A D_006160C0[4]; /* src/data/bss_0061.c: f32 D_006160C0[4][4] */
 
 void func_00180280(void *o) {
     V4A b, a, c;

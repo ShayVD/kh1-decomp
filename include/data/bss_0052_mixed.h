@@ -25,6 +25,7 @@ extern s32 D_0052AE38;
 extern s32 D_0052AE54;
 extern void *D_0052AE58;
 extern void *D_0052AE5C;
+extern void *D_0052AE70[];
 extern u32 D_0052CB18;
 extern u8 D_0052EB60[];
 
