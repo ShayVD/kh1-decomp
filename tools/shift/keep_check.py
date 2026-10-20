@@ -39,7 +39,11 @@ RUNTIME = [
      for n in ("D_003F8380", "D_003F8F80", "D_003F9F80", "D_003FA380", "D_003FA780", "D_0040E780",
                "D_0040EB80")] + [
     (n, None, "s20: parallel object/table records (hang loading the save)")
-    for n in ("D_0046E120", "D_00472160", "D_004761A0", "D_004761C0", "D_0047A1E0")]
+    for n in ("D_0046E120", "D_00472160", "D_004761A0", "D_004761C0", "D_0047A1E0")] + [
+    ("D_0048BFD0", None, "s22: head of a 0x90-byte record the tables point at (split_check; Agrabah sky)"),
+    ("D_002A6178", None, "s22: colour field of the GIF packet at D_002A6120 (split_check; no title)"),
+    ("D_002A6658", None, "s22: colour field of the GIF packet at D_002A65D0 (split_check; no title)"),
+]
 
 
 def c_defined() -> set[str]:

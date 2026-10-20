@@ -810,3 +810,18 @@ found that the next session needs:
 - **computer use**: a click near a window's traffic lights can minimise PCSX2's game window, which cannot be
   restored from computer use (the Dock is outside the allowlist); ask the user. A batch's waits must total
   under 50 s.
+
+## Session 22: what changed
+
+- **split_check.py** (float build): a pointed-at object cut into two pieces at a non-16-aligned boundary
+  stays in place whole. It found the Agrabah alley bug (D_0048BFD0, the head of a 0x90-byte record) and the
+  missing title at data 0x6000/0x8000 (GIF packet colour fields D_002A6178 / D_002A6658).
+- **Float defaults are now data 0x8000, bss 0x11800.** Session 21's "data + bss together" diagnosis was
+  wrong; the data float alone broke the alley. Use test T (docs/shiftable-plan.md "Session 22").
+- **Pads and layout knobs**: `SHIFT_FLOAT_PAD` / `SHIFT_FLOAT_BSS_PAD` + tools/shift/float_pads.py find writes
+  past a floated name; `SHIFT_FLOAT_BSS_GAP`, `SHIFT_FLOAT_DATA_GAP`, `SHIFT_FLOAT_BSS_SLOTS` move parts of
+  the layout for bisection.
+- **PCSX2 input**: a key pressed right after the title appears, or right after a screenshot/zoom, is
+  sometimes dropped; check the cursor with a zoom before each confirm. A dropped "Down" on the title starts
+  a new game. The intro text ("Thinking of you...") means New Game was chosen.
+- func_00125240 matched (worker s22m1): 6,979 / 6,988.
