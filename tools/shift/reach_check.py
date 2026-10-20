@@ -103,7 +103,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             states[i] = dict(st)
             work.append(i)
             return
-        new = {k: v for k, v in old.items() if st.get(k) == v}
+        new = {}
+        for k, v in old.items():
+            u = st.get(k)
+            if u == v:
+                new[k] = v
+                continue
+            # a pointer walking a table (p = D; ... p += 0x2c in a loop): base + unknown
+            bv = v if isinstance(v, int) else (v[1] if isinstance(v, tuple) and v[0] == IDX else None)
+            bu = u if isinstance(u, int) else (u[1] if isinstance(u, tuple) and u[0] == IDX else None)
+            if bv is not None and bu is not None and bv > 0x10000 and bu > 0x10000 and abs(bv - bu) < 0x10000:
+                new[k] = (IDX, min(bv, bu))
         if new != old:
             states[i] = new
             work.append(i)
@@ -257,6 +267,15 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     break
 
 
+def anchor_addrs(elf_path: Path) -> set[int]:
+    """Addresses of every D_ name of the M0 link (out/shift/kh1-shift.linked.elf)."""
+    if not elf_path.exists():
+        return set()
+    e = Elf.load(elf_path)
+    return {s_.value for s_ in e.symbols() if re.match(r"D_[0-9A-F]{8}$", s_.name)
+            and BLOB_START <= s_.value < IMAGE_END}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--ld", type=Path, help="a SHIFT_FLOAT link script: its floated variables and runs are "
@@ -265,6 +284,8 @@ def main() -> int:
     ap.add_argument("--elf", type=Path, default=ROOT / "SLPS_251.98")
     ap.add_argument("--overlays", type=Path, default=ROOT / "out/overlays")
     ap.add_argument("--all", action="store_true", help="also list indexed accesses from floated bases")
+    ap.add_argument("--anchors-elf", type=Path, default=ROOT / "out/shift/kh1-shift.linked.elf",
+                    help="the M0 link, for the addresses of every D_ name")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
@@ -305,6 +326,7 @@ def main() -> int:
 
     hits: dict[tuple, set] = {}
     idx: dict[int, set] = {}
+    idx_all: dict[int, set] = {}
     own: dict[int, dict[int, list[int]]] = {}  # function -> arg -> [lo, hi) reached from it
     passes: dict[int, list] = {}  # function -> [(callee, j, ("arg", k, off))]
     sites: list = []  # (caller name, callee, j, address)
@@ -341,6 +363,7 @@ def main() -> int:
             if not (BLOB_START <= base < IMAGE_END + 0x10000):
                 continue
             if kind == "idx":
+                idx_all.setdefault(base, set()).add(name)
                 if piece(base)[0] is not None:
                     idx.setdefault(base, set()).add(name)
                 continue
@@ -370,6 +393,19 @@ def main() -> int:
             continue
         if c and c[1] - c[0] <= 0x40000:
             check(name, v, c[0], c[1] - c[0], f"arg{j}:{fname.get(callee, hex(callee))}:")
+    # An array indexed from B may run past the next name: D_00550400[i] for i < 64 (0x48-byte
+    # entries) covers D_005512A0, which is entries 52..63 under its own name (session 18,
+    # found from the stale writes in a RAM dump). A floated variable that is the next name
+    # after an indexed base in another piece stays with it.
+    anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
+    for base, fs in sorted(idx_all.items()):
+        i = bisect.bisect_right(anchors, base)
+        if i >= len(anchors):
+            continue
+        nxt = anchors[i]
+        pn, nn = piece(nxt)
+        if pn is not None and pn != piece(base)[0] and nxt - base <= 0x10000:
+            hits.setdefault((base, piece(base)[1], nxt, nn, "idx-next", 0), set()).update(fs)
     for (base, nb, tgt, nt, kind, width), fs in sorted(hits.items()):
         print(f"{base:08x} ({nb or 'in place'}) -> {tgt:08x} ({nt or 'in place'})\t{kind}{width or ''}\t"
               + " ".join(sorted(fs)[:6]) + (f" +{len(fs) - 6}" if len(fs) > 6 else ""))

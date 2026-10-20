@@ -1,0 +1,11 @@
+# Names the SHIFT_FLOAT build keeps in place although no static check finds them
+# (appended to cover_check.py + reach_check.py's list). One name per line; # comments.
+#
+# The sound IOP module's status block: D_0063D640 is a 0x2000-byte buffer whose address
+# func_001ec* hands to the IOP (D_00633640[0] = D_0063D640, text_001e0000_h68.c), and the
+# IOP writes its replies into it by DMA. D_0063EE40, D_0063F248 (+0x1c08) and D_0063F540
+# (+0x1f00) are fields of it read after FlushCache(0). Floated, they stay zero and the
+# game never draws the title (session 18 bisection in PCSX2; the RAM dump showed the
+# IOP's write at D_0063F248's old place).
+D_0063F248
+D_0063F540
