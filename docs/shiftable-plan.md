@@ -1833,3 +1833,23 @@ Default run keeps 1,832 names (was 1,928). Each rule has a `--no-*` switch (SHIF
   kept (unless SHIFT_REACH_FLAGS is set). tests/reach_check_test.py is in `make test`.
 
 With both: 721 data names and 118 bss runs float (1,230 variables); `keep_check: 35/35`.
+
+### Runtime (PCSX2, save 06 in Agrabah)
+
+- **KH1_F21_RA** (addend_check + s21r1 rules): the walls hold, but the storage room's walls are black from
+  some angles and Gate Plaza draws only sky and a floating door. KH1_F21_D0 (no data floated) draws both.
+  **RX** (RA without countdown/join/arg-join/block-bound) shows the same, so the new rules are not the cause.
+- Bisection over the 695 names both floated: C1 (first half) good; C2 bad; C2a good; C2b bad; C2b1 good;
+  **C2b2a (44 names) bad**. 33 of the 44 are entries of pointer tables that define_ptr_tables.py moved into C
+  (D_0048CF78 ... in text_00110000_6.c, D_0048D2D0 ... in h53, D_0048DDA8 ... in text_00130000_4.c): the
+  session 20 pointer-table-only rule reads data_owners.tsv, where these now have a C owner, so it missed
+  them. **tools/shift/ptr_only.py** lists every name that only a C pointer table names (108); the float build
+  keeps them with the rest (SHIFT_FLOAT_PTR_ONLY=0).
+- **KH1_F21_RB** (with ptr_only; 690 data names, `_end` 0x6913E4): the storage room draws, a fight
+  (Pot Spider) works, but the alley behind the right-hand door shows pots floating in the sky (C2a drew it).
+  The suspects are the 115 RB names outside C1, C2a and C2b1 (refill names, C2b2b and the 11 non-table names
+  of C2b2a). X1 (good set + those 11) and X2 (good set + the other 104) are built, not booted: the PCSX2
+  connection dropped.
+- Quick tests: load save 06, hold back 7 s (storage room wall view), then right 6 s (through the right door
+  into the alley; buildings must draw). The door to Gate Plaza is on the left wall by a big red pot.
+

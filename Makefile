@@ -169,7 +169,8 @@ SHIFT_FLOAT_SKIP ?=
 SHIFT_FLOAT_ONLY ?=
 # SHIFT_FLOAT_ONLY_DATA: if set, only these data names float (@FILE reads names from FILE; bisecting).
 SHIFT_FLOAT_ONLY_DATA ?=
-# SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word names (no code user). Off by
+# SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word or a C pointer table names
+# (no code user; tools/shift/ptr_only.py lists the C ones). Off by
 # default since session 20: entries a pointer table points at one by one (D_0048F700 ...) can be walked
 # by stride, and floating them drops a digit from the load menu's slot labels.
 SHIFT_FLOAT_PTR_ONLY ?= 0
@@ -223,7 +224,8 @@ endif
 		cat $(SHIFT_OUT)/float_addend.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
-			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; \
+			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; \
+			$(SHIFT_PY) tools/shift/ptr_only.py >> $(SHIFT_OUT)/float_covered.txt; fi; \
 		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)" ]; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
 		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n))) \
