@@ -6,32 +6,29 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 20, 2026-10-20)
+## Where we stopped (end of session 21, 2026-10-20)
 
-- **6,978 / 6,988 functions matched**: 99.86% of functions, 98.83% of code bytes (docs/progress.md). Session 20 matched nothing new. 00125240 is now 3 words with a natural body and FP register pins, so it no longer needs the dead test. 001c62a0 (16w) is a global-alloc priority order, and 00200e28 (24w) looks closed for pins (nonmatchings/session20/NOTES.md).
-- **The data float is on**: `SHIFT_FLOAT_DATA_BUDGET ?= 0x4000` floats 753 data names. The float build boots, loads save 05, walks, attacks and opens the menus in PCSX2 (KH1_F20_Q4000). Details are in docs/shiftable-plan.md, "Session 20: the data float".
-  - **The session 19 crash**: D_00472190, D_004761D0 and D_0047A210 are declared 0x40 bytes, but code copies 0x4000 bytes through them.
-  - **reach_check has four new rules**: `&D_X[i]` passed to a call, idx-base, a stored address counts as unbounded, and uncached aliases.
-  - **float_keep.txt has two new groups**: the D_003F8380 staging arena and four object/table records (D_0046E120 ...).
-  - **Names that only pointer tables point at stay in place** (`SHIFT_FLOAT_PTR_ONLY ?= 0`): floated, they drop a digit from the load menu.
-- **Phase 4 step 4 is done for single-owner data** (docs/shiftable-plan.md, "Session 20: Phase 4"). There are 2,581 data pieces, and `merge_pieces.py` turns names declared larger than their extent into one piece with `PIECE_LABEL`s. Only D_0046A688 and D_00494050 stay extern.
-- **bss**: 0x16000 builds the same ELF as 0x11800. The 6 bss names left are large (D_00533BA0 is 0x14014 bytes), so the keep rules now limit the float, not the budget.
-- **Fresh-clone trap**: run `tools/shift/data_owners.py` after the first `make shift`, before a float build. The float build now also reads data_owners.tsv for the pointer-only rule.
+- **6,978 / 6,988 functions matched**: 99.86% of functions, 98.83% of code bytes (docs/progress.md). Session 21 matched nothing new. 00265608 (sceGsDefDispEnv) is now 4 words with two more register pins; the 2 words left in each block are a sched2 dependence that plain C did not change. 001fd858 stays at 1 word (nonmatchings/session21/NOTES.md).
+- **The Agrabah wall bug is fixed**: the session 20 float build (Q4000) reached the world map and warped to Agrabah, but Sora walked through the walls. Bisection isolated D_002A6274. func_00105288 reads D_002A6278 as `((s32 *)&D_002A6274)[1]`, which assembles as `%lo(D_002A6274+4)`, so floating the base alone broke the read. The new **tools/shift/addend_check.py** keeps both names of every such pair (72 names). Details: docs/shiftable-plan.md "Session 21".
+- **reach_check is less conservative** (worker s21r1): countdown bounds, stored joins (`cond ? A : B`), arg-join and block bounds, plus two coverage fixes (`D[i]` as lui+addu+%lo, and switch case bodies). It keeps 1,832 names instead of 1,928. **keep_check.py** fails the float build if any of the 35 names found by bisection would float.
+- **Two runtime hazards fixed with new keep rules**: names that only C pointer tables name (**tools/shift/ptr_only.py**, 108 names; floated, Agrabah's storage room walls went black), and libcdvd's state block in float_keep.txt (precaution, it did not change the alley).
+- **One hazard is open**: with data and bss floated together, the buildings in the Agrabah alley behind the storage room's right-hand door vanish when the camera faces away from the wall. It depends on the layout: each half of the data float draws fine, the whole set does not, and the same data with no bss float (or bss with no data) draws fine. **The default is now data 0x4000, bss 0** (`SHIFT_FLOAT_BSS_BUDGET ?= 0`; KH1_F21_RCB0, which plays: walls, scenery, a fight). Details and the test route: docs/shiftable-plan.md "Session 21".
+- Data budgets 0x6000/0x8000 (with bss 0x11800) build but were not booted; with the open hazard they are moot until it is found.
+- **Test memcard**: save 05 is Traverse Town and save 06 is in Agrabah. The load menu's cursor starts on save 06. The walk test is to walk Sora into a wall; the scenery test is the alley route in shiftable-plan.md "Session 21".
 
 ## What is left (10 functions)
 
-Best drafts are in nonmatchings/session20/ and older. Counts are LCS words.
+Best drafts are in nonmatchings/session21/ and older. Counts are LCS words.
 
-1. **1-3 words**: 001fd858 (1, reorg liveness), 001f2630 (1, nofill; pins exhausted), 001f1fc8 (2, nofill; pins exhausted), 00125240 (3; two `lui`s in sched1 order).
-2. **7-24 words**: 00265608 (7, SDK gcc991111), 001c62a0 (16, global-alloc order), 00200e28 (24).
+1. **1-4 words**: 001fd858 (1, reorg liveness), 001f2630 (1, nofill; pins exhausted), 001f1fc8 (2, nofill; pins exhausted), 00125240 (3; two `lui`s in sched1 order), 00265608 (4, sched2 dependence).
+2. **16-24 words**: 001c62a0 (16, global-alloc order), 00200e28 (24).
 3. **Large**: 00110618 (93), 0010d470 (170 natural), 001636d0 (400).
 
-## Session 21 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 22 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Run the default float build further in PCSX2**: the world map, the Agrabah warp and a fight (docs/workflow.md "Session 19" PCSX2 loop). Session 20 tested only the End of the World field and menus.
-2. **Float the kept records as wholes**: run merge_pieces.py on the four object/table records and the staging arena so they float together. Then try floating the pointer-table-only names with their table, bisecting D_0048F700 ... for the missing digit.
-3. **Raise the data budget** in steps (0x6000, 0x8000; the arena leaves 0xD7DC). Boot each one, since every step pulls in new names.
-4. **Make reach_check less conservative**: it keeps 1,928 names now (761 with the session 19 rules). Bound decrementing-counter walks such as func_00232ad0's clear loop, and follow a join of two known addresses that gets stored (`cond ? A : B`).
-5. **Phase 4**: D_0046A688 (needs D_0046A6A4 out of C) and types for the 1,229 untyped pieces.
-6. **Matching (1 worker)**: 001fd858 (1w) or 00265608 (7w) with the pin lever.
-7. End with `make progress-update SESSION=21`, commit, open a PR, and refresh this prompt.
+1. **Find the layout-dependent overrun**: add a pad option to shift_ld (e.g. 0x40 bytes of a sentinel after each floated name), build data 0x4000 + bss 0x11800 with pads, reproduce in the alley (route in shiftable-plan.md "Session 21"), save a state and look for a pad that changed. Fix it with a keep rule, then raise the bss budget back.
+2. **Then raise the budgets** (data 0x6000/0x8000) and boot each with the alley route, Gate Plaza, the world map and a fight.
+3. **Float the kept records as wholes** (merge_pieces.py on the four object/table records and the staging arena). Then try floating the pointer-table-only names with their table, bisecting D_0048F700 ... for the missing digit.
+4. **Phase 4**: D_0046A688 (needs D_0046A6A4 out of C) and types for the 1,229 untyped pieces.
+5. **Matching (1 worker)**: 00125240 (3w) or 001c62a0 (16w).
+6. End with `make progress-update SESSION=22`, commit, open a PR, and refresh this prompt.

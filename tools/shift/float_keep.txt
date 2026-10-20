@@ -48,3 +48,29 @@ D_004761C0
 D_0047A1D0
 D_0047A1E0
 D_0047A200
+#
+# libcdvd's state words (D_0046C610 ... D_0046C658, "volatile in the original") and its RPC buffer
+# D_0046C680. With D_0046C634 ... D_0046C650 floated (session 21, data budget 0x4000), Agrabah's
+# storage room walls and the alley's buildings are not drawn from some angles; the symptom moves with
+# the layout, which points at the streaming reads of map data. Kept as one block.
+D_0046C610
+D_0046C614
+D_0046C618
+D_0046C61C
+D_0046C620
+D_0046C624
+D_0046C628
+D_0046C62C
+D_0046C630
+D_0046C634
+D_0046C638
+D_0046C63C
+D_0046C640
+D_0046C644
+D_0046C648
+D_0046C64C
+D_0046C650
+D_0046C654
+D_0046C658
+D_0046C680
+D_0046C700

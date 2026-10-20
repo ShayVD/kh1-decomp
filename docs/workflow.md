@@ -788,3 +788,25 @@ found that the next session needs:
   place lets the budget pull in new ones: boot the default build again after any rule change.
 - **Worktree workers start on a stale commit** (816f161, session 14) with `isolation: worktree`: both
   workers had to `git reset --hard` to the session base first. Tell workers to check `git log -1` first.
+
+## Session 21: what changed
+
+- **addend_check.py** (float build): a matched function can name a variable through its neighbour
+  (`((s32 *)&D_002A6274)[1]` is `%lo(D_002A6274+4)` = D_002A6278). Floating the base alone broke Agrabah's
+  collision (Sora walks through walls). The check keeps both names; 72 names today. Details:
+  docs/shiftable-plan.md "Session 21".
+- **reach_check** (worker s21r1): countdown bounds, stored joins, arg-join, block bounds, plus two
+  coverage fixes (hi-index, switch tables); 1,928 -> 1,832 kept. keep_check.py fails the float build when a
+  runtime-bisected name would float.
+- **ptr_only.py**: names only a C pointer table names (define_ptr_tables.py moved those tables into C) stay
+  in place like the session 20 pointer-table-only names; floated, Agrabah's storage room walls went black.
+- **Float defaults are now data 0x4000, bss 0** (`SHIFT_FLOAT_BSS_BUDGET ?= 0`): data and bss floated together
+  lose Agrabah's alley buildings from some angles, a layout-dependent hazard bisection could not pin down.
+- **PCSX2 test memcard**: save 05 is Traverse Town, save 06 is in Agrabah (the load menu's cursor starts on
+  06; no Down press). The Agrabah walk test: walk into a wall; floated-collision bugs drop Sora into the
+  void. The world map warp and a fight are the other runtime checks.
+- **`pkill -f pattern` kills your own shell** when the pattern is in the command line (exit 144): find the
+  pid with `ps -eo pid,args | awk '/pattern/ && !/awk/{print $1}'`.
+- **computer use**: a click near a window's traffic lights can minimise PCSX2's game window, which cannot be
+  restored from computer use (the Dock is outside the allowlist); ask the user. A batch's waits must total
+  under 50 s.

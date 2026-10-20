@@ -109,6 +109,7 @@ toolchain:
 test:
 	@$(PY) tools/test_mangle_gcc2.py
 	@tests/selftest.sh
+	@$(PY) -I tests/reach_check_test.py
 	@tools/check_no_assets.sh && echo "no-assets check: PASS"
 
 # ---- Shiftable build (docs/shiftable-plan.md). Separate from `make`, which it
@@ -139,12 +140,15 @@ SHIFT_FLOAT      ?= 0
 # SHIFT_FLOAT_BSS_BUDGET: bytes of floated bss (smallest runs first); the rest stays in place, since
 # floated bss pushes _end and crt0's 0xA000-byte heap towards the fixed arena at 0x006A0000.
 # Names that are really parts of another object stay in place: cover_check.py (declared
-# objects), reach_check.py (displacements, calls, arrays indexed into the next name) and
+# objects), reach_check.py (displacements, calls, arrays indexed into the next name),
+# addend_check.py (a name reached as its neighbour plus an offset, %lo(D_002A6274+4)) and
 # tools/shift/float_keep.txt (IOP-written blocks, a packet buffer). Session 18: 0x10000 plays in
 # PCSX2; session 19: 0x11800 plays (title, save load, field) with the reach_check bounds and
 # float_keep's packet buffer. Session 20: with the stricter reach_check rules only 6 large bss names
 # are over 0x11800, and 0x16000 floats nothing more (the next one is 0x14014 bytes).
-SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
+# Session 21: with data floated too, bss 0x11800 and 0x4000 leave Agrabah's alley buildings undrawn
+# from some angles (layout-dependent; data 0x4000 with bss 0 and bss 0x11800 with no data both draw it).
+SHIFT_FLOAT_BSS_BUDGET ?= 0
 # SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
 # data goes after the blob and pushes .bss and _end up by as much (same arena limit).
 # Session 20: 0x4000 (753 data names) plays in PCSX2 (title, load menu, save 05, field, menus) with
@@ -152,7 +156,14 @@ SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
 # records, and pointer-table-only names kept (docs/shiftable-plan.md "Session 20: the data float").
 # _end is 0x688824; _end + 0xA000 leaves 0xD7DC below 0x6A0000.
 SHIFT_FLOAT_DATA_BUDGET ?= 0x4000
-# SHIFT_REACH_FLAGS: extra reach_check.py options (--no-bounds: the session 18 idx-next rule).
+# SHIFT_REACH_FLAGS: extra reach_check.py options, each turning one rule off for bisecting:
+# --no-bounds (the session 18 idx-next rule), --no-idx-base, --no-stored, --no-uncached (session 20),
+# --no-countdown (pointer walks capped by a loop counter), --no-join (a join of addresses is one base +
+# an index), --no-arg-join (an argument joined with another value counts as walked), --no-block-bound
+# (&B[i] passed to memcpy/memset is unbounded), --no-hi-index (ignore D[i] as lui + addu + %lo) and
+# --no-switch (no jump tables, no case code) (session 21; docs/shiftable-plan.md). keep_check.py then
+# checks that the names the PCSX2 bisections found are still kept; it fails the build only when
+# SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=
 # SHIFT_FLOAT_SKIP: names that stay in place (space-separated; for bisecting).
 SHIFT_FLOAT_SKIP ?=
@@ -160,7 +171,8 @@ SHIFT_FLOAT_SKIP ?=
 SHIFT_FLOAT_ONLY ?=
 # SHIFT_FLOAT_ONLY_DATA: if set, only these data names float (@FILE reads names from FILE; bisecting).
 SHIFT_FLOAT_ONLY_DATA ?=
-# SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word names (no code user). Off by
+# SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word or a C pointer table names
+# (no code user; tools/shift/ptr_only.py lists the C ones). Off by
 # default since session 20: entries a pointer table points at one by one (D_0048F700 ...) can be walked
 # by stride, and floating them drops a digit from the load menu's slot labels.
 SHIFT_FLOAT_PTR_ONLY ?= 0
@@ -210,9 +222,13 @@ endif
 	if [ "$(SHIFT_FLOAT)" = 1 ]; then $(SHIFT_PY) tools/shift/cover_check.py --out $(SHIFT_OUT)/float_covered.txt > $(SHIFT_OUT)/float_covered.log; \
 		$(SHIFT_PY) tools/shift/reach_check.py $(SHIFT_REACH_FLAGS) --elf $(ORIG) --overlays $(SHIFT_OVERLAYS) --out $(SHIFT_OUT)/float_reach.txt \
 			> $(SHIFT_OUT)/float_reach.log 2>&1; cat $(SHIFT_OUT)/float_reach.txt >> $(SHIFT_OUT)/float_covered.txt; \
+		$(SHIFT_PY) tools/shift/addend_check.py --link $(SHIFT) --out $(SHIFT_OUT)/float_addend.txt > $(SHIFT_OUT)/float_addend.log; \
+		cat $(SHIFT_OUT)/float_addend.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		grep -v '^#' tools/shift/float_keep.txt >> $(SHIFT_OUT)/float_covered.txt; \
 		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
-			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; fi; fi; \
+			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; \
+			$(SHIFT_PY) tools/shift/ptr_only.py >> $(SHIFT_OUT)/float_covered.txt; fi; \
+		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)" ]; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
 		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
