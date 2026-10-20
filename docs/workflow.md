@@ -728,8 +728,11 @@ found that the next session needs:
 
 ## Session 18: what changed
 
-- **Matching** (s18m1): func_001f18e8 matched with a local register variable that pins one constant
-  (`register u64 k3 asm("$3")`, docs/matching-tips.md "Session 18"). 6,974 / 6,988 matched.
+- **Matching**: func_001f18e8 (s18m1) and func_00192958 (s18m2) matched with local register variables
+  that pin a constant or an operation's result (`register u64 k3 asm("$3")`, docs/matching-tips.md
+  "Session 18"). 6,975 / 6,988 matched.
+- **Phase 4 step 3**: 387 more shared bss names are C definitions (1,029 in total; docs/shiftable-plan.md
+  "Session 18").
 - **bss float** works again with the default budget of 0x10000 (docs/shiftable-plan.md "Session 18"),
   using `tools/shift/reach_check.py`, `tools/shift/float_holes.py` and `tools/shift/float_keep.txt`.
 - **PCSX2 loop**: the same as session 17, plus these:

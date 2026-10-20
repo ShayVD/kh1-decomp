@@ -1337,3 +1337,30 @@ list is written to `out/shift/<mode>-float/float_reach.txt`, and the log shows e
 | 0x400 set + 7 names (D_00641BA4 ... D_00642EA4) | 22 | yes |
 | 0x400 set + D_005516E8 D_006257D4 D_006277E4 D_0062F6D0 | 19 | yes |
 | 0x10000 with D_0063F248, D_0063F540 kept | 155 | **yes** (title, save, walk, attack, magic, menu) |
+
+### Phase 4 step 3: shared names whose users disagree on the type (worker s18d1)
+
+- 387 more shared bss names are C definitions. That makes 1,029 C-defined variables (36 data, 993 bss),
+  and `make` stays byte-identical. By type: 277 basic types, 10 multi-dimensional or pointer arrays, and
+  100 struct types. The struct typedefs, with the file-local types they use, moved verbatim into
+  `include/data/types/<dir>_<stem>.h` (52 hand files; `tools/shift/type_move.py`).
+- Each definition goes into `src/data/bss_XXXX.c` and its declaration into `include/data/bss_XXXX_mixed.h`
+  (basic types) or `bss_XXXX_typed.h` (structs). A user whose declaration agrees includes that header at
+  the end of the file, after all code, and only if the file still compiles with it (`-fsyntax-only`). A user
+  that disagrees keeps its own extern with a `/* src/data/bss_XXXX.c: <type> */` comment.
+- `tools/shift/define_shared.py --mixed [--types] [--exclude NAME]` picks one declaration per name: exact
+  before fill before pad, a real type before M2C_UNK, hand files first, then the most users. The chosen one
+  must cover every other complete declaration.
+- **Hazard: data_owners.py does not use C-defined names as anchors.** A definition is referenced through its
+  own section, so the reference never names the D_ symbol. That means extents in data_owners.tsv can run over
+  existing definitions (D_0054B808 into D_0054B818). define_shared.py clamps each extent at the next C-defined
+  variable. data_owners.py itself still needs out/gen/data.tsv added as anchors.
+- 74 names were skipped. 37 have no declaration that fits the extent, and 25 have a declaration larger
+  than the extent (a field named on its own). 6 have an extent that is not a multiple of the element, 3 have
+  no single file-scope extern, and 3 clash on a type name in bss_0061 (`u128`, `PppMtx`; they need one shared
+  header). For 2, one element fills the whole extent (indexed past it).
+- The float build after it floats 577 C variables in 120 runs. 314 are kept in place, and 138 bss stay over
+  the budget. In PCSX2 it reaches the title, loads the save, walks, attacks and opens the menu
+  (KH1_F18D.ELF).
+- Some batch-1 names got a basic type (`u8 D_00495210[0x40]`) although a hand file's struct (`Mtx`) also
+  fits; these can be upgraded later.

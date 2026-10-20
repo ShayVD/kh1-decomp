@@ -682,3 +682,10 @@ from dead code. Read the allocation first, then find the source change.
   output dependence on them, which moves that argument setup earlier (0021e120's leftover word).
 - The loop insn-count lever (session 17) helped none of the ten loop drafts. It can only stop hoists
   and giv reductions, never add them.
+- Correction (s18m2): a pinned computed value survives when the pinned set is the operation's own
+  result (a truncate or a shift). Only a pinned copy of a value that already has a pseudo is dissolved.
+  This matched 00192958: two TI header constants were pinned to a1/a3, and the scy0 chain was split into
+  pinned `e` (u64, a1), `t = e` (s32, a3) and `u = t << 4` (a1). It also works under gcc991111
+  (sceGsDefDispEnv: 9 -> 7 words).
+- What a pin cannot fix is scheduling order. In 00200e28 and 00125240 the leftover words are an issue
+  order or a `lui`, and pins there made things worse.
