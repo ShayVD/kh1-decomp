@@ -1861,3 +1861,72 @@ With both: 721 data names and 118 bss runs float (1,230 variables); `keep_check:
   into the alley), forward 5 s, back 4 s: the camera then faces away from the wall and the buildings must
   draw. A first glance at the alley is not enough. The door to Gate Plaza is on the left wall by a big red pot.
 
+
+## Session 22: the alley bug was a split record, and split_check.py
+
+### Session 21's alley conclusions were wrong
+
+Session 21 compared builds on a first glance at the alley and with a route whose last camera angle varied.
+With a fixed route (below), **RCB0 (data 0x4000, bss 0, the session 21 default) is bad too** and so is H2;
+retail and D0 (no data floated) draw the alley. The data float alone is enough; the bss float and the
+`_end` / tail address were never the cause (G380: .bss moved by 0x380 with no data floated, good).
+
+### Test T (deterministic alley test)
+
+Load save 06 and wait 25 s; hold back 7 s, then right 6 s (through the right-hand door into the alley);
+wait 6 s; hold R2 (camera right) 1.5 s and look at the booth/shelf view; hold R2 1.5 s again and look at
+the door view. Retail shows walls in both. A bad build shows sky with the door or pots floating in it.
+
+### Pads first: no overrun
+
+shift_ld `--float-pad N` / `--float-bss-pad N` (Makefile `SHIFT_FLOAT_PAD`, `SHIFT_FLOAT_BSS_PAD`) put a
+sentinel (data, `FLOAT_PAD_WORD`) or zeros (bss) after each floated name, each at `__fpad_<name>`;
+**tools/shift/float_pads.py STATE.p2s** lists the pads that changed. With data 0x4000 + bss 0x11800 and pads
+0x10/0x40, the alley was bad but **0 of 795 pads changed** (and float_holes.py: 0 of 1,186 holes written):
+nothing writes past a floated name. (A data pad of 0x40 pushes `_end` into the 0x6A0000 arena.)
+
+Bisection tools added for the layout hunt: `SHIFT_FLOAT_BSS_GAP=N` (N bytes before the floated bss),
+`SHIFT_FLOAT_DATA_GAP=N` (moves .bss as if N more bytes of data floated) and `SHIFT_FLOAT_BSS_SLOTS=names|@FILE`
+(the bss tail is laid out in full, but only runs holding these names move; the others keep an empty slot).
+
+### Bisection with test T
+
+Over the 677 default data names: DB (half) bad, dB2 bad, dB2b (43) bad, both halves of dB2b good: a pair.
+b1 + b2[:5] bad, b1[:5] + b2[:5] good, b1[5:10] + b2[:5] bad; singles with b2[:5]: D_0046C5D8 good,
+D_004862D0 good, **D_0048BFD0 hangs loading save 06** (twice). The default build with only D_0048BFD0 kept
+draws the alley (K0), and so does bss 0x11800 (K1).
+
+D_0048BFD0 (0x8 bytes, C reads it as two words) and D_0048BFD8 (0x88) are one 0x90-byte record: the
+object/table records (D_0046E120+4, D_004761A0+4, D_0047E220+4, D_0048C630+0xc) point at D_0048BFD0, and
+whoever follows that pointer reads past its 8 bytes. Floated, its tail is whatever floated after it, so
+the symptom moved with the layout (sky, hang); that is why halves looked like pairs.
+
+### The data 0x6000 / 0x8000 title
+
+With D_0048BFD0 kept, data 0x6000 and 0x8000 (with or without bss 0x11800) boot with **no picture** ("No
+Image" in PCSX2; the game runs blind, keys start a new game). Over the 87 names 0x6000 adds: v2 bad, v22 bad,
+v221 bad, v221b bad, the IPU (D_0046E0B0) and VU0 (D_0046C590) tables alone good, **x1 = D_002A6178 +
+D_002A6658 bad**, x2 = D_002B6668 + D_002BC918 good. Both are u64 colour registers (RGBAQ) that C writes
+inside a GIF packet: D_002A6120 (0x58) + D_002A6178 (0x68) is one packet, and the DMA tag D_002A61E0 points
+at D_002A6120; floated, C writes the colour where the DMA no longer reads.
+
+### tools/shift/split_check.py
+
+One rule covers both: when a `.word` in src/data points at one of two adjacent pieces and the boundary
+between them is not 16-aligned, the two are one object; both stay in place. 272 names; it adds 9 of the
+default 0x4000 set (D_0048BFD0 among them) and 9 of the 87 extra. The Makefile appends it to
+float_covered.txt; keep_check.py now lists D_0048BFD0, D_002A6178 and D_002A6658 (38 names).
+
+### Runtime (PCSX2, save 06)
+
+| Build | Floated | Title | Alley (test T) |
+|---|---|---|---|
+| K0 | data 0x4000, bss 0, D_0048BFD0 kept | ok | ok |
+| K1 | data 0x4000, bss 0x11800, D_0048BFD0 kept | ok | ok |
+| K6C | data 0x6000, bss 0x11800, split_check | ok | ok |
+| K8C | data 0x8000, bss 0x11800, split_check (`_end` 0x695264) | ok | ok |
+
+**Defaults are now data 0x8000, bss 0x11800** (0x8000 floats 2 names more than 0x6000; `_end` + 0xA000
+leaves 0xD9C below 0x6A0000). Not run on these builds: Gate Plaza, the world map and a fight (walking blind
+from the alley kept going back into the storage room). The libcdvd block session 21 added to float_keep.txt
+was a guess for this bug and may not be needed.
