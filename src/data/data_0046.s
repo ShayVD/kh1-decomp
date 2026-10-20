@@ -113,6 +113,9 @@
 	.word D_00491B20
 	PIECE_BYTES D_0046A6D8, 0x38, 0x1ac
 	PIECE_END D_0046A6D8, 0x1e4
+	PIECE D_0046A8BC, 0x58, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A914, 0x58, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046A96C, 0x5c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0046A9C8, 0x8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word D_0046A6D8
 	PIECE_BYTES D_0046A9C8, 0x4, 0x4
@@ -187,6 +190,9 @@
 	.word func_002608e0
 	PIECE_BYTES D_0046C210, 0x8, 0x38
 	PIECE_END D_0046C210, 0x40
+	PIECE D_0046C250, 0xd0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C320, 0x120, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0046C440, 0x80, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0046C4C0, 0x1c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BYTES D_0046C4C0, 0x0, 0x10
 	.word D_0046C250

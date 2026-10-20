@@ -25,6 +25,7 @@
 	PIECE D_003DAD3C, 0x4, 4  /* untyped: users disagree: f32 D_003DAD3C | s32 D_003DAD3C */
 	PIECE D_003DAD40, 0x4, 4
 	PIECE D_003DAD44, 0xc, 4
+	PIECE D_003DAD50, 0xe0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_003DAE30, 0x10, 16
 	PIECE_BYTES D_003DAE30, 0x0, 0x4
 	.word D_003DAD50

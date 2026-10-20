@@ -5,21 +5,25 @@
  * include/data/data_0029.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
+	PIECE D_0029B140, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0029B170, 0x10, 16
 	PIECE_BYTES D_0029B170, 0x0, 0x4
 	.word D_0029B140
 	PIECE_BYTES D_0029B170, 0x8, 0x8
 	PIECE_END D_0029B170, 0x10
+	PIECE D_0029B180, 0x40, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0029B1C0, 0x10, 16
 	PIECE_BYTES D_0029B1C0, 0x0, 0x4
 	.word D_0029B180
 	PIECE_BYTES D_0029B1C0, 0x8, 0x8
 	PIECE_END D_0029B1C0, 0x10
+	PIECE D_0029B1D0, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0029B200, 0x10, 16
 	PIECE_BYTES D_0029B200, 0x0, 0x4
 	.word D_0029B1D0
 	PIECE_BYTES D_0029B200, 0x8, 0x8
 	PIECE_END D_0029B200, 0x10
+	PIECE D_0029B210, 0x50, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_0029B260, 0x10, 16
 	PIECE_BYTES D_0029B260, 0x0, 0x4
 	.word D_0029B210

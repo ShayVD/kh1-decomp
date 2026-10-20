@@ -27,6 +27,7 @@
 	.word D_002B65F0
 	PIECE_BYTES D_002B66B0, 0x8, 0x8
 	PIECE_END D_002B66B0, 0x10
+	PIECE D_002B66C0, 0xa0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B6760, 0x10, 16
 	PIECE_BYTES D_002B6760, 0x0, 0x4
 	.word D_002B66C0
@@ -85,26 +86,31 @@
 	PIECE D_002B72D0, 0x40, 16
 	PIECE D_002B7310, 0x40, 16
 	PIECE D_002B7350, 0x40, 16
+	PIECE D_002B7390, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B73B0, 0x10, 16
 	PIECE_BYTES D_002B73B0, 0x0, 0x4
 	.word D_002B7390
 	PIECE_BYTES D_002B73B0, 0x8, 0x8
 	PIECE_END D_002B73B0, 0x10
+	PIECE D_002B73C0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B73E0, 0x10, 16
 	PIECE_BYTES D_002B73E0, 0x0, 0x4
 	.word D_002B73C0
 	PIECE_BYTES D_002B73E0, 0x8, 0x8
 	PIECE_END D_002B73E0, 0x10
+	PIECE D_002B73F0, 0x60, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B7450, 0x10, 16
 	PIECE_BYTES D_002B7450, 0x0, 0x4
 	.word D_002B73F0
 	PIECE_BYTES D_002B7450, 0x8, 0x8
 	PIECE_END D_002B7450, 0x10
+	PIECE D_002B7460, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B7490, 0x10, 16
 	PIECE_BYTES D_002B7490, 0x0, 0x4
 	.word D_002B7460
 	PIECE_BYTES D_002B7490, 0x8, 0x8
 	PIECE_END D_002B7490, 0x10
+	PIECE D_002B74A0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002B74C0, 0x10, 16
 	PIECE_BYTES D_002B74C0, 0x0, 0x4
 	.word D_002B74A0
@@ -157,21 +163,25 @@
 	PIECE_BYTES D_002BBB90, 0x8, 0x8
 	PIECE_END D_002BBB90, 0x10
 	PIECE D_002BBBA0, 0x10, 16
+	PIECE D_002BBBB0, 0x70, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002BBC20, 0x10, 16  /* untyped: a non-user file declares it otherwise: src/hand/text_00110000_s6_02.c: u8 D_002BBC20[] */
 	PIECE_BYTES D_002BBC20, 0x0, 0x4
 	.word D_002BBBB0
 	PIECE_BYTES D_002BBC20, 0x8, 0x8
 	PIECE_END D_002BBC20, 0x10
+	PIECE D_002BBC30, 0x90, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002BBCC0, 0x10, 16
 	PIECE_BYTES D_002BBCC0, 0x0, 0x4
 	.word D_002BBC30
 	PIECE_BYTES D_002BBCC0, 0x8, 0x8
 	PIECE_END D_002BBCC0, 0x10
+	PIECE D_002BBCD0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002BBCF0, 0x10, 16
 	PIECE_BYTES D_002BBCF0, 0x0, 0x4
 	.word D_002BBCD0
 	PIECE_BYTES D_002BBCF0, 0x8, 0x8
 	PIECE_END D_002BBCF0, 0x10
+	PIECE D_002BBD00, 0x30, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002BBD30, 0x10, 16
 	PIECE_BYTES D_002BBD30, 0x0, 0x4
 	.word D_002BBD00
@@ -243,12 +253,14 @@
 	PIECE D_002BC750, 0x70, 16
 	PIECE D_002BC7C0, 0x70, 16
 	PIECE D_002BC830, 0x70, 16
+	PIECE D_002BC8A0, 0x78, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002BC918, 0x68, 8
 	PIECE_BEGIN D_002BC980, 0x10, 16
 	PIECE_BYTES D_002BC980, 0x0, 0x4
 	.word D_002BC8A0
 	PIECE_BYTES D_002BC980, 0x8, 0x8
 	PIECE_END D_002BC980, 0x10
+	PIECE D_002BC990, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002BC9B0, 0x40, 16
 	PIECE_BEGIN D_002BC9F0, 0x10, 16
 	PIECE_BYTES D_002BC9F0, 0x0, 0x4
@@ -307,6 +319,7 @@
 	PIECE D_002BD114, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BD114; unparsed in 1 file(s) */
 	PIECE D_002BD118, 0x4, 4  /* untyped: users disagree: s32 D_002BD118 | u32 D_002BD118 */
 	PIECE D_002BD11C, 0x4, 4
+	PIECE D_002BD120, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE_BEGIN D_002BD140, 0x10, 16
 	PIECE_BYTES D_002BD140, 0x0, 0x4
 	.word D_002BD120
