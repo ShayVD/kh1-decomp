@@ -167,9 +167,9 @@ void func_00102070(s32 a, s32 b, s32 x, s32 y, u64 *p) {
 /* ---- 00104f10.c ---- */
 /* VU0 */
 typedef struct { u8 pad[8]; s16 n; u8 pada[10]; } Face;
-typedef struct { s16 x, y, z, w; } SV;
+#include "data/types/text_00100000_s6_00_p.h"
 extern Face *D_002A6238;
-extern SV *D_002A6250;
+#include "data/pieces/D_002A6250.h"
 static inline void scale(void *d, void *s, f32 t) {
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"

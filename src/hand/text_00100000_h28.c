@@ -48,9 +48,9 @@ typedef struct {
 
 extern Api D_0046A688;
 extern Cam80 D_00494310[2];
-extern E90 D_002B1C60[][64];
+#include "data/pieces/D_002B1C60.h"
 extern E90 D_00494F20[][2];
-extern ED0 D_002AA060[];
+#include "data/pieces/D_002AA060.h"
 extern ED0 D_00494D80[];
 extern Ent14 *D_002A6238;
 extern Ent14 *D_002A62B0;

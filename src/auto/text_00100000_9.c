@@ -39,7 +39,7 @@ M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BBC20;
 extern M2C_UNK D_002BBCF0;
 extern M2C_UNK D_002BBD30;
-extern M2C_UNK D_002BBD48;
+#include "data/pieces/D_002BBD48.h"
 #include "data/pieces/D_002BBD90.h"
 extern M2C_UNK D_002BC210;
 #include "data/pieces/D_002BC720.h"
@@ -59,7 +59,7 @@ extern s32 D_00495180;
 extern s32 D_00495254;
 extern u32 D_004D8EC0[]; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
 extern volatile M2C_UNK D_002E2700;
-extern volatile M2C_UNK D_002E2740;
+#include "data/pieces/D_002E2740.h"
 #include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_002BC070[];
 extern volatile s32 D_00494410[]; /* src/data/bss_0049.c: s32 D_00494410[2] */
@@ -229,7 +229,7 @@ void func_001095b0(void) {
     func_00236f18();
     func_0024b990();
     D_002BC140 = &D_002E2700;
-    D_002BC144 = &D_002E2740;
+    D_002BC144 = ((volatile M2C_UNK *)&D_002E2740);
     D_002BBDE0 = 3;
     D_00495160 = 0;
 }
@@ -353,7 +353,7 @@ void func_0010fbe0(s32 arg0) {
     var_a3 = 0;
     do {
         temp_v1 = var_a3 * 4;
-        temp_a0 = temp_v1 + (s8 *)&D_002BBD48;
+        temp_a0 = temp_v1 + (s8 *)&(*(M2C_UNK *)&D_002BBD48);
         temp_v1_2 = temp_v1 + (s8 *)(M2C_UNK *)&D_002BBD90;
         var_a3 += 1;
         *temp_a0 = arg0 + M2C_FIELD(var_a2, s32 *, 0);

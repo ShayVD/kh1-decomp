@@ -304,9 +304,9 @@ extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
 extern s32 D_006477A8;
 extern s32 D_00647FE8[];
 extern s32 D_00425C28[2][4];
-extern s32 D_00425C48[2][4];
-extern s32 D_00425C68[2][4];
-extern s32 D_00425C88[2][4];
+#include "data/pieces/D_00425C48.h"
+#include "data/pieces/D_00425C68.h"
+#include "data/pieces/D_00425C88.h"
 s32 func_00270e40(s32);
 s32 func_002716d8(s32, s32, s32 *, s32 *, s32 *);
 s32 func_002715a0(s32, s32, s32 *);

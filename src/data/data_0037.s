@@ -1115,9 +1115,9 @@
 	PIECE D_003728C0, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00372908, 0x598, 8
 	PIECE D_00372EA0, 0x8, 8
-	PIECE D_00372EA8, 0x80, 8  /* untyped: users disagree: M2C_UNK D_00372EA8 | s32 D_00372EA8 | s32 D_00372EA8[] */
+	PIECE D_00372EA8, 0x80, 8  /* data/pieces/D_00372EA8.h */
 	PIECE D_00372F28, 0x8, 8
-	PIECE D_00372F30, 0x4, 4  /* untyped: users disagree: s32 D_00372F30 | s32 D_00372F30[] */
+	PIECE D_00372F30, 0x4, 4  /* data/pieces/D_00372F30.h */
 	PIECE D_00372F34, 0xcc, 4
 	PIECE D_00373000, 0x30, 16
 	PIECE D_00373030, 0x30, 16

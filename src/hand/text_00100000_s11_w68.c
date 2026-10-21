@@ -1,6 +1,6 @@
 #include "common.h"
 /* 00105288 (hand, strict): MATCH, natural (no dead statements). h as a header struct pointer (field loads are MEM_IN_STRUCT_P), D_002A6280 a plain s32 global stored through the hoisted &D_002A6280 pseudo: in sched1 canon_rtx turns that address into the symbol, so fixed_scalar_and_varying_struct_p separates it from the h->f3 load; after reload ($21) the address varies and sched2 gets the sw 6280 -> lw h3 edge. D_002A62A8 is a one-field int struct so its store keeps conflicting with the h loads in sched1 (a plain scalar there frees sched1 and costs 25w). */
-typedef struct { s32 v; } I1;
+#include "data/types/text_00100000_s11_w68.h"
 extern s32 D_002A3F28, D_002A62E8, D_002A62F0;
 void func_00115d18(void);
 void func_00104528(void);
@@ -18,7 +18,7 @@ extern s32 D_002A6278;
 extern s32 D_002A62A0;
 extern s32 D_002A6288;
 extern s32 D_002A6280;
-extern I1 D_002A62A8;
+#include "data/pieces/D_002A62A8.h"
 extern s32 D_002A6298;
 extern s32 D_002A628C;
 extern s32 D_002A629C;

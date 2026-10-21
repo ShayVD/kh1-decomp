@@ -8,4 +8,4 @@
 	PIECE D_004305B0, 0x1770, 16  /* untyped: users disagree: Tex1440 D_004305B0 | u8 D_004305B0[] */
 	PIECE D_00431D20, 0x30, 16  /* untyped: users disagree: GsTexHdr D_00431D20 | M2C_UNK D_00431D20 | u8 D_00431D20[] */
 	PIECE D_00431D50, 0x1e0, 16  /* untyped: users disagree: Fnt D_00431D50[] | GsTexHdr D_00431D50[10] */
-	PIECE D_00431F30, 0xea64, 4  /* untyped: users disagree: Tex6000 D_00431F30[10] | s8 D_00431F30 */
+	PIECE D_00431F30, 0xea64, 4  /* data/pieces/D_00431F30.h */

@@ -353,9 +353,9 @@ void func_0017e768(void) {
 extern void *D_00575894 __asm__("D_00575894");
 extern s32 D_002E27A8;
 extern s32 D_005758C4; /* src/data/bss_0057.c: f32 D_005758C4 */
-extern s32 D_00362424;
-extern void *D_0036244C;
-extern void *D_00362454;
+#include "data/pieces/D_00362424.h"
+#include "data/pieces/D_0036244C.h"
+#include "data/pieces/D_00362454.h"
 void func_0017ecf8(void);
 s32 func_0011ef10(s32, void *);
 void func_0017f150(void);

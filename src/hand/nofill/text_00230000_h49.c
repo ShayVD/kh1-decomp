@@ -137,8 +137,8 @@ s32 func_0023c400(void) {
     return 0;
 }
 extern s32 D_00651BD0;
-typedef struct { s32 unk0; s32 unk4; s32 unk8; } Hdr;
-extern Hdr D_00449990;
+#include "data/types/nofill_text_00230000_h49_p.h"
+#include "data/pieces/D_00449990.h"
 extern u8 *D_006512F0;
 extern u8 *D_006512F4;
 extern u8 *D_006512F8;

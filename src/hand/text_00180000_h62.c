@@ -21,7 +21,7 @@ extern f32 D_005758D0[];
 extern f32 D_002E2790[];
 extern f32 D_005758E0[];
 extern f32 D_002E27A0;
-extern Rec20 *D_00362428;
+#include "data/pieces/D_00362428.h"
 extern s32 D_0036242C;
 extern Rec20 *D_00362434;
 extern Rec20 *D_00362438;

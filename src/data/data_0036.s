@@ -56,8 +56,8 @@
 	PIECE D_00362400, 0x10, 16
 	PIECE D_00362410, 0x10, 16
 	PIECE D_00362420, 0x4, 4
-	PIECE D_00362424, 0x4, 4  /* untyped: users disagree: Hdr *D_00362424 | s32 D_00362424 */
-	PIECE D_00362428, 0x4, 4  /* untyped: users disagree: Rec20 *D_00362428 | Rec32 *D_00362428 | s32 D_00362428 */
+	PIECE D_00362424, 0x4, 4  /* data/pieces/D_00362424.h */
+	PIECE D_00362428, 0x4, 4  /* data/pieces/D_00362428.h */
 	PIECE D_0036242C, 0x4, 4  /* untyped: users disagree: Rec *D_0036242C | s32 D_0036242C */
 	PIECE D_00362430, 0x4, 4  /* untyped: users disagree: Box *D_00362430 | E30 *D_00362430 | s32 D_00362430 */
 	PIECE D_00362434, 0x4, 4  /* untyped: users disagree: CamPt *D_00362434 | P1c *D_00362434 | Rec20 *D_00362434 | s32 D_00362434 | void *D_00362434 */
@@ -66,9 +66,9 @@
 	PIECE D_00362440, 0x4, 4
 	PIECE D_00362444, 0x4, 4
 	PIECE D_00362448, 0x4, 4
-	PIECE D_0036244C, 0x4, 4  /* untyped: users disagree: s32 D_0036244C | void *D_0036244C */
-	PIECE D_00362450, 0x4, 4  /* untyped: users disagree: Path *D_00362450 | s32 D_00362450 */
-	PIECE D_00362454, 0x4, 4  /* untyped: users disagree: s32 D_00362454 | void *D_00362454 */
+	PIECE D_0036244C, 0x4, 4  /* data/pieces/D_0036244C.h */
+	PIECE D_00362450, 0x4, 4  /* data/pieces/D_00362450.h */
+	PIECE D_00362454, 0x4, 4  /* data/pieces/D_00362454.h */
 	PIECE D_00362458, 0x4, 4  /* untyped: type Fn8 is not a common.h basic type */
 	PIECE_BEGIN D_0036245C, 0x5c, 4  /* data/pieces/D_0036245C.h */
 	PIECE_BYTES D_0036245C, 0x0, 0x4

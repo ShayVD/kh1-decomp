@@ -5,7 +5,7 @@
  * include/data/data_002B.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_002B1C60, 0x1200, 16  /* untyped: users disagree: E90 D_002B1C60[][64] | M2C_UNK D_002B1C60 */
+	PIECE D_002B1C60, 0x1200, 16  /* data/pieces/D_002B1C60.h */
 	PIECE D_002B2E60, 0x2400, 16  /* data/pieces/D_002B2E60.h */
 	PIECE D_002B5260, 0x1200, 16  /* data/pieces/D_002B5260.h */
 	PIECE D_002B6460, 0x14, 4
@@ -124,7 +124,7 @@
 	PIECE D_002B74F0, 0x10, 16
 	PIECE D_002B7500, 0x90, 16
 	PIECE D_002B7590, 0x10, 16  /* data/pieces/D_002B7590.h */
-	PIECE D_002B75A0, 0x20, 16  /* untyped: users disagree: M2C_UNK D_002B75A0 | SemaCb D_002B75A0[2] | s32 D_002B75A0 */
+	PIECE D_002B75A0, 0x20, 16  /* data/pieces/D_002B75A0.h */
 	PIECE D_002B75C0, 0x4000, 16
 	PIECE D_002BB5C0, 0x50, 16
 	PIECE D_002BB610, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -191,7 +191,7 @@
 	PIECE_BYTES D_002BBD30, 0x8, 0x8
 	PIECE_END D_002BBD30, 0x10
 	PIECE D_002BBD40, 0x8, 8
-	PIECE D_002BBD48, 0x48, 8  /* untyped: users disagree: M2C_UNK D_002BBD48 | W29Map *D_002BBD48[] */
+	PIECE D_002BBD48, 0x48, 8  /* data/pieces/D_002BBD48.h */
 	PIECE D_002BBD90, 0x50, 16  /* data/pieces/D_002BBD90.h */
 	PIECE D_002BBDE0, 0x4, 4  /* data/pieces/D_002BBDE0.h */
 	PIECE D_002BBDE4, 0x4, 4  /* data/pieces/D_002BBDE4.h */
@@ -209,11 +209,11 @@
 	PIECE D_002BBE14, 0x4, 4
 	PIECE D_002BBE18, 0x4, 4
 	PIECE D_002BBE1C, 0x4, 4
-	PIECE D_002BBE20, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BBE20 | M53 D_002BBE20 | Mtx52 D_002BBE20 */
-	PIECE D_002BBE60, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BBE60 | Mtx52 D_002BBE60 */
-	PIECE D_002BBEA0, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BBEA0 | Mtx52 D_002BBEA0 */
-	PIECE D_002BBEE0, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BBEE0 | Mtx52 D_002BBEE0 */
-	PIECE D_002BBF20, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BBF20 | Mtx52 D_002BBF20 */
+	PIECE D_002BBE20, 0x40, 16  /* data/pieces/D_002BBE20.h */
+	PIECE D_002BBE60, 0x40, 16  /* data/pieces/D_002BBE60.h */
+	PIECE D_002BBEA0, 0x40, 16  /* data/pieces/D_002BBEA0.h */
+	PIECE D_002BBEE0, 0x40, 16  /* data/pieces/D_002BBEE0.h */
+	PIECE D_002BBF20, 0x40, 16  /* data/pieces/D_002BBF20.h */
 	PIECE D_002BBF60, 0x40, 16  /* data/pieces/D_002BBF60.h */
 	PIECE D_002BBFA0, 0x40, 16  /* data/pieces/D_002BBFA0.h */
 	PIECE D_002BBFE0, 0x40, 16  /* data/pieces/D_002BBFE0.h */
@@ -321,7 +321,7 @@
 	PIECE D_002BCDA0, 0x4, 4  /* untyped: users disagree: Ent40 *D_002BCDA0 | Room *D_002BCDA0 | W29Rec40 *D_002BCDA0 | s32 D_002BCDA0 */
 	PIECE D_002BCDA4, 0x4, 4  /* data/pieces/D_002BCDA4.h */
 	PIECE D_002BCDA8, 0x4, 4
-	PIECE D_002BCDAC, 0x4, 4  /* untyped: users disagree: Room *D_002BCDAC | W29Rec40 *D_002BCDAC | s32 D_002BCDAC */
+	PIECE D_002BCDAC, 0x4, 4  /* data/pieces/D_002BCDAC.h */
 	PIECE D_002BCDB0, 0x4, 4
 	PIECE D_002BCDB4, 0x4, 4
 	PIECE D_002BCDB8, 0x4, 4

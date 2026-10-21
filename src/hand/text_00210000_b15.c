@@ -361,7 +361,10 @@ extern S2 D_00647FE8;
 extern void (*D_00648034)(s32);
 extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
 #include "data/pieces/D_00425C1C.h"
-extern s32 D_00425C28[][4], D_00425C48[][4], D_00425C68[][4], D_00425C88[][4];
+extern s32 D_00425C28[][4];
+#include "data/pieces/D_00425C88.h"
+#include "data/pieces/D_00425C68.h"
+#include "data/pieces/D_00425C48.h"
 s32 func_002716d8(s32, s32, s32 *, s32 *, s32 *);
 s32 func_002715a0(s32, s32, s32 *);
 

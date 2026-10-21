@@ -27,7 +27,7 @@
 	PIECE D_003E3D68, 0x4, 4  /* data/pieces/D_003E3D68.h */
 	PIECE D_003E3D6C, 0x4, 4  /* data/pieces/D_003E3D6C.h */
 	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
-	PIECE D_003E3E50, 0x808, 8  /* untyped: users disagree: M2C_UNK D_003E3E50 | RecE0 D_003E3E50[] */
+	PIECE D_003E3E50, 0x808, 8  /* data/pieces/D_003E3E50.h */
 	PIECE_BEGIN D_003E4658, 0x42b8, 8  /* untyped: merged (a user declares it larger than the next name): D_003E4658, D_003E4660, D_003E4670, D_003E4680, D_003E4690, D_003E46A0 */
 	PIECE_BYTES D_003E4658, 0x0, 0x8
 	PIECE_LABEL D_003E4658, D_003E4660, 0x8
@@ -95,4 +95,4 @@
 	PIECE D_003E9138, 0x118, 8  /* untyped: type Spr is not a common.h basic type */
 	PIECE D_003E9250, 0x3e0, 16  /* untyped: type BigG is not a common.h basic type */
 	PIECE D_003E9630, 0x30, 16
-	PIECE D_003E9660, 0x8000, 16  /* untyped: users disagree: M2C_UNK D_003E9660 | Q D_003E9660[] */
+	PIECE D_003E9660, 0x8000, 16  /* data/pieces/D_003E9660.h */

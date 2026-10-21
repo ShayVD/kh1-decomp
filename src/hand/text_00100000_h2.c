@@ -117,12 +117,8 @@ void func_0010b190(u8 *p) {
 }
 
 /* Callbacks run by the semaphore-driven thread func_0010c0c8. */
-typedef struct {
-    void (*fn)(s32);
-    s32 arg;
-    s32 done;
-} SemaCb;
-extern SemaCb D_002B75A0[2];
+#include "data/types/text_00100000_h2_p.h"
+#include "data/pieces/D_002B75A0.h"
 extern s32 D_00495260;
 s32 WaitSema(s32);
 void func_0010c0c8(void) {

@@ -79,7 +79,7 @@ extern KkMtx D_00615FC0;
 extern KkMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern KkGs D_0061E800;
 extern s8 D_00372EA0;
-extern s32 D_00372EA8[];
+#include "data/pieces/D_00372EA8.h"
 
 #include "platform/math.h"
 void sceVu0MulMatrix(KkMtx, KkMtx, KkMtx);

@@ -464,7 +464,9 @@ extern f32 D_004F7650, D_004F77E0;
 extern V53 D_002E2780, D_002E2790, D_002E26B0;
 extern s32 D_002C5950;
 extern M53 D_004F76E0[], D_004F7760[], D_004F7660[];
-extern M53 D_002E2700, D_002E2740, D_002BBE20;
+extern M53 D_002E2700;
+#include "data/pieces/D_002E2740.h"
+#include "data/pieces/D_002BBE20.h"
 #include "data/pieces/D_002E26C0.h"
 extern f32 (*D_002E27AC)[4];
 void func_00110a48(f32);

@@ -144,9 +144,9 @@ void func_001aa858(void) {
 
 /* Two small s32 stacks with s8 stack pointers. */
 extern s8 D_00372EA0;
-extern s32 D_00372EA8[];
+#include "data/pieces/D_00372EA8.h"
 extern s8 D_00372F28;
-extern s32 D_00372F30[];
+#include "data/pieces/D_00372F30.h"
 
 s32 func_001aa950(s32 n) {
     s8 *sp = &D_00372EA0;

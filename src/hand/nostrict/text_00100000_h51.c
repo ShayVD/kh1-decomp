@@ -72,13 +72,13 @@ s32 func_00103058(void) {
     return 4;
 }
 
-typedef struct { f32 x0; f32 pad4; f32 cw; s32 nx; u8 pad10[0x10]; f32 z0; f32 pad24; f32 ch; s32 nz; } Grid;
+#include "data/types/nostrict_text_00100000_h51.h"
 typedef struct { f32 x, y, z; } Vec3;
 typedef struct { s32 x, y, z; } IVec3;
 extern Grid *D_002A6234;
 extern IVec3 D_002A6308;
 extern IVec3 D_002A6318;
-extern Grid *D_002A6324;
+#include "data/pieces/D_002A6324.h"
 void func_00104850(Vec3 *, IVec3 *);
 
 s32 func_00104940(Vec3 *v, s32 *out) {

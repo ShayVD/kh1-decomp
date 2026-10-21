@@ -5,15 +5,15 @@
  * include/data/data_003F.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_003F1660, 0x400, 16  /* untyped: users disagree: M2C_UNK D_003F1660 | Q D_003F1660[] */
+	PIECE D_003F1660, 0x400, 16  /* data/pieces/D_003F1660.h */
 	PIECE D_003F1A60, 0x4, 4
 	PIECE D_003F1A64, 0x4, 4
 	PIECE D_003F1A68, 0x8, 8  /* data/pieces/D_003F1A68.h */
 	PIECE D_003F1A70, 0x400, 16  /* untyped: users disagree: Q D_003F1A70[] | u8 D_003F1A70[]; unparsed in 1 file(s) */
 	PIECE D_003F1E70, 0x400, 16  /* untyped: users disagree: Q D_003F1E70[] | u8 D_003F1E70[] */
 	PIECE D_003F2270, 0x400, 16  /* untyped: users disagree: Q D_003F2270[] | u8 D_003F2270[] */
-	PIECE D_003F2670, 0xb0, 16  /* untyped: users disagree: M2C_UNK D_003F2670 | Q D_003F2670[] */
-	PIECE D_003F2720, 0xb0, 16  /* untyped: users disagree: M2C_UNK D_003F2720 | Q D_003F2720[] */
+	PIECE D_003F2670, 0xb0, 16  /* data/pieces/D_003F2670.h */
+	PIECE D_003F2720, 0xb0, 16  /* data/pieces/D_003F2720.h */
 	PIECE D_003F27D0, 0x400, 16  /* untyped: users disagree: Q D_003F27D0[] | u8 D_003F27D0[]; unparsed in 1 file(s) */
 	PIECE D_003F2BD0, 0x4, 4
 	PIECE D_003F2BD4, 0x4, 4
@@ -543,7 +543,7 @@
 	.word func_0021d9c8
 	PIECE_BYTES D_003F5BE0, 0x8, 0x20
 	PIECE_END D_003F5BE0, 0x28
-	PIECE D_003F5C18, 0x4, 4  /* untyped: users disagree: s32 D_003F5C18 | s32 D_003F5C18[] */
+	PIECE D_003F5C18, 0x4, 4  /* data/pieces/D_003F5C18.h */
 	PIECE D_003F5C1C, 0x4, 4
 	PIECE D_003F5C20, 0x4, 4
 	PIECE D_003F5C24, 0x4, 4

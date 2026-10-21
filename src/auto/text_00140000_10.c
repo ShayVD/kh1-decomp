@@ -42,7 +42,7 @@ extern f32 D_002BBDFC;
 extern s32 D_002E26A0;
 extern s32 D_0052CB18; /* src/data/bss_0052.c: u32 D_0052CB18 */
 extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
-extern volatile M2C_UNK D_00304D64;
+#include "data/pieces/D_00304D64.h"
 s32 func_00122ff8(s32);
 s32 func_001477e0(s32);
 s32 func_00148438(s32, s32);
@@ -72,7 +72,7 @@ void func_00142030(void) {
 }
 
 f32 func_00144378(Actor *arg0) {
-    return (arg0->unk014 - arg0->unk2D4) - *(f32 *)((s8 *)(s8 *)&D_00304D64 + (M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C) * 8));
+    return (arg0->unk014 - arg0->unk2D4) - *(f32 *)((s8 *)(s8 *)&(*(volatile M2C_UNK *)&D_00304D64) + (M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C) * 8));
 }
 
 void func_00144ce0(s32 arg0, s32 arg1) {

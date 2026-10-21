@@ -69,15 +69,15 @@ Pk *func_001f15f0(Pk *p, s32 a1, u32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
     return p + 1;
 }
 
-typedef struct { u64 a, b; } Q;
+#include "data/types/nofill_text_001f0000_h69.h"
 extern Q D_003F1A70[];
 extern Q D_003F1E70[];
 extern Q D_003F2270[];
 extern Q D_003F27D0[];
-extern Q D_003E9660[];
-extern Q D_003F2670[];
-extern Q D_003F1660[];
-extern Q D_003F2720[];
+#include "data/pieces/D_003E9660.h"
+#include "data/pieces/D_003F2670.h"
+#include "data/pieces/D_003F1660.h"
+#include "data/pieces/D_003F2720.h"
 extern s32 D_003F1A68;
 void func_0011fb78(Q *, s32, Q *);
 Q *func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, u32, Q *, Q *);

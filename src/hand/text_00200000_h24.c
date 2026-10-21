@@ -437,7 +437,7 @@ void func_0021b418(void) {
 
 extern s32 D_00642EA0;
 extern u8 D_00642E98[];
-extern s32 D_003F5C18[];
+#include "data/pieces/D_003F5C18.h"
 void func_0021cfc8(void) {
     s32 i;
     D_00642EA0 = 0;

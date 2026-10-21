@@ -516,21 +516,17 @@ s32 func_001772f8(Actor *o) {
     return 0;
 }
 
-typedef struct { u8 pad[0x20]; } Rec32;
+#include "data/types/text_00170000_h11_p2.h"
 typedef struct E30 {
     u8 pad0[0x20];
     void *x20;
     s32 x24;
     u8 pad28[8];
 } E30;
-typedef struct Hdr {
-    u8 x0, x1, x2, x3;
-    s32 x4, x8, xc;
-    f32 x10, x14, x18;
-} Hdr;
-extern Hdr *D_00362424;
+#include "data/types/text_00170000_h11_p.h"
+#include "data/pieces/D_00362424.h"
 extern s32 D_00362440, D_00362448;
-extern Rec32 *D_00362428;
+#include "data/pieces/D_00362428.h"
 extern Rec *D_0036242C;
 extern E30 *D_00362430;
 extern f32 D_00362674;

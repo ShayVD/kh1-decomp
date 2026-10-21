@@ -152,7 +152,7 @@
 	PIECE D_003044C0, 0x10, 16
 	PIECE D_003044D0, 0x8, 8
 	PIECE D_003044D8, 0x4, 4  /* untyped: users disagree: C02Slot D_003044D8[] | ColEnt D_003044D8[] | ColEntA D_003044D8[] | Ent52b D_003044D8[] | W29E10 D_003044D8[] | W6Ent16 D_003044D8[] */
-	PIECE D_003044DC, 0x4, 4  /* untyped: users disagree: MdlEnt52 D_003044DC[]; unparsed in 2 file(s) */
+	PIECE D_003044DC, 0x4, 4  /* data/pieces/D_003044DC.h */
 	PIECE D_003044E0, 0x5f8, 8  /* untyped: users disagree: B3Tbl D_003044E0[] | C02MSlot D_003044E0[] | MdlEnt D_003044E0[] */
 	PIECE D_00304AD8, 0x8, 8  /* untyped: users disagree: O15 *D_00304AD8 | W32Obj3 *D_00304AD8 | s32 D_00304AD8 */
 	PIECE D_00304AE0, 0x10, 16
@@ -194,7 +194,7 @@
 	PIECE D_00304C70, 0xe4, 4  /* untyped: users disagree: M2C_UNK D_00304C70 | St6C D_00304C70 | T16s D_00304C70 | W7Lv D_00304C70 | u8 D_00304C70[] */
 	PIECE D_00304D54, 0xc, 4
 	PIECE D_00304D60, 0x4, 4  /* untyped: type W606F8 is not a common.h basic type */
-	PIECE D_00304D64, 0x4c, 4  /* untyped: users disagree: B3F2 D_00304D64[] | volatile M2C_UNK D_00304D64 */
+	PIECE D_00304D64, 0x4c, 4  /* data/pieces/D_00304D64.h */
 	PIECE D_00304DB0, 0x8c, 4  /* untyped: users disagree: B3PjInf D_00304DB0[] | HtTab D_00304DB0[] */
 	PIECE D_00304E3C, 0x4, 4
 	PIECE D_00304E40, 0x1a00, 16

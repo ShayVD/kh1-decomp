@@ -689,8 +689,8 @@ void func_00132a78(s32 a0) {
 extern void func_00132a78(s32);
 typedef struct { s32 f0; u32 f4; u8 p8[0x40]; s16 f48; u8 p4a[2]; u16 f4c; u8 p4e[6]; s8 f54; s8 f55; s8 f56; u8 p57[0x78 - 0x57]; } Ent18;
 typedef struct { u8 p[0xc]; s32 n; Ent18 *base; u8 p14[8]; s32 f1c; } Lst18;
-typedef struct { s32 f0, f4, f8; } G18;
-extern G18 D_002E2F28;
+#include "data/types/nostrict_text_00120000_h54_p.h"
+#include "data/pieces/D_002E2F28.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 s32 D_00525294 ALIGNED(4);

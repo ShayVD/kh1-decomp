@@ -96,7 +96,11 @@ s32 func_00110218(void) {
 }
 
 #include "data/types/text_00110000_h52.h"
-extern Mtx52 D_002BBE20, D_002BBE60, D_002BBEA0, D_002BBEE0, D_002BBF20;
+#include "data/pieces/D_002BBF20.h"
+#include "data/pieces/D_002BBEE0.h"
+#include "data/pieces/D_002BBEA0.h"
+#include "data/pieces/D_002BBE60.h"
+#include "data/pieces/D_002BBE20.h"
 #include "data/pieces/D_002BBF60.h"
 extern Mtx52 D_004D8E40, D_004D9100, D_004D9140, D_004D9180, D_004D91C0, D_004D8E80;
 extern f32 D_004D90F8;
@@ -667,9 +671,8 @@ s32 func_00118b58(Probe52 *o) {
 
 typedef struct { Plane52 *tbl; u8 pad[60]; } Grp52;
 extern Grp52 D_004E2458[];
-typedef struct { u8 pad[0x10]; s32 x10; u8 pad14[0xc]; s32 x20; } Mdl52;
-typedef struct { Mdl52 *m; u8 pad[12]; } MdlEnt52;
-extern MdlEnt52 D_003044DC[];
+#include "data/types/text_00110000_h52_p2.h"
+#include "data/pieces/D_003044DC.h"
 typedef struct { u8 pad[0x18]; s16 cnt; } Qry52;
 void func_001158c8(Qry52 *);
 s32 func_0011ab88(s32, s32, Qry52 *);

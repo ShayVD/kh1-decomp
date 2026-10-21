@@ -22,12 +22,12 @@
 	PIECE D_004498E8, 0x18, 8
 	PIECE D_00449900, 0x8, 8
 	PIECE D_00449908, 0x88, 8  /* untyped: users disagree: Cam D_00449908 | St17 D_00449908 | St570 D_00449908; unparsed in 1 file(s) */
-	PIECE D_00449990, 0xe70, 16  /* untyped: users disagree: Hdr D_00449990 | M2C_UNK D_00449990 */
+	PIECE D_00449990, 0xe70, 16  /* data/pieces/D_00449990.h */
 	PIECE D_0044A800, 0x10, 16
 	PIECE D_0044A810, 0x10, 16
 	PIECE D_0044A820, 0x10, 16  /* data/pieces/D_0044A820.h */
-	PIECE D_0044A830, 0x1d70, 16  /* untyped: users disagree: Blob D_0044A830 | M2C_UNK D_0044A830 */
-	PIECE D_0044C5A0, 0x1a30, 16  /* untyped: users disagree: Blob D_0044C5A0 | M2C_UNK D_0044C5A0 */
-	PIECE D_0044DFD0, 0x13b0, 16  /* untyped: users disagree: Blob D_0044DFD0 | M2C_UNK D_0044DFD0 */
-	PIECE D_0044F380, 0x150, 16  /* untyped: users disagree: Blob D_0044F380 | M2C_UNK D_0044F380 */
-	PIECE D_0044F4D0, 0x1b70, 16  /* untyped: users disagree: Blob D_0044F4D0 | M2C_UNK D_0044F4D0 */
+	PIECE D_0044A830, 0x1d70, 16  /* data/pieces/D_0044A830.h */
+	PIECE D_0044C5A0, 0x1a30, 16  /* data/pieces/D_0044C5A0.h */
+	PIECE D_0044DFD0, 0x13b0, 16  /* data/pieces/D_0044DFD0.h */
+	PIECE D_0044F380, 0x150, 16  /* data/pieces/D_0044F380.h */
+	PIECE D_0044F4D0, 0x1b70, 16  /* data/pieces/D_0044F4D0.h */

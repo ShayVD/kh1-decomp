@@ -24,7 +24,7 @@ M2C_UNK func_0026a9d0(s32);
 M2C_UNK func_0026b978(f32);
 M2C_UNK func_0026b9a8(f32, f32);
 M2C_UNK func_00270b40();
-extern M2C_UNK D_002E2F28;
+#include "data/pieces/D_002E2F28.h"
 extern M2C_UNK D_002E2F34;
 extern M2C_UNK D_004F6EC0; /* src/data/bss_004F.c: TPool D_004F6EC0 */
 M2C_UNK D_004F6ED0[0xa0] ALIGNED(16);
@@ -462,7 +462,7 @@ void func_0012b1a8(s32 *arg0) {
 }
 
 void func_0012b1e8(M2C_UNK **arg0) {
-    *arg0 = &D_002E2F28;
+    *arg0 = ((M2C_UNK *)&D_002E2F28);
 }
 
 void func_0012b1f8(M2C_UNK **arg0) {

@@ -11,7 +11,7 @@ extern M2C_UNK D_0035C140;
 extern M2C_UNK D_0035C1F0;
 extern M2C_UNK D_0035C2C0;
 extern M2C_UNK D_0035C360;
-extern M2C_UNK D_0035E710;
+#include "data/pieces/D_0035E710.h"
 extern M2C_UNK D_0035FB20;
 extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00362660;
@@ -29,9 +29,9 @@ extern s32 D_00362420;
 extern s32 D_00362434;
 extern s32 D_00362438;
 extern s32 D_0036243C;
-extern s32 D_0036244C;
-extern s32 D_00362450;
-extern s32 D_00362454;
+#include "data/pieces/D_0036244C.h"
+#include "data/pieces/D_00362450.h"
+#include "data/pieces/D_00362454.h"
 extern s32 D_00575890;
 extern s8 D_003626C0;
 extern void *D_00575780;
@@ -180,7 +180,7 @@ void func_00175a98(void) {
 }
 
 void func_00176008(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    func_00175be0(&D_0035E710, arg0, arg1, -1, arg3, arg2, 1);
+    func_00175be0(((M2C_UNK *)&D_0035E710), arg0, arg1, -1, arg3, arg2, 1);
 }
 
 void func_00176040(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
@@ -193,15 +193,15 @@ void func_00176078(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 
 s32 func_0017dbb8(void) {
     if (D_002E27A8 == 9) {
-        D_0036244C = D_00362434;
-        D_00362450 = D_00362438;
-        D_00362454 = D_0036243C;
+        (*(s32 *)&D_0036244C) = D_00362434;
+        (*(s32 *)&D_00362450) = D_00362438;
+        (*(s32 *)&D_00362454) = D_0036243C;
         func_00176f08(0, 0.0f);
         return 1;
     }
-    D_0036244C = 0;
-    D_00362450 = 0;
-    D_00362454 = 0;
+    (*(s32 *)&D_0036244C) = 0;
+    (*(s32 *)&D_00362450) = 0;
+    (*(s32 *)&D_00362454) = 0;
     return 0;
 }
 
@@ -225,9 +225,9 @@ void func_0017eaa0(void) {
     func_00179d08();
     func_0017dee0();
     D_00362420 = 0;
-    D_0036244C = 0;
-    D_00362450 = 0;
-    D_00362454 = 0;
+    (*(s32 *)&D_0036244C) = 0;
+    (*(s32 *)&D_00362450) = 0;
+    (*(s32 *)&D_00362454) = 0;
 }
 
 void func_0017f178(void) {
