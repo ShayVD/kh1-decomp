@@ -2156,3 +2156,29 @@ them would push the pools past 0x820000 (about 0x8800 of room is left).
   idx-next[arg:wide,piece-next,stored,via-ptr:00494bac]`, i.e. chain 1 keeps chain 2 by itself. piece-next
   is what finds it (the stored rule already made the index unbounded); via-ptr names the reason. Stride
   bounds were not needed: the count (D_00494BB0) comes from room data, so the reach is unbounded either way.
+
+## Session 25: Phase 4 types (worker s25types)
+
+129 of the 274 "users disagree" pieces are typed (276 comment lines -> 146: 145 untyped pieces plus the
+D_0046A688 table, whose comment has another format); D_003E8D04's stale comment was fixed. 82 are basic
+types (s32/u32, T/T[] sized to the piece, M2C_UNK, char/u8, volatile where every user already reads the
+name as volatile), 47 struct, struct-pointer or pointer types. `make` stayed byte-identical after each
+batch, and the M12 float build's kh1-shift.elf is unchanged (same sha256 as KH1_F25_C).
+
+- Unlike session 24, every user includes include/data/pieces/D_X.h **in place of** its own extern, so the
+  users really compile against the shared declaration. A piece was accepted only if the `-S` output of
+  every changed file (its objects.mk recipe) stayed identical and no new warning appeared; per-file `-S`
+  catches what an end-of-file include cannot.
+- Hand files only change declarations. src/auto/ users whose declaration differed keep their code through
+  a cast to the type they had (`(*(s32 *)&D_X)`, `((M2C_UNK *)&D_X)`): same lvalue, but expression edits.
+- Struct types moved with type_pieces.move_types into 18 new headers in include/data/types/ (`_pN.h` where
+  the file's header existed; no shared header grew).
+- Some picks follow the code, not the meaning: D_002BBF60, D_002BC020, D_002A6C10 are `s32 [4][4]`
+  (text_00100000_b00.c copies them as ints; h52 calls them Mtx52, f32), and D_002A6C60 is a scalar
+  `volatile unsigned char` for a 0x3400-byte piece (its one auto user's declaration). Some struct pieces
+  keep `T D[]` without a size.
+- The 145 left: each comment says `session 25: as <decl tried>: does not compile in X / code changes in Y /
+  new warning in Z`. They need real work: one struct per object with the hand users' fields renamed, or
+  casts in hand code; volatile mismatches change code (D_002A3F50).
+- Helpers: tools/shift/s25types/ (s25_unify.py one piece + one declaration with the `-S` check; the drive
+  scripts batch it; README there).

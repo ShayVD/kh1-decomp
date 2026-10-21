@@ -873,3 +873,6 @@ found that the next session needs:
   and out/overlays staged from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12`, then
   `tools/shift/data_owners.py` before the float build. A worker restart in the middle of the session lost
   nothing: commit and push after every step.
+- **Phase 4** (worker s25types): 129 "users disagree" pieces typed; users include include/data/pieces/D_X.h
+  in place of their extern, accepted only when every changed file's `-S` output is identical with no new
+  warning (tools/shift/s25types/). 145 left, reasons in their comments.
