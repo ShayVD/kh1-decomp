@@ -630,7 +630,7 @@ s32 func_001e88e0(VM *vm) {
     t = (f32)(a * 0x3000) / 100.0f;
     n = c * 8;
     if (!func_0011e340(0)) {
-        func_0011e9d8(t, n, func_001e8628, ((s32)D_003DABD4));
+        func_0011e9d8(t, n, func_001e8628, D_003DABD4);
         D_00389C90.f3070 |= 0x200000000000000LL;
         vm->u.h.sp -= 2;
         return 2;

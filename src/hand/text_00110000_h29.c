@@ -410,9 +410,9 @@ void func_00112c20(s32 i) {
     func_00112400(id);
     strcpy(buf, D_002BCCE0);
     strcat(buf, D_0048D008);
-    (*(void **)&D_002A3F3C) = func_001559f0(0x34, 8);
-    (*(void **)&D_002A3F3C) = func_001137c8(((void *)D_002A3F3C), 0x80);
-    func_00120748(buf, ((void *)D_002A3F3C), func_00112c08, 0);
+    D_002A3F3C = func_001559f0(0x34, 8);
+    D_002A3F3C = func_001137c8(D_002A3F3C, 0x80);
+    func_00120748(buf, D_002A3F3C, func_00112c08, 0);
 }
 
 typedef struct { s32 a, b; } W29P8;

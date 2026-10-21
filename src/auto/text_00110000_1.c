@@ -44,8 +44,8 @@ void func_00111190(void) {
 }
 
 void func_001117b8(void) {
-    if (((void *)D_002BCB60) != NULL) {
-        M2C_FIELD(((void *)D_002BCB60), s32 *, 0x15C) = (s32) (M2C_FIELD(((void *)D_002BCB60), s32 *, 0x15C) + 1);
+    if (D_002BCB60 != NULL) {
+        M2C_FIELD(D_002BCB60, s32 *, 0x15C) = (s32) (M2C_FIELD(D_002BCB60, s32 *, 0x15C) + 1);
     }
 }
 

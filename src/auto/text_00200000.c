@@ -16,11 +16,11 @@ extern s32 D_00641218; /* src/data/bss_0064.c: f32 D_00641218 */
 s32 func_001ee7a8();
 
 void func_00206ff0(void) {
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 0x3C) = 0;
+    M2C_FIELD(D_003F34B8, s32 *, 0x3C) = 0;
 }
 
 void func_00207288(void) {
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 0x6C) = 0;
+    M2C_FIELD(D_003F34B8, s32 *, 0x6C) = 0;
 }
 
 void func_002075f8(void) {

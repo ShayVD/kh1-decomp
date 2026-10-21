@@ -268,7 +268,7 @@ void func_0015ac58(Obj15A *a) {
     func_00130578(a, 0x40000006, 8.0f)->cb = func_0015ac30;
     func_0014cce0(a, z);
     a->flags &= ~0x400;
-    func_002675a8(a->x3C0, ((u8 *)&D_002C58B0));
+    func_002675a8(a->x3C0, &D_002C58B0);
 }
 
 typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Coll;
@@ -522,7 +522,7 @@ s32 func_00175af0(void) {
     if (D_0035C6F0 == 0) return 0;
     if (D_0035C6F4) D_0061621C = 1;
     else D_0061621C = 0;
-    func_00182148(D_002BC140, D_002BC144, ((u8 *)&D_002E2780), ((u8 *)&D_002E2790));
+    func_00182148(D_002BC140, D_002BC144, &D_002E2780, ((u8 *)&D_002E2790));
     func_00181738();
     return 0;
 }

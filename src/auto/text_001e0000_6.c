@@ -226,7 +226,7 @@ u32 func_001ee2d0(void) {
 void func_001ee4e8(void) {
     func_00232de0();
     func_00219128();
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 0x1C) = 0;
+    M2C_FIELD(D_003F34B8, s32 *, 0x1C) = 0;
     func_00216180();
     func_0021dbb8();
 }

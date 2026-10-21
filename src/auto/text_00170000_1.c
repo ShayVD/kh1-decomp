@@ -19,8 +19,8 @@ void func_001761b0(void) {
 }
 
 void func_0017d208(void) {
-    if (!(M2C_FIELD(((void *)D_00362438), s32 *, 0x18) & 0x10)) {
-        func_0017b120(((void *)D_00362438));
+    if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
+        func_0017b120(D_00362438);
     }
 }
 

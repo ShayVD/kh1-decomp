@@ -338,7 +338,7 @@ void func_0012a2b0(Arg *p) {
     e->w0 |= 0x240;
     func_001358b8(e, 10);
     func_0014f658(e, 8);
-    func_002675a8(e->f3c0, ((u8 *)&D_002C58B0));
+    func_002675a8(e->f3c0, &D_002C58B0);
     e->f3b0 = 0;
     e->f370.v |= 1ULL << 60;
     func_002414a8(func_0013c318(e->f130->f4c), 3);

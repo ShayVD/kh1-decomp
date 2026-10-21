@@ -279,7 +279,7 @@ extern s32 D_00641BF0[], D_00641BE0[];
 void func_00211698(void) {
     u32 i;
     for (i = 0; i < D_003E3D68; i++) {
-        s32 v = ((S4BE8e *)((u8 *)D_00304BE8))[((u8 *)D_00304BE8)[0x48e + i]].f36;
+        s32 v = ((S4BE8e *)D_00304BE8)[((u8 *)D_00304BE8)[0x48e + i]].f36;
         D_00641BF0[i] = D_00641BE0[i] = v;
     }
 }
