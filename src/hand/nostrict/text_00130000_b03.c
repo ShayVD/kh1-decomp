@@ -40,7 +40,7 @@ typedef struct {
     s32 x0;
     B3SvSub b;
 } B3Sv;
-extern B3Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 extern f32 D_002C5970;
 void func_00267560(f32 *, f32 *, f32);
@@ -148,7 +148,7 @@ s32 func_0013c598(s32);
 
 void func_00141b10(s32 n, B3St *p) {
     B3StB *b;
-    B3SvEnt *e = &D_00304BE8->b.e[n];
+    B3SvEnt *e = &((B3Sv *)D_00304BE8)->b.e[n];
     B3Eq *r;
     B3It *q;
     s32 i, j;

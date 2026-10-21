@@ -136,7 +136,7 @@ s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 void func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00206370(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 typedef struct { u8 pad[0x48e]; u8 x48e[3]; u8 x491; } P491;
-extern P491 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_003F6E28;
 void func_001f3840(void *);
 void func_0013c778(s32, s32, s32);
@@ -741,7 +741,7 @@ void func_00228588(O98 *a0) {
                     func_0020be10(16);
                     D_003F6E28 = 1;
                     j = 1;
-                    for (i = 1; i < 4 && (c = D_00304BE8->x48e[i]) != 255; i++) {
+                    for (i = 1; i < 4 && (c = ((P491 *)D_00304BE8)->x48e[i]) != 255; i++) {
                         if ((u32)(c - 1) < 2) buf[j++] = c;
                     }
                     for (; j < 4; j += 2) buf[j] = -1;
@@ -944,7 +944,7 @@ void func_0020a248(s32);
 void func_00223ea8(void) {
     switch (D_00643794) {
     case 0:
-        if (D_00304BE8->x491 != 255) {
+        if (((P491 *)D_00304BE8)->x491 != 255) {
             switch (D_003F34FC) {
             case 0:
                 func_00223e10();

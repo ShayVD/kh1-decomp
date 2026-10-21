@@ -109,7 +109,7 @@ extern s32 D_0046A610;
 extern HddCfg D_0046A688;
 extern s32 D_0046A614;
 #include "data/pieces/D_0046A608.h"
-extern Sys *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_002C5C4C;
 extern s32 D_002C5C50;
 extern s32 D_0046A6B0[];
@@ -437,7 +437,7 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
     s32 id;
     D_0066AAA0 = a;
     D_0066AA80 = cb;
-    c = D_00304BE8->cur;
+    c = ((Sys *)D_00304BE8)->cur;
     id = D_0046A6B0[c];
     if (D_002C5C4C) {
         if (c == 1) id = 0xc000a;

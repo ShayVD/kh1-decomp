@@ -641,7 +641,7 @@ s32 func_00158100(s32 *a, f32 *v) {
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_0037A378.h"
 typedef struct { u8 pad[0x48E]; u8 b48E[3]; u8 pad491[0x3E3]; s32 w874; } S304BE8;
-extern S304BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_001140a0(void);
 
 s32 func_00158c78(void) {
@@ -649,7 +649,7 @@ s32 func_00158c78(void) {
     s32 r = 0;
     if (!(D_002C5958 & 0x92000)) {
         if (!((D_002E31A8 >> 1) & 1)) {
-            if (!(D_00304BE8->w874 & 0x40)) {
+            if (!(((S304BE8 *)D_00304BE8)->w874 & 0x40)) {
                 if (!((((u32)D_0037A378) >> 1) & 1)) {
                     if (m == 0 || m == 2 || (m == 3 && ((((u32)D_0037A378) >> 4) & 1))) r = 1;
                 }
@@ -819,7 +819,7 @@ void func_00157400(void (*cb)(s32)) {
     s32 i, n = 0;
     u8 *q;
     for (i = 0; i < 3; i++) {
-        q = (u8 *)(i + (s32)D_00304BE8) + 0x48E;
+        q = (u8 *)(i + (s32)((S304BE8 *)D_00304BE8)) + 0x48E;
         if (*q != 0xFF) {
             if (func_001571a8(*q, 0)) n++;
         }

@@ -338,9 +338,9 @@ s32 func_001da260(VM *vm) {
     return 2;
 }
 typedef struct { u8 pad[4]; u8 f4; u8 pad5[0x6f]; } E74;
-extern E74 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_001da3b8(VM *vm) {
-    E74 *e = D_00304BE8;
+    E74 *e = ((E74 *)D_00304BE8);
     e += vm->stk[vm->sp];
     vm->stk[vm->sp] = e->f4;
     return 2;

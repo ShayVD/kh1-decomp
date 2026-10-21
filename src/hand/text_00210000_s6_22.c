@@ -675,7 +675,7 @@ extern s32 D_00643780[];
 extern s32 D_00643790;
 extern s32 D_00643794;
 extern s32 D_0064379C;
-extern u8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
 #include "data/pieces/D_003F34C4.h"
@@ -712,7 +712,7 @@ void func_00228e70(void *arg0) {
         D_003F34C0 |= 2;
         for (i = 0; i < 4; i++) {
             D_00643760[i] = i;
-            D_00643770[i] = (D_00304BE8 + 0x48E)[i];
+            D_00643770[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
             if (i == D_00643708 + 1) D_00643780[i] = 96; else D_00643780[i] = 32;
         }
         D_0064375C = 0;
@@ -720,7 +720,7 @@ void func_00228e70(void *arg0) {
         D_00643794 = 0;
         D_0064379C = 0;
         for (i = 0; i < 4; i++) {
-            D_00643778[i] = (D_00304BE8 + 0x48E)[i];
+            D_00643778[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
         }
         objs[0] = func_001f31a8_q6(D_003F68F0, 6);
         if (objs[0]) {

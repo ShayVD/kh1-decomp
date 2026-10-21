@@ -3,7 +3,7 @@
 
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
 typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;
-extern G4BE8e *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 typedef struct { u8 pad[8]; s32 flags; } G5bc8e;
 #include "data/pieces/D_00425BC8.h"
 typedef struct ObjE {
@@ -162,7 +162,7 @@ void func_0020f530(ObjE *o) {
                 } else if (D_00641228 != -1) {
                     if (D_00641238 == 1) {
                         if (func_001ee9e0(v)) {
-                            if (D_00641234 && D_00304BE8->x499[D_00641234] >= 99) {
+                            if (D_00641234 && ((G4BE8e *)D_00304BE8)->x499[D_00641234] >= 99) {
                                 func_0011d768(4);
                                 if ((w[0] = (s32)func_001f31a8(D_003F38E0, 6))) {
                                     func_001f3e48((ObjE *)w[0], p);
@@ -174,9 +174,9 @@ void func_0020f530(ObjE *o) {
                                 func_001f3758(o);
                                 D_00641244 = v;
                                 D_00641248 = v;
-                                D_00304BE8->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = v;
-                                D_00304BE8->x499[v]--;
-                                if (D_00641234) D_00304BE8->x499[D_00641234]++;
+                                ((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641228]].x26[D_00641230] = v;
+                                ((G4BE8e *)D_00304BE8)->x499[v]--;
+                                if (D_00641234) ((G4BE8e *)D_00304BE8)->x499[D_00641234]++;
                                 D_00641224 = 5;
                             }
                         } else {
@@ -188,10 +188,10 @@ void func_0020f530(ObjE *o) {
                         func_001f3758(o);
                         D_00641244 = v;
                         D_00641248 = v;
-                        e = &D_00304BE8->e[D_00304BE8->x48e[D_00641228]];
+                        e = &((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641228]];
                         t = &e->x4;
                         e->x26[D_00641230] = v;
-                        D_00304BE8->x499[v]--;
+                        ((G4BE8e *)D_00304BE8)->x499[v]--;
                         cnt = t[33];
                         q = 0;
                         if (cnt == 0) goto out;
@@ -241,7 +241,7 @@ void func_0020f530(ObjE *o) {
             if (!a) m = 32;
             else if (i == sel && c == s) m = 31;
             else m = 30;
-            func_0020dfc8(o, m, y, cur, 166, u, D_00304BE8->x499[u], 15);
+            func_0020dfc8(o, m, y, cur, 166, u, ((G4BE8e *)D_00304BE8)->x499[u], 15);
             y += 166;
         }
         cur += 28;
@@ -298,7 +298,7 @@ void func_0020ff80(ObjE *o) {
             D_00641250[fl] = sel;
             if (p) {
                 if (sel < D_003E3D68) {
-                    u8 c = D_00304BE8->x48e[sel];
+                    u8 c = ((G4BE8e *)D_00304BE8)->x48e[sel];
                     if (!fl || D_00641238 == 1) {
                         if (!c) p->x24 = 122;
                         else p->x24 = 123;
@@ -350,7 +350,7 @@ void func_0020ff80(ObjE *o) {
                         if (!fl) {
                             D_00641224 = 1;
                             D_00641228 = sel;
-                            D_0064122C = func_001ee5f0(D_00304BE8->x48e[sel]);
+                            D_0064122C = func_001ee5f0(((G4BE8e *)D_00304BE8)->x48e[sel]);
                         } else {
                             D_00641240 = sel;
                             if (D_00641238 == 0) {
@@ -401,7 +401,7 @@ void func_0020ff80(ObjE *o) {
         do {
             if (*f++) m = i == sel2;
             else m = i == sel2 ? 3 : 2;
-            func_00207870(o, m, a, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i++]));
+            func_00207870(o, m, a, 0, y, 122, func_001ee5f0(((G4BE8e *)D_00304BE8)->x48e[i++]));
             y += 28;
         } while (i < D_003E3D68);
     }

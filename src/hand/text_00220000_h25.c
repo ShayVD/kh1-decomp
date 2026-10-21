@@ -48,7 +48,7 @@ s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
 
-extern Ent74 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern u128 D_00351E10[];
 extern s32 D_003F34A4;
 extern u8 D_003F67A0[];
@@ -324,7 +324,7 @@ void func_00231a80(void) {
 }
 
 s32 func_00231b38(s32 arg0, s32 arg1) {
-    Ent74 *e = &D_00304BE8[arg0];
+    Ent74 *e = &((Ent74 *)D_00304BE8)[arg0];
     s32 c = 0;
     s32 i;
     for (i = 0; i < e->n; i++) {

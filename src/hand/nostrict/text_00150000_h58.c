@@ -1010,13 +1010,13 @@ typedef struct { u8 b0, b1, b2, b3, b4, b5, b6, b7; u8 pad8[0x10]; u8 b18; u8 pa
 typedef struct { s32 x0; Sub116 s; } Ent116;
 typedef struct { u8 pad[0x40]; s32 x40; u8 pad44[4]; s32 x48; s32 x4c; s32 x50; u8 pad54[0x8c]; s32 xe0; } St6c;
 typedef struct { u8 pad[0x6c]; St6c *x6c; } P6c;
-extern Ent116 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 P6c *func_0013daf8(s32);
 void func_00141468(P6c *, s32);
 void func_00141540(P6c *, s32);
 void func_0013c8c8(s32, s32);
 void func_0015ae48(s32 i, u32 k) {
-    Sub116 *s = &D_00304BE8[i].s;
+    Sub116 *s = &((Ent116 *)D_00304BE8)[i].s;
     P6c *p = func_0013daf8(i);
     s32 v;
     switch (k) {

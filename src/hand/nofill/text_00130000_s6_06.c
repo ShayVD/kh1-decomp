@@ -29,7 +29,7 @@ typedef struct {
     u8 pad847[0x878 - 0x847];
     u64 x878;
 } W606Save;
-extern W606Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 typedef struct { u8 pad[0x40]; s32 x40; s32 x44; s32 x48; } W606S6c;
 typedef struct { u8 pad[0x6c]; W606S6c *x6c; } W606O26a0;
@@ -41,17 +41,17 @@ f32 func_0013bb20(void) {
 }
 
 s32 func_0013c2f0(s32 b) {
-    return D_00304BE8->x878 & ((u64)1 << b);
+    return ((W606Save *)D_00304BE8)->x878 & ((u64)1 << b);
 }
 
 void func_0013c108(s32 i, s32 b) {
     s32 j;
-    W606Mem *m = &D_00304BE8->m[i];
+    W606Mem *m = &((W606Save *)D_00304BE8)->m[i];
     m->bits |= 1 << b;
     if (i == 0) {
         for (j = 0; j < 3; j++) {
-            if (D_00304BE8->x844[j] == -1) {
-                D_00304BE8->x844[j] = b;
+            if (((W606Save *)D_00304BE8)->x844[j] == -1) {
+                ((W606Save *)D_00304BE8)->x844[j] = b;
                 break;
             }
         }

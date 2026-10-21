@@ -26,7 +26,7 @@ extern M2C_UNK func_0014f778;
 extern M2C_UNK func_0014f828;
 extern s32 D_002C5958;
 extern s32 D_002E26A0;
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_00350CE0.h"
 extern s32 D_0054C438;
 extern s32 D_0054C43C;
@@ -148,7 +148,7 @@ void func_00148db0(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
 }
 
 s32 func_00149740(s32 arg0) {
-    return func_001496c8(arg0, (s32) M2C_FIELD(((arg0 * 0x74) + D_00304BE8), u8 *, 0x36));
+    return func_001496c8(arg0, (s32) M2C_FIELD(((arg0 * 0x74) + ((s32)D_00304BE8)), u8 *, 0x36));
 }
 
 s32 func_0014a058(s32 arg0) {

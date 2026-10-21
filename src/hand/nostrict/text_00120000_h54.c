@@ -254,7 +254,7 @@ kill:
 typedef struct { u8 pad[0x48f]; u8 f48f; u8 f490; u8 p491[0x7d0-0x491]; s8 f7d0[7]; u8 p7d7[0x874-0x7d7]; u32 f874; u8 p878[0x880-0x878]; u8 f880; } W5;
 extern Q5 D_002E3010;
 extern L5 D_002E3080;
-extern W5 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_00304B78.h"
 extern u32 D_002C5958;
 #include "data/pieces/D_002E31A8.h"
@@ -274,7 +274,7 @@ void func_0012d188(s32 a0, u32 *a1) {
     n = 0;
     m = -1;
     for (i = 0; i < 7; i++) {
-        s32 v = D_00304BE8->f7d0[i];
+        s32 v = ((W5 *)D_00304BE8)->f7d0[i];
         if (v != -1) {
             l->ids[n] = v + 47;
             buf[n] = v;
@@ -286,7 +286,7 @@ void func_0012d188(s32 a0, u32 *a1) {
     if (n > 0) {
         n = q->n++;
         func_0012cb40(q, n, 6);
-        if ((D_00304BE8->f874 & 4) || (D_002C5958 >> 13 & 1) || (D_002E31A8 >> 1 & 1)) {
+        if ((((W5 *)D_00304BE8)->f874 & 4) || (D_002C5958 >> 13 & 1) || (D_002E31A8 >> 1 & 1)) {
             q->f4 |= 1 << n;
             q->f8 |= 1 << n;
         } else if (m == -1) {
@@ -308,7 +308,7 @@ void func_0012d6c0(A7 *a0, u32 *a1) {
     Q38 *p;
     T7 *t;
     s32 m, cnt, i;
-    if (D_00304BE8->f874 & 0x10) return;
+    if (((W5 *)D_00304BE8)->f874 & 0x10) return;
     g = D_002E2FD8;
     func_0012cb40((Q5 *)g, 2, 3);
     p = &g[2];
@@ -329,7 +329,7 @@ void func_0012d6c0(A7 *a0, u32 *a1) {
     p->n = cnt;
     if (cnt > 0) {
         if (!(p->fc < cnt)) p->fc = cnt - 1;
-        if (!(D_00304BE8->f874 & 2)) {
+        if (!(((W5 *)D_00304BE8)->f874 & 2)) {
             if (!(*a1 >> 6 & 1)) {
                 m = -1;
                 g->f4 |= 4;
@@ -462,7 +462,7 @@ void func_00136768(E21 *e) {
         e->f370 |= 0x800000000LL;
     }
     if (e->f0 & 2) {
-        if (e == D_002E26A0[0] && D_00304BE8->f880) return;
+        if (e == D_002E26A0[0] && ((W5 *)D_00304BE8)->f880) return;
         func_00128218((E2 *)e, v.w * s * (1.0f / 32640.0f));
     }
 }
@@ -718,7 +718,7 @@ void func_00132c70(s32 a0, void (*cb)(void)) {
         switch (p->f54) {
         case 1:
             if (k < 0) k = p->f55;
-            if (p->f4c == D_00304BE8->f48f || p->f4c == D_00304BE8->f490) {
+            if (p->f4c == ((W5 *)D_00304BE8)->f48f || p->f4c == ((W5 *)D_00304BE8)->f490) {
                 p->f55 = k;
                 k += p->f56;
             } else {

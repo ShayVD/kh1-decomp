@@ -45,7 +45,7 @@ typedef struct { s32 f0, f4, f8; E11 *fc; u8 pad10[0x20]; s32 f30; } P11;
 typedef struct { u8 pad[0x40]; struct { u8 a, b; } t[0x58]; f32 ff0; } G1;
 extern G1 *D_00308CDC;
 #include "data/pieces/D_002E31A4.h"
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern void func_0012c328();
 extern T11 *func_00147d18(void *);
 extern P11 *func_00121e28(s32, void *);
@@ -68,7 +68,7 @@ void func_0012c560(E11 *e, E11 *t, s32 fl) {
         k->f1c = D_00308CDC->t[e->f130->f4c].b;
     }
     if (!(fl & 0x400)) {
-        if (e->f130->f4c == 0) { s32 o = D_00304BE8; (D_002E31A4 + o)[38] = 0; }
+        if (e->f130->f4c == 0) { s32 o = ((s32)D_00304BE8); (D_002E31A4 + o)[38] = 0; }
         else func_0013cae8(e->f130->f4c, fl);
     }
 }

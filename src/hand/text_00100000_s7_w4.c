@@ -113,7 +113,7 @@ typedef struct { s32 f0; u8 pad[8]; Q30 *fc; u8 pad10[0xc]; } T28;
 typedef struct { u8 b74; u8 pad[0x73]; } E74;
 typedef struct { E74 e[1]; } Sv;
 #include "data/pieces/D_002E31A8.h"
-extern Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern T28 D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
 extern s32 func_00141288(Ent *, s32, s32);
 
@@ -123,8 +123,8 @@ s32 func_00133000(Ent *o, s32 i) {
     if ((D_002E31A8 >> 2) & 1) return 0;
     if (t->f0 == 0) goto r0;
     if (!(q = t->fc)) return 0;
-    if (*(s32 *)((u8 *)D_00304BE8 + 0x874) & 1) goto r0;
-    if ((D_00304BE8->e[o->f130->f4c + 1].b74 >> i) & 1) goto call;
+    if (*(s32 *)((u8 *)((Sv *)D_00304BE8) + 0x874) & 1) goto r0;
+    if ((((Sv *)D_00304BE8)->e[o->f130->f4c + 1].b74 >> i) & 1) goto call;
 r0:
     return 0;
 call:

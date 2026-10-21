@@ -14,7 +14,7 @@ typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 #include "data/types/text_00210000_b14.h"
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3E50.h"
 #include "data/pieces/D_003E8E08.h"
@@ -294,7 +294,7 @@ void func_002145d8(Obj *a) {
                     } else {
                         if (!f) func_0011d768(75);
                         else func_0011d768(5);
-                        D_00304BE8->x599[D_00642C34] ^= 0x80;
+                        ((S4BE8 *)D_00304BE8)->x599[D_00642C34] ^= 0x80;
                         D_00642C24 = 5;
                     }
                     break;
@@ -330,8 +330,8 @@ void func_00214b20(Obj *a) {
     Obj *p;
     k = a->x24;
     n = D_00642C78[k];
-    k = D_00304BE8->x48e[k];
-    sub = &D_00304BE8->r[k].sub;
+    k = ((S4BE8 *)D_00304BE8)->x48e[k];
+    sub = &((S4BE8 *)D_00304BE8)->r[k].sub;
     if (n == 0) return;
     if (D_00642C24 < 3) {
         m = 0;
@@ -432,7 +432,7 @@ void func_00214fc8(Obj *a) {
             if (!m) D_00642C24 = 0;
             else D_00642C24 = 2;
         } else {
-            S4BE8 **b = &D_00304BE8;
+            S4BE8 **b = ((S4BE8 **)&D_00304BE8);
             func_001fe158(a);
             func_0020bd18(a, 8);
             D_00642C64 = a->xd0 >> 4;
@@ -483,7 +483,7 @@ void func_00214fc8(Obj *a) {
     func_001f8ee0(a);
     for (j = 0; j < lim && i < D_00642C88; j++, i++) {
         s32 c = 2;
-        idx = D_00304BE8->x599[i];
+        idx = ((S4BE8 *)D_00304BE8)->x599[i];
         if (fl) c = j == sel;
         func_00214130(a, c, 0, y, 166, idx);
         y += 28;
@@ -521,9 +521,9 @@ void func_00215420(Obj *a) {
                     if (D_00642C78[D_00642C58]) {
                         func_0011d768(2);
                         D_00642C28 = D_00642C58;
-                        k = D_00304BE8->x48e[D_00642C28];
+                        k = ((S4BE8 *)D_00304BE8)->x48e[D_00642C28];
                         D_00642C2C = k;
-                        D_00642C30 = &D_00304BE8->r[k].sub;
+                        D_00642C30 = &((S4BE8 *)D_00304BE8)->r[k].sub;
                         D_00642C24 = 1;
                         func_001f3708(a, 5);
                         if ((o = a->x10)) {
@@ -572,7 +572,7 @@ void func_00215420(Obj *a) {
     for (i = 0; i < D_003E3D68; i++) {
         if (D_00642C78[i]) c = i == sel;
         else c = i == sel ? 3 : 2;
-        func_00207870(a, c, 0, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i]));
+        func_00207870(a, c, 0, 0, y, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[i]));
         y += 28;
     }
     if (D_00642C88) c = D_003E3D68 == sel;
@@ -594,7 +594,7 @@ void func_00217490(void *a) {
             y += 28;
         }
     } else {
-        k = D_00304BE8->x48e[D_00642CCC];
+        k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
         n = D_003F40F8[k].n;
         p = D_003F40F8[k].p;
         func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[((S34B8 *)D_003F34B8)->x20[k]]);

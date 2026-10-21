@@ -49,7 +49,7 @@ typedef struct {
 } Msg;
 void func_001c4640(Msg *m);
 typedef struct { u8 pad0[0x48e]; u8 a48e[11]; u8 a499[1]; } Save;
-extern Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;
 typedef struct { u8 pad0[0x6c]; Sub6c *f6c; } Sub4;
 typedef struct { u8 pad0[4]; Sub4 *f4; u8 pad8[0x318 - 8]; s32 f318; } Ent;
@@ -166,10 +166,10 @@ s32 func_001d33c8(VM *vm) {
 }
 
 s32 func_001d3858(VM *vm) {
-    s32 v = D_00304BE8->a499[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];
-    if (v >= 100) D_00304BE8->a499[vm->stk[vm->sp - 1]] = 99;
-    else if (v < 0) D_00304BE8->a499[vm->stk[vm->sp - 1]] = 0;
-    else D_00304BE8->a499[vm->stk[vm->sp - 1]] += vm->stk[vm->sp];
+    s32 v = ((Save *)D_00304BE8)->a499[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];
+    if (v >= 100) ((Save *)D_00304BE8)->a499[vm->stk[vm->sp - 1]] = 99;
+    else if (v < 0) ((Save *)D_00304BE8)->a499[vm->stk[vm->sp - 1]] = 0;
+    else ((Save *)D_00304BE8)->a499[vm->stk[vm->sp - 1]] += vm->stk[vm->sp];
     vm->sp -= 2;
     return 2;
 }
@@ -225,7 +225,7 @@ s32 func_001d3be8(VM *vm) {
 
 s32 func_001d40b0(VM *vm) {
     s32 i = vm->stk[vm->sp];
-    if (i < 4) vm->stk[vm->sp] = D_00304BE8->a48e[i];
+    if (i < 4) vm->stk[vm->sp] = ((Save *)D_00304BE8)->a48e[i];
     return 2;
 }
 
@@ -248,7 +248,7 @@ s32 func_001d4448(VM *vm) {
 }
 
 s32 func_001d4610(VM *vm) {
-    Ent *e = func_001e9b98((s32)(vm->flags.x >> 5) & 1, D_00304BE8->a48e[vm->stk[vm->sp]]);
+    Ent *e = func_001e9b98((s32)(vm->flags.x >> 5) & 1, ((Save *)D_00304BE8)->a48e[vm->stk[vm->sp]]);
     if (e) vm->stk[vm->sp] = e->f318;
     return 2;
 }

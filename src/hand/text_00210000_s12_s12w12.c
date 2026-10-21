@@ -8,7 +8,7 @@ typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
 typedef struct { u8 pad[8]; s32 x8; u8 padc[4]; u32 x10; } Cfg;
 #include "data/pieces/D_00425BC8.h"
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00642CCC;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_00642CD8;
@@ -45,7 +45,7 @@ void func_00216890(Ob1 *o) {
     u32 b;
     s32 x8, t;
     PN *pn;
-    k = D_00304BE8->x48e[D_00642CCC];
+    k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
     p = D_003F40F8[k].p;
     pnn = &D_003F40F8[k].n;
     n = *pnn;

@@ -121,7 +121,7 @@ typedef struct Obj3d {
     F3d f;
 } Obj3d;
 W3d D_004F71D0[0x3] ALIGNED(16);
-extern G3d *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_002BC128, D_002BC130, D_002BC134;
 s32 func_001499a0(void);
 u32 func_0013c318(u32);
@@ -151,7 +151,7 @@ void func_00123d48(Obj3d *o) {
     o->x6c->xbd = k;
     func_00141e68(o);
     func_00153d88(o);
-    D_00304BE8->x83e |= 1 << o->info->x4c;
+    ((G3d *)D_00304BE8)->x83e |= 1 << o->info->x4c;
     func_001358b8(o, 12);
     func_00241c60(o, n);
     if (D_002BC128 == 16 && ((D_002BC130 == 37 && D_002BC134 == 13 && o->info->x4c == 2) ||

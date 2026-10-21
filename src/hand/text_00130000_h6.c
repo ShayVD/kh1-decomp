@@ -369,7 +369,7 @@ typedef struct {
 } W6Info;
 
 extern f32 D_002BBDFC;
-extern W6Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 void func_001247e8(W6Fade *o);
 void func_001dce90(s32 a);
@@ -577,7 +577,7 @@ s32 func_001331d8(s32 i, s32 j, void (*cb)(void)) {
     } else {
         c->x18 = (s32)cb;
         c->x0 = j;
-        D_00304BE8->b492[i] = j;
+        ((W6Save *)D_00304BE8)->b492[i] = j;
         r = func_00120748(D_003041E4[i][j][0], c->x8, func_001330e8, 0);
     }
     return r;
@@ -845,8 +845,8 @@ void func_00138870(W6Unit *u) {
         func_001586a8(7);
     }
     if (k < 51) {
-        if (D_00304BE8->cnt[k] < 9999) {
-            D_00304BE8->cnt[k]++;
+        if (((W6Save *)D_00304BE8)->cnt[k] < 9999) {
+            ((W6Save *)D_00304BE8)->cnt[k]++;
         }
     }
 }
@@ -942,9 +942,9 @@ void func_0013bf20(void) {
 
 void func_0013bf90(s32 on) {
     if (on) {
-        D_00304BE8->b880 = 1;
+        ((W6Save *)D_00304BE8)->b880 = 1;
     } else {
-        D_00304BE8->b880 = 0;
+        ((W6Save *)D_00304BE8)->b880 = 0;
     }
 }
 
@@ -953,7 +953,7 @@ void func_0013c078(void) {
     W6SEnt *e;
     s32 i;
     for (i = 0; i < 10; i++) {
-        e = &D_00304BE8->ent[i];
+        e = &((W6Save *)D_00304BE8)->ent[i];
         func_00141b10(i, &info);
         e->x1 = info.b40;
         if (e->x3 < info.w48) {

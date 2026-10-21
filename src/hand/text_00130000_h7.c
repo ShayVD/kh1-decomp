@@ -34,7 +34,7 @@ typedef struct {
     u64 x878;
 } W7Save;
 
-extern W7Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 extern u16 *D_00304BB0[];
 extern u16 *D_00304B88[];
@@ -43,22 +43,22 @@ void func_00141b10(s32 c, u8 *buf);
 void *memcpy(void *, const void *, u32);
 
 s32 func_0013c188(s32 i, s32 b) {
-    W7Member *m = D_00304BE8->m;
+    W7Member *m = ((W7Save *)D_00304BE8)->m;
     return (m[i].bits >> b) & 1;
 }
 
 void func_0013c2a0(s32 b, s32 on) {
     if (on) {
-        D_00304BE8->x878 |= (u64)1 << b;
+        ((W7Save *)D_00304BE8)->x878 |= (u64)1 << b;
     } else {
-        D_00304BE8->x878 &= ~((u64)1 << b);
+        ((W7Save *)D_00304BE8)->x878 &= ~((u64)1 << b);
     }
 }
 
 s32 func_0013c318(s32 v) {
     s32 i;
     for (i = 0; i < 4; i++) {
-        if (D_00304BE8->party[i] == v) {
+        if (((W7Save *)D_00304BE8)->party[i] == v) {
             return i;
         }
     }
@@ -68,7 +68,7 @@ s32 func_0013c318(s32 v) {
 s32 func_0013c360(s32 v) {
     s32 i;
     for (i = 0; i < 7; i++) {
-        if (D_00304BE8->x7d0[i] == v) {
+        if (((W7Save *)D_00304BE8)->x7d0[i] == v) {
             return 1;
         }
     }
@@ -78,18 +78,18 @@ s32 func_0013c360(s32 v) {
 void func_0013c3a8(s32 v) {
     s32 i;
     for (i = 0; i < 7; i++) {
-        if (D_00304BE8->x7d0[i] == v) {
+        if (((W7Save *)D_00304BE8)->x7d0[i] == v) {
             return;
         }
-        if (D_00304BE8->x7d0[i] == -1) {
-            D_00304BE8->x7d0[i] = v;
+        if (((W7Save *)D_00304BE8)->x7d0[i] == -1) {
+            ((W7Save *)D_00304BE8)->x7d0[i] = v;
             return;
         }
     }
 }
 
 u16 *func_0013c3f8(s32 i) {
-    W7Save *s = D_00304BE8;
+    W7Save *s = ((W7Save *)D_00304BE8);
     u16 *r;
     if (i == 0) {
         r = func_001477c8(D_00304BB0[s->x48d]);
@@ -102,11 +102,11 @@ u16 *func_0013c3f8(s32 i) {
 s32 func_0013c598(s32 i) {
     u16 *p;
     s32 e;
-    if (D_00304BE8->m[i].lv >= 100) {
+    if (((W7Save *)D_00304BE8)->m[i].lv >= 100) {
         return 0;
     }
     p = func_0013c3f8(i);
-    e = D_00304BE8->m[i].exp;
+    e = ((W7Save *)D_00304BE8)->m[i].exp;
     while (e >= 0) {
         e -= *p++;
     }
@@ -115,9 +115,9 @@ s32 func_0013c598(s32 i) {
 
 void func_0013c638(u32 i, s32 on) {
     if (on) {
-        D_00304BE8->bits5cc[i >> 2] |= 1 << (i & 3);
+        ((W7Save *)D_00304BE8)->bits5cc[i >> 2] |= 1 << (i & 3);
     } else {
-        D_00304BE8->bits5cc[i >> 2] &= ~(1 << (i & 3));
+        ((W7Save *)D_00304BE8)->bits5cc[i >> 2] &= ~(1 << (i & 3));
     }
 }
 
@@ -125,9 +125,9 @@ void func_0013c6d8(void) {
     u8 buf[0xF0];
     s32 i;
     for (i = 0; i < 4; i++) {
-        u8 c = D_00304BE8->party[i];
+        u8 c = ((W7Save *)D_00304BE8)->party[i];
         if (c != 0xFF) {
-            W7Member *m = &D_00304BE8->m[c];
+            W7Member *m = &((W7Save *)D_00304BE8)->m[c];
             func_00141b10(c, buf);
             m->x1 = buf[64];
             m->x3 = buf[72];
@@ -137,22 +137,22 @@ void func_0013c6d8(void) {
 }
 
 void func_0013c778(u32 a, u32 b, u32 c) {
-    D_00304BE8->party[1] = a < 10 ? a : -1;
-    D_00304BE8->party[2] = b < 10 ? b : -1;
-    D_00304BE8->party[3] = c < 10 ? c : -1;
+    ((W7Save *)D_00304BE8)->party[1] = a < 10 ? a : -1;
+    ((W7Save *)D_00304BE8)->party[2] = b < 10 ? b : -1;
+    ((W7Save *)D_00304BE8)->party[3] = c < 10 ? c : -1;
 }
 
 void func_0013c7d8(u32 v) {
     s32 i;
     for (i = 0; i < 4; i++) {
-        if (D_00304BE8->party[i] == v) {
+        if (((W7Save *)D_00304BE8)->party[i] == v) {
             return;
         }
-        if (D_00304BE8->party[i] == 0xFF) {
+        if (((W7Save *)D_00304BE8)->party[i] == 0xFF) {
             if (v < 10) {
-                D_00304BE8->party[i] = v;
+                ((W7Save *)D_00304BE8)->party[i] = v;
             } else {
-                D_00304BE8->party[i] = -1;
+                ((W7Save *)D_00304BE8)->party[i] = -1;
             }
             return;
         }
@@ -162,11 +162,11 @@ void func_0013c7d8(u32 v) {
 void func_0013c840(u32 v) {
     s32 i, j;
     for (i = 0; i < 4; i++) {
-        if (D_00304BE8->party[i] == v) {
+        if (((W7Save *)D_00304BE8)->party[i] == v) {
             for (j = i; j < 3; j++) {
-                D_00304BE8->party[j] = D_00304BE8->party[j + 1];
+                ((W7Save *)D_00304BE8)->party[j] = ((W7Save *)D_00304BE8)->party[j + 1];
             }
-            D_00304BE8->party[j] = -1;
+            ((W7Save *)D_00304BE8)->party[j] = -1;
             return;
         }
     }
@@ -176,9 +176,9 @@ void func_0013c8c8(s32 c, u32 k) {
     u8 *p;
     s32 i;
     if (k < 10) {
-        p = D_00304BE8->m[k].name;
+        p = ((W7Save *)D_00304BE8)->m[k].name;
     } else {
-        p = D_00304BE8->list599;
+        p = ((W7Save *)D_00304BE8)->list599;
     }
     i = 0;
     while (p[i] != 0) {
@@ -192,9 +192,9 @@ s32 func_0013c968(s32 c, u32 k) {
     u8 *p;
     s32 n;
     if (k < 10) {
-        p = D_00304BE8->m[k].name;
+        p = ((W7Save *)D_00304BE8)->m[k].name;
     } else {
-        p = D_00304BE8->list599;
+        p = ((W7Save *)D_00304BE8)->list599;
     }
     n = 0;
     while (*p) {

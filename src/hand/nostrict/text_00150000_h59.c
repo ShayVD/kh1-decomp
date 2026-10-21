@@ -15,7 +15,7 @@ typedef struct {
     u16 x83e;
 } Save59;
 typedef struct { void *a; void *b; } Pair59;
-extern Save59 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern void *D_00351AC8[][2];//
 extern void *D_00351B18[];
 u8 *func_001477c8(void *p);
@@ -26,7 +26,7 @@ void func_0015b098(void *, s32 *);
 
 void func_0015b268(s32 i) {
     s32 buf[2];
-    Mem59 *m = &D_00304BE8->m[i];
+    Mem59 *m = &((Save59 *)D_00304BE8)->m[i];
     u8 *p;
     void *o, *o2;
     s32 v, j, n, cnt;
@@ -38,12 +38,12 @@ void func_0015b268(s32 i) {
     if (o) func_00153e80(o);
     buf[1] = 0;
     if (i == 0) {
-        o2 = D_00351B18[D_00304BE8->x48c];
+        o2 = D_00351B18[((Save59 *)D_00304BE8)->x48c];
     } else {
         o2 = D_00351AC8[i][1];
     }
     p = func_001477c8(o2) + m->x34 - 1;
-    if (!o && (D_00304BE8->x83e >> i & 1)) {
+    if (!o && (((Save59 *)D_00304BE8)->x83e >> i & 1)) {
         cnt = 0;
         n = 100 - m->x34;
         for (j = 0; j < n; j++) {

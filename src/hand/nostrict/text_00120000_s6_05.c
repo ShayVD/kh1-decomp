@@ -70,7 +70,7 @@ extern Ent *D_002E26A0;
 #include "data/pieces/D_002E31B8.h"
 #include "data/pieces/D_002E31B0.h"
 extern s32 D_002E31BC;
-extern Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern u32 D_00524F44;
 extern s32 D_00524F48;
 extern s32 D_00524F4C;
@@ -178,7 +178,7 @@ void func_0012d930(u32 *a0) {
     u32 *fp;
 
     if (D_002E31B8 == 1) func_0012fc58();
-    if (D_00304BE8->f874 & 0x20) return;
+    if (((Sv *)D_00304BE8)->f874 & 0x20) return;
     D_002E2FD8[0].ids[3] = 0;
     m = 0;
     pl = D_002E26A0;

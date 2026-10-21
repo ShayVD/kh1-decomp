@@ -29,7 +29,7 @@ typedef struct {
 Ent *func_001e98d0(s32, s32);
 typedef struct { u8 pad0[0x1f]; u8 n; u8 items[0x74 - 0x20]; } Chr;
 typedef struct { u8 pad0[6]; Chr ch[10]; u8 a48e[11]; u8 a499[1]; } Save;
-extern Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; } __attribute__((aligned(8))) Msg2;
 typedef struct { u8 pad0[0x10]; f32 pos[3]; u8 pad1c[0x14]; f32 f30; f32 f34; f32 f38; } Obj5;

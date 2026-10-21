@@ -73,7 +73,7 @@ extern M2C_UNK func_001e8628;
 extern M2C_UNK func_001e8658;
 extern f32 D_003DACB0;
 extern f32 D_003DACB4;
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003DABD0.h"
 extern s32 D_003DAD38;
 extern s32 D_003DC470;
@@ -334,7 +334,7 @@ void func_001ee5b8(void) {
 }
 
 void func_001ee618(s32 arg0) {
-    func_001efc10(*(M2C_UNK *)((s8 *)(s8 *)&D_003E3CB8 + (M2C_FIELD((arg0 + D_00304BE8), u8 *, 0x48E) * 2)));
+    func_001efc10(*(M2C_UNK *)((s8 *)(s8 *)&D_003E3CB8 + (M2C_FIELD((arg0 + ((s32)D_00304BE8)), u8 *, 0x48E) * 2)));
 }
 
 void func_001ee680(void) {

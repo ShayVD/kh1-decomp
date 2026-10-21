@@ -19,7 +19,7 @@ typedef struct { s32 x0; SaveSub s; } SaveE;
 #include "data/pieces/D_003E3D70.h"
 typedef E3D70_3E3D70_3 E3D70;
 typedef struct { u8 pad[0x24]; s32 x24; } Obj;
-extern SaveE *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E8E08.h"
 extern s32 D_00642CF0[];
 extern s32 D_003F46B0[];
@@ -45,7 +45,7 @@ void func_00208310(void *, s32, s32, s32, s32, s32);
 /* rodata */
 void func_00218218(Obj *a) {
     s32 n = a->x24;
-    SaveE *e = &D_00304BE8[n];
+    SaveE *e = &((SaveE *)D_00304BE8)[n];
     E3D70 *r = &D_003E3D70.e3D70_3[n];
     SaveSub *s = &e->s;
     u32 k = D_00642CF0[func_001fd538(a)];

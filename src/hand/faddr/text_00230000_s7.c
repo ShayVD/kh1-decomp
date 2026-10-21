@@ -18,7 +18,7 @@ extern s32 D_006476F4;
 extern s32 D_00647670[];
 #include "data/pieces/D_003E3D6C.h"
 typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
-extern S48e *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_003F7D30[];
 extern s32 D_003F7D40[];
 extern s32 D_003F7D50[];
@@ -96,7 +96,7 @@ void func_00231ea0(W17 *w) {
         if (!r) break;
         func_001fc308(w, y, 218, 0, 0, 21, 0, 0x26E6E6E6, 0x26E6E6E6);
         func_001fc308(w, y, 218, 0, 0, 22, 0, 0x4C000000, 0x4C000000);
-        v = func_001ef140(D_00304BE8->x48e[k], id);
+        v = func_001ef140(((S48e *)D_00304BE8)->x48e[k], id);
         func_001fb428(w, 1, 0, 0, y + 33, 269, v, 15, 0x80808080);
         y += 48;
         pos[0] += D_003F7D40[k];

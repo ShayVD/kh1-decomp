@@ -41,7 +41,7 @@ typedef struct {
     u64 x878;
 } W7Save;
 
-extern W7Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 /* ---- actor object ---- */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
@@ -320,7 +320,7 @@ void func_001318e8(Act *, s32, V4f *);
 s32 func_0013c9e0(s32 item, u32 who) {
     if (item & 0x400) return 255;
     if (who < 10) {
-        W7Member *m = &D_00304BE8->m[who];
+        W7Member *m = &((W7Save *)D_00304BE8)->m[who];
         if (func_00147840(item)->x2 == 0) {
             s32 k;
             for (k = 0; k < m->nslot; k++) {
@@ -331,8 +331,8 @@ s32 func_0013c9e0(s32 item, u32 who) {
             }
         }
     }
-    if (D_00304BE8->inv[item] < 99) {
-        D_00304BE8->inv[item]++;
+    if (((W7Save *)D_00304BE8)->inv[item] < 99) {
+        ((W7Save *)D_00304BE8)->inv[item]++;
         return 12;
     }
     return 255;
@@ -340,7 +340,7 @@ s32 func_0013c9e0(s32 item, u32 who) {
 
 s32 func_0013cae8(u32 who, s32 item) {
     if (who < 10) {
-        W7Member *m = &D_00304BE8->m[who];
+        W7Member *m = &((W7Save *)D_00304BE8)->m[who];
         s32 k;
         for (k = 0; k < m->nslot; k++) {
             if (m->slot[k] == item) {
@@ -349,8 +349,8 @@ s32 func_0013cae8(u32 who, s32 item) {
             }
         }
     }
-    if (D_00304BE8->inv[item] != 0) {
-        D_00304BE8->inv[item]--;
+    if (((W7Save *)D_00304BE8)->inv[item] != 0) {
+        ((W7Save *)D_00304BE8)->inv[item]--;
         return 12;
     }
     return 255;

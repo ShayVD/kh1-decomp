@@ -22,7 +22,7 @@ typedef struct {
     u8 x48d;
     u8 party[3];
 } W34Save;
-extern W34Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 /* actors: x6c stats, x370 flag word */
 typedef struct { u8 pad[0x3c]; s32 cur; s32 max; s32 mcur; s32 mmax; } W34St;
@@ -146,7 +146,7 @@ s32 func_00148fb0(u32 id, s32 add) {
     } else if (((id >> 16) & 0xff) == 1) {
         u32 i = id & 0xffff;
         if (i < 10) {
-            W34Member *m = &D_00304BE8->m[i];
+            W34Member *m = &((W34Save *)D_00304BE8)->m[i];
             if (m->hp < m->hpmax) {
                 s32 v = m->hp + add;
                 m->hp = (v < m->hpmax) ? v : m->hpmax;
@@ -168,7 +168,7 @@ s32 func_00149090(u32 id, s32 add) {
     } else if (((id >> 16) & 0xff) == 1) {
         u32 i = id & 0xffff;
         if (i < 10) {
-            W34Member *m = &D_00304BE8->m[i];
+            W34Member *m = &((W34Save *)D_00304BE8)->m[i];
             if (m->mp < m->mpmax) {
                 s32 v = m->mp + add;
                 m->mp = (v < m->mpmax) ? v : m->mpmax;
@@ -190,7 +190,7 @@ s32 func_00149170(s32 a, u32 b) {
     s32 v;
 
     q = func_00147840(a);
-    p = (((b >> 16) & 0xff) == 1 && (b & 0xffff) < 10) ? (W34Mem8 *)&D_00304BE8->m[b & 0xffff] : 0;
+    p = (((b >> 16) & 0xff) == 1 && (b & 0xffff) < 10) ? (W34Mem8 *)&((W34Save *)D_00304BE8)->m[b & 0xffff] : 0;
     r = 0;
     switch (a) {
     case 1: case 2: case 6:
@@ -310,7 +310,7 @@ extern s32 D_0054C43C;
 extern void (*D_0054C438)(s32);
 void func_00149fa0(void) {
     while (D_0054C43C < 3) {
-        s32 c = D_00304BE8->party[D_0054C43C++];
+        s32 c = ((W34Save *)D_00304BE8)->party[D_0054C43C++];
         if (c != 0xff && func_00149c80(c, func_00149fa0)) return;
     }
     if (D_0054C438) D_0054C438(-1);

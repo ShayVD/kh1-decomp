@@ -266,6 +266,10 @@ CASTEND = re.compile(r"\(\s*(?:(?:const|volatile|struct|union|unsigned|signed)\s
 
 def rewrite_uses(text, N, own, shared):
     """each use of N in code: the value/lvalue/address the user's own declaration gave"""
+    pa_own = re.fullmatch(r"(\*+)" + N + r"\[[^\]]*\]", own[1].replace(" ", ""))
+    pa_sh = re.fullmatch(r"(\*+)" + N + r"\[[^\]]*\]", shared[1].replace(" ", ""))
+    if pa_own and pa_sh and "volatile" not in own[0] + shared[0]:
+        return elem_casts(text, N, f"{own[0]} {pa_own.group(1)}")
     val, adr = cast_types(N, *own)
     rv = None
     if scalar_int(*own) and scalar_int(*shared):
@@ -305,6 +309,49 @@ def rewrite_uses(text, N, own, shared):
         last = b
     out.append(text[last:])
     return "".join(out).replace("\0K\0", N)
+
+
+def elem_casts(text, N, ET):
+    """pointer-array user of a pointer-array shared name: each element read converts
+    its value (`((T *)N[i])`), a store `N[i] = v` stays (the pointer converts)"""
+    ml = macro_lines(text, N)
+    out, last = [], 0
+    for a, b in code_spans(text):
+        out.append(text[last:a])
+        seg = text[a:b]
+        res, k = [], 0
+        for m in re.finditer(r"\b" + N + r"\b", seg):
+            if m.start() < k or text.count("\n", 0, a + m.start()) in ml:
+                continue
+            j = m.end()
+            mm = re.match(r"\s*\[", seg[j:])
+            if not mm:
+                continue  # the array itself (decays to a pointer): left as it is
+            i, d = j + mm.end(), 1
+            while i < len(seg) and d:
+                d += seg[i] == "["
+                d -= seg[i] == "]"
+                i += 1
+            if d:
+                raise ValueError("unbalanced index")
+            prev = seg[:m.start()].rstrip()
+            post = re.match(r"\s*(->|\.|\[)", seg[i:])
+            if prev.endswith("&") and not prev.endswith("&&") and not post:
+                raise ValueError("address of an element")
+            ref = seg[m.start():i]
+            deref = prev.endswith("*") and (len(prev) < 2 or not re.match(r"[\w)\]]", prev[-2]))
+            if not post and not deref and re.match(r"\s*(=(?!=)|\+\+|--|[-+*/%&|^]=|<<=|>>=)", seg[i:]):
+                if not re.match(r"\s*=(?!=)", seg[i:]):
+                    raise ValueError("compound store to an element")
+                res.append(seg[k:m.start()] + ref)
+            else:
+                res.append(seg[k:m.start()] + f"(({ET.strip()}){ref})")
+            k = i
+        res.append(seg[k:])
+        out.append("".join(res))
+        last = b
+    out.append(text[last:])
+    return "".join(out)
 
 
 def store_casts(text, N, ST):

@@ -7,7 +7,7 @@ M2C_UNK func_0014dcd8();
 M2C_UNK func_0014f658(void *, M2C_UNK);
 M2C_UNK func_002675a8(s32);
 extern M2C_UNK func_00147f20;
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_0054C1B0; /* src/data/bss_0054.c: Ent9c D_0054C1B0[0x3] */
 extern u32 D_002C5958;
 #include "data/pieces/D_002E27C8.h"
@@ -82,7 +82,7 @@ s32 func_00149eb8(s32 arg0) {
   s32 temp_a0;
   int new_var;
   temp_a0 = (*((u8 *) (func_00147840(arg0) + 2))) - 2;
-  new_var = D_00304BE8 + (temp_a0 * 0x74);
+  new_var = ((s32)D_00304BE8) + (temp_a0 * 0x74);
   *((s8 *) (((s8 *) new_var) + 0x36)) = (s8) arg0;
   return temp_a0;
 }

@@ -23,7 +23,7 @@ M2C_UNK func_0015d1d0();
 M2C_UNK func_00216180();
 M2C_UNK func_00232ad0(M2C_UNK);
 extern f32 D_002BBDFC;
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00551600; /* src/data/bss_0055.c: u8 *D_00551600 */
 extern s32 D_00559DB0;
 extern s32 D_0055BDE0;
@@ -98,7 +98,7 @@ void func_00157648(void *arg0) {
 }
 
 u16 func_001586d8(s32 arg0) {
-    return M2C_FIELD(((arg0 * 2) + D_00304BE8), u16 *, 0x848);
+    return M2C_FIELD(((arg0 * 2) + ((s32)D_00304BE8)), u16 *, 0x848);
 }
 
 s32 func_00158d30(void) {

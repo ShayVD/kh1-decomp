@@ -99,7 +99,7 @@ typedef struct { s32 *p; s32 n; } PN;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00642CCC;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_00642CD8;
@@ -109,7 +109,7 @@ extern s32 D_003F4200[][9];
 void func_00170d60(s32, s32, s32);
 
 void func_00216ea8(void) {
-    s32 k = D_00304BE8->x48e[D_00642CCC];
+    s32 k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
     s32 *p, n, i;
     p = D_003F40F8[k].p;
     n = D_003F40F8[k].n;
@@ -137,7 +137,7 @@ s32 D_00642D14 ALIGNED(4);
 s32 func_0013c360(s32);
 
 void func_00218020(s32 n) {
-    Rec74 *e = &D_00304BE8->r[n];
+    Rec74 *e = &((S4BE8 *)D_00304BE8)->r[n];
     s32 i;
     D_00642CF0[0] = 0;
     D_00642CF0[1] = 1;
@@ -203,10 +203,10 @@ void func_00218dd0(Obj2 *a) {
             v = func_001fd518(a);
             D_00642D18 = v;
             if ((o = a->x10)) {
-                u8 k8 = D_00304BE8->x48e[v];
+                u8 k8 = ((S4BE8 *)D_00304BE8)->x48e[v];
                 o->x24 = k8;
                 if ((o = o->x10)) {
-                    func_00218020(D_00304BE8->x48e[v]);
+                    func_00218020(((S4BE8 *)D_00304BE8)->x48e[v]);
                     o->xd8 = D_00642D10;
                     func_001fdfd0(o);
                     o->x24 = k8;
@@ -218,7 +218,7 @@ void func_00218dd0(Obj2 *a) {
     y = 0;
     for (i = 0; i < D_003E3D68; i++) {
         k = i == s ? 11 : 0;
-        func_00207870(a, k, 2, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i]));
+        func_00207870(a, k, 2, 0, y, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[i]));
         y += 28;
     }
 }
@@ -248,7 +248,7 @@ void func_00218f88(void *a) {
             S4BE8 **b;
             func_001f3e90(o[0], o[1]);
             func_001f3e20(o[1], o[0]);
-            b = &D_00304BE8;
+            b = ((S4BE8 **)&D_00304BE8);
             o[1]->x24 = (Obj *)(u32)(*b)->x48e[*v];
             if ((o[2] = func_001f31a8(D_003F46D0, 6))) {
                 func_001f3e90(o[1], o[2]);

@@ -243,7 +243,7 @@ typedef struct {
     u8 x5[16];
     u8 x15, x16;
 } B3SvSrc;
-extern B3Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00304BC0[10];
 #include "data/pieces/D_00351530.h"
 B3Sv *func_00232cc0(s32);
@@ -258,7 +258,7 @@ void func_0013cb98(void) {
     B3SvSub *b;
     s32 i, j;
 
-    B3Sv **pp = &D_00304BE8;
+    B3Sv **pp = ((B3Sv **)&D_00304BE8);
     s = func_00232cc0(0);
     *pp = s;
     s->x0 = 5;
@@ -294,7 +294,7 @@ void func_0013cb98(void) {
     }
     for (i = 0; i < 512; i++) func_0013c638(i, (*(u16 (*)[512])&D_00351530)[i] & 1);
     for (i = 0; i < 7; i++) s->b.x7cc[i] = -1;
-    for (i = 0; i < 7; i++) D_00304BE8->b.x48e[i] = 1;
+    for (i = 0; i < 7; i++) ((B3Sv *)D_00304BE8)->b.x48e[i] = 1;
     for (i = 0; i < 3; i++) b->x840[i] = -1;
 }
 #include "data/data_0030.h"

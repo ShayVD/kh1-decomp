@@ -138,7 +138,7 @@ void func_00130398(W8Act *, s32, f32);
 void func_0014f658(W8Act *, s32);
 s32 func_0014c4a8(W8Act *a);
 typedef struct { u8 pad[0x36]; u8 x36; } W8Save;
-extern W8Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 void func_00145138(void) {
     W8Node *n;
@@ -614,7 +614,7 @@ void func_0014c530(W8Act *a) {
 
 /* needs make: uses rodata */
 s32 func_00149678(void) {
-    switch (D_00304BE8->x36) {
+    switch (((W8Save *)D_00304BE8)->x36) {
     case 88:
     case 91:
     case 99:

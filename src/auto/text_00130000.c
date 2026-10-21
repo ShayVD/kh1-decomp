@@ -28,7 +28,7 @@ extern s32 D_002C5958;
 #include "data/pieces/D_00304B78.h"
 extern s32 D_00525364;
 #include "data/pieces/D_002E31A8.h"
-extern void *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0();
 s32 func_00131ab0();

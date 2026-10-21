@@ -12,7 +12,7 @@ typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8
 typedef E20_3F2C40 E20;
 
 #include "data/pieces/D_00425BC8.h"
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_00642CCC;
 extern s32 D_00642CD8;
@@ -46,7 +46,7 @@ void func_00217000(Obj *a) {
     Obj *o;
     Cfg *cfg;
     E20 *tbl = D_003F2C40.e20; /* dead set (flagged): overwritten before its only use; keeps the la of D_003F2C40 unfolded */
-    k = D_00304BE8->x48e[D_00642CCC];
+    k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
     pn = D_003F40F8[k].p;
     sel = 11;
     if (func_001f42b8(a)) {
@@ -83,7 +83,7 @@ void func_00217000(Obj *a) {
             if (ch) {
                 func_00216ea8();
                 D_00642CCC = cur;
-                { s32 n2 = D_00304BE8->x48e[cur];
+                { s32 n2 = ((S4BE8 *)D_00304BE8)->x48e[cur];
                 D_00642CD8 = ((S34B8 *)D_003F34B8)->x20[n2];
                 D_00642CDC = 0;
                 k = n2;

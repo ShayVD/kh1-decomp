@@ -38,7 +38,7 @@ typedef struct { u8 pad[0x70]; s32 w70; } Obj714;
 extern E551670 D_00551670[];
 extern U2E3190 D_002E3190;
 typedef struct { u8 pad[0x848]; u16 cnt[1]; } S304BE8;
-extern S304BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_00351A30.h"
 extern s32 D_005516EC;
 extern U2C5958 D_002C5958;
@@ -167,7 +167,7 @@ void func_00158068(void *a, s32 b, F158068 *c) {
 }
 
 void func_001586a8(s32 i) {
-    if (D_00304BE8->cnt[i] < 9999) D_00304BE8->cnt[i]++;
+    if (((S304BE8 *)D_00304BE8)->cnt[i] < 9999) ((S304BE8 *)D_00304BE8)->cnt[i]++;
 }
 
 void func_001586f0(void) {
