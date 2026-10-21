@@ -188,7 +188,7 @@ FLOAT_PAD_WORD = 0xA5C35A3C  # --float-pad: data pads hold this word; bss pads s
 # the next fixed region (0x820000, func_00121c78) must stay clear.
 ARENA_POOLS = {"D_006A0000": ("D_00350D18", 3, 0), "D_00720000": ("D_00304318", 7, 4)}
 ARENA_NEXT = 0x00820000
-ARENA_ALIGN = 0x10000
+ARENA_ALIGN = 0x1000
 HEAP_SIZE = 0xA000  # crt0: SetupHeap(_end, 0xA000)
 
 

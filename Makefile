@@ -150,7 +150,9 @@ SHIFT_FLOAT      ?= 0
 # from some angles (layout-dependent; data 0x4000 with bss 0 and bss 0x11800 with no data both draw it).
 # Session 22: the alley breaks with bss 0 too; the cause was D_0048BFD0 (float_keep.txt), and with
 # it kept data 0x4000 + bss 0x11800 draws the alley.
-SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
+# Session 25: the fixed pools follow crt0's heap (SHIFT_FIXED_ARENA), so 0x26000 floats D_00533BA0's
+# 0x14000 run too (KH1_F25_B plays; only the 0x1CC48 and 0x30C9C runs stay).
+SHIFT_FLOAT_BSS_BUDGET ?= 0x26000
 # SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
 # data goes after the blob and pushes .bss and _end up by as much (same arena limit).
 # Session 20: 0x4000 (753 data names) plays in PCSX2 (title, load menu, save 05, field, menus) with
@@ -160,7 +162,11 @@ SHIFT_FLOAT_BSS_BUDGET ?= 0x11800
 # Session 22: 0x6000 and 0x8000 drew no title until split_check.py kept the GIF packets' colour
 # fields; with it both draw the title and the Agrabah alley with bss 0x11800 (0x8000 floats 2 names
 # more than 0x6000). _end is 0x695264; _end + 0xA000 leaves 0xD9C below 0x6A0000.
-SHIFT_FLOAT_DATA_BUDGET ?= 0x8000
+# Session 25: the pools move after the heap, so 0x20000 floats every data name the checks allow
+# except the three 0x16C00-0x40000 tables (1,103 names). With bss 0x26000 _end is 0x6BABA4 and the
+# pools start at 0x6C5000; their end may reach 0x820000 (shift_ld asserts it), so at most about
+# 0x8000 more can float.
+SHIFT_FLOAT_DATA_BUDGET ?= 0x20000
 # SHIFT_REACH_FLAGS: extra reach_check.py options, each turning one rule off for bisecting:
 # --no-bounds (the session 18 idx-next rule), --no-idx-base, --no-stored, --no-uncached (session 20),
 # --no-countdown (pointer walks capped by a loop counter), --no-join (a join of addresses is one base +
