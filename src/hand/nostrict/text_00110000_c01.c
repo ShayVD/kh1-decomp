@@ -256,7 +256,7 @@ typedef struct {
     u8 pad8[0x10 - 0x8];
     f32 x10[4];
 } __attribute__((aligned(8))) C01Cmd;
-typedef struct { s32 x0; s32 x4; } C01CmdInfo;
+#include "data/types/nostrict_text_00110000_c01.h"
 typedef struct {
     u32 lo : 4;
     u32 b4 : 1;
@@ -532,3 +532,4 @@ void func_00133a88(void) {
 #include "data/data_002E.h"
 #include "data/data_0030.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_0030433C.h"

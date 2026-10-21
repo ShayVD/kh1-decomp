@@ -86,13 +86,7 @@ typedef struct {
     u8 padc[0x14];
 } W9Tab32;
 extern W9Tab32 D_00350D88[];
-typedef struct {
-    s8 a;
-    s8 b;
-    u8 pad2[2];
-    f32 f4;
-    u8 pad8[4];
-} W9Tab12;
+#include "data/types/text_00140000_h9.h"
 void func_00267560(void *out, void *in, f32 s);
 void func_00130398(W9Ent *e, f32 s, s32 n);
 void func_00267518(void *out, void *a, void *b);
@@ -707,3 +701,4 @@ void func_00153500(W9Ent *a, Msg9 *m) {
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_002C5970.h"
+#include "data/pieces/D_00350D30.h"

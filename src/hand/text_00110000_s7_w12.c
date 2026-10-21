@@ -1,5 +1,5 @@
 #include "common.h"
-typedef f32 V4[4] __attribute__((aligned(16)));
+#include "data/types/text_00110000_s7_w12.h"
 typedef int u128 __attribute__((mode(TI)));
 
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
@@ -128,3 +128,4 @@ s32 func_00119ad8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
     return 0;
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002C12E0.h"

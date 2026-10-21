@@ -16,7 +16,7 @@ typedef struct { u16 n; u8 pad2[0xb]; s8 col; u8 pade[2]; Glyph g[1]; } GlyphStr
 typedef struct { u16 pad0; u16 n; f32 a; f32 b; s8 state; u8 padd[0x1803]; f32 t[1]; } Track;
 typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:1; u32 rest:27; } Flags;
 typedef struct { u64 a; s32 b; } Pad8;
-typedef struct { u64 pad[17]; u64 a; u64 pad2[15]; u64 b; } Pkt;
+#include "data/types/text_00100000_h28_p.h"
 typedef struct { u8 pad0[0x54]; f32 rot; u8 pad58[8]; f32 x; s32 y; f32 z; u8 pad6c[0x14]; } Cam80;
 typedef struct { u8 pad0[4]; u16 mode; u8 pad6[2]; u16 w; u8 pada[2]; s16 cx; u8 pade[0x22]; f32 x, y; u8 pad38[0x38]; f32 ox, oy; } TextBox;
 typedef struct { u8 pad[0x10]; f32 f10, f14; u8 pad18[4]; u8 b1c, b1d, b1e; } Task;
@@ -1024,3 +1024,4 @@ void func_00100670(u32 arg0, s32 arg1) {
 #include "data/data_0046.h"
 #include "data/data_0047.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002B6490.h"

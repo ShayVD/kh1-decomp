@@ -36,7 +36,7 @@ s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 s32 sceGsSyncPath(s32, s32);
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
-typedef struct { u16 uv[8]; s16 w, h; } Spr;
+#include "data/types/nostrict_text_001f0000_s6_18.h"
 extern Spr D_003E9138[];
 extern u8 D_003F1E70[];
 typedef struct { s32 w, h, idx, a; s32 c[4]; u32 rot; } SprPrm;
@@ -444,3 +444,4 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
 }
 #include "data/data_003E.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003E9138.h"

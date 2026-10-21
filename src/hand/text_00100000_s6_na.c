@@ -8,7 +8,7 @@ void func_00104908(void) {
     D_002A6324 = 0;
 }
 
-typedef struct { s8 a, b, c, d; } E4;
+#include "data/types/text_00100000_s6_na.h"
 extern E4 D_002BCB80[];
 extern s32 D_002BC128;
 extern s32 D_002BC130;
@@ -80,3 +80,4 @@ s32 func_001cdc58(VM *vm) {
 }
 #include "data/data_002B.h"
 #include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCB80.h"

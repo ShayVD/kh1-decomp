@@ -29,7 +29,7 @@ typedef struct {
 #include "data/types/text_001e0000_h45.h"
 
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
-typedef struct { s32 x0; s32 x4; u8 pad[0xcc]; } E212;
+#include "data/types/text_001e0000_h45_p.h"
 typedef struct { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
 typedef struct { Obj26 *x0; s32 a; s32 b; } Pair20;
 typedef struct { s32 x0; u8 pad[844]; } E848;
@@ -875,3 +875,5 @@ s32 func_001eb698(VM *vm) {
 #include "data/pieces/D_003DD258.h"
 #include "data/pieces/D_003DD28C.h"
 #include "data/pieces/D_003F7A68.h"
+#include "data/pieces/D_003DB078.h"
+#include "data/pieces/D_003DB718.h"

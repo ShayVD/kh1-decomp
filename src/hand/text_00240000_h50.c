@@ -28,7 +28,7 @@ typedef struct {
 } Ctx;
 typedef struct { s32 x0; Ctx *c; } S8140;
 
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
+#include "data/types/text_00240000_h50_p.h"
 typedef union { f32 m[4][4]; u128 q[4]; } M44;
 
 /* GS texture header: TEX0-style bitfield word at +0x18. */
@@ -648,3 +648,4 @@ s32 func_0024d8f0(void) {
 #include "data/data_0046.h"
 #include "data/data_0045.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00491830.h"

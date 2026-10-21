@@ -9,7 +9,7 @@
 	PIECE D_00490008, 0x10, 8
 	PIECE D_00490018, 0x8, 8
 	PIECE D_00490020, 0x10, 16
-	PIECE D_004900A8, 0x18, 8  /* untyped: type Str11 is not a common.h basic type */
+	PIECE D_004900A8, 0x18, 8  /* data/pieces/D_004900A8.h */
 	PIECE D_00490300, 0x20, 16
 	PIECE_BEGIN D_00490340, 0x40, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_00490340, 0x0, 0x8
@@ -83,13 +83,13 @@
 	PIECE_BYTES D_00490560, 0x18, 0x18
 	PIECE_END D_00490560, 0x30
 	PIECE D_00490620, 0x10, 16
-	PIECE D_00490630, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_00490630, 0x10, 16  /* data/pieces/D_00490630.h */
 	PIECE D_004906C0, 0x10, 16
-	PIECE D_004906D0, 0xe0, 16  /* untyped: type Tbl55 is not a common.h basic type */
+	PIECE D_004906D0, 0xe0, 16  /* data/pieces/D_004906D0.h */
 	PIECE D_004908C8, 0x18, 8
-	PIECE D_004908E0, 0x10, 16  /* untyped: type S10 is not a common.h basic type */
-	PIECE D_004908F0, 0x10, 16  /* untyped: type Str10 is not a common.h basic type */
-	PIECE D_00490900, 0x10, 16  /* untyped: type S10 is not a common.h basic type */
+	PIECE D_004908E0, 0x10, 16  /* data/pieces/D_004908E0.h */
+	PIECE D_004908F0, 0x10, 16  /* data/pieces/D_004908F0.h */
+	PIECE D_00490900, 0x10, 16  /* data/pieces/D_00490900.h */
 	PIECE D_00490910, 0x18, 8
 	PIECE D_00490928, 0x18, 8
 	PIECE D_00490940, 0x20, 16
@@ -131,20 +131,20 @@
 	PIECE D_004910B8, 0x10, 8
 	PIECE D_004910C8, 0x18, 8
 	PIECE D_00491390, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_004914C0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004914D0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004914E0, 0x40, 16  /* untyped: type Col4 is not a common.h basic type */
-	PIECE D_004915A0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004915B0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004915C0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004915D0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004915E0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_004915F0, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_00491600, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_00491610, 0x10, 16  /* untyped: type Col is not a common.h basic type */
-	PIECE D_00491620, 0x10, 16  /* untyped: type Col is not a common.h basic type */
+	PIECE D_004914C0, 0x10, 16  /* data/pieces/D_004914C0.h */
+	PIECE D_004914D0, 0x10, 16  /* data/pieces/D_004914D0.h */
+	PIECE D_004914E0, 0x40, 16  /* data/pieces/D_004914E0.h */
+	PIECE D_004915A0, 0x10, 16  /* data/pieces/D_004915A0.h */
+	PIECE D_004915B0, 0x10, 16  /* data/pieces/D_004915B0.h */
+	PIECE D_004915C0, 0x10, 16  /* data/pieces/D_004915C0.h */
+	PIECE D_004915D0, 0x10, 16  /* data/pieces/D_004915D0.h */
+	PIECE D_004915E0, 0x10, 16  /* data/pieces/D_004915E0.h */
+	PIECE D_004915F0, 0x10, 16  /* data/pieces/D_004915F0.h */
+	PIECE D_00491600, 0x10, 16  /* data/pieces/D_00491600.h */
+	PIECE D_00491610, 0x10, 16  /* data/pieces/D_00491610.h */
+	PIECE D_00491620, 0x10, 16  /* data/pieces/D_00491620.h */
 	PIECE D_00491820, 0x10, 16
-	PIECE D_00491830, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_00491830, 0x10, 16  /* data/pieces/D_00491830.h */
 	PIECE D_00491840, 0x8, 8
 	PIECE D_00491860, 0x18, 8
 	PIECE D_00491878, 0x8, 8

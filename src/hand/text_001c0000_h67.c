@@ -247,7 +247,7 @@ s32 func_001d0dd0(VM *vm) {
     return 2;
 }
 
-typedef struct { f32 x[4]; } __attribute__((aligned(16))) V4;
+#include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;
 void func_001e9fe8(f32 *, f32 *);
 void sceVu0UnitMatrix(f32 (*)[4]);
@@ -557,3 +557,4 @@ s32 func_001dde08(VM *vm) {
 #include "data/pieces/D_00389C90.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_003DABD8.h"
+#include "data/pieces/D_00490630.h"

@@ -197,7 +197,7 @@ s32 func_001aab20(char *name) {
 }
 
 typedef struct { u8 pad[0x60]; u64 a; u64 b; } Gs800;
-typedef struct { u8 pad[0x20]; u64 a; u64 b; } Gs060;
+#include "data/types/text_001a0000_h13_p.h"
 extern Gs800 D_0061E800;
 extern Gs060 D_00373060;
 
@@ -345,7 +345,6 @@ s32 func_001bb2e0(s32 a) {
     return s->flags[a];
 }
 
-typedef struct { u8 c[11]; } Str11;
 extern Str11 D_004900A8;
 
 s32 func_001bb370(void) {
@@ -563,3 +562,5 @@ s32 func_001bb260(s32 a) {
 #include "data/data_0037.h"
 #include "data/data_0048.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_00373060.h"
+#include "data/pieces/D_004900A8.h"

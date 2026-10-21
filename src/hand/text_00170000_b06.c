@@ -1,7 +1,7 @@
 /* worker b06: hand-matched camera functions 0x001784c8..0x0017e428 */
 #include "common.h"
 #include "data/bss_0057.h"
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/text_00170000_b06.h"
 typedef struct { V4 a; V4 b; V4 c; V4 d; } Ray;
 typedef struct {
     s32 x0; u8 pad4[0x10 - 4]; V4 x10; u8 pad20[0x10]; f32 x30[3]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 x64;
@@ -392,3 +392,7 @@ s32 func_0017e428(V4 *a, V4 *b)
 }
 #include "data/data_0036.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00362510.h"
+#include "data/pieces/D_003625C0.h"
+#include "data/pieces/D_003625D0.h"
+#include "data/pieces/D_00362600.h"

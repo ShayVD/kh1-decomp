@@ -94,8 +94,8 @@
 	PIECE_LABEL D_003E90A0, D_003E9104, 0x64
 	PIECE_BYTES D_003E90A0, 0x64, 0xc
 	PIECE_END D_003E90A0, 0x70
-	PIECE D_003E9110, 0x28, 8  /* untyped: type SmG is not a common.h basic type */
-	PIECE D_003E9138, 0x118, 8  /* untyped: type Spr is not a common.h basic type */
-	PIECE D_003E9250, 0x3e0, 16  /* untyped: type BigG is not a common.h basic type */
+	PIECE D_003E9110, 0x28, 8  /* data/pieces/D_003E9110.h */
+	PIECE D_003E9138, 0x118, 8  /* data/pieces/D_003E9138.h */
+	PIECE D_003E9250, 0x3e0, 16  /* data/pieces/D_003E9250.h */
 	PIECE D_003E9630, 0x30, 16
 	PIECE D_003E9660, 0x8000, 16  /* untyped: users disagree: M2C_UNK D_003E9660 | Q D_003E9660[] */

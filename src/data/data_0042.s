@@ -26,7 +26,7 @@
 	PIECE D_00425CB0, 0x20, 16
 	PIECE D_00425CD0, 0x10, 16
 	PIECE D_00425CE0, 0xa0, 16  /* untyped: users disagree: M2C_UNK D_00425CE0 | VEC D_00425CE0 | u8 D_00425CE0[] */
-	PIECE D_00425D80, 0x1f0, 16  /* untyped: type S5D80 is not a common.h basic type */
+	PIECE D_00425D80, 0x1f0, 16  /* data/pieces/D_00425D80.h */
 	PIECE D_00425F70, 0x8, 8  /* untyped: users disagree: Cam *D_00425F70 | Cam_q1 *D_00425F70 | S5D80 *D_00425F70 */
 	PIECE D_00425F78, 0x8, 8
 	PIECE D_00425F80, 0x8, 8

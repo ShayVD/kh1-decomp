@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_004F.h"
 
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V53;
+#include "data/types/text_00110000_h53_p.h"
 
 static inline f32 w53_dot(void *a, void *b) {
     f32 r;
@@ -696,3 +696,5 @@ char *D_002C6460[0xb] ALIGNED(16) = {
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_0046A6A8.h"
+#include "data/pieces/D_002C5C70.h"
+#include "data/pieces/D_002E26B0.h"

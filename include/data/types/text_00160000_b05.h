@@ -1,0 +1,9 @@
+/* Types moved from src/hand/text_00160000_b05.c (phase 4, tools/shift/type_move.py). */
+#ifndef KH1_DATA_TYPES_TEXT_00160000_B05_H
+#define KH1_DATA_TYPES_TEXT_00160000_B05_H
+
+#include "common.h"
+
+typedef struct { f32 x, y, z, w; } V4;
+
+#endif /* KH1_DATA_TYPES_TEXT_00160000_B05_H */

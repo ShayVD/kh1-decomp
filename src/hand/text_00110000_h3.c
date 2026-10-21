@@ -90,9 +90,7 @@ extern s32 D_002BC128;
 typedef struct {
     char c[13];
 } Str13;
-typedef struct {
-    char c[10];
-} Str10;
+#include "data/types/text_00110000_h3_p.h"
 extern char D_0048D110[];
 extern Str13 D_0048D118;
 extern char D_0048D128[];
@@ -463,3 +461,4 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
 #include "data/data_0048.h"
 #include "data/pieces/D_002BC170.h"
 #include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_0048D130.h"

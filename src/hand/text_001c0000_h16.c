@@ -381,7 +381,7 @@ s32 func_001d1790(VM *vm) {
     vm->sp = sp - 2;
     return 2;
 }
-typedef struct { s32 a; s32 n; s32 off[1]; } Tbl;
+#include "data/types/text_001c0000_h16.h"
 extern Tbl *D_003DABCC[];
 void func_00131498(void *, void *);
 /* bit 7 of VM.flags as a u32 bitfield (compares against 1 are kept) */
@@ -417,3 +417,4 @@ s32 func_001cf7a0(VM *vm) {
 }
 #include "data/data_002B.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003DABCC.h"

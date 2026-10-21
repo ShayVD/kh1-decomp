@@ -88,7 +88,7 @@ CONTEXT_ONLY void func_00219598(Wnd_q0 *o, s32 x, s32 y) {
 }
 
 typedef struct { s32 a, b, c, d; } R4_q0;
-typedef struct { s32 x, y; } P2_q0;
+#include "data/types/text_00210000_s6_22.h"
 extern s32 D_00642D28;
 extern s32 D_003F34CC;
 extern s32 D_003F4818[], D_003F4848[], D_003F4878[], D_003F48A8[];
@@ -1341,3 +1341,4 @@ R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
 #include "data/pieces/D_003F34C8.h"
 #include "data/pieces/D_003F50E0.h"
 #include "data/pieces/D_00425CAC.h"
+#include "data/pieces/D_003F4AA8.h"

@@ -78,7 +78,7 @@ typedef struct {
     Ev57_0ec8 *ev;
 } Obj57_0ec8;
 #include "data/types/nostrict_text_00140000_h57.h"
-typedef struct { s32 id; f32 f4; } Kind57_15d0;
+#include "data/types/nostrict_text_00140000_h57_p.h"
 typedef struct { u8 pad0[3]; u8 b3; } Q57_15d0;
 
 extern u32 D_002C5958;
@@ -315,3 +315,4 @@ s32 func_001515d0(void *owner, f32 *pos, s32 type) {
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002C5970.h"
+#include "data/pieces/D_003514E8.h"

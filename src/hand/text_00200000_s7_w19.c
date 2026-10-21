@@ -132,7 +132,7 @@ typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } 
 extern Base4BE8 *D_00304BE8;
 typedef struct { u8 b0, b1, start, count, b4, b5; } T7C48;
 typedef struct { u16 id; u16 max; } T7A70;
-typedef struct { u8 b[32]; } T7D88;
+#include "data/types/text_00200000_s7_w19.h"
 extern T7C48 D_003F7C48[];
 extern T7A70 D_003F7A70[];
 extern T7D88 D_003F7D88[];
@@ -247,3 +247,4 @@ s32 func_001c8a00(VM *vm) {
     vm->sp = sp - 4;
     return 2;
 }
+#include "data/pieces/D_003F7D88.h"

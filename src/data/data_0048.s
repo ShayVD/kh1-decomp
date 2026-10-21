@@ -2076,7 +2076,7 @@
 	PIECE_BYTES D_004862D0, 0x8, 0x8
 	PIECE_END D_004862D0, 0x10
 	PIECE D_004862E0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_00486300, 0x30, 16  /* untyped: type V4i52 is not a common.h basic type */
+	PIECE_BEGIN D_00486300, 0x30, 16  /* data/pieces/D_00486300.h */
 	PIECE_BYTES D_00486300, 0x0, 0x4
 	.word D_004862E0
 	PIECE_BYTES D_00486300, 0x8, 0x28
@@ -2279,12 +2279,12 @@
 	PIECE D_0048D008, 0x8, 8
 	PIECE D_0048D010, 0x20, 16
 	PIECE D_0048D128, 0x8, 8
-	PIECE D_0048D130, 0x10, 16  /* untyped: type Str10 is not a common.h basic type */
+	PIECE D_0048D130, 0x10, 16  /* data/pieces/D_0048D130.h */
 	PIECE D_0048D140, 0x18, 8
 	PIECE D_0048D158, 0x8, 8
 	PIECE D_0048D198, 0x8, 8
 	PIECE D_0048D1A0, 0x8, 8
-	PIECE D_0048D1A8, 0x10, 8  /* untyped: type Str12 is not a common.h basic type */
+	PIECE D_0048D1A8, 0x10, 8  /* data/pieces/D_0048D1A8.h */
 	PIECE D_0048D1B8, 0x8, 8
 	PIECE D_0048D260, 0x18, 8
 	PIECE D_0048D278, 0x10, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */

@@ -194,7 +194,7 @@ def plan(note: str, names: list[str], exclude: set[str]):
 
 def move_types(src: Path, types: list[str]) -> str:
     """Move types to src's include/data/types header. When that header exists (an earlier
-    move), the types go to a second one, <stem>_p.h, that includes the first: a header
+    move), the types go to a new one, <stem>_p.h (or _p2.h ...), that includes the first: a header
     other files include already must not grow (a bss_XXXX_typed.h that includes two of
     them could see a type twice). Returns the include path."""
     hdr = type_move.header_path(src)
@@ -205,10 +205,13 @@ def move_types(src: Path, types: list[str]) -> str:
     if not hdr.exists():
         type_move.apply(src, take, info)
         return f"data/types/{stem}.h"
-    stem2 = stem + "_p"
-    hdr2 = hdr.with_name(stem2 + ".h")
-    if hdr2.exists():
-        raise RuntimeError(f"{hdr2} exists")
+    k = 1
+    while True:  # <stem>_p.h, then <stem>_p2.h ...: an existing header never grows
+        stem2 = stem + ("_p" if k == 1 else f"_p{k}")
+        hdr2 = hdr.with_name(stem2 + ".h")
+        if not hdr2.exists():
+            break
+        k += 1
     text = src.read_text()
     incs = []
     for ln in text.splitlines():

@@ -6,15 +6,15 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_002B1C60, 0x1200, 16  /* untyped: users disagree: E90 D_002B1C60[][64] | M2C_UNK D_002B1C60 */
-	PIECE D_002B2E60, 0x2400, 16  /* untyped: type M144 is not a common.h basic type */
-	PIECE D_002B5260, 0x1200, 16  /* untyped: type M144 is not a common.h basic type */
+	PIECE D_002B2E60, 0x2400, 16  /* data/pieces/D_002B2E60.h */
+	PIECE D_002B5260, 0x1200, 16  /* data/pieces/D_002B5260.h */
 	PIECE D_002B6460, 0x14, 4
 	PIECE D_002B6474, 0x4, 4
 	PIECE D_002B6478, 0x4, 4
 	PIECE D_002B647C, 0x4, 4
 	PIECE D_002B6480, 0x4, 4
 	PIECE D_002B6484, 0xc, 4
-	PIECE D_002B6490, 0x150, 16  /* untyped: type Pkt is not a common.h basic type */
+	PIECE D_002B6490, 0x150, 16  /* data/pieces/D_002B6490.h */
 	PIECE_BEGIN D_002B65E0, 0x10, 16
 	PIECE_BYTES D_002B65E0, 0x0, 0x4
 	.word D_002B6490
@@ -304,7 +304,7 @@
 	PIECE D_002BCB50, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002BCB50 | f32 D_002BCB50[3] */
 	PIECE D_002BCB60, 0x8, 8  /* untyped: users disagree: Ctx *D_002BCB60 | W29Ply *D_002BCB60 | s32 D_002BCB60 | void *D_002BCB60 */
 	PIECE D_002BCB68, 0x18, 8
-	PIECE D_002BCB80, 0x9c, 4  /* untyped: type E4 is not a common.h basic type */
+	PIECE D_002BCB80, 0x9c, 4  /* data/pieces/D_002BCB80.h */
 	PIECE D_002BCC1C, 0x4, 4  /* data/pieces/D_002BCC1C.h */
 	PIECE D_002BCC20, 0x4, 4
 	PIECE D_002BCC24, 0x4, 4  /* data/pieces/D_002BCC24.h */
@@ -354,7 +354,7 @@
 	PIECE_END D_002BD140, 0x10
 	PIECE D_002BD150, 0x10, 16
 	PIECE D_002BD160, 0x10, 16
-	PIECE D_002BD1E0, 0x10, 16  /* untyped: type W29V4 is not a common.h basic type */
-	PIECE D_002BD1F0, 0x60, 16  /* untyped: type V4_01 is not a common.h basic type */
+	PIECE D_002BD1E0, 0x10, 16  /* data/pieces/D_002BD1E0.h */
+	PIECE D_002BD1F0, 0x60, 16  /* data/pieces/D_002BD1F0.h */
 	PIECE D_002BD250, 0x2000, 16  /* untyped: users disagree: M2C_UNK D_002BD250 | s32 D_002BD250[] | u8 D_002BD250[] | void *D_002BD250[] */
 	PIECE D_002BF250, 0x2000, 16

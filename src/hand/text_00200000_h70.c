@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
-typedef struct { u8 b[64]; } B64;
+#include "data/types/text_00200000_h70.h"
 typedef struct {
     u8 pad0[0x14]; s32 x14; u8 x18[0x10]; u8 x28[8]; s32 x30; s32 x34; u8 pad38[4]; s32 x3c;
     u8 pad40[0x10]; s32 x50; u8 pad54[0x1c]; f32 x70; s32 x74; s32 x78; u8 pad7c[0x44]; u8 *xc0; u8 padc4[8]; s32 active;
@@ -601,3 +601,4 @@ KF3de0 D_003F3DE0[0x4] ALIGNED(16) = {
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_003F3488.h"
 #include "data/pieces/D_003F34C8.h"
+#include "data/pieces/D_003F3050.h"

@@ -262,11 +262,7 @@ void func_0021ad08(s32 a0) {
     D_00642D20 = a0;
 }
 
-typedef struct {
-    u8 pad[0x40];
-    u8 x40[0x100];
-    f32 f[20];
-} S5D80;
+#include "data/types/text_00200000_h47_p.h"
 extern S5D80 D_00425D80;
 extern S5D80 *D_00425F70;
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
@@ -817,3 +813,4 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"
 #include "data/pieces/D_003F34C8.h"
+#include "data/pieces/D_00425D80.h"

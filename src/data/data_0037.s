@@ -1103,13 +1103,13 @@
 	PIECE_END D_00370200, 0x2508
 	PIECE D_00372708, 0x8, 8
 	PIECE D_00372710, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
-	PIECE D_00372720, 0x10, 16  /* untyped: type SplV4 is not a common.h basic type */
+	PIECE D_00372720, 0x10, 16  /* data/pieces/D_00372720.h */
 	PIECE D_00372730, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
-	PIECE D_00372740, 0x10, 16  /* untyped: type SplV4 is not a common.h basic type */
+	PIECE D_00372740, 0x10, 16  /* data/pieces/D_00372740.h */
 	PIECE D_00372760, 0x10, 16
 	PIECE D_00372770, 0x20, 16  /* untyped: type u128 is not a common.h basic type */
 	PIECE D_00372790, 0x20, 16
-	PIECE D_003727B0, 0x40, 16  /* untyped: type u128 is not a common.h basic type */
+	PIECE D_003727B0, 0x40, 16  /* data/pieces/D_003727B0.h */
 	PIECE D_003727F0, 0x10, 16
 	PIECE D_00372800, 0xc0, 16  /* untyped: users disagree: M2C_UNK D_00372800 | f32 D_00372800[16] */
 	PIECE D_003728C0, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -1121,7 +1121,7 @@
 	PIECE D_00372F34, 0xcc, 4
 	PIECE D_00373000, 0x30, 16
 	PIECE D_00373030, 0x30, 16
-	PIECE D_00373060, 0x40, 16  /* untyped: type Gs060 is not a common.h basic type */
+	PIECE D_00373060, 0x40, 16  /* data/pieces/D_00373060.h */
 	PIECE D_003730A0, 0x230, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_003732D0, 0x4000, 16
 	PIECE D_003772D0, 0x4, 4
@@ -1255,7 +1255,7 @@
 	.word func_001c1880
 	.word D_00490578
 	PIECE_END D_0037A198, 0x84
-	PIECE_BEGIN D_0037A21C, 0x15c, 4  /* untyped: type MsgTbl is not a common.h basic type */
+	PIECE_BEGIN D_0037A21C, 0x15c, 4  /* data/pieces/D_0037A21C.h */
 	PIECE_BYTES D_0037A21C, 0x0, 0x4
 	.word D_00490560
 	PIECE_BYTES D_0037A21C, 0x8, 0x4

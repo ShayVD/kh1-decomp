@@ -664,7 +664,7 @@ s32 func_001daa18(VM *vm) {
     return 2;
 }
 
-typedef struct { s32 a[55]; } Tbl55;
+#include "data/types/text_001d0000_h44_p.h"
 extern Tbl55 D_004906D0;
 void func_001ba358(s32, s32);
 s32 func_001dc140(void) {
@@ -703,3 +703,4 @@ s32 func_001e24c8(VM *vm) {
 #include "data/pieces/D_003DACC0.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_003F7A68.h"
+#include "data/pieces/D_004906D0.h"

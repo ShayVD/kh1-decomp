@@ -70,7 +70,7 @@
 	PIECE D_00362450, 0x4, 4  /* untyped: users disagree: Path *D_00362450 | s32 D_00362450 */
 	PIECE D_00362454, 0x4, 4  /* untyped: users disagree: s32 D_00362454 | void *D_00362454 */
 	PIECE D_00362458, 0x4, 4  /* untyped: type Fn8 is not a common.h basic type */
-	PIECE_BEGIN D_0036245C, 0x5c, 4  /* untyped: type Fn8 is not a common.h basic type */
+	PIECE_BEGIN D_0036245C, 0x5c, 4  /* data/pieces/D_0036245C.h */
 	PIECE_BYTES D_0036245C, 0x0, 0x4
 	.word func_00178ef8
 	PIECE_BYTES D_0036245C, 0x8, 0x4
@@ -103,30 +103,30 @@
 	PIECE D_003624CC, 0x4, 4
 	PIECE D_003624D0, 0x4, 4
 	PIECE D_003624D4, 0xc, 4
-	PIECE D_003624E0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_003624F0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_003624E0, 0x10, 16  /* data/pieces/D_003624E0.h */
+	PIECE D_003624F0, 0x10, 16  /* data/pieces/D_003624F0.h */
 	PIECE D_00362500, 0x10, 16
-	PIECE D_00362510, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_00362510, 0x10, 16  /* data/pieces/D_00362510.h */
 	PIECE D_00362520, 0x10, 16
-	PIECE D_00362530, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362540, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_00362530, 0x10, 16  /* data/pieces/D_00362530.h */
+	PIECE D_00362540, 0x10, 16  /* data/pieces/D_00362540.h */
 	PIECE D_00362550, 0x10, 16
-	PIECE D_00362560, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362570, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362580, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362590, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_003625A0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_003625B0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_003625C0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_003625D0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_00362560, 0x10, 16  /* data/pieces/D_00362560.h */
+	PIECE D_00362570, 0x10, 16  /* data/pieces/D_00362570.h */
+	PIECE D_00362580, 0x10, 16  /* data/pieces/D_00362580.h */
+	PIECE D_00362590, 0x10, 16  /* data/pieces/D_00362590.h */
+	PIECE D_003625A0, 0x10, 16  /* data/pieces/D_003625A0.h */
+	PIECE D_003625B0, 0x10, 16  /* data/pieces/D_003625B0.h */
+	PIECE D_003625C0, 0x10, 16  /* data/pieces/D_003625C0.h */
+	PIECE D_003625D0, 0x10, 16  /* data/pieces/D_003625D0.h */
 	PIECE D_003625E0, 0x4, 4
 	PIECE D_003625E4, 0xc, 4
-	PIECE D_003625F0, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362600, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
+	PIECE D_003625F0, 0x10, 16  /* data/pieces/D_003625F0.h */
+	PIECE D_00362600, 0x10, 16  /* data/pieces/D_00362600.h */
 	PIECE D_00362610, 0x10, 16
-	PIECE D_00362620, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362630, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
-	PIECE D_00362640, 0x20, 16  /* untyped: type V3 is not a common.h basic type */
+	PIECE D_00362620, 0x10, 16  /* data/pieces/D_00362620.h */
+	PIECE D_00362630, 0x10, 16  /* data/pieces/D_00362630.h */
+	PIECE D_00362640, 0x20, 16  /* data/pieces/D_00362640.h */
 	PIECE_BEGIN D_00362660, 0x10, 16  /* merged (a user declares it larger than the next name): D_0036266C; data/pieces/D_00362660.h */
 	PIECE_BYTES D_00362660, 0x0, 0xc
 	PIECE_LABEL D_00362660, D_0036266C, 0xc

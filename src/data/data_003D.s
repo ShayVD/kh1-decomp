@@ -6,7 +6,7 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_003D97E0, 0x800, 16
-	PIECE_BEGIN D_003DABCC, 0x4, 4  /* untyped: type Tbl is not a common.h basic type */
+	PIECE_BEGIN D_003DABCC, 0x4, 4  /* data/pieces/D_003DABCC.h */
 	.word func_001dca88
 	PIECE_END D_003DABCC, 0x4
 	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[] */
@@ -55,8 +55,8 @@
 	PIECE D_003DB064, 0x8, 4
 	PIECE D_003DB06C, 0x4, 4
 	PIECE D_003DB070, 0x8, 8
-	PIECE D_003DB078, 0x6a0, 8  /* untyped: type E212 is not a common.h basic type */
-	PIECE D_003DB718, 0x350, 8  /* untyped: type E212 is not a common.h basic type */
+	PIECE D_003DB078, 0x6a0, 8  /* data/pieces/D_003DB078.h */
+	PIECE D_003DB718, 0x350, 8  /* data/pieces/D_003DB718.h */
 	PIECE D_003DBA68, 0x300, 8  /* untyped: users disagree: M2C_UNK D_003DBA68 | u8 D_003DBA68[] */
 	PIECE D_003DBD68, 0x300, 8
 	PIECE D_003DC068, 0x40, 8

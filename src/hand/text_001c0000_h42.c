@@ -140,7 +140,7 @@ typedef struct {
 extern Msg D_006257E0[256];
 extern s32 D_006277E0;
 extern s32 D_006277E4;
-typedef struct { s32 f; s32 pad; } MsgTbl;
+#include "data/types/text_001c0000_h42.h"
 extern MsgTbl D_0037A21C[];
 s32 func_00123488(s32);
 
@@ -620,3 +620,4 @@ s32 func_001cfd30(VM *vm) {
 #include "data/data_003C.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_0037A21C.h"

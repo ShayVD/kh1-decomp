@@ -469,7 +469,7 @@ void pppKeShpTail2XFrame(PppObject *obj, Tail2XKey *key, PppEntry *e) {
     }
 }
 
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) SplV4;
+#include "data/types/nostrict_text_00180000_s6_11.h"
 extern SplV4 D_00372720;
 extern SplV4 D_00372740;
 
@@ -536,3 +536,5 @@ void func_0019a9e0(u128 *out, u128 *p, u128 *q, f32 t) {
         ".set reorder\n"
         : : "r"(out), "r"(p), "r"(q), "r"(c) : "memory");
 }
+#include "data/pieces/D_00372720.h"
+#include "data/pieces/D_00372740.h"

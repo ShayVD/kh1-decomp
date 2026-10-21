@@ -7,7 +7,7 @@
 
 	PIECE D_002E26A0, 0xc, 4  /* untyped: users disagree: Act *D_002E26A0[] | Act D_002E26A0[] | ActD0 *D_002E26A0 | Actor *D_002E26A0 | B3Ob *D_002E26A0[] | B4Ent *D_002E26A0 | C01Ply *D_002E26A0[3] | ChrEA *D_002E26A0[3] | Ent *D_002E26A0 | M2C_UNK D_002E26A0 | M2C_UNK D_002E26A0[] | Obj123 *D_002E26A0[] | Obj70 *D_002E26A0[] | ObjBD40 *D_002E26A0[] | P26A0 D_002E26A0 | Pair20 D_002E26A0 | Pl *D_002E26A0 | Pl1557d0 *D_002E26A0[] | Pl57_0ec8 *D_002E26A0 | S26A0 D_002E26A0 | Src *D_002E26A0[3] | W55Ob *D_002E26A0[] | W55Pl *D_002E26A0[] | W606O26a0 *D_002E26A0 | W7Obj *D_002E26A0[] | W9Ent *D_002E26A0 | s32 D_002E26A0 | u32 *D_002E26A0[] | u8 *D_002E26A0 | void *D_002E26A0 | void *D_002E26A0[3] | void *D_002E26A0[]; unparsed in 3 file(s) */
 	PIECE D_002E26AC, 0x4, 4  /* untyped: users disagree: Obj1200 *D_002E26AC | void *D_002E26AC */
-	PIECE D_002E26B0, 0x10, 16  /* untyped: type V53 is not a common.h basic type */
+	PIECE D_002E26B0, 0x10, 16  /* data/pieces/D_002E26B0.h */
 	PIECE D_002E26C0, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E26C0 | M53 D_002E26C0 | f32 D_002E26C0[4][4] | u8 D_002E26C0[] */
 	PIECE D_002E2700, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E2700 | M53 D_002E2700 | f32 D_002E2700[] | u8 D_002E2700[] | volatile M2C_UNK D_002E2700 */
 	PIECE D_002E2740, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E2740 | M53 D_002E2740 | volatile M2C_UNK D_002E2740 */
@@ -17,7 +17,7 @@
 	PIECE D_002E27A4, 0x4, 4  /* untyped: users disagree: f32 D_002E27A4 | s32 D_002E27A4 */
 	PIECE D_002E27A8, 0x4, 4
 	PIECE D_002E27AC, 0x14, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_002E27C0, 0x8, 8  /* untyped: type Pair8 is not a common.h basic type */
+	PIECE D_002E27C0, 0x8, 8  /* data/pieces/D_002E27C0.h */
 	PIECE D_002E27C8, 0x4, 4  /* untyped: users disagree: C01Flg27C8 D_002E27C8 | F27c8 D_002E27C8 | Flg13 D_002E27C8 | u32 D_002E27C8 | u8 D_002E27C8 */
 	PIECE D_002E27CC, 0x4, 4  /* data/pieces/D_002E27CC.h */
 	PIECE D_002E27D0, 0x4, 4  /* data/pieces/D_002E27D0.h */

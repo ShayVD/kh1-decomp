@@ -27,7 +27,7 @@
 	PIECE D_003F2FB0, 0x28, 8
 	PIECE D_003F2FD8, 0x38, 8
 	PIECE D_003F3010, 0x40, 16
-	PIECE D_003F3050, 0x100, 16  /* untyped: type B64 is not a common.h basic type */
+	PIECE D_003F3050, 0x100, 16  /* data/pieces/D_003F3050.h */
 	PIECE D_003F3150, 0x28, 8
 	PIECE D_003F3178, 0x28, 8
 	PIECE D_003F31A0, 0x8, 8
@@ -458,7 +458,7 @@
 	PIECE D_003F4A08, 0x20, 8
 	PIECE D_003F4A28, 0x20, 8
 	PIECE D_003F4A78, 0x30, 8
-	PIECE D_003F4AA8, 0x68, 8  /* untyped: type P2_q0 is not a common.h basic type */
+	PIECE D_003F4AA8, 0x68, 8  /* data/pieces/D_003F4AA8.h */
 	PIECE_BEGIN D_003F4B10, 0x30, 16
 	.word func_00219870
 	PIECE_BYTES D_003F4B10, 0x4, 0x2c
@@ -561,7 +561,7 @@
 	PIECE D_003F5C44, 0xc, 4
 	PIECE D_003F5C60, 0x30, 16
 	PIECE D_003F5C90, 0x170, 16  /* untyped: a non-user file declares it otherwise: src/hand/text_00210000_s6_22.c: u16 D_003F5C90[] */
-	PIECE D_003F5E00, 0x30, 16  /* untyped: type C16 is not a common.h basic type */
+	PIECE D_003F5E00, 0x30, 16  /* data/pieces/D_003F5E00.h */
 	PIECE_BEGIN D_003F5E30, 0x28, 8
 	.word func_0021e670
 	.word func_0021e890
@@ -1131,14 +1131,14 @@
 	.word func_00231ea0
 	PIECE_BYTES D_003F7D60, 0x4, 0x24
 	PIECE_END D_003F7D60, 0x28
-	PIECE D_003F7D88, 0xe8, 8  /* untyped: type T7D88 is not a common.h basic type */
+	PIECE D_003F7D88, 0xe8, 8  /* data/pieces/D_003F7D88.h */
 	PIECE_BEGIN D_003F7E70, 0x24, 4
 	.word func_00232390
 	PIECE_BYTES D_003F7E70, 0x4, 0x20
 	PIECE_END D_003F7E70, 0x24
 	PIECE D_003F7E94, 0x4, 4
 	PIECE D_003F7E98, 0x8, 8
-	PIECE_BEGIN D_003F7EA0, 0x24, 4  /* untyped: type Win is not a common.h basic type */
+	PIECE_BEGIN D_003F7EA0, 0x24, 4  /* data/pieces/D_003F7EA0.h */
 	.word func_002327b0
 	PIECE_BYTES D_003F7EA0, 0x4, 0x20
 	PIECE_END D_003F7EA0, 0x24
@@ -1146,7 +1146,7 @@
 	PIECE D_003F7EC8, 0x8, 8
 	PIECE D_003F7ED0, 0x3c8, 8  /* untyped: users disagree: S7ED0 D_003F7ED0 | u8 D_003F7ED0[] */
 	PIECE D_003F8298, 0x10, 8
-	PIECE D_003F82A8, 0x28, 8  /* untyped: type Str82A8 is not a common.h basic type */
+	PIECE D_003F82A8, 0x28, 8  /* data/pieces/D_003F82A8.h */
 	PIECE D_003F82D0, 0x20, 16
 	PIECE D_003F82F0, 0x20, 16
 	PIECE D_003F8310, 0x20, 16

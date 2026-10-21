@@ -675,3 +675,4 @@ typedef struct {
 } PppPool;
 
 PppMdlRec *func_0019dfc8(s32);
+#include "data/pieces/D_003727B0.h"

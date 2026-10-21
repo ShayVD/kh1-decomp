@@ -42,7 +42,7 @@ typedef struct {
     u8 dd0;
     s32 dd4;
 } SaveInit;
-typedef struct { char s[10]; } Str10;
+#include "data/types/text_001d0000_b11.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -428,3 +428,4 @@ void func_001e6f28(void) {
 #include "data/data_003D.h"
 #include "data/pieces/D_003DD258.h"
 #include "data/pieces/D_003DD28C.h"
+#include "data/pieces/D_004908F0.h"

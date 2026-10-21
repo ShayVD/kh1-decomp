@@ -2,7 +2,7 @@
  * strict aliasing. */
 #include "common.h"
 
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_00230000_h26.h"
 typedef struct {
     u8 pad0[0x80];
     u8 unk80[0x10];
@@ -55,3 +55,5 @@ void func_0024b1f0(void) {
     for (i = 0; i < 8; i++) D_00669A18[i] = 0;
 }
 #include "data/bss_0066_mixed.h"
+#include "data/pieces/D_00491610.h"
+#include "data/pieces/D_00491620.h"

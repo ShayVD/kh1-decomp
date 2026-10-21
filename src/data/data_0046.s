@@ -30,8 +30,8 @@
 	PIECE D_00469F60, 0x30, 16
 	PIECE D_00469F90, 0x10, 16
 	PIECE D_00469FA0, 0x10, 16
-	PIECE D_00469FB0, 0x18, 8  /* untyped: type PsmEnt is not a common.h basic type */
-	PIECE D_0046A038, 0x4, 4  /* untyped: type Prm is not a common.h basic type */
+	PIECE D_00469FB0, 0x18, 8  /* data/pieces/D_00469FB0.h */
+	PIECE D_0046A038, 0x4, 4  /* data/pieces/D_0046A038.h */
 	PIECE D_0046A03C, 0x4, 4  /* untyped: users disagree: s32 D_0046A03C | u8 *D_0046A03C */
 	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040 */
 	PIECE D_0046A044, 0x4, 4  /* untyped: users disagree: s32 D_0046A044 | u8 *D_0046A044 */

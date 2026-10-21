@@ -18,7 +18,7 @@ typedef struct { s16 a, b, c, d; u8 pad8[3]; u8 b11; u8 pad12[4]; EntBits bits; 
 typedef struct { u8 pad[16]; s32 w16; } Ent20b;
 typedef struct { s32 w0, w4, w8, w12; } Ent16;
 typedef struct { u8 m[64]; u8 v64[16]; u8 v80[16]; s32 w96; } Xf;
-typedef struct { u8 pad0[16]; u64 d16; u8 pad18[8]; u64 d32; u8 pad28[112]; u64 d152; } GsRegs;
+#include "data/types/text_00100000_h1.h"
 /* Objects returned by func_0011f090 (task/effect slots). */
 typedef struct { u8 pad[16]; u8 b16; u8 b17; } Obj;
 typedef struct { u8 pad[16]; f32 f16; f32 f20; f32 f24; } Fade;
@@ -495,3 +495,4 @@ void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_002C1368.h"
+#include "data/pieces/D_002A6330.h"

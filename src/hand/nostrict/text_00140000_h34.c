@@ -244,7 +244,7 @@ void func_00152770(W34Pl11 *o) {
     }
     func_00152730(o);
 }
-typedef struct { f32 x0; u8 pad4[0xc]; } W34Tbl;
+#include "data/types/nostrict_text_00140000_h34.h"
 extern W34Tbl D_0035193C[];
 typedef struct { u64 x0; u8 pad8[0x14]; f32 x1c; s32 x20; u8 pad24[0xc]; f32 x30[4]; } W34S144b;
 typedef struct { u8 pad[0x30]; f32 x30[4]; u8 pad40[0x120]; s32 x160; } W34Tg2;
@@ -294,3 +294,4 @@ void func_00152f10(W34Pl14 *o) {
 }
 #include "data/data_0030.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_0035193C.h"

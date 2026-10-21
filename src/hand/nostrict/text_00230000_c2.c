@@ -2,7 +2,7 @@
  * Col pointer: the other prototype order schedules the argument moves
  * differently. */
 #include "common.h"
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_00230000_c2.h"
 typedef struct { u8 pad[0x3C]; s32 unk3C; s32 unk40; } St6C;
 typedef struct { u8 pad[0x6C]; St6C *unk6C; } Ow;
 typedef struct {
@@ -49,3 +49,4 @@ s32 func_0023f0d8(Obj *e, s32 buf) {
     if (v > 4.712388038635254f) v = 4.712388038635254f;
     return func_0023e160(e->unk80, e->unk90 + 0x20, 0.0f, v, e->unkA1C, &q, buf);
 }
+#include "data/pieces/D_004915E0.h"

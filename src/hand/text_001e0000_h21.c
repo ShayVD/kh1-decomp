@@ -48,7 +48,7 @@ typedef struct {
 } Sv;
 Sv *func_00232cc0(s32);
 typedef struct { f32 x, y, z; } V3;
-typedef struct { s8 c[10]; } S10;
+#include "data/types/text_001e0000_h21.h"
 extern S10 D_004908E0;
 extern S10 D_00490900;
 
@@ -416,3 +416,5 @@ u32 func_001ee118(void) {
 #include "data/pieces/D_00389C90.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_004908E0.h"
+#include "data/pieces/D_00490900.h"

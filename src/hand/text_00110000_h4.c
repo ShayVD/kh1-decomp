@@ -70,7 +70,7 @@ s32 func_0011f320(Pool *p, Node *n) {
     return 0;
 }
 
-typedef struct { u32 mask; u32 val; } MaskEnt;
+#include "data/types/text_00110000_h4_p.h"
 extern MaskEnt D_002C5990[];
 
 u32 func_0011f628(u32 m) {
@@ -438,3 +438,4 @@ void func_0011ea40(s32 n, char *out) {
 #include "data/data_002C.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002C5990.h"
