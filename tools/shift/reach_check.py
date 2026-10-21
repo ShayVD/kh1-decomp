@@ -696,6 +696,139 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     break
 
 
+ALL_ARGS = frozenset(ARG_REGS)
+# EE kernel syscalls (v1 = number, arguments in a0..) whose argument count is known (ps2sdk kernel.h);
+# any other syscall reads every argument register.
+SYSCALL_ARGS = {0x64: 1, -0x68: 1,  # FlushCache(op), iFlushCache(op)
+                0x14: 1, 0x15: 1, 0x16: 1, 0x17: 1, -0x1A: 1, -0x1B: 1, -0x1C: 1, -0x1D: 1,  # [i]Enable/Disable Intc/Dmac
+                0x2F: 0, 0x32: 0, 0x33: 1, -0x34: 1,  # GetThreadId, SleepThread, [i]WakeupThread
+                0x40: 1, 0x41: 1, 0x42: 1, -0x43: 1, 0x44: 1, 0x45: 1, -0x46: 1, 0x47: 2, -0x48: 2}  # semaphores
+
+
+def gpr_reads(w: int) -> set[int] | None:
+    """General registers an instruction may read (an over-approximation); None for one that may read
+    any argument register (syscall, an opcode not listed here). A call's own reads are handled by
+    arg_live()."""
+    o = mips.op(w)
+    s, t = mips.rs(w), mips.rt(w)
+    if o == mips.OP_SPECIAL:
+        if mips.funct(w) in (0x0C, 0x0D):  # syscall / break
+            return None
+        if mips.funct(w) in (0x0A, 0x0B):  # movz / movn keep rd when the test fails
+            return {s, t, mips.rd(w)}
+        return {s, t}
+    if o == mips.OP_MMI:
+        return {s, t}
+    if o == mips.OP_REGIMM:
+        return {s}
+    if o in (0x02, 0x03, 0x0F):  # j jal lui
+        return set()
+    if 0x08 <= o <= 0x0E or o in (0x18, 0x19):  # addi .. xori, daddi daddiu
+        return {s}
+    if o in mips.OP_BRANCH:
+        return {s, t}
+    if o in (0x1A, 0x1B, 0x22, 0x26):  # ldl ldr lwl lwr merge into rt
+        return {s, t}
+    if o in mips.OP_LOADS or o in (0x1E, 0x2F, 0x33, 0x36):  # loads, lq, cache, pref, lqc2
+        return {s}
+    if o in mips.OP_STORES or o in (0x1F, 0x3E):  # stores, sq, sqc2
+        return {s, t}
+    if o in (mips.OP_COP0, mips.OP_COP1, mips.OP_COP2):
+        return {t}  # mtc/ctc/dmtc/qmtc2 read rt; the rest read no gpr (rt is extra, harmless)
+    return None
+
+
+def arg_live(funcs: list[tuple[int, list[mips.Insn]]], read_word=None) -> dict[int, frozenset]:
+    """Session 27 (dead-arg): the argument registers each function may read before writing them, on
+    any path, including what the functions it calls or tail-calls read (a least fixpoint over the
+    call graph). A value left in a0-t3 at a call is an argument only if the callee reads it.
+
+    Conservative where the code leaves the function: an unknown callee, a jalr, a syscall, a switch's
+    `jr`, a branch out of the function or a fall-through past its end read every argument register.
+    After a jal the caller-saved registers are dead (the EE ABI: a callee may clobber them)."""
+    live: dict[int, frozenset] = {f_: frozenset() for f_, _x in funcs}
+    cs = frozenset(CALLER_SAVED)
+
+    def one(insns):
+        n = len(insns)
+        a0 = insns[0].addr
+        lin = [frozenset()] * (n + 2)
+
+        def callee_live(t):
+            return live.get(t, ALL_ARGS)
+
+        def through(j, after):
+            """Live before instruction j (a delay slot or a plain one) given live after it."""
+            r = gpr_reads(insns[j].word) if j < n else None
+            if r is None and j < n and insns[j].is_syscall and j > 0:
+                p_ = insns[j - 1].word  # li v1, N; syscall
+                if mips.op(p_) == 0x09 and mips.rs(p_) == 0 and mips.rt(p_) == 3 and mips.imm(p_) in SYSCALL_ARGS:
+                    r = {3} | set(ARG_REGS[:SYSCALL_ARGS[mips.imm(p_)]])
+            if r is None:
+                return after | ALL_ARGS
+            return frozenset(r) | (after - gpr_writes(insns[j].word))
+
+        def at(k):
+            if 0 <= k < n:
+                return lin[k]
+            return ALL_ARGS  # off the end of the function, or a branch outside it
+
+        changed = True
+        while changed:
+            changed = False
+            for i in range(n - 1, -1, -1):
+                x = insns[i]
+                w = x.word
+                if x.is_jal:
+                    after = (at(i + 2) - cs) | callee_live(x.jump_target)
+                    v = through(i + 1, after)
+                elif x.is_jalr:
+                    after = (at(i + 2) - cs) | ALL_ARGS
+                    v = frozenset({mips.rs(w)}) | through(i + 1, after)
+                elif x.is_j:
+                    t_ = x.jump_target
+                    k = (t_ - a0) // 4
+                    after = at(k) if a0 <= t_ < a0 + 4 * n else callee_live(t_)
+                    v = through(i + 1, after)
+                elif x.is_jr_ra:
+                    v = through(i + 1, frozenset())
+                elif x.is_jr:
+                    v = frozenset({mips.rs(w)}) | ALL_ARGS
+                elif x.is_branch:
+                    k = (x.branch_target - a0) // 4
+                    likely = mips.op(w) in (0x14, 0x15, 0x16, 0x17) or (
+                        mips.op(w) == mips.OP_REGIMM and mips.rt(w) in (0x02, 0x03, 0x12, 0x13))
+                    r = gpr_reads(w)
+                    r = ALL_ARGS if r is None else frozenset(r)
+                    if mips.op(w) == mips.OP_REGIMM and mips.rt(w) in (0x10, 0x11, 0x12, 0x13):
+                        r = ALL_ARGS  # bltzal & co: a call
+                    if likely:
+                        v = r | through(i + 1, at(k)) | at(i + 2)
+                    else:
+                        v = r | through(i + 1, at(k) | at(i + 2))
+                else:
+                    v = through(i, at(i + 1))
+                if v != lin[i]:
+                    lin[i] = v | lin[i]
+                    changed = True
+        return lin[0] & ALL_ARGS
+
+    for _round in range(64):
+        changed = False
+        for f_, insns in funcs:
+            if not insns:
+                continue
+            v = one(insns)
+            if v != live[f_]:
+                live[f_] = v | live[f_]
+                changed = True
+        if not changed:
+            break
+    else:
+        return {}  # no fixpoint: callers treat every register as live
+    return live
+
+
 def anchor_addrs(elf_path: Path) -> set[int]:
     """Addresses of every D_ name of the M0 link (out/shift/kh1-shift.linked.elf)."""
     if not elf_path.exists():
@@ -741,8 +874,13 @@ def main() -> int:
     ap.add_argument("--no-piece-next", action="store_true",
                     help="an unbounded index keeps only the next name, even when that name is inside the base's "
                          "own piece (session 25: then the next name after the piece)")
+    ap.add_argument("--no-dead-arg", action="store_true",
+                    help="an address left in an argument register at a call is passed even when the callee never "
+                         "reads that register (session 27)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
+    ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
+                    "with its callee, bound and reason")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
@@ -785,6 +923,10 @@ def main() -> int:
         b_ = elf.read(addr, 4)
         return None if b_ is None else struct.unpack("<I", b_)[0]
 
+    live_in = {} if a.no_dead_arg else arg_live([(r_[1][0].addr, r_[1]) for r_ in regions
+                                                 if r_[1] and not r_[0].endswith(".x")])
+    dead_arg = 0
+
     hits: dict[tuple, set] = {}
     idx: dict[int, set] = {}
     idx_all: dict[int, set] = {}
@@ -800,6 +942,7 @@ def main() -> int:
     ptr_stores: dict[int, set] = {}  # pointer global G -> the addresses code stores into it
     ptr_users: dict[int, set] = {}  # pointer global G -> functions that access through the pointer G holds
     ptr_reach: dict[int, int | None] = {}  # G -> end of the furthest access through it (None: indexed)
+    explain: list[str] = []
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -931,6 +1074,9 @@ def main() -> int:
     # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
     # B + bound(i) + hi; unbounded when either is unknown (block functions count their bytes).
     for name, callee, j, base, ub, nblk in passidx:
+        if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
+            dead_arg += 1  # the callee never reads the register: the address is not an argument (session 27)
+            continue
         c = reach.get(callee, {}).get(j)
         if ub is not None and c and c[1] - c[0] <= 0x40000 and c[0] >= 0 \
                 and j not in wide_args.get(callee, ()) and callee not in BLOCK_CALLS:
@@ -942,6 +1088,9 @@ def main() -> int:
         r_ = ("arg-ub" if end is not None else "arg:block" if callee in BLOCK_CALLS else
               "arg:wide" if j in wide_args.get(callee, ()) else "arg:noreach" if not c else "arg:idx")
         why.setdefault(base, set()).add(r_)
+        if a.explain:
+            explain.append(f"{base:08x}\t{r_}\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                           f"reach={c}\tblk={nblk}")
         idx_all.setdefault(base, set()).add(name)
         if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
             idx_end[base] = end
@@ -998,6 +1147,8 @@ def main() -> int:
     if a.out:
         names = sorted({n for (_b, nb, _t, nt, _k, _w) in hits for n in (nb, nt) if n})
         a.out.write_text("".join(n + "\n" for n in names))
+    if a.explain:
+        a.explain.write_text("".join(x + "\n" for x in explain))
     if a.all:
         for base, fs in sorted(idx.items()):
             print(f"{base:08x} ({piece(base)[1]}) indexed\t" + " ".join(sorted(fs)[:6]))
@@ -1007,6 +1158,8 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
+          file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
     print(f"# {len(bounded)} indexed bases have bounded accesses that end before the next name",
           file=sys.stderr)

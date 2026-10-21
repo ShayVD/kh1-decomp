@@ -95,4 +95,21 @@ mems = lambda ev: sorted(e[1] + e[2] for e in ev if len(e) == 5 and e[4] == "mem
 assert mems(run(sw_, read_word=words.get)) == [0x00400010, 0x00400030], mems(run(sw_, read_word=words.get))
 assert mems(run(sw_)) == [], mems(run(sw_))
 
+# 7. dead-arg (session 27): f(a0) passes a0 on to g and calls h; a1 is never read before it is written,
+# a2 only on one path, a3 by a movz that may keep it; an unknown jal reads every argument register
+def jal(t): return (0x03 << 26) | ((t >> 2) & 0x3FFFFFF)
+def movz(rd, rs, rt): return (rs << 21) | (rt << 16) | (rd << 11) | 0x0A
+A3 = 7
+G, H, F = 0x00200100, 0x00200200, BASE
+dec = lambda a, ws: (a, mips.decode(a, struct.pack(f"<{len(ws)}I", *ws)))
+g = dec(G, [lw(V0, A0, 0), JR_RA, NOP])
+h = dec(H, [beq(A0, 0, 2), NOP, lw(V0, A2, 0), movz(A3, V0, A0), JR_RA, NOP])
+f = dec(F, [addiu(A1, 0, 5), jal(G), NOP, jal(H), NOP, JR_RA, NOP])
+live = R.arg_live([g, h, f])
+assert live[G] == {A0} and live[H] == {A0, A2, A3} and live[F] == {A0}, live
+assert R.arg_live([dec(F, [jal(0x00300000), NOP, JR_RA, NOP])])[F] == R.ALL_ARGS
+# li v1,0x64; syscall (FlushCache) reads a0 only; an unknown syscall reads every argument register
+sysc = lambda n: dec(F, [addiu(V1, 0, n), 0x0C, JR_RA, NOP])
+assert R.arg_live([sysc(0x64)])[F] == {A0} and R.arg_live([sysc(0x3C)])[F] == R.ALL_ARGS
+
 print("reach_check_test: PASS")
