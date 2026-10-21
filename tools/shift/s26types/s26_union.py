@@ -171,8 +171,9 @@ def plan(N, cast_users=()):
                 kk = 2
                 while f"{view['uniq']}_{kk}" in {v.get("uniq") for v in views}:
                     kk += 1
-                view["uniq"] = f"{view['uniq']}_{kk}"
-                view["decl"] = re.sub(r"^(volatile )?\w+", lambda m: (m.group(1) or "") + view["uniq"], view["decl"])
+                old = view["uniq"]
+                view["uniq"] = f"{old}_{kk}"
+                view["decl"] = re.sub(r"\b" + old + r"\b", view["uniq"], view["decl"])
             vkey[view["key"]] = view
             views.append(view)
         users[rel] = ("member", view)

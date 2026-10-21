@@ -1,22 +1,22 @@
 #include "common.h"
 #include "data/bss_0064.h"
 
-typedef struct { s32 a; s32 b; s32 c; s32 d; s32 e; } S2C40;
-extern S2C40 D_003F2C40[];
+#include "data/pieces/D_003F2C40.h"
+typedef S2C40_3F2C40_2 S2C40;
 void func_00201440(s32, s32, s32, s32, s32, s32, s32, void *, s32);
 void func_00201460(s32, s32, s32, s32, s32, s32, s32, void *, s32);
 void func_00201480(s32, s32, s32, s32, s32, s32, s32, void *, s32);
 
 void func_002078f0(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0, s32 t1, s32 t2, s32 t3, s32 s0) {
-    func_00201440(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40[a1], s0);
+    func_00201440(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40.s2C40_2[a1], s0);
 }
 
 void func_00207938(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0, s32 t1, s32 t2, s32 t3, s32 s0) {
-    func_00201460(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40[a1], s0);
+    func_00201460(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40.s2C40_2[a1], s0);
 }
 
 void func_00207980(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0, s32 t1, s32 t2, s32 t3, s32 s0) {
-    func_00201480(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40[a1], s0);
+    func_00201480(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40.s2C40_2[a1], s0);
 }
 
 void func_00207830(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0, s32 t1, s32 t2) {
@@ -44,19 +44,19 @@ void func_00201c60(s32, s32, s32, s32);
 void func_001fb428(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 
 void func_00207cc0(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0) {
-    S2C40 *e = &D_003F2C40[a1];
+    S2C40 *e = &D_003F2C40.s2C40_2[a1];
     func_002016b0(a0, a2, a3 + 2, e->a);
     func_001fb428(a0, 1, 2, 0, a2 + 37, a3 + 7, t0, 12, e->e);
 }
 
 void func_00207e20(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0) {
-    S2C40 *e = &D_003F2C40[a1];
+    S2C40 *e = &D_003F2C40.s2C40_2[a1];
     func_00201988(a0, a2, a3 + 3, e->a);
     func_001fb428(a0, 1, 4, 0, a2 + 51, a3 + 7, t0, 12, e->e);
 }
 
 void func_00207f80(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0) {
-    S2C40 *e = &D_003F2C40[a1];
+    S2C40 *e = &D_003F2C40.s2C40_2[a1];
     func_00201c60(a0, a2, a3 + 2, e->a);
     func_001fb428(a0, 1, 2, 0, a2 + 29, a3 + 7, t0, 12, e->e);
 }

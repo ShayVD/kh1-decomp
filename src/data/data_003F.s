@@ -18,7 +18,7 @@
 	PIECE D_003F2BD0, 0x4, 4
 	PIECE D_003F2BD4, 0x4, 4
 	PIECE D_003F2BD8, 0x68, 8  /* data/pieces/D_003F2BD8.h */
-	PIECE D_003F2C40, 0x10, 16  /* untyped: users disagree: E20 D_003F2C40[] | M2C_UNK D_003F2C40 | S2C40 D_003F2C40[] | s8 D_003F2C40; session 25: as S2C40 D_003F2C40[]: does not compile in text_00210000_s6_21.c, text_00200000_h24.c +1; new warning in text_00210000_s11_w35.c, text_001e0000_h46.c */
+	PIECE D_003F2C40, 0x10, 16  /* data/pieces/D_003F2C40.h */
 	PIECE D_003F2C50, 0x4, 4
 	PIECE D_003F2C54, 0x258, 4
 	PIECE D_003F2EAC, 0x64, 4

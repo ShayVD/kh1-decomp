@@ -18,7 +18,8 @@ typedef struct ObjT {
     s16 xda;
 } Obj;
 typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
-typedef struct { u8 pad[16]; s32 x10; } E20;
+#include "data/pieces/D_003F2C40.h"
+typedef E20_3F2C40 E20;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_00642C94;
 extern s32 D_00642C9C;
@@ -28,7 +29,6 @@ extern u16 D_00642CD4; /* src/data/bss_0064.c: s32 D_00642CD4 */
 extern u8 D_003F4460[];
 extern u8 D_003F4430[];
 extern s32 D_003F44C8[];
-extern E20 D_003F2C40[];
 s32 func_001f42b8(void *);
 s32 func_001f3758(void *);
 void func_0011d768(s32);
@@ -88,10 +88,10 @@ void func_00216640(void *a) {
         s32 t;
         sel = i == s;
         func_00207830(a, sel, 2, 0, y, 180, D_003F44C8[i]);
-        func_001f9438(a, 0, 86, y + 5, 51, 15, D_003F2C40[sel].x10);
+        func_001f9438(a, 0, 86, y + 5, 51, 15, D_003F2C40.e20[sel].x10);
         t = func_00132f88(func_0013c288(i));
         if (!t) t = func_001efbb8(212);
-        func_001f94f0(a, 0, 96, y + 5, t, 15, D_003F2C40[sel].x10);
+        func_001f94f0(a, 0, 96, y + 5, t, 15, D_003F2C40.e20[sel].x10);
         y += 28;
     }
 }

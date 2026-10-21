@@ -88,7 +88,8 @@ typedef struct { u8 pad0[0x24]; s32 cur[1]; } Menu24;
 typedef struct { u8 pad0[0xd8]; s16 d8; } Obj203;
 typedef struct { u8 pad0[0x94]; f32 f94; } Obj207;
 typedef struct { u8 pad0[0xbe]; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; } Obj207a;
-typedef struct { s32 a; s32 pad[3]; s32 x10; } E20;
+#include "data/pieces/D_003F2C40.h"
+typedef E20_3F2C40_2 E20;
 
 typedef struct {
     s32 x0;
@@ -127,7 +128,6 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 extern f32 D_002BBDFC;
 extern s32 D_003F2F10[];
-extern E20 D_003F2C40[];
 
 int printf(const char *, ...);
 int sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
@@ -702,19 +702,19 @@ void func_00207a38(Obj207a *o) {
 }
 
 void func_00207d60(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_002016b0(o, b, y + 2, e->a);
     func_001fb428(o, 1, 2, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
 
 void func_00207ec0(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_00201988(o, b, y + 3, e->a);
     func_001fb428(o, 1, 4, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
 
 void func_00208020(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_00201c60(o, b, y + 2, e->a);
     func_001fb428(o, 1, 2, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
@@ -722,7 +722,7 @@ void func_00208020(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
 void func_002080e0(void *o, s32 i, s32 x, s32 y, s32 n) {
     E20 *e;
     if (n < 2) return;
-    e = &D_003F2C40[i];
+    e = &D_003F2C40.e20_2[i];
     func_002016b0(o, x, y + 2, e->a);
     y += 7;
     func_001f9438(o, 0, x + 5, y, 85, 12, e->x10);
@@ -732,7 +732,7 @@ void func_002080e0(void *o, s32 i, s32 x, s32 y, s32 n) {
 void func_002081b0(void *o, s32 i, s32 x, s32 y, s32 n) {
     E20 *e;
     if (n < 2) return;
-    e = &D_003F2C40[i];
+    e = &D_003F2C40.e20_2[i];
     func_00201988(o, x, y + 3, e->a);
     y += 7;
     func_001f9438(o, 0, x + 5, y, 85, 12, e->x10);

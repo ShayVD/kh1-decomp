@@ -367,6 +367,28 @@ def header_text(N, decl, incs):
         ["", f"extern {decl};", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""])
 
 
+def canon_labels(asm):
+    """local labels ($L12, $LC3) renumbered by first appearance: gcc's label counter
+    moves when a declaration changes, the assembled code does not"""
+    seen = {}
+
+    def rep(m):
+        k = m.group(0)
+        if k not in seen:
+            seen[k] = f"{m.group(1)}#{len([x for x in seen if x.startswith(m.group(1))])}"
+        return seen[k]
+    return re.sub(r"(\$LC?)\d+\b", rep, asm)
+
+
+def same_asm(a, b):
+    """-S identical, or identical up to local label numbers (S26_STRICT=1: exact)"""
+    if a == b:
+        return True
+    if os.environ.get("S26_STRICT") == "1" or a is None or b is None:
+        return False
+    return canon_labels(a) == canon_labels(b)
+
+
 def check_files(new, files):
     """[(rel, why)] for files whose -S changes or warns anew."""
     def one(rel):
@@ -376,7 +398,7 @@ def check_files(new, files):
         n_asm, n_warn = compile_s(rel, new[rel])
         if n_asm is None:
             return rel, "does not compile: " + " / ".join(n_warn)[:300]
-        if n_asm != b_asm:
+        if not same_asm(n_asm, b_asm):
             if os.environ.get("S26_KEEP"):
                 kd = SCR / "keep"; kd.mkdir(exist_ok=True)
                 stem = Path(rel).name

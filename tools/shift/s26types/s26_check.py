@@ -33,7 +33,7 @@ def main():
         n_asm, n_warn = C.compile_s(f, new[f])
         if n_asm is None:
             return f, "NOCOMPILE " + " / ".join(n_warn)[:600]
-        if n_asm != b_asm:
+        if not C.same_asm(n_asm, b_asm):
             import os
             if os.environ.get("S26_KEEP"):
                 kd = C.SCR / "keep"; kd.mkdir(exist_ok=True)
