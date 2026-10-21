@@ -448,8 +448,8 @@ void func_001584c0(Act *a, V4 *o) {
 }
 
 /* ---- func_00158780 ---- */
-typedef struct { u8 a, b; } P2;
-extern P2 D_00351A30[];
+#include "data/pieces/D_00351A30.h"
+typedef P2_351A30 P2;
 typedef struct { u8 pad[0xe]; u16 xe; } R478c8;
 R478c8 *func_001478c8(s32);
 f32 func_0012ed88(Act *, void *, V4 *, V4 *);
@@ -460,11 +460,11 @@ s32 func_00158780(s32 k) {
     V4 m;
     V4 d;
     Act *p = D_002E26A0[0];
-    R478c8 *r = func_001478c8(D_00351A30[k].b);
+    R478c8 *r = func_001478c8(D_00351A30.p2[k].b);
     s32 i;
     f32 f = func_0012ed88(p, ((P8 *)&D_002E31B0), &m, &d);
     if (r->xe <= f) return 0;
-    switch (D_00351A30[k].b) {
+    switch (D_00351A30.p2[k].b) {
     case 75:
         if (p->pos.y - m.y > 160.0f) return 0;
         break;
@@ -510,7 +510,7 @@ void func_00158960(void) {
             }
         }
     }
-    if (bk >= 0 && func_0012cc38(3, D_00351A30[bk].b) && best != 2) func_0012ccb0(3);
+    if (bk >= 0 && func_0012cc38(3, D_00351A30.p2[bk].b) && best != 2) func_0012ccb0(3);
 }
 
 /* ---- func_00159440 ---- */

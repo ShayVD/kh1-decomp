@@ -5,7 +5,8 @@ typedef __builtin_va_list va_list;
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 #include "data/types/text_00100000_h28.h"
 typedef struct { u16 code; u16 v; u16 x; u16 y; u16 lw; u16 w; u16 padc[2]; } Glyph;
-typedef struct { f32 a, b, c, d; s32 e, f, g; s32 h; f32 near_, far_; s32 i, j; } __attribute__((aligned(8))) View30;
+#include "data/pieces/D_002BC0C0.h"
+typedef View30_2BC0C0 View30;
 typedef struct { f32 a, b, c, d; } F16;
 typedef struct { f32 x, y, z; } Vec3;
 typedef struct { f32 x0; f32 pad4; f32 cw; s32 nx; u8 pad10[0x10]; f32 z0; f32 pad24; f32 ch; s32 nz; } Grid;
@@ -67,7 +68,6 @@ extern Pkt D_002B6490;
 extern Res *func_00120190(char *);
 extern Task *func_0011f090(void *, s32, void (*)(void));
 #include "data/pieces/D_002E2780.h"
-extern View30 D_002BC0C0;
 extern View30 D_002BC0F0;
 extern char D_0048CCA0[];
 extern char D_0048CCB8[];
@@ -405,7 +405,7 @@ void func_00100b18(Setup *s) {
     D_002BC0F0.e = s->b23;
     D_002BC0F0.f = s->b24;
     D_002BC0F0.g = s->b25;
-    D_002BC0C0 = D_002BC0F0;
+    D_002BC0C0.view30 = D_002BC0F0;
 }
 
 void func_00100f70(Blk810 *src) {

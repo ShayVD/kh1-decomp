@@ -237,7 +237,7 @@
 	PIECE_LABEL D_002BC0B0, D_002BC0BC, 0xc
 	PIECE_BYTES D_002BC0B0, 0xc, 0x4
 	PIECE_END D_002BC0B0, 0x10
-	PIECE D_002BC0C0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0C0 | View30 D_002BC0C0; session 25: as B48 D_002BC0C0: does not compile in text_00100000_h28.c */
+	PIECE D_002BC0C0, 0x30, 16  /* data/pieces/D_002BC0C0.h */
 	PIECE D_002BC0F0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0F0 | Cam D_002BC0F0 | Cam0 D_002BC0F0 | CamS D_002BC0F0 | S2BC0F0 D_002BC0F0 | View30 D_002BC0F0 | f32 D_002BC0F0[] | s32 D_002BC0F0[]; session 25: as S2BC0F0 D_002BC0F0: does not compile in text_001d0000_s8_w1.c, text_00120000_b02.c +3 */
 	PIECE D_002BC120, 0x4, 4
 	PIECE D_002BC124, 0x4, 4

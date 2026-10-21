@@ -27,7 +27,7 @@
 	PIECE D_00351A00, 0x10, 16
 	PIECE D_00351A10, 0x10, 16
 	PIECE D_00351A20, 0x10, 16  /* data/pieces/D_00351A20.h */
-	PIECE D_00351A30, 0x10, 16  /* untyped: users disagree: P2 D_00351A30[] | u8 D_00351A30[]; session 25: as P2 D_00351A30[]: code changes in text_00150000_h10.c */
+	PIECE D_00351A30, 0x10, 16  /* data/pieces/D_00351A30.h */
 	PIECE D_00351A40, 0x8, 8
 	PIECE D_00351A48, 0x8, 8  /* data/pieces/D_00351A48.h */
 	PIECE D_00351A50, 0x10, 16

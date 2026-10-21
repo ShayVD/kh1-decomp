@@ -346,7 +346,8 @@ void func_00144eb0(void *o, void *pos) {
 }
 
 typedef struct { f32 p[4]; f32 d[4]; f32 r20; f32 r24; s32 w28; u8 pad2c[0x14]; f32 out[4]; } Hit;
-typedef struct { f32 h; f32 f4; s32 f8; s32 fc; s32 f10; } HtTab;
+#include "data/pieces/D_00304DB0.h"
+typedef HtTab_304DB0 HtTab;
 typedef struct {
     u8 pad0[0x10];
     union {
@@ -359,14 +360,13 @@ typedef struct {
     f32 vel[4];
 } Bo;
 extern Hit *D_00531B60; /* src/data/bss_0053.c: B3Col *D_00531B60 */
-extern HtTab D_00304DB0[];
 void func_00116660(Hit *);
 void func_001166e8(Hit *);
 
 void func_00145858(Bo *o, f32 *pos) {
     f32 t[4];
     Hit **pp = &D_00531B60;
-    f32 h = D_00304DB0[o->u.s.idx].h;
+    f32 h = D_00304DB0.htTab[o->u.s.idx].h;
 
     func_00116660((*pp));
     (*pp)->r20 = 55.0f;
@@ -783,7 +783,7 @@ void *func_00145aa0(Bo *o, f32 *pos) {
     f32 d[4];
     s32 i;
     void *e;
-    f32 h = D_00304DB0[o->u.s.idx].h;
+    f32 h = D_00304DB0.htTab[o->u.s.idx].h;
 
     func_002675a8(t, pos);
     t[1] += h;
@@ -803,13 +803,13 @@ void *func_00145aa0(Bo *o, f32 *pos) {
         func_001315c0(e, 0x8003, t, 0.0f);
         func_00267530(d, pos, t);
         func_00121fc4(o->vel, d);
-        if (D_00304DB0[o->u.s.idx].f4 > 0.0f) {
-            func_00145188(e, D_00304DB0[o->u.s.idx].f4);
+        if (D_00304DB0.htTab[o->u.s.idx].f4 > 0.0f) {
+            func_00145188(e, D_00304DB0.htTab[o->u.s.idx].f4);
         }
-        if (D_00304DB0[o->u.s.idx].f10 > 0) {
-            func_00244a10(e, D_00304DB0[o->u.s.idx].f10);
+        if (D_00304DB0.htTab[o->u.s.idx].f10 > 0) {
+            func_00244a10(e, D_00304DB0.htTab[o->u.s.idx].f10);
         }
-        func_001473a8(D_00304DB0[o->u.s.idx].f8, 0, (f32 *)((u8 *)e + 0x50));
+        func_001473a8(D_00304DB0.htTab[o->u.s.idx].f8, 0, (f32 *)((u8 *)e + 0x50));
         return e;
     }
     return 0;

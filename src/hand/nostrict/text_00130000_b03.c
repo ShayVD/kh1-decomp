@@ -369,8 +369,8 @@ typedef struct {
     s32 x1c;
     f32 x20[4];
 } B3Pj;
-typedef struct { f32 x0; s32 x4, x8, xc, x10; } B3PjInf;
-extern B3PjInf D_00304DB0[];
+#include "data/pieces/D_00304DB0.h"
+typedef B3PjInf_304DB0 B3PjInf;
 extern B3Col *D_00531B60;
 #include "data/pieces/D_002C58A0.h"
 void func_00116660(B3Col *);
@@ -389,7 +389,7 @@ void func_00145528(B3Pj *o, f32 *v) {
         o->x10.s.x12--;
         return;
     }
-    f = D_00304DB0[o->x10.s.x14].x0;
+    f = D_00304DB0.b3PjInf[o->x10.s.x14].x0;
     func_00116660(D_00531B60);
     D_00531B60->x20 = 55.0f;
     D_00531B60->x24 = 60.0f;
@@ -409,7 +409,7 @@ void func_00145528(B3Pj *o, f32 *v) {
     if (0.0f <= o->x20[1] && !(D_00531B60->x30 & 1)) {
         if (5.0f < o->x20[1]) {
             o->x20[1] *= -0.8f;
-            if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0[o->x10.s.x14].xc, 0, D_00531B60->x40);
+            if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0.b3PjInf[o->x10.s.x14].xc, 0, D_00531B60->x40);
         } else {
             func_002675a8(o->x20, D_002C58A0);
             if (D_00531B60->x2c == -1) {

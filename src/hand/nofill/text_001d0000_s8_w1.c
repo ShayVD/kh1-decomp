@@ -16,7 +16,8 @@ typedef struct {
    alias the s32 VM fields, so vm->sp stays after the copies and is reloaded after the
    flags store; f3464 is an f32 (0 -> sw zero), so its store does not feed the stk load
    and sched puts the or first. */
-typedef union { u64 d[6]; s32 w[12]; } B48;
+#include "data/pieces/D_002BC0C0.h"
+typedef B48_2BC0C0 B48;
 typedef struct {
     u8 pad0[0x3078];
     union { u64 x; s32 i[2]; } flags;
@@ -28,12 +29,12 @@ typedef struct {
     B48 b;
 } Big92;
 extern Big92 D_00389C90;
-extern B48 D_002BC0C0, D_002BC0F0;
+extern B48 D_002BC0F0;
 
 s32 func_001d9268(VM *vm) {
     f32 x;
     s32 i;
-    D_00389C90.b = D_002BC0C0;
+    D_00389C90.b = D_002BC0C0.b48;
     D_00389C90.a = D_002BC0F0;
     i = vm->sp;
     D_00389C90.f3464 = 0;

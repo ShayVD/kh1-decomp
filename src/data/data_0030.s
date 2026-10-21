@@ -195,7 +195,7 @@
 	PIECE D_00304D54, 0xc, 4
 	PIECE D_00304D60, 0x4, 4  /* untyped: type W606F8 is not a common.h basic type */
 	PIECE D_00304D64, 0x4c, 4  /* data/pieces/D_00304D64.h */
-	PIECE D_00304DB0, 0x8c, 4  /* untyped: users disagree: B3PjInf D_00304DB0[] | HtTab D_00304DB0[]; session 25: as B3PjInf D_00304DB0[]: does not compile in text_00140000_h56.c */
+	PIECE D_00304DB0, 0x8c, 4  /* data/pieces/D_00304DB0.h */
 	PIECE D_00304E3C, 0x4, 4
 	PIECE D_00304E40, 0x1a00, 16
 	PIECE D_00306840, 0x4, 4

@@ -39,7 +39,7 @@ extern E551670 D_00551670[];
 extern U2E3190 D_002E3190;
 typedef struct { u8 pad[0x848]; u16 cnt[1]; } S304BE8;
 extern S304BE8 *D_00304BE8;
-extern u8 D_00351A30[];
+#include "data/pieces/D_00351A30.h"
 extern s32 D_005516EC;
 extern U2C5958 D_002C5958;
 extern s32 D_005516E8;
@@ -172,7 +172,7 @@ void func_001586a8(s32 i) {
 
 void func_001586f0(void) {
     s32 i;
-    u8 *p = D_00351A30;
+    u8 *p = D_00351A30.b;
     D_005516EC = 0;
     for (i = 0; i < 5; i++, p += 2) {
         if (func_0013c968(*p, 0)) D_005516EC |= 1 << i;
