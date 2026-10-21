@@ -176,6 +176,9 @@ SHIFT_FLOAT_SKIP ?=
 SHIFT_FLOAT_ONLY ?=
 # SHIFT_FLOAT_ONLY_DATA: if set, only these data names float (@FILE reads names from FILE; bisecting).
 SHIFT_FLOAT_ONLY_DATA ?=
+# SHIFT_FLOAT_FORCE: names (or @FILE) taken out of the keep list, so they may float although a check or
+# float_keep.txt keeps them (session 24; runtime hypotheses only, keep_check is not enforced).
+SHIFT_FLOAT_FORCE ?=
 # SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word or a C pointer table names
 # (no code user; tools/shift/ptr_only.py lists the C ones). Off by
 # default since session 20: entries a pointer table points at one by one (D_0048F700 ...) can be walked
@@ -245,7 +248,8 @@ endif
 		if [ "$(SHIFT_FLOAT_PTR_ONLY)" != 1 ]; then awk -F'\t' 'NR > 1 && $$8 ~ /^(src\/data\/[^;]*\.s;?)+$$/ { print $$2 }' \
 			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; \
 			$(SHIFT_PY) tools/shift/ptr_only.py >> $(SHIFT_OUT)/float_covered.txt; fi; \
-		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)" ]; fi; \
+		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)$(SHIFT_FLOAT_FORCE)" ]; \
+		if [ -n "$(SHIFT_FLOAT_FORCE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt $(SHIFT_FLOAT_FORCE); fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
 		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
