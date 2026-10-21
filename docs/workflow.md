@@ -891,3 +891,6 @@ found that the next session needs:
   the load menu (cursor on 06) Up picks 05.
 - System > Reset reboots the same ISO (no need to shut down unless the ISO changes). A batch's waits must total
   50 s or less, holds included.
+- **Phase 4** (worker s26types): 143 of the 145 "users disagree" pieces typed (casts at the uses, unions of the
+  users' views, or value conversions); D_002E26A0 and D_003044D8 need code changes. The `-S` check now ignores
+  local label numbers (`S26_STRICT=1` for the exact check). Helpers in tools/shift/s26types/.
