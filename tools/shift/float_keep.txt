@@ -53,13 +53,6 @@ D_00482260
 # dropped the block: KH1_F23_NOCD floats 16 of them and passes the title, load menu, test T, the
 # world map warp and a fight.)
 #
-# Session 27 (s27reach): reach_check's new rules release these two big tables (D_00278B50 follows the
-# DMA chain D_00278680, now bounded by dma-chain; D_002C64A0's idx-next came from a switch that went to
-# every label before slot-refine read its jump table). Floated, their 0x3E7F0 bytes leave the block heap
-# under its 0xE0000 minimum (shift_ld BLOCK_HEAP_MIN), so they stay here for room only, until floated
-# slots are given back (SHIFT_FLOAT_COMPACT).
-D_00278B50
-D_002C64A0
 # D_00272C70 is the first data object, at D_BLOB: floated (dma-chain releases it), shift_cmp maps D_BLOB
 # through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
 # as the blob start.
