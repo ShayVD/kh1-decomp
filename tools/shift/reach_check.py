@@ -53,6 +53,46 @@ BLOCK_CALLS = {
     0x00250054: [(4, lambda st: st.get(6))],  # memset(dst, c, n)
     0x0011EFA8: [(4, lambda st: 16), (5, lambda st: _mul(st, 6, 7))],  # pool init(hdr, items, size, count)
 }
+# Session 27 (str-arg): callee -> {argument: kind} for an argument the callee only reads, as a string that
+# ends at its first NUL (the libc ones read aligned quadwords, so at most 15 bytes more of the same qword).
+# fmt: a printf format (func_00259698 skips the byte after a lone '%', so every '%' must start a whole
+# conversion); str: any bytes; kh: func_001ea268's text, whose control bytes 5-7 and 9-31 take parameter
+# bytes (so none may occur before the NUL).
+STRING_ARGS = {
+    0x00259CC0: {0: "fmt"},  # scePrintf(fmt, ...)
+    0x00259C88: {0: "fmt"},  # func_00259c88(fmt, ...): the same printer, without the callback swap
+    0x00250248: {0: "fmt"},  # printf(fmt, ...)
+    0x00250EB0: {1: "fmt"},  # sprintf(dst, fmt, ...)
+    0x00250340: {0: "str"},  # puts(s)
+    0x00250F40: {1: "str"},  # strcat(dst, src)
+    0x002511B0: {1: "str"},  # strcpy(dst, src)
+    0x0025106C: {0: "str", 1: "str"},  # strcmp(a, b)
+    0x00251400: {0: "str", 1: "str"},  # strncmp(a, b, n)
+    0x002512C4: {0: "str"},  # strlen(s)
+    0x001EA268: {1: "kh"},  # func_001ea268(dst, src): the game's strcat for encoded text
+}
+_FMT = re.compile(rb"%[-+ #0]*[0-9]*(\.[0-9]+)?[hlLqjzt]*[diouxXcspfeEgGn%]")
+
+
+def string_end(data: bytes, ub: int, kind: str) -> int | None:
+    """Offset just past the NUL that ends a string read from any offset in [0, ub] of a data object whose
+    bytes (to the next name) are data: None unless the object is a non-empty string literal, i.e. the
+    NUL is followed only by zero padding of at most 15 bytes (a buffer filled at run time has a long
+    zero tail, or no text)."""
+    z = data.find(b"\0", ub)
+    if z <= 0 or not data[0] or len(data) - z > 16 or any(data[z:]):
+        return None
+    txt = data[:z]
+    if kind == "fmt":
+        if ub or any(c < 0x20 and c not in (9, 10, 13) or c == 0x7F for c in txt):
+            return None
+        if _FMT.sub(b"", txt).count(b"%"):
+            return None  # a '%' that does not start a whole conversion
+    elif kind == "kh" and any(5 <= c <= 7 or 9 <= c <= 31 for c in txt):
+        return None
+    return z + 1
+
+
 ARG = "arg"  # ("arg", k, off): argument k on entry + off
 IDX = "idx"  # register = known base + offset: ("idx", base, upper bound of the offset or None)
 UB = "ub"  # a small value with an upper bound: ("ub", U)
@@ -908,6 +948,8 @@ def main() -> int:
                     help="do not cap an up-counter (i = i0; ... i += k; while (i < L)) at its loop header (session 27)")
     ap.add_argument("--no-slot-refine", action="store_true",
                     help="refine a branch's edges after its delay slot, not before (session 27)")
+    ap.add_argument("--no-str-arg", action="store_true",
+                    help="a string literal passed to printf/strcpy/strcmp/... is not bounded by its NUL (session 27)")
     ap.add_argument("--no-dead-arg", action="store_true",
                     help="an address left in an argument register at a call is passed even when the callee never "
                          "reads that register (session 27)")
@@ -1100,15 +1142,43 @@ def main() -> int:
                     changed = True
         if not changed:
             break
+    anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
+
+    def str_bound(callee, j, base, ub):
+        """Offset past the NUL of a string literal at base (+ up to ub) that a STRING_ARGS callee reads
+        as argument j, when that NUL is inside the literal's own object; else None (session 27)."""
+        sk = STRING_ARGS.get(callee, {}).get(j)
+        if a.no_str_arg or not sk or ub is None or not (BLOB_START <= base and base + ub < BSS_START):
+            return None
+        k_ = bisect.bisect_right(anchors, base)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        return string_end(elf.read(base, obj_end - base), ub, sk) if obj_end - base <= 0x10000 else None
+
     for name, callee, j, v in sites:
         c = reach.get(callee, {}).get(j)
         if callee in BLOCK_CALLS:  # their own byte count is checked at the call
             continue
+        if str_bound(callee, j, v, 0) is not None:
+            continue  # the callee's quadword reads past the NUL are discarded (session 27)
         if c and c[1] - c[0] <= 0x40000:
             check(name, v, c[0], c[1] - c[0], f"arg{j}:{fname.get(callee, hex(callee))}:")
     # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
     # B + bound(i) + hi; unbounded when either is unknown (block functions count their bytes).
+    str_arg = 0
     for name, callee, j, base, ub, nblk in passidx:
+        z_ = str_bound(callee, j, base, ub)
+        if z_ is not None:  # a string literal read to its NUL, inside its own object (session 27)
+            str_arg += 1
+            why.setdefault(base, set()).add("arg-str")
+            if a.explain:
+                explain.append(f"{base:08x}\targ-str\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                               f"end=+{z_}\tblk={nblk}")
+            idx_all.setdefault(base, set()).add(name)
+            if base not in idx_end or (idx_end[base] is not None and base + z_ > idx_end[base]):
+                idx_end[base] = base + z_
+            if piece(base)[0] is not None:
+                idx.setdefault(base, set()).add(name)
+            continue
         if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
             dead_arg += 1  # the callee never reads the register: the address is not an argument (session 27)
             continue
@@ -1135,7 +1205,6 @@ def main() -> int:
     # entries) covers D_005512A0, which is entries 52..63 under its own name (session 18,
     # found from the stale writes in a RAM dump). A floated variable that is the next name
     # after an indexed base in another piece stays with it.
-    anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
     bounded = []
     # stored: the address is stored; idx / arg: an unbounded index (an access, or &B[i] passed to a
     # call); -ub: a bounded one that ends past the next name
@@ -1193,6 +1262,7 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
     print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
           file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
