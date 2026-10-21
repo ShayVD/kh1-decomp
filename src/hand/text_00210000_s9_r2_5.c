@@ -10,7 +10,7 @@ typedef struct ObjT {
 typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[4]; s32 x10; s32 x14; s32 x18; u8 pad1c[0x2C - 0x1C]; s32 x2c; } S34B8;
 typedef struct { s32 p0; s32 p1; } P2;
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_00642D20;
 extern s32 D_00642D24;
@@ -64,10 +64,10 @@ void func_00219f98(void *a) {
     s32 v, k, i, y, ch;
 
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758((void *)D_00642D20);
             func_0011d768(3);
-        } else if (D_00425BC8->x8 & 0x2000) {
+        } else if (((Cfg *)D_00425BC8)->x8 & 0x2000) {
             switch (D_00642D24) {
             case 0:
                 p = func_001f4468(a);
@@ -185,19 +185,19 @@ void func_00219f98(void *a) {
             D_00642D24 = v;
             ch = 0;
             if ((u32)(v - 6) >= 2 && (v != 5 || func_00219428())) {
-                if (D_00425BC8->x10 & 0x80000080) {
+                if (((Cfg *)D_00425BC8)->x10 & 0x80000080) {
                     if (func_00219158(D_00642D24) > 0) {
                         ch = 1;
                         func_002191f0(D_00642D24, func_00219158(D_00642D24) - 1);
-                    } else if (D_00425BC8->x8 & 0x80000080) {
+                    } else if (((Cfg *)D_00425BC8)->x8 & 0x80000080) {
                         ch = 1;
                         func_002191f0(D_00642D24, D_003F4C18[D_00642D24]);
                     }
-                } else if (D_00425BC8->x10 & 0x20000020) {
+                } else if (((Cfg *)D_00425BC8)->x10 & 0x20000020) {
                     if (func_00219158(D_00642D24) < D_003F4C18[D_00642D24]) {
                         ch = 1;
                         func_002191f0(D_00642D24, func_00219158(D_00642D24) + 1);
-                    } else if (D_00425BC8->x8 & 0x20000020) {
+                    } else if (((Cfg *)D_00425BC8)->x8 & 0x20000020) {
                         func_002191f0(D_00642D24, 0);
                         ch = 1;
                     }

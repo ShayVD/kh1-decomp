@@ -10,7 +10,7 @@ typedef struct { u32 b0:8; u32 b1:16; u32 b24:1; u32 flag:1; u32 rest:6; S31b0 f
 typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; s8 f9; s8 fa; s8 fb; } O8;
 #include "data/types/nostrict_nofill_text_00120000_h54.h"
 extern St8 D_002E3190;
-extern O8 *D_002E319C;
+#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A4.h"
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
@@ -62,7 +62,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     D_002E3190.f4 = tmp;
     D_002E3190.b0 = o->f6;
     D_002E3190.b1 = o->f7;
-    D_002E319C = o;
+    D_002E319C = (u16 *)o;
     while (D_00524F40 != ((Q8 **)&D_002E3170)) func_0012dd38();
     return 1;
 }
@@ -86,21 +86,21 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
     if (func_0012eaf8(a->f0) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
-    if (D_002E319C) {
+    if (((O8 *)D_002E319C)) {
         switch (a->f0->f370.b.kind) {
         case 1:
-            v = D_002E319C->f9;
+            v = ((O8 *)D_002E319C)->f9;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 2:
-            v = D_002E319C->fa;
+            v = ((O8 *)D_002E319C)->fa;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 0:
         case 3:
-            v = D_002E319C->fb;
+            v = ((O8 *)D_002E319C)->fb;
             if (v < 0) return -1;
             s |= v << 24;
             break;

@@ -16,7 +16,7 @@ typedef struct Cam {
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern Cam D_00575940;
 void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);
@@ -72,7 +72,7 @@ void func_0017bc90(s32 a0) {
     s32 f;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 dir;
     f32 bt;
@@ -141,7 +141,7 @@ void func_0017c550(void) {
     V4 p;
     struct { s32 idx; f32 t; } q;
 /*P*/
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     u64 k;
     f32 dir;
@@ -205,7 +205,7 @@ void func_0017cb88(void) {
     s32 f;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 dir;
     f32 bt;
@@ -284,7 +284,7 @@ void func_0017cf08(void) {
     V4 v;
     V4 v2;
     V4 v3;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     f32 r, ang, k;
 
     r = func_0012eca8(D_002E31B0, &D_00362690);
@@ -348,7 +348,7 @@ s32 func_0017d628(void) {
                 }
                 if (e->x24 & 2) {
                     (*(void **)&D_00362434) = 0;
-                    D_00362438 = e->x20;
+                    D_00362438 = (s32)e->x20;
                 } else {
                     (*(void **)&D_00362434) = e->x20;
                     D_00362438 = 0;
@@ -403,7 +403,7 @@ s32 func_0017c190(void) {
     V4 p;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 base, a, d, c, k, s, t0;
     s32 i0;

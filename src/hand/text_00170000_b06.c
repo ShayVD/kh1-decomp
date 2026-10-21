@@ -17,7 +17,7 @@ typedef struct Cam {
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern Cam D_00575940;
 void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);

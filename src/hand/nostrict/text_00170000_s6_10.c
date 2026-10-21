@@ -7,7 +7,7 @@ typedef struct Path {
     s32 n; f32 x4; f32 x8; f32 xc; f32 x10; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
 } Path;
 typedef struct { u8 pad0[0x30]; V4 x30; } ActB;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern V4 D_00575970;
 extern V4 D_003626A0;
 extern V4 D_005758D0;
@@ -25,7 +25,7 @@ s32 func_0017b860(s32 mode, V4 *pos, f32 *out, s32 *first) {
     V4 b;
     f32 d;
     f32 r;
-    Path *p = D_00362438;
+    Path *p = ((Path *)D_00362438);
 
     switch (mode) {
     default:

@@ -124,14 +124,14 @@ void func_0020ce78(s32 a0) {
 }
 
 typedef struct { s32 f0; s32 f4; s32 f8; } S5bc8;
-extern S5bc8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_003F34C0;
 s32 func_001f4390(s32);
 void func_001f3840(s32);
 void func_0011d768(s32);
 void func_00207618(void);
 void func_0020cf90(s32 a0) {
-    if (func_001f4390(a0) && (D_00425BC8->f8 & 8)) {
+    if (func_001f4390(a0) && (((S5bc8 *)D_00425BC8)->f8 & 8)) {
         if (!(D_003F34C0 & 3)) {
             func_001f3840(a0);
             func_0011d768(3);
@@ -185,7 +185,7 @@ void func_00207bb0(Sbbc0 *, s32);
 
 void func_0020d900(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->f8 & 0x4000) {
+        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -206,7 +206,7 @@ void func_0020d990(Sbbc0 *a0, s32 a1) {
 
 void func_0020da00(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->f8 & 0x4000) {
+        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -254,7 +254,7 @@ void func_00211398(void) {
 
 void func_002113f0(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->f8 & 0x4000) {
+        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -322,7 +322,7 @@ void func_002131e8(s32 a0) {
 
 void func_00214030(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->f8 & 0x4000) {
+        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {

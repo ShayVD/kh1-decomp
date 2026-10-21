@@ -107,7 +107,7 @@ done:
 
 /* func_00232390: func_0020dd38 takes 6 args (6th = id), y = 63 before the func_001fc308 call, callee return types as below. */
 typedef struct { u8 pad[8]; s32 x8; } F8;
-extern F8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];

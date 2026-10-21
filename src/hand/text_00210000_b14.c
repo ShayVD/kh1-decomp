@@ -39,7 +39,7 @@ extern s32 D_003F45A8[];
 extern u8 D_003F45C0[];
 extern u8 D_003F45F0[];
 extern u8 D_003F4620[];
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_00641BA4;
 extern s32 D_00641BAC;
 extern s32 D_00641BB0;
@@ -195,7 +195,7 @@ void func_00212930(Obj *a) {
     Obj *q[2];
     s32 k, t, s, n, y, i, j, r;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -254,7 +254,7 @@ void func_002145d8(Obj *a) {
     Obj *o, *p;
     f = D_00642C3C & 0x80;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00642C24 = 1;
@@ -345,7 +345,7 @@ void func_00214b20(Obj *a) {
     func_001fd688(a);
     money = func_001ef720(k);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -426,7 +426,7 @@ void func_00214fc8(Obj *a) {
     func_001fd610(a, lim);
     func_001fd688(a);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -498,7 +498,7 @@ void func_00215420(Obj *a) {
     u32 v, i;
     s32 sel, y, c, k;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_00642C20);
             func_0011d768(3);
         } else {

@@ -9,7 +9,7 @@ extern s32 D_003623F0;
 #include "data/pieces/D_0036242C.h"
 #include "data/pieces/D_00362430.h"
 #include "data/pieces/D_00362434.h"
-extern s32 D_00362438;
+#include "data/pieces/D_00362438.h"
 #include "data/pieces/D_0036243C.h"
 extern s32 D_00362440;
 extern s32 D_00362444;

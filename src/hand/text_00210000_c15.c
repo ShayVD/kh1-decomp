@@ -2,7 +2,7 @@
 #include "data/bss_0064.h"
 typedef struct { u8 pad0[0xb4]; s32 xb4; u8 padb8[2]; s16 xba; u8 padbc[0xcc - 0xbc]; s16 xcc, xce; u8 padd0[2]; s16 xd2; } Obj;
 typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad;
-extern Pad *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_0064375C;
 extern s32 D_003F34A8;
 extern u8 D_00643770[];
@@ -52,7 +52,7 @@ void func_00224060(Obj *o) {
     if (func_001f42b8(o)) {
         switch (D_0064375C) {
         case 0:
-            if (D_00425BC8->x8 & 0x4000) {
+            if (((Pad *)D_00425BC8)->x8 & 0x4000) {
                 if (D_003F34A8 != 2 && D_00643770[1] == D_00643778[1] && D_00643770[2] == D_00643778[2] && D_00643770[3] == D_00643778[3]) {
                     func_001f37c0(o, 5);
                     func_0011d768(3);

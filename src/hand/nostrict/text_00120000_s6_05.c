@@ -63,7 +63,7 @@ extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-extern O8 *D_002E319C;
+#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A0.h"
 extern Ent *D_002E26A0;
 #include "data/pieces/D_002E31A8.h"
@@ -148,7 +148,7 @@ void func_0012ca38(void) {
     for (i = 7; i >= 0; i--) (*(Q8 *(*)[8])&D_002E3170)[i] = 0;
     D_00524F40 = (*(Q8 *(*)[8])&D_002E3170);
     (*(Q8 *(*)[8])&D_002E3170)[0] = D_002E2FD8;
-    D_002E319C = (*(O8 **)&D_002E31A0) = 0;
+    D_002E319C = (u16 *)((*(O8 **)&D_002E31A0) = 0);
     D_002E2FD8[0].fc = 0;
 }
 
@@ -341,7 +341,7 @@ CONTEXT_ONLY s32 func_0012e1b0(Pad *pad) {
 play:
     func_0011d768(snd);
 end:
-    D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
+    D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
     return r;
 }
 
@@ -356,7 +356,7 @@ s32 func_0012e4b0(void) {
     f = D_002C5958;
 
     D_002E3190.w |= 0x2000000;
-    D_002E319C = (*(O8 **)&D_002E31A0) = 0;
+    D_002E319C = (u16 *)((*(O8 **)&D_002E31A0) = 0);
     D_00524F48 = (D_00524F48 & 0xc) | ((f & 0x104004) != 0);
 
     if (f & 0x8000004) {
@@ -415,13 +415,13 @@ s32 func_0012e4b0(void) {
         mask = 0x10000;
     }
     if (func_0012e1b0(p)) {
-        if (D_002E319C) {
-            if ((D_002E319C->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
+        if (((O8 *)D_002E319C)) {
+            if ((((O8 *)D_002E319C)->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
                 if (!(p->x8 & mask)) D_002E3190.w &= ~0x2000000;
                 func_0012e120();
             }
         } else {
-            D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(67);
+            D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(67);
             if (p->x8 & 0x80000) func_0012dea0(*D_00524F40, 0);
             else if (p->x8 & 0x100000) func_0012dea0(*D_00524F40, 1);
             else if (p->x8 & 0x200000) func_0012dea0(*D_00524F40, 2);
@@ -480,21 +480,21 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
     if (func_0012eaf8(a->a) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
-    if (D_002E319C) {
+    if (((O8 *)D_002E319C)) {
         switch (((E9 *)a->a)->f370.b.kind) {
         case 1:
-            v = D_002E319C->f9;
+            v = ((O8 *)D_002E319C)->f9;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 2:
-            v = D_002E319C->fa;
+            v = ((O8 *)D_002E319C)->fa;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 0:
         case 3:
-            v = D_002E319C->fb;
+            v = ((O8 *)D_002E319C)->fb;
             if (v < 0) return -1;
             s |= v << 24;
             break;
@@ -677,7 +677,7 @@ s32 func_0012fcd0(void) {
         break;
     case 0:
     case 2:
-        if (func_00219288() != 1 && D_002E319C && (D_002E319C->f0 & 4)) {
+        if (func_00219288() != 1 && ((O8 *)D_002E319C) && (((O8 *)D_002E319C)->f0 & 4)) {
             func_0012f868(&tmp);
             if (tmp.a) func_0012fb20(&tmp, 2);
         }

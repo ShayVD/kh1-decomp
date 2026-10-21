@@ -10,7 +10,7 @@
 	.word D_00491390
 	PIECE_END D_00425BC0, 0x4
 	PIECE D_00425BC4, 0x4, 4
-	PIECE D_00425BC8, 0x8, 8  /* untyped: users disagree: Cfg *D_00425BC8 | F8 *D_00425BC8 | G5bc8 *D_00425BC8 | G5bc8e *D_00425BC8 | P5BC8 *D_00425BC8 | Pad *D_00425BC8 | Pad8 *D_00425BC8 | S5bc8 *D_00425BC8 | S5bc8c *D_00425BC8 | s32 *D_00425BC8 | void *D_00425BC8; unparsed in 2 file(s); session 25: as Cfg *D_00425BC8: does not compile in text_00220000_b15.c, text_00210000_s11_w35.c +2; new warning in text_001f0000_h69.c */
+	PIECE D_00425BC8, 0x8, 8  /* data/pieces/D_00425BC8.h */
 	PIECE D_00425C08, 0x8, 8
 	PIECE D_00425C10, 0x4, 4  /* data/pieces/D_00425C10.h */
 	PIECE D_00425C14, 0x4, 4  /* data/pieces/D_00425C14.h */

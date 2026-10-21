@@ -74,7 +74,7 @@ extern u8 D_003FA780[];
 extern u128 D_0040EF80[];
 extern u8 D_0040E780[];
 extern u8 D_0040EB80[];
-extern s32 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern u8 D_006436A8[];
 extern s32 D_006436B8;
 extern s32 D_006436D0;
@@ -141,7 +141,7 @@ void func_00223870(void *arg0) {
 
 void func_00227ef8(s32 arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8[2] & 0x4000) {
+        if (((s32 *)D_00425BC8)[2] & 0x4000) {
             func_001f36b8(arg0);
             func_0011d768(3);
         } else {
@@ -199,7 +199,7 @@ void func_00229850(void) {
 
 void func_0022b248(s32 arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8[2] & 0x4000) {
+        if (((s32 *)D_00425BC8)[2] & 0x4000) {
             func_001f36b8(arg0);
             func_0011d768(3);
         } else {

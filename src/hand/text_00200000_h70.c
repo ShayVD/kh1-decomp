@@ -351,7 +351,7 @@ void func_0020d360(void) {
 }
 
 typedef struct { u8 pad[8]; s32 flags; } G5bc8;
-extern G5bc8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234;
 #include "data/pieces/D_003E8E08.h"
 extern u8 D_003F38B0[];
@@ -370,7 +370,7 @@ void func_0020e280(s32 a0) {
     s32 p;
     Obj *o;
     if (func_001f42b8((void *)a0)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8 *)D_00425BC8)->flags & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -471,7 +471,7 @@ void func_0020fc58(Ofc *o) {
     func_001fd610(o, 8);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8 *)D_00425BC8)->flags & 0x4000) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641224 = 0;

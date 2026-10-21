@@ -451,7 +451,8 @@ void func_0024aa48(void *a, Tag *t, Src *s) {
  * parameter block; the ones at +0x40 and +0x48 are restored after. */
 typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;
 extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
-extern s32 D_0046A040, D_0046A048;
+#include "data/pieces/D_0046A040.h"
+extern s32 D_0046A048;
 #include "data/pieces/D_0046A044.h"
 #include "data/pieces/D_0046A03C.h"
 void func_0024e0f0(s32, s32, s32);

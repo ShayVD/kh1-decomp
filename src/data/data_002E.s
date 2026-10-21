@@ -508,7 +508,7 @@
 	PIECE_LABEL D_002E3190, D_002E3194, 0x4
 	PIECE_BYTES D_002E3190, 0x4, 0x8
 	PIECE_END D_002E3190, 0xc
-	PIECE D_002E319C, 0x4, 4  /* untyped: users disagree: O8 *D_002E319C | u16 *D_002E319C; session 25: as O8 *D_002E319C: does not compile in text_00130660_s7_w37.c, text_00120000_h54.c +1 */
+	PIECE D_002E319C, 0x4, 4  /* data/pieces/D_002E319C.h */
 	PIECE D_002E31A0, 0x4, 4  /* data/pieces/D_002E31A0.h */
 	PIECE D_002E31A4, 0x4, 4  /* data/pieces/D_002E31A4.h */
 	PIECE D_002E31A8, 0x8, 8  /* data/pieces/D_002E31A8.h */

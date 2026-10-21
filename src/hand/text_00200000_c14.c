@@ -5,7 +5,7 @@ typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
 typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;
 extern G4BE8e *D_00304BE8;
 typedef struct { u8 pad[8]; s32 flags; } G5bc8e;
-extern G5bc8e *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct ObjE { u8 pad[0x10]; struct ObjE *x10; u8 p14[0x10]; s32 x24; s32 x28; s32 x2c; u8 p30[0x10]; s32 x40; u8 p44[0xce - 0x44]; s16 xce; u16 xd0; u16 xd2; } ObjE;
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234, D_00641238, D_0064123C;
 extern s32 D_00641240, D_00641254, D_00641274, D_00641790;
@@ -69,7 +69,7 @@ void func_0020e588(ObjE *o) {
         c3 = 0;
     }
     if (func_001f42b8(o)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8e *)D_00425BC8)->flags & 0x4000) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641224 = 1;
@@ -207,7 +207,7 @@ void func_0020ec50(ObjE *o) {
     func_001fd610(o, n);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8e *)D_00425BC8)->flags & 0x4000) {
             func_001f3758(o);
             func_0011d768(3);
             if (!fl) D_00641224 = 0;

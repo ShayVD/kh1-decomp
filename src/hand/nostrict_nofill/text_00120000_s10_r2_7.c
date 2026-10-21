@@ -8,7 +8,7 @@ typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern Q8 D_002E2FD8[7];
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-extern O8 *D_002E319C;
+#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A0.h"
 extern O8 *func_001478c8(s32);
 extern void func_0011d768(s32);
@@ -88,6 +88,6 @@ done:
     } else {
         r = 1;
     }
-    D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
+    D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
     return r;
 }

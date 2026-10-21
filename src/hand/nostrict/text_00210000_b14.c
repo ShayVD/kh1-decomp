@@ -105,7 +105,7 @@ typedef struct { u8 pad0[0x24]; s32 x24; s32 x28; s32 x2c; u8 pad30[0x90 - 0x30]
 typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad;
 typedef struct { u8 pad0[0x24]; f32 x24; s32 x28; s32 x2c; s32 x30; } Eff;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110;
-extern Pad *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_00643250;
 extern s32 D_00643274;
 extern S3110 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
@@ -148,7 +148,7 @@ void func_0021e8d8(Obj *o) {
     if (func_001f42b8()) {
         func_0021e538();
         if (o->x28 == 0) {
-            if (D_00425BC8->x8 & 0x4000) {
+            if (((Pad *)D_00425BC8)->x8 & 0x4000) {
                 func_0011d768(3);
                 func_0021b5c8(0xC009B, 0, 128, 128, 5.0f);
                 o->x28 = 1;
@@ -157,12 +157,12 @@ void func_0021e8d8(Obj *o) {
                 case 0:
                     ch = 0;
                     n = o->xd8;
-                    if (D_00425BC8->x10 & 0x80000480) {
+                    if (((Pad *)D_00425BC8)->x10 & 0x80000480) {
                         if (o->xda > 0) {
                             o->xda -= 16;
                             ch = 1;
                         }
-                    } else if (D_00425BC8->x10 & 0x20000820) {
+                    } else if (((Pad *)D_00425BC8)->x10 & 0x20000820) {
                         if (o->xda < (n - 1) << 4) {
                             o->xda += 16;
                             ch = 1;
@@ -170,7 +170,7 @@ void func_0021e8d8(Obj *o) {
                     }
                     if (ch) func_0011d768(ch);
                     D_00643250 = func_001fd668(o);
-                    if (D_00425BC8->x8 & 0x1000) {
+                    if (((Pad *)D_00425BC8)->x8 & 0x1000) {
                         if (func_0021e898(D_00643274)) {
                             func_0011d768(4);
                         } else {

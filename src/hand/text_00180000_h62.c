@@ -24,7 +24,7 @@ extern f32 D_002E27A0;
 #include "data/pieces/D_00362428.h"
 #include "data/pieces/D_0036242C.h"
 #include "data/pieces/D_00362434.h"
-extern Rec20 *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern s32 D_00362440;
 extern s32 D_00362444;
 void func_00176f08(s32, f32);
@@ -61,7 +61,7 @@ void func_0017f290(CamArg *a) {
             q = func_0017adf8(((s32)D_0036242C), i++);
             if (q->id != a->id)
                 goto loop;
-            D_00362438 = q;
+            D_00362438 = (s32)q;
             (*(Rec20 **)&D_00362434) = 0;
         }
         break;

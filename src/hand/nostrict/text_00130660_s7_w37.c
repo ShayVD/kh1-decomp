@@ -62,7 +62,7 @@ extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40;
-extern O8 *D_002E319C;
+#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A0.h"
 extern Ent *D_002E26A0;
 #include "data/pieces/D_002E31A8.h"

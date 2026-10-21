@@ -8,7 +8,7 @@ typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 typedef struct { s32 *p; s32 n; } PN;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef union { s32 i; u16 h; } U32H;
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern S4BE8 *D_00304BE8;
 #include "data/pieces/D_003E3D68.h"
 extern void *D_00642C90;
@@ -51,7 +51,7 @@ void func_002177c8(Obj *a) {
     u32 i;
     s32 sel, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_00642C90);
             func_0011d768(3);
         } else {

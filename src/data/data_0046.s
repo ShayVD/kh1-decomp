@@ -33,7 +33,7 @@
 	PIECE D_00469FB0, 0x18, 8  /* data/pieces/D_00469FB0.h */
 	PIECE D_0046A038, 0x4, 4  /* data/pieces/D_0046A038.h */
 	PIECE D_0046A03C, 0x4, 4  /* data/pieces/D_0046A03C.h */
-	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040; session 25: as s32 D_0046A040: new warning in text_00240000_h75.c */
+	PIECE D_0046A040, 0x4, 4  /* data/pieces/D_0046A040.h */
 	PIECE D_0046A044, 0x4, 4  /* data/pieces/D_0046A044.h */
 	PIECE_BEGIN D_0046A048, 0x10, 8
 	PIECE_BYTES D_0046A048, 0x0, 0x8

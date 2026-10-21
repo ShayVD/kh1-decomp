@@ -5,7 +5,7 @@ typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
 typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;
 extern G4BE8e *D_00304BE8;
 typedef struct { u8 pad[8]; s32 flags; } G5bc8e;
-extern G5bc8e *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct ObjE {
     u8 pad00[0x10];
     struct ObjE *x10;
@@ -122,7 +122,7 @@ void func_0020f530(ObjE *o) {
     func_001fd610(o, n);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8e *)D_00425BC8)->flags & 0x4000) {
             func_001f3758(o);
             func_0011d768(3);
             if (!fl) D_00641224 = 0;
@@ -282,7 +282,7 @@ void func_0020ff80(ObjE *o) {
         fl = 1;
     }
     if (func_001f42b8(o)) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8e *)D_00425BC8)->flags & 0x4000) {
             if (!fl) {
                 func_001f3758(D_00641220);
             } else {

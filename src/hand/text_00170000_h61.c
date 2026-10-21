@@ -311,7 +311,7 @@ typedef struct { u32 x0, x4; u64 x8; u8 pad10[0x44 - 0x10]; f32 x44; } PadB;
 typedef struct { V4 v; f32 x10, x14, x18; } CamPt;
 extern PadB D_002C5BB0;
 #include "data/pieces/D_00362434.h"
-extern void *D_00362438;
+#include "data/pieces/D_00362438.h"
 f32 D_00575820 ALIGNED(16);
 f32 D_00575824 ALIGNED(4);
 s32 D_00575828 ALIGNED(8);
@@ -369,7 +369,7 @@ void func_00179700(void) {
     if (D_00575820 > 1.047197491f) D_00575820 = 1.047197491f;
     else if (D_00575820 < -1.396263272f) D_00575820 = -1.396263272f;
     if ((D_002C5BB0.x8 & 0x8200) || !func_00177358(D_00575894) || func_001375d8(D_00575894)) {
-        if (!((CamPt *)D_00362434) && !D_00362438) func_00176f08(1, 30.0f);
+        if (!((CamPt *)D_00362434) && !((void *)D_00362438)) func_00176f08(1, 30.0f);
         else func_00176f08(9, 0.0f);
     }
 }

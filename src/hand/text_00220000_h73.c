@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct { u8 pad[8]; s32 x8; } F8;
-extern F8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];
@@ -26,7 +26,7 @@ void func_00209820(void *, s32, s32, s32, void *);
 void func_0022c960(O *a0) {
     s32 i, y; s32 *p;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             if ((D_006469B4 = D_006469B0, func_00219428()) != 0) {
@@ -68,7 +68,7 @@ void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_0022cba8(O *a0) {
     s32 v;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;

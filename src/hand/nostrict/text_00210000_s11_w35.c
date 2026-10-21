@@ -10,7 +10,7 @@ typedef struct { s32 *p; s32 n; } PN;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef struct { u8 pad[16]; s32 x10; } E20;
 
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern S4BE8 *D_00304BE8;
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_00642CCC;
@@ -51,7 +51,7 @@ void func_00217000(Obj *a) {
     sel = 11;
     if (func_001f42b8(a)) {
         sel = 1;
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             func_001f3d58(a, 5);
@@ -63,19 +63,19 @@ void func_00217000(Obj *a) {
         cur = D_00642CCC;
         if (D_003E3D68 >= 3) {
             ch = 0;
-            if (D_00425BC8->x10 & 0x10000010) {
+            if (((Cfg *)D_00425BC8)->x10 & 0x10000010) {
                 if (cur >= 2) {
                     cur--;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x10000010) {
+                } else if (((Cfg *)D_00425BC8)->x8 & 0x10000010) {
                     cur = D_003E3D68 - 1;
                     ch = 1;
                 }
-            } else if (D_00425BC8->x10 & 0x40000040) {
+            } else if (((Cfg *)D_00425BC8)->x10 & 0x40000040) {
                 if (cur < D_003E3D68 - 1) {
                     cur++;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x40000040) {
+                } else if (((Cfg *)D_00425BC8)->x8 & 0x40000040) {
                     cur = 1;
                     ch = 1;
                 }
@@ -93,21 +93,21 @@ void func_00217000(Obj *a) {
         }
         func_0020bd18(a, 8);
         ch = 0;
-        if (D_00425BC8->x10 & 0x80000080) {
+        if (((Cfg *)D_00425BC8)->x10 & 0x80000080) {
             p = &D_00642CD8;
             if (*p > 0) {
                 *p = *p - 1;
                 ch = 1;
-            } else if (D_00425BC8->x8 & 0x80000080) {
+            } else if (((Cfg *)D_00425BC8)->x8 & 0x80000080) {
                 *p = 5;
                 ch = 1;
             }
-        } else if (D_00425BC8->x10 & 0x20000020) {
+        } else if (((Cfg *)D_00425BC8)->x10 & 0x20000020) {
             p2 = &D_00642CD8;
             if (*p2 < 5) {
                 *p2 = *p2 + 1;
                 ch = 1;
-            } else if (D_00425BC8->x8 & 0x20000020) {
+            } else if (((Cfg *)D_00425BC8)->x8 & 0x20000020) {
                 *p2 = 0;
 
                 ch = 1;

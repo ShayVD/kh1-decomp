@@ -61,7 +61,7 @@
 	PIECE D_0036242C, 0x4, 4  /* data/pieces/D_0036242C.h */
 	PIECE D_00362430, 0x4, 4  /* data/pieces/D_00362430.h */
 	PIECE D_00362434, 0x4, 4  /* data/pieces/D_00362434.h */
-	PIECE D_00362438, 0x4, 4  /* untyped: users disagree: P1c *D_00362438 | Path *D_00362438 | PathB *D_00362438 | Rec20 *D_00362438 | S18 *D_00362438 | s32 D_00362438 | void *D_00362438; unparsed in 1 file(s); session 25: as Path *D_00362438: does not compile in text_00170000_s6_10.c, text_00170000_s7_w2.c +2; new warning in text_s7_w27.c */
+	PIECE D_00362438, 0x4, 4  /* data/pieces/D_00362438.h */
 	PIECE D_0036243C, 0x4, 4  /* data/pieces/D_0036243C.h */
 	PIECE D_00362440, 0x4, 4
 	PIECE D_00362444, 0x4, 4

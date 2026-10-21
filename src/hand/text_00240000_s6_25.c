@@ -279,7 +279,7 @@ typedef struct { u8 lo:3; u8 mode:2; u8 hi:3; } Bits8;
 #include "data/pieces/D_002C5968.h"
 extern Prm *D_0046A038;
 #include "data/pieces/D_0046A03C.h"
-extern s32 D_0046A040;
+#include "data/pieces/D_0046A040.h"
 #include "data/pieces/D_0046A044.h"
 extern s32 D_0046A048;
 extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */

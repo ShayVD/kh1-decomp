@@ -270,6 +270,8 @@ def rewrite_uses(text, N, own, shared):
     rv = None
     if scalar_int(*own) and scalar_int(*shared):
         rv = f"(({own[0]} {own[1].replace(N, '').strip()}){N})".replace(" )", ")")
+        if os.environ.get("S26_STORECAST", "1") == "1":
+            text = store_casts(text, N, f"{shared[0]} {shared[1].replace(N, '').strip()}".strip())
     out, last = [], 0
     ml = macro_lines(text, N)
     for a, b in code_spans(text):
@@ -302,7 +304,30 @@ def rewrite_uses(text, N, own, shared):
         out.append("".join(res))
         last = b
     out.append(text[last:])
-    return "".join(out)
+    return "".join(out).replace("\0K\0", N)
+
+
+def store_casts(text, N, ST):
+    """`N = rhs;` statements -> `N = (ST)rhs;` with N hidden from the use rewrite
+    (an int <-> pointer store through the shared type, no lvalue cast)."""
+    def rep(m):
+        rhs = m.group(3).strip()
+        if re.search(r"\b" + N + r"\b", rhs) or "\n" in rhs:
+            return m.group(0)
+        d = 0
+        for ch in rhs:
+            d += ch == "("
+            d -= ch == ")"
+            if d < 0:
+                return m.group(0)
+        if d:
+            return m.group(0)
+        if re.fullmatch(r"-?(0x[0-9a-fA-F]+|\d+)", rhs):
+            return f"{m.group(1)}\0K\0{m.group(2)}{rhs};"
+        simple = re.fullmatch(r"[\w.]+(->\w+)*|\(.*\)", rhs) and not re.fullmatch(r"\([^()]*\)\s*\S.*", rhs)
+        new = f"({ST}){rhs}" if simple else f"({ST})({rhs})"
+        return f"{m.group(1)}\0K\0{m.group(2)}{new};"
+    return re.sub(r"((?:^|[;{})])[ \t]*)" + N + r"(\s*=\s*)(?!=)([^;]*);", rep, text, flags=re.M)
 
 
 _lock = threading.Lock()

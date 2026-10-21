@@ -82,7 +82,7 @@ typedef struct {
 
 /* Pad state: x8 = trigger, x10 = repeat. */
 typedef struct { u8 pad0[8]; s32 x8; s32 xc; s32 x10; } Pad8;
-extern Pad8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad0[0x24]; s32 cur[1]; } Menu24;
 
 typedef struct { u8 pad0[0xd8]; s16 d8; } Obj203;
@@ -602,19 +602,19 @@ void func_001fe408(Fade *o) {
 
 s32 func_001fe660(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x10000010) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x10000010) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x10000010) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x10000010) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x40000040) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x40000040) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x40000040) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x40000040) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -624,19 +624,19 @@ s32 func_001fe660(Menu24 *m, s32 i, s32 n) {
 
 s32 func_001fe7a8(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000080) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x80000080) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000080) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000080) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000020) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x20000020) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000020) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000020) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -646,19 +646,19 @@ s32 func_001fe7a8(Menu24 *m, s32 i, s32 n) {
 
 s32 func_001fe8f0(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000480) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x80000480) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000480) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000480) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000820) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x20000820) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000820) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000820) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -820,7 +820,7 @@ s32 func_001fe558(Fade2 *o) {
 s32 func_001fe5a0(Fade2 *o) {
     switch (o->bc) {
     case 0:
-        if (D_00425BC8->x8 & 0x2000) {
+        if (((Pad8 *)D_00425BC8)->x8 & 0x2000) {
             if (func_001fe558(o)) o->bc++;
             else o->bc = 2;
         }

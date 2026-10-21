@@ -22,7 +22,7 @@ extern f32 D_004F7650;
 extern s32 D_002C5958;
 #include "data/pieces/D_002C6440.h"
 #include "data/pieces/D_00350D88.h"
-extern u16 *D_002E319C;
+#include "data/pieces/D_002E319C.h"
 extern void **D_00524F40;
 extern void *D_002E26A0;
 f32 func_00120c88(f32);

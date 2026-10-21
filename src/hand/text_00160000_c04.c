@@ -119,7 +119,7 @@ extern V4 D_00362670;
 #include "data/pieces/D_002E2780.h"
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_00362434.h"
-extern s32 D_00362438;
+#include "data/pieces/D_00362438.h"
 #include "data/pieces/D_002C58D0.h"
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5958;

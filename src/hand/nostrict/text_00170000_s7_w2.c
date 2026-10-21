@@ -9,7 +9,7 @@ extern f32 D_002E27A0;
 extern s32 D_002E27A8;
 S870 D_00575870 ALIGNED(16);
 #include "data/pieces/D_00362434.h"
-extern P1c *D_00362438;
+#include "data/pieces/D_00362438.h"
 
 S870 *func_0017f1c8(void) {
     S870 *d = &D_00575870;
@@ -25,8 +25,8 @@ S870 *func_0017f1c8(void) {
         if (((P1c *)D_00362434)) {
             d->x1d = ((P1c *)D_00362434)->x1c;
             d->x1e = 0;
-        } else if (D_00362438) {
-            d->x1d = D_00362438->x1c;
+        } else if (((P1c *)D_00362438)) {
+            d->x1d = ((P1c *)D_00362438)->x1c;
             d->x1e = 1;
         }
     } else {

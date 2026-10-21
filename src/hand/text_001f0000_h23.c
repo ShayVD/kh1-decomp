@@ -34,7 +34,7 @@ typedef struct {
 
 extern Obj D_0063F758[24];
 extern s32 D_003F1A60;
-extern Pad *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E20;
@@ -183,7 +183,7 @@ s32 func_001fd6f0(Win *w) {
 
 s32 func_001fe718(Menu *m, s32 idx, s32 max) {
     s32 r = 0;
-    u32 f = D_00425BC8->flags;
+    u32 f = ((Pad *)D_00425BC8)->flags;
     if (f & 0x10000010) {
         if (m->v[idx] > 0) {
             m->v[idx]--;
@@ -200,7 +200,7 @@ s32 func_001fe718(Menu *m, s32 idx, s32 max) {
 
 s32 func_001fe860(Menu *m, s32 idx, s32 max) {
     s32 r = 0;
-    u32 f = D_00425BC8->flags;
+    u32 f = ((Pad *)D_00425BC8)->flags;
     if (f & 0x80000080) {
         if (m->v[idx] > 0) {
             m->v[idx]--;
@@ -217,7 +217,7 @@ s32 func_001fe860(Menu *m, s32 idx, s32 max) {
 
 s32 func_001fe9a8(Menu *m, s32 idx, s32 max) {
     s32 r = 0;
-    u32 f = D_00425BC8->flags;
+    u32 f = ((Pad *)D_00425BC8)->flags;
     if (f & 0x80000480) {
         if (m->v[idx] > 0) {
             m->v[idx]--;

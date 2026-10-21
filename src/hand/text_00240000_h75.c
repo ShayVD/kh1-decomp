@@ -123,7 +123,7 @@ extern void *D_00469FF8[];
 extern s32 D_00469FD8[];
 extern void *D_0046A018[];
 #include "data/pieces/D_0046A03C.h"
-extern u8 *D_0046A040;
+#include "data/pieces/D_0046A040.h"
 #include "data/pieces/D_0046A044.h"
 extern s32 D_0046A048;
 void func_0024b1e8(const char *, const char *, s32);
@@ -135,7 +135,7 @@ Task *func_0024b7a0(s32 grp, Task *t, void *arg) {
     u8 *s40;
     s32 s48;
     off = grp * 0x10320;
-    s40 = D_0046A040;
+    s40 = (u8 *)D_0046A040;
     s48 = D_0046A048;
     a = (u8 *)t + 40;
     if ((u32)a & 15) a = a - ((u32)a & 15) + 16;
@@ -148,7 +148,7 @@ Task *func_0024b7a0(s32 grp, Task *t, void *arg) {
     t->unkC = a;
     (*(u8 **)&D_0046A03C) = a;
     t->unk10 = b;
-    D_0046A040 = b;
+    D_0046A040 = (s32)b;
     t->unk14 = c;
     D_0046A044 = c;
     t->unk18 = grp;
@@ -160,7 +160,7 @@ Task *func_0024b7a0(s32 grp, Task *t, void *arg) {
     D_00669A18[i] = t;
     t->unk1C = NULL;
     func_0024e0a4();
-    D_0046A040 = s40;
+    D_0046A040 = (s32)s40;
     D_0046A048 = s48;
     return t;
 }
