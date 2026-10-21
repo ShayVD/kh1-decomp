@@ -346,3 +346,6 @@ void func_001fea38(WinA *o) {
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C5AD0.h"
+#include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_002BC128.h"

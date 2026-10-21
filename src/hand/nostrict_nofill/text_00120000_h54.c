@@ -8,7 +8,7 @@ extern u8 D_00524F68[];
 typedef struct { s32 f0, f4; } S31b0;
 typedef struct { u32 b0:8; u32 b1:16; u32 b24:1; u32 flag:1; u32 rest:6; S31b0 f4; } St8;
 typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; s8 f9; s8 fa; s8 fb; } O8;
-typedef struct { s32 f0, f4; u32 f8; s32 fc; s32 n; u8 ids[0x20]; s32 f34; } Q8;
+#include "data/types/nostrict_nofill_text_00120000_h54.h"
 extern St8 D_002E3190;
 extern O8 *D_002E319C;
 extern s32 D_002E31A4;

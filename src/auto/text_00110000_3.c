@@ -172,3 +172,4 @@ void func_0011c9c0(void) {
     func_00101628();
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BCC24.h"

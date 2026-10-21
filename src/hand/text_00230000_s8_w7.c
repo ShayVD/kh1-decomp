@@ -1,19 +1,6 @@
 #include "common.h"
 /* func_00233168: matched session 8 (w7), hand, rodata 0x491350: case 7 is a goto loop (k = q->n; goto t7; i7: k = q->n + 1; q->n = k; ...; t7: if (!q->flag[k]) goto i7;). */
-typedef struct { s32 x0; s32 x4; u8 pad8[0x3C - 8]; } R60;
-typedef struct R64 { u8 pad[0x2D]; u8 x2d; u8 x2e; u8 pad2f[0x40 - 0x2F]; } R64;
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0x38];
-    R64 rec[65];
-    u8 pad1080[0x10C0 - 0x1080];
-    union { R64 *tbl[52][10]; R64 *tbl1[520]; };
-    u8 pad[0x1900 - 0x10C0 - 52 * 40];
-    s32 flag[99];
-    s32 n;
-    R60 r[99];
-} St;
+#include "data/types/text_00230000_s8_w7.h"
 extern St D_00351E10;
 extern s32 D_003F8370[];
 extern s32 D_00425C18;
@@ -143,3 +130,5 @@ end:
 }
 #include "data/data_0042.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_00351E10.h"
+#include "data/pieces/D_00425CAC.h"

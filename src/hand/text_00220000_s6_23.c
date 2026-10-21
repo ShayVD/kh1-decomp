@@ -4,7 +4,7 @@
 
 typedef struct { u8 pad[0x24]; s32 x24; u8 pad28[0x90 - 0x28]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W22;
 typedef struct { u8 pad0[8]; s32 x8; s32 xc; s32 x10; } Pad8;
-typedef struct { u8 b[32]; } T78D8;
+#include "data/types/text_00220000_s6_23.h"
 typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
 extern Pad8 *D_00425BC8;
 extern S48e *D_00304BE8;
@@ -713,3 +713,9 @@ void func_00234910(void) {
 }
 
 #include "data/data_003F.h"
+#include "data/pieces/D_003F7A68.h"
+#include "data/pieces/D_00425C10.h"
+#include "data/pieces/D_00425C14.h"
+#include "data/pieces/D_00425CA8.h"
+#include "data/pieces/D_00425CAC.h"
+#include "data/pieces/D_003F78D8.h"

@@ -586,7 +586,7 @@ void func_00232640(s32 arg0, s32 arg1) {
 
 
 typedef struct { u8 pad[0x664]; u32 x664, x668, x66c, x670; } Scr;
-typedef struct { u8 pad[0xC]; s16 xc, xe, x10, x12; u8 pad2[4]; s16 x18; } Win;
+#include "data/types/text_00220000_h48.h"
 extern s32 D_003F7EC4;
 extern s32 D_003F7EC8;
 extern Win D_003F7EA0;
@@ -768,3 +768,5 @@ void *D_003F71C8[0x6] ALIGNED(8) = {
     (void *)D_003F7090, 0,
 };
 #include "data/data_003F.h"
+#include "data/pieces/D_003F3488.h"
+#include "data/pieces/D_003F7EA0.h"

@@ -503,3 +503,4 @@ void func_002407b0(u8 *e, s32 k) {
 }
 #include "data/data_0046.h"
 #include "data/data_0045.h"
+#include "data/pieces/D_002BBDFC.h"

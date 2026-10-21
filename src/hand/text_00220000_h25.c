@@ -8,7 +8,7 @@ typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 a, b; } P2;
 typedef struct { u8 pad[0xCC]; u16 cc; u16 ce; u16 d0; s16 d2; } Obj;
 typedef struct { u8 pad[0x25]; u8 n; u8 ids[0x4E]; } Ent74;
-typedef struct { u8 pad[0xE]; u8 e, f; u8 pad2[0xE]; u8 e2, f2; } Str82A8;
+#include "data/types/text_00220000_h25_p.h"
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
 
@@ -558,3 +558,5 @@ void *func_00232cc0(u32 arg0) {
 
 #include "data/bss_0064_typed.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003F6DF0.h"
+#include "data/pieces/D_003F82A8.h"

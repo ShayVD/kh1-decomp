@@ -139,3 +139,4 @@ s32 func_001dc280(s32 arg0) {
     return 2;
     return 4;
 }
+#include "data/pieces/D_003773E0.h"

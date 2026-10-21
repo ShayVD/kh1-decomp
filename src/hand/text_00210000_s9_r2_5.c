@@ -271,3 +271,4 @@ void func_00219f98(void *a) {
 #include "data/bss_0064_mixed.h"
 #include "data/data_003F.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003F34C8.h"

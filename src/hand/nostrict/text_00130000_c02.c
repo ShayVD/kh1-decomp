@@ -1226,3 +1226,4 @@ s32 func_0013cfe8(C02Vm *vm, void (*cb)(void *), void *arg)
     }
 }
 #include "data/data_0030.h"
+#include "data/pieces/D_002C5958.h"

@@ -3,7 +3,7 @@
 #include "common.h"
 #include "platform/math.h"
 
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/nostrict_text_00150000_h58_p.h"
 typedef struct { s32 a, b; } P8;
 typedef struct {
     u32 w0; s32 w4; s32 w8; s32 wC; s32 x10; f32 f14; s32 x18; f32 f1c; s32 x20; u8 pad24[0xc]; V4 v30; f32 f40; f32 f44; s32 x48; s32 x4c;
@@ -1206,3 +1206,8 @@ void (*D_00351970[0x8])(void *) ALIGNED(16) = {
 #include "data/data_002B.h"
 #include "data/data_002E.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002C5978.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_00351A48.h"
+#include "data/pieces/D_00351A20.h"

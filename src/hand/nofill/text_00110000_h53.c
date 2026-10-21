@@ -18,3 +18,5 @@ void func_00127340(void) {
     D_004F7810 = func_001477c8(0xa9f0);
 }
 #include "data/bss_004F_typed.h"
+#include "data/pieces/D_002E27CC.h"
+#include "data/pieces/D_002E27D0.h"

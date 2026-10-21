@@ -12,3 +12,4 @@ void func_0015d7b8(s32 arg0, s32 arg1) {
     M2C_FIELD(arg0, f32 *, 0x2C) = (f32) (((M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x134), void **, 0x10), f32 *, 0xC) - 25.0f) + 5.0f) / D_002BBDFC);
     func_002675a8(arg1, M2C_FIELD(arg0, s32 *, 0x148) + 0xC0);
 }
+#include "data/pieces/D_002BBDFC.h"

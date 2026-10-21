@@ -129,3 +129,4 @@ r8:
 }
 #include "data/data_002B.h"
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBDFC.h"

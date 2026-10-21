@@ -363,7 +363,7 @@ void func_0023d7e8(s32 a0, s32 (*pos)[4], s32 (*uv)[4], s32 (*col)[4], TObj *o, 
 
 typedef struct { u8 pad[0x40]; s32 unk40; s32 unk44; s32 unk48; } St6C;
 typedef struct { u8 pad[0x6C]; St6C *unk6C; } Ow;
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_nofill_text_00230000_h74.h"
 typedef struct { s32 a, b, c, d; u8 pad[0xC0 - 0x10]; } __attribute__((aligned(8))) Big;
 typedef struct {
     s32 unk0;
@@ -551,3 +551,5 @@ s32 func_0023dd48(Obj *g, s32 buf) {
 }
 #include "data/bss_0064_mixed.h"
 #include "data/data_0045.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_004915A0.h"

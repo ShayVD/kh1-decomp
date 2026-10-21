@@ -55,7 +55,7 @@ s32 func_0023da08(Gda *g, s32 (*src)[4], s32 (*uv)[4], s32 ang, s32 off, s32 buf
     return func_0023d7e8(ang, m, m2, m3, g->unk6C, buf);
 }
 
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_00230000_b16_p.h"
 typedef struct { s32 a, b, c, d; u8 pad[0xC0 - 0x10]; } __attribute__((aligned(8))) Big;
 typedef struct { u8 pad[0x40]; s32 unk40; s32 unk44; s32 unk48; } St6C;
 typedef struct { u8 pad[0x6C]; St6C *unk6C; } Ow;
@@ -387,7 +387,7 @@ typedef struct {
     u8 padA20[0xA34 - 0xA20];
     struct GP { void *a[5]; Big *b; void *c[4]; void *d[5]; } unkA34;
 } Ga;
-typedef struct { s32 unk0, unk4, unk8, unkC, mode; f32 scale; s32 barrier; } GW;
+#include "data/types/nostrict_text_00230000_b16.h"
 extern GW D_00454A20;
 extern u8 D_00426880[], D_004268E0[];
 void __assert(const char *, s32, const char *);
@@ -427,3 +427,6 @@ s32 func_00240400(Ga *e, s32 buf) {
     return buf;
 }
 #include "data/data_0045.h"
+#include "data/pieces/D_00454A20.h"
+#include "data/pieces/D_004915B0.h"
+#include "data/pieces/D_004915C0.h"

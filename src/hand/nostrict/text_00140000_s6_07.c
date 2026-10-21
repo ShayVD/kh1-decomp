@@ -322,3 +322,4 @@ void func_0015f128(void) {
 }
 #include "data/bss_0055_typed.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"

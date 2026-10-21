@@ -1,6 +1,6 @@
 /* session 7 w2: func_0023ec88 (CONTEXT_ONLY func_0023e160 and func_0023d528 above). */
 #include "common.h"
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_00230000_s7_w2.h"
 typedef struct { s32 a, b, c, d; u8 pad[0xC0 - 0x10]; } __attribute__((aligned(8))) Big;
 typedef struct { u8 pad[0x40]; s32 unk40; u8 pad44[4]; s32 unk48; } St6C;
 typedef struct { u8 pad[0x6C]; St6C *unk6C; } Ow;
@@ -149,3 +149,4 @@ s32 func_0023ec88(Obj *e, s32 buf) {
     else e->unk64->a = 397;
     return func_0023d700(e->unk64, e->unk6C, p2[0], p2[1], buf, e->unkA1C);
 }
+#include "data/pieces/D_004915D0.h"

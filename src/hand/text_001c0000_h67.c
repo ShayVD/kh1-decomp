@@ -37,8 +37,7 @@ typedef struct {
 void func_001c4640(Msg *m);
 double sin(double);
 double cos(double);
-typedef struct { f32 a[4]; s32 b[3]; s32 pad; u64 d[2]; } CamS;
-typedef struct { u8 st[4]; u8 x4[12]; u16 tbl[8][256]; s32 cnt[8]; s8 ids[4]; u8 pad1034[0x3034 - 0x1034]; s32 f3034; s32 f3038; u8 pad303c[0x3070 - 0x303c]; union { u64 x; s32 i[2]; } f3070; union { u64 x; s32 i[2]; } f3078; u8 pad3080[0x14]; s32 f3094; u8 pad3098[0x316c - 0x3098]; s32 f316c; u8 pad3170[0x3460 - 0x3170]; f32 dur; f32 t; u8 pad3468[8]; CamS start; CamS tgt; } Str;
+#include "data/types/text_001c0000_h67.h"
 extern Str D_00389C90;
 extern s32 D_00389C80;
 extern char *D_00388480[];
@@ -248,7 +247,7 @@ s32 func_001d0dd0(VM *vm) {
     return 2;
 }
 
-typedef struct { f32 x[4]; } __attribute__((aligned(16))) V4;
+#include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;
 void func_001e9fe8(f32 *, f32 *);
 void sceVu0UnitMatrix(f32 (*)[4]);
@@ -555,3 +554,7 @@ s32 func_001dde08(VM *vm) {
 #include "data/data_003B.h"
 #include "data/data_003C.h"
 #include "data/data_003D.h"
+#include "data/pieces/D_00389C90.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003DABD8.h"
+#include "data/pieces/D_00490630.h"

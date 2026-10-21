@@ -7,10 +7,7 @@ typedef struct {
     s32 sp;
     s32 stk[92];
 } VM;
-typedef struct {
-    u8 pad0[0xc];
-    f32 f0c;
-} Lt;
+#include "data/types/nofill_text_001c0000_h42.h"
 extern Lt *D_0038CD3C[];
 s32 func_001cede8(VM *vm) {
     s32 sp = vm->sp;
@@ -19,3 +16,4 @@ s32 func_001cede8(VM *vm) {
     vm->sp = sp - 2;
     return 2;
 }
+#include "data/pieces/D_00389C90.h"

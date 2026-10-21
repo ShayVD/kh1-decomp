@@ -197,3 +197,4 @@ s32 func_001e0528(VM *vm) {
     return 2;
 }
 #include "data/data_003D.h"
+#include "data/pieces/D_002BBDFC.h"

@@ -146,7 +146,7 @@ QW *func_0023f250(Obj *o, QW *r) {
 
 /* func_0023fad0 (session 7, w3): returns the last func_0023e160 result (keeps v0 live, so 128 goes to v1). */
 typedef struct { s32 x, y, z, w; } I4b;
-typedef struct { s32 c[4]; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_s7_w3.h"
 typedef struct { u8 pad[0x40]; s32 v[2]; } R90;
 typedef struct {
     u8 pad[0x80]; s32 c[2]; u8 p88[8]; R90 *x90; u8 p94[0xA00 - 0x94];
@@ -166,3 +166,4 @@ I4b *func_0023fad0(Ofad0 *o, I4b *d) {
     }
     return d;
 }
+#include "data/pieces/D_00491600.h"

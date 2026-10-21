@@ -123,3 +123,4 @@ void func_0014f370(void *arg0) {
  do { new_var = func_00141a40(); } while (0);
   *((s32 *) (((s8 *) arg0) + 0x6C)) = new_var;
 }
+#include "data/pieces/D_002C5958.h"

@@ -247,3 +247,4 @@ st:
     return 0;
 }
 
+#include "data/pieces/D_002BBDFC.h"

@@ -851,3 +851,8 @@ s32 D_00304B44 ALIGNED(4) = (s32)D_0048DCA8;
 #include "data/data_002B.h"
 #include "data/data_0030.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002C6450.h"
+#include "data/pieces/D_003041F0.h"

@@ -1,8 +1,7 @@
 #include "common.h"
 #include "data/bss_0057.h"
 
-typedef struct { f32 x, y, z, w; } V4;
-typedef struct { void (*fn)(void); s32 x4; } Fn8;
+#include "data/types/text_00170000_h61.h"
 typedef struct { u8 pad[0xd0]; V4 xd0; } ActD0;
 typedef struct Cam {
     u8 pad0[0x10];
@@ -666,3 +665,14 @@ void func_00179ee8(void) {
 #undef D_002C5958
 #include "data/data_002E.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_0036245C.h"
+#include "data/pieces/D_003624E0.h"
+#include "data/pieces/D_003624F0.h"
+#include "data/pieces/D_00362530.h"
+#include "data/pieces/D_00362540.h"
+#include "data/pieces/D_00362560.h"
+#include "data/pieces/D_00362570.h"
+#include "data/pieces/D_003625A0.h"
+#include "data/pieces/D_003625B0.h"
+#include "data/pieces/D_003625F0.h"

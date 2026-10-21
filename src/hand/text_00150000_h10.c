@@ -528,3 +528,5 @@ s32 func_00175af0(void) {
 #include "data/bss_0061_mixed.h"
 #include "data/data_0029.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00351A48.h"

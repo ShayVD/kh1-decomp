@@ -65,7 +65,7 @@ typedef struct E0C0 {
     u8 padac[0xc0 - 0xac];
 } E0C0;
 
-typedef struct { f32 x, y, z; } V3;
+#include "data/types/text_00170000_h11.h"
 typedef struct { s32 a, b, c; } V12;
 
 extern E0C0 D_00364130[256];
@@ -561,3 +561,4 @@ void func_0017d9c8(Hdr *h) {
 #include "data/data_002E.h"
 #include "data/data_0036.h"
 #include "data/data_0037.h"
+#include "data/pieces/D_00362640.h"

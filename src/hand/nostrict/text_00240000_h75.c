@@ -695,3 +695,4 @@ void func_00247930(Clk *c) {
 #include "data/data_0045.h"
 #include "data/data_0046.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_002BBDFC.h"

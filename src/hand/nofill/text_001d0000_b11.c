@@ -237,3 +237,4 @@ f32 func_001dcb00(Obj *o, V4 *target, f32 a, f32 b) {
 }
 #include "data/data_0039.h"
 #include "data/data_003A.h"
+#include "data/pieces/D_002BBDFC.h"

@@ -152,7 +152,7 @@ typedef struct {
     u32 clut;
 } TimPic;
 typedef struct { u8 pad[0x10]; TimPic pic; u8 data[1]; } Tim;
-typedef struct { s16 psm; s16 pad; } PsmEnt;
+#include "data/types/text_00240000_s6_25_p.h"
 extern PsmEnt D_00469FB0[];
 void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 s32 sceGsExecLoadImage(void *, void *);
@@ -275,7 +275,6 @@ void func_0024aac8(UiFile *buffer) {
 }
 
 /* 24b448 */
-typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18, unk1C; } Prm;
 typedef struct { u8 lo:3; u8 mode:2; u8 hi:3; } Bits8;
 extern volatile Bits8 D_002C5968;
 extern Prm *D_0046A038;
@@ -341,3 +340,5 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
 #include "data/data_0046.h"
 #include "data/data_0045.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_00469FB0.h"
+#include "data/pieces/D_0046A038.h"

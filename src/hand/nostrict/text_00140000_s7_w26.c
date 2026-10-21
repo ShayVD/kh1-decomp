@@ -138,3 +138,4 @@ s32 func_00144d08(ObjF3 *o) {
     }
     return 0;
 }
+#include "data/pieces/D_002C5958.h"

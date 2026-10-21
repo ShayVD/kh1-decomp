@@ -889,3 +889,4 @@ void func_001a0908(PppMtx m, PppMdlMode *p, PppMdlOwn *o) {
         return;
     }
 }
+#include "data/pieces/D_003727B0.h"

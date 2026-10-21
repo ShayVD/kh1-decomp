@@ -175,3 +175,4 @@ void func_00211ed0(O15 *a) {
     }
     func_001f8f30();
 }
+#include "data/pieces/D_002BBDFC.h"

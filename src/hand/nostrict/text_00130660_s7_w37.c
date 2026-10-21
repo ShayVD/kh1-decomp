@@ -432,3 +432,5 @@ extern f32 atan2f(f32, f32);
 extern void func_00137688(O39 *, f32);
 extern void func_00138a20(O39 *, f32, f32 *);
 void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c);
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"

@@ -29,3 +29,4 @@ void func_001b9f78(s32 k) {
     c = func_001ba9a8();
     for (i = 0; i < D_006202A0.n; i++) { if (D_006202A0.e[i].id) { s32 j = D_006202A0.e[i].id - 1; c[j]++; } }
 }
+#include "data/pieces/D_003773E0.h"

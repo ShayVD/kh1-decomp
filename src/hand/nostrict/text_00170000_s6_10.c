@@ -1,7 +1,7 @@
 #include "common.h"
 
 /* ---- b860 ---- */
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/nostrict_text_00170000_s6_10.h"
 typedef struct { f32 x, y, z, len; } Seg;
 typedef struct Path {
     s32 n; f32 x4; f32 x8; f32 xc; f32 x10; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
@@ -761,3 +761,5 @@ search:
 #include "data/bss_0061_typed.h"
 #include "data/data_002E.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_00362690_2.h"
+#include "data/pieces/D_002BBDFC.h"

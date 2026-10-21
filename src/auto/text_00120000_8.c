@@ -835,3 +835,4 @@ s32 func_0012f1d0(s32 arg0, s32 arg1) {
 #include "data/bss_0051_mixed.h"
 #include "data/data_002C.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"

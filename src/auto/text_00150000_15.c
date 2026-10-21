@@ -18,3 +18,4 @@ void func_00157978(s32 arg0, s32 arg1, f32 fparg0, f32 fparg1, f32 fparg2, f32 f
         M2C_FIELD(temp_v0, f32 *, 8) = fparg0;
     }
 }
+#include "data/pieces/D_002C5958.h"

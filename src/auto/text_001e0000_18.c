@@ -161,3 +161,4 @@ void func_001e9f18(void *arg0, void *arg1, void *arg2, f32 fparg0) {
 }
 #include "data/data_003D.h"
 #include "data/data_003E.h"
+#include "data/pieces/D_003F7A68.h"

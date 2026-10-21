@@ -1,7 +1,7 @@
 #include "common.h"
 
 /* ---- 00100c30.c ---- */
-typedef struct { f32 a, b, c, d; } V4f;
+#include "data/types/text_00100000_s6_00.h"
 typedef struct { f32 f0, f4, f8, fc; s32 i10, i14, i18; s32 pad; f32 f20, f24; } Cam0;
 extern V4f D_0029B310[16];
 extern V4f D_002A4060[16];
@@ -249,3 +249,4 @@ void func_00107120(s32 *k, u32 *v, s32 n, s32 w) {
 #include "data/data_0029.h"
 #include "data/data_002A.h"
 #include "data/data_002B.h"
+#include "data/pieces/D_0029B310.h"

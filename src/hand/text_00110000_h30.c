@@ -363,7 +363,7 @@ void func_0011e7f8(void) {
     func_0011e758();
 }
 
-typedef struct { char c[12]; } Str12;
+#include "data/types/text_00110000_h30_p.h"
 extern char D_0048D1A0[];
 extern Str12 D_0048D1A8;
 extern char D_0048D1B8[];
@@ -812,3 +812,12 @@ void func_001247e8(Obj123 *o) {
 #include "data/data_0035.h"
 #include "data/data_0049.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C1378.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002C1368.h"
+#include "data/pieces/D_002C6450.h"
+#include "data/pieces/D_002C1320.h"
+#include "data/pieces/D_002C1330.h"
+#include "data/pieces/D_002C1340.h"
+#include "data/pieces/D_002C1350.h"
+#include "data/pieces/D_0048D1A8.h"

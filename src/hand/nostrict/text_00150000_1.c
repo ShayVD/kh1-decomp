@@ -53,3 +53,4 @@ void func_00151fa0(void *arg0) {
         M2C_FIELD(temp_s1, f32 *, 0xC) = 0.0f;
     }
 }
+#include "data/pieces/D_002BBDFC.h"

@@ -7,7 +7,7 @@
 
 	PIECE D_003031F0, 0xff4, 4
 	PIECE D_003041E4, 0xc, 4  /* untyped: element size does not divide the extent */
-	PIECE_BEGIN D_003041F0, 0x100, 16  /* untyped: element size does not divide the extent */
+	PIECE_BEGIN D_003041F0, 0x100, 16  /* data/pieces/D_003041F0.h */
 	.word D_0048D7A0
 	PIECE_BYTES D_003041F0, 0x4, 0x8
 	.word D_0048D790
@@ -56,7 +56,7 @@
 	PIECE_BYTES D_00304318, 0x0, 0x20
 	.word D_0048D9F8
 	PIECE_END D_00304318, 0x24
-	PIECE_BEGIN D_0030433C, 0x164, 4  /* untyped: type C01CmdInfo is not a common.h basic type */
+	PIECE_BEGIN D_0030433C, 0x164, 4  /* data/pieces/D_0030433C.h */
 	PIECE_BYTES D_0030433C, 0x0, 0x4
 	.word D_0048D9E0
 	PIECE_BYTES D_0030433C, 0x8, 0x4
@@ -201,9 +201,9 @@
 	PIECE D_00306840, 0x4, 4
 	PIECE D_00306844, 0x4, 4
 	PIECE D_00306848, 0x8, 8
-	PIECE D_00306850, 0x9d6, 2  /* untyped: type B3SeRow is not a common.h basic type */
+	PIECE D_00306850, 0x9d6, 2  /* data/pieces/D_00306850.h */
 	PIECE D_00307226, 0x13b2, 2
-	PIECE D_003085D8, 0x277, 1  /* untyped: element size does not divide the extent */
+	PIECE D_003085D8, 0x277, 1  /* data/pieces/D_003085D8.h */
 	PIECE D_0030884F, 0x25, 1
 	PIECE D_00308874, 0x3fc, 4
 	PIECE D_00308C70, 0x6c, 4

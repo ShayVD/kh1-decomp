@@ -56,3 +56,4 @@ block_6:
         M2C_FIELD(M2C_FIELD(arg0, void **, 0x144), s32 *, 4) = 5;
     }
 }
+#include "data/pieces/D_002BBDFC.h"

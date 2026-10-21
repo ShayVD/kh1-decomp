@@ -241,7 +241,7 @@ s32 func_0016c650(ObjC6 *o, WkC6 *w, s32 k, s32 mode) {
 }
 
 /* ---- func_0016e3f8 ---- */
-typedef struct { f32 x, y, z, w; } V4E3;
+#include "data/types/nostrict_text_00160000_c04.h"
 typedef struct { u8 pad[8]; f32 f8; } Sub4E3;
 typedef struct {
     u8 pad0[4]; Sub4E3 *p4; u8 pad8[0x30]; u64 w38; u8 pad40[0x64]; f32 fA4; u8 padA8[0x38];
@@ -513,3 +513,6 @@ void func_001707d0(ObjD0 *o, V4D0 *out) {
     func_002675a8(&w->v100, &o->x10);
 }
 #include "data/bss_0057_mixed.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_0035BD20.h"

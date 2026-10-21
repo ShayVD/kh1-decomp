@@ -6,7 +6,7 @@
    barrier insn (first insn after the loop notes), so h->b and the a1 argument issue together. */
 #include "common.h"
 
-typedef struct { s32 w[12]; } B48;
+#include "data/types/text_00100000_s11_w58.h"
 typedef struct { u8 pad[0x10]; struct { f32 f10; } u10; struct { f32 f14; } u14; f32 f18; u8 state, id, idx, last; s32 *p20, *p24; } Task2;
 typedef struct { u8 pad[0x10]; union { f32 f10; void *p10; } u10; union { f32 f14; void *p14; } u14; } Obj;
 typedef struct { s32 a, b, c, d; } Hdr;
@@ -195,3 +195,8 @@ s32 func_00102118(Task2 *t) {
 #include "data/data_0029.h"
 #include "data/data_0037.h"
 #include "data/data_002A.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002A4230.h"
+#include "data/pieces/D_002A4260.h"
+#include "data/pieces/D_002A4400.h"
+#include "data/pieces/D_002A4430.h"

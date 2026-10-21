@@ -124,20 +124,7 @@ void func_00174ca8(Wk *w, Ob *o) {
 /* --- GS packets --- */
 typedef struct { s32 a, b, c, d; } V16;
 typedef struct { u64 a, b; } Q16;
-typedef struct Pkt {
-    u16 x0;
-    u8 x2;
-    u8 x3;
-    s32 x4;
-    u8 pad8[0x68 - 8];
-    u64 x68;
-    u8 pad70[8];
-    u64 x78;
-    u8 pad80[0xf0 - 0x80];
-    u64 xf0;
-    u8 padf8[8];
-    u64 x100;
-} Pkt;
+#include "data/types/nostrict_text_00170000_h38.h"
 typedef struct { u64 *x0; } P10;
 typedef struct Spr {
     u8 pad0[0xa];
@@ -245,3 +232,4 @@ void func_00176ba8(H20 *h, s32 i) {
     }
 }
 #include "data/data_0035.h"
+#include "data/pieces/D_0035C4A0.h"

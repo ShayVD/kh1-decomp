@@ -2,7 +2,7 @@
 #include "common.h"
 
 typedef struct { f32 x, y, z; } V3;
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/text_00160000_b05.h"
 typedef struct {
     V4 pl; V4 org; V4 e[3]; f32 uv0[4]; f32 uv1[4]; f32 uv2[4];
 } Tri;
@@ -66,3 +66,4 @@ s32 func_00174fc0(V3 *a, V3 *b, Tri *t, s32 n, f32 *out, f32 s) {
     }
     return 0;
 }
+#include "data/pieces/D_0035C660.h"

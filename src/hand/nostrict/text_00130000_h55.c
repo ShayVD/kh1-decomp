@@ -749,3 +749,7 @@ s32 func_001401d8(W55Ob *o, f32 *d) {
 #include "data/data_002B.h"
 #include "data/data_0030.h"
 #include "data/data_002E.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002C5978.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"

@@ -190,3 +190,4 @@ s32 func_0024f1d0(s32 arg0) {
     return (s32) var_v0;
 }
 #include "data/data_0046.h"
+#include "data/pieces/D_002C5958.h"

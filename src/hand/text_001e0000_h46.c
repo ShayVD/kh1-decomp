@@ -838,3 +838,4 @@ s32 func_001fe5a0(Fade2 *o) {
 #include "data/data_003E.h"
 #include "data/data_003F.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_002BBDFC.h"

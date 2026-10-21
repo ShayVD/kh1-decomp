@@ -1,6 +1,6 @@
 /* 0x00230000-0x0024FFFF game code by hand (batch 49), built without strict aliasing. */
 #include "common.h"
-typedef struct { s32 r, g, b, a; } __attribute__((aligned(16))) Col;
+#include "data/types/nostrict_text_00230000_h49_p.h"
 extern Col D_004915F0;
 typedef struct {
     u8 pad0[0x80];
@@ -725,3 +725,6 @@ s32 func_002455c0(void) {
 #include "data/bss_0065_mixed.h"
 #include "data/bss_0066_typed.h"
 #include "data/data_0045.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_004915F0.h"

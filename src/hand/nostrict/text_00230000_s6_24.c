@@ -201,8 +201,7 @@ typedef struct {
     u8 pad38[0x1c0 - 0x38]; void *x1c0;
 } Ob17;
 typedef struct { s32 x0; s32 x4; s32 x8; s32 cur; s32 n; u8 id[16]; u8 col[16]; } Mn17;
-typedef struct { s32 c[4]; } __attribute__((aligned(16))) Col;
-typedef struct { s32 c[4][4]; } __attribute__((aligned(16))) Col4;
+#include "data/types/nostrict_text_00230000_s6_24_p.h"
 extern f32 D_00650DD0;
 extern f32 D_00650DD4;
 extern s32 D_00449900;
@@ -469,3 +468,6 @@ s32 func_00240810(Ob810 *o) {
     return r;
 }
 #include "data/data_0044.h"
+#include "data/pieces/D_004914C0.h"
+#include "data/pieces/D_004914D0.h"
+#include "data/pieces/D_004914E0.h"

@@ -159,3 +159,4 @@ void func_001f82b0(void) {
     } while (w);
     D_00640DDC = 0;
 }
+#include "data/pieces/D_002BBDFC.h"

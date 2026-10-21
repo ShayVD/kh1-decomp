@@ -812,3 +812,5 @@ s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
 #include "data/data_002C.h"
 #include "data/data_0035.h"
 #include "data/data_0027.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"

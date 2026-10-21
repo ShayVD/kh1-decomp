@@ -25,14 +25,14 @@
 	PIECE D_002A41A0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002A41C0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002A41E0, 0x50, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_002A4230, 0x30, 16  /* untyped: type B48 is not a common.h basic type */
+	PIECE_BEGIN D_002A4230, 0x30, 16  /* data/pieces/D_002A4230.h */
 	PIECE_BYTES D_002A4230, 0x0, 0x4
 	.word D_002A41A0
 	PIECE_BYTES D_002A4230, 0x8, 0xc
 	.word D_002A41E0
 	PIECE_BYTES D_002A4230, 0x18, 0x18
 	PIECE_END D_002A4230, 0x30
-	PIECE_BEGIN D_002A4260, 0x30, 16  /* untyped: type B48 is not a common.h basic type */
+	PIECE_BEGIN D_002A4260, 0x30, 16  /* data/pieces/D_002A4260.h */
 	PIECE_BYTES D_002A4260, 0x0, 0x4
 	.word D_002A41C0
 	PIECE_BYTES D_002A4260, 0x8, 0xc
@@ -52,14 +52,14 @@
 	PIECE_BYTES D_002A43A0, 0x8, 0x8
 	PIECE_END D_002A43A0, 0x10
 	PIECE D_002A43B0, 0x50, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_002A4400, 0x30, 16  /* untyped: type B48 is not a common.h basic type */
+	PIECE_BEGIN D_002A4400, 0x30, 16  /* data/pieces/D_002A4400.h */
 	PIECE_BYTES D_002A4400, 0x0, 0x4
 	.word D_002A41A0
 	PIECE_BYTES D_002A4400, 0x8, 0xc
 	.word D_002A43B0
 	PIECE_BYTES D_002A4400, 0x18, 0x18
 	PIECE_END D_002A4400, 0x30
-	PIECE_BEGIN D_002A4430, 0x30, 16  /* untyped: type B48 is not a common.h basic type */
+	PIECE_BEGIN D_002A4430, 0x30, 16  /* data/pieces/D_002A4430.h */
 	PIECE_BYTES D_002A4430, 0x0, 0x4
 	.word D_002A41C0
 	PIECE_BYTES D_002A4430, 0x8, 0xc
@@ -500,7 +500,7 @@
 	PIECE_BYTES D_002A5FD0, 0x8, 0x8
 	PIECE_END D_002A5FD0, 0x10
 	PIECE D_002A5FE0, 0x30, 16
-	PIECE_BEGIN D_002A6010, 0x60, 16  /* untyped: merged (a user declares it larger than the next name): D_002A6010, D_002A6058 */
+	PIECE_BEGIN D_002A6010, 0x60, 16  /* untyped: no C user declares it (merged); labels in data/data_002A.h */
 	PIECE_BYTES D_002A6010, 0x0, 0x48
 	PIECE_LABEL D_002A6010, D_002A6058, 0x48
 	PIECE_BYTES D_002A6010, 0x48, 0x18
@@ -521,7 +521,7 @@
 	.word D_002A60D0
 	PIECE_BYTES D_002A6110, 0x8, 0x8
 	PIECE_END D_002A6110, 0x10
-	PIECE_BEGIN D_002A6120, 0xc0, 16  /* untyped: merged (a user declares it larger than the next name): D_002A6120, D_002A6178 */
+	PIECE_BEGIN D_002A6120, 0xc0, 16  /* untyped: no C user declares it (merged); labels in data/data_002A.h */
 	PIECE_BYTES D_002A6120, 0x0, 0x58
 	PIECE_LABEL D_002A6120, D_002A6178, 0x58
 	PIECE_BYTES D_002A6120, 0x58, 0x68
@@ -593,7 +593,7 @@
 	PIECE D_002A6308, 0x10, 8  /* untyped: users disagree: IVec3 D_002A6308 | s32 D_002A6308[3] */
 	PIECE D_002A6318, 0xc, 4  /* untyped: users disagree: IVec3 D_002A6318 | s32 D_002A6318[3] */
 	PIECE D_002A6324, 0xc, 4  /* untyped: users disagree: Grid *D_002A6324 | s32 D_002A6324 */
-	PIECE D_002A6330, 0x1d0, 16  /* untyped: type GsRegs is not a common.h basic type */
+	PIECE D_002A6330, 0x1d0, 16  /* data/pieces/D_002A6330.h */
 	PIECE_BEGIN D_002A6500, 0x10, 16
 	PIECE_BYTES D_002A6500, 0x0, 0x4
 	.word D_002A6330
@@ -617,7 +617,7 @@
 	.word D_002A6590
 	PIECE_BYTES D_002A65C0, 0x8, 0x8
 	PIECE_END D_002A65C0, 0x10
-	PIECE_BEGIN D_002A65D0, 0x2c0, 16  /* untyped: merged (a user declares it larger than the next name): D_002A65D0, D_002A6658 */
+	PIECE_BEGIN D_002A65D0, 0x2c0, 16  /* untyped: no C user declares it (merged); labels in data/data_002A.h */
 	PIECE_BYTES D_002A65D0, 0x0, 0x88
 	PIECE_LABEL D_002A65D0, D_002A6658, 0x88
 	PIECE_BYTES D_002A65D0, 0x88, 0x238

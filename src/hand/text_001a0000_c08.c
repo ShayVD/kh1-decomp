@@ -83,7 +83,7 @@ void func_001bdb58(void) {
 }
 
 
-typedef struct { s8 x, y, z, w; } C4;
+#include "data/types/text_001a0000_c08_p.h"
 extern C4 D_0037A130[16];
 typedef struct { u16 h0; u16 r0 : 4; u16 r1 : 4; u16 r2 : 4; u16 r3 : 4; } Ori_1bbf88;
 
@@ -403,3 +403,4 @@ s32 func_001c1f80(void) {
 #include "data/data_0037.h"
 #include "data/data_0039.h"
 #include "data/data_003A.h"
+#include "data/pieces/D_002BBDFC.h"

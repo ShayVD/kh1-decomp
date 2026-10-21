@@ -33,3 +33,4 @@ void func_00158db0(void) {
     }
     D_00351A48 = 0;
 }
+#include "data/pieces/D_00351A48.h"
