@@ -2386,7 +2386,7 @@ fail alone (session 18). It needs a piece covering the whole block first.
 
 ## Session 27: Phase 4 types (worker s27types)
 
-## Result
+### Result
 
 Counted with `s27_survey.py --summary` (casts of a piece's name in src/):
 
@@ -2406,7 +2406,7 @@ Counted with `s27_survey.py --summary` (casts of a piece's name in src/):
   The basic count rose because folded users of a piece whose declaration stayed a
   basic type got value / lvalue casts to keep their code (see hazards).
 
-## Left, and why (`s27_reasons.py` over the batch logs)
+### Left, and why (`s27_reasons.py` over the batch logs)
 
 - Pointer pieces (declaration is a pointer or array of pointers, the view is behind
   it): D_00308CDC (44), D_002E3170 (20), several 1-cast pieces.  The fold handles
@@ -2429,7 +2429,7 @@ Counted with `s27_survey.py --summary` (casts of a piece's name in src/):
   (the old view types); make is unchanged, but a user that relied on them gets them
   from its own includes now.
 
-## Hazards found (gcc 2.96)
+### Hazards found (gcc 2.96)
 
 - Changing a declaration's type changes the alias set of its own loads: a scalar
   declared s32 that becomes a pointer/struct changes code in plain users.  Plain
@@ -2444,7 +2444,7 @@ Counted with `s27_survey.py --summary` (casts of a piece's name in src/):
   lengths are joined, reframing only when all used subfields stay in one element.
 - Signed / unsigned field differences are accepted when `-S` stays the same.
 
-## Tools
+### Tools
 
 See README.md: s27_fold (with s27_layout, s27_merge, s27_ctext, s27lib), s27_batch,
 s27_reasons, s27_survey, s27_trim, s27_unfold, s27_check, s27_hdrcheck.
