@@ -151,7 +151,7 @@
 	PIECE D_003044B0, 0x10, 16
 	PIECE D_003044C0, 0x10, 16
 	PIECE D_003044D0, 0x8, 8
-	PIECE D_003044D8, 0x4, 4  /* untyped: users disagree: C02Slot D_003044D8[] | ColEnt D_003044D8[] | ColEntA D_003044D8[] | Ent52b D_003044D8[] | W29E10 D_003044D8[] | W6Ent16 D_003044D8[]; session 25: as ColEnt D_003044D8[]: does not compile in text_00130000_c02.c, text_00110000_h29.c +3 */
+	PIECE D_003044D8, 0x4, 4  /* untyped: users disagree: C02Slot D_003044D8[] | ColEnt D_003044D8[] | ColEntA D_003044D8[] | Ent52b D_003044D8[] | W29E10 D_003044D8[] | W6Ent16 D_003044D8[]; session 25: as ColEnt D_003044D8[]: does not compile in text_00130000_c02.c, text_00110000_h29.c +3; session 26: six 16-byte record views; s8_lead's ColEntA read changes code through a union (gcc 2.96 gives union member accesses alias set 0) or a cast, and c02/s6_03 change code under ColEntA: no one declaration without a code change */
 	PIECE D_003044DC, 0x4, 4  /* data/pieces/D_003044DC.h */
 	PIECE D_003044E0, 0x5f8, 8  /* data/pieces/D_003044E0.h */
 	PIECE D_00304AD8, 0x8, 8  /* data/pieces/D_00304AD8.h */
