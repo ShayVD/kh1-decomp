@@ -84,6 +84,12 @@ def strip_comments(t):
     return re.sub(r"//[^\n]*", "", t)
 
 
+def names_it(t, N):
+    ml = macro_lines(t, N)
+    lines = [ASM.sub("", ln) for i, ln in enumerate(strip_comments(t).split("\n")) if i not in ml]
+    return any(re.search(r"\b" + N + r"\b", ln) for ln in lines)
+
+
 def c_text_users(N):
     files = {}
     for p in sorted((ROOT / "src").rglob("*.c")):
@@ -300,6 +306,7 @@ def rewrite_uses(text, N, own, shared):
 
 
 _lock = threading.Lock()
+NOTE = None
 
 
 def compile_s(rel, text, cache=False):
@@ -377,8 +384,8 @@ def try_decl(N, tspec, decl, incs=(), apply=False):
         ds = user_decls(t, N)
         if ds is None:
             fail.append((rel, "extern not understood")); continue
-        if not ds and not re.search(r"\b" + N + r"\b", strip_comments(t)):
-            continue  # only a comment names it
+        if not ds and not names_it(t, N):
+            continue  # only a comment, an __asm__ alias or a #define region names it
         try:
             new[rel] = edit_user(N, t, ds, shared, INC)
         except ValueError as e:
@@ -396,14 +403,18 @@ def try_decl(N, tspec, decl, incs=(), apply=False):
     if apply:
         for rel, nt in new.items():
             (ROOT / rel).write_text(nt)
-        mod = ROOT / f"src/data/data_{int(N[2:], 16) >> 16:04X}.s"
-        st = mod.read_text()
-        pat = re.compile(r"(PIECE(?:_BEGIN)?\s+" + N + r",[^/\n]*)/\* untyped: users disagree[^\n]*?\*/")
-        st, k = pat.subn(lambda m: m.group(1) + f"/* data/pieces/{N}.h */", st, count=1)
-        if not k:
-            print(f"note not found for {N}", file=sys.stderr)
-        mod.write_text(st)
+        mark_done(N)
     return []
+
+
+def mark_done(N):
+    mod = ROOT / f"src/data/data_{int(N[2:], 16) >> 16:04X}.s"
+    st = mod.read_text()
+    pat = re.compile(r"(PIECE(?:_BEGIN)?\s+" + N + r",[^/\n]*)/\* untyped: users disagree[^\n]*?\*/")
+    st, k = pat.subn(lambda m: m.group(1) + f"/* data/pieces/{N}.h */", st, count=1)
+    if not k:
+        print(f"note not found for {N}", file=sys.stderr)
+    mod.write_text(st)
 
 
 def fill(tspec, decl, size):
@@ -506,7 +517,10 @@ def main():
     cmd = a.pop(0)
     apply = "--apply" in a
     a = [x for x in a if x != "--apply"]
+    global NOTE
     decl = inc = None
+    if "--note" in a:
+        i = a.index("--note"); NOTE = a[i + 1]; del a[i:i + 2]
     if "--decl" in a:
         i = a.index("--decl"); decl = a[i + 1]; del a[i:i + 2]
     if "--inc" in a:
@@ -524,6 +538,13 @@ def main():
             for rel, t in c_text_users(N).items():
                 ds = user_decls(t, N)
                 print(f"   {rel}: " + (" | ".join(sorted({f'{ind and "(block) "}{ts} {d}' for _, ind, ts, d in ds})) if ds is not None else "NOT UNDERSTOOD"))
+            continue
+        if cmd == "hdr":  # hand-made unification: write the header, mark the piece; users by hand
+            HDR = ROOT / "include/data/pieces" / f"{N}.h"
+            t = header_text(N, decl, [inc] if inc else [])
+            HDR.write_text(t.replace("users whose own type differs cast at each use", NOTE or "unified by hand"))
+            mark_done(N)
+            print(f"{N}\theader written")
             continue
         if decl:
             m = re.match(r"^" + TSPEC + r"\s*(.*)$", decl)

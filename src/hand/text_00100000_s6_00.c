@@ -4,16 +4,16 @@
 #include "data/types/text_00100000_s6_00.h"
 typedef struct { f32 f0, f4, f8, fc; s32 i10, i14, i18; s32 pad; f32 f20, f24; } Cam0;
 extern V4f D_0029B310[16];
-extern V4f D_002A4060[16];
+#include "data/pieces/D_002A4060.h"
 extern f32 D_0029B270;
 extern Cam0 D_002BC0F0;
 void func_00100c30(void) {
     s32 i;
     for (i = 0; i < 16; i++) {
-        D_002A4060[i].a = D_0029B310[i].a * 6.103515625e-05f;
-        D_002A4060[i].b = D_0029B310[i].b * 6.103515625e-05f;
-        D_002A4060[i].c = D_0029B310[i].c * 6.103515625e-05f;
-        D_002A4060[i].d = D_0029B310[i].d * 6.103515625e-05f;
+        D_002A4060.v[i].a = D_0029B310[i].a * 6.103515625e-05f;
+        D_002A4060.v[i].b = D_0029B310[i].b * 6.103515625e-05f;
+        D_002A4060.v[i].c = D_0029B310[i].c * 6.103515625e-05f;
+        D_002A4060.v[i].d = D_0029B310[i].d * 6.103515625e-05f;
     }
 /*P*/
     D_0029B270 = 0.0005454153478331864f;

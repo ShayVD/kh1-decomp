@@ -54,8 +54,8 @@ extern E90 D_00494F20[][2];
 extern ED0 D_00494D80[];
 #include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002A62B0.h"
-extern F16 D_002A3F60[16];
-extern F16 D_002A4060[16];
+#include "data/pieces/D_002A3F60.h"
+#include "data/pieces/D_002A4060.h"
 extern Flags D_002BC0A8;
 #include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_002A6234.h"
@@ -392,10 +392,10 @@ void func_00100b18(Setup *s) {
     D_002BC0F0.near_ = 15000.0f;
     D_002BC0F0.far_ = 20000.0f;
     for (i = 0; i < 16; i++) {
-        D_002A3F60[i].a = 0;
-        D_002A3F60[i].b = 0;
-        D_002A4060[i].a = s->uv[i][0] * 0.00006103515625f;
-        D_002A4060[i].b = s->uv[i][1] * 0.00006103515625f;
+        D_002A3F60.v[i].a = 0;
+        D_002A3F60.v[i].b = 0;
+        D_002A4060.v[i].a = s->uv[i][0] * 0.00006103515625f;
+        D_002A4060.v[i].b = s->uv[i][1] * 0.00006103515625f;
     }
     D_0029B270 = s->f34;
     D_002BC0F0.a = s->f3c;

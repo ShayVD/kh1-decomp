@@ -5,9 +5,10 @@
 #include "data/pieces/D_002A62C8.h"
 #include "data/pieces/D_002A62C4.h"
 #include "data/pieces/D_002A62AC.h"
-typedef struct { s32 v; } SV; extern SV *D_002A62B4;
+#include "data/types/text_00100000_s11_w56.h"
+#include "data/pieces/D_002A62B4.h"
 extern s32 D_002A62B8;
-extern SV *D_002A62BC;
+#include "data/pieces/D_002A62BC.h"
 #include "data/pieces/D_002A62C0.h"
 #include "data/pieces/D_002A62E4.h"
 #include "data/pieces/D_002A62E0.h"
@@ -25,9 +26,9 @@ void func_00105d88(u8 *h) {
     D_002A62D0 = w[7] / 20;
     D_002A62CC = h + w[8];
     D_002A62E0 = w[9] / 16;
-    D_002A62B4 = (SV *)(h + w[10]);
+    D_002A62B4 = (SV62B4 *)(h + w[10]);
     D_002A62DC = w[11] / 4;
-    D_002A62BC = (SV *)(h + w[12]);
+    D_002A62BC = (SV62B4 *)(h + w[12]);
     D_002A62E4 = n = w[13] / 4;
     D_002A62C4 = h + w[2];
     D_002A62D4 = w[3] / 12;

@@ -16,11 +16,7 @@ void func_002672f8(f32 *, f32 (*)[4], f32 *);
 
 /* A texture header inside a sprite record (+0x10): +8/+0xC are offsets
  * from itself to its pixels and palette, +0x10..+0x14 its sizes. */
-typedef struct {
-    s32 unk00, unk04;
-    s32 off08, off0C;
-    s16 unk10, unk12, unk14;
-} H39Tex;
+#include "data/types/nostrict_text_00180000_h39.h"
 
 typedef struct {
     s16 id, w, h;
@@ -31,15 +27,8 @@ typedef struct {
 } H39Spr2;
 
 /* Texture slots (0x24 bytes), indexed by the sprite's id. */
-typedef struct {
-    s32 a, b, c;
-    s32 pad0C, pad10;
-    void *p14, *p18;
-    H39Tex *tex;
-    s32 unk20;
-} H39Slot;
 
-extern H39Slot D_00362730[];
+#include "data/pieces/D_00362730.h"
 
 s32 *func_001808f8(s32 *p, u8 *mask) {
     s32 n;

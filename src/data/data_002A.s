@@ -18,8 +18,8 @@
 	PIECE D_002A3F44, 0x4, 4
 	PIECE D_002A3F48, 0x8, 8  /* data/pieces/D_002A3F48.h */
 	PIECE D_002A3F50, 0x10, 16  /* data/pieces/D_002A3F50.h */
-	PIECE D_002A3F60, 0x100, 16  /* untyped: users disagree: F16 D_002A3F60[16] | f32 D_002A3F60[16][4] | s32 D_002A3F60[4][4][4]; session 25: as s32 D_002A3F60[4][4][4]: does not compile in text_00100000_h28.c, text_00110000_s8_w5.c */
-	PIECE D_002A4060, 0x100, 16  /* untyped: users disagree: F16 D_002A4060[16] | V4f D_002A4060[16] | f32 D_002A4060[16][4]; session 25: as F16 D_002A4060[16]: does not compile in text_00110000_s8_w5.c */
+	PIECE D_002A3F60, 0x100, 16  /* data/pieces/D_002A3F60.h */
+	PIECE D_002A4060, 0x100, 16  /* data/pieces/D_002A4060.h */
 	PIECE D_002A4160, 0x20, 16
 	PIECE D_002A4180, 0x20, 16
 	PIECE D_002A41A0, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -573,9 +573,9 @@
 	PIECE D_002A62A8, 0x4, 4  /* data/pieces/D_002A62A8.h */
 	PIECE D_002A62AC, 0x4, 4  /* data/pieces/D_002A62AC.h */
 	PIECE D_002A62B0, 0x4, 4  /* data/pieces/D_002A62B0.h */
-	PIECE D_002A62B4, 0x4, 4  /* untyped: users disagree: s32 D_002A62B4; unparsed in 1 file(s); session 25: as s32 D_002A62B4: no file-scope extern in text_00100000_s11_w56.c */
+	PIECE D_002A62B4, 0x4, 4  /* data/pieces/D_002A62B4.h */
 	PIECE D_002A62B8, 0x4, 4
-	PIECE D_002A62BC, 0x4, 4  /* untyped: users disagree: SV *D_002A62BC | s32 D_002A62BC; session 25: as SV *D_002A62BC: src/hand/text_00100000_s11_w56.c type move changes code */
+	PIECE D_002A62BC, 0x4, 4  /* data/pieces/D_002A62BC.h */
 	PIECE D_002A62C0, 0x4, 4  /* data/pieces/D_002A62C0.h */
 	PIECE D_002A62C4, 0x4, 4  /* data/pieces/D_002A62C4.h */
 	PIECE D_002A62C8, 0x4, 4  /* data/pieces/D_002A62C8.h */
