@@ -1227,6 +1227,22 @@ def main() -> int:
         if not changed:
             break
     anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
+    wr_small = sorted((x, n) for x, n in writes if n is not None and n <= 64)
+    wr_big = [(x, n) for x, n in writes if n is not None and n > 64]
+    wr_unb = sorted(x for x, n in writes if n is None)
+
+    def obj_written(lo, hi):
+        """Whether a store the analysis sees may write a byte of [lo, hi): an exact or bounded one that
+        overlaps it, or an unbounded index from a base inside it (session 27)."""
+        i_ = bisect.bisect_left(wr_small, (lo - 64, 0))
+        while i_ < len(wr_small) and wr_small[i_][0] < hi:
+            if wr_small[i_][0] + wr_small[i_][1] > lo:
+                return True
+            i_ += 1
+        if any(x < hi and x + n > lo for x, n in wr_big):
+            return True
+        i_ = bisect.bisect_left(wr_unb, lo)
+        return i_ < len(wr_unb) and wr_unb[i_] < hi
 
     def str_bound(callee, j, base, ub):
         """Offset past the NUL of a string literal at base (+ up to ub) that a STRING_ARGS callee reads
@@ -1236,7 +1252,9 @@ def main() -> int:
             return None
         k_ = bisect.bisect_right(anchors, base)
         obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
-        return string_end(elf.read(base, obj_end - base), ub, sk) if obj_end - base <= 0x10000 else None
+        if obj_end - base > 0x10000 or obj_written(base, obj_end):
+            return None
+        return string_end(elf.read(base, obj_end - base), ub, sk)
 
     for name, callee, j, v in sites:
         c = reach.get(callee, {}).get(j)
@@ -1264,7 +1282,7 @@ def main() -> int:
         lb = la[0][0]
         k_ = bisect.bisect_right(anchors, lb)
         obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
-        if obj_end - lb > 0x10000:
+        if obj_end - lb > 0x10000 or obj_written(lb, obj_end):
             return None
         cnt = list_count(elf.read(lb, obj_end - lb), spec[1], spec[2])
         if cnt is None:
@@ -1279,8 +1297,6 @@ def main() -> int:
         if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
             continue  # not an argument (dead-arg)
         uses.setdefault(base, set()).add((callee, j, ub))
-    wr_sorted = sorted((x, n) for x, n in writes if n is not None)
-    wr_unb = sorted(x for x, n in writes if n is None)
     stored_to = {x for xs in ptr_stores.values() for x in xs}
 
     def chain_of(base):
@@ -1291,16 +1307,8 @@ def main() -> int:
             return None
         k_ = bisect.bisect_right(anchors, base)
         obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
-        if obj_end - base > 0x10000:
-            return None
-        i_ = bisect.bisect_left(wr_sorted, (base - 64, 0))
-        while i_ < len(wr_sorted) and wr_sorted[i_][0] < obj_end:
-            if wr_sorted[i_][0] + wr_sorted[i_][1] > base:
-                return None  # a store into the chain's object
-            i_ += 1
-        i_ = bisect.bisect_left(wr_unb, base)
-        if i_ < len(wr_unb) and wr_unb[i_] < obj_end:
-            return None
+        if obj_end - base > 0x10000 or obj_written(base, obj_end):
+            return None  # (a store into the chain's object could change a tag)
         return parse_chain(read_word, base, obj_end)
 
     dma_chain = 0
