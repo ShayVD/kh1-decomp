@@ -61,6 +61,7 @@ HI = "hi"  # register = a lui alone: ("hi", value); its %lo users are relocated 
 SET = "set"  # register = one of a few exact addresses: ("set", frozenset) from a join (session 21)
 HIX = "hix"  # register = a lui + an index: ("hix", value, upper bound or None); %lo users index from value+lo
 JT = "jt"  # register = a word of a jump table: ("jt", table address, largest byte offset)
+PTR = "ptr"  # register = the word loaded from a pointer global G, + an offset: ("ptr", G, off or None if indexed)
 SET_MAX = 8  # a join of more addresses becomes base + bounded offset (IDX)
 
 
@@ -112,6 +113,17 @@ def _addrs(v):
     if isinstance(v, tuple) and v[0] == SET:
         return set(v[1])
     return None
+
+
+def _gaddr(b, w: int):
+    """The image address a load/store `op rt, imm(base)` names when base holds an address or a %hi."""
+    if isinstance(b, int) and b > 0x10000:
+        g = (b + mips.imm(w)) & 0xFFFFFFFF
+    elif isinstance(b, tuple) and b[0] == HI:
+        g = (b[1] + mips.imm(w)) & 0xFFFFFFFF
+    else:
+        return None
+    return g if BLOB_START <= g < IMAGE_END else None
 
 
 def gpr_writes(w: int) -> set[int]:
@@ -253,7 +265,7 @@ def back_edges(kind: str, n: int, k: int) -> int:
 
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
-            read_word=None, cases: bool = True):
+            read_word=None, cases: bool = True, ptr_globals: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -316,6 +328,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             hi = max(a[0] + a[1], b[0] + b[1]) - base
             # a pointer walking a table (p = D; ... p += 0x2c in a loop): base + bounded offset
             return (IDX, base, hi)
+        if isinstance(v, tuple) and isinstance(u, tuple) and v[0] == u[0] == PTR and v[1] == u[1]:
+            return (PTR, v[1], v[2] if v[2] == u[2] else None)  # a walk through the pointer G holds
         x, y = _ub(v), _ub(u)
         if x is not None and y is not None:
             return (UB, max(x, y))
@@ -384,7 +398,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 if a[1] is None or a[1] > hi:
                     st[r] = (IDX, a[0], hi)
             return
-        if -0x10000 < lim < 0x10000 and (cur is None or _ub(cur) is not None
+        if -0x10000 < lim < 0x10000 and (cur is None or _ub(cur) is not None or isinstance(cur, tuple) and cur[0] == PTR
                                           or cases and isinstance(cur, tuple) and cur[0] == ARG):
             # (an argument below a small limit is a number, not a pointer: switch(a0 + 1) and such)
             u = _ub(cur)
@@ -411,6 +425,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st[t] = v if b > 0x10000 or not (b + mips.imm(w)) < 0 else b + mips.imm(w)
             elif isinstance(b, tuple) and b[0] == ARG:
                 st[t] = (ARG, b[1], b[2] + mips.imm(w))
+            elif isinstance(b, tuple) and b[0] == PTR:
+                st[t] = (PTR, b[1], None if b[2] is None else b[2] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == IDX:
                 st[t] = (IDX, b[1], None if b[2] is None else b[2] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == UB:
@@ -440,6 +456,11 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             b = st.get(s)
             if o in (0x2B, 0x3F) and t != 0 and _addrs(st.get(t)):  # sw/sd of an address (or of each one a join holds)
                 ev += [(ins.addr, x, None, 0, "stored") for x in sorted(_addrs(st[t]))]
+                g_ = _gaddr(b, w)
+                if g_ is not None:  # ... into a pointer global G (session 25: followed through G's loads)
+                    ev += [("storedto", x, g_) for x in sorted(_addrs(st[t]))]
+            if isinstance(b, tuple) and b[0] == PTR:
+                ev.append(("ptrmem", b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o]))
             if isinstance(b, int):
                 ev.append((ins.addr, b, mips.imm(w), WIDTH[o], "mem"))
             elif isinstance(b, tuple) and b[0] == SET:
@@ -458,6 +479,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 elif o == 0x23 and read_word and isinstance(b, tuple) and b[0] == HIX and b[2] is not None \
                         and 0 <= b[2] <= 0x400:
                     st[t] = (JT, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2])  # a switch's jump table
+                elif o == 0x23 and ptr_globals and _gaddr(b, w) is not None:
+                    st[t] = (PTR, _gaddr(b, w), 0)  # the pointer a global holds
                 else:
                     st.pop(t, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x21, 0x2D, 0x20, 0x2C, 0x25):  # addu daddu add dadd or
@@ -496,6 +519,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                                                 and -0x10000 < q_ < 0x10000 for p_, q_ in ((x, y), (y, x))):
                 sv, c_ = (x, y) if isinstance(x, tuple) and x[0] == SET else (y, x)
                 st[d] = (SET, frozenset((e_ + c_) & 0xFFFFFFFF for e_ in sv[1]))
+            elif mips.funct(w) != 0x25 and any(isinstance(p_, tuple) and p_[0] == PTR and _idx(q_) is None
+                                                for p_, q_ in ((x, y), (y, x))):
+                pv, other = (x, y) if isinstance(x, tuple) and x[0] == PTR else (y, x)
+                off = pv[2] + other if pv[2] is not None and isinstance(other, int) and -0x10000 < other < 0x10000 \
+                    else None
+                st[d] = (PTR, pv[1], off)
             elif _idx(x) is not None or _idx(y) is not None:
                 a, other = (_idx(x), y) if _idx(x) is not None else (_idx(y), x)
                 u = _ub(other)
@@ -706,18 +735,26 @@ def main() -> int:
                     help="do not read switch jump tables, nor analyse the code after a `jr` nothing branches to")
     ap.add_argument("--no-block-bound", action="store_true",
                     help="&B[i] passed to memcpy/memset/pool init is unbounded even with a known count (session 20)")
+    ap.add_argument("--no-ptr-global", action="store_true",
+                    help="do not follow an address stored into a pointer global through the global's loads "
+                         "(session 25)")
+    ap.add_argument("--no-piece-next", action="store_true",
+                    help="an unbounded index keeps only the next name, even when that name is inside the base's "
+                         "own piece (session 25: then the next name after the piece)")
+    ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
+                    help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
     sizes = {}
-    for ln in (ROOT / "out/gen/data.tsv").read_text().splitlines()[1:]:
+    for ln in a.data_tsv.read_text().splitlines()[1:]:
         f = ln.split("\t")
         sizes[f[1]] = int(f[3], 16) if f[3].startswith("0x") else int(f[3], 16)
     if a.ld:
         pcs = pieces_from_ld(a.ld, sizes)
     else:
         pcs = []
-        for ln in (ROOT / "out/gen/data.tsv").read_text().splitlines()[1:]:
+        for ln in a.data_tsv.read_text().splitlines()[1:]:
             f = ln.split("\t")
             ad = int(f[0], 16)
             pcs.append((ad, ad + int(f[3], 16), f[1], f[1]))
@@ -760,6 +797,9 @@ def main() -> int:
     stored: set[int] = set()  # addresses some function stores to memory
     uncached: dict[int, set] = {}  # address -> functions that build its 0x20000000/0x30000000 alias
     why: dict[int, set] = {}  # indexed base -> the kinds of access that make it one (shown in the log)
+    ptr_stores: dict[int, set] = {}  # pointer global G -> the addresses code stores into it
+    ptr_users: dict[int, set] = {}  # pointer global G -> functions that access through the pointer G holds
+    ptr_reach: dict[int, int | None] = {}  # G -> end of the furthest access through it (None: indexed)
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -779,11 +819,22 @@ def main() -> int:
         for e in analyse(insns, set(x for x in labels if x), args=is_func,
                          countdown=not a.no_countdown, joins=not a.no_join, arg_join=not a.no_arg_join,
                          hi_index=not a.no_hi_index, cases=not a.no_switch,
-                         read_word=read_word if is_func and not a.no_switch else None):
+                         read_word=read_word if is_func and not a.no_switch else None,
+                         ptr_globals=not a.no_ptr_global):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
                 r[0], r[1] = min(r[0], off), max(r[1], off + width)
+                continue
+            if e[0] == "storedto":
+                ptr_stores.setdefault(e[2], set()).add(e[1])
+                continue
+            if e[0] == "ptrmem":
+                _k, g, off, width = e
+                ptr_users.setdefault(g, set()).add(name)
+                end = None if off is None else off + width
+                if g not in ptr_reach or (ptr_reach[g] is not None and (end is None or end > ptr_reach[g])):
+                    ptr_reach[g] = end
                 continue
             if e[0] == "argwide":
                 wide_args.setdefault(fstart, set()).add(e[1])
@@ -826,6 +877,23 @@ def main() -> int:
                     idx.setdefault(base, set()).add(name)
                 continue
             check(name, base, disp, width, kind)
+    # Session 25: an address stored into a pointer global G is reached through every load of G. func_00106ed0
+    # sets D_00494BAC = D_00472190 (chain 1's table, 16-byte ref tags) and func_00107548 indexes the pointer
+    # with a 32-byte stride by a count loaded from room data, so the table runs into chain 2. Each address
+    # stored into G is an indexed base reaching as far as the accesses through G (unbounded when indexed).
+    for g, addrs in sorted(ptr_stores.items()):
+        if g not in ptr_reach:
+            continue
+        for b_ in sorted(addrs):
+            if not (BLOB_START <= b_ < IMAGE_END + 0x10000):
+                continue
+            end = None if ptr_reach[g] is None else b_ + ptr_reach[g]
+            idx_all.setdefault(b_, set()).update(ptr_users[g])
+            why.setdefault(b_, set()).add(f"via-ptr:{g:08x}" if end is None else f"via-ptr-ub:{g:08x}")
+            if b_ not in idx_end or (idx_end[b_] is not None and (end is None or end > idx_end[b_])):
+                idx_end[b_] = end
+            if piece(b_)[0] is not None:
+                idx.setdefault(b_, set()).update(ptr_users[g])
     # Each function's reach from its arguments includes what its callees reach from them.
     reach = {f: {k: list(v) for k, v in d.items()} for f, d in own.items()}
     for _round in range(12):
@@ -893,6 +961,16 @@ def main() -> int:
         if i >= len(anchors):
             continue
         nxt = anchors[i]
+        pb_ = piece(base)[0]
+        if not a.no_piece_next and pb_ is not None and idx_end.get(base, 0) is None and piece(nxt)[0] == pb_:
+            # unbounded, and the next name is inside the base's own piece (a merged piece, a bss run):
+            # the access can run past the piece, into the first name after it (session 25)
+            while i < len(anchors) and piece(anchors[i])[0] == pb_:
+                i += 1
+            if i >= len(anchors):
+                continue
+            nxt = anchors[i]
+            why.setdefault(base, set()).add("piece-next")
         pn, nn = piece(nxt)
         if a.no_bounds is False and idx_end.get(base) is not None and idx_end[base] <= nxt:
             bounded.append((base, nxt, idx_end[base]))
