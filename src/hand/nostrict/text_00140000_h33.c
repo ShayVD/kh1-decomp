@@ -962,3 +962,4 @@ s32 func_00141540(O1468 *o, s32 x) {
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_003085D8.h"

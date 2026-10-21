@@ -11,7 +11,7 @@
 	PIECE_END D_003DABCC, 0x4
 	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[] */
 	PIECE D_003DABD4, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD4 | Tbl *D_003DABD4 | s32 D_003DABD4 */
-	PIECE D_003DABD8, 0x68, 8  /* untyped: element size does not divide the extent */
+	PIECE D_003DABD8, 0x68, 8  /* data/pieces/D_003DABD8.h */
 	PIECE D_003DAC40, 0x60, 16
 	PIECE D_003DACA0, 0x10, 16  /* untyped: users disagree: Tbl *D_003DACA0 | s32 D_003DACA0 */
 	PIECE D_003DACB0, 0x4, 4

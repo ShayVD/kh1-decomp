@@ -17,7 +17,7 @@
 	PIECE D_003F27D0, 0x400, 16  /* untyped: users disagree: Q D_003F27D0[] | u8 D_003F27D0[]; unparsed in 1 file(s) */
 	PIECE D_003F2BD0, 0x4, 4
 	PIECE D_003F2BD4, 0x4, 4
-	PIECE D_003F2BD8, 0x68, 8  /* untyped: element size does not divide the extent */
+	PIECE D_003F2BD8, 0x68, 8  /* data/pieces/D_003F2BD8.h */
 	PIECE D_003F2C40, 0x10, 16  /* untyped: users disagree: E20 D_003F2C40[] | M2C_UNK D_003F2C40 | S2C40 D_003F2C40[] | s8 D_003F2C40 */
 	PIECE D_003F2C50, 0x4, 4
 	PIECE D_003F2C54, 0x258, 4
@@ -1106,7 +1106,7 @@
 	.word func_0022eef8
 	PIECE_BYTES D_003F78B0, 0x4, 0x24
 	PIECE_END D_003F78B0, 0x28
-	PIECE D_003F78D8, 0x108, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_003F78D8, 0x108, 8  /* data/pieces/D_003F78D8.h */
 	PIECE_BEGIN D_003F79E0, 0x30, 16
 	.word func_0022fcb8
 	PIECE_BYTES D_003F79E0, 0x4, 0x2c

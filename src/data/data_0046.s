@@ -123,7 +123,7 @@
 	PIECE_LABEL D_0046A688, D_0046A6A4, 0x1c
 	.word func_0024e078
 	PIECE_END D_0046A688, 0x20
-	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* data/pieces/D_0046A6A8.h */
 	.word func_0024e088
 	PIECE_END D_0046A6A8, 0x4
 	PIECE D_0046A6AC, 0x4, 4

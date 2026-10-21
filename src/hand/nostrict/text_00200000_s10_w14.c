@@ -303,3 +303,4 @@ void func_00200648(Wnd *o, s32 type, s32 px, s32 py, s32 pw, s32 *cols) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
+#include "data/pieces/D_003F2BD8.h"

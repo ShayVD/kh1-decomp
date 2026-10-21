@@ -556,3 +556,4 @@ s32 func_001dde08(VM *vm) {
 #include "data/data_003D.h"
 #include "data/pieces/D_00389C90.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003DABD8.h"
