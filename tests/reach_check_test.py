@@ -95,6 +95,15 @@ mems = lambda ev: sorted(e[1] + e[2] for e in ev if len(e) == 5 and e[4] == "mem
 assert mems(run(sw_, read_word=words.get)) == [0x00400010, 0x00400030], mems(run(sw_, read_word=words.get))
 assert mems(run(sw_)) == [], mems(run(sw_))
 
+# 8. counter-cap (session 27): i = 0; v0 = 0; do { lw a1,0(&D + v0); i++; } while (i < 12) with
+# v0 = i << 2 in the back branch's delay slot (func_00219870): the index ends at +44, not unbounded
+S2, S3 = 18, 19
+cnt = [lui(S3, 0x003F), addiu(S2, 0, 0), addiu(S3, S3, 0x4818), sll(V0, S2, 2),
+       addu(A0, V0, S3), addiu(S2, S2, 1), lw(A1, A0, 0), slti(V1, S2, 12), bne(V1, 0, -5), sll(V0, S2, 2),
+       JR_RA, NOP]
+assert idx_end(run(cnt), 0x003F4818) == 44, idx_end(run(cnt), 0x003F4818)
+assert idx_end(run(cnt, counter_cap=False), 0x003F4818) is None
+
 # 7. dead-arg (session 27): f(a0) passes a0 on to g and calls h; a1 is never read before it is written,
 # a2 only on one path, a3 by a movz that may keep it; an unknown jal reads every argument register
 def jal(t): return (0x03 << 26) | ((t >> 2) & 0x3FFFFFF)

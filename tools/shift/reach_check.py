@@ -144,7 +144,7 @@ def gpr_writes(w: int) -> set[int]:
     return set()
 
 
-def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
+def countdown_loops(insns: list[mips.Insn], counters: bool = False) -> dict[int, tuple]:
     """Single-back-edge loops whose trip count a decrementing counter caps (session 21):
 
         li v1,N; loop: ...; addiu v1,v1,-k; sq $0,0(v0); bgtz v1,loop; addiu v0,v0,16
@@ -155,7 +155,9 @@ def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
     pointer p is written once, by `addiu p,p,s` (s > 0). Exits are free. Also an up-counter
     `addiu i,i,k; slti t,i,L; bne t,$0` from an exact start i0: it is taken as a countdown of
     L - i0. Returns {header index: (back-branch index, c, k, kind, {p: s}, L or None)}; kind says how
-    many times the back edge can be taken for a counter that enters at most N (see back_edges)."""
+    many times the back edge can be taken for a counter that enters at most N (see back_edges).
+    With counters=True (session 27) an up-counter loop is listed even when it walks no pointer: its
+    counter itself is capped at the header (analyse's counter-cap)."""
     n = len(insns)
     a0 = insns[0].addr if n else 0
     out = {}
@@ -241,7 +243,7 @@ def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
             y = insns[js[0]].word
             if mips.op(y) in (0x09, 0x19) and mips.rs(y) == r and mips.rt(y) == r and 0 < mips.imm(y):
                 ps[r] = mips.imm(y)
-        if ps:
+        if ps or (counters and lim is not None):
             out.setdefault(h, (b, c, k, kind, ps, lim))
     return out
 
@@ -265,7 +267,8 @@ def back_edges(kind: str, n: int, k: int) -> int:
 
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
-            read_word=None, cases: bool = True, ptr_globals: bool = True):
+            read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
+            slot_refine: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -298,7 +301,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     seen_out = set()
     grow: dict[tuple, int] = {}
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
-    loops = countdown_loops(insns) if countdown else {}
+    loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
     loop_entry: dict[int, dict] = {}  # loop header -> joined state of the edges that enter the loop
     loop_heads = set()  # targets of a backward branch or jump
     for j_, x_ in enumerate(insns):
@@ -347,6 +350,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return None
         return (IDX, a[0], a[1] + ps[k] * back_edges(kind, nmax, step_))
 
+    def counter_value(i):
+        """Session 27 (counter-cap): an up-counter `i = i0; do { ...; i += k; } while (i < L)` at its
+        header i is at most max(i0, L - 1), or max(i0, L - 1 + k) when the test sees i before the step:
+        the back edge is taken only when the test passed. Without it the counter's bound widened away
+        (0, 1, 2, then unbounded) before the test could cap it, and so did every index made from it."""
+        b, c, step_, kind, ps, lim = loops[i]
+        i0 = loop_entry.get(i, {}).get(c)
+        if lim is None or not (isinstance(i0, int) and -0x10000 < i0 < 0x10000):
+            return None
+        return (UB, max(i0, lim - 1 + (step_ if kind == "gtz-slot" else 0)))
+
     def merge(i, st, src=None):
         if not (0 <= i < n):
             return
@@ -365,6 +379,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             v = old.get(k)
             if lp is not None and k in lp[4] and (cap := loop_value(i, k)) is not None:
                 new[k] = cap  # the counter bounds the walk: no widening
+                continue
+            if counter_cap and lp is not None and k == lp[1] and (cap := counter_value(i)) is not None:
+                new[k] = cap  # the up-counter itself (session 27)
                 continue
             j = join(i, k, v, st.get(k))
             if j is None:
@@ -640,7 +657,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             cond = None
             if mips.op(w) in (0x04, 0x05, 0x14, 0x15) and (mips.rt(w) == 0) != (mips.rs(w) == 0):
                 cond = (mips.rs(w) or mips.rt(w), mips.op(w) in (0x05, 0x15))  # (t, branch-if-nonzero)
-            if i + 1 < n:
+            # session 27 (slot-refine): a branch's test refines the state before its delay slot, so a
+            # slot that scales the counter (`bne v1,$0,loop; sll v0,s2,2`) sees the capped counter
+            edge_first = slot_refine and ins.is_branch and cond is not None and i + 1 < n
+            if i + 1 < n and not edge_first:  # (with edge_first each edge steps the slot itself)
                 st_d = dict(st)
                 ev += step(insns[i + 1], st_d)
             else:
@@ -654,6 +674,16 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 for r in CALLER_SAVED:
                     st_d.pop(r, None)
                 merge(i + 2, st_d)
+            elif ins.is_branch and edge_first:
+                st_t = dict(st)
+                refine(st_t, cond, True)
+                ev += step(insns[i + 1], st_t)
+                merge(index(ins.branch_target), st_t, src=i)
+                st_f = dict(st)
+                refine(st_f, cond, False)
+                if not likely:
+                    ev += step(insns[i + 1], st_f)
+                merge(i + 2, st_f)
             elif ins.is_branch:
                 st_t = dict(st_d)
                 if cond and cond[0] in st and st.get(cond[0]) == st_d.get(cond[0]):
@@ -874,6 +904,10 @@ def main() -> int:
     ap.add_argument("--no-piece-next", action="store_true",
                     help="an unbounded index keeps only the next name, even when that name is inside the base's "
                          "own piece (session 25: then the next name after the piece)")
+    ap.add_argument("--no-counter-cap", action="store_true",
+                    help="do not cap an up-counter (i = i0; ... i += k; while (i < L)) at its loop header (session 27)")
+    ap.add_argument("--no-slot-refine", action="store_true",
+                    help="refine a branch's edges after its delay slot, not before (session 27)")
     ap.add_argument("--no-dead-arg", action="store_true",
                     help="an address left in an argument register at a call is passed even when the callee never "
                          "reads that register (session 27)")
@@ -963,7 +997,8 @@ def main() -> int:
                          countdown=not a.no_countdown, joins=not a.no_join, arg_join=not a.no_arg_join,
                          hi_index=not a.no_hi_index, cases=not a.no_switch,
                          read_word=read_word if is_func and not a.no_switch else None,
-                         ptr_globals=not a.no_ptr_global):
+                         ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
+                         slot_refine=not a.no_slot_refine):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
