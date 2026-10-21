@@ -35,7 +35,7 @@ void func_002016b0(Wnd *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;
@@ -102,7 +102,7 @@ void func_00201988(Wnd *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;
@@ -169,7 +169,7 @@ void func_00201c60(Wnd *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;

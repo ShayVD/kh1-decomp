@@ -244,6 +244,42 @@ def float_align(addr: int) -> int:
     return min(addr & -addr, 64)
 
 
+COMPACT_ALIGN = 64  # --float-compact: holes shrink by multiples of a cache line, so every kept name keeps its
+                    # offset in its cache line (DMA, SIF and cache-range code rely on it, as float_align says)
+
+
+def compact_holes(ranges: list[tuple[int, int]], align: int) -> list[tuple[int, int, int]]:
+    """--float-compact: (start, end, shrink) per run of contiguous floated ranges; shrink is the
+    largest multiple of align that fits (the rest of the hole stays, so alignment holds)."""
+    out: list[list[int]] = []
+    for lo, hi in sorted(ranges):
+        if out and lo == out[-1][1]:
+            out[-1][1] = hi
+        else:
+            out.append([lo, hi])
+    return [(lo, hi, (hi - lo) // align * align) for lo, hi in out if (hi - lo) >= align]
+
+
+class CompactMap:
+    """Original address -> how far --float-compact moved it down (the shrinks of the holes before it)."""
+
+    def __init__(self, holes: list[tuple[int, int, int]]):
+        self.holes = sorted(holes)
+        self.ends = [h[1] for h in self.holes]
+        self.cum = [0]
+        for h in self.holes:
+            self.cum.append(self.cum[-1] + h[2])
+
+    def shift(self, addr: int) -> int:
+        i = bisect.bisect_right(self.ends, addr)  # holes that end at or before addr
+        if i < len(self.holes) and self.holes[i][0] < addr < self.holes[i][1]:
+            raise ValueError(f"0x{addr:08x} is inside a compacted hole")
+        return self.cum[i]
+
+    def total(self) -> int:
+        return self.cum[-1]
+
+
 def collect_variables(elves) -> list[Placed]:
     """Variables C defines (out/gen/data.tsv): .data.<name> sections at their original
     address, with the region ('data' or 'bss') kept in Placed.section's suffix."""
@@ -386,6 +422,8 @@ def cmd_gen(a) -> int:
     data_vars = [v for v in variables if v.region == "data"]
     bss_vars = [v for v in variables if v.region == "bss"]
     floating = set()
+    if a.float_compact and not a.float_vars:
+        sys.exit("error: --float-compact needs --float-vars")
     if a.float_vars:
         if a.mode == "m0":
             sys.exit("error: --float-vars needs a moved mode: floated variables are not at their original address")
@@ -437,7 +475,8 @@ def cmd_gen(a) -> int:
     defined: dict[str, tuple[int | None, str]] = {}
     undefined: dict[str, str] = {}
     all_objs = list(dict.fromkeys(objects_mk_objs() + asm_objs + list(drafts.values())))
-    hook_objs = [rel(a.ovl_hook)] if a.ovl_hook else []  # its references (D_ names) need definitions too
+    # the hook's and the fixup table's references (D_ names) need definitions too
+    hook_objs = [rel(o) for o in (a.ovl_hook, a.ovl_fixups) if o]
     for obj in all_objs + hook_objs:
         e = elves(obj)
         for s in e.symbols():
@@ -469,7 +508,7 @@ def cmd_gen(a) -> int:
     kinds = {"label": 0, "alias": 0, "data": 0, "bss": 0, "abs": 0}
     expected: list[tuple[int, str, str]] = []
     for name in sorted(undefined):
-        if name in script_defined:
+        if name in script_defined or name.startswith("__dr_"):  # __dr_ labels: data relocations, --ovl-labels
             continue
         if name in alias_names:  # defined by the alias file; still checked by the M0 verifier
             addr = name_address(K.LIBCALL_ALIASES.get(name, name), registry)
@@ -753,13 +792,36 @@ def cmd_gen(a) -> int:
             chunk += 1
             cur = upto
 
+    # --float-compact: each run of contiguous floated data slots shrinks by a multiple of
+    # COMPACT_ALIGN, taken from its last slots first; everything after it moves down as much.
+    data_cut: dict[str, int] = {}
+    dmap = bmap = None
+    if a.float_compact:
+        fl_prim = [r for r in primary if r.name in floating]
+        dholes = compact_holes([(r.addr, r.addr + r.size) for r in fl_prim], COMPACT_ALIGN)
+        dmap = CompactMap(dholes)
+        for lo, hi, cut in dholes:
+            for r in reversed([r for r in fl_prim if lo <= r.addr < hi]):
+                take = min(cut, r.size)
+                if take:
+                    data_cut[r.name] = take
+                cut -= take
+        big = [r for r in primary if r.name not in floating and r.align > COMPACT_ALIGN]
+        if big and dmap.total():
+            print(f"error: --float-compact: {big[0].section} is {big[0].align}-aligned, more than "
+                  f"{COMPACT_ALIGN}", file=sys.stderr)
+            return 1
     for r in primary:
         emit_chunk(r.addr)
         if r.addr % r.align:
             print(f"error: {r.section} at 0x{r.addr:08x} is not {r.align}-aligned", file=sys.stderr)
             return 1
         if r.name in floating:  # its old place stays a zero gap; the variable goes after the blob
-            data.append(f"    . += 0x{r.size:x};  /* {r.name} floated */")
+            cut = data_cut.get(r.name, 0)  # --float-compact: the part of the gap given back
+            if r.size > cut:
+                data.append(f"    . += 0x{r.size - cut:x};  /* {r.name} floated */")
+            if cut:
+                data.append(f"    /* {r.name} floated: 0x{cut:x} bytes of its slot given back (--float-compact) */")
             cur = r.addr + r.size
             continue
         data.append(f"    KEEP({r.obj}({r.section}))  /* 0x{r.addr:08x} */")
@@ -831,19 +893,49 @@ def cmd_gen(a) -> int:
             bss_tail.append(f"    KEEP({v.obj}({v.section}))  /* was 0x{v.addr:08x} */")
         if a.float_bss_pad:  # zeroed by crt0 with the rest of .bss: float_pads.py reports non-zero bytes
             bss_tail += [f"    __fpad_{r[-1].name} = .;", f"    . += 0x{a.float_bss_pad:x};"]
+    if a.float_compact:  # the floated runs' original slots, as for the data above
+        bss_fl = [(r[0].addr, r[-1].addr + r[-1].size) for r in bss_runs if r[0].name in floating]
+        bmap = CompactMap(compact_holes(bss_fl, COMPACT_ALIGN))
+        big = [v for v in bss_vars if v.name not in floating and v.align > COMPACT_ALIGN]
+        if big and bmap.total():
+            print(f"error: --float-compact: {big[0].section} is {big[0].align}-aligned, more than "
+                  f"{COMPACT_ALIGN}", file=sys.stderr)
+            return 1
+    boff = (lambda addr: addr - bss_start - bmap.shift(addr)) if bmap else (lambda addr: addr - bss_start)
     for v in bss_vars:
         if v.name in floating:
             continue
-        bss_lines.append(f"    . = D_BSS + 0x{v.addr - bss_start:x};")
+        bss_lines.append(f"    . = D_BSS + 0x{boff(v.addr):x};")
         bss_lines.append(f"    KEEP({v.obj}({v.section}))  /* 0x{v.addr:08x} */")
         expected.append((v.addr, "bss", v.name))
     if bss_tail:
         # crt0 clears .bss up to D_00675018 and starts the heap there: it must be the new _end
         tail = [("D_00675018 = _end;  /* heap start: after the floated bss variables */"
                  if t.startswith("D_00675018 = ") else t) for t in tail]
-        bss_tail = [f"    . = D_BSS + 0x{image_end - bss_start:x};", "    . = ALIGN(16);"] + \
+        bss_tail = [f"    . = D_BSS + 0x{boff(image_end):x};", "    . = ALIGN(16);"] + \
                    ([f"    . += 0x{a.float_bss_gap:x};  /* --float-bss-gap experiment */"] if a.float_bss_gap else []) + \
                    ["    __float_bss_start = .;"] + bss_tail
+    if a.float_compact:
+        # Every `D_BLOB + off` / `D_BSS +- off` (names, merged rodata copies, blob words) names
+        # an original address outside the floated slots: subtract what the holes before it gave back.
+        def compact_ref(sym: str, sign: str, off: int) -> str:
+            v = off if sign == "+" else -off
+            if sym == "D_BLOB":
+                v -= dmap.shift(blob_start + v)
+            else:
+                v -= bmap.shift(bss_start + v)
+            return f"{sym}{'+' if v >= 0 else '-'}0x{abs(v):x}"
+        ref_re = re.compile(r"(D_BLOB|D_BSS) ?([+-]) ?0x([0-9a-f]+)")
+        sub = lambda t: ref_re.sub(lambda m: compact_ref(m.group(1), m.group(2), int(m.group(3), 16)), t)
+        tail = [sub(t) for t in tail]
+        rodup = [sub(t) for t in rodup]
+        blob_s = [sub(t) if t.startswith("\t.word D_") else t for t in blob_s]
+        write(out_dir / "compact.tsv", "region\tstart\tend\tshrink\n" + "".join(
+            f"{k}\t{lo:08x}\t{hi:08x}\t0x{c:x}\n" for k, m in (("data", dmap), ("bss", bmap)) for lo, hi, c in m.holes))
+        print(f"shift-ld: --float-compact: 0x{dmap.total():x} data bytes ({len(dmap.holes)} holes) and "
+              f"0x{bmap.total():x} bss bytes ({len(bmap.holes)} holes) of floated slots given back")
+    elif (out_dir / "compact.tsv").exists():
+        (out_dir / "compact.tsv").unlink()
     out = [
         "/* Auto-generated by tools/shift/shift_ld.py: link script of the shiftable",
         " * build (docs/shiftable-plan.md). No PROVIDE: every name is defined here",
@@ -862,7 +954,7 @@ def cmd_gen(a) -> int:
         *([f"    . += 0x{a.bss_pad:x};  /* --bss-pad experiment */"] if a.bss_pad else []),
         "    D_BSS = .;",
         *bss_lines,
-        f"    . = D_BSS + 0x{image_end - bss_start:x};  /* .bss and the .reginfo slot up to the heap */",
+        f"    . = D_BSS + 0x{boff(image_end):x};  /* .bss and the .reginfo slot up to the heap */",
         *bss_tail,
         "    _end = .;",
         "  }",
@@ -991,6 +1083,9 @@ def main() -> int:
                    help="--float-vars: N bytes after the floated data (moves .bss up without floating more; experiment)")
     g.add_argument("--float-bss-gap", type=lambda x: int(x, 0), default=0, metavar="N",
                    help="--float-vars: N bytes between the original .bss end and the floated bss (experiment)")
+    g.add_argument("--float-compact", action="store_true",
+                   help="--float-vars: give the floated variables' original slots back (in multiples of 64 bytes), "
+                        "so the kept data and bss close up; writes compact.tsv for shift_cmp.py")
     g.add_argument("--fixed-arena", action="store_true",
                    help="moved modes: keep the fixed pools at 0x6A0000/0x720000 even when crt0's heap reaches them")
     g.add_argument("--fixed-heap", action="store_true",

@@ -413,7 +413,7 @@ void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {
 /*Q*/
     if (key->b15) {
         sceVu0UnitMatrix(D_00615E68->m2);
-        func_00267e40(D_00615E68->m2[3], D_003701D0);
+        func_00267e40(D_00615E68->m2[3], (*(f32 (*)[4])&D_003701D0));
         sceVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m2);
         p.p20 = D_00615E68->m2;
     } else {

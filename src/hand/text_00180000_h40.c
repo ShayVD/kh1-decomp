@@ -482,7 +482,7 @@ void pppRyjDrawMatrixWorldWoodCon(PppObject *obj, PppEntry *e) {
     PppQv u, v, c;
     f32 *w = PPP_WORK(f32, obj, e, 1);
 
-    func_002675a8(w, D_003701D0);
+    func_002675a8(w, (*(f32 (*)[4])&D_003701D0));
     func_002675a8(w + 4, D_003701F0);
     v.f[0] = D_00615FC0[1].f[0];
     v.f[1] = D_00615FC0[1].f[1];

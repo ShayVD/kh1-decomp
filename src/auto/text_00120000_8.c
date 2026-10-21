@@ -266,7 +266,7 @@ void func_00122c70(void) {
     s32 var_a1;
 
     var_a1 = 0x1E;
-    var_a0 = ((M2C_UNK *)&D_002C5C80);
+    var_a0 = &D_002C5C80;
     do {
         if (M2C_FIELD(var_a0, s32 *, 0) != 0) {
             temp_v0 = M2C_FIELD(var_a0, s32 *, 4);

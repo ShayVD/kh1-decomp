@@ -23,12 +23,12 @@ void func_00111830(void) {
     s32 temp_v0;
 
     D_002BBE1C = 1;
-    temp_a0 = M2C_FIELD(((void *)D_002BCB60), s32 *, 0x40);
+    temp_a0 = M2C_FIELD(D_002BCB60, s32 *, 0x40);
     D_002BC128 = temp_a0;
-    temp_v0 = M2C_FIELD(((void *)D_002BCB60), s32 *, 0x44);
+    temp_v0 = M2C_FIELD(D_002BCB60, s32 *, 0x44);
     D_002BC130 = temp_v0;
     D_002BC134 = func_00111660(temp_a0, temp_v0);
-    D_002BCDA8 = M2C_FIELD(((void *)D_002BCB60), s32 *, 0x48);
+    D_002BCDA8 = M2C_FIELD(D_002BCB60, s32 *, 0x48);
 }
 
 void func_00112b18(void) {

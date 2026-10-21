@@ -37,7 +37,7 @@ void func_00122c08(void) {
     s8 *var_s0;
     s32 var_s1;
 
-    var_s0 = ((M2C_UNK *)&D_002C5C80);
+    var_s0 = &D_002C5C80;
     var_s1 = 0x1E;
     do {
         if ((M2C_FIELD(var_s0, s32 *, 0) != 0) && (M2C_FIELD(var_s0, s32 *, 4) & 8)) {

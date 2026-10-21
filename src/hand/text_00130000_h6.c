@@ -339,26 +339,9 @@ typedef struct {
     f32 v10[4];
 } W6Cmd;
 
-typedef struct {
-    u8 x0;
-    u8 x1;
-    u8 x2;
-    u8 x3;
-    u8 pad04[0x38 - 0x4];
-    u16 h38;
-    u8 pad3a[0x74 - 0x3A];
-} W6SEnt;
+#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 W6SEnt;
 
-typedef struct {
-    u8 pad000[4];
-    W6SEnt ent[10];
-    u8 pad48c[0x492 - 0x48C];
-    u8 b492[8];
-    u8 pad49a[0x7D8 - 0x49A];
-    u16 cnt[51];
-    u8 pad83e[0x880 - 0x83E];
-    u8 b880;
-} W6Save;
 
 typedef struct {
     u8 pad00[0x40];
@@ -369,7 +352,6 @@ typedef struct {
 } W6Info;
 
 extern f32 D_002BBDFC;
-#include "data/pieces/D_00304BE8.h"
 
 void func_001247e8(W6Fade *o);
 void func_001dce90(s32 a);
@@ -577,7 +559,7 @@ s32 func_001331d8(s32 i, s32 j, void (*cb)(void)) {
     } else {
         c->x18 = (s32)cb;
         c->x0 = j;
-        ((W6Save *)D_00304BE8)->b492[i] = j;
+        D_00304BE8->b492[i] = j;
         r = func_00120748(D_003041E4[i][j][0], c->x8, func_001330e8, 0);
     }
     return r;
@@ -845,8 +827,8 @@ void func_00138870(W6Unit *u) {
         func_001586a8(7);
     }
     if (k < 51) {
-        if (((W6Save *)D_00304BE8)->cnt[k] < 9999) {
-            ((W6Save *)D_00304BE8)->cnt[k]++;
+        if (D_00304BE8->cnt[k] < 9999) {
+            D_00304BE8->cnt[k]++;
         }
     }
 }
@@ -897,7 +879,7 @@ void func_00139c28(W6Unit *u, W6Kind *k) {
 }
 
 s32 func_0013aa60(void) {
-    if (!((D_00304B78 >> 3) & 1)) {
+    if (!(((*(u32 *)&D_00304B78) >> 3) & 1)) {
         return 1;
     }
     return D_00304B7C <= 0.0f;
@@ -925,7 +907,7 @@ s32 func_0013b8f0(void) {
     }
     func_0013a810();
     D_002C5958 &= ~0x2000;
-    D_00304B78 = 0;
+    (*(u32 *)&D_00304B78) = 0;
     return 1;
 }
 s32 func_0013b958(u16 *p) {
@@ -942,9 +924,9 @@ void func_0013bf20(void) {
 
 void func_0013bf90(s32 on) {
     if (on) {
-        ((W6Save *)D_00304BE8)->b880 = 1;
+        D_00304BE8->f880 = 1;
     } else {
-        ((W6Save *)D_00304BE8)->b880 = 0;
+        D_00304BE8->f880 = 0;
     }
 }
 
@@ -953,12 +935,12 @@ void func_0013c078(void) {
     W6SEnt *e;
     s32 i;
     for (i = 0; i < 10; i++) {
-        e = &((W6Save *)D_00304BE8)->ent[i];
+        e = &D_00304BE8->m[i];
         func_00141b10(i, &info);
-        e->x1 = info.b40;
-        if (e->x3 < info.w48) {
-            e->h38 = 0;
-            e->x3 = info.w48;
+        e->sub.x1 = info.b40;
+        if (e->sub.x3 < info.w48) {
+            e->sub.x38 = 0;
+            e->sub.x3 = info.w48;
         }
     }
 }

@@ -31,6 +31,6 @@ void func_00246120(s32 arg0, s32 arg1, f32 fparg0) {
         func_00249558((s32) &M2C_FIELD(sp, s32 *, 0x10), (s32) &M2C_FIELD(sp, s32 *, 0x10));
         temp_v0 = M2C_FIELD(sp, s32 *, 0x14) - 0x36;
         M2C_FIELD(sp, s32 *, 0x14) = temp_v0;
-        func_00246038((s32) var_s1, (s32) ((M2C_UNK *)&D_00431D20), M2C_FIELD(sp, s32 *, 0x10), temp_v0, fparg0);
+        func_00246038((s32) var_s1, (s32) &D_00431D20, M2C_FIELD(sp, s32 *, 0x10), temp_v0, fparg0);
     }
 }

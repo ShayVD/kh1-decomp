@@ -219,9 +219,8 @@ typedef struct {
     s32 x3380;
     C2Ent ent[8];
 } C2Big;
-typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 3; u32 b5 : 1; u32 rest : 26; } C2Flags;
-extern C2Big D_00389C90;
 #include "data/pieces/D_0037A378.h"
+extern C2Big D_00389C90;
 
 void func_001c29d8(void) {
     s32 i;
@@ -275,7 +274,7 @@ void func_001c29d8(void) {
         D_00389C90.ent[i].d = 0;
         D_00389C90.ent[i].f = -1;
     }
-    (*(C2Flags *)&D_0037A378).b1 = 0;
-    (*(C2Flags *)&D_0037A378).b5 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b1 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b5 = 0;
 }
 #include "data/data_0037.h"

@@ -288,8 +288,8 @@ CONTEXT_ONLY s32 func_00168618(Obj18 *o, Ent18 *e) {
             if (o->x70 != 8) return 0;
         } else {
             if ((u16)(o->x130->h4C - 1) >= 2) return 0;
-            if (D_002E27C8 >> 8 & 1) func_0014c580(o);
-            else if (D_002E27C8 >> 7 & 1) func_0014c530(o);
+            if ((*(u32 *)&D_002E27C8) >> 8 & 1) func_0014c580(o);
+            else if ((*(u32 *)&D_002E27C8) >> 7 & 1) func_0014c530(o);
             else return 0;
             if (o->x70 != 21) return 0;
         }
@@ -299,7 +299,7 @@ CONTEXT_ONLY s32 func_00168618(Obj18 *o, Ent18 *e) {
         if (e->b8) return 0;
         if (!(D_002C5958 >> 5 & 1)) {
             if ((u16)(o->x130->h4C - 1) >= 2) return 0;
-            if (!(D_002E27C8 >> 8 & 1) && !(D_002E27C8 >> 7 & 1)) return 0;
+            if (!((*(u32 *)&D_002E27C8) >> 8 & 1) && !((*(u32 *)&D_002E27C8) >> 7 & 1)) return 0;
         }
         func_0013dfb8(o, e->x120);
         e->b8 = 1;
@@ -323,8 +323,7 @@ void func_001687d8(void *, void *, s32);
 void func_002673b8(f32 *, f32 *);
 f32 func_00267390(f32 *, f32 *);
 
-typedef struct { u32 b0:6; u32 b6:1; u32 b7:1; u32 b8:1; u32 r:23; } F27C8;
-#define G27C8 (*(F27C8 *)&D_002E27C8)
+#define G27C8 D_002E27C8
 static inline s32 inl_chk(E8D *e) { if ((u16)(e->x130->h4C - 1) >= 2) return 0; if (G27C8.b8) return 1; return G27C8.b7 != 0; }
 
 void func_00168d20(E8D *e, W8D *w) {
@@ -356,7 +355,7 @@ void func_00168d20(E8D *e, W8D *w) {
         func_002673b8(u, u);
         if (!(func_00267390(w->v120, u) > 0.97999996f)) return;
         func_0013dfb8((Obj18 *)e, w->pad100 + 0x20);
-        if (D_002E27C8 >> 6 & 1) W8D_F12C(w) = 30.0f;
+        if ((*(u32 *)&D_002E27C8) >> 6 & 1) W8D_F12C(w) = 30.0f;
         else W8D_F12C(w) = 20.0f;
         return;
     }

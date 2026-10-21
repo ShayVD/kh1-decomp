@@ -73,7 +73,8 @@ s32 func_00103058(void) {
 }
 
 #include "data/types/nostrict_text_00100000_h51.h"
-typedef struct { f32 x, y, z; } Vec3;
+#include "data/pieces/D_002A624C.h"
+typedef Vec3_2a624c Vec3;
 #include "data/types/nostrict_text_00100000_h51_p2.h"
 #include "data/pieces/D_002A6234.h"
 #include "data/pieces/D_002A6308.h"
@@ -110,58 +111,56 @@ s32 func_00104940(Vec3 *v, s32 *out) {
 }
 
 typedef struct { f32 x, y, z, w; } Vec4;
-typedef struct { s16 a, b, c, d; u8 pad8[12]; } Ent20;
 #include "data/pieces/D_002A6238.h"
-#include "data/pieces/D_002A624C.h"
 
 s32 func_00104c38(s32 idx, Vec4 *out) {
-    s32 a = ((Ent20 *)D_002A6238)[idx].a, b = ((Ent20 *)D_002A6238)[idx].b, c = ((Ent20 *)D_002A6238)[idx].c, d = ((Ent20 *)D_002A6238)[idx].d;
+    s32 a = D_002A6238[idx].v[0], b = D_002A6238[idx].v[1], c = D_002A6238[idx].v[2], d = D_002A6238[idx].v[3];
 
     switch (d) {
     case -1:
-            out[0].x = ((Vec3 *)D_002A624C)[a].x;
-            out[0].y = ((Vec3 *)D_002A624C)[a].y;
-            out[0].z = ((Vec3 *)D_002A624C)[a].z;
+            out[0].x = ((Vec3_2a624c *)D_002A624C)[a].x[0];
+            out[0].y = ((Vec3_2a624c *)D_002A624C)[a].x[1];
+            out[0].z = ((Vec3_2a624c *)D_002A624C)[a].x[2];
             out[0].w = 1.0f;
-            out[1].x = ((Vec3 *)D_002A624C)[b].x;
-            out[1].y = ((Vec3 *)D_002A624C)[b].y;
-            out[1].z = ((Vec3 *)D_002A624C)[b].z;
+            out[1].x = ((Vec3_2a624c *)D_002A624C)[b].x[0];
+            out[1].y = ((Vec3_2a624c *)D_002A624C)[b].x[1];
+            out[1].z = ((Vec3_2a624c *)D_002A624C)[b].x[2];
             out[1].w = 1.0f;
-            out[2].x = ((Vec3 *)D_002A624C)[c].x;
-            out[2].y = ((Vec3 *)D_002A624C)[c].y;
-            out[2].z = ((Vec3 *)D_002A624C)[c].z;
+            out[2].x = ((Vec3_2a624c *)D_002A624C)[c].x[0];
+            out[2].y = ((Vec3_2a624c *)D_002A624C)[c].x[1];
+            out[2].z = ((Vec3_2a624c *)D_002A624C)[c].x[2];
             out[2].w = 1.0f;
             return 3;
     case -2:
-            out[0].x = ((Vec3 *)D_002A624C)[c].x;
-            out[0].y = ((Vec3 *)D_002A624C)[c].y;
-            out[0].z = ((Vec3 *)D_002A624C)[c].z;
+            out[0].x = ((Vec3_2a624c *)D_002A624C)[c].x[0];
+            out[0].y = ((Vec3_2a624c *)D_002A624C)[c].x[1];
+            out[0].z = ((Vec3_2a624c *)D_002A624C)[c].x[2];
             out[0].w = 1.0f;
-            out[1].x = ((Vec3 *)D_002A624C)[b].x;
-            out[1].y = ((Vec3 *)D_002A624C)[b].y;
-            out[1].z = ((Vec3 *)D_002A624C)[b].z;
+            out[1].x = ((Vec3_2a624c *)D_002A624C)[b].x[0];
+            out[1].y = ((Vec3_2a624c *)D_002A624C)[b].x[1];
+            out[1].z = ((Vec3_2a624c *)D_002A624C)[b].x[2];
             out[1].w = 1.0f;
-            out[2].x = ((Vec3 *)D_002A624C)[a].x;
-            out[2].y = ((Vec3 *)D_002A624C)[a].y;
-            out[2].z = ((Vec3 *)D_002A624C)[a].z;
+            out[2].x = ((Vec3_2a624c *)D_002A624C)[a].x[0];
+            out[2].y = ((Vec3_2a624c *)D_002A624C)[a].x[1];
+            out[2].z = ((Vec3_2a624c *)D_002A624C)[a].x[2];
             out[2].w = 1.0f;
             return 3;
     default:
-        out[0].x = ((Vec3 *)D_002A624C)[a].x;
-        out[0].y = ((Vec3 *)D_002A624C)[a].y;
-        out[0].z = ((Vec3 *)D_002A624C)[a].z;
+        out[0].x = ((Vec3_2a624c *)D_002A624C)[a].x[0];
+        out[0].y = ((Vec3_2a624c *)D_002A624C)[a].x[1];
+        out[0].z = ((Vec3_2a624c *)D_002A624C)[a].x[2];
         out[0].w = 1.0f;
-        out[1].x = ((Vec3 *)D_002A624C)[b].x;
-        out[1].y = ((Vec3 *)D_002A624C)[b].y;
-        out[1].z = ((Vec3 *)D_002A624C)[b].z;
+        out[1].x = ((Vec3_2a624c *)D_002A624C)[b].x[0];
+        out[1].y = ((Vec3_2a624c *)D_002A624C)[b].x[1];
+        out[1].z = ((Vec3_2a624c *)D_002A624C)[b].x[2];
         out[1].w = 1.0f;
-        out[2].x = ((Vec3 *)D_002A624C)[c].x;
-        out[2].y = ((Vec3 *)D_002A624C)[c].y;
-        out[2].z = ((Vec3 *)D_002A624C)[c].z;
+        out[2].x = ((Vec3_2a624c *)D_002A624C)[c].x[0];
+        out[2].y = ((Vec3_2a624c *)D_002A624C)[c].x[1];
+        out[2].z = ((Vec3_2a624c *)D_002A624C)[c].x[2];
         out[2].w = 1.0f;
-        out[3].x = ((Vec3 *)D_002A624C)[d].x;
-        out[3].y = ((Vec3 *)D_002A624C)[d].y;
-        out[3].z = ((Vec3 *)D_002A624C)[d].z;
+        out[3].x = ((Vec3_2a624c *)D_002A624C)[d].x[0];
+        out[3].y = ((Vec3_2a624c *)D_002A624C)[d].x[1];
+        out[3].z = ((Vec3_2a624c *)D_002A624C)[d].x[2];
         out[3].w = 1.0f;
         return 4;
     }
@@ -184,14 +183,14 @@ void func_001050d0(void) {
 
     D_002A6230 = 0;
     for (i = 0; i < D_002A6294; i++) {
-        Tri20 *t = &D_002A6274[i];
+        Tri20 *t = &(*(Tri20 * *)&D_002A6274)[i];
         if (t->b16.f25 == 1) {
             func_0011d270(t->u12.i, D_002A6230, i, 0);
-            D_002A62F8[D_002A6230++] = D_002A6274[i].u12.h;
+            D_002A62F8[D_002A6230++] = (*(Tri20 * *)&D_002A6274)[i].u12.h;
             func_00104f10(i, &a);
             func_00104eb0(i, &b);
             {f32 r = func_00267390(&a, &b);
-            Tri20 *e = D_002A6274;
+            Tri20 *e = (*(Tri20 * *)&D_002A6274);
             e[i].u12.f = -r;
             e[i].b16.f25 = 0;}
         }

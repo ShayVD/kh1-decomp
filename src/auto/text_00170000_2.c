@@ -57,7 +57,7 @@ s32 func_00176630(void *arg0) {
 }
 
 void func_0017d1e0(void) {
-    if (!(M2C_FIELD(((void *)D_00362438), s32 *, 0x18) & 0x10)) {
+    if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
         D_003626B0 = 1;
     }
 }

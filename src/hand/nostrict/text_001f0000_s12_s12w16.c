@@ -4,9 +4,10 @@
    Sibling of func_001f0148 (same if (*s < 21) switch shape). Mode switch with `case 0: default:` first;
    case 15 uses a GNU case range `case 2 ... 28:`; case 15/0 does `cx += 1440` after the func_00266f38 call;
    header and glyph store order hill-climbed (clb6_s12); `f32 fy, fx;` order gives fy f20. */
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 typedef struct { u64 d0; u64 d1; u64 d2; u64 d3; s32 w[16]; } GP;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F2270.h"
 typedef struct {
     u8 pad0[0x48];
     s32 x48;
@@ -20,13 +21,11 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8E00;
 extern s32 D_003E8D00[];
 extern s32 D_003E8D04[];
 #include "data/pieces/D_003E8E08.h"
 extern s32 D_003F1A64;
-#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 extern u8 D_003F2C54[];
@@ -61,7 +60,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     s32 c, k, r;
     Glyph *g;
 
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+    func_00266f38(func_00266c08(2), &D_003F2270);
     sz16 = sz << 4;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -194,17 +193,17 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 switch (k) {
                 case 0:
                     func_00201460(o, 2, 2, (cx - ox) >> 4, (y - oy) >> 4, 90, ((cx - ox) >> 4) + 45, D_003F2C54, func_001efc10(43));
-                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+                    func_00266f38(func_00266c08(2), &D_003F2270);
                     cx += 1440;
                     break;
                 case 1:
                     func_001fd070(o, (cx - ox) >> 4, (y - oy) >> 4);
                     cx += 576;
-                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+                    func_00266f38(func_00266c08(2), &D_003F2270);
                     break;
                 case 2 ... 28:
                     func_00208280(o, (cx - ox) >> 4, (y - oy) >> 4, 0, k + 25, 128);
-                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+                    func_00266f38(func_00266c08(2), &D_003F2270);
                     cx += 288;
                     break;
                 }
@@ -251,7 +250,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 c = *s - 32;
                 s++;
             }
-            g = &((Glyph *)D_003E8E28)[c];
+            g = &D_003E8E28[c];
             w = g->w << 4;
             f4 = g->f4;
             adv = (w + D_003E8E00) * sz / 18;

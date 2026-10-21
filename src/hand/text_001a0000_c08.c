@@ -217,7 +217,7 @@ typedef struct {
 } Big;
 typedef struct { u64 w[14]; } B112;
 typedef struct { s32 w0; s32 w4; s32 w8; u8 padc[0x34]; s32 a[8]; s32 b[3]; } S5BB0;
-typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 rest:29; } Bits;
+#include "data/pieces/D_0037A378.h"
 
 extern u8 D_00389C90[];
 #define D_00389C90 (*(Big *)&D_00389C90)
@@ -229,7 +229,6 @@ extern u8 D_002C5BB0[];
 extern s32 D_0039A570, D_003A7980;
 extern f32 D_002BBDFC;
 extern s32 D_0037A190;
-#include "data/pieces/D_0037A378.h"
 extern u8 D_002C5958[];
 #define D_002C5958 (*(s32 *)&D_002C5958)
 #include "data/pieces/D_002BBDE0.h"
@@ -274,7 +273,7 @@ s32 func_001c1f80(void) {
     }
     D_0037A190 = 0;
     D_00389C90.x316c = 0;
-    if ((*(Bits *)&D_0037A378).b2) return 0;
+    if ((*(Bits_37a378 *)&D_0037A378).b2) return 0;
     if (D_00389C90.f3078.b.b12 == 1) return 0;
     if (D_00389C90.f3078.b.b13 == 1) return 0;
     k = func_001c1e30();
@@ -360,7 +359,7 @@ s32 func_001c1f80(void) {
             case 2:
                 if (p->x == vm->x0) {
                     vm->fl.x &= ~1;
-                    if ((*(Bits *)&D_0037A378).b0) {
+                    if ((*(Bits_37a378 *)&D_0037A378).b0) {
                         m.type = 3;
                         m.val = 0;
                         m.x = vm->x0;

@@ -1,7 +1,8 @@
 /* func_001f0868: hand/nostrict_nofill (w10 draft unchanged; it was checked in hand/nofill only). Rodata jump table at 0x490a20. */
 #include "common.h"
 
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 typedef struct { u64 a, b; } Q;
 typedef struct {
     u64 d[2];
@@ -11,7 +12,6 @@ typedef struct {
     s32 x40, x44, x48, x4c;
     s32 x50, x54, x58, x5c;
 } Gl;
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 #include "data/pieces/D_003E8E08.h"
 extern s32 D_0063F740;
@@ -151,7 +151,7 @@ Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 
                 k = *str - 32;
                 str++;
             }
-            gl = &((Glyph *)D_003E8E28)[k];
+            gl = &D_003E8E28[k];
             w = gl->w << 4;
             s = w * sc / 18;
             k = (w + func_001efb88()) * sc / 18;

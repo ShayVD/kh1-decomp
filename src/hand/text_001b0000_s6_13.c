@@ -14,7 +14,6 @@ typedef struct {
     s32 x3444;
 } Big;
 extern Big D_00389C90;
-typedef struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, rest:27; } Bits;
 #include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
 s32 func_001c4788(void *);
@@ -315,21 +314,8 @@ s32 func_001c4788(void *m) {
 }
 
 typedef struct { s32 x0; s32 id; } Obj;
-typedef struct {
-    s32 id;
-    u8 pad4[0x6c];
-    s8 *code;
-    u8 pad74[0x2c];
-    s32 xa0;
-    u8 pada4[0xd8];
-    s32 pc;
-    s32 sp;
-    s32 stk[37];
-    u8 pad218[0x318 - 0x218];
-    s32 x318;
-    u8 pad31c[0x350 - 0x31c];
-} VmE;
 #include "data/pieces/D_0039A580.h"
+typedef VM_39a580 VmE;
 #include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 D_0037A190;
@@ -344,12 +330,12 @@ s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
     s32 n, i;
         if (!((D_00389C90.f3070 >> 59) & 1)) return 0;
     if (a2 < -1) return 0;
-    if ((*(Bits *)&D_0037A378).b2 || (D_002C5958 & 0x12000)) return 0;
+    if ((*(Bits_37a378 *)&D_0037A378).b2 || (D_002C5958 & 0x12000)) return 0;
     if (D_00389C90.x3034 == 0) {
         vm = ((VmE *)&D_0038D170);
         n = D_0039A570;
     } else {
-        vm = ((VmE *)&D_0039A580);
+        vm = &D_0039A580;
         n = D_003A7980;
     }
     for (i = 0; i < n; i++) {

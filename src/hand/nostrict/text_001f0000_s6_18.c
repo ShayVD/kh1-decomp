@@ -1,6 +1,7 @@
 #include "common.h"
 
-typedef struct { u16 code; u16 u; u16 v; u8 w; u8 f7; } Glyph;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 typedef struct {
     u8 pad0[0x48];
     s32 x48;
@@ -22,7 +23,6 @@ typedef struct {
 } GSpr;
 typedef struct { u64 h[12]; GSpr g; } Pkt;
 extern s32 D_003E8E00;
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 #include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
@@ -52,7 +52,7 @@ void func_001fade0(Txt9 *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     s32 gu, gv, ww, z;
     u64 tex;
     s32 k = 22;
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(1024, 128);
     p = (Pkt *)(buf + 2);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -70,12 +70,12 @@ void func_001fade0(Txt9 *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     p->h[10] = 0x50AB400000008001;
     z = 0x100000;
     p->h[11] = 0x4343E;
-    gl = &((Glyph *)D_003E8E28)[idx];
+    gl = &D_003E8E28[idx];
     ox = o->xb0;
     Y = o->xb4 + (y << 4);
-    gu = gl->u;
+    gu = gl->f2;
     w = gl->w << 4;
-    gv = gl->v;
+    gv = gl->f4;
     X = ox + (x << 4);
     ww = w + D_003E8E00;
     a = w * sz / 18;
@@ -126,7 +126,7 @@ s32 func_001fc330(Txt9 *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s
     s32 one, z;
     s32 cx, cy, nx, ny, nx2, ny2;
     f32 fx, fy, sx, sy;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -217,7 +217,7 @@ s32 func_001fc750(Txt9 *o, s32 x, s32 y, SprPrm *pr) {
     s32 X, Y, W, H, al;
     s32 cx, cy;
     f32 fx, fy, sx, sy;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -382,7 +382,7 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
     Spr *t;
     s32 X, Y, W, H;
     func_001f8270();
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);

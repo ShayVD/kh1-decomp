@@ -894,3 +894,19 @@ found that the next session needs:
 - **Phase 4** (worker s26types): 143 of the 145 "users disagree" pieces typed (casts at the uses, unions of the
   users' views, or value conversions); D_002E26A0 and D_003044D8 need code changes. The `-S` check now ignores
   local label numbers (`S26_STRICT=1` for the exact check). Helpers in tools/shift/s26types/.
+
+## Session 27: what changed
+
+- **Floated slots are given back** (`SHIFT_FLOAT_COMPACT=1`, the default; docs/shiftable-plan.md "Session 27"):
+  each run of floated slots shrinks by a multiple of 64 bytes, and D_BLOB/D_BSS+offset references go through
+  the piecewise map in compact.tsv. A floated name no longer costs its old slot, so the pools and the block heap
+  are back at 0x6A0000 / 0x820000. `SHIFT_FLOAT_COMPACT=0` builds the old layout (output in the `-holes` dir).
+- **reach_check has seven more rules** (dead-arg, counter-cap, slot-refine, str-arg, list-arg, dma-count,
+  dma-chain; each has a `--no-*` switch for SHIFT_REACH_FLAGS) and `--explain FILE`. It pins 1,347 names (was
+  1,803), and 2,051 names float by default (KH1_F27_R12 boots the usual route).
+- **Watch for end pointers**: code that uses the next name's address as a table's end (the actor table
+  D_002C64A0 / D_002E26A0) breaks when the table floats; nothing checks for it yet. Symptom: Donald and Goofy
+  missing after loading save 06.
+- **Phase 4** (worker s27types): 43 more pieces folded, 745 of 1,541 view casts removed (tools/shift/s27types/).
+- PCSX2: System > Save State > Save To File needs the menu opened with a click before each submenu step
+  (one click per batch step, with a wait); keys typed while the game window has focus go to the game.

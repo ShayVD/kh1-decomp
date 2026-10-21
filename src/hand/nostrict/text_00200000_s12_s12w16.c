@@ -55,7 +55,7 @@ void func_00208458(Wnd *o, s32 x, s32 y, u32 col, s32 n) {
     s32 cx, cy;
     f32 sx, sy, fcx, fcy;
 
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1536, 128);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
     x90 = o->x90;

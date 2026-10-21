@@ -15,7 +15,7 @@ s32 func_0011e340(M2C_UNK);
 
 void func_001e8728(void) {
     if (func_0011e340(0) == 0) {
-        func_0011e9a8(&func_001e8628, D_003DABD4);
+        func_0011e9a8(&func_001e8628, ((s32)D_003DABD4));
         return;
     }
     func_0011ef10(0xC352, &func_001e86e8);

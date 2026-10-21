@@ -4,7 +4,7 @@
 typedef struct { f32 min[3]; f32 max[3]; u16 n; u16 ids[1]; } Node368;
 typedef struct { f32 v[4]; } V4q;
 typedef struct { V4q lo[3]; V4q hi[3]; } Box368;
-typedef struct { u8 pad[0x10]; s32 fl; } Tri368;
+#include "data/pieces/D_002A6238.h"
 typedef struct { u8 pad[0x18]; u16 cnt; } Out368;
 extern s32 D_002C12C4;
 extern s32 D_004E0428[];
@@ -21,7 +21,6 @@ void (*D_002BD1A8[11])(s32, s32 *) = {
 };
 #include "data/pieces/D_002C1260.h"
 #include "data/pieces/D_002A6244.h"
-#include "data/pieces/D_002A6238.h"
 s32 func_00115d58(void);
 void func_001158c8(Out368 *);
 
@@ -59,14 +58,14 @@ void func_00116368(Out368 *o, s32 k) {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &((Tri368 *)D_002A6238)[id].fl;
+                    fl = &D_002A6238[id].f;
                     if (!(*fl & 1)) f1(id, fl);
                 }
             } else {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &((Tri368 *)D_002A6238)[id].fl;
+                    fl = &D_002A6238[id].f;
                     if (!(*fl & 1)) f2(id, fl);
                 }
             }

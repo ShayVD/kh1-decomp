@@ -55,7 +55,7 @@ void func_00203028(Wnd *o, s32 x0, s32 y, s32 x1, s32 c) {
     f32 sx, sy, fcx, fcy;
     s32 X0, Y0, X1, Y2, X4, X5;
     if (o->d8 < 2) return;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(2048, 128);
     h = (Q *)buf + 1;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;

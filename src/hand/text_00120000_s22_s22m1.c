@@ -1,7 +1,7 @@
 /* func_00125240: MATCHED (session 22, s22m1), hand. From s20m1's 3w draft (natural body, FP constants pinned: 10000.0f in $f0, -10000.0f in $f2, 1.0f in $f3). New: `f32 *q = &D_002E27A4;` at the top with the store written `*q = x;`. The 27A4 HIGH now gets the low LUID from the declaration (combine folds the LO_SUM into the swc1), independent of where the store sits, so sched1 issues it before the D_004F77E0 HIGH and local-alloc still gives it a0; then pclimb_s15 over the body order (1 -> 0). FLAGGED: three local register variables (without them 8w). */
 #include "common.h"
-typedef struct { f32 x, y, z, w; } V4f;
 #include "data/pieces/D_002E2780.h"
+typedef V3_2e2780 V4f;
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_002E27A4.h"
 extern f32 D_004F77E0;
@@ -11,7 +11,7 @@ void func_001251a0(void);
 void func_0011ef10(s32, void (*)(void));
 void func_0017f510(void);
 void func_00125240(void) {
-    V4f *p = ((V4f *)&D_002E2780);
+    V4f *p = ((V3_2e2780 *)&D_002E2780);
     f32 y, x;
     register f32 k asm("$f0");
     register f32 m asm("$f2");

@@ -5,7 +5,7 @@
    the loop (its own pseudo, v0); neg block statement order hill-climbed. */
 typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
 typedef struct { u64 d0; u64 d1; s32 w[16]; } GP;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F2270.h"
 typedef struct {
     u8 pad0[0x48];
     s32 x48;
@@ -23,7 +23,6 @@ extern Glyph *D_003E8CD0;
 extern Glyph *D_003E8CD8[];
 extern s32 D_003E8D00[];
 extern s32 D_003E8E04;
-#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 u64 *func_00122048(s32, s32);
@@ -59,7 +58,7 @@ void func_001fb428(Txt9 *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s3
     s32 x0, x1, y1;
     f32 fa, fb, t0, t1, t2, t3;
 
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+    func_00266f38(func_00266c08(2), &D_003F2270);
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;

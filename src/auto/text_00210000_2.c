@@ -20,7 +20,7 @@ void func_00211718(void) {
 }
 
 void func_00219320(s32 arg0) {
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 8) = arg0;
+    M2C_FIELD(D_003F34B8, s32 *, 8) = arg0;
 }
 
 s32 func_00219330(void) {

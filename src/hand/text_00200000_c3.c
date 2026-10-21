@@ -6,9 +6,8 @@ typedef struct {
     s8 c40[8]; s32 x48; s32 x4c; s32 x50; u8 pad54[0x60 - 0x54]; u64 x60, x68;
     f32 x70; s32 x74; s32 x78; u8 pad7c[4]; Mtx9 x80; f32 (*xc0)[4]; u8 padc4[0xd0 - 0xc4];
 } E9;
-typedef struct { u8 pad[0x48e]; u8 x48e[11]; } G9;
+#include "data/pieces/D_00304BE8_s.h"
 extern E9 D_003F3530[];
-#include "data/pieces/D_00304BE8.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 #include "data/pieces/D_00425CE0.h"
@@ -68,7 +67,7 @@ void func_0020a248(s32 idx) {
         func_00121e28(e->x74 << 6, &e->xc0);
         m = func_001623e0(e->x14) + e->x78;
         func_001625c8(m, &e->x80);
-        if (((G9 *)D_00304BE8)->x48e[idx] == 2) {
+        if (D_00304BE8->x48e[idx] == 2) {
             if (D_002BC128 == 9 || (D_002BC128 == 16 && D_002BC130 == 21)) fl = 1;
         }
         for (i = 0; i < e->x74; i++) {

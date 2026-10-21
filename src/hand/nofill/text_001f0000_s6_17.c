@@ -1,6 +1,7 @@
 #include "common.h"
 
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 typedef struct { u64 a, b; } Q;
 typedef struct {
     u64 d[2];
@@ -9,7 +10,6 @@ typedef struct {
     s32 x30, x34, x38, x3c;
     s32 x40, x44, x48, x4c;
 } Pg;
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 extern s32 D_0063F740;
 extern s32 D_0063F74C;
@@ -38,7 +38,7 @@ CONTEXT_ONLY void func_001efb98(s32 arg0) { D_003E8E04 = arg0; }
 CONTEXT_ONLY s32 func_001efba8(void) { return D_003E8E04; }
 CONTEXT_ONLY s32 func_001eff50(s32 a) {
     s32 i;
-    Glyph *e = ((Glyph *)D_003E8E28);
+    Glyph *e = D_003E8E28;
     for (i = 0; i < D_003E8E2C; i++, e++) {
         if (e->code == a) return i;
     }
@@ -56,7 +56,7 @@ CONTEXT_ONLY s32 func_001f0340(u8 *p, s32 scale) {
         if (k == 0x4081) {
             x += (scale << 8) / d;
         } else {
-            Glyph *g = &((Glyph *)D_003E8E28)[func_001eff50(k)];
+            Glyph *g = &D_003E8E28[func_001eff50(k)];
             x += ((g->w << 4) + func_001efb88()) * scale / d;
         }
     }
@@ -112,7 +112,7 @@ Q *func_001f0ea8(Q *pk, s32 a1, s32 mode, u32 a3, s32 x, s32 y, u8 *str, s32 sc)
             cx += (sc << 8) / 18;
             continue;
         }
-        gl = &((Glyph *)D_003E8E28)[func_001eff50(c)];
+        gl = &D_003E8E28[func_001eff50(c)];
         w = gl->w << 4;
         s = w * sc / 18;
         c = (w + func_001efb88()) * sc / 18;
@@ -208,7 +208,7 @@ Q *func_001f12c0(Q *p, s32 a1, u32 a2, s32 x, s32 y, u8 *str, s32 sc) {
 /*P*/
         k = D_003E8D40[c - 32];
         g = (Pg *)p;
-        gl = &((Glyph *)D_003E8E28)[k];
+        gl = &D_003E8E28[k];
         f7 = gl->f7;
         w = gl->w << 4;
         f4 = gl->f4;

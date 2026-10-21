@@ -73,7 +73,7 @@ void func_001113f8(s32 arg0) {
         func_00111340(D_002E26A0, 0);
     }
     var_a0 = 1;
-    var_v1 = D_002BCB60 + 0x2C;
+    var_v1 = ((s32)D_002BCB60) + 0x2C;
     var_v0 = (arg0 << 6) + ((s32)D_002BCDA0) + 0x2C;
     do {
         var_a0 -= 1;
@@ -91,10 +91,10 @@ void func_00111590(s32 arg0, void *arg1) {
     s32 temp_a0;
 
     temp_a0 = arg0 * 0x10;
-    M2C_FIELD(arg1, f32 *, 0) = (f32) M2C_FIELD((temp_a0 + D_002BCB60), f32 *, 0x10);
-    M2C_FIELD(arg1, f32 *, 4) = (f32) M2C_FIELD((temp_a0 + D_002BCB60), f32 *, 0x14);
-    M2C_FIELD(arg1, f32 *, 8) = (f32) M2C_FIELD((temp_a0 + D_002BCB60), f32 *, 0x18);
-    M2C_FIELD(arg1, f32 *, 0xC) = (f32) M2C_FIELD((temp_a0 + D_002BCB60), f32 *, 0x1C);
+    M2C_FIELD(arg1, f32 *, 0) = (f32) M2C_FIELD((temp_a0 + ((s32)D_002BCB60)), f32 *, 0x10);
+    M2C_FIELD(arg1, f32 *, 4) = (f32) M2C_FIELD((temp_a0 + ((s32)D_002BCB60)), f32 *, 0x14);
+    M2C_FIELD(arg1, f32 *, 8) = (f32) M2C_FIELD((temp_a0 + ((s32)D_002BCB60)), f32 *, 0x18);
+    M2C_FIELD(arg1, f32 *, 0xC) = (f32) M2C_FIELD((temp_a0 + ((s32)D_002BCB60)), f32 *, 0x1C);
 }
 
 void func_00111ca8(void) {

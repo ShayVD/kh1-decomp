@@ -277,7 +277,7 @@ void func_0014cee8(Obj57_cee8 *o, f32 *v) {
     if (o->flags & 0x1000) {
         o->f3b0 = o->f3b8 = 0.0f;
         o->f3b4 = o->f14;
-        func_002675a8(v, D_002C58A0);
+        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
     } else {
         if (o->f2c > 0.0f) {
             d = func_00120c18(o->v3c0);

@@ -178,7 +178,9 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # (&B[i] passed to memcpy/memset is unbounded), --no-hi-index (ignore D[i] as lui + addu + %lo) and
 # --no-switch (no jump tables, no case code) (session 21; docs/shiftable-plan.md), --no-ptr-global (an
 # address stored into a pointer global is not followed through the global's loads) and --no-piece-next
-# (an unbounded index keeps the next name even inside its own piece) (session 25). keep_check.py then
+# (an unbounded index keeps the next name even inside its own piece) (session 25), --no-dead-arg,
+# --no-counter-cap, --no-slot-refine, --no-str-arg, --no-list-arg, --no-dma-count and --no-dma-chain
+# (session 27). keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=
@@ -209,6 +211,10 @@ SHIFT_FLOAT_DATA_GAP ?= 0
 # SHIFT_FLOAT_BSS_SLOTS="names" or @FILE: only the bss runs holding these names move, each to the address it has
 # when every run floats (the other runs stay in place and leave their slot empty). Bisects a bss float by address.
 SHIFT_FLOAT_BSS_SLOTS ?=
+# SHIFT_FLOAT_COMPACT (with SHIFT_FLOAT=1): the floated variables' original slots are given back (shift_ld
+# --float-compact, in multiples of 64 bytes), so the kept data and bss close up and crt0's heap, the fixed pools
+# and the block heap get that room (docs/shiftable-plan.md "Session 27"). 0 keeps the holes (output gets -holes).
+SHIFT_FLOAT_COMPACT ?= 1
 # SHIFT_FIXED_ARENA=1: keep the fixed pools at 0x6A0000/0x720000 (moved modes move them after crt0's
 # heap when _end + 0xA000 reaches 0x6A0000; shift_ld ARENA_POOLS, docs/shiftable-plan.md "Session 25").
 SHIFT_FIXED_ARENA ?= 0
@@ -222,7 +228,7 @@ SHIFT_OVERLAYS   ?= out/overlays
 SHIFT_OVL_TIER   ?= 2
 SHIFT_OVL_FIXUPS ?= 1
 SHIFT_PY      := $(PY) -I
-SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE)$(if $(filter 1,$(SHIFT_DRAFTS)),-drafts)$(if $(filter 1,$(SHIFT_FLOAT)),-float)$(if $(filter-out 0x1000,$(SHIFT_DATA_SHIFT)),-ds$(SHIFT_DATA_SHIFT)))
+SHIFT_OUT      = $(if $(filter m0,$(SHIFT_MODE)),$(SHIFT),$(SHIFT)/$(SHIFT_MODE)$(if $(filter 1,$(SHIFT_DRAFTS)),-drafts)$(if $(filter 1,$(SHIFT_FLOAT)),-float$(if $(filter 1,$(SHIFT_FLOAT_COMPACT)),,-holes))$(if $(filter-out 0x1000,$(SHIFT_DATA_SHIFT)),-ds$(SHIFT_DATA_SHIFT)))
 ASFLAGS_SHIFT  = $(shell $(KH1) config toolchain.asflags)
 
 shift: $(PATCHED)
@@ -271,7 +277,7 @@ endif
 		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)$(SHIFT_FLOAT_FORCE)" ]; \
 		if [ -n "$(SHIFT_FLOAT_FORCE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt $(SHIFT_FLOAT_FORCE); fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FIXED_HEAP)),--fixed-heap) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FIXED_HEAP)),--fixed-heap) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars $(if $(filter 1,$(SHIFT_FLOAT_COMPACT)),--float-compact) --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s

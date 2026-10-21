@@ -177,15 +177,7 @@ typedef struct {
     u8 x70;
     u8 pad71[0x74 - 0x71];
 } W32SEnt;
-typedef struct {
-    u8 pad000[4];
-    W32SEnt ent[10];
-    u8 pad48c[0x492 - 0x48C];
-    u8 b492[8];
-    u8 pad49a[0x874 - 0x49A];
-    s32 x874;
-} W32Save;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 s32 func_001331d8(s32 i, s32 j, void (*cb)(void));
 void func_00133550(void);
 typedef struct {
@@ -198,7 +190,7 @@ void func_00133578(void (*cb)(s32)) {
     s32 n = 0;
     s32 j;
     for (i = 0; i < 7; i++) {
-        j = ((W32Save *)D_00304BE8)->b492[i];
+        j = D_00304BE8->b492[i];
         if (j > 0) {
             if (func_001331d8(i, j, 0) >= 0) n++;
         }
@@ -332,7 +324,7 @@ s32 func_00136bc0(W32Job *j) {
     if ((s32)(o->u370.x >> 33) & 1) return 4;
     o->u370.x &= ~(1ULL << 35);
     o->x1c = 1.0f;
-    func_00120ef0(o->x110, ((u8 *)&D_002E2700), o->xd0[3]);
+    func_00120ef0(o->x110, &D_002E2700, o->xd0[3]);
     o->x11c = 1.0f;
         if (((s32)(o->u370.x >> 34) & 1) && o->x154 != 0 && !((D_002C5958 >> 6) & 1)) {
         func_00135d38(o);
@@ -580,7 +572,7 @@ void func_001399a8(W32Act *o, W32Hit *h) {
     u32 f = h->x2c->x40;
     if (h->x8 < 0 && (f & 0x400000)) {
         f32 t;
-        func_00267530(v, D_002C58A0, o->x30);
+        func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), o->x30);
         t = (f32)-h->x8 * (*(W32Prm **)&D_00308CDC)->x28;
                 v[3] = (t < (*(W32Prm **)&D_00308CDC)->x2c ? t : (*(W32Prm **)&D_00308CDC)->x2c) * o->x6c->xc4;
         func_00156260(o, v);
@@ -758,7 +750,7 @@ void func_0013bd08(void) {
         func_00133708();
         func_00100ab0();
     }
-    g = &D_00304B78;
+    g = ((u32 *)&D_00304B78);
     *f &= ~0x2000;
     *f &= ~0x4000;
     *f &= ~0x100000;
@@ -823,7 +815,7 @@ void func_00139a90(W32Act *o, W32Hit *h) {
         func_00267560(o->x3c0, o->x30, (-(*(W32Prm **)&D_00308CDC)->x34 < t ? t : -(*(W32Prm **)&D_00308CDC)->x34) * o->x6c->xc4);
         return;
     }
-    func_002675a8(o->x3c0, D_002C58A0);
+    func_002675a8(o->x3c0, (*(f32 (*)[0x4])&D_002C58A0));
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */

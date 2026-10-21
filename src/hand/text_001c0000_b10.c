@@ -68,7 +68,7 @@ typedef struct {
 
 /* Camera state: channels 0-3 (pos, rot, ...) with Hermite moves, plus shake. */
 
-typedef struct { u32 b0:1, b1:1, b2:1, b3:1, rest:28; } Bits;
+#include "data/pieces/D_0037A378.h"
 
 typedef struct {
     u8 pad[0x10];
@@ -95,7 +95,6 @@ extern Big D_00389C90;
 #include "data/pieces/D_003C21A8.h"
 extern u32 D_003C39A8;
 extern s8 *D_003C39AC;
-#include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
 extern s32 D_002C5958;
@@ -163,16 +162,16 @@ void func_001c4198(s8 *h, s32 a1)
   D_00389C90.x3054 = D_00389C90.x304c;
   D_00389C90.x3064 = D_00389C90.x305c;
   D_00389C90.x3068 = D_00389C90.x3060;
-  D_003C39A8 = ((u32)D_00389C80);
+  D_003C39A8 = D_00389C80;
   for (i = 0; i < ((u32)D_00389C80); i++)
   {
     D_003C21A8[i] = D_00388480[i];
   }
 
-  (*(Bits *)&D_0037A378).b0 = 0;
-  (*(Bits *)&D_0037A378).b1 = 0;
-  (*(Bits *)&D_0037A378).b2 = 0;
-  (*(Bits *)&D_0037A378).b3 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b0 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b1 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b2 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b3 = 0;
   D_003C39AC = h;
   D_00389C90.x3148 = -1;
   D_00389C90.f314c = 1.0f;
@@ -240,7 +239,7 @@ void func_001c4198(s8 *h, s32 a1)
 
   }
 
-  func_001c2d20(q, ((u32 *)&D_00389C80), D_00388480);
+  func_001c2d20(q, &D_00389C80, D_00388480);
   e = ((VM *)&D_003C3A70);
   cnt = &D_003C54F0;
   for (i = 0; i < (*cnt); i++, e++)
@@ -514,7 +513,7 @@ s32 func_001d2c68(VM *vm) {
     Vec v;
     Msg m;
     f32 a, t, r, s, dx, dz;
-    if ((*(Bits *)&D_0037A378).b0) {
+    if ((*(Bits_37a378 *)&D_0037A378).b0) {
         m.type = 3;
         m.id = 0;
         m.x4 = vm->x0;
@@ -579,20 +578,20 @@ s32 func_001cb120(VM *vm) {
         n = D_002BBAB0 = e->b1;
         D_002BBAC8 = e->s;
         switch (func_00147840(n)->b2) {
-        case 0: D_00388480[((u32)D_00389C80)] = D_003C5660; break;
-        case 12: D_00388480[((u32)D_00389C80)] = D_003C5680; break;
-        case 13: D_00388480[((u32)D_00389C80)] = D_003C56A0; break;
-        case 2: D_00388480[((u32)D_00389C80)] = D_003C5750; break;
-        case 3: D_00388480[((u32)D_00389C80)] = D_003C5780; break;
-        case 4: D_00388480[((u32)D_00389C80)] = D_003C57B0; break;
-        case 1: D_00388480[((u32)D_00389C80)] = D_003C5728; break;
+        case 0: D_00388480[D_00389C80] = D_003C5660; break;
+        case 12: D_00388480[D_00389C80] = D_003C5680; break;
+        case 13: D_00388480[D_00389C80] = D_003C56A0; break;
+        case 2: D_00388480[D_00389C80] = D_003C5750; break;
+        case 3: D_00388480[D_00389C80] = D_003C5780; break;
+        case 4: D_00388480[D_00389C80] = D_003C57B0; break;
+        case 1: D_00388480[D_00389C80] = D_003C5728; break;
         }
         break;
     case 1:
         if (e->s == 11) {
             D_002BBAB8 = e->b1;
             D_002BBAC8 = e->s;
-            D_00388480[((u32)D_00389C80)] = D_003C56F0;
+            D_00388480[D_00389C80] = D_003C56F0;
             if (!((sv->xdc4 >> 4) & 1)) {
                 sv->xdc4 |= 0x10;
                 func_0011ef10(50000, func_001caa50);
@@ -600,11 +599,11 @@ s32 func_001cb120(VM *vm) {
         } else {
             D_002BBAB8 = e->b1;
             D_002BBAC8 = e->s;
-            D_00388480[((u32)D_00389C80)] = D_003C56C0;
+            D_00388480[D_00389C80] = D_003C56C0;
         }
         break;
     }
-    { u16 v = ((u32)D_00389C80); n = D_00389C90.cnt[k]++; D_00389C90.h10[k][n] = v; }
+    { u16 v = D_00389C80; n = D_00389C90.cnt[k]++; D_00389C90.h10[k][n] = v; }
     vm->sp -= 2;
     return 2;
 }

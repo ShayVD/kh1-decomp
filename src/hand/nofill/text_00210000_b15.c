@@ -1,9 +1,8 @@
 #include "common.h"
 
 /* needs make: uses rodata */
-typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
-typedef struct { u8 pad[0x24]; f32 x24[3]; } Ob3;
 #include "data/pieces/D_00425BC8.h"
+typedef struct { u8 pad[0x24]; f32 x24[3]; } Ob3;
 extern s32 D_003F76BC;
 extern s32 D_003F7628[];
 s32 func_001f42b8(void *);
@@ -27,7 +26,7 @@ void func_0022dfd8(Ob3 *a) {
 
     f32 f;
     if (func_001f42b8(a)) {
-        u32 fl = ((Cfg *)D_00425BC8)->x8;
+        u32 fl = D_00425BC8->x8;
         if (fl & 8) {
             D_003F76BC = 0;
             func_001f3840(a);

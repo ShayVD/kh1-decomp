@@ -101,7 +101,7 @@ void func_00143660(Ch *a, f32 *dir, Ch *b, f32 *out) {
                 return;
             }
         }
-        func_002675a8(out, D_002C58B0);
+        func_002675a8(out, (*(f32 (*)[0x4])&D_002C58B0));
     } else if (!func_001425d0(b)) {
         fa = a->p130->f18;
         fb = b->p130->f18;

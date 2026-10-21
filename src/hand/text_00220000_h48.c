@@ -63,7 +63,7 @@ void func_002295a0(s32 arg0, s32 arg1) {
     }
     func_0011d768(6);
     r = func_0020d030();
-    D_003F34C4 = r;
+    D_003F34C4 = (N_3f34c4 *)r;
     if (r != 0) {
         func_00229490(r);
     }
@@ -458,11 +458,11 @@ void func_002319d0(void) {
     }
 }
 
-typedef struct { u16 id; u8 b2, n, flag, b5; } E7C48;
+#include "data/pieces/D_003F7C48.h"
+typedef T7C48_3f7c48 E7C48;
 typedef struct { u16 idx; u16 amt; } E7A70;
 extern s32 D_00647660;
 extern s32 D_0064765C;
-#include "data/pieces/D_003F7C48.h"
 #include "data/pieces/D_003F7A70.h"
 void func_001ec2c0(s32, s32);
 
@@ -483,7 +483,7 @@ void func_00231b98(void) {
             func_001ec2c0(*k, 1);
         }
         ((S4BE8 *)D_00304BE8)->a[*p]++;
-        c = &((E7C48 *)&D_003F7C48)[*k];
+        c = &((T7C48_3f7c48 *)&D_003F7C48)[*k];
         n = c->n;
         l = &((E7A70 *)&D_003F7A70)[c->b2];
         for (; n > 0; n--) {
@@ -497,7 +497,7 @@ void func_00231b98(void) {
 
 
 void func_00231cd0(s32 arg0) {
-    E7C48 *c = &((E7C48 *)&D_003F7C48)[D_0064765C];
+    E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[D_0064765C];
     E7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[D_0064765C] != 0) {
@@ -521,7 +521,7 @@ void func_00231cd0(s32 arg0) {
 
 
 s32 func_00231dd0(s32 k) {
-    E7C48 *c = &((E7C48 *)&D_003F7C48)[k];
+    E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[k];
     E7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[k] != 0) {

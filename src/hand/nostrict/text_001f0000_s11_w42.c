@@ -3,7 +3,7 @@
 
 typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
 typedef struct { u64 d0; u64 d1; s32 w[16]; } GP;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F1E70.h"
 typedef struct {
     u8 pad0[0x48];
     s32 x48;
@@ -21,7 +21,6 @@ extern Glyph *D_003E8CD0;
 extern Glyph *D_003E8CD8[];
 extern s32 D_003E8D00[];
 extern s32 D_003E8E04;
-#include "data/pieces/D_003F1E70.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 u64 *func_00122048(s32, s32);
@@ -59,7 +58,7 @@ s32 func_001fbcd8(Txt9 *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s32
     s32 gh, gw;
     s32 x3, y3, u3;
 
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1E70));
+    func_00266f38(func_00266c08(2), &D_003F1E70);
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;

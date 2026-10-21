@@ -53,7 +53,7 @@ void func_002040f8(Wnd *o) {
     f32 f, sx, sy;
     if (o->cc == 0) return;
     if (!(o->ce < o->cc)) return;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;

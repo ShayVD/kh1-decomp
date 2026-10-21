@@ -3,13 +3,13 @@
 /* func_00104ae0 (session 7, w6): the face pointer is built from a local
  * copy of the table base (`base` first, so its lui is scheduled first),
  * and the two counts are separate returns (li v0,3 hoisted). */
-typedef struct { s16 v[4]; u8 pad[12]; } Face;
-#include "data/types/text_00100000_s7_w6.h"
 #include "data/pieces/D_002A6238.h"
+typedef Ent20_2a6238 Face;
+#include "data/types/text_00100000_s7_w6.h"
 #include "data/pieces/D_002A624C.h"
 
 s32 func_00104ae0(s32 i, f32 *o) {
-    u32 base = (u32)((Face *)D_002A6238);
+    u32 base = (u32)D_002A6238;
     Face *f = (Face *)(i * 20 + base);
     s32 a = f->v[0], b = f->v[1], c = f->v[2], d = f->v[3];
     o[0] = D_002A624C[a].x;

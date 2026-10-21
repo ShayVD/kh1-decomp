@@ -1,8 +1,9 @@
 #include "common.h"
 /* func_001fa8b0 (hand/nostrict_nogcse): s9 w6 12w draft + `cm = c - 32; k = D_003E8D40[cm];` and a FLAGGED dead FP test `if ((f32)cm < (f32)n) a = 0;` after `x40 = xx + a;` (cm read in a later block -> global, so local-alloc no longer gives the c-32 chain v0; flow2 deletes the test). checkfile MATCH. */
 
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
+#include "data/pieces/D_003F2270.h"
 typedef struct { u64 d0; u64 d1; s32 w[16]; } GP;
 typedef struct {
     u8 pad0[0x48];
@@ -17,12 +18,10 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 extern s32 D_003E8E00;
 extern s32 D_003F1A64;
 extern u16 D_003E8D40[];
-#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 
@@ -60,7 +59,7 @@ void func_001fa8b0(Txt9 *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
 
 
 
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+    func_00266f38(func_00266c08(2), &D_003F2270);
     x16 = x * 16;
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
@@ -112,7 +111,7 @@ void func_001fa8b0(Txt9 *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
 /*P*/
         cm = c - 32;
         k = D_003E8D40[cm];
-        g = &((Glyph *)D_003E8E28)[k];
+        g = &D_003E8E28[k];
         f2 = g->f2;
         w = g->w << 4;
         ww = w + D_003E8E00;

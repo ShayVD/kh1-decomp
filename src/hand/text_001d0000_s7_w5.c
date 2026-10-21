@@ -17,8 +17,8 @@ s32 func_001db658(VM *vm) {
     Sub *s = &vm->u.s;
     s32 i = vm->u.h.sp;
     s32 j;
-    for (j = 0; j < ((ChrB *)((u8 *)D_00304BE8))[s->stk[i - 1]].n; j++) {
-        u8 *p = (u8 *)((u32)(j + s->stk[i - 1] * 0x74) + (u32)((u8 *)D_00304BE8)) + 29;
+    for (j = 0; j < ((ChrB *)D_00304BE8)[s->stk[i - 1]].n; j++) {
+        u8 *p = (u8 *)((u32)(j + s->stk[i - 1] * 0x74) + (u32)D_00304BE8) + 29;
         if (*p == 0) { *p = s->stk[i]; break; }
         
     }

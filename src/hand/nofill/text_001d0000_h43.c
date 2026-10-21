@@ -163,7 +163,7 @@ s32 func_001d5168(VM *vm) {
     for (i = 0; i < n; i++, p++) {
         if (p->key == vm->stk[vm->sp]) p->val = 0;
     }
-    p = D_0039A580;
+    p = ((KEnt *)&D_0039A580);
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
         if (p->key == vm->stk[vm->sp]) p->val = 0;
@@ -180,7 +180,7 @@ s32 func_001d58c8(VM *vm) {
     for (i = 0; i < n; i++, p++) {
         if (p->key == (s32)D_00389C90.f3158) p->val = 0;
     }
-    p = D_0039A580;
+    p = ((KEnt *)&D_0039A580);
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
         if (p->key == (s32)D_00389C90.f3158) p->val = 0;

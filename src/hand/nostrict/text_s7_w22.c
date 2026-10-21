@@ -1,9 +1,9 @@
 #include "common.h"
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F1A70.h"
+typedef Q_3f1a70 Q;
 typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x68-0x4c]; u32 *x68; u8 pad6c[0x74-0x6c]; f32 sx, sy; u8 pad7c[0x88-0x7c]; s32 x88; u8 pad8c[0x90-0x8c]; s32 x90; u8 pad94[0xb0-0x94]; s32 xb0, xb4; s16 xb8, xba; } Wnd4;
 typedef struct { u64 rgba, q; s32 x, y, z, f; } V3;
 typedef struct { u64 h[6]; V3 v[12]; } Pk4;
-#include "data/pieces/D_003F1A70.h"
 #include "data/pieces/D_003E8E30.h"
 extern s32 D_003F1A68;
 #include "data/pieces/D_003F27D0.h"
@@ -26,7 +26,7 @@ void func_001f4778(Wnd4 *o) {
     s32 bx, by, w, h, cx, cy;
     f32 fx, fy, sx, sy;
     s32 X, X128, Xw, X32, X160, Xw32, Y, Y128, Yh, Y32, Y160, Yh32;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     if (o->x88 & 0x10) {
         func_00266f38(func_00266c08(2), D_003F27D0);
     }

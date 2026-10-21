@@ -103,7 +103,7 @@ void func_00122cf0(void) {
     s32 var_v1;
 
     var_v1 = 0x1E;
-    var_v0 = ((M2C_UNK *)&D_002C5C80);
+    var_v0 = &D_002C5C80;
     do {
         var_v1 -= 1;
         M2C_FIELD(var_v0, s32 *, 0) = 0;

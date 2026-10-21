@@ -198,7 +198,7 @@ void func_00158ad0(s32 arg0) {
 
 void func_001593f8(s32 arg0, s32 arg1, s32 arg2) {
     if (D_002E3190 == 1) {
-        func_00159178(arg0, 0x3C, (s32) ((M2C_UNK *)&D_002E31B0), arg2);
+        func_00159178(arg0, 0x3C, (s32) &D_002E31B0, arg2);
     }
 }
 

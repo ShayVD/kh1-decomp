@@ -4,7 +4,8 @@
 #include "platform/math.h"
 
 #include "data/types/nostrict_text_00150000_h58_p.h"
-typedef struct { s32 a, b; } P8;
+#include "data/pieces/D_002E31B0.h"
+typedef S31b0_2e31b0 P8;
 typedef struct {
     u32 w0; s32 w4; s32 w8; s32 wC; s32 x10; f32 f14; s32 x18; f32 f1c; s32 x20; u8 pad24[0xc]; V4 v30; f32 f40; f32 f44; s32 x48; s32 x4c;
 } S144;
@@ -40,7 +41,6 @@ void func_00145008(void *, s32);
 s32 func_001532c8(Msg *);
 void func_00152598(void *);
 void func_001525f0(void *);
-#include "data/pieces/D_002E31B0.h"
 s32 func_0012cc38(s32, s32);
 void func_0012ec60(s32, s32, void *);
 void func_00130340(void *, s32, f32);
@@ -154,16 +154,16 @@ s32 func_00153668(Act *a, S98 *b, s32 c) {
         func_0014f658(a, 4);
         break;
     case 29:
-        func_00153c50(b, (*(P8 *)&D_002E31B0).a);
+        func_00153c50(b, D_002E31B0.f0);
         break;
     case 30:
         func_00130340(b, 0x10000bb, 8.0f);
         func_00130578(b, 0x40000000, 0.0f);
-        a->x74 = (*(P8 *)&D_002E31B0);
+        a->x74 = D_002E31B0;
         func_00152dc8(a, 2);
-        if (a->x74.a) {
+        if (a->x74.f0) {
             *(u64 *)&a->x144->w0 |= 2;
-            func_0012ec60(a->x74.a, a->x74.b, &a->x144->v30);
+            func_0012ec60(a->x74.f0, a->x74.f4, &a->x144->v30);
         }
         func_00152688(a, b, a->x130->x4c == 0xcc ? 20 : 17);
         break;
@@ -355,7 +355,7 @@ void func_001568e8(B4A68 *e, f32 *out) {
     f32 t;
     s32 r;
     f32 f;
-    func_002675a8(out, D_002C58B0);
+    func_002675a8(out, (*(f32 (*)[0x4])&D_002C58B0));
     if (!D_00551600) return;
     if ((D_002C5958 >> 15) & 1) return;
     if ((D_002C5978 >> 13) & 1) return;
@@ -462,7 +462,7 @@ s32 func_00158780(s32 k) {
     Act *p = D_002E26A0[0];
     R478c8 *r = func_001478c8(D_00351A30.p2[k].b);
     s32 i;
-    f32 f = func_0012ed88(p, ((P8 *)&D_002E31B0), &m, &d);
+    f32 f = func_0012ed88(p, &D_002E31B0, &m, &d);
     if (r->xe <= f) return 0;
     switch (D_00351A30.p2[k].b) {
     case 75:
@@ -496,8 +496,8 @@ void func_00158960(void) {
     if ((D_002E31A8 >> 1) & 1) return;
     if (D_002E26A0[0]->x70) return;
     if (D_00351A48 != 5) return;
-    if (!func_00122ff8((Act *)(*(P8 *)&D_002E31B0).a)) return;
-    if (((s32)(((Act *)(*(P8 *)&D_002E31B0).a)->x370 >> 37) & 3) != 2) return;
+    if (!func_00122ff8((Act *)D_002E31B0.f0)) return;
+    if (((s32)(((Act *)D_002E31B0.f0)->x370 >> 37) & 3) != 2) return;
     best = 0;
     bk = -1;
     for (i = 0; i < 5; i++) {

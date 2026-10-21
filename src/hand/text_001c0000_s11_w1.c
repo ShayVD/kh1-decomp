@@ -43,13 +43,12 @@ typedef struct {
     u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, b10:1, b11:1, b12:1, b13:1, b14:1, b15:1, brest:16;
     u8 pad32c[0x24];
 } __attribute__((aligned(8))) VM;
-typedef struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, rest:27; } Bits;
+#include "data/pieces/D_0037A378.h"
 extern Big D_00389C90;
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM *, s32);
-#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
 extern s32 D_002C5950[]; /* D_002C5950[2] is D_002C5958 */
 extern s8 *D_003C39AC;
@@ -79,12 +78,12 @@ void func_001c2ec8(s8 *p, s32 a1) {
     s32 (**fn)(VM *, s32);
     s32 *fl;
     D_003C39AC = p;
-    (*(Bits *)&D_0037A378).b2 = 0;
-    (*(Bits *)&D_0037A378).b3 = 0;
-    (*(Bits *)&D_0037A378).b4 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b2 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b3 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b4 = 0;
     if (a1 == 0) {
         srand(func_001ee200());
-        (*(Bits *)&D_0037A378).b0 = 0;
+        (*(Bits_37a378 *)&D_0037A378).b0 = 0;
         D_002C5958 |= 0xc;
         func_001c29d8();
         D_006277E0 = 0;

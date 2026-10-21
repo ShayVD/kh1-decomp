@@ -40,7 +40,8 @@ typedef struct {
 } Sv;
 typedef Sv SvA80;
 typedef Sv SvAD0;
-typedef struct { void *p; u8 pad[0x34c]; } E848;
+#include "data/pieces/D_003A7990.h"
+typedef E848_3a7990 E848;
 #include "data/types/text_001e0000_h68.h"
 typedef struct { s8 used; u8 pad1[3]; s32 x4; s32 x8; s32 xc; s32 x10; u8 pad[180 - 20]; } Ent180;
 typedef struct { u8 b0; u8 b1; s8 x2; s8 x3; s8 used; u8 pad5[11]; s32 x10; u8 pad[72 - 20]; } Ent72;
@@ -113,7 +114,6 @@ extern u8 D_00630FC8[]; /* src/data/bss_0063.c: char D_00630FC8[0x100] */
 extern s32 D_0039A570;
 #include "data/pieces/D_0039A580.h"
 extern s32 D_003A7980;
-#include "data/pieces/D_003A7990.h"
 extern s32 D_003B4D90;
 #include "data/pieces/D_003B4DA0.h"
 extern s32 D_003C21A0;
@@ -695,7 +695,7 @@ E848 *func_001e9b98(s32 a, s32 id) {
     if (a == 1) {
         if (!D_00389C90.f3038) {
             for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123618(((E848 *)&D_003A7990)[i].p) == id) return &((E848 *)&D_003A7990)[i];
+                if (func_00123618(((E848_3a7990 *)&D_003A7990)[i].p) == id) return &((E848_3a7990 *)&D_003A7990)[i];
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {

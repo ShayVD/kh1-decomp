@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F1A70.h"
+typedef Q_3f1a70 Q;
 typedef struct { u64 tag, ad; u64 d2, d3; u64 d4, d5; s32 x0, y0, z0, w0; s32 x1, y1, z1, w1; } Pk;
 typedef struct {
     u8 pad0[0x48];
@@ -17,7 +18,6 @@ typedef struct {
     s16 wb8;
     s16 hba;
 } Ob;
-#include "data/pieces/D_003F1A70.h"
 #include "data/pieces/D_003F1E70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
@@ -34,7 +34,7 @@ void func_002053e8(Ob *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     buf = func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -80,7 +80,7 @@ void func_00205938(Ob *o, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     buf = func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -189,7 +189,7 @@ s32 func_001f4570(Ob *ob) {
 
 void func_001f52e8(Ob *o) {
     Q *buf; Pk *p; void *ub; s32 a, b, x, y; f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     buf = func_00122048(1024, 128); p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     p->tag = 0x4023400000008001; p->ad = 0x44ee; p->d2 = 68; p->d3 = 66;
@@ -222,7 +222,7 @@ void func_001f54f8(Wnd3 *o) {
     s32 bx, by, w, cx, cy;
     f32 fx, fy, sx, sy;
     s32 X32, X160, Xw, Y32, Y160, Y352, Y384;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     if (o->x88 & 0x10) {
         func_00266f38(func_00266c08(2), D_003F27D0);
     }
@@ -291,7 +291,7 @@ void func_001f5988(Wnd3 *o) {
     s32 bx, by, w, cx, cy;
     f32 fx, fy, sx, sy;
     s32 X32, X160, Xw, Y32, Y160, Y352, Y384;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     if (o->x88 & 0x10) {
         func_00266f38(func_00266c08(2), D_003F27D0);
     }
@@ -372,7 +372,7 @@ void func_001f4d10(Wnd4 *o) {
     s32 bx, by, w, h, cx, cy;
     f32 fx, fy, sx, sy;
     s32 X, Xw128, Xw, X32, Xw160, Xw32, Y, Y128, Yh, Y32, Y160, Yh32;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1A70));
+    func_00266f38(func_00266c08(2), &D_003F1A70);
     if (o->x88 & 0x10) {
         func_00266f38(func_00266c08(2), D_003F27D0);
     }

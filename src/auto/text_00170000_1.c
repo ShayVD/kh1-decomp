@@ -19,17 +19,17 @@ void func_001761b0(void) {
 }
 
 void func_0017d208(void) {
-    if (!(M2C_FIELD(((void *)D_00362438), s32 *, 0x18) & 0x10)) {
-        func_0017b120(((void *)D_00362438));
+    if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
+        func_0017b120(D_00362438);
     }
 }
 
 void func_0017ebd0(void) {
     D_00575894 = 0;
     D_002E27A8 = 0;
-    (*(s32 *)&D_0036244C) = 0;
-    (*(s32 *)&D_00362450) = 0;
-    (*(s32 *)&D_00362454) = 0;
+    D_0036244C = 0;
+    D_00362450 = 0;
+    D_00362454 = 0;
 }
 #include "data/data_002E.h"
 #include "data/data_0036.h"

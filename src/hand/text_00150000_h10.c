@@ -37,8 +37,7 @@ typedef struct { u8 pad[0x70]; s32 w70; } Obj714;
 /* ---- data ---- */
 extern E551670 D_00551670[];
 extern U2E3190 D_002E3190;
-typedef struct { u8 pad[0x848]; u16 cnt[1]; } S304BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 extern s32 D_005516EC;
 extern U2C5958 D_002C5958;
@@ -167,7 +166,7 @@ void func_00158068(void *a, s32 b, F158068 *c) {
 }
 
 void func_001586a8(s32 i) {
-    if (((S304BE8 *)D_00304BE8)->cnt[i] < 9999) ((S304BE8 *)D_00304BE8)->cnt[i]++;
+    if (D_00304BE8->cnt_848[i] < 9999) D_00304BE8->cnt_848[i]++;
 }
 
 void func_001586f0(void) {
@@ -269,7 +268,7 @@ void func_0015ac58(Obj15A *a) {
     func_00130578(a, 0x40000006, 8.0f)->cb = func_0015ac30;
     func_0014cce0(a, z);
     a->flags &= ~0x400;
-    func_002675a8(a->x3C0, ((u8 *)&D_002C58B0));
+    func_002675a8(a->x3C0, &D_002C58B0);
 }
 
 typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Coll;
@@ -311,7 +310,7 @@ void func_0015c9f8(Hdr *h) {
 
 typedef struct { u32 flags; u8 pad[0x2C]; f32 pos[4]; } ObjD1;
 void func_0015d1d0(ObjD1 *a, f32 *v) {
-    func_00267530(v, D_002C58A0, a->pos);
+    func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), a->pos);
     v[3] = 0.0f;
     func_0014cc88(a, v[3]);
     a->flags |= 0x10000;
@@ -523,7 +522,7 @@ s32 func_00175af0(void) {
     if (D_0035C6F0 == 0) return 0;
     if (D_0035C6F4) D_0061621C = 1;
     else D_0061621C = 0;
-    func_00182148(D_002BC140, D_002BC144, ((u8 *)&D_002E2780), ((u8 *)&D_002E2790));
+    func_00182148(D_002BC140, D_002BC144, &D_002E2780, &D_002E2790);
     func_00181738();
     return 0;
 }

@@ -198,6 +198,6 @@ void func_0014dcd8(Actor *arg0) {
 
 void func_0014f398(s32 arg0) {
     func_00141ab8(M2C_FIELD(arg0, s32 *, 0x6C));
-    M2C_FIELD(arg0, s32 *, 0x6C) = (s32) ((M2C_UNK *)&D_00304C70);
+    M2C_FIELD(arg0, s32 *, 0x6C) = (s32) &D_00304C70;
 }
 #include "data/data_0030.h"

@@ -3,8 +3,8 @@
 typedef struct { u64 x[20]; } Blk160;
 typedef struct { s32 m[32][16]; s32 v[4]; } Blk810;
 typedef struct { u8 kind[16]; u8 pad10[4]; u16 n0; u16 n1; } Setup;
-typedef struct { s32 o0; u32 sz4; s32 o8; s32 pc; s32 o10; s32 p14; s32 o18; s32 p1c; s32 o20; u32 sz24; } Hdr;
 #include "data/pieces/D_002A3F3C.h"
+typedef Hdr_2a3f3c Hdr;
 extern s32 D_002A3F20;
 extern s32 D_002A3F24;
 #include "data/pieces/D_0029B420.h"
@@ -30,7 +30,7 @@ s32 func_00101048(void) {
     u8 *big;
     i = 0;
     func_00108618();
-    h = ((Hdr *)D_002A3F3C);
+    h = D_002A3F3C;
     src = (Blk160 *)((u8 *)h + h->o0);
     D_002A3F20 = h->sz4 / sizeof(Blk160);
     for (; i < D_002A3F20; i++) {

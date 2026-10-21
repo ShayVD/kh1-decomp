@@ -1,6 +1,7 @@
 #include "common.h"
 
-typedef struct { u8 pad[8]; u32 x8; u8 padc[4]; u32 x10; } Pad;
+#include "data/pieces/D_00425BC8.h"
+typedef PadSt_425bc8 Pad;
 typedef struct {
     u8 pad0[0xca];
     s16 ca;
@@ -37,7 +38,6 @@ typedef struct {
     s32 xb4;
 } Wn;
 
-#include "data/pieces/D_00425BC8.h"
 extern u32 D_00640DF0; /* src/data/bss_0064.c: s32 D_00640DF0 */
 extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
 extern u32 D_00640DF8; /* src/data/bss_0064.c: s32 D_00640DF8 */
@@ -92,7 +92,7 @@ void func_001fdfd0(WinK *w) {
         return;
     }
     if ((w->cur >> 4) >= n) w->cur = (n - 1) << 4;
-    pd = ((Pad *)D_00425BC8);
+    pd = D_00425BC8;
     m = pd->x10 & D_00640DF8;
     moved = 0;
     if (m & D_00640DF0) {

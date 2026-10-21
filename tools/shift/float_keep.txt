@@ -23,6 +23,8 @@ D_00573AD0
 # clears each part and the getter in text_00220000_h25.c hands out each part's address. With the four
 # 0x400-byte parts floated (session 20), save 05 loads but the field and party are not drawn. As one
 # piece it is far over the data budget; kept so a budget change cannot float it untested.
+# Session 27: floated whole with chains 0 and 1-2 (KH1_F27_C2, SHIFT_FLOAT_FORCE, compact layout), save 05
+# loads with the field drawn; still kept because reach_check pins it too (D_003F8370's index).
 D_003F8380
 #
 # Six VIF1 DMA chains of 0x4040 bytes at D_0046E120 + k * 0x4040 (k = 0..5), each one piece since
@@ -50,3 +52,15 @@ D_00482260
 # the Agrabah alley bug; session 22 found the real cause (D_0048BFD0, split_check.py). Session 23
 # dropped the block: KH1_F23_NOCD floats 16 of them and passes the title, load menu, test T, the
 # world map warp and a fight.)
+#
+# D_00272C70 is the first data object, at D_BLOB: floated (dma-chain releases it), shift_cmp maps D_BLOB
+# through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
+# as the blob start.
+D_00272C70
+#
+# The actor table: 1200-byte entries from D_002C64A0 up to D_002E26A0, and the code walks it with the next
+# name as its end (`if (p >= D_002E26A0) p = D_002C64A0`, text_00110000_h30.c and others; func_00145aa0
+# indexes up to it). The address of D_002E26A0 is the table's end, so the table cannot move away from it.
+# Session 27: slot-refine released it (with D_00278B50 room came from SHIFT_FLOAT_COMPACT) and floated,
+# Donald and Goofy were missing after loading save 06 (bisected over KH1_F27_R5..R11).
+D_002C64A0

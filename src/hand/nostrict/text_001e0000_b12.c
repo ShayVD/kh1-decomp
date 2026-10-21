@@ -48,7 +48,7 @@ void func_001feff0(Wnd2 *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e) {
     s32 X, Y, cx, cy, t, a;
     f32 fx, fy, sx, sy, k;
     s32 X0, Y0, X1, Y1, X2, X3, Y4, Y5;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     x <<= 4;
     e <<= 4;
     w <<= 4;
@@ -154,7 +154,7 @@ void func_00201f38(Wnd2 *o) {
     s32 cx, cy, t, w, c, d, X, Y, xa, ya, k;
     f32 fx, fy, a, b;
     if (o->xcc == 0) return;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     s = (Spr2 *)(buf + 2);

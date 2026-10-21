@@ -123,7 +123,6 @@ void func_0020ce78(s32 a0) {
     func_001fc308(a0, 160, 12, 0, 63, 20, 0, 0x40c87878, 0x40c87878);
 }
 
-typedef struct { s32 f0; s32 f4; s32 f8; } S5bc8;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_003F34C0;
 s32 func_001f4390(s32);
@@ -131,7 +130,7 @@ void func_001f3840(s32);
 void func_0011d768(s32);
 void func_00207618(void);
 void func_0020cf90(s32 a0) {
-    if (func_001f4390(a0) && (((S5bc8 *)D_00425BC8)->f8 & 8)) {
+    if (func_001f4390(a0) && (D_00425BC8->x8 & 8)) {
         if (!(D_003F34C0 & 3)) {
             func_001f3840(a0);
             func_0011d768(3);
@@ -162,7 +161,7 @@ void func_0020d6c8(s32 a0) {
     D_003F34A8 = 0;
     func_0020d530();
     v = func_0020d030();
-    D_003F34C4 = v;
+    D_003F34C4 = (N_3f34c4 *)v;
     if (v) func_0020d050(v);
     func_0011ef10(0x270ff, func_0020d2f8)->f2 = a0;
 }
@@ -185,7 +184,7 @@ void func_00207bb0(Sbbc0 *, s32);
 
 void func_0020d900(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -206,7 +205,7 @@ void func_0020d990(Sbbc0 *a0, s32 a1) {
 
 void func_0020da00(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -254,7 +253,7 @@ void func_00211398(void) {
 
 void func_002113f0(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -280,7 +279,7 @@ extern s32 D_00641BF0[], D_00641BE0[];
 void func_00211698(void) {
     u32 i;
     for (i = 0; i < D_003E3D68; i++) {
-        s32 v = ((S4BE8e *)((u8 *)D_00304BE8))[((u8 *)D_00304BE8)[0x48e + i]].f36;
+        s32 v = ((S4BE8e *)D_00304BE8)[((u8 *)D_00304BE8)[0x48e + i]].f36;
         D_00641BF0[i] = D_00641BE0[i] = v;
     }
 }
@@ -322,7 +321,7 @@ void func_002131e8(s32 a0) {
 
 void func_00214030(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {
-        if (((S5bc8 *)D_00425BC8)->f8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -341,13 +340,13 @@ void func_002140c0(Sbbc0 *a0, s32 a1) {
     a0->f24 = a1;
 }
 
-typedef struct { s32 f0, f4, f8, fc, f10, f14, f18, f1c; u8 a[10]; u8 pad[2]; s32 f2c; u8 pad2[0x74 - 0x30]; s32 f74; } S34B8;
 #include "data/pieces/D_003F34B8.h"
+typedef S34B8_3f34b8 S34B8;
 void func_002161e8(s32, s32);
 void func_00216180(void) {
     s32 i;
     for (i = 0; i < 10; i++) {
-        ((S34B8 *)D_003F34B8)->a[i] = 4;
+        D_003F34B8->a[i] = 4;
         func_002161e8(i, 4);
     }
 }
@@ -388,7 +387,7 @@ void func_00218d60(s32 a0) {
 }
 
 void func_00219128(void) {
-    S34B8 *p = ((S34B8 *)D_003F34B8);
+    S34B8 *p = D_003F34B8;
     p->f2c = 1;
     p->f8 = 0;
     p->f4 = 0;
@@ -459,7 +458,7 @@ void func_0021db30(void) {
     s32 i;
     D_00643010 = 0;
     D_00643014 = 0;
-    ((S34B8 *)D_003F34B8)->f74 = 0;
+    D_003F34B8->b112[1] = 0;
     for (i = 5; i >= 0; i--) D_003F5C30[i] = 0;
     func_0021fb50();
     func_002205c0();
@@ -541,27 +540,27 @@ void func_00222ab0(void) {
 
 s32 func_00219158(s32 a0) {
     switch (a0) {
-    case 0: return ((S34B8 *)D_003F34B8)->f0;
-    case 1: return ((S34B8 *)D_003F34B8)->f4;
-    case 2: return ((S34B8 *)D_003F34B8)->f8;
-    case 3: return ((S34B8 *)D_003F34B8)->f10;
-    case 4: return ((S34B8 *)D_003F34B8)->f14;
-    case 5: return ((S34B8 *)D_003F34B8)->f18;
+    case 0: return D_003F34B8->f0;
+    case 1: return D_003F34B8->f4;
+    case 2: return D_003F34B8->f8;
+    case 3: return D_003F34B8->f10;
+    case 4: return D_003F34B8->f14;
+    case 5: return D_003F34B8->f18;
     case 6:
-    default: return ((S34B8 *)D_003F34B8)->f2c;
+    default: return D_003F34B8->f2c;
     }
 }
 
 void func_002191f0(s32 a0, s32 a1) {
     switch (a0) {
-    case 0: ((S34B8 *)D_003F34B8)->f0 = a1; break;
-    case 1: ((S34B8 *)D_003F34B8)->f4 = a1; break;
-    case 2: ((S34B8 *)D_003F34B8)->f8 = a1; break;
-    case 3: ((S34B8 *)D_003F34B8)->f10 = a1; break;
-    case 4: ((S34B8 *)D_003F34B8)->f14 = a1; break;
-    case 5: ((S34B8 *)D_003F34B8)->f18 = a1; break;
+    case 0: D_003F34B8->f0 = a1; break;
+    case 1: D_003F34B8->f4 = a1; break;
+    case 2: D_003F34B8->f8 = a1; break;
+    case 3: D_003F34B8->f10 = a1; break;
+    case 4: D_003F34B8->f14 = a1; break;
+    case 5: D_003F34B8->f18 = a1; break;
     case 6:
-    default: ((S34B8 *)D_003F34B8)->f2c = a1; break;
+    default: D_003F34B8->f2c = a1; break;
     }
 }
 #include "data/data_003F.h"

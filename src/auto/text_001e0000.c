@@ -298,7 +298,7 @@ void func_001ef528(void) {
 }
 
 s32 func_001ef7a0(void) {
-    return M2C_FIELD(((void *)D_003F34B8), s32 *, 0x1C);
+    return M2C_FIELD(D_003F34B8, s32 *, 0x1C);
 }
 
 void func_001ef948(void) {

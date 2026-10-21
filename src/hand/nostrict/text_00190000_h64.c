@@ -803,9 +803,9 @@ void pppRyjMatrixWorldFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_00183be0(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -826,9 +826,9 @@ void pppRyjMatrixWorldXZYFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_001a5250(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -849,9 +849,9 @@ void pppRyjMatrixWorldYXZFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_001a5370(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -872,9 +872,9 @@ void pppRyjMatrixWorldYZXFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_001a52e0(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -895,9 +895,9 @@ void pppRyjMatrixWorldZXYFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_001a5400(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -918,9 +918,9 @@ void pppRyjMatrixWorldZYXFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][1] = t->y;
     D_00615E68->m[3][2] = t->z;
     func_001a5490(m, &D_003701E0);
-    m[3][0] = D_003701D0[0];
-    m[3][1] = D_003701D0[1];
-    m[3][2] = D_003701D0[2];
+    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
+    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
+    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
     func_00267440(m, m);
     sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
@@ -1290,7 +1290,7 @@ void pppRyjMegaBirthFrame(PppObject *obj, PppMegaKey *key, PppEntry *e) {
         func_00267e90(w->m[0], w->m[0], D_003701F0[0]);
         func_00267e90(w->m[1], w->m[1], D_003701F0[1]);
         func_00267e90(w->m[2], w->m[2], D_003701F0[2]);
-        func_002675a8(w->m[3], D_003701D0);
+        func_002675a8(w->m[3], (*(f32 (*)[4])&D_003701D0));
         w->m[3][3] = 1.0f;
         break;
     default:

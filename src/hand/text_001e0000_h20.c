@@ -502,7 +502,7 @@ s32 func_001e7e00(void) {
 
 s32 func_001e8178(void) {
     if (func_0011e340(0)) return 0;
-    func_0011ec08(D_006314D0, D_003DABD4, D_006314D8, func_001e7fe0);
+    func_0011ec08(D_006314D0, ((s32)D_003DABD4), D_006314D8, func_001e7fe0);
     return 4;
 }
 
@@ -513,7 +513,7 @@ s32 func_001e82e0(VM *vm) {
 
 s32 func_001e84a0(void) {
     if (func_0011e340(0)) return 0;
-    func_0011eb88(D_006314CC, D_003DABD4, D_006314DC, func_001e8308);
+    func_0011eb88(D_006314CC, ((s32)D_003DABD4), D_006314DC, func_001e8308);
     return 4;
 }
 

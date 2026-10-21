@@ -212,7 +212,7 @@ void func_00182870(MObj *o) {
     ang[1] = asinf(-m[2].z);
     ang[2] = atan2f(m[2].y, m[2].x);
     for (i = 0; i < 3; i++) D_003701E0[i] = ang[i] * 32768.0f / 3.1415926f;
-    func_002675a8(((u8 *)&D_003701D0), &D_00615EA0);
+    func_002675a8(&D_003701D0, &D_00615EA0);
 }
 
 /* --- pppDrawMdl* draw callbacks: fill a PppMdlDraw for func_001aaf88 --- */

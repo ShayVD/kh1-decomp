@@ -31,7 +31,7 @@ void func_001ffb30(s32 px, s32 py, s32 pw, s32 ph, u32 col) {
     u32 ub;
     s32 X, Y, R, B, X1, X2, Y1, Y2;
     func_001f8270();
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     p = (PF *)func_00122048(1024, 128);
     buf = (u64 *)p;
     p = (PF *)(buf + 2);

@@ -49,7 +49,7 @@ void func_00202300(Wnd2 *w, s32 a1, s32 a2) {
     u32 ub, al;
     s32 x, y, cx, cy, l, t, r, b;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -114,7 +114,7 @@ void func_00204948(Wnd2 *w, s32 a1, s32 a2, s32 a3) {
     u32 ub;
     s32 x, y, cx, cy, l, r, t, b;
     f32 f, sx, sy, fcx, fcy;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -185,7 +185,7 @@ void func_00205618(Wnd2 *w, s32 a1, s32 a2, s32 a3, s32 a4, s32 *col) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -250,7 +250,7 @@ void func_00205b30(Wnd2 *w, s32 *r) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -315,7 +315,7 @@ void func_00205e30(Wnd2 *w, s32 *col) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -380,7 +380,7 @@ void func_00206370(Wnd2 *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s32 
     u32 ub;
     s32 al, cx, cy, x, y, x1, y1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -450,7 +450,7 @@ void func_00206748(Wnd2 *w, s32 f1, s32 f2, s32 px, s32 py, s32 pw, s32 ph) {
     u32 ub, k;
     s32 cx, cy, x0, y0, x1, y1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3, t4, t5, t6, t7;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk6 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -629,7 +629,7 @@ void func_0020ab88(u32 a) {
     u64 *buf;
     PkS *p;
     u32 ub, al;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     p = (PkS *)func_00122048(1024, 128);
     buf = (u64 *)p;
     p = (PkS *)((u64 *)p + 2);

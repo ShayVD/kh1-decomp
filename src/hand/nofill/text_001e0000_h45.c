@@ -1,11 +1,11 @@
 #include "common.h"
 
-typedef struct { u8 pad[848]; } E848;
+#include "data/pieces/D_003A7990.h"
+typedef E848_3a7990 E848;
 typedef struct { u8 pad0[0x3034]; s32 f3034; s32 f3038; u8 pad303c[0x130]; s32 f316c; } Big98;
 typedef struct { f32 x, y, z; } Vec3;
 extern Big98 D_00389C90;
 #include "data/pieces/D_003C3A70.h"
-#include "data/pieces/D_003A7990.h"
 #include "data/pieces/D_003B4DA0.h"
 #include "data/pieces/D_0038D170.h"
 #include "data/pieces/D_0039A580.h"
@@ -20,7 +20,7 @@ E848 *func_001e98d0(s32 a, s32 b) {
     if (D_00389C90.f316c) return &((E848 *)&D_003C3A70)[b];
     if (a == 1) {
         if (!D_00389C90.f3038) {
-            if (b < D_003B4D90) return &((E848 *)&D_003A7990)[b];
+            if (b < D_003B4D90) return &((E848_3a7990 *)&D_003A7990)[b];
         } else {
             if (b < D_003C21A0) return &((E848 *)&D_003B4DA0)[b];
         }

@@ -5,14 +5,15 @@ double asin(double);
 double cos(double);
 double atan2(double, double);
 f32 acosf(f32);
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/pieces/D_002E2780.h"
+typedef V3_2e2780 V4;
 f32 sinf(f32);
 f32 sqrtf(f32);
 void func_001bf290(f32 *q);
 typedef struct { u16 h0, h2, h4, h6; u8 *ctx; u8 *stk; u8 pad[32]; } Task_bfcd8;
-typedef struct { u8 *ctx; s32 arg; s32 w8; s32 wc; } RunQ_bfcd8;
-extern Task_bfcd8 *D_0037A16C;
 #include "data/pieces/D_0037A170.h"
+typedef RunQ_37a170 RunQ_bfcd8;
+extern Task_bfcd8 *D_0037A16C;
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
@@ -84,7 +85,6 @@ typedef struct {
     u64 flags; u8 pad8[200]; V4 v208; V4 v224; V4 v240; V4 v256; V4 v272; f32 f288; f32 f292;
 } Tw_c6890;
 #include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
 extern f32 D_002E27A0;
 #include "data/pieces/D_002E27A4.h"
 void *memset(void *, s32, u32);
@@ -258,7 +258,7 @@ void func_001bfcd8(void) {
     }
     {
         u8 *c = D_0037A16C->ctx;
-        RunQ_bfcd8 *q = ((RunQ_bfcd8 *)D_0037A170);
+        RunQ_bfcd8 *q = D_0037A170;
         q->wc = -1;
         q->ctx = c;
         q->w8 = 0;
@@ -548,7 +548,7 @@ void func_001c6890(void) {
     memset(&a, 0, 16);
     a.w = 1.0f;
     memset(&r, 0, 16);
-    func_002675a8(&a, ((V4 *)&D_002E2780));
+    func_002675a8(&a, ((V3_2e2780 *)&D_002E2780));
     func_002675a8(&D_003C5510.v208, ((V4 *)&D_002E2790));
     D_003C5510.f288 = func_001e9e58(&a, &D_003C5510.v208);
     D_003C5510.f292 = D_002E27A0;

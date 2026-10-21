@@ -21,7 +21,7 @@ void func_0020b6a8(void) {
     u32 a;
     s32 x, y, m;
     s32 k = 22;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(0x400, 0x80);
     p = buf + 2;
     ua = (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000);

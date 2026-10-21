@@ -290,18 +290,18 @@ s32 func_001ef720(s32 i) {
     return r;
 }
 
-typedef struct { u8 pad[0x1c]; s32 x1c; } S34B8;
 #include "data/pieces/D_003F34B8.h"
+typedef S34B8_3f34b8 S34B8;
 
 void func_001ef7b0(s32 a) {
-    S34B8 *p = ((S34B8 *)D_003F34B8);
+    S34B8 *p = D_003F34B8;
     p->x1c += a;
     if (p->x1c < 0) p->x1c = 0;
     else if ((u32)p->x1c > 99999) p->x1c = 99999;
 }
 
 void func_001ef7f0(s32 a) {
-    S34B8 *p = ((S34B8 *)D_003F34B8);
+    S34B8 *p = D_003F34B8;
     p->x1c -= a;
     if (p->x1c < 0) p->x1c = 0;
     else if ((u32)p->x1c > 99999) p->x1c = 99999;
@@ -338,7 +338,7 @@ extern s32 D_003E8E2C;
 
 s32 func_001eff50(s32 a) {
     s32 i;
-    E8E28 *e = D_003E8E28;
+    E8E28 *e = (*(E8E28 * *)&D_003E8E28);
     for (i = 0; i < D_003E8E2C; i++, e++) {
         if (e->id == a) return i;
     }
@@ -346,7 +346,7 @@ s32 func_001eff50(s32 a) {
 }
 
 s32 func_001f0600(s32 i, s32 b) {
-    return ((D_003E8E28[i].x6 << 4) * b / 18) >> 4;
+    return (((*(E8E28 * *)&D_003E8E28)[i].x6 << 4) * b / 18) >> 4;
 }
 
 typedef struct Obj {

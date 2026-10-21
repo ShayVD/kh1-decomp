@@ -144,7 +144,7 @@ s32 func_0013f108(s32 arg0) {
       if ((*((s32 *) (new_var + 0x70))) == 0)
       {
         func_0014cce0(arg0, 1e+01f);
-        func_002675a8(arg0 + 0x3C0, (s32) (((M2C_UNK *)&D_002C58A0)));
+        func_002675a8(arg0 + 0x3C0, (s32) (&D_002C58A0));
         func_00130340(arg0, 0x10006, 8.0f);
         return 1;
         goto block_4;

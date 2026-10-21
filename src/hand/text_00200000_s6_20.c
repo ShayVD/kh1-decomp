@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_0064.h"
-typedef struct N { u8 pad[0x10]; struct N *x10; u8 pad14[0x10]; s32 x24; f32 x28; u8 pad2c[0x90 - 0x2c]; s32 x90; f32 x94; u8 pad98[0xa0 - 0x98]; f32 xa0; u8 pada4[0xcc - 0xa4]; s16 xcc; s16 xce; } N;
-typedef struct { u8 pad[8]; s32 x8; } P5BC8;
+#include "data/pieces/D_003F34C4.h"
+typedef N_3f34c4 N;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E24, D_00640E28;
@@ -9,7 +9,6 @@ extern s32 D_003F32A8[];
 extern s32 D_003F32C8[];
 extern s32 D_003F3308[];
 extern void (*D_003F32E8[])(N *);
-#include "data/pieces/D_003F34C4.h"
 s32 func_001fd518(N *);
 void func_00207830(N *, s32, s32, s32, s32, s32, s32);
 s32 func_0021add8(void);
@@ -34,11 +33,10 @@ void func_001f3e90(N *, N *);
 void func_001f3e20(N *, N *);
 s32 func_001f4390(N *);
 
-typedef struct { u8 pad[112]; u32 b112[4]; } C1Flags;
 #include "data/pieces/D_003F34B8.h"
 /* callee defined above (from src/hand/text_001f0000_h23.c) */
 CONTEXT_ONLY u32 func_002073f0(s32 n) {
-    return ((C1Flags *)D_003F34B8)->b112[n / 32] & (1 << n);
+    return D_003F34B8->b112[n / 32] & (1 << n);
 }
 static inline void inl5(N *o) { if (func_0021add8()) func_00207560(o, 109, 215); if (!func_002073f0(0)) func_00207428(o, 92, 223); }
 #define ITEM(n) { \
@@ -72,7 +70,7 @@ void func_0020c1c8(N *o) {
         break;
     case 1:
         if (func_001f42b8(o)) {
-            if (((P5BC8 *)D_00425BC8)->x8 & 0x4000) {
+            if (D_00425BC8->x8 & 0x4000) {
                 func_001f3840(o);
                 func_0011d768(3);
                 func_00207618();
@@ -98,16 +96,16 @@ void func_0020c1c8(N *o) {
                     c = func_001f4468(o);
                     switch (D_00640E28) {
                     case 5:
-                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
+                        func_001f37c0(D_003F34C4->x10, 1);
+                        func_001f3d58(D_003F34C4->x10->x10, 2);
+                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
                         c = func_0021d9e0(c);
                         o->x24 = 4;
                         break;
                     case 7:
-                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
+                        func_001f37c0(D_003F34C4->x10, 1);
+                        func_001f3d58(D_003F34C4->x10->x10, 2);
+                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
                         c = func_00229338(c);
                         o->x24 = 4;
                         break;
