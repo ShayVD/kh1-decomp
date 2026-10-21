@@ -2021,7 +2021,7 @@ session, whole file (types emit no code and move no section).
 | --- | ---: | ---: | ---: |
 | merged | 114 | 46 (34 new, 12 in data_XXXX.h); 153 of 330 labels | 68 |
 | users disagree | 305 | 31 (`--all-users`) | 274 |
-| no C user ... with one file-scope extern | 496 | 42 (`--all-users`: 41 function-pointer slots D_0037733C..D_003773D8, D_0046A6A8, T78D8 D_003F78D8[8]) | 454 |
+| no C user ... with one file-scope extern | 496 | 42 (`--all-users`: 41 function pointers, D_0037733C..D_003773D8 and D_0046A6A8, and T78D8 D_003F78D8[8]) | 454 |
 | type X is not a common.h basic type | 112 | 93 (`--all-users`) | 19 |
 | element size does not divide the extent | 5 | 4 (as `T D[]`) | 1 |
 | a non-user file declares it otherwise, the D_0046A688 table | 3 | 0 | 3 |
@@ -2037,7 +2037,7 @@ Why the rest stay untyped:
   (merged); labels in ...`.
 - 274 "users disagree": `s32`/`u32`, `T`/`T[]`, different local structs; no one type compiles in every
   user. The merged pieces have the same split (e.g. D_00389C90: 20 local struct types in 55 files; its header
-  declares `Str`, from text_001c0000_h67.c, which 2 files include). Unifying needs one shared struct per
+  declares `Str`, from text_001c0000_h67.c: 2 files declare it that way, 5 include the header). Unifying needs one shared struct per
   object and edits to each user, function by function, with `make` checking the code.
 - 15 struct-typed pieces: the type is local to one file and other files name the piece (T16, Q16, Glyph,
   PCur), or a user's own `u128` typedef clashes with shared.h's; their comments say which.
