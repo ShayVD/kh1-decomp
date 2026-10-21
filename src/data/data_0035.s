@@ -335,6 +335,6 @@
 	PIECE D_0035C6F8, 0x4, 4
 	PIECE D_0035C6FC, 0x4, 4
 	PIECE D_0035C700, 0x10, 16
-	PIECE D_0035C710, 0x2000, 16  /* untyped: users disagree: B3PjE D_0035C710[] | M2C_UNK D_0035C710 | PppLight D_0035C710[256] | Spr D_0035C710[] | W8Ent35 D_0035C710[]; session 25: as PppLight D_0035C710[256]: new warning in text_00130000_b03.c, text_00140000_h56.c; does not compile in text_00140000_h8.c, text_00180000_h40.c */
+	PIECE D_0035C710, 0x2000, 16  /* data/pieces/D_0035C710.h */
 	PIECE D_0035E710, 0x1410, 16  /* data/pieces/D_0035E710.h */
 	PIECE D_0035FB20, 0x1410, 16

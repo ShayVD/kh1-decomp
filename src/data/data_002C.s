@@ -37,7 +37,7 @@
 	PIECE D_002C1394, 0xc, 4
 	PIECE D_002C13A0, 0x3880, 16
 	PIECE D_002C4C20, 0xc80, 16
-	PIECE D_002C58A0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002C58A0 | V4 D_002C58A0 | V4 D_002C58A0[] | V4f D_002C58A0 | f32 D_002C58A0[4] | f32 D_002C58A0[] | u8 D_002C58A0[]; unparsed in 6 file(s); session 25: as f32 D_002C58A0[0x4]: new warning in text_00120000_h54.c, text_00140000_h33.c +2; code changes in text_00150000_h58.c */
+	PIECE D_002C58A0, 0x10, 16  /* data/pieces/D_002C58A0.h */
 	PIECE D_002C58B0, 0x10, 16  /* data/pieces/D_002C58B0.h */
 	PIECE D_002C58C0, 0x10, 16
 	PIECE D_002C58D0, 0x40, 16  /* data/pieces/D_002C58D0.h */

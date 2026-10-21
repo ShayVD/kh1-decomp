@@ -20,11 +20,11 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8E00;
 extern s32 D_003E8D00[];
 extern s32 D_003E8D04[];
-extern u8 *D_003E8E08[];
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F1A64;
 #include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
@@ -77,7 +77,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     tag = ((u32)base & 0x0fffffff) | 0x80000000;
     p[9] = 0x4343ee;
     base[0] = 0x7000000b;
-    a = D_003E8E08;
+    a = ((u8 **)&D_003E8E08);
     p = base + 12;
     col0 = col;
     x90 = o->x90;
@@ -251,7 +251,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 c = *s - 32;
                 s++;
             }
-            g = &D_003E8E28[c];
+            g = &((Glyph *)D_003E8E28)[c];
             w = g->w << 4;
             f4 = g->f4;
             adv = (w + D_003E8E00) * sz / 18;

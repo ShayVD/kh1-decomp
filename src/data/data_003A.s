@@ -6,4 +6,4 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_003A7980, 0x10, 16
-	PIECE D_003A7990, 0xd400, 16  /* untyped: users disagree: E848 D_003A7990[] | E848b D_003A7990[] | Obj350 D_003A7990[] | VM D_003A7990[] | VmC D_003A7990[]; session 25: as E848 D_003A7990[]: new warning in text_001c0000_b10.c, text_001b0000_s6_13.c; does not compile in text_001c0000_h67.c, text_001e0000_h68.c +1 */
+	PIECE D_003A7990, 0xd400, 16  /* data/pieces/D_003A7990.h */

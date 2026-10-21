@@ -61,7 +61,7 @@ extern s32 D_002C12C0;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 #include "data/pieces/D_002BD250.h"
-extern ColE *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 
 void func_00104eb0(s32, f32 *);
 s32 func_00104f10(s32, f32 *);
@@ -200,10 +200,10 @@ again2:
         u8 kd;
         id = D_002BD250[i];
         func_00104f10(id, tmp);
-        fp = &D_002A6238[id].f;
-        if (D_002A6238[id].xA && func_00119a20(id, tmp, p2, hit, &D_002C1250)) {
+        fp = &((ColE *)D_002A6238)[id].f;
+        if (((ColE *)D_002A6238)[id].xA && func_00119a20(id, tmp, p2, hit, &D_002C1250)) {
             s32 b;
-            s32 x = D_002A6238[id].xA;
+            s32 x = ((ColE *)D_002A6238)[id].xA;
             b = fp->b15;
             o->x3A = id;
             o->x38 = x;
@@ -270,10 +270,10 @@ again2:
         s32 kd;
         id = list[i];
         func_00104f10(id, tmp);
-        fp = &D_002A6238[id].f;
-        if (D_002A6238[id].xA && func_00119ad8(-1, id, tmp, p2, hit, &D_002C1250)) {
+        fp = &((ColE *)D_002A6238)[id].f;
+        if (((ColE *)D_002A6238)[id].xA && func_00119ad8(-1, id, tmp, p2, hit, &D_002C1250)) {
             s32 b;
-            s32 x = D_002A6238[id].xA;
+            s32 x = ((ColE *)D_002A6238)[id].xA;
             b = fp->b15;
             o->x3A = id;
             o->x38 = x;
@@ -379,7 +379,7 @@ done:
     func_00116368(&box, 8);
     for (; i < box.n; i++) {
         id = D_002BD250[i];
-        fp = &D_002A6238[id].f;
+        fp = &((ColE *)D_002A6238)[id].f;
         if (fp->sub) continue;
         if (fn(fp)) continue;
         if (func_00115600(id, cur)) {
@@ -436,7 +436,7 @@ done:
             o->st |= 1;
         } else {
             if (!tf) {
-                if ((((ColTri *) &D_002A6238[best1].f)->w & 0xFF) >> 4 == 11) o->st |= 1;
+                if ((((ColTri *) &((ColE *)D_002A6238)[best1].f)->w & 0xFF) >> 4 == 11) o->st |= 1;
                 else o->st &= ~1;
             } else if ((func_0011ab38(tri, best2)->w & 0xFF) >> 4 == 11) o->st |= 1;
             else o->st &= ~1;
@@ -446,7 +446,7 @@ done:
         if (p1[1] + o->h * 0.5f < y) o->st |= 1;
         else cur[1] = y;
         if (!tf) {
-            if ((((ColTri *) &D_002A6238[best1].f)->w & 0xFF) >> 4 == 11) o->st |= 1;
+            if ((((ColTri *) &((ColE *)D_002A6238)[best1].f)->w & 0xFF) >> 4 == 11) o->st |= 1;
         } else if ((func_0011ab38(tri, best2)->w & 0xFF) >> 4 == 11) o->st |= 1;
     }
     o->x68 = y;
@@ -454,8 +454,8 @@ done:
         k = o->st;
         o->x3C = best1;
         if (!(k & 1)) {
-            if (D_002A6238[best1].xA) {
-                ep = &D_002A6238[best1];
+            if (((ColE *)D_002A6238)[best1].xA) {
+                ep = &((ColE *)D_002A6238)[best1];
                 o->x38 = ep->xA;
                 o->x3A = best1;
                 o->st = k | 2;

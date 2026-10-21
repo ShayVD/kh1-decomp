@@ -9,7 +9,7 @@ M2C_UNK func_001efc10(u16);
 M2C_UNK func_001efd20(s32, s32);
 M2C_UNK func_0021dbb8();
 M2C_UNK sceSifCallRpc(M2C_UNK *, M2C_UNK, M2C_UNK, s32 *, M2C_UNK, s32 *, M2C_UNK, M2C_UNK, s32);
-extern M2C_UNK *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3C88;
 extern M2C_UNK D_003E3CB8;
@@ -254,7 +254,7 @@ s32 func_001ef658(s32 arg0) {
 }
 
 void func_001efaa8(void) {
-    D_003E8E28 = &D_003E4658;
+    (*(M2C_UNK **)&D_003E8E28) = &D_003E4658;
     D_003E8E2C = 0x310;
     func_001efb58(0x14);
     func_001efb78(0);

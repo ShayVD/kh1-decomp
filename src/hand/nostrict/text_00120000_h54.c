@@ -123,7 +123,7 @@ typedef struct { u32 f0; u8 p4[0x2c]; f32 f30[3]; f32 f3c; f32 f40[2]; u8 p48[0x
 typedef struct { u8 p0[4]; s32 *rot; u8 p8[4]; f32 *scl; } R3;
 extern s32 D_0029B410;
 extern s8 D_002E2FB8[];
-extern V4 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern s32 func_00176578(s32, s32, u32, s64);
 extern R3 *func_00147ed8(s32, s32, s32, f32 *);
 extern void func_00267370(V4 *, V4 *, V4 *);
@@ -159,7 +159,7 @@ R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
         if (e->f0 & 0x400000) out[1] = e->f2d4;
         break;
     default:
-        func_00267530(&a, &D_002C58A0, &e->fc0);
+        func_00267530(&a, ((V4 *)&D_002C58A0), &e->fc0);
         func_00267370(&b, (V4 *)e->f30, &a);
         func_002673b8(&b, &b);
         func_00267370(&m, &a, &b);

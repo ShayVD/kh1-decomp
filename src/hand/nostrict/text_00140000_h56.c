@@ -87,7 +87,7 @@ void func_00143d20(Ch3 *o, f32 *v, void *arg) {
 typedef void (*MvFn)(void *, f32 *);
 typedef struct { u32 f0; u8 pad4[0xc]; MvFn f10; void *f14; u8 pad18[8]; } MvTab;
 #include "data/pieces/D_00350D88.h"
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 typedef struct {
     u8 pad0[0x20];
@@ -360,7 +360,6 @@ typedef struct {
 } Bo;
 extern Hit *D_00531B60; /* src/data/bss_0053.c: B3Col *D_00531B60 */
 extern HtTab D_00304DB0[];
-extern f32 D_002C58A0[];
 void func_00116660(Hit *);
 void func_001166e8(Hit *);
 
@@ -418,7 +417,7 @@ typedef struct {
         struct { u64 lo:8; u64 f8:1; u64 f9:1; u64 f10:1; u64 rest:53; } b;
     } u;
 } Spr;
-extern Spr D_0035C710[];
+#include "data/pieces/D_0035C710.h"
 extern u8 D_0052EB50[];
 extern Bo D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
 Bo *func_0011f090(void *, s32, void *);
@@ -430,7 +429,7 @@ void func_00146188(s32 id, f32 *pos, s32 mode) {
 
     b = func_0011f090(D_0052EB50, 0, func_00145ce8);
     if (b == 0) return;
-    e = &D_0035C710[b - D_0052EB60];
+    e = &((Spr *)&D_0035C710)[b - D_0052EB60];
     func_002675a8(e->v, pos);
     e->v[3] = 1.0f;
     e->u.id = id;

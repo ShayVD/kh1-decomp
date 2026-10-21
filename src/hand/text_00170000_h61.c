@@ -50,7 +50,7 @@ extern V4 D_00362560, D_00362570;
 extern V4 D_003625A0, D_003625B0;
 extern V4 D_003625F0;
 extern Z D_005759B0;
-extern V4 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 #include "data/pieces/D_003626F0.h"
 extern s32 D_003623F0;
 extern f32 D_003623F4, D_003623F8;
@@ -246,7 +246,7 @@ void func_0017df08(void) {
     }
     func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
     func_00267810(m, m, func_00120c88(a));
-    func_002675a8(&v, &D_002C58A0);
+    func_002675a8(&v, ((V4 *)&D_002C58A0));
     v.z = D_00362680.w;
     func_002672f8(&v, m, &v);
     func_00267518(&D_005758D0, &D_005758E0, &v);
@@ -430,12 +430,12 @@ void func_0017ba80(s32);
 s32 func_0017b7e8(void);
 void func_0017b740(V4 *, V4 *);
 typedef struct { V4 a, b; s32 on; } S26C0;
-extern S26C0 D_003626C0;
+#include "data/pieces/D_003626C0.h"
 
 void func_0017b200(void) {
-    func_002675a8(&D_003626C0.a, &D_005758D0);
-    func_002675a8(&D_003626C0.b, &D_005758E0);
-    D_003626C0.on = 1;
+    func_002675a8(&(*(S26C0 *)&D_003626C0).a, &D_005758D0);
+    func_002675a8(&(*(S26C0 *)&D_003626C0).b, &D_005758E0);
+    (*(S26C0 *)&D_003626C0).on = 1;
 }
 
 #define D_00575894 (*(ActB **)&D_00575894)
@@ -526,7 +526,6 @@ typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S5920;
 #define D_00575894 (*(CamC4 * *)&D_00575894)
 extern V4 D_005758D0;
 extern V4 D_005758E0;
-extern V4 D_002C58A0;
 #define D_002C58D0 (*(V4 *)&D_002C58D0)
 extern f32 D_002BBDFC;
 extern V4 D_00362680;
@@ -626,7 +625,7 @@ void func_00179ee8(void) {
     e.x = 0.0f;
     e.z = -l;
     func_00267810(m, &D_002C58D0, D_00362680.y);
-    func_002675a8(&m[3], &D_002C58A0);
+    func_002675a8(&m[3], ((V4 *)&D_002C58A0));
     func_002672f8(&e, m, &e);
     func_00267518(&D_005758E0, &D_005758D0, &e);
     D_00362680.y = func_00124d28(&D_005758D0, &D_005758E0);

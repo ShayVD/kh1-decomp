@@ -15,7 +15,7 @@ extern M2C_UNK func_00109360;
 extern f32 D_00494A88;
 extern f32 D_00494A8C;
 #include "data/pieces/D_002A3F48.h"
-extern s32 D_002A6238;
+#include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002B6778.h"
 extern s32 D_0035C6F0;
 extern s32 D_00494A7C;

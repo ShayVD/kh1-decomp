@@ -96,7 +96,7 @@ extern Big D_00389C90;
 extern u32 D_003C39A8;
 extern s8 *D_003C39AC;
 #include "data/pieces/D_0037A378.h"
-extern VM D_003C3A70[];
+#include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
 extern s32 D_002C5958;
 extern u8 D_006297F8[];
@@ -191,7 +191,7 @@ void func_001c4198(s8 *h, s32 a1)
   D_00389C90.x304c = o1;
   p = h + o[(a1 + (n1 + n0)) + 1];
   p += 12;
-  e = D_003C3A70;
+  e = ((VM *)&D_003C3A70);
   cnt = &D_003C54F0;
   *cnt = *(p++);
   for (i = 0; i < (*cnt); i++, e++)
@@ -241,7 +241,7 @@ void func_001c4198(s8 *h, s32 a1)
   }
 
   func_001c2d20(q, ((u32 *)&D_00389C80), D_00388480);
-  e = D_003C3A70;
+  e = ((VM *)&D_003C3A70);
   cnt = &D_003C54F0;
   for (i = 0; i < (*cnt); i++, e++)
   {
@@ -276,7 +276,7 @@ void func_001c4198(s8 *h, s32 a1)
   if (done == 0)
   {
     t = func_0011f090(D_006297F8, 1, func_001c3b10);
-    t->vm = D_003C3A70;
+    t->vm = ((VM *)&D_003C3A70);
     t->n = D_003C54F0;
     t->x18 = 0;
   }

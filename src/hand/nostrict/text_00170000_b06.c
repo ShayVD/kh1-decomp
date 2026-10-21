@@ -32,7 +32,7 @@ extern V4 D_00362680;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
 extern PadB D_002C5BB0;
-extern u8 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 #include "data/pieces/D_002C58D0.h"
 f32 func_00120c88(f32);
 s32 func_00118b58(void *);
@@ -312,8 +312,8 @@ void func_0017cf08(void) {
     func_0017b250(&D_00575940, m, D_00575940.x48);
 }
 
-typedef struct Box { V4 min; V4 max; void *x20; s32 x24; u8 pad28[8]; } Box;
-extern Box *D_00362430;
+#include "data/types/nostrict_text_00170000_b06_p2.h"
+#include "data/pieces/D_00362430.h"
 #include "data/pieces/D_00362434.h"
 #include "data/pieces/D_0036243C.h"
 extern s32 D_00362448;

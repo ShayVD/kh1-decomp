@@ -114,7 +114,7 @@ extern u8 D_003E3C88[];
 typedef struct { u8 b[0xe4]; } E228;
 extern E228 D_003E3D70[];
 extern u8 D_003E8D28[];
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003F2270.h"
 extern s32 D_0063F74C;
 extern s32 D_003F1A60;
@@ -385,7 +385,7 @@ s32 func_001f0340(u8 *p, s32 scale) {
         if (k == 0x4081) {
             x += (scale << 8) / d;
         } else {
-            Glyph *g = &D_003E8E28[func_001eff50(k)];
+            Glyph *g = &((Glyph *)D_003E8E28)[func_001eff50(k)];
             x += ((g->w << 4) + func_001efb88()) * scale / d;
         }
     }

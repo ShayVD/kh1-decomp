@@ -8,7 +8,7 @@ typedef struct {
     s32 xb0, xb4, xb8, xbc;
     s32 xc0, xc4, xc8, xcc;
 } Pk;
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 extern s32 D_0063F74C;
 extern s32 D_0063F750;
@@ -43,7 +43,7 @@ Pk *func_001f15f0(Pk *p, s32 a1, u32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
     p->d[15] = 0x4343e;
     p->d[12] = a2;
     p->d[14] = ((u64)a1 << 15) | 0x50ab400000000001;
-    g = &D_003E8E28[a5];
+    g = &((Glyph *)D_003E8E28)[a5];
     w = g->w << 4;
     s = w * a6 / 18;
     t = (w + func_001efb88()) * a6 / 18;

@@ -9,7 +9,7 @@ M2C_UNK func_00267620(void *);
 extern f32 D_002BBDFC;
 extern f32 D_00494898;
 extern s32 D_002A6204;
-extern s32 D_002A6238;
+#include "data/pieces/D_002A6238.h"
 extern s32 D_002B6480;
 #include "data/pieces/D_002BC070.h"
 extern s32 D_002BC0BC;

@@ -35,7 +35,7 @@ M2C_UNK func_00267370(s32, s32, s32);
 M2C_UNK func_00267530(void *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675a8(s32, s32);
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_0035C710;
+#include "data/pieces/D_0035C710.h"
 #include "data/pieces/D_0035E710.h"
 extern M2C_UNK D_0035FB20;
 extern M2C_UNK D_00360F30;
@@ -73,7 +73,7 @@ void func_00170e98(void) {
 }
 
 void func_00175a20(void) {
-    memset(&D_0035C710, 0, 0x2000);
+    memset(((M2C_UNK *)&D_0035C710), 0, 0x2000);
 }
 
 void func_00175f58(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {

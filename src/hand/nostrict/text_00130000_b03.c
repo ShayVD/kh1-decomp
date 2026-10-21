@@ -372,7 +372,7 @@ typedef struct {
 typedef struct { f32 x0; s32 x4, x8, xc, x10; } B3PjInf;
 extern B3PjInf D_00304DB0[];
 extern B3Col *D_00531B60;
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 void func_00116660(B3Col *);
 void func_001166e8(B3Col *);
 void func_00121fc4(f32 *, f32 *);
@@ -728,7 +728,7 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
 
 typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
 extern B3Pj D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
-extern B3PjE D_0035C710[];
+#include "data/pieces/D_0035C710.h"
 extern f32 *D_00531B68;
 #include "data/pieces/D_002C58D0.h"
 extern f32 D_00306840;
@@ -746,7 +746,7 @@ s32 func_00145ce8(B3Pj *o) {
     f32 u[4];
     f32 m[16];
     f32 s, r, a;
-    B3PjE *e = &D_0035C710[o - D_0052EB60];
+    B3PjE *e = &((B3PjE *)&D_0035C710)[o - D_0052EB60];
 
     switch (o->x10.s.x16) {
     case 0:

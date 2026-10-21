@@ -796,7 +796,7 @@ typedef struct {
 } __attribute__((aligned(8))) C01Obj3;
 
 extern void *D_002E31E8;
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 
 void sceVu0CopyMatrix(C01Mat, C01Mat);
 void func_00267530(f32 *, f32 *, f32 *);

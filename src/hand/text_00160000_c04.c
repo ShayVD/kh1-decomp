@@ -11,7 +11,7 @@ extern CamC4 *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern V4 D_005758D0; /* src/data/bss_0057.c: f32 D_005758D0[4] */
 extern V4 D_005758E0; /* src/data/bss_0057.c: f32 D_005758E0[4] */
 V4 D_00575810 ALIGNED(16);
-extern V4 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 extern f32 D_003624BC;
 extern f32 D_003624C0;
@@ -42,7 +42,7 @@ s32 func_00177ef8(void) {
     if (func_00177168()) {
         if (D_00575894->x70 == 2) {
             func_002675a8(&r.a, &D_005758E0);
-            func_002675a8(&r.b, &D_002C58A0);
+            func_002675a8(&r.b, ((V4 *)&D_002C58A0));
             r.b.y = 1000.0f;
             if (func_00119688(&r) == -1) hit = 1;
             else if (D_00575894->x3c0.y > 5.0f) {
@@ -64,7 +64,7 @@ s32 func_00177ef8(void) {
                 func_00267560(&r.a, &r.a, 30.0f);
                 func_00267518(&r.a, &r.a, &D_00575894->x10);
                 r.a.y -= 100.0f;
-                func_002675a8(&r.b, &D_002C58A0);
+                func_002675a8(&r.b, ((V4 *)&D_002C58A0));
                 r.b.y = 500.0f;
                 if (func_00119688(&r) == n) hit = 1;
             }
@@ -84,7 +84,7 @@ s32 func_00177ef8(void) {
         D_003624BC = 0.0f;
     }
     func_002675a8(&r.a, &D_005758D0);
-    func_002675a8(&r.b, &D_002C58A0);
+    func_002675a8(&r.b, ((V4 *)&D_002C58A0));
     r.b.y = 55.0f;
     func_00118d78(&r);
     if (r.h30 != -1 && !busy) {
@@ -207,7 +207,7 @@ void func_00178ef8(void) {
         t = func_00120c88(D_00362680.y);
         func_00267768(&m, ((M4 *)&D_002C58D0), func_00120c88(D_00362680.x));
         func_00267810(&m, &m, t);
-        func_002675a8(&b, &D_002C58A0);
+        func_002675a8(&b, ((V4 *)&D_002C58A0));
         b.z = D_00362680.w;
         func_002672f8(&b, &m, &b);
         func_00267518(&p, &D_005758E0, &b);
@@ -238,7 +238,7 @@ void func_00178ef8(void) {
         t = func_00120c88(D_00362680.y);
         func_00267768(&m, ((M4 *)&D_002C58D0), func_00120c88(D_00362680.x));
         func_00267810(&m, &m, t);
-        func_002675a8(&b, &D_002C58A0);
+        func_002675a8(&b, ((V4 *)&D_002C58A0));
         b.z = D_00362680.w;
         func_002672f8(&b, &m, &b);
         func_00267518(&p, &D_005758E0, &b);

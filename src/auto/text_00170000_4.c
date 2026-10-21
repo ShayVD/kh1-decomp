@@ -33,7 +33,7 @@ extern s32 D_00362438;
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"
 extern s32 D_00575890;
-extern s8 D_003626C0;
+#include "data/pieces/D_003626C0.h"
 extern void *D_00575780;
 extern void *D_00575784;
 f32 func_00120c18(s32);

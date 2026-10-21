@@ -28,7 +28,7 @@ u32 D_0064374C ALIGNED(4);
 extern u32 D_00643750; /* src/data/bss_0064.c: s32 D_00643750 */
 s32 D_00643754 ALIGNED(4);
 extern s32 D_00643758;
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F34C8;
 extern s32 D_003F34D4;
 #include "data/pieces/D_003F34D8.h"
@@ -648,7 +648,7 @@ void func_00225ea8(SvCtx *arg0) {
 end:
     if (D_00643738 != 0) {
         if (slot != -1) {
-            D_003E8E08 = slot;
+            (*(s32 *)&D_003E8E08) = slot;
         }
         {
             s32 y = SV_PORT * 28 + 83;

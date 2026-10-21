@@ -309,7 +309,7 @@ void func_0014fe48(B4Ent *e) {
 }
 
 typedef struct { u8 pad0[0x20]; f32 x20[4]; u8 pad30[0x164 - 0x30]; s32 x164; } B4A81;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 extern s32 D_002BC0F0[];
 #include "data/pieces/D_003519E0.h"
 s32 func_00137618(B4A81 *);

@@ -69,8 +69,8 @@ typedef struct {
 extern BigA D_00389C90;
 #include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
-extern VMa D_0038D170[];
-extern VMa D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 extern u8 D_003DE570[];
@@ -176,11 +176,11 @@ void func_001c48c8(s32 id, u32 kind, s32 *p) {
     if ((((u32)D_0037A378) >> 2) & 1) return;
     if (D_002C5958 & 0x12000) return;
     if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
+        vm = ((VMa *)&D_0038D170);
         n = D_0039A570;
     } else {
         n = D_003A7980;
-        vm = D_0039A580;
+        vm = ((VMa *)&D_0039A580);
     }
     for (i = 0; i < n; i++) {
         if (vm[i].x0 == id) break;

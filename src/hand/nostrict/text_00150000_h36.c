@@ -71,7 +71,7 @@ void func_0014cce0(void *, f32);
 f32 func_00120c88(f32);
 extern s32 D_002C5C54;
 extern f32 D_002BBDFC;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 s32 func_001375f0(void *);
 s32 func_0015dc50(void *);
 void func_0015dcc8(void *, f32 *);

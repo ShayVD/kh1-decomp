@@ -37,7 +37,7 @@ void func_00147d50(void *, f32 *);
 void func_0014ac00(B7P *, s32);
 B7O *func_00135070(s32, s32);
 void func_0014aaf0(B7P *);
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 
 B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
     B7Q q;

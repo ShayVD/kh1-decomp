@@ -12,7 +12,7 @@ extern M2C_UNK D_003F4488;
 extern M2C_UNK D_003F47B8;
 extern M2C_UNK D_003F4BD0;
 extern s32 D_00304BE8;
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F34C0;
 extern s32 D_00641BC4;
 extern s32 D_00642C70;
@@ -46,7 +46,7 @@ void func_00215388(s32 arg0) {
         var_s0 = 0xBF;
         if ((u32) D_00642C58 < (u32) D_003E3D68) {
             var_s0 = 0xBE;
-            D_003E8E08 = func_001ee5f0((s32) M2C_FIELD((D_00642C58 + D_00304BE8), u8 *, 0x48E));
+            (*(s32 *)&D_003E8E08) = func_001ee5f0((s32) M2C_FIELD((D_00642C58 + D_00304BE8), u8 *, 0x48E));
         }
     }
     func_001f9438(arg0, 0, 0xAE, 0xC, var_s0, 0x11, 0x80C87850);

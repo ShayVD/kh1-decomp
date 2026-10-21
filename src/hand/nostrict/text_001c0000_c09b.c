@@ -69,8 +69,8 @@ typedef struct {
 extern BigA D_00389C90;
 #include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
-extern VMa D_0038D170[];
-extern VMa D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 extern u8 D_003DE570[];

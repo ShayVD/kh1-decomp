@@ -21,7 +21,7 @@ void (*D_002BD1A8[11])(s32, s32 *) = {
 };
 #include "data/pieces/D_002C1260.h"
 #include "data/pieces/D_002A6244.h"
-extern Tri368 *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 s32 func_00115d58(void);
 void func_001158c8(Out368 *);
 
@@ -59,14 +59,14 @@ void func_00116368(Out368 *o, s32 k) {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].fl;
+                    fl = &((Tri368 *)D_002A6238)[id].fl;
                     if (!(*fl & 1)) f1(id, fl);
                 }
             } else {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].fl;
+                    fl = &((Tri368 *)D_002A6238)[id].fl;
                     if (!(*fl & 1)) f2(id, fl);
                 }
             }

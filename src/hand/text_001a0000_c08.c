@@ -224,7 +224,8 @@ extern u8 D_00389C90[];
 extern B112 D_002C5AD0;
 extern u8 D_002C5BB0[];
 #define D_002C5BB0 (*(S5BB0 *)&D_002C5BB0)
-extern VM D_0038D170[], D_0039A580[];
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern f32 D_002BBDFC;
 extern s32 D_0037A190;
@@ -261,8 +262,8 @@ s32 func_001c1f80(void) {
 
     if (D_00389C90.f3070.b.b40) return 4;
     if (D_00389C90.x3038 > 0) {
-        if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
-        else { vm = D_0039A580; cnt = &D_003A7980; }
+        if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
+        else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
         for (i = 0; i < *cnt; i++, vm++) {
             if ((vm->fl.x & 0x14) == 4) {
                 vm->f2f4 -= D_002BBDFC;
@@ -298,8 +299,8 @@ s32 func_001c1f80(void) {
         D_00389C90.e[i].d = 0;
         D_00389C90.e[i].f = -1;
     }
-    if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
-    else { vm = D_0039A580; cnt = &D_003A7980; }
+    if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
+    else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
     p = func_001c4730();
     while (p) {
         list[n++] = *p;
@@ -315,7 +316,7 @@ s32 func_001c1f80(void) {
         if (vm->fl.b.b3) {
             if (i != 0) continue;
             if (D_00389C90.x3034 != 0) {
-                v = D_0038D170;
+                v = ((VM *)&D_0038D170);
                 D_00389C90.x3034 = 0;
                 for (j = 1, v++; j < D_0039A570; j++, v++) {
                     if ((u32)v->fl.i[0] % 2 == 1) {

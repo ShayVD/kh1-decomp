@@ -165,7 +165,7 @@ void func_0015c3a0(Cyl *a, Cyl *b, f32 *out) {
     out[3] = 1.0f;
 }
 
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 void func_0015beb0(Cyl *, Cyl *, f32 *);
 void func_0015bff8(Cyl *, Cyl *, f32 *);
 void func_0015c1f8(Cyl *, Cyl *, f32 *);
@@ -282,7 +282,6 @@ typedef struct {
     u16 h30e;
 } Ob59;
 typedef struct { u8 pad[4]; f32 f4; } Tk59;
-extern f32 D_002C58A0[];
 void func_0015d7b8(Ob59 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_002675a8(f32 *, f32 *);

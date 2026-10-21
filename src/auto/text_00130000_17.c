@@ -5,7 +5,7 @@
 
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
-extern M2C_UNK D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 M2C_UNK D_0052A158[0x240] ALIGNED(8);
 extern M2C_UNK D_0052AA58; /* src/data/bss_0052.c: u8 D_0052AA58[0x10] */
 extern M2C_UNK D_0052ACF0; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
@@ -144,7 +144,7 @@ s32 func_0013f108(s32 arg0) {
       if ((*((s32 *) (new_var + 0x70))) == 0)
       {
         func_0014cce0(arg0, 1e+01f);
-        func_002675a8(arg0 + 0x3C0, (s32) (&D_002C58A0));
+        func_002675a8(arg0 + 0x3C0, (s32) (((M2C_UNK *)&D_002C58A0)));
         func_00130340(arg0, 0x10006, 8.0f);
         return 1;
         goto block_4;

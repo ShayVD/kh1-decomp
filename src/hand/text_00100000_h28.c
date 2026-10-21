@@ -52,7 +52,7 @@ extern Cam80 D_00494310[2];
 extern E90 D_00494F20[][2];
 #include "data/pieces/D_002AA060.h"
 extern ED0 D_00494D80[];
-extern Ent14 *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002A62B0.h"
 extern F16 D_002A3F60[16];
 extern F16 D_002A4060[16];
@@ -480,8 +480,8 @@ void func_00104850(f32 *pos, s32 *out) {
 void func_001057b8(s32 id, s32 on) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        if (D_002A6238[i].id == id) {
-            D_002A6238[i].on = on;
+        if (((Ent14 *)D_002A6238)[i].id == id) {
+            ((Ent14 *)D_002A6238)[i].on = on;
         }
     }
     if (D_002A3F28 != 0) {
@@ -496,10 +496,10 @@ void func_001057b8(s32 id, s32 on) {
 void func_00105860(void) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        if (D_002A6238[i].act != 0 && D_002A6238[i].id != 0 && D_002A6238[i].id < 100) {
-            D_002A6238[i].on = 0;
-            if (D_002A6238[i].id != D_002BC130 + 1) {
-                D_002A6238[i].on = 1;
+        if (((Ent14 *)D_002A6238)[i].act != 0 && ((Ent14 *)D_002A6238)[i].id != 0 && ((Ent14 *)D_002A6238)[i].id < 100) {
+            ((Ent14 *)D_002A6238)[i].on = 0;
+            if (((Ent14 *)D_002A6238)[i].id != D_002BC130 + 1) {
+                ((Ent14 *)D_002A6238)[i].on = 1;
             }
         }
     }

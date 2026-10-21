@@ -13,7 +13,7 @@
 	PIECE D_003C39B0, 0x40, 16
 	PIECE D_003C39F0, 0x40, 16
 	PIECE D_003C3A30, 0x40, 16
-	PIECE D_003C3A70, 0x1a80, 16  /* untyped: users disagree: E848 D_003C3A70[] | E848b D_003C3A70[] | Obj350 D_003C3A70[] | VM D_003C3A70[]; session 25: as E848 D_003C3A70[]: new warning in text_001c0000_b10.c; does not compile in text_001c0000_h67.c, text_001e0000_h68.c +1 */
+	PIECE D_003C3A70, 0x1a80, 16  /* data/pieces/D_003C3A70.h */
 	PIECE D_003C54F0, 0x10, 16
 	PIECE D_003C5500, 0x10, 16
 	PIECE_BEGIN D_003C5510, 0x130, 16  /* merged (a user declares it larger than the next name): D_003C55E0, D_003C55E4, D_003C55E8, D_003C55F4, D_003C55F8, D_003C5630, D_003C5634; data/pieces/D_003C5510.h */

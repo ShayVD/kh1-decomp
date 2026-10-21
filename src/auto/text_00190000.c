@@ -9,7 +9,7 @@ M2C_UNK func_001a62a8(s32);
 M2C_UNK func_001a6538(s32);
 M2C_UNK func_001a67a0(s32);
 M2C_UNK func_00250054(M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_0035C710;
+#include "data/pieces/D_0035C710.h"
 extern s32 D_00615E64;
 extern void *D_00615E60;
 
@@ -152,7 +152,7 @@ void pppRyjMngFlagFrame(void *arg0, void *arg1) {
 }
 
 void pppRyjMegaBirthPrizeCon(void) {
-    func_00250054(&D_0035C710, 0, 0x2000);
+    func_00250054(((M2C_UNK *)&D_0035C710), 0, 0x2000);
     M2C_FIELD(D_00615E60, s8 *, 0xB3) = 1;
     M2C_FIELD(D_00615E60, s8 *, 0xB0) = 1;
 }

@@ -155,7 +155,7 @@ typedef struct Chr57_0930 {
 } Chr57_0930;
 
 extern f32 D_002BBDFC;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 extern u32 D_002E3190;
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"

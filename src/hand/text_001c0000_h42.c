@@ -153,7 +153,8 @@ s32 func_001c4640(Msg *m) {
     return 0;
 }
 
-extern VM D_0038D170, D_0039A580;
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern volatile s32 D_002BBE04;
 s32 func_001d59a0(VM *);
 
@@ -162,8 +163,8 @@ s32 func_001c4de0(s32 a, s32 b) {
     Msg m;
     D_00389C90.x3170 = a;
     D_00389C90.x3174 = b;
-    if (D_00389C90.x3034 == 0) vm = &D_0038D170;
-    else vm = &D_0039A580;
+    if (D_00389C90.x3034 == 0) vm = ((VM *)&D_0038D170);
+    else vm = ((VM *)&D_0039A580);
     D_00389C90.x3450 = 0;
     func_001c1d20(vm, 10);
     if (b == 1) {

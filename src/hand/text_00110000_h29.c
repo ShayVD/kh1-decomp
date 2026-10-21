@@ -649,13 +649,13 @@ static inline void w29_scale4(void *d, void *s, f32 t) {
 }
 
 typedef struct { f32 n[3]; f32 d; s32 x10; } W29Plane;
-extern W29Plane *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 s32 func_001198c8(s32, s32, void *);
 
 s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {
     W29V4 t;
     f32 d;
-    d = w29_dot(p, n) + D_002A6238[i].d;
+    d = w29_dot(p, n) + ((W29Plane *)D_002A6238)[i].d;
     if (*maxd < d) return 0;
     w29_scale4(&t, n, d);
     w29_sub(out, p, &t);

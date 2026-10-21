@@ -291,7 +291,7 @@ extern f32 D_0036266C;
 extern f32 D_005758D0[4];
 extern f32 D_005758E0[4];
 #include "data/pieces/D_002C58D0.h"
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 s32 func_00119688(Ray84 *);
 f32 func_00120c88(f32);
 void func_002672f8(f32 *, void *, f32 *);

@@ -542,12 +542,12 @@
 	PIECE D_002A6220, 0x10, 16  /* data/pieces/D_002A6220.h */
 	PIECE D_002A6230, 0x4, 4
 	PIECE D_002A6234, 0x4, 4  /* data/pieces/D_002A6234.h */
-	PIECE D_002A6238, 0x4, 4  /* untyped: users disagree: ColE *D_002A6238 | Ent14 *D_002A6238 | Ent20 *D_002A6238 | Face *D_002A6238 | Plane *D_002A6238 | Plane52 *D_002A6238 | Tri01 *D_002A6238 | Tri20 *D_002A6238 | Tri25 *D_002A6238 | Tri368 *D_002A6238 | W29Plane *D_002A6238 | s32 D_002A6238 | void *D_002A6238; session 25: as Ent20 *D_002A6238: code changes in text_00100000_2.c; does not compile in text_00100000_h1.c, text_00100000_h28.c +1; new warning in text_00100000_h51.c */
+	PIECE D_002A6238, 0x4, 4  /* data/pieces/D_002A6238.h */
 	PIECE D_002A623C, 0x4, 4  /* data/pieces/D_002A623C.h */
 	PIECE D_002A6240, 0x4, 4
 	PIECE D_002A6244, 0x4, 4  /* data/pieces/D_002A6244.h */
 	PIECE D_002A6248, 0x4, 4
-	PIECE D_002A624C, 0x4, 4  /* untyped: users disagree: Vec3 *D_002A624C | Vtx *D_002A624C | Vtx25 *D_002A624C | s32 D_002A624C; session 25: as Vec3 *D_002A624C: does not compile in text_00100000_h1.c; new warning in text_00110000_s7_w25.c */
+	PIECE D_002A624C, 0x4, 4  /* data/pieces/D_002A624C.h */
 	PIECE D_002A6250, 0x4, 4  /* data/pieces/D_002A6250.h */
 	PIECE D_002A6254, 0x4, 4
 	PIECE D_002A6258, 0x4, 4

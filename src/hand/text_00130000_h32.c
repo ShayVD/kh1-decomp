@@ -569,7 +569,7 @@ typedef struct {
     u8 pad0c[0x2C - 0xC];
     W32Atk *x2c;
 } W32Hit;
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 extern W32Prm *D_00308CDC;
 void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_00156260(W32Act *o, f32 *v);

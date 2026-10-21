@@ -54,7 +54,7 @@ extern u8 D_00351AB0[];
 typedef struct { u8 b[32]; } E551970;
 extern E551970 D_00551970[];
 extern s32 D_00351AC0;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 extern f32 D_00551D74;
 #include "data/pieces/D_002BBDF8.h"

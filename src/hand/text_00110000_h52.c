@@ -206,7 +206,7 @@ void func_00114c18(Ent52 *o, s32 idx, s32 col) {
 typedef f32 V4_52[4] __attribute__((aligned(16)));
 typedef struct { u32 lo : 11; u32 k : 4; u32 m : 3; u32 x40 : 4; u32 hi : 10; } Bf52;
 typedef struct { f32 a, b, c, d; Bf52 bf; } Plane52;
-extern Plane52 *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 void func_00104eb0(s32, V4_52);
 void func_00104f10(s32, V4_52);
 s32 func_00104ae0(s32, V4_52 *);
@@ -273,7 +273,7 @@ void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
     func_00104eb0(id, pt);
     func_00104f10(id, n);
     if (mode != 1 && fabsf(n[1]) > 0.0999999940395355224609375f) {
-        *out = (-D_002A6238[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
+        *out = (-((Plane52 *)D_002A6238)[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
         return;
     }
     func_00104ae0(id, v);
@@ -325,8 +325,8 @@ void func_00117710(Src52 *a, Dst52 *b) {
     b->p[3] = 1.0f;
     if (a->x2c == -1) {
         func_001156f0(id, b);
-        b->x40 = D_002A6238[id].bf.x40;
-        k = D_002A6238[id].bf.k;
+        b->x40 = ((Plane52 *)D_002A6238)[id].bf.x40;
+        k = ((Plane52 *)D_002A6238)[id].bf.k;
     } else {
         func_0011aac8(id, b, a->x2c);
         bp = func_0011ab38(a->x2c, id);
@@ -351,13 +351,13 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
     s32 *idx;
     u32 *f, *g;
     if (grp == -1) {
-        s32 ta = ((PolyV52 *)D_002A6238)[e->poly].v[e->i0];
-        s32 tb = ((PolyV52 *)D_002A6238)[e->poly].v[e->i1];
+        s32 ta = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i0];
+        s32 tb = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i1];
         a = ta;
         b = tb;
         for (i = 0; i < n; i++) {
             id = list[i];
-            f = (u32 *)&D_002A6238[id].bf;
+            f = (u32 *)&((Plane52 *)D_002A6238)[id].bf;
             if (e->poly == id) continue;
             cnt = func_00104a90(id, v);
             if (cnt == 3) idx = D_002BD150;

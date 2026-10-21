@@ -9,7 +9,7 @@ extern S58F0 D_005758F0;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
 #include "data/pieces/D_002C58D0.h"
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 typedef struct { f32 x0, x4; } S2680;
 extern S2680 D_00362680;
 extern u64 D_002C5BB0;

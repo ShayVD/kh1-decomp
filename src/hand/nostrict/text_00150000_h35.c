@@ -237,7 +237,7 @@ typedef struct { u8 pad[0x6C]; S6C_1541a8 *p6C; } Obj6C_1549b8;
 typedef struct { u8 pad[0x29]; u8 b29; } S14C_154af8;
 typedef struct { u8 pad[0x30]; Vec154768 v30; u8 pad40[0x10C]; S14C_154af8 *p14C; } Obj154af8;
 typedef struct { u8 pad[8]; s32 w8; } Arg154af8;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 void func_00267530(void *, void *, void *);
 
 void func_001549b8(Obj154768 *a, Arg154768 *b, Vec154768 *o) {

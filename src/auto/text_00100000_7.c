@@ -5,12 +5,12 @@
 #include "data/pieces/D_002A6210.h"
 #include "data/pieces/D_002A6220.h"
 #include "data/pieces/D_002A6234.h"
-extern s32 D_002A6238;
+#include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002A623C.h"
 extern s32 D_002A6240;
 #include "data/pieces/D_002A6244.h"
 extern s32 D_002A6248;
-extern s32 D_002A624C;
+#include "data/pieces/D_002A624C.h"
 #include "data/pieces/D_002A6250.h"
 extern s32 D_002A6254;
 extern s32 D_002A6258;
@@ -53,7 +53,7 @@ void func_00104678(void) {
     D_002A6240 = D_002A62B8;
     (*(s32 *)&D_002A6244) = D_002A62BC;
     D_002A6248 = (*(s32 *)&D_002A62C0);
-    D_002A624C = (*(s32 *)&D_002A62C4);
+    (*(s32 *)&D_002A624C) = (*(s32 *)&D_002A62C4);
     (*(s32 *)&D_002A6250) = (*(s32 *)&D_002A62C8);
     D_002A6254 = (*(s32 *)&D_002A62CC);
     D_002A6258 = D_002A62D0;

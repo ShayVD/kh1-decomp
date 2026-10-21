@@ -703,7 +703,7 @@ typedef struct {
 } PppTexMode2;
 
 
-extern PppLight D_0035C710[256];
+#include "data/pieces/D_0035C710.h"
 extern PppLight *D_0061E310[256];
 extern s32 D_0061E710;
 #include "data/pieces/D_002E2780.h"
@@ -712,7 +712,7 @@ void func_0019d968(s32, s32);
 
 void func_0019dac8(void) {
     PppQv d;
-    PppLight *p = D_0035C710;
+    PppLight *p = (*(PppLight (*)[256])&D_0035C710);
     s32 i;
 
     D_0061E710 = 0;

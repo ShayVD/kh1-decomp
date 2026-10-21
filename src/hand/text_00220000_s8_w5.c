@@ -12,7 +12,7 @@ typedef struct {
 } Save3C;
 
 typedef struct { s32 a, b, c, d; } S4;
-extern S4 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 typedef struct O98 {
     u8 pad[0xc];
     struct O98 *xc;

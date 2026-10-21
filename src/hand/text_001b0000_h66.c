@@ -44,7 +44,8 @@ u8 pad816[32];
 } VM_c2778;
 typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
 extern s32 D_002BCDEC;
-extern VM_c2778 D_0038D170[], D_0039A580[];
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM_c2778 *, s32);
 extern u32 D_002C5958;
@@ -337,10 +338,10 @@ s32 func_001c2778(void) {
     Msg m;
     if (D_002BCDEC == 0) return 0;
     if (D_00389C90.w12340 == 0) {
-        p = D_0038D170;
+        p = ((VM_c2778 *)&D_0038D170);
         cnt = &D_0039A570;
     } else {
-        p = D_0039A580;
+        p = ((VM_c2778 *)&D_0039A580);
         cnt = &D_003A7980;
     }
     for (i = 1, p++; i < *cnt; i++, p++) {
@@ -367,7 +368,7 @@ s32 func_001c2778(void) {
         return 4;
     }
     cnt = &D_0039A570;
-    p = D_0038D170;
+    p = ((VM_c2778 *)&D_0038D170);
     for (i = 1, p++; i < *cnt; i++, p++) {
         if ((u32)p->fl.i[0] % 2 == 1) {
 /*P*/

@@ -227,7 +227,8 @@ typedef struct {
     u8 pad32c[0x24];
 } __attribute__((aligned(8))) VmC;
 typedef struct { u8 type; u8 pad[3]; s32 x4; } MsgC;
-extern VmC D_003A7990[], D_003B4DA0[];
+#include "data/pieces/D_003B4DA0.h"
+#include "data/pieces/D_003A7990.h"
 extern s32 D_003B4D90, D_003C21A0;
 extern s32 (*D_0037A198[])(VmC *, s32);
 extern f32 D_002BBDFC;
@@ -247,8 +248,8 @@ s32 func_001c3408(void) {
         return 4;
     }
     D_00389C90.x316c = 0;
-    if (D_00389C90.x3038 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
-    else { e = D_003B4DA0; cnt = &D_003C21A0; }
+    if (D_00389C90.x3038 == 0) { e = ((VmC *)&D_003A7990); cnt = &D_003B4D90; }
+    else { e = ((VmC *)&D_003B4DA0); cnt = &D_003C21A0; }
     done = 0;
     m = func_001c4730();
     if (((s32)(D_00389C90.f3070 >> 37) & 1) == 1U) func_0011ef10(99999, func_001c5b88);
@@ -328,7 +329,8 @@ typedef struct {
     s32 x318;
     u8 pad31c[0x350 - 0x31c];
 } VmE;
-extern VmE D_0038D170[], D_0039A580[];
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 D_0037A190;
 CONTEXT_ONLY s32 func_001c1ce8(s8 *a, s32 b) { return a[b * 4 + 3]; }
@@ -344,10 +346,10 @@ s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
     if (a2 < -1) return 0;
     if ((*(Bits *)&D_0037A378).b2 || (D_002C5958 & 0x12000)) return 0;
     if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
+        vm = ((VmE *)&D_0038D170);
         n = D_0039A570;
     } else {
-        vm = D_0039A580;
+        vm = ((VmE *)&D_0039A580);
         n = D_003A7980;
     }
     for (i = 0; i < n; i++) {

@@ -408,7 +408,7 @@ typedef struct {
     u8 pad8[0x88];
     Act53 *owner;
 } Ent53;
-extern V53 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 void func_002675a8(V53 *, V53 *);
 f32 func_00120c88(f32);
 float sinf(float);
@@ -452,7 +452,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
     o->x39e = 0;
     o->f.b46 = 0;
-    func_002675a8(&o->x120, &D_002C58A0);
+    func_002675a8(&o->x120, ((V53 *)&D_002C58A0));
     for (e = 0; (e = func_0014a398(e)) != 0;) {
         if (e->owner == o && (e->u.w & 3) == 1) e->u.b.b16 = 0;
     }
@@ -564,7 +564,7 @@ void func_001271b0(u8 *o, V53 *v) {
     if (D_002E3190.flag & 1) {
         if ((FLD(s32, o, 0x164) == 7 || FLD(s32, o, 0x164) == 12) && (FLD(s32, o, 0x70) == 0 || FLD(s32, o, 0x70) == 12)) {
             FLD(u32, o, 0) &= ~4;
-            func_002675a8(&s, &D_002C58A0);
+            func_002675a8(&s, ((V53 *)&D_002C58A0));
             p = func_0013dfb8(o, &s);
             if (p) FLD(f32, o, 0x3b0) = FLD(f32, p, 4) = 2.0f;
         }
@@ -622,7 +622,6 @@ void func_00122588(u8 *o) {
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 extern s32 D_002E27A8;
 #include "data/pieces/D_002C58D0.h"
-extern V53 D_002C58A0;
 extern f32 D_004F77E0;
 void func_00267810(f32 (*)[4], f32 (*)[4], f32);
 void func_00124d58(V53 *, V53 *, f32, f32);
@@ -646,7 +645,7 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
             return;
         }
         if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
-            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
+            func_00267530(out, ((V53 *)&D_002C58A0), (V53 *)(o + 0x20));
         } else {
             func_002675a8(out, o + 0x20);
         }

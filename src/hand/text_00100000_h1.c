@@ -42,8 +42,8 @@ extern s32 D_002A61F0;
 extern s32 D_002A6204;
 #include "data/pieces/D_002A6208.h"
 extern s32 D_002A6230;
-extern Ent20 *D_002A6238;
-extern Vec3 *D_002A624C;
+#include "data/pieces/D_002A6238.h"
+#include "data/pieces/D_002A624C.h"
 extern s32 D_002A6258;
 #include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
@@ -295,13 +295,13 @@ void func_001047c8(void) {
 }
 
 s32 func_00104a90(s32 i, s32 *out) {
-    Ent20 *e = &D_002A6238[i]; s32 d;
+    Ent20 *e = &((Ent20 *)D_002A6238)[i]; s32 d;
     out[0] = e->a; out[1] = e->b; out[2] = e->c; out[3] = d = e->d;
     if (d == -2 || d == -1) return 3; return 4;
 }
 
 void func_00104eb0(s32 i, f32 *out) {
-    Vec3 *v = &D_002A624C[D_002A6238[i].a];
+    Vec3 *v = &((Vec3 *)D_002A624C)[((Ent20 *)D_002A6238)[i].a];
     out[0] = v->x;
     out[1] = v->y;
     out[2] = v->z;
@@ -332,35 +332,35 @@ void func_00105218(void) {
 s32 func_00105960(s32 a, s32 b) {
     s32 sub;
     s32 idx = func_00142730(a, &sub);
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->b11 == b; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->b11 == b; }
     return func_0011ab60(sub, idx) == b;
 }
 
 s32 func_00105b10(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f22; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f22; }
     return func_0011ab38(sub, idx)->f22;
 }
 
 s32 func_00105b68(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f4; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f4; }
     return func_0011ab38(sub, idx)->f4;
 
 }
 
 s32 func_00105bc0(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f18; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f18; }
     return func_0011ab38(sub, idx)->f18;
 
 }
 
 s32 func_00105c18(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f28; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f28; }
     return func_0011ab38(sub, idx)->f28;
 
 }
 
 s32 func_00105ce0(s32 id) {
-    s32 i; for (i = 0; i < D_002A6258; i++) { Ent20 *e = &D_002A6238[i]; if (e->b11 == id) return e->bits.f11; } return 0;
+    s32 i; for (i = 0; i < D_002A6258; i++) { Ent20 *e = &((Ent20 *)D_002A6238)[i]; if (e->b11 == id) return e->bits.f11; } return 0;
 }
 
 void func_00105f28(void) {

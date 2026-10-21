@@ -5,7 +5,7 @@ typedef struct { s32 a, col, b; } St14;
 typedef struct { u8 pad[0x38]; s8 x38; } It14;
 extern s32 D_00641BAC;
 extern s32 D_00641BBC;
-extern St14 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 void func_001f9270(void *, s32, s32, s32, s32, s32);
 u8 *func_001eeb88(s32);
 s32 func_001eec28(s32, s32);
@@ -41,33 +41,33 @@ void func_002119a8(W14 *w) {
     func_001f94f0(w, 0, 12, 71, s, 14, 0x8080e680);
     func_001fb428(w, 1, 2, 0, 130, 93, n2, 14, 0x8080e680);
     func_002066b0(w, 12, 107, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = w->x28;
-    D_003E8E08.b = func_001eec48(D_00641BAC, id);
-    if (D_003E8E08.a < D_003E8E08.b) {
-        D_003E8E08.col = 0x80fc927a;
-    } else if (D_003E8E08.a == D_003E8E08.b) {
-        D_003E8E08.col = 0x80808080;
+    (*(St14 *)&D_003E8E08).a = w->x28;
+    (*(St14 *)&D_003E8E08).b = func_001eec48(D_00641BAC, id);
+    if ((*(St14 *)&D_003E8E08).a < (*(St14 *)&D_003E8E08).b) {
+        (*(St14 *)&D_003E8E08).col = 0x80fc927a;
+    } else if ((*(St14 *)&D_003E8E08).a == (*(St14 *)&D_003E8E08).b) {
+        (*(St14 *)&D_003E8E08).col = 0x80808080;
     } else {
-        D_003E8E08.col = 0x806e6eff;
+        (*(St14 *)&D_003E8E08).col = 0x806e6eff;
     }
     func_001f9438(w, 0, 12, 111, 173, 15, 0x80e6e6e6);
     func_002066b0(w, 12, 147, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = 0;
-    D_003E8E08.a = w->x2c;
-    D_003E8E08.b = 0;
+    (*(St14 *)&D_003E8E08).a = 0;
+    (*(St14 *)&D_003E8E08).a = w->x2c;
+    (*(St14 *)&D_003E8E08).b = 0;
     if (id) {
-        D_003E8E08.b = w->x2c + func_001496c8(D_00641BAC, id)->x38;
+        (*(St14 *)&D_003E8E08).b = w->x2c + func_001496c8(D_00641BAC, id)->x38;
         if (D_00641BBC) {
-            D_003E8E08.b -= func_001496c8(D_00641BAC, D_00641BBC)->x38;
+            (*(St14 *)&D_003E8E08).b -= func_001496c8(D_00641BAC, D_00641BBC)->x38;
         }
-        if (D_003E8E08.b < 0) D_003E8E08.b = 0;
+        if ((*(St14 *)&D_003E8E08).b < 0) (*(St14 *)&D_003E8E08).b = 0;
     }
-    if (D_003E8E08.a < D_003E8E08.b) {
-        D_003E8E08.col = 0x80fc927a;
-    } else if (D_003E8E08.a == D_003E8E08.b) {
-        D_003E8E08.col = 0x80808080;
+    if ((*(St14 *)&D_003E8E08).a < (*(St14 *)&D_003E8E08).b) {
+        (*(St14 *)&D_003E8E08).col = 0x80fc927a;
+    } else if ((*(St14 *)&D_003E8E08).a == (*(St14 *)&D_003E8E08).b) {
+        (*(St14 *)&D_003E8E08).col = 0x80808080;
     } else {
-        D_003E8E08.col = 0x806e6eff;
+        (*(St14 *)&D_003E8E08).col = 0x806e6eff;
     }
     func_001f9438(w, 0, 12, 151, 479, 15, 0x80e6e6e6);
     func_002066b0(w, 12, 187, 118, 0x80323232, 0x80323232);

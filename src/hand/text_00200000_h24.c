@@ -304,7 +304,7 @@ void func_00212c20(s32 a0) {
 }
 
 extern s32 D_00641BC4;
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 s32 func_001ee618(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 void func_002131e8(s32 a0) {
@@ -314,7 +314,7 @@ void func_002131e8(s32 a0) {
     t = D_00641BC4;
     x = 165;
     if (t) {
-        D_003E8E08 = func_001ee618(t);
+        (*(s32 *)&D_003E8E08) = func_001ee618(t);
         x = 166;
     }
     func_001f9438(a0, 0, 174, 12, x, 17, 0x80c87850);
@@ -381,7 +381,7 @@ void func_00218d60(s32 a0) {
     t = D_00642D18;
     x = 272;
     if (t) {
-        D_003E8E08 = func_001ee618(t);
+        (*(s32 *)&D_003E8E08) = func_001ee618(t);
         x = 273;
     }
     func_001f9438(a0, 0, 174, 12, x, 17, 0x80c87850);

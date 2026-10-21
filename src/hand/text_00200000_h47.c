@@ -622,7 +622,7 @@ void func_001f36b8(Obj7d8 *);
 extern s32 D_006436D4;
 extern s32 D_00643750;
 typedef struct { s32 x0; s32 x4; } S8E08;
-extern S8E08 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 void func_002246f8(Obj7d8 *);
@@ -643,8 +643,8 @@ void func_002251b0(Obj7d8 *a0) {
             }
         }
     }
-    D_003E8E08.x4 = 132;
-    D_003E8E08.x0 = D_00643750;
+    (*(S8E08 *)&D_003E8E08).x4 = 132;
+    (*(S8E08 *)&D_003E8E08).x0 = D_00643750;
     func_00207bb0(a0, 398);
 }
 

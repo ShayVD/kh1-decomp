@@ -493,7 +493,7 @@
 	.word func_0021ac38
 	PIECE_BYTES D_003F4CC0, 0x4, 0x2c
 	PIECE_END D_003F4CC0, 0x30
-	PIECE D_003F4CF0, 0x338, 8  /* untyped: users disagree: Spr D_003F4CF0[] | Spr_q0 D_003F4CF0[]; session 25: as Spr D_003F4CF0[]: does not compile in text_00210000_c15.c; new warning in text_00210000_s6_22.c */
+	PIECE D_003F4CF0, 0x338, 8  /* data/pieces/D_003F4CF0.h */
 	PIECE D_003F5028, 0xb8, 8
 	PIECE D_003F50E0, 0x2e0, 16  /* data/pieces/D_003F50E0.h */
 	PIECE D_003F53C0, 0x2e0, 16
@@ -1121,8 +1121,8 @@
 	PIECE_END D_003F7A40, 0x24
 	PIECE D_003F7A64, 0x4, 4
 	PIECE D_003F7A68, 0x8, 8  /* data/pieces/D_003F7A68.h */
-	PIECE D_003F7A70, 0x1d8, 8  /* untyped: users disagree: E7A70 D_003F7A70[] | T7A70 D_003F7A70[]; session 25: as T7A70 D_003F7A70[]: new warning in text_00220000_h48.c */
-	PIECE D_003F7C48, 0xc8, 8  /* untyped: users disagree: E6 D_003F7C48[] | E7C48 D_003F7C48[] | T7C48 D_003F7C48[]; session 25: as E6 D_003F7C48[]: new warning in text_00200000_s7_w19.c, text_00220000_h48.c */
+	PIECE D_003F7A70, 0x1d8, 8  /* data/pieces/D_003F7A70.h */
+	PIECE D_003F7C48, 0xc8, 8  /* data/pieces/D_003F7C48.h */
 	PIECE D_003F7D10, 0x20, 16
 	PIECE D_003F7D30, 0x10, 16
 	PIECE D_003F7D40, 0x10, 16

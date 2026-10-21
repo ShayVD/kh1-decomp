@@ -557,7 +557,7 @@ typedef struct {
 } Save3C_q6;
 
 typedef struct { s32 a, b, c, d; } S4_q6;
-extern S4_q6 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 typedef struct O98_q6 {
     u8 pad[0xc];
     struct O98_q6 *xc;

@@ -332,8 +332,8 @@ u8 *func_001efcb0(Tbl *t, s32 a) {
     return (u8 *)t + t->x14 + o[a - 1];
 }
 
-typedef struct { u16 id; u8 pad[4]; u8 x6; u8 x7; } E8E28;
-extern E8E28 *D_003E8E28;
+#include "data/types/text_001e0000_h22.h"
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8E2C;
 
 s32 func_001eff50(s32 a) {

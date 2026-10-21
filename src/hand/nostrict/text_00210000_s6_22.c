@@ -3,8 +3,8 @@
 
 typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd_q0;
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx_q0;
-typedef struct { u16 uv[8]; s16 w, h; } Spr_q0;
-extern Spr_q0 D_003F4CF0[];
+#include "data/types/nostrict_text_00210000_s6_22.h"
+#include "data/pieces/D_003F4CF0.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);

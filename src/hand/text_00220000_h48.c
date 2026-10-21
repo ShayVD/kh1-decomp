@@ -462,8 +462,8 @@ typedef struct { u16 id; u8 b2, n, flag, b5; } E7C48;
 typedef struct { u16 idx; u16 amt; } E7A70;
 extern s32 D_00647660;
 extern s32 D_0064765C;
-extern E7C48 D_003F7C48[];
-extern E7A70 D_003F7A70[];
+#include "data/pieces/D_003F7C48.h"
+#include "data/pieces/D_003F7A70.h"
 void func_001ec2c0(s32, s32);
 
 void func_00231b98(void) {
@@ -483,9 +483,9 @@ void func_00231b98(void) {
             func_001ec2c0(*k, 1);
         }
         D_00304BE8->a[*p]++;
-        c = &D_003F7C48[*k];
+        c = &((E7C48 *)&D_003F7C48)[*k];
         n = c->n;
-        l = &D_003F7A70[c->b2];
+        l = &((E7A70 *)&D_003F7A70)[c->b2];
         for (; n > 0; n--) {
             D_00304BE8->a[l->idx] -= (u8)l->amt;
             l++;
@@ -497,7 +497,7 @@ void func_00231b98(void) {
 
 
 void func_00231cd0(s32 arg0) {
-    E7C48 *c = &D_003F7C48[D_0064765C];
+    E7C48 *c = &((E7C48 *)&D_003F7C48)[D_0064765C];
     E7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[D_0064765C] != 0) {
@@ -505,7 +505,7 @@ void func_00231cd0(s32 arg0) {
         return;
     }
     n = c->n;
-    l = &D_003F7A70[c->b2];
+    l = &((E7A70 *)&D_003F7A70)[c->b2];
     D_00647660 = arg0;
     for (; n > 0; n--) {
         if (D_00304BE8->a[l->idx] < l->amt) {
@@ -521,14 +521,14 @@ void func_00231cd0(s32 arg0) {
 
 
 s32 func_00231dd0(s32 k) {
-    E7C48 *c = &D_003F7C48[k];
+    E7C48 *c = &((E7C48 *)&D_003F7C48)[k];
     E7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[k] != 0) {
         return -3;
     }
     n = c->n;
-    l = &D_003F7A70[c->b2];
+    l = &((E7A70 *)&D_003F7A70)[c->b2];
     for (; n > 0; n--) {
         if (D_00304BE8->a[l->idx] < l->amt) {
             return -1;

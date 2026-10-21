@@ -20,8 +20,8 @@ typedef struct { u8 pad[4]; s32 x4; u8 pad8[0x144-8]; s32 x144; u8 pad148[0x376-
 void func_0012bce0(s32, s32, s32, void *, s32);
 void func_001c48c8(s32, s32, s32);
 
-typedef struct { u8 pad[16]; u64 x10; u64 b0:8; u64 b8:1; u64 b9:55; } W8Ent35;
-extern W8Ent35 D_0035C710[];
+#include "data/types/text_00140000_h8.h"
+#include "data/pieces/D_0035C710.h"
 typedef struct { u8 pad[4]; void *x4; s32 x8; } W8Ent78;
 extern void *D_002E26A0[];
 extern u32 D_002C5958;

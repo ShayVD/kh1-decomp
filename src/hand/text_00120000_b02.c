@@ -152,7 +152,7 @@ typedef struct {
     F370 f370;
 } Ob8;
 typedef struct { u8 p0[0x30]; V4 f30; } Ct8;
-extern V4 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern u32 D_002C5958;
 extern void func_00267518(V4 *, V4 *, V4 *);
 extern void func_002675a8(V4 *, V4 *);
@@ -174,7 +174,7 @@ void func_00130898(Ob8 *o, Ct8 *c) {
     if (o->f160.b.b2) {
         if (s->f8 == 0.0f) {
             func_00267518(&c->f30, &c->f30, &o->f210);
-            func_002675a8(&o->f220, &D_002C58A0);
+            func_002675a8(&o->f220, ((V4 *)&D_002C58A0));
         } else {
             func_002673f8(b, &o->f230);
             func_002675a8(&a, &o->f210);
@@ -183,9 +183,9 @@ void func_00130898(Ob8 *o, Ct8 *c) {
             if (o->f370.b.b45) func_001219c8(&o->f220, &o->f220, &o->f40);
         }
     } else {
-        func_002675a8(&o->f220, &D_002C58A0);
+        func_002675a8(&o->f220, ((V4 *)&D_002C58A0));
     }
-    func_002675a8(&o->f210, &D_002C58A0);
+    func_002675a8(&o->f210, ((V4 *)&D_002C58A0));
     if ((o->f160.b.hi = *(u16 *)s)) o->f370.b.b50 = D_002C5958 & 1;
     r = func_00130190(o, s->f0);
     if (o->f160.b.b5 && (r & 0x200000)) {
@@ -353,7 +353,6 @@ typedef struct {
     u64 f370;
 } Ob9;
 typedef struct { f32 a[4]; V4 pos; } Tm9;
-extern V4 D_002C58A0;
 extern void func_002675a8(V4 *, V4 *);
 extern void func_00267518(V4 *, V4 *, V4 *);
 extern void func_002672f8(V4 *, f32 (*)[4], V4 *);
@@ -372,7 +371,7 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
     Md9 *md;
 
     if (!o || !((s32)(o->f370 >> 32) & 1)) {
-        func_002675a8(out, &D_002C58A0);
+        func_002675a8(out, ((V4 *)&D_002C58A0));
         return;
     }
     if (id & 0x8000) {

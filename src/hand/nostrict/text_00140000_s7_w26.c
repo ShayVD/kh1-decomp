@@ -34,7 +34,7 @@ void func_002675a8(V4f *, V4f *);
 void func_00121fc4(V4f *, V4f *);
 void func_00267560(V4f *, V4f *, f32);
 
-extern V4f D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 f32 func_0013fe80(f32);
 s32 func_001186a8(V4f *);
 void func_00267518(V4f *, V4f *, V4f *);
@@ -48,7 +48,7 @@ s32 func_00140838(ObjF3 *o, V4f *v) {
     func_002675a8(&o->v2a0, &o->pos);
     o->v2a0.y = func_0013fe80(o->pos.y);
     o->v2a0.w = 1.0f;
-    func_002675a8(&o->v2b0, &D_002C58A0);
+    func_002675a8(&o->v2b0, ((V4f *)&D_002C58A0));
     if (v->y < 0.0f) {
         r = 1;
         o->v2a0.y -= 66.66666412353516f;

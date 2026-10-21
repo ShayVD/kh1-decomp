@@ -352,7 +352,8 @@ void func_0020d360(void) {
 
 typedef struct { u8 pad[8]; s32 flags; } G5bc8;
 extern G5bc8 *D_00425BC8;
-extern s32 D_00641224, D_00641228, D_00641230, D_00641234, D_003E8E08;
+extern s32 D_00641224, D_00641228, D_00641230, D_00641234;
+#include "data/pieces/D_003E8E08.h"
 extern u8 D_003F38B0[];
 s32 func_001f42b8(void *);
 void func_001f3708(s32, s32);
@@ -394,7 +395,7 @@ void func_0020e280(s32 a0) {
             }
         }
     }
-    D_003E8E08 = func_001ee698(D_00641234);
+    (*(s32 *)&D_003E8E08) = func_001ee698(D_00641234);
     func_00207c28(a0, 128);
 }
 

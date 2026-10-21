@@ -22,7 +22,7 @@ typedef struct {
 } GSpr;
 typedef struct { u64 h[12]; GSpr g; } Pkt;
 extern s32 D_003E8E00;
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 #include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
@@ -70,7 +70,7 @@ void func_001fade0(Txt9 *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     p->h[10] = 0x50AB400000008001;
     z = 0x100000;
     p->h[11] = 0x4343E;
-    gl = &D_003E8E28[idx];
+    gl = &((Glyph *)D_003E8E28)[idx];
     ox = o->xb0;
     Y = o->xb4 + (y << 4);
     gu = gl->u;

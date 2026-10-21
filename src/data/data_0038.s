@@ -55,4 +55,4 @@
 	PIECE_BYTES D_00389C90, 0x3450, 0x80
 	PIECE_END D_00389C90, 0x34d0
 	PIECE D_0038D160, 0x10, 16
-	PIECE D_0038D170, 0xd400, 16  /* untyped: users disagree: E848 D_0038D170[] | E848b D_0038D170[] | Ent D_0038D170[] | KEnt D_0038D170[] | M2C_UNK D_0038D170 | Obj350 D_0038D170[] | VM D_0038D170 | VM D_0038D170[] | VM_c2778 D_0038D170[] | VMa D_0038D170[] | VmE D_0038D170[]; session 25: as VMa D_0038D170[]: new warning in text_001d0000_b11.c, text_001d0000_h43.c +1; does not compile in text_001c0000_c09b.c, text_001c0000_s10_r2_9.c */
+	PIECE D_0038D170, 0xd400, 16  /* data/pieces/D_0038D170.h */

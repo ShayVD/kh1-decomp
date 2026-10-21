@@ -26,7 +26,7 @@ typedef struct {
 typedef struct { u8 pad[0x24]; s32 x24; } Obj;
 extern SaveE *D_00304BE8;
 extern E3D70 D_003E3D70[];
-extern s32 D_003E8E08[2];
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_00642CF0[];
 extern s32 D_003F46B0[];
 extern s32 D_00642D18;

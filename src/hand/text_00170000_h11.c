@@ -261,14 +261,13 @@ Rec *func_0017adf8(Rec *p, s32 n) {
     return p;
 }
 
-typedef struct { f32 a[4]; f32 b[4]; s32 flag; } S26C0;
-extern S26C0 D_003626C0;
+#include "data/pieces/D_003626C0.h"
 typedef struct { u8 pad[0x28]; f32 x28; } S5970;
 extern S5970 D_00575970;
 f32 func_00120c18(void *);
 s32 func_0017b170(void) {
     f32 v[4];
-    S26C0 *s = &D_003626C0;
+    Blk26C0 *s = &D_003626C0;
     f32 r;
     if (!s->flag) return 0;
     func_002675a8(D_005758D0, s->a);
@@ -528,7 +527,7 @@ typedef struct E30 {
 extern s32 D_00362440, D_00362448;
 #include "data/pieces/D_00362428.h"
 #include "data/pieces/D_0036242C.h"
-extern E30 *D_00362430;
+#include "data/pieces/D_00362430.h"
 extern f32 D_00362674;
 
 void func_0017d9c8(Hdr *h) {
@@ -542,9 +541,9 @@ void func_0017d9c8(Hdr *h) {
     D_00362448 = h->x3;
     D_00362428 = (Rec32 *)(h->x4 + (s32)h);
     D_0036242C = (Rec *)(h->x8 + (s32)h);
-    D_00362430 = (E30 *)(h->xc + (s32)h);
+    (*(E30 **)&D_00362430) = (E30 *)(h->xc + (s32)h);
     for (i = 0; i < D_00362448; i++) {
-        E30 *e = &D_00362430[i];
+        E30 *e = &((E30 *)D_00362430)[i];
         if ((s32)e->x20 < 0) e->x20 = 0;
         else if (e->x24 & 2) e->x20 = func_0017adf8(D_0036242C, (s32)e->x20);
         else e->x20 = &D_00362428[(s32)e->x20];
