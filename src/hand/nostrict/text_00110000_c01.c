@@ -157,7 +157,7 @@ void func_00127568(void *, s32, C01Mat, f32 *, s32, f32);
 #define C01MAX(a, b) ((a) < (b) ? (b) : (a))
 
 void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
-    void *tex = ((u8 *)&D_002BD250);
+    void *tex = &D_002BD250;
     C01Box box;
     C01Mat m;
     C01Mat m2;

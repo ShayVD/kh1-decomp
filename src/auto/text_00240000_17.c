@@ -20,7 +20,7 @@ s32 func_00240ae0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
     if (!(M2C_FIELD(arg0, s32 *, 0x250) != 0)) {
         return arg3;
     }
-    return func_0023d700(M2C_FIELD(arg0, s32 *, 0), (s32) ((M2C_UNK *)&D_00426850), arg1, arg2, arg3, fparg0);
+    return func_0023d700(M2C_FIELD(arg0, s32 *, 0), (s32) &D_00426850, arg1, arg2, arg3, fparg0);
     return arg3;
 }
 

@@ -54,7 +54,7 @@ void func_001d3160(void) {
     void *temp_a3;
 
     if (D_0038CCC4 == 0) {
-        var_a4 = ((M2C_UNK *)&D_0038D170);
+        var_a4 = &D_0038D170;
     } else {
         var_a4 = &D_0039A580;
     }

@@ -89,7 +89,7 @@ s32 func_00149eb8(s32 arg0) {
 
 s32 func_0014d3c8(void) {
   unsigned long long new_var;
-  if ((((u32) D_002C5958) >> 5) & 1)
+  if ((D_002C5958 >> 5) & 1)
   {
     func_0014dcd8();
   }

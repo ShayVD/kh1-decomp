@@ -259,7 +259,7 @@ void func_00138a20(s32 arg0, void *arg1) {
 }
 
 void func_0013aaa0(void) {
-    (*(s32 *)&D_00304B78) &= ~8;
+    D_00304B78 &= ~8;
 }
 
 s32 func_0013bf68(void) {

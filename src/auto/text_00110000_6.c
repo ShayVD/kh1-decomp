@@ -184,7 +184,7 @@ void func_00115098(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_001158c8(s32 arg0) {
-    func_001158a8(((s8 *)&D_002C1260), arg0);
+    func_001158a8(&D_002C1260, arg0);
     func_001158a8(((s8 *)&D_002C1260) + 0x30, arg0 + 0xC);
     func_001158a8(((s8 *)&D_002C1260) + 0x10, arg0 + 4);
     func_001158a8(((s8 *)&D_002C1260) + 0x40, arg0 + 0x10);

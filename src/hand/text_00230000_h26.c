@@ -399,7 +399,7 @@ typedef struct { f32 val; f32 speed; } Fade;
  * reaches 128. */
 s32 func_002492e8(Fade *p, s32 dt) {
     if (p->speed != 0.0f) {
-        if (!(((s32)D_002C5960) & 1)) p->val += p->speed * (f32)dt;
+        if (!(D_002C5960 & 1)) p->val += p->speed * (f32)dt;
         if (p->val <= 0.0f) {
             p->val = 0.0f;
             p->speed = 0.0f;

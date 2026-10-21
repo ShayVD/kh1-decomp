@@ -250,7 +250,7 @@ s32 func_001ef270(s32 arg0, s32 arg1) {
 }
 
 s32 func_001ef658(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&(*(M2C_UNK *)&D_003E3E50) + (arg0 * 0xE4));
+    return *(M2C_UNK *)((s8 *)&D_003E3E50 + (arg0 * 0xE4));
 }
 
 void func_001efaa8(void) {

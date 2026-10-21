@@ -270,7 +270,7 @@ void func_00118688(s32 arg0, s32 arg1) {
 
 s32 func_0011b0c0(s32 arg0, s32 arg1) {
     func_0011a410(arg0);
-    return func_0011af48(arg0, arg1, 0, (s32) ((M2C_UNK *)&D_002BD250));
+    return func_0011af48(arg0, arg1, 0, (s32) &D_002BD250);
 }
 
 void func_0011cb80(s32 arg0) {
