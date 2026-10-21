@@ -34,7 +34,7 @@ extern f32 D_00362684;
 extern f32 D_002BBDFC;
 extern PadB D_002C5BB0;
 extern u8 D_002C58A0[];
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 f32 func_00120c88(f32);
 s32 func_00118b58(void *);
 s32 func_00119688(void *);
@@ -295,8 +295,8 @@ f32 fabsf(f32);
 extern s32 D_00362420;
 extern V4 D_00362600;
 extern f32 D_00362610[];
-extern V4 D_002E2780;
-extern V4 D_002E2790;
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 void func_0012fc58(void);
 void func_00267560(void *, void *, f32);
 s32 func_0017dbb8(void);
@@ -322,15 +322,15 @@ s32 func_0017e428(V4 *a, V4 *b)
     func_00267518(&D_005759B0, a, b);
     func_00267560(&D_005759B0, &D_005759B0, 0.5f);
     func_00267518(&D_005759B0, &D_005759B0, &D_00362600);
-    D_00362680.y = func_00124d28(&D_002E2780, &D_002E2790);
+    D_00362680.y = func_00124d28(((V4 *)&D_002E2780), ((V4 *)&D_002E2790));
     cur = D_00362680.y;
     ang = func_00124d28(a, b);
     D_005759B0.x44 = func_0017dbb8();
     if (D_005759B0.x44 != 0) {
         D_00362680.y = ang;
         cur = D_00362680.y;
-        func_00177900(&D_002E2780, &D_002E2790, cur);
-        func_002675a8(&D_002E2790, &D_005759B0);
+        func_00177900(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), cur);
+        func_002675a8(((V4 *)&D_002E2790), &D_005759B0);
         spd = 0.0f;
     } else {
         spd = 16.0f;

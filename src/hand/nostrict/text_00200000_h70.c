@@ -3,7 +3,7 @@
 typedef struct { u64 rgba; u64 st; s32 x, y, z, w; } V;
 typedef struct { u64 tag[2]; u64 a; u64 b; V v[4]; } G;
 #include "data/pieces/D_003F34B0.h"
-extern u8 D_003F1A70[];
+#include "data/pieces/D_003F1A70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
@@ -109,7 +109,9 @@ void func_0020b120(s32 prim, s32 al, u32 c0, u32 c1, u32 c2, u32 c3) {
 extern s32 D_00640E00[8];
 extern s32 D_00640E20;
 extern s32 D_003F34A8, D_003F34A4, D_003F34C0, D_003F34C8;
-extern s32 D_00640E2C, D_00640E30, D_002BC140, D_002BC144;
+extern s32 D_00640E2C, D_00640E30;
+#include "data/pieces/D_002BC144.h"
+#include "data/pieces/D_002BC140.h"
 s32 func_001ec510(void);
 void func_00207598(void);
 void func_0020d360(void);

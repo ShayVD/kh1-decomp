@@ -28,7 +28,7 @@
 typedef struct { u64 a, b; } QW;
 typedef struct { s32 u, v, p0, p1; s32 x, y, z, f; } UVXY;
 typedef struct { u64 tag, regs; s32 r, g, b, a; u64 tag2, regs2; UVXY v[12]; } Blk;
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);

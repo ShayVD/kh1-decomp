@@ -33,7 +33,7 @@ extern s32 D_003DD288;
 extern s32 D_003DD258;
 extern char D_00630FC8[];
 extern char D_003DD270[];
-extern char D_003DCB90[];
+#include "data/pieces/D_003DCB90.h"
 #include "data/pieces/D_003DD230.h"
 extern char D_003DD278[];
 extern char D_006305DA[][10];
@@ -53,7 +53,7 @@ s32 func_001e6038(void) {
         func_001ea128(D_00630FC8, D_003DD270);
         if (sv->a80[D_003DD258] == 0) {
             func_001ea268(D_00630FC8, D_006305DA[D_003DD258]);
-            func_001ea268(D_00630FC8, D_003DCB90);
+            func_001ea268(D_00630FC8, ((char *)&D_003DCB90));
         } else {
             func_001ea268(D_00630FC8, D_006305DA[D_003DD258]);
             func_001ea268(D_00630FC8, D_006310C8[sv->a80[D_003DD258] - 1].a);

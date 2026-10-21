@@ -7,7 +7,7 @@ extern f32 D_00641200;
 extern f32 D_00641208;
 extern f32 D_0064120C;
 extern f32 D_00641218;
-extern s32 D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_006411FC;
 extern s32 D_00641204;
 

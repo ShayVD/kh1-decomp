@@ -51,7 +51,7 @@ void func_0020bc48(s32 a0, s32 a1, s32 a2) {
     D_006411F8 = a2;
 }
 
-extern s32 D_003F3448[];
+#include "data/pieces/D_003F3448.h"
 extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);
 void func_001f3d58(s32, s32);
@@ -264,7 +264,7 @@ void func_0021ad08(s32 a0) {
 
 #include "data/types/text_00200000_h47_p.h"
 extern S5D80 D_00425D80;
-extern S5D80 *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 
 void func_0021ae28(void) {

@@ -19,8 +19,8 @@ s32 func_00101f80(void *);
 void func_00106bd8(void *, s32);
 
 extern s32 D_0029BE20[][32][16];
-typedef struct { s32 a, b, c, d; } Cfg;
-extern Cfg D_002A3E20[];
+#include "data/types/text_00100000_s11_w58_p.h"
+#include "data/pieces/D_002A3E20.h"
 extern f32 D_003732D0[];
 extern f32 D_002BBDFC;
 extern s32 D_002A45D0[];

@@ -9,12 +9,12 @@
 	PIECE D_003F1A60, 0x4, 4
 	PIECE D_003F1A64, 0x4, 4
 	PIECE D_003F1A68, 0x8, 8  /* data/pieces/D_003F1A68.h */
-	PIECE D_003F1A70, 0x400, 16  /* untyped: users disagree: Q D_003F1A70[] | u8 D_003F1A70[]; unparsed in 1 file(s); session 25: as u8 D_003F1A70[0x400]: new warning in text_001f0000_h69.c */
-	PIECE D_003F1E70, 0x400, 16  /* untyped: users disagree: Q D_003F1E70[] | u8 D_003F1E70[]; session 25: as u8 D_003F1E70[0x400]: new warning in text_001f0000_h69.c */
-	PIECE D_003F2270, 0x400, 16  /* untyped: users disagree: Q D_003F2270[] | u8 D_003F2270[]; session 25: as Q D_003F2270[]: does not compile in text_001f0000_s12_s12w16.c, text_001f0000_s11_w41.c +2 */
+	PIECE D_003F1A70, 0x400, 16  /* data/pieces/D_003F1A70.h */
+	PIECE D_003F1E70, 0x400, 16  /* data/pieces/D_003F1E70.h */
+	PIECE D_003F2270, 0x400, 16  /* data/pieces/D_003F2270.h */
 	PIECE D_003F2670, 0xb0, 16  /* data/pieces/D_003F2670.h */
 	PIECE D_003F2720, 0xb0, 16  /* data/pieces/D_003F2720.h */
-	PIECE D_003F27D0, 0x400, 16  /* untyped: users disagree: Q D_003F27D0[] | u8 D_003F27D0[]; unparsed in 1 file(s); session 25: as u8 D_003F27D0[0x400]: new warning in text_001f0000_h69.c */
+	PIECE D_003F27D0, 0x400, 16  /* data/pieces/D_003F27D0.h */
 	PIECE D_003F2BD0, 0x4, 4
 	PIECE D_003F2BD4, 0x4, 4
 	PIECE D_003F2BD8, 0x68, 8  /* data/pieces/D_003F2BD8.h */
@@ -79,7 +79,7 @@
 	.word func_0020cf90
 	PIECE_BYTES D_003F3420, 0x4, 0x24
 	PIECE_END D_003F3420, 0x28
-	PIECE_BEGIN D_003F3448, 0x20, 8  /* untyped: users disagree: s32 D_003F3448[] | u8 *D_003F3448[]; session 25: as s32 D_003F3448[0x8]: new warning in text_00200000_h70.c */
+	PIECE_BEGIN D_003F3448, 0x20, 8  /* data/pieces/D_003F3448.h */
 	.word D_003F33F0
 	.word D_003F33C0
 	.word D_003F3370
@@ -94,14 +94,14 @@
 	PIECE D_003F34A4, 0x4, 4
 	PIECE D_003F34A8, 0x8, 8
 	PIECE D_003F34B0, 0x8, 8  /* data/pieces/D_003F34B0.h */
-	PIECE D_003F34B8, 0x8, 8  /* untyped: users disagree: Flags *D_003F34B8 | S34B8 *D_003F34B8 | s32 *D_003F34B8 | s32 D_003F34B8 | void *D_003F34B8; unparsed in 1 file(s); session 25: as S34B8 *D_003F34B8: code changes in text_001e0000_7.c; does not compile in text_001e0000_h22.c, text_001f0000_h23.c +2 */
+	PIECE D_003F34B8, 0x8, 8  /* data/pieces/D_003F34B8.h */
 	PIECE D_003F34C0, 0x4, 4
-	PIECE D_003F34C4, 0x4, 4  /* untyped: users disagree: N *D_003F34C4 | Nd *D_003F34C4 | Obj2 *D_003F34C4 | s32 D_003F34C4; session 25: as s32 D_003F34C4: does not compile in text_00200000_s6_20.c, text_00210000_h71.c +1 */
+	PIECE D_003F34C4, 0x4, 4  /* data/pieces/D_003F34C4.h */
 	PIECE D_003F34C8, 0x4, 4  /* data/pieces/D_003F34C8.h */
 	PIECE D_003F34CC, 0x4, 4
 	PIECE D_003F34D0, 0x4, 4
 	PIECE D_003F34D4, 0x4, 4
-	PIECE D_003F34D8, 0x4, 4  /* untyped: users disagree: s32 D_003F34D8 | void *D_003F34D8; session 25: as void *D_003F34D8: new warning in text_00200000_h70.c */
+	PIECE D_003F34D8, 0x4, 4  /* data/pieces/D_003F34D8.h */
 	PIECE D_003F34DC, 0x4, 4
 	PIECE D_003F34E0, 0x4, 4
 	PIECE D_003F34E4, 0x4, 4
@@ -1144,7 +1144,7 @@
 	PIECE_END D_003F7EA0, 0x24
 	PIECE D_003F7EC4, 0x4, 4
 	PIECE D_003F7EC8, 0x8, 8
-	PIECE D_003F7ED0, 0x3c8, 8  /* untyped: users disagree: S7ED0 D_003F7ED0 | u8 D_003F7ED0[]; session 25: as u8 D_003F7ED0[0x3c8]: does not compile in text_00230000_s8_w8.c */
+	PIECE D_003F7ED0, 0x3c8, 8  /* data/pieces/D_003F7ED0.h */
 	PIECE D_003F8298, 0x10, 8
 	PIECE D_003F82A8, 0x28, 8  /* data/pieces/D_003F82A8.h */
 	PIECE D_003F82D0, 0x20, 16

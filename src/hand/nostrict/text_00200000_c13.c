@@ -25,8 +25,8 @@ typedef struct {
     u64 col, q;
     XY w[2];
 } P;
-extern u8 D_003F1E70[];
-extern u8 D_003F1A70[];
+#include "data/pieces/D_003F1E70.h"
+#include "data/pieces/D_003F1A70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);

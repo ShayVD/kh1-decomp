@@ -273,8 +273,8 @@ void func_00246708(Blk *d, Blk *s, s32 v) {
 }
 
 /* Ten 0x930-byte slots: a free one, else the oldest. */
-typedef struct { s32 used; s32 age; u8 pad8[0x930 - 8]; } Fx;
-extern Fx D_0045FAC0[10];
+#include "data/types/text_00230000_h26.h"
+#include "data/pieces/D_0045FAC0.h"
 
 void func_00247350(void) {
     s32 i;
@@ -393,13 +393,13 @@ s32 func_00248e30(void) {
 }
 
 typedef struct { f32 val; f32 speed; } Fade;
-extern s32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 
 /* Steps a fade by speed*dt (unless paused): 2 when it reaches 0, 1 when it
  * reaches 128. */
 s32 func_002492e8(Fade *p, s32 dt) {
     if (p->speed != 0.0f) {
-        if (!(D_002C5960 & 1)) p->val += p->speed * (f32)dt;
+        if (!(((s32)D_002C5960) & 1)) p->val += p->speed * (f32)dt;
         if (p->val <= 0.0f) {
             p->val = 0.0f;
             p->speed = 0.0f;
@@ -451,7 +451,9 @@ void func_0024aa48(void *a, Tag *t, Src *s) {
  * parameter block; the ones at +0x40 and +0x48 are restored after. */
 typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;
 extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
-extern s32 D_0046A03C, D_0046A040, D_0046A044, D_0046A048;
+extern s32 D_0046A040, D_0046A048;
+#include "data/pieces/D_0046A044.h"
+#include "data/pieces/D_0046A03C.h"
 void func_0024e0f0(s32, s32, s32);
 void func_0024b228(s32 i, s32 a, s32 b, s32 c) {
     Prm *p = D_00669A18[i];
@@ -460,7 +462,7 @@ void func_0024b228(s32 i, s32 a, s32 b, s32 c) {
     o40 = D_0046A040;
     o48 = D_0046A048;
     t10 = p->unk10;
-    D_0046A044 = p->unk14;
+    (*(s32 *)&D_0046A044) = p->unk14;
     t18 = p->unk18;
     D_0046A040 = t10;
     D_0046A048 = t18;
@@ -474,7 +476,7 @@ void func_0024b6d0(Prm *p, s32 a, s32 b, s32 c) {
     o40 = D_0046A040;
     o48 = D_0046A048;
     t10 = p->unk10;
-    D_0046A044 = p->unk14;
+    (*(s32 *)&D_0046A044) = p->unk14;
     t18 = p->unk18;
     D_0046A040 = t10;
     D_0046A048 = t18;

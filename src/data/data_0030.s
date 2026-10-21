@@ -147,14 +147,14 @@
 	.word D_0048D7B0
 	PIECE_BYTES D_0030433C, 0x160, 0x4
 	PIECE_END D_0030433C, 0x164
-	PIECE D_003044A0, 0x10, 16  /* untyped: users disagree: u16 *D_003044A0; unparsed in 1 file(s); session 25: as void *volatile D_003044A0: does not compile in text_00120000_b02.c */
+	PIECE D_003044A0, 0x10, 16  /* data/pieces/D_003044A0.h */
 	PIECE D_003044B0, 0x10, 16
 	PIECE D_003044C0, 0x10, 16
 	PIECE D_003044D0, 0x8, 8
 	PIECE D_003044D8, 0x4, 4  /* untyped: users disagree: C02Slot D_003044D8[] | ColEnt D_003044D8[] | ColEntA D_003044D8[] | Ent52b D_003044D8[] | W29E10 D_003044D8[] | W6Ent16 D_003044D8[]; session 25: as ColEnt D_003044D8[]: does not compile in text_00130000_c02.c, text_00110000_h29.c +3 */
 	PIECE D_003044DC, 0x4, 4  /* data/pieces/D_003044DC.h */
-	PIECE D_003044E0, 0x5f8, 8  /* untyped: users disagree: B3Tbl D_003044E0[] | C02MSlot D_003044E0[] | MdlEnt D_003044E0[]; session 25: as B3Tbl D_003044E0[]: does not compile in text_00130000_c02.c, text_00140000_h33.c */
-	PIECE D_00304AD8, 0x8, 8  /* untyped: users disagree: O15 *D_00304AD8 | W32Obj3 *D_00304AD8 | s32 D_00304AD8; session 25: as O15 *D_00304AD8: does not compile in text_00120000_h54.c, text_00130000_h32.c */
+	PIECE D_003044E0, 0x5f8, 8  /* data/pieces/D_003044E0.h */
+	PIECE D_00304AD8, 0x8, 8  /* data/pieces/D_00304AD8.h */
 	PIECE D_00304AE0, 0x10, 16
 	PIECE D_00304AF0, 0x10, 16
 	PIECE_BEGIN D_00304B00, 0x20, 16
@@ -178,9 +178,9 @@
 	PIECE_BYTES D_00304B48, 0x18, 0x4
 	.word func_0013b8f0
 	PIECE_END D_00304B48, 0x20
-	PIECE D_00304B6C, 0x4, 4  /* untyped: users disagree: s32 D_00304B6C; unparsed in 1 file(s); session 25: as s32 D_00304B6C: does not compile in text_00130000_2.c */
+	PIECE D_00304B6C, 0x4, 4  /* data/pieces/D_00304B6C.h */
 	PIECE D_00304B70, 0x8, 8
-	PIECE D_00304B78, 0x4, 4  /* untyped: users disagree: W55Bf D_00304B78 | s32 D_00304B78 | u32 D_00304B78; session 25: as u32 D_00304B78: new warning in text_00130000_h55.c */
+	PIECE D_00304B78, 0x4, 4  /* data/pieces/D_00304B78.h */
 	PIECE D_00304B7C, 0x4, 4
 	PIECE D_00304B80, 0x4, 4
 	PIECE D_00304B84, 0x4, 4  /* data/pieces/D_00304B84.h */
@@ -191,7 +191,7 @@
 	PIECE D_00304C18, 0x28, 8
 	PIECE D_00304C40, 0x8, 8
 	PIECE D_00304C48, 0x28, 8
-	PIECE D_00304C70, 0xe4, 4  /* untyped: users disagree: M2C_UNK D_00304C70 | St6C D_00304C70 | T16s D_00304C70 | W7Lv D_00304C70 | u8 D_00304C70[]; session 25: as u8 D_00304C70[0xe4]: new warning in text_00140000_h33.c, text_00140000_s7_w26.c +1 */
+	PIECE D_00304C70, 0xe4, 4  /* data/pieces/D_00304C70.h */
 	PIECE D_00304D54, 0xc, 4
 	PIECE D_00304D60, 0x4, 4  /* untyped: type W606F8 is not a common.h basic type */
 	PIECE D_00304D64, 0x4c, 4  /* data/pieces/D_00304D64.h */

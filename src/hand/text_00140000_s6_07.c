@@ -32,7 +32,7 @@ void func_0014d570(f32 *v, f32 lo, f32 hi, f32 max, f32 g) {
 
 
 typedef struct { s32 f0, f4; } S31b0;
-extern S31b0 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 f32 func_0012ec60(s32, s32, f32 *);
 void func_001315c0(void *, s32, f32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
@@ -49,7 +49,7 @@ void func_0014d988(void *o, s32 unused, f32 *v, f32 r, f32 off, f32 scale, f32 l
     f32 t;
 
     z = 0.0f;
-    h = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, d);
+    h = func_0012ec60((*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4, d);
     func_001315c0(o, 0x8003, z, p);
     func_00267530(d, d, p);
     if (r < func_00121748(d, v)) {
@@ -65,7 +65,7 @@ void func_0014d988(void *o, s32 unused, f32 *v, f32 r, f32 off, f32 scale, f32 l
 
 typedef struct { union { u64 x; u8 id; } f; u8 pad8[8]; f32 mn[4]; f32 mx[4]; } W34Box;
 typedef struct { u8 pad[4]; u8 n; u8 pad5[0xb]; W34Box box[1]; } W34Boxes;
-extern W34Boxes *D_00350D78;
+#include "data/pieces/D_00350D78.h"
 extern s32 D_0054F44C;
 typedef struct { u8 x[20]; } Col20;
 typedef struct { u8 pad[5]; u8 n; u8 pad6[0xe]; Col20 *cols; } ColSet;
@@ -85,7 +85,7 @@ s32 func_0014ee88(Ob88 *o) {
     W34Box *b;
     ColSet *cs;
 
-    if (!D_00350D78 || !o || !(cs = o->cs) || !cs->n) return 0;
+    if (!((W34Boxes *)D_00350D78) || !o || !(cs = o->cs) || !cs->n) return 0;
     i = 0;
     m = 0;
     func_0015bad0(o, cs->cols, &cap);
@@ -93,8 +93,8 @@ s32 func_0014ee88(Ob88 *o) {
     q[1] = cap.a[2];
     func_00267530(lo, cap.b, q);
     func_00267518(hi, cap.b, q);
-    b = D_00350D78->box;
-    for (; i < D_00350D78->n; i++, b++) {
+    b = ((W34Boxes *)D_00350D78)->box;
+    for (; i < ((W34Boxes *)D_00350D78)->n; i++, b++) {
         if ((b->f.x & 0x200) || func_0014ee08(lo, hi, (f32 *)b)) m |= 1 << (b->f.id - 1);
     }
     return m & D_0054F44C;

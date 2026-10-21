@@ -42,7 +42,7 @@ typedef struct {
     s32 x4;
 } C02Src;
 
-extern void (*D_00351BC8)(s32);
+#include "data/pieces/D_00351BC8.h"
 
 C02Q *func_0011fb38(s32 reg, u64 val, C02Q *p);
 void func_0011fb48(C02Q *t, s32 eop, C02Q *end);
@@ -241,7 +241,7 @@ typedef struct {
 } C02Ray;
 
 extern u8 D_002C58A0[];
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 extern u8 D_003044C0[];
 extern u8 D_003044B0[];
 
@@ -416,7 +416,7 @@ typedef struct {
     u8 pad[12];
 } C02MSlot;
 
-extern C02MSlot D_003044E0[];
+#include "data/pieces/D_003044E0.h"
 extern u8 D_002C58A0[];
 
 f32 func_0015ca50(C02Ob3 *o);
@@ -550,7 +550,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
         return 0;
     mo = 0;
     if (bst.mesh != -1)
-        mo = D_003044E0[bst.mesh].p;
+        mo = ((C02MSlot *)&D_003044E0)[bst.mesh].p;
     ((C02Hit *)o->x148)->x90 = bst.id;
     ((C02Hit *)o->x148)->x94 = mo;
     bn[3] = 0;
@@ -794,7 +794,7 @@ struct C02Ac {
 };
 
 extern u32 D_002C5958;
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 #include "data/pieces/D_002E31A8.h"
 extern u8 D_002E3190[];
 s32 D_00F20000(s32, void *);

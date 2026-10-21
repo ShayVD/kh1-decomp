@@ -3,7 +3,7 @@
 typedef struct { u8 pad[12400]; u64 d12400; } Big3;
 extern Big3 D_00389C90;
 typedef struct { s32 x0; u8 n; s32 off[1]; } Tbl;
-extern Tbl *D_003DABD4;
+#include "data/pieces/D_003DABD4.h"
 void func_00155be0(void *p);
 
 /* func_001cf3e0: t is copied from base at the loop top and killed (t = 0) after the call:
@@ -16,7 +16,7 @@ void func_001cf3e0(void) {
     Tbl *base;
     Tbl *t;
     D_00389C90.d12400 &= ~0x400000000ULL;
-    base = D_003DABD4;
+    base = ((Tbl *)D_003DABD4);
     n = base->n;
     t = base;
     for (i = 0; i < n; i++) {

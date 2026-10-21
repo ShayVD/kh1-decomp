@@ -58,11 +58,11 @@
 	PIECE D_00362420, 0x4, 4
 	PIECE D_00362424, 0x4, 4  /* data/pieces/D_00362424.h */
 	PIECE D_00362428, 0x4, 4  /* data/pieces/D_00362428.h */
-	PIECE D_0036242C, 0x4, 4  /* untyped: users disagree: Rec *D_0036242C | s32 D_0036242C; session 25: as s32 D_0036242C: new warning in text_00170000_h11.c */
+	PIECE D_0036242C, 0x4, 4  /* data/pieces/D_0036242C.h */
 	PIECE D_00362430, 0x4, 4  /* untyped: users disagree: Box *D_00362430 | E30 *D_00362430 | s32 D_00362430; session 25: as Box *D_00362430: new warning in text_00170000_h11.c */
-	PIECE D_00362434, 0x4, 4  /* untyped: users disagree: CamPt *D_00362434 | P1c *D_00362434 | Rec20 *D_00362434 | s32 D_00362434 | void *D_00362434; session 25: as s32 D_00362434: new warning in text_00170000_b06.c, text_00170000_h38.c +1; does not compile in text_00170000_s7_w2.c, text_00170000_h61.c */
+	PIECE D_00362434, 0x4, 4  /* data/pieces/D_00362434.h */
 	PIECE D_00362438, 0x4, 4  /* untyped: users disagree: P1c *D_00362438 | Path *D_00362438 | PathB *D_00362438 | Rec20 *D_00362438 | S18 *D_00362438 | s32 D_00362438 | void *D_00362438; unparsed in 1 file(s); session 25: as Path *D_00362438: does not compile in text_00170000_s6_10.c, text_00170000_s7_w2.c +2; new warning in text_s7_w27.c */
-	PIECE D_0036243C, 0x4, 4  /* untyped: users disagree: Box *D_0036243C | s32 D_0036243C | void *D_0036243C; session 25: as s32 D_0036243C: does not compile in text_00170000_b06.c; new warning in text_00170000_h38.c */
+	PIECE D_0036243C, 0x4, 4  /* data/pieces/D_0036243C.h */
 	PIECE D_00362440, 0x4, 4
 	PIECE D_00362444, 0x4, 4
 	PIECE D_00362448, 0x4, 4
@@ -152,7 +152,7 @@
 	PIECE_BYTES D_00362690, 0x20, 0x10
 	PIECE_END D_00362690, 0x30
 	PIECE D_003626C0, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003626C0 | S26C0 D_003626C0; session 25: as S26C0 D_003626C0: does not compile in text_00170000_h61.c */
-	PIECE D_003626F0, 0x8, 8  /* untyped: users disagree: Arg D_003626F0[] | M2C_UNK D_003626F0 | S26F0 D_003626F0; session 25: as Arg D_003626F0[]: does not compile in text_00170000_h61.c */
+	PIECE D_003626F0, 0x8, 8  /* data/pieces/D_003626F0.h */
 	PIECE D_003626F8, 0xc, 4  /* data/pieces/D_003626F8.h */
 	PIECE D_00362704, 0x4, 4
 	PIECE D_00362708, 0x4, 4

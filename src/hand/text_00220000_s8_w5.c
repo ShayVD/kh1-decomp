@@ -133,9 +133,9 @@ extern s32 D_0064379C;
 extern u8 *D_00304BE8;
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
-extern Nd *D_003F34C4;
+#include "data/pieces/D_003F34C4.h"
 extern s32 D_003F6E2C;
-extern C28 D_00425C28;
+#include "data/pieces/D_00425C28.h"
 extern u8 D_003F6C30[];
 extern u8 D_003F6C00[];
 extern u8 D_003F6BD0[];
@@ -184,8 +184,8 @@ void func_002287f8(void *arg0) {
                     func_00233ef8(0);
                     D_00643758 = 0;
                     D_0064373C = 0;
-                    D_00425C28.x0 = 3;
-                    D_00425C28.x10 = 3;
+                    (*(C28 *)&D_00425C28).x0 = 3;
+                    (*(C28 *)&D_00425C28).x10 = 3;
 
                     objs[0] = func_001f31a8(D_003F6C30, 6);
                     if (objs[0]) {
@@ -271,9 +271,9 @@ void func_002287f8(void *arg0) {
                     }
                     break;
                 case 3:
-                    func_001f37c0(D_003F34C4->x10, 1);
-                    func_001f3d58(D_003F34C4->x10->x10, 2);
-                    func_001f3d58(D_003F34C4->x10->x10->x10, 2);
+                    func_001f37c0(((Nd *)D_003F34C4)->x10, 1);
+                    func_001f3d58(((Nd *)D_003F34C4)->x10->x10, 2);
+                    func_001f3d58(((Nd *)D_003F34C4)->x10->x10->x10, 2);
                     func_0020d1d8(func_001f4468(arg0));
                     func_0011d768(2);
                     func_002075f8();

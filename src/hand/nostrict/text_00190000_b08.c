@@ -362,7 +362,7 @@ typedef struct {
     u8 b19;
 } ShipolyDKey;
 extern PppMtx D_00616180, D_00616080;
-extern f32 D_003701D0[4];
+#include "data/pieces/D_003701D0.h"
 void func_00267e40(f32 *, f32 *);
 
 void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {

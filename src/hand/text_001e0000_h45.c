@@ -68,8 +68,8 @@ extern Big498 D_003DC498;
 extern s32 D_002BCDE4;
 extern s32 D_002C1364;
 extern s32 D_002C5BB8;
-extern s32 D_0037A378;
-extern s32 D_003DABD4;
+#include "data/pieces/D_0037A378.h"
+#include "data/pieces/D_003DABD4.h"
 extern s32 D_003DC470;
 extern s32 D_003DC474;
 extern s32 D_003DC478;

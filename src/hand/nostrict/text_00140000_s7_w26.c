@@ -27,7 +27,7 @@ typedef struct {
     u8 pad316[0x3C4 - 0x316];
     f32 f3c4;
 } ObjF3;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 void func_00130398(ObjF3 *, s32, f32);
 void func_00130578(ObjF3 *, s32, f32);
 void func_002675a8(V4f *, V4f *);
@@ -77,7 +77,7 @@ typedef struct { u8 pad[0x38]; s16 x38; } T16c8;
 typedef struct { u8 pad[0x44]; s32 x44; s32 x48; u8 pad4c[0xbe - 0x4c]; u16 xbe; u8 padc0[8]; T16c8 *xc8; } T16s;
 typedef struct { u8 pad[0x4c]; u16 x4c; } T16i;
 typedef struct { u8 pad[0x6c]; T16s *x6c; u8 pad70[0x130 - 0x70]; T16i *info; } T16o;
-extern T16s D_00304C70;
+#include "data/pieces/D_00304C70.h"
 extern u32 D_002C5958;
 s32 func_00141540(T16o *o, s32 a);
 s32 func_00141608(T16o *o, s32 n) {
@@ -85,7 +85,7 @@ s32 func_00141608(T16o *o, s32 n) {
     u16 id;
     s32 v, max;
     s32 t;
-    if (s == 0 || s == &D_00304C70) return 0;
+    if (s == 0 || s == ((T16s *)&D_00304C70)) return 0;
     if (((D_002C5958 >> 11) & 1) || o->info->x4c >= 10 || (o->info->x4c == 0 && D_00304BE8->m[o->info->x4c].bits == 0)) return s->xbe;
     v = s->xbe + n;
     max = s->x48 * 30;

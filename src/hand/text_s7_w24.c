@@ -53,8 +53,8 @@ typedef struct {
     u8 pad12416[192]; s32 w12608; s32 *p12612;
 } Big;
 extern Big D_00389C90;
-extern union { s32 i; u16 h; } D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern u8 D_003C57E0[];
 s32 func_001cb3c0(VM3c0 *vm) {
     s32 n, i, k;
@@ -62,8 +62,8 @@ s32 func_001cb3c0(VM3c0 *vm) {
     Big *b;
     b = &D_00389C90;
     n = vm->stk[vm->sp];
-    i = D_00389C80.i;
-    h = D_00389C80.h;
+    i = (*(union { s32 i; u16 h; }(*))&D_00389C80).i;
+    h = (*(union { s32 i; u16 h; }(*))&D_00389C80).h;
     D_00388480[i] = D_003C57E0;
     k = b->w[n];
     b->w[n] = k + 1;

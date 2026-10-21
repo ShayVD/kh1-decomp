@@ -21,7 +21,7 @@ extern M2C_UNK func_001e0898;
 extern M2C_UNK func_001e08d8;
 extern M2C_UNK func_001e10f8;
 extern M2C_UNK func_001e4268;
-extern s32 D_003DACA0;
+#include "data/pieces/D_003DACA0.h"
 extern s32 D_003DAD38;
 #include "data/pieces/D_003DAD3C.h"
 extern s32 D_003DC470;
@@ -33,7 +33,7 @@ extern s32 D_003E8E2C;
 extern s32 D_0062F6D0;
 extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern s8 D_0062F810; /* src/data/bss_0062.c: u8 D_0062F810[0x30] */
-extern void *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 s32 func_0010e3f0(s32);
 s32 func_00147840(s32);
 s32 func_001ee768();
@@ -226,7 +226,7 @@ u32 func_001ee2d0(void) {
 void func_001ee4e8(void) {
     func_00232de0();
     func_00219128();
-    M2C_FIELD(D_003F34B8, s32 *, 0x1C) = 0;
+    M2C_FIELD(((void *)D_003F34B8), s32 *, 0x1C) = 0;
     func_00216180();
     func_0021dbb8();
 }

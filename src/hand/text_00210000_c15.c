@@ -159,7 +159,7 @@ extern s32 D_003F34C8;
 extern u8 D_00490F58[], D_00490F70[], D_00490F88[], D_00490FA0[], D_00490FB8[], D_00490FD0[];
 extern s32 D_00642E94;
 extern u8 D_003F5A90[];
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F5C30[];
 void func_00223e10(void);
 void func_00120748(void *, s32, void *, s32);
@@ -315,11 +315,11 @@ void func_0021d348(Obj *o) {
             p = func_001f31a8(D_003F5A90, 0);
             if (p) func_001f3e48(p, o);
             func_0021fb10();
-            if (!D_003F34B8->x74) {
+            if (!((S34B8 *)D_003F34B8)->x74) {
                 for (i = 0; i < 6; i++) {
                     if (!D_003F5C30[i]) goto inc;
                 }
-                D_003F34B8->x74 = 1;
+                ((S34B8 *)D_003F34B8)->x74 = 1;
                 func_0011d768(18);
             }
         inc:

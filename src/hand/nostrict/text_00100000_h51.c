@@ -74,10 +74,10 @@ s32 func_00103058(void) {
 
 #include "data/types/nostrict_text_00100000_h51.h"
 typedef struct { f32 x, y, z; } Vec3;
-typedef struct { s32 x, y, z; } IVec3;
-extern Grid *D_002A6234;
-extern IVec3 D_002A6308;
-extern IVec3 D_002A6318;
+#include "data/types/nostrict_text_00100000_h51_p2.h"
+#include "data/pieces/D_002A6234.h"
+#include "data/pieces/D_002A6308.h"
+#include "data/pieces/D_002A6318.h"
 #include "data/pieces/D_002A6324.h"
 void func_00104850(Vec3 *, IVec3 *);
 
@@ -88,14 +88,14 @@ s32 func_00104940(Vec3 *v, s32 *out) {
 
     func_00104850(&v[0], &lo);
     func_00104850(&v[1], &hi);
-    if (D_002A6324 == D_002A6234 && D_002A6308.x == hi.x && D_002A6308.z == hi.z
+    if (D_002A6324 == ((Grid *)D_002A6234) && D_002A6308.x == hi.x && D_002A6308.z == hi.z
         && D_002A6318.x == lo.x && D_002A6318.z == lo.z) {
         return -1;
     }
     n = 0;
     for (i = lo.x; i < hi.x + 1; i++) {
         for (j = lo.z; j < hi.z + 1; j++) {
-            *out++ = i * D_002A6234->nz + j;
+            *out++ = i * ((Grid *)D_002A6234)->nz + j;
             n++;
         }
     }
@@ -104,7 +104,7 @@ s32 func_00104940(Vec3 *v, s32 *out) {
     D_002A6308.z = hi.z;
     D_002A6318.x = lo.x;
     D_002A6318.z = lo.z;
-    D_002A6324 = D_002A6234;
+    D_002A6324 = ((Grid *)D_002A6234);
 /*Q*/
     return n;
 }
@@ -167,11 +167,9 @@ s32 func_00104c38(s32 idx, Vec4 *out) {
     }
 }
 
-typedef struct { u32 lo:25; u32 f25:1; u32 hi:6; } Bits16;
-typedef union { s32 i; u16 h; f32 f; } U12;
-typedef struct { u8 pad[12]; U12 u12; Bits16 b16; } Tri20;
+#include "data/types/nostrict_text_00100000_h51_p.h"
 extern s32 D_002A6230;
-extern Tri20 *D_002A6274;
+#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
 extern u16 D_002A62F8[];
 void func_0011d270(s32, s32, s32, s32);

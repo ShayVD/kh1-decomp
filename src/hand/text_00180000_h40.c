@@ -471,7 +471,7 @@ typedef struct {
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 void func_00267548(f32 *, f32 *, f32 *);
 
-extern f32 D_003701D0[4];
+#include "data/pieces/D_003701D0.h"
 extern PppQv D_00616010[3];
 extern PppMtx D_006160C0; /* src/data/bss_0061.c: f32 D_006160C0[4][4] */
 
@@ -621,7 +621,7 @@ typedef struct {
 extern PppLight D_0035C710[256];
 extern PppLight *D_0061E310[256];
 extern s32 D_0061E710;
-extern f32 D_002E2780[];
+#include "data/pieces/D_002E2780.h"
 
 void func_0019d968(s32, s32);
 

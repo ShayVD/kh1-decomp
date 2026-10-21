@@ -5,10 +5,10 @@
  * include/data/data_0038.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_00388480, 0x444, 4  /* untyped: users disagree: char *D_00388480[] | s32 D_00388480[] | s8 *D_00388480[] | u8 *D_00388480[]; session 25: as u8 *D_00388480[]: new warning in text_001c0000_h42.c, text_001c0000_s11_w1.c +1 */
+	PIECE D_00388480, 0x444, 4  /* data/pieces/D_00388480.h */
 	PIECE D_003888C4, 0x400, 4
 	PIECE D_00388CC4, 0xfbc, 4  /* data/pieces/D_00388CC4.h */
-	PIECE D_00389C80, 0x10, 16  /* untyped: users disagree: s32 D_00389C80 | u32 D_00389C80; unparsed in 1 file(s); session 25: as u32 D_00389C80: does not compile in text_s7_w24.c */
+	PIECE D_00389C80, 0x10, 16  /* data/pieces/D_00389C80.h */
 	PIECE_BEGIN D_00389C90, 0x34d0, 16  /* merged (a user declares it larger than the next name): D_0038ACC4, D_0038B4C4, D_0038CCC4, D_0038CCCC, D_0038CD04, D_0038CD08, D_0038CD3C, D_0038CDDC, D_0038CDE0, D_0038CDE4, D_0038CDE8, D_0038CDEC, D_0038CDF0, D_0038CDF4, D_0038CDF8, D_0038CE00, D_0038CE04, D_0038D010, D_0038D0D4, D_0038D0E0; data/pieces/D_00389C90.h */
 	PIECE_BYTES D_00389C90, 0x0, 0x1034
 	PIECE_LABEL D_00389C90, D_0038ACC4, 0x1034

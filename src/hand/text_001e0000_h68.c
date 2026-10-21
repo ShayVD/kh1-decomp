@@ -89,7 +89,7 @@ extern u8 D_003DC380[];
 extern u8 D_003DC460[];
 extern u8 D_003DC468[];
 extern u8 D_003DCB10[][32];
-extern char D_003DCB90[][32];
+#include "data/pieces/D_003DCB90.h"
 extern u8 D_003DCEF0[];
 #include "data/pieces/D_003DD230.h"
 extern s32 D_003DD258;

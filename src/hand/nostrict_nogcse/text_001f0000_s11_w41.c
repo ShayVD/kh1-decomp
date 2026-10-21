@@ -22,7 +22,7 @@ extern s32 D_003E8D00[];
 extern s32 D_003E8E00;
 extern s32 D_003F1A64;
 extern u16 D_003E8D40[];
-extern Q D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 
@@ -60,7 +60,7 @@ void func_001fa8b0(Txt9 *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
 
 
 
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
     x16 = x * 16;
     sz16 = sz * 16;
     base = func_00122048(1024, 128);

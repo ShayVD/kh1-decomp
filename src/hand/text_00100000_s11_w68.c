@@ -10,7 +10,7 @@ s32 func_00105078(void);
 void func_00105218(void);
 void func_001050d0(void);
 extern s32 D_002A6270;
-extern s32 D_002A6274;
+#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
 extern s32 D_002A6290;
 extern s32 D_002A62A4;
@@ -29,7 +29,7 @@ void func_00105288(H *h, s32 mode) {
     s32 n, b, q, m;
     s32 *p;
     D_002A6270 = (s32)h + h->f0;
-    D_002A6274 = (s32)h + h->f6;
+    (*(s32 *)&D_002A6274) = (s32)h + h->f6;
     D_002A6294 = h->f7 / 20;
     D_002A6290 = (s32)h + h->f8;
     D_002A62A4 = h->f9 / 16;
@@ -61,7 +61,7 @@ void func_00105288(H *h, s32 mode) {
     }
     n = D_002A62A0;
     if (n > 0) {
-        p = (s32 *)((s32 *)&D_002A6274)[1];
+        p = (s32 *)((s32 *)((s32 *)&D_002A6274))[1];
         do {
             if (*p != -1) *p += D_002A627C;
             p++;

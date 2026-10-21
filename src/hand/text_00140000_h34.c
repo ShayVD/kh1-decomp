@@ -370,7 +370,7 @@ typedef struct {
     u8 pad60[0x10];
     f32 x70[4];
 } W34Act2;
-extern f32 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 s32 func_0014af60(W34Act2 *a, W34Act2 *b) {
     f32 m[4][4] __attribute__((aligned(16)));
     f32 v[4] __attribute__((aligned(16)));
@@ -380,7 +380,7 @@ s32 func_0014af60(W34Act2 *a, W34Act2 *b) {
     if (!((s32)(b->x0 >> 6) & 1)) {
         k = (s32)(a->x0 >> 17) & 7;
         if (k == 1 || k == 3 || k == 4 || k == 2) {
-            func_00267810(m, D_002C58D0, a->x5c->x60);
+            func_00267810(m, ((f32 *)&D_002C58D0), a->x5c->x60);
             func_002675a8(v, a->x30.w.x34->x30);
             v[3] = 0;
             func_002672f8(v, m, v);
@@ -434,7 +434,7 @@ s32 func_0014ca38(W34Pl2 *o, s32 a) {
 }
 
 /* 0x14CB90 */
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 typedef struct { u32 x0; u8 pad4[0x144]; W34Tm *x148; u8 pad14c[0x3b0 - 0x14c]; f32 x3b0; u8 pad3b4[0x3d0 - 0x3b4]; s32 x3d0; } W34Pl3;
 s32 func_0014cb90(W34Pl3 *o) {
     s32 r;
@@ -553,13 +553,13 @@ s32 func_0014e510(s32 key) {
 /* 0x14E5B8 */
 typedef struct { union { u64 x; u8 id; } f; u8 pad8[8]; f32 mn[4]; f32 mx[4]; } W34Box;
 typedef struct { u8 pad[4]; u8 n; u8 pad5[0xb]; W34Box box[1]; } W34Boxes;
-extern W34Boxes *D_00350D78;
+#include "data/pieces/D_00350D78.h"
 s32 func_0014e5b8(f32 *p) {
     W34Box *b;
     s32 m, n, i;
-    if (!D_00350D78) return 0;
-    n = D_00350D78->n;
-    b = D_00350D78->box;
+    if (!((W34Boxes *)D_00350D78)) return 0;
+    n = ((W34Boxes *)D_00350D78)->n;
+    b = ((W34Boxes *)D_00350D78)->box;
     m = 0;
     for (i = 0; i < n; i++, b++) {
         if ((b->f.x & 0x200) || (p[0] >= b->mn[0] && p[0] <= b->mx[0] && p[2] >= b->mn[2] && p[2] <= b->mx[2]))

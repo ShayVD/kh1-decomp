@@ -256,7 +256,7 @@ typedef struct {
     u8 p14c[0x370 - 0x14c];
     u64 f370;
 } B12;
-extern u16 *D_003044A0;
+#include "data/pieces/D_003044A0.h"
 extern f32 func_00176850(void);
 extern s32 func_00122ff8(X12 *);
 extern void func_001586a8(s32);
@@ -306,8 +306,8 @@ s32 func_00134ba8(A12 *a, B12 *b, u32 *fl) {
     q = b->f6c;
     i = v - q->f50;
     if (i < 0) i = 0;
-    else if (i >= D_003044A0[0]) i = D_003044A0[0] - 1;
-    v = D_003044A0[i + 1];
+    else if (i >= (*(u16 **)&D_003044A0)[0]) i = (*(u16 **)&D_003044A0)[0] - 1;
+    v = (*(u16 **)&D_003044A0)[i + 1];
     if (lo) {
         lo = (f32)lo * a->fac;
         if (v < lo) v = lo;

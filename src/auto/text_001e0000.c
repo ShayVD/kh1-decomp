@@ -50,7 +50,7 @@ extern s32 D_006314D8;
 extern s32 D_006314DC;
 s32 D_0063F248 ALIGNED(8);
 extern s32 D_0063F540;
-extern void *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 s32 func_0011e340(M2C_UNK);
 s32 func_001ee768();
 s32 func_001efbb8();
@@ -298,7 +298,7 @@ void func_001ef528(void) {
 }
 
 s32 func_001ef7a0(void) {
-    return M2C_FIELD(D_003F34B8, s32 *, 0x1C);
+    return M2C_FIELD(((void *)D_003F34B8), s32 *, 0x1C);
 }
 
 void func_001ef948(void) {

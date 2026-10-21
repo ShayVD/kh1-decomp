@@ -48,13 +48,13 @@ extern Big D_00389C90;
 extern VM D_0038D170[], D_0039A580[];
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM *, s32);
-extern Bits D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
 extern s32 D_002C5950[]; /* D_002C5950[2] is D_002C5958 */
 extern s8 *D_003C39AC;
 extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern s32 D_00389C80;
-extern s8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 s32 func_001c1ce8(s8 *, s32);
 s32 func_001c1cf8(s8 *, s32);
 void *func_0011ef10(s32, void *);
@@ -78,12 +78,12 @@ void func_001c2ec8(s8 *p, s32 a1) {
     s32 (**fn)(VM *, s32);
     s32 *fl;
     D_003C39AC = p;
-    D_0037A378.b2 = 0;
-    D_0037A378.b3 = 0;
-    D_0037A378.b4 = 0;
+    (*(Bits *)&D_0037A378).b2 = 0;
+    (*(Bits *)&D_0037A378).b3 = 0;
+    (*(Bits *)&D_0037A378).b4 = 0;
     if (a1 == 0) {
         srand(func_001ee200());
-        D_0037A378.b0 = 0;
+        (*(Bits *)&D_0037A378).b0 = 0;
         D_002C5958 |= 0xc;
         func_001c29d8();
         D_006277E0 = 0;
@@ -139,7 +139,7 @@ void func_001c2ec8(s8 *p, s32 a1) {
             c += 4; k++;
         }
     }
-    func_001c2d20(q, &D_00389C80, D_00388480);
+    func_001c2d20(q, &D_00389C80, ((s8 **)&D_00388480));
     if (a1 == 0) e = D_0038D170;
     else e = D_0039A580;
     fn = D_0037A198;

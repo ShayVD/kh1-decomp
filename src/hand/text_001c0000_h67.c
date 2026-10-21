@@ -39,11 +39,11 @@ double sin(double);
 double cos(double);
 #include "data/types/text_001c0000_h67.h"
 extern Str D_00389C90;
-extern s32 D_00389C80;
-extern char *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 typedef struct { u64 d[22]; } Win;
 extern Win D_00629E70[]; /* src/data/bss_0062.c: Ent176 D_00629E70[4] */
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 void func_0010ef70(Win *, char *, void *);
 s32 func_001cbd80();
 extern u8 D_003C5650[];
@@ -64,7 +64,7 @@ s32 func_001cb7d0(VM *vm) {
         val -= q * d;
     }
     for (j = 0; (u32)j < 12; j++) D_0062A1F0[i++] = D_003C5650[j];
-    D_00388480[D_00389C80] = D_0062A1F0;
+    ((char **)&D_00388480)[D_00389C80] = D_0062A1F0;
     D_00389C90.tbl[idx][D_00389C90.cnt[idx]++] = *(u16 *)&D_00389C80;
     D_00389C80++;
     return 2;
@@ -82,7 +82,7 @@ s32 func_001cb960(VM *vm) {
         if (D_00389C90.st[i] == 4) {
             D_00389C90.st[i] = 2;
             D_00389C90.x4[idx] = 2;
-            func_0010ef70(&D_00629E70[i], D_00388480[v], func_001cbd80);
+            func_0010ef70(&D_00629E70[i], ((char **)&D_00388480)[v], func_001cbd80);
         }
     }
     return 2;
@@ -397,8 +397,8 @@ void func_001dcfd0(VM *vm) {
 
 typedef struct { s32 x0; u8 pad4[0x10]; s32 f14; } Q10;
 typedef struct { u8 pad0[0x10]; Q10 *q; u8 * f14; s32 f18; f32 f1c; f32 f20; f32 f24; } Task;
-extern f32 D_002E2790[4];
-extern f32 D_002E2780[4];
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 f32 func_001e9e58(f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_00267518(f32 *, f32 *, f32 *);

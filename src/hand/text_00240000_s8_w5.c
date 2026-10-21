@@ -1,7 +1,8 @@
 #include "common.h"
 typedef struct { s32 unk0; char *(*unk4)(void); s32 unk8; s32 unkC; s32 unk10; } HddCtx;
 extern HddCtx D_0046A688;
-extern s32 D_0046A614, D_0046A67C, D_0046A680, D_0046A678, D_0046A6AC, D_0046A608;
+extern s32 D_0046A614, D_0046A67C, D_0046A680, D_0046A678, D_0046A6AC;
+#include "data/pieces/D_0046A608.h"
 #include "data/pieces/D_0046A628.h"
 extern char D_00491978[];
 #include "data/pieces/D_004919B0.h"
@@ -46,13 +47,13 @@ s32 func_0024ddf8(void) {
         ok = 0;
         D_0046A6AC = 0;
     }
-    D_0046A608 = func_0024dd98(0);
+    (*(s32 *)&D_0046A608) = func_0024dd98(0);
     D_0046A614 = 20;
     r = func_0024daa0();
     D_0046A614 = 30;
     switch (abs(r) & 15) {
     case 0:
-        func_0024db78(D_0046A608);
+        func_0024db78(((s32)D_0046A608));
         if (func_0024d8f0()) {
             D_0046A67C = 1;
             if (ok) {

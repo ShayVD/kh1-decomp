@@ -25,7 +25,7 @@ extern M2C_UNK (*D_0066AA80)();
 #include "data/pieces/D_0044DFD0.h"
 #include "data/pieces/D_0044F380.h"
 #include "data/pieces/D_0044F4D0.h"
-extern M2C_UNK D_00451040;
+#include "data/pieces/D_00451040.h"
 extern M2C_UNK D_00469CA0;
 extern M2C_UNK D_00469F50;
 #include "data/pieces/D_004919B0.h"
@@ -75,7 +75,7 @@ void func_00242a38(void) {
     func_0024aac8(((M2C_UNK *)&D_0044DFD0));
     func_0024aac8(((M2C_UNK *)&D_0044F380));
     func_0024aac8(((M2C_UNK *)&D_0044F4D0));
-    func_0024aac8(&D_00451040);
+    func_0024aac8(((M2C_UNK *)&D_00451040));
     memset(&D_00651E50, 0, 0x4130);
     M2C_FIELD(&D_00651E50, s32 *, 0x4124) = (s32) (((u32) D_002C5958 >> 3) & 1);
     func_00241d60();

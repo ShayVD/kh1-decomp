@@ -29,12 +29,12 @@ typedef struct { u8 pad[16]; s32 w16, w20, w24, w28; u8 pad2[80]; s32 w112, w116
 
 /* ---- data ---- */
 extern char D_0029B170[];
-extern f32 D_0029B280[];
+#include "data/pieces/D_0029B280.h"
 extern u8 D_002A4160[];
 extern u8 D_002A4180[];
 extern s32 D_002A3F20;
 extern s32 D_002A3F28;
-extern s32 D_002A3F50[];
+#include "data/pieces/D_002A3F50.h"
 extern u64 D_002A6058;
 extern u8 D_002A6070[];
 extern u64 D_002A6178;
@@ -45,7 +45,7 @@ extern s32 D_002A6230;
 extern Ent20 *D_002A6238;
 extern Vec3 *D_002A624C;
 extern s32 D_002A6258;
-extern Ent20b *D_002A6274;
+#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
 extern u16 D_002A62F8[];
 extern GsRegs D_002A6330;
@@ -56,7 +56,7 @@ extern s32 D_002A6C50;
 extern f32 D_002BBDFC;
 extern s32 D_002BBE14;
 extern s32 D_002BC060[4];
-extern s32 D_002BC070;
+#include "data/pieces/D_002BC070.h"
 extern s32 D_002BC090, D_002BC094, D_002BC0A0, D_002BC0A4;
 extern Flags D_002BC0A8;
 extern s32 D_002BC0BC;
@@ -67,12 +67,12 @@ extern s32 D_002BCC98;
 extern s32 D_002BCDE8;
 extern s32 D_002C1368[];
 extern s32 D_002C138C;
-extern f32 D_002E2780[];
-extern f32 D_002E2790[];
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 extern s32 D_00472150[];
 extern s32 D_0048BFD0[2];
-extern Blk32 D_0048C630;
-extern Blk32 D_0048C690;
+#include "data/pieces/D_0048C630.h"
+#include "data/pieces/D_0048C690.h"
 extern s32 D_0048C6F0[];
 extern u8 D_00494320[];
 extern s32 D_00494410[];
@@ -173,7 +173,7 @@ void func_00101728(s32 arg) {
     s32 i;
     for (i = 0; i < 2; i++) {
         s32 v = D_00494410[i];
-        if (v != D_002A3F50[i] || v == 0) {
+        if (v != ((s32 *)&D_002A3F50)[i] || v == 0) {
             func_0011d3c8(v, i, arg);
         }
     }
@@ -311,7 +311,7 @@ void func_00104eb0(s32 i, f32 *out) {
 s32 func_00105020(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 80) return 1;
+        if ((((Ent20b *)D_002A6274)[i].w16 & 0xf6) == 80) return 1;
     }
     return 0;
 }
@@ -319,7 +319,7 @@ s32 func_00105020(void) {
 s32 func_00105078(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 144) return 1;
+        if ((((Ent20b *)D_002A6274)[i].w16 & 0xf6) == 144) return 1;
     }
     return 0;
 }
@@ -376,7 +376,7 @@ void func_00105f28(void) {
 }
 
 s32 func_001063f8(void) {
-    if (D_002BC070 == 128 && D_002BC0BC == 0 && D_002A6204 == 0) return 0;
+    if ((*(s32 *)&D_002BC070) == 128 && D_002BC0BC == 0 && D_002A6204 == 0) return 0;
     return 1;
 }
 
@@ -444,7 +444,7 @@ void func_00107e60(void) {
     f32 *p = v;
     func_00267530(p, D_002E2790, D_002E2780);
     func_002673b8(p, p);
-    func_002678b8(D_002A6C10, D_0029B280, p);
+    func_002678b8(D_002A6C10, ((f32 *)&D_0029B280), p);
 }
 
 void func_00108180(s32 n) {
@@ -477,14 +477,14 @@ void func_001086b8(s32 i, s32 n) {
 void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
     a[0] = b[0] = D_0048BFD0[0];
     a[1] = b[1] = D_0048BFD0[1];
-    o->w16 = D_0048C630.w16;
+    o->w16 = (*(Blk32 *)&D_0048C630).w16;
     o->w20 = (s32)a;
-    o->w24 = D_0048C630.w24;
-    o->w28 = D_0048C630.w28;
-    o->w112 = D_0048C690.w16;
+    o->w24 = (*(Blk32 *)&D_0048C630).w24;
+    o->w28 = (*(Blk32 *)&D_0048C630).w28;
+    o->w112 = (*(Blk32 *)&D_0048C690).w16;
     o->w116 = (s32)b;
-    o->w120 = D_0048C690.w24;
-    o->w124 = D_0048C690.w28;
+    o->w120 = (*(Blk32 *)&D_0048C690).w24;
+    o->w124 = (*(Blk32 *)&D_0048C690).w28;
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002A.h"

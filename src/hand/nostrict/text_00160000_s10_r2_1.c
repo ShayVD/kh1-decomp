@@ -12,13 +12,13 @@ extern s32 D_0057508C;
 extern V4EA D_00575090[40]; /* src/data/bss_0057.c: f32 D_00575090[40][4] */
 extern u32 D_002C5958;
 #include "data/pieces/D_002E3168.h"
-extern LockEA D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 extern LockEA D_00575080;
 extern f32 D_0035AF40;
 extern f32 D_0048E950;
 extern PrmEA D_0035AE80;
 extern TalkEA D_00575310;
-extern u8 D_002C5C60[];
+#include "data/pieces/D_002C5C60.h"
 
 extern s32 func_00122ff8(ChrEA *);
 extern void func_00122768();
@@ -113,8 +113,8 @@ s32 func_0016ea58(void) {
         w2 = 0;
     }
     if ((D_002C5958 & 1) && (D_002E3168 & 1)) {
-        if (D_002E31B0.tgt != 0) {
-            D_00575080 = D_002E31B0;
+        if ((*(LockEA *)&D_002E31B0).tgt != 0) {
+            D_00575080 = (*(LockEA *)&D_002E31B0);
         } else {
             inl_001711d0(D_0035BD40[0], &D_00575080, D_0035AF40);
             if (D_00575080.part < 0) D_00575080.tgt = 0;

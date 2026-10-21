@@ -67,7 +67,7 @@ s32 func_001425d0(Ch *);
 f32 func_00121748(f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_00267560(f32 *, f32 *, f32);
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 
 void func_00143660(Ch *a, f32 *dir, Ch *b, f32 *out) {
     f32 t[4];

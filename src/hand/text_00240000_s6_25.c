@@ -276,11 +276,11 @@ void func_0024aac8(UiFile *buffer) {
 
 /* 24b448 */
 typedef struct { u8 lo:3; u8 mode:2; u8 hi:3; } Bits8;
-extern volatile Bits8 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 extern Prm *D_0046A038;
-extern s32 D_0046A03C;
+#include "data/pieces/D_0046A03C.h"
 extern s32 D_0046A040;
-extern s32 D_0046A044;
+#include "data/pieces/D_0046A044.h"
 extern s32 D_0046A048;
 extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 void func_0024e1d0(void);
@@ -289,12 +289,12 @@ void func_0024b448(s32 i) {
     Prm *p;
     o40 = D_0046A040;
     o48 = D_0046A048;
-    switch (D_002C5968.mode) { default: return; case 0: break; }
+    switch ((*(volatile Bits8 *)&D_002C5968).mode) { default: return; case 0: break; }
     p = D_00669A18[i];
     D_0046A038 = p;
     D_0046A03C = p->unkC;
     t10 = p->unk10;
-    D_0046A044 = p->unk14;
+    (*(s32 *)&D_0046A044) = p->unk14;
     D_0046A040 = t10;
     t18 = p->unk18;
     D_0046A048 = t18;

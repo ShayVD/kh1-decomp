@@ -419,7 +419,7 @@ s32 func_001cae78(VM *vm) {
 void func_0010e3f0(void *);
 void func_0010ef70(Obj *, s32, void *);
 extern s32 D_003C5890;
-extern s32 D_00388480[];
+#include "data/pieces/D_00388480.h"
 void func_001cafe8(s32 id, Obj *t) {
     s32 i;
     D_003C5890 = id;
@@ -433,7 +433,7 @@ void func_001cafe8(s32 id, Obj *t) {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
                 func_0010e3f0(D_00629E70[i].f80);
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cafe8);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cafe8);
             }
         }
     }
@@ -451,7 +451,7 @@ void func_001cbab0(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cafe8);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cafe8);
             }
         }
     }
@@ -469,7 +469,7 @@ void func_001cbd80(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cbd80);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cbd80);
             }
         }
     }
@@ -487,7 +487,7 @@ void func_001cbea0(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cbd80);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cbd80);
             }
         }
     }
@@ -517,7 +517,7 @@ s32 func_001ccbf8(VM *vm) {
     s32 t = vm->stk[vm->sp - 2];
     s32 x = vm->stk[vm->sp - 1];
     s32 y = vm->stk[vm->sp];
-    f32 r = func_0010f098(D_00388480[t]);
+    f32 r = func_0010f098(((s32 *)&D_00388480)[t]);
     D_006298F0[n].v40[0] = r;
     D_006298F0[n].v30[0] = x + r * 12.0f;
     D_006298F0[n].v30[1] = y + D_006298F0[n].v40[1] * 12.0f;

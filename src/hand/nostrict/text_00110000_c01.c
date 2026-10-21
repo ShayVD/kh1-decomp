@@ -33,7 +33,7 @@ typedef struct {
 typedef struct { u16 a; u16 b; } C01Pr;
 typedef struct { u8 pad[0x54]; C01Pr e[1]; } C01Tbl;
 
-extern C01Flg27C8 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 extern f32 D_00304D54;
 extern f32 D_00306844;
 extern f32 D_00306848;
@@ -51,7 +51,7 @@ void func_001252f8(void) {
     s32 id;
     s32 c;
 
-    *(u32 *)&D_002E27C8 = 0;
+    *(u32 *)((C01Flg27C8 *)&D_002E27C8) = 0;
     D_00306844 = D_00306848 = 1.0f;
     D_00304D54 = 1.0f;
     for (i = 0; i < 3; i++) {
@@ -64,7 +64,7 @@ void func_001252f8(void) {
         p->x148->b36 = (u32)func_0013c968(25, id);
         p->x148->b37 = (u32)func_0013c968(26, id);
 
-        D_002E27C8.b10 += func_0013c968(16, id);
+        (*(C01Flg27C8 *)&D_002E27C8).b10 += func_0013c968(16, id);
         D_00306844 += func_0013c968(27, id) * 0.5f;
         D_00306848 += func_0013c968(28, id) * 0.5f;
         p->x6c->x10 = D_002C5C54 ? D_00308CDC->e[id].b : D_00308CDC->e[id].a;
@@ -77,31 +77,31 @@ void func_001252f8(void) {
     }
     if (D_002C5C54) return;
     if (D_002C5958 >> 22 & 1) return;
-    D_002E27C8.b19 = func_0013c968(60, 0);
-    if (func_0013c968(2, 11)) D_002E27C8.b6 = 1;
+    (*(C01Flg27C8 *)&D_002E27C8).b19 = func_0013c968(60, 0);
+    if (func_0013c968(2, 11)) (*(C01Flg27C8 *)&D_002E27C8).b6 = 1;
     if (D_002C5C4C) return;
-    if (func_0013c968(17, 0)) D_002E27C8.b0 = 1;
-    if (func_0013c968(18, 0)) D_002E27C8.b1 = 1;
-    if (func_0013c968(19, 0)) D_002E27C8.b2 = 1;
-    if (func_0013c968(20, 0)) D_002E27C8.b3 = 1;
-    if (func_0013c968(21, 0)) D_002E27C8.b4 = 1;
-    if (func_0013c968(22, 0)) D_002E27C8.b5 = 1;
+    if (func_0013c968(17, 0)) (*(C01Flg27C8 *)&D_002E27C8).b0 = 1;
+    if (func_0013c968(18, 0)) (*(C01Flg27C8 *)&D_002E27C8).b1 = 1;
+    if (func_0013c968(19, 0)) (*(C01Flg27C8 *)&D_002E27C8).b2 = 1;
+    if (func_0013c968(20, 0)) (*(C01Flg27C8 *)&D_002E27C8).b3 = 1;
+    if (func_0013c968(21, 0)) (*(C01Flg27C8 *)&D_002E27C8).b4 = 1;
+    if (func_0013c968(22, 0)) (*(C01Flg27C8 *)&D_002E27C8).b5 = 1;
     if (func_0013c968(1, 11)) {
-        D_002E27C8.b9 = 1;
+        (*(C01Flg27C8 *)&D_002E27C8).b9 = 1;
         for (i = 0; i < 3; i++) {
             p = D_002E26A0[i];
             if (p) p->x6c->x10 = D_00308CDC->e[p->x130->x4c].b;
         }
     }
-    if (func_0013c968(3, 11)) D_002E27C8.b7 = 1;
-    if (func_0013c968(4, 11)) D_002E27C8.b8 = 1;
-    D_002E27C8.b23 = func_0013c968(53, 0);
-    D_002E27C8.b24 = func_0013c968(54, 0);
-    D_002E27C8.b25 = func_0013c968(55, 0);
-    D_002E27C8.b26 = func_0013c968(56, 0);
-    D_002E27C8.b27 = func_0013c968(57, 0);
-    D_002E27C8.b28 = func_0013c968(58, 0);
-    D_002E27C8.b29 = func_0013c968(59, 0);
+    if (func_0013c968(3, 11)) (*(C01Flg27C8 *)&D_002E27C8).b7 = 1;
+    if (func_0013c968(4, 11)) (*(C01Flg27C8 *)&D_002E27C8).b8 = 1;
+    (*(C01Flg27C8 *)&D_002E27C8).b23 = func_0013c968(53, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b24 = func_0013c968(54, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b25 = func_0013c968(55, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b26 = func_0013c968(56, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b27 = func_0013c968(57, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b28 = func_0013c968(58, 0);
+    (*(C01Flg27C8 *)&D_002E27C8).b29 = func_0013c968(59, 0);
 }
 
 typedef f32 C01Mat[4][4];
@@ -137,9 +137,9 @@ typedef struct { u8 pad[0x10]; void *x10; } C01Task;
 typedef struct { u8 b[0x150]; } C01E150;
 typedef struct { u8 b[0x220]; } C01E220;
 
-extern u8 D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 #include "data/pieces/D_002BBFA0.h"
-extern C01Mat D_002C58D0;
+#include "data/pieces/D_002C58D0.h"
 extern s32 D_002E27E0[];
 extern u8 D_002E2800[];
 extern C01E150 D_004F7820[]; /* src/data/bss_004F.c: A6 D_004F7820[3] */
@@ -166,7 +166,7 @@ void func_00127568(void *, s32, C01Mat, f32 *, s32, f32);
 #define C01MAX(a, b) ((a) < (b) ? (b) : (a))
 
 void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
-    void *tex = D_002BD250;
+    void *tex = ((u8 *)&D_002BD250);
     C01Box box;
     C01Mat m;
     C01Mat m2;
@@ -231,7 +231,7 @@ void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
     e[1] -= o->x414 * 0.5f;
     func_00267930(m4, e, dir, D_002E2800);
     func_00121620(m, pos, pos[0], pos[1], pos[2], pos[0] * o->x50 + pos[1] * (o->x54 - o->x414 * 0.5f) + pos[2] * o->x58);
-    sceVu0CopyMatrix(m3, D_002C58D0);
+    sceVu0CopyMatrix(m3, (*(C01Mat *)&D_002C58D0));
     m3[3][0] = -o->x50;
     m3[3][1] = o->x414 * 0.5f - o->x54;
     m3[3][2] = -o->x58;

@@ -4,11 +4,11 @@
 
 /* shared declarations */
 typedef struct S31b0 { s32 f0, f4; } S31b0;
-extern S31b0 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 extern void *D_002E26A0[3];
 extern void *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
 extern u32 D_002C5958;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 #include "data/pieces/D_002E31B8.h"
 
 typedef struct { u8 pad[0x10]; volatile s32 n; } Q14;
@@ -98,8 +98,8 @@ typedef struct { u8 pad[0x10]; f32 f10[16]; u8 pad50[0x3c4 - 0x50]; f32 f3c4; } 
 void func_00125cf0(E3 *e, f32 k, f32 lim) {
     f32 v[4];
     f32 t, r;
-    if (func_00122ff8((void *)D_002E31B0.f0) == 0) return;
-    func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, v);
+    if (func_00122ff8((void *)(*(S31b0 *)&D_002E31B0).f0) == 0) return;
+    func_0012ec60((*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4, v);
     v[1] += 100.0f;
     func_00267530(v, v, e->f10);
     if (fabsf(v[1]) > 50.0f) {
@@ -117,7 +117,7 @@ extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 extern D6 D_004F8270[];
 extern u8 D_004F82D0[];
-extern void (*D_00351BC8)(s32);
+#include "data/pieces/D_00351BC8.h"
 extern void func_001284a0(A6 *, s32);
 extern void func_00128738(B6 *, s32);
 extern void *func_0011fb38(s32, s32, void *);
@@ -148,7 +148,7 @@ void func_00128b20(void) {
 }
 
 typedef struct { f32 *m; f32 *rot; } R8;
-extern f32 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 extern void func_002678b8(f32 *, f32 *, f32 *);
 extern void func_002672f8(f32 *, f32 *, f32 *);
 
@@ -160,7 +160,7 @@ void func_00129270(R8 *r) {
         v[i] = func_00120c88(r->rot[i] / 180.0f * 3.1415928f);
     }
     v[3] = 0.0f;
-    func_002678b8(m, D_002C58D0, v);
+    func_002678b8(m, ((f32 *)&D_002C58D0), v);
     func_002672f8(r->m, m, r->m);
 }
 
@@ -272,8 +272,8 @@ void func_0012d068(E16 *e, u32 *fl) {
     s32 v;
     if (D_002BC128 == 6 || (D_002BC128 == 16 && D_002BC130 == 24)) {
         d->f14 = 98;
-    } else if (((D_002E27C8 >> 2) & 1) && func_00122ff8((void *)D_002E31B0.f0)
-               && ((s32)(((O16 *)D_002E31B0.f0)->f370 >> 37) & 3) == 2 && e->f164 == 110
+    } else if (((D_002E27C8 >> 2) & 1) && func_00122ff8((void *)(*(S31b0 *)&D_002E31B0).f0)
+               && ((s32)(((O16 *)(*(S31b0 *)&D_002E31B0).f0)->f370 >> 37) & 3) == 2 && e->f164 == 110
                && (e->f14c->f30 & ~0x102)) {
         d->f14 = 99;
     } else {
@@ -508,7 +508,7 @@ void func_0012f5c0(P5c0 *e) {
 
 typedef struct { u8 pad[0x70]; s32 f70; } Gb20;
 typedef struct { u32 f0; u8 pad[28]; } Tb20;
-extern Tb20 D_00350D88[];
+#include "data/pieces/D_00350D88.h"
 extern s32 D_00524F78;
 extern s32 D_002E31BC;
 extern void func_001337e0(s32, s32, s32);
@@ -521,7 +521,7 @@ void func_0012fb20(S31b0 *e, s32 m) {
     switch (m) {
     case 3:
         func_001337e0(3, e->f0, 0);
-        if ((D_00350D88[((Gb20 *)D_002E26A0[0])->f70].f0 >> 2) & 1) func_0011d768(68);
+        if ((((Tb20 *)&D_00350D88)[((Gb20 *)D_002E26A0[0])->f70].f0 >> 2) & 1) func_0011d768(68);
         break;
     case 4:
         D_00524F78 = 0;
@@ -529,7 +529,7 @@ void func_0012fb20(S31b0 *e, s32 m) {
     }
     if (D_002E26A0[0]) func_00123030(D_002E26A0[0], e->f0, e->f4);
     if (m >= 3) func_0017ef40(e->f0);
-    D_002E31B0 = *e;
+    (*(S31b0 *)&D_002E31B0) = *e;
     D_002E31B8 = m;
     D_002E31BC = 0;
     func_0012fa98();

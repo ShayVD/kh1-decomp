@@ -21,7 +21,7 @@ extern M2C_UNK D_006297F8; /* src/data/bss_0062.c: u8 D_006297F8[0x10] */
 M2C_UNK D_00629808[0x3a] ALIGNED(8);
 extern M2C_UNK func_001c07c8;
 extern s32 D_002BBE04;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_0038CCCC;
 extern u32 D_002C5958;
 s32 func_0011e340(M2C_UNK);

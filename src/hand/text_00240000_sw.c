@@ -14,8 +14,8 @@ Pkt D_006694B0 ALIGNED(16);
 QW *D_00669614 ALIGNED(4);
 extern QW *D_00669610; /* src/data/bss_0066.c: Q4 *D_00669610 */
 extern QW D_00351E10[];
-extern u8 D_004267C0[];
-extern u8 D_004267F0[];
+#include "data/pieces/D_004267C0.h"
+#include "data/pieces/D_004267F0.h"
 void func_002370c8(Pkt *);
 void func_00237018(void *, s32, s32);
 void func_0011d768(s32);

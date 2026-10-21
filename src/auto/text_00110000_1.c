@@ -14,7 +14,7 @@ M2C_UNK func_0011f090(M2C_UNK *, s32, s32);
 M2C_UNK func_0011f320(M2C_UNK *, s32);
 M2C_UNK func_001edb48(M2C_UNK);
 extern M2C_UNK D_004E3A48; /* src/data/bss_004E.c: u8 D_004E3A48[0x10] */
-extern void *D_002BCB60;
+#include "data/pieces/D_002BCB60.h"
 s32 func_0011f2e0(M2C_UNK *, s32);
 
 void func_00111060(void) {
@@ -44,8 +44,8 @@ void func_00111190(void) {
 }
 
 void func_001117b8(void) {
-    if (D_002BCB60 != NULL) {
-        M2C_FIELD(D_002BCB60, s32 *, 0x15C) = (s32) (M2C_FIELD(D_002BCB60, s32 *, 0x15C) + 1);
+    if (((void *)D_002BCB60) != NULL) {
+        M2C_FIELD(((void *)D_002BCB60), s32 *, 0x15C) = (s32) (M2C_FIELD(((void *)D_002BCB60), s32 *, 0x15C) + 1);
     }
 }
 

@@ -11,11 +11,11 @@ typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; s8 f9; s8 fa; s8 fb; } O
 #include "data/types/nostrict_nofill_text_00120000_h54.h"
 extern St8 D_002E3190;
 extern O8 *D_002E319C;
-extern s32 D_002E31A4;
-extern S31b0 D_002E31B0;
+#include "data/pieces/D_002E31A4.h"
+#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
 extern Q8 D_002E30B8;
-extern Q8 *D_002E3170[];
+#include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 extern s32 D_00524F58[];
 extern s32 D_002E3160[];
@@ -48,7 +48,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
         q = D_00524F40[-1];
         o = func_001478c8(q->ids[q->f34]);
     } else if (D_002E31B8) {
-        tmp = D_002E31B0;
+        tmp = (*(S31b0 *)&D_002E31B0);
         f = 1;
     } else {
         tmp.f0 = 0;
@@ -56,21 +56,21 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     }
     if (!func_0012dd70(o)) return 0;
     if (f && func_00219288() != 1 && (o->f0 & 4)) {
-        if (D_002E31B8 - 1 < 2u || D_002E31B8 == 4) func_0012fb20(&D_002E31B0, 4);
+        if (D_002E31B8 - 1 < 2u || D_002E31B8 == 4) func_0012fb20(((S31b0 *)&D_002E31B0), 4);
     }
-    if (q->f0 == 2) D_002E31A4 = D_00524F68[q->fc];
+    if (q->f0 == 2) (*(s32 *)&D_002E31A4) = D_00524F68[q->fc];
     D_002E3190.f4 = tmp;
     D_002E3190.b0 = o->f6;
     D_002E3190.b1 = o->f7;
     D_002E319C = o;
-    while (D_00524F40 != D_002E3170) func_0012dd38();
+    while (D_00524F40 != ((Q8 **)&D_002E3170)) func_0012dd38();
     return 1;
 }
 typedef union { u64 x; struct { u32 lo0; u32 x32:3; u32 f35:1; u32 x36:1; u32 kind:2; u32 hi:25; } b; } F370b;
 typedef struct { u8 pad[4]; u32 f4; } I9;
 typedef struct { u8 pad[0x130]; I9 *f130; u8 p134[0x370-0x134]; F370b f370; } E9;
 typedef struct { E9 *f0; s32 f4; } A9;
-extern f32 D_002E2780[];
+#include "data/pieces/D_002E2780.h"
 extern f32 func_0012ec60(E9 *, s32, f32 *);
 extern f32 func_00120bf8(f32 *);
 extern s32 func_0012eaf8(E9 *);
@@ -155,7 +155,7 @@ void func_0012f700(Q8 *q) {
     switch (D_002E31B8) {
     case 0: if (q->f8 & 0x400) func_0012f3d0((A9 *)&cur); break;
     case 1: case 2: case 4:
-        if (q->f8 & 0x400) { if (func_0012f040((E9 *)D_002E31B0.f0, D_002E31B0.f4)) cur = D_002E31B0; }
+        if (q->f8 & 0x400) { if (func_0012f040((E9 *)(*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4)) cur = (*(S31b0 *)&D_002E31B0); }
         break;
     case 3:
         if (func_002192c0() == 1) { if (!(q->f4 & 0x400)) goto snd; }

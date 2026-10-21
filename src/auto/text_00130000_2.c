@@ -4,7 +4,7 @@
 
 M2C_UNK func_001394a8(s32, s32);
 M2C_UNK func_001394e8(s32, s32);
-extern M2C_UNK (*D_00304B6C)();
+#include "data/pieces/D_00304B6C.h"
 extern s32 D_00304BE8;
 f32 func_0026b9a8(f32, f32);
 s32 func_0014f5c8();
@@ -35,8 +35,8 @@ s32 func_0013a430(s32 *arg0, s32 *arg1) {
 }
 
 void func_0013ab08(void) {
-    if (D_00304B6C != NULL) {
-        D_00304B6C();
+    if ((*(M2C_UNK (*(*))())&D_00304B6C) != NULL) {
+        (*(M2C_UNK (*(*))())&D_00304B6C)();
     }
 }
 

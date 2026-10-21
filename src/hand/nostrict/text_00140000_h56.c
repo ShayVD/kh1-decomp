@@ -86,7 +86,7 @@ void func_00143d20(Ch3 *o, f32 *v, void *arg) {
 
 typedef void (*MvFn)(void *, f32 *);
 typedef struct { u32 f0; u8 pad4[0xc]; MvFn f10; void *f14; u8 pad18[8]; } MvTab;
-extern MvTab D_00350D88[];
+#include "data/pieces/D_00350D88.h"
 extern f32 D_002C58A0[];
 extern f32 D_002BBDFC;
 typedef struct {
@@ -131,7 +131,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         func_002675a8(v, D_002C58A0);
         break;
     default:
-        fn = D_00350D88[o->st70].f10;
+        fn = ((MvTab *)&D_00350D88)[o->st70].f10;
         if (fn) {
             fn(o, v);
         } else {
@@ -139,7 +139,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         }
         break;
     }
-    if ((D_00350D88[o->st70].f0 >> 3) & 1) {
+    if ((((MvTab *)&D_00350D88)[o->st70].f0 >> 3) & 1) {
         func_001568e8(o, t);
         func_00267518(v, v, t);
     }
@@ -202,7 +202,7 @@ s32 func_00144060(St *o) {
         if (s1) return o->st70;
         break;
     default:
-        fn = (StFn)D_00350D88[o->st70].f14;
+        fn = (StFn)((MvTab *)&D_00350D88)[o->st70].f14;
         if (fn) return fn(o, s1);
         if (s1) goto two;
         break;
@@ -232,7 +232,7 @@ typedef struct {
     f32 v490[4];
 } Pl;
 extern f32 D_002C5970;
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 void func_00267560(f32 *, f32 *, f32);
 void func_0014cc88(Pl *, f32);
 s32 func_0014f658(Pl *, s32);
@@ -574,7 +574,7 @@ typedef struct { u32 w0; void *p4; void *p8; } Rel12;
 extern u8 D_0048E398[];
 extern u8 D_00533BA0[];
 extern void *volatile D_00308CDC;
-extern void *volatile D_003044A0;
+#include "data/pieces/D_003044A0.h"
 extern Rel20 *volatile D_00547BA0;
 extern void *volatile D_00547BA4;
 extern Rel12 *volatile D_00547BA8;
@@ -721,7 +721,7 @@ void func_0014ac50(Hm *o, Hs *s, f32 *out) {
 
 typedef struct { u8 pad[0x3e0]; u32 w3e0; } Hp;
 typedef struct { s32 w0; Hp *p4; u8 pad8[4]; Hm *m; f32 v10[4]; f32 v20[4]; } Hz;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 s32 func_0014af60(Hm *, Hm *);
 s32 func_0014b090(Hm *, Hm *);
 s32 func_0014a330(Hm *, s32, f32 *, f32 *);

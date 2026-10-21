@@ -303,7 +303,7 @@ extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
 #include "data/pieces/D_00425C1C.h"
 extern s32 D_006477A8;
 extern s32 D_00647FE8[];
-extern s32 D_00425C28[2][4];
+#include "data/pieces/D_00425C28.h"
 #include "data/pieces/D_00425C48.h"
 #include "data/pieces/D_00425C68.h"
 #include "data/pieces/D_00425C88.h"
@@ -332,7 +332,7 @@ void func_00233ac8(void) {
     for (i = 0; i < 14; i++) D_00647FE8[i] = 0;
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 4; j++) {
-            D_00425C28[i][j] = 3;
+            (*(s32 (*)[2][4])&D_00425C28)[i][j] = 3;
             D_00425C48[i][j] = 0;
             D_00425C68[i][j] = 0;
             D_00425C88[i][j] = 0;
@@ -600,7 +600,7 @@ typedef struct {
     s32 x1e0;
     f32 dist;
 } Cam;
-extern Cam *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 f32 atan2f(f32, f32);
 void func_00236d48(void *, void *, void *);
@@ -612,7 +612,7 @@ void sceVu0UnitMatrix(void *);
 void sceVu0MulMatrix(void *, void *, void *);
 void func_002673b8(void *, void *);
 
-#define C D_00425F70
+#define C ((Cam *)D_00425F70)
 void func_00236a58(void) {
     MTX m;
     VEC v;

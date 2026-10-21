@@ -107,7 +107,7 @@ extern s32 D_002C5AD4;
 extern s32 D_002C5BB4;
 extern s32 D_002C5BB8;
 extern s32 D_00304BE8;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_0038CDE0;
 extern s32 D_0038CDE4;
 extern s32 D_0038CDE8;

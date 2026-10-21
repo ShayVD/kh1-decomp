@@ -35,7 +35,7 @@ extern Big D_00389C90;
 extern VM D_003A7990[], D_003B4DA0[];
 extern s32 D_003B4D90, D_003C21A0, D_002C5958;
 extern s32 (*D_0037A198[])(VM *, s32);
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002BCDE4, D_002BCC90;
 s32 func_001c1ce8(s8 *, s32);
 s32 func_001c1cf8(s8 *, s32);

@@ -40,7 +40,7 @@ void func_00145008(void *, s32);
 s32 func_001532c8(Msg *);
 void func_00152598(void *);
 void func_001525f0(void *);
-extern P8 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 s32 func_0012cc38(s32, s32);
 void func_0012ec60(s32, s32, void *);
 void func_00130340(void *, s32, f32);
@@ -154,12 +154,12 @@ s32 func_00153668(Act *a, S98 *b, s32 c) {
         func_0014f658(a, 4);
         break;
     case 29:
-        func_00153c50(b, D_002E31B0.a);
+        func_00153c50(b, (*(P8 *)&D_002E31B0).a);
         break;
     case 30:
         func_00130340(b, 0x10000bb, 8.0f);
         func_00130578(b, 0x40000000, 0.0f);
-        a->x74 = D_002E31B0;
+        a->x74 = (*(P8 *)&D_002E31B0);
         func_00152dc8(a, 2);
         if (a->x74.a) {
             *(u64 *)&a->x144->w0 |= 2;
@@ -337,7 +337,7 @@ typedef struct B4A68 {
     u8 padd0[0x148 - 0xd0]; B4H160 *x148;
 } B4A68;
 extern u32 D_002C5978;
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 void func_002673b8(void *, void *);
 void func_00267370(void *, void *, void *);
 void func_00267e90(void *, void *, f32);
@@ -462,7 +462,7 @@ s32 func_00158780(s32 k) {
     Act *p = D_002E26A0[0];
     R478c8 *r = func_001478c8(D_00351A30[k].b);
     s32 i;
-    f32 f = func_0012ed88(p, &D_002E31B0, &m, &d);
+    f32 f = func_0012ed88(p, ((P8 *)&D_002E31B0), &m, &d);
     if (r->xe <= f) return 0;
     switch (D_00351A30[k].b) {
     case 75:
@@ -496,8 +496,8 @@ void func_00158960(void) {
     if ((D_002E31A8 >> 1) & 1) return;
     if (D_002E26A0[0]->x70) return;
     if (D_00351A48 != 5) return;
-    if (!func_00122ff8((Act *)D_002E31B0.a)) return;
-    if (((s32)(((Act *)D_002E31B0.a)->x370 >> 37) & 3) != 2) return;
+    if (!func_00122ff8((Act *)(*(P8 *)&D_002E31B0).a)) return;
+    if (((s32)(((Act *)(*(P8 *)&D_002E31B0).a)->x370 >> 37) & 3) != 2) return;
     best = 0;
     bk = -1;
     for (i = 0; i < 5; i++) {
@@ -620,7 +620,8 @@ typedef struct { union { u64 d; s32 w; } h; u8 pad8[0x208]; V4 v210; V4 v220; } 
 extern Tr700 D_00551700;
 extern Trail D_00551740;
 extern s32 D_002E27A8;
-extern V4 D_002E2790, D_002E2780;
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 void sceVu0CopyMatrix(void *, void *);
 void func_002674f0(void *, void *, void *, f32);
 void func_00159b48(V4 *);
@@ -652,8 +653,8 @@ s32 func_00159cd8(void) {
             func_002674f0(&D_00551740.v210, &w, &D_00551740.v210, D_00551700.f30);
         }
     }
-    func_002675a8(&D_002E2790, &D_00551740.v220);
-    func_002675a8(&D_002E2780, &D_00551740.v210);
+    func_002675a8(((V4 *)&D_002E2790), &D_00551740.v220);
+    func_002675a8(((V4 *)&D_002E2780), &D_00551740.v210);
     func_00124c68(70.0f);
     return 0;
 }

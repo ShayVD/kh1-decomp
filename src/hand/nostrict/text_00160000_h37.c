@@ -14,7 +14,7 @@ typedef struct { u8 pad[0x10]; Dat684 *w10; Dat684 *w14; Ent67F e[4]; } Obj67F;
 typedef struct { u8 pad[8]; s32 w8; } Arg67F;
 
 extern Dat684 *func_001684e0(s32);
-extern void (*D_00351BC8)(s32);
+#include "data/pieces/D_00351BC8.h"
 
 /* inline copy of func_001677e0 */
 static inline Ent677 *inl_001677e0(Obj677 *o, u32 key) {

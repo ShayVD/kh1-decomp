@@ -67,7 +67,7 @@ void func_00127960(E1 *e, s32 a1, s32 a2) {
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct { V4 a; V4 b; V4 c; s16 f30; s16 pad32; s32 f34; } Ray2;
 typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 fc; V4 v10; V4 v20; u8 pad30[0x10]; } Lt2;
-extern Lt2 D_002C5C80[31];
+#include "data/pieces/D_002C5C80.h"
 typedef union { u64 x; struct { u32 lo:24; u32 b3:8; u32 b4:8; u32 k:2; u32 hi:22; } b; } F370;
 typedef struct { u8 pad[0x50]; V4 pos; u8 p60[0x2c4-0x60]; f32 f2c4; u8 p2c8[4]; s32 f2cc; u8 p2d0[0x320-0x2d0]; V4 v320; u8 p330[0x370-0x330]; F370 f370; } E2;
 extern s32 func_001232f0(E2 *);
@@ -95,7 +95,7 @@ void func_00128218(E2 *e, f32 k) {
         e->f2cc = r.f34;
     }
     k *= e->f370.b.b3 * 0.0078125f;
-    l = D_002C5C80;
+    l = (*(Lt2 (*)[31])&D_002C5C80);
     for (i = 0; i < 31; i++, l++) {
         if (!(l->flags & 4)) continue;
         switch (l->type) {
@@ -184,7 +184,7 @@ typedef struct { u8 pad[0x130]; I4 *f130; u8 p134[0x164-0x134]; s32 f164; } A4;
 typedef struct { s32 state; s32 f4; s32 f8; O4 *fc; u8 p10[0x20]; s32 f30; } W4;
 typedef struct { u8 pad[0x10]; A4 *f10; u8 p14[8]; f32 f1c; W4 *f20; } T4;
 extern f32 D_002BBDFC;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern void *D_002E26A0[3];
 extern s32 func_00122ff8(void *);
 extern s32 func_001375d8(A4 *);
@@ -255,7 +255,7 @@ typedef struct { u8 pad[0x48f]; u8 f48f; u8 f490; u8 p491[0x7d0-0x491]; s8 f7d0[
 extern Q5 D_002E3010;
 extern L5 D_002E3080;
 extern W5 *D_00304BE8;
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 extern u32 D_002C5958;
 #include "data/pieces/D_002E31A8.h"
 extern void func_0013ab08() __attribute__((weak));
@@ -343,7 +343,7 @@ void func_0012d6c0(A7 *a0, u32 *a1) {
 }
 
 typedef f32 Mtx[4][4];
-extern Mtx D_002C58D0;
+#include "data/pieces/D_002C58D0.h"
 
 typedef struct { u8 p[0x3c]; s32 f3c; u8 p40[0x9c - 0x40]; f32 f9c; f32 fa0; } M6c;
 typedef struct { u8 p[0x170]; f32 f170; } M148;
@@ -515,7 +515,7 @@ extern s32 D_0052ACF8;
 extern s32 D_003044D0;
 extern s32 D_0052AA68;
 extern u8 D_0052AA58[];
-extern s32 D_00304AD8;
+#include "data/pieces/D_00304AD8.h"
 #include "data/pieces/D_00304B84.h"
 extern s32 func_0011f130(void *, s32);
 extern void func_0013dd40(void);
@@ -528,7 +528,7 @@ s32 func_00138258(void) {
     p = D_002C64A0;
     for (i = 0; i < 96; i++, p++) { p->f370 &= ~(1LL << 34); p->f370 &= ~(1LL << 55); }
     func_0011f130(D_0052AA58, 0);
-    D_00304AD8 = 0;
+    (*(s32 *)&D_00304AD8) = 0;
     p = D_002C64A0;
     for (i = 0; i < 96; i++, p++) p->f8c = 0;
     p = 0;
@@ -559,7 +559,7 @@ void func_00138a78(E24 *e, P24 *a) {
     u32 msk;
     s32 k;
     if (!a->f34 || a->f38 < 0) return;
-    func_00267810(m, D_002C58D0, atan2f(a->f10, a->f18));
+    func_00267810(m, (*(Mtx *)&D_002C58D0), atan2f(a->f10, a->f18));
     func_00267768(m, m, func_00176850() * 3.1415928f - 1.5707964f);
     v.x = 0.0f;
     v.y = 0.0f;

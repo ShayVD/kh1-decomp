@@ -278,9 +278,9 @@ s32 func_001d9f20(VM *vm) {
     vm->sp -= 3;
     return 2;
 }
-extern volatile s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 s32 func_001d9ff8(void) {
-    D_0037A378 &= ~4;
+    (*(volatile s32 *)&D_0037A378) &= ~4;
     D_00389C90.f3070.x &= ~0x2000000000ULL;
     return 2;
 }

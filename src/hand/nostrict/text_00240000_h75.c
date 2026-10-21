@@ -187,9 +187,9 @@ void func_002410b8(Obj *o) {
 }
 
 /* func_0023d698 and func_002414a8 (moved here) and func_002410b8 must be defined above func_002416a8 for it to match. */
-extern u8 D_00426970[];
-extern u8 D_0042B790[];
-extern u8 D_004305B0[];
+#include "data/pieces/D_00426970.h"
+#include "data/pieces/D_0042B790.h"
+#include "data/pieces/D_004305B0.h"
 void func_00249a48(void *, s32);
 
 void func_0023d698(s32 a) {
@@ -468,8 +468,8 @@ typedef struct { s32 x0, y0, x1, y1, u0, v0, u1, v1; C4 c[4]; u8 pad60[0x40]; u6
 extern Spr2 D_006693F0;
 extern u64 D_00491820;
 extern u64 D_00669490;
-typedef struct { u8 pad[0x30]; } Fnt;
-extern Fnt D_00431D50[];
+#include "data/types/nostrict_text_00240000_h75_p.h"
+#include "data/pieces/D_00431D50.h"
 typedef struct { s32 unk0; s32 unk4; u8 pad8[0x10]; s32 unk18; } Wk;
 typedef struct { u8 pad[4]; Wk *unk4; } Ow;
 void func_00247cc8(s32);
@@ -656,7 +656,7 @@ void func_00244f28(void) {
 }
 
 typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; s32 unk2C; u8 pad30[0x14]; s32 unk44; s32 unk48; s32 unk4C; s32 unk50; } Clk;
-extern void *D_00467408;
+#include "data/pieces/D_00467408.h"
 s32 sprintf(char *, const char *, ...);
 void func_002475d0(s32, s32, s8 *, f32, char *, void *);
 
@@ -672,25 +672,25 @@ void func_00247930(Clk *c) {
     y = c->unk28 + 43;
     if (c->unk2C) {
         sprintf(buf, "%02d", c->unk50);
-        func_002475d0(x, y, col, 0.7999999523162842f, buf, D_00467408);
+        func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
         x += 22;
-        func_002475d0(x, y, col, 0.7999999523162842f, ":", D_00467408);
+        func_002475d0(x, y, col, 0.7999999523162842f, ":", ((void *)D_00467408));
         x += 11;
     }
     sprintf(buf, "%02d", c->unk4C);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
     x += 22;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
     x += 11;
     sprintf(buf, "%02d", c->unk48);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
     x += 22;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
     x += 5;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
     x += 9;
     sprintf(buf, "%02d", c->unk44);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, D_00467408);
+    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
 }
 #include "data/data_0045.h"
 #include "data/data_0046.h"

@@ -33,7 +33,10 @@ void func_00100c30(void) {
 typedef struct { s32 off; s32 size; } Ent;
 typedef struct { s32 ver; s32 pad[3]; Ent e[10]; } Hdr;
 extern s32 D_002A3F38;
-extern s32 D_002A3F30, D_002A3F34, D_002A3F2C, D_002A3F48, D_002A3F28, D_002A3F3C, D_002A3F40;
+extern s32 D_002A3F34, D_002A3F2C, D_002A3F28, D_002A3F40;
+#include "data/pieces/D_002A3F48.h"
+#include "data/pieces/D_002A3F3C.h"
+#include "data/pieces/D_002A3F30.h"
 s32 D_00494418 ALIGNED(8);
 s32 D_0049441C ALIGNED(4);
 extern s32 D_0029B410, D_0029B414, D_0029B418, D_0029B41C;

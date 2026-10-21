@@ -86,12 +86,12 @@ typedef struct {
 extern f32 D_002BBDFC;
 extern u32 D_002C5958;
 extern u32 D_002C5978;
-extern f32 D_002C58B0[4];
+#include "data/pieces/D_002C58B0.h"
 extern W55Ob *D_002E26A0[];
 extern W55Ev D_002E3190;
 extern s32 D_002E3194;
 extern f32 D_00304C40;
-extern u32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern u8 D_0052AD68[];
 extern W55Ob *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 W55Ob *D_0052AE3C ALIGNED(4);
@@ -253,7 +253,7 @@ s32 func_0013b740(void) {
     W55Ob **q;
     W55Ob **pl;
     W55Hd5 **ph;
-    if ((D_0037A378 >> 2) & 1) goto fail;
+    if ((((u32)D_0037A378) >> 2) & 1) goto fail;
     if (D_0052AE54 != 4 || func_001ecfd8()) {
     fail:
         return 0;

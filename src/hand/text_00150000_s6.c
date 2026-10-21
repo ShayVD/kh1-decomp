@@ -1,6 +1,6 @@
 #include "common.h"
 
-extern void *D_00351BC8;
+#include "data/pieces/D_00351BC8.h"
 void iFlushCache(s32);
 void FlushCache(s32);
 s32 func_0015ea98(void);
@@ -9,7 +9,7 @@ s32 func_0015ea98(void);
  * flush hook, then restores FlushCache and re-enables interrupts. */
 s32 func_0015efc0(void)
 {
-    void **p = &D_00351BC8;
+    void **p = ((void **)&D_00351BC8);
 
     *p = iFlushCache;
     func_0015ea98();

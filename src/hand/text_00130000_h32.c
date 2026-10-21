@@ -324,7 +324,7 @@ typedef struct {
     W32Col *obj;
     void (*cb)(W32Col *o);
 } W32Job;
-extern u8 D_002E2700[];
+#include "data/pieces/D_002E2700.h"
 extern u32 D_002C5958;
 void func_00120ef0(f32 *a, void *b, f32 *c);
 s32 func_00136bc0(W32Job *j) {
@@ -332,7 +332,7 @@ s32 func_00136bc0(W32Job *j) {
     if ((s32)(o->u370.x >> 33) & 1) return 4;
     o->u370.x &= ~(1ULL << 35);
     o->x1c = 1.0f;
-    func_00120ef0(o->x110, D_002E2700, o->xd0[3]);
+    func_00120ef0(o->x110, ((u8 *)&D_002E2700), o->xd0[3]);
     o->x11c = 1.0f;
         if (((s32)(o->u370.x >> 34) & 1) && o->x154 != 0 && !((D_002C5958 >> 6) & 1)) {
         func_00135d38(o);
@@ -455,7 +455,7 @@ typedef struct {
     W32Eff *xb0;
 } W32Pc;
 extern u32 D_002C5958;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 s32 func_001063c8(void);
 W32Eff *func_00148768(s32 a, s32 b, W32Pc *o, s32 c, f32 f);
 void func_00137db0(W32Pc *o) {
@@ -476,27 +476,10 @@ void func_00137db0(W32Pc *o) {
         o->xb0 = 0;
     }
 }
-typedef struct {
-    u8 pad00[4];
-    u32 x4;
-} W32Inf;
-typedef struct {
-    u8 pad000[0x10];
-    f32 x10[4];
-    u8 pad020[0x50 - 0x20];
-    f32 x50[4];
-    u8 pad060[0x88 - 0x60];
-    u32 x88;
-    u8 pad08c[0x130 - 0x8C];
-    W32Inf *x130;
-    u8 pad134[0x154 - 0x134];
-    s32 x154;
-    u8 pad158[0x370 - 0x158];
-    u64 x370;
-} W32Obj3;
+#include "data/types/text_00130000_h32_p.h"
 extern s32 D_0052AA68;
 extern W32Obj3 *D_0052AA70[]; /* src/data/bss_0052.c: O15 *D_0052AA70[0x60] */
-extern W32Obj3 *D_00304AD8;
+#include "data/pieces/D_00304AD8.h"
 extern f32 D_002BBDFC;
 void func_002675a8(f32 *d, f32 *s);
 void func_00130f18(W32Obj3 *o, f32 f);
@@ -760,7 +743,7 @@ void func_0013b958(void);
 void func_00133708(void);
 void func_00100ab0(void);
 #include "data/pieces/D_00304B84.h"
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 void func_0013bd08(void) {
     u32 *f = &D_002C5958;
     u32 *g;

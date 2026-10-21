@@ -378,7 +378,7 @@ typedef struct { V4 x0; V4 x10; f32 x20; u8 pad24[12]; V4 x30; } Mov;
 typedef struct { u8 pad[0x20]; f32 r; f32 h; s32 flags; u8 pad2[0x54]; } ColObj;
 extern f32 D_002C1250;
 extern s32 D_002A62EC;
-extern s32 D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 void func_00267518(f32 *, f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_002673b8(f32 *, f32 *);
@@ -519,7 +519,7 @@ void func_0011a0a0(void) {
 }
 
 
-extern void *D_002C1300;
+#include "data/pieces/D_002C1300.h"
 void func_00116690(void);
 void func_001166a0(void);
 void func_001166b0(void);
@@ -534,12 +534,12 @@ u64 func_0011b6a0(ColObj *o, f32 *pos, s32 a2) {
     s32 i;
     u64 res;
     switch (o->flags & 0x7c) {
-    case 4: D_002C1300 = func_00116690; break;
-    case 16: D_002C1300 = func_001166a0; break;
-    case 8: D_002C1300 = func_001166b0; break;
-    case 32: D_002C1300 = func_001166c0; break;
-    case 64: D_002C1300 = func_001166c8; break;
-    default: D_002C1300 = func_001166d8; break;
+    case 4: (*(void **)&D_002C1300) = func_00116690; break;
+    case 16: (*(void **)&D_002C1300) = func_001166a0; break;
+    case 8: (*(void **)&D_002C1300) = func_001166b0; break;
+    case 32: (*(void **)&D_002C1300) = func_001166c0; break;
+    case 64: (*(void **)&D_002C1300) = func_001166c8; break;
+    default: (*(void **)&D_002C1300) = func_001166d8; break;
     }
     r = D_002C1250 + o->r * 0.5f;
     res = 0;

@@ -56,7 +56,7 @@ extern f32 D_0048E8D4;
 extern f32 D_00575090[][4];
 extern Chr9F *D_0035BD40[];
 #include "data/pieces/D_002BBFA0.h"
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 extern s32 D_002E27A8;
 s32 func_00137618(E9F *);
 s32 func_00153d78(E9F *);

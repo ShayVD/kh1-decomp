@@ -60,7 +60,7 @@ extern f32 D_0038CDDC;
 typedef struct { u8 pad[0x20]; f32 f20; f32 f24; } S2BC0F0;
 extern S2BC0F0 D_002BC0F0;
 extern void *D_002E26A0;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002A61F0;
 extern s32 D_0062A210;
 extern s32 D_002E27A8;

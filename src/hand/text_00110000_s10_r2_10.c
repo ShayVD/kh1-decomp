@@ -60,7 +60,7 @@ extern s32 D_002C1304;
 extern s32 D_002C12C0;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern s32 D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 extern ColE *D_002A6238;
 
 void func_00104eb0(s32, f32 *);

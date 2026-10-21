@@ -26,7 +26,7 @@ extern s32 D_003E8D00[];
 extern s32 D_003E8D04[];
 extern u8 *D_003E8E08[];
 extern s32 D_003F1A64;
-extern Q D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 extern u8 D_003F2C54[];
@@ -61,7 +61,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     s32 c, k, r;
     Glyph *g;
 
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
     sz16 = sz << 4;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -194,17 +194,17 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 switch (k) {
                 case 0:
                     func_00201460(o, 2, 2, (cx - ox) >> 4, (y - oy) >> 4, 90, ((cx - ox) >> 4) + 45, D_003F2C54, func_001efc10(43));
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     cx += 1440;
                     break;
                 case 1:
                     func_001fd070(o, (cx - ox) >> 4, (y - oy) >> 4);
                     cx += 576;
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     break;
                 case 2 ... 28:
                     func_00208280(o, (cx - ox) >> 4, (y - oy) >> 4, 0, k + 25, 128);
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     cx += 288;
                     break;
                 }

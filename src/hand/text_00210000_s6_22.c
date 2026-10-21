@@ -178,15 +178,15 @@ typedef struct {
     s32 xcc;
 } G20_q1;
 extern G20_q1 D_00643020;
-extern Cam_q1 *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
 extern s32 D_006430F8;
 extern s32 D_00643100;
 extern f32 D_002BBDFC;
-extern void *D_002BC140;
-extern void *D_002BC144;
+#include "data/pieces/D_002BC140.h"
+#include "data/pieces/D_002BC144.h"
 extern u8 D_003F5990[];
 #include "data/pieces/D_003F59A0.h"
 typedef struct { u8 pad[0x90]; s32 x90; } Ob_q1;
@@ -210,11 +210,11 @@ void func_0021af38(Ob_q1 *a) {
     s32 r;
     if (D_00643100 == 0) return;
     if (func_0021ade8(D_006430F8)) {
-        D_00425F70->v1b0[0] = 1.0f;
-        D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
-        D_00425F70->v1b0[1] = 1.0f;
-        D_00425F70->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
+        ((Cam_q1 *)D_00425F70)->v1b0[0] = 1.0f;
+        ((Cam_q1 *)D_00425F70)->v1b0[3] = (f32)a->x90 * 0.0078125f;
+        ((Cam_q1 *)D_00425F70)->v1b0[1] = 1.0f;
+        ((Cam_q1 *)D_00425F70)->v1b0[2] = 1.0f;
+        func_002675a8(D_00643020.xc8->xc, ((Cam_q1 *)D_00425F70)->v1b0);
     }
     r = func_001301d8(D_00643020.x18, 0, 0, 0);
     func_00236a58();
@@ -222,7 +222,7 @@ void func_0021af38(Ob_q1 *a) {
     func_00131cc8(D_006430F8, m2);
     sceVu0MulMatrix(m, m, m2);
     func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, D_00425F70->m80, m);
+    sceVu0MulMatrix(m, ((Cam_q1 *)D_00425F70)->m80, m);
     func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
     D_00643020.x70 += D_002BBDFC;
     func_00167d70(D_00643020.x14, D_002BBDFC);
@@ -234,11 +234,11 @@ void func_0021af38(Ob_q1 *a) {
     v[1] = 0;
     v[2] = 0;
     func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
-    D_002BC144 = D_00425F70->m40;
-    D_002BC140 = D_00425F70->m80;
-    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
-    func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
+    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, m, ((Cam_q1 *)D_00425F70)->m40);
+    (*(void **)&D_002BC144) = ((Cam_q1 *)D_00425F70)->m40;
+    (*(void **)&D_002BC140) = ((Cam_q1 *)D_00425F70)->m80;
+    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, ((Cam_q1 *)D_00425F70)->m40, ((Cam_q1 *)D_00425F70)->m80);
+    func_00161de8(D_00643020.x14, ((Cam_q1 *)D_00425F70)->m100, &D_00643020.x28, 0);
 }
 
 /* ---- fb6a0/d.c ---- */
@@ -678,9 +678,9 @@ extern s32 D_0064379C;
 extern u8 *D_00304BE8;
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
-extern Nd_q6 *D_003F34C4;
+#include "data/pieces/D_003F34C4.h"
 extern s32 D_003F6E2C;
-extern C28_q6 D_00425C28;
+#include "data/pieces/D_00425C28.h"
 extern u8 D_003F6C30[];
 extern u8 D_003F6C00[];
 extern u8 D_003F6BD0[];

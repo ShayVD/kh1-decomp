@@ -79,12 +79,12 @@ W8R *func_00148570(W8O60 *, s32, s32);
 W8O60 *func_00147c98(s32 a, s32 b, s32 c);
 typedef union { s32 i; u32 u; f32 f; void *p; u8 b[4]; s16 h[2]; } W8Arg;
 typedef struct { u8 pad[0x370]; union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b; } x370; } W8Ply;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 W8R *func_001486d8(W8O60 *a, W8B *b);
 W8R *func_00148cb0(s32, f32);
 typedef struct { u8 pad[6]; s16 x6; } W8H6;
 W8H6 *func_00147840(s32);
-extern s32 D_00350CE8[];
+#include "data/pieces/D_00350CE8.h"
 typedef struct { u8 pad[88]; } W8E88;
 u8 *func_001477c8(s32 a);
 typedef struct { u32 x0; s32 x4; u8 pad8[4]; s32 xc; s32 x10; u8 pad14[0xc]; } W8E32;
@@ -386,7 +386,7 @@ W8E88 *func_001496c8(s32 a, s32 b) {
     if (!b) return 0;
     n = func_00147840(b)->x6;
     if (!n) return 0;
-    return &((W8E88 *)func_001477c8(D_00350CE8[a]))[n - 1];
+    return &((W8E88 *)func_001477c8(((s32 *)&D_00350CE8)[a]))[n - 1];
 }
 
 W8E32 *func_00149780(s32 a) {
@@ -418,7 +418,7 @@ W8O60 *func_00149810(void) {
 
 void func_00149b40(W8Q *q) {
     char buf[32];
-    u8 *base = func_001477c8(D_00350CE8[q->x4]);
+    u8 *base = func_001477c8(((s32 *)&D_00350CE8)[q->x4]);
     sprintf(buf, D_0048E410, &((W8E88 *)base)[q->x8 - 1], D_00350D10);
     func_00120748(buf, q->x10, func_00149a88, 0);
 }

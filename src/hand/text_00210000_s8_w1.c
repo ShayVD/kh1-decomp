@@ -20,7 +20,7 @@ extern s32 D_00642CD8;
 extern U32H D_00642CDC; /* src/data/bss_0064.c: s32 D_00642CDC */
 extern U32H D_00642CE0; /* src/data/bss_0064.c: s32 D_00642CE0 */
 extern PN D_003F40F8[];
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F43F0[];
 extern u8 D_003F44E0[];
 extern u8 D_003F44A0[];
@@ -85,7 +85,7 @@ void func_002177c8(Obj *a) {
                         b = &D_00304BE8;
                         func_001f3d58(o[0], 6);
                         pd = &D_00642CD8;
-                        *pd = D_003F34B8->x20[D_00304BE8->x48e[D_00642CCC]];
+                        *pd = ((S34B8 *)D_003F34B8)->x20[D_00304BE8->x48e[D_00642CCC]];
                         if ((o[1] = func_001f31a8(D_003F4550, 6))) {
                             func_001f3e48(o[1], o[0]);
                             o[1]->x24.i = D_003F43F0[*pd];

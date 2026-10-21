@@ -87,13 +87,13 @@ extern V4 D_00575970;
 extern f32 D_002BBDFC;
 extern Pad D_002C5BB0;
 extern u64 D_002C5BB8;
-extern u8 D_002C58D0[];
-extern V4 D_002E2780;
-extern V4 D_002E2790;
+#include "data/pieces/D_002C58D0.h"
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 extern s32 D_002E27A8;
-extern void *D_00362434;
+#include "data/pieces/D_00362434.h"
 extern Path *D_00362438;
-extern void *D_0036243C;
+#include "data/pieces/D_0036243C.h"
 #include "data/pieces/D_0036244C.h"
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"
@@ -426,9 +426,9 @@ s32 func_0017dc40(void) {
     void **a = &D_0036244C;
     void *v = *a;
     if (v != 0 || D_00362450 != 0) {
-        D_00362434 = v;
+        (*(void **)&D_00362434) = v;
         D_00362438 = D_00362450;
-        D_0036243C = D_00362454;
+        (*(void **)&D_0036243C) = D_00362454;
         func_00176f08(9, 0.0f);
         *a = 0;
         D_00362450 = 0;
@@ -451,8 +451,8 @@ void func_0017ec00(void) {
     func_00267810(m, D_002C58D0, D_00362684);
     func_002672f8(&v, m, &D_00362620);
     func_00267518(&D_005758D0, &D_005758E0, &v);
-    func_002675a8(&D_002E2780, &D_005758D0);
-    func_002675a8(&D_002E2790, &D_005758E0);
+    func_002675a8(((V4 *)&D_002E2780), &D_005758D0);
+    func_002675a8(((V4 *)&D_002E2790), &D_005758E0);
     func_00176f08(1, 30.0f);
     D_005758C4 = 0.0f;
 }

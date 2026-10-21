@@ -384,7 +384,7 @@ typedef struct {
     u8 pad168[0x158]; f32 f2C0, f2C4; u8 pad2C8[0xF8]; V4D0 x3C0;
 } ObjD0;
 
-extern V4D0 D_002C58B0;
+#include "data/pieces/D_002C58B0.h"
 
 extern s32 func_001375f0(ObjD0 *);
 extern void func_0013f0c0(ObjD0 *, u8 *, V4D0 *);
@@ -436,7 +436,7 @@ void func_001707d0(ObjD0 *o, V4D0 *out) {
     w->b9 = 0;
     w->b12 = 0;
     w->b20 = 0;
-    func_002675a8(&w->v120, &D_002C58B0);
+    func_002675a8(&w->v120, ((V4D0 *)&D_002C58B0));
     w->w80.c.m = 0;
     w->w80.w |= 0x200000000000000ULL;
     if ((u32)(o->x164 - 71) < 37) w->b1 = 0;

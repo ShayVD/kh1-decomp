@@ -122,9 +122,9 @@ extern Task *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern void *D_00469FF8[];
 extern s32 D_00469FD8[];
 extern void *D_0046A018[];
-extern u8 *D_0046A03C;
+#include "data/pieces/D_0046A03C.h"
 extern u8 *D_0046A040;
-extern u8 *D_0046A044;
+#include "data/pieces/D_0046A044.h"
 extern s32 D_0046A048;
 void func_0024b1e8(const char *, const char *, s32);
 void func_0024e0a4(void);
@@ -146,7 +146,7 @@ Task *func_0024b7a0(s32 grp, Task *t, void *arg) {
     c = b + 0x370;
     t->unk20 = i;
     t->unkC = a;
-    D_0046A03C = a;
+    (*(u8 **)&D_0046A03C) = a;
     t->unk10 = b;
     D_0046A040 = b;
     t->unk14 = c;

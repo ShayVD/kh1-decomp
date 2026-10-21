@@ -166,7 +166,7 @@ extern s32 D_005252A8;
 extern s32 D_0052535C;
 extern s32 D_00525360;
 extern s32 D_00525354;
-extern f32 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 
 s32 func_00162348(s32 a, u32 b);
 W6Node *func_001320a8(s32 a);
@@ -385,7 +385,7 @@ typedef struct {
     s32 x10;
 } W6Blob;
 
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 extern f32 D_00304B7C;
 extern W6Blob *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
 extern s32 D_0052AE54;
@@ -508,7 +508,7 @@ void func_00131cc8(s32 a, f32 *m) {
     v[0] = n->v38[0];
     v[1] = n->v38[1];
     v[2] = n->v38[2];
-    func_00120c38(m, D_002C58D0, v);
+    func_00120c38(m, ((f32 *)&D_002C58D0), v);
     v[0] = v[1] = v[2] = n->scale;
     func_00121958(m, m, v);
     m[12] = n->v1c[0];

@@ -70,10 +70,10 @@ Pk *func_001f15f0(Pk *p, s32 a1, u32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
 }
 
 #include "data/types/nofill_text_001f0000_h69.h"
-extern Q D_003F1A70[];
-extern Q D_003F1E70[];
-extern Q D_003F2270[];
-extern Q D_003F27D0[];
+#include "data/pieces/D_003F1A70.h"
+#include "data/pieces/D_003F1E70.h"
+#include "data/pieces/D_003F2270.h"
+#include "data/pieces/D_003F27D0.h"
 #include "data/pieces/D_003E9660.h"
 #include "data/pieces/D_003F2670.h"
 #include "data/pieces/D_003F1660.h"
@@ -85,7 +85,7 @@ void func_001f3110(void);
 
 void func_001f2eb8(void) {
     Q *p, *d;
-    p = D_003F1A70;
+    p = ((Q *)&D_003F1A70);
     d = p;
     p++;
     p->a = 0x1000000000008001;
@@ -97,7 +97,7 @@ void func_001f2eb8(void) {
     func_0011fb78(d, 7, p);
     func_0011fbb0(0x3d7c, 4, 20, 0, 0, 256, 256, 2048, D_003E9660, D_003F2670);
     func_0011fbb0(0x3dfc, 1, 0, 0, 0, 16, 16, 64, D_003F1660, D_003F2720);
-    p = D_003F1E70;
+    p = ((Q *)&D_003F1E70);
     d = p;
     p++;
     p->a = 0x1000000000008004;
@@ -116,7 +116,7 @@ void func_001f2eb8(void) {
     p->b = 0x14;
     p++;
     func_0011fb78(d, 7, p);
-    p = D_003F2270;
+    p = ((Q *)&D_003F2270);
     d = p;
     p++;
     p->a = 0x1000000000008004;
@@ -135,7 +135,7 @@ void func_001f2eb8(void) {
     p->b = 0x14;
     p++;
     func_0011fb78(d, 7, p);
-    p = D_003F27D0;
+    p = ((Q *)&D_003F27D0);
     d = p;
     p++;
     p->a = 0x1000000000008001;

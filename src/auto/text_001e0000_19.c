@@ -10,7 +10,7 @@ extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
 extern M2C_UNK func_001e8628;
 extern M2C_UNK func_001e86e8;
 extern M2C_UNK func_001e92b8;
-extern s32 D_003DABD4;
+#include "data/pieces/D_003DABD4.h"
 s32 func_0011e340(M2C_UNK);
 
 void func_001e8728(void) {

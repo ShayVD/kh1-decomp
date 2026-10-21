@@ -60,14 +60,14 @@ typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 /* ---- data ---- */
 extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
-extern Q8 *D_002E3170[8];
+#include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40;
 extern O8 *D_002E319C;
-extern O8 *D_002E31A0;
+#include "data/pieces/D_002E31A0.h"
 extern Ent *D_002E26A0;
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_002E31B8.h"
-extern V8 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 extern s32 D_002E31BC;
 extern Sv *D_00304BE8;
 extern u32 D_00524F44;
@@ -78,11 +78,11 @@ extern f32 D_00524F78;
 extern u32 D_002C5958;
 extern f32 D_002BBDFC;
 extern u32 D_002C5BB8;
-extern S88 D_00350D88[];
+#include "data/pieces/D_00350D88.h"
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
 extern V8 *D_00525288;
-extern f32 D_002E2780[];
+#include "data/pieces/D_002E2780.h"
 
 /* ---- functions ---- */
 extern void func_0012cb40(Q8 *, s32, u8);
@@ -135,7 +135,7 @@ typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern St3190 D_002E3190;
 #include "data/pieces/D_002E3168.h"
 extern Pad D_002C5BB0;
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern s32 D_002E27A8;
 extern s32 D_00524F50;
 extern void *memset(void *, s32, u32);
@@ -411,7 +411,7 @@ typedef struct GD { u8 p0[0x88]; u32 f88; } GD;
 extern QD D_005267C0[];
 extern QD D_005277C0[];
 extern QD D_005297C0;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern QD *func_00134f80(QD *, s32);
 extern void func_00135000(BD *, QD *);
 extern f32 func_00176850(void);

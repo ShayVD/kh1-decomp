@@ -1,12 +1,13 @@
 #include "common.h"
 #include "data/bss_004D.h"
 typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 r:29; } f; u8 c[4]; } F5968;
-extern F5968 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 
 /* ---- 00114880 ---- */
 extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
-extern s32 D_004D9330, D_002B6778, D_004D9320, D_002BD110;
+extern s32 D_004D9330, D_004D9320, D_002BD110;
+#include "data/pieces/D_002B6778.h"
 #include "data/pieces/D_002BBDE0.h"
 s32 func_00102a48(s32, s32);
 s32 func_00112d80(void);
@@ -39,7 +40,7 @@ void func_001f1ed8(s32, s32, s32, u8 *, s32);
 void func_00207748(s32, s32, s32, s32);
 
 void func_0010f658(s32 a) {
-    if ((*(volatile u8 *)&D_002C5968 >> 3) & 3) return;
+    if ((*(volatile u8 *)((F5968 *)&D_002C5968) >> 3) & 3) return;
     if (a == 0) {
         sceGsSyncPath(0, 0);
         func_001104e0();
@@ -117,11 +118,11 @@ s32 func_0010f918(void) {
     volatile F5968 *p;
 
     if (D_002BBD40 == 0 && D_002B6484 == 1) {
-        D_002C5968.w = 0;
+        (*(F5968 *)&D_002C5968).w = 0;
         return 0;
     }
     saved = D_002BD114;
-    p = &D_002C5968;
+    p = ((F5968 *)&D_002C5968);
     D_004D5B0C = 0;
     run = 1;
     started = 0;
@@ -310,7 +311,7 @@ void func_00113af8(void) {
 /* ---- 00113fa8 ---- */
 extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
-extern s32 D_004D9330, D_002B6778, D_004D9320, D_002BD110;
+extern s32 D_004D9330, D_004D9320, D_002BD110;
 s32 func_00102a48(s32, s32);
 s32 func_00112d80(void);
 s32 sceGsSyncPath(s32, s32);
@@ -339,7 +340,7 @@ typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
 Obj110 *D_004D9368 ALIGNED(8);
 extern s32 D_004D936C;
 #include "data/pieces/D_002BBFA0.h"
-extern f32 D_0029B280[4][4];
+#include "data/pieces/D_0029B280.h"
 extern u8 D_002BD140[];
 Obj110 *func_00122048(s32, s32);
 void func_002672f8(f32 *, s32, u8 *);
@@ -365,7 +366,7 @@ s32 func_00114a38(s32 a, Hdr *h, s32 id, s32 d) {
     func_002672f8(D_004D9368->v[5], a, D_004D9368->data + 80);
     func_002672f8(D_004D9368->v[6], a, D_004D9368->data + 96);
     func_002672f8(D_004D9368->v[7], a, D_004D9368->data + 112);
-    sceVu0MulMatrix(D_004D9368->m, D_002BBFA0, D_0029B280);
+    sceVu0MulMatrix(D_004D9368->m, D_002BBFA0, (*(f32 (*)[4][4])&D_0029B280));
     if (func_0024edf0(D_004D9368->m, (f32 (*)[4])D_004D9368->v) == 0) {
         if (id == 40000) func_00106bd8(D_002BD140, 40000);
         func_00108df8(D_004D936C++, id, a, D_004D9368->data, d);

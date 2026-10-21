@@ -28,7 +28,8 @@ extern s32 D_002E27A8;
 extern V4 D_005758D0, D_005758E0;
 V4 D_005758A0 ALIGNED(16);
 V4 D_005758B0 ALIGNED(16);
-extern V4 D_002E2780, D_002E2790;
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 extern f32 D_005758C4;
 extern f32 D_005758C0;
 extern s32 D_00575890;
@@ -36,7 +37,7 @@ extern Fn8 D_0036245C[];
 extern Fn8 D_00362458[];
 extern V4 D_00362670;
 extern ActD0 *D_002E26A0;
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 extern Shk D_00575900;
 extern f32 D_002BBDFC;
 extern f32 D_00362684;
@@ -50,7 +51,7 @@ extern V4 D_003625A0, D_003625B0;
 extern V4 D_003625F0;
 extern Z D_005759B0;
 extern V4 D_002C58A0;
-extern S26F0 D_003626F0;
+#include "data/pieces/D_003626F0.h"
 extern s32 D_003623F0;
 extern f32 D_003623F4, D_003623F8;
 extern BF D_002C5958;
@@ -83,14 +84,14 @@ void func_00176f08(s32, f32);
 
 void func_00176f08(s32 st, f32 t) {
     if (D_002E27A8 == 0) {
-        func_002675a8(&D_005758D0, &D_002E2780);
-        func_002675a8(&D_005758E0, &D_002E2790);
+        func_002675a8(&D_005758D0, ((V4 *)&D_002E2780));
+        func_002675a8(&D_005758E0, ((V4 *)&D_002E2790));
         D_005758C4 = 0.0f;
         D_00575890 |= 1;
     } else {
         if (D_005758C4 > 0.0f) {
-            func_002675a8(&D_005758A0, &D_002E2780);
-            func_002675a8(&D_005758B0, &D_002E2790);
+            func_002675a8(&D_005758A0, ((V4 *)&D_002E2780));
+            func_002675a8(&D_005758B0, ((V4 *)&D_002E2790));
         } else {
             func_002675a8(&D_005758A0, &D_005758D0);
             func_002675a8(&D_005758B0, &D_005758E0);
@@ -223,7 +224,7 @@ void func_0017df08(void) {
     f32 a;
     if (z->x10 == 4) return;
     if (D_00575890 & 2) {
-        f32 r = func_00124d28(&D_002E2780, &D_002E2790);
+        f32 r = func_00124d28(((V4 *)&D_002E2780), ((V4 *)&D_002E2790));
         z->x3c = r;
         z->x38 = D_005758C0;
         z->x34 = D_005758C0;
@@ -254,14 +255,14 @@ void func_0017df08(void) {
 
 void func_0017e910(void) {
     f32 a;
-    if (!D_003626F0.x0) return;
-    D_00362680.y = D_00575894->x3c + D_003626F0.x4;
-    if (func_001779e8(&D_002E2780, &D_002E2790, D_00362680.y) < 200.0f) {
+    if (!(*(S26F0 *)&D_003626F0).x0) return;
+    D_00362680.y = D_00575894->x3c + (*(S26F0 *)&D_003626F0).x4;
+    if (func_001779e8(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), D_00362680.y) < 200.0f) {
         a = 0.0f;
         while (a < 3.1415928f) {
             a += 0.31415928f;
-            if (func_001779e8(&D_002E2780, &D_002E2790, D_00362680.y + a) >= D_00362680.w - 10.0f) break;
-            if (func_001779e8(&D_002E2780, &D_002E2790, D_00362680.y - a) >= D_00362680.w - 10.0f) break;
+            if (func_001779e8(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), D_00362680.y + a) >= D_00362680.w - 10.0f) break;
+            if (func_001779e8(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), D_00362680.y - a) >= D_00362680.w - 10.0f) break;
         }
     }
     func_00176f08(1, 0.0f);
@@ -288,16 +289,16 @@ s32 func_0017ecf8(void) {
         if (0.0f < t) {
             u = t / D_005758C0;
             u = 1.0f - cosf(u * 3.1415928f * 0.5f);
-            func_002674f0(&D_002E2780, &D_005758A0, &D_005758D0, u);
-            func_002674f0(&D_002E2790, &D_005758B0, &D_005758E0, u);
+            func_002674f0(((V4 *)&D_002E2780), &D_005758A0, &D_005758D0, u);
+            func_002674f0(((V4 *)&D_002E2790), &D_005758B0, &D_005758E0, u);
         } else {
             D_005758C4 = 0.0f;
-            func_002675a8(&D_002E2780, &D_005758D0);
-            func_002675a8(&D_002E2790, &D_005758E0);
+            func_002675a8(((V4 *)&D_002E2780), &D_005758D0);
+            func_002675a8(((V4 *)&D_002E2790), &D_005758E0);
         }
     } else {
-        func_002675a8(&D_002E2780, &D_005758D0);
-        func_002675a8(&D_002E2790, &D_005758E0);
+        func_002675a8(((V4 *)&D_002E2780), &D_005758D0);
+        func_002675a8(((V4 *)&D_002E2790), &D_005758E0);
     }
     }
     return 0;
@@ -309,7 +310,7 @@ typedef struct { s32 x0; u8 pad4[0x3c - 4]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 
 typedef struct { u32 x0, x4; u64 x8; u8 pad10[0x44 - 0x10]; f32 x44; } PadB;
 typedef struct { V4 v; f32 x10, x14, x18; } CamPt;
 extern PadB D_002C5BB0;
-extern CamPt *D_00362434;
+#include "data/pieces/D_00362434.h"
 extern void *D_00362438;
 f32 D_00575820 ALIGNED(16);
 f32 D_00575824 ALIGNED(4);
@@ -317,7 +318,7 @@ s32 D_00575828 ALIGNED(8);
 extern V4 D_003624E0;
 extern V4 D_003624F0;
 extern f32 D_00362500;
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern s32 D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
 extern s32 D_00362420;
 void func_00124c68(f32);
@@ -368,7 +369,7 @@ void func_00179700(void) {
     if (D_00575820 > 1.047197491f) D_00575820 = 1.047197491f;
     else if (D_00575820 < -1.396263272f) D_00575820 = -1.396263272f;
     if ((D_002C5BB0.x8 & 0x8200) || !func_00177358(D_00575894) || func_001375d8(D_00575894)) {
-        if (!D_00362434 && !D_00362438) func_00176f08(1, 30.0f);
+        if (!((CamPt *)D_00362434) && !D_00362438) func_00176f08(1, 30.0f);
         else func_00176f08(9, 0.0f);
     }
 }
@@ -385,7 +386,7 @@ void func_0017ae48(void) {
     }
     if (D_00575890 & 1) D_00575890 &= ~1;
     if (D_00575890 & 4) D_00575890 &= ~4;
-    func_002675a8(&D_005758D0, D_00362434);
+    func_002675a8(&D_005758D0, ((CamPt *)D_00362434));
     func_001315c0(D_00575894, 0x8003, &d, 0.0f);
     func_00267530(&d, &d, &D_005758E0);
     len = func_00120bf8(&d) < 0.0f ? 0.0f : (func_00120bf8(&d) > 200.0f ? 200.0f : func_00120bf8(&d));
@@ -393,9 +394,9 @@ void func_0017ae48(void) {
     func_00267560(&d, &d, len * 0.3f);
     func_00267518(&D_005758E0, &D_005758E0, &d);
     func_00267530(&d, &D_005758E0, &D_005758D0);
-    if ((len = func_00120bf8(&d)) < 0.0f) func_00124c68(D_00362434->x14);
-    else if (D_00362434->x18 < len) func_00124c68(D_00362434->x10);
-    else func_00124c68(D_00362434->x14 - (D_00362434->x14 - D_00362434->x10) * (len / D_00362434->x18));
+    if ((len = func_00120bf8(&d)) < 0.0f) func_00124c68(((CamPt *)D_00362434)->x14);
+    else if (((CamPt *)D_00362434)->x18 < len) func_00124c68(((CamPt *)D_00362434)->x10);
+    else func_00124c68(((CamPt *)D_00362434)->x14 - (((CamPt *)D_00362434)->x14 - ((CamPt *)D_00362434)->x10) * (len / ((CamPt *)D_00362434)->x18));
     if ((&D_002C5BB0)->x8 & 0x3000) {
         if (!D_00575920) func_0011d768(4);
     }
@@ -533,7 +534,7 @@ extern V4 D_00362680;
 extern V4 D_00362530;
 extern V4 D_00362540;
 extern f32 D_00362550;
-extern u8 D_002E31B0[];
+#include "data/pieces/D_002E31B0.h"
 #define D_00575920 (*(S5920 *)&D_00575920)
 extern u32 D_002C5BB8;
 #define D_002C5958 (*(u32 *)&D_002C5958)

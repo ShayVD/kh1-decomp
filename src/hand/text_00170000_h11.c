@@ -42,7 +42,7 @@ typedef struct Pack {
 } Pack;
 
 /* script handler arguments */
-typedef union { s32 i; u32 u; f32 f; void *p; } Arg;
+#include "data/types/text_00170000_h11_p4.h"
 
 /* the object D_00575894 points to */
 typedef struct Actor {
@@ -71,7 +71,7 @@ typedef struct { s32 a, b, c; } V12;
 extern E0C0 D_00364130[256];
 extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern Actor *D_002E26A0;
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern s32 D_002E27A8;
 extern s32 D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
 extern f32 D_005758D0[4];
@@ -252,7 +252,7 @@ s32 func_00178468(void) {
 }
 
 extern s32 D_00362444;
-typedef struct { s32 n; } Rec;
+#include "data/types/text_00170000_h11_p3.h"
 Rec *func_0017adf8(Rec *p, s32 n) {
     s32 i;
     for (i = 0; i < D_00362444 && i != n; i++) {
@@ -312,7 +312,7 @@ void func_0017c4c8(void) {
     }
 }
 
-extern s32 D_00362434;
+#include "data/pieces/D_00362434.h"
 void func_0017ae48(void);
 void func_0017d238(void);
 f32 func_00124d28(void *, void *);
@@ -332,7 +332,7 @@ void func_0017e840(void) {
     }
 }
 
-extern Arg D_003626F0[];
+#include "data/pieces/D_003626F0.h"
 void func_0017e8c8(void) {
     Arg *p = D_003626F0;
     p[0].i = 1;
@@ -527,7 +527,7 @@ typedef struct E30 {
 #include "data/pieces/D_00362424.h"
 extern s32 D_00362440, D_00362448;
 #include "data/pieces/D_00362428.h"
-extern Rec *D_0036242C;
+#include "data/pieces/D_0036242C.h"
 extern E30 *D_00362430;
 extern f32 D_00362674;
 

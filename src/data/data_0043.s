@@ -5,7 +5,7 @@
  * include/data/data_0043.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_004305B0, 0x1770, 16  /* untyped: users disagree: Tex1440 D_004305B0 | u8 D_004305B0[]; session 25: as u8 D_004305B0[0x1770]: does not compile in text_00230000_s6_24.c */
-	PIECE D_00431D20, 0x30, 16  /* untyped: users disagree: GsTexHdr D_00431D20 | M2C_UNK D_00431D20 | u8 D_00431D20[]; session 25: as u8 D_00431D20[0x30]: does not compile in text_00230000_s6_24.c */
-	PIECE D_00431D50, 0x1e0, 16  /* untyped: users disagree: Fnt D_00431D50[] | GsTexHdr D_00431D50[10]; session 25: as Fnt D_00431D50[]: does not compile in text_00230000_s6_24.c */
+	PIECE D_004305B0, 0x1770, 16  /* data/pieces/D_004305B0.h */
+	PIECE D_00431D20, 0x30, 16  /* data/pieces/D_00431D20.h */
+	PIECE D_00431D50, 0x1e0, 16  /* data/pieces/D_00431D50.h */
 	PIECE D_00431F30, 0xea64, 4  /* data/pieces/D_00431F30.h */

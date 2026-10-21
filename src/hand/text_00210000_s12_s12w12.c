@@ -10,7 +10,7 @@ typedef struct { u8 pad[8]; s32 x8; u8 padc[4]; u32 x10; } Cfg;
 extern Cfg *D_00425BC8;
 extern S4BE8 *D_00304BE8;
 extern s32 D_00642CCC;
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_00642CD8;
 extern s32 D_00642CDC;
 extern s32 D_00642CE0;
@@ -112,7 +112,7 @@ void func_00216890(Ob1 *o) {
                 func_001f3758(o->x24);
                 func_0020bda8(16);
                 func_0011d768(2);
-                D_003F34B8->x20[k] = 5;
+                ((S34B8 *)D_003F34B8)->x20[k] = 5;
             }
         }
     }

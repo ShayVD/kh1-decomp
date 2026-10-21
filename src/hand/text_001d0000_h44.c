@@ -227,7 +227,7 @@ extern VM D_0038D170[];
 extern VM D_0039A580[];
 extern s32 D_0039A570;
 extern s32 D_003A7980;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 void func_001c19f8(VM *, s32);
 void func_001dcd98(s32 a) {
     VM *vm;

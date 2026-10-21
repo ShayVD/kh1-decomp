@@ -12,7 +12,7 @@ M2C_UNK func_002675a8(void *, void *);
 M2C_UNK func_002676c0(f32);
 M2C_UNK func_00267768(s32, s32, f32);
 M2C_UNK func_00267810(s32, s32, f32);
-extern M2C_UNK D_002C5C80;
+#include "data/pieces/D_002C5C80.h"
 extern M2C_UNK D_002E2FD8;
 extern M2C_UNK D_002E2FEC;
 extern M2C_UNK D_004F45B0; /* src/data/bss_004F.c: Block D_004F45B0[0x200] */
@@ -21,7 +21,7 @@ extern f32 D_002E27A0;
 extern f32 D_004F7650;
 extern s32 D_002C5958;
 #include "data/pieces/D_002C6440.h"
-extern s8 D_00350D88;
+#include "data/pieces/D_00350D88.h"
 extern u16 *D_002E319C;
 extern void **D_00524F40;
 extern void *D_002E26A0;
@@ -103,7 +103,7 @@ void func_00122cf0(void) {
     s32 var_v1;
 
     var_v1 = 0x1E;
-    var_v0 = &D_002C5C80;
+    var_v0 = ((M2C_UNK *)&D_002C5C80);
     do {
         var_v1 -= 1;
         M2C_FIELD(var_v0, s32 *, 0) = 0;
@@ -227,7 +227,7 @@ void func_0012dc70(void) {
     void *temp_s1;
 
     temp_s1 = D_002E26A0;
-    temp_s0 = &D_00350D88 + (M2C_FIELD(temp_s1, s32 *, 0x70) << 5);
+    temp_s0 = ((s8 *)&D_00350D88) + (M2C_FIELD(temp_s1, s32 *, 0x70) << 5);
     func_0012d068((s32) temp_s1, (s32) temp_s0);
     func_0012d468((s32) temp_s1, (s32) temp_s0);
     func_0012d6c0((s32) temp_s1, (s32) temp_s0);

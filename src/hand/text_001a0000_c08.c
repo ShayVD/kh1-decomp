@@ -228,7 +228,7 @@ extern VM D_0038D170[], D_0039A580[];
 extern s32 D_0039A570, D_003A7980;
 extern f32 D_002BBDFC;
 extern s32 D_0037A190;
-extern Bits D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern u8 D_002C5958[];
 #define D_002C5958 (*(s32 *)&D_002C5958)
 #include "data/pieces/D_002BBDE0.h"
@@ -273,7 +273,7 @@ s32 func_001c1f80(void) {
     }
     D_0037A190 = 0;
     D_00389C90.x316c = 0;
-    if (D_0037A378.b2) return 0;
+    if ((*(Bits *)&D_0037A378).b2) return 0;
     if (D_00389C90.f3078.b.b12 == 1) return 0;
     if (D_00389C90.f3078.b.b13 == 1) return 0;
     k = func_001c1e30();
@@ -359,7 +359,7 @@ s32 func_001c1f80(void) {
             case 2:
                 if (p->x == vm->x0) {
                     vm->fl.x &= ~1;
-                    if (D_0037A378.b0) {
+                    if ((*(Bits *)&D_0037A378).b0) {
                         m.type = 3;
                         m.val = 0;
                         m.x = vm->x0;

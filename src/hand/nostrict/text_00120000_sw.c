@@ -11,7 +11,7 @@ extern void func_002675a8(void *, void *);
 extern void *func_00123158(void *, void *);
 extern void func_00121fc4(f32 *, f32 *);
 s32 func_0012ee70(E23 *e, s32 i);
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 
 typedef struct { u8 pad[0x10]; f32 f10[16]; } E4;
 typedef struct { u8 pad[0x28]; s32 f28, f2c, f30, f34, f38; } C4;

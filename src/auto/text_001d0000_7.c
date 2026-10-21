@@ -22,7 +22,7 @@ extern f32 D_002BBE00;
 extern s32 D_0029B410;
 extern s32 D_0029B414;
 extern s32 D_002C5958;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_0038CCC4;
 extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);

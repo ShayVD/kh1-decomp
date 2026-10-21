@@ -406,7 +406,7 @@ typedef struct {
     } x6c;
 } W7Pl;
 
-extern W7Lv D_00304C70;
+#include "data/pieces/D_00304C70.h"
 void func_00141468(W7Pl *o, s32 v);
 void func_00141540(W7Pl *o, s32 v);
 void func_00141608(W7Pl *o, s32 v);
@@ -434,7 +434,7 @@ void func_001412f8(W7Pl *o, s32 n) {
 void func_00141720(W7Pl *o) {
     W7Lv *p = o->x6c.p;
     s32 x, t;
-    if (p == 0 || p == &D_00304C70) return;
+    if (p == 0 || p == ((W7Lv *)&D_00304C70)) return;
     x = p->xbe;
     t = p->x44 * 30 + 30;
     if (x >= t) {

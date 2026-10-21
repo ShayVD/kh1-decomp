@@ -10,7 +10,7 @@ extern M2C_UNK func_00147f20;
 extern s32 D_00304BE8;
 extern s32 D_0054C1B0; /* src/data/bss_0054.c: Ent9c D_0054C1B0[0x3] */
 extern u32 D_002C5958;
-extern u8 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 extern volatile s32 D_00532B90; /* src/data/bss_0053.c: Ent32 D_00532B90[128] */
 s32 func_00141a40();
 s32 func_00147840(s32);
@@ -95,7 +95,7 @@ s32 func_0014d3c8(void) {
   }
   else
   {
-    new_var = (u64) D_002E27C8;
+    new_var = (u64) (*(u8 *)&D_002E27C8);
     if ((new_var >> 7) != 0)
     {
       func_0014c530();

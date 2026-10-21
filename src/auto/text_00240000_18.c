@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK D_00668E20[0x58] ALIGNED(32);
-extern volatile M2C_UNK D_0045FAC0;
+#include "data/pieces/D_0045FAC0.h"
 void func_00237018(s32, s32, s32);
 void func_002370c8(s32);
 void func_002470d0(s32);
@@ -18,14 +18,14 @@ s32 func_00247190(void) {
   *((s64 *) (new_var + 0x60)) = 0x30003;
   *((s64 *) (new_var + 0x70)) = (s64) ((((s64) 0x80) << 0x20) | 0x48);
   func_00237018((s32) (&D_00668E20), 0x16, 1);
-  var_a0 = (var_s0 = &D_0045FAC0);
+  var_a0 = (var_s0 = ((volatile M2C_UNK *)&D_0045FAC0));
   do
   {
     var_a0 = var_s0;
     var_s0 += 0x930;
     func_002470d0((s32) var_a0);
   }
-  while (((s32) var_s0) < ((s32) (((s8 *) (&D_0045FAC0)) + 0x5BE0)));
+  while (((s32) var_s0) < ((s32) (((s8 *) (((volatile M2C_UNK *)&D_0045FAC0))) + 0x5BE0)));
   return 0;
 }
 

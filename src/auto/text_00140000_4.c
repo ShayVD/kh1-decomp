@@ -7,7 +7,7 @@
 M2C_UNK func_0011d350(M2C_UNK, s32);
 M2C_UNK func_001477c8(s32);
 M2C_UNK func_001ed128(M2C_UNK, s32);
-extern M2C_UNK D_00304C70;
+#include "data/pieces/D_00304C70.h"
 extern M2C_UNK D_00308C70;
 extern M2C_UNK D_00531B70; /* src/data/bss_0053.c: LdEnt D_00531B70[128] */
 extern M2C_UNK D_0054B808; /* src/data/bss_0054.c: u8 D_0054B808[0x10] */
@@ -27,7 +27,7 @@ extern M2C_UNK func_0014f828;
 extern s32 D_002C5958;
 extern s32 D_002E26A0;
 extern s32 D_00304BE8;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern s32 D_0054C438;
 extern s32 D_0054C43C;
 f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK *);
@@ -198,6 +198,6 @@ void func_0014dcd8(Actor *arg0) {
 
 void func_0014f398(s32 arg0) {
     func_00141ab8(M2C_FIELD(arg0, s32 *, 0x6C));
-    M2C_FIELD(arg0, s32 *, 0x6C) = (s32) &D_00304C70;
+    M2C_FIELD(arg0, s32 *, 0x6C) = (s32) ((M2C_UNK *)&D_00304C70);
 }
 #include "data/data_0030.h"

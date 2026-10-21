@@ -115,7 +115,7 @@ typedef struct { u8 b[0xe4]; } E228;
 extern E228 D_003E3D70[];
 extern u8 D_003E8D28[];
 extern Glyph *D_003E8E28;
-extern u8 D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_0063F74C;
 extern s32 D_003F1A60;
 extern s32 D_00640DE0;

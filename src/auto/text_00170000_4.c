@@ -26,9 +26,9 @@ extern s32 D_002E27A8;
 extern s32 D_0035C700;
 extern s32 D_003623F0;
 extern s32 D_00362420;
-extern s32 D_00362434;
+#include "data/pieces/D_00362434.h"
 extern s32 D_00362438;
-extern s32 D_0036243C;
+#include "data/pieces/D_0036243C.h"
 #include "data/pieces/D_0036244C.h"
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"

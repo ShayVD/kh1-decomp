@@ -8,8 +8,8 @@ M2C_UNK func_0017b250(M2C_UNK *, void *, f32);
 M2C_UNK func_0017b308(void *, void *, s32, s32, s32);
 M2C_UNK func_00267530(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
-extern M2C_UNK D_002E2780;
-extern M2C_UNK D_002E2790;
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 extern M2C_UNK D_0035FB20;
 extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00575970;
@@ -41,11 +41,11 @@ void func_00175fd0(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_00176a60(s32 *arg0) {
-    func_002675a8(*arg0, &D_002E2780);
+    func_002675a8(*arg0, ((M2C_UNK *)&D_002E2780));
 }
 
 void func_00176a80(s32 *arg0) {
-    func_002675a8(*arg0, &D_002E2790);
+    func_002675a8(*arg0, ((M2C_UNK *)&D_002E2790));
 }
 
 void func_0017c110(s32 arg0, f32 fparg0) {

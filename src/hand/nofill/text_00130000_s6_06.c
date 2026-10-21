@@ -34,7 +34,7 @@ extern W606Save *D_00304BE8;
 typedef struct { u8 pad[0x40]; s32 x40; s32 x44; s32 x48; } W606S6c;
 typedef struct { u8 pad[0x6c]; W606S6c *x6c; } W606O26a0;
 extern W606O26a0 *D_002E26A0;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 
 f32 func_0013bb20(void) {
     return (f32)((D_002E26A0->x6c->x48 + (s32)((D_002E27C8 >> 10) & 7)) * 3000);

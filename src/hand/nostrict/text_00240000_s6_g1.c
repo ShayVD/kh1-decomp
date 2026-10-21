@@ -28,7 +28,7 @@ typedef struct {
     u8 padCF0[0x10];
 } Slot;
 extern Slot D_00651E70[];
-extern Blob D_00451040;
+#include "data/pieces/D_00451040.h"
 #include "data/pieces/D_0044F4D0.h"
 #include "data/pieces/D_0044F380.h"
 #include "data/pieces/D_0044DFD0.h"
@@ -38,7 +38,10 @@ extern s32 D_00454430[], D_00454448[], D_00454450[], D_00454468[];
 extern s32 D_00454488[], D_00454498[], D_004544A0[], D_004544B0[];
 extern s32 D_004544C0[], D_004544C8[], D_004544D0[];
 extern s32 D_004544D8[], D_004544F8[], D_00454518[], D_00454538[];
-extern u8 D_00426880[], D_004268B0[], D_004268E0[], D_00426910[];
+#include "data/pieces/D_00426910.h"
+#include "data/pieces/D_004268E0.h"
+#include "data/pieces/D_004268B0.h"
+#include "data/pieces/D_00426880.h"
 extern u8 D_00454730[], D_00454780[], D_004547C0[];
 
 #define BASE(B) (b = &B, (Spr *)((u8 *)b + b->off))
@@ -120,7 +123,7 @@ void func_00241d60(void) {
             s->h[2] = base[34];
             break;
         case 4:
-            base = BASE(D_00451040);
+            base = BASE((*(Blob *)&D_00451040));
             s->na = 7;
             for (j = 0; j < s->na; j++) s->a[j] = base + D_00454468[j];
             s->nb = 4;

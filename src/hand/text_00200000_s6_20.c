@@ -9,7 +9,7 @@ extern s32 D_003F32A8[];
 extern s32 D_003F32C8[];
 extern s32 D_003F3308[];
 extern void (*D_003F32E8[])(N *);
-extern N *D_003F34C4;
+#include "data/pieces/D_003F34C4.h"
 s32 func_001fd518(N *);
 void func_00207830(N *, s32, s32, s32, s32, s32, s32);
 s32 func_0021add8(void);
@@ -35,10 +35,10 @@ void func_001f3e20(N *, N *);
 s32 func_001f4390(N *);
 
 typedef struct { u8 pad[112]; u32 b112[4]; } C1Flags;
-extern C1Flags *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 /* callee defined above (from src/hand/text_001f0000_h23.c) */
 CONTEXT_ONLY u32 func_002073f0(s32 n) {
-    return D_003F34B8->b112[n / 32] & (1 << n);
+    return ((C1Flags *)D_003F34B8)->b112[n / 32] & (1 << n);
 }
 static inline void inl5(N *o) { if (func_0021add8()) func_00207560(o, 109, 215); if (!func_002073f0(0)) func_00207428(o, 92, 223); }
 #define ITEM(n) { \
@@ -98,16 +98,16 @@ void func_0020c1c8(N *o) {
                     c = func_001f4468(o);
                     switch (D_00640E28) {
                     case 5:
-                        func_001f37c0(D_003F34C4->x10, 1);
-                        func_001f3d58(D_003F34C4->x10->x10, 2);
-                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
+                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
+                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
+                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
                         c = func_0021d9e0(c);
                         o->x24 = 4;
                         break;
                     case 7:
-                        func_001f37c0(D_003F34C4->x10, 1);
-                        func_001f3d58(D_003F34C4->x10->x10, 2);
-                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
+                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
+                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
+                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
                         c = func_00229338(c);
                         o->x24 = 4;
                         break;

@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 extern M2C_UNK D_0048CFF8;
-extern volatile s32 D_002A3F50[];
+#include "data/pieces/D_002A3F50.h"
 void func_00101728(s32);
 void func_00112270(s32, s32);
 void func_0011c7c0(s32, s32, s32);

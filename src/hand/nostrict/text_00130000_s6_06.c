@@ -63,7 +63,7 @@ struct W606Ch {
 
 extern u32 *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 extern s32 D_0052AE60;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern u32 *D_002E26A0[];
 extern u8 D_0052AD68[];
 void func_0014f658(void *, s32);

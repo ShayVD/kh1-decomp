@@ -2,8 +2,8 @@
 
 typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; s32 x10; } G958;
 extern G958 D_0054F958;
-typedef struct { u16 h; } H1530;
-extern H1530 D_00351530[];
+#include "data/types/nostrict_text_00150000_s8_w16.h"
+#include "data/pieces/D_00351530.h"
 typedef struct { u8 pad[0x48]; s16 x48; } C130f;
 typedef struct { u8 pad[4]; s32 x4; u8 pad8[0x130 - 8]; C130f *x130; } Bf;
 typedef struct { u8 pad[0x440]; u64 x440; } Af;

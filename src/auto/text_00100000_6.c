@@ -20,11 +20,11 @@ extern M2C_UNK D_002BB960;
 extern M2C_UNK D_002BB9A0;
 extern M2C_UNK D_002BB9E0;
 extern M2C_UNK func_0010c4b0;
-extern s32 D_002A6234;
+#include "data/pieces/D_002A6234.h"
 extern s32 D_002A6238;
 #include "data/pieces/D_002A623C.h"
 extern s32 D_002A6240;
-extern s32 D_002A6244;
+#include "data/pieces/D_002A6244.h"
 extern s32 D_002A6248;
 extern s32 D_002A624C;
 #include "data/pieces/D_002A6250.h"
@@ -36,7 +36,7 @@ extern s32 D_002A6264;
 extern s32 D_002A6268;
 extern s32 D_002A626C;
 extern s32 D_002A6270;
-extern s32 D_002A6274;
+#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6278;
 extern s32 D_002A627C;
 extern s32 D_002A6280;
@@ -55,10 +55,10 @@ void *func_0011ef10(M2C_UNK, M2C_UNK *);
 
 void func_00104528(void) {
     D_002A6234 = D_002A6270;
-    D_002A6238 = D_002A6274;
+    D_002A6238 = ((s32)D_002A6274);
     (*(s32 *)&D_002A623C) = D_002A6278;
     D_002A6240 = D_002A627C;
-    D_002A6244 = D_002A6280;
+    (*(s32 *)&D_002A6244) = D_002A6280;
     D_002A6248 = D_002A6284;
     D_002A624C = D_002A6288;
     (*(s32 *)&D_002A6250) = D_002A628C;

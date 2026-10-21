@@ -67,7 +67,7 @@ typedef struct {
 } BigA;
 
 extern BigA D_00389C90;
-extern u32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
 extern VMa D_0038D170[];
 extern VMa D_0039A580[];
@@ -118,8 +118,8 @@ VMa *func_001e98d0(s32, s32);
 
 extern s8 *D_003C39AC;
 extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern u32 D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern s32 (*D_0037A198[])(VMa *, s32);
 s32 func_001ee200(void);
 void srand(u32);
@@ -155,7 +155,7 @@ typedef struct {
 } Task;
 extern S5BB0 D_002C5BB0;
 extern u32 D_003C39A8;
-extern u8 *D_003C21A8[];
+#include "data/pieces/D_003C21A8.h"
 extern f32 D_002BBDFC;
 Msg *func_001c4730(void);
 void func_001c4788(Msg *);

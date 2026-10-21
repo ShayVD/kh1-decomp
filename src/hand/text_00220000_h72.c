@@ -113,12 +113,12 @@ void func_001f3dc0(s32);
 void func_0020be10(s32);
 s32 func_00233f18(void);
 void func_00207c28(void *, s32);
-typedef struct { s32 x0; u8 pad[12]; } S16;
+#include "data/types/text_00220000_h72.h"
 #include "data/pieces/D_003F6A70.h"
 extern u8 D_003F6BD0[];
 extern u8 D_003F6B70[];
 extern u8 D_003F6BF8[];
-extern S16 D_00425C28[];
+#include "data/pieces/D_00425C28.h"
 extern s32 D_006436EC;
 extern s32 D_00643758;
 extern s32 D_00643738;

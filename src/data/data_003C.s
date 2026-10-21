@@ -6,7 +6,7 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_003C21A0, 0x8, 8
-	PIECE D_003C21A8, 0xb88, 8  /* untyped: users disagree: s32 D_003C21A8[] | u8 *D_003C21A8[]; session 25: as u8 *D_003C21A8[]: new warning in text_001c0000_s11_w1b.c */
+	PIECE D_003C21A8, 0xb88, 8  /* data/pieces/D_003C21A8.h */
 	PIECE D_003C2D30, 0xc78, 8
 	PIECE D_003C39A8, 0x4, 4
 	PIECE D_003C39AC, 0x4, 4

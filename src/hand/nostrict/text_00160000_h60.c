@@ -102,10 +102,10 @@ extern f32 D_002BBDFC;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern u32 D_002C5958;
-extern u8 D_002C5C60[];
+#include "data/pieces/D_002C5C60.h"
 extern Obj70 *D_002E26A0[];
-extern u32 D_002E27C8;
-extern s32 D_002E31B0;
+#include "data/pieces/D_002E27C8.h"
+#include "data/pieces/D_002E31B0.h"
 extern Prm35AE80 D_0035AE80;
 extern void (*D_0035BC80[])(Obj70 *, Wk70 *);
 extern f32 D_0035BD10[4];
@@ -968,7 +968,7 @@ void func_001705c0(void *e, Wk705 *w) {
         *(P870 *)&w->p90 = D_00575080;
         if (!((s32)((s64)(w->w38 << 27) >> 32) & 1)) {
             w->w38 |= 0x20;
-            if (D_002E31B0 != 0) func_00157a30(e, 21, 0);
+            if ((*(s32 *)&D_002E31B0) != 0) func_00157a30(e, 21, 0);
             else func_00157a30(e, 22, D_0035BD40[0]);
         }
         if (w->p90 == 0) {

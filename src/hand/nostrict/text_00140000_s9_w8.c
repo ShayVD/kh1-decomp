@@ -7,7 +7,7 @@ extern S9c *D_00304BE8;
 #include "data/types/nostrict_text_00140000_s9_w8.h"
 typedef struct { u8 pad[6]; s16 x6; } R9c;
 extern Ent9c D_0054C1B0[];
-extern void *D_00350CE8[];
+#include "data/pieces/D_00350CE8.h"
 extern s32 D_00350D14;
 extern char D_0048E410[];
 R9c *func_00147840(s32);

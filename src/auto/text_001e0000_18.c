@@ -44,7 +44,7 @@ extern M2C_UNK func_001e8178;
 extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e84a0;
 extern M2C_UNK func_001e8628;
-extern s32 D_003DABD4;
+#include "data/pieces/D_003DABD4.h"
 extern s32 D_003DC48C;
 extern s32 D_003DC490;
 extern s32 D_003DD264;

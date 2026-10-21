@@ -9,10 +9,10 @@ typedef struct {
 typedef struct { u8 pad[4]; s32 x4; } Ctx4;
 typedef struct { f32 x, y, z, w; } V4f;
 typedef struct { void (*fn)(Obj3d0 *, Ctx4 *, V4f *); u8 pad[28]; } Handler;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 extern u32 D_002E3190;
 extern Handler D_00350DA0[];
-extern u8 D_002E31B0[];
+#include "data/pieces/D_002E31B0.h"
 void func_00126e80(Obj3d0 *, Ctx4 *, V4f *);
 void func_0014c580(Obj3d0 *);
 void func_0013dfb8(Obj3d0 *, V4f *);

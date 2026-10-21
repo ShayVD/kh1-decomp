@@ -94,7 +94,7 @@ extern GsBuf2 *D_0055BDE0; /* src/data/bss_0055.c: s32 D_0055BDE0 */
 extern GsBuf *D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
 extern s32 D_00351BD0;
 extern volatile s32 D_00559DBC;
-extern void *D_00351BC8;
+#include "data/pieces/D_00351BC8.h"
 s32 func_0015ea98(void);
 s32 FlushCache(s32);
 s32 DisableDmac(s32);
@@ -611,7 +611,7 @@ void func_0015ec68(void) {
     D_0055BDE0 = D_00559DC0;
     func_0011ef10(0x9C40, func_0015eb78)->h2 = -1;
     func_0011ef10(0x27CB8, func_0015eea0)->h2 = -1;
-    D_00351BC8 = FlushCache;
+    (*(void **)&D_00351BC8) = FlushCache;
 }
 
 s32 func_0015eea0(void) {

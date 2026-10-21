@@ -79,13 +79,8 @@ typedef struct {
     f32 x490[4];
     void *x4a0;
 } W9Ent;
-typedef struct {
-    s32 f0;
-    s32 f4;
-    s32 f8;
-    u8 padc[0x14];
-} W9Tab32;
-extern W9Tab32 D_00350D88[];
+#include "data/types/text_00140000_h9_p.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/types/text_00140000_h9.h"
 void func_00267560(void *out, void *in, f32 s);
 void func_00130398(W9Ent *e, f32 s, s32 n);

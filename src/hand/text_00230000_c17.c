@@ -12,7 +12,7 @@ typedef struct { s32 x0; s32 x4; s32 x8; s32 cur; s32 n; u8 id[16]; u8 col[16]; 
 extern f32 D_00650DD0;
 extern f32 D_00650DD4;
 extern s32 D_00449900;
-extern struct { s32 a; s32 t[4]; } D_00449908;
+#include "data/pieces/D_00449908.h"
 void func_0024ae00(void *);
 void func_0024af00(void *);
 void func_00239630(void *, void *, s32, s32, f32);
@@ -74,7 +74,7 @@ void func_00239e30(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f3
     }
     if (big) {
         xx = x + 11;
-        on2 = m->cur != D_00449908.t[mode];
+        on2 = m->cur != (*(struct { s32 a; s32 t[4]; }(*))&D_00449908).t[mode];
         yy = y + m->cur * 22;
         yy += 18;
         sel = 0;
@@ -100,7 +100,7 @@ void func_00239e30(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f3
         if (sel) func_00239778(on2, sel, 0, o->x4, xx, yy, s);
         func_0024ac08(&o->x20[1], pos);
         func_00239558(m->id[m->cur], xx + pos[0], yy + pos[1] + 2, m->col[m->cur]);
-        D_00449908.t[mode] = m->cur;
+        (*(struct { s32 a; s32 t[4]; }(*))&D_00449908).t[mode] = m->cur;
     }
 }
 #include "data/data_0044.h"

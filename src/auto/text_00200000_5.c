@@ -5,8 +5,8 @@
 
 M2C_UNK func_001f9010(M2C_UNK);
 M2C_UNK func_001f94f0(void *, M2C_UNK, M2C_UNK, M2C_UNK, s32, M2C_UNK, M2C_UNK);
-extern s32 D_002BC140;
-extern s32 D_002BC144;
+#include "data/pieces/D_002BC140.h"
+#include "data/pieces/D_002BC144.h"
 extern s32 D_003F34A4;
 extern s32 D_003F6E30;
 extern s32 D_00640E2C;

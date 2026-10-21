@@ -74,10 +74,7 @@ typedef struct {
     f32 f3cc;
 } Obj57_e160;
 typedef struct { s32 x0; u8 pad4[0x48-4]; s16 x48; u8 pad4a[0x58-0x4a]; u8 x58; } Ent57_f028;
-typedef struct { u8 id; u8 b1; u8 b2; u8 b3; u8 b4; } BoxHd57_f1b8;
-typedef union { u64 flags; BoxHd57_f1b8 c; } BoxU57_f1b8;
-typedef struct { BoxU57_f1b8 u; u8 pad8[8]; f32 lo[4]; f32 hi[4]; } Box57_f1b8;
-typedef struct { u8 pad0[3]; u8 x3; u8 n; u8 x5; u8 pad6[0xa]; Box57_f1b8 box[1]; } BoxSet57_f1b8;
+#include "data/types/text_00140000_h57_p.h"
 #include "data/types/text_00140000_h57.h"
 typedef struct { u8 pad0[8]; f32 f8; } Prm57_f410;
 typedef struct {
@@ -160,12 +157,12 @@ typedef struct Chr57_0930 {
 extern f32 D_002BBDFC;
 extern f32 D_002C58A0[];
 extern u32 D_002E3190;
-extern s32 D_002E31B0[2];
+#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
 extern u32 D_002C5958;
 extern void *D_002E26A0;
 extern s32 D_0054F448;
-extern BoxSet57_f1b8 *D_00350D78;
+#include "data/pieces/D_00350D78.h"
 extern s32 D_00350D7C;
 extern s32 D_00350D80;
 extern s32 D_0054F44C;
@@ -173,7 +170,7 @@ extern Grp57_f1b8 D_0054F438[];
 extern Grp57_f1b8 D_0054F450[];
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern f32 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 
 f32 atan2f(f32, f32);
 f32 func_00120c88(f32);
@@ -324,7 +321,7 @@ void func_0014dd48(Obj57_dd48 *o, s32 unused, f32 *v) {
     if (o->o148) o->o148->f100 |= (u64)0x8000 << 19;
 skip:
     if (D_002E31B8 >= 3 && v[3] > 0.0f && v[1] == 0.0f) {
-        h = func_0012ec60(D_002E31B0[0], D_002E31B0[1], a);
+        h = func_0012ec60((*(s32 (*)[2])&D_002E31B0)[0], (*(s32 (*)[2])&D_002E31B0)[1], a);
         func_001315c0(o, 0x8003, b, 0.0f);
         func_00267530(a, a, b);
         if (func_00121748(a, v) > 0.5f) {
@@ -627,7 +624,7 @@ f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, D_002C58D0, ang[2]);
+    func_00267768(m, ((f32 *)&D_002C58D0), ang[2]);
     func_00267810(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;
@@ -667,7 +664,7 @@ f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, D_002C58D0, ang[2]);
+    func_00267768(m, ((f32 *)&D_002C58D0), ang[2]);
     func_00267810(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;

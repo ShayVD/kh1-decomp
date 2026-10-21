@@ -4,7 +4,7 @@
 #include "data/bss_0057.h"
 
 extern M2C_UNK D_002C58A0;
-extern M2C_UNK D_002C58D0;
+#include "data/pieces/D_002C58D0.h"
 extern M2C_UNK D_0035BD40;
 extern M2C_UNK D_00362660;
 extern M2C_UNK D_00362670;
@@ -82,7 +82,7 @@ void func_00177900(s32 arg0, M2C_UNK *arg1, f32 fparg0) {
     func_0017f178();
     func_002672f8(arg1, D_002E26A0 + 0xD0, &D_00362670);
     temp_f20 = func_00120c88(fparg0);
-    func_00267768(sp, &D_002C58D0, func_00120c88(M2C_FIELD(&D_00362660, f32 *, 0)));
+    func_00267768(sp, ((M2C_UNK *)&D_002C58D0), func_00120c88(M2C_FIELD(&D_00362660, f32 *, 0)));
     func_00267810(sp, sp, temp_f20);
     func_002675a8(&M2C_FIELD(sp, M2C_UNK *, 0x40), &D_002C58A0);
     M2C_FIELD(sp, f32 *, 0x48) = M2C_FIELD(&D_00362660, f32 *, 0xC);

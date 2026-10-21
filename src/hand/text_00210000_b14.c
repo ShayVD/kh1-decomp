@@ -18,7 +18,7 @@ extern S4BE8 *D_00304BE8;
 extern Rec D_003E3D70[];
 #include "data/pieces/D_003E3E50.h"
 extern S4 D_003E8E08;
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern u8 D_003F3B10[];
 extern u8 D_003F3DF0[];
 extern u8 D_003F3E90[];
@@ -597,7 +597,7 @@ void func_00217490(void *a) {
         k = D_00304BE8->x48e[D_00642CCC];
         n = D_003F40F8[k].n;
         p = D_003F40F8[k].p;
-        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[D_003F34B8->x20[k]]);
+        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[((S34B8 *)D_003F34B8)->x20[k]]);
         func_001ff488(a, 0, 28, 342, n * 28 + 10, 0x40000000);
         y = 57;
         for (i = 0; i < n; i++) {

@@ -10,10 +10,10 @@
 	.word func_001dca88
 	PIECE_END D_003DABCC, 0x4
 	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[]; session 25: as Tbl *D_003DABD0: code changes in text_001e0000_17.c; does not compile in text_001c0000_h67.c */
-	PIECE D_003DABD4, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD4 | Tbl *D_003DABD4 | s32 D_003DABD4; session 25: as s32 D_003DABD4: new warning in text_s7_w22.c */
+	PIECE D_003DABD4, 0x4, 4  /* data/pieces/D_003DABD4.h */
 	PIECE D_003DABD8, 0x68, 8  /* data/pieces/D_003DABD8.h */
 	PIECE D_003DAC40, 0x60, 16
-	PIECE D_003DACA0, 0x10, 16  /* untyped: users disagree: Tbl *D_003DACA0 | s32 D_003DACA0; session 25: as Tbl *D_003DACA0: code changes in text_001e0000_6.c; does not compile in text_001e0000_h20.c */
+	PIECE D_003DACA0, 0x10, 16  /* data/pieces/D_003DACA0.h */
 	PIECE D_003DACB0, 0x4, 4
 	PIECE D_003DACB4, 0x4, 4
 	PIECE D_003DACB8, 0x4, 4
@@ -100,7 +100,7 @@
 	PIECE_LABEL D_003DC498, D_003DCB10, 0x678
 	PIECE_BYTES D_003DC498, 0x678, 0x80
 	PIECE_END D_003DC498, 0x6f8
-	PIECE D_003DCB90, 0x180, 16  /* untyped: users disagree: char D_003DCB90[] | char D_003DCB90[][32]; session 25: as char D_003DCB90[0xc][32]: new warning in text_001e0000_s9_w2.c */
+	PIECE D_003DCB90, 0x180, 16  /* data/pieces/D_003DCB90.h */
 	PIECE D_003DCD10, 0x60, 16
 	PIECE D_003DCD70, 0x80, 16  /* data/pieces/D_003DCD70.h */
 	PIECE D_003DCDF0, 0x40, 16

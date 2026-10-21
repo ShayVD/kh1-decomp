@@ -31,7 +31,7 @@ void func_00233ef8(s32);
 extern s32 D_003F3468[];
 extern s32 D_003F3488[];
 extern s32 D_003F34A8;
-extern s32 D_003F34C4;
+#include "data/pieces/D_003F34C4.h"
 extern u8 D_003F6D10[];
 extern void *D_003F6E18[];
 extern s32 D_003F6E24;
@@ -111,7 +111,7 @@ void func_0022b2e0(void *arg0) {
 extern u8 D_003F7000[];
 extern u8 D_003F7030[];
 extern u8 D_003F7060[];
-extern s32 D_00425C28[];
+#include "data/pieces/D_00425C28.h"
 extern s32 D_006437E4;
 extern s32 D_006469A4;
 
@@ -122,8 +122,8 @@ void func_0022b8a0(void *arg0) {
         func_00233ef8(0);
         D_006469A4 = 0;
         D_006437E4 = 0;
-        D_00425C28[0] = 3;
-        D_00425C28[4] = 3;
+        ((s32 *)&D_00425C28)[0] = 3;
+        ((s32 *)&D_00425C28)[4] = 3;
         o[0] = func_001f31a8(D_003F7060, 6);
         if (o[0] != NULL) {
             func_001f3e48(o[0], arg0);

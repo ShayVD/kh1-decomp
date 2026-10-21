@@ -44,7 +44,7 @@ typedef struct { u8 pad[0x10]; E11 *f10; s32 f14; u8 pad18[4]; f32 f1c; u8 f20[0
 typedef struct { s32 f0, f4, f8; E11 *fc; u8 pad10[0x20]; s32 f30; } P11;
 typedef struct { u8 pad[0x40]; struct { u8 a, b; } t[0x58]; f32 ff0; } G1;
 extern G1 *D_00308CDC;
-extern u8 *D_002E31A4;
+#include "data/pieces/D_002E31A4.h"
 extern s32 D_00304BE8;
 extern void func_0012c328();
 extern T11 *func_00147d18(void *);

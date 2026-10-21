@@ -206,17 +206,17 @@ typedef struct { u8 pad[0x68]; s32 w68; u8 pad6c[0x1C]; u32 w88; } Act;
 /* ---- data ---- */
 extern Cfg *D_00308CDC;
 extern u32 D_002C5958;
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
 extern V4f D_002C58A0;
 extern Pl *D_002E26A0;
 extern f32 D_00304D54;
-extern u32 D_00304B78;
-extern MdlEnt D_003044E0[];
+#include "data/pieces/D_00304B78.h"
+#include "data/pieces/D_003044E0.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 extern Snd *D_0052EB58;
 extern Snd D_0052EB50;
 extern s32 D_00531B64;
@@ -574,7 +574,7 @@ s32 func_00142388(V4f *p, s32 *out) {
         if (r.w34 == -1) {
             func_00105c98(r.h30, out);
         } else {
-            Mdl *m = D_003044E0[r.w34].m;
+            Mdl *m = ((MdlEnt *)&D_003044E0)[r.w34].m;
             for (i = 0; i < 4; i++) {
                 out[i] = m->a[i];
             }
@@ -916,7 +916,7 @@ Blk7c *func_00148a60(Act *o, s32 fl) {
 typedef struct { u8 b0; u8 b1; u8 b2; u8 b3; } S1C8;
 typedef struct { u32 flags; u8 pad4[0x38]; s32 w3c; s32 w40; u8 pad44[0xC8 - 0x44]; S1C8 *pc8; } St6C;
 typedef struct { u8 pad[0x44]; s32 w44; s32 w48; u8 pad4c[0xC8 - 0x4C]; S1C8 *pc8; } St6Cb;
-extern St6C D_00304C70;
+#include "data/pieces/D_00304C70.h"
 typedef struct { u8 pad[0x4C]; u16 h4c; } S130b;
 typedef struct { u8 pad[0x6C]; St6C *p6c; u8 pad70[0x18]; u32 w88; u8 pad8c[0x130 - 0x8C]; S130b *p130; } O1468;
 
@@ -933,7 +933,7 @@ s32 func_00141448(s32 a, s32 b, s32 max) {
 s32 func_00141468(O1468 *o, s32 x) {
     St6C *s = o->p6c;
     s32 v;
-    if (s == 0 || s == &D_00304C70) return 0;
+    if (s == 0 || s == ((St6C *)&D_00304C70)) return 0;
     v = func_00141448(s->w3c, x, s->w40);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
         v = s->w3c + (s32)((v - s->w3c) * D_00308CDC->f88);
@@ -947,7 +947,7 @@ s32 func_00141468(O1468 *o, s32 x) {
 s32 func_00141540(O1468 *o, s32 x) {
     St6Cb *s = (St6Cb *)o->p6c;
     s32 v;
-    if (s == 0 || s == (St6Cb *)&D_00304C70) return 0;
+    if (s == 0 || s == (St6Cb *)((St6C *)&D_00304C70)) return 0;
     v = func_00141448(s->w44, x, s->w48);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
         v = s->w44 + (s32)((v - s->w44) * D_00308CDC->f88);

@@ -2121,7 +2121,7 @@
 	PIECE_LABEL D_0048C390, D_0048C558, 0x1c8
 	PIECE_BYTES D_0048C390, 0x1c8, 0xd8
 	PIECE_END D_0048C390, 0x2a0
-	PIECE_BEGIN D_0048C630, 0x60, 16  /* untyped: users disagree: Blk32 D_0048C630 | Tpl52 D_0048C630 | s32 D_0048C630[]; session 25: as Blk32 D_0048C630: code changes in text_00100000_9.c; does not compile in text_00110000_h52.c */
+	PIECE_BEGIN D_0048C630, 0x60, 16  /* data/pieces/D_0048C630.h */
 	PIECE_BYTES D_0048C630, 0x0, 0x4
 	.word D_00487B80
 	PIECE_BYTES D_0048C630, 0x8, 0xc
@@ -2134,7 +2134,7 @@
 	.word D_004862A0
 	PIECE_BYTES D_0048C630, 0x48, 0x18
 	PIECE_END D_0048C630, 0x60
-	PIECE_BEGIN D_0048C690, 0x60, 16  /* untyped: users disagree: Blk32 D_0048C690 | Tpl52 D_0048C690 | s32 D_0048C690[]; session 25: as Blk32 D_0048C690: code changes in text_00100000_9.c; does not compile in text_00110000_h52.c */
+	PIECE_BEGIN D_0048C690, 0x60, 16  /* data/pieces/D_0048C690.h */
 	PIECE_BYTES D_0048C690, 0x0, 0x4
 	.word D_00487B80
 	PIECE_BYTES D_0048C690, 0x8, 0xc

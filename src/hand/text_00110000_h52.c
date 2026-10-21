@@ -126,10 +126,11 @@ extern s32 D_002BD11C;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 b3 : 1; u32 b4 : 1; u32 rest : 27; } Bits52;
 extern s32 D_004D9320;
 extern Bits52 D_002C5958;
-extern Bits52 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C1308, D_002C130C;
 #include "data/pieces/D_002BBDE0.h"
-extern s32 D_002BC070, D_002BC0BC, D_002A6204;
+extern s32 D_002BC0BC, D_002A6204;
+#include "data/pieces/D_002BC070.h"
 s32 func_001336a0(void);
 
 s32 func_001140a0(void) {
@@ -139,15 +140,15 @@ s32 func_001140a0(void) {
         *p = 0;
         if (D_002C5958.b0 == 1) *p = 2;
         if (D_002C5958.b4 == 1) *p = 2;
-        if (D_0037A378.b1 == 1) *p = 1;
-        if (D_0037A378.b3 == 1) *p = 3;
+        if ((*(Bits52 *)&D_0037A378).b1 == 1) *p = 1;
+        if ((*(Bits52 *)&D_0037A378).b3 == 1) *p = 3;
         if (D_002BD11C == 1) *p = D_002BD11C;
         if (D_002C1308) *p = 4;
         if (D_002C130C) *p = 5;
         if (D_002BBDE0 == 5) *p = 7;
         if (func_001336a0()) *p = 2;
         if (*p == 0) {
-            if (D_002BC070 != 128 || D_002BC0BC || D_002A6204) D_002BD118 = 1;
+            if ((*(s32 *)&D_002BC070) != 128 || D_002BC0BC || D_002A6204) D_002BD118 = 1;
         }
     }
     return D_002BD118;
@@ -157,7 +158,8 @@ s32 func_001140a0(void) {
 typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; V4i52 x30; V4i52 x40; } Ent52;
 typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; u8 pad[0x30]; } Tpl52;
 typedef struct { u8 b[0x90]; } E90_52;
-extern Tpl52 D_0048C630, D_0048C690;
+#include "data/pieces/D_0048C690.h"
+#include "data/pieces/D_0048C630.h"
 extern V4i52 D_0048C6F0[];
 extern V4i52 D_00472150, D_00486300;
 extern E90_52 D_004DBC20[2][64];
@@ -165,26 +167,26 @@ extern E90_52 D_004DBC20[2][64];
 void func_00114c18(Ent52 *o, s32 idx, s32 col) {
     s32 i;
     if (idx == -1) {
-        o[0].x14 = D_0048C630.x14;
-        o[1].x14 = D_0048C690.x14;
+        o[0].x14 = (*(Tpl52 *)&D_0048C630).x14;
+        o[1].x14 = (*(Tpl52 *)&D_0048C690).x14;
     } else {
         o[0].x14 = &D_004DBC20[0][idx];
         o[1].x14 = &D_004DBC20[1][idx];
     }
-    o[0].x10 = D_0048C630.x10;
-    o[0].x18 = D_0048C630.x18;
-    o[0].x1c = D_0048C630.x1c;
-    o[1].x10 = D_0048C690.x10;
-    o[1].x18 = D_0048C690.x18;
-    o[1].x1c = D_0048C690.x1c;
-    o[0].x20.v[0] = D_0048C630.x20.v[0];
-    o[0].x20.v[1] = D_0048C630.x20.v[1];
-    o[0].x20.v[2] = D_0048C630.x20.v[2];
-    o[0].x20.v[3] = D_0048C630.x20.v[3];
-    o[1].x20.v[0] = D_0048C690.x20.v[0];
-    o[1].x20.v[1] = D_0048C690.x20.v[1];
-    o[1].x20.v[2] = D_0048C690.x20.v[2];
-    o[1].x20.v[3] = D_0048C690.x20.v[3];
+    o[0].x10 = (*(Tpl52 *)&D_0048C630).x10;
+    o[0].x18 = (*(Tpl52 *)&D_0048C630).x18;
+    o[0].x1c = (*(Tpl52 *)&D_0048C630).x1c;
+    o[1].x10 = (*(Tpl52 *)&D_0048C690).x10;
+    o[1].x18 = (*(Tpl52 *)&D_0048C690).x18;
+    o[1].x1c = (*(Tpl52 *)&D_0048C690).x1c;
+    o[0].x20.v[0] = (*(Tpl52 *)&D_0048C630).x20.v[0];
+    o[0].x20.v[1] = (*(Tpl52 *)&D_0048C630).x20.v[1];
+    o[0].x20.v[2] = (*(Tpl52 *)&D_0048C630).x20.v[2];
+    o[0].x20.v[3] = (*(Tpl52 *)&D_0048C630).x20.v[3];
+    o[1].x20.v[0] = (*(Tpl52 *)&D_0048C690).x20.v[0];
+    o[1].x20.v[1] = (*(Tpl52 *)&D_0048C690).x20.v[1];
+    o[1].x20.v[2] = (*(Tpl52 *)&D_0048C690).x20.v[2];
+    o[1].x20.v[3] = (*(Tpl52 *)&D_0048C690).x20.v[3];
     for (i = 0; i < 2; i++) {
         o[i].a.v[0] = D_0048C6F0[col].v[0];
         o[i].a.v[1] = D_0048C6F0[col].v[1];
@@ -288,7 +290,7 @@ void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
 }
 
 extern s32 D_002A62E8;
-extern V4_52 *D_002A3F48;
+#include "data/pieces/D_002A3F48.h"
 typedef struct { u8 pad[0x28]; s32 x28; s32 x2c; u8 pad30[4]; f32 x34; u8 pad38[4]; u16 x3c; u8 pad3e[2]; V4_52 x40; u8 pad50[0x18]; f32 x68; } Src52;
 typedef struct { V4_52 p; s32 x10[4]; s32 x20; f32 x24; s32 x28; f32 x2c; V4_52 x30; s32 x40; } Dst52;
 void func_001150d8(void);
@@ -304,7 +306,7 @@ void func_00117710(Src52 *a, Dst52 *b) {
     a->x34 = 123456.0f;
     if (a->x28 >= 0) return;
     if (D_002A62E8) func_001150d8();
-    func_002675a8(b->x30, D_002A3F48);
+    func_002675a8(b->x30, ((V4_52 *)D_002A3F48));
     id = a->x3c;
     a->x28 &= 0x7fffffff;
     b->x40 = 0;
@@ -331,7 +333,7 @@ void func_00117710(Src52 *a, Dst52 *b) {
         b->x40 = bp->x40;
         k = bp->k;
     }
-    func_002675a8(b->x30, D_002A3F48[k]);
+    func_002675a8(b->x30, ((V4_52 *)D_002A3F48)[k]);
 }
 
 extern s32 D_002BD150[];
@@ -381,7 +383,7 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
 }
 
 typedef struct { V4_52 pts[512]; V4_52 tmp; s32 ids[512]; } Hits52;
-extern s32 D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 void *func_00122048(s32, s32);
 void func_001220b8(void *);
 s32 func_001152c8(s32, void *, void *, void *);
@@ -740,7 +742,7 @@ void func_0011b9f8(s32 g, s32 id, f32 *p, f32 *out) {
 
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern s32 (*D_002C1300)();
+#include "data/pieces/D_002C1300.h"
 typedef struct { f32 x0, x4; u8 pad8[0x1c]; f32 x24; } Obj52;
 s32 func_0011b908(s32, s32, f32 *);
 
