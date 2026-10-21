@@ -28,7 +28,7 @@ extern M2C_UNK D_0044F4D0;
 extern M2C_UNK D_00451040;
 extern M2C_UNK D_00469CA0;
 extern M2C_UNK D_00469F50;
-extern M2C_UNK D_004919B0;
+#include "data/pieces/D_004919B0.h"
 extern M2C_UNK D_00651E50;
 M2C_UNK D_00652888[0x4] ALIGNED(8);
 extern M2C_UNK D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
@@ -167,7 +167,7 @@ s32 func_0024d138(void) {
 }
 
 void func_0024daa0(void) {
-    func_0025dd48(&D_004919B0, 0x4807, 0, 0, 0, 0);
+    func_0025dd48((M2C_UNK *)&D_004919B0, 0x4807, 0, 0, 0, 0);
 }
 
 void func_0024f008(void) {

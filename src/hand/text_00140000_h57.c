@@ -161,7 +161,7 @@ extern f32 D_002BBDFC;
 extern f32 D_002C58A0[];
 extern u32 D_002E3190;
 extern s32 D_002E31B0[2];
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern u32 D_002C5958;
 extern void *D_002E26A0;
 extern s32 D_0054F448;

@@ -65,8 +65,8 @@ extern Q8 **D_00524F40;
 extern O8 *D_002E319C;
 extern O8 *D_002E31A0;
 extern Ent *D_002E26A0;
-extern s32 D_002E31A8;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31A8.h"
+#include "data/pieces/D_002E31B8.h"
 extern V8 D_002E31B0;
 extern s32 D_002E31BC;
 extern Sv *D_00304BE8;
@@ -133,7 +133,7 @@ s32 func_0012dd70(O8 *o);
 typedef struct { u32 w; s32 f4; s32 f8; } St3190;
 typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern St3190 D_002E3190;
-extern s32 D_002E3168;
+#include "data/pieces/D_002E3168.h"
 extern Pad D_002C5BB0;
 extern u32 D_002C5960;
 extern s32 D_002E27A8;

@@ -81,7 +81,7 @@ s32 func_00120678(LoadTask *);
 void func_002672f8(f32 *, V4 *, f32 *);
 extern f32 D_002BBDFC;
 void func_002675a8(f32 *, f32 *);
-extern s32 D_002C5910[4][4];
+#include "data/pieces/D_002C5910.h"
 typedef struct { u8 pad0[12]; s32 xC; u8 pad10[60]; u16 x4C; u8 pad4e[6]; s8 kind; u8 pad55[4]; u8 x59; } Info123;
 typedef union {
     u64 v;
@@ -234,7 +234,7 @@ void func_0011dcf0(void *a0, s32 *a1, s32 *a2) {
     func_0011db50(a1, a2);
 }
 
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern s32 D_002BC140;
 extern V4 D_002C1320, D_002C1330, D_002C1340, D_002C1350;
 void func_00267440(V4 *, s32);
@@ -604,7 +604,7 @@ CdReq *func_001204a0(char *name, u8 *buf) {
     return r;
 }
 
-extern u32 D_002C5C48;
+#include "data/pieces/D_002C5C48.h"
 s32 func_00146878(void);
 void func_00120038(CdReq *);
 #ifdef KH1_OVL_FIXUPS
@@ -763,7 +763,7 @@ s32 func_00122ab0(void) {
 
 typedef struct { u8 pad0[880]; u64 flags; u8 pad378[312]; } Obj1200;
 extern Obj1200 D_002C64A0[];
-extern Obj1200 *D_002E26AC;
+#include "data/pieces/D_002E26AC.h"
 void *memset(void *, s32, u32);
 
 Obj1200 *func_00123810(void) {

@@ -4,7 +4,7 @@ typedef struct { u64 lo, hi; } QW;
 extern u8 D_00351E10[];
 extern QW *D_00662940; /* src/data/bss_0066.c: s32 D_00662940 */
 QW *D_00662944 ALIGNED(4);
-extern u8 D_002E26C0[];
+#include "data/pieces/D_002E26C0.h"
 extern u8 D_00426820[];
 extern u8 D_004267F0[];
 typedef struct { u8 pad[0xC0]; } Item;
@@ -80,7 +80,7 @@ void func_00245b08(s32 a, Pan *p) {
 /* ---- func_00135bb0 ---- */
 typedef union { u64 x; struct { u32 lo; u32 x32:13; u32 b45:1; u32 x46:3; u32 b49:1; u32 hi:14; } b; } F370e;
 typedef struct { u8 p0[0x40]; f32 sx, sy, sz; u8 p4c[4]; f32 f50[4]; u8 p60[0xd0-0x60]; f32 fd0[4][4]; u8 p110[0x370-0x110]; F370e f370; } Ob9;
-extern f32 D_002BBFA0[4][4];
+#include "data/pieces/D_002BBFA0.h"
 extern void func_00135b88(Ob9 *, void *);
 extern void sceVu0CopyMatrix(void *, void *);
 extern void func_002675a8(f32 *, f32 *);

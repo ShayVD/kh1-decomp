@@ -112,7 +112,7 @@ typedef struct { u8 pad[0x30]; s32 f30; } Q30;
 typedef struct { s32 f0; u8 pad[8]; Q30 *fc; u8 pad10[0xc]; } T28;
 typedef struct { u8 b74; u8 pad[0x73]; } E74;
 typedef struct { E74 e[1]; } Sv;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern Sv *D_00304BE8;
 extern T28 D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
 extern s32 func_00141288(Ent *, s32, s32);

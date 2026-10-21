@@ -7,7 +7,7 @@ extern F5968 D_002C5968;
 extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
 extern s32 D_004D9330, D_002B6778, D_004D9320, D_002BD110;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 s32 func_00102a48(s32, s32);
 s32 func_00112d80(void);
 s32 sceGsSyncPath(s32, s32);
@@ -239,7 +239,7 @@ s32 func_00113558(void) {
 /* ---- 00113af8 ---- */
 extern s32 D_004D9340, D_004D9344, D_004D9348, D_004D9364;
 extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
-extern s32 D_002BD118;
+#include "data/pieces/D_002BD118.h"
 void func_00113a00(void);
 void func_00113ab0(s32);
 void func_00113df8(s32);
@@ -311,7 +311,6 @@ void func_00113af8(void) {
 extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
 extern s32 D_004D9330, D_002B6778, D_004D9320, D_002BD110;
-extern volatile s32 D_002BBDE0;
 s32 func_00102a48(s32, s32);
 s32 func_00112d80(void);
 s32 sceGsSyncPath(s32, s32);
@@ -339,7 +338,7 @@ typedef struct { u8 *data; s32 *hdr; s32 pad8[2]; f32 m[4][4]; f32 pad50[3][4]; 
 typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
 Obj110 *D_004D9368 ALIGNED(8);
 extern s32 D_004D936C;
-extern f32 D_002BBFA0[4][4];
+#include "data/pieces/D_002BBFA0.h"
 extern f32 D_0029B280[4][4];
 extern u8 D_002BD140[];
 Obj110 *func_00122048(s32, s32);

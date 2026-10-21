@@ -5,13 +5,13 @@
  * include/data/data_0037.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_00370130, 0x10, 16  /* untyped: users disagree: s32 D_00370130 | void *D_00370130 */
+	PIECE D_00370130, 0x10, 16  /* data/pieces/D_00370130.h */
 	PIECE D_00370140, 0x30, 16
 	PIECE D_00370170, 0x40, 16
 	PIECE D_003701B0, 0x10, 16  /* untyped: PCur is local to src/hand/text_00180000_b07.c and other files name D_003701B0 (type PCur is not a common.h basic type) */
 	PIECE D_003701D0, 0x10, 16  /* untyped: users disagree: FV4 D_003701D0 | M2C_UNK D_003701D0 | f32 D_003701D0[4] | u8 D_003701D0[] */
-	PIECE D_003701E0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701E0 | PppFVec D_003701E0 | s32 D_003701E0[3] */
-	PIECE D_003701F0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701F0 | f32 D_003701F0[2] | f32 D_003701F0[3] | f32 D_003701F0[] | u8 D_003701F0[] */
+	PIECE D_003701E0, 0x10, 16  /* data/pieces/D_003701E0.h */
+	PIECE D_003701F0, 0x10, 16  /* data/pieces/D_003701F0.h */
 	PIECE_BEGIN D_00370200, 0x2508, 8
 	PIECE_BYTES D_00370200, 0x0, 0x28
 	.word D_0048FB28
@@ -1111,7 +1111,7 @@
 	PIECE D_00372790, 0x20, 16
 	PIECE D_003727B0, 0x40, 16  /* data/pieces/D_003727B0.h */
 	PIECE D_003727F0, 0x10, 16
-	PIECE D_00372800, 0xc0, 16  /* untyped: users disagree: M2C_UNK D_00372800 | f32 D_00372800[16] */
+	PIECE D_00372800, 0xc0, 16  /* data/pieces/D_00372800.h */
 	PIECE D_003728C0, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00372908, 0x598, 8
 	PIECE D_00372EA0, 0x8, 8
@@ -1218,7 +1218,7 @@
 	PIECE_END D_0037A130, 0x40
 	PIECE D_0037A170, 0x4, 4  /* untyped: users disagree: RunQ *D_0037A170 | RunQ_bfcd8 *D_0037A170 | u8 *D_0037A170 */
 	PIECE D_0037A174, 0x4, 4
-	PIECE D_0037A178, 0x18, 8  /* untyped: users disagree: M2C_UNK D_0037A178 | s32 D_0037A178[] | u32 D_0037A178[] */
+	PIECE D_0037A178, 0x18, 8  /* data/pieces/D_0037A178.h */
 	PIECE D_0037A190, 0x8, 8
 	PIECE_BEGIN D_0037A198, 0x84, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_001c08e8

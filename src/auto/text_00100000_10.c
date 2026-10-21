@@ -22,12 +22,12 @@ M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 M2C_UNK strcat(void *, M2C_UNK *);
 M2C_UNK strcpy(void *, M2C_UNK *);
 extern M2C_UNK D_002B7500;
-extern M2C_UNK D_002B7590;
+#include "data/pieces/D_002B7590.h"
 extern M2C_UNK D_002BC1B0;
 extern M2C_UNK D_002BC210;
-extern M2C_UNK D_002BCAF0;
-extern M2C_UNK D_002BCCE0;
-extern M2C_UNK D_0048CC30;
+#include "data/pieces/D_002BCAF0.h"
+#include "data/pieces/D_002BCCE0.h"
+#include "data/pieces/D_0048CC30.h"
 extern M2C_UNK D_0048CF10;
 extern M2C_UNK D_00495190; /* src/data/bss_0049.c: Mtx D_00495190 */
 extern M2C_UNK D_00495210; /* src/data/bss_0049.c: u8 D_00495210[0x40] */
@@ -50,8 +50,8 @@ void func_001015a8(void) {
     s32 temp_v0;
     s32 temp_v0_2;
 
-    strcpy(sp, &D_002BCCE0);
-    strcat(sp, &D_0048CC30);
+    strcpy(sp, (M2C_UNK *)&D_002BCCE0);
+    strcat(sp, (M2C_UNK *)&D_0048CC30);
     temp_v0 = func_001559f0(0x34, 8);
     D_002A3F3C = temp_v0;
     temp_v0_2 = func_001137c8(temp_v0, 0x80);
@@ -80,7 +80,7 @@ void func_00109df8(void) {
 
 void func_0010b270(void *arg0, void *arg1) {
     s32 sp[16];
-    func_00267768(sp, &D_002BCAF0, M2C_FIELD(arg1, f32 *, 0x20));
+    func_00267768(sp, (M2C_UNK *)&D_002BCAF0, M2C_FIELD(arg1, f32 *, 0x20));
     func_00267328(sp, &D_00495190, sp);
     func_00267328(arg0, &D_00495210, sp);
 }
@@ -88,7 +88,7 @@ void func_0010b270(void *arg0, void *arg1) {
 void func_0010c078(void) {
     D_00495254 = 0;
     func_0010c040();
-    func_0011efa8(&D_002B7590, &D_002B7500, 0x24, 4);
+    func_0011efa8((M2C_UNK *)&D_002B7590, &D_002B7500, 0x24, 4);
     func_0011ef10(0x2BFE8, &func_0010c010);
 }
 

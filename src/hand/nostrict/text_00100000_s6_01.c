@@ -201,7 +201,7 @@ s32 func_001090e8(void *src, s32 w, s32 h, s32 dbp) {
 
 extern volatile s32 D_002BBE08;
 extern s32 D_002BBD40;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_00495164;
 extern volatile s32 D_00495160;
 extern f32 D_002BBE00;
@@ -361,7 +361,7 @@ CONTEXT_ONLY void func_0010a5d0(s32 a0, u8 *p, s32 n, s32 mode, s32 sub) {
 }
 
 
-extern u8 D_002BCAF0[];
+#include "data/pieces/D_002BCAF0.h"
 extern void func_00267578(Mtx, Mtx, void *);
 extern void func_002676c0(Mtx, void *, f32);
 extern void sceVu0MulMatrix(Mtx, Mtx, Mtx);

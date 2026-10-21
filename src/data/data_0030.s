@@ -183,7 +183,7 @@
 	PIECE D_00304B78, 0x4, 4  /* untyped: users disagree: W55Bf D_00304B78 | s32 D_00304B78 | u32 D_00304B78 */
 	PIECE D_00304B7C, 0x4, 4
 	PIECE D_00304B80, 0x4, 4
-	PIECE D_00304B84, 0x4, 4  /* untyped: users disagree: s32 D_00304B84; unparsed in 1 file(s) */
+	PIECE D_00304B84, 0x4, 4  /* data/pieces/D_00304B84.h */
 	PIECE D_00304B88, 0x28, 8
 	PIECE D_00304BB0, 0x10, 16
 	PIECE D_00304BC0, 0x28, 8

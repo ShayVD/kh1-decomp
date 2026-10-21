@@ -8,7 +8,7 @@ typedef struct {
 typedef struct TBox {
     u8 pad0[4]; s16 h4; u8 pad6[0x2a]; f32 x30, x34; u8 pad38[0x38]; f32 x70, x74;
 } TBox;
-extern u8 D_002BBAA0[];
+#include "data/pieces/D_002BBAA0.h"
 extern s32 func_00106b18(void *);
 extern void func_0010e4f0(TObj *);
 extern void *func_00121e28(s32, void *);

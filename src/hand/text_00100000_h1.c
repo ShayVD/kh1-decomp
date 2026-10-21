@@ -40,7 +40,7 @@ extern u8 D_002A6070[];
 extern u64 D_002A6178;
 extern s32 D_002A61F0;
 extern s32 D_002A6204;
-extern s32 D_002A6208;
+#include "data/pieces/D_002A6208.h"
 extern s32 D_002A6230;
 extern Ent20 *D_002A6238;
 extern Vec3 *D_002A624C;
@@ -51,7 +51,7 @@ extern u16 D_002A62F8[];
 extern GsRegs D_002A6330;
 extern u8 D_002A6500[];
 extern s32 D_002A6B84;
-extern f32 D_002A6C10[];
+#include "data/pieces/D_002A6C10.h"
 extern s32 D_002A6C50;
 extern f32 D_002BBDFC;
 extern s32 D_002BBE14;
@@ -61,8 +61,8 @@ extern s32 D_002BC090, D_002BC094, D_002BC0A0, D_002BC0A4;
 extern Flags D_002BC0A8;
 extern s32 D_002BC0BC;
 extern s32 D_002BC128, D_002BC130, D_002BC134;
-extern u8 D_002BC720[];
-extern u8 D_002BCAF0[];
+#include "data/pieces/D_002BC720.h"
+#include "data/pieces/D_002BCAF0.h"
 extern s32 D_002BCC98;
 extern s32 D_002BCDE8;
 extern s32 D_002C1368[];

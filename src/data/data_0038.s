@@ -7,7 +7,7 @@
 
 	PIECE D_00388480, 0x444, 4  /* untyped: users disagree: char *D_00388480[] | s32 D_00388480[] | s8 *D_00388480[] | u8 *D_00388480[] */
 	PIECE D_003888C4, 0x400, 4
-	PIECE D_00388CC4, 0xfbc, 4  /* untyped: users disagree: M2C_UNK D_00388CC4 | s32 D_00388CC4[] */
+	PIECE D_00388CC4, 0xfbc, 4  /* data/pieces/D_00388CC4.h */
 	PIECE D_00389C80, 0x10, 16  /* untyped: users disagree: s32 D_00389C80 | u32 D_00389C80; unparsed in 1 file(s) */
 	PIECE_BEGIN D_00389C90, 0x34d0, 16  /* merged (a user declares it larger than the next name): D_0038ACC4, D_0038B4C4, D_0038CCC4, D_0038CCCC, D_0038CD04, D_0038CD08, D_0038CD3C, D_0038CDDC, D_0038CDE0, D_0038CDE4, D_0038CDE8, D_0038CDEC, D_0038CDF0, D_0038CDF4, D_0038CDF8, D_0038CE00, D_0038CE04, D_0038D010, D_0038D0D4, D_0038D0E0; data/pieces/D_00389C90.h */
 	PIECE_BYTES D_00389C90, 0x0, 0x1034

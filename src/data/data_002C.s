@@ -41,7 +41,7 @@
 	PIECE D_002C58B0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002C58B0 | V4 D_002C58B0 | V4D0 D_002C58B0 | V53 D_002C58B0 | f32 D_002C58B0[4] | f32 D_002C58B0[] | u8 D_002C58B0[] */
 	PIECE D_002C58C0, 0x10, 16
 	PIECE D_002C58D0, 0x40, 16  /* untyped: users disagree: C01Mat D_002C58D0 | M2C_UNK D_002C58D0 | M4 D_002C58D0 | Mtx D_002C58D0 | V4 D_002C58D0[4] | f32 D_002C58D0[4] | f32 D_002C58D0[4][4] | f32 D_002C58D0[] | u8 D_002C58D0[] */
-	PIECE D_002C5910, 0x40, 16  /* untyped: users disagree: f32 D_002C5910[4][4] | s32 D_002C5910[4][4] */
+	PIECE D_002C5910, 0x40, 16  /* data/pieces/D_002C5910.h */
 	PIECE D_002C5950, 0x8, 8
 	PIECE_BEGIN D_002C5958, 0x8, 8  /* merged (a user declares it larger than the next name): D_002C595A; data/pieces/D_002C5958.h */
 	PIECE_BYTES D_002C5958, 0x0, 0x2
@@ -90,14 +90,14 @@
 	PIECE D_002C5C3C, 0x4, 4
 	PIECE D_002C5C40, 0x4, 4
 	PIECE D_002C5C44, 0x4, 4
-	PIECE D_002C5C48, 0x4, 4  /* untyped: users disagree: s32 D_002C5C48 | u32 D_002C5C48 */
+	PIECE D_002C5C48, 0x4, 4  /* data/pieces/D_002C5C48.h */
 	PIECE D_002C5C4C, 0x4, 4
 	PIECE D_002C5C50, 0x4, 4
 	PIECE D_002C5C54, 0xc, 4
 	PIECE D_002C5C60, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002C5C60 | Vec4 D_002C5C60 | u8 D_002C5C60[] */
 	PIECE D_002C5C70, 0x10, 16  /* data/pieces/D_002C5C70.h */
 	PIECE D_002C5C80, 0x7c0, 16  /* untyped: users disagree: Ent40 D_002C5C80[] | Ent5C80 D_002C5C80[] | Light53 D_002C5C80[] | Lt2 D_002C5C80[31] | Lt64 D_002C5C80[] | M2C_UNK D_002C5C80 */
-	PIECE D_002C6440, 0x10, 16  /* untyped: users disagree: s32 D_002C6440 | void *D_002C6440 */
+	PIECE D_002C6440, 0x10, 16  /* data/pieces/D_002C6440.h */
 	PIECE D_002C6450, 0x10, 16  /* data/pieces/D_002C6450.h */
 	PIECE D_002C648C, 0x4, 4
 	PIECE D_002C6490, 0x10, 16  /* data/pieces/D_002C6490.h */

@@ -207,7 +207,7 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
 
 /* needs make: uses rodata */
 typedef struct { s32 id; f32 *pos; s32 x8, handle, x10; u8 active, on, kind, x17; } Snd01;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern s32 D_002C1370;
 extern s32 D_003F34A4;
 extern s32 D_002C1360;

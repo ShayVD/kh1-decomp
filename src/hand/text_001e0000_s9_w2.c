@@ -6,7 +6,7 @@ extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
 extern u8 D_0062F810[];
 extern s32 D_003DC484;
 extern u8 D_003DC3C0[];
-extern u8 D_003DC390[];
+#include "data/pieces/D_003DC390.h"
 void func_001e39f0(void);
 void func_0010bd90(void *, void (*)());
 void func_00231b98(void);
@@ -34,7 +34,7 @@ extern s32 D_003DD258;
 extern char D_00630FC8[];
 extern char D_003DD270[];
 extern char D_003DCB90[];
-extern char D_003DD230[];
+#include "data/pieces/D_003DD230.h"
 extern char D_003DD278[];
 extern char D_006305DA[][10];
 extern StrPair D_006310C8[]; /* src/data/bss_0063.c: Pair D_006310C8[0x10] */

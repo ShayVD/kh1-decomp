@@ -1,5 +1,5 @@
 #include "common.h"
-extern volatile u32 D_002BBDF8;
+#include "data/pieces/D_002BBDF8.h"
 
 /* rodata */
 void func_00182270(void) {

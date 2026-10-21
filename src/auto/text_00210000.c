@@ -25,7 +25,7 @@ extern M2C_UNK D_00642EB0;
 extern M2C_UNK D_00642F60;
 extern s32 *D_003F34B8;
 extern s32 D_002B6478;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34E8;
 extern s32 D_00641250;
 extern s32 D_00641BC4;

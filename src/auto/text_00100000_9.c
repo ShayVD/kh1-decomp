@@ -34,15 +34,15 @@ M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
 M2C_UNK sceGsExecStoreImage(void *, M2C_UNK *);
 M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, s16, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-extern M2C_UNK D_002B7590;
-extern M2C_UNK D_002BBAA0;
+#include "data/pieces/D_002B7590.h"
+#include "data/pieces/D_002BBAA0.h"
 extern M2C_UNK D_002BBC20;
 extern M2C_UNK D_002BBCF0;
 extern M2C_UNK D_002BBD30;
 extern M2C_UNK D_002BBD48;
-extern M2C_UNK D_002BBD90;
+#include "data/pieces/D_002BBD90.h"
 extern M2C_UNK D_002BC210;
-extern M2C_UNK D_002BC720;
+#include "data/pieces/D_002BC720.h"
 extern M2C_UNK D_004945E0; /* src/data/bss_0049.c: u8 D_004945E0[0x10] */
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_00101048;
@@ -60,7 +60,7 @@ extern s32 D_00495254;
 extern u32 D_004D8EC0[]; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
 extern volatile M2C_UNK D_002E2700;
 extern volatile M2C_UNK D_002E2740;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_002BC070[];
 extern volatile s32 D_00494410[]; /* src/data/bss_0049.c: s32 D_00494410[2] */
 extern volatile s32 D_00495160;
@@ -211,7 +211,7 @@ void func_00109180(s32 arg0, s16 arg1) {
 }
 
 s32 func_00109360(void) {
-    func_0011f130(&D_002BC720, 0);
+    func_0011f130((M2C_UNK *)&D_002BC720, 0);
     return 0;
 }
 
@@ -262,7 +262,7 @@ void func_0010b208(s32 arg0, s32 arg1, void *arg2) {
 }
 
 s32 func_0010c010(void) {
-    func_0011f130(&D_002B7590, 0);
+    func_0011f130((M2C_UNK *)&D_002B7590, 0);
     D_00495254 = 0;
     return 0;
 }
@@ -309,13 +309,13 @@ void func_0010e750(void) {
 }
 
 void func_0010ea00(void *arg0) {
-    func_00106b18(&D_002BBAA0);
+    func_00106b18((M2C_UNK *)&D_002BBAA0);
     M2C_FIELD(arg0, s8 *, 0x11) = 1;
     func_0010e4f0(arg0);
 }
 
 void func_0010ea38(void *arg0) {
-    func_00106b18(&D_002BBAA0);
+    func_00106b18((M2C_UNK *)&D_002BBAA0);
     M2C_FIELD(arg0, s32 *, 0x24) = 0;
     M2C_FIELD(arg0, s8 *, 0x11) = 0;
     func_0010e4f0(arg0);
@@ -354,7 +354,7 @@ void func_0010fbe0(s32 arg0) {
     do {
         temp_v1 = var_a3 * 4;
         temp_a0 = temp_v1 + (s8 *)&D_002BBD48;
-        temp_v1_2 = temp_v1 + (s8 *)&D_002BBD90;
+        temp_v1_2 = temp_v1 + (s8 *)(M2C_UNK *)&D_002BBD90;
         var_a3 += 1;
         *temp_a0 = arg0 + M2C_FIELD(var_a2, s32 *, 0);
         temp_v0 = M2C_FIELD(var_a2, s32 *, 4);

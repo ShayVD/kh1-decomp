@@ -407,7 +407,7 @@ void sceVu0UnitMatrix(PppMtx);
 void func_002675a8(f32 *, f32 *);
 
 extern PppMtx D_0061E780;
-extern f32 D_003701F0[3];
+#include "data/pieces/D_003701F0.h"
 
 void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 

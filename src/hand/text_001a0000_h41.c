@@ -58,7 +58,7 @@ void sceVu0UnitMatrix(f32 (*)[4]);
 void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void func_002676c0(f32 (*)[4], f32 (*)[4], f32);
 void func_002675a8(f32 *, void *);
-extern f32 D_003701F0[2];
+#include "data/pieces/D_003701F0.h"
 extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 typedef struct { u8 pad[44]; f32 rot; u8 pad2[8]; f32 sx, sy; } Spr;

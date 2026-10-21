@@ -20,12 +20,12 @@
 	PIECE_BYTES D_003E3C88, 0x30, 0x18
 	PIECE_END D_003E3C88, 0x48
 	PIECE D_003E3CD0, 0x28, 8
-	PIECE D_003E3CF8, 0x28, 8  /* untyped: users disagree: M2C_UNK D_003E3CF8 | s32 D_003E3CF8[] */
+	PIECE D_003E3CF8, 0x28, 8  /* data/pieces/D_003E3CF8.h */
 	PIECE D_003E3D20, 0x28, 8
 	PIECE D_003E3D48, 0x10, 8
 	PIECE D_003E3D58, 0x10, 8
-	PIECE D_003E3D68, 0x4, 4  /* untyped: users disagree: int D_003E3D68 | s32 D_003E3D68 | u32 D_003E3D68 | unsigned int D_003E3D68 */
-	PIECE D_003E3D6C, 0x4, 4  /* untyped: users disagree: s32 D_003E3D6C | u32 D_003E3D6C */
+	PIECE D_003E3D68, 0x4, 4  /* data/pieces/D_003E3D68.h */
+	PIECE D_003E3D6C, 0x4, 4  /* data/pieces/D_003E3D6C.h */
 	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
 	PIECE D_003E3E50, 0x808, 8  /* untyped: users disagree: M2C_UNK D_003E3E50 | RecE0 D_003E3E50[] */
 	PIECE_BEGIN D_003E4658, 0x42b8, 8  /* untyped: merged (a user declares it larger than the next name): D_003E4658, D_003E4660, D_003E4670, D_003E4680, D_003E4690, D_003E46A0 */
@@ -75,7 +75,7 @@
 	.word D_003E46A8
 	PIECE_END D_003E8CD8, 0x28
 	PIECE D_003E8D00, 0x4, 4
-	PIECE D_003E8D04, 0x24, 4  /* untyped: users disagree: s32 D_003E8D04[]; unparsed in 1 file(s) */
+	PIECE D_003E8D04, 0x24, 4  /* data/pieces/D_003E8D04.h */
 	PIECE D_003E8D28, 0x18, 8
 	PIECE D_003E8D40, 0xc0, 16
 	PIECE D_003E8E00, 0x4, 4

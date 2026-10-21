@@ -353,7 +353,7 @@ void func_0017eff8(void) {
 extern V3 D_00362640[];
 extern f32 D_00362660[4];
 extern f32 D_00362670[4];
-extern f32 D_003626F8[3];
+#include "data/pieces/D_003626F8.h"
 void func_0017f178(void);
 void func_0017f078(s32 i) {
     if (i >= 2) return;

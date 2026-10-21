@@ -4,7 +4,7 @@
 #include "ppp.h"
 
 M2C_UNK func_00183b20(s32, s32);
-extern M2C_UNK D_00372800;
+#include "data/pieces/D_00372800.h"
 extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern f32 D_002BC120;
 extern f32 D_002BC124;
@@ -50,8 +50,8 @@ void func_001a8f08(void) {
 }
 
 void func_001aa8d0(void) {
-    M2C_FIELD(&D_00372800, f32 *, 0) = (f32) D_002BC120;
-    M2C_FIELD(&D_00372800, f32 *, 4) = (f32) D_002BC124;
+    M2C_FIELD((M2C_UNK *)&D_00372800, f32 *, 0) = (f32) D_002BC120;
+    M2C_FIELD((M2C_UNK *)&D_00372800, f32 *, 4) = (f32) D_002BC124;
 }
 
 void func_001aa8f8(void) {

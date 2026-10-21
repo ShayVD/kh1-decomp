@@ -62,7 +62,7 @@ extern void (*D_00377374)(s32, s32, s32);
 s32 func_002193f0(void);
 extern u64 D_0038CD08;
 extern u64 D_0038CD00;
-extern s32 D_0037A178[];
+#include "data/pieces/D_0037A178.h"
 extern s32 D_003F76B8;
 extern s32 D_0062A220;
 extern s32 D_0062A224;

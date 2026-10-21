@@ -102,7 +102,7 @@ s32 func_001ce320(VM *vm) {
     func_001081a0(vm->stk[vm->sp--]);
     return 2;
 }
-extern s32 D_00388CC4[];
+#include "data/pieces/D_00388CC4.h"
 s32 func_001ce3c0(VM *vm) {
     s32 i = vm->stk[32];
     vm->sp--;
@@ -329,7 +329,7 @@ void func_001d1610(void);
 extern f32 D_002BBDFC;
 extern u64 D_0038CD00;
 extern s32 D_002BC09C;
-extern f32 D_002BC098;
+#include "data/pieces/D_002BC098.h"
 extern s32 D_002BC0A0;
 extern s32 D_002BC0A4;
 void func_001560f8(s32, void (*)(void));

@@ -125,9 +125,9 @@ extern u8 D_00616100[];
 extern s32 D_00616224;
 extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern PppMtx D_00615FC0, D_00615E70, D_00615EB0, D_00616000, D_00616040;
-extern f32 D_003701F0[3];
+#include "data/pieces/D_003701F0.h"
 extern f32 D_003701D0[4];
-extern PppFVec D_003701E0;
+#include "data/pieces/D_003701E0.h"
 
 s32 func_001aaf88(DMdl *, DParam *, s32);
 u8 *func_00182588(PppSystem *, PppSlot *);

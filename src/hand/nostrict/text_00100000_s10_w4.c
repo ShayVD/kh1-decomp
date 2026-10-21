@@ -4,7 +4,7 @@ typedef struct {
     s32 x0; s32 x4; s16 x8; s16 xa; s16 xc; s16 xe;
     u8 x10; u8 x11; u8 x12; u8 x13; s32 x14; f32 x18; s32 x1c; s32 x20; s32 x24; s32 x28;
 } TObj;
-extern u8 D_002BBAA0[];
+#include "data/pieces/D_002BBAA0.h"
 extern s32 func_00106b18(void *);
 extern void func_0010e4f0(TObj *);
 

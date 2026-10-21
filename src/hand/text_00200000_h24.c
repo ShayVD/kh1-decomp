@@ -90,7 +90,7 @@ void func_0020be10(s32 a0) {
     D_0064120C = 0;
 }
 
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 void func_00208458(s32, s32, s32, u32, u32);
 void func_0020be68(s32, s32, u32);
 
@@ -398,7 +398,7 @@ void func_00219128(void) {
     p->f0 = 0;
 }
 
-extern f32 D_003F59A0[];
+#include "data/pieces/D_003F59A0.h"
 extern f32 D_003F59B0;
 extern s32 D_003F59B4, D_003F59B8;
 extern s32 D_003F59C8[];

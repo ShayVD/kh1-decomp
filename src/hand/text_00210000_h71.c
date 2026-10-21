@@ -184,7 +184,7 @@ typedef struct Obj2 {
 } Obj2;
 extern s32 D_00642CE8;
 extern s32 D_00642D18;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 void func_001fdfd0(Obj2 *);
 s32 func_001ee5f0(s32);
 void func_00207870(void *, s32, s32, s32, s32, s32, s32);
@@ -411,7 +411,7 @@ typedef struct {
 extern G20 D_00643020;
 extern s32 D_00643104;
 extern Cam *D_00425F70;
-extern u8 D_00425CE0[];
+#include "data/pieces/D_00425CE0.h"
 extern f32 D_003F59B0;
 void func_0021b418(void);
 void func_00131d68(void *, G20 *);
@@ -804,7 +804,7 @@ l3:
 
 extern s32 D_00643418;
 extern u8 D_006433F8[];
-extern s32 D_003F5FF0[];
+#include "data/pieces/D_003F5FF0.h"
 extern s32 D_003F6070[];
 s32 func_001eb9a8(s32, s32);
 s32 func_00206ee8(s32);
@@ -864,7 +864,7 @@ s32 D_00643610[0xa] ALIGNED(16);
 s32 D_00643638[0xa] ALIGNED(8);
 extern s32 D_0064342C;
 extern s32 D_00643430[];
-extern s32 D_003F61E0[];
+#include "data/pieces/D_003F61E0.h"
 s32 D_006435BC ALIGNED(4);
 s32 D_006435C0[0xa] ALIGNED(16);
 extern s32 D_003F5C3C;

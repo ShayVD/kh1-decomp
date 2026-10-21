@@ -9,7 +9,7 @@ extern u8 D_00643770[];
 extern u8 D_00643778[];
 extern s32 D_00643708;
 extern s32 D_0064370C;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_00643780[];
 extern s32 D_00643794;
 extern s32 D_003F6E30;

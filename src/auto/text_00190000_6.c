@@ -16,7 +16,7 @@ M2C_UNK func_002673b8(M2C_UNK *, s32);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
 M2C_UNK func_002675b8(s32, M2C_UNK *);
 extern M2C_UNK D_003701D0;
-extern M2C_UNK D_003701F0;
+#include "data/pieces/D_003701F0.h"
 extern M2C_UNK D_00615E70;
 extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern s32 D_00615E64;
@@ -91,7 +91,7 @@ void pppRyjDrawMatrixWorldFrontCon(s32 arg0, PppEntry *arg1) {
 
     temp_s0 = arg0 + arg1->offsets[1];
     func_002675a8(temp_s0 + 0xA0, &D_003701D0);
-    func_002675a8(temp_s0 + 0xB0, &D_003701F0);
+    func_002675a8(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
 }
 
 void pppRyjDrawMatrixWorldNoRotCon(s32 arg0, PppEntry *arg1) {
@@ -99,7 +99,7 @@ void pppRyjDrawMatrixWorldNoRotCon(s32 arg0, PppEntry *arg1) {
 
     temp_s0 = arg0 + arg1->offsets[1];
     func_002675a8(temp_s0 + 0xA0, &D_003701D0);
-    func_002675a8(temp_s0 + 0xB0, &D_003701F0);
+    func_002675a8(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
 }
 
 void pppRyjMegaBirthDes(s32 arg0, PppEntry *arg1) {

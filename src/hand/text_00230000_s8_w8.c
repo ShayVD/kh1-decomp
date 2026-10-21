@@ -7,7 +7,7 @@ typedef struct { u8 p0[8]; s32 x8; s32 xc; s32 x10; u8 name[0x24]; s32 x38; } S5
 typedef struct { u8 p0[0xda]; s16 xda; s16 xdc; s16 xde; u8 buf[1]; } S7ED0;
 extern S5B80 D_00425B80;
 extern S7ED0 D_003F7ED0;
-extern s32 D_002BBDF4;
+#include "data/pieces/D_002BBDF4.h"
 s32 func_002193f0(void);
 u8 *func_0010fd18(void);
 

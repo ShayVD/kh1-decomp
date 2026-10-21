@@ -5,7 +5,12 @@ typedef struct { s32 v; } SV; extern SV *D_002A62B4;
 extern s32 D_002A62B8;
 extern SV *D_002A62BC;
 extern u8 *D_002A62C0;
-extern u32 D_002A62D0, D_002A62D4, D_002A62D8, D_002A62DC, D_002A62E0, D_002A62E4;
+#include "data/pieces/D_002A62E4.h"
+#include "data/pieces/D_002A62E0.h"
+#include "data/pieces/D_002A62DC.h"
+#include "data/pieces/D_002A62D8.h"
+#include "data/pieces/D_002A62D4.h"
+#include "data/pieces/D_002A62D0.h"
 void func_00105d88(u8 *h) {
     u32 *w = (u32 *)h;
     s32 n;

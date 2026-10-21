@@ -4,7 +4,7 @@
 #include "data/bss_004D.h"
 
 M2C_UNK func_00108a60(s32, M2C_UNK, void *, void *, void *);
-extern M2C_UNK D_002A6C60;
+#include "data/pieces/D_002A6C60.h"
 extern M2C_UNK D_002AA060;
 extern M2C_UNK D_002AD460;
 extern M2C_UNK D_002B1C60;

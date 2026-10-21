@@ -470,7 +470,7 @@ s32 func_001def20(VM *vm) {
 }
 
 extern s32 D_003DAD38;
-extern f32 D_003DAD3C;
+#include "data/pieces/D_003DAD3C.h"
 extern f32 D_003DACB0;
 extern f32 D_003DACB4;
 extern s32 D_003DACB8;

@@ -138,7 +138,7 @@ extern s32 D_00616224;
 
 
 extern u8 D_00616040[];
-extern u8 D_003701F0[];
+#include "data/pieces/D_003701F0.h"
 
 typedef struct {
     void *work;    /* +0x00 */

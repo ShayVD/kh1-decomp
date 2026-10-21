@@ -87,7 +87,7 @@ extern T2MtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 
 extern s32 D_00616224;
 
-extern f32 D_003701F0[];
+#include "data/pieces/D_003701F0.h"
 
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 

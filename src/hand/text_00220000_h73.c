@@ -4,7 +4,8 @@ extern F8 *D_00425BC8;
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];
-extern u8 D_003F7210[], D_003F47A8[];
+extern u8 D_003F7210[];
+#include "data/pieces/D_003F47A8.h"
 s32 func_001f42b8(void *);
 void func_001f3708(void *, s32);
 void func_0011d768(s32);
@@ -163,7 +164,7 @@ void func_0022d4d8(s32 arg0) {
 
 typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8;
 extern Base4BE8 *D_00304BE8;
-extern u32 D_003E3D6C;
+#include "data/pieces/D_003E3D6C.h"
 extern u32 D_00646A24;
 extern s32 D_00647630;
 extern u8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
@@ -298,7 +299,8 @@ extern s32 D_00425CD0[];
 extern s32 D_00425C08[];
 extern s32 D_00647FB0, D_00647FB4, D_00647FB8, D_00647FBC, D_00647FC0, D_00647FC4, D_00647FC8;
 extern s32 D_00647FD4, D_00647FD8;
-extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C1C, D_00425C20;
+extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
+#include "data/pieces/D_00425C1C.h"
 extern s32 D_006477A8;
 extern s32 D_00647FE8[];
 extern s32 D_00425C28[2][4];
@@ -599,7 +601,7 @@ typedef struct {
     f32 dist;
 } Cam;
 extern Cam *D_00425F70;
-extern VEC D_00425CE0;
+#include "data/pieces/D_00425CE0.h"
 f32 atan2f(f32, f32);
 void func_00236d48(void *, void *, void *);
 void func_002672f8(void *, void *, void *);

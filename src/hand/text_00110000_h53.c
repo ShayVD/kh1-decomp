@@ -276,7 +276,7 @@ void func_00122198(s32 a0, s32 a1) {
 
 typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 radius; V53 pos; f32 dir[4]; V53 col; } Light53;
 extern Light53 D_002C5C80[];
-extern f32 D_002C5910[4][4];
+#include "data/pieces/D_002C5910.h"
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 f32 func_00267390(f32 *, V53 *);
 float cosf(float);
@@ -459,11 +459,13 @@ void func_001238d0(Act53 *o, V53 *p) {
 }
 
 #include "data/types/text_00110000_h53.h"
-extern f32 D_004F7650, D_002E27A4, D_004F77E0;
+extern f32 D_004F7650, D_004F77E0;
+#include "data/pieces/D_002E27A4.h"
 extern V53 D_002E2780, D_002E2790, D_002E26B0;
 extern s32 D_002C5950;
 extern M53 D_004F76E0[], D_004F7760[], D_004F7660[];
-extern M53 D_002E2700, D_002E2740, D_002E26C0, D_002BBE20;
+extern M53 D_002E2700, D_002E2740, D_002BBE20;
+#include "data/pieces/D_002E26C0.h"
 extern f32 (*D_002E27AC)[4];
 void func_00110a48(f32);
 void func_00120cf8(V53 *, f32 (*)[4], f32);

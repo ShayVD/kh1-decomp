@@ -15,7 +15,7 @@ typedef struct {
     u8 pad48[0x18];
     u8 m60[0x40];
 } Win;
-extern u8 D_002E26C0[];
+#include "data/pieces/D_002E26C0.h"
 extern void func_00267df8(s32 *, void *, void *, s32);
 extern void func_002673b8(f32 *, f32 *);
 extern void func_00133830(s32, void *);

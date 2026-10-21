@@ -38,8 +38,8 @@ s32 D_00494418 ALIGNED(8);
 s32 D_0049441C ALIGNED(4);
 extern s32 D_0029B410, D_0029B414, D_0029B418, D_0029B41C;
 extern s32 D_002BCDBC, D_002BCDF0;
-extern char D_002BCCE0[];
-extern char D_0048CC30[];
+#include "data/pieces/D_002BCCE0.h"
+#include "data/pieces/D_0048CC30.h"
 
 void func_00105288(s32, s32);
 void func_00108cf8(s32, s32, s32);

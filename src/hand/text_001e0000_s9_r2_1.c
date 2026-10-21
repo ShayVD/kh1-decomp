@@ -10,9 +10,9 @@ extern s32 D_003DC490;
 extern s32 D_003DC494;
 extern u8 D_0062F760[];
 extern Win D_0062F790;
-extern char D_003DC2A8[];
+#include "data/pieces/D_003DC2A8.h"
 extern char D_003DC2F8[];
-extern char D_003DC370[];
+#include "data/pieces/D_003DC370.h"
 typedef struct { s32 f0; s32 f4; s32 f8; } S26A0;
 extern S26A0 D_002E26A0;
 void func_0010bdd0(Win *, void *);

@@ -35,10 +35,10 @@ M2C_UNK strcat(M2C_UNK *, M2C_UNK *);
 M2C_UNK strcpy(M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_002BCC80;
 extern M2C_UNK D_002BCC88;
-extern M2C_UNK D_002BCCA0;
-extern M2C_UNK D_002BCCE0;
+#include "data/pieces/D_002BCCA0.h"
+#include "data/pieces/D_002BCCE0.h"
 extern M2C_UNK D_002BCD20;
-extern M2C_UNK D_002BCD60;
+#include "data/pieces/D_002BCD60.h"
 extern M2C_UNK D_002BD250;
 extern M2C_UNK D_0048CFF8;
 extern M2C_UNK D_0048D000;
@@ -63,7 +63,7 @@ extern s32 D_004D8EC0[];
 extern s32 D_004D90FC;
 extern s32 D_004D9280;
 extern s32 D_004D92E0;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_002BC070[];
 extern volatile s32 D_002BD114;
 extern volatile s32 D_002C5AD0[];
@@ -158,11 +158,11 @@ void func_00112320(void) {
     if (M2C_FIELD(sp, s8 *, 0x0) == 0x20) {
         M2C_FIELD(sp, s8 *, 0x0) = 0x30;
     }
-    strcpy(&D_002BCCA0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
-    strcat(&D_002BCCA0, &D_002BCC80);
-    strcpy(&D_002BCD60, &M2C_FIELD(sp, M2C_UNK *, 0x10));
-    strcat(&D_002BCD60, sp);
-    strcat(&D_002BCD60, &D_002BCC88);
+    strcpy((M2C_UNK *)&D_002BCCA0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
+    strcat((M2C_UNK *)&D_002BCCA0, &D_002BCC80);
+    strcpy((M2C_UNK *)&D_002BCD60, &M2C_FIELD(sp, M2C_UNK *, 0x10));
+    strcat((M2C_UNK *)&D_002BCD60, sp);
+    strcat((M2C_UNK *)&D_002BCD60, &D_002BCC88);
     strcpy(&D_002BCD20, &M2C_FIELD(sp, M2C_UNK *, 0x10));
     strcat(&D_002BCD20, sp);
 }
@@ -174,9 +174,9 @@ void func_00112400(s32 arg0) {
     if (M2C_FIELD(sp, s8 *, 0x0) == 0x20) {
         M2C_FIELD(sp, s8 *, 0x0) = 0x30;
     }
-    strcpy(&D_002BCCE0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
-    strcat(&D_002BCCE0, &D_0048D000);
-    strcat(&D_002BCCE0, sp);
+    strcpy((M2C_UNK *)&D_002BCCE0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
+    strcat((M2C_UNK *)&D_002BCCE0, &D_0048D000);
+    strcat((M2C_UNK *)&D_002BCCE0, sp);
 }
 
 void func_00112820(void) {

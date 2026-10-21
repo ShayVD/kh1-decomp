@@ -11,7 +11,7 @@ extern E9 D_003F3530[];
 extern G9 *D_00304BE8;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern u8 D_00425CE0[];
+#include "data/pieces/D_00425CE0.h"
 void func_00162070(s32, void *, void *, void *);
 void func_001321a0(void *, s32);
 void func_00132220(s32, s32);

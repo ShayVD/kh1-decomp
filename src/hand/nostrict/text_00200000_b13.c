@@ -24,7 +24,7 @@ typedef struct { u64 h[16]; SprE e[8]; } PkT;
 
 extern u8 D_003F1E70[];
 extern u8 D_003F1A70[];
-extern u32 D_003F34B0[];
+#include "data/pieces/D_003F34B0.h"
 extern u8 D_00641080[];
 extern u8 D_00641130[];
 

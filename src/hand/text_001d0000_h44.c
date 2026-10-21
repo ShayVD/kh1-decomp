@@ -198,7 +198,7 @@ s32 func_001dc470(void) {
     return 2;
 }
 
-extern u32 D_0037A178[];
+#include "data/pieces/D_0037A178.h"
 s32 func_001dc8c8(VM *vm) {
     s32 id = vm->stk[vm->sp - 1];
     s32 v, q, b;

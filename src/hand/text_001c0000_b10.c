@@ -104,7 +104,7 @@ extern s32 (*D_0037A198[])(VM *, s32);
 extern CamS D_003C5510;
 extern Vec D_003C55F0;
 extern Vec D_002E2780, D_002E2790;
-extern f32 D_002E27A4;
+#include "data/pieces/D_002E27A4.h"
 extern f32 D_002BBDFC;
 extern s32 D_002BBAB0, D_002BBAB8, D_002BBAC8;
 extern u8 D_003C5660[], D_003C5680[], D_003C56A0[], D_003C56C0[], D_003C56F0[], D_003C5728[], D_003C5750[], D_003C5780[], D_003C57B0[];

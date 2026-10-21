@@ -30,7 +30,7 @@ typedef struct { EN v; } IE;
 extern P8 D_00472150, D_0047A1D0;
 IE D_00494BE0 ALIGNED(16);
 extern s32 D_0029B2F4, D_0029B2F8, D_0029B2FC, D_0029B300;
-extern f32 D_002BBFE0[4][4];
+#include "data/pieces/D_002BBFE0.h"
 extern Flags D_002BC0A8;
 extern s32 D_00494AA0[32];
 extern s32 D_00494B20[32];

@@ -117,7 +117,7 @@
 	.word func_001f1fc8+0x460
 	PIECE_BYTES D_00490A80, 0x54, 0xc
 	PIECE_END D_00490A80, 0x60
-	PIECE D_00490AE0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_00490AE0 | u8 D_00490AE0[] */
+	PIECE D_00490AE0, 0x10, 16  /* data/pieces/D_00490AE0.h */
 	PIECE D_00490F10, 0x10, 16
 	PIECE D_00490F58, 0x18, 8
 	PIECE D_00490F70, 0x18, 8
@@ -155,7 +155,7 @@
 	PIECE D_004918E8, 0x10, 8
 	PIECE D_004918F8, 0x8, 8
 	PIECE D_00491900, 0x8, 8
-	PIECE D_004919B0, 0x8, 8  /* untyped: users disagree: M2C_UNK D_004919B0 | char D_004919B0[] */
+	PIECE D_004919B0, 0x8, 8  /* data/pieces/D_004919B0.h */
 	PIECE D_004919C8, 0x10, 8
 	PIECE D_004919E8, 0x30, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00491A18, 0x108, 8

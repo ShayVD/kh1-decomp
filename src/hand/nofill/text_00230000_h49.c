@@ -238,7 +238,7 @@ s32 func_0023d700(s32 a0, s32 a1, s32 x, s32 y, s32 q, f32 s) {
 /* needs make: uses rodata */
 
 extern s32 D_002E31B0;
-extern u32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern s32 D_002E31BC;
 extern s32 D_00651BD0;
 void func_0023c1b0(s32 *, s32, s32);

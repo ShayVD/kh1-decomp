@@ -795,7 +795,7 @@ struct C02Ac {
 
 extern u32 D_002C5958;
 extern u32 D_00304B78;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern u8 D_002E3190[];
 s32 D_00F20000(s32, void *);
 s32 func_001349d0(C02Ac *, C02It *);

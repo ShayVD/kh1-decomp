@@ -2,8 +2,8 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern M2C_UNK D_002A6210;
-extern M2C_UNK D_002A6220;
+#include "data/pieces/D_002A6210.h"
+#include "data/pieces/D_002A6220.h"
 extern s32 D_002A6234;
 extern s32 D_002A6238;
 extern s32 D_002A623C;
@@ -28,22 +28,22 @@ extern s32 D_002A62C0;
 extern s32 D_002A62C4;
 extern s32 D_002A62C8;
 extern s32 D_002A62CC;
-extern s32 D_002A62D0;
-extern s32 D_002A62D4;
-extern s32 D_002A62D8;
-extern s32 D_002A62DC;
-extern s32 D_002A62E0;
-extern s32 D_002A62E4;
+#include "data/pieces/D_002A62D0.h"
+#include "data/pieces/D_002A62D4.h"
+#include "data/pieces/D_002A62D8.h"
+#include "data/pieces/D_002A62DC.h"
+#include "data/pieces/D_002A62E0.h"
+#include "data/pieces/D_002A62E4.h"
 extern s32 D_002A62EC;
 
 void func_00103280(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3) {
-    M2C_FIELD(&D_002A6210, f32 *, 0) = fparg0;
-    M2C_FIELD(&D_002A6210, f32 *, 4) = fparg1;
-    M2C_FIELD(&D_002A6210, f32 *, 8) = fparg2;
-    M2C_FIELD(&D_002A6210, f32 *, 0xC) = fparg3;
-    M2C_FIELD(&D_002A6220, s32 *, 0) = 0;
-    M2C_FIELD(&D_002A6220, s32 *, 4) = 0;
-    M2C_FIELD(&D_002A6220, s32 *, 8) = 0;
+    M2C_FIELD((M2C_UNK *)&D_002A6210, f32 *, 0) = fparg0;
+    M2C_FIELD((M2C_UNK *)&D_002A6210, f32 *, 4) = fparg1;
+    M2C_FIELD((M2C_UNK *)&D_002A6210, f32 *, 8) = fparg2;
+    M2C_FIELD((M2C_UNK *)&D_002A6210, f32 *, 0xC) = fparg3;
+    M2C_FIELD((M2C_UNK *)&D_002A6220, s32 *, 0) = 0;
+    M2C_FIELD((M2C_UNK *)&D_002A6220, s32 *, 4) = 0;
+    M2C_FIELD((M2C_UNK *)&D_002A6220, s32 *, 8) = 0;
 }
 
 void func_00104678(void) {

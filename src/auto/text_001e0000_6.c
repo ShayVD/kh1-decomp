@@ -10,10 +10,10 @@ M2C_UNK func_001efd20(s32, s32);
 M2C_UNK func_0021dbb8();
 M2C_UNK sceSifCallRpc(M2C_UNK *, M2C_UNK, M2C_UNK, s32 *, M2C_UNK, s32 *, M2C_UNK, M2C_UNK, s32);
 extern M2C_UNK *D_003E8E28;
-extern M2C_UNK D_003DC390;
+#include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3C88;
 extern M2C_UNK D_003E3CB8;
-extern M2C_UNK D_003E3CF8;
+#include "data/pieces/D_003E3CF8.h"
 extern M2C_UNK D_003E3E50;
 extern M2C_UNK D_003E4658;
 extern M2C_UNK D_0062F6E0;
@@ -23,7 +23,7 @@ extern M2C_UNK func_001e10f8;
 extern M2C_UNK func_001e4268;
 extern s32 D_003DACA0;
 extern s32 D_003DAD38;
-extern s32 D_003DAD3C;
+#include "data/pieces/D_003DAD3C.h"
 extern s32 D_003DC470;
 extern s32 D_003DC474;
 extern s32 D_003DC480;
@@ -82,7 +82,7 @@ void func_001e3c08(s32 arg0) {
     if (arg0 != D_003DC474) {
         D_003DC474 = arg0;
         func_0010e3f0((s32) &D_0062F810);
-        func_0010ef70((s32) (&D_0062F810 - 0x80), (s32) &D_003DC390, 0);
+        func_0010ef70((s32) (&D_0062F810 - 0x80), (s32) (M2C_UNK *)&D_003DC390, 0);
     }
 }
 
@@ -244,7 +244,7 @@ s32 func_001ee6d0(s32 arg0) {
 
 s32 func_001ef270(s32 arg0, s32 arg1) {
     if (arg0 != 0) {
-        return func_001ee768() == *(M2C_UNK *)((s8 *)&D_003E3CF8 + (arg1 * 4));
+        return func_001ee768() == *(M2C_UNK *)((s8 *)(M2C_UNK *)&D_003E3CF8 + (arg1 * 4));
     }
     return 0;
 }

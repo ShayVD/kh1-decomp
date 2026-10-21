@@ -7,7 +7,7 @@ M2C_UNK func_0010e3f0(M2C_UNK *);
 M2C_UNK func_0010ef70(void *, M2C_UNK *, M2C_UNK);
 M2C_UNK func_001ed000(M2C_UNK, s32, s32, s32, s32, M2C_UNK, M2C_UNK, M2C_UNK);
 extern M2C_UNK D_003DAE30;
-extern M2C_UNK D_003DCD70;
+#include "data/pieces/D_003DCD70.h"
 extern M2C_UNK D_00630300;
 extern M2C_UNK D_006304E0; /* src/data/bss_0063.c: u8 D_006304E0[0x30] */
 extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
@@ -64,7 +64,7 @@ s32 func_001e6c90(void) {
     }
     if (D_002C5BB8 & 2) {
         func_0010e3f0(&D_006304E0);
-        func_0010ef70((s8 *)&D_006304E0 - 0x80, &D_003DCD70, 0);
+        func_0010ef70((s8 *)&D_006304E0 - 0x80, (M2C_UNK *)&D_003DCD70, 0);
         func_0010bd90(&D_00630510, &func_001e6c68);
         D_003DD28C = 0;
         return 4;

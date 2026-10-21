@@ -15,7 +15,7 @@
 	PIECE D_00425C10, 0x4, 4  /* data/pieces/D_00425C10.h */
 	PIECE D_00425C14, 0x4, 4  /* data/pieces/D_00425C14.h */
 	PIECE D_00425C18, 0x4, 4
-	PIECE D_00425C1C, 0x4, 4  /* untyped: users disagree: s32 D_00425C1C | u32 D_00425C1C */
+	PIECE D_00425C1C, 0x4, 4  /* data/pieces/D_00425C1C.h */
 	PIECE D_00425C20, 0x8, 8
 	PIECE D_00425C28, 0x20, 8  /* untyped: users disagree: C28 D_00425C28 | S16 D_00425C28[] | s32 D_00425C28[2][4] | s32 D_00425C28[] | s32 D_00425C28[][4] */
 	PIECE D_00425C48, 0x20, 8  /* untyped: users disagree: M2C_UNK D_00425C48 | s32 D_00425C48[2][4] | s32 D_00425C48[][4] | s8 D_00425C48 */
@@ -25,7 +25,7 @@
 	PIECE D_00425CAC, 0x4, 4  /* data/pieces/D_00425CAC.h */
 	PIECE D_00425CB0, 0x20, 16
 	PIECE D_00425CD0, 0x10, 16
-	PIECE D_00425CE0, 0xa0, 16  /* untyped: users disagree: M2C_UNK D_00425CE0 | VEC D_00425CE0 | u8 D_00425CE0[] */
+	PIECE D_00425CE0, 0xa0, 16  /* data/pieces/D_00425CE0.h */
 	PIECE D_00425D80, 0x1f0, 16  /* data/pieces/D_00425D80.h */
 	PIECE D_00425F70, 0x8, 8  /* untyped: users disagree: Cam *D_00425F70 | Cam_q1 *D_00425F70 | S5D80 *D_00425F70 */
 	PIECE D_00425F78, 0x8, 8

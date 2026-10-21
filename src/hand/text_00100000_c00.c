@@ -10,8 +10,8 @@ extern u8 D_002A46D0[], D_002A46F0[], D_002A4710[], D_002A4730[], D_002A4750[], 
 extern u8 D_002A47D0[], D_002A47F0[], D_002A4810[], D_002A4830[], D_002A4850[], D_002A4870[], D_002A4890[], D_002A48B0[], D_002A48D0[];
 extern u8 D_002A5CE0[], D_002A5FE0[];
 extern f32 D_002A6200;
-extern f32 D_002A6210[4];
-extern f32 D_002A6220[3];
+#include "data/pieces/D_002A6210.h"
+#include "data/pieces/D_002A6220.h"
 extern f32 D_00494890;
 
 s32 func_001032b0(void) {
@@ -81,11 +81,11 @@ s32 func_001032b0(void) {
 
 typedef struct { s16 h0; s16 h2; } Tsk;
 
-extern volatile u32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_002BBE08;
 extern s32 D_002B6774;
 extern s32 D_004D9334;
-extern u32 D_002BD118;
+#include "data/pieces/D_002BD118.h"
 s32 D_004D933C ALIGNED(4);
 s32 D_004D9338 ALIGNED(8);
 extern s32 D_004D9340;

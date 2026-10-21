@@ -35,13 +35,13 @@ extern f32 D_002E27A0;
 extern f32 D_004F77E4;
 extern s32 D_0029B418;
 extern s32 D_002BBE04;
-extern s32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern s32 D_00304B78;
 extern s32 D_00350D7C;
 extern s32 D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern s32 D_00514F10;
 extern s32 D_00514F14;
-extern u32 D_002BBDE4;
+#include "data/pieces/D_002BBDE4.h"
 extern u32 D_002C5958;
 f32 func_00121748();
 f32 func_00176850();

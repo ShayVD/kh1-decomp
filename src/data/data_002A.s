@@ -537,9 +537,9 @@
 	PIECE D_002A61FC, 0x4, 4
 	PIECE D_002A6200, 0x4, 4
 	PIECE D_002A6204, 0x4, 4
-	PIECE D_002A6208, 0x8, 8  /* untyped: users disagree: s32 D_002A6208 | u32 D_002A6208 */
-	PIECE D_002A6210, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002A6210 | f32 D_002A6210[4] */
-	PIECE D_002A6220, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002A6220 | f32 D_002A6220[3] */
+	PIECE D_002A6208, 0x8, 8  /* data/pieces/D_002A6208.h */
+	PIECE D_002A6210, 0x10, 16  /* data/pieces/D_002A6210.h */
+	PIECE D_002A6220, 0x10, 16  /* data/pieces/D_002A6220.h */
 	PIECE D_002A6230, 0x4, 4
 	PIECE D_002A6234, 0x4, 4  /* untyped: users disagree: Grid *D_002A6234 | s32 D_002A6234 */
 	PIECE D_002A6238, 0x4, 4  /* untyped: users disagree: ColE *D_002A6238 | Ent14 *D_002A6238 | Ent20 *D_002A6238 | Face *D_002A6238 | Plane *D_002A6238 | Plane52 *D_002A6238 | Tri01 *D_002A6238 | Tri20 *D_002A6238 | Tri25 *D_002A6238 | Tri368 *D_002A6238 | W29Plane *D_002A6238 | s32 D_002A6238 | void *D_002A6238 */
@@ -580,12 +580,12 @@
 	PIECE D_002A62C4, 0x4, 4  /* untyped: users disagree: s32 D_002A62C4 | u8 *D_002A62C4 */
 	PIECE D_002A62C8, 0x4, 4  /* untyped: users disagree: s32 D_002A62C8 | u8 *D_002A62C8 */
 	PIECE D_002A62CC, 0x4, 4  /* untyped: users disagree: s32 D_002A62CC | u8 *D_002A62CC */
-	PIECE D_002A62D0, 0x4, 4  /* untyped: users disagree: s32 D_002A62D0 | u32 D_002A62D0 */
-	PIECE D_002A62D4, 0x4, 4  /* untyped: users disagree: s32 D_002A62D4 | u32 D_002A62D4 */
-	PIECE D_002A62D8, 0x4, 4  /* untyped: users disagree: s32 D_002A62D8 | u32 D_002A62D8 */
-	PIECE D_002A62DC, 0x4, 4  /* untyped: users disagree: s32 D_002A62DC | u32 D_002A62DC */
-	PIECE D_002A62E0, 0x4, 4  /* untyped: users disagree: s32 D_002A62E0 | u32 D_002A62E0 */
-	PIECE D_002A62E4, 0x4, 4  /* untyped: users disagree: s32 D_002A62E4 | u32 D_002A62E4 */
+	PIECE D_002A62D0, 0x4, 4  /* data/pieces/D_002A62D0.h */
+	PIECE D_002A62D4, 0x4, 4  /* data/pieces/D_002A62D4.h */
+	PIECE D_002A62D8, 0x4, 4  /* data/pieces/D_002A62D8.h */
+	PIECE D_002A62DC, 0x4, 4  /* data/pieces/D_002A62DC.h */
+	PIECE D_002A62E0, 0x4, 4  /* data/pieces/D_002A62E0.h */
+	PIECE D_002A62E4, 0x4, 4  /* data/pieces/D_002A62E4.h */
 	PIECE D_002A62E8, 0x4, 4
 	PIECE D_002A62EC, 0x4, 4
 	PIECE D_002A62F0, 0x8, 8
@@ -659,9 +659,9 @@
 	PIECE_END D_002A6B70, 0x10
 	PIECE D_002A6B80, 0x4, 4
 	PIECE D_002A6B84, 0x8c, 4
-	PIECE D_002A6C10, 0x40, 16  /* untyped: users disagree: f32 D_002A6C10[] | s32 D_002A6C10[4][4] */
+	PIECE D_002A6C10, 0x40, 16  /* data/pieces/D_002A6C10.h */
 	PIECE D_002A6C50, 0x4, 4
 	PIECE D_002A6C54, 0xc, 4
-	PIECE D_002A6C60, 0x3400, 16  /* untyped: users disagree: M2C_UNK D_002A6C60 | volatile unsigned char D_002A6C60 */
+	PIECE D_002A6C60, 0x3400, 16  /* data/pieces/D_002A6C60.h */
 	PIECE D_002AA060, 0x3400, 16  /* untyped: users disagree: ED0 D_002AA060[] | M2C_UNK D_002AA060 */
 	PIECE D_002AD460, 0x4800, 16

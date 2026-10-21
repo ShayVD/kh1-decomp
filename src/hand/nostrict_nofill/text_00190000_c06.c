@@ -10,7 +10,7 @@ typedef struct {
 extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-extern f32 D_003701F0[3];
+#include "data/pieces/D_003701F0.h"
 void sceVu0UnitMatrix(PppMtx);
 void func_002676c0(PppMtx, PppMtx, f32);
 void func_00267518(f32 *, f32 *, f32 *);

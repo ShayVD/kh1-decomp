@@ -316,7 +316,7 @@ void func_0022eb00(s32 arg0) {
 
 typedef struct { u8 pad[0x499]; u8 a[1]; } S4BE8;
 extern S4BE8 *D_00304BE8;
-extern u32 D_003E3D6C;
+#include "data/pieces/D_003E3D6C.h"
 extern s32 D_00646A14;
 extern s32 D_00646A18;
 extern u32 D_00646A20;

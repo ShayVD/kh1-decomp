@@ -1,7 +1,7 @@
 #include "common.h"
 #include "platform/math.h"
 
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern s32 D_002C1310[];
 
 void func_0011dc28(s32 *a, s32 *b, s32 *c) {

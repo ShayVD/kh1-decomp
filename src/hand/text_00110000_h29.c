@@ -161,7 +161,8 @@ void func_001100a8(void) {
     sceGsPutDrawEnv(&D_004D8EF0);
 }
 
-extern s32 D_002BBE04, D_002BBE14, D_002BBE18, D_002A6208, D_002A61F4, D_002BC738, D_002A6204, D_002A61F0;
+extern s32 D_002BBE04, D_002BBE14, D_002BBE18, D_002A61F4, D_002BC738, D_002A6204, D_002A61F0;
+#include "data/pieces/D_002A6208.h"
 extern s32 D_002BC060[4];
 extern s32 D_002BC080[4];
 extern s32 D_002BC0B0[4];
@@ -215,7 +216,7 @@ void func_001104e0(void) {
 }
 
 typedef struct { u8 x0; u8 w; u8 d[1]; } W29Map;
-extern s32 D_002BBD90[];
+#include "data/pieces/D_002BBD90.h"
 extern W29Map *D_002BBD48[];
 void func_00111600(s32, s32, u8);
 
@@ -253,7 +254,7 @@ u32 func_00111be8(u32 a) {
 extern s32 D_004D925C;
 extern s32 D_002BCC1C;
 extern s32 D_004D9254;
-extern volatile u32 D_002BBDF0;
+#include "data/pieces/D_002BBDF0.h"
 extern u32 D_004D9250; /* src/data/bss_004D.c: s32 D_004D9250 */
 
 s32 func_00111cb8(void) {
@@ -352,7 +353,7 @@ void func_00112150(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, s32 a
 extern s32 D_002BCDB4, D_002BCDB8, D_002BCDBC, D_002BCDC0, D_002BCDC4, D_002BCDD8;
 extern void *D_004D92DC;
 extern u8 D_009A0000[];
-extern u8 D_002BCCA0[];
+#include "data/pieces/D_002BCCA0.h"
 extern s32 D_002BC138;
 extern s32 D_002BC128;
 void func_00112320(void);
@@ -391,7 +392,7 @@ extern W29Rec40 *D_002BCDA0;
 extern W29Rec40 *D_002BCDAC;
 extern s32 D_002BC13C;
 extern void *D_002A3F3C;
-extern char D_002BCCE0[];
+#include "data/pieces/D_002BCCE0.h"
 extern char D_0048D008[];
 void func_00112400(s32);
 char *strcpy(char *, const char *);

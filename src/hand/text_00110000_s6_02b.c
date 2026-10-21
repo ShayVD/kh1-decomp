@@ -16,7 +16,7 @@ void func_001136d8(void) {
     }
     func_001136a8();
 }
-extern u8 D_002BCD60[];
+#include "data/pieces/D_002BCD60.h"
 void func_00112498(void);
 void func_00101680(void);
 s32 func_001137c8(s32, s32);

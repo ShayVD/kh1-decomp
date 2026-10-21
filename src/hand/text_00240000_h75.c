@@ -169,7 +169,7 @@ typedef struct { s32 unk0; char *(*unk4)(void); s32 unk8; s32 unkC; s32 unk10; }
 extern HddCtx D_0046A688;
 extern s32 D_0046A674;
 extern s32 D_0046A614;
-extern char D_0046A650[];
+#include "data/pieces/D_0046A650.h"
 void func_0024d9a0(void);
 void func_0024d8f0(void);
 s32 sprintf(char *, const char *, ...);
@@ -178,7 +178,7 @@ s32 func_0025c448(s32, s32, s32, s32, s32, s32);
 s32 func_0025ce38(s32);
 s32 func_0024dad0(const char *, s32);
 
-extern char D_004919B0[];
+#include "data/pieces/D_004919B0.h"
 
 s32 func_0024db78(s32 size) {
     HddCtx *c = &D_0046A688;

@@ -109,8 +109,8 @@ extern s32 D_003E3CB0;
 extern char D_00490928[];
 extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern u8 D_003E3C88[];
-extern s32 D_003E3D68;
-extern s32 D_003E3D6C;
+#include "data/pieces/D_003E3D68.h"
+#include "data/pieces/D_003E3D6C.h"
 typedef struct { u8 b[0xe4]; } E228;
 extern E228 D_003E3D70[];
 extern u8 D_003E8D28[];

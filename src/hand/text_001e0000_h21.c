@@ -408,7 +408,7 @@ u32 func_001edf40(u32 x, u32 y) {
     return res;
 }
 
-extern u32 D_002BBDF4;
+#include "data/pieces/D_002BBDF4.h"
 extern f32 D_002BBDEC;
 u32 func_001ee118(void) {
     return *(volatile u32 *)&D_002BBDF4 * D_002BBDEC;

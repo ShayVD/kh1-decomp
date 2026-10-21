@@ -4,7 +4,7 @@
 #include "data/bss_0052.h"
 
 extern M2C_UNK D_002E31B0;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern s32 D_002E31BC;
 extern s32 D_00525288;
 extern s32 D_0052528C;

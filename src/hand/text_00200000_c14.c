@@ -9,7 +9,7 @@ extern G5bc8e *D_00425BC8;
 typedef struct ObjE { u8 pad[0x10]; struct ObjE *x10; u8 p14[0x10]; s32 x24; s32 x28; s32 x2c; u8 p30[0x10]; s32 x40; u8 p44[0xce - 0x44]; s16 xce; u16 xd0; u16 xd2; } ObjE;
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234, D_00641238, D_0064123C;
 extern s32 D_00641240, D_00641254, D_00641274, D_00641790;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u8 D_003F38E0[], D_003F3910[];
 extern s32 D_003F39A8[];
 s32 func_001ee7f0(s32);

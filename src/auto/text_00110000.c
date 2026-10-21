@@ -68,7 +68,7 @@ extern s32 D_002BCC24;
 extern s32 D_002BCC98;
 extern s32 D_002BCDA8;
 extern s32 D_002BCDAC;
-extern s32 D_002BD118;
+#include "data/pieces/D_002BD118.h"
 extern s32 D_002BD11C;
 extern s32 D_002C1308;
 extern s32 D_002C130C;

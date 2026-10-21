@@ -122,7 +122,7 @@ void func_001aa750(GsTag *t, s32 qwc, s32 pri) {
     D_0061EFA0[pri].s.tail = t;
 }
 
-extern f32 D_00372800[16];
+#include "data/pieces/D_00372800.h"
 
 void func_001aa858(void) {
     f32 *d = D_00372800;

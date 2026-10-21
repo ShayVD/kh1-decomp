@@ -40,7 +40,7 @@ extern s32 D_00362438;
 extern s32 D_0036243C;
 extern s32 D_00362440;
 extern s32 D_00362448;
-extern s32 D_00362710;
+#include "data/pieces/D_00362710.h"
 extern s32 D_00616228;
 s32 D_00616238 ALIGNED(8);
 extern void *D_00575894;

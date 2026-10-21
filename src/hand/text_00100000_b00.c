@@ -1,11 +1,11 @@
 #include "common.h"
 extern u8 D_002A4ED0[], D_002A4FC0[];
 extern s32 D_002BC09C;
-extern f32 D_002BC098;
+#include "data/pieces/D_002BC098.h"
 extern s32 D_002BC730;
 extern s32 D_002BC080[4];
 extern volatile u64 D_002A4F60[];
-extern u8 D_002BCAF0[];
+#include "data/pieces/D_002BCAF0.h"
 void func_00106b18(void *);
 void func_00102cc8(s32 *, s32 *, s32 *, s32 *);
 void func_002676c0(void *, void *, f32);
@@ -53,7 +53,10 @@ void func_00102da8(s32 arg0) {
 extern s32 D_00351BD0;
 extern s32 D_0048C518[], D_0048C558[], D_0048C308[][16], D_0048C398[][16], D_0048C418[][16];
 extern s32 D_0048C1E8[], D_0048C228[], D_0048BFD8[][16], D_0048C068[][16], D_0048C0E8[][16];
-extern s32 D_00494BC0[4][4], D_002A6C10[4][4], D_002BC170[4][4], D_002BC020[4][4], D_002BBF60[4][4];
+extern s32 D_00494BC0[4][4], D_002BC170[4][4];
+#include "data/pieces/D_002BC020.h"
+#include "data/pieces/D_002BBF60.h"
+#include "data/pieces/D_002A6C10.h"
 extern s32 D_002A3F60[4][4][4];
 void func_00107e60(void);
 
