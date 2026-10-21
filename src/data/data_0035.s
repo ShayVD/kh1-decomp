@@ -5,29 +5,29 @@
  * include/data/data_0035.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_00350CE0, 0x8, 8  /* untyped: users disagree: M2C_UNK *D_00350CE0 | s32 D_00350CE0 */
-	PIECE D_00350CE8, 0x28, 8  /* untyped: users disagree: s32 D_00350CE8[] | void *D_00350CE8[] */
+	PIECE D_00350CE0, 0x8, 8  /* untyped: users disagree: M2C_UNK *D_00350CE0 | s32 D_00350CE0; session 25: as s32 D_00350CE0: new warning in text_00140000.c */
+	PIECE D_00350CE8, 0x28, 8  /* untyped: users disagree: s32 D_00350CE8[] | void *D_00350CE8[]; session 25: as void *D_00350CE8[]: new warning in text_00140000_h8.c */
 	PIECE D_00350D18, 0x10, 8
 	PIECE D_00350D28, 0x8, 8
 	PIECE D_00350D30, 0x48, 8  /* data/pieces/D_00350D30.h */
-	PIECE D_00350D78, 0x4, 4  /* untyped: users disagree: BoxSet57_f1b8 *D_00350D78 | W34Boxes *D_00350D78 */
+	PIECE D_00350D78, 0x4, 4  /* untyped: users disagree: BoxSet57_f1b8 *D_00350D78 | W34Boxes *D_00350D78; session 25: as W34Boxes *D_00350D78: does not compile in text_00140000_h57.c, text_00140000_s6_07.c */
 	PIECE D_00350D7C, 0x4, 4
 	PIECE D_00350D80, 0x8, 8
-	PIECE D_00350D88, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D88 | MvTab D_00350D88[] | S88 D_00350D88[] | Tb20 D_00350D88[] | W55Ent32 D_00350D88[] | W9Tab32 D_00350D88[] | s8 D_00350D88 | volatile M2C_UNK D_00350D88 */
+	PIECE D_00350D88, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D88 | MvTab D_00350D88[] | S88 D_00350D88[] | Tb20 D_00350D88[] | W55Ent32 D_00350D88[] | W9Tab32 D_00350D88[] | s8 D_00350D88 | volatile M2C_UNK D_00350D88; session 25: as S88 D_00350D88[]: does not compile in text_00130660_s7_w37.c, text_00140000_h56.c +2 */
 	PIECE D_00350D94, 0xc, 4  /* data/pieces/D_00350D94.h */
 	PIECE D_00350DA0, 0x4, 4  /* untyped: type Handler is not a common.h basic type */
 	PIECE D_00350DA4, 0x744, 4  /* data/pieces/D_00350DA4.h */
 	PIECE D_003514E8, 0x48, 8  /* data/pieces/D_003514E8.h */
-	PIECE D_00351530, 0x400, 16  /* untyped: users disagree: H1530 D_00351530[] | u16 D_00351530[512] */
+	PIECE D_00351530, 0x400, 16  /* untyped: users disagree: H1530 D_00351530[] | u16 D_00351530[512]; session 25: as H1530 D_00351530[]: does not compile in text_00130000_b03.c */
 	PIECE D_00351930, 0xc, 4  /* untyped: type W9F4 is not a common.h basic type */
 	PIECE D_0035193C, 0x34, 4  /* data/pieces/D_0035193C.h */
 	PIECE D_00351990, 0x20, 16
 	PIECE D_003519B0, 0x30, 16
-	PIECE D_003519E0, 0x20, 16  /* untyped: users disagree: S3519E0 D_003519E0 | s32 D_003519E0[] */
+	PIECE D_003519E0, 0x20, 16  /* untyped: users disagree: S3519E0 D_003519E0 | s32 D_003519E0[]; session 25: as s32 D_003519E0[0x8]: does not compile in text_00150000_h35.c */
 	PIECE D_00351A00, 0x10, 16
 	PIECE D_00351A10, 0x10, 16
 	PIECE D_00351A20, 0x10, 16  /* data/pieces/D_00351A20.h */
-	PIECE D_00351A30, 0x10, 16  /* untyped: users disagree: P2 D_00351A30[] | u8 D_00351A30[] */
+	PIECE D_00351A30, 0x10, 16  /* untyped: users disagree: P2 D_00351A30[] | u8 D_00351A30[]; session 25: as P2 D_00351A30[]: code changes in text_00150000_h10.c */
 	PIECE D_00351A40, 0x8, 8
 	PIECE D_00351A48, 0x8, 8  /* data/pieces/D_00351A48.h */
 	PIECE D_00351A50, 0x10, 16
@@ -46,7 +46,7 @@
 	PIECE D_00351BB0, 0x10, 16
 	PIECE D_00351BC0, 0x4, 4  /* data/pieces/D_00351BC0.h */
 	PIECE D_00351BC4, 0x4, 4  /* data/pieces/D_00351BC4.h */
-	PIECE_BEGIN D_00351BC8, 0x8, 8  /* untyped: users disagree: void *D_00351BC8; unparsed in 4 file(s) */
+	PIECE_BEGIN D_00351BC8, 0x8, 8  /* untyped: users disagree: void *D_00351BC8; unparsed in 4 file(s); session 25: as void (*D_00351BC8)(s32): new warning in text_00150000_h36.c, text_00150000_s6.c */
 	.word func_002583e0
 	.word func_00258a58
 	PIECE_END D_00351BC8, 0x8
@@ -77,7 +77,7 @@
 	PIECE D_0035BCF0, 0x20, 16
 	PIECE D_0035BD10, 0x10, 16
 	PIECE D_0035BD20, 0x20, 16  /* data/pieces/D_0035BD20.h */
-	PIECE D_0035BD40, 0x10, 16  /* untyped: users disagree: Act6C *D_0035BD40[] | Chr *D_0035BD40[] | Chr9F *D_0035BD40[] | ChrE3 *D_0035BD40[3] | ChrEA *D_0035BD40[3] | EntB *D_0035BD40[] | M2C_UNK D_0035BD40 | ObjBD40 *D_0035BD40[] | s32 D_0035BD40 | s32 D_0035BD40[] | void *D_0035BD40[] */
+	PIECE D_0035BD40, 0x10, 16  /* untyped: users disagree: Act6C *D_0035BD40[] | Chr *D_0035BD40[] | Chr9F *D_0035BD40[] | ChrE3 *D_0035BD40[3] | ChrEA *D_0035BD40[3] | EntB *D_0035BD40[] | M2C_UNK D_0035BD40 | ObjBD40 *D_0035BD40[] | s32 D_0035BD40 | s32 D_0035BD40[] | void *D_0035BD40[]; session 25: as s32 D_0035BD40: does not compile in text_00160000_b05.c, text_00160000_c04.c +3 */
 	PIECE_BEGIN D_0035BD50, 0xf0, 16
 	PIECE_BYTES D_0035BD50, 0x0, 0x8
 	.word func_0016b670
@@ -323,7 +323,7 @@
 	PIECE D_0035C460, 0x10, 16  /* data/pieces/D_0035C460.h */
 	PIECE D_0035C470, 0x10, 16
 	PIECE D_0035C480, 0x10, 16
-	PIECE D_0035C490, 0x10, 16  /* untyped: users disagree: V4 D_0035C490 | u8 D_0035C490[] */
+	PIECE D_0035C490, 0x10, 16  /* untyped: users disagree: V4 D_0035C490 | u8 D_0035C490[]; session 25: as u8 D_0035C490[0x10]: new warning in text_00160000_b05.c */
 	PIECE_BEGIN D_0035C4A0, 0x1c0, 16  /* merged (a user declares it larger than the next name): D_0035C550; data/pieces/D_0035C4A0.h */
 	PIECE_BYTES D_0035C4A0, 0x0, 0xb0
 	PIECE_LABEL D_0035C4A0, D_0035C550, 0xb0
@@ -335,6 +335,6 @@
 	PIECE D_0035C6F8, 0x4, 4
 	PIECE D_0035C6FC, 0x4, 4
 	PIECE D_0035C700, 0x10, 16
-	PIECE D_0035C710, 0x2000, 16  /* untyped: users disagree: B3PjE D_0035C710[] | M2C_UNK D_0035C710 | PppLight D_0035C710[256] | Spr D_0035C710[] | W8Ent35 D_0035C710[] */
+	PIECE D_0035C710, 0x2000, 16  /* untyped: users disagree: B3PjE D_0035C710[] | M2C_UNK D_0035C710 | PppLight D_0035C710[256] | Spr D_0035C710[] | W8Ent35 D_0035C710[]; session 25: as PppLight D_0035C710[256]: new warning in text_00130000_b03.c, text_00140000_h56.c; does not compile in text_00140000_h8.c, text_00180000_h40.c */
 	PIECE D_0035E710, 0x1410, 16  /* data/pieces/D_0035E710.h */
 	PIECE D_0035FB20, 0x1410, 16

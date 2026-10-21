@@ -26,7 +26,7 @@
 	PIECE D_003E3D58, 0x10, 8
 	PIECE D_003E3D68, 0x4, 4  /* data/pieces/D_003E3D68.h */
 	PIECE D_003E3D6C, 0x4, 4  /* data/pieces/D_003E3D6C.h */
-	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
+	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[]; session 25: as E3D70 D_003E3D70[]: new warning in text_001e0000_h22.c, text_00210000_b14.c; does not compile in text_00210000_s10_r2_7.c, text_00210000_s7_w16.c +1 */
 	PIECE D_003E3E50, 0x808, 8  /* data/pieces/D_003E3E50.h */
 	PIECE_BEGIN D_003E4658, 0x42b8, 8  /* untyped: merged (a user declares it larger than the next name): D_003E4658, D_003E4660, D_003E4670, D_003E4680, D_003E4690, D_003E46A0 */
 	PIECE_BYTES D_003E4658, 0x0, 0x8
@@ -80,10 +80,10 @@
 	PIECE D_003E8D40, 0xc0, 16
 	PIECE D_003E8E00, 0x4, 4
 	PIECE D_003E8E04, 0x4, 4
-	PIECE D_003E8E08, 0x20, 8  /* untyped: users disagree: P8 D_003E8E08 | S4 D_003E8E08 | S8E08 D_003E8E08 | St14 D_003E8E08 | s32 D_003E8E08 | s32 D_003E8E08[2] | s32 D_003E8E08[] | u8 *D_003E8E08[]; unparsed in 1 file(s) */
-	PIECE D_003E8E28, 0x4, 4  /* untyped: users disagree: E8E28 *D_003E8E28 | Glyph *D_003E8E28 | M2C_UNK *D_003E8E28 | s32 D_003E8E28 */
+	PIECE D_003E8E08, 0x20, 8  /* untyped: users disagree: P8 D_003E8E08 | S4 D_003E8E08 | S8E08 D_003E8E08 | St14 D_003E8E08 | s32 D_003E8E08 | s32 D_003E8E08[2] | s32 D_003E8E08[] | u8 *D_003E8E08[]; unparsed in 1 file(s); session 25: as s32 D_003E8E08: does not compile in text_00230000_s7.c; code changes in text_001f0000_s12_s12w16.c, text_001f0000_s7_w32.c +2 */
+	PIECE D_003E8E28, 0x4, 4  /* untyped: users disagree: E8E28 *D_003E8E28 | Glyph *D_003E8E28 | M2C_UNK *D_003E8E28 | s32 D_003E8E28; session 25: as Glyph *D_003E8E28: does not compile in text_001f0000_s6_17.c, text_001f0000_s12_s12w16.c +3 */
 	PIECE D_003E8E2C, 0x4, 4
-	PIECE D_003E8E30, 0x270, 16  /* untyped: users disagree: E8E30 D_003E8E30[] | u32 D_003E8E30[][12]; unparsed in 1 file(s) */
+	PIECE D_003E8E30, 0x270, 16  /* untyped: users disagree: E8E30 D_003E8E30[] | u32 D_003E8E30[][12]; unparsed in 1 file(s); session 25: as u32 D_003E8E30[0xd][12]: new warning in text_001e0000_h22.c */
 	PIECE_BEGIN D_003E90A0, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_003E90AC, D_003E9104 */
 	PIECE_BYTES D_003E90A0, 0x0, 0xc
 	PIECE_LABEL D_003E90A0, D_003E90AC, 0xc
