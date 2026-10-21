@@ -74,9 +74,8 @@ void func_002119a8(W14 *w) {
 }
 
 typedef struct O15 { u8 pad[0x10]; struct O15 *x10; u8 p14[0x10]; s32 x24; f32 x28; } O15;
-typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
-typedef struct { u8 pad[0x32]; u8 x32; } S1BB0;
 #include "data/pieces/D_00425BC8.h"
+typedef struct { u8 pad[0x32]; u8 x32; } S1BB0;
 extern s32 D_00641BA4, D_00641BA8, D_00641BC0, D_00641BC4, D_00641BD0, D_00641BD4, D_00641C00, D_00641C08, D_00642410;
 extern s32 D_00641C10[], D_00641BE0[], D_00641BF0[], D_00642010[];
 extern S1BB0 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
@@ -104,7 +103,7 @@ void func_00211ed0(O15 *a) {
     s32 v, sel, i, y, k;
     O15 *o;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -136,7 +135,7 @@ void func_00211ed0(O15 *a) {
                 else o->x24 = (s32)func_001efbb8(169);
                 if ((o = o->x10)) o->x24 = v;
             }
-            if (func_001fe5a0(a) && !(((Cfg *)D_00425BC8)->x8 & 8)) {
+            if (func_001fe5a0(a) && !(D_00425BC8->x8 & 8)) {
                 func_0011d768(5);
                 if (v) {
                     if (D_00641BC4 != 3) {

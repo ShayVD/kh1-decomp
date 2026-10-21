@@ -44,7 +44,6 @@ typedef struct O98 {
     s16 xd8;
     s16 xda;
 } O98;
-typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_006469B0;
 extern s32 D_006469B4;
@@ -164,7 +163,7 @@ void func_002287f8(void *arg0) {
     s32 i, n, cur, k, c, y;
 
     if (func_001f42b8()) {
-        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3840(arg0);
             func_0011d768(3);
             func_0020be10(16);

@@ -1,7 +1,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
 typedef struct N { u8 pad[0x10]; struct N *x10; u8 pad14[0x10]; s32 x24; f32 x28; u8 pad2c[0x90 - 0x2c]; s32 x90; f32 x94; u8 pad98[0xa0 - 0x98]; f32 xa0; u8 pada4[0xcc - 0xa4]; s16 xcc; s16 xce; } N;
-typedef struct { u8 pad[8]; s32 x8; } P5BC8;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E24, D_00640E28;
@@ -72,7 +71,7 @@ void func_0020c1c8(N *o) {
         break;
     case 1:
         if (func_001f42b8(o)) {
-            if (((P5BC8 *)D_00425BC8)->x8 & 0x4000) {
+            if (D_00425BC8->x8 & 0x4000) {
                 func_001f3840(o);
                 func_0011d768(3);
                 func_00207618();

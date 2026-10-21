@@ -14,9 +14,9 @@ typedef struct Ob {
     s16 xd8;
     s16 xda;
 } Ob;
-typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
-typedef struct { u8 pad[16]; void *x10; } P10;
 #include "data/pieces/D_00425BC8.h"
+typedef PadSt_425bc8 Cfg;
+typedef struct { u8 pad[16]; void *x10; } P10;
 extern P10 *D_006433F0; /* src/data/bss_0064.c: s32 D_006433F0 */
 extern s32 D_00643418;
 extern s32 D_0064341C;
@@ -49,7 +49,7 @@ void func_0021ff68(Ob *a) {
     s32 i, j, y, step, id;
     Ob *o;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_006433F0);
             func_0011d768(3);
         } else {
@@ -57,7 +57,7 @@ void func_0021ff68(Ob *a) {
             s32 n, k;
             func_001fd858(a);
             D_0064341C = func_001fd518(a);
-            b = ((Cfg *)D_00425BC8)->x10;
+            b = D_00425BC8->x10;
             k = 0;
             n = a->xd8;
             if (b & 0x80000480) {
@@ -175,7 +175,7 @@ s32 func_0021b860(void *, s32, s32, s32, s32, s32);
 void func_00221660(Ob *a) {
     s32 i, n, y, id, msg;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -241,7 +241,7 @@ void func_00223a90(void *a) {
         else j = i;
     }
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -294,7 +294,7 @@ void func_00222e90(Ob *a) {
     s32 i, j, y, step, id;
     Ob *o;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_006436A0);
             func_0011d768(3);
         } else {
@@ -302,7 +302,7 @@ void func_00222e90(Ob *a) {
             s32 n, k;
             func_001fd858(a);
             D_006436BC = func_001fd518(a);
-            b = ((Cfg *)D_00425BC8)->x10;
+            b = D_00425BC8->x10;
             k = 0;
             n = a->xd8;
             if (b & 0x80000480) {
@@ -759,7 +759,7 @@ void func_002336f8(void) {
     case 0:
         break;
     }
-    if (((Cfg *)D_00425BC8)->x4) D_006477A4 = 0.0f;
+    if (D_00425BC8->x4) D_006477A4 = 0.0f;
     else D_006477A4 += D_002BBDFC;
 }
 

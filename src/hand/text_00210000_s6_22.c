@@ -418,10 +418,9 @@ e2:
 /* ---- fed60/MATCH_ed60.c ---- */
 
 typedef struct { u8 pad0[0xc4]; u16 xc4; u8 padc6[0xcc - 0xc6]; s16 xcc, xce; u8 padd0[0xd8 - 0xd0]; s16 xd8, xda; } Obj_q5;
-typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad_q5;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad0[0x24]; s32 x24; u8 pad28[0x40 - 0x28]; s32 x40; u8 pad44[0xa0 - 0x44]; f32 xa0; u8 pada4[0xd8 - 0xa4]; s16 xd8, xda; } Eff_q5;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110_q5;
-#include "data/pieces/D_00425BC8.h"
 extern S3110_q5 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_0064324C;
 extern s32 D_00643268[];
@@ -469,7 +468,7 @@ void func_0021ed60(Obj_q5 *o) {
     s32 ch, n, k, v, j, i, y, dy, c, x, cnt;
     Eff_q5 *p;
     if (func_001f42b8()) {
-        if (((Pad_q5 *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_00643110->x10);
             func_0011d768(3);
             goto draw;
@@ -479,12 +478,12 @@ void func_0021ed60(Obj_q5 *o) {
         D_00643268[D_0064324C] = func_001fd518(o);
         ch = 0;
         n = o->xd8;
-        if (((Pad_q5 *)D_00425BC8)->x10 & 0x80000480) {
+        if (D_00425BC8->x10 & 0x80000480) {
             if (o->xda > 0) {
                 o->xda -= 16;
                 ch = 1;
             }
-        } else if (((Pad_q5 *)D_00425BC8)->x10 & 0x20000820) {
+        } else if (D_00425BC8->x10 & 0x20000820) {
             if (o->xda < (n - 1) << 4) {
                 o->xda += 16;
                 ch = 1;

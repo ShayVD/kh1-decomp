@@ -35,7 +35,6 @@ typedef struct O98 {
     s16 xd8;
     s16 xda;
 } O98;
-typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_006469B0;
 extern s32 D_006469B4;
@@ -113,7 +112,7 @@ void func_00229ec0(void *arg0) {
             func_00233ff8(D_006437C4, 0);
             func_001f3d58(arg0, 6);
             func_00229a10(arg0);
-        } else if (((F8 *)D_00425BC8)->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & 0x4000) {
             func_001f3d58(arg0, 6);
             func_001f3758(D_00646990);
             func_0011d768(3);
@@ -182,7 +181,7 @@ void func_00229ec0(void *arg0) {
 void func_0022bd58(O98 *a0) {
     s32 s, x, y;
     if (func_001f42b8()) {
-        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -266,7 +265,7 @@ void func_0022e460(O98 *a0) {
     if (func_001f42b8()) {
         switch (D_006469E4) {
         case 0:
-            if (((F8 *)D_00425BC8)->x8 & 0x4000) {
+            if (D_00425BC8->x8 & 0x4000) {
                 D_003F7778 = 0;
                 func_001fd648(a0, 0);
                 func_0011d768(3);
@@ -416,7 +415,7 @@ void func_00225330(O98 *arg0) {
             func_00233ff8(D_006436D4, 0);
             func_001f3d58(arg0, 6);
             func_002246f8(arg0);
-        } else if (((F8 *)D_00425BC8)->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & 0x4000) {
             func_001f3d58(arg0, 6);
             func_001f3758(D_00643740);
             func_0011d768(3);

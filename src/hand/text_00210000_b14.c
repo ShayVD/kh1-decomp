@@ -7,7 +7,7 @@ typedef Rec_3E3D70 Rec;
 typedef struct { u8 pad[0x24]; u8 x24; } Arg;
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; s32 x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct Obj7 { u8 pad[0x10]; struct Obj7 *x10; u8 p14[0x10]; struct Obj7 *x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj7;
-typedef struct { u8 pad[4]; u32 x4; s32 x8; } Cfg;
+#include "data/pieces/D_00425BC8.h"
 #include "data/types/text_00210000_b14_p.h"
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
@@ -39,7 +39,6 @@ extern s32 D_003F45A8[];
 extern u8 D_003F45C0[];
 extern u8 D_003F45F0[];
 extern u8 D_003F4620[];
-#include "data/pieces/D_00425BC8.h"
 extern s32 D_00641BA4;
 extern s32 D_00641BAC;
 extern s32 D_00641BB0;
@@ -195,7 +194,7 @@ void func_00212930(Obj *a) {
     Obj *q[2];
     s32 k, t, s, n, y, i, j, r;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -254,7 +253,7 @@ void func_002145d8(Obj *a) {
     Obj *o, *p;
     f = D_00642C3C & 0x80;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00642C24 = 1;
@@ -345,7 +344,7 @@ void func_00214b20(Obj *a) {
     func_001fd688(a);
     money = func_001ef720(k);
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -426,7 +425,7 @@ void func_00214fc8(Obj *a) {
     func_001fd610(a, lim);
     func_001fd688(a);
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -498,7 +497,7 @@ void func_00215420(Obj *a) {
     u32 v, i;
     s32 sel, y, c, k;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_00642C20);
             func_0011d768(3);
         } else {

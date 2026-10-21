@@ -1,14 +1,13 @@
 #include "common.h"
 #include "data/bss_0064.h"
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; union { struct Obj *p; s32 i; s16 h; } x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj;
-typedef struct { u8 pad[4]; u32 x4; u32 x8; u32 xc; u32 x10; } Cfg;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 typedef struct { s32 *p; s32 n; } PN;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef union { s32 i; u16 h; } U32H;
-#include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern void *D_00642C90;
@@ -51,7 +50,7 @@ void func_002177c8(Obj *a) {
     u32 i;
     s32 sel, y;
     if (func_001f42b8(a)) {
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_00642C90);
             func_0011d768(3);
         } else {

@@ -2,7 +2,8 @@
 #include "data/bss_0064.h"
 /* 00217000 (hand/nostrict, no context). From s11w30's 6w draft. FLAGGED dead set: `E20 *tbl = D_003F2C40;` at entry is dead (tbl reassigned after the third draw call, before its only use); life1 deletes it, but it stops combine folding the la into lui/addu/lw sym+16. */
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; struct Obj *x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
-typedef struct { u8 pad[4]; u32 x4; u32 x8; u32 xc; u32 x10; } Cfg;
+#include "data/pieces/D_00425BC8.h"
+typedef PadSt_425bc8 Cfg;
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
@@ -11,7 +12,6 @@ typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8
 #include "data/pieces/D_003F2C40.h"
 typedef E20_3F2C40 E20;
 
-#include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_00642CCC;
@@ -51,7 +51,7 @@ void func_00217000(Obj *a) {
     sel = 11;
     if (func_001f42b8(a)) {
         sel = 1;
-        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             func_001f3d58(a, 5);
@@ -63,19 +63,19 @@ void func_00217000(Obj *a) {
         cur = D_00642CCC;
         if (D_003E3D68 >= 3) {
             ch = 0;
-            if (((Cfg *)D_00425BC8)->x10 & 0x10000010) {
+            if (D_00425BC8->x10 & 0x10000010) {
                 if (cur >= 2) {
                     cur--;
                     ch = 1;
-                } else if (((Cfg *)D_00425BC8)->x8 & 0x10000010) {
+                } else if (D_00425BC8->x8 & 0x10000010) {
                     cur = D_003E3D68 - 1;
                     ch = 1;
                 }
-            } else if (((Cfg *)D_00425BC8)->x10 & 0x40000040) {
+            } else if (D_00425BC8->x10 & 0x40000040) {
                 if (cur < D_003E3D68 - 1) {
                     cur++;
                     ch = 1;
-                } else if (((Cfg *)D_00425BC8)->x8 & 0x40000040) {
+                } else if (D_00425BC8->x8 & 0x40000040) {
                     cur = 1;
                     ch = 1;
                 }
@@ -93,21 +93,21 @@ void func_00217000(Obj *a) {
         }
         func_0020bd18(a, 8);
         ch = 0;
-        if (((Cfg *)D_00425BC8)->x10 & 0x80000080) {
+        if (D_00425BC8->x10 & 0x80000080) {
             p = &D_00642CD8;
             if (*p > 0) {
                 *p = *p - 1;
                 ch = 1;
-            } else if (((Cfg *)D_00425BC8)->x8 & 0x80000080) {
+            } else if (D_00425BC8->x8 & 0x80000080) {
                 *p = 5;
                 ch = 1;
             }
-        } else if (((Cfg *)D_00425BC8)->x10 & 0x20000020) {
+        } else if (D_00425BC8->x10 & 0x20000020) {
             p2 = &D_00642CD8;
             if (*p2 < 5) {
                 *p2 = *p2 + 1;
                 ch = 1;
-            } else if (((Cfg *)D_00425BC8)->x8 & 0x20000020) {
+            } else if (D_00425BC8->x8 & 0x20000020) {
                 *p2 = 0;
 
                 ch = 1;
