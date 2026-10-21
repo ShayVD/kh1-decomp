@@ -97,6 +97,9 @@ def string_end(data: bytes, ub: int, kind: str) -> int | None:
 # buf on GIF channel 2 in chain mode (func_00266f38: CHCR 0x105), so the DMA reads exactly 16 * n bytes.
 DMA_COUNT_CALLS = {
     0x00237018: [(4, lambda st: 16 * st[5] if isinstance(st.get(5), int) and 0 < st[5] < 0x10000 else None)],
+    # func_00106cd0(addr, qwc) appends a ref tag (word 0 = 0x30000000 + qwc, word 1 = addr) to the chain in
+    # D_00494A90: the DMA reads 16 * qwc bytes at addr
+    0x00106CD0: [(4, lambda st: 16 * st[5] if isinstance(st.get(5), int) and 0 < st[5] < 0x10000 else None)],
 }
 # Session 27 (list-arg): callee -> (list argument, element width, terminator, {argument: bytes per element}):
 # the callee reads the list until the terminator ("m1": a word -1, "neg": a negative halfword) and
@@ -116,6 +119,43 @@ def list_count(data: bytes, width: int, term: str) -> int | None:
         if (term == "m1" and v == -1) or (term == "neg" and v < 0):
             rest = data[k + width:]
             return k // width if len(rest) <= 12 and not any(rest) else None
+    return None
+
+
+# Session 27 (dma-chain): callee -> argument that is the start of a DMA source chain the callee (or the
+# callback it registers) sends in chain mode (func_00266f38 writes it to TADR with CHCR 0x105):
+# func_00106b18(chain) and func_00106bd8(chain, ...) send it on channel D_002A6B84 (through func_00106b98's
+# callback for the latter), func_00266f38(channel, chain) directly.
+CHAIN_CALLS = {0x00106B18: 0, 0x00106BD8: 0, 0x00266F38: 1}
+
+
+def parse_chain(read, base: int, end: int):
+    """Follow a DMA source chain in the image from base: (end of the tags and inline data, [(ref address,
+    bytes)]) when every tag is refe/cnt/ref/end and every tag and its inline data lie in [base, end);
+    None for next/call/ret/refs tags, a chain past end, or more than 256 tags."""
+    p, refs = base, []
+    for _n in range(256):
+        if p + 16 > end:
+            return None
+        w0, w1 = read(p), read(p + 4)
+        if w0 is None or w1 is None:
+            return None
+        qwc, tid = w0 & 0xFFFF, (w0 >> 28) & 7
+        if tid in (0, 3):  # refe / ref: qwc quadwords at ADDR
+            if w1 >> 31 or not qwc:
+                return None  # scratchpad, or an empty transfer
+            refs.append((w1 & 0x7FFFFFFF, 16 * qwc))
+            p += 16
+            if tid == 0:
+                return p, refs
+        elif tid in (1, 7):  # cnt / end: qwc quadwords after the tag
+            p += 16 + 16 * qwc
+            if p > end:
+                return None
+            if tid == 7:
+                return p, refs
+        else:
+            return None
     return None
 
 
@@ -542,6 +582,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 g_ = _gaddr(b, w)
                 if g_ is not None:  # ... into a pointer global G (session 25: followed through G's loads)
                     ev += [("storedto", x, g_) for x in sorted(_addrs(st[t]))]
+            if o in mips.OP_STORES or o in (0x1F, 0x3E):  # the bytes a store may write (session 27)
+                if _addrs(b):
+                    ev += [("wr", (x + mips.imm(w)) & 0xFFFFFFFF, WIDTH[o]) for x in sorted(_addrs(b))]
+                elif isinstance(b, tuple) and b[0] in (IDX, HIX):
+                    lo_ = (b[1] + (mips.imm(w) if b[0] == IDX else 0)) & 0xFFFFFFFF
+                    ev.append(("wr", lo_, None if b[2] is None else b[2] + mips.imm(w) + WIDTH[o]))
             if isinstance(b, tuple) and b[0] == PTR:
                 ev.append(("ptrmem", b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o]))
             if isinstance(b, int):
@@ -980,6 +1026,8 @@ def main() -> int:
                     help="a -1/negative-terminated list literal does not bound func_0024afc0 & co (session 27)")
     ap.add_argument("--no-dma-count", action="store_true",
                     help="func_00237018(buf, n) is not a block access of 16 * n bytes (session 27)")
+    ap.add_argument("--no-dma-chain", action="store_true",
+                    help="a static DMA chain sent by func_00106b18 & co is not bounded by its parsed tags (session 27)")
     ap.add_argument("--no-dead-arg", action="store_true",
                     help="an address left in an argument register at a call is passed even when the callee never "
                          "reads that register (session 27)")
@@ -1051,6 +1099,7 @@ def main() -> int:
     ptr_users: dict[int, set] = {}  # pointer global G -> functions that access through the pointer G holds
     ptr_reach: dict[int, int | None] = {}  # G -> end of the furthest access through it (None: indexed)
     explain: list[str] = []
+    writes: list = []  # (address, bytes or None for an unbounded index) of every store from a known base
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -1080,6 +1129,9 @@ def main() -> int:
                 continue
             if e[0] == "storedto":
                 ptr_stores.setdefault(e[2], set()).add(e[1])
+                continue
+            if e[0] == "wr":
+                writes.append((e[1], e[2]))
                 continue
             if e[0] == "ptrmem":
                 _k, g, off, width = e
@@ -1219,8 +1271,56 @@ def main() -> int:
             return None
         return base + ub + (spec[1] * (cnt + 1) if j == spec[0] else spec[3][j] * cnt)
 
+    # DMA chains (session 27): a chain object passed only to CHAIN_CALLS, never stored, indexed or written
+    # by any store the analysis sees, whose tags parse to the end inside the object: the DMA reads the
+    # tags and inline data, and each ref/refe target for 16 * qwc bytes (an access from that address).
+    uses: dict[int, set] = {}
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
+            continue  # not an argument (dead-arg)
+        uses.setdefault(base, set()).add((callee, j, ub))
+    wr_sorted = sorted((x, n) for x, n in writes if n is not None)
+    wr_unb = sorted(x for x, n in writes if n is None)
+    stored_to = {x for xs in ptr_stores.values() for x in xs}
+
+    def chain_of(base):
+        if a.no_dma_chain or not (BLOB_START <= base < BSS_START) or base in stored or base in stored_to \
+                or why.get(base, set()) & {"idx", "idx-ub"} or base in uncached:
+            return None
+        if any(CHAIN_CALLS.get(c_) != j_ or u_ != 0 for c_, j_, u_ in uses.get(base, ())):
+            return None
+        k_ = bisect.bisect_right(anchors, base)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        if obj_end - base > 0x10000:
+            return None
+        i_ = bisect.bisect_left(wr_sorted, (base - 64, 0))
+        while i_ < len(wr_sorted) and wr_sorted[i_][0] < obj_end:
+            if wr_sorted[i_][0] + wr_sorted[i_][1] > base:
+                return None  # a store into the chain's object
+            i_ += 1
+        i_ = bisect.bisect_left(wr_unb, base)
+        if i_ < len(wr_unb) and wr_unb[i_] < obj_end:
+            return None
+        return parse_chain(read_word, base, obj_end)
+
+    dma_chain = 0
     list_arg = 0
     for name, callee, j, base, ub, nblk, pc in passidx:
+        ch_ = chain_of(base) if CHAIN_CALLS.get(callee) == j and ub == 0 else None
+        if ch_ is not None:
+            dma_chain += 1
+            cend, refs = ch_
+            for b_, end in [(base, cend)] + [(x, x + n) for x, n in refs]:
+                why.setdefault(b_, set()).add("dma-chain" if b_ == base else "dma-ref")
+                if a.explain:
+                    explain.append(f"{b_:08x}\t{'dma-chain' if b_ == base else 'dma-ref'}\t{name}\t"
+                                   f"{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\tend=+{end - b_}\tblk=None")
+                idx_all.setdefault(b_, set()).add(name)
+                if b_ not in idx_end or (idx_end[b_] is not None and end > idx_end[b_]):
+                    idx_end[b_] = end
+                if piece(b_)[0] is not None:
+                    idx.setdefault(b_, set()).add(name)
+            continue
         le_ = list_end(name, pc, callee, j, base, ub)
         if le_ is not None:  # a list literal's count bounds the list and the arguments walked with it
             list_arg += 1
@@ -1330,6 +1430,7 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    print(f"# {dma_chain} DMA chain arguments are bounded by their parsed tags (dma-chain)", file=sys.stderr)
     print(f"# {list_arg} list arguments are bounded by a list literal's count (list-arg)", file=sys.stderr)
     print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
     print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",

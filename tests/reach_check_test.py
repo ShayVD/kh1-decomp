@@ -121,4 +121,22 @@ assert R.arg_live([dec(F, [jal(0x00300000), NOP, JR_RA, NOP])])[F] == R.ALL_ARGS
 sysc = lambda n: dec(F, [addiu(V1, 0, n), 0x0C, JR_RA, NOP])
 assert R.arg_live([sysc(0x64)])[F] == {A0} and R.arg_live([sysc(0x3C)])[F] == R.ALL_ARGS
 
+# 9. str-arg, list-arg and dma-chain helpers (session 27) on synthetic bytes
+assert R.string_end(b"%s_%d\0\0\0", 0, "fmt") == 6
+assert R.string_end(b"50%\0", 0, "fmt") is None  # a lone '%' makes the printer skip the NUL
+assert R.string_end(b"\0" * 8, 0, "str") is None  # empty: a buffer, not a literal
+assert R.string_end(b"abc\0" + b"\0" * 28, 0, "str") is None  # a long zero tail: a buffer
+assert R.string_end(b"a\x0bb\0", 0, "kh") is None and R.string_end(b"a\x0bb\0", 0, "str") == 4
+le = lambda *v: b"".join(x.to_bytes(4, "little", signed=True) for x in v)
+assert R.list_count(le(8, 9, 10, -1), 4, "m1") == 3 and R.list_count(le(-1, 0), 4, "m1") == 0
+assert R.list_count(le(1, 2), 4, "m1") is None and R.list_count(le(1, -1, 5, 0), 4, "m1") is None
+mem = {}
+for a_, v in zip(range(0x300000, 0x300040, 4), (0x3000000A, 0x2A4900, 0, 0, 0x10000001, 0, 0, 0,
+                                                0, 0, 0, 0, 0x70000000, 0, 0, 0)):
+    mem[a_] = v
+assert R.parse_chain(mem.get, 0x300000, 0x300040) == (0x300040, [(0x2A4900, 0xA0)])  # ref, cnt 1, end 0
+assert R.parse_chain(mem.get, 0x300000, 0x300030) is None  # the end tag lies past the object
+mem[0x300010] = 0x20000001  # next: not followed
+assert R.parse_chain(mem.get, 0x300000, 0x300040) is None
+
 print("reach_check_test: PASS")
