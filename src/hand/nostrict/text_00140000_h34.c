@@ -293,3 +293,4 @@ void func_00152f10(W34Pl14 *o) {
     }
 }
 #include "data/data_0030.h"
+#include "data/pieces/D_002BBDFC.h"

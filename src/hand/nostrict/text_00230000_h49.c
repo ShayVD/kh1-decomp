@@ -726,3 +726,4 @@ s32 func_002455c0(void) {
 #include "data/bss_0066_typed.h"
 #include "data/data_0045.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"

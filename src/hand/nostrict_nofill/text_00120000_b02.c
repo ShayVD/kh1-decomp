@@ -120,3 +120,4 @@ void func_001342c8(Ob11 *o) {
         }
     }
 }
+#include "data/pieces/D_002BBDFC.h"

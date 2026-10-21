@@ -309,3 +309,7 @@ end:
 #include "data/data_002C.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_003F6DF0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BD110.h"
+#include "data/pieces/D_002BD114.h"
+#include "data/pieces/D_002C1308.h"

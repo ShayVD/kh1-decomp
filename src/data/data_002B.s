@@ -196,13 +196,13 @@
 	PIECE D_002BBDE0, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDE0 | volatile u32 D_002BBDE0; unparsed in 1 file(s) */
 	PIECE D_002BBDE4, 0x4, 4  /* untyped: users disagree: s32 D_002BBDE4 | u32 D_002BBDE4 */
 	PIECE D_002BBDE8, 0x4, 4
-	PIECE D_002BBDEC, 0x4, 4  /* untyped: users disagree: f32 D_002BBDEC; unparsed in 1 file(s) */
+	PIECE D_002BBDEC, 0x4, 4  /* data/pieces/D_002BBDEC.h */
 	PIECE D_002BBDF0, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDF0 | volatile u32 D_002BBDF0 */
 	PIECE D_002BBDF4, 0x4, 4  /* untyped: users disagree: s32 D_002BBDF4 | u32 D_002BBDF4 | volatile s32 D_002BBDF4 | volatile u32 D_002BBDF4 */
 	PIECE D_002BBDF8, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDF8 | volatile u32 D_002BBDF8 */
-	PIECE D_002BBDFC, 0x4, 4  /* untyped: users disagree: f32 D_002BBDFC; unparsed in 5 file(s) */
+	PIECE D_002BBDFC, 0x4, 4  /* data/pieces/D_002BBDFC.h */
 	PIECE D_002BBE00, 0x4, 4
-	PIECE D_002BBE04, 0x4, 4  /* untyped: users disagree: s32 D_002BBE04 | volatile s32 D_002BBE04 */
+	PIECE D_002BBE04, 0x4, 4  /* data/pieces/D_002BBE04.h */
 	PIECE D_002BBE08, 0x4, 4
 	PIECE D_002BBE0C, 0x4, 4
 	PIECE D_002BBE10, 0x4, 4
@@ -241,7 +241,7 @@
 	PIECE D_002BC0F0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0F0 | Cam D_002BC0F0 | Cam0 D_002BC0F0 | CamS D_002BC0F0 | S2BC0F0 D_002BC0F0 | View30 D_002BC0F0 | f32 D_002BC0F0[] | s32 D_002BC0F0[] */
 	PIECE D_002BC120, 0x4, 4
 	PIECE D_002BC124, 0x4, 4
-	PIECE D_002BC128, 0x4, 4  /* untyped: users disagree: s32 D_002BC128; unparsed in 1 file(s) */
+	PIECE D_002BC128, 0x4, 4  /* data/pieces/D_002BC128.h */
 	PIECE D_002BC12C, 0x4, 4
 	PIECE D_002BC130, 0x4, 4
 	PIECE D_002BC134, 0x4, 4
@@ -305,9 +305,9 @@
 	PIECE D_002BCB60, 0x8, 8  /* untyped: users disagree: Ctx *D_002BCB60 | W29Ply *D_002BCB60 | s32 D_002BCB60 | void *D_002BCB60 */
 	PIECE D_002BCB68, 0x18, 8
 	PIECE D_002BCB80, 0x9c, 4  /* untyped: type E4 is not a common.h basic type */
-	PIECE D_002BCC1C, 0x4, 4  /* untyped: users disagree: s32 D_002BCC1C; unparsed in 1 file(s) */
+	PIECE D_002BCC1C, 0x4, 4  /* data/pieces/D_002BCC1C.h */
 	PIECE D_002BCC20, 0x4, 4
-	PIECE D_002BCC24, 0x4, 4  /* untyped: users disagree: int D_002BCC24 | s32 D_002BCC24 */
+	PIECE D_002BCC24, 0x4, 4  /* data/pieces/D_002BCC24.h */
 	PIECE D_002BCC80, 0x8, 8
 	PIECE D_002BCC88, 0x8, 8
 	PIECE D_002BCC90, 0x4, 4
@@ -342,8 +342,8 @@
 	.word D_002BCE00
 	PIECE_BYTES D_002BD100, 0x8, 0x8
 	PIECE_END D_002BD100, 0x10
-	PIECE D_002BD110, 0x4, 4  /* untyped: users disagree: s32 D_002BD110; unparsed in 1 file(s) */
-	PIECE D_002BD114, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BD114; unparsed in 1 file(s) */
+	PIECE D_002BD110, 0x4, 4  /* data/pieces/D_002BD110.h */
+	PIECE D_002BD114, 0x4, 4  /* data/pieces/D_002BD114.h */
 	PIECE D_002BD118, 0x4, 4  /* untyped: users disagree: s32 D_002BD118 | u32 D_002BD118 */
 	PIECE D_002BD11C, 0x4, 4
 	PIECE D_002BD120, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */

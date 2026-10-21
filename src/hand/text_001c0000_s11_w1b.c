@@ -220,3 +220,4 @@ s32 func_001c3b10(Task *t) {
     return 0;
 }
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBDFC.h"

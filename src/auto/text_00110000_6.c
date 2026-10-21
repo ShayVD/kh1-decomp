@@ -413,3 +413,4 @@ M2C_UNK D_002BCC28[0x16] ALIGNED(8) = {
 #include "data/data_002C.h"
 #include "data/data_003F.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BD114.h"

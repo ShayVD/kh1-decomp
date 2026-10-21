@@ -654,3 +654,8 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
 #include "data/pieces/D_002BC170.h"
 #include "data/pieces/D_002BC1B0.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC1C.h"
+#include "data/pieces/D_002BD110.h"

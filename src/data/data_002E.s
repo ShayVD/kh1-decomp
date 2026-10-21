@@ -19,8 +19,8 @@
 	PIECE D_002E27AC, 0x14, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002E27C0, 0x8, 8  /* untyped: type Pair8 is not a common.h basic type */
 	PIECE D_002E27C8, 0x4, 4  /* untyped: users disagree: C01Flg27C8 D_002E27C8 | F27c8 D_002E27C8 | Flg13 D_002E27C8 | u32 D_002E27C8 | u8 D_002E27C8 */
-	PIECE D_002E27CC, 0x4, 4  /* untyped: users disagree: f32 D_002E27CC; unparsed in 1 file(s) */
-	PIECE D_002E27D0, 0x4, 4  /* untyped: users disagree: f32 D_002E27D0; unparsed in 1 file(s) */
+	PIECE D_002E27CC, 0x4, 4  /* data/pieces/D_002E27CC.h */
+	PIECE D_002E27D0, 0x4, 4  /* data/pieces/D_002E27D0.h */
 	PIECE D_002E27D4, 0xc, 4  /* untyped: users disagree: s32 D_002E27D4; unparsed in 1 file(s) */
 	PIECE D_002E27E0, 0x10, 16
 	PIECE D_002E27F0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */

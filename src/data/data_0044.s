@@ -25,7 +25,7 @@
 	PIECE D_00449990, 0xe70, 16  /* untyped: users disagree: Hdr D_00449990 | M2C_UNK D_00449990 */
 	PIECE D_0044A800, 0x10, 16
 	PIECE D_0044A810, 0x10, 16
-	PIECE D_0044A820, 0x10, 16  /* untyped: users disagree: M2C_UNK D_0044A820 | s32 D_0044A820 */
+	PIECE D_0044A820, 0x10, 16  /* data/pieces/D_0044A820.h */
 	PIECE D_0044A830, 0x1d70, 16  /* untyped: users disagree: Blob D_0044A830 | M2C_UNK D_0044A830 */
 	PIECE D_0044C5A0, 0x1a30, 16  /* untyped: users disagree: Blob D_0044C5A0 | M2C_UNK D_0044C5A0 */
 	PIECE D_0044DFD0, 0x13b0, 16  /* untyped: users disagree: Blob D_0044DFD0 | M2C_UNK D_0044DFD0 */

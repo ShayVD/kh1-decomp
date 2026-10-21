@@ -243,3 +243,4 @@ void func_0014f948(void *arg0, s32 arg1) {
         }
     }
 }
+#include "data/pieces/D_002BBDFC.h"

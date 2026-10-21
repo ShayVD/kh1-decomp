@@ -462,3 +462,4 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
 #include "data/data_0035.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002BC170.h"
+#include "data/pieces/D_002BC128.h"

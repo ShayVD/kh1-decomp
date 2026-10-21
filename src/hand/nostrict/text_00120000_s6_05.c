@@ -1155,3 +1155,4 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
 #include "data/data_002E.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002E3190.h"
+#include "data/pieces/D_002BBDFC.h"

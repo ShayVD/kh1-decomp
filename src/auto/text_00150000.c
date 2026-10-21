@@ -143,3 +143,4 @@ void func_0015f108(void) {
     func_00232ad0(6);
     func_00216180();
 }
+#include "data/pieces/D_002BBDFC.h"

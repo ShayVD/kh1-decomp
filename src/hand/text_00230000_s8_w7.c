@@ -131,3 +131,4 @@ end:
 #include "data/data_0042.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_00351E10.h"
+#include "data/pieces/D_00425CAC.h"

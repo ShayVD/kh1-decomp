@@ -313,3 +313,5 @@ s32 func_001515d0(void *owner, f32 *pos, s32 type) {
 }
 #include "data/bss_0054_typed.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002C5970.h"

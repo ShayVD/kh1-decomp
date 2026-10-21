@@ -401,3 +401,5 @@ void func_001e65d0(void) {
 #include "data/bss_0063_typed.h"
 #include "data/data_003D.h"
 #include "data/pieces/D_003DC498.h"
+#include "data/pieces/D_003DD258.h"
+#include "data/pieces/D_003DD28C.h"

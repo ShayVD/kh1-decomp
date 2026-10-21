@@ -28,3 +28,4 @@ void func_0014f798(void *arg0, void *arg1) {
     func_002673b8(arg1, arg1);
     func_00267e90(arg1, arg1, M2C_FIELD(arg0, f32 *, 0x2C) * D_002BBDFC);
 }
+#include "data/pieces/D_002BBDFC.h"

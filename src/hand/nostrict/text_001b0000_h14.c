@@ -148,3 +148,4 @@ s32 func_001ca060(VM *v) {
     p->end[1] = e;
     return 2;
 }
+#include "data/pieces/D_002BBDFC.h"

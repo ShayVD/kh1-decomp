@@ -437,3 +437,4 @@ s32 func_001cc1c0(VM *v) {
 #include "data/data_003C.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_0037A130.h"
+#include "data/pieces/D_002BBDFC.h"

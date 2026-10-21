@@ -388,3 +388,4 @@ s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
 #include "data/data_003A.h"
 #include "data/data_003B.h"
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBDFC.h"

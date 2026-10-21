@@ -416,3 +416,4 @@ s32 func_001cf7a0(VM *vm) {
     return 2;
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BBDFC.h"

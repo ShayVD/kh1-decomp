@@ -224,3 +224,4 @@ s32 func_001cfa78(void *arg0) {
 }
 #include "data/data_0038.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBE04.h"

@@ -70,3 +70,4 @@ void func_0015d5e8(void *arg0) {
     M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), s32 *, 0xE4) = (s32) M2C_FIELD(arg0, u16 *, 0x30E);
     func_0014f658(arg0, 0x12);
 }
+#include "data/pieces/D_002BBDFC.h"

@@ -668,3 +668,5 @@ u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
 #include "data/data_002E.h"
 #include "data/pieces/D_002BC080.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_002BC128.h"

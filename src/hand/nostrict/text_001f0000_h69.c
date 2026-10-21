@@ -458,3 +458,4 @@ void func_001f4d10(Wnd4 *o) {
     func_001220b8(buf);
 }
 
+#include "data/pieces/D_003F1A68.h"

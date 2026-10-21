@@ -90,3 +90,4 @@ void func_00152928(Ah *a) {
 
     a->x144->x4 = 0;
 }
+#include "data/pieces/D_002BBDFC.h"

@@ -7,3 +7,4 @@ extern s32 D_0044A820;
 void func_0023cfd8(void) {
     D_0044A820 = 0;
 }
+#include "data/pieces/D_0044A820.h"

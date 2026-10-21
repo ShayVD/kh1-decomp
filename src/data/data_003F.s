@@ -8,7 +8,7 @@
 	PIECE D_003F1660, 0x400, 16  /* untyped: users disagree: M2C_UNK D_003F1660 | Q D_003F1660[] */
 	PIECE D_003F1A60, 0x4, 4
 	PIECE D_003F1A64, 0x4, 4
-	PIECE D_003F1A68, 0x8, 8  /* untyped: users disagree: s32 D_003F1A68; unparsed in 1 file(s) */
+	PIECE D_003F1A68, 0x8, 8  /* data/pieces/D_003F1A68.h */
 	PIECE D_003F1A70, 0x400, 16  /* untyped: users disagree: Q D_003F1A70[] | u8 D_003F1A70[]; unparsed in 1 file(s) */
 	PIECE D_003F1E70, 0x400, 16  /* untyped: users disagree: Q D_003F1E70[] | u8 D_003F1E70[] */
 	PIECE D_003F2270, 0x400, 16  /* untyped: users disagree: Q D_003F2270[] | u8 D_003F2270[] */
@@ -90,14 +90,14 @@
 	PIECE_BYTES D_003F3448, 0x1c, 0x4
 	PIECE_END D_003F3448, 0x20
 	PIECE D_003F3468, 0x20, 8
-	PIECE D_003F3488, 0x1c, 4  /* untyped: users disagree: s32 D_003F3488[]; unparsed in 1 file(s) */
+	PIECE D_003F3488, 0x1c, 4  /* data/pieces/D_003F3488.h */
 	PIECE D_003F34A4, 0x4, 4
 	PIECE D_003F34A8, 0x8, 8
 	PIECE D_003F34B0, 0x8, 8  /* untyped: users disagree: M2C_UNK D_003F34B0 | u32 D_003F34B0[] */
 	PIECE D_003F34B8, 0x8, 8  /* untyped: users disagree: Flags *D_003F34B8 | S34B8 *D_003F34B8 | s32 *D_003F34B8 | s32 D_003F34B8 | void *D_003F34B8; unparsed in 1 file(s) */
 	PIECE D_003F34C0, 0x4, 4
 	PIECE D_003F34C4, 0x4, 4  /* untyped: users disagree: N *D_003F34C4 | Nd *D_003F34C4 | Obj2 *D_003F34C4 | s32 D_003F34C4 */
-	PIECE D_003F34C8, 0x4, 4  /* untyped: users disagree: s32 D_003F34C8; unparsed in 1 file(s) */
+	PIECE D_003F34C8, 0x4, 4  /* data/pieces/D_003F34C8.h */
 	PIECE D_003F34CC, 0x4, 4
 	PIECE D_003F34D0, 0x4, 4
 	PIECE D_003F34D4, 0x4, 4
@@ -495,7 +495,7 @@
 	PIECE_END D_003F4CC0, 0x30
 	PIECE D_003F4CF0, 0x338, 8  /* untyped: users disagree: Spr D_003F4CF0[] | Spr_q0 D_003F4CF0[] */
 	PIECE D_003F5028, 0xb8, 8
-	PIECE D_003F50E0, 0x2e0, 16  /* untyped: users disagree: s32 D_003F50E0[]; unparsed in 1 file(s) */
+	PIECE D_003F50E0, 0x2e0, 16  /* data/pieces/D_003F50E0.h */
 	PIECE D_003F53C0, 0x2e0, 16
 	PIECE D_003F56A0, 0x170, 16
 	PIECE D_003F5810, 0x170, 16
@@ -1120,7 +1120,7 @@
 	PIECE_BYTES D_003F7A40, 0x4, 0x20
 	PIECE_END D_003F7A40, 0x24
 	PIECE D_003F7A64, 0x4, 4
-	PIECE D_003F7A68, 0x8, 8  /* untyped: users disagree: s32 D_003F7A68; unparsed in 1 file(s) */
+	PIECE D_003F7A68, 0x8, 8  /* data/pieces/D_003F7A68.h */
 	PIECE D_003F7A70, 0x1d8, 8  /* untyped: users disagree: E7A70 D_003F7A70[] | T7A70 D_003F7A70[] */
 	PIECE D_003F7C48, 0xc8, 8  /* untyped: users disagree: E6 D_003F7C48[] | E7C48 D_003F7C48[] | T7C48 D_003F7C48[] */
 	PIECE D_003F7D10, 0x20, 16

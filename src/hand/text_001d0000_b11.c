@@ -426,3 +426,5 @@ void func_001e6f28(void) {
 }
 #include "data/bss_0063_mixed.h"
 #include "data/data_003D.h"
+#include "data/pieces/D_003DD258.h"
+#include "data/pieces/D_003DD28C.h"

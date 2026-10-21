@@ -108,3 +108,4 @@ f32 func_00142e30(E30o *o, V4f *tg, s32 mode) {
 end:
     return d;
 }
+#include "data/pieces/D_002BBDFC.h"

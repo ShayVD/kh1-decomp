@@ -51,3 +51,4 @@ s32 func_0020d2f8(void) {
     return 4;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/pieces/D_003F34C8.h"

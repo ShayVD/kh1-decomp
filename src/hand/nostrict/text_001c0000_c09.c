@@ -247,3 +247,4 @@ void func_001c48c8(s32 id, u32 kind, s32 *p) {
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/data_003D.h"
+#include "data/pieces/D_002BBDFC.h"

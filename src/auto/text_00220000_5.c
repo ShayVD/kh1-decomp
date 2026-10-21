@@ -51,3 +51,4 @@ void func_0022da10(s32 arg0) {
 void func_0022de50(s32 arg0) {
     func_001f9438(arg0, 2, 0x100, 0x90, 0x1CE, 0x12, 0x801E4696);
 }
+#include "data/pieces/D_002BBDFC.h"

@@ -618,3 +618,5 @@ s32 func_001cfd30(VM *vm) {
     return 2;
 }
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BBE04.h"

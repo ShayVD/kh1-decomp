@@ -83,3 +83,4 @@ void func_0022bc80(void) {
     D_003F720C = 0;
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F34C8.h"

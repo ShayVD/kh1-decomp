@@ -94,3 +94,4 @@ s32 func_001eeac0(s32 arg0) {
 }
 #include "data/data_003D.h"
 #include "data/data_003E.h"
+#include "data/pieces/D_003DD28C.h"

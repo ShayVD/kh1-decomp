@@ -14,7 +14,7 @@
 	PIECE D_00350D7C, 0x4, 4
 	PIECE D_00350D80, 0x8, 8
 	PIECE D_00350D88, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D88 | MvTab D_00350D88[] | S88 D_00350D88[] | Tb20 D_00350D88[] | W55Ent32 D_00350D88[] | W9Tab32 D_00350D88[] | s8 D_00350D88 | volatile M2C_UNK D_00350D88 */
-	PIECE D_00350D94, 0xc, 4  /* untyped: users disagree: M2C_UNK D_00350D94; unparsed in 1 file(s) */
+	PIECE D_00350D94, 0xc, 4  /* data/pieces/D_00350D94.h */
 	PIECE D_00350DA0, 0x4, 4  /* untyped: type Handler is not a common.h basic type */
 	PIECE D_00350DA4, 0x744, 4  /* untyped: type W7Fn is not a common.h basic type */
 	PIECE D_003514E8, 0x48, 8  /* untyped: type Kind57_15d0 is not a common.h basic type */
@@ -29,7 +29,7 @@
 	PIECE D_00351A20, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
 	PIECE D_00351A30, 0x10, 16  /* untyped: users disagree: P2 D_00351A30[] | u8 D_00351A30[] */
 	PIECE D_00351A40, 0x8, 8
-	PIECE D_00351A48, 0x8, 8  /* untyped: users disagree: s32 D_00351A48; unparsed in 1 file(s) */
+	PIECE D_00351A48, 0x8, 8  /* data/pieces/D_00351A48.h */
 	PIECE D_00351A50, 0x10, 16
 	PIECE D_00351A60, 0x10, 16
 	PIECE D_00351A70, 0x10, 16
@@ -44,8 +44,8 @@
 	PIECE D_00351B60, 0x28, 8
 	PIECE D_00351B88, 0x28, 8
 	PIECE D_00351BB0, 0x10, 16
-	PIECE D_00351BC0, 0x4, 4  /* untyped: users disagree: s32 D_00351BC0 | volatile s32 D_00351BC0 */
-	PIECE D_00351BC4, 0x4, 4  /* untyped: users disagree: s32 D_00351BC4 | volatile s32 D_00351BC4 */
+	PIECE D_00351BC0, 0x4, 4  /* data/pieces/D_00351BC0.h */
+	PIECE D_00351BC4, 0x4, 4  /* data/pieces/D_00351BC4.h */
 	PIECE_BEGIN D_00351BC8, 0x8, 8  /* untyped: users disagree: void *D_00351BC8; unparsed in 4 file(s) */
 	.word func_002583e0
 	.word func_00258a58

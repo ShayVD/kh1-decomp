@@ -99,3 +99,4 @@ void func_00106000(s32 a) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/pieces/D_002BC0B0.h"
+#include "data/pieces/D_002BBE04.h"

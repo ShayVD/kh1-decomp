@@ -169,3 +169,4 @@ void func_00241260(Obj *o) {
     }
     func_00237018(D_00651D64, D_00651D60 - D_00651D64, 1);
 }
+#include "data/pieces/D_002BBDFC.h"

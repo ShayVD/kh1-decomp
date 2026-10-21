@@ -666,3 +666,4 @@ void func_00179ee8(void) {
 #undef D_002C5958
 #include "data/data_002E.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_002BBDFC.h"

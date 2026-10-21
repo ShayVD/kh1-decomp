@@ -133,3 +133,4 @@ s32 func_001efb68(void) {
 }
 #include "data/data_003D.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003F7A68.h"

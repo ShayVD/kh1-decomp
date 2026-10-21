@@ -834,3 +834,7 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
 #include "data/data_002C.h"
 #include "data/data_0030.h"
 #include "data/pieces/D_0046E120.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC24.h"
+#include "data/pieces/D_002BD114.h"
+#include "data/pieces/D_002C1308.h"

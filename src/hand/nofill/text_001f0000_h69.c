@@ -149,3 +149,4 @@ void func_001f2eb8(void) {
     func_001f3110();
 }
 #include "data/data_003E.h"
+#include "data/pieces/D_003F1A68.h"

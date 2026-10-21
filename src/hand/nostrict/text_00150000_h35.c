@@ -865,3 +865,5 @@ s32 func_00158b88(s32 a, u8 *b) {
 #include "data/data_0035.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00351A48.h"

@@ -598,3 +598,6 @@ KF3de0 D_003F3DE0[0x4] ALIGNED(16) = {
     (void *)func_00213d80, (void *)func_00213db8, (void *)func_00213e18, 0,
 };
 #include "data/data_003F.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003F3488.h"
+#include "data/pieces/D_003F34C8.h"

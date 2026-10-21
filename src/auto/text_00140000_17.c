@@ -35,3 +35,4 @@ s32 func_0014d7b8(s32 arg0, s32 arg1) {
   }
   return func_002675a8(arg0 + 0x20, arg1);
 }
+#include "data/pieces/D_002BBDFC.h"

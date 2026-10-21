@@ -18,3 +18,4 @@ void func_00112b48(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_00112b18();
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"

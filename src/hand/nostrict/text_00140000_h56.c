@@ -891,3 +891,6 @@ void func_0014ade0(Hx *x, Hy *y) {
 #include "data/data_0030.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002C5970.h"

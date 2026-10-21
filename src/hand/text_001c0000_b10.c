@@ -611,3 +611,4 @@ s32 func_001cb120(VM *vm) {
 #include "data/data_002B.h"
 #include "data/data_003C.h"
 #include "data/pieces/D_003C5510.h"
+#include "data/pieces/D_002BBDFC.h"

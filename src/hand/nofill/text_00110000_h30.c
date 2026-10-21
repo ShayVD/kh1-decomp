@@ -120,3 +120,5 @@ f32 func_00121550(f32 *out, f32 *p0, f32 *d0, f32 *p1, f32 *d1) {
     return t;
 }
 #include "data/pieces/D_002C1378.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002C1368.h"

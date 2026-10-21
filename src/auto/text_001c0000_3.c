@@ -70,3 +70,4 @@ s32 func_001cfed8(void) {
     return 2;
 }
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBE04.h"

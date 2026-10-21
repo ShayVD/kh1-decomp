@@ -107,3 +107,5 @@ void func_0015eda8(void) {
     D_00351BC0 = AddDmacHandler(1, &func_0015efc0, 0);
     D_00351BC4 = AddDmacHandler(2, &func_0015efc0, 0);
 }
+#include "data/pieces/D_00351BC0.h"
+#include "data/pieces/D_00351BC4.h"

@@ -137,3 +137,4 @@ void func_0010fe90(void) {
 }
 #include "data/data_002A.h"
 #include "data/data_002B.h"
+#include "data/pieces/D_002BBDFC.h"

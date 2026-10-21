@@ -270,3 +270,4 @@ block_8:
 #include "data/data_0035.h"
 #include "data/data_0036.h"
 #include "data/data_0027.h"
+#include "data/pieces/D_002BC128.h"

@@ -128,3 +128,4 @@ void func_0012fcc0(void) {
     D_00524F78 = 0;
 }
 #include "data/bss_0052_mixed.h"
+#include "data/pieces/D_00351A48.h"

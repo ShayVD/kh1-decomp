@@ -13,7 +13,7 @@
 	PIECE D_002C12F0, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
 	PIECE D_002C1300, 0x4, 4  /* untyped: users disagree: RFn D_002C1300 | void *D_002C1300; unparsed in 1 file(s) */
 	PIECE D_002C1304, 0x4, 4
-	PIECE D_002C1308, 0x4, 4  /* untyped: users disagree: s32 D_002C1308 | volatile s32 D_002C1308 */
+	PIECE D_002C1308, 0x4, 4  /* data/pieces/D_002C1308.h */
 	PIECE D_002C130C, 0x4, 4
 	PIECE D_002C1310, 0x10, 16
 	PIECE D_002C1320, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
@@ -22,7 +22,7 @@
 	PIECE D_002C1350, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
 	PIECE D_002C1360, 0x4, 4
 	PIECE D_002C1364, 0x4, 4
-	PIECE D_002C1368, 0x8, 8  /* untyped: users disagree: s32 D_002C1368[]; unparsed in 1 file(s) */
+	PIECE D_002C1368, 0x8, 8  /* data/pieces/D_002C1368.h */
 	PIECE D_002C1370, 0x8, 8
 	PIECE_BEGIN D_002C1378, 0x8, 8  /* merged (a user declares it larger than the next name): D_002C137C; data/pieces/D_002C1378.h */
 	PIECE_BYTES D_002C1378, 0x0, 0x4
@@ -51,7 +51,7 @@
 	PIECE D_002C5960, 0x8, 8  /* untyped: users disagree: Fl5960 D_002C5960 | s32 D_002C5960 | u32 D_002C5960 */
 	PIECE D_002C5968, 0x4, 4  /* untyped: users disagree: F5968 D_002C5968 | volatile Bits8 D_002C5968 | volatile F5968 D_002C5968 | volatile Flags5968 D_002C5968 | volatile HddSt D_002C5968 | volatile Sema5968 D_002C5968 | volatile s32 D_002C5968 */
 	PIECE D_002C596C, 0x4, 4
-	PIECE D_002C5970, 0x8, 8  /* untyped: users disagree: f32 D_002C5970; unparsed in 1 file(s) */
+	PIECE D_002C5970, 0x8, 8  /* data/pieces/D_002C5970.h */
 	PIECE_BEGIN D_002C5978, 0x8, 8  /* merged (a user declares it larger than the next name): D_002C597A; data/pieces/D_002C5978.h */
 	PIECE_BYTES D_002C5978, 0x0, 0x2
 	PIECE_LABEL D_002C5978, D_002C597A, 0x2
@@ -98,7 +98,7 @@
 	PIECE D_002C5C70, 0x10, 16  /* untyped: type V53 is not a common.h basic type */
 	PIECE D_002C5C80, 0x7c0, 16  /* untyped: users disagree: Ent40 D_002C5C80[] | Ent5C80 D_002C5C80[] | Light53 D_002C5C80[] | Lt2 D_002C5C80[31] | Lt64 D_002C5C80[] | M2C_UNK D_002C5C80 */
 	PIECE D_002C6440, 0x10, 16  /* untyped: users disagree: s32 D_002C6440 | void *D_002C6440 */
-	PIECE D_002C6450, 0x10, 16  /* untyped: users disagree: V4 D_002C6450 | f32 D_002C6450[4] */
+	PIECE D_002C6450, 0x10, 16  /* data/pieces/D_002C6450.h */
 	PIECE D_002C648C, 0x4, 4
 	PIECE D_002C6490, 0x10, 16  /* untyped: type V53 is not a common.h basic type */
 	PIECE_BEGIN D_002C64A0, 0x1c200, 16  /* merged (a user declares it larger than the next name): D_002C6814; data/pieces/D_002C64A0.h */

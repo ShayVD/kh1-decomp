@@ -115,3 +115,4 @@ void func_0023dfc0(void) {
     func_0023dd48();
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_0044A820.h"

@@ -67,3 +67,4 @@ void func_001395d8(O95 *o) {
     }
     if (o->x164 == 103) o->x480 += (1.0f - o->x480) * 0.3f;
 }
+#include "data/pieces/D_002BBDFC.h"

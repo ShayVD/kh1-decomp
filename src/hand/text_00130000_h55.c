@@ -270,3 +270,4 @@ s32 D_00304B68 ALIGNED(8) = (s32)D_0048DCB8;
 #include "data/data_0030.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BC128.h"

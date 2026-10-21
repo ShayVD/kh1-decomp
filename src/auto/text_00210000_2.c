@@ -70,3 +70,4 @@ void func_0021d318(void) {
     D_003F34C8 -= 1;
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F34C8.h"

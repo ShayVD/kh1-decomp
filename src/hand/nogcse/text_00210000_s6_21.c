@@ -49,3 +49,4 @@ void func_00214f50(void) {
     }
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F34C8.h"

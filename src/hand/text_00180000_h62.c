@@ -210,3 +210,4 @@ void func_0017ffd8(TexHdr *h, TexRef *r, s16 x, s16 y) {
 #include "data/bss_0057_mixed.h"
 #include "data/data_002E.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_002BBDFC.h"

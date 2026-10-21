@@ -872,3 +872,6 @@ s32 func_001eb698(VM *vm) {
 #include "data/data_003D.h"
 #include "data/data_003F.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003DD258.h"
+#include "data/pieces/D_003DD28C.h"
+#include "data/pieces/D_003F7A68.h"

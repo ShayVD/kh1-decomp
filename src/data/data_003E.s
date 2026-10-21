@@ -78,7 +78,7 @@
 	.word D_003E46A8
 	PIECE_END D_003E8CD8, 0x28
 	PIECE D_003E8D00, 0x4, 4
-	PIECE D_003E8D04, 0x24, 4  /* untyped: users disagree: s32 D_003E8D04[]; unparsed in 1 file(s) */
+	PIECE D_003E8D04, 0x24, 4  /* data/pieces/D_003E8D04.h */
 	PIECE D_003E8D28, 0x18, 8
 	PIECE D_003E8D40, 0xc0, 16
 	PIECE D_003E8E00, 0x4, 4

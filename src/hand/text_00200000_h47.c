@@ -815,3 +815,5 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 #include "data/pieces/D_003F3530.h"
 #include "data/pieces/D_003F5C30.h"
 #include "data/pieces/D_003F6DF0.h"
+#include "data/pieces/D_003F3488.h"
+#include "data/pieces/D_003F34C8.h"

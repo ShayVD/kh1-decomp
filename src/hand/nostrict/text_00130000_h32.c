@@ -162,3 +162,4 @@ s32 func_0013be00(W32Seq *s) {
 #include "data/bss_0052_mixed.h"
 #include "data/bss_0052_typed.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"

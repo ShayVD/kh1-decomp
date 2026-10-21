@@ -122,7 +122,7 @@
 	PIECE D_003DD240, 0x8, 8
 	PIECE D_003DD248, 0x8, 8
 	PIECE D_003DD250, 0x8, 8
-	PIECE D_003DD258, 0x4, 4  /* untyped: users disagree: s32 D_003DD258; unparsed in 1 file(s) */
+	PIECE D_003DD258, 0x4, 4  /* data/pieces/D_003DD258.h */
 	PIECE D_003DD25C, 0x4, 4
 	PIECE D_003DD260, 0x4, 4
 	PIECE D_003DD264, 0x4, 4
@@ -133,7 +133,7 @@
 	PIECE D_003DD280, 0x4, 4
 	PIECE D_003DD284, 0x4, 4
 	PIECE D_003DD288, 0x4, 4
-	PIECE D_003DD28C, 0x4, 4  /* untyped: users disagree: s32 D_003DD28C; unparsed in 1 file(s) */
+	PIECE D_003DD28C, 0x4, 4  /* data/pieces/D_003DD28C.h */
 	PIECE D_003DD290, 0x60, 16
 	PIECE D_003DD2F0, 0x18, 8
 	PIECE D_003DD308, 0x4, 4

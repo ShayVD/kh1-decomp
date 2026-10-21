@@ -282,3 +282,4 @@ void func_0022eef8(O98 *a0) {
     func_001fb428(a0, 1, 0, 0, 485, 355, func_001ef0c0(D_00646A0C[D_00646A14]), 15, D_003E3D6C == D_00646A20 ? 0x80e6e6e6 : 0x80808080);
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F7A68.h"

@@ -252,3 +252,4 @@ void func_00124a28(void) {
     }
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"

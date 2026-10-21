@@ -452,3 +452,4 @@ s32 func_0017c190(void) {
 #include "data/data_002E.h"
 #include "data/data_0036.h"
 #include "data/pieces/D_00362690.h"
+#include "data/pieces/D_002BBDFC.h"

@@ -292,3 +292,4 @@ void func_00178ef8(void) {
 #include "data/pieces/D_00362660.h"
 #include "data/pieces/D_00362670.h"
 #include "data/pieces/D_00362680.h"
+#include "data/pieces/D_002BBDFC.h"

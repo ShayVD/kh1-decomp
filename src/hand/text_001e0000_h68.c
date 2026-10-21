@@ -824,3 +824,6 @@ void func_001ef950(void)
 #include "data/data_003E.h"
 #include "data/data_0049.h"
 #include "data/pieces/D_003E3C88.h"
+#include "data/pieces/D_003DD258.h"
+#include "data/pieces/D_003DD28C.h"
+#include "data/pieces/D_003F7A68.h"

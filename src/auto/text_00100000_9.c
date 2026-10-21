@@ -370,3 +370,4 @@ void func_0010ffb8(s32 *arg0, s32 *arg1) {
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/pieces/D_002BC1B0.h"
+#include "data/pieces/D_002BBDFC.h"

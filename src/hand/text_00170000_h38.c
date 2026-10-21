@@ -556,3 +556,4 @@ void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
 #include "data/data_002E.h"
 #include "data/data_0036.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"

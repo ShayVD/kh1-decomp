@@ -728,3 +728,8 @@ s32 D_002BD170 ALIGNED(16) = 0;
 #include "data/pieces/D_002BC080.h"
 #include "data/pieces/D_002BCA00.h"
 #include "data/pieces/D_002C5AD0.h"
+#include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC1C.h"

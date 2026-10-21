@@ -155,3 +155,4 @@ void func_0013bef0(s32 arg0) {
 }
 #include "data/data_0030.h"
 #include "data/data_002E.h"
+#include "data/pieces/D_002BBDFC.h"

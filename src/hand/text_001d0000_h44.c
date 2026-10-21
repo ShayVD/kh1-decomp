@@ -701,3 +701,5 @@ s32 func_001e24c8(VM *vm) {
 #include "data/data_003A.h"
 #include "data/data_003D.h"
 #include "data/pieces/D_003DACC0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003F7A68.h"

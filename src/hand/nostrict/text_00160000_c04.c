@@ -514,3 +514,4 @@ void func_001707d0(ObjD0 *o, V4D0 *out) {
 }
 #include "data/bss_0057_mixed.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"

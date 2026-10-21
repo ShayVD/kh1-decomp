@@ -746,3 +746,5 @@ void func_00132c70(s32 a0, void (*cb)(void)) {
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C64A0.h"
 #include "data/pieces/D_002E2FD8.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"

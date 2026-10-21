@@ -40,3 +40,4 @@ void func_00110ce0(void) {
     }
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BBDFC.h"

@@ -90,3 +90,4 @@ void func_0020a248(s32 idx) {
     }
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"

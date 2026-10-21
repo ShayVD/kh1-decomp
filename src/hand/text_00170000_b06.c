@@ -391,3 +391,4 @@ s32 func_0017e428(V4 *a, V4 *b)
     return D_005759B0.x10;
 }
 #include "data/data_0036.h"
+#include "data/pieces/D_002BBDFC.h"

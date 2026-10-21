@@ -461,3 +461,5 @@ void func_0010b6c0(Win *w) {
 #include "data/data_0048.h"
 #include "data/pieces/D_002BC170.h"
 #include "data/pieces/D_0048BFD0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"

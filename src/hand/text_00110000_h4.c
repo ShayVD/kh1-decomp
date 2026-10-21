@@ -437,3 +437,4 @@ void func_0011ea40(s32 n, char *out) {
 #include "data/bss_004F_mixed.h"
 #include "data/data_002C.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BBDFC.h"

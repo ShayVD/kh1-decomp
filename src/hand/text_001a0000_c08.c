@@ -403,3 +403,4 @@ s32 func_001c1f80(void) {
 #include "data/data_0037.h"
 #include "data/data_0039.h"
 #include "data/data_003A.h"
+#include "data/pieces/D_002BBDFC.h"

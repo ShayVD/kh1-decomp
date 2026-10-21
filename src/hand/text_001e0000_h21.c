@@ -415,3 +415,4 @@ u32 func_001ee118(void) {
 }
 #include "data/pieces/D_00389C90.h"
 #include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDEC.h"

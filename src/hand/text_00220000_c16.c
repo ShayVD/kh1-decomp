@@ -515,3 +515,4 @@ void func_00225330(O98 *arg0) {
 }
 #include "data/bss_0064_typed.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_002BBDFC.h"

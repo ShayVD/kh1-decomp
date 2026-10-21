@@ -1036,3 +1036,6 @@ end:;
 #include "data/data_0030.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C5BB0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002C5970.h"

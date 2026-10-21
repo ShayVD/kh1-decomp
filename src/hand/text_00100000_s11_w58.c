@@ -195,3 +195,4 @@ s32 func_00102118(Task2 *t) {
 #include "data/data_0029.h"
 #include "data/data_0037.h"
 #include "data/data_002A.h"
+#include "data/pieces/D_002BBDFC.h"

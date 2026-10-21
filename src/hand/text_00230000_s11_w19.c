@@ -136,3 +136,4 @@ s32 func_0023a968(void) {
     return 0;
 }
 #include "data/bss_0065_typed.h"
+#include "data/pieces/D_002BBDFC.h"
