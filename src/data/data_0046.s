@@ -112,6 +112,17 @@
 	PIECE D_0046A678, 0x4, 4
 	PIECE D_0046A67C, 0x4, 4
 	PIECE D_0046A680, 0x8, 8
+	PIECE_BEGIN D_0046A688, 0x20, 8  /* untyped: a table of eight function pointers (users disagree: Api | HddCfg | HddCtx | s32[]); D_0046A6A4 is its last entry */
+	.word func_0024d8a0
+	.word func_0024d8b0
+	.word func_0024d8c0
+	.word func_0024d8d0
+	PIECE_BYTES D_0046A688, 0x10, 0x4
+	.word func_0024d8e0
+	.word func_0024ddf8
+	PIECE_LABEL D_0046A688, D_0046A6A4, 0x1c
+	.word func_0024e078
+	PIECE_END D_0046A688, 0x20
 	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_0024e088
 	PIECE_END D_0046A6A8, 0x4
