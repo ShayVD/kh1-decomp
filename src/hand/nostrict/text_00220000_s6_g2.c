@@ -33,7 +33,7 @@ extern s32 D_003F34C8;
 extern s32 D_003F34D4;
 extern void *D_003F34D8;
 extern s32 D_00425C18;
-extern u32 D_00425C1C;
+#include "data/pieces/D_00425C1C.h"
 extern s32 D_00425C20;
 extern s32 D_00425CAC;
 extern u8 D_004910B8[];

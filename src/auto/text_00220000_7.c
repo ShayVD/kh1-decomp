@@ -7,7 +7,7 @@ extern M2C_UNK D_003F6950;
 extern M2C_UNK D_003F69E0;
 extern M2C_UNK D_003F6A10;
 extern M2C_UNK D_003F6A40;
-extern M2C_UNK D_003F6A70;
+#include "data/pieces/D_003F6A70.h"
 extern M2C_UNK D_003F6AA0;
 extern M2C_UNK D_003F6E70;
 extern M2C_UNK D_003F6EA0;
@@ -135,7 +135,7 @@ void func_00225c30(s32 arg0) {
     D_00643758 = 0;
     func_00233ef8(0);
     func_00223980(D_006436D4, 0, 0);
-    temp_v0 = func_001f3520((s32) &D_003F6A70, 6);
+    temp_v0 = func_001f3520((s32) (M2C_UNK *)&D_003F6A70, 6);
     if (temp_v0 != 0) {
         func_001f3e48(temp_v0, arg0);
         func_001f4058(temp_v0, 1);

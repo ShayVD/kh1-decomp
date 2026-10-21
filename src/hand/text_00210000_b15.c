@@ -221,7 +221,7 @@ void func_00221660(Ob *a) {
     }
 }
 
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_00643708;
 extern s32 D_0064370C;
 extern u8 D_00643770[];
@@ -359,8 +359,12 @@ extern s32 D_00647FB4, D_00647FC8, D_00647FD8, D_00647FD4, D_00647FB0, D_00647FC
 typedef struct { s32 x0, x4; } S2;
 extern S2 D_00647FE8;
 extern void (*D_00648034)(s32);
-extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C1C, D_00425C20;
-extern s32 D_00425C28[][4], D_00425C48[][4], D_00425C68[][4], D_00425C88[][4];
+extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
+#include "data/pieces/D_00425C1C.h"
+extern s32 D_00425C28[][4];
+#include "data/pieces/D_00425C88.h"
+#include "data/pieces/D_00425C68.h"
+#include "data/pieces/D_00425C48.h"
 s32 func_002716d8(s32, s32, s32 *, s32 *, s32 *);
 s32 func_002715a0(s32, s32, s32 *);
 

@@ -50,7 +50,7 @@ extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
 extern s32 D_004F82C0;
 extern s32 D_004F82C4;
 extern u8 D_002C58B0[];
-extern s32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern Node D_004F8310[64];
 extern u8 D_002E2F20[];
 extern u8 D_00524F20[32];

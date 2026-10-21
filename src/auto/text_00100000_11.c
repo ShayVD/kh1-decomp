@@ -11,7 +11,7 @@ M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC1B0;
 extern M2C_UNK D_002BC210;
-extern s32 D_002B677C;
+#include "data/pieces/D_002B677C.h"
 void *func_00121e28(M2C_UNK, void *);
 
 void func_0010eee0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {

@@ -16,7 +16,7 @@ extern void (*D_00647648)(s32);
 extern s32 D_006476F4;
 extern P8 D_003E8E08;
 extern s32 D_00647670[];
-extern u32 D_003E3D6C;
+#include "data/pieces/D_003E3D6C.h"
 typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
 extern S48e *D_00304BE8;
 extern s32 D_003F7D30[];

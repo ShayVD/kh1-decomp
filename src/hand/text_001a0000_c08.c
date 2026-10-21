@@ -231,7 +231,7 @@ extern s32 D_0037A190;
 extern Bits D_0037A378;
 extern u8 D_002C5958[];
 #define D_002C5958 (*(s32 *)&D_002C5958)
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern s32 (*D_0037A198[])(VM *, s32);
 s32 func_001c1ce8(s32, s32);
 s32 func_001c1cf8(s32, s32);

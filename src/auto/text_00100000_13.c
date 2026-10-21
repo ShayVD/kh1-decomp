@@ -4,7 +4,7 @@
 #include "data/bss_0049.h"
 
 extern s32 D_002A6B84;
-extern s32 D_002B75A0;
+#include "data/pieces/D_002B75A0.h"
 extern s32 D_00494A90;
 extern s32 D_00494A9C;
 void func_00106b18(s32);
@@ -68,7 +68,7 @@ s32 func_0010c200(void) {
     s32 var_v0;
 
     var_a1 = 0;
-    var_a0 = &D_002B75A0;
+    var_a0 = ((s32 *)&D_002B75A0);
 loop_1:
     temp_v1 = *var_a0;
     var_a0 += 3;

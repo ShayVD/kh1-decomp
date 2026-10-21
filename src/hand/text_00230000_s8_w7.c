@@ -4,7 +4,7 @@
 extern St D_00351E10;
 extern s32 D_003F8370[];
 extern s32 D_00425C18;
-extern u32 D_00425C1C;
+#include "data/pieces/D_00425C1C.h"
 extern s32 D_00425C20;
 extern s32 D_00425CAC;
 void func_002365e0(void);

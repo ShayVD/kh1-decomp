@@ -2,9 +2,9 @@
 typedef struct { s32 unk0; char *(*unk4)(void); s32 unk8; s32 unkC; s32 unk10; } HddCtx;
 extern HddCtx D_0046A688;
 extern s32 D_0046A614, D_0046A67C, D_0046A680, D_0046A678, D_0046A6AC, D_0046A608;
-extern char D_0046A628[];
+#include "data/pieces/D_0046A628.h"
 extern char D_00491978[];
-extern char D_004919B0[];
+#include "data/pieces/D_004919B0.h"
 s32 abs(s32);
 s32 func_0024d4a0(void);
 char *func_0011fd30(void);

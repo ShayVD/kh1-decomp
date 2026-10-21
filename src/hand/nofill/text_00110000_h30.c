@@ -82,7 +82,7 @@ s32 func_00120678(LoadTask *);
 void func_002672f8(f32 *, V4 *, f32 *);
 extern f32 D_002BBDFC;
 void func_002675a8(f32 *, f32 *);
-extern s32 D_002C5910[4][4];
+#include "data/pieces/D_002C5910.h"
 typedef struct { u8 pad0[12]; s32 xC; u8 pad10[60]; u16 x4C; u8 pad4e[6]; s8 kind; u8 pad55[4]; u8 x59; } Info123;
 typedef union {
     u64 v;

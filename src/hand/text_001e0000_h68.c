@@ -70,13 +70,13 @@ extern s32 D_003F7A68;
 extern u64 D_0038CD00;
 extern s32 D_002C5BB8;
 extern volatile s32 D_002C5958;
-extern u8 D_003DBA68[];
+#include "data/pieces/D_003DBA68.h"
 extern u8 D_003DC068[][64];
 extern u8 D_003DC0A8[];
 extern u8 D_003DC0E8[];
 extern u8 D_003DC128[];
 extern u8 D_003DC1A8[];
-extern u8 D_003DC2A8[];
+#include "data/pieces/D_003DC2A8.h"
 extern u8 D_003DC2B8[];
 extern u8 D_003DC2C8[];
 extern u8 D_003DC2E0[];
@@ -84,14 +84,14 @@ extern u8 D_003DC318[];
 extern u8 D_003DC338[];
 extern u8 D_003DC358[];
 extern u8 D_003DC368[];
-extern u8 D_003DC370[];
+#include "data/pieces/D_003DC370.h"
 extern u8 D_003DC380[];
 extern u8 D_003DC460[];
 extern u8 D_003DC468[];
 extern u8 D_003DCB10[][32];
 extern char D_003DCB90[][32];
 extern u8 D_003DCEF0[];
-extern u8 D_003DD230[];
+#include "data/pieces/D_003DD230.h"
 extern s32 D_003DD258;
 extern s32 D_003DD25C;
 extern s32 D_003DD264;

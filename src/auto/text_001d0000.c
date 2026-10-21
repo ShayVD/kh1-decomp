@@ -123,7 +123,7 @@ extern s32 D_003F6E24;
 extern s32 D_00425BC4;
 extern s32 D_0062A220;
 extern s32 D_0062A224;
-extern void *D_002C6440;
+#include "data/pieces/D_002C6440.h"
 s32 func_00105ce0(s32);
 s32 func_00111f88();
 s32 func_00125a00(M2C_UNK);

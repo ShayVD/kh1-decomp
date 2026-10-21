@@ -7,16 +7,16 @@ typedef struct { u8 pad[0x24]; u8 x24; } Arg;
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; s32 x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct Obj7 { u8 pad[0x10]; struct Obj7 *x10; u8 p14[0x10]; struct Obj7 *x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj7;
 typedef struct { u8 pad[4]; u32 x4; s32 x8; } Cfg;
-typedef struct { s32 x0; u8 pad[224]; } RecE0;
+#include "data/types/text_00210000_b14_p.h"
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 #include "data/types/text_00210000_b14.h"
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 extern S4BE8 *D_00304BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern Rec D_003E3D70[];
-extern RecE0 D_003E3E50[];
+#include "data/pieces/D_003E3E50.h"
 extern S4 D_003E8E08;
 extern S34B8 *D_003F34B8;
 extern u8 D_003F3B10[];

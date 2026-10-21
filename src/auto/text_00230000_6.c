@@ -23,7 +23,7 @@ M2C_UNK func_00267930(s32, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK sceGsExecLoadImage(void *, M2C_UNK *);
 M2C_UNK sceGsSetDefLoadImage(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-extern M2C_UNK D_00425CE0;
+#include "data/pieces/D_00425CE0.h"
 extern M2C_UNK D_006480D0; /* src/data/bss_0064.c: u64 D_006480D0[0x2c] */
 extern M2C_UNK D_00648230; /* src/data/bss_0064.c: Slot32 D_00648230[0xc] */
 extern s32 D_003F7A64;
@@ -62,7 +62,7 @@ void func_00232ac8(void) {
 
 void func_00236c68(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
     s32 sp[28];
-    func_00267768(sp, &D_00425CE0, M2C_FIELD(arg4, f32 *, 0));
+    func_00267768(sp, (M2C_UNK *)&D_00425CE0, M2C_FIELD(arg4, f32 *, 0));
     func_00267810(sp, sp, M2C_FIELD(arg4, f32 *, 4));
     func_002676c0(sp, sp, M2C_FIELD(arg4, f32 *, 8));
     func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, arg2);

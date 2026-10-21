@@ -3,7 +3,7 @@
 #include "data/bss_0052.h"
 
 extern u32 D_002C5958;
-extern u32 D_00304B84;
+#include "data/pieces/D_00304B84.h"
 extern u8 *D_00308CDC;
 void func_00130340(void *o, s32 a, f32 f);
 void *func_00130578(void *, s32, f32);
@@ -110,12 +110,11 @@ typedef struct {
 } W55Pl;
 typedef struct { u64 x0; u8 padx[0x18]; } W55Ent32;
 typedef struct { u8 pad[0x98]; u8 x98; u8 pad99[7]; } W55Lv;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern W55Pl *D_002E26A0[];
 extern W55Ent32 D_00350D88[];
 extern s32 D_002BC128;
 extern s32 D_002BC130;
-extern u32 D_00304B84;
 s32 func_00153d78(W55Pl *p);
 s32 func_0012f040(W55Pl *p, s32 a);
 

@@ -62,7 +62,8 @@ void func_001c4640(Msg *m);
 void func_001c6720(void);
 
 extern s32 D_002BC080[4];
-extern s32 D_002BC090, D_002BC094, D_002BC098, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE04;
+extern s32 D_002BC090, D_002BC094, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE04;
+#include "data/pieces/D_002BC098.h"
 extern Big D_00389C90;
 
 s32 func_001cc210(VM *vm) {

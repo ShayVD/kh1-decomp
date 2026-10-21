@@ -38,8 +38,8 @@ s32 D_00494418 ALIGNED(8);
 s32 D_0049441C ALIGNED(4);
 extern s32 D_0029B410, D_0029B414, D_0029B418, D_0029B41C;
 extern s32 D_002BCDBC, D_002BCDF0;
-extern char D_002BCCE0[];
-extern char D_0048CC30[];
+#include "data/pieces/D_002BCCE0.h"
+#include "data/pieces/D_0048CC30.h"
 
 void func_00105288(s32, s32);
 void func_00108cf8(s32, s32, s32);
@@ -167,9 +167,9 @@ void func_00102070(s32 a, s32 b, s32 x, s32 y, u64 *p) {
 /* ---- 00104f10.c ---- */
 /* VU0 */
 typedef struct { u8 pad[8]; s16 n; u8 pada[10]; } Face;
-typedef struct { s16 x, y, z, w; } SV;
+#include "data/types/text_00100000_s6_00_p.h"
 extern Face *D_002A6238;
-extern SV *D_002A6250;
+#include "data/pieces/D_002A6250.h"
 static inline void scale(void *d, void *s, f32 t) {
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"

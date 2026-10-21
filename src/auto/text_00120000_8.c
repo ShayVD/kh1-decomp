@@ -119,9 +119,9 @@ extern M2C_UNK D_004E49E8; /* src/data/bss_004E.c: u8 D_004E49E8[0x18] */
 extern M2C_UNK D_004F8270; /* src/data/bss_004F.c: D6 D_004F8270[0x5] */
 extern M2C_UNK func_001274c8;
 extern f32 D_002BBDFC;
-extern f32 D_002E27A4;
+#include "data/pieces/D_002E27A4.h"
 extern s32 D_002C5958;
-extern s32 D_002C5C48;
+#include "data/pieces/D_002C5C48.h"
 extern s32 D_002C5C4C;
 extern s32 D_002E2FD8[];
 extern s32 D_00350D80;

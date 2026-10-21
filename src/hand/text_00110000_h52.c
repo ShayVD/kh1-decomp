@@ -59,9 +59,9 @@ s32 func_0010f368(Range52 *r, s32 arg) {
 extern s32 D_002BBDE8;
 extern volatile s32 D_002BD114;
 extern s32 D_002BCC24;
-extern volatile s32 D_002BBDF0;
-extern volatile u32 D_002BBDF4;
-extern volatile s32 D_002BBDF8;
+#include "data/pieces/D_002BBDF0.h"
+#include "data/pieces/D_002BBDF4.h"
+#include "data/pieces/D_002BBDF8.h"
 extern volatile u32 D_004D90F0; /* src/data/bss_004D.c: volatile s32 D_004D90F0 */
 extern volatile s32 D_004D90F4;
 s32 func_00111798(void);
@@ -96,7 +96,12 @@ s32 func_00110218(void) {
 }
 
 #include "data/types/text_00110000_h52.h"
-extern Mtx52 D_002BBE20, D_002BBE60, D_002BBEA0, D_002BBEE0, D_002BBF20, D_002BBF60;
+#include "data/pieces/D_002BBF20.h"
+#include "data/pieces/D_002BBEE0.h"
+#include "data/pieces/D_002BBEA0.h"
+#include "data/pieces/D_002BBE60.h"
+#include "data/pieces/D_002BBE20.h"
+#include "data/pieces/D_002BBF60.h"
 extern Mtx52 D_004D8E40, D_004D9100, D_004D9140, D_004D9180, D_004D91C0, D_004D8E80;
 extern f32 D_004D90F8;
 void func_00110ce0(void);
@@ -116,14 +121,14 @@ void func_00110a48(f32 x) {
                   400000000.0f, D_004D90F8);
 }
 
-extern s32 D_002BD118;
+#include "data/pieces/D_002BD118.h"
 extern s32 D_002BD11C;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 b3 : 1; u32 b4 : 1; u32 rest : 27; } Bits52;
 extern s32 D_004D9320;
 extern Bits52 D_002C5958;
 extern Bits52 D_0037A378;
 extern s32 D_002C1308, D_002C130C;
-extern volatile s32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern s32 D_002BC070, D_002BC0BC, D_002A6204;
 s32 func_001336a0(void);
 
@@ -666,9 +671,8 @@ s32 func_00118b58(Probe52 *o) {
 
 typedef struct { Plane52 *tbl; u8 pad[60]; } Grp52;
 extern Grp52 D_004E2458[];
-typedef struct { u8 pad[0x10]; s32 x10; u8 pad14[0xc]; s32 x20; } Mdl52;
-typedef struct { Mdl52 *m; u8 pad[12]; } MdlEnt52;
-extern MdlEnt52 D_003044DC[];
+#include "data/types/text_00110000_h52_p2.h"
+#include "data/pieces/D_003044DC.h"
 typedef struct { u8 pad[0x18]; s16 cnt; } Qry52;
 void func_001158c8(Qry52 *);
 s32 func_0011ab88(s32, s32, Qry52 *);

@@ -10,10 +10,10 @@ M2C_UNK D_004D6B20[0x8c8] ALIGNED(32);
 extern M2C_UNK func_00108d90;
 extern f32 D_002BBDFC;
 extern s32 D_00351BD0;
-extern u32 D_002A6208;
+#include "data/pieces/D_002A6208.h"
 extern u64 D_002A6178;
 extern volatile char D_00494C00; /* src/data/bss_0049.c: V3 D_00494C00[0x20] */
-extern volatile unsigned char D_002A6C60;
+#include "data/pieces/D_002A6C60.h"
 void *func_0015ed80(s32, M2C_UNK *);
 void func_00108b60(s32, void *);
 void func_00108c58(s32, void *);

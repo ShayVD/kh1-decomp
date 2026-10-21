@@ -1,6 +1,6 @@
 #include "common.h"
 
-extern u32 *D_002BCC9C;
+#include "data/pieces/D_002BCC9C.h"
 
 void func_0010e610(u32 *a, u32 *b, s32 k) {
     s32 i, o;

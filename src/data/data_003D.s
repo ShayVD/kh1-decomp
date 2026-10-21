@@ -9,11 +9,11 @@
 	PIECE_BEGIN D_003DABCC, 0x4, 4  /* data/pieces/D_003DABCC.h */
 	.word func_001dca88
 	PIECE_END D_003DABCC, 0x4
-	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[] */
-	PIECE D_003DABD4, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD4 | Tbl *D_003DABD4 | s32 D_003DABD4 */
+	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[]; session 25: as Tbl *D_003DABD0: code changes in text_001e0000_17.c; does not compile in text_001c0000_h67.c */
+	PIECE D_003DABD4, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD4 | Tbl *D_003DABD4 | s32 D_003DABD4; session 25: as s32 D_003DABD4: new warning in text_s7_w22.c */
 	PIECE D_003DABD8, 0x68, 8  /* data/pieces/D_003DABD8.h */
 	PIECE D_003DAC40, 0x60, 16
-	PIECE D_003DACA0, 0x10, 16  /* untyped: users disagree: Tbl *D_003DACA0 | s32 D_003DACA0 */
+	PIECE D_003DACA0, 0x10, 16  /* untyped: users disagree: Tbl *D_003DACA0 | s32 D_003DACA0; session 25: as Tbl *D_003DACA0: code changes in text_001e0000_6.c; does not compile in text_001e0000_h20.c */
 	PIECE D_003DACB0, 0x4, 4
 	PIECE D_003DACB4, 0x4, 4
 	PIECE D_003DACB8, 0x4, 4
@@ -26,7 +26,7 @@
 	PIECE D_003DACD0, 0x8, 8
 	PIECE D_003DACD8, 0x60, 8
 	PIECE D_003DAD38, 0x4, 4
-	PIECE D_003DAD3C, 0x4, 4  /* untyped: users disagree: f32 D_003DAD3C | s32 D_003DAD3C */
+	PIECE D_003DAD3C, 0x4, 4  /* data/pieces/D_003DAD3C.h */
 	PIECE D_003DAD40, 0x4, 4
 	PIECE D_003DAD44, 0xc, 4
 	PIECE D_003DAD50, 0xe0, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -57,7 +57,7 @@
 	PIECE D_003DB070, 0x8, 8
 	PIECE D_003DB078, 0x6a0, 8  /* data/pieces/D_003DB078.h */
 	PIECE D_003DB718, 0x350, 8  /* data/pieces/D_003DB718.h */
-	PIECE D_003DBA68, 0x300, 8  /* untyped: users disagree: M2C_UNK D_003DBA68 | u8 D_003DBA68[] */
+	PIECE D_003DBA68, 0x300, 8  /* data/pieces/D_003DBA68.h */
 	PIECE D_003DBD68, 0x300, 8
 	PIECE D_003DC068, 0x40, 8
 	PIECE D_003DC0A8, 0x40, 8
@@ -67,7 +67,7 @@
 	PIECE D_003DC1E8, 0x40, 8
 	PIECE D_003DC228, 0x40, 8
 	PIECE D_003DC268, 0x40, 8
-	PIECE D_003DC2A8, 0x10, 8  /* untyped: users disagree: char D_003DC2A8[] | u8 D_003DC2A8[] */
+	PIECE D_003DC2A8, 0x10, 8  /* data/pieces/D_003DC2A8.h */
 	PIECE D_003DC2B8, 0x10, 8
 	PIECE D_003DC2C8, 0x18, 8
 	PIECE D_003DC2E0, 0x18, 8
@@ -76,9 +76,9 @@
 	PIECE D_003DC338, 0x20, 8
 	PIECE D_003DC358, 0x10, 8
 	PIECE D_003DC368, 0x8, 8
-	PIECE D_003DC370, 0x10, 16  /* untyped: users disagree: char D_003DC370[] | u8 D_003DC370[] */
+	PIECE D_003DC370, 0x10, 16  /* data/pieces/D_003DC370.h */
 	PIECE D_003DC380, 0x10, 16
-	PIECE D_003DC390, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003DC390 | u8 D_003DC390[] */
+	PIECE D_003DC390, 0x30, 16  /* data/pieces/D_003DC390.h */
 	PIECE D_003DC3C0, 0x10, 16
 	PIECE D_003DC3D0, 0x38, 8
 	PIECE D_003DC408, 0x20, 8
@@ -100,9 +100,9 @@
 	PIECE_LABEL D_003DC498, D_003DCB10, 0x678
 	PIECE_BYTES D_003DC498, 0x678, 0x80
 	PIECE_END D_003DC498, 0x6f8
-	PIECE D_003DCB90, 0x180, 16  /* untyped: users disagree: char D_003DCB90[] | char D_003DCB90[][32] */
+	PIECE D_003DCB90, 0x180, 16  /* untyped: users disagree: char D_003DCB90[] | char D_003DCB90[][32]; session 25: as char D_003DCB90[0xc][32]: new warning in text_001e0000_s9_w2.c */
 	PIECE D_003DCD10, 0x60, 16
-	PIECE D_003DCD70, 0x80, 16  /* untyped: users disagree: M2C_UNK D_003DCD70 | u8 D_003DCD70[] */
+	PIECE D_003DCD70, 0x80, 16  /* data/pieces/D_003DCD70.h */
 	PIECE D_003DCDF0, 0x40, 16
 	PIECE D_003DCE30, 0x40, 16
 	PIECE D_003DCE70, 0x40, 16
@@ -117,7 +117,7 @@
 	PIECE D_003DD1F0, 0x20, 16
 	PIECE D_003DD210, 0x10, 16
 	PIECE D_003DD220, 0x10, 16
-	PIECE D_003DD230, 0x8, 8  /* untyped: users disagree: char D_003DD230[] | u8 D_003DD230[] */
+	PIECE D_003DD230, 0x8, 8  /* data/pieces/D_003DD230.h */
 	PIECE D_003DD238, 0x8, 8
 	PIECE D_003DD240, 0x8, 8
 	PIECE D_003DD248, 0x8, 8

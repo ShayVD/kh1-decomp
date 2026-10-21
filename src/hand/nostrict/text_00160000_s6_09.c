@@ -161,8 +161,8 @@ extern s32 D_0035C420;
 extern u8 *D_0035C424;
 extern s32 D_0035C428;
 extern u8 *D_0035C42C;
-extern f32 D_0035C440[4];
-extern f32 D_0035C460[4];
+#include "data/pieces/D_0035C440.h"
+#include "data/pieces/D_0035C460.h"
 extern u8 D_0035C470[];
 extern u8 D_0035C480[];
 extern f32 D_002C58B0[4];

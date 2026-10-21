@@ -23,7 +23,7 @@ M2C_UNK func_0017ebd0();
 M2C_UNK func_0017eff8();
 M2C_UNK func_00239488();
 extern s32 D_002E26A0;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern s32 D_00351A48;
 extern s32 D_00524F74;
 extern s32 D_00524F78;

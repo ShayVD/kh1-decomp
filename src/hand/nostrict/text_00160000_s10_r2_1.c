@@ -11,7 +11,7 @@ extern s32 D_00575088;
 extern s32 D_0057508C;
 extern V4EA D_00575090[40]; /* src/data/bss_0057.c: f32 D_00575090[40][4] */
 extern u32 D_002C5958;
-extern u32 D_002E3168;
+#include "data/pieces/D_002E3168.h"
 extern LockEA D_002E31B0;
 extern LockEA D_00575080;
 extern f32 D_0035AF40;

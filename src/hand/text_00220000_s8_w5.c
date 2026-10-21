@@ -51,7 +51,7 @@ extern s32 D_006469B4;
 extern u8 D_003F7210[];
 extern s32 D_003F7228[];
 extern s32 D_003F7230[];
-extern s32 D_003F7238[];
+#include "data/pieces/D_003F7238.h"
 extern s32 D_003F7248[];
 void func_0011d768(s32);
 s32 func_001f42b8(void);
@@ -74,7 +74,7 @@ s32 func_002193f0(void);
 s32 func_00219428(void);
 s32 func_00219458(s32);
 
-extern u8 D_003F6E40[];
+#include "data/pieces/D_003F6E40.h"
 extern s32 D_003F6F58[];
 extern s32 D_006437C0;
 extern s32 D_006437C4;
@@ -131,7 +131,7 @@ extern s32 D_00643790;
 extern s32 D_00643794;
 extern s32 D_0064379C;
 extern u8 *D_00304BE8;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
 extern Nd *D_003F34C4;
 extern s32 D_003F6E2C;

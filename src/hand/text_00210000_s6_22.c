@@ -179,7 +179,7 @@ typedef struct {
 } G20_q1;
 extern G20_q1 D_00643020;
 extern Cam_q1 *D_00425F70;
-extern u8 D_00425CE0[];
+#include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
 extern s32 D_006430F8;
@@ -188,7 +188,7 @@ extern f32 D_002BBDFC;
 extern void *D_002BC140;
 extern void *D_002BC144;
 extern u8 D_003F5990[];
-extern u8 D_003F59A0[];
+#include "data/pieces/D_003F59A0.h"
 typedef struct { u8 pad[0x90]; s32 x90; } Ob_q1;
 s32 func_001301d8(void *, s32, s32, s32);
 void func_001655e0(void *, s32, s32, f32);
@@ -596,7 +596,7 @@ extern s32 D_006469B4;
 extern u8 D_003F7210[];
 extern s32 D_003F7228[];
 extern s32 D_003F7230[];
-extern s32 D_003F7238[];
+#include "data/pieces/D_003F7238.h"
 extern s32 D_003F7248[];
 void func_0011d768(s32);
 s32 func_001f42b8(void);
@@ -619,7 +619,7 @@ s32 func_002193f0(void);
 s32 func_00219428(void);
 s32 func_00219458(s32);
 
-extern u8 D_003F6E40[];
+#include "data/pieces/D_003F6E40.h"
 extern s32 D_003F6F58[];
 extern s32 D_006437C0;
 extern s32 D_006437C4;
@@ -676,7 +676,7 @@ extern s32 D_00643790;
 extern s32 D_00643794;
 extern s32 D_0064379C;
 extern u8 *D_00304BE8;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
 extern Nd_q6 *D_003F34C4;
 extern s32 D_003F6E2C;
@@ -806,7 +806,6 @@ extern s32 D_006469B4;
 extern u8 D_003F7210[];
 extern s32 D_003F7228[];
 extern s32 D_003F7230[];
-extern s32 D_003F7238[];
 extern s32 D_003F7248[];
 s32 func_0011d768_q7(s32) __asm__("func_0011d768");
 s32 func_001f42b8(void);
@@ -829,7 +828,6 @@ s32 func_002193f0(void);
 s32 func_00219428(void);
 s32 func_00219458(s32);
 
-extern u8 D_003F6E40[];
 extern s32 D_003F6F58[];
 extern s32 D_006437C0;
 extern s32 D_006437C4;
@@ -905,7 +903,7 @@ extern s32 D_00643750;
 extern u8 D_003F6980[];
 extern u8 D_003F69B0[];
 extern u8 D_003F6AD0[];
-extern u8 D_003F6920[];
+#include "data/pieces/D_003F6920.h"
 extern s32 D_003F6B28[];
 void *func_001f3520(void *, s32);
 void func_001f4058(void *, s32);
@@ -921,7 +919,7 @@ extern s32 D_006469A4;
 s32 D_006469A8 ALIGNED(8);
 s32 D_006469AC ALIGNED(4);
 extern s32 D_00425C18;
-extern u32 D_00425C1C;
+#include "data/pieces/D_00425C1C.h"
 extern s32 D_00425C20;
 extern s32 D_00425CAC;
 Dir40_q7 D_00643800[0x63] ALIGNED(64);
@@ -1264,7 +1262,7 @@ extern s32 *D_00646A0C;
 extern s32 D_00646A18;
 extern u32 D_00646A20;
 extern s32 D_00646A28;
-extern u32 D_003E3D6C;
+#include "data/pieces/D_003E3D6C.h"
 extern EbMember_q8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
 extern s32 D_00647638;
 extern u32 D_0064763C; /* src/data/bss_0064.c: s32 D_0064763C */

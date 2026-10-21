@@ -101,7 +101,7 @@ void func_0021bbe0(void *, s32, s32, s32, s32, s32, s32);
 extern s32 D_006436D4;
 extern s32 D_00643740;
 extern s32 D_00643734;
-extern u8 D_003F6920[];
+#include "data/pieces/D_003F6920.h"
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 void func_002246f8(void *);
@@ -114,7 +114,7 @@ void func_0020be10(s32);
 s32 func_00233f18(void);
 void func_00207c28(void *, s32);
 typedef struct { s32 x0; u8 pad[12]; } S16;
-extern u8 D_003F6A70[];
+#include "data/pieces/D_003F6A70.h"
 extern u8 D_003F6BD0[];
 extern u8 D_003F6B70[];
 extern u8 D_003F6BF8[];
@@ -148,7 +148,7 @@ extern s32 D_006437DC;
 extern s32 D_00646990;
 extern u8 D_003F7000[];
 extern u8 D_003F6FA0[];
-extern u8 D_003F6E40[];
+#include "data/pieces/D_003F6E40.h"
 extern u8 D_003F7028[];
 void func_0022b2e0(void *);
 extern s32 D_006437E4;
@@ -167,7 +167,7 @@ s32 func_001fa808(void *, s32, s32, s32, s32);
 void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00219370(s32);
 extern s32 D_003F7240[];
-extern u8 D_003F7238[];
+#include "data/pieces/D_003F7238.h"
 void func_00219320(s32);
 void func_00209820(void *, s32, s32, s32, void *);
 

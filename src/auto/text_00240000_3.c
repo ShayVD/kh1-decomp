@@ -20,15 +20,15 @@ M2C_UNK func_0025dd48(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_00267620();
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
 extern M2C_UNK (*D_0066AA80)();
-extern M2C_UNK D_0044A830;
-extern M2C_UNK D_0044C5A0;
-extern M2C_UNK D_0044DFD0;
-extern M2C_UNK D_0044F380;
-extern M2C_UNK D_0044F4D0;
+#include "data/pieces/D_0044A830.h"
+#include "data/pieces/D_0044C5A0.h"
+#include "data/pieces/D_0044DFD0.h"
+#include "data/pieces/D_0044F380.h"
+#include "data/pieces/D_0044F4D0.h"
 extern M2C_UNK D_00451040;
 extern M2C_UNK D_00469CA0;
 extern M2C_UNK D_00469F50;
-extern M2C_UNK D_004919B0;
+#include "data/pieces/D_004919B0.h"
 extern M2C_UNK D_00651E50;
 M2C_UNK D_00652888[0x4] ALIGNED(8);
 extern M2C_UNK D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
@@ -45,7 +45,7 @@ extern s32 D_0046A53C;
 extern s32 D_00669920;
 extern s32 D_00669A5C;
 extern s32 D_0066AAA0;
-extern s8 D_00431F30;
+#include "data/pieces/D_00431F30.h"
 extern s8 D_00651E70;
 extern u32 D_002C5958;
 f32 func_0024ef88();
@@ -70,11 +70,11 @@ void func_00241a10(s32 arg0, s32 arg1) {
 }
 
 void func_00242a38(void) {
-    func_0024aac8(&D_0044A830);
-    func_0024aac8(&D_0044C5A0);
-    func_0024aac8(&D_0044DFD0);
-    func_0024aac8(&D_0044F380);
-    func_0024aac8(&D_0044F4D0);
+    func_0024aac8(((M2C_UNK *)&D_0044A830));
+    func_0024aac8(((M2C_UNK *)&D_0044C5A0));
+    func_0024aac8(((M2C_UNK *)&D_0044DFD0));
+    func_0024aac8(((M2C_UNK *)&D_0044F380));
+    func_0024aac8(((M2C_UNK *)&D_0044F4D0));
     func_0024aac8(&D_00451040);
     memset(&D_00651E50, 0, 0x4130);
     M2C_FIELD(&D_00651E50, s32 *, 0x4124) = (s32) (((u32) D_002C5958 >> 3) & 1);
@@ -109,7 +109,7 @@ void func_00243380(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
 }
 
 void func_00247cc8(s32 arg0) {
-    func_00249a48(&D_00431F30 + (arg0 * 0x1770), 1);
+    func_00249a48(((s8 *)&D_00431F30) + (arg0 * 0x1770), 1);
 }
 
 void func_002485b8(s32 arg0) {
@@ -167,7 +167,7 @@ s32 func_0024d138(void) {
 }
 
 void func_0024daa0(void) {
-    func_0025dd48(&D_004919B0, 0x4807, 0, 0, 0, 0);
+    func_0025dd48((M2C_UNK *)&D_004919B0, 0x4807, 0, 0, 0, 0);
 }
 
 void func_0024f008(void) {

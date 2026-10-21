@@ -15,7 +15,7 @@ M2C_UNK func_00223508();
 M2C_UNK func_00223870(s32);
 M2C_UNK func_0022f818();
 extern s32 D_003F34C0;
-extern s32 D_003F5C18;
+#include "data/pieces/D_003F5C18.h"
 extern s32 D_003F5C24;
 extern s32 D_003F5C28;
 extern s32 D_003F5C2C;
@@ -51,7 +51,7 @@ void func_00220580(s32 arg0) {
 
 void func_00220590(void) {
     func_0021fbb8();
-    D_003F5C18 = D_00643418 != 0;
+    (*(s32 *)&D_003F5C18) = D_00643418 != 0;
 }
 
 void func_002205c0(void) {

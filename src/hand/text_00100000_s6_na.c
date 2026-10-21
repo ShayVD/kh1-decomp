@@ -2,7 +2,7 @@
 
 extern s32 D_002A6308[3];
 extern s32 D_002A6318[3];
-extern s32 D_002A6324;
+#include "data/pieces/D_002A6324.h"
 void func_00104908(void) {
     D_002A6318[0] = D_002A6308[0] = D_002A6318[1] = D_002A6318[2] = D_002A6308[1] = D_002A6308[2] = -1;
     D_002A6324 = 0;

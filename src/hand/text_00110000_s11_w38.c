@@ -7,8 +7,8 @@
  *    a 17th ref to p, so p beats &D[i] for s0 in global-alloc (an `x < 1.0f` test lengthens p's life
  *    without the extra ref and loses s0: 15w). */
 #include "common.h"
-extern f32 D_002BCB40[4];
-extern f32 D_002BCB50[3];
+#include "data/pieces/D_002BCB40.h"
+#include "data/pieces/D_002BCB50.h"
 extern f32 D_002BC190[];
 f32 cosf(f32);
 void func_002675a8(f32 *, s32);

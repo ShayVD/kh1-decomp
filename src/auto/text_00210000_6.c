@@ -20,7 +20,7 @@ extern M2C_UNK D_003F3FF0;
 extern M2C_UNK D_00642C78; /* src/data/bss_0064.c: s32 D_00642C78[0x4] */
 extern s32 *D_003F34B8;
 extern s32 D_00304BE8;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C8;
 extern s32 D_003F34CC;
 extern s32 D_003F34F0;

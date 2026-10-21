@@ -65,7 +65,7 @@ s32 func_0012cd10(E15 *o, E15 *t) {
 
 typedef struct { s32 d; E15 *e; } P15;
 typedef struct S31b0 { E15 *f0; s32 f4; } S31b0;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern S31b0 D_002E31B0;
 extern s32 func_00122ff8(E15 *);
 extern s32 func_00122fd0(E15 *);

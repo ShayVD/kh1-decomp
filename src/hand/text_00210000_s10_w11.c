@@ -29,7 +29,7 @@ typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 extern S4BE8 *D_00304BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3980[], D_003F39C0[], D_003F39F0[], D_003F3A20[], D_003F3A50[], D_003F3A80[];
 extern s32 D_00641224;
 extern s32 D_00641228;

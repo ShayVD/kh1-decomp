@@ -6,7 +6,7 @@
 M2C_UNK func_0010ef70(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0011cdf0(M2C_UNK, s32, M2C_UNK *, M2C_UNK);
 M2C_UNK func_00146928(M2C_UNK);
-extern M2C_UNK D_003DBA68;
+#include "data/pieces/D_003DBA68.h"
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK D_0062F6E0;
 extern M2C_UNK func_001dd5c0;
@@ -59,7 +59,7 @@ void func_001e32c8(s32 arg0) {
 }
 
 void func_001e3728(void) {
-    func_0010ef70(&D_0062F6E0, &D_003DBA68, &func_001e2810);
+    func_0010ef70(&D_0062F6E0, (M2C_UNK *)&D_003DBA68, &func_001e2810);
     D_003F7A68 = 1;
     D_003DC490 = 1;
 }

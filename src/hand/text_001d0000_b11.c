@@ -84,7 +84,7 @@ extern char D_003DCDF0[];
 extern char D_003DCE30[];
 extern char D_003DCE70[];
 extern char D_003DD210[];
-extern char D_003DD230[];
+#include "data/pieces/D_003DD230.h"
 extern char D_003DD238[];
 extern char D_003DD240[];
 extern char D_003DD248[];

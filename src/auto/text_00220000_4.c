@@ -25,7 +25,7 @@ M2C_UNK func_0021b820();
 M2C_UNK func_0021c780(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb00(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-extern M2C_UNK D_003F61E0;
+#include "data/pieces/D_003F61E0.h"
 extern M2C_UNK D_003F70E8;
 extern f32 D_002BBDFC;
 extern f32 D_006469B8[]; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
@@ -66,7 +66,7 @@ void func_002207f0(s32 arg0) {
 }
 
 void func_00220808(s32 arg0) {
-    func_0021b800(*(M2C_UNK *)((s8 *)(s8 *)&D_003F61E0 + ((arg0 / 3) * 4)) + 8);
+    func_0021b800(*(M2C_UNK *)((s8 *)(s8 *)(M2C_UNK *)&D_003F61E0 + ((arg0 / 3) * 4)) + 8);
 }
 
 void func_00220848(s32 arg0) {

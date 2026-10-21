@@ -17,15 +17,15 @@ M2C_UNK func_001edba0();
 M2C_UNK func_002193e0(M2C_UNK);
 M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675b8(M2C_UNK *, M2C_UNK *);
-extern M2C_UNK D_002BBE20;
-extern M2C_UNK D_002BBE60;
-extern M2C_UNK D_002BBEA0;
-extern M2C_UNK D_002BBEE0;
-extern M2C_UNK D_002BBF20;
-extern M2C_UNK D_002BBF60;
-extern M2C_UNK D_002BBFA0;
-extern M2C_UNK D_002BBFE0;
-extern M2C_UNK D_002BC020;
+#include "data/pieces/D_002BBE20.h"
+#include "data/pieces/D_002BBE60.h"
+#include "data/pieces/D_002BBEA0.h"
+#include "data/pieces/D_002BBEE0.h"
+#include "data/pieces/D_002BBF20.h"
+#include "data/pieces/D_002BBF60.h"
+#include "data/pieces/D_002BBFA0.h"
+#include "data/pieces/D_002BBFE0.h"
+#include "data/pieces/D_002BC020.h"
 extern M2C_UNK D_002E2700;
 extern M2C_UNK D_004D8E40; /* src/data/bss_004D.c: Mtx52 D_004D8E40 */
 extern M2C_UNK D_004D8E80; /* src/data/bss_004D.c: Mtx52 D_004D8E80 */
@@ -47,20 +47,20 @@ s32 func_002193b8();
 void *func_0011ef10(M2C_UNK, M2C_UNK *);
 
 void func_00110ba8(void) {
-    func_002675b8(&D_004D9200, &D_002BBFA0);
-    func_00267328(&D_002BBFA0, &D_002BBE60, &D_002E2700);
-    func_00267328(&D_002BBFE0, &D_002BBEE0, &D_002E2700);
-    func_00267328(&D_002BC020, &D_002BBF20, &D_002E2700);
+    func_002675b8(&D_004D9200, (M2C_UNK *)&D_002BBFA0);
+    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), &D_002E2700);
+    func_00267328((M2C_UNK *)&D_002BBFE0, ((M2C_UNK *)&D_002BBEE0), &D_002E2700);
+    func_00267328((M2C_UNK *)&D_002BC020, ((M2C_UNK *)&D_002BBF20), &D_002E2700);
 }
 
 void func_00110c30(void) {
-    func_002675b8(&D_002BBE20, &D_004D8E40);
-    func_002675b8(&D_002BBE60, &D_004D9100);
-    func_002675b8(&D_002BBEA0, &D_004D9140);
-    func_002675b8(&D_002BBEE0, &D_004D9180);
-    func_002675b8(&D_002BBF20, &D_004D91C0);
-    func_002675b8(&D_002BBF60, &D_004D8E80);
-    func_00267328(&D_002BBFA0, &D_002BBE60, &D_002E2700);
+    func_002675b8(((M2C_UNK *)&D_002BBE20), &D_004D8E40);
+    func_002675b8(((M2C_UNK *)&D_002BBE60), &D_004D9100);
+    func_002675b8(((M2C_UNK *)&D_002BBEA0), &D_004D9140);
+    func_002675b8(((M2C_UNK *)&D_002BBEE0), &D_004D9180);
+    func_002675b8(((M2C_UNK *)&D_002BBF20), &D_004D91C0);
+    func_002675b8((M2C_UNK *)&D_002BBF60, &D_004D8E80);
+    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), &D_002E2700);
 }
 
 void func_001113f8(s32 arg0) {

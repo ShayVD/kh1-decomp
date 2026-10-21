@@ -638,7 +638,7 @@ s32 func_00158100(s32 *a, f32 *v) {
 }
 
 /* ---- func_00158c78 ---- */
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern u32 D_0037A378;
 typedef struct { u8 pad[0x48E]; u8 b48E[3]; u8 pad491[0x3E3]; s32 w874; } S304BE8;
 extern S304BE8 *D_00304BE8;

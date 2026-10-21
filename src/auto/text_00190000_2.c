@@ -4,7 +4,7 @@
 #include "ppp.h"
 
 extern M2C_UNK D_003701D0;
-extern M2C_UNK D_003701E0;
+#include "data/pieces/D_003701E0.h"
 extern void *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 void func_00183be0(s32, s32);
 void func_001a5250(s32, s32);
@@ -112,7 +112,7 @@ void pppRyjMatrixWorldCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_00183be0(temp_s0, (s32) &D_003701E0);
+    func_00183be0(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
@@ -122,7 +122,7 @@ void pppRyjMatrixWorldXZYCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_001a5250(temp_s0, (s32) &D_003701E0);
+    func_001a5250(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
@@ -132,7 +132,7 @@ void pppRyjMatrixWorldYXZCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_001a5370(temp_s0, (s32) &D_003701E0);
+    func_001a5370(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
@@ -142,7 +142,7 @@ void pppRyjMatrixWorldYZXCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_001a52e0(temp_s0, (s32) &D_003701E0);
+    func_001a52e0(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
@@ -152,7 +152,7 @@ void pppRyjMatrixWorldZXYCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_001a5400(temp_s0, (s32) &D_003701E0);
+    func_001a5400(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
@@ -162,7 +162,7 @@ void pppRyjMatrixWorldZYXCon(s32 arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 0xC) + 0xA0;
-    func_001a5490(temp_s0, (s32) &D_003701E0);
+    func_001a5490(temp_s0, (s32) (M2C_UNK *)&D_003701E0);
     M2C_FIELD(temp_s0, f32 *, 0x30) = (f32) M2C_FIELD(&D_003701D0, f32 *, 0);
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);

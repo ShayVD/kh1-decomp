@@ -156,8 +156,8 @@ extern s32 D_0035C420;
 extern u8 *D_0035C424;
 extern s32 D_0035C428;
 extern u8 *D_0035C42C;
-extern u8 D_0035C440[];
-extern u8 D_0035C460[];
+#include "data/pieces/D_0035C440.h"
+#include "data/pieces/D_0035C460.h"
 extern u8 D_0035C490[];
 
 s32 func_00266c08(s32);

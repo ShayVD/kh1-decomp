@@ -81,7 +81,7 @@ extern void (*D_004E3430)(void);
 extern s32 D_004E2430[64][16];
 extern s32 D_002A3F50[];
 extern s32 D_002A3F44;
-extern u8 D_002BCAF0[];
+#include "data/pieces/D_002BCAF0.h"
 extern s32 D_002BC128;
 
 /* Strings in .rodata, referenced through their data symbols so the copies

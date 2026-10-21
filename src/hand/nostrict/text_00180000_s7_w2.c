@@ -27,7 +27,7 @@ typedef struct {
 } ThKey;
 
 typedef struct { f32 x, y; } ThV2;
-extern f32 D_003701F0[3];
+#include "data/pieces/D_003701F0.h"
 extern u8 D_00616080[];
 extern u8 D_00616224[];
 
