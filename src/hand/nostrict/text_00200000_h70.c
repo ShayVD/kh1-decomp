@@ -324,3 +324,4 @@ void func_002163e0(N *a0) {
     }
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F34C8.h"

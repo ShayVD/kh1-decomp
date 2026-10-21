@@ -148,7 +148,7 @@ s32 func_001140a0(void) {
     return D_002BD118;
 }
 
-typedef struct { s32 v[4]; } V4i52;
+#include "data/types/text_00110000_h52_p.h"
 typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; V4i52 x30; V4i52 x40; } Ent52;
 typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; u8 pad[0x30]; } Tpl52;
 typedef struct { u8 b[0x90]; } E90_52;
@@ -833,3 +833,9 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
+#include "data/pieces/D_0046E120.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC24.h"
+#include "data/pieces/D_002BD114.h"
+#include "data/pieces/D_002C1308.h"
+#include "data/pieces/D_00486300.h"

@@ -1986,3 +1986,116 @@ in float_keep.txt. (At the default budgets none of them would float anyway: 0x40
   writes it) stays its own piece. `make` identical; the float build's loaded image did not change.
 - shift/drafts.tsv: 001636d0 uses the session 23 394w draft (PR #27); `SHIFT_DRAFTS=1` links all nine.
 - 1,035 pieces are still "untyped" in their comments.
+
+## Session 24: why a whole DMA chain could not float, and pointer-table-only names float
+
+### The REC2 hang: chain 1's table is also a 32-byte array
+
+Session 23's hang savestate (Downloads/kh1-test/s23_rec2_hang.p2s) was read here without PCSX2:
+`PCSX2 Internal Structures.dat` holds cpuRegs 32 bytes after the `cpuRegs` tag (GPRs 16 bytes each, then
+HI, LO, CP0, sa, IsDelaySlot, pc) and eeHwRegs.bin the DMA channel registers (offset = address - 0x10000000).
+The EE sat in the kernel idle loop (pc 0x80001578, EPC 0x26815c in `_DisableDmac`), VIF1 idle with an `end`
+tag in the heap: every game thread was blocked, no DMA was stuck.
+
+The memory showed the cause. func_00106ed0 sets `D_00494BA8 = D_0046E150` (chain 0's table, 16-byte
+entries) and `D_00494BAC = D_00472190` (chain 1's table, **32-byte entries**), and fills D_00494BB0 entries
+of each (622 in Gate Plaza; func_00107548 reads them back). 622 * 32 = 0x4DC0 bytes from chain1+0x30 run
+0xDB0 bytes past chain 1's 0x4010-byte table into chain 2. Only words 2-3 of each qword are written (floats
+at +8 and +0x18), the halves of a DMA tag that the DMA ignores (CHCR 0x105, TTE off), so the original layout
+survives it. With chain 1 floated alone, the writes landed on whatever floated after it: in REC2 D_004914E0
+... D_002A62F0, among them D_002A3F30 (a header pointer func_001081c8 and func_00107c48 follow) and the
+collision header. float_holes.py could not see it: the old places stay clean, the new neighbours are hit.
+D_00494BB0 is loaded from the room's data, so no static rule bounds it; up to 1024 entries reach chain2+0x3FF0.
+
+- **Chains 1 and 2 are one piece**: `merge_pieces.py --group D_00472160:0x8080` (D_004761A0 is a label).
+  Chain 0's table only holds 16-byte entries (0x26E0 bytes for 622) and chains 3-5 are kept by reach_check
+  (idx-next) anyway.
+- **KH1_F24_REC3** (data = the MRG2 set + chain 0 + the merged chains 1-2, bss 0, forced with
+  SHIFT_FLOAT_FORCE): loads save 06, Gate Plaza draws and a fight there works. REC2 hung at this point.
+- The chains stay in float_keep.txt (each is far over the 0x8000 data budget; nothing changes by default).
+
+### SHIFT_FLOAT_FORCE (tools/shift/float_force.py)
+
+`SHIFT_FLOAT_FORCE="names|@FILE"` takes names out of float_covered.txt after keep_check (which then does not
+fail the build), so a hypothesis about a kept name can be booted: combine with `SHIFT_FLOAT_ONLY_DATA` and a
+large `SHIFT_FLOAT_DATA_BUDGET`. Runtime experiments only; the default never sets it.
+
+### Pointer-table-only names float by default (SHIFT_FLOAT_PTR_ONLY=1)
+
+Session 20 kept the 466 names only pieces' `.word`s name because floating them dropped the slot digit on the
+load menu. On the session 23 tree that bug is gone (the session 22-23 split and group merges hold the walked
+tables together). The only thing that stopped `SHIFT_FLOAT_PTR_ONLY=1` was keep_check: D_003E4670/80/90 are
+inside D_003E4658's 0x310-byte buffer and were kept only by the pointer-only rule. D_003E4658 is now one piece
+(`--group D_003E4658:0x310`; it grows to 0x42B8 because the 0x4270-byte D_003E46A0 starts inside the buffer).
+
+| ELF | build | result |
+|---|---|---|
+| F24_REC3 | MRG2 set + D_0046E120 + D_00472160 (0x8080), bss 0 | save 06, Gate Plaza, fight: OK |
+| F24_P1 | defaults + SHIFT_FLOAT_PTR_ONLY=1: 1,061 data names, 118 bss runs, `_end` 0x6953E4 | slot digits right, save 06, Gate Plaza + fight, world map, warp drive to Neverland, fight on the ship: OK |
+
+**The default float build is now F24_P1** (loaded bytes identical, also after the s24types merge):
+data 0x8000 with pointer-table-only names, bss 0x11800. `_end + 0xA000` leaves 0xC1C below 0x6A0000.
+
+## Session 24: Phase 4 types (worker s24types)
+
+`make` stayed byte-identical after every batch. The M12 float build (`make shift SHIFT_MODE=m12
+SHIFT_FLOAT=1`: M12-FLOAT OK, overlay fixups OK) gives a kh1-shift.elf identical to the one before the
+session, whole file (types emit no code and move no section).
+
+### tools/shift/type_pieces.py
+
+- Reads the pieces whose comment has `--note` (default "untyped: merged") and, for the piece name and every
+  PIECE_LABEL in it, the file-scope externs of all C files outside src/sdk/ (repeated identical lines are
+  fine). It picks one declaration per name: the largest (sizeof probed in the user's file; `T D[]` counts as
+  one element) that fits what is left of the piece, then a real type before M2C_UNK, complete before `[]`,
+  hand before auto, most users. The piece's own name chosen as `T D[]` is written `T D[size / sizeof T]`.
+- A struct type the chosen file defines moves to include/data/types/ (type_move.py). When the file's type
+  header exists, the types go to a new `<stem>_p.h` (`_p2.h` ...) that includes it: **never grow a type
+  header other files include** (appending `Ent16` to text_00100000_s11_w71.h broke src/data/bss_0049.c,
+  whose bss_0049_typed.h also includes nostrict_text_00100000_s11_w45.h with its own `Ent16`).
+- The declarations go to **include/data/pieces/D_X.h, one header per piece** (a module-wide header clashed
+  with about twice as many users: one wrong name or one type-name clash, e.g. a local `V4`, keeps the file
+  out). Each header must compile on its own. Every file that names a declared name tries the header at its
+  end (`compiles_with`); a compatible extern (`T D[]` vs `T D[N]`, `M2C_UNK` vs `s32`) is fine.
+- Names already declared in include/data/data_XXXX.h are left there (12 merged heads were: merge_pieces.py
+  writes "untyped: merged" whatever the absorbed pieces' headers say).
+- `--all-users` (the second pass) types a piece only when one type serves every file that names it, and a
+  local struct type only when no other file names the piece. `--includes-only` reruns the include step.
+- The .s comment of a typed piece names its header (`/* data/pieces/D_X.h */`; merged ones keep
+  `merged (...)`).
+
+### Counts
+
+| category (comment) | before | typed | left |
+| --- | ---: | ---: | ---: |
+| merged | 114 | 46 (34 new, 12 in data_XXXX.h); 153 of 330 labels | 68 |
+| users disagree | 305 | 31 (`--all-users`) | 274 |
+| no C user ... with one file-scope extern | 496 | 42 (`--all-users`: 41 function pointers, D_0037733C..D_003773D8 and D_0046A6A8, and T78D8 D_003F78D8[8]) | 454 |
+| type X is not a common.h basic type | 112 | 93 (`--all-users`) | 19 |
+| element size does not divide the extent | 5 | 4 (as `T D[]`) | 1 |
+| a non-user file declares it otherwise, the D_0046A688 table | 3 | 0 | 3 |
+| **all** | **1,035** | **216** | **819** |
+
+214 headers in include/data/pieces/, 549 includes in 245 user files; 87 new type headers in
+include/data/types/ (33 of them `_pN.h`).
+
+Why the rest stay untyped:
+- 53 merged pieces and 454 others: no C file declares the piece at all (names only data `.word`s or asm reach;
+  the split_check/record groups of session 23). 15 merged pieces have typed labels but an unnamed head; a
+  struct made up from the labels alone would be a guess, so they say `untyped: no C user declares it
+  (merged); labels in ...`.
+- 274 "users disagree": `s32`/`u32`, `T`/`T[]`, different local structs; no one type compiles in every
+  user. The merged pieces have the same split (e.g. D_00389C90: 20 local struct types in 55 files; its header
+  declares `Str`, from text_001c0000_h67.c: 2 files declare it that way, 5 include the header). Unifying needs one shared struct per
+  object and edits to each user, function by function, with `make` checking the code.
+- 15 struct-typed pieces: the type is local to one file and other files name the piece (T16, Q16, Glyph,
+  PCur), or a user's own `u128` typedef clashes with shared.h's; their comments say which.
+
+### Hazards
+
+- gcc 2.96 accepts `extern volatile s32 X;` followed by `extern s32 X;` (only the qualifier differs), so
+  the end-of-file include does not prove the qualifiers agree: D_002BBE04's header says `s32`, and
+  text_001c0000_h42.c still reads it as `volatile`. A later C definition from these headers must check the
+  users' qualifiers.
+- A header included at a user's end only checks the declarations; it changes nothing before it, so the code
+  cannot change. Nothing may ever move these includes to the top of a file without a `make`.

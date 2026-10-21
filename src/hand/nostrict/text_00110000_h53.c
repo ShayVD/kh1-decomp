@@ -1,5 +1,5 @@
 #include "common.h"
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V53;
+#include "data/types/nostrict_text_00110000_h53.h"
 typedef struct {
     u8 pad0[0x1c];
     f32 p[4];
@@ -252,3 +252,5 @@ void func_00124a28(void) {
     }
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002C6490.h"

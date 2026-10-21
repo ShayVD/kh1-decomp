@@ -4,7 +4,7 @@
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { f32 x, y, z; } V3;
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/text_00170000_h38.h"
 typedef union { V4 v; u128 q; } V4A;
 
 /* --- actor state handlers (Wk = owner, Ob = actor) --- */
@@ -556,3 +556,8 @@ void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
 #include "data/data_002E.h"
 #include "data/data_0036.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00362580.h"
+#include "data/pieces/D_00362590.h"
+#include "data/pieces/D_00362620.h"
+#include "data/pieces/D_00362630.h"

@@ -48,9 +48,7 @@ s32 func_00108d90(void *arg) {
 }
 
 /* sceGsLoadImage / sceGsStoreImage packets (0x70 bytes). */
-typedef struct {
-    u64 q[14];
-} GsImagePacket;
+#include "data/types/text_00100000_h2.h"
 
 void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
@@ -653,3 +651,11 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
 #include "data/data_002B.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC170.h"
+#include "data/pieces/D_002BC1B0.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC1C.h"
+#include "data/pieces/D_002BD110.h"

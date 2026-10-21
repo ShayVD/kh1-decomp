@@ -86,7 +86,7 @@ void func_0010f258(W29Cnt *c, W29Mdl *m) {
     }
 }
 
-typedef struct { u64 d[14]; } W29S70;
+#include "data/types/text_00110000_h29_p.h"
 extern s32 D_004D9240;
 extern W29S70 D_002C5AD0[2];
 extern W29S70 D_002BCA00[2];
@@ -498,7 +498,7 @@ s32 func_00115200(void *p0, void *dir, void *p1, void *n, void *out) {
     return 1;
 }
 
-typedef struct { f32 v[4]; } __attribute__((aligned(16))) W29V4;
+#include "data/types/text_00110000_h29_p2.h"
 void func_00104f10(void *, W29V4 *);
 void func_00104eb0(void *, W29V4 *);
 
@@ -725,3 +725,12 @@ s32 D_002BD170 ALIGNED(16) = 0;
 #include "data/data_0030.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC080.h"
+#include "data/pieces/D_002BCA00.h"
+#include "data/pieces/D_002C5AD0.h"
+#include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002BCC1C.h"
+#include "data/pieces/D_002BD1E0.h"

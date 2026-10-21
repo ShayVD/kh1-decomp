@@ -153,3 +153,5 @@ s32 func_00126360(C01Obj2 *o, s32 *ctx, C01Vec *v) {
     return 13;
 
 }
+#include "data/pieces/D_002E27CC.h"
+#include "data/pieces/D_002E27D0.h"

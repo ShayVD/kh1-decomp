@@ -6,21 +6,21 @@
 	.include "include/data/piece.inc"
 
 	PIECE D_002B1C60, 0x1200, 16  /* untyped: users disagree: E90 D_002B1C60[][64] | M2C_UNK D_002B1C60 */
-	PIECE D_002B2E60, 0x2400, 16  /* untyped: type M144 is not a common.h basic type */
-	PIECE D_002B5260, 0x1200, 16  /* untyped: type M144 is not a common.h basic type */
+	PIECE D_002B2E60, 0x2400, 16  /* data/pieces/D_002B2E60.h */
+	PIECE D_002B5260, 0x1200, 16  /* data/pieces/D_002B5260.h */
 	PIECE D_002B6460, 0x14, 4
 	PIECE D_002B6474, 0x4, 4
 	PIECE D_002B6478, 0x4, 4
 	PIECE D_002B647C, 0x4, 4
 	PIECE D_002B6480, 0x4, 4
 	PIECE D_002B6484, 0xc, 4
-	PIECE D_002B6490, 0x150, 16  /* untyped: type Pkt is not a common.h basic type */
+	PIECE D_002B6490, 0x150, 16  /* data/pieces/D_002B6490.h */
 	PIECE_BEGIN D_002B65E0, 0x10, 16
 	PIECE_BYTES D_002B65E0, 0x0, 0x4
 	.word D_002B6490
 	PIECE_BYTES D_002B65E0, 0x8, 0x8
 	PIECE_END D_002B65E0, 0x10
-	PIECE_BEGIN D_002B65F0, 0xc0, 16  /* untyped: merged (a user declares it larger than the next name): D_002B65F0, D_002B6668 */
+	PIECE_BEGIN D_002B65F0, 0xc0, 16  /* untyped: no C user declares it (merged); labels in data/data_002B.h */
 	PIECE_BYTES D_002B65F0, 0x0, 0x78
 	PIECE_LABEL D_002B65F0, D_002B6668, 0x78
 	PIECE_BYTES D_002B65F0, 0x78, 0x48
@@ -196,13 +196,13 @@
 	PIECE D_002BBDE0, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDE0 | volatile u32 D_002BBDE0; unparsed in 1 file(s) */
 	PIECE D_002BBDE4, 0x4, 4  /* untyped: users disagree: s32 D_002BBDE4 | u32 D_002BBDE4 */
 	PIECE D_002BBDE8, 0x4, 4
-	PIECE D_002BBDEC, 0x4, 4  /* untyped: users disagree: f32 D_002BBDEC; unparsed in 1 file(s) */
+	PIECE D_002BBDEC, 0x4, 4  /* data/pieces/D_002BBDEC.h */
 	PIECE D_002BBDF0, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDF0 | volatile u32 D_002BBDF0 */
 	PIECE D_002BBDF4, 0x4, 4  /* untyped: users disagree: s32 D_002BBDF4 | u32 D_002BBDF4 | volatile s32 D_002BBDF4 | volatile u32 D_002BBDF4 */
 	PIECE D_002BBDF8, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BBDF8 | volatile u32 D_002BBDF8 */
-	PIECE D_002BBDFC, 0x4, 4  /* untyped: users disagree: f32 D_002BBDFC; unparsed in 5 file(s) */
+	PIECE D_002BBDFC, 0x4, 4  /* data/pieces/D_002BBDFC.h */
 	PIECE D_002BBE00, 0x4, 4
-	PIECE D_002BBE04, 0x4, 4  /* untyped: users disagree: s32 D_002BBE04 | volatile s32 D_002BBE04 */
+	PIECE D_002BBE04, 0x4, 4  /* data/pieces/D_002BBE04.h */
 	PIECE D_002BBE08, 0x4, 4
 	PIECE D_002BBE0C, 0x4, 4
 	PIECE D_002BBE10, 0x4, 4
@@ -220,7 +220,7 @@
 	PIECE D_002BC020, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002BC020 | s32 D_002BC020[4][4] */
 	PIECE D_002BC060, 0x10, 16
 	PIECE D_002BC070, 0x10, 16  /* untyped: users disagree: Col D_002BC070 | s32 D_002BC070 | volatile s32 D_002BC070[] */
-	PIECE_BEGIN D_002BC080, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC08C */
+	PIECE_BEGIN D_002BC080, 0x10, 16  /* merged (a user declares it larger than the next name): D_002BC08C; data/pieces/D_002BC080.h */
 	PIECE_BYTES D_002BC080, 0x0, 0xc
 	PIECE_LABEL D_002BC080, D_002BC08C, 0xc
 	PIECE_BYTES D_002BC080, 0xc, 0x4
@@ -232,7 +232,7 @@
 	PIECE D_002BC0A0, 0x4, 4
 	PIECE D_002BC0A4, 0x4, 4
 	PIECE D_002BC0A8, 0x8, 8  /* untyped: users disagree: Fl0A8 D_002BC0A8 | Flags D_002BC0A8 | s32 D_002BC0A8 | u32 D_002BC0A8 */
-	PIECE_BEGIN D_002BC0B0, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC0BC */
+	PIECE_BEGIN D_002BC0B0, 0x10, 16  /* merged (a user declares it larger than the next name): D_002BC0BC; data/pieces/D_002BC0B0.h */
 	PIECE_BYTES D_002BC0B0, 0x0, 0xc
 	PIECE_LABEL D_002BC0B0, D_002BC0BC, 0xc
 	PIECE_BYTES D_002BC0B0, 0xc, 0x4
@@ -241,7 +241,7 @@
 	PIECE D_002BC0F0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0F0 | Cam D_002BC0F0 | Cam0 D_002BC0F0 | CamS D_002BC0F0 | S2BC0F0 D_002BC0F0 | View30 D_002BC0F0 | f32 D_002BC0F0[] | s32 D_002BC0F0[] */
 	PIECE D_002BC120, 0x4, 4
 	PIECE D_002BC124, 0x4, 4
-	PIECE D_002BC128, 0x4, 4  /* untyped: users disagree: s32 D_002BC128; unparsed in 1 file(s) */
+	PIECE D_002BC128, 0x4, 4  /* data/pieces/D_002BC128.h */
 	PIECE D_002BC12C, 0x4, 4
 	PIECE D_002BC130, 0x4, 4
 	PIECE D_002BC134, 0x4, 4
@@ -250,12 +250,12 @@
 	PIECE D_002BC140, 0x4, 4  /* untyped: users disagree: s32 D_002BC140 | void *D_002BC140 | volatile s8 *D_002BC140 */
 	PIECE D_002BC144, 0x4, 4  /* untyped: users disagree: s32 D_002BC144 | void *D_002BC144 | volatile s8 *D_002BC144 */
 	PIECE D_002BC148, 0x28, 8  /* untyped: users disagree: Pair D_002BC148 | s32 D_002BC148[4] */
-	PIECE_BEGIN D_002BC170, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC190 */
+	PIECE_BEGIN D_002BC170, 0x40, 16  /* merged (a user declares it larger than the next name): D_002BC190; data/pieces/D_002BC170.h */
 	PIECE_BYTES D_002BC170, 0x0, 0x20
 	PIECE_LABEL D_002BC170, D_002BC190, 0x20
 	PIECE_BYTES D_002BC170, 0x20, 0x20
 	PIECE_END D_002BC170, 0x40
-	PIECE_BEGIN D_002BC1B0, 0xc0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC210 */
+	PIECE_BEGIN D_002BC1B0, 0xc0, 16  /* merged (a user declares it larger than the next name): D_002BC210; data/pieces/D_002BC1B0.h */
 	PIECE_BYTES D_002BC1B0, 0x0, 0x60
 	PIECE_LABEL D_002BC1B0, D_002BC210, 0x60
 	PIECE_BYTES D_002BC1B0, 0x60, 0x60
@@ -272,7 +272,7 @@
 	PIECE D_002BC750, 0x70, 16
 	PIECE D_002BC7C0, 0x70, 16
 	PIECE D_002BC830, 0x70, 16
-	PIECE_BEGIN D_002BC8A0, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC8A0, D_002BC918 */
+	PIECE_BEGIN D_002BC8A0, 0xe0, 16  /* untyped: no C user declares it (merged); labels in data/data_002B.h */
 	PIECE_BYTES D_002BC8A0, 0x0, 0x78
 	PIECE_LABEL D_002BC8A0, D_002BC918, 0x78
 	PIECE_BYTES D_002BC8A0, 0x78, 0x68
@@ -289,7 +289,7 @@
 	.word D_002BC990
 	PIECE_BYTES D_002BC9F0, 0x8, 0x8
 	PIECE_END D_002BC9F0, 0x10
-	PIECE_BEGIN D_002BCA00, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BCA04, D_002BCA70 */
+	PIECE_BEGIN D_002BCA00, 0xe0, 16  /* merged (a user declares it larger than the next name): D_002BCA04, D_002BCA70; data/pieces/D_002BCA00.h */
 	PIECE_BYTES D_002BCA00, 0x0, 0x4
 	PIECE_LABEL D_002BCA00, D_002BCA04, 0x4
 	PIECE_BYTES D_002BCA00, 0x4, 0x6c
@@ -304,10 +304,10 @@
 	PIECE D_002BCB50, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002BCB50 | f32 D_002BCB50[3] */
 	PIECE D_002BCB60, 0x8, 8  /* untyped: users disagree: Ctx *D_002BCB60 | W29Ply *D_002BCB60 | s32 D_002BCB60 | void *D_002BCB60 */
 	PIECE D_002BCB68, 0x18, 8
-	PIECE D_002BCB80, 0x9c, 4  /* untyped: type E4 is not a common.h basic type */
-	PIECE D_002BCC1C, 0x4, 4  /* untyped: users disagree: s32 D_002BCC1C; unparsed in 1 file(s) */
+	PIECE D_002BCB80, 0x9c, 4  /* data/pieces/D_002BCB80.h */
+	PIECE D_002BCC1C, 0x4, 4  /* data/pieces/D_002BCC1C.h */
 	PIECE D_002BCC20, 0x4, 4
-	PIECE D_002BCC24, 0x4, 4  /* untyped: users disagree: int D_002BCC24 | s32 D_002BCC24 */
+	PIECE D_002BCC24, 0x4, 4  /* data/pieces/D_002BCC24.h */
 	PIECE D_002BCC80, 0x8, 8
 	PIECE D_002BCC88, 0x8, 8
 	PIECE D_002BCC90, 0x4, 4
@@ -342,8 +342,8 @@
 	.word D_002BCE00
 	PIECE_BYTES D_002BD100, 0x8, 0x8
 	PIECE_END D_002BD100, 0x10
-	PIECE D_002BD110, 0x4, 4  /* untyped: users disagree: s32 D_002BD110; unparsed in 1 file(s) */
-	PIECE D_002BD114, 0x4, 4  /* untyped: users disagree: volatile s32 D_002BD114; unparsed in 1 file(s) */
+	PIECE D_002BD110, 0x4, 4  /* data/pieces/D_002BD110.h */
+	PIECE D_002BD114, 0x4, 4  /* data/pieces/D_002BD114.h */
 	PIECE D_002BD118, 0x4, 4  /* untyped: users disagree: s32 D_002BD118 | u32 D_002BD118 */
 	PIECE D_002BD11C, 0x4, 4
 	PIECE D_002BD120, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -354,7 +354,7 @@
 	PIECE_END D_002BD140, 0x10
 	PIECE D_002BD150, 0x10, 16
 	PIECE D_002BD160, 0x10, 16
-	PIECE D_002BD1E0, 0x10, 16  /* untyped: type W29V4 is not a common.h basic type */
-	PIECE D_002BD1F0, 0x60, 16  /* untyped: type V4_01 is not a common.h basic type */
+	PIECE D_002BD1E0, 0x10, 16  /* data/pieces/D_002BD1E0.h */
+	PIECE D_002BD1F0, 0x60, 16  /* data/pieces/D_002BD1F0.h */
 	PIECE D_002BD250, 0x2000, 16  /* untyped: users disagree: M2C_UNK D_002BD250 | s32 D_002BD250[] | u8 D_002BD250[] | void *D_002BD250[] */
 	PIECE D_002BF250, 0x2000, 16

@@ -874,3 +874,8 @@ s32 func_00235d70(void) {
 }
 #include "data/data_003F.h"
 #include "data/data_0042.h"
+#include "data/pieces/D_003F7A68.h"
+#include "data/pieces/D_00425C10.h"
+#include "data/pieces/D_00425C14.h"
+#include "data/pieces/D_00425CA8.h"
+#include "data/pieces/D_00425CAC.h"

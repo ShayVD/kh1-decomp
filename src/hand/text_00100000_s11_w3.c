@@ -63,3 +63,4 @@ s32 func_00101bb8(Anim *o) {
     o->prev = o->frame;
     return 0;
 }
+#include "data/pieces/D_002BBDFC.h"

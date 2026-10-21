@@ -45,3 +45,4 @@ void func_00110e68(s32 a) {
     func_00176110(a);
     func_00176150(a);
 }
+#include "data/pieces/D_002BC170.h"

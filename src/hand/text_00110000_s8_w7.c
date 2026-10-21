@@ -72,3 +72,5 @@ void func_001124f8(void) {
 }
 #include "data/data_002B.h"
 #include "data/data_002C.h"
+#include "data/pieces/D_002C1378.h"
+#include "data/pieces/D_002BC128.h"

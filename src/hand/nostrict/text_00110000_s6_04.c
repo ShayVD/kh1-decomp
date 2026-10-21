@@ -21,8 +21,7 @@ Node *func_0011f090(Pool *l, s32 key, s32 val) {
     l->cur = (u8 *)n;
     return n;
 }
-typedef f32 V4[4] __attribute__((aligned(16)));
-typedef struct { u16 active; s8 b2; u8 b3; s32 x4; u8 pad8[0x28]; V4 v[4]; } PadSt;
+#include "data/types/nostrict_text_00110000_s6_04_p.h"
 typedef struct { u8 b0 : 1; u8 lo : 2; u8 mode : 2; u8 hi : 3; } Sema5968;
 typedef struct { u32 a : 2; u32 b : 1; u32 r : 29; } Fl5960;
 typedef struct { u8 x0[2]; u8 x2; u8 pad[17]; } Prof;
@@ -355,3 +354,4 @@ void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004E_typed.h"
 #include "data/data_002C.h"
+#include "data/pieces/D_002C5BB0.h"

@@ -928,7 +928,7 @@ s32 func_00145ce8(B3Pj *o) {
     return 0;
 }
 
-typedef struct { u16 x[15]; } B3SeRow;
+#include "data/types/nostrict_text_00130000_b03_p.h"
 typedef struct {
     union { u64 x; struct { s32 lo; s32 x4; } s; } x0;
     u16 x8;
@@ -1034,3 +1034,9 @@ end:;
 #include "data/bss_0053_typed.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002C5BB0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002C5970.h"
+#include "data/pieces/D_00306850.h"

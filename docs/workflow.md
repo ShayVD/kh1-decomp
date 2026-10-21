@@ -840,3 +840,21 @@ found that the next session needs:
   in PCSX2's game list boots it (no Start File dialog). A fresh container needs `out/overlays` (stage
   Downloads/kh1-test/ovl/*.x) and `tools/shift/data_owners.py` before the float build.
 - A PCSX2 hang can show as a black screen with "FPS: N/A" in the status bar while VPS stays at 60.
+
+## Session 24: what changed
+
+- **The DMA chain hang is explained** (docs/shiftable-plan.md "Session 24"): chain 1's table doubles as a
+  32-byte array (D_00494BAC) that runs into chain 2. Chains 1 and 2 are one 0x8080 piece; floated whole with
+  chain 0 (KH1_F24_REC3) Gate Plaza plays.
+- **SHIFT_FLOAT_PTR_ONLY=1 is the default**; the default build (= KH1_F24_P1, 1,061 data names) plays the load
+  menu, Gate Plaza, the world map warp and a fight. SHIFT_FLOAT_FORCE floats kept names for experiments.
+- **Reading a PCSX2 savestate without PCSX2**: unzip every member (zstd, method 93; float_holes.py's
+  `ee_memory()` shows how). eeHwRegs.bin = the 0x10000000 register page (DMA channels at 0x8000 VIF0, 0x9000
+  VIF1, 0xA000 GIF: CHCR, MADR +0x10, QWC +0x20, TADR +0x30). cpuRegs start 32 bytes after the `cpuRegs` tag in
+  `PCSX2 Internal Structures.dat`: 32 GPRs of 16 bytes, HI, LO, 32 CP0 words, sa, IsDelaySlot, pc.
+- Phase 4 (worker s24types): tools/shift/type_pieces.py typed 216 pieces (1,035 -> 819 untyped), one header
+  per piece in include/data/pieces/.
+- PCSX2 input: keys must be held (`hold_key` 0.3 s); a plain key press is often missed. Click the game window
+  first. L = confirm (circle), K = cancel, arrows = d-pad, WASD = left stick.
+- Matching: not run this session (no new idea for the 1-2 word functions or 001c62a0).
+

@@ -188,3 +188,5 @@ void func_00181738(void) {
         D_003701B0.bit = e->x93;
     }
 }
+#include "data/pieces/D_002BBDEC.h"
+#include "data/pieces/D_002BBDFC.h"

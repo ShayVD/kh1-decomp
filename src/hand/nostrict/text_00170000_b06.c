@@ -269,7 +269,7 @@ void func_0017cb88(void) {
 }
 
 /* ---- func_0017d628 ---- */
-typedef struct { V4 a; V4 b; s32 mode; } S690;
+#include "data/types/nostrict_text_00170000_b06_p.h"
 extern S690 D_00362690;
 extern u8 D_002E31B0[];
 f32 func_0012eca8(void *, void *);
@@ -451,3 +451,5 @@ s32 func_0017c190(void) {
 #include "data/bss_0057_typed.h"
 #include "data/data_002E.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_00362690.h"
+#include "data/pieces/D_002BBDFC.h"

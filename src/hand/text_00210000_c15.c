@@ -376,3 +376,4 @@ void func_0021d9c8(void) {
 }
 #include "data/data_003F.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003F34C8.h"

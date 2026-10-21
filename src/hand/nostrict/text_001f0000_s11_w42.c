@@ -33,8 +33,7 @@ s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 s32 sceGsSyncPath(s32, s32);
 
-typedef struct { u16 u, v; u8 pad[12]; s16 w, h; } BigG;
-typedef struct { u16 u, v; } SmG;
+#include "data/types/nostrict_text_001f0000_s11_w42.h"
 typedef struct { s32 w[16]; } GQ;
 extern BigG D_003E9250;
 extern SmG D_003E9110[];
@@ -206,3 +205,5 @@ s32 func_001fbcd8(Txt9 *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s32
     func_001220b8(base);
     return (xx - ox) >> 4;
 }
+#include "data/pieces/D_003E9110.h"
+#include "data/pieces/D_003E9250.h"

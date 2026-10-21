@@ -164,3 +164,4 @@ void func_001ddbf8(void) {
 }
 */
 #include "data/data_0029.h"
+#include "data/pieces/D_00389C90.h"

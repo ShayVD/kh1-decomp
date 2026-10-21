@@ -5,11 +5,7 @@
 typedef struct { u8 pad[0x10]; f32 f10; u8 pad14[0x28]; s32 w3C; s32 w40; s32 w44; } ChrHp;
 typedef struct { u8 pad[0x38]; u64 w38; } Wk144;
 typedef struct { u32 flags; u8 pad4[0xC]; f32 pos[4]; u8 pad20[0x4C]; ChrHp *p6C; s32 w70; u8 pad74[0xD0]; Wk144 *p144; } Chr;
-typedef struct {
-    u8 pad[0xB4]; s32 wB4; u8 padB8[4]; f32 fBC; u8 padC0[4]; f32 fC4, fC8; u8 padCC[4];
-    f32 fD0, fD4, fD8, fDC, fE0, fE4; u8 padE8[0x6C]; f32 f154, f158, f15C, f160, f164; u8 pad168[0x6C];
-    f32 f1D4, f1D8, f1DC;
-} Prm35AE80;
+#include "data/types/nostrict_text_00160000_h60_p.h"
 typedef struct { s32 *a; s32 b; } P86F;
 typedef struct {
     u8 pad[0x20]; f32 v20[4]; u8 pad30[8]; u64 w38; u8 pad40[0x18]; s32 w58; u8 pad5c[0x34];
@@ -1018,3 +1014,7 @@ void (*D_0035BC80[0xa])(Obj70 *, Wk70 *) ALIGNED(16) = {
 #include "data/data_002B.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_0035AE80.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"

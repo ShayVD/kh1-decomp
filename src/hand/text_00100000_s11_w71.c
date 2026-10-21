@@ -1,11 +1,8 @@
 /* func_00106ed0: MATCH (hand, strict), no context. s11w71, from w48's 31w draft. Natural shape apart from climbed statement orders (no dead statements, no flags, no asm). Alias-set levers: h accesses and q->v stores go through a one-field struct F1 (MEM_IN_STRUCT), so the D_00494BAC/BA8 scalar-global loads are not ordered behind the h stores in sched1 (fixed_scalar_and_varying_struct_p); the four prologue tables use structs with a 4-byte enum EN (its own alias set) and sub->b is read as EN, so the load waits only on the EN-typed stores and their output deps fix the sched2 store order; block-local pointers to the four tables, declared in the order 761C0, 7A200, 6E140, 72180, set the address registers and the lo_sum order. */
 #include "common.h"
 #include "data/bss_0049.h"
-typedef struct { s32 a, b, c, d; } Ent16;
+#include "data/types/text_00100000_s11_w71_p.h"
 #include "data/types/text_00100000_s11_w71.h"
-typedef enum { EZ } EN;
-typedef struct { EN a; s32 b; EN c, d; } EntD;
-typedef struct { EN a, b, c, d; } EntE;
 typedef struct { s32 a; EN b; s32 c, d; } EntLb;
 extern EntE D_0046E140;
 extern EntE D_00472180;
@@ -120,3 +117,7 @@ p004761C0->c = 0;
     }
 }
 #include "data/data_002A.h"
+#include "data/pieces/D_0046E120.h"
+#include "data/pieces/D_00472160.h"
+#include "data/pieces/D_004761A0.h"
+#include "data/pieces/D_0047A1E0.h"

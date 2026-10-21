@@ -522,3 +522,6 @@ s32 func_0012ffd0(void *arg0) {
 #include "data/data_002B.h"
 #include "data/data_002E.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BBE04.h"

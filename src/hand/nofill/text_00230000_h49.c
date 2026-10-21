@@ -282,3 +282,4 @@ void func_0023c7a0(void) {
 }
 #include "data/data_002E.h"
 #include "data/data_0045.h"
+#include "data/pieces/D_002BBDFC.h"

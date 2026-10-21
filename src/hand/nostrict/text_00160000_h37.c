@@ -847,3 +847,4 @@ void func_0016f7b8(void) {
 #include "data/data_002E.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C5958.h"

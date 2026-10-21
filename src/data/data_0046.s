@@ -30,8 +30,8 @@
 	PIECE D_00469F60, 0x30, 16
 	PIECE D_00469F90, 0x10, 16
 	PIECE D_00469FA0, 0x10, 16
-	PIECE D_00469FB0, 0x18, 8  /* untyped: type PsmEnt is not a common.h basic type */
-	PIECE D_0046A038, 0x4, 4  /* untyped: type Prm is not a common.h basic type */
+	PIECE D_00469FB0, 0x18, 8  /* data/pieces/D_00469FB0.h */
+	PIECE D_0046A038, 0x4, 4  /* data/pieces/D_0046A038.h */
 	PIECE D_0046A03C, 0x4, 4  /* untyped: users disagree: s32 D_0046A03C | u8 *D_0046A03C */
 	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040 */
 	PIECE D_0046A044, 0x4, 4  /* untyped: users disagree: s32 D_0046A044 | u8 *D_0046A044 */
@@ -42,7 +42,7 @@
 	PIECE_END D_0046A048, 0x10
 	PIECE D_0046A070, 0x10, 16
 	PIECE D_0046A080, 0x40, 16
-	PIECE_BEGIN D_0046A0C0, 0x480, 16  /* untyped: merged (a user declares it larger than the next name): D_0046A0C0, D_0046A0C8, D_0046A112, D_0046A1A8, D_0046A1F2, D_0046A288, D_0046A2D2, D_0046A368, D_0046A3B2, D_0046A448, D_0046A4DA, D_0046A53C */
+	PIECE_BEGIN D_0046A0C0, 0x480, 16  /* merged (a user declares it larger than the next name): D_0046A0C0, D_0046A0C8, D_0046A112, D_0046A1A8, D_0046A1F2, D_0046A288, D_0046A2D2, D_0046A368, D_0046A3B2, D_0046A448, D_0046A4DA, D_0046A53C; data/data_0046.h */
 	PIECE_BYTES D_0046A0C0, 0x0, 0x8
 	PIECE_LABEL D_0046A0C0, D_0046A0C8, 0x8
 	PIECE_BYTES D_0046A0C0, 0x8, 0x4a
@@ -123,11 +123,11 @@
 	PIECE_LABEL D_0046A688, D_0046A6A4, 0x1c
 	.word func_0024e078
 	PIECE_END D_0046A688, 0x20
-	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE_BEGIN D_0046A6A8, 0x4, 4  /* data/pieces/D_0046A6A8.h */
 	.word func_0024e088
 	PIECE_END D_0046A6A8, 0x4
 	PIECE D_0046A6AC, 0x4, 4
-	PIECE_BEGIN D_0046A6B0, 0x320, 16  /* untyped: merged (a user declares it larger than the next name): D_0046A6B0, D_0046A6D8, D_0046A8BC, D_0046A914, D_0046A96C, D_0046A9C8 */
+	PIECE_BEGIN D_0046A6B0, 0x320, 16  /* merged (a user declares it larger than the next name): D_0046A6B0, D_0046A6D8, D_0046A8BC, D_0046A914, D_0046A96C, D_0046A9C8; data/data_0046.h */
 	PIECE_BYTES D_0046A6B0, 0x0, 0x28
 	PIECE_LABEL D_0046A6B0, D_0046A6D8, 0x28
 	PIECE_BYTES D_0046A6B0, 0x28, 0x4
@@ -276,7 +276,7 @@
 	PIECE D_0046E094, 0x1c, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046E0B0, 0x50, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_0046E100, 0x20, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_0046E120, 0x4040, 16  /* untyped: merged (a user declares it larger than the next name): D_0046E120, D_0046E140, D_0046E150, D_00472150 */
+	PIECE_BEGIN D_0046E120, 0x4040, 16  /* merged (a user declares it larger than the next name): D_0046E120, D_0046E140, D_0046E150, D_00472150; data/data_0046.h */
 	PIECE_BYTES D_0046E120, 0x0, 0x4
 	.word D_0048BFD0
 	PIECE_BYTES D_0046E120, 0x8, 0xc

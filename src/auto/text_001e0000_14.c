@@ -12,3 +12,4 @@ void func_001e3f00(void) {
     D_003DC490 = 1;
 }
 #include "data/data_003D.h"
+#include "data/pieces/D_003F7A68.h"

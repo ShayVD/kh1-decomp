@@ -108,3 +108,4 @@ s32 func_0023cfc8(void) {
     return D_0044A820 != 0;
 }
 #include "data/bss_0064_mixed.h"
+#include "data/pieces/D_0044A820.h"

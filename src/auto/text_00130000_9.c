@@ -43,3 +43,4 @@ void func_0013e558(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) (M2C_FIELD(arg0, s32 *, 0) & ~0x800);
     func_001452a0(arg0);
 }
+#include "data/pieces/D_00350D94.h"

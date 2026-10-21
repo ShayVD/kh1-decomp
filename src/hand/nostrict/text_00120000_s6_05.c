@@ -256,7 +256,7 @@ s32 func_0012dd70(O8 *o) {
     return 0;
 }
 
-typedef struct { u32 w; s32 f4; s32 f8; } St3190;
+#include "data/types/nostrict_text_00120000_s6_05_p.h"
 typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern St3190 D_002E3190;
 extern s32 D_002E3168;
@@ -1153,3 +1153,6 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
     e->f0 |= 2;
 }
 #include "data/data_002E.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002E3190.h"
+#include "data/pieces/D_002BBDFC.h"

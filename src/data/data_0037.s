@@ -8,7 +8,7 @@
 	PIECE D_00370130, 0x10, 16  /* untyped: users disagree: s32 D_00370130 | void *D_00370130 */
 	PIECE D_00370140, 0x30, 16
 	PIECE D_00370170, 0x40, 16
-	PIECE D_003701B0, 0x10, 16  /* untyped: type PCur is not a common.h basic type */
+	PIECE D_003701B0, 0x10, 16  /* untyped: PCur is local to src/hand/text_00180000_b07.c and other files name D_003701B0 (type PCur is not a common.h basic type) */
 	PIECE D_003701D0, 0x10, 16  /* untyped: users disagree: FV4 D_003701D0 | M2C_UNK D_003701D0 | f32 D_003701D0[4] | u8 D_003701D0[] */
 	PIECE D_003701E0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701E0 | PppFVec D_003701E0 | s32 D_003701E0[3] */
 	PIECE D_003701F0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701F0 | f32 D_003701F0[2] | f32 D_003701F0[3] | f32 D_003701F0[] | u8 D_003701F0[] */
@@ -1102,14 +1102,14 @@
 	PIECE_BYTES D_00370200, 0x24c0, 0x48
 	PIECE_END D_00370200, 0x2508
 	PIECE D_00372708, 0x8, 8
-	PIECE D_00372710, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
-	PIECE D_00372720, 0x10, 16  /* untyped: type SplV4 is not a common.h basic type */
-	PIECE D_00372730, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
-	PIECE D_00372740, 0x10, 16  /* untyped: type SplV4 is not a common.h basic type */
+	PIECE D_00372710, 0x10, 16  /* untyped: src/hand/nostrict/text_00190000_h64.c does not compile with it (type u128 is not a common.h basic type) */
+	PIECE D_00372720, 0x10, 16  /* data/pieces/D_00372720.h */
+	PIECE D_00372730, 0x10, 16  /* untyped: src/hand/nostrict/text_00190000_h64.c does not compile with it (type u128 is not a common.h basic type) */
+	PIECE D_00372740, 0x10, 16  /* data/pieces/D_00372740.h */
 	PIECE D_00372760, 0x10, 16
-	PIECE D_00372770, 0x20, 16  /* untyped: type u128 is not a common.h basic type */
+	PIECE D_00372770, 0x20, 16  /* untyped: src/hand/text_001a0000_b09.c does not compile with it (type u128 is not a common.h basic type) */
 	PIECE D_00372790, 0x20, 16
-	PIECE D_003727B0, 0x40, 16  /* untyped: type u128 is not a common.h basic type */
+	PIECE D_003727B0, 0x40, 16  /* data/pieces/D_003727B0.h */
 	PIECE D_003727F0, 0x10, 16
 	PIECE D_00372800, 0xc0, 16  /* untyped: users disagree: M2C_UNK D_00372800 | f32 D_00372800[16] */
 	PIECE D_003728C0, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
@@ -1121,55 +1121,55 @@
 	PIECE D_00372F34, 0xcc, 4
 	PIECE D_00373000, 0x30, 16
 	PIECE D_00373030, 0x30, 16
-	PIECE D_00373060, 0x40, 16  /* untyped: type Gs060 is not a common.h basic type */
+	PIECE D_00373060, 0x40, 16  /* data/pieces/D_00373060.h */
 	PIECE D_003730A0, 0x230, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_003732D0, 0x4000, 16
 	PIECE D_003772D0, 0x4, 4
 	PIECE D_003772D4, 0x4, 4
 	PIECE D_003772D8, 0x4, 4
 	PIECE D_003772DC, 0x60, 4
-	PIECE D_0037733C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377340, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377344, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377348, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037734C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377350, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377354, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377358, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037735C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377360, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377364, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377368, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037736C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377370, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377374, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377378, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037737C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377380, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377384, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377388, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037738C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377390, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377394, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00377398, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_0037739C, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773A0, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773A4, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773A8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773AC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773B0, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773B4, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773B8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773BC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773C0, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773C4, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773C8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773CC, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773D0, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773D4, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003773D8, 0x4, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
+	PIECE D_0037733C, 0x4, 4  /* data/pieces/D_0037733C.h */
+	PIECE D_00377340, 0x4, 4  /* data/pieces/D_00377340.h */
+	PIECE D_00377344, 0x4, 4  /* data/pieces/D_00377344.h */
+	PIECE D_00377348, 0x4, 4  /* data/pieces/D_00377348.h */
+	PIECE D_0037734C, 0x4, 4  /* data/pieces/D_0037734C.h */
+	PIECE D_00377350, 0x4, 4  /* data/pieces/D_00377350.h */
+	PIECE D_00377354, 0x4, 4  /* data/pieces/D_00377354.h */
+	PIECE D_00377358, 0x4, 4  /* data/pieces/D_00377358.h */
+	PIECE D_0037735C, 0x4, 4  /* data/pieces/D_0037735C.h */
+	PIECE D_00377360, 0x4, 4  /* data/pieces/D_00377360.h */
+	PIECE D_00377364, 0x4, 4  /* data/pieces/D_00377364.h */
+	PIECE D_00377368, 0x4, 4  /* data/pieces/D_00377368.h */
+	PIECE D_0037736C, 0x4, 4  /* data/pieces/D_0037736C.h */
+	PIECE D_00377370, 0x4, 4  /* data/pieces/D_00377370.h */
+	PIECE D_00377374, 0x4, 4  /* data/pieces/D_00377374.h */
+	PIECE D_00377378, 0x4, 4  /* data/pieces/D_00377378.h */
+	PIECE D_0037737C, 0x4, 4  /* data/pieces/D_0037737C.h */
+	PIECE D_00377380, 0x4, 4  /* data/pieces/D_00377380.h */
+	PIECE D_00377384, 0x4, 4  /* data/pieces/D_00377384.h */
+	PIECE D_00377388, 0x4, 4  /* data/pieces/D_00377388.h */
+	PIECE D_0037738C, 0x4, 4  /* data/pieces/D_0037738C.h */
+	PIECE D_00377390, 0x4, 4  /* data/pieces/D_00377390.h */
+	PIECE D_00377394, 0x4, 4  /* data/pieces/D_00377394.h */
+	PIECE D_00377398, 0x4, 4  /* data/pieces/D_00377398.h */
+	PIECE D_0037739C, 0x4, 4  /* data/pieces/D_0037739C.h */
+	PIECE D_003773A0, 0x4, 4  /* data/pieces/D_003773A0.h */
+	PIECE D_003773A4, 0x4, 4  /* data/pieces/D_003773A4.h */
+	PIECE D_003773A8, 0x4, 4  /* data/pieces/D_003773A8.h */
+	PIECE D_003773AC, 0x4, 4  /* data/pieces/D_003773AC.h */
+	PIECE D_003773B0, 0x4, 4  /* data/pieces/D_003773B0.h */
+	PIECE D_003773B4, 0x4, 4  /* data/pieces/D_003773B4.h */
+	PIECE D_003773B8, 0x4, 4  /* data/pieces/D_003773B8.h */
+	PIECE D_003773BC, 0x4, 4  /* data/pieces/D_003773BC.h */
+	PIECE D_003773C0, 0x4, 4  /* data/pieces/D_003773C0.h */
+	PIECE D_003773C4, 0x4, 4  /* data/pieces/D_003773C4.h */
+	PIECE D_003773C8, 0x4, 4  /* data/pieces/D_003773C8.h */
+	PIECE D_003773CC, 0x4, 4  /* data/pieces/D_003773CC.h */
+	PIECE D_003773D0, 0x4, 4  /* data/pieces/D_003773D0.h */
+	PIECE D_003773D4, 0x4, 4  /* data/pieces/D_003773D4.h */
+	PIECE D_003773D8, 0x4, 4  /* data/pieces/D_003773D8.h */
 	PIECE D_003773DC, 0x4, 4
-	PIECE_BEGIN D_003773E0, 0x2d50, 16  /* untyped: merged (a user declares it larger than the next name): D_003773E0, D_003773E4, D_003773E8, D_003773EC, D_003773F8, D_00377648, D_00377748, D_00377848, D_00378A48, D_00379C78, D_0037A128 */
+	PIECE_BEGIN D_003773E0, 0x2d50, 16  /* merged (a user declares it larger than the next name): D_003773E0, D_003773E4, D_003773E8, D_003773EC, D_003773F8, D_00377648, D_00377748, D_00377848, D_00378A48, D_00379C78, D_0037A128; data/data_0037.h */
 	PIECE_BYTES D_003773E0, 0x0, 0x4
 	PIECE_LABEL D_003773E0, D_003773E4, 0x4
 	PIECE_BYTES D_003773E0, 0x4, 0x4
@@ -1193,7 +1193,7 @@
 	PIECE_LABEL D_003773E0, D_0037A128, 0x2d48
 	PIECE_BYTES D_003773E0, 0x2d48, 0x8
 	PIECE_END D_003773E0, 0x2d50
-	PIECE_BEGIN D_0037A130, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_0037A148, D_0037A14C, D_0037A150, D_0037A154, D_0037A158, D_0037A15C, D_0037A160, D_0037A164, D_0037A168, D_0037A16C */
+	PIECE_BEGIN D_0037A130, 0x40, 16  /* merged (a user declares it larger than the next name): D_0037A148, D_0037A14C, D_0037A150, D_0037A154, D_0037A158, D_0037A15C, D_0037A160, D_0037A164, D_0037A168, D_0037A16C; data/pieces/D_0037A130.h */
 	PIECE_BYTES D_0037A130, 0x0, 0x18
 	PIECE_LABEL D_0037A130, D_0037A148, 0x18
 	PIECE_BYTES D_0037A130, 0x18, 0x4
@@ -1255,7 +1255,7 @@
 	.word func_001c1880
 	.word D_00490578
 	PIECE_END D_0037A198, 0x84
-	PIECE_BEGIN D_0037A21C, 0x15c, 4  /* untyped: type MsgTbl is not a common.h basic type */
+	PIECE_BEGIN D_0037A21C, 0x15c, 4  /* data/pieces/D_0037A21C.h */
 	PIECE_BYTES D_0037A21C, 0x0, 0x4
 	.word D_00490560
 	PIECE_BYTES D_0037A21C, 0x8, 0x4

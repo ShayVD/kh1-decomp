@@ -36,7 +36,7 @@
 	PIECE D_0029B2F8, 0x4, 4
 	PIECE D_0029B2FC, 0x4, 4
 	PIECE D_0029B300, 0x10, 16
-	PIECE D_0029B310, 0x100, 16  /* untyped: type V4f is not a common.h basic type */
+	PIECE D_0029B310, 0x100, 16  /* data/pieces/D_0029B310.h */
 	PIECE D_0029B410, 0x4, 4
 	PIECE D_0029B414, 0x4, 4
 	PIECE D_0029B418, 0x4, 4

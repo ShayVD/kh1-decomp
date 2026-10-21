@@ -31,3 +31,4 @@ void func_0015def8(void *arg0, s32 arg1) {
   func_00267560((*((s32 *) (((s8 *) arg0) + 0x148))) + 0x110, &(*((M2C_UNK *) (((s8 *) sp) + 0x10))), var_f12);
   func_00267560(arg1, (*((s32 *) (((s8 *) arg0) + 0x148))) + 0x110, D_002BBDFC);
 }
+#include "data/pieces/D_002BBDFC.h"

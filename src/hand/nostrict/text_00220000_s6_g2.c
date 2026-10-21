@@ -670,3 +670,5 @@ end:
 #include "data/data_003F.h"
 #include "data/data_0042.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003F34C8.h"
+#include "data/pieces/D_00425CAC.h"

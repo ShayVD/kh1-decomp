@@ -32,3 +32,4 @@ void func_001d9510(void *arg0) {
     temp_f1_3 = M2C_FIELD(arg0, f32 *, 0x34);
     M2C_FIELD(temp_v0, f32 *, 0x38) = (f32) (temp_f1_3 + ((M2C_FIELD(arg0, f32 *, 0x40) - temp_f1_3) * (M2C_FIELD(arg0, f32 *, 0x48) / M2C_FIELD(arg0, f32 *, 0x44))));
 }
+#include "data/pieces/D_002BBDFC.h"

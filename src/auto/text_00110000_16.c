@@ -67,3 +67,4 @@ s32 func_00119710(s32 arg0) {
     return var_v0;
 }
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"

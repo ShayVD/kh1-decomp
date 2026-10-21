@@ -2,7 +2,7 @@
 #include "common.h"
 typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd;
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
-typedef struct { s32 a[4]; } C16;
+#include "data/types/nostrict_text_00210000_s19_s19m1.h"
 extern s32 D_0064324C;
 extern C16 D_003F5E00[];
 extern u8 D_003F5028[];
@@ -124,3 +124,4 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
+#include "data/pieces/D_003F5E00.h"

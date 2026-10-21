@@ -32,7 +32,13 @@ D_003F8380
 # func_00107d30 stores `D_00351BD0 ? D_00472160 : D_0046E120` (and the other pairs) into the object
 # func_00106db0 kicks (VIF1 TADR). Floating pieces of them hung loading save 05 (session 20). Floating
 # D_0046E120 and D_00472160 whole (KH1_F23_REC2) loads save 06 but hangs entering Gate Plaza, with no
-# stale writes in a savestate (float_holes.py): the cause is not found yet.
+# stale writes in a savestate (float_holes.py). Session 24 found why: func_00106ed0 also uses chain 1's
+# table as 32-byte entries (D_00494BAC = D_00472190, D_00494BB0 entries, 622 in Gate Plaza), writing
+# floats into the qwords' upper halves 0xDB0 bytes past chain 1 into chain 2 (the DMA ignores those
+# halves). Floated alone, chain 1's table overwrote the names floated after it (D_002A3F30 ...). Chains 1
+# and 2 are one 0x8080 piece now (D_004761A0 is a label), and KH1_F24_REC3 (chain 0 and chains 1-2
+# floated, SHIFT_FLOAT_FORCE) plays Gate Plaza and a fight. They stay here only because they are far over
+# the data budget; reach_check keeps chains 3-5 anyway (idx-next).
 D_0046E120
 D_00472160
 D_004761A0

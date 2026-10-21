@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_0049.h"
 typedef struct { s32 w0, w4, w8, w12; } Ent16;
-typedef struct { s32 pad[2]; s32 a[16]; s32 b[16]; s32 pad2[2]; } M144;
+#include "data/types/nostrict_text_00100000_s6_01_p2.h"
 #include "data/types/nostrict_text_00100000_s6_01.h"
 extern s32 D_00351BD0;
 extern M144 D_002B5260[];
@@ -135,7 +135,7 @@ extern void func_001085e8(s32, s32);
 extern void func_00108180(s32);
 extern s32 D_0029B2F4;
 extern s32 D_0029B2FC;
-typedef struct { u8 b[64]; } B64;
+#include "data/types/nostrict_text_00100000_s6_01_p.h"
 extern B64 D_0047A250[];
 extern B64 D_004721D0[];
 extern B64 D_00476210[];
@@ -459,3 +459,9 @@ void func_0010b6c0(Win *w) {
 #include "data/data_0035.h"
 #include "data/data_003F.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC170.h"
+#include "data/pieces/D_0048BFD0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002BC128.h"
+#include "data/pieces/D_002B2E60.h"
+#include "data/pieces/D_002B5260.h"

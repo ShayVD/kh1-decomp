@@ -1,7 +1,7 @@
 /* Hand-matched functions (worker c04). */
 #include "common.h"
 
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/types/text_00160000_c04.h"
 typedef struct { V4 a; V4 b; V4 c; s16 h30; u8 pad32[0xE]; } RayC4;
 typedef struct {
     u8 pad0[0x10]; V4 x10; u8 pad20[0x10]; V4 x30; u8 pad40[0x30]; s32 x70; u8 pad74[0x5C]; V4 xD0; u8 padE0[0x2E0]; V4 x3c0;
@@ -288,3 +288,8 @@ void func_00178ef8(void) {
     func_001773b0();
 }
 #include "data/data_0036.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_00362660.h"
+#include "data/pieces/D_00362670.h"
+#include "data/pieces/D_00362680.h"
+#include "data/pieces/D_002BBDFC.h"

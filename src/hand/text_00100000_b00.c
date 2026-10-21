@@ -117,3 +117,7 @@ void func_00107ec0(s32 (*m)[4]) {
 #include "data/data_0035.h"
 #include "data/data_002A.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC080.h"
+#include "data/pieces/D_002BC170.h"
+#include "data/pieces/D_0048BFD0.h"
+#include "data/pieces/D_0048C300.h"

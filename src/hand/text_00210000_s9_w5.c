@@ -50,3 +50,4 @@ void func_0021b4c8(s32 n) {
 }
 #include "data/bss_0064_mixed.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003F50E0.h"

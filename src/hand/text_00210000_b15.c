@@ -789,3 +789,6 @@ void func_002335d8(s32 i) {
 #include "data/data_003F.h"
 #include "data/data_0042.h"
 #include "data/data_003E.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00425C10.h"
+#include "data/pieces/D_00425C14.h"

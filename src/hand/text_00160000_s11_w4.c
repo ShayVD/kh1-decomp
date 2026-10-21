@@ -201,3 +201,4 @@ r0:
 #include "data/bss_0057_mixed.h"
 #include "data/data_002E.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BBDFC.h"

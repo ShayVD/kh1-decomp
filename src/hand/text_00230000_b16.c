@@ -257,3 +257,5 @@ void func_00247cf8(Sc *p) {
         break;
     }
 }
+#include "data/pieces/D_00425C10.h"
+#include "data/pieces/D_00425C14.h"

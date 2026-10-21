@@ -279,3 +279,6 @@ void func_0015ee10(void) {
     D_00351BC4 = -1;
 }
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_00351BC0.h"
+#include "data/pieces/D_00351BC4.h"

@@ -38,3 +38,4 @@ s32 func_001ed278(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     return D_00633640;
 }
 #include "data/data_003E.h"
+#include "data/pieces/D_003DD28C.h"

@@ -41,3 +41,4 @@ M2C_UNK D_00425BD0[0xe] ALIGNED(16) = {
     (s32)func_00236450, (s32)func_00236598,
 };
 #include "data/bss_0064_mixed.h"
+#include "data/pieces/D_0044A820.h"

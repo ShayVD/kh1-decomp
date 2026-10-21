@@ -1,6 +1,6 @@
 #include "common.h"
 /* func_00106000 (hand, rodata jtbl 0x48cc80: verified with rr.py). rgba inline computes w = r | 1<<32 before v; the else-branch D_002A6658 store goes through a block-local u64 *q; case 2 computes x/y after the [4]/[6] stores. */
-typedef struct { s32 r, g, b; volatile s32 a; } Col;
+#include "data/types/text_00100000_s8_w9.h"
 extern Col D_002BC0B0, D_002BC070;
 extern s32 D_002BC730, D_002A6208, D_002A6B80, D_002BBE04, D_002BC740, D_002BC744;
 s32 D_00494A78 ALIGNED(8);
@@ -98,3 +98,5 @@ void func_00106000(s32 a) {
 }
 #include "data/data_002A.h"
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC0B0.h"
+#include "data/pieces/D_002BBE04.h"

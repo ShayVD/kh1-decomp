@@ -81,3 +81,4 @@ int func_0023d1e0(float x)
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_0038.h"
+#include "data/pieces/D_002BCC24.h"

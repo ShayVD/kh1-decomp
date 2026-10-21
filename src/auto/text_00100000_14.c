@@ -103,3 +103,4 @@ void *func_0010fce8(s32 arg0, s32 arg1) {
 }
 #include "data/data_002A.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002BBDFC.h"

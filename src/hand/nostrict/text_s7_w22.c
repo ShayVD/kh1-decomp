@@ -85,3 +85,4 @@ void func_001f4778(Wnd4 *o) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
+#include "data/pieces/D_003F1A68.h"

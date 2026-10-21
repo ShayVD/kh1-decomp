@@ -168,3 +168,4 @@ s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n) {
 }
 #include "data/bss_0057_mixed.h"
 #include "data/data_0036.h"
+#include "data/pieces/D_002BBDFC.h"

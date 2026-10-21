@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/bss_004E.h"
-typedef f32 V4_01[4] __attribute__((aligned(16)));
+#include "data/types/text_00110000_b01.h"
 typedef struct { u8 pad[0x10]; V4_01 x10; } Obj01;
 typedef struct { u32 b0:1; u32 p1:3; u32 k:4; u32 p8:9; u32 b17:1; u32 p18:11; u32 b29:1; u32 p30:2; } Bits01;
 typedef struct { f32 minx, p0[3], miny, p1[3], minz, p2[3], maxx, p3[3], maxy, p4[3], maxz, p5[3]; } Box01;
@@ -604,3 +604,4 @@ void func_0011e1c8(s32 x) {
 
 #include "data/data_002C.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_002BD1F0.h"

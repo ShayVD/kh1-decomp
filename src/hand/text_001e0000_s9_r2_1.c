@@ -95,3 +95,4 @@ deflt:
     func_0010bdd0(&D_0062F790, func_001e2d08);
 }
 #include "data/data_003D.h"
+#include "data/pieces/D_003F7A68.h"

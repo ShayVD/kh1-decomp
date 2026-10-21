@@ -274,3 +274,4 @@ void func_0010fd18(void) {
 }
 #include "data/data_002A.h"
 #include "data/data_002B.h"
+#include "data/pieces/D_002BC128.h"

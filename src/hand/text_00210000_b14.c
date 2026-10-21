@@ -11,7 +11,7 @@ typedef struct { s32 x0; u8 pad[224]; } RecE0;
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
-typedef struct { s32 *p; s32 n; } PN;
+#include "data/types/text_00210000_b14.h"
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 extern S4BE8 *D_00304BE8;
 extern u32 D_003E3D68;
@@ -692,3 +692,4 @@ void func_00217b38(void *a) {
     }
 }
 #include "data/data_003F.h"
+#include "data/pieces/D_003F40D0.h"

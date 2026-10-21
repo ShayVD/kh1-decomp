@@ -378,3 +378,5 @@ void func_00176cc8(s32 i) {
     func_00176c60(i);
 }
 #include "data/data_0035.h"
+#include "data/pieces/D_002C5AD0.h"
+#include "data/pieces/D_002BBDFC.h"

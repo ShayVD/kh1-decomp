@@ -1009,3 +1009,5 @@ s32 D_003F6568[0xa] ALIGNED(8) = {
 };
 #include "data/data_003F.h"
 #include "data/data_003E.h"
+#include "data/pieces/D_003F6DF0.h"
+#include "data/pieces/D_003F34C8.h"

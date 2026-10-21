@@ -286,3 +286,4 @@ s32 func_001c7c18(VMa *vm) {
     return 2;
 }
 #include "data/data_003C.h"
+#include "data/pieces/D_002BBDFC.h"

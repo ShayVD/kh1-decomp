@@ -294,3 +294,4 @@ end:
 }
 #include "data/data_003E.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003E8D04.h"

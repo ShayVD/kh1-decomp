@@ -76,3 +76,5 @@ void func_00229820(void) {
 }
 #include "data/bss_0064_mixed.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_003F6DF0.h"
+#include "data/pieces/D_003F34C8.h"
