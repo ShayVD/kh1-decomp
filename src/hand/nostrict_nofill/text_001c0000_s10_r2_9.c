@@ -68,10 +68,10 @@ typedef struct {
 } BigA;
 
 extern BigA D_00389C90;
-extern u32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
-extern VMa D_0038D170[];
-extern VMa D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 extern u8 D_003DE570[];
@@ -79,31 +79,12 @@ s32 func_001c1ce8(s8 *, s32);
 void func_001c19f8(VMa *, s32);
 void func_001c4198(void *, s32);
 
-typedef f32 Vec[4] __attribute__((aligned(16)));
-typedef struct Elem {
-    s32 a;
-    s32 b;
-    s32 c;
-    s32 pad;
-    Vec m[11];
-    f32 f[6];
-    struct Elem *next;
-    struct Elem *prev;
-} Elem;
-typedef struct {
-    f32 x0;
-    u8 pad4[0xc];
-    Vec q10, q20, q30, q40;
-    Vec q50;
-    f32 x60;
-    u8 pad64[0xf0 - 0x64];
-    Elem arr[256];
-    s32 n;
-    f32 xE0F4;
-    Elem *first;
-    Elem *last;
-} Scn;
-extern Scn D_0037A380;
+#include "data/pieces/D_0037A380.h"
+typedef Vec_37A380 Vec;
+typedef Elem_37A380 Elem;
+typedef Scn_37A380 Scn;
+
+
 typedef struct {
     u8 pad0[0xd0];
     Vec v[5];
@@ -119,8 +100,8 @@ VMa *func_001e98d0(s32, s32);
 
 extern s8 *D_003C39AC;
 extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern u32 D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern s32 (*D_0037A198[])(VMa *, s32);
 s32 func_001ee200(void);
 void srand(u32);
@@ -156,7 +137,7 @@ typedef struct {
 } Task;
 extern S5BB0 D_002C5BB0;
 extern u32 D_003C39A8;
-extern u8 *D_003C21A8[];
+#include "data/pieces/D_003C21A8.h"
 extern f32 D_002BBDFC;
 Msg *func_001c4730(void);
 void func_001c4788(Msg *);
@@ -189,18 +170,18 @@ void func_001c53c8(f32 t) {
     s32 i, k;
     f32 c0, c1, dt, u, u2, u3;
     f32 x;
-    if (t < (f32)D_0037A380.first->c) return;
-    if ((f32)D_0037A380.last->c < t) return;
-    e = D_0037A380.first;
-    for (i = 0; i < D_0037A380.n; i++) {
+    if (t < (f32)D_0037A380.scn.first->c) return;
+    if ((f32)D_0037A380.scn.last->c < t) return;
+    e = D_0037A380.scn.first;
+    for (i = 0; i < D_0037A380.scn.n; i++) {
         x = (f32)e->c;
         if (t == x) {
-            __builtin_memcpy(&D_0037A380.q10, &e->m[5], 16);
-            __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16);
-            __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16);
-            __builtin_memcpy(&D_0037A380.q40, &e->m[10], 16);
-            D_0037A380.x60 = e->f[2];
-            D_0037A380.xE0F4 = e->f[5];
+            __builtin_memcpy(&D_0037A380.scn.q10, &e->m[5], 16);
+            __builtin_memcpy(&D_0037A380.scn.q20, &e->m[6], 16);
+            __builtin_memcpy(&D_0037A380.scn.q30, &e->m[7], 16);
+            __builtin_memcpy(&D_0037A380.scn.q40, &e->m[10], 16);
+            D_0037A380.scn.x60 = e->f[2];
+            D_0037A380.scn.xE0F4 = e->f[5];
             func_001c5168();
             return;
         }
@@ -214,12 +195,12 @@ void func_001c53c8(f32 t) {
                 u2 = u * u;
                 u3 = u * u2;
                 for (k = 0; k < 3; k++) {
-                    D_0037A380.q10[k] = herm(u, u2, u3, dt, e->m[5][k], n->m[5][k], e->m[4][k], n->m[3][k]);
-                    D_0037A380.q40[k] = herm(u, u2, u3, dt, e->m[10][k], n->m[10][k], e->m[9][k], n->m[8][k]);
+                    D_0037A380.scn.q10[k] = herm(u, u2, u3, dt, e->m[5][k], n->m[5][k], e->m[4][k], n->m[3][k]);
+                    D_0037A380.scn.q40[k] = herm(u, u2, u3, dt, e->m[10][k], n->m[10][k], e->m[9][k], n->m[8][k]);
                 }
-                D_0037A380.x60 = herm(u, u2, u3, dt, e->f[2], n->f[2], e->f[1], n->f[0]);
-                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], n->f[5], e->f[4], n->f[3]);
-                __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16); __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16); func_001c5168(); return;
+                D_0037A380.scn.x60 = herm(u, u2, u3, dt, e->f[2], n->f[2], e->f[1], n->f[0]);
+                D_0037A380.scn.xE0F4 = herm(u, u2, u3, dt, e->f[5], n->f[5], e->f[4], n->f[3]);
+                __builtin_memcpy(&D_0037A380.scn.q20, &e->m[6], 16); __builtin_memcpy(&D_0037A380.scn.q30, &e->m[7], 16); func_001c5168(); return;
             }
             switch (((s8 *)&e->b)[3]) {
             case 0:
@@ -235,15 +216,15 @@ void func_001c53c8(f32 t) {
                 func_001e9f18(&q1, &e->next->m[5], &r, e->next->f[2]);
                 k = 0; { Elem *m = e->next;
                 for (; k < 3; k++) {
-                    D_0037A380.q10[k] = herm(u, u2, u3, dt, e->m[5][k], m->m[5][k], e->m[4][k], m->m[3][k]);
+                    D_0037A380.scn.q10[k] = herm(u, u2, u3, dt, e->m[5][k], m->m[5][k], e->m[4][k], m->m[3][k]);
                     q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], m->m[0][k]);
                 }
-                D_0037A380.q40[2] = herm(u, u2, u3, dt, e->m[10][2], m->m[10][2], e->m[9][2], m->m[8][2]); }
-                D_0037A380.x60 = func_001e9e58(&q0, &D_0037A380.q10);
-                func_001e9d00(&D_0037A380.q40, &D_0037A380.q10, &q0, D_0037A380.q40[2]);
-                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], e->next->f[5], e->f[4], e->next->f[3]);
-                __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16);
-                __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16);
+                D_0037A380.scn.q40[2] = herm(u, u2, u3, dt, e->m[10][2], m->m[10][2], e->m[9][2], m->m[8][2]); }
+                D_0037A380.scn.x60 = func_001e9e58(&q0, &D_0037A380.scn.q10);
+                func_001e9d00(&D_0037A380.scn.q40, &D_0037A380.scn.q10, &q0, D_0037A380.scn.q40[2]);
+                D_0037A380.scn.xE0F4 = herm(u, u2, u3, dt, e->f[5], e->next->f[5], e->f[4], e->next->f[3]);
+                __builtin_memcpy(&D_0037A380.scn.q20, &e->m[6], 16);
+                __builtin_memcpy(&D_0037A380.scn.q30, &e->m[7], 16);
                 func_001c5168();
                 return;
             case 2:
@@ -259,14 +240,14 @@ void func_001c53c8(f32 t) {
                 k = 0; { Elem *m = e->next;
                 for (; k < 3; k++) {
                     q0[k] = herm(u, u2, u3, dt, q0[k], q1[k], e->m[1][k], m->m[0][k]);
-                    D_0037A380.q40[k] = herm(u, u2, u3, dt, e->m[10][k], m->m[10][k], e->m[9][k], m->m[8][k]);
+                    D_0037A380.scn.q40[k] = herm(u, u2, u3, dt, e->m[10][k], m->m[10][k], e->m[9][k], m->m[8][k]);
                 }
-                D_0037A380.x60 = herm(u, u2, u3, dt, e->f[2], m->f[2], e->f[1], m->f[0]);
-                D_0037A380.xE0F4 = herm(u, u2, u3, dt, e->f[5], m->f[5], e->f[4], m->f[3]); }
-                __builtin_memcpy(&D_0037A380.q20, &e->m[6], 16);
-                __builtin_memcpy(&D_0037A380.q30, &e->m[7], 16);
-                func_001e9fe8(&r, &D_0037A380.q40);
-                func_001e9f18(&D_0037A380.q10, &q0, &r, -D_0037A380.x60);
+                D_0037A380.scn.x60 = herm(u, u2, u3, dt, e->f[2], m->f[2], e->f[1], m->f[0]);
+                D_0037A380.scn.xE0F4 = herm(u, u2, u3, dt, e->f[5], m->f[5], e->f[4], m->f[3]); }
+                __builtin_memcpy(&D_0037A380.scn.q20, &e->m[6], 16);
+                __builtin_memcpy(&D_0037A380.scn.q30, &e->m[7], 16);
+                func_001e9fe8(&r, &D_0037A380.scn.q40);
+                func_001e9f18(&D_0037A380.scn.q10, &q0, &r, -D_0037A380.scn.x60);
                 func_001c5168();
                 return;
             }

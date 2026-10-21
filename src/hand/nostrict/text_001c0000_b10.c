@@ -12,30 +12,14 @@ typedef struct {
 } Big;
 
 /* Script VM instance (0x350 bytes). */
-typedef struct {
-    s32 x0, x4;
-    u8 pad8[0x68];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[91];
-    s32 x2f0;
-    s32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    u8 pad31c[0xc];
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:22;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VM;
+#include "data/types/nostrict_text_001c0000_b10.h"
 
 extern Big D_00389C90;
-extern VM D_003A7990[], D_003B4DA0[];
+#include "data/pieces/D_003B4DA0.h"
+#include "data/pieces/D_003A7990.h"
 extern s32 D_003B4D90, D_003C21A0, D_002C5958;
 extern s32 (*D_0037A198[])(VM *, s32);
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002BCDE4, D_002BCC90;
 s32 func_001c1ce8(s8 *, s32);
 s32 func_001c1cf8(s8 *, s32);
@@ -54,7 +38,7 @@ void func_001c3770(s8 *p, s32 a1) {
     h0 = ((s32 *)p)[0];
     { u32 n = (a1 + (((s32 *)p)[1] + h0)) * 4; p += *(s32 *)((u32)p + n + 16); }
     p += 12;
-    if (a1 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
+    if (a1 == 0) { e = ((VM *)&D_003A7990); cnt = &D_003B4D90; }
     else { e = D_003B4DA0; cnt = &D_003C21A0; }
     *cnt = *p++;
     for (i = 0; i < *cnt; i++, e++) {
@@ -80,7 +64,7 @@ void func_001c3770(s8 *p, s32 a1) {
             p += 4; k++;
         }
     }
-    if (a1 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
+    if (a1 == 0) { e = ((VM *)&D_003A7990); cnt = &D_003B4D90; }
     else { e = D_003B4DA0; cnt = &D_003C21A0; }
     for (i = 0; i < *cnt; i++, e++) {
         e->pc = e->lbl[0];

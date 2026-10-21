@@ -21,7 +21,7 @@
 	PIECE D_004498A8, 0x40, 8
 	PIECE D_004498E8, 0x18, 8
 	PIECE D_00449900, 0x8, 8
-	PIECE D_00449908, 0x88, 8  /* untyped: users disagree: Cam D_00449908 | St17 D_00449908 | St570 D_00449908; unparsed in 1 file(s); session 25: as Cam D_00449908: does not compile in text_00230000_s6_24.c, text_00230000_c17.c +1 */
+	PIECE D_00449908, 0x88, 8  /* data/pieces/D_00449908.h */
 	PIECE D_00449990, 0xe70, 16  /* data/pieces/D_00449990.h */
 	PIECE D_0044A800, 0x10, 16
 	PIECE D_0044A810, 0x10, 16

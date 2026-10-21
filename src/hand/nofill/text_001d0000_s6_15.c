@@ -29,7 +29,7 @@ typedef struct {
 Ent *func_001e98d0(s32, s32);
 typedef struct { u8 pad0[0x1f]; u8 n; u8 items[0x74 - 0x20]; } Chr;
 typedef struct { u8 pad0[6]; Chr ch[10]; u8 a48e[11]; u8 a499[1]; } Save;
-extern Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; } __attribute__((aligned(8))) Msg2;
 typedef struct { u8 pad0[0x10]; f32 pos[3]; u8 pad1c[0x14]; f32 f30; f32 f34; f32 f38; } Obj5;
@@ -134,10 +134,10 @@ void func_001d9348(VM93 *vm) {
 /* rodata */
 typedef struct { u8 pad0[0x3070]; u64 f3070; } Big02;
 extern Big02 D_00389C90;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern char D_003DAC40[][6];
 typedef struct { s32 x0; s32 n; s32 tbl[1]; } Tbl;
-extern Tbl *D_003DACA0;
+#include "data/pieces/D_003DACA0.h"
 s32 func_0011e340(void *);
 s32 func_001559f0(s32, s32);
 void func_001e01f0(void);
@@ -149,7 +149,7 @@ s32 func_001e0220(VM *vm) {
     if (!(D_0037A378 & 1)) {
         if (func_0011e340(0) == 0) {
             sprintf(buf, "voice/event/%s_%03d.vset", D_003DAC40[vm->stk[vm->sp - 1]], vm->stk[vm->sp]);
-            pp = (s32 *)&D_003DACA0;
+            pp = (s32 *)((Tbl **)&D_003DACA0);
             *pp = func_001559f0(60, 4); func_00120748(buf, *pp, func_001e01f0, 0);
             D_00389C90.f3070 |= 0x8000ULL << 37;
         } else {
@@ -159,11 +159,10 @@ s32 func_001e0220(VM *vm) {
     vm->sp -= 2;
     return 2;
 }
-extern s32 D_0037A378;
 double ceil(double);
 void func_0011e220(void *, s32, s32, s32);
 s32 func_001e0338(VM *vm) {
-    Tbl *t = D_003DACA0;
+    Tbl *t = ((Tbl *)D_003DACA0);
     s32 k = vm->stk[vm->sp - 2];
     s32 s; void *p;
     f32 a, b;
@@ -183,7 +182,7 @@ s32 func_001e0498(VM *vm) {
         return 2;
     }
     {
-        Tbl *t = D_003DACA0;
+        Tbl *t = ((Tbl *)D_003DACA0);
         func_001ed6b0((u8 *)t + *(t->tbl + k + t->n));
     }
     vm->sp--;
@@ -192,7 +191,7 @@ s32 func_001e0498(VM *vm) {
 s32 func_001e0528(VM *vm) {
     s32 k = vm->stk[vm->sp];
     if (k == -1) { if (func_0011e340(0)) return 4; }
-    else { Tbl *t = D_003DACA0; if (func_0011e340((u8 *)t + *(t->tbl + k + t->n))) return 4; }
+    else { Tbl *t = ((Tbl *)D_003DACA0); if (func_0011e340((u8 *)t + *(t->tbl + k + t->n))) return 4; }
     vm->sp--;
     return 2;
 }

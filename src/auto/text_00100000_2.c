@@ -9,9 +9,9 @@ M2C_UNK func_00267620(void *);
 extern f32 D_002BBDFC;
 extern f32 D_00494898;
 extern s32 D_002A6204;
-extern s32 D_002A6238;
+#include "data/pieces/D_002A6238.h"
 extern s32 D_002B6480;
-extern s32 D_002BC070;
+#include "data/pieces/D_002BC070.h"
 extern s32 D_002BC0BC;
 extern s32 D_002BC734;
 extern s32 D_002BC738;
@@ -81,7 +81,7 @@ s32 func_001063c8(void) {
     s32 var_a1;
 
     var_a1 = 0;
-    if ((D_002BC070 == 0) || (D_002BC0BC == 0x80)) {
+    if (((*(s32 *)&D_002BC070) == 0) || (D_002BC0BC == 0x80)) {
         var_a1 = 1;
     }
     return var_a1;

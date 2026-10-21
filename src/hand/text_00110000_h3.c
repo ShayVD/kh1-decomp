@@ -13,7 +13,7 @@ static inline void CopyQword(void *dst, void *src) {
 }
 
 /* ---- externs ---- */
-extern void *D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 extern s32 D_002C12C4;
 extern s32 D_004D9370;
 extern s32 D_002BBE0C;
@@ -79,7 +79,7 @@ extern SndSlot D_004E3458[];
 extern Slot12 *D_004E3454;
 extern void (*D_004E3430)(void);
 extern s32 D_004E2430[64][16];
-extern s32 D_002A3F50[];
+#include "data/pieces/D_002A3F50.h"
 extern s32 D_002A3F44;
 #include "data/pieces/D_002BCAF0.h"
 extern s32 D_002BC128;
@@ -199,43 +199,43 @@ void func_001158a8(f32 *a, f32 *b) {
 
 /* List filters: append a0 to D_002BD250 when the flags at *a1 match. */
 void func_00115e90(void *a0, s32 *a1) {
-    if (!(*a1 & 0x106)) D_002BD250[D_002C12C4++] = a0;
+    if (!(*a1 & 0x106)) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00115ed0(void *a0, s32 *a1) {
-    if ((*a1 & 0x406) == 0x400) D_002BD250[D_002C12C4++] = a0;
+    if ((*a1 & 0x406) == 0x400) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00115f10(void *a0, s32 *a1) {
-    if ((*a1 & 0xf6) == 0x20) D_002BD250[D_002C12C4++] = a0;
+    if ((*a1 & 0xf6) == 0x20) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00115f50(void *a0, s32 *a1) {
-    if (!(*a1 & 0xe)) D_002BD250[D_002C12C4++] = a0;
+    if (!(*a1 & 0xe)) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00115f90(void *a0, KindBits *a1) {
-    if (a1->kind != 7 && a1->kind != 5) D_002BD250[D_002C12C4++] = a0;
+    if (a1->kind != 7 && a1->kind != 5) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00115fd8(void *a0, s32 *a1) {
-    if (!(*a1 & 0x10006)) D_002BD250[D_002C12C4++] = a0;
+    if (!(*a1 & 0x10006)) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00116020(void *a0, s32 *a1) {
-    if ((*a1 & 0xf6) == 0x50) D_002BD250[D_002C12C4++] = a0;
+    if ((*a1 & 0xf6) == 0x50) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_00116060(void *a0, KindBits *a1) {
-    if (a1->kind != 7 && a1->kind != 9 && a1->kind != 5) D_002BD250[D_002C12C4++] = a0;
+    if (a1->kind != 7 && a1->kind != 9 && a1->kind != 5) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_001160b0(void *a0, KindBits *a1) {
-    if (a1->kind == 9) D_002BD250[D_002C12C4++] = a0;
+    if (a1->kind == 9) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_001160f0(void *a0, u32 *a1) {
-    if (!((*a1 >> 17) & 1)) D_002BD250[D_002C12C4++] = a0;
+    if (!((*a1 >> 17) & 1)) ((void **)&D_002BD250)[D_002C12C4++] = a0;
 }
 
 void func_001178d0(Obj178 *a) {
@@ -243,7 +243,7 @@ void func_001178d0(Obj178 *a) {
     a->x1c = 0;
     func_00116368(a, 1);
     if (a->x18 != 0) {
-        a->x28 = D_002BD250;
+        a->x28 = ((void **)&D_002BD250);
         a->x24 = -1;
         a->x1c++;
         r = 1;
@@ -418,7 +418,7 @@ void func_0011d2d0(s32 a0, s32 a1, s32 a2) {
 void func_0011d588(void) {
     s32 i;
     for (i = 0; i < 2; i++) {
-        func_0011d240(D_002A3F50[i], i, D_002BCAF0, 0x3fff);
+        func_0011d240(((s32 *)&D_002A3F50)[i], i, D_002BCAF0, 0x3fff);
     }
 }
 

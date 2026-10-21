@@ -3,15 +3,15 @@
 #include "data/types/text_00110000_b01.h"
 typedef struct { u8 pad[0x10]; V4_01 x10; } Obj01;
 typedef struct { u32 b0:1; u32 p1:3; u32 k:4; u32 p8:9; u32 b17:1; u32 p18:11; u32 b29:1; u32 p30:2; } Bits01;
-typedef struct { f32 minx, p0[3], miny, p1[3], minz, p2[3], maxx, p3[3], maxy, p4[3], maxz, p5[3]; } Box01;
-extern Box01 D_002C1260;
+#include "data/types/text_00110000_b01_p2.h"
+#include "data/pieces/D_002C1260.h"
 extern s32 D_002C12C4;
-extern s32 D_002BD250[];
+#include "data/pieces/D_002BD250.h"
 extern s32 D_004E0428[];
-typedef struct { f32 mn[3]; f32 mx[3]; u16 n; u16 ids[1]; } Node01;
-extern Node01 **D_002A6244;
+#include "data/types/text_00110000_b01_p.h"
+#include "data/pieces/D_002A6244.h"
 typedef struct { u32 a, b, c, d; u32 f; } Tri01;
-extern Tri01 *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 typedef struct { u8 pad[0x18]; s16 cnt; } Qry01;
 s32 func_00115d58(Qry01 *);
 void func_001158c8(Qry01 *);
@@ -46,7 +46,7 @@ void func_00117db0(Qry01 *q) {
                 for (j = 0; j < e->n; j++) {
                     u32 *f;
                     id = *p++;
-                    f = &D_002A6238[id].f;
+                    f = &((Tri01 *)D_002A6238)[id].f;
                     if (!(*f & 1)) {
                         D_002BD250[D_002C12C4] = id;
                         D_002C12C4++;
@@ -57,7 +57,7 @@ void func_00117db0(Qry01 *q) {
                 for (j = 0; j < e->n; j++) {
                     u32 *f;
                     id = *p++;
-                    f = &D_002A6238[id].f;
+                    f = &((Tri01 *)D_002A6238)[id].f;
                     if (!(*f & 1)) func_00115940(id);
                 }
             }
@@ -162,7 +162,7 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
             for (j = 0; j < e->n; j++) {
                 s32 k;
                 id = *p++;
-                f = &D_002A6238[id].f;
+                f = &((Tri01 *)D_002A6238)[id].f;
                 w = *f;
                 if (w & 1) continue;
                 if (mode != 8) {
@@ -182,7 +182,7 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
             for (j = 0; j < e->n; j++) {
                 s32 k;
                 id = *p++;
-                f = &D_002A6238[id].f;
+                f = &((Tri01 *)D_002A6238)[id].f;
                 w = *f;
                 if (w & 1) continue;
                 if (mode != 8) {

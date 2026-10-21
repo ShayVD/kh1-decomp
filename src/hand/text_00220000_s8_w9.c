@@ -13,7 +13,7 @@ typedef struct {
 } Save3C;
 
 typedef struct { s32 a, b, c, d; } S4;
-extern S4 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 typedef struct O98 {
     u8 pad[0xc];
     struct O98 *xc;
@@ -47,7 +47,7 @@ typedef struct O98 {
     s16 xda;
 } O98;
 typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8;
-extern F8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_006469B0;
 extern s32 D_006469B4;
 extern u8 D_003F7210[];
@@ -116,7 +116,7 @@ void func_00233ff8(s32, s32);
 
 typedef struct { u8 pad[0x10]; s32 x10; } F10;
 typedef struct { u8 pad[0x48E]; u8 party[11]; u8 items[256]; } SvE;
-extern SvE *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D6C.h"
 extern s32 D_003F7A68;
 extern u16 *D_00646A08;
@@ -168,7 +168,7 @@ void func_0022eef8(O98 *a0) {
             if (id) {
                 max = func_001ef7a0() / id;
                 if (max) {
-                    lim = 99 - D_00304BE8->items[idx] ;
+                    lim = 99 - ((SvE *)D_00304BE8)->items[idx] ;
                     if (lim < max) {
                         max = lim;
                     }
@@ -178,24 +178,24 @@ void func_0022eef8(O98 *a0) {
                 max = 1;
             }
             snd = 0;
-            if ((((F10 *)D_00425BC8)->x10 & 0x80000080) && !(((F10 *)D_00425BC8)->x10 & 0x20000020)) {
+            if ((((F10 *)((F8 *)D_00425BC8))->x10 & 0x80000080) && !(((F10 *)((F8 *)D_00425BC8))->x10 & 0x20000020)) {
                 if (D_00646A28 >= 2) {
                     D_00646A28--;
                     snd = 1;
                     a0->x24.i = D_00646A14;
-                } else if (D_00425BC8->x8 & 0x80000080) {
+                } else if (((F8 *)D_00425BC8)->x8 & 0x80000080) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
                     }
                     a0->x24.i = D_00646A14;
                 }
-            } else if ((((F10 *)D_00425BC8)->x10 & 0x20000020) && !(((F10 *)D_00425BC8)->x10 & 0x80000080)) {
+            } else if ((((F10 *)((F8 *)D_00425BC8))->x10 & 0x20000020) && !(((F10 *)((F8 *)D_00425BC8))->x10 & 0x80000080)) {
                 if (D_00646A28 < max) {
                     D_00646A28++;
                     snd = 1;
                     a0->x24.i = D_00646A14;
-                } else if (D_00425BC8->x8 & 0x20000020) {
+                } else if (((F8 *)D_00425BC8)->x8 & 0x20000020) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;
@@ -268,7 +268,7 @@ void func_0022eef8(O98 *a0) {
         if (!r) break;
         func_001fc308(a0, x, 304, 0, 0, 21, 0, 0x26e6e6e6, 0x26e6e6e6);
         func_001fc308(a0, x, 304, 0, 0, 22, 0, 0x4c000000, 0x4c000000);
-        func_001fb428(a0, 1, 0, 0, x + 33, 355, func_001ef140(D_00304BE8->party[j] , D_00646A0C[D_00646A14]), 15, j == D_00646A20 ? 0x80e6e6e6 : 0x80808080);
+        func_001fb428(a0, 1, 0, 0, x + 33, 355, func_001ef140(((SvE *)D_00304BE8)->party[j] , D_00646A0C[D_00646A14]), 15, j == D_00646A20 ? 0x80e6e6e6 : 0x80808080);
         pos[0] += D_003F7790[j];
         pos[1] += D_003F77A0[j];
         func_00242ef8(r, D_003F7780[j], D_003F7780[j], pos, col);

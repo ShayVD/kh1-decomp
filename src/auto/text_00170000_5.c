@@ -6,11 +6,11 @@ M2C_UNK func_0017dbb8();
 extern s32 D_002E27A8;
 extern s32 D_003623F0;
 #include "data/pieces/D_00362428.h"
-extern s32 D_0036242C;
-extern s32 D_00362430;
-extern s32 D_00362434;
-extern s32 D_00362438;
-extern s32 D_0036243C;
+#include "data/pieces/D_0036242C.h"
+#include "data/pieces/D_00362430.h"
+#include "data/pieces/D_00362434.h"
+#include "data/pieces/D_00362438.h"
+#include "data/pieces/D_0036243C.h"
 extern s32 D_00362440;
 extern s32 D_00362444;
 extern s32 D_00362448;
@@ -32,8 +32,8 @@ void func_0017e7d8(void) {
 void func_0017eb20(void) {
     func_0017eaa0();
     (*(s32 *)&D_00362428) = 0;
-    D_0036242C = 0;
-    D_00362430 = 0;
+    (*(s32 *)&D_0036242C) = 0;
+    (*(s32 *)&D_00362430) = 0;
     D_00362434 = 0;
     D_00362438 = 0;
     D_0036243C = 0;

@@ -178,15 +178,15 @@ typedef struct {
     s32 xcc;
 } G20_q1;
 extern G20_q1 D_00643020;
-extern Cam_q1 *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
 extern s32 D_006430F8;
 extern s32 D_00643100;
 extern f32 D_002BBDFC;
-extern void *D_002BC140;
-extern void *D_002BC144;
+#include "data/pieces/D_002BC140.h"
+#include "data/pieces/D_002BC144.h"
 extern u8 D_003F5990[];
 #include "data/pieces/D_003F59A0.h"
 typedef struct { u8 pad[0x90]; s32 x90; } Ob_q1;
@@ -210,11 +210,11 @@ void func_0021af38(Ob_q1 *a) {
     s32 r;
     if (D_00643100 == 0) return;
     if (func_0021ade8(D_006430F8)) {
-        D_00425F70->v1b0[0] = 1.0f;
-        D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
-        D_00425F70->v1b0[1] = 1.0f;
-        D_00425F70->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
+        ((Cam_q1 *)D_00425F70)->v1b0[0] = 1.0f;
+        ((Cam_q1 *)D_00425F70)->v1b0[3] = (f32)a->x90 * 0.0078125f;
+        ((Cam_q1 *)D_00425F70)->v1b0[1] = 1.0f;
+        ((Cam_q1 *)D_00425F70)->v1b0[2] = 1.0f;
+        func_002675a8(D_00643020.xc8->xc, ((Cam_q1 *)D_00425F70)->v1b0);
     }
     r = func_001301d8(D_00643020.x18, 0, 0, 0);
     func_00236a58();
@@ -222,7 +222,7 @@ void func_0021af38(Ob_q1 *a) {
     func_00131cc8(D_006430F8, m2);
     sceVu0MulMatrix(m, m, m2);
     func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, D_00425F70->m80, m);
+    sceVu0MulMatrix(m, ((Cam_q1 *)D_00425F70)->m80, m);
     func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
     D_00643020.x70 += D_002BBDFC;
     func_00167d70(D_00643020.x14, D_002BBDFC);
@@ -234,11 +234,11 @@ void func_0021af38(Ob_q1 *a) {
     v[1] = 0;
     v[2] = 0;
     func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
-    D_002BC144 = D_00425F70->m40;
-    D_002BC140 = D_00425F70->m80;
-    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
-    func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
+    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, m, ((Cam_q1 *)D_00425F70)->m40);
+    (*(void **)&D_002BC144) = ((Cam_q1 *)D_00425F70)->m40;
+    (*(void **)&D_002BC140) = ((Cam_q1 *)D_00425F70)->m80;
+    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, ((Cam_q1 *)D_00425F70)->m40, ((Cam_q1 *)D_00425F70)->m80);
+    func_00161de8(D_00643020.x14, ((Cam_q1 *)D_00425F70)->m100, &D_00643020.x28, 0);
 }
 
 /* ---- fb6a0/d.c ---- */
@@ -421,7 +421,7 @@ typedef struct { u8 pad0[0xc4]; u16 xc4; u8 padc6[0xcc - 0xc6]; s16 xcc, xce; u8
 typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad_q5;
 typedef struct { u8 pad0[0x24]; s32 x24; u8 pad28[0x40 - 0x28]; s32 x40; u8 pad44[0xa0 - 0x44]; f32 xa0; u8 pada4[0xd8 - 0xa4]; s16 xd8, xda; } Eff_q5;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110_q5;
-extern Pad_q5 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern S3110_q5 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_0064324C;
 extern s32 D_00643268[];
@@ -469,7 +469,7 @@ void func_0021ed60(Obj_q5 *o) {
     s32 ch, n, k, v, j, i, y, dy, c, x, cnt;
     Eff_q5 *p;
     if (func_001f42b8()) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Pad_q5 *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_00643110->x10);
             func_0011d768(3);
             goto draw;
@@ -479,12 +479,12 @@ void func_0021ed60(Obj_q5 *o) {
         D_00643268[D_0064324C] = func_001fd518(o);
         ch = 0;
         n = o->xd8;
-        if (D_00425BC8->x10 & 0x80000480) {
+        if (((Pad_q5 *)D_00425BC8)->x10 & 0x80000480) {
             if (o->xda > 0) {
                 o->xda -= 16;
                 ch = 1;
             }
-        } else if (D_00425BC8->x10 & 0x20000820) {
+        } else if (((Pad_q5 *)D_00425BC8)->x10 & 0x20000820) {
             if (o->xda < (n - 1) << 4) {
                 o->xda += 16;
                 ch = 1;
@@ -557,7 +557,7 @@ typedef struct {
 } Save3C_q6;
 
 typedef struct { s32 a, b, c, d; } S4_q6;
-extern S4_q6 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 typedef struct O98_q6 {
     u8 pad[0xc];
     struct O98_q6 *xc;
@@ -675,12 +675,12 @@ extern s32 D_00643780[];
 extern s32 D_00643790;
 extern s32 D_00643794;
 extern s32 D_0064379C;
-extern u8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34C0;
-extern Nd_q6 *D_003F34C4;
+#include "data/pieces/D_003F34C4.h"
 extern s32 D_003F6E2C;
-extern C28_q6 D_00425C28;
+#include "data/pieces/D_00425C28.h"
 extern u8 D_003F6C30[];
 extern u8 D_003F6C00[];
 extern u8 D_003F6BD0[];
@@ -712,7 +712,7 @@ void func_00228e70(void *arg0) {
         D_003F34C0 |= 2;
         for (i = 0; i < 4; i++) {
             D_00643760[i] = i;
-            D_00643770[i] = (D_00304BE8 + 0x48E)[i];
+            D_00643770[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
             if (i == D_00643708 + 1) D_00643780[i] = 96; else D_00643780[i] = 32;
         }
         D_0064375C = 0;
@@ -720,7 +720,7 @@ void func_00228e70(void *arg0) {
         D_00643794 = 0;
         D_0064379C = 0;
         for (i = 0; i < 4; i++) {
-            D_00643778[i] = (D_00304BE8 + 0x48E)[i];
+            D_00643778[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
         }
         objs[0] = func_001f31a8_q6(D_003F68F0, 6);
         if (objs[0]) {

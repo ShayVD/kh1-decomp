@@ -1,7 +1,8 @@
 #include "common.h"
 /* func_00106000 (hand, rodata jtbl 0x48cc80: verified with rr.py). rgba inline computes w = r | 1<<32 before v; the else-branch D_002A6658 store goes through a block-local u64 *q; case 2 computes x/y after the [4]/[6] stores. */
 #include "data/types/text_00100000_s8_w9.h"
-extern Col D_002BC0B0, D_002BC070;
+extern Col D_002BC0B0;
+#include "data/pieces/D_002BC070.h"
 extern s32 D_002BC730, D_002A6B80, D_002BBE04, D_002BC740, D_002BC744;
 #include "data/pieces/D_002A6208.h"
 s32 D_00494A78 ALIGNED(8);
@@ -58,7 +59,7 @@ void func_00106000(s32 a) {
             }
         } else {
             u64 *q = &D_002A6658;
-            *q = rgba(&D_002BC070);
+            *q = rgba(((Col *)&D_002BC070));
             func_00106b18(D_002A6890);
         }
         if (D_002A6B80 != 0) {

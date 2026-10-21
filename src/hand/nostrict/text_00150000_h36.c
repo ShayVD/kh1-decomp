@@ -71,7 +71,7 @@ void func_0014cce0(void *, f32);
 f32 func_00120c88(f32);
 extern s32 D_002C5C54;
 extern f32 D_002BBDFC;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 s32 func_001375f0(void *);
 s32 func_0015dc50(void *);
 void func_0015dcc8(void *, f32 *);
@@ -94,7 +94,7 @@ extern GsBuf2 *D_0055BDE0; /* src/data/bss_0055.c: s32 D_0055BDE0 */
 extern GsBuf *D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
 extern s32 D_00351BD0;
 extern volatile s32 D_00559DBC;
-extern void *D_00351BC8;
+#include "data/pieces/D_00351BC8.h"
 s32 func_0015ea98(void);
 s32 FlushCache(s32);
 s32 DisableDmac(s32);
@@ -107,8 +107,8 @@ void func_00266f38(void *, void *);
 extern u8 D_00278680[], D_00272C70[];
 void func_00162500(void);
 extern u64 D_00573E40[];
-typedef struct { u8 pad[0x10]; s32 x10, x14, x18; } S2BC0F0;
-extern S2BC0F0 D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
+typedef S2BC0F0_2BC0F0_2 S2BC0F0;
 extern DmaChcr *D_0055C644;
 extern DmaChcr *D_0055C640;
 typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
@@ -611,7 +611,7 @@ void func_0015ec68(void) {
     D_0055BDE0 = D_00559DC0;
     func_0011ef10(0x9C40, func_0015eb78)->h2 = -1;
     func_0011ef10(0x27CB8, func_0015eea0)->h2 = -1;
-    D_00351BC8 = FlushCache;
+    (*(void **)&D_00351BC8) = FlushCache;
 }
 
 s32 func_0015eea0(void) {
@@ -660,7 +660,7 @@ s32 func_0015f388(void) {
     p = (u64 *)((u32)D_00573E40 | 0x20000000);
     p[12] = 0x5080B;
     p[14] = (128LL << 32) | 0x2A;
-    p[18] = (s64)D_002BC0F0.x10 | ((s64)D_002BC0F0.x14 << 8) | ((s64)D_002BC0F0.x18 << 16);
+    p[18] = (s64)D_002BC0F0.s2BC0F0_2.x10 | ((s64)D_002BC0F0.s2BC0F0_2.x14 << 8) | ((s64)D_002BC0F0.s2BC0F0_2.x18 << 16);
     p[16] = 0x31000070;
     p[20] = 0x800D0;
     p[22] = 5;

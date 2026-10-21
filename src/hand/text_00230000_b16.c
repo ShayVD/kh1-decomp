@@ -25,7 +25,8 @@ Q D_00668120 ALIGNED(32);
 Q4 *D_00668284 ALIGNED(4);
 extern Q4 *D_00668280;
 extern Q4 D_00351E10[];
-extern u8 D_004268B0[], D_004267F0[];
+#include "data/pieces/D_004268B0.h"
+#include "data/pieces/D_004267F0.h"
 void func_002370c8(Q *);
 void func_00237018(void *, s32, s32);
 s32 func_002485f0(void);
@@ -203,7 +204,7 @@ void func_00236190(void) {
 }
 
 typedef struct { u8 pad[8]; s32 on; s32 mode; s32 a; s32 b; } Sc;
-extern s32 D_00467408;
+#include "data/pieces/D_00467408.h"
 int sprintf(char *, const char *, ...);
 void func_002475d0(s32, s32, u8 *, f32, char *, s32);
 extern char D_004917D8[];

@@ -106,8 +106,8 @@ extern s32 D_002C5958;
 extern s32 D_002C5AD4;
 extern s32 D_002C5BB4;
 extern s32 D_002C5BB8;
-extern s32 D_00304BE8;
-extern s32 D_0037A378;
+#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_0037A378.h"
 extern s32 D_0038CDE0;
 extern s32 D_0038CDE4;
 extern s32 D_0038CDE8;
@@ -743,7 +743,7 @@ s32 func_001d6128(void *arg0) {
 
     var_a2 = 0;
     var_a0 = 3;
-    var_v1 = D_00304BE8 + 0x48E;
+    var_v1 = ((s32)D_00304BE8) + 0x48E;
     do {
         temp_v0 = *var_v1;
         var_v1 += 1;

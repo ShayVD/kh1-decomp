@@ -78,7 +78,7 @@ typedef struct {
 extern Big D_00389C90;
 extern Menu D_003DC498;
 extern Str10 D_004908F0;
-extern char D_003DCB90[][32];
+#include "data/pieces/D_003DCB90.h"
 extern char D_003DCD10[][32];
 extern char D_003DCDF0[];
 extern char D_003DCE30[];

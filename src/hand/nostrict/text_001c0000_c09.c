@@ -67,10 +67,10 @@ typedef struct {
 } BigA;
 
 extern BigA D_00389C90;
-extern u32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
-extern VMa D_0038D170[];
-extern VMa D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 extern u8 D_003DE570[];
@@ -78,31 +78,12 @@ s32 func_001c1ce8(s8 *, s32);
 void func_001c19f8(VMa *, s32);
 void func_001c4198(void *, s32);
 
-typedef f32 Vec[4] __attribute__((aligned(16)));
-typedef struct Elem {
-    s32 a;
-    s32 b;
-    s32 c;
-    s32 pad;
-    Vec m[11];
-    f32 f[6];
-    struct Elem *next;
-    struct Elem *prev;
-} Elem;
-typedef struct {
-    f32 x0;
-    u8 pad4[0xc];
-    Vec q10, q20, q30, q40;
-    Vec q50;
-    f32 x60;
-    u8 pad64[0xf0 - 0x64];
-    Elem arr[256];
-    s32 n;
-    f32 xE0F4;
-    Elem *first;
-    Elem *last;
-} Scn;
-extern Scn D_0037A380;
+#include "data/pieces/D_0037A380.h"
+typedef Vec_37A380 Vec;
+typedef Elem_37A380 Elem;
+typedef Scn_37A380 Scn;
+
+
 typedef struct {
     u8 pad0[0xd0];
     Vec v[5];
@@ -118,8 +99,8 @@ VMa *func_001e98d0(s32, s32);
 
 extern s8 *D_003C39AC;
 extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern u32 D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern s32 (*D_0037A198[])(VMa *, s32);
 s32 func_001ee200(void);
 void srand(u32);
@@ -155,7 +136,7 @@ typedef struct {
 } Task;
 extern S5BB0 D_002C5BB0;
 extern u32 D_003C39A8;
-extern u8 *D_003C21A8[];
+#include "data/pieces/D_003C21A8.h"
 extern f32 D_002BBDFC;
 Msg *func_001c4730(void);
 void func_001c4788(Msg *);
@@ -173,14 +154,14 @@ void func_001c48c8(s32 id, u32 kind, s32 *p) {
     VMa *e;
     s32 n, i;
     if (!((s32)(D_00389C90.f3070.x >> 59) & 1)) return;
-    if ((D_0037A378 >> 2) & 1) return;
+    if ((((u32)D_0037A378) >> 2) & 1) return;
     if (D_002C5958 & 0x12000) return;
     if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
+        vm = ((VMa *)&D_0038D170);
         n = D_0039A570;
     } else {
         n = D_003A7980;
-        vm = D_0039A580;
+        vm = ((VMa *)&D_0039A580);
     }
     for (i = 0; i < n; i++) {
         if (vm[i].x0 == id) break;

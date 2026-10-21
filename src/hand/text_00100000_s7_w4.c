@@ -4,10 +4,10 @@ typedef struct { u64 x[20]; } Blk160;
 typedef struct { s32 m[32][16]; s32 v[4]; } Blk810;
 typedef struct { u8 kind[16]; u8 pad10[4]; u16 n0; u16 n1; } Setup;
 typedef struct { s32 o0; u32 sz4; s32 o8; s32 pc; s32 o10; s32 p14; s32 o18; s32 p1c; s32 o20; u32 sz24; } Hdr;
-extern Hdr *D_002A3F3C;
+#include "data/pieces/D_002A3F3C.h"
 extern s32 D_002A3F20;
 extern s32 D_002A3F24;
-extern Blk160 D_0029B420[];
+#include "data/pieces/D_0029B420.h"
 s32 func_00108618(void);
 void func_00100b18(Setup *);
 void func_00100d18(void *, s32);
@@ -30,11 +30,11 @@ s32 func_00101048(void) {
     u8 *big;
     i = 0;
     func_00108618();
-    h = D_002A3F3C;
+    h = ((Hdr *)D_002A3F3C);
     src = (Blk160 *)((u8 *)h + h->o0);
     D_002A3F20 = h->sz4 / sizeof(Blk160);
     for (; i < D_002A3F20; i++) {
-        D_0029B420[i] = src[i];
+        ((Blk160 *)&D_0029B420)[i] = src[i];
     }
     s = (Setup *)((u8 *)h + h->o8);
     tex = (u8 *)h + h->o10;
@@ -113,7 +113,7 @@ typedef struct { s32 f0; u8 pad[8]; Q30 *fc; u8 pad10[0xc]; } T28;
 typedef struct { u8 b74; u8 pad[0x73]; } E74;
 typedef struct { E74 e[1]; } Sv;
 #include "data/pieces/D_002E31A8.h"
-extern Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern T28 D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
 extern s32 func_00141288(Ent *, s32, s32);
 
@@ -123,8 +123,8 @@ s32 func_00133000(Ent *o, s32 i) {
     if ((D_002E31A8 >> 2) & 1) return 0;
     if (t->f0 == 0) goto r0;
     if (!(q = t->fc)) return 0;
-    if (*(s32 *)((u8 *)D_00304BE8 + 0x874) & 1) goto r0;
-    if ((D_00304BE8->e[o->f130->f4c + 1].b74 >> i) & 1) goto call;
+    if (*(s32 *)((u8 *)((Sv *)D_00304BE8) + 0x874) & 1) goto r0;
+    if ((((Sv *)D_00304BE8)->e[o->f130->f4c + 1].b74 >> i) & 1) goto call;
 r0:
     return 0;
 call:

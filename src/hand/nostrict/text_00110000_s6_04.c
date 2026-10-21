@@ -25,8 +25,8 @@ Node *func_0011f090(Pool *l, s32 key, s32 val) {
 typedef struct { u8 b0 : 1; u8 lo : 2; u8 mode : 2; u8 hi : 3; } Sema5968;
 typedef struct { u32 a : 2; u32 b : 1; u32 r : 29; } Fl5960;
 typedef struct { u8 x0[2]; u8 x2; u8 pad[17]; } Prof;
-extern volatile Sema5968 D_002C5968;
-extern Fl5960 D_002C5960;
+#include "data/pieces/D_002C5968.h"
+#include "data/pieces/D_002C5960.h"
 extern s16 D_002C597A;
 extern PadSt D_002C5AD0[];
 extern PadSt D_002C5BB0;
@@ -34,7 +34,7 @@ extern s32 D_004E4280;
 extern s32 D_004E44C0[];
 Prof D_004E44C8[0x2] ALIGNED(8);
 extern s32 D_004E44F0;
-extern V4 D_002C58B0;
+#include "data/pieces/D_002C58B0.h"
 extern u8 D_002C5A80[];
 s32 scePad2GetState(s32);
 s32 scePad2GetButtonProfile(s32, void *);
@@ -54,8 +54,8 @@ void func_0011f668(void) {
     PadSt *p;
     s32 btn;
     u16 act;
-    { s32 m = D_002C5968.mode; if (m) return; }
-    D_002C5968.b0 = 0;
+    { s32 m = (*(volatile Sema5968 *)&D_002C5968).mode; if (m) return; }
+    (*(volatile Sema5968 *)&D_002C5968).b0 = 0;
     i = 0;
     goto top;
 body:
@@ -83,17 +83,17 @@ join:
     p->active = act;
     if (i <= 0) goto top;
     if (D_002C5AD0[D_004E4280].active != 1) {
-        if (D_004E44F0 >= 31) D_002C5968.b0 = 1;
+        if (D_004E44F0 >= 31) (*(volatile Sema5968 *)&D_002C5968).b0 = 1;
         else D_004E44F0++;
     } else {
         D_004E44F0 = 0;
     }
-    if (D_002C5960.b) {
+    if ((*(Fl5960 *)&D_002C5960).b) {
         D_002C5BB0.active = 0;
-        func_002675a8(&D_002C5BB0.v[0], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[1], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[2], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[3], &D_002C58B0);
+        func_002675a8(&D_002C5BB0.v[0], ((V4 *)&D_002C58B0));
+        func_002675a8(&D_002C5BB0.v[1], ((V4 *)&D_002C58B0));
+        func_002675a8(&D_002C5BB0.v[2], ((V4 *)&D_002C58B0));
+        func_002675a8(&D_002C5BB0.v[3], ((V4 *)&D_002C58B0));
         func_0011f548(&D_002C5BB0, 0);
     } else {
         func_002675a8(&D_002C5BB0.v[0], &D_002C5AD0[0].v[0]);
@@ -222,7 +222,7 @@ void func_00121c78(void) {
 typedef struct { s32 kind; u8 pad[0x2c]; f32 v[4]; } Lt64;
 typedef struct { u8 pad[0x420]; u32 mask; u8 pad2[0xc]; f32 pos[4]; } Obj430;
 #include "data/pieces/D_002C5910.h"
-extern Lt64 D_002C5C80[];
+#include "data/pieces/D_002C5C80.h"
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 
 void func_001229c0(Obj430 *o, f32 m[4][4]) {
@@ -232,7 +232,7 @@ void func_001229c0(Obj430 *o, f32 m[4][4]) {
     Lt64 *e;
     sceVu0CopyMatrix(m, D_002C5910);
     { s32 j; for (j = 3; j >= 0; j--) m[3][j] = 1.0f; }
-    for (i = 0, e = D_002C5C80, b = 1, row = m[0]; i < 31; i++, e++) {
+    for (i = 0, e = ((Lt64 *)&D_002C5C80), b = 1, row = m[0]; i < 31; i++, e++) {
         if (o->mask & (b << i)) {
             if (e->kind < 5) if (e->kind >= 2) {
                 func_002675a8(row, e->v);

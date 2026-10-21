@@ -35,7 +35,7 @@ typedef struct {
     u64 x878;
 } W606Save;
 
-extern W606Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 typedef struct W606Ch W606Ch;
 struct W606Ch {
@@ -63,7 +63,7 @@ struct W606Ch {
 
 extern u32 *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 extern s32 D_0052AE60;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern u32 *D_002E26A0[];
 extern u8 D_0052AD68[];
 void func_0014f658(void *, s32);
@@ -101,7 +101,6 @@ s32 func_0013b050(void) {
     return 1;
 }
 
-extern W606Save *D_00304BE8;
 extern u16 *D_00304BB0[];
 extern u16 *D_00304B88[];
 void *func_001477c8(void *p);
@@ -109,7 +108,7 @@ u16 *func_0013c3f8(s32 i);
 void func_0015b268(s32 i);
 void func_0015b438(s32 i);
 s32 func_0013c458(s32 i, s32 n) {
-    W606Mem *m = &D_00304BE8->m[i];
+    W606Mem *m = &((W606Save *)D_00304BE8)->m[i];
     u16 *p = func_0013c3f8(i);
     s32 lv = 1;
     s32 first = 1;

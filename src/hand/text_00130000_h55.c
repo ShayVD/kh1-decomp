@@ -4,7 +4,7 @@
 
 extern u32 D_002C5958;
 #include "data/pieces/D_00304B84.h"
-extern u8 *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 void func_00130340(void *o, s32 a, f32 f);
 void *func_00130578(void *, s32, f32);
 s32 func_0014f600(void *o);
@@ -18,7 +18,6 @@ typedef struct {
 typedef struct { u8 pad[0x38]; f32 x38; } W55CamA;
 extern s32 D_00304AF0[];
 extern s32 D_00304AE0[];
-extern u8 *D_00308CDC;
 void func_00138a78(void *o, void *b);
 f32 func_00176850(void);
 void func_002675a8(void *d, void *s);
@@ -34,7 +33,7 @@ void func_00139840(W55ObA *o, u8 *b) {
         func_00130340(o, D_00304AF0[i] | 0x1000000, 0.0f);
         func_00130578(o, 0x40000006, 8.0f);
         func_002675a8(v, b + 16);
-        v[3] = ((W55CamA *)D_00308CDC)->x38 * *(f32 *)(o->x6c + 0xc4);
+        v[3] = ((W55CamA *)(*(u8 **)&D_00308CDC))->x38 * *(f32 *)(o->x6c + 0xc4);
         func_00138a20(o, v, 20.0f);
         return;
     }
@@ -112,7 +111,7 @@ typedef struct { u64 x0; u8 padx[0x18]; } W55Ent32;
 typedef struct { u8 pad[0x98]; u8 x98; u8 pad99[7]; } W55Lv;
 #include "data/pieces/D_002E31A8.h"
 extern W55Pl *D_002E26A0[];
-extern W55Ent32 D_00350D88[];
+#include "data/pieces/D_00350D88.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 s32 func_00153d78(W55Pl *p);
@@ -122,9 +121,9 @@ s32 func_0013a910(s32 n) {
     W55Pl **pp;
     s32 i;
     if ((D_002E31A8 >> 2) & 1) return 0;
-    if (!((D_00350D88[D_002E26A0[0]->x70].x0 >> 7) & 1)) return 0;
+    if (!((((W55Ent32 *)&D_00350D88)[D_002E26A0[0]->x70].x0 >> 7) & 1)) return 0;
     if ((D_002C5958 >> 16) & 1) return 0;
-    if (D_002E26A0[0]->x6c->x44 < D_00308CDC[n * 8 + 0x98]) return 0;
+    if (D_002E26A0[0]->x6c->x44 < (*(u8 **)&D_00308CDC)[n * 8 + 0x98]) return 0;
     if (!(D_002C5958 & 1)) return 0;
     if (D_002BC128 == 3 && D_002BC130 == 20) return 1;
     if (D_00304B84 & (1 << n)) return 0;
@@ -134,7 +133,7 @@ s32 func_0013a910(s32 n) {
     return 1;
 }
 typedef struct { u32 lv:3; u32 on:1; u32 rest:28; } W55Bf;
-extern W55Bf D_00304B78;
+#include "data/pieces/D_00304B78.h"
 extern u8 *D_00304B70;
 extern f32 D_00304B7C;
 extern f32 D_00304B80;
@@ -161,9 +160,9 @@ void func_0011ef10(s32 a, void (*f)());
 void func_0013bb60(s32 o, s32 n) {
     char buf[32];
     u32 *fl = &D_002C5958;
-    W55Bf *bf = &D_00304B78;
+    W55Bf *bf = ((W55Bf *)&D_00304B78);
     u32 *msk = &D_00304B84;
-    u8 **lv = &D_00308CDC;
+    u8 **lv = ((u8 **)&D_00308CDC);
     f32 *fp;
     void **hp;
     *fl |= 0x102000;

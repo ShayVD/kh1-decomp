@@ -10,7 +10,7 @@ M2C_UNK func_00267518(s32, s32, void *);
 M2C_UNK func_00267560(void *, void *, f32);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
 M2C_UNK func_00267e40(s32, s32);
-extern M2C_UNK D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern M2C_UNK D_0054F750; /* src/data/bss_0054.c: Slot57_15d0 D_0054F750[8] */
 extern M2C_UNK D_0054F970; /* src/data/bss_0054.c: u8 D_0054F970[0x10] */
 f32 func_0015ca50(void *);
@@ -46,7 +46,7 @@ void func_00150d70(void) {
 }
 
 void func_001523e8(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, &D_002C58A0);
+    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
 }
 
 void func_00152880(Actor *arg0) {
@@ -89,7 +89,7 @@ void func_0015cac0(void *arg0, s32 arg1, void *arg2, s32 arg3) {
 }
 
 void func_0015d518(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, &D_002C58A0);
+    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
 }
 
 s32 func_0015d538(void *arg0) {

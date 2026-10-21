@@ -3,7 +3,7 @@
 typedef struct { s32 x0, x4, x8, xc, x10; u32 x14; f32 x18, x1c; } St;
 extern s32 D_00643430[];
 extern s32 D_0064342C;
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 void func_0021b820(void);
 void func_0021c9a0(void *, s32, s32);
 void func_0021b860(void *, s32, s32, s32, s32, s32);
@@ -72,6 +72,6 @@ done:
         y += 28;
     }
     func_0021cb00(a, 280, 318, 2, 30);
-    D_003E8E08 = D_0064342C;
+    (*(s32 *)&D_003E8E08) = D_0064342C;
     func_001f94f0(a, 0, 303, 326, func_0021b800(18), 15, 0x80461E00);
 }

@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct { u8 pad[8]; s32 x8; } F8;
-extern F8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];
@@ -26,7 +26,7 @@ void func_00209820(void *, s32, s32, s32, void *);
 void func_0022c960(O *a0) {
     s32 i, y; s32 *p;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             if ((D_006469B4 = D_006469B0, func_00219428()) != 0) {
@@ -68,7 +68,7 @@ void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_0022cba8(O *a0) {
     s32 v;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((F8 *)D_00425BC8)->x8 & 0x4000) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -163,7 +163,7 @@ void func_0022d4d8(s32 arg0) {
 }
 
 typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8;
-extern Base4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D6C.h"
 extern u32 D_00646A24;
 extern s32 D_00647630;
@@ -183,7 +183,7 @@ void func_0022f818(void) {
         return;
     }
     if (sel < D_003E3D6C) {
-        D_00647634 = &D_00304BE8->r[D_00304BE8->sel[sel] * 116];
+        D_00647634 = &((Base4BE8 *)D_00304BE8)->r[((Base4BE8 *)D_00304BE8)->sel[sel] * 116];
         n = D_00647634[0x21];
         D_00647630 = 0;
         for (i = 0; i < n; i++) {
@@ -227,7 +227,7 @@ void func_0022fba8(void) {
             s32 o = (s32)D_00647634;
             ((u8 *)(D_00647638 + o))[0x22] = 0;
         } else {
-            D_00304BE8->cnt[*p] -= *q;
+            ((Base4BE8 *)D_00304BE8)->cnt[*p] -= *q;
         }
         func_0022f818();
     } else {
@@ -303,7 +303,7 @@ extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
 #include "data/pieces/D_00425C1C.h"
 extern s32 D_006477A8;
 extern s32 D_00647FE8[];
-extern s32 D_00425C28[2][4];
+#include "data/pieces/D_00425C28.h"
 #include "data/pieces/D_00425C48.h"
 #include "data/pieces/D_00425C68.h"
 #include "data/pieces/D_00425C88.h"
@@ -332,7 +332,7 @@ void func_00233ac8(void) {
     for (i = 0; i < 14; i++) D_00647FE8[i] = 0;
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 4; j++) {
-            D_00425C28[i][j] = 3;
+            (*(s32 (*)[2][4])&D_00425C28)[i][j] = 3;
             D_00425C48[i][j] = 0;
             D_00425C68[i][j] = 0;
             D_00425C88[i][j] = 0;
@@ -600,7 +600,7 @@ typedef struct {
     s32 x1e0;
     f32 dist;
 } Cam;
-extern Cam *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 f32 atan2f(f32, f32);
 void func_00236d48(void *, void *, void *);
@@ -612,7 +612,7 @@ void sceVu0UnitMatrix(void *);
 void sceVu0MulMatrix(void *, void *, void *);
 void func_002673b8(void *, void *);
 
-#define C D_00425F70
+#define C ((Cam *)D_00425F70)
 void func_00236a58(void) {
     MTX m;
     VEC v;

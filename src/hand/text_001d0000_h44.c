@@ -223,22 +223,22 @@ s32 func_001dc8c8(VM *vm) {
     return 2;
 }
 
-extern VM D_0038D170[];
-extern VM D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 void func_001c19f8(VM *, s32);
 void func_001dcd98(s32 a) {
     VM *vm;
     s32 n, i;
     D_00389C90.x3150 = a;
     if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
+        vm = ((VM *)&D_0038D170);
         n = D_0039A570;
     } else {
         n = D_003A7980;
-        vm = D_0039A580;
+        vm = ((VM *)&D_0039A580);
     }
     for (i = 0; i < n; i++) {
         if (&vm[i] == D_00389C90.x3154) break;

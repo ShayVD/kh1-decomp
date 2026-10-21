@@ -38,31 +38,34 @@ typedef struct { u8 pad[0x70]; s32 w70; } Obj714;
 extern E551670 D_00551670[];
 extern U2E3190 D_002E3190;
 typedef struct { u8 pad[0x848]; u16 cnt[1]; } S304BE8;
-extern S304BE8 *D_00304BE8;
-extern u8 D_00351A30[];
+#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00351A30.h"
 extern s32 D_005516EC;
 extern U2C5958 D_002C5958;
 extern s32 D_005516E8;
 extern s32 *D_005516E4;
 typedef struct { u8 pad[0xF4]; u16 hF4[1]; } S308CDC;
-extern S308CDC *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 extern s32 D_00351A48;
 extern s32 D_0029B418;
 extern u8 D_00351AA0[];
 extern u8 D_00351AB0[];
-extern u8 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 typedef struct { u8 b[32]; } E551970;
 extern E551970 D_00551970[];
 extern s32 D_00351AC0;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 extern f32 D_00551D74;
 #include "data/pieces/D_002BBDF8.h"
 extern volatile s32 D_00559DB4;
 typedef struct Node70 { s32 id; s32 w4; s32 w8; s32 wC; struct Node70 *next; } Node70;
 extern Node70 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
-extern s32 D_0035C6F0, D_0035C6F4, D_0061621C, D_002BC140, D_002BC144;
-extern u8 D_002E2780[], D_002E2790[];
+extern s32 D_0035C6F0, D_0035C6F4, D_0061621C;
+#include "data/pieces/D_002BC144.h"
+#include "data/pieces/D_002BC140.h"
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 
 /* ---- callees ---- */
 s32 D_00F20000(); /* code at a fixed address (overlay) */
@@ -164,12 +167,12 @@ void func_00158068(void *a, s32 b, F158068 *c) {
 }
 
 void func_001586a8(s32 i) {
-    if (D_00304BE8->cnt[i] < 9999) D_00304BE8->cnt[i]++;
+    if (((S304BE8 *)D_00304BE8)->cnt[i] < 9999) ((S304BE8 *)D_00304BE8)->cnt[i]++;
 }
 
 void func_001586f0(void) {
     s32 i;
-    u8 *p = D_00351A30;
+    u8 *p = D_00351A30.b;
     D_005516EC = 0;
     for (i = 0; i < 5; i++, p += 2) {
         if (func_0013c968(*p, 0)) D_005516EC |= 1 << i;
@@ -181,7 +184,7 @@ void func_00158af0(s32 a, s32 b) {
     *f = (*f | 0x10000) & ~0x800000;
     func_00131498(a, D_005516E8);
     D_00F20000(b, (s32)D_005516E4 + D_005516E4[b + 2]);
-    func_001412f8(a, D_00308CDC->hF4[b]);
+    func_001412f8(a, (*(S308CDC **)&D_00308CDC)->hF4[b]);
 }
 
 void func_001590a8(void) {
@@ -266,7 +269,7 @@ void func_0015ac58(Obj15A *a) {
     func_00130578(a, 0x40000006, 8.0f)->cb = func_0015ac30;
     func_0014cce0(a, z);
     a->flags &= ~0x400;
-    func_002675a8(a->x3C0, D_002C58B0);
+    func_002675a8(a->x3C0, ((u8 *)&D_002C58B0));
 }
 
 typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Coll;
@@ -520,7 +523,7 @@ s32 func_00175af0(void) {
     if (D_0035C6F0 == 0) return 0;
     if (D_0035C6F4) D_0061621C = 1;
     else D_0061621C = 0;
-    func_00182148(D_002BC140, D_002BC144, D_002E2780, D_002E2790);
+    func_00182148(D_002BC140, D_002BC144, ((u8 *)&D_002E2780), ((u8 *)&D_002E2790));
     func_00181738();
     return 0;
 }

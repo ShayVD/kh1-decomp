@@ -174,9 +174,9 @@ typedef struct {
     u8 pad68[0x350 - 0x68];
 } Ent;
 extern s32 D_0039A570;
-extern Ent D_0038D170[];
+#include "data/pieces/D_0038D170.h"
 extern s32 D_003A7980;
-extern Ent D_0039A580[];
+#include "data/pieces/D_0039A580.h"
 void func_00267530(V4 *, V4 *, V4 *);
 void func_00121fc4(V4 *, V4 *);
 f32 func_00121840(V4 *, V4 *);
@@ -204,15 +204,15 @@ f32 func_001dcb00(Obj *o, V4 *target, f32 a, f32 b) {
     v.w = a;
     func_002675a8(&o->dir, &v);
     for (i = 0; i < D_0039A570; i++) {
-        e = &D_0038D170[i];
+        e = &((Ent *)&D_0038D170)[i];
         if (e->owner == o && e->f60 && e->f60 == o->f8) len = 0.0f;
     }
     for (i = 0; i < D_003A7980; i++) {
-        e = &D_0039A580[i];
+        e = &((Ent *)&D_0039A580)[i];
         if (e->owner == o && e->f60 && e->f60 == o->f8) len = 0.0f;
     }
     for (i = 0; i < D_0039A570; i++) {
-        e = &D_0038D170[i];
+        e = &((Ent *)&D_0038D170)[i];
         if (e->owner == o) {
             if (o->f90) {
                 e->f64 += 1.0f;
@@ -223,7 +223,7 @@ f32 func_001dcb00(Obj *o, V4 *target, f32 a, f32 b) {
         }
     }
     for (i = 0; i < D_003A7980; i++) {
-        e = &D_0039A580[i];
+        e = &((Ent *)&D_0039A580)[i];
         if (e->owner == o) {
             if (e->owner->f90) {
                 e->f64 += 1.0f;

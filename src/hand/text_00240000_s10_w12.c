@@ -13,7 +13,7 @@ extern s32 D_0046A554;
 extern s32 D_0046A558;
 extern s32 D_0046A55C;
 extern s32 D_0046A560;
-extern u32 *D_0046A568[];
+#include "data/pieces/D_0046A568.h"
 extern s16 D_00669A40[8];
 extern s32 D_00669A58;
 extern s32 D_00669A70;

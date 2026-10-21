@@ -17,7 +17,7 @@ typedef struct Cam {
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern Cam D_00575940;
 void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);
@@ -33,8 +33,8 @@ extern V4 D_00362680;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
 extern PadB D_002C5BB0;
-extern u8 D_002C58A0[];
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58A0.h"
+#include "data/pieces/D_002C58D0.h"
 f32 func_00120c88(f32);
 s32 func_00118b58(void *);
 s32 func_00119688(void *);
@@ -79,7 +79,7 @@ void func_00178a98(void) {
         D_003624D0 = 0.0f;
     }
     if (D_005758F8 <= 0.0f && D_003624D4 > 0.0f) {
-        func_002675a8(&s.b, D_002C58A0);
+        func_002675a8(&s.b, ((u8 *)&D_002C58A0));
         func_002675a8(&s.a, &D_005758E0);
         s.c.y = 0.0f;
         s.c.x = 250.0f;
@@ -181,7 +181,7 @@ void func_0017a958(void) {
             p = D_00575840.x + func_00120c88(s * 0.04363322724f * D_002BBDFC);
             func_00267768(m, D_002C58D0, func_00120c88(p));
             func_00267810(m, m, func_00120c88(D_00575850));
-            func_002675a8(&b, D_002C58A0);
+            func_002675a8(&b, ((u8 *)&D_002C58A0));
             b.z = D_00575840.w;
             func_002672f8(&b, m, &b);
             func_002672f8(&D_005758E0, D_00575894->xd0, &D_003625D0);
@@ -211,7 +211,7 @@ void func_0017a958(void) {
     D_00575840.y = func_00120c88(D_00575850);
     func_00267768(m, D_002C58D0, func_00120c88(D_00575840.x));
     func_00267810(m, m, D_00575840.y);
-    func_002675a8(&b, D_002C58A0);
+    func_002675a8(&b, ((u8 *)&D_002C58A0));
     b.z = D_00575840.w;
     func_002672f8(&b, m, &b);
     func_002672f8(&D_005758E0, D_00575894->xd0, &D_003625D0);
@@ -258,7 +258,7 @@ s32 func_0017e170(s32 a0)
             func_002675a8(&v40, &v50);
             func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
             func_00267810(m, m, func_00120c88(a));
-            func_002675a8(&v60, D_002C58A0);
+            func_002675a8(&v60, ((u8 *)&D_002C58A0));
             v60.z = D_00362680.w;
             func_002672f8(&v60, m, &v60);
             func_00267518(&v50, &D_005759B0, &v60);
@@ -278,7 +278,7 @@ s32 func_0017e170(s32 a0)
         a = y + d;
         func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
         func_00267810(m, m, func_00120c88(a));
-        func_002675a8(&v60, D_002C58A0);
+        func_002675a8(&v60, ((u8 *)&D_002C58A0));
         v60.z = D_00362680.w;
         func_002672f8(&v60, m, &v60);
         func_00267518(&v50, &D_005759B0, &v60);
@@ -295,8 +295,8 @@ f32 fabsf(f32);
 extern s32 D_00362420;
 extern V4 D_00362600;
 extern f32 D_00362610[];
-extern V4 D_002E2780;
-extern V4 D_002E2790;
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 void func_0012fc58(void);
 void func_00267560(void *, void *, f32);
 s32 func_0017dbb8(void);
@@ -322,15 +322,15 @@ s32 func_0017e428(V4 *a, V4 *b)
     func_00267518(&D_005759B0, a, b);
     func_00267560(&D_005759B0, &D_005759B0, 0.5f);
     func_00267518(&D_005759B0, &D_005759B0, &D_00362600);
-    D_00362680.y = func_00124d28(&D_002E2780, &D_002E2790);
+    D_00362680.y = func_00124d28(((V4 *)&D_002E2780), ((V4 *)&D_002E2790));
     cur = D_00362680.y;
     ang = func_00124d28(a, b);
     D_005759B0.x44 = func_0017dbb8();
     if (D_005759B0.x44 != 0) {
         D_00362680.y = ang;
         cur = D_00362680.y;
-        func_00177900(&D_002E2780, &D_002E2790, cur);
-        func_002675a8(&D_002E2790, &D_005759B0);
+        func_00177900(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), cur);
+        func_002675a8(((V4 *)&D_002E2790), &D_005759B0);
         spd = 0.0f;
     } else {
         spd = 16.0f;

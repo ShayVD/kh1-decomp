@@ -10,9 +10,10 @@ void func_00157a30(void *, s32, void *);
 /* 0016ce10 */
 typedef struct { u8 pad[0x80]; u8 b80; } Prm6x;
 extern Prm6x D_0035AE80;
-typedef struct { u8 pad[0x3C]; s32 w3C; s32 w40; } Hp6C;
-typedef struct { u32 flags; u8 pad4[0x68]; Hp6C *p6C; s32 w70; } Act6C;
-extern Act6C *D_0035BD40[];
+#include "data/pieces/D_0035BD40.h"
+typedef Hp6C_35BD40 Hp6C;
+typedef Act6C_35BD40 Act6C;
+
 typedef struct {
     s32 w0; u8 pad4[0x34]; u64 w38; u8 pad40[0x40];
     union { u64 w; struct { u64 lo:32; u64 m:8; u64 z:16; u64 hi:8; } b; } w80;
@@ -44,8 +45,8 @@ s32 func_0016ce10(Act6C *e, Wk6CE *w, s32 unused, s32 mode) {
     Act6C *s;
     s32 i;
     list[0] = e;
-    list[1] = D_0035BD40[0];
-    list[2] = D_0035BD40[w->w0 ^ 3];
+    list[1] = D_0035BD40.act6C[0];
+    list[2] = D_0035BD40.act6C[w->w0 ^ 3];
     t = w->p98;
     if (t != 0 && inl_alive(t)) s = t;
     else s = 0;
@@ -78,13 +79,13 @@ s32 func_0016ce10(Act6C *e, Wk6CE *w, s32 unused, s32 mode) {
 typedef struct { u8 pad[0x4C]; u16 h4C; } Mdl13;
 typedef struct { u8 pad[0x70]; s32 w70; u8 pad74[0xBC]; Mdl13 *p130; } Act13;
 typedef struct { u32 pad:7; u32 b7:1; u32 b8:1; } Flg13;
-extern Flg13 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 
 s32 func_001713f8(Act13 *a) {
     if ((u16)(a->p130->h4C - 1) >= 2) return 0;
     if (a->w70 != 0 && a->w70 != 2) return 0;
-    if (D_002E27C8.b8) return 1;
-    if (D_002E27C8.b7) return 1;
+    if ((*(Flg13 *)&D_002E27C8).b8) return 1;
+    if ((*(Flg13 *)&D_002E27C8).b7) return 1;
     return 0;
 }
 
@@ -165,7 +166,7 @@ extern u8 *D_0035C42C;
 #include "data/pieces/D_0035C460.h"
 extern u8 D_0035C470[];
 extern u8 D_0035C480[];
-extern f32 D_002C58B0[4];
+#include "data/pieces/D_002C58B0.h"
 typedef struct { u8 pad[0x154]; u8 *x154; } Ob52;
 void sceVu0CopyMatrix(void *, void *);
 void func_001625c8(void *, void *);
@@ -290,8 +291,8 @@ extern S2680b D_00362680;
 extern f32 D_0036266C;
 extern f32 D_005758D0[4];
 extern f32 D_005758E0[4];
-extern f32 D_002C58D0[4];
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58D0.h"
+#include "data/pieces/D_002C58A0.h"
 s32 func_00119688(Ray84 *);
 f32 func_00120c88(f32);
 void func_002672f8(f32 *, void *, f32 *);
@@ -314,7 +315,7 @@ void func_001784c8(void) {
     if (D_00575900.xc > 0.0f) return;
     range = func_00120c88(D_00575894->x3c + 3.1415928f - D_00362680.x4);
     if (range > 0.0f) dir = 1; else dir = 0;
-    func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x0));
+    func_00267768(m, (*(f32 (*)[4])&D_002C58D0), func_00120c88(D_00362680.x0));
     func_002675a8(up, D_002C58A0);
     up[2] = D_00362680.xc;
     func_00267810(m2, m, func_00120c88(D_00362680.x4 + range));

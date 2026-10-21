@@ -29,7 +29,7 @@ s32 func_001443a8(void *);
 void func_0014f658(void *, s32);
 void func_00152d50(void *, s32, void *);
 extern f32 D_002BBDFC;
-extern V4 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 typedef union { u64 d; s32 w; struct { u32 lo; u32 x:6; u32 kind:4; u32 hi:22; } b; } F8;
 typedef struct { u8 pad[8]; F8 f8; } Msg;
 void func_00147138(void *, s32);
@@ -40,7 +40,7 @@ void func_00145008(void *, s32);
 s32 func_001532c8(Msg *);
 void func_00152598(void *);
 void func_001525f0(void *);
-extern P8 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 s32 func_0012cc38(s32, s32);
 void func_0012ec60(s32, s32, void *);
 void func_00130340(void *, s32, f32);
@@ -69,7 +69,7 @@ s32 func_0013c968(s32, s32);
 typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 p2:14; u32 b16:1; u32 p17:6; u32 b23:1; u32 b24:1; u32 b25:1; u32 p26:6; } b; } F5958;
 extern F5958 D_002C5958;
 typedef struct { u8 pad[0x7c]; u8 x7c[0x14]; f32 x90; u8 pad94[0x60]; u16 xf4[1]; } S8CDC;
-extern S8CDC *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 s32 D_00F20000(s32, s32);
 f32 func_00267390(void *, void *);
 s32 func_00122ff8(void *);
@@ -111,9 +111,9 @@ void func_00152ff8(Act *a) {
     if (k >= 72 && (k < 74 || k == 76)) {
         func_002675a8(&v, &q->v30);
     } else {
-        func_00267530(&v, &D_002C58A0[0], &q->v30);
+        func_00267530(&v, &((V4 *)&D_002C58A0)[0], &q->v30);
     }
-    func_002675a8(p, &D_002C58A0[1]);
+    func_002675a8(p, &((V4 *)&D_002C58A0)[1]);
     func_00152d50(a, 1, &v);
 }
 
@@ -150,16 +150,16 @@ s32 func_00153668(Act *a, S98 *b, s32 c) {
         func_0013dfa0(b);
         a->x144->w4 = 1;
         a->x144->f1c = 12.0f;
-        func_002675a8(&a->x3c0, &D_002C58A0[1]);
+        func_002675a8(&a->x3c0, &((V4 *)&D_002C58A0)[1]);
         func_0014f658(a, 4);
         break;
     case 29:
-        func_00153c50(b, D_002E31B0.a);
+        func_00153c50(b, (*(P8 *)&D_002E31B0).a);
         break;
     case 30:
         func_00130340(b, 0x10000bb, 8.0f);
         func_00130578(b, 0x40000000, 0.0f);
-        a->x74 = D_002E31B0;
+        a->x74 = (*(P8 *)&D_002E31B0);
         func_00152dc8(a, 2);
         if (a->x74.a) {
             *(u64 *)&a->x144->w0 |= 2;
@@ -337,7 +337,7 @@ typedef struct B4A68 {
     u8 padd0[0x148 - 0xd0]; B4H160 *x148;
 } B4A68;
 extern u32 D_002C5978;
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 void func_002673b8(void *, void *);
 void func_00267370(void *, void *, void *);
 void func_00267e90(void *, void *, f32);
@@ -448,8 +448,8 @@ void func_001584c0(Act *a, V4 *o) {
 }
 
 /* ---- func_00158780 ---- */
-typedef struct { u8 a, b; } P2;
-extern P2 D_00351A30[];
+#include "data/pieces/D_00351A30.h"
+typedef P2_351A30 P2;
 typedef struct { u8 pad[0xe]; u16 xe; } R478c8;
 R478c8 *func_001478c8(s32);
 f32 func_0012ed88(Act *, void *, V4 *, V4 *);
@@ -460,11 +460,11 @@ s32 func_00158780(s32 k) {
     V4 m;
     V4 d;
     Act *p = D_002E26A0[0];
-    R478c8 *r = func_001478c8(D_00351A30[k].b);
+    R478c8 *r = func_001478c8(D_00351A30.p2[k].b);
     s32 i;
-    f32 f = func_0012ed88(p, &D_002E31B0, &m, &d);
+    f32 f = func_0012ed88(p, ((P8 *)&D_002E31B0), &m, &d);
     if (r->xe <= f) return 0;
-    switch (D_00351A30[k].b) {
+    switch (D_00351A30.p2[k].b) {
     case 75:
         if (p->pos.y - m.y > 160.0f) return 0;
         break;
@@ -479,7 +479,7 @@ s32 func_00158780(s32 k) {
         }
         break;
     }
-    return func_00141288(p, D_00308CDC->xf4[k]) ? 2 : 1;
+    return func_00141288(p, (*(S8CDC **)&D_00308CDC)->xf4[k]) ? 2 : 1;
 }
 
 /* ---- func_00158960 ---- */
@@ -496,8 +496,8 @@ void func_00158960(void) {
     if ((D_002E31A8 >> 1) & 1) return;
     if (D_002E26A0[0]->x70) return;
     if (D_00351A48 != 5) return;
-    if (!func_00122ff8((Act *)D_002E31B0.a)) return;
-    if (((s32)(((Act *)D_002E31B0.a)->x370 >> 37) & 3) != 2) return;
+    if (!func_00122ff8((Act *)(*(P8 *)&D_002E31B0).a)) return;
+    if (((s32)(((Act *)(*(P8 *)&D_002E31B0).a)->x370 >> 37) & 3) != 2) return;
     best = 0;
     bk = -1;
     for (i = 0; i < 5; i++) {
@@ -510,7 +510,7 @@ void func_00158960(void) {
             }
         }
     }
-    if (bk >= 0 && func_0012cc38(3, D_00351A30[bk].b) && best != 2) func_0012ccb0(3);
+    if (bk >= 0 && func_0012cc38(3, D_00351A30.p2[bk].b) && best != 2) func_0012ccb0(3);
 }
 
 /* ---- func_00159440 ---- */
@@ -588,7 +588,7 @@ void func_00159978(Act *a, V4 *o) {
     o->y = 0.0f;
     func_00121fc4(o, o);
     if (o->w < 200.0f) {
-        func_00267530(o, &D_002C58A0[0], o);
+        func_00267530(o, &((V4 *)&D_002C58A0)[0], o);
         o->w = 1.0f;
     } else if (o->w > 250.0f) {
         o->w = 1.0f;
@@ -620,7 +620,8 @@ typedef struct { union { u64 d; s32 w; } h; u8 pad8[0x208]; V4 v210; V4 v220; } 
 extern Tr700 D_00551700;
 extern Trail D_00551740;
 extern s32 D_002E27A8;
-extern V4 D_002E2790, D_002E2780;
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 void sceVu0CopyMatrix(void *, void *);
 void func_002674f0(void *, void *, void *, f32);
 void func_00159b48(V4 *);
@@ -652,8 +653,8 @@ s32 func_00159cd8(void) {
             func_002674f0(&D_00551740.v210, &w, &D_00551740.v210, D_00551700.f30);
         }
     }
-    func_002675a8(&D_002E2790, &D_00551740.v220);
-    func_002675a8(&D_002E2780, &D_00551740.v210);
+    func_002675a8(((V4 *)&D_002E2790), &D_00551740.v220);
+    func_002675a8(((V4 *)&D_002E2780), &D_00551740.v210);
     func_00124c68(70.0f);
     return 0;
 }
@@ -760,7 +761,7 @@ void func_00153f88(Act *a) {
         }
     }
     if (a->x88 & 0x10) {
-        a->x3e4 = D_00308CDC->x7c[a->x130->x4c] * 60.0f;
+        a->x3e4 = (*(S8CDC **)&D_00308CDC)->x7c[a->x130->x4c] * 60.0f;
         a->x88 = (a->x88 & ~0x10) | 0x20;
         if (!a->x400) {
             a->x400 = func_00148908(a);
@@ -770,7 +771,7 @@ void func_00153f88(Act *a) {
     }
     func_001373f8(a, 30.0f);
     s = D_002BBDFC;
-    if (!(D_002C5958.b.b0)) s *= D_00308CDC->x90;
+    if (!(D_002C5958.b.b0)) s *= (*(S8CDC **)&D_00308CDC)->x90;
     if (func_0013c968(9, a->x130->x4c) > 0) s += s;
     a->x3e4 -= s;
     if (a->x3e4 <= 0.0f) {
@@ -1009,13 +1010,13 @@ typedef struct { u8 b0, b1, b2, b3, b4, b5, b6, b7; u8 pad8[0x10]; u8 b18; u8 pa
 typedef struct { s32 x0; Sub116 s; } Ent116;
 typedef struct { u8 pad[0x40]; s32 x40; u8 pad44[4]; s32 x48; s32 x4c; s32 x50; u8 pad54[0x8c]; s32 xe0; } St6c;
 typedef struct { u8 pad[0x6c]; St6c *x6c; } P6c;
-extern Ent116 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 P6c *func_0013daf8(s32);
 void func_00141468(P6c *, s32);
 void func_00141540(P6c *, s32);
 void func_0013c8c8(s32, s32);
 void func_0015ae48(s32 i, u32 k) {
-    Sub116 *s = &D_00304BE8[i].s;
+    Sub116 *s = &((Ent116 *)D_00304BE8)[i].s;
     P6c *p = func_0013daf8(i);
     s32 v;
     switch (k) {

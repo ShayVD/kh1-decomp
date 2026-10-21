@@ -178,23 +178,9 @@ void func_00180d50(s32 *data, u8 *mask, s16 base) {
 
 /* The effect objects: 256 entries of 0xC0 bytes at D_00364130 (see
  * text_00170000_h11.c's E0C0). */
-typedef struct H39Obj {
-    u8 pad0[0x86];
-    u16 flags; /* 0x86: bit 0 in use, bit 2 stopping */
-    u8 pad88[4];
-    struct {
-        u8 pad[0xfc];
-        u16 xfc;
-    } *p8c;   /* 0x8C */
-    u8 pad90[4];
-    s32 key;  /* 0x94 */
-    s32 x98;  /* 0x98 */
-    u8 pad9c[0xc];
-    s32 xa8;  /* 0xA8 */
-    u8 padac[0xc0 - 0xac];
-} H39Obj;
+#include "data/pieces/D_00364130.h"
+typedef H39Obj_364130 H39Obj;
 
-extern H39Obj D_00364130[256];
 void func_0011d3c8(u16, s32, s32);
 void func_00182788(H39Obj *);
 
@@ -202,7 +188,7 @@ s32 func_00181368(s32 t) {
     s32 i;
 
     for (i = 0; i < 256; i++) {
-        H39Obj *e = &D_00364130[i];
+        H39Obj *e = &D_00364130.h39Obj[i];
 
         if ((e->flags & 1) && !(e->flags & 4) && e->x98 < t) {
             if (e->p8c->xfc)

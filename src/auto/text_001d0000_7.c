@@ -9,8 +9,8 @@ M2C_UNK func_0011f130(M2C_UNK *, M2C_UNK);
 M2C_UNK func_00120748(M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK);
 M2C_UNK func_00141b10(s32, void *);
 M2C_UNK func_0022dee0(M2C_UNK);
-extern M2C_UNK D_0038D170;
-extern M2C_UNK D_0039A580;
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern M2C_UNK D_00490620;
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK D_00F20000;
@@ -22,7 +22,7 @@ extern f32 D_002BBE00;
 extern s32 D_0029B410;
 extern s32 D_0029B414;
 extern s32 D_002C5958;
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_0038CCC4;
 extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
@@ -54,9 +54,9 @@ void func_001d3160(void) {
     void *temp_a3;
 
     if (D_0038CCC4 == 0) {
-        var_a4 = &D_0038D170;
+        var_a4 = ((M2C_UNK *)&D_0038D170);
     } else {
-        var_a4 = &D_0039A580;
+        var_a4 = ((M2C_UNK *)&D_0039A580);
     }
     temp_a3 = var_a4 + 4;
     temp_v0 = M2C_FIELD(var_a4, s32 *, 0x180) + 1;

@@ -4,7 +4,7 @@ typedef union { u32 w; struct { s16 a; s16 b; } h; } E;
 extern s32 D_0046A54C;
 extern s32 D_0046A550;
 extern s32 D_0046A540;
-extern E *D_0046A568[];
+#include "data/pieces/D_0046A568.h"
 extern s32 D_00669A5C;
 
 /* func_0024bce8: *px / *py re-read at the end (gcse copies of the first loads, numbered after the -10 pseudo, so -10 wins the global-alloc tie). */
@@ -23,7 +23,7 @@ void func_0024bce8(s32 *px, s32 *py) {
         dy = 1; if (y < D_0046A550) dy = -1;
     }
     for (i = 0; i < 12; i++) {
-        for (e = D_0046A568[D_0046A540]; e->h.b != -10; e++) {
+        for (e = ((E **)&D_0046A568)[D_0046A540]; e->h.b != -10; e++) {
             if (e->h.b != -1 && x == ((e->w >> 4) & 15) && y == ((e->w >> 8) & 15)) {
                 *px = x;
                 *py = y;

@@ -12,7 +12,7 @@ void func_001bf290(f32 *q);
 typedef struct { u16 h0, h2, h4, h6; u8 *ctx; u8 *stk; u8 pad[32]; } Task_bfcd8;
 typedef struct { u8 *ctx; s32 arg; s32 w8; s32 wc; } RunQ_bfcd8;
 extern Task_bfcd8 *D_0037A16C;
-extern RunQ_bfcd8 *D_0037A170;
+#include "data/pieces/D_0037A170.h"
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
@@ -44,7 +44,8 @@ u8 pad816[32];
 } VM_c2778;
 typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
 extern s32 D_002BCDEC;
-extern VM_c2778 D_0038D170[], D_0039A580[];
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM_c2778 *, s32);
 extern u32 D_002C5958;
@@ -82,7 +83,8 @@ void func_001c6890(void);
 typedef struct {
     u64 flags; u8 pad8[200]; V4 v208; V4 v224; V4 v240; V4 v256; V4 v272; f32 f288; f32 f292;
 } Tw_c6890;
-extern V4 D_002E2780, D_002E2790;
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 extern f32 D_002E27A0;
 #include "data/pieces/D_002E27A4.h"
 void *memset(void *, s32, u32);
@@ -109,7 +111,7 @@ void func_001c96c0(void);
 void func_001c9ac8(void);
 void func_001c9d40(void);
 void func_001c9e80(void);
-extern u8 D_0037A380[];
+#include "data/pieces/D_0037A380.h"
 extern u8 D_00389C90[];
 extern u8 D_003C5510[];
 
@@ -256,7 +258,7 @@ void func_001bfcd8(void) {
     }
     {
         u8 *c = D_0037A16C->ctx;
-        RunQ_bfcd8 *q = D_0037A170;
+        RunQ_bfcd8 *q = ((RunQ_bfcd8 *)D_0037A170);
         q->wc = -1;
         q->ctx = c;
         q->w8 = 0;
@@ -336,10 +338,10 @@ s32 func_001c2778(void) {
     Msg m;
     if (D_002BCDEC == 0) return 0;
     if (D_00389C90.w12340 == 0) {
-        p = D_0038D170;
+        p = ((VM_c2778 *)&D_0038D170);
         cnt = &D_0039A570;
     } else {
-        p = D_0039A580;
+        p = ((VM_c2778 *)&D_0039A580);
         cnt = &D_003A7980;
     }
     for (i = 1, p++; i < *cnt; i++, p++) {
@@ -366,7 +368,7 @@ s32 func_001c2778(void) {
         return 4;
     }
     cnt = &D_0039A570;
-    p = D_0038D170;
+    p = ((VM_c2778 *)&D_0038D170);
     for (i = 1, p++; i < *cnt; i++, p++) {
         if ((u32)p->fl.i[0] % 2 == 1) {
 /*P*/
@@ -546,8 +548,8 @@ void func_001c6890(void) {
     memset(&a, 0, 16);
     a.w = 1.0f;
     memset(&r, 0, 16);
-    func_002675a8(&a, &D_002E2780);
-    func_002675a8(&D_003C5510.v208, &D_002E2790);
+    func_002675a8(&a, ((V4 *)&D_002E2780));
+    func_002675a8(&D_003C5510.v208, ((V4 *)&D_002E2790));
     D_003C5510.f288 = func_001e9e58(&a, &D_003C5510.v208);
     D_003C5510.f292 = D_002E27A0;
     func_001e9d00(&r, &D_003C5510.v208, &a, D_002E27A4);

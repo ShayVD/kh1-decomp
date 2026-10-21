@@ -22,8 +22,8 @@ typedef struct { s32 u, v, u1, v1; u64 rgba, q; s32 x, y, z, w; } SprE;
 typedef struct { u64 h[14]; SprE e[8]; } PkS;
 typedef struct { u64 h[16]; SprE e[8]; } PkT;
 
-extern u8 D_003F1E70[];
-extern u8 D_003F1A70[];
+#include "data/pieces/D_003F1E70.h"
+#include "data/pieces/D_003F1A70.h"
 #include "data/pieces/D_003F34B0.h"
 extern u8 D_00641080[];
 extern u8 D_00641130[];

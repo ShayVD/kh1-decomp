@@ -16,11 +16,7 @@ void func_002672f8(f32 *, f32 (*)[4], f32 *);
 
 /* A texture header inside a sprite record (+0x10): +8/+0xC are offsets
  * from itself to its pixels and palette, +0x10..+0x14 its sizes. */
-typedef struct {
-    s32 unk00, unk04;
-    s32 off08, off0C;
-    s16 unk10, unk12, unk14;
-} H39Tex;
+#include "data/types/nostrict_text_00180000_h39.h"
 
 typedef struct {
     s16 id, w, h;
@@ -31,15 +27,8 @@ typedef struct {
 } H39Spr2;
 
 /* Texture slots (0x24 bytes), indexed by the sprite's id. */
-typedef struct {
-    s32 a, b, c;
-    s32 pad0C, pad10;
-    void *p14, *p18;
-    H39Tex *tex;
-    s32 unk20;
-} H39Slot;
 
-extern H39Slot D_00362730[];
+#include "data/pieces/D_00362730.h"
 
 s32 *func_001808f8(s32 *p, u8 *mask) {
     s32 n;
@@ -475,7 +464,7 @@ typedef struct H39Obj {
     u8 padb1[0xC0 - 0xB1];
 } H39Obj;
 
-extern H39Obj D_00364130[256];
+#include "data/pieces/D_00364130.h"
 extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 
 /* Quicksort of a[lo..hi] into descending order, moving b along. */
@@ -515,7 +504,7 @@ void func_001814b0(f32 *a, H39Obj **b, s32 lo, s32 hi) {
 s32 func_00181608(H39Obj **list) {
     f32 depth[256];
     H39Q v;
-    H39Obj *e = D_00364130;
+    H39Obj *e = (*(H39Obj (*)[256])&D_00364130);
     H39Obj **l = list;
     s32 n = 0;
     s32 i;

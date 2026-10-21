@@ -8,8 +8,8 @@ extern f32 D_005758E0[4];
 extern S58F0 D_005758F0;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
-extern f32 D_002C58D0[4];
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58D0.h"
+#include "data/pieces/D_002C58A0.h"
 typedef struct { f32 x0, x4; } S2680;
 extern S2680 D_00362680;
 extern u64 D_002C5BB0;
@@ -52,7 +52,7 @@ s32 func_00177ac0(void) {
     func_00267530(v50, D_005758D0, D_005758E0);
     func_002673b8(v70, v50);
     v70[1] = 0.0f;
-    func_00267810(v80, D_002C58D0, 1.5707962f);
+    func_00267810(v80, (*(f32 (*)[4])&D_002C58D0), 1.5707962f);
     func_002672f8(v70, v80, v70);
     func_00267560(v70, v70, 50.0f);
     func_002675a8(r.dir, v50);
@@ -69,10 +69,10 @@ s32 func_00177ac0(void) {
         func_002673b8(v70, v40);
         func_00267560(v70, v70, 300.0f);
         func_002675a8(s.a, D_005758D0);
-        func_00267810(v80, D_002C58D0, 0.52359875f);
+        func_00267810(v80, (*(f32 (*)[4])&D_002C58D0), 0.52359875f);
         func_002672f8(s.b, v80, v70);
         a = func_00119688(&s) != -1;
-        func_00267810(v80, D_002C58D0, -0.52359875f);
+        func_00267810(v80, (*(f32 (*)[4])&D_002C58D0), -0.52359875f);
         func_002672f8(s.b, v80, v70);
         b = func_00119688(&s) != -1;
         if (a && b) return 0;

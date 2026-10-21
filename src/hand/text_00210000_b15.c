@@ -16,7 +16,7 @@ typedef struct Ob {
 } Ob;
 typedef struct { u8 pad[4]; u32 x4; s32 x8; u8 padc[4]; u32 x10; } Cfg;
 typedef struct { u8 pad[16]; void *x10; } P10;
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern P10 *D_006433F0; /* src/data/bss_0064.c: s32 D_006433F0 */
 extern s32 D_00643418;
 extern s32 D_0064341C;
@@ -49,7 +49,7 @@ void func_0021ff68(Ob *a) {
     s32 i, j, y, step, id;
     Ob *o;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_006433F0);
             func_0011d768(3);
         } else {
@@ -57,7 +57,7 @@ void func_0021ff68(Ob *a) {
             s32 n, k;
             func_001fd858(a);
             D_0064341C = func_001fd518(a);
-            b = D_00425BC8->x10;
+            b = ((Cfg *)D_00425BC8)->x10;
             k = 0;
             n = a->xd8;
             if (b & 0x80000480) {
@@ -159,7 +159,7 @@ next:
 
 extern s32 D_00643694;
 typedef struct { s32 a, b, c, d; } S4;
-extern S4 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 s32 func_001fe9a8(void *, s32, s32);
 void func_0021cb88(void *, s32, s32, s32, s32);
 void func_0021c9a0(void *, s32, s32);
@@ -175,7 +175,7 @@ s32 func_0021b860(void *, s32, s32, s32, s32, s32);
 void func_00221660(Ob *a) {
     s32 i, n, y, id, msg;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -201,7 +201,7 @@ void func_00221660(Ob *a) {
     func_00206130(a, 287, 94, 20, 2, 0x80202020);
     func_00206130(a, 453, 94, 20, 2, 0x80202020);
     func_001f94f0(a, 2, 380, 86, func_00221390(1), 15, 0x80461E00);
-    id = D_003E8E08.a = func_001eb5f0(D_00643694 + 15, 0);
+    id = (*(S4 *)&D_003E8E08).a = func_001eb5f0(D_00643694 + 15, 0);
     func_001f94f0(a, 0, 302, 146, func_0021b800(id != -1 ? 70 : 71), 15, 0x80461E00);
     func_0021b860(a, 378, 140, 0, 0, 39);
     y = 204;
@@ -209,11 +209,11 @@ void func_00221660(Ob *a) {
     for (i = 0; i < 5; i++) {
         id = func_001eb5f0(n, i);
         msg = 58;
-        D_003E8E08.a = i + 1;
+        (*(S4 *)&D_003E8E08).a = i + 1;
         if (id != -1) {
-            D_003E8E08.b = func_001ee440(id);
-            D_003E8E08.c = func_001ee458(id);
-            D_003E8E08.d = func_001ee470(id);
+            (*(S4 *)&D_003E8E08).b = func_001ee440(id);
+            (*(S4 *)&D_003E8E08).c = func_001ee458(id);
+            (*(S4 *)&D_003E8E08).d = func_001ee470(id);
             msg = 57;
         }
         func_001f94f0(a, 0, 287, y, func_0021b800(msg), 15, 0x80461E00);
@@ -241,7 +241,7 @@ void func_00223a90(void *a) {
         else j = i;
     }
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -294,7 +294,7 @@ void func_00222e90(Ob *a) {
     s32 i, j, y, step, id;
     Ob *o;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_006436A0);
             func_0011d768(3);
         } else {
@@ -302,7 +302,7 @@ void func_00222e90(Ob *a) {
             s32 n, k;
             func_001fd858(a);
             D_006436BC = func_001fd518(a);
-            b = D_00425BC8->x10;
+            b = ((Cfg *)D_00425BC8)->x10;
             k = 0;
             n = a->xd8;
             if (b & 0x80000480) {
@@ -361,7 +361,7 @@ extern S2 D_00647FE8;
 extern void (*D_00648034)(s32);
 extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
 #include "data/pieces/D_00425C1C.h"
-extern s32 D_00425C28[][4];
+#include "data/pieces/D_00425C28.h"
 #include "data/pieces/D_00425C88.h"
 #include "data/pieces/D_00425C68.h"
 #include "data/pieces/D_00425C48.h"
@@ -379,27 +379,27 @@ void func_00234f80(void) {
         return;
     case 2:
         if (D_00425C18 == 3) {
-            D_00425C28[D_00425C10][D_00425C14] = 3;
+            ((s32 (*)[4])&D_00425C28)[D_00425C10][D_00425C14] = 3;
         } else {
             switch (D_00647FC8) {
             case 0:
                 D_00647FE8.x4 = 0;
-                D_00425C28[D_00425C10][D_00425C14] = 0;
+                ((s32 (*)[4])&D_00425C28)[D_00425C10][D_00425C14] = 0;
                 break;
             case -1:
                 D_00647FE8.x4 = 0;
-                D_00425C28[D_00425C10][D_00425C14] = 1;
+                ((s32 (*)[4])&D_00425C28)[D_00425C10][D_00425C14] = 1;
                 D_00425C48[D_00425C10][D_00425C14] = 1;
                 D_00425C68[D_00425C10][D_00425C14] = 1;
                 break;
             case -2:
                 D_00647FE8.x4 = 0;
-                D_00425C28[D_00425C10][D_00425C14] = 2;
+                ((s32 (*)[4])&D_00425C28)[D_00425C10][D_00425C14] = 2;
                 D_00425C48[D_00425C10][D_00425C14] = 1;
                 D_00425C68[D_00425C10][D_00425C14] = 1;
                 break;
             default:
-                D_00425C28[D_00425C10][D_00425C14] = 3;
+                ((s32 (*)[4])&D_00425C28)[D_00425C10][D_00425C14] = 3;
                 if (!D_00647FE8.x4) {
                     D_00425C48[D_00425C10][D_00425C14] = 1;
                     D_00425C88[D_00425C10][D_00425C14] = 1;
@@ -675,20 +675,20 @@ void func_002336f8(void) {
         break;
     case 1:
         if (--D_00647794) {
-            D_00425BC8 = &D_00647710;
+            D_00425BC8 = (void *)(&D_00647710);
             D_00647710.x4 = D_00647790->a;
             D_00647710.x8 = D_00647790->b;
             D_00647710.x10 = D_00647790->c;
             D_00647790++;
         } else {
             D_0064778C = 0;
-            D_00425BC8 = &D_002C5AD0;
+            D_00425BC8 = (void *)(&D_002C5AD0);
         }
         break;
     }
     switch (D_00647798) {
     case 1:
-        D_00425BC8 = &D_00647710;
+        D_00425BC8 = (void *)(&D_00647710);
         switch (*D_0064779C) {
         case 0:
             D_00647710.x4 = 0x10000010;
@@ -745,12 +745,12 @@ void func_002336f8(void) {
             break;
         case 7:
             D_00647798 = 0;
-            D_00425BC8 = &D_002C5AD0;
+            D_00425BC8 = (void *)(&D_002C5AD0);
             break;
         }
         break;
     case 2:
-        D_00425BC8 = &D_00647710;
+        D_00425BC8 = (void *)(&D_00647710);
         D_00647710.x4 = 0;
         D_00647710.x8 = 0;
         D_00647710.x10 = 0;
@@ -759,7 +759,7 @@ void func_002336f8(void) {
     case 0:
         break;
     }
-    if (D_00425BC8->x4) D_006477A4 = 0.0f;
+    if (((Cfg *)D_00425BC8)->x4) D_006477A4 = 0.0f;
     else D_006477A4 += D_002BBDFC;
 }
 

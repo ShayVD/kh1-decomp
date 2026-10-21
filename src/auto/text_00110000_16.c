@@ -7,7 +7,7 @@ extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_002BC134;
 extern s32 D_002BCAE0;
-extern s32 D_002BCDA0;
+#include "data/pieces/D_002BCDA0.h"
 extern s32 D_002BCDA8;
 extern s32 D_004D9244;
 f32 func_001195d8(s32, s32);
@@ -29,7 +29,7 @@ void func_00112bb8(s32 arg0) {
     s32 temp_v0;
 
     D_002BCDA8 = arg0;
-    temp_v0 = *(M2C_UNK *)((s32) ((arg0 << 6)) + (s32) D_002BCDA0);
+    temp_v0 = *(M2C_UNK *)((s32) ((arg0 << 6)) + (s32) ((s32)D_002BCDA0));
     D_002BC130 = temp_v0;
     D_002BC134 = func_00111660(D_002BC128, temp_v0);
     func_00112b18();

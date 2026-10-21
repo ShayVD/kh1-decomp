@@ -51,7 +51,7 @@ void func_0020bc48(s32 a0, s32 a1, s32 a2) {
     D_006411F8 = a2;
 }
 
-extern s32 D_003F3448[];
+#include "data/pieces/D_003F3448.h"
 extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);
 void func_001f3d58(s32, s32);
@@ -75,7 +75,7 @@ s32 func_0020d1d8(s32 a0) {
 
 typedef struct { u8 pad[0x24]; s32 x24; s32 x28; } Obj7d8;
 typedef struct { u8 pad[8]; s32 flags; } G5bc8;
-extern G5bc8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 void func_0011d768(s32);
 void func_001f3708(Obj7d8 *, s32);
 s32 func_001f42b8(void);
@@ -87,7 +87,7 @@ void func_0020c100(Obj7d8 *, s32);
 
 void func_0020d7d8(Obj7d8 *a0) {
     if (func_001f42b8() != 0) {
-        if (D_00425BC8->flags & 0x4000) {
+        if (((G5bc8 *)D_00425BC8)->flags & 0x4000) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -105,7 +105,7 @@ void func_0020d7d8(Obj7d8 *a0) {
 typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
 #include "data/pieces/D_003E3D68.h"
 typedef struct { u8 pad[0x48e]; u8 x48e[11]; u8 x499[256]; } G4BE8;
-extern G4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00641378[];
 extern s32 D_00641278[][16];
 
@@ -113,7 +113,7 @@ void func_0020eb98(void) {
     u32 i;
     s32 j;
     for (i = 0; i < D_003E3D68; i++) {
-        E4BE8 *e = (E4BE8 *)((u8 *)D_00304BE8 + D_00304BE8->x48e[i] * 0x74);
+        E4BE8 *e = (E4BE8 *)((u8 *)((G4BE8 *)D_00304BE8) + ((G4BE8 *)D_00304BE8)->x48e[i] * 0x74);
         D_00641378[i] = e->n;
         for (j = 0; j < D_00641378[i]; j++) {
             D_00641278[i][j] = e->v[j];
@@ -132,14 +132,14 @@ void func_00211da0(void) {
     s32 i;
     D_00642410 = 0;
     for (i = 1; i < 256; i++) {
-        if (D_00304BE8->x499[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
+        if (((G4BE8 *)D_00304BE8)->x499[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
             D_00641C10[D_00642410] = i;
             D_00642410++;
         }
     }
     func_0020f290(D_00641C10, 0, D_00642410 - 1);
     for (i = 0; i < D_00642410; i++) {
-        D_00642010[i] = D_00304BE8->x499[D_00641C10[i]];
+        D_00642010[i] = ((G4BE8 *)D_00304BE8)->x499[D_00641C10[i]];
     }
 }
 
@@ -264,7 +264,7 @@ void func_0021ad08(s32 a0) {
 
 #include "data/types/text_00200000_h47_p.h"
 extern S5D80 D_00425D80;
-extern S5D80 *D_00425F70;
+#include "data/pieces/D_00425F70.h"
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 
 void func_0021ae28(void) {
@@ -508,7 +508,7 @@ void func_0021cb88(s32, s32, s32, s32, s32);
 void func_00220af0(s32 a0) {
     s32 b[2];
     if (func_001f42b8() != 0) {
-        s32 fl = D_00425BC8->flags;
+        s32 fl = ((G5bc8 *)D_00425BC8)->flags;
         if (fl & 0x4000) {
             func_001f3758((s32)D_00643428);
             func_0011d768(3);
@@ -622,7 +622,7 @@ void func_001f36b8(Obj7d8 *);
 extern s32 D_006436D4;
 extern s32 D_00643750;
 typedef struct { s32 x0; s32 x4; } S8E08;
-extern S8E08 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 void func_002246f8(Obj7d8 *);
@@ -633,7 +633,7 @@ void func_002251b0(Obj7d8 *a0) {
         if (func_00233f40(D_006436D4, 0) != 0) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(a0);
-        } else if (D_00425BC8->flags & 0x4000) {
+        } else if (((G5bc8 *)D_00425BC8)->flags & 0x4000) {
             func_001f36b8(a0);
             func_0011d768(3);
         } else {
@@ -643,8 +643,8 @@ void func_002251b0(Obj7d8 *a0) {
             }
         }
     }
-    D_003E8E08.x4 = 132;
-    D_003E8E08.x0 = D_00643750;
+    (*(S8E08 *)&D_003E8E08).x4 = 132;
+    (*(S8E08 *)&D_003E8E08).x0 = D_00643750;
     func_00207bb0(a0, 398);
 }
 
@@ -783,7 +783,7 @@ void func_0020f3c8(void) {
     s32 i;
     D_00641388 = 0; D_00641790 = 0;
     for (i = 1; i < 256; i++) {
-        if (D_00304BE8->x499[i]) {
+        if (((G4BE8 *)D_00304BE8)->x499[i]) {
             if (func_001eea60(i)) { D_00641390[D_00641388++] = i; }
             if (func_001eeac0(i)) { D_00641798[D_00641790++] = i; }
         }

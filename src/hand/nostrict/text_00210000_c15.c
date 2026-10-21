@@ -3,7 +3,7 @@ typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 p
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
 typedef struct { u16 uv[8]; s16 w, h; } Spr;
 typedef struct { s32 x, y, w, h, idx; u32 col; f32 sc, ang; } Prm;
-extern Spr D_003F4CF0[];
+#include "data/pieces/D_003F4CF0.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
@@ -57,7 +57,7 @@ s32 func_0021bf68(Wnd *o, Prm *a) {
     c = func_001edd88(c, o->x90);
     X = o->xb0 + (x << 4);
     Y = o->xb4 + y;
-    t = &D_003F4CF0[idx];
+    t = &((Spr *)&D_003F4CF0)[idx];
     if (!w) W = t->w;
     H = h ? h << 4 : t->h;
     fh = (f32)H * sc;

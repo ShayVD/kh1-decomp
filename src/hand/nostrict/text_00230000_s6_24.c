@@ -62,13 +62,15 @@ void func_002399f0(s32 a0, void *a1, void *a2, s32 dx, s32 dy, s32 *src, f32 s) 
 
 /* ---- q7.c */
 #include "data/types/nostrict_text_00230000_s6_24.h"
-typedef struct { s32 cur; s32 t[6]; u8 rest[132 - 28]; } St570;
+#include "data/types/nostrict_text_00230000_s6_24_p2.h"
 extern Ob570 D_00650120[]; /* src/data/bss_0065.c: Ob17 D_00650120[0x6] */
 extern Ob570 D_00650C00;
-extern St570 D_00449908;
+#include "data/pieces/D_00449908.h"
 extern u8 D_004409A0[], D_00443180[], D_004419B0[], D_00444A70[], D_00446240[], D_004478F0[], D_00448FA0[], D_00449530[];
 extern u8 D_004497A0[], D_004497D0[], D_00449818[], D_00449860[], D_004498A8[], D_004498E8[];
-extern u8 D_00426790[], D_004267C0[], D_004267F0[];
+#include "data/pieces/D_004267F0.h"
+#include "data/pieces/D_004267C0.h"
+#include "data/pieces/D_00426790.h"
 /* Sprite and packet work buffers of the six menu objects func_0023b570 builds (phase 4:
  * defined here because nothing else uses them; sizes are the distance to the next known
  * object, docs/shiftable-plan.md "Phase 4"). Qword-aligned: they hold DMA/GIF packets. */
@@ -376,7 +378,7 @@ typedef struct {
     u8 padA20[0xA94 - 0xA20];
     s32 unkA94;
 } Obj;
-extern Tex D_004268B0;
+#include "data/pieces/D_004268B0.h"
 void func_0023d528(Obj *, s32 *, s32 *);
 QW *func_0023d700(Spr *, Tex *, s32, s32, QW *, f32);
 QW *func_0023e5b0(Obj *, QW *);
@@ -401,7 +403,7 @@ QW *func_0023ee80(Obj *o, QW *r) {
     x = b[0];
     y = b[1];
     for (i = 0; i < o->unk38; i++) {
-        r = func_0023d700(o->unk28[i], &D_004268B0, x, y, r, o->unkA1C);
+        r = func_0023d700(o->unk28[i], ((Tex *)&D_004268B0), x, y, r, o->unkA1C);
     }
     for (i = 0; i < o->unk24; i++) {
         if (((o->unkA18 == 0 && o->unk0 == 0) || (o->unk0 == 3 && o->unkA94 == 0)) && i == 5) continue;

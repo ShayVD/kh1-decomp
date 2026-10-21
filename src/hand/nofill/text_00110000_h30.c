@@ -52,7 +52,7 @@ typedef struct {
 } PadState;
 extern s32 D_002C5C24, D_002C5C28;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 r : 30; } Flags5968;
-extern volatile Flags5968 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 extern u8 D_002C5C38[];
 s32 sceCdDiskReady(s32);
 s32 sceCdRead(u32, u32, void *, void *);

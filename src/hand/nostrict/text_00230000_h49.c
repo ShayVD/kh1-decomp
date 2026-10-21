@@ -63,7 +63,7 @@ void func_00240fa0(Obj4 *o) {
     D_00651D60 = func_00240400(o, D_00651D60);
     func_00237018(D_00651D64, D_00651D60 - D_00651D64, 1);
 }
-extern u8 D_00426940[];
+#include "data/pieces/D_00426940.h"
 typedef struct { u8 pad[0xA1C]; f32 unkA1C; u8 padA20[0xA84 - 0xA20]; s32 unkA84; } Obj5;
 void func_0023d528(Obj5 *, s32 *, s32 *);
 void func_0023d698(s32);
@@ -151,7 +151,7 @@ void func_002432d8(s32 a0, s32 a1, s32 x, s32 y) {
 }
 typedef struct { s32 unk0; s32 unk4; s32 unk8; s32 unkC; s32 unk10; } Hp2;
 extern Hp2 D_00454A20;
-extern u8 D_00451040[];
+#include "data/pieces/D_00451040.h"
 Slot3 *func_00241b60(s32, s32);
 void func_0023d1a0(void);
 void func_00242bd0(void);
@@ -269,8 +269,8 @@ void func_00244a10(s32 a0, s32 a1) {
     }
     h->unk8 = 0;
 }
-extern u8 D_004267F0[];
-extern u8 D_00426820[];
+#include "data/pieces/D_004267F0.h"
+#include "data/pieces/D_00426820.h"
 s32 func_00244b10(s32, s32 *);
 void func_00244be0(s32 a0, s32 y, s32 z) {
     s32 buf[5];
@@ -349,7 +349,7 @@ s32 D_006627C8 ALIGNED(8);
 s32 D_006627D0 ALIGNED(16);
 s32 D_006627D8 ALIGNED(8);
 extern Msg3 D_006627B0;
-extern u8 D_00431D20[];
+#include "data/pieces/D_00431D20.h"
 #include "data/pieces/D_002E26C0.h"
 typedef struct { s32 x, y; } XY;
 void func_0024ae00(void *);
@@ -519,7 +519,7 @@ struct Gm {
 };
 typedef struct { u8 pad[0x4120]; s32 unk4120; } G51E50;
 #define D_00651E50 (*(G51E50 *)&D_00651E50)
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern u32 D_002C5958;
 extern f32 D_002BBDFC;
 s32 func_0023d490(Gm *);
@@ -646,7 +646,7 @@ typedef struct {
     s32 unk9F4;
     s32 unk9F8;
 } Wipe;
-extern u8 D_004267C0[], D_004267F0[];
+#include "data/pieces/D_004267C0.h"
 void func_00243ef8(s32, void *, void *, void *, void *, void *, void *, s32, f32, s32, s32, s32, s32, s32, s32, s32);
 
 void func_00244188(Wipe *o) {

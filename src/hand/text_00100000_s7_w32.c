@@ -49,8 +49,8 @@ extern s32 D_002C1360, D_002C1384;
 extern s32 D_002BBE0C, D_002BBE04, D_002BBE14, D_002BBE18;
 extern s32 D_002C5AD4, D_002C5AD8;
 extern s32 D_002A6B80;
-extern s32 D_002BC148[4];
-extern s32 D_002BCDC8[4];
+#include "data/pieces/D_002BC148.h"
+#include "data/pieces/D_002BCDC8.h"
 extern s32 D_002BCDA8, D_002BC128, D_002BCDD8, D_002BCDDC;
 
 #define inl_fin(k) { \
@@ -206,8 +206,8 @@ void func_00109770(void) {
                             D_002BCDDC = 0;
                             break;
                         case 9:
-                            D_002BC128 = D_002BCDC8[0];
-                            D_002BCDA8 = D_002BCDC8[2];
+                            D_002BC128 = (*(s32 (*)[4])&D_002BCDC8)[0];
+                            D_002BCDA8 = (*(s32 (*)[4])&D_002BCDC8)[2];
                             D_002BCDD8 = 1;
                             D_002BCDDC = 1;
                             break;
@@ -255,7 +255,7 @@ typedef struct {
     s16 xda;
 } WinA;
 
-extern u8 D_003F1A70[];
+#include "data/pieces/D_003F1A70.h"
 typedef union { u64 d; f32 f; } QU;
 s32 sceGsSyncPath(s32, u16);
 f32 sinf(f32);

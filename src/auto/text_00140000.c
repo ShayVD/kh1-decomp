@@ -17,7 +17,7 @@ M2C_UNK func_001586f0();
 M2C_UNK func_0016f7b8();
 M2C_UNK func_001763f0(M2C_UNK *);
 M2C_UNK func_00176488(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK *D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern M2C_UNK D_00308CE0;
 extern M2C_UNK D_00348CE0;
 M2C_UNK D_00547BC0[0x10] ALIGNED(64);
@@ -125,7 +125,7 @@ M2C_UNK *func_00148e20(void) {
 }
 
 void func_00148e60(void) {
-    D_00350CE0 = &D_00308CE0;
+    (*(M2C_UNK **)&D_00350CE0) = &D_00308CE0;
     func_001763f0(&D_00308CE0);
     func_001763f0(&D_00348CE0);
 }

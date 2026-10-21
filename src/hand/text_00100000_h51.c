@@ -194,13 +194,13 @@ typedef struct {
     u32 b25:1; u32 b26:1; u32 b27:1; u32 b28:1; u32 p29:3;
 } TriFlags;
 typedef struct { s16 v[4]; u8 pad8[3]; u8 group; u8 pad12[4]; TriFlags f; } Tri20;
-extern Tri20 *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 extern s32 D_002A6258;
 
 void func_001054d0(s32 group, s32 which, s32 on) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        Tri20 *t = &D_002A6238[i];
+        Tri20 *t = &((Tri20 *)D_002A6238)[i];
         if (t->group != group) continue;
         switch (which) {
         case 0: t->f.b3 = on; break;

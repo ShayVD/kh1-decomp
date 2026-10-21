@@ -146,11 +146,11 @@ s32 func_001d1df0(VM *vm) {
     vm->stk[vm->sp] = d;
     return 2;
 }
-typedef struct { s32 key; void *val; u8 pad[0x348]; } KEnt;
+#include "data/types/nofill_text_001d0000_h43.h"
 extern s32 D_0039A570;
-extern KEnt D_0038D170[];
+#include "data/pieces/D_0038D170.h"
 extern s32 D_003A7980;
-extern KEnt D_0039A580[];
+#include "data/pieces/D_0039A580.h"
 void func_001248e8(s32);
 s32 func_001d5168(VM *vm) {
     s32 i, n;

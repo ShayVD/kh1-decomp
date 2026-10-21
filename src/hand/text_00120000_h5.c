@@ -49,7 +49,7 @@ extern u32 D_002E3190;
 extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
 extern s32 D_004F82C0;
 extern s32 D_004F82C4;
-extern u8 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 #include "data/pieces/D_002E31A8.h"
 extern Node D_004F8310[64];
 extern u8 D_002E2F20[];
@@ -60,8 +60,8 @@ extern u8 D_00514F20[];
 extern struct { u8 pad[4]; u32 f4; u32 f8; s32 f0c; } D_002E2FD8;
 extern u32 D_00524F44;
 extern void **D_00524F40;
-extern S31b0 D_002E31B0;
-extern S31a0 *D_002E31A0;
+#include "data/pieces/D_002E31B0.h"
+#include "data/pieces/D_002E31A0.h"
 extern s32 D_002E31BC;
 extern V8 *D_00525288;
 extern s32 D_0052528C;
@@ -339,7 +339,7 @@ void func_0012a2b0(Arg *p) {
     e->w0 |= 0x240;
     func_001358b8(e, 10);
     func_0014f658(e, 8);
-    func_002675a8(e->f3c0, D_002C58B0);
+    func_002675a8(e->f3c0, ((u8 *)&D_002C58B0));
     e->f3b0 = 0;
     e->f370.v |= 1ULL << 60;
     func_002414a8(func_0013c318(e->f130->f4c), 3);
@@ -543,7 +543,7 @@ void func_0012dce0(E7 *e) {
 s32 func_0012eb08(s32 *p) {
     f32 a[4];
     f32 b[4];
-    if (!func_0012f040(D_002E31B0.f0, D_002E31B0.f4)) return 1;
+    if (!func_0012f040((*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4)) return 1;
     if (func_0012eaf8(*p)) {
         if (func_0012ed88(D_002E26A0[0], p, a, b) > 1500.0f) return 1;
         if (fabsf(b[1]) > 1000.0f) return 1;
@@ -554,9 +554,9 @@ s32 func_0012eb08(s32 *p) {
 void func_0012fa98(void) {
     f32 a[4];
     f32 b[4];
-    f32 d = func_0012ed88(D_002E26A0[0], &D_002E31B0, a, b);
+    f32 d = func_0012ed88(D_002E26A0[0], ((S31b0 *)&D_002E31B0), a, b);
     s32 *o = &D_002E31BC;
-    S31a0 *x = D_002E31A0;
+    S31a0 *x = ((S31a0 *)D_002E31A0);
     s32 r = 0;
     if (x) {
         if (!(d < x->f0c)) {

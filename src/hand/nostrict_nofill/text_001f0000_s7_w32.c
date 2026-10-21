@@ -11,9 +11,9 @@ typedef struct {
     s32 x40, x44, x48, x4c;
     s32 x50, x54, x58, x5c;
 } Gl;
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
-extern s32 D_003E8E08[];
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_0063F740;
 extern s32 D_0063F74C;
 extern s32 D_0063F750;
@@ -151,7 +151,7 @@ Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 
                 k = *str - 32;
                 str++;
             }
-            gl = &D_003E8E28[k];
+            gl = &((Glyph *)D_003E8E28)[k];
             w = gl->w << 4;
             s = w * sc / 18;
             k = (w + func_001efb88()) * sc / 18;

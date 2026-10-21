@@ -16,15 +16,15 @@ typedef struct {
 } CamArg;
 
 extern s32 D_00575890;
-extern f32 D_002E2780[];
+#include "data/pieces/D_002E2780.h"
 extern f32 D_005758D0[];
-extern f32 D_002E2790[];
+#include "data/pieces/D_002E2790.h"
 extern f32 D_005758E0[];
 extern f32 D_002E27A0;
 #include "data/pieces/D_00362428.h"
-extern s32 D_0036242C;
-extern Rec20 *D_00362434;
-extern Rec20 *D_00362438;
+#include "data/pieces/D_0036242C.h"
+#include "data/pieces/D_00362434.h"
+#include "data/pieces/D_00362438.h"
 extern s32 D_00362440;
 extern s32 D_00362444;
 void func_00176f08(s32, f32);
@@ -48,7 +48,7 @@ void func_0017f290(CamArg *a) {
         for (i = 0; i < D_00362440; i++) {
             r = (Rec20 *) ((i * 32) + (s32) D_00362428);
             if (r->id == a->id) {
-                D_00362434 = r;
+                (*(Rec20 **)&D_00362434) = r;
                 D_00362438 = 0;
                 break;
             }
@@ -58,11 +58,11 @@ void func_0017f290(CamArg *a) {
         i = 0;
     loop:
         if (i < D_00362444) {
-            q = func_0017adf8(D_0036242C, i++);
+            q = func_0017adf8(((s32)D_0036242C), i++);
             if (q->id != a->id)
                 goto loop;
-            D_00362438 = q;
-            D_00362434 = 0;
+            D_00362438 = (s32)q;
+            (*(Rec20 **)&D_00362434) = 0;
         }
         break;
     }

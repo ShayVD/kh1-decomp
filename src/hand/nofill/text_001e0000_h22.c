@@ -13,8 +13,8 @@ u8 *func_001efc10(s32 a) {
     return &D_003E5ED8[D_003E890E[a]];
 }
 
-typedef struct { u8 pad[0x30]; } E8E30;
-extern E8E30 D_003E8E30[];
+#include "data/types/nofill_text_001e0000_h22.h"
+#include "data/pieces/D_003E8E30.h"
 typedef struct { u8 pad[0x68]; E8E30 *x68; } O68;
 
 void func_001f4058(O68 *p, s32 i) {

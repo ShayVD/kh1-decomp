@@ -30,7 +30,7 @@ M2C_UNK func_002583e0(M2C_UNK);
 M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
 M2C_UNK func_00266f38(s32, s32);
 M2C_UNK func_00267930(M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
-extern M2C_UNK D_0029B280;
+#include "data/pieces/D_0029B280.h"
 extern M2C_UNK D_002B74D0;
 extern M2C_UNK D_002B74E0;
 extern M2C_UNK D_002B74F0;
@@ -50,7 +50,7 @@ extern s32 D_002A6258;
 extern s32 D_002A6B84;
 extern s32 D_002B647C;
 extern s32 D_002B6484;
-extern s32 D_002BC0A8;
+#include "data/pieces/D_002BC0A8.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_002BC734;
@@ -63,7 +63,7 @@ extern s32 D_00495260;
 extern s32 D_004D5AF4;
 extern s32 D_004D5AF8;
 extern s32 D_004D5AFC; /* src/data/bss_004D.c: f32 D_004D5AFC */
-extern void *D_002A6238;
+#include "data/pieces/D_002A6238.h"
 s32 func_00111090();
 
 s32 func_001001f8(void) {
@@ -81,7 +81,7 @@ void func_00100610(void) {
 }
 
 void func_00100768(void) {
-    func_00104480(-1, &D_0029B280);
+    func_00104480(-1, ((M2C_UNK *)&D_0029B280));
     func_00104480(-1, &D_00494320);
     M2C_FIELD(&D_00494320, s32 *, 0x44) = 0;
 }
@@ -92,8 +92,8 @@ void func_001007b0(void) {
 }
 
 void func_001007e8(void) {
-    func_001044c0(&D_0029B280);
-    func_00107ec0(&D_0029B280);
+    func_001044c0(((M2C_UNK *)&D_0029B280));
+    func_00107ec0(((M2C_UNK *)&D_0029B280));
 }
 
 void func_001008d8(f32 fparg0) {
@@ -101,7 +101,7 @@ void func_001008d8(f32 fparg0) {
 }
 
 void func_00100ab0(void) {
-    D_002BC0A8 |= 3;
+    D_002BC0A8.i |= 3;
     func_00176250();
     func_00176290();
 }
@@ -127,7 +127,7 @@ void func_00105710(s32 arg0, s32 arg1) {
 
     var_a3 = D_002A6258;
     if (var_a3 > 0) {
-        var_a2 = D_002A6238;
+        var_a2 = ((void *)D_002A6238);
         do {
             var_a3 -= 1;
             if (M2C_FIELD(var_a2, u8 *, 0xB) == arg0) {
@@ -154,7 +154,7 @@ void func_00105d38(s32 arg0, s32 arg1) {
 
     var_a3 = D_002A6258;
     if (var_a3 > 0) {
-        var_a2 = D_002A6238;
+        var_a2 = ((void *)D_002A6238);
         do {
             var_a3 -= 1;
             if (M2C_FIELD(var_a2, u8 *, 0xB) == arg0) {

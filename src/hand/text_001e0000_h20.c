@@ -46,7 +46,7 @@ extern f32 *D_0062A428;
 typedef struct { u8 pad0[0x10]; f32 x, y, z; } Obj9c0;
 extern u64 D_0038CD00;
 typedef struct { s32 x0; s32 n; s32 tbl[1]; } Tbl;
-extern Tbl *D_003DACA0;
+#include "data/pieces/D_003DACA0.h"
 void func_001ed6b0(void *);
 s32 func_0011e340(void *);
 typedef struct { s32 a, b, c, d; } Q4;
@@ -135,7 +135,7 @@ void func_001e7d90(void);
 void func_001e4b08(void);
 extern s32 D_006314D0;
 extern s32 D_006314D8;
-extern s32 D_003DABD4;
+#include "data/pieces/D_003DABD4.h"
 void func_001e7fe0();
 void func_0011ec08(s32, s32, s32, void (*)());
 extern s32 D_006314CC;
@@ -144,7 +144,7 @@ void func_001e8308();
 void func_0011eb88(s32, s32, s32, void (*)());
 extern volatile s32 D_002C58C0;
 s32 func_0011c808(s32);
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 void func_0011d080(s32, s32);
 void func_0011d0d8(s32, s32);
 void func_0011d108(s32, s32, s32);

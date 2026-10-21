@@ -136,7 +136,7 @@ typedef struct {
     u32 result;
 } CdReq53;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 r : 29; } F5968;
-extern volatile F5968 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 extern char D_0048D260[];
 extern u32 D_002C5B44;
 extern void (*D_0046A6A8)(s32);
@@ -189,8 +189,8 @@ rd:
 out:
     if (err) {
         D_0046A6A8(4);
-        D_002C5968.b2 = 1;
-        do func_0010c150(); while (D_002C5968.b2);
+        (*(volatile F5968 *)&D_002C5968).b2 = 1;
+        do func_0010c150(); while ((*(volatile F5968 *)&D_002C5968).b2);
         func_002193e0(0);
         r->lsn += D_004F3200;
         func_0010c170(func_001201d0, r);
@@ -274,8 +274,8 @@ void func_00122198(s32 a0, s32 a1) {
     func_0012ea38();
 }
 
-typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 radius; V53 pos; f32 dir[4]; V53 col; } Light53;
-extern Light53 D_002C5C80[];
+#include "data/types/text_00110000_h53_p2.h"
+#include "data/pieces/D_002C5C80.h"
 #include "data/pieces/D_002C5910.h"
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 f32 func_00267390(f32 *, V53 *);
@@ -408,7 +408,7 @@ typedef struct {
     u8 pad8[0x88];
     Act53 *owner;
 } Ent53;
-extern V53 D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 void func_002675a8(V53 *, V53 *);
 f32 func_00120c88(f32);
 float sinf(float);
@@ -452,7 +452,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
     o->x39e = 0;
     o->f.b46 = 0;
-    func_002675a8(&o->x120, &D_002C58A0);
+    func_002675a8(&o->x120, ((V53 *)&D_002C58A0));
     for (e = 0; (e = func_0014a398(e)) != 0;) {
         if (e->owner == o && (e->u.w & 3) == 1) e->u.b.b16 = 0;
     }
@@ -461,10 +461,12 @@ void func_001238d0(Act53 *o, V53 *p) {
 #include "data/types/text_00110000_h53.h"
 extern f32 D_004F7650, D_004F77E0;
 #include "data/pieces/D_002E27A4.h"
-extern V53 D_002E2780, D_002E2790, D_002E26B0;
+extern V53 D_002E26B0;
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 extern s32 D_002C5950;
 extern M53 D_004F76E0[], D_004F7760[], D_004F7660[];
-extern M53 D_002E2700;
+#include "data/pieces/D_002E2700.h"
 #include "data/pieces/D_002E2740.h"
 #include "data/pieces/D_002BBE20.h"
 #include "data/pieces/D_002E26C0.h"
@@ -481,19 +483,19 @@ s32 func_00125000(void) {
     V53 d, r;
     M53 m;
     func_00110a48(D_004F7650);
-    func_00267530(&d, &D_002E2790, &D_002E2780);
+    func_00267530(&d, ((V53 *)&D_002E2790), ((V53 *)&D_002E2780));
     func_002673b8(&d, &d);
     func_00120cf8(&d, m, func_00120c88(D_002E27A4));
     func_002672f8(&r, m, &D_002E26B0);
-    func_00267930(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
-    sceVu0CopyMatrix(D_002E2700, D_004F76E0[D_002C5950]);
+    func_00267930(D_004F76E0[D_002C5950], ((V53 *)&D_002E2780), &d, &r);
+    sceVu0CopyMatrix((*(M53 *)&D_002E2700), D_004F76E0[D_002C5950]);
     sceVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
     sceVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
-    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, D_002E2700);
+    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, (*(M53 *)&D_002E2700));
     sceVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
     D_002E27AC = D_004F7660[D_002C5950];
     func_00110ba8();
-    D_004F77E0 = func_00124d28(&D_002E2780, &D_002E2790);
+    D_004F77E0 = func_00124d28(((V53 *)&D_002E2780), ((V53 *)&D_002E2790));
     return 0;
 }
 
@@ -501,7 +503,7 @@ s32 func_00125000(void) {
 typedef struct { s16 id; u8 pad[18]; } E7810;
 extern E7810 *D_004F7810;
 typedef struct { u32 lo : 25; u32 b25 : 1; u32 hi : 6; } F27c8;
-extern F27c8 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 void func_0012ec60(s32, s32, V53 *);
 
 s32 func_00126838(u8 *o, s32 *a, V53 *v) {
@@ -516,7 +518,7 @@ s32 func_00126838(u8 *o, s32 *a, V53 *v) {
             t[17] = 1;
         } else {
             t[18] = 1;
-            if (FLD(s32, o, 0x70) == 2 && D_002E27C8.b25) t[15] = t[16];
+            if (FLD(s32, o, 0x70) == 2 && (*(F27c8 *)&D_002E27C8).b25) t[15] = t[16];
         }
         v->y = 0.0f;
     } else {
@@ -539,7 +541,7 @@ typedef struct { u8 type; u8 pad1[2]; s8 flag; s32 a, b; } C3190b;
 extern C3190b D_002E3190;
 extern u8 D_002C5BB0[];
 extern V53 D_004F7800; /* src/data/bss_004F.c: f32 D_004F7800[0x4] */
-extern s32 (*D_002E27D4)(u8 *, u8 *, V53 *);
+#include "data/pieces/D_002E27D4.h"
 s32 func_00137618(u8 *, V53 *);
 void func_00124e08(u8 *o, u8 *p, V53 *out);
 void func_00126f18(u8 *, u8 *, V53 *);
@@ -553,8 +555,8 @@ void func_001271b0(u8 *o, V53 *v) {
     if (func_00137618(o, v)) {
         func_00124e08(o, D_002C5BB0, v);
         func_002675a8(&D_004F7800, v);
-        if (D_002E27D4) {
-            if (D_002E27D4(o, D_002C5BB0, v)) func_00126f18(o, D_002C5BB0, v);
+        if ((*(s32 (*(*))(u8*,u8*,V53*))&D_002E27D4)) {
+            if ((*(s32 (*(*))(u8*,u8*,V53*))&D_002E27D4)(o, D_002C5BB0, v)) func_00126f18(o, D_002C5BB0, v);
         } else {
             func_00126f18(o, D_002C5BB0, v);
         }
@@ -562,7 +564,7 @@ void func_001271b0(u8 *o, V53 *v) {
     if (D_002E3190.flag & 1) {
         if ((FLD(s32, o, 0x164) == 7 || FLD(s32, o, 0x164) == 12) && (FLD(s32, o, 0x70) == 0 || FLD(s32, o, 0x70) == 12)) {
             FLD(u32, o, 0) &= ~4;
-            func_002675a8(&s, &D_002C58A0);
+            func_002675a8(&s, ((V53 *)&D_002C58A0));
             p = func_0013dfb8(o, &s);
             if (p) FLD(f32, o, 0x3b0) = FLD(f32, p, 4) = 2.0f;
         }
@@ -619,8 +621,7 @@ void func_00122588(u8 *o) {
 
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 extern s32 D_002E27A8;
-extern f32 D_002C58D0[4][4];
-extern V53 D_002C58A0;
+#include "data/pieces/D_002C58D0.h"
 extern f32 D_004F77E0;
 void func_00267810(f32 (*)[4], f32 (*)[4], f32);
 void func_00124d58(V53 *, V53 *, f32, f32);
@@ -630,13 +631,13 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
     V53 v;
     switch (D_002E27A8) {
     case 2:
-        func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+        func_00267810(m, (*(f32 (*)[4][4])&D_002C58D0), FLD(f32, p, 0x40) * 0.0523598762229085f);
         func_002672f8(out, m, (V53 *)(o + 0x30));
         out->y = out->w = 0.0f;
         return;
     case 11:
         if (FLD(f32, p, 0x44) <= 0.0f) {
-            func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+            func_00267810(m, (*(f32 (*)[4][4])&D_002C58D0), FLD(f32, p, 0x40) * 0.0523598762229085f);
             func_002672f8(out, m, (V53 *)(o + 0x20));
             out->y = 0.0f;
             func_002673b8(out, out);
@@ -644,7 +645,7 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
             return;
         }
         if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
-            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
+            func_00267530(out, ((V53 *)&D_002C58A0), (V53 *)(o + 0x20));
         } else {
             func_002675a8(out, o + 0x20);
         }

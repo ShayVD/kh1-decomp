@@ -18,7 +18,7 @@ extern M2C_UNK func_001032b0;
 extern M2C_UNK func_00109e20;
 extern M2C_UNK func_0010a378;
 extern f32 D_00495184;
-extern s32 D_002A3F48;
+#include "data/pieces/D_002A3F48.h"
 extern s32 D_002A6254;
 extern s32 D_002A6258;
 extern s32 D_002BC138;
@@ -31,8 +31,8 @@ extern s32 D_00495188;
 extern s32 D_00495260;
 extern s32 D_004D5B00; /* src/data/bss_004D.c: u32 D_004D5B00 */
 extern s32 D_004D5B08; /* src/data/bss_004D.c: u32 D_004D5B08 */
-extern void *D_002A6238;
-extern volatile s32 D_002C5968;
+#include "data/pieces/D_002A6238.h"
+#include "data/pieces/D_002C5968.h"
 extern volatile s32 D_00495258;
 s32 func_00104ae0(s32, s32);
 s32 func_0011aa18(s32, s32, s32);
@@ -107,7 +107,7 @@ void func_00105760(s32 arg0, s32 arg1) {
 
     var_a3 = D_002A6258;
     if (var_a3 > 0) {
-        var_a2 = D_002A6238;
+        var_a2 = ((void *)D_002A6238);
         do {
             var_a3 -= 1;
             if (M2C_FIELD(var_a2, u8 *, 0xB) == arg0) {

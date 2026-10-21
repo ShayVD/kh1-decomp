@@ -47,7 +47,7 @@ typedef struct {
     Vec x120;
 } Wk;
 extern s32 D_002C5958;
-extern s32 D_0035BD40;
+#include "data/pieces/D_0035BD40.h"
 extern Vec D_00575020[];
 void func_0013dfb8(Obj *, Vec *);
 void func_0014cce0(Obj *, f32);
@@ -88,7 +88,7 @@ s32 func_00169688(Obj *o, Wk *w) {
 
     switch (o->x70) {
     case 13:
-        if (o->x8 != 0 && o->x8 == D_0035BD40) {
+        if (o->x8 != 0 && o->x8 == D_0035BD40.i) {
             Tail(o, w);
             return 1;
         }

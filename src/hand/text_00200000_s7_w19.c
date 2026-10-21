@@ -107,7 +107,7 @@ done:
 
 /* func_00232390: func_0020dd38 takes 6 args (6th = id), y = 63 before the func_001fc308 call, callee return types as below. */
 typedef struct { u8 pad[8]; s32 x8; } F8;
-extern F8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];
@@ -130,12 +130,12 @@ s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 void func_00209820(void *, s32, s32, s32, void *);
 
 typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8;
-extern Base4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 typedef struct { u8 b0, b1, start, count, b4, b5; } T7C48;
-typedef struct { u16 id; u16 max; } T7A70;
+#include "data/types/text_00200000_s7_w19_p.h"
 #include "data/types/text_00200000_s7_w19.h"
-extern T7C48 D_003F7C48[];
-extern T7A70 D_003F7A70[];
+#include "data/pieces/D_003F7C48.h"
+#include "data/pieces/D_003F7A70.h"
 extern T7D88 D_003F7D88[];
 extern s32 D_0064765C;
 void func_00205b30(void *, void *);
@@ -159,14 +159,14 @@ void func_00232390(void *a0) {
     func_001f9438(a0, 0, 44, 42, 427, 15, 0x80C8C8C8);
     func_001f9438(a0, 0, 271, 42, 428, 15, 0x80C8C8C8);
     func_001f9438(a0, 1, 484, 42, 429, 15, 0x80C8C8C8);
-    t = &D_003F7C48[D_0064765C];
+    t = &((T7C48 *)&D_003F7C48)[D_0064765C];
     e = &D_003F7A70[t->start];
     n = t->count;
     for (j = 0; j < n; j++) {
         id = e->id;
         max = e->max;
         e++;
-        cnt = D_00304BE8->cnt[id];
+        cnt = ((Base4BE8 *)D_00304BE8)->cnt[id];
         c = cnt < max ? 2 : 0;
         func_0020dd38(a0, c, 247, y, 194, id);
         col = func_00207ca0(0);

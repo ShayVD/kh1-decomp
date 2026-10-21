@@ -6,7 +6,7 @@ typedef struct { f32 x, y, z; } V3;
 typedef struct {
     V4 pl; V4 org; V4 e[3]; f32 uv0[4]; f32 uv1[4]; f32 uv2[4];
 } Tri;
-extern V4 D_0035C490;
+#include "data/pieces/D_0035C490.h"
 extern V4 D_0035C660[];
 f32 func_00162950(V3 *, void *);
 void func_00267530(void *, void *, void *);
@@ -36,9 +36,9 @@ static inline void inl_uv(Tri *t, f32 u, f32 v, f32 *out, f32 s) {
     out[0] = uv[0] = (t->uv1[0] - t->uv0[0]) * u + (t->uv2[0] - t->uv0[0]) * v + t->uv0[0];
     uv[1] = out[1] = (t->uv1[1] - t->uv0[1]) * u + (t->uv2[1] - t->uv0[1]) * v + t->uv0[1];
     for (j = 0; j < 8; j++) {
-        if (func_00162ab8(&D_0035C490, uv, &D_0035C660[j], &D_0035C660[j + 1], tmp)) func_002675a8(uv, tmp);
+        if (func_00162ab8(((V4 *)&D_0035C490), uv, &D_0035C660[j], &D_0035C660[j + 1], tmp)) func_002675a8(uv, tmp);
     }
-    func_002674f0(uv, uv, &D_0035C490, s);
+    func_002674f0(uv, uv, ((V4 *)&D_0035C490), s);
     out[0] = uv[0];
     out[1] = uv[1];
 }

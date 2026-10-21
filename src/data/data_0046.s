@@ -15,7 +15,7 @@
 	PIECE D_00467398, 0x28, 8
 	PIECE D_004673C0, 0x28, 8
 	PIECE D_004673E8, 0x20, 8
-	PIECE D_00467408, 0x4, 4  /* untyped: users disagree: s32 D_00467408 | void *D_00467408; session 25: as s32 D_00467408: new warning in text_00240000_h75.c */
+	PIECE D_00467408, 0x4, 4  /* data/pieces/D_00467408.h */
 	PIECE D_0046740C, 0x4, 4
 	PIECE D_00467410, 0xe10, 16
 	PIECE D_00468220, 0xbf0, 16
@@ -32,9 +32,9 @@
 	PIECE D_00469FA0, 0x10, 16
 	PIECE D_00469FB0, 0x18, 8  /* data/pieces/D_00469FB0.h */
 	PIECE D_0046A038, 0x4, 4  /* data/pieces/D_0046A038.h */
-	PIECE D_0046A03C, 0x4, 4  /* untyped: users disagree: s32 D_0046A03C | u8 *D_0046A03C; session 25: as s32 D_0046A03C: new warning in text_00240000_h75.c */
-	PIECE D_0046A040, 0x4, 4  /* untyped: users disagree: s32 D_0046A040 | u8 *D_0046A040; session 25: as s32 D_0046A040: new warning in text_00240000_h75.c */
-	PIECE D_0046A044, 0x4, 4  /* untyped: users disagree: s32 D_0046A044 | u8 *D_0046A044; session 25: as s32 D_0046A044: new warning in text_00240000_h75.c */
+	PIECE D_0046A03C, 0x4, 4  /* data/pieces/D_0046A03C.h */
+	PIECE D_0046A040, 0x4, 4  /* data/pieces/D_0046A040.h */
+	PIECE D_0046A044, 0x4, 4  /* data/pieces/D_0046A044.h */
 	PIECE_BEGIN D_0046A048, 0x10, 8
 	PIECE_BYTES D_0046A048, 0x0, 0x8
 	.word func_0024d1c8
@@ -76,7 +76,7 @@
 	PIECE D_0046A558, 0x4, 4
 	PIECE D_0046A55C, 0x4, 4
 	PIECE D_0046A560, 0x8, 8
-	PIECE_BEGIN D_0046A568, 0x18, 8  /* untyped: users disagree: E *D_0046A568[] | u32 *D_0046A568[]; session 25: as u32 *D_0046A568[]: new warning in text_00240000_s9_w3.c */
+	PIECE_BEGIN D_0046A568, 0x18, 8  /* data/pieces/D_0046A568.h */
 	.word D_0046A0C8
 	.word D_0046A1A8
 	.word D_0046A288
@@ -98,7 +98,7 @@
 	.word func_0024cfa0
 	PIECE_BYTES D_0046A5E0, 0x4, 0x24
 	PIECE_END D_0046A5E0, 0x28
-	PIECE D_0046A608, 0x4, 4  /* untyped: users disagree: s32 D_0046A608 | u32 D_0046A608; session 25: as u32 D_0046A608: code changes in text_00240000_s8_w5.c */
+	PIECE D_0046A608, 0x4, 4  /* data/pieces/D_0046A608.h */
 	PIECE D_0046A60C, 0x4, 4
 	PIECE D_0046A610, 0x4, 4
 	PIECE D_0046A614, 0x4, 4

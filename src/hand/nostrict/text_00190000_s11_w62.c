@@ -57,7 +57,7 @@ typedef struct {
     u16 idx[4];
 } ShipolyVtx4;
 
-extern f32 D_003701D0[4];
+#include "data/pieces/D_003701D0.h"
 void func_00199908(ShipolyKey *, f32 *, f32 *);
 void func_002675a8(f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);

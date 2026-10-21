@@ -8,7 +8,7 @@ M2C_UNK func_001452a0(void *);
 M2C_UNK func_00267560(void *, void *, f32);
 M2C_UNK func_002675a8(void *, M2C_UNK *);
 extern M2C_UNK (*D_00525364)(s32);
-extern M2C_UNK D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern M2C_UNK D_00350D94;
 extern M2C_UNK D_00525328;
 f32 func_001216d8(f32, f32, f32);
@@ -33,8 +33,8 @@ void func_0013e558(void *arg0) {
         temp_v0();
     }
     if (M2C_FIELD(arg0, s32 *, 0x70) == 4) {
-        func_002675a8(arg0 + 0x3C0, &D_002C58A0);
-        func_002675a8(arg0 + 0x20, &D_002C58A0);
+        func_002675a8(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58A0));
+        func_002675a8(arg0 + 0x20, ((M2C_UNK *)&D_002C58A0));
     }
     func_00137688(arg0, func_001216d8(M2C_FIELD(arg0, f32 *, 0x3C), M2C_FIELD(arg0, f32 *, 0x150), M2C_FIELD(M2C_FIELD(arg0, void **, 0x6C), f32 *, 0xCC)));
     if ((M2C_FIELD(arg0, s32 *, 0) & 0x400) && (M2C_FIELD(arg0, s32 *, 0x70) == 2)) {

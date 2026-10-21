@@ -4,10 +4,10 @@
 
 M2C_UNK func_001f9010(M2C_UNK);
 M2C_UNK func_001f9438(void *, M2C_UNK, M2C_UNK, M2C_UNK, s32, M2C_UNK, M2C_UNK);
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 
 void func_0020ff28(void *arg0) {
     func_001f9010(0x17);
-    D_003E8E08 = M2C_FIELD(arg0, s32 *, 0x28);
+    (*(s32 *)&D_003E8E08) = M2C_FIELD(arg0, s32 *, 0x28);
     func_001f9438(arg0, 0, 0xAE, 0xC, M2C_FIELD(arg0, s32 *, 0x24), 0x11, 0x80C87850);
 }

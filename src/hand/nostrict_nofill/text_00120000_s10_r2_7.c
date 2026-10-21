@@ -6,16 +6,16 @@ typedef struct { s32 f0, f4; u32 f8; s32 fc; s32 n; u8 ids[0x20]; s32 f34; } Q8;
 typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; } O8;
 typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern Q8 D_002E2FD8[7];
-extern Q8 *D_002E3170[];
+#include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-extern O8 *D_002E319C;
-extern O8 *D_002E31A0;
+#include "data/pieces/D_002E319C.h"
+#include "data/pieces/D_002E31A0.h"
 extern O8 *func_001478c8(s32);
 extern void func_0011d768(s32);
 extern void func_0012dce0(Q8 *);
 CONTEXT_ONLY Q8 *func_0012dd38(void) {
     Q8 **p = D_00524F40;
-    if (p > D_002E3170) {
+    if (p > ((Q8 **)&D_002E3170)) {
         *p = 0;
         D_00524F40 = --p;
     }
@@ -30,7 +30,7 @@ s32 func_0012e1b0(Pad *pad) {
     s32 r;
     s32 snd;
 
-    D_00524F40 = D_002E3170;
+    D_00524F40 = ((Q8 **)&D_002E3170);
     q = D_00524F40[1];
     if (q == 0 || q->n == 0 || ((*D_00524F40)->f8 & (1 << (*D_00524F40)->f34)))
         goto done;
@@ -65,7 +65,7 @@ done:
             func_0012dce0(&D_002E2FD8[o->f8]);
         }
     } else if (k == 0x80 || (k & 2)) {
-        if (D_00524F40 > D_002E3170) {
+        if (D_00524F40 > ((Q8 **)&D_002E3170)) {
             q = func_0012dd38();
             if ((pad->x8 & 2) && q->fc >= 0) q->fc = 0;
             func_0011d768(3);
@@ -88,6 +88,6 @@ done:
     } else {
         r = 1;
     }
-    D_002E319C = D_002E31A0 = func_001478c8(q->ids[q->fc]);
+    D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
     return r;
 }

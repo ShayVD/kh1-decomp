@@ -28,7 +28,7 @@ typedef struct { s32 x0, x4; } B50;
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3980[], D_003F39C0[], D_003F39F0[], D_003F3A20[], D_003F3A50[], D_003F3A80[];
 extern s32 D_00641224;
@@ -277,7 +277,7 @@ void func_002106b8(Ob *o) {
         }
         func_00207830(o, 11, 2, 351, 71, 122, v);
         func_00206690(o, 473, 83, 39);
-        func_00207870(o, 11, 1, 11, 99, 122, D_00641240 != -1 ? func_001ee5f0(D_00304BE8->x48e[D_00641240]) : func_001efbb8(56));
+        func_00207870(o, 11, 1, 11, 99, 122, D_00641240 != -1 ? func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[D_00641240]) : func_001efbb8(56));
         func_00206690(o, 0, 111, 11);
         break;
     case 5:
@@ -298,7 +298,7 @@ void func_002106b8(Ob *o) {
         switch (D_00641238) {
         case 1:
             func_00206690(o, 0, 111, 11);
-            if (D_00641240 != -1) v = func_001ee5f0(D_00304BE8->x48e[D_00641240]);
+            if (D_00641240 != -1) v = func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[D_00641240]);
             else v = func_001efbb8(56);
             func_00207870(o, 11, 1, 11, 99, 122, v);
             func_00206690(o, 133, 111, 26);
@@ -308,7 +308,7 @@ void func_002106b8(Ob *o) {
         case 0:
             if (D_0064123C == 0) break;
             func_00206690(o, 0, 111, 11);
-            func_00207870(o, 11, 1, 11, 99, 122, func_001ee5f0(D_00304BE8->x48e[D_00641240]));
+            func_00207870(o, 11, 1, 11, 99, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[D_00641240]));
             func_00206690(o, 133, 111, 379);
             break;
         case 2:

@@ -71,7 +71,7 @@ s32 func_0010a058(void) {
     return 4;
 }
 
-extern s32 D_002BC070;
+#include "data/pieces/D_002BC070.h"
 extern s32 D_002B6774;
 void func_001038b0(s32);
 s32 func_0011ef10(s32, s32 (*)(void));
@@ -79,22 +79,22 @@ s32 func_0010a058(void);
 
 s32 func_0010a0d8(void) {
     D_002B6774 = 1;
-    if (D_002BC070 != 128) func_001038b0(1);
+    if ((*(s32 *)&D_002BC070) != 128) func_001038b0(1);
     return func_0011ef10(0x2e630, func_0010a058);
 }
 
 void func_00106b18(void *);
 void *func_00121e28(s32, void **);
 extern u8 D_002B6760[];
-extern void *D_002B6778;
+#include "data/pieces/D_002B6778.h"
 void func_0010a3e8(void) {
     GsImagePacket si;
     func_00106b18(D_002B6760);
     func_002660c0(&si, 0x3600, 4, 1, 0, 0, 256, 192);
     FlushCache(0);
     sceGsSyncPath(0, 0);
-    D_002B6778 = func_00121e28(0x24000, &D_002B6778);
-    sceGsExecStoreImage(&si, D_002B6778);
+    (*(void **)&D_002B6778) = func_00121e28(0x24000, ((void **)&D_002B6778));
+    sceGsExecStoreImage(&si, ((void *)D_002B6778));
 }
 extern u64 D_002B70B0[];
 extern s32 D_00495250;
@@ -355,27 +355,27 @@ typedef struct {
     s32 w158;
     s32 w15c;
 } Ctx;
-extern Ctx *D_002BCB60;
+#include "data/pieces/D_002BCB60.h"
 void func_00111288(void);
 void func_001112b8(void) {
     s32 i;
     func_00111288();
-    for (i = 0; i < 234; i++) D_002BCB60->flags[i] = 0;
-    D_002BCB60->w40 = 0;
-    D_002BCB60->w44 = 0;
-    D_002BCB60->w10[0] = 0;
-    D_002BCB60->w10[1] = 0;
-    D_002BCB60->w10[2] = 0;
-    D_002BCB60->w10[3] = 0;
-    D_002BCB60->w10[4] = 0;
-    D_002BCB60->w10[5] = 0;
-    D_002BCB60->w10[6] = 0;
-    D_002BCB60->w10[7] = 0;
-    D_002BCB60->w10[8] = 0;
-    D_002BCB60->w10[9] = 0;
-    D_002BCB60->w10[10] = 0;
-    D_002BCB60->w10[11] = 0;
-    D_002BCB60->w158 = 0;
+    for (i = 0; i < 234; i++) ((Ctx *)D_002BCB60)->flags[i] = 0;
+    ((Ctx *)D_002BCB60)->w40 = 0;
+    ((Ctx *)D_002BCB60)->w44 = 0;
+    ((Ctx *)D_002BCB60)->w10[0] = 0;
+    ((Ctx *)D_002BCB60)->w10[1] = 0;
+    ((Ctx *)D_002BCB60)->w10[2] = 0;
+    ((Ctx *)D_002BCB60)->w10[3] = 0;
+    ((Ctx *)D_002BCB60)->w10[4] = 0;
+    ((Ctx *)D_002BCB60)->w10[5] = 0;
+    ((Ctx *)D_002BCB60)->w10[6] = 0;
+    ((Ctx *)D_002BCB60)->w10[7] = 0;
+    ((Ctx *)D_002BCB60)->w10[8] = 0;
+    ((Ctx *)D_002BCB60)->w10[9] = 0;
+    ((Ctx *)D_002BCB60)->w10[10] = 0;
+    ((Ctx *)D_002BCB60)->w10[11] = 0;
+    ((Ctx *)D_002BCB60)->w158 = 0;
 }
 
 typedef struct {
@@ -411,10 +411,10 @@ typedef struct { f32 m[1][4]; } CtxRows;
 typedef struct { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
 
 void func_00111340(Src *s, s32 i) {
-    ((CtxRows *)D_002BCB60)->m[i][4] = s->x;
-    ((CtxRows *)D_002BCB60)->m[i][5] = s->y;
-    ((CtxRows *)D_002BCB60)->m[i][6] = s->z;
-    ((CtxRows *)D_002BCB60)->m[i][7] = s->w;
+    ((CtxRows *)((Ctx *)D_002BCB60))->m[i][4] = s->x;
+    ((CtxRows *)((Ctx *)D_002BCB60))->m[i][5] = s->y;
+    ((CtxRows *)((Ctx *)D_002BCB60))->m[i][6] = s->z;
+    ((CtxRows *)((Ctx *)D_002BCB60))->m[i][7] = s->w;
 }
 extern Src *D_002E26A0[3];
 void func_00111480(void);
@@ -433,14 +433,14 @@ void func_00111380(void) {
 extern s32 D_002BC128, D_002BC130, D_002BCDA8;
 V32 *func_0017f1c8(void);
 void func_00111480(void) {
-    Ctx *c = D_002BCB60;
+    Ctx *c = ((Ctx *)D_002BCB60);
     c->w40 = D_002BC128;
     c->w44 = D_002BC130;
     c->w48 = D_002BCDA8;
     c->blk = *func_0017f1c8();
 }
 s32 func_00111798(void) {
-    if (D_002BCB60) return D_002BCB60->w15c;
+    if (((Ctx *)D_002BCB60)) return ((Ctx *)D_002BCB60)->w15c;
     return 0;
 }
 
@@ -486,7 +486,7 @@ s32 func_001120c8(void) {
 }
 typedef struct { s32 a, b; } Pair;
 extern volatile u32 D_002C5958;
-extern Pair D_002BC148;
+#include "data/pieces/D_002BC148.h"
 void func_0012cac8(s32, s32);
 void func_00112d28(void);
 void func_001c1f60(void);
@@ -499,12 +499,12 @@ s32 func_00112d80(void) {
     func_00112d28();
     func_001c1f60();
     func_0011ef10(0x2e630, func_00112cf8);
-    D_002BC148.a = D_002BC128;
-    D_002BC148.b = D_002BC130;
+    (*(Pair *)&D_002BC148).a = D_002BC128;
+    (*(Pair *)&D_002BC148).b = D_002BC130;
     return func_00109558(4);
 }
-typedef struct { s32 a, b, c; } Trip;
-extern Trip D_002BCDC8;
+#include "data/types/text_00100000_h2_p2.h"
+#include "data/pieces/D_002BCDC8.h"
 
 void func_00113048(void);
 s32 func_00112e08(void) {
@@ -541,13 +541,13 @@ void func_001130a0(s32 i, f32 *d) {
     d[3] = D_004D92F0[i][3];
 }
 typedef struct { s32 id; u8 pad4[0xc]; f32 v[3][4]; } Ent40;
-extern Ent40 *D_002BCDA0;
+#include "data/pieces/D_002BCDA0.h"
 #include "data/pieces/D_002BCDA4.h"
 
 s32 func_001130e0(void) {
     s32 i;
     for (i = 0; i < D_002BCDA4; i++) {
-        if (D_002BC130 == D_002BCDA0[i].id) return i;
+        if (D_002BC130 == ((Ent40 *)D_002BCDA0)[i].id) return i;
     }
     return 1000;
 }
@@ -562,10 +562,10 @@ void func_00111590(s32, f32 *);
 void func_00113138(f32 *out) {
     if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
     if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = D_002BCDA0[D_002BCDA8].v[0][0];
-        out[1] = D_002BCDA0[D_002BCDA8].v[0][1];
-        out[2] = D_002BCDA0[D_002BCDA8].v[0][2];
-        out[3] = D_002BCDA0[D_002BCDA8].v[0][3];
+        out[0] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[0][0];
+        out[1] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[0][1];
+        out[2] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[0][2];
+        out[3] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[0][3];
         if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(0, out);
         if (D_002BBE1C == 1) func_00111590(0, out);
     } else {
@@ -576,10 +576,10 @@ void func_00113138(f32 *out) {
 void func_00113270(f32 *out) {
     if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
     if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = D_002BCDA0[D_002BCDA8].v[1][0];
-        out[1] = D_002BCDA0[D_002BCDA8].v[1][1];
-        out[2] = D_002BCDA0[D_002BCDA8].v[1][2];
-        out[3] = D_002BCDA0[D_002BCDA8].v[1][3];
+        out[0] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[1][0];
+        out[1] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[1][1];
+        out[2] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[1][2];
+        out[3] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[1][3];
         if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(1, out);
         if (D_002BBE1C == 1) func_00111590(1, out);
     } else {
@@ -590,10 +590,10 @@ void func_00113270(f32 *out) {
 void func_001133a0(f32 *out) {
     if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
     if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = D_002BCDA0[D_002BCDA8].v[2][0];
-        out[1] = D_002BCDA0[D_002BCDA8].v[2][1];
-        out[2] = D_002BCDA0[D_002BCDA8].v[2][2];
-        out[3] = D_002BCDA0[D_002BCDA8].v[2][3];
+        out[0] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[2][0];
+        out[1] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[2][1];
+        out[2] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[2][2];
+        out[3] = ((Ent40 *)D_002BCDA0)[D_002BCDA8].v[2][3];
         if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(2, out);
         if (D_002BBE1C == 1) func_00111590(2, out);
     } else {
@@ -635,13 +635,13 @@ typedef struct {
     s32 v[2][24];
 } SlotRows;
 
-extern s32 D_0048C6F0[][4];
+#include "data/pieces/D_0048C6F0.h"
 
 void func_00108970(SlotRows *a, s32 i, s32 j) {
-    a->v[i][0] = D_0048C6F0[j][0];
-    a->v[i][1] = D_0048C6F0[j][1];
-    a->v[i][2] = D_0048C6F0[j][2];
-    a->v[i][3] = D_0048C6F0[j][3];
+    a->v[i][0] = D_0048C6F0[j].v[0];
+    a->v[i][1] = D_0048C6F0[j].v[1];
+    a->v[i][2] = D_0048C6F0[j].v[2];
+    a->v[i][3] = D_0048C6F0[j].v[3];
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002B.h"

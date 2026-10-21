@@ -13,8 +13,8 @@ typedef struct { s32 x0; Sub s; } VM;
 typedef struct { u8 x[0x74]; } Ch;
 typedef struct { u8 pad0[4]; Ch ch[12]; } SaveA;
 typedef struct { u8 pad0[9]; u8 arr[0x700]; } SaveB;
-extern SaveA *D_00304BE8;
-#define SB ((SaveB *)D_00304BE8)
+#include "data/pieces/D_00304BE8.h"
+#define SB ((SaveB *)((SaveA *)D_00304BE8))
 
 s32 func_001db718(VM *vm) {
     Sub *s = &vm->s;
@@ -35,7 +35,7 @@ s32 func_001db718(VM *vm) {
             }
         }
     } else {
-        Ch *e = &D_00304BE8->ch[s->stk[vm->s.sp - 1]];
+        Ch *e = &((SaveA *)D_00304BE8)->ch[s->stk[vm->s.sp - 1]];
         j = 0;
         if (e->x[j + 0x40] & 0x7f) {
             for (;;) {

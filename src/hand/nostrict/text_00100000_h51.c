@@ -74,10 +74,10 @@ s32 func_00103058(void) {
 
 #include "data/types/nostrict_text_00100000_h51.h"
 typedef struct { f32 x, y, z; } Vec3;
-typedef struct { s32 x, y, z; } IVec3;
-extern Grid *D_002A6234;
-extern IVec3 D_002A6308;
-extern IVec3 D_002A6318;
+#include "data/types/nostrict_text_00100000_h51_p2.h"
+#include "data/pieces/D_002A6234.h"
+#include "data/pieces/D_002A6308.h"
+#include "data/pieces/D_002A6318.h"
 #include "data/pieces/D_002A6324.h"
 void func_00104850(Vec3 *, IVec3 *);
 
@@ -88,14 +88,14 @@ s32 func_00104940(Vec3 *v, s32 *out) {
 
     func_00104850(&v[0], &lo);
     func_00104850(&v[1], &hi);
-    if (D_002A6324 == D_002A6234 && D_002A6308.x == hi.x && D_002A6308.z == hi.z
+    if (D_002A6324 == ((Grid *)D_002A6234) && D_002A6308.x == hi.x && D_002A6308.z == hi.z
         && D_002A6318.x == lo.x && D_002A6318.z == lo.z) {
         return -1;
     }
     n = 0;
     for (i = lo.x; i < hi.x + 1; i++) {
         for (j = lo.z; j < hi.z + 1; j++) {
-            *out++ = i * D_002A6234->nz + j;
+            *out++ = i * ((Grid *)D_002A6234)->nz + j;
             n++;
         }
     }
@@ -104,74 +104,72 @@ s32 func_00104940(Vec3 *v, s32 *out) {
     D_002A6308.z = hi.z;
     D_002A6318.x = lo.x;
     D_002A6318.z = lo.z;
-    D_002A6324 = D_002A6234;
+    D_002A6324 = ((Grid *)D_002A6234);
 /*Q*/
     return n;
 }
 
 typedef struct { f32 x, y, z, w; } Vec4;
 typedef struct { s16 a, b, c, d; u8 pad8[12]; } Ent20;
-extern Ent20 *D_002A6238;
-extern Vec3 *D_002A624C;
+#include "data/pieces/D_002A6238.h"
+#include "data/pieces/D_002A624C.h"
 
 s32 func_00104c38(s32 idx, Vec4 *out) {
-    s32 a = D_002A6238[idx].a, b = D_002A6238[idx].b, c = D_002A6238[idx].c, d = D_002A6238[idx].d;
+    s32 a = ((Ent20 *)D_002A6238)[idx].a, b = ((Ent20 *)D_002A6238)[idx].b, c = ((Ent20 *)D_002A6238)[idx].c, d = ((Ent20 *)D_002A6238)[idx].d;
 
     switch (d) {
     case -1:
-            out[0].x = D_002A624C[a].x;
-            out[0].y = D_002A624C[a].y;
-            out[0].z = D_002A624C[a].z;
+            out[0].x = ((Vec3 *)D_002A624C)[a].x;
+            out[0].y = ((Vec3 *)D_002A624C)[a].y;
+            out[0].z = ((Vec3 *)D_002A624C)[a].z;
             out[0].w = 1.0f;
-            out[1].x = D_002A624C[b].x;
-            out[1].y = D_002A624C[b].y;
-            out[1].z = D_002A624C[b].z;
+            out[1].x = ((Vec3 *)D_002A624C)[b].x;
+            out[1].y = ((Vec3 *)D_002A624C)[b].y;
+            out[1].z = ((Vec3 *)D_002A624C)[b].z;
             out[1].w = 1.0f;
-            out[2].x = D_002A624C[c].x;
-            out[2].y = D_002A624C[c].y;
-            out[2].z = D_002A624C[c].z;
+            out[2].x = ((Vec3 *)D_002A624C)[c].x;
+            out[2].y = ((Vec3 *)D_002A624C)[c].y;
+            out[2].z = ((Vec3 *)D_002A624C)[c].z;
             out[2].w = 1.0f;
             return 3;
     case -2:
-            out[0].x = D_002A624C[c].x;
-            out[0].y = D_002A624C[c].y;
-            out[0].z = D_002A624C[c].z;
+            out[0].x = ((Vec3 *)D_002A624C)[c].x;
+            out[0].y = ((Vec3 *)D_002A624C)[c].y;
+            out[0].z = ((Vec3 *)D_002A624C)[c].z;
             out[0].w = 1.0f;
-            out[1].x = D_002A624C[b].x;
-            out[1].y = D_002A624C[b].y;
-            out[1].z = D_002A624C[b].z;
+            out[1].x = ((Vec3 *)D_002A624C)[b].x;
+            out[1].y = ((Vec3 *)D_002A624C)[b].y;
+            out[1].z = ((Vec3 *)D_002A624C)[b].z;
             out[1].w = 1.0f;
-            out[2].x = D_002A624C[a].x;
-            out[2].y = D_002A624C[a].y;
-            out[2].z = D_002A624C[a].z;
+            out[2].x = ((Vec3 *)D_002A624C)[a].x;
+            out[2].y = ((Vec3 *)D_002A624C)[a].y;
+            out[2].z = ((Vec3 *)D_002A624C)[a].z;
             out[2].w = 1.0f;
             return 3;
     default:
-        out[0].x = D_002A624C[a].x;
-        out[0].y = D_002A624C[a].y;
-        out[0].z = D_002A624C[a].z;
+        out[0].x = ((Vec3 *)D_002A624C)[a].x;
+        out[0].y = ((Vec3 *)D_002A624C)[a].y;
+        out[0].z = ((Vec3 *)D_002A624C)[a].z;
         out[0].w = 1.0f;
-        out[1].x = D_002A624C[b].x;
-        out[1].y = D_002A624C[b].y;
-        out[1].z = D_002A624C[b].z;
+        out[1].x = ((Vec3 *)D_002A624C)[b].x;
+        out[1].y = ((Vec3 *)D_002A624C)[b].y;
+        out[1].z = ((Vec3 *)D_002A624C)[b].z;
         out[1].w = 1.0f;
-        out[2].x = D_002A624C[c].x;
-        out[2].y = D_002A624C[c].y;
-        out[2].z = D_002A624C[c].z;
+        out[2].x = ((Vec3 *)D_002A624C)[c].x;
+        out[2].y = ((Vec3 *)D_002A624C)[c].y;
+        out[2].z = ((Vec3 *)D_002A624C)[c].z;
         out[2].w = 1.0f;
-        out[3].x = D_002A624C[d].x;
-        out[3].y = D_002A624C[d].y;
-        out[3].z = D_002A624C[d].z;
+        out[3].x = ((Vec3 *)D_002A624C)[d].x;
+        out[3].y = ((Vec3 *)D_002A624C)[d].y;
+        out[3].z = ((Vec3 *)D_002A624C)[d].z;
         out[3].w = 1.0f;
         return 4;
     }
 }
 
-typedef struct { u32 lo:25; u32 f25:1; u32 hi:6; } Bits16;
-typedef union { s32 i; u16 h; f32 f; } U12;
-typedef struct { u8 pad[12]; U12 u12; Bits16 b16; } Tri20;
+#include "data/types/nostrict_text_00100000_h51_p.h"
 extern s32 D_002A6230;
-extern Tri20 *D_002A6274;
+#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
 extern u16 D_002A62F8[];
 void func_0011d270(s32, s32, s32, s32);

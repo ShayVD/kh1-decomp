@@ -16,11 +16,11 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 extern s32 D_003E8E00;
 extern s32 D_003F1A64;
-extern Q D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 
@@ -55,7 +55,7 @@ void func_001f9e48(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     f32 fa, fb, t0, t1, t2, t3;
 
 
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
     q = base + 2;
@@ -123,7 +123,7 @@ void func_001f9e48(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
             xx += (sz << 8) / n;
             continue;
         }
-        g = &D_003E8E28[func_001eff50(c)];
+        g = &((Glyph *)D_003E8E28)[func_001eff50(c)];
         w = g->w << 4;
         f2 = g->f2;
         a = w * sz / n;

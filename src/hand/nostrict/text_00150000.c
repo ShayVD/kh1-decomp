@@ -3,7 +3,7 @@
 #include "m2c.h"
 
 M2C_UNK func_00152880(void *);
-extern M2C_UNK D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 s32 func_0014f600(s32);
 void func_002675a8(void *, M2C_UNK *);
@@ -26,7 +26,7 @@ void func_00151148(void *arg0) {
     temp_f0 = M2C_FIELD(arg0, f32 *, 0x24) + temp_f1_2;
     M2C_FIELD(arg0, f32 *, 0x24) = temp_f0;
     if (temp_f0 < 0.0f) {
-        func_002675a8(arg0 + 0x20, &D_002C58A0);
+        func_002675a8(arg0 + 0x20, ((M2C_UNK *)&D_002C58A0));
         M2C_FIELD(temp_s0, s32 *, 0) = 1;
         return;
     }

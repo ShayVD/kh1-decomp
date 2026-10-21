@@ -20,13 +20,13 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8E00;
 extern s32 D_003E8D00[];
 extern s32 D_003E8D04[];
-extern u8 *D_003E8E08[];
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F1A64;
-extern Q D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 extern u8 D_003F2C54[];
@@ -61,7 +61,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     s32 c, k, r;
     Glyph *g;
 
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
     sz16 = sz << 4;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -77,7 +77,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     tag = ((u32)base & 0x0fffffff) | 0x80000000;
     p[9] = 0x4343ee;
     base[0] = 0x7000000b;
-    a = D_003E8E08;
+    a = ((u8 **)&D_003E8E08);
     p = base + 12;
     col0 = col;
     x90 = o->x90;
@@ -194,17 +194,17 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 switch (k) {
                 case 0:
                     func_00201460(o, 2, 2, (cx - ox) >> 4, (y - oy) >> 4, 90, ((cx - ox) >> 4) + 45, D_003F2C54, func_001efc10(43));
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     cx += 1440;
                     break;
                 case 1:
                     func_001fd070(o, (cx - ox) >> 4, (y - oy) >> 4);
                     cx += 576;
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     break;
                 case 2 ... 28:
                     func_00208280(o, (cx - ox) >> 4, (y - oy) >> 4, 0, k + 25, 128);
-                    func_00266f38(func_00266c08(2), D_003F2270);
+                    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
                     cx += 288;
                     break;
                 }
@@ -251,7 +251,7 @@ s32 func_001f94f0(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 c = *s - 32;
                 s++;
             }
-            g = &D_003E8E28[c];
+            g = &((Glyph *)D_003E8E28)[c];
             w = g->w << 4;
             f4 = g->f4;
             adv = (w + D_003E8E00) * sz / 18;

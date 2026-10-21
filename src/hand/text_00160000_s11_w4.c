@@ -47,16 +47,16 @@ typedef struct {
     u8 x120[0x10];
 } __attribute__((aligned(8))) W9F;
 typedef struct { f32 a[4]; f32 b[4]; f32 c0; f32 c1; s32 c2; s32 c3; u8 pad[0x50]; } Q9F;
-typedef struct { u8 pad[0x10]; f32 pos[4]; } Chr9F;
+#include "data/pieces/D_0035BD40.h"
+typedef Chr9F_35BD40 Chr9F;
 
 extern s32 D_00574FB4;
 extern s32 D_0057508C;
 extern f32 D_002BBDFC;
 extern f32 D_0048E8D4;
 extern f32 D_00575090[][4];
-extern Chr9F *D_0035BD40[];
 #include "data/pieces/D_002BBFA0.h"
-extern f32 D_002C58B0[];
+#include "data/pieces/D_002C58B0.h"
 extern s32 D_002E27A8;
 s32 func_00137618(E9F *);
 s32 func_00153d78(E9F *);
@@ -121,7 +121,7 @@ static inline s32 inl_find(E9F *e, W9F *w) {
         Q9F q;
         s32 vis;
         p = D_00575090[i];
-        func_00267530(v, p, D_0035BD40[0]->pos);
+        func_00267530(v, p, D_0035BD40.chr9F[0]->pos);
         { f32 a = v[1] * w->fE4; if (p) { if (0.0999999940395355224609375f < a) continue; } else { if (0.0999999940395355224609375f < a) continue; } }
         v[1] = 0.0f;
         { f32 a = func_00267390(v, w->vF0); if (p) { if (0.0999999940395355224609375f < a) continue; } else { if (0.0999999940395355224609375f < a) continue; } }

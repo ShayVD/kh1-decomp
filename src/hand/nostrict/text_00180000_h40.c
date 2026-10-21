@@ -670,7 +670,7 @@ void pppRyjDrawMatrixWorldNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
     sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
 }
 
-extern f32 D_003701D0[4];
+#include "data/pieces/D_003701D0.h"
 extern PppQv D_00616010[3];
 extern PppMtx D_006160C0;
 
@@ -703,16 +703,16 @@ typedef struct {
 } PppTexMode2;
 
 
-extern PppLight D_0035C710[256];
+#include "data/pieces/D_0035C710.h"
 extern PppLight *D_0061E310[256];
 extern s32 D_0061E710;
-extern f32 D_002E2780[];
+#include "data/pieces/D_002E2780.h"
 
 void func_0019d968(s32, s32);
 
 void func_0019dac8(void) {
     PppQv d;
-    PppLight *p = D_0035C710;
+    PppLight *p = (*(PppLight (*)[256])&D_0035C710);
     s32 i;
 
     D_0061E710 = 0;

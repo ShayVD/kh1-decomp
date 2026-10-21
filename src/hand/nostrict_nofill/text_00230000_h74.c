@@ -148,8 +148,8 @@ void func_0023a318(s32 a0, s32 a1, s32 a2, s32 a3, Obj1C4 *o, s32 a5, s32 a6, f3
 
 typedef struct { s32 unk0; u32 unk4; u8 pad8[0xC]; u8 unk14[3]; } Btn;
 extern u8 D_0064FD60[];
-extern u8 D_00426820[];
-extern u8 D_004267F0[];
+#include "data/pieces/D_00426820.h"
+#include "data/pieces/D_004267F0.h"
 void func_0024ac08(void *, s32 *);
 void func_00239558(s32, s32, s32, s32);
 
@@ -179,7 +179,7 @@ extern Spr6 D_00651210; /* src/data/bss_0065.c: Pkt D_00651210 */
 extern s32 D_00651200;
 extern f32 D_002BBDFC;
 #include "data/pieces/D_002E26C0.h"
-extern u8 D_00426850[];
+#include "data/pieces/D_00426850.h"
 s32 func_00122ff8(s32);
 void func_0024ae00(void *);
 void func_0024af00(void *);

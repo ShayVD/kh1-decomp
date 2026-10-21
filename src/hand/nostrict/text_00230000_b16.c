@@ -251,7 +251,8 @@ Q D_00655F80 ALIGNED(64);
 QW *D_006560E4 ALIGNED(4);
 extern QW *D_006560E0; /* src/data/bss_0065.c: s32 D_006560E0 */
 extern QW D_00351E10[];
-extern u8 D_004267C0[], D_004267F0[];
+#include "data/pieces/D_004267F0.h"
+#include "data/pieces/D_004267C0.h"
 void func_002370c8(Q *);
 void func_00237018(void *, s32, s32);
 void func_0011d768(s32);
@@ -389,7 +390,8 @@ typedef struct {
 } Ga;
 #include "data/types/nostrict_text_00230000_b16.h"
 extern GW D_00454A20;
-extern u8 D_00426880[], D_004268E0[];
+#include "data/pieces/D_004268E0.h"
+#include "data/pieces/D_00426880.h"
 void __assert(const char *, s32, const char *);
 
 s32 func_00240400(Ga *e, s32 buf) {

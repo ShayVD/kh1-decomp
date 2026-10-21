@@ -49,25 +49,25 @@ extern M2C_UNK func_00101048;
 extern M2C_UNK func_0010a120;
 extern M2C_UNK func_0010a248;
 extern f32 D_002BBDFC;
-extern s32 D_002A6238;
+#include "data/pieces/D_002A6238.h"
 extern s32 D_002A6B84;
 extern s32 D_002B6770;
 extern s32 D_00472150[];
-extern s32 D_0048C630[];
-extern s32 D_0048C690[];
+#include "data/pieces/D_0048C630.h"
+#include "data/pieces/D_0048C690.h"
 extern s32 D_00495180;
 extern s32 D_00495254;
 extern u32 D_004D8EC0[]; /* src/data/bss_004D.c: s32 D_004D8EC0[0xc] */
-extern volatile M2C_UNK D_002E2700;
+#include "data/pieces/D_002E2700.h"
 #include "data/pieces/D_002E2740.h"
 #include "data/pieces/D_002BBDE0.h"
-extern volatile s32 D_002BC070[];
+#include "data/pieces/D_002BC070.h"
 extern volatile s32 D_00494410[]; /* src/data/bss_0049.c: s32 D_00494410[2] */
 extern volatile s32 D_00495160;
 extern volatile s32 D_00495164;
 extern volatile s32 D_00495258;
-extern volatile s8 *D_002BC140;
-extern volatile s8 *D_002BC144;
+#include "data/pieces/D_002BC140.h"
+#include "data/pieces/D_002BC144.h"
 f32 func_00266f38(s32, s32);
 f32 iFlushCache(M2C_UNK);
 s32 func_0010a0d8(void);
@@ -228,8 +228,8 @@ void func_001095b0(void) {
     func_001c06f8();
     func_00236f18();
     func_0024b990();
-    D_002BC140 = &D_002E2700;
-    D_002BC144 = ((volatile M2C_UNK *)&D_002E2740);
+    (*(volatile s8 **)&D_002BC140) = ((volatile M2C_UNK *)&D_002E2700);
+    (*(volatile s8 **)&D_002BC144) = ((volatile M2C_UNK *)&D_002E2740);
     D_002BBDE0 = 3;
     D_00495160 = 0;
 }

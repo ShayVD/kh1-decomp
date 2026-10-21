@@ -18,7 +18,7 @@ typedef struct {
     s32 u1, v1, p48, p4c;
     s32 x1, y1, z1, f1;
 } Spr;
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);

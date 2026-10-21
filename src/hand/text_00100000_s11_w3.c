@@ -1,11 +1,11 @@
 #include "common.h"
 /* No u16 member: the n bitfield read gets Tex's alias set, so it does not depend on the u16
    prev/frame stores in case 0 (sched1 then issues sh prev after the idx*160 sll). */
-typedef struct { u32 n:16; u8 pad2[6]; u32 spd:16; s8 type; u8 padb[0x95]; } Tex;
+#include "data/types/text_00100000_s11_w3.h"
 /* func_0015ed80 task object (same as 00102118's Obj): union fields, alias set 0. */
 typedef struct { u8 pad[0x10]; union { f32 f10; void *p10; } u10; union { f32 f14; void *p14; } u14; } Obj10;
 typedef struct { u8 pad[0x10]; u8 state; u8 idx; u16 prev; u16 frame; u16 max; f32 t; } Anim;
-extern Tex D_0029B420[];
+#include "data/pieces/D_0029B420.h"
 extern f32 D_002BBDFC;
 s32 D_004945F0 ALIGNED(16);
 Obj10 *func_0015ed80(s32, void (*)(void));

@@ -15,7 +15,7 @@ typedef struct {
     u16 x83e;
 } Save59;
 typedef struct { void *a; void *b; } Pair59;
-extern Save59 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern void *D_00351AC8[][2];//
 extern void *D_00351B18[];
 u8 *func_001477c8(void *p);
@@ -26,7 +26,7 @@ void func_0015b098(void *, s32 *);
 
 void func_0015b268(s32 i) {
     s32 buf[2];
-    Mem59 *m = &D_00304BE8->m[i];
+    Mem59 *m = &((Save59 *)D_00304BE8)->m[i];
     u8 *p;
     void *o, *o2;
     s32 v, j, n, cnt;
@@ -38,12 +38,12 @@ void func_0015b268(s32 i) {
     if (o) func_00153e80(o);
     buf[1] = 0;
     if (i == 0) {
-        o2 = D_00351B18[D_00304BE8->x48c];
+        o2 = D_00351B18[((Save59 *)D_00304BE8)->x48c];
     } else {
         o2 = D_00351AC8[i][1];
     }
     p = func_001477c8(o2) + m->x34 - 1;
-    if (!o && (D_00304BE8->x83e >> i & 1)) {
+    if (!o && (((Save59 *)D_00304BE8)->x83e >> i & 1)) {
         cnt = 0;
         n = 100 - m->x34;
         for (j = 0; j < n; j++) {
@@ -165,7 +165,7 @@ void func_0015c3a0(Cyl *a, Cyl *b, f32 *out) {
     out[3] = 1.0f;
 }
 
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 void func_0015beb0(Cyl *, Cyl *, f32 *);
 void func_0015bff8(Cyl *, Cyl *, f32 *);
 void func_0015c1f8(Cyl *, Cyl *, f32 *);
@@ -282,7 +282,6 @@ typedef struct {
     u16 h30e;
 } Ob59;
 typedef struct { u8 pad[4]; f32 f4; } Tk59;
-extern f32 D_002C58A0[];
 void func_0015d7b8(Ob59 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_002675a8(f32 *, f32 *);

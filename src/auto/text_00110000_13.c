@@ -8,7 +8,7 @@ M2C_UNK func_00108a60(s32, M2C_UNK, void *, void *, void *);
 #include "data/pieces/D_002AA060.h"
 extern M2C_UNK D_002AD460;
 #include "data/pieces/D_002B1C60.h"
-extern s32 D_002A3F50;
+#include "data/pieces/D_002A3F50.h"
 extern s32 D_004D936C;
 extern s32 D_004D9370;
 f32 func_0011c868(M2C_UNK, s32, s32, M2C_UNK, s32);
@@ -43,7 +43,7 @@ void func_0011d688(s32 arg0) {
     s32 var_s0;
 
     var_s0 = 0;
-    var_s1 = &D_002A3F50;
+    var_s1 = ((s32 *)&D_002A3F50);
     do {
         temp_a1 = *var_s1;
         var_s1 += 1;

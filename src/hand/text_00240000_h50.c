@@ -85,14 +85,14 @@ extern f32 D_002BBDFC;
 Panel D_00668F90 ALIGNED(16);
 extern Q4 *D_00668F80;
 extern u8 D_0045E1F0[];
-extern E930 D_0045FAC0[10];
+#include "data/pieces/D_0045FAC0.h"
 extern u8 D_0045FA80[];
 extern u8 D_0045FA88[];
 extern u8 D_0045FA90[];
 Panel D_006691E0 ALIGNED(32);
 extern Q4 *D_006691D0;
 extern Q4 *D_006691D4;
-extern s32 D_00467408;
+#include "data/pieces/D_00467408.h"
 extern s32 D_0046740C;
 Panel D_00669620 ALIGNED(32);
 extern Q4 *D_00669610;
@@ -102,14 +102,14 @@ S7df0 D_006697C0 ALIGNED(64);
 extern Q4 *D_00669920; /* src/data/bss_0066.c: s32 D_00669920 */
 Q4 *D_00669924 ALIGNED(4);
 extern void *D_00669A10[];
-extern u8 D_004267F0[];
+#include "data/pieces/D_004267F0.h"
 extern V4 D_00491830;
 extern s32 D_0046A60C;
 extern s32 D_0046A610;
 extern HddCfg D_0046A688;
 extern s32 D_0046A614;
-extern u32 D_0046A608;
-extern Sys *D_00304BE8;
+#include "data/pieces/D_0046A608.h"
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_002C5C4C;
 extern s32 D_002C5C50;
 extern s32 D_0046A6B0[];
@@ -263,7 +263,7 @@ void func_00247258(void) {
     s32 i;
     E930 *p;
     func_0024aac8(D_0045E1F0);
-    p = D_0045FAC0;
+    p = (*(E930 (*)[10])&D_0045FAC0);
     for (i = 0; i < 10; i++) {
         func_0024af40(D_0045FA80, p->a, D_0045E1F0);
         func_0024af40(D_0045FA88, p->b, D_0045E1F0);
@@ -437,7 +437,7 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
     s32 id;
     D_0066AAA0 = a;
     D_0066AA80 = cb;
-    c = D_00304BE8->cur;
+    c = ((Sys *)D_00304BE8)->cur;
     id = D_0046A6B0[c];
     if (D_002C5C4C) {
         if (c == 1) id = 0xc000a;
