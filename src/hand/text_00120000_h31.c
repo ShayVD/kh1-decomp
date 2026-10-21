@@ -25,8 +25,7 @@ typedef struct {
 } D14;
 extern D14 D_002E2FD8;
 
-typedef struct { u8 pad[0x48e]; u8 f48e[3]; u8 pad491[0x844 - 0x491]; s8 f844[3]; } W17;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 typedef struct { u8 b0; u8 pad[19]; } T23;
 typedef struct { u8 pad[7]; u8 b7; u8 pad8[0x14]; T23 *f1c; } I23;
@@ -296,7 +295,7 @@ void func_0012d368(s32 a0, s32 a1, s32 *fl) {
     s32 mask = -1;
     s32 i;
     for (i = 0; i < 3; i++) {
-        s32 id = ((W17 *)D_00304BE8)->f844[i];
+        s32 id = D_00304BE8->x844[i];
         if (id == -1) {
             d->f14[i] = 66;
         } else {
@@ -322,7 +321,7 @@ void func_0012d818(void) {
     D18 *d = &D_002E30B8;
     n = 0;
     for (i = 0; i < 3; i++) {
-        id = ((W17 *)D_00304BE8)->f48e[i];
+        id = D_00304BE8->x48e[i];
         if (id == 0xff) continue;
         k = func_0013daa8(id);
         if (k < 0) continue;

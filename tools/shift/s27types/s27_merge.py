@@ -111,7 +111,7 @@ class Merge:
             i += 1
         return not self.fail
 
-    def attach(self, cid, rel, nid):
+    def attach(self, cid, rel, nid, shift=0):
         k = (rel, nid)
         if k in self.attached:
             if self.attached[k] != cid:
@@ -122,9 +122,29 @@ class Merge:
         cl = self.classes[cid]
         cl.nodes.append(k)
         node = self.files[rel][0].nodes[nid]
-        cl.size = max(cl.size, node.size)
+        if not shift:
+            cl.size = max(cl.size, node.size)
         for f in self.need[rel].get(nid, []):
-            cl.cands.append(Cand(f, rel, nid, f.off, f.bitoff, []))
+            cl.cands.append(Cand(f, rel, nid, f.off + shift,
+                                 None if f.bitoff is None else f.bitoff + shift * 8, []))
+
+    def reframe(self, cl, s, c, key):
+        f = c.f
+        if s.kind != "struct" or f.kind != "struct" or f.elem != s.elem or not s.elem:
+            return False
+        if not f.mem.dims or not s.f.mem.dims or len(f.mem.dims) != 1 or len(s.f.mem.dims) != 1:
+            return False
+        d = c.off - s.off
+        if d == 0 or abs(d) >= s.elem:
+            return False
+        ft = self.files[c.rel][0]
+        for g in self.need[c.rel].get(f.sub, []):
+            lo = (g.bitoff // 8) if g.kind == "bits" else g.off
+            if not (0 <= d + lo and d + lo + g.size <= s.elem):
+                return False
+        self.fmap[key] = c.prefix + [(s, None)]
+        self.attach(s.sub, c.rel, f.sub, shift=d)
+        return True
 
     def newslot(self, cl, c):
         s = Slot(c, len(self.slots))
@@ -151,12 +171,41 @@ class Merge:
         return (s.n, s.elem) == (f.n, f.elem) and compatible(s.f.tkey, f.tkey)
 
     def process(self, cl):
-        cands = sorted(cl.cands, key=lambda c: (0 if c.rel.startswith("include/") else 1, KORDER[c.kind], -(c.f.size if c.f.kind != "bits" else 0),
+        frames = defaultdict(set)
+        for c in cl.cands:
+            if c.f.kind == "struct":
+                frames[(c.off, c.f.elem)].add(c.rel)
+                frames[(c.off, c.f.elem, c.f.n)].add(c.rel)
+        cands = sorted(cl.cands, key=lambda c: (0 if c.rel.startswith("include/") else 1, KORDER[c.kind],
+                                               -len(frames.get((c.off, c.f.elem), ())) if c.f.kind == "struct" else 0,
+                                               -len(frames.get((c.off, c.f.elem, c.f.n), ())) if c.f.kind == "struct" else 0,
+                                               (c.f.size if c.kind in ("array", "blob") else
+                                                -(c.f.size if c.f.kind != "bits" else 0)),
                                                self.prio[c.rel], c.off))
         for c in cands:
             if c.rel in self.fail:
                 continue
             lo, hi = c.rng()
+            if c.f.kind == "struct" and c.f.mem.dims and len(c.f.mem.dims) == 1 and not c.f.localref:
+                # a struct array framed like a slot but with another length: the same array
+                js = [s for s in cl.slots if s.kind == "struct" and s.off == c.off and s.elem == c.f.elem
+                      and len(s.f.mem.dims) == 1 and s.n != c.f.n]
+                if js:
+                    s = js[0]
+                    s.cands.append(c)
+                    self.fmap[(c.rel, tmpname(c.f.name, c.nid))] = c.prefix + [(s, None)]
+                    self.attach(s.sub, c.rel, c.f.sub)
+                    continue
+            if c.f.kind == "leaf" and c.f.mem.dims and len(c.f.mem.dims) == 1 and not c.f.localref:
+                # a leaf array of the same element type starting where a placed one does:
+                # the same array, longer or shorter in this view (the placed length stays)
+                js = [s for s in cl.slots if s.kind == "leaf" and s.off == c.off and s.f.mem.dims
+                      and len(s.f.mem.dims) == 1 and s.elem == c.f.elem and s.n != c.f.n
+                      and compatible(elem_key(s.f.tkey) or "", elem_key(c.f.tkey) or "?")]
+                if js:
+                    self.fmap[(c.rel, tmpname(c.f.name, c.nid))] = c.prefix + [(js[0], None)]
+                    js[0].cands.append(c)
+                    continue
             hits = [s for s in cl.slots if s.lo < hi and lo < s.hi]
             key = (c.rel, tmpname(c.f.name, c.nid))
             if c.f.localref:
@@ -197,9 +246,18 @@ class Merge:
                         and len(s.f.mem.dims) == 1):
                     self.fmap[key] = c.prefix + [(s, (c.off - s.off) // s.elem)]
                     continue
+            if len(hits) == 1 and self.reframe(cl, hits[0], c, key):
+                continue
             h = hits[0]
             self.fail.setdefault(c.rel, f"field {c.f.name} at {c.off:#x} overlaps {h.f.name} "
                                         f"({h.cands[0].rel})")
+
+
+def _reframe_doc():
+    """A struct array c framed differently from slot s (same element size E, c starting d
+    bytes off, |d| < E): when every used field of c's element still falls in the same
+    element of s (0 <= d + o, d + o + size <= E), c maps to s (`e[i]` -> `m[i]`) and its
+    element type joins s's element class with its fields shifted by d."""
 
 
 def is_hand(rel):

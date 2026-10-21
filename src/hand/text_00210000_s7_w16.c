@@ -34,10 +34,7 @@ extern s32 D_00641C00;
 extern s32 D_00642410;
 extern s32 D_00642C18;
 #include "data/pieces/D_003E3D68.h"
-typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
-typedef struct { u8 pad[4]; Sub sub; } Rec74;
-typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 extern u8 D_003F3B70[], D_003F3BA0[], D_003F3BD0[], D_003F3C00[], D_003F3C30[], D_003F3C60[], D_003F3C90[], D_003F3CC0[], D_003F3CF0[], D_003F3D20[], D_003F3D50[];
 s32 func_001f42b8(Ob *);
 Ob *func_001f31a8(void *, s32);
@@ -88,8 +85,8 @@ void func_002134c8(Ob *o) {
             if (w[2] == 0) break;
             func_001f3e90((Ob *)w[1], (Ob *)w[2]);
             func_001f3e20((Ob *)w[2], (Ob *)w[1]);
-            D_00641BAC = ((S4BE8 *)D_00304BE8)->x48e[*q];
-            D_00641BB0 = (s32)&((S4BE8 *)D_00304BE8)->r[D_00641BAC].sub;
+            D_00641BAC = D_00304BE8->x48e[*q];
+            D_00641BB0 = (s32)&D_00304BE8->m[D_00641BAC].sub;
             n = ((Mem *)D_00641BB0)->x18 + 1;
             ((Ob *)w[2])->xcc = n;
             if (n < 9) {

@@ -177,15 +177,7 @@ typedef struct {
     u8 x70;
     u8 pad71[0x74 - 0x71];
 } W32SEnt;
-typedef struct {
-    u8 pad000[4];
-    W32SEnt ent[10];
-    u8 pad48c[0x492 - 0x48C];
-    u8 b492[8];
-    u8 pad49a[0x874 - 0x49A];
-    s32 x874;
-} W32Save;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 s32 func_001331d8(s32 i, s32 j, void (*cb)(void));
 void func_00133550(void);
 typedef struct {
@@ -198,7 +190,7 @@ void func_00133578(void (*cb)(s32)) {
     s32 n = 0;
     s32 j;
     for (i = 0; i < 7; i++) {
-        j = ((W32Save *)D_00304BE8)->b492[i];
+        j = D_00304BE8->b492[i];
         if (j > 0) {
             if (func_001331d8(i, j, 0) >= 0) n++;
         }

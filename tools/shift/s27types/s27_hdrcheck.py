@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[3]
 ref = sys.argv[1] if len(sys.argv) > 1 else "HEAD"
 out = subprocess.run(["git", "diff", "--name-only", "--diff-filter=AM", ref, "--", "include/data"], cwd=ROOT,
                      capture_output=True, text=True).stdout.split()
+out += subprocess.run(["git", "ls-files", "--others", "--exclude-standard", "--", "include/data"], cwd=ROOT,
+                      capture_output=True, text=True).stdout.split()
 GCC = ROOT / "tools/toolchain/ee-gcc2.96/bin/ee-gcc"
 
 

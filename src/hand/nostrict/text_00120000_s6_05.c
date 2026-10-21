@@ -56,7 +56,7 @@ typedef struct Ent {
 
 typedef struct V8 { Ent *a; s32 b; } V8;
 typedef struct Hit { s32 f0; Ent *e; } Hit;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 
 /* ---- data ---- */

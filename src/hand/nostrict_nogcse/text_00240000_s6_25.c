@@ -3,7 +3,7 @@
 typedef struct { u8 pad[0x55]; s8 x55; } EntInfo;
 typedef struct { u8 pad[0x10]; V4f pos; u8 pad20[0x1c]; f32 x3c; u8 pad40[0xf0]; EntInfo *info; } Ent;
 typedef struct { s32 x0; u8 pad[0x48]; u16 id; u8 pad4e[6]; s8 kind; s8 x55; } Obj;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct { u8 pad[3]; u8 id; } Req;
 extern V4f D_0066AA90;
 extern Obj *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */

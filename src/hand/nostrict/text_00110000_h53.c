@@ -98,7 +98,7 @@ void func_00123b40(Obj3b *o, V53 *out) {
 typedef struct { u8 pad[0x4c]; u16 x4c; } Info3d;
 typedef struct { u8 pad[0xbd]; u8 xbd; } Sub3d;
 typedef struct { u8 pad[0x154]; s32 x154; u8 pad158[0x28]; } W3d;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct { u8 pad[0x10]; s32 x10; } R3d;
 typedef struct {
     u64 lo : 37;

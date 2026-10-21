@@ -640,7 +640,7 @@ s32 func_00158100(s32 *a, f32 *v) {
 /* ---- func_00158c78 ---- */
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_0037A378.h"
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 s32 func_001140a0(void);
 
 s32 func_00158c78(void) {

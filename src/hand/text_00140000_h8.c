@@ -137,7 +137,7 @@ void func_0014cce0(W8Act *, f32);
 void func_00130398(W8Act *, s32, f32);
 void func_0014f658(W8Act *, s32);
 s32 func_0014c4a8(W8Act *a);
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 void func_00145138(void) {
     W8Node *n;
@@ -613,7 +613,7 @@ void func_0014c530(W8Act *a) {
 
 /* needs make: uses rodata */
 s32 func_00149678(void) {
-    switch (D_00304BE8->x36) {
+    switch (D_00304BE8->m[0].sub.x2c.x6) {
     case 88:
     case 91:
     case 99:

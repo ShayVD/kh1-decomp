@@ -3,38 +3,11 @@
 #include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x145000 (worker 7). */
 
-typedef struct {
-    u8 lv;
-    u8 x1;
-    u8 x2;
-    u8 x3;
-    u8 pad04[0x38 - 0x4];
-    s16 x38;
-    u8 pad3a[2];
-    s32 exp;
-    u8 name[0x30];
-    u8 bits;
-    u8 pad71[3];
-} W7Member;
+#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 W7Member;
 
-typedef struct {
-    u8 pad000[4];
-    W7Member m[10];
-    u8 x48c;
-    u8 x48d;
-    u8 party[4];
-    u8 pad492[0x599 - 0x492];
-    u8 list599[0x30];
-    u8 pad5c9[0x5CC - 0x5C9];
-    u32 bits5cc[(0x7D0 - 0x5CC) / 4];
-    s8 x7d0[7];
-    u8 pad7d7[0x844 - 0x7D7];
-    s8 x844[3];
-    u8 pad847[0x878 - 0x847];
-    u64 x878;
-} W7Save;
+typedef Save_304be8 W7Save;
 
-#include "data/pieces/D_00304BE8.h"
 
 extern u16 *D_00304BB0[];
 extern u16 *D_00304B88[];
@@ -43,22 +16,22 @@ void func_00141b10(s32 c, u8 *buf);
 void *memcpy(void *, const void *, u32);
 
 s32 func_0013c188(s32 i, s32 b) {
-    W7Member *m = ((W7Save *)D_00304BE8)->m;
+    W7Member *m = D_00304BE8->m;
     return (m[i].bits >> b) & 1;
 }
 
 void func_0013c2a0(s32 b, s32 on) {
     if (on) {
-        ((W7Save *)D_00304BE8)->x878 |= (u64)1 << b;
+        D_00304BE8->x878 |= (u64)1 << b;
     } else {
-        ((W7Save *)D_00304BE8)->x878 &= ~((u64)1 << b);
+        D_00304BE8->x878 &= ~((u64)1 << b);
     }
 }
 
 s32 func_0013c318(s32 v) {
     s32 i;
     for (i = 0; i < 4; i++) {
-        if (((W7Save *)D_00304BE8)->party[i] == v) {
+        if (D_00304BE8->x48e[i] == v) {
             return i;
         }
     }
@@ -68,7 +41,7 @@ s32 func_0013c318(s32 v) {
 s32 func_0013c360(s32 v) {
     s32 i;
     for (i = 0; i < 7; i++) {
-        if (((W7Save *)D_00304BE8)->x7d0[i] == v) {
+        if (D_00304BE8->x7d0[i] == v) {
             return 1;
         }
     }
@@ -78,18 +51,18 @@ s32 func_0013c360(s32 v) {
 void func_0013c3a8(s32 v) {
     s32 i;
     for (i = 0; i < 7; i++) {
-        if (((W7Save *)D_00304BE8)->x7d0[i] == v) {
+        if (D_00304BE8->x7d0[i] == v) {
             return;
         }
-        if (((W7Save *)D_00304BE8)->x7d0[i] == -1) {
-            ((W7Save *)D_00304BE8)->x7d0[i] = v;
+        if (D_00304BE8->x7d0[i] == -1) {
+            D_00304BE8->x7d0[i] = v;
             return;
         }
     }
 }
 
 u16 *func_0013c3f8(s32 i) {
-    W7Save *s = ((W7Save *)D_00304BE8);
+    W7Save *s = D_00304BE8;
     u16 *r;
     if (i == 0) {
         r = func_001477c8(D_00304BB0[s->x48d]);
@@ -102,11 +75,11 @@ u16 *func_0013c3f8(s32 i) {
 s32 func_0013c598(s32 i) {
     u16 *p;
     s32 e;
-    if (((W7Save *)D_00304BE8)->m[i].lv >= 100) {
+    if (D_00304BE8->m[i].sub.lv >= 100) {
         return 0;
     }
     p = func_0013c3f8(i);
-    e = ((W7Save *)D_00304BE8)->m[i].exp;
+    e = D_00304BE8->m[i].sub.exp;
     while (e >= 0) {
         e -= *p++;
     }
@@ -115,9 +88,9 @@ s32 func_0013c598(s32 i) {
 
 void func_0013c638(u32 i, s32 on) {
     if (on) {
-        ((W7Save *)D_00304BE8)->bits5cc[i >> 2] |= 1 << (i & 3);
+        D_00304BE8->bits5cc[i >> 2] |= 1 << (i & 3);
     } else {
-        ((W7Save *)D_00304BE8)->bits5cc[i >> 2] &= ~(1 << (i & 3));
+        D_00304BE8->bits5cc[i >> 2] &= ~(1 << (i & 3));
     }
 }
 
@@ -125,34 +98,34 @@ void func_0013c6d8(void) {
     u8 buf[0xF0];
     s32 i;
     for (i = 0; i < 4; i++) {
-        u8 c = ((W7Save *)D_00304BE8)->party[i];
+        u8 c = D_00304BE8->x48e[i];
         if (c != 0xFF) {
-            W7Member *m = &((W7Save *)D_00304BE8)->m[c];
+            W7Member *m = &D_00304BE8->m[c];
             func_00141b10(c, buf);
-            m->x1 = buf[64];
-            m->x3 = buf[72];
-            m->x38 = 0;
+            m->sub.x1 = buf[64];
+            m->sub.x3 = buf[72];
+            m->sub.x38 = 0;
         }
     }
 }
 
 void func_0013c778(u32 a, u32 b, u32 c) {
-    ((W7Save *)D_00304BE8)->party[1] = a < 10 ? a : -1;
-    ((W7Save *)D_00304BE8)->party[2] = b < 10 ? b : -1;
-    ((W7Save *)D_00304BE8)->party[3] = c < 10 ? c : -1;
+    D_00304BE8->x48e[1] = a < 10 ? a : -1;
+    D_00304BE8->x48e[2] = b < 10 ? b : -1;
+    D_00304BE8->x48e[3] = c < 10 ? c : -1;
 }
 
 void func_0013c7d8(u32 v) {
     s32 i;
     for (i = 0; i < 4; i++) {
-        if (((W7Save *)D_00304BE8)->party[i] == v) {
+        if (D_00304BE8->x48e[i] == v) {
             return;
         }
-        if (((W7Save *)D_00304BE8)->party[i] == 0xFF) {
+        if (D_00304BE8->x48e[i] == 0xFF) {
             if (v < 10) {
-                ((W7Save *)D_00304BE8)->party[i] = v;
+                D_00304BE8->x48e[i] = v;
             } else {
-                ((W7Save *)D_00304BE8)->party[i] = -1;
+                D_00304BE8->x48e[i] = -1;
             }
             return;
         }
@@ -162,11 +135,11 @@ void func_0013c7d8(u32 v) {
 void func_0013c840(u32 v) {
     s32 i, j;
     for (i = 0; i < 4; i++) {
-        if (((W7Save *)D_00304BE8)->party[i] == v) {
+        if (D_00304BE8->x48e[i] == v) {
             for (j = i; j < 3; j++) {
-                ((W7Save *)D_00304BE8)->party[j] = ((W7Save *)D_00304BE8)->party[j + 1];
+                D_00304BE8->x48e[j] = D_00304BE8->x48e[j + 1];
             }
-            ((W7Save *)D_00304BE8)->party[j] = -1;
+            D_00304BE8->x48e[j] = -1;
             return;
         }
     }
@@ -176,9 +149,9 @@ void func_0013c8c8(s32 c, u32 k) {
     u8 *p;
     s32 i;
     if (k < 10) {
-        p = ((W7Save *)D_00304BE8)->m[k].name;
+        p = D_00304BE8->m[k].sub.name;
     } else {
-        p = ((W7Save *)D_00304BE8)->list599;
+        p = D_00304BE8->list599;
     }
     i = 0;
     while (p[i] != 0) {
@@ -192,9 +165,9 @@ s32 func_0013c968(s32 c, u32 k) {
     u8 *p;
     s32 n;
     if (k < 10) {
-        p = ((W7Save *)D_00304BE8)->m[k].name;
+        p = D_00304BE8->m[k].sub.name;
     } else {
-        p = ((W7Save *)D_00304BE8)->list599;
+        p = D_00304BE8->list599;
     }
     n = 0;
     while (*p) {

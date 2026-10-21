@@ -174,17 +174,15 @@ void func_00123f28(Obj123 *o) {
     }
 }
 
-typedef struct { u8 pad0[8]; u32 lo : 16; u32 b16 : 1; u32 hi : 15; u8 padc[104]; } Ent116;
-typedef struct { u8 pad0[48]; Ent116 e[10]; } Tbl4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 void func_00124920(void) {
     s32 i;
     Obj123 *o;
-    for (i = 0; i < 10; i++) ((Tbl4BE8 *)D_00304BE8)->e[i].b16 = 0;
+    for (i = 0; i < 10; i++) D_00304BE8->m[i].sub.b16 = 0;
     for (i = 0; i < 3; i++) {
         o = D_002E26A0[i];
-        if (o && (o->x0 & 0x4000)) ((Tbl4BE8 *)D_00304BE8)->e[o->info->x4C].b16 = 1;
+        if (o && (o->x0 & 0x4000)) D_00304BE8->m[o->info->x4C].sub.b16 = 1;
     }
 }
 

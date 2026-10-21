@@ -5,7 +5,7 @@
 typedef struct { u8 pad[0x24]; s32 x24; u8 pad28[0x90 - 0x28]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W22;
 #include "data/pieces/D_00425BC8.h"
 #include "data/types/text_00220000_s6_23.h"
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
 extern s32 D_003F7780[];
 extern s32 D_003F7790[];

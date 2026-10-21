@@ -1,21 +1,9 @@
 #include "common.h"
 #include "platform/math.h"
 /* Hand-matched functions near 0x15b000-0x169000 (worker 59). */
-typedef struct {
-    u8 lv; u8 x1; u8 x2; u8 x3;
-    u8 pad04[0x34 - 0x4];
-    u8 x34;
-    u8 pad35[0x74 - 0x35];
-} Mem59;
-typedef struct {
-    u8 pad000[4];
-    Mem59 m[10];
-    u8 x48c;
-    u8 pad48d[0x83e - 0x48d];
-    u16 x83e;
-} Save59;
+#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 Mem59;
 typedef struct { void *a; void *b; } Pair59;
-#include "data/pieces/D_00304BE8.h"
 extern void *D_00351AC8[][2];//
 extern void *D_00351B18[];
 u8 *func_001477c8(void *p);
@@ -26,35 +14,35 @@ void func_0015b098(void *, s32 *);
 
 void func_0015b268(s32 i) {
     s32 buf[2];
-    Mem59 *m = &((Save59 *)D_00304BE8)->m[i];
+    Mem59 *m = &D_00304BE8->m[i];
     u8 *p;
     void *o, *o2;
     s32 v, j, n, cnt;
 
-    buf[0] = func_001477c8(D_00351AC8[i][0])[m->lv - 1];
+    buf[0] = func_001477c8(D_00351AC8[i][0])[m->sub.lv - 1];
     func_0015ae48(i, buf[0]);
-    m->lv++;
+    m->sub.lv++;
     o = func_0013daf8(i);
     if (o) func_00153e80(o);
     buf[1] = 0;
     if (i == 0) {
-        o2 = D_00351B18[((Save59 *)D_00304BE8)->x48c];
+        o2 = D_00351B18[D_00304BE8->x48c];
     } else {
         o2 = D_00351AC8[i][1];
     }
-    p = func_001477c8(o2) + m->x34 - 1;
-    if (!o && (((Save59 *)D_00304BE8)->x83e >> i & 1)) {
+    p = func_001477c8(o2) + m->sub.x34 - 1;
+    if (!o && (D_00304BE8->x83e >> i & 1)) {
         cnt = 0;
-        n = 100 - m->x34;
+        n = 100 - m->sub.x34;
         for (j = 0; j < n; j++) {
             if (p[j]) cnt++;
         }
-        if (cnt < 100 - m->lv) return;
+        if (cnt < 100 - m->sub.lv) return;
     }
     buf[1] = 0;
-    n = m->lv - m->x34;
+    n = m->sub.lv - m->sub.x34;
     for (j = 0; j < n; j++) {
-        m->x34++;
+        m->sub.x34++;
         buf[1] = *p++;
         if (buf[1]) {
             func_0015ae48(i, buf[1]);

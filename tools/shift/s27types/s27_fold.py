@@ -227,9 +227,10 @@ def rename_view_casts(text, N, views, S):
     return re.sub(r"\(\s*(?:" + vs + r")\s*\*\s*\)(\s*&?\s*" + N + r"\b)", lambda m: f"({S} *){m.group(1)}", text)
 
 
-def phase2(rel, p1text, ft, aliases, fmap, N, obj, views, keepcast=None):
+def phase2(rel, p1text, ft, aliases, fmap, N, obj, views, keepcast=None, used=(), split=False):
     text = p1text
-    inc = f'#include "data/pieces/{N}.h"'
+    inc0 = f'#include "data/pieces/{N}.h"'
+    inc = f'#include "data/pieces/{N}_s.h"' if split else inc0
     # alias the class members' named types
     reps = []
     for nid, n in ft.nodes.items():
@@ -239,16 +240,19 @@ def phase2(rel, p1text, ft, aliases, fmap, N, obj, views, keepcast=None):
         if d.tagdef:
             raise ValueError("tag-defined view")
         reps.append((d, aliases[(rel, nid)], n.name))
+    MARK = "\x01S27INC\x01"
     first = min(d.start for d, _, _ in reps)
     for d, S, name in sorted(reps, key=lambda r: -r[0].start):
         new = f"typedef {S} {name};"
         if d.others:
             new += f"\ntypedef {S} " + ", ".join(d.others) + ";"
-        text = text[:d.start] + new + text[d.end:]
+        text = text[:d.start] + (MARK if d.start == first else "") + new + text[d.end:]
     # field names
     def rn(m):
         k = (rel, m.group(0))
         if k not in fmap:
+            if m.group(0) not in used:  # a field of a type that is not folded: its own name again
+                return re.sub(r"__q\d+$", "", m.group(0))
             raise KeyError(m.group(0))
         return fmap[k]
     try:
@@ -266,16 +270,25 @@ def phase2(rel, p1text, ft, aliases, fmap, N, obj, views, keepcast=None):
         if not d.others and len(re.findall(r"\b" + name + r"\b", ct)) == 1 and line in text:
             i = text.index(line)
             text = text[:i] + text[i + len(line):].lstrip(" ")
-            if text[i:i + 1] == "\n" and (i == 0 or text[i - 1] == "\n"):
+            if text[i:i + 1] == "\n" and (i == 0 or text[i - 1] in "\n" + MARK[-1]):
                 text = text[:i] + text[i + 1:]
-            first = min(first, i)
     # the piece header before the first alias
+    if split and inc0 in text:
+        p0 = text.find(inc0)
+        if p0 < text.index(MARK):
+            text = text.replace(MARK, "")
+            text = text[:p0] + MARK + text[p0:]
+        e = text.find("\n", text.find(inc0))
+        text = text[:text.find(inc0)] + text[e + 1:]
+    first = text.index(MARK)
     pos = text.find(inc)
-    if pos < 0 or pos > first:
+    if 0 <= pos < first:
+        text = text.replace(MARK, "")
+    else:
         if pos >= 0:
             e = text.find("\n", pos)
-            text = text[:pos] + text[e + 1:] if text[pos - 1] == "\n" or pos == 0 else text[:pos] + text[e:]
-        text = text[:first] + inc + "\n" + text[first:]
+            text = text[:pos] + text[e + 1:]
+        text = text.replace(MARK, inc + "\n")
     return text
 
 
@@ -292,7 +305,7 @@ def new_header(N, oldhdr, defs, deps, decl, mode="full"):
     body = ["/* The data piece " + N + " (src/data/data_" + f"{int(N[2:], 16) >> 16:04X}" + ".s): one struct its",
             " * users share (phase 4: session 26 cast at each use, session 27 folded the users'",
             " * views into these types; users not folded still cast" +
-            ("" if mode == "full" else ", and the folded ones cast to it: the declaration\n * keeps its type because other users' code needs it") + "). */",
+            ("" if mode != "keep" else ", and the folded ones cast to it: the declaration\n * keeps its type because other users' code needs it") + "). */",
             f"#ifndef KH1_DATA_PIECES_{N}_H", f"#define KH1_DATA_PIECES_{N}_H", "", '#include "common.h"']
     body += [f'#include "{h}"' for h in incs if h != "common.h"]
     body += [""] + [d + "\n" for d in defs] + [f"extern {decl};", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""]
@@ -440,7 +453,9 @@ def main(argv):
         sname = f"{cnt.most_common(1)[0][0]}_{addr}" if cnt else f"T_{addr}"
     sname = given_name or sname
     result = None
-    for mode in ("full", "keep"):
+    for mode in ("full", "split", "keep"):
+        if mode == "split" and obj:
+            continue
         result = fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, apply)
         if result:
             break
@@ -494,7 +509,8 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
                 ft = live[rel][0]
                 views = [ft.nodes[nid].name for (r, nid) in mg.classes[0].nodes if r == rel]
                 newtexts[rel] = phase2(rel, done[rel][3], ft, aliases, fmap, N, obj,
-                                       views, sname if mode == "keep" else None)
+                                       views, sname if mode == "keep" else None, done[rel][1],
+                                       mode == "split")
             except Exception as e:  # noqa: BLE001
                 bad[rel] = f"phase 2: {e}"
         if bad:
@@ -505,6 +521,9 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
         if mode == "keep":
             deps = set(deps) | header_deps(oldhdr)
         hdr = new_header(N, oldhdr, defs, deps, decl, mode)
+        shdr = None
+        if mode == "split":
+            hdr, shdr = split_header(N, hdr, sname)
         if os.environ.get("S27_DEBUG"):
             dd = L.SCR / "dbg" / N
             dd.mkdir(parents=True, exist_ok=True)
@@ -512,11 +531,18 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
             for rel, t in newtexts.items():
                 (dd / Path(rel).name).write_text(t)
         saved = {rel: (ROOT / rel).read_text() for rel in users}
+        spath = hpath.with_name(f"{N}_s.h")
+        saved_s = spath.read_text() if spath.exists() else None
+        saved[str(spath.relative_to(ROOT))] = saved_s
+        if shdr:
+            spath.write_text(shdr)
+        elif spath.exists():
+            spath.unlink()
         hpath.write_text(hdr)
         for rel, t in newtexts.items():
             (ROOT / rel).write_text(t)
         try:
-            res = check_all(list(users), N, olddecl, newtexts, decl, mode == "full")
+            res = check_all(list(users), N, olddecl, newtexts, decl, mode != "keep")
         except BaseException:
             restore(saved, hpath, oldhdr)
             raise
@@ -539,8 +565,32 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
             return None
         if not apply:
             restore(saved, hpath, oldhdr)
-        return newtexts, hdr, mode
+        return newtexts, hdr + (shdr or ""), mode
     return None
+
+
+def split_header(N, hdr, sname):
+    """(the piece header with only `typedef struct S S;` and the extern, the struct header
+    D_X_s.h with the definitions): a big header in every user moves code in some of them
+    (gcc 2.96 hashes by address: more declarations, other hash orders)"""
+    a = hdr.index("typedef struct {")
+    b = hdr.index("extern ")
+    defs = hdr[a:b]
+    pre = hdr[:a]
+    incs = re.findall(r'^#include "[^"]+"\n', pre, re.M)
+    main = pre
+    for i in incs:
+        if '"common.h"' not in i:
+            main = main.replace(i, "")
+    main = main + f"typedef struct {sname} {sname};\n\n" + hdr[b:]
+    defs = re.sub(r"typedef struct \{([^{}]*)\n\} " + sname + ";", lambda m: f"struct {sname} {{{m.group(1)}\n}};",
+                  defs)
+    g = f"KH1_DATA_PIECES_{N}_S_H"
+    sh = "\n".join([f"/* The struct types of the data piece {N} (data/pieces/{N}.h declares it with",
+                    " * the root type left incomplete; the users that read its fields include this). */",
+                    f"#ifndef {g}", f"#define {g}", "", '#include "common.h"'] + [i.rstrip() for i in incs if '"common.h"' not in i]
+                   + [f'#include "data/pieces/{N}.h"', "", defs.rstrip() + "\n", f"#endif /* {g} */", ""])
+    return main, sh
 
 
 def header_deps(hdr):
@@ -550,6 +600,10 @@ def header_deps(hdr):
 
 def restore(saved, hpath, oldhdr):
     for rel, t in saved.items():
+        if t is None:
+            if (ROOT / rel).exists():
+                (ROOT / rel).unlink()
+            continue
         (ROOT / rel).write_text(t)
     hpath.write_text(oldhdr)
 

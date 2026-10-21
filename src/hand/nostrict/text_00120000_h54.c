@@ -251,7 +251,7 @@ kill:
 }
 
 #include "data/types/nostrict_text_00120000_h54.h"
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 extern Q5 D_002E3010;
 extern L5 D_002E3080;
 #include "data/pieces/D_00304B78.h"
@@ -273,7 +273,7 @@ void func_0012d188(s32 a0, u32 *a1) {
     n = 0;
     m = -1;
     for (i = 0; i < 7; i++) {
-        s32 v = D_00304BE8->f7d0[i];
+        s32 v = D_00304BE8->x7d0[i];
         if (v != -1) {
             l->ids[n] = v + 47;
             buf[n] = v;

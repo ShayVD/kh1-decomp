@@ -1,9 +1,7 @@
 #include "common.h"
 /* func_00149c80 (hand/nostrict): func_001477c8 result read into a local `u8 *s` in its own statement before sprintf; this lengthens id's live range so param i (s1) outranks id (s2) in global-alloc. */
-typedef struct { u8 x0[6]; u8 x6; u8 x7; } Q9c;
-typedef struct { u8 pad[0x2c]; Q9c x2c; u8 pad34[0x74 - 0x34]; } M9c;
-typedef struct { u8 pad[4]; M9c m[10]; } S9c;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
+typedef Q9c_304be8 Q9c;
 #include "data/types/nostrict_text_00140000_s9_w8.h"
 typedef struct { u8 pad[6]; s16 x6; } R9c;
 extern Ent9c D_0054C1B0[];
@@ -17,7 +15,7 @@ void func_00120748(char *, s32, void *, s32);
 void func_00149bd0();
 s32 func_00149c80(s32 i, s32 a) {
     char buf[32];
-    Q9c *m = (Q9c *)((u32)((S9c *)D_00304BE8) + (u32)(i * 0x74 + 0x30));
+    Q9c *m = (Q9c *)((u32)D_00304BE8 + (u32)(i * 0x74 + 0x30));
     Ent9c *e;
     s32 id, j;
     u8 *s;
