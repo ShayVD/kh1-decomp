@@ -374,7 +374,7 @@ def back_edges(kind: str, n: int, k: int) -> int:
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
-            slot_refine: bool = True):
+            slot_refine: bool = True, end_ptr: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -528,6 +528,23 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if u is None or u > lim - 1:
                 st[r] = (UB, lim - 1)
 
+    def end_compare(pc, x, y, how):
+        """Session 28 (end-ptr): a compare or subtract of a value against an exact image address A.
+        `p < &N` / `&N - p` (A the minuend) uses A as the end of whatever p walks: when A starts a name N, the object
+        before N must stay next to it (the actor table D_002C64A0 is walked with `p >= D_002E26A0` as
+        its end). An equality test only counts when the other side is a pointer known to come from
+        another address (an identity test `o == &N` is common and harmless)."""
+        out = []
+        for a_, b_ in ((x, y),) if how == "sub" else ((x, y), (y, x)):  # `p - &N` is an index into N
+            if not (isinstance(a_, int) and BLOB_START <= a_ < IMAGE_END + 0x10000) or isinstance(b_, int):
+                continue
+            if how == "eq":
+                ib = _idx(b_)
+                if ib is None or ib[0] == a_:
+                    continue
+            out.append((pc, a_, None, 0, "end-" + how))
+        return out
+
     def step(ins, st):
         w = ins.word
         o, s, t, d = mips.op(w), mips.rs(w), mips.rt(w), mips.rd(w)
@@ -667,6 +684,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st.pop(d, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x23, 0x2F):  # subu dsubu
             x = st.get(s)
+            if end_ptr and d != 0:
+                ev += end_compare(ins.addr, x, st.get(t), "sub")
             if isinstance(x, tuple) and x[0] == ARG:
                 wide.add(x[1])
             if _idx(x) is not None and d != 0:
@@ -684,6 +703,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st.pop(d, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x2A, 0x2B):  # slt sltu: t = s < t
             lim = st.get(t)
+            if end_ptr and d != 0:
+                ev += end_compare(ins.addr, st.get(s), lim, "lt")
             if isinstance(lim, int) and d != 0 and s not in (0, d):
                 st[d] = (LT, s, lim)
             elif d != 0:
@@ -767,6 +788,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             call = ins.is_jal or ins.is_jalr
             w = ins.word
             cond = None
+            if end_ptr and mips.op(w) in (0x04, 0x05, 0x14, 0x15) and mips.rt(w) and mips.rs(w):
+                ev += end_compare(ins.addr, st.get(mips.rs(w)), st.get(mips.rt(w)), "eq")
             if mips.op(w) in (0x04, 0x05, 0x14, 0x15) and (mips.rt(w) == 0) != (mips.rs(w) == 0):
                 cond = (mips.rs(w) or mips.rt(w), mips.op(w) in (0x05, 0x15))  # (t, branch-if-nonzero)
             # session 27 (slot-refine): a branch's test refines the state before its delay slot, so a
@@ -1031,6 +1054,9 @@ def main() -> int:
     ap.add_argument("--no-dead-arg", action="store_true",
                     help="an address left in an argument register at a call is passed even when the callee never "
                          "reads that register (session 27)")
+    ap.add_argument("--no-end-ptr", action="store_true",
+                    help="a compare or subtract against a name's address does not tie the object before it to "
+                         "the name (session 28)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1100,6 +1126,7 @@ def main() -> int:
     ptr_reach: dict[int, int | None] = {}  # G -> end of the furthest access through it (None: indexed)
     explain: list[str] = []
     writes: list = []  # (address, bytes or None for an unbounded index) of every store from a known base
+    end_uses: dict[int, dict] = {}  # address compared or subtracted as an end -> kind -> functions (end-ptr)
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -1121,7 +1148,7 @@ def main() -> int:
                          hi_index=not a.no_hi_index, cases=not a.no_switch,
                          read_word=read_word if is_func and not a.no_switch else None,
                          ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
-                         slot_refine=not a.no_slot_refine):
+                         slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
@@ -1160,6 +1187,9 @@ def main() -> int:
                 continue
             if kind == "uncached":
                 uncached.setdefault(base, set()).add(name)
+                continue
+            if kind.startswith("end-"):
+                end_uses.setdefault(base, {}).setdefault(kind, set()).add(name)
                 continue
             if kind == "stored":
                 # an address stored to memory is used through a pointer no check follows, often with
@@ -1421,6 +1451,23 @@ def main() -> int:
             pn, nn = piece(nxt)
             if pb is not None or pn is not None:
                 hits.setdefault((base, nb, nxt, nn, "uncached", 0), set()).update(fs)
+    # Session 28 (end-ptr): an address used as a walk's end (`p < &N`, `&N - p`, `p != &N` for a pointer
+    # walked from elsewhere) that starts a name N ties the object ending there to N: D_002C64A0 (96 actors of
+    # 1200 bytes) is walked with `if (p >= D_002E26A0) p = D_002C64A0` (func_00123810), so floating the table
+    # lost Donald and Goofy (session 27, KH1_F27_R1). The object before N is the last name below it.
+    end_ptr = 0
+    for addr, kinds in sorted(end_uses.items()):
+        i = bisect.bisect_left(anchors, addr)
+        if i == 0 or i >= len(anchors) or anchors[i] != addr:
+            continue  # not a name's start: inside an object, which moves whole
+        prev = anchors[i - 1]
+        pp, np_ = piece(prev)
+        pn, nn = piece(addr)
+        fs = set().union(*kinds.values())
+        why.setdefault(prev, set()).add("end-ptr")
+        if pp != pn or piece(addr - 1)[0] != pn:
+            end_ptr += 1
+            hits.setdefault((prev, np_, addr, nn, "end-ptr[" + ",".join(sorted(kinds)) + "]", 0), set()).update(fs)
     for (base, nb, tgt, nt, kind, width), fs in sorted(hits.items()):
         print(f"{base:08x} ({nb or 'in place'}) -> {tgt:08x} ({nt or 'in place'})\t{kind}{width or ''}\t"
               + " ".join(sorted(fs)[:6]) + (f" +{len(fs) - 6}" if len(fs) > 6 else ""))
@@ -1444,6 +1491,8 @@ def main() -> int:
     print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
           file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
+    print(f"# {len(end_uses)} addresses are compared or subtracted as an end, {end_ptr} tie two pieces (end-ptr)",
+          file=sys.stderr)
     print(f"# {len(bounded)} indexed bases have bounded accesses that end before the next name",
           file=sys.stderr)
     print(f"# {len(reach)} functions reach from their arguments, {len(sites)} call sites pass an address",

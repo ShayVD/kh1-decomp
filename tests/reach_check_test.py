@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-28 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -138,5 +138,23 @@ assert R.parse_chain(mem.get, 0x300000, 0x300040) == (0x300040, [(0x2A4900, 0xA0
 assert R.parse_chain(mem.get, 0x300000, 0x300030) is None  # the end tag lies past the object
 mem[0x300010] = 0x20000001  # next: not followed
 assert R.parse_chain(mem.get, 0x300000, 0x300040) is None
+
+# 10. end-ptr (session 28): func_00123810's `p = *G + 1200; if (p >= &D_002E26A0) ...` (sltu against the next
+# name's address) is an end use of 0x002E26A0; `p - &N` (an index into N) and `p == &N` for an unknown p are not
+def sltu(rd, rs, rt): return (rs << 21) | (rt << 16) | (rd << 11) | 0x2B
+def subu(rd, rs, rt): return (rs << 21) | (rt << 16) | (rd << 11) | 0x23
+A3 = 7
+ends = lambda ev: sorted((e[1], e[4]) for e in ev if len(e) == 5 and str(e[4]).startswith("end-"))
+endp = [lui(A2, 0x002E), lui(A3, 0x002E), addiu(A2, A2, 0x26AC), addiu(A3, A3, 0x26A0), lw(S0, A2, 0),
+        addiu(V0, S0, 1200), sltu(V1, V0, A3), bne(V1, 0, 2), sw(V0, A2, 0), sw(0, A2, 0), JR_RA, NOP]
+assert ends(run(endp)) == [(0x002E26A0, "end-lt")], ends(run(endp))
+assert ends(run(endp, end_ptr=False)) == []
+idxsub = [lw(V0, A0, 20), lui(V1, 0x0051), addiu(V1, V1, 0x4F20), subu(V0, V0, V1), JR_RA, NOP]
+assert ends(run(idxsub)) == []
+same = [lw(V0, A0, 0), lui(V1, 0x0051), addiu(V1, V1, 0x4F20), beq(V0, V1, 2), NOP, NOP, JR_RA, NOP]
+assert ends(run(same)) == []
+walk = [lui(V0, 0x0051), lui(V1, 0x0051), addiu(V0, V0, 0x4F00), addiu(V1, V1, 0x4F20),
+        sw(0, V0, 0), addiu(V0, V0, 4), bne(V0, V1, -3), NOP, JR_RA, NOP]
+assert ends(run(walk)) == [(0x00514F20, "end-eq")], ends(run(walk))
 
 print("reach_check_test: PASS")
