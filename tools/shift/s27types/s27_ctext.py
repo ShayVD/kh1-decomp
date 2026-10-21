@@ -113,7 +113,10 @@ def parse_members(body):
             if not mm:
                 raise ValueError("member: " + decl)
             run, rest = mm.group(1).split(), mm.group(2).strip()
-            if not rest or rest[0] in ":[":
+            if rest[:1] == ":" and (len(run) == 1 or run[-1] in ("int", "u8", "u16", "u32", "s8", "s16",
+                                                                  "s32", "u64", "s64", "char", "short")):
+                ts, items[0] = " ".join(run), rest  # an unnamed bit-field
+            elif not rest or rest[0] in ":[":
                 ts, items[0] = " ".join(run[:-1]), run[-1] + rest
             else:
                 ts, items[0] = " ".join(run), rest

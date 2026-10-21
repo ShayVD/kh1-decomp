@@ -150,7 +150,7 @@ class FileTypes:
                         f.tdef = (p, lt)
                     elif p not in C.BASIC:
                         h = header_types().get(p)
-                        if h:
+                        if h and not h.startswith("data/"):
                             f.deps.add(h)
                         else:
                             f.localref = p

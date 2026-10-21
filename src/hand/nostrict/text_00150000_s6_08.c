@@ -323,8 +323,7 @@ void func_001687d8(void *, void *, s32);
 void func_002673b8(f32 *, f32 *);
 f32 func_00267390(f32 *, f32 *);
 
-typedef struct { u32 b0:6; u32 b6:1; u32 b7:1; u32 b8:1; u32 r:23; } F27C8;
-#define G27C8 (*(F27C8 *)&D_002E27C8)
+#define G27C8 D_002E27C8
 static inline s32 inl_chk(E8D *e) { if ((u16)(e->x130->h4C - 1) >= 2) return 0; if (G27C8.b8) return 1; return G27C8.b7 != 0; }
 
 void func_00168d20(E8D *e, W8D *w) {

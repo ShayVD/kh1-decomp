@@ -306,15 +306,32 @@ def header_decl(N):
 
 
 def new_header(N, oldhdr, defs, deps, decl, mode="full"):
-    incs = sorted(deps)
-    body = ["/* The data piece " + N + " (src/data/data_" + f"{int(N[2:], 16) >> 16:04X}" + ".s): one struct its",
-            " * users share (phase 4: session 26 cast at each use, session 27 folded the users'",
-            " * views into these types; users not folded still cast" +
-            ("" if mode != "keep" else ", and the folded ones cast to it: the declaration\n * keeps its type because other users' code needs it") + "). */",
-            f"#ifndef KH1_DATA_PIECES_{N}_H", f"#define KH1_DATA_PIECES_{N}_H", "", '#include "common.h"']
-    body += [f'#include "{h}"' for h in incs if h != "common.h"]
-    body += [""] + [d + "\n" for d in defs] + [f"extern {decl};", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""]
-    return "\n".join(body)
+    """the old piece header with: the comment saying what session 27 did, the merged types'
+    includes, an earlier session 27 fold's types taken out, the new types before N's
+    extern, and N's extern replaced (other declarations in it stay)"""
+    addr = N[2:].lstrip("0").lower() or "0"
+    t = oldhdr
+    com = ("/* The data piece " + N + " (src/data/data_" + f"{int(N[2:], 16) >> 16:04X}" + ".s): one struct its\n"
+           " * users share (phase 4: session 26 cast at each use, session 27 folded the users'\n"
+           " * views into these types; users not folded still cast" +
+           ("" if mode != "keep" else ", and the folded ones cast to it: the declaration\n"
+            " * keeps its type because other users' code needs it") + "). */\n")
+    m = re.match(r"\s*/\*.*?\*/\n", t, re.S)
+    t = com + (t[m.end():] if m else t)
+    # an earlier fold's types (names ending in _<addr>)
+    t = re.sub(r"typedef struct \{[^{}]*\} \w+_" + addr + r";\n\n?", "", t)
+    t = re.sub(r"struct \w+_" + addr + r" \{[^{}]*\};\n\n?", "", t)
+    t = re.sub(r"typedef struct (\w+_" + addr + r") \1;\n\n?", "", t)
+    t = re.sub(r"typedef [^;{}]*\b\w+_" + addr + r"\b[^;{}]*;\n\n?", "", t)
+    have = set(re.findall(r'#include "([^"]+)"', t))
+    add = [h for h in sorted(deps) if h not in have and h != "common.h"]
+    if add:
+        i = t.index('#include "common.h"\n') + len('#include "common.h"\n')
+        t = t[:i] + "".join(f'#include "{h}"\n' for h in add) + t[i:]
+    em = re.search(r"^extern [^\n]*\b" + N + r"\b[^\n]*;\n", t, re.M)
+    block = "".join(d + "\n\n" for d in defs)
+    t = t[:em.start()] + block + f"extern {decl};\n" + t[em.end():]
+    return re.sub(r"\n{3,}", "\n\n", t)
 
 
 # ---------------------------------------------------------------- fallback for other users
@@ -546,6 +563,18 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
         hpath.write_text(hdr)
         for rel, t in newtexts.items():
             (ROOT / rel).write_text(t)
+        if shdr:
+            # users of an earlier fold read fields too: they need the struct header now
+            tnames = set(re.findall(r"\bstruct (\w+) \{|\} (\w+);", shdr)) and \
+                set(x for pair in re.findall(r"\bstruct (\w+) \{|\} (\w+);", shdr) for x in pair if x)
+            for rel in users:
+                if rel in newtexts:
+                    continue
+                t = (ROOT / rel).read_text()
+                inc0 = f'#include "data/pieces/{N}.h"'
+                if inc0 in t and (re.search(r"\b" + N + r"\s*(->|\[)", t) or
+                                  any(re.search(r"\b" + x + r"\b", t) for x in tnames)):
+                    (ROOT / rel).write_text(t.replace(inc0, f'#include "data/pieces/{N}_s.h"'))
         try:
             res = check_all(list(users), N, olddecl, newtexts, decl, mode != "keep")
         except BaseException:
@@ -578,24 +607,25 @@ def split_header(N, hdr, sname):
     """(the piece header with only `typedef struct S S;` and the extern, the struct header
     D_X_s.h with the definitions): a big header in every user moves code in some of them
     (gcc 2.96 hashes by address: more declarations, other hash orders)"""
-    b = hdr.index("\nextern ") + 1
-    a = hdr.index("\n\n", hdr.index("#include")) + 2
-    defs = hdr[a:b]
-    pre = hdr[:a]
-    incs = re.findall(r'^#include "[^"]+"\n', pre, re.M)
-    main = pre
-    for i in incs:
-        if '"common.h"' not in i:
-            main = main.replace(i, "")
-    main = main + f"typedef struct {sname} {sname};\n\n" + hdr[b:]
+    addr = N[2:].lstrip("0").lower() or "0"
+    blocks = re.findall(r"(?:typedef struct \{[^{}]*\} \w+_" + addr + r";|struct \w+_" + addr + r" \{[^{}]*\};|"
+                        r"typedef struct (?:\w+_" + addr + r") \w+;|typedef [^;{}]*\b\w+_" + addr + r"\b[^;{}]*;)\n", hdr)
+    main = hdr
+    for bl in blocks:
+        main = main.replace(bl, "", 1)
+    defs = "".join(blocks)
+    em = re.search(r"^extern [^\n]*\b" + N + r"\b", main, re.M)
+    main = main[:em.start()] + f"typedef struct {sname} {sname};\n" + main[em.start():]
+    main = re.sub(r"\n{3,}", "\n\n", main)
     defs = re.sub(r"typedef struct \{([^{}]*)\n\} " + sname + ";", lambda m: f"struct {sname} {{{m.group(1)}\n}};",
                   defs)
     defs = re.sub(r"^typedef struct " + sname + " " + sname + ";\n", "", defs, flags=re.M)
+    defs = re.sub(r"(;|\})\n(typedef|struct)", r"\1\n\n\2", defs)
     g = f"KH1_DATA_PIECES_{N}_S_H"
     sh = "\n".join([f"/* The struct types of the data piece {N} (data/pieces/{N}.h declares it with",
                     " * the root type left incomplete; the users that read its fields include this). */",
-                    f"#ifndef {g}", f"#define {g}", "", '#include "common.h"'] + [i.rstrip() for i in incs if '"common.h"' not in i]
-                   + [f'#include "data/pieces/{N}.h"', "", defs.rstrip() + "\n", f"#endif /* {g} */", ""])
+                    f"#ifndef {g}", f"#define {g}", "", '#include "common.h"',
+                    f'#include "data/pieces/{N}.h"', "", defs.rstrip() + "\n", f"#endif /* {g} */", ""])
     return main, sh
 
 
@@ -614,6 +644,14 @@ def restore(saved, hpath, oldhdr):
     hpath.write_text(oldhdr)
 
 
+def basic_decl(decl, N):
+    """the old declaration's type is a basic one (s32, void *, u8 [n], ...): value casts to it
+    are not views; a struct or union type would make its users views again"""
+    base = re.sub(r"\b(extern|volatile|const|unsigned|signed)\b", " ", decl.split(N)[0]).split()
+    return bool(base) and base[0] in ("s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64", "f32", "f64",
+                                      "int", "char", "void", "M2C_UNK", "short", "long")
+
+
 def check_all(rels, N, olddecl, newtexts, newdecl, fix=True):
     """-S check of every user against HEAD; users not folded that fail get plain_fix casts"""
     res = {}
@@ -624,7 +662,7 @@ def check_all(rels, N, olddecl, newtexts, newdecl, fix=True):
         ok = n_asm is not None and L.same_asm(n_asm, b_asm) and not (L.warnings(n_d) - L.warnings(b_d))
         if ok:
             return rel, "SAME"
-        if rel not in newtexts and fix:
+        if rel not in newtexts and fix and basic_decl(olddecl, N):
             t = (ROOT / rel).read_text()
             for lv in (False, True):
                 try:

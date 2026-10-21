@@ -9,26 +9,6 @@ extern f32 D_002BBDFC;
 /* party member records (D_00304BE8->m[i], 0x74 bytes each) */
 #include "data/pieces/D_00304BE8_s.h"
 typedef W606Mem_304be8 W34Member;
-typedef struct {
-    u8 pad_0[0x36];
-    u8 x36;
-    u8 pad_37[0x457];
-    u8 x48e[16];
-    u8 pad_49e[0xfb];
-    u8 x599[48];
-    u8 pad_5c9[0x207];
-    s8 f7d0[7];
-    u8 pad_7d7[0x67];
-    u16 x83e;
-    u8 pad_840[0x8];
-    u16 cnt[1];
-    u8 pad_84a[0x2a];
-    u32 f874;
-    u8 pad_878[0x8];
-    u8 f880;
-    u8 pad_881[0x3];
-} S4BE8_304be8_v;
-
 /* actors: x6c stats, x370 flag word */
 typedef struct { u8 pad[0x3c]; s32 cur; s32 max; s32 mcur; s32 mmax; } W34St;
 typedef union { u64 x; struct { u32 lo; u32 l19:19; u32 b51:1; u32 hi:12; } b; } W34F370;
