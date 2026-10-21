@@ -635,13 +635,13 @@ typedef struct {
     s32 v[2][24];
 } SlotRows;
 
-extern s32 D_0048C6F0[][4];
+#include "data/pieces/D_0048C6F0.h"
 
 void func_00108970(SlotRows *a, s32 i, s32 j) {
-    a->v[i][0] = D_0048C6F0[j][0];
-    a->v[i][1] = D_0048C6F0[j][1];
-    a->v[i][2] = D_0048C6F0[j][2];
-    a->v[i][3] = D_0048C6F0[j][3];
+    a->v[i][0] = D_0048C6F0[j].v[0];
+    a->v[i][1] = D_0048C6F0[j].v[1];
+    a->v[i][2] = D_0048C6F0[j].v[2];
+    a->v[i][3] = D_0048C6F0[j].v[3];
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002B.h"

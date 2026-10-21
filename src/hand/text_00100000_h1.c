@@ -73,7 +73,7 @@ extern s32 D_00472150[];
 extern s32 D_0048BFD0[2];
 #include "data/pieces/D_0048C630.h"
 #include "data/pieces/D_0048C690.h"
-extern s32 D_0048C6F0[];
+#include "data/pieces/D_0048C6F0.h"
 extern u8 D_00494320[];
 extern s32 D_00494410[];
 u8 D_00494420[0x1c0] ALIGNED(32);
@@ -131,10 +131,10 @@ void sceVu0MulMatrix(void *, void *, void *);
 void func_00100580(s32 idx, s32 *dst) {
     s32 i;
     for (i = 0; i < 2; i++) { 
-        dst[0] = D_0048C6F0[idx * 4 + 0];
-        dst[1] = D_0048C6F0[idx * 4 + 1];
-        dst[2] = D_0048C6F0[idx * 4 + 2];
-        dst[3] = D_0048C6F0[idx * 4 + 3];
+        dst[0] = D_0048C6F0[idx].v[0];
+        dst[1] = D_0048C6F0[idx].v[1];
+        dst[2] = D_0048C6F0[idx].v[2];
+        dst[3] = D_0048C6F0[idx].v[3];
         dst[4] = D_00472150[0];
         dst[5] = D_00472150[1];
         dst[6] = D_00472150[2];

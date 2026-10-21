@@ -74,7 +74,7 @@ extern M2C_UNK func_001e8658;
 extern f32 D_003DACB0;
 extern f32 D_003DACB4;
 extern s32 D_00304BE8;
-extern s32 D_003DABD0[];
+#include "data/pieces/D_003DABD0.h"
 extern s32 D_003DAD38;
 extern s32 D_003DC470;
 extern s32 D_003DC474;
@@ -105,11 +105,11 @@ void func_001e07a8(s32 arg0) {
     FlushCache(0);
     sceGsSyncPath(0, 0);
     temp_s0 = arg0 * 0x600;
-    sceGsExecLoadImage(&D_0062F670, D_003DABD0[1] + temp_s0);
+    sceGsExecLoadImage(&D_0062F670, (s32)D_003DABD0[1] + temp_s0);
     sceGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
     FlushCache(0);
     sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_0062F670, D_003DABD0[1] + temp_s0 + 0x48000);
+    sceGsExecLoadImage(&D_0062F670, (s32)D_003DABD0[1] + temp_s0 + 0x48000);
 }
 
 void func_001e0d68(s32 arg0) {

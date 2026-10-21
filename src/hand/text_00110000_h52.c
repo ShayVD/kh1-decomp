@@ -160,7 +160,7 @@ typedef struct { V4i52 a; s32 x10; void *x14; s32 x18; s32 x1c; V4i52 x20; u8 pa
 typedef struct { u8 b[0x90]; } E90_52;
 #include "data/pieces/D_0048C690.h"
 #include "data/pieces/D_0048C630.h"
-extern V4i52 D_0048C6F0[];
+#include "data/pieces/D_0048C6F0.h"
 extern V4i52 D_00472150, D_00486300;
 extern E90_52 D_004DBC20[2][64];
 

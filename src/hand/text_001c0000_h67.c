@@ -122,7 +122,7 @@ s32 func_001cbfc0(VM *vm) {
     return 2;
 }
 
-extern void *D_003DABD0[];
+#include "data/pieces/D_003DABD0.h"
 extern char D_003C58E0[][256];
 void *func_001559f0(s32, s32);
 void func_00120748(char *, void *, void *, s32);

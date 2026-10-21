@@ -9,7 +9,7 @@
 	PIECE_BEGIN D_003DABCC, 0x4, 4  /* data/pieces/D_003DABCC.h */
 	.word func_001dca88
 	PIECE_END D_003DABCC, 0x4
-	PIECE D_003DABD0, 0x4, 4  /* untyped: users disagree: M2C_UNK D_003DABD0 | Tbl *D_003DABD0 | s32 D_003DABD0[] | void *D_003DABD0[]; session 25: as Tbl *D_003DABD0: code changes in text_001e0000_17.c; does not compile in text_001c0000_h67.c */
+	PIECE D_003DABD0, 0x4, 4  /* data/pieces/D_003DABD0.h */
 	PIECE D_003DABD4, 0x4, 4  /* data/pieces/D_003DABD4.h */
 	PIECE D_003DABD8, 0x68, 8  /* data/pieces/D_003DABD8.h */
 	PIECE D_003DAC40, 0x60, 16
