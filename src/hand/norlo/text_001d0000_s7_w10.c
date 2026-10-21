@@ -9,8 +9,9 @@ typedef struct { u8 pad0[0x10]; void *f10; HS5 *f14; s32 f18; f32 f1c; u8 pad20[
 extern u8 D_0062A630[];
 extern E60 D_0062A428[]; /* src/data/bss_0062.c: u8 D_0062A428[0x8] */
 extern s32 D_0062A608[];
-extern s32 D_0037A378;
-extern s32 D_0062A220, D_0062A224, D_0029B418, D_0029B41C, D_0029B410, D_0029B414, D_00350CE0;
+#include "data/pieces/D_0037A378.h"
+extern s32 D_0062A220, D_0062A224, D_0029B418, D_0029B41C, D_0029B410, D_0029B414;
+#include "data/pieces/D_00350CE0.h"
 s32 func_001dd5c0(Hd5 *);
 s32 func_001dd208(Hd5 *);
 s32 func_001dd320(Hd5 *);

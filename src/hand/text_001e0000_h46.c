@@ -56,7 +56,7 @@ typedef struct {
     u8 x48e[3];
     u8 x491;
 } SaveM;
-extern SaveM *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
@@ -82,13 +82,14 @@ typedef struct {
 
 /* Pad state: x8 = trigger, x10 = repeat. */
 typedef struct { u8 pad0[8]; s32 x8; s32 xc; s32 x10; } Pad8;
-extern Pad8 *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad0[0x24]; s32 cur[1]; } Menu24;
 
 typedef struct { u8 pad0[0xd8]; s16 d8; } Obj203;
 typedef struct { u8 pad0[0x94]; f32 f94; } Obj207;
 typedef struct { u8 pad0[0xbe]; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; } Obj207a;
-typedef struct { s32 a; s32 pad[3]; s32 x10; } E20;
+#include "data/pieces/D_003F2C40.h"
+typedef E20_3F2C40_2 E20;
 
 typedef struct {
     s32 x0;
@@ -111,11 +112,11 @@ extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern u8 D_003E3C88[];
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3D6C.h"
-typedef struct { u8 b[0xe4]; } E228;
-extern E228 D_003E3D70[];
+#include "data/pieces/D_003E3D70.h"
+typedef E228_3E3D70 E228;
 extern u8 D_003E8D28[];
-extern Glyph *D_003E8E28;
-extern u8 D_003F2270[];
+#include "data/pieces/D_003E8E28.h"
+#include "data/pieces/D_003F2270.h"
 extern s32 D_0063F74C;
 extern s32 D_003F1A60;
 extern s32 D_00640DE0;
@@ -127,7 +128,6 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 extern f32 D_002BBDFC;
 extern s32 D_003F2F10[];
-extern E20 D_003F2C40[];
 
 int printf(const char *, ...);
 int sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
@@ -260,7 +260,7 @@ s32 func_001edba0(void) {
 
 s32 func_001ef140(s32 i, s32 id) {
     s32 c = 0;
-    Mem74 *m = &D_00304BE8->m[i];
+    Mem74 *m = &((SaveM *)D_00304BE8)->m[i];
     s32 t = func_001ee768(id);
     s32 j, n;
     if (t == 0) {
@@ -282,12 +282,12 @@ s32 func_001ef140(s32 i, s32 id) {
 void func_001ef830(void) {
     s32 i;
     for (i = 0; i < 3; i++) {
-        if (D_00304BE8->x48e[i] == 0xff) break;
+        if (((SaveM *)D_00304BE8)->x48e[i] == 0xff) break;
     }
     D_003E3D6C = i;
     D_003E3D68 = i;
-    if (D_00304BE8->x491 != 0xff) D_003E3D68 = i + 1;
-    for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70[i]);
+    if (((SaveM *)D_00304BE8)->x491 != 0xff) D_003E3D68 = i + 1;
+    for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70.e228[i]);
 }
 
 u8 *func_001efcd8(MsgHdr *h, s32 a, s32 n) {
@@ -385,7 +385,7 @@ s32 func_001f0340(u8 *p, s32 scale) {
         if (k == 0x4081) {
             x += (scale << 8) / d;
         } else {
-            Glyph *g = &D_003E8E28[func_001eff50(k)];
+            Glyph *g = &((Glyph *)D_003E8E28)[func_001eff50(k)];
             x += ((g->w << 4) + func_001efb88()) * scale / d;
         }
     }
@@ -602,19 +602,19 @@ void func_001fe408(Fade *o) {
 
 s32 func_001fe660(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x10000010) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x10000010) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x10000010) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x10000010) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x40000040) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x40000040) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x40000040) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x40000040) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -624,19 +624,19 @@ s32 func_001fe660(Menu24 *m, s32 i, s32 n) {
 
 s32 func_001fe7a8(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000080) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x80000080) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000080) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000080) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000020) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x20000020) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000020) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000020) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -646,19 +646,19 @@ s32 func_001fe7a8(Menu24 *m, s32 i, s32 n) {
 
 s32 func_001fe8f0(Menu24 *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000480) {
+    if (((Pad8 *)D_00425BC8)->x10 & 0x80000480) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000480) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000480) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000820) {
+    } else if (((Pad8 *)D_00425BC8)->x10 & 0x20000820) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000820) {
+        } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000820) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -702,19 +702,19 @@ void func_00207a38(Obj207a *o) {
 }
 
 void func_00207d60(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_002016b0(o, b, y + 2, e->a);
     func_001fb428(o, 1, 2, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
 
 void func_00207ec0(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_00201988(o, b, y + 3, e->a);
     func_001fb428(o, 1, 4, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
 
 void func_00208020(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
-    E20 *e = &D_003F2C40[i];
+    E20 *e = &D_003F2C40.e20_2[i];
     func_00201c60(o, b, y + 2, e->a);
     func_001fb428(o, 1, 2, 0, x, y + (26 - h) / 2, p, h, e->x10);
 }
@@ -722,7 +722,7 @@ void func_00208020(void *o, s32 i, s32 b, s32 y, s32 x, s32 p, s32 h) {
 void func_002080e0(void *o, s32 i, s32 x, s32 y, s32 n) {
     E20 *e;
     if (n < 2) return;
-    e = &D_003F2C40[i];
+    e = &D_003F2C40.e20_2[i];
     func_002016b0(o, x, y + 2, e->a);
     y += 7;
     func_001f9438(o, 0, x + 5, y, 85, 12, e->x10);
@@ -732,7 +732,7 @@ void func_002080e0(void *o, s32 i, s32 x, s32 y, s32 n) {
 void func_002081b0(void *o, s32 i, s32 x, s32 y, s32 n) {
     E20 *e;
     if (n < 2) return;
-    e = &D_003F2C40[i];
+    e = &D_003F2C40.e20_2[i];
     func_00201988(o, x, y + 3, e->a);
     y += 7;
     func_001f9438(o, 0, x + 5, y, 85, 12, e->x10);
@@ -820,7 +820,7 @@ s32 func_001fe558(Fade2 *o) {
 s32 func_001fe5a0(Fade2 *o) {
     switch (o->bc) {
     case 0:
-        if (D_00425BC8->x8 & 0x2000) {
+        if (((Pad8 *)D_00425BC8)->x8 & 0x2000) {
             if (func_001fe558(o)) o->bc++;
             else o->bc = 2;
         }

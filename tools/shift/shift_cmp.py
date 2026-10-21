@@ -206,6 +206,11 @@ class Links:
             sys.path.insert(0, str(Path(__file__).resolve().parent))
             from shift_ld import arena_sizes
             pieces.append((0x006A0000, 0x006A0000 + sum(arena_sizes().values()), self.arena))
+        # func_00121c78's block heap base follows the pools past 0x820000 (shift_ld BLOCK_HEAP);
+        # its end (D_009A0000) stays, so only the base address maps.
+        self.heap = nsym.get("D_00820000", 0x00820000)
+        if self.heap != 0x00820000:
+            pieces.append((0x00820000, 0x00820004, self.heap))
         self.floated_bss = floated
         self.secs = secs
         self.amap = AddrMap(pieces, [])
@@ -456,6 +461,9 @@ def main() -> int:
     if L.arena != 0x006A0000:
         print(f"  fixed pools moved after crt0's heap: 0x006a0000 -> 0x{L.arena:08x} "
               f"(_end 0x{nsym['_end']:08x} + 0xA000 = 0x{heap_end:08x})")
+    if L.heap != 0x00820000:
+        print(f"  block heap base moved after the pools: 0x00820000 -> 0x{L.heap:08x} "
+              f"(0x{0x009A0000 - L.heap:x} bytes left before D_009A0000)")
     if heap_end > L.arena:
         print(f"  {'FAIL' if arena_clash else 'warning'}: _end 0x{nsym['_end']:08x} + crt0's 0xA000 heap = "
               f"0x{heap_end:08x} reaches the fixed arena at 0x{L.arena:08x} (func_0014a090); "

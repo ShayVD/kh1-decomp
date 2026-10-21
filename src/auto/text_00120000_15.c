@@ -9,10 +9,10 @@ M2C_UNK func_00138e58(s32, void *);
 M2C_UNK func_00139170(s32, void *);
 M2C_UNK func_00139240(s32, void *, s32, f32, f32, f32);
 extern M2C_UNK D_002E2FCF;
-extern M2C_UNK D_002E3170;
+#include "data/pieces/D_002E3170.h"
 extern M2C_UNK D_004F82D0; /* src/data/bss_004F.c: u8 D_004F82D0[0x40] */
 extern M2C_UNK func_0012c0e8;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern u32 D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 extern void *D_002E26A0;
 extern void *D_00514F10; /* src/data/bss_0051.c: s32 D_00514F10 */
@@ -170,7 +170,7 @@ s32 func_0012dd38(void) {
 
     var_a0 = D_00524F40;
     temp_a1 = var_a0 - 4;
-    if ((u32) &D_002E3170 < var_a0) {
+    if ((u32) ((M2C_UNK *)&D_002E3170) < var_a0) {
         *(M2C_UNK *)var_a0 = 0;
         D_00524F40 = temp_a1;
         var_a0 = temp_a1;

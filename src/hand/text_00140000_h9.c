@@ -79,13 +79,8 @@ typedef struct {
     f32 x490[4];
     void *x4a0;
 } W9Ent;
-typedef struct {
-    s32 f0;
-    s32 f4;
-    s32 f8;
-    u8 padc[0x14];
-} W9Tab32;
-extern W9Tab32 D_00350D88[];
+#include "data/types/text_00140000_h9_p.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/types/text_00140000_h9.h"
 void func_00267560(void *out, void *in, f32 s);
 void func_00130398(W9Ent *e, f32 s, s32 n);
@@ -464,16 +459,16 @@ typedef struct {
     f32 x30;
     f32 x34;
 } W9Cfg;
-extern W9Cfg *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 f32 func_001348e0(W9Ent *e, f32 *o);
 void func_00267e90(f32 *out, f32 *in, f32 s);
 void func_00154258(W9Ent *e, f32 *o, f32 *out) {
     f32 k = e->x6c->xc4;
     f32 s;
-    if (func_001348e0(e, o) * D_00308CDC->x30 < D_00308CDC->x34) {
-        s = func_001348e0(e, o) * D_00308CDC->x30 * k;
+    if (func_001348e0(e, o) * (*(W9Cfg **)&D_00308CDC)->x30 < (*(W9Cfg **)&D_00308CDC)->x34) {
+        s = func_001348e0(e, o) * (*(W9Cfg **)&D_00308CDC)->x30 * k;
     } else {
-        s = D_00308CDC->x34 * k;
+        s = (*(W9Cfg **)&D_00308CDC)->x34 * k;
     }
     func_00267e90(out, o + 4, s);
 }

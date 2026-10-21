@@ -33,7 +33,7 @@ typedef struct B3Ob {
 } B3Ob;
 
 extern f32 D_002BBDFC;
-extern f32 D_002C58B0[4];
+#include "data/pieces/D_002C58B0.h"
 extern u32 D_002C5958;
 f32 func_001216d8(f32, f32, f32);
 s32 func_00123368(B3Ob *);
@@ -118,10 +118,10 @@ void func_0013a0f0(B3Ob *o) {
 }
 
 extern f32 D_002BBDFC;
-extern f32 D_002C58D0[4];
+#include "data/pieces/D_002C58D0.h"
 extern u32 D_002C5958;
-extern f32 D_002E2780[4];
-extern f32 D_002E2790[4];
+#include "data/pieces/D_002E2780.h"
+#include "data/pieces/D_002E2790.h"
 extern f32 D_00304B20[4];
 extern f32 D_00304B30[4];
 f32 D_0052AD04 ALIGNED(4);
@@ -196,7 +196,7 @@ s32 func_0013abf8(u16 *o) {
     if (t < 0.0f) t = 0.0f;
     t = (cosf(t * 3.1415928f) + 1.0f) * 0.5f;
     func_002674f0(b, D_00304B30, D_0052AD30, t);
-    func_00267810(rm, D_002C58D0, func_00120c88(D_0052AD04 * t));
+    func_00267810(rm, (*(f32 (*)[4])&D_002C58D0), func_00120c88(D_0052AD04 * t));
     func_002672f8(D_0052AD10, rm, D_0052AD40);
     func_00267560(D_0052AD10, D_0052AD10, D_0052AD08 + D_0052AD0C * t);
     func_00267518(a, b, D_0052AD10);
@@ -243,9 +243,9 @@ typedef struct {
     u8 x5[16];
     u8 x15, x16;
 } B3SvSrc;
-extern B3Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 extern s32 D_00304BC0[10];
-extern u16 D_00351530[512];
+#include "data/pieces/D_00351530.h"
 B3Sv *func_00232cc0(s32);
 B3SvSrc *func_001477c8(s32);
 void func_0013c9e0(s32, s32);
@@ -258,7 +258,7 @@ void func_0013cb98(void) {
     B3SvSub *b;
     s32 i, j;
 
-    B3Sv **pp = &D_00304BE8;
+    B3Sv **pp = ((B3Sv **)&D_00304BE8);
     s = func_00232cc0(0);
     *pp = s;
     s->x0 = 5;
@@ -292,9 +292,9 @@ void func_0013cb98(void) {
         e++;
         d++;
     }
-    for (i = 0; i < 512; i++) func_0013c638(i, D_00351530[i] & 1);
+    for (i = 0; i < 512; i++) func_0013c638(i, (*(u16 (*)[512])&D_00351530)[i] & 1);
     for (i = 0; i < 7; i++) s->b.x7cc[i] = -1;
-    for (i = 0; i < 7; i++) D_00304BE8->b.x48e[i] = 1;
+    for (i = 0; i < 7; i++) ((B3Sv *)D_00304BE8)->b.x48e[i] = 1;
     for (i = 0; i < 3; i++) b->x840[i] = -1;
 }
 #include "data/data_0030.h"

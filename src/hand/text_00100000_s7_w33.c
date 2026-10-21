@@ -1,6 +1,6 @@
 /* func_00102a48: MATCH (hand). The two repeated colours are chained assignments (D[9] = D[15] = D[21] = D[27] = ...), written right after D[3]; every other store in index order. */
 #include "common.h"
-extern s32 *D_002B6778;
+#include "data/pieces/D_002B6778.h"
 extern u64 D_002A49A0[];
 extern u8 D_002A4B60[];
 extern u8 D_002A4DD0[];
@@ -12,7 +12,7 @@ void func_00102a48(s32 c, s32 o) {
     s32 i;
     s32 *p;
     func_0010a470();
-    p = D_002B6778;
+    p = ((s32 *)D_002B6778);
     for (i = 0; i < 0x9000; i++) {
         if (p[i] != 0) goto found;
     }

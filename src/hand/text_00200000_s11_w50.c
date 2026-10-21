@@ -21,7 +21,7 @@ typedef struct { UQ a, b; } Q;
 typedef struct { s32 u, v, p0, p1; s32 x, y, z, f; } UX;
 typedef struct { u64 tag, regs; UX s[4]; } P4;
 typedef struct { UQ tag, regs; UX s[2]; } H2;
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 UQ *func_00122048(s32, s32);

@@ -8,8 +8,8 @@ typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 typedef struct { s32 *p; s32 n; } PN;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 typedef union { s32 i; u16 h; } U32H;
-extern Cfg *D_00425BC8;
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00425BC8.h"
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 extern void *D_00642C90;
 extern s32 D_00642C94;
@@ -20,7 +20,7 @@ extern s32 D_00642CD8;
 extern U32H D_00642CDC; /* src/data/bss_0064.c: s32 D_00642CDC */
 extern U32H D_00642CE0; /* src/data/bss_0064.c: s32 D_00642CE0 */
 extern PN D_003F40F8[];
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F43F0[];
 extern u8 D_003F44E0[];
 extern u8 D_003F44A0[];
@@ -51,7 +51,7 @@ void func_002177c8(Obj *a) {
     u32 i;
     s32 sel, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_00642C90);
             func_0011d768(3);
         } else {
@@ -67,7 +67,7 @@ void func_002177c8(Obj *a) {
                 func_001f3758(a);
                 if (*pc == 0) {
                     D_00642C94 = 1;
-                    D_00642C98 = D_00304BE8->x48e[0];
+                    D_00642C98 = ((S4BE8 *)D_00304BE8)->x48e[0];
                     if ((o[0] = func_001f31a8(D_003F44E0, 0))) {
                         func_001f3e48(o[0], p);
                         func_001f3d58(o[0], 6);
@@ -82,10 +82,10 @@ void func_002177c8(Obj *a) {
                         S4BE8 **b;
                         s32 *pd;
                         func_001f3e48(o[0], p);
-                        b = &D_00304BE8;
+                        b = ((S4BE8 **)&D_00304BE8);
                         func_001f3d58(o[0], 6);
                         pd = &D_00642CD8;
-                        *pd = D_003F34B8->x20[D_00304BE8->x48e[D_00642CCC]];
+                        *pd = ((S34B8 *)D_003F34B8)->x20[((S4BE8 *)D_00304BE8)->x48e[D_00642CCC]];
                         if ((o[1] = func_001f31a8(D_003F4550, 6))) {
                             func_001f3e48(o[1], o[0]);
                             o[1]->x24.i = D_003F43F0[*pd];
@@ -119,7 +119,7 @@ void func_002177c8(Obj *a) {
     sel = func_001fd518(a);
     y = 0;
     for (i = 0; i < D_003E3D68; i++) {
-        func_00207870(a, i == sel, 2, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i]));
+        func_00207870(a, i == sel, 2, 0, y, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[i]));
         y += 28;
     }
 }

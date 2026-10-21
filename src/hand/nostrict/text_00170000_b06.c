@@ -16,7 +16,7 @@ typedef struct Cam {
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern Cam D_00575940;
 void func_0017b308(void *, Seg *, s32, s32, s32);
 void func_0017b250(void *, void *, f32);
@@ -32,8 +32,8 @@ extern V4 D_00362680;
 extern f32 D_00362684;
 extern f32 D_002BBDFC;
 extern PadB D_002C5BB0;
-extern u8 D_002C58A0[];
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58A0.h"
+#include "data/pieces/D_002C58D0.h"
 f32 func_00120c88(f32);
 s32 func_00118b58(void *);
 s32 func_00119688(void *);
@@ -72,7 +72,7 @@ void func_0017bc90(s32 a0) {
     s32 f;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 dir;
     f32 bt;
@@ -141,7 +141,7 @@ void func_0017c550(void) {
     V4 p;
     struct { s32 idx; f32 t; } q;
 /*P*/
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     u64 k;
     f32 dir;
@@ -205,7 +205,7 @@ void func_0017cb88(void) {
     s32 f;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 dir;
     f32 bt;
@@ -271,7 +271,7 @@ void func_0017cb88(void) {
 /* ---- func_0017d628 ---- */
 #include "data/types/nostrict_text_00170000_b06_p.h"
 extern S690 D_00362690;
-extern u8 D_002E31B0[];
+#include "data/pieces/D_002E31B0.h"
 f32 func_0012eca8(void *, void *);
 f32 func_00121840(void *, void *);
 void func_002674f0(void *, void *, void *, f32);
@@ -284,7 +284,7 @@ void func_0017cf08(void) {
     V4 v;
     V4 v2;
     V4 v3;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     f32 r, ang, k;
 
     r = func_0012eca8(D_002E31B0, &D_00362690);
@@ -312,14 +312,14 @@ void func_0017cf08(void) {
     func_0017b250(&D_00575940, m, D_00575940.x48);
 }
 
-typedef struct Box { V4 min; V4 max; void *x20; s32 x24; u8 pad28[8]; } Box;
-extern Box *D_00362430;
-extern void *D_00362434;
-extern Box *D_0036243C;
+#include "data/types/nostrict_text_00170000_b06_p2.h"
+#include "data/pieces/D_00362430.h"
+#include "data/pieces/D_00362434.h"
+#include "data/pieces/D_0036243C.h"
 extern s32 D_00362448;
 #include "data/pieces/D_00362424.h"
 extern s32 D_002E27A8;
-extern u32 D_002C5960;
+#include "data/pieces/D_002C5960.h"
 extern S920 D_00575920;
 
 s32 func_0017d628(void) {
@@ -342,37 +342,37 @@ s32 func_0017d628(void) {
                 if (D_002E27A8 != 9) {
                     if ((e->x24 & 2) && !(D_00575890 & 1)) D_00575940.x65 = 1;
                     func_00176f08(9, 30.0f);
-                } else if (D_0036243C && D_0036243C != e && (D_0036243C->x24 & 2) && (e->x24 & 2)
-                           && e->x20 != D_0036243C->x20 && !(D_00575890 & 1)) {
+                } else if (((Box *)D_0036243C) && ((Box *)D_0036243C) != e && (((Box *)D_0036243C)->x24 & 2) && (e->x24 & 2)
+                           && e->x20 != ((Box *)D_0036243C)->x20 && !(D_00575890 & 1)) {
                     D_00575940.x65 = 1;
                 }
                 if (e->x24 & 2) {
-                    D_00362434 = 0;
-                    D_00362438 = e->x20;
+                    (*(void **)&D_00362434) = 0;
+                    D_00362438 = (s32)e->x20;
                 } else {
-                    D_00362434 = e->x20;
+                    (*(void **)&D_00362434) = e->x20;
                     D_00362438 = 0;
                 }
             } else if (D_002E27A8 == 9) {
-                if (D_0036243C && (D_0036243C->x24 & 2)) {
+                if (((Box *)D_0036243C) && (((Box *)D_0036243C)->x24 & 2)) {
                     if (D_00575920.x0) func_00176f08(3, 30.0f);
                     else func_00176f08(1, 30.0f);
                 } else {
                     func_00176f08(1, 0.0f);
                 }
-                D_00362434 = 0;
+                (*(void **)&D_00362434) = 0;
                 D_00362438 = 0;
-            } else if (D_0036243C != e) {
+            } else if (((Box *)D_0036243C) != e) {
                 func_00176f08(1, 30.0f);
             }
-            D_0036243C = e;
+            (*(Box **)&D_0036243C) = e;
             found = 1;
             break;
         }
     }
-    if (i == D_00362448 && D_0036243C) {
-        if (D_0036243C->x24 & 1) {
-            if (D_0036243C->x24 & 2) {
+    if (i == D_00362448 && ((Box *)D_0036243C)) {
+        if (((Box *)D_0036243C)->x24 & 1) {
+            if (((Box *)D_0036243C)->x24 & 2) {
                 if (D_00575920.x0) {
                     func_002675a8(&D_00575920.x10, &D_005758E0);
                     func_00176f08(3, 30.0f);
@@ -382,9 +382,9 @@ s32 func_0017d628(void) {
             } else {
                 func_00176f08(1, 30.0f);
             }
-            D_00362434 = 0;
+            (*(void **)&D_00362434) = 0;
             D_00362438 = 0;
-            D_0036243C = 0;
+            (*(Box **)&D_0036243C) = 0;
         }
     }
     return found;
@@ -403,7 +403,7 @@ s32 func_0017c190(void) {
     V4 p;
     s32 idx;
     f32 t;
-    Path *path = D_00362438;
+    Path *path = ((Path *)D_00362438);
     s32 loop;
     f32 base, a, d, c, k, s, t0;
     s32 i0;

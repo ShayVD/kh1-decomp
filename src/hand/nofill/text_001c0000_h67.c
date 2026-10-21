@@ -157,7 +157,7 @@ s32 func_001d2270(VM *vm) {
     return 2;
 }
 
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 void func_001d3e30(VM2 *vm) {
     Msg2 m;
     f32 dx, dy, dz, dist, spd;

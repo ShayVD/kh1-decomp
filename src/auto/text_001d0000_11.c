@@ -4,7 +4,7 @@
 
 M2C_UNK func_001f1e98(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_001f2d68(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, u16, M2C_UNK, M2C_UNK);
-extern void *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 s32 func_001dc580(void) {
     func_001f1e98(0x80FFFFFF, 0x46, 0x14, 0x1AF, 0x10);

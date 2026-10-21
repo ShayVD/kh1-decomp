@@ -14,8 +14,8 @@ M2C_UNK func_002673b8(s32, void *);
 M2C_UNK func_002674f0(s32, void *, s32, f32);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
 M2C_UNK func_00267e90(void *, s32, f32);
-extern M2C_UNK D_002C58B0;
-extern M2C_UNK D_002E31B0;
+#include "data/pieces/D_002C58B0.h"
+#include "data/pieces/D_002E31B0.h"
 extern M2C_UNK D_00351B60;
 extern M2C_UNK D_00351B88;
 extern M2C_UNK D_0054F970; /* src/data/bss_0054.c: u8 D_0054F970[0x10] */
@@ -29,7 +29,7 @@ extern M2C_UNK func_00150cb0;
 extern M2C_UNK func_00150cb8;
 extern M2C_UNK func_00156188;
 extern f32 D_002BBDFC;
-extern s32 D_00350CE0;
+#include "data/pieces/D_00350CE0.h"
 extern s32 D_005516E8;
 extern s8 D_00550400; /* src/data/bss_0055.c: E550400 D_00550400[0x34] */
 extern s8 D_00FE0000;
@@ -154,7 +154,7 @@ void func_001561f8(void) {
 }
 
 void func_00156260(void *arg0, void *arg1) {
-    func_002675a8(arg0 + 0x3C0, &D_002C58B0);
+    func_002675a8(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58B0));
     func_002673b8(arg0 + 0x3F0, arg1);
     M2C_FIELD(arg0, f32 *, 0x3FC) = (f32) (M2C_FIELD(arg1, f32 *, 0xC) * 0.22314355f);
     M2C_FIELD(arg0, s32 *, 0x88) = (s32) (M2C_FIELD(arg0, s32 *, 0x88) | 0x40);
@@ -198,7 +198,7 @@ void func_00158ad0(s32 arg0) {
 
 void func_001593f8(s32 arg0, s32 arg1, s32 arg2) {
     if (D_002E3190 == 1) {
-        func_00159178(arg0, 0x3C, (s32) &D_002E31B0, arg2);
+        func_00159178(arg0, 0x3C, (s32) ((M2C_UNK *)&D_002E31B0), arg2);
     }
 }
 

@@ -19,9 +19,9 @@ void (*D_002BD1A8[11])(s32, s32 *) = {
     func_00116130, func_00116160, func_00116198, func_001161d0, func_00116200, func_00116240,
     func_00116278, func_001161d0, func_001162b0, func_001162f8, func_00116330,
 };
-extern Box368 D_002C1260;
-extern Node368 **D_002A6244;
-extern Tri368 *D_002A6238;
+#include "data/pieces/D_002C1260.h"
+#include "data/pieces/D_002A6244.h"
+#include "data/pieces/D_002A6238.h"
 s32 func_00115d58(void);
 void func_001158c8(Out368 *);
 
@@ -53,20 +53,20 @@ void func_00116368(Out368 *o, s32 k) {
     f2 = D_002BD1A8[k];
     f1 = D_002BD178[k];
     for (j = 0; j < n; j++) {
-        nd = D_002A6244[*p++];
-        if (overlap(nd->min, nd->max, &D_002C1260)) {
-            if (inside(nd->min, nd->max, &D_002C1260)) {
+        nd = ((Node368 **)D_002A6244)[*p++];
+        if (overlap(nd->min, nd->max, ((Box368 *)&D_002C1260))) {
+            if (inside(nd->min, nd->max, ((Box368 *)&D_002C1260))) {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].fl;
+                    fl = &((Tri368 *)D_002A6238)[id].fl;
                     if (!(*fl & 1)) f1(id, fl);
                 }
             } else {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].fl;
+                    fl = &((Tri368 *)D_002A6238)[id].fl;
                     if (!(*fl & 1)) f2(id, fl);
                 }
             }

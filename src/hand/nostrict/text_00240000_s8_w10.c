@@ -6,8 +6,8 @@ extern u8 D_00351E10[];
 extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
 QW *D_00668F84 ALIGNED(4);
 #include "data/pieces/D_002E26C0.h"
-extern u8 D_00426820[];
-extern u8 D_004267F0[];
+#include "data/pieces/D_00426820.h"
+#include "data/pieces/D_004267F0.h"
 typedef struct { u8 pad[0xC0]; } Item;
 typedef struct { u8 pad0[0x10]; u8 unk10[0x10]; s32 unk20; u8 pad24[0xC]; Item unk30; Item unkF0; Item items[10]; } Pan2;
 typedef struct { s32 x, y, z, w; } V4;

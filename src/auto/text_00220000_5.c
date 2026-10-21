@@ -12,7 +12,7 @@ M2C_UNK func_0021ccd0(void *, s32);
 extern f32 D_002BBDFC;
 extern f32 D_006469B8; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
 extern s32 D_00643428;
-extern void *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 s32 func_001f42b8();
 s32 func_001f4400();
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);

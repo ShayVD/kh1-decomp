@@ -18,7 +18,7 @@ extern s32 D_003DD264;
 extern Menu D_003DC498;
 extern Big D_00389C90;
 extern char D_003DCB10[][32];
-extern char D_003DCB90[][32];
+#include "data/pieces/D_003DCB90.h"
 extern char D_003DD1B0[];
 extern char D_003DD1D8[];
 extern char D_003DD1F0[];

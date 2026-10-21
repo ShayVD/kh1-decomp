@@ -90,7 +90,7 @@ s32 func_001559f0(s32, s32);
 s32 func_00120748(void *, s32, void (*)(), s32);
 extern u8 D_004906C0[];
 typedef struct { u8 pad0[0x36]; u8 f36; u8 pad37[116 - 0x37]; } E116;
-extern E116 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 s32 func_001da6d0(VM *vm) {
     vm->flags.x |= 0x8000;
@@ -251,7 +251,7 @@ s32 func_001db550(VM *vm) {
 }
 
 s32 func_001db600(VM *vm) {
-    D_00304BE8[vm->stk[vm->sp - 1]].f36 = vm->stk[vm->sp];
+    ((E116 *)D_00304BE8)[vm->stk[vm->sp - 1]].f36 = vm->stk[vm->sp];
     vm->sp -= 2;
     return 2;
 }

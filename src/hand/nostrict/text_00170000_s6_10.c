@@ -7,7 +7,7 @@ typedef struct Path {
     s32 n; f32 x4; f32 x8; f32 xc; f32 x10; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
 } Path;
 typedef struct { u8 pad0[0x30]; V4 x30; } ActB;
-extern Path *D_00362438;
+#include "data/pieces/D_00362438.h"
 extern V4 D_00575970;
 extern V4 D_003626A0;
 extern V4 D_005758D0;
@@ -25,7 +25,7 @@ s32 func_0017b860(s32 mode, V4 *pos, f32 *out, s32 *first) {
     V4 b;
     f32 d;
     f32 r;
-    Path *p = D_00362438;
+    Path *p = ((Path *)D_00362438);
 
     switch (mode) {
     default:
@@ -409,22 +409,10 @@ void func_0017f580(f32 t, f32 a, f32 b, f32 c, s32 flag) {
 }
 
 /* ---- fb98 ---- */
-typedef struct Sub80 {
-    u8 pad0[6];
-    u16 flags;
-    s32 x88;
-    struct { u8 pad[0xfc]; u16 xfc; } *p8c;
-    u8 pad10[4];
-    s32 key;
-    u8 pad18[0x10];
-    s32 xa8;
-    u8 pad2c[0x40 - 0x2c];
-} Sub80;
-typedef struct E0C0 {
-    u8 pad0[0x80];
-    Sub80 s;
-} E0C0;
-extern E0C0 D_00364130[256];
+#include "data/pieces/D_00364130.h"
+typedef Sub80_364130 Sub80;
+typedef E0C0_364130 E0C0;
+
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_001827f0(E0C0 *);
@@ -435,7 +423,7 @@ void func_0017fb98(s32 key) {
     E0C0 *t;
     Sub80 *s;
     off = 0;
-    t = D_00364130;
+    t = D_00364130.e0C0;
     i = 0;
     s = &t->s;
     for (; i < 256; i++) {
@@ -453,7 +441,6 @@ void func_0017fb98(s32 key) {
 }
 
 /* ---- fcd8 ---- */
-extern E0C0 D_00364130[256];
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_00182840(E0C0 *);
@@ -464,7 +451,7 @@ void func_0017fcd8(s32 key) {
     E0C0 *t;
     Sub80 *s;
     off = 0;
-    t = D_00364130;
+    t = D_00364130.e0C0;
     i = 0;
     s = &t->s;
     for (; i < 256; i++) {
@@ -482,7 +469,6 @@ void func_0017fcd8(s32 key) {
 }
 
 /* ---- fd88 ---- */
-extern E0C0 D_00364130[256];
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_001827f0(E0C0 *);
@@ -490,7 +476,7 @@ void func_001827f0(E0C0 *);
 void func_0017fd88(s32 lo, s32 n) {
     s32 i;
     s32 off = 0;
-    E0C0 *t = D_00364130;
+    E0C0 *t = D_00364130.e0C0;
     Sub80 *s = &t->s;
     for (i = 0; i < 256; i++) {
         if (s->flags & 1) {
@@ -509,7 +495,6 @@ void func_0017fd88(s32 lo, s32 n) {
 }
 
 /* ---- fe60 ---- */
-extern E0C0 D_00364130[256];
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_00182840(E0C0 *);
@@ -517,7 +502,7 @@ void func_00182840(E0C0 *);
 void func_0017fe60(s32 lo, s32 n) {
     s32 i;
     s32 off = 0;
-    E0C0 *t = D_00364130;
+    E0C0 *t = D_00364130.e0C0;
     Sub80 *s = &t->s;
     for (i = 0; i < 256; i++) {
         if (s->flags & 1) {

@@ -6,7 +6,7 @@ void func_0014f658(void *, s32);
 void func_001315c0(void *, s32, f32 *, f32);
 void func_002675a8(f32 *, f32 *);
 extern f32 D_002BBDFC;
-extern f32 D_002C58A0[];
+#include "data/pieces/D_002C58A0.h"
 typedef struct { u8 pad[0x20]; f32 x20; u8 pad24[8]; f32 x2c; u8 x30; u8 x31; s8 x32; u8 x33; } W34Prm;
 typedef struct { u8 pad[0x14]; s32 x14; W34Prm *x18; u8 pad1c[0x14]; s32 x30; } W34Eff;
 typedef struct { u8 pad[0x40]; f32 x40; u8 pad44[0x14c - 0x44]; W34Eff *x14c; } W34EObj;

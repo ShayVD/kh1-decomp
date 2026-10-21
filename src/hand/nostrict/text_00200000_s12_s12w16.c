@@ -32,7 +32,7 @@ typedef struct {
     u64 tag4, regs4;
     S2 s[1];
 } PK;
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);

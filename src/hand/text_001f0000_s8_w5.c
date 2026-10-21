@@ -1,7 +1,7 @@
 #include "common.h"
 typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
-extern Glyph *D_003E8E28;
-extern u8 *D_003E8E08[];
+#include "data/pieces/D_003E8E28.h"
+#include "data/pieces/D_003E8E08.h"
 s32 func_001efb88(void);
 s32 func_001f0448(s32, s32, u8 *, s32);
 
@@ -9,7 +9,7 @@ s32 func_001f0448(s32, s32, u8 *, s32);
 s32 func_001f0148(u8 *s, s32 sz)
 {
     s32 w = 0;
-    u8 **a = D_003E8E08;
+    u8 **a = ((u8 **)&D_003E8E08);
     s32 c;
     Glyph *g;
 
@@ -94,7 +94,7 @@ s32 func_001f0148(u8 *s, s32 sz)
                 c = *s - 32;
                 s++;
             }
-            g = &D_003E8E28[c];
+            g = &((Glyph *)D_003E8E28)[c];
             w += ((g->w << 4) + func_001efb88()) * sz / 18;
         }
     }

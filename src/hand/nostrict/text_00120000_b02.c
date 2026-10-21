@@ -45,7 +45,7 @@ typedef struct {
     void *fn2;
     u64 g[2];
 } S14;
-extern s32 D_002BC0F0[];
+#include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26C0.h"
 extern void func_00122770(void);
 extern void func_001229c0(void);
@@ -70,9 +70,9 @@ void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
     s.f48 = -1;
     s.fn1 = func_00122770;
     s.fn2 = func_001229c0;
-    s.b[0] = D_002BC0F0[4];
-    s.b[1] = D_002BC0F0[5];
-    s.b[2] = D_002BC0F0[6];
+    s.b[0] = D_002BC0F0.i[4];
+    s.b[1] = D_002BC0F0.i[5];
+    s.b[2] = D_002BC0F0.i[6];
     s.b[3] = (s32)alpha;
     s.f40 = 0;
     switch (o->f130->h4c) {
@@ -128,10 +128,10 @@ void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
 }
 
 typedef struct { u8 p0[0x10]; O15 *f10; void (*f14)(O15 *); } T15;
-extern O15 *D_00304AD8;
+#include "data/pieces/D_00304AD8.h"
 extern f32 D_002BBDFC;
-extern u32 D_002C5960;
-extern V4 D_002C58B0;
+#include "data/pieces/D_002C5960.h"
+#include "data/pieces/D_002C58B0.h"
 extern s32 D_0052AA68;
 extern O15 *D_0052AA70[];
 extern void func_00137990(O15 *);
@@ -156,7 +156,7 @@ s32 func_00137ea8(T15 *t) {
     O15 *o = t->f10;
     void *e;
 
-    D_00304AD8 = o;
+    (*(O15 **)&D_00304AD8) = o;
     func_00137990(o);
     func_00137a20(o);
     if (o->f488 && (o->f488->f14 & 3) != 1) o->f488 = 0;
@@ -190,7 +190,7 @@ s32 func_00137ea8(T15 *t) {
         o->b34 = 1;
         D_0052AA70[D_0052AA68++] = o;
     } else {
-        func_002675a8(&o->f120.x, &D_002C58B0);
+        func_002675a8(&o->f120.x, ((V4 *)&D_002C58B0));
     }
     if (o->f14c) func_0012c760(o);
     if (o->b33) {
@@ -296,13 +296,13 @@ void func_00132790(Hd10 *f, s32 idx, Ou10 *o) {
 typedef struct { u8 p0[4]; u32 f4; u8 p8[0x4c - 8]; u16 h4c; u8 p4e[6]; s8 b54; } K16;
 typedef struct { u8 p0[6]; u8 f6; u8 p7[0x130 - 7]; K16 *f130; u8 p134[0x408 - 0x134]; void *f408; } O16;
 typedef struct { u8 p0[0x10]; O16 *f10; void *f14; } T16;
-extern s32 D_002E27D4;
+#include "data/pieces/D_002E27D4.h"
 extern s32 D_002C5C4C;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_002BC134;
 extern u32 D_002C5958;
-extern s32 D_00304B6C;
+#include "data/pieces/D_00304B6C.h"
 extern void func_0014f658(O16 *, s32);
 extern T16 *func_001383d8(s32, void *);
 extern void func_0013f198(void);

@@ -22,7 +22,7 @@ extern M2C_UNK func_001129c8;
 extern M2C_UNK func_0011e700;
 extern s32 D_002A62F0;
 extern s32 D_002B6474;
-extern s32 D_002BCB60;
+#include "data/pieces/D_002BCB60.h"
 extern s32 D_002BCDE4;
 extern s32 D_002BCDEC;
 extern s32 D_002C12C0;
@@ -34,7 +34,7 @@ extern s32 D_004D9320;
 extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
 extern s32 D_004E44C0; /* src/data/bss_004E.c: s32 D_004E44C0[0x2] */
 extern s8 D_002BCB68;
-extern s8 D_002C1260;
+#include "data/pieces/D_002C1260.h"
 #include "data/pieces/D_002BBDF4.h"
 extern volatile s32 D_002BD114;
 s32 func_00104c38(s32, s32);
@@ -184,12 +184,12 @@ void func_00115098(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_001158c8(s32 arg0) {
-    func_001158a8(&D_002C1260, arg0);
-    func_001158a8(&D_002C1260 + 0x30, arg0 + 0xC);
-    func_001158a8(&D_002C1260 + 0x10, arg0 + 4);
-    func_001158a8(&D_002C1260 + 0x40, arg0 + 0x10);
-    func_001158a8(&D_002C1260 + 0x20, arg0 + 8);
-    func_001158a8(&D_002C1260 + 0x50, arg0 + 0x14);
+    func_001158a8(((s8 *)&D_002C1260), arg0);
+    func_001158a8(((s8 *)&D_002C1260) + 0x30, arg0 + 0xC);
+    func_001158a8(((s8 *)&D_002C1260) + 0x10, arg0 + 4);
+    func_001158a8(((s8 *)&D_002C1260) + 0x40, arg0 + 0x10);
+    func_001158a8(((s8 *)&D_002C1260) + 0x20, arg0 + 8);
+    func_001158a8(((s8 *)&D_002C1260) + 0x50, arg0 + 0x14);
 }
 
 void func_00116130(s32 arg0, s32 *arg1) {

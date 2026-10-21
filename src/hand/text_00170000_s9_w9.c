@@ -9,11 +9,11 @@
    symbol so the table can move; 4 bytes longer (the nop), which still fits
    before func_00171098. */
 #ifdef KH1_SHIFTABLE
-extern s32 D_0035BD40[];
+#include "data/pieces/D_0035BD40.h"
 #endif
 s32 func_00171078(s32 a, s32 *b) {
 #ifdef KH1_SHIFTABLE
-    return D_0035BD40[*b ^ 3];
+    return D_0035BD40.i_2[*b ^ 3];
 #else
     return ((s32 *)0x35BD40)[*b ^ 3];
 #endif

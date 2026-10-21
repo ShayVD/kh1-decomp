@@ -3,8 +3,8 @@
 #include "m2c.h"
 
 M2C_UNK func_002675a8(s32, M2C_UNK *);
-extern M2C_UNK D_002C58A0;
+#include "data/pieces/D_002C58A0.h"
 
 void func_0014f778(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, &D_002C58A0);
+    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
 }

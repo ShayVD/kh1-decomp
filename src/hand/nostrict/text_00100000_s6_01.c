@@ -9,11 +9,11 @@ extern M144 D_002B2E60[];
 extern s32 D_00482260[];
 extern s32 D_0047E220[];
 extern s32 D_0048BFD0[2];
-extern s32 D_0029B280[4][4];
+#include "data/pieces/D_0029B280.h"
 extern s32 D_002BC170[4][4];
 extern V3 D_00494C00[];
 extern s32 D_004862D0[2];
-extern s32 *D_002A3F30;
+#include "data/pieces/D_002A3F30.h"
 extern s32 D_00494BB0;
 extern Ent16 *D_00494BA8;
 extern s32 D_0047A1D0[2];
@@ -56,7 +56,7 @@ s32 *func_001081c8(s32 *p, s32 k) {
     *p++ = D_004862D0[0];
     *p = D_004862D0[1];
     r = p + 3;
-    tbl = (Ent16 *)(D_002A3F30[1] + (s32)D_002A3F30);
+    tbl = (Ent16 *)(((s32 *)D_002A3F30)[1] + (s32)((s32 *)D_002A3F30));
     for (i = 0; i < D_00494BB0; i = j) {
         j = i + 1;
         e = &D_00494BA8[i];
@@ -112,7 +112,7 @@ s32 *func_001083d8(s32 *p, s32 k) {
     *p++ = D_004862D0[0];
     *p = D_004862D0[1];
     r = p + 3;
-    tbl = (Ent16 *)(D_002A3F30[1] + (s32)D_002A3F30);
+    tbl = (Ent16 *)(((s32 *)D_002A3F30)[1] + (s32)((s32 *)D_002A3F30));
     for (i = 0; i < D_00494BB0; i = j) {
         j = i + 1;
         e = &D_00494BA8[i];

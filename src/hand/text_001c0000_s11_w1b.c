@@ -66,12 +66,12 @@ typedef struct {
 } Task;
 
 extern BigA D_00389C90;
-extern VMa D_0038D170[];
+#include "data/pieces/D_0038D170.h"
 extern S5BB0 D_002C5BB0;
 extern u32 D_003C39A8;
-extern s32 D_003C21A8[];
-extern s32 D_00388480[];
-extern u32 D_00389C80;
+#include "data/pieces/D_003C21A8.h"
+#include "data/pieces/D_00388480.h"
+#include "data/pieces/D_00389C80.h"
 extern f32 D_002BBDFC;
 extern s32 (*D_0037A198[])(VMa *, s32);
 Msg *func_001c4730(void);
@@ -97,9 +97,9 @@ s32 func_001c1cf8(s8 *, s32);
     D_00389C90.x304c = D_00389C90.x3054; \
     D_00389C90.x305c = D_00389C90.x3064; \
     D_00389C90.x3060 = D_00389C90.x3068; \
-    D_00389C80 = D_003C39A8; \
-    for (i = 0; i < D_00389C80; i++) { \
-        D_00388480[i] = D_003C21A8[i]; \
+    (*(u32 *)&D_00389C80) = D_003C39A8; \
+    for (i = 0; i < ((u32)D_00389C80); i++) { \
+        ((s32 *)&D_00388480)[i] = ((s32 *)&D_003C21A8)[i]; \
     }
 
 s32 func_001c3b10(Task *t) {
@@ -144,7 +144,7 @@ s32 func_001c3b10(Task *t) {
             if (i != 0) continue;
             if (t->x18) {
                 D_00389C90.x3034 = 0;
-                w = D_0038D170;
+                w = ((VMa *)&D_0038D170);
                 for (j = 1, w++; j < t->n; j++, w++) {
                     if (w->fl.b.b0 == 1) {
                         m.type = 2;

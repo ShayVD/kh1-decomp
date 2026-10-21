@@ -1,105 +1,7 @@
 /* Hand-matched functions (worker b03), built without strict aliasing. */
 #include "common.h"
 
-typedef struct { u8 pad[0xcc]; f32 xcc; } B3Mv;
-typedef struct {
-    f32 x0[4];
-    f32 x10[4];
-    f32 x20[4];
-    u8 pad30[0x40 - 0x30];
-    f32 x40[4];
-    f32 x50;
-    f32 x54;
-    u8 pad58[0x5c - 0x58];
-    s32 x5c;
-    u8 pad60[0x90 - 0x60];
-    s32 x90;
-    s32 x94;
-    u8 pad98[0xa0 - 0x98];
-    f32 xa0[4];
-    f32 xb0, xb4, xb8, xbc;
-    u8 padc0[0x100 - 0xc0];
-    f32 x100;
-    u8 pad104[0x170 - 0x104];
-    f32 x170;
-} B3Wk;
-typedef struct { u8 pad[0x4c]; u16 x4c; } B3Inf;
-typedef struct B3Ob {
-    u32 x0;
-    s32 x4;
-    u8 pad08[0x10 - 0x8];
-    f32 x10[4];
-    f32 x20[4];
-    f32 x30[3];
-    f32 x3c;
-    u8 pad40[0x6c - 0x40];
-    B3Mv *x6c;
-    u32 x70;
-    u8 pad74[0x88 - 0x74];
-    u32 x88;
-    u8 pad8c[0x98 - 0x8c];
-    void *x98;
-    u32 x9c;
-    u8 padA0[0xc0 - 0xa0];
-    f32 xc0[3];
-    f32 xcc;
-    u8 padd0[0x130 - 0xd0];
-    B3Inf *x130;
-    u8 pad134[0x144 - 0x134];
-    s32 x144;
-    B3Wk *x148;
-    u8 pad14c[0x150 - 0x14c];
-    f32 x150;
-    u8 pad154[0x164 - 0x154];
-    s32 x164;
-    u8 pad168[0x16c - 0x168];
-    f32 x16c;
-    u8 pad170[0x178 - 0x170];
-    s32 x178;
-    u8 pad17c[0x1cc - 0x17c];
-    u32 x1cc;
-    u8 pad1d0[0x280 - 0x1d0];
-    f32 x280;
-    u8 pad284[0x2a0 - 0x284];
-    f32 x2a0[4];
-    u8 pad2b0[0x2c0 - 0x2b0];
-    f32 x2c0;
-    u8 pad2c4[0x2cc - 0x2c4];
-    s32 x2cc;
-    u32 x2d0;
-    f32 x2d4;
-    u16 x2d8;
-    u8 pad2da[0x2de - 0x2da];
-    u16 x2de;
-    u8 pad2e0[0x30c - 0x2e0];
-    u16 x30c;
-    u8 pad30e[0x320 - 0x30e];
-    f32 x320[4];
-    u8 pad330[0x340 - 0x330];
-    f32 x340[4];
-    s32 x350[4];
-    u8 pad360[0x370 - 0x360];
-    u64 x370;
-    s32 x378;
-    u8 pad37c[0x398 - 0x37c];
-    struct B3Ob *x398;
-    u8 x39c;
-    u8 pad39d;
-    u8 x39e;
-    u8 pad39f[0x3c0 - 0x39f];
-    f32 x3c0[4];
-    s32 x3d0;
-    u8 pad3d4[0x3e4 - 0x3d4];
-    f32 x3e4;
-    u16 x3e8;
-    u8 pad3ea[0x440 - 0x3ea];
-    u64 x440;
-    s32 x448;
-    u8 pad44c[0x490 - 0x44c];
-    f32 x490[4];
-    u8 pad4a0[0x4ac - 0x4a0];
-    f32 x4ac;
-} B3Ob;
+#include "data/types/nostrict_text_00130000_b03_p3.h"
 extern f32 D_002BBDFC;
 extern u32 D_002C5958;
 void func_00130340(B3Ob *o, s32 a, f32 f);
@@ -107,7 +9,7 @@ void func_00130398(B3Ob *o, s32 a, f32 f);
 void *func_00130578(B3Ob *, s32, f32);
 void func_002675a8(f32 *, f32 *);
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } B3Ev;
-extern f32 D_002C58B0[4];
+#include "data/pieces/D_002C58B0.h"
 typedef struct {
     u8 x0, x1, x2, x3, x4, x5, x6, x7;
     u8 x8[16];
@@ -138,7 +40,7 @@ typedef struct {
     s32 x0;
     B3SvSub b;
 } B3Sv;
-extern B3Sv *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 extern f32 D_002C5970;
 void func_00267560(f32 *, f32 *, f32);
@@ -246,7 +148,7 @@ s32 func_0013c598(s32);
 
 void func_00141b10(s32 n, B3St *p) {
     B3StB *b;
-    B3SvEnt *e = &D_00304BE8->b.e[n];
+    B3SvEnt *e = &((B3Sv *)D_00304BE8)->b.e[n];
     B3Eq *r;
     B3It *q;
     s32 i, j;
@@ -300,8 +202,7 @@ void func_00141b10(s32 n, B3St *p) {
     p->b.x24 = 0.017453290987759829f;
 }
 
-typedef struct { B3Ob *x0; s32 x4, x8, xc; } B3Tbl;
-extern B3Tbl D_003044E0[];
+#include "data/pieces/D_003044E0.h"
 extern B3Ob *D_002E26A0[];
 f32 func_001427d0(B3Ob *, f32 *);
 s32 func_0015c738(B3Ob *, f32 *);
@@ -468,10 +369,10 @@ typedef struct {
     s32 x1c;
     f32 x20[4];
 } B3Pj;
-typedef struct { f32 x0; s32 x4, x8, xc, x10; } B3PjInf;
-extern B3PjInf D_00304DB0[];
+#include "data/pieces/D_00304DB0.h"
+typedef B3PjInf_304DB0 B3PjInf;
 extern B3Col *D_00531B60;
-extern f32 D_002C58A0[4];
+#include "data/pieces/D_002C58A0.h"
 void func_00116660(B3Col *);
 void func_001166e8(B3Col *);
 void func_00121fc4(f32 *, f32 *);
@@ -488,7 +389,7 @@ void func_00145528(B3Pj *o, f32 *v) {
         o->x10.s.x12--;
         return;
     }
-    f = D_00304DB0[o->x10.s.x14].x0;
+    f = D_00304DB0.b3PjInf[o->x10.s.x14].x0;
     func_00116660(D_00531B60);
     D_00531B60->x20 = 55.0f;
     D_00531B60->x24 = 60.0f;
@@ -508,7 +409,7 @@ void func_00145528(B3Pj *o, f32 *v) {
     if (0.0f <= o->x20[1] && !(D_00531B60->x30 & 1)) {
         if (5.0f < o->x20[1]) {
             o->x20[1] *= -0.8f;
-            if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0[o->x10.s.x14].xc, 0, D_00531B60->x40);
+            if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0.b3PjInf[o->x10.s.x14].xc, 0, D_00531B60->x40);
         } else {
             func_002675a8(o->x20, D_002C58A0);
             if (D_00531B60->x2c == -1) {
@@ -827,9 +728,9 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
 
 typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
 extern B3Pj D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
-extern B3PjE D_0035C710[];
+#include "data/pieces/D_0035C710.h"
 extern f32 *D_00531B68;
-extern f32 D_002C58D0[4];
+#include "data/pieces/D_002C58D0.h"
 extern f32 D_00306840;
 void func_00145858(B3Pj *, B3PjE *);
 s32 func_00145aa0(B3Pj *, B3PjE *);
@@ -845,7 +746,7 @@ s32 func_00145ce8(B3Pj *o) {
     f32 u[4];
     f32 m[16];
     f32 s, r, a;
-    B3PjE *e = &D_0035C710[o - D_0052EB60];
+    B3PjE *e = &((B3PjE *)&D_0035C710)[o - D_0052EB60];
 
     switch (o->x10.s.x16) {
     case 0:
@@ -881,7 +782,7 @@ s32 func_00145ce8(B3Pj *o) {
         r = o->x18 / 40.0f;
         s = o->x20[3] * r;
         a = 30.0f / s;
-        func_00267810(m, D_002C58D0, (a < 0.59341193735599518f) ? a : 0.59341193735599518f);
+        func_00267810(m, (*(f32 (*)[4])&D_002C58D0), (a < 0.59341193735599518f) ? a : 0.59341193735599518f);
         func_002672f8(u, m, o->x20);
         func_00267e40(o->x20, u);
         func_00267e90(u, o->x20, s);

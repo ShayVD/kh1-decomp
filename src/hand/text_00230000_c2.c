@@ -2,7 +2,7 @@
  * into eight functions). */
 #include "common.h"
 #include "data/bss_0064.h"
-extern void *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern u8 D_002C5AD0[];
 extern s32 D_00647780, D_00647784, D_00647788;
 extern s32 D_0064778C, D_00647790, D_00647794;

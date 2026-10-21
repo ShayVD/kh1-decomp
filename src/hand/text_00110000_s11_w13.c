@@ -17,7 +17,7 @@ s32 func_00119ad8(s32, s32, f32 *, f32 *, f32 *, f32 *);
 typedef struct { u32 lo : 4; u32 type : 4; u32 rest : 24; } RFlg;
 typedef struct { u8 pad[16]; RFlg f; } Rec20b;
 typedef s32 (*RFn)(RFlg *);
-extern RFn D_002C1300;
+#include "data/pieces/D_002C1300.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 void func_0011a978(s32, s32, f32 *);
@@ -107,7 +107,7 @@ u64 func_0011b220(s32 a0, f32 *out, void *a2, s32 a3, f32 scale) {
                 list1[cnt++] = id;
             }
         } else {
-            if (D_002BC128 == 10 && D_002BC130 == 7 && D_002C1300(f)) continue;
+            if (D_002BC128 == 10 && D_002BC130 == 7 && (*(RFn *)&D_002C1300)(f)) continue;
             if (func_00119ef8(a0, id, n, out, p, &D_002C1250)) {
                 hit = 1;
                 vscale2(n, n, scale);
@@ -133,7 +133,7 @@ u64 func_0011b220(s32 a0, f32 *out, void *a2, s32 a3, f32 scale) {
                 vadd3(out, p, out);
             }
         } else {
-            if (D_002BC128 == 10 && D_002BC130 == 7 && D_002C1300(f)) continue;
+            if (D_002BC128 == 10 && D_002BC130 == 7 && (*(RFn *)&D_002C1300)(f)) continue;
             if (func_00119ad8(a0, id, n, out, p, &D_002C1250)) {
                 hit = 1;
                 vsub3(out, out, p);

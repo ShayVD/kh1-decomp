@@ -4,7 +4,7 @@
 
 M2C_UNK func_0014aab0(M2C_UNK *);
 extern M2C_UNK D_0054C440;
-extern volatile M2C_UNK D_00350D88;
+#include "data/pieces/D_00350D88.h"
 f32 PlatSqrtf(f32);
 s32 func_001375f0();
 s32 func_001477c8(M2C_UNK);
@@ -108,6 +108,6 @@ s32 func_0014f5c8(void *arg0) {
     if (temp_v1 == 0x17) {
         return var_v0;
     }
-    var_v0 = (*(M2C_UNK *)((s8 *)(s8 *)&D_00350D88 + (temp_v1 << 5)) & 3) == 2;
+    var_v0 = (*(M2C_UNK *)((s8 *)(s8 *)((volatile M2C_UNK *)&D_00350D88) + (temp_v1 << 5)) & 3) == 2;
     return var_v0;
 }

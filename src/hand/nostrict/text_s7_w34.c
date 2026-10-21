@@ -138,7 +138,7 @@ typedef struct {
     u8 x120[4];
 } __attribute__((aligned(8))) Ent18;
 extern u32 D_002C5958;
-extern u32 D_002E27C8;
+#include "data/pieces/D_002E27C8.h"
 void func_0014dcd8(Obj18 *, void *);
 void func_0014c580(Obj18 *);
 void func_0014c530(Obj18 *);

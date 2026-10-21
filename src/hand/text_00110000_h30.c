@@ -51,7 +51,7 @@ typedef struct {
 } PadState;
 extern s32 D_002C5C24, D_002C5C28;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 r : 30; } Flags5968;
-extern volatile Flags5968 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 extern u8 D_002C5C38[];
 s32 sceCdDiskReady(s32);
 s32 sceCdRead(u32, u32, void *, void *);
@@ -235,7 +235,7 @@ void func_0011dcf0(void *a0, s32 *a1, s32 *a2) {
 }
 
 #include "data/pieces/D_002BBDE0.h"
-extern s32 D_002BC140;
+#include "data/pieces/D_002BC140.h"
 extern V4 D_002C1320, D_002C1330, D_002C1340, D_002C1350;
 void func_00267440(V4 *, s32);
 
@@ -399,7 +399,7 @@ void func_0011ec08(s32 a0, s32 *a1, s32 a2, void (*a3)(void)) {
 }
 
 typedef struct { u16 type; s16 f2; } NodeHd;
-extern V4 D_002C58D0[4];
+#include "data/pieces/D_002C58D0.h"
 extern s32 D_002C5950;
 extern s32 D_002C596C;
 extern u8 D_004E3A48[];
@@ -417,7 +417,7 @@ void func_0011eda8(void);
 
 void func_0011edc8(void) {
     s32 i, j;
-    sceVu0UnitMatrix(D_002C58D0);
+    sceVu0UnitMatrix((*(V4 (*)[4])&D_002C58D0));
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) D_002C5910[i][j] = 0;
     }
@@ -483,7 +483,7 @@ extern f32 D_002C5C20;
 extern s32 D_002C5C2C;
 extern PadState D_002C5AD0[2];
 extern PadState D_002C5BB0;
-extern V4 D_002C58B0;
+#include "data/pieces/D_002C58B0.h"
 extern s32 D_004E4280, D_004E44F0;
 
 void func_0011f988(void) {
@@ -502,8 +502,8 @@ void func_0011f988(void) {
         p->x3 = 0;
         p->x2 = 0;
         for (j = 0; j < 2; j++) {
-            func_002675a8(p->a[j], D_002C58B0);
-            func_002675a8(p->b[j], D_002C58B0);
+            func_002675a8(p->a[j], (*(V4 *)&D_002C58B0));
+            func_002675a8(p->b[j], (*(V4 *)&D_002C58B0));
         }
     }
     D_002C5BB0.rep = 0;
@@ -531,13 +531,13 @@ int strncmp(const char *, const char *, u32);
 void func_0011fec0(void) {
     if (func_001ecfb0() == 1) {
         if (D_002C5C3C > 30) {
-            D_002C5968.b1 = 1;
+            (*(volatile Flags5968 *)&D_002C5968).b1 = 1;
             return;
         }
         D_002C5C3C++;
         return;
     }
-    if (D_002C5968.b1) {
+    if ((*(volatile Flags5968 *)&D_002C5968).b1) {
         if (D_002C5C40 > 0) {
             D_002C5C40--;
             return;
@@ -549,7 +549,7 @@ void func_0011fec0(void) {
         }
     }
     D_002C5C3C = 0;
-    D_002C5968.b1 = 0;
+    (*(volatile Flags5968 *)&D_002C5968).b1 = 0;
 }
 
 void func_0010c150(void);
@@ -730,8 +730,8 @@ void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
 }
 
 typedef struct { s32 kind; u32 flags; u8 pad8[40]; V4 pos; } Ent5C80;
-extern Ent5C80 D_002C5C80[];
-extern u32 D_002BC0A8;
+#include "data/pieces/D_002C5C80.h"
+#include "data/pieces/D_002BC0A8.h"
 extern V4 D_002C6450;
 extern TPool D_004F6EC0;
 void func_00107e10(Ent5C80 *);
@@ -743,14 +743,14 @@ s32 func_00122ab0(void) {
     Ent5C80 *e;
     func_0011f130(&D_004F6EC0, 0);
     D_002C6450[0] = D_002C6450[1] = D_002C6450[2] = D_002C6450[3] = 1.0f;
-    D_002BC0A8 &= ~0x10;
-    e = D_002C5C80;
+    D_002BC0A8.u &= ~0x10;
+    e = ((Ent5C80 *)&D_002C5C80);
     for (i = 0; i < 31; i++, e++) {
         if (e->flags & 0x12) continue;
         if (e->kind != 1) {
             if (e->kind == 3) {
                 func_00107e10(e);
-                D_002BC0A8 |= 0x10;
+                D_002BC0A8.u |= 0x10;
             }
         } else {
             func_00267548(D_002C6450, D_002C6450, e->pos);

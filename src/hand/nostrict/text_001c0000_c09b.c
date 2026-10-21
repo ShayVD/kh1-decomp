@@ -67,10 +67,10 @@ typedef struct {
 } BigA;
 
 extern BigA D_00389C90;
-extern u32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern s32 D_002C5958;
-extern VMa D_0038D170[];
-extern VMa D_0039A580[];
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 extern u8 D_003DE570[];
@@ -102,7 +102,7 @@ typedef struct {
     Elem *first;
     Elem *last;
 } Scn;
-extern Scn D_0037A380;
+#include "data/pieces/D_0037A380.h"
 typedef struct {
     u8 pad0[0xd0];
     Vec v[5];
@@ -118,8 +118,8 @@ VMa *func_001e98d0(s32, s32);
 
 extern s8 *D_003C39AC;
 extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern u32 D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern s32 (*D_0037A198[])(VMa *, s32);
 s32 func_001ee200(void);
 void srand(u32);
@@ -155,7 +155,7 @@ typedef struct {
 } Task;
 extern S5BB0 D_002C5BB0;
 extern u32 D_003C39A8;
-extern u8 *D_003C21A8[];
+#include "data/pieces/D_003C21A8.h"
 extern f32 D_002BBDFC;
 Msg *func_001c4730(void);
 void func_001c4788(Msg *);
@@ -176,62 +176,62 @@ static inline void inl_load(u32 k) {
     Elem *e;
     f32 tE;
     p = D_00389C90.x3040 + D_00389C90.x304c[k];
-    D_0037A380.n = *(s32 *)p;
+    (*(Scn *)&D_0037A380).n = *(s32 *)p;
     p += 4;
-    for (i = 0; i < D_0037A380.n; i++) {
-        e = &D_0037A380.arr[i];
+    for (i = 0; i < (*(Scn *)&D_0037A380).n; i++) {
+        e = &(*(Scn *)&D_0037A380).arr[i];
         __builtin_memcpy(&e->a, p, 4); p += 4;
         __builtin_memcpy(&e->b, p, 4); p += 4;
         e->c = *(s32 *)p; p += 4;
-        __builtin_memcpy(&D_0037A380.arr[i].m[0], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[1], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[2], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[3], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[4], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[5], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[6], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[7], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[8], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[9], p, 16); p += 16;
-        __builtin_memcpy(&D_0037A380.arr[i].m[10], p, 16); p += 16;
-        D_0037A380.arr[i].f[0] = *(f32 *)p; p += 2; p += 2;
-        D_0037A380.arr[i].f[1] = *(f32 *)p; p += 4;
-        D_0037A380.arr[i].f[2] = *(f32 *)p; p += 4;
-        D_0037A380.arr[i].f[3] = *(f32 *)p; p += 4;
-        D_0037A380.arr[i].f[4] = *(f32 *)p; p += 4;
-        D_0037A380.arr[i].f[5] = *(f32 *)p; p += 4;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[0], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[1], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[2], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[3], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[4], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[5], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[6], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[7], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[8], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[9], p, 16); p += 16;
+        __builtin_memcpy(&(*(Scn *)&D_0037A380).arr[i].m[10], p, 16); p += 16;
+        (*(Scn *)&D_0037A380).arr[i].f[0] = *(f32 *)p; p += 2; p += 2;
+        (*(Scn *)&D_0037A380).arr[i].f[1] = *(f32 *)p; p += 4;
+        (*(Scn *)&D_0037A380).arr[i].f[2] = *(f32 *)p; p += 4;
+        (*(Scn *)&D_0037A380).arr[i].f[3] = *(f32 *)p; p += 4;
+        (*(Scn *)&D_0037A380).arr[i].f[4] = *(f32 *)p; p += 4;
+        (*(Scn *)&D_0037A380).arr[i].f[5] = *(f32 *)p; p += 4;
         if (i == 0) {
-            D_0037A380.arr[i].prev = 0;
-            D_0037A380.arr[i].next = 0;
+            (*(Scn *)&D_0037A380).arr[i].prev = 0;
+            (*(Scn *)&D_0037A380).arr[i].next = 0;
         } else {
-            D_0037A380.arr[i - 1].next = (struct Elem *)e;
+            (*(Scn *)&D_0037A380).arr[i - 1].next = (struct Elem *)e;
             e->next = 0;
-            e->prev = (struct Elem *)&D_0037A380.arr[i - 1];
+            e->prev = (struct Elem *)&(*(Scn *)&D_0037A380).arr[i - 1];
         }
     }
-    D_0037A380.x0 = D_0037A380.arr[0].c;
-    D_0037A380.first = &D_0037A380.arr[0];
-    D_0037A380.last = &D_0037A380.arr[D_0037A380.n - 1];
-    tE = D_0037A380.arr[0].f[5];
-    D_003C5500 = D_0037A380.n + 1;
-    __builtin_memcpy(&D_0037A380.q10, &D_0037A380.arr[0].m[5], 16);
-    __builtin_memcpy(&D_0037A380.q20, &D_0037A380.arr[0].m[6], 16);
-    __builtin_memcpy(&D_0037A380.q30, &D_0037A380.arr[0].m[7], 16);
-    __builtin_memcpy(&D_0037A380.q40, &D_0037A380.arr[0].m[10], 16);
-    D_0037A380.x60 = D_0037A380.arr[0].f[2];
-    D_0037A380.xE0F4 = tE;
-    D_0037A380.q50[0] = 0.0f;
-    D_0037A380.q50[1] = 0.0f;
-    D_0037A380.q50[2] = 0.0f;
-    D_0037A380.q50[3] = 0.0f;
-    func_001c53c8(D_0037A380.x0);
-    __builtin_memcpy(&D_003C5510.v[0], &D_0037A380.q10, 16);
-    __builtin_memcpy(&D_003C5510.v[1], &D_0037A380.q40, 16);
-    __builtin_memcpy(&D_003C5510.v[2], &D_0037A380.q50, 16);
-    __builtin_memcpy(&D_003C5510.v[4], &D_0037A380.q30, 16);
-    __builtin_memcpy(&D_003C5510.v[3], &D_0037A380.q20, 16);
-    D_003C5510.f120 = D_0037A380.x60;
-    D_003C5510.f124 = D_0037A380.xE0F4;
+    (*(Scn *)&D_0037A380).x0 = (*(Scn *)&D_0037A380).arr[0].c;
+    (*(Scn *)&D_0037A380).first = &(*(Scn *)&D_0037A380).arr[0];
+    (*(Scn *)&D_0037A380).last = &(*(Scn *)&D_0037A380).arr[(*(Scn *)&D_0037A380).n - 1];
+    tE = (*(Scn *)&D_0037A380).arr[0].f[5];
+    D_003C5500 = (*(Scn *)&D_0037A380).n + 1;
+    __builtin_memcpy(&(*(Scn *)&D_0037A380).q10, &(*(Scn *)&D_0037A380).arr[0].m[5], 16);
+    __builtin_memcpy(&(*(Scn *)&D_0037A380).q20, &(*(Scn *)&D_0037A380).arr[0].m[6], 16);
+    __builtin_memcpy(&(*(Scn *)&D_0037A380).q30, &(*(Scn *)&D_0037A380).arr[0].m[7], 16);
+    __builtin_memcpy(&(*(Scn *)&D_0037A380).q40, &(*(Scn *)&D_0037A380).arr[0].m[10], 16);
+    (*(Scn *)&D_0037A380).x60 = (*(Scn *)&D_0037A380).arr[0].f[2];
+    (*(Scn *)&D_0037A380).xE0F4 = tE;
+    (*(Scn *)&D_0037A380).q50[0] = 0.0f;
+    (*(Scn *)&D_0037A380).q50[1] = 0.0f;
+    (*(Scn *)&D_0037A380).q50[2] = 0.0f;
+    (*(Scn *)&D_0037A380).q50[3] = 0.0f;
+    func_001c53c8((*(Scn *)&D_0037A380).x0);
+    __builtin_memcpy(&D_003C5510.v[0], &(*(Scn *)&D_0037A380).q10, 16);
+    __builtin_memcpy(&D_003C5510.v[1], &(*(Scn *)&D_0037A380).q40, 16);
+    __builtin_memcpy(&D_003C5510.v[2], &(*(Scn *)&D_0037A380).q50, 16);
+    __builtin_memcpy(&D_003C5510.v[4], &(*(Scn *)&D_0037A380).q30, 16);
+    __builtin_memcpy(&D_003C5510.v[3], &(*(Scn *)&D_0037A380).q20, 16);
+    D_003C5510.f120 = (*(Scn *)&D_0037A380).x60;
+    D_003C5510.f124 = (*(Scn *)&D_0037A380).xE0F4;
     func_001c6a20();
     func_0011ef10(99999, func_001c5b88);
     D_00389C90.f3070.x |= 0x2000000000ULL;

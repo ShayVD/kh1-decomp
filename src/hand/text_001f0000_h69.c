@@ -37,7 +37,7 @@ typedef struct {
     s32 xb4;
 } Wn;
 
-extern Pad *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern u32 D_00640DF0; /* src/data/bss_0064.c: s32 D_00640DF0 */
 extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
 extern u32 D_00640DF8; /* src/data/bss_0064.c: s32 D_00640DF8 */
@@ -92,7 +92,7 @@ void func_001fdfd0(WinK *w) {
         return;
     }
     if ((w->cur >> 4) >= n) w->cur = (n - 1) << 4;
-    pd = D_00425BC8;
+    pd = ((Pad *)D_00425BC8);
     m = pd->x10 & D_00640DF8;
     moved = 0;
     if (m & D_00640DF0) {

@@ -166,7 +166,7 @@ extern s32 D_005252A8;
 extern s32 D_0052535C;
 extern s32 D_00525360;
 extern s32 D_00525354;
-extern f32 D_002C58D0[];
+#include "data/pieces/D_002C58D0.h"
 
 s32 func_00162348(s32 a, u32 b);
 W6Node *func_001320a8(s32 a);
@@ -177,7 +177,7 @@ extern u32 D_002C5958;
 s32 func_00123488(s32 id);
 s32 func_0012ba98(s32 a);
 extern W6Trip D_00526640[]; /* src/data/bss_0052.c: W32E12 D_00526640[32] */
-extern W6Lim *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 void func_00133920(W6Mgr *m, W6Link *l);
 f32 func_001348e0(W6Mgr *m, W6Kind *k);
 void *memset(void *d, s32 c, u32 n);
@@ -270,7 +270,7 @@ typedef struct {
     u32 x88;
 } W6Flg;
 
-extern f32 D_002BC0F0[];
+#include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BC120;
 extern f32 D_002BC124;
 extern s32 D_003044D0;
@@ -369,7 +369,7 @@ typedef struct {
 } W6Info;
 
 extern f32 D_002BBDFC;
-extern W6Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 void func_001247e8(W6Fade *o);
 void func_001dce90(s32 a);
@@ -385,7 +385,7 @@ typedef struct {
     s32 x10;
 } W6Blob;
 
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 extern f32 D_00304B7C;
 extern W6Blob *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
 extern s32 D_0052AE54;
@@ -508,7 +508,7 @@ void func_00131cc8(s32 a, f32 *m) {
     v[0] = n->v38[0];
     v[1] = n->v38[1];
     v[2] = n->v38[2];
-    func_00120c38(m, D_002C58D0, v);
+    func_00120c38(m, ((f32 *)&D_002C58D0), v);
     v[0] = v[1] = v[2] = n->scale;
     func_00121958(m, m, v);
     m[12] = n->v1c[0];
@@ -577,7 +577,7 @@ s32 func_001331d8(s32 i, s32 j, void (*cb)(void)) {
     } else {
         c->x18 = (s32)cb;
         c->x0 = j;
-        D_00304BE8->b492[i] = j;
+        ((W6Save *)D_00304BE8)->b492[i] = j;
         r = func_00120748(D_003041E4[i][j][0], c->x8, func_001330e8, 0);
     }
     return r;
@@ -639,9 +639,9 @@ s32 func_001347f0(W6Mgr *m, W6Kind *k) {
     s32 v;
     if (r == 1) {
         v = func_001348e0(m, k) * 100.0f;
-        if (v < D_00308CDC->lim0) {
+        if (v < (*(W6Lim **)&D_00308CDC)->lim0) {
             r = 3;
-        } else if (v < D_00308CDC->lim1) {
+        } else if (v < (*(W6Lim **)&D_00308CDC)->lim1) {
             r = 4;
         } else {
             r = 5;
@@ -751,10 +751,10 @@ void func_00135a38(W6Ch2 *c, s32 a) {
 
 f32 func_00135ca0(f32 x) {
     f32 r;
-    if (D_002BC0F0[0] <= x) {
+    if (D_002BC0F0.f[0] <= x) {
         return D_002BC120;
     }
-    if (D_002BC0F0[1] < x) {
+    if (D_002BC0F0.f[1] < x) {
         r = D_002BC120 + D_002BC124 / x;
         if (r < 0.0f) {
             r = 0.0f;
@@ -845,8 +845,8 @@ void func_00138870(W6Unit *u) {
         func_001586a8(7);
     }
     if (k < 51) {
-        if (D_00304BE8->cnt[k] < 9999) {
-            D_00304BE8->cnt[k]++;
+        if (((W6Save *)D_00304BE8)->cnt[k] < 9999) {
+            ((W6Save *)D_00304BE8)->cnt[k]++;
         }
     }
 }
@@ -862,12 +862,12 @@ s32 func_00138988(W6Unit *u) {
 void func_00138c30(W6Unit *u, W6Cmd *c) {
     f32 v[4];
     func_002675a8(v, c->v10);
-    v[3] = D_00308CDC->f2c * u->p6c->fc4;
+    v[3] = (*(W6Lim **)&D_00308CDC)->f2c * u->p6c->fc4;
     func_00156260(u, v);
     c->bits |= 2;
 }
 void func_00139408(W6Unit *u, s32 a) {
-    W6Lim *c = D_00308CDC;
+    W6Lim *c = (*(W6Lim **)&D_00308CDC);
     f32 lo = c->h14;
     f32 t = lo + (c->h16 - lo) * u->p6c->fc4;
     f32 k = c->f18;
@@ -942,9 +942,9 @@ void func_0013bf20(void) {
 
 void func_0013bf90(s32 on) {
     if (on) {
-        D_00304BE8->b880 = 1;
+        ((W6Save *)D_00304BE8)->b880 = 1;
     } else {
-        D_00304BE8->b880 = 0;
+        ((W6Save *)D_00304BE8)->b880 = 0;
     }
 }
 
@@ -953,7 +953,7 @@ void func_0013c078(void) {
     W6SEnt *e;
     s32 i;
     for (i = 0; i < 10; i++) {
-        e = &D_00304BE8->ent[i];
+        e = &((W6Save *)D_00304BE8)->ent[i];
         func_00141b10(i, &info);
         e->x1 = info.b40;
         if (e->x3 < info.w48) {

@@ -22,9 +22,9 @@ typedef struct {
 } GSpr;
 typedef struct { u64 h[12]; GSpr g; } Pkt;
 extern s32 D_003E8E00;
-extern Glyph *D_003E8E28;
+#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
-extern u8 D_003F2270[];
+#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 u64 *func_00122048(s32, s32);
@@ -38,7 +38,7 @@ s32 sceGsSyncPath(s32, s32);
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
 #include "data/types/nostrict_text_001f0000_s6_18.h"
 extern Spr D_003E9138[];
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 typedef struct { s32 w, h, idx, a; s32 c[4]; u32 rot; } SprPrm;
 void func_001f8270(void);
 
@@ -70,7 +70,7 @@ void func_001fade0(Txt9 *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     p->h[10] = 0x50AB400000008001;
     z = 0x100000;
     p->h[11] = 0x4343E;
-    gl = &D_003E8E28[idx];
+    gl = &((Glyph *)D_003E8E28)[idx];
     ox = o->xb0;
     Y = o->xb4 + (y << 4);
     gu = gl->u;

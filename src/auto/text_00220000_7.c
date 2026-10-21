@@ -22,7 +22,7 @@ extern s32 D_006437DC;
 extern s32 D_006437E0;
 extern s32 D_006437E4;
 extern s32 D_006469A4;
-extern void *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern void *D_00643740; /* src/data/bss_0064.c: s32 D_00643740 */
 extern void *D_00646990; /* src/data/bss_0064.c: s32 D_00646990 */
 s32 func_0011d768(s32);

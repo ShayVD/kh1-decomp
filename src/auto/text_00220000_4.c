@@ -37,7 +37,7 @@ s32 D_006436C8 ALIGNED(8);
 extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_00646990;
-extern void *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern void *D_00643428; /* src/data/bss_0064.c: s32 D_00643428 */
 s32 func_001efc10(M2C_UNK);
 s32 func_001f42b8();

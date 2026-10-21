@@ -153,7 +153,8 @@ s32 func_001c4640(Msg *m) {
     return 0;
 }
 
-extern VM D_0038D170, D_0039A580;
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern volatile s32 D_002BBE04;
 s32 func_001d59a0(VM *);
 
@@ -162,8 +163,8 @@ s32 func_001c4de0(s32 a, s32 b) {
     Msg m;
     D_00389C90.x3170 = a;
     D_00389C90.x3174 = b;
-    if (D_00389C90.x3034 == 0) vm = &D_0038D170;
-    else vm = &D_0039A580;
+    if (D_00389C90.x3034 == 0) vm = ((VM *)&D_0038D170);
+    else vm = ((VM *)&D_0039A580);
     D_00389C90.x3450 = 0;
     func_001c1d20(vm, 10);
     if (b == 1) {
@@ -196,7 +197,7 @@ typedef struct {
     u8 padE0F8[4];
     Lim *lim;
 } Cam;
-extern Cam D_0037A380;
+#include "data/pieces/D_0037A380.h"
 typedef struct {
     union {
         u64 flags;
@@ -227,19 +228,19 @@ static inline void inl_cpy(V4 *d, V4 *s) {
     *d = *s;
 }
 s32 func_001c5db8(void) {
-    D_0037A380.t += 1.0f;
-    if ((f32)D_0037A380.lim->n < D_0037A380.t) {
-        D_0037A380.t = (f32)D_0037A380.lim->n;
+    (*(Cam *)&D_0037A380).t += 1.0f;
+    if ((f32)(*(Cam *)&D_0037A380).lim->n < (*(Cam *)&D_0037A380).t) {
+        (*(Cam *)&D_0037A380).t = (f32)(*(Cam *)&D_0037A380).lim->n;
         return 4;
     }
-    func_001c53c8(D_0037A380.t);
-    inl_cpy(&OUT.a, &D_0037A380.a);
-    inl_cpy(&OUT.b, &D_0037A380.d);
-    inl_cpy(&OUT.c, &D_0037A380.e);
-    inl_cpy(&OUT.e, &D_0037A380.c);
-    inl_cpy(&OUT.d, &D_0037A380.b);
-    OUT.f50 = D_0037A380.f60;
-    OUT.f54 = D_0037A380.fE0F4;
+    func_001c53c8((*(Cam *)&D_0037A380).t);
+    inl_cpy(&OUT.a, &(*(Cam *)&D_0037A380).a);
+    inl_cpy(&OUT.b, &(*(Cam *)&D_0037A380).d);
+    inl_cpy(&OUT.c, &(*(Cam *)&D_0037A380).e);
+    inl_cpy(&OUT.e, &(*(Cam *)&D_0037A380).c);
+    inl_cpy(&OUT.d, &(*(Cam *)&D_0037A380).b);
+    OUT.f50 = (*(Cam *)&D_0037A380).f60;
+    OUT.f54 = (*(Cam *)&D_0037A380).fE0F4;
     func_001c6a20();
     return 0;
 }
@@ -419,7 +420,7 @@ s32 func_001cae78(VM *vm) {
 void func_0010e3f0(void *);
 void func_0010ef70(Obj *, s32, void *);
 extern s32 D_003C5890;
-extern s32 D_00388480[];
+#include "data/pieces/D_00388480.h"
 void func_001cafe8(s32 id, Obj *t) {
     s32 i;
     D_003C5890 = id;
@@ -433,7 +434,7 @@ void func_001cafe8(s32 id, Obj *t) {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
                 func_0010e3f0(D_00629E70[i].f80);
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cafe8);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cafe8);
             }
         }
     }
@@ -451,7 +452,7 @@ void func_001cbab0(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cafe8);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cafe8);
             }
         }
     }
@@ -469,7 +470,7 @@ void func_001cbd80(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cbd80);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cbd80);
             }
         }
     }
@@ -487,7 +488,7 @@ void func_001cbea0(s32 id, Obj *t) {
             } else {
                 D_00389C90.b0[i] = 2;
                 D_00389C90.b4[k] = 2;
-                func_0010ef70(o, D_00388480[D_00389C90.h10[k][id]], func_001cbd80);
+                func_0010ef70(o, ((s32 *)&D_00388480)[D_00389C90.h10[k][id]], func_001cbd80);
             }
         }
     }
@@ -517,7 +518,7 @@ s32 func_001ccbf8(VM *vm) {
     s32 t = vm->stk[vm->sp - 2];
     s32 x = vm->stk[vm->sp - 1];
     s32 y = vm->stk[vm->sp];
-    f32 r = func_0010f098(D_00388480[t]);
+    f32 r = func_0010f098(((s32 *)&D_00388480)[t]);
     D_006298F0[n].v40[0] = r;
     D_006298F0[n].v30[0] = x + r * 12.0f;
     D_006298F0[n].v30[1] = y + D_006298F0[n].v40[1] * 12.0f;

@@ -278,9 +278,9 @@ s32 func_001d9f20(VM *vm) {
     vm->sp -= 3;
     return 2;
 }
-extern volatile s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 s32 func_001d9ff8(void) {
-    D_0037A378 &= ~4;
+    (*(volatile s32 *)&D_0037A378) &= ~4;
     D_00389C90.f3070.x &= ~0x2000000000ULL;
     return 2;
 }
@@ -338,9 +338,9 @@ s32 func_001da260(VM *vm) {
     return 2;
 }
 typedef struct { u8 pad[4]; u8 f4; u8 pad5[0x6f]; } E74;
-extern E74 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_001da3b8(VM *vm) {
-    E74 *e = D_00304BE8;
+    E74 *e = ((E74 *)D_00304BE8);
     e += vm->stk[vm->sp];
     vm->stk[vm->sp] = e->f4;
     return 2;

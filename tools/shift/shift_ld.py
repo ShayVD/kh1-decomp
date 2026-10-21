@@ -188,6 +188,15 @@ FLOAT_PAD_WORD = 0xA5C35A3C  # --float-pad: data pads hold this word; bss pads s
 # the next fixed region (0x820000, func_00121c78) must stay clear.
 ARENA_POOLS = {"D_006A0000": ("D_00350D18", 3, 0), "D_00720000": ("D_00304318", 7, 4)}
 ARENA_NEXT = 0x00820000
+# func_00121c78's block heap (docs/shiftable-plan.md "Session 26"): one free-list head at D_004F45B0
+# whose block starts at D_00820000; func_00121d60 takes D_009A0000 as the heap's end. Only
+# func_00121c78 names 0x820000 (no overlay does), so in the moved modes the base follows the
+# pools once they reach it; the end stays, so the heap shrinks by as much. The largest heap
+# use seen in retail-layout savestates (fights, Agrabah, Gate Plaza) ends 0x9E038 bytes in;
+# BLOCK_HEAP_MIN keeps that plus a margin.
+BLOCK_HEAP = "D_00820000"
+BLOCK_HEAP_END = 0x009A0000
+BLOCK_HEAP_MIN = 0xE0000
 ARENA_ALIGN = 0x1000
 HEAP_SIZE = 0xA000  # crt0: SetupHeap(_end, 0xA000)
 
@@ -202,21 +211,30 @@ def arena_sizes() -> dict[str, int]:
     return sizes
 
 
-def arena_lines(names: list[str]) -> list[str]:
-    """Linker-script lines that place the fixed pools after crt0's heap (see ARENA_POOLS)."""
+def arena_lines(names: list[str], heap: bool = False) -> list[str]:
+    """Linker-script lines that place the fixed pools after crt0's heap (see ARENA_POOLS), and with
+    heap=True the block heap's base after the pools (BLOCK_HEAP)."""
     if not names:
-        return []
+        return [f"{BLOCK_HEAP} = 0x{ARENA_NEXT:08x};"] if heap else []
     sizes = arena_sizes()
     first, second = "D_006A0000", "D_00720000"
     if set(names) != {first, second} or 0x006A0000 + sizes[first] != 0x00720000:
         sys.exit(f"error: fixed pools {names}: expected both, back to back (sizes {sizes})")
     end = 0x00720000 + sizes[second]
-    return [
+    lines = [
         "/* Fixed pools (ARENA_POOLS): 0x006a0000 unless crt0's heap reaches it, then after the heap. */",
         f"{first} = MAX(0x006a0000, ALIGN(_end + 0x{HEAP_SIZE:x}, 0x{ARENA_ALIGN:x}));",
         f"{second} = {first} + 0x{sizes[first]:x};",
-        f"ASSERT({second} + 0x{sizes[second]:x} <= 0x{ARENA_NEXT:08x}, "
-        f"\"fixed pools (0x{end - 0x006A0000:x} bytes) would reach 0x{ARENA_NEXT:08x}: float less\");",
+    ]
+    if not heap:
+        return lines + [
+            f"ASSERT({second} + 0x{sizes[second]:x} <= 0x{ARENA_NEXT:08x}, "
+            f"\"fixed pools (0x{end - 0x006A0000:x} bytes) would reach 0x{ARENA_NEXT:08x}: float less\");"]
+    return lines + [
+        f"/* Block heap (BLOCK_HEAP): 0x{ARENA_NEXT:08x} unless the pools reach it; its end stays 0x{BLOCK_HEAP_END:08x}. */",
+        f"{BLOCK_HEAP} = MAX(0x{ARENA_NEXT:08x}, ALIGN({second} + 0x{sizes[second]:x}, 0x{ARENA_ALIGN:x}));",
+        f"ASSERT({BLOCK_HEAP} + 0x{BLOCK_HEAP_MIN:x} <= 0x{BLOCK_HEAP_END:08x}, "
+        f"\"block heap at D_00820000 would keep less than 0x{BLOCK_HEAP_MIN:x} bytes: float less\");",
     ]
 
 
@@ -447,6 +465,7 @@ def cmd_gen(a) -> int:
     labels: dict[int, list[tuple[str, int]]] = {}
     tail: list[str] = []
     arena_names: list[str] = []
+    heap_moves = False
     kinds = {"label": 0, "alias": 0, "data": 0, "bss": 0, "abs": 0}
     expected: list[tuple[int, str, str]] = []
     for name in sorted(undefined):
@@ -489,6 +508,9 @@ def cmd_gen(a) -> int:
             expected.append((addr, "bss", name))
         elif name in ARENA_POOLS and a.mode in ("m2", "m12") and not a.fixed_arena:
             arena_names.append(name)
+            kinds["abs"] += 1
+        elif name == BLOCK_HEAP and a.mode in ("m2", "m12") and not a.fixed_arena and not a.fixed_heap:
+            heap_moves = True
             kinds["abs"] += 1
         else:
             tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
@@ -870,7 +892,7 @@ def cmd_gen(a) -> int:
         "",
         "/* Data and bss names: blob/bss base + offset; fixed addresses outside the image. */",
         *tail,
-        *arena_lines(arena_names),
+        *arena_lines(arena_names, heap_moves),
         "",
     ]
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -971,6 +993,8 @@ def main() -> int:
                    help="--float-vars: N bytes between the original .bss end and the floated bss (experiment)")
     g.add_argument("--fixed-arena", action="store_true",
                    help="moved modes: keep the fixed pools at 0x6A0000/0x720000 even when crt0's heap reaches them")
+    g.add_argument("--fixed-heap", action="store_true",
+                   help="moved modes: keep func_00121c78's block heap at 0x820000 (the pools must then end by it)")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")

@@ -6,7 +6,7 @@
 typedef struct { void *dst; s32 id; } Req;
 
 extern s32 D_0046A540;
-extern u32 *D_0046A568[];
+#include "data/pieces/D_0046A568.h"
 extern s32 D_00669A60;
 extern s16 D_00669A40[];
 

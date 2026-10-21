@@ -48,7 +48,7 @@ typedef struct {
 } Msg;
 void func_001c4640(Msg *m);
 typedef struct { u8 pad0[0x48e]; u8 a48e[11]; u8 a499[1]; } Save;
-extern Save *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;
 typedef struct { u8 pad0[0x6c]; Sub6c *f6c; } Sub4;
 typedef struct { u8 pad0[4]; Sub4 *f4; u8 pad8[0x318 - 8]; s32 f318; } Ent;

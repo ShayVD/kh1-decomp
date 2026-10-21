@@ -42,7 +42,7 @@ typedef struct {
     s32 x4;
 } C02Src;
 
-extern void (*D_00351BC8)(s32);
+#include "data/pieces/D_00351BC8.h"
 
 C02Q *func_0011fb38(s32 reg, u64 val, C02Q *p);
 void func_0011fb48(C02Q *t, s32 eop, C02Q *end);
@@ -240,8 +240,8 @@ typedef struct {
     u8 pad[0xE];
 } C02Ray;
 
-extern u8 D_002C58A0[];
-extern u8 D_002C58D0[];
+#include "data/pieces/D_002C58A0.h"
+#include "data/pieces/D_002C58D0.h"
 extern u8 D_003044C0[];
 extern u8 D_003044B0[];
 
@@ -325,7 +325,7 @@ void func_00136d38(C02Obj *o)
         }
         func_00267370(m, up, D_003044B0);
         func_002673b8(m, m);
-        func_00267530(o->mtx[2], D_002C58A0, up);
+        func_00267530(o->mtx[2], ((u8 *)&D_002C58A0), up);
         func_00267370(o->mtx[1], o->mtx[2], m);
         func_002673b8(o->mtx[1], o->mtx[1]);
     }
@@ -416,8 +416,7 @@ typedef struct {
     u8 pad[12];
 } C02MSlot;
 
-extern C02MSlot D_003044E0[];
-extern u8 D_002C58A0[];
+#include "data/pieces/D_003044E0.h"
 
 f32 func_0015ca50(C02Ob3 *o);
 f32 func_0015ca70(C02Ob3 *o);
@@ -550,7 +549,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
         return 0;
     mo = 0;
     if (bst.mesh != -1)
-        mo = D_003044E0[bst.mesh].p;
+        mo = ((C02MSlot *)&D_003044E0)[bst.mesh].p;
     ((C02Hit *)o->x148)->x90 = bst.id;
     ((C02Hit *)o->x148)->x94 = mo;
     bn[3] = 0;
@@ -564,7 +563,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
         n = bn;
         func_002672f8(o->x148 + 0x70, m, bp);
         sceVu0CopyMatrix(m, mo + 0xD0);
-        func_002675a8(m[3], D_002C58A0);
+        func_002675a8(m[3], ((u8 *)&D_002C58A0));
         func_002673f8(m, m);
         func_002672f8(o->x148 + 0x60, m, n);
         func_002672f8(o->x148 + 0x80, m, edge);
@@ -642,7 +641,6 @@ typedef struct {
 } C02Slot;
 
 extern C02Slot D_003044D8[];
-extern u8 D_002C58A0[];
 
 void func_002675a8(void *dst, void *src);
 void func_00267530(void *dst, void *a, void *b);
@@ -693,7 +691,7 @@ void func_00143180(C02Ob2 *o, f32 *v)
             if (n >= 2) {
                 tmp = o->mv;
                 func_002675a8(tmp.v00, tmp.v40);
-                func_002675a8(tmp.v10, D_002C58A0);
+                func_002675a8(tmp.v10, ((u8 *)&D_002C58A0));
                 if (func_001166e8(&tmp)) {
                     o->mv = save;
                     o->mv.x28 |= 0x80000000;
@@ -714,7 +712,7 @@ void func_00143180(C02Ob2 *o, f32 *v)
                     continue;
                 }
             } else if (o->mv.x3e == 0xFFFF) {
-                func_002675a8(v, D_002C58A0);
+                func_002675a8(v, ((u8 *)&D_002C58A0));
                 func_002675a8(o->mv.v40, o->mv.v00);
                 o->mv.x3e = 0;
             }
@@ -794,7 +792,7 @@ struct C02Ac {
 };
 
 extern u32 D_002C5958;
-extern u32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 #include "data/pieces/D_002E31A8.h"
 extern u8 D_002E3190[];
 s32 D_00F20000(s32, void *);

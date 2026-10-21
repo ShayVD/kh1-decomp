@@ -2,13 +2,13 @@
 #include "data/bss_0064.h"
 
 typedef struct { u8 pad0[0x2D]; u8 a, b; u8 pad[0x11]; } SvE;
-typedef struct { s32 x0, x4; u8 pad[0x30]; s32 x38; } SvF;
+#include "data/types/nostrict_text_00220000_s6_g2.h"
 typedef struct { SvE e[66]; SvE *tbl[528]; SvE *ptr[99]; s32 idx; SvF f[99]; } SvD;
 typedef struct { s32 pad[4]; s32 x10; } SvCtx;
 typedef struct { u8 pad[0xD0]; s16 xD0, xD2; } SvWin;
 
 extern SvD D_00351E10;
-extern SvF D_00425B80;
+#include "data/pieces/D_00425B80.h"
 extern s32 D_006436D4;
 extern s32 D_006436D8[2];
 extern s32 D_006436E0[2];
@@ -28,10 +28,10 @@ u32 D_0064374C ALIGNED(4);
 extern u32 D_00643750; /* src/data/bss_0064.c: s32 D_00643750 */
 s32 D_00643754 ALIGNED(4);
 extern s32 D_00643758;
-extern s32 D_003E8E08;
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F34C8;
 extern s32 D_003F34D4;
-extern void *D_003F34D8;
+#include "data/pieces/D_003F34D8.h"
 extern s32 D_00425C18;
 #include "data/pieces/D_00425C1C.h"
 extern s32 D_00425C20;
@@ -40,7 +40,7 @@ extern u8 D_004910B8[];
 extern u8 D_004910C8[];
 extern u8 D_003F6B00[];
 extern u8 D_003F6B40[];
-extern u8 D_003F7ED0[];
+#include "data/pieces/D_003F7ED0.h"
 extern u8 D_003F8380[];
 
 void func_0011d768(s32);
@@ -648,7 +648,7 @@ void func_00225ea8(SvCtx *arg0) {
 end:
     if (D_00643738 != 0) {
         if (slot != -1) {
-            D_003E8E08 = slot;
+            (*(s32 *)&D_003E8E08) = slot;
         }
         {
             s32 y = SV_PORT * 28 + 83;

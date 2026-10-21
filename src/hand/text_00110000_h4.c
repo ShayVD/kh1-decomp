@@ -319,17 +319,17 @@ u32 func_00122048(u32 size, u32 align) {
 }
 
 typedef struct { s32 a; s32 b; s32 c; u8 pad[36]; Vec4 v; } Ent40;
-extern Ent40 D_002C5C80[];
-extern Vec4 D_002C5C60;
+#include "data/pieces/D_002C5C80.h"
+#include "data/pieces/D_002C5C60.h"
 void func_002675a8(Vec4 *, Vec4 *);
 
 Ent40 *func_001226f0(s32 a, s32 b, s32 c) {
     s32 i;
-    Ent40 *e = D_002C5C80;
+    Ent40 *e = ((Ent40 *)&D_002C5C80);
     for (i = 0; i < 31; i++, e++) {
         if (e->a == 0) {
             e->a = a; e->b = b; e->c = c;
-            func_002675a8(&e->v, &D_002C5C60);
+            func_002675a8(&e->v, ((Vec4 *)&D_002C5C60));
             return e;
         }
     }

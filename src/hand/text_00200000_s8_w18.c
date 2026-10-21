@@ -1,7 +1,7 @@
 /* func_0020b6a8 (hand): one packet word written through a u64/s32[2] union (W64), which gives that sw a dependence on the later sd buf[0] in sched2; tail order found by hill_s8. */
 #include "common.h"
 #include "data/pieces/D_002BBDF8.h"
-extern u8 D_003F1E70[];
+#include "data/pieces/D_003F1E70.h"
 extern f32 D_00641210;
 extern f32 D_00641214;
 extern f32 D_00641218;

@@ -12,7 +12,7 @@ extern M2C_UNK func_0017f8e0;
 extern s32 D_003626B0;
 extern s32 D_00574FB4;
 extern s32 D_00616230;
-extern void *D_00362438;
+#include "data/pieces/D_00362438.h"
 void *func_0011ef10(M2C_UNK, M2C_UNK *);
 
 s32 func_00170e30(s32 arg0) {
@@ -57,7 +57,7 @@ s32 func_00176630(void *arg0) {
 }
 
 void func_0017d1e0(void) {
-    if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
+    if (!(M2C_FIELD(((void *)D_00362438), s32 *, 0x18) & 0x10)) {
         D_003626B0 = 1;
     }
 }

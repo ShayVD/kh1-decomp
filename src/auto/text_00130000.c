@@ -25,10 +25,10 @@ extern M2C_UNK D_005267C0; /* src/data/bss_0052.c: QD D_005267C0[0x40] */
 extern M2C_UNK D_0052AA58; /* src/data/bss_0052.c: u8 D_0052AA58[0x10] */
 extern M2C_UNK func_00132e78;
 extern s32 D_002C5958;
-extern s32 D_00304B78;
+#include "data/pieces/D_00304B78.h"
 extern s32 D_00525364;
 #include "data/pieces/D_002E31A8.h"
-extern void *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0();
 s32 func_00131ab0();
@@ -259,7 +259,7 @@ void func_00138a20(s32 arg0, void *arg1) {
 }
 
 void func_0013aaa0(void) {
-    D_00304B78 &= ~8;
+    (*(s32 *)&D_00304B78) &= ~8;
 }
 
 s32 func_0013bf68(void) {

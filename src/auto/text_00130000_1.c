@@ -8,7 +8,7 @@ M2C_UNK func_00167978(s32, s32, s32);
 M2C_UNK func_00167ac0(s32, s32, s32);
 M2C_UNK func_00167fd0(s32, s32, s32);
 #include "data/pieces/D_002E31A8.h"
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_00135888();
 
 void func_001336b8(void) {
@@ -50,13 +50,13 @@ void func_00135938(Actor *arg0, s32 arg1) {
 }
 
 void func_0013c270(s32 arg0, s8 arg1) {
-    M2C_FIELD((arg0 + D_00304BE8), s8 *, 0x844) = arg1;
+    M2C_FIELD((arg0 + ((s32)D_00304BE8)), s8 *, 0x844) = arg1;
 }
 
 s8 func_0013c288(s32 arg0) {
-    return M2C_FIELD((arg0 + D_00304BE8), s8 *, 0x844);
+    return M2C_FIELD((arg0 + ((s32)D_00304BE8)), s8 *, 0x844);
 }
 
 s32 func_0013c6a8(u32 arg0) {
-    return M2C_FIELD((((arg0 >> 2) * 4) + D_00304BE8), s32 *, 0x5CC) & (1 << (arg0 & 3));
+    return M2C_FIELD((((arg0 >> 2) * 4) + ((s32)D_00304BE8)), s32 *, 0x5CC) & (1 << (arg0 & 3));
 }

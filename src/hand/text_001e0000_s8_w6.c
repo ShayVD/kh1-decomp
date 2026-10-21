@@ -1,10 +1,10 @@
 #include "common.h"
-extern u8 *D_003E8E08[];
+#include "data/pieces/D_003E8E08.h"
 
 /* rodata: jump table at 0x490960 */
 s32 func_001effc0(u8 *s) {
     s32 n = 0;
-    u8 **tbl = D_003E8E08;
+    u8 **tbl = ((u8 **)&D_003E8E08);
     for (;;) {
         if (*s < 21) {
             switch (*s) {

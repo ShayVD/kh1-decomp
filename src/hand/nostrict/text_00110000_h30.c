@@ -52,7 +52,7 @@ typedef struct {
 } PadState;
 extern s32 D_002C5C24, D_002C5C28;
 typedef struct { u32 b0 : 1; u32 b1 : 1; u32 r : 30; } Flags5968;
-extern volatile Flags5968 D_002C5968;
+#include "data/pieces/D_002C5968.h"
 extern u8 D_002C5C38[];
 s32 sceCdDiskReady(s32);
 s32 sceCdRead(u32, u32, void *, void *);
@@ -176,15 +176,15 @@ void func_00123f28(Obj123 *o) {
 
 typedef struct { u8 pad0[8]; u32 lo : 16; u32 b16 : 1; u32 hi : 15; u8 padc[104]; } Ent116;
 typedef struct { u8 pad0[48]; Ent116 e[10]; } Tbl4BE8;
-extern Tbl4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 void func_00124920(void) {
     s32 i;
     Obj123 *o;
-    for (i = 0; i < 10; i++) D_00304BE8->e[i].b16 = 0;
+    for (i = 0; i < 10; i++) ((Tbl4BE8 *)D_00304BE8)->e[i].b16 = 0;
     for (i = 0; i < 3; i++) {
         o = D_002E26A0[i];
-        if (o && (o->x0 & 0x4000)) D_00304BE8->e[o->info->x4C].b16 = 1;
+        if (o && (o->x0 & 0x4000)) ((Tbl4BE8 *)D_00304BE8)->e[o->info->x4C].b16 = 1;
     }
 }
 
@@ -311,7 +311,7 @@ typedef struct {
 extern s32 D_00350D7C;
 extern s32 D_00350D80;
 #define D_00304BE8 (*(C01Tbl74 * *)&D_00304BE8)
-extern u8 D_00304C70[];
+#include "data/pieces/D_00304C70.h"
 extern u8 D_00FE0000[];
 
 s32 func_00131f78(s32);

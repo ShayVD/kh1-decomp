@@ -224,11 +224,12 @@ extern u8 D_00389C90[];
 extern B112 D_002C5AD0;
 extern u8 D_002C5BB0[];
 #define D_002C5BB0 (*(S5BB0 *)&D_002C5BB0)
-extern VM D_0038D170[], D_0039A580[];
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern f32 D_002BBDFC;
 extern s32 D_0037A190;
-extern Bits D_0037A378;
+#include "data/pieces/D_0037A378.h"
 extern u8 D_002C5958[];
 #define D_002C5958 (*(s32 *)&D_002C5958)
 #include "data/pieces/D_002BBDE0.h"
@@ -261,8 +262,8 @@ s32 func_001c1f80(void) {
 
     if (D_00389C90.f3070.b.b40) return 4;
     if (D_00389C90.x3038 > 0) {
-        if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
-        else { vm = D_0039A580; cnt = &D_003A7980; }
+        if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
+        else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
         for (i = 0; i < *cnt; i++, vm++) {
             if ((vm->fl.x & 0x14) == 4) {
                 vm->f2f4 -= D_002BBDFC;
@@ -273,7 +274,7 @@ s32 func_001c1f80(void) {
     }
     D_0037A190 = 0;
     D_00389C90.x316c = 0;
-    if (D_0037A378.b2) return 0;
+    if ((*(Bits *)&D_0037A378).b2) return 0;
     if (D_00389C90.f3078.b.b12 == 1) return 0;
     if (D_00389C90.f3078.b.b13 == 1) return 0;
     k = func_001c1e30();
@@ -298,8 +299,8 @@ s32 func_001c1f80(void) {
         D_00389C90.e[i].d = 0;
         D_00389C90.e[i].f = -1;
     }
-    if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
-    else { vm = D_0039A580; cnt = &D_003A7980; }
+    if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
+    else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
     p = func_001c4730();
     while (p) {
         list[n++] = *p;
@@ -315,7 +316,7 @@ s32 func_001c1f80(void) {
         if (vm->fl.b.b3) {
             if (i != 0) continue;
             if (D_00389C90.x3034 != 0) {
-                v = D_0038D170;
+                v = ((VM *)&D_0038D170);
                 D_00389C90.x3034 = 0;
                 for (j = 1, v++; j < D_0039A570; j++, v++) {
                     if ((u32)v->fl.i[0] % 2 == 1) {
@@ -359,7 +360,7 @@ s32 func_001c1f80(void) {
             case 2:
                 if (p->x == vm->x0) {
                     vm->fl.x &= ~1;
-                    if (D_0037A378.b0) {
+                    if ((*(Bits *)&D_0037A378).b0) {
                         m.type = 3;
                         m.val = 0;
                         m.x = vm->x0;

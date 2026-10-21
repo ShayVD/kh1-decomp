@@ -1,8 +1,10 @@
 #include "common.h"
-typedef struct { u8 pad[0x3c]; s32 x3c; s32 x40; s32 x44; s32 x48; } HpB;
+#include "data/pieces/D_0035BD40.h"
+typedef HpB_35BD40 HpB;
+typedef EntB_35BD40 EntB;
 typedef struct { u8 pad[0x21]; u8 n; u8 ids[1]; } ItB;
 typedef struct { u8 pad[0xc8]; ItB *xc8; } SubB;
-typedef struct { u32 x0; u8 pad4[0x68]; HpB *x6c; s32 w70; } EntB;
+
 typedef struct { u32 x0; u8 pad4[0x68]; SubB *x6c; s32 w70; } ObjB;
 typedef union { u64 x; struct { u64 lo:40; u64 id:16; u64 hi:8; } b; struct { u32 lo; u8 b4; } c; } BfB;
 typedef struct {
@@ -11,7 +13,6 @@ typedef struct {
 typedef struct { u8 pad[0x78]; u8 x78; u8 pad79[3]; u8 x7c; } PrmB;
 typedef struct { u8 pad[4]; u32 x4; } ResB;
 extern PrmB D_0035AE80;
-extern EntB *D_0035BD40[];
 extern s32 D_0035BCC8[2][5];
 extern s32 D_0035BCF0[2][4];
 s32 func_0012ca98(void);
@@ -51,8 +52,8 @@ s32 func_0016bb68(ObjB *o, WkB *w, s32 unused, s32 mode) {
     s32 i, id;
     
     arr[0] = (EntB *)o;
-    arr[1] = D_0035BD40[0];
-    arr[2] = D_0035BD40[w->x0 ^ 3];
+    arr[1] = D_0035BD40.entB[0];
+    arr[2] = D_0035BD40.entB[w->x0 ^ 3];
     e = w->x98;
     if (e != 0 && inl_hp(e, D_0035AE80.x78)) t = e;
     else t = 0;
@@ -107,8 +108,8 @@ s32 func_0016bfe8(ObjB *o, WkB *w, s32 unused, s32 mode) {
     s32 i, id;
     
     arr[0] = (EntB *)o;
-    arr[1] = D_0035BD40[0];
-    arr[2] = D_0035BD40[w->x0 ^ 3];
+    arr[1] = D_0035BD40.entB[0];
+    arr[2] = D_0035BD40.entB[w->x0 ^ 3];
     e = w->x98;
     if (e != 0 && inl_hp2(e, D_0035AE80.x7c)) t = e;
     else t = 0;

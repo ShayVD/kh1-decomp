@@ -50,8 +50,8 @@ void func_0023a608(s32 a0, s32 a1, s32 a2, s32 a3, f32 f) {
         func_00237018(D_006488F4, (D_006488F0 - D_006488F4) >> 4, 1);
     }
 }
-typedef struct { s32 unk0; u32 unk4; u8 pad8[8]; s32 unk10; u8 pad14[0x10]; u8 unk24[1]; } Spr;
-extern Spr *D_002E3170[];
+#include "data/types/nofill_text_00230000_h49_p2.h"
+#include "data/pieces/D_002E3170.h"
 
 void func_0023a720(void) {
     Spr **pp;
@@ -93,25 +93,25 @@ void func_0023a7e8(void) {
     }
 }
 typedef struct { u8 pad[0x7C]; f32 unk7C; f32 unk80; } Cam;
-extern Cam D_00449908;
+#include "data/pieces/D_00449908.h"
 
 void func_0023b4b8(s32 a) {
     switch (a) {
     case 0:
-        D_00449908.unk7C = 1.0f;
-        D_00449908.unk80 = -0.0999999940395355224609375f;
+        (*(Cam *)&D_00449908).unk7C = 1.0f;
+        (*(Cam *)&D_00449908).unk80 = -0.0999999940395355224609375f;
         break;
     case 1:
-        D_00449908.unk80 = 0.0999999940395355224609375f;
-        D_00449908.unk7C = 0.0f;
+        (*(Cam *)&D_00449908).unk80 = 0.0999999940395355224609375f;
+        (*(Cam *)&D_00449908).unk7C = 0.0f;
         break;
     case 2:
-        D_00449908.unk7C = 1.0f;
-        D_00449908.unk80 = 0.0f;
+        (*(Cam *)&D_00449908).unk7C = 1.0f;
+        (*(Cam *)&D_00449908).unk80 = 0.0f;
         break;
     case 3:
-        D_00449908.unk80 = 0.0f;
-        D_00449908.unk7C = 0.0f;
+        (*(Cam *)&D_00449908).unk80 = 0.0f;
+        (*(Cam *)&D_00449908).unk7C = 0.0f;
         break;
     }
 }
@@ -237,7 +237,7 @@ s32 func_0023d700(s32 a0, s32 a1, s32 x, s32 y, s32 q, f32 s) {
 
 /* needs make: uses rodata */
 
-extern s32 D_002E31B0;
+#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
 extern s32 D_002E31BC;
 extern s32 D_00651BD0;
@@ -256,7 +256,7 @@ void func_0023c7a0(void) {
         m = 0;
         break;
     case 3:
-        if (D_002E31B0 == 0) { m = 0; break; }
+        if ((*(s32 *)&D_002E31B0) == 0) { m = 0; break; }
         f = 1;
         func_0023cee8();
         switch (D_002E31BC) {
@@ -274,8 +274,8 @@ void func_0023c7a0(void) {
     p = &D_00651BD0;
     c = *p != m;
     if (m != 0) {
-        func_0023c5c8(&D_002E31B0, m, c);
-        func_0023c1b0(&D_002E31B0, 0, 0);
+        func_0023c5c8(((s32 *)&D_002E31B0), m, c);
+        func_0023c1b0(((s32 *)&D_002E31B0), 0, 0);
     }
     if (f == 0) func_0023cf08();
     *p = m;

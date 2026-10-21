@@ -11,7 +11,7 @@ extern s32 D_002E27A8;
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"
 extern s32 D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
-extern void *D_00362438;
+#include "data/pieces/D_00362438.h"
 
 void func_001761b0(void) {
     func_00175e38(&D_00360F30);
@@ -19,8 +19,8 @@ void func_001761b0(void) {
 }
 
 void func_0017d208(void) {
-    if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
-        func_0017b120(D_00362438);
+    if (!(M2C_FIELD(((void *)D_00362438), s32 *, 0x18) & 0x10)) {
+        func_0017b120(((void *)D_00362438));
     }
 }
 

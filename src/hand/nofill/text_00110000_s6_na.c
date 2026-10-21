@@ -1,7 +1,7 @@
 #include "common.h"
 
-extern s32 D_002C5960;
-extern volatile s32 D_002C5968;
+#include "data/pieces/D_002C5960.h"
+#include "data/pieces/D_002C5968.h"
 extern s32 D_002C5978;
 void func_0011fa88(void);
 void func_001209d8(char *);
@@ -12,7 +12,7 @@ void func_001220e8(void);
 void func_0024d4b0(void);
 /* rodata */
 void func_0011ecd8(void) {
-    D_002C5960 = 0;
+    (*(s32 *)&D_002C5960) = 0;
     D_002C5968 = 0;
     func_00120b10();
     func_001209d8("sio2man.irx");

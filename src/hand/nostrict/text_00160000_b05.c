@@ -13,7 +13,7 @@ typedef struct {
 } Prm05;
 extern Prm05 D_0035AE80;
 extern u8 D_0035AF20;
-extern void *D_0035BD40[];
+#include "data/pieces/D_0035BD40.h"
 
 s32 func_00133000(void *, s32);
 s32 func_00141200(void *, s32);
@@ -189,8 +189,8 @@ s32 func_0016d768(Ent7 *e, Wk7 *w, s32 unused, s32 mode) {
         if (!inl_ok(e, 6)) return 0;
         r = func_00132fe0(6);
         arr[0] = e;
-        arr[1] = D_0035BD40[0];
-        arr[2] = D_0035BD40[w->x0 ^ 3];
+        arr[1] = D_0035BD40.vp[0];
+        arr[2] = D_0035BD40.vp[w->x0 ^ 3];
         D_00574FB0 = 0;
         switch (r) {
         case 1: k = *(u8 *)&D_0035AE80.x9c; break;
@@ -316,7 +316,7 @@ void func_0016fd98(EntF *e, WkF *w) {
     func_0016fa10(e, w, rng);
     if ((s32)w->w38 & 1) return;
     inl_find((Ent370 *)e, &l, rng->f4);
-    if (l.tgt == 0 || l.part < 0) inl_find(D_0035BD40[0], &l, rng->f4);
+    if (l.tgt == 0 || l.part < 0) inl_find(D_0035BD40.vp[0], &l, rng->f4);
     if (l.part < 0) l.tgt = 0;
     if ((s32)(w->w38 >> 11) & 1) func_0016fc60(e, w);
     else if (l.tgt) w->l90 = l;

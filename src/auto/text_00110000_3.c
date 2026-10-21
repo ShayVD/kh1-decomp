@@ -26,7 +26,7 @@ M2C_UNK func_002675b8(M2C_UNK *, M2C_UNK *);
 #include "data/pieces/D_002BBFA0.h"
 #include "data/pieces/D_002BBFE0.h"
 #include "data/pieces/D_002BC020.h"
-extern M2C_UNK D_002E2700;
+#include "data/pieces/D_002E2700.h"
 extern M2C_UNK D_004D8E40; /* src/data/bss_004D.c: Mtx52 D_004D8E40 */
 extern M2C_UNK D_004D8E80; /* src/data/bss_004D.c: Mtx52 D_004D8E80 */
 extern M2C_UNK D_004D9100; /* src/data/bss_004D.c: Mtx52 D_004D9100 */
@@ -36,9 +36,9 @@ extern M2C_UNK D_004D91C0; /* src/data/bss_004D.c: Mtx52 D_004D91C0 */
 M2C_UNK D_004D9200[0x10] ALIGNED(64);
 extern M2C_UNK func_00113ee0;
 extern s32 D_002B6478;
-extern s32 D_002BCB60;
+#include "data/pieces/D_002BCB60.h"
 extern s32 D_002BCC24;
-extern s32 D_002BCDA0;
+#include "data/pieces/D_002BCDA0.h"
 extern s32 D_002BCDD8;
 extern s32 D_002BCDDC;
 extern s32 D_002E26A0;
@@ -48,9 +48,9 @@ void *func_0011ef10(M2C_UNK, M2C_UNK *);
 
 void func_00110ba8(void) {
     func_002675b8(&D_004D9200, (M2C_UNK *)&D_002BBFA0);
-    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), &D_002E2700);
-    func_00267328((M2C_UNK *)&D_002BBFE0, ((M2C_UNK *)&D_002BBEE0), &D_002E2700);
-    func_00267328((M2C_UNK *)&D_002BC020, ((M2C_UNK *)&D_002BBF20), &D_002E2700);
+    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), ((M2C_UNK *)&D_002E2700));
+    func_00267328((M2C_UNK *)&D_002BBFE0, ((M2C_UNK *)&D_002BBEE0), ((M2C_UNK *)&D_002E2700));
+    func_00267328((M2C_UNK *)&D_002BC020, ((M2C_UNK *)&D_002BBF20), ((M2C_UNK *)&D_002E2700));
 }
 
 void func_00110c30(void) {
@@ -60,7 +60,7 @@ void func_00110c30(void) {
     func_002675b8(((M2C_UNK *)&D_002BBEE0), &D_004D9180);
     func_002675b8(((M2C_UNK *)&D_002BBF20), &D_004D91C0);
     func_002675b8((M2C_UNK *)&D_002BBF60, &D_004D8E80);
-    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), &D_002E2700);
+    func_00267328((M2C_UNK *)&D_002BBFA0, ((M2C_UNK *)&D_002BBE60), ((M2C_UNK *)&D_002E2700));
 }
 
 void func_001113f8(s32 arg0) {
@@ -74,7 +74,7 @@ void func_001113f8(s32 arg0) {
     }
     var_a0 = 1;
     var_v1 = D_002BCB60 + 0x2C;
-    var_v0 = (arg0 << 6) + D_002BCDA0 + 0x2C;
+    var_v0 = (arg0 << 6) + ((s32)D_002BCDA0) + 0x2C;
     do {
         var_a0 -= 1;
         M2C_FIELD(var_v1, f32 *, -0xC) = (f32) M2C_FIELD(var_v0, f32 *, -0xC);

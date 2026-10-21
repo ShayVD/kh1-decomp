@@ -12,7 +12,8 @@ typedef struct { u8 pad[8]; s32 key; s32 state; } Ent;
 typedef struct { u8 pad[8]; f32 x, y; u8 pad10[8]; f32 z; u8 pad1c[4]; } Pt;
 typedef struct { f32 v[4]; f32 p[3]; f32 w; f32 m[4][4]; E16 *t0; E16 *t1; u8 pad68[8]; } Work;
 typedef struct { u8 pad[4]; s32 off; u8 pad8[8]; u8 e[1][128]; } Src;
-typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 rest:29; } Flags;
+#include "data/pieces/D_002BC0A8.h"
+typedef Flags_2BC0A8_3 Flags;
 
 void *func_00122048(s32, s32);
 void func_001220b8(void *);
@@ -31,7 +32,6 @@ extern P8 D_00472150, D_0047A1D0;
 IE D_00494BE0 ALIGNED(16);
 extern s32 D_0029B2F4, D_0029B2F8, D_0029B2FC, D_0029B300;
 #include "data/pieces/D_002BBFE0.h"
-extern Flags D_002BC0A8;
 extern s32 D_00494AA0[32];
 extern s32 D_00494B20[32];
 extern s32 D_00494BA0, D_00494BA4;
@@ -84,7 +84,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
                 if (tbl[k] != 0) {
                     *st = 1;
                     { s32 n = D_0029B2FC * 4;
-                    if (D_002BC0A8.b2) {
+                    if (D_002BC0A8.flags_3.b2) {
                         { Pt *pt = D_00494BAC; f32 *q8 = (f32 *)((s32)pt + 8);
                         { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
                         { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
@@ -106,7 +106,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
                 if (tbl[k] != 0) {
                     *st = r;
                     { s32 n = D_0029B2F4 * 4;
-                    if (D_002BC0A8.b2) {
+                    if (D_002BC0A8.flags_3.b2) {
                         { Pt *pt = D_00494BAC; f32 *q8 = (f32 *)((s32)pt + 8);
                         { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
                         { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
@@ -142,7 +142,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
         e[0] = D_0047A1D0.a;
         e[1] = D_0047A1D0.b;
     }
-    if (D_002BC0A8.b2) {
+    if (D_002BC0A8.flags_3.b2) {
         if (D_0029B2FC != 0) {
             func_001072c0(D_0029B2FC, z0);
         }

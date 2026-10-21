@@ -37,7 +37,7 @@ extern M2C_UNK func_001012b8;
 extern M2C_UNK func_00106b98;
 extern M2C_UNK func_00109d98;
 extern M2C_UNK func_0010c010;
-extern s32 D_002A3F3C;
+#include "data/pieces/D_002A3F3C.h"
 extern s32 D_00495254;
 s32 func_001137c8(s32, M2C_UNK);
 s32 func_001205f0(M2C_UNK *, s32);

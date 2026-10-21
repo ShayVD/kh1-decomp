@@ -1,14 +1,14 @@
 #include "common.h"
 
-typedef struct E0C0 { u8 pad0[0x80]; u64 x80; u8 pad88[0xc0 - 0x88]; } E0C0;
-extern E0C0 D_00364130[256];
+#include "data/pieces/D_00364130.h"
+typedef E0C0_364130_3 E0C0;
 void func_00181f50(E0C0 *);
 
 void func_00181fe0(E0C0 **out) {
     s32 i;
     E0C0 *e;
     for (i = 0; i < 256; i++) {
-        e = &D_00364130[i];
+        e = &D_00364130.e0C0_3[i];
         if (!(e->x80 & 0x3000000000000)) {
             func_00181f50(e);
             *out = e;
@@ -53,8 +53,8 @@ typedef struct {
     u8 pad12416[192]; s32 w12608; s32 *p12612;
 } Big;
 extern Big D_00389C90;
-extern union { s32 i; u16 h; } D_00389C80;
-extern u8 *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern u8 D_003C57E0[];
 s32 func_001cb3c0(VM3c0 *vm) {
     s32 n, i, k;
@@ -62,8 +62,8 @@ s32 func_001cb3c0(VM3c0 *vm) {
     Big *b;
     b = &D_00389C90;
     n = vm->stk[vm->sp];
-    i = D_00389C80.i;
-    h = D_00389C80.h;
+    i = (*(union { s32 i; u16 h; }(*))&D_00389C80).i;
+    h = (*(union { s32 i; u16 h; }(*))&D_00389C80).h;
     D_00388480[i] = D_003C57E0;
     k = b->w[n];
     b->w[n] = k + 1;

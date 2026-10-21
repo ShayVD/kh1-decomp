@@ -67,8 +67,8 @@ typedef struct {
 typedef struct { f32 a[4]; s32 b[3]; s32 pad; u64 d[2]; } CamS;
 typedef struct { u8 st[4]; u8 x4[12]; u16 tbl[8][256]; s32 cnt[8]; s8 ids[4]; u8 pad1034[0x3034 - 0x1034]; s32 f3034; s32 f3038; u8 pad303c[0x3070 - 0x303c]; union { u64 x; s32 i[2]; } f3070; union { u64 x; s32 i[2]; } f3078; u8 pad3080[0x14]; s32 f3094; u8 pad3098[0x316c - 0x3098]; s32 f316c; u8 pad3170[0x3460 - 0x3170]; f32 dur; f32 t; u8 pad3468[8]; CamS start; CamS tgt; } Str;
 extern Str D_00389C90;
-extern s32 D_00389C80;
-extern char *D_00388480[];
+#include "data/pieces/D_00389C80.h"
+#include "data/pieces/D_00388480.h"
 extern u8 D_003C5640[];
 extern s32 D_002BBAB0;
 s32 func_001cb738(VM *vm) {
@@ -76,7 +76,7 @@ s32 func_001cb738(VM *vm) {
     s32 val = vm->stk[vm->sp];
     vm->sp -= 2;
     D_002BBAB0 = val;
-    D_00388480[D_00389C80] = D_003C5640;
+    ((char **)&D_00388480)[D_00389C80] = D_003C5640;
     D_00389C90.tbl[idx][D_00389C90.cnt[idx]++] = *(u16 *)&D_00389C80;
     D_00389C80++;
     return 2;

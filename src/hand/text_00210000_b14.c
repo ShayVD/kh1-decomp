@@ -2,7 +2,8 @@
 #include "data/bss_0064.h"
 
 typedef struct { s32 a, b, c, d; } S4;
-typedef struct { u8 pad[0x40]; s32 x40; u8 p44[4]; s32 x48; s32 x4c; s32 x50; u8 p54[0xE0 - 0x54]; s32 xe0; } Rec;
+#include "data/pieces/D_003E3D70.h"
+typedef Rec_3E3D70 Rec;
 typedef struct { u8 pad[0x24]; u8 x24; } Arg;
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; s32 x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct Obj7 { u8 pad[0x10]; struct Obj7 *x10; u8 p14[0x10]; struct Obj7 *x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj7;
@@ -13,12 +14,11 @@ typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 #include "data/types/text_00210000_b14.h"
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
-extern S4BE8 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
-extern Rec D_003E3D70[];
 #include "data/pieces/D_003E3E50.h"
-extern S4 D_003E8E08;
-extern S34B8 *D_003F34B8;
+#include "data/pieces/D_003E8E08.h"
+#include "data/pieces/D_003F34B8.h"
 extern u8 D_003F3B10[];
 extern u8 D_003F3DF0[];
 extern u8 D_003F3E90[];
@@ -39,7 +39,7 @@ extern s32 D_003F45A8[];
 extern u8 D_003F45C0[];
 extern u8 D_003F45F0[];
 extern u8 D_003F4620[];
-extern Cfg *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 extern s32 D_00641BA4;
 extern s32 D_00641BAC;
 extern s32 D_00641BB0;
@@ -152,40 +152,40 @@ void func_002123b8(Arg *a) {
     *p = a->x24;
     func_00141b10(D_00641BAC, &buf);
     { s32 o = D_00641BB0; (D_00641BB4 + o)[25] = s; }
-    D_003E8E08.c = buf.x40;
-    r = &D_003E3D70[D_00641BAC];
-    D_003E8E08.a = r->x40;
-    if (r->x40 < buf.x40) D_003E8E08.b = 0x80FC927A;
-    else if (r->x40 == buf.x40) D_003E8E08.b = 0x80808080;
-    else D_003E8E08.b = 0x806E6EFF;
+    (*(S4 *)&D_003E8E08).c = buf.x40;
+    r = &D_003E3D70.rec[D_00641BAC];
+    (*(S4 *)&D_003E8E08).a = r->x40;
+    if (r->x40 < buf.x40) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x40 == buf.x40) (*(S4 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 37, 175, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 53, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = r->x48;
-    D_003E8E08.c = buf.x48;
-    if (r->x48 < buf.x48) D_003E8E08.b = 0x80FC927A;
-    else if (r->x48 == buf.x48) D_003E8E08.b = 0x80808080;
-    else D_003E8E08.b = 0x806E6EFF;
+    (*(S4 *)&D_003E8E08).a = r->x48;
+    (*(S4 *)&D_003E8E08).c = buf.x48;
+    if (r->x48 < buf.x48) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x48 == buf.x48) (*(S4 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 69, 176, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 85, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = r->xe0;
-    D_003E8E08.c = buf.xe0;
-    if (r->xe0 < buf.xe0) D_003E8E08.b = 0x80FC927A;
-    else if (r->xe0 == buf.xe0) D_003E8E08.b = 0x80808080;
-    else D_003E8E08.b = 0x806E6EFF;
+    (*(S4 *)&D_003E8E08).a = r->xe0;
+    (*(S4 *)&D_003E8E08).c = buf.xe0;
+    if (r->xe0 < buf.xe0) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->xe0 == buf.xe0) (*(S4 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 101, 177, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 117, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = r->x4c;
-    D_003E8E08.c = buf.x4c;
-    if (r->x4c < buf.x4c) D_003E8E08.b = 0x80FC927A;
-    else if (r->x4c == buf.x4c) D_003E8E08.b = 0x80808080;
-    else D_003E8E08.b = 0x806E6EFF;
+    (*(S4 *)&D_003E8E08).a = r->x4c;
+    (*(S4 *)&D_003E8E08).c = buf.x4c;
+    if (r->x4c < buf.x4c) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x4c == buf.x4c) (*(S4 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 133, 178, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 149, 118, 0x80323232, 0x80323232);
-    D_003E8E08.a = r->x50;
-    D_003E8E08.c = buf.x50;
-    if (r->x50 < buf.x50) D_003E8E08.b = 0x80FC927A;
-    else if (r->x50 == buf.x50) D_003E8E08.b = 0x80808080;
-    else D_003E8E08.b = 0x806E6EFF;
+    (*(S4 *)&D_003E8E08).a = r->x50;
+    (*(S4 *)&D_003E8E08).c = buf.x50;
+    if (r->x50 < buf.x50) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x50 == buf.x50) (*(S4 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 165, 179, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 181, 118, 0x80323232, 0x80323232);
 }
@@ -195,7 +195,7 @@ void func_00212930(Obj *a) {
     Obj *q[2];
     s32 k, t, s, n, y, i, j, r;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -254,7 +254,7 @@ void func_002145d8(Obj *a) {
     Obj *o, *p;
     f = D_00642C3C & 0x80;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             D_00642C24 = 1;
@@ -294,7 +294,7 @@ void func_002145d8(Obj *a) {
                     } else {
                         if (!f) func_0011d768(75);
                         else func_0011d768(5);
-                        D_00304BE8->x599[D_00642C34] ^= 0x80;
+                        ((S4BE8 *)D_00304BE8)->x599[D_00642C34] ^= 0x80;
                         D_00642C24 = 5;
                     }
                     break;
@@ -330,8 +330,8 @@ void func_00214b20(Obj *a) {
     Obj *p;
     k = a->x24;
     n = D_00642C78[k];
-    k = D_00304BE8->x48e[k];
-    sub = &D_00304BE8->r[k].sub;
+    k = ((S4BE8 *)D_00304BE8)->x48e[k];
+    sub = &((S4BE8 *)D_00304BE8)->r[k].sub;
     if (n == 0) return;
     if (D_00642C24 < 3) {
         m = 0;
@@ -345,7 +345,7 @@ void func_00214b20(Obj *a) {
     func_001fd688(a);
     money = func_001ef720(k);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -426,13 +426,13 @@ void func_00214fc8(Obj *a) {
     func_001fd610(a, lim);
     func_001fd688(a);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
             else D_00642C24 = 2;
         } else {
-            S4BE8 **b = &D_00304BE8;
+            S4BE8 **b = ((S4BE8 **)&D_00304BE8);
             func_001fe158(a);
             func_0020bd18(a, 8);
             D_00642C64 = a->xd0 >> 4;
@@ -483,7 +483,7 @@ void func_00214fc8(Obj *a) {
     func_001f8ee0(a);
     for (j = 0; j < lim && i < D_00642C88; j++, i++) {
         s32 c = 2;
-        idx = D_00304BE8->x599[i];
+        idx = ((S4BE8 *)D_00304BE8)->x599[i];
         if (fl) c = j == sel;
         func_00214130(a, c, 0, y, 166, idx);
         y += 28;
@@ -498,7 +498,7 @@ void func_00215420(Obj *a) {
     u32 v, i;
     s32 sel, y, c, k;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (((Cfg *)D_00425BC8)->x8 & 0x4000) {
             func_001f3758(D_00642C20);
             func_0011d768(3);
         } else {
@@ -521,9 +521,9 @@ void func_00215420(Obj *a) {
                     if (D_00642C78[D_00642C58]) {
                         func_0011d768(2);
                         D_00642C28 = D_00642C58;
-                        k = D_00304BE8->x48e[D_00642C28];
+                        k = ((S4BE8 *)D_00304BE8)->x48e[D_00642C28];
                         D_00642C2C = k;
-                        D_00642C30 = &D_00304BE8->r[k].sub;
+                        D_00642C30 = &((S4BE8 *)D_00304BE8)->r[k].sub;
                         D_00642C24 = 1;
                         func_001f3708(a, 5);
                         if ((o = a->x10)) {
@@ -572,7 +572,7 @@ void func_00215420(Obj *a) {
     for (i = 0; i < D_003E3D68; i++) {
         if (D_00642C78[i]) c = i == sel;
         else c = i == sel ? 3 : 2;
-        func_00207870(a, c, 0, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i]));
+        func_00207870(a, c, 0, 0, y, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[i]));
         y += 28;
     }
     if (D_00642C88) c = D_003E3D68 == sel;
@@ -594,10 +594,10 @@ void func_00217490(void *a) {
             y += 28;
         }
     } else {
-        k = D_00304BE8->x48e[D_00642CCC];
+        k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
         n = D_003F40F8[k].n;
         p = D_003F40F8[k].p;
-        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[D_003F34B8->x20[k]]);
+        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[((S34B8 *)D_003F34B8)->x20[k]]);
         func_001ff488(a, 0, 28, 342, n * 28 + 10, 0x40000000);
         y = 57;
         for (i = 0; i < n; i++) {

@@ -65,7 +65,8 @@ void func_001e9d00(f32 *, f32 *, f32 *, f32);
 void func_001e9fe8(f32 *, f32 *);
 f32 func_001e9e58(f32 *, f32 *);
 void func_002675a8(void *, void *);
-extern f32 D_002E2780[], D_002E2790[];
+#include "data/pieces/D_002E2790.h"
+#include "data/pieces/D_002E2780.h"
 s32 func_001ca0f8(VM *vm) {
     Vec a;
     Vec b;

@@ -4,7 +4,7 @@
 
 M2C_UNK func_0011ea10(M2C_UNK *, M2C_UNK *, unsigned long long);
 extern M2C_UNK D_003D9FE0[];
-extern M2C_UNK D_003DABD4;
+#include "data/pieces/D_003DABD4.h"
 extern M2C_UNK func_001dbcb8;
 extern s64 D_00389C90[];
 

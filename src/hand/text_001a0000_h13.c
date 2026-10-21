@@ -520,7 +520,7 @@ f32 func_001befc8(s32 t, Key *k) {
 }
 
 extern u8 *D_0037A16C;
-extern u8 *D_0037A170;
+#include "data/pieces/D_0037A170.h"
 extern s32 D_0037A160;
 extern s32 D_0037A15C;
 extern u8 *D_006257D4;

@@ -134,7 +134,7 @@ V4F D_00615EA0 ALIGNED(16);
 extern V4F D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 #include "data/pieces/D_003701F0.h"
 #include "data/pieces/D_003701E0.h"
-extern u8 D_003701D0[];
+#include "data/pieces/D_003701D0.h"
 
 void func_00183be0(void *, void *);
 void func_002675a8(void *, void *);
@@ -212,7 +212,7 @@ void func_00182870(MObj *o) {
     ang[1] = asinf(-m[2].z);
     ang[2] = atan2f(m[2].y, m[2].x);
     for (i = 0; i < 3; i++) D_003701E0[i] = ang[i] * 32768.0f / 3.1415926f;
-    func_002675a8(D_003701D0, &D_00615EA0);
+    func_002675a8(((u8 *)&D_003701D0), &D_00615EA0);
 }
 
 /* --- pppDrawMdl* draw callbacks: fill a PppMdlDraw for func_001aaf88 --- */

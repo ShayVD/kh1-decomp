@@ -280,26 +280,26 @@ typedef union {
     PEnt ent[20];
     struct { u8 pad0[1166]; u8 slot[11]; u8 have[1]; } s;
 } PSave;
-extern PSave *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_001d6a60(VM *vm) {
     s32 k = vm->stk[vm->sp];
     s32 item = vm->stk[vm->sp - 1];
     s32 r = 0;
     s32 j;
-    for (j = 0; j < D_00304BE8->ent[k].cnt; j++) {
-        if (D_00304BE8->ent[k].items[j] == 0) {
-            D_00304BE8->ent[k].items[j] = item;
+    for (j = 0; j < ((PSave *)D_00304BE8)->ent[k].cnt; j++) {
+        if (((PSave *)D_00304BE8)->ent[k].items[j] == 0) {
+            ((PSave *)D_00304BE8)->ent[k].items[j] = item;
             r = 0;
             break;
         }
     }
-    if (j == D_00304BE8->ent[k].cnt) {
-        s32 v = D_00304BE8->s.have[item] + 1;
+    if (j == ((PSave *)D_00304BE8)->ent[k].cnt) {
+        s32 v = ((PSave *)D_00304BE8)->s.have[item] + 1;
         if (v >= 100) {
-            D_00304BE8->s.have[item] = 99;
+            ((PSave *)D_00304BE8)->s.have[item] = 99;
             r = 1;
         } else {
-            D_00304BE8->s.have[item] = v;
+            ((PSave *)D_00304BE8)->s.have[item] = v;
             r = 0;
         }
     }

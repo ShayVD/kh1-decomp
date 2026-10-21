@@ -41,52 +41,20 @@ void func_00180280(void *o) {
 }
 
 
-typedef struct {
-    u8 pad[0x14];
-    s32 flags;
-} PLink;
+#include "data/pieces/D_00364130.h"
+typedef PLink_364130 PLink;
+typedef POwner_364130 POwner;
+typedef PObj_364130 PObj;
 
-typedef struct {
-    u8 pad[0xf8];
-    u8 xf8;
-    u8 padf9[3];
-    u16 xfc;
-    u16 xfe;
-} POwner;
 
-typedef struct PObj {
-    u8 pad0[0x58];
-    s32 x58;
-    u8 pad5c[4];
-    s32 x60;
-    u8 pad64[0x22];
-    u16 flags;
-    s32 key;
-    POwner *own;
-    u8 x90;
-    u8 pad91[2];
-    u8 x93;
-    PLink *link;
-    s32 x98;
-    f32 x9c;
-    u8 pada0[8];
-    s32 xa8;
-    f32 xac;
-    u8 padb0;
-    u8 xb1;
-    u8 padb2;
-    u8 xb3;
-    u8 xb4;
-    u8 xb5;
-    u8 padb6[10];
-} PObj;
+
+
 
 typedef struct {
     s32 key;
     s32 bit;
 } PCur;
 
-extern PObj D_00364130[256];
 extern PCur D_003701B0;
 extern f32 D_002BBDEC;
 extern f32 D_002BBDFC;
@@ -108,7 +76,7 @@ void func_00181738(void) {
     D_003701B0.bit = -1;
     D_003701B0.key = 0;
     for (i = 0; i < 256; i++) {
-        PObj *e = &D_00364130[i];
+        PObj *e = &D_00364130.pObj[i];
         f32 lim;
         s32 fl;
         s32 done;

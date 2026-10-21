@@ -57,7 +57,7 @@ extern s32 D_00494BC0[4][4], D_002BC170[4][4];
 #include "data/pieces/D_002BC020.h"
 #include "data/pieces/D_002BBF60.h"
 #include "data/pieces/D_002A6C10.h"
-extern s32 D_002A3F60[4][4][4];
+#include "data/pieces/D_002A3F60.h"
 void func_00107e60(void);
 
 void func_00107ec0(s32 (*m)[4]) {
@@ -68,14 +68,14 @@ void func_00107ec0(s32 (*m)[4]) {
         k = 0;
         for (i = 0; i < 4; i++) {
             for (j = 0; j < 4; j++) {
-                s32 g0 = D_002A3F60[0][i][j];
+                s32 g0 = D_002A3F60.i[0][i][j];
                 s32 a = m[i][j];
                 s32 b = D_002BC170[i][j];
-                s32 g1 = D_002A3F60[1][i][j];
+                s32 g1 = D_002A3F60.i[1][i][j];
                 s32 c = D_002BC020[i][j];
-                s32 g2 = D_002A3F60[2][i][j];
+                s32 g2 = D_002A3F60.i[2][i][j];
                 s32 d = D_002BBF60[i][j];
-                s32 g3 = D_002A3F60[3][i][j];
+                s32 g3 = D_002A3F60.i[3][i][j];
                 D_0048C308[0][k] = a;
                 D_0048C308[1][k] = b;
                 D_0048C398[0][k] = c;
@@ -93,14 +93,14 @@ void func_00107ec0(s32 (*m)[4]) {
         k = 0;
         for (i = 0; i < 4; i++) {
             for (j = 0; j < 4; j++) {
-                s32 g0 = D_002A3F60[0][i][j];
+                s32 g0 = D_002A3F60.i[0][i][j];
                 s32 a = m[0][i * 4 + j];
                 s32 b = D_002BC170[i][j];
-                s32 g1 = D_002A3F60[1][i][j];
+                s32 g1 = D_002A3F60.i[1][i][j];
                 s32 c = D_002BC020[i][j];
-                s32 g2 = D_002A3F60[2][i][j];
+                s32 g2 = D_002A3F60.i[2][i][j];
                 s32 d = D_002BBF60[i][j];
-                s32 g3 = D_002A3F60[3][i][j];
+                s32 g3 = D_002A3F60.i[3][i][j];
                 D_0048BFD8[0][k] = a;
                 D_0048BFD8[1][k] = b;
                 D_0048C068[0][k] = c;

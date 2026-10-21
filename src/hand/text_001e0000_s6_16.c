@@ -106,16 +106,16 @@ s32 func_001ea888(E848 *e) {
 
 typedef struct { u8 pad[28]; u8 n1c; u8 l1d[25]; u8 b36; u8 pad37[116 - 55]; } C116;
 typedef struct { u8 pad[0x48e]; u8 f48e[4]; } W17;
-extern W17 *D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 
 s32 func_001eeeb8(s32 id) {
     s32 n = 0, i;
     u8 c;
     C116 *e;
     for (i = 0; i < 4; i++) {
-        c = D_00304BE8->f48e[i];
+        c = ((W17 *)D_00304BE8)->f48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)D_00304BE8)[c];
+        e = &((C116 *)((W17 *)D_00304BE8))[c];
         if (e->b36 == id) n++;
     }
     return n;
@@ -126,9 +126,9 @@ s32 func_001eef38(s32 id) {
     u8 c;
     C116 *e;
     for (i = 0; i < 4; i++) {
-        c = D_00304BE8->f48e[i];
+        c = ((W17 *)D_00304BE8)->f48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)D_00304BE8)[c];
+        e = &((C116 *)((W17 *)D_00304BE8))[c];
         for (j = 0; j < e->n1c; j++) {
             if (e->l1d[j] == id) n++;
         }
@@ -137,10 +137,14 @@ s32 func_001eef38(s32 id) {
 }
 
 typedef struct { u8 pad[0x3034]; s32 f3034; s32 f3038; u8 pad2[0x316c - 0x303c]; s32 f316c; } B9C90;
-typedef struct { u8 d[848]; } E848b;
+#include "data/types/text_001e0000_s6_16.h"
 extern B9C90 D_00389C90;
 extern s32 D_003C54F0, D_003B4D90, D_003C21A0, D_0039A570, D_003A7980;
-extern E848b D_003C3A70[], D_003A7990[], D_003B4DA0[], D_0038D170[], D_0039A580[];
+#include "data/pieces/D_003C3A70.h"
+#include "data/pieces/D_003B4DA0.h"
+#include "data/pieces/D_003A7990.h"
+#include "data/pieces/D_0039A580.h"
+#include "data/pieces/D_0038D170.h"
 
 s32 func_001e99e8(s32 kind, E848b *p) {
     s32 i;
@@ -150,13 +154,13 @@ s32 func_001e99e8(s32 kind, E848b *p) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) if (&D_003A7990[i] == p) return i;
         } else {
-            for (i = 0; i < D_003C21A0; i++) if (&D_003B4DA0[i] == p) return i;
+            for (i = 0; i < D_003C21A0; i++) if (&((E848b *)&D_003B4DA0)[i] == p) return i;
         }
     } else {
         if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) if (&D_0038D170[i] == p) return i;
+            for (i = 0; i < D_0039A570; i++) if (&((E848b *)&D_0038D170)[i] == p) return i;
         } else {
-            for (i = 0; i < D_003A7980; i++) if (&D_0039A580[i] == p) return i;
+            for (i = 0; i < D_003A7980; i++) if (&((E848b *)&D_0039A580)[i] == p) return i;
         }
     }
     return -1;

@@ -10,7 +10,7 @@ extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_006437C4;
 extern s32 D_00646990;
-extern void *D_00425BC8;
+#include "data/pieces/D_00425BC8.h"
 s32 func_0011d768(s32);
 s32 func_001f31a8(s32, s32);
 s32 func_001f42b8(s32);

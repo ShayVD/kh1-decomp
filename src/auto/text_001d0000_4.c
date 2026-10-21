@@ -6,7 +6,7 @@ M2C_UNK func_001008d8(f32);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 extern M2C_UNK func_001dc580;
 extern s32 D_002C5958;
-extern s32 D_00304BE8;
+#include "data/pieces/D_00304BE8.h"
 s32 func_00105960(s32, s32);
 s32 func_0013bf68();
 s32 func_0014efe0(s32, s32);
@@ -31,7 +31,7 @@ s32 func_001d4578(void *arg0) {
     void *temp_v0;
 
     temp_s1 = arg0 + 4;
-    temp_v0 = func_00123488(M2C_FIELD((M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) + D_00304BE8), u8 *, 0x48E));
+    temp_v0 = func_00123488(M2C_FIELD((M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) + ((s32)D_00304BE8)), u8 *, 0x48E));
     if (temp_v0 != NULL) {
         M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) = (s32) ((M2C_FIELD(temp_v0, f32 *, 0x3C) * 180.0f) / 3.141592979f);
     }

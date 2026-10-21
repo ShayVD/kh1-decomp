@@ -37,7 +37,7 @@ typedef struct {
 
 extern Obj D_006298F0[];
 extern s32 D_003C5870[];
-extern s32 D_0037A378;
+#include "data/pieces/D_0037A378.h"
 
 typedef struct {
     u8 a[4];
