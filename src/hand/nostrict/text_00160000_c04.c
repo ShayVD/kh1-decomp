@@ -242,19 +242,15 @@ s32 func_0016c650(ObjC6 *o, WkC6 *w, s32 k, s32 mode) {
 
 /* ---- func_0016e3f8 ---- */
 #include "data/types/nostrict_text_00160000_c04.h"
-typedef struct { u8 pad[8]; f32 f8; } Sub4E3;
-typedef struct {
-    u8 pad0[4]; Sub4E3 *p4; u8 pad8[0x30]; u64 w38; u8 pad40[0x64]; f32 fA4; u8 padA8[0x38];
-    V4E3 vE0; V4E3 vF0;
-} WkE3;
-typedef struct {
-    u8 pad0[0x10]; V4E3 pos; u8 pad20[0x30]; V4E3 x50; u8 pad60[0x10]; s32 x70; u8 pad74[0x5C]; V4E3 xd0;
-    u8 padE0[0x64]; WkE3 *p144;
-} ChrE3;
+#include "data/pieces/D_0035BD40.h"
+typedef Sub4E3_35BD40 Sub4E3;
+typedef WkE3_35BD40 WkE3;
+typedef ChrE3_35BD40 ChrE3;
+
+
 
 extern V4E3 D_00575060[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
 extern V4E3 D_00575030[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
-extern ChrE3 *D_0035BD40[3];
 extern V4E3 D_0035BD20[2];
 
 extern void func_00162878(V4E3 *, V4E3 *, V4E3 *);
@@ -265,7 +261,7 @@ extern void func_00267518(V4E3 *, V4E3 *, V4E3 *);
 extern void func_00267560(V4E3 *, V4E3 *, f32);
 
 static inline s32 inl_k(void) {
-    if (D_0035BD40[0]->x70 == 13 || D_0035BD40[0]->x70 == 10) return 1;
+    if (D_0035BD40.chrE3[0]->x70 == 13 || D_0035BD40.chrE3[0]->x70 == 10) return 1;
     return 0;
 }
 
@@ -277,38 +273,38 @@ void func_0016e3f8(void) {
     s32 k;
     func_002675a8(&D_00575060[0], &D_00575030[0]);
     func_002675a8(&D_00575060[1], &D_00575030[1]);
-    func_00162878(&v0, &D_0035BD40[0]->xd0, &D_0035BD20[0]);
-    func_00162878(&v1, &D_0035BD40[0]->xd0, &D_0035BD20[1]);
+    func_00162878(&v0, &D_0035BD40.chrE3[0]->xd0, &D_0035BD20[0]);
+    func_00162878(&v1, &D_0035BD40.chrE3[0]->xd0, &D_0035BD20[1]);
     d1 = d2 = d3 = d4 = 0.0f;
-    if (D_0035BD40[1] != 0 && (w1 = D_0035BD40[1]->p144) != 0) {
+    if (D_0035BD40.chrE3[1] != 0 && (w1 = D_0035BD40.chrE3[1]->p144) != 0) {
         w1->w38 &= ~0x80000ULL;
-        func_00267530(&w1->vE0, &D_0035BD40[0]->pos, &D_0035BD40[1]->pos);
+        func_00267530(&w1->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[1]->pos);
         w1->fA4 = w1->vE0.y;
         func_002675a8(&w1->vF0, &w1->vE0);
         w1->vF0.y = 0.0f;
         w1->vE0.w = func_00162c20(&w1->vE0);
         w1->vF0.w = func_00162c20(&w1->vF0);
         func_00267560(&a1, &v0, w1->p4->f8);
-        func_00267518(&a1, &a1, &D_0035BD40[0]->pos);
+        func_00267518(&a1, &a1, &D_0035BD40.chrE3[0]->pos);
         func_00267560(&a2, &v1, w1->p4->f8);
-        func_00267518(&a2, &a2, &D_0035BD40[0]->pos);
-        d1 = func_001629b0(&a1, &D_0035BD40[1]->pos);
-        d2 = func_001629b0(&a2, &D_0035BD40[1]->pos);
+        func_00267518(&a2, &a2, &D_0035BD40.chrE3[0]->pos);
+        d1 = func_001629b0(&a1, &D_0035BD40.chrE3[1]->pos);
+        d2 = func_001629b0(&a2, &D_0035BD40.chrE3[1]->pos);
     }
-    if (D_0035BD40[2] != 0 && (w2 = D_0035BD40[2]->p144) != 0) {
+    if (D_0035BD40.chrE3[2] != 0 && (w2 = D_0035BD40.chrE3[2]->p144) != 0) {
         w2->w38 &= ~0x80000ULL;
-        func_00267530(&w2->vE0, &D_0035BD40[0]->pos, &D_0035BD40[2]->pos);
+        func_00267530(&w2->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[2]->pos);
         w2->fA4 = w2->vE0.y;
         func_002675a8(&w2->vF0, &w2->vE0);
         w2->vF0.y = 0.0f;
         w2->vE0.w = func_00162c20(&w2->vE0);
         w2->vF0.w = func_00162c20(&w2->vF0);
         func_00267560(&b1, &v0, w2->p4->f8);
-        func_00267518(&b1, &b1, &D_0035BD40[0]->pos);
+        func_00267518(&b1, &b1, &D_0035BD40.chrE3[0]->pos);
         func_00267560(&b2, &v1, w2->p4->f8);
-        func_00267518(&b2, &b2, &D_0035BD40[0]->pos);
-        d3 = func_001629b0(&b1, &D_0035BD40[2]->pos);
-        d4 = func_001629b0(&b2, &D_0035BD40[2]->pos);
+        func_00267518(&b2, &b2, &D_0035BD40.chrE3[0]->pos);
+        d3 = func_001629b0(&b1, &D_0035BD40.chrE3[2]->pos);
+        d4 = func_001629b0(&b2, &D_0035BD40.chrE3[2]->pos);
     }
     if (w1 != 0) {
         if (w2 != 0) {
@@ -336,10 +332,10 @@ void func_0016e3f8(void) {
             if (inl_k()) {
                 if (w1->vE0.w < w2->vE0.w) {
                     w1->w38 |= 0x80000ULL;
-                    func_002675a8(&D_00575030[0], &D_0035BD40[0]->x50);
+                    func_002675a8(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
                 } else {
                     w2->w38 |= 0x80000ULL;
-                    func_002675a8(&D_00575030[1], &D_0035BD40[0]->x50);
+                    func_002675a8(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
                 }
             }
             func_0016e1f0(1);
@@ -349,7 +345,7 @@ void func_0016e3f8(void) {
             else func_002675a8(&D_00575030[0], &a2);
             if (inl_k()) {
                 w1->w38 |= 0x80000ULL;
-                func_002675a8(&D_00575030[0], &D_0035BD40[0]->x50);
+                func_002675a8(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
             }
             func_0016e1f0(1);
         }
@@ -358,7 +354,7 @@ void func_0016e3f8(void) {
         else func_002675a8(&D_00575030[1], &b2);
         if (inl_k()) {
             w2->w38 |= 0x80000ULL;
-            func_002675a8(&D_00575030[1], &D_0035BD40[0]->x50);
+            func_002675a8(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
         }
         func_0016e1f0(2);
     }

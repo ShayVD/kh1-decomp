@@ -2,9 +2,12 @@
 #include "platform/math.h"
 #include "data/bss_0057.h"
 
-typedef struct { u8 pad[0x10]; f32 f10; u8 pad14[0x28]; s32 w3C; s32 w40; s32 w44; } ChrHp;
-typedef struct { u8 pad[0x38]; u64 w38; } Wk144;
-typedef struct { u32 flags; u8 pad4[0xC]; f32 pos[4]; u8 pad20[0x4C]; ChrHp *p6C; s32 w70; u8 pad74[0xD0]; Wk144 *p144; } Chr;
+#include "data/pieces/D_0035BD40.h"
+typedef ChrHp_35BD40 ChrHp;
+typedef Wk144_35BD40 Wk144;
+typedef Chr_35BD40 Chr;
+
+
 #include "data/types/nostrict_text_00160000_h60_p.h"
 typedef struct { s32 *a; s32 b; } P86F;
 typedef struct {
@@ -109,7 +112,6 @@ extern Obj70 *D_002E26A0[];
 extern Prm35AE80 D_0035AE80;
 extern void (*D_0035BC80[])(Obj70 *, Wk70 *);
 extern f32 D_0035BD10[4];
-extern Chr *D_0035BD40[];
 extern u8 D_0035BE40[];
 extern f32 D_0048EA68;
 extern s32 D_00574FB4;
@@ -214,11 +216,11 @@ void func_001689d0(Chr *self, L60 *l) {
     f32 c[8];
     if (((s32)((s64)(l->w38 << 22) >> 32) & 1) || l->tgt == 0) {
         if (l->fE4 < 0.0f) {
-            func_00267518(a, D_0035BD40[0]->pos, l->v20);
-            func_00267530(b, self->pos, D_0035BD40[0]->pos);
+            func_00267518(a, D_0035BD40.chr[0]->pos, l->v20);
+            func_00267530(b, self->pos, D_0035BD40.chr[0]->pos);
         } else {
             func_00267518(a, self->pos, l->v20);
-            func_00267530(b, D_0035BD40[0]->pos, self->pos);
+            func_00267530(b, D_0035BD40.chr[0]->pos, self->pos);
         }
     } else {
         if (l->fA0 < 0.0f) {
@@ -573,12 +575,12 @@ void func_0016e1f0(s32 i) {
     Wk144 *w;
     f32 best, d;
     s32 j, k;
-    w = D_0035BD40[i]->p144;
+    w = D_0035BD40.chr[i]->p144;
     w->w38 &= ~0x4000;
-    if (D_0035BD40[i]->w70 == 8 || D_0035BD40[i]->w70 == 24 || D_0035BD40[i]->w70 == 25) return;
-    if (D_00575020[i][1] < D_0035BD40[i]->pos[1] - D_0035BD40[i]->p6C->f10) return;
-    if (D_0035BD40[i]->pos[1] + D_0035BD40[i]->p6C->f10 < D_00575020[i][1]) return;
-    func_00267560(a, D_0035BD10, D_0035BD40[i]->p6C->f10);
+    if (D_0035BD40.chr[i]->w70 == 8 || D_0035BD40.chr[i]->w70 == 24 || D_0035BD40.chr[i]->w70 == 25) return;
+    if (D_00575020[i][1] < D_0035BD40.chr[i]->pos[1] - D_0035BD40.chr[i]->p6C->f10) return;
+    if (D_0035BD40.chr[i]->pos[1] + D_0035BD40.chr[i]->p6C->f10 < D_00575020[i][1]) return;
+    func_00267560(a, D_0035BD10, D_0035BD40.chr[i]->p6C->f10);
     func_00267530(r.p, D_00575020[i], a);
     func_00267560(r.d, a, 2.0f);
     func_00118668(&r);
@@ -606,35 +608,35 @@ s32 func_0016f1f0(void) {
     s32 st[2];
     Wk144 *w1 = 0;
     Wk144 *w2 = 0;
-    if (D_0035BD40[1] != 0) w1 = D_0035BD40[1]->p144;
-    if (D_0035BD40[2] != 0) w2 = D_0035BD40[2]->p144;
+    if (D_0035BD40.chr[1] != 0) w1 = D_0035BD40.chr[1]->p144;
+    if (D_0035BD40.chr[2] != 0) w2 = D_0035BD40.chr[2]->p144;
     func_002464f8(st);
     if (w1 != 0) {
-        if (st[0] && !(D_0035BD40[1]->flags & 0x8000)) {
-            func_00245ff0(D_0035BD40[1]);
+        if (st[0] && !(D_0035BD40.chr[1]->flags & 0x8000)) {
+            func_00245ff0(D_0035BD40.chr[1]);
             w1->w38 &= ~0x20;
             st[0] = 0;
         }
-        if ((s32)((s64)(w1->w38 << 28) >> 32) & 1) func_00242b00(D_0035BD40[1]);
-        else func_00242b38(D_0035BD40[1]);
+        if ((s32)((s64)(w1->w38 << 28) >> 32) & 1) func_00242b00(D_0035BD40.chr[1]);
+        else func_00242b38(D_0035BD40.chr[1]);
         if ((s32)((s64)(w1->w38 << 27) >> 32) & 1) {
-            if (st[0] == 0) func_00245f90(0, D_0035BD40[1]);
+            if (st[0] == 0) func_00245f90(0, D_0035BD40.chr[1]);
         } else if (st[0] != 0) {
-            func_00245ff0(D_0035BD40[1]);
+            func_00245ff0(D_0035BD40.chr[1]);
         }
     }
     if (w2 != 0) {
-        if (st[1] && !(D_0035BD40[2]->flags & 0x8000)) {
-            func_00245ff0(D_0035BD40[2]);
+        if (st[1] && !(D_0035BD40.chr[2]->flags & 0x8000)) {
+            func_00245ff0(D_0035BD40.chr[2]);
             w2->w38 &= ~0x20;
             st[1] = 0;
         }
-        if ((s32)((s64)(w2->w38 << 28) >> 32) & 1) func_00242b00(D_0035BD40[2]);
-        else func_00242b38(D_0035BD40[2]);
+        if ((s32)((s64)(w2->w38 << 28) >> 32) & 1) func_00242b00(D_0035BD40.chr[2]);
+        else func_00242b38(D_0035BD40.chr[2]);
         if ((s32)((s64)(w2->w38 << 27) >> 32) & 1) {
-            if (st[1] == 0) func_00245f90(0, D_0035BD40[2]);
+            if (st[1] == 0) func_00245f90(0, D_0035BD40.chr[2]);
         } else if (st[1] != 0) {
-            func_00245ff0(D_0035BD40[2]);
+            func_00245ff0(D_0035BD40.chr[2]);
         }
     }
     func_0016e0d0(2);
@@ -706,11 +708,11 @@ static inline s32 inl_alive2(Chr *a, u8 *kp) {
 
 Chr *func_0016f8b8(Chr *e, Wk6F8 *w) {
     Chr *o;
-    if (D_0035BD40[0] != 0 && inl_alive2(D_0035BD40[0], w->p8)) return D_0035BD40[0];
+    if (D_0035BD40.chr[0] != 0 && inl_alive2(D_0035BD40.chr[0], w->p8)) return D_0035BD40.chr[0];
     if (inl_alive2(e, w->p8)) return e;
-    o = D_0035BD40[w->w0 ^ 3];
+    o = D_0035BD40.chr[w->w0 ^ 3];
     if (o != 0 && inl_alive2(o, w->p8)) return o;
-    if (w->f64 > 0.0f && D_0035BD40[0] != 0 && inl_alive2(D_0035BD40[0], w->pC)) return D_0035BD40[0];
+    if (w->f64 > 0.0f && D_0035BD40.chr[0] != 0 && inl_alive2(D_0035BD40.chr[0], w->pC)) return D_0035BD40.chr[0];
     return 0;
 }
 
@@ -749,7 +751,7 @@ void func_0016fa10(Ent6FA *e, Wk6FA *w, Sub6FA *pr) {
     if (!((s32)w->w38 & 1) && inl_00171118(t, -1)) {
         if (!func_0012eaf8(w->p90)) return;
         func_0012ec60(w->p90, w->w94, h);
-        if (pr->f8 <= func_00162978(h, e->pos) && pr->f8 <= func_00162978(h, D_0035BD40[0]->pos)) w->p90 = 0;
+        if (pr->f8 <= func_00162978(h, e->pos) && pr->f8 <= func_00162978(h, D_0035BD40.chr[0]->pos)) w->p90 = 0;
         if (!(D_0035AE80.fC4 <= w->fEC)) return;
     }
     w->w38 |= 1;
@@ -864,8 +866,8 @@ s32 func_001722e8(Chr *o, Wk172_22e8 *w, s32 unused, s32 mode) {
     Chr *q;
     if (w->p98 != 0 && w->p98 != o && func_001710d8(w->p98, 84)) {
         t = w->p98;
-    } else if (D_0035BD40[0] != 0 && func_001710d8(D_0035BD40[0], 84)) {
-        t = D_0035BD40[0];
+    } else if (D_0035BD40.chr[0] != 0 && func_001710d8(D_0035BD40.chr[0], 84)) {
+        t = D_0035BD40.chr[0];
     } else {
         q = func_00171078(o, w);
         if (q != 0) t = func_001710d8(q, 84) ? q : 0;
@@ -897,7 +899,7 @@ s32 func_001724b8(Chr *o, Wk172_22e8 *w, s32 unused, s32 mode) {
     Chr *t;
     s32 i;
     list[0] = o;
-    list[1] = D_0035BD40[0];
+    list[1] = D_0035BD40.chr[0];
     list[2] = func_00171078(o, w);
     if (w->p98 != 0 && func_00171098(w->p98, 84)) t = w->p98;
     else t = 0;
@@ -969,7 +971,7 @@ void func_001705c0(void *e, Wk705 *w) {
         if (!((s32)((s64)(w->w38 << 27) >> 32) & 1)) {
             w->w38 |= 0x20;
             if ((*(s32 *)&D_002E31B0) != 0) func_00157a30(e, 21, 0);
-            else func_00157a30(e, 22, D_0035BD40[0]);
+            else func_00157a30(e, 22, D_0035BD40.chr[0]);
         }
         if (w->p90 == 0) {
             w->w38 |= 1;

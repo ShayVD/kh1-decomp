@@ -61,22 +61,42 @@ def find_typedef(rel, text, tname):
     return None
 
 
-def find_deps(rel, text, stmt, tname, depth=0):
-    """[(name, stmt, start, end)] of the file's own self-contained typedefs stmt uses
-    (dependencies first), or None"""
+def dep_uniq(name, stmt, N, depnames):
+    """a unique name for a dependency type; the same body under the same name shares it"""
+    body = re.sub(r"\s+", " ", TM.blank_comments(stmt)).strip()
+    u = f"{name}_{N[2:].lstrip('0')}"
+    k = 2
+    cand = u
+    while cand in depnames and depnames[cand] != body:
+        cand = f"{u}_{k}"; k += 1
+    depnames[cand] = body
+    return cand
+
+
+def find_deps(rel, text, stmt, tname, depth=0, where=("file", None)):
+    """[(name, stmt, start, end)] of the typedefs stmt uses that live where it does
+    (the file, or the one header), dependencies first; None if one lives elsewhere"""
     bad = self_contained(stmt, tname)
     out = []
     for t in sorted(bad):
         if t.startswith("struct ") or " " in t or depth > 3:
             return None
         ft = find_typedef(rel, text, t)
-        if not ft or ft[0] != "file":
-            return None
-        sub = find_deps(rel, text, ft[4], t, depth + 1)
+        if not ft or ft[0] != where[0] or (where[0] == "header" and ft[1] != where[1]):
+            inc = types_header(text, t)
+            if inc is None:
+                return None
+            if ("#inc", inc) not in out:
+                out.append(("#inc", inc))
+            continue
+        sub = find_deps(rel, text, ft[4], t, depth + 1, where)
         if sub is None:
             return None
         for x in sub:
-            if x[0] not in [y[0] for y in out]:
+            if x[0] == "#inc":
+                if x not in out:
+                    out.append(x)
+            elif x[0] not in [y[0] for y in out]:
                 out.append(x)
         if t not in [y[0] for y in out]:
             out.append((t, ft[4], ft[2], ft[3]))
@@ -101,6 +121,7 @@ def plan(N, cast_users=()):
     size, _ = C.piece_info(N)
     files = C.c_text_users(N)
     views, users, why = [], {}, {}
+    depnames = {}
     vkey = {}
     for rel, t in files.items():
         ds = C.user_decls(t, N)
@@ -141,8 +162,11 @@ def plan(N, cast_users=()):
             key = norm_view(ts, d2.replace(N, "@"))
             view = dict(key=key, mname=mname, decl=f"{ts} {d2.replace(N, mname)}", stmt=None, tname=None)
         else:
+            hv = header_view(rel, t, b, ptr, dims, size, ts)
             ft = find_typedef(rel, t, b)
             if not ft:
+                if hv:
+                    users[rel] = ("member", register(hv, vkey, views)); continue
                 users[rel] = ("cast", (ts, d)); continue
             where, path, st, en, stmt = ft
             am = re.fullmatch(r"\s*typedef\s+(\w+)\s+" + b + r"\s*;\s*", stmt)
@@ -151,42 +175,39 @@ def plan(N, cast_users=()):
                 mname = b[0].lower() + b[1:]
                 view = dict(key=("alias", X, ptr, dims), mname=mname, decl=member_decl(X, mname, ptr, dims, size),
                             stmt=None, tname=None, inc=pieces_type(X))
-                if view["key"] in vkey:
-                    view = dict(vkey[view["key"]])
-                else:
-                    vkey[view["key"]] = view
-                    views.append(view)
-                users[rel] = ("member", view)
+                users[rel] = ("member", register(view, vkey, views))
                 continue
             bad = self_contained(stmt, b)
+            macros = set(re.findall(r"^\s*#\s*define\s+(\w+)", t, re.M))
+            if macros & set(re.findall(r"\w+", TM.blank_comments(stmt))):
+                if hv:
+                    users[rel] = ("member", register(hv, vkey, views)); continue
+                users[rel] = ("cast", (ts, d)); continue
             deps = []
-            if bad and where == "file":
-                deps = find_deps(rel, t, stmt, b)
-                if deps is not None and {x[0] for x in deps} >= bad:
+            if bad:
+                deps = find_deps(rel, t, stmt, b, 0, (where, path))
+                if deps is not None and ({x[0] for x in deps if x[0] != "#inc"}
+                                         | {t_ for t_ in bad if any(x[0] == "#inc" and t_ in TM.header_types(ROOT / "include" / x[1]) for x in deps)}) >= bad:
                     bad = set()
             if bad:
+                if hv:
+                    users[rel] = ("member", register(hv, vkey, views)); continue
                 users[rel] = ("cast", (ts, d)); continue
             body = re.sub(r"\s+", " ", TM.blank_comments(stmt))
             key = (body.replace(b, "@T"), ptr, dims,
                    tuple(re.sub(r"\s+", " ", TM.blank_comments(x[1])) for x in deps))
             mname = b[0].lower() + b[1:]
-            uniq = f"{b}_{N[2:].lstrip('0')}"
-            if not ptr and dims:
-                ds_ = re.findall(r"\[([^\]]*)\]", dims)
-                if ds_[0] == "":
-                    inner = "".join(f"[{x}]" for x in ds_[1:])
-                    mdecl = f"{uniq} {mname}[{size:#x} / sizeof({uniq}{inner and ' ' + inner})]{inner}"
-                    if inner:
-                        mdecl = f"{uniq} {mname}[{size:#x} / sizeof({uniq}){'' if not inner else ' / (' + ' * '.join(ds_[1:]) + ')'}]{inner}"
-                else:
-                    mdecl = f"{uniq} {mname}{dims}"
+            depincs = [x[1] for x in deps if x[0] == "#inc"]
+            deps = [x for x in deps if x[0] != "#inc"]
+            depd = [dict(name=x[0], stmt=x[1], st=x[2], en=x[3], uniq=dep_uniq(x[0], x[1], N, depnames))
+                    for x in deps]
+            if key in vkey:
+                uniq = vkey[key]["uniq"]
             else:
-                mdecl = f"{uniq} {ptr}{mname}"
+                uniq = dep_uniq(b, stmt, N, depnames)
             vol = "volatile " if "volatile" in ts.split() else ""
-            view = dict(key=key, mname=mname, decl=vol + mdecl, stmt=stmt, tname=b, uniq=uniq,
-                        where=(where, path, st, en),
-                        deps=[dict(name=x[0], stmt=x[1], st=x[2], en=x[3], uniq=f"{x[0]}_{N[2:].lstrip('0')}")
-                              for x in deps])
+            view = dict(key=key, mname=mname, decl=vol + member_decl(uniq, mname, ptr, dims, size), stmt=stmt,
+                        tname=b, uniq=uniq, where=(where, path, st, en), deps=depd, incs=depincs)
         if view["key"] in vkey:
             v0 = vkey[view["key"]]
             if view.get("tname") and v0.get("tname") != view.get("tname"):
@@ -200,17 +221,45 @@ def plan(N, cast_users=()):
                 view["mname"] = f"{base}_{k}"; k += 1
             if view["mname"] != base:
                 view["decl"] = re.sub(r"\b" + base + r"\b(?=\s*[\[;]|$)", view["mname"], view["decl"])
-            if view.get("tname") and view["uniq"] in {v.get("uniq") for v in views}:
-                kk = 2
-                while f"{view['uniq']}_{kk}" in {v.get("uniq") for v in views}:
-                    kk += 1
-                old = view["uniq"]
-                view["uniq"] = f"{old}_{kk}"
-                view["decl"] = re.sub(r"\b" + old + r"\b", view["uniq"], view["decl"])
             vkey[view["key"]] = view
             views.append(view)
         users[rel] = ("member", view)
     return size, files, views, users, why
+
+
+def register(view, vkey, views):
+    if view["key"] in vkey:
+        return dict(vkey[view["key"]])
+    names = {v["mname"] for v in views}
+    base, k = view["mname"], 2
+    while view["mname"] in names:
+        view["mname"] = f"{base}_{k}"; k += 1
+    if view["mname"] != base:
+        view["decl"] = re.sub(r"\b" + base + r"\b(?=\s*[\[;]|$)", view["mname"], view["decl"])
+    vkey[view["key"]] = view
+    views.append(view)
+    return view
+
+
+def types_header(text, tname):
+    for inc in re.findall(r'^\s*#\s*include\s+"(data/types/[^"]+)"', text, re.M):
+        h = ROOT / "include" / inc
+        if h.exists() and tname in TM.header_types(h):
+            return inc
+    return None
+
+
+def header_view(rel, text, tname, ptr, dims, size, ts):
+    """a view whose type stays in the data/types header the user includes (the piece
+    header includes it too; a name clash there fails the compile check)"""
+    for inc in re.findall(r'^\s*#\s*include\s+"(data/types/[^"]+)"', text, re.M):
+        h = ROOT / "include" / inc
+        if h.exists() and tname in TM.header_types(h):
+            mname = tname[0].lower() + tname[1:]
+            vol = "volatile " if "volatile" in ts.split() else ""
+            return dict(key=("hdr", inc, tname, ptr, dims, vol), mname=mname,
+                        decl=vol + member_decl(tname, mname, ptr, dims, size), stmt=None, tname=None, inc=inc)
+    return None
 
 
 def pieces_type(X):
@@ -222,6 +271,11 @@ def pieces_type(X):
 
 
 def member_decl(uniq, mname, ptr, dims, size):
+    if ptr and dims:
+        ds_ = re.findall(r"\[([^\]]*)\]", dims)
+        if ds_[0] == "":
+            ds_[0] = f"{size:#x} / sizeof(void *)" + ("" if not ds_[1:] else " / (" + " * ".join(ds_[1:]) + ")")
+        return f"{uniq} {ptr}{mname}" + "".join(f"[{x}]" for x in ds_)
     if not ptr and dims:
         ds_ = re.findall(r"\[([^\]]*)\]", dims)
         inner = "".join(f"[{x}]" for x in ds_[1:])
@@ -260,7 +314,7 @@ def header(N, views):
              f"#ifndef KH1_DATA_PIECES_{N}_H", f"#define KH1_DATA_PIECES_{N}_H", "", '#include "common.h"']
     if any("M2C_UNK" in v["decl"] for v in views):
         lines.append('#include "m2c.h"')
-    for i in sorted({v["inc"] for v in views if v.get("inc")}):
+    for i in sorted({v["inc"] for v in views if v.get("inc")} | {i for v in views for i in v.get("incs", [])}):
         lines.append(f'#include "{i}"')
     lines.append("")
     done = set()
@@ -272,7 +326,8 @@ def header(N, views):
                 ren[dp["name"]] = dp["uniq"]
                 if dp["uniq"] not in done:
                     lines.append(ds); done.add(dp["uniq"])
-            lines.append(rename_stmt(v["stmt"], v["tname"], v["uniq"], ren))
+            if v["uniq"] not in done:
+                lines.append(rename_stmt(v["stmt"], v["tname"], v["uniq"], ren)); done.add(v["uniq"])
     if ELEM:
         if any("[" not in v["decl"] for v in views):
             raise ValueError("--elem needs array views")
@@ -326,7 +381,13 @@ def edit(N, rel, text, kind, info, INC):
             out = [x for x in out if x is not None]
         else:
             ht = path.read_text()
-            extra[path] = ht[:st] + INC + "\n" + alias + ht[en:]
+            spans = sorted([(dp["st"], dp["en"], f"typedef {dp['uniq']} {dp['name']};") for dp in view.get("deps", [])]
+                           + [(st, en, alias)])
+            for i, (s0, e0, al) in enumerate(reversed(spans)):
+                first = i == len(spans) - 1
+                rep = (INC + "\n" + "\n".join(x[2] for x in spans)) if first else ""
+                ht = ht[:s0] + rep + ht[e0:]
+            extra[path] = ht
             out = [ln if i not in drop else drop[i] for i, ln in enumerate(lines)]
             out = [x for x in out if x is not None]
     else:
@@ -456,6 +517,17 @@ def main():
             print(f"{N} try {it}: " + "; ".join(f[:200] for f in fail), flush=True)
             more = [f.split(":")[0] for f in fail if f.startswith("src/") and f.split(":")[0] not in cu
                     and users and users.get(f.split(":")[0], ("x",))[0] == "member"]
+            # a type name clash from a header a view brought in: that view's users cast instead
+            clash = set(re.findall(r"conflicting types for `(\w+)'", " ".join(fail)))
+            if clash and users:
+                for r, (k, v) in users.items():
+                    if k != "member" or r in cu:
+                        continue
+                    hs = [v["inc"]] if v.get("inc") else []
+                    hs += v.get("incs", [])
+                    if any(clash & TM.header_types(ROOT / "include" / h) for h in hs if h.startswith("data/types/")):
+                        more.append(r)
+                more = list(dict.fromkeys(more))
             if not more:
                 break
             cu += more

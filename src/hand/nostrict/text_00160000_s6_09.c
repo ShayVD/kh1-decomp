@@ -10,9 +10,10 @@ void func_00157a30(void *, s32, void *);
 /* 0016ce10 */
 typedef struct { u8 pad[0x80]; u8 b80; } Prm6x;
 extern Prm6x D_0035AE80;
-typedef struct { u8 pad[0x3C]; s32 w3C; s32 w40; } Hp6C;
-typedef struct { u32 flags; u8 pad4[0x68]; Hp6C *p6C; s32 w70; } Act6C;
-extern Act6C *D_0035BD40[];
+#include "data/pieces/D_0035BD40.h"
+typedef Hp6C_35BD40 Hp6C;
+typedef Act6C_35BD40 Act6C;
+
 typedef struct {
     s32 w0; u8 pad4[0x34]; u64 w38; u8 pad40[0x40];
     union { u64 w; struct { u64 lo:32; u64 m:8; u64 z:16; u64 hi:8; } b; } w80;
@@ -44,8 +45,8 @@ s32 func_0016ce10(Act6C *e, Wk6CE *w, s32 unused, s32 mode) {
     Act6C *s;
     s32 i;
     list[0] = e;
-    list[1] = D_0035BD40[0];
-    list[2] = D_0035BD40[w->w0 ^ 3];
+    list[1] = D_0035BD40.act6C[0];
+    list[2] = D_0035BD40.act6C[w->w0 ^ 3];
     t = w->p98;
     if (t != 0 && inl_alive(t)) s = t;
     else s = 0;

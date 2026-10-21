@@ -77,7 +77,7 @@
 	PIECE D_0035BCF0, 0x20, 16
 	PIECE D_0035BD10, 0x10, 16
 	PIECE D_0035BD20, 0x20, 16  /* data/pieces/D_0035BD20.h */
-	PIECE D_0035BD40, 0x10, 16  /* untyped: users disagree: Act6C *D_0035BD40[] | Chr *D_0035BD40[] | Chr9F *D_0035BD40[] | ChrE3 *D_0035BD40[3] | ChrEA *D_0035BD40[3] | EntB *D_0035BD40[] | M2C_UNK D_0035BD40 | ObjBD40 *D_0035BD40[] | s32 D_0035BD40 | s32 D_0035BD40[] | void *D_0035BD40[]; session 25: as s32 D_0035BD40: does not compile in text_00160000_b05.c, text_00160000_c04.c +3 */
+	PIECE D_0035BD40, 0x10, 16  /* data/pieces/D_0035BD40.h */
 	PIECE_BEGIN D_0035BD50, 0xf0, 16
 	PIECE_BYTES D_0035BD50, 0x0, 0x8
 	.word func_0016b670

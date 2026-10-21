@@ -5,7 +5,7 @@
 
 #include "data/pieces/D_002C58A0.h"
 #include "data/pieces/D_002C58D0.h"
-extern M2C_UNK D_0035BD40;
+#include "data/pieces/D_0035BD40.h"
 extern M2C_UNK D_00362660;
 extern M2C_UNK D_00362670;
 extern M2C_UNK D_00575310; /* src/data/bss_0057.c: TalkEA D_00575310 */
@@ -46,7 +46,7 @@ void func_00170e48(s32 arg0) {
 
     temp_s0 = M2C_FIELD(arg0, s32 *, 0x144);
     func_0016f3d0(arg0, temp_s0);
-    *(M2C_UNK *)((s8 *)(s8 *)&D_0035BD40 + (*(M2C_UNK *)temp_s0 * 4)) = 0;
+    *(M2C_UNK *)((s8 *)(s8 *)&D_0035BD40.i + (*(M2C_UNK *)temp_s0 * 4)) = 0;
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x144));
 }
 
