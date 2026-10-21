@@ -161,7 +161,7 @@ void func_0020d6c8(s32 a0) {
     D_003F34A8 = 0;
     func_0020d530();
     v = func_0020d030();
-    D_003F34C4 = v;
+    D_003F34C4 = (N_3f34c4 *)v;
     if (v) func_0020d050(v);
     func_0011ef10(0x270ff, func_0020d2f8)->f2 = a0;
 }

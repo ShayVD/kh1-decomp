@@ -355,21 +355,9 @@ void func_00141078(W7Ob *o) {
     func_00137688(o, func_001376e8(o, o->x20));
 }
 
-typedef struct {
-    u8 pad00[0x38];
-    s16 x38;
-} W7Gauge;
+#include "data/pieces/D_00304C70.h"
 
-typedef struct {
-    u8 pad00[0x40];
-    s32 x40;
-    s32 x44;
-    s32 x48;
-    u8 pad4c[0xBE - 0x4C];
-    u16 xbe;
-    u8 padc0[0xC8 - 0xC0];
-    W7Gauge *xc8;
-} W7Lv;
+typedef St6C_304c70 W7Lv;
 
 typedef struct {
     u8 pad00[0x6C];
@@ -379,7 +367,6 @@ typedef struct {
     } x6c;
 } W7Pl;
 
-#include "data/pieces/D_00304C70.h"
 void func_00141468(W7Pl *o, s32 v);
 void func_00141540(W7Pl *o, s32 v);
 void func_00141608(W7Pl *o, s32 v);
@@ -407,7 +394,7 @@ void func_001412f8(W7Pl *o, s32 n) {
 void func_00141720(W7Pl *o) {
     W7Lv *p = o->x6c.p;
     s32 x, t;
-    if (p == 0 || p == ((W7Lv *)&D_00304C70)) return;
+    if (p == 0 || p == &D_00304C70) return;
     x = p->xbe;
     t = p->x44 * 30 + 30;
     if (x >= t) {
@@ -415,8 +402,8 @@ void func_00141720(W7Pl *o) {
         x -= t;
     }
     p->xbe = x;
-    if (p->xc8) {
-        p->xc8->x38 = x;
+    if (p->pc8) {
+        p->pc8->x38 = x;
     }
 }
 

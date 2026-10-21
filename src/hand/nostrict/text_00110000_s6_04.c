@@ -23,10 +23,9 @@ Node *func_0011f090(Pool *l, s32 key, s32 val) {
 }
 #include "data/types/nostrict_text_00110000_s6_04_p.h"
 typedef struct { u8 b0 : 1; u8 lo : 2; u8 mode : 2; u8 hi : 3; } Sema5968;
-typedef struct { u32 a : 2; u32 b : 1; u32 r : 29; } Fl5960;
+#include "data/pieces/D_002C5960.h"
 typedef struct { u8 x0[2]; u8 x2; u8 pad[17]; } Prof;
 #include "data/pieces/D_002C5968.h"
-#include "data/pieces/D_002C5960.h"
 extern s16 D_002C597A;
 extern PadSt D_002C5AD0[];
 extern PadSt D_002C5BB0;
@@ -88,7 +87,7 @@ join:
     } else {
         D_004E44F0 = 0;
     }
-    if ((*(Fl5960 *)&D_002C5960).b) {
+    if (D_002C5960.b) {
         D_002C5BB0.active = 0;
         func_002675a8(&D_002C5BB0.v[0], ((V4 *)&D_002C58B0));
         func_002675a8(&D_002C5BB0.v[1], ((V4 *)&D_002C58B0));

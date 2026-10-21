@@ -172,14 +172,8 @@ void func_00218020(s32 n) {
     }
 }
 
-typedef struct Obj2 {
-    u8 pad[0x10];
-    struct Obj2 *x10;
-    u8 pad14[0x24 - 0x14];
-    s32 x24;
-    u8 pad28[0xD8 - 0x28];
-    s16 xd8;
-} Obj2;
+#include "data/pieces/D_003F34C4.h"
+typedef N_3f34c4 Obj2;
 extern s32 D_00642CE8;
 extern s32 D_00642D18;
 #include "data/pieces/D_003E3D68.h"
@@ -616,7 +610,6 @@ void func_0021cd68(Ob3 *a) {
 extern s32 D_00643100;
 extern u8 D_003F5A60[];
 extern u8 D_003F5A30[];
-#include "data/pieces/D_003F34C4.h"
 s32 func_001f44a0(u8 *);
 void func_001f37c0(Obj2 *, s32);
 void func_0020d1d8(Obj *);
@@ -642,9 +635,9 @@ void func_0021d028(void *a) {
         break;
     case 1:
         if (func_001f44a0(D_003F5A60)) return;
-        func_001f37c0(((Obj2 *)D_003F34C4)->x10, 50);
-        func_001f3d58(((Obj2 *)D_003F34C4)->x10->x10, 2);
-        func_001f3d58(((Obj2 *)D_003F34C4)->x10->x10->x10, 2);
+        func_001f37c0(D_003F34C4->x10, 50);
+        func_001f3d58(D_003F34C4->x10->x10, 2);
+        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
         func_0020d1d8(func_001f4468(a));
         func_0020bda8(16);
         break;

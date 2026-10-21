@@ -39,7 +39,7 @@ class Field:
     def __init__(self, **kw):
         self.name = None; self.off = 0; self.size = 0; self.n = 1; self.kind = "leaf"
         self.sub = None; self.tkey = None; self.tmpl = None; self.bitoff = None; self.width = None
-        self.deps = set(); self.localref = None; self.elem = 0
+        self.deps = set(); self.localref = None; self.elem = 0; self.ptrnode = None; self.tdef = None
         self.__dict__.update(kw)
 
     def __repr__(self):
@@ -70,6 +70,17 @@ class FileTypes:
 
     def local_struct(self, name):
         return C.find_def(self.text, name, self.ct)
+
+    def local_typedef(self, name):
+        """the whole `typedef ... name ...;` statement of a non-struct local typedef, or None"""
+        for m in re.finditer(r"\btypedef\b[^;{}]*;", self.ct):
+            st = m.group(0)
+            if re.search(r"\b" + name + r"\b", st) and not re.match(r"typedef\s+(struct|union)\s+\w+\s+" + name + r"\s*;", st):
+                # the name must be the declared one, not the base type
+                body = re.sub(r"__attribute__\s*\(\(.*?\)\)", "", st)
+                if re.search(r"\b" + name + r"\b\s*(\[|;|\))", body):
+                    return re.sub(r"\s+", " ", st)
+        return None
 
     def resolve(self, ts):
         """normalized base type, following the file's simple typedefs"""
@@ -129,16 +140,31 @@ class FileTypes:
                     f.kind, f.sub = "struct", self.named(p)
                     f.tkey = None
                 else:
-                    if self.local_struct(p):
+                    lt = None if self.local_struct(p) or p in C.BASIC else self.local_typedef(p)
+                    if self.local_struct(p) and m.stars > 0:
+                        f.ptrnode = self.named(p)  # a pointer to a local struct: its class decides
+                    elif self.local_struct(p):
                         f.localref = p
+                    elif lt:
+                        # a local typedef of another kind (array, attribute, function): copied
+                        f.tdef = (p, lt)
                     elif p not in C.BASIC:
                         h = header_types().get(p)
                         if h:
                             f.deps.add(h)
                         else:
                             f.localref = p
-                    f.tkey = b + " " + "*" * m.stars + "".join(f"[{d}]" for d in m.dims)
-                    f.tmpl = b + " " + "*" * m.stars + "{}" + "".join(f"[{d}]" for d in m.dims)
+                    dims = "".join(f"[{d}]" for d in m.dims)
+                    f.tkey = b + " " + "*" * m.stars + dims
+                    f.tmpl = b + " " + "*" * m.stars + "{}" + dims
+                    if f.ptrnode is not None:
+                        vol = "volatile " if "volatile" in b.split() else ""
+                        f.tkey = f"{vol}@ptr " + "*" * m.stars + dims
+                        f.tmpl = f"{vol}@P " + "*" * m.stars + "{}" + dims
+                    elif f.tdef:
+                        stmt = re.sub(r"\b" + p + r"\b", "@", f.tdef[1])
+                        f.tkey = f"tdef<{stmt}> " + b.replace(p, "@") + " " + "*" * m.stars + dims
+                        f.tmpl = b.replace(p, "@T") + " " + "*" * m.stars + "{}" + dims
             f.mem = m
             node.fields.append(f)
 

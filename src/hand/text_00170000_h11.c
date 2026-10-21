@@ -174,24 +174,24 @@ void func_00176b80(Arg *a) {
 }
 
 s32 func_00177218(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     if (o->x70 < 11) { if (o->x70 >= 9) return 1; }
     return 0;
 }
 
 s32 func_00177258(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     return o->x70 == 15;
 }
 
 s32 func_00177288(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     if (o->x70 < 15) { if (o->x70 >= 13) return 1; }
     return 0;
 }
 
 s32 func_001772c8(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     return o->x70 == 18;
 }
 
@@ -496,7 +496,7 @@ void func_00180ea0(SEA0 *s) {
 
 /* needs make: uses rodata */
 s32 func_001772f8(Actor *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     switch (o->x70) {
     case 4: case 5: case 8: case 21: case 24: case 26:
         return 1;
@@ -516,7 +516,7 @@ extern f32 D_00362674;
 
 void func_0017d9c8(Hdr *h) {
     s32 i;
-    if ((D_002C5960 >> 4) & 1) return;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return;
     D_00362434 = 0;
     D_00362438 = 0;
     D_00362424 = h;

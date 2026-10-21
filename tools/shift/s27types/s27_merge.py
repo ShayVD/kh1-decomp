@@ -78,6 +78,7 @@ class Slot:
         self.bitoff, self.width = c.bitoff, c.f.width
         self.cands = [c]
         self.sub = None
+        self.ptrcls = None
 
 
 class Cls:
@@ -100,8 +101,8 @@ class Merge:
         self.slots = []
         for rel, (ft, used, roots) in self.files.items():
             memo = {}
-            for r in roots:
-                needed(ft, used, ft.byname[r], memo)
+            for nid in ft.nodes:
+                needed(ft, used, nid, memo)
             self.need[rel] = memo
             for r in roots:
                 self.attach(0, rel, ft.byname[r])
@@ -156,6 +157,15 @@ class Merge:
             self.classes.append(sub)
             s.sub = sub.cid
             self.attach(sub.cid, c.rel, c.f.sub)
+        if c.f.ptrnode is not None:
+            k = (c.rel, c.f.ptrnode)
+            if k in self.attached:
+                s.ptrcls = self.attached[k]
+            else:
+                pc = Cls(len(self.classes), None)
+                self.classes.append(pc)
+                s.ptrcls = pc.cid
+                self.attach(pc.cid, c.rel, c.f.ptrnode)
         return s
 
     def same(self, s, c):
@@ -167,6 +177,8 @@ class Merge:
         if f.kind == "bits":
             return compatible(s.f.tkey, f.tkey)
         if f.localref or s.f.localref:
+            return False
+        if (f.ptrnode is None) != (s.f.ptrnode is None):
             return False
         return (s.n, s.elem) == (f.n, f.elem) and compatible(s.f.tkey, f.tkey)
 
@@ -222,6 +234,8 @@ class Merge:
                     self.fmap[key] = c.prefix + [(s, None)]
                     if c.f.kind == "struct":
                         self.attach(s.sub, c.rel, c.f.sub)
+                    if c.f.ptrnode is not None:
+                        self.attach(s.ptrcls, c.rel, c.f.ptrnode)
                     continue
                 if s.kind == "struct" and s.elem:
                     rel0 = s.off * 8
@@ -295,8 +309,13 @@ def emit(N, mg, sname):
             nm = mg.files[rel][0].nodes[nid].name
             if nm:
                 names[nm] += weight(rel)
-        parent_slot = next(s for s in mg.slots if s.sub == cl.cid)
-        base = names.most_common(1)[0][0] if names else f"{cname.get(cl.parent, sname)}_{snames[parent_slot.sid]}"
+        parent_slot = next((s for s in mg.slots if s.sub == cl.cid), None)
+        if names:
+            base = names.most_common(1)[0][0]
+        elif parent_slot is not None:
+            base = f"{cname.get(cl.parent, sname)}_{snames[parent_slot.sid]}"
+        else:
+            base = "Obj"
         nm = base if base.endswith("_" + addr) else f"{base}_{addr}"
         k = 2
         while nm in taken_t:
@@ -306,6 +325,17 @@ def emit(N, mg, sname):
     deps = set()
     defs = {}
     order = []
+    fwd = False
+    tdefs = {}  # (name, statement) -> new name
+
+    def tdef_name(td):
+        if td not in tdefs:
+            nm = f"{td[0]}_{addr}"
+            k = 2
+            while nm in tdefs.values() or nm in taken_t:
+                nm = f"{td[0]}{k}_{addr}"; k += 1
+            tdefs[td] = nm
+        return tdefs[td]
 
     def visit(cid):
         if cid in order:
@@ -350,13 +380,19 @@ def emit(N, mg, sname):
                 lines.append(f"    {cname[s.sub]} {nm}{dims};")
             else:
                 deps |= s.f.deps
-                lines.append("    " + s.f.tmpl.replace("{}", nm) + ";")
+                t = s.f.tmpl
+                if s.ptrcls is not None:
+                    t = t.replace("@P", cname[s.ptrcls])
+                    fwd = True
+                if s.f.tdef:
+                    t = t.replace("@T", tdef_name(s.f.tdef))
+                lines.append("    " + t.replace("{}", nm) + ";")
         if unit and cur < unit[1]:
             lines.append(f"    {unit[2]} :{unit[1] - cur};")
             cur = unit[1]
         if cur < cl.size * 8:
             lines.append(f"    u8 pad_{cur // 8:x}[{(cl.size * 8 - cur) // 8:#x}];")
-        defs[cid] = "typedef struct {\n" + "\n".join(lines) + f"\n}} {cname[cid]};"
+        defs[cid] = lines
     aliases = {}
     for cl in mg.classes:
         for rel, nid in cl.nodes:
@@ -365,4 +401,10 @@ def emit(N, mg, sname):
     fmap = {}
     for k, path in mg.fmap.items():
         fmap[k] = ".".join(snames[s.sid] + (f"[{i}]" if i is not None else "") for s, i in path)
-    return [defs[c] for c in order], deps, aliases, fmap
+    out = [re.sub(r"\b" + td[0] + r"\b", nm, td[1]) for td, nm in tdefs.items()]
+    if fwd:
+        out.append("\n".join(f"typedef struct {cname[c]} {cname[c]};" for c in order))
+        out += [f"struct {cname[c]} {{\n" + "\n".join(defs[c]) + "\n};" for c in order]
+    else:
+        out += ["typedef struct {\n" + "\n".join(defs[c]) + f"\n}} {cname[c]};" for c in order]
+    return out, deps, aliases, fmap

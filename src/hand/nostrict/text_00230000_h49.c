@@ -551,7 +551,7 @@ void func_00240b68(Obj4 *o_) {
     s32 p2[4];
     s32 n, r;
     if (e->unkA20 != 0.0f) {
-        if (!(D_002C5960 & 1)) e->unkA1C += e->unkA20 * D_002BBDFC;
+        if (!((*(u32 *)&D_002C5960) & 1)) e->unkA1C += e->unkA20 * D_002BBDFC;
         if (e->unkA1C <= 0.0f) {
             e->unkA20 = e->unkA1C = 0.0f;
         } else if (1.0f <= e->unkA1C) {

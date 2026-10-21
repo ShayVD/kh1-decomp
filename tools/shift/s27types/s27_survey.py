@@ -128,6 +128,10 @@ def summary():
                 per[(N, k)] += 1
     print(" ".join(f"{k}={v}" for k, v in sorted(tot.items())), "pieces with view casts:",
           len({n for (n, k) in per if k == "view"}))
+    if "--views" in sys.argv:
+        for (n, k), v in per.most_common():
+            if k == "view":
+                print(f"  {n} {v}")
 
 
 if __name__ == "__main__":

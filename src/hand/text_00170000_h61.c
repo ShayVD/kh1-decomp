@@ -328,7 +328,7 @@ void func_0011d768(s32);
 #define D_00575894 (*(ActB **)&D_00575894)
 
 s32 func_00177358(ActB *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     switch (o->x70) {
     case 0: case 8: case 24: return 1;
     }

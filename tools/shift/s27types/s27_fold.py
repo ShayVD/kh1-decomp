@@ -251,7 +251,12 @@ def phase2(rel, p1text, ft, aliases, fmap, N, obj, views, keepcast=None, used=()
     def rn(m):
         k = (rel, m.group(0))
         if k not in fmap:
-            if m.group(0) not in used:  # a field of a type that is not folded: its own name again
+            nid = re.search(r"__q(\d+)$", m.group(0)).group(1)
+            anc = nid
+            while ft.nodes[anc].parent is not None:
+                anc = ft.nodes[anc].parent
+            if m.group(0) not in used or (rel, anc) not in aliases:
+                # a field of a type that is not folded: its own name again
                 return re.sub(r"__q\d+$", "", m.group(0))
             raise KeyError(m.group(0))
         return fmap[k]
@@ -573,8 +578,8 @@ def split_header(N, hdr, sname):
     """(the piece header with only `typedef struct S S;` and the extern, the struct header
     D_X_s.h with the definitions): a big header in every user moves code in some of them
     (gcc 2.96 hashes by address: more declarations, other hash orders)"""
-    a = hdr.index("typedef struct {")
-    b = hdr.index("extern ")
+    b = hdr.index("\nextern ") + 1
+    a = hdr.index("\n\n", hdr.index("#include")) + 2
     defs = hdr[a:b]
     pre = hdr[:a]
     incs = re.findall(r'^#include "[^"]+"\n', pre, re.M)
@@ -585,6 +590,7 @@ def split_header(N, hdr, sname):
     main = main + f"typedef struct {sname} {sname};\n\n" + hdr[b:]
     defs = re.sub(r"typedef struct \{([^{}]*)\n\} " + sname + ";", lambda m: f"struct {sname} {{{m.group(1)}\n}};",
                   defs)
+    defs = re.sub(r"^typedef struct " + sname + " " + sname + ";\n", "", defs, flags=re.M)
     g = f"KH1_DATA_PIECES_{N}_S_H"
     sh = "\n".join([f"/* The struct types of the data piece {N} (data/pieces/{N}.h declares it with",
                     " * the root type left incomplete; the users that read its fields include this). */",

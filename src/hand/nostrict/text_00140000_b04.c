@@ -193,7 +193,7 @@ s32 func_0014bdc0(s32 a) {
         if (((s32)(p->f.x >> 10) & 1)) continue;
         switch (((s32)(p->f.x >> 2) & 3)) {
         case 1:
-            if (!(D_002C5960 & 1)) p->f.b.b2 = 0;
+            if (!((*(u32 *)&D_002C5960) & 1)) p->f.b.b2 = 0;
             break;
         case 2:
             if (p->x58 == 0xfff) {

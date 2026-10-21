@@ -258,7 +258,7 @@ void func_00128f98(s32 *arg0) {
 }
 
 void func_00128fb0(s32 *arg0) {
-    *arg0 = D_00304B78 & 7;
+    *arg0 = (*(u32 *)&D_00304B78) & 7;
 }
 
 void func_00129330(void) {

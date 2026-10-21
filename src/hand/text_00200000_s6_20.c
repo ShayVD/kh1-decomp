@@ -1,6 +1,7 @@
 #include "common.h"
 #include "data/bss_0064.h"
-typedef struct N { u8 pad[0x10]; struct N *x10; u8 pad14[0x10]; s32 x24; f32 x28; u8 pad2c[0x90 - 0x2c]; s32 x90; f32 x94; u8 pad98[0xa0 - 0x98]; f32 xa0; u8 pada4[0xcc - 0xa4]; s16 xcc; s16 xce; } N;
+#include "data/pieces/D_003F34C4.h"
+typedef N_3f34c4 N;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E24, D_00640E28;
@@ -8,7 +9,6 @@ extern s32 D_003F32A8[];
 extern s32 D_003F32C8[];
 extern s32 D_003F3308[];
 extern void (*D_003F32E8[])(N *);
-#include "data/pieces/D_003F34C4.h"
 s32 func_001fd518(N *);
 void func_00207830(N *, s32, s32, s32, s32, s32, s32);
 s32 func_0021add8(void);
@@ -96,16 +96,16 @@ void func_0020c1c8(N *o) {
                     c = func_001f4468(o);
                     switch (D_00640E28) {
                     case 5:
-                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
+                        func_001f37c0(D_003F34C4->x10, 1);
+                        func_001f3d58(D_003F34C4->x10->x10, 2);
+                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
                         c = func_0021d9e0(c);
                         o->x24 = 4;
                         break;
                     case 7:
-                        func_001f37c0(((N *)D_003F34C4)->x10, 1);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10, 2);
-                        func_001f3d58(((N *)D_003F34C4)->x10->x10->x10, 2);
+                        func_001f37c0(D_003F34C4->x10, 1);
+                        func_001f3d58(D_003F34C4->x10->x10, 2);
+                        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
                         c = func_00229338(c);
                         o->x24 = 4;
                         break;

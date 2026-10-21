@@ -71,11 +71,10 @@ s32 func_00140838(ObjF3 *o, V4f *v) {
 
 /* func_00141608: matches in hand/nostrict and hand. The three return-xbe tests as one || chain (one shared return label): cse then keeps the x4c reload for the index and gcse turns it into a copy of the first load (move a0,v1), with no folding of m[0]. */
 #include "data/pieces/D_00304BE8_s.h"
-typedef struct { u8 pad[0x38]; s16 x38; } T16c8;
-typedef struct { u8 pad[0x44]; s32 x44; s32 x48; u8 pad4c[0xbe - 0x4c]; u16 xbe; u8 padc0[8]; T16c8 *xc8; } T16s;
+#include "data/pieces/D_00304C70.h"
+typedef St6C_304c70 T16s;
 typedef struct { u8 pad[0x4c]; u16 x4c; } T16i;
 typedef struct { u8 pad[0x6c]; T16s *x6c; u8 pad70[0x130 - 0x70]; T16i *info; } T16o;
-#include "data/pieces/D_00304C70.h"
 extern u32 D_002C5958;
 s32 func_00141540(T16o *o, s32 a);
 s32 func_00141608(T16o *o, s32 n) {
@@ -83,10 +82,10 @@ s32 func_00141608(T16o *o, s32 n) {
     u16 id;
     s32 v, max;
     s32 t;
-    if (s == 0 || s == ((T16s *)&D_00304C70)) return 0;
+    if (s == 0 || s == &D_00304C70) return 0;
     if (((D_002C5958 >> 11) & 1) || o->info->x4c >= 10 || (o->info->x4c == 0 && D_00304BE8->m[o->info->x4c].bits == 0)) return s->xbe;
     v = s->xbe + n;
-    max = s->x48 * 30;
+    max = s->w48 * 30;
     if (v < 0) {
         if (s->x44 > 0) {
             v += s->x44 * 30;
@@ -98,7 +97,7 @@ s32 func_00141608(T16o *o, s32 n) {
         v = max;
     }
     s->xbe = v;
-    if (s->xc8) s->xc8->x38 = v;
+    if (s->pc8) s->pc8->x38 = v;
     return v;
 }
 

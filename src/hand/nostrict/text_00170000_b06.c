@@ -329,7 +329,7 @@ s32 func_0017d628(void) {
     if (D_002E27A8 == 7) return 0;
     if (D_002E27A8 == 2) return 0;
     if (!D_00362424) return 0;
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     func_002675a8(&pos, &D_00575894->x10);
     pos.y -= 100.0f;
     for (i = 0; i < D_00362448; i++) {

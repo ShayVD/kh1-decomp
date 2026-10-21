@@ -63,7 +63,7 @@ void func_002295a0(s32 arg0, s32 arg1) {
     }
     func_0011d768(6);
     r = func_0020d030();
-    D_003F34C4 = r;
+    D_003F34C4 = (N_3f34c4 *)r;
     if (r != 0) {
         func_00229490(r);
     }
