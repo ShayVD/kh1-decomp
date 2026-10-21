@@ -10,8 +10,10 @@ typedef struct {
     s16 xcc, xce, xd0, xd2;
 } Ob;
 typedef struct { u8 pad0[0x18]; u8 x18; } Mem;
-typedef struct { s32 a, b, c, d; } S4;
-typedef struct { u8 pad0[0x40]; S4 s; u8 pad50[0xe4 - 0x50]; } E3D70;
+#include "data/pieces/D_003E3D70.h"
+typedef S4_3E3D70 S4;
+typedef E3D70_3E3D70_2 E3D70;
+
 extern s32 D_00641BA4;
 extern s32 D_00641BA8;
 extern s32 D_00641BAC;
@@ -32,7 +34,6 @@ extern s32 D_00641C00;
 extern s32 D_00642410;
 extern s32 D_00642C18;
 #include "data/pieces/D_003E3D68.h"
-extern E3D70 D_003E3D70[];
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
@@ -147,8 +148,8 @@ void func_002134c8(Ob *o) {
                 w[2] = (s32)func_001f31a8(D_003F3BA0, 6);
                 if (w[2] != 0) {
                     func_001f3e48((Ob *)w[2], (Ob *)w[1]);
-((Ob *)w[2])->x28 = D_003E3D70[D_00641BAC].s.d;
-                    ((Ob *)w[2])->x2c = D_003E3D70[D_00641BAC].s.c;
+((Ob *)w[2])->x28 = D_003E3D70.e3D70_2[D_00641BAC].s.d;
+                    ((Ob *)w[2])->x2c = D_003E3D70.e3D70_2[D_00641BAC].s.c;
                     if (D_00641BC4 != 3) {
                         w[3] = (s32)func_001f31a8(D_003F3B70, 6);
                         if (w[3] != 0) {

@@ -256,8 +256,8 @@ s32 func_001ef4c0(s32 a) {
     return n;
 }
 
-typedef struct { u8 pad[0xe0]; s32 xe0; } S3D70;
-extern S3D70 D_003E3D70[];
+#include "data/pieces/D_003E3D70.h"
+typedef S3D70_3E3D70 S3D70;
 u8 *func_001478a0(s32);
 
 u8 func_001ef5c0(s32 arg0) {
@@ -284,7 +284,7 @@ end:
 }
 
 s32 func_001ef720(s32 i) {
-    S3D70 *e = &D_003E3D70[i];
+    S3D70 *e = &D_003E3D70.s3D70[i];
     s32 r = e->xe0 - func_001ef680(i);
     if (r < 0) r = 0;
     return r;

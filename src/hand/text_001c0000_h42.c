@@ -197,7 +197,7 @@ typedef struct {
     u8 padE0F8[4];
     Lim *lim;
 } Cam;
-extern Cam D_0037A380;
+#include "data/pieces/D_0037A380.h"
 typedef struct {
     union {
         u64 flags;
@@ -228,19 +228,19 @@ static inline void inl_cpy(V4 *d, V4 *s) {
     *d = *s;
 }
 s32 func_001c5db8(void) {
-    D_0037A380.t += 1.0f;
-    if ((f32)D_0037A380.lim->n < D_0037A380.t) {
-        D_0037A380.t = (f32)D_0037A380.lim->n;
+    (*(Cam *)&D_0037A380).t += 1.0f;
+    if ((f32)(*(Cam *)&D_0037A380).lim->n < (*(Cam *)&D_0037A380).t) {
+        (*(Cam *)&D_0037A380).t = (f32)(*(Cam *)&D_0037A380).lim->n;
         return 4;
     }
-    func_001c53c8(D_0037A380.t);
-    inl_cpy(&OUT.a, &D_0037A380.a);
-    inl_cpy(&OUT.b, &D_0037A380.d);
-    inl_cpy(&OUT.c, &D_0037A380.e);
-    inl_cpy(&OUT.e, &D_0037A380.c);
-    inl_cpy(&OUT.d, &D_0037A380.b);
-    OUT.f50 = D_0037A380.f60;
-    OUT.f54 = D_0037A380.fE0F4;
+    func_001c53c8((*(Cam *)&D_0037A380).t);
+    inl_cpy(&OUT.a, &(*(Cam *)&D_0037A380).a);
+    inl_cpy(&OUT.b, &(*(Cam *)&D_0037A380).d);
+    inl_cpy(&OUT.c, &(*(Cam *)&D_0037A380).e);
+    inl_cpy(&OUT.e, &(*(Cam *)&D_0037A380).c);
+    inl_cpy(&OUT.d, &(*(Cam *)&D_0037A380).b);
+    OUT.f50 = (*(Cam *)&D_0037A380).f60;
+    OUT.f54 = (*(Cam *)&D_0037A380).fE0F4;
     func_001c6a20();
     return 0;
 }

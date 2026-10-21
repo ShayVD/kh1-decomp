@@ -397,6 +397,8 @@ def check_files(new, files):
         b_asm, b_warn = compile_s(rel, files[rel], cache=True)
         n_asm, n_warn = compile_s(rel, new[rel])
         if n_asm is None:
+            if os.environ.get("S26_KEEP"):
+                kd = SCR / "keep"; kd.mkdir(exist_ok=True); (kd / Path(rel).name).write_text(new[rel])
             return rel, "does not compile: " + " / ".join(n_warn)[:300]
         if not same_asm(n_asm, b_asm):
             if os.environ.get("S26_KEEP"):

@@ -1345,4 +1345,4 @@
 	PIECE_BYTES D_0037A21C, 0x158, 0x4
 	PIECE_END D_0037A21C, 0x15c
 	PIECE D_0037A378, 0x8, 8  /* data/pieces/D_0037A378.h */
-	PIECE D_0037A380, 0xe100, 16  /* untyped: users disagree: Cam D_0037A380 | Scn D_0037A380 | u8 D_0037A380[]; session 25: as Scn D_0037A380: does not compile in text_001c0000_c09b.c, text_001c0000_s10_r2_9.c +2 */
+	PIECE D_0037A380, 0xe100, 16  /* data/pieces/D_0037A380.h */

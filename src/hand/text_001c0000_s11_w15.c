@@ -39,7 +39,7 @@ typedef struct {
     Ent *first;
     Ent *last;
 } Cam;
-extern Cam D_0037A380;
+#include "data/pieces/D_0037A380.h"
 extern s32 D_003C5500;
 typedef union { f32 f[4]; Ent *p[4]; } __attribute__((aligned(16))) A16;
 static inline void inl_cpy(V4 *d, V4 *s) {
@@ -49,23 +49,23 @@ s32 func_001c5db8(void);
 void func_0011ef10(s32, void *);
 void func_001c5ee8(s32 *p) {
     s32 i;
-    D_0037A380.n = *p++;
-    for (i = 0; i < D_0037A380.n; i++) {
-        Ent *e = &D_0037A380.ent[i];
+    (*(Cam *)&D_0037A380).n = *p++;
+    for (i = 0; i < (*(Cam *)&D_0037A380).n; i++) {
+        Ent *e = &(*(Cam *)&D_0037A380).ent[i];
         e->c0 = *(C4 *)p; p++;
         e->c4 = *(C4 *)p; p++;
-        D_0037A380.ent[i].n = *p; p++;
+        (*(Cam *)&D_0037A380).ent[i].n = *p; p++;
         cpm(&e->v[0], (B16 *)p); p += 4;
         cpm(&e->v[1], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[2], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[3], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[4], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[5], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[6], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[7], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[8], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[9], (B16 *)p); p += 4;
-        cpm(&D_0037A380.ent[i].v[10], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[2], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[3], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[4], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[5], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[6], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[7], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[8], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[9], (B16 *)p); p += 4;
+        cpm(&(*(Cam *)&D_0037A380).ent[i].v[10], (B16 *)p); p += 4;
         e->f[0] = *(f32 *)p; p++;
         e->f[1] = *(f32 *)p; p++;
         e->f[2] = *(f32 *)p; p++;
@@ -73,33 +73,33 @@ void func_001c5ee8(s32 *p) {
         e->lk.f4 = *(f32 *)p; p++;
         e->lk.f5 = *(f32 *)p; p++;
         if (i == 0) {
-            if (p) lk_init(&D_0037A380.ent[0].lk); else lk_init(&D_0037A380.ent[0].lk); /* identical arms, re-merged by jump2 */
+            if (p) lk_init(&(*(Cam *)&D_0037A380).ent[0].lk); else lk_init(&(*(Cam *)&D_0037A380).ent[0].lk); /* identical arms, re-merged by jump2 */
         } else {
-            Ent *q = &D_0037A380.ent[i - 1];
+            Ent *q = &(*(Cam *)&D_0037A380).ent[i - 1];
             if (i > 0) { /* identical arms (odd source): adds refs to i so it outranks lk in global-alloc; re-merged by jump2 */
-                D_0037A380.ent[i - 1].lk.next = &D_0037A380.ent[i];
+                (*(Cam *)&D_0037A380).ent[i - 1].lk.next = &(*(Cam *)&D_0037A380).ent[i];
                 e->lk.next = 0;
             } else {
-                D_0037A380.ent[i - 1].lk.next = &D_0037A380.ent[i];
+                (*(Cam *)&D_0037A380).ent[i - 1].lk.next = &(*(Cam *)&D_0037A380).ent[i];
                 e->lk.next = 0;
             }
             e->lk.prev = q;
         }
     }
-    D_0037A380.e.x = 0;
-    D_0037A380.e.y = 0;
-    D_0037A380.first = &D_0037A380.ent[0];
-    D_0037A380.last = &D_0037A380.ent[D_0037A380.n - 1];
-    D_0037A380.t = (f32)D_0037A380.ent[0].n;
-    inl_cpy(&D_0037A380.a, (V4 *)&D_0037A380.ent[0].v[5]);
-    D_0037A380.e.z = 0;
-    inl_cpy(&D_0037A380.b, (V4 *)&D_0037A380.ent[0].v[6]);
-    inl_cpy(&D_0037A380.c, (V4 *)&D_0037A380.ent[0].v[7]);
-    inl_cpy(&D_0037A380.d, (V4 *)&D_0037A380.ent[0].v[10]);
-    D_0037A380.f60 = D_0037A380.ent[0].f[2];
-    D_0037A380.e.w = 0;
-    D_0037A380.fE0F4 = D_0037A380.ent[0].lk.f5;
-    D_003C5500 = *(s32 *)&D_0037A380.ent[256] + 1;
+    (*(Cam *)&D_0037A380).e.x = 0;
+    (*(Cam *)&D_0037A380).e.y = 0;
+    (*(Cam *)&D_0037A380).first = &(*(Cam *)&D_0037A380).ent[0];
+    (*(Cam *)&D_0037A380).last = &(*(Cam *)&D_0037A380).ent[(*(Cam *)&D_0037A380).n - 1];
+    (*(Cam *)&D_0037A380).t = (f32)(*(Cam *)&D_0037A380).ent[0].n;
+    inl_cpy(&(*(Cam *)&D_0037A380).a, (V4 *)&(*(Cam *)&D_0037A380).ent[0].v[5]);
+    (*(Cam *)&D_0037A380).e.z = 0;
+    inl_cpy(&(*(Cam *)&D_0037A380).b, (V4 *)&(*(Cam *)&D_0037A380).ent[0].v[6]);
+    inl_cpy(&(*(Cam *)&D_0037A380).c, (V4 *)&(*(Cam *)&D_0037A380).ent[0].v[7]);
+    inl_cpy(&(*(Cam *)&D_0037A380).d, (V4 *)&(*(Cam *)&D_0037A380).ent[0].v[10]);
+    (*(Cam *)&D_0037A380).f60 = (*(Cam *)&D_0037A380).ent[0].f[2];
+    (*(Cam *)&D_0037A380).e.w = 0;
+    (*(Cam *)&D_0037A380).fE0F4 = (*(Cam *)&D_0037A380).ent[0].lk.f5;
+    D_003C5500 = *(s32 *)&(*(Cam *)&D_0037A380).ent[256] + 1;
     func_0011ef10(50000, func_001c5db8);
     i = 0; /* dead store kept: needed for the match */
 }

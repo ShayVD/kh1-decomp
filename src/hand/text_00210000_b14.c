@@ -2,7 +2,8 @@
 #include "data/bss_0064.h"
 
 typedef struct { s32 a, b, c, d; } S4;
-typedef struct { u8 pad[0x40]; s32 x40; u8 p44[4]; s32 x48; s32 x4c; s32 x50; u8 p54[0xE0 - 0x54]; s32 xe0; } Rec;
+#include "data/pieces/D_003E3D70.h"
+typedef Rec_3E3D70 Rec;
 typedef struct { u8 pad[0x24]; u8 x24; } Arg;
 typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; s32 x24; s32 x28; u8 p2c[0xCE - 0x2C]; s16 xce; s16 xd0; s16 xd2; } Obj;
 typedef struct Obj7 { u8 pad[0x10]; struct Obj7 *x10; u8 p14[0x10]; struct Obj7 *x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj7;
@@ -15,7 +16,6 @@ typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
 extern S4BE8 *D_00304BE8;
 #include "data/pieces/D_003E3D68.h"
-extern Rec D_003E3D70[];
 #include "data/pieces/D_003E3E50.h"
 #include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_003F34B8.h"
@@ -153,7 +153,7 @@ void func_002123b8(Arg *a) {
     func_00141b10(D_00641BAC, &buf);
     { s32 o = D_00641BB0; (D_00641BB4 + o)[25] = s; }
     (*(S4 *)&D_003E8E08).c = buf.x40;
-    r = &D_003E3D70[D_00641BAC];
+    r = &D_003E3D70.rec[D_00641BAC];
     (*(S4 *)&D_003E8E08).a = r->x40;
     if (r->x40 < buf.x40) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
     else if (r->x40 == buf.x40) (*(S4 *)&D_003E8E08).b = 0x80808080;

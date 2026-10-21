@@ -112,8 +112,8 @@ extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern u8 D_003E3C88[];
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3D6C.h"
-typedef struct { u8 b[0xe4]; } E228;
-extern E228 D_003E3D70[];
+#include "data/pieces/D_003E3D70.h"
+typedef E228_3E3D70 E228;
 extern u8 D_003E8D28[];
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003F2270.h"
@@ -287,7 +287,7 @@ void func_001ef830(void) {
     D_003E3D6C = i;
     D_003E3D68 = i;
     if (D_00304BE8->x491 != 0xff) D_003E3D68 = i + 1;
-    for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70[i]);
+    for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70.e228[i]);
 }
 
 u8 *func_001efcd8(MsgHdr *h, s32 a, s32 n) {

@@ -177,8 +177,8 @@ void func_0020b998(void) {
     if (func_0020bb78()) func_0020b6a8();
 }
 
-typedef struct { u8 pad[0x3c]; s32 x3c; s32 x40; s32 x44; s32 x48; u8 pad4c[0xe4 - 0x4c]; } E3D70;
-extern E3D70 D_003E3D70[];
+#include "data/pieces/D_003E3D70.h"
+typedef E3D70_3E3D70 E3D70;
 s32 func_001ee5f0(s32);
 s32 func_001f94f0(s32, s32, s32, s32, s32, s32, s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
@@ -186,7 +186,7 @@ s32 func_001fb428(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_0020be68(s32 a0, s32 x, u32 k) {
     s32 n = D_00304BE8->x48e[k];
     u8 *t = &D_00304BE8->e[n].x4;
-    E3D70 *e = &D_003E3D70[n];
+    E3D70 *e = &D_003E3D70.e3D70[n];
     func_001f94f0(a0, 2, x - 39, 5, func_001ee5f0(n), 13, 0x80808080);
     func_001fb428(a0, 1, 3, 0, x - 2, 25, *t, 11, 0x80208080);
     func_001fb428(a0, 1, 3, 0, x - 43, 39, e->x3c, 11, 0x8040a040);

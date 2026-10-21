@@ -58,6 +58,28 @@ def find_typedef(rel, text, tname):
     return None
 
 
+def find_deps(rel, text, stmt, tname, depth=0):
+    """[(name, stmt, start, end)] of the file's own self-contained typedefs stmt uses
+    (dependencies first), or None"""
+    bad = self_contained(stmt, tname)
+    out = []
+    for t in sorted(bad):
+        if t.startswith("struct ") or " " in t or depth > 3:
+            return None
+        ft = find_typedef(rel, text, t)
+        if not ft or ft[0] != "file":
+            return None
+        sub = find_deps(rel, text, ft[4], t, depth + 1)
+        if sub is None:
+            return None
+        for x in sub:
+            if x[0] not in [y[0] for y in out]:
+                out.append(x)
+        if t not in [y[0] for y in out]:
+            out.append((t, ft[4], ft[2], ft[3]))
+    return out
+
+
 def self_contained(stmt, tname):
     b = TM.blank_comments(stmt)
     names, tags = TM.uses(b)
@@ -134,10 +156,16 @@ def plan(N, cast_users=()):
                 users[rel] = ("member", view)
                 continue
             bad = self_contained(stmt, b)
+            deps = []
+            if bad and where == "file":
+                deps = find_deps(rel, t, stmt, b)
+                if deps is not None and {x[0] for x in deps} >= bad:
+                    bad = set()
             if bad:
                 users[rel] = ("cast", (ts, d)); continue
             body = re.sub(r"\s+", " ", TM.blank_comments(stmt))
-            key = (body.replace(b, "@T"), ptr, dims)
+            key = (body.replace(b, "@T"), ptr, dims,
+                   tuple(re.sub(r"\s+", " ", TM.blank_comments(x[1])) for x in deps))
             mname = b[0].lower() + b[1:]
             uniq = f"{b}_{N[2:].lstrip('0')}"
             if not ptr and dims:
@@ -153,7 +181,9 @@ def plan(N, cast_users=()):
                 mdecl = f"{uniq} {ptr}{mname}"
             vol = "volatile " if "volatile" in ts.split() else ""
             view = dict(key=key, mname=mname, decl=vol + mdecl, stmt=stmt, tname=b, uniq=uniq,
-                        where=(where, path, st, en))
+                        where=(where, path, st, en),
+                        deps=[dict(name=x[0], stmt=x[1], st=x[2], en=x[3], uniq=f"{x[0]}_{N[2:].lstrip('0')}")
+                              for x in deps])
         if view["key"] in vkey:
             v0 = vkey[view["key"]]
             if view.get("tname") and v0.get("tname") != view.get("tname"):
@@ -203,6 +233,23 @@ def norm_view(ts, d):
     return (C.norm(ts.replace("M2C_UNK", "s32")), d)
 
 
+def rename_stmt(stmt, name, uniq, ren):
+    """stmt's typedef name -> uniq, its struct tags -> tag + uniq's suffix, the
+    already renamed dependency types -> their new names"""
+    st = stmt.strip()
+    suf = uniq[len(name):]
+    for tag in TM.defines(TM.blank_comments(st))[1]:
+        st = re.sub(r"\b(struct|union|enum)(\s+)" + tag + r"\b", r"\1\2" + tag + suf, st)
+    k = st.rfind("}")
+    head, tail = (st[:k], st[k:]) if k >= 0 else ("", st)
+    for o, n in ren.items():
+        head = re.sub(r"\b" + o + r"\b", n, head)
+        if k < 0:
+            tail = re.sub(r"(^\s*typedef\s+)" + o + r"\b", r"\1" + n, tail)
+    tail = re.sub(r"\b" + name + r"\b", uniq, tail)
+    return head + tail
+
+
 def header(N, views):
     U = "U" + N[2:]
     lines = [f"/* The data piece {N} (src/data/data_{int(N[2:], 16) >> 16:04X}.s): one declaration its users",
@@ -213,12 +260,16 @@ def header(N, views):
     for i in sorted({v["inc"] for v in views if v.get("inc")}):
         lines.append(f'#include "{i}"')
     lines.append("")
+    done = set()
     for v in views:
         if v.get("stmt"):
-            st = v["stmt"].strip()
-            k = st.rfind("}")
-            st = st[:k] + re.sub(r"\b" + v["tname"] + r"\b", v["uniq"], st[k:])
-            lines.append(st)
+            ren = {}
+            for dp in v.get("deps", []):
+                ds = rename_stmt(dp["stmt"], dp["name"], dp["uniq"], ren)
+                ren[dp["name"]] = dp["uniq"]
+                if dp["uniq"] not in done:
+                    lines.append(ds); done.add(dp["uniq"])
+            lines.append(rename_stmt(v["stmt"], v["tname"], v["uniq"], ren))
     lines.append(f"typedef union {{ " + " ".join(v["decl"] + ";" for v in views) + f" }} {U};")
     lines += ["", f"extern {U} {N};", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""]
     return "\n".join(lines)
@@ -247,9 +298,16 @@ def edit(N, rel, text, kind, info, INC):
         where, path, st, en = view["where"]
         alias = f"typedef {view['uniq']} {view['tname']};"
         if where == "file":
-            # the typedef statement becomes the include + an alias
+            # the typedef statements (deps, then the type) become the include + aliases
+            spans = sorted([(dp["st"], dp["en"], f"typedef {dp['uniq']} {dp['name']};") for dp in view.get("deps", [])]
+                           + [(st, en, alias)])
+            st = spans[0][0]
             ln_st = text.count("\n", 0, st)
-            new_text = text[:st] + INC + "\n" + alias + text[en:]
+            new_text = text
+            for i, (s0, e0, al) in enumerate(reversed(spans)):
+                first = i == len(spans) - 1
+                rep = (INC + "\n" + "\n".join(x[2] for x in spans)) if first else ""
+                new_text = new_text[:s0] + rep + new_text[e0:]
             lines = new_text.split("\n")
             shift = new_text.count("\n") - text.count("\n")
             drop = {(i + shift if i > ln_st else i): v for i, v in drop.items()}

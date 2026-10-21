@@ -9,9 +9,10 @@ typedef struct { T74c e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; } G4BE8c;
 extern G4BE8c *D_00304BE8;
 typedef struct { u8 pad[8]; s32 f8; } S5bc8c;
 #include "data/pieces/D_00425BC8.h"
-typedef struct { s32 a, b, c, d; } S4c;
-typedef struct { u8 pad[0x40]; S4c s; u8 pad2[0xe4 - 0x50]; } E3D70c;
-extern E3D70c D_003E3D70[];
+#include "data/pieces/D_003E3D70.h"
+typedef S4c_3E3D70 S4c;
+typedef E3D70c_3E3D70 E3D70c;
+
 typedef struct {
     u8 pad0[0x10]; void *x10; u8 pad14[0x14]; s32 x28; s32 x2c;
     u8 pad30[0xcc - 0x30]; s16 xcc; s16 xce; u16 xd0; u16 xd2;
@@ -105,8 +106,8 @@ void func_00212cc0(Obj2cc0 *o) {
                                 func_001f3e48((void *)w[1], (void *)w[0]);
                                 if ((w[2] = func_001f31a8(D_003F3BA0, 6))) {
                                     func_001f3e48((void *)w[2], (void *)w[1]);
-                                    ((Obj2cc0 *)w[2])->x28 = D_003E3D70[D_00641BAC].s.d;
-                                    ((Obj2cc0 *)w[2])->x2c = D_003E3D70[D_00641BAC].s.c;
+                                    ((Obj2cc0 *)w[2])->x28 = D_003E3D70.e3D70c[D_00641BAC].s.d;
+                                    ((Obj2cc0 *)w[2])->x2c = D_003E3D70.e3D70c[D_00641BAC].s.c;
                                     if (D_00641BC4 != 3) {
                                         if ((w[3] = func_001f31a8(D_003F3B70, 1))) {
                                             func_001f3e48((void *)w[3], (void *)w[2]);

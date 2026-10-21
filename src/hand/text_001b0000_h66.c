@@ -111,7 +111,7 @@ void func_001c96c0(void);
 void func_001c9ac8(void);
 void func_001c9d40(void);
 void func_001c9e80(void);
-extern u8 D_0037A380[];
+#include "data/pieces/D_0037A380.h"
 extern u8 D_00389C90[];
 extern u8 D_003C5510[];
 
