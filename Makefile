@@ -152,7 +152,9 @@ SHIFT_FLOAT      ?= 0
 # it kept data 0x4000 + bss 0x11800 draws the alley.
 # Session 25: the fixed pools follow crt0's heap (SHIFT_FIXED_ARENA), so 0x26000 floats D_00533BA0's
 # 0x14000 run too (KH1_F25_B plays; only the 0x1CC48 and 0x30C9C runs stay).
-SHIFT_FLOAT_BSS_BUDGET ?= 0x26000
+# Session 26: func_00121c78's block heap base follows the pools past 0x820000 (SHIFT_FIXED_HEAP), so
+# every bss run the checks allow floats (KH1_F26_A plays); the budgets no longer leave anything out.
+SHIFT_FLOAT_BSS_BUDGET ?= 0x100000
 # SHIFT_FLOAT_DATA_BUDGET: bytes of floated data variables and pieces (smallest first); floated
 # data goes after the blob and pushes .bss and _end up by as much (same arena limit).
 # Session 20: 0x4000 (753 data names) plays in PCSX2 (title, load menu, save 05, field, menus) with
@@ -166,7 +168,9 @@ SHIFT_FLOAT_BSS_BUDGET ?= 0x26000
 # except the three 0x16C00-0x40000 tables (1,103 names). With bss 0x26000 _end is 0x6BABA4 and the
 # pools start at 0x6C5000; their end may reach 0x820000 (shift_ld asserts it), so at most about
 # 0x8000 more can float.
-SHIFT_FLOAT_DATA_BUDGET ?= 0x20000
+# Session 26: the block heap at 0x820000 moves too, so the three tables float (KH1_F26_A: _end 0x74B164,
+# pools at 0x756000, block heap at 0x8A9000 with 0xF7000 of its 0x180000 bytes left).
+SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # SHIFT_REACH_FLAGS: extra reach_check.py options, each turning one rule off for bisecting:
 # --no-bounds (the session 18 idx-next rule), --no-idx-base, --no-stored, --no-uncached (session 20),
 # --no-countdown (pointer walks capped by a loop counter), --no-join (a join of addresses is one base +
@@ -208,6 +212,9 @@ SHIFT_FLOAT_BSS_SLOTS ?=
 # SHIFT_FIXED_ARENA=1: keep the fixed pools at 0x6A0000/0x720000 (moved modes move them after crt0's
 # heap when _end + 0xA000 reaches 0x6A0000; shift_ld ARENA_POOLS, docs/shiftable-plan.md "Session 25").
 SHIFT_FIXED_ARENA ?= 0
+# SHIFT_FIXED_HEAP=1: keep func_00121c78's block heap at 0x820000 (moved modes move its base after the pools
+# when they reach it; its end stays at 0x9A0000; shift_ld BLOCK_HEAP, docs/shiftable-plan.md "Session 26").
+SHIFT_FIXED_HEAP ?= 0
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
 # (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
 # with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
@@ -264,7 +271,7 @@ endif
 		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)$(SHIFT_FLOAT_FORCE)" ]; \
 		if [ -n "$(SHIFT_FLOAT_FORCE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt $(SHIFT_FLOAT_FORCE); fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FIXED_HEAP)),--fixed-heap) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s
