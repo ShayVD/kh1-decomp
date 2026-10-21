@@ -41,7 +41,7 @@ extern C01Ply *D_002E26A0[3];
 extern s32 D_002C5C54;
 extern s32 D_002C5C4C;
 extern u32 D_002C5958;
-extern C01Tbl *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 s32 func_0013c968(s32, s32);
 
 void func_001252f8(void) {
@@ -67,7 +67,7 @@ void func_001252f8(void) {
         (*(C01Flg27C8 *)&D_002E27C8).b10 += func_0013c968(16, id);
         D_00306844 += func_0013c968(27, id) * 0.5f;
         D_00306848 += func_0013c968(28, id) * 0.5f;
-        p->x6c->x10 = D_002C5C54 ? D_00308CDC->e[id].b : D_00308CDC->e[id].a;
+        p->x6c->x10 = D_002C5C54 ? (*(C01Tbl **)&D_00308CDC)->e[id].b : (*(C01Tbl **)&D_00308CDC)->e[id].a;
         p->x148->b38 = func_0013c968(62, id);
         for (j = 0; j < p->x6c->xc8->n; j++) {
             c = p->x6c->xc8->id[j];
@@ -90,7 +90,7 @@ void func_001252f8(void) {
         (*(C01Flg27C8 *)&D_002E27C8).b9 = 1;
         for (i = 0; i < 3; i++) {
             p = D_002E26A0[i];
-            if (p) p->x6c->x10 = D_00308CDC->e[p->x130->x4c].b;
+            if (p) p->x6c->x10 = (*(C01Tbl **)&D_00308CDC)->e[p->x130->x4c].b;
         }
     }
     if (func_0013c968(3, 11)) (*(C01Flg27C8 *)&D_002E27C8).b7 = 1;

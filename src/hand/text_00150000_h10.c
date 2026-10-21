@@ -45,7 +45,7 @@ extern U2C5958 D_002C5958;
 extern s32 D_005516E8;
 extern s32 *D_005516E4;
 typedef struct { u8 pad[0xF4]; u16 hF4[1]; } S308CDC;
-extern S308CDC *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 extern s32 D_00351A48;
 extern s32 D_0029B418;
 extern u8 D_00351AA0[];
@@ -184,7 +184,7 @@ void func_00158af0(s32 a, s32 b) {
     *f = (*f | 0x10000) & ~0x800000;
     func_00131498(a, D_005516E8);
     D_00F20000(b, (s32)D_005516E4 + D_005516E4[b + 2]);
-    func_001412f8(a, D_00308CDC->hF4[b]);
+    func_001412f8(a, (*(S308CDC **)&D_00308CDC)->hF4[b]);
 }
 
 void func_001590a8(void) {

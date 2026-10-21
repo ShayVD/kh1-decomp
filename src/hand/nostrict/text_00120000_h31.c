@@ -43,7 +43,7 @@ typedef struct { u8 pad[0x130]; S4c *f130; } E11;
 typedef struct { u8 pad[0x10]; E11 *f10; s32 f14; u8 pad18[4]; f32 f1c; u8 f20[0x40]; } T11;
 typedef struct { s32 f0, f4, f8; E11 *fc; u8 pad10[0x20]; s32 f30; } P11;
 typedef struct { u8 pad[0x40]; struct { u8 a, b; } t[0x58]; f32 ff0; } G1;
-extern G1 *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002E31A4.h"
 #include "data/pieces/D_00304BE8.h"
 extern void func_0012c328();
@@ -62,10 +62,10 @@ void func_0012c560(E11 *e, E11 *t, s32 fl) {
     p->fc = t;
     if (t == 0 || e == t) {
         p->f4 = 1;
-        k->f1c = D_00308CDC->t[e->f130->f4c].a;
+        k->f1c = (*(G1 **)&D_00308CDC)->t[e->f130->f4c].a;
     } else {
         p->f4 = 2;
-        k->f1c = D_00308CDC->t[e->f130->f4c].b;
+        k->f1c = (*(G1 **)&D_00308CDC)->t[e->f130->f4c].b;
     }
     if (!(fl & 0x400)) {
         if (e->f130->f4c == 0) { s32 o = ((s32)D_00304BE8); (D_002E31A4 + o)[38] = 0; }

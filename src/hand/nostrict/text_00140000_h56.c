@@ -572,7 +572,7 @@ typedef struct { u8 pad[0xc]; void *pc; u8 pad10[4]; } Rel20;
 typedef struct { u32 w0; void *p4; void *p8; } Rel12;
 extern u8 D_0048E398[];
 extern u8 D_00533BA0[];
-extern void *volatile D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_003044A0.h"
 extern Rel20 *volatile D_00547BA0;
 extern void *volatile D_00547BA4;

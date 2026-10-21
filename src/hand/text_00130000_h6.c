@@ -177,7 +177,7 @@ extern u32 D_002C5958;
 s32 func_00123488(s32 id);
 s32 func_0012ba98(s32 a);
 extern W6Trip D_00526640[]; /* src/data/bss_0052.c: W32E12 D_00526640[32] */
-extern W6Lim *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 void func_00133920(W6Mgr *m, W6Link *l);
 f32 func_001348e0(W6Mgr *m, W6Kind *k);
 void *memset(void *d, s32 c, u32 n);
@@ -639,9 +639,9 @@ s32 func_001347f0(W6Mgr *m, W6Kind *k) {
     s32 v;
     if (r == 1) {
         v = func_001348e0(m, k) * 100.0f;
-        if (v < D_00308CDC->lim0) {
+        if (v < (*(W6Lim **)&D_00308CDC)->lim0) {
             r = 3;
-        } else if (v < D_00308CDC->lim1) {
+        } else if (v < (*(W6Lim **)&D_00308CDC)->lim1) {
             r = 4;
         } else {
             r = 5;
@@ -862,12 +862,12 @@ s32 func_00138988(W6Unit *u) {
 void func_00138c30(W6Unit *u, W6Cmd *c) {
     f32 v[4];
     func_002675a8(v, c->v10);
-    v[3] = D_00308CDC->f2c * u->p6c->fc4;
+    v[3] = (*(W6Lim **)&D_00308CDC)->f2c * u->p6c->fc4;
     func_00156260(u, v);
     c->bits |= 2;
 }
 void func_00139408(W6Unit *u, s32 a) {
-    W6Lim *c = D_00308CDC;
+    W6Lim *c = (*(W6Lim **)&D_00308CDC);
     f32 lo = c->h14;
     f32 t = lo + (c->h16 - lo) * u->p6c->fc4;
     f32 k = c->f18;

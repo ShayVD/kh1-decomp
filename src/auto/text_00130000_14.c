@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern void *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 f32 atan2f(f32, f32);
 s32 func_00130040(s32, s32);
 void func_00130340(s32, s32, f32);
@@ -35,6 +35,6 @@ void func_00139040(s32 arg0, s32 arg1, f32 fparg0) {
     M2C_FIELD(arg0, f32 *, 0x150) = var_f0;
     func_00137688(arg0, var_f0);
     func_002675a8((s32) sp, arg1 + 0x10);
-    M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD(D_00308CDC, f32 *, 0x3C);
+    M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD((*(void **)&D_00308CDC), f32 *, 0x3C);
     func_00138a20(arg0, (s32) sp, 2e+01f);
 }

@@ -80,7 +80,7 @@ void func_00153c50(Obj153c50 *a, s32 b) {
 
 /* ---- func_001541a8 ---- */
 typedef struct { u8 pad[0x20]; f32 f20; f32 f24; } S308CDC;
-extern S308CDC *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 typedef struct { u8 pad[0xC4]; f32 fC4; } S6C_1541a8;
 typedef struct { u8 pad[0x6C]; S6C_1541a8 *p6C; } Obj1541a8;
 typedef struct { u8 pad[0xC]; f32 fC; } Out1541a8;
@@ -92,10 +92,10 @@ void func_001541a8(Obj1541a8 *a, u8 *b, Out1541a8 *o) {
     f32 v;
     func_002675a8(o, b + 16);
     s = a->p6C->fC4;
-    if (func_001348e0(a, b) * D_00308CDC->f20 < D_00308CDC->f24) {
-        v = func_001348e0(a, b) * D_00308CDC->f20 * s;
+    if (func_001348e0(a, b) * (*(S308CDC **)&D_00308CDC)->f20 < (*(S308CDC **)&D_00308CDC)->f24) {
+        v = func_001348e0(a, b) * (*(S308CDC **)&D_00308CDC)->f20 * s;
     } else {
-        v = D_00308CDC->f24 * s;
+        v = (*(S308CDC **)&D_00308CDC)->f24 * s;
     }
     o->fC = v;
 }
@@ -227,7 +227,7 @@ void func_00154880(Obj154768 *a, Arg154768 *b, Vec154768 *o) {
     func_002675a8(o, &a->v30);
     o->w = 0.0f;
     func_002675a8(&t, &b->v);
-    t.w = ((S308CDC_b *)D_00308CDC)->f3C;
+    t.w = ((S308CDC_b *)(*(S308CDC **)&D_00308CDC))->f3C;
     func_00138a20(a, &t, 20.0f);
 }
 
@@ -259,7 +259,7 @@ void func_001549b8(Obj154768 *a, Arg154768 *b, Vec154768 *o) {
     func_002675a8(o, &a->v30);
     o->w = 0.0f;
     func_002675a8(&t, &b->v);
-    t.w = ((S308CDC_c *)D_00308CDC)->f24 * ((Obj6C_1549b8 *)a)->p6C->fC4;
+    t.w = ((S308CDC_c *)(*(S308CDC **)&D_00308CDC))->f24 * ((Obj6C_1549b8 *)a)->p6C->fC4;
     func_00156260(a, &t);
 }
 
@@ -271,7 +271,7 @@ void func_00154af8(Obj154af8 *a, Arg154af8 *b, Vec154768 *o) {
     a->p14C->b29--;
     if (b->w8 < 0) {
         func_00267530(&t, D_002C58A0, &a->v30);
-        t.w = (f32)-b->w8 * ((S308CDC_c *)D_00308CDC)->f1C * ((Obj6C_1549b8 *)a)->p6C->fC4;
+        t.w = (f32)-b->w8 * ((S308CDC_c *)(*(S308CDC **)&D_00308CDC))->f1C * ((Obj6C_1549b8 *)a)->p6C->fC4;
         func_00156260(a, &t);
     }
     o->w = 0.0f;
@@ -288,8 +288,8 @@ void func_00154c60(Obj154c60 *a, Arg154af8 *b) {
     func_001373f8(a, 8.0f);
     func_0014cce0(a, 20.0f);
     if (b->w8 < 0) {
-        f = (f32)b->w8 / 100.0f * ((S308CDC_d *)D_00308CDC)->f30;
-        m = -((S308CDC_d *)D_00308CDC)->f34;
+        f = (f32)b->w8 / 100.0f * ((S308CDC_d *)(*(S308CDC **)&D_00308CDC))->f30;
+        m = -((S308CDC_d *)(*(S308CDC **)&D_00308CDC))->f34;
         s = a->p6C->fC4;
         if (m < f) {
             m = f * s;
@@ -309,7 +309,7 @@ void func_00154d60(Obj154c60 *a, Arg154af8 *b) {
     func_001373f8(a, 8.0f);
     func_00267530(&t, D_002C58A0, &a->v30);
     if (b->w8 < 0) {
-        t.w = (f32)-b->w8 * ((S308CDC_d *)D_00308CDC)->f1C * a->p6C->fC4;
+        t.w = (f32)-b->w8 * ((S308CDC_d *)(*(S308CDC **)&D_00308CDC))->f1C * a->p6C->fC4;
     } else {
         t.w = 0.0f;
     }
@@ -734,7 +734,7 @@ Ret157ea8 *func_00159740(Obj159740 *a, Vec154768 *o) {
     func_0014f658(a, 1);
     a->f3B0 = 0.0f;
     a->p148->f100 = 0.0f;
-    func_00159148(a, ((S308CDC_e *)D_00308CDC)->e[a->p130->h4C].a);
+    func_00159148(a, ((S308CDC_e *)(*(S308CDC **)&D_00308CDC))->e[a->p130->h4C].a);
     func_002675a8(o, a->p148->x160);
     o->y = 0.0f;
     func_00121fc4(o, o);

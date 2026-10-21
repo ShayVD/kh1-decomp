@@ -204,7 +204,7 @@ typedef struct { u8 pad[0x18]; void **p18; } Blk7c;
 typedef struct { u8 pad[0x68]; s32 w68; u8 pad6c[0x1C]; u32 w88; } Act;
 
 /* ---- data ---- */
-extern Cfg *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
@@ -370,8 +370,8 @@ void func_0013e978(ObjF3 *o, Cmd *c) {
             }
             func_00130578(o, 0x40000006, 8.0f);
             func_001333e0(o, c->id, &c->w4);
-            func_0014cce0(o, D_00308CDC->fe8);
-            func_00267560((V4f *)((u8 *)o + 0x3C0), (V4f *)((u8 *)o + 0x3C0), D_00308CDC->ff0);
+            func_0014cce0(o, (*(Cfg **)&D_00308CDC)->fe8);
+            func_00267560((V4f *)((u8 *)o + 0x3C0), (V4f *)((u8 *)o + 0x3C0), (*(Cfg **)&D_00308CDC)->ff0);
             return;
         }
         func_00137330(c->w4, o, t);
@@ -936,7 +936,7 @@ s32 func_00141468(O1468 *o, s32 x) {
     if (s == 0 || s == ((St6C *)&D_00304C70)) return 0;
     v = func_00141448(s->w3c, x, s->w40);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->w3c + (s32)((v - s->w3c) * D_00308CDC->f88);
+        v = s->w3c + (s32)((v - s->w3c) * (*(Cfg **)&D_00308CDC)->f88);
     }
     s->w3c = v;
     s->flags &= ~4;
@@ -950,7 +950,7 @@ s32 func_00141540(O1468 *o, s32 x) {
     if (s == 0 || s == (St6Cb *)((St6C *)&D_00304C70)) return 0;
     v = func_00141448(s->w44, x, s->w48);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->w44 + (s32)((v - s->w44) * D_00308CDC->f88);
+        v = s->w44 + (s32)((v - s->w44) * (*(Cfg **)&D_00308CDC)->f88);
     }
     s->w44 = v;
     if (s->pc8) s->pc8->b3 = v;

@@ -8,7 +8,7 @@ M2C_UNK func_001318e8(void *, u16, void *);
 M2C_UNK func_00267328(void *, void *, void *);
 extern M2C_UNK D_002E26A0[];
 extern s32 D_005252A8;
-extern void *D_00308CDC;
+#include "data/pieces/D_00308CDC.h"
 f32 atan2f(f32, f32);
 s32 func_00122ff8(void *);
 s32 func_00130070();
@@ -114,7 +114,7 @@ void func_00138d88(s32 arg0, s32 arg1, f32 fparg0) {
     }
     func_00130578(arg0, 6, 8.0f);
     func_002675a8((s32) sp, arg1 + 0x10);
-    M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD(D_00308CDC, f32 *, 0x38) * M2C_FIELD(M2C_FIELD(arg0, void **, 0x6C), f32 *, 0xC4);
+    M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD((*(void **)&D_00308CDC), f32 *, 0x38) * M2C_FIELD(M2C_FIELD(arg0, void **, 0x6C), f32 *, 0xC4);
     func_00138a20(arg0, (s32) sp, 2e+01f);
 }
 
