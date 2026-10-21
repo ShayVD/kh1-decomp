@@ -6,9 +6,11 @@
 # IOP writes its replies into it by DMA. D_0063EE40, D_0063F248 (+0x1c08) and D_0063F540
 # (+0x1f00) are fields of it read after FlushCache(0). Floated, they stay zero and the
 # game never draws the title (session 18 bisection in PCSX2; the RAM dump showed the
-# IOP's write at D_0063F248's old place).
-D_0063F248
-D_0063F540
+# IOP's write at D_0063F248's old place). Session 28: the whole block is one piece
+# (src/data/data_0063.s, the three fields are labels in it), so it can float whole; kept until a
+# SHIFT_FLOAT_FORCE=D_0063D640 build has played (the IOP gets the block's new address from
+# D_00633640[0], which is a relocation).
+D_0063D640
 #
 # The renderer's GIF packet buffer: func_00162428 and friends store D_00573AC0 | 0x20000000
 # (uncached) into D_0055C648 and func_0015f8c8 builds the packet through that pointer, far

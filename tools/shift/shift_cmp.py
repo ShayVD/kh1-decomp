@@ -449,7 +449,13 @@ def main() -> int:
     arena_clash = nsym.get("_end", 0) > L.arena
     ok = not bad_fields and not bad_bytes and not absolute and not arena_clash
     ent_ok = new_elf.entry in amap.fwd(ref_elf.entry)
-    sym_ok = all(nsym[n] in amap.fwd(rsym[n]) for n in ("_gp", "D_BLOB", "D_BSS", "_end"))
+    # D_BLOB is the start of .data in both links (shift_ld: `D_BLOB = .;` first in .data). When the first
+    # data object (D_00272C70) floats, the address maps to its copy, but the symbol stays the blob start
+    # (session 28), so it is checked as the .data start, not through the map.
+    dstart = {n: min((s.addr for s in e.sections if s.name == ".data"), default=None) for n, e in (("ref", ref_elf), ("new", new_elf))}
+    blob_ok = rsym["D_BLOB"] == dstart["ref"] and nsym["D_BLOB"] == dstart["new"] and (
+        nsym["D_BLOB"] in amap.fwd(rsym["D_BLOB"]) or nsym["D_BLOB"] == nsym.get("_fdata"))
+    sym_ok = blob_ok and all(nsym[n] in amap.fwd(rsym[n]) for n in ("_gp", "D_BSS", "_end"))
     ok = ok and ent_ok and sym_ok
     moved = sum(1 for ra, size, na, *_ in secs if ra != na)
     print(f"{mode} {'OK' if ok else 'FAIL'}: {len(secs)} input sections ({moved} moved), "

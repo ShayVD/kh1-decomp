@@ -48,7 +48,7 @@ extern s32 D_006314CC;
 extern s32 D_006314D0;
 extern s32 D_006314D8;
 extern s32 D_006314DC;
-s32 D_0063F248 ALIGNED(8);
+extern s32 D_0063F248;  /* src/data/data_0063.s: inside the IOP block D_0063D640 */
 extern s32 D_0063F540;
 #include "data/pieces/D_003F34B8.h"
 s32 func_0011e340(M2C_UNK);
