@@ -93,6 +93,32 @@ def string_end(data: bytes, ub: int, kind: str) -> int | None:
     return z + 1
 
 
+# Session 27 (dma-count): func_00237018(buf, n, wait) writes a DMA "end" tag with qwc n - 1 at buf and sends
+# buf on GIF channel 2 in chain mode (func_00266f38: CHCR 0x105), so the DMA reads exactly 16 * n bytes.
+DMA_COUNT_CALLS = {
+    0x00237018: [(4, lambda st: 16 * st[5] if isinstance(st.get(5), int) and 0 < st[5] < 0x10000 else None)],
+}
+# Session 27 (list-arg): callee -> (list argument, element width, terminator, {argument: bytes per element}):
+# the callee reads the list until the terminator ("m1": a word -1, "neg": a negative halfword) and
+# advances each dependent argument by its stride per element before it. A list literal in .data (ending
+# with the terminator and at most 12 bytes of zero padding) gives the count.
+LIST_CALLS = {
+    0x0024AFC0: (0, 4, "m1", {1: 4}),  # func_0024afc0(list, out[] words, hdr)
+    0x0024AF40: (0, 4, "m1", {1: 0xC0}),  # func_0024af40(list, out[] 0xC0-byte records, hdr)
+    0x0024C8B8: (1, 2, "neg", {}),  # func_0024c8b8(o, list of halfwords, ...)
+}
+
+
+def list_count(data: bytes, width: int, term: str) -> int | None:
+    """Elements before the terminator of a list literal that fills data (the object to the next name)."""
+    for k in range(0, len(data) - width + 1, width):
+        v = int.from_bytes(data[k:k + width], "little", signed=True)
+        if (term == "m1" and v == -1) or (term == "neg" and v < 0):
+            rest = data[k + width:]
+            return k // width if len(rest) <= 12 and not any(rest) else None
+    return None
+
+
 ARG = "arg"  # ("arg", k, off): argument k on entry + off
 IDX = "idx"  # register = known base + offset: ("idx", base, upper bound of the offset or None)
 UB = "ub"  # a small value with an upper bound: ("ub", U)
@@ -950,6 +976,10 @@ def main() -> int:
                     help="refine a branch's edges after its delay slot, not before (session 27)")
     ap.add_argument("--no-str-arg", action="store_true",
                     help="a string literal passed to printf/strcpy/strcmp/... is not bounded by its NUL (session 27)")
+    ap.add_argument("--no-list-arg", action="store_true",
+                    help="a -1/negative-terminated list literal does not bound func_0024afc0 & co (session 27)")
+    ap.add_argument("--no-dma-count", action="store_true",
+                    help="func_00237018(buf, n) is not a block access of 16 * n bytes (session 27)")
     ap.add_argument("--no-dead-arg", action="store_true",
                     help="an address left in an argument register at a call is passed even when the callee never "
                          "reads that register (session 27)")
@@ -960,6 +990,8 @@ def main() -> int:
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
+    if not a.no_dma_count:
+        BLOCK_CALLS.update(DMA_COUNT_CALLS)
     sizes = {}
     for ln in a.data_tsv.read_text().splitlines()[1:]:
         f = ln.split("\t")
@@ -1062,7 +1094,7 @@ def main() -> int:
             if e[0] == "passidx":
                 _p, callee, j, base, ub, _pc, nblk = e
                 if BLOB_START <= base < IMAGE_END + 0x10000:
-                    passidx.append((name, callee, j, base, ub, nblk))
+                    passidx.append((name, callee, j, base, ub, nblk, _pc))
                 continue
             if e[0] == "pass":
                 _p, callee, j, v, _pc = e
@@ -1165,7 +1197,43 @@ def main() -> int:
     # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
     # B + bound(i) + hi; unbounded when either is unknown (block functions count their bytes).
     str_arg = 0
-    for name, callee, j, base, ub, nblk in passidx:
+    call_args: dict[tuple, dict] = {}  # (caller, pc) -> {argument: [(base, bound)]}
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        call_args.setdefault((name, pc), {}).setdefault(j, []).append((base, ub))
+
+    def list_end(name, pc, callee, j, base, ub):
+        """End of argument j's reach at a LIST_CALLS call whose list argument is one list literal (session 27)."""
+        spec = LIST_CALLS.get(callee)
+        if a.no_list_arg or not spec or ub is None or (j != spec[0] and j not in spec[3]):
+            return None
+        la = call_args.get((name, pc), {}).get(spec[0], [])
+        if len(la) != 1 or la[0][1] != 0 or not (BLOB_START <= la[0][0] < BSS_START):
+            return None
+        lb = la[0][0]
+        k_ = bisect.bisect_right(anchors, lb)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        if obj_end - lb > 0x10000:
+            return None
+        cnt = list_count(elf.read(lb, obj_end - lb), spec[1], spec[2])
+        if cnt is None:
+            return None
+        return base + ub + (spec[1] * (cnt + 1) if j == spec[0] else spec[3][j] * cnt)
+
+    list_arg = 0
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        le_ = list_end(name, pc, callee, j, base, ub)
+        if le_ is not None:  # a list literal's count bounds the list and the arguments walked with it
+            list_arg += 1
+            why.setdefault(base, set()).add("arg-list")
+            if a.explain:
+                explain.append(f"{base:08x}\targ-list\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                               f"end=+{le_ - base}\tblk={nblk}")
+            idx_all.setdefault(base, set()).add(name)
+            if base not in idx_end or (idx_end[base] is not None and le_ > idx_end[base]):
+                idx_end[base] = le_
+            if piece(base)[0] is not None:
+                idx.setdefault(base, set()).add(name)
+            continue
         z_ = str_bound(callee, j, base, ub)
         if z_ is not None:  # a string literal read to its NUL, inside its own object (session 27)
             str_arg += 1
@@ -1262,6 +1330,7 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    print(f"# {list_arg} list arguments are bounded by a list literal's count (list-arg)", file=sys.stderr)
     print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
     print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
           file=sys.stderr)
