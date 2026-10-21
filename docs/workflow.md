@@ -825,3 +825,18 @@ found that the next session needs:
   sometimes dropped; check the cursor with a zoom before each confirm. A dropped "Down" on the title starts
   a new game. The intro text ("Thinking of you...") means New Game was chosen.
 - func_00125240 matched (worker s22m1): 6,979 / 6,988.
+
+## Session 23: what changed
+
+- **Runtime on data 0x8000 / bss 0x11800**: Gate Plaza, the world map, a warp drive and a fight all work
+  (docs/shiftable-plan.md "Session 23"). Test T's "alley" is Gate Plaza (the main menu names it).
+- float_keep.txt lost the libcdvd block (not needed). merge_pieces.py `--group D_X:SIZE` / `--split` made the
+  staging arena, the six 0x4040-byte VIF1 DMA chains (D_0046E120 + k * 0x4040) and every split_check pair whole
+  pieces. Floating two chains whole still hangs entering Gate Plaza (cause open); they stay kept.
+- Phase 4: D_0046A688 is a piece (D_0046A6A4 left C).
+- Matching ran as its own thread (PR #27): no new matches; 001636d0 394w; notes in nonmatchings/session23-match/.
+- **PCSX2 from a fresh session**: the folder tools need `device_request_folder_access(["~/Downloads"])` (the
+  full path was refused once); the computer-use app is "PCSX2-v2.8.2". Double-clicking the KH1_BIG.iso row
+  in PCSX2's game list boots it (no Start File dialog). A fresh container needs `out/overlays` (stage
+  Downloads/kh1-test/ovl/*.x) and `tools/shift/data_owners.py` before the float build.
+- A PCSX2 hang can show as a black screen with "FPS: N/A" in the status bar while VPS stays at 60.

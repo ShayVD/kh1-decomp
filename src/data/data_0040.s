@@ -5,6 +5,4 @@
  * include/data/data_0040.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_0040E780, 0x400, 16  /* untyped: users disagree: u128 D_0040E780[] | u8 D_0040E780[] */
-	PIECE D_0040EB80, 0x400, 16  /* untyped: users disagree: u128 D_0040EB80[] | u8 D_0040EB80[] */
 	PIECE D_0040EF80, 0x16c00, 16  /* untyped: type u128 is not a common.h basic type */

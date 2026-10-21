@@ -41,8 +41,11 @@
 	.word D_003DAE40
 	PIECE_BYTES D_003DAF60, 0x8, 0x8
 	PIECE_END D_003DAF60, 0x10
-	PIECE D_003DAF70, 0xb8, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_003DB028, 0x28, 8
+	PIECE_BEGIN D_003DAF70, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_003DAF70, D_003DB028 */
+	PIECE_BYTES D_003DAF70, 0x0, 0xb8
+	PIECE_LABEL D_003DAF70, D_003DB028, 0xb8
+	PIECE_BYTES D_003DAF70, 0xb8, 0x28
+	PIECE_END D_003DAF70, 0xe0
 	PIECE_BEGIN D_003DB050, 0x10, 16
 	PIECE_BYTES D_003DB050, 0x0, 0x4
 	.word D_003DAF70

@@ -20,8 +20,11 @@
 	.word D_002B6490
 	PIECE_BYTES D_002B65E0, 0x8, 0x8
 	PIECE_END D_002B65E0, 0x10
-	PIECE D_002B65F0, 0x78, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_002B6668, 0x48, 8
+	PIECE_BEGIN D_002B65F0, 0xc0, 16  /* untyped: merged (a user declares it larger than the next name): D_002B65F0, D_002B6668 */
+	PIECE_BYTES D_002B65F0, 0x0, 0x78
+	PIECE_LABEL D_002B65F0, D_002B6668, 0x78
+	PIECE_BYTES D_002B65F0, 0x78, 0x48
+	PIECE_END D_002B65F0, 0xc0
 	PIECE_BEGIN D_002B66B0, 0x10, 16
 	PIECE_BYTES D_002B66B0, 0x0, 0x4
 	.word D_002B65F0
@@ -269,8 +272,11 @@
 	PIECE D_002BC750, 0x70, 16
 	PIECE D_002BC7C0, 0x70, 16
 	PIECE D_002BC830, 0x70, 16
-	PIECE D_002BC8A0, 0x78, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_002BC918, 0x68, 8
+	PIECE_BEGIN D_002BC8A0, 0xe0, 16  /* untyped: merged (a user declares it larger than the next name): D_002BC8A0, D_002BC918 */
+	PIECE_BYTES D_002BC8A0, 0x0, 0x78
+	PIECE_LABEL D_002BC8A0, D_002BC918, 0x78
+	PIECE_BYTES D_002BC8A0, 0x78, 0x68
+	PIECE_END D_002BC8A0, 0xe0
 	PIECE_BEGIN D_002BC980, 0x10, 16
 	PIECE_BYTES D_002BC980, 0x0, 0x4
 	.word D_002BC8A0

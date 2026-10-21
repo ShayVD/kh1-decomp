@@ -7,7 +7,8 @@ The float build keeps a name in place when cover_check.py, reach_check.py, float
 pointer-table-only rule lists it (the union is float_covered.txt). The names below hung, crashed or
 garbled the game when they floated (docs/shiftable-plan.md, sessions 18-21). A reach_check rule
 change must not let one of them float again; `make shift SHIFT_FLOAT=1` runs this check and fails
-when one is missing. A name with a tail is needed only while its tail stays in place (the head of a
+when one is missing. A name merged into a larger piece (merge_pieces.py --group / --split) moves
+with the whole object, so only the piece's own name is checked. A name with a tail is needed only while its tail stays in place (the head of a
 0x4000-byte table declared 0x40 bytes: when the tail floats with it, the copy reads the right bytes).
 With --reach, each name also says whether reach_check's own list has it."""
 from __future__ import annotations
@@ -53,6 +54,17 @@ def c_defined() -> set[str]:
     return {ln.split("\t")[1] for ln in p.read_text().splitlines()[1:] if ln.strip()}
 
 
+def piece_labels() -> dict[str, str]:
+    """Inner names of merged pieces (PIECE_LABEL in src/data/*.s) -> the piece's name."""
+    out = {}
+    for f in (ROOT / "src/data").glob("data_*.s"):
+        for ln in f.read_text().splitlines():
+            t = ln.split()
+            if t[:1] == ["PIECE_LABEL"]:
+                out[t[2].rstrip(",")] = t[1].rstrip(",")
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("covered", type=Path, help="the keep list (float_covered.txt)")
@@ -61,9 +73,12 @@ def main() -> int:
     keep = {ln.strip() for ln in a.covered.read_text().splitlines() if ln.strip() and not ln.startswith("#")}
     reach = set(a.reach.read_text().split()) if a.reach else set()
     cdef = c_defined()
+    inner = piece_labels()
     missing = 0
     for name, tail, why in RUNTIME:
-        if tail and tail in cdef and tail not in keep:
+        if name in inner and inner[name] in cdef:
+            state = f"one piece with {inner[name]}" + (" (kept)" if inner[name] in keep else "")
+        elif tail and tail in cdef and tail not in keep:
             state = "not needed (its tail floats)"
         elif name not in cdef:
             state = "not C-defined (stays)"

@@ -1930,3 +1930,59 @@ float_covered.txt; keep_check.py now lists D_0048BFD0, D_002A6178 and D_002A6658
 leaves 0xD9C below 0x6A0000). Not run on these builds: Gate Plaza, the world map and a fight (walking blind
 from the alley kept going back into the storage room). The libcdvd block session 21 added to float_keep.txt
 was a guess for this bug and may not be needed.
+
+## Session 23: runtime on data 0x8000 / bss 0x11800, and whole pieces
+
+### Runtime on the session 22 defaults (KH1_F22_K8C = the default build, byte-identical)
+
+Save 06: the load menu, test T, the world map and a warp drive to Neverland (the pirate ship), and a fight
+there all work. **Test T's "alley" is Gate Plaza**: the main menu names the area behind the storage room's
+right-hand door アグラバー：城門広場 (Gate Plaza). Sessions 21-22 called it the alley; it is the same place.
+
+Quick world-map route from save 06 (no walking): at the save point Up, L (save menu), Down, Down, L (Gummi
+Ship), L (yes); on the map W (warp hole), D (Halloween Town), D (Neverland, Warp Drive only), L, L (land on
+the ship). Heartless appear on the ship's lower deck after walking about 10 s (S, A, D, W).
+
+### The libcdvd block is not needed
+
+float_keep.txt's libcdvd block (session 21's guess for the alley bug) is gone. KH1_F23_NOCD floats 16 of
+its names (D_0046C614 ... D_0046C650) and plays: title, load menu, test T, warp, fight.
+
+### merge_pieces.py --group / --split
+
+- `--group D_X:SIZE` makes one piece of D_X ... D_X + SIZE whatever the declarations say (inner names become
+  PIECE_LABELs; bytes that were no piece take their data_relocs rows as `.word`). `--split` does it for every
+  maximal run of adjacent pieces whose inner boundaries are not 16-aligned when a `.word` points into the run
+  (split_check.py's rule): 77 pieces from 299 names; split_check.py now lists nothing.
+- The plan reads out/gen/data.tsv, so run `make` after each `--apply` before the next plan (a stale
+  data.tsv gave pieces a label of their own name and duplicate definitions).
+- keep_check.py: a runtime name that is now a label inside a merged piece is reported as "one piece with
+  D_X"; the piece's own name still has to be kept when the bisection said so.
+
+### The object/table records are six VIF1 DMA chains
+
+Decoding the tags (bits 28-30 of the first word): D_0046E120 + k * 0x4040 (k = 0..5, the last at D_00482260)
+are six chains: `ref` D_0048BFD0 qwc 9 (the 0x90-byte record of session 22), `ref` D_0048C060 qwc 42 (now a
+0x2A0 piece), an entry and a 0x4010-byte table of `ref` tags C fills per frame, ending with an `end` tag at
++0x4030. func_00107d30 stores the chain's address into the object func_00106db0 kicks (VIF1 TADR, CHCR
+0x105). Session 20's "0x10-byte headers" D_00472150 and D_0047A1D0 are the previous chain's end tag
+(text_00110000_h52.c and others copy D_00472150 as an end-tag template). Each chain is one piece now
+(`--group D_0046E120:0x4040` and so on), and so is the 0x16C00-byte staging arena.
+
+| ELF | build | result |
+|---|---|---|
+| F23_REC | records cut at the wrong place (0x4050, "headers" first) + 0x16C00 arena, three floated | hangs loading save 06 |
+| F23_REC2 | MRG2 data + D_0046E120 and D_00472160 floated whole, bss 0 | save 06 loads; hangs (black, FPS N/A) walking into Gate Plaza |
+| F23_MRG2 | the default after the merges (same float set as NOCD plus D_0046A6B0 0x320, D_0046E100) | title, load, test T, warp, fight: OK |
+
+float_holes.py on REC2's hang savestate: 0 of 729 floated names have writes at their old place, so the
+REC2 hang is a read (or a DMA) of the old place, not found yet. The six chain heads and the arena head stay
+in float_keep.txt. (At the default budgets none of them would float anyway: 0x4040 each.)
+
+### Phase 4
+
+- D_0046A688 is a piece: a table of eight function pointers (func_0024d8a0 ... func_0024e078). D_0046A6A4,
+  its last entry, was a C definition in text_00100000_c00.c and is now a PIECE_LABEL. D_0046A6A8 (dktitle.x
+  writes it) stays its own piece. `make` identical; the float build's loaded image did not change.
+- shift/drafts.tsv: 001636d0 uses the session 23 394w draft (PR #27); `SHIFT_DRAFTS=1` links all nine.
+- 1,035 pieces are still "untyped" in their comments.

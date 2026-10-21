@@ -300,9 +300,8 @@ end:
     return D_002BBE08;
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-void func_0024e078();
-s32 (*D_0046A6A4)(void) ALIGNED(4) = (void *)func_0024e078;
+/* D_0046A6A4 is the last entry of D_0046A688's function table (src/data/data_0046.s, a piece since
+ * session 23). */
 #include "data/bss_0049_mixed.h"
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"
