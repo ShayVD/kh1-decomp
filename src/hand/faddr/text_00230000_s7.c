@@ -4,7 +4,7 @@
 
 #include "data/types/faddr_text_00230000_s7.h"
 typedef struct { u8 pad[0x90]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W17;
-typedef struct { s32 a; s32 b; } P8;
+#include "data/pieces/D_003E8E08.h"
 extern s32 D_003F7E98;
 extern s32 D_00647654;
 extern s32 D_00647658;
@@ -14,10 +14,8 @@ extern void (*D_0064764C)(s32);
 extern s32 D_00647660;
 extern void (*D_00647648)(s32);
 extern s32 D_006476F4;
-#include "data/pieces/D_003E8E08.h"
 extern s32 D_00647670[];
 #include "data/pieces/D_003E3D6C.h"
-typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
 #include "data/pieces/D_00304BE8.h"
 extern s32 D_003F7D30[];
 extern s32 D_003F7D40[];
@@ -65,8 +63,8 @@ void func_00231ea0(W17 *w) {
     id = D_003F7C48[D_0064765C].id;
     if (D_00647648) D_00647648(id);
     n = w->xcc;
-    (*(P8 *)&D_003E8E08).a = D_006476F4;
-    (*(P8 *)&D_003E8E08).b = n;
+    (*(S4_3e8e08 *)&D_003E8E08).a = D_006476F4;
+    (*(S4_3e8e08 *)&D_003E8E08).b = n;
     func_001f9438(w, 0, 160, 42, 430, 15, 0x80E6E6E6);
     j = 0;
     func_00202fc0(w);
@@ -96,7 +94,7 @@ void func_00231ea0(W17 *w) {
         if (!r) break;
         func_001fc308(w, y, 218, 0, 0, 21, 0, 0x26E6E6E6, 0x26E6E6E6);
         func_001fc308(w, y, 218, 0, 0, 22, 0, 0x4C000000, 0x4C000000);
-        v = func_001ef140(((S48e *)D_00304BE8)->x48e[k], id);
+        v = func_001ef140(D_00304BE8->x48e[k], id);
         func_001fb428(w, 1, 0, 0, y + 33, 269, v, 15, 0x80808080);
         y += 48;
         pos[0] += D_003F7D40[k];

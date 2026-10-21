@@ -110,7 +110,8 @@ s32 func_00177ef8(void) {
 }
 
 typedef struct { V4 a; V4 b; f32 r; u8 pad24[0xC]; V4 out; } SweepC4;
-typedef struct { V4 r[4]; } M4;
+#include "data/pieces/D_002C58D0.h"
+typedef M4_2c58d0 M4;
 typedef struct { u8 pad[8]; s32 w8; } PadC4;
 
 extern u32 D_00575890; /* src/data/bss_0057.c: s32 D_00575890 */
@@ -120,7 +121,6 @@ extern V4 D_00362670;
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_00362434.h"
 #include "data/pieces/D_00362438.h"
-#include "data/pieces/D_002C58D0.h"
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5958;
 extern PadC4 D_002C5BB0;
@@ -205,7 +205,7 @@ void func_00178ef8(void) {
         func_00178a98();
         if (!((D_002C5960 >> 4) & 1)) func_00178468();
         t = func_00120c88(D_00362680.y);
-        func_00267768(&m, ((M4 *)&D_002C58D0), func_00120c88(D_00362680.x));
+        func_00267768(&m, &D_002C58D0, func_00120c88(D_00362680.x));
         func_00267810(&m, &m, t);
         func_002675a8(&b, ((V4 *)&D_002C58A0));
         b.z = D_00362680.w;
@@ -236,7 +236,7 @@ void func_00178ef8(void) {
     } else {
         if (!((D_002C5960 >> 4) & 1)) func_00177ef8();
         t = func_00120c88(D_00362680.y);
-        func_00267768(&m, ((M4 *)&D_002C58D0), func_00120c88(D_00362680.x));
+        func_00267768(&m, &D_002C58D0, func_00120c88(D_00362680.x));
         func_00267810(&m, &m, t);
         func_002675a8(&b, ((V4 *)&D_002C58A0));
         b.z = D_00362680.w;

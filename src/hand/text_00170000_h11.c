@@ -270,13 +270,12 @@ s32 func_0017b170(void) {
 }
 
 extern u64 D_002C5BB0;
-typedef struct { u8 pad[0x18]; s32 x18; } S18;
 #include "data/pieces/D_00362438.h"
 u8 D_005759A4 ALIGNED(4);
 s32 func_001770b8(void);
 s32 func_0017b7e8(void) {
     if (!(D_002C5BB0 & 0x300000000000ULL)) {
-        if (D_00575920 && !(((S18 *)D_00362438)->x18 & 0x10)) goto one;
+        if (D_00575920 && !(D_00362438->x18 & 0x10)) goto one;
         if (func_001770b8()) return 1;
         if (!D_005759A4) return 0;
     }
@@ -323,7 +322,7 @@ void func_0017e840(void) {
 
 #include "data/pieces/D_003626F0.h"
 void func_0017e8c8(void) {
-    Arg *p = D_003626F0;
+    Arg *p = ((Arg *)&D_003626F0);
     p[0].i = 1;
     p[1].f = D_00362684 - D_00575894->x3c;
     func_00176f08(0, 0.0f);
@@ -506,18 +505,13 @@ s32 func_001772f8(Actor *o) {
 }
 
 #include "data/types/text_00170000_h11_p2.h"
-typedef struct E30 {
-    u8 pad0[0x20];
-    void *x20;
-    s32 x24;
-    u8 pad28[8];
-} E30;
+#include "data/pieces/D_00362430.h"
+typedef E30_362430 E30;
 #include "data/types/text_00170000_h11_p.h"
 #include "data/pieces/D_00362424.h"
 extern s32 D_00362440, D_00362448;
 #include "data/pieces/D_00362428.h"
 #include "data/pieces/D_0036242C.h"
-#include "data/pieces/D_00362430.h"
 extern f32 D_00362674;
 
 void func_0017d9c8(Hdr *h) {
@@ -533,7 +527,7 @@ void func_0017d9c8(Hdr *h) {
     D_0036242C = (Rec *)(h->x8 + (s32)h);
     (*(E30 **)&D_00362430) = (E30 *)(h->xc + (s32)h);
     for (i = 0; i < D_00362448; i++) {
-        E30 *e = &((E30 *)D_00362430)[i];
+        E30 *e = &D_00362430[i];
         if ((s32)e->x20 < 0) e->x20 = 0;
         else if (e->x24 & 2) e->x20 = func_0017adf8(D_0036242C, (s32)e->x20);
         else e->x20 = &D_00362428[(s32)e->x20];

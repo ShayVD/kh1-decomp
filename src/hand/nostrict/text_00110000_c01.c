@@ -1,15 +1,7 @@
 #include "common.h"
 #include "data/bss_004F.h"
 
-typedef struct {
-    u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 b3 : 1; u32 b4 : 1; u32 b5 : 1;
-    u32 b6 : 1; u32 b7 : 1; u32 b8 : 1; u32 b9 : 1;
-    u32 b10 : 3;
-    u32 pad13 : 6;
-    u32 b19 : 3;
-    u32 b22 : 1;
-    u32 b23 : 1; u32 b24 : 1; u32 b25 : 1; u32 b26 : 1; u32 b27 : 1; u32 b28 : 1; u32 b29 : 1;
-} C01Flg27C8;
+#include "data/pieces/D_002E27C8.h"
 typedef struct {
     u8 pad[0x170];
     u64 lo : 32;
@@ -33,7 +25,6 @@ typedef struct {
 typedef struct { u16 a; u16 b; } C01Pr;
 typedef struct { u8 pad[0x54]; C01Pr e[1]; } C01Tbl;
 
-#include "data/pieces/D_002E27C8.h"
 extern f32 D_00304D54;
 extern f32 D_00306844;
 extern f32 D_00306848;
@@ -51,7 +42,7 @@ void func_001252f8(void) {
     s32 id;
     s32 c;
 
-    *(u32 *)((C01Flg27C8 *)&D_002E27C8) = 0;
+    *(u32 *)&D_002E27C8 = 0;
     D_00306844 = D_00306848 = 1.0f;
     D_00304D54 = 1.0f;
     for (i = 0; i < 3; i++) {
@@ -64,7 +55,7 @@ void func_001252f8(void) {
         p->x148->b36 = (u32)func_0013c968(25, id);
         p->x148->b37 = (u32)func_0013c968(26, id);
 
-        (*(C01Flg27C8 *)&D_002E27C8).b10 += func_0013c968(16, id);
+        D_002E27C8.b10 += func_0013c968(16, id);
         D_00306844 += func_0013c968(27, id) * 0.5f;
         D_00306848 += func_0013c968(28, id) * 0.5f;
         p->x6c->x10 = D_002C5C54 ? (*(C01Tbl **)&D_00308CDC)->e[id].b : (*(C01Tbl **)&D_00308CDC)->e[id].a;
@@ -77,31 +68,31 @@ void func_001252f8(void) {
     }
     if (D_002C5C54) return;
     if (D_002C5958 >> 22 & 1) return;
-    (*(C01Flg27C8 *)&D_002E27C8).b19 = func_0013c968(60, 0);
-    if (func_0013c968(2, 11)) (*(C01Flg27C8 *)&D_002E27C8).b6 = 1;
+    D_002E27C8.b19 = func_0013c968(60, 0);
+    if (func_0013c968(2, 11)) D_002E27C8.b6 = 1;
     if (D_002C5C4C) return;
-    if (func_0013c968(17, 0)) (*(C01Flg27C8 *)&D_002E27C8).b0 = 1;
-    if (func_0013c968(18, 0)) (*(C01Flg27C8 *)&D_002E27C8).b1 = 1;
-    if (func_0013c968(19, 0)) (*(C01Flg27C8 *)&D_002E27C8).b2 = 1;
-    if (func_0013c968(20, 0)) (*(C01Flg27C8 *)&D_002E27C8).b3 = 1;
-    if (func_0013c968(21, 0)) (*(C01Flg27C8 *)&D_002E27C8).b4 = 1;
-    if (func_0013c968(22, 0)) (*(C01Flg27C8 *)&D_002E27C8).b5 = 1;
+    if (func_0013c968(17, 0)) D_002E27C8.b0 = 1;
+    if (func_0013c968(18, 0)) D_002E27C8.b1 = 1;
+    if (func_0013c968(19, 0)) D_002E27C8.b2 = 1;
+    if (func_0013c968(20, 0)) D_002E27C8.b3 = 1;
+    if (func_0013c968(21, 0)) D_002E27C8.b4 = 1;
+    if (func_0013c968(22, 0)) D_002E27C8.b5 = 1;
     if (func_0013c968(1, 11)) {
-        (*(C01Flg27C8 *)&D_002E27C8).b9 = 1;
+        D_002E27C8.b9 = 1;
         for (i = 0; i < 3; i++) {
             p = D_002E26A0[i];
             if (p) p->x6c->x10 = (*(C01Tbl **)&D_00308CDC)->e[p->x130->x4c].b;
         }
     }
-    if (func_0013c968(3, 11)) (*(C01Flg27C8 *)&D_002E27C8).b7 = 1;
-    if (func_0013c968(4, 11)) (*(C01Flg27C8 *)&D_002E27C8).b8 = 1;
-    (*(C01Flg27C8 *)&D_002E27C8).b23 = func_0013c968(53, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b24 = func_0013c968(54, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b25 = func_0013c968(55, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b26 = func_0013c968(56, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b27 = func_0013c968(57, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b28 = func_0013c968(58, 0);
-    (*(C01Flg27C8 *)&D_002E27C8).b29 = func_0013c968(59, 0);
+    if (func_0013c968(3, 11)) D_002E27C8.b7 = 1;
+    if (func_0013c968(4, 11)) D_002E27C8.b8 = 1;
+    D_002E27C8.b23 = func_0013c968(53, 0);
+    D_002E27C8.b24 = func_0013c968(54, 0);
+    D_002E27C8.b25 = func_0013c968(55, 0);
+    D_002E27C8.b26 = func_0013c968(56, 0);
+    D_002E27C8.b27 = func_0013c968(57, 0);
+    D_002E27C8.b28 = func_0013c968(58, 0);
+    D_002E27C8.b29 = func_0013c968(59, 0);
 }
 
 typedef f32 C01Mat[4][4];

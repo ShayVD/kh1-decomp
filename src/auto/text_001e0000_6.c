@@ -55,7 +55,7 @@ void func_00231958(void);
 void func_00232de0(void);
 
 void func_001e01b8(void) {
-    D_003DACA0 = func_001559f0(0x3C, 4);
+    D_003DACA0 = (Tbl_3daca0 *)(func_001559f0(0x3C, 4));
 }
 
 void func_001e13e8(s32 arg0) {

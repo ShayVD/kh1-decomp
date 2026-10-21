@@ -199,7 +199,7 @@ void func_0015c5d0(Cyl *a, Cyl *b, f32 *out) {
         if (b->type == 3) func_0015c508(a, b, out);
         break;
     }
-    if (sw) func_00267530(out, D_002C58A0, out);
+    if (sw) func_00267530(out, (*(f32 (*)[0x4])&D_002C58A0), out);
 }
 
 typedef struct { u8 b0; u8 type; u16 bone; f32 off; f32 dy; f32 r; f32 h; } CylSrc;
@@ -317,7 +317,7 @@ void func_0015d848(Ob59 *o, f32 *v) {
         func_002673b8(v, t);
         func_00267560(v, v, 1.5f);
     } else {
-        func_002675a8(v, D_002C58A0);
+        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
         st = 50;
     }
     func_00267560(d, o->m->xC0, -1.5f);

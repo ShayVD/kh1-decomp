@@ -580,7 +580,7 @@ void func_001399a8(W32Act *o, W32Hit *h) {
     u32 f = h->x2c->x40;
     if (h->x8 < 0 && (f & 0x400000)) {
         f32 t;
-        func_00267530(v, D_002C58A0, o->x30);
+        func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), o->x30);
         t = (f32)-h->x8 * (*(W32Prm **)&D_00308CDC)->x28;
                 v[3] = (t < (*(W32Prm **)&D_00308CDC)->x2c ? t : (*(W32Prm **)&D_00308CDC)->x2c) * o->x6c->xc4;
         func_00156260(o, v);
@@ -823,7 +823,7 @@ void func_00139a90(W32Act *o, W32Hit *h) {
         func_00267560(o->x3c0, o->x30, (-(*(W32Prm **)&D_00308CDC)->x34 < t ? t : -(*(W32Prm **)&D_00308CDC)->x34) * o->x6c->xc4);
         return;
     }
-    func_002675a8(o->x3c0, D_002C58A0);
+    func_002675a8(o->x3c0, (*(f32 (*)[0x4])&D_002C58A0));
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */

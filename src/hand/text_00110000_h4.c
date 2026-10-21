@@ -186,7 +186,8 @@ f32 func_00120c88(f32 a) {
     return a;
 }
 
-typedef struct { f32 x, y, z, w; } Vec4;
+#include "data/pieces/D_002C5C80.h"
+typedef Vec4_2c5c80 Vec4;
 void func_00267530(Vec4 *, Vec4 *, Vec4 *);
 void func_00267370(Vec4 *, Vec4 *, Vec4 *);
 void func_00121fc4(Vec4 *, Vec4 *);
@@ -194,7 +195,7 @@ void func_00120f70(Vec4 *pts, Vec4 *out) {
     Vec4 d[2];
     s32 i;
     for (i = 0; i < 2; i++) func_00267530(&d[i], &pts[i + 1], &pts[i]);
-    d[1].w = d[0].w = 1.0f;
+    d[1].v[3] = d[0].v[3] = 1.0f;
     func_00267370(out, &d[0], &d[1]);
     func_00121fc4(out, out);
 }
@@ -202,7 +203,7 @@ void func_00120f70(Vec4 *pts, Vec4 *out) {
 s32 func_00267ea8(Vec4 *);
 s32 func_00121120(Vec4 *v) {
     s32 r = 0;
-    if (v->z < 0.0f || func_00267ea8(v)) r = 1;
+    if (v->v[2] < 0.0f || func_00267ea8(v)) r = 1;
     return r;
 }
 
@@ -318,17 +319,16 @@ u32 func_00122048(u32 size, u32 align) {
     return v;
 }
 
-typedef struct { s32 a; s32 b; s32 c; u8 pad[36]; Vec4 v; } Ent40;
-#include "data/pieces/D_002C5C80.h"
+typedef Lt64_2c5c80 Ent40;
 #include "data/pieces/D_002C5C60.h"
 void func_002675a8(Vec4 *, Vec4 *);
 
 Ent40 *func_001226f0(s32 a, s32 b, s32 c) {
     s32 i;
-    Ent40 *e = ((Ent40 *)&D_002C5C80);
+    Ent40 *e = &D_002C5C80;
     for (i = 0; i < 31; i++, e++) {
-        if (e->a == 0) {
-            e->a = a; e->b = b; e->c = c;
+        if (e->kind == 0) {
+            e->kind = a; e->b = b; e->c = c;
             func_002675a8(&e->v, ((Vec4 *)&D_002C5C60));
             return e;
         }

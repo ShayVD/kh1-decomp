@@ -25,7 +25,8 @@ typedef struct Node {
 typedef struct Q8 { s32 f0, f4; u32 f8; s32 fc; s32 n; u8 ids[0x20]; s32 f34; } Q8;
 
 /* Menu item (func_001478c8 result). */
-typedef struct O8 { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; s8 f9; s8 fa; s8 fb; u16 f0c; u16 f0e; } O8;
+#include "data/pieces/D_002E319C.h"
+typedef O8_2e319c O8;
 
 typedef struct T23 { u8 b0; u8 pad[19]; } T23;
 typedef struct Info { u8 pad[4]; u32 f4; u8 pad8[0x57]; u8 f5f; } Info;
@@ -55,7 +56,7 @@ typedef struct Ent {
 
 typedef struct V8 { Ent *a; s32 b; } V8;
 typedef struct Hit { s32 f0; Ent *e; } Hit;
-typedef struct Sv { u8 pad[0x844]; s32 f844[3]; u8 pad850[0x24]; s32 f874; } Sv;
+#include "data/pieces/D_00304BE8.h"
 typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 
 /* ---- data ---- */
@@ -63,14 +64,12 @@ extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A0.h"
 extern Ent *D_002E26A0;
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_002E31B8.h"
 #include "data/pieces/D_002E31B0.h"
 extern s32 D_002E31BC;
-#include "data/pieces/D_00304BE8.h"
 extern u32 D_00524F44;
 extern s32 D_00524F48;
 extern s32 D_00524F4C;
@@ -178,7 +177,7 @@ void func_0012d930(u32 *a0) {
     u32 *fp;
 
     if (D_002E31B8 == 1) func_0012fc58();
-    if (((Sv *)D_00304BE8)->f874 & 0x20) return;
+    if (D_00304BE8->f874 & 0x20) return;
     D_002E2FD8[0].ids[3] = 0;
     m = 0;
     pl = D_002E26A0;
@@ -415,8 +414,8 @@ s32 func_0012e4b0(void) {
         mask = 0x10000;
     }
     if (func_0012e1b0(p)) {
-        if (((O8 *)D_002E319C)) {
-            if ((((O8 *)D_002E319C)->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
+        if (((O8_2e319c *)D_002E319C)) {
+            if ((((O8_2e319c *)D_002E319C)->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
                 if (!(p->x8 & mask)) D_002E3190.w &= ~0x2000000;
                 func_0012e120();
             }
@@ -480,21 +479,21 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
     if (func_0012eaf8(a->a) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
-    if (((O8 *)D_002E319C)) {
+    if (((O8_2e319c *)D_002E319C)) {
         switch (((E9 *)a->a)->f370.b.kind) {
         case 1:
-            v = ((O8 *)D_002E319C)->f9;
+            v = ((O8_2e319c *)D_002E319C)->f9;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 2:
-            v = ((O8 *)D_002E319C)->fa;
+            v = ((O8_2e319c *)D_002E319C)->fa;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 0:
         case 3:
-            v = ((O8 *)D_002E319C)->fb;
+            v = ((O8_2e319c *)D_002E319C)->fb;
             if (v < 0) return -1;
             s |= v << 24;
             break;
@@ -677,7 +676,7 @@ s32 func_0012fcd0(void) {
         break;
     case 0:
     case 2:
-        if (func_00219288() != 1 && ((O8 *)D_002E319C) && (((O8 *)D_002E319C)->f0 & 4)) {
+        if (func_00219288() != 1 && ((O8_2e319c *)D_002E319C) && (((O8_2e319c *)D_002E319C)->f0 & 4)) {
             func_0012f868(&tmp);
             if (tmp.a) func_0012fb20(&tmp, 2);
         }
@@ -958,7 +957,7 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
                 if (o->b2) {
                     func_00267518(m[3], m[3], t3);
                     func_002675a8(a, m[3]);
-                    func_002675a8(t3, D_002C58A0);
+                    func_002675a8(t3, (*(f32 (*)[0x4])&D_002C58A0));
                 }
                 if (o->b3) {
                     func_00130660(o, m, o->x168, o->f280, 0.0f);
@@ -990,8 +989,8 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
         func_00267530(o->x200, b, t3);
         func_002675a8(t3, b);
     } else {
-        func_002675a8(o->x200, D_002C58A0);
-        func_002675a8(t3, D_002C58A0);
+        func_002675a8(o->x200, (*(f32 (*)[0x4])&D_002C58A0));
+        func_002675a8(t3, (*(f32 (*)[0x4])&D_002C58A0));
     }
     sceVu0CopyMatrix(o->x230, m);
     func_00167d70(o->x15c, dt);
@@ -1107,7 +1106,7 @@ QD *func_001350d8(AD *a, u32 mask, BD *b) {
             v.y = 0.0f;
             func_00121fc4(&q->f10, &v);
         } else {
-            func_00267530((f32 *)&q->f10, D_002C58A0, (f32 *)&b->f30);
+            func_00267530((f32 *)&q->f10, (*(f32 (*)[0x4])&D_002C58A0), (f32 *)&b->f30);
         }
     } else {
         func_002675a8((f32 *)&q->f10, (f32 *)&v);

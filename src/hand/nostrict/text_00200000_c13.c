@@ -53,7 +53,7 @@ void func_00203a10(Wnd *o, s32 x) {
     s32 X0, X1, X2, X3, Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7;
     if (o->cc == 0) return;
     if (!(o->ce < o->cc)) return;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
     q = (Q *)buf + 1;
@@ -160,7 +160,7 @@ void func_00204d80(Wnd *w, s32 a1, s32 a2, s32 a3, s32 a4) {
     u32 ub;
     s32 y, cx, cy, d;
     f32 f, sx, sy, fcx, fcy;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;

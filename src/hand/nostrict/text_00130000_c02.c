@@ -285,7 +285,7 @@ void func_00136d38(C02Obj *o)
             *r = func_00120c88(*r);
             r++;
         } while (--i >= 0);
-        func_00267768(m, D_002C58D0, o->rot[0]);
+        func_00267768(m, (*(u8 (*)[0x40])&D_002C58D0), o->rot[0]);
         func_00267810(m, m, o->rot[1]);
         func_002676c0(m, m, o->rot[2]);
         if (o->desc->x54 == 10) {

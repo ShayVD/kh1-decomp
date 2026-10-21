@@ -270,7 +270,7 @@ void func_00154af8(Obj154af8 *a, Arg154af8 *b, Vec154768 *o) {
     func_001373f8(a, 8.0f);
     a->p14C->b29--;
     if (b->w8 < 0) {
-        func_00267530(&t, D_002C58A0, &a->v30);
+        func_00267530(&t, (*(f32 (*)[0x4])&D_002C58A0), &a->v30);
         t.w = (f32)-b->w8 * ((S308CDC_c *)(*(S308CDC **)&D_00308CDC))->f1C * ((Obj6C_1549b8 *)a)->p6C->fC4;
         func_00156260(a, &t);
     }
@@ -298,7 +298,7 @@ void func_00154c60(Obj154c60 *a, Arg154af8 *b) {
         }
         func_00267560(a->x3C0, &a->v30, m);
     } else {
-        func_002675a8(a->x3C0, D_002C58A0);
+        func_002675a8(a->x3C0, (*(f32 (*)[0x4])&D_002C58A0));
     }
 }
 
@@ -307,7 +307,7 @@ void func_00154d60(Obj154c60 *a, Arg154af8 *b) {
     func_00130340(a, 0x01000070, 0.0f);
     func_00130578(a, 0x40000075, 16.0f);
     func_001373f8(a, 8.0f);
-    func_00267530(&t, D_002C58A0, &a->v30);
+    func_00267530(&t, (*(f32 (*)[0x4])&D_002C58A0), &a->v30);
     if (b->w8 < 0) {
         t.w = (f32)-b->w8 * ((S308CDC_d *)(*(S308CDC **)&D_00308CDC))->f1C * a->p6C->fC4;
     } else {
@@ -608,7 +608,7 @@ void func_00157f70(Obj157f70 *a) {
     r->f30 = 0.5f;
     (*pp)->f34 = 250.0f;
     a->p6C->fCC = 0.20943951606750488f;
-    func_002675a8(a->x3C0, D_002C58A0);
+    func_002675a8(a->x3C0, (*(f32 (*)[0x4])&D_002C58A0));
     D_002BC0F0.s2BC0F0.f0 = 10000.0f;
     D_002BC0F0.s2BC0F0.f4 = 4000.0f;
     D_002BC0F0.s2BC0F0.f8 = 64.0f;
@@ -640,7 +640,6 @@ s32 func_00158100(s32 *a, f32 *v) {
 /* ---- func_00158c78 ---- */
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_0037A378.h"
-typedef struct { u8 pad[0x48E]; u8 b48E[3]; u8 pad491[0x3E3]; s32 w874; } S304BE8;
 #include "data/pieces/D_00304BE8.h"
 s32 func_001140a0(void);
 
@@ -649,7 +648,7 @@ s32 func_00158c78(void) {
     s32 r = 0;
     if (!(D_002C5958 & 0x92000)) {
         if (!((D_002E31A8 >> 1) & 1)) {
-            if (!(((S304BE8 *)D_00304BE8)->w874 & 0x40)) {
+            if (!(D_00304BE8->f874 & 0x40)) {
                 if (!((((u32)D_0037A378) >> 1) & 1)) {
                     if (m == 0 || m == 2 || (m == 3 && ((((u32)D_0037A378) >> 4) & 1))) r = 1;
                 }
@@ -819,7 +818,7 @@ void func_00157400(void (*cb)(s32)) {
     s32 i, n = 0;
     u8 *q;
     for (i = 0; i < 3; i++) {
-        q = (u8 *)(i + (s32)((S304BE8 *)D_00304BE8)) + 0x48E;
+        q = (u8 *)(i + (s32)D_00304BE8) + 0x48E;
         if (*q != 0xFF) {
             if (func_001571a8(*q, 0)) n++;
         }

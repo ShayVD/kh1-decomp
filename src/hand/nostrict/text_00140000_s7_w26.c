@@ -1,6 +1,7 @@
 #include "common.h"
 
-typedef struct { f32 x, y, z, w; } V4f;
+#include "data/pieces/D_002C58A0.h"
+typedef V4_2c58a0 V4f;
 typedef struct { u8 pad[0x30]; u64 d30; u8 pad38[8]; V4f p; f32 f50; f32 f54; u8 pad58[4]; s32 w5c; u8 pad60[0x40]; V4f va0; f32 fb0; f32 fb4; f32 fb8; f32 fbc; } Sub148;
 typedef struct {
     u32 flags;
@@ -34,7 +35,6 @@ void func_002675a8(V4f *, V4f *);
 void func_00121fc4(V4f *, V4f *);
 void func_00267560(V4f *, V4f *, f32);
 
-#include "data/pieces/D_002C58A0.h"
 f32 func_0013fe80(f32);
 s32 func_001186a8(V4f *);
 void func_00267518(V4f *, V4f *, V4f *);
@@ -48,7 +48,7 @@ s32 func_00140838(ObjF3 *o, V4f *v) {
     func_002675a8(&o->v2a0, &o->pos);
     o->v2a0.y = func_0013fe80(o->pos.y);
     o->v2a0.w = 1.0f;
-    func_002675a8(&o->v2b0, ((V4f *)&D_002C58A0));
+    func_002675a8(&o->v2b0, &D_002C58A0);
     if (v->y < 0.0f) {
         r = 1;
         o->v2a0.y -= 66.66666412353516f;
@@ -111,7 +111,7 @@ s32 func_00144d08(ObjF3 *o) {
     if (o->p148->fb0 <= 0.0f) {
         s32 k;
         f32 a, s;
-        if ((D_002E27C8 >> 6) & 1) {
+        if (((*(u32 *)&D_002E27C8) >> 6) & 1) {
             k = 48;
             o->p148->fb0 = 75.0f;
             a = 45.0f;

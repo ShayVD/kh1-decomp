@@ -61,7 +61,8 @@ typedef struct {
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
 typedef struct { u8 pad[0x10]; s32 o10; s32 o14; } MsgHdr;
-typedef struct { u16 code; u8 pad2[4]; u8 w; u8 pad7; } Glyph;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 
 typedef struct Nd {
     u8 pad0[0xc];
@@ -114,7 +115,6 @@ extern u8 D_003E3C88[];
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
 extern u8 D_003E8D28[];
-#include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003F2270.h"
 extern s32 D_0063F74C;
 extern s32 D_003F1A60;
@@ -384,7 +384,7 @@ s32 func_001f0340(u8 *p, s32 scale) {
         if (k == 0x4081) {
             x += (scale << 8) / d;
         } else {
-            Glyph *g = &((Glyph *)D_003E8E28)[func_001eff50(k)];
+            Glyph *g = &D_003E8E28[func_001eff50(k)];
             x += ((g->w << 4) + func_001efb88()) * scale / d;
         }
     }
@@ -393,7 +393,7 @@ s32 func_001f0340(u8 *p, s32 scale) {
 s32 func_001f2a50(s32 a, s32 b, s32 c, s32 d, s32 e) {
     u64 *buf;
     void *u;
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x1000, 0x80);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f12c0(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
@@ -406,7 +406,7 @@ s32 func_001f2a50(s32 a, s32 b, s32 c, s32 d, s32 e) {
 s32 func_001f2b58(s32 a, s32 b, s32 c, s32 d, s32 e) {
     u64 *buf;
     void *u;
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x400, 0x80);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f15f0(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
@@ -419,7 +419,7 @@ s32 func_001f2b58(s32 a, s32 b, s32 c, s32 d, s32 e) {
 s32 func_001f2c60(s32 a, s32 b, s32 c, s32 d, s32 e) {
     u64 *buf;
     void *u;
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(0x400, 0x80);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f1868(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
@@ -433,7 +433,7 @@ s32 func_001f2d68(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
     u64 *buf;
     void *u;
     u64 *p;
-    func_00266f38(func_00266c08(2), D_003F2270);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
     p = func_00122048(0x400, 0x80);
     buf = p;
     p += 2;

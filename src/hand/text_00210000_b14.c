@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_0064.h"
 
-typedef struct { s32 a, b, c, d; } S4;
+#include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_003E3D70.h"
 typedef Rec_3E3D70 Rec;
 typedef struct { u8 pad[0x24]; u8 x24; } Arg;
@@ -17,7 +17,6 @@ typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3E50.h"
-#include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_003F34B8.h"
 extern u8 D_003F3B10[];
 extern u8 D_003F3DF0[];
@@ -151,40 +150,40 @@ void func_002123b8(Arg *a) {
     *p = a->x24;
     func_00141b10(D_00641BAC, &buf);
     { s32 o = D_00641BB0; (D_00641BB4 + o)[25] = s; }
-    (*(S4 *)&D_003E8E08).c = buf.x40;
+    (*(S4_3e8e08 *)&D_003E8E08).c = buf.x40;
     r = &D_003E3D70.rec[D_00641BAC];
-    (*(S4 *)&D_003E8E08).a = r->x40;
-    if (r->x40 < buf.x40) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
-    else if (r->x40 == buf.x40) (*(S4 *)&D_003E8E08).b = 0x80808080;
-    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
+    (*(S4_3e8e08 *)&D_003E8E08).a = r->x40;
+    if (r->x40 < buf.x40) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x40 == buf.x40) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4_3e8e08 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 37, 175, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 53, 118, 0x80323232, 0x80323232);
-    (*(S4 *)&D_003E8E08).a = r->x48;
-    (*(S4 *)&D_003E8E08).c = buf.x48;
-    if (r->x48 < buf.x48) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
-    else if (r->x48 == buf.x48) (*(S4 *)&D_003E8E08).b = 0x80808080;
-    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
+    (*(S4_3e8e08 *)&D_003E8E08).a = r->x48;
+    (*(S4_3e8e08 *)&D_003E8E08).c = buf.x48;
+    if (r->x48 < buf.x48) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x48 == buf.x48) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4_3e8e08 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 69, 176, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 85, 118, 0x80323232, 0x80323232);
-    (*(S4 *)&D_003E8E08).a = r->xe0;
-    (*(S4 *)&D_003E8E08).c = buf.xe0;
-    if (r->xe0 < buf.xe0) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
-    else if (r->xe0 == buf.xe0) (*(S4 *)&D_003E8E08).b = 0x80808080;
-    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
+    (*(S4_3e8e08 *)&D_003E8E08).a = r->xe0;
+    (*(S4_3e8e08 *)&D_003E8E08).c = buf.xe0;
+    if (r->xe0 < buf.xe0) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->xe0 == buf.xe0) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4_3e8e08 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 101, 177, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 117, 118, 0x80323232, 0x80323232);
-    (*(S4 *)&D_003E8E08).a = r->x4c;
-    (*(S4 *)&D_003E8E08).c = buf.x4c;
-    if (r->x4c < buf.x4c) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
-    else if (r->x4c == buf.x4c) (*(S4 *)&D_003E8E08).b = 0x80808080;
-    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
+    (*(S4_3e8e08 *)&D_003E8E08).a = r->x4c;
+    (*(S4_3e8e08 *)&D_003E8E08).c = buf.x4c;
+    if (r->x4c < buf.x4c) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x4c == buf.x4c) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4_3e8e08 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 133, 178, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 149, 118, 0x80323232, 0x80323232);
-    (*(S4 *)&D_003E8E08).a = r->x50;
-    (*(S4 *)&D_003E8E08).c = buf.x50;
-    if (r->x50 < buf.x50) (*(S4 *)&D_003E8E08).b = 0x80FC927A;
-    else if (r->x50 == buf.x50) (*(S4 *)&D_003E8E08).b = 0x80808080;
-    else (*(S4 *)&D_003E8E08).b = 0x806E6EFF;
+    (*(S4_3e8e08 *)&D_003E8E08).a = r->x50;
+    (*(S4_3e8e08 *)&D_003E8E08).c = buf.x50;
+    if (r->x50 < buf.x50) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80FC927A;
+    else if (r->x50 == buf.x50) (*(S4_3e8e08 *)&D_003E8E08).b = 0x80808080;
+    else (*(S4_3e8e08 *)&D_003E8E08).b = 0x806E6EFF;
     func_001f9438(a, 0, 12, 165, 179, 15, 0x80E6E6E6);
     func_002066b0(a, 12, 181, 118, 0x80323232, 0x80323232);
 }

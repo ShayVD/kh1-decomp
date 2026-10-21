@@ -1,10 +1,25 @@
-/* The data piece D_00362438 (src/data/data_0036.s): one declaration its users
- * share (phase 4, session 26: users whose own type differs cast at each use). */
+/* The data piece D_00362438 (src/data/data_0036.s): one struct its
+ * users share (phase 4: session 26 cast at each use, session 27 folded the users'
+ * views into these types; users not folded still cast). */
 #ifndef KH1_DATA_PIECES_D_00362438_H
 #define KH1_DATA_PIECES_D_00362438_H
 
 #include "common.h"
 
-extern s32 D_00362438;
+typedef struct {
+    u8 pad_0[0xc];
+    f32 len;
+} Seg_362438;
+
+typedef struct {
+    s32 n;
+    u8 pad_4[0x14];
+    s32 x18;
+    u8 x1c;
+    u8 pad_1d[0x3];
+    Seg_362438 seg[1];
+} Path_362438;
+
+extern Path_362438 *D_00362438;
 
 #endif /* KH1_DATA_PIECES_D_00362438_H */

@@ -37,7 +37,7 @@ extern W606O26a0 *D_002E26A0;
 #include "data/pieces/D_002E27C8.h"
 
 f32 func_0013bb20(void) {
-    return (f32)((D_002E26A0->x6c->x48 + (s32)((D_002E27C8 >> 10) & 7)) * 3000);
+    return (f32)((D_002E26A0->x6c->x48 + (s32)(((*(u32 *)&D_002E27C8) >> 10) & 7)) * 3000);
 }
 
 s32 func_0013c2f0(s32 b) {

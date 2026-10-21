@@ -33,11 +33,10 @@ void func_001f3e90(N *, N *);
 void func_001f3e20(N *, N *);
 s32 func_001f4390(N *);
 
-typedef struct { u8 pad[112]; u32 b112[4]; } C1Flags;
 #include "data/pieces/D_003F34B8.h"
 /* callee defined above (from src/hand/text_001f0000_h23.c) */
 CONTEXT_ONLY u32 func_002073f0(s32 n) {
-    return ((C1Flags *)D_003F34B8)->b112[n / 32] & (1 << n);
+    return D_003F34B8->b112[n / 32] & (1 << n);
 }
 static inline void inl5(N *o) { if (func_0021add8()) func_00207560(o, 109, 215); if (!func_002073f0(0)) func_00207428(o, 92, 223); }
 #define ITEM(n) { \

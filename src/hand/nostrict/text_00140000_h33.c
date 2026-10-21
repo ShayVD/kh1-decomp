@@ -3,7 +3,8 @@
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
  * Built without strict aliasing (several of these need the reloads). */
 
-typedef struct { f32 x, y, z, w; } V4f;
+#include "data/pieces/D_002C58A0.h"
+typedef V4_2c58a0 V4f;
 typedef struct { s32 x, y, z; } V3i;
 
 /* ---- save data (D_00304BE8), shared with h7 ---- */
@@ -209,7 +210,6 @@ extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
-#include "data/pieces/D_002C58A0.h"
 extern Pl *D_002E26A0;
 extern f32 D_00304D54;
 #include "data/pieces/D_00304B78.h"
@@ -855,7 +855,7 @@ Eff *func_001484c8(V4f **o, s32 a, s32 b, f32 f) {
     e->w8 = b;
     e->u.s.b4 = 1;
     e->fc = f;
-    func_002675a8(&e->v10, ((V4f *)&D_002C58A0));
+    func_002675a8(&e->v10, &D_002C58A0);
     func_001315c0(a, b, &e->v20, f);
     func_002675a8(*o, &e->v20);
     return e;

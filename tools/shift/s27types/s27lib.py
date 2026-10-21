@@ -85,14 +85,23 @@ def git(*args):
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True).stdout
 
 
+_head_lock = __import__("threading").Lock()
+
+
 def head_tree():
     """an export of HEAD's src/ and include/ (refreshed when HEAD moves)"""
+    with _head_lock:
+        return _head_tree()
+
+
+def _head_tree():
     sha = git("rev-parse", "HEAD").strip()
     d = SCR / "head"
     stamp = d / ".sha"
     if not stamp.exists() or stamp.read_text() != sha:
         subprocess.run(["rm", "-rf", str(d)])
         d.mkdir(parents=True)
+        (SCR / "cache").mkdir(exist_ok=True)
         p = subprocess.Popen(["git", "archive", "HEAD", "src", "include", "kh1.toml"], cwd=ROOT,
                              stdout=subprocess.PIPE)
         subprocess.run(["tar", "-x", "-C", str(d)], stdin=p.stdout, check=True)

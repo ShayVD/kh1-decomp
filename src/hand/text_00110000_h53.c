@@ -288,7 +288,7 @@ void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
     f32 dot, r;
     n = 0;
     sceVu0CopyMatrix(m, D_002C5910);
-    l = D_002C5C80;
+    l = ((Light53 *)&D_002C5C80);
     for (i = 0; i < 31; i++, l++) {
         if (!(*(u32 *)(o + 0x420) & (1 << i))) continue;
         switch (l->type) {
@@ -502,7 +502,6 @@ s32 func_00125000(void) {
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 typedef struct { s16 id; u8 pad[18]; } E7810;
 extern E7810 *D_004F7810;
-typedef struct { u32 lo : 25; u32 b25 : 1; u32 hi : 6; } F27c8;
 #include "data/pieces/D_002E27C8.h"
 void func_0012ec60(s32, s32, V53 *);
 
@@ -518,7 +517,7 @@ s32 func_00126838(u8 *o, s32 *a, V53 *v) {
             t[17] = 1;
         } else {
             t[18] = 1;
-            if (FLD(s32, o, 0x70) == 2 && (*(F27c8 *)&D_002E27C8).b25) t[15] = t[16];
+            if (FLD(s32, o, 0x70) == 2 && D_002E27C8.b25) t[15] = t[16];
         }
         v->y = 0.0f;
     } else {
@@ -589,7 +588,7 @@ void func_00122588(u8 *o) {
     u32 mask = 0;
     f32 dist, r;
     func_002675a8(acc, &D_002C5C70);
-    l = D_002C5C80;
+    l = ((Light53 *)&D_002C5C80);
     for (i = 0; i < 31; i++, l++) {
         if (l->flags & 0x11) continue;
         switch (l->type) {

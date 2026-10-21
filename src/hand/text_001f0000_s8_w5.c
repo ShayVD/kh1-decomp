@@ -1,6 +1,6 @@
 #include "common.h"
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
 #include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
 #include "data/pieces/D_003E8E08.h"
 s32 func_001efb88(void);
 s32 func_001f0448(s32, s32, u8 *, s32);
@@ -94,7 +94,7 @@ s32 func_001f0148(u8 *s, s32 sz)
                 c = *s - 32;
                 s++;
             }
-            g = &((Glyph *)D_003E8E28)[c];
+            g = &D_003E8E28[c];
             w += ((g->w << 4) + func_001efb88()) * sz / 18;
         }
     }

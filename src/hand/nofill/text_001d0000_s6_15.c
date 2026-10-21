@@ -136,8 +136,8 @@ typedef struct { u8 pad0[0x3070]; u64 f3070; } Big02;
 extern Big02 D_00389C90;
 #include "data/pieces/D_0037A378.h"
 extern char D_003DAC40[][6];
-typedef struct { s32 x0; s32 n; s32 tbl[1]; } Tbl;
 #include "data/pieces/D_003DACA0.h"
+typedef Tbl_3daca0 Tbl;
 s32 func_0011e340(void *);
 s32 func_001559f0(s32, s32);
 void func_001e01f0(void);
@@ -162,7 +162,7 @@ s32 func_001e0220(VM *vm) {
 double ceil(double);
 void func_0011e220(void *, s32, s32, s32);
 s32 func_001e0338(VM *vm) {
-    Tbl *t = ((Tbl *)D_003DACA0);
+    Tbl *t = D_003DACA0;
     s32 k = vm->stk[vm->sp - 2];
     s32 s; void *p;
     f32 a, b;
@@ -182,7 +182,7 @@ s32 func_001e0498(VM *vm) {
         return 2;
     }
     {
-        Tbl *t = ((Tbl *)D_003DACA0);
+        Tbl *t = D_003DACA0;
         func_001ed6b0((u8 *)t + *(t->tbl + k + t->n));
     }
     vm->sp--;
@@ -191,7 +191,7 @@ s32 func_001e0498(VM *vm) {
 s32 func_001e0528(VM *vm) {
     s32 k = vm->stk[vm->sp];
     if (k == -1) { if (func_0011e340(0)) return 4; }
-    else { Tbl *t = ((Tbl *)D_003DACA0); if (func_0011e340((u8 *)t + *(t->tbl + k + t->n))) return 4; }
+    else { Tbl *t = D_003DACA0; if (func_0011e340((u8 *)t + *(t->tbl + k + t->n))) return 4; }
     vm->sp--;
     return 2;
 }

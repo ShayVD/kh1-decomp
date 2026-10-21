@@ -16,7 +16,7 @@ typedef struct {
     u32 f18:4; u32 f22:1; u32 f23:5; u32 f28:1; u32 f29:3;
 } EntBits;
 typedef struct { s16 a, b, c, d; u8 pad8[3]; u8 b11; u8 pad12[4]; EntBits bits; } Ent20;
-typedef struct { u8 pad[16]; s32 w16; } Ent20b;
+#include "data/pieces/D_002A6274.h"
 typedef struct { s32 w0, w4, w8, w12; } Ent16;
 typedef struct { u8 m[64]; u8 v64[16]; u8 v80[16]; s32 w96; } Xf;
 #include "data/types/text_00100000_h1.h"
@@ -25,7 +25,8 @@ typedef struct { u8 pad[16]; u8 b16; u8 b17; } Obj;
 typedef struct { u8 pad[16]; f32 f16; f32 f20; f32 f24; } Fade;
 typedef struct { u8 pad[16]; s32 w16; f32 f20; f32 f24; } Fade2;
 typedef struct { u8 pad[16]; u32 w16; } DmaReq;
-typedef struct { u8 pad[16]; s32 w16, w20, w24, w28; } Blk32;
+#include "data/pieces/D_0048C630.h"
+typedef Blk32_48c630 Blk32;
 typedef struct { u8 pad[16]; s32 w16, w20, w24, w28; u8 pad2[80]; s32 w112, w116, w120, w124; } Blk128;
 
 /* ---- data ---- */
@@ -46,7 +47,6 @@ extern s32 D_002A6230;
 #include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002A624C.h"
 extern s32 D_002A6258;
-#include "data/pieces/D_002A6274.h"
 extern s32 D_002A6294;
 extern u16 D_002A62F8[];
 extern GsRegs D_002A6330;
@@ -71,7 +71,6 @@ extern s32 D_002C138C;
 #include "data/pieces/D_002E2790.h"
 extern s32 D_00472150[];
 extern s32 D_0048BFD0[2];
-#include "data/pieces/D_0048C630.h"
 #include "data/pieces/D_0048C690.h"
 #include "data/pieces/D_0048C6F0.h"
 extern u8 D_00494320[];
@@ -311,7 +310,7 @@ void func_00104eb0(s32 i, f32 *out) {
 s32 func_00105020(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((((Ent20b *)D_002A6274)[i].w16 & 0xf6) == 80) return 1;
+        if ((D_002A6274[i].w16 & 0xf6) == 80) return 1;
     }
     return 0;
 }
@@ -319,7 +318,7 @@ s32 func_00105020(void) {
 s32 func_00105078(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((((Ent20b *)D_002A6274)[i].w16 & 0xf6) == 144) return 1;
+        if ((D_002A6274[i].w16 & 0xf6) == 144) return 1;
     }
     return 0;
 }
@@ -477,14 +476,14 @@ void func_001086b8(s32 i, s32 n) {
 void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
     a[0] = b[0] = D_0048BFD0[0];
     a[1] = b[1] = D_0048BFD0[1];
-    o->w16 = (*(Blk32 *)&D_0048C630).w16;
+    o->w16 = (*(Blk32_48c630 *)&D_0048C630).x10;
     o->w20 = (s32)a;
-    o->w24 = (*(Blk32 *)&D_0048C630).w24;
-    o->w28 = (*(Blk32 *)&D_0048C630).w28;
-    o->w112 = (*(Blk32 *)&D_0048C690).w16;
+    o->w24 = (*(Blk32_48c630 *)&D_0048C630).x18;
+    o->w28 = (*(Blk32_48c630 *)&D_0048C630).x1c;
+    o->w112 = (*(Blk32 *)&D_0048C690).x10;
     o->w116 = (s32)b;
-    o->w120 = (*(Blk32 *)&D_0048C690).w24;
-    o->w124 = (*(Blk32 *)&D_0048C690).w28;
+    o->w120 = (*(Blk32 *)&D_0048C690).x18;
+    o->w124 = (*(Blk32 *)&D_0048C690).x1c;
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002A.h"

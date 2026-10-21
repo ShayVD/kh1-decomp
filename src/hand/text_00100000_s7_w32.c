@@ -282,7 +282,7 @@ void func_001fea38(WinA *o) {
     s32 h;
 
     if (o->xcc == 0) return;
-    func_00266f38(func_00266c08(2), D_003F1A70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
     p = func_00122048(0x400, 0x80);
     q = p + 2;
     u = (void *)(((u32)p & 0x0fffffff) | 0x80000000);

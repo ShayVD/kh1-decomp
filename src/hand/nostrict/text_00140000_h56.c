@@ -128,7 +128,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         func_002675a8(v, o->v20);
         break;
     case 19:
-        func_002675a8(v, D_002C58A0);
+        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
         break;
     default:
         fn = ((MvTab *)&D_00350D88)[o->st70].f10;
@@ -397,7 +397,7 @@ void func_00145858(Bo *o, f32 *pos) {
         o->vel[3] += -0.05f;
         o->vel[1] += o->vel[3];
         if (o->vel[1] < 0.0f) {
-            func_002675a8(o->vel, D_002C58A0);
+            func_002675a8(o->vel, (*(f32 (*)[0x4])&D_002C58A0));
             o->u.s.b16 = 1;
         }
     }
@@ -696,7 +696,7 @@ void func_0014ac50(Hm *o, Hs *s, f32 *out) {
         out[1] = 0.0f;
         func_00121fc4(out, out);
         if (out[3] == 0.0f) {
-            func_00267530(out, D_002C58A0, s->v30);
+            func_00267530(out, (*(f32 (*)[0x4])&D_002C58A0), s->v30);
         }
     } else if (((s32)(o->u30.d >> 10) & 1) || !o->u30.s.tg) {
         func_00267530(out, o->pos, o->v70);

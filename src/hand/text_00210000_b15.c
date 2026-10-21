@@ -158,7 +158,6 @@ next:
 }
 
 extern s32 D_00643694;
-typedef struct { s32 a, b, c, d; } S4;
 #include "data/pieces/D_003E8E08.h"
 s32 func_001fe9a8(void *, s32, s32);
 void func_0021cb88(void *, s32, s32, s32, s32);
@@ -201,7 +200,7 @@ void func_00221660(Ob *a) {
     func_00206130(a, 287, 94, 20, 2, 0x80202020);
     func_00206130(a, 453, 94, 20, 2, 0x80202020);
     func_001f94f0(a, 2, 380, 86, func_00221390(1), 15, 0x80461E00);
-    id = (*(S4 *)&D_003E8E08).a = func_001eb5f0(D_00643694 + 15, 0);
+    id = (*(S4_3e8e08 *)&D_003E8E08).a = func_001eb5f0(D_00643694 + 15, 0);
     func_001f94f0(a, 0, 302, 146, func_0021b800(id != -1 ? 70 : 71), 15, 0x80461E00);
     func_0021b860(a, 378, 140, 0, 0, 39);
     y = 204;
@@ -209,11 +208,11 @@ void func_00221660(Ob *a) {
     for (i = 0; i < 5; i++) {
         id = func_001eb5f0(n, i);
         msg = 58;
-        (*(S4 *)&D_003E8E08).a = i + 1;
+        (*(S4_3e8e08 *)&D_003E8E08).a = i + 1;
         if (id != -1) {
-            (*(S4 *)&D_003E8E08).b = func_001ee440(id);
-            (*(S4 *)&D_003E8E08).c = func_001ee458(id);
-            (*(S4 *)&D_003E8E08).d = func_001ee470(id);
+            (*(S4_3e8e08 *)&D_003E8E08).b = func_001ee440(id);
+            (*(S4_3e8e08 *)&D_003E8E08).c = func_001ee458(id);
+            (*(S4_3e8e08 *)&D_003E8E08).d = func_001ee470(id);
             msg = 57;
         }
         func_001f94f0(a, 0, 287, y, func_0021b800(msg), 15, 0x80461E00);

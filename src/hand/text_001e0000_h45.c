@@ -585,7 +585,7 @@ s32 func_001e8238(VM *vm) {
     Sub *s = &vm->u.s;
     s32 i;
     func_0011eae0(s->stk[vm->u.h.sp], buf);
-    func_00120748(buf, D_003DABD4, func_001e81c8, 0);
+    func_00120748(buf, ((s32)D_003DABD4), func_001e81c8, 0);
     D_00389C90.f3070 |= 0x100000000000000LL;
     i = vm->u.h.sp;
     D_006314D0 = s->stk[i - 1] - 1;
@@ -598,7 +598,7 @@ s32 func_001e8560(VM *vm) {
     Sub *s = &vm->u.s;
     s32 i;
     func_0011ea40(s->stk[vm->u.h.sp], buf);
-    func_00120748(buf, D_003DABD4, func_001e84f0, 0);
+    func_00120748(buf, ((s32)D_003DABD4), func_001e84f0, 0);
     D_00389C90.f3070 |= 0x8000LL << 36;
     i = vm->u.h.sp;
     D_006314CC = s->stk[i - 1] - 1;
@@ -630,7 +630,7 @@ s32 func_001e88e0(VM *vm) {
     t = (f32)(a * 0x3000) / 100.0f;
     n = c * 8;
     if (!func_0011e340(0)) {
-        func_0011e9d8(t, n, func_001e8628, D_003DABD4);
+        func_0011e9d8(t, n, func_001e8628, ((s32)D_003DABD4));
         D_00389C90.f3070 |= 0x200000000000000LL;
         vm->u.h.sp -= 2;
         return 2;
@@ -674,7 +674,7 @@ s32 func_001e8f68(VM *vm) {
         Sub *s = &vm->u.s;
         sprintf(buf, D_004908C8, D_003DD290[s->stk[vm->u.h.sp - 1]], s->stk[vm->u.h.sp]);
         D_00389C90.f3070 |= 0x80000000000000LL;
-        func_00120748(buf, D_003DABD4, func_001e8ed8, 0);
+        func_00120748(buf, ((s32)D_003DABD4), func_001e8ed8, 0);
     }
     vm->u.h.sp -= 2;
     return 2;

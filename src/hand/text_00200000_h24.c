@@ -340,13 +340,13 @@ void func_002140c0(Sbbc0 *a0, s32 a1) {
     a0->f24 = a1;
 }
 
-typedef struct { s32 f0, f4, f8, fc, f10, f14, f18, f1c; u8 a[10]; u8 pad[2]; s32 f2c; u8 pad2[0x74 - 0x30]; s32 f74; } S34B8;
 #include "data/pieces/D_003F34B8.h"
+typedef S34B8_3f34b8 S34B8;
 void func_002161e8(s32, s32);
 void func_00216180(void) {
     s32 i;
     for (i = 0; i < 10; i++) {
-        ((S34B8 *)D_003F34B8)->a[i] = 4;
+        D_003F34B8->a[i] = 4;
         func_002161e8(i, 4);
     }
 }
@@ -387,7 +387,7 @@ void func_00218d60(s32 a0) {
 }
 
 void func_00219128(void) {
-    S34B8 *p = ((S34B8 *)D_003F34B8);
+    S34B8 *p = D_003F34B8;
     p->f2c = 1;
     p->f8 = 0;
     p->f4 = 0;
@@ -458,7 +458,7 @@ void func_0021db30(void) {
     s32 i;
     D_00643010 = 0;
     D_00643014 = 0;
-    ((S34B8 *)D_003F34B8)->f74 = 0;
+    D_003F34B8->b112[1] = 0;
     for (i = 5; i >= 0; i--) D_003F5C30[i] = 0;
     func_0021fb50();
     func_002205c0();
@@ -540,27 +540,27 @@ void func_00222ab0(void) {
 
 s32 func_00219158(s32 a0) {
     switch (a0) {
-    case 0: return ((S34B8 *)D_003F34B8)->f0;
-    case 1: return ((S34B8 *)D_003F34B8)->f4;
-    case 2: return ((S34B8 *)D_003F34B8)->f8;
-    case 3: return ((S34B8 *)D_003F34B8)->f10;
-    case 4: return ((S34B8 *)D_003F34B8)->f14;
-    case 5: return ((S34B8 *)D_003F34B8)->f18;
+    case 0: return D_003F34B8->f0;
+    case 1: return D_003F34B8->f4;
+    case 2: return D_003F34B8->f8;
+    case 3: return D_003F34B8->f10;
+    case 4: return D_003F34B8->f14;
+    case 5: return D_003F34B8->f18;
     case 6:
-    default: return ((S34B8 *)D_003F34B8)->f2c;
+    default: return D_003F34B8->f2c;
     }
 }
 
 void func_002191f0(s32 a0, s32 a1) {
     switch (a0) {
-    case 0: ((S34B8 *)D_003F34B8)->f0 = a1; break;
-    case 1: ((S34B8 *)D_003F34B8)->f4 = a1; break;
-    case 2: ((S34B8 *)D_003F34B8)->f8 = a1; break;
-    case 3: ((S34B8 *)D_003F34B8)->f10 = a1; break;
-    case 4: ((S34B8 *)D_003F34B8)->f14 = a1; break;
-    case 5: ((S34B8 *)D_003F34B8)->f18 = a1; break;
+    case 0: D_003F34B8->f0 = a1; break;
+    case 1: D_003F34B8->f4 = a1; break;
+    case 2: D_003F34B8->f8 = a1; break;
+    case 3: D_003F34B8->f10 = a1; break;
+    case 4: D_003F34B8->f14 = a1; break;
+    case 5: D_003F34B8->f18 = a1; break;
     case 6:
-    default: ((S34B8 *)D_003F34B8)->f2c = a1; break;
+    default: D_003F34B8->f2c = a1; break;
     }
 }
 #include "data/data_003F.h"

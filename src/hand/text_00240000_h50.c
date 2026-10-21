@@ -63,7 +63,7 @@ typedef union {
 
 typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
-typedef struct { u8 pad[0x491]; u8 cur; } Sys;
+#include "data/pieces/D_00304BE8.h"
 
 extern u8 D_0045BC10[];
 extern E860 D_00662A30[10];
@@ -109,7 +109,6 @@ extern s32 D_0046A610;
 extern HddCfg D_0046A688;
 extern s32 D_0046A614;
 #include "data/pieces/D_0046A608.h"
-#include "data/pieces/D_00304BE8.h"
 extern s32 D_002C5C4C;
 extern s32 D_002C5C50;
 extern s32 D_0046A6B0[];
@@ -437,7 +436,7 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
     s32 id;
     D_0066AAA0 = a;
     D_0066AA80 = cb;
-    c = ((Sys *)D_00304BE8)->cur;
+    c = D_00304BE8->x48e[3];
     id = D_0046A6B0[c];
     if (D_002C5C4C) {
         if (c == 1) id = 0xc000a;

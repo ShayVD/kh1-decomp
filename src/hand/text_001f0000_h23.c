@@ -21,20 +21,10 @@ typedef struct Win {
 
 #include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[36]; s32 v[1]; } Menu;
-typedef struct {
-    u8 pad[48];
-    u32 b48[2];
-    u32 b56[1];
-    u32 b60[1];
-    u32 b64[10];
-    u32 b104[1];
-    u32 b108[1];
-    u32 b112[4];
-} Flags;
+#include "data/pieces/D_003F34B8.h"
 
 extern Obj D_0063F758[24];
 extern s32 D_003F1A60;
-#include "data/pieces/D_003F34B8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E20;
 extern s32 D_00640E24;
@@ -253,91 +243,91 @@ s32 func_00206710(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
 
 void func_00206e28(void) {
     s32 i;
-    for (i = 0; i < 2; i++) ((Flags *)D_003F34B8)->b48[i] = 0;
+    for (i = 0; i < 2; i++) D_003F34B8->b48[i] = 0;
 }
 
 void func_00206e60(s32 n) {
-    ((Flags *)D_003F34B8)->b48[n / 32] &= ~(1 << n);
+    D_003F34B8->b48[n / 32] &= ~(1 << n);
 }
 
 void func_00206ea8(s32 n) {
-    ((Flags *)D_003F34B8)->b48[n / 32] |= 1 << n;
+    D_003F34B8->b48[n / 32] |= 1 << n;
 }
 
 u32 func_00206ee8(s32 n) {
-    return ((Flags *)D_003F34B8)->b48[n / 32] & (1 << n);
+    return D_003F34B8->b48[n / 32] & (1 << n);
 }
 
 void func_00206f30(s32 n) {
-    ((Flags *)D_003F34B8)->b56[n / 32] &= ~(1 << n);
+    D_003F34B8->b56[n / 32] &= ~(1 << n);
 }
 
 void func_00206f78(s32 n) {
-    ((Flags *)D_003F34B8)->b56[n / 32] |= 1 << n;
+    D_003F34B8->b56[n / 32] |= 1 << n;
 }
 
 u32 func_00206fb8(s32 n) {
-    return ((Flags *)D_003F34B8)->b56[n / 32] & (1 << n);
+    return D_003F34B8->b56[n / 32] & (1 << n);
 }
 
 void func_00207000(s32 n) {
-    ((Flags *)D_003F34B8)->b60[n / 32] &= ~(1 << n);
+    D_003F34B8->b60[n / 32] &= ~(1 << n);
 }
 
 void func_00207048(s32 n) {
-    ((Flags *)D_003F34B8)->b60[n / 32] |= 1 << n;
+    D_003F34B8->b60[n / 32] |= 1 << n;
 }
 
 u32 func_00207088(s32 n) {
-    return ((Flags *)D_003F34B8)->b60[n / 32] & (1 << n);
+    return D_003F34B8->b60[n / 32] & (1 << n);
 }
 
 void func_002070f8(s32 n) {
-    ((Flags *)D_003F34B8)->b64[n / 32] &= ~(1 << n);
+    D_003F34B8->b64[n / 32] &= ~(1 << n);
 }
 
 void func_00207140(s32 n) {
-    ((Flags *)D_003F34B8)->b64[n / 32] |= 1 << n;
+    D_003F34B8->b64[n / 32] |= 1 << n;
 }
 
 u32 func_00207180(s32 n) {
-    return ((Flags *)D_003F34B8)->b64[n / 32] & (1 << n);
+    return D_003F34B8->b64[n / 32] & (1 << n);
 }
 
 void func_002071c8(s32 n) {
-    ((Flags *)D_003F34B8)->b104[n / 32] &= ~(1 << n);
+    D_003F34B8->b104[n / 32] &= ~(1 << n);
 }
 
 void func_00207210(s32 n) {
-    ((Flags *)D_003F34B8)->b104[n / 32] |= 1 << n;
+    D_003F34B8->b104[n / 32] |= 1 << n;
 }
 
 u32 func_00207250(s32 n) {
-    return ((Flags *)D_003F34B8)->b104[n / 32] & (1 << n);
+    return D_003F34B8->b104[n / 32] & (1 << n);
 }
 
 void func_00207298(s32 n) {
-    ((Flags *)D_003F34B8)->b108[n / 32] &= ~(1 << n);
+    D_003F34B8->b108[n / 32] &= ~(1 << n);
 }
 
 void func_002072e0(s32 n) {
-    ((Flags *)D_003F34B8)->b108[n / 32] |= 1 << n;
+    D_003F34B8->b108[n / 32] |= 1 << n;
 }
 
 u32 func_00207320(s32 n) {
-    return ((Flags *)D_003F34B8)->b108[n / 32] & (1 << n);
+    return D_003F34B8->b108[n / 32] & (1 << n);
 }
 
 void func_00207368(s32 n) {
-    ((Flags *)D_003F34B8)->b112[n / 32] &= ~(1 << n);
+    D_003F34B8->b112[n / 32] &= ~(1 << n);
 }
 
 void func_002073b0(s32 n) {
-    ((Flags *)D_003F34B8)->b112[n / 32] |= 1 << n;
+    D_003F34B8->b112[n / 32] |= 1 << n;
 }
 
 u32 func_002073f0(s32 n) {
-    return ((Flags *)D_003F34B8)->b112[n / 32] & (1 << n);
+    return D_003F34B8->b112[n / 32] & (1 << n);
 }
 
 void func_00207598(void) {

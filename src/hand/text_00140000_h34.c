@@ -439,7 +439,7 @@ typedef struct { u32 x0; u8 pad4[0x144]; W34Tm *x148; u8 pad14c[0x3b0 - 0x14c]; 
 s32 func_0014cb90(W34Pl3 *o) {
     s32 r;
     if (o->x0 & 0x2000) o->x3d0 = 171;
-    else if (D_002E27C8 >> 9 & 1) o->x3d0 = 5;
+    else if ((*(u32 *)&D_002E27C8) >> 9 & 1) o->x3d0 = 5;
     else o->x3d0 = 0;
     r = func_00130340(o, (o->x3d0 + 4) | 0x10000, 0.0f);
     func_0014f658(o, 1);

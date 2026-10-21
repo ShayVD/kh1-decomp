@@ -41,7 +41,8 @@ typedef struct V8 { s32 a, b; } V8;
 #include "data/types/text_00120000_h5.h"
 
 typedef struct S31b0 { s32 f0, f4; } S31b0;
-typedef struct S31a0 { u8 pad[0xc]; u16 f0c; u16 f0e; } S31a0;
+#include "data/pieces/D_002E31A0.h"
+typedef S31a0_2e31a0 S31a0;
 
 /* ---- data ---- */
 extern void *D_002E26A0[3];
@@ -61,7 +62,6 @@ extern struct { u8 pad[4]; u32 f4; u32 f8; s32 f0c; } D_002E2FD8;
 extern u32 D_00524F44;
 extern void **D_00524F40;
 #include "data/pieces/D_002E31B0.h"
-#include "data/pieces/D_002E31A0.h"
 extern s32 D_002E31BC;
 extern V8 *D_00525288;
 extern s32 D_0052528C;
@@ -556,7 +556,7 @@ void func_0012fa98(void) {
     f32 b[4];
     f32 d = func_0012ed88(D_002E26A0[0], ((S31b0 *)&D_002E31B0), a, b);
     s32 *o = &D_002E31BC;
-    S31a0 *x = ((S31a0 *)D_002E31A0);
+    S31a0 *x = D_002E31A0;
     s32 r = 0;
     if (x) {
         if (!(d < x->f0c)) {

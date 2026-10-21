@@ -29,7 +29,7 @@ void func_00175918(void);
 void func_00175980(void);
 
 s32 func_00105c98(s32 arg0, s32 arg1) {
-    return func_002675a8(arg1, D_002A3F48 + (((u32) M2C_FIELD(((arg0 * 0x14) + D_002A6238), u32 *, 0x10) >> 7) & 0xF0));
+    return func_002675a8(arg1, D_002A3F48 + (((u32) M2C_FIELD(((arg0 * 0x14) + ((s32)D_002A6238)), u32 *, 0x10) >> 7) & 0xF0));
 }
 
 void func_001065a8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {

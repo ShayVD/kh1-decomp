@@ -219,10 +219,10 @@ void func_00121c78(void) {
     p->x8 = 0;
     func_0011ef10(200000, func_00121b98)->x2 = -1;
 }
-typedef struct { s32 kind; u8 pad[0x2c]; f32 v[4]; } Lt64;
+#include "data/pieces/D_002C5C80.h"
+typedef Lt64_2c5c80 Lt64;
 typedef struct { u8 pad[0x420]; u32 mask; u8 pad2[0xc]; f32 pos[4]; } Obj430;
 #include "data/pieces/D_002C5910.h"
-#include "data/pieces/D_002C5C80.h"
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 
 void func_001229c0(Obj430 *o, f32 m[4][4]) {
@@ -232,10 +232,10 @@ void func_001229c0(Obj430 *o, f32 m[4][4]) {
     Lt64 *e;
     sceVu0CopyMatrix(m, D_002C5910);
     { s32 j; for (j = 3; j >= 0; j--) m[3][j] = 1.0f; }
-    for (i = 0, e = ((Lt64 *)&D_002C5C80), b = 1, row = m[0]; i < 31; i++, e++) {
+    for (i = 0, e = &D_002C5C80, b = 1, row = m[0]; i < 31; i++, e++) {
         if (o->mask & (b << i)) {
             if (e->kind < 5) if (e->kind >= 2) {
-                func_002675a8(row, e->v);
+                func_002675a8(row, e->v.v);
                 row += 4;
             }
         }

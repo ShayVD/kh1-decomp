@@ -16,7 +16,7 @@ void func_002070c0(void) {
     s32 var_a0;
 
     var_a0 = 9;
-    var_v0 = D_003F34B8 + 0x40;
+    var_v0 = ((s32)D_003F34B8) + 0x40;
     do {
         var_a0 -= 1;
         *var_v0 = 0;

@@ -335,7 +335,7 @@ s32 func_0017d628(void) {
     func_002675a8(&pos, &D_00575894->x10);
     pos.y -= 100.0f;
     for (i = 0; i < D_00362448; i++) {
-        e = &D_00362430[i];
+        e = &(*(Box * *)&D_00362430)[i];
         if (e->min.x <= pos.x && pos.x <= e->max.x && e->min.y <= pos.y && pos.y <= e->max.y
             && e->min.z <= pos.z && pos.z <= e->max.z) {
             if (e->x20) {
@@ -348,7 +348,7 @@ s32 func_0017d628(void) {
                 }
                 if (e->x24 & 2) {
                     (*(void **)&D_00362434) = 0;
-                    D_00362438 = (s32)e->x20;
+                    D_00362438 = (Path_362438 *)((s32)e->x20);
                 } else {
                     (*(void **)&D_00362434) = e->x20;
                     D_00362438 = 0;

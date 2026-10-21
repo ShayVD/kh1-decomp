@@ -10,7 +10,7 @@ extern s64 D_00389C90[];
 
 s32 func_001dbd20(void) {
   D_00389C90[1551] = (s64) (D_00389C90[1551] | 0x100);
-  func_0011ea10(&func_001dbcb8, &D_003DABD4, 0x100);
+  func_0011ea10(&func_001dbcb8, ((s32 *)&D_003DABD4), 0x100);
   return 2;
 }
 

@@ -1,7 +1,8 @@
 #include "common.h"
 
-typedef struct { u16 code; u16 f2; u16 f4; u8 w; u8 f7; } Glyph;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003E8E28.h"
+typedef Glyph_3e8e28 Glyph;
+#include "data/pieces/D_003F2270.h"
 typedef struct { u64 d0; u64 d1; s32 w[16]; } GP;
 typedef struct {
     u8 pad0[0x48];
@@ -16,11 +17,9 @@ typedef struct {
     s32 xb4;
 } Txt9;
 
-#include "data/pieces/D_003E8E28.h"
 extern s32 D_003E8D00[];
 extern s32 D_003E8E00;
 extern s32 D_003F1A64;
-#include "data/pieces/D_003F2270.h"
 extern s32 D_003F2BD0;
 extern s32 D_003F2BD4;
 
@@ -55,7 +54,7 @@ void func_001f9e48(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     f32 fa, fb, t0, t1, t2, t3;
 
 
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F2270));
+    func_00266f38(func_00266c08(2), &D_003F2270);
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
     q = base + 2;
@@ -123,7 +122,7 @@ void func_001f9e48(Txt9 *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
             xx += (sz << 8) / n;
             continue;
         }
-        g = &((Glyph *)D_003E8E28)[func_001eff50(c)];
+        g = &D_003E8E28[func_001eff50(c)];
         w = g->w << 4;
         f2 = g->f2;
         a = w * sz / n;

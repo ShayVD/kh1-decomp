@@ -113,7 +113,7 @@ s32 func_001059d0(s32 arg0) {
     temp_v0 = func_00142730(arg0, (s32) sp);
     temp_a3 = temp_v0 * 0x14;
     if (M2C_FIELD(sp, M2C_UNK *, 0x0) == -1) {
-        return (s32) M2C_FIELD((D_002A6238 + temp_a3), u8 *, 0xB);
+        return (s32) M2C_FIELD((((s32)D_002A6238) + temp_a3), u8 *, 0xB);
     }
     return func_0011ab60(M2C_FIELD(sp, M2C_UNK *, 0x0), temp_v0);
 }

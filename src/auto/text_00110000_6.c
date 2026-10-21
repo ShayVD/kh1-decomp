@@ -71,7 +71,7 @@ void func_00110448(s32 arg0) {
 }
 
 void func_00111288(void) {
-    D_002BCB60 = func_00232cc0(3);
+    D_002BCB60 = (Ctx_2bcb60 *)(func_00232cc0(3));
 }
 
 void func_00111600(s32 arg0, s32 arg1, s32 arg2) {
@@ -89,7 +89,7 @@ void func_00111600(s32 arg0, s32 arg1, s32 arg2) {
                 var_a5 += *temp_v0;
             } while (var_a3 < arg0);
         }
-        M2C_FIELD((var_a5 + arg1 + D_002BCB60), s8 *, 0x6C) = (s8) arg2;
+        M2C_FIELD((var_a5 + arg1 + ((s32)D_002BCB60)), s8 *, 0x6C) = (s8) arg2;
     }
 }
 
@@ -107,7 +107,7 @@ s8 func_00111660(s32 arg0, s32 arg1) {
             var_a4 += *temp_v0;
         } while (var_a2 < arg0);
     }
-    return M2C_FIELD((var_a4 + arg1 + D_002BCB60), s8 *, 0x6C);
+    return M2C_FIELD((var_a4 + arg1 + ((s32)D_002BCB60)), s8 *, 0x6C);
 }
 
 u32 func_00111b10(void) {

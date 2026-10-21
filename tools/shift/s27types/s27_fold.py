@@ -363,6 +363,7 @@ def main(argv):
     oldhdr, olddecl = header_decl(N)
     users = users_of(N)
     log(f"{N}: {olddecl}; {len(users)} users")
+    L.head_tree()
     files = {}
     prio = {}
     forms = set()
@@ -486,7 +487,11 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
         hpath.write_text(hdr)
         for rel, t in newtexts.items():
             (ROOT / rel).write_text(t)
-        res = check_all(list(users), N, olddecl, newtexts, decl, mode == "full")
+        try:
+            res = check_all(list(users), N, olddecl, newtexts, decl, mode == "full")
+        except BaseException:
+            restore(saved, hpath, oldhdr)
+            raise
         failed = {r: why for r, why in res.items() if why != "SAME" and r in newtexts}
         others = {r: why for r, why in res.items() if why != "SAME" and r not in newtexts}
         if others:

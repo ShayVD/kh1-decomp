@@ -149,7 +149,7 @@ void func_00224060(Obj *o) {
  * func_0021d348 matches (rotry 00490ff0, 0 words differ over its 1276 bytes);
  * the five small ones compile to the original instruction sequences.
  * Uncomment once layout.tsv is split. */
-typedef struct { u8 pad[0x74]; s32 x74; } S34B8;
+#include "data/pieces/D_003F34B8.h"
 extern s32 D_00642EA4;
 extern s32 D_003F34FC;
 extern s32 D_003F34DC, D_003F34E0, D_003F34E4, D_003F34E8, D_003F34EC, D_003F34F0, D_003F34F4, D_003F34F8;
@@ -158,7 +158,6 @@ extern s32 D_003F34C8;
 extern u8 D_00490F58[], D_00490F70[], D_00490F88[], D_00490FA0[], D_00490FB8[], D_00490FD0[];
 extern s32 D_00642E94;
 extern u8 D_003F5A90[];
-#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F5C30[];
 void func_00223e10(void);
 void func_00120748(void *, s32, void *, s32);
@@ -314,11 +313,11 @@ void func_0021d348(Obj *o) {
             p = func_001f31a8(D_003F5A90, 0);
             if (p) func_001f3e48(p, o);
             func_0021fb10();
-            if (!((S34B8 *)D_003F34B8)->x74) {
+            if (!D_003F34B8->b112[1]) {
                 for (i = 0; i < 6; i++) {
                     if (!D_003F5C30[i]) goto inc;
                 }
-                ((S34B8 *)D_003F34B8)->x74 = 1;
+                D_003F34B8->b112[1] = 1;
                 func_0011d768(18);
             }
         inc:

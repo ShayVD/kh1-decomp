@@ -68,7 +68,7 @@ typedef struct {
 
 /* Camera state: channels 0-3 (pos, rot, ...) with Hermite moves, plus shake. */
 
-typedef struct { u32 b0:1, b1:1, b2:1, b3:1, rest:28; } Bits;
+#include "data/pieces/D_0037A378.h"
 
 typedef struct {
     u8 pad[0x10];
@@ -95,7 +95,6 @@ extern Big D_00389C90;
 #include "data/pieces/D_003C21A8.h"
 extern u32 D_003C39A8;
 extern s8 *D_003C39AC;
-#include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
 extern s32 D_002C5958;
@@ -169,10 +168,10 @@ void func_001c4198(s8 *h, s32 a1)
     D_003C21A8[i] = D_00388480[i];
   }
 
-  (*(Bits *)&D_0037A378).b0 = 0;
-  (*(Bits *)&D_0037A378).b1 = 0;
-  (*(Bits *)&D_0037A378).b2 = 0;
-  (*(Bits *)&D_0037A378).b3 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b0 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b1 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b2 = 0;
+  (*(Bits_37a378 *)&D_0037A378).b3 = 0;
   D_003C39AC = h;
   D_00389C90.x3148 = -1;
   D_00389C90.f314c = 1.0f;
@@ -514,7 +513,7 @@ s32 func_001d2c68(VM *vm) {
     Vec v;
     Msg m;
     f32 a, t, r, s, dx, dz;
-    if ((*(Bits *)&D_0037A378).b0) {
+    if ((*(Bits_37a378 *)&D_0037A378).b0) {
         m.type = 3;
         m.id = 0;
         m.x4 = vm->x0;

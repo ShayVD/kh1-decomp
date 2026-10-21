@@ -30,7 +30,7 @@ void func_001ff488(Wnd *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     PF *p;
     u32 ub;
     s32 X, Y, R, B, X1, X2, Y1, Y2;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (PF *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
