@@ -53,22 +53,12 @@ typedef struct Actor {
 } Actor;
 
 /* --- 256 entries of 0xC0 bytes at D_00364130 --- */
-typedef struct E0C0 {
-    u8 pad0[0x86];
-    u16 flags;   /* 0x86: bit 0 = in use, bit 5 = paused */
-    u8 pad88[4];
-    struct { u8 pad[0xfc]; u16 xfc; } *p8c; /* 0x8C */
-    u8 pad90[4];
-    s32 key;     /* 0x94 */
-    u8 pad98[0x10];
-    s32 xa8;     /* 0xA8 */
-    u8 padac[0xc0 - 0xac];
-} E0C0;
+#include "data/pieces/D_00364130.h"
+typedef E0C0_364130_2 E0C0;
 
 #include "data/types/text_00170000_h11.h"
 typedef struct { s32 a, b, c; } V12;
 
-extern E0C0 D_00364130[256];
 extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 extern Actor *D_002E26A0;
 #include "data/pieces/D_002C5960.h"
@@ -372,7 +362,7 @@ void func_001827f0(E0C0 *);
 void func_0017f9d8(void) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        E0C0 *e = &D_00364130[i];
+        E0C0 *e = &D_00364130.e0C0_2[i];
         if (e->flags & 1) {
             if (e->p8c && e->p8c->xfc) func_0011d3c8(e->p8c->xfc, e->xa8, 60);
             func_00182788(e);
@@ -384,22 +374,22 @@ void func_0017f9d8(void) {
 void func_0017fa68(void) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        if (D_00364130[i].flags & 1) D_00364130[i].flags |= 0x20;
+        if (D_00364130.e0C0_2[i].flags & 1) D_00364130.e0C0_2[i].flags |= 0x20;
     }
 }
 
 void func_0017faa8(void) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        if (D_00364130[i].flags & 1) D_00364130[i].flags &= ~0x20;
+        if (D_00364130.e0C0_2[i].flags & 1) D_00364130.e0C0_2[i].flags &= ~0x20;
     }
 }
 
 void func_0017fae8(s32 key) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        if ((D_00364130[i].flags & 1) && D_00364130[i].key == key) {
-            D_00364130[i].flags |= 0x20;
+        if ((D_00364130.e0C0_2[i].flags & 1) && D_00364130.e0C0_2[i].key == key) {
+            D_00364130.e0C0_2[i].flags |= 0x20;
             return;
         }
     }
@@ -408,8 +398,8 @@ void func_0017fae8(s32 key) {
 void func_0017fb40(s32 key) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        if ((D_00364130[i].flags & 1) && D_00364130[i].key == key) {
-            D_00364130[i].flags &= ~0x20;
+        if ((D_00364130.e0C0_2[i].flags & 1) && D_00364130.e0C0_2[i].key == key) {
+            D_00364130.e0C0_2[i].flags &= ~0x20;
             return;
         }
     }
@@ -419,7 +409,7 @@ void func_00182840(E0C0 *);
 void func_0017fc48(void) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        E0C0 *e = &D_00364130[i];
+        E0C0 *e = &D_00364130.e0C0_2[i];
         if (e->flags & 1) {
             if (e->p8c && e->p8c->xfc) func_0011d3c8(e->p8c->xfc, e->xa8, 60);
             func_00182788(e);
@@ -432,7 +422,7 @@ typedef struct { u8 pad[0x104]; s32 x104; } S104;
 s32 func_0017ff98(s32 key) {
     s32 i;
     for (i = 0; i < 256; i++) {
-        if (D_00364130[i].key == key) return ((S104 *)D_00364130[i].p8c)->x104;
+        if (D_00364130.e0C0_2[i].key == key) return ((S104 *)D_00364130.e0C0_2[i].p8c)->x104;
     }
     return -2;
 }

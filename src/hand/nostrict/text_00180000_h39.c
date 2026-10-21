@@ -464,7 +464,7 @@ typedef struct H39Obj {
     u8 padb1[0xC0 - 0xB1];
 } H39Obj;
 
-extern H39Obj D_00364130[256];
+#include "data/pieces/D_00364130.h"
 extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 
 /* Quicksort of a[lo..hi] into descending order, moving b along. */
@@ -504,7 +504,7 @@ void func_001814b0(f32 *a, H39Obj **b, s32 lo, s32 hi) {
 s32 func_00181608(H39Obj **list) {
     f32 depth[256];
     H39Q v;
-    H39Obj *e = D_00364130;
+    H39Obj *e = (*(H39Obj (*)[256])&D_00364130);
     H39Obj **l = list;
     s32 n = 0;
     s32 i;

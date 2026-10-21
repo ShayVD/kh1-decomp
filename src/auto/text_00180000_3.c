@@ -3,7 +3,7 @@
 #include "m2c.h"
 #include "ppp.h"
 
-extern M2C_UNK D_00364130;
+#include "data/pieces/D_00364130.h"
 extern void *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 s32 func_00180f18(s32, s32, s32, s32);
 void func_00267620(s32);
@@ -26,7 +26,7 @@ s32 func_00181318(void) {
     u16 temp_v1;
 
     var_a2 = 0;
-    var_a0 = &D_00364130;
+    var_a0 = &D_00364130.i;
     var_a1 = 0xFF;
     do {
         temp_v1 = M2C_FIELD(var_a0, u16 *, 0x86);

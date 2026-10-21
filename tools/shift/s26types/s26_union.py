@@ -16,7 +16,7 @@ take a member (`--cast F`, or a view whose type is not self-contained) keep thei
 code through s26_cast's casts. Accepted only if every changed file's -S is
 identical with no new warning; the result names the users that failed.
 """
-import re, sys
+import os, re, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import s26_cast as C  # noqa: E402
@@ -28,6 +28,9 @@ import type_move as TM  # noqa: E402
 COMMON = {"u8", "s8", "u16", "s16", "u32", "s32", "u64", "s64", "f32", "f64", "u128", "s128", "M2C_UNK"}
 MEMB = {"s32": "i", "int": "i", "M2C_UNK": "i", "u32": "u", "f32": "f", "u8": "b", "s8": "c", "char": "c",
         "u16": "h", "s16": "sh", "u64": "d", "s64": "sd", "void": "v"}
+
+
+ELEM = False
 
 
 def find_typedef(rel, text, tname):
@@ -270,6 +273,14 @@ def header(N, views):
                 if dp["uniq"] not in done:
                     lines.append(ds); done.add(dp["uniq"])
             lines.append(rename_stmt(v["stmt"], v["tname"], v["uniq"], ren))
+    if ELEM:
+        if any("[" not in v["decl"] for v in views):
+            raise ValueError("--elem needs array views")
+        E = "E" + N[2:]
+        lines.append(f"typedef union {{ " + " ".join(re.sub(r"\[[^\]]*\]", "", v["decl"], count=1) + ";"
+                                                   for v in views) + f" }} {E};")
+        lines += ["", f"extern {E} {N}[];", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""]
+        return "\n".join(lines)
     lines.append(f"typedef union {{ " + " ".join(v["decl"] + ";" for v in views) + f" }} {U};")
     lines += ["", f"extern {U} {N};", "", f"#endif /* KH1_DATA_PIECES_{N}_H */", ""]
     return "\n".join(lines)
@@ -335,7 +346,42 @@ def edit(N, rel, text, kind, info, INC):
     return member_uses(t2, N, view["mname"]), extra
 
 
+def elem_member(seg, k, N, mname):
+    """(replacement, end) for N at seg[k:]: N[i] -> N[i].m, N -> (&N[0].m)"""
+    j = k + len(N)
+    m = re.match(r"\s*\[", seg[j:])
+    if not m:
+        return f"(&{N}[0].{mname})", j
+    i = j + m.end()
+    d = 1
+    while i < len(seg) and d:
+        d += seg[i] == "["
+        d -= seg[i] == "]"
+        i += 1
+    if d:
+        raise ValueError("unbalanced index")
+    return seg[k:i] + "." + mname, i
+
+
 def member_uses(text, N, mname):
+    if ELEM:
+        ml = C.macro_lines(text, N)
+        out, last = [], 0
+        for a, b in C.code_spans(text):
+            out.append(text[last:a])
+            seg = text[a:b]
+            res, k = [], 0
+            for m in re.finditer(r"\b" + N + r"\b", seg):
+                if m.start() < k or text.count("\n", 0, a + m.start()) in ml:
+                    continue
+                rep, e = elem_member(seg, m.start(), N, mname)
+                res.append(seg[k:m.start()] + rep)
+                k = e
+            res.append(seg[k:])
+            out.append("".join(res))
+            last = b
+        out.append(text[last:])
+        return "".join(out)
     ml = C.macro_lines(text, N)
     out, last = [], 0
     for a, b in C.code_spans(text):
@@ -394,12 +440,16 @@ def main():
     a = sys.argv[1:]
     apply = "--apply" in a
     a = [x for x in a if x != "--apply"]
+    global ELEM
+    if "--elem" in a:
+        ELEM = True
+        a.remove("--elem")
     casts = []
     while "--cast" in a:
         i = a.index("--cast"); casts.append(a[i + 1]); del a[i:i + 2]
     for N in a:
         cu = list(casts)
-        for it in range(6):
+        for it in range(int(os.environ.get("S26_TRIES", "6"))):
             fail, users = run(N, cu, apply=False)
             if not fail:
                 break

@@ -168,4 +168,4 @@
 	PIECE D_00362730, 0x1200, 16  /* data/pieces/D_00362730.h */
 	PIECE D_00363930, 0x400, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00363D30, 0x400, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00364130, 0xc000, 16  /* untyped: users disagree: E0C0 D_00364130[256] | H39Obj D_00364130[256] | M2C_UNK D_00364130 | PObj D_00364130[256] | PppMng D_00364130[256]; unparsed in 1 file(s); session 25: as H39Obj D_00364130[256]: does not compile in text_00180000_3.c, text_00170000_s6_10.c +2; no file-scope extern in text_00180000_b07.c */
+	PIECE D_00364130, 0xc000, 16  /* data/pieces/D_00364130.h */

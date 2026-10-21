@@ -1,14 +1,14 @@
 #include "common.h"
 
-typedef struct E0C0 { u8 pad0[0x80]; u64 x80; u8 pad88[0xc0 - 0x88]; } E0C0;
-extern E0C0 D_00364130[256];
+#include "data/pieces/D_00364130.h"
+typedef E0C0_364130_3 E0C0;
 void func_00181f50(E0C0 *);
 
 void func_00181fe0(E0C0 **out) {
     s32 i;
     E0C0 *e;
     for (i = 0; i < 256; i++) {
-        e = &D_00364130[i];
+        e = &D_00364130.e0C0_3[i];
         if (!(e->x80 & 0x3000000000000)) {
             func_00181f50(e);
             *out = e;

@@ -4,36 +4,23 @@
 extern u8 D_00616040[];
 
 /* D_00364130: 256 effect managers of 0xC0 bytes. */
-typedef struct {
-    u8 pad[0xFC];
-    u16 unkFC;
-} PppOwner;
+#include "data/pieces/D_00364130.h"
+typedef PppOwner_364130 PppOwner;
+typedef PppMng_364130 PppMng;
 
-typedef struct PppMng {
-    u8 pad00[0x86];
-    u16 st;          /* +0x86 */
-    u8 pad88[4];
-    PppOwner *owner; /* +0x8C */
-    u8 pad90[4];
-    s32 link;        /* +0x94: a PppLink *, typed s32 (see func_001827f0) */
-    s32 unk98;       /* +0x98 */
-    u8 pad9C[0xC];
-    s32 unkA8;       /* +0xA8 */
-    u8 padAC[0x14];
-} PppMng;
+
 
 typedef struct {
     u8 pad00[0x14];
     s32 flags;
 } PppLink;
 
-extern PppMng D_00364130[256];
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(PppMng *);
 void func_00182840(PppMng *);
 
 s32 func_00181410(void) {
-    PppMng *m = D_00364130;
+    PppMng *m = D_00364130.pppMng;
     s32 i;
 
     for (i = 0; i < 256; i++, m++) {
