@@ -36,7 +36,7 @@ s32 func_001ed780(s32 arg0, s32 arg1, s32 arg2) {
 }
 
 void func_001ee4b8(void) {
-    D_003F34B8 = func_00232cc0(5);
+    D_003F34B8 = (S34B8_3f34b8 *)(func_00232cc0(5));
 }
 
 void func_001efc38(s32 arg0, s32 arg1) {

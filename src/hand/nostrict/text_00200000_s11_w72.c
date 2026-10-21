@@ -69,7 +69,7 @@ void func_00200038(Wnd2 *o) {
     f32 sx;
     f32 sy;
     if (o->xcc == 0) return;
-    func_00266f38(func_00266c08(2), D_003F1E70);
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     q = (QW *)(buf + 2);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);

@@ -145,7 +145,7 @@ s32 func_0014b090(B4P *a, B4P *b) {
         func_001586a8(10);
         n = a->xb0;
         if (n > 0) {
-            n = ((D_002E27C8 >> 19) & 7) * n + n;
+            n = (((*(u32 *)&D_002E27C8) >> 19) & 7) * n + n;
             func_00247408(b->x30.w.hi, n);
             func_0013c548(n);
         }
@@ -193,7 +193,7 @@ s32 func_0014bdc0(s32 a) {
         if (((s32)(p->f.x >> 10) & 1)) continue;
         switch (((s32)(p->f.x >> 2) & 3)) {
         case 1:
-            if (!(D_002C5960 & 1)) p->f.b.b2 = 0;
+            if (!((*(u32 *)&D_002C5960) & 1)) p->f.b.b2 = 0;
             break;
         case 2:
             if (p->x58 == 0xfff) {
@@ -358,7 +358,7 @@ void func_001581d8(B4A81 *e, f32 *v) {
                 break;
             }
         } else {
-            func_002675a8(v, D_002C58B0);
+            func_002675a8(v, (*(f32 (*)[0x4])&D_002C58B0));
             switch (e->x164) {
             case 203:
                 f = 0.0f;
@@ -382,7 +382,7 @@ void func_001581d8(B4A81 *e, f32 *v) {
             break;
         }
     } else {
-        func_002675a8(v, D_002C58A0);
+        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
         switch (e->x164) {
         case 209:
             v[0] = 1.0f;
@@ -461,11 +461,10 @@ zero:
 }
 
 typedef struct { u8 pad[0x20]; f32 x20; f32 x24; f32 x28; u8 pad2c[0x3b0 - 0x2c]; f32 x3b0; } B4E5;
-typedef struct { s32 a; s32 b; } B4Pair;
+#include "data/pieces/D_002E31B0.h"
 extern u32 D_002E3190;
 f32 D_00551D70 ALIGNED(16);
 #include "data/pieces/D_002E31B8.h"
-#include "data/pieces/D_002E31B0.h"
 void func_0014f658(B4E5 *, s32);
 f32 func_0012ec60(s32, s32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
@@ -489,7 +488,7 @@ void func_0015e178(B4E5 *e, s32 unused, f32 *v) {
     if ((D_002E3190 >> 27) & 1) v[1] = -8.0f;
     else if ((D_002E3190 >> 28) & 1) v[1] = 8.0f;
     else v[1] = 0.0f;
-    if ((D_002E27C8 >> 6) & 1) {
+    if (((*(u32 *)&D_002E27C8) >> 6) & 1) {
         if (D_002E3190 & 0x18000000) {
             if (0.0f < D_00551D70 && D_00551D70 < 16.0f) func_0014f658(e, 25);
             else D_00551D70 = 16.0f;
@@ -498,7 +497,7 @@ void func_0015e178(B4E5 *e, s32 unused, f32 *v) {
         }
     }
     if (D_002E31B8 >= 3 && 0.0f < v[3] && v[1] == 0.0f) {
-        d = func_0012ec60((*(B4Pair *)&D_002E31B0).a, (*(B4Pair *)&D_002E31B0).b, a);
+        d = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, a);
         func_001315c0(e, 0x8003, 0.0f, b);
         func_00267530(a, a, b);
         if (0.5f < func_00121748(a, v)) {
@@ -966,7 +965,7 @@ void func_00151268(B4A51 *e) {
         func_00137688(e, func_00120c88(e->x3c + (1.0f - k) * 0.52359874546527862548828125f));
         func_00267518(e->x10, v, u);
         if (k < 1.0f) e->x40 = e->x44 = e->x48 = w->x20 * k;
-        func_002675a8(e->x20, D_002C58B0);
+        func_002675a8(e->x20, (*(f32 (*)[0x4])&D_002C58B0));
         break;
     case 3:
         w->xc -= 1.0f;
@@ -976,7 +975,7 @@ void func_00151268(B4A51 *e) {
             k = w->xc / D_00306840;
             e->x40 = e->x44 = e->x48 = w->x20 * k;
         }
-        func_002675a8(e->x20, D_002C58B0);
+        func_002675a8(e->x20, (*(f32 (*)[0x4])&D_002C58B0));
         break;
     case 4:
         e->x0 |= 3;
@@ -988,7 +987,7 @@ void func_00151268(B4A51 *e) {
             w->x0 = 0;
         } else {
             k = 1.0f - w->xc / D_00306840;
-            func_002675a8(e->x20, D_002C58B0);
+            func_002675a8(e->x20, (*(f32 (*)[0x4])&D_002C58B0));
         }
         e->x40 = e->x44 = e->x48 = w->x20 * k;
         break;

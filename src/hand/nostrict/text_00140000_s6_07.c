@@ -59,7 +59,7 @@ B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
         h = func_0014a1b0(a, k, q.hit);
         if (h) {
             func_00105a30(q.x34, q.x30, v);
-            func_00267530(v, D_002C58A0, v);
+            func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), v);
             func_00147d50(h, v);
         }
         func_0014ac00(a, k);

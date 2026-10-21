@@ -7,7 +7,6 @@
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x17]; u8 x1c[0x58]; } T74c;
 typedef struct { T74c e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; } G4BE8c;
 #include "data/pieces/D_00304BE8.h"
-typedef struct { u8 pad[8]; s32 f8; } S5bc8c;
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003E3D70.h"
 typedef S4c_3E3D70 S4c;
@@ -67,7 +66,7 @@ void func_00212cc0(Obj2cc0 *o) {
     e = &((G4BE8c *)D_00304BE8)->e[n];
     t = &e->x4;
     if (func_001f42b8(o)) {
-        if (((S5bc8c *)D_00425BC8)->f8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641BA4 = 0;

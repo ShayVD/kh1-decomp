@@ -83,13 +83,12 @@ static inline void vscale(f32 *d, f32 *s, f32 t) {
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
 }
 
-typedef struct { f32 n[3]; f32 d; s32 x10; } Plane;
 #include "data/pieces/D_002A6238.h"
 
 s32 func_00119a20(s32 i, f32 *n, f32 *p, f32 *out, f32 *maxd) {
     V4 t;
     f32 d;
-    d = vdot(p, n) + ((Plane *)D_002A6238)[i].d;
+    d = vdot(p, n) + D_002A6238[i].d;
     if (*maxd < d) return 0;
     if (d < 0.0f) return 0;
     vscale(t, n, d);

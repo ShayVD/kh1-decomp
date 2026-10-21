@@ -108,6 +108,6 @@ s32 func_0014f5c8(void *arg0) {
     if (temp_v1 == 0x17) {
         return var_v0;
     }
-    var_v0 = (*(M2C_UNK *)((s8 *)(s8 *)((volatile M2C_UNK *)&D_00350D88) + (temp_v1 << 5)) & 3) == 2;
+    var_v0 = (*(M2C_UNK *)((s8 *)(s8 *)&D_00350D88 + (temp_v1 << 5)) & 3) == 2;
     return var_v0;
 }

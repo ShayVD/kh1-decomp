@@ -31,7 +31,6 @@ void func_0014d570(f32 *v, f32 lo, f32 hi, f32 max, f32 g) {
 }
 
 
-typedef struct { s32 f0, f4; } S31b0;
 #include "data/pieces/D_002E31B0.h"
 f32 func_0012ec60(s32, s32, f32 *);
 void func_001315c0(void *, s32, f32, f32 *);
@@ -49,7 +48,7 @@ void func_0014d988(void *o, s32 unused, f32 *v, f32 r, f32 off, f32 scale, f32 l
     f32 t;
 
     z = 0.0f;
-    h = func_0012ec60((*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4, d);
+    h = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, d);
     func_001315c0(o, 0x8003, z, p);
     func_00267530(d, d, p);
     if (r < func_00121748(d, v)) {

@@ -362,7 +362,8 @@ I4b *func_0023e160(s32 *c, s32 *r, s32 *col, I4b *d, f32 a0, f32 a1, f32 al) {
 /* ---- k6.c */
 typedef struct { u64 lo, hi; } QW;
 typedef struct { s32 v[48]; } __attribute__((aligned(8))) Spr;
-typedef struct { u8 pad[0x18]; u64 unk18; } Tex;
+#include "data/pieces/D_004268B0.h"
+typedef Tex_4268b0 Tex;
 typedef struct {
     s32 unk0;
     s32 unk4;
@@ -378,7 +379,6 @@ typedef struct {
     u8 padA20[0xA94 - 0xA20];
     s32 unkA94;
 } Obj;
-#include "data/pieces/D_004268B0.h"
 void func_0023d528(Obj *, s32 *, s32 *);
 QW *func_0023d700(Spr *, Tex *, s32, s32, QW *, f32);
 QW *func_0023e5b0(Obj *, QW *);
@@ -403,7 +403,7 @@ QW *func_0023ee80(Obj *o, QW *r) {
     x = b[0];
     y = b[1];
     for (i = 0; i < o->unk38; i++) {
-        r = func_0023d700(o->unk28[i], ((Tex *)&D_004268B0), x, y, r, o->unkA1C);
+        r = func_0023d700(o->unk28[i], &D_004268B0, x, y, r, o->unkA1C);
     }
     for (i = 0; i < o->unk24; i++) {
         if (((o->unkA18 == 0 && o->unk0 == 0) || (o->unk0 == 3 && o->unkA94 == 0)) && i == 5) continue;
@@ -412,7 +412,7 @@ QW *func_0023ee80(Obj *o, QW *r) {
     r->lo = 0x2000000000008001;
     r->hi = 0xEE;
     r++;
-    t = o->unk6C->unk18;
+    t = o->unk6C->tb.unk18;
     tx.v = t;
     tx.b.csa = 0;
     tx.b.cld = 1;

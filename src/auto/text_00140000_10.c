@@ -72,7 +72,7 @@ void func_00142030(void) {
 }
 
 f32 func_00144378(Actor *arg0) {
-    return (arg0->unk014 - arg0->unk2D4) - *(f32 *)((s8 *)(s8 *)&(*(volatile M2C_UNK *)&D_00304D64) + (M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C) * 8));
+    return (arg0->unk014 - arg0->unk2D4) - *(f32 *)((s8 *)(s8 *)&D_00304D64 + (M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C) * 8));
 }
 
 void func_00144ce0(s32 arg0, s32 arg1) {
@@ -201,7 +201,7 @@ void func_0014f868(void) {
     s32 var_v1;
 
     var_v1 = 0x3A;
-    var_v0 = ((M2C_UNK *)&D_00350D88);
+    var_v0 = &D_00350D88;
     do {
         var_v1 -= 1;
         M2C_FIELD(var_v0, s32 *, 0) = 0;

@@ -55,7 +55,7 @@ void func_00231958(void);
 void func_00232de0(void);
 
 void func_001e01b8(void) {
-    D_003DACA0 = func_001559f0(0x3C, 4);
+    D_003DACA0 = (Tbl_3daca0 *)(func_001559f0(0x3C, 4));
 }
 
 void func_001e13e8(s32 arg0) {
@@ -226,7 +226,7 @@ u32 func_001ee2d0(void) {
 void func_001ee4e8(void) {
     func_00232de0();
     func_00219128();
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 0x1C) = 0;
+    M2C_FIELD(D_003F34B8, s32 *, 0x1C) = 0;
     func_00216180();
     func_0021dbb8();
 }
@@ -250,7 +250,7 @@ s32 func_001ef270(s32 arg0, s32 arg1) {
 }
 
 s32 func_001ef658(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&(*(M2C_UNK *)&D_003E3E50) + (arg0 * 0xE4));
+    return *(M2C_UNK *)((s8 *)&D_003E3E50 + (arg0 * 0xE4));
 }
 
 void func_001efaa8(void) {

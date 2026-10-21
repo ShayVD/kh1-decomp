@@ -157,8 +157,8 @@ s32 func_00168618(Obj18 *o, Ent18 *e) {
                 return 1;
             } else {
                 if ((u16)(o->x130->h4C - 1) >= 2) return 0;
-                if (D_002E27C8 >> 8 & 1) func_0014c580(o);
-                else if (D_002E27C8 >> 7 & 1) func_0014c530(o);
+                if ((*(u32 *)&D_002E27C8) >> 8 & 1) func_0014c580(o);
+                else if ((*(u32 *)&D_002E27C8) >> 7 & 1) func_0014c530(o);
                 else goto r0;
                 if (o->x70 != 21) goto r0;
                 e->u.b.b8 = 0;
@@ -169,8 +169,8 @@ s32 func_00168618(Obj18 *o, Ent18 *e) {
         if (e->u.b.b8) goto r0;
         if (D_002C5958 >> 5 & 1) { func_0013dfb8(o, e->x120); t = e->u.w; t |= 0x100; e->u.w = t; goto r0; }
         if ((u16)(o->x130->h4C - 1) >= 2) return 0;
-        if (D_002E27C8 >> 8 & 1) { func_0013dfb8(o, e->x120); t = e->u.w; t |= 0x100; e->u.w = t; goto r0; }
-        if (D_002E27C8 >> 7 & 1) { func_0013dfb8(o, e->x120); t = e->u.w; t |= 0x100; e->u.w = t; goto r0; }
+        if ((*(u32 *)&D_002E27C8) >> 8 & 1) { func_0013dfb8(o, e->x120); t = e->u.w; t |= 0x100; e->u.w = t; goto r0; }
+        if ((*(u32 *)&D_002E27C8) >> 7 & 1) { func_0013dfb8(o, e->x120); t = e->u.w; t |= 0x100; e->u.w = t; goto r0; }
     }
     r0:
     return 0;

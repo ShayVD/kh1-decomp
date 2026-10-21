@@ -285,7 +285,7 @@ void func_00136d38(C02Obj *o)
             *r = func_00120c88(*r);
             r++;
         } while (--i >= 0);
-        func_00267768(m, D_002C58D0, o->rot[0]);
+        func_00267768(m, (*(u8 (*)[0x40])&D_002C58D0), o->rot[0]);
         func_00267810(m, m, o->rot[1]);
         func_002676c0(m, m, o->rot[2]);
         if (o->desc->x54 == 10) {
@@ -325,7 +325,7 @@ void func_00136d38(C02Obj *o)
         }
         func_00267370(m, up, D_003044B0);
         func_002673b8(m, m);
-        func_00267530(o->mtx[2], ((u8 *)&D_002C58A0), up);
+        func_00267530(o->mtx[2], &D_002C58A0, up);
         func_00267370(o->mtx[1], o->mtx[2], m);
         func_002673b8(o->mtx[1], o->mtx[1]);
     }
@@ -563,7 +563,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
         n = bn;
         func_002672f8(o->x148 + 0x70, m, bp);
         sceVu0CopyMatrix(m, mo + 0xD0);
-        func_002675a8(m[3], ((u8 *)&D_002C58A0));
+        func_002675a8(m[3], &D_002C58A0);
         func_002673f8(m, m);
         func_002672f8(o->x148 + 0x60, m, n);
         func_002672f8(o->x148 + 0x80, m, edge);
@@ -691,7 +691,7 @@ void func_00143180(C02Ob2 *o, f32 *v)
             if (n >= 2) {
                 tmp = o->mv;
                 func_002675a8(tmp.v00, tmp.v40);
-                func_002675a8(tmp.v10, ((u8 *)&D_002C58A0));
+                func_002675a8(tmp.v10, &D_002C58A0);
                 if (func_001166e8(&tmp)) {
                     o->mv = save;
                     o->mv.x28 |= 0x80000000;
@@ -712,7 +712,7 @@ void func_00143180(C02Ob2 *o, f32 *v)
                     continue;
                 }
             } else if (o->mv.x3e == 0xFFFF) {
-                func_002675a8(v, ((u8 *)&D_002C58A0));
+                func_002675a8(v, &D_002C58A0);
                 func_002675a8(o->mv.v40, o->mv.v00);
                 o->mv.x3e = 0;
             }
@@ -854,7 +854,7 @@ void func_001550a0(C02Ac *o, s32 arg1)
         if (o->x88 & 0x20) continue;
         if (hp <= 0) {
             if (o->x130->x4c == 0) {
-                if (((D_002C5958 >> 13) & 1) && (D_00304B78 & 0xf) == 11) {
+                if (((D_002C5958 >> 13) & 1) && ((*(u32 *)&D_00304B78) & 0xf) == 11) {
                     D_00F20000(4, o);
                     hp = func_00141468(o, o->x6c->x40);
                     func_0013aaa0();

@@ -89,7 +89,7 @@ void func_00241d60(void) {
             for (j = 0; j < s->nd; j++) s->d[j] = base + D_004544F8[j];
             s->nb = 1;
             for (j = 0; j < s->nb; j++) s->b[j] = base + D_00454498[j];
-            s->p6c = D_004268B0;
+            s->p6c = (*(u8 (*)[0x30])&D_004268B0);
             s->p70 = D_004268E0;
             s->p90 = D_00454780;
             s->f[0] = base[26];

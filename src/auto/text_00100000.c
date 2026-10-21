@@ -127,7 +127,7 @@ void func_00105710(s32 arg0, s32 arg1) {
 
     var_a3 = D_002A6258;
     if (var_a3 > 0) {
-        var_a2 = ((void *)D_002A6238);
+        var_a2 = D_002A6238;
         do {
             var_a3 -= 1;
             if (M2C_FIELD(var_a2, u8 *, 0xB) == arg0) {
@@ -154,7 +154,7 @@ void func_00105d38(s32 arg0, s32 arg1) {
 
     var_a3 = D_002A6258;
     if (var_a3 > 0) {
-        var_a2 = ((void *)D_002A6238);
+        var_a2 = D_002A6238;
         do {
             var_a3 -= 1;
             if (M2C_FIELD(var_a2, u8 *, 0xB) == arg0) {

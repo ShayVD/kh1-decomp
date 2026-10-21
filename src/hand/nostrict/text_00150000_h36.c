@@ -541,7 +541,7 @@ s32 func_0015dd50(void *vo, f32 *v) {
             r = func_0015dc50(o);
             o->p148->x120 = r;
             if (r >= 0) {
-                func_002675a8(o->p148->x110, D_002C58A0);
+                func_002675a8(o->p148->x110, (*(f32 (*)[0x4])&D_002C58A0));
                 z = 0.0f;
                 if (z < v[3]) {
                     func_0015dcc8(o, d);

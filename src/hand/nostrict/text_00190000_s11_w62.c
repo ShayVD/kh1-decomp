@@ -109,7 +109,7 @@ void func_00199ac8(ShipolySlot *r, ShipolyKey *key, ShipolyWork *w) {
             idx = cur - i;
             idx += (idx < 0) * n;
             func_002675a8(pts[i], (f32 *) ((u32) buf + (idx * 2 + j) * 16));
-            if (key->b15) func_00267530(pts[i], pts[i], D_003701D0);
+            if (key->b15) func_00267530(pts[i], pts[i], (*(f32 (*)[4])&D_003701D0));
         }
         func_001996d0(pts, n, tmp);
         for (i = 0; i < segs; i++) {

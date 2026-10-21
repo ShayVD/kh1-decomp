@@ -12,7 +12,7 @@ void func_001220e8(void);
 void func_0024d4b0(void);
 /* rodata */
 void func_0011ecd8(void) {
-    (*(s32 *)&D_002C5960) = 0;
+    (*(u32 *)&D_002C5960) = 0;
     D_002C5968 = 0;
     func_00120b10();
     func_001209d8("sio2man.irx");

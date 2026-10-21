@@ -3,8 +3,8 @@
 #include "data/bss_0052.h"
 
 /* shared declarations */
-typedef struct S31b0 { s32 f0, f4; } S31b0;
 #include "data/pieces/D_002E31B0.h"
+typedef S31b0_2e31b0 S31b0;
 extern void *D_002E26A0[3];
 extern void *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
 extern u32 D_002C5958;
@@ -25,8 +25,7 @@ typedef struct {
 } D14;
 extern D14 D_002E2FD8;
 
-typedef struct { u8 pad[0x48e]; u8 f48e[3]; u8 pad491[0x844 - 0x491]; s8 f844[3]; } W17;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 typedef struct { u8 b0; u8 pad[19]; } T23;
 typedef struct { u8 pad[7]; u8 b7; u8 pad8[0x14]; T23 *f1c; } I23;
@@ -98,8 +97,8 @@ typedef struct { u8 pad[0x10]; f32 f10[16]; u8 pad50[0x3c4 - 0x50]; f32 f3c4; } 
 void func_00125cf0(E3 *e, f32 k, f32 lim) {
     f32 v[4];
     f32 t, r;
-    if (func_00122ff8((void *)(*(S31b0 *)&D_002E31B0).f0) == 0) return;
-    func_0012ec60((*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4, v);
+    if (func_00122ff8((void *)D_002E31B0.f0) == 0) return;
+    func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, v);
     v[1] += 100.0f;
     func_00267530(v, v, e->f10);
     if (fabsf(v[1]) > 50.0f) {
@@ -272,8 +271,8 @@ void func_0012d068(E16 *e, u32 *fl) {
     s32 v;
     if (D_002BC128 == 6 || (D_002BC128 == 16 && D_002BC130 == 24)) {
         d->f14 = 98;
-    } else if (((D_002E27C8 >> 2) & 1) && func_00122ff8((void *)(*(S31b0 *)&D_002E31B0).f0)
-               && ((s32)(((O16 *)(*(S31b0 *)&D_002E31B0).f0)->f370 >> 37) & 3) == 2 && e->f164 == 110
+    } else if ((((*(u32 *)&D_002E27C8) >> 2) & 1) && func_00122ff8((void *)D_002E31B0.f0)
+               && ((s32)(((O16 *)D_002E31B0.f0)->f370 >> 37) & 3) == 2 && e->f164 == 110
                && (e->f14c->f30 & ~0x102)) {
         d->f14 = 99;
     } else {
@@ -296,7 +295,7 @@ void func_0012d368(s32 a0, s32 a1, s32 *fl) {
     s32 mask = -1;
     s32 i;
     for (i = 0; i < 3; i++) {
-        s32 id = ((W17 *)D_00304BE8)->f844[i];
+        s32 id = D_00304BE8->x844[i];
         if (id == -1) {
             d->f14[i] = 66;
         } else {
@@ -322,7 +321,7 @@ void func_0012d818(void) {
     D18 *d = &D_002E30B8;
     n = 0;
     for (i = 0; i < 3; i++) {
-        id = ((W17 *)D_00304BE8)->f48e[i];
+        id = D_00304BE8->x48e[i];
         if (id == 0xff) continue;
         k = func_0013daa8(id);
         if (k < 0) continue;
@@ -529,7 +528,7 @@ void func_0012fb20(S31b0 *e, s32 m) {
     }
     if (D_002E26A0[0]) func_00123030(D_002E26A0[0], e->f0, e->f4);
     if (m >= 3) func_0017ef40(e->f0);
-    (*(S31b0 *)&D_002E31B0) = *e;
+    D_002E31B0 = *e;
     D_002E31B8 = m;
     D_002E31BC = 0;
     func_0012fa98();

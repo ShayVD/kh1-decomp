@@ -54,9 +54,9 @@ void func_001d3160(void) {
     void *temp_a3;
 
     if (D_0038CCC4 == 0) {
-        var_a4 = ((M2C_UNK *)&D_0038D170);
+        var_a4 = &D_0038D170;
     } else {
-        var_a4 = ((M2C_UNK *)&D_0039A580);
+        var_a4 = &D_0039A580;
     }
     temp_a3 = var_a4 + 4;
     temp_v0 = M2C_FIELD(var_a4, s32 *, 0x180) + 1;

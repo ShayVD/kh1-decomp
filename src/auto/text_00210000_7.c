@@ -58,7 +58,7 @@ void func_002165e0(s32 arg0) {
 }
 
 void func_002192e8(s32 arg0) {
-    M2C_FIELD(((void *)D_003F34B8), s32 *, 4) = arg0;
+    M2C_FIELD(D_003F34B8, s32 *, 4) = arg0;
 }
 
 void func_00219478(s32 arg0) {

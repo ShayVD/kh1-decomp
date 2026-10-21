@@ -74,7 +74,7 @@ void func_001044b8(s32 arg0, void *arg1) {
 }
 
 void func_00104fa8(s32 arg0, f32 *arg1) {
-    *arg1 = M2C_FIELD(((arg0 * 0x14) + D_002A6238), f32 *, 0xC);
+    *arg1 = M2C_FIELD(((arg0 * 0x14) + ((s32)D_002A6238)), f32 *, 0xC);
 }
 
 s32 func_001063c8(void) {

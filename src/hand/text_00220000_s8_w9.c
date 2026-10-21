@@ -46,7 +46,6 @@ typedef struct O98 {
     s16 xd8;
     s16 xda;
 } O98;
-typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8;
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_006469B0;
 extern s32 D_006469B4;
@@ -114,7 +113,6 @@ s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 
 
-typedef struct { u8 pad[0x10]; s32 x10; } F10;
 typedef struct { u8 pad[0x48E]; u8 party[11]; u8 items[256]; } SvE;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D6C.h"
@@ -178,24 +176,24 @@ void func_0022eef8(O98 *a0) {
                 max = 1;
             }
             snd = 0;
-            if ((((F10 *)((F8 *)D_00425BC8))->x10 & 0x80000080) && !(((F10 *)((F8 *)D_00425BC8))->x10 & 0x20000020)) {
+            if (((D_00425BC8)->x10 & 0x80000080) && !((D_00425BC8)->x10 & 0x20000020)) {
                 if (D_00646A28 >= 2) {
                     D_00646A28--;
                     snd = 1;
                     a0->x24.i = D_00646A14;
-                } else if (((F8 *)D_00425BC8)->x8 & 0x80000080) {
+                } else if (D_00425BC8->x8 & 0x80000080) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
                     }
                     a0->x24.i = D_00646A14;
                 }
-            } else if ((((F10 *)((F8 *)D_00425BC8))->x10 & 0x20000020) && !(((F10 *)((F8 *)D_00425BC8))->x10 & 0x80000080)) {
+            } else if (((D_00425BC8)->x10 & 0x20000020) && !((D_00425BC8)->x10 & 0x80000080)) {
                 if (D_00646A28 < max) {
                     D_00646A28++;
                     snd = 1;
                     a0->x24.i = D_00646A14;
-                } else if (((F8 *)D_00425BC8)->x8 & 0x20000020) {
+                } else if (D_00425BC8->x8 & 0x20000020) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;

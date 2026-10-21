@@ -131,16 +131,7 @@ void func_00219870(Wnd_q0 *o) {
 /* ---- faf38/match.c ---- */
 
 typedef f32 Mtx[4][4];
-typedef struct {
-    u8 pad0[0x40];
-    Mtx m40;
-    Mtx m80;
-    u8 padc0[0x100 - 0xC0];
-    Mtx m100;
-    u8 pad140[0x1A0 - 0x140];
-    f32 v1a0[4];
-    f32 v1b0[4];
-} Cam_q1;
+#include "data/pieces/D_00425F70.h"
 typedef struct { u8 pad[8]; s32 x8; s32 xc; } P8_q1;
 typedef struct {
     s32 x0;
@@ -178,7 +169,6 @@ typedef struct {
     s32 xcc;
 } G20_q1;
 extern G20_q1 D_00643020;
-#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
@@ -210,11 +200,11 @@ void func_0021af38(Ob_q1 *a) {
     s32 r;
     if (D_00643100 == 0) return;
     if (func_0021ade8(D_006430F8)) {
-        ((Cam_q1 *)D_00425F70)->v1b0[0] = 1.0f;
-        ((Cam_q1 *)D_00425F70)->v1b0[3] = (f32)a->x90 * 0.0078125f;
-        ((Cam_q1 *)D_00425F70)->v1b0[1] = 1.0f;
-        ((Cam_q1 *)D_00425F70)->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, ((Cam_q1 *)D_00425F70)->v1b0);
+        D_00425F70->v1b0[0] = 1.0f;
+        D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
+        D_00425F70->v1b0[1] = 1.0f;
+        D_00425F70->v1b0[2] = 1.0f;
+        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
     }
     r = func_001301d8(D_00643020.x18, 0, 0, 0);
     func_00236a58();
@@ -222,7 +212,7 @@ void func_0021af38(Ob_q1 *a) {
     func_00131cc8(D_006430F8, m2);
     sceVu0MulMatrix(m, m, m2);
     func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, ((Cam_q1 *)D_00425F70)->m80, m);
+    sceVu0MulMatrix(m, D_00425F70->m80, m);
     func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
     D_00643020.x70 += D_002BBDFC;
     func_00167d70(D_00643020.x14, D_002BBDFC);
@@ -234,11 +224,11 @@ void func_0021af38(Ob_q1 *a) {
     v[1] = 0;
     v[2] = 0;
     func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, m, ((Cam_q1 *)D_00425F70)->m40);
-    (*(void **)&D_002BC144) = ((Cam_q1 *)D_00425F70)->m40;
-    (*(void **)&D_002BC140) = ((Cam_q1 *)D_00425F70)->m80;
-    sceVu0MulMatrix(((Cam_q1 *)D_00425F70)->m100, ((Cam_q1 *)D_00425F70)->m40, ((Cam_q1 *)D_00425F70)->m80);
-    func_00161de8(D_00643020.x14, ((Cam_q1 *)D_00425F70)->m100, &D_00643020.x28, 0);
+    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
+    (*(void **)&D_002BC144) = D_00425F70->m40;
+    (*(void **)&D_002BC140) = D_00425F70->m80;
+    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
+    func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
 }
 
 /* ---- fb6a0/d.c ---- */
@@ -418,10 +408,9 @@ e2:
 /* ---- fed60/MATCH_ed60.c ---- */
 
 typedef struct { u8 pad0[0xc4]; u16 xc4; u8 padc6[0xcc - 0xc6]; s16 xcc, xce; u8 padd0[0xd8 - 0xd0]; s16 xd8, xda; } Obj_q5;
-typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad_q5;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad0[0x24]; s32 x24; u8 pad28[0x40 - 0x28]; s32 x40; u8 pad44[0xa0 - 0x44]; f32 xa0; u8 pada4[0xd8 - 0xa4]; s16 xd8, xda; } Eff_q5;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110_q5;
-#include "data/pieces/D_00425BC8.h"
 extern S3110_q5 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
 extern s32 D_0064324C;
 extern s32 D_00643268[];
@@ -469,7 +458,7 @@ void func_0021ed60(Obj_q5 *o) {
     s32 ch, n, k, v, j, i, y, dy, c, x, cnt;
     Eff_q5 *p;
     if (func_001f42b8()) {
-        if (((Pad_q5 *)D_00425BC8)->x8 & 0x4000) {
+        if (D_00425BC8->x8 & 0x4000) {
             func_001f3758(D_00643110->x10);
             func_0011d768(3);
             goto draw;
@@ -479,12 +468,12 @@ void func_0021ed60(Obj_q5 *o) {
         D_00643268[D_0064324C] = func_001fd518(o);
         ch = 0;
         n = o->xd8;
-        if (((Pad_q5 *)D_00425BC8)->x10 & 0x80000480) {
+        if (D_00425BC8->x10 & 0x80000480) {
             if (o->xda > 0) {
                 o->xda -= 16;
                 ch = 1;
             }
-        } else if (((Pad_q5 *)D_00425BC8)->x10 & 0x20000820) {
+        } else if (D_00425BC8->x10 & 0x20000820) {
             if (o->xda < (n - 1) << 4) {
                 o->xda += 16;
                 ch = 1;

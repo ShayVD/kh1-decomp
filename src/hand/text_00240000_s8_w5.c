@@ -53,7 +53,7 @@ s32 func_0024ddf8(void) {
     D_0046A614 = 30;
     switch (abs(r) & 15) {
     case 0:
-        func_0024db78(((s32)D_0046A608));
+        func_0024db78(D_0046A608);
         if (func_0024d8f0()) {
             D_0046A67C = 1;
             if (ok) {

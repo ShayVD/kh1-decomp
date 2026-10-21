@@ -170,7 +170,7 @@ s32 func_0012dd38(void) {
 
     var_a0 = D_00524F40;
     temp_a1 = var_a0 - 4;
-    if ((u32) ((M2C_UNK *)&D_002E3170) < var_a0) {
+    if ((u32) &D_002E3170 < var_a0) {
         *(M2C_UNK *)var_a0 = 0;
         D_00524F40 = temp_a1;
         var_a0 = temp_a1;

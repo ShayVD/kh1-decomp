@@ -24,7 +24,7 @@ void func_002297a0(unsigned int arg0) {
   func_0011d768(6);
   new_var = func_0020d030();
   temp_v0 = new_var;
-  D_003F34C4 = temp_v0;
+  D_003F34C4 = (N_3f34c4 *)temp_v0;
   if (temp_v0 != 0)
   {
     func_00229690(temp_v0);

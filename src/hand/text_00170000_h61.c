@@ -21,7 +21,7 @@ typedef struct Z {
     f32 x24[4];
     f32 x34, x38, x3c, x40;
 } Z;
-typedef struct { s32 x0; f32 x4; } S26F0;
+#include "data/pieces/D_003626F0.h"
 typedef struct { u32 b0:1; u32 b1:1; u32 r:30; } BF;
 
 extern s32 D_002E27A8;
@@ -51,7 +51,6 @@ extern V4 D_003625A0, D_003625B0;
 extern V4 D_003625F0;
 extern Z D_005759B0;
 #include "data/pieces/D_002C58A0.h"
-#include "data/pieces/D_003626F0.h"
 extern s32 D_003623F0;
 extern f32 D_003623F4, D_003623F8;
 extern BF D_002C5958;
@@ -111,10 +110,10 @@ s32 func_00177740(V4 *a0) {
     c.x = c.z = 0.0f;
     func_002672f8(&c, &D_002E26A0->xd0, &c);
     func_00267530(&dir, &c, a0);
-    func_00267810(m, D_002C58D0, 0.26179939f);
+    func_00267810(m, (*(u8 (*)[0x40])&D_002C58D0), 0.26179939f);
     func_002672f8(&l, m, &dir);
     func_00267518(&l, &l, &D_005758D0);
-    func_00267810(m, D_002C58D0, -0.26179939f);
+    func_00267810(m, (*(u8 (*)[0x40])&D_002C58D0), -0.26179939f);
     func_002672f8(&r, m, &dir);
     func_00267518(&r, &r, &D_005758D0);
     func_002675a8(&u, &c);
@@ -244,7 +243,7 @@ void func_0017df08(void) {
     } else {
         a = z->x3c + z->x40;
     }
-    func_00267768(m, D_002C58D0, func_00120c88(D_00362680.x));
+    func_00267768(m, (*(u8 (*)[0x40])&D_002C58D0), func_00120c88(D_00362680.x));
     func_00267810(m, m, func_00120c88(a));
     func_002675a8(&v, ((V4 *)&D_002C58A0));
     v.z = D_00362680.w;
@@ -255,8 +254,8 @@ void func_0017df08(void) {
 
 void func_0017e910(void) {
     f32 a;
-    if (!(*(S26F0 *)&D_003626F0).x0) return;
-    D_00362680.y = D_00575894->x3c + (*(S26F0 *)&D_003626F0).x4;
+    if (!D_003626F0.x0) return;
+    D_00362680.y = D_00575894->x3c + D_003626F0.x4;
     if (func_001779e8(((V4 *)&D_002E2780), ((V4 *)&D_002E2790), D_00362680.y) < 200.0f) {
         a = 0.0f;
         while (a < 3.1415928f) {
@@ -308,9 +307,8 @@ s32 func_0017ecf8(void) {
  * original file (both must be defined above them). */
 typedef struct { s32 x0; u8 pad4[0x3c - 4]; f32 x3c; u8 pad40[0x64 - 0x40]; f32 x64; u8 pad68[0x70 - 0x68]; s32 x70; u8 pad74[0xd0 - 0x74]; V4 xd0; } ActB;
 typedef struct { u32 x0, x4; u64 x8; u8 pad10[0x44 - 0x10]; f32 x44; } PadB;
-typedef struct { V4 v; f32 x10, x14, x18; } CamPt;
-extern PadB D_002C5BB0;
 #include "data/pieces/D_00362434.h"
+extern PadB D_002C5BB0;
 #include "data/pieces/D_00362438.h"
 f32 D_00575820 ALIGNED(16);
 f32 D_00575824 ALIGNED(4);
@@ -330,7 +328,7 @@ void func_0011d768(s32);
 #define D_00575894 (*(ActB **)&D_00575894)
 
 s32 func_00177358(ActB *o) {
-    if ((D_002C5960 >> 4) & 1) return 0;
+    if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     switch (o->x70) {
     case 0: case 8: case 24: return 1;
     }
@@ -369,7 +367,7 @@ void func_00179700(void) {
     if (D_00575820 > 1.047197491f) D_00575820 = 1.047197491f;
     else if (D_00575820 < -1.396263272f) D_00575820 = -1.396263272f;
     if ((D_002C5BB0.x8 & 0x8200) || !func_00177358(D_00575894) || func_001375d8(D_00575894)) {
-        if (!((CamPt *)D_00362434) && !((void *)D_00362438)) func_00176f08(1, 30.0f);
+        if (!D_00362434 && !D_00362438) func_00176f08(1, 30.0f);
         else func_00176f08(9, 0.0f);
     }
 }
@@ -386,7 +384,7 @@ void func_0017ae48(void) {
     }
     if (D_00575890 & 1) D_00575890 &= ~1;
     if (D_00575890 & 4) D_00575890 &= ~4;
-    func_002675a8(&D_005758D0, ((CamPt *)D_00362434));
+    func_002675a8(&D_005758D0, D_00362434);
     func_001315c0(D_00575894, 0x8003, &d, 0.0f);
     func_00267530(&d, &d, &D_005758E0);
     len = func_00120bf8(&d) < 0.0f ? 0.0f : (func_00120bf8(&d) > 200.0f ? 200.0f : func_00120bf8(&d));
@@ -394,9 +392,9 @@ void func_0017ae48(void) {
     func_00267560(&d, &d, len * 0.3f);
     func_00267518(&D_005758E0, &D_005758E0, &d);
     func_00267530(&d, &D_005758E0, &D_005758D0);
-    if ((len = func_00120bf8(&d)) < 0.0f) func_00124c68(((CamPt *)D_00362434)->x14);
-    else if (((CamPt *)D_00362434)->x18 < len) func_00124c68(((CamPt *)D_00362434)->x10);
-    else func_00124c68(((CamPt *)D_00362434)->x14 - (((CamPt *)D_00362434)->x14 - ((CamPt *)D_00362434)->x10) * (len / ((CamPt *)D_00362434)->x18));
+    if ((len = func_00120bf8(&d)) < 0.0f) func_00124c68(D_00362434->x14);
+    else if (D_00362434->x18 < len) func_00124c68(D_00362434->x10);
+    else func_00124c68(D_00362434->x14 - (D_00362434->x14 - D_00362434->x10) * (len / D_00362434->x18));
     if ((&D_002C5BB0)->x8 & 0x3000) {
         if (!D_00575920) func_0011d768(4);
     }
@@ -573,7 +571,7 @@ void func_00179ee8(void) {
     A = e.y + D_00362550;
     e.y = A;
     func_002672f8(&a, m, &e);
-    A = func_0012eca8(D_002E31B0, &c);
+    A = func_0012eca8((*(u8 (*)[0x8])&D_002E31B0), &c);
     func_00267530(&e, &c, &a);
     B = e.y;
     e.y = 0.0f;

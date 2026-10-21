@@ -78,14 +78,13 @@ s32 func_0016ce10(Act6C *e, Wk6CE *w, s32 unused, s32 mode) {
 /* 001713f8 */
 typedef struct { u8 pad[0x4C]; u16 h4C; } Mdl13;
 typedef struct { u8 pad[0x70]; s32 w70; u8 pad74[0xBC]; Mdl13 *p130; } Act13;
-typedef struct { u32 pad:7; u32 b7:1; u32 b8:1; } Flg13;
 #include "data/pieces/D_002E27C8.h"
 
 s32 func_001713f8(Act13 *a) {
     if ((u16)(a->p130->h4C - 1) >= 2) return 0;
     if (a->w70 != 0 && a->w70 != 2) return 0;
-    if ((*(Flg13 *)&D_002E27C8).b8) return 1;
-    if ((*(Flg13 *)&D_002E27C8).b7) return 1;
+    if (D_002E27C8.b8) return 1;
+    if (D_002E27C8.b7) return 1;
     return 0;
 }
 
@@ -186,8 +185,8 @@ void func_001752a0(Ob52 *o, f32 *c) {
         sceVu0CopyMatrix(m, o->x154 + 0xB80);
         func_001625c8(m, m2);
         func_00162848(v, m2, c);
-        func_002675a8(a, D_002C58B0);
-        func_002675a8(b, D_002C58B0);
+        func_002675a8(a, (*(f32 (*)[0x4])&D_002C58B0));
+        func_002675a8(b, (*(f32 (*)[0x4])&D_002C58B0));
         if (v[1] < 300.0f) v[1] = 300.0f;
         if (func_00174fc0(D_0035C470, v, D_0035C424, D_0035C420, a, c[3])) {
             func_00267530(t, a, D_0035C440);
@@ -316,7 +315,7 @@ void func_001784c8(void) {
     range = func_00120c88(D_00575894->x3c + 3.1415928f - D_00362680.x4);
     if (range > 0.0f) dir = 1; else dir = 0;
     func_00267768(m, (*(f32 (*)[4])&D_002C58D0), func_00120c88(D_00362680.x0));
-    func_002675a8(up, D_002C58A0);
+    func_002675a8(up, (*(f32 (*)[0x4])&D_002C58A0));
     up[2] = D_00362680.xc;
     func_00267810(m2, m, func_00120c88(D_00362680.x4 + range));
     func_002672f8(r.dir, m2, up);

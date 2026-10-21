@@ -18,8 +18,8 @@ extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 typedef struct { s16 a; s16 n; u16 *list; } Grp;
 typedef struct { u8 pad0[0x10]; Ent24 *x10; AnEnt *anims; Grp *grps; } PppRes;
 extern PppRes *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-typedef struct { f32 x, y, z, w; } FV4;
 #include "data/pieces/D_003701D0.h"
+typedef FV4_3701d0 FV4;
 
 typedef struct {
     f32 x, y, z, w;
@@ -152,9 +152,9 @@ void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     }
     p = (FV4 *)((u8 *)obj + e->offsets[1] + 0xA0);
     c = (LtCol *)((u8 *)obj + e->offsets[0] + 0xA0);
-    l->pos.x = p->x + (*(FV4 *)&D_003701D0).x;
-    l->pos.y = p->y + (*(FV4 *)&D_003701D0).y;
-    l->pos.z = p->z + (*(FV4 *)&D_003701D0).z;
+    l->pos.x = p->x + D_003701D0.x;
+    l->pos.y = p->y + D_003701D0.y;
+    l->pos.z = p->z + D_003701D0.z;
     l->pos.w = 1.0f;
     l->dir.x = k->x;
     l->dir.y = k->y;
@@ -215,7 +215,7 @@ void pppRyjMegaBirthFilterFrame(void *obj, MbfKey *k, PppEntry *e) {
     if (!func_001a2218(w, k))
         return;
     if (k->test) {
-        func_00267530(&d, &D_00615F70, ((FV4 *)&D_003701D0));
+        func_00267530(&d, &D_00615F70, &D_003701D0);
         len = vlen3_w65(&d);
         if (k->dist < len) {
             w->active = 0;
@@ -257,7 +257,7 @@ void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
     if (!func_001a36f0(w, k))
         return;
     if (k->test) {
-        func_00267530(&d, &D_00615F70, ((FV4 *)&D_003701D0));
+        func_00267530(&d, &D_00615F70, &D_003701D0);
         len = vlen3_w65(&d);
         if (k->dist < len) {
             w->active = 0;

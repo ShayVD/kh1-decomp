@@ -132,8 +132,8 @@ s32 func_0013a910(s32 n) {
     }
     return 1;
 }
-typedef struct { u32 lv:3; u32 on:1; u32 rest:28; } W55Bf;
 #include "data/pieces/D_00304B78.h"
+typedef W55Bf_304b78 W55Bf;
 extern u8 *D_00304B70;
 extern f32 D_00304B7C;
 extern f32 D_00304B80;
@@ -160,7 +160,7 @@ void func_0011ef10(s32 a, void (*f)());
 void func_0013bb60(s32 o, s32 n) {
     char buf[32];
     u32 *fl = &D_002C5958;
-    W55Bf *bf = ((W55Bf *)&D_00304B78);
+    W55Bf *bf = &D_00304B78;
     u32 *msk = &D_00304B84;
     u8 **lv = ((u8 **)&D_00308CDC);
     f32 *fp;

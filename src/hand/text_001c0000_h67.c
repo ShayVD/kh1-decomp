@@ -163,10 +163,10 @@ s32 func_001cf5d0(VM *vm) {
     return 2;
 }
 
-typedef struct { void *p; u8 pad[0x34c]; } Obj350;
+#include "data/pieces/D_003A7990.h"
+typedef E848_3a7990 Obj350;
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
-#include "data/pieces/D_003A7990.h"
 extern s32 D_003B4D90;
 #include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570;
@@ -189,7 +189,7 @@ s32 func_001d0b90(VM *vm) {
     } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(((Obj350 *)&D_003A7990)[i].p)) { m.x = (s32)((Obj350 *)&D_003A7990)[i].p; func_001c4640(&m); }
+                if (func_00123488(((E848_3a7990 *)&D_003A7990)[i].p)) { m.x = (s32)((E848_3a7990 *)&D_003A7990)[i].p; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {
@@ -226,7 +226,7 @@ s32 func_001d0dd0(VM *vm) {
     } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(((Obj350 *)&D_003A7990)[i].p)) { m.x = (s32)((Obj350 *)&D_003A7990)[i].p; func_001c4640(&m); }
+                if (func_00123488(((E848_3a7990 *)&D_003A7990)[i].p)) { m.x = (s32)((E848_3a7990 *)&D_003A7990)[i].p; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {

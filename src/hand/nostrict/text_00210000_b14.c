@@ -2,8 +2,8 @@
 #include "data/bss_0064.h"
 typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd;
 typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
-typedef struct { u16 uv[8]; s16 w, h; } Spr;
 #include "data/pieces/D_003F4CF0.h"
+typedef Spr_3f4cf0 Spr;
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
@@ -32,7 +32,7 @@ s32 func_0021b860(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx) {
     p[3] = 71;
     p[5] = 63;
     p[6] = 0x2006E00621313600;
-    t = &((Spr *)&D_003F4CF0)[idx];
+    t = &((Spr_3f4cf0 *)&D_003F4CF0)[idx];
     p[7] = 6;
     p[8] = 97;
     p[9] = 20;
@@ -102,10 +102,9 @@ s32 func_0021b860(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx) {
 }
 
 typedef struct { u8 pad0[0x24]; s32 x24; s32 x28; s32 x2c; u8 pad30[0x90 - 0x30]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; u8 padb8[0xd8 - 0xb8]; s16 xd8, xda; } Obj;
-typedef struct { u8 pad0[8]; u32 x8; u8 padc[4]; u32 x10; } Pad;
+#include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad0[0x24]; f32 x24; s32 x28; s32 x2c; s32 x30; } Eff;
 typedef struct { u8 pad0[0x10]; s32 x10; } S3110;
-#include "data/pieces/D_00425BC8.h"
 extern s32 D_00643250;
 extern s32 D_00643274;
 extern S3110 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
@@ -148,7 +147,7 @@ void func_0021e8d8(Obj *o) {
     if (func_001f42b8()) {
         func_0021e538();
         if (o->x28 == 0) {
-            if (((Pad *)D_00425BC8)->x8 & 0x4000) {
+            if (D_00425BC8->x8 & 0x4000) {
                 func_0011d768(3);
                 func_0021b5c8(0xC009B, 0, 128, 128, 5.0f);
                 o->x28 = 1;
@@ -157,12 +156,12 @@ void func_0021e8d8(Obj *o) {
                 case 0:
                     ch = 0;
                     n = o->xd8;
-                    if (((Pad *)D_00425BC8)->x10 & 0x80000480) {
+                    if (D_00425BC8->x10 & 0x80000480) {
                         if (o->xda > 0) {
                             o->xda -= 16;
                             ch = 1;
                         }
-                    } else if (((Pad *)D_00425BC8)->x10 & 0x20000820) {
+                    } else if (D_00425BC8->x10 & 0x20000820) {
                         if (o->xda < (n - 1) << 4) {
                             o->xda += 16;
                             ch = 1;
@@ -170,7 +169,7 @@ void func_0021e8d8(Obj *o) {
                     }
                     if (ch) func_0011d768(ch);
                     D_00643250 = func_001fd668(o);
-                    if (((Pad *)D_00425BC8)->x8 & 0x1000) {
+                    if (D_00425BC8->x8 & 0x1000) {
                         if (func_0021e898(D_00643274)) {
                             func_0011d768(4);
                         } else {

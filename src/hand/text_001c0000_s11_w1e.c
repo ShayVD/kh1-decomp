@@ -1,5 +1,5 @@
 #include "common.h"
-/* func_001c95f8 (s11w1, hand strict, no context): from s9 r2_3 (15w, sibling style of func_001c8878). dur0 (offset 4, inside the u64 flags word) is stored through an f32 pointer, `{ f32 *p = &D_003C5510.u.s.dur0; *p = d; }`, so the store has the f32 alias set instead of the union member alias set 0; `((f32 *)&D_003C5510)[1] = d;` matches too. That frees the p70 cvt loads to issue z first in sched1 (z f1, x f2, y f3). */
+/* func_001c95f8 (s11w1, hand strict, no context): from s9 r2_3 (15w, sibling style of func_001c8878). dur0 (offset 4, inside the u64 flags word) is stored through an f32 pointer, `{ f32 *p = &D_003C5510.u.s.dur0; *p = d; }`, so the store has the f32 alias set instead of the union member alias set 0; `&D_003C5510[1] = d;` matches too. That frees the p70 cvt loads to issue z first in sched1 (z f1, x f2, y f3). */
 typedef struct {
     s32 x0;
     void *ent;

@@ -5,5 +5,5 @@
 #include "data/pieces/D_003F34B8.h"
 
 void func_001ef778(u32 arg0) {
-    M2C_FIELD(((void *)D_003F34B8), u32 *, 0x1C) = (u32) ((arg0 <= 0x1869FU) ? arg0 : 0x1869FU);
+    M2C_FIELD(D_003F34B8, u32 *, 0x1C) = (u32) ((arg0 <= 0x1869FU) ? arg0 : 0x1869FU);
 }

@@ -386,9 +386,8 @@ s32 func_001129c8(void) {
 }
 
 typedef struct { u32 lo:13; u32 b13:1; u32 hi:18; } W29Flg;
-typedef struct { s32 x0; u8 pad[0x3c]; } W29Rec40;
-extern W29Flg D_002C5958;
 #include "data/pieces/D_002BCDA0.h"
+extern W29Flg D_002C5958;
 #include "data/pieces/D_002BCDAC.h"
 extern s32 D_002BC13C;
 #include "data/pieces/D_002A3F3C.h"
@@ -405,15 +404,15 @@ void func_00112c20(s32 i) {
     char buf[64];
     s32 id;
     if (D_002C5958.b13 == 1) return;
-    id = D_002BCDAC[((W29Rec40 *)D_002BCDA0)[i].x0].x0;
+    id = D_002BCDAC[((Ent40_2bcda0 *)D_002BCDA0)[i].id].x0;
     if (D_002BC13C == id) return;
     D_002BCDBC = 1;
     func_00112400(id);
     strcpy(buf, D_002BCCE0);
     strcat(buf, D_0048D008);
-    (*(void **)&D_002A3F3C) = func_001559f0(0x34, 8);
-    (*(void **)&D_002A3F3C) = func_001137c8(((void *)D_002A3F3C), 0x80);
-    func_00120748(buf, ((void *)D_002A3F3C), func_00112c08, 0);
+    D_002A3F3C = func_001559f0(0x34, 8);
+    D_002A3F3C = func_001137c8(D_002A3F3C, 0x80);
+    func_00120748(buf, D_002A3F3C, func_00112c08, 0);
 }
 
 typedef struct { s32 a, b; } W29P8;
@@ -648,14 +647,13 @@ static inline void w29_scale4(void *d, void *s, f32 t) {
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
 }
 
-typedef struct { f32 n[3]; f32 d; s32 x10; } W29Plane;
 #include "data/pieces/D_002A6238.h"
 s32 func_001198c8(s32, s32, void *);
 
 s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {
     W29V4 t;
     f32 d;
-    d = w29_dot(p, n) + ((W29Plane *)D_002A6238)[i].d;
+    d = w29_dot(p, n) + D_002A6238[i].d;
     if (*maxd < d) return 0;
     w29_scale4(&t, n, d);
     w29_sub(out, p, &t);
@@ -691,29 +689,28 @@ void func_0011b108(W29Grp *g, s32 k) {
 }
 
 /* needs make: uses rodata */
-typedef struct { u8 pad[0x158]; s32 x158; } W29Ply;
 #include "data/pieces/D_002BCB60.h"
 void func_0013c7d8(s32);
 
 void func_001119d0(void) {
     switch (D_002BC128) {
     case 5:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x8) func_0013c7d8(3);
+        if (D_002BCB60->w158 & 0x8) func_0013c7d8(3);
         break;
     case 8:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x20) func_0013c7d8(5);
+        if (D_002BCB60->w158 & 0x20) func_0013c7d8(5);
         break;
     case 9:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x40) func_0013c7d8(6);
+        if (D_002BCB60->w158 & 0x40) func_0013c7d8(6);
         break;
     case 10:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x80) func_0013c7d8(7);
+        if (D_002BCB60->w158 & 0x80) func_0013c7d8(7);
         break;
     case 13:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x100) func_0013c7d8(8);
+        if (D_002BCB60->w158 & 0x100) func_0013c7d8(8);
         break;
     case 15:
-        if (((W29Ply *)D_002BCB60)->x158 & 0x200) func_0013c7d8(9);
+        if (D_002BCB60->w158 & 0x200) func_0013c7d8(9);
         break;
     }
 }

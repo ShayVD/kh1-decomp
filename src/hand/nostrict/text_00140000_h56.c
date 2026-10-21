@@ -128,7 +128,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         func_002675a8(v, o->v20);
         break;
     case 19:
-        func_002675a8(v, D_002C58A0);
+        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
         break;
     default:
         fn = ((MvTab *)&D_00350D88)[o->st70].f10;
@@ -245,7 +245,7 @@ void func_001441b8(Pl *o) {
     func_002675a8(o->v490, o->pos);
     o->d90 = 0;
     if (!func_001232f0((Ch3 *)o)) {
-        func_002675a8(o->v3c0, D_002C58B0);
+        func_002675a8(o->v3c0, (*(f32 (*)[0x4])&D_002C58B0));
         func_00267560(v, o->v20, o->f2c * D_002BBDFC);
         if ((s32)(o->w160 >> 2) & 1) {
             func_00267518(v, v, o->v200);
@@ -267,7 +267,7 @@ void func_001441b8(Pl *o) {
             func_00267560(o->v3c0, v, v[3]);
         }
     }
-    func_002675a8(o->v120, D_002C58B0);
+    func_002675a8(o->v120, (*(f32 (*)[0x4])&D_002C58B0));
 }
 
 typedef struct { u8 pad[0xa0]; f32 va0[3]; f32 fac; f32 fb0; f32 fb4; f32 fb8; } Cam148;
@@ -397,7 +397,7 @@ void func_00145858(Bo *o, f32 *pos) {
         o->vel[3] += -0.05f;
         o->vel[1] += o->vel[3];
         if (o->vel[1] < 0.0f) {
-            func_002675a8(o->vel, D_002C58A0);
+            func_002675a8(o->vel, (*(f32 (*)[0x4])&D_002C58A0));
             o->u.s.b16 = 1;
         }
     }
@@ -696,7 +696,7 @@ void func_0014ac50(Hm *o, Hs *s, f32 *out) {
         out[1] = 0.0f;
         func_00121fc4(out, out);
         if (out[3] == 0.0f) {
-            func_00267530(out, D_002C58A0, s->v30);
+            func_00267530(out, (*(f32 (*)[0x4])&D_002C58A0), s->v30);
         }
     } else if (((s32)(o->u30.d >> 10) & 1) || !o->u30.s.tg) {
         func_00267530(out, o->pos, o->v70);

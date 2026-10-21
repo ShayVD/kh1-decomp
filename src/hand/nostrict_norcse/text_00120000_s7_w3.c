@@ -2,11 +2,11 @@
 #include "common.h"
 #include "data/bss_0052.h"
 typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
-typedef struct { s32 f0, f4; } S31b0;
+#include "data/pieces/D_002E31B0.h"
+typedef S31b0_2e31b0 S31b0;
 typedef struct { u16 f0; u8 p2[0xc]; u16 fe; } O8;
 typedef struct { u8 pad[0x844]; s32 f844[3]; u8 pad850[0x24]; s32 f874; } Sv;
 extern Q38 D_002E2FD8[7];
-#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00304BE8.h"
 extern s32 D_00524F50;
 extern s32 func_0013c188(s32, s32);
@@ -84,8 +84,8 @@ void func_0012d468(s32 a0, u32 *a1) {
                 k = list[i];
                 if (func_00133000(a0, k)) {
                     o = func_001478c8(q->ids[i]);
-                    if (func_00122ff8((*(S31b0 *)&D_002E31B0).f0) && (o->f0 & 8)) {
-                        if (func_0012ed88(a0, ((S31b0 *)&D_002E31B0), v0, v1) > (f32)o->fe) goto next;
+                    if (func_00122ff8(D_002E31B0.f0) && (o->f0 & 8)) {
+                        if (func_0012ed88(a0, &D_002E31B0, v0, v1) > (f32)o->fe) goto next;
                     }
                     mask &= ~(1 << i);
                     fl[k] = 1;

@@ -53,9 +53,9 @@ void func_001015a8(void) {
     strcpy(sp, (M2C_UNK *)&D_002BCCE0);
     strcat(sp, (M2C_UNK *)&D_0048CC30);
     temp_v0 = func_001559f0(0x34, 8);
-    D_002A3F3C = temp_v0;
+    D_002A3F3C = (Hdr_2a3f3c *)temp_v0;
     temp_v0_2 = func_001137c8(temp_v0, 0x80);
-    D_002A3F3C = temp_v0_2;
+    D_002A3F3C = (Hdr_2a3f3c *)temp_v0_2;
     func_00120748(sp, temp_v0_2, &func_001012b8, 0);
 }
 

@@ -108,7 +108,7 @@ void func_00111020(s32 arg0) {
 }
 
 void func_001115e0(void) {
-    func_0017f290(D_002BCB60 + 0x4C);
+    func_0017f290(((s32)D_002BCB60) + 0x4C);
 }
 
 void func_00111778(s32 arg0) {

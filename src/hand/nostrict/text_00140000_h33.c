@@ -3,7 +3,8 @@
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
  * Built without strict aliasing (several of these need the reloads). */
 
-typedef struct { f32 x, y, z, w; } V4f;
+#include "data/pieces/D_002C58A0.h"
+typedef V4_2c58a0 V4f;
 typedef struct { s32 x, y, z; } V3i;
 
 /* ---- save data (D_00304BE8), shared with h7 ---- */
@@ -209,7 +210,6 @@ extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
-#include "data/pieces/D_002C58A0.h"
 extern Pl *D_002E26A0;
 extern f32 D_00304D54;
 #include "data/pieces/D_00304B78.h"
@@ -399,7 +399,7 @@ void func_0013f198(Obj130 *o) {
             func_001271b0(o, &a);
         } else if ((D_002C5958 >> 17) & 1) {
             func_00159978(o, &a);
-        } else if (!((D_002C5960 >> 3) & 1)) {
+        } else if (!(((*(u32 *)&D_002C5960) >> 3) & 1)) {
             func_001707d0(o, &a);
         } else if (D_002C5AD4 & 0x8000) {
             func_001271b0(o, &a);
@@ -528,7 +528,7 @@ void func_001417a0(V4f *p, s32 n) {
         n = n * D_00304D54 + 0.5f;
         func_002458a0(&t, n);
         func_0013c548(n);
-        if ((D_00304B78 & 0xF) == 9) {
+        if (((*(u32 *)&D_00304B78) & 0xF) == 9) {
             D_00F20000(5, n);
         }
     }
@@ -855,7 +855,7 @@ Eff *func_001484c8(V4f **o, s32 a, s32 b, f32 f) {
     e->w8 = b;
     e->u.s.b4 = 1;
     e->fc = f;
-    func_002675a8(&e->v10, ((V4f *)&D_002C58A0));
+    func_002675a8(&e->v10, &D_002C58A0);
     func_001315c0(a, b, &e->v20, f);
     func_002675a8(*o, &e->v20);
     return e;
@@ -913,10 +913,9 @@ Blk7c *func_00148a60(Act *o, s32 fl) {
 
 /* func_00141468 and func_00141540 only match with func_00141448 defined
  * above them. */
-typedef struct { u8 b0; u8 b1; u8 b2; u8 b3; } S1C8;
-typedef struct { u32 flags; u8 pad4[0x38]; s32 w3c; s32 w40; u8 pad44[0xC8 - 0x44]; S1C8 *pc8; } St6C;
-typedef struct { u8 pad[0x44]; s32 w44; s32 w48; u8 pad4c[0xC8 - 0x4C]; S1C8 *pc8; } St6Cb;
 #include "data/pieces/D_00304C70.h"
+typedef St6C_304c70 St6C;
+typedef St6C_304c70 St6Cb;
 typedef struct { u8 pad[0x4C]; u16 h4c; } S130b;
 typedef struct { u8 pad[0x6C]; St6C *p6c; u8 pad70[0x18]; u32 w88; u8 pad8c[0x130 - 0x8C]; S130b *p130; } O1468;
 
@@ -933,7 +932,7 @@ s32 func_00141448(s32 a, s32 b, s32 max) {
 s32 func_00141468(O1468 *o, s32 x) {
     St6C *s = o->p6c;
     s32 v;
-    if (s == 0 || s == ((St6C *)&D_00304C70)) return 0;
+    if (s == 0 || s == &D_00304C70) return 0;
     v = func_00141448(s->w3c, x, s->w40);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
         v = s->w3c + (s32)((v - s->w3c) * (*(Cfg **)&D_00308CDC)->f88);
@@ -947,12 +946,12 @@ s32 func_00141468(O1468 *o, s32 x) {
 s32 func_00141540(O1468 *o, s32 x) {
     St6Cb *s = (St6Cb *)o->p6c;
     s32 v;
-    if (s == 0 || s == (St6Cb *)((St6C *)&D_00304C70)) return 0;
-    v = func_00141448(s->w44, x, s->w48);
+    if (s == 0 || s == &D_00304C70) return 0;
+    v = func_00141448(s->x44, x, s->w48);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->w44 + (s32)((v - s->w44) * (*(Cfg **)&D_00308CDC)->f88);
+        v = s->x44 + (s32)((v - s->x44) * (*(Cfg **)&D_00308CDC)->f88);
     }
-    s->w44 = v;
+    s->x44 = v;
     if (s->pc8) s->pc8->b3 = v;
     return v;
 }

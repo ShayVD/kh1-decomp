@@ -3,11 +3,9 @@
 
 
 typedef struct { u8 pad[0x24]; s32 x24; u8 pad28[0x90 - 0x28]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W22;
-typedef struct { u8 pad0[8]; s32 x8; s32 xc; s32 x10; } Pad8;
-#include "data/types/text_00220000_s6_23.h"
-typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
 #include "data/pieces/D_00425BC8.h"
-#include "data/pieces/D_00304BE8.h"
+#include "data/types/text_00220000_s6_23.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
 extern s32 D_003F7780[];
 extern s32 D_003F7790[];
@@ -71,22 +69,22 @@ void func_0022fcb8(W22 *m) {
                 max = 1;
                 if (D_003E3D6C <= D_00646A24) max = func_001ef0c0(D_00646A30[idx]);
                 snd = 0;
-                if ((((Pad8 *)D_00425BC8)->x10 & 0x80000080) && !(((Pad8 *)D_00425BC8)->x10 & 0x20000020)) {
+                if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
                     if (D_00646A28 > 1) {
                         D_00646A28--;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000080) {
+                    } else if (D_00425BC8->x8 & 0x80000080) {
                         D_00646A28 = max;
                         snd = max != 1;
                         m->x24 = idx;
                     }
-                } else if ((((Pad8 *)D_00425BC8)->x10 & 0x20000020) && !(((Pad8 *)D_00425BC8)->x10 & 0x80000080)) {
+                } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
                     if (D_00646A28 < max) {
                         D_00646A28++;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000020) {
+                    } else if (D_00425BC8->x8 & 0x20000020) {
                         if (max != 1) {
                             D_00646A28 = 1;
                             snd = 1;
@@ -152,7 +150,7 @@ void func_0022fcb8(W22 *m) {
         if (!r3) break;
         func_001fc308(m, y3, 304, 0, 0, 21, 0, 0x26E6E6E6, 0x26E6E6E6);
         func_001fc308(m, y3, 304, 0, 0, 22, 0, 0x4C000000, 0x4C000000);
-        if (D_00647630) func_001fb428(m, 1, 0, 0, y3 + 33, 355, func_001ef140(((S48e *)D_00304BE8)->x48e[j], D_00646A30[func_001fd548(m)]), 15, j == D_00646A24 ? 0x80E6E6E6 : 0x80808080);
+        if (D_00647630) func_001fb428(m, 1, 0, 0, y3 + 33, 355, func_001ef140(D_00304BE8->x48e[j], D_00646A30[func_001fd548(m)]), 15, j == D_00646A24 ? 0x80E6E6E6 : 0x80808080);
         y3 += 48;
         pos[0] += D_003F7790[j];
         pos[1] += D_003F77A0[j];
@@ -228,24 +226,24 @@ void func_002307c0(W22 *m) {
             }
             if (max == 0) max = 1;
             snd = 0;
-            if ((((Pad8 *)D_00425BC8)->x10 & 0x80000080) && !(((Pad8 *)D_00425BC8)->x10 & 0x20000020)) {
+            if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
                 if (D_00646A28 > 1) {
                     D_00646A28--;
                     snd = 1;
                     m->x24 = idx;
-                } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000080) {
+                } else if (D_00425BC8->x8 & 0x80000080) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
                     }
                     m->x24 = idx;
                 }
-            } else if ((((Pad8 *)D_00425BC8)->x10 & 0x20000020) && !(((Pad8 *)D_00425BC8)->x10 & 0x80000080)) {
+            } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
                 if (D_00646A28 < (s32)max) {
                     D_00646A28++;
                     snd = 1;
                     m->x24 = idx;
-                } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000020) {
+                } else if (D_00425BC8->x8 & 0x20000020) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;
@@ -391,24 +389,24 @@ void func_00231018(W22 *m) {
                 if (idx != m->x24) D_00646A28 = 1;
                 max = vals[idx];
                 snd = 0;
-                if ((((Pad8 *)D_00425BC8)->x10 & 0x80000080) && !(((Pad8 *)D_00425BC8)->x10 & 0x20000020)) {
+                if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
                     if (D_00646A28 > 1) {
                         D_00646A28--;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (((Pad8 *)D_00425BC8)->x8 & 0x80000080) {
+                    } else if (D_00425BC8->x8 & 0x80000080) {
                         if (max != 1) {
                             D_00646A28 = max;
                             snd = 1;
                         }
                         m->x24 = idx;
                     }
-                } else if ((((Pad8 *)D_00425BC8)->x10 & 0x20000020) && !(((Pad8 *)D_00425BC8)->x10 & 0x80000080)) {
+                } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
                     if (D_00646A28 < max) {
                         D_00646A28++;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (((Pad8 *)D_00425BC8)->x8 & 0x20000020) {
+                    } else if (D_00425BC8->x8 & 0x20000020) {
                         if (max != 1) {
                             D_00646A28 = 1;
                             snd = 1;

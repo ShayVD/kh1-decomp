@@ -11,7 +11,7 @@ extern s32 D_006477A4; /* src/data/bss_0064.c: f32 D_006477A4 */
 void func_002336d8(void);
 
 void func_00233610(void) {
-    D_00425BC8 = D_002C5AD0;
+    (*(void * *)&D_00425BC8) = D_002C5AD0;
     D_00647780 = 0;
     D_0064778C = 0;
     D_00647798 = 0;

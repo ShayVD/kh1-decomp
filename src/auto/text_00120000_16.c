@@ -24,7 +24,7 @@ void func_00122cb8(void) {
   int new_var;
   s8 *var_v1;
   s32 var_a0;
-  var_v1 = ((M2C_UNK *)&D_002C5C80);
+  var_v1 = &D_002C5C80;
   new_var = ~0x10;
   var_a0 = 0x1E;
   do

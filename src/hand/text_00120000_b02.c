@@ -128,7 +128,8 @@ void func_00128738(QW *buf, s32 idx) {
     func_0011fb78(d, 7, buf);
 }
 
-typedef struct { f32 x, y, z, w; } V4;
+#include "data/pieces/D_002C58A0.h"
+typedef V4_2c58a0 V4;
 typedef union { u64 x; struct { u32 b0:2; u32 b2:1; u32 b3:1; u32 b4:1; u32 b5:1; u32 b6:1; u32 b7:4; u32 b11:1; u32 b12:1; u32 r13:19; s32 hi; } b; } F160;
 typedef union { u64 x; struct { u32 lo; u32 r0:13; u32 b45:1; u32 r46:4; u32 b50:1; u32 r51:13; } b; } F370;
 typedef struct { s32 f0; f32 f4; f32 f8; f32 fc; } Q8e;
@@ -152,7 +153,6 @@ typedef struct {
     F370 f370;
 } Ob8;
 typedef struct { u8 p0[0x30]; V4 f30; } Ct8;
-#include "data/pieces/D_002C58A0.h"
 extern u32 D_002C5958;
 extern void func_00267518(V4 *, V4 *, V4 *);
 extern void func_002675a8(V4 *, V4 *);
@@ -174,7 +174,7 @@ void func_00130898(Ob8 *o, Ct8 *c) {
     if (o->f160.b.b2) {
         if (s->f8 == 0.0f) {
             func_00267518(&c->f30, &c->f30, &o->f210);
-            func_002675a8(&o->f220, ((V4 *)&D_002C58A0));
+            func_002675a8(&o->f220, &D_002C58A0);
         } else {
             func_002673f8(b, &o->f230);
             func_002675a8(&a, &o->f210);
@@ -183,9 +183,9 @@ void func_00130898(Ob8 *o, Ct8 *c) {
             if (o->f370.b.b45) func_001219c8(&o->f220, &o->f220, &o->f40);
         }
     } else {
-        func_002675a8(&o->f220, ((V4 *)&D_002C58A0));
+        func_002675a8(&o->f220, &D_002C58A0);
     }
-    func_002675a8(&o->f210, ((V4 *)&D_002C58A0));
+    func_002675a8(&o->f210, &D_002C58A0);
     if ((o->f160.b.hi = *(u16 *)s)) o->f370.b.b50 = D_002C5958 & 1;
     r = func_00130190(o, s->f0);
     if (o->f160.b.b5 && (r & 0x200000)) {
@@ -371,7 +371,7 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
     Md9 *md;
 
     if (!o || !((s32)(o->f370 >> 32) & 1)) {
-        func_002675a8(out, ((V4 *)&D_002C58A0));
+        func_002675a8(out, &D_002C58A0);
         return;
     }
     if (id & 0x8000) {
