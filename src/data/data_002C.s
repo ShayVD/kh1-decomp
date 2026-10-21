@@ -10,7 +10,7 @@
 	PIECE D_002C12C0, 0x4, 4
 	PIECE D_002C12C4, 0x1c, 4
 	PIECE D_002C12E0, 0x10, 16  /* data/pieces/D_002C12E0.h */
-	PIECE D_002C12F0, 0x10, 16  /* untyped: type u128 is not a common.h basic type */
+	PIECE D_002C12F0, 0x10, 16  /* untyped: src/hand/text_00110000_cc.c does not compile with it (type u128 is not a common.h basic type) */
 	PIECE D_002C1300, 0x4, 4  /* untyped: users disagree: RFn D_002C1300 | void *D_002C1300; unparsed in 1 file(s) */
 	PIECE D_002C1304, 0x4, 4
 	PIECE D_002C1308, 0x4, 4  /* data/pieces/D_002C1308.h */

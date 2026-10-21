@@ -317,9 +317,9 @@
 	PIECE D_0035C424, 0x4, 4
 	PIECE D_0035C428, 0x4, 4
 	PIECE D_0035C42C, 0x4, 4
-	PIECE D_0035C430, 0x10, 16  /* untyped: type Q16 is not a common.h basic type */
+	PIECE D_0035C430, 0x10, 16  /* untyped: Q16 is local to src/hand/nostrict/text_00160000_s6_09.c and other files name D_0035C430 (type Q16 is not a common.h basic type) */
 	PIECE D_0035C440, 0x10, 16  /* untyped: users disagree: f32 D_0035C440[4] | u8 D_0035C440[] */
-	PIECE D_0035C450, 0x10, 16  /* untyped: type Q16 is not a common.h basic type */
+	PIECE D_0035C450, 0x10, 16  /* untyped: Q16 is local to src/hand/nostrict/text_00160000_s6_09.c and other files name D_0035C450 (type Q16 is not a common.h basic type) */
 	PIECE D_0035C460, 0x10, 16  /* untyped: users disagree: f32 D_0035C460[4] | u8 D_0035C460[] */
 	PIECE D_0035C470, 0x10, 16
 	PIECE D_0035C480, 0x10, 16

@@ -61,11 +61,11 @@
 	PIECE_BYTES D_003E46A0, 0x426e, 0x2
 	PIECE_END D_003E46A0, 0x4270
 	PIECE D_003E8910, 0x3c0, 16
-	PIECE_BEGIN D_003E8CD0, 0x8, 8  /* untyped: type Glyph is not a common.h basic type */
+	PIECE_BEGIN D_003E8CD0, 0x8, 8  /* untyped: Glyph is local to src/hand/nofill/text_001f0000_s18_s18m1.c and other files name D_003E8CD0 (type Glyph is not a common.h basic type) */
 	.word D_003E46B8
 	PIECE_BYTES D_003E8CD0, 0x4, 0x4
 	PIECE_END D_003E8CD0, 0x8
-	PIECE_BEGIN D_003E8CD8, 0x28, 8  /* untyped: type Glyph is not a common.h basic type */
+	PIECE_BEGIN D_003E8CD8, 0x28, 8  /* untyped: Glyph is local to src/hand/nofill/text_001f0000_s18_s18m1.c and other files name D_003E8CD8 (type Glyph is not a common.h basic type) */
 	.word D_003E4660
 	.word D_003E4668
 	.word D_003E4670

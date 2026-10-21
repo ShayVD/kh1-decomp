@@ -29,11 +29,11 @@
 	PIECE D_004545C8, 0x18, 8
 	PIECE D_004545E0, 0x18, 8
 	PIECE D_004545F8, 0x8, 8
-	PIECE D_00454600, 0x50, 16  /* untyped: type T16 is not a common.h basic type */
-	PIECE D_00454650, 0x30, 16  /* untyped: type T16 is not a common.h basic type */
-	PIECE D_00454680, 0x40, 16  /* untyped: type T16 is not a common.h basic type */
-	PIECE D_004546C0, 0x40, 16  /* untyped: type T16 is not a common.h basic type */
-	PIECE D_00454700, 0x30, 16  /* untyped: type T16 is not a common.h basic type */
+	PIECE D_00454600, 0x50, 16  /* untyped: T16 is local to src/hand/text_00230000_s6_24.c and other files name D_00454600 (type T16 is not a common.h basic type) */
+	PIECE D_00454650, 0x30, 16  /* untyped: T16 is local to src/hand/text_00230000_s6_24.c and other files name D_00454650 (type T16 is not a common.h basic type) */
+	PIECE D_00454680, 0x40, 16  /* untyped: T16 is local to src/hand/text_00230000_s6_24.c and other files name D_00454680 (type T16 is not a common.h basic type) */
+	PIECE D_004546C0, 0x40, 16  /* untyped: T16 is local to src/hand/text_00230000_s6_24.c and other files name D_004546C0 (type T16 is not a common.h basic type) */
+	PIECE D_00454700, 0x30, 16  /* untyped: T16 is local to src/hand/text_00230000_s6_24.c and other files name D_00454700 (type T16 is not a common.h basic type) */
 	PIECE D_00454730, 0x50, 16
 	PIECE D_00454780, 0x40, 16
 	PIECE D_004547C0, 0x40, 16
