@@ -53,6 +53,112 @@ BLOCK_CALLS = {
     0x00250054: [(4, lambda st: st.get(6))],  # memset(dst, c, n)
     0x0011EFA8: [(4, lambda st: 16), (5, lambda st: _mul(st, 6, 7))],  # pool init(hdr, items, size, count)
 }
+# Session 27 (str-arg): callee -> {argument: kind} for an argument the callee only reads, as a string that
+# ends at its first NUL (the libc ones read aligned quadwords, so at most 15 bytes more of the same qword).
+# fmt: a printf format (func_00259698 skips the byte after a lone '%', so every '%' must start a whole
+# conversion); str: any bytes; kh: func_001ea268's text, whose control bytes 5-7 and 9-31 take parameter
+# bytes (so none may occur before the NUL).
+STRING_ARGS = {
+    0x00259CC0: {0: "fmt"},  # scePrintf(fmt, ...)
+    0x00259C88: {0: "fmt"},  # func_00259c88(fmt, ...): the same printer, without the callback swap
+    0x00250248: {0: "fmt"},  # printf(fmt, ...)
+    0x00250EB0: {1: "fmt"},  # sprintf(dst, fmt, ...)
+    0x00250340: {0: "str"},  # puts(s)
+    0x00250F40: {1: "str"},  # strcat(dst, src)
+    0x002511B0: {1: "str"},  # strcpy(dst, src)
+    0x0025106C: {0: "str", 1: "str"},  # strcmp(a, b)
+    0x00251400: {0: "str", 1: "str"},  # strncmp(a, b, n)
+    0x002512C4: {0: "str"},  # strlen(s)
+    0x001EA268: {1: "kh"},  # func_001ea268(dst, src): the game's strcat for encoded text
+}
+_FMT = re.compile(rb"%[-+ #0]*[0-9]*(\.[0-9]+)?[hlLqjzt]*[diouxXcspfeEgGn%]")
+
+
+def string_end(data: bytes, ub: int, kind: str) -> int | None:
+    """Offset just past the NUL that ends a string read from any offset in [0, ub] of a data object whose
+    bytes (to the next name) are data: None unless the object is a non-empty string literal, i.e. the
+    NUL is followed only by zero padding of at most 15 bytes (a buffer filled at run time has a long
+    zero tail, or no text)."""
+    z = data.find(b"\0", ub)
+    if z <= 0 or not data[0] or len(data) - z > 16 or any(data[z:]):
+        return None
+    txt = data[:z]
+    if kind == "fmt":
+        if ub or any(c < 0x20 and c not in (9, 10, 13) or c == 0x7F for c in txt):
+            return None
+        if _FMT.sub(b"", txt).count(b"%"):
+            return None  # a '%' that does not start a whole conversion
+    elif kind == "kh" and any(5 <= c <= 7 or 9 <= c <= 31 for c in txt):
+        return None
+    return z + 1
+
+
+# Session 27 (dma-count): func_00237018(buf, n, wait) writes a DMA "end" tag with qwc n - 1 at buf and sends
+# buf on GIF channel 2 in chain mode (func_00266f38: CHCR 0x105), so the DMA reads exactly 16 * n bytes.
+DMA_COUNT_CALLS = {
+    0x00237018: [(4, lambda st: 16 * st[5] if isinstance(st.get(5), int) and 0 < st[5] < 0x10000 else None)],
+    # func_00106cd0(addr, qwc) appends a ref tag (word 0 = 0x30000000 + qwc, word 1 = addr) to the chain in
+    # D_00494A90: the DMA reads 16 * qwc bytes at addr
+    0x00106CD0: [(4, lambda st: 16 * st[5] if isinstance(st.get(5), int) and 0 < st[5] < 0x10000 else None)],
+}
+# Session 27 (list-arg): callee -> (list argument, element width, terminator, {argument: bytes per element}):
+# the callee reads the list until the terminator ("m1": a word -1, "neg": a negative halfword) and
+# advances each dependent argument by its stride per element before it. A list literal in .data (ending
+# with the terminator and at most 12 bytes of zero padding) gives the count.
+LIST_CALLS = {
+    0x0024AFC0: (0, 4, "m1", {1: 4}),  # func_0024afc0(list, out[] words, hdr)
+    0x0024AF40: (0, 4, "m1", {1: 0xC0}),  # func_0024af40(list, out[] 0xC0-byte records, hdr)
+    0x0024C8B8: (1, 2, "neg", {}),  # func_0024c8b8(o, list of halfwords, ...)
+}
+
+
+def list_count(data: bytes, width: int, term: str) -> int | None:
+    """Elements before the terminator of a list literal that fills data (the object to the next name)."""
+    for k in range(0, len(data) - width + 1, width):
+        v = int.from_bytes(data[k:k + width], "little", signed=True)
+        if (term == "m1" and v == -1) or (term == "neg" and v < 0):
+            rest = data[k + width:]
+            return k // width if len(rest) <= 12 and not any(rest) else None
+    return None
+
+
+# Session 27 (dma-chain): callee -> argument that is the start of a DMA source chain the callee (or the
+# callback it registers) sends in chain mode (func_00266f38 writes it to TADR with CHCR 0x105):
+# func_00106b18(chain) and func_00106bd8(chain, ...) send it on channel D_002A6B84 (through func_00106b98's
+# callback for the latter), func_00266f38(channel, chain) directly.
+CHAIN_CALLS = {0x00106B18: 0, 0x00106BD8: 0, 0x00266F38: 1}
+
+
+def parse_chain(read, base: int, end: int):
+    """Follow a DMA source chain in the image from base: (end of the tags and inline data, [(ref address,
+    bytes)]) when every tag is refe/cnt/ref/end and every tag and its inline data lie in [base, end);
+    None for next/call/ret/refs tags, a chain past end, or more than 256 tags."""
+    p, refs = base, []
+    for _n in range(256):
+        if p + 16 > end:
+            return None
+        w0, w1 = read(p), read(p + 4)
+        if w0 is None or w1 is None:
+            return None
+        qwc, tid = w0 & 0xFFFF, (w0 >> 28) & 7
+        if tid in (0, 3):  # refe / ref: qwc quadwords at ADDR
+            if w1 >> 31 or not qwc:
+                return None  # scratchpad, or an empty transfer
+            refs.append((w1 & 0x7FFFFFFF, 16 * qwc))
+            p += 16
+            if tid == 0:
+                return p, refs
+        elif tid in (1, 7):  # cnt / end: qwc quadwords after the tag
+            p += 16 + 16 * qwc
+            if p > end:
+                return None
+            if tid == 7:
+                return p, refs
+        else:
+            return None
+    return None
+
+
 ARG = "arg"  # ("arg", k, off): argument k on entry + off
 IDX = "idx"  # register = known base + offset: ("idx", base, upper bound of the offset or None)
 UB = "ub"  # a small value with an upper bound: ("ub", U)
@@ -144,7 +250,7 @@ def gpr_writes(w: int) -> set[int]:
     return set()
 
 
-def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
+def countdown_loops(insns: list[mips.Insn], counters: bool = False) -> dict[int, tuple]:
     """Single-back-edge loops whose trip count a decrementing counter caps (session 21):
 
         li v1,N; loop: ...; addiu v1,v1,-k; sq $0,0(v0); bgtz v1,loop; addiu v0,v0,16
@@ -155,7 +261,9 @@ def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
     pointer p is written once, by `addiu p,p,s` (s > 0). Exits are free. Also an up-counter
     `addiu i,i,k; slti t,i,L; bne t,$0` from an exact start i0: it is taken as a countdown of
     L - i0. Returns {header index: (back-branch index, c, k, kind, {p: s}, L or None)}; kind says how
-    many times the back edge can be taken for a counter that enters at most N (see back_edges)."""
+    many times the back edge can be taken for a counter that enters at most N (see back_edges).
+    With counters=True (session 27) an up-counter loop is listed even when it walks no pointer: its
+    counter itself is capped at the header (analyse's counter-cap)."""
     n = len(insns)
     a0 = insns[0].addr if n else 0
     out = {}
@@ -241,7 +349,7 @@ def countdown_loops(insns: list[mips.Insn]) -> dict[int, tuple]:
             y = insns[js[0]].word
             if mips.op(y) in (0x09, 0x19) and mips.rs(y) == r and mips.rt(y) == r and 0 < mips.imm(y):
                 ps[r] = mips.imm(y)
-        if ps:
+        if ps or (counters and lim is not None):
             out.setdefault(h, (b, c, k, kind, ps, lim))
     return out
 
@@ -265,7 +373,8 @@ def back_edges(kind: str, n: int, k: int) -> int:
 
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
-            read_word=None, cases: bool = True, ptr_globals: bool = True):
+            read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
+            slot_refine: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -298,7 +407,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     seen_out = set()
     grow: dict[tuple, int] = {}
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
-    loops = countdown_loops(insns) if countdown else {}
+    loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
     loop_entry: dict[int, dict] = {}  # loop header -> joined state of the edges that enter the loop
     loop_heads = set()  # targets of a backward branch or jump
     for j_, x_ in enumerate(insns):
@@ -347,6 +456,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return None
         return (IDX, a[0], a[1] + ps[k] * back_edges(kind, nmax, step_))
 
+    def counter_value(i):
+        """Session 27 (counter-cap): an up-counter `i = i0; do { ...; i += k; } while (i < L)` at its
+        header i is at most max(i0, L - 1), or max(i0, L - 1 + k) when the test sees i before the step:
+        the back edge is taken only when the test passed. Without it the counter's bound widened away
+        (0, 1, 2, then unbounded) before the test could cap it, and so did every index made from it."""
+        b, c, step_, kind, ps, lim = loops[i]
+        i0 = loop_entry.get(i, {}).get(c)
+        if lim is None or not (isinstance(i0, int) and -0x10000 < i0 < 0x10000):
+            return None
+        return (UB, max(i0, lim - 1 + (step_ if kind == "gtz-slot" else 0)))
+
     def merge(i, st, src=None):
         if not (0 <= i < n):
             return
@@ -365,6 +485,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             v = old.get(k)
             if lp is not None and k in lp[4] and (cap := loop_value(i, k)) is not None:
                 new[k] = cap  # the counter bounds the walk: no widening
+                continue
+            if counter_cap and lp is not None and k == lp[1] and (cap := counter_value(i)) is not None:
+                new[k] = cap  # the up-counter itself (session 27)
                 continue
             j = join(i, k, v, st.get(k))
             if j is None:
@@ -459,6 +582,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 g_ = _gaddr(b, w)
                 if g_ is not None:  # ... into a pointer global G (session 25: followed through G's loads)
                     ev += [("storedto", x, g_) for x in sorted(_addrs(st[t]))]
+            if o in mips.OP_STORES or o in (0x1F, 0x3E):  # the bytes a store may write (session 27)
+                if _addrs(b):
+                    ev += [("wr", (x + mips.imm(w)) & 0xFFFFFFFF, WIDTH[o]) for x in sorted(_addrs(b))]
+                elif isinstance(b, tuple) and b[0] in (IDX, HIX):
+                    lo_ = (b[1] + (mips.imm(w) if b[0] == IDX else 0)) & 0xFFFFFFFF
+                    ev.append(("wr", lo_, None if b[2] is None else b[2] + mips.imm(w) + WIDTH[o]))
             if isinstance(b, tuple) and b[0] == PTR:
                 ev.append(("ptrmem", b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o]))
             if isinstance(b, int):
@@ -640,7 +769,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             cond = None
             if mips.op(w) in (0x04, 0x05, 0x14, 0x15) and (mips.rt(w) == 0) != (mips.rs(w) == 0):
                 cond = (mips.rs(w) or mips.rt(w), mips.op(w) in (0x05, 0x15))  # (t, branch-if-nonzero)
-            if i + 1 < n:
+            # session 27 (slot-refine): a branch's test refines the state before its delay slot, so a
+            # slot that scales the counter (`bne v1,$0,loop; sll v0,s2,2`) sees the capped counter
+            edge_first = slot_refine and ins.is_branch and cond is not None and i + 1 < n
+            if i + 1 < n and not edge_first:  # (with edge_first each edge steps the slot itself)
                 st_d = dict(st)
                 ev += step(insns[i + 1], st_d)
             else:
@@ -654,6 +786,16 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 for r in CALLER_SAVED:
                     st_d.pop(r, None)
                 merge(i + 2, st_d)
+            elif ins.is_branch and edge_first:
+                st_t = dict(st)
+                refine(st_t, cond, True)
+                ev += step(insns[i + 1], st_t)
+                merge(index(ins.branch_target), st_t, src=i)
+                st_f = dict(st)
+                refine(st_f, cond, False)
+                if not likely:
+                    ev += step(insns[i + 1], st_f)
+                merge(i + 2, st_f)
             elif ins.is_branch:
                 st_t = dict(st_d)
                 if cond and cond[0] in st and st.get(cond[0]) == st_d.get(cond[0]):
@@ -694,6 +836,139 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     states[k] = {0: 0}
                     work.append(k)
                     break
+
+
+ALL_ARGS = frozenset(ARG_REGS)
+# EE kernel syscalls (v1 = number, arguments in a0..) whose argument count is known (ps2sdk kernel.h);
+# any other syscall reads every argument register.
+SYSCALL_ARGS = {0x64: 1, -0x68: 1,  # FlushCache(op), iFlushCache(op)
+                0x14: 1, 0x15: 1, 0x16: 1, 0x17: 1, -0x1A: 1, -0x1B: 1, -0x1C: 1, -0x1D: 1,  # [i]Enable/Disable Intc/Dmac
+                0x2F: 0, 0x32: 0, 0x33: 1, -0x34: 1,  # GetThreadId, SleepThread, [i]WakeupThread
+                0x40: 1, 0x41: 1, 0x42: 1, -0x43: 1, 0x44: 1, 0x45: 1, -0x46: 1, 0x47: 2, -0x48: 2}  # semaphores
+
+
+def gpr_reads(w: int) -> set[int] | None:
+    """General registers an instruction may read (an over-approximation); None for one that may read
+    any argument register (syscall, an opcode not listed here). A call's own reads are handled by
+    arg_live()."""
+    o = mips.op(w)
+    s, t = mips.rs(w), mips.rt(w)
+    if o == mips.OP_SPECIAL:
+        if mips.funct(w) in (0x0C, 0x0D):  # syscall / break
+            return None
+        if mips.funct(w) in (0x0A, 0x0B):  # movz / movn keep rd when the test fails
+            return {s, t, mips.rd(w)}
+        return {s, t}
+    if o == mips.OP_MMI:
+        return {s, t}
+    if o == mips.OP_REGIMM:
+        return {s}
+    if o in (0x02, 0x03, 0x0F):  # j jal lui
+        return set()
+    if 0x08 <= o <= 0x0E or o in (0x18, 0x19):  # addi .. xori, daddi daddiu
+        return {s}
+    if o in mips.OP_BRANCH:
+        return {s, t}
+    if o in (0x1A, 0x1B, 0x22, 0x26):  # ldl ldr lwl lwr merge into rt
+        return {s, t}
+    if o in mips.OP_LOADS or o in (0x1E, 0x2F, 0x33, 0x36):  # loads, lq, cache, pref, lqc2
+        return {s}
+    if o in mips.OP_STORES or o in (0x1F, 0x3E):  # stores, sq, sqc2
+        return {s, t}
+    if o in (mips.OP_COP0, mips.OP_COP1, mips.OP_COP2):
+        return {t}  # mtc/ctc/dmtc/qmtc2 read rt; the rest read no gpr (rt is extra, harmless)
+    return None
+
+
+def arg_live(funcs: list[tuple[int, list[mips.Insn]]], read_word=None) -> dict[int, frozenset]:
+    """Session 27 (dead-arg): the argument registers each function may read before writing them, on
+    any path, including what the functions it calls or tail-calls read (a least fixpoint over the
+    call graph). A value left in a0-t3 at a call is an argument only if the callee reads it.
+
+    Conservative where the code leaves the function: an unknown callee, a jalr, a syscall, a switch's
+    `jr`, a branch out of the function or a fall-through past its end read every argument register.
+    After a jal the caller-saved registers are dead (the EE ABI: a callee may clobber them)."""
+    live: dict[int, frozenset] = {f_: frozenset() for f_, _x in funcs}
+    cs = frozenset(CALLER_SAVED)
+
+    def one(insns):
+        n = len(insns)
+        a0 = insns[0].addr
+        lin = [frozenset()] * (n + 2)
+
+        def callee_live(t):
+            return live.get(t, ALL_ARGS)
+
+        def through(j, after):
+            """Live before instruction j (a delay slot or a plain one) given live after it."""
+            r = gpr_reads(insns[j].word) if j < n else None
+            if r is None and j < n and insns[j].is_syscall and j > 0:
+                p_ = insns[j - 1].word  # li v1, N; syscall
+                if mips.op(p_) == 0x09 and mips.rs(p_) == 0 and mips.rt(p_) == 3 and mips.imm(p_) in SYSCALL_ARGS:
+                    r = {3} | set(ARG_REGS[:SYSCALL_ARGS[mips.imm(p_)]])
+            if r is None:
+                return after | ALL_ARGS
+            return frozenset(r) | (after - gpr_writes(insns[j].word))
+
+        def at(k):
+            if 0 <= k < n:
+                return lin[k]
+            return ALL_ARGS  # off the end of the function, or a branch outside it
+
+        changed = True
+        while changed:
+            changed = False
+            for i in range(n - 1, -1, -1):
+                x = insns[i]
+                w = x.word
+                if x.is_jal:
+                    after = (at(i + 2) - cs) | callee_live(x.jump_target)
+                    v = through(i + 1, after)
+                elif x.is_jalr:
+                    after = (at(i + 2) - cs) | ALL_ARGS
+                    v = frozenset({mips.rs(w)}) | through(i + 1, after)
+                elif x.is_j:
+                    t_ = x.jump_target
+                    k = (t_ - a0) // 4
+                    after = at(k) if a0 <= t_ < a0 + 4 * n else callee_live(t_)
+                    v = through(i + 1, after)
+                elif x.is_jr_ra:
+                    v = through(i + 1, frozenset())
+                elif x.is_jr:
+                    v = frozenset({mips.rs(w)}) | ALL_ARGS
+                elif x.is_branch:
+                    k = (x.branch_target - a0) // 4
+                    likely = mips.op(w) in (0x14, 0x15, 0x16, 0x17) or (
+                        mips.op(w) == mips.OP_REGIMM and mips.rt(w) in (0x02, 0x03, 0x12, 0x13))
+                    r = gpr_reads(w)
+                    r = ALL_ARGS if r is None else frozenset(r)
+                    if mips.op(w) == mips.OP_REGIMM and mips.rt(w) in (0x10, 0x11, 0x12, 0x13):
+                        r = ALL_ARGS  # bltzal & co: a call
+                    if likely:
+                        v = r | through(i + 1, at(k)) | at(i + 2)
+                    else:
+                        v = r | through(i + 1, at(k) | at(i + 2))
+                else:
+                    v = through(i, at(i + 1))
+                if v != lin[i]:
+                    lin[i] = v | lin[i]
+                    changed = True
+        return lin[0] & ALL_ARGS
+
+    for _round in range(64):
+        changed = False
+        for f_, insns in funcs:
+            if not insns:
+                continue
+            v = one(insns)
+            if v != live[f_]:
+                live[f_] = v | live[f_]
+                changed = True
+        if not changed:
+            break
+    else:
+        return {}  # no fixpoint: callers treat every register as live
+    return live
 
 
 def anchor_addrs(elf_path: Path) -> set[int]:
@@ -741,11 +1016,30 @@ def main() -> int:
     ap.add_argument("--no-piece-next", action="store_true",
                     help="an unbounded index keeps only the next name, even when that name is inside the base's "
                          "own piece (session 25: then the next name after the piece)")
+    ap.add_argument("--no-counter-cap", action="store_true",
+                    help="do not cap an up-counter (i = i0; ... i += k; while (i < L)) at its loop header (session 27)")
+    ap.add_argument("--no-slot-refine", action="store_true",
+                    help="refine a branch's edges after its delay slot, not before (session 27)")
+    ap.add_argument("--no-str-arg", action="store_true",
+                    help="a string literal passed to printf/strcpy/strcmp/... is not bounded by its NUL (session 27)")
+    ap.add_argument("--no-list-arg", action="store_true",
+                    help="a -1/negative-terminated list literal does not bound func_0024afc0 & co (session 27)")
+    ap.add_argument("--no-dma-count", action="store_true",
+                    help="func_00237018(buf, n) is not a block access of 16 * n bytes (session 27)")
+    ap.add_argument("--no-dma-chain", action="store_true",
+                    help="a static DMA chain sent by func_00106b18 & co is not bounded by its parsed tags (session 27)")
+    ap.add_argument("--no-dead-arg", action="store_true",
+                    help="an address left in an argument register at a call is passed even when the callee never "
+                         "reads that register (session 27)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
+    ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
+                    "with its callee, bound and reason")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
+    if not a.no_dma_count:
+        BLOCK_CALLS.update(DMA_COUNT_CALLS)
     sizes = {}
     for ln in a.data_tsv.read_text().splitlines()[1:]:
         f = ln.split("\t")
@@ -785,6 +1079,10 @@ def main() -> int:
         b_ = elf.read(addr, 4)
         return None if b_ is None else struct.unpack("<I", b_)[0]
 
+    live_in = {} if a.no_dead_arg else arg_live([(r_[1][0].addr, r_[1]) for r_ in regions
+                                                 if r_[1] and not r_[0].endswith(".x")])
+    dead_arg = 0
+
     hits: dict[tuple, set] = {}
     idx: dict[int, set] = {}
     idx_all: dict[int, set] = {}
@@ -800,6 +1098,8 @@ def main() -> int:
     ptr_stores: dict[int, set] = {}  # pointer global G -> the addresses code stores into it
     ptr_users: dict[int, set] = {}  # pointer global G -> functions that access through the pointer G holds
     ptr_reach: dict[int, int | None] = {}  # G -> end of the furthest access through it (None: indexed)
+    explain: list[str] = []
+    writes: list = []  # (address, bytes or None for an unbounded index) of every store from a known base
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -820,7 +1120,8 @@ def main() -> int:
                          countdown=not a.no_countdown, joins=not a.no_join, arg_join=not a.no_arg_join,
                          hi_index=not a.no_hi_index, cases=not a.no_switch,
                          read_word=read_word if is_func and not a.no_switch else None,
-                         ptr_globals=not a.no_ptr_global):
+                         ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
+                         slot_refine=not a.no_slot_refine):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
@@ -828,6 +1129,9 @@ def main() -> int:
                 continue
             if e[0] == "storedto":
                 ptr_stores.setdefault(e[2], set()).add(e[1])
+                continue
+            if e[0] == "wr":
+                writes.append((e[1], e[2]))
                 continue
             if e[0] == "ptrmem":
                 _k, g, off, width = e
@@ -842,7 +1146,7 @@ def main() -> int:
             if e[0] == "passidx":
                 _p, callee, j, base, ub, _pc, nblk = e
                 if BLOB_START <= base < IMAGE_END + 0x10000:
-                    passidx.append((name, callee, j, base, ub, nblk))
+                    passidx.append((name, callee, j, base, ub, nblk, _pc))
                 continue
             if e[0] == "pass":
                 _p, callee, j, v, _pc = e
@@ -922,15 +1226,138 @@ def main() -> int:
                     changed = True
         if not changed:
             break
+    anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
+    wr_small = sorted((x, n) for x, n in writes if n is not None and n <= 64)
+    wr_big = [(x, n) for x, n in writes if n is not None and n > 64]
+    wr_unb = sorted(x for x, n in writes if n is None)
+
+    def obj_written(lo, hi):
+        """Whether a store the analysis sees may write a byte of [lo, hi): an exact or bounded one that
+        overlaps it, or an unbounded index from a base inside it (session 27)."""
+        i_ = bisect.bisect_left(wr_small, (lo - 64, 0))
+        while i_ < len(wr_small) and wr_small[i_][0] < hi:
+            if wr_small[i_][0] + wr_small[i_][1] > lo:
+                return True
+            i_ += 1
+        if any(x < hi and x + n > lo for x, n in wr_big):
+            return True
+        i_ = bisect.bisect_left(wr_unb, lo)
+        return i_ < len(wr_unb) and wr_unb[i_] < hi
+
+    def str_bound(callee, j, base, ub):
+        """Offset past the NUL of a string literal at base (+ up to ub) that a STRING_ARGS callee reads
+        as argument j, when that NUL is inside the literal's own object; else None (session 27)."""
+        sk = STRING_ARGS.get(callee, {}).get(j)
+        if a.no_str_arg or not sk or ub is None or not (BLOB_START <= base and base + ub < BSS_START):
+            return None
+        k_ = bisect.bisect_right(anchors, base)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        if obj_end - base > 0x10000 or obj_written(base, obj_end):
+            return None
+        return string_end(elf.read(base, obj_end - base), ub, sk)
+
     for name, callee, j, v in sites:
         c = reach.get(callee, {}).get(j)
         if callee in BLOCK_CALLS:  # their own byte count is checked at the call
             continue
+        if str_bound(callee, j, v, 0) is not None:
+            continue  # the callee's quadword reads past the NUL are discarded (session 27)
         if c and c[1] - c[0] <= 0x40000:
             check(name, v, c[0], c[1] - c[0], f"arg{j}:{fname.get(callee, hex(callee))}:")
     # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
     # B + bound(i) + hi; unbounded when either is unknown (block functions count their bytes).
-    for name, callee, j, base, ub, nblk in passidx:
+    str_arg = 0
+    call_args: dict[tuple, dict] = {}  # (caller, pc) -> {argument: [(base, bound)]}
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        call_args.setdefault((name, pc), {}).setdefault(j, []).append((base, ub))
+
+    def list_end(name, pc, callee, j, base, ub):
+        """End of argument j's reach at a LIST_CALLS call whose list argument is one list literal (session 27)."""
+        spec = LIST_CALLS.get(callee)
+        if a.no_list_arg or not spec or ub is None or (j != spec[0] and j not in spec[3]):
+            return None
+        la = call_args.get((name, pc), {}).get(spec[0], [])
+        if len(la) != 1 or la[0][1] != 0 or not (BLOB_START <= la[0][0] < BSS_START):
+            return None
+        lb = la[0][0]
+        k_ = bisect.bisect_right(anchors, lb)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        if obj_end - lb > 0x10000 or obj_written(lb, obj_end):
+            return None
+        cnt = list_count(elf.read(lb, obj_end - lb), spec[1], spec[2])
+        if cnt is None:
+            return None
+        return base + ub + (spec[1] * (cnt + 1) if j == spec[0] else spec[3][j] * cnt)
+
+    # DMA chains (session 27): a chain object passed only to CHAIN_CALLS, never stored, indexed or written
+    # by any store the analysis sees, whose tags parse to the end inside the object: the DMA reads the
+    # tags and inline data, and each ref/refe target for 16 * qwc bytes (an access from that address).
+    uses: dict[int, set] = {}
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
+            continue  # not an argument (dead-arg)
+        uses.setdefault(base, set()).add((callee, j, ub))
+    stored_to = {x for xs in ptr_stores.values() for x in xs}
+
+    def chain_of(base):
+        if a.no_dma_chain or not (BLOB_START <= base < BSS_START) or base in stored or base in stored_to \
+                or why.get(base, set()) & {"idx", "idx-ub"} or base in uncached:
+            return None
+        if any(CHAIN_CALLS.get(c_) != j_ or u_ != 0 for c_, j_, u_ in uses.get(base, ())):
+            return None
+        k_ = bisect.bisect_right(anchors, base)
+        obj_end = min(anchors[k_] if k_ < len(anchors) else BSS_START, BSS_START)
+        if obj_end - base > 0x10000 or obj_written(base, obj_end):
+            return None  # (a store into the chain's object could change a tag)
+        return parse_chain(read_word, base, obj_end)
+
+    dma_chain = 0
+    list_arg = 0
+    for name, callee, j, base, ub, nblk, pc in passidx:
+        ch_ = chain_of(base) if CHAIN_CALLS.get(callee) == j and ub == 0 else None
+        if ch_ is not None:
+            dma_chain += 1
+            cend, refs = ch_
+            for b_, end in [(base, cend)] + [(x, x + n) for x, n in refs]:
+                why.setdefault(b_, set()).add("dma-chain" if b_ == base else "dma-ref")
+                if a.explain:
+                    explain.append(f"{b_:08x}\t{'dma-chain' if b_ == base else 'dma-ref'}\t{name}\t"
+                                   f"{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\tend=+{end - b_}\tblk=None")
+                idx_all.setdefault(b_, set()).add(name)
+                if b_ not in idx_end or (idx_end[b_] is not None and end > idx_end[b_]):
+                    idx_end[b_] = end
+                if piece(b_)[0] is not None:
+                    idx.setdefault(b_, set()).add(name)
+            continue
+        le_ = list_end(name, pc, callee, j, base, ub)
+        if le_ is not None:  # a list literal's count bounds the list and the arguments walked with it
+            list_arg += 1
+            why.setdefault(base, set()).add("arg-list")
+            if a.explain:
+                explain.append(f"{base:08x}\targ-list\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                               f"end=+{le_ - base}\tblk={nblk}")
+            idx_all.setdefault(base, set()).add(name)
+            if base not in idx_end or (idx_end[base] is not None and le_ > idx_end[base]):
+                idx_end[base] = le_
+            if piece(base)[0] is not None:
+                idx.setdefault(base, set()).add(name)
+            continue
+        z_ = str_bound(callee, j, base, ub)
+        if z_ is not None:  # a string literal read to its NUL, inside its own object (session 27)
+            str_arg += 1
+            why.setdefault(base, set()).add("arg-str")
+            if a.explain:
+                explain.append(f"{base:08x}\targ-str\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                               f"end=+{z_}\tblk={nblk}")
+            idx_all.setdefault(base, set()).add(name)
+            if base not in idx_end or (idx_end[base] is not None and base + z_ > idx_end[base]):
+                idx_end[base] = base + z_
+            if piece(base)[0] is not None:
+                idx.setdefault(base, set()).add(name)
+            continue
+        if callee in live_in and ARG_REGS[j] not in live_in[callee] and callee not in BLOCK_CALLS:
+            dead_arg += 1  # the callee never reads the register: the address is not an argument (session 27)
+            continue
         c = reach.get(callee, {}).get(j)
         if ub is not None and c and c[1] - c[0] <= 0x40000 and c[0] >= 0 \
                 and j not in wide_args.get(callee, ()) and callee not in BLOCK_CALLS:
@@ -942,6 +1369,9 @@ def main() -> int:
         r_ = ("arg-ub" if end is not None else "arg:block" if callee in BLOCK_CALLS else
               "arg:wide" if j in wide_args.get(callee, ()) else "arg:noreach" if not c else "arg:idx")
         why.setdefault(base, set()).add(r_)
+        if a.explain:
+            explain.append(f"{base:08x}\t{r_}\t{name}\t{fname.get(callee, hex(callee))}\targ{j}\tub={ub}\t"
+                           f"reach={c}\tblk={nblk}")
         idx_all.setdefault(base, set()).add(name)
         if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
             idx_end[base] = end
@@ -951,7 +1381,6 @@ def main() -> int:
     # entries) covers D_005512A0, which is entries 52..63 under its own name (session 18,
     # found from the stale writes in a RAM dump). A floated variable that is the next name
     # after an indexed base in another piece stays with it.
-    anchors = sorted(anchor_addrs(a.anchors_elf) | {p_[0] for p_ in pcs})
     bounded = []
     # stored: the address is stored; idx / arg: an unbounded index (an access, or &B[i] passed to a
     # call); -ub: a bounded one that ends past the next name
@@ -998,6 +1427,8 @@ def main() -> int:
     if a.out:
         names = sorted({n for (_b, nb, _t, nt, _k, _w) in hits for n in (nb, nt) if n})
         a.out.write_text("".join(n + "\n" for n in names))
+    if a.explain:
+        a.explain.write_text("".join(x + "\n" for x in explain))
     if a.all:
         for base, fs in sorted(idx.items()):
             print(f"{base:08x} ({piece(base)[1]}) indexed\t" + " ".join(sorted(fs)[:6]))
@@ -1007,6 +1438,11 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    print(f"# {dma_chain} DMA chain arguments are bounded by their parsed tags (dma-chain)", file=sys.stderr)
+    print(f"# {list_arg} list arguments are bounded by a list literal's count (list-arg)", file=sys.stderr)
+    print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
+    print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
+          file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
     print(f"# {len(bounded)} indexed bases have bounded accesses that end before the next name",
           file=sys.stderr)
