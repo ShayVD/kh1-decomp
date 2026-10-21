@@ -181,6 +181,44 @@ def collect_rodata(elves, funcs: list[Placed], asm_objs: list[str]) -> list[Plac
 
 FLOAT_PAD_WORD = 0xA5C35A3C  # --float-pad: data pads hold this word; bss pads stay zero
 
+# The game's fixed pools past the image (docs/shiftable-plan.md "Session 25"): func_0014a090 hands
+# out three pools from 0x6A0000 (sizes: the words of D_00350D18), func_00133628 seven from 0x720000
+# (sizes: D_00304318, each rounded down to 16). Nothing else names an address in 0x67F018-0x820000,
+# so in the moved modes both bases follow crt0's heap (_end + 0xA000) once it passes 0x6A0000;
+# the next fixed region (0x820000, func_00121c78) must stay clear.
+ARENA_POOLS = {"D_006A0000": ("D_00350D18", 3, 0), "D_00720000": ("D_00304318", 7, 4)}
+ARENA_NEXT = 0x00820000
+ARENA_ALIGN = 0x10000
+HEAP_SIZE = 0xA000  # crt0: SetupHeap(_end, 0xA000)
+
+
+def arena_sizes() -> dict[str, int]:
+    """Bytes of each fixed pool area, from the size tables in the user's ELF (ARENA_POOLS)."""
+    orig = K.require_orig(K.load_config())
+    sizes = {}
+    for name, (table, n, shift) in ARENA_POOLS.items():
+        words = struct.unpack(f"<{n}I", orig.read(int(table[2:], 16), 4 * n))
+        sizes[name] = sum((w >> shift) << shift for w in words)
+    return sizes
+
+
+def arena_lines(names: list[str]) -> list[str]:
+    """Linker-script lines that place the fixed pools after crt0's heap (see ARENA_POOLS)."""
+    if not names:
+        return []
+    sizes = arena_sizes()
+    first, second = "D_006A0000", "D_00720000"
+    if set(names) != {first, second} or 0x006A0000 + sizes[first] != 0x00720000:
+        sys.exit(f"error: fixed pools {names}: expected both, back to back (sizes {sizes})")
+    end = 0x00720000 + sizes[second]
+    return [
+        "/* Fixed pools (ARENA_POOLS): 0x006a0000 unless crt0's heap reaches it, then after the heap. */",
+        f"{first} = MAX(0x006a0000, ALIGN(_end + 0x{HEAP_SIZE:x}, 0x{ARENA_ALIGN:x}));",
+        f"{second} = {first} + 0x{sizes[first]:x};",
+        f"ASSERT({second} + 0x{sizes[second]:x} <= 0x{ARENA_NEXT:08x}, "
+        f"\"fixed pools (0x{end - 0x006A0000:x} bytes) would reach 0x{ARENA_NEXT:08x}: float less\");",
+    ]
+
 
 def float_align(addr: int) -> int:
     """A floated variable keeps the alignment its original address had, up to a cache
@@ -408,6 +446,7 @@ def cmd_gen(a) -> int:
     starts = [f.addr for f in funcs]
     labels: dict[int, list[tuple[str, int]]] = {}
     tail: list[str] = []
+    arena_names: list[str] = []
     kinds = {"label": 0, "alias": 0, "data": 0, "bss": 0, "abs": 0}
     expected: list[tuple[int, str, str]] = []
     for name in sorted(undefined):
@@ -448,6 +487,9 @@ def cmd_gen(a) -> int:
             tail.append(f"{name} = D_BSS {'+' if off >= 0 else '-'} 0x{abs(off):x};")
             kinds["bss"] += 1
             expected.append((addr, "bss", name))
+        elif name in ARENA_POOLS and a.mode in ("m2", "m12") and not a.fixed_arena:
+            arena_names.append(name)
+            kinds["abs"] += 1
         else:
             tail.append(f"{name} = 0x{addr:08x};  /* fixed address outside the image */")
             kinds["abs"] += 1
@@ -496,6 +538,11 @@ def cmd_gen(a) -> int:
             else:
                 dkept.append(v)
         floating -= {v.name for v in dkept}
+        # what the budgets left out, smallest first (for choosing the next budget)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        write(out_dir / "float_over_budget.tsv", "kind\tname\taddr\tsize\n" + "".join(
+            f"{k}\t{v.name}\t{v.addr:08x}\t0x{v.size:x}\n" for k, vs in (("data", dkept), ("bss", kept))
+            for v in sorted(vs, key=lambda v: (v.size, v.addr))))
         if dkept:
             print(f"shift-ld: --float-vars: {len(dkept)} data variables over the 0x{a.float_data_budget:x} budget "
                   f"stay in the blob (0x{sum(v.size for v in dkept):x} bytes); "
@@ -823,6 +870,7 @@ def cmd_gen(a) -> int:
         "",
         "/* Data and bss names: blob/bss base + offset; fixed addresses outside the image. */",
         *tail,
+        *arena_lines(arena_names),
         "",
     ]
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -921,6 +969,8 @@ def main() -> int:
                    help="--float-vars: N bytes after the floated data (moves .bss up without floating more; experiment)")
     g.add_argument("--float-bss-gap", type=lambda x: int(x, 0), default=0, metavar="N",
                    help="--float-vars: N bytes between the original .bss end and the floated bss (experiment)")
+    g.add_argument("--fixed-arena", action="store_true",
+                   help="moved modes: keep the fixed pools at 0x6A0000/0x720000 even when crt0's heap reaches them")
     g.add_argument("--bss-pad", type=lambda x: int(x, 0), default=0, help="experiment: pad before .bss")
     g.add_argument("--ovl-fixups", default=None, help="overlay fixup table object (ovl_fixups.s), M1/M2")
     g.add_argument("--ovl-hook", default=None, help="the KH1_OVL_FIXUPS hook object (shift/ovl_fixup.c)")

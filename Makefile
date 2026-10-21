@@ -197,6 +197,9 @@ SHIFT_FLOAT_DATA_GAP ?= 0
 # SHIFT_FLOAT_BSS_SLOTS="names" or @FILE: only the bss runs holding these names move, each to the address it has
 # when every run floats (the other runs stay in place and leave their slot empty). Bisects a bss float by address.
 SHIFT_FLOAT_BSS_SLOTS ?=
+# SHIFT_FIXED_ARENA=1: keep the fixed pools at 0x6A0000/0x720000 (moved modes move them after crt0's
+# heap when _end + 0xA000 reaches 0x6A0000; shift_ld ARENA_POOLS, docs/shiftable-plan.md "Session 25").
+SHIFT_FIXED_ARENA ?= 0
 # Overlay fixups (m1/m2 only): SHIFT_OVERLAYS = directory of the user's .x files
 # (tools/shift/extract_kingdom.py; missing = empty table); SHIFT_OVL_TIER: data words
 # with tier <= N are fixed (default 2: code evidence); SHIFT_OVL_FIXUPS=0: no hook, no table.
@@ -253,7 +256,7 @@ endif
 		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)$(SHIFT_FLOAT_FORCE)" ]; \
 		if [ -n "$(SHIFT_FLOAT_FORCE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt $(SHIFT_FLOAT_FORCE); fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
-		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
+		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \
 		$(foreach f,$(SHIFT_ALIASES),--aliases $(f))
 	@$(AS) $(ASFLAGS_SHIFT) -o $(SHIFT_OUT)/blob.o $(SHIFT_OUT)/blob.s
