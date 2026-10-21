@@ -192,13 +192,27 @@ class Links:
         delta = nsym["D_BSS"] - rsym["D_BSS"]
         floated = sorted((r[0], r[0] + r[1], nb[k][0]) for k, r in rb.items()
                          if r[1] and k in nb and nb[k][0] - r[0] != delta)
+        # SHIFT_FLOAT_COMPACT (compact.tsv from shift_ld.py): the floated runs' old slots shrank,
+        # so the rest of .bss moves down by what the holes before it gave back.
+        bss_cut: list[tuple[int, int]] = []  # (original hole end, total given back up to it)
+        ct = new / "compact.tsv"
+        if ct.exists():
+            for line in ct.read_text().splitlines()[1:]:
+                region, _lo, hi, cut = line.split("\t")
+                if region == "bss":
+                    bss_cut.append((int(hi, 16), int(cut, 16) + (bss_cut[-1][1] if bss_cut else 0)))
+        cut_ends = [e for e, _ in bss_cut]
+
+        def given_back(a: int) -> int:
+            i = bisect.bisect_right(cut_ends, a)
+            return bss_cut[i - 1][1] if i else 0
         cur = rsym["D_BSS"]
         for fa, fe, na in floated:
             if fa > cur:
-                pieces.append((cur, fa, cur + delta))
+                pieces.append((cur, fa, cur + delta - given_back(cur)))
             pieces.append((fa, fe, na))
             cur = fe
-        pieces.append((cur, rsym["_end"], cur + delta))
+        pieces.append((cur, rsym["_end"], cur + delta - given_back(cur)))
         # The fixed pools follow crt0's heap when it reaches them (shift_ld ARENA_POOLS): the two
         # bases and everything up to the next fixed region (0x820000) move together.
         self.arena = nsym.get("D_006A0000", 0x006A0000)

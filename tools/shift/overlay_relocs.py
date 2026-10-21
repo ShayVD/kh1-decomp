@@ -200,9 +200,9 @@ class Main:
         i = bisect.bisect_right(self.var_starts, v) - 1
         if k in ("data", "bss") and i >= 0 and v < self.vars[i][1]:
             return self.vars[i][2], v - self.vars[i][0], ""
-        if k == "data":
-            return "D_BLOB", v - DATA_LO, ""
-        return "D_BSS", v - BSS_LO, ""
+        # an address outside the C variables: its own D_ name, which shift_ld.py defines from the
+        # original address (blob or bss base + offset, adjusted when SHIFT_FLOAT_COMPACT closes holes)
+        return f"D_{v:08X}", 0, ""
 
     def name(self, v: int) -> str:
         k = self.kind(v)

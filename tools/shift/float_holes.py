@@ -4,7 +4,8 @@
   python3 -I tools/shift/float_holes.py STATE.p2s [--out-dir out/shift/m12-float]
 
 A SHIFT_FLOAT build leaves each floated variable's old place as a zero gap (crt0
-clears it with the rest of .bss). Code that still reaches the old place, through a
+clears it with the rest of .bss; with SHIFT_FLOAT_COMPACT only the part of it that was
+not given back, read from compact.tsv). Code that still reaches the old place, through a
 base no relocation names (an array indexed past its declared end into the next
 name, a field reached from another object), writes there. Run the build in PCSX2
 until it misbehaves, save a state to a file (System > Save State > Save To File),
@@ -57,11 +58,29 @@ def main() -> int:
     pcs = pieces_from_ld(a.out_dir / "kh1-shift.ld", sizes)
     syms = {s.name: s.value for s in Elf.load(a.out_dir / "kh1-shift.linked.elf").symbols()}
     d_bss, d_blob = syms["D_BSS"] - BSS_START, syms["D_BLOB"] - 0x00272C70
+    # SHIFT_FLOAT_COMPACT: each run of floated slots kept only its first (size - shrink) bytes,
+    # and everything after it moved down by the shrink (compact.tsv)
+    holes = {"data": [], "bss": []}
+    ct = a.out_dir / "compact.tsv"
+    if ct.exists():
+        for ln in ct.read_text().splitlines()[1:]:
+            region, lo, hi, cut = ln.split("\t")
+            holes[region].append((int(lo, 16), int(hi, 16), int(cut, 16)))
+
+    def placed(start: int, end: int) -> tuple[int, int]:
+        """(where the old place of [start, end) is now, how many bytes of it are left)."""
+        hs = holes["bss" if start >= BSS_START else "data"]
+        before = sum(c for lo, hi, c in hs if hi <= start)
+        for lo, hi, c in hs:
+            if lo <= start < hi:
+                return start - before, max(0, min(end, hi - c) - start)
+        return start - before, end - start
     ee = ee_memory(a.state)
     n = 0
     for start, end, run, name in pcs:
         d = d_bss if start >= BSS_START else d_blob
-        hole = ee[start + d:end + d]
+        at, left = placed(start, end)
+        hole = ee[at + d:at + d + left]
         nz = [i for i, b in enumerate(hole) if b]
         if not nz:
             continue
