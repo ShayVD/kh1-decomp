@@ -2182,3 +2182,77 @@ batch, and the M12 float build's kh1-shift.elf is unchanged (same sha256 as KH1_
   casts in hand code; volatile mismatches change code (D_002A3F50).
 - Helpers: tools/shift/s25types/ (s25_unify.py one piece + one declaration with the `-S` check; the drive
   scripts batch it; README there).
+
+## Session 26: the memory map past 0x820000, and everything floats
+
+### The fixed regions (static scan of the ELF and all twelve overlays)
+
+Every `lui` of 0x82..0x1FF (and the 0x20/0x30 mirrors) paired with an `addiu`/load in the main ELF's
+code, and in each overlay: the `ori` pairs and unpaired `lui`s are masks, colours and float bits.
+
+| Region | Who names it | What it is |
+| --- | --- | --- |
+| 0x6A0000-0x7F2C00 | func_0014a090, func_00133628 | the fixed pools (session 25); 0x7F2C00-0x820000 unused |
+| **0x820000-0x9A0000** | func_00121c78 (base), func_00121d60 (end, D_009A0000) | a block heap: 511 20-byte records from D_004F45B0 (+4 start, +8 size, +0x10 next); the head's block starts at D_00820000 |
+| 0x9A0000-0xF20000 | func_00109388 (func_0011cb80 / func_0011cd20 at boot), func_001129c8 (D_004D92DC = D_009A0000), dktitle.x (0x9A0000 and 0xBA0000) | a load area; in the savestates up to 0xE42100 |
+| 0xF20000- | 28 places; every overlay is linked there | overlays; wm.x's bss runs to about 0x1090000, so it overlaps the next region while the world map is loaded |
+| 0xF45200 | func_001e1c20 | a fixed address inside the overlay area |
+| 0xFE0000-0x12E0000 | func_00124218, func_00155760, func_00155878, func_001559a8, func_001559f0, func_00155c68 | 12 slots of 0x40000 (D_00550400, 72-byte entries; `sra 18` maps an address back to its slot) |
+| 0x1CE0000- | func_00155a50 (returns it) | used up to the stack in every savestate |
+| 0x1FE0000 | crt0 (func_00100008) | the stack |
+
+Only func_00121c78 names 0x820000 (no overlay does), and nothing holds an address inside the heap at
+build time. The overlays at 0xF20000 cannot move (linked there), and dktitle.x names 0x9A0000 itself, so
+the load area stays.
+
+### How much each region uses: tools/shift/mem_regions.py
+
+`python3 -I tools/shift/mem_regions.py STATE.p2s [--heap-base N]` prints, per region, the last non-zero
+byte (an upper bound on the high-water mark: PCSX2 starts with zeroed RAM and freed memory keeps its
+bytes) and a map of 64 KB blocks, and walks the heap's free list. Over the session 19-26 savestates
+(title, Agrabah, Gate Plaza, fights, the ship, End of the World):
+
+| State | heap blocks in use | heap high-water (from the base) |
+| --- | --- | --- |
+| s19_f19d_title | 1 | 0 |
+| s19_fight1 (Agrabah fight) | 65 | 0x9E038 (the largest) |
+| s21_q4000_agrabah | 42 | 0x65D34 |
+| s22_pad_alley (Gate Plaza) | 55 | 0x78780 |
+| s26_f26a_ship (Neverland, fight) | 53 | 0x79040 |
+| s26_f26b_eotw (End of the World, fight) | 62 | 0x69708 |
+
+The heap is 0x180000 bytes; the game uses at most about 0xA0000 of it in these states.
+
+### shift_ld BLOCK_HEAP: the heap base follows the pools
+
+In the moved modes `D_00820000 = MAX(0x820000, ALIGN(D_00720000 + pools, 0x1000))`, so the base moves
+only once the pools reach it; its end stays at D_009A0000, so the heap shrinks by as much.
+`ASSERT(D_00820000 + 0xE0000 <= 0x9A0000)` (BLOCK_HEAP_MIN: the high-water mark above plus a margin)
+replaces session 25's "pools must end by 0x820000". shift_cmp maps the base and prints "block heap base
+moved after the pools". `SHIFT_FIXED_HEAP=1` (`--fixed-heap`) keeps it at 0x820000 (then the old assert
+applies).
+
+**Defaults are now data 0x100000, bss 0x100000**: the budgets leave nothing out
+(float_over_budget.tsv is empty). The three big tables (D_0040EF80, D_002E31F0, D_00308CE0) and the
+D_004F8310 / 0x30C9C bss runs float. KH1_F26_A = the default build: 1,602 floated variables, `_end`
+0x74B164, pools at 0x756000, heap at 0x8A9000 (0xF7000 of 0x180000 left).
+
+| ELF | build | result |
+| --- | --- | --- |
+| F26_A | the default (everything the checks allow) | load menu, test T, a fight in Gate Plaza, world map warp drive to Neverland, a fight on the ship: OK; float_holes: 0 of 1,602 floated names written at their old place |
+| F26_B | + SHIFT_FLOAT_FORCE="D_0046E120 D_00472160" (DMA chains 0 and 1-2 whole), heap at 0x8B5000 | test T and a fight in Gate Plaza, save 05 (End of the World) and a fight there: OK |
+
+**Every floated byte costs twice**: the blob keeps the original slot, and the copy goes after the image,
+so each name floated shrinks the block heap. With the staging arena D_003F8380 (0x16C00) forced as well,
+the link fails the BLOCK_HEAP_MIN assert. Cutting floated pieces out of the blob (or ending the blob
+at the last kept name) is what gives the room back; that is the next step if more must float.
+
+### What the float still pins
+
+1,848 names stay in place in the default build: reach_check 1,803 (an index or a walk may run into the
+next name), addend_check 72, cover_check, split_check and float_keep.txt (several overlap).
+keep_check's 38 runtime names are all still held, and all but D_0063F540, D_002A6274/78 (addend_check)
+and the merged labels are held by reach_check by itself, so float_keep.txt only adds D_0063F540 today.
+The pins that runtime has shown to be safe as whole pieces: DMA chains 0 and 1-2 (F24_REC3, F26_B). They
+stay pinned because reach_check finds the indexing that crosses into the next chain (idx-next) and each
+costs heap; floating them is a SHIFT_FLOAT_FORCE experiment, not the default.

@@ -876,3 +876,18 @@ found that the next session needs:
 - **Phase 4** (worker s25types): 129 "users disagree" pieces typed; users include include/data/pieces/D_X.h
   in place of their extern, accepted only when every changed file's `-S` output is identical with no new
   warning (tools/shift/s25types/). 145 left, reasons in their comments.
+
+## Session 26: what changed
+
+- **The block heap at 0x820000 follows the pools** (docs/shiftable-plan.md "Session 26"): func_00121c78's heap
+  base D_00820000 moves after the fixed pools once they reach it (its end, D_009A0000, stays), with an assert that
+  0xE0000 bytes are left. `SHIFT_FIXED_HEAP=1` keeps it. The memory map past 0x820000 is in that section.
+- **Everything the checks allow floats by default** (budgets 0x100000): KH1_F26_A plays the load menu, test T, a
+  Gate Plaza fight, the warp drive to Neverland and a fight on the ship. A floated name still costs its old slot
+  too, so each extra name forced to float shrinks the heap.
+- **tools/shift/mem_regions.py STATE.p2s**: per fixed region the high-water mark and a 64 KB map, and the block
+  heap's free list.
+- **PCSX2 test memcard**: save 05 is End of the World (闇への入口), not Traverse Town; save 06 is Agrabah. From
+  the load menu (cursor on 06) Up picks 05.
+- System > Reset reboots the same ISO (no need to shut down unless the ISO changes). A batch's waits must total
+  50 s or less, holds included.
