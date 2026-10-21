@@ -2330,3 +2330,56 @@ or self-contained in the piece header under a unique name: SV62B4, Blk26C0, UvTa
 Helpers: tools/shift/s26types/ (README there): s26_cast.py (one declaration + casts; `hdr` for hand
 unifications), s26_union.py (union of views, `--elem`, `--cast F`), s26_check.py (-S of changed files vs
 HEAD), s26_hdrcheck.py.
+
+## Session 27: floated slots are given back (SHIFT_FLOAT_COMPACT, default on)
+
+Until session 26 a floated variable cost its size twice: its original slot stayed in the layout as a hole
+(`. += size` in the .data script; an empty range of .bss) and the copy went after the image, so every name
+floated pushed `_end`, the fixed pools and the block heap up.
+
+### shift_ld --float-compact
+
+- After the budgets, every run of **contiguous** floated slots (data: the `primary` blob list; bss: the floated
+  runs) is a hole. It shrinks by the largest multiple of **64** (`COMPACT_ALIGN`) that fits; the rest of the hole
+  stays. Everything after it moves down by the shrink, so every kept name keeps its offset inside its cache line
+  (the same 64 float_align keeps for floated names: DMA, SIF and cache-range code rely on it). Kept sections
+  aligned beyond 64 would make shift_ld fail (none today). Holes shorter than 64 bytes stay.
+- Data: the shrink is taken from the run's last slots (`. += size - cut`, or a comment when a slot is gone
+  entirely). Bss: kept variables are placed at `D_BSS + compact offset`, and the end of the original .bss as well.
+- Every `D_BLOB + off` / `D_BSS ± off` the script and blob.s emit (tail names, `.rodup_` merged rodata copies,
+  `.word D_BLOB+x` / `D_BSS+x` blob relocations) is rewritten with the piecewise map (`CompactMap`): subtract what
+  the holes ending at or before the address gave back. An address strictly inside a hole is an error (the older
+  in_floated check already refuses names and blob words that point into a floated variable).
+- `out/shift/<mode>-float/compact.tsv` (region, start, end, shrink per hole) feeds shift_cmp.py (bss pieces
+  between floated variables move by `delta - given back`; data pieces come from the link map as before) and
+  float_holes.py (only the first `size - shrink` bytes of each hole are still a hole).
+- overlay_relocs.py now names an overlay target outside the C variables `D_XXXXXXXX` (shift_ld defines it like
+  any other name, compact or not) instead of `D_BLOB+x`; there were none today. shift_ld collects the fixup
+  table's undefined names too (and skips its `__dr_` labels, which `--ovl-labels` defines).
+- Makefile: `SHIFT_FLOAT_COMPACT ?= 1`; `SHIFT_FLOAT_COMPACT=0` keeps the holes (output dir `m12-float-holes`).
+  The holes build is byte-identical to session 26's default (KH1_F26_A).
+- crt0: `_gp` = `_edata` and D_BSS = `_gp + 0x30` still hold (0x004A3DD0 / 0x004A3E00); shift_cmp checks them.
+
+| | holes (F26_A) | compact (F27_C1) |
+| --- | --- | --- |
+| data given back | 0 | 0x89880 (90 holes; 1,082 floated data slots, most in runs) |
+| bss given back | 0 | 0x3B640 (28 holes) |
+| `_end` | 0x74B164 | 0x6862A4 |
+| fixed pools | moved to 0x756000 | back at 0x6A0000 (`_end + 0xA000` is below it) |
+| block heap | 0x8A9000 (0xF7000 left) | back at 0x820000 (0x180000) |
+
+### Floating is now free
+
+With compaction a forced name gives its slot back, so floating more no longer shrinks anything: KH1_F27_C2 =
+default + `SHIFT_FLOAT_FORCE="D_003F8380 D_0046E120 D_00472160"` (the 0x16C00 staging arena, which session 26
+could not fit, and DMA chains 0 and 1-2) has the same `_end` 0x6862A4 (0xAC540 data bytes given back).
+
+| ELF | build | result (PCSX2) |
+| --- | --- | --- |
+| F27_C1 | the default (compact) | load menu, test T, Gate Plaza into the desert (area change) and a fight there, world map warp drive to Neverland, a fight on the ship, save 05 End of the World and a fight; float_holes 0 of 1,602; block heap at 0x820000, high-water 0x899040 |
+| F27_C2 | + staging arena and chains 0, 1-2 forced | test T, a desert fight, End of the World (the field is drawn: the staging arena whole is fine) and a fight; float_holes 0 of 1,605 |
+
+The forced names stay out of the default: reach_check still pins them (D_003F8370's index may reach the arena;
+the chains' idx-next), and float_keep.txt lists them. The IOP block (D_0063D640, 0x2000 bytes the IOP writes by
+DMA) cannot be tried this way: it is not a C object, only its fields D_0063F248 / D_0063F540 are, and those
+fail alone (session 18). It needs a piece covering the whole block first.
