@@ -37,6 +37,12 @@ The piece's comment loses "untyped" when its own name got a declaration
 (a merged piece keeps "merged (...)"); a piece whose name no C user declares
 keeps it, saying so.
 
+With --all-users a piece is typed only when one type serves every file that
+names it (the second pass: "users disagree" and the like); the merged pieces
+take the largest declaration whatever the others say. Any file that names a
+declared name tries the header, not only those with the same extern text
+(--includes-only reruns that for every header).
+
 Without --apply only the plan is printed. Nothing here reads game bytes."""
 from __future__ import annotations
 
@@ -155,7 +161,7 @@ def plan(note: str, names: list[str], exclude: set[str]):
     out = []
     for p, n, off, room in rows:
         if n in declared:
-            out.append(dict(piece=p, name=n, off=off, header=declared[n], existing=True))
+            out.append(dict(piece=p, name=n, off=off, header=declared[n], existing=True, mention=mentions.get(n, [])))
             continue
         cands = []
         for (tspec, decl), fns in decls[n].items():
@@ -168,18 +174,18 @@ def plan(note: str, names: list[str], exclude: set[str]):
             cands.append((score, tspec, decl, fn, fns))
         if not cands:
             why = "no C user declares it" if not decls[n] else "no declaration fits"
-            out.append(dict(piece=p, name=n, off=off, why=why))
+            out.append(dict(piece=p, name=n, off=off, why=why, mention=mentions.get(n, [])))
             continue
         cands.sort(key=lambda c: c[0], reverse=True)
         score, tspec, decl, fn, fns = cands[0]
         kind, where = type_home(fn, base_name(tspec))
         if kind is None:
-            out.append(dict(piece=p, name=n, off=off, why=where))
+            out.append(dict(piece=p, name=n, off=off, why=where, mention=mentions.get(n, [])))
             continue
         hdecl = decl
         if off == 0 and decl.endswith("[]") and decl.count("[") == 1 and room % score[0] == 0:
             hdecl = decl[:-2] + f"[{room // score[0]:#x}]"
-        out.append(dict(piece=p, name=n, off=off, tspec=tspec, decl=decl, hdecl=hdecl, src=fn, users=fns,
+        out.append(dict(piece=p, name=n, off=off, tspec=tspec, decl=decl, hdecl=hdecl, src=fn, users=fns, mention=mentions.get(n, []),
                         size=score[0], kind=kind, where=where, tname=base_name(tspec),
                         others=sum(len(c[4]) for c in cands[1:]) + sum(
                             len(v) for k, v in decls[n].items() if k not in {(c[1], c[2]) for c in cands})))
@@ -307,23 +313,7 @@ def apply(rows) -> None:
             for r in hr:
                 r["header"] = f"data/pieces/{path.name}"
     # 3. users
-    users: dict[str, set] = {}
-    for r in rows:
-        if "tspec" not in r:
-            continue
-        for fn in r["users"]:
-            users.setdefault(fn, set()).add(r["header"])
-    for fn, hs in sorted(users.items()):
-        path = ROOT / fn
-        for inc in sorted(hs):
-            text = path.read_text()
-            if f'#include "{inc}"' in text:
-                continue
-            if compiles_with(path, inc):
-                path.write_text(text + ("" if text.endswith("\n") else "\n") + f'#include "{inc}"\n')
-                print(f"include\t{fn}\t{inc}", file=sys.stderr)
-            else:
-                print(f"keep\t{fn}\t{inc}", file=sys.stderr)
+    include_users(sorted({ROOT / "include" / r["header"] for r in rows if "tspec" in r}))
     # 4. the comments in src/data
     heads_done = {r["piece"][1]: r for r in rows if r["off"] == 0}
     by_src: dict[Path, list] = {}
@@ -337,6 +327,8 @@ def apply(rows) -> None:
                 new = old.replace("/* untyped: merged", "/* merged").replace("/* untyped: ", "/* was untyped: ") \
                     if "untyped: merged" in old else ""
                 new = new.replace(" */", f"; {r['header']} */") if new else f"/* {r['header']} */"
+            elif "untyped: merged" not in old:
+                continue  # left as it was
             else:
                 inner = [x for x in rows if x["piece"] is r["piece"] and x["off"] and "header" in x]
                 tail = f"; labels in {inner[0]['header']}" if inner else ""
@@ -350,14 +342,87 @@ def apply(rows) -> None:
         src.write_text(text)
 
 
+def include_users(headers: list[Path]) -> None:
+    """Every file that names a name a piece header declares includes that header at its
+    end, when it still compiles with it (its own declaration is compatible: the same, or
+    `T D[]` against `T D[N]`, `M2C_UNK` against `s32`)."""
+    files = c_files()
+    for hdr in headers:
+        inc = str(hdr.relative_to(ROOT / "include"))
+        names = set(re.findall(r"^extern .*?\b(D_[0-9A-F]{8})\b", hdr.read_text(), re.M))
+        for fn, text in sorted(files.items()):
+            if f'#include "{inc}"' in text or not names & set(re.findall(r"\bD_[0-9A-F]{8}\b", text)):
+                continue
+            path = ROOT / fn
+            if compiles_with(path, inc):
+                text = path.read_text()
+                text += ("" if text.endswith("\n") else "\n") + f'#include "{inc}"\n'
+                path.write_text(text)
+                files[fn] = text
+                print(f"include\t{fn}\t{inc}", file=sys.stderr)
+            else:
+                print(f"keep\t{fn}\t{inc}", file=sys.stderr)
+
+
+def compiles_with_text(src: Path, header_text: str) -> bool:
+    with tempfile.TemporaryDirectory() as td:
+        (Path(td) / "kh1_probe_piece.h").write_text(header_text)
+        p = Path(td) / src.name
+        p.write_text(src.read_text() + '\n#include "kh1_probe_piece.h"\n')
+        r = subprocess.run([str(CC), "-fsyntax-only", "-x", "c", "-O2", "-G0", "-fno-common", f"-I{td}",
+                            f"-I{ROOT/'include'}", f"-I{ROOT/'src'}", f"-I{src.parent}", str(p)],
+                           capture_output=True, text=True)
+        return r.returncode == 0
+
+
+def all_users(rows) -> None:
+    """Keep a piece's declarations only when one type serves every file that names
+    the piece or a name inside it (each compiles with them at its end); otherwise the
+    piece stays as it was. A type the chosen file defines must be named by no other file."""
+    by_piece: dict[str, list] = {}
+    for r in rows:
+        by_piece.setdefault(r["piece"][1], []).append(r)
+    for piece, rs in by_piece.items():
+        typed = [r for r in rs if "tspec" in r]
+        if not typed:
+            continue
+        why = ""
+        for r in typed:
+            if r["kind"] == "local" and set(r["mention"]) != {r["src"]}:
+                why = f"{r['tname']} is local to {r['src']} and other files name {r['name']}"
+        if not why:
+            incs = sorted({r["where"] for r in typed if r["kind"] == "header"})
+            text = "#include \"common.h\"\n#include \"m2c.h\"\n" + "".join(f'#include "{i}"\n' for i in incs) + \
+                "".join(f"extern {r['tspec']} {r['hdecl']};\n" for r in typed if r["kind"] != "local")
+            for fn in sorted({f for r in rs for f in r["mention"]}):
+                if not compiles_with_text(ROOT / fn, text):
+                    why = f"{fn} does not compile with it"
+                    break
+        if why:
+            for r in typed:
+                del r["tspec"]
+                r["why"] = why
+            print(f"refused\t{piece}\t{why}", file=sys.stderr)
+
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--note", default="untyped: merged")
     ap.add_argument("--name", action="append", default=[])
     ap.add_argument("--exclude", action="append", default=[])
+    ap.add_argument("--all-users", action="store_true",
+                    help="type a piece only when one type serves every file that names it")
+    ap.add_argument("--includes-only", action="store_true",
+                    help="only (re)try the includes of every include/data/pieces/ header")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
+    if a.includes_only:
+        include_users(sorted((ROOT / "include/data/pieces").glob("D_*.h")))
+        return 0
     rows = plan(a.note, a.name, set(a.exclude))
+    if a.all_users:
+        all_users(rows)
     for r in rows:
         if r.get("existing"):
             print(f"{r['piece'][1]}\t+{r['off']:#x}\t{r['name']}\t(declared in {r['header']})")

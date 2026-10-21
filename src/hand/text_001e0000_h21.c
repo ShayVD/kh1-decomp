@@ -414,3 +414,4 @@ u32 func_001ee118(void) {
     return *(volatile u32 *)&D_002BBDF4 * D_002BBDEC;
 }
 #include "data/pieces/D_00389C90.h"
+#include "data/pieces/D_002C5958.h"

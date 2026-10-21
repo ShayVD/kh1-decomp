@@ -812,3 +812,4 @@ void func_001247e8(Obj123 *o) {
 #include "data/data_0035.h"
 #include "data/data_0049.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002C1378.h"

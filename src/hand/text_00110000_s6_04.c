@@ -73,3 +73,4 @@ void func_0011eb88(s32 a0, s32 a1, s32 a2, void (*a3)(void)) {
 }
 #include "data/bss_004E_mixed.h"
 #include "data/data_002C.h"
+#include "data/pieces/D_002C1378.h"
