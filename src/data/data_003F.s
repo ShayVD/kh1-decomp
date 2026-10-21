@@ -40,26 +40,26 @@
 	.word func_0020c070
 	PIECE_BYTES D_003F3200, 0x4, 0x2c
 	PIECE_END D_003F3200, 0x30
-	PIECE_BEGIN D_003F3230, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3230, D_003F3258 */
+	PIECE_BEGIN D_003F3230, 0x50, 16  /* merged (a user declares it larger than the next name): D_003F3230, D_003F3258; data/data_003F.h */
 	.word func_0020c150
 	PIECE_BYTES D_003F3230, 0x4, 0x24
 	PIECE_LABEL D_003F3230, D_003F3258, 0x28
 	PIECE_BYTES D_003F3230, 0x28, 0x28
 	PIECE_END D_003F3230, 0x50
-	PIECE_BEGIN D_003F3280, 0x48, 8  /* untyped: merged (a user declares it larger than the next name): D_003F3280, D_003F32A8 */
+	PIECE_BEGIN D_003F3280, 0x48, 8  /* merged (a user declares it larger than the next name): D_003F3280, D_003F32A8; data/data_003F.h */
 	.word func_0020c168
 	PIECE_BYTES D_003F3280, 0x4, 0x24
 	PIECE_LABEL D_003F3280, D_003F32A8, 0x28
 	PIECE_BYTES D_003F3280, 0x28, 0x20
 	PIECE_END D_003F3280, 0x48
 	PIECE D_003F3308, 0x28, 8
-	PIECE_BEGIN D_003F3330, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3330, D_003F3358 */
+	PIECE_BEGIN D_003F3330, 0x40, 16  /* merged (a user declares it larger than the next name): D_003F3330, D_003F3358; data/data_003F.h */
 	.word func_0020c1c8
 	PIECE_BYTES D_003F3330, 0x4, 0x24
 	PIECE_LABEL D_003F3330, D_003F3358, 0x28
 	PIECE_BYTES D_003F3330, 0x28, 0x18
 	PIECE_END D_003F3330, 0x40
-	PIECE_BEGIN D_003F3370, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F3370, D_003F3398, D_003F33A8 */
+	PIECE_BEGIN D_003F3370, 0x50, 16  /* untyped: no C user declares it (merged); labels in data/data_003F.h */
 	.word func_0020ca68
 	PIECE_BYTES D_003F3370, 0x4, 0x24
 	PIECE_LABEL D_003F3370, D_003F3398, 0x28
@@ -120,7 +120,7 @@
 	PIECE D_003F3518, 0x4, 4
 	PIECE D_003F351C, 0x4, 4
 	PIECE D_003F3520, 0x10, 16
-	PIECE_BEGIN D_003F3530, 0x340, 16  /* untyped: merged (a user declares it larger than the next name): D_003F37A0 */
+	PIECE_BEGIN D_003F3530, 0x340, 16  /* merged (a user declares it larger than the next name): D_003F37A0; data/pieces/D_003F3530.h */
 	PIECE_BYTES D_003F3530, 0x0, 0x270
 	PIECE_LABEL D_003F3530, D_003F37A0, 0x270
 	PIECE_BYTES D_003F3530, 0x270, 0xd0
@@ -289,12 +289,12 @@
 	.word func_00216078
 	PIECE_BYTES D_003F4020, 0x4, 0x2c
 	PIECE_END D_003F4020, 0x30
-	PIECE_BEGIN D_003F4050, 0x30, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4050, D_003F4068 */
+	PIECE_BEGIN D_003F4050, 0x30, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003F4050, 0x0, 0x18
 	PIECE_LABEL D_003F4050, D_003F4068, 0x18
 	PIECE_BYTES D_003F4050, 0x18, 0x18
 	PIECE_END D_003F4050, 0x30
-	PIECE_BEGIN D_003F4080, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4080, D_003F4098, D_003F40A8 */
+	PIECE_BEGIN D_003F4080, 0x40, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003F4080, 0x0, 0x18
 	PIECE_LABEL D_003F4080, D_003F4098, 0x18
 	PIECE_BYTES D_003F4080, 0x18, 0x10
@@ -302,7 +302,7 @@
 	PIECE_BYTES D_003F4080, 0x28, 0x18
 	PIECE_END D_003F4080, 0x40
 	PIECE D_003F40C0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE_BEGIN D_003F40D0, 0xa0, 16  /* untyped: merged (a user declares it larger than the next name): D_003F40D0, D_003F40E8, D_003F40F8, D_003F4148 */
+	PIECE_BEGIN D_003F40D0, 0xa0, 16  /* untyped: no C user declares it (merged); labels in data/pieces/D_003F40D0.h */
 	PIECE_BYTES D_003F40D0, 0x0, 0x18
 	PIECE_LABEL D_003F40D0, D_003F40E8, 0x18
 	PIECE_BYTES D_003F40D0, 0x18, 0x10
@@ -327,12 +327,12 @@
 	PIECE_LABEL D_003F40D0, D_003F4148, 0x78
 	PIECE_BYTES D_003F40D0, 0x78, 0x28
 	PIECE_END D_003F40D0, 0xa0
-	PIECE_BEGIN D_003F4170, 0x50, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4170, D_003F4198 */
+	PIECE_BEGIN D_003F4170, 0x50, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003F4170, 0x0, 0x28
 	PIECE_LABEL D_003F4170, D_003F4198, 0x28
 	PIECE_BYTES D_003F4170, 0x28, 0x28
 	PIECE_END D_003F4170, 0x50
-	PIECE_BEGIN D_003F41C0, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F41C0, D_003F41E8 */
+	PIECE_BEGIN D_003F41C0, 0x40, 16  /* untyped: no C user declares it (merged); labels in data/data_003F.h */
 	PIECE_BYTES D_003F41C0, 0x0, 0x28
 	PIECE_LABEL D_003F41C0, D_003F41E8, 0x28
 	.word D_003F4148
@@ -343,7 +343,7 @@
 	PIECE_END D_003F41C0, 0x40
 	PIECE D_003F4200, 0x168, 8
 	PIECE D_003F4368, 0x18, 8
-	PIECE_BEGIN D_003F4380, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_003F4380, D_003F43A8, D_003F43B8, D_003F43C8 */
+	PIECE_BEGIN D_003F4380, 0x70, 16  /* merged (a user declares it larger than the next name): D_003F4380, D_003F43A8, D_003F43B8, D_003F43C8; data/data_003F.h */
 	PIECE_BYTES D_003F4380, 0x0, 0x28
 	PIECE_LABEL D_003F4380, D_003F43A8, 0x28
 	PIECE_BYTES D_003F4380, 0x28, 0x10
@@ -549,7 +549,7 @@
 	PIECE D_003F5C24, 0x4, 4
 	PIECE D_003F5C28, 0x4, 4
 	PIECE D_003F5C2C, 0x4, 4
-	PIECE_BEGIN D_003F5C30, 0x14, 4  /* untyped: merged (a user declares it larger than the next name): D_003F5C34, D_003F5C38, D_003F5C3C */
+	PIECE_BEGIN D_003F5C30, 0x14, 4  /* merged (a user declares it larger than the next name): D_003F5C34, D_003F5C38, D_003F5C3C; data/pieces/D_003F5C30.h */
 	PIECE_BYTES D_003F5C30, 0x0, 0x4
 	PIECE_LABEL D_003F5C30, D_003F5C34, 0x4
 	PIECE_BYTES D_003F5C30, 0x4, 0x4
@@ -872,7 +872,7 @@
 	PIECE_BYTES D_003F6D40, 0x4, 0x24
 	PIECE_END D_003F6D40, 0x28
 	PIECE D_003F6D68, 0x18, 8
-	PIECE_BEGIN D_003F6D80, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F6D80, D_003F6DA8 */
+	PIECE_BEGIN D_003F6D80, 0x40, 16  /* untyped: no C user declares it (merged); labels in data/data_003F.h */
 	.word func_00229150
 	PIECE_BYTES D_003F6D80, 0x4, 0x24
 	PIECE_LABEL D_003F6D80, D_003F6DA8, 0x28
@@ -882,7 +882,7 @@
 	.word func_00229220
 	PIECE_BYTES D_003F6DC0, 0x4, 0x2c
 	PIECE_END D_003F6DC0, 0x30
-	PIECE_BEGIN D_003F6DF0, 0x40, 16  /* untyped: merged (a user declares it larger than the next name): D_003F6DF0, D_003F6E18, D_003F6E24, D_003F6E28, D_003F6E2C */
+	PIECE_BEGIN D_003F6DF0, 0x40, 16  /* untyped: no C user declares it (merged); labels in data/pieces/D_003F6DF0.h */
 	.word func_002292a8
 	PIECE_BYTES D_003F6DF0, 0x4, 0x24
 	PIECE_LABEL D_003F6DF0, D_003F6E18, 0x28
@@ -1153,7 +1153,7 @@
 	PIECE D_003F8330, 0x20, 16
 	PIECE D_003F8350, 0x20, 16
 	PIECE D_003F8370, 0x10, 16
-	PIECE_BEGIN D_003F8380, 0x16c00, 16  /* untyped: merged (a user declares it larger than the next name): D_003F8380, D_003F8F80, D_003F9F80, D_003FA380, D_003FA780, D_0040E780, D_0040EB80 */
+	PIECE_BEGIN D_003F8380, 0x16c00, 16  /* merged (a user declares it larger than the next name): D_003F8380, D_003F8F80, D_003F9F80, D_003FA380, D_003FA780, D_0040E780, D_0040EB80; data/pieces/D_003F8380.h */
 	PIECE_BYTES D_003F8380, 0x0, 0xc00
 	PIECE_LABEL D_003F8380, D_003F8F80, 0xc00
 	PIECE_BYTES D_003F8380, 0xc00, 0x1000

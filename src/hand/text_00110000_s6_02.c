@@ -437,3 +437,4 @@ void func_00116628(Ent628 *e) {
 #include "data/data_0029.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"
+#include "data/pieces/D_003F6DF0.h"

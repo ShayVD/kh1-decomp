@@ -52,7 +52,7 @@
 	PIECE D_00454960, 0x40, 16
 	PIECE D_004549A0, 0x40, 16
 	PIECE D_004549E0, 0x40, 16
-	PIECE_BEGIN D_00454A20, 0x20, 16  /* untyped: merged (a user declares it larger than the next name): D_00454A24, D_00454A2C */
+	PIECE_BEGIN D_00454A20, 0x20, 16  /* merged (a user declares it larger than the next name): D_00454A24, D_00454A2C; data/pieces/D_00454A20.h */
 	PIECE_BYTES D_00454A20, 0x0, 0x4
 	PIECE_LABEL D_00454A20, D_00454A24, 0x4
 	PIECE_BYTES D_00454A20, 0x4, 0x8

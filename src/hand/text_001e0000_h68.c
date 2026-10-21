@@ -41,7 +41,7 @@ typedef struct {
 typedef Sv SvA80;
 typedef Sv SvAD0;
 typedef struct { void *p; u8 pad[0x34c]; } E848;
-typedef struct { u8 pad[0x24]; s32 server; u8 pad2[0x10]; } RpcCd;
+#include "data/types/text_001e0000_h68.h"
 typedef struct { s8 used; u8 pad1[3]; s32 x4; s32 x8; s32 xc; s32 x10; u8 pad[180 - 20]; } Ent180;
 typedef struct { u8 b0; u8 b1; s8 x2; s8 x3; s8 used; u8 pad5[11]; s32 x10; u8 pad[72 - 20]; } Ent72;
 
@@ -823,3 +823,4 @@ void func_001ef950(void)
 #include "data/data_003D.h"
 #include "data/data_003E.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003E3C88.h"

@@ -9,11 +9,7 @@ typedef struct {
     u8 d[40];
 } Save;
 #include "data/types/text_001c0000_c10.h"
-typedef struct {
-    s32 n;
-    char str[50][32];
-    char last[64];
-} Menu;
+#include "data/types/text_001c0000_c10_p.h"
 typedef struct { u8 pad[0x3078]; u64 f3078; } Big;
 
 extern volatile s32 D_002C5958;
@@ -404,3 +400,4 @@ void func_001e65d0(void) {
 #include "data/bss_0063_mixed.h"
 #include "data/bss_0063_typed.h"
 #include "data/data_003D.h"
+#include "data/pieces/D_003DC498.h"

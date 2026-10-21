@@ -334,3 +334,4 @@ void func_001effa0(void) {
 }
 #include "data/data_003D.h"
 #include "data/data_003E.h"
+#include "data/pieces/D_003E46A0.h"

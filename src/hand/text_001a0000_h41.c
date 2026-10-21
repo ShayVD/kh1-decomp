@@ -418,8 +418,7 @@ void func_001ba108(u8 *p, s32 k) {
 }
 
 /* ---- func_001bb580 ---- */
-typedef struct { u8 p0[4]; u8 f4; u8 p5[23]; } It28;
-typedef struct { s32 n; u8 p4[12]; It28 e[1]; } ItTbl;
+#include "data/types/text_001a0000_h41.h"
 extern ItTbl D_00377848;
 extern ItTbl *D_00623210; /* src/data/bss_0062.c: s32 *D_00623210 */
 extern s32 D_00623214;
@@ -927,3 +926,4 @@ s32 func_001c13e8(VM_1c13e8 *v, s32 idx) {
 #include "data/data_0038.h"
 #include "data/data_0048.h"
 #include "data/data_003C.h"
+#include "data/pieces/D_003773E0.h"

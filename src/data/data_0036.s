@@ -127,24 +127,24 @@
 	PIECE D_00362620, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
 	PIECE D_00362630, 0x10, 16  /* untyped: type V4 is not a common.h basic type */
 	PIECE D_00362640, 0x20, 16  /* untyped: type V3 is not a common.h basic type */
-	PIECE_BEGIN D_00362660, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_0036266C */
+	PIECE_BEGIN D_00362660, 0x10, 16  /* merged (a user declares it larger than the next name): D_0036266C; data/pieces/D_00362660.h */
 	PIECE_BYTES D_00362660, 0x0, 0xc
 	PIECE_LABEL D_00362660, D_0036266C, 0xc
 	PIECE_BYTES D_00362660, 0xc, 0x4
 	PIECE_END D_00362660, 0x10
-	PIECE_BEGIN D_00362670, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_00362674 */
+	PIECE_BEGIN D_00362670, 0x10, 16  /* merged (a user declares it larger than the next name): D_00362674; data/pieces/D_00362670.h */
 	PIECE_BYTES D_00362670, 0x0, 0x4
 	PIECE_LABEL D_00362670, D_00362674, 0x4
 	PIECE_BYTES D_00362670, 0x4, 0xc
 	PIECE_END D_00362670, 0x10
-	PIECE_BEGIN D_00362680, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_00362684, D_0036268C */
+	PIECE_BEGIN D_00362680, 0x10, 16  /* merged (a user declares it larger than the next name): D_00362684, D_0036268C; data/pieces/D_00362680.h */
 	PIECE_BYTES D_00362680, 0x0, 0x4
 	PIECE_LABEL D_00362680, D_00362684, 0x4
 	PIECE_BYTES D_00362680, 0x4, 0x8
 	PIECE_LABEL D_00362680, D_0036268C, 0xc
 	PIECE_BYTES D_00362680, 0xc, 0x4
 	PIECE_END D_00362680, 0x10
-	PIECE_BEGIN D_00362690, 0x30, 16  /* untyped: merged (a user declares it larger than the next name): D_003626A0, D_003626B0 */
+	PIECE_BEGIN D_00362690, 0x30, 16  /* merged (a user declares it larger than the next name): D_003626A0, D_003626B0; data/pieces/D_00362690.h */
 	PIECE_BYTES D_00362690, 0x0, 0x10
 	PIECE_LABEL D_00362690, D_003626A0, 0x10
 	PIECE_BYTES D_00362690, 0x10, 0x10

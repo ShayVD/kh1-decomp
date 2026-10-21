@@ -568,7 +568,7 @@ s32 func_001e0078(VM *vm) {
     return 2;
 }
 
-typedef struct { s32 a, b, c, d; } Col4;
+#include "data/types/text_001d0000_h44.h"
 extern Col4 D_003DACC0;
 extern s32 D_003DACD0;
 extern u64 D_003DB028;
@@ -700,3 +700,4 @@ s32 func_001e24c8(VM *vm) {
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/data_003D.h"
+#include "data/pieces/D_003DACC0.h"

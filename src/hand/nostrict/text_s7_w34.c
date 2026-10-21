@@ -175,3 +175,4 @@ s32 func_00168618(Obj18 *o, Ent18 *e) {
     r0:
     return 0;
 }
+#include "data/pieces/D_002C5958.h"

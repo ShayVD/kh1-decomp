@@ -1206,3 +1206,4 @@ void (*D_00351970[0x8])(void *) ALIGNED(16) = {
 #include "data/data_002B.h"
 #include "data/data_002E.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_002C5978.h"

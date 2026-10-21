@@ -12,7 +12,7 @@
 	PIECE D_003E1CB0, 0x1a50, 16
 	PIECE D_003E3700, 0x580, 16
 	PIECE D_003E3C80, 0x8, 8
-	PIECE_BEGIN D_003E3C88, 0x48, 8  /* untyped: merged (a user declares it larger than the next name): D_003E3CB0, D_003E3CB8 */
+	PIECE_BEGIN D_003E3C88, 0x48, 8  /* merged (a user declares it larger than the next name): D_003E3CB0, D_003E3CB8; data/pieces/D_003E3C88.h */
 	PIECE_BYTES D_003E3C88, 0x0, 0x28
 	PIECE_LABEL D_003E3C88, D_003E3CB0, 0x28
 	PIECE_BYTES D_003E3C88, 0x28, 0x8
@@ -29,27 +29,27 @@
 	PIECE D_003E3D70, 0xe0, 16  /* untyped: users disagree: E228 D_003E3D70[] | E3D70 D_003E3D70[] | E3D70c D_003E3D70[] | Rec D_003E3D70[] | S3D70 D_003E3D70[] */
 	PIECE D_003E3E50, 0x808, 8  /* untyped: users disagree: M2C_UNK D_003E3E50 | RecE0 D_003E3E50[] */
 	PIECE D_003E4658, 0x8, 8
-	PIECE_BEGIN D_003E4660, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4660, D_003E4668 */
+	PIECE_BEGIN D_003E4660, 0x10, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003E4660, 0x0, 0x8
 	PIECE_LABEL D_003E4660, D_003E4668, 0x8
 	PIECE_BYTES D_003E4660, 0x8, 0x8
 	PIECE_END D_003E4660, 0x10
-	PIECE_BEGIN D_003E4670, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4670, D_003E4678 */
+	PIECE_BEGIN D_003E4670, 0x10, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003E4670, 0x0, 0x8
 	PIECE_LABEL D_003E4670, D_003E4678, 0x8
 	PIECE_BYTES D_003E4670, 0x8, 0x8
 	PIECE_END D_003E4670, 0x10
-	PIECE_BEGIN D_003E4680, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4680, D_003E4688 */
+	PIECE_BEGIN D_003E4680, 0x10, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003E4680, 0x0, 0x8
 	PIECE_LABEL D_003E4680, D_003E4688, 0x8
 	PIECE_BYTES D_003E4680, 0x8, 0x8
 	PIECE_END D_003E4680, 0x10
-	PIECE_BEGIN D_003E4690, 0x10, 16  /* untyped: merged (a user declares it larger than the next name): D_003E4690, D_003E4698 */
+	PIECE_BEGIN D_003E4690, 0x10, 16  /* untyped: no C user declares it (merged) */
 	PIECE_BYTES D_003E4690, 0x0, 0x8
 	PIECE_LABEL D_003E4690, D_003E4698, 0x8
 	PIECE_BYTES D_003E4690, 0x8, 0x8
 	PIECE_END D_003E4690, 0x10
-	PIECE_BEGIN D_003E46A0, 0x4270, 16  /* untyped: merged (a user declares it larger than the next name): D_003E46A0, D_003E46A8, D_003E46B8, D_003E5ED8, D_003E890E */
+	PIECE_BEGIN D_003E46A0, 0x4270, 16  /* untyped: no C user declares it (merged); labels in data/pieces/D_003E46A0.h */
 	PIECE_BYTES D_003E46A0, 0x0, 0x8
 	PIECE_LABEL D_003E46A0, D_003E46A8, 0x8
 	PIECE_BYTES D_003E46A0, 0x8, 0x10
@@ -87,7 +87,7 @@
 	PIECE D_003E8E28, 0x4, 4  /* untyped: users disagree: E8E28 *D_003E8E28 | Glyph *D_003E8E28 | M2C_UNK *D_003E8E28 | s32 D_003E8E28 */
 	PIECE D_003E8E2C, 0x4, 4
 	PIECE D_003E8E30, 0x270, 16  /* untyped: users disagree: E8E30 D_003E8E30[] | u32 D_003E8E30[][12]; unparsed in 1 file(s) */
-	PIECE_BEGIN D_003E90A0, 0x70, 16  /* untyped: merged (a user declares it larger than the next name): D_003E90AC, D_003E9104 */
+	PIECE_BEGIN D_003E90A0, 0x70, 16  /* merged (a user declares it larger than the next name): D_003E90AC, D_003E9104; data/pieces/D_003E90A0.h */
 	PIECE_BYTES D_003E90A0, 0x0, 0xc
 	PIECE_LABEL D_003E90A0, D_003E90AC, 0xc
 	PIECE_BYTES D_003E90A0, 0xc, 0x58

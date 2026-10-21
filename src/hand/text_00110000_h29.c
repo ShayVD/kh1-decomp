@@ -86,7 +86,7 @@ void func_0010f258(W29Cnt *c, W29Mdl *m) {
     }
 }
 
-typedef struct { u64 d[14]; } W29S70;
+#include "data/types/text_00110000_h29_p.h"
 extern s32 D_004D9240;
 extern W29S70 D_002C5AD0[2];
 extern W29S70 D_002BCA00[2];
@@ -725,3 +725,6 @@ s32 D_002BD170 ALIGNED(16) = 0;
 #include "data/data_0030.h"
 #include "data/data_0035.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC080.h"
+#include "data/pieces/D_002BCA00.h"
+#include "data/pieces/D_002C5AD0.h"

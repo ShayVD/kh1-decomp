@@ -431,3 +431,4 @@ void func_00138400(O16 *o) {
 #include "data/bss_0052_typed.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"
+#include "data/pieces/D_002C5958.h"

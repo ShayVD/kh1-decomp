@@ -1,7 +1,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
-typedef struct { u8 pad[0xcc]; s32 active; } E3530;
-typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
+#include "data/types/text_00200000_h47.h"
 extern S3530 D_003F3530;
 extern s32 D_003F3870;
 s32 func_001ef8f8(s32);
@@ -498,7 +497,6 @@ void func_0021f858(s32 a0) {
 
 typedef struct { u8 pad[0xa0]; f32 xa0; } Oaf0;
 typedef struct { u8 pad[0x10]; s32 x10; } O3428;
-typedef struct { u8 pad[0x64]; u16 x64; } S90a0;
 extern O3428 *D_00643428; /* src/data/bss_0064.c: s32 D_00643428 */
 extern S90a0 D_003E90A0;
 extern u8 D_003F6270[];
@@ -591,7 +589,6 @@ end:
     D_003F5C34 = D_006436B8 == 13;
 }
 
-typedef struct { u8 pad[0x10]; s32 x10; } S5C30;
 extern S5C30 D_003F5C30;
 extern s32 D_003F6740[];
 extern s32 D_003F6758[];
@@ -814,3 +811,7 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 };
 #include "data/data_003F.h"
 #include "data/data_0049.h"
+#include "data/pieces/D_003E90A0.h"
+#include "data/pieces/D_003F3530.h"
+#include "data/pieces/D_003F5C30.h"
+#include "data/pieces/D_003F6DF0.h"

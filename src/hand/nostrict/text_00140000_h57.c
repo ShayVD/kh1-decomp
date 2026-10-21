@@ -312,3 +312,4 @@ s32 func_001515d0(void *owner, f32 *pos, s32 type) {
     return func_0014f658(o, 20);
 }
 #include "data/bss_0054_typed.h"
+#include "data/pieces/D_002C5958.h"

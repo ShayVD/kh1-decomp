@@ -602,3 +602,4 @@ void func_0014ed30(W34Act4 *o) {
     }
 }
 #include "data/data_002C.h"
+#include "data/pieces/D_002C5958.h"

@@ -5,7 +5,7 @@
  * include/data/data_0047.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE_BEGIN D_00472160, 0x4040, 16  /* untyped: merged (a user declares it larger than the next name): D_00472160, D_00472180, D_00472190, D_004721D0 */
+	PIECE_BEGIN D_00472160, 0x4040, 16  /* merged (a user declares it larger than the next name): D_00472160, D_00472180, D_00472190, D_004721D0; data/data_0047.h */
 	PIECE_BYTES D_00472160, 0x0, 0x4
 	.word D_0048C300
 	PIECE_BYTES D_00472160, 0x8, 0xc
@@ -2068,7 +2068,7 @@
 	.word D_004862A0
 	PIECE_BYTES D_00472160, 0x4028, 0x18
 	PIECE_END D_00472160, 0x4040
-	PIECE_BEGIN D_004761A0, 0x4040, 16  /* untyped: merged (a user declares it larger than the next name): D_004761A0, D_004761C0, D_004761D0, D_00476210, D_0047A1D0 */
+	PIECE_BEGIN D_004761A0, 0x4040, 16  /* merged (a user declares it larger than the next name): D_004761A0, D_004761C0, D_004761D0, D_00476210, D_0047A1D0; data/data_0047.h */
 	PIECE_BYTES D_004761A0, 0x0, 0x4
 	.word D_0048BFD0
 	PIECE_BYTES D_004761A0, 0x8, 0xc
@@ -4133,7 +4133,7 @@
 	PIECE_LABEL D_004761A0, D_0047A1D0, 0x4030
 	PIECE_BYTES D_004761A0, 0x4030, 0x10
 	PIECE_END D_004761A0, 0x4040
-	PIECE_BEGIN D_0047A1E0, 0x4040, 16  /* untyped: merged (a user declares it larger than the next name): D_0047A1E0, D_0047A200, D_0047A210, D_0047A250 */
+	PIECE_BEGIN D_0047A1E0, 0x4040, 16  /* merged (a user declares it larger than the next name): D_0047A1E0, D_0047A200, D_0047A210, D_0047A250; data/data_0047.h */
 	PIECE_BYTES D_0047A1E0, 0x0, 0x4
 	.word D_0048C300
 	PIECE_BYTES D_0047A1E0, 0x8, 0xc
@@ -6196,7 +6196,7 @@
 	.word D_004862A0
 	PIECE_BYTES D_0047A1E0, 0x4028, 0x18
 	PIECE_END D_0047A1E0, 0x4040
-	PIECE_BEGIN D_0047E220, 0x4040, 16  /* untyped: merged (a user declares it larger than the next name): D_0047E220, D_0047E250 */
+	PIECE_BEGIN D_0047E220, 0x4040, 16  /* merged (a user declares it larger than the next name): D_0047E220, D_0047E250; data/pieces/D_0047E220.h */
 	PIECE_BYTES D_0047E220, 0x0, 0x4
 	.word D_0048BFD0
 	PIECE_BYTES D_0047E220, 0x8, 0xc

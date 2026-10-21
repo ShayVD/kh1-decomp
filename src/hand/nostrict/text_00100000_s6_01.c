@@ -135,7 +135,7 @@ extern void func_001085e8(s32, s32);
 extern void func_00108180(s32);
 extern s32 D_0029B2F4;
 extern s32 D_0029B2FC;
-typedef struct { u8 b[64]; } B64;
+#include "data/types/nostrict_text_00100000_s6_01_p.h"
 extern B64 D_0047A250[];
 extern B64 D_004721D0[];
 extern B64 D_00476210[];
@@ -459,3 +459,5 @@ void func_0010b6c0(Win *w) {
 #include "data/data_0035.h"
 #include "data/data_003F.h"
 #include "data/data_0048.h"
+#include "data/pieces/D_002BC170.h"
+#include "data/pieces/D_0048BFD0.h"

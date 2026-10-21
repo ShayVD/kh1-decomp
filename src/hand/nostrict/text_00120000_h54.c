@@ -250,8 +250,7 @@ kill:
     return 0;
 }
 
-typedef struct { s32 f0; s32 f4; s32 f8; s32 fc; volatile s32 n; u8 ids[8]; } Q5;
-typedef struct { s32 f0; s32 f4; s32 f8; s32 fc; s32 n; u8 ids[8]; } L5;
+#include "data/types/nostrict_text_00120000_h54.h"
 typedef struct { u8 pad[0x48f]; u8 f48f; u8 f490; u8 p491[0x7d0-0x491]; s8 f7d0[7]; u8 p7d7[0x874-0x7d7]; u32 f874; u8 p878[0x880-0x878]; u8 f880; } W5;
 extern Q5 D_002E3010;
 extern L5 D_002E3080;
@@ -298,7 +297,6 @@ void func_0012d188(s32 a0, u32 *a1) {
     l->f4 = m;
 }
 
-typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
 extern Q38 D_002E2FD8[7];
 extern u8 D_00524F68[];
 typedef struct { u8 pad[0x21]; u8 n; u8 f22[1]; } T7;
@@ -511,7 +509,6 @@ void func_00137ab8(E22 *e) {
     }
 }
 
-typedef struct O23 { u8 p0[0x8c]; s32 f8c; u8 p90[0x370 - 0x90]; u64 f370; u8 p378[0x398 - 0x378]; struct O23 *f398; u8 p39c[0x4b0 - 0x39c]; } O23;
 extern O23 D_002C64A0[96];
 extern s32 D_0052ACF0[]; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
 extern s32 D_0052ACF8;
@@ -746,3 +743,6 @@ void func_00132c70(s32 a0, void (*cb)(void)) {
 #include "data/data_002B.h"
 #include "data/data_0030.h"
 #include "data/data_002E.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002C64A0.h"
+#include "data/pieces/D_002E2FD8.h"

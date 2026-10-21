@@ -44,7 +44,7 @@ extern void func_0011ef10(s32, void *);
 extern f32 func_00121748(f32 *, f32 *);
 s32 func_0012ee70(E23 *e, s32 i);
 
-typedef struct { s32 f0; u8 pad[1196]; } A2;
+#include "data/types/text_00120000_h31_p.h"
 extern A2 D_002C6814[];
 extern void *D_002C64A0;
 extern void *D_002E26AC;
@@ -287,7 +287,6 @@ void func_0012d068(E16 *e, u32 *fl) {
     d->f4 = d->f8 = v;
 }
 
-typedef struct { u8 pad[4]; s32 f4; s32 f8; u8 padc[8]; u8 f14[4]; } D17;
 extern D17 D_002E30F0;
 extern s32 D_00524F50;
 extern s32 func_00132fe0(s32);
@@ -667,3 +666,5 @@ u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
 #include "data/bss_004F_typed.h"
 #include "data/data_002B.h"
 #include "data/data_002E.h"
+#include "data/pieces/D_002BC080.h"
+#include "data/pieces/D_002C5958.h"

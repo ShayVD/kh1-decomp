@@ -7,8 +7,7 @@
  * The tail needs no barriers in strict mode: D_00494BE0 as a one-field struct with a 4-byte enum
  * field (own alias set), sources as P8 globals, destinations through s32 pointers. */
 
-typedef struct { s32 a, b; } P8;
-typedef struct { P8 v; s32 c, d; } E16;
+#include "data/types/text_00100000_s11_w74.h"
 typedef struct { u8 pad[8]; s32 key; s32 state; } Ent;
 typedef struct { u8 pad[8]; f32 x, y; u8 pad10[8]; f32 z; u8 pad1c[4]; } Pt;
 typedef struct { f32 v[4]; f32 p[3]; f32 w; f32 m[4][4]; E16 *t0; E16 *t1; u8 pad68[8]; } Work;

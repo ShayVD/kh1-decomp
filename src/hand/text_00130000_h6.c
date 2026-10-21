@@ -964,3 +964,5 @@ void func_0013c078(void) {
 }
 #include "data/data_002B.h"
 #include "data/data_0030.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002C5978.h"

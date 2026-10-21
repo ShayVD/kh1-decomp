@@ -55,3 +55,5 @@ s32 func_00107c48(s32 i) {
 }
 #include "data/bss_0049_typed.h"
 #include "data/data_0035.h"
+#include "data/pieces/D_0047E220.h"
+#include "data/pieces/D_00482260.h"

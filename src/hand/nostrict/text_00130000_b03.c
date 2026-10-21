@@ -1034,3 +1034,5 @@ end:;
 #include "data/bss_0053_typed.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_002C5BB0.h"

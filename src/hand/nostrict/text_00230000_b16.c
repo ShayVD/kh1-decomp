@@ -387,7 +387,7 @@ typedef struct {
     u8 padA20[0xA34 - 0xA20];
     struct GP { void *a[5]; Big *b; void *c[4]; void *d[5]; } unkA34;
 } Ga;
-typedef struct { s32 unk0, unk4, unk8, unkC, mode; f32 scale; s32 barrier; } GW;
+#include "data/types/nostrict_text_00230000_b16.h"
 extern GW D_00454A20;
 extern u8 D_00426880[], D_004268E0[];
 void __assert(const char *, s32, const char *);
@@ -427,3 +427,4 @@ s32 func_00240400(Ga *e, s32 buf) {
     return buf;
 }
 #include "data/data_0045.h"
+#include "data/pieces/D_00454A20.h"

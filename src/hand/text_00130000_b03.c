@@ -298,3 +298,4 @@ void func_0013cb98(void) {
     for (i = 0; i < 3; i++) b->x840[i] = -1;
 }
 #include "data/data_0030.h"
+#include "data/pieces/D_002C5958.h"

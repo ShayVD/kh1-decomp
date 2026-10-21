@@ -4,7 +4,7 @@
 
 /* ---- types ---- */
 /* 48-byte slots of the table D_0037A16C points to. */
-typedef struct { u16 used; u16 h2; u16 h4; u8 pad6[26]; void (*fn)(void); u8 pad36[12]; } Slot;
+#include "data/types/text_001b0000_h14_p.h"
 /* Script VM: pc at +380, stack (sp at +384) at +388, registers, variables. */
 typedef struct {
     u8 pad[380]; s32 pc; s32 sp; s32 stack[33]; s32 regs[26]; s32 vars[32]; s32 vidx;
@@ -436,3 +436,4 @@ s32 func_001cc1c0(VM *v) {
 #include "data/data_0037.h"
 #include "data/data_003C.h"
 #include "data/data_003F.h"
+#include "data/pieces/D_0037A130.h"
