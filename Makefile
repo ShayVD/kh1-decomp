@@ -180,10 +180,12 @@ SHIFT_FLOAT_ONLY_DATA ?=
 # float_keep.txt keeps them (session 24; runtime hypotheses only, keep_check is not enforced).
 SHIFT_FLOAT_FORCE ?=
 # SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word or a C pointer table names
-# (no code user; tools/shift/ptr_only.py lists the C ones). Off by
-# default since session 20: entries a pointer table points at one by one (D_0048F700 ...) can be walked
-# by stride, and floating them drops a digit from the load menu's slot labels.
-SHIFT_FLOAT_PTR_ONLY ?= 0
+# (no code user; tools/shift/ptr_only.py lists the C ones). Off in sessions 20-23: entries a pointer
+# table points at one by one (D_0048F700 ...) can be walked by stride, and in session 20 floating them
+# dropped a digit from the load menu's slot labels. On by default since session 24: after the session
+# 22-23 merges (split_check, --split) that bug is gone, and KH1_F24_P1 (1,061 data names) plays the load
+# menu, Gate Plaza, the world map warp and a fight. 0 keeps them in place again.
+SHIFT_FLOAT_PTR_ONLY ?= 1
 # SHIFT_FLOAT_PAD=N: N bytes after each floated data variable (sentinel words) and bss run (zero), to find
 # an overrun with tools/shift/float_pads.py on a savestate (session 22). Moves _end up: lower the budgets.
 SHIFT_FLOAT_PAD ?= 0
