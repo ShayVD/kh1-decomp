@@ -13,7 +13,10 @@ typedef struct {
 
 typedef struct {
     s32 n;
-    u8 pad_4[0x14];
+    f32 x4;
+    u8 pad_8[0x4];
+    f32 xc;
+    u8 pad_10[0x8];
     s32 x18;
     u8 x1c;
     u8 pad_1d[0x3];

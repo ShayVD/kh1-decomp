@@ -461,11 +461,10 @@ zero:
 }
 
 typedef struct { u8 pad[0x20]; f32 x20; f32 x24; f32 x28; u8 pad2c[0x3b0 - 0x2c]; f32 x3b0; } B4E5;
-typedef struct { s32 a; s32 b; } B4Pair;
+#include "data/pieces/D_002E31B0.h"
 extern u32 D_002E3190;
 f32 D_00551D70 ALIGNED(16);
 #include "data/pieces/D_002E31B8.h"
-#include "data/pieces/D_002E31B0.h"
 void func_0014f658(B4E5 *, s32);
 f32 func_0012ec60(s32, s32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
@@ -498,7 +497,7 @@ void func_0015e178(B4E5 *e, s32 unused, f32 *v) {
         }
     }
     if (D_002E31B8 >= 3 && 0.0f < v[3] && v[1] == 0.0f) {
-        d = func_0012ec60((*(B4Pair *)&D_002E31B0).a, (*(B4Pair *)&D_002E31B0).b, a);
+        d = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, a);
         func_001315c0(e, 0x8003, 0.0f, b);
         func_00267530(a, a, b);
         if (0.5f < func_00121748(a, v)) {

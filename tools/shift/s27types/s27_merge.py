@@ -151,7 +151,7 @@ class Merge:
         return (s.n, s.elem) == (f.n, f.elem) and compatible(s.f.tkey, f.tkey)
 
     def process(self, cl):
-        cands = sorted(cl.cands, key=lambda c: (KORDER[c.kind], -(c.f.size if c.f.kind != "bits" else 0),
+        cands = sorted(cl.cands, key=lambda c: (0 if c.rel.startswith("include/") else 1, KORDER[c.kind], -(c.f.size if c.f.kind != "bits" else 0),
                                                self.prio[c.rel], c.off))
         for c in cands:
             if c.rel in self.fail:
@@ -159,6 +159,9 @@ class Merge:
             lo, hi = c.rng()
             hits = [s for s in cl.slots if s.lo < hi and lo < s.hi]
             key = (c.rel, tmpname(c.f.name, c.nid))
+            if c.f.localref:
+                self.fail.setdefault(c.rel, f"field {c.f.name} has the file's own type {c.f.localref}")
+                continue
             if not hits:
                 s = self.newslot(cl, c)
                 self.fmap[key] = c.prefix + [(s, None)]
@@ -203,6 +206,11 @@ def is_hand(rel):
     return rel.startswith("src/hand/")
 
 
+def weight(rel):
+    """naming weight: an earlier fold's header first, then hand files"""
+    return 100 if rel.startswith("include/") else 3 if is_hand(rel) else 1
+
+
 def emit(N, mg, sname):
     """(type definitions in dependency order, header deps, aliases {(rel, nid): type},
     fmap {(rel, tmpname): path})"""
@@ -216,7 +224,7 @@ def emit(N, mg, sname):
         for s in sorted(cl.slots, key=lambda s: (s.lo, s.hi)):
             cn = Counter()
             for c in s.cands:
-                w = (3 if is_hand(c.rel) else 1) * (0.1 if PADNAME.match(c.f.name) else 1)
+                w = weight(c.rel) * (0.1 if PADNAME.match(c.f.name) else 1)
                 cn[c.f.name] += w
             nm = cn.most_common(1)[0][0] if cn else s.f.name
             if nm in taken:
@@ -228,7 +236,7 @@ def emit(N, mg, sname):
         for rel, nid in cl.nodes:
             nm = mg.files[rel][0].nodes[nid].name
             if nm:
-                names[nm] += 3 if is_hand(rel) else 1
+                names[nm] += weight(rel)
         parent_slot = next(s for s in mg.slots if s.sub == cl.cid)
         base = names.most_common(1)[0][0] if names else f"{cname.get(cl.parent, sname)}_{snames[parent_slot.sid]}"
         nm = base if base.endswith("_" + addr) else f"{base}_{addr}"

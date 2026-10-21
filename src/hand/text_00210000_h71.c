@@ -361,16 +361,8 @@ void func_00219da8(Obj2 *a) {
     }
 }
 typedef f32 Mtx[4][4];
-typedef struct {
-    u8 pad0[0x40];
-    Mtx m40;
-    Mtx m80;
-    u8 padc0[0x100 - 0xC0];
-    Mtx m100;
-    u8 pad140[0x1A0 - 0x140];
-    f32 v1a0[4];
-    f32 v1b0[4];
-} Cam;
+#include "data/pieces/D_00425F70.h"
+typedef Cam_425f70 Cam;
 typedef struct { u8 pad[8]; s32 x8; } P8;
 typedef struct {
     s32 x0;
@@ -409,7 +401,6 @@ typedef struct {
 } G20;
 extern G20 D_00643020;
 extern s32 D_00643104;
-#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 extern f32 D_003F59B0;
 void func_0021b418(void);
@@ -464,7 +455,7 @@ void func_0021b250(void *a) {
     func_001655e0(D_00425CE0, D_00643020.x14, r, D_00643020.x70);
     if (func_0021ade8(a)) {
         p = func_00147b08(D_00643020.xc, a, D_00643020.x14);
-        c = ((Cam *)D_00425F70);
+        c = D_00425F70;
 
         c->v1a0[0] = D_003F59B0;
         c->v1a0[3] = 1.0f;

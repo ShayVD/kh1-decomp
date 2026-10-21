@@ -407,6 +407,30 @@ def main(argv):
                 log(f"  skip {rel}: {err}")
             else:
                 done[rel] = res
+    if not done:
+        log("  nothing to fold")
+        return 1
+    # an earlier session 27 fold: its header's struct is one more view, first in naming
+    hrel = f"include/data/pieces/{N}.h"
+    if "session 27 folded" in oldhdr:
+        hm = re.match(r"^(?:volatile\s+)?(\w+)\s*\*?\s*(?:volatile\s*)?" + N + r"\b", olddecl)
+        S0 = hm.group(1) if hm else None
+        if S0 is None or C.find_def(oldhdr, S0) is None:
+            # keep mode: the struct is the one every typedef in the header ends with
+            defs0 = re.findall(r"\}\s*(\w+);", C.strip_comments(oldhdr))
+            S0 = defs0[-1] if defs0 else None
+        try:
+            ft = Y.FileTypes(hrel, oldhdr, [S0])
+            ft.probe()
+            used = {tmpname(f.name, n.nid) for n in ft.nodes.values() for f in n.fields
+                    if not f.name.startswith("pad_")}
+            done[hrel] = (ft, used, [S0], oldhdr)
+            prio[hrel] = (-1, 0, hrel)
+            given_name = given_name or S0
+            log(f"  earlier fold: {S0} is a view")
+        except Exception as e:  # noqa: BLE001
+            log(f"  earlier fold's header not understood: {e}")
+            return 1
     if not given_name:
         cnt = Counter()
         for rel, (t, roots) in files.items():
@@ -414,6 +438,7 @@ def main(argv):
                 cnt[r] += 3 if is_hand(rel) else 1
         addr = N[2:].lstrip("0").lower()
         sname = f"{cnt.most_common(1)[0][0]}_{addr}" if cnt else f"T_{addr}"
+    sname = given_name or sname
     result = None
     for mode in ("full", "keep"):
         result = fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, apply)
@@ -431,6 +456,7 @@ def main(argv):
 
 
 def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, apply):
+    hrel = f"include/data/pieces/{N}.h"
     """mode full: the piece is declared as the merged struct (pointer) and the folded users'
     casts go; mode keep: the declaration stays, folded users cast to the merged struct"""
     log(f"  -- mode {mode}")
@@ -449,7 +475,7 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
             if not live:
                 break
             mg = M.Merge(live, prio)
-        if not live:
+        if not [r for r in live if r != hrel]:
             break
         defs, deps, aliases, fmap = M.emit(N, mg, sname)
         if mode == "keep":
@@ -462,6 +488,8 @@ def fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, 
         newtexts = {}
         bad = {}
         for rel in live:
+            if rel == hrel:
+                continue
             try:
                 ft = live[rel][0]
                 views = [ft.nodes[nid].name for (r, nid) in mg.classes[0].nodes if r == rel]

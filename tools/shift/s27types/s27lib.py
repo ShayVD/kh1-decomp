@@ -28,7 +28,10 @@ def recipes():
 def compile_s(rel, text=None, root=ROOT):
     """(asm or None, [(line, message)]) of src file `rel` (text: its content, default the file)
     compiled with its recipe in tree `root`."""
-    cmd = recipes()[rel]
+    cmd = recipes().get(rel)
+    if cmd is None and rel.endswith(".h"):  # a header compiled as C: any C file's recipe
+        k, c = next(iter(sorted(recipes().items())))
+        cmd = c.replace(" " + k, " " + rel)
     src = Path(root) / rel
     with tempfile.TemporaryDirectory(dir=SCR) as td:
         if text is not None:

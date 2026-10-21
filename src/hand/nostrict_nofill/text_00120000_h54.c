@@ -5,14 +5,14 @@ extern void func_00267530(V4 *, V4 *, V4 *);
 typedef struct { s32 f0, f4, f8, fc; s32 n; u8 ids[0x24]; } Q38;
 extern Q38 D_002E2FD8[7];
 extern u8 D_00524F68[];
-typedef struct { s32 f0, f4; } S31b0;
+#include "data/pieces/D_002E31B0.h"
+typedef S31b0_2e31b0 S31b0;
 typedef struct { u32 b0:8; u32 b1:16; u32 b24:1; u32 flag:1; u32 rest:6; S31b0 f4; } St8;
 #include "data/pieces/D_002E319C.h"
 typedef O8_2e319c O8;
 #include "data/types/nostrict_nofill_text_00120000_h54.h"
 extern St8 D_002E3190;
 #include "data/pieces/D_002E31A4.h"
-#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
 extern Q8 D_002E30B8;
 #include "data/pieces/D_002E3170.h"
@@ -48,7 +48,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
         q = D_00524F40[-1];
         o = func_001478c8(q->ids[q->f34]);
     } else if (D_002E31B8) {
-        tmp = (*(S31b0 *)&D_002E31B0);
+        tmp = D_002E31B0;
         f = 1;
     } else {
         tmp.f0 = 0;
@@ -56,7 +56,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     }
     if (!func_0012dd70(o)) return 0;
     if (f && func_00219288() != 1 && (o->f0 & 4)) {
-        if (D_002E31B8 - 1 < 2u || D_002E31B8 == 4) func_0012fb20(((S31b0 *)&D_002E31B0), 4);
+        if (D_002E31B8 - 1 < 2u || D_002E31B8 == 4) func_0012fb20(&D_002E31B0, 4);
     }
     if (q->f0 == 2) (*(s32 *)&D_002E31A4) = D_00524F68[q->fc];
     D_002E3190.f4 = tmp;
@@ -155,7 +155,7 @@ void func_0012f700(Q8 *q) {
     switch (D_002E31B8) {
     case 0: if (q->f8 & 0x400) func_0012f3d0((A9 *)&cur); break;
     case 1: case 2: case 4:
-        if (q->f8 & 0x400) { if (func_0012f040((E9 *)(*(S31b0 *)&D_002E31B0).f0, (*(S31b0 *)&D_002E31B0).f4)) cur = (*(S31b0 *)&D_002E31B0); }
+        if (q->f8 & 0x400) { if (func_0012f040((E9 *)D_002E31B0.f0, D_002E31B0.f4)) cur = D_002E31B0; }
         break;
     case 3:
         if (func_002192c0() == 1) { if (!(q->f4 & 0x400)) goto snd; }

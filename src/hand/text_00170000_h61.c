@@ -571,7 +571,7 @@ void func_00179ee8(void) {
     A = e.y + D_00362550;
     e.y = A;
     func_002672f8(&a, m, &e);
-    A = func_0012eca8(D_002E31B0, &c);
+    A = func_0012eca8((*(u8 (*)[0x8])&D_002E31B0), &c);
     func_00267530(&e, &c, &a);
     B = e.y;
     e.y = 0.0f;

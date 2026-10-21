@@ -97,7 +97,7 @@ class FileTypes:
         self.nodes[n.nid] = n
         self.byname[name] = n.nid
         n.path = f"(({name} *)0)->"
-        self.build(n, self.text[d.b0:d.b1])
+        self.build(n, self.ct[d.b0:d.b1])
         return n.nid
 
     def build(self, node, body):
