@@ -96,10 +96,26 @@ def c_text_users(N):
     return files
 
 
+def macro_lines(text, N):
+    """line numbers from `#define N ...` to its `#undef N`: N there names another object"""
+    out, on = set(), False
+    for i, ln in enumerate(text.split("\n")):
+        if re.match(r"\s*#\s*define\s+" + N + r"\b", ln):
+            on = True
+        if on:
+            out.add(i)
+        if re.match(r"\s*#\s*undef\s+" + N + r"\b", ln):
+            on = False
+    return out
+
+
 def user_decls(text, N):
     """[(lineno, indent, tspec, decl)] of every extern of N; None if one is not understood."""
     out = []
+    ml = macro_lines(text, N)
     for i, ln in enumerate(text.split("\n")):
+        if i in ml:
+            continue
         if re.search(r"\bextern\b", ln) and re.search(r"\b" + N + r"\b", ASM.sub("", ln)):
             p = parse_line(ln, N)
             if not p:
@@ -249,6 +265,7 @@ def rewrite_uses(text, N, own, shared):
     if scalar_int(*own) and scalar_int(*shared):
         rv = f"(({own[0]} {own[1].replace(N, '').strip()}){N})".replace(" )", ")")
     out, last = [], 0
+    ml = macro_lines(text, N)
     for a, b in code_spans(text):
         out.append(text[last:a])
         seg = text[a:b]
@@ -257,7 +274,10 @@ def rewrite_uses(text, N, own, shared):
             pre = seg[k:m.start()]
             prev = (text[:a] + seg[:m.start()]).rstrip()
             after = seg[m.end():]
-            if prev.endswith("&") and not prev.endswith("&&"):
+            if (text.count("\n", 0, a + m.start()) in ml
+                    or re.search(r"#\s*(define|undef|ifdef|ifndef)\s+$", prev)):
+                continue  # `#define N N_alias` ... `#undef N`: another object there
+            if prev.endswith("&") and not prev.endswith("&&") and not re.match(r"\s*(\[|\.|->|\()", after):
                 p2 = prev[:-1].rstrip()
                 addr = (not p2 or p2[-1] in "(,=+-*/!~?:;{[<>|&^%" or re.search(r"\breturn$", p2)
                         or (p2.endswith(")") and CASTEND.search(p2)))
