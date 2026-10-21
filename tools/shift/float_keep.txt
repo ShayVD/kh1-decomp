@@ -57,3 +57,10 @@ D_00482260
 # through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
 # as the blob start.
 D_00272C70
+#
+# The actor table: 1200-byte entries from D_002C64A0 up to D_002E26A0, and the code walks it with the next
+# name as its end (`if (p >= D_002E26A0) p = D_002C64A0`, text_00110000_h30.c and others; func_00145aa0
+# indexes up to it). The address of D_002E26A0 is the table's end, so the table cannot move away from it.
+# Session 27: slot-refine released it (with D_00278B50 room came from SHIFT_FLOAT_COMPACT) and floated,
+# Donald and Goofy were missing after loading save 06 (bisected over KH1_F27_R5..R11).
+D_002C64A0
