@@ -8,7 +8,8 @@ typedef struct { s32 a, b, c, d; } Q4;
 typedef struct { Q4 h; s32 n, x, c, d; } DmaHdr;
 typedef struct { f32 x, y, z; } Vec3;
 /* Flag word D_002BC0A8. */
-typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:1; u32 b5:1; u32 rest:26; } Flags;
+#include "data/pieces/D_002BC0A8.h"
+typedef Flags_2BC0A8 Flags;
 /* Packed attribute word at +16 of the 20-byte entries of D_002A6238. */
 typedef struct {
     u32 f0:4; u32 f4:4; u32 f8:3; u32 f11:4; u32 f15:3;
@@ -58,7 +59,6 @@ extern s32 D_002BBE14;
 extern s32 D_002BC060[4];
 #include "data/pieces/D_002BC070.h"
 extern s32 D_002BC090, D_002BC094, D_002BC0A0, D_002BC0A4;
-extern Flags D_002BC0A8;
 extern s32 D_002BC0BC;
 extern s32 D_002BC128, D_002BC130, D_002BC134;
 #include "data/pieces/D_002BC720.h"
@@ -147,15 +147,15 @@ void func_001008e8(void) {
     func_00106bd8(D_0029B170, 10010);
     func_001044c0((Xf *)D_00494320);
     func_00108f18(0, 10010, D_00494320);
-    if (D_002BC0A8.b5 == 1) {
+    if (D_002BC0A8.flags.b5 == 1) {
         func_001044c0((Xf *)(D_00494320 + 128));
         func_00108f18(1, 10010, D_00494320 + 128);
     }
 }
 
 void func_00100ae0(void) {
-    D_002BC0A8.b0 = 0;
-    D_002BC0A8.b1 = 0;
+    D_002BC0A8.flags.b0 = 0;
+    D_002BC0A8.flags.b1 = 0;
     func_001761f0();
     func_00176230();
 }

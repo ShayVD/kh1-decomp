@@ -287,7 +287,7 @@ void func_00267548(f32 *d, f32 *a, f32 *b);
 s32 func_00135bb0(W32Col *o);
 void func_00136428(W32Col *o, s32 a, s32 b, f32 *c, f32 f);
 void func_00128218(W32Col *o, f32 f);
-extern s32 D_002BC0A8;
+#include "data/pieces/D_002BC0A8.h"
 extern f32 D_002C6450[4];
 void func_001368e8(W32Col *o) {
     f32 v[4] __attribute__((aligned(16)));
@@ -296,7 +296,7 @@ void func_001368e8(W32Col *o) {
     func_00135df0(o, v);
     func_00267548(v, v, D_002C6450);
     if (v[3] > 0.0f && func_00135bb0(o) && (o->flags & 1)) {
-        if (D_002BC0A8 & 1) {
+        if (D_002BC0A8.i & 1) {
             o->u370.x |= 1ULL << 35;
             if (o->x154 == 0) return;
             func_00136428(o, o->x38c, o->x394, v, k);

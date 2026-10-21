@@ -306,7 +306,7 @@ s32 func_001d8400(VM *vm) {
     return 2;
 }
 
-extern CamS D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BBDFC;
 void func_001d8f38(void) {
     Str *g = &D_00389C90;
@@ -314,28 +314,28 @@ void func_001d8f38(void) {
     t = g->t + D_002BBDFC;
     g->t = t;
     if (g->dur < t) {
-        D_002BC0F0 = g->tgt;
+        (*(CamS *)&D_002BC0F0) = g->tgt;
         g->f3078.x &= ~2ULL;
         return;
     }
     r = g->t / g->dur;
-    D_002BC0F0.b[0] = g->start.b[0] + (g->tgt.b[0] - g->start.b[0]) * r;
+    (*(CamS *)&D_002BC0F0).b[0] = g->start.b[0] + (g->tgt.b[0] - g->start.b[0]) * r;
     g->t += D_002BBDFC;
-    D_002BC0F0.b[1] = g->start.b[1] + (g->tgt.b[1] - g->start.b[1]) * r;
-    D_002BC0F0.b[2] = g->start.b[2] + (g->tgt.b[2] - g->start.b[2]) * r;
-    D_002BC0F0.a[0] = g->start.a[0] + (g->tgt.a[0] - g->start.a[0]) * r;
-    D_002BC0F0.a[1] = g->start.a[1] + (g->tgt.a[1] - g->start.a[1]) * r;
-    D_002BC0F0.a[2] = g->start.a[2] + (g->tgt.a[2] - g->start.a[2]) * r;
-    D_002BC0F0.a[3] = g->start.a[3] + (g->tgt.a[3] - g->start.a[3]) * r;
+    (*(CamS *)&D_002BC0F0).b[1] = g->start.b[1] + (g->tgt.b[1] - g->start.b[1]) * r;
+    (*(CamS *)&D_002BC0F0).b[2] = g->start.b[2] + (g->tgt.b[2] - g->start.b[2]) * r;
+    (*(CamS *)&D_002BC0F0).a[0] = g->start.a[0] + (g->tgt.a[0] - g->start.a[0]) * r;
+    (*(CamS *)&D_002BC0F0).a[1] = g->start.a[1] + (g->tgt.a[1] - g->start.a[1]) * r;
+    (*(CamS *)&D_002BC0F0).a[2] = g->start.a[2] + (g->tgt.a[2] - g->start.a[2]) * r;
+    (*(CamS *)&D_002BC0F0).a[3] = g->start.a[3] + (g->tgt.a[3] - g->start.a[3]) * r;
     if (g->dur < g->t) {
-        D_002BC0F0 = g->tgt;
+        (*(CamS *)&D_002BC0F0) = g->tgt;
         g->f3078.x &= ~2ULL;
     }
 }
 
 s32 func_001d9100(VM *vm) {
     Str *g = &D_00389C90;
-    g->tgt = g->start = D_002BC0F0;
+    g->tgt = g->start = (*(CamS *)&D_002BC0F0);
     g->t = 0.0f;
     g->dur = vm->stk[vm->sp - 7] * 2.0f;
     g->tgt.b[0] = vm->stk[vm->sp - 6];
@@ -346,13 +346,13 @@ s32 func_001d9100(VM *vm) {
     g->tgt.a[2] = vm->stk[vm->sp - 1];
     g->tgt.a[3] = vm->stk[vm->sp];
     if (g->dur < 2.0f) {
-        D_002BC0F0.b[0] = g->tgt.b[0];
-        D_002BC0F0.b[1] = g->tgt.b[1];
-        D_002BC0F0.b[2] = g->tgt.b[2];
-        D_002BC0F0.a[0] = g->tgt.a[0];
-        D_002BC0F0.a[1] = g->tgt.a[1];
-        D_002BC0F0.a[2] = g->tgt.a[2];
-        D_002BC0F0.a[3] = g->tgt.a[3];
+        (*(CamS *)&D_002BC0F0).b[0] = g->tgt.b[0];
+        (*(CamS *)&D_002BC0F0).b[1] = g->tgt.b[1];
+        (*(CamS *)&D_002BC0F0).b[2] = g->tgt.b[2];
+        (*(CamS *)&D_002BC0F0).a[0] = g->tgt.a[0];
+        (*(CamS *)&D_002BC0F0).a[1] = g->tgt.a[1];
+        (*(CamS *)&D_002BC0F0).a[2] = g->tgt.a[2];
+        (*(CamS *)&D_002BC0F0).a[3] = g->tgt.a[3];
         g->f3078.x &= ~2ULL;
     } else {
         g->f3078.x |= 2;

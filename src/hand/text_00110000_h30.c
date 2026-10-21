@@ -731,7 +731,7 @@ void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
 
 typedef struct { s32 kind; u32 flags; u8 pad8[40]; V4 pos; } Ent5C80;
 #include "data/pieces/D_002C5C80.h"
-extern u32 D_002BC0A8;
+#include "data/pieces/D_002BC0A8.h"
 extern V4 D_002C6450;
 extern TPool D_004F6EC0;
 void func_00107e10(Ent5C80 *);
@@ -743,14 +743,14 @@ s32 func_00122ab0(void) {
     Ent5C80 *e;
     func_0011f130(&D_004F6EC0, 0);
     D_002C6450[0] = D_002C6450[1] = D_002C6450[2] = D_002C6450[3] = 1.0f;
-    D_002BC0A8 &= ~0x10;
+    D_002BC0A8.u &= ~0x10;
     e = ((Ent5C80 *)&D_002C5C80);
     for (i = 0; i < 31; i++, e++) {
         if (e->flags & 0x12) continue;
         if (e->kind != 1) {
             if (e->kind == 3) {
                 func_00107e10(e);
-                D_002BC0A8 |= 0x10;
+                D_002BC0A8.u |= 0x10;
             }
         } else {
             func_00267548(D_002C6450, D_002C6450, e->pos);

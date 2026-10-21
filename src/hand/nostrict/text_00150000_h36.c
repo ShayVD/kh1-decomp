@@ -107,8 +107,8 @@ void func_00266f38(void *, void *);
 extern u8 D_00278680[], D_00272C70[];
 void func_00162500(void);
 extern u64 D_00573E40[];
-typedef struct { u8 pad[0x10]; s32 x10, x14, x18; } S2BC0F0;
-extern S2BC0F0 D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
+typedef S2BC0F0_2BC0F0_2 S2BC0F0;
 extern DmaChcr *D_0055C644;
 extern DmaChcr *D_0055C640;
 typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
@@ -660,7 +660,7 @@ s32 func_0015f388(void) {
     p = (u64 *)((u32)D_00573E40 | 0x20000000);
     p[12] = 0x5080B;
     p[14] = (128LL << 32) | 0x2A;
-    p[18] = (s64)D_002BC0F0.x10 | ((s64)D_002BC0F0.x14 << 8) | ((s64)D_002BC0F0.x18 << 16);
+    p[18] = (s64)D_002BC0F0.s2BC0F0_2.x10 | ((s64)D_002BC0F0.s2BC0F0_2.x14 << 8) | ((s64)D_002BC0F0.s2BC0F0_2.x18 << 16);
     p[16] = 0x31000070;
     p[20] = 0x800D0;
     p[22] = 5;

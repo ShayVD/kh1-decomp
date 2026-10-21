@@ -231,14 +231,14 @@
 	PIECE D_002BC09C, 0x4, 4
 	PIECE D_002BC0A0, 0x4, 4
 	PIECE D_002BC0A4, 0x4, 4
-	PIECE D_002BC0A8, 0x8, 8  /* untyped: users disagree: Fl0A8 D_002BC0A8 | Flags D_002BC0A8 | s32 D_002BC0A8 | u32 D_002BC0A8; session 25: as Flags D_002BC0A8: does not compile in text_00130000_s6_na.c, text_00100000_h28.c +3 */
+	PIECE D_002BC0A8, 0x8, 8  /* data/pieces/D_002BC0A8.h */
 	PIECE_BEGIN D_002BC0B0, 0x10, 16  /* merged (a user declares it larger than the next name): D_002BC0BC; data/pieces/D_002BC0B0.h */
 	PIECE_BYTES D_002BC0B0, 0x0, 0xc
 	PIECE_LABEL D_002BC0B0, D_002BC0BC, 0xc
 	PIECE_BYTES D_002BC0B0, 0xc, 0x4
 	PIECE_END D_002BC0B0, 0x10
 	PIECE D_002BC0C0, 0x30, 16  /* data/pieces/D_002BC0C0.h */
-	PIECE D_002BC0F0, 0x30, 16  /* untyped: users disagree: B48 D_002BC0F0 | Cam D_002BC0F0 | Cam0 D_002BC0F0 | CamS D_002BC0F0 | S2BC0F0 D_002BC0F0 | View30 D_002BC0F0 | f32 D_002BC0F0[] | s32 D_002BC0F0[]; session 25: as S2BC0F0 D_002BC0F0: does not compile in text_001d0000_s8_w1.c, text_00120000_b02.c +3 */
+	PIECE D_002BC0F0, 0x30, 16  /* data/pieces/D_002BC0F0.h */
 	PIECE D_002BC120, 0x4, 4
 	PIECE D_002BC124, 0x4, 4
 	PIECE D_002BC128, 0x4, 4  /* data/pieces/D_002BC128.h */

@@ -15,7 +15,8 @@ typedef struct { s32 m[32][16]; s32 v[4]; } Blk810;
 typedef struct { s32 status; void (*entry)(void); void *stack; s32 stackSize; void *gpReg; s32 initPriority; s32 currentPriority; u32 attr; u32 option; s32 waitType; s32 waitId; s32 wakeupCount; } ThreadParam;
 typedef struct { u16 n; u8 pad2[0xb]; s8 col; u8 pade[2]; Glyph g[1]; } GlyphStr;
 typedef struct { u16 pad0; u16 n; f32 a; f32 b; s8 state; u8 padd[0x1803]; f32 t[1]; } Track;
-typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:1; u32 rest:27; } Flags;
+#include "data/pieces/D_002BC0A8.h"
+typedef Flags_2BC0A8_2 Flags;
 typedef struct { u64 a; s32 b; } Pad8;
 #include "data/types/text_00100000_h28_p.h"
 typedef struct { u8 pad0[0x54]; f32 rot; u8 pad58[8]; f32 x; s32 y; f32 z; u8 pad6c[0x14]; } Cam80;
@@ -57,7 +58,6 @@ extern ED0 D_00494D80[];
 #include "data/pieces/D_002A62B0.h"
 #include "data/pieces/D_002A3F60.h"
 #include "data/pieces/D_002A4060.h"
-extern Flags D_002BC0A8;
 #include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_002A6234.h"
 extern Mtx D_00495190;
@@ -68,7 +68,7 @@ extern Pkt D_002B6490;
 extern Res *func_00120190(char *);
 extern Task *func_0011f090(void *, s32, void (*)(void));
 #include "data/pieces/D_002E2780.h"
-extern View30 D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
 extern char D_0048CCA0[];
 extern char D_0048CCB8[];
 extern f32 D_0029B270;
@@ -288,7 +288,7 @@ void func_00100278(void) {
     func_00111ca8();
     { s32 z = 0; D_002BCDDC = z; D_002BCDD8 = z; func_00112fd0(z); }
     func_00101660();
-    D_002BC0A8.b1 = 0;
+    D_002BC0A8.flags_2.b1 = 0;
     (*(void **)&D_002BC140) = D_002BCAF0;
     (*(void **)&D_002BC144) = D_002BCAF0;
 }
@@ -303,7 +303,7 @@ void func_00100360(void) {
     func_00100228();
     func_0011e528();
     D_002BCDC4 = 0;
-    D_002BC0A8.b1 = 0;
+    D_002BC0A8.flags_2.b1 = 0;
     func_0011e5f0();
     D_002BCDC0 = 0;
     func_0010e8d0();
@@ -319,10 +319,10 @@ s32 func_00100448(void) {
     D_002BC744 = D_002BC740;
     D_002BC740 = (*(Flags *)&D_0037A378).b0;
     func_00114c00();
-    if (D_002BC0A8.b1 == 1) {
+    if (D_002BC0A8.flags_2.b1 == 1) {
         func_001007e8();
-        if (D_002BC0A8.b0 == 1) {
-            if (D_002BC0A8.b3 == 1) {
+        if (D_002BC0A8.flags_2.b0 == 1) {
+            if (D_002BC0A8.flags_2.b3 == 1) {
                 func_00100818();
                 func_001008e8();
             }
@@ -370,7 +370,7 @@ void func_00100988(void) {
         func_00107d30(10020, 1);
     }
     if (D_0029B2FC != 0) {
-        if (D_002BC0A8.b4 == 1) {
+        if (D_002BC0A8.flags_2.b4 == 1) {
             func_00100670(6, 10020);
         } else {
             func_00100670(0, 10020);
@@ -389,8 +389,8 @@ void func_00100988(void) {
 
 void func_00100b18(Setup *s) {
     s32 i;
-    D_002BC0F0.near_ = 15000.0f;
-    D_002BC0F0.far_ = 20000.0f;
+    D_002BC0F0.view30.near_ = 15000.0f;
+    D_002BC0F0.view30.far_ = 20000.0f;
     for (i = 0; i < 16; i++) {
         D_002A3F60.v[i].a = 0;
         D_002A3F60.v[i].b = 0;
@@ -398,14 +398,14 @@ void func_00100b18(Setup *s) {
         D_002A4060.v[i].b = s->uv[i][1] * 0.00006103515625f;
     }
     D_0029B270 = s->f34;
-    D_002BC0F0.a = s->f3c;
-    D_002BC0F0.b = s->f38;
-    D_002BC0F0.c = s->b21;
-    D_002BC0F0.d = s->b22;
-    D_002BC0F0.e = s->b23;
-    D_002BC0F0.f = s->b24;
-    D_002BC0F0.g = s->b25;
-    D_002BC0C0.view30 = D_002BC0F0;
+    D_002BC0F0.view30.a = s->f3c;
+    D_002BC0F0.view30.b = s->f38;
+    D_002BC0F0.view30.c = s->b21;
+    D_002BC0F0.view30.d = s->b22;
+    D_002BC0F0.view30.e = s->b23;
+    D_002BC0F0.view30.f = s->b24;
+    D_002BC0F0.view30.g = s->b25;
+    D_002BC0C0.view30 = D_002BC0F0.view30;
 }
 
 void func_00100f70(Blk810 *src) {

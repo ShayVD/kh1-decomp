@@ -1,7 +1,7 @@
 #include "common.h"
 #include "data/bss_004D.h"
-typedef struct { f32 a[4]; s32 b[3]; } CamS;
-extern CamS D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
+typedef CamS_2BC0F0 CamS;
 extern f32 D_004D90F8;
 extern u64 D_002BC9B0;
 extern u8 D_002BC9F0[];
@@ -18,12 +18,12 @@ void func_00110ce0(void) {
     f32 n, f, t, b, d, p, q;
     s32 i;
     s32 unused[4];
-    n = D_002BC0F0.a[0];
-    f = D_002BC0F0.a[1];
-    b = D_002BC0F0.a[2];
-    t = D_002BC0F0.a[3];
+    n = D_002BC0F0.camS.a[0];
+    f = D_002BC0F0.camS.a[1];
+    b = D_002BC0F0.camS.a[2];
+    t = D_002BC0F0.camS.a[3];
     D_004D90F8 = f;
-    mk(&D_002BC9B0, D_002BC0F0.b[0], D_002BC0F0.b[1], D_002BC0F0.b[2]);
+    mk(&D_002BC9B0, D_002BC0F0.camS.b[0], D_002BC0F0.camS.b[1], D_002BC0F0.camS.b[2]);
     d = n - f;
     p = (n * f * (t - b)) / d;
     q = ((b - t) * (n + f) / d + (b + t)) * 0.5f;

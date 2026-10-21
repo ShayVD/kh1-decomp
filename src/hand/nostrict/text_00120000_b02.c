@@ -45,7 +45,7 @@ typedef struct {
     void *fn2;
     u64 g[2];
 } S14;
-extern s32 D_002BC0F0[];
+#include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26C0.h"
 extern void func_00122770(void);
 extern void func_001229c0(void);
@@ -70,9 +70,9 @@ void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
     s.f48 = -1;
     s.fn1 = func_00122770;
     s.fn2 = func_001229c0;
-    s.b[0] = D_002BC0F0[4];
-    s.b[1] = D_002BC0F0[5];
-    s.b[2] = D_002BC0F0[6];
+    s.b[0] = D_002BC0F0.i[4];
+    s.b[1] = D_002BC0F0.i[5];
+    s.b[2] = D_002BC0F0.i[6];
     s.b[3] = (s32)alpha;
     s.f40 = 0;
     switch (o->f130->h4c) {

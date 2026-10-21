@@ -310,7 +310,7 @@ void func_0014fe48(B4Ent *e) {
 
 typedef struct { u8 pad0[0x20]; f32 x20[4]; u8 pad30[0x164 - 0x30]; s32 x164; } B4A81;
 #include "data/pieces/D_002C58A0.h"
-extern s32 D_002BC0F0[];
+#include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_003519E0.h"
 s32 func_00137618(B4A81 *);
 void func_00130340(B4A81 *, s32, f32);
@@ -397,8 +397,8 @@ void func_001581d8(B4A81 *e, f32 *v) {
     func_002675a8(e->x20, v);
     if (func_0014efe0(e, 1)) {
         for (i = 0; i < 3; i++) {
-            if (D_002BC0F0[i + 4] < D_003519E0[i + 4]) D_002BC0F0[i + 4]++;
-            else if (D_003519E0[i + 4] < D_002BC0F0[i + 4]) D_002BC0F0[i + 4]--;
+            if (D_002BC0F0.i[i + 4] < D_003519E0[i + 4]) D_002BC0F0.i[i + 4]++;
+            else if (D_003519E0[i + 4] < D_002BC0F0.i[i + 4]) D_002BC0F0.i[i + 4]--;
         }
     }
 }

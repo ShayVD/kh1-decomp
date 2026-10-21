@@ -270,7 +270,7 @@ typedef struct {
     u32 x88;
 } W6Flg;
 
-extern f32 D_002BC0F0[];
+#include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BC120;
 extern f32 D_002BC124;
 extern s32 D_003044D0;
@@ -751,10 +751,10 @@ void func_00135a38(W6Ch2 *c, s32 a) {
 
 f32 func_00135ca0(f32 x) {
     f32 r;
-    if (D_002BC0F0[0] <= x) {
+    if (D_002BC0F0.f[0] <= x) {
         return D_002BC120;
     }
-    if (D_002BC0F0[1] < x) {
+    if (D_002BC0F0.f[1] < x) {
         r = D_002BC120 + D_002BC124 / x;
         if (r < 0.0f) {
             r = 0.0f;

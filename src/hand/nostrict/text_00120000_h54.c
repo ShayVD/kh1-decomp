@@ -9,8 +9,8 @@ typedef struct {
     s32 f20; s32 f24; s32 f28; s32 f2c; s32 f30; s32 f34;
     u64 f38; u64 f40;
 } Pkt;
-typedef struct { f32 f0; f32 f4; u8 pad[8]; s32 f10; s32 f14; s32 f18; } Cam;
-extern Cam D_002BC0F0;
+#include "data/pieces/D_002BC0F0.h"
+typedef Cam_2BC0F0 Cam;
 extern s32 D_004F82C0;
 extern s32 D_004F82C4;
 typedef struct { s32 f4; s32 f0; } L14c;
@@ -28,9 +28,9 @@ void func_00127960(E1 *e, s32 a1, s32 a2) {
         p.c[2] = 0x80;
         p.c[3] = 0x80;
         p.f0 = 0x101;
-        p.d[0] = D_002BC0F0.f10;
-        p.d[1] = D_002BC0F0.f14;
-        p.d[2] = D_002BC0F0.f18;
+        p.d[0] = D_002BC0F0.cam.f10;
+        p.d[1] = D_002BC0F0.cam.f14;
+        p.d[2] = D_002BC0F0.cam.f18;
         p.d[3] = func_00135ca0(e->f118);
     } else {
         p.f0 = 0x101;

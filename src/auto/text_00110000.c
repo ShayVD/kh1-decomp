@@ -55,7 +55,7 @@ extern f32 D_002C5970;
 extern s32 D_002A6B80;
 extern s32 D_002B6474;
 extern s32 D_002BBE1C;
-extern s32 D_002BC0A8;
+#include "data/pieces/D_002BC0A8.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_002BC134;
@@ -184,11 +184,11 @@ void func_00112498(void) {
 }
 
 void func_001124c0(void) {
-    D_002BC0A8 |= 0x20;
+    D_002BC0A8.i |= 0x20;
 }
 
 void func_001124d8(void) {
-    D_002BC0A8 &= ~0x20;
+    D_002BC0A8.i &= ~0x20;
 }
 
 void func_00112b80(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {

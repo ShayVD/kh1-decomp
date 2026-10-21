@@ -93,11 +93,22 @@ def plan(N, cast_users=()):
             users[rel] = ("cast", (ts, d)); continue
         b = C.base_of(ts)
         dd = d.replace(" ", "")
-        m = re.fullmatch(r"(\**)" + N + r"((?:\[[^\]]*\])*)", dd)
-        if not m or b is None:
+        mv = re.fullmatch(r"(\*+)volatile" + N, dd)
+        if mv and (C.base_of(ts) in C.BASIC or C.base_of(ts) in COMMON):
+            mname = MEMB.get(b, b.lower()) + "p" * len(mv.group(1)) + "v"
+            d2 = f"{mv.group(1)}volatile {mname}"
+            view = dict(key=norm_view(ts, d2), mname=mname, decl=f"{ts} {d2}", stmt=None, tname=None)
+            dd = None
+        m = dd and re.fullmatch(r"(\**)" + N + r"((?:\[[^\]]*\])*)", dd)
+        if dd is None:
+            pass
+        elif not m or b is None:
             users[rel] = ("cast", (ts, d)); continue
-        ptr, dims = m.groups()
-        if b in C.BASIC or b in COMMON:
+        else:
+            ptr, dims = m.groups()
+        if dd is None:
+            pass
+        elif b in C.BASIC or b in COMMON:
             d2 = C.fill(ts, d, size).replace(" ", "")
             if "[]" in d2:
                 users[rel] = ("cast", (ts, d)); continue
@@ -153,12 +164,14 @@ def plan(N, cast_users=()):
             k = 2
             base = view["mname"]
             while view["mname"] in names:
-                view["mname"] = f"{base}{k}"; k += 1
+                view["mname"] = f"{base}_{k}"; k += 1
             if view["mname"] != base:
                 view["decl"] = re.sub(r"\b" + base + r"\b(?=\s*[\[;]|$)", view["mname"], view["decl"])
-                view["decl"] = view["decl"].replace(f" {base}[", f" {view['mname']}[").replace(f"*{base}", f"*{view['mname']}")
             if view.get("tname") and view["uniq"] in {v.get("uniq") for v in views}:
-                view["uniq"] = view["uniq"] + f"_{len(views)}"
+                kk = 2
+                while f"{view['uniq']}_{kk}" in {v.get("uniq") for v in views}:
+                    kk += 1
+                view["uniq"] = f"{view['uniq']}_{kk}"
                 view["decl"] = re.sub(r"^(volatile )?\w+", lambda m: (m.group(1) or "") + view["uniq"], view["decl"])
             vkey[view["key"]] = view
             views.append(view)

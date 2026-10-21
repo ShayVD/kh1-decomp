@@ -2,11 +2,11 @@
 
 /* ---- 00100c30.c ---- */
 #include "data/types/text_00100000_s6_00.h"
-typedef struct { f32 f0, f4, f8, fc; s32 i10, i14, i18; s32 pad; f32 f20, f24; } Cam0;
+#include "data/pieces/D_002BC0F0.h"
+typedef Cam0_2BC0F0 Cam0;
 extern V4f D_0029B310[16];
 #include "data/pieces/D_002A4060.h"
 extern f32 D_0029B270;
-extern Cam0 D_002BC0F0;
 void func_00100c30(void) {
     s32 i;
     for (i = 0; i < 16; i++) {
@@ -17,15 +17,15 @@ void func_00100c30(void) {
     }
 /*P*/
     D_0029B270 = 0.0005454153478331864f;
-    D_002BC0F0.f24 = 20000.0f;
-    D_002BC0F0.f20 = 15000.0f;
-    D_002BC0F0.f0 = 30000.0f;
-    D_002BC0F0.f4 = 20000.0f;
-    D_002BC0F0.f8 = 64.0f;
-    D_002BC0F0.fc = 255.0f;
-    D_002BC0F0.i10 = 0x10;
-    D_002BC0F0.i14 = 0x70;
-    D_002BC0F0.i18 = 0x80;
+    D_002BC0F0.cam0.f24 = 20000.0f;
+    D_002BC0F0.cam0.f20 = 15000.0f;
+    D_002BC0F0.cam0.f0 = 30000.0f;
+    D_002BC0F0.cam0.f4 = 20000.0f;
+    D_002BC0F0.cam0.f8 = 64.0f;
+    D_002BC0F0.cam0.fc = 255.0f;
+    D_002BC0F0.cam0.i10 = 0x10;
+    D_002BC0F0.cam0.i14 = 0x70;
+    D_002BC0F0.cam0.i18 = 0x80;
 /*Q*/
 }
 
