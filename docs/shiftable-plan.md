@@ -2099,3 +2099,60 @@ Why the rest stay untyped:
   users' qualifiers.
 - A header included at a user's end only checks the declarations; it changes nothing before it, so the code
   cannot change. Nothing may ever move these includes to the top of a file without a `make`.
+
+## Session 25: the fixed pools move, and a bigger float
+
+### What the 0x6A0000 limit was
+
+Only two functions name an address between the image and 0x820000 (checked over the ELF's code and all
+twelve overlays: every other `lui 0x67..0x81` is a mask or a colour constant):
+
+- `func_0014a090` hands out three pools from **D_006A0000**, sizes from the words of D_00350D18
+  (0x40000, 0x20000, 0x20000): 0x6A0000-0x720000.
+- `func_00133628` hands out seven from **D_00720000**, sizes from D_00304318 rounded down to 16 (0x1B800 ...
+  0x20000, 0xD2C00 in all): 0x720000-0x7F2C00.
+- The next fixed region is `func_00121c78`'s D_00820000; 0x7F2C00-0x820000 (0x2D400 bytes) is unused.
+
+Both size tables are only read. Nothing else holds an address inside the pools at build time (they are
+handed out at run time), so the two bases can move together as long as the second area ends by 0x820000.
+
+**shift_ld `ARENA_POOLS`**: in the moved modes D_006A0000 is `MAX(0x6A0000, ALIGN(_end + 0xA000, 0x1000))`
+and D_00720000 is 0x80000 after it, with an `ASSERT` that the second area ends by 0x820000 (ld fails with
+"fixed pools ... would reach 0x00820000: float less"). The sizes are read from the user's ELF. Below the
+limit nothing changes (MAX), so m1/m2/m12 without the float are the same ELFs as before.
+`SHIFT_FIXED_ARENA=1` (`--fixed-arena`) keeps the old fixed bases. shift_cmp maps 0x6A0000-0x7F2C00 to the
+new base, prints "fixed pools moved after crt0's heap", and checks `_end` against the new base. The largest
+`_end` possible is 0x6C3400 (pools at 0x6CD400).
+
+`out/shift/<mode>-float/float_over_budget.tsv` (new) lists every name the budgets left out, smallest first.
+
+### Budgets and runtime (PCSX2, save 06)
+
+| ELF | build | result |
+|---|---|---|
+| F25_A | data 0x20000 (1,103 data names: every one the checks allow except the 0x16C00, 0x20000 and 0x40000 tables), bss 0x11800, pools at 0x6C0000 (0x10000-aligned) | load menu, test T, warp drive to Neverland, fight on the ship: OK |
+| F25_B | + bss 0x26000 (D_00533BA0's 0x14000 run floats; 119 runs), pools at 0x6C5000 (0x1000-aligned), `_end` 0x6BABA4 | same route: OK |
+| F25_C | the default after the reach_check rules below: 1,079 data names, 119 bss runs, `_end` 0x6B7924, pools at 0x6C2000 | same route: OK |
+
+**Defaults are now data 0x20000, bss 0x26000.** What still stays: the three big data tables (D_0040EF80
+0x16C00, D_002E31F0 0x20000, D_00308CE0 0x40000) and the bss runs of D_004F8310 (0x1CC48) and 0x30C9C; any of
+them would push the pools past 0x820000 (about 0x8800 of room is left).
+
+### reach_check: pointer globals and the next name after a piece
+
+- **via-ptr** (`--no-ptr-global` turns it off): a load of a word from an image address G (`lw r, %lo(G)`)
+  is the pointer G holds (`PTR` state); loads and stores through it, and indexes into it (`addu` with an
+  unknown value), are accesses through G. Every address code stores into G (`sw A, %lo(G)`) gets them as
+  its own indexed accesses: bounded when every access through G has a constant offset, otherwise
+  unbounded. On D_00494BAC it finds func_00106ed0's `D_00494BAC = D_00472190` and func_00107548's indexed
+  reads (11 bases have a via-ptr reason today). A comparison against a constant still bounds a loaded word
+  (refine treats PTR like an unknown).
+- **piece-next** (`--no-piece-next`): an unbounded indexed base whose next name is inside its own piece (a
+  merged piece's label, the rest of a bss run) keeps the first name after the piece instead. Without it an
+  index into a merged piece kept nothing. It keeps 30 more names on today's tree (e.g. D_0046E120, chain 0,
+  and D_003773E0).
+- **The check**: with D_00472160 split back into two 0x4040 chains (`--data-tsv` with a copy of
+  out/gen/data.tsv), reach_check now reports `00472190 (D_00472160) -> 004761a0 (D_004761A0)
+  idx-next[arg:wide,piece-next,stored,via-ptr:00494bac]`, i.e. chain 1 keeps chain 2 by itself. piece-next
+  is what finds it (the stored rule already made the index unbounded); via-ptr names the reason. Stride
+  bounds were not needed: the count (D_00494BB0) comes from room data, so the reach is unbounded either way.
