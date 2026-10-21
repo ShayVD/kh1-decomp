@@ -5,7 +5,7 @@
  * include/data/data_0045.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_00451040, 0x33f0, 16  /* untyped: users disagree: Blob D_00451040 | M2C_UNK D_00451040 | u8 D_00451040[] */
+	PIECE D_00451040, 0x33f0, 16  /* untyped: users disagree: Blob D_00451040 | M2C_UNK D_00451040 | u8 D_00451040[]; session 25: as u8 D_00451040[0x33f0]: new warning in text_00240000_s6_g1.c */
 	PIECE D_00454430, 0x18, 8
 	PIECE D_00454448, 0x8, 8
 	PIECE D_00454450, 0x18, 8
@@ -104,4 +104,4 @@
 	PIECE D_0045FA80, 0x8, 8
 	PIECE D_0045FA88, 0x8, 8
 	PIECE D_0045FA90, 0x30, 16
-	PIECE D_0045FAC0, 0x5be0, 16  /* untyped: users disagree: E930 D_0045FAC0[10] | Fx D_0045FAC0[10] | volatile M2C_UNK D_0045FAC0 */
+	PIECE D_0045FAC0, 0x5be0, 16  /* untyped: users disagree: E930 D_0045FAC0[10] | Fx D_0045FAC0[10] | volatile M2C_UNK D_0045FAC0; session 25: as Fx D_0045FAC0[10]: new warning in text_00240000_h50.c */

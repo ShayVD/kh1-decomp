@@ -122,7 +122,7 @@ void func_001aa750(GsTag *t, s32 qwc, s32 pri) {
     D_0061EFA0[pri].s.tail = t;
 }
 
-extern f32 D_00372800[16];
+#include "data/pieces/D_00372800.h"
 
 void func_001aa858(void) {
     f32 *d = D_00372800;
@@ -144,9 +144,9 @@ void func_001aa858(void) {
 
 /* Two small s32 stacks with s8 stack pointers. */
 extern s8 D_00372EA0;
-extern s32 D_00372EA8[];
+#include "data/pieces/D_00372EA8.h"
 extern s8 D_00372F28;
-extern s32 D_00372F30[];
+#include "data/pieces/D_00372F30.h"
 
 s32 func_001aa950(s32 n) {
     s8 *sp = &D_00372EA0;

@@ -9,7 +9,7 @@ extern void *D_002E26A0[3];
 extern void *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
 extern u32 D_002C5958;
 extern u32 D_002E27C8;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 
 typedef struct { u8 pad[0x10]; volatile s32 n; } Q14;
 typedef struct {
@@ -47,7 +47,7 @@ s32 func_0012ee70(E23 *e, s32 i);
 #include "data/types/text_00120000_h31_p.h"
 extern A2 D_002C6814[];
 extern void *D_002C64A0;
-extern void *D_002E26AC;
+#include "data/pieces/D_002E26AC.h"
 extern void func_001372a0(void);
 extern void func_00138738(void);
 extern s32 func_0011ef38(void *);
@@ -168,7 +168,7 @@ typedef struct { f32 c[4]; s32 f10, f14, f18, f1c; f32 f20; s32 f24; } L9;
 extern s32 D_002BC080[4];
 extern s32 D_002BC090;
 extern s32 D_002BC094;
-extern f32 D_002BC098;
+#include "data/pieces/D_002BC098.h"
 extern s32 D_002BC09C;
 extern s32 D_002BC0A0;
 extern s32 D_002BC0A4;
@@ -590,7 +590,7 @@ void func_00131b50(Ob50 *e) {
 /* needs make: uses rodata */
 
 typedef struct { u8 pad[0x30]; f32 f30[4]; u8 pad40[0x30]; s32 f70; u8 pad74[0x164 - 0x74]; s32 f164; u8 pad168[0x2da - 0x168]; u16 f2da; } E1;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern f32 D_004F7800[];
 extern s32 func_00137618(E1 *, s32);
 extern void func_00105a30(s32, s32, f32 *);

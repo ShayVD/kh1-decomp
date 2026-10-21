@@ -57,7 +57,7 @@ extern s32 D_00351AC0;
 extern f32 D_002C58A0[];
 extern f32 D_002BBDFC;
 extern f32 D_00551D74;
-extern volatile s32 D_002BBDF8;
+#include "data/pieces/D_002BBDF8.h"
 extern volatile s32 D_00559DB4;
 typedef struct Node70 { s32 id; s32 w4; s32 w8; s32 wC; struct Node70 *next; } Node70;
 extern Node70 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */

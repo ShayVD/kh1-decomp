@@ -18,7 +18,7 @@ extern s32 D_00641BC4;
 extern s32 D_00642C70;
 extern s32 D_00642CD0;
 extern s32 D_00642D24;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u32 D_00642C58;
 extern void *D_003F34B8;
 s32 func_001ee5f0(s32);

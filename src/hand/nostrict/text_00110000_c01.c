@@ -138,7 +138,7 @@ typedef struct { u8 b[0x150]; } C01E150;
 typedef struct { u8 b[0x220]; } C01E220;
 
 extern u8 D_002BD250[];
-extern u8 D_002BBFA0[];
+#include "data/pieces/D_002BBFA0.h"
 extern C01Mat D_002C58D0;
 extern s32 D_002E27E0[];
 extern u8 D_002E2800[];

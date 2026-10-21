@@ -374,8 +374,8 @@ void func_00143a70(B3Ob *o, f32 *v, s32 a2) {
     }
 }
 
-typedef struct { f32 x0, x4; } B3F2;
-extern B3F2 D_00304D64[];
+#include "data/types/nostrict_text_00130000_b03_p2.h"
+#include "data/pieces/D_00304D64.h"
 extern u32 D_002C5BB4;
 extern f32 D_002C5970;
 s32 func_001232f0(B3Ob *);

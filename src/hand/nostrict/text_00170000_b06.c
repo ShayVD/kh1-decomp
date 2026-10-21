@@ -317,7 +317,7 @@ extern Box *D_00362430;
 extern void *D_00362434;
 extern Box *D_0036243C;
 extern s32 D_00362448;
-extern s32 D_00362424;
+#include "data/pieces/D_00362424.h"
 extern s32 D_002E27A8;
 extern u32 D_002C5960;
 extern S920 D_00575920;

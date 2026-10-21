@@ -68,7 +68,7 @@ void func_00209f70(void) {
     func_00267b08(&D_00640E40[8], 512.0f, 0.7999999523162842f, K84, 2048.0f, 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
 }
 
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 void func_0020a518(P9e18 *p, s32 a1, s32 *idx, s32 *col) {
     u32 i;
     s32 k = 0xea61;
@@ -93,7 +93,7 @@ void func_0020a518(P9e18 *p, s32 a1, s32 *idx, s32 *col) {
 typedef struct { f32 m[4][4]; } __attribute__((aligned(16))) Mtx;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) Vec4;
 typedef struct { u8 pad[0x24]; f32 x24; u8 pad28[0x68]; s32 x90; } Pa758;
-extern u8 D_00425CE0[];
+#include "data/pieces/D_00425CE0.h"
 extern u8 D_003F31E0[];
 void func_002678b8(Mtx *, void *, Vec4 *);
 void func_00267578(Mtx *, Mtx *, void *);

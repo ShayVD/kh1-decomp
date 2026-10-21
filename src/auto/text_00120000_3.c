@@ -20,7 +20,7 @@ extern M2C_UNK func_00122ab0;
 extern f32 D_002E27A0;
 extern f32 D_004F7650;
 extern s32 D_002C5958;
-extern s32 D_002C6440;
+#include "data/pieces/D_002C6440.h"
 extern s8 D_00350D88;
 extern u16 *D_002E319C;
 extern void **D_00524F40;

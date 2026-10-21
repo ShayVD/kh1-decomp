@@ -3,7 +3,7 @@
 typedef struct { f32 x, y, z, w; } V4f;
 extern V4f D_002E2780;
 extern V4f D_002E2790;
-extern f32 D_002E27A4;
+#include "data/pieces/D_002E27A4.h"
 extern f32 D_004F77E0;
 void func_00124c68(f32);
 void func_00125000(void);

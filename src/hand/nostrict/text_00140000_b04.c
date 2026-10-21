@@ -464,7 +464,7 @@ typedef struct { u8 pad[0x20]; f32 x20; f32 x24; f32 x28; u8 pad2c[0x3b0 - 0x2c]
 typedef struct { s32 a; s32 b; } B4Pair;
 extern u32 D_002E3190;
 f32 D_00551D70 ALIGNED(16);
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern B4Pair D_002E31B0;
 void func_0014f658(B4E5 *, s32);
 f32 func_0012ec60(s32, s32, f32 *);

@@ -257,7 +257,7 @@ extern L5 D_002E3080;
 extern W5 *D_00304BE8;
 extern u32 D_00304B78;
 extern u32 D_002C5958;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern void func_0013ab08() __attribute__((weak));
 extern void func_0012cb40(Q5 *, s32, s32);
 extern s32 func_0013a910(s32);
@@ -516,7 +516,7 @@ extern s32 D_003044D0;
 extern s32 D_0052AA68;
 extern u8 D_0052AA58[];
 extern s32 D_00304AD8;
-extern s32 D_00304B84;
+#include "data/pieces/D_00304B84.h"
 extern s32 func_0011f130(void *, s32);
 extern void func_0013dd40(void);
 s32 func_00138258(void) {
@@ -689,8 +689,8 @@ void func_00132a78(s32 a0) {
 extern void func_00132a78(s32);
 typedef struct { s32 f0; u32 f4; u8 p8[0x40]; s16 f48; u8 p4a[2]; u16 f4c; u8 p4e[6]; s8 f54; s8 f55; s8 f56; u8 p57[0x78 - 0x57]; } Ent18;
 typedef struct { u8 p[0xc]; s32 n; Ent18 *base; u8 p14[8]; s32 f1c; } Lst18;
-typedef struct { s32 f0, f4, f8; } G18;
-extern G18 D_002E2F28;
+#include "data/types/nostrict_text_00120000_h54_p.h"
+#include "data/pieces/D_002E2F28.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 s32 D_00525294 ALIGNED(4);

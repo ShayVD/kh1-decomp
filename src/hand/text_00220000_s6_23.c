@@ -8,7 +8,7 @@ typedef struct { u8 pad0[8]; s32 x8; s32 xc; s32 x10; } Pad8;
 typedef struct { u8 pad[0x48e]; u8 x48e[16]; } S48e;
 extern Pad8 *D_00425BC8;
 extern S48e *D_00304BE8;
-extern u32 D_003E3D6C;
+#include "data/pieces/D_003E3D6C.h"
 extern s32 D_003F7780[];
 extern s32 D_003F7790[];
 extern s32 D_003F77A0[];
@@ -170,7 +170,7 @@ void func_0022fcb8(W22 *m) {
 #define func_001ef7a0 func_001ef7a0_s1
 
 extern Pad8 *D_00425BC8;
-extern T78D8 D_003F77B0[8];
+#include "data/pieces/D_003F77B0.h"
 extern s32 D_003F7A68;
 extern void (*D_00646A00)(s32);
 extern void (*D_00646A04)(s32);
@@ -477,7 +477,8 @@ extern F8 *D_00425BC8 __asm__("D_00425BC8");
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
 extern s32 D_003F7308[];
-extern u8 D_003F7210[], D_003F47A8[];
+extern u8 D_003F7210[];
+#include "data/pieces/D_003F47A8.h"
 s32 func_001f42b8(void *);
 void func_001f3708(void *, s32);
 void func_0011d768(s32);

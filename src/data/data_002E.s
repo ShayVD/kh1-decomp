@@ -5,23 +5,23 @@
  * include/data/data_002E.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_002E26A0, 0xc, 4  /* untyped: users disagree: Act *D_002E26A0[] | Act D_002E26A0[] | ActD0 *D_002E26A0 | Actor *D_002E26A0 | B3Ob *D_002E26A0[] | B4Ent *D_002E26A0 | C01Ply *D_002E26A0[3] | ChrEA *D_002E26A0[3] | Ent *D_002E26A0 | M2C_UNK D_002E26A0 | M2C_UNK D_002E26A0[] | Obj123 *D_002E26A0[] | Obj70 *D_002E26A0[] | ObjBD40 *D_002E26A0[] | P26A0 D_002E26A0 | Pair20 D_002E26A0 | Pl *D_002E26A0 | Pl1557d0 *D_002E26A0[] | Pl57_0ec8 *D_002E26A0 | S26A0 D_002E26A0 | Src *D_002E26A0[3] | W55Ob *D_002E26A0[] | W55Pl *D_002E26A0[] | W606O26a0 *D_002E26A0 | W7Obj *D_002E26A0[] | W9Ent *D_002E26A0 | s32 D_002E26A0 | u32 *D_002E26A0[] | u8 *D_002E26A0 | void *D_002E26A0 | void *D_002E26A0[3] | void *D_002E26A0[]; unparsed in 3 file(s) */
-	PIECE D_002E26AC, 0x4, 4  /* untyped: users disagree: Obj1200 *D_002E26AC | void *D_002E26AC */
+	PIECE D_002E26A0, 0xc, 4  /* untyped: users disagree: Act *D_002E26A0[] | Act D_002E26A0[] | ActD0 *D_002E26A0 | Actor *D_002E26A0 | B3Ob *D_002E26A0[] | B4Ent *D_002E26A0 | C01Ply *D_002E26A0[3] | ChrEA *D_002E26A0[3] | Ent *D_002E26A0 | M2C_UNK D_002E26A0 | M2C_UNK D_002E26A0[] | Obj123 *D_002E26A0[] | Obj70 *D_002E26A0[] | ObjBD40 *D_002E26A0[] | P26A0 D_002E26A0 | Pair20 D_002E26A0 | Pl *D_002E26A0 | Pl1557d0 *D_002E26A0[] | Pl57_0ec8 *D_002E26A0 | S26A0 D_002E26A0 | Src *D_002E26A0[3] | W55Ob *D_002E26A0[] | W55Pl *D_002E26A0[] | W606O26a0 *D_002E26A0 | W7Obj *D_002E26A0[] | W9Ent *D_002E26A0 | s32 D_002E26A0 | u32 *D_002E26A0[] | u8 *D_002E26A0 | void *D_002E26A0 | void *D_002E26A0[3] | void *D_002E26A0[]; unparsed in 3 file(s); session 25: as s32 D_002E26A0: code changes in text_00120000_15.c; does not compile in text_00130000_13.c, text_00130000_s6_06.c +2 */
+	PIECE D_002E26AC, 0x4, 4  /* data/pieces/D_002E26AC.h */
 	PIECE D_002E26B0, 0x10, 16  /* data/pieces/D_002E26B0.h */
-	PIECE D_002E26C0, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E26C0 | M53 D_002E26C0 | f32 D_002E26C0[4][4] | u8 D_002E26C0[] */
-	PIECE D_002E2700, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E2700 | M53 D_002E2700 | f32 D_002E2700[] | u8 D_002E2700[] | volatile M2C_UNK D_002E2700 */
-	PIECE D_002E2740, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E2740 | M53 D_002E2740 | volatile M2C_UNK D_002E2740 */
-	PIECE D_002E2780, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002E2780 | V3 D_002E2780 | V4 D_002E2780 | V53 D_002E2780 | Vec D_002E2780 | Vec3 D_002E2780 | f32 D_002E2780[4] | f32 D_002E2780[] | u8 D_002E2780[] */
-	PIECE D_002E2790, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002E2790 | V3 D_002E2790 | V4 D_002E2790 | V53 D_002E2790 | Vec D_002E2790 | f32 D_002E2790[4] | f32 D_002E2790[] | u8 D_002E2790[] */
+	PIECE D_002E26C0, 0x40, 16  /* data/pieces/D_002E26C0.h */
+	PIECE D_002E2700, 0x40, 16  /* untyped: users disagree: M2C_UNK D_002E2700 | M53 D_002E2700 | f32 D_002E2700[] | u8 D_002E2700[] | volatile M2C_UNK D_002E2700; session 25: as M53 D_002E2700: code changes in text_00120000_9.c */
+	PIECE D_002E2740, 0x40, 16  /* data/pieces/D_002E2740.h */
+	PIECE D_002E2780, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002E2780 | V3 D_002E2780 | V4 D_002E2780 | V53 D_002E2780 | Vec D_002E2780 | Vec3 D_002E2780 | f32 D_002E2780[4] | f32 D_002E2780[] | u8 D_002E2780[]; session 25: as f32 D_002E2780[0x4]: does not compile in text_00170000_s7_w2.c, text_00100000_h28.c; new warning in text_00110000_h53.c, text_00120000_s22_s22m1.c +1 */
+	PIECE D_002E2790, 0x10, 16  /* untyped: users disagree: M2C_UNK D_002E2790 | V3 D_002E2790 | V4 D_002E2790 | V53 D_002E2790 | Vec D_002E2790 | f32 D_002E2790[4] | f32 D_002E2790[] | u8 D_002E2790[]; session 25: as V4 D_002E2790: code changes in text_00170000_s7_w2.c, text_00110000_h53.c; does not compile in text_00100000_h1.c, text_00130000_b03.c +1 */
 	PIECE D_002E27A0, 0x4, 4
-	PIECE D_002E27A4, 0x4, 4  /* untyped: users disagree: f32 D_002E27A4 | s32 D_002E27A4 */
+	PIECE D_002E27A4, 0x4, 4  /* data/pieces/D_002E27A4.h */
 	PIECE D_002E27A8, 0x4, 4
 	PIECE D_002E27AC, 0x14, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002E27C0, 0x8, 8  /* data/pieces/D_002E27C0.h */
-	PIECE D_002E27C8, 0x4, 4  /* untyped: users disagree: C01Flg27C8 D_002E27C8 | F27c8 D_002E27C8 | Flg13 D_002E27C8 | u32 D_002E27C8 | u8 D_002E27C8 */
+	PIECE D_002E27C8, 0x4, 4  /* untyped: users disagree: C01Flg27C8 D_002E27C8 | F27c8 D_002E27C8 | Flg13 D_002E27C8 | u32 D_002E27C8 | u8 D_002E27C8; session 25: as u32 D_002E27C8: does not compile in text_00110000_c01.c, text_00160000_s6_09.c +1 */
 	PIECE D_002E27CC, 0x4, 4  /* data/pieces/D_002E27CC.h */
 	PIECE D_002E27D0, 0x4, 4  /* data/pieces/D_002E27D0.h */
-	PIECE D_002E27D4, 0xc, 4  /* untyped: users disagree: s32 D_002E27D4; unparsed in 1 file(s) */
+	PIECE D_002E27D4, 0xc, 4  /* untyped: users disagree: s32 D_002E27D4; unparsed in 1 file(s); session 25: as s32 D_002E27D4: does not compile in text_00110000_h53.c */
 	PIECE D_002E27E0, 0x10, 16
 	PIECE D_002E27F0, 0x10, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_002E2800, 0x10, 16
@@ -481,7 +481,7 @@
 	.word D_002E2810
 	.word D_00362340
 	PIECE_END D_002E2F20, 0x8
-	PIECE D_002E2F28, 0xc, 4  /* untyped: users disagree: G18 D_002E2F28 | M2C_UNK D_002E2F28 */
+	PIECE D_002E2F28, 0xc, 4  /* data/pieces/D_002E2F28.h */
 	PIECE D_002E2F34, 0x84, 4
 	PIECE D_002E2FB8, 0x17, 1
 	PIECE D_002E2FCF, 0x9, 1
@@ -501,19 +501,19 @@
 	PIECE_BYTES D_002E2FD8, 0x160, 0x28
 	PIECE_END D_002E2FD8, 0x188
 	PIECE D_002E3160, 0x8, 8
-	PIECE D_002E3168, 0x8, 8  /* untyped: users disagree: s32 D_002E3168 | u32 D_002E3168 */
-	PIECE D_002E3170, 0x20, 16  /* untyped: users disagree: It17 *D_002E3170[] | M2C_UNK D_002E3170 | Q8 *D_002E3170[8] | Q8 *D_002E3170[] | Spr *D_002E3170[] */
+	PIECE D_002E3168, 0x8, 8  /* data/pieces/D_002E3168.h */
+	PIECE D_002E3170, 0x20, 16  /* untyped: users disagree: It17 *D_002E3170[] | M2C_UNK D_002E3170 | Q8 *D_002E3170[8] | Q8 *D_002E3170[] | Spr *D_002E3170[]; session 25: as Q8 *D_002E3170[8]: new warning in text_00230000_h49.c, text_00230000_s11_w19.c; does not compile in text_00130660_s7_w37.c, text_00120000_h54.c +1 */
 	PIECE_BEGIN D_002E3190, 0xc, 4  /* merged (a user declares it larger than the next name): D_002E3194; data/pieces/D_002E3190.h */
 	PIECE_BYTES D_002E3190, 0x0, 0x4
 	PIECE_LABEL D_002E3190, D_002E3194, 0x4
 	PIECE_BYTES D_002E3190, 0x4, 0x8
 	PIECE_END D_002E3190, 0xc
-	PIECE D_002E319C, 0x4, 4  /* untyped: users disagree: O8 *D_002E319C | u16 *D_002E319C */
-	PIECE D_002E31A0, 0x4, 4  /* untyped: users disagree: O8 *D_002E31A0 | S31a0 *D_002E31A0 */
-	PIECE D_002E31A4, 0x4, 4  /* untyped: users disagree: s32 D_002E31A4 | u8 *D_002E31A4 */
-	PIECE D_002E31A8, 0x8, 8  /* untyped: users disagree: s32 D_002E31A8 | u32 D_002E31A8 */
-	PIECE D_002E31B0, 0x8, 8  /* untyped: users disagree: B4Pair D_002E31B0 | LockEA D_002E31B0 | M2C_UNK D_002E31B0 | P8 D_002E31B0 | S31b0 D_002E31B0 | V8 D_002E31B0 | s32 D_002E31B0 | s32 D_002E31B0[2] | u8 D_002E31B0[] */
-	PIECE D_002E31B8, 0x4, 4  /* untyped: users disagree: s32 D_002E31B8 | u32 D_002E31B8 */
+	PIECE D_002E319C, 0x4, 4  /* untyped: users disagree: O8 *D_002E319C | u16 *D_002E319C; session 25: as O8 *D_002E319C: does not compile in text_00130660_s7_w37.c, text_00120000_h54.c +1 */
+	PIECE D_002E31A0, 0x4, 4  /* untyped: users disagree: O8 *D_002E31A0 | S31a0 *D_002E31A0; session 25: as O8 *D_002E31A0: does not compile in text_00130660_s7_w37.c, text_00120000_s10_r2_7.c; new warning in text_00120000_h5.c */
+	PIECE D_002E31A4, 0x4, 4  /* untyped: users disagree: s32 D_002E31A4 | u8 *D_002E31A4; session 25: as u8 *D_002E31A4: new warning in text_00120000_h54.c */
+	PIECE D_002E31A8, 0x8, 8  /* data/pieces/D_002E31A8.h */
+	PIECE D_002E31B0, 0x8, 8  /* untyped: users disagree: B4Pair D_002E31B0 | LockEA D_002E31B0 | M2C_UNK D_002E31B0 | P8 D_002E31B0 | S31b0 D_002E31B0 | V8 D_002E31B0 | s32 D_002E31B0 | s32 D_002E31B0[2] | u8 D_002E31B0[]; session 25: as S31b0 D_002E31B0: does not compile in text_00230000_h49.c, text_00120000_s6_05.c +3 */
+	PIECE D_002E31B8, 0x4, 4  /* data/pieces/D_002E31B8.h */
 	PIECE D_002E31BC, 0x2c, 4
 	PIECE D_002E31E8, 0x8, 8
 	PIECE D_002E31F0, 0x20000, 16

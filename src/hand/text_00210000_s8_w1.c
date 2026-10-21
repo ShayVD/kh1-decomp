@@ -10,7 +10,7 @@ typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8
 typedef union { s32 i; u16 h; } U32H;
 extern Cfg *D_00425BC8;
 extern S4BE8 *D_00304BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern void *D_00642C90;
 extern s32 D_00642C94;
 extern s32 D_00642C98;

@@ -24,7 +24,7 @@ M2C_UNK func_0026a9d0(s32);
 M2C_UNK func_0026b978(f32);
 M2C_UNK func_0026b9a8(f32, f32);
 M2C_UNK func_00270b40();
-extern M2C_UNK D_002E2F28;
+#include "data/pieces/D_002E2F28.h"
 extern M2C_UNK D_002E2F34;
 extern M2C_UNK D_004F6EC0; /* src/data/bss_004F.c: TPool D_004F6EC0 */
 M2C_UNK D_004F6ED0[0xa0] ALIGNED(16);
@@ -35,13 +35,13 @@ extern f32 D_002E27A0;
 extern f32 D_004F77E4;
 extern s32 D_0029B418;
 extern s32 D_002BBE04;
-extern s32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern s32 D_00304B78;
 extern s32 D_00350D7C;
 extern s32 D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern s32 D_00514F10;
 extern s32 D_00514F14;
-extern u32 D_002BBDE4;
+#include "data/pieces/D_002BBDE4.h"
 extern u32 D_002C5958;
 f32 func_00121748();
 f32 func_00176850();
@@ -462,7 +462,7 @@ void func_0012b1a8(s32 *arg0) {
 }
 
 void func_0012b1e8(M2C_UNK **arg0) {
-    *arg0 = &D_002E2F28;
+    *arg0 = ((M2C_UNK *)&D_002E2F28);
 }
 
 void func_0012b1f8(M2C_UNK **arg0) {

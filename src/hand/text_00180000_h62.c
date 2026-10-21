@@ -21,7 +21,7 @@ extern f32 D_005758D0[];
 extern f32 D_002E2790[];
 extern f32 D_005758E0[];
 extern f32 D_002E27A0;
-extern Rec20 *D_00362428;
+#include "data/pieces/D_00362428.h"
 extern s32 D_0036242C;
 extern Rec20 *D_00362434;
 extern Rec20 *D_00362438;
@@ -73,7 +73,7 @@ void func_0017f290(CamArg *a) {
 extern s32 D_00362704;
 extern s32 D_00362708;
 extern s32 D_0036270C;
-extern f32 D_00362710;
+#include "data/pieces/D_00362710.h"
 extern f32 D_00362714;
 extern f32 D_00362718;
 extern f32 D_0036271C;

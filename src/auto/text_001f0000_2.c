@@ -6,7 +6,7 @@
 M2C_UNK func_001f3698(void *, s32);
 M2C_UNK func_001f5fe0();
 M2C_UNK func_001f8170(void *);
-extern M2C_UNK D_00490AE0;
+#include "data/pieces/D_00490AE0.h"
 extern M2C_UNK D_0063F758; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern f32 D_002BBDFC;
 extern s32 D_003E8E28;
@@ -163,7 +163,7 @@ M2C_UNK *func_001f4010(void *arg0) {
 
     var_v0 = M2C_FIELD(arg0, M2C_UNK **, 0x64);
     if (var_v0 == NULL) {
-        var_v0 = &D_00490AE0;
+        var_v0 = (M2C_UNK *)&D_00490AE0;
     }
     return var_v0;
 }

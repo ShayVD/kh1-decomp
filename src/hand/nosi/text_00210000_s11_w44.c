@@ -3,7 +3,7 @@
 typedef struct { u8 x0[0x44]; u8 x44[48]; } Ch74;
 typedef struct { union { Ch74 c[1]; struct { u8 pad[0x48e]; u8 ids[8]; } h; } u; } P48E;
 extern P48E *D_00304BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_00642C78[];
 extern s32 D_00642C74[];
 void func_00214a68(void) {

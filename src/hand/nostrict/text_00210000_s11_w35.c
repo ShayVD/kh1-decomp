@@ -12,7 +12,7 @@ typedef struct { u8 pad[16]; s32 x10; } E20;
 
 extern Cfg *D_00425BC8;
 extern S4BE8 *D_00304BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern s32 D_00642CCC;
 extern s32 D_00642CD8;
 extern s32 D_00642CDC;

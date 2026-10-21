@@ -9,7 +9,7 @@ M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC1B0;
 extern M2C_UNK D_002BC320;
-extern M2C_UNK D_002BC720;
+#include "data/pieces/D_002BC720.h"
 extern M2C_UNK func_00106460;
 extern M2C_UNK func_00109360;
 extern f32 D_00494A88;
@@ -46,7 +46,7 @@ void func_001094f0(void) {
     func_00175918();
     func_00175980();
     D_0035C6F0 = 1;
-    func_0011efa8((s32) &D_002BC720, (s32) &D_002BC320, 0x20, 0x20);
+    func_0011efa8((s32) (M2C_UNK *)&D_002BC720, (s32) &D_002BC320, 0x20, 0x20);
     func_0011ef10(0x2E662, (s32) &func_00109360);
 }
 

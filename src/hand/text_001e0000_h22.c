@@ -15,7 +15,7 @@ void func_001ee230(u32 *a, u32 *b, u32 *c, u32 *d) {
 typedef struct { u8 pad[0x18]; u8 cnt; u8 a19[0x19]; u8 f32; u8 pad33[0x40 - 0x33]; u8 name[0x30]; u8 pad70[4]; } Member;
 typedef struct { u8 pad[4]; Member m[10]; u8 pad2[2]; u8 party[4]; u8 pad492[0x499 - 0x492]; u8 x499[0x100]; u8 list599[0x30]; } S4BE8;
 extern S4BE8 *D_00304BE8;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u16 D_003E3CD0[];
 s32 func_00149440(s32, s32);
 s32 func_001ee7c8(void);
@@ -200,7 +200,7 @@ s32 func_001ef0c0(s32 a) {
     return n;
 }
 
-extern s32 D_003E3CF8[];
+#include "data/pieces/D_003E3CF8.h"
 
 s32 func_001ef2c0(s32 a) {
     u32 i;

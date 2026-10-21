@@ -7,7 +7,7 @@ M2C_UNK func_001350d0(void *);
 M2C_UNK func_00167978(s32, s32, s32);
 M2C_UNK func_00167ac0(s32, s32, s32);
 M2C_UNK func_00167fd0(s32, s32, s32);
-extern s32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern s32 D_00304BE8;
 s32 func_00135888();
 

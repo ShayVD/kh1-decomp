@@ -36,7 +36,7 @@ typedef struct ObjE {
 } ObjE;
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234, D_00641238, D_0064123C;
 extern s32 D_00641240, D_00641254, D_00641274, D_00641790;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u8 D_003F38E0[], D_003F3910[];
 extern s32 D_003F39A8[];
 s32 func_001ee7f0(s32);

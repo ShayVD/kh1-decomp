@@ -132,8 +132,8 @@ V4F D_00615E80 ALIGNED(16);
 V4F D_00615E90 ALIGNED(16);
 V4F D_00615EA0 ALIGNED(16);
 extern V4F D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
-extern f32 D_003701F0[3];
-extern s32 D_003701E0[3];
+#include "data/pieces/D_003701F0.h"
+#include "data/pieces/D_003701E0.h"
 extern u8 D_003701D0[];
 
 void func_00183be0(void *, void *);

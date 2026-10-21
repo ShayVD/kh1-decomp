@@ -484,7 +484,7 @@ s32 func_00158780(s32 k) {
 
 /* ---- func_00158960 ---- */
 extern s16 D_002C595A;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern s32 D_00351A48;
 extern u8 D_00351A40[];
 extern u32 D_005516EC; /* src/data/bss_0055.c: s32 D_005516EC */
@@ -573,7 +573,7 @@ void func_001595a8(Act *a, V4 *o) {
 
 /* ---- func_00159978 ---- */
 typedef struct { Act *p; s32 w4; } Arg159178;
-extern u32 D_002E3168;
+#include "data/pieces/D_002E3168.h"
 s32 func_00123368(Act *);
 Act *func_001230a0(Act *);
 void func_0013dfb8(Act *, V4 *);
@@ -1142,7 +1142,7 @@ char *func_0015b060(void) {
 /* needs make: uses rodata */
 typedef struct { s32 x0; char *x4; } R478a0;
 extern s32 D_00351B20[][2];
-extern s32 D_002BBDE4;
+#include "data/pieces/D_002BBDE4.h"
 char *func_00147808(s32);
 R478a0 *func_001478a0(s32);
 void func_00244670(s32, char *, char *);

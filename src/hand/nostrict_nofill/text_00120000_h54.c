@@ -13,7 +13,7 @@ extern St8 D_002E3190;
 extern O8 *D_002E319C;
 extern s32 D_002E31A4;
 extern S31b0 D_002E31B0;
-extern s32 D_002E31B8;
+#include "data/pieces/D_002E31B8.h"
 extern Q8 D_002E30B8;
 extern Q8 *D_002E3170[];
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */

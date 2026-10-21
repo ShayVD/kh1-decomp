@@ -83,7 +83,8 @@ typedef struct {
     u64 flags; u8 pad8[200]; V4 v208; V4 v224; V4 v240; V4 v256; V4 v272; f32 f288; f32 f292;
 } Tw_c6890;
 extern V4 D_002E2780, D_002E2790;
-extern f32 D_002E27A0, D_002E27A4;
+extern f32 D_002E27A0;
+#include "data/pieces/D_002E27A4.h"
 void *memset(void *, s32, u32);
 void func_00267768(f32 (*d)[4], f32 (*s)[4], f32 r);
 void func_002676c0(f32 (*d)[4], f32 (*s)[4], f32 r);

@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct { s32 v[48]; } __attribute__((aligned(8))) Spr;
-typedef struct { u8 pad[8]; s32 off; } Blob;
+#include "data/types/nostrict_text_00240000_s6_g1.h"
 typedef struct {
     u8 pad0[8];
     Spr *a[7];      /* 0x08 */
@@ -28,7 +28,12 @@ typedef struct {
     u8 padCF0[0x10];
 } Slot;
 extern Slot D_00651E70[];
-extern Blob D_0044A830, D_0044C5A0, D_0044DFD0, D_0044F380, D_0044F4D0, D_00451040;
+extern Blob D_00451040;
+#include "data/pieces/D_0044F4D0.h"
+#include "data/pieces/D_0044F380.h"
+#include "data/pieces/D_0044DFD0.h"
+#include "data/pieces/D_0044C5A0.h"
+#include "data/pieces/D_0044A830.h"
 extern s32 D_00454430[], D_00454448[], D_00454450[], D_00454468[];
 extern s32 D_00454488[], D_00454498[], D_004544A0[], D_004544B0[];
 extern s32 D_004544C0[], D_004544C8[], D_004544D0[];

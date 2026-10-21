@@ -6,7 +6,7 @@ extern s32 D_002BC128;
 extern s32 D_002BC12C;
 extern s32 D_002BC138;
 extern s32 D_002BC13C;
-extern char D_002BCCE0[];
+#include "data/pieces/D_002BCCE0.h"
 extern s32 D_002BCDB4;
 extern s32 D_002BCDB8;
 extern s32 D_002BCDD8;
@@ -106,7 +106,7 @@ typedef struct Obj_s {
 typedef struct { u8 pad[0x1c]; void *obj; void *spr; } Task;
 #define SPR(t) ((Spr *)(t)->spr)
 extern s32 D_00495254;
-extern u8 D_002B7590[];
+#include "data/pieces/D_002B7590.h"
 extern u16 D_002B67C0[];
 extern u16 D_002B67C8[];
 extern f32 D_002B6798[];

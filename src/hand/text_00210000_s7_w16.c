@@ -31,7 +31,7 @@ extern s32 D_00641BF0[];
 extern s32 D_00641C00;
 extern s32 D_00642410;
 extern s32 D_00642C18;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern E3D70 D_003E3D70[];
 typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;

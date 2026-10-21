@@ -349,7 +349,8 @@ s32 D_006627C8 ALIGNED(8);
 s32 D_006627D0 ALIGNED(16);
 s32 D_006627D8 ALIGNED(8);
 extern Msg3 D_006627B0;
-extern u8 D_002E26C0[], D_00431D20[];
+extern u8 D_00431D20[];
+#include "data/pieces/D_002E26C0.h"
 typedef struct { s32 x, y; } XY;
 void func_0024ae00(void *);
 void func_0024af00(void *);

@@ -89,13 +89,13 @@ extern s32 D_006314CC;
 extern s32 D_006314D0;
 extern s32 D_006314D4;
 extern s8 D_006314C8;
-extern u8 D_003DBA68[];
+#include "data/pieces/D_003DBA68.h"
 extern u8 D_003DC368[];
-extern u8 D_003DC390[];
+#include "data/pieces/D_003DC390.h"
 extern u8 D_003DC3D0[];
 extern u8 D_003DC408[];
 extern u8 D_003DC428[];
-extern u8 D_003DCD70[];
+#include "data/pieces/D_003DCD70.h"
 extern u8 D_003DCF30[];
 extern u8 D_003DD320[];
 extern u8 D_0062F760[];

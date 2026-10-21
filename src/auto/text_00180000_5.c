@@ -14,7 +14,7 @@ M2C_UNK func_00267328(void *, M2C_UNK *, M2C_UNK *);
 M2C_UNK sceGsExecLoadImage(void *, void *);
 M2C_UNK sceGsSetDefLoadImage(void *, s16, s16, s16, s16, s16, s16, s16);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-extern M2C_UNK D_002BBFA0;
+#include "data/pieces/D_002BBFA0.h"
 extern M2C_UNK D_00615E70;
 extern s32 D_00615E64;
 extern s32 D_00615E68;
@@ -24,7 +24,7 @@ void memset(s32, s32, s32);
 
 void func_001812d0(void *arg0) {
     s32 sp[16];
-    func_00267328(sp, &D_002BBFA0, &D_00615E70);
+    func_00267328(sp, (M2C_UNK *)&D_002BBFA0, &D_00615E70);
     func_0024edf0(sp, M2C_FIELD(arg0, s32 *, 0x8C));
 }
 

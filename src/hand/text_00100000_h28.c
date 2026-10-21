@@ -48,9 +48,9 @@ typedef struct {
 
 extern Api D_0046A688;
 extern Cam80 D_00494310[2];
-extern E90 D_002B1C60[][64];
+#include "data/pieces/D_002B1C60.h"
 extern E90 D_00494F20[][2];
-extern ED0 D_002AA060[];
+#include "data/pieces/D_002AA060.h"
 extern ED0 D_00494D80[];
 extern Ent14 *D_002A6238;
 extern Ent14 *D_002A62B0;
@@ -96,7 +96,7 @@ extern s32 D_002A3F44;
 extern s32 D_002A3F50[2];
 extern s32 D_002A61F4;
 extern s32 D_002A6258;
-extern s32 D_002A62D0;
+#include "data/pieces/D_002A62D0.h"
 extern s32 D_002A6B84;
 extern s32 D_002B6474;
 extern s32 D_002B6478;
@@ -106,7 +106,7 @@ extern s32 D_002B6484;
 extern s32 D_002B6770;
 extern s32 D_002B6774;
 extern s32 D_002BBBA0;
-extern s32 D_002BBDE4;
+#include "data/pieces/D_002BBDE4.h"
 extern s32 D_002BC130;
 extern s32 D_002BC734;
 extern s32 D_002BC738;
@@ -193,8 +193,8 @@ extern u8 D_002B65E0[];
 extern u8 D_002B66B0[];
 extern u8 D_002B75C0[];
 extern u8 D_002BC1B0[];
-extern u8 D_002BC720[];
-extern u8 D_002BCAF0[];
+#include "data/pieces/D_002BC720.h"
+#include "data/pieces/D_002BCAF0.h"
 extern u8 D_0046E120[];
 extern u8 D_00472160[];
 extern u8 D_004761A0[];
@@ -964,7 +964,7 @@ void func_0010e4f0(W29Obj *o) {
 
 /* func_0010a248 only matches with func_00109f88 defined above it. */
 extern u8 D_002BC210[];
-extern s32 D_002B677C;
+#include "data/pieces/D_002B677C.h"
 f32 D_0049517C ALIGNED(4);
 extern s32 func_00106978(s32);
 

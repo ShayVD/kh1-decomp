@@ -49,17 +49,7 @@ typedef struct Actor {
 } Actor;
 
 /* camera path (D_00362438 points to one) */
-typedef struct { f32 x, y, z, len; } Seg;
-typedef struct Path {
-    s32 n;          /* 0x00 */
-    u8 pad4[4];
-    f32 x8;         /* 0x08 */
-    u8 padc[8];
-    f32 x14;        /* 0x14 */
-    s32 flags;      /* 0x18 */
-    u8 pad1c[4];
-    Seg seg[1];     /* 0x20 */
-} Path;
+#include "data/types/text_00170000_h38_p.h"
 
 /* camera state at D_00575940 */
 typedef struct Cam {
@@ -104,9 +94,9 @@ extern s32 D_002E27A8;
 extern void *D_00362434;
 extern Path *D_00362438;
 extern void *D_0036243C;
-extern void *D_0036244C;
-extern Path *D_00362450;
-extern void *D_00362454;
+#include "data/pieces/D_0036244C.h"
+#include "data/pieces/D_00362450.h"
+#include "data/pieces/D_00362454.h"
 extern V4 D_00362580;
 extern V4 D_00362590;
 extern f32 D_003623F4;

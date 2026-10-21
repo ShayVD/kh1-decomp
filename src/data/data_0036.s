@@ -56,19 +56,19 @@
 	PIECE D_00362400, 0x10, 16
 	PIECE D_00362410, 0x10, 16
 	PIECE D_00362420, 0x4, 4
-	PIECE D_00362424, 0x4, 4  /* untyped: users disagree: Hdr *D_00362424 | s32 D_00362424 */
-	PIECE D_00362428, 0x4, 4  /* untyped: users disagree: Rec20 *D_00362428 | Rec32 *D_00362428 | s32 D_00362428 */
-	PIECE D_0036242C, 0x4, 4  /* untyped: users disagree: Rec *D_0036242C | s32 D_0036242C */
-	PIECE D_00362430, 0x4, 4  /* untyped: users disagree: Box *D_00362430 | E30 *D_00362430 | s32 D_00362430 */
-	PIECE D_00362434, 0x4, 4  /* untyped: users disagree: CamPt *D_00362434 | P1c *D_00362434 | Rec20 *D_00362434 | s32 D_00362434 | void *D_00362434 */
-	PIECE D_00362438, 0x4, 4  /* untyped: users disagree: P1c *D_00362438 | Path *D_00362438 | PathB *D_00362438 | Rec20 *D_00362438 | S18 *D_00362438 | s32 D_00362438 | void *D_00362438; unparsed in 1 file(s) */
-	PIECE D_0036243C, 0x4, 4  /* untyped: users disagree: Box *D_0036243C | s32 D_0036243C | void *D_0036243C */
+	PIECE D_00362424, 0x4, 4  /* data/pieces/D_00362424.h */
+	PIECE D_00362428, 0x4, 4  /* data/pieces/D_00362428.h */
+	PIECE D_0036242C, 0x4, 4  /* untyped: users disagree: Rec *D_0036242C | s32 D_0036242C; session 25: as s32 D_0036242C: new warning in text_00170000_h11.c */
+	PIECE D_00362430, 0x4, 4  /* untyped: users disagree: Box *D_00362430 | E30 *D_00362430 | s32 D_00362430; session 25: as Box *D_00362430: new warning in text_00170000_h11.c */
+	PIECE D_00362434, 0x4, 4  /* untyped: users disagree: CamPt *D_00362434 | P1c *D_00362434 | Rec20 *D_00362434 | s32 D_00362434 | void *D_00362434; session 25: as s32 D_00362434: new warning in text_00170000_b06.c, text_00170000_h38.c +1; does not compile in text_00170000_s7_w2.c, text_00170000_h61.c */
+	PIECE D_00362438, 0x4, 4  /* untyped: users disagree: P1c *D_00362438 | Path *D_00362438 | PathB *D_00362438 | Rec20 *D_00362438 | S18 *D_00362438 | s32 D_00362438 | void *D_00362438; unparsed in 1 file(s); session 25: as Path *D_00362438: does not compile in text_00170000_s6_10.c, text_00170000_s7_w2.c +2; new warning in text_s7_w27.c */
+	PIECE D_0036243C, 0x4, 4  /* untyped: users disagree: Box *D_0036243C | s32 D_0036243C | void *D_0036243C; session 25: as s32 D_0036243C: does not compile in text_00170000_b06.c; new warning in text_00170000_h38.c */
 	PIECE D_00362440, 0x4, 4
 	PIECE D_00362444, 0x4, 4
 	PIECE D_00362448, 0x4, 4
-	PIECE D_0036244C, 0x4, 4  /* untyped: users disagree: s32 D_0036244C | void *D_0036244C */
-	PIECE D_00362450, 0x4, 4  /* untyped: users disagree: Path *D_00362450 | s32 D_00362450 */
-	PIECE D_00362454, 0x4, 4  /* untyped: users disagree: s32 D_00362454 | void *D_00362454 */
+	PIECE D_0036244C, 0x4, 4  /* data/pieces/D_0036244C.h */
+	PIECE D_00362450, 0x4, 4  /* data/pieces/D_00362450.h */
+	PIECE D_00362454, 0x4, 4  /* data/pieces/D_00362454.h */
 	PIECE D_00362458, 0x4, 4  /* untyped: type Fn8 is not a common.h basic type */
 	PIECE_BEGIN D_0036245C, 0x5c, 4  /* data/pieces/D_0036245C.h */
 	PIECE_BYTES D_0036245C, 0x0, 0x4
@@ -151,13 +151,13 @@
 	PIECE_LABEL D_00362690, D_003626B0, 0x20
 	PIECE_BYTES D_00362690, 0x20, 0x10
 	PIECE_END D_00362690, 0x30
-	PIECE D_003626C0, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003626C0 | S26C0 D_003626C0 */
-	PIECE D_003626F0, 0x8, 8  /* untyped: users disagree: Arg D_003626F0[] | M2C_UNK D_003626F0 | S26F0 D_003626F0 */
-	PIECE D_003626F8, 0xc, 4  /* untyped: users disagree: M2C_UNK D_003626F8 | f32 D_003626F8[3] */
+	PIECE D_003626C0, 0x30, 16  /* untyped: users disagree: M2C_UNK D_003626C0 | S26C0 D_003626C0; session 25: as S26C0 D_003626C0: does not compile in text_00170000_h61.c */
+	PIECE D_003626F0, 0x8, 8  /* untyped: users disagree: Arg D_003626F0[] | M2C_UNK D_003626F0 | S26F0 D_003626F0; session 25: as Arg D_003626F0[]: does not compile in text_00170000_h61.c */
+	PIECE D_003626F8, 0xc, 4  /* data/pieces/D_003626F8.h */
 	PIECE D_00362704, 0x4, 4
 	PIECE D_00362708, 0x4, 4
 	PIECE D_0036270C, 0x4, 4
-	PIECE D_00362710, 0x4, 4  /* untyped: users disagree: f32 D_00362710 | s32 D_00362710 */
+	PIECE D_00362710, 0x4, 4  /* data/pieces/D_00362710.h */
 	PIECE D_00362714, 0x4, 4
 	PIECE D_00362718, 0x4, 4
 	PIECE D_0036271C, 0x4, 4
@@ -165,7 +165,7 @@
 	PIECE D_00362724, 0x4, 4
 	PIECE D_00362728, 0x4, 4
 	PIECE D_0036272C, 0x4, 4
-	PIECE D_00362730, 0x1200, 16  /* untyped: users disagree: H39Slot D_00362730[]; unparsed in 1 file(s) */
+	PIECE D_00362730, 0x1200, 16  /* untyped: users disagree: H39Slot D_00362730[]; unparsed in 1 file(s); session 25: as H39Slot D_00362730[]: code changes in text_00170000_s6_10.c */
 	PIECE D_00363930, 0x400, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00363D30, 0x400, 16  /* untyped: no C user outside src/sdk/ with one file-scope extern */
-	PIECE D_00364130, 0xc000, 16  /* untyped: users disagree: E0C0 D_00364130[256] | H39Obj D_00364130[256] | M2C_UNK D_00364130 | PObj D_00364130[256] | PppMng D_00364130[256]; unparsed in 1 file(s) */
+	PIECE D_00364130, 0xc000, 16  /* untyped: users disagree: E0C0 D_00364130[256] | H39Obj D_00364130[256] | M2C_UNK D_00364130 | PObj D_00364130[256] | PppMng D_00364130[256]; unparsed in 1 file(s); session 25: as H39Obj D_00364130[256]: does not compile in text_00180000_3.c, text_00170000_s6_10.c +2; no file-scope extern in text_00180000_b07.c */

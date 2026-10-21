@@ -179,7 +179,7 @@ typedef struct {
 typedef struct { u8 pad[9]; u8 x[1]; } DbSave9;
 typedef struct { u8 pad[0x28]; s32 x28; } DbObj;
 extern DbSave *D_00304BE8;
-extern s32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3880[];
 extern u8 D_003F38E0[];
 s32 func_00149600(s32, s32);

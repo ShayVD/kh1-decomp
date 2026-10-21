@@ -1,20 +1,21 @@
 #include "common.h"
 /* func_001124f8: matched in session 8 (w7): func_001ed170 takes one s32 argument, called with D_002C1380. */
 typedef struct { s32 x0, x4, x8, xc, x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38; } MapHdr;
-typedef struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:2; u32 b6:1; u32 r:25; } RoomFl;
-typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; RoomFl fl; s32 x14; s32 x18; s32 x1c; s32 x20; s32 x24; s32 x28; s32 x2c; u8 pad[0x10]; } Room;
+#include "data/types/text_00110000_s8_w7.h"
 typedef struct { u32 b0:2; u32 b2:1; u32 b3:1; u32 r:28; } Fl0A8;
 extern MapHdr *D_004D92DC; /* src/data/bss_004D.c: void *D_004D92DC */
-extern s32 D_002BCC90, D_002BCC9C, D_002BCC94, D_002BCDE0;
-extern Room *D_002BCDAC;
-extern u32 D_002BCDB0, D_002BCDA4;
+extern s32 D_002BCC90, D_002BCC94, D_002BCDE0;
+#include "data/pieces/D_002BCC9C.h"
+#include "data/pieces/D_002BCDAC.h"
+extern u32 D_002BCDB0;
+#include "data/pieces/D_002BCDA4.h"
 extern Room *D_002BCDA0;
 extern s32 D_002BCDD8, D_002BCDA8, D_002BC128, D_002BC130, D_002BC134, D_002BCDDC, D_002BC12C, D_002BC734;
 extern Fl0A8 D_002BC0A8;
 extern s32 D_002BCB30, D_002C12C0, D_002C1380, D_002C1360, D_002C1384;
 extern s32 D_002A3F50[2];
 extern s32 D_002C1378[2];
-extern s32 D_002E27A4;
+#include "data/pieces/D_002E27A4.h"
 s32 func_00111660(s32, s32);
 void func_00112320(void);
 void func_001119d0(void);

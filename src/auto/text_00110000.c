@@ -67,8 +67,8 @@ extern s32 D_002BCC20;
 extern s32 D_002BCC24;
 extern s32 D_002BCC98;
 extern s32 D_002BCDA8;
-extern s32 D_002BCDAC;
-extern s32 D_002BD118;
+#include "data/pieces/D_002BCDAC.h"
+#include "data/pieces/D_002BD118.h"
 extern s32 D_002BD11C;
 extern s32 D_002C1308;
 extern s32 D_002C130C;
@@ -180,7 +180,7 @@ s32 func_00111fe0(s32 arg0) {
 }
 
 void func_00112498(void) {
-    D_002BCC98 = M2C_FIELD(((D_002BC130 << 6) + D_002BCDAC), s32 *, 4);
+    D_002BCC98 = M2C_FIELD(((D_002BC130 << 6) + (*(s32 *)&D_002BCDAC)), s32 *, 4);
 }
 
 void func_001124c0(void) {

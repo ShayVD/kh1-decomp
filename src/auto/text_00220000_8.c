@@ -3,8 +3,8 @@
 #include "m2c.h"
 #include "data/bss_0064.h"
 
-extern M2C_UNK D_003F6920;
-extern M2C_UNK D_003F6E40;
+#include "data/pieces/D_003F6920.h"
+#include "data/pieces/D_003F6E40.h"
 extern s32 D_006436D4;
 extern s32 D_00643734;
 extern s32 D_00643740;
@@ -39,7 +39,7 @@ s32 func_00224b38(s32 arg0) {
             func_0020be10(0x10);
             D_00643734 = 0;
             func_00233f18();
-            temp_v0 = func_001f31a8((s32) &D_003F6920, 6);
+            temp_v0 = func_001f31a8((s32) (M2C_UNK *)&D_003F6920, 6);
             if (temp_v0 != 0) {
                 func_001f3e48(temp_v0, arg0);
                 func_001f3dc0(D_00643740);
@@ -121,7 +121,7 @@ s32 func_00229ad0(s32 arg0) {
             func_0011d768(2);
             func_0020be10(0x10);
             func_00233f18();
-            temp_v0 = func_001f31a8((s32) &D_003F6E40, 6);
+            temp_v0 = func_001f31a8((s32) (M2C_UNK *)&D_003F6E40, 6);
             if (temp_v0 != 0) {
                 func_001f3e48(temp_v0, arg0);
                 func_001f3dc0(D_00646990);

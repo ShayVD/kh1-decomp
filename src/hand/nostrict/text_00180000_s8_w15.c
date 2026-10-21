@@ -93,7 +93,7 @@ extern struct { u8 pad[0x90]; s16 *verts; } *D_00615E68;
 extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern u8 *D_00616224;
 extern s32 D_00616228;
-extern f32 D_003701F0[];
+#include "data/pieces/D_003701F0.h"
 
 void func_00267560(f32 *, f32 *, f32);
 void *func_001aa950(s32);

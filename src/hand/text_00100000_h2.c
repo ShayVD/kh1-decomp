@@ -56,7 +56,7 @@ void func_002660c0(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16);
 s32 sceGsExecStoreImage(GsImagePacket *, void *);
 void *func_001559f0(s32, s32);
 
-extern void *D_002B677C;
+#include "data/pieces/D_002B677C.h"
 
 s32 func_0010a058(void) {
     GsImagePacket si;
@@ -117,12 +117,8 @@ void func_0010b190(u8 *p) {
 }
 
 /* Callbacks run by the semaphore-driven thread func_0010c0c8. */
-typedef struct {
-    void (*fn)(s32);
-    s32 arg;
-    s32 done;
-} SemaCb;
-extern SemaCb D_002B75A0[2];
+#include "data/types/text_00100000_h2_p.h"
+#include "data/pieces/D_002B75A0.h"
 extern s32 D_00495260;
 s32 WaitSema(s32);
 void func_0010c0c8(void) {
@@ -172,7 +168,7 @@ void *func_0010c3c0(void) {
 }
 
 extern GsImagePacket D_002BC1B0;
-extern s32 D_002BD118;
+#include "data/pieces/D_002BD118.h"
 void sceGsSetDefLoadImage(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16);
 s32 sceGsExecLoadImage(GsImagePacket *, void *);
 
@@ -315,12 +311,12 @@ void func_0010ffe0(void) {
     func_00265980(&D_004D8EC0);
 }
 extern f32 D_002BBDEC;
-extern volatile s32 D_002BBDF0;
-extern volatile s32 D_002BBDF8;
+#include "data/pieces/D_002BBDF0.h"
+#include "data/pieces/D_002BBDF8.h"
 extern f32 D_002BBDFC;
 extern s32 D_002BBE10;
 extern s32 D_002BBE0C;
-extern f32 D_002BCAF0[4][4];
+#include "data/pieces/D_002BCAF0.h"
 extern s32 D_002BD110;
 void sceVu0UnitMatrix(f32 (*)[4]);
 void func_00110458(void) {
@@ -546,7 +542,7 @@ void func_001130a0(s32 i, f32 *d) {
 }
 typedef struct { s32 id; u8 pad4[0xc]; f32 v[3][4]; } Ent40;
 extern Ent40 *D_002BCDA0;
-extern s32 D_002BCDA4;
+#include "data/pieces/D_002BCDA4.h"
 
 s32 func_001130e0(void) {
     s32 i;

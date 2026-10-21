@@ -35,7 +35,7 @@ extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
 extern s32 D_004E44C0; /* src/data/bss_004E.c: s32 D_004E44C0[0x2] */
 extern s8 D_002BCB68;
 extern s8 D_002C1260;
-extern volatile s32 D_002BBDF4;
+#include "data/pieces/D_002BBDF4.h"
 extern volatile s32 D_002BD114;
 s32 func_00104c38(s32, s32);
 s32 func_00110360(void);

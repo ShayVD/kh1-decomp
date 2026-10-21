@@ -759,7 +759,7 @@ void func_0011ef58(void (*f)(void));
 void func_0013b958(void);
 void func_00133708(void);
 void func_00100ab0(void);
-extern s32 D_00304B84;
+#include "data/pieces/D_00304B84.h"
 extern u32 D_00304B78;
 void func_0013bd08(void) {
     u32 *f = &D_002C5958;

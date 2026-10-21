@@ -48,7 +48,7 @@ M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
 M2C_UNK sceGsExecStoreImage(void *, M2C_UNK *);
 M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-extern M2C_UNK D_003DC390;
+#include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E1CB0;
 extern M2C_UNK D_003E3700;
 extern M2C_UNK D_003E3CB8;
@@ -180,7 +180,7 @@ void func_001e3b28(void) {
 }
 
 void func_001e3da8(void) {
-    func_0010ef70(&D_0062F790, &D_003DC390, 0);
+    func_0010ef70(&D_0062F790, (M2C_UNK *)&D_003DC390, 0);
 }
 
 void func_001e4048(s32 arg0) {

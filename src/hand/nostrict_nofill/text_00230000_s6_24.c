@@ -9,14 +9,13 @@ typedef struct {
 } GsTexHdr;
 typedef struct { u8 pad[0x10]; GsTexHdr h; } GsTex;
 typedef struct { u8 b[0x4440]; } Tex4440;
-typedef struct { u8 b[0x1440]; } Tex1440;
-typedef struct { Tex1440 t; u8 pad[6000 - 0x1440]; } Tex6000;
+#include "data/types/nostrict_nofill_text_00230000_s6_24_p.h"
 #include "data/types/nostrict_nofill_text_00230000_s6_24.h"
 extern s32 D_00440994;
 extern GsTexHdr D_00426790, D_004267C0, D_004267F0, D_00426850, D_00426880, D_004268B0, D_00426820, D_00431D20, D_004268E0, D_00426910, D_00426940;
 extern Tex4440 D_00426970, D_0042B790;
 extern Tex1440 D_004305B0;
-extern Tex6000 D_00431F30[10];
+#include "data/pieces/D_00431F30.h"
 extern GsTexHdr D_00431D50[10];
 extern Slot32 D_00648230[];
 Slot32 D_006483B0[0x14] ALIGNED(16);

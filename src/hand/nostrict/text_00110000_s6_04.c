@@ -155,7 +155,7 @@ s32 func_00120040(u8 *buf, s32 len) {
     return size;
 }
 typedef struct { u8 pad[0x30]; s32 result; } CdReq30;
-extern s32 D_002C5C48;
+#include "data/pieces/D_002C5C48.h"
 CdReq30 *func_001204a0(char *, u8 *);
 void func_0011fd40(void);
 void func_00120038(CdReq30 *);
@@ -221,7 +221,7 @@ void func_00121c78(void) {
 }
 typedef struct { s32 kind; u8 pad[0x2c]; f32 v[4]; } Lt64;
 typedef struct { u8 pad[0x420]; u32 mask; u8 pad2[0xc]; f32 pos[4]; } Obj430;
-extern f32 D_002C5910[4][4];
+#include "data/pieces/D_002C5910.h"
 extern Lt64 D_002C5C80[];
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 

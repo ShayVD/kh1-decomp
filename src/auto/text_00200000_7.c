@@ -14,10 +14,10 @@ M2C_UNK func_002660c0(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2
 M2C_UNK sceGsExecStoreImage(M2C_UNK *, s32 *);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_003F3258;
-extern M2C_UNK D_003F34B0;
+#include "data/pieces/D_003F34B0.h"
 extern s32 D_00640E24;
 extern s32 D_00640E28;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 s32 func_001f94f0(s32, s32, s32, s32, s32, s32, s32);
 s32 func_00202678(s32, s32, s32);
 s32 func_00203a10(s32, s32);
@@ -111,8 +111,8 @@ void func_0020a8f0(void) {
     sceGsExecStoreImage(sp, &M2C_FIELD(sp, s32 *, 0xE0));
     sceGsExecStoreImage(&M2C_FIELD(sp, M2C_UNK *, 0x70), &M2C_FIELD(sp, s32 *, 0x1E0));
     sceGsSyncPath(0, 0);
-    M2C_FIELD(&D_003F34B0, s32 *, 0) = (s32) (M2C_FIELD(sp, s32 *, 0xE0) & 0xFFFFFF);
-    M2C_FIELD(&D_003F34B0, s32 *, 4) = (s32) (M2C_FIELD(sp, s32 *, 0x1E0) & 0xFFFFFF);
+    M2C_FIELD((M2C_UNK *)&D_003F34B0, s32 *, 0) = (s32) (M2C_FIELD(sp, s32 *, 0xE0) & 0xFFFFFF);
+    M2C_FIELD((M2C_UNK *)&D_003F34B0, s32 *, 4) = (s32) (M2C_FIELD(sp, s32 *, 0x1E0) & 0xFFFFFF);
 }
 
 void func_0020c100(s32 arg0, s32 arg1) {

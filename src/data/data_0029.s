@@ -30,7 +30,7 @@
 	PIECE_BYTES D_0029B260, 0x8, 0x8
 	PIECE_END D_0029B260, 0x10
 	PIECE D_0029B270, 0x10, 16
-	PIECE D_0029B280, 0x70, 16  /* untyped: users disagree: M2C_UNK D_0029B280 | f32 D_0029B280[4][4] | f32 D_0029B280[] | s32 D_0029B280[4][4] | u8 D_0029B280[] */
+	PIECE D_0029B280, 0x70, 16  /* untyped: users disagree: M2C_UNK D_0029B280 | f32 D_0029B280[4][4] | f32 D_0029B280[] | s32 D_0029B280[4][4] | u8 D_0029B280[]; session 25: as s32 D_0029B280[4][4]: new warning in text_00110000_s6_02.c */
 	PIECE D_0029B2F0, 0x4, 4
 	PIECE D_0029B2F4, 0x4, 4
 	PIECE D_0029B2F8, 0x4, 4
@@ -41,5 +41,5 @@
 	PIECE D_0029B414, 0x4, 4
 	PIECE D_0029B418, 0x4, 4
 	PIECE D_0029B41C, 0x4, 4
-	PIECE D_0029B420, 0xa00, 16  /* untyped: users disagree: Blk160 D_0029B420[] | Tex D_0029B420[] */
+	PIECE D_0029B420, 0xa00, 16  /* untyped: users disagree: Blk160 D_0029B420[] | Tex D_0029B420[]; session 25: as Tex D_0029B420[]: does not compile in text_00100000_s7_w4.c */
 	PIECE D_0029BE20, 0x8000, 16

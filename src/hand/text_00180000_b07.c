@@ -182,7 +182,7 @@ typedef struct {
 
 PObj *D_00575A10[0x10c] ALIGNED(16);
 extern PCur D_003701B0;
-extern void *D_00370130;
+#include "data/pieces/D_00370130.h"
 extern u8 D_00370140[];
 extern u8 D_00370170[];
 extern s32 D_00372908;

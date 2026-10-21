@@ -103,7 +103,7 @@ void func_0020d7d8(Obj7d8 *a0) {
 }
 
 typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 typedef struct { u8 pad[0x48e]; u8 x48e[11]; u8 x499[256]; } G4BE8;
 extern G4BE8 *D_00304BE8;
 extern s32 D_00641378[];

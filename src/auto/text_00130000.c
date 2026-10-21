@@ -27,7 +27,7 @@ extern M2C_UNK func_00132e78;
 extern s32 D_002C5958;
 extern s32 D_00304B78;
 extern s32 D_00525364;
-extern u32 D_002E31A8;
+#include "data/pieces/D_002E31A8.h"
 extern void *D_00304BE8;
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0();

@@ -57,7 +57,7 @@ extern s32 D_003DACD0;
 s32 func_0011ef10(s32, void (*)());
 void func_001e15a0();
 void func_001e2678();
-extern f32 D_003DAD3C;
+#include "data/pieces/D_003DAD3C.h"
 extern f32 D_003DAD40;
 extern s32 D_003DAD44;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; } Big20;
@@ -83,7 +83,7 @@ extern s32 D_003DC484;
 void func_00231b98(void *);
 void func_0010e3f0(void *);
 extern u8 D_003DC3C0[];
-extern u8 D_003DC390[];
+#include "data/pieces/D_003DC390.h"
 extern u8 D_003DC268[];
 extern s32 D_003DC48C;
 void func_001e3a00(void);

@@ -858,3 +858,21 @@ found that the next session needs:
   first. L = confirm (circle), K = cancel, arrows = d-pad, WASD = left stick.
 - Matching: not run this session (no new idea for the 1-2 word functions or 001c62a0).
 
+
+## Session 25: what changed
+
+- **The fixed pools follow crt0's heap** (docs/shiftable-plan.md "Session 25"): D_006A0000 and D_00720000
+  move to `_end + 0xA000` (0x1000-aligned) when the float reaches them; they must end by 0x820000.
+  `SHIFT_FIXED_ARENA=1` keeps them fixed.
+- **Float defaults are now data 0x20000, bss 0x26000** (KH1_F25_C: 1,079 data names, 119 bss runs, `_end`
+  0x6B7924). float_over_budget.tsv lists what the budgets leave out.
+- **reach_check** gained via-ptr (an address stored into a pointer global, followed through the global's
+  loads) and piece-next (an unbounded index inside a merged piece keeps the first name after the piece);
+  `--data-tsv` tests a different piece split.
+- **PCSX2 loop**: unchanged from session 24. A fresh container needs the i386 libs, `make toolchain`, the ELF
+  and out/overlays staged from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12`, then
+  `tools/shift/data_owners.py` before the float build. A worker restart in the middle of the session lost
+  nothing: commit and push after every step.
+- **Phase 4** (worker s25types): 129 "users disagree" pieces typed; users include include/data/pieces/D_X.h
+  in place of their extern, accepted only when every changed file's `-S` output is identical with no new
+  warning (tools/shift/s25types/). 145 left, reasons in their comments.

@@ -7,7 +7,7 @@ typedef struct Win {
 typedef struct { u16 v; u16 pad; } H4;
 extern u8 D_003F3E30[], D_003F3E60[], D_003F3E90[], D_003F3ED0[], D_003F3F00[];
 extern u8 D_003F3F30[], D_003F3F60[], D_003F3F90[], D_003F3FC0[];
-extern u32 D_003E3D68;
+#include "data/pieces/D_003E3D68.h"
 extern u32 D_00642C24; /* src/data/bss_0064.c: s32 D_00642C24 */
 extern s32 D_00642C28, D_00642C2C, D_00642C3C, D_00642C44, D_00642C48, D_00642C54;
 extern u32 D_00642C58;

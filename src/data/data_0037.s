@@ -5,13 +5,13 @@
  * include/data/data_0037.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_00370130, 0x10, 16  /* untyped: users disagree: s32 D_00370130 | void *D_00370130 */
+	PIECE D_00370130, 0x10, 16  /* data/pieces/D_00370130.h */
 	PIECE D_00370140, 0x30, 16
 	PIECE D_00370170, 0x40, 16
 	PIECE D_003701B0, 0x10, 16  /* untyped: PCur is local to src/hand/text_00180000_b07.c and other files name D_003701B0 (type PCur is not a common.h basic type) */
-	PIECE D_003701D0, 0x10, 16  /* untyped: users disagree: FV4 D_003701D0 | M2C_UNK D_003701D0 | f32 D_003701D0[4] | u8 D_003701D0[] */
-	PIECE D_003701E0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701E0 | PppFVec D_003701E0 | s32 D_003701E0[3] */
-	PIECE D_003701F0, 0x10, 16  /* untyped: users disagree: M2C_UNK D_003701F0 | f32 D_003701F0[2] | f32 D_003701F0[3] | f32 D_003701F0[] | u8 D_003701F0[] */
+	PIECE D_003701D0, 0x10, 16  /* untyped: users disagree: FV4 D_003701D0 | M2C_UNK D_003701D0 | f32 D_003701D0[4] | u8 D_003701D0[]; session 25: as f32 D_003701D0[4]: does not compile in text_001a0000_h65.c */
+	PIECE D_003701E0, 0x10, 16  /* data/pieces/D_003701E0.h */
+	PIECE D_003701F0, 0x10, 16  /* data/pieces/D_003701F0.h */
 	PIECE_BEGIN D_00370200, 0x2508, 8
 	PIECE_BYTES D_00370200, 0x0, 0x28
 	.word D_0048FB28
@@ -1111,13 +1111,13 @@
 	PIECE D_00372790, 0x20, 16
 	PIECE D_003727B0, 0x40, 16  /* data/pieces/D_003727B0.h */
 	PIECE D_003727F0, 0x10, 16
-	PIECE D_00372800, 0xc0, 16  /* untyped: users disagree: M2C_UNK D_00372800 | f32 D_00372800[16] */
+	PIECE D_00372800, 0xc0, 16  /* data/pieces/D_00372800.h */
 	PIECE D_003728C0, 0x48, 8  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	PIECE D_00372908, 0x598, 8
 	PIECE D_00372EA0, 0x8, 8
-	PIECE D_00372EA8, 0x80, 8  /* untyped: users disagree: M2C_UNK D_00372EA8 | s32 D_00372EA8 | s32 D_00372EA8[] */
+	PIECE D_00372EA8, 0x80, 8  /* data/pieces/D_00372EA8.h */
 	PIECE D_00372F28, 0x8, 8
-	PIECE D_00372F30, 0x4, 4  /* untyped: users disagree: s32 D_00372F30 | s32 D_00372F30[] */
+	PIECE D_00372F30, 0x4, 4  /* data/pieces/D_00372F30.h */
 	PIECE D_00372F34, 0xcc, 4
 	PIECE D_00373000, 0x30, 16
 	PIECE D_00373030, 0x30, 16
@@ -1216,9 +1216,9 @@
 	PIECE_LABEL D_0037A130, D_0037A16C, 0x3c
 	PIECE_BYTES D_0037A130, 0x3c, 0x4
 	PIECE_END D_0037A130, 0x40
-	PIECE D_0037A170, 0x4, 4  /* untyped: users disagree: RunQ *D_0037A170 | RunQ_bfcd8 *D_0037A170 | u8 *D_0037A170 */
+	PIECE D_0037A170, 0x4, 4  /* untyped: users disagree: RunQ *D_0037A170 | RunQ_bfcd8 *D_0037A170 | u8 *D_0037A170; session 25: as u8 *D_0037A170: does not compile in text_001b0000_h14.c; new warning in text_001b0000_h66.c */
 	PIECE D_0037A174, 0x4, 4
-	PIECE D_0037A178, 0x18, 8  /* untyped: users disagree: M2C_UNK D_0037A178 | s32 D_0037A178[] | u32 D_0037A178[] */
+	PIECE D_0037A178, 0x18, 8  /* data/pieces/D_0037A178.h */
 	PIECE D_0037A190, 0x8, 8
 	PIECE_BEGIN D_0037A198, 0x84, 4  /* untyped: no C user outside src/sdk/ with one file-scope extern */
 	.word func_001c08e8
@@ -1344,5 +1344,5 @@
 	.word D_00490380
 	PIECE_BYTES D_0037A21C, 0x158, 0x4
 	PIECE_END D_0037A21C, 0x15c
-	PIECE D_0037A378, 0x8, 8  /* untyped: users disagree: Bits D_0037A378 | Bits52 D_0037A378 | C2Flags D_0037A378 | Flags D_0037A378 | s32 D_0037A378 | u32 D_0037A378 | volatile s32 D_0037A378; unparsed in 1 file(s) */
-	PIECE D_0037A380, 0xe100, 16  /* untyped: users disagree: Cam D_0037A380 | Scn D_0037A380 | u8 D_0037A380[] */
+	PIECE D_0037A378, 0x8, 8  /* untyped: users disagree: Bits D_0037A378 | Bits52 D_0037A378 | C2Flags D_0037A378 | Flags D_0037A378 | s32 D_0037A378 | u32 D_0037A378 | volatile s32 D_0037A378; unparsed in 1 file(s); session 25: as s32 D_0037A378: code changes in text_00130000_h55.c, text_00150000_h35.c +1; does not compile in text_00100000_h28.c, text_00110000_h52.c */
+	PIECE D_0037A380, 0xe100, 16  /* untyped: users disagree: Cam D_0037A380 | Scn D_0037A380 | u8 D_0037A380[]; session 25: as Scn D_0037A380: does not compile in text_001c0000_c09b.c, text_001c0000_s10_r2_9.c +2 */

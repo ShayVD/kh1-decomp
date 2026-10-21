@@ -10,18 +10,18 @@ M2C_UNK func_001f5e10();
 M2C_UNK func_001fd858();
 M2C_UNK func_001fdfd0(s32);
 M2C_UNK func_00266f38(s32, M2C_UNK *);
-extern M2C_UNK D_003E9660;
-extern M2C_UNK D_003F1660;
-extern M2C_UNK D_003F2670;
-extern M2C_UNK D_003F2720;
+#include "data/pieces/D_003E9660.h"
+#include "data/pieces/D_003F1660.h"
+#include "data/pieces/D_003F2670.h"
+#include "data/pieces/D_003F2720.h"
 s32 func_001f4378();
 s32 func_001fe1b8();
 s32 func_001fe5a0();
 s32 func_00266c08(M2C_UNK);
 
 void func_001f2e98(M2C_UNK **arg0, M2C_UNK **arg1) {
-    *arg0 = &D_003E9660;
-    *arg1 = &D_003F1660;
+    *arg0 = ((M2C_UNK *)&D_003E9660);
+    *arg1 = ((M2C_UNK *)&D_003F1660);
 }
 
 void func_001f3648(void *arg0) {
@@ -101,8 +101,8 @@ void func_001f8108(void) {
 }
 
 void func_001f8270(void) {
-    func_00266f38(func_00266c08(2), &D_003F2670);
-    func_00266f38(func_00266c08(2), &D_003F2720);
+    func_00266f38(func_00266c08(2), ((M2C_UNK *)&D_003F2670));
+    func_00266f38(func_00266c08(2), ((M2C_UNK *)&D_003F2720));
 }
 
 s32 func_001fd518(void *arg0) {

@@ -331,7 +331,7 @@ void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][2] = pos[2];
 }
 
-extern f32 D_003701F0[3];
+#include "data/pieces/D_003701F0.h"
 extern f32 D_006160C0[4][4];
 extern f32 D_00616080[4][4]; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
 void func_00267560(f32 *, f32 *, f32);

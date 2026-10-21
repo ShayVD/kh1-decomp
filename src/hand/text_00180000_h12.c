@@ -619,24 +619,11 @@ void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
     sceVu0UnitMatrix(D_0061E2D0);
 }
 
-typedef struct {
-    s32 unk0;
-    s32 n;
-} PppTblHdr;
+#include "data/types/text_00180000_h12_p.h"
 
-typedef struct {
-    s32 unk0, unk4;
-    s32 key;    /* +0x8 */
-    u8 pad[0x44];
-} PppTblEnt;
 
-typedef struct {
-    s32 unk0;
-    PppTblHdr *hdr;   /* +0x4 */
-    PppTblEnt *ent;   /* +0x8 */
-} PppTbl;
 
-extern PppTbl D_0035E710;
+#include "data/pieces/D_0035E710.h"
 
 PppTblEnt *func_0019dfc8(s32 key) {
     PppTblEnt *e = D_0035E710.ent;

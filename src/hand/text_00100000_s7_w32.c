@@ -41,7 +41,7 @@ void func_0010a320(void);
 extern char D_0048CCC8[];
 extern u8 D_00F20000[];
 extern volatile s32 D_002BBE08;
-extern volatile u32 D_002BBDE0;
+#include "data/pieces/D_002BBDE0.h"
 extern volatile s32 D_00495160;
 extern volatile s32 D_00495164;
 extern s32 D_002B647C, D_002B6474, D_002B6480, D_002B6774, D_002B6770;
