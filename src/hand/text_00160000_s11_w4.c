@@ -133,7 +133,7 @@ static inline s32 inl_find(E9F *e, W9F *w) {
         if (!func_0024edf0(m90, m10)) continue;
         func_00116660(&q);
         func_002675a8(q.a, p);
-        func_002675a8(q.b, D_002C58B0);
+        func_002675a8(q.b, (*(f32 (*)[0x4])&D_002C58B0));
         q.c0 = e->x2C0;
         q.c1 = e->x2C4;
         q.c2 = 0;

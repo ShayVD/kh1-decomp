@@ -355,7 +355,7 @@ void func_001568e8(B4A68 *e, f32 *out) {
     f32 t;
     s32 r;
     f32 f;
-    func_002675a8(out, D_002C58B0);
+    func_002675a8(out, (*(f32 (*)[0x4])&D_002C58B0));
     if (!D_00551600) return;
     if ((D_002C5958 >> 15) & 1) return;
     if ((D_002C5978 >> 13) & 1) return;

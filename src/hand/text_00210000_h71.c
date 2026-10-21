@@ -95,12 +95,11 @@ void func_00216640(void *a) {
     }
 }
 typedef struct { s32 *p; s32 n; } PN;
-typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
+#include "data/pieces/D_003F34B8.h"
 typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
 #include "data/pieces/D_00304BE8.h"
 extern s32 D_00642CCC;
-#include "data/pieces/D_003F34B8.h"
 extern s32 D_00642CD8;
 extern PN D_003F40F8[];
 extern s32 *D_003F41E8[];
@@ -112,7 +111,7 @@ void func_00216ea8(void) {
     s32 *p, n, i;
     p = D_003F40F8[k].p;
     n = D_003F40F8[k].n;
-    ((S34B8 *)D_003F34B8)->x20[k] = *(u8 *)&D_00642CD8;
+    D_003F34B8->a[k] = *(u8 *)&D_00642CD8;
     switch (D_00642CD8) {
     case 3:
     default:
@@ -277,7 +276,7 @@ void func_00219a88(Obj2 *a) {
         } else {
             func_001fdfd0(a);
             func_0020bd18(a, 8);
-            ((S34B8 *)D_003F34B8)->x0 = func_001fd538(a);
+            D_003F34B8->f0 = func_001fd538(a);
             if ((o = a->x10)) {
                 func_001fd858(o);
                 v = func_001fd518(o);
@@ -309,7 +308,7 @@ void func_00219c18(Obj2 *a) {
         } else {
             func_001fdfd0(a);
             func_0020bd18(a, 8);
-            ((S34B8 *)D_003F34B8)->x4 = func_001fd538(a);
+            D_003F34B8->f4 = func_001fd538(a);
             if ((o = a->x10)) {
                 func_001fd858(o);
                 v = func_001fd518(o);
@@ -341,7 +340,7 @@ void func_00219da8(Obj2 *a) {
         } else {
             func_001fdfd0(a);
             func_0020bd18(a, 8);
-            ((S34B8 *)D_003F34B8)->x8 = func_001fd538(a);
+            D_003F34B8->f8 = func_001fd538(a);
             if ((o = a->x10)) {
                 func_001fd858(o);
                 v = func_001fd518(o);

@@ -13,11 +13,10 @@ typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
 #include "data/types/text_00210000_b14.h"
-typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
+#include "data/pieces/D_003F34B8.h"
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3E50.h"
-#include "data/pieces/D_003F34B8.h"
 extern u8 D_003F3B10[];
 extern u8 D_003F3DF0[];
 extern u8 D_003F3E90[];
@@ -595,7 +594,7 @@ void func_00217490(void *a) {
         k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
         n = D_003F40F8[k].n;
         p = D_003F40F8[k].p;
-        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[((S34B8 *)D_003F34B8)->x20[k]]);
+        func_00207830(a, 2, 2, 0, 0, 342, D_003F4368[D_003F34B8->a[k]]);
         func_001ff488(a, 0, 28, 342, n * 28 + 10, 0x40000000);
         y = 57;
         for (i = 0; i < n; i++) {

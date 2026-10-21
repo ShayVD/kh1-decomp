@@ -8,7 +8,7 @@ typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
 typedef struct { u8 pad[4]; Sub sub; } Rec74;
 #include "data/pieces/D_00304BE8_s.h"
 typedef struct { s32 *p; s32 n; } PN;
-typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
+#include "data/pieces/D_003F34B8.h"
 #include "data/pieces/D_003F2C40.h"
 typedef E20_3F2C40 E20;
 
@@ -18,7 +18,6 @@ extern s32 D_00642CD8;
 extern s32 D_00642CDC;
 extern s32 D_00642CE0;
 extern PN D_003F40F8[];
-#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F43F0[];
 extern s32 D_003F4408[];
 extern s32 D_003F4368[];
@@ -83,7 +82,7 @@ void func_00217000(Obj *a) {
                 func_00216ea8();
                 D_00642CCC = cur;
                 { s32 n2 = D_00304BE8->x48e[cur];
-                D_00642CD8 = ((S34B8 *)D_003F34B8)->x20[n2];
+                D_00642CD8 = D_003F34B8->a[n2];
                 D_00642CDC = 0;
                 k = n2;
                 pn = D_003F40F8[n2].p; }
@@ -120,7 +119,7 @@ void func_00217000(Obj *a) {
             s32 *pd, *pe;
             func_0011d768(2);
             func_00216ea8();
-            ((S34B8 *)D_003F34B8)->x20[k] = 5;
+            D_003F34B8->a[k] = 5;
             pd = &D_00642CDC;
             pe = &D_00642CE0;
             c = func_00170dd8(k, pn[*pd]);

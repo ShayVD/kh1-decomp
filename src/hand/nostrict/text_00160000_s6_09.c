@@ -185,8 +185,8 @@ void func_001752a0(Ob52 *o, f32 *c) {
         sceVu0CopyMatrix(m, o->x154 + 0xB80);
         func_001625c8(m, m2);
         func_00162848(v, m2, c);
-        func_002675a8(a, D_002C58B0);
-        func_002675a8(b, D_002C58B0);
+        func_002675a8(a, (*(f32 (*)[0x4])&D_002C58B0));
+        func_002675a8(b, (*(f32 (*)[0x4])&D_002C58B0));
         if (v[1] < 300.0f) v[1] = 300.0f;
         if (func_00174fc0(D_0035C470, v, D_0035C424, D_0035C420, a, c[3])) {
             func_00267530(t, a, D_0035C440);

@@ -16,7 +16,8 @@ typedef struct {
     f32 x4;
     u8 pad_8[0x4];
     f32 xc;
-    u8 pad_10[0x8];
+    f32 x10;
+    u8 pad_14[0x4];
     s32 x18;
     u8 x1c;
     u8 pad_1d[0x3];

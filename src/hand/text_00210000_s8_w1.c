@@ -7,7 +7,7 @@ typedef struct { u8 pad[4]; Sub sub; } Rec74;
 #include "data/pieces/D_00304BE8_s.h"
 typedef Save_304be8 S4BE8;
 typedef struct { s32 *p; s32 n; } PN;
-typedef struct { s32 x0; s32 x4; s32 x8; u8 padc[0x20 - 0xC]; u8 x20[1]; } S34B8;
+#include "data/pieces/D_003F34B8.h"
 typedef union { s32 i; u16 h; } U32H;
 #include "data/pieces/D_003E3D68.h"
 extern void *D_00642C90;
@@ -19,7 +19,6 @@ extern s32 D_00642CD8;
 extern U32H D_00642CDC; /* src/data/bss_0064.c: s32 D_00642CDC */
 extern U32H D_00642CE0; /* src/data/bss_0064.c: s32 D_00642CE0 */
 extern PN D_003F40F8[];
-#include "data/pieces/D_003F34B8.h"
 extern s32 D_003F43F0[];
 extern u8 D_003F44E0[];
 extern u8 D_003F44A0[];
@@ -84,7 +83,7 @@ void func_002177c8(Obj *a) {
                         b = ((S4BE8 **)&D_00304BE8);
                         func_001f3d58(o[0], 6);
                         pd = &D_00642CD8;
-                        *pd = ((S34B8 *)D_003F34B8)->x20[D_00304BE8->x48e[D_00642CCC]];
+                        *pd = D_003F34B8->a[D_00304BE8->x48e[D_00642CCC]];
                         if ((o[1] = func_001f31a8(D_003F4550, 6))) {
                             func_001f3e48(o[1], o[0]);
                             o[1]->x24.i = D_003F43F0[*pd];

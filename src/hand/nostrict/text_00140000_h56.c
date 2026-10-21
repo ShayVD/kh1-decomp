@@ -245,7 +245,7 @@ void func_001441b8(Pl *o) {
     func_002675a8(o->v490, o->pos);
     o->d90 = 0;
     if (!func_001232f0((Ch3 *)o)) {
-        func_002675a8(o->v3c0, D_002C58B0);
+        func_002675a8(o->v3c0, (*(f32 (*)[0x4])&D_002C58B0));
         func_00267560(v, o->v20, o->f2c * D_002BBDFC);
         if ((s32)(o->w160 >> 2) & 1) {
             func_00267518(v, v, o->v200);
@@ -267,7 +267,7 @@ void func_001441b8(Pl *o) {
             func_00267560(o->v3c0, v, v[3]);
         }
     }
-    func_002675a8(o->v120, D_002C58B0);
+    func_002675a8(o->v120, (*(f32 (*)[0x4])&D_002C58B0));
 }
 
 typedef struct { u8 pad[0xa0]; f32 va0[3]; f32 fac; f32 fb0; f32 fb4; f32 fb8; } Cam148;
