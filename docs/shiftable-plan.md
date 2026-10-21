@@ -2145,7 +2145,7 @@ them would push the pools past 0x820000 (about 0x8800 of room is left).
   unknown value), are accesses through G. Every address code stores into G (`sw A, %lo(G)`) gets them as
   its own indexed accesses: bounded when every access through G has a constant offset, otherwise
   unbounded. On D_00494BAC it finds func_00106ed0's `D_00494BAC = D_00472190` and func_00107548's indexed
-  reads (11 bases have a via-ptr reason today). A comparison against a constant still bounds a loaded word
+  reads (27 bases in the hit list carry a via-ptr reason today, all also kept by older rules). A comparison against a constant still bounds a loaded word
   (refine treats PTR like an unknown).
 - **piece-next** (`--no-piece-next`): an unbounded indexed base whose next name is inside its own piece (a
   merged piece's label, the rest of a bss run) keeps the first name after the piece instead. Without it an
