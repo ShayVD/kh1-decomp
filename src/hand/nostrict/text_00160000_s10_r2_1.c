@@ -6,7 +6,7 @@
 typedef struct { u8 pad[0xC8]; f32 fC8; } PrmEA;
 
 #include "data/pieces/D_0035BD40.h"
-extern ChrEA *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_00575088;
 extern s32 D_0057508C;
 extern V4EA D_00575090[40]; /* src/data/bss_0057.c: f32 D_00575090[40][4] */
@@ -81,8 +81,8 @@ s32 func_0016ea58(void) {
     w2 = 0;
     w1 = 0;
     if (func_00122ff8(D_002E26A0[0])) D_0035BD40.chrEA[0] = D_002E26A0[0];
-    if (func_00122ff8(D_002E26A0[1]) && (w1 = D_002E26A0[1]->p144) != 0) D_0035BD40.chrEA[1] = D_002E26A0[1];
-    if (func_00122ff8(D_002E26A0[2]) && (w2 = D_002E26A0[2]->p144) != 0) D_0035BD40.chrEA[2] = D_002E26A0[2];
+    if (func_00122ff8(D_002E26A0[1]) && (w1 = ((ChrEA *)D_002E26A0[1])->p144) != 0) D_0035BD40.chrEA[1] = D_002E26A0[1];
+    if (func_00122ff8(D_002E26A0[2]) && (w2 = ((ChrEA *)D_002E26A0[2])->p144) != 0) D_0035BD40.chrEA[2] = D_002E26A0[2];
 
     if (D_0035BD40.chrEA[0] == 0 || (D_0035BD40.chrEA[1] == 0 && D_0035BD40.chrEA[2] == 0)) return 0;
     func_0016e0d0(1);

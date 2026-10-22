@@ -106,7 +106,7 @@ extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern u32 D_002C5958;
 #include "data/pieces/D_002C5C60.h"
-extern Obj70 *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002E27C8.h"
 #include "data/pieces/D_002E31B0.h"
 extern Prm35AE80 D_0035AE80;

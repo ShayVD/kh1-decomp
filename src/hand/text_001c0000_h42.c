@@ -108,13 +108,13 @@ typedef struct {
 } Big;
 extern Big D_00389C90;
 typedef struct { u8 pad[16]; f32 pos[4]; } Actor;
-extern Actor *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 void func_002675a8(void *, void *);
 s32 func_001c1e30(void) {
     f32 mn[4], mx[4], p[4];
     s32 i;
-    if (D_002E26A0 == 0) return 0;
-    func_002675a8(p, D_002E26A0->pos);
+    if (D_002E26A0[0] == 0) return 0;
+    func_002675a8(p, (*(Actor **)&D_002E26A0)->pos);
     for (i = 0; i < D_00389C90.nbox; i++) {
         mn[0] = D_00389C90.box[i].c[0] - D_00389C90.box[i].s[0] * 0.5f;
         mn[1] = D_00389C90.box[i].c[1] - D_00389C90.box[i].s[1] * 0.5f;
@@ -181,23 +181,8 @@ s32 func_001c4de0(s32 a, s32 b) {
     return D_00389C90.x3450;
 }
 
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
-typedef struct { u8 pad[8]; s32 n; } Lim;
-typedef struct {
-    f32 t;
-    u8 pad4[0xc];
-    V4 a;
-    V4 b;
-    V4 c;
-    V4 d;
-    V4 e;
-    f32 f60;
-    u8 pad64[0xE0F4 - 0x64];
-    f32 fE0F4;
-    u8 padE0F8[4];
-    Lim *lim;
-} Cam;
 #include "data/pieces/D_0037A380.h"
+typedef V4_37A380 V4;
 typedef struct {
     union {
         u64 flags;
@@ -228,19 +213,19 @@ static inline void inl_cpy(V4 *d, V4 *s) {
     *d = *s;
 }
 s32 func_001c5db8(void) {
-    (*(Cam *)&D_0037A380).t += 1.0f;
-    if ((f32)(*(Cam *)&D_0037A380).lim->n < (*(Cam *)&D_0037A380).t) {
-        (*(Cam *)&D_0037A380).t = (f32)(*(Cam *)&D_0037A380).lim->n;
+    (*(Cam_37A380 *)&D_0037A380).t += 1.0f;
+    if ((f32)(*(Cam_37A380 *)&D_0037A380).last->n < (*(Cam_37A380 *)&D_0037A380).t) {
+        (*(Cam_37A380 *)&D_0037A380).t = (f32)(*(Cam_37A380 *)&D_0037A380).last->n;
         return 4;
     }
-    func_001c53c8((*(Cam *)&D_0037A380).t);
-    inl_cpy(&OUT.a, &(*(Cam *)&D_0037A380).a);
-    inl_cpy(&OUT.b, &(*(Cam *)&D_0037A380).d);
-    inl_cpy(&OUT.c, &(*(Cam *)&D_0037A380).e);
-    inl_cpy(&OUT.e, &(*(Cam *)&D_0037A380).c);
-    inl_cpy(&OUT.d, &(*(Cam *)&D_0037A380).b);
-    OUT.f50 = (*(Cam *)&D_0037A380).f60;
-    OUT.f54 = (*(Cam *)&D_0037A380).fE0F4;
+    func_001c53c8((*(Cam_37A380 *)&D_0037A380).t);
+    inl_cpy(&OUT.a, &(*(Cam_37A380 *)&D_0037A380).a);
+    inl_cpy(&OUT.b, &(*(Cam_37A380 *)&D_0037A380).d);
+    inl_cpy(&OUT.c, &(*(Cam_37A380 *)&D_0037A380).e);
+    inl_cpy(&OUT.e, &(*(Cam_37A380 *)&D_0037A380).c);
+    inl_cpy(&OUT.d, &(*(Cam_37A380 *)&D_0037A380).b);
+    OUT.f50 = (*(Cam_37A380 *)&D_0037A380).f60;
+    OUT.f54 = (*(Cam_37A380 *)&D_0037A380).fE0F4;
     func_001c6a20();
     return 0;
 }

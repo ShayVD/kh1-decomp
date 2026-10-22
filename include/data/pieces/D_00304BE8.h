@@ -7,7 +7,6 @@
 #include "common.h"
 
 typedef struct Save_304be8 Save_304be8;
-
 extern Save_304be8 *D_00304BE8;
 
 #endif /* KH1_DATA_PIECES_D_00304BE8_H */

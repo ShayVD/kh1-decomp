@@ -42,7 +42,7 @@ typedef struct {
     u64 x878;
 } W7Save;
 
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 /* ---- actor object ---- */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
@@ -210,7 +210,7 @@ extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
-extern Pl *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern f32 D_00304D54;
 #include "data/pieces/D_00304B78.h"
 #include "data/pieces/D_003044E0.h"
@@ -331,8 +331,8 @@ s32 func_0013c9e0(s32 item, u32 who) {
             }
         }
     }
-    if (((W7Save *)D_00304BE8)->inv[item] < 99) {
-        ((W7Save *)D_00304BE8)->inv[item]++;
+    if (D_00304BE8->items[item] < 99) {
+        D_00304BE8->items[item]++;
         return 12;
     }
     return 255;
@@ -349,8 +349,8 @@ s32 func_0013cae8(u32 who, s32 item) {
             }
         }
     }
-    if (((W7Save *)D_00304BE8)->inv[item] != 0) {
-        ((W7Save *)D_00304BE8)->inv[item]--;
+    if (D_00304BE8->items[item] != 0) {
+        D_00304BE8->items[item]--;
         return 12;
     }
     return 255;
@@ -522,7 +522,7 @@ s32 func_00141348(A141 *a, R141 *r) {
 
 void func_001417a0(V4f *p, s32 n) {
     V4f t;
-    if (D_002E26A0 == 0 || D_002E26A0->p6c->w3c > 0) {
+    if (D_002E26A0[0] == 0 || (*(Pl **)&D_002E26A0)->p6c->w3c > 0) {
         func_002675a8(&t, p);
         t.w = 1.0f;
         n = n * D_00304D54 + 0.5f;

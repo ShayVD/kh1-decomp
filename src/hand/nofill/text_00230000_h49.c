@@ -57,7 +57,7 @@ void func_0023a720(void) {
     Spr **pp;
     Spr *p;
     s32 i;
-    for (pp = D_002E3170; *pp != 0; pp++) {
+    for (pp = (Spr **)D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
             for (i = 0; i < p->unk10; i++) {
@@ -75,7 +75,7 @@ void func_0023a7e8(void) {
     Spr **pp;
     Spr *p;
     s32 i, v;
-    for (pp = D_002E3170; *pp != 0; pp++) {
+    for (pp = (Spr **)D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
             for (i = 0; i < p->unk10; i++) {

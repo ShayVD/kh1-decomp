@@ -542,8 +542,8 @@ typedef struct { u8 pad[4]; u8 n; u8 pad5[0xb]; W34Box box[1]; } W34Boxes;
 s32 func_0014e5b8(f32 *p) {
     W34Box *b;
     s32 m, n, i;
-    if (!((W34Boxes *)D_00350D78)) return 0;
-    n = ((W34Boxes *)D_00350D78)->n;
+    if (!D_00350D78) return 0;
+    n = D_00350D78->n;
     b = ((W34Boxes *)D_00350D78)->box;
     m = 0;
     for (i = 0; i < n; i++, b++) {

@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 SCR = Path(os.environ.get("S27_DIR", "/tmp/s27types"))
+JOBS = int(os.environ.get("S27_JOBS", "2"))  # parallel compiles (shared machine)
 SCR.mkdir(parents=True, exist_ok=True)
 TOOLCHAIN = (ROOT / "tools/toolchain").resolve()
 

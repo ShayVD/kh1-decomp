@@ -14,7 +14,7 @@ void func_001ee230(u32 *a, u32 *b, u32 *c, u32 *d) {
 
 typedef struct { u8 pad[0x18]; u8 cnt; u8 a19[0x19]; u8 f32; u8 pad33[0x40 - 0x33]; u8 name[0x30]; u8 pad70[4]; } Member;
 typedef struct { u8 pad[4]; Member m[10]; u8 pad2[2]; u8 party[4]; u8 pad492[0x499 - 0x492]; u8 x499[0x100]; u8 list599[0x30]; } S4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D68.h"
 extern u16 D_003E3CD0[];
 s32 func_00149440(s32, s32);
@@ -30,7 +30,7 @@ s32 func_001ee7f0(s32 a) {
     s32 n = D_003E3D68;
     s32 i = 0;
     do {
-        if (func_00149440(a, ((S4BE8 *)D_00304BE8)->party[i++])) return 1;
+        if (func_00149440(a, D_00304BE8->x48e[i++])) return 1;
     } while (--n);
     return 0;
 }
@@ -44,7 +44,7 @@ s32 func_001ee870(s32 a, s32 i) {
         n = 1;
     }
     do {
-        if (func_00149440(a, ((S4BE8 *)D_00304BE8)->party[i++])) return 1;
+        if (func_00149440(a, D_00304BE8->x48e[i++])) return 1;
     } while (--n);
     return 0;
 }
@@ -233,7 +233,7 @@ s32 func_001ef3a0(s32 i) {
 
 s32 func_001ef408(void) {
     s32 n;
-    for (n = 0; n < 48 && ((S4BE8 *)D_00304BE8)->list599[n]; n++);
+    for (n = 0; n < 48 && D_00304BE8->list599[n]; n++);
     return n;
 }
 
@@ -250,7 +250,7 @@ s32 func_001ef450(s32 i, s32 a) {
 s32 func_001ef4c0(s32 a) {
     s32 n = 0, k;
     u8 c;
-    for (k = 0; k < 48 && (c = ((S4BE8 *)D_00304BE8)->list599[k]); k++) {
+    for (k = 0; k < 48 && (c = D_00304BE8->list599[k]); k++) {
         if ((c & ~0x80) == a) n++;
     }
     return n;
@@ -311,7 +311,7 @@ void *func_0013daf8(s32);
 s32 func_00122ff8(void *);
 
 void *func_001ef8f8(s32 i) {
-    void *p = func_0013daf8(((S4BE8 *)D_00304BE8)->party[i]);
+    void *p = func_0013daf8(D_00304BE8->x48e[i]);
     if (p && func_00122ff8(p)) goto ok;
     return 0;
 ok:

@@ -185,7 +185,7 @@ typedef struct { s32 state; s32 f4; s32 f8; O4 *fc; u8 p10[0x20]; s32 f30; } W4;
 typedef struct { u8 pad[0x10]; A4 *f10; u8 p14[8]; f32 f1c; W4 *f20; } T4;
 extern f32 D_002BBDFC;
 #include "data/pieces/D_00350CE0.h"
-extern void *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern s32 func_00122ff8(void *);
 extern s32 func_001375d8(A4 *);
 extern void func_001315c0(void *, s32, f32 *, f32);

@@ -6,6 +6,8 @@
 import subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import s27lib as L  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 ref = sys.argv[1] if len(sys.argv) > 1 else "HEAD"
@@ -18,7 +20,7 @@ GCC = ROOT / "tools/toolchain/ee-gcc2.96/bin/ee-gcc"
 
 def one(h):
     inc = h[len("include/"):]
-    with tempfile.NamedTemporaryFile("w", suffix=".c", dir="/tmp/s27types", delete=False) as f:
+    with tempfile.NamedTemporaryFile("w", suffix=".c", dir=L.SCR, delete=False) as f:
         f.write(f'#include "{inc}"\n')
     r = subprocess.run([str(GCC), "-fsyntax-only", "-x", "c", "-O2", "-G0", "-Iinclude", "-Isrc", f.name],
                        cwd=ROOT, capture_output=True, text=True)
@@ -27,7 +29,7 @@ def one(h):
 
 
 bad = 0
-with ThreadPoolExecutor(3) as ex:
+with ThreadPoolExecutor(L.JOBS) as ex:
     for h, rc, err in ex.map(one, [x for x in out if x.endswith(".h")]):
         if rc or err:
             print(f"BAD {h}: {err[:300]}")

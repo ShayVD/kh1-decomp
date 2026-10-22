@@ -203,7 +203,7 @@ void func_00141b10(s32 n, B3St *p) {
 }
 
 #include "data/pieces/D_003044E0.h"
-extern B3Ob *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 f32 func_001427d0(B3Ob *, f32 *);
 s32 func_0015c738(B3Ob *, f32 *);
 void func_00137440(B3Ob *, s32);

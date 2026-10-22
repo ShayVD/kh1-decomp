@@ -22,7 +22,7 @@ M2C_UNK func_0017db68();
 M2C_UNK func_0017ebd0();
 M2C_UNK func_0017eff8();
 M2C_UNK func_00239488();
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002E31B8.h"
 extern s32 D_00351A48;
 extern s32 D_00524F74;
@@ -118,8 +118,8 @@ void func_0012fc58(void) {
             func_0017eff8();
         }
         func_0012fc20();
-        if (D_002E26A0 != 0) {
-            func_00123030(D_002E26A0, 0, 0);
+        if ((*(s32 *)&D_002E26A0) != 0) {
+            func_00123030((*(s32 *)&D_002E26A0), 0, 0);
         }
     }
 }

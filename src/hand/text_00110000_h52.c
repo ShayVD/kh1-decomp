@@ -167,26 +167,26 @@ extern E90_52 D_004DBC20[2][64];
 void func_00114c18(Ent52 *o, s32 idx, s32 col) {
     s32 i;
     if (idx == -1) {
-        o[0].x14 = (*(Blk32_48c630 *)&D_0048C630).x14;
-        o[1].x14 = (*(Tpl52 *)&D_0048C690).x14;
+        o[0].x14 = D_0048C630.x14;
+        o[1].x14 = D_0048C690.x14;
     } else {
         o[0].x14 = &D_004DBC20[0][idx];
         o[1].x14 = &D_004DBC20[1][idx];
     }
-    o[0].x10 = (*(Blk32_48c630 *)&D_0048C630).x10;
-    o[0].x18 = (*(Blk32_48c630 *)&D_0048C630).x18;
-    o[0].x1c = (*(Blk32_48c630 *)&D_0048C630).x1c;
-    o[1].x10 = (*(Tpl52 *)&D_0048C690).x10;
-    o[1].x18 = (*(Tpl52 *)&D_0048C690).x18;
-    o[1].x1c = (*(Tpl52 *)&D_0048C690).x1c;
-    o[0].x20.v[0] = (*(Blk32_48c630 *)&D_0048C630).x20.v[0];
-    o[0].x20.v[1] = (*(Blk32_48c630 *)&D_0048C630).x20.v[1];
-    o[0].x20.v[2] = (*(Blk32_48c630 *)&D_0048C630).x20.v[2];
-    o[0].x20.v[3] = (*(Blk32_48c630 *)&D_0048C630).x20.v[3];
-    o[1].x20.v[0] = (*(Tpl52 *)&D_0048C690).x20.v[0];
-    o[1].x20.v[1] = (*(Tpl52 *)&D_0048C690).x20.v[1];
-    o[1].x20.v[2] = (*(Tpl52 *)&D_0048C690).x20.v[2];
-    o[1].x20.v[3] = (*(Tpl52 *)&D_0048C690).x20.v[3];
+    o[0].x10 = D_0048C630.x10;
+    o[0].x18 = D_0048C630.x18;
+    o[0].x1c = D_0048C630.x1c;
+    o[1].x10 = D_0048C690.x10;
+    o[1].x18 = D_0048C690.x18;
+    o[1].x1c = D_0048C690.x1c;
+    o[0].x20.v[0] = D_0048C630.x20.v[0];
+    o[0].x20.v[1] = D_0048C630.x20.v[1];
+    o[0].x20.v[2] = D_0048C630.x20.v[2];
+    o[0].x20.v[3] = D_0048C630.x20.v[3];
+    o[1].x20.v[0] = D_0048C690.x20.v[0];
+    o[1].x20.v[1] = D_0048C690.x20.v[1];
+    o[1].x20.v[2] = D_0048C690.x20.v[2];
+    o[1].x20.v[3] = D_0048C690.x20.v[3];
     for (i = 0; i < 2; i++) {
         o[i].a.v[0] = D_0048C6F0[col].v[0];
         o[i].a.v[1] = D_0048C6F0[col].v[1];
@@ -273,7 +273,7 @@ void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
     func_00104eb0(id, pt);
     func_00104f10(id, n);
     if (mode != 1 && fabsf(n[1]) > 0.0999999940395355224609375f) {
-        *out = (-((Plane52 *)D_002A6238)[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
+        *out = (-D_002A6238[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
         return;
     }
     func_00104ae0(id, v);
@@ -351,8 +351,8 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
     s32 *idx;
     u32 *f, *g;
     if (grp == -1) {
-        s32 ta = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i0];
-        s32 tb = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i1];
+        s32 ta = ((PolyV52 *)D_002A6238)[e->poly].v[e->i0];
+        s32 tb = ((PolyV52 *)D_002A6238)[e->poly].v[e->i1];
         a = ta;
         b = tb;
         for (i = 0; i < n; i++) {
@@ -792,8 +792,7 @@ s32 func_0011bbe8(Obj52 *o, f32 *p, s32 g, f32 *out) {
     return best;
 }
 
-typedef struct { s32 x0; u8 pad[8]; u32 b0 : 1; u32 rest : 31; } Ent52b;
-extern Ent52b D_003044D8[];
+#include "data/pieces/D_003044D8.h"
 extern s32 D_003044D0;
 s32 func_0011a728(void *, s32);
 void func_0011a410(s32);
@@ -813,7 +812,7 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
     bx.mn[1] = p[1] - o->x24;
     bx.mx[1] = p[1] + 1000000.0f;
     for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].b0 == 1) continue;
+        if (D_003044D8[i].flags.b0 == 1) continue;
         if (func_0011a728(&bx, i)) {
             func_0011a410(i);
             gs[n] = i;

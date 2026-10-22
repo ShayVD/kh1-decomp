@@ -87,7 +87,7 @@ extern f32 D_002BBDFC;
 extern u32 D_002C5958;
 extern u32 D_002C5978;
 #include "data/pieces/D_002C58B0.h"
-extern W55Ob *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern W55Ev D_002E3190;
 extern s32 D_002E3194;
 extern f32 D_00304C40;

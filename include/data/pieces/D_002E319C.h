@@ -1,7 +1,6 @@
-/* The data piece D_002E319C (src/data/data_002E.s): one struct its
- * users share (phase 4: session 26 cast at each use, session 27 folded the users'
- * views into these types; users not folded still cast, and the folded ones cast to it: the declaration
- * keeps its type because other users' code needs it). */
+/* The data piece D_002E319C (src/data/data_002E.s): the current menu item (phase 4:
+ * session 26 cast at each use, session 27 folded the users' views, session 28 declared
+ * the pointer with the folded type; D_002E31A0 points to the same item). */
 #ifndef KH1_DATA_PIECES_D_002E319C_H
 #define KH1_DATA_PIECES_D_002E319C_H
 
@@ -20,6 +19,6 @@ typedef struct {
     u16 f0e;
 } O8_2e319c;
 
-extern u16 *D_002E319C;
+extern O8_2e319c *D_002E319C;
 
 #endif /* KH1_DATA_PIECES_D_002E319C_H */

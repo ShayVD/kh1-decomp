@@ -14,7 +14,7 @@ extern M2C_UNK D_004F82D0; /* src/data/bss_004F.c: u8 D_004F82D0[0x40] */
 extern M2C_UNK func_0012c0e8;
 #include "data/pieces/D_00350CE0.h"
 extern u32 D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-extern void *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern void *D_00514F10; /* src/data/bss_0051.c: s32 D_00514F10 */
 f32 func_0012ed88(s32, s32, s32, s32);
 s32 func_00121de0(s32);
@@ -144,9 +144,9 @@ void func_0012abe0(void *arg0) {
 void func_0012b358(s32 arg0) {
     s32 *temp_a3;
 
-    temp_a3 = M2C_FIELD(D_002E26A0, s32 **, 0x6C);
+    temp_a3 = M2C_FIELD(*(s32 *)D_002E26A0, s32 **, 0x6C);
     *temp_a3 |= 4;
-    func_00157a30((s32) D_002E26A0, 2, 0);
+    func_00157a30(*(s32 *)D_002E26A0, 2, 0);
     func_001ea498(*(M2C_UNK *)arg0);
 }
 

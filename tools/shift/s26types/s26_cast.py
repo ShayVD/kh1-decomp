@@ -458,7 +458,7 @@ def check_files(new, files):
         if nw:
             return rel, "new warning: " + " / ".join(nw)[:300]
         return None
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(int(os.environ.get("S27_JOBS", "2"))) as ex:
         return [r for r in ex.map(one, sorted(new)) if r]
 
 

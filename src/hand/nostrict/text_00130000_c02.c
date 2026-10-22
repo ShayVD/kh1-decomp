@@ -633,14 +633,8 @@ typedef struct C02Ob2 {
     s32 x398;
 } C02Ob2;
 
-typedef struct {
-    s32 a;
-    s32 b;
-    C02Ob2 *p;
-    s32 c;
-} C02Slot;
 
-extern C02Slot D_003044D8[];
+#include "data/pieces/D_003044D8.h"
 
 void func_002675a8(void *dst, void *src);
 void func_00267530(void *dst, void *a, void *b);
@@ -680,8 +674,8 @@ void func_00143180(C02Ob2 *o, f32 *v)
             for (i = 0; i < 32; i++) {
                 if ((o->x90 >> i) & 1) {
                     if (i > 0) {
-                        func_00142fe0(o, D_003044D8[i - 1].p);
-                        if ((s32)(D_003044D8[i - 1].p->fl.w >> 57) & 1)
+                        func_00142fe0(o, ((C02Ob2 *)D_003044D8[i - 1].x8));
+                        if ((s32)(((C02Ob2 *)D_003044D8[i - 1].x8)->fl.w >> 57) & 1)
                             n++;
                     } else {
                         n++;

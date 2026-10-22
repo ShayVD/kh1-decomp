@@ -129,8 +129,7 @@ s32 func_001fa808(void *, s32, s32, s32, s32);
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 void func_00209820(void *, s32, s32, s32, void *);
 
-typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003F7C48.h"
 typedef T7C48_3f7c48 T7C48;
 #include "data/types/text_00200000_s7_w19_p.h"
@@ -166,7 +165,7 @@ void func_00232390(void *a0) {
         id = e->id;
         max = e->max;
         e++;
-        cnt = ((Base4BE8 *)D_00304BE8)->cnt[id];
+        cnt = D_00304BE8->items[id];
         c = cnt < max ? 2 : 0;
         func_0020dd38(a0, c, 247, y, 194, id);
         col = func_00207ca0(0);

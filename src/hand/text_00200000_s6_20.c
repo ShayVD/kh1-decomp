@@ -176,7 +176,7 @@ typedef struct {
 } DbSaveB;
 typedef struct { u8 pad[9]; u8 x[1]; } DbSave9;
 typedef struct { u8 pad[0x28]; s32 x28; } DbObj;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3880[];
 extern u8 D_003F38E0[];
@@ -191,7 +191,7 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     s32 id, n, i, bits, first;
     DbObj *o;
     if (slot != -1) {
-        DbMember *mp = &((DbSave *)D_00304BE8)->m[((DbSave *)D_00304BE8)->party[slot]];
+        DbMember *mp = &((DbSave *)D_00304BE8)->m[D_00304BE8->x48e[slot]];
         id = mp->items[item];
     } else {
         id = item;
@@ -206,15 +206,15 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     bits = 0;
     do {
         n--;
-        bits |= func_00149600(id, ((DbSave *)D_00304BE8)->party[a3++]);
+        bits |= func_00149600(id, D_00304BE8->x48e[a3++]);
     } while (n != 0);
     for (i = 0; i < 7; i++) {
         if ((bits >> i) & 1) {
             if (slot != -1) {
-                DbMemberB *mq = &((DbSaveB *)((DbSave *)D_00304BE8))->m[((DbSave *)D_00304BE8)->party[slot]];
+                DbMemberB *mq = &((DbSaveB *)D_00304BE8)->m[D_00304BE8->x48e[slot]];
                 mq->a[item + 32] = 0;
             } else {
-                ((DbSave9 *)((DbSave *)D_00304BE8))->x[item + 0x490]--;
+                ((DbSave9 *)D_00304BE8)->x[item + 0x490]--;
             }
             func_001ef830();
             if (i < 4) func_0011d768(14);

@@ -372,7 +372,7 @@ typedef struct Act {
     u8 pad378[0x138];
 } Act;
 extern Act D_002C64A0[];
-extern Act D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 Act *func_001230a0(Act *a);
 s32 func_00123118(s32, Act *);
 
@@ -389,7 +389,7 @@ void func_00123030(Act *x, Act *a1, s32 a2) {
 
 Act *func_001230a0(Act *a) {
     if (a == 0) a = D_002C64A0; else a++;
-    for (; a < D_002E26A0; a++) {
+    for (; a < ((Act *)&D_002E26A0); a++) {
         if ((a->u370.x370 & 0x300000000) == 0x100000000) return a;
     }
     return 0;

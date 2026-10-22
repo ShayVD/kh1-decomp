@@ -13,7 +13,7 @@ s32 func_001f4390(void);
 void func_00149f10(s32, void (*)(void));
 void func_001ef830(void);
 void func_001f36b8(s32);
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct {
     u8 pad_0[0x36];
     u8 x36;
@@ -62,7 +62,7 @@ void func_00214f50(void) {
         D_00642C88 = 1;
         for (;;) {
             i++;
-            if (i >= 48 || !((S4BE8_304be8_v *)D_00304BE8)->x599[i]) return;
+            if (i >= 48 || !D_00304BE8->list599[i]) return;
             D_00642C88++;
         }
     }

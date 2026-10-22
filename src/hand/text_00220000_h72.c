@@ -943,7 +943,7 @@ void func_0020a248(s32);
 void func_00223ea8(void) {
     switch (D_00643794) {
     case 0:
-        if (D_00304BE8->x491 != 255) {
+        if (D_00304BE8->x48e[3] != 255) {
             switch (D_003F34FC) {
             case 0:
                 func_00223e10();

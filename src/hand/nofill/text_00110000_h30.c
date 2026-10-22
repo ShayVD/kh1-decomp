@@ -102,7 +102,7 @@ typedef struct {
     u8 pad378[40];
     s32 x3a0;
 } Obj123;
-extern Obj123 *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 
 double nan();
 void func_00267560(f32 *, f32 *, f32);

@@ -180,15 +180,15 @@ void func_00108a60(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 var_s3;
     void *var_s0;
 
-    M2C_FIELD(arg2, s32 *, 0x20) = (s32) D_0048C630[8];
+    M2C_FIELD(arg2, s32 *, 0x20) = D_0048C630.x20.v[0];
     var_s0 = arg2 + 0x5C;
-    M2C_FIELD(arg2, s32 *, 0x24) = (s32) D_0048C630[9];
-    M2C_FIELD(arg2, s32 *, 0x28) = (s32) D_0048C630[10];
-    M2C_FIELD(arg2, s32 *, 0x2C) = (s32) D_0048C630[11];
-    M2C_FIELD(arg2, s32 *, 0x80) = (s32) D_0048C690[8];
-    M2C_FIELD(arg2, s32 *, 0x84) = (s32) D_0048C690[9];
-    M2C_FIELD(arg2, s32 *, 0x88) = (s32) D_0048C690[10];
-    M2C_FIELD(arg2, s32 *, 0x8C) = (s32) D_0048C690[11];
+    M2C_FIELD(arg2, s32 *, 0x24) = D_0048C630.x20.v[1];
+    M2C_FIELD(arg2, s32 *, 0x28) = D_0048C630.x20.v[2];
+    M2C_FIELD(arg2, s32 *, 0x2C) = D_0048C630.x20.v[3];
+    M2C_FIELD(arg2, s32 *, 0x80) = D_0048C690.x20.v[0];
+    M2C_FIELD(arg2, s32 *, 0x84) = D_0048C690.x20.v[1];
+    M2C_FIELD(arg2, s32 *, 0x88) = D_0048C690.x20.v[2];
+    M2C_FIELD(arg2, s32 *, 0x8C) = D_0048C690.x20.v[3];
     func_00108900(arg2, arg0, arg3, arg4);
     var_s3 = 0;
     do {

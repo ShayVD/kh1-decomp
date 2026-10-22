@@ -65,6 +65,9 @@ def view_casts(text, N):
     out = []
     for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\)\s*(&?)\s*(?:\(\s*)?" + N + r"\b", ct):
         out.append((m.group(1), "obj" if m.group(2) else "ptr"))
+    # (V **)&N: a pointer piece read through another pointer type (form 'pp', keep mode only)
+    for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\*\s*\)\s*&\s*" + N + r"\b", ct):
+        out.append((m.group(1), "pp"))
     # (V *)((W *)N): the outer cast of an inner view cast
     for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\)\s*\(\s*\(\s*\w+\s*\*\s*\)\s*(&?)\s*" + N + r"\b", ct):
         out.append((m.group(1), "obj" if m.group(2) else "ptr"))
@@ -224,6 +227,7 @@ def rename_view_casts(text, N, views, S):
     vs = "|".join(re.escape(v) for v in sorted(views, key=len, reverse=True))
     text = re.sub(r"\(\s*\(\s*(?:" + vs + r")\s*\*\s*\)\s*\(\s*\(\s*(?:" + vs + r")\s*\*\s*\)\s*(&?)\s*" + N + r"\s*\)\s*\)",
                   lambda m: f"(({S} *){m.group(1)}{N})", text)
+    text = re.sub(r"\(\s*(?:" + vs + r")\s*\*\s*\*\s*\)(\s*&\s*" + N + r"\b)", lambda m: f"({S} **){m.group(1)}", text)
     return re.sub(r"\(\s*(?:" + vs + r")\s*\*\s*\)(\s*&?\s*" + N + r"\b)", lambda m: f"({S} *){m.group(1)}", text)
 
 
@@ -402,26 +406,39 @@ def main(argv):
     files = {}
     prio = {}
     forms = set()
+    fforms = {}
     for rel, t in users.items():
         vc = view_casts(t, N)
         roots = []
         ct = C.strip_comments(t)
+        ff = set()
         for v, form in vc:
             if v in NOTVIEW or v in roots:
                 continue
             if C.find_def(t, v, ct) is None:
                 continue
             roots.append(v)
-            forms.add(form)
+            ff.add(form)
         if not roots or rel in skip or (only and rel not in only):
             continue
+        forms |= ff
+        fforms[rel] = ff
         prio[rel] = (0 if is_hand(rel) else 1, -len(vc), rel)
         files[rel] = (t, roots)
     if len(forms) > 1:
-        log(f"  mixed cast forms {forms}: stop")
-        return 1
+        # session 28: keep the files whose views match the declaration (a pointer
+        # declaration: `((S *)D_X)`; an object: `(*(S *)&D_X)`), skip the others
+        want = "ptr" if re.search(r"\*\s*(?:volatile\s+)?" + N + r"\b", olddecl or "") else "obj"
+        if want == "ptr" and "ptr" not in forms:
+            want = "pp"
+        for rel in sorted(files):
+            if fforms[rel] != {want}:
+                log(f"  skip {rel}: cast forms {sorted(fforms[rel])} (declaration wants {want})")
+                del files[rel]
+        forms = {want}
     obj = forms == {"obj"}
-    log(f"  {len(files)} files with struct views ({'object' if obj else 'pointer'} piece)")
+    pp = forms == {"pp"}
+    log(f"  {len(files)} files with struct views ({'object' if obj else 'pointer'} piece{', (V **)&N form' if pp else ''})")
 
     def p1(rel):
         t, roots = files[rel]
@@ -436,7 +453,7 @@ def main(argv):
         except Exception as e:  # noqa: BLE001
             return rel, None, str(e)
     done = {}
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(L.JOBS) as ex:
         for rel, res, err in ex.map(p1, sorted(files)):
             if err:
                 log(f"  skip {rel}: {err}")
@@ -448,18 +465,26 @@ def main(argv):
     # an earlier session 27 fold: its header's struct is one more view, first in naming
     hrel = f"include/data/pieces/{N}.h"
     if "session 27 folded" in oldhdr:
+        htext = oldhdr
+        spath0 = hpath.with_name(f"{N}_s.h")
+        if spath0.exists():
+            # session 28: an earlier split fold: the definitions are in D_X_s.h
+            stext = spath0.read_text()
+            body = re.sub(r'#(?:ifndef|define|endif|include)[^\n]*\n', "", stext)
+            em = re.search(r"^extern [^\n]*\b" + N + r"\b[^\n]*;\n", htext, re.M)
+            htext = htext[:em.start()] + body + "\n" + htext[em.start():]
         hm = re.match(r"^(?:volatile\s+)?(\w+)\s*\*?\s*(?:volatile\s*)?" + N + r"\b", olddecl)
         S0 = hm.group(1) if hm else None
-        if S0 is None or C.find_def(oldhdr, S0) is None:
+        if S0 is None or C.find_def(htext, S0) is None:
             # keep mode: the struct is the one every typedef in the header ends with
-            defs0 = re.findall(r"\}\s*(\w+);", C.strip_comments(oldhdr))
+            defs0 = re.findall(r"\}\s*(\w+);", C.strip_comments(htext))
             S0 = defs0[-1] if defs0 else None
         try:
-            ft = Y.FileTypes(hrel, oldhdr, [S0])
+            ft = Y.FileTypes(hrel, htext, [S0])
             ft.probe()
             used = {tmpname(f.name, n.nid) for n in ft.nodes.values() for f in n.fields
                     if not f.name.startswith("pad_")}
-            done[hrel] = (ft, used, [S0], oldhdr)
+            done[hrel] = (ft, used, [S0], htext)
             prio[hrel] = (-1, 0, hrel)
             given_name = given_name or S0
             log(f"  earlier fold: {S0} is a view")
@@ -478,6 +503,10 @@ def main(argv):
     for mode in ("full", "split", "keep"):
         if mode == "split" and obj:
             continue
+        if pp and mode != "keep":
+            continue  # session 28: (V **)&N views keep the declaration and cast to (S **)
+        if mode == "full" and hpath.with_name(f"{N}_s.h").exists():
+            continue  # session 28: an earlier split fold stays split (its users include D_X_s.h)
         result = fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, apply)
         if result:
             break
@@ -680,7 +709,7 @@ def check_all(rels, N, olddecl, newtexts, newdecl, fix=True):
         if not L.same_asm(n_asm, b_asm):
             return rel, "CODE"
         return rel, "WARN " + "; ".join(sorted(L.warnings(n_d) - L.warnings(b_d)))[:300]
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(L.JOBS) as ex:
         for rel, r in ex.map(one, rels):
             res[rel] = r
     return res

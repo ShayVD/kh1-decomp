@@ -243,11 +243,11 @@ s32 func_001d9cb0(VM *vm) {
     return 2;
 }
 extern u64 D_0038CD08;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 void func_00245280(s32, s32);
 s32 func_001d9d48(void) {
     if (!((s32)(D_0038CD08 >> 2) & 1)) return 4;
-    func_00245280(1, D_002E26A0);
+    func_00245280(1, (*(s32 *)&D_002E26A0));
     return 0;
 }
 extern void (*D_00377360)(s32);
