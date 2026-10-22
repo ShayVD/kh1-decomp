@@ -103,8 +103,7 @@ void func_0020d7d8(Obj7d8 *a0) {
 
 typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
 #include "data/pieces/D_003E3D68.h"
-typedef struct { u8 pad[0x48e]; u8 x48e[11]; u8 x499[256]; } G4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 extern s32 D_00641378[];
 extern s32 D_00641278[][16];
 
@@ -112,7 +111,7 @@ void func_0020eb98(void) {
     u32 i;
     s32 j;
     for (i = 0; i < D_003E3D68; i++) {
-        E4BE8 *e = (E4BE8 *)((u8 *)((G4BE8 *)D_00304BE8) + ((G4BE8 *)D_00304BE8)->x48e[i] * 0x74);
+        E4BE8 *e = (E4BE8 *)((u8 *)D_00304BE8 + D_00304BE8->x48e[i] * 0x74);
         D_00641378[i] = e->n;
         for (j = 0; j < D_00641378[i]; j++) {
             D_00641278[i][j] = e->v[j];
@@ -131,14 +130,14 @@ void func_00211da0(void) {
     s32 i;
     D_00642410 = 0;
     for (i = 1; i < 256; i++) {
-        if (((G4BE8 *)D_00304BE8)->x499[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
+        if (D_00304BE8->items[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
             D_00641C10[D_00642410] = i;
             D_00642410++;
         }
     }
     func_0020f290(D_00641C10, 0, D_00642410 - 1);
     for (i = 0; i < D_00642410; i++) {
-        D_00642010[i] = ((G4BE8 *)D_00304BE8)->x499[D_00641C10[i]];
+        D_00642010[i] = D_00304BE8->items[D_00641C10[i]];
     }
 }
 
@@ -781,7 +780,7 @@ void func_0020f3c8(void) {
     s32 i;
     D_00641388 = 0; D_00641790 = 0;
     for (i = 1; i < 256; i++) {
-        if (((G4BE8 *)D_00304BE8)->x499[i]) {
+        if (D_00304BE8->items[i]) {
             if (func_001eea60(i)) { D_00641390[D_00641388++] = i; }
             if (func_001eeac0(i)) { D_00641798[D_00641790++] = i; }
         }
