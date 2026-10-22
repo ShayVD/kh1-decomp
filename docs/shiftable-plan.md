@@ -2578,7 +2578,7 @@ Per piece (view casts, base -> now):
 | D_002E3170 | 20 | 4 | `Q8_2e3170 *D_002E3170[8]`, the menu cursor stack |
 | D_0048C690 | 11 | 0 | D_0048C630 / D_0048C690 are Blk32_48c630 |
 | D_002A6238 | 34 | 27 | s28_partial |
-| D_0036243C, D_00350D78, D_002E31A0, D_00362434, D_002E31B0, D_003626C0, D_00362430, D_002A6234 | 52 | 36 | s28_partial / s28_trim / retypes (D_002E31A0, D_002E319C are `O8_2e319c *`) |
+| D_0036243C, D_00350D78, D_002E31A0, D_00362434, D_002E31B0, D_003626C0, D_00362430, D_002A6234 | 52 | 34 | s28_partial / s28_trim / retypes (D_002E31A0, D_002E319C are `O8_2e319c *`) |
 | D_002E26A0 | (no header) | 24 | typed `void *D_002E26A0[3]` (63 users); element casts C does not need dropped |
 | D_003044D8 | (no header) | 2 | typed `ColEnt_3044d8 D_003044D8[]` (7 users) |
 
