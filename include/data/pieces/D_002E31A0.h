@@ -5,13 +5,9 @@
 #define KH1_DATA_PIECES_D_002E31A0_H
 
 #include "common.h"
+#include "data/pieces/D_002E319C.h"
 
-typedef struct {
-    u8 pad_0[0xc];
-    u16 f0c;
-    u16 f0e;
-} S31a0_2e31a0;
-
-extern S31a0_2e31a0 *D_002E31A0;
+/* the current menu item, which D_002E319C also points to (session 28) */
+extern O8_2e319c *D_002E31A0;
 
 #endif /* KH1_DATA_PIECES_D_002E31A0_H */

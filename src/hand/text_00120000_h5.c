@@ -42,7 +42,7 @@ typedef struct V8 { s32 a, b; } V8;
 
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31A0.h"
-typedef S31a0_2e31a0 S31a0;
+typedef O8_2e319c S31a0;
 
 /* ---- data ---- */
 #include "data/pieces/D_002E26A0.h"
