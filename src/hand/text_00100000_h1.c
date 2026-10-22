@@ -331,29 +331,29 @@ void func_00105218(void) {
 s32 func_00105960(s32 a, s32 b) {
     s32 sub;
     s32 idx = func_00142730(a, &sub);
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->b11 == b; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->b11 == b; }
     return func_0011ab60(sub, idx) == b;
 }
 
 s32 func_00105b10(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f22; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f22; }
     return func_0011ab38(sub, idx)->f22;
 }
 
 s32 func_00105b68(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f4; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f4; }
     return func_0011ab38(sub, idx)->f4;
 
 }
 
 s32 func_00105bc0(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f18; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f18; }
     return func_0011ab38(sub, idx)->f18;
 
 }
 
 s32 func_00105c18(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f28; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f28; }
     return func_0011ab38(sub, idx)->f28;
 
 }

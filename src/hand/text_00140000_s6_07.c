@@ -84,7 +84,7 @@ s32 func_0014ee88(Ob88 *o) {
     W34Box *b;
     ColSet *cs;
 
-    if (!((W34Boxes *)D_00350D78) || !o || !(cs = o->cs) || !cs->n) return 0;
+    if (!D_00350D78 || !o || !(cs = o->cs) || !cs->n) return 0;
     i = 0;
     m = 0;
     func_0015bad0(o, cs->cols, &cap);
@@ -93,7 +93,7 @@ s32 func_0014ee88(Ob88 *o) {
     func_00267530(lo, cap.b, q);
     func_00267518(hi, cap.b, q);
     b = ((W34Boxes *)D_00350D78)->box;
-    for (; i < ((W34Boxes *)D_00350D78)->n; i++, b++) {
+    for (; i < D_00350D78->n; i++, b++) {
         if ((b->f.x & 0x200) || func_0014ee08(lo, hi, (f32 *)b)) m |= 1 << (b->f.id - 1);
     }
     return m & D_0054F44C;

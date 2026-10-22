@@ -62,7 +62,7 @@ void func_0017f290(CamArg *a) {
             if (q->id != a->id)
                 goto loop;
             D_00362438 = (Path_362438 *)((s32)q);
-            (*(Rec20 **)&D_00362434) = 0;
+            D_00362434 = 0;
         }
         break;
     }

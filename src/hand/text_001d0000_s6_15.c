@@ -81,7 +81,7 @@ s32 func_001d3610(VM *vm) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c < 20) {
-            for (j = 0; j < ((u8 *)((Save *)D_00304BE8))[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
             
         }
     }
@@ -96,7 +96,7 @@ s32 func_001d3710(VM *vm) {
     for (i = 0; i < 4; i++) { if (i == 3) break;
         c = D_00304BE8->x48e[i];
         if (c < 20) {
-            for (j = 0; j < ((u8 *)((Save *)D_00304BE8))[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
         }
     }
     n += D_00304BE8->items[k];

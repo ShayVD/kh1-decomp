@@ -115,7 +115,7 @@ s32 func_001eeeb8(s32 id) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)((W17 *)D_00304BE8))[c];
+        e = &((C116 *)D_00304BE8)[c];
         if (e->b36 == id) n++;
     }
     return n;
@@ -128,7 +128,7 @@ s32 func_001eef38(s32 id) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)((W17 *)D_00304BE8))[c];
+        e = &((C116 *)D_00304BE8)[c];
         for (j = 0; j < e->n1c; j++) {
             if (e->l1d[j] == id) n++;
         }

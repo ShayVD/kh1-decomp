@@ -351,8 +351,8 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
     s32 *idx;
     u32 *f, *g;
     if (grp == -1) {
-        s32 ta = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i0];
-        s32 tb = ((PolyV52 *)((Plane52 *)D_002A6238))[e->poly].v[e->i1];
+        s32 ta = ((PolyV52 *)D_002A6238)[e->poly].v[e->i0];
+        s32 tb = ((PolyV52 *)D_002A6238)[e->poly].v[e->i1];
         a = ta;
         b = tb;
         for (i = 0; i < n; i++) {

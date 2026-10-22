@@ -211,10 +211,10 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     for (i = 0; i < 7; i++) {
         if ((bits >> i) & 1) {
             if (slot != -1) {
-                DbMemberB *mq = &((DbSaveB *)((DbSave *)D_00304BE8))->m[D_00304BE8->x48e[slot]];
+                DbMemberB *mq = &((DbSaveB *)D_00304BE8)->m[D_00304BE8->x48e[slot]];
                 mq->a[item + 32] = 0;
             } else {
-                ((DbSave9 *)((DbSave *)D_00304BE8))->x[item + 0x490]--;
+                ((DbSave9 *)D_00304BE8)->x[item + 0x490]--;
             }
             func_001ef830();
             if (i < 4) func_0011d768(14);

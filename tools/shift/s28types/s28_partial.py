@@ -47,14 +47,48 @@ def piece_struct(N):
         body = re.sub(r'#(?:ifndef|define|endif|include)[^\n]*\n', "", spath.read_text())
         e2 = re.search(r"^extern [^\n]*\b" + N + r"\b[^\n]*;\n", htext, re.M)
         htext = htext[:e2.start()] + body + "\n" + htext[e2.start():]
-    if C.find_def(htext, S0) is None:
+    if C.find_def(types_headers(htext) + htext, S0) is None:
         return None
-    ft = Y.FileTypes(str(hpath.relative_to(ROOT)), htext, [S0])
+    ft = HFileTypes(str(hpath.relative_to(ROOT)), htext, [S0])
     ft.probe()
     node = ft.nodes[ft.byname[S0]]
     if node.kind != "struct":
         return None
     return S0, form, node, split
+
+
+def types_headers(text, seen=None):
+    """text of the data/types headers a file includes (and theirs), for parsing view types
+    that session 24 moved out of the file"""
+    seen = set() if seen is None else seen
+    out = ""
+    for inc in re.findall(r'#include "(data/types/[^"]+)"', text):
+        if inc in seen:
+            continue
+        seen.add(inc)
+        p = ROOT / "include" / inc
+        if p.exists():
+            t = p.read_text()
+            out += types_headers(t, seen) + re.sub(r"#[^\n]*\n", "\n", t) + "\n"
+    return out
+
+
+class HFileTypes(Y.FileTypes):
+    """FileTypes that also finds view types in the file's data/types headers (the probe
+    still compiles the file itself, which includes them)"""
+    def __init__(self, rel, text, roots):
+        self.probe_text = text
+        extra = types_headers(text)
+        self.extra_len = len(extra)
+        super().__init__(rel, extra + text, roots)
+
+    def probe(self):
+        aug = self.text
+        self.text = self.probe_text
+        try:
+            super().probe()
+        finally:
+            self.text = aug
 
 
 def compat(a, b):
@@ -91,10 +125,8 @@ def edits_for(N, rel, text, info):
     ct = C.strip_comments(text)
     res = []
     for V in sorted({v for v, _ in F.view_casts(text, N) if v not in F.NOTVIEW}):
-        if C.find_def(text, V, ct) is None:
-            continue
         try:
-            ft = Y.FileTypes(rel, text, [V])
+            ft = HFileTypes(rel, text, [V])
             ft.probe()
         except Exception:  # noqa: BLE001
             continue

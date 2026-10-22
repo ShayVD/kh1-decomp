@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drop casts of a pointer-array piece's elements that C does not need (session 28).
+"""Drop casts of a pointer piece's value (or its elements) that C does not need (session 28).
 
   python3 -I tools/shift/s28types/s28_trim.py [--apply] D_X ...
 
@@ -8,7 +8,8 @@ users their own pointer type back: `((T *)D_X[i])` for a `T *D_X[]` user and
 `(*(T **)&D_X)` for a scalar `T *D_X` user.  A `void *` element converts to any
 object pointer by itself, so where the context does not need the type (an
 assignment, a comparison, a prototyped argument) the cast can go:
-`((T *)D_X[i])` -> `D_X[i]`, `(*(T **)&D_X)` -> `D_X[0]`.  Each removal is kept only
+`((T *)D_X[i])` -> `D_X[i]`, `(*(T **)&D_X)` -> `D_X[0]` (or `D_X` for a scalar pointer
+piece), and `((T *)D_X)` not followed by `->` or `[` -> `D_X`.  Each removal is kept only
 when the file's -S stays the same as HEAD and no new warning appears (s27_trim's
 check: first all of a file's candidates, else one by one).
 """
@@ -40,9 +41,22 @@ def cands(text, N):
             inner = ct[ct.index(N, m.start()):e]
             out.append((m.start(), k + 1, inner))
     # (*(T **)&N)
+    arr = is_array(N)
     for m in re.finditer(r"\(\s*\*\s*\(\s*" + TY + r"\*\s*\*\s*\)\s*&\s*" + N + r"\s*\)", ct):
-        out.append((m.start(), m.end(), N + "[0]"))
-    return sorted(out)
+        out.append((m.start(), m.end(), N + "[0]" if arr else N))
+    # ((T *)N) of a pointer piece where the value is only compared or passed on (not -> or [])
+    if not arr:
+        for m in re.finditer(r"\(\(\s*" + TY + r"\*\s*\)\s*" + N + r"\s*\)(?!\s*(?:->|\[))", ct):
+            out.append((m.start(), m.end(), N))
+    return sorted(set(out))
+
+
+def is_array(N):
+    h = L.ROOT / f"include/data/pieces/{N}.h"
+    if not h.exists():
+        return True
+    m = re.search(r"^extern [^\n]*\b" + N + r"\b\s*(\[)?", h.read_text(), re.M)
+    return bool(m and m.group(1))
 
 
 def trim_file(rel, N):

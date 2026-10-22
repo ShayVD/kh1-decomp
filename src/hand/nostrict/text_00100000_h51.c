@@ -96,7 +96,7 @@ s32 func_00104940(Vec3 *v, s32 *out) {
     n = 0;
     for (i = lo.x; i < hi.x + 1; i++) {
         for (j = lo.z; j < hi.z + 1; j++) {
-            *out++ = i * ((Grid *)D_002A6234)->nz + j;
+            *out++ = i * D_002A6234->nz + j;
             n++;
         }
     }
