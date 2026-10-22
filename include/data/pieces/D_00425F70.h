@@ -14,7 +14,8 @@ typedef struct {
     Mtx_425f70 m80;
     u8 pad_c0[0x40];
     Mtx_425f70 m100;
-    u8 pad_140[0x60];
+    f32 f140[20];
+    u8 pad_190[0x10];
     f32 v1a0[4];
     f32 v1b0[4];
 } Cam_425f70;

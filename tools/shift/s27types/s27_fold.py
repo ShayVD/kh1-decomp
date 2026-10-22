@@ -65,6 +65,9 @@ def view_casts(text, N):
     out = []
     for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\)\s*(&?)\s*(?:\(\s*)?" + N + r"\b", ct):
         out.append((m.group(1), "obj" if m.group(2) else "ptr"))
+    # (V **)&N: a pointer piece read through another pointer type (form 'pp', keep mode only)
+    for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\*\s*\)\s*&\s*" + N + r"\b", ct):
+        out.append((m.group(1), "pp"))
     # (V *)((W *)N): the outer cast of an inner view cast
     for m in re.finditer(r"\(\s*(\w+)\s*\*\s*\)\s*\(\s*\(\s*\w+\s*\*\s*\)\s*(&?)\s*" + N + r"\b", ct):
         out.append((m.group(1), "obj" if m.group(2) else "ptr"))
@@ -224,6 +227,7 @@ def rename_view_casts(text, N, views, S):
     vs = "|".join(re.escape(v) for v in sorted(views, key=len, reverse=True))
     text = re.sub(r"\(\s*\(\s*(?:" + vs + r")\s*\*\s*\)\s*\(\s*\(\s*(?:" + vs + r")\s*\*\s*\)\s*(&?)\s*" + N + r"\s*\)\s*\)",
                   lambda m: f"(({S} *){m.group(1)}{N})", text)
+    text = re.sub(r"\(\s*(?:" + vs + r")\s*\*\s*\*\s*\)(\s*&\s*" + N + r"\b)", lambda m: f"({S} **){m.group(1)}", text)
     return re.sub(r"\(\s*(?:" + vs + r")\s*\*\s*\)(\s*&?\s*" + N + r"\b)", lambda m: f"({S} *){m.group(1)}", text)
 
 
@@ -424,14 +428,17 @@ def main(argv):
     if len(forms) > 1:
         # session 28: keep the files whose views match the declaration (a pointer
         # declaration: `((S *)D_X)`; an object: `(*(S *)&D_X)`), skip the others
-        want = "ptr" if re.search(r"\*\s*" + N + r"\b", olddecl or "") else "obj"
+        want = "ptr" if re.search(r"\*\s*(?:volatile\s+)?" + N + r"\b", olddecl or "") else "obj"
+        if want == "ptr" and "ptr" not in forms:
+            want = "pp"
         for rel in sorted(files):
             if fforms[rel] != {want}:
                 log(f"  skip {rel}: cast forms {sorted(fforms[rel])} (declaration wants {want})")
                 del files[rel]
         forms = {want}
     obj = forms == {"obj"}
-    log(f"  {len(files)} files with struct views ({'object' if obj else 'pointer'} piece)")
+    pp = forms == {"pp"}
+    log(f"  {len(files)} files with struct views ({'object' if obj else 'pointer'} piece{', (V **)&N form' if pp else ''})")
 
     def p1(rel):
         t, roots = files[rel]
@@ -496,6 +503,8 @@ def main(argv):
     for mode in ("full", "split", "keep"):
         if mode == "split" and obj:
             continue
+        if pp and mode != "keep":
+            continue  # session 28: (V **)&N views keep the declaration and cast to (S **)
         if mode == "full" and hpath.with_name(f"{N}_s.h").exists():
             continue  # session 28: an earlier split fold stays split (its users include D_X_s.h)
         result = fold_rounds(mode, N, sname, obj, olddecl, oldhdr, hpath, users, done, prio, apply)

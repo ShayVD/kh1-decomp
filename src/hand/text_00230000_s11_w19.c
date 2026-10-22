@@ -3,12 +3,12 @@
 
 typedef struct { s32 x, y; } Pt17;
 #include "data/pieces/D_00449908.h"
-typedef struct { s32 x0; u8 pad4[8]; s32 xc; s32 x10; } It17;
+#include "data/pieces/D_002E3170.h"
+typedef Q8_2e3170 It17;
 #include "data/types/text_00230000_s11_w19.h"
 #include "data/pieces/D_002C5960.h"
 extern f32 D_002BBDFC;
 extern Ob17 D_00650120[];
-#include "data/pieces/D_002E3170.h"
 void func_0023a8d0(Ob17 *);
 void func_0023a7e8(void);
 void func_0023a720(void);
@@ -20,7 +20,7 @@ CONTEXT_ONLY void func_0023a720(void) {
     Spr17 **pp;
     Spr17 *p;
     s32 i;
-    for (pp = (Spr17 **)((It17 **)&D_002E3170); *pp != 0; pp++) {
+    for (pp = (Spr17 **)((Q8_2e3170 **)&D_002E3170); *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
             for (i = 0; i < p->unk10; i++) {
@@ -52,7 +52,7 @@ s32 func_0023a968(void) {
     chg = 0;
     func_0023a8d0(&D_00650120[0]);
     func_0023a7e8();
-    list = ((It17 **)&D_002E3170);
+    list = ((Q8_2e3170 **)&D_002E3170);
     o = *list;
     if (o) do {
         if (list[1] == 0 && o->x0 != D_00449908.cur) {
@@ -67,55 +67,55 @@ s32 func_0023a968(void) {
         switch (o->x0) {
         case 0:
             func_0023a318(0, o, last, chg, &D_00650120[0], 16, 260, D_00449908.f7c);
-            D_00449908.a[0] = o->xc;
+            D_00449908.a[0] = o->fc;
             D_00449908.p[0 * 2] = 16;
             D_00449908.p[0 * 2 + 1] = 260;
-            D_00449908.b[0] = o->x10;
+            D_00449908.b[0] = o->n;
             break;
         case 1:
             x = D_00449908.p[0 * 2] + 11;
-            if (o->x10 < 3) y = D_00449908.p[0 * 2 + 1] + 22;
-            else y = 348 - o->x10 * 22;
+            if (o->n < 3) y = D_00449908.p[0 * 2 + 1] + 22;
+            else y = 348 - o->n * 22;
             func_0023a318(1, o, last, chg, &D_00650120[1], x, y, D_00449908.f7c);
-            D_00449908.a[1] = o->xc;
+            D_00449908.a[1] = o->fc;
             D_00449908.p[1 * 2] = x;
             D_00449908.p[1 * 2 + 1] = y;
-            D_00449908.b[1] = o->x10;
+            D_00449908.b[1] = o->n;
             break;
         case 2:
             x = D_00449908.p[0 * 2] + 11;
-            if (o->x10 < 2) y = D_00449908.p[0 * 2 + 1] + 44;
-            else y = 348 - o->x10 * 22;
+            if (o->n < 2) y = D_00449908.p[0 * 2 + 1] + 44;
+            else y = 348 - o->n * 22;
             func_0023a318(2, o, last, chg, &D_00650120[2], x, y, D_00449908.f7c);
-            D_00449908.a[2] = o->xc;
+            D_00449908.a[2] = o->fc;
             D_00449908.p[2 * 2] = x;
             D_00449908.p[2 * 2 + 1] = y;
-            D_00449908.b[2] = o->x10;
+            D_00449908.b[2] = o->n;
             break;
         case 3:
-            h = o->x10 * 22; t = D_00449908.a[1] * 22; x = D_00449908.p[1 * 2] + 11; last2 = D_00449908.p[1 * 2 + 1] + h + t + 20; if (last2 >= 369) y = 348 - h; else y = D_00449908.p[1 * 2 + 1] + t;
+            h = o->n * 22; t = D_00449908.a[1] * 22; x = D_00449908.p[1 * 2] + 11; last2 = D_00449908.p[1 * 2 + 1] + h + t + 20; if (last2 >= 369) y = 348 - h; else y = D_00449908.p[1 * 2 + 1] + t;
             func_0023a318(3, o, last, chg, &D_00650120[3], x, y, D_00449908.f7c);
-            D_00449908.a[3] = o->xc;
+            D_00449908.a[3] = o->fc;
             D_00449908.p[3 * 2] = x;
             D_00449908.p[3 * 2 + 1] = y;
-            D_00449908.b[3] = o->x10;
+            D_00449908.b[3] = o->n;
             break;
         case 4:
             if (list[-1]->x0 == 1) k = 1;
             else if (list[-1]->x0 == 2) k = 2;
             else if (list[-1]->x0 == 5) k = 5;
             if (k != 5) {
-                { s32 py; x = D_00449908.p[k * 2] + 11; h = o->x10 * 22; py = D_00449908.p[k * 2 + 1]; t = D_00449908.a[k] * 22; last2 = py + h + t + 20; if (last2 >= 369) y = 348 - h; else y = py + t; }
+                { s32 py; x = D_00449908.p[k * 2] + 11; h = o->n * 22; py = D_00449908.p[k * 2 + 1]; t = D_00449908.a[k] * 22; last2 = py + h + t + 20; if (last2 >= 369) y = 348 - h; else y = py + t; }
             } else {
                 x = D_00449908.p[5 * 2];
-                y = 348 - o->x10 * 22;
+                y = 348 - o->n * 22;
             }
             if (k != 2) func_0023a318(4, o, last, chg, &D_00650120[4], x, y, D_00449908.f7c);
             else func_0023a318(4, o, last, chg, &D_00650120[6], x, y, D_00449908.f7c);
-            D_00449908.a[4] = o->xc;
+            D_00449908.a[4] = o->fc;
             D_00449908.p[4 * 2] = x;
             D_00449908.p[4 * 2 + 1] = y;
-            D_00449908.b[4] = o->x10;
+            D_00449908.b[4] = o->n;
             break;
         case 5:
             x = 16;
@@ -124,7 +124,7 @@ s32 func_0023a968(void) {
             D_00449908.a[5] = -1;
             D_00449908.p[5 * 2] = x;
             D_00449908.p[5 * 2 + 1] = y;
-            D_00449908.b[5] = o->x10;
+            D_00449908.b[5] = o->n;
             break;
         }
         list++;

@@ -64,7 +64,6 @@ void func_00124b90(void) {
 }
 
 typedef struct { u8 pad[0x70]; s32 f70; u8 pad74[0x3c0 - 0x74]; f32 f3c0[4]; } E2;
-typedef struct { u8 pad[0xf0]; f32 ff0; } G1;
 #include "data/pieces/D_00308CDC.h"
 extern void func_00130340(E2 *, s32, f32);
 extern void func_00130578(E2 *, s32, f32);
@@ -76,12 +75,12 @@ void func_00125be8(E2 *e, s32 a1) {
     case 2:
         func_00130340(e, 0x100008a, 8.0f);
         func_00130578(e, 0x40000006, 0.0f);
-        func_00267560(e->f3c0, e->f3c0, (*(G1 **)&D_00308CDC)->ff0);
+        func_00267560(e->f3c0, e->f3c0, (*(Cfg_308cdc **)&D_00308CDC)->ff0);
         break;
     case 8:
         func_00130340(e, 0x100008a, 8.0f);
         func_00130578(e, 0x40000075, 8.0f);
-        func_00267560(e->f3c0, e->f3c0, (*(G1 **)&D_00308CDC)->ff0);
+        func_00267560(e->f3c0, e->f3c0, (*(Cfg_308cdc **)&D_00308CDC)->ff0);
         break;
     default:
         func_00130340(e, 0x100003d, 8.0f);

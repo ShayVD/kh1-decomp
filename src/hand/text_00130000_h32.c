@@ -532,13 +532,7 @@ void func_00139170(W32Src *o, W32Tgt *t) {
     }
     t->flags |= 2;
 }
-typedef struct {
-    u8 pad00[0x28];
-    f32 x28;
-    f32 x2c;
-    f32 x30;
-    f32 x34;
-} W32Prm;
+#include "data/pieces/D_00308CDC.h"
 typedef struct {
     u8 pad00[0xC4];
     f32 xc4;
@@ -562,7 +556,6 @@ typedef struct {
     W32Atk *x2c;
 } W32Hit;
 #include "data/pieces/D_002C58A0.h"
-#include "data/pieces/D_00308CDC.h"
 void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_00156260(W32Act *o, f32 *v);
 s32 func_00130340(W32Act *o, u32 f, f32 x);
@@ -573,8 +566,8 @@ void func_001399a8(W32Act *o, W32Hit *h) {
     if (h->x8 < 0 && (f & 0x400000)) {
         f32 t;
         func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), o->x30);
-        t = (f32)-h->x8 * (*(W32Prm **)&D_00308CDC)->x28;
-                v[3] = (t < (*(W32Prm **)&D_00308CDC)->x2c ? t : (*(W32Prm **)&D_00308CDC)->x2c) * o->x6c->xc4;
+        t = (f32)-h->x8 * (*(Cfg_308cdc **)&D_00308CDC)->x28;
+                v[3] = (t < (*(Cfg_308cdc **)&D_00308CDC)->x2c ? t : (*(Cfg_308cdc **)&D_00308CDC)->x2c) * o->x6c->xc4;
         func_00156260(o, v);
         f &= ~0x400000;
     }
@@ -811,8 +804,8 @@ void func_00139a90(W32Act *o, W32Hit *h) {
     func_00130578(o, 0x40000006, 0.0f);
     func_0014cce0(o, 20.0f);
     if (h->x8 < 0) {
-                f32 t = (f32)h->x8 / 100.0f * (*(W32Prm **)&D_00308CDC)->x30;
-        func_00267560(o->x3c0, o->x30, (-(*(W32Prm **)&D_00308CDC)->x34 < t ? t : -(*(W32Prm **)&D_00308CDC)->x34) * o->x6c->xc4);
+                f32 t = (f32)h->x8 / 100.0f * (*(Cfg_308cdc **)&D_00308CDC)->x30;
+        func_00267560(o->x3c0, o->x30, (-(*(Cfg_308cdc **)&D_00308CDC)->x34 < t ? t : -(*(Cfg_308cdc **)&D_00308CDC)->x34) * o->x6c->xc4);
         return;
     }
     func_002675a8(o->x3c0, (*(f32 (*)[0x4])&D_002C58A0));

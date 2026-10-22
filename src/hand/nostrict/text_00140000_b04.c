@@ -62,7 +62,6 @@ typedef struct B4Ent {
     union { u64 x; struct { struct B4Ent *lo; u32 hi; } w; } x470;
 } B4Ent;
 
-typedef struct { u8 pad[0xfe]; u8 xfe; } B4G;
 #include "data/pieces/D_00308CDC.h"
 extern B4Ent *D_002E26A0;
 extern u32 D_0054F440;
@@ -855,7 +854,7 @@ B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {
         p->x2c = e->x6c->x4c;
         if (e->x148 && e->x148->x170.b.b5) {
             t = func_0013c318(e->x130->x4c);
-            if (t >= 0 && func_002408d8(t)) p->x2c = p->x2c + (*(B4G **)&D_00308CDC)->xfe;
+            if (t >= 0 && func_002408d8(t)) p->x2c = p->x2c + (*(Cfg_308cdc **)&D_00308CDC)->xfe;
         }
         break;
     case 1: p->x2c = e->x6c->x48; break;

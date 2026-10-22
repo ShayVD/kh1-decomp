@@ -454,21 +454,16 @@ void func_00153b68(W9Ent *e, s32 a1, f32 *v) {
     func_00130398(e, 8.0f, n);
 }
 
-typedef struct {
-    u8 pad0[0x30];
-    f32 x30;
-    f32 x34;
-} W9Cfg;
 #include "data/pieces/D_00308CDC.h"
 f32 func_001348e0(W9Ent *e, f32 *o);
 void func_00267e90(f32 *out, f32 *in, f32 s);
 void func_00154258(W9Ent *e, f32 *o, f32 *out) {
     f32 k = e->x6c->xc4;
     f32 s;
-    if (func_001348e0(e, o) * (*(W9Cfg **)&D_00308CDC)->x30 < (*(W9Cfg **)&D_00308CDC)->x34) {
-        s = func_001348e0(e, o) * (*(W9Cfg **)&D_00308CDC)->x30 * k;
+    if (func_001348e0(e, o) * (*(Cfg_308cdc **)&D_00308CDC)->x30 < (*(Cfg_308cdc **)&D_00308CDC)->x34) {
+        s = func_001348e0(e, o) * (*(Cfg_308cdc **)&D_00308CDC)->x30 * k;
     } else {
-        s = (*(W9Cfg **)&D_00308CDC)->x34 * k;
+        s = (*(Cfg_308cdc **)&D_00308CDC)->x34 * k;
     }
     func_00267e90(out, o + 4, s);
 }
