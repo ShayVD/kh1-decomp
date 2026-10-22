@@ -261,13 +261,13 @@ void func_0021ad08(s32 a0) {
 }
 
 #include "data/types/text_00200000_h47_p.h"
-extern S5D80 D_00425D80;
+#include "data/pieces/D_00425D80.h"
 #include "data/pieces/D_00425F70.h"
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 
 void func_0021ae28(void) {
-    D_00425F70 = (Cam_425f70 *)&D_00425D80;
-    func_00267b08(D_00425D80.x40, 512.0f, 0.7999999523162842f, 0.839999854564666748046875f, 2048.0f, 2048.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
+    D_00425F70 = &D_00425D80;
+    func_00267b08(D_00425D80.m40, 512.0f, 0.7999999523162842f, 0.839999854564666748046875f, 2048.0f, 2048.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
     D_00425F70->f140[0] = 0.0f;
     D_00425F70->f140[1] = -170.0f;
     D_00425F70->f140[2] = -400.0f;
@@ -810,4 +810,3 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"
 #include "data/pieces/D_003F34C8.h"
-#include "data/pieces/D_00425D80.h"
