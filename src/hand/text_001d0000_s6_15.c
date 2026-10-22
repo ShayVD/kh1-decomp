@@ -30,7 +30,7 @@ typedef struct {
 Ent *func_001e98d0(s32, s32);
 typedef struct { u8 pad0[0x1f]; u8 n; u8 items[0x74 - 0x20]; } Chr;
 typedef struct { u8 pad0[6]; Chr ch[10]; u8 a48e[11]; u8 a499[1]; } Save;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 s32 func_001d2768(VM *vm) {
     Msg m;
@@ -79,13 +79,13 @@ s32 func_001d3610(VM *vm) {
     s32 i, j, c;
     s32 k = vm->stk[vm->sp];
     for (i = 0; i < 4; i++) {
-        c = ((Save *)D_00304BE8)->a48e[i];
+        c = D_00304BE8->x48e[i];
         if (c < 20) {
             for (j = 0; j < ((u8 *)((Save *)D_00304BE8))[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
             
         }
     }
-    n += ((Save *)D_00304BE8)->a499[k];
+    n += D_00304BE8->items[k];
     vm->stk[vm->sp] = n;
     return 2;
 }
@@ -94,12 +94,12 @@ s32 func_001d3710(VM *vm) {
     s32 i, j, c;
     s32 k = vm->stk[vm->sp];
     for (i = 0; i < 4; i++) { if (i == 3) break;
-        c = ((Save *)D_00304BE8)->a48e[i];
+        c = D_00304BE8->x48e[i];
         if (c < 20) {
             for (j = 0; j < ((u8 *)((Save *)D_00304BE8))[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
         }
     }
-    n += ((Save *)D_00304BE8)->a499[k];
+    n += D_00304BE8->items[k];
     vm->stk[vm->sp] = n;
     return 2;
 }

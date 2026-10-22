@@ -7,7 +7,7 @@ typedef S31b0_2e31b0 S31b0;
 typedef struct { u16 f0; u8 p2[0xc]; u16 fe; } O8;
 typedef struct { u8 pad[0x844]; s32 f844[3]; u8 pad850[0x24]; s32 f874; } Sv;
 extern Q38 D_002E2FD8[7];
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 extern s32 D_00524F50;
 extern s32 func_0013c188(s32, s32);
 extern s32 func_00132fe0(s32);
@@ -60,7 +60,7 @@ void func_0012d468(s32 a0, u32 *a1) {
     Q38 *base;
 
     D_00524F50 = 0;
-    if (((Sv *)D_00304BE8)->f874 & 8) return;
+    if (D_00304BE8->f874 & 8) return;
     base = D_002E2FD8;
     mask = -1;
     n = 0;
@@ -99,7 +99,7 @@ void func_0012d468(s32 a0, u32 *a1) {
     q->f4 = mask;
     if (n > 0) {
         func_0012cb40(base, 1, 2);
-        if (((Sv *)D_00304BE8)->f874 & 1) {
+        if (D_00304BE8->f874 & 1) {
             func_0012ccb0(1);
             return;
         }

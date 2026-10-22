@@ -56,7 +56,7 @@ typedef struct {
     u8 x48e[3];
     u8 x491;
 } SaveM;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
@@ -281,11 +281,11 @@ s32 func_001ef140(s32 i, s32 id) {
 void func_001ef830(void) {
     s32 i;
     for (i = 0; i < 3; i++) {
-        if (((SaveM *)D_00304BE8)->x48e[i] == 0xff) break;
+        if (D_00304BE8->x48e[i] == 0xff) break;
     }
     D_003E3D6C = i;
     D_003E3D68 = i;
-    if (((SaveM *)D_00304BE8)->x491 != 0xff) D_003E3D68 = i + 1;
+    if (D_00304BE8->x48e[3] != 0xff) D_003E3D68 = i + 1;
     for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70.e228[i]);
 }
 

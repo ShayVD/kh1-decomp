@@ -98,7 +98,7 @@ typedef struct { s32 *p; s32 n; } PN;
 #include "data/pieces/D_003F34B8.h"
 typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
 typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 extern s32 D_00642CCC;
 extern s32 D_00642CD8;
 extern PN D_003F40F8[];
@@ -107,7 +107,7 @@ extern s32 D_003F4200[][9];
 void func_00170d60(s32, s32, s32);
 
 void func_00216ea8(void) {
-    s32 k = ((S4BE8 *)D_00304BE8)->x48e[D_00642CCC];
+    s32 k = D_00304BE8->x48e[D_00642CCC];
     s32 *p, n, i;
     p = D_003F40F8[k].p;
     n = D_003F40F8[k].n;
@@ -195,10 +195,10 @@ void func_00218dd0(Obj2 *a) {
             v = func_001fd518(a);
             D_00642D18 = v;
             if ((o = a->x10)) {
-                u8 k8 = ((S4BE8 *)D_00304BE8)->x48e[v];
+                u8 k8 = D_00304BE8->x48e[v];
                 o->x24 = k8;
                 if ((o = o->x10)) {
-                    func_00218020(((S4BE8 *)D_00304BE8)->x48e[v]);
+                    func_00218020(D_00304BE8->x48e[v]);
                     o->xd8 = D_00642D10;
                     func_001fdfd0(o);
                     o->x24 = k8;
@@ -210,7 +210,7 @@ void func_00218dd0(Obj2 *a) {
     y = 0;
     for (i = 0; i < D_003E3D68; i++) {
         k = i == s ? 11 : 0;
-        func_00207870(a, k, 2, 0, y, 122, func_001ee5f0(((S4BE8 *)D_00304BE8)->x48e[i]));
+        func_00207870(a, k, 2, 0, y, 122, func_001ee5f0(D_00304BE8->x48e[i]));
         y += 28;
     }
 }

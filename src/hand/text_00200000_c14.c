@@ -3,7 +3,7 @@
 
 typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
 typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00425BC8.h"
 typedef struct ObjE { u8 pad[0x10]; struct ObjE *x10; u8 p14[0x10]; s32 x24; s32 x28; s32 x2c; u8 p30[0x10]; s32 x40; u8 p44[0xce - 0x44]; s16 xce; u16 xd0; u16 xd2; } ObjE;
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234, D_00641238, D_0064123C;
@@ -112,7 +112,7 @@ void func_0020e588(ObjE *o) {
                 case 2:
                     if (c2) {
                         if (D_00641234) {
-                            if (((G4BE8e *)D_00304BE8)->x499[D_00641234] >= 99) {
+                            if (D_00304BE8->items[D_00641234] >= 99) {
                                 func_0011d768(4);
                                 if ((q = func_001f31a8(D_003F38E0, 6))) {
                                     func_001f3e48(q, p);
@@ -122,8 +122,8 @@ void func_0020e588(ObjE *o) {
                                 func_0011d768(2);
                                 func_001f3d58(o, 5);
                                 func_001f3758(o);
-                                ((G4BE8e *)D_00304BE8)->x499[D_00641234]++;
-                                ((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641228]].x26[D_00641230] = 0;
+                                D_00304BE8->items[D_00641234]++;
+                                ((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = 0;
                                 D_00641224 = 5;
                             }
                         } else if (D_00641790) {
@@ -192,7 +192,7 @@ void func_0020ec50(ObjE *o) {
 
     k = o->x24;
     f = o->x2c;
-    t = &((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[k]].x4;
+    t = &((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[k]].x4;
     lim = t[33];
     if (!lim) return;
     if (f < 2) {
@@ -250,7 +250,7 @@ void func_0020ec50(ObjE *o) {
                         func_001f3758(o);
                         D_00641244 = idx;
                         D_00641248 = v;
-                        ((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641228]].x26[D_00641230] = v;
+                        ((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = v;
                         i2 = idx + 32;
                         ((u8 *)n)[i2] = D_00641234;
                         D_00641224 = 5;
@@ -260,13 +260,13 @@ void func_0020ec50(ObjE *o) {
                         func_001f3758(o);
                         D_00641244 = idx;
                         D_00641248 = v;
-                        ((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641228]].x26[D_00641230] = v;
+                        ((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = v;
                         i2 = idx + 32;
                         ((u8 *)n)[i2] = 0;
                         D_00641224 = 5;
                     }
                 } else if (D_00641238 == 1) {
-                    if (v && ((G4BE8e *)D_00304BE8)->x499[v] >= 99) {
+                    if (v && D_00304BE8->items[v] >= 99) {
                         func_0011d768(4);
                         if ((w[0] = (s32)func_001f31a8(D_003F38E0, 6))) {
                             func_001f3e48((ObjE *)w[0], p);
@@ -278,8 +278,8 @@ void func_0020ec50(ObjE *o) {
                         func_001f3758(o);
                         D_00641244 = idx;
                         D_00641248 = v;
-                        if (v) ((G4BE8e *)D_00304BE8)->x499[v]++;
-                        ((G4BE8e *)D_00304BE8)->x499[D_00641234]--;
+                        if (v) D_00304BE8->items[v]++;
+                        D_00304BE8->items[D_00641234]--;
                         i2 = idx + 32;
                         ((u8 *)n)[i2] = D_00641234;
                         D_00641224 = 5;
@@ -290,8 +290,8 @@ void func_0020ec50(ObjE *o) {
                     func_001f3758(o);
                     D_00641244 = idx;
                     D_00641248 = v;
-                    ((G4BE8e *)D_00304BE8)->e[((G4BE8e *)D_00304BE8)->x48e[D_00641240]].x26[idx] = v;
-                    ((G4BE8e *)D_00304BE8)->x499[D_00641234]--;
+                    ((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641240]].x26[idx] = v;
+                    D_00304BE8->items[D_00641234]--;
                     D_00641224 = 5;
                 }
             }

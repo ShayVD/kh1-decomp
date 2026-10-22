@@ -43,8 +43,7 @@ struct Save_304be8 {
     W606Mem_304be8 m[10];
     u8 x48c;
     u8 x48d;
-    u8 x48e[3];
-    u8 x491;
+    u8 x48e[4];
     u8 b492[7];
     u8 items[0x100];
     u8 list599[0x30];

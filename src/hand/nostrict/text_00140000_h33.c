@@ -42,7 +42,7 @@ typedef struct {
     u64 x878;
 } W7Save;
 
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 /* ---- actor object ---- */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
@@ -331,8 +331,8 @@ s32 func_0013c9e0(s32 item, u32 who) {
             }
         }
     }
-    if (((W7Save *)D_00304BE8)->inv[item] < 99) {
-        ((W7Save *)D_00304BE8)->inv[item]++;
+    if (D_00304BE8->items[item] < 99) {
+        D_00304BE8->items[item]++;
         return 12;
     }
     return 255;
@@ -349,8 +349,8 @@ s32 func_0013cae8(u32 who, s32 item) {
             }
         }
     }
-    if (((W7Save *)D_00304BE8)->inv[item] != 0) {
-        ((W7Save *)D_00304BE8)->inv[item]--;
+    if (D_00304BE8->items[item] != 0) {
+        D_00304BE8->items[item]--;
         return 12;
     }
     return 255;

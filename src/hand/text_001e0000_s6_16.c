@@ -106,14 +106,14 @@ s32 func_001ea888(E848 *e) {
 
 typedef struct { u8 pad[28]; u8 n1c; u8 l1d[25]; u8 b36; u8 pad37[116 - 55]; } C116;
 typedef struct { u8 pad[0x48e]; u8 f48e[4]; } W17;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 s32 func_001eeeb8(s32 id) {
     s32 n = 0, i;
     u8 c;
     C116 *e;
     for (i = 0; i < 4; i++) {
-        c = ((W17 *)D_00304BE8)->f48e[i];
+        c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
         e = &((C116 *)((W17 *)D_00304BE8))[c];
         if (e->b36 == id) n++;
@@ -126,7 +126,7 @@ s32 func_001eef38(s32 id) {
     u8 c;
     C116 *e;
     for (i = 0; i < 4; i++) {
-        c = ((W17 *)D_00304BE8)->f48e[i];
+        c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
         e = &((C116 *)((W17 *)D_00304BE8))[c];
         for (j = 0; j < e->n1c; j++) {
