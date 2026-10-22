@@ -6,14 +6,12 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 27, 2026-10-21)
+## Where we stopped (end of session 28, 2026-10-22)
 
-- **6,979 / 6,988 functions matched**: 99.87% of functions, 98.84% of code bytes (docs/progress.md). No matching work in session 27.
-- **Floated slots are given back** (docs/shiftable-plan.md "Session 27: floated slots are given back"): `SHIFT_FLOAT_COMPACT=1` is the default. Each run of floated slots shrinks by a multiple of 64; D_BLOB/D_BSS+offset references go through the piecewise map in compact.tsv (shift_ld CompactMap; shift_cmp and float_holes read it). The pools and block heap are back at 0x6A0000 / 0x820000.
-- **reach_check has seven more rules** ("Session 27: reach_check rules"): it pins 1,347 names (was 1,803). The default build (= KH1_F27_R12) floats **2,051 of 3,412 names**, `_end` 0x687564, and plays save 06 with the party, test T, a desert fight, the warp to Neverland and a ship fight, End of the World and a fight; float_holes 0 of 2,051.
-- **The actor table hazard**: D_002C64A0 (1200-byte entries) is walked with D_002E26A0's address as its end, so floating it lost Donald and Goofy (bisected R1-R11). float_keep.txt pins it. No check finds this pattern yet.
-- float_keep.txt also pins D_00272C70 (= D_BLOB; shift_cmp maps D_BLOB through it if it floats).
-- **Phase 4**: worker s27types folded 43 pieces, removing 745 of 1,541 view casts (tools/shift/s27types/, "Session 27: Phase 4 types"). About 796 casts are left; D_002E26A0 and D_003044D8 still need code changes.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-28.
+- **reach_check end-ptr rule** (docs/shiftable-plan.md "Session 28: end pointers, the IOP block and D_BLOB"): finds the actor table D_002C64A0 by itself; it left float_keep.txt and keep_check enforces it. The default float set is unchanged from KH1_F27_R12.
+- **Ready but never booted** (no PCSX2 access in session 28): the IOP block is one piece D_0063D640 (src/data/data_0063.s), and shift_cmp accepts a floated D_00272C70 (D_BLOB checked as the .data start). `SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"` links and passes M12-FLOAT. Both stay in float_keep.txt until that build has played.
+- **Phase 4**: view casts 796 -> 463 (worker s28types); D_002E26A0 and D_003044D8 typed. What is left and why: "Session 28: Phase 4 types".
 
 ## What is left (9 functions)
 
@@ -23,11 +21,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 28 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 29 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **An end-pointer rule in reach_check**: find every compare (`sltu`/`slt`/`beq` after a subtract) of a walked pointer against another name's address (`&NEXT` as a table end, like D_002C64A0 / D_002E26A0) and pin the table to the name. Check it finds the actor table on its own, then take D_002C64A0 out of float_keep.txt and boot (save 06: Donald and Goofy must be there).
-2. **The rest of float_keep.txt**: fix shift_cmp's D_BLOB mapping so D_00272C70 can float; make the IOP block D_0063D640 a piece covering its 0x2000 bytes and try it with SHIFT_FLOAT_FORCE; try making F27_C2's forced names (D_003F8380, D_0046E120, D_00472160) the default if reach_check can release them.
-3. **reach_check's remaining groups**: idx (nested loops whose inner counter carries across the outer loop; needs relational bounds) and stored (func_0023b570's stack arguments to func_0023aed0). Boot after any rule change (keep_check must pass); the riskiest releases are listed in the reach_check section.
-4. **Phase 4**: fold the ~796 remaining view casts (tools/shift/s27types/ helpers), then D_002E26A0 and D_003044D8. `make` must stay identical.
-5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=28`, commit, open a PR, and refresh this prompt.
+1. **Boot the pending floats first** (ask for the Mac and PCSX2 at the start): stage out/overlays from Downloads/kh1-test/ovl, build the default (expect = F27_R12) and `SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"`, boot the usual route (save 06 with Donald and Goofy, test T, a desert fight, Neverland ship fight, End of the World). If it plays, drop both from float_keep.txt. Then try D_003F8380 / D_0046E120 / D_00472160 forced (F27_C2 played) and decide whether to make them default via float_keep comments or a targeted reach_check exception.
+2. **reach_check idx**: relational bounds for nested loops whose inner counter carries over the outer loop (func_00103a70's 4x4 copy). The stored group (func_0023aed0) is not worth it (pointers go into its Out record).
+3. **Phase 4**: the remaining 463 view casts: a VM type shared by D_0039A580 / D_0038D170 / D_003C3A70 / D_003A7990 / D_003B4DA0, one vector type set (V4/V3) for D_002E2780/2790, D_002C58A0/B0, D_002C58D0, and the D_00304BE8 overlaps. `make` must stay identical.
+4. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
+5. End with `make progress-update SESSION=29`, commit, open a PR, and refresh this prompt.

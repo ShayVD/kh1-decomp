@@ -910,3 +910,24 @@ found that the next session needs:
 - **Phase 4** (worker s27types): 43 more pieces folded, 745 of 1,541 view casts removed (tools/shift/s27types/).
 - PCSX2: System > Save State > Save To File needs the menu opened with a click before each submenu step
   (one click per batch step, with a wait); keys typed while the game window has focus go to the game.
+
+## Session 28: what changed
+
+- **reach_check end-ptr** (`--no-end-ptr`; docs/shiftable-plan.md "Session 28: end pointers"): a compare
+  (`slt`/`sltu`, or `beq`/`bne` against a walked pointer) or a subtract (`&N - p`) against a name's address
+  ties the object before it to the name. It finds the actor table D_002C64A0 on its own (func_00123810), so
+  float_keep.txt no longer lists it and keep_check does. No other name is newly pinned, so the default float
+  set is the same as KH1_F27_R12's.
+- **The IOP status block D_0063D640 is one piece** (src/data/data_0063.s: zero-filled section, fields
+  D_0063EE40 / D_0063F248 / D_0063F540 as PIECE_LABELs). float_keep.txt keeps the piece.
+- **shift_cmp checks D_BLOB as the .data start**, so D_00272C70 can float. `SHIFT_FLOAT_FORCE="D_00272C70
+  D_0063D640"` links and passes M12-FLOAT; neither has been booted (no PCSX2 access this session), so both
+  stay in float_keep.txt.
+- A global-bound rule (loads of a word only ever set to small constants) was tried for the staging arena
+  D_003F8380 and dropped: D_00351E10 escapes to many callees.
+- **Phase 4** (worker s28types): view casts 796 -> 463; D_002E26A0 (`void *[3]`) and D_003044D8
+  (`ColEnt_3044d8 []`) are typed. Helpers in tools/shift/s28types/; the s26/s27 tools honour `S27_JOBS`.
+- A worker in a separate `git worktree` (symlink tools/toolchain, copy the ELF) kept its builds apart from
+  the main checkout; merge its branch when it reports.
+- A fresh container without the Mac can still run `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1
+  SHIFT_OVERLAYS=<empty dir>` to check links (the overlay table is empty, so such an ELF is not for booting).
