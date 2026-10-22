@@ -15,7 +15,7 @@ extern void func_0011d768(s32);
 extern void func_0012dce0(Q8 *);
 CONTEXT_ONLY Q8 *func_0012dd38(void) {
     Q8 **p = D_00524F40;
-    if (p > ((Q8_2e3170 **)&D_002E3170)) {
+    if (p > D_002E3170) {
         *p = 0;
         D_00524F40 = --p;
     }
@@ -30,7 +30,7 @@ s32 func_0012e1b0(Pad *pad) {
     s32 r;
     s32 snd;
 
-    D_00524F40 = ((Q8_2e3170 **)&D_002E3170);
+    D_00524F40 = D_002E3170;
     q = D_00524F40[1];
     if (q == 0 || q->n == 0 || ((*D_00524F40)->f8 & (1 << (*D_00524F40)->f34)))
         goto done;
@@ -65,7 +65,7 @@ done:
             func_0012dce0(&D_002E2FD8[o->f8]);
         }
     } else if (k == 0x80 || (k & 2)) {
-        if (D_00524F40 > ((Q8_2e3170 **)&D_002E3170)) {
+        if (D_00524F40 > D_002E3170) {
             q = func_0012dd38();
             if ((pad->x8 & 2) && q->fc >= 0) q->fc = 0;
             func_0011d768(3);

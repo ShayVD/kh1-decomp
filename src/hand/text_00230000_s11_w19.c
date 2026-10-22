@@ -20,7 +20,7 @@ CONTEXT_ONLY void func_0023a720(void) {
     Spr17 **pp;
     Spr17 *p;
     s32 i;
-    for (pp = (Spr17 **)((Q8_2e3170 **)&D_002E3170); *pp != 0; pp++) {
+    for (pp = (Spr17 **)D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
             for (i = 0; i < p->unk10; i++) {
@@ -52,19 +52,19 @@ s32 func_0023a968(void) {
     chg = 0;
     func_0023a8d0(&D_00650120[0]);
     func_0023a7e8();
-    list = ((Q8_2e3170 **)&D_002E3170);
+    list = D_002E3170;
     o = *list;
     if (o) do {
-        if (list[1] == 0 && o->x0 != D_00449908.cur) {
+        if (list[1] == 0 && o->f0 != D_00449908.cur) {
             func_0023a720();
-            if (D_00449908.cur < o->x0) {
-                D_00449908.t[o->x0] = -1;
+            if (D_00449908.cur < o->f0) {
+                D_00449908.t[o->f0] = -1;
                 chg = 1;
             }
-            D_00449908.cur = o->x0;
+            D_00449908.cur = o->f0;
         }
         last = list[1] == 0;
-        switch (o->x0) {
+        switch (o->f0) {
         case 0:
             func_0023a318(0, o, last, chg, &D_00650120[0], 16, 260, D_00449908.f7c);
             D_00449908.a[0] = o->fc;
@@ -101,9 +101,9 @@ s32 func_0023a968(void) {
             D_00449908.b[3] = o->n;
             break;
         case 4:
-            if (list[-1]->x0 == 1) k = 1;
-            else if (list[-1]->x0 == 2) k = 2;
-            else if (list[-1]->x0 == 5) k = 5;
+            if (list[-1]->f0 == 1) k = 1;
+            else if (list[-1]->f0 == 2) k = 2;
+            else if (list[-1]->f0 == 5) k = 5;
             if (k != 5) {
                 { s32 py; x = D_00449908.p[k * 2] + 11; h = o->n * 22; py = D_00449908.p[k * 2 + 1]; t = D_00449908.a[k] * 22; last2 = py + h + t + 20; if (last2 >= 369) y = 348 - h; else y = py + t; }
             } else {

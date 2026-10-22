@@ -22,7 +22,8 @@ typedef struct Node {
 } Node;
 
 /* 0x38-byte menu cursor block (D_002E2FD8[7]); D_002E3170 is a stack of them. */
-typedef struct Q8 { s32 f0, f4; u32 f8; s32 fc; s32 n; u8 ids[0x20]; s32 f34; } Q8;
+#include "data/pieces/D_002E3170.h"
+typedef Q8_2e3170 Q8;
 
 /* Menu item (func_001478c8 result). */
 #include "data/pieces/D_002E319C.h"
@@ -62,7 +63,6 @@ typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 /* ---- data ---- */
 extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
-#include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 #include "data/pieces/D_002E31A0.h"
 #include "data/pieces/D_002E26A0.h"
@@ -144,9 +144,9 @@ Node *func_0012b7a8(s32 a) {
 
 void func_0012ca38(void) {
     s32 i;
-    for (i = 7; i >= 0; i--) (*(Q8 *(*)[8])&D_002E3170)[i] = 0;
-    D_00524F40 = (*(Q8 *(*)[8])&D_002E3170);
-    (*(Q8 *(*)[8])&D_002E3170)[0] = D_002E2FD8;
+    for (i = 7; i >= 0; i--) D_002E3170[i] = 0;
+    D_00524F40 = D_002E3170;
+    D_002E3170[0] = D_002E2FD8;
     D_002E319C = (u16 *)((*(O8 **)&D_002E31A0) = 0);
     D_002E2FD8[0].fc = 0;
 }
@@ -283,7 +283,7 @@ CONTEXT_ONLY s32 func_0012e1b0(Pad *pad) {
     s32 r;
     s32 snd;
 
-    D_00524F40 = (*(Q8 *(*)[8])&D_002E3170);
+    D_00524F40 = D_002E3170;
     while ((q = D_00524F40[1]) && q->n && !((*D_00524F40)->f8 & (1 << (*D_00524F40)->f34))) {
         cur = *D_00524F40;
         o = func_001478c8(cur->ids[cur->f34]);
@@ -311,7 +311,7 @@ CONTEXT_ONLY s32 func_0012e1b0(Pad *pad) {
         }
         goto end;
     } else if (k == 0x80 || (k & 2)) {
-        if (D_00524F40 > (*(Q8 *(*)[8])&D_002E3170)) {
+        if (D_00524F40 > D_002E3170) {
             q = func_0012dd38();
             snd = 3;
             if ((pad->x8 & 2) && q->fc >= 0) q->fc = 0;
@@ -376,22 +376,22 @@ s32 func_0012e4b0(void) {
     D_00524F48 |= 2;
     func_0012dc70();
     if (func_001375d8(e)) D_00524F50 = 0;
-    if ((*(Q8 *(*)[8])&D_002E3170)[0] == &D_002E2FD8[0]) {
+    if (D_002E3170[0] == &D_002E2FD8[0]) {
         if (D_00524F50 && (p->x4 & 0x40000)) {
-            memset((*(Q8 *(*)[8])&D_002E3170), 0, 32);
-            (*(Q8 *(*)[8])&D_002E3170)[0] = &D_002E2FD8[5];
-            D_00524F40 = (*(Q8 *(*)[8])&D_002E3170);
+            memset(D_002E3170, 0, 32);
+            D_002E3170[0] = &D_002E2FD8[5];
+            D_00524F40 = D_002E3170;
         }
     } else if (!(p->x4 & 0x40000) || !D_00524F50) {
-        memset((*(Q8 *(*)[8])&D_002E3170), 0, 32);
-        (*(Q8 *(*)[8])&D_002E3170)[0] = &D_002E2FD8[0];
+        memset(D_002E3170, 0, 32);
+        D_002E3170[0] = &D_002E2FD8[0];
         D_002E2FD8[0].fc = 0;
-        D_00524F40 = (*(Q8 *(*)[8])&D_002E3170);
+        D_00524F40 = D_002E3170;
     }
     if (func_001375d8(e)) return 0;
     if (!((e->f370 >> 34) & 1)) goto out;
     {
-    if (D_00524F40 == (*(Q8 *(*)[8])&D_002E3170)) {
+    if (D_00524F40 == D_002E3170) {
         k = e->f70;
         if (k - 24 < 2u || k == 33 || k == 8) {
             if (p->x4 & 4) D_002E3190.w |= 0x8000000;
@@ -400,7 +400,7 @@ s32 func_0012e4b0(void) {
             return 0;
         }
     }
-    if ((*(Q8 *(*)[8])&D_002E3170)[0]->f0 == 5) {
+    if (D_002E3170[0]->f0 == 5) {
         mask = 0x390000;
     } else {
         if (p->x8 & 8) D_002E3168 |= 1;
