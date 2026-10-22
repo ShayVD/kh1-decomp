@@ -73,7 +73,7 @@ typedef struct { u8 pad[0x7c]; u8 x7c[0x14]; f32 x90; u8 pad94[0x60]; u16 xf4[1]
 s32 D_00F20000(s32, s32);
 f32 func_00267390(void *, void *);
 s32 func_00122ff8(void *);
-extern Act *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 s32 func_0014f600(void *);
 void *func_00147ed8(s32, s32, s32, void *);
 void func_00121fc4(void *, void *);
@@ -474,7 +474,7 @@ s32 func_00158780(s32 k) {
     case 82:
         for (i = 1; i < 3; i++) {
             if (!D_002E26A0[i] || func_00153d78(D_002E26A0[i]) || !func_0012f040(D_002E26A0[i], -1)) return 0;
-            func_00267530(&d, &D_002E26A0[i]->pos, &D_002E26A0[0]->pos);
+            func_00267530(&d, &((Act *)D_002E26A0[i])->pos, &((Act *)D_002E26A0[0])->pos);
             if (func_00267390(&d, &d) > 250000.0f) return 0;
         }
         break;
@@ -494,7 +494,7 @@ void func_00158960(void) {
     s32 i, k, r, best, bk;
     if (D_002C595A & 1) return;
     if ((D_002E31A8 >> 1) & 1) return;
-    if (D_002E26A0[0]->x70) return;
+    if (((Act *)D_002E26A0[0])->x70) return;
     if (D_00351A48 != 5) return;
     if (!func_00122ff8((Act *)D_002E31B0.f0)) return;
     if (((s32)(((Act *)D_002E31B0.f0)->x370 >> 37) & 3) != 2) return;

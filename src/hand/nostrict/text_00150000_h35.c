@@ -317,7 +317,7 @@ void func_00154d60(Obj154c60 *a, Arg154af8 *b) {
 
 /* ---- func_001557d0 / func_00155878 ---- */
 typedef struct { u8 pad[0x130]; void *p130; } Pl1557d0;
-extern Pl1557d0 *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern u32 D_002C5958;
 typedef struct { u32 lo:18; u32 b18:1; u32 hi:13; } F2C5958_1557d0;
 #include "data/types/nostrict_text_00150000_h35.h"
@@ -333,7 +333,7 @@ void func_001557d0(void) {
         D_00550400[i].h.w &= ~0x10000;
     }
     for (i = 0; i < 3; i++) {
-        if (D_002E26A0[i]) func_00155760(D_002E26A0[i]->p130);
+        if (D_002E26A0[i]) func_00155760(((Pl1557d0 *)D_002E26A0[i])->p130);
     }
 }
 

@@ -14,7 +14,7 @@ extern Win D_0062F790;
 extern char D_003DC2F8[];
 #include "data/pieces/D_003DC370.h"
 typedef struct { s32 f0; s32 f4; s32 f8; } S26A0;
-extern S26A0 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 void func_0010bdd0(Win *, void *);
 void func_0010ef70(void *, char *, void *);
 void func_0010e3f0(void *);
@@ -89,8 +89,8 @@ deflt:
     v = func_001e2800(*pC);
     D_0062F790.f44 = 1.5f;
     if (v) D_0062F790.f44 = 2.0f;
-    if (D_002E26A0.f4 && v) D_0062F790.f44 = 3.0f;
-    if (D_002E26A0.f8 && v) D_0062F790.f44 = 4.0f;
+    if ((*(S26A0 *)&D_002E26A0).f4 && v) D_0062F790.f44 = 3.0f;
+    if ((*(S26A0 *)&D_002E26A0).f8 && v) D_0062F790.f44 = 4.0f;
     D_003DC490 = 0;
     func_0010bdd0(&D_0062F790, func_001e2d08);
 }

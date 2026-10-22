@@ -108,13 +108,13 @@ typedef struct {
 } Big;
 extern Big D_00389C90;
 typedef struct { u8 pad[16]; f32 pos[4]; } Actor;
-extern Actor *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 void func_002675a8(void *, void *);
 s32 func_001c1e30(void) {
     f32 mn[4], mx[4], p[4];
     s32 i;
-    if (D_002E26A0 == 0) return 0;
-    func_002675a8(p, D_002E26A0->pos);
+    if (D_002E26A0[0] == 0) return 0;
+    func_002675a8(p, (*(Actor **)&D_002E26A0)->pos);
     for (i = 0; i < D_00389C90.nbox; i++) {
         mn[0] = D_00389C90.box[i].c[0] - D_00389C90.box[i].s[0] * 0.5f;
         mn[1] = D_00389C90.box[i].c[1] - D_00389C90.box[i].s[1] * 0.5f;

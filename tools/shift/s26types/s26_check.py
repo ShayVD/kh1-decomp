@@ -8,7 +8,7 @@ objects.mk recipe (`-S`) as it is in HEAD (cached) and as it is now; prints
 SAME / CODE / NOCOMPILE / WARN per file and exits 1 unless all are SAME.
 With S26_KEEP=1 a changed file's two .s go to $S26_DIR/keep/.
 """
-import subprocess, sys
+import os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -45,7 +45,7 @@ def main():
             return f, "WARN " + " / ".join(nw)[:600]
         return f, "SAME"
     bad = 0
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(int(os.environ.get("S27_JOBS", "2"))) as ex:
         for f, r in ex.map(one, files):
             print(f"{r.split()[0]:9} {f} {r[len(r.split()[0]):].strip()}")
             bad += r != "SAME"

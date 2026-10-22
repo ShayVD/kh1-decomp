@@ -39,7 +39,7 @@ M2C_UNK func_00267e90(s32, s32, f32);
 extern M2C_UNK D_0054B808; /* src/data/bss_0054.c: u8 D_0054B808[0x10] */
 extern M2C_UNK func_001468b0;
 extern f32 D_002BBDFC;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_0052CB18; /* src/data/bss_0052.c: u32 D_0052CB18 */
 extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 #include "data/pieces/D_00304D64.h"
@@ -176,7 +176,7 @@ void func_0014eab0(void *arg0, s32 arg1) {
     } else {
         var_f20 = 0.0f;
     }
-    func_002675a8(sp, D_002E26A0 + 0x10);
+    func_002675a8(sp, (*(s32 *)&D_002E26A0) + 0x10);
     M2C_FIELD(sp, f32 *, 0x4) += -200.0f;
     func_0014e668(sp, M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u8 *, 0x58), arg1, var_f20 + 100.0f, var_f20 + 600.0f);
 }
@@ -191,7 +191,7 @@ void func_0014eb60(void *arg0, s32 arg1) {
     } else {
         var_f20 = 0.0f;
     }
-    func_002675a8(sp, D_002E26A0 + 0x10);
+    func_002675a8(sp, (*(s32 *)&D_002E26A0) + 0x10);
     M2C_FIELD(sp, f32 *, 0x4) += -200.0f;
     func_0014e878(sp, M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u8 *, 0x58), arg1, var_f20 + 100.0f, var_f20 + 600.0f);
 }

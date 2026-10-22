@@ -60,7 +60,7 @@ typedef E0C0_364130_2 E0C0;
 typedef struct { s32 a, b, c; } V12;
 
 extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
-extern Actor *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002C5960.h"
 extern s32 D_002E27A8;
 extern s32 D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
@@ -313,7 +313,7 @@ void func_0017d5d0(void) {
 extern s32 D_003623F0;
 void func_0017e840(void) {
     if (D_003623F0) {
-        if ((D_00575894 = D_002E26A0) != 0) {
+        if ((D_00575894 = D_002E26A0[0]) != 0) {
             if (!func_0017dc40()) func_00176f08(1, 30.0f);
         }
         D_003623F0 = 0;

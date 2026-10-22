@@ -336,10 +336,10 @@ void func_00151940(W9Ent *e) {
     }
 }
 
-extern W9Ent *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 void func_0012cc38(s32 a, s32 b);
 s32 func_001520e0(W9Ent *e, s32 a1, s32 a2) {
-    W9Ent *p = D_002E26A0;
+    W9Ent *p = D_002E26A0[0];
     if (a2 == -1 && e->x70 == 0 && e->x8c == 0 && p->x70 == 28) func_0012cc38(0, 29);
     return 0;
 }

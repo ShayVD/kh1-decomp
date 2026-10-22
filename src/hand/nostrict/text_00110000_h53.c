@@ -25,7 +25,7 @@ typedef struct Obj3b {
     u8 pad4c[0xe4];
     Info3b *info;
 } Obj3b;
-extern void *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 void func_00113138(V53 *);
 void func_00113270(V53 *);
 void func_001133a0(V53 *);

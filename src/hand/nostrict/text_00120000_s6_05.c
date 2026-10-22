@@ -65,7 +65,7 @@ extern Q8 D_002E2FD8[7];
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 #include "data/pieces/D_002E31A0.h"
-extern Ent *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_002E31B8.h"
 #include "data/pieces/D_002E31B0.h"
@@ -180,7 +180,7 @@ void func_0012d930(u32 *a0) {
     if (D_00304BE8->f874 & 0x20) return;
     D_002E2FD8[0].ids[3] = 0;
     m = 0;
-    pl = D_002E26A0;
+    pl = D_002E26A0[0];
     tmp.a = 0;
     tmp.b = 0;
     fp = &D_00524F44;
@@ -240,7 +240,7 @@ void func_0012d930(u32 *a0) {
 }
 
 s32 func_0012dd70(O8 *o) {
-    Ent *p = D_002E26A0;
+    Ent *p = D_002E26A0[0];
     s32 k;
     if (o->f6 == 71) return 1;
     k = o->f6;
@@ -365,7 +365,7 @@ s32 func_0012e4b0(void) {
         D_00524F48 &= ~8;
     }
     if (!func_00122ff8((*(V8 *)&D_002E31B0).a)) func_0012fc58();
-    e = D_002E26A0;
+    e = D_002E26A0[0];
     if (!(((*(u32 *)&D_002C5960) >> 2) & 1) && e && D_002E27A8 != 2 && !((D_002C5958 >> 27) & 1)) {
     p = &D_002C5BB0;
     if (D_002C5958 & 0x104004) {
@@ -525,7 +525,7 @@ CONTEXT_ONLY s32 func_0012ee70(Ent *e, s32 i) {
 void func_0012f3d0(V8 *out) {
     f32 pos[4];
     V8 cur;
-    Ent *pl = D_002E26A0;
+    Ent *pl = D_002E26A0[0];
     s32 n = D_0052528C;
     V8 *tbl = D_00524F80;
     s32 best = -1;
@@ -558,7 +558,7 @@ void func_0012f868(V8 *out) {
     f32 pos[4];
     f32 b[4];
     f32 c[4];
-    Ent *pl = D_002E26A0;
+    Ent *pl = D_002E26A0[0];
     f32 best = -1.0f;
     f32 d, t;
 
@@ -592,7 +592,7 @@ CONTEXT_ONLY s32 func_0012eb08(V8 *p) {
     f32 b[4];
     if (!func_0012f040((*(V8 *)&D_002E31B0).a, (*(V8 *)&D_002E31B0).b)) return 1;
     if (func_0012eaf8(p->a)) {
-        if (func_0012ed88(D_002E26A0, p, a, b) > 1500.0f) return 1;
+        if (func_0012ed88(D_002E26A0[0], p, a, b) > 1500.0f) return 1;
         if (fabsf(b[1]) > 1000.0f) return 1;
     }
     return 0;
@@ -601,7 +601,7 @@ CONTEXT_ONLY s32 func_0012eb08(V8 *p) {
 CONTEXT_ONLY void func_0012fa98(void) {
     f32 a[4];
     f32 b[4];
-    f32 d = func_0012ed88(D_002E26A0, ((V8 *)&D_002E31B0), a, b);
+    f32 d = func_0012ed88(D_002E26A0[0], ((V8 *)&D_002E31B0), a, b);
     s32 *o = &D_002E31BC;
     O8 *x = ((O8 *)D_002E31A0);
     s32 r = 0;
@@ -618,13 +618,13 @@ CONTEXT_ONLY void func_0012fc58(void) {
     if (D_002E31B8 != 0) {
         if (D_002E31B8 >= 3) func_0017eff8();
         func_0012fc20();
-        if (D_002E26A0 != 0) func_00123030(D_002E26A0, 0, 0);
+        if (D_002E26A0[0] != 0) func_00123030(D_002E26A0[0], 0, 0);
     }
 }
 
 /* rodata: jump tables at 0x48d550, 0x48d570 */
 s32 func_0012fcd0(void) {
-    Ent *pl = D_002E26A0;
+    Ent *pl = D_002E26A0[0];
     V8 tmp;
     if (!pl || ((s32)(pl->f440 >> 32) & 1)) {
         func_0012fc58();

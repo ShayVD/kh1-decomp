@@ -402,7 +402,7 @@ void func_00111340(Src *s, s32 i) {
     (D_002BCB60)->m[i][6] = s->z;
     (D_002BCB60)->m[i][7] = s->w;
 }
-extern Src *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 void func_00111480(void);
 
 void func_00111380(void) {

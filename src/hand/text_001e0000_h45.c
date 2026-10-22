@@ -54,7 +54,7 @@ extern Big20 D_00389C90;
 extern Cb20 D_006305C0;
 extern E212 D_003DB078[];
 extern E212 D_003DB718[];
-extern Pair20 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern Win D_0062F6E0;
 extern Win D_0062F790;
 extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
@@ -382,8 +382,8 @@ s32 func_001e4790(void) {
     func_001e27b0();
     func_001e3600();
     D_0062F790.f44 = 2.0f;
-    if (D_002E26A0.a) D_0062F790.f44 = 3.0f;
-    if (D_002E26A0.b) D_0062F790.f44 = 4.0f;
+    if ((*(Pair20 *)&D_002E26A0).a) D_0062F790.f44 = 3.0f;
+    if ((*(Pair20 *)&D_002E26A0).b) D_0062F790.f44 = 4.0f;
     func_0010bdd0(&D_0062F790, func_001e4578);
     func_00231740(1, 0, func_001e4048, func_001e4070);
     D_003F7A68 = 0;
@@ -722,7 +722,7 @@ void func_001e9fe8(Vec3 *out, Vec3 *in) {
 }
 
 void func_001ea498(s32 a) {
-    Obj26 *p = D_002E26A0.x0;
+    Obj26 *p = (*(Pair20 *)&D_002E26A0).x0;
     p->f60 = 1.0f;
     p->f64 = 0.0f;
     p->x0 |= 1;

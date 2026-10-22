@@ -5,7 +5,7 @@
  * include/data/data_002E.h (names whose C users agree on the type). */
 	.include "include/data/piece.inc"
 
-	PIECE D_002E26A0, 0xc, 4  /* untyped: users disagree: Act *D_002E26A0[] | Act D_002E26A0[] | ActD0 *D_002E26A0 | Actor *D_002E26A0 | B3Ob *D_002E26A0[] | B4Ent *D_002E26A0 | C01Ply *D_002E26A0[3] | ChrEA *D_002E26A0[3] | Ent *D_002E26A0 | M2C_UNK D_002E26A0 | M2C_UNK D_002E26A0[] | Obj123 *D_002E26A0[] | Obj70 *D_002E26A0[] | ObjBD40 *D_002E26A0[] | P26A0 D_002E26A0 | Pair20 D_002E26A0 | Pl *D_002E26A0 | Pl1557d0 *D_002E26A0[] | Pl57_0ec8 *D_002E26A0 | S26A0 D_002E26A0 | Src *D_002E26A0[3] | W55Ob *D_002E26A0[] | W55Pl *D_002E26A0[] | W606O26a0 *D_002E26A0 | W7Obj *D_002E26A0[] | W9Ent *D_002E26A0 | s32 D_002E26A0 | u32 *D_002E26A0[] | u8 *D_002E26A0 | void *D_002E26A0 | void *D_002E26A0[3] | void *D_002E26A0[]; unparsed in 3 file(s); session 25: as s32 D_002E26A0: code changes in text_00120000_15.c; does not compile in text_00130000_13.c, text_00130000_s6_06.c +2; session 26: as void *D_002E26A0[3] with element casts every hand user keeps its -S, but src/auto/text_00120000_15.c reads it as a scalar void * and needs that declaration (it reloads it after a store through an int pointer; as an array, cast or union it does not): no one declaration without a code change */
+	PIECE D_002E26A0, 0xc, 4  /* data/pieces/D_002E26A0.h */
 	PIECE D_002E26AC, 0x4, 4  /* data/pieces/D_002E26AC.h */
 	PIECE D_002E26B0, 0x10, 16  /* data/pieces/D_002E26B0.h */
 	PIECE D_002E26C0, 0x40, 16  /* data/pieces/D_002E26C0.h */

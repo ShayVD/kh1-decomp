@@ -63,7 +63,7 @@ typedef struct B4Ent {
 } B4Ent;
 
 #include "data/pieces/D_00308CDC.h"
-extern B4Ent *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern u32 D_0054F440;
 B4P *func_0014a450(void);
 s32 func_0013c318(s32);
@@ -862,7 +862,7 @@ B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {
     case 3: p->x2c = e->x6c->x48 * 2; break;
     case 4: p->x2c = e->x6c->x48 * 3; break;
     case 5: p->x2c = e->x6c->x48 * 5; break;
-    case 6: p->x2c = D_002E26A0->x6c->x4c; break;
+    case 6: p->x2c = (*(B4Ent **)&D_002E26A0)->x6c->x4c; break;
     }
     p->x30.b.b0 = d->x8;
     p->x30.b.b6 = d->x4;
@@ -929,7 +929,7 @@ void func_00151268(B4A51 *e) {
     f32 k;
     B4W51 *w = e->x144;
     if (!w) return;
-    func_001315c0(D_002E26A0, 0x8003, 0.0f, v);
+    func_001315c0(D_002E26A0[0], 0x8003, 0.0f, v);
     if (w->x24 < 1.0f) {
         w->x24 += 0.09999999590218067169189453125f;
         if (1.0f < w->x24) w->x24 = 1.0f;

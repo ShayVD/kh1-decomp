@@ -118,7 +118,7 @@ def summary():
         if N.endswith("_s"):
             continue
         ht = h.read_text() + (h.with_name(N + "_s.h").read_text() if h.with_name(N + "_s.h").exists() else "")
-        hdr_types = set(re.findall(r"\}\s*(\w+)\s*;", ht)) | set(re.findall(r"typedef struct (\w+) \1;", ht))
+        hdr_types = set(re.findall(r"\}\s*(?:__attribute__\s*\(\(.*?\)\)\s*)?(\w+)\s*;", ht)) | set(re.findall(r"typedef struct (\w+) \1;", ht))
         for p, t in srcs.items():
             if N not in t:
                 continue

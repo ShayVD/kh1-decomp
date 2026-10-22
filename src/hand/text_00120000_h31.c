@@ -5,7 +5,7 @@
 /* shared declarations */
 #include "data/pieces/D_002E31B0.h"
 typedef S31b0_2e31b0 S31b0;
-extern void *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern void *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
 extern u32 D_002C5958;
 #include "data/pieces/D_002E27C8.h"

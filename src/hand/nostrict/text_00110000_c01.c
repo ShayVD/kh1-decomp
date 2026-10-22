@@ -28,7 +28,7 @@ typedef struct { u8 pad[0x54]; C01Pr e[1]; } C01Tbl;
 extern f32 D_00304D54;
 extern f32 D_00306844;
 extern f32 D_00306848;
-extern C01Ply *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_002C5C54;
 extern s32 D_002C5C4C;
 extern u32 D_002C5958;

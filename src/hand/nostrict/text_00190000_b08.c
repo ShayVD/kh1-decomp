@@ -488,9 +488,8 @@ typedef struct {
     u8 padA4[0x13];
     u8 bB7;
 } PppSystemB;
-extern void *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 
-extern void *D_002E26A0;
 typedef struct {
     s32 frame;
     s32 slot;
@@ -514,7 +513,7 @@ void pppRyjDrawShipolyBoneDraw(PppObject *obj, BoneDKey *key, PppEntry *e) {
     if (key->slot == 0xFFFF)
         return;
     w = PPP_WORK(DColWork, obj, e, 0);
-    a = D_002E26A0;
+    a = D_002E26A0[0];
     if (((PppSystemB *) D_00615E60)->pA0)
         a = ((PppSystemB *) D_00615E60)->pA0;
     p.a = w->a;
@@ -1524,7 +1523,7 @@ void func_0019b460(PppObject *obj, BoneKey *key, PppEntry *e) {
         s32 b0, b1;
         w->n = key->n;
         w->buf = func_0017f958(D_00615E64, w->n << 5);
-        a = D_002E26A0;
+        a = D_002E26A0[0];
         if (((PppSystemB *) D_00615E60)->pA0)
             a = ((PppSystemB *) D_00615E60)->pA0;
         if (key->h26 >= 0)

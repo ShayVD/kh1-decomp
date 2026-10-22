@@ -10,7 +10,7 @@ extern M2C_UNK D_00362660;
 extern M2C_UNK D_00362670;
 extern M2C_UNK D_00575310; /* src/data/bss_0057.c: TalkEA D_00575310 */
 extern f32 D_005758C0;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_0035C6F0;
 extern void *D_00575894;
 f32 func_00120c88(f32);
@@ -80,7 +80,7 @@ void func_00177900(s32 arg0, M2C_UNK *arg1, f32 fparg0) {
     s32 sp[20];    f32 temp_f20;
 
     func_0017f178();
-    func_002672f8(arg1, D_002E26A0 + 0xD0, &D_00362670);
+    func_002672f8(arg1, (*(s32 *)&D_002E26A0) + 0xD0, &D_00362670);
     temp_f20 = func_00120c88(fparg0);
     func_00267768(sp, ((M2C_UNK *)&D_002C58D0), func_00120c88(M2C_FIELD(&D_00362660, f32 *, 0)));
     func_00267810(sp, sp, temp_f20);

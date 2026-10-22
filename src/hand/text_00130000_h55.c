@@ -110,7 +110,7 @@ typedef struct {
 typedef struct { u64 x0; u8 padx[0x18]; } W55Ent32;
 typedef struct { u8 pad[0x98]; u8 x98; u8 pad99[7]; } W55Lv;
 #include "data/pieces/D_002E31A8.h"
-extern W55Pl *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_00350D88.h"
 extern s32 D_002BC128;
 extern s32 D_002BC130;
@@ -121,9 +121,9 @@ s32 func_0013a910(s32 n) {
     W55Pl **pp;
     s32 i;
     if ((D_002E31A8 >> 2) & 1) return 0;
-    if (!((((W55Ent32 *)&D_00350D88)[D_002E26A0[0]->x70].x0 >> 7) & 1)) return 0;
+    if (!((((W55Ent32 *)&D_00350D88)[((W55Pl *)D_002E26A0[0])->x70].x0 >> 7) & 1)) return 0;
     if ((D_002C5958 >> 16) & 1) return 0;
-    if (D_002E26A0[0]->x6c->x44 < (*(u8 **)&D_00308CDC)[n * 8 + 0x98]) return 0;
+    if (((W55Pl *)D_002E26A0[0])->x6c->x44 < (*(u8 **)&D_00308CDC)[n * 8 + 0x98]) return 0;
     if (!(D_002C5958 & 1)) return 0;
     if (D_002BC128 == 3 && D_002BC130 == 20) return 1;
     if (D_00304B84 & (1 << n)) return 0;

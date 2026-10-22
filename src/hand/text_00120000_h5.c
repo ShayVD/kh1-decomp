@@ -45,7 +45,7 @@ typedef struct V8 { s32 a, b; } V8;
 typedef S31a0_2e31a0 S31a0;
 
 /* ---- data ---- */
-extern void *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern u32 D_002E3190;
 extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
 extern s32 D_004F82C0;

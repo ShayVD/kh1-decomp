@@ -160,7 +160,7 @@ extern u32 D_002E3190;
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E31B8.h"
 extern u32 D_002C5958;
-extern void *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_0054F448;
 #include "data/pieces/D_00350D78.h"
 extern s32 D_00350D7C;
@@ -499,7 +499,7 @@ s32 func_0014f028(void) {
 
     if (!D_00350D78) return 4;
     if ((D_002C5958 >> 14) & 1) return 0;
-    m = func_0014ee88(D_002E26A0);
+    m = func_0014ee88(D_002E26A0[0]);
     if (m) {
         p = 0;
         while ((p = func_00132040(p)) != 0) {

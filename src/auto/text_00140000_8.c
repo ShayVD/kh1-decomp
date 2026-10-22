@@ -3,14 +3,14 @@
 #include "m2c.h"
 
 M2C_UNK func_00141e68(s32);
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 
 void func_00141eb8(void) {
     s32 *var_s0;
     s32 temp_v0;
     s32 var_s1;
 
-    var_s0 = &D_002E26A0;
+    var_s0 = ((s32 *)&D_002E26A0);
     var_s1 = 2;
     do {
         temp_v0 = *var_s0;

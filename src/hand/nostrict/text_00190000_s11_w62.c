@@ -275,7 +275,7 @@ typedef struct {
 } PppSystemB7;
 extern PppSystemB *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 extern s32 D_0061621C;
-extern u8 *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 
 void func_002675a8(f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
@@ -315,7 +315,7 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
 
     cur = w->cur;
     buf = w->buf;
-    src = D_002E26A0;
+    src = D_002E26A0[0];
     if (D_00615E60->pA0)
         src = D_00615E60->pA0;
     v0p = w->v0;

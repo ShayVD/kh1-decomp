@@ -96,7 +96,7 @@ void func_0017eb88(void);
 void func_001252f8(void);
 void func_00156c18(s32 a);
 void func_001590a8(void);
-extern void *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 extern f32 D_00304C40;
 void func_00132550(void) {
     W32Rec *r;

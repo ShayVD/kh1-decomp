@@ -36,7 +36,7 @@ struct W606Ch {
 extern u32 *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 extern s32 D_0052AE60;
 #include "data/pieces/D_00350CE0.h"
-extern u32 *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern u8 D_0052AD68[];
 void func_0014f658(void *, s32);
 s32 func_00130340(void *, s32, f32);
@@ -66,7 +66,7 @@ s32 func_0013b050(void) {
     func_002414a8(2, 3);
     func_00145080(1, 4);
     for (i = 0; i < 2; i++) {
-        if (D_002E26A0[i + 1]) *D_002E26A0[i + 1] |= 0x1000000;
+        if (D_002E26A0[i + 1]) *((u32 *)D_002E26A0[i + 1]) |= 0x1000000;
     }
     func_0011f090(D_0052AD68, 0, func_0013ab30);
     func_0011ef10(100000, func_0013abf8);
