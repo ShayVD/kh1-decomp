@@ -4,11 +4,11 @@
 #include "common.h"
 #include "data/pieces/D_002E3170.h"
 typedef Q8_2e3170 Q8;
-typedef struct { u16 f0; u8 p2[4]; u8 f6; s8 f7; s8 f8; } O8;
+#include "data/pieces/D_002E319C.h"
+typedef O8_2e319c O8;
 typedef struct { u32 x0; u32 x4; u32 x8; } Pad;
 extern Q8 D_002E2FD8[7];
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-#include "data/pieces/D_002E319C.h"
 #include "data/pieces/D_002E31A0.h"
 extern O8 *func_001478c8(s32);
 extern void func_0011d768(s32);
@@ -88,6 +88,6 @@ done:
     } else {
         r = 1;
     }
-    D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
+    D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
     return r;
 }

@@ -244,7 +244,7 @@ void func_0012e120(void) {
     if (func_0012dea0(temp_a0, M2C_FIELD(temp_a0, s32 *, 0xC)) != 0) {
         temp_a1 = *D_00524F40;
         if (temp_a1 == &D_002E2FD8) {
-            if (!(*D_002E319C & 0x10)) {
+            if (!(D_002E319C->f0 & 0x10)) {
                 M2C_FIELD(temp_a1, s32 *, 0xC) = 0;
             }
         }

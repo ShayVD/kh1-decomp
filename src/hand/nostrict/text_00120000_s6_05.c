@@ -147,7 +147,7 @@ void func_0012ca38(void) {
     for (i = 7; i >= 0; i--) D_002E3170[i] = 0;
     D_00524F40 = D_002E3170;
     D_002E3170[0] = D_002E2FD8;
-    D_002E319C = (u16 *)(D_002E31A0 = 0);
+    D_002E319C = D_002E31A0 = 0;
     D_002E2FD8[0].fc = 0;
 }
 
@@ -340,7 +340,7 @@ CONTEXT_ONLY s32 func_0012e1b0(Pad *pad) {
 play:
     func_0011d768(snd);
 end:
-    D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
+    D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(q->ids[q->fc]);
     return r;
 }
 
@@ -355,7 +355,7 @@ s32 func_0012e4b0(void) {
     f = D_002C5958;
 
     D_002E3190.w |= 0x2000000;
-    D_002E319C = (u16 *)(D_002E31A0 = 0);
+    D_002E319C = D_002E31A0 = 0;
     D_00524F48 = (D_00524F48 & 0xc) | ((f & 0x104004) != 0);
 
     if (f & 0x8000004) {
@@ -414,13 +414,13 @@ s32 func_0012e4b0(void) {
         mask = 0x10000;
     }
     if (func_0012e1b0(p)) {
-        if (((O8_2e319c *)D_002E319C)) {
-            if ((((O8_2e319c *)D_002E319C)->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
+        if (D_002E319C) {
+            if ((D_002E319C->f0 & 0x10) ? (p->x4 & mask) : (p->x8 & mask)) {
                 if (!(p->x8 & mask)) D_002E3190.w &= ~0x2000000;
                 func_0012e120();
             }
         } else {
-            D_002E319C = (u16 *)(*(O8 **)&D_002E31A0) = func_001478c8(67);
+            D_002E319C = (*(O8 **)&D_002E31A0) = func_001478c8(67);
             if (p->x8 & 0x80000) func_0012dea0(*D_00524F40, 0);
             else if (p->x8 & 0x100000) func_0012dea0(*D_00524F40, 1);
             else if (p->x8 & 0x200000) func_0012dea0(*D_00524F40, 2);
@@ -479,21 +479,21 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
     if (func_0012eaf8(a->a) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
-    if (((O8_2e319c *)D_002E319C)) {
+    if (D_002E319C) {
         switch (((E9 *)a->a)->f370.b.kind) {
         case 1:
-            v = ((O8_2e319c *)D_002E319C)->f9;
+            v = D_002E319C->f9;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 2:
-            v = ((O8_2e319c *)D_002E319C)->fa;
+            v = D_002E319C->fa;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 0:
         case 3:
-            v = ((O8_2e319c *)D_002E319C)->fb;
+            v = D_002E319C->fb;
             if (v < 0) return -1;
             s |= v << 24;
             break;
@@ -676,7 +676,7 @@ s32 func_0012fcd0(void) {
         break;
     case 0:
     case 2:
-        if (func_00219288() != 1 && ((O8_2e319c *)D_002E319C) && (((O8_2e319c *)D_002E319C)->f0 & 4)) {
+        if (func_00219288() != 1 && D_002E319C && (D_002E319C->f0 & 4)) {
             func_0012f868(&tmp);
             if (tmp.a) func_0012fb20(&tmp, 2);
         }
