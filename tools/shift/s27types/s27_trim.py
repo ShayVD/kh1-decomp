@@ -69,7 +69,7 @@ def main(argv):
     total = [0, 0]
     for N in names:
         users = F.users_of(N)
-        with ThreadPoolExecutor(3) as ex:
+        with ThreadPoolExecutor(L.JOBS) as ex:
             for rel, t, k, n in ex.map(lambda r: trim_file(r, N), sorted(users)):
                 if n:
                     print(f"{N} {rel}: {k} of {n} casts out", flush=True)

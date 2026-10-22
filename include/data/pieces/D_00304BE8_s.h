@@ -43,10 +43,9 @@ struct Save_304be8 {
     W606Mem_304be8 m[10];
     u8 x48c;
     u8 x48d;
-    u8 x48e[3];
-    u8 x491;
-    u8 b492[8];
-    u8 pad_49a[0xff];
+    u8 x48e[4];
+    u8 b492[7];
+    u8 items[0x100];
     u8 list599[0x30];
     u8 pad_5c9[0x3];
     u32 bits5cc[(0x7D0 - 0x5CC) / 4];
@@ -62,7 +61,7 @@ struct Save_304be8 {
     u32 f874;
     u64 x878;
     u8 f880;
-    u8 pad_881[0x3];
+    u8 pad_881[0x7];
 };
 
 #endif /* KH1_DATA_PIECES_D_00304BE8_S_H */

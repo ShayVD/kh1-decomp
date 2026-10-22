@@ -6,7 +6,7 @@
 M2C_UNK func_00123488(s32, void *);
 M2C_UNK func_001318e8(void *, u16, void *);
 M2C_UNK func_00267328(void *, void *, void *);
-extern M2C_UNK D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_005252A8;
 #include "data/pieces/D_00308CDC.h"
 f32 atan2f(f32, f32);
@@ -139,7 +139,7 @@ s32 func_0013daf8(void) {
     if (temp_v0 < 0) {
         return var_v0;
     }
-    var_v0 = D_002E26A0[temp_v0];
+    var_v0 = ((M2C_UNK *)&D_002E26A0)[temp_v0];
     return var_v0;
 }
 

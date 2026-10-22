@@ -14,7 +14,7 @@ typedef struct { u8 x[0x74]; } Ch;
 typedef struct { u8 pad0[4]; Ch ch[12]; } SaveA;
 typedef struct { u8 pad0[9]; u8 arr[0x700]; } SaveB;
 #include "data/pieces/D_00304BE8.h"
-#define SB ((SaveB *)((SaveA *)D_00304BE8))
+#define SB ((SaveB *)D_00304BE8)
 
 s32 func_001db718(VM *vm) {
     Sub *s = &vm->s;

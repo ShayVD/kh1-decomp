@@ -40,14 +40,14 @@ s32 func_0011ab88(s32 a0, s32 a1, void *a2) {
     if (k < -2) goto quad;
     {
         t[0] = p0[0]; t[1] = p1[0]; t[2] = p2[0];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[3], t) & 0xe0) == 0xe0) return 0;
-        if ((vsubflags(t, (*(V4 (*)[6])&D_002C1260)[0]) & 0xe0) == 0xe0) return 0;
+        if ((vsubflags(D_002C1260.mx[0], t) & 0xe0) == 0xe0) return 0;
+        if ((vsubflags(t, D_002C1260.mn[0]) & 0xe0) == 0xe0) return 0;
         t[0] = p0[1]; t[1] = p1[1]; t[2] = p2[1];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[4], t) & 0xe0) == 0xe0) return 0;
-        if ((vsubflags(t, (*(V4 (*)[6])&D_002C1260)[1]) & 0xe0) == 0xe0) return 0;
+        if ((vsubflags(D_002C1260.mx[1], t) & 0xe0) == 0xe0) return 0;
+        if ((vsubflags(t, D_002C1260.mn[1]) & 0xe0) == 0xe0) return 0;
         t[0] = p0[2]; t[1] = p1[2]; t[2] = p2[2];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[5], t) & 0xe0) == 0xe0) return 0;
-        m = vsubflags(t, (*(V4 (*)[6])&D_002C1260)[2]) & 0xe0;
+        if ((vsubflags(D_002C1260.mx[2], t) & 0xe0) == 0xe0) return 0;
+        m = vsubflags(t, D_002C1260.mn[2]) & 0xe0;
         if (m != 0xe0) goto one;
         return 0;
     }
@@ -55,14 +55,14 @@ quad:
     {
         f32 *p3 = e->x0[*r];
         t[0] = p0[0]; t[1] = p1[0]; t[2] = p2[0]; t[3] = p3[0];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[3], t) & 0xf0) == 0xf0) return 0;
-        if ((vsubflags(t, (*(V4 (*)[6])&D_002C1260)[0]) & 0xf0) == 0xf0) return 0;
+        if ((vsubflags(D_002C1260.mx[0], t) & 0xf0) == 0xf0) return 0;
+        if ((vsubflags(t, D_002C1260.mn[0]) & 0xf0) == 0xf0) return 0;
         t[0] = p0[1]; t[1] = p1[1]; t[2] = p2[1]; t[3] = p3[1];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[4], t) & 0xf0) == 0xf0) return 0;
-        if ((vsubflags(t, (*(V4 (*)[6])&D_002C1260)[1]) & 0xf0) == 0xf0) return 0;
+        if ((vsubflags(D_002C1260.mx[1], t) & 0xf0) == 0xf0) return 0;
+        if ((vsubflags(t, D_002C1260.mn[1]) & 0xf0) == 0xf0) return 0;
         t[0] = p0[2]; t[1] = p1[2]; t[2] = p2[2]; t[3] = p3[2];
-        if ((vsubflags((*(V4 (*)[6])&D_002C1260)[5], t) & 0xf0) == 0xf0) return 0;
-        m = vsubflags(t, (*(V4 (*)[6])&D_002C1260)[2]) & 0xf0;
+        if ((vsubflags(D_002C1260.mx[2], t) & 0xf0) == 0xf0) return 0;
+        m = vsubflags(t, D_002C1260.mn[2]) & 0xf0;
         if (m == 0xf0) return 0;
     }
 one:

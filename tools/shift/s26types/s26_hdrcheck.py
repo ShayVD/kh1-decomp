@@ -3,7 +3,7 @@
 
   python3 -I tools/shift/s26types/s26_hdrcheck.py [REF]   (default origin/main)
 """
-import subprocess, sys, tempfile
+import os, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -25,7 +25,7 @@ def one(h):
 
 
 bad = 0
-with ThreadPoolExecutor(3) as ex:
+with ThreadPoolExecutor(int(os.environ.get("S27_JOBS", "2"))) as ex:
     for h, rc, err in ex.map(one, [x for x in out if x.endswith(".h")]):
         if rc or err:
             print(f"BAD {h}: {err[:300]}")

@@ -25,7 +25,7 @@ extern M2C_UNK func_00141078;
 extern M2C_UNK func_0014f778;
 extern M2C_UNK func_0014f828;
 extern s32 D_002C5958;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_00350CE0.h"
 extern s32 D_0054C438;

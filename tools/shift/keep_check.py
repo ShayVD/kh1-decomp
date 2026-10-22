@@ -44,6 +44,7 @@ RUNTIME = [
     ("D_0048BFD0", None, "s22: head of a 0x90-byte record the tables point at (split_check; Agrabah sky)"),
     ("D_002A6178", None, "s22: colour field of the GIF packet at D_002A6120 (split_check; no title)"),
     ("D_002A6658", None, "s22: colour field of the GIF packet at D_002A65D0 (split_check; no title)"),
+    ("D_002C64A0", None, "s27: the actor table, walked to &D_002E26A0 (end-ptr; Donald and Goofy missing)"),
 ]
 
 

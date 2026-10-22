@@ -55,7 +55,7 @@ typedef struct Node57 { s32 id; s32 mask; s32 (*cb)(ObjBD40 *, s32, s32, s32); s
 extern Node57 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
 extern Node57 *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
 
-extern ObjBD40 *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern s32 func_00122ff8(ObjBD40 *);
 extern void func_0016f3d0(ObjBD40 *, s32);
 typedef struct { s32 a, b; } P8;
@@ -285,10 +285,10 @@ void func_0016e0d0(s32 mask) {
 void func_0016f548(void) {
     s32 i;
     Node57 **pp;
-    if (func_00122ff8(D_002E26A0[1]) && D_002E26A0[1]->w144 != 0)
-        func_0016f3d0(D_002E26A0[1], D_002E26A0[1]->w144);
-    if (func_00122ff8(D_002E26A0[2]) && D_002E26A0[2]->w144 != 0)
-        func_0016f3d0(D_002E26A0[2], D_002E26A0[2]->w144);
+    if (func_00122ff8(D_002E26A0[1]) && ((ObjBD40 *)D_002E26A0[1])->w144 != 0)
+        func_0016f3d0(D_002E26A0[1], ((ObjBD40 *)D_002E26A0[1])->w144);
+    if (func_00122ff8(D_002E26A0[2]) && ((ObjBD40 *)D_002E26A0[2])->w144 != 0)
+        func_0016f3d0(D_002E26A0[2], ((ObjBD40 *)D_002E26A0[2])->w144);
     { s32 j; for (j = 2; j >= 0; j--) D_00575310[j].a = 0; }
     pp = &D_00575784;
     for (i = 0; i < 30; i++) {

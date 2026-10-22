@@ -2,7 +2,7 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-extern M2C_UNK D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 
 s32 func_001d44b8(s32 arg0) {
   s32 *new_var;

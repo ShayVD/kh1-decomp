@@ -3,7 +3,7 @@
 /* func_00123488 (w31): matches in hand and hand/nostrict. All "return 0" go to one shared r0 label at the end (keeps the explicit move v0,zero after each loop and the reloaded li 1 in case 0), and case 1 first loop shares the found: return e stub with the default loop. Needs func_001230a0 defined above it (CONTEXT_ONLY copy). */
 typedef struct { u8 pad[0x4c]; u16 x4c; u16 x4e; } Prm;
 typedef struct Ent { u32 x0; u32 x4; u8 pad[0x128]; Prm *x130; } Ent;
-extern Ent *D_002E26A0[3];
+#include "data/pieces/D_002E26A0.h"
 Ent *func_001230a0(Ent *);
 typedef struct CA { u8 pad[0x370]; u64 x370; u8 pad2[0x4b0 - 0x378]; } CA;
 extern CA D_002C64A0[], D_002E26A0_ca[] __asm__("D_002E26A0");

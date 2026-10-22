@@ -753,7 +753,7 @@ void func_0014b3e0(Hz *x, Hz *y) {
     func_00147ed8(D_00350CE0, (a | b) < 32 ? 10 : 11, 20000, t);
 }
 
-extern void *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 #define FLD(p, T, off) (*(T *)((u8 *)(p) + (off)))
 s32 func_00148768(s32, s32, void *, s32, f32);
 void func_0011d1e0(s32, s32, void *, s32);
@@ -770,7 +770,6 @@ void func_00145188(void *a, f32 f) {
 #undef FLD
 
 
-extern void *D_002E26A0[];
 s32 func_001453a8(void *, f32 *, s32);
 void func_001ef7b0(s32);
 void func_00141468(void *, s32);

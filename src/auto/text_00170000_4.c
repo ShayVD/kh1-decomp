@@ -21,7 +21,7 @@ extern M2C_UNK D_005758E0;
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_002C5958;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_002E27A8;
 extern s32 D_0035C700;
 extern s32 D_003623F0;
@@ -242,7 +242,7 @@ f32 func_0017f440(s32 arg0) {
     f32 var_f20;
 
     var_f20 = 1.0f;
-    if ((arg0 == D_002E26A0) && (func_001375d8() == 0)) {
+    if ((arg0 == (*(s32 *)&D_002E26A0)) && (func_001375d8() == 0)) {
         var_f0 = 1.0f;
         if (!(D_002C5958 & 0x104000)) {
             temp_f0 = func_00120c18(arg0 + 0x110);

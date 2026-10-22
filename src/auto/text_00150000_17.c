@@ -11,7 +11,7 @@ M2C_UNK func_002673b8(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_00267530(void *, s32, s32);
 M2C_UNK func_002675a8(void *, s32);
 extern M2C_UNK D_00351BB0;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 f32 func_00120bf8(void *);
 s32 func_00122ff8(s32);
 
@@ -26,7 +26,7 @@ void func_0015ab50(void *arg0) {
     s32 sp[4];
     s32 temp_s0;
 
-    temp_s0 = D_002E26A0;
+    temp_s0 = (*(s32 *)&D_002E26A0);
     if (func_00122ff8(temp_s0) != 0) {
         func_00267530(sp, arg0 + 0x10, temp_s0 + 0x10);
         if (func_00120bf8(sp) < M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), f32 *, 0x44)) {

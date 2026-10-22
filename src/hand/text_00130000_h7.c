@@ -218,7 +218,7 @@ struct W7Obj {
     W7Obj *x398;
 };
 
-extern W7Obj *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 s32 func_00137618(W7Obj *o);
 s32 func_00130030(W7Obj *o);
 

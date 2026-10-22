@@ -27,8 +27,7 @@ typedef struct {
     f32 f94;
     u8 pad98[0x18];
 } __attribute__((aligned(8))) Obj;
-typedef struct { u8 *x0; } P26A0;
-extern P26A0 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern Obj D_006298F0[];
 s32 func_0017e428(void *, void *);
 void func_0017e768(void);
@@ -93,7 +92,7 @@ s32 func_001cc640(VM *vm) {
         vm->sp -= 2;
         return 2;
     }
-    switch (func_0017e428(D_002E26A0.x0 + 16, (u8 *)vm->obj + 16)) {
+    switch (func_0017e428((u8 *)D_002E26A0[0] + 16, (u8 *)vm->obj + 16)) {
     case 0: {
         s32 i, j;
         j = vm->stk[vm->sp - 1];

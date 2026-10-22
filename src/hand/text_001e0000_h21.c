@@ -55,7 +55,7 @@ extern S10 D_00490900;
 extern s32 D_00631560;
 extern volatile u32 D_002C5958;
 extern u64 D_0038CD00;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern S631620 D_00631620;
 
 s32 func_0011e340(s32);
@@ -92,8 +92,8 @@ s32 func_001e91c0(void) {
 }
 
 s32 func_001e9238(void) {
-    s32 r = func_00123158(D_002E26A0, 0);
-    while (r) r = func_00123158(D_002E26A0, r);
+    s32 r = func_00123158((*(s32 *)&D_002E26A0), 0);
+    while (r) r = func_00123158((*(s32 *)&D_002E26A0), r);
     return 2;
 }
 

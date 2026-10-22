@@ -17,13 +17,13 @@ void func_001158c8(Qry01 *);
 void func_00115940(s32);
 
 static inline s32 ov01(f32 *mn, f32 *mx) {
-    if (mn[0] <= D_002C1260.maxx && D_002C1260.minx <= mx[0] && D_002C1260.maxy >= mn[1] &&
-        D_002C1260.miny <= mx[1] && D_002C1260.maxz >= mn[2] && D_002C1260.minz <= mx[2]) return 1;
+    if (mn[0] <= D_002C1260.mx[0][0] && D_002C1260.mn[0][0] <= mx[0] && D_002C1260.mx[1][0] >= mn[1] &&
+        D_002C1260.mn[1][0] <= mx[1] && D_002C1260.mx[2][0] >= mn[2] && D_002C1260.mn[2][0] <= mx[2]) return 1;
     return 0;
 }
 static inline s32 in01(f32 *mn, f32 *mx) {
-    if (D_002C1260.minx < mn[0] && D_002C1260.maxx > mx[0] && D_002C1260.miny < mn[1] &&
-        D_002C1260.maxy > mx[1] && D_002C1260.minz < mn[2] && D_002C1260.maxz > mx[2]) return 1;
+    if (D_002C1260.mn[0][0] < mn[0] && D_002C1260.mx[0][0] > mx[0] && D_002C1260.mn[1][0] < mn[1] &&
+        D_002C1260.mx[1][0] > mx[1] && D_002C1260.mn[2][0] < mn[2] && D_002C1260.mx[2][0] > mx[2]) return 1;
     return 0;
 }
 

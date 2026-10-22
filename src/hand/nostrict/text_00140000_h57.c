@@ -88,7 +88,7 @@ extern f32 D_002BBDFC;
 extern f32 D_002C5970;
 extern f32 D_0054F444;
 extern s32 D_0054F738; /* src/data/bss_0054.c: f32 D_0054F738 */
-extern Pl57_0ec8 *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002C58B0.h"
 extern Slot57_15d0 D_0054F750[8];
 extern s32 D_0054F740;
@@ -242,7 +242,7 @@ s32 func_00150ec8(Obj57_0ec8 *o) {
     Ev57_0ec8 *e;
     s32 r;
 
-    pl = D_002E26A0;
+    pl = D_002E26A0[0];
     func_001315c0(pl, 0x8003, v, 0.0f);
     e = o->ev;
     if (!(o->flags & 0x20)) {

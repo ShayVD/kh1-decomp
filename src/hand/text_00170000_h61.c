@@ -36,7 +36,7 @@ extern s32 D_00575890;
 extern Fn8 D_0036245C[];
 extern Fn8 D_00362458[];
 extern V4 D_00362670;
-extern ActD0 *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002C58D0.h"
 extern Shk D_00575900;
 extern f32 D_002BBDFC;
@@ -108,7 +108,7 @@ s32 func_00177740(V4 *a0) {
     V4 c, l, r, u, d, dir;
     func_002675a8(&c, &D_00362670);
     c.x = c.z = 0.0f;
-    func_002672f8(&c, &D_002E26A0->xd0, &c);
+    func_002672f8(&c, &(*(ActD0 **)&D_002E26A0)->xd0, &c);
     func_00267530(&dir, &c, a0);
     func_00267810(m, (*(u8 (*)[0x40])&D_002C58D0), 0.26179939f);
     func_002672f8(&l, m, &dir);
@@ -433,7 +433,7 @@ typedef struct { V4 a, b; s32 on; } S26C0;
 void func_0017b200(void) {
     func_002675a8(&(*(S26C0 *)&D_003626C0).a, &D_005758D0);
     func_002675a8(&(*(S26C0 *)&D_003626C0).b, &D_005758E0);
-    (*(S26C0 *)&D_003626C0).on = 1;
+    D_003626C0.flag = 1;
 }
 
 #define D_00575894 (*(ActB **)&D_00575894)

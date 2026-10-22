@@ -11,7 +11,7 @@ M2C_UNK func_00258d10(M2C_UNK);
 extern M2C_UNK func_0015efc0;
 extern f32 D_00551D74;
 extern s32 D_002C5958;
-extern s32 D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 extern s32 D_00351BC0;
 extern s32 D_00351BC4;
 s32 AddDmacHandler(M2C_UNK, M2C_UNK *, M2C_UNK);
@@ -96,7 +96,7 @@ void func_0015d5d0(void *arg0) {
 }
 
 void func_0015e7f8(s32 arg0) {
-    if (D_002E26A0 == arg0) {
+    if ((*(s32 *)&D_002E26A0) == arg0) {
         D_00551D74 = 30.0f;
     }
 }

@@ -23,7 +23,7 @@ void func_001c48c8(s32, s32, s32);
 #include "data/types/text_00140000_h8.h"
 #include "data/pieces/D_0035C710.h"
 typedef struct { u8 pad[4]; void *x4; s32 x8; } W8Ent78;
-extern void *D_002E26A0[];
+#include "data/pieces/D_002E26A0.h"
 extern u32 D_002C5958;
 W8Ent78 *func_00134928(void *);
 void func_001350d0(W8Ent78 *);

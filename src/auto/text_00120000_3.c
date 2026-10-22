@@ -24,7 +24,7 @@ extern s32 D_002C5958;
 #include "data/pieces/D_00350D88.h"
 #include "data/pieces/D_002E319C.h"
 extern void **D_00524F40;
-extern void *D_002E26A0;
+#include "data/pieces/D_002E26A0.h"
 f32 func_00120c88(f32);
 f32 func_001315c0(void *, u16, void *, f32);
 f32 func_0026b6f8(f32);
@@ -226,7 +226,7 @@ void func_0012dc70(void) {
     void *temp_s0;
     void *temp_s1;
 
-    temp_s1 = D_002E26A0;
+    temp_s1 = D_002E26A0[0];
     temp_s0 = ((s8 *)&D_00350D88) + (M2C_FIELD(temp_s1, s32 *, 0x70) << 5);
     func_0012d068((s32) temp_s1, (s32) temp_s0);
     func_0012d468((s32) temp_s1, (s32) temp_s0);
@@ -244,12 +244,12 @@ void func_0012e120(void) {
     if (func_0012dea0(temp_a0, M2C_FIELD(temp_a0, s32 *, 0xC)) != 0) {
         temp_a1 = *D_00524F40;
         if (temp_a1 == &D_002E2FD8) {
-            if (!(*D_002E319C & 0x10)) {
+            if (!(D_002E319C->f0 & 0x10)) {
                 M2C_FIELD(temp_a1, s32 *, 0xC) = 0;
             }
         }
     } else {
-        temp_a0_2 = M2C_FIELD(D_002E26A0, void **, 0x14C);
+        temp_a0_2 = M2C_FIELD(D_002E26A0[0], void **, 0x14C);
         M2C_FIELD(temp_a0_2, s32 *, 0x28) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 0x28) & 0xFFFEFFFF);
     }
 }

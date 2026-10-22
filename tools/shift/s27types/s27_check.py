@@ -85,7 +85,7 @@ def main():
     files = sys.argv[1:] or default_files()
     L.head_tree()
     bad = 0
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(L.JOBS) as ex:
         for f, r in ex.map(one, files):
             if r != "SAME" or os.environ.get("S27_VERBOSE"):
                 print(f"{r.split()[0]:9} {f} {r[len(r.split()[0]):].strip()}")

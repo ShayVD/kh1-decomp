@@ -2550,3 +2550,137 @@ reason, caller, callee, argument, bound) for the next round. tests/reach_check_t
 - arg:noreach / arg:wide that are real: func_0010ef70 (a window keeps the text pointer; the renderer's
   control codes are not verified), sceGsExecLoadImage via func_0010c438 (16), func_001e05a8, printf `%s`
   arguments.
+
+## Session 28: end pointers, the IOP block and D_BLOB
+
+### reach_check end-ptr (`--no-end-ptr`)
+
+A compare or subtract of a value against an exact image address A is an *end use* of A:
+`slt`/`sltu` with A on either side (`p < &N` and `&N <= p` look the same), `subu` with A as the minuend
+(`&N - p`; `p - &N` is an index into N and does not count), and `beq`/`bne` of A against a pointer the
+analysis knows came from another address (a walk: `p != &N`; an identity test `o == &N` against an
+unknown value does not count). When A starts a name N, the object before N must stay next to it, so
+the hit is (previous name -> N, `end-ptr[end-lt|end-sub|end-eq]`).
+
+- It finds the actor table by itself: func_00123810 and func_001230a0 compare the walk against
+  &D_002E26A0 (`sltu v1,v0,a3`), so D_002C64A0 is pinned without float_keep.txt (taken out of it;
+  keep_check now lists it, so a rule change cannot float it again).
+- 20 addresses are end uses, 10 tie two pieces; only D_002C64A0 is new (the rest were pinned already:
+  D_002BCA00, D_002E3168, D_00372F28, D_0045FAC0, D_004F45B0, D_0052AE70/98, D_00547C00, D_0054F438).
+- tests/reach_check_test.py case 10 covers the four shapes.
+
+### The IOP status block is one piece (src/data/data_0063.s)
+
+D_0063D640 (0x2000 bytes the sound IOP module writes by DMA) was not a C object: only its fields
+D_0063F248 (+0x1c08, defined in src/auto/text_001e0000.c) and D_0063F540 (+0x1f00, src/data/bss_0063.c)
+were, and D_0063EE40 (+0x1800) was a linker name. It is now one zero-filled `.data.D_0063D640` section
+(.space only, like the C bss names, which -fdata-sections makes progbits) with the three fields as
+PIECE_LABELs; the two C definitions became externs. `make` is byte-identical, data.tsv has 1,043 bss
+variables (one fewer), and keep_check maps the fields to the piece. float_keep.txt keeps D_0063D640
+until a forced build has played (the IOP learns the address from D_00633640[0] = D_0063D640, a code
+relocation, so the copy should work).
+
+### D_BLOB when the first data object floats
+
+shift_cmp used to check D_BLOB through the address map, which sends 0x272C70 to D_00272C70's copy once it
+floats. D_BLOB is the start of .data in both links (`D_BLOB = .;` first in .data), so it is now checked as
+that. `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1 SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"` links and passes
+M12-FLOAT (built with an empty overlay directory, so the overlay table was empty: rebuild with the
+overlays before booting). D_00272C70 stays in float_keep.txt until that build has played.
+
+### Tried and dropped: global-bound
+
+A rule bounding loads of a global word that every seen store sets to a small constant (aimed at
+func_00233168's `D_003F8370[D_00351E10.x4]`, x4 = memory card port 0/1, which pins the staging arena
+D_003F8380): it found 25 such words but released nothing, because D_00351E10's address is passed to
+dozens of callees (func_0011fec0, func_00163150, func_00163490 ...) and unbounded indexed stores from
+func_0014f830/func_0015ff78 may reach it, so x4 cannot be proved. Not committed. Releasing D_003F8380 needs
+either those callees' writes followed or a runtime test with SHIFT_FLOAT_FORCE (F27_C2 played with it).
+
+### Left in reach_check
+
+- stored (func_0023b570 -> func_0023aed0's stack arguments): following the stack arguments would not
+  help: func_0023aed0 stores every pointer into its Out record (o->p6 ... o->p17), and p9/p15 are filled
+  for i < n (a runtime count), so the names stay stored either way.
+- idx (nested loops whose inner counter carries across the outer loop) still needs relational bounds.
+
+## Session 28: Phase 4 types (worker s28types)
+
+### Result
+
+Counted with `s27_survey.py --summary` (the session 28 survey: a header type with
+`__attribute__((...))` before its name counts as shared; the base count is the
+same with either survey):
+
+| | base 2629fbe | now |
+|---|---|---|
+| view casts (a user's own struct type) | 796 in 85 pieces | 463 in 84 pieces |
+| shared casts (to the piece header's own types) | 188 | 213 |
+| basic casts (s32, u8 *, void *, ...) | 734 | 773 |
+
+Per piece (view casts, base -> now):
+
+| piece | before | after | how |
+|---|---|---|---|
+| D_0037A380 | 115 | 2 | c09b reads union member `scn`; camera view is member `cam` (Cam_37A380) |
+| D_00304BE8 | 172 | 73 | 5 more users folded; 63 accesses renamed by `s28_partial.py` |
+| D_00308CDC | 44 | 15 | `(V **)&D_X` views fold in keep mode (Cfg_308cdc, 7 users) |
+| D_002C1260 | 26 | 0 | one Box_2c1260 { mn[3][4], mx[3][4] } (b01's Box01 goes) |
+| D_00425F70 | 22 | 1 | h47 reads f140[] of Cam_425f70; D_00425D80 is a Cam_425f70 |
+| D_002BC0F0 | 19 | 0 | h67's CamS is the union's camS; h17 casts to Cam0_2BC0F0 |
+| D_002E3170 | 20 | 4 | `Q8_2e3170 *D_002E3170[8]`, the menu cursor stack |
+| D_0048C690 | 11 | 0 | D_0048C630 / D_0048C690 are Blk32_48c630 |
+| D_002A6238 | 34 | 27 | s28_partial |
+| D_0036243C, D_00350D78, D_002E31A0, D_00362434, D_002E31B0, D_003626C0, D_00362430, D_002A6234 | 52 | 34 | s28_partial / s28_trim / retypes (D_002E31A0, D_002E319C are `O8_2e319c *`) |
+| D_002E26A0 | (no header) | 24 | typed `void *D_002E26A0[3]` (63 users); element casts C does not need dropped |
+| D_003044D8 | (no header) | 2 | typed `ColEnt_3044d8 D_003044D8[]` (7 users) |
+
+The two code shape pieces of session 27 are typed: D_002E26A0 (the three player /
+party pointers) and D_003044D8 (collision entity records).  Their users' own casts
+now count in the survey (26 view casts left between them).  The basic count rose
+mostly because of them: a user's `(s32 *)D_002E26A0` now is a cast of a typed piece.
+
+### Left, and why
+
+- D_00304BE8 (73): members at 0x18..0x70 are read as arrays by some users and as
+  scalars or sub-structs at other offsets by others; s28_partial only renames a
+  view field that is a whole field, an array, or an element of one in the struct.
+- D_002A6238 (27): users partition the bits at 0x10 differently (bit-field layouts
+  conflict); a union would get alias set 0 and change code.
+- VM family (D_0039A580, D_0038D170, D_003C3A70, D_003A7990, D_003B4DA0, ~60): the
+  view pointers are assigned to locals of the user's own VM / E848 / Obj350 types;
+  folding needs one global VM type shared by those files' locals, not a cast rename.
+- Vector pieces (D_002E2780, D_002E2790, D_002C58A0, D_002C58B0, D_002C58D0, ~60):
+  passed to functions prototyped with each file's own V4 / V3 / V53; needs the
+  vector types unified across the prototypes first.
+- D_002C5968 (volatile flag word read through union views), D_00351E10 (QW buffer
+  views), D_0036243C (Box tied to b06's V4), D_002E31B0 (pointer-typed fields):
+  each user's view differs in a way that changes alias sets.
+- Pieces with one view in one file: keep mode needs at least 2 users.
+
+### Hazards found (gcc 2.96)
+
+- Union member access sometimes keeps the code (c09b, s11_w15 on D_0037A380) and
+  sometimes changes it (h42, h17): check every user; those that change cast to the
+  member's type instead `(*(Cam_37A380 *)&D_X)`.
+- Typing a piece as an array of pointers changed a reload after a store in an auto
+  file (text_00120000_15.c): it reads element 0 as `*(s32 *)D_002E26A0` to keep it.
+- Cast-lvalue chains `(u16 *)(*(O8 **)&D_X) = f()` must keep the `*(T **)&D_X` form
+  even when D_X is already a `T *`: the plain form changes code.
+- `((s32 *)&D_X)[8]` in an auto file changed code once D_X was a struct; the field
+  form `D_X.x20.v[k]` keeps it.
+- Piece types moved into data/types headers (session 24) are invisible to a parser
+  of the .c alone; s28_partial parses them from the included headers and probes
+  with the original text.
+
+### Tools (tools/shift/s28types/)
+
+- `s28_partial.py`: renames field accesses through a user's view to the piece
+  struct's fields one access at a time (`(*(V *)&N).f`, `((V *)N)->f`,
+  `((V *)N)[i].f` when the sizes match), -S checked per file.
+- `s28_trim.py`: drops value casts of pointer pieces that C does not need
+  (`((T *)D_X[i])`, `(*(T **)&D_X)`, `((T *)D_X)` not followed by `->` / `[`).
+- `s28_dedup.py`: finds views that copy a header type text for text (found none).
+- s27types changes: at most `S27_JOBS` (default 2) parallel compiles in all the
+  s26/s27 tools; s27_fold skips files whose cast form differs from the declaration
+  instead of failing, folds `(V **)&N` views (keep mode), and refolds split pieces.

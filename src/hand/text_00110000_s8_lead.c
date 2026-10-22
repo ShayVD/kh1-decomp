@@ -80,8 +80,7 @@ typedef struct {
 } MdlEnt;
 typedef struct { u8 pad[0x20]; MdlEnt e; } Ent2430;
 extern Ent2430 D_004E2430[];
-typedef struct { void *mtx; u8 *mdl; s32 x8; s32 flags; } ColEntA;
-extern ColEntA D_003044D8[];
+#include "data/pieces/D_003044D8.h"
 void *func_00122048(s32, s32);
 void *func_00121e28(s32, void *);
 void func_00121eb0(void *);
@@ -104,9 +103,9 @@ void func_0011a410(s32 i) {
     D_004E2430[i].e.loaded = 1;
     w = func_00122048(112, 4);
     w->v[3] = 1.0f;
-    vcopymatrix(w->m, D_003044D8[i].mtx);
+    vcopymatrix(w->m, (void *)D_003044D8[i].x0);
     e = (MdlEnt *)((s32)(i * sizeof(*D_004E2430) + 32) + (s32)D_004E2430);
-    h = D_003044D8[i].mdl;
+    h = D_003044D8[i].x4;
     w->hdr = h + 16;
     h += *(s32 *)(h + 16);
     w->hdr2 = h;

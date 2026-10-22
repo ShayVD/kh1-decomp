@@ -62,7 +62,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     D_002E3190.f4 = tmp;
     D_002E3190.b0 = o->f6;
     D_002E3190.b1 = o->f7;
-    D_002E319C = (u16 *)o;
+    D_002E319C = o;
     while (D_00524F40 != ((Q8 **)&D_002E3170)) func_0012dd38();
     return 1;
 }
@@ -86,21 +86,21 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
     if (func_0012eaf8(a->f0) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
-    if (((O8_2e319c *)D_002E319C)) {
+    if (D_002E319C) {
         switch (a->f0->f370.b.kind) {
         case 1:
-            v = ((O8_2e319c *)D_002E319C)->f9;
+            v = D_002E319C->f9;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 2:
-            v = ((O8_2e319c *)D_002E319C)->fa;
+            v = D_002E319C->fa;
             if (v < 0) return -1;
             s |= v << 24;
             break;
         case 0:
         case 3:
-            v = ((O8_2e319c *)D_002E319C)->fb;
+            v = D_002E319C->fb;
             if (v < 0) return -1;
             s |= v << 24;
             break;

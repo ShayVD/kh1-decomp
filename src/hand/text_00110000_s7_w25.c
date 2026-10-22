@@ -2,7 +2,6 @@
 /* kh1-decomp session 7, worker w25: func_00115940 (hand; also matches hand/nostrict).
    VU0 bounding-box cull: C with the vsub/cfc2 MAC-flag test as an inline-asm macro. */
 typedef f32 V4_25[4] __attribute__((aligned(16)));
-typedef struct { V4_25 mn[3]; V4_25 mx[3]; } Box25;
 #include "data/pieces/D_002A6238.h"
 typedef Ent20_2a6238 Tri25;
 #include "data/pieces/D_002A624C.h"
@@ -37,26 +36,26 @@ void func_00115940(s32 id) {
     switch (t->v[3]) {
     case -1: case -2:
         v[0] = p0->x[0]; v[1] = p1->x[0]; v[2] = p2->x[0];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[0], v); if ((r & 0xe0) == 0xe0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[0]); if ((r2 & 0xe0) == 0xe0) return;
+        VSUB_MAC(r, D_002C1260.mx[0], v); if ((r & 0xe0) == 0xe0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[0]); if ((r2 & 0xe0) == 0xe0) return;
         v[0] = p0->x[1]; v[1] = p1->x[1]; v[2] = p2->x[1];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[1], v); if ((r & 0xe0) == 0xe0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[1]); if ((r2 & 0xe0) == 0xe0) return;
+        VSUB_MAC(r, D_002C1260.mx[1], v); if ((r & 0xe0) == 0xe0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[1]); if ((r2 & 0xe0) == 0xe0) return;
         v[0] = p0->x[2]; v[1] = p1->x[2]; v[2] = p2->x[2];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[2], v); if ((r & 0xe0) == 0xe0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[2]); if ((r2 & 0xe0) == 0xe0) return;
+        VSUB_MAC(r, D_002C1260.mx[2], v); if ((r & 0xe0) == 0xe0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[2]); if ((r2 & 0xe0) == 0xe0) return;
         break;
     default:
         p3 = &((Vec3_2a624c *)D_002A624C)[*q];
         v[0] = p0->x[0]; v[1] = p1->x[0]; v[2] = p2->x[0]; v[3] = p3->x[0];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[0], v); if ((r & 0xf0) == 0xf0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[0]); if ((r2 & 0xf0) == 0xf0) return;
+        VSUB_MAC(r, D_002C1260.mx[0], v); if ((r & 0xf0) == 0xf0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[0]); if ((r2 & 0xf0) == 0xf0) return;
         v[0] = p0->x[1]; v[1] = p1->x[1]; v[2] = p2->x[1]; v[3] = p3->x[1];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[1], v); if ((r & 0xf0) == 0xf0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[1]); if ((r2 & 0xf0) == 0xf0) return;
+        VSUB_MAC(r, D_002C1260.mx[1], v); if ((r & 0xf0) == 0xf0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[1]); if ((r2 & 0xf0) == 0xf0) return;
         v[0] = p0->x[2]; v[1] = p1->x[2]; v[2] = p2->x[2]; v[3] = p3->x[2];
-        VSUB_MAC(r, (*(Box25 *)&D_002C1260).mx[2], v); if ((r & 0xf0) == 0xf0) return;
-        VSUB_MAC(r2, v, (*(Box25 *)&D_002C1260).mn[2]); if ((r2 & 0xf0) == 0xf0) return;
+        VSUB_MAC(r, D_002C1260.mx[2], v); if ((r & 0xf0) == 0xf0) return;
+        VSUB_MAC(r2, v, D_002C1260.mn[2]); if ((r2 & 0xf0) == 0xf0) return;
         break;
     }
     D_002BD250[D_002C12C4++] = id;

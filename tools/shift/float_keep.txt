@@ -6,9 +6,11 @@
 # IOP writes its replies into it by DMA. D_0063EE40, D_0063F248 (+0x1c08) and D_0063F540
 # (+0x1f00) are fields of it read after FlushCache(0). Floated, they stay zero and the
 # game never draws the title (session 18 bisection in PCSX2; the RAM dump showed the
-# IOP's write at D_0063F248's old place).
-D_0063F248
-D_0063F540
+# IOP's write at D_0063F248's old place). Session 28: the whole block is one piece
+# (src/data/data_0063.s, the three fields are labels in it), so it can float whole; kept until a
+# SHIFT_FLOAT_FORCE=D_0063D640 build has played (the IOP gets the block's new address from
+# D_00633640[0], which is a relocation).
+D_0063D640
 #
 # The renderer's GIF packet buffer: func_00162428 and friends store D_00573AC0 | 0x20000000
 # (uncached) into D_0055C648 and func_0015f8c8 builds the packet through that pointer, far
@@ -55,12 +57,9 @@ D_00482260
 #
 # D_00272C70 is the first data object, at D_BLOB: floated (dma-chain releases it), shift_cmp maps D_BLOB
 # through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
-# as the blob start.
+# as the blob start. Session 28: shift_cmp checks D_BLOB as the .data start, and
+# SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640" links and passes M12-FLOAT; kept until that build has played.
 D_00272C70
 #
-# The actor table: 1200-byte entries from D_002C64A0 up to D_002E26A0, and the code walks it with the next
-# name as its end (`if (p >= D_002E26A0) p = D_002C64A0`, text_00110000_h30.c and others; func_00145aa0
-# indexes up to it). The address of D_002E26A0 is the table's end, so the table cannot move away from it.
-# Session 27: slot-refine released it (with D_00278B50 room came from SHIFT_FLOAT_COMPACT) and floated,
-# Donald and Goofy were missing after loading save 06 (bisected over KH1_F27_R5..R11).
-D_002C64A0
+# (The actor table D_002C64A0, kept here in session 27 after floating it lost Donald and Goofy, is pinned
+# by reach_check's end-ptr rule since session 28: func_00123810 compares the walk against &D_002E26A0.)

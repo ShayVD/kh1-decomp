@@ -300,7 +300,7 @@ s32 func_00104a90(s32 i, s32 *out) {
 }
 
 void func_00104eb0(s32 i, f32 *out) {
-    Vec3 *v = &((Vec3 *)D_002A624C)[((Ent20 *)D_002A6238)[i].a];
+    Vec3 *v = &((Vec3 *)D_002A624C)[D_002A6238[i].v[0]];
     out[0] = v->x;
     out[1] = v->y;
     out[2] = v->z;
@@ -331,29 +331,29 @@ void func_00105218(void) {
 s32 func_00105960(s32 a, s32 b) {
     s32 sub;
     s32 idx = func_00142730(a, &sub);
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->b11 == b; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->b11 == b; }
     return func_0011ab60(sub, idx) == b;
 }
 
 s32 func_00105b10(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f22; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f22; }
     return func_0011ab38(sub, idx)->f22;
 }
 
 s32 func_00105b68(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f4; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f4; }
     return func_0011ab38(sub, idx)->f4;
 
 }
 
 s32 func_00105bc0(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f18; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f18; }
     return func_0011ab38(sub, idx)->f18;
 
 }
 
 s32 func_00105c18(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)((Ent20 *)D_002A6238) + off))->bits.f28; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f28; }
     return func_0011ab38(sub, idx)->f28;
 
 }
@@ -476,14 +476,14 @@ void func_001086b8(s32 i, s32 n) {
 void func_00108900(Blk128 *o, s32 unused, s32 *a, s32 *b) {
     a[0] = b[0] = D_0048BFD0[0];
     a[1] = b[1] = D_0048BFD0[1];
-    o->w16 = (*(Blk32_48c630 *)&D_0048C630).x10;
+    o->w16 = D_0048C630.x10;
     o->w20 = (s32)a;
-    o->w24 = (*(Blk32_48c630 *)&D_0048C630).x18;
-    o->w28 = (*(Blk32_48c630 *)&D_0048C630).x1c;
-    o->w112 = (*(Blk32 *)&D_0048C690).x10;
+    o->w24 = D_0048C630.x18;
+    o->w28 = D_0048C630.x1c;
+    o->w112 = D_0048C690.x10;
     o->w116 = (s32)b;
-    o->w120 = (*(Blk32 *)&D_0048C690).x18;
-    o->w124 = (*(Blk32 *)&D_0048C690).x1c;
+    o->w120 = D_0048C690.x18;
+    o->w124 = D_0048C690.x1c;
 }
 #include "data/bss_0049_mixed.h"
 #include "data/data_002A.h"

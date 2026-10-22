@@ -180,7 +180,8 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # address stored into a pointer global is not followed through the global's loads) and --no-piece-next
 # (an unbounded index keeps the next name even inside its own piece) (session 25), --no-dead-arg,
 # --no-counter-cap, --no-slot-refine, --no-str-arg, --no-list-arg, --no-dma-count and --no-dma-chain
-# (session 27). keep_check.py then
+# (session 27), --no-end-ptr (a compare against a name's address does not tie the object before it to
+# the name; session 28). keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=

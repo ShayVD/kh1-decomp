@@ -6,8 +6,8 @@
 #define KH1_DATA_PIECES_D_00425D80_H
 
 #include "common.h"
-#include "data/types/text_00200000_h47_p.h"
+#include "data/pieces/D_00425F70.h"
 
-extern S5D80 D_00425D80;
+extern Cam_425f70 D_00425D80; /* the camera D_00425F70 points to (session 28) */
 
 #endif /* KH1_DATA_PIECES_D_00425D80_H */
