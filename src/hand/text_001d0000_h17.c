@@ -56,7 +56,6 @@ Ent *func_001e98d0(s32, s32);
 Ent *func_001e9b98(s32, s32);
 
 extern f32 D_0038CDDC;
-typedef struct { u8 pad[0x20]; f32 f20; f32 f24; } S2BC0F0;
 #include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_0037A378.h"
@@ -113,8 +112,8 @@ s32 func_001d2628(VM *vm) {
 }
 
 s32 func_001d2720(VM *vm) {
-    (*(S2BC0F0 *)&D_002BC0F0).f20 = vm->stk[vm->sp - 1];
-    (*(S2BC0F0 *)&D_002BC0F0).f24 = vm->stk[vm->sp];
+    (*(Cam0_2BC0F0 *)&D_002BC0F0).f20 = vm->stk[vm->sp - 1];
+    (*(Cam0_2BC0F0 *)&D_002BC0F0).f24 = vm->stk[vm->sp];
     vm->sp -= 2;
     return 2;
 }
