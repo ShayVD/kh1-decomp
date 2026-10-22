@@ -2550,3 +2550,56 @@ reason, caller, callee, argument, bound) for the next round. tests/reach_check_t
 - arg:noreach / arg:wide that are real: func_0010ef70 (a window keeps the text pointer; the renderer's
   control codes are not verified), sceGsExecLoadImage via func_0010c438 (16), func_001e05a8, printf `%s`
   arguments.
+
+## Session 28: end pointers, the IOP block and D_BLOB
+
+### reach_check end-ptr (`--no-end-ptr`)
+
+A compare or subtract of a value against an exact image address A is an *end use* of A:
+`slt`/`sltu` with A on either side (`p < &N` and `&N <= p` look the same), `subu` with A as the minuend
+(`&N - p`; `p - &N` is an index into N and does not count), and `beq`/`bne` of A against a pointer the
+analysis knows came from another address (a walk: `p != &N`; an identity test `o == &N` against an
+unknown value does not count). When A starts a name N, the object before N must stay next to it, so
+the hit is (previous name -> N, `end-ptr[end-lt|end-sub|end-eq]`).
+
+- It finds the actor table by itself: func_00123810 and func_001230a0 compare the walk against
+  &D_002E26A0 (`sltu v1,v0,a3`), so D_002C64A0 is pinned without float_keep.txt (taken out of it;
+  keep_check now lists it, so a rule change cannot float it again).
+- 20 addresses are end uses, 10 tie two pieces; only D_002C64A0 is new (the rest were pinned already:
+  D_002BCA00, D_002E3168, D_00372F28, D_0045FAC0, D_004F45B0, D_0052AE70/98, D_00547C00, D_0054F438).
+- tests/reach_check_test.py case 10 covers the four shapes.
+
+### The IOP status block is one piece (src/data/data_0063.s)
+
+D_0063D640 (0x2000 bytes the sound IOP module writes by DMA) was not a C object: only its fields
+D_0063F248 (+0x1c08, defined in src/auto/text_001e0000.c) and D_0063F540 (+0x1f00, src/data/bss_0063.c)
+were, and D_0063EE40 (+0x1800) was a linker name. It is now one zero-filled `.data.D_0063D640` section
+(.space only, like the C bss names, which -fdata-sections makes progbits) with the three fields as
+PIECE_LABELs; the two C definitions became externs. `make` is byte-identical, data.tsv has 1,043 bss
+variables (one fewer), and keep_check maps the fields to the piece. float_keep.txt keeps D_0063D640
+until a forced build has played (the IOP learns the address from D_00633640[0] = D_0063D640, a code
+relocation, so the copy should work).
+
+### D_BLOB when the first data object floats
+
+shift_cmp used to check D_BLOB through the address map, which sends 0x272C70 to D_00272C70's copy once it
+floats. D_BLOB is the start of .data in both links (`D_BLOB = .;` first in .data), so it is now checked as
+that. `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1 SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"` links and passes
+M12-FLOAT (built with an empty overlay directory, so the overlay table was empty: rebuild with the
+overlays before booting). D_00272C70 stays in float_keep.txt until that build has played.
+
+### Tried and dropped: global-bound
+
+A rule bounding loads of a global word that every seen store sets to a small constant (aimed at
+func_00233168's `D_003F8370[D_00351E10.x4]`, x4 = memory card port 0/1, which pins the staging arena
+D_003F8380): it found 25 such words but released nothing, because D_00351E10's address is passed to
+dozens of callees (func_0011fec0, func_00163150, func_00163490 ...) and unbounded indexed stores from
+func_0014f830/func_0015ff78 may reach it, so x4 cannot be proved. Not committed. Releasing D_003F8380 needs
+either those callees' writes followed or a runtime test with SHIFT_FLOAT_FORCE (F27_C2 played with it).
+
+### Left in reach_check
+
+- stored (func_0023b570 -> func_0023aed0's stack arguments): following the stack arguments would not
+  help: func_0023aed0 stores every pointer into its Out record (o->p6 ... o->p17), and p9/p15 are filled
+  for i < n (a runtime count), so the names stay stored either way.
+- idx (nested loops whose inner counter carries across the outer loop) still needs relational bounds.
