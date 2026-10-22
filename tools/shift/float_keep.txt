@@ -57,7 +57,8 @@ D_00482260
 #
 # D_00272C70 is the first data object, at D_BLOB: floated (dma-chain releases it), shift_cmp maps D_BLOB
 # through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
-# as the blob start.
+# as the blob start. Session 28: shift_cmp checks D_BLOB as the .data start, and
+# SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640" links and passes M12-FLOAT; kept until that build has played.
 D_00272C70
 #
 # (The actor table D_002C64A0, kept here in session 27 after floating it lost Donald and Goofy, is pinned
