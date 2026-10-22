@@ -792,8 +792,7 @@ s32 func_0011bbe8(Obj52 *o, f32 *p, s32 g, f32 *out) {
     return best;
 }
 
-typedef struct { s32 x0; u8 pad[8]; u32 b0 : 1; u32 rest : 31; } Ent52b;
-extern Ent52b D_003044D8[];
+#include "data/pieces/D_003044D8.h"
 extern s32 D_003044D0;
 s32 func_0011a728(void *, s32);
 void func_0011a410(s32);
@@ -813,7 +812,7 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
     bx.mn[1] = p[1] - o->x24;
     bx.mx[1] = p[1] + 1000000.0f;
     for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].b0 == 1) continue;
+        if (D_003044D8[i].flags.b0 == 1) continue;
         if (func_0011a728(&bx, i)) {
             func_0011a410(i);
             gs[n] = i;

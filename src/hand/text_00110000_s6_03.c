@@ -281,9 +281,9 @@ typedef struct { u8 pad[16]; s32 x10; } Rec20w;
 typedef struct { Rec20w *x0; u8 pad[60]; } Ent2458;
 extern Ent2458 D_004E2458[];
 /* 16-byte collision entries at D_003044D8, D_003044D0 of them. */
-typedef struct { u32 b0 : 1; u32 mask : 8; u32 rest : 23; } ColFlags;
-typedef struct { s32 x0; u8 *x4; s32 x8; ColFlags flags; } ColEnt;
-extern ColEnt D_003044D8[];
+#include "data/pieces/D_003044D8.h"
+typedef ColFlags_3044d8 ColFlags;
+typedef ColEnt_3044d8 ColEnt;
 extern s32 D_003044D0;
 void func_001158c8(void *);
 s32 func_0011ab88(s32, s32, void *);

@@ -437,9 +437,8 @@ void func_00114e50(void) {
 }
 
 typedef struct { u8 pad[0x10]; void *x10; } W29Task;
-typedef struct { s32 x0; u8 pad[8]; u32 b0:1; u32 rest:31; } W29E10;
 extern s32 D_00351BD0;
-extern W29E10 D_003044D8[];
+#include "data/pieces/D_003044D8.h"
 void func_00108d90(void);
 W29Task *func_0015ed80(void *, void (*)(void));
 void func_00114db0(s32, s32);
@@ -672,7 +671,7 @@ void func_0011b108(W29Grp *g, s32 k) {
     void *prev = D_002BF250;
     s32 i;
     for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].b0 != 1 && func_0011a728(g, i)) {
+        if (D_003044D8[i].flags.b0 != 1 && func_0011a728(g, i)) {
             void *r;
             func_0011a410(i);
             r = func_0011af48(i, g, 1, prev);
