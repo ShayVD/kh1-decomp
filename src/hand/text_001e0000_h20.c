@@ -63,7 +63,6 @@ extern s32 D_003DAD44;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; } Big20;
 extern Big20 D_00389C90;
 extern s32 D_002BBBA0;
-typedef struct { s32 x0; s32 a; s32 b; } Pair20;
 #include "data/pieces/D_002E26A0.h"
 void func_0022eee0(s32);
 extern s32 D_003DC490;
@@ -332,8 +331,8 @@ void func_001e2778(void) {
 
 void func_001e2a40(s32 a) {
     if (a == 3) {
-        if (!(*(Pair20 *)&D_002E26A0).a) a = 2;
-        if (!(*(Pair20 *)&D_002E26A0).b) a = a - 1;
+        if (!D_002E26A0[1]) a = 2;
+        if (!D_002E26A0[2]) a = a - 1;
     }
     func_0022eee0(a);
 }
@@ -372,8 +371,8 @@ void func_001e3fc8(void) {
 
 void func_001e42b0(void) {
     D_0062F790.f44 = 2.0f;
-    if ((*(Pair20 *)&D_002E26A0).a) D_0062F790.f44 = 3.0f;
-    if ((*(Pair20 *)&D_002E26A0).b) D_0062F790.f44 = 4.0f;
+    if (D_002E26A0[1]) D_0062F790.f44 = 3.0f;
+    if (D_002E26A0[2]) D_0062F790.f44 = 4.0f;
     func_0010bdd0(&D_0062F790, func_001e4578);
 }
 

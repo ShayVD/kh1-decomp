@@ -31,7 +31,6 @@ typedef struct {
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
 #include "data/types/text_001e0000_h45_p.h"
 typedef struct { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
-typedef struct { Obj26 *x0; s32 a; s32 b; } Pair20;
 typedef struct { s32 x0; u8 pad[844]; } E848;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; u8 pad3080[0x450]; s32 f34d0; } Big20;
 typedef struct { f32 x, y, z; } Vec3;
@@ -382,8 +381,8 @@ s32 func_001e4790(void) {
     func_001e27b0();
     func_001e3600();
     D_0062F790.f44 = 2.0f;
-    if ((*(Pair20 *)&D_002E26A0).a) D_0062F790.f44 = 3.0f;
-    if ((*(Pair20 *)&D_002E26A0).b) D_0062F790.f44 = 4.0f;
+    if (D_002E26A0[1]) D_0062F790.f44 = 3.0f;
+    if (D_002E26A0[2]) D_0062F790.f44 = 4.0f;
     func_0010bdd0(&D_0062F790, func_001e4578);
     func_00231740(1, 0, func_001e4048, func_001e4070);
     D_003F7A68 = 0;
@@ -722,7 +721,7 @@ void func_001e9fe8(Vec3 *out, Vec3 *in) {
 }
 
 void func_001ea498(s32 a) {
-    Obj26 *p = (*(Pair20 *)&D_002E26A0).x0;
+    Obj26 *p = D_002E26A0[0];
     p->f60 = 1.0f;
     p->f64 = 0.0f;
     p->x0 |= 1;
