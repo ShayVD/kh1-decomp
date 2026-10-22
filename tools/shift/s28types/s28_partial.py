@@ -57,13 +57,17 @@ def piece_struct(N):
     return S0, form, node, split
 
 
+def compat(a, b):
+    return M.compatible((a or "").strip(), (b or "").strip())
+
+
 def match(fv, node):
     """the access text replacing `.f` for view field fv, or None"""
     for fs in node.fields:
         if fs.name.startswith("pad") or fs.kind == "struct" or fs.ptrnode is not None or fs.localref:
             continue
         if fv.kind == "bits":
-            if fs.kind == "bits" and fs.bitoff == fv.bitoff and fs.width == fv.width and M.compatible(fs.tkey, fv.tkey):
+            if fs.kind == "bits" and fs.bitoff == fv.bitoff and fs.width == fv.width and compat(fs.tkey, fv.tkey):
                 return fs.name
             continue
         if fs.kind == "bits" or fv.kind != "leaf":
@@ -71,13 +75,13 @@ def match(fv, node):
         if "*" in (fv.tkey or "") or "*" in (fs.tkey or ""):
             continue
         vd, sd = len(fv.mem.dims), len(fs.mem.dims)
-        if fv.off == fs.off and vd == sd == 0 and fv.size == fs.size and M.compatible(fs.tkey, fv.tkey):
+        if fv.off == fs.off and vd == sd == 0 and fv.size == fs.size and compat(fs.tkey, fv.tkey):
             return fs.name
         if (fv.off == fs.off and vd == sd == 1 and fv.elem == fs.elem
-                and M.compatible(M.elem_key(fs.tkey) or "", M.elem_key(fv.tkey) or "?")):
+                and compat(M.elem_key(fs.tkey) or "", M.elem_key(fv.tkey) or "?")):
             return fs.name
         if (vd == 0 and sd == 1 and fs.off <= fv.off < fs.off + fs.size and fv.size == fs.elem
-                and (fv.off - fs.off) % fs.elem == 0 and M.compatible(M.elem_key(fs.tkey) or "", fv.tkey)):
+                and (fv.off - fs.off) % fs.elem == 0 and compat(M.elem_key(fs.tkey) or "", fv.tkey)):
             return f"{fs.name}[{(fv.off - fs.off) // fs.elem}]"
     return None
 

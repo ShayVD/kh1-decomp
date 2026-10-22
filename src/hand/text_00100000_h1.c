@@ -300,7 +300,7 @@ s32 func_00104a90(s32 i, s32 *out) {
 }
 
 void func_00104eb0(s32 i, f32 *out) {
-    Vec3 *v = &((Vec3 *)D_002A624C)[((Ent20 *)D_002A6238)[i].a];
+    Vec3 *v = &((Vec3 *)D_002A624C)[D_002A6238[i].v[0]];
     out[0] = v->x;
     out[1] = v->y;
     out[2] = v->z;
