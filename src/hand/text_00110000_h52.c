@@ -273,7 +273,7 @@ void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
     func_00104eb0(id, pt);
     func_00104f10(id, n);
     if (mode != 1 && fabsf(n[1]) > 0.0999999940395355224609375f) {
-        *out = (-((Plane52 *)D_002A6238)[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
+        *out = (-D_002A6238[id].d - (n[0] * pos[0] + n[2] * pos[2])) / n[1];
         return;
     }
     func_00104ae0(id, v);

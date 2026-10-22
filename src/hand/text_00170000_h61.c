@@ -433,7 +433,7 @@ typedef struct { V4 a, b; s32 on; } S26C0;
 void func_0017b200(void) {
     func_002675a8(&(*(S26C0 *)&D_003626C0).a, &D_005758D0);
     func_002675a8(&(*(S26C0 *)&D_003626C0).b, &D_005758E0);
-    (*(S26C0 *)&D_003626C0).on = 1;
+    D_003626C0.flag = 1;
 }
 
 #define D_00575894 (*(ActB **)&D_00575894)

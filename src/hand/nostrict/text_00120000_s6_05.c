@@ -590,7 +590,7 @@ void func_0012f868(V8 *out) {
 CONTEXT_ONLY s32 func_0012eb08(V8 *p) {
     f32 a[4];
     f32 b[4];
-    if (!func_0012f040((*(V8 *)&D_002E31B0).a, (*(V8 *)&D_002E31B0).b)) return 1;
+    if (!func_0012f040((*(V8 *)&D_002E31B0).a, D_002E31B0.f4)) return 1;
     if (func_0012eaf8(p->a)) {
         if (func_0012ed88(D_002E26A0[0], p, a, b) > 1500.0f) return 1;
         if (fabsf(b[1]) > 1000.0f) return 1;
@@ -672,7 +672,7 @@ s32 func_0012fcd0(void) {
         break;
     }
     case 1:
-        if (!func_0012f040((*(V8 *)&D_002E31B0).a, (*(V8 *)&D_002E31B0).b)) func_0012fc58();
+        if (!func_0012f040((*(V8 *)&D_002E31B0).a, D_002E31B0.f4)) func_0012fc58();
         break;
     case 0:
     case 2:
