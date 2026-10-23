@@ -57,15 +57,15 @@ void func_0023a720(void) {
     Spr **pp;
     Spr *p;
     s32 i;
-    for (pp = (Spr **)D_002E3170; *pp != 0; pp++) {
+    for (pp = D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
-            for (i = 0; i < p->unk10; i++) {
-                if (p->unk4 & (1 << i)) p->unk24[i] = 0x73;
-                else p->unk24[i] = 0xE6;
+            for (i = 0; i < p->n; i++) {
+                if (p->f4 & (1 << i)) p->bright[i] = 0x73;
+                else p->bright[i] = 0xE6;
             }
         } else {
-            for (i = 0; i < p->unk10; i++) p->unk24[i] = 0x73;
+            for (i = 0; i < p->n; i++) p->bright[i] = 0x73;
         }
     }
 }
@@ -75,18 +75,18 @@ void func_0023a7e8(void) {
     Spr **pp;
     Spr *p;
     s32 i, v;
-    for (pp = (Spr **)D_002E3170; *pp != 0; pp++) {
+    for (pp = D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
-            for (i = 0; i < p->unk10; i++) {
-                if (p->unk4 & (1 << i)) {
-                    v = p->unk24[i]; v = v - D_002BBDFC * 32.0f;
+            for (i = 0; i < p->n; i++) {
+                if (p->f4 & (1 << i)) {
+                    v = p->bright[i]; v = v - D_002BBDFC * 32.0f;
                     if (v < 0x73) v = 0x73;
-                    p->unk24[i] = v;
+                    p->bright[i] = v;
                 } else {
-                    v = p->unk24[i]; v = v + D_002BBDFC * 32.0f;
+                    v = p->bright[i]; v = v + D_002BBDFC * 32.0f;
                     if (v > 0xE6) v = 0xE6;
-                    p->unk24[i] = v;
+                    p->bright[i] = v;
                 }
             }
         }

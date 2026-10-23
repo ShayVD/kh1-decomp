@@ -9,11 +9,12 @@
 
 typedef struct {
     s32 f0;
-    s32 f4;
+    u32 f4; /* item bit mask (h49: lit items) */
     u32 f8;
     s32 fc;
     s32 n;
-    u8 ids[0x20];
+    u8 ids[0x10];
+    u8 bright[0x10]; /* per item: 0x73 lit, 0xe6 dim (h49) */
     s32 f34;
 } Q8_2e3170;
 

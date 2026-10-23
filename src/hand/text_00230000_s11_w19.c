@@ -15,20 +15,19 @@ void func_0023a720(void);
 void func_0023a318(s32, It17 *, s32, s32, Ob17 *, s32, s32, f32);
 void func_0023a608(s32, It17 *, s32, s32, f32);
 
-typedef struct { s32 unk0; u32 unk4; u8 pad8[8]; s32 unk10; u8 pad14[0x10]; u8 unk24[1]; } Spr17;
 CONTEXT_ONLY void func_0023a720(void) {
-    Spr17 **pp;
-    Spr17 *p;
+    It17 **pp;
+    It17 *p;
     s32 i;
-    for (pp = (Spr17 **)D_002E3170; *pp != 0; pp++) {
+    for (pp = D_002E3170; *pp != 0; pp++) {
         p = *pp;
         if (pp[1] == 0) {
-            for (i = 0; i < p->unk10; i++) {
-                if (p->unk4 & (1 << i)) p->unk24[i] = 0x73;
-                else p->unk24[i] = 0xE6;
+            for (i = 0; i < p->n; i++) {
+                if (p->f4 & (1 << i)) p->bright[i] = 0x73;
+                else p->bright[i] = 0xE6;
             }
         } else {
-            for (i = 0; i < p->unk10; i++) p->unk24[i] = 0x73;
+            for (i = 0; i < p->n; i++) p->bright[i] = 0x73;
         }
     }
 }
