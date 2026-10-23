@@ -1,36 +1,21 @@
 #include "common.h"
 #include "data/types/vm_rec.h"
-typedef struct {
-    u8 pad0[0x10];
-    f32 pos[3];
-    u8 pad1c[0x30 - 0x1c];
-    f32 f30;
-    f32 f34;
-    f32 f38;
-} Actor;
-typedef struct {
-    s32 x0;
-    Actor *obj;
-    f32 p[3];
-    f32 f14[3];
-    f32 f20;
-    u8 pad24[0x28];
-    f32 f4c;
-    f32 f50;
-    f32 f54;
-    f32 f58;
-    s8 b5c;
-    s8 b5d;
-    u8 pad5e[2];
-    s32 f60;
-    s32 f64;
-    u8 pad68[0x118];
-    s32 sp;
-    s32 stk[92];
-    f32 f2f4;
-    u8 pad2f8[0x30];
-    union { u64 x; s32 i[2]; } flags;
-} VM;
+#include "data/types/fvec.h"
+/* The entity a VM drives (VmRec's obj): the jump op reads its position, the
+ * chase routine its direction and flags (session 30: b11's Actor and Obj). */
+typedef FVec4 V4 __attribute__((aligned(16)));
+typedef struct VmObj {
+    u8 pad0[8];
+    s32 f8;
+    u8 padc[4];
+    V4 pos;
+    V4 dir;
+    u8 pad30[0x60];
+    u64 f90;
+    u8 pad98[0xb8];
+    f32 f150;
+} Obj;
+typedef VmRec VM;
 typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; } __attribute__((aligned(8))) Msg;
 typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; f32 e[3]; } __attribute__((aligned(8))) MsgE;
 void func_001c4640();
@@ -47,7 +32,7 @@ void func_001d7898(VM *vm) {
     vm->f4c -= dt;
     vm->f50 -= dt;
     if (vm->f4c <= 0.0f) {
-        vm->flags.x &= ~0x400;
+        vm->fl.x &= ~0x400;
         if (vm->b5d) {
             m.type = 17;
             m.val = 0x10007;
@@ -118,9 +103,9 @@ s32 func_001d7b88(VM *vm) {
     vm->f14[2] = tz;
     vm->f14[0] = tx;
     vm->f14[1] = ty;
-    vm->p[0] = vm->obj->pos[0];
-    vm->p[1] = y0 = vm->obj->pos[1];
-    vm->p[2] = vm->obj->pos[2];
+    vm->p[0] = vm->obj->pos.x;
+    vm->p[1] = y0 = vm->obj->pos.y;
+    vm->p[2] = vm->obj->pos.z;
     dh = h;
     a = dh;
     if (a < 0.0) a = -a;
@@ -133,9 +118,9 @@ s32 func_001d7b88(VM *vm) {
     vm->f54 = h * 2.0f / t2;
     vm->f58 = (ty - y0) * 2.0f / T / T - vm->f54 * 2.0f / T;
     v[1] = ty;
-    vm->flags.x |= 0x400;
+    vm->fl.x |= 0x400;
     v[2] = tz;
-    d = func_001e9ec0(v, vm->obj->pos);
+    d = func_001e9ec0(v, &vm->obj->pos.x);
     vm->f20 = d / T;
     vm->p[0] += (vm->f14[0] - vm->p[0]) / d * vm->f20;
     vm->p[2] += (vm->f14[2] - vm->p[2]) / d * vm->f20;
@@ -154,18 +139,6 @@ s32 func_001d7b88(VM *vm) {
     return 2;
 }
 
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
-typedef struct VmObj {
-    u8 pad0[8];
-    s32 f8;
-    u8 padc[4];
-    V4 pos;
-    V4 dir;
-    u8 pad30[0x60];
-    u64 f90;
-    u8 pad98[0xb8];
-    f32 f150;
-} Obj;
 typedef VmRec Ent;
 extern s32 D_0039A570;
 #include "data/pieces/D_0038D170.h"
