@@ -4,21 +4,6 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-/* Script VM handlers: obj at +4, top index at +0x180, value stack at +0x184.
- * The stack is indexed off &vm->u.s (vm+4) with a local copy of sp. */
-typedef struct {
-    void *obj;
-    u8 pad4[0x17c];
-    s32 stk[105];
-} Sub;
-typedef struct {
-    s32 x0;
-    union {
-        Sub s;
-        struct { void *obj; u8 pad[0x178]; s32 sp; } h;
-    } u;
-} VM;
-
 /* Menu window (0xb0 bytes); D_0062F6E0/D_0062F790/D_0062F840 and
  * D_00630300/D_006303B0/D_00630460 are runs of these. */
 #include "data/types/text_001e0000_h45.h"
@@ -28,8 +13,6 @@ typedef struct Actor { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; u8 pad3080[0x450]; s32 f34d0; } Big20;
 typedef struct { f32 x, y, z; } Vec3;
 typedef struct { s32 x0; s32 id; } Ent88;
-typedef struct { u8 pad[0xb10]; u32 tbl[4][5]; } Rec98s;
-typedef struct { s32 x0; Rec98s s; } Rec98;
 
 /* Message passed to func_001c4640. */
 
@@ -48,38 +31,17 @@ extern s32 D_003F7A68;
 #include "data/pieces/D_003DCD70.h"
 extern u8 D_003DD320[];
 
-int sprintf(char *, const char *, ...);
 Ent88 *func_001230a0(Ent88 *);
 s32 func_00123618(s32);
 void func_001caf58(void);
-Rec98 *func_00232cc0(s32);
 
 /* func_001e31b8, func_001e3600, func_001e3770, func_001e38b0, func_001e3b40, func_001e3c70, func_001e3dd0, func_001e3f20, func_001e4790, func_001e4868 are in src/shop/shop.c. */
-
-
-
-
-
-
-
-
 
 
 /* func_001e4990, func_001e4b08, func_001e4c20, func_001e5810, func_001e6ba8, func_001e6d20, func_001e7800 are in src/list/list.c. */
 
 
-
-
-
-
-
 /* func_001e7f08, func_001e8238, func_001e8560, func_001e8800, func_001e88e0, func_001e8a50, func_001e8bd8, func_001e8f68 are in src/event/sound.c. */
-
-
-
-
-
-
 
 
 /* func_001e9310 is in src/screen/wave.c. */
@@ -231,25 +193,8 @@ s32 func_001eab78(void) {
     return 2;
 }
 
-s32 func_001eb698(VM *vm) {
-    Sub *s = &vm->u.s;
-    s32 i = vm->u.h.sp;
-    s32 a = s->stk[i - 2];
-    s32 b = s->stk[i - 1];
-    u32 c = s->stk[i];
-    Rec98 *r = func_00232cc0(1);
-    Rec98s *q = &r->s;
-    s32 j, k;
-    for (j = 0; j < 5; j++) {
-        if (q->tbl[a][j] == -1 || (b == 0 && q->tbl[a][j] < c) || (b == 1 && q->tbl[a][j] > c)) {
-            for (k = 4; j < k; k--) q->tbl[a][k] = q->tbl[a][k - 1];
-            q->tbl[a][j] = c;
-            break;
-        }
-    }
-    vm->u.h.sp -= 3;
-    return 2;
-}
+/* func_001eb698 is in src/save/flags.c. */
+
 #include "data/bss_0063_typed.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"

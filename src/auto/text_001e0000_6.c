@@ -23,7 +23,6 @@ extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 s32 func_00147840(s32);
 s32 func_001ee768();
 s32 func_001efbb8();
-s32 func_00232cc0(s32);
 u32 func_001ee118();
 void func_001efaf0(void);
 void func_001efb58(s32);
@@ -41,9 +40,7 @@ void func_00232de0(void);
 /* func_001e3c08, func_001e44e0 are in src/shop/shop.c. */
 
 
-void func_001ec380(s32 arg0) {
-    M2C_FIELD(func_00232cc0(1), s8 *, 0xDD0) = (s8) arg0;
-}
+/* func_001ec380 is in src/save/flags.c. */
 
 s32 func_001ec9a8(void) {
     sceSifCallRpc(&D_003E3C88, 0x1F, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);

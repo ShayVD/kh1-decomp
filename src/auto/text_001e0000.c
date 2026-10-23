@@ -26,7 +26,6 @@ extern s32 D_0063F540;
 #include "data/pieces/D_003F34B8.h"
 s32 func_001ee768();
 s32 func_001efbb8();
-s32 func_00232cc0(M2C_UNK);
 u16 *func_00147840();
 u32 func_001ee118();
 void *func_001496c8();
@@ -58,25 +57,11 @@ void func_001ea430(void) {
 
 }
 
-s32 func_001eafd8(void) {
-    return func_00232cc0(1) + 0xAD1;
-}
+/* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
 
-s32 func_001eaff8(void) {
-    return func_00232cc0(1) + 0x904;
-}
 
-s32 func_001eb018(void) {
-    return func_00232cc0(1) + 0x909;
-}
 
-s32 func_001eb5f0(s32 arg0, s32 arg1) {
-    return M2C_FIELD(((((arg0 * 5) + arg1) * 4) + func_00232cc0(1)), s32 *, 0xB14);
-}
 
-void func_001eb640(s32 arg0, s32 arg1, s32 arg2) {
-    M2C_FIELD(((((arg0 * 5) + arg1) * 4) + func_00232cc0(1)), s32 *, 0xB14) = arg2;
-}
 
 void func_001ec7c0(s32 arg0) {
     D_003E3C80 = arg0;
