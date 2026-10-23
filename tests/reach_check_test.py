@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read; session 27-30 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-32 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -72,8 +72,10 @@ join = [lw(V1, A1, 0), lui(V0, 0x0047), beq(V1, 0, 3), addiu(V0, V0, 0x2160),
 stored = sorted(e[1] for e in run(join) if len(e) == 5 and e[4] == "stored")
 assert stored == [0x0046E120, 0x00472160], [hex(x) for x in stored]
 assert not [e for e in run(join, joins=False, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
-# (session 31, stored-idx: without joins the store is of the lowest address + an index, which stores that base)
-assert [e[1] for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120]
+# (session 31, stored-idx: without joins the store is of the lowest address + an index, which stores that base;
+# session 32, multi-base: the index carries the other address too, so both are stored)
+assert [e[1] for e in run(join, joins=False, multi_base=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120]
+assert [e[1] for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120, 0x00472160]
 
 # 4. a0 reused on one path (p = cond ? arg : other): the argument is not walked
 reuse = [beq(A1, 0, 2), NOP, lw(A0, A2, 0), lw(V0, A0, 8), JR_RA, NOP]
@@ -253,5 +255,69 @@ assert not [e for e in run(walk_, join_keep=False) if len(e) == 5 and e[4] == "i
 sti = [andi_(V0, A0, 0x1C), lui(V1, 0x0037), addiu(V1, V1, 0x0140), addu(V1, V1, V0), sw(V1, A1, 0), JR_RA, NOP]
 assert [e[1] for e in run(sti) if len(e) == 5 and e[4] == "stored"] == [0x00370140]
 assert not [e for e in run(sti, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
+
+# 17. multi-base (session 32): func_00219f98's `p = c ? D_003F4C68 : D_003F4C78; p[k * 2 + 1]` with k loaded: the SET
+# + an unknown index kept only the lower base, so B's unbounded index (B tied to its next name) was seen only in the
+# orders that visited the join point with B alone first. The IDX carries both bases, in every order.
+mb = [lw(S1, A2, 0), beq(A0, 0, 3), lui(V0, 0x003F), beq(0, 0, 2), addiu(V0, V0, 0x4C68), addiu(V0, V0, 0x4C78),
+      sll(V1, S1, 3), addu(A1, V1, V0), lw(V0, A1, 4), JR_RA, NOP]
+ibases = lambda ev: sorted({e[1] for e in ev if len(e) == 5 and e[4] == "idx" and e[2] is None})
+assert ibases(run(mb)) == [0x003F4C68, 0x003F4C78], [hex(x) for x in ibases(run(mb))]
+assert all(ibases(run(mb, visit_rng=random.Random(sd))) == [0x003F4C68, 0x003F4C78] for sd in range(16))
+assert ibases(run(mb, multi_base=False)) == [0x003F4C68]  # the old answer in the default order
+# the same through a join of two indexed values (each path indexes its own table): both bases, the store too
+mj = [lw(S1, A2, 0), sll(V1, S1, 3), beq(A0, 0, 4), lui(V0, 0x003F), addiu(V0, V0, 0x4C68), beq(0, 0, 3),
+      addu(A1, V1, V0), addiu(V0, V0, 0x4C78), addu(A1, V1, V0), lw(V0, A1, 4), sw(A1, A3, 0), JR_RA, NOP]
+assert all(ibases(run(mj, visit_rng=random.Random(sd))) == [0x003F4C68, 0x003F4C78] for sd in range(16))
+assert sorted(e[1] for e in run(mj) if len(e) == 5 and e[4] == "stored") == [0x003F4C68, 0x003F4C78]
+assert ibases(run(mj, multi_base=False)) == [0x003F4C68]
+# a join elsewhere of a walk's position with the walk's bounded range (an intermediate state some orders visit) is
+# not a choice either: p = c ? &D[k & 7] : &D[4]; *p: D + 16 is inside D + [0, 28], no second base
+mw = [andi_(V1, A1, 0x1C), lui(V0, 0x003F), beq(A0, 0, 3), addiu(V0, V0, 0x4C68), beq(0, 0, 2), addu(A1, V0, V1),
+      addiu(A1, V0, 0x10), lw(V0, A1, 0), JR_RA, NOP]
+assert all({e[1] for e in run(mw, visit_rng=random.Random(sd)) if len(e) == 5 and e[4] == "idx"} == {0x003F4C68}
+           for sd in range(16))
+# a loop head's join is a walk (D, D + 16, ...), not a choice: the walk's steps are not bases
+assert {e[1] for e in run(clear, countdown=False) if len(e) == 5 and e[4] == "idx"} == {0x003F8380}
+
+# 18. sign-prune (session 32): func_00169f28's `best = -1; ...; if (best >= 0) f(&D[best])`: a bltz on an exact -1 does
+# not fall through, so &D[-1] is never passed (an order that reached the test before the loop's states were joined
+# passed it and pinned the name before D)
+def bltz(rs, off): return (0x01 << 26) | (rs << 21) | (off & 0xFFFF)
+sp = [addiu(S0, 0, -1), bltz(S0, 5), sll(A1, S0, 4), lui(V0, 0x0057), addiu(V0, V0, 0x5090), addu(A1, V0, A1),
+      lw(V1, A1, 0), JR_RA, NOP]
+assert not [e for e in run(sp) if len(e) == 5 and e[1] == 0x00575080]
+assert (BASE + 24, 0x00575080, 0, 4, "mem") in run(sp, sign_prune=False)
+
+# 19. widen-bases (session 32): func_0021d348 leaves one of several state words' addresses in a1 at a call, each joined
+# with an unknown value (join-keep shadows). After SHADOW_MAX values the shadow is widened to the lowest base + an
+# unknown index, which kept only the lowest base; now it keeps every base, so an unbounded `passidx` (the callee may
+# index it) comes from each address in every order that widens
+mw5 = [lw(A1, A2, 0)]
+for k_ in range(5):
+    mw5 += [beq(S0 + k_ % 2, 0, 3), NOP, lui(A1, 0x003F), addiu(A1, A1, 0x34DC + 8 * k_)]
+mw5 += [jal(0x00207830), NOP, JR_RA, NOP]
+five = {0x003F34DC + 8 * k_ for k_ in range(5)}
+unb = lambda ev: {e[3] for e in ev if e[0] == "passidx" and e[4] is None}
+for sd in range(8):
+    ev = run(mw5, visit_rng=random.Random(sd))
+    assert {e[3] for e in ev if e[0] == "passidx"} == five and unb(ev) in (set(), five), (sd, unb(ev))
+assert any(unb(run(mw5, widen_bases=False, visit_rng=random.Random(sd))) not in (set(), five) for sd in range(8))
+
+# 20. termination (session 32): func_0025632c (memchr)'s byte loop `while (n-- != -1) if (*p++ == c) ...` with v1 =
+# 0xFFFFFFFF. --visit-seed 4 and 6 never ended: each shadow of 0xFFFFFFFF (not an image address: shadow-image) carried
+# a new offset of the argument walk, and the walk's two offsets joined to nothing while the next arrival came back as
+# the argument (arg-drop caps that at ARG_DROP_MAX). Every order ends, with the default order's events.
+def ori(rt, rs, v): return (0x0D << 26) | (rs << 21) | (rt << 16) | v
+def move(rd, rs): return (rs << 21) | (rd << 11) | 0x2D
+mc = [sltiu(V0, A2, 16), bne(V0, 0, 10), NOP, move(7, A0),  # n < 16: bytes; a3 = p
+      lw(V0, 7, 0), bne(V0, 0, 7), move(A0, 7),  # 16 bytes at a time while no hit (seeds 4, 22, 25, 28 did not end)
+      addiu(A2, A2, -16), sltiu(V0, A2, 16), beq(V0, 0, -6), addiu(7, 7, 16), move(A0, 7), NOP,
+      lui(V0, 0xFFFF), addiu(A2, A2, -1), ori(V0, V0, 0xFFFF), beq(A2, V0, 8), NOP, lui(V1, 0xFFFF), ori(V1, V1, 0xFFFF),
+      lbu(V0, A0, 0), beq(V0, A1, 4), addiu(A2, A2, -1), bne(A2, V1, -4), addiu(A0, A0, 1), JR_RA, NOP, JR_RA, NOP]
+nam = lambda ev: sorted(str(e) for e in ev if e[0] != "argmem")  # (an argument walk's offsets differ: it is argwide)
+want = nam(run(mc))
+assert ("argwide", 0) in run(mc) and all(nam(run(mc, visit_rng=random.Random(sd))) == want for sd in range(32))
+assert R._addressy(0xFFFFFFFF) and not R._addressy(0xFFFFFFFF, True) and R._addressy(0x003F4C68, True)
 
 print("reach_check_test: PASS")
