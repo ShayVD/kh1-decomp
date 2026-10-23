@@ -1257,6 +1257,91 @@ with float_covered.txt, float_reach.txt, the loaded bytes and the symbols the
 same as the base.  At the end `make report` 6979 at 100% and `make test`
 passes.
 
+## Session 43: the load screen, small screens, the shop's menu, 0x002298e0-0x002327b0
+
+Session 43 moved 138 functions in nine commits.  No Mac: static checks only.
+After page 7 the code is a run of small screens, each opened by itself
+(`D_003F34A4 = 1` or its own flag, a task through func_0011ef10 that closes
+it when its windows are gone) and each ending with its opener, which is how
+the range was split.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the load screen's card windows: the card task func_0022a698 (the directory "BISLPS-25198-??" into D_00643800, each save's 60-byte head into D_00645250, then the slot list func_00229ec0 on the newest save; step 20 loads the slot into D_003F8380 and starts it), the message boxes D_003F6E40 / D_003F6E70 ... D_003F6F00 with their title setters and openers, the status lines | src/menu/loadmenu.c | 0x002298e0-0x0022b248 | 17 |
+| the load screen's frame: opener func_0022bcb8 (D_003F34A4, the chain D_003F71A0 / D_003F71C8[5]), task func_0022bc28, the port window func_0022b410 (D_006437C4; no card: the box func_0022b2e0), the free-space bar func_0022b648, the open func_0022b8a0, the cursor reset func_0022bd20 | src/menu/loadframe.c | 0x0022b248-0x0022bd58 | 17 |
+| the game settings screen: opener func_0022d080 (D_003F7380), the step handler func_0022cde8 (D_006469B0 / B4) opening one window per setting of settings.c and a summary (func_0022bd58) | src/menu/gamesetup.c | 0x0022bd58-0x0022d138 | 9 |
+| a text screen: opener func_0022d4d8, five lines D_003F73B0 ... D_003F7470 that close one after another on the timers D_006469B8[k] once a button is pressed | src/menu/textfade.c | 0x0022d138-0x0022d728 | 10 |
+| three choice screens (openers func_0022daa0 / func_0022dee0 / func_0022e368, titles 0x5f / 0x1ce / 0x1d8, answers D_003F76B4 / B8 / BC); the three list handlers need -fno-fill | src/menu/choice.c (15), choice.nofill.c (3) | 0x0022d728-0x0022e458 | 18 |
+| a two-row choice screen with a sine pulse: opener func_0022eb00, list func_0022e460 (answer D_003F7778), the timers D_006469D8 ... D_006469F8 | src/menu/choice2.c | 0x0022e458-0x0022ebe8 | 6 |
+| the item shop's menu, buying: the list func_0022eef8 (*D_00646A08 items of D_00646A0C, the count D_00646A28, the party's portraits), the check func_0022ebf8 (D_00646A18), the purchase func_0022ee08 | src/shop/shopbuy.c | 0x0022ebe8-0x0022f818 | 7 |
+| selling: whose items func_0022fc88 (D_00646A24), the list builder func_0022f818 (D_00646A30 / D_00646E30 / D_00647230), the list func_0022fcb8, the check func_0022fa58 (D_00646A1C), the sale func_0022fba8 | src/shop/shopsell.c | 0x0022f818-0x002305b0 | 6 |
+| the same buy and sell lists for the goods of func_001ba3f0 / func_001ba458 (held / most), priced func_001eeaf0 / func_001eeb08, D_00647640 the total: most likely the Gummi blocks | src/shop/shopgummi.c | 0x002305b0-0x002316f8 | 8 |
+| the shop menu's opener func_00231740(mode, list, on_cursor, on_choice) (modes 0-3: buy, sell, the two gummi lists; src/shop/shop.c calls it), its task and wrappers | src/shop/shopframe.c | 0x002316f8-0x002319d0 | 9 |
+| the synthesis menu: opener func_00232640 (D_003F7E94), the recipes D_003F7C48 / D_003F7A70, the level func_001ec360 and the made-once flags D_00647670, the checks func_00231cd0 / func_00231dd0, the make func_00231b98, the ingredients func_00232390; the list func_00231ea0 needs -fforce-addr | src/shop/synth.c (13), synth.faddr.c (1) | 0x002319d0-0x002327b0 | 14 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x002298e0-0x0022b248 | 28e686f | auto text_00220000_7, _8 |
+| 0x0022b248-0x0022bd58 | f89f7c5 | auto text_00220000_2, _3, _12 |
+| 0x0022bd58-0x0022d138 | 1725a92 | h72 |
+| 0x0022d138-0x0022d728 | 5937f60 | auto text_00220000_9 |
+| 0x0022d728-0x0022e458 | 3141839 | auto text_00220000_5, nofill/text_00210000_b15 (nofill/text_00220000_b15 renamed to choice.nofill.c) |
+| 0x0022e458-0x0022ebe8 | 4f96f69 | c16, auto text_00220000_4, _6 |
+| 0x0022ebe8-0x002316f8 + the opener | e1fcb63 | auto text_00220000, _13, text_00230000_12, s6_22 (s8_w9 renamed to shopbuy.c) |
+| 0x00231908-0x002319d0 | 4d69581 | (nothing) |
+| 0x002319d0-0x002327b0 | 2323b7f | s7_w19 (faddr/text_00230000_s7 renamed to synth.faddr.c) |
+
+objdiff units 779 -> 772.  The names come from what the code reads; none is
+proved by a boot.  "Load screen" (a card's directory read, a slot loaded
+and started, D_003F720C = 1), "game settings" (one window per setting of
+src/menu/settings.c), "item shop" (munny func_001ef7a0, 99 a slot, called
+from src/shop/shop.c) and "synthesis" (recipes of ingredients and counts, a
+level that grows with what was made) are guesses from the data flow.
+
+**Types.**  All the window handlers now take TextWin (include/text/textwin.h)
+or page7.h's PtWin (+0xba / +0xc0 u16, which the title setters need); PtWin
+got `s16 xd0` in place of its pad (no code change).  The party is
+Save_304be8 / Sub_304be8 everywhere (shopbuy.c's func_0022ebf8 used a
+local EbMember view: m[k].sub.x21 / x22[] are its n / items[], x48e its
+party[], items[] its cnt[]).  func_001ef7a0 (munny), func_001ee708 and
+func_001eeaf0 (prices) are u32 in every file.
+
+**Data moved with its users**: D_00643800, D_006469A8 / AC, D_00646994,
+D_0064699C, D_0064524C (from s6_22) into loadmenu.c; D_006469D8 / E0 / E8 /
+F0 / F8 (from c16) into choice2.c; D_003F6568 (journal section 5's page
+table, initialized, from h72) into journal_s5.c as `u8 *[0xa]`.
+
+**Traps.**
+- **The deleted file's initialized data again**: h72 held D_003F6568 (no
+  function of h72 used it); `make` passed and only the float check saw it.
+  A file with no function left can still define data: grep it before
+  deleting (`grep -n "^[a-zA-Z][^(]*D_[0-9A-F]\{8\}[^;]*\(ALIGNED\|=\)"`).
+- **A void callee moves a store**: loadmenu.c declares func_0011d768 `s32`
+  (s6_22 did); with `void` func_0022a698's stores to D_006469A4 /
+  D_006437D8 come out in another order (3 words).  The other 16 functions
+  in the file match with either.
+- **An implicit declaration on purpose**: choice.nofill.c leaves
+  func_001f9438 undeclared as b15 did; a prototype swaps two argument loads
+  in two of the three handlers.
+- **lb vs lbu**: Dir40's name is `char`; the card task reads the slot
+  digits through `(u8 *)` (s6_22's view had `u8 name[]`).
+- m2c's no-argument calls (`func_001f42b8()`, `func_001ee708()`,
+  `func_001eeaf0()`, `func_001ba3f0()`) take the value still in a0: writing
+  the argument gives the same code everywhere here.
+- One rodata block fewer (229, 9,740 input sections in the shift build):
+  the three nofill handlers' doubles 0.08 now share one .rodata of 0x18
+  bytes; they are contiguous in the original (0x004912f0 ...), so the bytes
+  and the float layout are the same.
+- Leftovers: s6_23 keeps its section-by-section declarations (`#define
+  func_001ef7a0 func_001ef7a0_s1` ...) for func_002327b0 and func_00234910,
+  the two functions left in it.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings in the edited
+and new files, and the m12 float build with float_covered.txt,
+float_reach.txt, the loaded bytes and the symbols the same as the base.  At
+the end `make report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1353,7 +1438,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 42, after each step)
+## Verification (sessions 30 to 43, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1369,18 +1454,20 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x002298e0 on.**  Page 5 and page 7 are done (session 42).  Next is the
-  window D_003F6E40 (func_002298e0, a status line like func_00228760) and a
-  second set of memory card windows on D_00646990 (func_00229928 ...
-  func_00229e78, the slot list func_00229ec0 in c16: most likely the load
-  screen of the title menu, like savemenu.c's), then from 0x0022a3a0 on more
-  of the same old files.  Old files there: auto text_00220000*, c16, s6_22,
-  h25, h48, h72, h73, b15, nofill/b15 ...; `python3 -I
-  tools/shift/s37move/refs.py 002298e0 00230000` lists them.  Find the
-  openers first (h48's func_0022b2e0 / func_0022b8a0 ... and the window
-  tables in data_003F.s after D_003F6E40) and split by them.
-- What is left of s6_22, h25, h48, h72 and b15 after that (h24, h47, h71,
-  c15, cc are gone).
+- **0x002327b0 on.**  The menus up to the synthesis menu are done (session
+  43).  Next: func_002327b0 (s6_23, a list on D_006476F8 ...) with its
+  opener func_002329a0 (h48, D_003F7EC4, task func_00232960) and
+  func_00232aa8 / func_00232ac8; then func_00232ad0 ... func_00232da0 (h73,
+  h25: clear D_003F8380 (the 0x16c00-byte buffer the load screen reads a
+  save into) or one of its parts D_003F8F80 ... D_0040EF80 by number,
+  most likely the save data's image) and on from 0x00232de0 (the memory
+  card requests func_00233d08 ... func_002348d0 the save and load windows
+  call: a memcard wrapper candidate, docs/portability.md).  Old files there:
+  s6_23, h25, h48, h73, b15, c2, s8_w7, s8_w8, sw, auto text_00230000*;
+  `python3 -I tools/shift/s37move/refs.py 002327b0 00236000` lists them.
+  Split by the openers (a func_0011ef10 call) as in session 43.
+- What is left of s6_23, h25, h48, h73 and b15 after that (s6_22, c16,
+  h72, h24, h47, h71, c15, cc are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
