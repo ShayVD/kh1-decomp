@@ -45,6 +45,7 @@ struct VmObj {
         u64 flags;
         u8 col[4];          /* func_001cf210 */
         struct { u32 lo; u32 p:12; u32 b44:1; u32 hi:19; } b;  /* h44's func_001d95f0 */
+        struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } k;  /* bits 37-38: func_001dc3c0 */
     } f370;                 /* 0x370 */
 };
 

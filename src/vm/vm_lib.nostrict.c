@@ -89,3 +89,20 @@ void func_001d9510(VmRec *vm) {
     temp_f1_3 = VMF(vm, f32, 0x34);
     VMF(temp_v0, f32, 0x38) = (f32) (temp_f1_3 + ((VMF(vm, f32, 0x40) - temp_f1_3) * (VMF(vm, f32, 0x48) / VMF(vm, f32, 0x44))));
 }
+
+/* func_001d95f0 .. func_001dbd90 are in vm_lib.c. */
+
+void func_001dbd90();
+s32 func_001559f0(s32, s32);
+s32 func_00120748(void *, s32, void (*)(), s32);
+extern u8 D_004906C0[];
+
+/* Load file (stk[sp-1], stk[sp]) and start it with func_001dbd90 as the
+ * callback (flag 9 of 0x3078 until then). */
+s32 func_001dbdc8(VmRec *vm) {
+    s32 r = func_001559f0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    func_00120748(D_004906C0, r, func_001dbd90, 0);
+    D_00389C90.f3078.x |= 0x200;
+    vm->sp -= 2;
+    return 2;
+}

@@ -63,82 +63,9 @@ void func_001e2810(void);
 
 
 
-s32 func_001dc000(VM *vm) {
-    VmMsg m;
-    m.type = 44;
-    m.val = (u32)vm->stk[vm->sp];
-    m.x = vm->x0;
-    m.v[0] = vm->stk[vm->sp - 4] / 255.0f;
-    m.v[1] = vm->stk[vm->sp - 3] / 255.0f;
-    m.v[2] = vm->stk[vm->sp - 2] / 255.0f;
-    m.v[3] = vm->stk[vm->sp - 1] * 0.0078125f;
-    func_001c4640(&m);
-    vm->sp -= 5;
-    return 2;
-}
-
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[0x370 - 8]; union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b; } f370; } Obj3;
-Obj3 *func_001230a0(Obj3 *);
-s32 func_001dc3c0(void) {
-    VmMsg m;
-    Obj3 *o;
-    m.type = 27;
-    m.val = 0;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.v[3] = 1.0f;
-    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
-        if (o->f370.b.kind == 2) {
-            m.x = o->f4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
-
-s32 func_001dc470(void) {
-    VmMsg m;
-    Obj3 *o;
-    m.type = 28;
-    m.val = 0;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.v[3] = 1.0f;
-    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
-        if (o->f370.b.kind == 2) {
-            m.x = o->f4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
 
 #include "data/pieces/D_0037A178.h"
-s32 func_001dc8c8(VM *vm) {
-    s32 id = vm->stk[vm->sp - 1];
-    s32 v, q, b;
-    u32 *p;
-    if (id < 0 || id >= 128) {
-        vm->sp -= 2;
-        return 2;
-    }
-    v = vm->stk[vm->sp];
-    if (v < 0 || v >= 2) {
-        vm->sp -= 2;
-        return 2;
-    }
-    q = id / 32;
-    b = 31 - (id - q * 32);
-    if (v) {
-        D_0037A178[q] |= 1 << b;
-    } else {
-        D_0037A178[q] &= ~(1 << b);
-    }
-    vm->sp -= 2;
-    return 2;
-}
 
 #include "data/pieces/D_0038D170.h"
 #include "data/pieces/D_0039A580.h"
@@ -566,15 +493,6 @@ s32 func_001e2920(void) {
 
 #include "data/types/text_001d0000_h44_p.h"
 extern Tbl55 D_004906D0;
-void func_001ba358(s32, s32);
-s32 func_001dc140(void) {
-    Tbl55 t = D_004906D0;
-    u32 i;
-    for (i = 0; i < 55; i++) {
-        func_001ba358(t.a[i], 99);
-    }
-    return 2;
-}
 
 extern char D_003DACD8[][6];
 extern u8 D_00F20000[];

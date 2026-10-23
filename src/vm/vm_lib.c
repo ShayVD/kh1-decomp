@@ -51,6 +51,9 @@
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
+#include "data/pieces/D_0037A178.h"
+#include "data/pieces/D_004906D0.h"
+#include "data/pieces/D_003773E0.h"
 #include "data/pieces/D_003773D8.h"
 #include "data/pieces/D_003773D4.h"
 #include "data/pieces/D_003773D0.h"
@@ -4720,6 +4723,361 @@ s32 func_001dba30(VmRec *vm) {
 s32 func_001dba88(VmRec *vm) {
     D_003773CC(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
     vm->sp -= 2;
+    return 2;
+}
+
+/* ---- 0x001dbae0-0x001dcad0 ---- */
+
+void func_0011ea10();
+void func_001763f0(s32);
+s32 func_0013bf90(s32);
+s32 func_001259b0(s32);
+void func_001ba358(s32, s32);
+s32 func_001f1e98(s32, s32, s32, s32, s32);
+s32 func_001f2d68(s32, s32, s32, s32, s32, u16, s32, s32);
+s32 func_0013bf68();
+s32 func_0022dee0(s32);
+s32 func_001c1df8(void);
+s32 func_002193f0(void);
+s32 func_0021add8();
+extern s32 D_002BCA04;
+extern s32 D_0038D160;
+extern s32 D_002B6474;
+extern s32 D_003F76B8;
+
+s32 func_001dbae0(void) {
+    D_002C5958 |= 0x20;
+    return 2;
+}
+
+s32 func_001dbb00(void) {
+    D_002C5958 &= ~0x20;
+    return 2;
+}
+
+s32 func_001dbb20(void) {
+    D_00389C90.f3078.x &= ~0x80;
+    return 2;
+}
+
+s32 func_001dbb40(void) {
+    D_00389C90.f3078.x |= 0x80;
+    return 2;
+}
+
+s32 func_001dbb60(VmRec *vm) {
+    s32 sp = vm->sp;
+    if (D_002BCA04 & vm->stk[sp]) {
+        vm->sp = sp - 1;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001dbba0(VmRec *vm) {
+    D_003773D0(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001dbbf0(void) {
+    D_002C5958 |= 0x200000;
+    return 2;
+}
+
+s32 func_001dbc10(void) {
+    D_002C5958 &= 0xFFDFFFFF;
+    return 2;
+}
+
+s32 func_001dbc38(VmRec *vm) {
+    D_003773D4(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dbc90(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D160;
+    return 2;
+}
+
+void func_001dbcb8(void) {
+    D_00389C90.f3078.x &= ~0x100;
+}
+
+s32 func_001dbcd8(VmRec *vm) {
+    D_00389C90.f3078.x |= 0x100;
+    func_0011ea10(func_001dbcb8, D_00F20000);
+    return 2;
+}
+
+/* The auto file's call passes the third argument as a u64 (h19's
+ * func_001dbcd8 passes two), so func_0011ea10 is unprototyped here. */
+s32 func_001dbd20(void) {
+    D_00389C90.f3078.x |= 0x100;
+    ((void (*)(void *, void *, u64))func_0011ea10)(func_001dbcb8, &D_003DABD4, 0x100);
+    return 2;
+}
+
+s32 func_001dbd68(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 8) & 1) return 4;
+    return 2;
+}
+
+void func_001dbd90(s32 a0, s32 a1, s32 a2) {
+    func_001763f0(a2);
+    D_00389C90.f3078.x &= ~0x200;
+}
+
+/* func_001dbdc8 is in vm_lib.nostrict.c. */
+
+s32 func_001dbe50(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 9) & 1) return 4;
+    return 2;
+}
+
+/* Member stk[sp]'s x36 (low byte). */
+s32 func_001dbe78(VmRec *vm) {
+    vm->stk[vm->sp] = *((u8 *)D_00304BE8 + vm->stk[vm->sp] * 0x74 + 0x36);
+    return 2;
+}
+
+s32 func_001dbec0(VmRec *vm) {
+    D_003773D8(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001dbf20(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        if (vm->obj->x0 & 0x4000) vm->stk[vm->sp] = 1;
+        else vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001dbf68(VmRec *vm) {
+    vm->fl.x |= 4;
+    vm->x2f4 = (f32)vm->stk[vm->sp] * 2 / 100.0f;
+    vm->sp -= 1;
+    return 6;
+}
+
+s32 func_001dbfb8(VmRec *vm) {
+    func_0013bf90(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* Message 44: colour stk[sp-4..sp-2] / 255, stk[sp-1] / 128. */
+s32 func_001dc000(VmRec *vm) {
+    VmMsg m;
+    m.type = 44;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 4] / 255.0f;
+    m.v[1] = vm->stk[vm->sp - 3] / 255.0f;
+    m.v[2] = vm->stk[vm->sp - 2] / 255.0f;
+    m.v[3] = vm->stk[vm->sp - 1] * 0.0078125f;
+    func_001c4640(&m);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001dc100(void) {
+    func_001259b0(1);
+    return 2;
+}
+
+s32 func_001dc120(void) {
+    func_001259b0(0);
+    return 2;
+}
+
+s32 func_001dc140(void) {
+    Tbl55 t = D_004906D0;
+    u32 i;
+    for (i = 0; i < 55; i++) {
+        func_001ba358(t.a[i], 99);
+    }
+    return 2;
+}
+
+/* D_003773E8 gets stk[sp] and vm + 4 sp (the auto file's form). */
+s32 func_001dc280(VmRec *vm) {
+    s8 *p = (s8 *)(vm->sp * 4 + (s32)vm);
+    if (!(D_003773E8(*(s32 *)(p + 0x184), p) != 0)) {
+        return 4;
+    }
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001dc2e0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002B6474;
+    return 2;
+}
+
+s32 func_001dc308(VmRec *vm) {
+    s8 *p = func_00232cc0(1);
+    vm->sp++;
+    vm->stk[vm->sp] = (*(u32 *)(p + 0xdc4) >> 4) & 1;
+    return 2;
+}
+
+s32 func_001dc358(VmRec *vm) {
+    if (D_003773C8(vm->stk[vm->sp - 1], vm->stk[vm->sp])) {
+        vm->sp -= 2;
+        return 2;
+    }
+    return 4;
+}
+
+/* Message 27 (func_001dc3c0) or 28 (func_001dc470) to every entity whose
+ * flag bits 37-38 are 2. */
+s32 func_001dc3c0(void) {
+    VmMsg m;
+    struct VmObj *o;
+    m.type = 27;
+    m.val = 0;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.v[3] = 1.0f;
+    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
+        if (o->f370.k.kind == 2) {
+            m.x = o->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001dc470(void) {
+    VmMsg m;
+    struct VmObj *o;
+    m.type = 28;
+    m.val = 0;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.v[3] = 1.0f;
+    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
+        if (o->f370.k.kind == 2) {
+            m.x = o->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001dc520(VmRec *vm) {
+    D_00377374(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+/* The counters screen func_001dc7c0 shows: labels 0x1af-0x1b6 and the
+ * save's u16 counters at 0x84e .. 0x866 (in its pad). */
+#define SAVE_U16(off) (*(u16 *)((s8 *)D_00304BE8 + (off)))
+s32 func_001dc580(void) {
+    func_001f1e98(0x80FFFFFF, 0x46, 0x14, 0x1AF, 0x10);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x28, 0x1B0, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x3D, SAVE_U16(0x856), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x50, 0x1B1, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x65, SAVE_U16(0x866), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x78, 0x1B2, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x8D, SAVE_U16(0x85C), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xA0, 0x1B3, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0xB5, SAVE_U16(0x862), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xC8, 0x1B4, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0xDD, SAVE_U16(0x860), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xF0, 0x1B5, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x105, SAVE_U16(0x864), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x118, 0x1B6, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x12D, SAVE_U16(0x84E), 0x10, 0x80FFFFFF);
+    return 0;
+}
+
+s32 func_001dc7c0(void) {
+    if (func_0013bf68() == 1) {
+        func_0011ef10(190001, (s32 (*)(void))func_001dc580);
+    }
+    return 2;
+}
+
+s32 func_001dc800(VmRec *vm) {
+    s32 r;
+    vm->sp++;
+    r = func_0013bf68();
+    if (r == 1) {
+        vm->stk[vm->sp] = r;
+        return 2;
+    }
+    vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001dc868(VmRec *vm) {
+    vm->sp++;
+    if (!func_002193f0()) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+/* Set (stk[sp] 1) or clear (0) flag stk[sp-1] (0-127) of D_0037A178,
+ * most significant bit first; func_001dc9a0 reads one. */
+s32 func_001dc8c8(VmRec *vm) {
+    s32 id = vm->stk[vm->sp - 1];
+    s32 v, q, b;
+    if (id < 0 || id >= 128) {
+        vm->sp -= 2;
+        return 2;
+    }
+    v = vm->stk[vm->sp];
+    if (v < 0 || v >= 2) {
+        vm->sp -= 2;
+        return 2;
+    }
+    q = id / 32;
+    b = 31 - (id - q * 32);
+    if (v) {
+        D_0037A178[q] |= 1 << b;
+    } else {
+        D_0037A178[q] &= ~(1 << b);
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dc9a0(VmRec *vm) {
+    if ((u32)vm->stk[vm->sp] >= 128) return 2;
+    vm->stk[vm->sp] = (D_0037A178[vm->stk[vm->sp] / 32] >> (31 - vm->stk[vm->sp] % 32)) & 1;
+    return 2;
+}
+
+s32 func_001dca00(void) {
+    func_0022dee0(0xFFFF);
+    func_0011ef10(50001, func_001c1df8);
+    D_00389C90.f3078.x |= 0x1000;
+    return 6;
+}
+
+s32 func_001dca48(VmRec *vm) {
+    vm->sp++;
+    if (!D_003F76B8) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+/* Not a table entry, but a library function like the others (push
+ * func_0021add8()), the last before the dispatcher. */
+s32 func_001dca88(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_0021add8();
     return 2;
 }
 

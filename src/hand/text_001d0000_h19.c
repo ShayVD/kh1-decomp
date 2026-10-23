@@ -51,11 +51,8 @@ extern void (*D_003773D4)(s32, s32);
 extern void (*D_003773D8)(s32, s32, s32);
 extern s32 (*D_003773C8)(s32, s32);
 extern void (*D_00377374)(s32, s32, s32);
-s32 func_002193f0(void);
-extern u64 D_0038CD08;
 extern u64 D_0038CD00;
 #include "data/pieces/D_0037A178.h"
-extern s32 D_003F76B8;
 extern s32 D_0062A220;
 extern s32 D_0062A224;
 extern s32 D_0062A628;
@@ -73,98 +70,10 @@ M64 *func_001623e0(s32);
 void func_001318e8(HSub4 *, s32, void *);
 void func_00147e08(HObj *, void *);
 typedef struct { u8 pad0[0x3078]; u64 f3078; } Big19;
-extern Big19 D_00389C90;
-s32 D_00F20000();
-void func_001dbcb8();
-void func_0011ea10(void (*)(), s32 (*)());
 s32 func_001559f0(s32, s32);
 typedef W606Mem_304be8 E116;
 #include "data/pieces/D_00304BE8.h"
 
-s32 func_001dbba0(VM *vm) {
-    D_003773D0(vm->stk[vm->sp]);
-    vm->sp -= 1;
-    return 2;
-}
-
-s32 func_001dbc38(VM *vm) {
-    D_003773D4(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001dbcd8(VM *vm) {
-    D_00389C90.f3078 |= 0x100;
-    func_0011ea10(func_001dbcb8, D_00F20000);
-    return 2;
-}
-
-s32 func_001dbd68(VM *vm) {
-    if ((s32)(D_0038CD08 >> 8) & 1) return 4;
-    return 2;
-}
-
-
-s32 func_001dbe50(VM *vm) {
-    if ((s32)(D_0038CD08 >> 9) & 1) return 4;
-    return 2;
-}
-
-s32 func_001dbec0(VM *vm) {
-    D_003773D8(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 3;
-    return 2;
-}
-
-s32 func_001dbf20(VM *vm) {
-    vm->sp++;
-    if (vm->obj) {
-        if (vm->obj->flags & 0x4000) vm->stk[vm->sp] = 1;
-        else vm->stk[vm->sp] = 0;
-    }
-    return 2;
-}
-
-s32 func_001dbf68(VM *vm) {
-    vm->flags.x |= 4;
-    vm->f2f4 = (f32)vm->stk[vm->sp] * 2 / 100.0f;
-    vm->sp -= 1;
-    return 6;
-}
-
-s32 func_001dc358(VM *vm) {
-    if (D_003773C8(vm->stk[vm->sp - 1], vm->stk[vm->sp])) {
-        vm->sp -= 2;
-        return 2;
-    }
-    return 4;
-}
-
-s32 func_001dc520(VM *vm) {
-    D_00377374(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 3;
-    return 2;
-}
-
-s32 func_001dc868(VM *vm) {
-    vm->sp++;
-    if (!func_002193f0()) vm->stk[vm->sp] = 1;
-    else vm->stk[vm->sp] = 0;
-    return 2;
-}
-
-s32 func_001dc9a0(VM *vm) {
-    if ((u32)vm->stk[vm->sp] >= 128) return 2;
-    vm->stk[vm->sp] = (D_0037A178[vm->stk[vm->sp] / 32] >> (31 - vm->stk[vm->sp] % 32)) & 1;
-    return 2;
-}
-
-s32 func_001dca48(VM *vm) {
-    vm->sp++;
-    if (!D_003F76B8) vm->stk[vm->sp] = 1;
-    else vm->stk[vm->sp] = 0;
-    return 2;
-}
 
 s32 func_001dd170(void) {
     s32 *p = &D_0062A220;

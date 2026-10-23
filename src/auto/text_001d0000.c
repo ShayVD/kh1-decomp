@@ -2,83 +2,20 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_001259b0(M2C_UNK);
-M2C_UNK func_0013bf90(s32);
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
-extern s32 D_002B6474;
 extern s32 D_002BC128;
-extern s32 D_002BCA04;
 extern s32 D_002BCC1C;
 extern s32 D_002BD110;
-extern s32 D_002C5958;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_0037A378.h"
 extern s32 D_0062A220;
 extern s32 D_0062A224;
 #include "data/pieces/D_002C6440.h"
-s32 func_0021add8();
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001dbae0(void) {
-    D_002C5958 |= 0x20;
-    return 2;
-}
-
-s32 func_001dbb00(void) {
-    D_002C5958 &= ~0x20;
-    return 2;
-}
-
-s32 func_001dbb60(void *arg0) {
-    s32 temp_a1;
-
-    temp_a1 = M2C_FIELD(arg0, s32 *, 0x180);
-    if (D_002BCA04 & M2C_FIELD(((temp_a1 * 4) + arg0), s32 *, 0x184)) {
-        M2C_FIELD(arg0, s32 *, 0x180) = (s32) (temp_a1 - 1);
-        return 2;
-    }
-    return 4;
-}
-
-s32 func_001dbbf0(void) {
-    D_002C5958 |= 0x200000;
-    return 2;
-}
-
-s32 func_001dbfb8(void *arg0) {
-    func_0013bf90(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001dc100(void) {
-    func_001259b0(1);
-    return 2;
-}
-
-s32 func_001dc120(void) {
-    func_001259b0(0);
-    return 2;
-}
-
-s32 func_001dc2e0(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_002B6474;
-    return 2;
-}
-
-s32 func_001dca88(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) + 1);
-    M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184) = func_0021add8();
-    return 2;
-}
 
 void func_001dd1f0(s32 arg0, s32 arg1) {
     D_0062A220 = arg0;
