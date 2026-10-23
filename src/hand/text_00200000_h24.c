@@ -5,19 +5,6 @@
 typedef W606Mem_304be8 S4BE8e;
 
 #include "data/pieces/D_003F34B8.h"
-typedef S34B8_3f34b8 S34B8;
-
-void func_00219128(void) {
-    S34B8 *p = D_003F34B8;
-    p->f2c = 1;
-    p->f8 = 0;
-    p->f4 = 0;
-    p->fc = 0;
-    p->f10 = 0;
-    p->f14 = 0;
-    p->f18 = 0;
-    p->f0 = 0;
-}
 
 #include "data/pieces/D_003F59A0.h"
 extern f32 D_003F59B0;
@@ -158,30 +145,4 @@ void func_00222ab0(void) {
 }
 
 /* needs make: uses rodata */
-
-s32 func_00219158(s32 a0) {
-    switch (a0) {
-    case 0: return D_003F34B8->f0;
-    case 1: return D_003F34B8->f4;
-    case 2: return D_003F34B8->f8;
-    case 3: return D_003F34B8->f10;
-    case 4: return D_003F34B8->f14;
-    case 5: return D_003F34B8->f18;
-    case 6:
-    default: return D_003F34B8->f2c;
-    }
-}
-
-void func_002191f0(s32 a0, s32 a1) {
-    switch (a0) {
-    case 0: D_003F34B8->f0 = a1; break;
-    case 1: D_003F34B8->f4 = a1; break;
-    case 2: D_003F34B8->f8 = a1; break;
-    case 3: D_003F34B8->f10 = a1; break;
-    case 4: D_003F34B8->f14 = a1; break;
-    case 5: D_003F34B8->f18 = a1; break;
-    case 6:
-    default: D_003F34B8->f2c = a1; break;
-    }
-}
 #include "data/data_003F.h"

@@ -7,13 +7,8 @@ M2C_UNK func_0021ccd0(s32, M2C_UNK);
 extern M2C_UNK D_003F47B8;
 extern M2C_UNK D_003F4BD0;
 extern s32 D_00642D24;
-#include "data/pieces/D_003F34B8.h"
 void func_001f9010(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-
-void func_002192e8(s32 arg0) {
-    M2C_FIELD(D_003F34B8, s32 *, 4) = arg0;
-}
 
 void func_00219478(s32 arg0) {
     func_001f9010(0x17);

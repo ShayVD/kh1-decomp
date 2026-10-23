@@ -11,23 +11,6 @@ extern s32 D_003F34F4;
 extern s32 D_003F3504;
 extern s32 D_003F3514;
 extern s32 D_003F351C;
-#include "data/pieces/D_003F34B8.h"
-
-void func_00219320(s32 arg0) {
-    M2C_FIELD(D_003F34B8, s32 *, 8) = arg0;
-}
-
-s32 func_00219330(void) {
-    return 0;
-}
-
-s32 func_00219338(void) {
-    return 0;
-}
-
-void func_00219340(void) {
-
-}
 
 void func_0021b470(void) {
     D_003F3504 += 1;
