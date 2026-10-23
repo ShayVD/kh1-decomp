@@ -2,42 +2,7 @@
 #include "data/bss_0066.h"
 /* func_001cdcb8 is in src/vm/vm_lib.c. */
 
-/* func_001f0448: needs CONTEXT_ONLY func_001efba8 above; the q-loop divides by a local `ten` set before the pad test */
-extern s32 D_003E8E04;
-CONTEXT_ONLY s32 func_001efba8(void) { return D_003E8E04; }
-
-s32 func_001f0448(s32 n, s32 pad, s32 val, s32 w) {
-    s32 buf[10];
-    s32 neg = 0;
-    s32 cnt;
-    s32 i;
-    s32 ws = w * 16;
-    if (val == 0) {
-        if (n == 0 || pad == 0) {
-            buf[0] = 0;
-            cnt = 1;
-        } else {
-            for (i = n - 1; i >= 0; i--) buf[i] = 0;
-            cnt = n;
-        }
-    } else {
-        if (val < 0) { val = -val; neg = 1; }
-        if (n == 0) {
-            cnt = 0;
-            do { buf[cnt++] = val % 10; val /= 10; } while (val != 0 && cnt < 10);
-        } else {
-            s32 ten;
-            cnt = 0;
-            ten = 10;
-            if (pad == 0) {
-                do { buf[cnt++] = val % 10; val /= 10; } while (val != 0 && cnt < n);
-            } else {
-                s32 *q = buf; do { if (val == 0) { *q = 0; q++; cnt++; } else { cnt++; *q = val % ten; val /= ten; q++; } } while (cnt < n);
-            }
-        }
-    }
-    return (cnt + neg) * (ws + func_001efba8()) >> 4;
-}
+/* func_001f0448 is in src/text/text.c. */
 
 /* func_0024d1c8: func_001f31a8 declared s32 (not void) */
 extern s32 D_00669A60, D_00669A64, D_00669A7C, D_0046A55C, D_00669A68, D_00669A6C, D_00669A5C;

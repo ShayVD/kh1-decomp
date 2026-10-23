@@ -1,32 +1,14 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_001f0148(s32, s32);
-M2C_UNK func_001f15f0(s32, s32, s32, s32, s32, s32, s32);
-M2C_UNK func_001f1f58(M2C_UNK, s32, s32, s32, s32, s32);
 M2C_UNK func_001f3698(M2C_UNK *, s32);
 extern M2C_UNK D_0063F758; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern f32 D_002BBDFC;
-s32 func_001efbb8();
-s32 func_001eff50(s32);
 s32 func_001f31a8(s32, s32);
 s32 func_001f86e0(s32, s32, s32, s32, s32);
 void func_001f5fe0(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 void func_001fefc8(s32, s32, s32, s32, s32);
-
-void func_001f0118(s32 arg0, s32 arg1) {
-    func_001f0148(func_001efbb8(), arg1);
-}
-
-void func_001f1868(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
-    func_001f15f0(arg0, arg1, arg2, arg3, arg4, func_001eff50(arg5), arg6);
-}
-
-void func_001f1e98(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    func_001f1f58(0, arg0, arg1, arg2, arg3, arg4);
-}
 
 s32 func_001f3520(s32 arg0, s32 arg1) {
     s32 temp_v0;

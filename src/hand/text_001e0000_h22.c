@@ -1,11 +1,6 @@
 #include "common.h"
 
 #include "data/types/text_001e0000_h22.h"
-#include "data/pieces/D_003E8E28.h"
-
-s32 func_001f0600(s32 i, s32 b) {
-    return ((D_003E8E28[i].w << 4) * b / 18) >> 4;
-}
 
 typedef struct Obj {
     u8 pad[0xc];
