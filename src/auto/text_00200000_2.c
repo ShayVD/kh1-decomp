@@ -11,20 +11,7 @@ M2C_UNK func_002365e0();
 extern f32 D_00641218;
 extern s32 D_003F34C8;
 extern s32 D_006411FC;
-#include "data/pieces/D_003F34B8.h"
 s32 func_001f40c8();
-
-void func_00206f20(void) {
-    M2C_FIELD(D_003F34B8, s32 *, 0x38) = 0;
-}
-
-void func_002071b8(void) {
-    M2C_FIELD(D_003F34B8, s32 *, 0x68) = 0;
-}
-
-void func_00207358(void) {
-    M2C_FIELD(D_003F34B8, s32 *, 0x70) = 0;
-}
 
 void func_0020a6b8(void) {
 
