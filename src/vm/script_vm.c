@@ -67,7 +67,7 @@ typedef struct {
     s32 x18;
 } VmTask;
 
-typedef struct { u8 pad[16]; f32 pos[4]; } Actor;
+typedef struct Actor { u8 pad[16]; f32 pos[4]; } Actor;
 typedef struct { s32 x0; s32 id; } Obj;
 
 /* The message queues: D_006257E0 (VMs -> game: func_001c4640 puts,
@@ -579,7 +579,7 @@ s32 func_001c1e30(void) {
     f32 mn[4], mx[4], p[4];
     s32 i;
     if (D_002E26A0[0] == 0) return 0;
-    func_002675a8(p, (*(Actor **)&D_002E26A0)->pos);
+    func_002675a8(p, D_002E26A0[0]->pos);
     for (i = 0; i < D_00389C90.nbox; i++) {
         mn[0] = D_00389C90.u.box[i].c[0] - D_00389C90.u.box[i].s[0] * 0.5f;
         mn[1] = D_00389C90.u.box[i].c[1] - D_00389C90.u.box[i].s[1] * 0.5f;
