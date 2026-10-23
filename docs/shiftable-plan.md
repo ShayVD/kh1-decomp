@@ -3336,3 +3336,11 @@ s31_tag / s31_warndiff.  s27_check needs `out/gen/objects.mk`, so run `make`
 once in a fresh worktree.  A fresh worktree's
 `make shift ... SHIFT_FLOAT=1` needs `python3 -I tools/shift/data_owners.py`
 first, to write out/shift/data_owners.tsv.
+
+Later in session 32 (worker s32module2): D_00389C90's last two casts are
+gone (survey 20 -> 18 view casts, 12 pieces).  include/vm/vm_mgr.h no longer
+has the union at 0x3180: `box[10]` stops before the slots and `e[8]` (0x3384)
+is a plain field, so `D_00389C90.e[i].obj / .ret` folds the offset in one
+step as h18's Big2 view did.  script_vm.c's `u.s.e[i]` / `u.box[i]` became
+`e[i]` / `box[i]`; s30_hdrdiff gave SAME for every includer and `make` stayed
+byte-identical (docs/modules.md, session 32 "Second half").
