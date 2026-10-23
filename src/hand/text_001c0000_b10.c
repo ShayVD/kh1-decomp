@@ -536,9 +536,9 @@ s32 func_001d2c68(VM *vm) {
     func_001c4640(&m);
     vm->f20 = s;
     vm->fl.b.b2 = 1;
-    vm->f14 = vm->stk[vm->sp - 2];
-    vm->f18 = vm->stk[vm->sp - 1];
-    vm->f1c = vm->stk[vm->sp];
+    vm->f14[0] = vm->stk[vm->sp - 2];
+    vm->f14[1] = vm->stk[vm->sp - 1];
+    vm->f14[2] = vm->stk[vm->sp];
     vm->sp -= 4;
     vm->x2f4 = r * (2.0f - D_002BBDFC + 2.0f);
     return 6;

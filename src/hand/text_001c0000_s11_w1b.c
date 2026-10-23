@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/types/vm_rec.h"
-/* func_001c3b10 (s11w1, hand strict): from s10 r2_3 (4w nostrict, 2w strict); the x18 loop stores the msg fields straight from w in struct order (m.x = w->x0; m.v[0..2] = w->f14..f1c), which fixes the lwc1 x14/x18 issue order and FP registers. */
+/* func_001c3b10 (s11w1, hand strict): from s10 r2_3 (4w nostrict, 2w strict); the x18 loop stores the msg fields straight from w in struct order (m.x = w->x0; m.v[0..2] = w->f14[0..2]), which fixes the lwc1 x14/x18 issue order and FP registers. */
 
 typedef VmRec VMa;
 
@@ -136,7 +136,7 @@ s32 func_001c3b10(Task *t) {
                     if (w->fl.b.b0 == 1) {
                         m.type = 2;
                         m.val = (u32)w->f20;
-                        m.x = w->x0; m.v[0] = w->f14; m.v[1] = w->f18; m.v[2] = w->f1c;
+                        m.x = w->x0; m.v[0] = w->f14[0]; m.v[1] = w->f14[1]; m.v[2] = w->f14[2];
                         m.v[3] = 10.0f;
                         func_001c4640(&m);
                     }

@@ -26,14 +26,17 @@ typedef union {
 typedef struct {
     s32 x0;                 /* 0x000: id / handle */
     struct VmObj *obj;      /* 0x004: the entity this VM drives */
-    u8 pad8[0xc];
-    f32 f14, f18, f1c, f20; /* 0x014 */
+    f32 p[3];               /* 0x008 */
+    f32 f14[3];             /* 0x014 */
+    f32 f20;                /* 0x020 */
     u8 pad24[0x8];
     f32 f2c[3];             /* 0x02c */
     f32 f38[3];             /* 0x038 */
     f32 f44;                /* 0x044 */
     s32 f48;                /* 0x048 */
-    u8 pad4c[0x14];
+    f32 f4c, f50, f54, f58; /* 0x04c */
+    s8 b5c, b5d;            /* 0x05c */
+    u8 pad5e[0x2];
     s32 f60;                /* 0x060 */
     f32 f64;                /* 0x064 */
     u8 pad68[0x8];
@@ -52,7 +55,10 @@ typedef struct {
     s32 rsp;                /* 0x318 */
     s32 x31c, x320, x324;   /* 0x31c */
     VmFl fl;                /* 0x328 */
-    u8 pad330[0x20];
+    f32 f330;               /* 0x330 */
+    u8 pad334[0xc];
+    f32 f340[3];            /* 0x340 */
+    u8 pad34c[0x4];
 } VmRec;
 
 #endif /* KH1_DATA_TYPES_VM_REC_H */

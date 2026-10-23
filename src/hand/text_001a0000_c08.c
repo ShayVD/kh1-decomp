@@ -305,9 +305,9 @@ s32 func_001c1f80(void) {
                         m.type = 2;
                         m.val = (u32)v->f20;
                         m.x = v->x0;
-                        m.v[0] = v->f14;
-                        m.v[1] = v->f18;
-                        m.v[2] = v->f1c;
+                        m.v[0] = v->f14[0];
+                        m.v[1] = v->f14[1];
+                        m.v[2] = v->f14[2];
                         m.v[3] = 10.0f;
                         func_001c4640(&m);
                     }
@@ -346,9 +346,9 @@ s32 func_001c1f80(void) {
                         m.type = 3;
                         m.val = 0;
                         m.x = vm->x0;
-                        m.v[0] = vm->f14;
-                        m.v[1] = vm->f18;
-                        m.v[2] = vm->f1c;
+                        m.v[0] = vm->f14[0];
+                        m.v[1] = vm->f14[1];
+                        m.v[2] = vm->f14[2];
                         m.v[3] = 1.0f;
                         func_001c4640(&m);
                     }

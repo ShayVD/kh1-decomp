@@ -143,10 +143,7 @@ void func_001c0010(void) {
     func_001bfcd8();
 }
 
-typedef struct {
-    u8 pad[380]; s32 pc; s32 sp; s32 stack[33]; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
-} VmA;
+typedef VmRec VmA;
 u8 *func_00232cc0(s32);
 s32 func_001c1330(VmA *v, s32 a) {
     u8 *p1 = func_00232cc0(1);
@@ -154,7 +151,7 @@ s32 func_001c1330(VmA *v, s32 a) {
     s32 bit = a % 8;
     s32 q = a / 8;
     a = q - 3392;
-    v->stack[++v->sp] = (*(s8 *)(p2 + a) >> bit) & 1;
+    v->stk[++v->sp] = (*(s8 *)(p2 + a) >> bit) & 1;
     return 2;
 }
 

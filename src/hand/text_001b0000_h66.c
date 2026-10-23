@@ -18,17 +18,11 @@ extern Task_bfcd8 *D_0037A16C;
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
-typedef struct {
-    u8 pad[380]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
-} VM_c0f30;
+typedef VmRec VM_c0f30;
 extern s32 D_0038B4C4[], D_0038ACC4[];
 extern s8 D_003C2D30[];
 s8 *func_00232cc0(s32);
-typedef struct {
-    s32 x0; u8 pad[376]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; union { u64 x; s32 i[2]; } fl;
-} VM_c1b58;
+typedef VmRec VM_c1b58;
 typedef struct {
     u8 type;
     u64 val:24;
@@ -266,28 +260,28 @@ void func_001bfcd8(void) {
 s32 func_001c0f30(VM_c0f30 *v, s32 idx) {
     s8 *a = func_00232cc0(1);
     s8 *b = func_00232cc0(2);
-    v->w516 = idx;
+    v->stk[32] = idx;
     if (idx < 0x800) {
-        v->stack[++v->sp] = a[idx];
+        v->stk[++v->sp] = a[idx];
     } else if (idx < 0x900) {
-        v->stack[++v->sp] = a[idx];
+        v->stk[++v->sp] = a[idx];
     } else if (idx < 0xb00) {
         idx -= 0x900;
-        if ((s32)(v->flags >> 5) & 1) {
-            v->stack[++v->sp] = D_0038B4C4[idx];
+        if ((s32)(v->fl.x >> 5) & 1) {
+            v->stk[++v->sp] = D_0038B4C4[idx];
         } else {
-            v->stack[++v->sp] = D_0038ACC4[idx];
+            v->stk[++v->sp] = D_0038ACC4[idx];
         }
     } else if (idx < 0xc80) {
-        v->stack[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
+        v->stk[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
     } else if (idx < 0xcc0) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else if (idx < 0xd00) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else if (idx < 0xd40) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else {
-        v->stack[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
+        v->stk[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
     }
     return 2;
 }
@@ -296,18 +290,18 @@ s32 func_001c1b58(VM_c1b58 *v) {
     s32 id, lvl, j;
     VM_c1b58 *t;
     Msg m;
-    id = v->stack[v->sp--];
-    lvl = v->stack[v->sp--];
+    id = v->stk[v->sp--];
+    lvl = v->stk[v->sp--];
     if (lvl < 0) lvl = 0;
     else if (lvl >= 8) lvl = 7;
     t = func_001e98d0((s32)(v->fl.x >> 5) & 1, id);
     if (t == v) return 6;
     t->ret[lvl] = -1;
-    if (lvl != t->depth) return 2;
+    if (lvl != t->rsp) return 2;
     for (j = lvl + 1; j < 8; j++) {
         if (t->ret[j] != -1) {
             t->pc = t->ret[j];
-            t->depth = j;
+            t->rsp = j;
             break;
         }
     }
@@ -696,19 +690,7 @@ void func_001ca800(void) {
 #undef D_003C5510
 #undef B
 
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0x68];
-    s32 code;
-    u8 pad74[8];
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[92];
-    u8 pad2f4[0x34];
-    u64 flags;
-} VM_c91e8;
+typedef VmRec VM_c91e8;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4_c91e8;
 typedef struct {
     union {
