@@ -30,7 +30,6 @@ typedef struct { f32 x, y, z, w; } V4;
 extern Slot *D_0037A16C;
 extern s32 D_0037A168;
 extern Big D_00389C90;
-extern s32 D_003F34A4;
 extern Tween D_003C5510;
 extern f32 D_002BBDFC;
 extern f32 D_003C55E0, D_003C55E4, D_003C55E8, D_003C55F4, D_003C55F8, D_003C5630, D_003C5634;
@@ -38,8 +37,6 @@ extern V4 D_003C55F0[];
 extern u64 D_0038CD00;
 extern s32 D_0038CD04;
 extern f32 D_0036266C;
-extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-extern Msg D_006257E0[256], D_006277F0[256];
 extern u8 D_0062A130[];
 extern Ent176 D_00629E70[4];
 typedef struct { u16 h; u8 pad[174]; } E176;
@@ -138,30 +135,6 @@ void func_001c06f8(void) {
     b->d12400 &= ~(1ULL << 58);
     func_001c07f0();
     func_001dd170();
-}
-
-s32 func_001c1df8(void) {
-    if (D_003F34A4 == 1) return 0;
-    D_00389C90.d12408 &= ~0x1000;
-    return 4;
-}
-
-Msg *func_001c45e8(void) {
-    s32 h = D_006277E0;
-    Msg *r;
-    if (h == D_006277E4) return 0;
-    r = &D_006257E0[h];
-    D_006277E0 = (h + 1) % 256;
-    return r;
-}
-
-Msg *func_001c4730(void) {
-    s32 h = D_006297F0;
-    Msg *r;
-    if (h == D_006297F4) return 0;
-    r = &D_006277F0[h];
-    D_006297F0 = (h + 1) % 256;
-    return r;
 }
 
 s32 func_001c8478(VM *v) {

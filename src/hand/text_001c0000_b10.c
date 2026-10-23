@@ -48,12 +48,6 @@ typedef struct {
 
 #include "data/pieces/D_0037A378.h"
 
-typedef struct {
-    u8 pad[0x10];
-    VM *vm;
-    s32 n;
-    s32 x18;
-} Task;
 
 typedef struct {
     u32 type:8, id:24;
@@ -71,13 +65,7 @@ extern Big D_00389C90;
 #include "data/pieces/D_00389C80.h"
 #include "data/pieces/D_00388480.h"
 #include "data/pieces/D_003C21A8.h"
-extern u32 D_003C39A8;
-extern s8 *D_003C39AC;
 #include "data/pieces/D_003C3A70.h"
-extern s32 D_003C54F0;
-extern s32 D_002C5958;
-extern u8 D_006297F8[];
-extern s32 (*D_0037A198[])(VM *, s32);
 extern CamS D_003C5510;
 extern Vec D_003C55F0;
 #include "data/pieces/D_002E2790.h"
@@ -87,12 +75,6 @@ extern f32 D_002BBDFC;
 extern s32 D_002BBAB0, D_002BBAB8, D_002BBAC8;
 extern u8 D_003C5660[], D_003C5680[], D_003C56A0[], D_003C56C0[], D_003C56F0[], D_003C5728[], D_003C5750[], D_003C5780[], D_003C57B0[];
 
-s32 func_001c1ce8(s8 *, s32);
-s32 func_001c1cf8(s8 *, s32);
-void func_001c6720(void);
-void func_001c2d20(s8 *, u32 *, u8 **);
-Task *func_0011f090(void *, s32, void *);
-void func_001c3b10(void);
 void *memset(void *, s32, u32);
 s32 rand(void);
 void func_001c6890(void);
@@ -113,151 +95,6 @@ Ent *func_00147778(s32);
 Ent2 *func_00147840(s32);
 void *func_0011ef10(s32, void *);
 void func_001caa50(void);
-
-void func_001c4198(s8 *h, s32 a1)
-{
-  s32 done = 0;
-  VM *e;
-  VM *e2;
-  s32 i;
-  s32 *cnt;
-  s32 *o;
-  s32 *o1;
-  s32 n0;
-  s32 n1;
-  s32 j;
-  s32 k;
-  s8 *p;
-  s8 *q;
-  s32 op;
-  s64 mask;
-  s32 arg;
-  s32 r;
-  Task *t;
-  s32 *src;
-  D_00389C90.x3044 = D_00389C90.x3040;
-  D_00389C90.x3050 = D_00389C90.x3048;
-  D_00389C90.x3054 = D_00389C90.x304c;
-  D_00389C90.x3064 = D_00389C90.x305c;
-  D_00389C90.x3068 = D_00389C90.x3060;
-  D_003C39A8 = D_00389C80;
-  for (i = 0; i < ((u32)D_00389C80); i++)
-  {
-    D_003C21A8[i] = D_00388480[i];
-  }
-
-  (*(Bits_37a378 *)&D_0037A378).b0 = 0;
-  (*(Bits_37a378 *)&D_0037A378).b1 = 0;
-  (*(Bits_37a378 *)&D_0037A378).b2 = 0;
-  (*(Bits_37a378 *)&D_0037A378).b3 = 0;
-  D_003C39AC = h;
-  D_00389C90.x3148 = -1;
-  D_00389C90.f314c = 1.0f;
-  D_00389C90.x3140 = 0;
-  func_001c6720();
-  o = (s32 *) (h + 12);
-  o1 = (s32 *) (h + 16);
-  mask = ~8;
-  n0 = ((s32 *) h)[0];
-  D_00389C90.x3048 = n0;
-  D_00389C90.x3040 = h;
-  n1 = ((s32 *) h)[1];
-  D_00389C90.x3060 = (o + n0) + 1;
-  D_00389C90.x305c = n1;
-  q = h + o[0];
-  D_00389C90.x304c = o1;
-  p = h + o[(a1 + (n1 + n0)) + 1];
-  p += 12;
-  e = D_003C3A70;
-  cnt = &D_003C54F0;
-  *cnt = *(p++);
-  for (i = 0; i < (*cnt); i++, e++)
-  {
-    s32 m;
-    e->x0 = 0;
-    e->obj = 0;
-    e->code = p + 4;
-    e->n = *p;
-    e->pc = 0;
-    e->sp = -1;
-    e->x78 = 0;
-    e->x2f0 = 0;
-    e->rsp = 7;
-    for (m = 7; m >= 0; m--)
-    {
-      e->ret[m] = -1;
-    }
-
-    p += 4;
-    e->ret[7] = e->pc;
-    e->fl.b.b0 = 0;
-    e2 = e;
-    e2->fl.b.b1 = 0;
-    e->fl.b.b2 = 0;
-    e->fl.b.b3 = 0;
-    e->fl.b.b4 = 0;
-    e->fl.b.b5 = 0;
-    e->fl.b.b6 = 0;
-    e->fl.b.b7 = 0;
-    e2->fl.b.b8 = 0;
-    e2->fl.b.b9 = 0;
-    k = 0;
-    for (m = 0; m < e2->n; m++)
-    {
-      e2->lbl[m] = k;
-      while (p[3] != 5)
-      {
-        p += 4;
-        k++;
-      }
-
-      p += 4;
-      k++;
-    }
-
-  }
-
-  func_001c2d20(q, &D_00389C80, D_00388480);
-  e = D_003C3A70;
-  cnt = &D_003C54F0;
-  for (i = 0; i < (*cnt); i++, e++)
-  {
-    e->pc = e->lbl[0];
-    while (1)
-    {
-      op = func_001c1ce8(e->code, e->pc);
-      arg = func_001c1cf8(e->code, e->pc);
-      if (op == 5)
-      {
-        break;
-      }
-      r = D_0037A198[op](e, arg);
-      if (r & 2)
-      {
-        e->pc++;
-      }
-      if (r & 8)
-      {
-        done = 1;
-
-        D_002C5958 &= mask;
-        D_002C5958 &= ~4;
-        break;
-      }
-    }
-
-    e->x78 = 1;
-    e->pc = e->lbl[1];
-  }
-
-  if (done == 0)
-  {
-    t = func_0011f090(D_006297F8, 1, func_001c3b10);
-    t->vm = D_003C3A70;
-    t->n = D_003C54F0;
-    t->x18 = 0;
-  }
-}
 
 void func_001c6a20(void) {
     Vec rot;

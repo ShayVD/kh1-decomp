@@ -2,22 +2,7 @@
 #include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
-typedef struct {
-    u8 pad0[0x3034];
-    s32 x3034;
-    s32 x3038;
-    u8 pad303c[0x3070 - 0x303c];
-    u64 f3070;
-    u8 pad3078[0x316c - 0x3078];
-    s32 x316c;
-    u8 pad3170[0x3384 - 0x3170];
-    struct { s32 obj; s32 x4; s32 snd; s32 ret; s32 x10; s32 h; } e[8];
-    s32 x3444;
-} Big;
-extern Big D_00389C90;
 #include "data/pieces/D_0037A378.h"
-extern s32 D_002C5958;
-s32 func_001c4788(void *);
 
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct {
@@ -143,203 +128,14 @@ void func_001c0010(void) {
     func_001bfcd8();
 }
 
-void func_001c2d20(s8 *p, s32 *cnt, s8 **tbl) {
-    s32 n = *(s32 *)p;
-    s32 i;
-    p += 4;
-    *cnt = n;
-    for (i = 0; i < n; i++) {
-        tbl[i] = p;
-        {
-            u8 c;
-            for (;;) {
-                s8 t = *p;
-                c = *p;
-                if (t == 4 || t == 0) break;
-                if ((u32)(c - 5) < 3) p += 2;
-                else if ((s8)c == 11) p += 3;
-                else if ((s8)c == 10) { p++; if (*p == 0) p += 2; }
-                else if ((s8)c == 13) p += 3;
-                else p += (u32)(c - 9) < 23;
-                p++;
-            }
-        }
-        p++;
-    }
-}
-
-s8 *func_001c2df0(s8 *p, s32 k) {
-    s32 n = *(s32 *)p;
-    s32 i;
-    p += 4;
-    for (i = 0; i < n; i++) {
-        if (i == k) return p;
-        {
-            u8 c;
-            for (;;) {
-                s8 t = *p;
-                c = *p;
-                if (t == 4 || t == 0) break;
-                if ((u32)(c - 5) < 3) p += 2;
-                else if ((s8)c == 11) p += 3;
-                else if ((s8)c == 10) { p++; if (*p == 0) p += 2; }
-                else if ((s8)c == 13) p += 3;
-                else p += (u32)(c - 9) < 23;
-                p++;
-            }
-        }
-        p++;
-    }
-    return 0;
-}
-
-typedef VmRec VmC;
-typedef struct { u8 type; u8 pad[3]; s32 x4; } MsgC;
 #include "data/pieces/D_003B4DA0.h"
 #include "data/pieces/D_003A7990.h"
-extern s32 D_003B4D90, D_003C21A0;
-extern s32 (*D_0037A198[])(VmC *, s32);
 extern f32 D_002BBDFC;
-s32 func_001c1ce8(s8 *, s32);
-s32 func_001c1cf8(s8 *, s32);
-void *func_0011ef10(s32, void *);
-s32 func_001c5b88(void);
-MsgC *func_001c4730(void);
-s32 func_001c3408(void) {
-    VmC *e;
-    s32 *cnt;
-    s32 i, op, arg, r;
-    s32 done;
-    MsgC *m;
-    if ((s32)(D_00389C90.f3070 >> 40) & 1) {
-        D_00389C90.f3070 &= ~0x40000000000ULL;
-        return 4;
-    }
-    D_00389C90.x316c = 0;
-    if (D_00389C90.x3038 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
-    else { e = D_003B4DA0; cnt = &D_003C21A0; }
-    done = 0;
-    m = func_001c4730();
-    if (((s32)(D_00389C90.f3070 >> 37) & 1) == 1U) func_0011ef10(99999, func_001c5b88);
-    for (i = 0; i < *cnt; i++, e++) {
-        if (e->fl.b.b3) {
-            if (i != 0) continue;
-            if (D_00389C90.x3038 != 0) {
-                D_00389C90.x3038 = 0;
-                D_00389C90.f3070 &= ~0x40000000000ULL;
-                if (m && !done) func_001c4788(m);
-                return 4;
-            } else {
-                D_00389C90.f3070 &= ~0x40000000000ULL;
-                if (m && !done) func_001c4788(m);
-                return 4;
-            }
-        }
-        if (e->fl.b.b8) continue;
-        if (e->fl.b.b2) {
-            e->x2f4 -= D_002BBDFC;
-            if (e->x2f4 > 0.0f) continue;
-            e->fl.b.b2 = 0;
-        }
-        if (m) {
-            switch (m->type) {
-            case 2:
-                if (m->x4 == e->x0) { done = 1; e->fl.b.b0 = 0; }
-                break;
-            case 4:
-                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
-                break;
-            case 21:
-                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
-                break;
-            case 22:
-                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
-                break;
-            }
-        }
-        while (1) {
-            op = func_001c1ce8(e->code, e->pc);
-            arg = func_001c1cf8(e->code, e->pc);
-            r = D_0037A198[op](e, arg);
-            if (r & 2) e->pc++;
-            if (r & 4) break;
-            if ((r & 8) || ((s32)(D_00389C90.f3070 >> 40) & 1)) {
-                D_00389C90.f3070 &= ~0x40000000000ULL;
-                if (m && !done) func_001c4788(m);
-                return 4;
-            }
-        }
-    }
-    if (m && !done) func_001c4788(m);
-    return 0;
-}
-
+#include "vm/script_vm.h"
 typedef struct { u64 a, b, c, d; } MsgQ; extern s32 D_006297F0, D_006297F4; extern MsgQ D_006277F0[256];
-s32 func_001c4788(void *m) {
-    if ((D_006297F4 + 1) % 256 == D_006297F0) return -1;
-    D_006277F0[D_006297F4] = *(MsgQ *)m;
-    D_006297F4 = (D_006297F4 + 1) % 256;
-    return 0;
-}
-
-typedef struct { s32 x0; s32 id; } Obj;
 #include "data/pieces/D_0039A580.h"
-typedef VmRec VmE;
 #include "data/pieces/D_0038D170.h"
-extern s32 D_0039A570, D_003A7980;
-extern s32 D_0037A190;
 CONTEXT_ONLY s32 func_001c1ce8(s8 *a, s32 b) { return a[b * 4 + 3]; }
-s32 func_001c19f8(VmE *, s32);
-void func_0012cb78(Obj *, s32);
-void func_0012cc38(s32, s32);
-void func_0012ccb0(s32);
-s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
-    VmE *vm;
-    VmE *t;
-    s32 n, i;
-        if (!((D_00389C90.f3070 >> 59) & 1)) return 0;
-    if (a2 < -1) return 0;
-    if ((*(Bits_37a378 *)&D_0037A378).b2 || (D_002C5958 & 0x12000)) return 0;
-    if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
-        n = D_0039A570;
-    } else {
-        vm = D_0039A580;
-        n = D_003A7980;
-    }
-    for (i = 0; i < n; i++) {
-        if (vm[i].x0 == o->id) break;
-    }
-    if (i >= n) return 0;
-    t = &vm[i];
-    if (t->rsp != 3 || a2 >= 0) {
-        if (D_0037A190 == 0) {
-            if (func_001c1ce8(t->code, t->lbl[9]) != 5) {
-                vm->stk[++vm->sp] = 3;
-                vm->stk[++vm->sp] = i;
-                func_001c19f8(vm, 9);
-                D_00389C90.x3444 = a2;
-            }
-        }
-        if (a2 != -1) D_0037A190 = 1;
-    }
-    for (i = 0; i < 8; i++) {
-        if (D_00389C90.e[i].obj != (s32)o) continue;
-        D_00389C90.e[i].obj = 0;
-        if (D_00389C90.e[i].h >= 0) {
-            func_0012cb78(o, D_00389C90.e[i].h);
-            D_00389C90.e[i].h = -1;
-        }
-        if (a2 != -1) D_00389C90.e[i].snd = -1;
-        if (D_00389C90.e[i].snd >= 0) {
-            func_0012cc38(3, D_00389C90.e[i].snd);
-            D_00389C90.e[i].snd = -1;
-            if (D_00389C90.e[i].x10 == 0) func_0012ccb0(3);
-            return D_00389C90.e[i].ret;
-        }
-    }
-    return 0;
-}
 #include "data/data_0037.h"
 #include "data/data_0039.h"
 #include "data/data_003A.h"
