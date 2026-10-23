@@ -1,17 +1,4 @@
 #include "common.h"
-
-#include "data/pieces/D_00425BC8.h"
-typedef PadSt_425bc8 Pad;
-typedef struct {
-    u8 pad0[0xca];
-    s16 ca;
-    u8 padcc[0xd0 - 0xcc];
-    s16 d0;
-    s16 d2;
-    u8 padd4[0xd8 - 0xd4];
-    s16 n;
-    s16 cur;
-} WinK;
 typedef struct { u8 pad[0xd8]; s16 n; } WinM;
 typedef struct {
     u8 pad0[0xbe];
@@ -26,12 +13,6 @@ typedef struct {
     u8 padd0[0xd8 - 0xd0];
     s16 d8;
 } Win;
-
-extern u32 D_00640DF0; /* src/data/bss_0064.c: s32 D_00640DF0 */
-extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
-extern u32 D_00640DF8; /* src/data/bss_0064.c: s32 D_00640DF8 */
-
-void func_0011d768(s32);
 u8 *func_001efc10(s32);
 void func_001f8e18(void *);
 void func_001f8f30(void);
@@ -49,48 +30,6 @@ void func_002078b0(Win *, s32, s32, s32, s32, s32, s32);
 void func_002078f0(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207938(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207980(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
-
-void func_001fdfd0(WinK *w) {
-    s32 n = w->n;
-    s32 moved;
-    s32 k, r;
-    Pad *pd;
-    u32 m;
-    if (n < 2) {
-        w->cur = 0;
-        return;
-    }
-    if ((w->cur >> 4) >= n) w->cur = (n - 1) << 4;
-    pd = D_00425BC8;
-    m = pd->x10 & D_00640DF8;
-    moved = 0;
-    if (m & D_00640DF0) {
-        if (w->cur > 0) {
-            w->cur -= 16;
-            moved = 1;
-        } else if (pd->x8 & D_00640DF0) {
-            moved = 1;
-            w->cur = (n - 1) << 4;
-        }
-    } else if (m & D_00640DF4) {
-        if (w->cur < (n - 1) << 4) {
-            w->cur += 16;
-            moved = 1;
-        } else if (pd->x8 & D_00640DF4) {
-            w->cur = 0;
-            moved = 1;
-        }
-    }
-    k = w->ca;
-    if (w->d0 + w->d2 >= (k + n - 1) / n * 16 - 24) {
-        r = k % n;
-        if (r != 0 && (w->cur >> 4) >= r) {
-            w->cur = 0;
-            moved = 0;
-        }
-    }
-    if (moved) func_0011d768(1);
-}
 
 void func_00203890(WinM *o, s32 x, s32 y, s32 x2, s32 col) {
     s32 cur, mid, a, b;

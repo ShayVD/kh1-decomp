@@ -2,25 +2,6 @@
 #include "data/bss_0064.h"
 
 #include "data/types/text_001f0000_h23.h"
-
-typedef struct Win {
-    u8 pad0[192];
-    u16 f192;
-    u16 pad194;
-    u16 f196;
-    u8 pad198[204 - 198];
-    s16 f204;
-    s16 f206;
-    s16 f208;
-    s16 f210;
-    s16 f212;
-    s16 f214;
-    u8 f216[4];
-    u8 f220[64];
-} Win;
-
-#include "data/pieces/D_00425BC8.h"
-typedef struct { u8 pad[36]; s32 v[1]; } Menu;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_00640E00[];
 extern s32 D_00640E20;
@@ -30,86 +11,6 @@ s32 func_002014a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201550(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201600(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00206370(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_001fd590(Win *w) {
-    return ((s16)w->f192 >> 4) - ((s16)w->f196 >> 4) * (w->f208 & 0xf) / 16;
-}
-
-void func_001fd688(Win *w) {
-    s32 a = w->f204;
-    s32 d;
-    if (a == 0) return;
-    d = (a - w->f206) << 4;
-    if (d <= 0) {
-        a = (a - 1) << 4;
-        w->f208 = 0;
-        w->f214 = 0;
-        if (a < w->f210) {
-            w->f210 = a;
-            w->f212 = 0;
-        }
-    } else if (d < w->f208) {
-        w->f208 = d;
-        w->f214 = 0;
-    }
-}
-
-s32 func_001fd6f0(Win *w) {
-    s32 a = w->f204;
-    s32 b = w->f206;
-    return a < b ? a : b;
-}
-
-s32 func_001fe718(Menu *m, s32 idx, s32 max) {
-    s32 r = 0;
-    u32 f = D_00425BC8->x10;
-    if (f & 0x10000010) {
-        if (m->v[idx] > 0) {
-            m->v[idx]--;
-            r = 1;
-        }
-    } else if (f & 0x40000040) {
-        if (m->v[idx] < max - 1) {
-            m->v[idx]++;
-            r = 1;
-        }
-    }
-    return r;
-}
-
-s32 func_001fe860(Menu *m, s32 idx, s32 max) {
-    s32 r = 0;
-    u32 f = D_00425BC8->x10;
-    if (f & 0x80000080) {
-        if (m->v[idx] > 0) {
-            m->v[idx]--;
-            r = 1;
-        }
-    } else if (f & 0x20000020) {
-        if (m->v[idx] < max - 1) {
-            m->v[idx]++;
-            r = 1;
-        }
-    }
-    return r;
-}
-
-s32 func_001fe9a8(Menu *m, s32 idx, s32 max) {
-    s32 r = 0;
-    u32 f = D_00425BC8->x10;
-    if (f & 0x80000480) {
-        if (m->v[idx] > 0) {
-            m->v[idx]--;
-            r = 1;
-        }
-    } else if (f & 0x20000820) {
-        if (m->v[idx] < max - 1) {
-            m->v[idx]++;
-            r = 1;
-        }
-    }
-    return r;
-}
 
 s32 func_00201440(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i, s32 j) {
     return func_002014a0(a, b, c, d, e, f, g, h, i, 15);

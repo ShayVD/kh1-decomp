@@ -3,14 +3,6 @@
 #include "m2c.h"
 void func_001fefc8(s32, s32, s32, s32, s32);
 
-void func_001fd5e0(s32 arg0, s32 arg1) {
-    s16 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s16 *, 0xD8);
-    M2C_FIELD(arg0, s16 *, 0xCC) = (s16) ((s32) ((arg1 + temp_v1) - 1) / temp_v1);
-    M2C_FIELD(arg0, s16 *, 0xCA) = (s16) arg1;
-}
-
 void func_001fef40(s32 arg0) {
     s32 temp_v0;
     s32 temp_v1;
