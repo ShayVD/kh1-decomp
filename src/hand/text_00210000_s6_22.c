@@ -19,24 +19,7 @@ extern s32 D_00643100;
 /* rodata */
 
 /* ---- fd860/MATCH_d860.c ---- */
-
-extern u8 D_003F5AE8[];
-extern s32 D_00643014;
-extern s32 D_003F59D0[];
-void func_00205b30(void *, void *);
-void func_00206130(void *, s32, s32, s32, s32, u32);
-void func_0020ca30(void *, s32, u32, u32);
-s32 func_001fc308_q3(void *, s32, s32, s32, s32, s32, s32, u32, u32) __asm__("func_001fc308");
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-
-void func_0021d860(void *a) {
-    func_00205b30(a, D_003F5AE8);
-    func_00205b30(a, D_003F5AE8 + 32);
-    func_00206130(a, 0, 62, 512, 2, 0x80364B2C);
-    func_0020ca30(a, 0, 0x804C7F33, 0x805BB66A);
-    func_001fc308_q3(a, 160, 35, 0, 19, 20, 0, 0x80399BFF, 0x80399BFF);
-    func_001f9438(a, 0, 173, 35, D_003F59D0[D_00643014], 19, 0x80399BFF);
-}
 
 /* ---- fdc40/MATCH_dc40.c ---- */
 

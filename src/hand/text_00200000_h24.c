@@ -3,41 +3,7 @@
 #include "data/bss_0064.h"
 
 typedef W606Mem_304be8 S4BE8e;
-
-#include "data/pieces/D_003F34B8.h"
-
-extern s32 D_00642EA0;
-extern u8 D_00642E98[];
-#include "data/pieces/D_003F5C18.h"
-void func_0021cfc8(void) {
-    s32 i;
-    D_00642EA0 = 0;
-    for (i = 0; i < 6; i++) {
-        if (D_003F5C18[i]) D_00642E98[D_00642EA0++] = i;
-    }
-}
-
-extern s32 D_00643010, D_00643014;
-extern s32 D_003F5C30[];
 void func_0021fb50(void);
-void func_002205c0(void);
-void func_002210f0(void);
-void func_00223978(void);
-void func_00222b80(void);
-void func_002234e8(void);
-void func_0021db30(void) {
-    s32 i;
-    D_00643010 = 0;
-    D_00643014 = 0;
-    D_003F34B8->b112[1] = 0;
-    for (i = 5; i >= 0; i--) D_003F5C30[i] = 0;
-    func_0021fb50();
-    func_002205c0();
-    func_002210f0();
-    func_00223978();
-    func_00222b80();
-    func_002234e8();
-}
 
 extern s32 D_0064324C, D_00643250;
 extern s32 D_00643258[], D_00643268[];

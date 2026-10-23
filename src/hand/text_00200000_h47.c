@@ -31,27 +31,10 @@ void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0021b860(s32, s32, s32, s32, s32, s32);
 void func_0021b860(s32, s32, s32, s32, s32, s32);
 
-extern s32 D_003F5C08[];
 extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);
 void func_001f3d58(s32, s32);
 void func_001f3e48(s32, s32);
-void func_0020be10(s32);
-
-s32 func_0021d9e0(s32 a0) {
-    s32 buf[3];
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        buf[i] = func_001f31a8(D_003F5C08[i], 50);
-        if (buf[i] != 0) {
-            func_001f3e48(buf[i], a0);
-            func_001f3d58(buf[i], D_003F3488[i]);
-            a0 = buf[i];
-        }
-    }
-    func_0020be10(16);
-    return a0;
-}
 
 extern s32 D_003F34C8;
 extern s32 D_003F350C;
@@ -437,12 +420,6 @@ void func_00229490(s32 a0) {
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-extern u8 D_003F5B30[];
-extern u8 D_003F5BA0[];
-extern u8 D_003F5BE0[];
-s32 D_003F5C08[0x4] ALIGNED(8) = {
-    (s32)D_003F5BE0, (s32)D_003F5BA0, (s32)D_003F5B30, 0,
-};
 extern u8 D_00491030[];
 extern u8 D_00491048[];
 extern u8 D_00491060[];

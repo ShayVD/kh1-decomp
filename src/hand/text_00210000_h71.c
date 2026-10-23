@@ -25,111 +25,18 @@ s32 func_001f3758(void *);
 void func_0011d768(s32);
 void func_001fd858(void *);
 s32 func_001fd518(void *);
-s32 func_001fe570(void *);
-void func_001f3d58(void *, s32);
-Obj *func_001f4468(void *);
 Obj *func_001f31a8(u8 *, s32);
 void func_001f3e48(Obj *, void *);
-void func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
 
 #include "data/pieces/D_003F34C4.h"
 typedef N_3f34c4 Obj2;
 typedef f32 Mtx[4][4];
-
-typedef struct { u8 pad[0xC]; void *xc; } Ob3;
-extern s32 D_00642E94;
-extern s32 D_00643010;
-extern s32 D_00643014;
-extern u8 D_00642E98[];
-extern s32 D_00642EA0;
-extern u8 *D_003F59E8[];
-extern s32 D_003F5A18[];
-extern void (*D_003F5A00[])(Obj *);
-extern u16 D_003E90AC;
-extern s32 D_003F59D0[];
 extern s32 D_003F5C30[];
 void func_0021b820(void);
 void func_00207560(void *, s32, s32);
-s32 func_00207320(s32);
 void func_00207428(void *, s32, s32);
 void func_0021c4f8(void *);
-
-void func_0021c5e0(void *, s32, s32);
-void func_0021cd68(Ob3 *a) {
-    Obj *o[2];
-    s32 i, y, k, v;
-    s32 *p;
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3758(a->xc);
-            func_0011d768(3);
-            D_00642E94 = 1;
-        } else {
-            func_001fd858(a);
-            v = func_001fd518(a);
-            D_00643010 = v;
-            p = &D_00643014;
-            *p = D_00642E98[v];
-            if (func_001fe570(a)) {
-                func_001f3758(a->xc);
-                if ((o[0] = func_001f31a8(D_003F59E8[*p], D_003F5A18[*p]))) {
-                    func_001f3e48(o[0], a->xc);
-                    D_003F5A00[*p](o[0]);
-                    o[0]->xa0 = D_003E90AC;
-                }
-            }
-        }
-    }
-    func_0021b820();
-    func_0021c5e0(a, 257, 72);
-    y = 108;
-    for (i = 0; i < D_00642EA0; i++) {
-        k = D_00642E98[i];
-        func_001f9438(a, 0, 330, y, D_003F59D0[k], 15, 0x80B4DCF5);
-        if (D_003F5C30[k]) func_00207560(a, 450, y - 2);
-        if (!func_00207320(k)) func_00207428(a, 435, y + 7);
-        y += 28;
-    }
-    do { func_0021c4f8(a); } while (0);
-}
-
-extern s32 D_00643100;
-extern u8 D_003F5A60[];
-extern u8 D_003F5A30[];
-s32 func_001f44a0(u8 *);
-void func_001f37c0(Obj2 *, s32);
-void func_0020d1d8(Obj *);
-void func_0020bda8(s32);
-
-void func_0021d028(void *a) {
-    Obj *o[2];
-    if (!func_001f42b8(a)) return;
-    switch (D_00642E94) {
-    case 0:
-        if (!D_00643100) return;
-        if (!(o[0] = func_001f31a8(D_003F5A60, 50))) return;
-        func_001f3e48(o[0], a);
-        if (!(o[1] = func_001f31a8(D_003F5A30, 6))) return;
-        func_001f3e48(o[1], o[0]);
-        {
-            s32 *n = &D_00642EA0;
-            s32 *c = &D_00643010;
-            o[1]->xcc = *n;
-            if (*c >= *n) *c = *n - 1;
-            o[1]->xd2 = *c << 4;
-        }
-        break;
-    case 1:
-        if (func_001f44a0(D_003F5A60)) return;
-        func_001f37c0(D_003F34C4->x10, 50);
-        func_001f3d58(D_003F34C4->x10->x10, 2);
-        func_001f3d58(D_003F34C4->x10->x10->x10, 2);
-        func_0020d1d8(func_001f4468(a));
-        func_0020bda8(16);
-        break;
-    }
-}
 
 typedef struct { u8 pad[0x24]; f32 x24; f32 x28; s32 x2c; s32 x30; } Ed;
 void func_001f36b8(void *);
@@ -452,26 +359,5 @@ s32 func_0021fd90(Ob4 *a) {
     return func_0010edb0(x, y, 256, D_00643424 * 2, a->x90, (s32)func_001c2df0((s8 *)D_003F3518, k));
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-extern u8 D_003F5FC0[];
-extern u8 D_003F61B0[];
-extern u8 D_003F6330[];
-extern u8 D_003F6620[];
-extern u8 D_003F6710[];
-extern u8 D_003F6800[];
-u8 *D_003F59E8[0x6] ALIGNED(8) = {
-    (void *)D_003F61B0, (void *)D_003F6710, (void *)D_003F5FC0, (void *)D_003F6330,
-    (void *)D_003F6800, (void *)D_003F6620,
-};
-void func_0021faf8();
-void func_00220580();
-void func_002210b0();
-void func_00222b40();
-void func_002234a8();
-void func_00223938();
-void (*D_003F5A00[0x6])(Obj *) ALIGNED(16) = {
-    (void *)func_00220580, (void *)func_002234a8, (void *)func_0021faf8, (void *)func_002210b0,
-    (void *)func_00223938, (void *)func_00222b40,
-};
 #include "data/data_003F.h"
 #include "data/data_003E.h"
