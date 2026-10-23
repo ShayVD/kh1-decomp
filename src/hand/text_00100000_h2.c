@@ -394,7 +394,7 @@ void func_00108b60(SlotHdr *h, SlotObj *o) {
     o->owner = h;
 }
 /* Same object as *D_002BCB60 above, seen as rows of 4 floats. */
-typedef struct { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
+typedef struct Actor { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
 
 void func_00111340(Src *s, s32 i) {
     (D_002BCB60)->m[i][4] = s->x;
@@ -470,7 +470,6 @@ s32 func_001120c8(void) {
     D_004D9288.w1c = D_002BCC20;
     return D_004D9280 ? 4 : 0;
 }
-typedef struct { s32 a, b; } Pair;
 extern volatile u32 D_002C5958;
 #include "data/pieces/D_002BC148.h"
 void func_0012cac8(s32, s32);
@@ -485,8 +484,8 @@ s32 func_00112d80(void) {
     func_00112d28();
     func_001c1f60();
     func_0011ef10(0x2e630, func_00112cf8);
-    (*(Pair *)&D_002BC148).a = D_002BC128;
-    (*(Pair *)&D_002BC148).b = D_002BC130;
+    D_002BC148[0] = D_002BC128;
+    D_002BC148[1] = D_002BC130;
     return func_00109558(4);
 }
 #include "data/types/text_00100000_h2_p2.h"

@@ -14,7 +14,7 @@ typedef struct {
     f32 x24;
     f32 x28;
     s32 x2c;
-    union { u64 x; struct { u64 b0:5; u64 b5:1; u64 b6:4; u64 b10:1; u64 r:53; } b; struct { s32 lo; struct B4Ent *hi; } w; } x30;
+    union { u64 x; struct { u64 b0:5; u64 b5:1; u64 b6:4; u64 b10:1; u64 r:53; } b; struct { s32 lo; struct Actor *hi; } w; } x30;
     s32 x38_;
     f32 x3c;
     u8 pad40[0x50 - 0x40];
@@ -27,7 +27,7 @@ typedef struct {
     u8 pad68[0x70 - 0x68];
     u8 x70[0x10];
     u8 x80[0x10];
-    struct B4Ent *x90;
+    struct Actor *x90;
     f32 x94;
     s32 x98;
     s32 x9c;
@@ -50,7 +50,7 @@ typedef struct {
 typedef struct { u8 pad[0x1c]; f32 x1c; f32 x20; f32 x24; f32 x28; u8 pad2c[0x48 - 0x2c]; s32 x48; s32 x4c; u8 pad50[0x68 - 0x50]; s32 x68; u8 pad6c[0xd4 - 0x6c]; f32 xd4; u8 padd8[4]; f32 xdc; } B4Prm;
 typedef struct { u8 pad[0x48]; s16 x48; s16 x4a; u16 x4c; } B4C130;
 typedef struct { u8 pad[0x170]; union { u64 x; struct { u32 lo; u32 b0:5; u32 b5:1; u32 r:26; } b; } x170; } B4C148;
-typedef struct B4Ent {
+typedef struct Actor {
     s32 x0; u8 pad4[0x30 - 4]; u8 x30[0x10]; f32 x40; u8 pad44[0x68 - 0x44]; s32 x68; B4Prm *x6c;
     u8 pad70[0x88 - 0x70]; s32 x88; u8 pad8c[0xd0 - 0x8c]; f32 xd0[4][4]; u8 pad110[0x130 - 0x110];
     B4C130 *x130; u8 pad134[0x148 - 0x134]; B4C148 *x148;
@@ -59,7 +59,7 @@ typedef struct B4Ent {
     u8 pad200[0x370 - 0x200];
     union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 b7:6; u32 b13:1; u32 hi:18; } b; } x370;
     u8 pad378[0x450 - 0x378]; f32 x450[4]; u8 pad460[0x470 - 0x460];
-    union { u64 x; struct { struct B4Ent *lo; u32 hi; } w; } x470;
+    union { u64 x; struct { struct Actor *lo; u32 hi; } w; } x470;
 } B4Ent;
 
 #include "data/pieces/D_00308CDC.h"
@@ -77,7 +77,7 @@ extern f32 D_002BBDFC;
 #include "data/pieces/D_002E27C8.h"
 
 typedef struct {
-    union { u64 x; struct { u64 b0:2; u64 b2:2; u64 b4:2; u64 b6:2; u64 b8:24; struct B4Ent *hi; } b; } f;
+    union { u64 x; struct { u64 b0:2; u64 b2:2; u64 b4:2; u64 b6:2; u64 b8:24; struct Actor *hi; } b; } f;
     union { u64 x; struct { s32 i; s32 c; } w; struct { u64 lo:32; u64 b32:5; u64 r:27; } b; } x8;
     u8 x10[0x10];
     u8 pad20[0x2c - 0x20];
@@ -465,7 +465,7 @@ extern u32 D_002E3190;
 f32 D_00551D70 ALIGNED(16);
 #include "data/pieces/D_002E31B8.h"
 void func_0014f658(B4E5 *, s32);
-f32 func_0012ec60(s32, s32, f32 *);
+f32 func_0012ec60(struct Actor *, s32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 f32 func_00121748(f32 *, f32 *);
 f32 func_00120c18(f32 *);
@@ -862,7 +862,7 @@ B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {
     case 3: p->x2c = e->x6c->x48 * 2; break;
     case 4: p->x2c = e->x6c->x48 * 3; break;
     case 5: p->x2c = e->x6c->x48 * 5; break;
-    case 6: p->x2c = (*(B4Ent **)&D_002E26A0)->x6c->x4c; break;
+    case 6: p->x2c = D_002E26A0[0]->x6c->x4c; break;
     }
     p->x30.b.b0 = d->x8;
     p->x30.b.b6 = d->x4;

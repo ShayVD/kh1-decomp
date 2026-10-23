@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_TEXT_001E0000_H22_H
 
 #include "common.h"
+#include "data/pieces/D_003E8E28.h"
 
-typedef struct { u16 id; u8 pad[4]; u8 x6; u8 x7; } E8E28;
+typedef Glyph_3e8e28 E8E28;
 
 #endif /* KH1_DATA_TYPES_TEXT_001E0000_H22_H */

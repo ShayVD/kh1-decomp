@@ -1,5 +1,5 @@
 #include "common.h"
-typedef struct { u64 lo, hi; } QW;
+#include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
 typedef struct { u8 pad[0x44]; s32 unk44; u8 pad48[0xBE - 0x48]; u16 unkBE; } Prof;
 typedef struct { u8 pad[0x4C]; u16 unk4C; } C130;
 typedef struct { u8 pad[0x6C]; Prof *unk6C; u8 pad70[0x130 - 0x70]; C130 *unk130; } Chr;
@@ -29,7 +29,7 @@ typedef struct {
     u8 padA90[0xAA0 - 0xA90];
     u8 unkAA0[0x10];
 } Obj;
-extern u8 D_00351E10[];
+extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00651D60;
 extern QW *D_00651D64;
 extern f32 D_002BBDFC;
@@ -161,8 +161,8 @@ void func_002410b8(Obj *o) {
     QW **bp = &D_00651D64;
     QW **pp = &D_00651D60;
     QW *q;
-    *bp = (QW *)D_00351E10;
-    *pp = (QW *)(D_00351E10 + 0x10);
+    *bp = D_00351E10;
+    *pp = D_00351E10 + 1;
     func_00240b68(o);
     *pp = func_0023ee80(o, *pp);
     *pp = func_0023dfc0(o, *pp);
@@ -194,11 +194,11 @@ void func_00249a48(void *, s32);
 
 void func_0023d698(s32 a) {
     if (a == 0) {
-        func_00249a48((*(u8 (*)[0x4e20])&D_00426970), 1);
+        func_00249a48(&D_00426970, 1);
     } else if (a == 1) {
-        func_00249a48(D_0042B790, 1);
+        func_00249a48(&D_0042B790, 1);
     } else {
-        func_00249a48(D_004305B0, 1);
+        func_00249a48(&D_004305B0, 1);
     }
 }
 
@@ -411,8 +411,8 @@ s32 func_00244298(void) {
     for (i = 0; i < 3; i++) {
         for (j = 0; j < D_00656510.cnt[i]; j++) {
             e = &D_00656510.e[i][j];
-            D_00656424 = (QW *)D_00351E10;
-            D_00656420 = (QW *)(D_00351E10 + 0x10);
+            D_00656424 = D_00351E10;
+            D_00656420 = D_00351E10 + 1;
             if (e->unk0 == 0) continue;
             n = e->unk18;
             if (left < n + 1) {
@@ -480,8 +480,8 @@ void func_00248238(Ow *o) {
     Wk *w = o->unk4;
     s32 i;
     if (w->unk4 == 0 && w->unk18 == 0) return;
-    D_006691D4 = (QW *)D_00351E10;
-    D_006691D0 = (QW *)(D_00351E10 + 0x10);
+    D_006691D4 = D_00351E10;
+    D_006691D0 = D_00351E10 + 1;
     func_00247cc8(w->unk0);
     D_006693F0.x0 = 12;
     D_006693F0.y0 = 15;

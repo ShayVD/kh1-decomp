@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_00451040_H
 
 #include "common.h"
+#include "data/types/nostrict_text_00240000_s6_g1.h"
 
-extern u8 D_00451040[0x33f0];
+extern Blob D_00451040; /* a sprite file like D_0044A830 (0x33f0 bytes) */
 
 #endif /* KH1_DATA_PIECES_D_00451040_H */

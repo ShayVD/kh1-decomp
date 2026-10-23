@@ -169,9 +169,9 @@ void func_001bfcd8(void) {
     {
         u8 *c = D_0037A16C->ctx;
         RunQ_bfcd8 *q = D_0037A170;
-        q->wc = -1;
+        q[1].arg = -1;
         q->ctx = c;
-        q->w8 = 0;
+        q[1].ctx = 0;
         q->arg = 0;
     }
 }

@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker b03), built without strict aliasing. */
 #include "common.h"
+#include "data/pieces/D_0035C710.h"
 #include "data/pieces/D_00304BE8_s.h"
 
 #include "data/types/nostrict_text_00130000_b03_p3.h"
@@ -698,9 +699,8 @@ void func_0013e638(B3Ob *o, B3Ev *e, f32 *q) {
     q[3] = 0.0f;
 }
 
-typedef struct { f32 x0[4]; f32 x10, x14; u64 x18; } B3PjE;
+typedef W8Ent35 B3PjE;
 extern B3Pj D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
-#include "data/pieces/D_0035C710.h"
 extern f32 *D_00531B68;
 #include "data/pieces/D_002C58D0.h"
 extern f32 D_00306840;
@@ -718,13 +718,13 @@ s32 func_00145ce8(B3Pj *o) {
     f32 u[4];
     f32 m[16];
     f32 s, r, a;
-    B3PjE *e = &((B3PjE *)&D_0035C710)[o - D_0052EB60];
+    B3PjE *e = &D_0035C710[o - D_0052EB60];
 
     switch (o->x10.s.x16) {
     case 0:
         switch ((u16)(o->x10.x >> 2) & 3) {
         case 0:
-            func_00145528(o, e->x0);
+            func_00145528(o, e->v);
             break;
         case 1:
             func_00145858(o, e);
@@ -744,7 +744,7 @@ s32 func_00145ce8(B3Pj *o) {
         }
         if (0.0f < o->x18) {
             o->x18 -= D_002BBDFC;
-            if (o->x18 <= 0.0f || (D_00531B68 && e->x0[1] > D_00531B68[2])) {
+            if (o->x18 <= 0.0f || (D_00531B68 && e->v[1] > D_00531B68[2])) {
                 o->x10.s.x16 = 3;
                 o->x18 = 12.0f;
             }
@@ -759,11 +759,11 @@ s32 func_00145ce8(B3Pj *o) {
         func_00267e40(o->x20, u);
         func_00267e90(u, o->x20, s);
         func_001315c0(o->x1c, 0x8003, 0.0f, t);
-        func_00267518(e->x0, t, u);
+        func_00267518(e->v, t, u);
         e->x10 = r;
         o->x18 -= D_002BBDFC;
         if (o->x18 <= 0.0f) {
-            e->x18 &= ~0x100;
+            e->u.w &= ~0x100;
             return 4;
         }
         break;
@@ -772,13 +772,13 @@ s32 func_00145ce8(B3Pj *o) {
         e->x10 = r;
         o->x18 -= D_002BBDFC;
         if (o->x18 <= 0.0f) {
-            e->x18 &= ~0x100;
+            e->u.w &= ~0x100;
             return 4;
         }
         break;
     case 4:
         if (o->x18 < 0.0f) {
-            e->x18 |= 0x200;
+            e->u.w |= 0x200;
         } else {
             r = o->x18 / D_00306840;
             e->x10 = r;
@@ -786,7 +786,7 @@ s32 func_00145ce8(B3Pj *o) {
         o->x18 = o->x18 - 1.0f;
         break;
     case 5:
-        e->x18 &= ~0x200;
+        e->u.w &= ~0x200;
         if (o->x18 < 0.0f) {
             e->x10 = 1.0f;
             o->x18 = 900.0f;

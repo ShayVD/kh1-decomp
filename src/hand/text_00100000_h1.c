@@ -1,12 +1,13 @@
 /* Hand-matched functions from 0x00100000-0x00108fff (worker 1). */
 #include "common.h"
+#include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
 
 /* ---- types ---- */
 typedef struct { s32 a, b, c, d; } Q4;
 /* DMA tag pair built by func_00101970. */
 typedef struct { Q4 h; s32 n, x, c, d; } DmaHdr;
-typedef struct { f32 x, y, z; } Vec3;
+typedef Vtx Vec3;
 /* Flag word D_002BC0A8. */
 #include "data/pieces/D_002BC0A8.h"
 typedef Flags_2BC0A8 Flags;
@@ -43,7 +44,6 @@ extern s32 D_002A6204;
 #include "data/pieces/D_002A6208.h"
 extern s32 D_002A6230;
 #include "data/pieces/D_002A6238.h"
-#include "data/pieces/D_002A624C.h"
 extern s32 D_002A6258;
 extern s32 D_002A6294;
 extern u16 D_002A62F8[];
@@ -298,7 +298,7 @@ s32 func_00104a90(s32 i, s32 *out) {
 }
 
 void func_00104eb0(s32 i, f32 *out) {
-    Vec3 *v = &((Vec3 *)D_002A624C)[D_002A6238[i].v[0]];
+    Vec3 *v = &D_002A624C[D_002A6238[i].v[0]];
     out[0] = v->x;
     out[1] = v->y;
     out[2] = v->z;

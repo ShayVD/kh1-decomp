@@ -34,7 +34,7 @@ typedef union {
     W9U w[0x20];
     u64 d[0x10];
 } W9Obj144;
-typedef struct {
+typedef struct Actor {
     s32 flags;
     s32 x4;
     u8 pad8[0x10 - 8];

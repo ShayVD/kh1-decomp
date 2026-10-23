@@ -56,8 +56,8 @@ extern Node57 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
 extern Node57 *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
 
 #include "data/pieces/D_002E26A0.h"
-extern s32 func_00122ff8(ObjBD40 *);
-extern void func_0016f3d0(ObjBD40 *, s32);
+extern s32 func_00122ff8(void *); /* an actor (D_002E26A0[k] or an ObjBD40) */
+extern void func_0016f3d0(void *, s32);
 typedef struct { s32 a, b; } P8;
 extern P8 D_00575310[]; /* src/data/bss_0057.c: TalkEA D_00575310 */
 extern Node57 D_00575528[]; /* src/data/bss_0057.c: Node6F D_00575528[30] */

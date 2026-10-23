@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_NOSTRICT_NOFILL_TEXT_00120000_H54_H
 
 #include "common.h"
+#include "data/pieces/D_002E3170.h"
 
-typedef struct { s32 f0, f4; u32 f8; s32 fc; s32 n; u8 ids[0x20]; s32 f34; } Q8;
+typedef Q8_2e3170 Q8; /* a menu cursor block (D_002E3170's stack) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_NOFILL_TEXT_00120000_H54_H */

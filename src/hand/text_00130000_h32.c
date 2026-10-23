@@ -617,7 +617,7 @@ typedef struct {
     u8 pad00[0x4C];
     u16 x4c;
 } W32Pi;
-typedef struct {
+typedef struct Actor {
     u32 flags;
     u8 pad004[0x130 - 0x4];
     W32Pi *x130;
@@ -630,7 +630,7 @@ void func_002414a8(s32 a, s32 b);
 void func_0013a810(void) {
     s32 i;
     for (i = 0; i < 2; i++) {
-        W32Ply *p = (W32Ply *)D_002E26A0[i + 1];
+        W32Ply *p = D_002E26A0[i + 1];
         if (p == 0) continue;
         if (p->flags & 0x8000) continue;
         func_00123460(p);

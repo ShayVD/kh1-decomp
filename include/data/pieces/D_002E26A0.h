@@ -7,6 +7,7 @@
 
 #include "common.h"
 
-extern void *D_002E26A0[3];
+struct Actor;
+extern struct Actor *D_002E26A0[3];
 
 #endif /* KH1_DATA_PIECES_D_002E26A0_H */

@@ -7,18 +7,18 @@
 #include "common.h"
 
 typedef struct {
-    u8 pad_0[0xc];
+    f32 x, y, z;    /* the segment's start point */
     f32 len;
 } Seg_362438;
 
 typedef struct {
     s32 n;
     f32 x4;
-    u8 pad_8[0x4];
+    f32 x8;
     f32 xc;
     f32 x10;
-    u8 pad_14[0x4];
-    s32 x18;
+    f32 x14;        /* speed (h38: x14 * dt) */
+    s32 x18;        /* flags: 1 loops, 0x10 */
     u8 x1c;
     u8 pad_1d[0x3];
     Seg_362438 seg[1];

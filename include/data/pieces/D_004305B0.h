@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_004305B0_H
 
 #include "common.h"
+#include "data/types/nostrict_nofill_text_00230000_s6_24_p.h"
 
-extern u8 D_004305B0[0x1770];
+extern Tex6000 D_004305B0; /* like D_00431F30[k] */
 
 #endif /* KH1_DATA_PIECES_D_004305B0_H */

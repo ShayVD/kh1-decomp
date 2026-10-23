@@ -411,10 +411,6 @@ typedef struct {
     f32 x324;
 } C02Ob3;
 
-typedef struct {
-    u8 *p;
-    u8 pad[12];
-} C02MSlot;
 
 #include "data/pieces/D_003044E0.h"
 
@@ -549,7 +545,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
         return 0;
     mo = 0;
     if (bst.mesh != -1)
-        mo = ((C02MSlot *)&D_003044E0)[bst.mesh].p;
+        mo = D_003044E0[bst.mesh].x0;
     ((C02Hit *)o->x148)->x90 = bst.id;
     ((C02Hit *)o->x148)->x94 = mo;
     bn[3] = 0;

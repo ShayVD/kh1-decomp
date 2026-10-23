@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
 #include "data/types/text_001e0000_h45_p.h"
-typedef struct { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
+typedef struct Actor { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
 typedef struct { s32 x0; u8 pad[844]; } E848;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; u8 pad3080[0x450]; s32 f34d0; } Big20;
 typedef struct { f32 x, y, z; } Vec3;

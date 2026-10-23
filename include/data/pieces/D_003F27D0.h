@@ -4,7 +4,9 @@
 #define KH1_DATA_PIECES_D_003F27D0_H
 
 #include "common.h"
+#include "data/pieces/D_003F1A70.h"
 
-extern u8 D_003F27D0[0x400];
+/* A 0x400-byte GIF packet buffer like D_003F1A70 (session 31). */
+extern Q_3f1a70 D_003F27D0[0x40];
 
 #endif /* KH1_DATA_PIECES_D_003F27D0_H */

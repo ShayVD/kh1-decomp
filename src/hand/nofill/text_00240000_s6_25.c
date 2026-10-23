@@ -1,5 +1,4 @@
 #include "common.h"
-typedef struct { u8 lo : 3; u8 st : 2; u8 hi : 3; } HddSt;
 #include "data/pieces/D_002C5968.h"
 extern s32 D_0046A610;
 s32 WaitSema(s32);
@@ -21,7 +20,7 @@ void func_0024d618(s32 sema) {
     u8 buf[16];
     for (;;) {
         WaitSema(sema);
-        (*(volatile HddSt *)&D_002C5968).st = 2;
+        (*(volatile Sema_2c5968 *)&D_002C5968).mode = 2;
         if (hdd_ok() >= 0) {
             if (hdd_ctl(0x4807) != 3) {
                 pfs_ctl();
@@ -36,7 +35,7 @@ void func_0024d618(s32 sema) {
         }
     done:
         while (func_0026aca8(buf) == 0) func_0024d5d0(100000);
-        (*(volatile HddSt *)&D_002C5968).st = 3;
+        (*(volatile Sema_2c5968 *)&D_002C5968).mode = 3;
         D_0046A610++;
     }
 }

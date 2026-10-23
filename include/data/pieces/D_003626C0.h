@@ -4,8 +4,11 @@
 #define KH1_DATA_PIECES_D_003626C0_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-typedef struct { f32 a[4]; f32 b[4]; s32 flag; } Blk26C0;
+/* the camera blend start / end points (h61 func_0017b200 sets them, h11
+ * func_0017b170 copies them back once flag is set) */
+typedef struct { FVec4 a; FVec4 b; s32 flag; } Blk26C0;
 
 extern Blk26C0 D_003626C0;
 

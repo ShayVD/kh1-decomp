@@ -338,15 +338,15 @@ extern s32 D_003E8E2C;
 
 s32 func_001eff50(s32 a) {
     s32 i;
-    E8E28 *e = (*(E8E28 * *)&D_003E8E28);
+    E8E28 *e = D_003E8E28;
     for (i = 0; i < D_003E8E2C; i++, e++) {
-        if (e->id == a) return i;
+        if (e->code == a) return i;
     }
     return 0;
 }
 
 s32 func_001f0600(s32 i, s32 b) {
-    return (((*(E8E28 * *)&D_003E8E28)[i].x6 << 4) * b / 18) >> 4;
+    return ((D_003E8E28[i].w << 4) * b / 18) >> 4;
 }
 
 typedef struct Obj {

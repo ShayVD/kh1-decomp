@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_002E2700_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-extern f32 D_002E2700[0x10];
+extern FMtx4 D_002E2700; /* a camera matrix (h53 copies D_004F76E0[k] into it) */
 
 #endif /* KH1_DATA_PIECES_D_002E2700_H */

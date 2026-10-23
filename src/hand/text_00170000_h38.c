@@ -363,7 +363,7 @@ void func_0017b250(f32 *out, f32 (*m)[4], f32 t) {
 
 void func_0017b740(V4 *out, V4 *in) {
     V4 d;
-    Path *p = ((Path *)D_00362438);
+    Path *p = D_00362438;
     func_00267530(&d, &D_00575970, in);
     d.y = 0.0f;
     func_00121fc4(&d, &d);
@@ -380,7 +380,7 @@ void func_0017bfe8(void) {
     Cam *c2;
     f32 dt = D_002BBDFC;
     Cam *c = &D_00575940;
-    f32 max = ((Path *)D_00362438)->x14 * dt;
+    f32 max = D_00362438->x14 * dt;
     f32 s, d;
     f32 k = 100.0f;
     if (c->x64) {
@@ -401,9 +401,9 @@ void func_0017bfe8(void) {
 }
 
 void func_0017c7f0(void) {
-    Path *p = ((Path *)D_00362438);
+    Path *p = D_00362438;
     Cam *c;
-    if (p->flags & 4) {
+    if (p->x18 & 4) {
         if (D_002C5BB8 & 0x3000) {
             D_005759A6 = 0;
             func_0011d768(4);
@@ -417,7 +417,7 @@ void func_0017c7f0(void) {
     }
     if (func_001375d8(D_00575894)) return;
     if (c->x65) return;
-    if (D_00575920.x0 && !(p->flags & 0x10)) return;
+    if (D_00575920.x0 && !(p->x18 & 0x10)) return;
     func_0017c4c8();
     func_0017c550();
 }
@@ -427,7 +427,7 @@ s32 func_0017dc40(void) {
     void *v = *a;
     if (v != 0 || D_00362450 != 0) {
         D_00362434 = v;
-        D_00362438 = (Path_362438 *)D_00362450;
+        D_00362438 = D_00362450;
         (*(void **)&D_0036243C) = D_00362454;
         func_00176f08(9, 0.0f);
         *a = 0;

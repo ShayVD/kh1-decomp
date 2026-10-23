@@ -73,7 +73,7 @@ typedef struct {
 typedef struct { u8 pad[0x30]; u64 w30; } Sub148;
 typedef struct { u8 pad[0x2C]; s32 w2C; } Sub14C;
 typedef struct { u8 pad[0x4C]; u16 h4C; } Sub130;
-typedef struct { u8 pad[0x130]; Sub130 *p130; u8 pad134[0x10]; Wk70 *p144; Sub148 *p148; Sub14C *p14C; } Obj70;
+typedef struct Actor { u8 pad[0x130]; Sub130 *p130; u8 pad134[0x10]; Wk70 *p144; Sub148 *p148; Sub14C *p14C; } Obj70;
 typedef struct { s32 o0, o4, o8, oC, n; s32 ofs[1]; } Tbl70;
 typedef struct { Ent370 *tgt; s32 part; } Lock71;
 typedef struct { s32 w0; u8 pad4[0x10]; f32 f14, f18, f1C, f20, f24; } Sub170C;

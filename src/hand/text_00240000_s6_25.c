@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002C5968.h"
 /* 241948 */
 typedef struct {
     u8 pad[0x9C];
@@ -275,8 +276,6 @@ void func_0024aac8(UiFile *buffer) {
 }
 
 /* 24b448 */
-typedef struct { u8 lo:3; u8 mode:2; u8 hi:3; } Bits8;
-#include "data/pieces/D_002C5968.h"
 extern Prm *D_0046A038;
 #include "data/pieces/D_0046A03C.h"
 #include "data/pieces/D_0046A040.h"
@@ -289,7 +288,7 @@ void func_0024b448(s32 i) {
     Prm *p;
     o40 = D_0046A040;
     o48 = D_0046A048;
-    switch ((*(volatile Bits8 *)&D_002C5968).mode) { default: return; case 0: break; }
+    switch ((*(volatile Sema_2c5968 *)&D_002C5968).mode) { default: return; case 0: break; }
     p = D_00669A18[i];
     D_0046A038 = p;
     D_0046A03C = p->unkC;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 
 #include "data/types/text_00110000_h53_p.h"
@@ -135,8 +136,6 @@ typedef struct {
     u8 *buf;
     u32 result;
 } CdReq53;
-typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 r : 29; } F5968;
-#include "data/pieces/D_002C5968.h"
 extern char D_0048D260[];
 extern u32 D_002C5B44;
 extern void (*D_0046A6A8)(s32);
@@ -189,8 +188,8 @@ rd:
 out:
     if (err) {
         D_0046A6A8(4);
-        (*(volatile F5968 *)&D_002C5968).b2 = 1;
-        do func_0010c150(); while ((*(volatile F5968 *)&D_002C5968).b2);
+        (*(volatile Fl_2c5968 *)&D_002C5968).b2 = 1;
+        do func_0010c150(); while ((*(volatile Fl_2c5968 *)&D_002C5968).b2);
         func_002193e0(0);
         r->lsn += D_004F3200;
         func_0010c170(func_001201d0, r);
@@ -488,10 +487,10 @@ s32 func_00125000(void) {
     func_00120cf8(&d, m, func_00120c88(D_002E27A4));
     func_002672f8(&r, m, &D_002E26B0);
     func_00267930(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
-    sceVu0CopyMatrix((*(M53 *)&D_002E2700), D_004F76E0[D_002C5950]);
+    sceVu0CopyMatrix(D_002E2700, D_004F76E0[D_002C5950]);
     sceVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
     sceVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
-    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, (*(M53 *)&D_002E2700));
+    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, D_002E2700);
     sceVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
     D_002E27AC = D_004F7660[D_002C5950];
     func_00110ba8();

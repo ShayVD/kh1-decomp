@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_0045FAC0.h"
 #include "data/bss_0066.h"
 
 /* 16-byte list entries; the D_00667F50/D_00667F54-style globals are
@@ -18,7 +19,7 @@ typedef struct { u8 pad[0xc]; SC *c; } SArg;
 
 typedef struct { u32 state; s32 cnt; u8 pad[0x18]; u8 sub[1]; } S5cd0;
 typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
-typedef struct { u8 pad0[0x30]; u8 a[0xc0]; u8 b[0xc0]; u8 c[0x780]; } E930;
+typedef Fx E930;
 typedef struct { u8 pad[0x180]; B192 b; } L240;
 typedef struct { u32 state; f32 t; s32 x8; s32 xc; s32 x10; u8 pad[0xa8c]; s32 xaa0; } S8370;
 typedef struct { u8 r, g, b, a; } RGBA;
@@ -85,7 +86,6 @@ extern f32 D_002BBDFC;
 Panel D_00668F90 ALIGNED(16);
 extern Q4 *D_00668F80;
 extern u8 D_0045E1F0[];
-#include "data/pieces/D_0045FAC0.h"
 extern u8 D_0045FA80[];
 extern u8 D_0045FA88[];
 extern u8 D_0045FA90[];
@@ -262,7 +262,7 @@ void func_00247258(void) {
     s32 i;
     E930 *p;
     func_0024aac8(D_0045E1F0);
-    p = (*(E930 (*)[10])&D_0045FAC0);
+    p = D_0045FAC0;
     for (i = 0; i < 10; i++) {
         func_0024af40(D_0045FA80, p->a, D_0045E1F0);
         func_0024af40(D_0045FA88, p->b, D_0045E1F0);
