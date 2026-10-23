@@ -1,28 +1,15 @@
+/* The functions of src/text/textwin.c that need nofill: func_001f4058 sets
+ * a window's +0x68 to entry i of D_003E8E30 (-1: none); func_001f5fe0 runs
+ * the opening / closing animation picked by +0x80 (+0x9c is the time, +0x90
+ * the alpha, +0x50 ... +0x5c and +0xb0 / +0xb4 positions, +0x74 / +0x78 the
+ * scale). */
 #include "common.h"
+#include "text/textwin.h"
+#include "data/pieces/D_003E8E30.h"
 
-/* rodata */ /* func_001f5fe0: s11w70, hand/nofill, NATURAL (no flagged shapes). Jump table at 0x490c70 (wqb03_rr.py 490c70 MATCH). */
-
-typedef struct {
-    u8 pad0[0x24];
-    u32 x24;             /* 0x24 */
-    u8 pad28[0x48 - 0x28];
-    u64 flags;           /* 0x48 */
-    s32 x50, x54, x58, x5c;
-    u8 pad60[0x74 - 0x60];
-    f32 x74;             /* 0x74 */
-    f32 x78;             /* 0x78 */
-    u8 pad7c[4];
-    u32 kind;            /* 0x80 */
-    u8 pad84[0x8c - 0x84];
-    s32 x8c;             /* 0x8C */
-    s32 x90;             /* 0x90 */
-    u8 pad94[0x9c - 0x94];
-    f32 t;               /* 0x9C */
-    u8 pada0[0xac - 0xa0];
-    s32 xac;             /* 0xAC */
-    s32 xb0;             /* 0xB0 */
-    s32 xb4;             /* 0xB4 */
-} G2Wn;
+void func_001f4058(TextWin *p, s32 i) {
+    p->x68 = (i == -1) ? 0 : &D_003E8E30[i];
+}
 
 f32 sinf(f32);
 f32 cosf(f32);
@@ -36,20 +23,21 @@ u32 func_001eddc0(u32, u32, f32);
 #define PI8 25.1327419281005859375f
 #define LERP(a, b, x) ((a) + ((b) - (a)) * (x))
 
-void func_001f5fe0(G2Wn *o) {
+/* rodata: jump table at 0x490c70.  s11w70, natural (no flagged shapes). */
+void func_001f5fe0(TextWin *o) {
     f32 t;
     f32 p;
     f32 s;
 
-    t = o->t;
-    switch (o->kind) {
+    t = o->x9c;
+    switch ((u32)o->x80) {
     case 0:
-        o->x8c++;
+        o->state++;
         break;
     case 2:
         if (t >= 16.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 3:
@@ -59,7 +47,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 10.0f) {
             o->x90 = 0x80;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 4:
@@ -69,7 +57,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 10.0f) {
             o->x90 = 0x80;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 5:
@@ -79,7 +67,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 10.0f) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 6:
@@ -89,7 +77,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 10.0f) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 7:
@@ -101,7 +89,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 8:
@@ -113,7 +101,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 9:
@@ -125,7 +113,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 10:
@@ -137,7 +125,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 11:
@@ -145,11 +133,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = o->x78 = LERP(0.9f, 1.0f, p);
         if (t >= 16.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 12:
@@ -157,11 +145,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = o->x78 = LERP(1.1f, 1.0f, p);
         if (t >= 16.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 13:
@@ -169,11 +157,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = o->x78 = LERP(0.0f, 1.0f, sinf(p * PI_2));
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 14:
@@ -181,11 +169,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = o->x78 = LERP(1.5f, 1.0f, sinf(p * PI_2));
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 15:
@@ -193,10 +181,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = sinf(p * PI_2);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 16:
@@ -204,10 +192,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x78 = sinf(p * PI_2);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x78 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 21:
@@ -216,11 +204,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x78 = LERP(2.0f, 1.0f, p);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 22:
@@ -229,11 +217,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = LERP(2.0f, 1.0f, p);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 17:
@@ -241,10 +229,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = LERP(0.75f, 1.0f, p);
         if (t >= 8.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 18:
@@ -252,10 +240,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x78 = LERP(0.75f, 1.0f, p);
         if (t >= 8.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x78 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 19:
@@ -263,10 +251,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = LERP(1.7f, 1.0f, p);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 20:
@@ -274,10 +262,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x78 = LERP(1.7f, 1.0f, p);
         if (t >= 10.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x78 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 23:
@@ -286,11 +274,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = LERP(0.0f, 1.0f, sinf((p * PI_2) + PI3_2) + 1.0f);
         o->x78 = LERP(0.0f, 1.0f, sinf((p * PI_2)));
         if (t >= 12.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 24:
@@ -299,11 +287,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = LERP(0.0f, 1.0f, sinf((p * PI_2)));
         o->x78 = LERP(0.0f, 1.0f, sinf((p * PI_2) + PI3_2) + 1.0f);
         if (t >= 12.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 25:
@@ -315,7 +303,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 26:
@@ -327,7 +315,7 @@ void func_001f5fe0(G2Wn *o) {
             o->x90 = 0x80;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 27:
@@ -337,13 +325,13 @@ void func_001f5fe0(G2Wn *o) {
         o->xb0 = (f32)o->x50 + (16.0f - p * 16.0f) * sinf(func_001edcd8((p * PI8)));
         o->xb4 = (f32)o->x54 + (16.0f - p * 16.0f) * -cosf(func_001edcd8((p * PI8)));
         if (t >= 16.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
             o->xb4 = o->x54;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 28:
@@ -357,11 +345,11 @@ void func_001f5fe0(G2Wn *o) {
             o->x74 = o->x78 = LERP(1.2f, 1.0f, sinf(p * PI_2));
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 29:
@@ -369,10 +357,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x74 = cosf(func_001edcd8(p * PI2));
         if (t >= 16.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 30:
@@ -380,10 +368,10 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         o->x78 = cosf(func_001edcd8(p * PI2));
         if (t >= 16.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x90 = 0x80;
             o->x78 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 31:
@@ -392,11 +380,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = cosf(func_001edcd8(p * PI2)) * o->x78;
         o->x78 = LERP(0.2f, 1.0f, p);
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 32:
@@ -405,11 +393,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = LERP(0.2f, 1.0f, p);
         o->x78 = cosf(func_001edcd8(p * PI2)) * o->x74;
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 33:
@@ -418,11 +406,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = cosf(func_001edcd8(p * PI2)) * o->x78;
         o->x78 = LERP(1.5f, 1.0f, p);
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 34:
@@ -431,11 +419,11 @@ void func_001f5fe0(G2Wn *o) {
         o->x74 = LERP(1.5f, 1.0f, p);
         o->x78 = cosf(func_001edcd8(p * PI2)) * o->x74;
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 35:
@@ -452,11 +440,11 @@ void func_001f5fe0(G2Wn *o) {
             o->x78 = LERP(0.05f, 1.0f, sinf(p * PI_2));
         }
         if (t >= 26.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 36:
@@ -473,13 +461,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 37:
@@ -496,13 +484,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 38:
@@ -519,13 +507,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb0 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 39:
@@ -542,13 +530,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb0 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 40:
@@ -565,13 +553,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 41:
@@ -588,13 +576,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 42:
@@ -611,13 +599,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb0 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 43:
@@ -634,13 +622,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb0 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 44:
@@ -648,7 +636,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 40.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 45:
@@ -656,7 +644,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 40.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 46:
@@ -664,7 +652,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 11.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 47:
@@ -672,7 +660,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 6.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 48:
@@ -694,7 +682,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 32.0f) {
             o->x24 = 0x5A3287CD;
             o->xb0 = o->x5c;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 49:
@@ -713,7 +701,7 @@ void func_001f5fe0(G2Wn *o) {
         if (t >= 20.0f) {
             o->x24 = 0x5A3287CD;
             o->xb0 = o->x58;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 50:
@@ -721,7 +709,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 10.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 1:
@@ -730,7 +718,7 @@ void func_001f5fe0(G2Wn *o) {
         o->x90 = p * 128.0f;
         if (t >= 16.0f) {
             o->x90 = 0x80;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 54:
@@ -747,13 +735,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb0 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb0 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 52:
@@ -770,13 +758,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     case 53:
@@ -793,13 +781,13 @@ void func_001f5fe0(G2Wn *o) {
             o->xb4 = o->x50;
         }
         if (t >= 20.0f) {
-            o->flags &= ~1;
+            o->u48.q &= ~1;
             o->xac = 0;
             o->x78 = 1.0f;
             o->x90 = 0x80;
             o->x74 = 1.0f;
             o->xb4 = o->x50;
-            o->x8c++;
+            o->state++;
         }
         break;
     }

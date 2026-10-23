@@ -8,16 +8,6 @@ typedef Save_304be8 SaveM;
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
-#include "data/pieces/D_003E8E28.h"
-typedef Glyph_3e8e28 Glyph;
-
-typedef struct Nd {
-    u8 pad0[0xc];
-    struct Nd *x0c;
-    struct Nd *x10;
-    u8 pad14[0x8c - 0x14];
-    s32 x8c;
-} Nd;
 
 typedef struct {
     u8 pad0[0xce];
@@ -37,25 +27,8 @@ typedef struct { u8 pad0[0x94]; f32 f94; } Obj207;
 typedef struct { u8 pad0[0xbe]; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; } Obj207a;
 #include "data/pieces/D_003F2C40.h"
 typedef E20_3F2C40_2 E20;
-
-typedef struct {
-    s32 x0;
-    s32 x4;
-    s32 x8;
-    u8 padc[0xa0 - 0xc];
-    f32 fa0, fa4, fa8;
-    u32 ac;
-    s32 pad_b0;
-    s32 b4;
-    s16 pad_b8;
-    s16 ba;
-} Txt;
-typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
-#include "data/pieces/D_003F2270.h"
-extern s32 D_0063F74C;
-extern s32 D_003F1A60;
 extern s32 D_00640DE0;
 extern s32 D_00640DE4;
 extern s32 D_00640DE8;
@@ -65,33 +38,9 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 extern f32 D_002BBDFC;
 extern s32 D_003F2F10[];
-s32 sceGsSyncPath(s32, u16);
 f32 sinf(f32);
-u64 *func_0011fb38(s32, u64, u64 *);
-u64 *func_00122048(u32, u32);
-void func_001220b8(void *);
-s32 func_001efb88(void);
-u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
-s32 func_001eff50(s32);
-u64 *func_001f12c0(u64 *, s32, s32, s32, s32, s32, s32);
-u64 *func_001f15f0(u64 *, s32, s32, s32, s32, s32, s32);
-u64 *func_001f1868(u64 *, s32, s32, s32, s32, s32, s32);
-u64 *func_001f18e8(u64 *, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_001f3680(Nd *);
-void func_001f3698(Nd *, s32);
-void func_001f4778(Win46 *);
-void func_001f4d10(Win46 *);
-void func_001f52a8(Win46 *);
-void func_001f52e8(Win46 *);
-void func_001f54f8(Win46 *);
-void func_001f5988(Win46 *);
 s32 func_001f94f0(void *, s32, s32, s32, u8 *, s32, s32);
-void func_001f9e48(s32, s32, s32, s32, s32, s32, s32);
-void func_001fa8b0(s32, s32, s32, s32, s32, s32);
-void func_001fade0(s32, s32, s32, s32, s32, s32);
-void func_001fb248(s32, s32, s32, s32, s32, s32);
-void func_001fb408(s32, s32, s32, s32, s32, s32, s32, s32);
 void func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_001fc308(Obj207 *, s32, s32, s32, s32, s32, s32, u32, u32);
 s32 func_001fd538(void *);
@@ -102,199 +51,10 @@ void func_00201c60(void *, s32, s32, s32);
 void func_00203028(Obj203 *, s32, s32, s32, s32);
 void func_002053e8(Obj207 *, s32, s32, s32, s32, u32);
 void func_002078f0(Obj207a *, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc);
-void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g);
 void func_001fd708(void);
 void func_001fd720(s32 m);
-s32 func_001f45e0(Txt *t);
-s32 func_001f4650(Txt *t);
-void func_001f4658(Txt *t, s32 v);
-void func_001f4660(Txt *t);
-s32 func_001f4668(Txt *t);
-void func_001f4670(Txt *t, s32 v);
-void func_001f4678(Txt *t);
-f32 func_001f4680(Txt *t);
-void func_001f4688(Txt *t, f32 v);
-f32 func_001f4690(Txt *t);
-void func_001f4698(Txt *t, f32 v);
-f32 func_001f46a0(Txt *t);
-void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-s32 func_001f0340(u8 *p, s32 scale) {
-    s32 d = 18;
-    s32 x = 0;
-    for (;;) {
-        s32 c = *p;
-        s32 k;
-        if (c == 0 || c == 10) return x >> 4;
-        k = c | (p[1] << 8);
-        p += 2;
-        if (k == 0x4081) {
-            x += (scale << 8) / d;
-        } else {
-            Glyph *g = &D_003E8E28[func_001eff50(k)];
-            x += ((g->w << 4) + func_001efb88()) * scale / d;
-        }
-    }
-}
-
-s32 func_001f2a50(s32 a, s32 b, s32 c, s32 d, s32 e) {
-    u64 *buf;
-    void *u;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
-    buf = func_00122048(0x1000, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    buf[0] = ((s32)((u8 *)func_001f12c0(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-    return D_0063F74C;
-}
-
-s32 func_001f2b58(s32 a, s32 b, s32 c, s32 d, s32 e) {
-    u64 *buf;
-    void *u;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
-    buf = func_00122048(0x400, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    buf[0] = ((s32)((u8 *)func_001f15f0(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-    return D_0063F74C;
-}
-
-s32 func_001f2c60(s32 a, s32 b, s32 c, s32 d, s32 e) {
-    u64 *buf;
-    void *u;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
-    buf = func_00122048(0x400, 0x80);
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    buf[0] = ((s32)((u8 *)func_001f1868(buf + 2, 1, a, b, c, d, e) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-    return D_0063F74C;
-}
-
-s32 func_001f2d68(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    u64 *buf;
-    void *u;
-    u64 *p;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
-    p = func_00122048(0x400, 0x80);
-    buf = p;
-    p += 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    buf[0] = ((s32)((u8 *)func_001f18e8(p, 1, a, b, c, d, e, f, g, h) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-    return D_0063F74C;
-}
-
-s32 func_001f3978(Nd *n, s32 skip, s32 cnt) {
-    s32 i;
-    if (n == 0) return -1;
-    for (i = 0; i < skip && n->x0c; i++) n = n->x0c;
-    i = i + cnt + 1;
-    do {
-        if (i <= 0) return 0;
-        switch (n->x8c) {
-        case 0:
-        case 4:
-        case 5:
-            break;
-        default:
-            func_001f3680(n);
-            break;
-        }
-        n = n->x10;
-        i--;
-    } while (n);
-    return 0;
-}
-
-s32 func_001f3a30(Nd *n, s32 skip, s32 cnt, s32 arg) {
-    s32 i;
-    if (n == 0) return -1;
-    for (i = 0; i < skip && n->x0c; i++) n = n->x0c;
-    i = i + cnt + 1;
-    do {
-        if (i <= 0) return 0;
-        switch (n->x8c) {
-        case 0:
-        case 4:
-        case 5:
-            break;
-        default:
-            func_001f3698(n, arg);
-            break;
-        }
-        n = n->x10;
-        i--;
-    } while (n);
-    return 0;
-}
-
-void func_001f8f30(void) {
-    void *u;
-    u64 *p = func_00122048(0x400, 0x80);
-    u64 *buf = p;
-    p += 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    p[0] = 0x1000000000008001;
-    p[1] = 0xe;
-    buf[0] = ((s32)((u8 *)func_0011fb38(0x40, 0x017F000001FF0000, p + 2) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-}
-
-s32 func_001f9438(void *a, s32 b, s32 c, s32 d, s32 id, s32 f, s32 g) {
-    if (id == 0) return c;
-    return func_001f94f0(a, b, c, d, func_001efbb8(id), f, g);
-}
-
-void func_001fa5b0(s32 a, s32 b, s32 x, s32 y, s32 e, s32 f, s32 c, s32 sc) {
-    func_001f9e48(a, b, x - 1, y - 1, e, f, sc);
-    func_001f9e48(a, b, x + 1, y - 1, e, f, sc);
-    func_001f9e48(a, b, x - 1, y + 1, e, f, sc);
-    func_001f9e48(a, b, x + 1, y + 1, e, f, sc);
-    func_001f9e48(a, b, x, y, e, f, c);
-}
-
-void func_001facd8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fa8b0(a, x - 1, y - 1, d, e, sc);
-    func_001fa8b0(a, x + 1, y - 1, d, e, sc);
-    func_001fa8b0(a, x - 1, y + 1, d, e, sc);
-    func_001fa8b0(a, x + 1, y + 1, d, e, sc);
-    func_001fa8b0(a, x, y, d, e, c);
-}
-
-void func_001fb140(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fade0(a, x - 1, y - 1, d, e, sc);
-    func_001fade0(a, x + 1, y - 1, d, e, sc);
-    func_001fade0(a, x - 1, y + 1, d, e, sc);
-    func_001fade0(a, x + 1, y + 1, d, e, sc);
-    func_001fade0(a, x, y, d, e, c);
-}
-
-void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fb248(a, x - 1, y - 1, d, e, sc);
-    func_001fb248(a, x + 1, y - 1, d, e, sc);
-    func_001fb248(a, x - 1, y + 1, d, e, sc);
-    func_001fb248(a, x + 1, y + 1, d, e, sc);
-    func_001fb248(a, x, y, d, e, c);
-}
-
-void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g) {
-    func_001fb408(a, b, c, d, e, f, g, D_003F1A60);
-}
 
 void func_001fd708(void) {
     func_001fd720(0);
@@ -491,75 +251,6 @@ void func_002081b0(void *o, s32 i, s32 x, s32 y, s32 n) {
 }
 
 /* needs make: uses rodata (switch jump tables) */
-s32 func_001f45e0(Txt *t) {
-    switch (t->ac) {
-    case 0:
-    case 3:
-    case 4:
-    default:
-        return t->b4 + t->ba / 2;
-    case 1:
-    case 5:
-    case 6:
-        return t->b4;
-    case 2:
-    case 7:
-    case 8:
-        return t->b4 + t->ba - 16;
-    }
-}
-
-s32 func_001f4650(Txt *t) { return t->x8; }
-
-void func_001f4658(Txt *t, s32 v) { t->x8 = v; }
-
-void func_001f4660(Txt *t) { t->x8 = 0; }
-
-s32 func_001f4668(Txt *t) { return t->x0; }
-
-void func_001f4670(Txt *t, s32 v) { t->x0 = v; }
-
-void func_001f4678(Txt *t) { t->x0 = 0; }
-
-f32 func_001f4680(Txt *t) { return t->fa0; }
-
-void func_001f4688(Txt *t, f32 v) { t->fa0 = v; }
-
-f32 func_001f4690(Txt *t) { return t->fa4; }
-
-void func_001f4698(Txt *t, f32 v) { t->fa4 = v; }
-
-f32 func_001f46a0(Txt *t) { return t->fa8; }
-
-void func_001f46a8(Txt *t, f32 v) { t->fa8 = v; }
-
-void func_001f46b0(Win46 *w) {
-    if (!(w->x88 & 1)) return;
-    switch (w->x70) {
-    case 0:
-        break;
-    case 1:
-        func_001f4778(w);
-        if (w->x88 & 2) {
-            func_001f54f8(w);
-            return;
-        }
-        break;
-    case 2:
-        func_001f4d10(w);
-        if (w->x88 & 2) {
-            func_001f5988(w);
-            return;
-        }
-        break;
-    case 3:
-        func_001f52e8(w);
-        return;
-    case 4:
-        func_001f52a8(w);
-        break;
-    }
-}
 
 /* func_001fe5a0 only matches with func_001fe558 defined above it. */
 typedef struct { u8 pad0[0xbc]; s16 bc; u8 padbe[0x12]; u64 d0; } Fade2;

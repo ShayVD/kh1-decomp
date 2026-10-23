@@ -1,9 +1,13 @@
-/* func_001f0868: hand/nostrict_nofill (w10 draft unchanged; it was checked in hand/nofill only). Rodata jump table at 0x490a20. */
+/* The function of src/text/text.c that needs nostrict and nofill
+ * (docs/modules.md "Session 37"): func_001f0868 draws a message string
+ * (control codes as in func_001f0148) into a GIF packet, one sprite per
+ * glyph.  It needs the CONTEXT_ONLY copies of its callees from text.c. */
 #include "common.h"
 
 #include "data/pieces/D_003E8E28.h"
 typedef Glyph_3e8e28 Glyph;
-typedef struct { u64 a, b; } Q;
+#include "data/pieces/D_003F1A70.h"
+typedef Q_3f1a70 Q; /* a GIF packet quadword */
 typedef struct {
     u64 d[2];
     u64 col, one;
@@ -39,7 +43,7 @@ s32 func_001f0148(u8 *, s32);
         break; \
     }
 
-/* rodata */
+/* rodata: jump table at 0x490a20 */
 Q *func_001f0868(Q *pk, s32 a1, s32 mode, s32 color, s32 x, s32 y, u8 *str, s32 sc) {
     u64 *d;
     Q *p, *start, *tag;
@@ -189,4 +193,3 @@ done:
     }
     return p;
 }
-#include "data/data_003E.h"

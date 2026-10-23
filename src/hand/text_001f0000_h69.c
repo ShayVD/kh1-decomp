@@ -26,24 +26,12 @@ typedef struct {
     u8 padd0[0xd8 - 0xd0];
     s16 d8;
 } Win;
-typedef struct {
-    u8 pad0[0x48];
-    u64 flags;
-    s32 x50, x54, x58, x5c;
-    u8 pad60[0x80 - 0x60];
-    u32 kind;
-    u8 pad84[0xac - 0x84];
-    s32 xac;
-    s32 xb0;
-    s32 xb4;
-} Wn;
 
 extern u32 D_00640DF0; /* src/data/bss_0064.c: s32 D_00640DF0 */
 extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
 extern u32 D_00640DF8; /* src/data/bss_0064.c: s32 D_00640DF8 */
 
 void func_0011d768(s32);
-u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
 void func_001f8e18(void *);
 void func_001f8f30(void);
@@ -61,25 +49,6 @@ void func_002078b0(Win *, s32, s32, s32, s32, s32, s32);
 void func_002078f0(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207938(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207980(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_001fa318(void *o, s32 a1, s32 x, s32 y, s32 str, s32 a5, s32 col, s32 ecol) {
-    u8 *s;
-    if (str == 0) return x;
-    s = func_001efbb8(str);
-    func_001f94f0(o, a1, x - 1, y - 1, s, a5, ecol);
-    func_001f94f0(o, a1, x + 1, y - 1, s, a5, ecol);
-    func_001f94f0(o, a1, x - 1, y + 1, s, a5, ecol);
-    func_001f94f0(o, a1, x + 1, y + 1, s, a5, ecol);
-    return func_001f94f0(o, a1, x, y, s, a5, col);
-}
-
-s32 func_001fbb50(void *a0, s32 a1, s32 a2, s32 a3, s32 x, s32 y, s32 a6, s32 a7, s32 col, s32 ecol) {
-    func_001fb428(a0, a1, a2, a3, x - 1, y - 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x + 1, y - 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x - 1, y + 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x + 1, y + 1, a6, a7, ecol);
-    return func_001fb428(a0, a1, a2, a3, x, y, a6, a7, col);
-}
 
 void func_001fdfd0(WinK *w) {
     s32 n = w->n;
@@ -309,103 +278,3 @@ done:
 }
 
 /* needs make: uses rodata */
-void func_001f5e10(Wn *o) {
-    switch (o->kind) {
-    case 0:
-    case 1:
-    case 2:
-        break;
-    case 3:
-    case 4:
-        o->x50 = o->xb4;
-        break;
-    case 5:
-    case 6:
-        o->x50 = o->xb0;
-        break;
-    case 7:
-    case 8:
-    case 9:
-    case 10:
-    case 25:
-    case 26:
-        o->x50 = o->xb0;
-        o->x54 = o->xb4;
-        break;
-    case 27:
-        o->flags |= 1;
-        o->x50 = o->xb0;
-        o->x54 = o->xb4;
-        break;
-    case 11: case 12: case 13: case 14: case 15: case 16: case 17: case 18:
-    case 19: case 20: case 21: case 22: case 23: case 24:
-    case 28: case 29: case 30: case 31: case 32: case 33: case 34: case 35:
-        o->flags |= 1;
-        break;
-    case 36:
-        o->flags |= 1;
-        o->xac = 2;
-        o->x50 = o->xb4;
-        break;
-    case 37:
-        o->flags |= 1;
-        o->xac = 1;
-        o->x50 = o->xb4;
-        break;
-    case 39:
-        o->flags |= 1;
-        o->xac = 3;
-        o->x50 = o->xb0;
-        break;
-    case 40:
-        o->flags |= 1;
-        o->xac = 1;
-        o->x50 = o->xb4;
-        break;
-    case 41:
-        o->flags |= 1;
-        o->xac = 2;
-        o->x50 = o->xb4;
-        break;
-    case 42:
-        o->flags |= 1;
-        o->xac = 3;
-        o->x50 = o->xb0;
-        break;
-    case 48:
-        {
-            s32 b = o->xb0;
-            o->x58 = b + 0xa0;
-            o->x54 = b - 0x200;
-            o->x5c = b;
-            o->x50 = b + 0xd00;
-
-        }
-        break;
-    case 49:
-        {
-            s32 b = o->xb0;
-            o->x54 = b + 0x2a0;
-            o->x58 = b;
-            o->x50 = b - 0x500;
-        }
-        break;
-    case 52:
-        o->flags |= 1;
-        o->xac = 1;
-        o->x50 = o->xb4;
-        break;
-    case 53:
-        o->flags |= 1;
-        o->xac = 2;
-        o->x50 = o->xb4;
-        break;
-    case 38:
-    case 43:
-    case 54:
-        o->flags |= 1;
-        o->xac = 4;
-        o->x50 = o->xb0;
-        break;
-    }
-}

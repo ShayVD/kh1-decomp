@@ -22,124 +22,14 @@ typedef struct Win {
 #include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[36]; s32 v[1]; } Menu;
 #include "data/pieces/D_003F34B8.h"
-
-extern Obj D_0063F758[24];
-extern s32 D_003F1A60;
 extern s32 D_00640E00[];
 extern s32 D_00640E20;
 extern s32 D_00640E24;
 extern s32 D_00640E28;
-
-s32 func_001fb428(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fbcd8(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fc330(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_002014a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201550(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201600(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00206370(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_001f4148(void) {
-    s32 i, n = 0;
-    Obj *p = D_0063F758;
-    for (i = 0; i < 24; i++, p++) {
-        if (p->state == 0) n++;
-    }
-    return n;
-}
-
-s32 func_001f4180(void) {
-    s32 i, n = 0;
-    Obj *p = D_0063F758;
-    for (i = 0; i < 24; i++, p++) {
-        if (p->state == 3) n++;
-    }
-    return n;
-}
-
-s32 func_001f41c0(void) {
-    s32 i, n = 0;
-    Obj *p = D_0063F758;
-    for (i = 0; i < 24; i++, p++) {
-        switch (p->state) {
-        case 1:
-        case 2:
-            n++;
-        }
-    }
-    return n;
-}
-
-s32 func_001f4208(void) {
-    s32 i, n = 0;
-    Obj *p = D_0063F758;
-    for (i = 0; i < 24; i++, p++) {
-        if (p->state < 6) {
-            if (p->state >= 4) n++;
-        }
-    }
-    return n;
-}
-
-s32 func_001f4390(Obj *o) {
-    s32 s = o->state;
-    if (s < 4) {
-        if (s > 0) return ((s32)o->hi & 1) ^ 1;
-    }
-    return 0;
-}
-
-s32 func_001f43c8(Obj *o) {
-    s32 s = o->state;
-    if (s < 4) {
-        if (s > 0) return ((s32)o->hi & 1) ^ 1;
-    }
-    return 0;
-}
-
-s32 func_001f4400(Obj *o) {
-    if (o->state == 3) return ((s32)o->hi & 1) ^ 1;
-    return 0;
-}
-
-s32 func_001f44a0(s32 id) {
-    s32 i;
-    Obj *p = D_0063F758;
-    for (i = 0; i < 24; i++, p++) {
-        if (p->state != 0 && p->id == id) return 1;
-    }
-    return 0;
-}
-
-s32 func_001f44e8(Obj *o, s32 id) {
-    if (o == NULL) return 0;
-    while (o->child != NULL) o = o->child;
-    do {
-        if (o->state != 0 && o->id == id) return 1;
-        o = o->next;
-    } while (o != NULL);
-    return 0;
-}
-
-s32 func_001fb3e0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fb428(a, b, c, d, e, f, g, h, D_003F1A60);
-}
-
-s32 func_001fb408(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fb428(a, b, c, d, e, f, g, 18, h);
-}
-
-s32 func_001fbcb0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fbcd8(a, b, c, d, e, f, g, h, 0x80808080);
-}
-
-s32 func_001fc308(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i) {
-    return func_001fc330(a, b, c, d, e, f, g, h, h, i, i);
-}
-
-void func_001fd070(s32 a, s32 b, s32 c) {
-    func_001fc308(a, b, c, 0, 0, 57, 0, 0x64323296, 0x64323296);
-    func_001fc308(a, b + 14, c + 6, 0, 0, 56, 0, 0x64ffffff, 0x64ffffff);
-}
 
 s32 func_001fd590(Win *w) {
     return ((s16)w->f192 >> 4) - ((s16)w->f196 >> 4) * (w->f208 & 0xf) / 16;
