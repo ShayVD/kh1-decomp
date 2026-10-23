@@ -38,6 +38,7 @@ back, boot, and narrow down within the session that fixes it.
 | 36 | none | module move and type folds only, same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 35 after every commit | none |
 | 37 | none | module move and the TextWin type only, same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 36 after every commit | none |
 | 38 | none | module move, view folds into TextWin and D_0063F758 typed TextWin[24], same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 37 after every commit | none |
+| 39 | none | module move into src/menu/ (D_003F3530 typed PartyMdl[4]; D_00640E40, D_003F31D0, D_006411E0 ... D_00641218, D_003F32C8 and D_003F32E8 defined by their modules), same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 38 after every commit | none |
 
 Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043), session 33's (2,032) and session 34's
 (2,049, unchanged in sessions 35 to 38) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
