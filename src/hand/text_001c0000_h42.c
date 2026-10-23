@@ -48,31 +48,7 @@ typedef struct {
 } Big;
 extern Big D_00389C90;
 #include "data/pieces/D_002E26A0.h"
-/* 32-byte message queue at D_006257E0 (tail D_006277E4, head D_006277E0). */
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-extern Msg D_006257E0[256];
-extern s32 D_006277E0;
-extern s32 D_006277E4;
-#include "data/types/text_001c0000_h42.h"
-extern MsgTbl D_0037A21C[];
-s32 func_00123488(s32);
-
-/* func_001c4640 is in src/vm/script_vm.c; this copy is for the callers below (docs/context-only-plan.md). */
-CONTEXT_ONLY s32 func_001c4640(Msg *m) {
-    Msg t;
-    if ((D_006277E4 + 1) % 256 == D_006277E0) return -1;
-    if (func_00123488(m->x) == 0 && D_0037A21C[m->type].f != 0) return 0;
-    D_006257E0[D_006277E4] = *m;
-    D_006277E4 = (D_006277E4 + 1) % 256;
-    return 0;
-}
+#include "vm/script_vm.h"
 
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
@@ -87,7 +63,7 @@ extern f32 D_002BBDFC;
 /* func_001cab48, func_001cae78, func_001cafe8, func_001cbab0, func_001cbd80, func_001cbea0, func_001cc548 and func_001ccbf8 are in src/msgwin/msgwin.c. */
 
 s32 func_001cd940(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 3;
     m.val = 0;
     m.x = vm->x0;
@@ -128,7 +104,7 @@ s32 func_001cec68(VM *vm) {
 }
 
 s32 func_001cf018(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 19;
     m.val = (u32)vm->stk[vm->sp - 2];
     m.x = vm->x0;
@@ -140,7 +116,7 @@ s32 func_001cf018(VM *vm) {
 }
 
 s32 func_001cf110(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 23;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;
@@ -153,7 +129,7 @@ s32 func_001cf110(VM *vm) {
     return 2;
 }
 s32 func_001cf210(VM *vm) {
-    Msg m;
+    VmMsg m;
     if (vm->obj != 0) {
         m.type = 23;
         m.val = (u32)(vm->stk[vm->sp] * 2);
@@ -169,7 +145,7 @@ s32 func_001cf210(VM *vm) {
 }
 
 s32 func_001cfd30(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 17;
     m.val = (u32)(vm->stk[vm->sp - 1] | 0x10000);
     m.x = vm->x0;
@@ -181,4 +157,3 @@ s32 func_001cfd30(VM *vm) {
 #include "data/data_003C.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002BBE04.h"
-#include "data/pieces/D_0037A21C.h"
