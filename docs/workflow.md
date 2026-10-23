@@ -1042,3 +1042,21 @@ found that the next session needs:
   retyped, then the library move removed most of the rest (1 left: h44's func_001e98d0).
 - Workers ran in git worktrees /home/user/wt-{module,types,reach}; the only merge conflicts were the appended
   sections in docs/shiftable-plan.md and the "Next module moves" list in docs/modules.md.
+
+## Session 34: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only. docs/float-untested.md has the session 34 rows.
+- **reach_check** (worker s34reach; docs/shiftable-plan.md "Session 34: reach_check"): five rules, each with a switch
+  (`--no-likely-slot --no-widen-heads --no-hix-join --no-align-end --no-neg-keep` together restore session 33's
+  float_reach.txt / .log byte for byte). **19 names released (the first releases since session 30, all untested)**,
+  2 newly pinned; the default floats 2,049 (was 2,032). D_00551600 is a real hazard (func_001571a8 writes entry -1
+  of D_00551608 when every sound-bank slot is busy) and is now in float_keep.txt. Order dependence is fixed except
+  four libc string arguments (default order pins them: the safe side).
+- **Modules** (worker s34module; docs/modules.md "Session 34"): 0x001dcb00-0x001e4918 (159 functions, 6 chunks):
+  5 after the dispatcher into src/vm/vm_lib*.c, then new modules src/event/effect*.c (effect scripts),
+  src/event/voice*.c, src/screen/{frame,screen}*.c and src/shop/shop.c. Groups were split by their own data and by
+  the D_003D9FE0 index run (the library's entries rise in address order; later entries interleave, so they are other
+  files). 22 files deleted, objdiff units 879 -> 866, s33_protodiff 0. D_0062F840 went into float_keep.txt (h20's
+  oversized view used to keep it in place), so the float layout is unchanged by the move.
+- Workers ran in git worktrees /home/user/wt-{module,reach}; the only merge conflict was the appended entries in
+  tools/shift/float_keep.txt (keep both).

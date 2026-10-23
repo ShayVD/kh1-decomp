@@ -33,6 +33,7 @@ back, boot, and narrow down within the session that fixes it.
 | 34 | `--no-widen-heads` | **released (float)** 2, newly pinned 2 | released D_00531B70, D_00531F70 (the loader's 128-entry id/handle table); pinned D_002BD1F0, D_00454468 (not real, safe) | D_00531B70 (every file load registers in it: area load, save load) |
 | 34 | `--no-hix-join` | **released (float)** | 3: D_00493F38, D_00493F48, D_00493F58 (atanf's atanhi / atanlo / aT) | atan everywhere (camera, steering, aiming): any wrong angle |
 | 34 | `--no-align-end --no-neg-keep` | order only, same names | (D_0054F444 in random orders; D_00551600 now pinned in every order) | none |
+| 34 | none (float_keep.txt) | module move only, same names | D_0062F840 (the shop's third window) kept by float_keep.txt: h20's 0x100-byte view of D_0062F790 used to cover it; src/shop/shop.c types the windows as MsgWin (0xb0). It can float after a `SHIFT_FLOAT_FORCE=D_0062F840` boot that plays a shop | none |
 
 Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043), session 33's (2,032) and session 34's
 (2,049) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
