@@ -15,7 +15,6 @@ M2C_UNK func_00247350();
 M2C_UNK func_002485e0();
 M2C_UNK func_00248b00();
 M2C_UNK func_00249240();
-extern f32 D_006477A4;
 extern s32 D_0044A820;
 extern s32 D_006477A8;
 extern s32 D_00647FEC;
@@ -26,10 +25,6 @@ extern s32 D_00648000;
 extern s32 D_00648014;
 extern s32 D_00648018;
 extern s32 D_0064801C;
-
-f32 func_002336e8(void) {
-    return D_006477A4;
-}
 
 s32 func_00233ee8(void) {
     return D_006477A8;
