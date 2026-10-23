@@ -1,18 +1,6 @@
 #include "common.h"
 #include "data/pieces/D_00304BE8_s.h"
 
-u32 func_001ee118(void);
-
-void func_001ee230(u32 *a, u32 *b, u32 *c, u32 *d) {
-    u32 t = func_001ee118();
-    *a = t / 216000U;
-    t = t % 216000U;
-    *b = t / 3600U;
-    t = t % 3600U;
-    *c = t / 60U;
-    *d = t % 60U;
-}
-
 typedef W606Mem_304be8 Member;
 typedef Save_304be8 S4BE8;
 #include "data/pieces/D_003E3D68.h"
@@ -481,7 +469,6 @@ void func_001f3c20(void) {
         }
     }
 }
-
 
 void func_001f3d70(Obj *p) {
     Obj **h;

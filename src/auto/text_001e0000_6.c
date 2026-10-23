@@ -18,7 +18,6 @@ extern s32 D_003E8E2C;
 s32 func_00147840(s32);
 s32 func_001ee768();
 s32 func_001efbb8();
-u32 func_001ee118();
 void func_001efaf0(void);
 void func_001efb58(s32);
 void func_001efb78(s32);
@@ -32,26 +31,6 @@ void func_00232de0(void);
 /* func_001e3c08, func_001e44e0 are in src/shop/shop.c. */
 
 /* func_001ec380 is in src/save/flags.c. */
-
-f32 func_001edcd8(f32 fparg0) {
-    f32 var_f12;
-
-    var_f12 = fparg0;
-    if (var_f12 >= 3.141592979f) {
-        var_f12 -= 2.0f * ((f32) ((s32) (var_f12 / 6.2831855f) + 1) * 3.141592979f);
-    } else if (var_f12 < -3.141592979f) {
-        var_f12 += 2.0f * ((f32) ((s32) (var_f12 / -6.2831855f) + 1) * 3.141592979f);
-    }
-    return var_f12;
-}
-
-u32 func_001ee198(void) {
-    return func_001ee118() / 216000U;
-}
-
-u32 func_001ee2d0(void) {
-    return func_001ee118() / 216000U;
-}
 
 void func_001ee4e8(void) {
     func_00232de0();

@@ -23,7 +23,6 @@ extern s32 D_003E8E04;
 s32 func_001ee768();
 s32 func_001efbb8();
 u16 *func_00147840();
-u32 func_001ee118();
 void *func_001496c8();
 
 /* func_001e05a8, func_001e1418 are in src/screen/screen.c. */
@@ -37,22 +36,6 @@ void *func_001496c8();
 /* func_001ea430 is in src/vm/vm_util.c. */
 
 /* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
-
-u32 func_001ee1d0(void) {
-    return func_001ee118() / 3600U;
-}
-
-u32 func_001ee200(void) {
-    return func_001ee118() / 60U;
-}
-
-u32 func_001ee308(void) {
-    return (u32) (func_001ee118() / 3600U) % 60U;
-}
-
-u32 func_001ee348(void) {
-    return (u32) (func_001ee118() / 60U) % 60U;
-}
 
 void func_001ee428(void) {
     func_00111b10();
