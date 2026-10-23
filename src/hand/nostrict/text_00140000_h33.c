@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
@@ -125,7 +126,6 @@ typedef struct { u8 x0, x1, x2; } Item;
 typedef struct { u32 type:8; u32 id:16; u32 hi:8; s32 w4; } Cmd;
 typedef struct { u8 id; u8 pad[3]; s32 w4; s32 w8; } Cmd8;
 typedef struct { f32 x, y, z; s32 w; } V4;
-typedef struct { u8 pad[0x88]; f32 f88; u8 pad8c[0xE8 - 0x8C]; f32 fe8; u8 padec[4]; f32 ff0; } Cfg;
 typedef struct { u8 pad[0x54]; s8 b54; } Sub130;
 typedef struct { u8 pad[0x130]; Sub130 *p130; } Obj130;
 typedef struct { u8 pad[0x3C]; s32 w3c; s32 w40; } S6C;
@@ -175,7 +175,6 @@ typedef struct { u8 pad[0x18]; void **p18; } Blk7c;
 typedef struct { u8 pad[0x68]; s32 w68; u8 pad6c[0x1C]; u32 w88; } Act;
 
 /* ---- data ---- */
-#include "data/pieces/D_00308CDC.h"
 extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
@@ -340,8 +339,8 @@ void func_0013e978(ObjF3 *o, Cmd *c) {
             }
             func_00130578(o, 0x40000006, 8.0f);
             func_001333e0(o, c->id, &c->w4);
-            func_0014cce0(o, (*(Cfg **)&D_00308CDC)->fe8);
-            func_00267560((V4f *)((u8 *)o + 0x3C0), (V4f *)((u8 *)o + 0x3C0), (*(Cfg **)&D_00308CDC)->ff0);
+            func_0014cce0(o, (*(Cfg_308cdc **)&D_00308CDC)->fe8);
+            func_00267560((V4f *)((u8 *)o + 0x3C0), (V4f *)((u8 *)o + 0x3C0), (*(Cfg_308cdc **)&D_00308CDC)->ff0);
             return;
         }
         func_00137330(c->w4, o, t);
@@ -905,7 +904,7 @@ s32 func_00141468(O1468 *o, s32 x) {
     if (s == 0 || s == &D_00304C70) return 0;
     v = func_00141448(s->w3c, x, s->w40);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->w3c + (s32)((v - s->w3c) * (*(Cfg **)&D_00308CDC)->f88);
+        v = s->w3c + (s32)((v - s->w3c) * (*(Cfg_308cdc **)&D_00308CDC)->f88);
     }
     s->w3c = v;
     s->flags &= ~4;
@@ -919,7 +918,7 @@ s32 func_00141540(O1468 *o, s32 x) {
     if (s == 0 || s == &D_00304C70) return 0;
     v = func_00141448(s->x44, x, s->w48);
     if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->x44 + (s32)((v - s->x44) * (*(Cfg **)&D_00308CDC)->f88);
+        v = s->x44 + (s32)((v - s->x44) * (*(Cfg_308cdc **)&D_00308CDC)->f88);
     }
     s->x44 = v;
     if (s->pc8) s->pc8->b3 = v;

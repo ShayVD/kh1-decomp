@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x152ff8-0x15b098 (worker 58). Built without
  * strict aliasing. */
 #include "common.h"
+#include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
 
@@ -69,8 +70,6 @@ void func_001373f8(void *, f32);
 s32 func_0013c968(s32, s32);
 typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 p2:14; u32 b16:1; u32 p17:6; u32 b23:1; u32 b24:1; u32 b25:1; u32 p26:6; } b; } F5958;
 extern F5958 D_002C5958;
-typedef struct { u8 pad[0x7c]; u8 x7c[0x14]; f32 x90; u8 pad94[0x60]; u16 xf4[1]; } S8CDC;
-#include "data/pieces/D_00308CDC.h"
 s32 D_00F20000(s32, s32);
 f32 func_00267390(void *, void *);
 s32 func_00122ff8(void *);
@@ -480,7 +479,7 @@ s32 func_00158780(s32 k) {
         }
         break;
     }
-    return func_00141288(p, (*(S8CDC **)&D_00308CDC)->xf4[k]) ? 2 : 1;
+    return func_00141288(p, (*(Cfg_308cdc **)&D_00308CDC)->hF4[k]) ? 2 : 1;
 }
 
 /* ---- func_00158960 ---- */
@@ -762,7 +761,7 @@ void func_00153f88(Act *a) {
         }
     }
     if (a->x88 & 0x10) {
-        a->x3e4 = (*(S8CDC **)&D_00308CDC)->x7c[a->x130->x4c] * 60.0f;
+        a->x3e4 = (*(Cfg_308cdc **)&D_00308CDC)->x7c[a->x130->x4c] * 60.0f;
         a->x88 = (a->x88 & ~0x10) | 0x20;
         if (!a->x400) {
             a->x400 = func_00148908(a);
@@ -772,7 +771,7 @@ void func_00153f88(Act *a) {
     }
     func_001373f8(a, 30.0f);
     s = D_002BBDFC;
-    if (!(D_002C5958.b.b0)) s *= (*(S8CDC **)&D_00308CDC)->x90;
+    if (!(D_002C5958.b.b0)) s *= (*(Cfg_308cdc **)&D_00308CDC)->x90;
     if (func_0013c968(9, a->x130->x4c) > 0) s += s;
     a->x3e4 -= s;
     if (a->x3e4 <= 0.0f) {

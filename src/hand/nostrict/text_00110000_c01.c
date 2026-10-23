@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
 
 #include "data/pieces/D_002E27C8.h"
@@ -23,7 +24,6 @@ typedef struct {
     C01Sub148 *x148;
 } C01Ply;
 typedef struct { u16 a; u16 b; } C01Pr;
-typedef struct { u8 pad[0x54]; C01Pr e[1]; } C01Tbl;
 
 extern f32 D_00304D54;
 extern f32 D_00306844;
@@ -32,7 +32,6 @@ extern f32 D_00306848;
 extern s32 D_002C5C54;
 extern s32 D_002C5C4C;
 extern u32 D_002C5958;
-#include "data/pieces/D_00308CDC.h"
 s32 func_0013c968(s32, s32);
 
 void func_001252f8(void) {
@@ -58,7 +57,7 @@ void func_001252f8(void) {
         D_002E27C8.b10 += func_0013c968(16, id);
         D_00306844 += func_0013c968(27, id) * 0.5f;
         D_00306848 += func_0013c968(28, id) * 0.5f;
-        p->x6c->x10 = D_002C5C54 ? (*(C01Tbl **)&D_00308CDC)->e[id].b : (*(C01Tbl **)&D_00308CDC)->e[id].a;
+        p->x6c->x10 = D_002C5C54 ? (*(Cfg_308cdc **)&D_00308CDC)->e[id].b : (*(Cfg_308cdc **)&D_00308CDC)->e[id].a;
         p->x148->b38 = func_0013c968(62, id);
         for (j = 0; j < p->x6c->xc8->n; j++) {
             c = p->x6c->xc8->id[j];
@@ -81,7 +80,7 @@ void func_001252f8(void) {
         D_002E27C8.b9 = 1;
         for (i = 0; i < 3; i++) {
             p = D_002E26A0[i];
-            if (p) p->x6c->x10 = (*(C01Tbl **)&D_00308CDC)->e[p->x130->x4c].b;
+            if (p) p->x6c->x10 = (*(Cfg_308cdc **)&D_00308CDC)->e[p->x130->x4c].b;
         }
     }
     if (func_0013c968(3, 11)) D_002E27C8.b7 = 1;
