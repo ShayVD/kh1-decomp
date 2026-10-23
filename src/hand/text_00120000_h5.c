@@ -101,7 +101,7 @@ extern void func_00121eb0(void *);
 extern s32 func_00122ff8(void *);
 extern void func_00176310(void *);
 extern void func_0011d768(s32);
-extern s32 func_0012f040(s32, s32);
+extern s32 func_0012f040(struct Actor *, s32);
 extern s32 func_0012eaf8(s32);
 extern f32 func_0012ed88(void *, void *, void *, void *);
 

@@ -32,7 +32,7 @@ void func_0014d570(f32 *v, f32 lo, f32 hi, f32 max, f32 g) {
 
 
 #include "data/pieces/D_002E31B0.h"
-f32 func_0012ec60(s32, s32, f32 *);
+f32 func_0012ec60(struct Actor *, s32, f32 *);
 void func_001315c0(void *, s32, f32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 f32 func_00121748(f32 *, f32 *);

@@ -44,14 +44,14 @@ s32 func_001532c8(Msg *);
 void func_00152598(void *);
 void func_001525f0(void *);
 s32 func_0012cc38(s32, s32);
-void func_0012ec60(s32, s32, void *);
+void func_0012ec60(struct Actor *, s32, void *);
 void func_00130340(void *, s32, f32);
 void *func_00130578(void *, s32, f32);
 void func_0013dfa0(void *);
 void func_00152520(void *, void *);
 void func_00152688(void *, void *, s32);
 void func_00152dc8(void *, s32);
-void func_00153c50(void *, s32);
+void func_00153c50(void *, struct Actor *);
 void *func_00121e28(s32, void *);
 s32 func_001538d8(void *);
 void func_001528f0(void *);
@@ -496,8 +496,8 @@ void func_00158960(void) {
     if ((D_002E31A8 >> 1) & 1) return;
     if (D_002E26A0[0]->x70) return;
     if (D_00351A48 != 5) return;
-    if (!func_00122ff8((Act *)D_002E31B0.f0)) return;
-    if (((s32)(((Act *)D_002E31B0.f0)->x370 >> 37) & 3) != 2) return;
+    if (!func_00122ff8(D_002E31B0.f0)) return;
+    if (((s32)(D_002E31B0.f0->x370 >> 37) & 3) != 2) return;
     best = 0;
     bk = -1;
     for (i = 0; i < 5; i++) {

@@ -465,7 +465,7 @@ extern u32 D_002E3190;
 f32 D_00551D70 ALIGNED(16);
 #include "data/pieces/D_002E31B8.h"
 void func_0014f658(B4E5 *, s32);
-f32 func_0012ec60(s32, s32, f32 *);
+f32 func_0012ec60(struct Actor *, s32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 f32 func_00121748(f32 *, f32 *);
 f32 func_00120c18(f32 *);

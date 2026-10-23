@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350D88.h"
 #include "data/bss_0052.h"
 
@@ -56,7 +57,7 @@ typedef struct Actor {
     u64 f440;
 } Ent;
 
-typedef struct V8 { Ent *a; s32 b; } V8;
+typedef S31b0_2e31b0 V8;
 typedef struct Hit { s32 f0; Ent *e; } Hit;
 #include "data/pieces/D_00304BE8_s.h"
 
@@ -68,7 +69,6 @@ extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_002E31B8.h"
-#include "data/pieces/D_002E31B0.h"
 extern s32 D_002E31BC;
 extern u32 D_00524F44;
 extern s32 D_00524F48;
@@ -180,8 +180,8 @@ void func_0012d930(u32 *a0) {
     D_002E2FD8[0].ids[3] = 0;
     m = 0;
     pl = D_002E26A0[0];
-    tmp.a = 0;
-    tmp.b = 0;
+    tmp.f0 = 0;
+    tmp.f4 = 0;
     fp = &D_00524F44;
     *fp = 0;
     if (D_00524F74) D_00524F74();
@@ -196,7 +196,7 @@ void func_0012d930(u32 *a0) {
             switch (e->f130->f5f) {
             case 1:
                 if (!pl->f98 && !(D_002C5958 & 1) && func_0012cc38(0, 4)) {
-                    tmp.a = e;
+                    tmp.f0 = e;
                     m = 0;
                     k = pl->f70;
                     if (k && k != 24 && k != 8) func_0012ccb0(0);
@@ -205,7 +205,7 @@ void func_0012d930(u32 *a0) {
             case 2:
                 if (func_0012cc38(3, 5)) {
                     m = 1;
-                    tmp.a = e;
+                    tmp.f0 = e;
                     if ((D_002C5958 & 1) || ((k = pl->f70) && k != 24 && k != 8)) func_0012ccb0(3);
                 }
                 break;
@@ -214,23 +214,23 @@ void func_0012d930(u32 *a0) {
                 old = *fq;
                 func_00137330(e, pl, -1);
                 if (*fq != old) {
-                    tmp.a = e;
+                    tmp.f0 = e;
                     m = 1;
                 }
                 break;
             }
             case 4:
                 if (func_0012cc38(0, 1)) {
-                    tmp.a = e;
+                    tmp.f0 = e;
                     m = 0;
                 }
                 break;
             }
-            if (tmp.a) break;
+            if (tmp.f0) break;
         }
         func_001220b8(h);
     }
-    if (tmp.a) {
+    if (tmp.f0) {
         func_00245238(m, pl);
         if (D_002E31B8 < 3) func_0012fb20(&tmp, 1);
         if ((D_002C5958 >> 13) & 1) func_0012ccb0(3);
@@ -363,7 +363,7 @@ s32 func_0012e4b0(void) {
         if (D_00524F48 & 8) func_0012ca38();
         D_00524F48 &= ~8;
     }
-    if (!func_00122ff8((*(V8 *)&D_002E31B0).a)) func_0012fc58();
+    if (!func_00122ff8(D_002E31B0.f0)) func_0012fc58();
     e = D_002E26A0[0];
     if (!(((*(u32 *)&D_002C5960) >> 2) & 1) && e && D_002E27A8 != 2 && !((D_002C5958 >> 27) & 1)) {
     p = &D_002C5BB0;
@@ -472,14 +472,14 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
     f32 d[4];
     f32 r;
     s32 s, v;
-    r = func_0012ec60(a->a, a->b, tmp);
+    r = func_0012ec60(a->f0, a->f4, tmp);
     func_00267530(d, tmp, pos);
     r = func_00120bf8(d) - r;
-    if (func_0012eaf8(a->a) && r > 1200.0f) return -1;
+    if (func_0012eaf8(a->f0) && r > 1200.0f) return -1;
     s = r;
     if (!(r > 0.0f)) s = 0;
     if (D_002E319C) {
-        switch (((E9 *)a->a)->f370.b.kind) {
+        switch (((E9 *)a->f0)->f370.b.kind) {
         case 1:
             v = D_002E319C->f9;
             if (v < 0) return -1;
@@ -499,9 +499,9 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
         }
     }
     if (lim >= 0 && !(s < lim)) return -1;
-    if (((E9 *)a->a)->f370.b.f35 && func_0012f0f8(&D_002E2780.x, tmp, 0)) return s;
+    if (((E9 *)a->f0)->f370.b.f35 && func_0012f0f8(&D_002E2780.x, tmp, 0)) return s;
     if (!func_0012f0f8(pos, tmp, 0)) return -1;
-    if (func_0012eaf8(a->a)) s |= 0x10000;
+    if (func_0012eaf8(a->f0)) s |= 0x10000;
     return s;
 }
 
@@ -531,16 +531,16 @@ void func_0012f3d0(V8 *out) {
     s32 i, r;
 
     func_001315c0(pl, 0x8003, pos, 0.0f);
-    out->a = 0;
-    cur.a = 0;
-    while ((cur.a = func_001230a0(cur.a)) != 0) {
-        if (cur.a == pl) continue;
-        if (cur.a == pl->f98) continue;
-        if (!func_0012f040(cur.a, -1)) continue;
-        cur.b = -1;
-        while ((cur.b = func_0012ee70(cur.a, cur.b)) >= 0) {
+    out->f0 = 0;
+    cur.f0 = 0;
+    while ((cur.f0 = func_001230a0(cur.f0)) != 0) {
+        if (cur.f0 == pl) continue;
+        if (cur.f0 == pl->f98) continue;
+        if (!func_0012f040(cur.f0, -1)) continue;
+        cur.f4 = -1;
+        while ((cur.f4 = func_0012ee70(cur.f0, cur.f4)) >= 0) {
             for (i = 0; i < n; i++) {
-                if (tbl[i].a == cur.a && tbl[i].b == cur.b) break;
+                if (tbl[i].f0 == cur.f0 && tbl[i].f4 == cur.f4) break;
             }
             if (i < n) continue;
             r = func_0012f218(pos, &cur, best);
@@ -562,14 +562,14 @@ void func_0012f868(V8 *out) {
     f32 d, t;
 
     func_001315c0(pl, 0, pos, 1.0f);
-    cur.a = 0;
-    out->a = 0;
-    while ((cur.a = func_001230a0(cur.a)) != 0) {
-        if (((cur.a->f370 >> 37) & 3) != 2 && !(cur.a->f130->f4 & 0x8000)) continue;
-        if (!func_00123368(cur.a)) continue;
-        if (!func_0012f040(cur.a, -1)) continue;
-        cur.b = -1;
-        while ((cur.b = func_0012ee70(cur.a, cur.b)) >= 0) {
+    cur.f0 = 0;
+    out->f0 = 0;
+    while ((cur.f0 = func_001230a0(cur.f0)) != 0) {
+        if (((cur.f0->f370 >> 37) & 3) != 2 && !(cur.f0->f130->f4 & 0x8000)) continue;
+        if (!func_00123368(cur.f0)) continue;
+        if (!func_0012f040(cur.f0, -1)) continue;
+        cur.f4 = -1;
+        while ((cur.f4 = func_0012ee70(cur.f0, cur.f4)) >= 0) {
             d = func_0012ed88(pl, &cur, b, c);
             if (d > 300.0f) continue;
             t = func_00121b38(pl->f30, c);
@@ -589,8 +589,8 @@ void func_0012f868(V8 *out) {
 CONTEXT_ONLY s32 func_0012eb08(V8 *p) {
     f32 a[4];
     f32 b[4];
-    if (!func_0012f040((*(V8 *)&D_002E31B0).a, D_002E31B0.f4)) return 1;
-    if (func_0012eaf8(p->a)) {
+    if (!func_0012f040(D_002E31B0.f0, D_002E31B0.f4)) return 1;
+    if (func_0012eaf8(p->f0)) {
         if (func_0012ed88(D_002E26A0[0], p, a, b) > 1500.0f) return 1;
         if (fabsf(b[1]) > 1000.0f) return 1;
     }
@@ -600,7 +600,7 @@ CONTEXT_ONLY s32 func_0012eb08(V8 *p) {
 CONTEXT_ONLY void func_0012fa98(void) {
     f32 a[4];
     f32 b[4];
-    f32 d = func_0012ed88(D_002E26A0[0], ((V8 *)&D_002E31B0), a, b);
+    f32 d = func_0012ed88(D_002E26A0[0], &D_002E31B0, a, b);
     s32 *o = &D_002E31BC;
     O8 *x = D_002E31A0;
     s32 r = 0;
@@ -643,7 +643,7 @@ s32 func_0012fcd0(void) {
         }
     }
     case 3:
-        if (func_0012eb08(((V8 *)&D_002E31B0))) func_0012fc58();
+        if (func_0012eb08(&D_002E31B0)) func_0012fc58();
         break;
     case 0:
     case 2:
@@ -658,7 +658,7 @@ s32 func_0012fcd0(void) {
         V8 *src = dst;
         s32 i;
         for (i = 0; i < D_0052528C; i++, src++) {
-            if (func_0012f040(src->a, src->b) && !func_0012eb08(src)) {
+            if (func_0012f040(src->f0, src->f4) && !func_0012eb08(src)) {
                 if (src != dst) {
                     V8 **pp = &D_00525288;
                     *dst = *src;
@@ -671,13 +671,13 @@ s32 func_0012fcd0(void) {
         break;
     }
     case 1:
-        if (!func_0012f040((*(V8 *)&D_002E31B0).a, D_002E31B0.f4)) func_0012fc58();
+        if (!func_0012f040(D_002E31B0.f0, D_002E31B0.f4)) func_0012fc58();
         break;
     case 0:
     case 2:
         if (func_00219288() != 1 && D_002E319C && (D_002E319C->f0 & 4)) {
             func_0012f868(&tmp);
-            if (tmp.a) func_0012fb20(&tmp, 2);
+            if (tmp.f0) func_0012fb20(&tmp, 2);
         }
         break;
     case 4:

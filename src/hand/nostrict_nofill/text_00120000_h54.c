@@ -17,8 +17,8 @@ extern St8 D_002E3190;
 extern Q8 D_002E30B8;
 #include "data/pieces/D_002E3170.h"
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
-extern s32 D_00524F58[];
-extern s32 D_002E3160[];
+extern struct Actor *D_00524F58[]; /* src/data/bss_0052.c: s32 D_00524F58[0x4] */
+extern s32 D_002E3160[]; /* data/data_002E.h */
 extern O8 *func_001478c8(s32);
 extern void func_0011d768(s32);
 extern void func_0012dce0(Q38 *);
@@ -43,7 +43,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     f = 0;
     if (q->f0 == 4) {
         if (q == &D_002E30B8) tmp.f0 = D_00524F58[i];
-        else tmp.f0 = D_002E3160[i];
+        else tmp.f0 = (struct Actor *)D_002E3160[i];
         tmp.f4 = 0;
         q = D_00524F40[-1];
         o = func_001478c8(q->ids[q->f34]);
@@ -68,7 +68,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
 }
 typedef union { u64 x; struct { u32 lo0; u32 x32:3; u32 f35:1; u32 x36:1; u32 kind:2; u32 hi:25; } b; } F370b;
 typedef struct { u8 pad[4]; u32 f4; } I9;
-typedef struct { u8 pad[0x130]; I9 *f130; u8 p134[0x370-0x134]; F370b f370; } E9;
+typedef struct Actor { u8 pad[0x130]; I9 *f130; u8 p134[0x370-0x134]; F370b f370; } E9;
 typedef struct { E9 *f0; s32 f4; } A9;
 #include "data/pieces/D_002E2780.h"
 extern f32 func_0012ec60(E9 *, s32, f32 *);
@@ -155,7 +155,7 @@ void func_0012f700(Q8 *q) {
     switch (D_002E31B8) {
     case 0: if (q->f8 & 0x400) func_0012f3d0((A9 *)&cur); break;
     case 1: case 2: case 4:
-        if (q->f8 & 0x400) { if (func_0012f040((E9 *)D_002E31B0.f0, D_002E31B0.f4)) cur = D_002E31B0; }
+        if (q->f8 & 0x400) { if (func_0012f040(D_002E31B0.f0, D_002E31B0.f4)) cur = D_002E31B0; }
         break;
     case 3:
         if (func_002192c0() == 1) { if (!(q->f4 & 0x400)) goto snd; }

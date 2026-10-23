@@ -6,8 +6,12 @@
 
 #include "common.h"
 
+struct Actor;
+
+/* the lock-on target: the actor and its part (session 31: f0 is the actor,
+ * completed in each user file like D_002E26A0's) */
 typedef struct {
-    s32 f0;
+    struct Actor *f0;
     s32 f4;
 } S31b0_2e31b0;
 

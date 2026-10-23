@@ -163,6 +163,9 @@ def merge(t, rel, a, bs):
         lines.append(f"    u8 pad{off:x}[0x{size - off:x}];")
     s, e, tag, k = find_def(t, a)
     head = t[s:k]
+    btags = [find_def(t, b)[2] for b in bs if find_def(t, b)[2]]
+    if btags and not tag:  # a tagged second view hands its tag to the merged type
+        head = re.sub(r"typedef\s+(struct|union)(\s+\w+)?\s*$", r"typedef \1 " + btags[0] + " ", head)
     t = t[:s] + head + "{\n" + "\n".join(lines) + "\n} " + a + ";" + t[e:]
     t = hoist(t, a, "\n".join(lines))
     for b in bs:
