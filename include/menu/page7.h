@@ -1,5 +1,5 @@
 /* Page 7 of the menu (docs/modules.md "Session 42"): src/menu/party.c (the
- * party change), save.c / save.nostrict.c (the save and load windows) and
+ * party change), savemenu.c / savemenu.nostrict.c (the save and load windows) and
  * page7.c (the page's frame and its list). */
 #ifndef KH1_MENU_PAGE7_H
 #define KH1_MENU_PAGE7_H

@@ -1,9 +1,9 @@
-/* Page 7 of the menu, part 2 (src/menu/save.c, docs/modules.md "Session 42"):
+/* Page 7 of the menu, part 2 (src/menu/savemenu.c, docs/modules.md "Session 42"):
  * func_00225ea8, the save / load task, matches only with
  * -fno-strict-aliasing.  It steps D_00643734 through the memory card
  * requests (func_00234018 ... func_00234668 on port D_006436D4, slot
  * D_006436E8 + 1; func_00233d08 polls, func_002348c0 ... the results) and
- * opens the message windows of save.c (func_002259c8 ... func_00225dd8) on
+ * opens the message windows of savemenu.c (func_002259c8 ... func_00225dd8) on
  * an error.  D_00351E10 is the card directory view SvD; the save data is
  * staged in D_003F8380 (0x16c00 bytes).  Its memory card calls are the
  * candidates for a platform wrapper (docs/portability.md). */

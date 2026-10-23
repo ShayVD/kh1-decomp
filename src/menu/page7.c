@@ -1,7 +1,7 @@
 /* Page 7 of the menu, part 3 (docs/modules.md "Session 42"),
  * 0x00228760-0x002298e0: the page's frame (message 0x70).  Its open
  * func_002293f0 opens the list D_003F6CE0 (func_002287f8: D_00643730 rows of
- * D_00643720, the cursor D_006436D0; 0 save (save.c, the port window
+ * D_00643720, the cursor D_006436D0; 0 save (savemenu.c, the port window
  * D_003F6C00 / D_003F6BD0), 1 the party change (party.c), 2 a message box
  * (D_003F6C60) unless D_003F6E2C == 3, 3 leaves) with its status line
  * D_003F6CA0 (func_00228760); set up func_00229820, reset func_00229850.

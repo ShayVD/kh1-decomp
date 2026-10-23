@@ -2,7 +2,7 @@
  * 0x002245c8-0x00228760: the save and load windows.  func_002280c0 picks the
  * memory card port D_006436D4 (D_00425C28[port] the card state, func_00233f28
  * / func_00233f40 / func_00233fb0 / func_00233ff8 the card requests), then
- * opens the task window D_003F6B70 (save.nostrict.c's func_00225ea8) with
+ * opens the task window D_003F6B70 (savemenu.nostrict.c's func_00225ea8) with
  * the status line D_003F6920 (func_002245c8, message D_00643734 when not 0).
  * func_00225330 is the list of the 99 slots of D_00351E10 (magic 'KHSQ',
  * version 0x01317f14: name, place D_003F6B28[x38], play time, level),
