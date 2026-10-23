@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 u32 func_001ee118(void);
 
@@ -12,9 +13,8 @@ void func_001ee230(u32 *a, u32 *b, u32 *c, u32 *d) {
     *d = t % 60U;
 }
 
-typedef struct { u8 pad[0x18]; u8 cnt; u8 a19[0x19]; u8 f32; u8 pad33[0x40 - 0x33]; u8 name[0x30]; u8 pad70[4]; } Member;
-typedef struct { u8 pad[4]; Member m[10]; u8 pad2[2]; u8 party[4]; u8 pad492[0x499 - 0x492]; u8 x499[0x100]; u8 list599[0x30]; } S4BE8;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 Member;
+typedef Save_304be8 S4BE8;
 #include "data/pieces/D_003E3D68.h"
 extern u16 D_003E3CD0[];
 s32 func_00149440(s32, s32);
@@ -101,61 +101,61 @@ void func_00141b10(s32, s32 *);
 
 s32 func_001eec48(s32 i, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->f32;
-    m->f32 = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x32;
+    m->sub.x32 = v;
     func_00141b10(i, buf);
-    m->f32 = old;
+    m->sub.x32 = old;
     return buf[19];
 }
 
 s32 func_001eecb0(s32 i, s32 j, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->a19[j];
-    m->a19[j] = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x19[j];
+    m->sub.x19[j] = v;
     func_00141b10(i, buf);
-    m->a19[j] = old;
+    m->sub.x19[j] = old;
     return buf[15];
 }
 
 s32 func_001eed18(s32 i, s32 j, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->a19[j];
-    m->a19[j] = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x19[j];
+    m->sub.x19[j] = v;
     func_00141b10(i, buf);
-    m->a19[j] = old;
+    m->sub.x19[j] = old;
     return buf[17];
 }
 
 s32 func_001eed80(s32 i, s32 j, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->a19[j];
-    m->a19[j] = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x19[j];
+    m->sub.x19[j] = v;
     func_00141b10(i, buf);
-    m->a19[j] = old;
+    m->sub.x19[j] = old;
     return buf[56];
 }
 
 s32 func_001eede8(s32 i, s32 j, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->a19[j];
-    m->a19[j] = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x19[j];
+    m->sub.x19[j] = v;
     func_00141b10(i, buf);
-    m->a19[j] = old;
+    m->sub.x19[j] = old;
     return buf[19];
 }
 
 s32 func_001eee50(s32 i, s32 j, u8 v) {
     s32 buf[60];
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    u8 old = m->a19[j];
-    m->a19[j] = v;
+    Member *m = &D_00304BE8->m[i];
+    u8 old = m->sub.x19[j];
+    m->sub.x19[j] = v;
     func_00141b10(i, buf);
-    m->a19[j] = old;
+    m->sub.x19[j] = old;
     return buf[20];
 }
 
@@ -164,9 +164,9 @@ s32 func_001eefd8(s32 a, s32 skip) {
     for (i = 0; i < 10; i++) {
         Member *m;
         if (i == skip) continue;
-        m = &((S4BE8 *)D_00304BE8)->m[i];
-        for (j = 0; j < m->cnt; j++) {
-            if (m->a19[j] == a) n++;
+        m = &D_00304BE8->m[i];
+        for (j = 0; j < m->sub.x1c; j++) {
+            if (m->sub.x19[j] == a) n++;
         }
     }
     return n;
@@ -174,12 +174,12 @@ s32 func_001eefd8(s32 a, s32 skip) {
 
 s32 func_001ef050(s32 a) {
     s32 n = 0, i, j;
-    S4BE8 *d = ((S4BE8 *)D_00304BE8);
+    S4BE8 *d = D_00304BE8;
     for (i = 0; i < 10; i++) {
         Member *m = &d->m[i];
-        if (m->f32 == a) n++;
-        for (j = 0; j < m->cnt; j++) {
-            if (m->a19[j] == a) n++;
+        if (m->sub.x32 == a) n++;
+        for (j = 0; j < m->sub.x1c; j++) {
+            if (m->sub.x19[j] == a) n++;
         }
     }
     return n;
@@ -187,13 +187,13 @@ s32 func_001ef050(s32 a) {
 
 s32 func_001ef0c0(s32 a) {
     s32 i, j;
-    S4BE8 *d = ((S4BE8 *)D_00304BE8);
-    s32 n = d->x499[a];
+    S4BE8 *d = D_00304BE8;
+    s32 n = d->items[a];
     for (i = 0; i < 10; i++) {
         Member *m = &d->m[i];
-        if (m->f32 == a) n--;
-        for (j = 0; j < m->cnt; j++) {
-            if (m->a19[j] == a) n--;
+        if (m->sub.x32 == a) n--;
+        for (j = 0; j < m->sub.x1c; j++) {
+            if (m->sub.x19[j] == a) n--;
         }
     }
     if (n < 0) n = 0;
@@ -217,7 +217,7 @@ extern s32 D_003E3D58[];
 
 s32 func_001ef320(void) {
     s32 i;
-    u8 k = ((S4BE8 *)D_00304BE8)->m[0].f32;
+    u8 k = D_00304BE8->m[0].sub.x32;
     for (i = 3; i >= 0; i--) {
         if (k == D_003E3D58[i]) return 0;
     }
@@ -226,8 +226,8 @@ s32 func_001ef320(void) {
 
 s32 func_001ef3a0(s32 i) {
     s32 n;
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
-    for (n = 0; n < 48 && m->name[n]; n++);
+    Member *m = &D_00304BE8->m[i];
+    for (n = 0; n < 48 && m->sub.name[n]; n++);
     return n;
 }
 
@@ -239,9 +239,9 @@ s32 func_001ef408(void) {
 
 s32 func_001ef450(s32 i, s32 a) {
     s32 n = 0, k;
-    Member *m = &((S4BE8 *)D_00304BE8)->m[i];
+    Member *m = &D_00304BE8->m[i];
     u8 c;
-    for (k = 0; k < 48 && (c = m->name[k]); k++) {
+    for (k = 0; k < 48 && (c = m->sub.name[k]); k++) {
         if ((c & ~0x80) == a) n++;
     }
     return n;
@@ -269,7 +269,7 @@ u8 func_001ef5c0(s32 arg0) {
 
 s32 func_001ef680(s32 i) {
     s32 n = 0, k = 0;
-    u8 *p = ((S4BE8 *)D_00304BE8)->m[i].name;
+    u8 *p = D_00304BE8->m[i].sub.name;
     u8 c;
 loop:
     if (k >= 48) goto end;

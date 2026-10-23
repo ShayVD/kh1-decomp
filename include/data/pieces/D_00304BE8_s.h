@@ -20,8 +20,9 @@ typedef struct {
     u8 mpmax;
     u8 pad_5[0x13];
     u8 x1c;
-    u8 pad_19[0x13];
-    Q9c_304be8 x2c;
+    u8 x19[0x19];
+    u8 x32;
+    u8 pad_33[0x1];
     u8 x34;
     u32 :8;
     u32 b16:1;

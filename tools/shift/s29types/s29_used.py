@@ -66,8 +66,8 @@ def rename_members(body, suffix="__u"):
     """body with each member declarator name suffixed (inline sub-structs too)"""
     def rep(m):
         w = m.group(1)
-        if w in TYPEWORDS:
-            return m.group(0)
+        if w in TYPEWORDS and m.group(2).lstrip().startswith(":"):
+            return m.group(0)  # an unnamed bit-field `u32 :6;`
         return w + suffix + m.group(2)
     return re.sub(r"\b([A-Za-z_]\w*)(\s*(?:\[[^\]]*\]\s*)*(?::\s*\w+\s*)?[;,])", rep, body)
 
