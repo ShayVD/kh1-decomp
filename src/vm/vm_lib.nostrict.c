@@ -2,6 +2,9 @@
  * (docs/modules.md "Session 32"). */
 #include "common.h"
 #include "data/types/vm_rec.h"
+#include "vm/vm_mgr.h"
+#include "data/types/text_001c0000_h16.h"
+#include "data/pieces/D_003DABD0.h"
 
 /* The entity a VM drives (as in vm_lib.c). */
 struct VmObj {
@@ -12,6 +15,9 @@ struct VmObj {
     u8 pad3c[0x370 - 0x3c];
     u64 flags;              /* 0x370 */
 };
+
+extern VmMgr D_00389C90;
+void func_00155be0(void *p);
 
 /* Set the entity's rotation from degrees. */
 s32 func_001cd600(VmRec *vm) {
@@ -33,4 +39,22 @@ s32 func_001cd600(VmRec *vm) {
     }
     vm->sp -= 3;
     return 2;
+}
+
+/* The callback of the first file func_001cf478 / func_001cf5d0 load (see
+ * func_001cf3e0 in vm_lib.c). */
+void func_001cf348(void) {
+    s32 i;
+    s32 n;
+    Tbl *base;
+    Tbl *t;
+    D_00389C90.f3070.x &= ~0x200000000ULL;
+    base = D_003DABD0[0];
+    n = base->n;
+    t = base;
+    for (i = 0; i < n; i++) {
+        t = base;
+        func_00155be0((u8 *)t + *(s32 *)((u8 *)t + i * 4 + 8));
+        t = 0;
+    }
 }

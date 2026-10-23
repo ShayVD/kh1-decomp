@@ -2,6 +2,7 @@
  * "Session 32"). */
 #include "common.h"
 #include "vm/script_vm.h"
+#include "vm/vm_mgr.h"
 
 /* The entity a VM drives (as in vm_lib.c). */
 struct VmObj {
@@ -21,6 +22,7 @@ struct VmObj {
 typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; } __attribute__((aligned(8))) Msg2;
 double sqrt(double);
 double atan2(double, double);
+extern VmFx *D_0038CD3C[];
 
 /* Send message 2 (turn towards the point stk[sp-2..sp]). */
 s32 func_001cd2d8(VmRec *vm) {
@@ -63,5 +65,14 @@ s32 func_001cd2d8(VmRec *vm) {
     vm->f60 = 0;
     vm->f64 = 0;
     vm->sp -= 4;
+    return 2;
+}
+
+/* The fade of effect D_0038CD3C[stk[sp-1]]: 1 - stk[sp] / 180. */
+s32 func_001cede8(VmRec *vm) {
+    s32 sp = vm->sp;
+    VmFx *p = D_0038CD3C[vm->stk[sp - 1]];
+    p->f0c = 1.0 - vm->stk[sp] / 180.0f;
+    vm->sp = sp - 2;
     return 2;
 }

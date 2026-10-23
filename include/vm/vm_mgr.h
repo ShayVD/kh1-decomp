@@ -42,6 +42,17 @@ typedef union {
     } w;
 } VmMgrF3078;
 
+/* An effect record of D_0038CD3C[] (made by func_001226f0; src/vm/vm_lib.c):
+ * x0, the fade f0c, two positions and the colour v30. */
+typedef struct VmFx {
+    s32 x0;
+    u8 pad4[8];
+    f32 f0c;
+    f32 v10[4];
+    f32 v20[4];
+    f32 v30[4];             /* colour (r, g, b, a) */
+} VmFx;
+
 /* h42's trigger box: id, centre, size */
 typedef struct { s32 id; u8 pad[12]; f32 c[4]; f32 s[4]; } VmBox;
 
@@ -76,7 +87,16 @@ typedef struct {
     s32 x306c;
     VmMgrF3070 f3070;       /* 0x3070 */
     VmMgrF3078 f3078;       /* 0x3078 */
-    u8 pad3080[0x3140 - 0x3080];
+    u8 pad3080[0x3098 - 0x3080];
+    s32 fxk;                /* 0x3098: the effect func_001cebe8 fades (D_0038CD3C index) */
+    s32 fxn;                /* 0x309c: frames left */
+    f32 fxd[3];             /* 0x30a0: colour step */
+    VmFx *fx[4];            /* 0x30ac */
+    u8 pad30bc[0x3128 - 0x30bc];
+    s32 an;                 /* 0x3128: frames left of the alpha fade (func_001cff28, D_002BC080[3]) */
+    s32 ad;                 /* 0x312c: alpha step */
+    s32 rgbn;               /* 0x3130: frames left of the colour fade (func_001cfff8, D_002BC080[0..2]) */
+    s32 rgbd[3];            /* 0x3134 */
     s32 x3140;
     s32 *x3144;             /* 0x3144: where func_001cac60 stores the choice */
     u32 x3148;

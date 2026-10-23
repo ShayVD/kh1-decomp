@@ -60,17 +60,6 @@ typedef struct {
 extern Big D_00389C90;
 typedef struct { s32 v[3]; s32 f0c; } Cam;
 extern Cam D_002BC080;
-s32 func_001cfdd8(VM *vm) {
-    VmMsg m;
-    m.type = 19;
-    m.val = (u32)(vm->stk[vm->sp - 2] | 0x10000);
-    m.v[0] = vm->stk[vm->sp - 1];
-    m.v[1] = vm->stk[vm->sp] * 2.0f;
-    m.x = vm->x0;
-    func_001c4640(&m);
-    vm->sp -= 3;
-    return 2;
-}
 s32 func_001d01e8(VM *vm) {
     VmMsg m;
     m.type = 30;

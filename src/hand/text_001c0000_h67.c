@@ -17,46 +17,9 @@ extern Str D_00389C90;
 
 /* func_001cb7d0, func_001cb960, func_001cbbd0 and func_001cbfc0 (and D_0062A1F0) are in src/msgwin/msgwin.c. */
 
-#include "data/pieces/D_003DABD0.h"
-extern char D_003C58E0[][256];
+/* func_001cf478 and func_001cf5d0 are in src/vm/vm_lib.c. */
 void *func_001559f0(s32, s32);
 void func_00120748(char *, void *, void *, s32);
-s32 func_001cf348();
-s32 func_001cf3e0();
-s32 func_001cf478(VM *vm) {
-    switch (vm->stk[vm->sp - 1]) {
-    case 1:
-        D_003DABD0[0] = func_001559f0(52, 4);
-        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
-        D_00389C90.f3070.x |= 0x200000000ULL;
-        break;
-    case 2:
-        D_003DABD0[1] = func_001559f0(56, 4);
-        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
-        D_00389C90.f3070.x |= 0x400000000ULL;
-        break;
-    }
-    vm->sp -= 2;
-    return 2;
-}
-
-extern char D_003D97E0[][256];
-s32 func_001cf5d0(VM *vm) {
-    switch (vm->stk[vm->sp - 1]) {
-    case 1:
-        D_003DABD0[0] = func_001559f0(52, 4);
-        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
-        D_00389C90.f3070.x |= 0x200000000ULL;
-        break;
-    case 2:
-        D_003DABD0[1] = func_001559f0(56, 4);
-        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
-        D_00389C90.f3070.x |= 0x400000000ULL;
-        break;
-    }
-    vm->sp -= 2;
-    return 2;
-}
 
 #include "data/pieces/D_003A7990.h"
 typedef VmRec Obj350;

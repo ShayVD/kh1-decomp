@@ -32,15 +32,4 @@ s32 func_001c07c8(void) {
 
 /* func_001ca9f8 is in src/msgwin/msgwin.c. */
 
-s32 func_001ceee8(void) {
-    func_00104300(0x10);
-    D_00389C90[1551] = (s64) (D_00389C90[1551] | 1);
-    return 2;
-}
-
-s32 func_001cef80(void) {
-    func_001043f8(0x10);
-    D_00389C90[1551] = (s64) (D_00389C90[1551] & ~1);
-    return 2;
-}
 #include "data/data_0037.h"

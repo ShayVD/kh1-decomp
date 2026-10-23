@@ -22,6 +22,13 @@
 #include "data/pieces/D_002BC098.h"
 #include "data/pieces/D_003DABD0.h"
 #include "data/data_002B.h"
+#include "data/data_0038.h"
+#include "data/data_003C.h"
+#include "data/data_003D.h"
+#include "data/pieces/D_00388CC4.h"
+#include "data/pieces/D_002C5958.h"
+#include "data/pieces/D_003DABCC.h"
+#include "data/pieces/D_003DABD4.h"
 
 /* The entity a VM drives, as the library functions read it. */
 struct VmObj {
@@ -30,10 +37,15 @@ struct VmObj {
     u8 pad1c[0x14];
     f32 rot[3];             /* 0x30: radians */
     u8 pad3c[0x370 - 0x3c];
-    u64 flags;              /* 0x370 */
+    union {
+        u64 flags;
+        u8 col[4];          /* func_001cf210 */
+    } f370;                 /* 0x370 */
 };
 
 extern VmMgr D_00389C90;
+extern u64 D_0038CD00;
+extern VmFx *D_0038CD3C[];
 
 void func_001c6720(void);
 void *func_001559f0(s32, s32);
@@ -315,6 +327,639 @@ s32 func_001cdf00(VmRec *vm) {
     m.x = vm->x0;
     m.v[0] = vm->stk[vm->sp];
     func_001c4640(&m);
+    vm->sp -= 2;
+    return 2;
+}
+
+/* ---- 0x001cdf98-0x001cfff8 ---- */
+
+void func_00112b48(s32, s32, s32, s32);
+void func_00112b80(s32, s32, s32, s32);
+void func_00112bb8(s32);
+void func_00108180(s32);
+void func_001081a0(s32);
+s32 func_00123618(s32);
+f32 func_00176850(void);
+VmFx *func_001226f0(s32, s32, s32);
+void func_00122768(VmFx *);
+void func_00104300(s32);
+void func_001043f8(s32);
+void func_00155be0(void *p);
+void func_00120748(char *, void *, void *, s32);
+void func_00131498(void *, void *);
+void func_00131500(struct VmObj *);
+void func_00135978(void *, s32, s32);
+void func_001359c0(void *, s32, s32);
+s32 func_00131b08(void *);
+void func_00109df8(void);
+void func_00109f48(s32);
+
+s32 func_001cdf98(VmRec *vm) {
+    s32 c = vm->stk[vm->sp--];
+    s32 b = vm->stk[vm->sp--];
+    s32 a = vm->stk[vm->sp--];
+    func_00112b48(a, b, c, -1);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce020(VmRec *vm) {
+    s32 d = vm->stk[vm->sp--];
+    s32 c = vm->stk[vm->sp--];
+    s32 b = vm->stk[vm->sp--];
+    s32 a = vm->stk[vm->sp--];
+    func_00112b48(a, b, c, d);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce0b8(VmRec *vm) {
+    s32 d = vm->stk[vm->sp--];
+    s32 c = vm->stk[vm->sp--];
+    s32 b = vm->stk[vm->sp--];
+    s32 a = vm->stk[vm->sp--];
+    func_00112b80(a, b, c, d);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce150(VmRec *vm) {
+    s32 a = vm->stk[vm->sp--];
+    func_00112bb8(a);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce1a8(VmRec *vm) {
+    s32 d = vm->stk[vm->sp--];
+    s32 c = vm->stk[vm->sp--];
+    s32 b = vm->stk[vm->sp--];
+    s32 a = vm->stk[vm->sp--];
+    func_00112b48(a, b, c, d);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce240(VmRec *vm) {
+    s32 a = vm->stk[vm->sp--];
+    func_00112bb8(a);
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 10;
+}
+
+s32 func_001ce298(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_00123618(D_0038CCCC);
+    return 2;
+}
+
+s32 func_001ce2e8(VmRec *vm) {
+    func_00108180(vm->stk[vm->sp--]);
+    return 2;
+}
+
+s32 func_001ce320(VmRec *vm) {
+    func_001081a0(vm->stk[vm->sp--]);
+    return 2;
+}
+
+/* The story flags D_00388CC4[2048..]: set, clear, increment, decrement the
+ * one named by stk[32]. */
+s32 func_001ce358(VmRec *vm) {
+    s32 i = vm->stk[32];
+    vm->sp--;
+    if (i >= 2048) D_00388CC4[i] = 1;
+    return 2;
+}
+
+s32 func_001ce390(VmRec *vm) {
+    s32 i = vm->stk[32];
+    vm->sp--;
+    if (i >= 2048) D_00388CC4[i] = 0;
+    return 2;
+}
+
+s32 func_001ce3c0(VmRec *vm) {
+    s32 i = vm->stk[32];
+    vm->sp--;
+    if (i >= 2048) D_00388CC4[i]++;
+    return 2;
+}
+
+s32 func_001ce400(VmRec *vm) {
+    s32 i = vm->stk[32];
+    vm->sp--;
+    if (i >= 2048) D_00388CC4[i]--;
+    return 2;
+}
+
+/* Scale stk[sp] by a random fraction (rounded). */
+s32 func_001ce440(VmRec *vm) {
+    s32 v = vm->stk[vm->sp];
+    vm->stk[vm->sp] = func_00176850() * (f32)v + 0.5f;
+    return 2;
+}
+
+/* func_001ce4b8, func_001ce5f0, func_001ce750 and func_001ce880 are in
+ * vm_lib.nostrict_nofill.c. */
+
+/* The effects D_0038CD3C[i]: create, set x0, the two positions, the fade. */
+s32 func_001ce9b0(VmRec *vm) {
+    s32 i = vm->stk[vm->sp];
+    VmFx *p = func_001226f0(2, 0, i);
+    D_0038CD3C[i] = p;
+    vm->sp--;
+    p->v30[3] = p->v30[2] = p->v30[1] = p->v30[0] = 1.0f;
+    return 2;
+}
+
+s32 func_001cea38(VmRec *vm) {
+    s32 i = vm->stk[vm->sp];
+    VmFx *p = func_001226f0(2, 1, i);
+    D_0038CD3C[i] = p;
+    vm->sp--;
+    p->v30[3] = p->v30[2] = p->v30[1] = p->v30[0] = 1.0f;
+    return 2;
+}
+
+s32 func_001ceac0(VmRec *vm) {
+    D_0038CD3C[vm->stk[vm->sp - 1]]->x0 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001ceb08(VmRec *vm) {
+    s32 sp = vm->sp;
+    s32 i = vm->stk[sp - 3];
+    f32 x = vm->stk[sp - 2];
+    f32 y = vm->stk[sp - 1];
+    f32 z = vm->stk[sp];
+    VmFx *p;
+    vm->sp = sp - 4;
+    p = D_0038CD3C[i];
+    p->v10[0] = x;
+    p->v10[1] = y;
+    p->v10[2] = z;
+    p->v10[3] = 1.0f;
+    return 2;
+}
+
+s32 func_001ceb78(VmRec *vm) {
+    s32 sp = vm->sp;
+    s32 i = vm->stk[sp - 3];
+    f32 x = vm->stk[sp - 2];
+    f32 y = vm->stk[sp - 1];
+    f32 z = vm->stk[sp];
+    VmFx *p;
+    vm->sp = sp - 4;
+    p = D_0038CD3C[i];
+    p->v20[0] = x;
+    p->v20[1] = y;
+    p->v20[2] = z;
+    p->v20[3] = 1.0f;
+    return 2;
+}
+
+/* The per-frame step of func_001cec68's colour fade. */
+void func_001cebe8(void) {
+    VmFx *p;
+    if (--D_00389C90.fxn <= 0) D_00389C90.f3070.x &= ~0x80000000000ULL;
+    p = D_00389C90.fx[D_00389C90.fxk];
+    p->v30[0] += D_00389C90.fxd[0];
+    p->v30[1] += D_00389C90.fxd[1];
+    p->v30[2] += D_00389C90.fxd[2];
+}
+
+/* Fade effect fx[stk[sp-4]] to the colour stk[sp-3..sp-1] / 255 in stk[sp] frames. */
+s32 func_001cec68(VmRec *vm) {
+    VmFx *e;
+    s32 n;
+    f32 x, y, z, fn;
+    D_00389C90.fxk = vm->stk[vm->sp - 4];
+    e = D_00389C90.fx[D_00389C90.fxk];
+    n = vm->stk[vm->sp];
+    D_00389C90.fxn = n;
+    fn = n;
+    x = vm->stk[vm->sp - 3] / 255.0f;
+    y = vm->stk[vm->sp - 2] / 255.0f;
+    z = vm->stk[vm->sp - 1] / 255.0f;
+    D_00389C90.fxd[0] = (x - e->v30[0]) / fn;
+    D_00389C90.fxd[1] = (y - e->v30[1]) / fn;
+    D_00389C90.fxd[2] = (z - e->v30[2]) / fn;
+    if (n == 0) {
+        e->v30[0] = x;
+        e->v30[1] = y;
+        e->v30[2] = z;
+        e->v30[3] = 1.0f;
+    } else {
+        D_00389C90.f3070.x |= 0x80000000000ULL;
+    }
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001ceda0(VmRec *vm) {
+    s32 sp = vm->sp;
+    s32 i = vm->stk[sp - 1];
+    f32 v = vm->stk[sp];
+    vm->sp = sp - 2;
+    D_0038CD3C[i]->f0c = v;
+    return 2;
+}
+
+/* func_001cede8 is in vm_lib.nofill.c. */
+
+s32 func_001cee90(VmRec *vm) {
+    func_00122768(D_0038CD3C[vm->stk[vm->sp]]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001ceee8(void) {
+    func_00104300(0x10);
+    D_00389C90.f3078.x |= 1;
+    return 2;
+}
+
+s32 func_001cef20(VmRec *vm) {
+    func_00104300(vm->stk[vm->sp]);
+    D_00389C90.f3078.x |= 1;
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cef80(void) {
+    func_001043f8(0x10);
+    D_00389C90.f3078.x &= ~1;
+    return 2;
+}
+
+s32 func_001cefb8(VmRec *vm) {
+    func_001043f8(vm->stk[vm->sp]);
+    D_00389C90.f3078.x &= ~1ULL;
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cf018(VmRec *vm) {
+    VmMsg m;
+    m.type = 19;
+    m.val = (u32)vm->stk[vm->sp - 2];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 1];
+    m.v[1] = vm->stk[vm->sp] * 2.0f;
+    func_001c4640(&m);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001cf0c8(VmRec *vm) {
+    VmMsg m;
+    m.type = 20;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cf110(VmRec *vm) {
+    VmMsg m;
+    m.type = 23;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 4] / 255.0f;
+    m.v[1] = vm->stk[vm->sp - 3] / 255.0f;
+    m.v[2] = vm->stk[vm->sp - 2] / 255.0f;
+    m.v[3] = vm->stk[vm->sp - 1] * 0.0078125f;
+    func_001c4640(&m);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001cf210(VmRec *vm) {
+    VmMsg m;
+    if (vm->obj != 0) {
+        m.type = 23;
+        m.val = (u32)(vm->stk[vm->sp] * 2);
+        m.x = vm->x0;
+        m.v[0] = vm->obj->f370.col[0] * 0.0078125f;
+        m.v[1] = vm->obj->f370.col[1] * 0.0078125f;
+        m.v[2] = vm->obj->f370.col[2] * 0.0078125f;
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cf300(VmRec *vm) {
+    VmMsg m;
+    m.type = 24;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+/* func_001cf348 is in vm_lib.nostrict.c. */
+void func_001cf348(void);
+
+/* The callback of the second file func_001cf478 / func_001cf5d0 load: t is
+ * copied from base at the loop top and killed (t = 0) after the call: two
+ * sets in the loop stop loop.c hoisting the copy / strength-reducing
+ * t->off[i], and the mention outside the loop makes cse keep t (not base) as
+ * the canonical register.  The copy at the top fills sched2's cycle-0 slot
+ * (sll; addu; addiu order); reorg steals it into bnez. */
+void func_001cf3e0(void) {
+    s32 i;
+    s32 n;
+    Tbl_3dabd4 *base;
+    Tbl_3dabd4 *t;
+    D_00389C90.f3070.x &= ~0x400000000ULL;
+    base = D_003DABD4;
+    n = base->n;
+    t = base;
+    for (i = 0; i < n; i++) {
+        t = base;
+        func_00155be0((u8 *)t + *(s32 *)((u8 *)t + i * 4 + 8));
+        t = 0;
+    }
+}
+
+/* Load file stk[sp] of the table D_003C58E0 (func_001cf478) or D_003D97E0
+ * (func_001cf5d0) into slot stk[sp-1] (1 or 2) of D_003DABD0. */
+s32 func_001cf478(VmRec *vm) {
+    switch (vm->stk[vm->sp - 1]) {
+    case 1:
+        D_003DABD0[0] = func_001559f0(52, 4);
+        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
+        D_00389C90.f3070.x |= 0x200000000ULL;
+        break;
+    case 2:
+        D_003DABD0[1] = func_001559f0(56, 4);
+        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
+        D_00389C90.f3070.x |= 0x400000000ULL;
+        break;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cf5d0(VmRec *vm) {
+    switch (vm->stk[vm->sp - 1]) {
+    case 1:
+        D_003DABD0[0] = func_001559f0(52, 4);
+        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
+        D_00389C90.f3070.x |= 0x200000000ULL;
+        break;
+    case 2:
+        D_003DABD0[1] = func_001559f0(56, 4);
+        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
+        D_00389C90.f3070.x |= 0x400000000ULL;
+        break;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cf728(VmRec *vm) {
+    s32 f;
+    switch (vm->stk[vm->sp]) {
+    case 1:
+        f = (s32)(D_0038CD00 >> 33) & 1;
+        if (f == 1) return 4;
+        vm->sp--;
+        return 2;
+    case 2:
+        f = (s32)(D_0038CD00 >> 34) & 1;
+        if (f == 1) return 4;
+        vm->sp--;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001cf7a0(VmRec *vm) {
+    if (vm->fl.b.b7 != 1) {
+        Tbl *t;
+        s32 sp = vm->sp;
+        vm->fl.x |= 0x80;
+        t = D_003DABCC[vm->stk[sp - 1]];
+        func_00131498(vm->obj, (u8 *)t + ((s32 *)t)[vm->stk[sp] + 2]);
+        vm->sp -= 2;
+        return 2;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cf838(VmRec *vm) {
+    if (vm->fl.b.b7 == 1) {
+        func_00131500(vm->obj);
+        vm->fl.x &= ~0x80;
+    }
+    return 2;
+}
+
+s32 func_001cf890(VmRec *vm) {
+    func_00135978(vm->obj, vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cf8e8(VmRec *vm) {
+    func_001359c0(vm->obj, vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cf940(VmRec *vm) {
+    return ((s32)(vm->fl.x >> 1) & 1) ? 4 : 2;
+}
+
+/* func_001cf960 (s11w1, hand strict): from s8 w4.  The VM flags at 0x328 are
+ * u64 bit-fields directly in the VM struct, which also has an f32 (x2f4): the
+ * bit-field store `vm->b1 = 1` gets the VM struct alias set, so sd flags
+ * still conflicts with the f32 pos loads (stays after them) but ld flags no
+ * longer conflicts with the VmMsg stores in sched2.  So it keeps this view of
+ * VmRec. */
+typedef struct {
+    s32 x0;
+    struct VmObj *obj;
+    u8 pad8[0x178];
+    s32 sp;
+    s32 stk[92];
+    f32 x2f4;
+    u8 pad2f8[0x30];
+    u64 b0:1, b1:1, rest:62;
+    u8 pad330[0x20];
+} __attribute__((aligned(8))) VmRecW;
+
+s32 func_001cf960(VmRecW *vm) {
+    VmMsg m;
+    m.type = 4;
+    m.val = (u32)vm->stk[vm->sp] * 2;
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 3] - vm->obj->pos[0];
+    m.v[1] = vm->stk[vm->sp - 2] - vm->obj->pos[1];
+    m.v[2] = vm->stk[vm->sp - 1] - vm->obj->pos[2];
+    m.v[3] = 1.0f;
+    vm->b1 = 1;
+    func_001c4640(&m);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001cfa58(void) {
+    func_00109df8();
+    return 2;
+}
+
+s32 func_001cfa78(VmRec *vm) {
+    if (!(D_0037A378 & 1)) {
+        func_00109f48(vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cfad0(VmRec *vm) {
+    return func_00131b08(vm->obj) ? 2 : 4;
+}
+
+s32 func_001cfb00(VmRec *vm) {
+    VmMsg m;
+    m.type = 27;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cfb48(VmRec *vm) {
+    VmMsg m;
+    m.type = 28;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cfb90(VmRec *vm) {
+    VmMsg m;
+    m.type = 5;
+    m.val = (u32)(vm->stk[vm->sp] | 0x10000);
+    m.x = vm->x0;
+    func_001c4640(&m);
+    vm->sp--;
+    return 2;
+}
+
+/* func_001cfc28: MATCHED (session 19, s19m1), hand.  `f32 one = 1.0f;` at
+ * the top (update_equiv_regs moves the li.s next to its use after sched1)
+ * plus volatile type and v3 in the message, which put the li.s after the
+ * dsll as in the original.  The c*2.0f chain is a local register variable
+ * `register f32 t asm("$f0")` set by `t = (f32)c; t = t + t;`, so
+ * local-alloc can no longer give f0 to the moved 1.0 (it gets f1 as in the
+ * original).  FLAGGED: two volatile fields in the stack message (without them
+ * 6w) and the pin (`t = c * 2.0f` in one statement: 6w). */
+typedef struct {
+    volatile u8 type;
+    u64 val:24;
+    s32 x;
+    s32 a8;
+    s32 ac;
+    f32 v[3]; volatile f32 v3;
+} VmMsgV;
+typedef struct { s32 x0; s32 x4; } VmLibR4;
+typedef struct { s32 x0; VmLibR4 *x4; } VmLibR;
+VmLibR *func_001e98d0(s32 a, s32 b);
+
+s32 func_001cfc28(VmRec *vm) {
+    VmMsgV m; f32 one = 1.0f;
+    s32 a = vm->stk[vm->sp - 2];
+    s32 b = vm->stk[vm->sp - 1];
+    s32 c = vm->stk[vm->sp];
+    VmLibR *r = func_001e98d0(vm->fl.b.b5, a);
+    if (r == 0) {
+        vm->sp -= 3;
+        return 2;
+    }
+    if (r->x4) {
+        if (vm) m.x = r->x4->x4; else m.x = r->x4->x4;
+        m.type = 29;
+        m.val = (u32)b;
+        {
+            register f32 t asm("$f0");
+            t = (f32)c;
+            t = t + t;
+            m.v[0] = t;
+        }
+        m.v[1] = 0;
+        m.v[2] = 0;
+        m.v3 = one;
+        func_001c4640((VmMsg *)&m);
+    }
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001cfd30(VmRec *vm) {
+    VmMsg m;
+    m.type = 17;
+    m.val = (u32)(vm->stk[vm->sp - 1] | 0x10000);
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp];
+    func_001c4640(&m);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001cfdd8(VmRec *vm) {
+    VmMsg m;
+    m.type = 19;
+    m.val = (u32)(vm->stk[vm->sp - 2] | 0x10000);
+    m.v[0] = vm->stk[vm->sp - 1];
+    m.v[1] = vm->stk[vm->sp] * 2.0f;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001cfe98(void) {
+    D_002C5958 &= ~8;
+    return 2;
+}
+
+s32 func_001cfeb8(void) {
+    D_002C5958 |= 8;
+    return 2;
+}
+
+s32 func_001cfed8(void) {
+    D_002C5958 = (s32)D_002C5958 & ~4 & 0xF7FFFFFF;
+    return 2;
+}
+
+s32 func_001cff08(void) {
+    D_002C5958 |= 4;
+    return 2;
+}
+
+/* The per-frame step of func_001cff80's alpha fade. */
+void func_001cff28(void) {
+    if (--D_00389C90.an <= 0) D_00389C90.f3070.x &= ~0x4000000000ULL;
+    D_002BC080[3] += D_00389C90.ad;
+}
+
+/* Fade the alpha D_002BC080[3] (D_002BC08C) to stk[sp-1] in stk[sp] frames. */
+s32 func_001cff80(VmRec *vm) {
+    s32 base = D_002BC08C;
+    s32 n = vm->stk[vm->sp];
+    D_00389C90.an = n;
+    D_00389C90.ad = (vm->stk[vm->sp - 1] - base) / n;
+    D_00389C90.f3070.x |= 0x4000000000ULL;
     vm->sp -= 2;
     return 2;
 }
