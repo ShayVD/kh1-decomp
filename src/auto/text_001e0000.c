@@ -36,7 +36,6 @@ extern M2C_UNK D_00F20000;
 extern M2C_UNK func_001e7fe0;
 extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e8628;
-extern s32 D_003DD260;
 extern s32 D_003E3C80;
 extern s32 D_003E8E00;
 extern s32 D_003E8E04;
@@ -60,14 +59,7 @@ void *func_001496c8();
 
 /* func_001e2800 is in src/shop/shop.c. */
 
-s32 func_001e7488(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_003DD260;
-    return 2;
-}
+/* func_001e7488 is in src/list/list.c. */
 
 s32 func_001e8010(void) {
     if (func_0011e340(0) == 0) {

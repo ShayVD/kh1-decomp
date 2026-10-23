@@ -3,10 +3,6 @@
 #include "m2c.h"
 #include "data/bss_0063.h"
 
-M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
-M2C_UNK func_00232aa8();
-extern M2C_UNK D_00630300;
-extern M2C_UNK D_00630460;
 extern s32 D_006314D4;
 extern s64 D_00389C90[];
 void func_0011c7d8(s32, f32, f32, f32, f32, f32, f32, f32, f32);
@@ -15,21 +11,9 @@ void func_001e8728(void);
 
 /* func_001e2498 is in src/screen/screen.c. */
 
-void func_001e78d8(void) {
-    func_0010bd90(&D_00630460, 0);
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFDFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
+/* func_001e78d8, func_001e7a10, func_001e7b50 are in src/list/list.c. */
 
-void func_001e7a10(void) {
-    func_0010bd90(&D_00630460, 0);
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFDFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
 
-void func_001e7b50(void) {
-    func_00232aa8();
-    func_0010bd90(&D_00630300, 0);
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFDFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
 
 void func_001e7fe0(void) {
     D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFEFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));

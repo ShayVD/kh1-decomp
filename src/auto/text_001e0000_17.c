@@ -5,7 +5,6 @@
 #include "data/bss_0063.h"
 
 M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
-M2C_UNK func_0010bdd0(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_00111be8();
 M2C_UNK func_0011c7a8(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0011e9a8(M2C_UNK *, M2C_UNK *);
@@ -13,7 +12,6 @@ M2C_UNK func_0011eb88(s32, M2C_UNK *, s32, M2C_UNK *);
 M2C_UNK func_0011ec08(s32, M2C_UNK *, s32, M2C_UNK *);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_00147840();
-M2C_UNK func_001e61c0(M2C_UNK, M2C_UNK *);
 M2C_UNK func_001e9650();
 M2C_UNK func_001ef948();
 M2C_UNK func_001efaa8();
@@ -42,10 +40,8 @@ M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
 #include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3CB8;
-extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
 extern M2C_UNK D_00F20000;
-extern M2C_UNK func_001e72a0;
 extern M2C_UNK func_001e7fe0;
 extern M2C_UNK func_001e8010;
 extern M2C_UNK func_001e8308;
@@ -61,7 +57,6 @@ extern s32 D_006314D0;
 extern s32 D_006314D4;
 extern s32 D_006314D8;
 extern s32 D_006314DC;
-extern s64 D_00389C90[];
 f32 func_001edc50(s32);
 f32 func_001edcd8(f32);
 s32 func_0011e340(M2C_UNK);
@@ -90,31 +85,12 @@ void memset(s32, s32, s32);
 
 
 
-void func_001e6388(void) {
-    func_001e61c0(0, &D_00630510);
-}
+/* func_001e6388, func_001e6438, func_001e64e0, func_001e6c68, func_001e6e08, func_001e7d80 are in src/list/list.c. */
 
-void func_001e6438(s32 arg0) {
-    D_003DD28C = 0;
-    D_003DD258 = arg0;
-}
 
-void func_001e64e0(void) {
-    D_00389C90[1551] = (s64) (D_00389C90[1551] & ~0x10);
-}
 
-void func_001e6c68(void) {
-    func_0010bdd0(&D_00630510, &func_001e72a0);
-}
 
-void func_001e6e08(s32 arg0) {
-    D_003DD28C = 0;
-    D_003DD258 = arg0;
-}
 
-void func_001e7d80(s32 arg0) {
-    D_003DD258 = arg0;
-}
 
 void func_001e7e78(void) {
     func_0011c7a8(D_006314D4, 0, 0x3000, 0, 0, 0);

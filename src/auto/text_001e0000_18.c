@@ -4,7 +4,6 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0011e9a8(M2C_UNK *, s32);
 M2C_UNK func_0011eb88(s32, s32, s32, M2C_UNK *);
 M2C_UNK func_0011ec08(s32, s32, s32, M2C_UNK *);
@@ -14,29 +13,12 @@ M2C_UNK func_002672f8(void *, void *, void *);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
-extern M2C_UNK D_003E0D20;
-extern M2C_UNK D_003E0F40;
-extern M2C_UNK D_003E1150;
-extern M2C_UNK D_003E12E0;
-extern M2C_UNK D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
-extern M2C_UNK D_00630460;
-extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
-extern M2C_UNK D_006310C8; /* src/data/bss_0063.c: Pair D_006310C8[0x10] */
-extern M2C_UNK D_00631148; /* src/data/bss_0063.c: Pair D_00631148[0x10] */
-extern M2C_UNK D_006311C8; /* src/data/bss_0063.c: Pair D_006311C8[0x10] */
-extern M2C_UNK D_00631248; /* src/data/bss_0063.c: Pair D_00631248[0x50] */
-extern M2C_UNK func_001e4990;
-extern M2C_UNK func_001e61c0;
-extern M2C_UNK func_001e6d20;
-extern M2C_UNK func_001e6f28;
-extern M2C_UNK func_001e7ba8;
 extern M2C_UNK func_001e7fe0;
 extern M2C_UNK func_001e8178;
 extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e84a0;
 extern M2C_UNK func_001e8628;
 #include "data/pieces/D_003DABD4.h"
-extern s32 D_003DD264;
 extern s32 D_003F7A68;
 extern s32 D_006314CC;
 extern s32 D_006314D0;
@@ -49,34 +31,12 @@ s32 func_0011e340(M2C_UNK);
 
 /* func_001e4268 is in src/shop/shop.c. */
 
-void func_001e4918(void) {
-    s32 sp[4];
-    func_001c2d20((s8 *) &D_003E0D20, sp, (s8 **) &D_006310C8);
-    func_001c2d20((s8 *) &D_003E0F40, sp, (s8 **) &D_00631148);
-    func_001c2d20((s8 *) &D_003E1150, sp, (s8 **) &D_006311C8);
-    func_001c2d20((s8 *) &D_003E12E0, sp, (s8 **) &D_00631248);
-}
+/* func_001e4918, func_001e4d20, func_001e6410, func_001e6de0, func_001e7278, func_001e7d58 are in src/list/list.c. */
 
-void func_001e4d20(void) {
-    D_003DD264 = 0;
-    func_0010bd90(&D_006303B0, &func_001e4990);
-}
 
-void func_001e6410(void) {
-    func_0010bd90(&D_00630510, &func_001e61c0);
-}
 
-void func_001e6de0(void) {
-    func_0010bd90(&D_00630510, &func_001e6d20);
-}
 
-void func_001e7278(void) {
-    func_0010bd90(&D_00630510, &func_001e6f28);
-}
 
-void func_001e7d58(void) {
-    func_0010bd90(&D_00630460, &func_001e7ba8);
-}
 
 void func_001e81c8(s32 arg0) {
     D_006314D8 = arg0;

@@ -8,8 +8,6 @@ M2C_UNK func_00146928(M2C_UNK);
 #include "data/pieces/D_003DBA68.h"
 extern M2C_UNK func_001e8e38;
 extern s32 D_002C5958;
-extern s32 D_003DD25C;
-extern s32 D_003DD260;
 extern s32 D_003DD310;
 extern s32 D_003DD314;
 extern s32 D_003F7A68;
@@ -27,29 +25,11 @@ s32 func_001ee768();
 
 
 
-void func_001e6578(void) {
+/* func_001e6578, func_001e6b70, func_001e7928, func_001e7a60, func_001e7b48 are in src/list/list.c. */
 
-}
 
-void func_001e6b70(s32 arg0) {
-    if (D_003DD25C == 3) {
-        D_003DD260 = arg0 - 1;
-        return;
-    }
-    D_003DD260 = arg0 - 2;
-}
 
-void func_001e7928(void) {
 
-}
-
-void func_001e7a60(void) {
-
-}
-
-void func_001e7b48(void) {
-
-}
 
 s32 func_001e8e68(void) {
     if (func_0011e340(0) == 0) {
