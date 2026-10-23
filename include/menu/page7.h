@@ -22,7 +22,7 @@ typedef struct PtWin {
     u16 xc0;
     u8 padc2[0xcc - 0xc2];
     s16 xcc, xce;
-    u8 padd0[2];
+    s16 xd0;
     s16 xd2;
     u8 padd4[0xd8 - 0xd4];
     s16 xd8, xda;
