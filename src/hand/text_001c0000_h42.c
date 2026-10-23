@@ -105,28 +105,8 @@ extern CamOut D_003C5510;
 extern u8 D_003C55E0[];
 /* D_003C55E0 is +0xd0 into this block. */
 #define OUT (*(CamOut *)(D_003C55E0 - 0xd0))
-void func_001c53c8(f32);
 void func_001c6a20(void);
-static inline void inl_cpy(V4 *d, V4 *s) {
-    *d = *s;
-}
-s32 func_001c5db8(void) {
-    (*(Cam_37A380 *)&D_0037A380).t += 1.0f;
-    if ((f32)(*(Cam_37A380 *)&D_0037A380).last->n < (*(Cam_37A380 *)&D_0037A380).t) {
-        (*(Cam_37A380 *)&D_0037A380).t = (f32)(*(Cam_37A380 *)&D_0037A380).last->n;
-        return 4;
-    }
-    func_001c53c8((*(Cam_37A380 *)&D_0037A380).t);
-    inl_cpy(&OUT.a, &(*(Cam_37A380 *)&D_0037A380).a);
-    inl_cpy(&OUT.b, &(*(Cam_37A380 *)&D_0037A380).d);
-    inl_cpy(&OUT.c, &(*(Cam_37A380 *)&D_0037A380).e);
-    inl_cpy(&OUT.e, &(*(Cam_37A380 *)&D_0037A380).c);
-    inl_cpy(&OUT.d, &(*(Cam_37A380 *)&D_0037A380).b);
-    OUT.f50 = (*(Cam_37A380 *)&D_0037A380).f60;
-    OUT.f54 = (*(Cam_37A380 *)&D_0037A380).fE0F4;
-    func_001c6a20();
-    return 0;
-}
+/* func_001c5db8 is in src/camera/camera.c. */
 
 void func_001c6890(void);
 f32 func_001e9e58(V4 *, V4 *);

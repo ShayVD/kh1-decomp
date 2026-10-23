@@ -6,7 +6,7 @@ double asin(double);
 double cos(double);
 double atan2(double, double);
 f32 acosf(f32);
-#include "data/pieces/D_002E2780.h"
+#include "data/types/fvec.h"
 typedef FVec4 V4;
 f32 sinf(f32);
 f32 sqrtf(f32);
@@ -22,42 +22,10 @@ void func_001be820(void *p, u32 n);
 #include "data/pieces/D_0038D170.h"
 extern u32 D_002C5958;
 void func_0011ef10(s32, void *);
-typedef struct { u8 pad[16]; V4 pos; u8 pad32[28]; f32 roty; } Obj_c5168;
-typedef struct { u8 pad[16]; V4 pos; u8 pad32[32]; V4 tgt; u8 pad80[16]; f32 f96; } Cam_c5168;
-typedef struct { u8 pad[12376]; s32 mode; u8 pad12380[16]; Obj_c5168 *p12396; Obj_c5168 *p12400; } Big_c5168;
-void sceVu0UnitMatrix(f32 (*m)[4]);
-void func_00267810(f32 (*d)[4], f32 (*s)[4], f32 r);
-void func_002672f8(V4 *d, f32 (*m)[4], V4 *s);
-void func_001e9d00(V4 *d, V4 *a, V4 *b, f32 t);
-void func_001e9fe8(V4 *dst, V4 *src);
-void func_001e9f18(V4 *dst, V4 *a, V4 *b, f32 t);
-f32 func_001e9e58(V4 *a, V4 *b);
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(8))) V4a_c5b88;
-typedef struct { u8 pad[8]; s32 end; } Track_c5b88;
-typedef struct {
-    f32 t; u8 pad4[12]; V4a_c5b88 v16; V4a_c5b88 v32; V4a_c5b88 v48; V4a_c5b88 v64; V4a_c5b88 v80; f32 f96;
-    u8 pad100[0xE0F4 - 100]; f32 fE0F4; u8 padE0F8[4]; Track_c5b88 *trk;
-} CamPlay_c5b88;
-typedef struct {
-    u64 flags; u8 pad8[184]; V4a_c5b88 v192; V4a_c5b88 v208; V4a_c5b88 v224; V4a_c5b88 v240; V4a_c5b88 v256; V4a_c5b88 v272; f32 f288; f32 f292;
-} Tw_c5b88;
-typedef struct { u8 pad[12400]; u64 d12400; u8 pad12408[212]; f32 f12620; } Big_c5b88;
 extern f32 D_002BBDFC;
-void func_001c53c8(f32 t);
 void func_001c6a20(void);
 void func_002675a8(void *a, void *b);
-typedef union { u64 flags; struct { s32 lo; f32 f[74]; } s;
-} Tw_c6720;
 void func_001c6890(void);
-typedef struct {
-    u64 flags; u8 pad8[200]; V4 v208; V4 v224; V4 v240; V4 v256; V4 v272; f32 f288; f32 f292;
-} Tw_c6890;
-#include "data/pieces/D_002E2790.h"
-extern f32 D_002E27A0;
-#include "data/pieces/D_002E27A4.h"
-void *memset(void *, s32, u32);
-void func_00267768(f32 (*d)[4], f32 (*s)[4], f32 r);
-void func_002676c0(f32 (*d)[4], f32 (*s)[4], f32 r);
 typedef struct {
     u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u32 m[8]; u8 pad76[20];
     f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3];
@@ -234,195 +202,10 @@ void func_001bfcd8(void) {
     }
 }
 
-#define D_00389C90 (*(Big_c5168 *)&D_00389C90)
-#define D_0037A380 (*(Cam_c5168 *)&D_0037A380)
-void func_001c5168(void) {
-    V4 a;
-    V4 b;
-    f32 m[4][4] __attribute__((aligned(16)));
-    Big_c5168 *g = &D_00389C90;
-    switch ((u32)g->mode) {
-    case 0:
-        break;
-    case 1:
-        D_0037A380.pos.x += g->p12396->pos.x;
-        D_0037A380.pos.y += g->p12396->pos.y;
-        D_0037A380.pos.z += g->p12396->pos.z;
-        break;
-    case 2:
-        D_0037A380.tgt.y += g->p12396->roty;
-        sceVu0UnitMatrix(m);
-        func_00267810(m, m, g->p12396->roty);
-        func_002672f8(&D_0037A380.pos, m, &D_0037A380.pos);
-        D_0037A380.pos.x += g->p12396->pos.x;
-        D_0037A380.pos.y += g->p12396->pos.y;
-        D_0037A380.pos.z += g->p12396->pos.z;
-        break;
-    case 3:
-        func_001e9d00(&b, &g->p12400->pos, &g->p12396->pos, D_0037A380.tgt.z);
-        D_0037A380.tgt.y += b.y;
-        func_001e9fe8(&b, &D_0037A380.tgt);
-        func_001e9f18(&a, &D_0037A380.pos, &b, D_0037A380.f96);
-        a.x += g->p12400->pos.x;
-        a.y += g->p12400->pos.y;
-        a.z += g->p12400->pos.z;
-        sceVu0UnitMatrix(m);
-        func_00267810(m, m, g->p12396->roty);
-        func_002672f8(&D_0037A380.pos, m, &D_0037A380.pos);
-        D_0037A380.pos.x += g->p12396->pos.x;
-        D_0037A380.pos.y += g->p12396->pos.y;
-        D_0037A380.pos.z += g->p12396->pos.z;
-        D_0037A380.f96 = func_001e9e58(&a, &D_0037A380.pos);
-        func_001e9d00(&D_0037A380.tgt, &D_0037A380.pos, &a, D_0037A380.tgt.z);
-        break;
-    }
+/* func_001c5168, func_001c5b88, func_001c6720 and func_001c6890 are in src/camera/camera.c.
+ * func_001c91e8 below matches only with a definition of func_001c6890 above it. */
+CONTEXT_ONLY void func_001c6890(void) {
 }
-#undef D_00389C90
-#undef D_0037A380
-
-#define D_00389C90 (*(Big_c5b88 *)&D_00389C90)
-#define D_0037A380 (*(CamPlay_c5b88 *)&D_0037A380)
-#define D_003C5510 (*(Tw_c5b88 *)&D_003C5510)
-static inline void inl_cp(V4a_c5b88 *d, V4a_c5b88 *a) {
-    *d = *a;
-}
-s32 func_001c5b88(void) {
-    Big_c5b88 *g = &D_00389C90;
-    CamPlay_c5b88 *c = &D_0037A380;
-    f32 t;
-    t = c->t + D_002BBDFC * 0.5f * g->f12620;
-    c->t = t;
-    if ((f32)c->trk->end < t) {
-        c->t = (f32)c->trk->end;
-        func_001c53c8(c->t);
-        inl_cp(&D_003C5510.v208, &c->v16);
-        inl_cp(&D_003C5510.v224, &c->v64);
-        inl_cp(&D_003C5510.v240, &c->v80);
-        inl_cp(&D_003C5510.v272, &c->v48);
-        inl_cp(&D_003C5510.v256, &c->v32);
-        D_003C5510.f288 = c->f96;
-        D_003C5510.f292 = c->fE0F4;
-        func_001c6a20();
-        g->d12400 &= ~(1ULL << 37);
-    } else {
-        func_001c53c8(t);
-        inl_cp(&D_003C5510.v208, &c->v16);
-        inl_cp(&D_003C5510.v224, &c->v64);
-        inl_cp(&D_003C5510.v240, &c->v80);
-        inl_cp(&D_003C5510.v272, &c->v48);
-        inl_cp(&D_003C5510.v256, &c->v32);
-        D_003C5510.f288 = c->f96;
-        D_003C5510.f292 = c->fE0F4;
-        func_001c6a20();
-        if ((s32)(D_003C5510.flags >> 8) & 1) func_002675a8(&D_003C5510.v192, &D_003C5510.v208);
-    }
-    return 4;
-}
-#undef D_00389C90
-#undef D_0037A380
-#undef D_003C5510
-
-#define D_003C5510 (*(Tw_c6720 *)&D_003C5510)
-#define T D_003C5510
-void func_001c6720(void) {
-    V4 v;
-    T.flags &= ~1;
-    T.flags &= ~2;
-    T.flags &= ~4;
-    T.flags &= ~8;
-    T.flags &= ~16;
-    T.flags &= ~32;
-    T.flags &= ~64;
-    T.flags &= ~128;
-    T.flags &= ~256;
-    T.s.f[0] = 0.0f;
-    T.s.f[1] = 0.0f;
-    T.s.f[2] = 0.0f;
-    T.s.f[3] = 0.0f;
-    T.s.f[15] = 0.0f;
-    T.s.f[16] = 0.0f;
-    T.s.f[17] = 0.0f;
-    T.s.f[18] = 1.0f;
-    T.s.f[19] = 0.0f;
-    T.s.f[20] = 0.0f;
-    T.s.f[21] = 0.0f;
-    T.s.f[22] = 0.0f;
-    T.s.f[23] = 1000.0f;
-    T.s.f[24] = 53.0f;
-    T.s.f[27] = 0.0f;
-    T.s.f[28] = 0.0f;
-    T.s.f[29] = 0.0f;
-    T.s.f[30] = 1.0f;
-    T.s.f[31] = 0.0f;
-    T.s.f[32] = 0.0f;
-    T.s.f[33] = 0.0f;
-    T.s.f[34] = 0.0f;
-    T.s.f[35] = 1000.0f;
-    T.s.f[36] = 53.0f;
-    T.s.f[51] = 0.0f;
-    T.s.f[52] = 0.0f;
-    T.s.f[53] = 0.0f;
-    T.s.f[54] = 1.0f;
-    T.s.f[55] = 0.0f;
-    T.s.f[56] = 0.0f;
-    T.s.f[57] = 0.0f;
-    T.s.f[58] = 0.0f;
-    T.s.f[63] = 0.0f;
-    T.s.f[64] = 0.0f;
-    T.s.f[65] = 1.0f;
-    T.s.f[66] = 1.0f;
-    T.s.f[67] = 0.0f;
-    T.s.f[68] = 1.0f;
-    T.s.f[69] = 0.0f;
-    T.s.f[70] = 1.0f;
-    T.s.f[71] = 1000.0f;
-    T.s.f[72] = 53.0f;
-    func_001c6890();
-    func_002675a8(&v, (V4 *)&T.s.f[55]);
-    v.y += 3.1415928f;
-    func_001e9fe8(&v, &v);
-    T.s.f[73] = v.y;
-}
-#undef D_003C5510
-#undef T
-
-#define D_003C5510 (*(Tw_c6890 *)&D_003C5510)
-void func_001c6890(void) {
-    V4 a;
-    f32 m[4][4] __attribute__((aligned(16)));
-    V4 r;
-
-    memset(&a, 0, 16);
-    a.w = 1.0f;
-    memset(&r, 0, 16);
-    func_002675a8(&a, &D_002E2780);
-    func_002675a8(&D_003C5510.v208, &D_002E2790);
-    D_003C5510.f288 = func_001e9e58(&a, &D_003C5510.v208);
-    D_003C5510.f292 = D_002E27A0;
-    func_001e9d00(&r, &D_003C5510.v208, &a, D_002E27A4);
-/*P*/
-    D_003C5510.v256.x = 0.0f;
-    D_003C5510.v256.y = 0.0f;
-    D_003C5510.v256.z = 1.0f;
-    D_003C5510.v256.w = 1.0f;
-    D_003C5510.v272.x = 0.0f;
-    D_003C5510.v272.y = 1.0f;
-    D_003C5510.v272.z = 0.0f;
-    D_003C5510.v272.w = 1.0f;
-/*Q*/
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, r.x);
-    func_00267810(m, m, r.y);
-    func_002672f8(&D_003C5510.v256, m, &D_003C5510.v256);
-    func_002672f8(&a, m, &a);
-    func_002675a8(&D_003C5510.v224, &r);
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, r.x);
-    func_00267810(m, m, r.y);
-    func_002676c0(m, m, r.z);
-    func_002672f8(&D_003C5510.v272, m, &D_003C5510.v272);
-}
-#undef D_003C5510
 
 #define D_003C5510 (*(Tw_c9ac8 *)&D_003C5510)
 void func_001c9ac8(void) {

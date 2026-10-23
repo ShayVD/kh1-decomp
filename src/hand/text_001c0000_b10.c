@@ -67,24 +67,16 @@ extern Big D_00389C90;
 #include "data/pieces/D_003C21A8.h"
 #include "data/pieces/D_003C3A70.h"
 extern CamS D_003C5510;
-extern Vec D_003C55F0;
-#include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
-#include "data/pieces/D_002E27A4.h"
 extern f32 D_002BBDFC;
 extern s32 D_002BBAB0, D_002BBAB8, D_002BBAC8;
 extern u8 D_003C5660[], D_003C5680[], D_003C56A0[], D_003C56C0[], D_003C56F0[], D_003C5728[], D_003C5750[], D_003C5780[], D_003C57B0[];
 
-void *memset(void *, s32, u32);
 s32 rand(void);
 void func_001c6890(void);
 void func_001e9fe8(f32 *, f32 *);
-void func_00124c68(f32);
 void sceVu0UnitMatrix(Mtx);
 void func_00267768(Mtx, Mtx, f32);
 void func_00267810(Mtx, Mtx, f32);
-void func_002676c0(Mtx, Mtx, f32);
-void func_00267578(Mtx, Mtx, f32 *);
 void func_002672f8(f32 *, Mtx, f32 *);
 void func_002675a8(f32 *, f32 *);
 void func_00267518(f32 *, f32 *, f32 *);
@@ -96,62 +88,8 @@ Ent2 *func_00147840(s32);
 void *func_0011ef10(s32, void *);
 void func_001caa50(void);
 
-void func_001c6a20(void) {
-    Vec rot;
-    Mtx m;
-    Vec v;
-    Vec t;
-    memset(rot, 0, 16);
-    memset(v, 0, 16);
-    v[3] = 1.0f;
-    memset(t, 0, 16);
-    t[3] = 1.0f;
-    func_001e9fe8(rot, D_003C55F0);
-    if (rot[0] > 1.5707964f || rot[0] < -1.5707964f) {
-        if (rot[2] < 0.0f) rot[2] = rot[2] + 3.1415928f;
-        else rot[2] = rot[2] - 3.1415928f;
-    }
-    func_00124c68(D_003C5510.f124);
-/*P*/
-    D_003C5510.v100[0] = 0.0f;
-    D_003C5510.v100[2] = 1.0f;
-    D_003C5510.v100[1] = 0.0f;
-    t[2] = D_003C5510.f120;
-    D_003C5510.v100[3] = 1.0f;
-    D_003C5510.v110[1] = 1.0f;
-    D_003C5510.v110[3] = 1.0f;
-    D_003C5510.v110[0] = 0.0f;
-    D_003C5510.v110[2] = 0.0f;
-/*Q*/
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, D_003C5510.rx);
-    func_00267810(m, m, D_003C5510.ry);
-    func_002676c0(m, m, D_003C5510.rz);
-    func_00267578(m, m, t);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(v, m, v);
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(D_003C5510.v100, m, D_003C5510.v100);
-    v[0] = -v[0];
-    v[1] = -v[1];
-    v[2] = -v[2];
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, rot[2]);
-    func_002672f8(D_003C5510.v110, m, D_003C5510.v110);
-    v[0] += D_003C5510.pos[0];
-    v[1] += D_003C5510.pos[1];
-    v[2] += D_003C5510.pos[2];
-    func_002675a8(&D_002E2780.x, v);
-    func_002675a8(&D_002E2790.x, D_003C5510.pos);
-    D_002E27A4 = rot[2];
-}
+/* func_001c6a20 is in src/camera/camera.c. */
+void func_001c6a20(void);
 
 s32 func_001c8e20(void) {
     Vec v;
