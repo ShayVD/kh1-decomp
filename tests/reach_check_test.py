@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read; session 27-28 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-29 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -156,5 +156,17 @@ assert ends(run(same)) == []
 walk = [lui(V0, 0x0051), lui(V1, 0x0051), addiu(V0, V0, 0x4F00), addiu(V1, V1, 0x4F20),
         sw(0, V0, 0), addiu(V0, V0, 4), bne(V0, V1, -3), NOP, JR_RA, NOP]
 assert ends(run(walk)) == [(0x00514F20, "end-eq")], ends(run(walk))
+
+# 11. nest-carry (session 29): func_00103a70's 4x4 copy. t5 counts 16 across both loops (never reset); t6 is
+# stepped once per outer iteration. The store through t5 reaches at most +60.
+def bgez(rs, off): return (0x01 << 26) | (rs << 21) | (0x01 << 16) | (off & 0xFFFF)
+T3, T4, T5, T6, T7 = 11, 12, 13, 14, 15
+nest = [lui(S0, 0x0049), addiu(S0, S0, -0x3520), addiu(T5, 0, 0), addiu(T7, 0, 0), addiu(T6, 0, 0),
+        sll(T3, T6, 2), addiu(T4, 0, 3),
+        sll(V0, T5, 2), addu(V1, V0, S0), addiu(T4, T4, -1), addiu(T5, T5, 1), sw(0, V1, 0), bgez(T4, -6),
+        addiu(T3, T3, 4),
+        addiu(T7, T7, 1), slti(V0, T7, 4), bne(V0, 0, -12), addiu(T6, T6, 4), JR_RA, NOP]
+assert idx_end(run(nest), 0x0048CAE0) == 60, idx_end(run(nest), 0x0048CAE0)
+assert idx_end(run(nest, nest_carry=False), 0x0048CAE0) is None
 
 print("reach_check_test: PASS")
