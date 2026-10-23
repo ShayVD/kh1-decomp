@@ -832,7 +832,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
             join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, sign_prune: bool = True, widen_bases: bool = True,
             shadow_image: bool = True, arg_drop: bool = True,
-            visit_rng=None):
+            visit_rng=None, tight: bool = False):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -868,7 +868,11 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     through it is reported from each of them; an unbounded IDX covers (_covers) only the bases it carries.
     visit_rng (tests, --visit-seed): a random.Random that picks the next point to visit instead of the
     last one pushed; the output should not depend on it (docs/shiftable-plan.md "Session 31" lists what
-    still does)."""
+    still does).
+    Session 33 (`tight`, for idx-span): only bounds from a loop (a counter's cap, a walk's trip count) or a compare
+    against a constant. A byte or halfword load and an `andi` give no bound (a field's type range or a mask says
+    nothing about the values the game stores), and a join outside a loop head of more than SET_MAX addresses or of
+    two different bases (a choice: its span covers the bytes between them, which no access reaches) is unbounded."""
     n = len(insns)
     if not n:
         return
@@ -1169,7 +1173,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st.pop(t, None)
         elif o == 0x0C:  # andi: 0 <= v <= imm
             b = st.get(s)
-            st[t] = (b & (w & 0xFFFF)) if isinstance(b, int) else (UB, w & 0xFFFF)
+            if isinstance(b, int):
+                st[t] = b & (w & 0xFFFF)
+            elif tight:  # (session 33, idx-span) a mask is no tight bound
+                st.pop(t, None)
+            else:
+                st[t] = (UB, w & 0xFFFF)
         elif o in (0x0A, 0x0B):  # slti / sltiu
             st[t] = (LT, s, mips.imm(w) if o == 0x0A else mips.imm(w) & 0xFFFFFFFF) if s not in (0, t) else (UB, 1)
         elif o in WIDTH:
@@ -1218,7 +1227,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif isinstance(b, tuple) and b[0] == ARG:
                 ev.append(("argmem", b[1], b[2] + mips.imm(w), WIDTH[o]))
             if (ins.is_load or o == 0x1E) and o not in (0x31, 0x35, 0x36):  # gpr destination (lq too)
-                if o == 0x24:  # lbu
+                if o in (0x24, 0x25) and tight:  # (session 33, idx-span) a type's range is no tight bound
+                    st.pop(t, None)
+                elif o == 0x24:  # lbu
                     st[t] = (UB, 0xFF)
                 elif o == 0x25:  # lhu
                     st[t] = (UB, 0xFFFF)
@@ -1727,6 +1738,11 @@ def main() -> int:
     ap.add_argument("--no-arg-drop", action="store_true",
                     help="an argument dropped at a join (two offsets: a walk) may come back as the argument at the "
                          "next arrival (before session 32; some visit orders do not terminate)")
+    ap.add_argument("--no-idx-span", action="store_true",
+                    help="a bounded index that ends past the next name pins only that name, not the names after it "
+                         "up to its end (session 33)")
+    ap.add_argument("--span-log", type=Path, help="write each bounded indexed base whose accesses end past the next "
+                    "name: the names inside the overrun and the accesses that reach it (session 33)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1785,6 +1801,7 @@ def main() -> int:
     idx: dict[int, set] = {}
     idx_all: dict[int, set] = {}
     idx_end: dict[int, int | None] = {}  # indexed base -> end of the furthest bounded access (None: unbounded)
+    span_src: dict[int, list] = {}  # session 33 (idx-span): indexed base -> [(end, kind, function, pc)] (bounded)
     own: dict[int, dict[int, list[int]]] = {}  # function -> arg -> [lo, hi) reached from it
     passes: dict[int, list] = {}  # function -> [(callee, j, ("arg", k, off))]
     sites: list = []  # (caller name, callee, j, address)
@@ -1812,25 +1829,30 @@ def main() -> int:
         if pb != pt or pt != pl:
             hits.setdefault((base, nb, tgt, nt, kind, width), set()).add(name)
 
+    def run(name, insns, tight=False):
+        fstart = insns[0].addr
+        labels = {i.branch_target for i in insns if i.is_branch} | {i.jump_target for i in insns if i.is_j}
+        is_func = not name.endswith(".x")
+        return analyse(insns, set(x for x in labels if x), args=is_func, tight=tight,
+                       countdown=not a.no_countdown, joins=not a.no_join, arg_join=not a.no_arg_join,
+                       hi_index=not a.no_hi_index, cases=not a.no_switch,
+                       read_word=read_word if is_func and not a.no_switch else None,
+                       ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
+                       slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
+                       nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
+                       wr_span=not a.no_wr_span, arg_keep=not a.no_arg_keep, join_keep=not a.no_join_keep,
+                       stored_idx=not a.no_stored_idx, multi_base=not a.no_multi_base,
+                       sign_prune=not a.no_sign_prune, widen_bases=not a.no_widen_bases,
+                       shadow_image=not a.no_shadow_image, arg_drop=not a.no_arg_drop,
+                       visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
+                       arg_bound=not a.no_arg_bound and is_func)
+
     for name, insns in regions:
         if not insns:
             continue
         fstart = insns[0].addr
-        labels = {i.branch_target for i in insns if i.is_branch} | {i.jump_target for i in insns if i.is_j}
         is_func = not name.endswith(".x")
-        for e in analyse(insns, set(x for x in labels if x), args=is_func,
-                         countdown=not a.no_countdown, joins=not a.no_join, arg_join=not a.no_arg_join,
-                         hi_index=not a.no_hi_index, cases=not a.no_switch,
-                         read_word=read_word if is_func and not a.no_switch else None,
-                         ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
-                         slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
-                         nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
-                         wr_span=not a.no_wr_span, arg_keep=not a.no_arg_keep, join_keep=not a.no_join_keep,
-                         stored_idx=not a.no_stored_idx, multi_base=not a.no_multi_base,
-                         sign_prune=not a.no_sign_prune, widen_bases=not a.no_widen_bases,
-                         shadow_image=not a.no_shadow_image, arg_drop=not a.no_arg_drop,
-                         visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
-                         arg_bound=not a.no_arg_bound and is_func):
+        for e in run(name, insns):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
@@ -1903,6 +1925,8 @@ def main() -> int:
                 why.setdefault(base, set()).add("idx" if end is None else "idx-ub")
                 if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
                     idx_end[base] = end
+                if end is not None:
+                    span_src.setdefault(base, []).append((end, "idx", name, pc))
                 if piece(base)[0] is not None:
                     idx.setdefault(base, set()).add(name)
                 continue
@@ -2002,6 +2026,8 @@ def main() -> int:
             why.setdefault(b_, set()).add("idx" if end is None else "idx-arg")
             if b_ not in idx_end or (idx_end[b_] is not None and (end is None or end > idx_end[b_])):
                 idx_end[b_] = end
+            if end is not None:
+                span_src.setdefault(b_, []).append((end, "idx-arg", name, _pc))
             if piece(b_)[0] is not None:
                 idx.setdefault(b_, set()).add(name)
     # Session 25: an address stored into a pointer global G is reached through every load of G. func_00106ed0
@@ -2019,6 +2045,8 @@ def main() -> int:
             why.setdefault(b_, set()).add(f"via-ptr:{g:08x}" if end is None else f"via-ptr-ub:{g:08x}")
             if b_ not in idx_end or (idx_end[b_] is not None and (end is None or end > idx_end[b_])):
                 idx_end[b_] = end
+            if end is not None:
+                span_src.setdefault(b_, []).append((end, f"via-ptr-ub:{g:08x}", ",".join(sorted(ptr_users[g])), None))
             if piece(b_)[0] is not None:
                 idx.setdefault(b_, set()).update(ptr_users[g])
     # Each function's reach from its arguments includes what its callees reach from them.
@@ -2149,6 +2177,7 @@ def main() -> int:
                 idx_all.setdefault(b_, set()).add(name)
                 if b_ not in idx_end or (idx_end[b_] is not None and end > idx_end[b_]):
                     idx_end[b_] = end
+                span_src.setdefault(b_, []).append((end, "dma-chain" if b_ == base else "dma-ref", name, pc))
                 if piece(b_)[0] is not None:
                     idx.setdefault(b_, set()).add(name)
             continue
@@ -2162,6 +2191,7 @@ def main() -> int:
             idx_all.setdefault(base, set()).add(name)
             if base not in idx_end or (idx_end[base] is not None and le_ > idx_end[base]):
                 idx_end[base] = le_
+            span_src.setdefault(base, []).append((le_, "arg-list", name, pc))
             if piece(base)[0] is not None:
                 idx.setdefault(base, set()).add(name)
             continue
@@ -2175,6 +2205,7 @@ def main() -> int:
             idx_all.setdefault(base, set()).add(name)
             if base not in idx_end or (idx_end[base] is not None and base + z_ > idx_end[base]):
                 idx_end[base] = base + z_
+            span_src.setdefault(base, []).append((base + z_, "arg-str", name, pc))
             if piece(base)[0] is not None:
                 idx.setdefault(base, set()).add(name)
             continue
@@ -2198,6 +2229,9 @@ def main() -> int:
         idx_all.setdefault(base, set()).add(name)
         if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
             idx_end[base] = end
+        if end is not None:
+            span_src.setdefault(base, []).append((end, r_ + (":block" if not (ub is not None and c and c[1] - c[0]
+                                                   <= 0x40000 and c[0] >= 0) else ""), name, pc))
         if piece(base)[0] is not None:
             idx.setdefault(base, set()).add(name)
     # An array indexed from B may run past the next name: D_00550400[i] for i < 64 (0x48-byte
@@ -2205,6 +2239,8 @@ def main() -> int:
     # found from the stale writes in a RAM dump). A floated variable that is the next name
     # after an indexed base in another piece stays with it.
     bounded = []
+    span_lines: list[str] = []
+    spans: list = []  # session 33 (idx-span): (base, index of the next name in anchors, next name) of a bounded overrun
     # stored: the address is stored; idx / arg: an unbounded index (an access, or &B[i] passed to a
     # call); -ub: a bounded one that ends past the next name
     _why = lambda b_: "[" + ",".join(sorted(why.get(b_, ()))) + "]"
@@ -2227,12 +2263,61 @@ def main() -> int:
         if a.no_bounds is False and idx_end.get(base) is not None and idx_end[base] <= nxt:
             bounded.append((base, nxt, idx_end[base]))
             continue  # every indexed access from base is bounded and ends before the next name
+        if not a.no_idx_span and idx_end.get(base) is not None and nxt - base <= 0x10000:
+            spans.append((base, i, nxt))
+        if a.span_log and idx_end.get(base) is not None:
+            k_ = i + 1
+            over = []
+            while k_ < len(anchors) and anchors[k_] < idx_end[base]:
+                over.append(anchors[k_])
+                k_ += 1
+            srcs = sorted({(e_ - base, kd_, n_, pc_) for e_, kd_, n_, pc_ in span_src.get(base, ()) if e_ > nxt},
+                          key=lambda t_: (t_[0], t_[1], t_[2], t_[3] or 0))
+            span_lines.append(f"{base:08x}\t{piece(base)[1]}\tnext={nxt:08x}\tend=+{idx_end[base] - base:#x}\t"
+                              + " ".join(f"{x_:08x}:{piece(x_)[1]}" for x_ in over) + "\t"
+                              + "; ".join(f"+{e_:#x} {kd_} {n_} {pc_:08x}" if pc_ else f"+{e_:#x} {kd_} {n_}"
+                                          for e_, kd_, n_, pc_ in srcs))
         if pn is not None and pn != piece(base)[0] and nxt - base <= 0x10000:
             hits.setdefault((base, piece(base)[1], nxt, nn, "idx-next" + _why(base), 0), set()).update(fs)
         elif not a.no_idx_base and pn is None and piece(base)[0] is not None and nxt - base <= 0x10000:
             # the base floats and the next name stays: the array runs on into a name of the blob
             # (D_00472190 is declared 0x40, func_001073f0 copies 0x4000 bytes through it; session 20)
             hits.setdefault((base, piece(base)[1], nxt, nn, "idx-base" + _why(base), 0), set()).update(fs)
+    # Session 33 (idx-span): a bounded index that ends past the next name pinned only that name (idx-next), not the
+    # names after it: func_0021cfc8 reads D_003F5C18[i] for i < 6 and D_003F5C20 ... D_003F5C2C floated (sessions
+    # 30-32). Every name before the end is pinned too, but only up to the end that a tight bound gives: the
+    # functions behind the overrun are analysed again with bounds from loops and compares against constants only
+    # (analyse's `tight`), since a byte/halfword load's type range, a mask or a choice of bases reaches far past
+    # the values the game uses (all of them pinned 512 more names; session 32). Direct accesses only (idx).
+    if spans:
+        need_f = {n_ for b_, _i, nx_ in spans for e_, kd_, n_, _pc in span_src.get(b_, ()) if kd_ == "idx" and e_ > nx_}
+        tight_end: dict[tuple, int | None] = {}  # (function, pc, base) -> largest tight end (None: not bounded)
+        for name, insns in regions:
+            if name not in need_f or not insns:
+                continue
+            for e in run(name, insns, tight=True):
+                if isinstance(e[0], str) or e[4] != "idx":
+                    continue
+                pc, b_, disp, width, _k = e
+                k_ = (name, pc, b_)
+                end = None if disp is None else b_ + disp + width
+                if k_ not in tight_end or (tight_end[k_] is not None and (end is None or end > tight_end[k_])):
+                    tight_end[k_] = end
+        for base, i, nxt in spans:
+            ends = [(min(e_, t_), n_) for e_, kd_, n_, pc_ in span_src.get(base, ())
+                    if kd_ == "idx" and e_ > nxt and (t_ := tight_end.get((n_, pc_, base))) is not None]
+            end = max((x_ for x_, _n in ends), default=None)
+            if end is None or end <= nxt:
+                continue
+            fs = {n_ for x_, n_ in ends if x_ > nxt}
+            pb_, nb_ = piece(base)
+            k_ = i + 1
+            while k_ < len(anchors) and anchors[k_] < end:
+                x_ = anchors[k_]
+                px_, nx_ = piece(x_)
+                if px_ is not None and px_ != pb_:
+                    hits.setdefault((base, nb_, x_, nx_, "idx-span", 0), set()).update(fs)
+                k_ += 1
     # A name whose uncached alias (| 0x20000000 or 0x30000000) is built is a DMA/GIF buffer whose real
     # size no declaration gives: func_00162428 stores D_00573AC0 | 0x20000000 and func_0015f8c8 writes a
     # 0x500-byte packet through it (session 19). The base stays in place, and so does the next name.
@@ -2267,6 +2352,8 @@ def main() -> int:
     if a.out:
         names = sorted({n for (_b, nb, _t, nt, _k, _w) in hits for n in (nb, nt) if n})
         a.out.write_text("".join(n + "\n" for n in names))
+    if a.span_log:
+        a.span_log.write_text("".join(x + "\n" for x in span_lines))
     if a.explain:
         a.explain.write_text("".join(x + "\n" for x in explain))
     if a.all:

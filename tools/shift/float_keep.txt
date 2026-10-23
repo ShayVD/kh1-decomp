@@ -64,3 +64,9 @@ D_00482260
 #
 # (The actor table D_002C64A0, kept here in session 27 after floating it lost Donald and Goofy, is pinned
 # by reach_check's end-ptr rule since session 28: func_00123810 compares the walk against &D_002E26A0.)
+#
+# Session 33: func_00209f70 (the party gradients) reads D_003F3150[x48e[i]] and D_003F3178[x48e[i]] for the four
+# party slots; an empty slot holds 0xFF, so the reads land at +0x3FC, in D_003F3530 (0x003F354C, 0x003F3574).
+# reach_check pins it through an unbounded index of its own; this keeps it if that ever changes (tight idx-span
+# does not see a byte's 0xFF: docs/shiftable-plan.md "Session 33: reach_check").
+D_003F3530
