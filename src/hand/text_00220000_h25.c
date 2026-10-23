@@ -19,7 +19,6 @@ s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
 extern u128 D_00351E10[];
-extern Str82A8 D_003F82A8;
 extern Cmd D_006477B0[64];
 extern s32 D_00647FB0;
 extern s32 D_00647FB8;
@@ -36,14 +35,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-Str82A8 *func_00232fc8(u32 arg0) {
-    D_003F82A8.e = arg0 / 10 + '0';
-    D_003F82A8.f = arg0 % 10 + '0';
-    D_003F82A8.e2 = arg0 / 10 + '0';
-    D_003F82A8.f2 = arg0 % 10 + '0';
-    return &D_003F82A8;
-}
 
 s32 func_00234018(s32 arg0, s32 arg1, s32 arg2) {
     s32 i = D_00647FB8;
@@ -213,4 +204,3 @@ s32 func_0023c8c8(void) {
 #include "data/bss_0064_typed.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_003F6DF0.h"
-#include "data/pieces/D_003F82A8.h"

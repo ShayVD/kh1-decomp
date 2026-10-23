@@ -8,7 +8,6 @@ M2C_UNK func_0024ae00(s32);
 M2C_UNK func_0024af00(s32);
 M2C_UNK func_0024afc0(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
-#include "data/pieces/D_00425B80.h"
 #include "data/pieces/D_00449990.h"
 extern M2C_UNK D_0044A800;
 extern M2C_UNK D_0044A810;
@@ -27,11 +26,6 @@ s32 func_0011ef38(M2C_UNK *);
 s32 func_00237600(s32);
 s32 func_0023f0d8(s32, s32);
 s32 func_0023f250(s32, s32);
-
-void func_00232de0(void) {
-    M2C_FIELD(&D_00425B80, s32 *, 0) = 0x5153484B;
-    M2C_FIELD(&D_00425B80, s32 *, 4) = 0x01317F14;
-}
 
 s32 func_00233f40(s32 arg0, s32 arg1) {
     s32 *temp_a0;
