@@ -21,18 +21,18 @@ typedef struct {
     u8 x5;
     u8 x6;
     u8 x7;
-    u8 pad_8[0x10];
+    u8 x8[0x10];
     u8 x18;
     u8 x19[8];
     u8 x21;
     u8 x22[0x10];
     u8 x32;
     u8 pad_33[0x1];
-    u8 x34;
-    u32 :8;
-    u32 b16:1;
-    u32 :15;
-    s16 x38;
+    union {                 /* 0x34 */
+        struct { u8 x34; u8 x35; u16 x36; } h;
+        struct { u32 :16; u32 b16:1; u32 :15; } b;
+    } w34;
+    u16 x38;
     u8 pad_3a[0x2];
     s32 exp;
     u8 name[0x30];
@@ -45,7 +45,7 @@ typedef struct {
 } W606Mem_304be8;
 
 struct Save_304be8 {
-    u8 pad_0[0x4];
+    s32 x0;
     W606Mem_304be8 m[10];
     u8 x48c;
     u8 x48d;

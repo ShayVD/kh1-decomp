@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read; session 27-29 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-30 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -168,5 +168,61 @@ nest = [lui(S0, 0x0049), addiu(S0, S0, -0x3520), addiu(T5, 0, 0), addiu(T7, 0, 0
         addiu(T7, T7, 1), slti(V0, T7, 4), bne(V0, 0, -12), addiu(T6, T6, 4), JR_RA, NOP]
 assert idx_end(run(nest), 0x0048CAE0) == 60, idx_end(run(nest), 0x0048CAE0)
 assert idx_end(run(nest, nest_carry=False), 0x0048CAE0) is None
+
+# 12. path-step (session 30): the step proved over the paths of the body. (a) func_0011e248: the counter steps in a
+# likely branch's slot on the path that loops, the other path returns; (b) func_001269d8: the counter steps in both
+# arms (a blezl slot and the fall-through); (c) func_00111510: the pointer walks through a copy (a1 = a0; a0 = a1 + 4)
+def bnel(rs, rt, off): return (0x15 << 26) | (rs << 21) | (rt << 16) | (off & 0xFFFF)
+def blezl(rs, off): return (0x16 << 26) | (rs << 21) | (off & 0xFFFF)
+def lbu(rt, rs, v): return (0x24 << 26) | (rs << 21) | (rt << 16) | (v & 0xFFFF)
+T0 = 8
+likely_ = [lui(S0, 0x004E), addiu(S0, S0, 0x39F8), addiu(V1, 0, 0),
+           lw(V0, S0, 0), bnel(V0, A1, 3), addiu(V1, V1, 1), JR_RA, NOP,
+           slti(V0, V1, 4), bne(V0, 0, -7), addiu(S0, S0, 8), JR_RA, NOP]
+assert idx_end(run(likely_), 0x004E39F8) == 24, idx_end(run(likely_), 0x004E39F8)  # i < 4: entries 0..3
+assert idx_end(run(likely_, path_step=False), 0x004E39F8) is None
+arms = [lui(S0, 0x002E), addiu(S0, S0, 0x27C0), addiu(T0, 0, 0),
+        lbu(V0, S0, 1), blezl(V0, 2), addiu(T0, T0, 1), addiu(T0, T0, 1),
+        sltiu(V0, T0, 4), bne(V0, 0, -6), addiu(S0, S0, 2), JR_RA, NOP]
+assert idx_end(run(arms), 0x002E27C0) == 7, idx_end(run(arms), 0x002E27C0)  # +6, a byte at +1
+assert idx_end(run(arms, path_step=False), 0x002E27C0) is None
+copy_ = [lui(A0, 0x002C), addiu(A0, A0, -0x3480), addiu(A2, 0, 0),
+         addu(A1, A0, 0), lw(V0, A1, 0), addiu(A2, A2, 1), slti(V0, A2, 39), bne(V0, 0, -5), addiu(A0, A1, 4),
+         JR_RA, NOP]
+assert idx_end(run(copy_), 0x002BCB80) == 152, idx_end(run(copy_), 0x002BCB80)  # 39 words
+assert idx_end(run(copy_, path_step=False), 0x002BCB80) is None
+# a path that loops without the step proves nothing
+skip = [lui(S0, 0x004E), addiu(S0, S0, 0x39F8), addiu(V1, 0, 0),
+        lw(V0, S0, 0), bne(V0, A1, 2), NOP, addiu(V1, V1, 1),
+        slti(V0, V1, 4), bne(V0, 0, -6), addiu(S0, S0, 8), JR_RA, NOP]
+assert idx_end(run(skip), 0x004E39F8) is None
+
+# 13. wr-span (session 30): `sw $0,-4(v1)` with v1 = &D + (a0 & 0x1c) writes [D - 4, D + 0x1c); the old count
+# added the displacement twice and ended at D + 0x18
+andi_ = lambda rt, rs, v: (0x0C << 26) | (rs << 21) | (rt << 16) | v
+neg = [andi_(V0, A0, 0x1C), lui(V1, 0x0037), addiu(V1, V1, 0x0140), addu(V1, V1, V0), sw(0, V1, -4), JR_RA, NOP]
+wrs = lambda ev: [e[1:] for e in ev if e[0] == "wr"]
+assert wrs(run(neg)) == [(0x0037013C, 0x20)], wrs(run(neg))
+assert wrs(run(neg, wr_span=False)) == [(0x0037013C, 0x1C)]
+
+# 14. arg-bound (session 30): func_001130a0(i, out) reads D_004D92F0[i] (16 bytes each): the access is argument 0
+# times 16 (an "argidx" event, bounded later by the callers), unless a0 may hold something else (a join)
+argx = [sll(A0, A0, 4), lui(V0, 0x004E), addiu(V0, V0, -0x6D10), addu(V1, A0, V0), lw(A3, V1, 12), JR_RA, NOP]
+aev = lambda ev: [e[2:] for e in ev if e[0] == "argidx"]
+assert aev(run(argx)) == [(0x004D92F0, 0, 16, 12, 4)], aev(run(argx))  # D + a0 * 16 + 12, 4 bytes
+assert aev(run(argx, arg_bound=False)) == [] and idx_end(run(argx, arg_bound=False), 0x004D92F0) is None
+joined = [beq(A1, 0, 2), NOP, lw(A0, A2, 0)] + argx  # a0 = cond ? *a2 : a0
+assert aev(run(joined)) == [] and idx_end(run(joined), 0x004D92F0) is None
+# the bounds over the call sites: F2 is called with 5 and 2, F1 with 3 and F2's a0 + 1; F3 is not called directly;
+# F4 calls itself with a0 + 1 (no fixpoint); F5 is called with -1
+F1, F2, F3, F4, F5 = 0x1000, 0x2000, 0x3000, 0x4000, 0x5000
+rest = (None,) * 7
+calls = {F1: {0x3010: (3,) + rest, 0x2010: (("arg", 0, 1),) + rest}, F2: {0x3020: (5,) + rest, 0x3030: (2,) + rest},
+         F5: {0x3040: (-1,) + rest}}
+cof = lambda pc: pc & ~0xFFF
+ubs = R.arg_bounds({F1, F2, F3, F5}, calls, lambda f: f in calls, cof)
+assert ubs[F1][0] == 6 and ubs[F2][0] == 5 and ubs[F3][0] is None and ubs[F5][0] is None and ubs[F1][1] is None, ubs
+calls[F4] = {0x3050: (0,) + rest, 0x4010: (("arg", 0, 1),) + rest}
+assert R.arg_bounds({F4}, calls, lambda f: f in calls, cof)[F4][0] is None
 
 print("reach_check_test: PASS")

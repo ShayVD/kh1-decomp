@@ -30,19 +30,19 @@ void func_0015b268(s32 i) {
     } else {
         o2 = D_00351AC8[i][1];
     }
-    p = func_001477c8(o2) + m->sub.x34 - 1;
+    p = func_001477c8(o2) + m->sub.w34.h.x34 - 1;
     if (!o && (D_00304BE8->x83e >> i & 1)) {
         cnt = 0;
-        n = 100 - m->sub.x34;
+        n = 100 - m->sub.w34.h.x34;
         for (j = 0; j < n; j++) {
             if (p[j]) cnt++;
         }
         if (cnt < 100 - m->sub.lv) return;
     }
     buf[1] = 0;
-    n = m->sub.lv - m->sub.x34;
+    n = m->sub.lv - m->sub.w34.h.x34;
     for (j = 0; j < n; j++) {
-        m->sub.x34++;
+        m->sub.w34.h.x34++;
         buf[1] = *p++;
         if (buf[1]) {
             func_0015ae48(i, buf[1]);

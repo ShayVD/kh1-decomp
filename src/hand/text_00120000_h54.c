@@ -13,7 +13,7 @@ extern s32 func_00131558(E14 *, s32);
 extern s32 func_00162368(s32, s32);
 void func_001318e8(E14 *e, s32 id, f32 (*m)[4]) {
     if (!func_00122ff8(e)) {
-        sceVu0CopyMatrix(m, (*(f32 (*)[4][4])&D_002C58D0));
+        sceVu0CopyMatrix(m, D_002C58D0);
         return;
     }
     if (id & 0x8000) {

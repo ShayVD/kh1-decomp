@@ -1,8 +1,5 @@
 #include "common.h"
-typedef struct { u8 b[116]; } R116;
-typedef struct { u8 p0[4]; R116 r[(0x48e - 4) / 116]; u8 pr[(0x48e - 4) % 116]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8B;
-#define Base4BE8 Base4BE8B
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 u32 func_001ef7a0(void);
 #include "data/pieces/D_00425B80.h"
 #include "data/pieces/D_003F7ED0.h"
@@ -14,7 +11,7 @@ void func_00232e08(u32 a) {
     u8 *s;
     s32 i, q;
     u8 c;
-    D_00425B80.x8 = ((Base4BE8 *)D_00304BE8)->r[((Base4BE8 *)D_00304BE8)->sel[0]].b[0];
+    D_00425B80.x8 = D_00304BE8->m[D_00304BE8->x48e[0]].sub.lv;
     D_00425B80.xc = func_001ef7a0();
     D_00425B80.x10 = *(volatile s32 *)&D_002BBDF4;
     D_00425B80.x38 = func_002193f0();

@@ -179,10 +179,10 @@ void func_00123f28(Obj123 *o) {
 void func_00124920(void) {
     s32 i;
     Obj123 *o;
-    for (i = 0; i < 10; i++) D_00304BE8->m[i].sub.b16 = 0;
+    for (i = 0; i < 10; i++) D_00304BE8->m[i].sub.w34.b.b16 = 0;
     for (i = 0; i < 3; i++) {
         o = D_002E26A0[i];
-        if (o && (o->x0 & 0x4000)) D_00304BE8->m[o->info->x4C].sub.b16 = 1;
+        if (o && (o->x0 & 0x4000)) D_00304BE8->m[o->info->x4C].sub.w34.b.b16 = 1;
     }
 }
 
@@ -208,7 +208,6 @@ typedef struct { u8 pad[8]; f32 x8; f32 xc; } C01Pt;
 typedef struct { u8 pad[4]; u8 x4; u8 pad5; u8 x6; u8 pad7[5]; f32 xc; C01Pt *x10; } C01Ent4;
 typedef struct { u8 pad[0xe0]; s32 xe0; } C01S148;
 typedef struct { u8 pad[0xf]; s8 xf; u8 pad10[0xc]; s32 x1c; u8 pad20[4]; s32 x24; } C01S14c;
-typedef struct { u8 pad[0x3a]; u16 x3a; u8 pad3c[0x74 - 0x3c]; } C01Tbl74;
 typedef struct { u8 pad[0xbd]; u8 xbd; } C01Fx;
 typedef struct {
     u32 x0;
@@ -308,7 +307,6 @@ typedef struct {
 
 extern s32 D_00350D7C;
 extern s32 D_00350D80;
-#define D_00304BE8 (*(C01Tbl74 * *)&D_00304BE8)
 #include "data/pieces/D_00304C70.h"
 extern u8 D_00FE0000[];
 
@@ -351,7 +349,7 @@ C01Act *func_00124218(u32 id) {
     a->x130 = d;
     a->x0 = f | 0x8000;
     if (!(d->x4 & 0x100)) a->x0 = f | 0x8003;
-    if (d->x4c < 10 && (D_00304BE8[d->x4c].x3a & 1)) a->x0 |= 0x4000;
+    if (d->x4c < 10 && (D_00304BE8->m[d->x4c].sub.w34.h.x36 & 1)) a->x0 |= 0x4000;
     a->u370.x = (a->u370.x & ~(3ULL << 40)) | ((u64)(d->x4 >> 3 & 3) << 40);
     if (a->x130->x4 & 0x80) a->u370.x |= 1ULL << 47;
     a->x144 = 0;
@@ -479,7 +477,6 @@ C01Act *func_00124218(u32 id) {
     a->x0 &= ~0x400;
     return a;
 }
-#undef D_00304BE8
 #include "data/data_002C.h"
 #include "data/data_0035.h"
 #include "data/pieces/D_002C1378.h"

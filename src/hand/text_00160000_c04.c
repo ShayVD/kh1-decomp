@@ -111,7 +111,7 @@ s32 func_00177ef8(void) {
 
 typedef struct { V4 a; V4 b; f32 r; u8 pad24[0xC]; V4 out; } SweepC4;
 #include "data/pieces/D_002C58D0.h"
-typedef M4_2c58d0 M4;
+typedef FMtx4 M4;
 typedef struct { u8 pad[8]; s32 w8; } PadC4;
 
 extern u32 D_00575890; /* src/data/bss_0057.c: s32 D_00575890 */

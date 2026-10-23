@@ -417,7 +417,7 @@ void func_0011eda8(void);
 
 void func_0011edc8(void) {
     s32 i, j;
-    sceVu0UnitMatrix((*(V4 (*)[4])&D_002C58D0));
+    sceVu0UnitMatrix(D_002C58D0);
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) D_002C5910[i][j] = 0;
     }

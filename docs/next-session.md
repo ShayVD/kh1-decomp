@@ -6,13 +6,20 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 29, 2026-10-23)
+## Where we stopped (end of session 30, 2026-10-23)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-29.
-- **Runtime**: the IOP block D_0063D640, D_00272C70, the staging arena D_003F8380 and DMA chains 0-2 (D_0046E120, D_00472160) all float by default now. The ones reach_check still pins are in the new tools/shift/float_release.txt (Makefile `SHIFT_FLOAT_RELEASE`). The default build KH1_F29_N plays the usual route (docs/shiftable-plan.md "Session 29").
-- **reach_check nest-carry** (`--no-nest-carry`): counters carried across nested loops. 1,348 -> 1,338 names pinned.
-- **Phase 4** (worker s29types): view casts 463 -> 275. The VM tables share `VmRec` and the vector pieces share `FVec4`. What is left and why: docs/shiftable-plan.md "Session 29: Phase 4 types".
-- **PCSX2 loop**: the Mac's shell sandbox did not start in session 29, so patch_iso.py ran through a Remote Control session, and once through me in Terminal (docs/workflow.md "Session 29"). Try device_bash first.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-30.
+- **reach_check** (worker s30reach): path-step, arg-bound and wr-span (`--no-path-step`, `--no-arg-bound`,
+  `--no-wr-span`). 29 names released, D_003728C0 / D_00372908 newly pinned; the default float build floats
+  2,100 names. **Not booted yet** (the Mac was not reachable): docs/shiftable-plan.md "Session 30: reach_check"
+  lists the riskiest releases. `stored` (func_0023aed0's Out records) is confirmed unprovable statically.
+- **Phase 4 types** (worker s30types): view casts 275 -> 217 (FMtx4 for D_002C58D0, D_00304BE8 down to 1,
+  D_002A6238's union Fl20_2a6238, b11 on VmRec). docs/shiftable-plan.md "Session 30: Phase 4 types".
+- **First named module** (worker s30module): src/vm/script_vm.c holds all 60 functions of 0x001c08e8-0x001c4ed0
+  (the script VM). Flag modes per file via `<name>.<mode>.c`; docs/modules.md has the mechanism and a checklist.
+- **PCSX2 loop**: device access needs the connect card approved in the Claude desktop app on the Mac; ask for it
+  at the start. Without device_bash, patch_iso.py runs via Remote Control or the user in Terminal
+  (docs/workflow.md "Session 29").
 
 ## What is left (9 functions)
 
@@ -22,11 +29,22 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 30 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 31 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **reach_check, the next largest groups** (`--explain`, float_reach.log): the idx tail (2-6 names per function) and `stored` (func_0023b570's stack arguments to func_0023aed0, 38 names: follow stack arguments into the callee's `lw aN, off(sp)`). Every rule gets a `--no-*` switch and a test case in tests/reach_check_test.py, and `--no-*` must reproduce the old list byte for byte.
-2. **Boot the result** (ask for the Mac and PCSX2 if a rule releases names): stage out/overlays from Downloads/kh1-test/ovl, build the default, copy the ELF to Downloads/kh1-test/s30, patch KH1_BIG.iso, and run the usual route: save 06 with Donald and Goofy, test T, the desert fight, save 05 End of the World, and the warp drive to Neverland. A new name pinned by a check that played can go in float_release.txt.
-3. **Phase 4**: the remaining 275 view casts: D_002C58D0 (one matrix type: retype h30's `V4` array and c04's `M4` locals first), the 18 left in D_00304BE8, D_002A6238's bit-field views, and b11's Actor/Obj views before its VM view. `make` must stay identical.
-4. **Phase 4, real modules (a first try)**: the src/auto/text_XXXX0000.c files are provisional (docs/workflow.md "Bulk matching"). Move one subsystem whose data types are now shared (the VmRec users) into a named module, and write down in docs/ what that takes. The build must stay byte-identical.
+1. **Boot session 30's default float build first** (ask for the Mac and PCSX2 at the start): run
+   tools/shift/data_owners.py, stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12
+   SHIFT_FLOAT=1`, copy the ELF to Downloads/kh1-test/s31 and /mnt/project-files/kh1-runtime/s31, patch
+   KH1_BIG.iso, and run the usual route: load menu, save 06 with Donald and Goofy, test T, the desert fight, the
+   in-game menu, save 05 End of the World, and the warp drive to Neverland. If anything breaks, bisect with the
+   three `--no-*` switches (SHIFT_REACH_FLAGS) before anything else.
+2. **reach_check arg-join**: analyse's arg-join drops addresses held on one path only, so whether an access is
+   seen depends on visit order (how D_003728C0 / D_00372908 surfaced). Make it order-independent; `--no-*`
+   reproduces the session 30 list byte for byte; boot any new release.
+3. **Phase 4 modules**: continue docs/modules.md "Next moves": the far handlers func_001cd208 / func_001dcad0,
+   func_001e98d0, and whether the code after 0x001c4ed0 extends script_vm.c; retype the 15
+   `void func_001c4640(Msg *)` users to script_vm.h one file at a time. Then pick a second subsystem with shared
+   types for its own module. `make` must stay byte-identical.
+4. **Phase 4 types**: the remaining 217 view casts (D_002E26A0 24, D_002C5968 15, D_00308CDC 15, D_002E31B0 14,
+   D_00351E10 10, ...).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=30`, commit, open a PR, and refresh this prompt.
+6. End with `make progress-update SESSION=31`, commit, open a PR, and refresh this prompt.

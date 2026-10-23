@@ -2827,3 +2827,174 @@ What changed besides the aliases:
   renamed by layout (`--map`, `--objtag`, `--sub`, `--hdr`, `--shift`, `--force`).
 - `s29_recfold.py`: D_00304BE8 record views (`--shift 4` + `->m[k]`).
 - `s29_uncast.py` (`--scalar`), `s29_asmdiff.py`.
+
+## Session 30: Phase 4 types (worker s30types)
+
+### Result
+
+Counted with `s27_survey.py --summary` (unchanged survey):
+
+| | base d7b6a3f | now |
+|---|---|---|
+| view casts (a user's own struct type) | 275 in 75 pieces | 217 in 72 pieces |
+| shared casts (to the piece header's own types) | 202 | 202 |
+| basic casts (s32, u8 *, void *, ...) | 775 | 750 |
+
+The basic count fell with D_002C58D0's `f32 (*)[4]` / `u8 (*)[0x40]` / `f32 *` casts
+(29 -> 5, the auto files' `M2C_UNK *` stay) and s7_w4's `(u8 *)D_00304BE8 + 0x874`.
+
+Per piece (view casts, base -> now):
+
+| piece | before | after | how |
+|---|---|---|---|
+| D_002C58D0 | 4 | 0 | `FMtx4 D_002C58D0` (`typedef f32 FMtx4[4][4]`, data/types/fvec.h): users pass `D_002C58D0` (f32 (*)[4] / void * / Mtx parameters) or `D_002C58D0[0]` (f32 * parameters); c04's M4, c01's C01Mat, h54n's Mtx alias FMtx4; h61's `#define D_002C58D0 (*(V4 *)&...)` goes |
+| D_00304BE8 | 18 | 1 | s8_w8, h73, s7_w4, s7_w3, s12w5, s6_20, h56, b03, b03n, s11_w44, h30n, s6_21 read Save_304be8 / W606Mem_304be8 / Sub_304be8 |
+| D_002A6238 | 27 | 2 | the word at 0x10 is a union Fl20_2a6238 of the users' five bit splits; h1 Ent20, h28 Ent14, h51 Tri20, h52 Plane52 / PolyV52, r2_10 ColE alias Ent20_2a6238 |
+| D_002A62B0 | 8 | 0 | typed `Ent20_2a6238 *` (the second table h28 walks; s11_w56 casts the loaded address) |
+| D_002A6274 | 4 | 0 | typed `Ent20_2a6238 *` (the table D_002A6238 is set from); h51n's Tri20 aliases Ent20_2a6238 |
+
+Also b11 (nofill): its Actor (the jump op's obj, pos[3] at 0x10) is its Obj
+(`struct VmObj`, V4 pos at 0x10; V4 is `FVec4` aligned 16), and its VM is
+`typedef VmRec VM` (`flags` -> `fl`).  No piece casts there, so no count change.
+
+What changed in the shared types:
+
+- Save_304be8: 0x0 is `s32 x0` (b03's save copy sets it to 5), Sub_304be8's 0x8 is
+  `x8[0x10]` (was pad), 0x38 `u16 x38` (b03n reads it unsigned; h6 / h7 only store
+  0), and 0x34 is `union { struct { u8 x34; u8 x35; u16 x36; } h; struct { u32 :16;
+  u32 b16:1; u32 :15; } b; } w34` (h30n read b16 as `x36 & 1` through a u16 view;
+  `sub.x34` is `sub.w34.h.x34`, `sub.b16` is `sub.w34.b.b16`).
+- Ent20_2a6238: 0xa / 0xb are `act` / `id` (h28's names; h1 b11, h51 group, r2_10
+  xA), 0xc is an anonymous union `{ f32 d; s32 i; u16 h; }` (h51n reads an id there
+  before the load stores the plane's d), 0x10 is `Fl20_2a6238 f` = `union { u32 w;
+  EntBits_2a6238 e; OnBits_2a6238 o; TriBits_2a6238 t; PlaneBits_2a6238 p;
+  ColBits_2a6238 c; }`.  Users that took `&D[i].f` as a word pointer use `.f.w`.
+- Record views that started at the block (`((T *)D_00304BE8)[k]`, `r[k * 116]`,
+  `e[k + 1].b74`, `arr[j + 0x590]`, `x[item + 0x490]`) became `m[k]`, `m[k].bits`,
+  `list599[j]`, `items[item]` with the same code in every file tried here, the loop /
+  PRE-sensitive s12w5 and the FLAGGED s11_w44 included.
+- s7_w3's CONTEXT_ONLY copy of func_0012d368 read the three party slots at 0x844 as
+  s32; it reads `x844[i]` (s8) like h31's real func_0012d368 now.  The context
+  function's own -S changed (it is weak in `.ctx`, not placed); kh1.elf did not.
+
+### Left, and why
+
+- D_00304BE8 (1): r2_7's G4BE8c record starts at the block (`e = &v[n]`, then
+  `&e->x4`, `e->x1c[s]`): with `&D->m[n].sub` gcc folds the +4 into `e` and the
+  register / stack slot of `t` change (the file's comment documents a giv order).
+- D_002A6238 (2): r2_10 reads the word at 0x10 as a u64 (`ColTri`, `(w & 0xff) >> 4
+  == 11` compares with `dli`); a `kind == 11` bit-field compare uses `li`.  A u64
+  member at 0x10 would run past the 20-byte record.
+- h1's five `((Ent20 *)((u8 *)D_002A6238 + off))` (off = idx * 20) keep their basic
+  `(u8 *)` cast: `D_002A6238[idx]` swaps two addu operands.
+- h30's V4 (`f32[4]` aligned 16, used by seven data headers) was not retyped: its
+  D_002C58D0 cast went without it (sceVu0UnitMatrix's `V4 *` accepts FMtx4).
+- The rest as session 29 left it (D_002E26A0 actor pointers 24, D_002C5968 volatile
+  flag views 15, D_00308CDC config views 15, D_002E31B0 14, D_00351E10 10, ...).
+
+### Hazards found (gcc 2.96)
+
+- A direct union member access is alias set 0 in strict files: h52's two bit-field
+  reads `D_002A6238[id].f.p.x40` / `.k` with a store between them reloaded the word.
+  `(&D_002A6238[id].f.p)->x40` (through a pointer) keeps the code; the other users'
+  union accesses (h28 writes, h51 writes, h1 / r2_10 reads) kept theirs as written.
+- A union containing a bit-field struct: the struct's bits count from the union's
+  start, so a split that began after a byte member needs its own leading pad (`u32
+  :16` for b16 when x34 / x35 were outside it).
+- `s29_retype` renames only accesses gcc rejects: a view field whose name is also a
+  shared field elsewhere (`d`) stayed on the shared field and changed code; the tool
+  now refuses such maps (see Tools).
+- Removing a view's +N base (r2_7 `e` at the record start - 4) changes register
+  allocation even when every address is the same.
+
+### Tools (tools/shift/s30types/, README there)
+
+- `s30_hdrdiff.py HEADER..`: -S check of every source that includes a header,
+  directly or through other headers (before `make` when a shared header changes).
+- `s29_retype.py` refuses a "name clash" map (a renamed field whose name the shared
+  type also uses).
+
+## Session 30: reach_check (worker s30reach)
+
+reach_check pins **1,304** names (was 1,331): 29 released, 2 newly pinned. Counted in a container without the
+overlays (`SHIFT_OVERLAYS=` an empty directory); session 29's 1,338 had them, so with the overlays expect about
+1,311. With all three new switches on (`--no-path-step --no-arg-bound --no-wr-span`) float_reach.txt *and*
+float_reach.log are byte-identical to the session 29 code's. The default float build floats **2,100** names (was
+2,073), links and passes M12-FLOAT and keep_check (39/39).
+
+### The 1,331 names by reason (session 29 code, `--explain`)
+
+| reason (every hit that pins the name) | names | what it is |
+| --- | --- | --- |
+| idx | 185 | an unbounded index |
+| idx,idx-ub | 174 | one unbounded index among bounded ones |
+| arg:wide | 169 | the callee walks the argument (printf `%s`, DMA senders) |
+| arg:noreach | 98 | an address the callee keeps or sends |
+| stored | 94 | the address is stored |
+| idx-ub | 48 | a bounded index that ends past the next name (real) |
+
+The idx tail, read site by site (about 1,500 unbounded accesses in 350 idx-only names, 2-6 per function): most
+indices are loaded from memory (a cursor, a count in a record, a resource offset) or are a function's argument; the
+loops among them mostly run to a count loaded from memory (`lw v0, n; slt v0, i, v0`). A common menu shape is
+`list[n++] = x` with n a global counter (func_00216280, func_0021dc40: `lw v0,0(s0); addiu v1,v0,1; sw v1,0(s0);
+D[v0]`): bounded only by runtime invariants (the readers index by a cursor < count), so no static rule proves
+them. What a rule can prove: loops countdown_loops rejected only because the step is not a single write, and
+indices made from an argument that every caller passes as a constant.
+
+**stored** (func_0023b570 -> func_0023aed0, 38 names): session 28's claim holds. func_0023aed0
+(src/hand/nostrict/text_00230000_c18.c) copies records into p6 ... p17 and then stores every one of them into its
+Out record (`o->p6 = p6; ... o->p17 = p17`); p9[i] and p15[i] are filled for i < n, and n is stored too (o->n), so
+the drawing code that reads the Out records (D_00650120[0..4], D_00650C00) indexes them by a count in memory.
+Following the stack arguments (`lw aN, off(sp)` in the callee) would only move the `stored` from the caller's
+`sw` to the callee's: the names stay pinned. Not attempted.
+
+### The rules (each `--no-RULE` in SHIFT_REACH_FLAGS re-pins its names)
+
+| rule (switch) | releases | what it proves |
+| --- | --- | --- |
+| path-step (`--no-path-step`) | 20 | `path_loops()`: countdown_loops' loops (down-counter `bgtz/bgez/bne c`, or up-counter `slti t,i,L; bne t`), proved over the paths of the body instead of by single writes. Every path from the header that reaches the back edge is followed (the body has no inner back edge, no switch, no linking branch, the header is the only way in; paths that branch or jump out or return are dropped); each register is tracked as {a register's header value + constant} or unknown. On the edge that loops the counter must be c - k (or i + k) on every path, and the test must see it at the same point on every path; a walked register is p + d, 0 <= d <= s, on every path. Covers the step in a likely branch's delay slot on the looping path while the other path returns (func_0011e248), the step in both arms of an if (func_001269d8, func_00266c30, func_001581d8, func_001474a0), the test register reloaded in the back branch's slot (func_0022d730), and a walk through a copy (`a1 = a0; ...; a0 = a1 + 4`, func_00111510). For a loop both functions find, the walked registers of both are kept. A call in the body clobbers the caller-saved registers after its delay slot. |
+| arg-bound (`--no-arg-bound`) | 9 (and 2 newly pinned, below) | An index made from an argument (`sll v0,a0,4; lui; addu; lw`) is tracked as ("ax", k, m, a) = a_k * m + a, and the access becomes an `argidx` resolved after the scan: when every way into the function is a direct call the analysis saw (`jal F` or a tail `j F`), its bound is m * (largest a_k over the calls) + a. A call passes an exact value >= 0 or the caller's own argument + offset (a least fixpoint over the call graph; a recursion that keeps growing gives up). Not proved, so unbounded as before: any word equal to F in the ELF file or an overlay, code that builds F (lui/addiu/ori), a jal/j word for F the analysis did not record (an overlay, code outside layout.tsv, data), a branch into F from another function, code before F that may fall into it, a call with an unknown or negative argument, or an argument that came through a join (analyse's arg-join keeps an argument joined with another value as the argument: it is marked and never used as an index). The log prints `# N functions index by an argument, M called directly only`. |
+| wr-span (`--no-wr-span`) | 0 on its own | A fix: the bytes an indexed store may write (`wr`, used by str-arg/list-arg/dma-chain's "no store writes the object") added the store's displacement twice: too far for a positive one, too short for a negative one (`sw $0,-4(v1)` ended 4 bytes early). Without it path-step's newly bounded store in func_00181368 (D_00364130's walk) looked like it wrote D_00370140 and re-pinned the DMA chains D_00370140 / D_00370170 / D_003701B0. |
+
+tests/reach_check_test.py cases 12 (path-step: the three shapes and a path that loops without the step), 13
+(wr-span) and 14 (arg-bound: the argidx event, a joined argument, and `arg_bounds()` with constants,
+pass-through, a growing recursion and a negative argument).
+
+### The released names
+
+- path-step (20): D_002B75A0 (func_0010c170 & co: 2 slots of 12 bytes), D_002BC0F0 / D_002BC120 /
+  D_00351A00 (func_001581d8: 3 ints moved one step toward a target), D_002BCC1C (func_00111510: 39-entry lookup
+  table D_002BCB80), D_002E27C0 / D_002E27C8 (func_001269d8: 4 byte pairs, 66 x 4 nested), D_003F60F0
+  (func_0021fbb8), D_003F6770 (func_00223508), D_003F7500 / D_003F7510 / D_003F7598 / D_003F75A0 / D_003F7628 /
+  D_003F7630 (func_0022d730 / func_0022db98 / func_0022dfd8, menu panels: 3 or 2 entries), D_0046C550 / D_0046C580
+  (func_00266c30: the 10 DMA channel register pointers, reset at boot), D_004E4528 / D_004E49E8 (func_001207f8 /
+  func_00120aa0: a 1,216-byte pool), D_00532B90 (bss, 128 records of 32 bytes walked by func_001474a0 & co).
+- arg-bound (9): D_0048C6F0 / D_0048C770 (func_00100580(i, out) for i = 0..7, func_00108970, func_00114c18:
+  `V4i [8]`), D_004D92F0 / D_004D9320 (func_001130a0(i, out), i = 0..2: three vectors), D_002BD178 / D_002BD1A8 /
+  D_002BD1E0 (func_00116368(w, i), i <= 10 through func_00118060's own argument: two 11-word tables),
+  D_003F31F0 / D_003F3200 (func_0020b120(prim, ...), prim <= 2: GS primitive codes for the menu gradients).
+- Newly pinned (2): D_003728C0 / D_00372908. func_001afac0 passes &D_003728C0 to printf (0x1b19bc, t1) on one
+  path; analyse's arg-join turned the join of that address with the function's own t1 into "the argument", so the
+  access was never seen. arg-bound's marking changed the visit order and an earlier visit now reports it. They
+  floated in KH1_F29_N without trouble (a debug printf), but pinning them is right.
+
+### Riskiest releases (for the boot route)
+
+- **arg-bound** is whole-program reasoning (no pointer to the function anywhere). D_0048C6F0 / D_0048C770: boot
+  (func_00100580 runs from func_00100610, which func_00100360 calls early) and func_00108970 / func_00114c18; a wrong release shows at the
+  title or as a missing/garbled model. D_003F31F0: the menu's gradient boxes (func_0020b120: open the in-game
+  menu, the load menu). D_002BD178 & co: func_00116368 (ray tests in text_00110000_h52.c: walk the field, the camera
+  against walls). D_004D92F0: func_001130a0 (three vectors, the same field code).
+- **path-step**: D_0046C550 (DMA reset at boot: no boot means this), D_00532B90 (bss records func_001474a0 walks
+  every frame: walk, fight), D_004E4528 (a pool: load an area), D_003F7500 ... D_003F7630 and D_003F60F0 /
+  D_003F6770 (menus: open the in-game menu, its item / status pages, the load menu).
+- A boot of the usual route (load menu, save 06 with the party, test T, a desert fight, the in-game menu, save 05
+  End of the World, the warp drive to Neverland) covers all of them.
+
+### Hazard found: arg-join loses addresses
+
+analyse's arg-join (session 20) returns the argument for a join of an argument with anything else, so an address
+that only one path holds is dropped, and whether an access through it is reported depends on the order the
+blocks are visited (events are emitted from intermediate states). D_003728C0 above is one case; others may
+exist. A next step: keep the non-argument side (a SET of {the argument, the address}) or emit the address's
+events at the join.

@@ -96,11 +96,22 @@ class Flags:
     as_compiler: str = ""  # toolchain whose driver assembles compiled C (default: compiler)
 
 
+# A module file picks a flag mode with its name: src/vm/vm_ops.nostrict.c uses the
+# override whose `mode` is "nostrict" (kh1.toml; docs/modules.md "Flags"). Dot-files
+# (scratch copies) never carry a mode; `gen` rejects an unknown one under src/.
+MODE_FILE_RE = re.compile(r"(?:^|/)[^/.][^/]*\.([A-Za-z0-9_]+)\.(?:c|cpp|cc)$")
+
+
+def flag_modes(cfg: dict) -> dict[str, dict]:
+    return {ov["mode"]: ov for ov in cfg["toolchain"].get("override", []) if "mode" in ov}
+
+
 def flags_for(cfg: dict, rel: str) -> Flags:
     tc = cfg["toolchain"]
     base = Flags(tc["compiler"], tc["cflags"], tc.get("cxxflags", tc["cflags"]), tc["asflags"])
-    best = None
-    for ov in tc.get("override", []):
+    m = MODE_FILE_RE.search(rel)
+    best = flag_modes(cfg).get(m.group(1)) if m else None
+    for ov in [] if best else tc.get("override", []):
         if rel.startswith(ov["path"]) and (best is None or len(ov["path"]) > len(best["path"])):
             best = ov
     if best is None:
@@ -399,8 +410,12 @@ def cmd_gen(args, cfg) -> int:
     GEN.mkdir(parents=True, exist_ok=True)
     rules, objs = [], []
     skip_dsec = cfg["toolchain"].get("data_sections_skip", [])
+    modes = flag_modes(cfg)
     for src in iter_sources():
         rel = src.relative_to(ROOT).as_posix()
+        m = MODE_FILE_RE.search(rel)
+        if m and m.group(1) not in modes:
+            sys.exit(f"error: {rel}: unknown flag mode '{m.group(1)}' (kh1.toml modes: {', '.join(sorted(modes))})")
         obj = obj_for(src).relative_to(ROOT).as_posix()
         kind = SOURCE_SUFFIXES[src.suffix]
         fl = flags_for(cfg, rel)

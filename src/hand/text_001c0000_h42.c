@@ -13,56 +13,7 @@ typedef struct VmObj {
    value stack at +0x184, flags at +0x328. */
 typedef VmRec VM;
 
-typedef struct { s32 x0; s32 id; } PQ;
-typedef struct { s32 x0; PQ *q; u8 pad8[0x74]; s32 a[1]; u8 pad80[0x2f8-0x80]; s32 b[8]; } P;
-P *func_001e98d0(s32, s32);
-s32 func_001c1980(P *, s32, s32);
 
-s32 func_001c19f8(VM *vm, s32 k) {
-    s32 a = vm->stk[vm->sp--];
-    s32 b = vm->stk[vm->sp--];
-    P *p;
-    if (b < 0) b = 0;
-    else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
-    func_001c1980(p, b, p->a[k]);
-    return 2;
-}
-
-s32 func_001c1aa8(VM *vm) {
-    s32 a = vm->stk[vm->sp--];
-    s32 b = vm->stk[vm->sp--];
-    P *p;
-    if (b < 0) b = 0;
-    else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
-    if (p->b[b] != -1) {
-        vm->pc -= 2;
-        return 4;
-    }
-    return 2;
-}
-
-s32 func_001c1ce8(s8 *, s32);
-s32 func_001c1cf8(s8 *, s32);
-extern s32 (*D_0037A198[])(VM *, s32);
-
-void func_001c1d20(VM *vm, s32 k) {
-    s32 saved = vm->pc;
-    s32 op, arg, r;
-    vm->pc = vm->lbl[k];
-    for (;;) {
-        op = func_001c1ce8(vm->code, vm->pc);
-        arg = func_001c1cf8(vm->code, vm->pc);
-        if (op == 5) break;
-        r = D_0037A198[op](vm, arg);
-        if (r & 2) vm->pc++;
-        if (r & 4) goto out;
-        if (r & 8) goto out;
-    }
-out:
-    vm->pc = saved;
-}
 typedef struct Fx {
     u8 pad0[0x30];
     f32 v30[4];
@@ -96,27 +47,8 @@ typedef struct {
     s32 x3450;
 } Big;
 extern Big D_00389C90;
-typedef struct { u8 pad[16]; f32 pos[4]; } Actor;
 #include "data/pieces/D_002E26A0.h"
 void func_002675a8(void *, void *);
-s32 func_001c1e30(void) {
-    f32 mn[4], mx[4], p[4];
-    s32 i;
-    if (D_002E26A0[0] == 0) return 0;
-    func_002675a8(p, (*(Actor **)&D_002E26A0)->pos);
-    for (i = 0; i < D_00389C90.nbox; i++) {
-        mn[0] = D_00389C90.box[i].c[0] - D_00389C90.box[i].s[0] * 0.5f;
-        mn[1] = D_00389C90.box[i].c[1] - D_00389C90.box[i].s[1] * 0.5f;
-        mn[2] = D_00389C90.box[i].c[2] - D_00389C90.box[i].s[2] * 0.5f;
-        mx[0] = D_00389C90.box[i].c[0] + D_00389C90.box[i].s[0] * 0.5f;
-        mx[1] = D_00389C90.box[i].c[1] + D_00389C90.box[i].s[1] * 0.5f;
-        mx[2] = D_00389C90.box[i].c[2] + D_00389C90.box[i].s[2] * 0.5f;
-        if (mn[0] <= p[0] && p[0] <= mx[0] && mn[1] <= p[1] && p[1] <= mx[1] && mn[2] <= p[2] && p[2] <= mx[2])
-            return D_00389C90.box[i].id;
-    }
-    return 0;
-}
-
 /* 32-byte message queue at D_006257E0 (tail D_006277E4, head D_006277E0). */
 typedef struct {
     u8 type;
@@ -133,7 +65,8 @@ extern s32 D_006277E4;
 extern MsgTbl D_0037A21C[];
 s32 func_00123488(s32);
 
-s32 func_001c4640(Msg *m) {
+/* func_001c4640 is in src/vm/script_vm.c; this copy is for the callers below (docs/context-only-plan.md). */
+CONTEXT_ONLY s32 func_001c4640(Msg *m) {
     Msg t;
     if ((D_006277E4 + 1) % 256 == D_006277E0) return -1;
     if (func_00123488(m->x) == 0 && D_0037A21C[m->type].f != 0) return 0;
@@ -145,30 +78,6 @@ s32 func_001c4640(Msg *m) {
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
 extern volatile s32 D_002BBE04;
-s32 func_001d59a0(VM *);
-
-s32 func_001c4de0(s32 a, s32 b) {
-    VM *vm;
-    Msg m;
-    D_00389C90.x3170 = a;
-    D_00389C90.x3174 = b;
-    if (D_00389C90.x3034 == 0) vm = D_0038D170;
-    else vm = D_0039A580;
-    D_00389C90.x3450 = 0;
-    func_001c1d20(vm, 10);
-    if (b == 1) {
-        func_001d59a0(vm);
-        m.type = 40;
-        m.val = 0;
-        m.v[0] = 0.0f;
-        m.v[1] = 0.0f;
-        m.v[2] = 0.0f;
-        m.v[3] = 1.0f;
-        func_001c4640(&m);
-        if (D_002BBE04 == b) D_002BBE04 = 4;
-    }
-    return D_00389C90.x3450;
-}
 
 #include "data/pieces/D_0037A380.h"
 typedef V4_37A380 V4;

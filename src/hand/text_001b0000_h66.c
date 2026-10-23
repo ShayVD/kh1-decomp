@@ -18,33 +18,10 @@ extern Task_bfcd8 *D_0037A16C;
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
-typedef VmRec VM_c0f30;
-extern s32 D_0038B4C4[], D_0038ACC4[];
-extern s8 D_003C2D30[];
-s8 *func_00232cc0(s32);
-typedef VmRec VM_c1b58;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-s32 func_001c4640(Msg *m);
-VM_c1b58 *func_001e98d0(s32, s32);
-typedef VmRec VM_c2778;
-typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
-extern s32 D_002BCDEC;
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
-extern s32 D_0039A570, D_003A7980;
-extern s32 (*D_0037A198[])(VM_c2778 *, s32);
 extern u32 D_002C5958;
-s32 func_001c1ce8(s8 *, s32);
-s32 func_001c1cf8(s8 *, s32);
 void func_0011ef10(s32, void *);
-s32 func_001c1f80();
 typedef struct { u8 pad[16]; V4 pos; u8 pad32[28]; f32 roty; } Obj_c5168;
 typedef struct { u8 pad[16]; V4 pos; u8 pad32[32]; V4 tgt; u8 pad80[16]; f32 f96; } Cam_c5168;
 typedef struct { u8 pad[12376]; s32 mode; u8 pad12380[16]; Obj_c5168 *p12396; Obj_c5168 *p12400; } Big_c5168;
@@ -256,127 +233,6 @@ void func_001bfcd8(void) {
         q->arg = 0;
     }
 }
-
-s32 func_001c0f30(VM_c0f30 *v, s32 idx) {
-    s8 *a = func_00232cc0(1);
-    s8 *b = func_00232cc0(2);
-    v->stk[32] = idx;
-    if (idx < 0x800) {
-        v->stk[++v->sp] = a[idx];
-    } else if (idx < 0x900) {
-        v->stk[++v->sp] = a[idx];
-    } else if (idx < 0xb00) {
-        idx -= 0x900;
-        if ((s32)(v->fl.x >> 5) & 1) {
-            v->stk[++v->sp] = D_0038B4C4[idx];
-        } else {
-            v->stk[++v->sp] = D_0038ACC4[idx];
-        }
-    } else if (idx < 0xc80) {
-        v->stk[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
-    } else if (idx < 0xcc0) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else if (idx < 0xd00) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else if (idx < 0xd40) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else {
-        v->stk[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
-    }
-    return 2;
-}
-
-s32 func_001c1b58(VM_c1b58 *v) {
-    s32 id, lvl, j;
-    VM_c1b58 *t;
-    Msg m;
-    id = v->stk[v->sp--];
-    lvl = v->stk[v->sp--];
-    if (lvl < 0) lvl = 0;
-    else if (lvl >= 8) lvl = 7;
-    t = func_001e98d0((s32)(v->fl.x >> 5) & 1, id);
-    if (t == v) return 6;
-    t->ret[lvl] = -1;
-    if (lvl != t->rsp) return 2;
-    for (j = lvl + 1; j < 8; j++) {
-        if (t->ret[j] != -1) {
-            t->pc = t->ret[j];
-            t->rsp = j;
-            break;
-        }
-    }
-    if ((u32)t->fl.i[0] % 2 == 1) {
-        m.type = 18;
-        m.val = 0;
-        m.v[0] = 0.0f;
-        m.v[1] = 0.0f;
-        m.v[2] = 0.0f;
-        m.v[3] = 1.0f;
-        m.x = t->x0;
-        func_001c4640(&m);
-        t->fl.x &= ~1;
-    }
-    return 2;
-}
-
-#define D_00389C90 (*(Big_c2778 *)&D_00389C90)
-s32 func_001c2778(void) {
-    VM_c2778 *vms;
-    s32 *cnt;
-    s32 i, op, arg, r;
-    s32 stop = 0;
-    VM_c2778 *p;
-    Msg m;
-    if (D_002BCDEC == 0) return 0;
-    if (D_00389C90.w12340 == 0) {
-        p = D_0038D170;
-        cnt = &D_0039A570;
-    } else {
-        p = D_0039A580;
-        cnt = &D_003A7980;
-    }
-    for (i = 1, p++; i < *cnt; i++, p++) {
-        p->pc = p->lbl[0];
-        while (1) {
-            op = func_001c1ce8(p->code, p->pc);
-            arg = func_001c1cf8(p->code, p->pc);
-            if (op == 5) break;
-            r = D_0037A198[op](p, arg);
-            if (r & 2) p->pc++;
-            if (r & 8) {
-                stop = 1;
-                D_002C5958 &= ~8;
-                D_002C5958 &= ~4;
-                break;
-            }
-        }
-        p->x78 = 1;
-        p->pc = p->lbl[1];
-    }
-    if (stop) return 4;
-    if (D_00389C90.w12340 == 0) {
-        func_0011ef10(0xc352, func_001c1f80);
-        return 4;
-    }
-    cnt = &D_0039A570;
-    p = D_0038D170;
-    for (i = 1, p++; i < *cnt; i++, p++) {
-        if ((u32)p->fl.i[0] % 2 == 1) {
-/*P*/
-            m.type = 18;
-            m.val = 0;
-            m.v[0] = 0.0f;
-            m.v[1] = 0.0f;
-            m.v[2] = 0.0f;
-            m.v[3] = 1.0f;
-            m.x = p->x0;
-/*Q*/
-            func_001c4640(&m);
-        }
-    }
-    return 4;
-}
-#undef D_00389C90
 
 #define D_00389C90 (*(Big_c5168 *)&D_00389C90)
 #define D_0037A380 (*(Cam_c5168 *)&D_0037A380)

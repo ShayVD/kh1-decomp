@@ -608,24 +608,23 @@ void func_001478e0(void) {
     }
 }
 
-typedef struct { u8 pad[4]; u8 b[8]; u8 padc[0x24]; u8 c[8]; u8 pad38[0x74 - 0x38]; } Ent74;
 typedef struct { u8 pad[0x40]; s32 w40; s32 w44; s32 w48; u8 pad4c[0xf0 - 0x4c]; } StBuf;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct { u8 b0, b1, b2, b3; s16 h4; s16 h6; } Itm;
 Itm *func_00147840(s32);
 void func_00141b10(s32, StBuf *);
 
 s32 func_00149440(s32 kind, s32 id) {
     StBuf st;
-    u8 *e;
+    Sub_304be8 *e;
     s32 a, b, r;
     u8 m = func_00147840(kind)->b2;
 
     if (m != 0 && m != 12) return 0;
-    e = ((Ent74 *)D_00304BE8)[id].b;
+    e = &D_00304BE8->m[id].sub;
     func_00141b10(id, &st);
-    a = e[1] < st.w40;
-    b = e[3] < st.w48;
+    a = e->x1 < st.w40;
+    b = e->x3 < st.w48;
     r = 0;
     switch (kind) {
     case 1:
@@ -646,15 +645,15 @@ s32 func_00149440(s32 kind, s32 id) {
         break;
     case 152:
         r = 16;
-        if (e[6] < 100) r = 17;
+        if (e->x6 < 100) r = 17;
         break;
     case 153:
         r = 32;
-        if (e[7] < 100) r = 33;
+        if (e->x7 < 100) r = 33;
         break;
     case 154:
         r = 64;
-        if (e[5] < 100) r = 65;
+        if (e->x5 < 100) r = 65;
         break;
     }
     return r;

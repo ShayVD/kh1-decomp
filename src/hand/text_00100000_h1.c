@@ -11,11 +11,9 @@ typedef struct { f32 x, y, z; } Vec3;
 #include "data/pieces/D_002BC0A8.h"
 typedef Flags_2BC0A8 Flags;
 /* Packed attribute word at +16 of the 20-byte entries of D_002A6238. */
-typedef struct {
-    u32 f0:4; u32 f4:4; u32 f8:3; u32 f11:4; u32 f15:3;
-    u32 f18:4; u32 f22:1; u32 f23:5; u32 f28:1; u32 f29:3;
-} EntBits;
-typedef struct { s16 a, b, c, d; u8 pad8[3]; u8 b11; u8 pad12[4]; EntBits bits; } Ent20;
+#include "data/pieces/D_002A6238.h"
+typedef EntBits_2a6238 EntBits;
+typedef Ent20_2a6238 Ent20;
 #include "data/pieces/D_002A6274.h"
 typedef struct { s32 w0, w4, w8, w12; } Ent16;
 typedef struct { u8 m[64]; u8 v64[16]; u8 v80[16]; s32 w96; } Xf;
@@ -294,8 +292,8 @@ void func_001047c8(void) {
 }
 
 s32 func_00104a90(s32 i, s32 *out) {
-    Ent20 *e = &((Ent20 *)D_002A6238)[i]; s32 d;
-    out[0] = e->a; out[1] = e->b; out[2] = e->c; out[3] = d = e->d;
+    Ent20 *e = &D_002A6238[i]; s32 d;
+    out[0] = e->v[0]; out[1] = e->v[1]; out[2] = e->v[2]; out[3] = d = e->v[3];
     if (d == -2 || d == -1) return 3; return 4;
 }
 
@@ -310,7 +308,7 @@ void func_00104eb0(s32 i, f32 *out) {
 s32 func_00105020(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 80) return 1;
+        if ((D_002A6274[i].f.w & 0xf6) == 80) return 1;
     }
     return 0;
 }
@@ -318,7 +316,7 @@ s32 func_00105020(void) {
 s32 func_00105078(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 144) return 1;
+        if ((D_002A6274[i].f.w & 0xf6) == 144) return 1;
     }
     return 0;
 }
@@ -331,35 +329,35 @@ void func_00105218(void) {
 s32 func_00105960(s32 a, s32 b) {
     s32 sub;
     s32 idx = func_00142730(a, &sub);
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->b11 == b; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->id == b; }
     return func_0011ab60(sub, idx) == b;
 }
 
 s32 func_00105b10(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f22; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->f.e.f22; }
     return func_0011ab38(sub, idx)->f22;
 }
 
 s32 func_00105b68(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f4; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->f.e.f4; }
     return func_0011ab38(sub, idx)->f4;
 
 }
 
 s32 func_00105bc0(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f18; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->f.e.f18; }
     return func_0011ab38(sub, idx)->f18;
 
 }
 
 s32 func_00105c18(s32 sub, s32 idx) {
-    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->bits.f28; }
+    if (sub == -1) { s32 off = idx * 20; return ((Ent20 *)((u8 *)D_002A6238 + off))->f.e.f28; }
     return func_0011ab38(sub, idx)->f28;
 
 }
 
 s32 func_00105ce0(s32 id) {
-    s32 i; for (i = 0; i < D_002A6258; i++) { Ent20 *e = &((Ent20 *)D_002A6238)[i]; if (e->b11 == id) return e->bits.f11; } return 0;
+    s32 i; for (i = 0; i < D_002A6258; i++) { Ent20 *e = &D_002A6238[i]; if (e->id == id) return e->f.e.f11; } return 0;
 }
 
 void func_00105f28(void) {

@@ -119,10 +119,17 @@ path = "src/sdk/libc/"
 cflags = "-O2 -G0 -fno-builtin"
 no_fill = true
 
+# Flag modes (docs/modules.md "Flags"). Each src/hand/<mode>/ override below has a
+# `mode` name; a module file anywhere in src/ picks one with its file name,
+# <name>.<mode>.c (src/vm/vm_ops.nostrict.c), which wins over directory overrides.
+# gcc 2.96 has no per-function optimize attribute, so a module's functions that
+# need other flags go in such a sibling file.
+
 # Game files whose delay slots were left to the assembler (gcc's own
 # filling off): leaf `jr ra` slots stay empty (session 5).
 [[toolchain.override]]
 path = "src/hand/nofill/"
+mode = "nofill"
 cflags = "-O2 -G0"
 no_fill = true
 
@@ -130,10 +137,12 @@ no_fill = true
 # through other types; the script VM around 0x001C08F0, session 5).
 [[toolchain.override]]
 path = "src/hand/nostrict/"
+mode = "nostrict"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 
 [[toolchain.override]]
 path = "src/hand/nostrict_nofill/"
+mode = "nostrict_nofill"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 no_fill = true
 
@@ -141,10 +150,12 @@ no_fill = true
 # merged by gcse with the normal flags (session 6; func_0014b550, func_001ca368).
 [[toolchain.override]]
 path = "src/hand/nogcse/"
+mode = "nogcse"
 cflags = "-O2 -G0 -fno-gcse"
 
 [[toolchain.override]]
 path = "src/hand/nostrict_nogcse/"
+mode = "nostrict_nogcse"
 cflags = "-O2 -G0 -fno-strict-aliasing -fno-gcse"
 
 
@@ -155,16 +166,19 @@ cflags = "-O2 -G0 -fno-strict-aliasing -fno-gcse"
 # 32-bit under n32; KH1_N32 makes common.h define s64/u64 as long long.
 [[toolchain.override]]
 path = "src/hand/n32/"
+mode = "n32"
 cflags = "-O2 -G0"
 ccflags = "-mabi=n32 -DKH1_N32"
 
 [[toolchain.override]]
 path = "src/hand/n32_nogcse/"
+mode = "n32_nogcse"
 cflags = "-O2 -G0 -fno-gcse"
 ccflags = "-mabi=n32 -DKH1_N32"
 
 [[toolchain.override]]
 path = "src/hand/n32_nostrict/"
+mode = "n32_nostrict"
 cflags = "-O2 -G0 -fno-strict-aliasing"
 ccflags = "-mabi=n32 -DKH1_N32"
 
@@ -173,32 +187,40 @@ ccflags = "-mabi=n32 -DKH1_N32"
 # probably built with that flag (or by a compiler whose pass behaved the same).
 [[toolchain.override]]
 path = "src/hand/nosi/"
+mode = "nosi"
 cflags = "-O2 -G0 -fno-sched-interblock"
 
 [[toolchain.override]]
 path = "src/hand/nogcse_nosi/"
+mode = "nogcse_nosi"
 cflags = "-O2 -G0 -fno-gcse -fno-sched-interblock"
 
 [[toolchain.override]]
 path = "src/hand/nogcse_nosib/"
+mode = "nogcse_nosib"
 cflags = "-O2 -G0 -fno-gcse -fno-optimize-sibling-calls"
 
 [[toolchain.override]]
 path = "src/hand/faddr/"
+mode = "faddr"
 cflags = "-O2 -G0 -fforce-addr"
 
 [[toolchain.override]]
 path = "src/hand/nostrict_norcse/"
+mode = "nostrict_norcse"
 cflags = "-O2 -G0 -fno-strict-aliasing -fno-rerun-cse-after-loop"
 
 [[toolchain.override]]
 path = "src/hand/norlo/"
+mode = "norlo"
 cflags = "-O2 -G0 -fno-rerun-loop-opt"
 
 [[toolchain.override]]
 path = "src/hand/fmam/"
+mode = "fmam"
 cflags = "-O2 -G0 -fmove-all-movables"
 
 [[toolchain.override]]
 path = "src/hand/nostrict_nosib/"
+mode = "nostrict_nosib"
 cflags = "-O2 -G0 -fno-strict-aliasing -fno-optimize-sibling-calls"

@@ -56,14 +56,14 @@ void func_00116368(Out368 *o, s32 k) {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].f;
+                    fl = &D_002A6238[id].f.w;
                     if (!(*fl & 1)) f1(id, fl);
                 }
             } else {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;
-                    fl = &D_002A6238[id].f;
+                    fl = &D_002A6238[id].f.w;
                     if (!(*fl & 1)) f2(id, fl);
                 }
             }
