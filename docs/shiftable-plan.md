@@ -2712,7 +2712,7 @@ Per piece (view casts, base -> now):
 |---|---|---|---|
 | D_0039A580, D_0038D170, D_003C3A70, D_003A7990, D_003B4DA0 | 62 | 0 | `VmRec D_X[]` (data/types/vm_rec.h); VM / VMa / VmC / VmE / VM_c2778 / KEnt / Ent / E848 / E848b / Obj350 of 16 files alias VmRec |
 | D_002E2780, D_002E2790, D_002C58A0, D_002C58B0 | 71 | 0 | `FVec4 D_X` (data/types/fvec.h); the files' V4 / V4f / V3_2e2780 alias FVec4, h53's V53 is `typedef FVec4 V53 __attribute__((aligned(16)))` |
-| D_00304BE8 | 73 | 18 | 18 users read Save_304be8 / W606Mem_304be8 / Sub_304be8 (aliases; record views with `--shift`) |
+| D_00304BE8 | 73 | 18 | 22 user files read Save_304be8 / W606Mem_304be8 / Sub_304be8 (aliases; record views with `--shift`) |
 | D_002C58D0 | 4 | 4 | left (see below) |
 
 Also VM-typed locals of those files that do not cast the pieces now alias VmRec
