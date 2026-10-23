@@ -726,7 +726,7 @@ f32 func_00135ca0(f32 x) {
     return r;
 }
 
-s32 func_00137450(s32 id) {
+s32 func_00137450(struct Actor *id) {
     s32 i;
     for (i = 0; i < D_003044D0; i++) {
         if (D_003044D8[i].x8 == id) {
@@ -771,7 +771,7 @@ void func_00137c70(W6Reg *o) {
     ColEnt_3044d8 *e = &D_003044D8[D_003044D0++];
     e->x0 = (s32)o->x0d0;
     e->x4 = (u8 *)o->x154;
-    e->x8 = (s32)o;
+    *(s32 *)&e->x8 = (s32)o; /* an int store: the field's pointer alias set reorders the stores */
     if (o->flags & 0x20) {
         *(u32 *)&e->flags |= 1;
     } else {

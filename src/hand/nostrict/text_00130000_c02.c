@@ -601,7 +601,7 @@ typedef struct {
     s32 x90;
 } C02Tgt;
 
-typedef struct C02Ob2 {
+typedef struct Actor {
     u32 x0;
     u8 pad04[0x70 - 0x4];
     s32 x70;
@@ -670,8 +670,8 @@ void func_00143180(C02Ob2 *o, f32 *v)
             for (i = 0; i < 32; i++) {
                 if ((o->x90 >> i) & 1) {
                     if (i > 0) {
-                        func_00142fe0(o, ((C02Ob2 *)D_003044D8[i - 1].x8));
-                        if ((s32)(((C02Ob2 *)D_003044D8[i - 1].x8)->fl.w >> 57) & 1)
+                        func_00142fe0(o, D_003044D8[i - 1].x8);
+                        if ((s32)(D_003044D8[i - 1].x8->fl.w >> 57) & 1)
                             n++;
                     } else {
                         n++;
