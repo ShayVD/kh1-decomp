@@ -2,18 +2,12 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0064.h"
-
-M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_002073b0(M2C_UNK, void *);
 M2C_UNK func_00209e18();
 M2C_UNK func_0020a9b0(s32);
 M2C_UNK func_0020ab88(s32);
 M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_002660c0(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsExecStoreImage(M2C_UNK *, s32 *);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_003F3258;
-#include "data/pieces/D_003F34B0.h"
 extern s32 D_00640E24;
 extern s32 D_00640E28;
 #include "data/pieces/D_003E3D68.h"
@@ -39,18 +33,6 @@ void func_00219118(void);
 void func_0021adc8(void);
 void func_0021db30(void);
 void func_00229850(void);
-
-void func_0020a8f0(void) {
-    s32 sp[184];
-    func_002660c0(sp, 0, 8, 0, 0x100, 4, 0x10, 1);
-    func_002660c0(&M2C_FIELD(sp, M2C_UNK *, 0x70), 0, 8, 0, 0x100, 0x1BB, 0x10, 1);
-    FlushCache(0);
-    sceGsExecStoreImage(sp, &M2C_FIELD(sp, s32 *, 0xE0));
-    sceGsExecStoreImage(&M2C_FIELD(sp, M2C_UNK *, 0x70), &M2C_FIELD(sp, s32 *, 0x1E0));
-    sceGsSyncPath(0, 0);
-    M2C_FIELD((M2C_UNK *)&D_003F34B0, s32 *, 0) = (s32) (M2C_FIELD(sp, s32 *, 0xE0) & 0xFFFFFF);
-    M2C_FIELD((M2C_UNK *)&D_003F34B0, s32 *, 4) = (s32) (M2C_FIELD(sp, s32 *, 0x1E0) & 0xFFFFFF);
-}
 
 void func_0020c100(s32 arg0, s32 arg1) {
     func_00208458(arg0, 0, 0, 0x802020A0, 1);
