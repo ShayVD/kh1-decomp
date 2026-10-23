@@ -7,11 +7,9 @@
 #include "common.h"
 
 typedef struct {
-    u8 *ctx;
-    s32 arg;
-    s32 w8;
-    s32 wc;
-} RunQ_37a170;
+    u8 *ctx;    /* a task slot's context (D_0037A16C[k].ctx), 0 ends the queue */
+    s32 arg;    /* the slot index, -1 at the end */
+} RunQ_37a170; /* 8 bytes: h14's func_001bxxxx fills the queue in run order */
 
 extern RunQ_37a170 *D_0037A170;
 

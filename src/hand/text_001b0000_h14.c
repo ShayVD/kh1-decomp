@@ -79,7 +79,6 @@ void func_001bffa0(s32 i) {
 }
 
 typedef struct { u16 h0, h2, h4, h6; u8 *ctx; u8 *stk; u8 pad16[16]; void (*fn)(void); u8 pad36[12]; } Task;
-typedef struct { u8 *ctx; s32 arg; } RunQ;
 #include "data/pieces/D_0037A170.h"
 extern s32 D_0037A174;
 #define D_0037A16C (*(Task **)&D_0037A16C)
@@ -88,7 +87,7 @@ void func_001c0460(void) {
     s32 i, j, k, n;
     Task *p;
     Task **pp;
-    RunQ *q;
+    RunQ_37a170 *q;
     n = 1;
     for (i = 1; i < 400; i++) {
         if (D_0037A16C[i].h0 != 0) {
@@ -97,8 +96,8 @@ void func_001c0460(void) {
         if (D_0037A16C[i].h0 != 0) n++;
     }
     D_0037A174 = n;
-    ((RunQ *)D_0037A170)[0].arg = 0;
-    ((RunQ *)D_0037A170)[0].ctx = D_0037A16C[0].ctx;
+    D_0037A170[0].arg = 0;
+    D_0037A170[0].ctx = D_0037A16C[0].ctx;
     if (n < 2) return;
     order[0] = -1;
     n = 0;
@@ -113,11 +112,11 @@ void func_001c0460(void) {
         n++;
     }
     for (i = 0; i < n; i++) {
-        ((RunQ *)D_0037A170)[i + 1].arg = order[i];
-        ((RunQ *)D_0037A170)[i + 1].ctx = D_0037A16C[order[i]].ctx;
+        D_0037A170[i + 1].arg = order[i];
+        D_0037A170[i + 1].ctx = D_0037A16C[order[i]].ctx;
     }
-    ((RunQ *)D_0037A170)[i + 1].arg = -1;
-    ((RunQ *)D_0037A170)[i + 1].ctx = 0;
+    D_0037A170[i + 1].arg = -1;
+    D_0037A170[i + 1].ctx = 0;
 }
 #undef D_0037A16C
 

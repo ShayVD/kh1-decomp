@@ -30,7 +30,7 @@ typedef struct {
     u8 padA90[0xAA0 - 0xA90];
     u8 unkAA0[0x10];
 } Obj;
-extern u8 D_00351E10[];
+extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00651D60;
 extern QW *D_00651D64;
 extern f32 D_002BBDFC;
@@ -136,7 +136,7 @@ void func_00241260(Obj *o) {
     s32 a[4];
     s32 b[2];
     QW *q;
-    QW *p = (QW *)D_00351E10;
+    QW *p = D_00351E10;
     D_00651D64 = p;
     D_00651D60 = p + 1;
     func_00240b68(o);

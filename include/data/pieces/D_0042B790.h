@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_0042B790_H
 
 #include "common.h"
+#include "data/pieces/D_00426970.h"
 
-extern u8 D_0042B790[0x4e20];
+extern TexBuf_426970 D_0042B790;
 
 #endif /* KH1_DATA_PIECES_D_0042B790_H */

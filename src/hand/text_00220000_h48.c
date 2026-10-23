@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_003F7A70.h"
 #include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
@@ -459,10 +460,9 @@ void func_002319d0(void) {
 
 #include "data/pieces/D_003F7C48.h"
 typedef T7C48_3f7c48 E7C48;
-typedef struct { u16 idx; u16 amt; } E7A70;
+typedef T7A70 E7A70;
 extern s32 D_00647660;
 extern s32 D_0064765C;
-#include "data/pieces/D_003F7A70.h"
 void func_001ec2c0(s32, s32);
 
 void func_00231b98(void) {
@@ -484,9 +484,9 @@ void func_00231b98(void) {
         D_00304BE8->items[*p]++;
         c = &((T7C48_3f7c48 *)&D_003F7C48)[*k];
         n = c->n;
-        l = &((E7A70 *)&D_003F7A70)[c->b2];
+        l = &D_003F7A70[c->b2];
         for (; n > 0; n--) {
-            D_00304BE8->items[l->idx] -= (u8)l->amt;
+            D_00304BE8->items[l->id] -= (u8)l->max;
             l++;
         }
     } else {
@@ -504,10 +504,10 @@ void func_00231cd0(s32 arg0) {
         return;
     }
     n = c->n;
-    l = &((E7A70 *)&D_003F7A70)[c->b2];
+    l = &D_003F7A70[c->b2];
     D_00647660 = arg0;
     for (; n > 0; n--) {
-        if (D_00304BE8->items[l->idx] < l->amt) {
+        if (D_00304BE8->items[l->id] < l->max) {
             D_00647660 = -1;
             return;
         }
@@ -527,9 +527,9 @@ s32 func_00231dd0(s32 k) {
         return -3;
     }
     n = c->n;
-    l = &((E7A70 *)&D_003F7A70)[c->b2];
+    l = &D_003F7A70[c->b2];
     for (; n > 0; n--) {
-        if (D_00304BE8->items[l->idx] < l->amt) {
+        if (D_00304BE8->items[l->id] < l->max) {
             return -1;
         }
         l++;

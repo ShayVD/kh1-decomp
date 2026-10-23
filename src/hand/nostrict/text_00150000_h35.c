@@ -593,7 +593,6 @@ typedef struct { u8 pad[0x30]; f32 f30; f32 f34; } S5516E0;
 S5516E0 *D_005516E0 ALIGNED(16);
 #include "data/pieces/D_002BC0F0.h"
 typedef S2BC0F0_2BC0F0 S2BC0F0;
-typedef struct { s32 w0, w4, w8; } S3519E0;
 #include "data/pieces/D_003519E0.h"
 extern u8 D_00351A00[], D_00351A10[];
 typedef struct { u8 pad[0xCC]; f32 fCC; } S6C_157f70;
@@ -612,9 +611,9 @@ void func_00157f70(Obj157f70 *a) {
     D_002BC0F0.s2BC0F0.f4 = 4000.0f;
     D_002BC0F0.s2BC0F0.f8 = 64.0f;
     D_002BC0F0.s2BC0F0.fC = 255.0f;
-    D_002BC0F0.s2BC0F0.w10 = (*(S3519E0 *)&D_003519E0).w0;
-    D_002BC0F0.s2BC0F0.w14 = (*(S3519E0 *)&D_003519E0).w4;
-    D_002BC0F0.s2BC0F0.w18 = (*(S3519E0 *)&D_003519E0).w8;
+    D_002BC0F0.s2BC0F0.w10 = D_003519E0[0];
+    D_002BC0F0.s2BC0F0.w14 = D_003519E0[1];
+    D_002BC0F0.s2BC0F0.w18 = D_003519E0[2];
 }
 
 /* ---- func_00158100 ---- */

@@ -1,8 +1,8 @@
 #include "common.h"
 /* func_00246ed8: CONTEXT_ONLY 00246cf0 and 00246ea8 above; one Item *it reused for the
    init calls and the draw loop (its kill keeps the gcse PRE copy for &p->unk30). */
-typedef struct { u64 lo, hi; } QW;
-extern u8 D_00351E10[];
+#include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
+extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
 QW *D_00668F84 ALIGNED(4);
 #include "data/pieces/D_002E26C0.h"
@@ -70,8 +70,8 @@ void func_00246ed8(s32 a, Pan2 *p) {
     v.y -= 20;
     a = v.x;
     y = v.y - 20;
-    D_00668F84 = (QW *)D_00351E10;
-    D_00668F80 = (QW *)(D_00351E10 + 0x10);
+    D_00668F84 = D_00351E10;
+    D_00668F80 = D_00351E10 + 1;
     func_00246dc0(&p->unk30, D_004267F0, a, y, 1.0f);
     a += 43;
     for (i = 0; i < n; i++) {

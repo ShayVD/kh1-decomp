@@ -4,7 +4,8 @@
 
 #include "common.h"
 #include "data/types/nostrict_text_00240000_h75.h"
+#include "data/pieces/D_004268B0.h"
 
-typedef struct { u8 pad[0x30]; } Fnt;
+typedef Tex_4268b0 Fnt; /* a 0x30-byte GS texture header (D_00431D50[k]) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00240000_H75_P_H */
