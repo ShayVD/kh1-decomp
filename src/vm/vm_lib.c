@@ -2700,6 +2700,51 @@ s32 func_001d5b00(VmRec *vm) {
     return 2;
 }
 
+/* ---- 0x001d5b58-0x001d6000 ---- */
+
+/* func_001d5b58 is in vm_lib.nofill.c. */
+
+s32 func_0014ec10(s32);
+
+s32 func_001d5ed8(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBE00 = (f32)vm->stk[sp] / 100.0f;
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d5f18(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002A6200 = (f32)vm->stk[sp] / 100.0f;
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d5f58(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CE00;
+    return 2;
+}
+
+s32 func_001d5f80(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CE04;
+    return 2;
+}
+
+s32 func_001d5fa8(VmRec *vm) {
+    D_00389C90.x3170 = vm->stk[vm->sp - 1];
+    D_00389C90.x3174 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d5ff0(VmRec *vm) {
+    func_0014ec10(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 

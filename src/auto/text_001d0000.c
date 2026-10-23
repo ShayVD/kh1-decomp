@@ -35,7 +35,6 @@ M2C_UNK func_001422b0(s32);
 M2C_UNK func_00145080(M2C_UNK, s32);
 M2C_UNK func_00145138();
 M2C_UNK func_00149eb8(s32);
-M2C_UNK func_0014ec10(s32);
 M2C_UNK func_0014ec38(s32);
 M2C_UNK func_00156678(s32);
 M2C_UNK func_001566a8(s32);
@@ -52,8 +51,6 @@ M2C_UNK func_002414a8(s32, M2C_UNK);
 M2C_UNK func_0024d418();
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
-extern f32 D_002A6200;
-extern f32 D_002BBE00;
 extern s32 D_002B6474;
 extern s32 D_002BBAB0;
 extern s32 D_002BBAB4;
@@ -68,7 +65,6 @@ extern s32 D_002BD110;
 extern s32 D_002C5958;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_0037A378.h"
-extern s32 D_0038CE00;
 extern s32 D_0038D010;
 extern s32 D_0038D0D4;
 extern s32 D_0038D0E0;
@@ -88,39 +84,6 @@ void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001d5ed8(void *arg0) {
-    s32 temp_a1;
-
-    temp_a1 = M2C_FIELD(arg0, s32 *, 0x180);
-    D_002BBE00 = (f32) M2C_FIELD(((temp_a1 * 4) + arg0), s32 *, 0x184) / 100.0f;
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (temp_a1 - 1);
-    return 2;
-}
-
-s32 func_001d5f18(void *arg0) {
-    s32 temp_a1;
-
-    temp_a1 = M2C_FIELD(arg0, s32 *, 0x180);
-    D_002A6200 = (f32) M2C_FIELD(((temp_a1 * 4) + arg0), s32 *, 0x184) / 100.0f;
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (temp_a1 - 1);
-    return 2;
-}
-
-s32 func_001d5f58(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_0038CE00;
-    return 2;
-}
-
-s32 func_001d5ff0(void *arg0) {
-    func_0014ec10(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
 
 s32 func_001d6038(void *arg0) {
     func_0014ec38(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
