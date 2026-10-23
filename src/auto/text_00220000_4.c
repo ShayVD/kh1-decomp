@@ -49,18 +49,6 @@ void func_00206130(s32, s32, s32, s32, s32, s32);
 void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0020ca30(s32, s32, s32, s32);
 
-void func_002202b8(s32 arg0) {
-    func_0021b820();
-    func_0021ccd0(arg0, 2);
-    func_0021af38(arg0);
-}
-
-void func_002202f0(s32 arg0) {
-    func_0021b820();
-    func_0021c780(arg0, 0x10, 0x48);
-    func_0021cb00(arg0, 0x118, 0x6C, 9, 0x1E);
-}
-
 void func_002207f0(s32 arg0) {
     func_0021b800(arg0 + 8);
 }

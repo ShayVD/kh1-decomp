@@ -17,15 +17,7 @@ typedef struct Ob {
 #include "data/pieces/D_00425BC8.h"
 typedef PadSt_425bc8 Cfg;
 typedef struct { u8 pad[16]; void *x10; } P10;
-extern P10 *D_006433F0; /* src/data/bss_0064.c: s32 D_006433F0 */
-extern s32 D_00643418;
-extern s32 D_0064341C;
-extern s32 D_00643420;
-extern s32 D_00643424;
-extern u8 D_006433F8[];
-extern u8 D_003F60F0[];
 extern u16 D_003E9104;
-extern s32 D_003F3518;
 s32 func_001f42b8(void *);
 s32 func_001f3758(void *);
 void func_0011d768(s32);
@@ -35,80 +27,13 @@ s32 func_001fd668(void *);
 s32 func_001fe570(void *);
 Ob *func_001f31a8(u8 *, s32);
 void func_001f3e48(Ob *, void *);
-s32 func_0021fd88(s32);
-s32 func_0021fd60(s32);
 #include "vm/script_vm.h"
 s32 func_0010eb78(s32);
 void func_00203788(void *, s32, s32, s32, u32);
 s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
-s32 func_00206ee8(s32);
 void func_00207428(void *, s32, s32);
 void func_0021b820(void);
 void func_0021c4f8(void *);
-void func_0021ff68(Ob *a) {
-    s32 i, j, y, step, id;
-    Ob *o;
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3758(D_006433F0);
-            func_0011d768(3);
-        } else {
-            u32 b;
-            s32 n, k;
-            func_001fd858(a);
-            D_0064341C = func_001fd518(a);
-            b = D_00425BC8->x10;
-            k = 0;
-            n = a->xd8;
-            if (b & 0x80000480) {
-                if (a->xda > 0) {
-                    a->xda -= 16;
-                    k = 1;
-                }
-            } else if (b & 0x20000820) {
-                s32 m = n - 1;
-                if (a->xda < m * 16) {
-                    a->xda += 16;
-                    k = 1;
-                }
-            }
-            D_00643420 = func_001fd668(a);
-            if (k) {
-                func_0011d768(1);
-                if (D_00643418 < 4 || D_00643420 == n - 1) {
-                    a->xcc = a->xce = (D_00643418 - 1) % 4 + 1;
-                } else {
-                    a->xcc = a->xce = 4;
-                }
-            }
-            if (func_001fe570(a)) {
-                func_001f3758(D_006433F0->x10);
-                o = func_001f31a8(D_003F60F0, 50);
-                if (o) {
-                    func_001f3e48(o, a);
-                    D_00643424 = 0;
-                    id = D_006433F8[D_00643420 * 4 + D_0064341C];
-                    o->xa0 = D_003E9104;
-                    k = func_0010eb78((s32)func_001c2df0((s8 *)D_003F3518, func_0021fd88(id)));
-                    o->xd8 = (k + 1) / 2;
-                    o->xda = D_00643424 << 4;
-                    o->x24 = id;
-                }
-            }
-        }
-    }
-    func_00203788(a, 372, 40, 486, 0x80C8C8C8);
-    step = a->xc4 >> 4;
-    y = 116;
-    for (i = D_00643420 * 4, j = 0; j < 4 && i < D_00643418; j++) {
-        id = D_006433F8[i++];
-        func_001f94f0(a, 0, 322, y, func_0021fd60(id), 15, 0x80461E00);
-        if (!func_00206ee8(id)) func_00207428(a, 450, y + 10);
-        y += step;
-    }
-    func_0021b820();
-    func_0021c4f8(a);
-}
 
 s32 func_00207250(s32);
 void func_00207298(s32);
@@ -550,7 +475,6 @@ void func_00235ee8(void) {
     }
 }
 
-
 typedef struct { u8 pad[0xD2]; s16 xd2; u8 padd4[0xDA - 0xD4]; s16 xda; } ObC;
 extern s32 D_006469B0;
 extern s32 D_006469B4;
@@ -776,7 +700,6 @@ s32 func_0022d038(void) {
     D_003F34A4 = 0;
     return 4;
 }
-
 
 extern s32 D_00425BC0[];
 void D_00F20000(s32, s32);

@@ -3,22 +3,8 @@
 #include "data/bss_0064.h"
 
 typedef W606Mem_304be8 S4BE8e;
-
-extern s32 D_00643418;
-extern u8 D_006433F8[];
-s32 func_00206ee8(s32);
 void func_00207298(s32);
 void func_002072e0(s32);
-void func_002204f0(void) {
-    s32 i;
-    for (i = 0; i < D_00643418; i++) {
-        if (!func_00206ee8(D_006433F8[i])) {
-            func_00207298(0);
-            return;
-        }
-    }
-    func_002072e0(0);
-}
 
 extern u8 D_003F6300[], D_003F62D0[];
 s32 func_001f31a8(void *, s32);

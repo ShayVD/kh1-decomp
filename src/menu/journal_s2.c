@@ -15,31 +15,14 @@
  * D_003F3510.  Entry names are messages 0x51 + i (func_0021dc20).  Not proved
  * by a boot; most likely the journal's character / enemy lists.
  *
- * Views: JsWin (the TextWin fields these use: +0xd2 as plain s16), Ed (the
- * model viewer: f32 at +0x24 / +0x28). */
+ * Views: JsWin (include/menu/journal.h), Ed (the model viewer: f32 at +0x24 /
+ * +0x28). */
 #include "common.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "vm/script_vm.h"
+#include "menu/journal.h"
 
-typedef struct JsWin {
-    u8 pad0[0x10];
-    struct JsWin *x10;
-    u8 pad14[0x24 - 0x14];
-    s32 x24;
-    u8 pad28[0x40 - 0x28];
-    s32 x40;
-    u8 pad44[0xa0 - 0x44];
-    f32 xa0;
-    u8 pada4[0xc4 - 0xa4];
-    u16 xc4;
-    u8 padc6[0xca - 0xc6];
-    s16 xca, xcc, xce;
-    u8 padd0[2];
-    s16 xd2;
-    u8 padd4[0xd8 - 0xd4];
-    s16 xd8, xda;
-} JsWin;
 typedef struct { u8 pad[0x24]; f32 x24; f32 x28; s32 x2c; s32 x30; } Ed;
 
 extern JsWin *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
@@ -394,7 +377,7 @@ void func_0021ed60(JsWin *o) {
     }
 draw:
     func_00203788(o, D_0064324C != 1 ? 372 : 329, 40, 486, 0x80C8C8C8);
-    dy = (s16)o->xc4 >> 4;
+    dy = o->xc4 >> 4;
     y = 116;
     for (i = 0, j = D_00643258[D_0064324C] * 8; i < 8 && j < D_00643200[D_0064324C]; i++, j++) {
         c = D_006431F0[D_0064324C][j];
