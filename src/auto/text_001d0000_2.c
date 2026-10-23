@@ -4,16 +4,13 @@
 #include "data/bss_0062.h"
 
 M2C_UNK func_001038b0(s32);
-M2C_UNK func_00111d90(s32);
 M2C_UNK func_001248e8(s32);
-M2C_UNK func_00137330(s32, M2C_UNK, s32);
 #include "data/pieces/D_002E26A0.h"
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
 extern s32 D_002A61F0;
 extern s32 D_0038D160;
 extern s32 D_0062A210;
-s32 func_00123488(s32);
 s32 func_0013bf68();
 s32 func_0014e510(s32);
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
@@ -21,21 +18,6 @@ void *func_001230a0(void *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001d3118(void *arg0) {
-    func_00111d90(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001d35a0(void *arg0) {
-    s32 temp_s1;
-
-    temp_s1 = arg0 + 4;
-    func_00137330(func_00123488(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x17C)), 0, M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 2);
-    return 2;
-}
 
 s32 func_001d5010(void *arg0) {
     D_002A61F0 = 0;

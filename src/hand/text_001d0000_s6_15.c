@@ -11,12 +11,6 @@ typedef struct {
     f32 v[4];
 } Msg;
 s32 func_001c4640(Msg *m);
-typedef struct Ent {
-    s32 x0;
-    void *f4;
-    u8 pad8[0x328 - 8];
-    union { u64 x; s32 i[2]; } flags;
-} Ent;
 typedef struct {
     s32 x0;
     void *obj;
@@ -28,52 +22,9 @@ typedef struct {
     union { u64 x; s32 i[2]; } flags;
     f32 f330;
 } VM;
-Ent *func_001e98d0(s32, s32);
 typedef W606Mem_304be8 Chr;
 typedef Save_304be8 Save;
 
-s32 func_001d2768(VM *vm) {
-    Msg m;
-    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
-    if (e) {
-        m.type = 7;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        m.type = 11;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        m.type = 28;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        e->flags.x |= 0x100;
-    }
-    vm->sp--;
-    return 2;
-}
-s32 func_001d2860(VM *vm) {
-    Msg m;
-    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
-    if (e) {
-        m.type = 6;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        m.type = 10;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        m.type = 27;
-        m.val = 0;
-        m.x = e->x0;
-        func_001c4640(&m);
-        e->flags.x &= ~0x100ULL;
-    }
-    vm->sp--;
-    return 2;
-}
 s32 func_001d3610(VM *vm) {
     s32 n = 0;
     s32 i, j, c;

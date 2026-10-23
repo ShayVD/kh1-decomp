@@ -47,7 +47,6 @@ typedef struct { u8 pad0[4]; Sub4 *f4; u8 pad8[0x318 - 8]; s32 f318; } Ent;
 Ent *func_001e98d0(s32, s32);
 Ent *func_001e9b98(s32, s32);
 
-extern f32 D_0038CDDC;
 #include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_0037A378.h"
@@ -61,10 +60,6 @@ extern volatile S5AD0 D_002C5AD0;
 extern volatile S5BB0 D_002C5BB0;
 typedef struct Node { s32 x0; s32 f4; } Node;
 
-void func_001e1418(s32, s32);
-void func_001e1438(s32, s32);
-void func_0014f9b0(void *, f32 *, f32);
-void func_0014fa38(void *, f32);
 s32 func_001059d0(void *);
 void func_00176ba8(s32, s32);
 void func_00103988(s32);
@@ -78,82 +73,9 @@ void func_001248e8(s32);
 void func_0013c638(s32, s32);
 void func_0013c778(s32, s32, s32);
 s32 func_0024d490(void);
-void func_00104268(f32, f32);
 void func_00105d38(s32, s32);
 s32 func_00131de0(s32, s32);
 void func_00124218(s32);
-
-s32 func_001d2588(VM *vm) {
-    func_001e1418(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d25d8(VM *vm) {
-    func_001e1438(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d2628(VM *vm) {
-    s32 sp = vm->sp;
-    f32 v = vm->stk[sp];
-    vm->sp = sp - 1;
-    D_0038CDDC = v / 100.0f;
-    return 2;
-}
-
-s32 func_001d2720(VM *vm) {
-    (*(Cam0_2BC0F0 *)&D_002BC0F0).f20 = vm->stk[vm->sp - 1];
-    (*(Cam0_2BC0F0 *)&D_002BC0F0).f24 = vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d2ab8(VM *vm) {
-    f32 v[4];
-    if (vm->obj) {
-        v[3] = 1.0f;
-        v[0] = vm->stk[vm->sp - 3];
-        v[1] = vm->stk[vm->sp - 2];
-        v[2] = vm->stk[vm->sp - 1];
-        func_0014f9b0(vm->obj, v, (f32)vm->stk[vm->sp] * 2);
-    }
-    vm->sp -= 4;
-    return 2;
-}
-
-s32 func_001d2c08(VM *vm) {
-    if (vm->obj) {
-        func_0014fa38(vm->obj, (f32)vm->stk[vm->sp] * 2);
-    }
-    vm->sp -= 1;
-    return 2;
-}
-
-s32 func_001d2fd8(VM *vm) {
-    D_00389C90.f3070.x |= 0x800000000000ULL;
-    D_00389C90.w[1] = vm->stk[vm->sp - 1] + 256;
-    D_00389C90.w[2] = vm->stk[vm->sp] + 192;
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d3078(VM *vm) {
-    D_00389C90.f3070.x |= 0x1000000000000ULL;
-    D_00389C90.w[3] = vm->stk[vm->sp - 1] + 256;
-    D_00389C90.w[4] = vm->stk[vm->sp] + 192;
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d33c8(VM *vm) {
-    D_00389C90.f3070.x |= 0x2000000000000ULL;
-    D_00389C90.w[5] = vm->stk[vm->sp - 1] + 256;
-    D_00389C90.w[6] = vm->stk[vm->sp] + 192;
-    vm->sp -= 2;
-    return 2;
-}
 
 s32 func_001d3858(VM *vm) {
     s32 v = D_00304BE8->items[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];

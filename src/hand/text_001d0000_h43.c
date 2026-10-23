@@ -58,25 +58,6 @@ typedef struct {
     E48 ent3180[1];
 } Big;
 extern Big D_00389C90;
-void func_001e58c0(s32);
-s32 func_001d34b0(VM *vm) {
-    switch (vm->stk[vm->sp]) {
-    case 0:
-        func_001e58c0(0);
-        break;
-    case 1:
-        func_001e58c0(1);
-        break;
-    case 2:
-        func_001e58c0(2);
-        break;
-    case 3:
-        func_001e58c0(3);
-        break;
-    }
-    vm->sp--;
-    return 2;
-}
 s32 func_001d4b60(VM *vm) {
     VmMsg m;
     m.type = 32;

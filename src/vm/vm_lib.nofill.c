@@ -10,7 +10,8 @@ struct VmObj {
     f32 pos[3];             /* 0x10 */
     u8 pad1c[0x14];
     f32 rot[3];             /* 0x30: radians */
-    u8 pad3c[0x370 - 0x3c];
+    f32 f3c;                /* 0x3c: heading (radians) */
+    u8 pad40[0x370 - 0x40];
     u64 flags;              /* 0x370 */
 };
 
@@ -124,4 +125,200 @@ void func_001d1080(VmRec *vm) {
         m.v[2] = vm->p[2];
         func_001c4640((VmMsg *)&m);
     }
+}
+
+/* The distance functions: from stk[sp-3..] or between the entities of VMs
+ * stk[sp-1] and stk[sp]; func_001d17d0 / func_001d1948 / func_001d1b00 /
+ * func_001d1ce0 store it in the story variable D_003888C4[stk[32]], the
+ * others push it. */
+extern s32 D_003888C4[];
+static inline double inl_dist(f32 x1, f32 y1, f32 x2, f32 y2) {
+    f32 dx = x2 - x1;
+    f32 dy = y2 - y1;
+    return sqrt(dx * dx + dy * dy);
+}
+
+s32 func_001d17d0(VmRec *vm) {
+    f32 d = inl_dist(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    if (vm->stk[32] >= 2304) D_003888C4[vm->stk[32]] = d;
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001d1890(VmRec *vm) {
+    f32 d = inl_dist(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    vm->stk[vm->sp] = d;
+    return 2;
+}
+
+static inline double inl_dist3(f32 x1, f32 y1, f32 z1, f32 x2, f32 y2, f32 z2) {
+    f32 dx = x2 - x1;
+    f32 dy = y2 - y1;
+    f32 dz = z2 - z1;
+    return sqrt(dx * dx + dz * dz + dy * dy);
+}
+
+s32 func_001d1948(VmRec *vm) {
+    f32 d = inl_dist3(vm->stk[vm->sp - 5], vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    if (vm->stk[32] >= 2304) D_003888C4[vm->stk[32]] = d;
+    vm->sp -= 7;
+    return 2;
+}
+
+s32 func_001d1a28(VmRec *vm) {
+    f32 d = inl_dist3(vm->stk[vm->sp - 5], vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    vm->stk[vm->sp] = d;
+    return 2;
+}
+
+VmRec *func_001e98d0(s32, s32);
+
+s32 func_001d1b00(VmRec *vm) {
+    VmRec *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VmRec *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    struct VmObj *p = a->obj;
+    struct VmObj *q = b->obj;
+    f32 d = inl_dist(p->pos[0], p->pos[2], q->pos[0], q->pos[2]);
+    if (vm->stk[32] >= 2304) D_003888C4[vm->stk[32]] = d;
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d1bf8(VmRec *vm) {
+    VmRec *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VmRec *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    struct VmObj *p = a->obj;
+    struct VmObj *q = b->obj;
+    f32 d = inl_dist(p->pos[0], p->pos[2], q->pos[0], q->pos[2]);
+    vm->sp -= 1;
+    vm->stk[vm->sp] = d;
+    return 2;
+}
+
+s32 func_001d1ce0(VmRec *vm) {
+    VmRec *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VmRec *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    struct VmObj *p = a->obj;
+    struct VmObj *q = b->obj;
+    f32 d = inl_dist3(p->pos[0], p->pos[2], p->pos[1], q->pos[0], q->pos[2], q->pos[1]);
+    if (vm->stk[32] >= 2304) D_003888C4[vm->stk[32]] = d;
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d1df0(VmRec *vm) {
+    VmRec *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VmRec *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    struct VmObj *p = a->obj;
+    struct VmObj *q = b->obj;
+    f32 d = inl_dist3(p->pos[0], p->pos[2], p->pos[1], q->pos[0], q->pos[2], q->pos[1]);
+    vm->sp -= 1;
+    vm->stk[vm->sp] = d;
+    return 2;
+}
+
+/* func_001d1ef0 is in vm_lib.c. */
+
+void func_00122f58(struct VmObj *, f32, f32, f32);
+
+s32 func_001d1f48(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00122f58(o, vm->stk[vm->sp], 0.0f, 1.0f);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d1fb0(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00122f58(o, vm->stk[vm->sp], 0.0f, 2.0f);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d2018(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00122f58(o, vm->stk[vm->sp], 0.0f, 3.0f);
+    }
+    vm->sp--;
+    return 2;
+}
+
+/* func_001d2080 and func_001d2088 are in vm_lib.c. */
+
+/* The heading (degrees, 0-360) from the entity of VM stk[sp-3] to the point
+ * stk[sp-2..sp] (func_001d2090) or to the entity of VM stk[sp]
+ * (func_001d2270), relative to its own heading. */
+void func_001e9d00(f32 *out, f32 *to, f32 *from, f32 x);
+static inline f32 inl_deg(f32 r) {
+    f32 d = r * 180.0f / 3.1415928f;
+    return d < 0.0f ? d + 360.0f : d;
+}
+
+s32 func_001d2090(VmRec *vm) {
+    f32 from[4];
+    f32 to[4];
+    f32 out[4];
+    VmRec *p;
+    struct VmObj *e;
+    f32 a, b;
+    s32 *r;
+    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 3]);
+    if (!p) {
+        vm->sp -= 3;
+        vm->stk[vm->sp] = 0;
+        return 2;
+    }
+    e = p->obj;
+    from[0] = e->pos[0];
+    from[1] = e->pos[1];
+    from[2] = e->pos[2];
+    to[0] = vm->stk[vm->sp - 2];
+    to[1] = vm->stk[vm->sp - 1];
+    to[2] = vm->stk[vm->sp];
+    to[3] = from[3] = 1.0f;
+    func_001e9d00(out, to, from, 0.0f);
+    vm->sp -= 3;
+    a = inl_deg(p->obj->f3c);
+    vm->stk[vm->sp] = inl_deg(out[1]) - a;
+    if (vm->stk[vm->sp] < 0) vm->stk[vm->sp] += 360;
+    return 2;
+}
+
+s32 func_001d2270(VmRec *vm) {
+    f32 from[4];
+    f32 to[4];
+    f32 out[4];
+    VmRec *p, *q;
+    struct VmObj *e, *e2;
+    f32 a;
+    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    q = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    if (!p || !q) {
+        vm->sp -= 1;
+        vm->stk[vm->sp] = 0;
+        return 2;
+    }
+    e = p->obj;
+    from[0] = e->pos[0];
+    e2 = q->obj;
+    from[1] = e->pos[1];
+    from[2] = e->pos[2];
+    from[3] = 1.0f;
+    to[0] = e2->pos[0];
+    to[1] = e2->pos[1];
+    to[2] = e2->pos[2];
+    to[3] = 1.0f;
+    func_001e9d00(out, to, from, 0.0f);
+    vm->sp -= 1;
+    a = inl_deg(p->obj->f3c);
+    vm->stk[vm->sp] = inl_deg(out[1]) - a;
+    if (vm->stk[vm->sp] < 0) vm->stk[vm->sp] += 360;
+    return 2;
 }

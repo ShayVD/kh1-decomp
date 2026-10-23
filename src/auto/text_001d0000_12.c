@@ -2,25 +2,11 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_00131c28(s32, f32);
 extern s32 (*D_003773E8)(s32, void *);
 s32 func_00135838(s32);
 void *func_001e98d0(s32, s32);
 void func_0014ec10(s32);
 void func_0014ec38(s32);
-
-s32 func_001d2668(void *arg0) {
-    s32 temp_s1;
-    s32 temp_v1;
-
-    temp_s1 = arg0 + 4;
-    temp_v1 = M2C_FIELD(func_001e98d0((s32) ((s64) (M2C_FIELD(arg0, s64 *, 0x328) << 0x1B) >> 0x20) & 1, M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180)), s32 *, 4);
-    if (temp_v1 != 0) {
-        func_00131c28(temp_v1, (f32) M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x17C) / 1e+02f);
-    }
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 2);
-    return 2;
-}
 
 s32 func_001d40f0(void *arg0) {
     s32 temp_s1;

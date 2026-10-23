@@ -28,40 +28,8 @@ void func_00120748(char *, void *, void *, s32);
 
 #include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;
-void func_001e9fe8(f32 *, f32 *);
 void sceVu0UnitMatrix(f32 (*)[4]);
-void func_00267768(f32 (*)[4], f32 (*)[4], f32);
-void func_00267810(f32 (*)[4], f32 (*)[4], f32);
-void func_002672f8(V4 *, f32 (*)[4], V4 *);
-void func_001315c0(Ent *, s32, f32 *, f32);
 void func_00267518(f32 *, f32 *, f32 *);
-void func_0014f9b0(Ent *, V4 *, f32);
-s32 func_001d2958(VM *vm) {
-    V4 v;
-    f32 rot[4];
-    f32 out[4];
-    f32 t[4];
-    f32 m[4][4] __attribute__((aligned(16)));
-    Ent *e;
-    v = D_00490630;
-    e = vm->obj;
-    if (e) {
-        rot[0] = vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
-        rot[1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f + vm->obj->f3c;
-        rot[2] = 0.0f;
-        func_001e9fe8(out, rot);
-        sceVu0UnitMatrix(m);
-        func_00267768(m, m, out[0]);
-        func_00267810(m, m, out[1]);
-        func_002672f8(&v, m, &v);
-        func_001315c0(vm->obj, 0, t, 0.0f);
-        func_00267518(v.x, t, v.x);
-        func_0014f9b0(vm->obj, &v, vm->stk[vm->sp] * 2.0f);
-    }
-end:
-    vm->sp -= 3;
-    return 2;
-}
 
 typedef struct { u8 pad[0xa80]; u8 a[10]; u8 b[10]; u8 c[10]; u8 d[50]; } Save;
 Save *func_00232cc0(s32);

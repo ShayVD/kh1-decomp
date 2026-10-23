@@ -92,7 +92,10 @@ typedef struct {
     s32 x306c;
     VmMgrF3070 f3070;       /* 0x3070 */
     VmMgrF3078 f3078;       /* 0x3078 */
-    u8 pad3080[0x3098 - 0x3080];
+    s32 py0;                /* 0x3080: three screen points (func_001d2fd8 ..): y of the first, */
+    s32 px1, py1;           /*   whose x is f3078.b.hi (h17's w[1]) */
+    s32 px2, py2;
+    s32 x3094;
     s32 fxk;                /* 0x3098: the effect func_001cebe8 fades (D_0038CD3C index) */
     s32 fxn;                /* 0x309c: frames left */
     f32 fxd[3];             /* 0x30a0: colour step */

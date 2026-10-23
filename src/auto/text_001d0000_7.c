@@ -17,32 +17,9 @@ extern s32 D_0029B410;
 extern s32 D_0029B414;
 extern s32 D_002C5958;
 #include "data/pieces/D_0037A378.h"
-extern s32 D_0038CCC4;
 extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_001763f0(s32);
-void func_001c19f8(s32, s32);
-
-void func_001d3160(void) {
-    s8 *var_a4;
-    s32 temp_v0;
-    s32 temp_v0_2;
-    void *temp_a3;
-
-    if (D_0038CCC4 == 0) {
-        var_a4 = &D_0038D170;
-    } else {
-        var_a4 = &D_0039A580;
-    }
-    temp_a3 = var_a4 + 4;
-    temp_v0 = M2C_FIELD(var_a4, s32 *, 0x180) + 1;
-    M2C_FIELD(var_a4, s32 *, 0x180) = temp_v0;
-    M2C_FIELD(((temp_v0 * 4) + temp_a3), s32 *, 0x180) = 1;
-    temp_v0_2 = M2C_FIELD(var_a4, s32 *, 0x180) + 1;
-    M2C_FIELD(var_a4, s32 *, 0x180) = temp_v0_2;
-    M2C_FIELD(((temp_v0_2 * 4) + temp_a3), s32 *, 0x180) = 0;
-    func_001c19f8((s32) var_a4, 2);
-}
 
 s32 func_001d64f8(void *arg0) {
     s32 sp[60];

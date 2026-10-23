@@ -5,21 +5,6 @@
 M2C_UNK func_00112d80();
 extern s64 D_00389C90[];
 
-s32 func_001d3040(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFF7FFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-    return 2;
-}
-
-s32 func_001d30e0(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFEFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-    return 2;
-}
-
-s32 func_001d3430(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFDFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-    return 2;
-}
-
 s32 func_001d3da8(void) {
     func_00112d80();
     D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x19));
