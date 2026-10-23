@@ -1,28 +1,11 @@
 #include "common.h"
 #include "data/bss_0064.h"
 #include "data/types/text_00200000_h47.h"
-
-#include "data/pieces/D_003F3448.h"
 extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);
 void func_001f3d58(s32, s32);
 void func_001f3e20(s32, s32);
 void func_001f3e90(s32, s32);
-
-s32 func_0020d1d8(s32 a0) {
-    s32 buf[3];
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        buf[i] = func_001f31a8(D_003F3448[i], 1);
-        if (buf[i] != 0) {
-            func_001f3e90(a0, buf[i]);
-            func_001f3e20(buf[i], a0);
-            func_001f3d58(buf[i], D_003F3488[i]);
-            a0 = buf[i];
-        }
-    }
-    return a0;
-}
 
 typedef struct { u8 pad[0x24]; s32 x24; s32 x28; } Obj7d8;
 #include "data/pieces/D_00425BC8.h"

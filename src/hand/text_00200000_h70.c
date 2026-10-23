@@ -6,164 +6,13 @@ extern f32 D_002BBDFC;
 
 typedef W606Mem_304be8 T74;
 typedef Save_304be8 G4BE8;
-
-#include "data/pieces/D_003E3D68.h"
 typedef struct { u8 pad[0x24]; f32 x24; u8 pad28[0x68]; s32 x90; } Pa758;
 extern f32 D_002BBDFC;
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 
-extern s32 D_003F3398[];
-s32 func_00111798(void);
-s32 func_001ee2d0(void);
-s32 func_001ee308(void);
-s32 func_001ee348(void);
-s32 func_001ef7a0(void);
-s32 func_001fbcb0(s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fc308(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_0020ccb0(s32 a0) {
-    s32 c, a, b, d, x;
-    func_001fc308(a0, 10, 54, 0, 0, 5, 0, 0x40ff8a00, 0x40ff8a00);
-    c = D_003F3398[func_00111798()];
-    a = func_001ee2d0();
-    b = func_001ee308();
-    d = func_001ee348();
-    x = func_001fbcb0(a0, 0, 2, 1, 51, 51, a, c);
-    x = func_001fc308(a0, x - 2, 51, 0, 0, 0, c, 0x80808080, 0x80808080);
-    x = func_001fbcb0(a0, 0, 2, 1, x - 3, 51, b, c);
-    x = func_001fc308(a0, x - 2, 51, 0, 0, 0, c, 0x80808080, 0x80808080);
-    x = func_001fbcb0(a0, 0, 2, 1, x - 3, 51, d, c);
-    func_001fc308(a0, 9, 20, 0, 0, 4, 0, 0x402760f5, 0x402760f5);
-    func_001fbcb0(a0, 1, 5, 1, x, 18, func_001ef7a0(), 1);
-}
-
 typedef struct { u8 pad[0x10]; s32 x10; u8 pad14[0x70]; s32 x84; u8 pad88[0x28]; s32 xb0; u8 padb4[4]; u16 xb8; u8 padba[4]; s16 xbe; u8 padc0[2]; s16 xc2; u8 padc4[8]; u16 xcc; u16 xce; u8 padd0[2]; s16 xd2; } Obj;
-extern u8 D_003F3330[], D_003F3280[], D_003F3230[], D_003F3200[], D_003F3358[];
-extern u16 D_00640E20, D_00640E24;
-s32 func_001f4390(Obj *);
 Obj *func_001f31a8(void *, s32);
-void func_001f3e90(Obj *, Obj *);
-void func_001f3e20(Obj *, Obj *);
-void func_001f3d58(Obj *, s32);
-void func_001f3dc0(Obj *);
-void func_00207598(void);
-void func_00205e30(Obj *, void *);
-void func_00206130(Obj *, s32, s32, s32, s32, s32);
-void func_0020ca30(Obj *, s32, s32, s32);
-s32 func_0010fd18(void);
-void func_001f9e48(Obj *, s32, s32, s32, s32, s32, s32);
-void func_0020b3d8(Obj *, s32, s32);
-void func_0020ca68(Obj *a0) {
-    Obj *o[4];
-    s32 d;
-    if (func_001f4390(a0) && a0->x10 == 0) {
-        o[0] = func_001f31a8(D_003F3330, 1);
-        if (o[0]) {
-            func_001f3e90(a0, o[0]);
-            func_001f3e20(o[0], a0);
-            o[0]->xcc = o[0]->xce = D_00640E20;
-            func_00207598();
-            o[0]->xd2 = D_00640E24 * 16;
-            o[1] = func_001f31a8(D_003F3280, 6);
-            if (o[1]) {
-                func_001f3e90(o[0], o[1]);
-                func_001f3e20(o[1], o[0]);
-                func_001f3d58(o[1], 4);
-                o[2] = func_001f31a8(D_003F3230, 1);
-                if (o[2]) {
-                    func_001f3e90(o[1], o[2]);
-                    func_001f3e20(o[2], o[1]);
-                    o[3] = func_001f31a8(D_003F3200, 54);
-                    if (o[3]) {
-                        func_001f3e90(o[2], o[3]);
-                        func_001f3e20(o[3], o[2]);
-                        func_001f3d58(o[3], 6);
-                        d = 4 - D_003E3D68;
-                        d *= 0x4f0;
-                        o[3]->xb0 += d;
-                        o[3]->xb8 -= d;
-                        o[3]->x84 = 6;
-                        func_001f3dc0(o[0]);
-                    }
-                }
-            }
-        }
-    }
-    func_00205e30(a0, D_003F3358);
-    func_00206130(a0, 0, 62, 512, 2, 0x80f04646);
-    func_0020ca30(a0, 0, 0x808f1f22, 0x80e16063);
-    func_001fc308((s32)a0, 160, 35, 0, 19, 20, 0, 0x80399bff, 0x80399bff);
-    func_001f9e48(a0, 0, 173, 35, func_0010fd18(), 19, 0x80399bff);
-    func_0020b3d8(a0, 401, 4);
-}
-
-#include "data/pieces/D_003F3448.h"
-extern s32 D_003F3468[];
-extern s32 D_003F3488[];
-void func_0020bb90(s32, s32);
 void func_0020bd18(Obj *, s32);
-void func_0020bda8(s32);
-void func_0020d050(Obj *a0) {
-    Obj *o[7];
-    s32 i, d;
-    for (i = 0; i < 7; i++) {
-        o[i] = func_001f31a8(((u8 **)&D_003F3448)[i], D_003F3468[i]);
-        if (o[i]) {
-            func_001f3e90(a0, o[i]);
-            func_001f3e20(o[i], a0);
-            func_001f3d58(o[i], D_003F3488[i]);
-            a0 = o[i];
-        }
-    }
-    o[3]->xcc = o[3]->xce = D_00640E20;
-    func_00207598();
-    o[3]->xd2 = D_00640E24 * 16;
-    d = 4 - D_003E3D68;
-    i = d * 0x4f0;
-    o[6]->xb0 += i;
-    o[6]->xb8 -= i;
-    o[6]->x84 = 6;
-    func_001f3dc0(o[3]);
-    func_0020bb90((o[3]->xb0 + o[3]->xc2 + o[3]->xbe - 0x7000) >> 4, 0);
-    func_0020bd18(o[3], 8);
-    func_0020bda8(16);
-}
-
-s32 func_001559f0(s32, s32);
-extern s32 D_003F34CC;
-extern s32 D_003F34D0;
-extern s32 D_003F34D4;
-#include "data/pieces/D_003F34D8.h"
-extern s32 D_003F34DC;
-extern s32 D_003F34E0;
-extern s32 D_003F34E4;
-extern s32 D_003F34E8;
-extern s32 D_003F34EC;
-extern s32 D_003F34F0;
-extern s32 D_003F34F4;
-extern s32 D_003F34F8;
-extern s32 D_003F34FC;
-extern s32 D_003F3500;
-extern s32 D_003F3504;
-extern s32 D_003F3508;
-extern s32 D_003F350C;
-extern s32 D_003F3510;
-extern s32 D_003F3514;
-extern s32 D_003F3518;
-extern s32 D_003F351C;
-extern s32 D_003F3520;
-void func_0020d360(void) {
-    D_003F34CC = 0; { s32 *p = &D_003F34D0; *p = func_001559f0(52, 1); }
-    D_003F34D4 = 0; { s32 *p = ((s32 *)&D_003F34D8); *p = func_001559f0(52, 1) + 0x4000; }
-    D_003F34DC = 0; { s32 *p = &D_003F34E0; *p = func_001559f0(52, 1) + 0x1c000; }
-    D_003F34E4 = 0; { s32 *p = &D_003F34E8; *p = func_001559f0(52, 1) + 0x2d000; }
-    D_003F34EC = 0; { s32 *p = &D_003F34F0; *p = func_001559f0(52, 1) + 0x31000; }
-    D_003F34F4 = 0; { s32 *p = &D_003F34F8; *p = func_001559f0(52, 1) + 0x34000; }
-    D_003F34FC = 0; { s32 *p = &D_003F3500; *p = func_001559f0(53, 1); }
-    D_003F3504 = 0; { s32 *p = &D_003F3508; *p = func_001559f0(54, 1); }
-    D_003F350C = 0; { s32 *p = &D_003F3510; *p = func_001559f0(62, 1); }
-    D_003F3514 = 0; { s32 *p = &D_003F3518; *p = func_001559f0(62, 1) + 0x54000; }
-    D_003F351C = 0; { s32 *p = &D_003F3520; *p = func_001559f0(62, 1) + 0x5c000; }
-}
 
 #include "data/pieces/D_00425BC8.h"
 extern s32 D_00641224, D_00641228, D_00641230, D_00641234;
@@ -407,5 +256,4 @@ KF3de0 D_003F3DE0[0x4] ALIGNED(16) = {
 };
 #include "data/data_003F.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_003F3488.h"
 #include "data/pieces/D_003F34C8.h"

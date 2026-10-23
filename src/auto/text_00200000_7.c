@@ -3,61 +3,10 @@
 #include "m2c.h"
 #include "data/bss_0064.h"
 M2C_UNK func_002073b0(M2C_UNK, void *);
-M2C_UNK func_0020a9b0(s32);
-M2C_UNK func_0020ab88(s32);
-M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-extern s32 D_00640E24;
-extern s32 D_00640E28;
 #include "data/pieces/D_003E3D68.h"
-s32 func_00207358(void);
 s32 func_0020ec50(s32);
 s32 func_0020f530(s32);
 s32 func_0020fc58(s32);
-void func_00206e28(void);
-void func_00206f20(void);
-void func_00206ff0(void);
-void func_002070c0(void);
-void func_002071b8(void);
-void func_00207288(void);
-void func_00211398(void);
-void func_00213d30(void);
-void func_00216140(void);
-void func_00217fe8(void);
-void func_00219118(void);
-void func_0021adc8(void);
-void func_0021db30(void);
-void func_00229850(void);
-
-void func_0020cf00(void *arg0) {
-    s32 temp_s0;
-
-    temp_s0 = M2C_FIELD(arg0, s32 *, 0x90);
-    func_0020b120(2, temp_s0, 0x80080808, 0x80080808, 0x80080808, 0x80080808);
-    func_0020b120(1, temp_s0, 0x80101010, 0x80101010, 0x80101010, 0x80101010);
-    func_0020b120(2, temp_s0, 0x80080808, 0x80080808, 0x80080808, 0x80080808);
-    func_0020a9b0(temp_s0);
-    func_0020ab88(temp_s0);
-}
-
-void func_0020d748(void) {
-    D_00640E24 = 0;
-    D_00640E28 = 0;
-    func_00211398();
-    func_00213d30();
-    func_00216140();
-    func_00217fe8();
-    func_00219118();
-    func_0021adc8();
-    func_0021db30();
-    func_00229850();
-    func_00206e28();
-    func_00206f20();
-    func_00206ff0();
-    func_002070c0();
-    func_002071b8();
-    func_00207288();
-    func_00207358();
-}
 
 s32 func_0020fea0(s32 arg0) {
     u32 temp_a1;

@@ -6,65 +6,8 @@ typedef struct { u8 pad0[0x24]; s32 f24; u8 pad[0xb0 - 0x28]; s32 b0; s32 b4; s1
 
 #include "data/pieces/D_003E3D68.h"
 
-void func_001fc308(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-
-void func_0020ca30(s32 a0, s32 a1, s32 a2, s32 a3) {
-    func_001fc308(a0, 12, 11, 0, 0, 3, a1, a2, a3);
-}
-
-extern u8 D_003F33A8[];
-void func_00205e30(s32, void *);
-void func_00206130(s32, s32, s32, s32, s32, s32);
-void func_0020ccb0(s32);
-void func_0020ce78(s32 a0) {
-    func_00205e30(a0, D_003F33A8);
-    func_00206130(a0, 0, 0, 512, 2, 0x80f04646);
-    func_0020ccb0(a0);
-    func_001fc308(a0, 160, 12, 0, 63, 20, 0, 0x40c87878, 0x40c87878);
-}
-
 #include "data/pieces/D_00425BC8.h"
-extern s32 D_003F34C0;
-s32 func_001f4390(s32);
-void func_001f3840(s32);
 void func_0011d768(s32);
-void func_00207618(void);
-void func_0020cf90(s32 a0) {
-    if (func_001f4390(a0) && (D_00425BC8->x8 & 8)) {
-        if (!(D_003F34C0 & 3)) {
-            func_001f3840(a0);
-            func_0011d768(3);
-            func_00207618();
-            D_003F34C0 |= 1;
-        } else {
-            func_0011d768(4);
-        }
-    }
-}
-
-extern s32 D_003F34A4, D_003F34A8;
-#include "data/pieces/D_003F34C4.h"
-void func_001f3110(void);
-s32 func_0020d6c0(s32);
-void func_0020d530(void);
-s32 func_0020d030(void);
-void func_0020d050(s32);
-void func_0020d2f8(void);
-typedef struct { s16 f0; s16 f2; } Task;
-Task *func_0011ef10(s32, void (*)(void));
-
-void func_0020d6c8(s32 a0) {
-    s32 v;
-    D_003F34A4 = 0;
-    func_001f3110();
-    if (func_0020d6c0(a0)) return;
-    D_003F34A8 = 0;
-    func_0020d530();
-    v = func_0020d030();
-    D_003F34C4 = (N_3f34c4 *)v;
-    if (v) func_0020d050(v);
-    func_0011ef10(0x270ff, func_0020d2f8)->f2 = a0;
-}
 
 s32 func_001efd98(s32);
 
