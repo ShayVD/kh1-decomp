@@ -62,7 +62,12 @@ typedef struct TextWin {
     f32 x94, x98, x9c, xa0, xa4, xa8;
     s32 xac, xb0, xb4;
     s16 xb8, xba, xbc, xbe, xc0, xc2, xc4, xc6, xc8, xca, xcc, xce;
-    s16 xd0, xd2, xd4, xd6, xd8, xda;
+    union {
+        struct { s16 xd0, xd2, xd4, xd6; } s;   /* scroll, cursor, their steps */
+        struct { u16 xd0, xd2; s16 xd4, xd6; } u;   /* func_001fe1b8 */
+        u64 q;                  /* func_001fe558 tests the high word */
+    } ud0;
+    s16 xd8, xda;           /* columns, column cursor */
     u8 xdc[16];
 } TextWin;
 

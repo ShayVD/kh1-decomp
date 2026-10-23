@@ -1,109 +1,8 @@
 #include "common.h"
+#include "text/textwin.h"
 #include "data/bss_0064.h"
-/* func_00208ea8: needs s32 func_001f9438 (return type). */
-typedef struct {
-    u8 pad0[0xbe];
-    s16 be;
-    s16 c0;
-    s16 c2;
-    s16 c4;
-    s16 c6;
-    u8 padc8[0xcc - 0xc8];
-    s16 cc;
-    s16 ce;
-    u8 padd0[0xd8 - 0xd0];
-    s16 d8;
-} Win;
-void func_001f8e18(void *);
-void func_001f8f30(void);
 s32 func_001fd518(void *);
-s32 func_001fd538(void *);
-s32 func_001fd590(void *);
-s32 func_001fd618(void *);
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
-void func_00208ea8(Win *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
-    s32 sr = func_001fd518(o);
-    s32 sc = func_001fd538(o);
-    s32 idx = func_001fd618(o);
-    s32 y = func_001fd590(o);
-    s32 cnt = o->cc;
-    s32 rows = o->ce;
-    s32 cols = o->d8;
-    s32 r, c, x;
-    func_001f8e18(o);
-    for (r = 0; r < rows + 1; r++) {
-        x = x0;
-        for (c = 0; c < cols; c++) {
-            if (idx >= cnt) goto done;
-            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f9438(o, 0, x, y, strs[idx], k, col); }
-            idx++;
-            x += dx;
-        }
-        y += dy;
-    }
-done:
-    func_001f8f30();
-}
-
-s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
-void func_00209030(Win *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
-    s32 sr = func_001fd518(o);
-    s32 sc = func_001fd538(o);
-    s32 idx = func_001fd618(o);
-    s32 y = func_001fd590(o);
-    s32 cnt = o->cc;
-    s32 rows = o->ce;
-    s32 cols = o->d8;
-    s32 r, c, x;
-    func_001f8e18(o);
-    for (r = 0; r < rows + 1; r++) {
-        x = x0;
-        for (c = 0; c < cols; c++) {
-            if (idx >= cnt) goto done;
-            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f94f0(o, 0, x, y, strs[idx], k, col); }
-            idx++;
-            x += dx;
-        }
-        y += dy;
-    }
-done:
-    func_001f8f30();
-}
-
-s32 func_001f9e48(void *, s32, s32, s32, s32, s32, s32);
-void func_002091b8(Win *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
-    s32 x0, dx, dy, sr, sc, idx, y, cnt, rows, cols;
-    s32 r, c, x;
-    x0 = o->be >> 4;
-    dx = o->c2 >> 4;
-    dy = o->c4 >> 4;
-    sr = func_001fd518(o);
-    sc = func_001fd538(o);
-    idx = func_001fd618(o);
-    y = func_001fd590(o);
-    rows = o->ce + 1;
-    cnt = o->cc;
-    cols = o->d8;
-    func_001f8e18(o);
-    for (r = 0; r < rows; r++) {
-        x = x0;
-        for (c = 0; c < cols; c++) {
-            if (idx >= cnt) goto done;
-            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f9e48(o, 0, x, y, strs[idx], k, col); }
-            idx++;
-            x += dx;
-        }
-        y += dy;
-    }
-done:
-    func_001f8f30();
-}
 
 /* func_00232390: func_0020dd38 takes 6 args (6th = id), y = 63 before the func_001fc308 call, callee return types as below. */
 typedef struct { u8 pad[8]; s32 x8; } F8;
@@ -144,8 +43,6 @@ s32 func_00207ca0(s32);
 void func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207d60(void *, s32, s32, s32, s32, s32, s32);
 
-
-
 void func_00232390(void *a0) {
     u32 i;
     s32 n, j, y, id, max, cnt, c, col;
@@ -175,7 +72,6 @@ void func_00232390(void *a0) {
         y += 28;
     }
 }
-
 
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4a;
 

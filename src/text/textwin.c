@@ -161,10 +161,10 @@ TextWin *func_001f31a8(TextWinDesc *a, s32 b) {
         p->xcc = a->x1e;
         p->xce = a->x20;
         p->xd8 = 1;
-        p->xd0 = 0;
-        p->xd2 = 0;
-        p->xd4 = 0;
-        p->xd6 = 0;
+        p->ud0.s.xd0 = 0;
+        p->ud0.s.xd2 = 0;
+        p->ud0.s.xd4 = 0;
+        p->ud0.s.xd6 = 0;
         p->xda = 0;
 
         for (j = 0; j < 16; j++) p->xdc[j] = 64;

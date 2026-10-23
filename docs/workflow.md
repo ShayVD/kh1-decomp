@@ -1103,3 +1103,18 @@ found that the next session needs:
   (`python3 -I tools/shift/s37move/refs.py 001fd248 00200000`), the fastest way to split a range by data and calls;
   fcheck.sh runs the m12 float build and compares float_covered / float_reach / loaded bytes / symbols with a
   `base` snapshot (run `fcheck.sh base` first).
+
+## Session 38: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only, no boot test. Nothing new floats: docs/float-untested.md
+  has a session 38 row with no names.
+- **Modules** (docs/modules.md "Session 38"): 0x001fd248-0x00209d48 (179 functions, 6 commits) into src/text/winmenu*.c
+  (the text area accessors, pad masks, cursor movers, cursor bar / frame), src/text/winpart*.c (row highlights, list
+  frames, scroll arrows and bars, page tabs), src/game/bitsets.c (the bit sets of D_003F34B8), src/text/winrow.c (rows
+  in the colour sets D_003F2C40, tabs, titles) and src/text/winlist*.c (list cells). 28 files deleted (h23, h46, h69
+  among them); objdiff units 821 -> 801. No workers.
+- **TextWin** gains the union `ud0` at +0xd0 (s16 / u16 / u64 views); D_0063F758 is defined as TextWin[24].
+- **tools/shift/s38move/fold.py FILE.c TYPE [--write]** folds a file-local window view into TextWin by offset and type
+  (prints any field with no matching member); run it on the old files and `make` before drafting a chunk. 16 views
+  folded this way kept every byte; one access (func_001fea38's +0xd2) needed a cast, one view (func_00202678's union
+  fields) stays.

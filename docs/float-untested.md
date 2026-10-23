@@ -37,9 +37,10 @@ back, boot, and narrow down within the session that fixes it.
 | 35 | none | module move only, same names | none: float_covered.txt, float_reach.txt and the symbols match session 34 after every commit | none |
 | 36 | none | module move and type folds only, same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 35 after every commit | none |
 | 37 | none | module move and the TextWin type only, same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 36 after every commit | none |
+| 38 | none | module move, view folds into TextWin and D_0063F758 typed TextWin[24], same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 37 after every commit | none |
 
 Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043), session 33's (2,032) and session 34's
-(2,049, unchanged in sessions 35 to 37) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
+(2,049, unchanged in sessions 35 to 38) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
 --no-hix-join --no-align-end --no-neg-keep"` gives session 33's names (float_reach.txt and .log byte-identical);
 `--no-hix-join` alone puts back the three atanf tables, `--no-widen-heads` those and D_00531B70 / D_00531F70 (and
 re-floats D_002BD1F0 and D_00454468), `--no-likely-slot` the other 14. Add `--no-idx-span` for session 32's names; add

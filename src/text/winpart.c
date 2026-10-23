@@ -1,5 +1,18 @@
+/* The parts of a menu window (docs/modules.md "Session 38"),
+ * 0x00200000-0x00206e28; the packet builders are in winpart.nostrict.c.
+ * A list row (func_002014a0 / func_00201550 / func_00201600: the frame
+ * func_00200648 with the colours cols, then a message id, a string or a
+ * string with an outline in a 26-pixel band at the text size sz, colour
+ * cols[4]), the scroll bars on the left and the right edge of the text area
+ * (func_00202678, func_00203a10), the page counter "n / m" under the tabs
+ * (func_00203788, func_00203890: message 84 is the slash), and the default
+ * colours of the boxes and lines. */
 #include "common.h"
-/* 00202678 (hand, strict): from session8 w12 7w (nostrict). Strict mode, with alias-set-0 (union) types exactly where the original keeps a nostrict-like ordering: the Q header stores, the H2 tag/regs, the buf[0] DMA tag stores, o->x90 and o->sx. Everything else keeps real alias sets, so the o-> loads pass the a/100, b/100 spill stores. */
+#include "text/textwin.h"
+#include "data/pieces/D_003F1E70.h"
+
+/* func_00202678's view: +0x74 and +0x90 are unions (alias set 0), which
+ * TextWin's f32 / s32 there are not (see the note above the function). */
 typedef union { u64 d; s32 w[2]; } UQ;
 typedef union { s32 i; f32 f; } UF;
 typedef struct {
@@ -16,24 +29,79 @@ typedef struct {
     s16 xb8, xba;
     u8 padbc[0xc0 - 0xbc];
     s16 c0, c2, c4, c6, c8, ca, cc, ce, d0;
-} Wnd;
+} WinUF;
 typedef struct { UQ a, b; } Q;
 typedef struct { s32 u, v, p0, p1; s32 x, y, z, f; } UX;
 typedef struct { u64 tag, regs; UX s[4]; } P4;
 typedef struct { UQ tag, regs; UX s[2]; } H2;
-#include "data/pieces/D_003F1E70.h"
+
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 UQ *func_00122048(s32, s32);
 s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
-s32 func_001f4570(Wnd *);
-s32 func_001f45e0(Wnd *);
 u32 func_001edd88(s32, s32);
+u8 *func_001efc10(s32);
+s32 func_001f4570(TextWin *);
+s32 func_001f45e0(TextWin *);
+s32 func_001f9438(TextWin *w, s32 mode, s32 x, s32 y, s32 id, s32 sz, u32 col);
+s32 func_001f94f0(TextWin *w, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col);
+s32 func_001f9e48(TextWin *w, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col);
+s32 func_001fb428(TextWin *o, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sz, u32 col);
+s32 func_001fc308(TextWin *o, s32 x, s32 y, s32 a, s32 b, s32 idx, s32 c, u32 c0, u32 c1);
+s32 func_001fd538(TextWin *w);
+s16 func_001fd658(TextWin *w);
+void func_00200648(TextWin *o, s32 type, s32 px, s32 py, s32 pw, s32 *cols);
+s32 func_002014a0(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, s32 id, s32 sz);
+s32 func_00201550(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz);
+s32 func_00201600(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz);
+void func_00202678(WinUF *o, s32 x, s32 c);
+void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c);
+s32 func_00203a10(TextWin *o, s32 x);
+void func_00206130(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col);
+s32 func_00206370(TextWin *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s32 k2, s32 k3);
 
 static inline s32 inl_sc(s32 v, s32 c, f32 fc, f32 s) { return fc + (f32)(v - c) * s; }
 
-void func_00202678(Wnd *o, s32 x, s32 c) {
+/* The rows at text size 15. */
+s32 func_00201440(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, s32 id, s32 sz) {
+    return func_002014a0(o, type, mode, px, py, pw, x, cols, id, 15);
+}
+
+s32 func_00201460(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+    return func_00201550(o, type, mode, px, py, pw, x, cols, s, 15);
+}
+
+s32 func_00201480(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+    return func_00201600(o, type, mode, px, py, pw, x, cols, s, 15);
+}
+
+s32 func_002014a0(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, s32 id, s32 sz) {
+    u32 t;
+
+    func_00200648(o, type, px, py, pw, cols);
+    t = 0x1A - sz;
+    return func_001f9438(o, mode, x, py + ((s32)(t + (t >> 0x1F)) >> 1), id, sz, cols[4]);
+}
+
+s32 func_00201550(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+    u32 t;
+
+    func_00200648(o, type, px, py, pw, cols);
+    t = 0x1A - sz;
+    return func_001f94f0(o, mode, x, py + ((s32)(t + (t >> 0x1F)) >> 1), s, sz, cols[4]);
+}
+
+s32 func_00201600(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+    u32 t;
+
+    func_00200648(o, type, px, py, pw, cols);
+    t = 0x1A - sz;
+    return func_001f9e48(o, mode, x, py + ((s32)(t + (t >> 0x1F)) >> 1), s, sz, cols[4]);
+}
+
+/* 00202678 (hand, strict): from session8 w12 7w (nostrict). Strict mode, with alias-set-0 (union) types exactly where the original keeps a nostrict-like ordering: the Q header stores, the H2 tag/regs, the buf[0] DMA tag stores, o->x90 and o->sx. Everything else keeps real alias sets, so the o-> loads pass the a/100, b/100 spill stores. */
+void func_00202678(WinUF *o, s32 x, s32 c) {
     s32 ys[2];
     s32 xx[2];
     UQ *buf;
@@ -101,8 +169,8 @@ void func_00202678(Wnd *o, s32 x, s32 c) {
     ((P4 *)q)->s[3].x = X + 192; ((P4 *)q)->s[3].y = ys[1] + 144; ((P4 *)q)->s[3].z = 0x100000; ((P4 *)q)->s[3].f = 0;
     fl = o->x48 & 1;
     if (fl) {
-        cx = func_001f4570(o);
-        cy = func_001f45e0(o);
+        cx = func_001f4570((TextWin *)o);
+        cy = func_001f45e0((TextWin *)o);
         sx = o->sx.f;
         sy = o->sy;
         fcx = cx;
@@ -203,4 +271,68 @@ void func_00202678(Wnd *o, s32 x, s32 c) {
         ys[1] -= 64;
     }
     func_001220b8(buf);
+}
+
+void func_00202fc0(TextWin *o) {
+    func_00202678((WinUF *)o, ((s32)((u16)o->xbe << 0x10) >> 0x14) - 0x10, 0x80C8C8C8);
+}
+
+void func_00202ff0(TextWin *o) {
+    func_00202678((WinUF *)o, ((s32)(o->xbe + o->xc2) >> 4) + 4, 0x80C8C8C8);
+}
+
+/* The page counter between the tabs: current column + 1, "/", columns. */
+void func_00203788(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
+    s32 mid;
+    if (o->xd8 < 2) return;
+    func_00203028(o, x0, y, x1, c);
+    y--;
+    mid = x0 + (x1 - x0 + 9) / 2;
+    func_001fb428(o, 1, 0, 0, mid - 7, y, func_001fd538(o) + 1, 15, c);
+    func_001f94f0(o, 0, mid - 7, y, func_001efc10(84), 15, c);
+    func_001fb428(o, 0, 0, 0, mid + 6, y, func_001fd658(o), 15, c);
+}
+
+/* The same with arrow icons (17 / 18 at the ends, 15 / 16 otherwise). */
+void func_00203890(TextWin *o, s32 x, s32 y, s32 x2, s32 col) {
+    s32 cur, mid, a, b;
+    if (o->xd8 < 2) return;
+    cur = func_001fd538(o);
+    a = cur == 0 ? 17 : 15;
+    b = cur == o->xd8 - 1 ? 18 : 16;
+    func_001fc308(o, x, y, 0, 0, a, 0, col, col);
+    func_001fc308(o, x2, y, 0, 0, b, 0, col, col);
+    y--;
+    mid = x + (x2 - x + 9) / 2;
+    func_001fb428(o, 1, 0, 0, mid - 7, y, func_001fd538(o) + 1, 15, col);
+    func_001f94f0(o, 0, mid - 7, y, func_001efc10(84), 15, col);
+    func_001fb428(o, 0, 0, 0, mid + 6, y, func_001fd658(o), 15, col);
+}
+
+s32 func_002040a0(TextWin *o) {
+    return func_00203a10(o, ((s32)((u16)o->xbe << 0x10) >> 0x14) - 0x10);
+}
+
+void func_002040c8(TextWin *o) {
+    func_00203a10(o, ((s32)(o->xbe + o->xc2) >> 4) + 4);
+}
+
+void func_00206110(TextWin *o, s32 px, s32 py, s32 pw, s32 ph) {
+    func_00206130(o, px, py, pw, ph, 0x80F04646);
+}
+
+void func_00206690(TextWin *o, s32 px, s32 py, s32 pw) {
+    func_00206130(o, px, py, pw, 2, 0x80F04646);
+}
+
+s32 func_002066b0(TextWin *w, s32 px, s32 py, s32 pw, s32 k0, s32 k1) {
+    return func_00206370(w, px, py, pw, 2, k0, k1, k0, k1);
+}
+
+void func_002066e8(TextWin *o, s32 px, s32 py, s32 ph) {
+    func_00206130(o, px, py, 2, ph, 0x80F04646);
+}
+
+s32 func_00206710(TextWin *w, s32 px, s32 py, s32 ph, s32 k0, s32 k1) {
+    return func_00206370(w, px, py, 2, ph, k0, k0, k1, k1);
 }
