@@ -54,6 +54,14 @@
 
 
 extern VmMgr D_00389C90;
+
+/* A library function: takes the VM, returns the handler result.  The table
+ * is declared here, before the library: gcc's cse hashes a symbol by the
+ * address of its name, so naming D_003D9FE0 first keeps the dispatcher's
+ * code (lw D_003D9FE0(k)) from depending on how many names the functions
+ * above it add. */
+typedef s32 (*VmLibFn)();
+extern VmLibFn D_003D9FE0[];
 extern u64 D_0038CD00;
 extern VmFx *D_0038CD3C[];
 
@@ -3106,11 +3114,269 @@ s32 func_001d6cf0(VmRec *vm) {
     return 2;
 }
 
+/* ---- 0x001d6d60-0x001d7678 ---- */
+
+s32 func_00141608(struct VmObj *, s32);
+s32 func_00131de0(s32, s32);
+void func_00124218(s32);
+s32 func_00125a00(s32);
+s32 func_001ef7b0(s32);
+s32 func_00112c20(s32);
+f32 func_001e9e58(f32 *, f32 *);
+s32 func_0014e510(s32);
+s32 func_001331d8(s32, s32, void *);
+
+s32 func_001d6d60(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141608(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6db0(void) {
+    D_002C5958 &= ~0x800;
+    return 2;
+}
+
+s32 func_001d6dd0(void) {
+    D_002C5958 |= 0x800;
+    return 2;
+}
+
+s32 func_001d6df0(void) {
+    D_002C5958 &= ~0x200;
+    return 2;
+}
+
+s32 func_001d6e10(void) {
+    D_002C5958 |= 0x200;
+    return 2;
+}
+
+s32 func_001d6e30(void) {
+    D_002C5958 &= ~0x400;
+    return 2;
+}
+
+s32 func_001d6e50(void) {
+    D_002C5958 |= 0x400;
+    return 2;
+}
+
+/* Remove every entity func_00131de0 finds for stk[sp]. */
+s32 func_001d6e70(VmRec *vm) {
+    s32 i = -1;
+    while ((i = func_00131de0(i, vm->stk[vm->sp])) != -1) func_00124218(i);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6ef0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_00125a00(1);
+    return 2;
+}
+
+s32 func_001d6f38(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D010;
+    return 2;
+}
+
+s32 func_001d6f60(void) {
+    D_0038D010 = 0;
+    return 2;
+}
+
+s32 func_001d6f70(void) {
+    D_002C5958 |= 0x1000;
+    return 2;
+}
+
+s32 func_001d6f90(void) {
+    D_002C5958 &= ~0x1000;
+    return 2;
+}
+
+s32 func_001d6fb0(VmRec *vm) {
+    func_001ef7b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6ff8(VmRec *vm) {
+    func_00112c20(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* Message 7 (func_001d7040) or 6 (func_001d7118) to every entity of kind
+ * 300-350 or 400-539. */
+s32 func_001d7040(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 7;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d7118(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 6;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+void func_001d71f0(void) {
+    D_00389C90.f3070.x &= ~0x1000000000000000ULL;
+}
+
+s32 func_001d7220(VmRec *vm) {
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7238(VmRec *vm) {
+    if ((s32)(D_0038CD00 >> 60) & 1) return 4;
+    return 2;
+}
+
+/* Message 39 with the point 20 below the entity. */
+s32 func_001d7258(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *o = vm->obj;
+    if (o) {
+        m.x = vm->x0;
+        m.type = 39;
+        m.val = 0;
+        m.v[0] = o->pos[0];
+        m.v[1] = o->pos[1] - 20.0f;
+        m.v[2] = o->pos[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d72e0(VmRec *vm) {
+    vm->fl.x |= 0x4000;
+    vm->f330 = (f32)vm->stk[vm->sp] * 2;
+    vm->sp--;
+    return 2;
+}
+
+/* Push the distance to the nearest entity of kind 300-350 or 400-539 (-1
+ * if none). */
+s32 func_001d7320(VmRec *vm) {
+    struct VmObj *p;
+    s32 found = 0;
+    f32 best = -1.0f;
+    f32 d;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            if (!found) {
+                found = 1;
+                best = func_001e9e58(vm->obj->pos, p->pos);
+            } else {
+                d = func_001e9e58(vm->obj->pos, p->pos);
+                if (d < best) best = d;
+            }
+        }
+    }
+    vm->sp++;
+    vm->stk[vm->sp] = best;
+    return 2;
+}
+
+/* Give the entity a slot (free or its own) of the eight at 0x3384: snd and
+ * x10 (func_001d7438), or h (func_001d74b8).  Kept h17's view of the slots
+ * with obj as a pointer: a pointer store does not alias vm->sp (VmSlot's
+ * s32 obj loads sp after the store), and a cast of &e[i].obj folds the
+ * slot base into one constant. */
+typedef struct { struct VmObj *obj; s32 x4, snd, ret, x10, h; } VmSlotP;
+typedef struct { u8 pad0[0x3384]; VmSlotP e[8]; } VmMgrSlotP;
+#define SLOT(i) (((VmMgrSlotP *)&D_00389C90)->e[i])
+s32 func_001d7438(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (SLOT(i).obj == 0 || SLOT(i).obj == vm->obj) {
+            SLOT(i).obj = vm->obj;
+            SLOT(i).snd = vm->stk[vm->sp - 1];
+            SLOT(i).x10 = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d74b8(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (SLOT(i).obj == 0 || SLOT(i).obj == vm->obj) {
+            SLOT(i).obj = vm->obj;
+            SLOT(i).h = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001d7520(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D0D4;
+    return 2;
+}
+
+s32 func_001d7548(VmRec *vm) {
+    vm->stk[vm->sp] = func_0014e510(vm->stk[vm->sp]);
+    return 2;
+}
+
+void func_001d75a0(void) {
+    D_00389C90.f3070.x &= ~0x2000000000000000ULL;
+}
+
+s32 func_001d75d0(VmRec *vm) {
+    if (func_001331d8(vm->stk[vm->sp - 1], vm->stk[vm->sp], func_001d75a0)) {
+        D_00389C90.f3070.x &= ~0x2000000000000000ULL;
+    } else {
+        D_00389C90.f3070.x |= 0x2000000000000000ULL;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 
-/* A library function: takes the VM, returns the handler result. */
-typedef s32 (*VmLibFn)();
 
 s32 func_001c6d08();
 s32 func_001c71e8();
