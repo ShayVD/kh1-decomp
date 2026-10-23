@@ -3,7 +3,6 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-M2C_UNK func_001248e8(s32);
 #include "data/pieces/D_002E26A0.h"
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
@@ -11,25 +10,9 @@ extern s32 D_0038D160;
 s32 func_0013bf68();
 s32 func_0014e510(s32);
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
-void *func_001230a0(void *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001d6c80(void) {
-    void *var_s0;
-
-    var_s0 = func_001230a0(NULL);
-    if (var_s0 != NULL) {
-        do {
-            if ((((u64) M2C_FIELD(var_s0, u64 *, 0x370) >> 0x25) & 3) == 2) {
-                func_001248e8(M2C_FIELD(var_s0, s32 *, 4));
-            }
-            var_s0 = func_001230a0(var_s0);
-        } while (var_s0 != NULL);
-    }
-    return 2;
-}
 
 s32 func_001d7548(void *arg0) {
     s32 temp_s1;

@@ -568,3 +568,13 @@ s32 func_001d5b58(VmRec *vm) {
     vm->f64 = 0;
     return 2;
 }
+
+/* func_001d5ed8 .. func_001d6628 are in vm_lib.c. */
+
+void func_00104268(f32, f32);
+
+s32 func_001d6658(VmRec *vm) {
+    func_00104268(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}

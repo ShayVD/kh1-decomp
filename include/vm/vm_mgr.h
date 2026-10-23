@@ -59,7 +59,7 @@ typedef struct VmFx {
 } VmFx;
 
 /* h42's trigger box: id, centre, size */
-typedef struct { s32 id; u8 pad[12]; f32 c[4]; f32 s[4]; } VmBox;
+typedef struct { s32 id; u8 pad[12]; f32 c[4]; f32 s[4]; } __attribute__((aligned(8))) VmBox;
 
 /* 0x3384: the eight slots func_001c4ed0 clears (obj, sound, return value ...) */
 typedef struct { s32 obj, x4, snd, ret, x10, h; } VmSlot;

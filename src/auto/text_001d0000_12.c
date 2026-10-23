@@ -3,26 +3,6 @@
 #include "m2c.h"
 
 extern s32 (*D_003773E8)(s32, void *);
-void func_0014ec10(s32);
-void func_0014ec38(s32);
-
-s32 func_001d6080(void) {
-    s32 var_s0;
-
-    for (var_s0 = 1; var_s0 < 0x20; var_s0 += 1) {
-        func_0014ec10(var_s0);
-    }
-    return 2;
-}
-
-s32 func_001d60c0(void) {
-    s32 var_s0;
-
-    for (var_s0 = 1; var_s0 < 0x20; var_s0 += 1) {
-        func_0014ec38(var_s0);
-    }
-    return 2;
-}
 
 s32 func_001dc280(s32 arg0) {
     void *temp_a1;

@@ -4,16 +4,6 @@
 
 extern s64 D_00389C90[];
 
-s32 func_001d6c20(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x2C));
-    return 2;
-}
-
-s32 func_001d6c48(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xF7FFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-    return 2;
-}
-
 void func_001d71f0(void) {
     D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xEFFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
 }

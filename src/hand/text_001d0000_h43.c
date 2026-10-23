@@ -80,32 +80,6 @@ s32 func_001d7040(VM *vm) {
     return 2;
 }
 #include "data/pieces/D_00304BE8_s.h"
-s32 func_001d6a60(VM *vm) {
-    s32 k = vm->stk[vm->sp];
-    s32 item = vm->stk[vm->sp - 1];
-    s32 r = 0;
-    s32 j;
-    for (j = 0; j < D_00304BE8->m[k].sub.x21; j++) {
-        if (D_00304BE8->m[k].sub.x22[j] == 0) {
-            D_00304BE8->m[k].sub.x22[j] = item;
-            r = 0;
-            break;
-        }
-    }
-    if (j == D_00304BE8->m[k].sub.x21) {
-        s32 v = D_00304BE8->items[item] + 1;
-        if (v >= 100) {
-            D_00304BE8->items[item] = 99;
-            r = 1;
-        } else {
-            D_00304BE8->items[item] = v;
-            r = 0;
-        }
-    }
-    vm->sp--;
-    vm->stk[vm->sp] = r;
-    return 2;
-}
 s32 func_001d7118(VM *vm) {
     VmMsg m;
     Obj *p;
@@ -155,18 +129,5 @@ s32 func_001d75d0(VM *vm) {
         D_00389C90.f3070.x |= 0x2000000000000000ULL;
     }
     vm->sp -= 2;
-    return 2;
-}
-s32 func_001d6250(VM *vm) {
-    s32 n = D_00389C90.n3178;
-    D_00389C90.ent3180[n].key = vm->stk[vm->sp - 6];
-    D_00389C90.ent3180[n].v[0][0] = vm->stk[vm->sp - 5];
-    D_00389C90.ent3180[n].v[0][1] = vm->stk[vm->sp - 4];
-    D_00389C90.ent3180[n].v[0][2] = vm->stk[vm->sp - 3];
-    D_00389C90.ent3180[n].v[1][0] = vm->stk[vm->sp - 2];
-    D_00389C90.ent3180[n].v[1][1] = vm->stk[vm->sp - 1];
-    D_00389C90.ent3180[n].v[1][2] = vm->stk[vm->sp];
-    D_00389C90.n3178++;
-    vm->sp -= 7;
     return 2;
 }

@@ -2704,7 +2704,7 @@ s32 func_001d5b00(VmRec *vm) {
 
 /* func_001d5b58 is in vm_lib.nofill.c. */
 
-s32 func_0014ec10(s32);
+void func_0014ec10(s32);
 
 s32 func_001d5ed8(VmRec *vm) {
     s32 sp = vm->sp;
@@ -2742,6 +2742,367 @@ s32 func_001d5fa8(VmRec *vm) {
 s32 func_001d5ff0(VmRec *vm) {
     func_0014ec10(vm->stk[vm->sp]);
     vm->sp--;
+    return 2;
+}
+
+/* ---- 0x001d6000-0x001d6d60 ---- */
+
+void func_0014ec38(s32);
+s32 func_00145080(s32, s32);
+s32 func_00145138();
+s32 func_00112e90();
+s32 func_00141b10(s32, void *);
+s32 func_00111778(s32);
+s32 func_001eac68();
+s32 func_0024d418();
+s32 func_0024d490(void);
+s32 func_00104288();
+s32 func_00100ab0();
+s32 func_00100ae0();
+s32 func_0017f078(s32);
+s32 func_0017f110();
+s32 func_00135a10(struct VmObj *, s32);
+s32 func_00135a38(struct VmObj *, s32);
+s32 func_002414a8(s32, s32);
+s32 func_00105ce0(s32);
+void func_00105d38(s32, s32);
+s32 func_001118a0();
+s32 func_001118b0();
+void func_001248e8(s32);
+extern s32 D_002BD110;
+
+s32 func_001d6038(VmRec *vm) {
+    func_0014ec38(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6080(void) {
+    s32 i;
+    for (i = 1; i < 0x20; i++) {
+        func_0014ec10(i);
+    }
+    return 2;
+}
+
+s32 func_001d60c0(void) {
+    s32 i;
+    for (i = 1; i < 0x20; i++) {
+        func_0014ec38(i);
+    }
+    return 2;
+}
+
+s32 func_001d6100(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB0 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+/* Push how many of the four party slots x48e[] hold a member (< 20). */
+s32 func_001d6128(VmRec *vm) {
+    s32 i = 3, n = 0;
+    u8 *p = D_00304BE8->x48e;
+    do {
+        n += *p++ < 20;
+        i--;
+    } while (i >= 0);
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d6180(VmRec *vm) {
+    func_00145080(0, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d61c8(VmRec *vm) {
+    func_00145080(1, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6210(void) {
+    func_00145138();
+    return 2;
+}
+
+s32 func_001d6230(void) {
+    func_00112e90();
+    return 2;
+}
+
+/* Add trigger box nbox: id stk[sp-6], centre stk[sp-5..sp-3], size
+ * stk[sp-2..sp]. */
+s32 func_001d6250(VmRec *vm) {
+    s32 n = D_00389C90.nbox;
+    D_00389C90.box[n].id = vm->stk[vm->sp - 6];
+    D_00389C90.box[n].c[0] = vm->stk[vm->sp - 5];
+    D_00389C90.box[n].c[1] = vm->stk[vm->sp - 4];
+    D_00389C90.box[n].c[2] = vm->stk[vm->sp - 3];
+    D_00389C90.box[n].s[0] = vm->stk[vm->sp - 2];
+    D_00389C90.box[n].s[1] = vm->stk[vm->sp - 1];
+    D_00389C90.box[n].s[2] = vm->stk[vm->sp];
+    D_00389C90.nbox++;
+    vm->sp -= 7;
+    return 2;
+}
+
+/* How many entities of kind stk[sp] are in the list. */
+s32 func_001d6348(VmRec *vm) {
+    s32 n = 0;
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->x4) == vm->stk[vm->sp]) n++;
+    }
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+/* Remove the trigger boxes with id stk[sp]. */
+s32 func_001d63e8(VmRec *vm) {
+    s32 i, j, k;
+    for (i = 0; i < D_00389C90.nbox; i = k) {
+        if (D_00389C90.box[i].id == vm->stk[vm->sp]) {
+            k = i + 1;
+            if (k < D_00389C90.nbox) {
+                for (j = k; j < D_00389C90.nbox; j++) D_00389C90.box[j - 1] = D_00389C90.box[j];
+                k = i;
+                D_00389C90.nbox--;
+            } else D_00389C90.nbox--;
+        } else k = i + 1;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d64f8(VmRec *vm) {
+    s32 buf[60];
+    func_00141b10(vm->stk[vm->sp], buf);
+    vm->stk[vm->sp] = buf[15];
+    return 2;
+}
+
+s32 func_001d6558(VmRec *vm) {
+    s32 buf[60];
+    func_00141b10(vm->stk[vm->sp], buf);
+    vm->stk[vm->sp] = buf[17];
+    return 2;
+}
+
+s32 func_001d65b8(VmRec *vm) {
+    func_00111778(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6600(void) {
+    func_001eac68();
+    func_0024d418();
+    return 2;
+}
+
+s32 func_001d6628(VmRec *vm) {
+    if (!func_0024d490()) return 4;
+    return 2;
+}
+
+/* func_001d6658 is in vm_lib.nofill.c. */
+
+s32 func_001d66b8(void) {
+    func_00104288();
+    return 2;
+}
+
+s32 func_001d66d8(void) {
+    func_00100ab0();
+    return 2;
+}
+
+s32 func_001d66f8(void) {
+    func_00100ae0();
+    return 2;
+}
+
+s32 func_001d6718(VmRec *vm) {
+    func_0017f078(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6760(void) {
+    func_0017f110();
+    return 2;
+}
+
+s32 func_001d6780(VmRec *vm) {
+    func_00135a10(vm->obj, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d67c8(VmRec *vm) {
+    func_00135a38(vm->obj, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6810(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6858(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 3);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d68a0(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d68e8(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 0);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6930(void) {
+    D_002C5958 &= 0xF7FFFFFF;
+    return 2;
+}
+
+s32 func_001d6958(void) {
+    D_002C5958 |= 0x08000000;
+    return 2;
+}
+
+s32 func_001d6978(VmRec *vm) {
+    vm->stk[vm->sp] = func_00105ce0(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d69d0(VmRec *vm) {
+    func_00105d38(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d6a20(void) {
+    func_001118a0();
+    return 2;
+}
+
+s32 func_001d6a40(void) {
+    func_001118b0();
+    return 2;
+}
+
+/* Give item stk[sp-1] to party member stk[sp]: into a free slot of its
+ * x22[], else into the stock (at most 99; pushes 1 when it was full). */
+s32 func_001d6a60(VmRec *vm) {
+    s32 k = vm->stk[vm->sp];
+    s32 item = vm->stk[vm->sp - 1];
+    s32 r = 0;
+    s32 j;
+    for (j = 0; j < D_00304BE8->m[k].sub.x21; j++) {
+        if (D_00304BE8->m[k].sub.x22[j] == 0) {
+            D_00304BE8->m[k].sub.x22[j] = item;
+            r = 0;
+            break;
+        }
+    }
+    if (j == D_00304BE8->m[k].sub.x21) {
+        s32 v = D_00304BE8->items[item] + 1;
+        if (v >= 100) {
+            D_00304BE8->items[item] = 99;
+            r = 1;
+        } else {
+            D_00304BE8->items[item] = v;
+            r = 0;
+        }
+    }
+    vm->sp--;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+/* func_001d6b70 keeps h17's volatile views of D_002C5AD0 / D_002C5BB0 (the
+ * pieces' types, W29S70 / PadSt, have no fields at these offsets). */
+typedef struct { s32 f0; s32 f4; s32 f8; } S5AD0;
+typedef struct { s32 f0; s32 f4; s32 f8; u8 padc[0x24]; s32 a30[15]; s32 f6c; } S5BB0;
+extern volatile S5BB0 D_002C5BB0;
+#define D_002C5AD0V (*(volatile S5AD0 *)&D_002C5AD0)
+
+s32 func_001d6b70(VmRec *vm) {
+    if (!((s32)(D_0038CD00 >> 58) & 1)) return 4;
+    D_002C5AD0V.f8 = 0;
+    D_002C5AD0V.f4 = 0;
+    D_002C5BB0.f6c = 0;
+    D_002C5BB0.f4 = 0;
+    D_002C5BB0.f8 = 0;
+    D_002C5BB0.a30[0] = 0;
+    D_002C5BB0.a30[1] = 0;
+    D_002C5BB0.a30[2] = 0;
+    D_002C5BB0.a30[3] = 0;
+    D_002C5BB0.a30[4] = 0;
+    D_002C5BB0.a30[5] = 0;
+    D_002C5BB0.a30[6] = 0;
+    D_002C5BB0.a30[7] = 0;
+    D_002C5BB0.a30[8] = 0;
+    D_002C5BB0.a30[9] = 0;
+    D_002C5BB0.a30[10] = 0;
+    D_002C5BB0.a30[11] = 0;
+    D_002C5BB0.a30[12] = 0;
+    D_002C5BB0.a30[13] = 0;
+    D_002C5BB0.a30[14] = 0;
+    return 0;
+}
+
+s32 func_001d6bf8(void) {
+    D_002BD110 = 0;
+    return 2;
+}
+
+s32 func_001d6c08(void) {
+    D_002BD110 = 1;
+    return 2;
+}
+
+s32 func_001d6c20(void) {
+    D_00389C90.f3070.x |= 0x8000000000000000ULL >> 4;
+    return 2;
+}
+
+s32 func_001d6c48(void) {
+    D_00389C90.f3070.x &= ~(0x8000000000000000ULL >> 4);
+    return 2;
+}
+
+/* Remove every entity whose flag bits 37-38 are 2 (func_001d6c80), or
+ * whose kind is 300-350 (func_001d6cf0). */
+s32 func_001d6c80(void) {
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((p->f370.flags >> 37) & 3) == 2) {
+            func_001248e8(p->x4);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d6cf0(VmRec *vm) {
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) func_001248e8(p->x4);
+    }
     return 2;
 }
 

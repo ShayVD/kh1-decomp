@@ -4,7 +4,6 @@
 
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011f130(M2C_UNK *, M2C_UNK);
-M2C_UNK func_00141b10(s32, void *);
 M2C_UNK func_0022dee0(M2C_UNK);
 #include "data/pieces/D_0038D170.h"
 #include "data/pieces/D_0039A580.h"
@@ -20,26 +19,6 @@ extern s32 D_002C5958;
 extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_001763f0(s32);
-
-s32 func_001d64f8(void *arg0) {
-    s32 sp[60];
-    s32 temp_s1;
-
-    temp_s1 = arg0 + 4;
-    func_00141b10(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180), sp);
-    M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) = M2C_FIELD(sp, M2C_UNK *, 0x3C);
-    return 2;
-}
-
-s32 func_001d6558(void *arg0) {
-    s32 sp[60];
-    s32 temp_s1;
-
-    temp_s1 = arg0 + 4;
-    func_00141b10(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180), sp);
-    M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) = M2C_FIELD(sp, M2C_UNK *, 0x44);
-    return 2;
-}
 
 s32 func_001d87b8(void) {
     D_00389C90[1551] = (s64) (D_00389C90[1551] | 1);
