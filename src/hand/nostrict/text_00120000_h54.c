@@ -65,7 +65,7 @@ void func_00127960(E1 *e, s32 a1, s32 a2) {
     func_001621e0(e->f15c, a1, &p, e);
 }
 #include "data/pieces/D_002C58A0.h"
-typedef V4_2c58a0 V4;
+typedef FVec4 V4;
 typedef struct { V4 a; V4 b; V4 c; s16 f30; s16 pad32; s32 f34; } Ray2;
 typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 fc; V4 v10; V4 v20; u8 pad30[0x10]; } Lt2;
 #include "data/pieces/D_002C5C80.h"

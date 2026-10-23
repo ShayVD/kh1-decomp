@@ -1,6 +1,6 @@
 #include "common.h"
 #include "data/pieces/D_002C58A0.h"
-typedef V4_2c58a0 V4;
+typedef FVec4 V4;
 typedef struct { u8 pad[0xd0]; f32 fd0[4][4]; u8 p110[0x15c - 0x110]; s32 f15c; } E14;
 #include "data/pieces/D_002C58D0.h"
 extern s32 func_00122ff8(E14 *);

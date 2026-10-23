@@ -4,7 +4,7 @@
  * Built without strict aliasing (several of these need the reloads). */
 
 #include "data/pieces/D_002C58A0.h"
-typedef V4_2c58a0 V4f;
+typedef FVec4 V4f;
 typedef struct { s32 x, y, z; } V3i;
 
 /* ---- save data (D_00304BE8), shared with h7 ---- */

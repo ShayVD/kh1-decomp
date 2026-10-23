@@ -3,8 +3,9 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00120000_B02_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-typedef struct { f32 x, y, z, w; } V4;
+typedef FVec4 V4;
 typedef struct { u8 p0[0x14]; u32 f14; } G15;
 typedef struct { u8 p0[8]; u64 d8; } E15;
 typedef struct O15 {

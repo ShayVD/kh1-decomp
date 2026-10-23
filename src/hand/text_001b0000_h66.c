@@ -7,7 +7,7 @@ double cos(double);
 double atan2(double, double);
 f32 acosf(f32);
 #include "data/pieces/D_002E2780.h"
-typedef V3_2e2780 V4;
+typedef FVec4 V4;
 f32 sinf(f32);
 f32 sqrtf(f32);
 void func_001bf290(f32 *q);
@@ -539,8 +539,8 @@ void func_001c6890(void) {
     memset(&a, 0, 16);
     a.w = 1.0f;
     memset(&r, 0, 16);
-    func_002675a8(&a, ((V3_2e2780 *)&D_002E2780));
-    func_002675a8(&D_003C5510.v208, ((V4 *)&D_002E2790));
+    func_002675a8(&a, &D_002E2780);
+    func_002675a8(&D_003C5510.v208, &D_002E2790);
     D_003C5510.f288 = func_001e9e58(&a, &D_003C5510.v208);
     D_003C5510.f292 = D_002E27A0;
     func_001e9d00(&r, &D_003C5510.v208, &a, D_002E27A4);
