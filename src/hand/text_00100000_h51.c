@@ -188,35 +188,31 @@ void func_0010f0d0(s32 px, s32 py, Obj70 *o) {
 }
 
 /* needs make: uses rodata */
-typedef struct {
-    u32 p0:3; u32 b3:1; u32 p4:4; u32 b8:1; u32 b9:1; u32 b10:1; u32 p11:4;
-    u32 b15:1; u32 b16:1; u32 b17:1; u32 p18:4; u32 b22:1; u32 b23:1; u32 b24:1;
-    u32 b25:1; u32 b26:1; u32 b27:1; u32 b28:1; u32 p29:3;
-} TriFlags;
-typedef struct { s16 v[4]; u8 pad8[3]; u8 group; u8 pad12[4]; TriFlags f; } Tri20;
 #include "data/pieces/D_002A6238.h"
+typedef TriBits_2a6238 TriFlags;
+typedef Ent20_2a6238 Tri20;
 extern s32 D_002A6258;
 
 void func_001054d0(s32 group, s32 which, s32 on) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        Tri20 *t = &((Tri20 *)D_002A6238)[i];
-        if (t->group != group) continue;
+        Tri20 *t = &D_002A6238[i];
+        if (t->id != group) continue;
         switch (which) {
-        case 0: t->f.b3 = on; break;
-        case 1: t->f.b8 = on; break;
-        case 2: t->f.b9 = on; break;
-        case 3: t->f.b10 = on; break;
-        case 4: t->f.b15 = on; break;
-        case 5: t->f.b16 = on; break;
-        case 6: t->f.b17 = on; break;
-        case 7: t->f.b22 = on; break;
-        case 8: t->f.b23 = on; break;
-        case 9: t->f.b24 = on; break;
-        case 10: t->f.b25 = on; break;
-        case 11: t->f.b26 = on; break;
-        case 12: t->f.b27 = on; break;
-        case 13: t->f.b28 = on; break;
+        case 0: t->f.t.b3 = on; break;
+        case 1: t->f.t.b8 = on; break;
+        case 2: t->f.t.b9 = on; break;
+        case 3: t->f.t.b10 = on; break;
+        case 4: t->f.t.b15 = on; break;
+        case 5: t->f.t.b16 = on; break;
+        case 6: t->f.t.b17 = on; break;
+        case 7: t->f.t.b22 = on; break;
+        case 8: t->f.t.b23 = on; break;
+        case 9: t->f.t.b24 = on; break;
+        case 10: t->f.t.b25 = on; break;
+        case 11: t->f.t.b26 = on; break;
+        case 12: t->f.t.b27 = on; break;
+        case 13: t->f.t.b28 = on; break;
         }
     }
 }

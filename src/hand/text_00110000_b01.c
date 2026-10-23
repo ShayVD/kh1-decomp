@@ -45,7 +45,7 @@ void func_00117db0(Qry01 *q) {
                 for (j = 0; j < e->n; j++) {
                     u32 *f;
                     id = *p++;
-                    f = &D_002A6238[id].f;
+                    f = &D_002A6238[id].f.w;
                     if (!(*f & 1)) {
                         D_002BD250[D_002C12C4] = id;
                         D_002C12C4++;
@@ -56,7 +56,7 @@ void func_00117db0(Qry01 *q) {
                 for (j = 0; j < e->n; j++) {
                     u32 *f;
                     id = *p++;
-                    f = &D_002A6238[id].f;
+                    f = &D_002A6238[id].f.w;
                     if (!(*f & 1)) func_00115940(id);
                 }
             }
@@ -161,7 +161,7 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
             for (j = 0; j < e->n; j++) {
                 s32 k;
                 id = *p++;
-                f = &D_002A6238[id].f;
+                f = &D_002A6238[id].f.w;
                 w = *f;
                 if (w & 1) continue;
                 if (mode != 8) {
@@ -181,7 +181,7 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
             for (j = 0; j < e->n; j++) {
                 s32 k;
                 id = *p++;
-                f = &D_002A6238[id].f;
+                f = &D_002A6238[id].f.w;
                 w = *f;
                 if (w & 1) continue;
                 if (mode != 8) {

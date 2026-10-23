@@ -4,7 +4,9 @@
 #define KH1_DATA_PIECES_D_002A62B0_H
 
 #include "common.h"
+#include "data/pieces/D_002A6238.h"
 
-extern u8 *D_002A62B0;
+/* session 30: the second Ent20_2a6238 table (h28 walks both) */
+extern Ent20_2a6238 *D_002A62B0;
 
 #endif /* KH1_DATA_PIECES_D_002A62B0_H */
