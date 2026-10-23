@@ -4,27 +4,13 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-M2C_UNK func_0011e9a8(M2C_UNK *, s32);
-M2C_UNK func_0011eb88(s32, s32, s32, M2C_UNK *);
-M2C_UNK func_0011ec08(s32, s32, s32, M2C_UNK *);
-M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 #include "vm/script_vm.h"
 M2C_UNK func_002672f8(void *, void *, void *);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
-extern M2C_UNK func_001e7fe0;
-extern M2C_UNK func_001e8178;
-extern M2C_UNK func_001e8308;
-extern M2C_UNK func_001e84a0;
-extern M2C_UNK func_001e8628;
 #include "data/pieces/D_003DABD4.h"
 extern s32 D_003F7A68;
-extern s32 D_006314CC;
-extern s32 D_006314D0;
-extern s32 D_006314D8;
-extern s32 D_006314DC;
-s32 func_0011e340(M2C_UNK);
 
 /* func_001e10c8, func_001e14e0 are in src/screen/screen.c. */
 
@@ -38,31 +24,9 @@ s32 func_0011e340(M2C_UNK);
 
 
 
-void func_001e81c8(s32 arg0) {
-    D_006314D8 = arg0;
-    if (func_0011e340(0) == 0) {
-        func_0011ec08(D_006314D0, ((s32)D_003DABD4), D_006314D8, &func_001e7fe0);
-        return;
-    }
-    func_0011ef10(0xC352, &func_001e8178);
-}
+/* func_001e81c8, func_001e84f0, func_001e86e8 are in src/event/sound.c. */
 
-void func_001e84f0(s32 arg0) {
-    D_006314DC = arg0;
-    if (func_0011e340(0) == 0) {
-        func_0011eb88(D_006314CC, ((s32)D_003DABD4), D_006314DC, &func_001e8308);
-        return;
-    }
-    func_0011ef10(0xC352, &func_001e84a0);
-}
 
-s32 func_001e86e8(void) {
-    if (func_0011e340(0) == 0) {
-        func_0011e9a8(&func_001e8628, ((s32)D_003DABD4));
-        return 4;
-    }
-    return 0;
-}
 
 void func_001e9f18(void *arg0, void *arg1, void *arg2, f32 fparg0) {
     s32 sp[16];

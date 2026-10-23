@@ -6,11 +6,6 @@
 
 M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
 M2C_UNK func_00111be8();
-M2C_UNK func_0011c7a8(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_0011e9a8(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_0011eb88(s32, M2C_UNK *, s32, M2C_UNK *);
-M2C_UNK func_0011ec08(s32, M2C_UNK *, s32, M2C_UNK *);
-M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_00147840();
 M2C_UNK func_001e9650();
 M2C_UNK func_001ef948();
@@ -41,25 +36,12 @@ M2C_UNK func_00267810(void *, void *, f32);
 #include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3CB8;
 extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
-extern M2C_UNK D_00F20000;
-extern M2C_UNK func_001e7fe0;
-extern M2C_UNK func_001e8010;
-extern M2C_UNK func_001e8308;
-extern M2C_UNK func_001e8338;
-extern M2C_UNK func_001e8628;
-extern M2C_UNK func_001e8658;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003DABD0.h"
 extern s32 D_003DD258;
 extern s32 D_003DD28C;
-extern s32 D_006314CC;
-extern s32 D_006314D0;
-extern s32 D_006314D4;
-extern s32 D_006314D8;
-extern s32 D_006314DC;
 f32 func_001edc50(s32);
 f32 func_001edcd8(f32);
-s32 func_0011e340(M2C_UNK);
 s32 func_00123488(s32);
 s32 func_001efc68();
 #include "vm/script_vm.h"
@@ -92,35 +74,10 @@ void memset(s32, s32, s32);
 
 
 
-void func_001e7e78(void) {
-    func_0011c7a8(D_006314D4, 0, 0x3000, 0, 0, 0);
-}
+/* func_001e7e78, func_001e8060, func_001e8388, func_001e86a0 are in src/event/sound.c. */
 
-void func_001e8060(s32 arg0) {
-    D_006314D8 = arg0;
-    if (func_0011e340(0) == 0) {
-        func_0011ec08(D_006314D0, &D_00F20000, D_006314D8, &func_001e7fe0);
-        return;
-    }
-    func_0011ef10(0xC352, &func_001e8010);
-}
 
-void func_001e8388(s32 arg0) {
-    D_006314DC = arg0;
-    if (func_0011e340(0) == 0) {
-        func_0011eb88(D_006314CC, &D_00F20000, D_006314DC, &func_001e8308);
-        return;
-    }
-    func_0011ef10(0xC352, &func_001e8338);
-}
 
-void func_001e86a0(void) {
-    if (func_0011e340(0) == 0) {
-        func_0011e9a8(&func_001e8628, &D_00F20000);
-        return;
-    }
-    func_0011ef10(0xC352, &func_001e8658);
-}
 
 void func_001e92b8(void) {
     func_0010bd90(&D_00631570, 0);

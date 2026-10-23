@@ -134,15 +134,9 @@ call:
 }
 
 
-typedef struct {
-    u8 pad0[0x180];
-    s32 sp;
-    s32 stk[105];
-    s64 f328;
-} VM2;
-s32 func_0011e368(s32, s32);
 
-s32 func_001e8da0(VM2 *vm) { s32 r = func_0011e368(vm->stk[vm->sp - 1], vm->stk[vm->sp]); if (r != 0) return r = 4; return 2; }
+/* func_001e8da0 is in src/event/sound.c. */
+
 #include "data/data_002A.h"
 #include "data/pieces/D_002E27CC.h"
 #include "data/pieces/D_002E27D0.h"

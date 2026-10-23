@@ -30,54 +30,16 @@ typedef struct { f32 x, y, z; } V3;
 extern S10 D_004908E0;
 extern S10 D_00490900;
 
-extern s32 D_00631560;
 extern volatile u32 D_002C5958;
-extern u64 D_0038CD00;
 #include "data/pieces/D_002E26A0.h"
 extern S631620 D_00631620;
 
-s32 func_0011e340(s32);
-void func_00146928(s32);
-s32 func_0011cdf0(s32, s32, void *);
-s32 func_0011ef10(s32, void *);
-void func_001e8e68(void);
-void func_001e8e38(void);
-void func_001557d0(void);
-s32 func_00123158(s32, s32);
-s32 func_0011c820(void);
 
-s32 func_001e8ed8(s32 a0, s32 a1, s32 a2) {
-    D_00631560 = a2;
-    if (func_0011e340(0) == 0) {
-        func_00146928(-6);
-        func_00146928(-7);
-        D_002C5958 |= 0x40000;
-        return func_0011cdf0(-8, D_00631560, func_001e8e38);
-    }
-    return func_0011ef10(0xc352, func_001e8e68);
-}
+/* func_001e8ed8, func_001e9028, func_001e91c0, func_001e9238, func_001e9288 are in src/event/sound.c. */
 
-s32 func_001e9028(void) {
-    return ((s32)(D_0038CD00 >> 55) & 1) ? 4 : 2;
-}
 
-s32 func_001e91c0(void) {
-    if (func_0011e340(0) == 0) {
-        func_001557d0();
-        return 2;
-    }
-    return 4;
-}
 
-s32 func_001e9238(void) {
-    s32 r = func_00123158((*(s32 *)&D_002E26A0), 0);
-    while (r) r = func_00123158((*(s32 *)&D_002E26A0), r);
-    return 2;
-}
 
-s32 func_001e9288(void) {
-    return func_0011c820() ? 4 : 2;
-}
 
 void func_001e97d8(s32 a0, s32 a1, s32 a2, s32 a3) {
     s32 x0 = (a0 + 0x700) << 4;

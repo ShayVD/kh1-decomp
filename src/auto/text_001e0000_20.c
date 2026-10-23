@@ -3,11 +3,7 @@
 #include "m2c.h"
 #include "data/bss_0063.h"
 
-extern s32 D_006314D4;
 extern s64 D_00389C90[];
-void func_0011c7d8(s32, f32, f32, f32, f32, f32, f32, f32, f32);
-void func_001e86a0(void);
-void func_001e8728(void);
 
 /* func_001e2498 is in src/screen/screen.c. */
 
@@ -15,35 +11,12 @@ void func_001e8728(void);
 
 
 
-void func_001e7fe0(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFEFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
+/* func_001e7fe0, func_001e8308, func_001e8628, func_001e8770, func_001e87b8, func_001e8e38 are in src/event/sound.c. */
 
-void func_001e8308(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFF7FFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
 
-void func_001e8628(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFDFFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
 
-s32 func_001e8770(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
-    func_0011c7d8(D_006314D4, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
-    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x2A));
-    func_001e86a0();
-    return 2;
-}
 
-s32 func_001e87b8(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
-    func_0011c7d8(D_006314D4, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
-    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x2A));
-    func_001e8728();
-    return 2;
-}
 
-void func_001e8e38(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFF7FFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
 
 s32 func_001ea438(void) {
     D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFBFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
