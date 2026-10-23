@@ -4,8 +4,6 @@
 
 #include "common.h"
 
-typedef struct { u8 pad[0xcc]; s32 active; } E3530;
-typedef struct { E3530 e[3]; u8 pad[0x33c - 0x270]; s32 x33c; } S3530;
 typedef struct { u8 pad[0x64]; u16 x64; } S90a0;
 typedef struct { u8 pad[0x10]; s32 x10; } S5C30;
 

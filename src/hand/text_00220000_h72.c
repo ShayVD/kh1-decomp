@@ -925,7 +925,7 @@ void func_0022c730(O98 *a0) {
 }
 
 /* needs make: uses rodata */
-typedef struct { u8 pad[0x33c]; s32 x33c; } S33C;
+#include "menu/partymdl.h"
 extern s32 D_003F34FC;
 extern s32 D_00643794;
 extern s32 D_00643790;
@@ -934,11 +934,10 @@ extern s32 D_0064379C;
 extern s32 D_003F34C8;
 extern s32 D_003F3504;
 extern u8 D_003F37A0[];
-extern S33C D_003F3530;
+extern PartyMdl D_003F3530[4];
 void func_00223e10(void);
 void func_00223e68(void);
 void func_0024f210(void *, void (*)(void));
-void func_0020a248(s32);
 
 void func_00223ea8(void) {
     switch (D_00643794) {
@@ -974,9 +973,9 @@ void func_00223ea8(void) {
     case 5:
         break;
     case 4:
-        if (D_003F3530.x33c == 0) {
+        if (D_003F3530[3].active == 0) {
             func_0020a248(3);
-            D_003F3530.x33c = 1;
+            D_003F3530[3].active = 1;
         }
         D_00643790 = 1;
         D_0064379C = 1;

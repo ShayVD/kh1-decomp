@@ -1,29 +1,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
 #include "data/types/text_00200000_h47.h"
-extern S3530 D_003F3530;
-extern s32 D_003F3870;
-s32 func_001ef8f8(s32);
-void func_00122f20(s32, void *);
-void func_0020a248(s32);
-
-void func_00209d48(void) {
-    s32 i;
-    s32 p;
-    D_003F3870 = 0;
-    for (i = 0; i < 3; i++) {
-        p = func_001ef8f8(i);
-        if (p == 0) {
-            D_003F3530.e[i].active = 0;
-        } else {
-            D_003F3530.e[i].active = 1;
-            func_00122f20(p, &D_003F3530.e[i]);
-            func_0020a248(i);
-            D_003F3870++;
-        }
-    }
-    D_003F3530.x33c = 0;
-}
 
 extern s32 D_006411E0;
 extern f32 D_006411E4;
@@ -750,7 +727,6 @@ s32 func_00229338(s32 a0) {
     return a0;
 }
 
-
 void func_00229490(s32 a0) {
     s32 buf[3];
     s32 i;
@@ -805,7 +781,6 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 #include "data/data_003F.h"
 #include "data/data_0049.h"
 #include "data/pieces/D_003E90A0.h"
-#include "data/pieces/D_003F3530.h"
 #include "data/pieces/D_003F5C30.h"
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"

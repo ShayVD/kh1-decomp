@@ -13,14 +13,6 @@ extern s32 D_003F34C8;
 extern s32 D_006411FC;
 s32 func_001f40c8();
 
-void func_0020a6b8(void) {
-
-}
-
-void func_0020a8e8(void) {
-
-}
-
 void func_0020bdf0(void) {
     D_006411FC = 1;
     D_00641218 = 128.0f;
