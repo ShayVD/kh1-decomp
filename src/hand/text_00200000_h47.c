@@ -17,8 +17,6 @@ extern s32 D_00641C10[];
 extern s32 D_00642410;
 extern s32 D_00641C10[];
 extern s32 D_00642410;
-
-typedef struct { u8 pad[0xd2]; s16 xd2; } Oac38;
 s32 func_001f31a8(s32, s32);
 void func_001f3dc0(s32);
 void func_001f3e20(s32, s32);
@@ -35,107 +33,12 @@ extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);
 void func_001f3d58(s32, s32);
 void func_001f3e48(s32, s32);
-
-extern s32 D_003F34C8;
-extern s32 D_003F350C;
-extern s32 D_003F3510;
 extern s32 D_003F5C50[];
-extern s32 D_00643118;
-extern s32 D_0064311C;
-extern s32 D_00643120;
 extern s32 D_0064324C;
-void func_0021e508(void);
-void func_00120748(s32, s32, void (*)(void), s32);
-
-void func_0021e538(void) {
-    s32 k;
-    switch (D_00643118) {
-    case 0:
-        switch (D_003F350C) {
-        case 0:
-            k = D_0064324C;
-            D_003F34C8++;
-            D_003F350C = 1;
-            D_00643118 = 1;
-            D_00643120 = k;
-            func_00120748(D_003F5C50[k], D_003F3510, func_0021e508, 0);
-            return;
-        case 1:
-            D_00643118 = D_003F350C;
-            return;
-        default:
-            if (D_00643120 != D_0064324C) {
-                D_003F350C = 0;
-                D_00643118 = 0;
-            } else {
-                D_0064311C = D_00643120;
-                D_00643118 = 2;
-            }
-            break;
-        }
-        break;
-    case 2:
-        break;
-    case 1:
-        if (D_003F350C == 2) {
-            if (D_00643120 != D_0064324C) {
-                D_003F350C = 0;
-                D_00643118 = 0;
-                return;
-            }
-            D_00643118 = D_003F350C;
-            D_0064311C = D_00643120;
-        }
-        break;
-    }
-}
-
-extern u8 *D_006431F0[];
-extern s32 D_00643200[];
-extern u8 D_00643210[];
 extern s32 D_0064324C;
-void func_00207000(s32);
-void func_00207048(s32);
-s32 func_00207180(s32);
-s32 func_0021dc08(u8);
-
-void func_0021f278(void) {
-    s32 i;
-    for (i = D_00643200[D_0064324C] - 1; i >= 0; i--) {
-        if (func_00207180(func_0021dc08(D_006431F0[D_0064324C][i])) == 0) {
-            if (D_0064324C != 2) {
-                func_00207000(D_0064324C);
-                return;
-            }
-            if (D_00643210[i] != 0) {
-                func_00207000(2);
-                return;
-            }
-        }
-    }
-    func_00207048(D_0064324C);
-}
-
-extern u8 D_003F5F30[];
-extern u8 D_003F5F60[];
-extern u8 D_003F5F90[];
 extern s32 D_0064324C;
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
-
-void func_0021f858(s32 a0) {
-    s32 b[3];
-    b[0] = func_001f31a8((s32)D_003F5F90, 50);
-    if (b[0] == 0) return;
-    func_001f3e48(b[0], a0);
-    b[1] = func_001f31a8((s32)D_003F5F60, 50);
-    if (b[1] == 0) return;
-    func_001f3e48(b[1], b[0]);
-    b[2] = func_001f31a8((s32)D_003F5F30, 50);
-    if (b[2] == 0) return;
-    func_001f3e48(b[2], b[1]);
-    ((Oac38 *)b[2])->xd2 = *(u16 *)&D_0064324C * 16;
-}
 
 typedef struct { u8 pad[0xa0]; f32 xa0; } Oaf0;
 typedef struct { u8 pad[0x10]; s32 x10; } O3428;
@@ -432,4 +335,3 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 #include "data/pieces/D_003F5C30.h"
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"
-#include "data/pieces/D_003F34C8.h"

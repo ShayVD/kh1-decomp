@@ -23,160 +23,22 @@ typedef E20_3F2C40 E20;
 s32 func_001f42b8(void *);
 s32 func_001f3758(void *);
 void func_0011d768(s32);
-void func_001fd858(void *);
-s32 func_001fd518(void *);
 Obj *func_001f31a8(u8 *, s32);
 void func_001f3e48(Obj *, void *);
 s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
 
 #include "data/pieces/D_003F34C4.h"
-typedef N_3f34c4 Obj2;
 typedef f32 Mtx[4][4];
 extern s32 D_003F5C30[];
 void func_0021b820(void);
-void func_00207560(void *, s32, s32);
-void func_00207428(void *, s32, s32);
-void func_0021c4f8(void *);
-
-typedef struct { u8 pad[0x24]; f32 x24; f32 x28; s32 x2c; s32 x30; } Ed;
-void func_001f36b8(void *);
-f32 func_001edcd8(f32);
-void func_002053e8(void *, s32, s32, s32, s32, s32);
-void func_0021b1b0(f32, f32, s32, s32);
-void func_0021af38(void *);
-
-void func_0021e670(Ed *a) {
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f36b8(a);
-            func_0011d768(3);
-        } else {
-            if (D_00425BC8->x4 & 0x100000) {
-                a->x24 -= 0.02f;
-                if (a->x24 < 0.1f) a->x24 = 0.1f;
-            } else if (D_00425BC8->x4 & 0x400000) {
-                a->x24 += 0.02f;
-                if (10.0f < a->x24) a->x24 = 10.0f;
-            }
-            if (D_00425BC8->x4 & 0x800000) {
-                a->x28 += 0.05235987755982988f;
-                a->x28 = func_001edcd8(a->x28);
-            } else if (D_00425BC8->x4 & 0x200000) {
-                a->x28 -= 0.05235987755982988f;
-                a->x28 = func_001edcd8(a->x28);
-            }
-            if ((s32)D_00425BC8->x4 < 0) {
-                a->x2c -= 4;
-                if (a->x2c < 0) a->x2c = 0;
-            } else if (D_00425BC8->x4 & 0x20000000) {
-                a->x2c += 4;
-                if (a->x2c > 512) a->x2c = 512;
-            }
-            if (D_00425BC8->x4 & 0x10000000) {
-                a->x30 -= 4;
-                if (a->x30 < 0) a->x30 = 0;
-            } else if (D_00425BC8->x4 & 0x40000000) {
-                a->x30 += 4;
-                if (a->x30 > 384) a->x30 = 384;
-            }
-        }
-    }
-    func_002053e8(a, 17, 73, 479, 295, 0x40357966);
-    func_0021b1b0(a->x24, a->x28, a->x2c, a->x30);
-    func_0021af38(a);
-}
-
-extern Obj2 *D_00643110; /* src/data/bss_0064.c: s32 D_00643110 */
-extern s32 D_0064324C;
 extern s32 D_00643200[];
-extern s32 D_00643118;
-extern s32 D_003F5F18[];
-extern s32 D_00643278[];
-s32 func_001fe5a0(void *);
-void func_0021f410(void *);
 s32 func_0021b800(s32);
 s32 func_00207088(s32);
 
-void func_0021f5f8(void *a) {
-    s32 i, y;
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3758(D_00643110);
-            func_0011d768(3);
-        } else {
-            s32 *p;
-            func_001fd858(a);
-            i = func_001fd518(a);
-            p = &D_0064324C;
-            *p = i;
-            if (func_001fe5a0(a)) {
-                if (D_00643200[*p]) {
-                    func_001f3758(D_00643110->x10);
-                    func_0021f410(a);
-                    D_00643118 = 0;
-                    func_0011d768(2);
-                } else {
-                    func_0011d768(3);
-                }
-            }
-        }
-    }
-    y = 116;
-    for (i = 0; i < 3; i++) {
-        func_001f94f0(a, 0, 322, y, func_0021b800(D_003F5F18[i]), 15, D_00643200[i] ? 0x80461E00 : 0x40461E00);
-        if (D_00643278[i]) func_00207560(a, 456, y - 2);
-        if (!func_00207088(i)) func_00207428(a, 450, y + 10);
-        y += 60;
-    }
-    func_0021b820();
-    func_0021c4f8(a);
-}
-
 extern s32 D_00643200[];
-extern u8 D_00643128[];
-extern u8 D_00643160[];
-extern u8 D_006431B0[];
-extern u8 D_00643210[];
-s32 func_0021dc08(s32);
-s32 func_00207180(s32);
-void func_00207000(s32);
-void func_00207048(s32);
 s32 func_00207088(s32);
 void func_002072e0(s32);
 void func_00207298(s32);
-
-void func_0021f968(void) {
-    s32 i;
-    for (i = D_00643200[0] - 1; i >= 0; i--) {
-        if (!func_00207180(func_0021dc08(D_00643128[i]))) {
-            func_00207000(0);
-            goto l1;
-        }
-    }
-    func_00207048(0);
-l1:
-    for (i = D_00643200[1] - 1; i >= 0; i--) {
-        if (!func_00207180(func_0021dc08(D_00643160[i]))) {
-            func_00207000(1);
-            goto l2;
-        }
-    }
-    func_00207048(1);
-l2:
-    for (i = D_00643200[2] - 1; i >= 0; i--) {
-        if (!func_00207180(func_0021dc08(D_006431B0[i])) && D_00643210[i]) {
-            func_00207000(2);
-            goto l3;
-        }
-    }
-    func_00207048(2);
-l3:
-    if (func_00207088(0) && func_00207088(1) && func_00207088(2)) {
-        func_002072e0(2);
-        return;
-    }
-    func_00207298(2);
-}
 
 extern s32 D_00643418;
 extern u8 D_006433F8[];

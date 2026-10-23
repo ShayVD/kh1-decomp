@@ -3,23 +3,6 @@
 #include "data/bss_0064.h"
 
 typedef W606Mem_304be8 S4BE8e;
-void func_0021fb50(void);
-
-extern s32 D_0064324C, D_00643250;
-extern s32 D_00643258[], D_00643268[];
-extern s32 D_00643118, D_0064311C, D_00643120;
-void func_0021fb50(void) {
-    s32 i;
-    D_0064324C = 0;
-    D_00643250 = 0;
-    for (i = 0; i < 3; i++) {
-        D_00643258[i] = 0;
-        D_00643268[i] = 0;
-    }
-    D_0064311C = -1;
-    D_00643120 = -1;
-    D_00643118 = 0;
-}
 
 extern s32 D_00643418;
 extern u8 D_006433F8[];
