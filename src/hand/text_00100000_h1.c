@@ -308,7 +308,7 @@ void func_00104eb0(s32 i, f32 *out) {
 s32 func_00105020(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 80) return 1;
+        if ((D_002A6274[i].f.w & 0xf6) == 80) return 1;
     }
     return 0;
 }
@@ -316,7 +316,7 @@ s32 func_00105020(void) {
 s32 func_00105078(void) {
     s32 i;
     for (i = 0; i < D_002A6294; i++) {
-        if ((D_002A6274[i].w16 & 0xf6) == 144) return 1;
+        if ((D_002A6274[i].f.w & 0xf6) == 144) return 1;
     }
     return 0;
 }

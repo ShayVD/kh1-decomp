@@ -42,7 +42,11 @@ typedef struct {
     s16 n;
     u8 act;
     u8 id;
-    f32 d;
+    union {                 /* 0xc: the plane's d; an id before the load sets it */
+        f32 d;
+        s32 i;
+        u16 h;
+    };
     Fl20_2a6238 f;
 } Ent20_2a6238;
 
