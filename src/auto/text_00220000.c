@@ -4,50 +4,19 @@
 #include "data/bss_0064.h"
 
 M2C_UNK func_0021b800(s32);
-M2C_UNK func_002210f8();
-M2C_UNK func_002229a0(s32);
 M2C_UNK func_00223260(s32);
 M2C_UNK func_00223508();
 M2C_UNK func_00223870(s32);
 M2C_UNK func_0022f818();
 extern s32 D_003F34C0;
 extern s32 D_003F5C28;
-extern s32 D_003F5C2C;
 extern s32 D_003F6854;
-extern s32 D_00643660;
-extern s32 D_00643674;
-extern s32 D_00643690;
-extern s32 D_00643694;
-extern s32 D_00643698;
-extern s32 D_0064369C;
 extern s32 D_006436A0;
 extern s32 D_00646A20; /* src/data/bss_0064.c: u32 D_00646A20 */
 extern s32 D_00646A24; /* src/data/bss_0064.c: u32 D_00646A24 */
 extern s32 D_00646A28;
 extern s32 D_00647644;
 s32 func_001f42b8();
-
-void func_00222a70(s32 arg0) {
-    if (func_001f42b8() != 0) {
-        func_002229a0(arg0);
-    }
-}
-
-void func_00222b40(s32 arg0) {
-    D_00643660 = arg0;
-}
-
-void func_00222b50(void) {
-    func_002210f8();
-    D_003F5C2C = D_00643674 != 0;
-}
-
-void func_00222b80(void) {
-    D_00643690 = 0;
-    D_00643694 = 0;
-    D_00643698 = 0;
-    D_0064369C = 0;
-}
 
 void func_00222c98(s32 arg0) {
     func_0021b800(arg0 + 0x13);

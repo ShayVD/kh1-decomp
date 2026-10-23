@@ -43,33 +43,8 @@ void func_0011d768(s32);
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
 s32 func_001f42b8(void);
-
-typedef struct { u8 pad[0xcc]; s16 xcc; u8 pad2[4]; s16 xd2; } O29a0;
-extern u8 D_003F6590[];
-extern u8 D_003F65C0[];
-extern u8 D_003F65F0[];
-extern s32 D_00643674;
-extern s32 D_00643690;
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
-
-void func_002229a0(s32 a0) {
-    s32 b[3];
-    b[0] = func_001f31a8((s32)D_003F65F0, 50);
-    if (b[0] == 0) return;
-    func_001f3e48(b[0], a0);
-    b[1] = func_001f31a8((s32)D_003F65C0, 50);
-    if (b[1] == 0) return;
-    func_001f3e48(b[1], b[0]);
-    b[2] = func_001f31a8((s32)D_003F6590, 50);
-    if (b[2] == 0) return;
-    func_001f3e48(b[2], b[1]);
-    ((O29a0 *)b[2])->xcc = D_00643674;
-    if (D_00643690 >= D_00643674) {
-        D_00643690 = D_00643674 - 1;
-    }
-    ((O29a0 *)b[2])->xd2 = (u16)D_00643690 * 16;
-}
 
 extern s32 D_003F5C34;
 extern u8 D_006436A8[];

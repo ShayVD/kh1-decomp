@@ -12,7 +12,8 @@
 /* The TextWin fields (include/text/textwin.h) the sections read, with
  * +0xd2 as a plain s16. */
 typedef struct JsWin {
-    u8 pad0[0x10];
+    u8 pad0[0xc];
+    struct JsWin *xc;
     struct JsWin *x10;
     u8 pad14[0x24 - 0x14];
     s32 x24;
