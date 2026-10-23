@@ -507,7 +507,7 @@ void pppRyjDrawShipolyBoneDraw(PppObject *obj, BoneDKey *key, PppEntry *e) {
     DColWork *w;
     DSlot *s;
     DMdl *m;
-    u8 *a;
+    void *a; /* the actor (D_002E26A0[0]) or pA0 */
 
     func_0019b460(obj, (BoneKey *) key, e);
     if (key->slot == 0xFFFF)

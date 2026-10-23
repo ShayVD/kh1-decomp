@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_0036243C_H
 
 #include "common.h"
+#include "data/pieces/D_00362430.h"
 
-extern s32 D_0036243C;
+extern E30_362430 *D_0036243C; /* the current camera box */
 
 #endif /* KH1_DATA_PIECES_D_0036243C_H */

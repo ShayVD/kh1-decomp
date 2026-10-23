@@ -101,7 +101,7 @@ extern void func_00121eb0(void *);
 extern s32 func_00122ff8(void *);
 extern void func_00176310(void *);
 extern void func_0011d768(s32);
-extern s32 func_0012f040(s32, s32);
+extern s32 func_0012f040(struct Actor *, s32);
 extern s32 func_0012eaf8(s32);
 extern f32 func_0012ed88(void *, void *, void *, void *);
 
@@ -162,7 +162,7 @@ void func_001249d8(void) {
     while ((p = func_001230a0(p)) != 0) func_001247e8(p);
 }
 
-typedef struct S70 { u8 pad[0x70]; s32 f70; } S70;
+typedef struct Actor { u8 pad[0x70]; s32 f70; } S70;
 s32 func_00125a00(s32 a) {
     S70 *p = D_002E26A0[0];
     if ((a & 1) && p->f70) return 0;

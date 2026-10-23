@@ -39,8 +39,6 @@ typedef struct {
 } Sv;
 typedef Sv SvA80;
 typedef Sv SvAD0;
-#include "data/pieces/D_003A7990.h"
-typedef VmRec E848;
 #include "data/types/text_001e0000_h68.h"
 typedef struct { s8 used; u8 pad1[3]; s32 x4; s32 x8; s32 xc; s32 x10; u8 pad[180 - 20]; } Ent180;
 typedef struct { u8 b0; u8 b1; s8 x2; s8 x3; s8 used; u8 pad5[11]; s32 x10; u8 pad[72 - 20]; } Ent72;
@@ -109,12 +107,6 @@ extern char D_006305D0[][10];
 extern u8 D_006304E0[];
 extern s8 D_006307C8[]; /* src/data/bss_0063.c: char D_006307C8[0x800] */
 extern u8 D_00630FC8[]; /* src/data/bss_0063.c: char D_00630FC8[0x100] */
-#include "data/pieces/D_0038D170.h"
-extern s32 D_0039A570;
-#include "data/pieces/D_0039A580.h"
-extern s32 D_003A7980;
-extern s32 D_003B4D90;
-#include "data/pieces/D_003B4DA0.h"
 extern s32 D_003C21A0;
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
@@ -138,7 +130,6 @@ void func_0010f558(void *, void *, s32);
 void func_0011d768(s32);
 s32 func_0011ef10(s32, void (*)());
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
-s32 func_00123618(s32);
 s32 func_001205f0(void *, void *);
 void *func_001559f0(s32, s32);
 s32 func_001ba1e8(s32);
@@ -689,31 +680,7 @@ void func_001e9670(void) {
     func_0011ef10(0xC350, (void (*)())func_001e9418);
 }
 
-E848 *func_001e9b98(s32 a, s32 id) {
-    s32 i;
-    if (a == 1) {
-        if (!D_00389C90.f3038) {
-            for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123618(D_003A7990[i].x0) == id) return &D_003A7990[i];
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123618(D_0039A580[i].x0) == id) return &D_0039A580[i];
-            }
-        }
-    } else {
-        if (!D_00389C90.f3034) {
-            for (i = 0; i < D_0039A570; i++) {
-                if (func_00123618(D_0038D170[i].x0) == id) return &D_0038D170[i];
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123618(D_0039A580[i].x0) == id) return &D_0039A580[i];
-            }
-        }
-    }
-    return 0;
-}
+/* func_001e9b98 is in src/vm/vm_find.nofill.c. */
 
 s32 func_001ec7d0(s32 arg) {
     u32 i, j;

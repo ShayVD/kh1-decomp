@@ -1,7 +1,8 @@
 #include "common.h"
-#include "data/bss_004D.h"
-typedef union { u32 w; struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 r:29; } f; u8 c[4]; } F5968;
+#include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C5968.h"
+#include "data/bss_004D.h"
+typedef W_2c5968 F5968;
 
 /* ---- 00114880 ---- */
 extern s32 D_003F6E28;
@@ -40,7 +41,7 @@ void func_001f1ed8(s32, s32, s32, u8 *, s32);
 void func_00207748(s32, s32, s32, s32);
 
 void func_0010f658(s32 a) {
-    if ((*(volatile u8 *)((F5968 *)&D_002C5968) >> 3) & 3) return;
+    if ((*(volatile u8 *)((W_2c5968 *)&D_002C5968) >> 3) & 3) return;
     if (a == 0) {
         sceGsSyncPath(0, 0);
         func_001104e0();
@@ -118,11 +119,11 @@ s32 func_0010f918(void) {
     volatile F5968 *p;
 
     if (D_002BBD40 == 0 && D_002B6484 == 1) {
-        (*(F5968 *)&D_002C5968).w = 0;
+        (*(W_2c5968 *)&D_002C5968).w = 0;
         return 0;
     }
     saved = D_002BD114;
-    p = ((F5968 *)&D_002C5968);
+    p = ((W_2c5968 *)&D_002C5968);
     D_004D5B0C = 0;
     run = 1;
     started = 0;
@@ -197,7 +198,6 @@ u32 func_00111b90(u32 a) {
 /* ---- 00113558 ---- */
 extern s32 D_002BBE0C;
 extern s32 D_002B6774, D_002BCDEC, D_0029B410, D_0029B414, D_002BC130;
-typedef struct { u32 b0:2; u32 b2:1; u32 b3:24; u32 b27:1; u32 r:4; } F58;
 extern volatile u32 D_002C5958;
 extern s32 D_002BCC90, D_002BCDBC, D_002BCDC0, D_002BCDD8, D_002C1388, D_002BBE1C, D_002B6474, D_002BCDC4;
 s32 func_00105860(void);
@@ -221,7 +221,7 @@ s32 func_00113558(void) {
     D_002BCDEC = 1;
     if (D_0029B410 && D_0029B414) func_00175f58(D_0029B410, D_0029B414, D_002BC130 + 1, 100000);
     func_00100ab0();
-    { F58 *p = (F58 *)&D_002C5958; p->b2 = 0; p->b27 = 0; }
+    { Fl_2c5958 *p = (Fl_2c5958 *)&D_002C5958; p->b2 = 0; p->b27 = 0; }
     func_001c3770(D_002BCC90, 0);
     D_002BCDBC = 0;
     D_002BCDC0 = 0;
@@ -438,6 +438,5 @@ void func_00116628(Ent628 *e) {
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/pieces/D_003F6DF0.h"
-#include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BD110.h"
 #include "data/pieces/D_002BD114.h"

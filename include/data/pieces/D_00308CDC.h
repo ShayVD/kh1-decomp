@@ -7,6 +7,9 @@
 
 #include "common.h"
 
+typedef struct { u8 a, b; } Cfg8Pr_308cdc;
+typedef struct { u16 a, b; } Cfg16Pr_308cdc;
+
 typedef struct {
     u8 pad_0[0x10];
     u8 lim0;
@@ -22,7 +25,19 @@ typedef struct {
     f32 x2c;
     f32 x30;
     f32 x34;
-    u8 pad_38[0xb8];
+    u8 pad_38[0x8];
+    Cfg8Pr_308cdc t[10];   /* 0x40: per kind (an actor's x130->x4c), h31 */
+    Cfg16Pr_308cdc e[10];  /* 0x54: per kind, c01 */
+    u8 x7c[0xc];           /* 0x7c: per kind, h58 (* 60 frames) */
+    f32 f88;
+    u8 pad_8c[0x4];
+    f32 x90;
+    u8 f94;
+    u8 f95;
+    u16 f96;
+    u8 pad_98[0x50];
+    f32 fe8;
+    u8 pad_ec[0x4];
     f32 ff0;
     u16 hF4[1];
     u8 pad_f6[0x8];

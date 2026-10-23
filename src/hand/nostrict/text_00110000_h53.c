@@ -17,7 +17,7 @@ typedef struct {
     s32 x4;
     u8 x6pad[0];
 } Dummy3b;
-typedef struct Obj3b {
+typedef struct Actor {
     u8 pad0[4];
     s32 x4;
     u8 pad8[0x38];
@@ -142,7 +142,7 @@ void func_00123d48(Obj3d *o) {
         k = (D_002E26A0[1] == 0) ? 1 : 2;
     }
     w = &D_004F71D0[k];
-    D_002E26A0[k] = o;
+    D_002E26A0[k] = (void *)o; /* o: this file's Obj3d view */
     o->x148 = w;
     w->x154 = 0;
     o->x1cc = 1;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
 typedef struct Node { u16 type; u16 f2; s32 key; struct Node *next; s32 data; } Node;
@@ -22,10 +23,8 @@ Node *func_0011f090(Pool *l, s32 key, s32 val) {
     return n;
 }
 #include "data/types/nostrict_text_00110000_s6_04_p.h"
-typedef struct { u8 b0 : 1; u8 lo : 2; u8 mode : 2; u8 hi : 3; } Sema5968;
 #include "data/pieces/D_002C5960.h"
 typedef struct { u8 x0[2]; u8 x2; u8 pad[17]; } Prof;
-#include "data/pieces/D_002C5968.h"
 extern s16 D_002C597A;
 extern PadSt D_002C5AD0[];
 extern PadSt D_002C5BB0;
@@ -53,8 +52,8 @@ void func_0011f668(void) {
     PadSt *p;
     s32 btn;
     u16 act;
-    { s32 m = (*(volatile Sema5968 *)&D_002C5968).mode; if (m) return; }
-    (*(volatile Sema5968 *)&D_002C5968).b0 = 0;
+    { s32 m = (*(volatile Sema_2c5968 *)&D_002C5968).mode; if (m) return; }
+    (*(volatile Sema_2c5968 *)&D_002C5968).b0 = 0;
     i = 0;
     goto top;
 body:
@@ -82,7 +81,7 @@ join:
     p->active = act;
     if (i <= 0) goto top;
     if (D_002C5AD0[D_004E4280].active != 1) {
-        if (D_004E44F0 >= 31) (*(volatile Sema5968 *)&D_002C5968).b0 = 1;
+        if (D_004E44F0 >= 31) (*(volatile Sema_2c5968 *)&D_002C5968).b0 = 1;
         else D_004E44F0++;
     } else {
         D_004E44F0 = 0;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_002A6238.h"
 #include "data/bss_0049.h"
 
@@ -17,7 +18,6 @@ typedef struct { s32 status; void (*entry)(void); void *stack; s32 stackSize; vo
 typedef struct { u16 n; u8 pad2[0xb]; s8 col; u8 pade[2]; Glyph g[1]; } GlyphStr;
 typedef struct { u16 pad0; u16 n; f32 a; f32 b; s8 state; u8 padd[0x1803]; f32 t[1]; } Track;
 #include "data/pieces/D_002BC0A8.h"
-typedef Flags_2BC0A8_2 Flags;
 typedef struct { u64 a; s32 b; } Pad8;
 #include "data/types/text_00100000_h28_p.h"
 typedef struct { u8 pad0[0x54]; f32 rot; u8 pad58[8]; f32 x; s32 y; f32 z; u8 pad6c[0x14]; } Cam80;
@@ -58,7 +58,6 @@ extern ED0 D_00494D80[];
 #include "data/pieces/D_002A62B0.h"
 #include "data/pieces/D_002A3F60.h"
 #include "data/pieces/D_002A4060.h"
-#include "data/pieces/D_0037A378.h"
 extern Mtx D_00495190;
 extern Mtx D_00495210; /* src/data/bss_0049.c: u8 D_00495210[0x40] */
 extern Obj10 *func_0015ed80(s32, void (*)(void));
@@ -275,7 +274,7 @@ void func_00100278(void) {
     func_00106900();
     func_00106910();
     D_002B6474 = 0;
-    (*(Flags *)&D_0037A378).b0 = 0;
+    (*(Bits_37a378 *)&D_0037A378).b0 = 0;
     D_002BCDA8 = 0;
     D_002A3F44 = 0;
     D_002BC740 = 0;
@@ -315,7 +314,7 @@ void func_00100360(void) {
 
 s32 func_00100448(void) {
     D_002BC744 = D_002BC740;
-    D_002BC740 = (*(Flags *)&D_0037A378).b0;
+    D_002BC740 = (*(Bits_37a378 *)&D_0037A378).b0;
     func_00114c00();
     if (D_002BC0A8.flags_2.b1 == 1) {
         func_001007e8();

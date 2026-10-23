@@ -11,6 +11,7 @@ typedef struct {
     f32 x10;
     f32 x14;
     f32 x18;
+    u8 x1c;         /* s7_w2 copies it like D_00362438->x1c */
 } CamPt_362434;
 
 extern CamPt_362434 *D_00362434;

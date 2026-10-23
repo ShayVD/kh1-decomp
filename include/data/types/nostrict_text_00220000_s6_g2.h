@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00220000_S6_G2_H
 
 #include "common.h"
+#include "data/pieces/D_00425B80.h"
 
-typedef struct { s32 x0, x4; u8 pad[0x30]; s32 x38; } SvF;
+typedef S5B80_425b80 SvF; /* the save header record (D_00425B80) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00220000_S6_G2_H */

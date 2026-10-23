@@ -123,7 +123,7 @@ void func_00241d60(void) {
             s->h[2] = base[34];
             break;
         case 4:
-            base = BASE((*(Blob *)&D_00451040));
+            base = BASE(D_00451040);
             s->na = 7;
             for (j = 0; j < s->na; j++) s->a[j] = base + D_00454468[j];
             s->nb = 4;

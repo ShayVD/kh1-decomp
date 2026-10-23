@@ -1,159 +1,32 @@
-/* func_001c53c8 (hand/nostrict_nofill, no context). s10 r2_9 from r2_6__001c53c8_42w.c: (1) `u = (t - c0) / dt;` instead of reassigning x (c0 outlives x, so cse keeps c0 in the sub: FP regs exact); (2) `k = 0;` before the block-local `Elem *m = e->next;` (move a3,zero first); (3) the b==2 arm writes out the q20/q30 memcpys + call + return instead of `goto tail` (jump2 merges them; +2 refs each lifts &q20/&q30 over the loop base copy: s5/s6/s7). */
+/* The event camera: func_001c53c8, the one function of src/camera/ that
+ * needs -fno-strict-aliasing and gas without delay slot filling
+ * (docs/modules.md "Flags").  func_001c5168, which it calls, is in
+ * camera.c.
+ *
+ * Interpolate the camera path (D_0037A380.scn) at time `t`: find the key
+ * pair around t and set the output vectors q10..q40, x60 and xE0F4 by
+ * Hermite interpolation (key mode 2) or along the keys' view directions
+ * (modes 0-2 of byte 3), then apply func_001c5168.
+ *
+ * Match notes (session 10, r2_9, from r2_6__001c53c8_42w.c): (1) `u = (t -
+ * c0) / dt;` instead of reassigning x (c0 outlives x, so cse keeps c0 in the
+ * sub: FP regs exact); (2) `k = 0;` before the block-local `Elem *m =
+ * e->next;` (move a3,zero first); (3) the b==2 arm writes out the q20/q30
+ * memcpys + call + return instead of `goto tail` (jump2 merges them; +2 refs
+ * each lifts &q20/&q30 over the loop base copy: s5/s6/s7). */
 #include "common.h"
-
-typedef struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, rest:27; } Bits;
-
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0xc];
-    f32 f14, f18, f1c, f20;
-    u8 pad24[0x4c];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    u32 lbl[64];
-    u32 pc;
-    s32 sp;
-    s32 stk[32];
-    s32 var[26];
-    s32 stk2[33];
-    s32 x2f0;
-    f32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    s32 x31c, x320, x324;
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, b10:1, b11:1, b12:1, b13:1, b14:1, b15:1, brest:16;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VMa;
-
-typedef struct {
-    u8 pad0[4];
-    s32 x4;
-    u8 pad8[0x3c];
-    s32 x44;
-    u8 pad48[0x24];
-    s32 x6c;
-} Q48;
-
-typedef struct {
-    u8 pad0[0x1034];
-    s32 a1034[512];
-    s32 a1834[512];
-    s32 a2034[512];
-    s32 a2834[512];
-    s32 x3034;
-    u8 pad3038[8];
-    u8 *x3040;
-    u8 *x3044;
-    u32 x3048;
-    s32 *x304c;
-    u32 x3050;
-    s32 *x3054;
-    s32 x3058;
-    s32 x305c;
-    s32 *x3060;
-    s32 x3064;
-    s32 *x3068;
-    s32 x306c;
-    union { u64 x; s32 w[2]; struct { u32 lo; u32 p0:6, b38:1, b39:1, p40:3, b43:1, p44:9, b53:1, p54:10; } __attribute__((aligned(8))) f; } f3070;
-    union { u64 x; struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, b10:1, brest:21; u32 hi; } __attribute__((aligned(8))) b; } f3078;
-    u8 pad3080[0x3148 - 0x3080];
-    u32 x3148;
-    u8 pad314c[0x3158 - 0x314c];
-    s32 x3158[5];
-    void *x316c;
-    u8 pad3170[0x3178 - 0x3170];
-    s32 x3178;
-} BigA;
-
-extern BigA D_00389C90;
-#include "data/pieces/D_0037A378.h"
-extern s32 D_002C5958;
-#include "data/pieces/D_0038D170.h"
-#include "data/pieces/D_0039A580.h"
-extern s32 D_0039A570;
-extern s32 D_003A7980;
-extern u8 D_003DE570[];
-s32 func_001c1ce8(s8 *, s32);
-void func_001c19f8(VMa *, s32);
-void func_001c4198(void *, s32);
-
+#include "camera/camera.h"
 #include "data/pieces/D_0037A380.h"
+
 typedef Vec_37A380 Vec;
 typedef Elem_37A380 Elem;
-typedef Scn_37A380 Scn;
 
+void func_001e9fe8(void *dst, void *src);
+void func_001e9f18(void *dst, void *a, void *b, f32 t);
+f32 func_001e9e58(void *a, void *b);
+void func_001e9d00(void *d, void *a, void *b, f32 t);
 
-typedef struct {
-    u8 pad0[0xd0];
-    Vec v[5];
-    f32 f120, f124;
-} __attribute__((aligned(16))) CamS;
-extern CamS D_003C5510;
-extern s32 D_003C5500;
-void func_001c53c8(f32);
-void func_001c6a20(void);
-void func_001c5b88(void);
-void func_0011ef10(s32, void *);
-VMa *func_001e98d0(s32, s32);
-
-extern s8 *D_003C39AC;
-extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
-#include "data/pieces/D_00389C80.h"
-#include "data/pieces/D_00388480.h"
-extern s32 (*D_0037A198[])(VMa *, s32);
-s32 func_001ee200(void);
-void srand(u32);
-void func_001c29d8(void);
-void func_001c6720(void);
-void func_001cab48(void);
-void func_001c2d20(s8 *, void *, void *);
-s32 func_001c1cf8(s8 *, s32);
-void func_001c2778(void);
-
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-typedef struct {
-    u8 pad0[4];
-    s32 x4;
-    s32 x8;
-    u8 padc[0x34];
-    s32 x40[3];
-    u8 pad4c[0x14];
-    s32 x60[3];
-} S5BB0;
-typedef struct {
-    u8 pad0[0x10];
-    VMa *vm;
-    s32 n;
-    s32 x18;
-} Task;
-extern S5BB0 D_002C5BB0;
-extern u32 D_003C39A8;
-#include "data/pieces/D_003C21A8.h"
-extern f32 D_002BBDFC;
-Msg *func_001c4730(void);
-void func_001c4788(Msg *);
-s32 func_001c4640(Msg *);
-void func_001cebe8(void);
-void func_001cff28(void);
-void func_001cfff8(void);
-void func_001ca800(void);
-void func_001dcea8(VMa *);
-void func_001dcfd0(VMa *);
-void func_001e9fe8(Vec *dst, Vec *src);
-void func_001e9f18(Vec *dst, Vec *a, Vec *b, f32 t);
-f32 func_001e9e58(Vec *a, Vec *b);
-void func_001e9d00(Vec *d, Vec *a, Vec *b, f32 t);
-void func_001c5168(void);
-
+/* Cubic Hermite interpolation of p0 -> p1 with tangents m0, m1 over dt. */
 static inline f32 herm(f32 u, f32 u2, f32 u3, f32 dt, f32 p0, f32 p1, f32 m0, f32 m1) {
     f32 h1 = 2.0f * u3 - 3.0f * u2 + 1.0f;
     f32 h2 = -2.0f * u3 + 3.0f * u2;
@@ -255,4 +128,3 @@ void func_001c53c8(f32 t) {
         e = e->next;
     }
 }
-#include "data/pieces/D_002BBDFC.h"

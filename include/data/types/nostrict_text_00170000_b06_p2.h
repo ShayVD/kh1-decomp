@@ -3,9 +3,10 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00170000_B06_P2_H
 
 #include "common.h"
+#include "data/pieces/D_00362430.h"
 #include "data/types/nostrict_text_00170000_b06.h"
 #include "data/types/nostrict_text_00170000_b06_p.h"
 
-typedef struct Box { V4 min; V4 max; void *x20; s32 x24; u8 pad28[8]; } Box;
+typedef E30_362430 Box;
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00170000_B06_P2_H */

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "platform/math.h"
 #include "data/bss_0063.h"
 
@@ -19,15 +20,6 @@ typedef struct {
     u8 pad2f4[0x34];
     union { u64 x; s32 i[2]; } flags;
 } VM;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef struct {
     u8 pad0[0x34c];
     s32 a34c[7];

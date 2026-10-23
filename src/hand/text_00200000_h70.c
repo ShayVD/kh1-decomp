@@ -17,7 +17,6 @@ void func_00161de8(s32, void *, void *, s32);
 void func_001655e0(void *, s32, s32, f32);
 s32 func_00167698(s32);
 void func_00167d70(s32, f32);
-typedef struct { u8 pad[0x34]; f32 x34; f32 x38; u8 pad3c[4]; } C3050;
 
 typedef struct { u8 pad[0x90]; s32 x90; } P9e18;
 void func_00209e18(P9e18 *p) {
@@ -51,14 +50,14 @@ void func_00209f70(void) {
     s32 i;
     f32 *t;
     f32 *f;
-    C3050 *c;
+    B64 *c;
     func_00209d48();
     t = D_003F31D0[D_003F3870 - 1];
     for (i = 0; i < D_003F3870; i++) {
         func_00267b08(&D_00640E40[i], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
     }
     t = D_003F31D0[3];
-    c = (C3050 *)D_003F3050;
+    c = D_003F3050;
     f = &c->x38;
     for (i = 0; i < 4; i++) {
         func_00267b08(&D_00640E40[i + 4], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);

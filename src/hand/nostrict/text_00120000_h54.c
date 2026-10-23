@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
 #include "data/bss_0052.h"
 typedef struct {
@@ -391,9 +392,7 @@ typedef struct { u8 p[0xc8]; u8 *fc8; u8 pcc[0xd8 - 0xcc]; s32 fd8; } P6c;
 typedef struct { u8 p[0x6c]; P6c *f6c; u8 p70[0x148 - 0x70]; P148 *f148; } O20;
 typedef struct { u8 p[0x2c]; s32 f2c; } P5c;
 typedef struct { u8 p[0x34]; O20 *f34; void *f38; u8 p3c[0x54 - 0x3c]; s32 f54; u8 p58[4]; P5c *f5c; u8 p60[0xa0 - 0x60]; s32 fa0; } E20;
-typedef struct { u8 p[0x94]; u8 f94; u8 f95; u16 f96; } D20;
 typedef struct { void *p; s32 n; } Arg20;
-#include "data/pieces/D_00308CDC.h"
 extern s32 func_00123368(O20 *);
 extern s32 func_001350d8(E20 *, s32, O20 *);
 extern void func_00141608(O20 *, s32);
@@ -410,10 +409,10 @@ s32 func_001354b8(E20 *e, O20 *x) {
     if (r) {
     o = e->f34;
     if (o && (q = o->f6c->fc8) != 0 && (n = x->f6c->fd8) > 0) {
-        f32 f = (f32)(n - *q) * (f32)(*(D20 **)&D_00308CDC)->f94 / 100.0f + 1.0f;
+        f32 f = (f32)(n - *q) * (f32)(*(Cfg_308cdc **)&D_00308CDC)->f94 / 100.0f + 1.0f;
         s32 t, m;
-        if (o->f148 && ((s32)(o->f148->f170 >> 32) & 1)) f += (f32)(*(D20 **)&D_00308CDC)->f95 / 100.0f;
-        func_00141608(o, min54(max54(1, (s32)((f32)e->f5c->f2c * f)), e->f5c->f2c * (*(D20 **)&D_00308CDC)->f96 / 100));
+        if (o->f148 && ((s32)(o->f148->f170 >> 32) & 1)) f += (f32)(*(Cfg_308cdc **)&D_00308CDC)->f95 / 100.0f;
+        func_00141608(o, min54(max54(1, (s32)((f32)e->f5c->f2c * f)), e->f5c->f2c * (*(Cfg_308cdc **)&D_00308CDC)->f96 / 100));
     }
     if (e->f38) {
         Arg20 a;
@@ -426,7 +425,7 @@ s32 func_001354b8(E20 *e, O20 *x) {
 }
 
 typedef struct { u8 p[0x4c]; u16 f4c; } I21;
-typedef struct { u32 f0; u8 p4[2]; u8 f6; u8 p7[0x118 - 7]; f32 f118; u8 p11c[0x130 - 0x11c]; I21 *f130; u8 p134[0x144 - 0x134]; s32 f144; u8 p148[0x370 - 0x148]; u64 f370; u8 p378[0x38c - 0x378]; s32 f38c; u8 p390[4]; s32 f394; u8 p398[0x430 - 0x398]; V4 f430; } E21;
+typedef struct Actor { u32 f0; u8 p4[2]; u8 f6; u8 p7[0x118 - 7]; f32 f118; u8 p11c[0x130 - 0x11c]; I21 *f130; u8 p134[0x144 - 0x134]; s32 f144; u8 p148[0x370 - 0x148]; u64 f370; u8 p378[0x38c - 0x378]; s32 f38c; u8 p390[4]; s32 f394; u8 p398[0x430 - 0x398]; V4 f430; } E21;
 typedef struct { void *p; s32 n; } Arg21;
 extern f32 func_00135ca0(f32);
 extern void func_00122588(E21 *);

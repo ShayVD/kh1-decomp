@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
 
@@ -32,7 +33,7 @@ typedef struct { u8 pad[7]; u8 b7; u8 pad8[0x14]; T23 *f1c; } I23;
 typedef struct { u8 pad[0x134]; I23 *f134; u8 pad138[0x3ac - 0x138]; u32 f3ac; } E23;
 
 extern s32 func_00122ff8(void *);
-extern f32 func_0012ec60(s32, s32, f32 *);
+extern f32 func_0012ec60(struct Actor *, s32, f32 *);
 extern void func_00267530(void *, void *, void *);
 extern void func_002675a8(void *, void *);
 extern void *func_00123158(void *, void *);
@@ -259,7 +260,19 @@ void func_0012cb78(s32 v, s32 x) {
     D_00524F44 |= 0x10;
 }
 
-typedef struct { u8 pad[0x370]; u64 f370; } O16;
+typedef struct Actor {
+    u32 f0;
+    u8 pad4[0x2c];
+    f32 f30[4];
+    u8 pad40[0x30];
+    s32 f70;
+    u8 pad74[0xf0];
+    s32 f164;
+    u8 pad168[0x172];
+    u16 f2da;
+    u8 pad2dc[0x94];
+    u64 f370;
+} O16;
 typedef struct { u8 pad[0x30]; u32 f30; } P16;
 typedef struct { u8 pad[0x14c]; P16 *f14c; u8 pad150[0x14]; s32 f164; } E16;
 extern s32 D_002BC128;
@@ -271,7 +284,7 @@ void func_0012d068(E16 *e, u32 *fl) {
     if (D_002BC128 == 6 || (D_002BC128 == 16 && D_002BC130 == 24)) {
         d->f14 = 98;
     } else if ((((*(u32 *)&D_002E27C8) >> 2) & 1) && func_00122ff8((void *)D_002E31B0.f0)
-               && ((s32)(((O16 *)D_002E31B0.f0)->f370 >> 37) & 3) == 2 && e->f164 == 110
+               && ((s32)(D_002E31B0.f0->f370 >> 37) & 3) == 2 && e->f164 == 110
                && (e->f14c->f30 & ~0x102)) {
         d->f14 = 99;
     } else {
@@ -307,7 +320,7 @@ void func_0012d368(s32 a0, s32 a1, s32 *fl) {
 }
 
 typedef struct { u8 pad[0x10]; s32 f10; u8 f14[4]; } D18;
-typedef struct { u32 f0; } E18;
+typedef O16 E18;
 extern D18 D_002E30B8;
 extern s32 D_002E3138;
 extern s32 func_0013daa8(s32);
@@ -504,22 +517,20 @@ void func_0012f5c0(P5c0 *e) {
     }
 }
 
-typedef struct { u8 pad[0x70]; s32 f70; } Gb20;
-typedef struct { u32 f0; u8 pad[28]; } Tb20;
-#include "data/pieces/D_00350D88.h"
+typedef E18 Gb20;
 extern s32 D_00524F78;
 extern s32 D_002E31BC;
-extern void func_001337e0(s32, s32, s32);
+extern void func_001337e0(s32, struct Actor *, s32);
 extern void func_0011d768(s32);
-extern void func_00123030(Gb20 *, s32, s32);
-extern void func_0017ef40(s32);
+extern void func_00123030(Gb20 *, struct Actor *, s32);
+extern void func_0017ef40(struct Actor *);
 extern void func_0012fa98(void);
 
 void func_0012fb20(S31b0 *e, s32 m) {
     switch (m) {
     case 3:
         func_001337e0(3, e->f0, 0);
-        if ((((Tb20 *)&D_00350D88)[((Gb20 *)D_002E26A0[0])->f70].f0 >> 2) & 1) func_0011d768(68);
+        if ((D_00350D88[D_002E26A0[0]->f70].f0 >> 2) & 1) func_0011d768(68);
         break;
     case 4:
         D_00524F78 = 0;
@@ -587,7 +598,7 @@ void func_00131b50(Ob50 *e) {
 
 /* needs make: uses rodata */
 
-typedef struct { u8 pad[0x30]; f32 f30[4]; u8 pad40[0x30]; s32 f70; u8 pad74[0x164 - 0x74]; s32 f164; u8 pad168[0x2da - 0x168]; u16 f2da; } E1;
+typedef E18 E1;
 #include "data/pieces/D_002E31A8.h"
 extern f32 D_004F7800[];
 extern s32 func_00137618(E1 *, s32);

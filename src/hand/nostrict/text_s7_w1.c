@@ -1,7 +1,7 @@
 #include "common.h"
 
-typedef struct { u64 lo, hi; } QW;
-extern u8 D_00351E10[];
+#include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
+extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00662940; /* src/data/bss_0066.c: s32 D_00662940 */
 QW *D_00662944 ALIGNED(4);
 #include "data/pieces/D_002E26C0.h"
@@ -66,8 +66,8 @@ void func_00245b08(s32 a, Pan *p) {
     v.y -= 20;
     a = v.x;
     y = v.y;
-    D_00662944 = (QW *)D_00351E10;
-    D_00662940 = (QW *)(D_00351E10 + 0x10);
+    D_00662944 = D_00351E10;
+    D_00662940 = D_00351E10 + 1;
     for (i = 0; i < n; i++) {
         func_00245920(&p->items[d[5 - n + i]], D_00426820, a, y, 1.0f);
         a += 13;

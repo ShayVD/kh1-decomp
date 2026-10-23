@@ -712,27 +712,27 @@ void func_0019d968(s32, s32);
 
 void func_0019dac8(void) {
     PppQv d;
-    PppLight *p = (*(PppLight (*)[256])&D_0035C710);
+    PppLight *p = D_0035C710;
     s32 i;
 
     D_0061E710 = 0;
     for (i = 0; i < 256; i++, p++) {
-        if (!(p->flags & 0x100))
+        if (!(p->u.w & 0x100))
             continue;
-        if (p->flags & 0x200)
+        if (p->u.w & 0x200)
             continue;
         {
-            func_00267530(d.f, &D_002E2780.x, p->pos);
+            func_00267530(d.f, &D_002E2780.x, p->v);
             func_00267548(d.f, d.f, d.f);
             D_0061E310[D_0061E710] = p;
             D_0061E710++;
-            p->dist = d.f[0] + d.f[1] + d.f[2];
+            p->v[3] = d.f[0] + d.f[1] + d.f[2];
         }
     }
     if (D_0061E710 >= 2)
         func_0019d968(0, D_0061E710 - 1);
     for (i = 0; i < D_0061E710; i++)
-        D_0061E310[i]->dist = 1.0f;
+        D_0061E310[i]->v[3] = 1.0f;
 }
 
 /* Effect instance pools: each slot points back at its source and at the

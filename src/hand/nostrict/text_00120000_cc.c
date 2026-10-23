@@ -1,13 +1,14 @@
 /* func_0012cf48 only matches with its callee func_0012cd10 defined above it. */
 #include "common.h"
+#include "data/pieces/D_002E31B0.h"
 typedef struct { u8 pad[0x44]; f32 r; u8 pad48[0x16]; u8 kind; } CdInfo;
-typedef struct E15 {
+typedef struct Actor {
     u8 pad[0x10];
     f32 pos[4];
     u8 pad20[0x10];
     f32 dir[4];
     u8 pad40[0x98 - 0x40];
-    struct E15 *f98;
+    struct Actor *f98;
     u8 pad9c[0x130 - 0x9c];
     CdInfo *info;
 } E15;
@@ -64,9 +65,8 @@ s32 func_0012cd10(E15 *o, E15 *t) {
 }
 
 typedef struct { s32 d; E15 *e; } P15;
-typedef struct S31b0 { E15 *f0; s32 f4; } S31b0;
+typedef S31b0_2e31b0 S31b0;
 #include "data/pieces/D_002E31B8.h"
-#include "data/pieces/D_002E31B0.h"
 extern s32 func_00122ff8(E15 *);
 extern s32 func_00122fd0(E15 *);
 extern E15 *func_001230a0(E15 *);
@@ -78,11 +78,11 @@ s32 func_0012cf48(E15 *e, P15 *out) {
     P15 *p;
     E15 *it;
     if (D_002E31B8 >= 3) {
-        if (func_00122ff8((*(S31b0 *)&D_002E31B0).f0)) {
-            if (func_0012cd10((*(S31b0 *)&D_002E31B0).f0, e) >= 0) {
+        if (func_00122ff8(D_002E31B0.f0)) {
+            if (func_0012cd10(D_002E31B0.f0, e) >= 0) {
                 out->d = 0;
                 n = 1;
-                out->e = (*(S31b0 *)&D_002E31B0).f0;
+                out->e = D_002E31B0.f0;
             }
             goto done;
         }

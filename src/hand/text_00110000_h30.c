@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
 typedef int u128 __attribute__((mode(TI)));
@@ -50,8 +51,6 @@ typedef struct {
     V4 b[2];
 } PadState;
 extern s32 D_002C5C24, D_002C5C28;
-typedef struct { u32 b0 : 1; u32 b1 : 1; u32 r : 30; } Flags5968;
-#include "data/pieces/D_002C5968.h"
 extern u8 D_002C5C38[];
 s32 sceCdDiskReady(s32);
 s32 sceCdRead(u32, u32, void *, void *);
@@ -88,7 +87,7 @@ typedef union {
     struct { u32 lo0; u32 x0 : 1; u32 b33 : 1; u32 x2 : 14; u32 b48 : 1; u32 x17 : 5; u32 b54 : 1; u32 x23 : 9; } b;
     struct { u64 lo : 33; u64 b33 : 1; u64 m : 14; u64 b48 : 1; u64 m2 : 5; u64 b54 : 1; u64 hi : 9; } c;
 } ObjFlags;
-typedef struct {
+typedef struct Actor {
     u32 x0;
     u8 pad4[300];
     Info123 *info;
@@ -531,13 +530,13 @@ int strncmp(const char *, const char *, u32);
 void func_0011fec0(void) {
     if (func_001ecfb0() == 1) {
         if (D_002C5C3C > 30) {
-            (*(volatile Flags5968 *)&D_002C5968).b1 = 1;
+            (*(volatile Fl_2c5968 *)&D_002C5968).b1 = 1;
             return;
         }
         D_002C5C3C++;
         return;
     }
-    if ((*(volatile Flags5968 *)&D_002C5968).b1) {
+    if ((*(volatile Fl_2c5968 *)&D_002C5968).b1) {
         if (D_002C5C40 > 0) {
             D_002C5C40--;
             return;
@@ -549,7 +548,7 @@ void func_0011fec0(void) {
         }
     }
     D_002C5C3C = 0;
-    (*(volatile Flags5968 *)&D_002C5968).b1 = 0;
+    (*(volatile Fl_2c5968 *)&D_002C5968).b1 = 0;
 }
 
 void func_0010c150(void);

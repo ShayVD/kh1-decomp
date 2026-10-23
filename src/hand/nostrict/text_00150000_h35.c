@@ -316,7 +316,26 @@ void func_00154d60(Obj154c60 *a, Arg154af8 *b) {
 }
 
 /* ---- func_001557d0 / func_00155878 ---- */
-typedef struct { u8 pad[0x130]; void *p130; } Pl1557d0;
+typedef struct { u8 pad[0x3C]; s32 w3C; s32 w40; s32 w44; s32 w48; u8 pad4c[0x72]; u16 hBE; } S6C_156c68;
+typedef struct Actor {
+    s32 w0;
+    u8 pad4[0xc];
+    Vec154768 v10;
+    u8 pad20[0x1c];
+    f32 f3C;
+    u8 pad40[0x2c];
+    S6C_156c68 *p6C;
+    u8 pad70[0xc0];
+    void *p130;
+    u8 pad134[0x30];
+    s32 w164;
+    u8 pad168[0x4];
+    f32 f16C;
+    u8 pad170[0x1e0];
+    s32 w350[4];
+    u8 pad360[0x10];
+    u64 d370;
+} Pl1557d0;
 #include "data/pieces/D_002E26A0.h"
 extern u32 D_002C5958;
 typedef struct { u32 lo:18; u32 b18:1; u32 hi:13; } F2C5958_1557d0;
@@ -333,7 +352,7 @@ void func_001557d0(void) {
         D_00550400[i].h.w &= ~0x10000;
     }
     for (i = 0; i < 3; i++) {
-        if (D_002E26A0[i]) func_00155760(((Pl1557d0 *)D_002E26A0[i])->p130);
+        if (D_002E26A0[i]) func_00155760(D_002E26A0[i]->p130);
     }
 }
 
@@ -407,8 +426,8 @@ s32 func_001563e0(Obj1562d0 *a, Vec154768 *b) {
 /* ---- func_00156c68 ---- */
 typedef struct { u32 b0:1; u32 b1:1; u32 b23:2; u32 b4:1; u32 hi:27; } F144_156c68;
 typedef struct { u8 pad[0x144]; F144_156c68 *p144; } Obj156c68;
-typedef struct { u8 pad[0x3C]; s32 w3C; s32 w40; s32 w44; s32 w48; u8 pad4c[0x72]; u16 hBE; } S6C_156c68;
-typedef struct { u8 pad[0x6C]; S6C_156c68 *p6C; } Pl156c68;
+
+typedef Pl1557d0 Pl156c68;
 void func_00141468(Pl156c68 *, s32);
 s32 func_00141540(Pl156c68 *, s32);
 void func_00141608(Pl156c68 *, s32);
@@ -421,7 +440,7 @@ void func_00156c68(Obj156c68 *a) {
         a->p144->b4 = 1;
     }
     for (i = 0; i < 3; i++) {
-        p = (Pl156c68 *)D_002E26A0[i];
+        p = D_002E26A0[i];
         if (p) {
             if (p->p6C->w3C < p->p6C->w40) {
                 func_00141468(p, 2);
@@ -555,21 +574,7 @@ void func_00157dc8(void) {
 }
 
 /* ---- func_00157ea8 ---- */
-typedef struct {
-    s32 w0;
-    u8 pad4[0xC];
-    Vec154768 v10;
-    u8 pad20[0x1C];
-    f32 f3C;
-    u8 pad40[0x124];
-    s32 w164;
-    u8 pad168[4];
-    f32 f16C;
-    u8 pad170[0x1E0];
-    s32 w350[4];
-    u8 pad360[0x10];
-    u64 d370;
-} Obj157ea8;
+typedef Pl1557d0 Obj157ea8;
 typedef struct { u8 pad[4]; f32 f4; } Ret157ea8;
 
 void func_00157ea8(Obj157ea8 *a) {
@@ -577,7 +582,7 @@ void func_00157ea8(Obj157ea8 *a) {
     s32 i;
     a->w0 |= 0x02000270;
     a->d370 &= ~(3ULL << 37);
-    p = (Obj157ea8 *)D_002E26A0[0];
+    p = D_002E26A0[0];
     if (func_00122ff8((Act1576a8 *)p)) {
         func_002675a8(&a->v10, &p->v10);
         func_00137688(a, p->f3C);
@@ -593,7 +598,6 @@ typedef struct { u8 pad[0x30]; f32 f30; f32 f34; } S5516E0;
 S5516E0 *D_005516E0 ALIGNED(16);
 #include "data/pieces/D_002BC0F0.h"
 typedef S2BC0F0_2BC0F0 S2BC0F0;
-typedef struct { s32 w0, w4, w8; } S3519E0;
 #include "data/pieces/D_003519E0.h"
 extern u8 D_00351A00[], D_00351A10[];
 typedef struct { u8 pad[0xCC]; f32 fCC; } S6C_157f70;
@@ -612,9 +616,9 @@ void func_00157f70(Obj157f70 *a) {
     D_002BC0F0.s2BC0F0.f4 = 4000.0f;
     D_002BC0F0.s2BC0F0.f8 = 64.0f;
     D_002BC0F0.s2BC0F0.fC = 255.0f;
-    D_002BC0F0.s2BC0F0.w10 = (*(S3519E0 *)&D_003519E0).w0;
-    D_002BC0F0.s2BC0F0.w14 = (*(S3519E0 *)&D_003519E0).w4;
-    D_002BC0F0.s2BC0F0.w18 = (*(S3519E0 *)&D_003519E0).w8;
+    D_002BC0F0.s2BC0F0.w10 = D_003519E0[0];
+    D_002BC0F0.s2BC0F0.w14 = D_003519E0[1];
+    D_002BC0F0.s2BC0F0.w18 = D_003519E0[2];
 }
 
 /* ---- func_00158100 ---- */

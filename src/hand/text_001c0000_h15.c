@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 
 /* Script VM: value stack at +0x184, stack pointer (index of top) at +0x180. */
 typedef struct {
@@ -49,16 +50,7 @@ typedef struct {
 } Big;
 
 /* Message passed to func_001c4640. */
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
 
-void func_001c4640(Msg *m);
 void func_001c6720(void);
 
 extern s32 D_002BC080[4];
@@ -163,93 +155,7 @@ Obj func_001ccd30(s32 i) {
     return D_006298F0[i];
 }
 
-void func_001cce38(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] += vm->stk[vm->sp + 1];
-}
-
-void func_001cce70(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] -= vm->stk[vm->sp + 1];
-}
-
-void func_001ccea8(VM *vm) {
-    vm->stk[vm->sp] = -vm->stk[vm->sp];
-}
-
-void func_001ccec8(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] *= vm->stk[vm->sp + 1];
-}
-
-void func_001ccf00(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] /= vm->stk[vm->sp + 1];
-}
-
-void func_001ccf40(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] %= vm->stk[vm->sp + 1];
-}
-
-void func_001ccf80(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] == vm->stk[vm->sp + 1];
-}
-
-void func_001ccfb8(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] > vm->stk[vm->sp + 1];
-}
-
-void func_001ccff0(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] >= vm->stk[vm->sp + 1];
-}
-
-void func_001cd028(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] < vm->stk[vm->sp + 1];
-}
-
-void func_001cd060(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] <= vm->stk[vm->sp + 1];
-}
-
-void func_001cd098(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] != vm->stk[vm->sp + 1];
-}
-
-void func_001cd0d0(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] & vm->stk[vm->sp + 1];
-}
-
-void func_001cd108(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] | vm->stk[vm->sp + 1];
-}
-
-void func_001cd140(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] ^ vm->stk[vm->sp + 1];
-}
-
-void func_001cd178(VM *vm) {
-    vm->stk[vm->sp] = ~vm->stk[vm->sp];
-}
-
-void func_001cd198(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] >> vm->stk[vm->sp + 1];
-}
-
-void func_001cd1d0(VM *vm) {
-    vm->sp--;
-    vm->stk[vm->sp] = vm->stk[vm->sp] << vm->stk[vm->sp + 1];
-}
+/* func_001cce38 .. func_001cd1d0 (the opcode 1 operations) are in src/vm/vm_calc.c. */
 
 s32 func_001cd280(VM *vm) {
     vm->flags.x |= 4;
@@ -259,7 +165,7 @@ s32 func_001cd280(VM *vm) {
 }
 
 s32 func_001cd6b8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 5;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;
@@ -269,7 +175,7 @@ s32 func_001cd6b8(VM *vm) {
 }
 
 s32 func_001cd778(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 0;
     m.val = 0;
     m.x = vm->x0;
@@ -280,7 +186,7 @@ s32 func_001cd778(VM *vm) {
 }
 
 s32 func_001cd830(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 1;
     m.val = 0;
     m.x = vm->x0;
@@ -315,7 +221,7 @@ s32 func_001cd9e8(VM *vm) {
 }
 
 s32 func_001cda18(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 6;
     m.val = 0;
     m.x = vm->x0;
@@ -324,7 +230,7 @@ s32 func_001cda18(VM *vm) {
 }
 
 s32 func_001cda60(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 7;
     m.val = 0;
     m.x = vm->x0;
@@ -333,7 +239,7 @@ s32 func_001cda60(VM *vm) {
 }
 
 s32 func_001cdaa8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 8;
     m.val = 0;
     m.x = vm->x0;
@@ -342,7 +248,7 @@ s32 func_001cdaa8(VM *vm) {
 }
 
 s32 func_001cdaf0(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 9;
     m.val = 0;
     m.x = vm->x0;
@@ -351,7 +257,7 @@ s32 func_001cdaf0(VM *vm) {
 }
 
 s32 func_001cdb38(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 10;
     m.val = 0;
     m.x = vm->x0;
@@ -360,7 +266,7 @@ s32 func_001cdb38(VM *vm) {
 }
 
 s32 func_001cdb80(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 11;
     m.val = 0;
     m.x = vm->x0;
@@ -369,7 +275,7 @@ s32 func_001cdb80(VM *vm) {
 }
 
 s32 func_001cdbc8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 12;
     m.val = 0;
     m.x = vm->x0;
@@ -400,7 +306,7 @@ s32 func_001cde38(void) {
 }
 
 s32 func_001cdf00(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 17;
     m.val = (u32)vm->stk[vm->sp - 1];
     m.x = vm->x0;

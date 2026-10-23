@@ -1,5 +1,6 @@
 #include "common.h"
-/* func_001cf960 (s11w1, hand strict): from s8 w4 (7w, 3 LCS). The VM flags at 0x328 are u64 bitfields directly in the VM struct, which also has an f32 (x2f4): the bitfield store `vm->b1 = 1` gets the VM struct alias set, so sd flags still conflicts with the f32 pos loads (stays after them) but ld flags no longer conflicts with the Msg stores in sched2. */
+#include "vm/script_vm.h"
+/* func_001cf960 (s11w1, hand strict): from s8 w4 (7w, 3 LCS). The VM flags at 0x328 are u64 bitfields directly in the VM struct, which also has an f32 (x2f4): the bitfield store `vm->b1 = 1` gets the VM struct alias set, so sd flags still conflicts with the f32 pos loads (stays after them) but ld flags no longer conflicts with the VmMsg stores in sched2. */
 typedef struct { u8 pad[16]; f32 pos[3]; } Act;
 typedef struct {
     s32 x0;
@@ -12,17 +13,8 @@ typedef struct {
     u64 b0:1, b1:1, rest:62;
     u8 pad330[0x20];
 } __attribute__((aligned(8))) VMc;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 s32 func_001cf960(VMc *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 4;
     m.val = (u32)vm->stk[vm->sp] * 2;
     m.x = vm->x0;

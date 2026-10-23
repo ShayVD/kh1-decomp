@@ -71,7 +71,9 @@ join = [lw(V1, A1, 0), lui(V0, 0x0047), beq(V1, 0, 3), addiu(V0, V0, 0x2160),
         lui(V0, 0x0047), addiu(V0, V0, -0x1EE0), sw(V0, A0, 16), JR_RA, NOP]
 stored = sorted(e[1] for e in run(join) if len(e) == 5 and e[4] == "stored")
 assert stored == [0x0046E120, 0x00472160], [hex(x) for x in stored]
-assert not [e for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"]
+assert not [e for e in run(join, joins=False, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
+# (session 31, stored-idx: without joins the store is of the lowest address + an index, which stores that base)
+assert [e[1] for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120]
 
 # 4. a0 reused on one path (p = cond ? arg : other): the argument is not walked
 reuse = [beq(A1, 0, 2), NOP, lw(A0, A2, 0), lw(V0, A0, 8), JR_RA, NOP]
@@ -224,5 +226,32 @@ ubs = R.arg_bounds({F1, F2, F3, F5}, calls, lambda f: f in calls, cof)
 assert ubs[F1][0] == 6 and ubs[F2][0] == 5 and ubs[F3][0] is None and ubs[F5][0] is None and ubs[F1][1] is None, ubs
 calls[F4] = {0x3050: (0,) + rest, 0x4010: (("arg", 0, 1),) + rest}
 assert R.arg_bounds({F4}, calls, lambda f: f in calls, cof)[F4][0] is None
+
+# 15. arg-keep (session 31): func_00122dc8's `if (!buf) buf = &D[...]`: a1 is the argument on one path and an address
+# on the other. The arg-join keeps the argument and dropped the address, so the load through the join at index 4
+# was seen only when the address's path was visited first. A shadow visit reports it in every order.
+import random  # noqa: E402
+keep = [beq(A0, 0, 6), NOP, NOP, NOP, lw(V0, A1, 8), JR_RA, NOP, lui(A1, 0x004F), beq(0, 0, -5), addiu(A1, A1, 0x7150)]
+hit = lambda ev: (BASE + 16, 0x004F7150, 8, 4, "mem") in ev
+assert hit(run(keep)), run(keep)
+assert not hit(run(keep, arg_keep=False))  # the old answer in the default (last pushed first) order
+orders = [hit(run(keep, arg_keep=False, visit_rng=random.Random(sd))) for sd in range(16)]
+assert True in orders and False in orders, orders  # ... and it depended on the order
+assert all(hit(run(keep, visit_rng=random.Random(sd))) for sd in range(16))
+assert ("argmem", 1, 8, 4) in run(keep)  # the argument's own reach is still counted
+# join-keep: the same for a join with an unknown value. p = cond ? &D : a1; while (*p++) ...: at the loop head a1 and
+# a1 + 4 join to unknown (a walk of the argument), and the address's path joined into that was dropped. The shadow
+# visits follow &D around the loop (D, D + 4, D + 8, then D + unknown: the walk is unbounded, and it terminates).
+walk_ = [beq(A0, 0, 7), NOP, lw(V0, A1, 0), addiu(A1, A1, 4), bne(V0, 0, -3), NOP, JR_RA, NOP,
+         lui(A1, 0x004F), beq(0, 0, -8), addiu(A1, A1, 0x7150)]
+assert all(idx_end(run(walk_, visit_rng=random.Random(sd)), 0x004F7150) is None for sd in range(16))
+assert not [e for e in run(walk_, join_keep=False) if len(e) == 5 and e[4] == "idx"]
+
+# 16. stored-idx (session 31): func_001c5ee8's `ent[i - 1].lk.next = &ent[i]`: storing base + an index stores the base.
+# Before, only an exact address counted, and the store was seen with exact values only when the loop's later states
+# were not joined before the point was visited (they were, in the default order: no `stored` at all)
+sti = [andi_(V0, A0, 0x1C), lui(V1, 0x0037), addiu(V1, V1, 0x0140), addu(V1, V1, V0), sw(V1, A1, 0), JR_RA, NOP]
+assert [e[1] for e in run(sti) if len(e) == 5 and e[4] == "stored"] == [0x00370140]
+assert not [e for e in run(sti, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
 
 print("reach_check_test: PASS")

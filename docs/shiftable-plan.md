@@ -2998,3 +2998,208 @@ that only one path holds is dropped, and whether an access through it is reporte
 blocks are visited (events are emitted from intermediate states). D_003728C0 above is one case; others may
 exist. A next step: keep the non-argument side (a SET of {the argument, the address}) or emit the address's
 events at the join.
+
+## Session 31: reach_check arg-join (worker s31reach)
+
+reach_check pins **1,358** names (was 1,304; both counted without the overlays, `SHIFT_OVERLAYS=` an empty
+directory): **54 newly pinned, none released**. With the three new switches on (`--no-arg-keep --no-join-keep
+--no-stored-idx`) float_reach.txt and float_reach.log are byte-identical to the session 30 code's, and with
+`--no-path-step --no-arg-bound --no-wr-span` added, to the session 29 code's (1,331). The default float build
+floats **2,047** names (was 2,100: 53 of the new pins had floated; D_00525354 was kept by something else), links
+and passes M12-FLOAT and keep_check (39/39). `make` is unchanged (byte-identical).
+
+The name `--no-arg-join` was taken (session 20/21: an argument joined with anything is walked), so the switch that
+restores session 30's arg-join is `--no-arg-keep`.
+
+### The rules (each `--no-RULE` in SHIFT_REACH_FLAGS brings back the session 30 answer)
+
+| rule (switch) | names it pins on its own (from the final 1,358) | what it does |
+| --- | --- | --- |
+| arg-keep (`--no-arg-keep`) | 17 | A join of an argument with an address keeps the argument (session 20's arg-join) and dropped the address, so the address's accesses after the join were seen only when its path happened to be visited first (events come from every state a point is visited with). Now merge() notes the dropped value and visits the point once more with the joined state but the address in that register (a *shadow visit*: its events are reported and its successors merged as usual). Both orders now report it. |
+| join-keep (`--no-join-keep`) | 48 | The same for every other join that does not cover an address (`_covers`): an address joined with an unknown value (dropped), two pointer globals, a %hi or a jump-table word with something else. A register that gets more than SHADOW_MAX (3) values from shadows at one point (a walk around a loop) is widened to the lowest base + unknown, so it ends. |
+| stored-idx (`--no-stored-idx`) | 2 | A store of base + index (`&D[i]`, an IDX value) stores the base. Before, only an exact address (or a SET) counted, so a store visited only with a loop's joined state (base + index) was not a `stored` at all (func_001c5ee8's `ent[i-1].lk.next = &ent[i]` was `stored` only in some visit orders). |
+
+The three overlap (both keep rules shadow func_00241d60's tables); together 54. `--visit-seed N` (new) visits each
+function's points in a random order (seeded by N and the function's address) for checking order dependence;
+`analyse(visit_rng=...)` does the same in tests. tests/reach_check_test.py cases 15 (arg-keep: the load through the
+join is seen in 16 random orders; with `arg_keep=False` the default order misses it and some random orders see it;
+join-keep: a walk from an address joined into an argument's walk is reported, unbounded, and ends) and 16 (stored-idx); case 3 now notes that
+without `joins` the store of the lowest address + index stores that base.
+
+### The newly pinned names (54; untested only in the sense that the layout around them changed)
+
+| function | names | why |
+| --- | --- | --- |
+| func_00241d60 (src/hand/nostrict/text_00240000_s6_g1.c) | D_00454448, D_00454450, D_00454488, D_00454498, D_004544A0, D_004544B0, D_004544C0, D_004544C8, D_004544D0, D_004544D8, D_004544F8, D_00454518, D_00454538, D_00454558 | `s->a[j] = base + D_00454430[j]` for `j < s->na` in each switch case: the count is stored then reloaded (a count in memory), so the index is unbounded (idx). Each table's address sat in a register joined, at the loop heads, with an argument register (arg-keep) or an unknown value (join-keep). |
+| func_00122dc8 (src/hand/text_00110000_h53.c) | D_004F7150 | `if (!buf) buf = D_004F7150[n];` then sprintf / strlen / `buf[i]` through buf: a1 on one path, the address on the other (arg-keep: the exact case of the hazard). |
+| func_00132a78 | D_00525354, D_00525358 | the address is in an argument register at a call on one path (arg:noreach; arg-keep). |
+| func_0021d348 (src/hand/text_00210000_c15.c) | D_003F34DC, D_003F34E0, D_003F34E4, D_003F34E8, D_003F34EC, D_003F34F0, D_003F34F4, D_003F34F8, D_003F3514, D_003F3518, D_003F351C, D_003F3520 | the state words' addresses are left in t3 at the calls to func_00207830 / func_0021b6a0 on one path (arg:noreach; join-keep). |
+| func_00223508 | D_003F6770 | arg:noreach (join-keep). A session 30 path-step release, kept in place again. |
+| func_0020e408 | D_003F3940, D_003F3960, D_003F3980 | idx (join-keep) |
+| func_0024b7a0 | D_00469FF8, D_0046A018, D_0046A038 | idx (join-keep) |
+| func_002705f8 | D_00493F38, D_00493F48, D_00493F58 | idx (join-keep) |
+| func_002541b8 | D_004920A8, D_004920F8 | idx (join-keep) |
+| func_002524a0 | D_00491D48 | idx, stored (join-keep; libc) |
+| func_0016f7b8 | D_0048E9EC | idx from the in-place object before it (join-keep) |
+| func_0010d470 | D_004D5AF4 | arg:noreach from the in-place object before it (join-keep) |
+| func_001f4058, func_001f4778 & co | D_003E8E30 | idx, stored (join-keep) |
+| func_00161a08 | D_005739F8 | stored (join-keep) |
+| func_00258f08, func_00265ed8, func_00266380, func_0026ab38 | D_00492138, D_00492B00, D_00492CF8, D_00492D38, D_00492E60, D_004932A8 | `arg0:func_00259c88:8` / `func_00259cc0:8`: an 8-byte block access from 2 bytes before the next name, and func_00266380 walks D_00492D38 (arg:wide) and stores D_00492D70 (join-keep; libc number formatting) |
+| func_00127c20, func_00128b20 | D_004F7820, D_004F7C10 | stored as &D[i] (stored-idx) |
+
+**Released: none**, so there is nothing new to boot for a release. The default float ELF is still a new layout
+(53 names back in place, so every floated name after them moved): boot it on the usual route next Mac session
+(load menu, save 06 with Donald and Goofy, test T, a desert fight, the in-game menu, save 05 End of the World, the
+warp drive to Neverland) together with session 30's default, which has not been booted either. If session 30's
+default fails and this one passes, D_003F6770 (path-step, now pinned again) is the first suspect.
+
+### Order dependence that remains (`--visit-seed 1..3`, all rules on)
+
+904 of the 6,979 functions (917 with the three rules off) report a different event set in a random order (seeds
+1 and 2), mostly `callargs` values and index bounds that change no name. In names (float_reach.txt against the default order):
+
+| names | which order pins them | why |
+| --- | --- | --- |
+| D_002BD1F0 (func_00118ea0, `i < 6`, 16-byte entries) | random only | imprecision: the default's bound (+80) is right; a random order widens the walk before all the loop's entry edges are joined. |
+| D_0048C630 (func_00107ec0, `k < 16`) | random only | imprecision: nest-carry's cap is computed from a partial loop_entry. |
+| D_00575080, D_00575088 (func_00169f28, `&D_00575090[bi]`) | random only | imprecision: the base becomes D_00575080 + unknown. |
+| D_003F4C90 (func_00219f98) | random only | **a gap**: the loop's join of two bases makes one IDX from the lower (0x3F4C68), and an unbounded index from it ties only that base to its next name; a random order also reports it from 0x3F4C78 (D_003F4C78 -> D_003F4C90). Making `_covers` demand the same base for an unbounded IDX did not reach it (the loss is in join's IDX rule, not a shadow): needs join to keep each base (a SET of bases with an index). |
+| D_002B6460 (func_001081c8 / func_001083d8), D_003B4DA0 (func_001c3408 / func_001c3770), 8-10 of func_0021d348's D_003F34xx, D_00493F38 ... (seed 3) | default only | a random order misses them: the default is the more conservative here. |
+
+Mechanisms behind it: (1) a point's pending state is joined again before it is visited (LIFO work list), so
+intermediate states are never visited — harmless now that a join no longer drops an address (the keep rules) except
+for (4); (2) widening by a growth count; (3) loop caps (counter-cap, nest-carry, countdown) from a loop_entry that
+is not complete yet; (4) the IDX join keeps the lower base only. (2) and (3) only lose precision. A next step for
+(4): an IDX with several bases, or emit an unbounded `idx` from each base a join folds in.
+
+## Session 31: Phase 4 types (worker s31types)
+
+### Result
+
+These counts come from `s27_survey.py --summary`, with the survey unchanged.
+Session 30's table said 217 views at its own HEAD.  The survey run at the
+session 31 base gives 214.
+
+| | base 5eda346 | now |
+|---|---|---|
+| view casts (a user's own struct type) | 214 in 71 pieces | 52 in 22 pieces |
+| shared casts (to the piece header's own types) | 202 | 235 |
+| basic casts (s32, u8 *, void *, ...) | 750 | 751 |
+
+Per piece (view casts, base -> now):
+
+| piece | before | after |
+|---|---|---|
+| D_002E26A0 | 24 | 8 |
+| D_00308CDC | 15 | 0 |
+| D_002C5968 | 15 | 0 |
+| D_002E31B0 | 14 | 2 |
+| D_00351E10 | 10 | 0 |
+| D_0036243C | 8 | 0 |
+| D_0037A170, D_00350D88 | 6, 6 | 0, 1 |
+| D_00362438 | 5 | 0 |
+| D_00425B80, D_002E3170 | 4, 4 | 0, 3 |
+| D_003519E0, D_0042B790, D_003F7A70, D_004305B0, D_0035C710 | 3 each | 0 |
+| 13 pieces with 2 (D_003E8E28, D_003F1E70, D_00350D78, D_002C1300, D_003626C0, D_0035C490, D_0037A378, D_00425C28, D_002A6234, D_002E2700, D_003044E0, D_002BC148, D_00362434) | 2 each | 0 (D_00362434: 1) |
+| 25 pieces with 1 (the texture headers D_00426790..D_00426940 and D_00431D20 / D_00431D50, D_00451040, D_003F1A70, D_003F2270, D_003F27D0, D_00362430, D_00362450, D_002C5958, ...) | 1 each | 0 |
+| 17 pieces not reduced (see "Left, and why") | 37 | 37 |
+
+What got typed (the shared types are in each piece's header):
+
+- **D_00308CDC** (`Cfg_308cdc`).  It gained the users' fields: `t[10]` Cfg8Pr,
+  `e[10]` Cfg16Pr, x7c[0xc], f88, x90, f94..f96 and fe8.
+- **D_002C5968**.  `Sema_2c5968`, `Fl_2c5968` and `W_2c5968` are the volatile
+  flag-word splits.
+- **D_00351E10**.  The staging-arena QW users declare `extern QW D_00351E10[]`.
+- **Texture headers**.
+  - D_00426790..D_00426940 and D_00431D20 are `Tex_4268b0[1]`, and Fnt is
+    Tex_4268b0.
+  - D_00426970 and D_0042B790 are `TexBuf_426970`.
+  - D_004305B0 is `Tex6000`.
+- **D_0037A170**.  `RunQ_37a170` is 8 bytes, and h66's init writes `q[1]`.
+- **Camera**.
+  - Path_362438 has names for all its fields.
+  - E30_362430's min and max are `FVec4`, and D_0036243C is `E30_362430 *`.
+  - CamPt_362434 gained x1c.
+  - Cam_425f70 takes h73's names.
+- **Smaller views**.
+  - W9Tab32: f0 is u32, and f10 / f14 are void *.
+  - S5B80_425b80 gained x0 / x4.
+  - The collision grid (Grid_2a6234), nodes (Node01) and map vertices (Vtx)
+    are now shared.
+  - B3Tbl moved to D_003044E0.h.
+  - Q8_2e3170 and Fl_2c5958 are new.
+  - `Q_3f1a70` is shared by D_003F1A70, D_003F1E70, D_003F2270 and
+    D_003F27D0[0x40].
+  - D_0035C490 is FVec4, and the h34 / s6_07 box set is BoxSet57_f1b8.
+  - E8E28 is Glyph_3e8e28.
+  - h28 reads Bits_37a378.
+  - The light / sprite record `W8Ent35` is `{v[4], x10, x14, Fl_35c710 u}`.
+  - Fx gained a, b, c, and B64 gained x34 / x38.
+  - D_00451040 is a Blob, and D_002E2700 is FMtx4.
+- **D_002E26A0** is `struct Actor *D_002E26A0[3]`, with the tag incomplete in
+  the piece header.  About 25 user files complete it by tagging their own actor
+  view `typedef struct Actor {..} X;` (s31_tag), as the VmObj precedent did.
+  Where a file had two actor views they were merged first (s31_merge).
+- **D_002E31B0** is `S31b0_2e31b0 { struct Actor *f0; s32 f4; }`, the lock-on
+  target.  The target prototypes in b04, h58, s7_w3, h31, h5 and s6_07 take
+  `struct Actor *`.  h54 (nofill) declares `extern struct Actor *D_00524F58[]`.
+
+`make` stayed byte-identical after every commit, and no file gained a warning
+(s31_warndiff).  `make test` passes.  The m12 float shift prints M12-FLOAT OK,
+and float_covered.txt is the same as the base.
+
+### Left, and why
+
+- **D_002E26A0 (8)**.
+  - h4's `(Act *)&D_002E26A0` is an end pointer.
+  - src/vm/script_vm.c was left to the VM worker.
+  - h37's ObjBD40 and r2_1's ChrEA are members of the D_0035BD40.h union
+    header, and tagging them conflicts with that header's other includers.
+- **The VM-area views**: D_003C5510 (7), D_00389C90 (4) and D_0037A380 (2), in
+  h66 and h18.  They were avoided while the script VM moves.
+- **D_002C5C80 (4)**.  The light vector members disagree: h53, h54, h30 and h4
+  use `f32[4]` against `struct V4`.
+- **D_002E3170 (3)**: the h49 and s11_w19 Spr views.
+- **D_002E31A0 (3)**: the O8 typedef hazard below.
+- **D_002E31B0 (2)**.  r2_1's LockEA: tgt is a ChrEA from the union header.
+- **D_002A6238 (2) and D_00304BE8 (1)**: as session 30 left them.
+- **D_0046A568 (2)**: it needs a union in a strict file (alias set hazard).
+- **D_003044D8 (2) and D_00304AD8 (1)**: other actor pointers, not
+  struct Actor.
+- **D_002A3F48 (2)**.  It holds an s32 address that the auto code uses with
+  byte arithmetic.
+- **D_00364130 (2)**: two overlapping layouts.
+- **Single casts**:
+  - D_0029B420: the alignment of the copy.
+  - D_002BC070: a volatile Col.
+  - D_002C5C60: h4's Vec4.
+  - D_002A62AC: s11_w56 computes it as a u8 address.
+  - D_00362434: h62's lvalue cast.
+  - D_003626F0: the h11 Arg hazard below.
+  - D_00350D88: h55's u64 view, which W9Tab32 cannot take (below).
+
+### Hazards found (gcc 2.96)
+
+- **A union member access is alias set 0 in strict files.**  An anonymous
+  union in W9Tab32, added for h55's u64 read, changed h9's code.  Reverted.
+- **Union stores against struct-field stores.**  h11 stored through an `Arg`
+  union.  Retyping those stores as struct-field (or s32 / f32) stores changed
+  the load scheduling, through the alias sets.  Reverted.
+- **The typedef name in a cast lvalue matters.**  `(*(O8 **)&D)`, with O8 a
+  typedef of the declared type, keeps the INDIRECT_REF.  Recasting to the exact
+  declared type (`O8_2e319c **`) folds it away and changes the code (s6_05 and
+  r2_7 D_002E31A0).  Leave such casts as they are, or drop them only when the
+  access becomes a plain `D` / `D[0]`.
+- **An extern that conflicts with a shared data header** (D_002E3160 in
+  data_002E.h) cannot be retyped per file.  Keep the declared type and cast at
+  the use.
+- Files under nostrict/ are built without strict aliasing, so the alias-set
+  hazards do not reach them.  Most of the merges and tags were done there first.
+
+### Tools (tools/shift/s31types/, README there)
+
+- `s31_recast.py`: renames alias casts to the shared type.
+- `s31_tag.py`: gives a file's view a shared incomplete tag and drops the casts.
+- `s31_merge.py`: merges a file's second views by stabs offset.
+- `s31_warndiff.py`: lists new warnings against HEAD.

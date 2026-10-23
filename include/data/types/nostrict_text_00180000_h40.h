@@ -3,14 +3,10 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00180000_H40_H
 
 #include "common.h"
+#include "data/pieces/D_0035C710.h"
 #include "ppp.h"
 
 #include "data/types/shared.h"
-typedef struct {
-    f32 pos[3];
-    f32 dist;   /* +0xC */
-    u8 pad10[8];
-    u64 flags;  /* +0x18 */
-} PppLight;
+typedef W8Ent35 PppLight;
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00180000_H40_H */

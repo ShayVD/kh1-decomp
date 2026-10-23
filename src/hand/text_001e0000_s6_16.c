@@ -137,35 +137,7 @@ s32 func_001eef38(s32 id) {
     return n;
 }
 
-typedef struct { u8 pad[0x3034]; s32 f3034; s32 f3038; u8 pad2[0x316c - 0x303c]; s32 f316c; } B9C90;
-#include "data/types/text_001e0000_s6_16.h"
-extern B9C90 D_00389C90;
-extern s32 D_003C54F0, D_003B4D90, D_003C21A0, D_0039A570, D_003A7980;
-#include "data/pieces/D_003C3A70.h"
-#include "data/pieces/D_003B4DA0.h"
-#include "data/pieces/D_003A7990.h"
-#include "data/pieces/D_0039A580.h"
-#include "data/pieces/D_0038D170.h"
-
-s32 func_001e99e8(s32 kind, E848b *p) {
-    s32 i;
-    if (D_00389C90.f316c) {
-        for (i = 0; i < D_003C54F0; i++) if (&D_003C3A70[i] == p) return i;
-    } else if (kind == 1) {
-        if (D_00389C90.f3038 == 0) {
-            for (i = 0; i < D_003B4D90; i++) if (&D_003A7990[i] == p) return i;
-        } else {
-            for (i = 0; i < D_003C21A0; i++) if (&D_003B4DA0[i] == p) return i;
-        }
-    } else {
-        if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) if (&D_0038D170[i] == p) return i;
-        } else {
-            for (i = 0; i < D_003A7980; i++) if (&D_0039A580[i] == p) return i;
-        }
-    }
-    return -1;
-}
+/* func_001e99e8 is in src/vm/vm_find.nofill.c. */
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/data_003B.h"

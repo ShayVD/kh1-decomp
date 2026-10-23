@@ -1,7 +1,8 @@
 #include "common.h"
+#include "data/pieces/D_002A6244.h"
 #include "data/bss_004E.h"
 /* func_00116368 (hand): both id loops written out with function-level `s32 id; s32 *fl;` shared by the two loops (global pseudos: fl is not tied to the address chain, gets a1 by copy preference; id ends in a1). */
-typedef struct { f32 min[3]; f32 max[3]; u16 n; u16 ids[1]; } Node368;
+typedef Node01 Node368;
 #include "data/pieces/D_002A6238.h"
 typedef struct { u8 pad[0x18]; u16 cnt; } Out368;
 extern s32 D_002C12C4;
@@ -18,7 +19,6 @@ void (*D_002BD1A8[11])(s32, s32 *) = {
     func_00116278, func_001161d0, func_001162b0, func_001162f8, func_00116330,
 };
 #include "data/pieces/D_002C1260.h"
-#include "data/pieces/D_002A6244.h"
 s32 func_00115d58(void);
 void func_001158c8(Out368 *);
 
@@ -50,9 +50,9 @@ void func_00116368(Out368 *o, s32 k) {
     f2 = D_002BD1A8[k];
     f1 = D_002BD178[k];
     for (j = 0; j < n; j++) {
-        nd = ((Node368 **)D_002A6244)[*p++];
-        if (overlap(nd->min, nd->max, &D_002C1260)) {
-            if (inside(nd->min, nd->max, &D_002C1260)) {
+        nd = D_002A6244[*p++];
+        if (overlap(nd->mn, nd->mx, &D_002C1260)) {
+            if (inside(nd->mn, nd->mx, &D_002C1260)) {
                 q = nd->ids;
                 for (i = 0; i < nd->n; i++) {
                     id = *q++;

@@ -31,8 +31,8 @@ s32 func_0023f700(Obj *o, s32 a1) {
     return a1;
 }
 void func_00237018(void *, s32, s32);
-typedef struct { u64 lo, hi; } QW;
-extern u8 D_00351E10[];
+#include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
+extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00651D60;
 extern QW *D_00651D64;
 typedef struct { u8 pad[0x18]; u64 unk18; } Tex;
@@ -46,8 +46,8 @@ QW *func_0023dfd8(Obj4 *, QW *);
 QW *func_00240400(Obj4 *, QW *);
 
 void func_00240fa0(Obj4 *o) {
-    D_00651D64 = (QW *)D_00351E10;
-    D_00651D60 = (QW *)(D_00351E10 + 0x10);
+    D_00651D64 = D_00351E10;
+    D_00651D60 = D_00351E10 + 1;
     func_00240b68(o);
     D_00651D60 = func_0023ee80(o, D_00651D60);
     D_00651D60 = func_0023dfc0(o, D_00651D60);
@@ -73,8 +73,8 @@ void func_002415f0(Obj5 *o) {
     s32 a[4];
     s32 b[2];
     s32 x, y;
-    D_00651D64 = (QW *)D_00351E10;
-    D_00651D60 = (QW *)(D_00351E10 + 0x10);
+    D_00651D64 = D_00351E10;
+    D_00651D60 = D_00351E10 + 1;
     func_0023d528(o, a, b);
     x = b[0];
     y = b[1];
@@ -172,7 +172,7 @@ void func_00241c60(s32 b, s32 i) {
         e->unk9E0 = D_00454A20.unk0;
         e->unk9E4 = D_00454A20.unk0 * 0.5235987f;
         func_002492d0(e->unk9EC, 0.0f, 0.0f, 0.0f, 128.0f);
-        func_0023cfe8(e->unkA34, D_00454A20.unk10, D_00451040);
+        func_0023cfe8(e->unkA34, D_00454A20.unk10, &D_00451040);
     } else {
         func_00241a38(i);
         e->unkA2C = 0;
@@ -300,8 +300,8 @@ s32 func_00245090(void) {
     D_0065FB30.unk70 = 0x8000000048ULL;
     func_00237018(&D_0065FB30, 0x16, 1);
     func_00244960();
-    D_0065FC94 = (QW *)D_00351E10;
-    D_0065FC90 = (QW *)(D_00351E10 + 0x10);
+    D_0065FC94 = D_00351E10;
+    D_0065FC90 = D_00351E10 + 1;
     func_00244f28();
     func_00237018(D_0065FC94, D_0065FC90 - D_0065FC94, 1);
     return 0;
@@ -394,8 +394,8 @@ void func_00245508(s32 a0, f32 f) {
     D_00662560.unkE0 = 5;
     D_00662560.unk60 = 0x30003;
     func_00237018(&D_00662560, 0x16, 1);
-    D_006626C4 = (QW *)D_00351E10;
-    D_006626C0 = (QW *)(D_00351E10 + 0x10);
+    D_006626C4 = D_00351E10;
+    D_006626C0 = D_00351E10 + 1;
     func_002453e8(a0, f);
     func_00237018(D_006626C4, D_006626C0 - D_006626C4, 1);
 }

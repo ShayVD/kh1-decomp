@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
 typedef struct VmObj {
     u8 pad0[0x10];
@@ -9,15 +10,6 @@ typedef struct VmObj {
     u64 f370;
 } Ent;
 typedef VmRec VM;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 double sin(double);
 double cos(double);
 #include "data/types/text_001c0000_h67.h"
@@ -157,7 +149,7 @@ extern s32 D_0039A570;
 extern s32 D_003A7980;
 s32 func_00123488(s32);
 s32 func_001d0b90(VM *vm) {
-    Msg m;
+    VmMsg m;
     s32 i;
     m.type = 13;
     m.val = 0;
@@ -194,7 +186,7 @@ s32 func_001d0b90(VM *vm) {
 }
 
 s32 func_001d0dd0(VM *vm) {
-    Msg m;
+    VmMsg m;
     s32 i;
     m.type = 14;
     m.val = 0;
@@ -345,7 +337,7 @@ s32 func_001d9100(VM *vm) {
 }
 
 void func_001dcfd0(VM *vm) {
-    Msg m;
+    VmMsg m;
     Ent *e;
     if ((s32)(vm->fl.x >> 14) & 1) {
         e = vm->obj;

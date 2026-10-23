@@ -459,7 +459,7 @@ void func_00225ea8(SvCtx *arg0) {
             SV_WAITCLOSE(374)
         case 44:
             D_00643738 = 377;
-            func_00234440(SV_PORT, 0, func_00233018(SV_SLOT1), ((SvF *)&D_00425B80), 0x400, 0);
+            func_00234440(SV_PORT, 0, func_00233018(SV_SLOT1), &D_00425B80, 0x400, 0);
             D_00643734 = 45;
             break;
         case 45:
@@ -484,7 +484,7 @@ void func_00225ea8(SvCtx *arg0) {
             SV_S.ptr[D_006436E8] = &SV_S.e[D_00643744];
             D_00643744++;
             D_00643734 = 53;
-            SV_S.f[D_006436E8] = (*(SvF *)&D_00425B80);
+            SV_S.f[D_006436E8] = D_00425B80;
             break;
         case 53:
             SV_CLOSE(372, 54)
@@ -540,7 +540,7 @@ void func_00225ea8(SvCtx *arg0) {
             SV_WAITCLOSE(374)
         case 67:
             D_00643738 = 378;
-            func_00234440(SV_PORT, 0, func_00233018(SV_SLOT1), ((SvF *)&D_00425B80), 0x400, 0);
+            func_00234440(SV_PORT, 0, func_00233018(SV_SLOT1), &D_00425B80, 0x400, 0);
             D_00643734 = 68;
             break;
         case 68:
@@ -555,7 +555,7 @@ void func_00225ea8(SvCtx *arg0) {
                     }
                 } else {
                     D_00643734 = 53;
-                    SV_S.f[D_006436E8] = (*(SvF *)&D_00425B80);
+                    SV_S.f[D_006436E8] = D_00425B80;
                 }
             }
             break;

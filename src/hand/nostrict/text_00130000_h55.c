@@ -7,7 +7,7 @@ typedef struct { u8 pad[0x10]; W55Dim *x10; } W55Mdl;
 typedef struct { u8 pad[4]; s32 x4; u8 pad8[0x4c - 0x8]; u16 x4c; u8 pad4e[0x54 - 0x4e]; s8 x54; } W55Inf;
 typedef struct { u8 pad[0xcc]; f32 xcc; } W55Mv;
 typedef struct { f32 *x0; } W55Fx;
-typedef struct W55Ob {
+typedef struct Actor {
     u32 x0;
     s32 x4;
     u8 pad08[0x10 - 0x8];

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
 
 #include "data/pieces/D_002E27C8.h"
@@ -15,15 +16,36 @@ typedef struct { u8 pad[0x18]; u8 n; u8 id[1]; } C01Cnt;
 typedef struct { u8 pad[0x10]; f32 x10; u8 pad14[0xc8 - 0x14]; C01Cnt *xc8; } C01Sub6C;
 typedef struct { u8 pad[0x4c]; u16 x4c; } C01Sub130;
 typedef struct {
-    u8 pad[0x6c];
+    u32 lo : 4;
+    u32 b4 : 1;
+} __attribute__((aligned(8))) C01Bits160;
+typedef struct Actor {
+    u32 x0;
+    u8 pad4[0x38];
+    f32 x3c;
+    f32 x40[4];
+    u8 pad50[0x1c];
     C01Sub6C *x6c;
-    u8 pad70[0x130 - 0x70];
+    u8 pad70[0x30];
+    f32 xa0[4];
+    u8 padb0[0x80];
     C01Sub130 *x130;
-    u8 pad134[0x148 - 0x134];
+    u8 pad134[0x14];
     C01Sub148 *x148;
+    u8 pad14c[0x14];
+    C01Bits160 x160;
+    u8 pad168[0x1e8];
+    f32 x350[4];
+    u8 pad360[0x10];
+    u64 x370;
+    u8 pad378[0x48];
+    f32 x3c0[3];
+    f32 x3cc;
+    s32 x3d0;
+    u8 pad3d4[0x6c];
+    u64 x440;
 } C01Ply;
 typedef struct { u16 a; u16 b; } C01Pr;
-typedef struct { u8 pad[0x54]; C01Pr e[1]; } C01Tbl;
 
 extern f32 D_00304D54;
 extern f32 D_00306844;
@@ -32,7 +54,6 @@ extern f32 D_00306848;
 extern s32 D_002C5C54;
 extern s32 D_002C5C4C;
 extern u32 D_002C5958;
-#include "data/pieces/D_00308CDC.h"
 s32 func_0013c968(s32, s32);
 
 void func_001252f8(void) {
@@ -58,7 +79,7 @@ void func_001252f8(void) {
         D_002E27C8.b10 += func_0013c968(16, id);
         D_00306844 += func_0013c968(27, id) * 0.5f;
         D_00306848 += func_0013c968(28, id) * 0.5f;
-        p->x6c->x10 = D_002C5C54 ? (*(C01Tbl **)&D_00308CDC)->e[id].b : (*(C01Tbl **)&D_00308CDC)->e[id].a;
+        p->x6c->x10 = D_002C5C54 ? (*(Cfg_308cdc **)&D_00308CDC)->e[id].b : (*(Cfg_308cdc **)&D_00308CDC)->e[id].a;
         p->x148->b38 = func_0013c968(62, id);
         for (j = 0; j < p->x6c->xc8->n; j++) {
             c = p->x6c->xc8->id[j];
@@ -81,7 +102,7 @@ void func_001252f8(void) {
         D_002E27C8.b9 = 1;
         for (i = 0; i < 3; i++) {
             p = D_002E26A0[i];
-            if (p) p->x6c->x10 = (*(C01Tbl **)&D_00308CDC)->e[p->x130->x4c].b;
+            if (p) p->x6c->x10 = (*(Cfg_308cdc **)&D_00308CDC)->e[p->x130->x4c].b;
         }
     }
     if (func_0013c968(3, 11)) D_002E27C8.b7 = 1;
@@ -249,30 +270,8 @@ typedef struct {
     f32 x10[4];
 } __attribute__((aligned(8))) C01Cmd;
 #include "data/types/nostrict_text_00110000_c01.h"
-typedef struct {
-    u32 lo : 4;
-    u32 b4 : 1;
-} __attribute__((aligned(8))) C01Bits160;
-typedef struct {
-    u32 x0;
-    u8 pad004[0x3c - 0x4];
-    f32 x3c;
-    f32 x40[4];
-    u8 pad050[0xa0 - 0x50];
-    f32 xa0[4];
-    u8 pad0b0[0x160 - 0xb0];
-    C01Bits160 x160;
-    u8 pad168[0x350 - 0x168];
-    f32 x350[4];
-    u8 pad360[0x370 - 0x360];
-    u64 x370;
-    u8 pad378[0x3c0 - 0x378];
-    f32 x3c0[3];
-    f32 x3cc;
-    s32 x3d0;
-    u8 pad3d4[0x440 - 0x3d4];
-    u64 x440;
-} C01Act3;
+
+typedef C01Ply C01Act3;
 typedef struct {
     u8 pad[0x30];
     s8 x30[4];
@@ -372,7 +371,7 @@ void func_00133a88(void) {
         case 14:
             a->x440 |= 1ULL << 32;
             a->x0 &= ~4;
-            if ((C01Act3 *)D_002E26A0[1] == a || (C01Act3 *)D_002E26A0[2] == a) {
+            if (D_002E26A0[1] == a || D_002E26A0[2] == a) {
                 func_00171f58(a);
                 func_00153d88(a);
             }

@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00100000_H51_H
 
 #include "common.h"
+#include "data/pieces/D_002A6234.h"
 
-typedef struct { f32 x0; f32 pad4; f32 cw; s32 nx; u8 pad10[0x10]; f32 z0; f32 pad24; f32 ch; s32 nz; } Grid;
+typedef Grid_2a6234 Grid; /* the collision grid (D_002A6234, D_002A6324) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00100000_H51_H */

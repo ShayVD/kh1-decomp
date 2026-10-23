@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_00426940_H
 
 #include "common.h"
+#include "data/pieces/D_004268B0.h"
 
-extern u8 D_00426940[0x30];
+extern Tex_4268b0 D_00426940[1];
 
 #endif /* KH1_DATA_PIECES_D_00426940_H */

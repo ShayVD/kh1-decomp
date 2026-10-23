@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -20,15 +21,6 @@ typedef struct {
     u8 pad2f8[0x30];
     union { u64 x; s32 i[2]; } flags;
 } VM;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef struct {
     s32 x0;
     u8 pad4[8];
@@ -69,7 +61,7 @@ extern Big D_00389C90;
 typedef struct { s32 v[3]; s32 f0c; } Cam;
 extern Cam D_002BC080;
 s32 func_001cfdd8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 19;
     m.val = (u32)(vm->stk[vm->sp - 2] | 0x10000);
     m.v[0] = vm->stk[vm->sp - 1];
@@ -80,7 +72,7 @@ s32 func_001cfdd8(VM *vm) {
     return 2;
 }
 s32 func_001d01e8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 30;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;
@@ -102,7 +94,7 @@ s32 func_001d0070(VM *vm) {
     return 2;
 }
 s32 func_001d02d0(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 31;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;
@@ -126,7 +118,7 @@ s32 func_001d06f0(VM *vm) {
 }
 VM *func_001e98d0(s32, s32);
 s32 func_001d14f0(VM *vm) {
-    Msg m;
+    VmMsg m;
     s32 b = vm->stk[vm->sp - 1];
     VM *p = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
     if (p) {
@@ -163,7 +155,7 @@ s32 func_001d34b0(VM *vm) {
     return 2;
 }
 s32 func_001d4b60(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 32;
     m.val = 0;
     m.x = vm->x0;
@@ -192,7 +184,7 @@ s32 func_001d3ff0(VM *vm) {
 typedef struct { s32 x0; s32 x4; u8 pad8[8]; f32 pos[3]; u8 pad1c[0x354]; u64 f370; } Obj;
 Obj *func_00123220(Obj *);
 s32 func_001d4e60(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     for (p = func_00123220(0); p; p = func_00123220(p)) {
         m.type = 7;
@@ -207,7 +199,7 @@ s32 func_001d4e60(VM *vm) {
     return 2;
 }
 s32 func_001d4f10(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     for (p = func_00123220(0); p; p = func_00123220(p)) {
         m.type = 6;
@@ -223,7 +215,7 @@ s32 func_001d4f10(VM *vm) {
 }
 Obj *func_001230a0(Obj *);
 s32 func_001d59a0(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     m.type = 14;
     m.val = 0;
@@ -240,7 +232,7 @@ s32 func_001d59a0(VM *vm) {
     return 2;
 }
 s32 func_001d5a50(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     m.type = 13;
     m.val = 0;
@@ -258,7 +250,7 @@ s32 func_001d5a50(VM *vm) {
 }
 s32 func_00123618(s32);
 s32 func_001d7040(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     m.type = 7;
     m.val = 0;
@@ -303,7 +295,7 @@ s32 func_001d6a60(VM *vm) {
     return 2;
 }
 s32 func_001d7118(VM *vm) {
-    Msg m;
+    VmMsg m;
     Obj *p;
     m.type = 6;
     m.val = 0;

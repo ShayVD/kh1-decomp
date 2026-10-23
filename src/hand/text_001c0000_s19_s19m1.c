@@ -1,5 +1,6 @@
 /* func_001cfc28: MATCHED (session 19, s19m1), hand. From s11w15's 6w finding (nonmatchings/session11/w15__001cfc28_6w_finding.c): `f32 one = 1.0f;` at the top (update_equiv_regs moves the li.s next to its use after sched1) plus volatile Msg.type and Msg.v3, which put the li.s after the dsll as in the original. New: the c*2.0f chain is a local register variable `register f32 t asm("$f0")` set by `t = (f32)c; t = t + t;`, so local-alloc can no longer give f0 to the moved 1.0 (it gets f1 as in the original). FLAGGED: two volatile fields in the stack message (without them 6w) and the pin (`t = c * 2.0f` in one statement: 6w, the pin dissolves). */
 #include "common.h"
+#include "vm/script_vm.h"
 typedef struct {
     s32 x0;
     void *obj;
@@ -21,7 +22,6 @@ typedef struct {
 } Msg;
 typedef struct { s32 x0; s32 x4; } R4;
 typedef struct { s32 x0; R4 *x4; } R;
-void func_001c4640(Msg *m);
 R *func_001e98d0(s32 a, s32 b);
 s32 func_001cfc28(VMd *vm) {
     Msg m; f32 one = 1.0f;
@@ -46,7 +46,7 @@ s32 func_001cfc28(VMd *vm) {
         m.v[1] = 0;
         m.v[2] = 0;
         m.v3 = one;
-        func_001c4640(&m);
+        func_001c4640((VmMsg *)&m); /* m is VmMsg with volatile type and v[3] */
     }
     vm->sp -= 3;
     return 2;

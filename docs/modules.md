@@ -27,7 +27,8 @@ translation unit, and they now are one file again.
 run `op = func_001c1ce8(code, pc); arg = func_001c1cf8(code, pc); r =
 D_0037A198[op](vm, arg);`. D_0037A198 is a table of 32 function pointers (read
 from the ELF): 30 of them are the handlers in 0x001c08e8-0x001c1b58, the other
-two are func_001cd208 and func_001dcad0 (far away; not moved). The rest of the
+two are func_001cd208 (opcode 1, src/vm/vm_calc.c since session 31) and func_001dcad0
+(opcode 24, still in src/auto; see "Session 31"). The rest of the
 range is what those handlers call: the type clamp func_001c0bf0, the save block
 accessors func_001c0da0 / func_001c0e50 / func_001c0e80, the cross-VM jump
 func_001c1980 (called by the handler func_001c19f8) and the instruction fetch
@@ -98,6 +99,105 @@ nostrict/c09, s11_w1, s11_w1b), with nostrict/b10's type header.
   so a separate file for the runtime half failed there and the merged file
   does not.
 
+## Session 31: the rest of the VM, and src/camera/
+
+| file | functions |
+|---|---|
+| `src/vm/vm_calc.c` | opcode 1: the 18 operations func_001cce38-func_001cd1d0, their table D_003C5898 (defined here) and the dispatcher func_001cd208 |
+| `src/vm/vm_find.nofill.c` | func_001e98d0, func_001e99e8, func_001e9b98: the walks over VmMgr's VM list (need nofill) |
+| `include/vm/vm_find.h` | their prototypes (script_vm.c includes it) |
+| `src/camera/camera.c` | 46: the camera core 0x001c5168-0x001c6d08 and its script functions 0x001c6d08-0x001ca9e8, in address order, except the nine below |
+| `src/camera/camera.nostrict.c` | func_001c6d08, func_001c71e8, func_001c7700, func_001c7c18 (load and play camera path k), func_001c8c90, func_001c8d98, func_001c9ca8, func_001ca060 (start channels 2 / 3) |
+| `src/camera/camera.nostrict_nofill.c` | func_001c53c8 (interpolate the path at a time) |
+| `include/camera/camera.h` | `CamState` (D_003C5510, 0x130 bytes), `CamVec`, `CamV4q`, the core prototypes |
+
+func_001c62a0 (0x001c62a0-0x001c671c, a second path loader) is not matched and
+stays original bytes at its place in the camera range.
+
+**Where the boundaries are, and the evidence.**
+
+- *script_vm.c ends at 0x001c4ed0.* Every function from 0x001c08e8 to
+  0x001cd300 matches in one file with the default (or nofill) flags, and the
+  camera core matches appended to script_vm.c too, so matching cannot place the
+  boundary. The types and the call graph do: from 0x001c5168 on the code works
+  on D_0037A380 / D_003C5510 and the view (D_002E2780 ...), shares no type with
+  the VM, and calls nothing in it; the VM calls only func_001c6720 (reset, at
+  script load) and func_001c5b88 (play, every frame). The data agrees: the
+  VM's D_0037A378 is directly followed by the camera's D_0037A380.
+- *The camera core and its script functions are one file.* The script
+  functions match only with func_001c6890 defined above them (h66's
+  func_001c91e8, s11_w1d's func_001c99a8: branch-likely vs plain branch without
+  it), and func_001c6890 is a core function.
+- *The camera ends at 0x001ca9e8.* func_001ca800 (run the active tweens every
+  frame) is the last function that touches D_003C5510; from 0x001ca9e8 on the
+  functions (h14, h42, h67, h15 ...) use VmMgr and other data. D_003D9FE0, the
+  763-entry table func_001dcad0 dispatches through, starts at func_001c6d08
+  (its lowest entry) and runs to 0x001ec678: the camera's 32 entries are the
+  first of a long script-function library 0x001c6d08-0x001ec6xx
+  (153 entries in 0x001c, 505 in 0x001d, 105 in 0x001e).
+- *func_001cd208 (opcode 1) moves; func_001dcad0 (opcode 24) does not.*
+  func_001cd208 sits directly after its 18 operations, and none of them is a
+  D_003D9FE0 entry: the operations, the table D_003C5898 (in .data among the
+  VM's) and the dispatcher are one island in the library range, so they are
+  their own file. func_001dcad0 is a one-line dispatcher in the middle of the
+  library (0x001dcad0) and its table names 763 functions from 0x001c6d08 to
+  0x001ec678: it belongs with that library, not with the VM; it stays in
+  src/auto/text_001d0000_14.c with D_003D9FE0.
+- *func_001e98d0 moves with its two siblings.* func_001e98d0 / func_001e99e8 /
+  func_001e9b98 are contiguous (0x001e98d0-0x001e9d00), all walk the same
+  VmMgr VM list (x316c, x3034, x3038) and are called from script_vm.c; they
+  match together in one nofill file.
+
+**Where they came from.** vm_calc.c: h15 (18), auto text_001c0000_10.c
+(func_001cd208 and D_003C5898). vm_find.nofill.c: nofill/h45, s6_16, h68.
+camera: h66 (8), h14 (15), nostrict/h14 (4), h42 (7), b10 (4), auto
+text_001c0000.c (2), auto text_001c0000_3.c (2), nostrict/c09b (4), s6_14 (2),
+s9_w11 (2), s11_w15, s11_w1d, s11_w1e, s7_w19, nostrict_nofill/r2_9 (1 each).
+Deleted as empty: s11_w15, s11_w1d, s11_w1e, s6_14, s9_w11, nostrict/c09b,
+nostrict/h14, nostrict_nofill/r2_9, and include/data/types/text_001e0000_s6_16.h.
+(Session 30's note that c09b and r2_9 were separate translation units was wrong:
+they were camera functions.)
+
+**Types.** CamState replaces the views of D_003C5510 (b10's CamS, h66's
+Tw_c9ac8 / Tw_c9e80 / Tw_ca800 / Cam_c91e8, h14's Tween, h42's / h14's
+D_003C55E0.. names): five tween channels (dur / t / mode, p0 -> p1), the shake,
+base / pos / rot, v100 / v110 and f120..f12c (see the comment in camera.h). The
+flag word is a three-way union: `fl.x` (u64, whole-word reads: func_001c5b88),
+`fl.s` (u32 bit-fields, sharing the word with dur[0]) and `fl.w` (u64
+bit-fields); all three occur in the original. Its size stays 0x130 (the
+D_003C5510 piece), so cover_check's sizes do not change. The VM side uses
+VmRec / VmMgr.
+
+**Hazards found.**
+
+- Union members get alias set 0: a direct store `D_003C5510.fl.s.dur[1] = d`
+  gave different code from the view's; storing through a pointer,
+  `(&D_003C5510.fl.s)->dur[1] = d`, matched (func_001c99a8, func_001ca0f8,
+  func_001ca368). A read of a union member of D_0037A380 likewise needed a cast
+  macro, `#define CAM (*(Cam_37A380 *)&D_0037A380)` (func_001c5db8).
+- Which symbol an access names matters: gcc treats D_003C55F0 and D_003C5510
+  as not aliasing. func_001ca5f8 / func_001ca680 / func_001ca708 were 8 bytes
+  short through D_003C5510.rot and matched with `CamVec *b = &D_003C55F0;`
+  (b[-1] the position, b[4][0] f120). Keep the symbol the matching file used.
+- `*(s32 *)&D_003C5510.st = 0` is 8 bytes longer than `D_003C5510.st = 0`.
+- The same "callee defined above" effect as func_001c4ed0 above: removing
+  func_001c6890 from h66 made h66's func_001c91e8 NONMATCHING until a
+  CONTEXT_ONLY stub stood in (both are in camera.c now). Probe before moving:
+  a CONTEXT_ONLY definition of the callee above a candidate shows whether it
+  needs one. The 15 retyped func_001c4640 callers showed no change.
+- The float keep list grows by six names, D_003C55E4 / E8 / F4 / F8 / D_003C5630
+  / 34: addend_check now sees `D_003C5510+0xd4` ... from the camera functions
+  that used to name those labels. They are PIECE_LABELs inside the one
+  D_003C5510 piece (already kept), so nothing moves differently: with
+  `SHIFT_FLOAT_FORCE` releasing exactly these six the list equals the base and
+  kh1-shift.elf is byte-identical to the build that keeps them.
+
+**Retypes.** The 15 `void func_001c4640(Msg *)` users (h15, h16, h17,
+nofill/h17, h18, h19, h21, h43, nofill/h43, h44, h45, h67, nostrict_nofill/h67,
+s11_w1c, s19_s19m1) include script_vm.h and use VmMsg; h44 and h45 lost local
+prototypes that conflicted with the header (calls got `(s8 *)` casts); s19m1
+keeps its `volatile` message and passes `(VmMsg *)&m`. No code changed.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -141,12 +241,12 @@ one sibling file (func_001c4808 calls func_001c3770 above it, as in b10).
 - **Module header** (`include/<module>/<name>.h`): prototypes of the functions
   other files call, with the real types. The module includes it, so the
   definitions are checked against it. Other files still declare their own
-  prototypes, mostly different from the header (`void func_001c4640(Msg *)` in
-  15 files, `void func_001c19f8(VMa *, s32)`, `s32 func_001c2df0(s32, s32)` ...);
-  only s6_13's (`s32 func_001c1ce8(s8 *, s32)`) was identical, and s6_13 now
-  includes script_vm.h. Switching the others changes their types (return types
-  and pointer types can change code: see "Hazards" above and
+  prototypes, mostly different from the header (`void func_001c19f8(VMa *, s32)`,
+  `s32 func_001c2df0(s32, s32)` ...). Switching them changes their types (return
+  types and pointer types can change code: see "Hazards" above and
   docs/shiftable-plan.md "Session 29"), so each is a retype checked with `make`.
+  s6_13 (session 30) and the 15 `void func_001c4640(Msg *)` users (session 31)
+  now include script_vm.h.
 - **Externs**: use the shared data headers (include/data/data_00XX.h,
   include/data/pieces/D_X.h, include/data/types/*.h), not file-local `extern`s.
   script_vm.c includes data_0038.h / data_003C.h and the piece headers at the top. tools/shift/cover_check.py
@@ -163,7 +263,8 @@ one sibling file (func_001c4808 calls func_001c3770 above it, as in b10).
 - **Data defined in C**: each variable is placed by name (`.data.<name>`), so it
   can live in any file; define it in the module that owns it, never `static`.
   This module defines none (D_00629808 stays in src/auto/text_001c0000.c with
-  func_001c07f0, its user).
+  func_001c07f0, its user). Session 31 moved D_003C5898 (opcode 1's table) from
+  src/auto/text_001c0000_10.c into src/vm/vm_calc.c with nothing else to change.
 - **Removing a function from an old file**: if a function left in that file calls
   it from below, leave a CONTEXT_ONLY copy (or `{}` stub) at its place, since the
   caller may have matched with the definition above it. h42 keeps a CONTEXT_ONLY
@@ -180,7 +281,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
   A new directory needs no registration.
 - link-script, patch, verify, progress: work from out/gen/placements.tsv (symbol ->
   address); `decompiled_addrs` (rank) scans all of src/.
-- objdiff / report: one unit per source file (the module is three units; 927 in all).
+- objdiff / report: one unit per source file (src/vm/ is five units and src/camera/ three; 924 in all after session 31).
 - autodecomp `--write` only creates new src/auto/ files keyed by address (or
   `--out-dir`); it never touches modules, and a function defined anywhere is not
   retried. Its default flags come from the `src/auto` path.
@@ -192,7 +293,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (session 30, after each step)
+## Verification (sessions 30 and 31, after each step)
 
 - `make`: OK, byte-identical, 6979 decompiled functions (same as before).
 - `make objdiff` / `make report`: all 6979 functions at 100%; placements.tsv
@@ -204,19 +305,24 @@ Nothing assumes the src/auto / src/hand names except where noted:
 
 ## Next module moves
 
-- The rest of the VM: the two far handlers func_001cd208 / func_001dcad0, the VM
-  lookup func_001e98d0, and the code right after this module (0x001c4ed0 on:
-  h66's camera functions func_001c5168 / func_001c5b88, then the function
-  handlers 0x001c6890-0x001cc208 that h14 / h15 / h16 / h42 / h67 match against
-  VM views and the camera tween D_003C5510). Check first whether they match at the
-  end of script_vm.c: if they do, they extend this file; if the first one does
-  not, the translation unit probably ends at 0x001c4ed0.
-- Other files that still loop over D_0037A198 (nostrict/c09b, nostrict_nofill/r2_9)
-  are elsewhere in the address space; they are separate translation units.
-- Retype the 15 `void func_001c4640(Msg *)` users to script_vm.h's `s32 (VmMsg *)`
-  one file at a time (the return type may change their code).
-- Leave alone the files another worker is retyping in the same session (session
-  30: the D_002C58D0, D_00304BE8 and D_002A6238 users and b11).
+- **The script-function library** 0x001c6d08-0x001ec678: the 763 entries of
+  D_003D9FE0 (func_001dcad0's table, opcode 24), in 0x001c/0x001d/0x001e
+  (153 / 505 / 105 entries). The camera's 32 were the first group. Find the next
+  groups by data (each group's shared global, like D_003C5510 for the camera)
+  and by "needs X defined above", and move func_001dcad0 with D_003D9FE0 once
+  the group around 0x001dcad0 is known. The functions right after the camera
+  (0x001ca9e8-0x001cce38: h14, h42, h67, h15, b10 ...) work on VmMgr and are
+  the next candidates.
+- Remaining views of the camera data: b10 still includes the D_003C5510 piece
+  header (CamS) for its other functions, and h14 keeps its multi-name
+  `extern f32 D_003C55E0, D_003C55E4 ...` line (unused now, kept for
+  cover_check; drop it with a float_covered check).
+- h42's CONTEXT_ONLY func_001c4640 (still `Msg *`) is not needed by its callers
+  (a probe without it changes nothing): retype h42 to script_vm.h and drop it.
+- Other files' prototypes of VM functions that differ from script_vm.h
+  (`s32 func_001c4640`, `func_001c19f8(VMa *, s32)`, `func_001c2df0(s32, s32)`):
+  retype one file at a time with `make`.
+- Leave alone the files another worker is retyping in the same session.
 
 ## Checklist for a module move
 

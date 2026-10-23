@@ -12,7 +12,7 @@ extern s32 func_0013c188(s32, s32);
 extern s32 func_00132fe0(s32);
 extern s32 func_00133000(s32, s32);
 extern O8 *func_001478c8(s32);
-extern s32 func_00122ff8(s32);
+extern s32 func_00122ff8(struct Actor *);
 extern f32 func_0012ed88(s32, S31b0 *, void *, void *);
 extern u32 D_00524F44;
 CONTEXT_ONLY void func_0012cb40(Q38 *a, s32 i, u8 v) {
