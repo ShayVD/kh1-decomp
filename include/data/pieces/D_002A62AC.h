@@ -4,7 +4,9 @@
 #define KH1_DATA_PIECES_D_002A62AC_H
 
 #include "common.h"
+#include "data/pieces/D_002A6234.h"
 
-extern u8 *D_002A62AC;
+/* the loaded map's grid (session 32: Grid_2a6234 *, as D_002A6234 is set from it) */
+extern Grid_2a6234 *D_002A62AC;
 
 #endif /* KH1_DATA_PIECES_D_002A62AC_H */

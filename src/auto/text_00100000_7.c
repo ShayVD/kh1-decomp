@@ -47,7 +47,7 @@ void func_00103280(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3) {
 }
 
 void func_00104678(void) {
-    D_002A6234 = (Grid_2a6234 *)D_002A62AC;
+    D_002A6234 = D_002A62AC;
     D_002A6238 = D_002A62B0;
     (*(s32 *)&D_002A623C) = ((s32)D_002A62B4);
     D_002A6240 = D_002A62B8;
