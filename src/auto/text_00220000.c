@@ -8,10 +8,6 @@ extern s32 D_00646A24; /* src/data/bss_0064.c: u32 D_00646A24 */
 extern s32 D_00646A28;
 extern s32 D_00647644;
 
-void func_0022e458(void) {
-
-}
-
 void func_0022ebe8(void) {
 
 }

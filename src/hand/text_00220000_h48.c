@@ -13,45 +13,7 @@ void func_0020bb90(s32, s32);
 void func_0020bda8(s32);
 
 extern void *D_003F71C8[];
-
-extern u8 D_003F7720[];
-extern u8 D_003F7750[];
-extern s32 D_003F7774;
-extern s32 D_006469D0;
-extern s32 D_006469D4;
-extern s32 D_006469DC;
-extern s32 D_006469E4;
-extern s32 D_006469EC;
-extern s32 D_006469F4;
-void func_001f3e20(void *, void *);
-void func_001f3e90(void *, void *);
 void func_0020b968(void);
-void func_0022eab8(void);
-
-void func_0022eb00(s32 arg0) {
-    Obj *o[2];
-    func_001f3110();
-    o[0] = func_001f31a8(D_003F7750, 44);
-    if (o[0] != NULL) {
-        o[1] = func_001f31a8(D_003F7720, 45);
-        if (o[1] != NULL) {
-            func_001f3e90(o[0], o[1]);
-            func_001f3e20(o[1], o[0]);
-            o[1]->xa0 = 0;
-        }
-    }
-    D_006469DC = 0;
-    D_006469E4 = 0;
-    D_006469EC = 0;
-    D_006469F4 = 0;
-    D_003F7774 = 1;
-    D_006469D0 = 0;
-    D_006469D4 = 0;
-    func_0020b968();
-    func_0020bb90(0x153, 0xA4);
-    func_0020bda8(0x28);
-    func_0011ef10(0x2BFE9, func_0022eab8)[1] = arg0;
-}
 
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
