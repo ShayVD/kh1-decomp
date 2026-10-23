@@ -1,4 +1,4 @@
-/* src/vm/vm_ops.c's func_001c1718, which needs -fno-sched-interblock
+/* src/vm/script_vm.c's func_001c1718, which needs -fno-sched-interblock
  * (flag mode nosi; docs/modules.md "Flags").  It was below func_001c0bf0 in
  * the original file: the CONTEXT_ONLY stub stands in for that definition. */
 #include "common.h"

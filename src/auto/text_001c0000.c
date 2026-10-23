@@ -14,8 +14,6 @@ M2C_UNK func_001336b8();
 M2C_UNK func_0017e768();
 M2C_UNK func_0017e8c8();
 M2C_UNK func_0017e910();
-M2C_UNK func_001c4198(s32, M2C_UNK);
-M2C_UNK func_001dd1f0(s32, s32);
 #include "data/pieces/D_003DABD0.h"
 extern M2C_UNK D_006297F8; /* src/data/bss_0062.c: u8 D_006297F8[0x10] */
 M2C_UNK D_00629808[0x3a] ALIGNED(8);
@@ -31,12 +29,6 @@ s32 func_001559f0(M2C_UNK, M2C_UNK);
 void func_001c07f0(void) {
     func_0011efa8(&D_006297F8, &D_00629808, 0x1C, 8);
     func_0011ef10(0xC352, &func_001c07c8);
-}
-
-void func_001c4d90(s32 arg0, s32 arg1, s32 arg2) {
-    func_001dd1f0(arg1, arg2);
-    func_001c4198(arg0, 0);
-    D_0037A378 |= 4;
 }
 
 s32 func_001ca790(void) {

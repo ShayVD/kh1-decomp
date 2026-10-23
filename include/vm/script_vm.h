@@ -1,4 +1,4 @@
-/* The script VM's instruction set (src/vm/vm_ops.c; docs/modules.md).
+/* The script VM (src/vm/script_vm*.c; docs/modules.md).
  *
  * A VM is a VmRec (data/types/vm_rec.h): the script (`code`), its program
  * counter `pc` (in 4-byte instructions), an operand stack `stk` / `sp`,
@@ -17,6 +17,17 @@
 
 /* D_0037A198: the 32 handlers, indexed by opcode. */
 typedef s32 (*VmOp)(VmRec *vm, s32 arg);
+extern VmOp D_0037A198[];
+
+/* A message on the queues func_001c4640 / func_001c4788 fill (src/vm/script_vm.c). */
+typedef struct {
+    u8 type;
+    u64 val:24;
+    s32 x;                  /* the VM id (VmRec.x0) it is for */
+    s32 a8;
+    s32 ac;
+    f32 v[4];
+} VmMsg;
 
 /* Script fetch: instruction `pc` of `code` is 4 bytes, arg (s24) then opcode (s8). */
 s32 func_001c1ce8(s8 *code, s32 pc);
@@ -32,5 +43,24 @@ void func_001c0e80(s32 off, s32 size, void *src);
 
 /* Jump another VM to `pc` at return level `lvl`. */
 s32 func_001c1980(VmRec *vm, s32 lvl, s32 pc);
+s32 func_001c19f8(VmRec *vm, s32 k);
+
+/* the runtime half of src/vm/script_vm.c */
+void func_001c1d20(VmRec *vm, s32 k);
+s32 func_001c1e30(void);
+s32 func_001c1f80(void);
+s32 func_001c2778(void);
+void func_001c29d8(void);
+void func_001c2d20(s8 *p, s32 *cnt, s8 **tbl);
+s8 *func_001c2df0(s8 *p, s32 k);
+void func_001c2ec8(s8 *p, s32 a1);
+s32 func_001c3408(void);
+void func_001c3770(s8 *p, s32 a1);
+void func_001c4198(s8 *h, s32 a1);
+VmMsg *func_001c45e8(void);
+s32 func_001c4640(VmMsg *m);
+VmMsg *func_001c4730(void);
+s32 func_001c4788(void *m);
+void func_001c4808(s32 a, u32 b);
 
 #endif /* KH1_VM_SCRIPT_VM_H */
