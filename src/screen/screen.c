@@ -11,6 +11,7 @@
  * the event voices' D_003DACA0 / the effects' D_0062A640; the code after
  * 0x001e2748 works on D_002BBBA0 / D_0062F760 instead. */
 #include "common.h"
+#include "vm/vm_sub.h"
 #include "data/types/vm_rec.h"
 #include "vm/vm_mgr.h"
 #include "data/bss_0062.h"
@@ -342,11 +343,10 @@ void func_001e1688(void) {
 }
 
 /* h20's view of a VM from +4 (obj, then the stack at +0x180). */
-typedef struct { struct VmObj *obj; u8 pad4[0x17c]; s32 stk[33]; } ScrVmSub;
 
 /* The tint colour stk[sp-2..sp]. */
 s32 func_001e16b0(VmRec *vm) {
-    ScrVmSub *s = (ScrVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     u64 r;
     D_003DACC0.a = s->stk[vm->sp - 2];
     D_003DACC0.b = s->stk[vm->sp - 1];
@@ -358,7 +358,7 @@ s32 func_001e16b0(VmRec *vm) {
 
 /* Fade the tint in over stk[sp] frames (at once when 0). */
 s32 func_001e1748(VmRec *vm) {
-    s32 n = ((ScrVmSub *)&vm->obj)->stk[vm->sp];
+    s32 n = ((VmSub *)&vm->obj)->stk[vm->sp];
     if (n > 0) {
         D_003DACD0 = 128 / n; D_003DACCC = 0;
     } else {
@@ -372,7 +372,7 @@ s32 func_001e1748(VmRec *vm) {
 
 /* Fade it out over stk[sp] frames. */
 s32 func_001e17e0(VmRec *vm) {
-    s32 n = ((ScrVmSub *)&vm->obj)->stk[vm->sp];
+    s32 n = ((VmSub *)&vm->obj)->stk[vm->sp];
     if (n > 0) {
         D_003DACD0 = -128 / n;
     } else {
@@ -460,7 +460,7 @@ s32 func_001e2678(void) {
 
 /* Scroll to line stk[sp-1] over stk[sp] frames. */
 s32 func_001e26b8(VmRec *vm) {
-    ScrVmSub *s = (ScrVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i = vm->sp;
     f32 x = s->stk[i - 1], y = s->stk[i];
     D_003DAD44 = y;

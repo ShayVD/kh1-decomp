@@ -10,6 +10,7 @@
  * is theirs alone; it follows the screen effects' D_003DB070 / D_0062F6D0,
  * and the code after 0x001e4918 works on D_00630300.. / D_003DC498 instead. */
 #include "common.h"
+#include "vm/vm_sub.h"
 #include "data/types/vm_rec.h"
 #include "vm/vm_mgr.h"
 #include "msgwin/msgwin.h"
@@ -30,7 +31,6 @@ typedef struct { s32 a; s32 n; void (*fn)(); s32 d; } ShopCb;
 /* An entry of the item lists D_003DB078 / D_003DB718. */
 typedef struct { s32 x0; s32 x4; u8 pad[0xcc]; } ShopList;
 /* h45's view of a VM from +4 (obj, then the stack at +0x180). */
-typedef struct { struct VmObj *obj; u8 pad4[0x17c]; s32 stk[33]; } ShopVmSub;
 
 extern VmMgr D_00389C90;
 extern u64 D_0038CD00;
@@ -505,7 +505,7 @@ void func_001e3728(void) {
 }
 
 s32 func_001e3770(VmRec *vm) {
-    ShopVmSub *s = (ShopVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i;
     D_002C5958 |= 0xc;
     func_001e27b0();
@@ -528,7 +528,7 @@ s32 func_001e3770(VmRec *vm) {
 }
 
 s32 func_001e38b0(VmRec *vm) {
-    ShopVmSub *s = (ShopVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i;
     D_002C5958 |= 0xc;
     func_001e27b0();
