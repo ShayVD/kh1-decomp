@@ -25,7 +25,6 @@ M2C_UNK func_0021b820();
 M2C_UNK func_0021c780(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb00(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-#include "data/pieces/D_003F61E0.h"
 extern M2C_UNK D_003F70E8;
 extern f32 D_002BBDFC;
 extern f32 D_006469B8[]; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
@@ -38,7 +37,6 @@ extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_00646990;
 #include "data/pieces/D_00425BC8.h"
-extern void *D_00643428; /* src/data/bss_0064.c: s32 D_00643428 */
 s32 func_001efc10(M2C_UNK);
 s32 func_001f42b8();
 s32 func_001f4390();
@@ -48,28 +46,6 @@ void func_00205e30(s32, s32);
 void func_00206130(s32, s32, s32, s32, s32, s32);
 void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0020ca30(s32, s32, s32, s32);
-
-void func_002207f0(s32 arg0) {
-    func_0021b800(arg0 + 8);
-}
-
-void func_00220808(s32 arg0) {
-    func_0021b800(*(M2C_UNK *)((s8 *)(s8 *)(M2C_UNK *)&D_003F61E0 + ((arg0 / 3) * 4)) + 8);
-}
-
-void func_00220848(s32 arg0) {
-    if ((func_001f42b8() != 0) && (M2C_FIELD(D_00425BC8, s32 *, 8) & 0x4000)) {
-        func_001f3758(M2C_FIELD(D_00643428, s32 *, 0x10));
-        func_0011d768(3);
-    }
-    func_0021b820();
-    func_0021ccd0(arg0, 3);
-    func_0021af38(arg0);
-}
-
-void func_00221098(void) {
-    func_002072e0(3);
-}
 
 void func_00221390(s32 arg0) {
     func_0021b800(arg0 + 0x30);

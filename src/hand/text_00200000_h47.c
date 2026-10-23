@@ -39,46 +39,10 @@ extern s32 D_0064324C;
 extern s32 D_0064324C;
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
-
-typedef struct { u8 pad[0xa0]; f32 xa0; } Oaf0;
-typedef struct { u8 pad[0x10]; s32 x10; } O3428;
-extern O3428 *D_00643428; /* src/data/bss_0064.c: s32 D_00643428 */
-extern S90a0 D_003E90A0;
-extern u8 D_003F6270[];
-extern u8 D_003F62A0[];
 void func_0011d768(s32);
 s32 func_001f31a8(s32, s32);
-void func_001f3758(s32);
 void func_001f3e48(s32, s32);
 s32 func_001f42b8(void);
-void func_0021b820(void);
-void func_0021cb88(s32, s32, s32, s32, s32);
-
-void func_00220af0(s32 a0) {
-    s32 b[2];
-    if (func_001f42b8() != 0) {
-        s32 fl = D_00425BC8->x8;
-        if (fl & 0x4000) {
-            func_001f3758((s32)D_00643428);
-            func_0011d768(3);
-        } else if (fl & 0x1000) {
-            func_0011d768(2);
-            func_001f3758(D_00643428->x10);
-            b[0] = func_001f31a8((s32)D_003F62A0, 50);
-            if (b[0] != 0) {
-                func_001f3e48(b[0], a0);
-                ((Oaf0 *)b[0])->xa0 = D_003E90A0.x64;
-                b[1] = func_001f31a8((s32)D_003F6270, 50);
-                if (b[1] != 0) {
-                    func_001f3e48(b[1], b[0]);
-                    ((Oaf0 *)b[1])->xa0 = ((Oaf0 *)b[0])->xa0 + D_003E90A0.x64;
-                }
-            }
-        }
-    }
-    func_0021b820();
-    func_0021cb88(a0, 176, 8, 320, 7);
-}
 
 typedef struct { u8 pad[0xcc]; s16 xcc; u8 pad2[4]; s16 xd2; } O29a0;
 extern u8 D_003F6590[];
@@ -331,7 +295,6 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 };
 #include "data/data_003F.h"
 #include "data/data_0049.h"
-#include "data/pieces/D_003E90A0.h"
 #include "data/pieces/D_003F5C30.h"
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"

@@ -6,19 +6,6 @@ typedef W606Mem_304be8 S4BE8e;
 void func_00207298(s32);
 void func_002072e0(s32);
 
-extern u8 D_003F6300[], D_003F62D0[];
-s32 func_001f31a8(void *, s32);
-void func_001f3e48(s32, s32);
-void func_00220fe8(s32 a0) {
-    s32 a[2];
-    a[0] = func_001f31a8(D_003F6300, 50);
-    if (a[0]) {
-        func_001f3e48(a[0], a0);
-        a[1] = func_001f31a8(D_003F62D0, 50);
-        if (a[1]) func_001f3e48(a[1], a[0]);
-    }
-}
-
 void func_0021b800(s32);
 void func_002213a8(s32 a0) {
     if (a0 <= 0) func_0021b800(48);
