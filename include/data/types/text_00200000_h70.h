@@ -4,6 +4,6 @@
 
 #include "common.h"
 
-typedef struct { u8 b[64]; } B64;
+typedef struct { u8 pad[0x34]; f32 x34; f32 x38; u8 pad3c[4]; } B64; /* D_003F3050[k] (64 bytes) */
 
 #endif /* KH1_DATA_TYPES_TEXT_00200000_H70_H */

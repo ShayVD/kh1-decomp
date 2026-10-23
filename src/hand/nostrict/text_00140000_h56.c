@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_0035C710.h"
 #include "data/pieces/D_00350D88.h"
 #include "data/bss_0053.h"
 void func_002675a8(f32 *, f32 *);
@@ -407,16 +408,7 @@ void func_00145858(Bo *o, f32 *pos) {
     }
 }
 
-typedef struct {
-    f32 v[4];
-    f32 f10;
-    f32 f14;
-    union {
-        u8 id;
-        struct { u64 lo:8; u64 f8:1; u64 f9:1; u64 f10:1; u64 rest:53; } b;
-    } u;
-} Spr;
-#include "data/pieces/D_0035C710.h"
+typedef W8Ent35 Spr;
 extern u8 D_0052EB50[];
 extern Bo D_0052EB60[]; /* src/data/bss_0052.c: u8 D_0052EB60[0x3000] */
 Bo *func_0011f090(void *, s32, void *);
@@ -428,12 +420,12 @@ void func_00146188(s32 id, f32 *pos, s32 mode) {
 
     b = func_0011f090(D_0052EB50, 0, func_00145ce8);
     if (b == 0) return;
-    e = &((Spr *)&D_0035C710)[b - D_0052EB60];
+    e = &D_0035C710[b - D_0052EB60];
     func_002675a8(e->v, pos);
     e->v[3] = 1.0f;
     e->u.id = id;
-    e->f10 = 1.0f;
-    e->f14 = 1.0f;
+    e->x10 = 1.0f;
+    e->x14 = 1.0f;
     e->u.b.f8 = 1;
     e->u.b.f10 = 1;
     e->u.b.f9 = 0;

@@ -99,7 +99,7 @@ void func_0012a608(void *arg0) {
 }
 
 void func_0012a6c0(f32 *arg0) {
-    *arg0 = atan2f(D_002E2700[2], D_002E2700[10]);
+    *arg0 = atan2f(D_002E2700[0][2], D_002E2700[2][2]);
 }
 
 void func_0012b260(void *arg0) {

@@ -172,7 +172,7 @@ void func_00241c60(s32 b, s32 i) {
         e->unk9E0 = D_00454A20.unk0;
         e->unk9E4 = D_00454A20.unk0 * 0.5235987f;
         func_002492d0(e->unk9EC, 0.0f, 0.0f, 0.0f, 128.0f);
-        func_0023cfe8(e->unkA34, D_00454A20.unk10, D_00451040);
+        func_0023cfe8(e->unkA34, D_00454A20.unk10, &D_00451040);
     } else {
         func_00241a38(i);
         e->unkA2C = 0;

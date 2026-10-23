@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
 extern s32 D_006469B0, D_006469B4;
@@ -582,23 +583,6 @@ s32 func_00236450(void) {
 #include "data/bss_0064.h"
 typedef f32 MTX[4][4] __attribute__((aligned(16)));
 typedef f32 VEC[4] __attribute__((aligned(16)));
-typedef struct {
-    MTX m0;
-    MTX m40;
-    MTX m80;
-    MTX mc0;
-    u8 p100[0x40];
-    f32 px, py, pz, pw;
-    f32 tx, ty, tz, tw;
-    VEC v160;
-    VEC v170;
-    f32 rx, ry, rz, rw;
-    VEC v190;
-    u8 p1a0[0x40];
-    s32 x1e0;
-    f32 dist;
-} Cam;
-#include "data/pieces/D_00425F70.h"
 #include "data/pieces/D_00425CE0.h"
 f32 atan2f(f32, f32);
 void func_00236d48(void *, void *, void *);
@@ -610,7 +594,7 @@ void sceVu0UnitMatrix(void *);
 void sceVu0MulMatrix(void *, void *, void *);
 void func_002673b8(void *, void *);
 
-#define C ((Cam *)D_00425F70)
+#define C D_00425F70
 void func_00236a58(void) {
     MTX m;
     VEC v;

@@ -149,7 +149,7 @@ void func_00146508(void) {
     s32 i;
     if (D_00304E3C) { func_00176340(D_00304E3C); D_00304E3C = 0; }
     func_0011efa8(D_0052EB50, D_0052EB60, 48, 256);
-    for (i = 0; i < 256; i++) D_0035C710[i].b8 = 0;
+    for (i = 0; i < 256; i++) D_0035C710[i].u.b.f8 = 0;
 }
 
 void func_00146590(void) {
