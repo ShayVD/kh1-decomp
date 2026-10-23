@@ -928,6 +928,103 @@ float build with float_covered.txt, float_reach.txt, the loaded bytes and the
 symbols the same as the base.  At the end `make report` 6979 at 100% and
 `make test` passes.
 
+## Session 39: the menus, 0x00209d48-0x00210000
+
+Session 39 moved 81 functions in five chunks, one commit each, into a new
+directory src/menu/ (headers in include/menu/).  No Mac: static checks only.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the party models of the menus: D_003F3530 (PartyMdl[4], include/menu/partymdl.h), D_003F3870 the count, the nine views D_00640E40 | src/menu/partymdl.c (11) | 0x00209d48-0x0020a8f0 | 11 |
+| the backgrounds: two frame-buffer pixels read back into D_003F34B0 (top / bottom colour), full-screen gradients, the two images of D_00641080 / D_00641130 | src/menu/menubg.c (2), menubg.nostrict.c (5) | 0x0020a8f0-0x0020b6a8 | 7 |
+| the pointer: a sprite that glides to the cursor cell of a TextWin and fades (D_006411E0 ... D_00641218, defined there) | src/menu/pointer.c (12) | 0x0020b6a8-0x0020be68 | 12 |
+| the party rows (name, level, HP, MP of a member) and the callbacks of the windows D_003F3200 / D_003F3230 / D_003F3280 | src/menu/partyrow.c (5) | 0x0020be68-0x0020c1c8 | 5 |
+| the top menu: the page list D_00640E00, its window, the window chains, the munny / time panel, set up / open / close, and the page tables D_003F32C8 / D_003F32E8 | src/menu/topmenu.c (17) | 0x0020c1c8-0x0020d7d8 | 17 |
+| the item page (page 0, message 0x69): its window callbacks (descriptors D_003F3880 ... D_003F3A80), using an item, the slot and stock lists, the third tab | src/menu/items.c (19), items.n32.c (6), itemslots.c (2), itemstock.c (2) | 0x0020d7d8-0x00210000 | 29 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x00209d48-0x0020a8f0 | e5467a7 | c3 |
+| 0x0020a8f0-0x0020b6a8 | 0b0fdb6 | nostrict/b13, auto text_00200000_4 |
+| 0x0020b6a8-0x0020c1c8 | 0eaf30b | s8_w18, auto text_00200000_1 _3 _6 |
+| 0x0020c1c8-0x0020d7d8 | 0d68987 | auto text_00200000_2 |
+| 0x0020d7d8-0x00210000 | 898f02f | s6_20, n32/s6_n32, auto text_00200000 _5 _7 _8; c14 and s7_w15 renamed (git mv) |
+
+That is 14 files deleted, 8 new units and 2 renamed: objdiff units 801 -> 795.  Every
+src/auto/text_00200000*.c file is gone; h24, h47, h70, nostrict/h70 and b13
+keep functions above 0x00210000.
+
+**What the groups are.**
+- **partymdl.c**: func_00209d48 loads a model for each party member
+  (func_001ef8f8(i)) into D_003F3530[i] and counts them; the fourth entry is
+  turned on by func_00223ea8 (h72, `D_003F3530[3].active`).  func_0020a248
+  sets a model up (its motion, the colours at +0x34 ... +0x47, two u64
+  constants at +0x60 / +0x68, and copies of the bones from bone 52 on into +0xc0).
+  func_00209f70 sets the views D_00640E40[0..8] (func_00267b08) from
+  D_003F31D0[party size - 1] and D_003F31D0[3], with D_003F3150 / D_003F3178
+  by the models of D_00304BE8->x48e.  func_00209e18 / func_0020a518 animate
+  and draw them (draw ids from 0xea61), func_0020a758 the turning one,
+  func_0020a1d8 frees them.
+- **menubg**: func_0020a8f0 reads the pixels (4, 16) and (443, 16) of the
+  frame buffer (sceGsExecStoreImage) into D_003F34B0[0] / [1]; func_0020a9b0,
+  func_0020ab88, func_0020ae98 draw a gradient between them (plain, textured
+  with D_003F1A70 / D_003F1E70, or into a packet), func_0020b120 a quad with
+  four colours and the alpha mode D_003F31F0[prim].
+- **pointer.c**: D_006411FC is the fade state (0 in, 1 shown, 2 out, 3
+  hidden), D_00641218 the alpha, D_00641210 / D_00641214 the place in pixels;
+  func_0020bc48 starts a glide of a0 frames (it jumps when the target is
+  within one pixel), func_0020bd18 aims at a TextWin's cursor cell.
+- **topmenu.c**: D_00640E00 holds the pages in menu order (0-4 always, 5
+  when func_001ec510, 6, 7 when D_003F34A8 == 1), D_003F32A8[page] their
+  message ids (0x69 ... 0x70), D_003F32C8[page] the descriptor of their first
+  window and D_003F32E8[page] their open functions (func_002112f8,
+  func_00213c90, func_002160a8, func_00217f58, func_00218f88,
+  func_0021daa0, func_0021ad08, func_002293f0: the pages from 0x00210000 on).
+- **items**: the window descriptors D_003F3880 ... D_003F3A80 start with
+  their draw callback (func_0020d7d8, func_0020d900, func_0020da00,
+  func_0020e280, func_0020e408, func_0020e588, func_0020eb20, func_0020fea0,
+  func_0020fee8, func_0020ff28, func_0020ff80).  The list window's tab
+  (+0x24) picks a member's slots (below the party size: func_0020ec50), the
+  stock (equal: func_0020f530) or the list of func_001ba3d8 (func_0020fc58).
+  Page 0 is most likely the item page (message 0x69, the slot and stock
+  lists); not proved by a boot.
+
+**Types and views.**
+- **PartyMdl** (0xd0) replaces four views (h47's E3530 / S3530, h70's E3530,
+  c3's E9, the auto offsets) and h72's S33C.  +0x34 is a union (`u34.w` for
+  the colour word, `u34.c[]` for its bytes).  +0x14 (the model) must be
+  `void *`: as s32, func_0020a248 stores +0x78 before it loads +0x14 (the
+  alias set of the two s32 fields keeps their order); every callee that takes
+  the model takes `void *` in partymdl.c.
+- **func_0011fbb0** returns s32 in menubg.c: declared void, func_0020b338
+  swaps v0 / v1 in its stack arguments.
+- **func_002073b0** (src/game/bitsets.c, one argument) is called with the
+  window as a second argument from func_0020fee8: the original moves a0 to a1
+  before the call.
+- **D_00640E20 / D_00640E24** are s32; func_0020ca68 and func_0020d050 read
+  E24 with lhu: `(u16)D_00640E24 * 16` gives it (h70 declared them u16).
+- The top menu's list window keeps D_003F34C4's type N_3f34c4 (its +0x28 is
+  f32, TextWin's is s32); func_0020ca68 / func_0020d050 keep h70's Obj (+0xb8
+  and +0xcc are u16 there); itemslots.c and itemstock.c keep their ObjE views
+  (u16 +0xd0 / +0xd2 and s32 +0x40 in one, halves of +0x70 / +0x88 in the
+  other).  Everything else in items.c, partyrow.c, pointer.c and menubg is a
+  TextWin, and callees whose window views disagreed take `void *` in
+  topmenu.c.
+- **Flags**: func_0020d530 (nostrict/h70) matches with the default flags and
+  is in topmenu.c; the five nostrict functions of menubg stay nostrict
+  (func_0020ae98 grows past its slot without it); the six row functions of
+  items.n32.c need n32.
+- **Data moved with its users**: D_00640E40 and D_003F31D0 (from h70) into
+  partymdl.c, D_006411E0 ... D_00641218 (from bss_0064.c and its two headers;
+  D_00641204 is f32 now, every user adds frame times to it) into pointer.c,
+  D_003F32C8 (now `void *[8]`) and D_003F32E8 (from s6_20) into topmenu.c.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings (and no
+warnings in the new files), and the m12 float build with float_covered.txt,
+float_reach.txt, the loaded bytes and the symbols the same as the base.  At
+the end `make report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1024,7 +1121,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 38, after each step)
+## Verification (sessions 30 to 39, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1040,20 +1137,25 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x00209d48 on**: a new group starts: func_00209d48 ... func_0020a8f0 use
-  the party D_00304BE8, D_003F3530 / D_003F3870 / D_003F3050 (h47, h70, c3,
-  auto text_00200000 _2 _4 _5), then GS image transfers and more window code
-  (b13, h70, h24, s8_w18) up to 0x0020c1c8, then the menus' open / update
-  functions (s6_20, h70, h24, h47, c14, s7_w15, n32/s6_n32) to 0x00210000.
-  `python3 -I tools/shift/s37move/refs.py 00209d48 00210000` lists them.
-  Fold each old file's window view into TextWin first
-  (tools/shift/s38move/fold.py, then `make`), then draft.
-- What is left of h24, h47, h70, b13 and s7_w19 after that.
+- **0x00210000 on: the pages.**  The top menu's pages start here: page 0 (the
+  item page) goes on to its open function func_002112f8, set up func_00211358
+  and reset func_00211398; the other pages' open functions are func_00213c90,
+  func_002160a8, func_00217f58, func_00218f88, func_0021daa0 (page 5),
+  func_0021ad08 (page 6) and func_002293f0 (topmenu.c's D_003F32E8; the set up
+  / reset lists of func_0020d530 / func_0020d748 name one more function per
+  page).  Where each page's code starts is not settled: split by refs.py.
+  Old files: auto text_00210000*, s10_w11, n32 / nogcse s6_21, b13, b14,
+  s10_r2_7, s7_w16, c15 and what is left of h24, h47, h70.  Move page 0's
+  rest into src/menu/items*.c first (it uses D_00641220 ... D_00641BC4 like
+  items.c), then one module per page.
+  `python3 -I tools/shift/s37move/refs.py 00210000 00214000` lists them.
+- What is left of h24, h47, h70, b13 and s7_w19 after that (s7_w15 is now
+  src/menu/itemstock.c).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
   and `mod.py remove func...` deletes the definitions and the declarations
-  only they used (prints EMPTY / NOTE lines).  Sessions 36 to 38 used it for every
+  only they used (prints EMPTY / NOTE lines).  Sessions 36 to 39 used it for every
   chunk; the checklist below still applies.  It does not copy `static inline`
   helpers (inl_sc) and does not call a file EMPTY while one is left: delete
   such files by hand (session 38: s11_w50, s6_19, c13, s8_w12).

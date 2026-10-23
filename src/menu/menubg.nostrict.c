@@ -1,25 +1,80 @@
+/* The gradients and sprites of src/menu/menubg.c that need -fno-strict-aliasing
+ * (docs/modules.md "Session 39"). */
 #include "common.h"
 #include "text/textwin.h"
+
+typedef struct { u64 rgba; u64 st; s32 x, y, z, w; } V;
+typedef struct { u64 tag[2]; u64 a; u64 b; V v[4]; } G;
 typedef struct { s32 u, v, u1, v1; u64 rgba, q; s32 x, y, z, w; } SprE;
 typedef struct { u64 h[14]; SprE e[8]; } PkS;
 typedef struct { u64 h[16]; SprE e[8]; } PkT;
 
-#include "data/pieces/D_003F1E70.h"
-#include "data/pieces/D_003F34B0.h"
+extern s32 D_002BCC94;
+extern s32 D_003F31F0[];
 extern u8 D_00641080[];
 extern u8 D_00641130[];
 
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-u64 *func_00122048(s32, s32);
+s32 FlushCache(s32);
+s32 sceGsExecStoreImage(void *, void *);
 s32 sceGsSyncPath(s32, s32);
+void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
+u64 *func_00122048(s32, s32);
 void func_001220b8(void *);
+u32 func_001edd88(u32, s32);
+u32 func_001edf40(u32, u32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-u32 func_001edd88(s32, s32);
-u32 func_001edf40(u32, u32);
+s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
 
-static inline s32 inl_sc(s32 v, s32 c, f32 fc, f32 s) { return fc + (f32)(v - c) * s; }
+#include "data/pieces/D_003F34B0.h"
+#include "data/pieces/D_003F1A70.h"
+#include "data/pieces/D_003F1E70.h"
+
+void func_0020a9b0(s32 a) {
+    u64 *p;
+    G *g;
+    u64 *q;
+    void *u;
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    q = func_00122048(1024, 128);
+    p = q++;
+    q++;
+    u = (void *)(((u32)p & 0x0fffffff) | 0x80000000);
+    g = (G *)q;
+    g->tag[0] = 0x9026400000008001;
+    g->tag[1] = 0x4e4e4e4ee;
+    g->a = 0x44;
+    g->b = 0x42;
+    g->v[1].rgba = g->v[0].rgba = func_001edd88(D_003F34B0[0] | (a << 24), 64);
+    g->v[0].st = 1;
+    g->v[0].x = 0x7000;
+    g->v[0].y = 0x7400;
+    g->v[0].z = 0x100000;
+    g->v[0].w = 0;
+    g->v[1].st = 1;
+    g->v[1].x = 0x9000;
+    g->v[1].y = 0x7400;
+    g->v[1].z = 0x100000;
+    g->v[1].w = 0;
+    g->v[3].rgba = g->v[2].rgba = func_001edd88(D_003F34B0[1] | (a << 24), 64);
+    g->v[2].st = 1;
+    g->v[2].x = 0x7000;
+    g->v[2].y = 0x8c00;
+    g->v[2].z = 0x100000;
+    g->v[2].w = 0;
+    g->v[3].st = 1;
+    g->v[3].x = 0x9000;
+    g->v[3].y = 0x8c00;
+    g->v[3].z = 0x100000;
+    g->v[3].w = 0;
+    q += 20;
+    p[0] = (((s32)q - (s32)p) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(p);
+}
 
 void func_0020ab88(u32 a) {
     u32 c[3];
@@ -115,6 +170,56 @@ u64 *func_0020ae98(PkT *p, s32 tex, u32 a) {
     return (u64 *)(p + 1);
 }
 
+void func_0020b120(s32 prim, s32 al, u32 c0, u32 c1, u32 c2, u32 c3) {
+    u64 *p;
+    u64 *q;
+    G *g;
+    void *u;
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    q = func_00122048(1024, 128);
+    p = q++;
+    q++;
+    u = (void *)(((u32)p & 0x0fffffff) | 0x80000000);
+    c0 = func_001edd88(c0, al);
+    c1 = func_001edd88(c1, al);
+    c2 = func_001edd88(c2, al);
+    c3 = func_001edd88(c3, al);
+    g = (G *)q;
+    g->tag[0] = 0x9026400000008001;
+    g->tag[1] = 0x4e4e4e4ee;
+    g->a = D_003F31F0[prim];
+    g->b = 0x42;
+    g->v[0].rgba = c0;
+    g->v[0].st = 1;
+    g->v[0].x = 0x7000;
+    g->v[0].y = 0x7400;
+    g->v[0].z = 0x100000;
+    g->v[0].w = 0;
+    g->v[1].rgba = c1;
+    g->v[1].st = 1;
+    g->v[1].x = 0x9000;
+    g->v[1].y = 0x7400;
+    g->v[1].z = 0x100000;
+    g->v[1].w = 0;
+    g->v[2].rgba = c2;
+    g->v[2].st = 1;
+    g->v[2].x = 0x7000;
+    g->v[2].y = 0x8c00;
+    g->v[2].z = 0x100000;
+    g->v[2].w = 0;
+    g->v[3].rgba = c3;
+    g->v[3].st = 1;
+    g->v[3].x = 0x9000;
+    g->v[3].y = 0x8c00;
+    g->v[3].z = 0x100000;
+    g->v[3].w = 0;
+    q += 20;
+    p[0] = (((s32)q - (s32)p) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(p);
+}
+
 void func_0020b3d8(TextWin *w, s32 px, s32 py) {
     u64 *buf, *p;
     s32 *q;
@@ -176,4 +281,3 @@ void func_0020b3d8(TextWin *w, s32 px, s32 py) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
-#include "data/bss_0064_mixed.h"

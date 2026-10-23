@@ -1,3 +1,8 @@
+/* The item page's stock tab (docs/modules.md "Session 39"; was
+ * src/hand/text_00200000_s7_w15.c): func_0020f530 lists the stock
+ * (D_00641390 / D_00641798, D_00641388 / D_00641790 of them, by +0x2c),
+ * func_0020ff80 the window that gives the chosen item to a member.  ObjE is
+ * this file's view of a TextWin: +0x70 and +0x88 are read by halves. */
 #include "common.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"

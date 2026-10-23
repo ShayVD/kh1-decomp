@@ -6,8 +6,8 @@
 #define KH1_DATA_PIECES_D_003F3530_H
 
 #include "common.h"
-#include "data/types/text_00200000_h47.h"
+#include "menu/partymdl.h"
 
-extern S3530 D_003F3530;
+extern PartyMdl D_003F3530[4];
 
 #endif /* KH1_DATA_PIECES_D_003F3530_H */
