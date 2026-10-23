@@ -474,7 +474,7 @@ extern volatile u32 D_002C5958;
 #include "data/pieces/D_002BC148.h"
 void func_0012cac8(s32, s32);
 void func_00112d28(void);
-void func_001c1f60(void);
+#include "vm/script_vm.h"
 s32 func_00112cf8(void);
 s32 func_00109558(s32);
 s32 func_00112d80(void) {

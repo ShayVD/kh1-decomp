@@ -60,147 +60,12 @@ void func_001ea268(void *, s32);
 void func_0010ef70(void *, void *, void (*)());
 void func_001e2810(void);
 
-s32 func_001d95f0(VM *vm) {
-    vm->fl.x |= 0x1000;
-    vm->f44 = (f32)vm->stk[vm->sp - 3] * 2;
-    if (vm->obj->f370.b.b44 == 1) {
-        vm->f2c[0] = vm->obj->v30[0];
-        vm->f2c[1] = vm->obj->v30[1];
-        vm->f2c[2] = vm->obj->v30[2];
-    } else {
-        vm->f2c[0] = 0;
-        vm->f2c[1] = vm->obj->v30[3];
-        vm->f2c[2] = 0;
-    }
-    vm->f38[0] = vm->f2c[0] + vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
-    vm->f38[1] = vm->f2c[1] + vm->stk[vm->sp - 1] * 3.1415928f / 180.0f;
-    vm->f38[2] = vm->f2c[2] + vm->stk[vm->sp] * 3.1415928f / 180.0f;
-    vm->obj->f370.b.b44 = 1;
-    vm->f48 = 0;
-    vm->sp -= 4;
-    return 2;
-}
 
-void func_00103810(void);
-void func_00103280(f32, f32, f32, f32);
-s32 func_001d9780(VM *vm) {
-    func_00103810();
-    func_00103280(vm->stk[vm->sp - 3] / 100.0f, vm->stk[vm->sp - 2] / 100.0f, vm->stk[vm->sp - 1] / 100.0f, vm->stk[vm->sp] / 100.0f);
-    vm->sp -= 4;
-    return 2;
-}
 
-void func_00105c70(s32, s32 *);
-s32 func_001da2c8(VM *vm) {
-    VmMsg m;
-    s32 buf[3];
-    func_00105c70(vm->stk[vm->sp - 1], buf);
-    m.type = 23;
-    m.v[0] = buf[0] * 0.0078125f;
-    m.val = (u32)vm->stk[vm->sp];
-    m.v[1] = buf[1] * 0.0078125f;
-    m.v[2] = buf[2] * 0.0078125f;
-    m.x = vm->x0;
-    m.v[3] = vm->obj->fac;
-    func_001c4640(&m);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_00142388(f32 *, f32 *);
-void func_00142470(Obj *, f32 *);
-s32 func_001da628(VM *vm) {
-    f32 v[4];
-    f32 r[4];
-    Obj *o;
-    v[0] = vm->stk[vm->sp - 2];
-    v[1] = vm->stk[vm->sp - 1];
-    v[2] = vm->stk[vm->sp];
-    func_00142388(v, r);
-    o = vm->obj;
-    if (o) {
-        func_00142470(o, r);
-    }
-    vm->sp -= 3;
-    return 2;
-}
-
-s32 func_001dc000(VM *vm) {
-    VmMsg m;
-    m.type = 44;
-    m.val = (u32)vm->stk[vm->sp];
-    m.x = vm->x0;
-    m.v[0] = vm->stk[vm->sp - 4] / 255.0f;
-    m.v[1] = vm->stk[vm->sp - 3] / 255.0f;
-    m.v[2] = vm->stk[vm->sp - 2] / 255.0f;
-    m.v[3] = vm->stk[vm->sp - 1] * 0.0078125f;
-    func_001c4640(&m);
-    vm->sp -= 5;
-    return 2;
-}
 
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[0x370 - 8]; union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b; } f370; } Obj3;
-Obj3 *func_001230a0(Obj3 *);
-s32 func_001dc3c0(void) {
-    VmMsg m;
-    Obj3 *o;
-    m.type = 27;
-    m.val = 0;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.v[3] = 1.0f;
-    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
-        if (o->f370.b.kind == 2) {
-            m.x = o->f4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
-
-s32 func_001dc470(void) {
-    VmMsg m;
-    Obj3 *o;
-    m.type = 28;
-    m.val = 0;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.v[3] = 1.0f;
-    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
-        if (o->f370.b.kind == 2) {
-            m.x = o->f4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
 
 #include "data/pieces/D_0037A178.h"
-s32 func_001dc8c8(VM *vm) {
-    s32 id = vm->stk[vm->sp - 1];
-    s32 v, q, b;
-    u32 *p;
-    if (id < 0 || id >= 128) {
-        vm->sp -= 2;
-        return 2;
-    }
-    v = vm->stk[vm->sp];
-    if (v < 0 || v >= 2) {
-        vm->sp -= 2;
-        return 2;
-    }
-    q = id / 32;
-    b = 31 - (id - q * 32);
-    if (v) {
-        D_0037A178[q] |= 1 << b;
-    } else {
-        D_0037A178[q] &= ~(1 << b);
-    }
-    vm->sp -= 2;
-    return 2;
-}
 
 #include "data/pieces/D_0038D170.h"
 #include "data/pieces/D_0039A580.h"
@@ -625,34 +490,9 @@ s32 func_001e2920(void) {
 }
 
 /* needs make: uses rodata */
-typedef struct { u8 pad0[2]; u8 f2; } P147840;
-P147840 *func_00147840(s32);
-s32 func_001daa18(VM *vm) {
-    s32 r = -1;
-    switch (func_00147840(vm->stk[vm->sp])->f2) {
-    case 0: r = 0; break;
-    case 12: r = 1; break;
-    case 13: r = 2; break;
-    case 2: r = 4; break;
-    case 3: r = 5; break;
-    case 4: r = 6; break;
-    case 1: r = 3; break;
-    }
-    vm->stk[vm->sp] = r;
-    return 2;
-}
 
 #include "data/types/text_001d0000_h44_p.h"
 extern Tbl55 D_004906D0;
-void func_001ba358(s32, s32);
-s32 func_001dc140(void) {
-    Tbl55 t = D_004906D0;
-    u32 i;
-    for (i = 0; i < 55; i++) {
-        func_001ba358(t.a[i], 99);
-    }
-    return 2;
-}
 
 extern char D_003DACD8[][6];
 extern u8 D_00F20000[];

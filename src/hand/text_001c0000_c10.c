@@ -60,53 +60,6 @@ void func_001e64e0();
 void func_001e6b70();
 void func_001e5788();
 
-typedef struct {
-    void *obj;
-    u8 pad4[0x17c];
-    s32 stk[105];
-} Sub;
-typedef struct {
-    s32 x0;
-    union {
-        Sub s;
-        struct { void *obj; u8 pad[0x178]; s32 sp; } h;
-    } u;
-} VM;
-typedef struct { u8 pad[0xa80]; u8 b0[10]; u8 b1[10]; u8 b2[10]; u8 b3[50]; } Rec;
-
-#define D7EF8_BODY(B, N) \
-    for (i = 0; i < N; i++) { \
-        if (B[i] == 0 && s->stk[vm->u.h.sp] - 1 >= i) { vm->u.h.sp -= 2; return 2; } \
-    } \
-    for (i = 0; i < N; i++) { \
-        if (B[i] == 0) { \
-            for (k = i; k < N - 1; k++) B[k] = B[k + 1]; \
-        } \
-    } \
-    for (i = 0; i < N; i++) { \
-        if (i == vm->u.s.stk[vm->u.h.sp] - 1) { \
-            for (k = N - 1; i < k; k--) B[k] = B[k - 1]; \
-            B[i] = 0; \
-            break; \
-        } \
-    } \
-    break;
-
-s32 func_001d7ef8(VM *vm) {
-    Rec *r = (Rec *)func_00232cc0(1);
-    s32 sp = vm->u.h.sp;
-    Sub *s = &vm->u.s;
-    s32 i, k;
-
-    switch (s->stk[sp - 1]) {
-    case 0: D7EF8_BODY(r->b0, 10)
-    case 1: D7EF8_BODY(r->b1, 10)
-    case 2: D7EF8_BODY(r->b2, 10)
-    case 3: D7EF8_BODY(r->b3, 50)
-    }
-    vm->u.h.sp -= 2;
-    return 2;
-}
 
 extern s32 D_003DD258;
 void func_001e5198(void);

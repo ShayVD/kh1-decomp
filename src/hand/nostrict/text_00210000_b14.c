@@ -134,7 +134,7 @@ void func_00203788(Obj *, s32, s32, s32, u32);
 void func_0021c9a0(Obj *, s32, s32);
 void func_0021cb00(Obj *, s32, s32, s32, s32);
 s32 func_0021dc38(s32);
-s32 func_001c2df0(s32, s32);
+#include "vm/script_vm.h"
 void func_0010edb0(s32, s32, s32, s32, s32, s32);
 s32 func_0021b800(s32);
 void func_001f94f0(Obj *, s32, s32, s32, s32, s32, u32);
@@ -219,7 +219,7 @@ void func_0021e8d8(Obj *o) {
     func_0021c9a0(o, 16, 72);
     func_0021cb00(o, 32, 108, 9, 30);
     func_0021cb00(o, 280, 108, 9, 30);
-    t = func_001c2df0(D_003F34F8, func_0021dc38(D_00643274));
+    t = (s32)func_001c2df0((s8 *)D_003F34F8, func_0021dc38(D_00643274));
     func_0010edb0(((o->xb0 - 0x7000) >> 4) + 32, ((o->xb4 - 0x7400) >> 4) + 84, 256, D_00643250 * 2, o->x90, t);
     if (((*(s32 *)&D_003E8E08) = o->x24) && o->xd8 - 1 == func_001fd668(o)) {
         func_001f94f0(o, 0, 282, 328, func_0021b800(6), 15, 0x50461E00);

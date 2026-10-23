@@ -83,7 +83,7 @@ extern s32 D_006436C4;
 extern s32 D_003F3520;
 s32 func_001fd668(void *);
 s32 func_00222cb0(s32);
-s32 func_001c2df0(s32, s32);
+#include "vm/script_vm.h"
 s32 func_0010edb0(s32, s32, s32, s32, s32, s32);
 extern u8 D_003F66E0[];
 extern u8 D_003F66B0[];
@@ -490,7 +490,7 @@ s32 func_00222cb8(O98 *a0) {
     x = ((a0->xb0 - 0x7000) >> 4) + 32;
     y = ((a0->xb4 - 0x7400) >> 4) + 84;
     r = func_00222cb0(a0->x24.i);
-    return func_0010edb0(x, y, 256, D_006436C4 * 2, a0->x90, func_001c2df0(D_003F3520, r));
+    return func_0010edb0(x, y, 256, D_006436C4 * 2, a0->x90, (s32)func_001c2df0((s8 *)D_003F3520, r));
 }
 
 void func_00223260(O98 *a0) {

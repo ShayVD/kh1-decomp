@@ -95,7 +95,7 @@ f32 func_001edcd8(f32);
 s32 func_0011e340(M2C_UNK);
 s32 func_00123488(s32);
 s32 func_001efc68();
-void func_001c2d20(s32, s32, s32);
+#include "vm/script_vm.h"
 void memset(s32, s32, s32);
 
 void func_001e07a8(s32 arg0) {
@@ -154,8 +154,8 @@ void func_001e2470(void) {
 
 void func_001e27b0(void) {
     s32 sp[4];
-    func_001c2d20((s32) &D_003E1CB0, (s32) sp, (s32) &D_0062FB00);
-    func_001c2d20((s32) &D_003E3700, (s32) sp, (s32) &D_0062FF00);
+    func_001c2d20((s8 *) &D_003E1CB0, sp, (s8 **) &D_0062FB00);
+    func_001c2d20((s8 *) &D_003E3700, sp, (s8 **) &D_0062FF00);
     D_0062FA00 = 0;
 }
 

@@ -320,4 +320,20 @@ want = nam(run(mc))
 assert ("argwide", 0) in run(mc) and all(nam(run(mc, visit_rng=random.Random(sd))) == want for sd in range(32))
 assert R._addressy(0xFFFFFFFF) and not R._addressy(0xFFFFFFFF, True) and R._addressy(0x003F4C68, True)
 
+# 21. idx-span (session 33): main() pins every name before a bounded index's end, but only up to the end that the
+# `tight` analysis gives (bounds from loops and compares against constants). (a) func_0021cfc8: D_003F5C18[i] for i < 6
+# keeps its bound (+20, through D_003F5C2C); (b) a byte load's range (D_003F3150[x48e[i]], a party slot: 0..9 or 0xFF)
+# and (c) a mask are no tight bound; (d) a byte compared against a constant first is (func_00266d10 rereads it: none)
+up6 = [lui(A0, 0x003F), addiu(A0, A0, 0x5C18), addiu(A1, 0, 0), lw(V0, A0, 0), addiu(A0, A0, 4), addiu(A1, A1, 1),
+       slti(V0, A1, 6), bne(V0, 0, -5), NOP, JR_RA, NOP]
+assert idx_end(run(up6), 0x003F5C18) == 20 and idx_end(run(up6, tight=True), 0x003F5C18) == 20
+tbl = lambda ix: ix + [sll(V1, V1, 2), lui(V0, 0x003F), addiu(V0, V0, 0x3150), addu(V0, V0, V1), lw(V1, V0, 0),
+                       JR_RA, NOP]
+assert idx_end(run(tbl([lbu(V1, A0, 0x48E)])), 0x003F3150) == 0x3FC
+assert idx_end(run(tbl([lbu(V1, A0, 0x48E)]), tight=True), 0x003F3150) is None
+assert idx_end(run(tbl([andi_(V1, A0, 0xFF)])), 0x003F3150) == 0x3FC
+assert idx_end(run(tbl([andi_(V1, A0, 0xFF)]), tight=True), 0x003F3150) is None
+cmp10 = tbl([lbu(V1, A0, 0), sltiu(V0, V1, 10), beq(V0, 0, 6), NOP])
+assert idx_end(run(cmp10), 0x003F3150) == 36 and idx_end(run(cmp10, tight=True), 0x003F3150) == 36
+
 print("reach_check_test: PASS")

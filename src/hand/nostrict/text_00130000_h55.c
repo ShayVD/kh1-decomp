@@ -163,7 +163,7 @@ void func_00176310(s32 a);
 void func_00176388(s32 a);
 void func_001763a0(s32 a);
 s32 func_00176578(s32 a, s32 b, s32 c, s64 d);
-void func_001c4d90(void *a, void *b, void *c);
+#include "vm/script_vm.h"
 s32 func_001ecfd8(void);
 void func_002414a8(s32 a, s32 b);
 f32 func_00267390(f32 *a, f32 *b);
@@ -214,7 +214,7 @@ s32 func_0013b238(void) {
         ph = &D_0052AE58;
         if ((*ph)->x14 != (*ph)->x10) {
             func_00131498(*pl, (u8 *)*ph + (*ph)->xc);
-            func_001c4d90((u8 *)*ph + (*ph)->x10, (u8 *)*ph + (*ph)->x14, (u8 *)*ph + (*ph)->x18);
+            func_001c4d90((s32)((u8 *)*ph + (*ph)->x10), (s32)((u8 *)*ph + (*ph)->x14), (s32)((u8 *)*ph + (*ph)->x18));
         }
     }
     return 4;

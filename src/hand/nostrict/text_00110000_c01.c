@@ -268,7 +268,8 @@ typedef struct {
     s32 x4;
     u8 pad8[0x10 - 0x8];
     f32 x10[4];
-} __attribute__((aligned(8))) C01Cmd;
+} __attribute__((aligned(8))) C01Cmd;  /* a VmMsg as this file reads it: v (u32:24) */
+#include "vm/script_vm.h"
 #include "data/types/nostrict_text_00110000_c01.h"
 
 typedef C01Ply C01Act3;
@@ -283,8 +284,6 @@ typedef struct { u8 pad[4]; f32 x4; } C01Snd;
 
 extern C01CmdInfo D_0030433C[];
 
-C01Cmd *func_001c45e8(void);
-void func_001c4788(C01Cmd *);
 C01Act3 *func_00123488(s32);
 void func_001336d8(void);
 void func_00133708(void);
@@ -318,7 +317,7 @@ void func_00133a88(void) {
     f32 f;
     s32 i;
 
-    while ((c = func_001c45e8()) != 0) {
+    while ((c = (C01Cmd *)func_001c45e8()) != 0) {
         a = func_00123488(c->x4);
         if (D_0030433C[c->id].x0 && !a) {
             func_001c4788(c);

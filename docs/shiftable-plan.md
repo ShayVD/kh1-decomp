@@ -3411,3 +3411,157 @@ D_003F3178; D_003F31F0 was a session 30 arg-bound release), D_00351BC0 / C4 / C8
 D_003F4170, D_003F65C0, D_0046A03C / 40 / 44, D_00492EE8 / F10 / F38, D_004E3A1C, D_0054C218. Next step: read those
 functions, then either a bounded idx-span (only when the bound comes from a loop cap or an exact constant) or
 float_keep.txt entries.
+
+## Session 33: Phase 4 types (worker s33types)
+
+Item 4 of the session 33 plan: other files' prototypes of the module functions.
+
+### Found
+
+`tools/shift/s33types/s33_protodiff.py` (new) lists every one-line declaration,
+in a src/ file outside src/vm, src/camera and src/msgwin, of a function those
+modules define, whose type differs from the include/vm, include/camera or
+include/msgwin prototype (parameter names dropped; `()` counts as different).
+At the base (a0e83e4) it gives **27 declarations in 23 files**, all of
+script_vm.h / vm_find.h functions (none of camera.h or msgwin.h).  `--defs`
+adds **10** declarations of module functions no header declares.  The README's
+examples `func_001c19f8(VMa *, s32)` and `s32 func_001c4640` were already gone
+(session 31); the old-style `void func_001c4640();` is b11's.
+
+### Retyped (19 of 27, plus 5 of the 10)
+
+Each file now includes the module header instead of its own prototype.
+`make` stayed byte-identical (6979 functions) and s31_warndiff gave 0 new
+warnings for every file; s29_asmdiff gave SAME per file first.
+
+- **func_001c2df0** (`s32 (s32, s32)` -> `s8 *(s8 *, s32)`): auto
+  text_00210000_6, nostrict/b14, b15, h71, s6_22, h72.  The script pointers
+  (D_003F34F0 / F8, D_003F3518 / 3520) stay s32 in data_003F.h (h70 and c15
+  do arithmetic on them), so the call is `(s32)func_001c2df0((s8 *)D, k)`.
+- **func_001c2ec8, func_001c3770** (`s8 *` first argument): auto
+  text_00110000_6, s6_02 (`(s8 *)` at the call).
+- **func_001c2d20**: auto text_001e0000_17 / _18 pass `(s8 *)&D, sp, (s8 **)&D`
+  (their M2C_UNK externs stay: cover_check sizes them).
+- **func_001c0da0 / func_001c0e80, func_001c4788, func_001c4808**: auto
+  text_001b0000_10, h47, auto text_00130000_4 (`(void *)`), auto
+  text_00130000_8 (no cast needed: s32 to u32 converts).
+- **nostrict/c01**: the prototypes are the header's and the loop reads
+  `c = (C01Cmd *)func_001c45e8()`.  C01Cmd stays: it is VmMsg except that
+  `v` is `u32 :24` where VmMsg has `u64 val:24`, and reading the u64 bit-field
+  compiles as `dsrl 8` + `and` instead of `dsll 24` / `dsra 32` (8 calls).
+- **s6_16**: Msg (a copy of VmMsg) -> VmMsg, E848 -> VmRec.
+- **h45**: E848 (0x350 bytes: a VmRec) -> VmRec, from vm_find.h.  Its VM2
+  view -> VmRec, with `(s32)(vm->f328 >> 5) & 1` as `vm->fl.b.b5` (same code;
+  `fl.i[0] >> 5` changes it).
+- **h21, h46**: the VM view (only sp / stk used) -> VmRec.  nofill/h16's VM
+  was unused and is gone.
+- **script_vm.h** gains `func_001c1f60`, `func_001c48c8`, `func_001c4d90`, so
+  h2 / auto text_00110000_6, h8 / auto text_00130000_8 and nostrict/h55 use it
+  (h55 passes `(s32)` addresses; h8 passes `(s32 *)b`).
+
+### Left, and why
+
+- **8 declarations in 6 files** that the library move (worker s33module) owns:
+  nofill/b11 (`void func_001c4640();`), nofill/h17 and nofill/s6_15
+  (`Ent *func_001e98d0` / `func_001e9b98`), h18 (`P8 *`), h44 (`HSub *`),
+  s6_15 and nofill/s6_15 (`func_001c4640(Msg *)`).
+- **No header yet**: func_001c4de0 (auto text_00120000_8, agrees with the
+  definition; see the hazard below), func_001c4ed0 (s6_na's Ob7 against
+  script_vm.c's Obj), func_001cd238 (library), h44's func_001d1080 /
+  func_001d3e30 (library).
+- **VM views addressed from vm + 4**: h45's VM, h20, fmam/s7_w19 and s8_w6
+  index the stack through `Sub *s = &vm->u.s` (a register holding vm + 4) and
+  `vm->u.h.sp`.  VmRec's `vm->stk[i]` addresses from vm, which is other code.
+
+### View casts
+
+`s27_survey.py --summary`: view casts **18 in 12 pieces** (unchanged; none of
+session 32's list became easy with these types), shared 223, basic 748.
+
+### Hazard found: prototype count in script_vm.h flips vm_lib.c
+
+Adding prototypes to script_vm.h changes the code of src/vm/vm_lib.c's
+dispatcher (`return D_003D9FE0[k](vm)`, the table defined above it in the same
+file) with the parity of the count: 1 or 3 new declarations keep
+`lw $2,D_003D9FE0($5)`, 2 or 4 give `lui` / `addiu` / `addu` / `lw`.  Which
+names are added does not matter.  So script_vm.h got 3 (func_001c4de0 was left
+out), and s30_hdrdiff on `vm/script_vm.h` is SAME for every includer.  Any
+change to the headers vm_lib.c includes needs s30_hdrdiff / `make`, even one
+that only adds declarations.
+
+### Checks
+
+`make` byte-identical (6979), `make test` passes, `make shift` M0 OK, and
+`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1` (no overlays) prints M12-FLOAT OK
+with float_covered.txt and the float ELF's symbols equal to the base's.
+
+## Session 33: reach_check (worker s33reach)
+
+reach_check pins **1,373** names (was 1,362; without the overlays, `SHIFT_OVERLAYS=` an empty directory):
+**11 newly pinned, none released**. The default float build floats **2,032** names (was 2,043; all eleven had
+floated), links and passes M12-FLOAT and keep_check (39/39). `make` is unchanged (byte-identical, 6979 functions),
+`make test` passes (tests/reach_check_test.py case 21). With `--no-idx-span` float_reach.txt *and* float_reach.log
+are byte-identical to session 32's.
+
+### The rule: idx-span (`--no-idx-span` brings back the session 32 answer)
+
+Session 32's hazard: a bounded index that ends past the next name pinned the base and that one name (idx-next), not
+the names after it. Pinning every name up to the end (session 32's try) pinned 512 more, almost all from loose
+bounds. Now only a **tight** end counts: the functions behind an overrun are analysed a second time with analyse's
+`tight=True`, where only a loop (a counter's cap, a walk's trip count, nest-carry) or a compare against a constant
+(slti/sltiu/sltu on the branch edge) bounds a value; `lbu`, `lhu` and `andi` give no bound (a field's type range or a
+mask says nothing about the values the game stores). For each base whose accesses are all bounded and end past the
+next name, every name from the next one up to the largest tight end (each access's end is the smaller of its normal
+and tight end) is pinned (`idx-span` in float_reach.log). Direct accesses only (`idx` events): the other bounded
+overruns (`arg-ub` call arguments, `dma-ref`; 223 of the 368 overrunning accesses) name no floating name today.
+A join of different bases outside a loop head stays as it is in tight mode: making it unbounded also lost
+func_0021cfc8's walk (a walk position, D + 4, joins the walk's range at the branch target inside the loop).
+
+`--span-log FILE` (new, no effect on the output) writes every bounded base whose accesses end past the next name:
+the names inside the overrun and each access that reaches past the next name (end, kind, function, pc). It is how
+the verdicts below were found; 110 bases, 833 floating names inside some overrun, most behind `lbu`/`lhu` indexes.
+
+### Verdicts (session 32's 26 names, then the rule's other pins)
+
+| name(s) | function | access | verdict | pinned now |
+| --- | --- | --- | --- | --- |
+| D_003F5C20, 24, 28, 2C | func_0021cfc8 | D_003F5C18[i], i < 6 (a walk capped by the up-counter) | **real**: the menu reads all six words | yes (idx-span) |
+| D_00351A00, 10, 20 | func_00157a30 | D_003519B0[o->x130->x4c] (lhu), 12 words | not real: x4c is a party member id, the same field is checked `< 10` two lines on; D_00351A00 needs index 20 | no |
+| (same) | func_001515d0 | D_003514E8[q->b3].id (lbu), 9 entries of 8 | not real: index 163 needed | no |
+| D_003F31A8, B0, E0, F0 | func_00209f70 | D_003F3150 / D_003F3178[x48e[i]] (lbu), 10 floats each, i < 4 party slots | not reached: x48e[i] is 0..9 or 0xFF for an empty slot (text_00130000_h7.c: `a < 10 ? a : -1`); 0xFF reads +0x3FC, in **D_003F3530** (pinned by its own unbounded index; float_keep.txt now keeps it too) | no (D_003F3530 kept) |
+| D_00351BC0, C4, C8 | func_0015b268 | D_00351B18[x48c] (lbu), 2 words | not real: index 42 needed | no |
+| D_002B6830 | func_0010bdd0 | D_002B6780 / 6798 / 67C0 / 67C8[lhu field] | not real: small tables (4-12 entries) indexed by a record's small fields; 52+ needed | no |
+| D_002C6490 | func_00122dc8 | D_002C6460[(id >> 16) & 0xff] (andi 0x3fc), 11 names | not real: the other path checks the same byte `< 11`; index 12 needed | no |
+| D_003F4170 | func_00216890, 00216ea8, 00217000, 00217490, 002177c8 | D_003F40F8[x48e[cur]] (lbu), 8-byte entries | not real: the cursor stays below the party count (D_003E3D68), ids 0..9 end at D_003F4148, inside D_003F40D0's piece | no |
+| D_003F65C0 | func_00222670 | D_003F6568[D_00643668[k]] (lbu), 10 words | not real: func_002210f8 stores only 1..8 there | no |
+| D_0046A03C, 40, 44 | func_00249a48 | D_00469FB0[clutType / imageType].psm (lbu), 6 entries | not real (format): TIM2 image and CLUT types are small (the table has 6 entries); index 35 needed | no |
+| (same) | func_0024b138 | D_00469FC8[*p] (lbu), 4 function pointers | not real: a jalr through it; index 29 needed | no |
+| D_00492EE8, F10, F38 | func_00266d10 | D_00492EA0 / EB0 / EC0[p[k]] (lbu), 16 bytes each | not real: each byte is checked `< 10` first (the analysis loses it: the byte is loaded again) | no |
+| D_004E3A1C | func_0011e1c8 | D_004E39F8[i] = {a0, 2} after `for (i = 0; i < 4 && D[i].a; i++)` | **real**: with four slots busy it writes slot 4 = D_004E3A18 / D_004E3A1C, and func_0011e248 / func_0011e368 read both | yes (idx-span) |
+| D_0054C218 | func_001497c8 | `for (i = 0; i < 3; i++) if (D_0054C1B0[i].x10 == a)` (bnezl slot load) | not real: loads end at +0x54 of 0x60; the analysis's bound (+0x64) runs past the last load | yes (safe, false) |
+| D_003C39B0, 39F0, 3A30 | func_001c0f30 (script VM op 12) | D_003C2D30[idx] for idx < 0xcc0 / 0xd00 / 0xd40 (compares) | **real** (new): the push of s8 variable idx reads D_003C39B0[idx - 0xc80], D_003C39F0[...], D_003C3A30[...] (gcc folded the subtraction into D_003C2D30's %lo), while the pop (func_001c13e8, op 13) writes them by name: floated, the VM read the old slots | yes (idx-span) |
+| D_003C39AC | func_001c0f30 | (same) | not real: idx >= 0xc80 starts at D_003C39B0 (no lower bounds) | yes (safe, false) |
+| D_00575784 | func_0016f548, func_0016f640 | free list of 30 x 20 bytes from D_00575528; a2 starts at &D_00575784 (the head) and walks the entries | not real: the head is written by name; the loop head's join of &D_00575784 with the walk makes the walk's range cover it | yes (safe, false) |
+
+Real and newly pinned: D_003F5C20, D_003F5C24, D_003F5C28, D_003F5C2C, D_004E3A1C, D_003C39B0, D_003C39F0, D_003C3A30.
+Pinned although not reached (safe): D_003C39AC, D_0054C218, D_00575784.
+
+**Newly released (UNTESTED until booted in PCSX2): none.** The default float ELF is a new layout again (11 names back
+in place). D_003C39B0 / 39F0 / 3A30 are the script VM's byte variables: if session 30-32's defaults misbehaved in
+script-driven scenes (events, flags), this is a candidate cause.
+
+### Order dependence (`--visit-seed 1` and `4`)
+
+Against `--no-idx-span` with the same seed, idx-span adds the same 11 names plus **D_0054F444** (random orders only):
+func_0014a398 walks D_0054C440 in 192-byte steps `while (p < &D_0054F440)`; some orders see positions of the walk
+(0x0054C5C0, 0x0054C680) as bases, bounded by the sltu, and `ld` reads 8 bytes from `lim - 1`, so their end passes
+D_0054F440 (the real last entry ends at 0x0054F388). A safe pin, from session 31's intermediate-state mechanism. The
+rest of the differences to the default order are session 32's (D_002BD1F0; seed 4: D_00492138, D_00492B00,
+D_00492CF8, D_004932A8).
+
+### Left
+
+Two of the false pins come from bounds one step long, both on loops whose test is a branch-likely with a load in
+its slot (func_001497c8: +0x64 for loads ending at +0x54; func_0021cfc8's own bound is +0x1c, one word past the six
+it reads, and D_003F5C30 was pinned anyway): likely the slot's load counted on the edge that nullifies it. Fixing either makes bounds tighter, so
+it could release names: not done. Lower bounds (idx >= 0xc80) are not modelled.

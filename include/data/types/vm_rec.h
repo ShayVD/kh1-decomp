@@ -29,7 +29,7 @@ typedef struct {
     f32 p[3];               /* 0x008 */
     f32 f14[3];             /* 0x014 */
     f32 f20;                /* 0x020 */
-    u8 pad24[0x8];
+    f32 f24, f28;           /* 0x024: length and time of the move func_001d9348 steps */
     f32 f2c[3];             /* 0x02c */
     f32 f38[3];             /* 0x038 */
     f32 f44;                /* 0x044 */

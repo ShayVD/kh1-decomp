@@ -37,7 +37,7 @@ Ob *func_001f31a8(u8 *, s32);
 void func_001f3e48(Ob *, void *);
 s32 func_0021fd88(s32);
 s32 func_0021fd60(s32);
-s32 func_001c2df0(s32, s32);
+#include "vm/script_vm.h"
 s32 func_0010eb78(s32);
 void func_00203788(void *, s32, s32, s32, u32);
 s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
@@ -89,7 +89,7 @@ void func_0021ff68(Ob *a) {
                     D_00643424 = 0;
                     id = D_006433F8[D_00643420 * 4 + D_0064341C];
                     o->xa0 = D_003E9104;
-                    k = func_0010eb78(func_001c2df0(D_003F3518, func_0021fd88(id)));
+                    k = func_0010eb78((s32)func_001c2df0((s8 *)D_003F3518, func_0021fd88(id)));
                     o->xd8 = (k + 1) / 2;
                     o->xda = D_00643424 << 4;
                     o->x24 = id;
@@ -332,7 +332,7 @@ void func_00222e90(Ob *a) {
                     func_001f3e48(o, a);
                     id = D_006436A8[D_006436C0 * 4 + D_006436BC];
                     o->xa0 = D_003E9104;
-                    k = func_0010eb78(func_001c2df0(D_003F3520, func_00222cb0(id)));
+                    k = func_0010eb78((s32)func_001c2df0((s8 *)D_003F3520, func_00222cb0(id)));
                     o->xd8 = (k + 1) / 2;
                     D_006436C4 = 0;
                     o->xda = D_006436C4 << 4;

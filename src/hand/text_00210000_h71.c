@@ -924,7 +924,7 @@ s32 func_001fd668(void *);
 void func_00203788(void *, s32, s32, s32, u32);
 void func_0021cb00(void *, s32, s32, s32, s32);
 s32 func_0021fd88(s32);
-s32 func_001c2df0(s32, s32);
+#include "vm/script_vm.h"
 s32 func_0010edb0(s32, s32, s32, s32, s32, s32);
 
 s32 func_0021fd90(Ob4 *a) {
@@ -962,7 +962,7 @@ s32 func_0021fd90(Ob4 *a) {
     x = ((a->xb0 - 0x7000) >> 4) + 32;
     y = ((a->xb4 - 0x7400) >> 4) + 84;
     k = func_0021fd88(a->x24);
-    return func_0010edb0(x, y, 256, D_00643424 * 2, a->x90, func_001c2df0(D_003F3518, k));
+    return func_0010edb0(x, y, 256, D_00643424 * 2, a->x90, (s32)func_001c2df0((s8 *)D_003F3518, k));
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */

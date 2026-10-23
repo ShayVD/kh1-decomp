@@ -28,20 +28,27 @@ back, boot, and narrow down within the session that fixes it.
 | 31 | `--no-arg-keep --no-join-keep --no-stored-idx` | 54 newly pinned, none released | docs/shiftable-plan.md "Session 31: reach_check arg-join" | layout only: every floated name after them moved |
 | 32 | `--no-multi-base` | 4 newly pinned, none released | D_003F4C90, D_003C21A0, D_002BD170, D_00454700 | layout only |
 | 32 | `--no-sign-prune --no-shadow-image --no-arg-drop` | log only, same names | (termination and order fixes) | none |
+| 33 | `--no-idx-span` | 11 newly pinned, none released | D_003F5C20, D_003F5C24, D_003F5C28, D_003F5C2C, D_004E3A1C, D_003C39B0, D_003C39F0, D_003C3A30 (real), D_003C39AC, D_0054C218, D_00575784 (not reached, safe) | layout only (fixes: the menu's D_003F5C18[i < 6], D_004E39F8[4], the script VM's byte variables) |
 
-Session 30's default (2,100 float), session 31's (2,047) and session 32's (2,043) were never booted.
-To go back one session at a time: `SHIFT_REACH_FLAGS="--no-multi-base"` gives session 31's names;
+Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043) and session 33's (2,032) were never
+booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-idx-span"` gives session 32's names; add
+`--no-multi-base` for session 31's;
 add `--no-arg-keep --no-join-keep --no-stored-idx` for session 30's, then `--no-path-step --no-arg-bound
 --no-wr-span` for session 29's (the last booted). Boot the current default first and walk back only if it
 fails; within a session, drop its switches one at a time. If session 30's default fails and 31's passes,
-D_003F6770 is the first suspect. Sessions 31 and 32 released nothing, so a failure that their switches fix
+D_003F6770 is the first suspect. Sessions 31, 32 and 33 released nothing, so a failure that their switches fix
 points at layout shift around the newly pinned names, not at a wrong release.
 
-## Known hazard to read before booting (session 32)
+## Known hazard to read before booting (sessions 32-33)
 
-A bounded index that runs past the next name pins only that one name, so the names after it can float
-while code still reads them: func_0021cfc8 reads `D_003F5C18[i]` for i < 6, but D_003F5C20 / 24 / 28 / 2C
-float in the session 30-32 defaults. A general rule pinned 512 more names (mostly loose bounds) and was
-dropped. docs/shiftable-plan.md "Session 32: reach_check" lists the 26 floating names with an overrun under
-0x80 bytes, among them D_00351A00 (session 30 path-step) and D_003F31F0 (session 30 arg-bound). If the
-menus misbehave in a boot, read those first and add keep entries only for the real ones.
+Session 32: a bounded index that runs past the next name pinned only that one name, so the names after it could
+float while code still read them. **Session 33 fixed it** (idx-span, `--no-idx-span` to undo): every name up to an
+access's tight end (a bound from a loop or a compare against a constant, not from a byte/halfword load or a mask)
+is pinned. Three real cases floated in the session 30-32 defaults and are pinned now: func_0021cfc8's
+`D_003F5C18[i]` for i < 6 (D_003F5C20 ... 2C, the menu), func_0011e1c8's fifth slot of D_004E39F8 (D_004E3A1C) and the
+script VM's byte variables (func_001c0f30 reads D_003C39B0 / D_003C39F0 / D_003C3A30 through D_003C2D30[idx]). The
+other 21 of session 32's 26 names were read case by case and are not reached (D_0054C218 is pinned anyway;
+docs/shiftable-plan.md "Session 33: reach_check" has the table). What idx-span cannot see: an index from a byte or halfword field whose values the game
+keeps small (party ids, TIM2 types). The one such read that lands outside its table, func_00209f70's
+D_003F3150[0xFF] for an empty party slot, hits D_003F3530, which stays in place (float_keep.txt). If a boot breaks in
+script-driven scenes with session 30-32's layouts but not session 33's, the VM variables were the cause.

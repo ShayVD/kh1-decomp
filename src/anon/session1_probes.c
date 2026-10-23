@@ -32,21 +32,6 @@ int func_001882f8(int a, float f)
     return (float)a * f - (float)a;
 }
 
-typedef struct {
-    char pad0[384];
-    int count;
-    int list[1];
-} S1D5F80;
-
-extern int D_0038CE04;
-
-int func_001d5f80(S1D5F80 *s)
-{
-    s->count++;
-    s->list[s->count] = D_0038CE04;
-    return 2;
-}
-
 void func_0018ad70(int a, int *p)
 {
     p[2] = 0;

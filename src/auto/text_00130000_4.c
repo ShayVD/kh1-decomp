@@ -7,7 +7,7 @@
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_00133920();
-M2C_UNK func_001c4788(s32);
+#include "vm/script_vm.h"
 extern M2C_UNK D_003042F0;
 extern M2C_UNK D_00304BF0[];
 extern M2C_UNK D_00525368;
@@ -161,7 +161,7 @@ void func_00133830(s32 arg0, s32 arg1) {
 
 void func_00133950(s32 arg0, s32 arg1) {
     func_00133920();
-    func_001c4788(arg1 + 0x10);
+    func_001c4788((void *) (arg1 + 0x10));
 }
 
 void func_001339c0(s32 arg0) {
