@@ -3565,3 +3565,73 @@ Two of the false pins come from bounds one step long, both on loops whose test i
 its slot (func_001497c8: +0x64 for loads ending at +0x54; func_0021cfc8's own bound is +0x1c, one word past the six
 it reads, and D_003F5C30 was pinned anyway): likely the slot's load counted on the edge that nullifies it. Fixing either makes bounds tighter, so
 it could release names: not done. Lower bounds (idx >= 0xc80) are not modelled.
+
+## Session 34: reach_check (worker s34reach)
+
+reach_check pins **1,356** names (was 1,373; without the overlays, `SHIFT_OVERLAYS=` an empty directory):
+**19 released, 2 newly pinned**. The default float build floats **2,049** names (was 2,032), links and passes
+M12-FLOAT and keep_check (39/39). `make` is unchanged (byte-identical, 6979 functions), `make test` passes
+(tests/reach_check_test.py cases 22-26). With all five new switches
+(`--no-likely-slot --no-widen-heads --no-hix-join --no-align-end --no-neg-keep`) float_reach.txt *and*
+float_reach.log are byte-identical to session 33's. float_keep.txt gains D_00551600 (pinned either way, see below).
+**Every release is UNTESTED until a PCSX2 boot** (docs/float-untested.md has the row).
+
+### The rules (each `--no-RULE` in SHIFT_REACH_FLAGS brings back the session 33 answer for its names)
+
+| rule (switch) | names | what it does |
+| --- | --- | --- |
+| likely-slot (`--no-likely-slot`) | 15 released (14 stay released: D_00551600 is pinned again by neg-keep) | The delay slot of a countdown loop's **likely** back branch runs only when the back edge is taken, at most back_edges times per entry, so only in the runs before the last. A walked pointer there is at most its header cap (loop_value), one stride less when the slot itself steps it. Before, the slot saw the header cap plus the body's step: one stride more. func_001497c8 (`bnezl a1,loop; lw v1,0(a3)`, `for (i = 0; i < 3; i++) if (D_0054C1B0[i].x10 == a)`) read +0x70 from D_0054C1B0 for loads ending at +0x54; func_0021cfc8's six words now end at +0x18 (D_003F5C30 stays pinned by func_0021db30). Applied on the taken edge only (analyse's slot_cap), for the loops countdown_loops / path_loops prove. |
+| widen-heads (`--no-widen-heads`) | 2 released, 2 newly pinned | A growing bound is widened after two growths only at a loop head (a backward branch's or jump's target, or a jump-table case at or before its `jr`); every cycle passes one. Elsewhere it widens only after FWD_GROW_MAX (16) growths, a safety net. Before, a value checked by a compare after the loop head (`i++; slti; beqz exit; sll a2,i,3`) widened again at the forward points after the refine (func_00146a68), and a forward join of a few constants lost its bound in orders that saw them one by one. It also makes func_00241d60's switch reach its cases 3 and 4 from their entries: the table index was widened at a forward point, so the `jr` fell back to the branch labels, which do not include the case entries; the loops inside them were analysed from the switch's state (the copy counter was the argument a2, so the table reads made no event). |
+| hix-join (`--no-hix-join`) | 3 released (needs widen-heads) | Two lui + index values (HIX) of one %hi join to that %hi with the larger bound (unbounded if either is), as IDX values do; before, they joined to nothing and join-keep's shadows widened the fourth value to unbounded. A growing HIX bound is widened like the others. func_002705f8 (atanf) reads atanhi[id] / atanlo[id] as `lui at; addu at,at,v0; lwc1 %lo(...)(at)`; id's bounds 0, 4, 8, 12 arrived one by one in the default order. |
+| align-end (`--no-align-end`) | 0 (order: D_0054F444) | A bounded access wider than a byte ends at its largest offset **rounded down to its width** + the width (the address of lh/lw/ld/lq and the FPU/VU forms is a multiple of the width; lwl/lwr/ldl/ldr/sdl/sdr count as bytes). func_0014a398 walks D_0054C440 in 192-byte steps `while (p < &D_0054F440)` and reads `ld 0(p)`: p <= END - 1 gave an end of END + 7. Module function aligned_end; direct `idx` accesses (normal and tight). |
+| neg-keep (`--no-neg-keep`) | 0 (D_00551600 stays pinned) | Small negative constants a join drops (to an upper bound, which says nothing below zero; -1 and its 32-bit form 0xFFFFFFFF) get one shadow visit holding every negative constant from that side (k = -1 and 16 * k in another register go together). func_001571a8 writes &D_00551608[k] with k still -1 when no slot is free; only some visit orders saw that path before it was joined away. |
+
+### Verdicts (every name the rules release or newly pin)
+
+| name(s) | rule | function | access | verdict | now |
+| --- | --- | --- | --- | --- | --- |
+| D_002C1310, D_002C1320 | likely-slot | func_0011dc28, func_0011dc98 | `for (i = 3; i >= 0; i--)` over D_002C1310's four words, the next one loaded in the bgezl's slot: +0x0 ... +0xC, ends at its 0x10 | not real (analysis +0x14) | released |
+| D_00304BE8 | likely-slot | func_0013cb98 | D_00304BC0's ten words (`lw`, and `lbu` in the bgezl's slot), s0 = 9 ... 0: ends at its 0x28 | not real (analysis +0x29) | released |
+| D_003F59C0, D_003F59C8 | likely-slot | func_0021b170 | `for (i = 0; i < 2; i++) if (D_003F59C0[i] == a) return 1` (bnezl slot load): 8 bytes, its size | not real (analysis +0xC) | released |
+| D_003F5E58, D_003F5E60 | likely-slot | func_0021e898 | the same shape over D_003F5E58 (8 bytes) | not real | released |
+| D_0046BE88 | likely-slot | func_0025fa88 | D_0046BE48's pairs 2 ... 7 (`i = 2; i < 8`, first words at +0x10 ... +0x38): ends at +0x3C of 0x40 | not real (analysis +0x44) | released |
+| D_0046C210, D_0046C250 | likely-slot | func_00260938 | D_0046C210's pairs 3 ... 7 (+0x18 ... +0x38): ends at +0x3C of 0x40 | not real (analysis +0x44) | released |
+| D_0054C218 | likely-slot | func_001497c8 | D_0054C1B0[i].x10, i < 3: +0x10, +0x30, +0x50, ends at +0x54 of 0x60 (session 33's false pin) | not real (analysis +0x74) | released |
+| D_00669390, D_006693B0, D_006693D0 | likely-slot | func_002480d8, func_00247bd0, func_00247b50 | countdown loops (bgezl, slot load) over D_00669388 (2 words), D_00669390 and D_006693B0 (8 words each): each reads exactly its own words | not real (one word more) | released |
+| D_00551600 | likely-slot / neg-keep | func_00155a90; func_001571a8 | func_00155a90 reads D_005512A0's 12 x 72-byte entries (ends +0x31C of 0x360; analysis +0x364): not real. But func_001571a8 (sound bank slots) keeps k = -1 until it finds a free D_00551608[j] (34 bytes) and then writes e = &D_00551608[k] unchecked (b0, b1, strcpy of the name): with every slot busy it writes 0x005515E6 ... 0x00551607, D_005512A0's tail and all of D_00551600 | **real** (if all slots are ever busy) | stays pinned (neg-keep, float_keep.txt) |
+| D_00531B70, D_00531F70 | widen-heads | func_00146a68 (func_00146928) | D_00531B70[128] of 8 bytes: `for (i = 1; i < 128; i++) if (!D_00531B70[i].h)` (i++ in the bnez's slot, `slti; beqz exit; sll a2,i,3`): i <= 127, ends at its 0x400; func_00146928's countdown also ends there | not real (the bound was widened away after the refine) | released |
+| D_00493F38, D_00493F48, D_00493F58 | hix-join (+ widen-heads) | func_002705f8 (atanf, src/sdk/libm/sf_atan.c) | atanhi[id], atanlo[id] (4 floats each) with id in 0 ... 3 (id = -1 skips them: `bgez v1`); aT[0 ... 10] at constant offsets | not real | released |
+| D_002BD1F0 | widen-heads | func_00118ea0 | D_002BD1F0[i], i < 6, 16 bytes each: 0x60, its size; the counter steps on two paths (a bc1tl's slot and after the switch), and the default order now loses the bound as the random orders already did | not real | newly pinned (safe) |
+| D_00454468 | widen-heads | func_00241d60 | switch cases 3 and 4 (not analysed before): `for (i = 0; i < n; i++)` over D_00454450 (n = 6, its 6 words) and D_00454468 (n = 7 of its 8 words), n stored to a3->x24 and reloaded as the bound | not real | newly pinned (safe) |
+
+Released (UNTESTED until booted in PCSX2, 19): D_002C1310, D_002C1320, D_00304BE8, D_003F59C0, D_003F59C8,
+D_003F5E58, D_003F5E60, D_0046BE88, D_0046C210, D_0046C250, D_0054C218, D_00669390, D_006693B0, D_006693D0
+(likely-slot), D_00531B70, D_00531F70 (widen-heads), D_00493F38, D_00493F48, D_00493F58 (hix-join). Newly pinned:
+D_002BD1F0, D_00454468. Riskiest: D_00493F38 / 48 / 58 (atanf: every angle the game computes), D_00531B70 (the
+loader's id/handle table, func_00146a68 registers loads), D_0054C218 (summon/effect slots), D_00669390 ... D_006693D0
+(bss tables passed to func_002474e8). None of the released names showed up in any `--visit-seed 1..8` run.
+
+### Order dependence (`--visit-seed 1..8`, all rules on)
+
+Fixed against session 33: D_002BD1F0 (pinned in every order now), D_00493F38 / 48 / 58 (floated in every order),
+D_0054F444 (floated in every order: align-end) and D_00551600 (pinned in every order: neg-keep; random orders pinned
+it in session 33 too, hidden by func_00155a90's false pin). What remains (float_reach.txt against the default order):
+
+| names | seeds | why |
+| --- | --- | --- |
+| D_00492138, D_00492B00, D_00492CF8, D_004932A8 (func_00258f08 & co, libc formatting) | 4, 5: default only | session 32's: the reach of func_00259c88's argument (arg-drop / join order); the default is the conservative side |
+| D_00654570 (func_00241d60) | 7: random only | session 32's struct copy from a3 + 2928 with a3 exact; cover_check keeps D_00654570 in every order, so the float set does not change |
+
+The float set (float_covered.txt) is therefore the same in every order except for the four libc strings in seeds 4
+and 5. A walk position taken as a base (session 31's intermediate-state mechanism) remains possible in general; align-end
+only removed the overrun that made it pin D_0054F444.
+
+### Left
+
+- Negative indices are modelled only through exact values (neg-keep makes the default order see them); an index
+  that may be negative but is not a constant (`k` from a search that can fail) pins nothing before the base.
+- A jump table whose index is not bounded falls back to the branch labels (`starts`), which do not include the case
+  entries nothing branches to: the labels inside a case are analysed from the switch's state, the case's first
+  instructions not at all (a gap that can miss accesses, not only bound them loosely). widen-heads fixed
+  func_00241d60's; reading the table's words when its address is known but its index is not would close it.
+- D_00492138 & co (above) and session 31's widening / partial loop_entry mechanisms stay.
