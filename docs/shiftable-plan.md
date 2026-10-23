@@ -2998,3 +2998,135 @@ that only one path holds is dropped, and whether an access through it is reporte
 blocks are visited (events are emitted from intermediate states). D_003728C0 above is one case; others may
 exist. A next step: keep the non-argument side (a SET of {the argument, the address}) or emit the address's
 events at the join.
+
+## Session 31: Phase 4 types (worker s31types)
+
+### Result
+
+These counts come from `s27_survey.py --summary`, with the survey unchanged.
+Session 30's table said 217 views at its own HEAD.  The survey run at the
+session 31 base gives 214.
+
+| | base 5eda346 | now |
+|---|---|---|
+| view casts (a user's own struct type) | 214 in 71 pieces | 52 in 22 pieces |
+| shared casts (to the piece header's own types) | 202 | 235 |
+| basic casts (s32, u8 *, void *, ...) | 750 | 751 |
+
+Per piece (view casts, base -> now):
+
+| piece | before | after |
+|---|---|---|
+| D_002E26A0 | 24 | 8 |
+| D_00308CDC | 15 | 0 |
+| D_002C5968 | 15 | 0 |
+| D_002E31B0 | 14 | 2 |
+| D_00351E10 | 10 | 0 |
+| D_0036243C | 8 | 0 |
+| D_0037A170, D_00350D88 | 6, 6 | 0, 1 |
+| D_00362438 | 5 | 0 |
+| D_00425B80, D_002E3170 | 4, 4 | 0, 3 |
+| D_003519E0, D_0042B790, D_003F7A70, D_004305B0, D_0035C710 | 3 each | 0 |
+| 13 pieces with 2 (D_003E8E28, D_003F1E70, D_00350D78, D_002C1300, D_003626C0, D_0035C490, D_0037A378, D_00425C28, D_002A6234, D_002E2700, D_003044E0, D_002BC148, D_00362434) | 2 each | 0 (D_00362434: 1) |
+| 25 pieces with 1 (the texture headers D_00426790..D_00426940 and D_00431D20 / D_00431D50, D_00451040, D_003F1A70, D_003F2270, D_003F27D0, D_00362430, D_00362450, D_002C5958, ...) | 1 each | 0 |
+| 17 pieces not reduced (see "Left, and why") | 37 | 37 |
+
+What got typed (the shared types are in each piece's header):
+
+- **D_00308CDC** (`Cfg_308cdc`).  It gained the users' fields: `t[10]` Cfg8Pr,
+  `e[10]` Cfg16Pr, x7c[0xc], f88, x90, f94..f96 and fe8.
+- **D_002C5968**.  `Sema_2c5968`, `Fl_2c5968` and `W_2c5968` are the volatile
+  flag-word splits.
+- **D_00351E10**.  The staging-arena QW users declare `extern QW D_00351E10[]`.
+- **Texture headers**.
+  - D_00426790..D_00426940 and D_00431D20 are `Tex_4268b0[1]`, and Fnt is
+    Tex_4268b0.
+  - D_00426970 and D_0042B790 are `TexBuf_426970`.
+  - D_004305B0 is `Tex6000`.
+- **D_0037A170**.  `RunQ_37a170` is 8 bytes, and h66's init writes `q[1]`.
+- **Camera**.
+  - Path_362438 has names for all its fields.
+  - E30_362430's min and max are `FVec4`, and D_0036243C is `E30_362430 *`.
+  - CamPt_362434 gained x1c.
+  - Cam_425f70 takes h73's names.
+- **Smaller views**.
+  - W9Tab32: f0 is u32, and f10 / f14 are void *.
+  - S5B80_425b80 gained x0 / x4.
+  - The collision grid (Grid_2a6234), nodes (Node01) and map vertices (Vtx)
+    are now shared.
+  - B3Tbl moved to D_003044E0.h.
+  - Q8_2e3170 and Fl_2c5958 are new.
+  - `Q_3f1a70` is shared by D_003F1A70, D_003F1E70, D_003F2270 and
+    D_003F27D0[0x40].
+  - D_0035C490 is FVec4, and the h34 / s6_07 box set is BoxSet57_f1b8.
+  - E8E28 is Glyph_3e8e28.
+  - h28 reads Bits_37a378.
+  - The light / sprite record `W8Ent35` is `{v[4], x10, x14, Fl_35c710 u}`.
+  - Fx gained a, b, c, and B64 gained x34 / x38.
+  - D_00451040 is a Blob, and D_002E2700 is FMtx4.
+- **D_002E26A0** is `struct Actor *D_002E26A0[3]`, with the tag incomplete in
+  the piece header.  About 25 user files complete it by tagging their own actor
+  view `typedef struct Actor {..} X;` (s31_tag), as the VmObj precedent did.
+  Where a file had two actor views they were merged first (s31_merge).
+- **D_002E31B0** is `S31b0_2e31b0 { struct Actor *f0; s32 f4; }`, the lock-on
+  target.  The target prototypes in b04, h58, s7_w3, h31, h5 and s6_07 take
+  `struct Actor *`.  h54 (nofill) declares `extern struct Actor *D_00524F58[]`.
+
+`make` stayed byte-identical after every commit, and no file gained a warning
+(s31_warndiff).  `make test` passes.  The m12 float shift prints M12-FLOAT OK,
+and float_covered.txt is the same as the base.
+
+### Left, and why
+
+- **D_002E26A0 (8)**.
+  - h4's `(Act *)&D_002E26A0` is an end pointer.
+  - src/vm/script_vm.c was left to the VM worker.
+  - h37's ObjBD40 and r2_1's ChrEA are members of the D_0035BD40.h union
+    header, and tagging them conflicts with that header's other includers.
+- **The VM-area views**: D_003C5510 (7), D_00389C90 (4) and D_0037A380 (2), in
+  h66 and h18.  They were avoided while the script VM moves.
+- **D_002C5C80 (4)**.  The light vector members disagree: h53, h54, h30 and h4
+  use `f32[4]` against `struct V4`.
+- **D_002E3170 (3)**: the h49 and s11_w19 Spr views.
+- **D_002E31A0 (3)**: the O8 typedef hazard below.
+- **D_002E31B0 (2)**.  r2_1's LockEA: tgt is a ChrEA from the union header.
+- **D_002A6238 (2) and D_00304BE8 (1)**: as session 30 left them.
+- **D_0046A568 (2)**: it needs a union in a strict file (alias set hazard).
+- **D_003044D8 (2) and D_00304AD8 (1)**: other actor pointers, not
+  struct Actor.
+- **D_002A3F48 (2)**.  It holds an s32 address that the auto code uses with
+  byte arithmetic.
+- **D_00364130 (2)**: two overlapping layouts.
+- **Single casts**:
+  - D_0029B420: the alignment of the copy.
+  - D_002BC070: a volatile Col.
+  - D_002C5C60: h4's Vec4.
+  - D_002A62AC: s11_w56 computes it as a u8 address.
+  - D_00362434: h62's lvalue cast.
+  - D_003626F0: the h11 Arg hazard below.
+  - D_00350D88: h55's u64 view, which W9Tab32 cannot take (below).
+
+### Hazards found (gcc 2.96)
+
+- **A union member access is alias set 0 in strict files.**  An anonymous
+  union in W9Tab32, added for h55's u64 read, changed h9's code.  Reverted.
+- **Union stores against struct-field stores.**  h11 stored through an `Arg`
+  union.  Retyping those stores as struct-field (or s32 / f32) stores changed
+  the load scheduling, through the alias sets.  Reverted.
+- **The typedef name in a cast lvalue matters.**  `(*(O8 **)&D)`, with O8 a
+  typedef of the declared type, keeps the INDIRECT_REF.  Recasting to the exact
+  declared type (`O8_2e319c **`) folds it away and changes the code (s6_05 and
+  r2_7 D_002E31A0).  Leave such casts as they are, or drop them only when the
+  access becomes a plain `D` / `D[0]`.
+- **An extern that conflicts with a shared data header** (D_002E3160 in
+  data_002E.h) cannot be retyped per file.  Keep the declared type and cast at
+  the use.
+- Files under nostrict/ are built without strict aliasing, so the alias-set
+  hazards do not reach them.  Most of the merges and tags were done there first.
+
+### Tools (tools/shift/s31types/, README there)
+
+- `s31_recast.py`: renames alias casts to the shared type.
+- `s31_tag.py`: gives a file's view a shared incomplete tag and drops the casts.
+- `s31_merge.py`: merges a file's second views by stabs offset.
+- `s31_warndiff.py`: lists new warnings against HEAD.
