@@ -4504,6 +4504,225 @@ s32 func_001db060(void) {
     return 2;
 }
 
+/* ---- 0x001db080-0x001dbae0 ---- */
+
+s32 func_001bad78(s32);
+
+s32 func_001db080(VmRec *vm) {
+    D_00377384(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db0d0(VmRec *vm) {
+    if (D_00377388(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp])) {
+        vm->sp -= 3;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001db140(VmRec *vm) {
+    D_0037738C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db198(VmRec *vm) {
+    D_0037739C(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db208(VmRec *vm) {
+    D_003773A0(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db278(VmRec *vm) {
+    D_00377390(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001db2e0(VmRec *vm) {
+    D_00377394(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001db348(VmRec *vm) {
+    D_00377398(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db3b8(VmRec *vm) {
+    D_003773A4(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db408(VmRec *vm) {
+    D_003773A8(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db458(VmRec *vm) {
+    D_003773AC(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db4a8(VmRec *vm) {
+    D_003773B0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db500(VmRec *vm) {
+    D_003773B4(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db550(VmRec *vm) {
+    D_003773B8(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db5a0(void) {
+    D_0037A378 |= 0x10;
+    return 2;
+}
+
+s32 func_001db5c0(void) {
+    D_0037A378 &= ~0x10;
+    return 2;
+}
+
+s32 func_001db5e0(void) {
+    func_001ec7c0(0);
+    return 2;
+}
+
+s32 func_001db600(VmRec *vm) {
+    D_00304BE8->m[vm->stk[vm->sp - 1]].sub.x32 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Put item stk[sp] into the first free one of member stk[sp-1]'s x18
+ * slots x19[] (s7_w5's address arithmetic: &m[k].sub.x19[j] is 2 words
+ * longer). */
+s32 func_001db658(VmRec *vm) {
+    s32 i = vm->sp;
+    s32 j;
+    for (j = 0; j < D_00304BE8->m[vm->stk[i - 1]].sub.x18; j++) {
+        u8 *p = (u8 *)((u32)(j + vm->stk[i - 1] * 0x74) + (u32)D_00304BE8) + 29;
+        if (*p == 0) { *p = vm->stk[i]; break; }
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Clear the flag bit (0x80) of the first entry whose 7-bit id is stk[sp]
+ * in list599 (stk[sp-1] == 11) or member stk[sp-1]'s name[].  Its shape
+ * (s12w5's notes):
+ * - `for (;;)` with the exits at the bottom: expand_end_loop rotates it (the `!X` break is the
+ *   only exit in its 30-insn window), the leftover `jump start` block takes gcse's PRE insertion
+ *   of the list599[j] / name[j] addresses, so loop.c calls the loop phony and hoists nothing (stk[sp], D address).
+ * - the cleared value as `(u8)(b << 1) >> 1`: a separate pseudo that combine turns into a copy
+ *   of the compare value, which makes `b & 0x7f` block-local (4 qtys: qsort order in local-alloc;
+ *   with 3 qtys local-alloc's hand-sort gives the D chain v0) and gives loop 2 its `move v0,v1`. */
+s32 func_001db718(VmRec *vm) {
+    s32 j;
+    u8 b;
+
+    if (vm->stk[vm->sp - 1] == 11) {
+        j = 0;
+        if (D_00304BE8->list599[j] & 0x7f) {
+            for (;;) {
+                b = D_00304BE8->list599[j];
+                if ((b & 0x7f) == vm->stk[vm->sp] && (b & 0x80)) {
+                    D_00304BE8->list599[j] = (u8)(b << 1) >> 1;
+                    goto end;
+                }
+                if (++j >= 48) goto end;
+                if (!(D_00304BE8->list599[j] & 0x7f)) break;
+            }
+        }
+    } else {
+        Sub_304be8 *e = &D_00304BE8->m[vm->stk[vm->sp - 1]].sub;
+        j = 0;
+        if (e->name[j] & 0x7f) {
+            for (;;) {
+                b = e->name[j];
+                if ((b & 0x7f) == vm->stk[vm->sp] && (b & 0x80)) {
+                    e->name[j] = (u8)(b << 1) >> 1;
+                    goto end;
+                }
+                if (++j >= 48) goto end;
+                if (!(e->name[j] & 0x7f)) break;
+            }
+        }
+    }
+end:
+    vm->sp -= 2;
+    return 2;
+}
+
+
+s32 func_001db888(VmRec *vm) {
+    vm->stk[vm->sp] = func_001bad78(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001db8e0(VmRec *vm) {
+    s32 r = D_003773C0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 1;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+s32 func_001db950(VmRec *vm) {
+    D_003773BC(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db9c0(VmRec *vm) {
+    if (D_003773C4()) return 2;
+    return 4;
+}
+
+s32 func_001db9f8(VmRec *vm) {
+    vm->stk[vm->sp] = *(u16 *)((s8 *)D_00304BE8 + vm->stk[vm->sp] * 2 + 0x580);
+    return 2;
+}
+
+/* Push the sum of cnt[0..50]. */
+s32 func_001dba30(VmRec *vm) {
+    s32 i = 50, n = 0;
+    u16 *p = D_00304BE8->cnt;
+    do {
+        n += *p++;
+        i--;
+    } while (i >= 0);
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001dba88(VmRec *vm) {
+    D_003773CC(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 
