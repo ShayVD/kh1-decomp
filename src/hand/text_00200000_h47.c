@@ -10,48 +10,10 @@ void func_001f3e90(s32, s32);
 typedef struct { u8 pad[0x24]; s32 x24; s32 x28; } Obj7d8;
 #include "data/pieces/D_00425BC8.h"
 void func_0011d768(s32);
-void func_001f3708(Obj7d8 *, s32);
 s32 func_001f42b8(void);
-void func_001f9438(Obj7d8 *, s32, s32, s32, s32, s32, s32);
 s32 func_001fe570(Obj7d8 *);
-void func_002079c8(Obj7d8 *);
 void func_0020bd18(Obj7d8 *, s32);
-void func_0020c100(Obj7d8 *, s32);
-
-void func_0020d7d8(Obj7d8 *a0) {
-    if (func_001f42b8() != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 6);
-            func_0011d768(3);
-        } else {
-            func_0020bd18(a0, 8);
-            if (func_001fe570(a0) != 0) {
-                func_001f3708(a0, 6);
-            }
-        }
-    }
-    func_0020c100(a0, a0->x28);
-    func_001f9438(a0, 0, 0x80, 0xE, a0->x24, 0xF, 0x801EC8C8);
-    func_002079c8(a0);
-}
-
-typedef struct { u8 pad[0x25]; u8 n; u8 v[0x4e]; } E4BE8;
-#include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_00304BE8_s.h"
-extern s32 D_00641378[];
-extern s32 D_00641278[][16];
-
-void func_0020eb98(void) {
-    u32 i;
-    s32 j;
-    for (i = 0; i < D_003E3D68; i++) {
-        E4BE8 *e = (E4BE8 *)((u8 *)D_00304BE8 + D_00304BE8->x48e[i] * 0x74);
-        D_00641378[i] = e->n;
-        for (j = 0; j < D_00641378[i]; j++) {
-            D_00641278[i][j] = e->v[j];
-        }
-    }
-}
 
 extern s32 D_00641BAC;
 extern s32 D_00641C10[];
@@ -73,28 +35,6 @@ void func_00211da0(void) {
     for (i = 0; i < D_00642410; i++) {
         D_00642010[i] = D_00304BE8->items[D_00641C10[i]];
     }
-}
-
-u32 func_0020f260(s32);
-
-void func_0020f290(s32 *a, s32 l, s32 r) {
-    s32 i, j, t;
-    u32 p;
-    p = func_0020f260(a[(l + r) / 2]);
-    i = l;
-    j = r;
-    for (;;) {
-        while (func_0020f260(a[i]) < p) i++;
-        while (p < func_0020f260(a[j])) j--;
-        if (i >= j) break;
-        t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-        i++;
-        j--;
-    }
-    if (l < i - 1) func_0020f290(a, l, i - 1);
-    if (j + 1 < r) func_0020f290(a, j + 1, r);
 }
 
 extern s32 D_00641BC4;
@@ -703,23 +643,6 @@ void func_00229490(s32 a0) {
     func_0020bb90(133, 0);
     func_0020bd18((Obj7d8 *)buf[0], 8);
     func_0020bda8(16);
-}
-
-extern s32 D_00641388, D_00641790;
-extern s32 D_00641390[], D_00641798[];
-s32 func_001eea60(s32);
-s32 func_001eeac0(s32);
-void func_0020f3c8(void) {
-    s32 i;
-    D_00641388 = 0; D_00641790 = 0;
-    for (i = 1; i < 256; i++) {
-        if (D_00304BE8->items[i]) {
-            if (func_001eea60(i)) { D_00641390[D_00641388++] = i; }
-            if (func_001eeac0(i)) { D_00641798[D_00641790++] = i; }
-        }
-    }
-    if (D_00641388) func_0020f290(D_00641390, 0, D_00641388 - 1);
-    if (D_00641790) func_0020f290(D_00641798, 0, D_00641790 - 1);
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */

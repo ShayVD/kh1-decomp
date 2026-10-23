@@ -1,3 +1,9 @@
+/* The item page's party member tab (docs/modules.md "Session 39"; was
+ * src/hand/text_00200000_c14.c): func_0020ec50 lists a member's item slots
+ * (the tab +0x24 is the member, D_00304BE8->m[...].sub), func_0020e588 the
+ * window that uses the chosen item (func_0020db00 in src/menu/items.c) on a
+ * member.  ObjE is this file's view of a TextWin: +0xd0 / +0xd2 are u16 here
+ * and +0x40 is s32 (TextWin has u32), so it stays. */
 #include "common.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"

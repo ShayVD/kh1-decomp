@@ -518,3 +518,30 @@ void func_0020d748(void) {
     func_00207288();
     func_00207358();
 }
+
+/* The pages: their first window and their open functions (moved from
+ * src/hand/text_00200000_s6_20.c, phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F3AE0[];
+extern u8 D_003F3DB0[];
+extern u8 D_003F4020[];
+extern u8 D_003F4680[];
+extern u8 D_003F4760[];
+extern u8 D_003F4CC0[];
+extern u8 D_003F5AC0[];
+extern u8 D_003F6D40[];
+void *D_003F32C8[0x8] ALIGNED(8) = {
+    D_003F3AE0, D_003F3DB0, D_003F4020, D_003F4680,
+    D_003F4760, D_003F5AC0, D_003F4CC0, D_003F6D40,
+};
+void func_002112f8();
+void func_00213c90();
+void func_002160a8();
+void func_00217f58();
+void func_00218f88();
+void func_0021ad08();
+void func_0021daa0();
+void func_002293f0();
+void (*D_003F32E8[0x8])(N *) ALIGNED(8) = {
+    (void *)func_002112f8, (void *)func_00213c90, (void *)func_002160a8, (void *)func_00217f58,
+    (void *)func_00218f88, (void *)func_0021daa0, (void *)func_0021ad08, (void *)func_002293f0,
+};
