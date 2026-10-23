@@ -1023,3 +1023,22 @@ found that the next session needs:
   VmMgr's 0x3180 union is gone (`box[10]`, `e[8]` at 0x3384). What is left is listed in docs/shiftable-plan.md
   "Session 32: Phase 4 types" and is mostly genuine second views (union-like buffers, copy widths, volatile).
 - In a fresh worktree run `make` and a plain `make shift` before `tools/shift/data_owners.py` and the float build.
+
+## Session 33: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only; docs/float-untested.md has the session 33 row.
+- **A fresh container** needs `dpkg --add-architecture i386 && apt-get install libc6:i386 libstdc++5:i386
+  binutils-mips-linux-gnu` before `make toolchain` (it stops on each missing piece in turn).
+- **reach_check idx-span** (worker s33reach, `--no-idx-span`; docs/shiftable-plan.md "Session 33: reach_check"): a
+  bounded index pins every name up to its tight end (bound from a loop cap or a constant compare). 11 newly pinned
+  (8 real: D_003F5C20-2C, D_004E3A1C, the script VM's D_003C39B0 / F0 / D_003C3A30), none released; 2,043 -> 2,032
+  float. `--span-log FILE` lists every bounded overrun. float_keep.txt gains D_003F3530 (already pinned).
+- **Modules** (worker s33module; docs/modules.md "Session 33"): the whole library 0x001d5408-0x001dcad0 (301
+  functions, 11 chunks) is in src/vm/vm_lib*.c; 22 files deleted; objdiff units 900 -> 879. vm_lib.c declares
+  `extern VmLibFn D_003D9FE0[]` at the top: the dispatcher func_001dcad0 flipped between two code forms with the
+  number of declarations above it (cse hashes symbols by name-string address), which the early declaration stops.
+- **Types** (worker s33types; docs/shiftable-plan.md "Session 33: Phase 4 types"): tools/shift/s33types/
+  s33_protodiff.py lists file-local prototypes of module functions that differ from the module header; 19 of 27
+  retyped, then the library move removed most of the rest (1 left: h44's func_001e98d0).
+- Workers ran in git worktrees /home/user/wt-{module,types,reach}; the only merge conflicts were the appended
+  sections in docs/shiftable-plan.md and the "Next module moves" list in docs/modules.md.

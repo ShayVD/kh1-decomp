@@ -23,14 +23,14 @@ _Last updated 2026-10-23._
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |
 |---|---|---|---|---|
-| dir:src/anon | 8 / 8 | 100.00% | 100.00% | 0 |
+| dir:src/anon | 7 / 7 | 100.00% | 100.00% | 0 |
 | dir:src/asm | 33 / 33 | 100.00% | 100.00% | 0 |
-| dir:src/auto | 2670 / 2670 | 100.00% | 100.00% | 0 |
+| dir:src/auto | 2516 / 2516 | 100.00% | 100.00% | 0 |
 | dir:src/camera | 55 / 55 | 100.00% | 100.00% | 0 |
-| dir:src/hand | 3090 / 3090 | 100.00% | 100.00% | 0 |
+| dir:src/hand | 2944 / 2944 | 100.00% | 100.00% | 0 |
 | dir:src/msgwin | 44 / 44 | 100.00% | 100.00% | 0 |
 | dir:src/sdk | 721 / 721 | 100.00% | 100.00% | 0 |
-| dir:src/vm | 358 / 358 | 100.00% | 100.00% | 0 |
+| dir:src/vm | 659 / 659 | 100.00% | 100.00% | 0 |
 
 ## History
 

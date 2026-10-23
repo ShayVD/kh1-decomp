@@ -622,8 +622,8 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 - Other files' prototypes of VM functions: session 33 retyped every one
   outside the library files (docs/shiftable-plan.md "Session 33: Phase 4
   types").  `python3 -I tools/shift/s33types/s33_protodiff.py` lists what is
-  left (8 declarations in b11, nofill/b11, s6_15, nofill/s6_15, h44 at the
-  types pass; h17 and h18 are gone since).  Retype one file at a time with
+  left: after the session 33 library move only h44's `HSub *func_001e98d0`
+  (the header returns `VmRec *`).  Retype one file at a time with
   `make`; `--defs` also lists declarations of functions no header declares
   yet (func_001c4de0, func_001c4ed0, func_001cd238 ...).
 - Leave alone the files another worker is retyping in the same session.
