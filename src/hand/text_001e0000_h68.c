@@ -2,11 +2,6 @@
 #include "data/bss_0062.h"
 
 typedef int u128 __attribute__((mode(TI)));
-typedef struct { s32 a, b, c, d; } Q4;
-typedef union { u128 q; u32 w; } U128;
-typedef struct { U128 dma; u64 gif[8]; Q4 v[400]; U128 end; } Pkt620;
-
-
 #include "data/types/text_001e0000_h68.h"
 typedef struct { s8 used; u8 pad1[3]; s32 x4; s32 x8; s32 xc; s32 x10; u8 pad[180 - 20]; } Ent180;
 typedef struct { u8 b0; u8 b1; s8 x2; s8 x3; s8 used; u8 pad5[11]; s32 x10; u8 pad[72 - 20]; } Ent72;
@@ -20,10 +15,6 @@ extern s32 D_003F7A68;
 #include "data/pieces/D_003DD230.h"
 extern s32 D_003DD258;
 extern s32 D_003DD28C;
-extern s32 D_003DD308;
-extern s32 D_003DD30C;
-extern s32 D_003DD310;
-extern s32 D_003DD314;
 extern s32 D_003C21A0;
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
@@ -36,13 +27,10 @@ extern Ent72 D_0063EE40[];
 extern u8 D_0063F640[256];
 extern char D_00490910[];
 extern u8 D_00490940[];
-extern Pkt620 D_00631620;
 
-s32 func_0011ef10(s32, void (*)());
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 s32 func_001205f0(void *, void *);
 void *func_001559f0(s32, s32);
-s32 func_001e9418(void);
 void func_001ec7c0(s32);
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
@@ -65,55 +53,7 @@ int printf(const char *, ...);
 
 
 
-void func_001e9670(void) {
-#define pk (&D_00631620)
-    Q4 *p;
-    s32 i;
-    Pkt620 *q;
-    U128 *e;
-    pk->dma.q = 0;
-    pk->dma.w = 0x10000194;
-    pk->gif[0] = 0x1000000000000002ULL;
-    pk->gif[1] = 14;
-    pk->gif[2] = 0x4000d;
-    pk->gif[3] = 71;
-    pk->gif[4] = 68;
-    pk->gif[5] = 66;
-    pk->gif[6] = 0x2024c000000080c8ULL;
-    pk->gif[7] = 65;
-    p = pk->v;
-    for (i = 0; i < 100; i++) {
-        p->a = i + 32;
-        p->b = i + 96;
-        p->c = i + 16;
-        p->d = 96;
-        p++;
-        p->a = 0x7880;
-        p->b = (i + 2098) << 4;
-        p->c = 0xFFFFFF;
-        p->d = 0;
-        p++;
-        p->a = i + 32;
-        p->b = i + 96;
-        p->c = i + 16;
-        p->d = 96;
-        p++;
-        p->a = 0x8780;
-        p->b = (i + 2098) << 4;
-        p->c = 0xFFFFFF;
-        p->d = 0;
-        p++;
-    }
-    q = &D_00631620;
-    e = &q->end;
-    e->q = 0;
-    e->w = 0x70000000;
-    D_003DD308 = 0;
-    D_003DD30C = 0;
-    D_003DD310 = 4;
-    D_003DD314 = 2;
-    func_0011ef10(0xC350, (void (*)())func_001e9418);
-}
+/* func_001e9670 is in src/screen/wave.c. */
 
 /* func_001e9b98 is in src/vm/vm_find.nofill.c. */
 

@@ -4,26 +4,13 @@
 
 M2C_UNK func_001ee698();
 M2C_UNK func_001efc10(M2C_UNK);
-M2C_UNK func_002583e0(M2C_UNK);
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
-M2C_UNK func_00266f38(s32, M2C_UNK *);
-extern M2C_UNK D_00631620;
 s32 func_001efd98();
 s32 func_001efdb8();
-s32 func_00266c08(M2C_UNK);
 u8 *func_001478a0(s32);
 void *func_00147840();
 void *func_00232cc0(M2C_UNK);
 
-s32 func_001e93c8(void) {
-    s32 temp_s0;
-
-    temp_s0 = func_00266c08(2);
-    func_002583e0(0);
-    func_00265bc0(0, 0);
-    func_00266f38(temp_s0, &D_00631620);
-    return 4;
-}
+/* func_001e93c8 is in src/screen/wave.c. */
 
 s32 func_001ebe80(void) {
     return M2C_FIELD(func_00232cc0(1), s32 *, 0xDC4) & 1;

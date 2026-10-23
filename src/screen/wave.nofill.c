@@ -1,23 +1,19 @@
+/* The functions of src/screen/wave.c that need nofill (gcc's delay-slot
+ * filling off; h68 and h21 had them in src/hand/nofill/). */
 #include "common.h"
+#include "screen/wave.h"
+#include "data/data_003D.h"
 
-extern s32 D_003DD308;
-extern s32 D_003DD30C;
-extern s32 D_003DD310;
-extern s32 D_003DD314;
-extern f32 D_003DD318;
-extern f32 D_003DD31C;
+extern WavePkt D_00631620;
+
 double sin(double);
-s32 func_0011ef10(s32, void (*)());
-void func_001e93c8();
-typedef int u128 __attribute__((mode(TI)));
-typedef struct { s32 a, b, c, d; } Q4;
-typedef union { u128 q; u32 w; } U128;
-typedef struct { U128 dma; u64 gif[8]; Q4 v[400]; U128 end; } Pkt620;
-extern Pkt620 D_00631620;
+s32 func_0011ef10(s32, void *);
+s32 func_001e93c8(void);
+
 s32 func_001e9418(void) {
     s32 i;
-    Q4 *p;
-    Pkt620 *q;
+    WaveQ *p;
+    WavePkt *q;
     D_003DD318 += D_003DD31C;
     if (D_003DD318 >= 360.0f) D_003DD318 = 0.0f;
     D_003DD308 += D_003DD310;
@@ -56,4 +52,15 @@ s32 func_001e9418(void) {
     func_0011ef10(0x2BF20, func_001e93c8);
     return 0;
 }
-#include "data/data_003D.h"
+
+/* Round to the nearest integer, halves away from zero.  Nothing calls it. */
+s32 func_001e9830(double x) {
+    s32 i = (s32)x;
+    double d = x - (double)i;
+    if (d >= 0.5) {
+        i++;
+    } else if (d <= -0.5) {
+        i--;
+    }
+    return i;
+}

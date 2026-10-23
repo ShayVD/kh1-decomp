@@ -3,8 +3,6 @@
 #include "platform/math.h"
 #include "data/bss_0063.h"
 
-typedef struct { s32 x, y; u8 pad[0x18]; } Vtx20;
-typedef struct { u8 pad[0x60]; Vtx20 v[4]; } S631620;
 
 typedef struct {
     u8 pad0[0x34c];
@@ -32,7 +30,6 @@ extern S10 D_00490900;
 
 extern volatile u32 D_002C5958;
 #include "data/pieces/D_002E26A0.h"
-extern S631620 D_00631620;
 
 
 /* func_001e8ed8, func_001e9028, func_001e91c0, func_001e9238, func_001e9288 are in src/event/sound.c. */
@@ -41,20 +38,7 @@ extern S631620 D_00631620;
 
 
 
-void func_001e97d8(s32 a0, s32 a1, s32 a2, s32 a3) {
-    s32 x0 = (a0 + 0x700) << 4;
-    s32 y0 = (a1 + 0x740) << 4;
-    s32 x1 = (a0 + a2 + 0x700) << 4;
-    s32 y1 = (a1 + a3 + 0x740) << 4;
-    D_00631620.v[0].x = x0;
-    D_00631620.v[0].y = y0;
-    D_00631620.v[1].x = x1;
-    D_00631620.v[1].y = y0;
-    D_00631620.v[2].x = x0;
-    D_00631620.v[2].y = y1;
-    D_00631620.v[3].x = x1;
-    D_00631620.v[3].y = y1;
-}
+/* func_001e97d8 is in src/screen/wave.c. */
 
 void func_001eac68(void) {
     S10 t = D_004908E0;

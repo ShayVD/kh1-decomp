@@ -4,8 +4,6 @@
 #include "data/bss_0063.h"
 
 #include "data/pieces/D_003DBA68.h"
-extern s32 D_003DD310;
-extern s32 D_003DD314;
 extern s32 D_003F7A68;
 extern s32 D_0063F740;
 extern s32 D_0063F744; /* src/data/bss_0063.c: u8 *D_0063F744 */
@@ -27,10 +25,7 @@ s32 func_001ee768();
 
 /* func_001e8e68 is in src/event/sound.c. */
 
-void func_001e9650(void) {
-    D_003DD310 = -4;
-    D_003DD314 = -2;
-}
+/* func_001e9650 is in src/screen/wave.c. */
 
 s32 func_001ef370(s32 arg0) {
     if (arg0 != 0) {

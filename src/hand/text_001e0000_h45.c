@@ -37,7 +37,6 @@ extern Big20 D_00389C90;
 extern E212 D_003DB078[];
 extern E212 D_003DB718[];
 #include "data/pieces/D_002E26A0.h"
-extern Win D_00631570;
 extern s32 D_002BCDE4;
 #include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_003DABD4.h"
@@ -50,12 +49,9 @@ extern s32 D_003F7A68;
 extern u8 D_003DD320[];
 
 int sprintf(char *, const char *, ...);
-void func_0010bdd0(void *, void (*)());
 Ent88 *func_001230a0(Ent88 *);
 s32 func_00123618(s32);
 void func_001caf58(void);
-void func_001e92e0();
-void func_001e9670(void);
 Rec98 *func_00232cc0(s32);
 
 /* func_001e31b8, func_001e3600, func_001e3770, func_001e38b0, func_001e3b40, func_001e3c70, func_001e3dd0, func_001e3f20, func_001e4790, func_001e4868 are in src/shop/shop.c. */
@@ -86,25 +82,7 @@ Rec98 *func_00232cc0(s32);
 
 
 
-s32 func_001e9310(VM *vm) {
-    D_00631570.f30 = 0.0f;
-    D_00631570.f34 = 110.0f;
-    D_00631570.f40 = 10.0f;
-    D_00631570.f44 = 3.0f;
-    D_00631570.h4 = 0;
-    D_00631570.hc = 2;
-    D_00631570.he = 2;
-    D_00631570.h6 = 0;
-    D_00631570.h8 = 0;
-    D_00631570.b90 = 0;
-    D_00631570.f1c = 45.0f;
-    D_00631570.x0 = -1;
-    D_00631570.f94 = 1.0f;
-    func_001e9670();
-    func_0010bdd0(&D_00631570, func_001e92e0);
-    vm->u.h.sp -= 1;
-    return 2;
-}
+/* func_001e9310 is in src/screen/wave.c. */
 
 void func_001e9fe8(Vec3 *out, Vec3 *in) {
     out->x = in->x;

@@ -4,10 +4,8 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
 M2C_UNK func_00111be8();
 M2C_UNK func_00147840();
-M2C_UNK func_001e9650();
 M2C_UNK func_001ef948();
 M2C_UNK func_001efaa8();
 M2C_UNK func_001efc10(u16);
@@ -35,7 +33,6 @@ M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
 #include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3CB8;
-extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003DABD0.h"
 extern s32 D_003DD258;
@@ -79,10 +76,7 @@ void memset(s32, s32, s32);
 
 
 
-void func_001e92b8(void) {
-    func_0010bd90(&D_00631570, 0);
-    func_001e9650();
-}
+/* func_001e92b8 is in src/screen/wave.c. */
 
 void func_001e9dc8(s32 arg0, void *arg1, s32 arg2) {
     s32 sp[16];
