@@ -22,29 +22,5 @@ void func_001cf348(void) {
     }
 }
 
-typedef struct { u8 pad[48]; f32 rot[3]; u8 pad3c[880 - 60]; u64 flags; } Obj600;
-/* Script VM: obj at +4, top index at +0x180, value stack at +0x184 (indexed off &vm->u.s). */
-typedef struct { Obj600 *obj; u8 pad4[0x17c]; s32 stk[92]; } Sub;
-typedef struct { s32 x0; union { Sub s; struct { Obj600 *obj; u8 pad[0x178]; s32 sp; } h; } u; } VM;
-
-s32 func_001cd600(VM *vm) {
-    Obj600 *o = vm->u.h.obj;
-    Sub *s = &vm->u.s;
-    Obj600 *o2;
-    s32 i;
-    f32 x, y, z;
-    if (o) {
-        i = vm->u.h.sp;
-        x = s->stk[i - 2];
-        y = s->stk[i - 1];
-        z = s->stk[i];
-        o2 = s->obj;
-        o->rot[0] = x * 3.1415928f / 180.0f;
-        o2->rot[1] = y * 3.1415928f / 180.0f;
-        o2->rot[2] = z * 3.1415928f / 180.0f;
-        o2->flags |= 0x100000000000ULL;
-    }
-    vm->u.h.sp -= 3;
-    return 2;
-}
+/* func_001cd600 is in src/vm/vm_lib.nostrict.c. */
 

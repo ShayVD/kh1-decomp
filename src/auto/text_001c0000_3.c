@@ -5,18 +5,10 @@
 M2C_UNK func_00122768(s32);
 #include "data/pieces/D_00388CC4.h"
 extern M2C_UNK D_0038CD3C;
-extern s32 D_002BBE04;
 extern s32 D_002C5958;
-void func_001ec7c0(s32);
-void func_00242bd0(void);
 
-/* func_001c83c8 and func_001c8420 are in src/camera/camera.c. */
-s32 func_001cded0(void) {
-    D_002BBE04 = 0;
-    func_001ec7c0(0);
-    func_00242bd0();
-    return 2;
-}
+/* func_001c83c8 and func_001c8420 are in src/camera/camera.c, func_001cded0 in
+ * src/vm/vm_lib.c. */
 
 s32 func_001ce358(void *arg0) {
     s32 temp_v1;
@@ -51,4 +43,3 @@ s32 func_001cfed8(void) {
     return 2;
 }
 #include "data/data_003C.h"
-#include "data/pieces/D_002BBE04.h"

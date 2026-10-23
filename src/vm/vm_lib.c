@@ -14,6 +14,313 @@
  * after 0x001dcad0 (0x001ddc78-0x001ec678). */
 #include "common.h"
 #include "data/types/vm_rec.h"
+#include "vm/script_vm.h"
+#include "vm/vm_mgr.h"
+#include "data/pieces/D_0037A378.h"
+#include "data/pieces/D_002BBE04.h"
+#include "data/pieces/D_002BC080.h"
+#include "data/pieces/D_002BC098.h"
+#include "data/pieces/D_003DABD0.h"
+#include "data/data_002B.h"
+
+/* The entity a VM drives, as the library functions read it. */
+struct VmObj {
+    u8 pad0[0x10];
+    f32 pos[3];             /* 0x10 */
+    u8 pad1c[0x14];
+    f32 rot[3];             /* 0x30: radians */
+    u8 pad3c[0x370 - 0x3c];
+    u64 flags;              /* 0x370 */
+};
+
+extern VmMgr D_00389C90;
+
+void func_001c6720(void);
+void *func_001559f0(s32, s32);
+s32 func_001336b8();
+s32 func_0011e340(s32);
+s32 func_00106780(s32);
+s32 func_00106880(s32);
+s32 func_00106978(s32);
+s32 func_00106a58(s32);
+void func_001ec7c0(s32);
+void func_00242bd0(void);
+
+/* ---- 0x001cd238-0x001cdf98 ---- */
+
+void func_001cd238(void) {
+    D_003DABD0[0] = func_001559f0(0x34, 4);
+    D_003DABD0[1] = func_001559f0(0x38, 4);
+}
+
+s32 func_001cd280(VmRec *vm) {
+    vm->fl.x |= 4;
+    vm->x2f4 = vm->stk[vm->sp] * 2.0f;
+    vm->sp--;
+    return 6;
+}
+
+s32 func_001cd2c0(VmRec *vm) {
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+/* func_001cd2d8 is in vm_lib.nofill.c. */
+
+/* func_001cd600 is in vm_lib.nostrict.c. */
+
+s32 func_001cd6b8(VmRec *vm) {
+    VmMsg m;
+    m.type = 5;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    func_001c4640(&m);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cd740(void) {
+    return 2;
+}
+
+s32 func_001cd748(void) {
+    D_0037A378 |= 2;
+    func_001336b8();
+    return 2;
+}
+
+s32 func_001cd778(VmRec *vm) {
+    VmMsg m;
+    m.type = 0;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    func_001c6720();
+    D_00389C90.f3078.x |= 0x400;
+    return 2;
+}
+
+s32 func_001cd7e0(void) {
+    return 2;
+}
+
+s32 func_001cd7e8(void) {
+    if (func_0011e340(0) == 0) {
+        D_0037A378 &= ~2;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001cd830(VmRec *vm) {
+    VmMsg m;
+    m.type = 1;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    D_00389C90.f3070.x &= ~0x2000000000ULL;
+    D_00389C90.f3078.x &= ~0x400ULL;
+    return 2;
+}
+
+s32 func_001cd8b0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->obj->pos[0];
+    return 2;
+}
+
+s32 func_001cd8e0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->obj->pos[1];
+    return 2;
+}
+
+s32 func_001cd910(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->obj->pos[2];
+    return 2;
+}
+
+s32 func_001cd940(VmRec *vm) {
+    VmMsg m;
+    m.type = 3;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 2];
+    m.v[1] = vm->stk[vm->sp - 1];
+    m.v[2] = vm->stk[vm->sp];
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001cd9e8(VmRec *vm) {
+    u64 f = vm->fl.x;
+    if ((f & 0xa41) && !((s32)(f >> 4) & 1)) return 4;
+    return 2;
+}
+
+s32 func_001cda18(VmRec *vm) {
+    VmMsg m;
+    m.type = 6;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cda60(VmRec *vm) {
+    VmMsg m;
+    m.type = 7;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdaa8(VmRec *vm) {
+    VmMsg m;
+    m.type = 8;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdaf0(VmRec *vm) {
+    VmMsg m;
+    m.type = 9;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdb38(VmRec *vm) {
+    VmMsg m;
+    m.type = 10;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdb80(VmRec *vm) {
+    VmMsg m;
+    m.type = 11;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdbc8(VmRec *vm) {
+    VmMsg m;
+    m.type = 12;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = 0.0f;
+    m.v[1] = vm->stk[vm->sp];
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001cdc58(VmRec *vm) {
+    VmMsg m;
+    m.type = 15;
+    m.val = 0;
+    m.v[3] = 1.0f;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdcb8(VmRec *vm) {
+    VmMsg m;
+    m.type = 16;
+    m.val = 0;
+    m.v[3] = 1.0f;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001cdd18(VmRec *vm) {
+    func_00106780(vm->stk[vm->sp]);
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001cdd60(VmRec *vm) {
+    func_00106880(vm->stk[vm->sp]);
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001cdda8(VmRec *vm) {
+    func_00106a58(vm->stk[vm->sp]);
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001cddf0(VmRec *vm) {
+    func_00106978(vm->stk[vm->sp]);
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001cde38(void) {
+    D_002BBE04 = 1;
+    D_002BC080[0] = 128;
+    D_002BC080[1] = 128;
+    D_002BC080[2] = 128;
+    D_002BC080[3] = 64;
+    D_002BC090 = 256;
+    D_002BC094 = 192;
+    D_002BC098 = 0;
+    D_002BC09C = 1;
+    D_002BC0A0 = 0;
+    D_002BC0A4 = 0;
+    return 2;
+}
+
+s32 func_001cdea8(void) {
+    if (D_002BBE04 == 1) {
+        D_002BBE04 = 4;
+    }
+    return 2;
+}
+
+s32 func_001cded0(void) {
+    D_002BBE04 = 0;
+    func_001ec7c0(0);
+    func_00242bd0();
+    return 2;
+}
+
+s32 func_001cdf00(VmRec *vm) {
+    VmMsg m;
+    m.type = 17;
+    m.val = (u32)vm->stk[vm->sp - 1];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp];
+    func_001c4640(&m);
+    vm->sp -= 2;
+    return 2;
+}
+
+/* ---- the table and the dispatcher ---- */
+
 
 /* A library function: takes the VM, returns the handler result. */
 typedef s32 (*VmLibFn)();

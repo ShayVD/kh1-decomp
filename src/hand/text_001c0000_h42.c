@@ -60,21 +60,7 @@ extern volatile s32 D_002BBE04;
 /* func_001c8168, func_001c8260, func_001c8308, func_001c8758, func_001c8878 and func_001c8930 are in src/camera/camera.c. */
 extern f32 D_002BBDFC;
 
-/* func_001cab48, func_001cae78, func_001cafe8, func_001cbab0, func_001cbd80, func_001cbea0, func_001cc548 and func_001ccbf8 are in src/msgwin/msgwin.c. */
-
-s32 func_001cd940(VM *vm) {
-    VmMsg m;
-    m.type = 3;
-    m.val = 0;
-    m.x = vm->x0;
-    m.v[0] = vm->stk[vm->sp - 2];
-    m.v[1] = vm->stk[vm->sp - 1];
-    m.v[2] = vm->stk[vm->sp];
-    m.v[3] = 1.0f;
-    func_001c4640(&m);
-    vm->sp -= 3;
-    return 2;
-}
+/* func_001cab48, func_001cae78, func_001cafe8, func_001cbab0, func_001cbd80, func_001cbea0, func_001cc548 and func_001ccbf8 are in src/msgwin/msgwin.c, func_001cd940 in src/vm/vm_lib.c. */
 
 s32 func_001cec68(VM *vm) {
     Fx *e;
