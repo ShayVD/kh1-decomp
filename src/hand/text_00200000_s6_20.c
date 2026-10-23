@@ -157,16 +157,7 @@ void func_0020c1c8(N *o) {
 /* party member: 0x74 bytes; item slots at +0x22 */
 typedef W606Mem_304be8 DbMember;
 /* same member viewed from +2 (indexed with item + 32) */
-typedef struct {
-    u8 pad00[2];
-    u8 a[0x72];
-} DbMemberB;
 typedef Save_304be8 DbSave;
-typedef struct {
-    u8 pad000[4];
-    DbMemberB m[10];
-} DbSaveB;
-typedef struct { u8 pad[9]; u8 x[1]; } DbSave9;
 typedef struct { u8 pad[0x28]; s32 x28; } DbObj;
 #include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3880[];
@@ -202,10 +193,10 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     for (i = 0; i < 7; i++) {
         if ((bits >> i) & 1) {
             if (slot != -1) {
-                DbMemberB *mq = &((DbSaveB *)D_00304BE8)->m[D_00304BE8->x48e[slot]];
-                mq->a[item + 32] = 0;
+                Sub_304be8 *mq = &D_00304BE8->m[D_00304BE8->x48e[slot]].sub;
+                mq->x22[item] = 0;
             } else {
-                ((DbSave9 *)D_00304BE8)->x[item + 0x490]--;
+                D_00304BE8->items[item]--;
             }
             func_001ef830();
             if (i < 4) func_0011d768(14);

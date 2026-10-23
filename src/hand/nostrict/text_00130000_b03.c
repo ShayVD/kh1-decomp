@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker b03), built without strict aliasing. */
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 #include "data/types/nostrict_text_00130000_b03_p3.h"
 extern f32 D_002BBDFC;
@@ -10,36 +11,7 @@ void *func_00130578(B3Ob *, s32, f32);
 void func_002675a8(f32 *, f32 *);
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } B3Ev;
 #include "data/pieces/D_002C58B0.h"
-typedef struct {
-    u8 x0, x1, x2, x3, x4, x5, x6, x7;
-    u8 x8[16];
-    u8 x18;
-    u8 x19[8];
-    u8 x21;
-    u8 x22[16];
-    u8 x32, x33, x34, x35;
-    u16 x36, x38, x3a;
-    s32 x3c;
-    u8 x40[48];
-    u8 x70[4];
-} B3SvEnt;
-typedef struct {
-    B3SvEnt e[10];
-    u8 x488[2];
-    u8 x48a;
-    u8 x48b[3];
-    u8 x48e[7];
-    u8 x495[256];
-    u8 x595[48];
-    u8 x5c5[0x7cc - 0x5c5];
-    u8 x7cc[7];
-    u8 x7d3[0x840 - 0x7d3];
-    u8 x840[3];
-} B3SvSub;
-typedef struct {
-    s32 x0;
-    B3SvSub b;
-} B3Sv;
+typedef W606Mem_304be8 B3SvEnt;
 #include "data/pieces/D_00304BE8.h"
 
 extern f32 D_002C5970;
@@ -148,31 +120,31 @@ s32 func_0013c598(s32);
 
 void func_00141b10(s32 n, B3St *p) {
     B3StB *b;
-    B3SvEnt *e = &((B3Sv *)D_00304BE8)->b.e[n];
+    B3SvEnt *e = &D_00304BE8->m[n];
     B3Eq *r;
     B3It *q;
     s32 i, j;
 
-    p->b.x40 = e->x2;
-    p->b.x48 = e->x4;
-    p->b.xbe = e->x38;
-    p->b.x4c = e->x6;
-    p->b.x50 = e->x7;
-    p->b.xe0 = e->x5;
+    p->b.x40 = e->sub.hpmax;
+    p->b.x48 = e->sub.mpmax;
+    p->b.xbe = e->sub.x38;
+    p->b.x4c = e->sub.x6;
+    p->b.x50 = e->sub.x7;
+    p->b.xe0 = e->sub.x5;
     p->b.xc0 = 0;
     p->b.xc2 = 0;
     p->b.xc4 = 1.0f;
     p->b.xb8 = 0;
     p->b.xbc = 0;
-    for (i = 0, b = &p->b; i < 16; i++) p->b.x78[i] = e->x8[i] / 100.0f;
+    for (i = 0, b = &p->b; i < 16; i++) p->b.x78[i] = e->sub.x8[i] / 100.0f;
     r = func_00149740(n);
     if (r) {
         p->b.x4c += r->x30;
         p->b.x48 += r->x38;
     }
-    for (i = 0; i < e->x18; i++) {
-        if (e->x19[i]) {
-            q = func_00147860(e->x19[i]);
+    for (i = 0; i < e->sub.x18; i++) {
+        if (e->sub.x19[i]) {
+            q = func_00147860(e->sub.x19[i]);
             p->b.x40 += q->x0;
             p->b.x48 += q->x1;
             p->b.x4c += q->x2;
@@ -181,9 +153,9 @@ void func_00141b10(s32 n, B3St *p) {
             for (j = 0; j < 16; j++) b->x78[j] *= q->x6[j] / 100.0f;
         }
     }
-    p->b.x3c = (e->x1 < p->b.x40) ? e->x1 : p->b.x40;
-    p->b.x44 = (e->x3 < p->b.x48) ? e->x3 : p->b.x48;
-    p->b.xbe = (e->x38 < p->b.x48 * 30) ? e->x38 : p->b.x48 * 30;
+    p->b.x3c = (e->sub.x1 < p->b.x40) ? e->sub.x1 : p->b.x40;
+    p->b.x44 = (e->sub.x3 < p->b.x48) ? e->sub.x3 : p->b.x48;
+    p->b.xbe = (e->sub.x38 < p->b.x48 * 30) ? e->sub.x38 : p->b.x48 * 30;
     p->b.x4c = (p->b.x4c < 101) ? p->b.x4c : 100;
     p->b.x50 = (p->b.x50 < 101) ? p->b.x50 : 100;
     p->b.xe0 = (p->b.xe0 < 101) ? p->b.xe0 : 100;
