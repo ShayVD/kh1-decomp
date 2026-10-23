@@ -406,8 +406,8 @@ s32 func_0021b7f0(void) {
     return D_00643100;
 }
 
-void func_0021b800(s32 arg0) {
-    func_001efcb0(D_003F34E8, arg0);
+s32 func_0021b800(s32 arg0) {
+    return func_001efcb0(D_003F34E8, arg0);
 }
 
 void func_0021b820(void) {

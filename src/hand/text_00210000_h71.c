@@ -36,92 +36,6 @@ s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
 #include "data/pieces/D_003F34C4.h"
 typedef N_3f34c4 Obj2;
 typedef f32 Mtx[4][4];
-void func_0021b860(void *, s32, s32, s32, s32, s32);
-
-void func_0021c5e0(void *a, s32 x, s32 y) {
-    s32 i, yy, xb, xc;
-    xb = x + 52;
-    xc = x + 195;
-    func_0021b860(a, x, y, 0, 0, 6);
-    func_0021b860(a, xb, y, 143, 0, 7);
-    func_0021b860(a, xc, y, 0, 0, 8);
-    yy = y + 51;
-    for (i = 0; i < 12; i++) {
-        func_0021b860(a, x, yy, 0, 0, 9);
-        func_0021b860(a, xb, yy, 143, 0, 10);
-        func_0021b860(a, xc, yy, 0, 0, 11);
-        yy += 16;
-    }
-    func_0021b860(a, x, yy, 0, 0, 12);
-    func_0021b860(a, xb, yy, 143, 0, 13);
-    func_0021b860(a, xc, yy, 0, 0, 14);
-    xb = x - 16;
-    yy = y + 7;
-    for (i = 0; i < 18; i++) {
-        func_0021b860(a, xb, yy, 0, 0, 31);
-        yy += 16;
-    }
-}
-
-void func_0021c780(void *a, s32 x, s32 y) {
-    s32 i, yy, xb, xc, y20;
-    xb = x + 52;
-    yy = y + 20;
-    y20 = yy;
-    xc = x + 198;
-    func_0021b860(a, x, y, 0, 0, 15);
-    func_0021b860(a, xb, y, 146, 0, 16);
-    func_0021b860(a, xc, y, 0, 0, 17);
-    for (i = 0; i < 16; i++) {
-        func_0021b860(a, x, yy, 0, 0, 18);
-        func_0021b860(a, xb, yy, 146, 0, 19);
-        func_0021b860(a, xc, yy, 0, 0, 20);
-        yy += 16;
-    }
-    func_0021b860(a, x, yy, 0, 0, 21);
-    func_0021b860(a, xb, yy, 146, 0, 22);
-    xb = x + 241;
-    func_0021b860(a, xc, yy, 0, 0, 23);
-    yy = y20;
-    func_0021b860(a, xb, y, 0, 0, 0);
-    for (i = 0; i < 16; i++) {
-        func_0021b860(a, xb, yy, 0, 0, 4);
-        yy += 16;
-    }
-    func_0021b860(a, xb, yy, 0, 0, 2);
-    xb = x + 225;
-    yy = y + 7;
-    for (i = 0; i < 18; i++) {
-        func_0021b860(a, xb, yy, 0, 0, 31);
-        yy += 16;
-    }
-}
-
-void func_0021c9a0(void *a, s32 x, s32 y) {
-    s32 i, yy, xb, y20;
-    yy = y + 20;
-    y20 = yy;
-    func_0021b860(a, x, y, 0, 0, 1);
-    for (i = 0; i < 16; i++) {
-        func_0021b860(a, x, yy, 0, 0, 5);
-        yy += 16;
-    }
-    func_0021b860(a, x, yy, 0, 0, 3);
-    yy = y20;
-    xb = x + 241;
-    func_0021b860(a, xb, y, 0, 0, 0);
-    for (i = 0; i < 16; i++) {
-        func_0021b860(a, xb, yy, 0, 0, 4);
-        yy += 16;
-    }
-    func_0021b860(a, xb, yy, 0, 0, 2);
-    xb = x + 225;
-    yy = y + 7;
-    for (i = 0; i < 18; i++) {
-        func_0021b860(a, xb, yy, 0, 0, 31);
-        yy += 16;
-    }
-}
 
 typedef struct { u8 pad[0xC]; void *xc; } Ob3;
 extern s32 D_00642E94;
@@ -141,6 +55,7 @@ s32 func_00207320(s32);
 void func_00207428(void *, s32, s32);
 void func_0021c4f8(void *);
 
+void func_0021c5e0(void *, s32, s32);
 void func_0021cd68(Ob3 *a) {
     Obj *o[2];
     s32 i, y, k, v;

@@ -29,42 +29,7 @@ void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 #include "data/types/text_00200000_h47_p.h"
 
 void func_0021b860(s32, s32, s32, s32, s32, s32);
-
-void func_0021c450(s32 a0, s32 a1, s32 a2, s32 a3) {
-    s32 y = a1 + 25;
-    s32 h;
-    s32 z;
-    if (a3 < 75) a3 = 75;
-    h = a3 - 75;
-    z = y + h;
-    func_0021b860(a0, a1, a2, 0, 0, 24);
-    func_0021b860(a0, y, a2, h, 0, 25);
-    func_0021b860(a0, z, a2, 0, 0, 26);
-}
-
-typedef struct {
-    u8 pad[0x98];
-    f32 x98;
-    u8 pad2[0xb0 - 0x9c];
-    s32 xb0;
-    s32 xb4;
-    u8 pad3[0xbe - 0xb8];
-    s16 xbe;
-    s16 xc0;
-    s16 pad4;
-    s16 xc4;
-    u8 pad5[0xd2 - 0xc6];
-    s16 xd2;
-} Oc4f8;
-f32 sinf(f32);
 void func_0021b860(s32, s32, s32, s32, s32, s32);
-
-void func_0021c4f8(Oc4f8 *o) {
-    s32 a = (s32)(o->x98 * 256.0f);
-    f32 s = sinf((a % 8192) * 0.0001220703125f * 6.2831855f);
-    func_0021b860((s32)o, ((o->xb0 + o->xbe - 0x7000) >> 4) + ((s32)(s * 262144.0f) >> 16) - 36,
-                  (o->xb4 + (o->xd2 * o->xc4 >> 4) + o->xc0 - 0x7400) >> 4, 0, 0, 38);
-}
 
 extern s32 D_003F5C08[];
 extern s32 D_003F3488[];

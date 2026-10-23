@@ -4,7 +4,6 @@
 #include "data/bss_0064.h"
 
 M2C_UNK func_0011fbb0(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, s32, M2C_UNK *);
-M2C_UNK func_00206130(s32, s32, s32, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021b800(s32);
 extern M2C_UNK D_003F5C90;
 #include "data/pieces/D_003F5FF0.h"
@@ -14,21 +13,6 @@ extern s32 D_003F34E0;
 extern s32 D_003F5C20;
 extern s32 D_0064311C;
 extern s32 D_00643120;
-
-void func_0021cb00(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    s32 var_s0;
-    s32 var_s1;
-
-    var_s0 = arg3;
-    var_s1 = arg2;
-    if (var_s0 > 0) {
-        do {
-            var_s0 -= 1;
-            func_00206130(arg0, arg1, var_s1, 0xC8, 2, 0x40202020);
-            var_s1 += arg4;
-        } while (var_s0 > 0);
-    }
-}
 
 void func_0021d188(void) {
     func_0011fbb0(0x3600, 4, 0x13, 0, 0, 0x100, 0x100, 0x1000, D_003F34E0, &D_00642EB0);

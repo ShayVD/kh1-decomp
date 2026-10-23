@@ -9,27 +9,12 @@ M2C_UNK func_0021c780(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb00(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb88(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 extern s32 D_003F34C8;
-extern s32 D_003F34F0;
 extern s32 D_003F350C;
 extern s32 D_00643110;
 extern s32 D_00643114;
 extern u16 D_003F5C60;
-s32 func_0010ef90(s32, s32);
 #include "vm/script_vm.h"
-void func_0010eee0(s32, s32, s32, s32);
 void func_001eb0a0(s32, s32);
-void func_0021c450(s32, s32, s32, s32);
-
-void func_0021ccd0(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    s32 temp_v0;
-    u32 temp_a0;
-
-    func_0021c450(arg0, 0x14, 0x59, 0xDC);
-    temp_v0 = (s32) func_001c2df0((s8 *) D_003F34F0, arg1);
-    temp_a0 = 0xDC - func_0010ef90(temp_v0, (s32) sp);
-    func_0010eee0(((s32) (temp_a0 + (temp_a0 >> 0x1F)) >> 1) + 0x14, 0x7F - (M2C_FIELD(sp, M2C_UNK *, 0x0) * 0xE), M2C_FIELD(arg0, s32 *, 0x90), temp_v0);
-}
 
 s32 func_0021dbb8(void) {
     s32 temp_v0;
