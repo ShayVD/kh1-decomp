@@ -15,12 +15,14 @@
 #include "common.h"
 #include "camera/camera.h"
 #include "vm/vm_mgr.h"
+#include "data/types/vm_rec.h"
 #include "data/types/fvec.h"
 #include "data/pieces/D_0037A380.h"
 #include "data/pieces/D_002E2780.h"
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_002E27A4.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_002C5958.h"
 
 extern VmMgr D_00389C90;
 extern CamState D_003C5510;
@@ -389,3 +391,836 @@ void func_001c6a20(void) {
     func_002675a8(&D_002E2790.x, D_003C5510.pos);
     D_002E27A4 = rot[2];
 }
+
+/* ---- The camera's script functions (entries of D_003D9FE0) ---- */
+
+/* func_001c6d08, func_001c71e8, func_001c7700, func_001c7c18 (play camera
+ * path k, following 0, 1 or 2 objects) are in camera.nostrict.c. */
+
+/* Look at (x, y, z) from the current position. */
+s32 func_001c8168(VmRec *vm) {
+    FVec4 t, r;
+    func_001c6890();
+    t.x = vm->stk[vm->sp - 2];
+    t.y = vm->stk[vm->sp - 1];
+    t.z = vm->stk[vm->sp];
+    D_003C5510.f120 = func_001e9e58(&t, D_003C5510.pos);
+    func_001e9d00(&r, D_003C5510.pos, &t, D_003C5510.rot[2]);
+    func_002675a8(D_003C5510.rot, &r);
+    func_001c6a20();
+    if ((s32)(D_003C5510.fl.x >> 8) & 1) func_002675a8(D_003C5510.base, D_003C5510.pos);
+    vm->sp -= 3;
+    return 2;
+}
+
+/* Set the position. */
+s32 func_001c8260(VmRec *vm) {
+    func_001c6890();
+    D_003C5510.pos[0] = vm->stk[vm->sp - 2];
+    D_003C5510.pos[1] = vm->stk[vm->sp - 1];
+    D_003C5510.pos[2] = vm->stk[vm->sp];
+    func_001c6a20();
+    if ((s32)(D_003C5510.fl.x >> 8) & 1) func_002675a8(D_003C5510.base, D_003C5510.pos);
+    vm->sp -= 3;
+    return 2;
+}
+
+/* Set the rotation (degrees). */
+s32 func_001c8308(VmRec *vm) {
+    func_001c6890();
+    D_003C5510.rot[0] = vm->stk[vm->sp - 2] / 180.0f * 3.1415928f;
+    D_003C5510.rot[1] = vm->stk[vm->sp - 1] / 180.0f * 3.1415928f;
+    D_003C5510.rot[2] = vm->stk[vm->sp] / 180.0f * 3.1415928f;
+    func_001c6a20();
+    vm->sp -= 3;
+    return 2;
+}
+
+/* Set f120. */
+s32 func_001c83c8(VmRec *vm) {
+    func_001c6890();
+    D_003C5510.f120 = vm->stk[vm->sp];
+    func_001c6a20();
+    vm->sp--;
+    return 2;
+}
+
+/* Set f124. */
+s32 func_001c8420(VmRec *vm) {
+    func_001c6890();
+    D_003C5510.f124 = vm->stk[vm->sp];
+    func_001c6a20();
+    vm->sp--;
+    return 2;
+}
+
+/* Push the position x / y / z, the rotation (degrees), f120, f124. */
+s32 func_001c8478(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.pos[0];
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c84c8(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.pos[1];
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c8518(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.pos[2];
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c8568(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.rot[0] / 3.1415928f * 180.0f;
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c85d8(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.rot[1] / 3.1415928f * 180.0f;
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c8648(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.rot[2] / 3.1415928f * 180.0f;
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c86b8(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.f120;
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+s32 func_001c8708(VmRec *vm) {
+    f32 f;
+    func_001c6890();
+    f = D_003C5510.f124;
+    vm->sp++;
+    vm->stk[vm->sp] = f;
+    return 2;
+}
+
+/* Channel 0, linear (bit 0): move the position, keeping what it looks at. */
+void func_001c8758(void) {
+    CamState *c = &D_003C5510;
+    f32 *f = c->p0[0];
+    f32 *t = c->p1[0];
+    f32 *o = c->pos;
+    FVec4 m, q;
+    c->t[0] += D_002BBDFC;
+    if (c->fl.s.dur[0] < c->t[0]) {
+        c->t[0] = c->fl.s.dur[0];
+        c->fl.x &= ~1;
+    }
+    func_001e9fe8(&q, c->rot);
+    func_001e9f18(&m, o, &q, c->f120);
+    o[0] = f[0] + (t[0] - f[0]) / c->fl.s.dur[0] * c->t[0];
+    c->pos[1] = f[1] + (t[1] - f[1]) / c->fl.s.dur[0] * c->t[0];
+    c->pos[2] = f[2] + (t[2] - f[2]) / c->fl.s.dur[0] * c->t[0];
+    func_001c6a20();
+}
+
+/* Start channel 0, linear: to (x, y, z) in n frames. */
+s32 func_001c8878(VmRec *vm) {
+    f32 d;
+    func_001c6890();
+    D_003C5510.fl.x |= 1;
+    D_003C5510.p0[0][0] = D_003C5510.pos[0];
+    D_003C5510.p0[0][1] = D_003C5510.pos[1];
+    D_003C5510.p0[0][2] = D_003C5510.pos[2];
+    d = vm->stk[vm->sp - 3] * 2.0f;
+    D_003C5510.p1[0][0] = vm->stk[vm->sp - 2];
+    D_003C5510.p1[0][1] = vm->stk[vm->sp - 1];
+    D_003C5510.p1[0][2] = vm->stk[vm->sp];
+    D_003C5510.t[0] = 0.0f;
+    vm->sp -= 4;
+    D_003C5510.fl.s.dur[0] = d;
+    return 2;
+}
+
+static inline void inl_lerp2(f32 *f, f32 *t, f32 d, f32 s) {
+    D_003C5510.rot[0] = f[0] + (t[0] - f[0]) / d * s;
+    D_003C5510.rot[1] = f[1] + (t[1] - f[1]) / d * s;
+    D_003C5510.rot[2] = f[2] + (t[2] - f[2]) / d * s;
+}
+
+/* Channel 1, linear (bit 1): the rotation. */
+void func_001c8930(void) {
+    CamState *c = &D_003C5510;
+    c->t[1] += D_002BBDFC;
+    if (c->fl.s.dur[1] < c->t[1]) {
+        c->t[1] = c->fl.s.dur[1];
+        c->fl.x &= ~2;
+    }
+    inl_lerp2(c->p0[1], c->p1[1], c->fl.s.dur[1], c->t[1]);
+    do { func_001c6a20(); } while (0);
+}
+
+#define WRAP(a) while (1) { if (a > 3.1415928f) a -= 6.2831855f; else if (a < -3.1415928f) a += 6.2831855f; else break; }
+/* Start channel 1, linear: to (x, y, z) degrees in n frames. */
+s32 func_001c8a00(VmRec *vm) {
+    f32 x, y, z, f;
+    s32 sp;
+    func_001c6890();
+    D_003C5510.fl.x |= 2;
+    D_003C5510.t[1] = 0;
+    sp = vm->sp;
+    x = vm->stk[sp - 2];
+    y = vm->stk[sp - 1];
+    f = vm->stk[sp - 3];
+    z = vm->stk[sp];
+    D_003C5510.p1[1][0] = x / 180.0f * 3.1415928f;
+    D_003C5510.p1[1][1] = y / 180.0f * 3.1415928f;
+    D_003C5510.p1[1][2] = z / 180.0f * 3.1415928f;
+    D_003C5510.fl.s.dur[1] = f * 2.0f;
+    WRAP(D_003C5510.p1[1][0]);
+    WRAP(D_003C5510.p1[1][1]);
+    WRAP(D_003C5510.p1[1][2]);
+    D_003C5510.p0[1][0] = D_003C5510.rot[0];
+    D_003C5510.p0[1][1] = D_003C5510.rot[1];
+    D_003C5510.p0[1][2] = D_003C5510.rot[2];
+    vm->sp = sp - 4;
+    return 2;
+}
+#undef WRAP
+
+/* Channel 2, linear (bit 2): f120. */
+void func_001c8c10(void) {
+    CamState *p = &D_003C5510;
+    p->t[2] += D_002BBDFC;
+    if (p->fl.s.dur[2] < p->t[2]) {
+        p->t[2] = p->fl.s.dur[2];
+        p->fl.x &= ~4;
+    }
+    p->f120 = p->p0[2][0] + (p->p1[2][0] - p->p0[2][0]) / p->fl.s.dur[2] * p->t[2];
+    do { func_001c6a20(); break; } while (1);
+}
+
+/* func_001c8c90 (start channel 2, linear) is in camera.nostrict.c. */
+
+/* Channel 3, linear (bit 3): f124. */
+void func_001c8d18(void) {
+    CamState *p = &D_003C5510;
+    p->t[3] += D_002BBDFC;
+    if (p->fl.s.dur[3] < p->t[3]) {
+        p->t[3] = p->fl.s.dur[3];
+        p->fl.x &= ~8;
+    }
+    p->f124 = p->p0[2][1] + (p->p1[2][1] - p->p0[2][1]) / p->fl.s.dur[3] * p->t[3];
+    do { func_001c6a20(); break; } while (1);
+}
+
+/* func_001c8d98 (start channel 3, linear) is in camera.nostrict.c. */
+
+s32 rand(void);
+void func_00267518(void *d, void *a, void *b);
+
+/* Bit 8, run as a task while set: shake the camera around `base` by
+ * random offsets up to amp, scaled by smode's envelope over sdur frames. */
+s32 func_001c8e20(void) {
+    CamVec v;
+    f32 m[4][4] __attribute__((aligned(16)));
+    CamVec rot;
+    f32 x, y, z, k;
+    z = x = y = 0.0f;
+    func_001c6890();
+    switch (D_003C5510.smode) {
+    case 0:
+        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f;
+        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f;
+        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f;
+        break;
+    case 1:
+        k = D_003C5510.st / D_003C5510.sdur;
+        if (0.5f < k) k = (1.0f - k) * 2.0f;
+        else k = k * 2.0f;
+        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
+        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
+        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
+        break;
+    case 2:
+        k = D_003C5510.st / D_003C5510.sdur;
+        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
+        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
+        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
+        break;
+    case 3:
+        k = 1.0f - D_003C5510.st / D_003C5510.sdur;
+        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
+        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
+        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
+        break;
+    }
+    func_001e9fe8(rot, D_003C5510.rot);
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+    v[3] = 1.0f;
+    sceVu0UnitMatrix(m);
+    func_00267768(m, m, rot[0]);
+    func_00267810(m, m, rot[1]);
+    func_002672f8(v, m, v);
+    func_00267518(D_003C5510.pos, D_003C5510.base, v);
+    func_001c6a20();
+    D_003C5510.st += D_002BBDFC;
+    if (D_003C5510.sdur <= D_003C5510.st) {
+        D_003C5510.fl.s.b8 = 0;
+        func_002675a8(D_003C5510.pos, D_003C5510.base);
+    }
+    return 4;
+}
+
+/* Start (n > 0) or stop the shake: amplitude (x, y, z), envelope, n frames. */
+s32 func_001c91e8(VmRec *vm) {
+    if (vm->stk[vm->sp] > 0) {
+        func_001c6890();
+        D_003C5510.st = 0;
+        D_003C5510.fl.x |= 0x100;
+        D_003C5510.amp[0] = vm->stk[vm->sp - 4];
+        D_003C5510.amp[1] = vm->stk[vm->sp - 3];
+        D_003C5510.amp[2] = vm->stk[vm->sp - 2];
+        D_003C5510.smode = vm->stk[vm->sp - 1];
+        D_003C5510.sdur = vm->stk[vm->sp] * 2.0f;
+        func_002675a8(D_003C5510.base, D_003C5510.pos);
+    } else {
+        D_003C5510.fl.x &= ~0x100;
+    }
+    vm->sp -= 5;
+    return 2;
+}
+
+extern u64 D_0038CD00;
+
+/* Wait while D_0038CD00 bit 37 (a camera path playing) is set. */
+s32 func_001c92e8(void) {
+    return ((u32)(D_0038CD00 >> 37) & 1) ? 4 : 2;
+}
+
+/* Channel 0, curved (bit 4): the position, Hermite from p0 to p1 with the
+ * end tangents mode[0] picks. */
+void func_001c9308(void) {
+    f32 a[4];
+    f32 b[4];
+    s32 i;
+    f32 s, u, u2, u3, d;
+    f32 *p0, *p1;
+    for (i = 0; i < 3; i++) {
+        a[i] = 0.0f;
+        b[i] = 0.0f;
+    }
+    D_003C5510.t[0] += D_002BBDFC;
+    p0 = D_003C5510.p0[0];
+    p1 = D_003C5510.p1[0];
+    switch (D_003C5510.mode[0]) {
+    case 0:
+    case 3:
+        s = D_003C5510.fl.s.dur[0];
+        for (i = 0; i < 3; i++) a[i] = (p1[i] - p0[i]) / s;
+        break;
+    case 1:
+    case 2:
+        for (i = 2; i >= 0; i--) a[i] = 0.0f;
+        break;
+    }
+    switch (D_003C5510.mode[0]) {
+    case 0:
+    case 2:
+        s = D_003C5510.fl.s.dur[0];
+        for (i = 0; i < 3; i++) b[i] = (p1[i] - p0[i]) / s;
+        break;
+    case 1:
+    case 3:
+        for (i = 2; i >= 0; i--) b[i] = 0.0f;
+        break;
+    }
+    s = 0.0f;
+    if (D_003C5510.t[0] == s) {
+        D_003C5510.pos[0] = p0[0];
+        D_003C5510.pos[1] = p0[1];
+        D_003C5510.pos[2] = p0[2];
+    } else if (D_003C5510.fl.s.dur[0] <= D_003C5510.t[0]) {
+        D_003C5510.pos[0] = p1[0];
+        D_003C5510.pos[1] = p1[1];
+        D_003C5510.pos[2] = p1[2];
+    } else {
+        d = D_003C5510.fl.s.dur[0] - s;
+        u = (D_003C5510.t[0] - s) / d;
+        u2 = u * u;
+        u3 = u * u2;
+        for (i = 0; i < 3; i++) {
+            D_003C5510.pos[i] = (2.0f * u3 - 3.0f * u2 + 1.0f) * p0[i]
+                + (-2.0f * u3 + 3.0f * u2) * p1[i]
+                + ((u3 - 2.0f * u2 + u) * a[i] + (u3 - u2) * b[i]) * d;
+        }
+    }
+    func_001c6a20();
+    if (D_003C5510.t[0] > D_003C5510.fl.s.dur[0]) D_003C5510.fl.s.b4 = 0;
+}
+
+/* Start channel 0, curved: to (x, y, z), mode, in n frames. */
+s32 func_001c95f8(VmRec *vm) {
+    f32 d;
+    func_001c6890();
+    D_003C5510.fl.x |= 0x10;
+    D_003C5510.p0[0][0] = D_003C5510.pos[0];
+    D_003C5510.p0[0][1] = D_003C5510.pos[1];
+    D_003C5510.p0[0][2] = D_003C5510.pos[2];
+    d = vm->stk[vm->sp - 4] * 2.0f;
+    D_003C5510.mode[0] = vm->stk[vm->sp - 3];
+    D_003C5510.t[0] = 0.0f;
+    D_003C5510.p1[0][0] = vm->stk[vm->sp - 2];
+    D_003C5510.p1[0][1] = vm->stk[vm->sp - 1];
+    D_003C5510.p1[0][2] = vm->stk[vm->sp];
+    vm->sp -= 5;
+    { f32 *p = &D_003C5510.fl.s.dur[0]; *p = d; }
+    return 2;
+}
+
+/* Channel 1, curved (bit 5): the rotation. */
+void func_001c96c0(void) {
+    f32 a[4];
+    f32 b[4];
+    s32 i;
+    f32 s, u, u2, u3, d;
+    f32 *p0, *p1;
+    for (i = 0; i < 3; i++) {
+        a[i] = 0.0f;
+        b[i] = 0.0f;
+    }
+    D_003C5510.t[1] += D_002BBDFC;
+    p0 = D_003C5510.p0[1];
+    p1 = D_003C5510.p1[1];
+    s = D_003C5510.fl.s.dur[1];
+    switch (D_003C5510.mode[1]) {
+    case 0:
+    case 3:
+        for (i = 0; i < 3; i++) a[i] = (p1[i] - p0[i]) / s;
+        break;
+    case 1:
+    case 2:
+        for (i = 2; i >= 0; i--) a[i] = 0.0f;
+        break;
+    }
+    switch (D_003C5510.mode[1]) {
+    case 0:
+    case 2:
+        s = D_003C5510.fl.s.dur[1];
+        for (i = 0; i < 3; i++) b[i] = (p1[i] - p0[i]) / s;
+        break;
+    case 1:
+    case 3:
+        for (i = 2; i >= 0; i--) b[i] = 0.0f;
+        break;
+    }
+    s = 0.0f;
+    if (D_003C5510.t[1] == s) {
+        D_003C5510.rot[0] = p0[0];
+        D_003C5510.rot[1] = p0[1];
+        D_003C5510.rot[2] = p0[2];
+    } else if (D_003C5510.fl.s.dur[1] <= D_003C5510.t[1]) {
+        D_003C5510.rot[0] = p1[0];
+        D_003C5510.rot[1] = p1[1];
+        D_003C5510.rot[2] = p1[2];
+    } else {
+        d = D_003C5510.fl.s.dur[1] - s;
+        u = (D_003C5510.t[1] - s) / d;
+        u2 = u * u;
+        u3 = u * u2;
+        for (i = 0; i < 3; i++) {
+            D_003C5510.rot[i] = (2.0f * u3 - 3.0f * u2 + 1.0f) * p0[i]
+                + (-2.0f * u3 + 3.0f * u2) * p1[i]
+                + ((u3 - 2.0f * u2 + u) * a[i] + (u3 - u2) * b[i]) * d;
+        }
+    }
+    func_001c6a20();
+    if (D_003C5510.t[1] > D_003C5510.fl.s.dur[1]) D_003C5510.fl.s.b5 = 0;
+}
+
+/* Start channel 1, curved: to (x, y, z) degrees, mode, in n frames. */
+s32 func_001c99a8(VmRec *vm) {
+    s32 m;
+    f32 d;
+    func_001c6890();
+    D_003C5510.fl.w.b5 = 1;
+    m = vm->stk[vm->sp - 3];
+    d = (f32)vm->stk[vm->sp - 4] * 2.0f;
+    D_003C5510.mode[1] = m;
+    D_003C5510.p1[1][0] = vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
+    D_003C5510.p1[1][1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f;
+    D_003C5510.p1[1][2] = vm->stk[vm->sp] * 3.1415928f / 180.0f;
+    (&D_003C5510.fl.s)->dur[1] = d; /* through a pointer: a direct store through the union gets alias set 0 */
+    func_001e9fe8(D_003C5510.p1[1], D_003C5510.p1[1]);
+    D_003C5510.p0[1][0] = D_003C5510.rot[0];
+    D_003C5510.p0[1][1] = D_003C5510.rot[1];
+    D_003C5510.p0[1][2] = D_003C5510.rot[2];
+    vm->sp -= 5;
+    return 2;
+}
+
+/* Channel 2, curved (bit 6): f120. */
+void func_001c9ac8(void) {
+    f32 t0, t1, a, u, u2, u3, d;
+    f32 *s, *e;
+    t1 = t0 = 0.0f;
+    D_003C5510.t[2] += D_002BBDFC;
+    s = &D_003C5510.p0[2][0];
+    e = &D_003C5510.p1[2][0];
+    switch (D_003C5510.mode[2]) {
+    case 0:
+    case 3:
+        t0 = (*e - *s) / D_003C5510.fl.s.dur[2];
+        break;
+    case 1:
+    case 2:
+        break;
+    }
+    switch (D_003C5510.mode[2]) {
+    case 0:
+    case 2:
+        t1 = (*e - *s) / D_003C5510.fl.s.dur[2];
+        break;
+    case 1:
+    case 3:
+        t1 = 0.0f;
+        break;
+    }
+    a = 0.0f;
+    if (D_003C5510.t[2] == a) {
+        D_003C5510.f120 = *s;
+    } else if (D_003C5510.fl.s.dur[2] <= D_003C5510.t[2]) {
+        D_003C5510.f120 = *e;
+    } else {
+        d = D_003C5510.fl.s.dur[2] - a;
+        u = (D_003C5510.t[2] - a) / d;
+        u2 = u * u;
+        u3 = u * u2;
+        D_003C5510.f120 = ((u3 + u3) - u2 * 3.0f + 1.0f) * *s
+            + (u3 * -2.0f + u2 * 3.0f) * *e
+            + ((u3 - (u2 + u2) + u) * t0 + (u3 - u2) * t1) * d;
+    }
+    func_001c6a20();
+    if (D_003C5510.t[2] > D_003C5510.fl.s.dur[2]) D_003C5510.fl.x &= ~64;
+}
+
+/* func_001c9ca8 (start channel 2, curved) is in camera.nostrict.c. */
+
+extern f32 D_0036266C;
+
+/* Channel 4 (bit 9): D_0036266C, linear. */
+void func_001c9d40(void) {
+    CamState *p = &D_003C5510;
+    p->t[4] += D_002BBDFC;
+    if (p->fl.s.dur[4] < p->t[4]) {
+        p->fl.x &= ~0x200;
+        D_0036266C = p->p1[2][2];
+        return;
+    }
+    D_0036266C = (p->p1[2][2] - p->p0[2][2]) * (p->t[4] / p->fl.s.dur[4]);
+}
+
+/* Start channel 4: from D_0036266C (saved in f12c) to v in n frames. */
+s32 func_001c9db0(VmRec *vm) {
+    f32 f, a, b;
+    s32 sp;
+    D_003C5510.fl.x |= 0x200;
+    D_003C5510.t[4] = 0;
+    f = D_0036266C;
+    D_003C5510.p0[2][2] = f;
+    D_003C5510.f12c = f;
+    sp = vm->sp;
+    a = vm->stk[sp - 1];
+    b = vm->stk[sp];
+    vm->sp = sp - 2;
+    D_003C5510.p1[2][2] = b;
+    D_003C5510.fl.s.dur[4] = a * 2.0f;
+    return 2;
+}
+
+/* Start channel 4: back to the saved value in n frames. */
+s32 func_001c9e20(VmRec *vm) {
+    f32 a;
+    s32 sp;
+    D_003C5510.fl.x |= 0x200;
+    D_003C5510.p1[2][2] = D_003C5510.f12c;
+    D_003C5510.p0[2][2] = D_0036266C;
+    D_003C5510.t[4] = 0;
+    sp = vm->sp;
+    a = vm->stk[sp];
+    vm->sp = sp - 1;
+    D_003C5510.fl.s.dur[4] = a * 2.0f;
+    return 2;
+}
+
+/* Channel 3, curved (bit 7): f124. */
+void func_001c9e80(void) {
+    f32 t0, t1, a, u, u2, u3, d;
+    f32 *s, *e;
+    t1 = t0 = 0.0f;
+    D_003C5510.t[3] += D_002BBDFC;
+    s = &D_003C5510.p0[2][1];
+    e = &D_003C5510.p1[2][1];
+    switch (D_003C5510.mode[3]) {
+    case 0:
+    case 3:
+        t0 = (*e - *s) / D_003C5510.fl.s.dur[3];
+        break;
+    case 1:
+    case 2:
+        break;
+    }
+    switch (D_003C5510.mode[0]) {
+    case 0:
+    case 2:
+        t1 = (*e - *s) / D_003C5510.fl.s.dur[3];
+        break;
+    case 1:
+    case 3:
+        t1 = 0.0f;
+        break;
+    }
+    a = 0.0f;
+    if (D_003C5510.t[3] == a) {
+        D_003C5510.f124 = *s;
+    } else if (D_003C5510.fl.s.dur[3] <= D_003C5510.t[3]) {
+        D_003C5510.f124 = *e;
+    } else {
+        d = D_003C5510.fl.s.dur[3] - a;
+        u = (D_003C5510.t[3] - a) / d;
+        u2 = u * u;
+        u3 = u * u2;
+        D_003C5510.f124 = ((u3 + u3) - u2 * 3.0f + 1.0f) * *s
+            + (u3 * -2.0f + u2 * 3.0f) * *e
+            + ((u3 - (u2 + u2) + u) * t0 + (u3 - u2) * t1) * d;
+    }
+    func_001c6a20();
+    if (D_003C5510.t[3] > D_003C5510.fl.s.dur[3]) D_003C5510.fl.x &= ~128;
+}
+
+/* func_001ca060 (start channel 3, curved) is in camera.nostrict.c. */
+
+void func_00177900(f32 *, f32 *, f32);
+
+/* Move the camera to the view func_00177900 gives for angle a: at once
+ * (n == 0) or by curved tweens of channels 0-3 over n frames.  Here and in
+ * func_001ca368 the durations are stored through a pointer to fl.s: a
+ * direct store through the union gets alias set 0, which changes the
+ * delay slot filling (bnel for bne) and the store order. */
+s32 func_001ca0f8(VmRec *vm) {
+    CamVec a;
+    CamVec b;
+    CamVec c;
+    f32 f;
+    f32 v;
+    f = vm->stk[vm->sp];
+    func_00177900(a, b, vm->stk[vm->sp - 2] * 3.1415928f / 180.0f);
+    if (vm->stk[vm->sp] == 0) {
+        func_002675a8(&D_002E2780, a);
+        func_002675a8(&D_002E2790, b);
+        vm->sp -= 3;
+        return 2;
+    }
+    func_001c6890();
+    f += f;
+    D_003C5510.fl.s.b4 = 1;
+    (&D_003C5510.fl.s)->dur[0] = f;
+    D_003C5510.mode[0] = vm->stk[vm->sp - 1];
+    D_003C5510.fl.s.b5 = 1;
+    D_003C5510.p1[0][0] = b[0];
+    D_003C5510.p1[0][1] = b[1];
+    D_003C5510.p1[0][2] = b[2];
+    D_003C5510.p0[0][0] = D_003C5510.pos[0];
+    D_003C5510.p0[0][1] = D_003C5510.pos[1];
+    D_003C5510.p0[0][2] = D_003C5510.pos[2];
+    D_003C5510.mode[1] = vm->stk[vm->sp - 1];
+    D_003C5510.t[0] = 0.0f;
+    (&D_003C5510.fl.s)->dur[1] = f;
+    func_001e9d00(c, b, a, D_003C5510.rot[2]);
+    D_003C5510.fl.s.b6 = 1;
+    D_003C5510.p1[1][0] = c[0];
+    D_003C5510.p1[1][1] = c[1];
+    D_003C5510.p0[1][0] = D_003C5510.rot[0];
+    D_003C5510.p0[1][1] = D_003C5510.rot[1];
+    D_003C5510.mode[2] = vm->stk[vm->sp - 1];
+    D_003C5510.p1[1][2] = 0.0f;
+    D_003C5510.p0[1][2] = 0.0f;
+    D_003C5510.t[1] = 0.0f;
+    (&D_003C5510.fl.s)->dur[2] = f;
+    v = func_001e9e58(b, a);
+    D_003C5510.p0[2][0] = D_003C5510.f120;
+    (&D_003C5510.fl.s)->dur[3] = f;
+    D_003C5510.p1[2][1] = 53.0f;
+    D_003C5510.fl.s.b7 = 1;
+    D_003C5510.t[3] = 0.0f;
+    D_003C5510.mode[3] = vm->stk[vm->sp - 1];
+    D_003C5510.t[2] = 0.0f;
+    D_00389C90.f3070.w.b37 = 0;
+    D_003C5510.p0[2][1] = D_003C5510.f124;
+    D_003C5510.p1[2][0] = v;
+    vm->sp -= 3;
+    return 2;
+}
+
+/* The same towards the view at f128, over n frames, the yaw taking the
+ * short way round. */
+s32 func_001ca368(VmRec *vm) {
+    CamVec a;
+    CamVec b;
+    CamVec c;
+    f32 f;
+    f32 v;
+    f32 d;
+    s32 n = vm->stk[vm->sp];
+    func_00177900(a, b, D_003C5510.f128);
+    func_001c6890();
+    D_003C5510.fl.s.b4 = 1;
+    (&D_003C5510.fl.s)->dur[0] = n * 2.0f;
+    D_003C5510.mode[0] = vm->stk[vm->sp - 1];
+    D_003C5510.fl.s.b5 = 1;
+    D_003C5510.p1[0][0] = b[0];
+    D_003C5510.p1[0][1] = b[1];
+    D_003C5510.p1[0][2] = b[2];
+    D_003C5510.p0[0][0] = D_003C5510.pos[0];
+    D_003C5510.p0[0][1] = D_003C5510.pos[1];
+    D_003C5510.p0[0][2] = D_003C5510.pos[2];
+    D_003C5510.mode[1] = vm->stk[vm->sp - 1];
+    D_003C5510.t[0] = 0.0f;
+    (&D_003C5510.fl.s)->dur[1] = n * 2.0f;
+    func_001e9d00(c, b, a, D_003C5510.rot[2]);
+    D_003C5510.p1[1][0] = c[0];
+    D_003C5510.p1[1][1] = c[1];
+    D_003C5510.p1[1][2] = 0.0f;
+    func_001e9fe8(c, D_003C5510.rot);
+    D_003C5510.p0[1][0] = c[0];
+    D_003C5510.p0[1][1] = c[1];
+    D_003C5510.p0[1][2] = 0.0f;
+    d = c[1] - D_003C5510.p1[1][1];
+    if (3.1415928f < d) D_003C5510.p0[1][1] = c[1] - 6.2831855f;
+    else if (d < -3.1415928f) D_003C5510.p0[1][1] = c[1] + 6.2831855f;
+    D_003C5510.fl.s.b6 = 1;
+    D_003C5510.t[1] = 0.0f;
+    (&D_003C5510.fl.s)->dur[2] = n * 2.0f;
+    D_003C5510.mode[2] = vm->stk[vm->sp - 1];
+    v = func_001e9e58(b, a);
+    D_003C5510.fl.s.b7 = 1;
+    D_003C5510.p1[2][0] = v;
+    D_003C5510.p0[2][0] = D_003C5510.f120;
+    D_003C5510.mode[3] = vm->stk[vm->sp - 1];
+    D_00389C90.f3070.w.b37 = 0;
+    (&D_003C5510.fl.s)->dur[3] = n * 2.0f;
+    D_003C5510.p1[2][1] = 53.0f;
+    D_003C5510.p0[2][1] = D_003C5510.f124;
+    D_003C5510.t[2] = 0.0f;
+    D_003C5510.t[3] = 0.0f;
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Push x / y / z of the point the camera looks at (f120 along the rotation
+ * from the position), all addressed from D_003C55F0. */
+s32 func_001ca5f8(VmRec *vm) {
+    FVec4 out, tmp;
+    CamVec *b = &D_003C55F0;
+    func_001c6890();
+    func_001e9fe8(&tmp, b);
+    func_001e9f18(&out, b - 1, &tmp, b[4][0]);
+    vm->sp++;
+    vm->stk[vm->sp] = out.x;
+    return 2;
+}
+
+s32 func_001ca680(VmRec *vm) {
+    FVec4 out, tmp;
+    CamVec *b = &D_003C55F0;
+    func_001c6890();
+    func_001e9fe8(&tmp, b);
+    func_001e9f18(&out, b - 1, &tmp, b[4][0]);
+    vm->sp++;
+    vm->stk[vm->sp] = out.y;
+    return 2;
+}
+
+s32 func_001ca708(VmRec *vm) {
+    FVec4 out, tmp;
+    CamVec *b = &D_003C55F0;
+    func_001c6890();
+    func_001e9fe8(&tmp, b);
+    func_001e9f18(&out, b - 1, &tmp, b[4][0]);
+    vm->sp++;
+    vm->stk[vm->sp] = out.z;
+    return 2;
+}
+
+s32 func_0017e8c8(void);
+s32 func_0017e910(void);
+
+/* Unless D_002C5958 bit 1: func_0017e8c8 / func_0017e910. */
+s32 func_001ca790(void) {
+    if (!((D_002C5958 >> 1) & 1)) {
+        func_0017e8c8();
+    }
+    return 2;
+}
+
+s32 func_001ca7c8(void) {
+    if (!((D_002C5958 >> 1) & 1)) {
+        func_0017e910();
+    }
+    return 2;
+}
+
+#define B(n) ((s32)(D_003C5510.fl.x >> (n)) & 1)
+/* Every frame: start the path player if D_0038CD00 bit 37 is set, then run
+ * the tweens whose bits are set. */
+void func_001ca800(void) {
+    if ((u32)(D_0038CD00 >> 37) % 2 == 1) {
+        func_0011ef10(99999, func_001c5b88);
+    }
+    if (B(0)) {
+        func_001c8758();
+        if (B(8)) {
+            func_002675a8(D_003C5510.base, D_003C5510.pos);
+        }
+    }
+    if (B(4)) {
+        func_001c9308();
+        if (B(8)) {
+            func_002675a8(D_003C5510.base, D_003C5510.pos);
+        }
+    }
+    if (B(1)) func_001c8930();
+    if (B(5)) func_001c96c0();
+    if (B(2)) func_001c8c10();
+    if (B(6)) func_001c9ac8();
+    if (B(3)) func_001c8d18();
+    if (B(7)) func_001c9e80();
+    if (B(8)) func_0011ef10(99999, func_001c8e20);
+    if (B(9)) func_001c9d40();
+}
+#undef B

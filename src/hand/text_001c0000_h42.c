@@ -48,7 +48,6 @@ typedef struct {
 } Big;
 extern Big D_00389C90;
 #include "data/pieces/D_002E26A0.h"
-void func_002675a8(void *, void *);
 /* 32-byte message queue at D_006257E0 (tail D_006277E4, head D_006277E0). */
 typedef struct {
     u8 type;
@@ -80,128 +79,12 @@ CONTEXT_ONLY s32 func_001c4640(Msg *m) {
 extern volatile s32 D_002BBE04;
 
 #include "data/pieces/D_0037A380.h"
-typedef V4_37A380 V4;
-typedef struct {
-    union {
-        u64 flags;
-        struct { s32 lo; f32 dur0; f32 dur1; } s;
-    } u;
-    u8 pad10[8];
-    f32 t0;
-    f32 t1;
-    u8 pad20[0x20];
-    V4 p40;
-    V4 p50;
-    V4 p60;
-    V4 p70;
-    V4 p80;
-    u8 pad90[0x30];
-    V4 v0;
-    V4 a, b, c, d, e;
-    f32 f50;
-    f32 f54;
-} CamOut;
-extern CamOut D_003C5510;
 extern u8 D_003C55E0[];
 /* D_003C55E0 is +0xd0 into this block. */
-#define OUT (*(CamOut *)(D_003C55E0 - 0xd0))
-void func_001c6a20(void);
 /* func_001c5db8 is in src/camera/camera.c. */
 
-void func_001c6890(void);
-f32 func_001e9e58(V4 *, V4 *);
-void func_001e9d00(V4 *, V4 *, V4 *, f32);
-s32 func_001c8168(VM *vm) {
-    V4 t, r;
-    func_001c6890();
-    t.x = vm->stk[vm->sp - 2];
-    t.y = vm->stk[vm->sp - 1];
-    t.z = vm->stk[vm->sp];
-    OUT.f50 = func_001e9e58(&t, &OUT.a);
-    func_001e9d00(&r, &OUT.a, &t, OUT.b.z);
-    func_002675a8(&OUT.b, &r);
-    func_001c6a20();
-    if ((s32)(OUT.u.flags >> 8) & 1) func_002675a8(&OUT.v0, &OUT.a);
-    vm->sp -= 3;
-    return 2;
-}
-
-s32 func_001c8260(VM *vm) {
-    func_001c6890();
-    D_003C5510.a.x = vm->stk[vm->sp - 2];
-    D_003C5510.a.y = vm->stk[vm->sp - 1];
-    D_003C5510.a.z = vm->stk[vm->sp];
-    func_001c6a20();
-    if ((s32)(D_003C5510.u.flags >> 8) & 1) func_002675a8(&D_003C5510.v0, &D_003C5510.a);
-    vm->sp -= 3;
-    return 2;
-}
-
-s32 func_001c8308(VM *vm) {
-    func_001c6890();
-    D_003C5510.b.x = vm->stk[vm->sp - 2] / 180.0f * 3.1415928f;
-    D_003C5510.b.y = vm->stk[vm->sp - 1] / 180.0f * 3.1415928f;
-    D_003C5510.b.z = vm->stk[vm->sp] / 180.0f * 3.1415928f;
-    func_001c6a20();
-    vm->sp -= 3;
-    return 2;
-}
-
+/* func_001c8168, func_001c8260, func_001c8308, func_001c8758, func_001c8878 and func_001c8930 are in src/camera/camera.c. */
 extern f32 D_002BBDFC;
-
-void func_001e9fe8(V4 *, V4 *);
-void func_001e9f18(V4 *, V4 *, V4 *, f32);
-void func_001c8758(void) {
-    CamOut *c = &D_003C5510;
-    V4 *f = &c->p40;
-    V4 *t = &c->p70;
-    V4 *o = &c->a;
-    V4 m, q;
-    c->t0 += D_002BBDFC;
-    if (c->u.s.dur0 < c->t0) {
-        c->t0 = c->u.s.dur0;
-        c->u.flags &= ~1;
-    }
-    func_001e9fe8(&q, &c->b);
-    func_001e9f18(&m, o, &q, c->f50);
-    o->x = f->x + (t->x - f->x) / c->u.s.dur0 * c->t0;
-    c->a.y = f->y + (t->y - f->y) / c->u.s.dur0 * c->t0;
-    c->a.z = f->z + (t->z - f->z) / c->u.s.dur0 * c->t0;
-    func_001c6a20();
-}
-
-s32 func_001c8878(VM *vm) {
-    f32 d;
-    func_001c6890();
-    D_003C5510.u.flags |= 1;
-    D_003C5510.p40.x = D_003C5510.a.x;
-    D_003C5510.p40.y = D_003C5510.a.y;
-    D_003C5510.p40.z = D_003C5510.a.z;
-    d = vm->stk[vm->sp - 3] * 2.0f;
-    D_003C5510.p70.x = vm->stk[vm->sp - 2];
-    D_003C5510.p70.y = vm->stk[vm->sp - 1];
-    D_003C5510.p70.z = vm->stk[vm->sp];
-    D_003C5510.t0 = 0.0f;
-    vm->sp -= 4;
-    D_003C5510.u.s.dur0 = d;
-    return 2;
-}
-
-static inline void inl_lerp2(V4 *f, V4 *t, f32 d, f32 s) {
-    D_003C5510.b.x = f->x + (t->x - f->x) / d * s;
-    D_003C5510.b.y = f->y + (t->y - f->y) / d * s;
-    D_003C5510.b.z = f->z + (t->z - f->z) / d * s;
-}
-void func_001c8930(void) {
-    CamOut *c = &D_003C5510;
-    c->t1 += D_002BBDFC;
-    if (c->u.s.dur1 < c->t1) {
-        c->t1 = c->u.s.dur1;
-        c->u.flags &= ~2;
-    }
-    inl_lerp2(&c->p50, &c->p80, c->u.s.dur1, c->t1);
-    do { func_001c6a20(); } while (0);
-}
 
 /* 0xB0-byte entries at D_006298F0 (D_0062A130 is entry 12). */
 typedef struct {

@@ -21,10 +21,7 @@ void func_001be820(void *p, u32 n);
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
 extern u32 D_002C5958;
-void func_0011ef10(s32, void *);
 extern f32 D_002BBDFC;
-void func_001c6a20(void);
-void func_002675a8(void *a, void *b);
 void func_001c6890(void);
 typedef struct {
     u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u32 m[8]; u8 pad76[20];
@@ -35,17 +32,8 @@ typedef struct {
     f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3];
 } Tw_c9e80;
 typedef struct { u64 flags; u8 pad[184]; V4 v192; V4 v208; } Tw_ca800;
-extern u64 D_0038CD00;
 s32 func_001c5b88(void);
-void func_001c8e20(void);
-void func_001c8758(void);
-void func_001c8930(void);
-void func_001c8c10(void);
-void func_001c8d18(void);
-void func_001c9308(void);
-void func_001c96c0(void);
 void func_001c9ac8(void);
-void func_001c9d40(void);
 void func_001c9e80(void);
 #include "data/pieces/D_0037A380.h"
 extern u8 D_00389C90[];
@@ -202,134 +190,19 @@ void func_001bfcd8(void) {
     }
 }
 
-/* func_001c5168, func_001c5b88, func_001c6720 and func_001c6890 are in src/camera/camera.c.
- * func_001c91e8 below matches only with a definition of func_001c6890 above it. */
-CONTEXT_ONLY void func_001c6890(void) {
-}
+/* func_001c5168, func_001c5b88, func_001c6720 and func_001c6890 are in src/camera/camera.c. */
 
 #define D_003C5510 (*(Tw_c9ac8 *)&D_003C5510)
-void func_001c9ac8(void) {
-    f32 t0, t1, a, u, u2, u3, d;
-    f32 *s, *e;
-    t1 = t0 = 0.0f;
-    D_003C5510.t[0] += D_002BBDFC;
-    s = &D_003C5510.start[0];
-    e = &D_003C5510.end[0];
-    switch (D_003C5510.m[2]) {
-    case 0:
-    case 3:
-        t0 = (*e - *s) / D_003C5510.dur[0];
-        break;
-    case 1:
-    case 2:
-        break;
-    }
-    switch (D_003C5510.m[2]) {
-    case 0:
-    case 2:
-        t1 = (*e - *s) / D_003C5510.dur[0];
-        break;
-    case 1:
-    case 3:
-        t1 = 0.0f;
-        break;
-    }
-    a = 0.0f;
-    if (D_003C5510.t[0] == a) {
-        D_003C5510.cur[0] = *s;
-    } else if (D_003C5510.dur[0] <= D_003C5510.t[0]) {
-        D_003C5510.cur[0] = *e;
-    } else {
-        d = D_003C5510.dur[0] - a;
-        u = (D_003C5510.t[0] - a) / d;
-        u2 = u * u;
-        u3 = u * u2;
-        D_003C5510.cur[0] = ((u3 + u3) - u2 * 3.0f + 1.0f) * *s
-            + (u3 * -2.0f + u2 * 3.0f) * *e
-            + ((u3 - (u2 + u2) + u) * t0 + (u3 - u2) * t1) * d;
-    }
-    func_001c6a20();
-    if (D_003C5510.t[0] > D_003C5510.dur[0]) D_003C5510.flags &= ~64;
-}
 #undef D_003C5510
 
 #define D_003C5510 (*(Tw_c9e80 *)&D_003C5510)
-void func_001c9e80(void) {
-    f32 t0, t1, a, u, u2, u3, d;
-    f32 *s, *e;
-    t1 = t0 = 0.0f;
-    D_003C5510.t[1] += D_002BBDFC;
-    s = &D_003C5510.start[1];
-    e = &D_003C5510.end[1];
-    switch (D_003C5510.m[3]) {
-    case 0:
-    case 3:
-        t0 = (*e - *s) / D_003C5510.dur[1];
-        break;
-    case 1:
-    case 2:
-        break;
-    }
-    switch (D_003C5510.m[0]) {
-    case 0:
-    case 2:
-        t1 = (*e - *s) / D_003C5510.dur[1];
-        break;
-    case 1:
-    case 3:
-        t1 = 0.0f;
-        break;
-    }
-    a = 0.0f;
-    if (D_003C5510.t[1] == a) {
-        D_003C5510.cur[1] = *s;
-    } else if (D_003C5510.dur[1] <= D_003C5510.t[1]) {
-        D_003C5510.cur[1] = *e;
-    } else {
-        d = D_003C5510.dur[1] - a;
-        u = (D_003C5510.t[1] - a) / d;
-        u2 = u * u;
-        u3 = u * u2;
-        D_003C5510.cur[1] = ((u3 + u3) - u2 * 3.0f + 1.0f) * *s
-            + (u3 * -2.0f + u2 * 3.0f) * *e
-            + ((u3 - (u2 + u2) + u) * t0 + (u3 - u2) * t1) * d;
-    }
-    func_001c6a20();
-    if (D_003C5510.t[1] > D_003C5510.dur[1]) D_003C5510.flags &= ~128;
-}
 #undef D_003C5510
 
 #define D_003C5510 (*(Tw_ca800 *)&D_003C5510)
 #define B(n) ((s32)(D_003C5510.flags >> (n)) & 1)
-void func_001ca800(void) {
-    if ((u32)(D_0038CD00 >> 37) % 2 == 1) {
-        func_0011ef10(99999, func_001c5b88);
-    }
-    if (B(0)) {
-        func_001c8758();
-        if (B(8)) {
-            func_002675a8(&D_003C5510.v192, &D_003C5510.v208);
-        }
-    }
-    if (B(4)) {
-        func_001c9308();
-        if (B(8)) {
-            func_002675a8(&D_003C5510.v192, &D_003C5510.v208);
-        }
-    }
-    if (B(1)) func_001c8930();
-    if (B(5)) func_001c96c0();
-    if (B(2)) func_001c8c10();
-    if (B(6)) func_001c9ac8();
-    if (B(3)) func_001c8d18();
-    if (B(7)) func_001c9e80();
-    if (B(8)) func_0011ef10(99999, func_001c8e20);
-    if (B(9)) func_001c9d40();
-}
 #undef D_003C5510
 #undef B
 
-typedef VmRec VM_c91e8;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4_c91e8;
 typedef struct {
     union {
@@ -359,23 +232,7 @@ typedef struct {
     f32 f54;
 } Cam_c91e8;
 #define D_003C5510 (*(Cam_c91e8 *)&D_003C5510)
-s32 func_001c91e8(VM_c91e8 *vm) {
-    if (vm->stk[vm->sp] > 0) {
-        func_001c6890();
-        D_003C5510.xb4 = 0;
-        D_003C5510.u.flags |= 0x100;
-        D_003C5510.r[0] = vm->stk[vm->sp - 4];
-        D_003C5510.r[1] = vm->stk[vm->sp - 3];
-        D_003C5510.r[2] = vm->stk[vm->sp - 2];
-        D_003C5510.xac = vm->stk[vm->sp - 1];
-        D_003C5510.fb0 = vm->stk[vm->sp] * 2.0f;
-        func_002675a8(&D_003C5510.v0, &D_003C5510.a);
-    } else {
-        D_003C5510.u.flags &= ~0x100;
-    }
-    vm->sp -= 5;
-    return 2;
-}
+/* func_001c91e8, func_001c9ac8, func_001c9e80 and func_001ca800 are in src/camera/camera.c. */
 #undef D_003C5510
 #include "data/data_002B.h"
 #include "data/data_002E.h"

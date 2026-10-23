@@ -31,19 +31,36 @@ typedef f32 CamVec[4] __attribute__((aligned(16)));
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(8))) CamV4q;
 
 /* D_003C5510 (0x130 bytes: the size of data/pieces/D_003C5510.h's CamS,
- * so the float keep list does not change). */
+ * so the float keep list does not change).
+ *
+ * Five tween channels, each with a duration, a time and a mode: 0 the
+ * position (p0[0] -> p1[0]), 1 the rotation (p0[1] -> p1[1]), 2 f120,
+ * 3 f124 and 4 D_0036266C (from p0[2][0..2] to p1[2][0..2]).  Bits 0-3
+ * run channel 0-3's linear tween, bits 4-7 their curved one
+ * (func_001ca800 runs them every frame), bit 8 shakes the camera around
+ * `base` (func_001c8e20, amp / smode / sdur / st), bit 9 runs channel 4
+ * (func_001c9d40).
+ *
+ * The bits share the first word with dur[0].  Some functions change them
+ * with 64-bit operations on the doubleword at 0 (`fl.x`), others with
+ * 32-bit bit-field operations (`fl.s.b4`) or 64-bit ones (`fl.w.b5`): all
+ * three are in the original, so the word is a union. */
 typedef struct {
     union {
-        u64 x;                      /* bits 0-8: tween running, per axis */
-        struct { u32 bits; f32 dur[4]; f32 x14; } s;
+        u64 x;
+        struct {
+            u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:22;
+            f32 dur[5];             /* 0x004 */
+        } s;
+        struct {
+            u64 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:54;
+        } w;
     } fl;                           /* 0x000 */
-    f32 t[4];                       /* 0x018 */
-    f32 x28;                        /* 0x028 */
-    u32 mode[4];                    /* 0x02c */
-    u8 pad3c[4];
-    CamVec p0[3];                   /* 0x040 */
-    CamVec p1[3];                   /* 0x070 */
-    f32 amp[3];                     /* 0x0a0 */
+    f32 t[5];                       /* 0x018 */
+    u32 mode[5];                    /* 0x02c */
+    CamVec p0[3];                   /* 0x040: from (p0[2]: channels 2-4) */
+    CamVec p1[3];                   /* 0x070: to */
+    f32 amp[3];                     /* 0x0a0: shake */
     s32 smode;                      /* 0x0ac */
     f32 sdur;                       /* 0x0b0 */
     f32 st;                         /* 0x0b4 */
@@ -55,9 +72,10 @@ typedef struct {
     u8 padfc[4];
     CamVec v100;                    /* 0x100 */
     CamVec v110;                    /* 0x110 */
-    f32 f120;                       /* 0x120 */
-    f32 f124;                       /* 0x124 */
+    f32 f120;                       /* 0x120: D_003C5630 */
+    f32 f124;                       /* 0x124: D_003C5634 */
     f32 f128;                       /* 0x128 */
+    f32 f12c;                       /* 0x12c: D_0036266C saved */
 } __attribute__((aligned(16))) CamState;
 
 /* src/camera/camera.c */
