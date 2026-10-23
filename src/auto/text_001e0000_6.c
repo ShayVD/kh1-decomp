@@ -39,7 +39,6 @@ s32 func_00147840(s32);
 s32 func_001ee768();
 s32 func_001efbb8();
 s32 func_00232cc0(s32);
-u32 func_001559f0(M2C_UNK, M2C_UNK);
 u32 func_001ee118();
 void func_0010bdd0(s32, s32);
 void func_0010ef70(s32, s32, s32);
@@ -54,9 +53,6 @@ void func_0022fc88(s32);
 void func_00231958(void);
 void func_00232de0(void);
 
-void func_001e01b8(void) {
-    D_003DACA0 = (Tbl_3daca0 *)(func_001559f0(0x3C, 4));
-}
 
 void func_001e13e8(s32 arg0) {
     D_0062F6D0 = arg0;

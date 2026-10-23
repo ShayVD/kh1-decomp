@@ -15,9 +15,7 @@ typedef struct {
     } u;
 } VM;
 extern u64 D_0038CD00;
-typedef struct { s32 x0; s32 n; s32 tbl[1]; } Tbl;
 #include "data/pieces/D_003DACA0.h"
-void func_001ed6b0(void *);
 s32 func_0011e340(void *);
 typedef struct { s32 a, b, c, d; } Q4;
 extern Q4 D_003DACC0;
@@ -131,10 +129,7 @@ void func_0011d350(s32, s32);
 
 
 
-s32 func_001e0318(VM *vm) {
-    if ((s32)(D_0038CD00 >> 52) & 1) return 4;
-    return 2;
-}
+/* func_001e0318 is in src/event/voice.c. */
 
 s32 func_001e16b0(VM *vm) {
     Sub *s = &vm->u.s;
