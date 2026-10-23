@@ -8,7 +8,6 @@ typedef Save_304be8 SaveM;
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
-typedef struct { u8 pad[0x10]; s32 o10; s32 o14; } MsgHdr;
 #include "data/pieces/D_003E8E28.h"
 typedef Glyph_3e8e28 Glyph;
 
@@ -54,7 +53,6 @@ typedef struct {
 typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
-extern u8 D_003E8D28[];
 #include "data/pieces/D_003F2270.h"
 extern s32 D_0063F74C;
 extern s32 D_003F1A60;
@@ -75,7 +73,6 @@ void func_001220b8(void *);
 s32 func_001efb88(void);
 u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
-u8 *func_001efc68(u8 *, u8 *, s32);
 s32 func_001eff50(s32);
 u64 *func_001f12c0(u64 *, s32, s32, s32, s32, s32, s32);
 u64 *func_001f15f0(u64 *, s32, s32, s32, s32, s32, s32);
@@ -107,12 +104,6 @@ void func_002053e8(Obj207 *, s32, s32, s32, s32, u32);
 void func_002078f0(Obj207a *, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
-
-u8 *func_001efcd8(MsgHdr *h, s32 a, s32 n);
-u8 *func_001efd20(u8 *p, s32 n);
-s32 func_001efea8(s32 id);
-s32 func_001efec8(u8 *a, u8 *b, s32 i);
-s32 func_001efee8(u8 *p);
 void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc);
 void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g);
 void func_001fd708(void);
@@ -132,89 +123,6 @@ f32 func_001f46a0(Txt *t);
 void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-u8 *func_001efcd8(MsgHdr *h, s32 a, s32 n) {
-    u8 *t = (u8 *)h + h->o14;
-    return func_001efd20(func_001efc68((u8 *)h + h->o10, t, a), n);
-}
-
-u8 *func_001efd20(u8 *p, s32 n) {
-    if (n == 0) return p;
-    for (;;) {
-        if (*p < 21) {
-            switch (*p) {
-            case 0:
-                return p;
-            case 16:
-                p++;
-                if (--n == 0) return p;
-                break;
-            default:
-                p += D_003E8D28[*p];
-                break;
-            }
-        } else {
-            p = (*p < 32) ? p + 2 : p + 1;
-        }
-    }
-}
-
-s32 func_001efdb8(u8 *p) {
-    s32 n = 0;
-    for (;;) {
-        if (*p < 21) {
-            switch (*p) {
-case 0:
- return n;
-case 2:
- p++;
- n++;
- break;
-case 16:
- return n;
-case 3:
- p += 2;
- n++;
- break;
-default:
- p += D_003E8D28[*p];
- break;
-
-            }
-        } else {
-            p = (*p < 32) ? p + 2 : p + 1;
-        }
-    }
-}
-
-s32 func_001efea8(s32 id) {
-    return func_001efee8(func_001efbb8(id));
-}
-
-s32 func_001efec8(u8 *a, u8 *b, s32 i) {
-    return func_001efee8(func_001efc68(a, b, i));
-}
-
-s32 func_001efee8(u8 *p) {
-    s32 n = 1;
-    for (;;) {
-        if (*p < 21) {
-            switch (*p) {
-            case 0:
-                return n;
-            case 16:
-                p++;
-                n++;
-                break;
-            default:
-                p += D_003E8D28[*p];
-                break;
-            }
-        } else {
-            p = (*p < 32) ? p + 2 : p + 1;
-        }
-    }
-}
 
 s32 func_001f0340(u8 *p, s32 scale) {
     s32 d = 18;

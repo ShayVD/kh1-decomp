@@ -1,31 +1,7 @@
 #include "common.h"
 
-extern u16 *D_0063F748;
-extern u8 *D_0063F744;
-
-u8 *func_001efbb8(s32 a) {
-    return D_0063F744 + D_0063F748[a - 1];
-}
-
-typedef struct { u8 pad[0x10]; s32 x10; s32 x14; } Tbl;
-
-u8 *func_001efcb0(Tbl *t, s32 a) {
-    u16 *o = (u16 *)((u8 *)t + t->x10);
-    return (u8 *)t + t->x14 + o[a - 1];
-}
-
 #include "data/types/text_001e0000_h22.h"
 #include "data/pieces/D_003E8E28.h"
-extern s32 D_003E8E2C;
-
-s32 func_001eff50(s32 a) {
-    s32 i;
-    E8E28 *e = D_003E8E28;
-    for (i = 0; i < D_003E8E2C; i++, e++) {
-        if (e->code == a) return i;
-    }
-    return 0;
-}
 
 s32 func_001f0600(s32 i, s32 b) {
     return ((D_003E8E28[i].w << 4) * b / 18) >> 4;
