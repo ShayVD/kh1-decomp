@@ -951,3 +951,27 @@ found that the next session needs:
   first, and stop it before the next copy. The Mac's disk had 2.6 GB free, so there is no room for a second ISO.
 - PCSX2 world map: the left stick moves between worlds (hold W/A 0.25-0.8 s); arrows only toggle Normal / Warp
   Drive. From End of the World: W 0.8 s (warp hole), A 0.25 s (Neverland), L, then pick a landing point.
+
+## Session 30: what changed
+
+- **reach_check path-step, arg-bound and wr-span** (`--no-path-step`, `--no-arg-bound`, `--no-wr-span`;
+  docs/shiftable-plan.md "Session 30: reach_check"): loop steps are proved over every path through the body
+  (likely-slot steps, steps in both arms, walks through a copy); an index made from an argument is bounded by
+  what every direct caller passes, only when nothing takes the function's address; indexed stores no longer
+  count their displacement twice. 1,331 -> 1,304 pinned without overlays (29 released, D_003728C0 / D_00372908
+  newly pinned). The `stored` group (func_0023aed0's Out records) is confirmed unprovable statically. Next: the
+  arg-join in analyse drops addresses held on one path only, so some events depend on visit order.
+- **Phase 4 types** (worker s30types): view casts 275 -> 217. D_002C58D0 is `FMtx4` (f32[4][4], data/types/fvec.h);
+  D_00304BE8 is down to 1 view (r2_7); D_002A6238's bit-field views are one union `Fl20_2a6238`, and D_002A62B0 /
+  D_002A6274 are `Ent20_2a6238 *`; b11's VM is VmRec with one struct VmObj. Hazard: in strict files a direct union
+  member read is alias set 0, so read bit-fields through a pointer, `(&x.f.p)->k`, when a store sits between reads.
+  `s29_retype` refuses field-name clashes; `tools/shift/s30types/s30_hdrdiff.py` checks every includer of a changed
+  header before `make`.
+- **First named module, src/vm/** (worker s30module; docs/modules.md): all 60 functions of 0x001c08e8-0x001c4ed0
+  (30 of the 32 handlers in D_0037A198, their helpers, the fetch pair, the interpreter loops, script loaders,
+  message queues and entry points) moved from 17 auto/hand files into src/vm/script_vm.c; they match together in
+  address order, so they were probably one source file. gcc 2.96 has no per-function flags, so a function needing
+  other flags goes in a sibling file named by mode: kh1.toml's src/hand/<mode>/ overrides have a `mode` key, and
+  `<name>.<mode>.c` anywhere under src/ gets that mode's flags (script_vm.nosi.c, script_vm.nostrict.c). Types come
+  from VmRec, include/vm/script_vm.h and vm_mgr.h (one VmMgr for D_00389C90 instead of ten views). Callee
+  prototypes must be copied exactly (return type, volatile). objdiff has 927 units; the float keep list is unchanged.
