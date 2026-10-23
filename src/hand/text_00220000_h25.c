@@ -10,13 +10,8 @@ typedef W606Mem_304be8 Ent74;
 #include "data/types/text_00220000_h25_p.h"
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
-
-void func_0011d768(s32);
-void func_001ba358(s32, s32);
 s32 func_001ba3f0(s32);
 void func_001ec380(s32);
-u32 func_001ef7a0();
-void func_001ef7f0(s32);
 s32 func_001f40c8(void);
 void func_001f82b0(void);
 void func_0020b998(void);
@@ -32,7 +27,6 @@ s32 func_002474a8(void);
 
 #include "data/pieces/D_00304BE8.h"
 extern u128 D_00351E10[];
-extern s32 D_003F7A64;
 extern s32 D_003F7E94;
 extern s32 D_003F7EC4;
 extern Str82A8 D_003F82A8;
@@ -44,11 +38,6 @@ extern u8 D_003FA780[];
 extern u128 D_0040EF80[];
 extern u8 D_0040E780[];
 extern u8 D_0040EB80[];
-extern s32 D_00646A18;
-extern s32 D_00646A28;
-extern s32 D_00647630;
-extern s32 D_0064763C;
-extern s32 D_00647640;
 extern s32 D_00647664;
 extern s32 D_00647668;
 extern s32 D_006476F4;
@@ -68,36 +57,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-s32 func_0022fb50(s32 arg0) {
-    if (D_00647630 == 0) return -2;
-    if (arg0 != 0) {
-        if (func_001ef7a0() > 99998) return -1;
-    }
-    return arg0;
-}
-
-void func_00230728(void) {
-    if (D_00646A18 >= 0) {
-        func_0011d768(8);
-        func_001ef7f0(D_0064763C);
-        func_001ba358(D_00646A18, D_00646A28);
-        D_00647640 += D_00646A28;
-    } else {
-        func_0011d768(4);
-    }
-    D_00646A28 = 1;
-}
-
-s32 func_002316f8(void) {
-    if (func_001f40c8() != 0) {
-        func_001f82b0();
-        func_0020b998();
-        return 0;
-    }
-    D_003F7A64 = 0;
-    return 4;
-}
 
 void func_00231a80(void) {
     s32 d = D_00647668 - D_006476F4;

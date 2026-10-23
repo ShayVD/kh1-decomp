@@ -4,138 +4,13 @@ void func_0011d768(s32);
 void func_001f3110(void);
 void *func_001f31a8(void *, s32);
 s16 *func_0011ef10(s32, void *);
-
-#include "data/pieces/D_00304BE8_s.h"
-#include "data/pieces/D_003E3D6C.h"
-extern u32 D_00646A24;
-extern s32 D_00647630;
-extern u8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
-extern s32 D_00646A30[];
-extern s32 D_00646E30[];
-extern s32 D_00647230[];
-s32 func_001ee728(s32);
-s32 func_001ef0c0(s32);
-void func_0020f290(s32 *, s32, s32);
-
-void func_0022f818(void) {
-    u32 sel = D_00646A24;
-    s32 i, n, k, c;
-    if (sel == -1) {
-        D_00647630 = 0;
-        return;
-    }
-    if (sel < D_003E3D6C) {
-        D_00647634 = &D_00304BE8->m[D_00304BE8->x48e[sel]].sub.lv;
-        n = D_00647634[0x21];
-        D_00647630 = 0;
-        for (i = 0; i < n; i++) {
-            k = *(u8 *)(i + (s32)D_00647634 + 0x22);
-            if (k != 0 && func_001ee728(k) != 0) {
-                D_00646A30[D_00647630] = k;
-                D_00646E30[D_00647630] = 1;
-                D_00647230[D_00647630++] = i;
-            }
-        }
-        return;
-    }
-    D_00647630 = 0;
-    for (i = 1; i < 256; i++) {
-        if (func_001ef0c0(i) != 0 && func_001ee728(i) != 0) {
-            c = D_00647630; D_00647630 = c + 1; D_00646A30[c] = i;
-        }
-    }
-    if (D_00647630 == 0) return;
-    func_0020f290(D_00646A30, 0, D_00647630 - 1);
-    for (i = 0; i < D_00647630; i++) {
-        k = D_00646A30[i];
-        D_00646E30[i] = func_001ef0c0(k);
-        D_00647230[i] = k;
-    }
-}
-
-extern s32 D_00646A1C;
 extern s32 D_00646A28;
-extern s32 D_00647638;
-void func_001ef7b0(s32);
 void func_0011d768(s32);
-
-void func_0022fba8(void) {
-    s32 *p = &D_00646A1C;
-    if (*p > 0) {
-        s32 *q = &D_00646A28;
-        func_0011d768(8);
-        func_001ef7b0(func_001ee728(*p) * *q);
-        if (D_00646A24 < D_003E3D6C) {
-            s32 o = (s32)D_00647634;
-            ((u8 *)(D_00647638 + o))[0x22] = 0;
-        } else {
-            D_00304BE8->items[*p] -= *q;
-        }
-        func_0022f818();
-    } else {
-        func_0011d768(4);
-    }
-    D_00646A28 = 1;
-}
-
-extern s32 D_003F7A64;
-extern s32 D_003F7A68;
-extern s32 D_00646A00, D_00646A04;
-extern s32 *D_00646A08; /* src/data/bss_0064.c: u16 *D_00646A08 */
-extern s32 *D_00646A0C;
-extern void *D_00646A10;
 extern s32 D_00646A28;
-extern s32 D_00647640, D_00647644;
-extern u8 D_003F78B0[], D_003F79E0[], D_003F7A10[], D_003F7A40[];
 void func_001f3110(void);
 void *func_001f31a8(void *, s32);
-void func_001ef830(void);
-void func_0022eee0(s32);
-void func_0022fc88(s32);
 void func_0011d768(s32);
-void func_0020bb90(s32, s32);
-void func_0020bda8(s32);
-s32 func_001eeb20(void);
 s16 *func_0011ef10(s32, void *);
-s32 func_002316f8(void);
-
-void func_00231740(s32 mode, s32 *p, s32 a2, s32 a3) {
-    if (D_003F7A64 != 0) return;
-    func_001f3110();
-    D_003F7A64 = 1;
-    D_003F7A68 = 1;
-    func_001ef830();
-    func_0022eee0(-1);
-    func_0022fc88(-1);
-    D_00646A00 = a2;
-    D_00646A04 = a3;
-    D_00646A28 = 1;
-    D_00647644 = 0;
-    func_0011d768(16);
-    func_0020bb90(544, -32);
-    func_0020bda8(16);
-    switch (mode) {
-    case 0:
-        D_00646A08 = p;
-        D_00646A0C = p + 1;
-        D_00646A10 = func_001f31a8(D_003F78B0, 6);
-        break;
-    case 1:
-        D_00646A10 = func_001f31a8(D_003F79E0, 6);
-        break;
-    case 2:
-        D_00646A08 = p;
-        D_00646A0C = p + 1;
-        D_00647640 = func_001eeb20();
-        D_00646A10 = func_001f31a8(D_003F7A10, 6);
-        break;
-    case 3:
-        D_00647640 = func_001eeb20();
-        D_00646A10 = func_001f31a8(D_003F7A40, 6);
-        break;
-    }
-    func_0011ef10(0x2BF84, func_002316f8);
-}
 
 extern s32 D_00425CD0[];
 extern s32 D_00425C08[];
@@ -698,7 +573,6 @@ s32 func_00235d70(void) {
 }
 #include "data/data_003F.h"
 #include "data/data_0042.h"
-#include "data/pieces/D_003F7A68.h"
 #include "data/pieces/D_00425C10.h"
 #include "data/pieces/D_00425C14.h"
 #include "data/pieces/D_00425CA8.h"

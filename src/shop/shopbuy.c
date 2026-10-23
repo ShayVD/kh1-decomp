@@ -1,150 +1,149 @@
-/* func_0022eef8 (hand): block A item id in idx (shared with the list loop), func_001ee708 result / x90 save in id (shared with the loop), D_00304BE8->items[idx]. */
+/* The item shop's menu, part 1 (docs/modules.md "Session 43"), 0x0022ebe8-0x0022f818:
+ * buying.  func_0022eef8 is the list of the *D_00646A08 items D_00646A0C[] for
+ * sale (price func_001ee708, munny func_001ef7a0; left / right change the
+ * count D_00646A28 up to what the munny and 99 allow), with the party's
+ * portraits along the bottom (D_003E3D6C members, D_00304BE8->x48e) and the
+ * count each holds (func_001ef140), D_00646A20 the receiver (func_0022eee0
+ * sets it and D_00647644 = 30 frames of its marker).  func_0022ebf8 checks a
+ * purchase (D_00646A18: the item, or -1 too little munny, -2 full, -3 the
+ * member cannot hold it, -4 too many; D_00647634 / D_00647638 the member and
+ * the free slot), func_0022ee08 pays (func_001ef7f0) and gives the item.
+ * D_00646A00 / D_00646A04 are the hooks of the cursor and of a purchase (set
+ * by the frame, shopframe.c).  Not proved by a boot. */
 #include "common.h"
 #include "data/bss_0064.h"
-
-typedef struct {
-    s32 magic;
-    s32 ver;
-    s32 x8;
-    s32 xC;
-    s32 x10;
-    char name[36];
-    s32 x38;
-} Save3C;
-
-typedef struct { s32 a, b, c, d; } S4;
-#include "data/pieces/D_003E8E08.h"
-typedef struct O98 {
-    u8 pad[0xc];
-    struct O98 *xc;
-    s32 x10;
-    u8 pad14[0x24 - 0x14];
-    union { s32 i; u16 h; } x24;
-    u8 p0[0x8c - 0x28];
-    s32 x8c;
-    s32 x90;
-    u8 p1[0xa0 - 0x94];
-    f32 xa0;
-    u8 p2[0xb0 - 0xa4];
-    s32 xb0;
-    s32 xb4;
-    u8 p3[0xba - 0xb8];
-    s16 xba;
-    s16 xbc;
-    s16 xbe;
-    s16 xc0;
-    s16 xc2;
-    s16 xc4;
-    s16 xc6;
-    s16 xc8;
-    s16 xca;
-    s16 xcc;
-    s16 xce;
-    u8 p5[0xd2 - 0xd0];
-    s16 xd2;
-    u8 p6[0xd8 - 0xd4];
-    s16 xd8;
-    s16 xda;
-} O98;
+#include "data/pieces/D_00304BE8_s.h"
+#include "data/pieces/D_003E3D6C.h"
 #include "data/pieces/D_00425BC8.h"
-extern s32 D_006469B0;
-extern s32 D_006469B4;
-extern u8 D_003F7210[];
-extern s32 D_003F7228[];
-extern s32 D_003F7230[];
-#include "data/pieces/D_003F7238.h"
-extern s32 D_003F7248[];
-void func_0011d768(s32);
-s32 func_001f42b8(void *);
-s32 func_001fe570(void *);
-void func_001fdfd0(void *);
-s32 func_001fd538(void *);
-s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
-void func_001f3708(void *, s32);
-void func_0020bc48(s32, s32, s32);
-void func_00201440(void *, s32, s32, s32, s32, s32, s32, void *, s32);
-void func_002066b0(void *, s32, s32, s32, s32, s32);
-void func_002053e8(void *, s32, s32, s32, s32, s32);
-void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001efbb8(s32);
-s32 func_002192f8(void);
-s32 func_00219348(void);
-s32 func_00219380(void);
-s32 func_002193b8(void);
-s32 func_002193f0(void);
-s32 func_00219428(void);
-s32 func_00219458(s32);
+#include "data/pieces/D_003F77B0.h"
+#include "data/pieces/D_003F7A68.h"
+#include "text/textwin.h"
 
-#include "data/pieces/D_003F6E40.h"
-extern s32 D_003F6F58[];
-extern s32 D_006437C0;
-extern s32 D_006437C4;
-extern s32 D_006437C8[];
-extern s32 D_006437D0[];
-extern s32 D_006437DC;
-extern s32 D_006437E4;
-extern s32 D_006450C0[];
-extern Save3C D_00645250[];
-extern void *D_00646990;
-s32 func_001ee428(s32);
-s32 func_001ee440(s32);
-void *func_001f31a8(void *, s32);
-void func_001f3758(void *);
-void func_001f3d58(void *, s32);
-void func_001f3dc0(void *);
-void func_001f3e48(void *, void *);
-void func_001f8ba8(void *);
+extern void (*D_00646A00)(s32); /* src/data/bss_0064.c: s32 D_00646A00 */
+extern void (*D_00646A04)(s32); /* src/data/bss_0064.c: s32 D_00646A04 */
+extern u16 *D_00646A08;
+extern u32 D_00646A20;
+extern s32 D_00646A28;
+extern Sub_304be8 *D_00647634; /* src/data/bss_0064.c: s32 D_00647634 */
+extern s32 D_00647638;
+extern u32 D_0064763C; /* src/data/bss_0064.c: s32 D_0064763C */
+extern s32 D_003F7780[];
+extern s32 D_003F7790[];
+extern s32 D_003F77A0[];
+
+void func_0011d768(s32);
+u32 func_001ee708(s32);
+s32 func_001ee9e0(s32);
+s32 func_001ef0c0(s32);
+s32 func_001ef140(s32, s32);
+u32 func_001ef7a0(void);
+void func_001ef7f0(s32);
+s32 func_001ef8f8(u32);
+s32 func_001f42b8(void *);
+void func_001f8ee0(void *);
 void func_001f8f30(void);
-s32 func_001f9e48(void *, s32, s32, s32, void *, s32, s32);
+s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
 s32 func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_001fbcb0(void *, s32, s32, s32, s32, s32, s32, s32);
+s32 func_001fc308(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_001fd518(void *);
 s32 func_001fd548(void *);
 s32 func_001fd590(void *);
 s32 func_001fd618(void *);
 void func_001fd858(void *);
 s32 func_001fe5a0(void *);
-void func_001ff488(void *, s32, s32, s32, s32, s32);
 void func_00202fc0(void *);
-void func_0020bd18(void *, s32);
-void func_0020be10(s32);
-void func_00229a10(void *);
-void func_00233f18(void);
-s32 func_00233f40(s32, s32);
-void func_00233ff8(s32, s32);
-
-
-#include "data/pieces/D_00304BE8_s.h"
-#include "data/pieces/D_003E3D6C.h"
-extern s32 D_003F7A68;
-extern u16 *D_00646A08;
-extern s32 *D_00646A0C;
-extern s32 D_00646A14;
-extern s32 D_00646A20; /* src/data/bss_0064.c: u32 D_00646A20 */
-extern s32 D_00646A28;
-extern s32 D_00647644;
-extern void (*D_00646A00)(s32);
-extern void (*D_00646A04)(s32);
-#include "data/pieces/D_003F77B0.h"
-extern s32 D_003F7780[];
-extern s32 D_003F7790[];
-extern s32 D_003F77A0[];
-u32 func_001ee708(s32);
-u32 func_001ef7a0(void);
-void func_0022ebf8(s32);
 void func_00205b30(void *, void *);
-s32 func_001fc308(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_001fbcb0(void *, s32, s32, s32, s32, s32, s32, s32);
-s32 func_0022edc0(s32);
-void func_0020dd38(void *, s32, s32, s32, s32, s32);
-void func_00207e20(void *, s32, s32, s32, s32);
-void func_001f8ee0(void *);
 void func_00206130(void *, s32, s32, s32, s32, s32);
-s32 func_001ef8f8(u32);
-s32 func_001ef140(s32, s32);
-s32 func_001ef0c0(s32);
+void func_00207e20(void *, s32, s32, s32, s32);
+void func_0020bc48(s32, s32, s32);
+void func_0020bd18(void *, s32);
+void func_0020dd38(void *, s32, s32, s32, s32, s32);
 void func_00242ef8(s32, s32, s32, s32 *, s32 *);
 
-void func_0022eef8(O98 *a0) {
+void func_0022ebe8(void) {
+
+}
+
+void func_0022ebf0(void) {
+
+}
+
+void func_0022ebf8(s32 idx) {
+    s32 id, i, n, r;
+    Sub_304be8 *m;
+
+    id = D_00646A0C[idx];
+    D_00646A18 = id;
+    D_0064763C = func_001ee708(id) * D_00646A28;
+    if (func_001ef7a0() < D_0064763C) goto err;
+    if (D_00646A20 < D_003E3D6C) {
+        if (D_00646A28 == 1) {
+        if (func_001ee9e0(id)) {
+            m = &D_00304BE8->m[D_00304BE8->x48e[D_00646A20]].sub;
+            D_00647634 = m;
+            n = m->x21;
+            for (i = 0; i < n; i++) {
+                if (!m->x22[i]) goto found;
+            }
+            D_00646A18 = -2;
+            return;
+        }
+        D_00646A18 = -3;
+        return;
+        }
+        D_00646A18 = -4;
+        return;
+    }
+    if (D_00304BE8->items[D_00646A18] == 99) {
+        D_00646A18 = -2;
+        return;
+    }
+    if (D_00304BE8->items[D_00646A18] + D_00646A28 >= 100) {
+        D_00646A18 = -4;
+        return;
+    }
+    D_00647634 = 0;
+    D_00647638 = D_00646A18;
+    return;
+found:
+    D_00647638 = i;
+    return;
+err:
+    D_00646A18 = -1;
+}
+
+s32 func_0022edc0(s32 arg0) {
+    u32 temp_s0;
+
+    temp_s0 = func_001ee708(arg0);
+    return (func_001ef7a0() >= temp_s0) ? arg0 : -1;
+}
+
+s32 func_0022ee08(void) {
+    s32 *p = &D_00646A18;
+    func_0022ebf8(D_00646A14);
+    if (*p > 0) {
+        func_0011d768(8);
+        func_001ef7f0(D_0064763C);
+        if (D_00646A20 < D_003E3D6C) {
+            { s32 o = (s32)D_00647634; ((u8 *)(D_00647638 + o))[0x22] = *p; }
+        } else {
+            D_00304BE8->items[*p] += D_00646A28;
+        }
+    } else {
+        func_0011d768(4);
+    }
+    D_00646A28 = 1;
+    return D_00646A18;
+}
+
+void func_0022eee0(s32 arg0) {
+    D_00646A20 = arg0;
+    D_00647644 = 0x1E;
+}
+
+void func_0022eef8(TextWin *a0) {
     s32 pos[4];
     s32 col[4];
     s32 j, idx, id, max, lim, snd, pad, sel, i, y, cnt, c, x, save, r;
@@ -156,7 +155,7 @@ void func_0022eef8(O98 *a0) {
             func_001fd858(a0);
             func_0020bd18(a0, 8);
             D_00646A14 = func_001fd548(a0);
-            if (D_00646A14 != a0->x24.i) {
+            if (D_00646A14 != a0->x24) {
                 D_00646A28 = 1;
             }
             idx = D_00646A0C[D_00646A14];
@@ -179,25 +178,25 @@ void func_0022eef8(O98 *a0) {
                 if (D_00646A28 >= 2) {
                     D_00646A28--;
                     snd = 1;
-                    a0->x24.i = D_00646A14;
+                    a0->x24 = D_00646A14;
                 } else if (D_00425BC8->x8 & 0x80000080) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
                     }
-                    a0->x24.i = D_00646A14;
+                    a0->x24 = D_00646A14;
                 }
             } else if (((D_00425BC8)->x10 & 0x20000020) && !((D_00425BC8)->x10 & 0x80000080)) {
                 if (D_00646A28 < max) {
                     D_00646A28++;
                     snd = 1;
-                    a0->x24.i = D_00646A14;
+                    a0->x24 = D_00646A14;
                 } else if (D_00425BC8->x8 & 0x20000020) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;
                     }
-                    a0->x24.i = D_00646A14;
+                    a0->x24 = D_00646A14;
                 }
             }
             if (snd) {
@@ -278,5 +277,3 @@ void func_0022eef8(O98 *a0) {
     func_001fc308(a0, 444, 316, 0, 0, 7, 0, 0x80808080, 0x80808080);
     func_001fb428(a0, 1, 0, 0, 485, 355, func_001ef0c0(D_00646A0C[D_00646A14]), 15, D_003E3D6C == D_00646A20 ? 0x80e6e6e6 : 0x80808080);
 }
-#include "data/data_003F.h"
-#include "data/pieces/D_003F7A68.h"
