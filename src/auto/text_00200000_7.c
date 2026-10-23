@@ -3,11 +3,9 @@
 #include "m2c.h"
 #include "data/bss_0064.h"
 M2C_UNK func_002073b0(M2C_UNK, void *);
-M2C_UNK func_00209e18();
 M2C_UNK func_0020a9b0(s32);
 M2C_UNK func_0020ab88(s32);
 M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_003F3258;
 extern s32 D_00640E24;
 extern s32 D_00640E28;
 #include "data/pieces/D_003E3D68.h"
@@ -15,16 +13,12 @@ s32 func_00207358(void);
 s32 func_0020ec50(s32);
 s32 func_0020f530(s32);
 s32 func_0020fc58(s32);
-void func_001f9010(s32);
-void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 void func_00206e28(void);
 void func_00206f20(void);
 void func_00206ff0(void);
 void func_002070c0(void);
 void func_002071b8(void);
 void func_00207288(void);
-void func_00208458(s32, s32, s32, s32, s32);
-void func_0020be68(s32, s32, s32);
 void func_00211398(void);
 void func_00213d30(void);
 void func_00216140(void);
@@ -33,20 +27,6 @@ void func_00219118(void);
 void func_0021adc8(void);
 void func_0021db30(void);
 void func_00229850(void);
-
-void func_0020c100(s32 arg0, s32 arg1) {
-    func_00208458(arg0, 0, 0, 0x802020A0, 1);
-    func_0020be68(arg0, 0x69, arg1);
-}
-
-void func_0020c150(void) {
-    func_00209e18();
-}
-
-void func_0020c168(s32 arg0) {
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xAE, 0xC, *(M2C_UNK *)((s8 *)(s8 *)&D_003F3258 + (D_00640E28 * 4)), 0x11, 0x80C87850);
-}
 
 void func_0020cf00(void *arg0) {
     s32 temp_s0;

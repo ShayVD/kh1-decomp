@@ -2,32 +2,6 @@
 #include "data/bss_0064.h"
 #include "data/types/text_00200000_h47.h"
 
-extern s32 D_006411E0;
-extern f32 D_006411E4;
-extern s32 D_006411E8; /* src/data/bss_0064.c: f32 D_006411E8 */
-extern f32 D_006411EC;
-extern f32 D_006411F0;
-extern f32 D_006411F4;
-extern f32 D_006411F8;
-extern f32 D_00641210;
-extern f32 D_00641214;
-
-void func_0020bc48(s32 a0, s32 a1, s32 a2) {
-    if ((a1 - (s32)D_00641210 + 1) >> 1 == 0 && (a2 - (s32)D_00641214 + 1) >> 1 == 0) {
-        D_00641210 = a1;
-        D_00641214 = a2;
-        D_006411E0 = 0;
-        return;
-    }
-    D_006411E0 = 1;
-    D_006411E4 = a0;
-    D_006411E8 = 0;
-    D_006411EC = D_00641210;
-    D_006411F0 = D_00641214;
-    D_006411F4 = a1;
-    D_006411F8 = a2;
-}
-
 #include "data/pieces/D_003F3448.h"
 extern s32 D_003F3488[];
 s32 func_001f31a8(s32, s32);

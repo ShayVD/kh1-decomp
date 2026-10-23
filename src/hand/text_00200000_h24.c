@@ -3,47 +3,8 @@
 #include "data/bss_0064.h"
 
 typedef struct { u8 pad0[0x24]; s32 f24; u8 pad[0xb0 - 0x28]; s32 b0; s32 b4; s16 b8; s16 ba; s16 bc; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; u8 pad3[10]; s16 d2; u8 pad4[6]; s16 da; } Sbbc0;
-void func_0020bb90(s32, s32);
-void func_0020bc48(s32, s32, s32);
-
-void func_0020bbc0(Sbbc0 *a0) {
-    func_0020bb90((a0->b0 + a0->c2 * (a0->da + 16) / 16 + a0->be - a0->c6 - 0x7000) >> 4,
-                  (a0->b4 + a0->c4 * a0->d2 / 16 + a0->c0 - 0x7400) >> 4);
-}
-
-void func_0020bd18(Sbbc0 *a0, s32 a1) {
-    func_0020bc48(a1, (a0->b0 + a0->c2 * (a0->da + 16) / 16 + a0->be - a0->c6 - 0x7000) >> 4,
-                  (a0->b4 + a0->c4 * a0->d2 / 16 + a0->c0 - 0x7400) >> 4);
-}
-
-extern s32 D_006411FC;
-extern f32 D_00641200;
-extern s32 D_00641204;
-extern f32 D_00641208;
-extern s32 D_0064120C; /* src/data/bss_0064.c: f32 D_0064120C */
-extern f32 D_00641218;
-
-void func_0020be10(s32 a0) {
-    D_006411FC = 2;
-    D_00641200 = a0;
-    D_00641204 = 0;
-    D_00641208 = D_00641218;
-    D_0064120C = 0;
-}
 
 #include "data/pieces/D_003E3D68.h"
-void func_00208458(s32, s32, s32, u32, u32);
-void func_0020be68(s32, s32, u32);
-
-void func_0020c070(s32 a0) {
-    u32 i;
-    s32 x = 105;
-    func_00208458(a0, 0, 0, 0x80602020, D_003E3D68);
-    for (i = 0; i < D_003E3D68; i++) {
-        func_0020be68(a0, x, i);
-        x += 79;
-    }
-}
 
 void func_001fc308(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 

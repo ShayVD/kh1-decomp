@@ -8,15 +8,8 @@ M2C_UNK func_0020b998();
 M2C_UNK func_0020d2a0();
 M2C_UNK func_002336f8();
 M2C_UNK func_002365e0();
-extern f32 D_00641218;
 extern s32 D_003F34C8;
-extern s32 D_006411FC;
 s32 func_001f40c8();
-
-void func_0020bdf0(void) {
-    D_006411FC = 1;
-    D_00641218 = 128.0f;
-}
 
 s32 func_0020d2f8(void) {
     if ((func_001f40c8() != 0) || (D_003F34C8 != 0)) {
