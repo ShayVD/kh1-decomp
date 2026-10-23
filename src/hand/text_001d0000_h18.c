@@ -21,12 +21,8 @@ typedef struct {
     u8 pad2f4[0x34];
     union { u64 x; s32 i[2]; } flags;
 } VM;
-typedef struct {
-    u8 pad0[0x3070];
-    union { u64 x; s32 i[2]; } f3070;
-    union { u64 x; s32 i[2]; } f3078;
-} Big;
-extern Big D_00389C90;
+#include "vm/vm_mgr.h"
+extern VmMgr D_00389C90;
 typedef union { u64 x; struct { u32 lo; u32 b0:29; u32 b29:1; u32 b30:1; u32 b31:1; } b; } F64;
 extern F64 D_0038CD00;
 void func_0013c108(s32, s32);
@@ -66,13 +62,11 @@ s32 func_001d7820(void) {
     if (D_0038CD00.b.b30) return 4;
     return 2;
 }
-typedef struct { s32 key; u8 pad[8]; s32 val; u8 pad2[8]; } E18;
-typedef struct { u8 pad0[0x3384]; E18 e[8]; } Big2;
 s32 func_001d7840(VM *vm) {
     s32 i;
     for (i = 0; i < 8; i++) {
-        if ((s32)vm->obj == ((Big2 *)&D_00389C90)->e[i].key) {
-            ((Big2 *)&D_00389C90)->e[i].val = vm->stk[vm->sp];
+        if ((s32)vm->obj == D_00389C90.e[i].obj) {
+            D_00389C90.e[i].ret = vm->stk[vm->sp];
         }
     }
     vm->sp--;
