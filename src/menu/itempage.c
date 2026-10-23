@@ -1,12 +1,25 @@
+/* The item page's frame (docs/modules.md "Session 40"), 0x002106b8-0x002113f0:
+ * the end of page 0 of the top menu.  func_002106b8 is the callback of its
+ * first window (descriptor D_003F3AB0): by the state D_00641224 it opens the
+ * list, slot and stock windows of src/menu/items.c, itemslots.c and
+ * itemstock.c (descriptors D_003F3980 ... D_003F3A80) and draws the help
+ * lines; func_002112c8 draws the page title (message 0x69), func_002112f8
+ * opens the page (topmenu.c's D_003F32E8[0]), func_00211358 sets it up and
+ * func_00211398 resets its cursors (func_0020d530's / func_0020d748's lists).
+ *
+ * PageWin is this file's view of a TextWin (include/text/textwin.h).  It
+ * stays: TextWin's +0xd0 is a union (any union access reorders
+ * func_002106b8) and its +0x24 / +0x28 / +0x2c are s32 (as s32 the stores
+ * there move: the alias set changes). */
 #include "common.h"
-#include "data/bss_0064.h"
+#include "data/pieces/D_00304BE8_s.h"
+#include "data/pieces/D_003E3D68.h"
 
-/* rodata: jump tables at 0x00490e30. Matched from session-9 r2_7 draft + a dead `n = D_003E3D68;` in the case-4 arm (gives gcse a partially available hi(D_003E3D68), so PRE puts lui s5 in both arms). */
-typedef struct Ob Ob;
-struct Ob {
+typedef struct PageWin PageWin;
+struct PageWin {
     u8 pad0[0x24];
-    Ob *x24, *x28;
-    Ob *x2c;
+    PageWin *x24, *x28;
+    PageWin *x2c;
     u8 pad30[0x70 - 0x30];
     s32 x70;
     u8 pad74[0x88 - 0x74];
@@ -24,50 +37,34 @@ struct Ob {
     u8 padd4[0xd8 - 0xd4];
     s16 xd8, xda;
 };
-typedef struct { s32 x0, x4; } B50;
-typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
-typedef struct { u8 pad[4]; Sub sub; } Rec74;
-#include "data/pieces/D_00304BE8_s.h"
-#include "data/pieces/D_003E3D68.h"
-extern u8 D_003F3980[], D_003F39C0[], D_003F39F0[], D_003F3A20[], D_003F3A50[], D_003F3A80[];
-extern s32 D_00641224;
-extern s32 D_00641228;
-extern s32 D_0064122C;
-extern s32 D_00641234;
-extern s32 D_00641238;
-extern s32 D_0064123C;
-extern s32 D_00641240;
-extern s32 D_00641248;
-extern B50 D_00641250;
-extern u16 D_00641258; /* src/data/bss_0064.c: s32 D_00641258 */
-extern u16 D_0064125C; /* src/data/bss_0064.c: s32 D_0064125C */
-extern u16 D_00641260; /* src/data/bss_0064.c: s32 D_00641260 */
-extern u16 D_00641264; /* src/data/bss_0064.c: s32 D_00641264 */
-extern u16 D_00641268; /* src/data/bss_0064.c: s32 D_00641268 */
-extern u16 D_0064126C; /* src/data/bss_0064.c: s32 D_0064126C */
-extern u16 D_00641270; /* src/data/bss_0064.c: s32 D_00641270 */
-extern u16 D_00641274; /* src/data/bss_0064.c: s32 D_00641274 */
-extern s32 D_00641388;
-s32 func_001f42b8(Ob *);
-Ob *func_001f31a8(void *, s32);
-void func_001f3e48(Ob *, Ob *);
-void func_001f3dc0(Ob *);
+
+extern u8 D_003F3980[], D_003F39C0[], D_003F39F0[], D_003F3A20[], D_003F3A50[], D_003F3A80[], D_003F3AB0[];
+extern PageWin *D_00641220;
+extern s32 D_00641224, D_00641228, D_0064122C, D_00641234, D_00641238, D_0064123C;
+extern s32 D_00641240, D_00641248, D_00641388;
+extern u32 D_00641250[];
+extern s32 D_00641258, D_0064125C, D_00641260, D_00641264, D_00641268, D_0064126C, D_00641270, D_00641274;
+
 s32 func_001ebea8(void);
-void func_001f40a0(Ob *, s32);
-s32 func_001fd518(Ob *);
+s32 func_001ee5f0(s32);
+s32 func_001efbb8(s32);
+PageWin *func_001f31a8(void *, s32);
+void func_001f3dc0(PageWin *);
+void func_001f3e48(PageWin *, PageWin *);
+void func_001f40a0(PageWin *, s32);
+s32 func_001f42b8(PageWin *);
+s32 func_001fd518(PageWin *);
+void func_00206690(PageWin *, s32, s32, s32);
+void func_00207830(PageWin *, s32, s32, s32, s32, s32, s32);
+void func_00207870(PageWin *, s32, s32, s32, s32, s32, s32);
+void func_0020dd38(PageWin *, s32, s32, s32, s32, s32);
 void func_0020eb98(void);
 void func_0020f3c8(void);
 void func_0020fbe0(void);
-void func_00206690(Ob *, s32, s32, s32);
-void func_00207870(Ob *, s32, s32, s32, s32, s32, s32);
-void func_00207830(Ob *, s32, s32, s32, s32, s32, s32);
-void func_0020dd38(Ob *, s32, s32, s32, s32, s32);
-s32 func_001ee5f0(s32);
-s32 func_001efbb8(s32);
 
-/* rodata */
-void func_002106b8(Ob *o) {
-    Ob *w[3];
+/* rodata: jump tables at 0x00490e30.  The dead `n = D_003E3D68;` in the case-4 arm gives gcse a partially available hi(D_003E3D68), so PRE puts lui s5 in both arms. */
+void func_002106b8(PageWin *o) {
+    PageWin *w[3];
     s32 n;
     u32 sel;
     s32 shift;
@@ -84,7 +81,7 @@ void func_002106b8(Ob *o) {
                 shift = 0;
                 n = D_003E3D68 + 1;
                 n += func_001ebea8();
-                sel = D_00641250.x0;
+                sel = D_00641250[0];
             } else {
                 w[0]->xb4 += 448;
                 shift = 1;
@@ -92,18 +89,18 @@ void func_002106b8(Ob *o) {
                 else n = D_003E3D68 + 1;
                 switch (D_00641238) {
                 case 0:
-                    if (D_00641228 == -1) D_00641250.x4 = 0;
-                    else D_00641250.x4 = D_00641250.x0;
+                    if (D_00641228 == -1) D_00641250[1] = 0;
+                    else D_00641250[1] = D_00641250[0];
                     n = D_003E3D68;
                     break;
                 case 1:
-                    D_00641250.x4 = 0;
+                    D_00641250[1] = 0;
                     break;
                 case 2:
-                    D_00641250.x4 = D_003E3D68;
+                    D_00641250[1] = D_003E3D68;
                     break;
                 }
-                sel = D_00641250.x4;
+                sel = D_00641250[1];
             }
             w[0]->xd2 = sel * 16;
             w[0]->xcc = n;
@@ -118,16 +115,16 @@ void func_002106b8(Ob *o) {
                 if (w[2] != 0) {
                     func_001f3e48(w[2], w[1]);
                     if (sel < D_003E3D68) {
-                        w[2]->xd0 = D_00641258 * 16;
-                        w[2]->xd2 = D_0064125C * 16;
+                        w[2]->xd0 = (u16)D_00641258 * 16;
+                        w[2]->xd2 = (u16)D_0064125C * 16;
                         w[2]->xb8 = 0xa60;
                         w[2]->xd8 = 1;
                         w[2]->xc2 = 0xa60;
                         w[2]->x88 &= ~1;
                     } else if (sel == D_003E3D68) {
-                        w[2]->xd0 = D_00641260 * 16;
-                        w[2]->xd2 = D_00641264 * 16;
-                        w[2]->xda = D_00641268 * 16;
+                        w[2]->xd0 = (u16)D_00641260 * 16;
+                        w[2]->xd2 = (u16)D_00641264 * 16;
+                        w[2]->xda = (u16)D_00641268 * 16;
                         w[2]->xd8 = 2;
                         w[2]->xb8 = 0x14c0;
                         w[2]->xc2 = 0xa60;
@@ -135,8 +132,8 @@ void func_002106b8(Ob *o) {
                         w[2]->x70 = 4;
                         w[2]->xc6 = 0;
                     } else {
-                        w[2]->xd0 = D_0064126C * 16;
-                        w[2]->xd2 = D_00641270 * 16;
+                        w[2]->xd0 = (u16)D_0064126C * 16;
+                        w[2]->xd2 = (u16)D_00641270 * 16;
                         w[2]->xb8 = 0xa60;
                         w[2]->xd8 = 1;
                         w[2]->xc2 = 0xa60;
@@ -147,8 +144,8 @@ void func_002106b8(Ob *o) {
                         w[2]->xba -= 448;
                     }
                     func_001f40a0(w[2], 0x40000000);
-                    w[2]->x24 = (Ob *)sel;
-                    w[2]->x2c = (Ob *)D_00641224;
+                    w[2]->x24 = (PageWin *)sel;
+                    w[2]->x2c = (PageWin *)D_00641224;
                 }
             }
             func_001f3dc0(w[0]);
@@ -161,23 +158,23 @@ void func_002106b8(Ob *o) {
             func_001f3e48(w[0], o);
             if (D_00641224 == 1) {
                 shift = 0;
-                sel = D_00641250.x0;
+                sel = D_00641250[0];
             } else {
-                sel = D_00641250.x4;
+                sel = D_00641250[1];
                 n = D_003E3D68;
                 shift = 1;
             }
             if (sel < D_003E3D68) {
-                w[0]->xd0 = D_00641258 * 16;
-                w[0]->xd2 = D_0064125C * 16;
+                w[0]->xd0 = (u16)D_00641258 * 16;
+                w[0]->xd2 = (u16)D_0064125C * 16;
                 w[0]->xb8 = 0xa60;
                 w[0]->xd8 = 1;
                 w[0]->xc2 = 0xa60;
                 w[0]->x88 &= ~1;
             } else if (sel == D_003E3D68) {
-                w[0]->xd0 = D_00641260 * 16;
-                w[0]->xd2 = D_00641264 * 16;
-                w[0]->xda = D_00641268 * 16;
+                w[0]->xd0 = (u16)D_00641260 * 16;
+                w[0]->xd2 = (u16)D_00641264 * 16;
+                w[0]->xda = (u16)D_00641268 * 16;
                 w[0]->xd8 = 2;
                 w[0]->xb8 = 0x14c0;
                 w[0]->xc2 = 0xa60;
@@ -185,8 +182,8 @@ void func_002106b8(Ob *o) {
                 w[0]->x70 = 4;
                 w[0]->xc6 = 0;
             } else {
-                w[0]->xd0 = D_0064126C * 16;
-                w[0]->xd2 = D_00641270 * 16;
+                w[0]->xd0 = (u16)D_0064126C * 16;
+                w[0]->xd2 = (u16)D_00641270 * 16;
                 w[0]->xb8 = 0xa60;
                 w[0]->xd8 = 1;
                 w[0]->xc2 = 0xa60;
@@ -197,9 +194,9 @@ void func_002106b8(Ob *o) {
                 w[0]->xba -= 448;
             }
             func_001f40a0(w[0], 0x40000000);
-            w[0]->x24 = (Ob *)sel;
-            w[0]->x28 = (Ob *)1;
-            w[0]->x2c = (Ob *)D_00641224;
+            w[0]->x24 = (PageWin *)sel;
+            w[0]->x28 = (PageWin *)1;
+            w[0]->x2c = (PageWin *)D_00641224;
             func_001f40a0(w[0], 0x60000000);
             w[1] = func_001f31a8(D_003F39F0, 6);
             if (w[1] == 0) break;
@@ -210,11 +207,11 @@ void func_002106b8(Ob *o) {
             w[0] = func_001f31a8(D_003F39C0, 6);
             if (w[0] == 0) break;
             func_001f3e48(w[0], o);
-            w[0]->xd2 = D_00641274 * 16;
+            w[0]->xd2 = (u16)D_00641274 * 16;
             w[1] = func_001f31a8(D_003F3980, 6);
             if (w[1] == 0) break;
             func_001f3e48(w[1], w[0]);
-            w[1]->x24 = (Ob *)func_001fd518(w[0]);
+            w[1]->x24 = (PageWin *)func_001fd518(w[0]);
             func_001f3dc0(w[0]);
             break;
         case 5:
@@ -316,4 +313,40 @@ void func_002106b8(Ob *o) {
         break;
     }
 }
-#include "data/data_003F.h"
+
+void func_002112c8(PageWin *o) {
+    func_00207830(o, 4, 2, 0, 0, 0x7A, 0x69);
+}
+
+void func_002112f8(PageWin *o) {
+    PageWin *w = func_001f31a8(D_003F3AB0, 0);
+    if (w != 0) {
+        func_001f3e48(w, o);
+    }
+    D_00641220 = o;
+    D_00641224 = 0;
+    func_0020eb98();
+    func_0020f3c8();
+    func_0020fbe0();
+}
+
+/* Keeps the list cursor within the party and the stock. */
+void func_00211358(void) {
+    s32 n = D_003E3D68 + func_001ebea8();
+    if (n < (s32)D_00641250[0]) {
+        D_00641250[0] = n;
+    }
+}
+
+void func_00211398(void) {
+    D_00641250[0] = 0;
+    D_00641250[1] = 0;
+    D_00641258 = 0;
+    D_0064125C = 0;
+    D_00641260 = 0;
+    D_00641264 = 0;
+    D_00641268 = 0;
+    D_0064126C = 0;
+    D_00641270 = 0;
+    D_00641274 = 0;
+}

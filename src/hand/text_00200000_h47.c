@@ -13,78 +13,10 @@ void func_0011d768(s32);
 s32 func_001f42b8(void);
 s32 func_001fe570(Obj7d8 *);
 void func_0020bd18(Obj7d8 *, s32);
-#include "data/pieces/D_00304BE8_s.h"
-
-extern s32 D_00641BAC;
-extern s32 D_00641C10[];
-extern s32 D_00642010[];
-extern s32 D_00642410;
-s32 func_001ef270(s32, s32);
-void func_0020f290(s32 *, s32, s32);
-
-void func_00211da0(void) {
-    s32 i;
-    D_00642410 = 0;
-    for (i = 1; i < 256; i++) {
-        if (D_00304BE8->items[i] != 0 && func_001ef270(i, D_00641BAC) != 0) {
-            D_00641C10[D_00642410] = i;
-            D_00642410++;
-        }
-    }
-    func_0020f290(D_00641C10, 0, D_00642410 - 1);
-    for (i = 0; i < D_00642410; i++) {
-        D_00642010[i] = D_00304BE8->items[D_00641C10[i]];
-    }
-}
-
-extern s32 D_00641BC4;
-extern s32 D_00641BD0;
-extern s32 D_00641BD4;
-extern s32 D_00641BF0[];
 extern s32 D_00641C10[];
 extern s32 D_00642410;
-
-void func_002122b8(void) {
-    s32 i;
-    s32 n;
-    s32 k = D_00641BD0 + D_00641BD4;
-    if (D_00642410 >= k && D_00641BF0[D_00641BC4] == D_00641C10[k]) return;
-    for (i = 0; i < D_00642410; i++) {
-        if (D_00641C10[i] == D_00641BF0[D_00641BC4]) {
-            n = D_00642410;
-            if (n < 7) {
-                D_00641BD0 = 0;
-                D_00641BD4 = i;
-                return;
-            }
-            n -= 7;
-            if (i < n) {
-                D_00641BD0 = i;
-                D_00641BD4 = 0;
-                return;
-            }
-            D_00641BD0 = n;
-            D_00641BD4 = i - n;
-            return;
-        }
-    }
-}
-
-extern s32 D_00642CA8[];
-extern s32 D_00642CC8;
-s32 func_0013c188(s32, s32);
-
-void func_00216280(void) {
-    s32 i;
-    D_00642CC8 = 0;
-    for (i = 0; i < 7; i++) {
-        if (func_0013c188(0, i) != 0) {
-            D_00642CA8[D_00642CC8++] = i;
-        }
-    }
-    D_00642CA8[D_00642CC8] = 7;
-    D_00642CC8++;
-}
+extern s32 D_00641C10[];
+extern s32 D_00642410;
 
 typedef struct { u8 pad[0xd2]; s16 xd2; } Oac38;
 extern u8 D_003F4BF0[];

@@ -6,15 +6,7 @@ M2C_UNK func_0021af38(s32);
 M2C_UNK func_0021b800(s32);
 M2C_UNK func_0021b820();
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-#include "data/pieces/D_003E3D68.h"
-extern u32 D_00642C58;
 #include "data/pieces/D_003F34B8.h"
-
-void func_00216118(void) {
-    if ((u32) D_003E3D68 < (u32) D_00642C58) {
-        D_00642C58 = D_003E3D68;
-    }
-}
 
 s32 func_002192c0(void) {
     return M2C_FIELD(D_003F34B8, s32 *, 4);

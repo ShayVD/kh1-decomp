@@ -1025,6 +1025,86 @@ warnings in the new files), and the m12 float build with float_covered.txt,
 float_reach.txt, the loaded bytes and the symbols the same as the base.  At
 the end `make report` 6979 at 100% and `make test` passes.
 
+## Session 40: the menu pages, 0x002106b8-0x00219128
+
+Session 40 moved 86 functions in five chunks, one commit each (and a sixth
+that moved the abilities page's bss and deleted the empty b14), into
+src/menu/.  No Mac: static checks only.  Every page ends the same way: its
+first window's callback, the title (func_00207830(o, 4, 2, 0, 0, 122,
+message)), the open function (topmenu.c's D_003F32E8[page]), set up and
+reset (func_0020d530's / func_0020d748's lists).  That is where each split was
+made.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the item page's frame (page 0): its first window D_003F3AB0 (the state D_00641224 opens the list, slot and stock windows), title, open, set up, reset | src/menu/itempage.c (5) | 0x002106b8-0x002113f0 | 5 |
+| the equipment page (page 1, message 0x6a): the member list, the slot list (weapon row + Sub_304be8 +0x18 accessory slots), the weapon list (D_00641C10, func_001ef270) and accessory list (D_00642418, func_001ef370), the stat comparisons, the party model's weapon swap | src/menu/equip.c (24), equip.n32.c (1), equip.nogcse.c (1), equip.nostrict.c (1) | 0x002113f0-0x00213d80 | 27 |
+| the abilities page (page 2, message 0x6b): the member list, a member's abilities (Sub_304be8 +0x40) or the shared ones (Save +0x599), equip / remove / move, the sort keys D_003F3DE0 and the sort | src/menu/abilities.c (22), abilities.n32.c (2), abilities.nosi.c (1), abilities.nogcse.c (1), abilities.nostrict.c (1) | 0x00213d80-0x00216180 | 27 |
+| the customize page (page 3, message 0x6c): the three shortcuts (Save +0x844, the magic list D_00642CA8) and the party members' behaviour (D_003F40F8 settings, presets D_003F41E8 / D_003F4200, style D_003F34B8->a[member]) | src/menu/customize.c (17), customize.nostrict.c (2) | 0x00216180-0x00218020 | 19 |
+| the status page (page 4, message 0x6d): the member list, the tab list D_00642CF0 and the tabs (stats, equipment, items, abilities by 12, magic) | src/menu/status.c (8) | 0x00218020-0x00219128 | 8 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x002106b8-0x002113f0 | 2bbe569 | s10_w11 |
+| 0x002113f0-0x00213d80 | 448347e | b13, s7_w16, s10_r2_7, auto text_00210000_13 |
+| 0x00213d80-0x00216180 | 46b4a9b | h70, s6_21, auto text_00210000_5; n32/s6_21, nogcse/s6_21, nosi/s11_w44 moved (git mv) |
+| 0x00216180-0x00218020 | d73a13e | s12_s12w12, s8_w1, nostrict/s11_w35, auto text_00210000_8 _9; nostrict/h70 moved (git mv) |
+| 0x00218020-0x00219128 | edcf650 | s7_w17, auto text_00210000_14 |
+| bss | 6ab24bc | b14 (only bss and a static inline left) |
+
+objdiff units 795 -> 788.  The page names (equipment, abilities, customize,
+status) come from what the code reads (weapon kinds, AP costs, the magic
+shortcuts and party behaviour, the stat tabs); none is proved by a boot.
+
+**Data moved with its users**: D_003F3DE0 (the sort keys, from h70) and
+D_00642C34 ... D_00642C50 (from b14) into abilities.c, D_00642D10 /
+D_00642D14 (from h71) into status.c.
+
+**Struct findings.**
+- **Sub_304be8 +0x40** (`name[0x30]` in D_00304BE8_s.h) holds a member's
+  abilities, one byte each (bit 0x80: equipped; func_001ef3a0 and
+  func_00214a68 count the entries up to 48), not a name.  **Save +0x599**
+  (`list599[0x30]`) is the shared abilities list, **Save +0x844** (`x844[3]`)
+  the three shortcuts (func_0013c270 / func_0013c288).  Sub_304be8 +0x18 is
+  the accessory-slot count with the accessories at +0x19, the weapon at
+  +0x32 (`D_00641BB0->x19[i - 1]` matches func_00212c20 where
+  `(&->x18)[i]` does not).  The fields keep their names for now (a rename
+  touches every user).
+- D_00641BB0 (equip) is `Sub_304be8 *`; two old views used it as an s32
+  offset beside the s32 slot index D_00641BB4: the bodies cast
+  (`(u8 *)D_00641BB4 + (s32)D_00641BB0`), which keeps the code.
+
+**Traps.**
+- **A union access in TextWin reorders**: TextWin's +0xd0 is the union
+  `ud0`; func_002106b8, func_00212cc0, func_002134c8, func_00214b20,
+  func_00214fc8, func_00215420, func_00215838 and the customize windows keep
+  views with plain s16 / u16 +0xd0 / +0xd2 (PageWin, WinU16, WinS16, AbWin,
+  WinP24, CuWin*).  A pointer at +0x24 (PageWin, WinP24, CuWin, StWin) is
+  also kept: as s32 the stores there move.
+- **The return type of a callee whose result is unused still matters**:
+  func_002066b0 declared s32 gives func_002119a8 v1 for v0 (2 words);
+  customize.c needs func_001f9438 s32 for func_00216890 (the others take
+  either).
+- **An implicit declaration changes registers**: func_00216180 calls
+  func_002161e8 defined below it; without a prototype (implicit int) 2 words
+  differ.  Declare every callee.
+- func_0020a6c0 / func_0020a728 take one argument (partymdl.h), but
+  func_00211840 has the window in a1: equip.c declares them `void f();`
+  (K&R), as the old files called them both ways.  func_002122b8 is defined
+  with an unused `void *` because its callers pass the window.
+- func_00215358 and func_002160a8 are void now (the auto drafts returned the
+  callee's value; same code).  D_00641BC4 and D_00642D18 need no `volatile`
+  (the auto drafts had it).
+- The FLAGGED dead code of func_00214a68 (abilities.nosi.c) and
+  func_00217000 (customize.nostrict.c) moved as it was.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings (and no
+warnings in the new files), and the m12 float build with float_covered.txt
+(the same set; one line changes place), float_reach.txt, the loaded bytes
+and the symbols the same as the base.  At the end, with data_owners.py
+rerun, the same; `make report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1121,7 +1201,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 39, after each step)
+## Verification (sessions 30 to 40, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1137,28 +1217,27 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x00210000 on: the pages.**  The top menu's pages start here: page 0 (the
-  item page) goes on to its open function func_002112f8, set up func_00211358
-  and reset func_00211398; the other pages' open functions are func_00213c90,
-  func_002160a8, func_00217f58, func_00218f88, func_0021daa0 (page 5),
-  func_0021ad08 (page 6) and func_002293f0 (topmenu.c's D_003F32E8; the set up
-  / reset lists of func_0020d530 / func_0020d748 name one more function per
-  page).  Where each page's code starts is not settled: split by refs.py.
-  Old files: auto text_00210000*, s10_w11, n32 / nogcse s6_21, b13, b14,
-  s10_r2_7, s7_w16, c15 and what is left of h24, h47, h70.  Move page 0's
-  rest into src/menu/items*.c first (it uses D_00641220 ... D_00641BC4 like
-  items.c), then one module per page.
-  `python3 -I tools/shift/s37move/refs.py 00210000 00214000` lists them.
-- What is left of h24, h47, h70, b13 and s7_w19 after that (s7_w15 is now
-  src/menu/itemstock.c).
+- **0x00219128 on: the rest of the pages.**  Pages 0 to 4 are done
+  (session 40).  Next: the accessors of D_003F34B8 (the settings block:
+  0x00219128 ... about 0x00219400, tiny get / set functions in auto
+  text_00210000*, h24), then pages 6 (open func_0021ad08) and 5 (open
+  func_0021daa0; page 5 is in D_00640E00 only when func_001ec510), and page
+  7 (func_002293f0, far on).  Split each page where its title / open / set
+  up / reset end it.  Old files there: auto text_00210000* and
+  text_00220000*, h24, h47, h71, h72, s6_22, c15, b15, h25, cc, h48, c16,
+  nostrict/b14 ...; `python3 -I tools/shift/s37move/refs.py 00219128
+  0021e000` lists them.
+- What is left of h24, h47 and h71 after that (h70, b13, b14 are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
   and `mod.py remove func...` deletes the definitions and the declarations
-  only they used (prints EMPTY / NOTE lines).  Sessions 36 to 39 used it for every
+  only they used (prints EMPTY / NOTE lines).  Sessions 36 to 40 used it for every
   chunk; the checklist below still applies.  It does not copy `static inline`
   helpers (inl_sc) and does not call a file EMPTY while one is left: delete
-  such files by hand (session 38: s11_w50, s6_19, c13, s8_w12).
+  such files by hand (session 38: s11_w50, s6_19, c13, s8_w12; session 40:
+  s10_r2_7, b14).  It does not move data definitions either: move a
+  `TYPE D_X ALIGNED(n);` its functions own by hand.
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it
   (harmless; a `void` one would conflict, none does).
