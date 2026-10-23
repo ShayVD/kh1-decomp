@@ -39,7 +39,6 @@ extern s32 D_003DD258;
 extern s32 D_003DD28C;
 f32 func_001edc50(s32);
 f32 func_001edcd8(f32);
-s32 func_00123488(s32);
 s32 func_001efc68();
 #include "vm/script_vm.h"
 void memset(s32, s32, s32);
@@ -88,20 +87,7 @@ void func_001e9dc8(s32 arg0, void *arg1, s32 arg2) {
     func_00267518(arg0, arg0, arg2);
 }
 
-s32 func_001ea580(void *arg0) {
-    u8 temp_v0;
-
-    M2C_FIELD(arg0, s32 *, 0) = (s32) M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184);
-    temp_v0 = M2C_FIELD(arg0, u8 *, 2);
-    if (temp_v0 == 1) {
-        M2C_FIELD(arg0, u8 *, 2) = 0U;
-    } else if (temp_v0 == 0) {
-        M2C_FIELD(arg0, u8 *, 2) = 1U;
-    }
-    M2C_FIELD(arg0, s32 *, 4) = func_00123488(M2C_FIELD(arg0, s32 *, 0));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
+/* func_001ea580 is in src/vm/vm_ent.c. */
 
 void func_001ee470(void) {
     func_00111be8();
