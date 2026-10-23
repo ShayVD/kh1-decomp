@@ -3203,3 +3203,70 @@ and float_covered.txt is the same as the base.
 - `s31_tag.py`: gives a file's view a shared incomplete tag and drops the casts.
 - `s31_merge.py`: merges a file's second views by stabs offset.
 - `s31_warndiff.py`: lists new warnings against HEAD.
+
+## Session 32: reach_check (worker s32reach)
+
+reach_check pins **1,362** names (was 1,358; both without the overlays, `SHIFT_OVERLAYS=` an empty directory):
+**4 newly pinned, none released**. The default float build floats **2,043** names (was 2,047; all four had floated),
+links and passes M12-FLOAT and keep_check (39/39). `make` is unchanged (byte-identical), `make test` passes. With
+`--no-multi-base --no-sign-prune --no-shadow-image --no-arg-drop` float_reach.txt *and* float_reach.log are
+byte-identical to the session 31 code's (`--no-multi-base` alone already gives the same names; widen-bases needs
+multi-base, so it is off with it).
+
+### The rules (each `--no-RULE` in SHIFT_REACH_FLAGS brings back the session 31 answer)
+
+| rule (switch) | names | what it does |
+| --- | --- | --- |
+| multi-base (`--no-multi-base`) | 4 newly pinned | The D_003F4C90 gap. func_00219f98 picks D_003F4C68 or D_003F4C78 (a SET) and adds `k * 8` with k loaded: SET + index (and a join of two indexed bases) became one IDX from the lowest base, so the unbounded index tied D_003F4C68 to D_003F4C78 and D_003F4C78 to nothing. An IDX made from a choice now carries the other bases (5th element, `_mkidx`); every access, `stored`, `wr`, `passidx` and `argidx` through it is reported from each base, to the same end. A loop head's join (a walk: D, D + stride) adds no base, and neither does an address inside the other side's bounded range (a walk position some orders visit before the loop's states are joined). For an unbounded IDX `_covers` asks for the base itself (an index from B ties B to *its* next name). |
+| widen-bases (`--no-widen-bases`) | 0 (order) | A shadow register widened after SHADOW_MAX values keeps every base it saw (minus walk positions). func_0021d348 leaves one of six state words in t3 at its calls; the widened value kept the lowest, so D_003F34E4 ... D_003F3520 were pinned only in the default order. |
+| sign-prune (`--no-sign-prune`) | 0 (order) | bltz/bgez/blez/bgtz (and likely forms) on an exact value take one edge. func_00169f28 `best = -1; ...; if (best >= 0) f(&D_00575090[best])`: an order that reached the test with -1 passed &D[-1] and pinned D_00575080 / D_00575088. |
+| shadow-image (`--no-shadow-image`) | 0 (termination) | Only an image address gets a shadow visit (main drops every event from other values). |
+| arg-drop (`--no-arg-drop`) | 0 (termination) | Two offsets of an argument join to nothing (a walk), but the next arrival joined with nothing came back as the argument (arg-join), so a point could alternate forever; after ARG_DROP_MAX (8) drops at a point it stays dropped. With the session 31 code **`--visit-seed 4` and `6` never ended** (func_0025632c, memchr: 0xFFFFFFFF in v1 got shadows that each carried a new argument offset). |
+
+tests/reach_check_test.py: case 17 (multi-base: SET + index and a join of two indexed values, both bases in 16
+orders; a walk position is not a base; a loop walk's steps are not bases), 18 (sign-prune), 19 (widen-bases), 20
+(a memchr-shaped function that the old code did not finish for seeds 4, 22, 25, 28 of 32); case 3 now stores both
+addresses with `joins=False`.
+
+### Newly pinned (4) and released (none)
+
+| name | function | why |
+| --- | --- | --- |
+| D_003F4C90 | func_00219f98 | D_003F4C78[k * 2 (+1)], k loaded (the gap) |
+| D_003C21A0 | func_001c3408, func_001c3770 | an unbounded index from D_003B4DA0 (session 31 listed it as "default only") |
+| D_002BD170 | func_00115600 & co (6) | an unbounded index from D_002BD160, chosen with D_002BD150 |
+| D_00454700 | func_0023d528 | an unbounded index from it (one of several tables), ties it to D_00454730 |
+
+**Newly released (UNTESTED until booted in PCSX2): none.** The default float ELF is again a new layout (4 names back
+in place): boot it with session 30's and 31's on the usual route. If it fails and session 31's passes, bisect with
+`SHIFT_REACH_FLAGS="--no-multi-base"` (= session 31's names), then session 31/30's switches as their sections say.
+
+### Order dependence (`--visit-seed 1..8`, all rules on; every seed now terminates)
+
+Fixed against session 31: D_003F4C90, D_002B6460, D_003B4DA0, func_0021d348's D_003F34xx, D_00575080 / D_00575088,
+D_0048C630. What remains (float_reach.txt against the default order):
+
+| names | seeds | why |
+| --- | --- | --- |
+| D_002BD1F0 (func_00118ea0) | all, random only | the walk widens (0, 16, 32, then unbounded) before loop_value's cap sees the whole loop_entry; the default's +80 is right |
+| D_00493F38, D_00493F48, D_00493F58 (func_002705f8) | 2, 3, 5-8: default only | v1 is one of -1, 0, 1, 2, 3 at a forward join; three growths widen it (the default, unbounded: conservative); orders that see 3 early keep `<= 3` |
+| D_00492138, D_00492B00, D_00492CF8, D_004932A8 (func_00258f08 & co, libc formatting) | 4, 5: default only | session 31's join-keep pins; those orders reach the arg-drop cap or join differently |
+| D_00654570 (func_00241d60) | 7, 8: random only | a struct copy from `a3 + 2928` with a3 exact in some orders: the copy's walk is unbounded from 0x006529E0 (the in-place block after D_00652898) instead of from 0x00651E70 |
+
+All are widening or intermediate-state imprecision (session 31's mechanisms 1-3); none is a lost base. A fix for the
+middle two: widen by growth count only at loop heads (a jump table can make a cycle without one, so a higher count
+elsewhere instead); not done, since more precise bounds can release names.
+
+### Hazard found: a bounded index ties the base to the next name only
+
+A bounded access that ends past the next name pins the base and that one name (`idx-next[idx-ub]`), not the names
+after it. **func_0021cfc8 reads D_003F5C18[i] for i < 6** (h24.c: `if (D_003F5C18[i]) D_00642E98[D_00642EA0++] = i`),
+through D_003F5C1C ... D_003F5C2C, but D_003F5C20 / 24 / 28 / 2C **float in the session 30, 31 and 32 defaults**:
+the menu code would read the holes. An `idx-span` rule (pin every name before the end) pinned 512 more names, most
+from loose bounds (lhu's 0xFFFF, long SET spans), so it was not kept. Spans under 0x80 bytes name 26 floating names
+worth a look first: D_003F5C20-2C (func_0021cfc8, real), D_00351A00 / 10 / 20 (func_00157a30 from D_003519B0;
+D_00351A00 was a session 30 path-step release), D_003F31A8 / B0 / E0 / F0 (func_00209f70 from D_003F3150 /
+D_003F3178; D_003F31F0 was a session 30 arg-bound release), D_00351BC0 / C4 / C8, D_002B6830, D_002C6490,
+D_003F4170, D_003F65C0, D_0046A03C / 40 / 44, D_00492EE8 / F10 / F38, D_004E3A1C, D_0054C218. Next step: read those
+functions, then either a bounded idx-span (only when the bound comes from a loop cap or an exact constant) or
+float_keep.txt entries.
