@@ -10,18 +10,6 @@ extern M2C_UNK func_001ddbf8;
 extern s32 D_00389C90[];
 extern s32 D_0062A220;
 
-s32 func_001d1348(void *arg0) {
-    D_00389C90[3154] = (s32) (D_00389C90[3154] | M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001d1380(void *arg0) {
-    D_00389C90[3154] = (s32) (D_00389C90[3154] & ~M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
 s32 func_001d31d8(void *arg0) {
     func_00111ef0(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184), &func_001d3160);
     M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);

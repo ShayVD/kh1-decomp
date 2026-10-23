@@ -22,88 +22,9 @@ void *func_001559f0(s32, s32);
 void func_00120748(char *, void *, void *, s32);
 
 #include "data/pieces/D_003A7990.h"
-typedef VmRec Obj350;
 #include "data/pieces/D_003C3A70.h"
-extern s32 D_003C54F0;
-extern s32 D_003B4D90;
 #include "data/pieces/D_0038D170.h"
-extern s32 D_0039A570;
 #include "data/pieces/D_0039A580.h"
-extern s32 D_003A7980;
-s32 func_00123488(s32);
-s32 func_001d0b90(VM *vm) {
-    VmMsg m;
-    s32 i;
-    m.type = 13;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    if (D_00389C90.f316c) {
-        for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
-        }
-    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
-        if (D_00389C90.f3038 == 0) {
-            for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    } else {
-        if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    }
-    return 2;
-}
-
-s32 func_001d0dd0(VM *vm) {
-    VmMsg m;
-    s32 i;
-    m.type = 14;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    if (D_00389C90.f316c) {
-        for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
-        }
-    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
-        if (D_00389C90.f3038 == 0) {
-            for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    } else {
-        if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    }
-    return 2;
-}
 
 #include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;

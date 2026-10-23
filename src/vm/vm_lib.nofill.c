@@ -76,3 +76,52 @@ s32 func_001cede8(VmRec *vm) {
     vm->sp = sp - 2;
     return 2;
 }
+
+/* The message of func_001d1080: VmMsg with the step d after v. */
+typedef struct {
+    u8 type;
+    u64 val:24;
+    s32 x;
+    s32 a8;
+    s32 ac;
+    f32 v[4];
+    f32 d[3];
+} VmMsgD;
+
+/* Step the move func_001d1230 / func_001d12b8 started: from p towards f14 by
+ * f20 a frame (message 3), and clear flag bit 6 on arrival. */
+void func_001d1080(VmRec *vm) {
+    VmMsgD m;
+    f32 dx, dy, dz, dist, spd;
+    dx = vm->f14[0] - vm->p[0];
+    dy = vm->f14[1] - vm->p[1];
+    dz = vm->f14[2] - vm->p[2];
+    dist = sqrt(dx * dx + dy * dy + dz * dz);
+    spd = vm->f20;
+    if (dist < spd) {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = vm->f14[0];
+        m.v[1] = vm->f14[1];
+        m.v[2] = vm->f14[2];
+        m.v[3] = 1.0f;
+        func_001c4640((VmMsg *)&m);
+        vm->fl.x &= ~0x40ULL;
+    } else {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[3] = 1.0f;
+        m.d[0] = (vm->f14[0] - vm->p[0]) / dist * spd;
+        m.d[1] = (vm->f14[1] - vm->p[1]) / dist * spd;
+        m.d[2] = (vm->f14[2] - vm->p[2]) / dist * spd;
+        vm->p[0] += m.d[0];
+        vm->p[1] += m.d[1];
+        vm->p[2] += m.d[2];
+        m.v[0] = vm->p[0];
+        m.v[1] = vm->p[1];
+        m.v[2] = vm->p[2];
+        func_001c4640((VmMsg *)&m);
+    }
+}

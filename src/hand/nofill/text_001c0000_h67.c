@@ -53,41 +53,6 @@ typedef struct {
     f32 d[3];
 } Msg2;
 double sqrt(double);
-void func_001d1080(VM2 *vm) {
-    Msg2 m;
-    f32 dx, dy, dz, dist, spd;
-    dx = vm->tgt[0] - vm->cur[0];
-    dy = vm->tgt[1] - vm->cur[1];
-    dz = vm->tgt[2] - vm->cur[2];
-    dist = sqrt(dx * dx + dy * dy + dz * dz);
-    spd = vm->spd;
-    if (dist < spd) {
-        m.type = 3;
-        m.val = 0;
-        m.x = vm->x0;
-        m.v[0] = vm->tgt[0];
-        m.v[1] = vm->tgt[1];
-        m.v[2] = vm->tgt[2];
-        m.v[3] = 1.0f;
-        func_001c4640(&m);
-        vm->flags &= ~0x40ULL;
-    } else {
-    m.type = 3;
-    m.val = 0;
-    m.x = vm->x0;
-    m.v[3] = 1.0f;
-    m.d[0] = (vm->tgt[0] - vm->cur[0]) / dist * spd;
-    m.d[1] = (vm->tgt[1] - vm->cur[1]) / dist * spd;
-    m.d[2] = (vm->tgt[2] - vm->cur[2]) / dist * spd;
-    vm->cur[0] += m.d[0];
-    vm->cur[1] += m.d[1];
-    vm->cur[2] += m.d[2];
-    m.v[0] = vm->cur[0];
-    m.v[1] = vm->cur[1];
-    m.v[2] = vm->cur[2];
-    func_001c4640(&m);
-    }
-}
 
 VM *func_001e98d0(s32, s32);
 void func_001e9d00(f32 *out, f32 *to, f32 *from, f32 x);
