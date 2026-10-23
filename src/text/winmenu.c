@@ -22,6 +22,9 @@
 #include "text/textwin.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003F1A70.h"
+
+typedef union { u64 d; f32 f; } QU;
 
 /* A menu that keeps its cursors in an s32 array at +0x24 (not a window). */
 typedef struct {
@@ -38,6 +41,16 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 
 void func_0011d768(s32);
+u64 *func_0011fb38(s32, u64, u64 *);
+u64 *func_00122048(u32, u32);
+void func_001220b8(void *);
+s32 func_001f4378(TextWin *);
+s32 func_001f4570(TextWin *);
+s32 func_001f45e0(TextWin *);
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
+s32 sceGsSyncPath(s32, u16);
+f32 sinf(f32);
 void func_001fd5e0(TextWin *w, s32 n);
 void func_001fd610(TextWin *w, s32 v);
 void func_001fd660(TextWin *w, s32 v);
@@ -47,6 +60,10 @@ void func_001fd858(TextWin *w);
 void func_001fdfd0(TextWin *w);
 s32 func_001fe1b8(s32 a);
 s32 func_001fe5a0(TextWin *w);
+void func_001fefc8(TextWin *w, s32 x, s32 y, s32 cw, s32 ch);
+void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e);
+/* Defined void (winmenu.nostrict.c); func_001ffaf0 returns its value. */
+s32 func_001ff488(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col);
 
 s32 func_001fd248(TextWin *w) {
     return (s32)(w->xb0 - 0x7000) >> 4;
@@ -636,4 +653,103 @@ s32 func_001fe9a8(MenuCur *m, s32 i, s32 n) {
         }
     }
     return r;
+}
+
+/* The cursor bar: a gradient (pulsing with the time +0x94) over the cell
+ * under the cursor. */
+/* func_001fea38: hand (strict). Header stores after func_0011fb38 through union { u64 d; f32 f; } so the f32 o->t load stays after them; strict aliasing keeps the s16 xbe/xc0 loads after o->x/o->y. */
+void func_001fea38(TextWin *o) {
+    s32 x[2];
+    s32 y[3];
+    s32 r[2];
+    s32 g[2];
+    s32 b[2];
+    u64 *p;
+    u64 *q;
+    void *u;
+    s32 col;
+    f32 s;
+    s32 h;
+
+    if (o->xcc == 0) return;
+    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    p = func_00122048(0x400, 0x80);
+    q = p + 2;
+    u = (void *)(((u32)p & 0x0fffffff) | 0x80000000);
+    q[0] = 0x1000000000008001;
+    q[1] = 0xe;
+    q = func_0011fb38(0x42, 0x48, q + 2);
+    ((QU *)q)[0].d = 0x2026400000008006;
+    ((QU *)q)[1].d = 0x41;
+    q += 2;
+    s = sinf((f32)((s32)o->x94 % 64) * 0.015625f * 3.1415928f);
+    if (func_001f4378(o)) {
+        r[0] = (s32)(s * 20.0f) + 32;
+        b[0] = g[0] = (s32)(s * 60.0f) + 96;
+    } else {
+        r[0] = (s32)(s * 20.0f) + 32;
+        g[0] = (s32)(s * 60.0f) + 96;
+        b[0] = (s32)(s * 30.0f) + 48;
+    }
+    r[1] = r[0] >> 1;
+    g[1] = g[0] >> 1;
+    b[1] = b[0] >> 1;
+    x[0] = o->xb0 + o->xbe + o->xda * o->xc2;
+    x[1] = x[0] + o->xc2 - o->xc6;
+    /* +0xd2 through an s16 pointer: as o->ud0.s.xd2 the two loads swap. */
+    y[0] = o->xb4 + o->xc0 + (((s16 *)&o->ud0)[1] * o->xc4 >> 4);
+    h = o->xc4 - o->xc8;
+    y[1] = y[0] + h / 2;
+    y[2] = y[0] + h;
+    col = o->x90;
+    if (o->u48.w.lo & 1) {
+        s32 cx = func_001f4570(o);
+        s32 cy = func_001f45e0(o);
+        f32 sx = o->x74;
+        f32 sy = o->x78;
+        f32 fx = cx;
+        f32 fy = cy;
+        x[0] = fx + (f32)(x[0] - cx) * sx;
+        x[1] = fx + (f32)(x[1] - cx) * sx;
+        y[0] = fy + (f32)(y[0] - cy) * sy;
+        y[1] = fy + (f32)(y[1] - cy) * sy;
+        y[2] = fy + (f32)(y[2] - cy) * sy;
+    }
+    ((s32 *)q)[0] = r[1]; ((s32 *)q)[1] = g[1]; ((s32 *)q)[2] = b[1]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[0]; ((s32 *)q)[1] = y[0]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    ((s32 *)q)[0] = r[1]; ((s32 *)q)[1] = g[1]; ((s32 *)q)[2] = b[1]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[1]; ((s32 *)q)[1] = y[0]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    ((s32 *)q)[0] = r[0]; ((s32 *)q)[1] = g[0]; ((s32 *)q)[2] = b[0]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[0]; ((s32 *)q)[1] = y[1]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    ((s32 *)q)[0] = r[0]; ((s32 *)q)[1] = g[0]; ((s32 *)q)[2] = b[0]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[1]; ((s32 *)q)[1] = y[1]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    ((s32 *)q)[0] = r[1]; ((s32 *)q)[1] = g[1]; ((s32 *)q)[2] = b[1]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[0]; ((s32 *)q)[1] = y[2]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    ((s32 *)q)[0] = r[1]; ((s32 *)q)[1] = g[1]; ((s32 *)q)[2] = b[1]; ((s32 *)q)[3] = col; q += 2;
+    ((s32 *)q)[0] = x[1]; ((s32 *)q)[1] = y[2]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
+    p[0] = ((s32)((u8 *)q - (u8 *)p) >> 4) - 1 | 0x70000000;
+    func_00266f38(func_00266c08(2), u);
+    sceGsSyncPath(0, 0);
+    func_001220b8(p);
+}
+
+/* The cursor frame on the cell under the cursor. */
+void func_001fef40(TextWin *w) {
+    s32 cw;
+    s32 ch;
+
+    if (w->xcc != 0) {
+        cw = (s32)((u16)w->xc2 << 0x10) >> 0x14;
+        ch = (s32)((u16)w->xc4 << 0x10) >> 0x14;
+        func_001fefc8(w, (s32)(w->xbe + (w->xda * cw)) >> 4, (s32)(w->xc0 + (w->ud0.s.xd2 * ch)) >> 4, cw - ((s32)((u16)w->xc6 << 0x10) >> 0x14), ch - ((s32)((u16)w->xc8 << 0x10) >> 0x14));
+    }
+}
+
+void func_001fefc8(TextWin *w, s32 x, s32 y, s32 cw, s32 ch) {
+    func_001feff0(w, x, y, cw, ch, 0x80606020, 0x80C0C040, 2);
+}
+
+/* The panel over the whole window. */
+s32 func_001ffaf0(TextWin *o, s32 a) {
+    return func_001ff488(o, 0, 0, o->xb8 >> 4, o->xba >> 4, a);
 }
