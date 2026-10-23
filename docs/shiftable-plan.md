@@ -3232,7 +3232,7 @@ Per piece (view casts, base -> now):
 | D_002E31B0 | 2 | 0 | r2_1's LockEA is S31b0_2e31b0 |
 | D_003044D8 | 2 | 0 | x8 is `struct Actor *`; c02's C02Ob2 completes it |
 | D_002C5C60, D_002A62AC, D_0029B420 | 1 each | 0 | FVec4; Grid_2a6234 *; s7_w4's cp160 copy helper |
-| the other 13 pieces | 21 | 20 | see "Left, and why" |
+| the other 12 pieces | 19 | 19 | see "Left, and why" |
 
 What got typed:
 
