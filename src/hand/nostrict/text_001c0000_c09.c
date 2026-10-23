@@ -1,30 +1,9 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 
 typedef struct { u32 b0:1, b1:1, b2:1, b3:1, b4:1, rest:27; } Bits;
 
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0xc];
-    f32 f14, f18, f1c, f20;
-    u8 pad24[0x4c];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    u32 lbl[64];
-    u32 pc;
-    s32 sp;
-    s32 stk[32];
-    s32 var[26];
-    s32 stk2[33];
-    s32 x2f0;
-    f32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    s32 x31c, x320, x324;
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, b10:1, b11:1, b12:1, b13:1, b14:1, b15:1, brest:16;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VMa;
+typedef VmRec VMa;
 
 typedef struct {
     u8 pad0[4];
@@ -157,11 +136,11 @@ void func_001c48c8(s32 id, u32 kind, s32 *p) {
     if ((((u32)D_0037A378) >> 2) & 1) return;
     if (D_002C5958 & 0x12000) return;
     if (D_00389C90.x3034 == 0) {
-        vm = ((VMa *)&D_0038D170);
+        vm = D_0038D170;
         n = D_0039A570;
     } else {
         n = D_003A7980;
-        vm = ((VMa *)&D_0039A580);
+        vm = D_0039A580;
     }
     for (i = 0; i < n; i++) {
         if (vm[i].x0 == id) break;
@@ -171,7 +150,7 @@ void func_001c48c8(s32 id, u32 kind, s32 *p) {
     case 0:
         e = &vm[i];
         if (func_001c1ce8(e->code, e->lbl[5]) == 5) return;
-        if (e->pc >= e->lbl[5] && e->pc < e->lbl[6]) return;
+        if ((u32)e->pc >= (u32)e->lbl[5] && (u32)e->pc < (u32)e->lbl[6]) return;
         D_002C5958 |= 0x1000;
         D_00389C90.f3078.x |= 0x800;
         vm->stk[++vm->sp] = 3;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -59,7 +60,7 @@ typedef struct {
     s32 cnt3;
     s32 step3[3];
     u8 pad3140[0x18];
-    void *f3158;
+    struct VmObj *f3158;
     u8 pad315c[0x1c];
     s32 n3178;
     s32 pad317c;
@@ -161,12 +162,12 @@ s32 func_001d5168(VM *vm) {
     p = D_0038D170;
     n = D_0039A570;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == vm->stk[vm->sp]) p->val = 0;
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
     }
-    p = ((KEnt *)&D_0039A580);
+    p = D_0039A580;
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == vm->stk[vm->sp]) p->val = 0;
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
     }
     vm->sp--;
     return 2;
@@ -178,12 +179,12 @@ s32 func_001d58c8(VM *vm) {
     p = D_0038D170;
     n = D_0039A570;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == (s32)D_00389C90.f3158) p->val = 0;
+        if (p->x0 == (s32)D_00389C90.f3158) p->obj = 0;
     }
-    p = ((KEnt *)&D_0039A580);
+    p = D_0039A580;
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == (s32)D_00389C90.f3158) p->val = 0;
+        if (p->x0 == (s32)D_00389C90.f3158) p->obj = 0;
     }
     return 2;
 }

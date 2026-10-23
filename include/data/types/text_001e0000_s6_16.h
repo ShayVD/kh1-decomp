@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_TEXT_001E0000_S6_16_H
 
 #include "common.h"
+#include "data/types/vm_rec.h"
 
-typedef struct { u8 d[848]; } E848b;
+typedef VmRec E848b;
 
 #endif /* KH1_DATA_TYPES_TEXT_001E0000_S6_16_H */

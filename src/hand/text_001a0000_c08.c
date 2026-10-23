@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
 #include "data/types/text_001a0000_c08.h"
@@ -167,25 +168,7 @@ typedef struct {
     s32 ac;
     f32 v[4];
 } Msg;
-typedef union {
-    u64 x;
-    s32 i[2];
-    struct { u32 b0:1; u32 b1:1; u32 b2:1; u32 b3:1; u32 b4:4; u32 b8:1; u32 b9:4; u32 b13:1; u32 r14:18; u32 hi; } b;
-} VMFl;
-typedef struct {
-    s32 x0;
-    u8 pad4[0x10];
-    f32 f14, f18, f1c, f20;
-    u8 pad24[0x4c];
-    s32 w70;
-    u8 pad74[0x108];
-    s32 pc;
-    u8 pad180[0x174];
-    f32 f2f4;
-    u8 pad2f8[0x30];
-    VMFl fl;
-    u8 pad330[0x20];
-} VM;
+typedef VmRec VM;
 typedef union {
     u64 x;
     struct { u32 lo; u32 h0:6; u32 b38:1; u32 b39:1; u32 b40:1; u32 h9:2; u32 b43:1; u32 h12:9; u32 b53:1; u32 h22:10; } b;
@@ -233,8 +216,8 @@ extern u8 D_002C5958[];
 #define D_002C5958 (*(s32 *)&D_002C5958)
 #include "data/pieces/D_002BBDE0.h"
 extern s32 (*D_0037A198[])(VM *, s32);
-s32 func_001c1ce8(s32, s32);
-s32 func_001c1cf8(s32, s32);
+s32 func_001c1ce8(s8 *, s32);
+s32 func_001c1cf8(s8 *, s32);
 s32 func_001c1e30(void);
 void func_001c2ec8(s32, s32);
 Msg *func_001c4730(void);
@@ -261,12 +244,12 @@ s32 func_001c1f80(void) {
 
     if (D_00389C90.f3070.b.b40) return 4;
     if (D_00389C90.x3038 > 0) {
-        if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
-        else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
+        if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
+        else { vm = D_0039A580; cnt = &D_003A7980; }
         for (i = 0; i < *cnt; i++, vm++) {
             if ((vm->fl.x & 0x14) == 4) {
-                vm->f2f4 -= D_002BBDFC;
-                if (!(0.0f < vm->f2f4)) vm->fl.x &= ~4;
+                vm->x2f4 -= D_002BBDFC;
+                if (!(0.0f < vm->x2f4)) vm->fl.x &= ~4;
             }
         }
         return 0;
@@ -298,8 +281,8 @@ s32 func_001c1f80(void) {
         D_00389C90.e[i].d = 0;
         D_00389C90.e[i].f = -1;
     }
-    if (D_00389C90.x3034 == 0) { vm = ((VM *)&D_0038D170); cnt = &D_0039A570; }
-    else { vm = ((VM *)&D_0039A580); cnt = &D_003A7980; }
+    if (D_00389C90.x3034 == 0) { vm = D_0038D170; cnt = &D_0039A570; }
+    else { vm = D_0039A580; cnt = &D_003A7980; }
     p = func_001c4730();
     while (p) {
         list[n++] = *p;
@@ -315,7 +298,7 @@ s32 func_001c1f80(void) {
         if (vm->fl.b.b3) {
             if (i != 0) continue;
             if (D_00389C90.x3034 != 0) {
-                v = ((VM *)&D_0038D170);
+                v = D_0038D170;
                 D_00389C90.x3034 = 0;
                 for (j = 1, v++; j < D_0039A570; j++, v++) {
                     if ((u32)v->fl.i[0] % 2 == 1) {
@@ -349,8 +332,8 @@ s32 func_001c1f80(void) {
         func_001dcea8(vm);
         func_001dcfd0(vm);
         if ((vm->fl.x & 0x14) == 4) {
-            vm->f2f4 -= D_002BBDFC;
-            if (0.0f < vm->f2f4) continue;
+            vm->x2f4 -= D_002BBDFC;
+            if (0.0f < vm->x2f4) continue;
             vm->fl.x &= ~4;
         }
         for (j = 0; j < n; j++) {
@@ -383,8 +366,8 @@ s32 func_001c1f80(void) {
             }
         }
         for (;;) {
-            op = func_001c1ce8(vm->w70, vm->pc);
-            arg = func_001c1cf8(vm->w70, vm->pc);
+            op = func_001c1ce8(vm->code, vm->pc);
+            arg = func_001c1cf8(vm->code, vm->pc);
             r = D_0037A198[op](vm, arg);
             if (r & 2) vm->pc++;
             if (r & 4) break;

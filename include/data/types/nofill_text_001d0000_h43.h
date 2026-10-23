@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_NOFILL_TEXT_001D0000_H43_H
 
 #include "common.h"
+#include "data/types/vm_rec.h"
 
-typedef struct { s32 key; void *val; u8 pad[0x348]; } KEnt;
+typedef VmRec KEnt;
 
 #endif /* KH1_DATA_TYPES_NOFILL_TEXT_001D0000_H43_H */

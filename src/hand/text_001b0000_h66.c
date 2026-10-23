@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
 double asin(double);
@@ -38,11 +39,7 @@ typedef struct {
 } Msg;
 s32 func_001c4640(Msg *m);
 VM_c1b58 *func_001e98d0(s32, s32);
-typedef struct {
-    s32 x0; u8 pad4[108]; s32 w70; s32 w74; s32 w78; s32 w7c; s32 w80; u8 pad84[248]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; union { u64 x; s32 i[2]; } fl;
-u8 pad816[32];
-} VM_c2778;
+typedef VmRec VM_c2778;
 typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
 extern s32 D_002BCDEC;
 #include "data/pieces/D_0039A580.h"
@@ -50,8 +47,8 @@ extern s32 D_002BCDEC;
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM_c2778 *, s32);
 extern u32 D_002C5958;
-s32 func_001c1ce8(s32, s32);
-s32 func_001c1cf8(s32, s32);
+s32 func_001c1ce8(s8 *, s32);
+s32 func_001c1cf8(s8 *, s32);
 void func_0011ef10(s32, void *);
 s32 func_001c1f80();
 typedef struct { u8 pad[16]; V4 pos; u8 pad32[28]; f32 roty; } Obj_c5168;
@@ -338,17 +335,17 @@ s32 func_001c2778(void) {
     Msg m;
     if (D_002BCDEC == 0) return 0;
     if (D_00389C90.w12340 == 0) {
-        p = ((VM_c2778 *)&D_0038D170);
+        p = D_0038D170;
         cnt = &D_0039A570;
     } else {
-        p = ((VM_c2778 *)&D_0039A580);
+        p = D_0039A580;
         cnt = &D_003A7980;
     }
     for (i = 1, p++; i < *cnt; i++, p++) {
-        p->pc = p->w7c;
+        p->pc = p->lbl[0];
         while (1) {
-            op = func_001c1ce8(p->w70, p->pc);
-            arg = func_001c1cf8(p->w70, p->pc);
+            op = func_001c1ce8(p->code, p->pc);
+            arg = func_001c1cf8(p->code, p->pc);
             if (op == 5) break;
             r = D_0037A198[op](p, arg);
             if (r & 2) p->pc++;
@@ -359,8 +356,8 @@ s32 func_001c2778(void) {
                 break;
             }
         }
-        p->w78 = 1;
-        p->pc = p->w80;
+        p->x78 = 1;
+        p->pc = p->lbl[1];
     }
     if (stop) return 4;
     if (D_00389C90.w12340 == 0) {
@@ -368,7 +365,7 @@ s32 func_001c2778(void) {
         return 4;
     }
     cnt = &D_0039A570;
-    p = ((VM_c2778 *)&D_0038D170);
+    p = D_0038D170;
     for (i = 1, p++; i < *cnt; i++, p++) {
         if ((u32)p->fl.i[0] % 2 == 1) {
 /*P*/

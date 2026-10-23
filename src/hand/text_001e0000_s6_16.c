@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 typedef struct {
     u8 type;
     u64 val:24;
@@ -154,13 +155,13 @@ s32 func_001e99e8(s32 kind, E848b *p) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) if (&D_003A7990[i] == p) return i;
         } else {
-            for (i = 0; i < D_003C21A0; i++) if (&((E848b *)&D_003B4DA0)[i] == p) return i;
+            for (i = 0; i < D_003C21A0; i++) if (&D_003B4DA0[i] == p) return i;
         }
     } else {
         if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) if (&((E848b *)&D_0038D170)[i] == p) return i;
+            for (i = 0; i < D_0039A570; i++) if (&D_0038D170[i] == p) return i;
         } else {
-            for (i = 0; i < D_003A7980; i++) if (&((E848b *)&D_0039A580)[i] == p) return i;
+            for (i = 0; i < D_003A7980; i++) if (&D_0039A580[i] == p) return i;
         }
     }
     return -1;

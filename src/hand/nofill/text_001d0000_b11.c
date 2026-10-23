@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -154,7 +155,7 @@ s32 func_001d7b88(VM *vm) {
 }
 
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
-typedef struct {
+typedef struct VmObj {
     u8 pad0[8];
     s32 f8;
     u8 padc[4];
@@ -165,14 +166,7 @@ typedef struct {
     u8 pad98[0xb8];
     f32 f150;
 } Obj;
-typedef struct {
-    u8 pad0[4];
-    Obj *owner;
-    u8 pad8[0x58];
-    s32 f60;
-    f32 f64;
-    u8 pad68[0x350 - 0x68];
-} Ent;
+typedef VmRec Ent;
 extern s32 D_0039A570;
 #include "data/pieces/D_0038D170.h"
 extern s32 D_003A7980;
@@ -204,16 +198,16 @@ f32 func_001dcb00(Obj *o, V4 *target, f32 a, f32 b) {
     v.w = a;
     func_002675a8(&o->dir, &v);
     for (i = 0; i < D_0039A570; i++) {
-        e = &((Ent *)&D_0038D170)[i];
-        if (e->owner == o && e->f60 && e->f60 == o->f8) len = 0.0f;
+        e = &D_0038D170[i];
+        if (e->obj == o && e->f60 && e->f60 == o->f8) len = 0.0f;
     }
     for (i = 0; i < D_003A7980; i++) {
-        e = &((Ent *)&D_0039A580)[i];
-        if (e->owner == o && e->f60 && e->f60 == o->f8) len = 0.0f;
+        e = &D_0039A580[i];
+        if (e->obj == o && e->f60 && e->f60 == o->f8) len = 0.0f;
     }
     for (i = 0; i < D_0039A570; i++) {
-        e = &((Ent *)&D_0038D170)[i];
-        if (e->owner == o) {
+        e = &D_0038D170[i];
+        if (e->obj == o) {
             if (o->f90) {
                 e->f64 += 1.0f;
                 if (60.0f < e->f64) len = 0.0f;
@@ -223,9 +217,9 @@ f32 func_001dcb00(Obj *o, V4 *target, f32 a, f32 b) {
         }
     }
     for (i = 0; i < D_003A7980; i++) {
-        e = &((Ent *)&D_0039A580)[i];
-        if (e->owner == o) {
-            if (e->owner->f90) {
+        e = &D_0039A580[i];
+        if (e->obj == o) {
+            if (e->obj->f90) {
                 e->f64 += 1.0f;
                 if (60.0f < e->f64) len = 0.0f;
             } else {
