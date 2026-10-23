@@ -4,28 +4,8 @@
 
 typedef W606Mem_304be8 S4BE8e;
 
-void func_001f9010(s32);
-#include "data/pieces/D_003E8E08.h"
-s32 func_001ee618(s32);
-void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-
 #include "data/pieces/D_003F34B8.h"
 typedef S34B8_3f34b8 S34B8;
-
-extern s32 D_00642D18;
-
-void func_00218d60(s32 a0) {
-    s32 x;
-    s32 t;
-    func_001f9010(23);
-    t = D_00642D18;
-    x = 272;
-    if (t) {
-        (*(s32 *)&D_003E8E08) = func_001ee618(t);
-        x = 273;
-    }
-    func_001f9438(a0, 0, 174, 12, x, 17, 0x80c87850);
-}
 
 void func_00219128(void) {
     S34B8 *p = D_003F34B8;

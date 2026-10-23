@@ -25,12 +25,7 @@ s32 func_0010ef90(s32, s32);
 s32 func_00219440();
 void func_0010eee0(s32, s32, s32, s32);
 void func_001eb0a0(s32, s32);
-void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0021c450(s32, s32, s32, s32);
-
-void func_00218f58(s32 arg0) {
-    func_00207830(arg0, 4, 2, 0, 0, 0x7A, 0x6D);
-}
 
 void func_00219298(void) {
     func_00219288();
