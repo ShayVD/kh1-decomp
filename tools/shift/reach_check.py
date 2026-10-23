@@ -257,6 +257,7 @@ def _ax(v):
 
 
 ARG_DROP_MAX = 8  # session 32 (arg-drop): an argument walk dropped this often at a point is not taken back
+FWD_GROW_MAX = 16  # session 34 (widen-heads): growths of a bound at a point that is not a loop head before widening
 SHADOW_MAX = 3  # arg-keep/join-keep: distinct values a register gets from shadow visits at a point before widening
 
 
@@ -581,6 +582,18 @@ def nested_carries(insns: list[mips.Insn], loops: dict[int, tuple]) -> tuple[dic
     return outer, carry
 
 
+def aligned_end(base: int, disp: int, width: int, align: bool = True) -> int:
+    """Where a bounded indexed access from base ends, disp being the largest offset its address can have. Session 34
+    (align-end): an access wider than a byte (WIDTH gives the unaligned lwl/lwr/ldl/ldr/sdl/sdr 1) is at an address
+    that is a multiple of its width (lq/sq drop the low bits), so its last address is base + disp rounded down:
+    func_0014a398 walks D_0054C440 in 192-byte steps while p < &D_0054F440 and reads `ld 0(p)`; p < END gave
+    p <= END - 1 and an end of END + 7, though no doubleword starts after END - 8."""
+    x = base + disp
+    if align and width in (2, 4, 8, 16):
+        x &= ~(width - 1)
+    return x + width
+
+
 def _likely(w: int) -> bool:
     """A branch-likely: its delay slot runs only when the branch is taken (bc1fl/bc1tl too)."""
     o = mips.op(w)
@@ -831,8 +844,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True,
             path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
             join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, sign_prune: bool = True, widen_bases: bool = True,
-            shadow_image: bool = True, arg_drop: bool = True,
-            visit_rng=None, tight: bool = False):
+            shadow_image: bool = True, arg_drop: bool = True, likely_slot: bool = True,
+            widen_heads: bool = True, hix_join: bool = True, neg_keep: bool = True, visit_rng=None, tight: bool = False):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -872,7 +885,26 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     Session 33 (`tight`, for idx-span): only bounds from a loop (a counter's cap, a walk's trip count) or a compare
     against a constant. A byte or halfword load and an `andi` give no bound (a field's type range or a mask says
     nothing about the values the game stores), and a join outside a loop head of more than SET_MAX addresses or of
-    two different bases (a choice: its span covers the bytes between them, which no access reaches) is unbounded."""
+    two different bases (a choice: its span covers the bytes between them, which no access reaches) is unbounded.
+    Session 34 (`likely_slot`): the delay slot of a countdown loop's likely back branch runs only when the back edge is
+    taken, which happens at most back_edges times per entry, so only in the runs before the last. A walked pointer
+    there is at most its header cap (loop_value), less one stride when its step is the slot itself; before, the slot
+    saw the header cap plus the step, one stride more (func_001497c8's `bnezl a1,loop; lw v1,0(a3)` read +0x70 for
+    loads ending at +0x54).
+    Session 34 (`widen_heads`): a bound that grows at a point is widened (dropped) after two growths only at a loop
+    head (a backward branch's or jump's target, or a switch case at or before its `jr`): every cycle passes one, so
+    that is enough to end. Elsewhere a forward join of a few exact values (func_002705f8, atanf: id is -1, 0, 1, 2 or
+    3 where five paths meet) kept its bound only in orders that saw the large values first; it now widens only after
+    FWD_GROW_MAX growths (a safety net).
+    Session 34 (`hix_join`): two lui + index values (HIX) of one %hi join to that %hi with the larger bound (unbounded
+    if either is), as IDX does; before, they joined to nothing and join-keep's shadows widened the fourth value to
+    unbounded (func_002705f8 reads atanhi[id] as lui + addu + lwc1 %lo: bounds 0, 4, 8, 12 arrived one by one in
+    the default order). A growing HIX bound is widened like the others.
+    Session 34 (`neg_keep`): small negative constants that a join drops (to an upper bound, which says nothing below
+    zero; -1 or its 32-bit form 0xFFFFFFFF, -16 as 0xFFFFFFF0) get one shadow visit with all of them from that side, like
+    a dropped address (join-keep): an index of -1 is an address below the base.
+    func_001571a8 keeps k = -1 until it finds a free slot and then writes &D_00551608[k] unchecked; only some visit
+    orders saw the -1 path (D_00551608 - 34, in D_005512A0 and D_00551600) before it was joined away."""
     n = len(insns)
     if not n:
         return
@@ -900,11 +932,13 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 loops[h_] = lp_
     outer, carry = nested_carries(insns, loops) if countdown and nest_carry else ({}, {})
     loop_entry: dict[int, dict] = {}  # loop header -> joined state of the edges that enter the loop
+    back_of = {lp_[0]: h_ for h_, lp_ in loops.items()} if likely_slot else {}  # back branch -> header (likely-slot)
     loop_heads = set()  # targets of a backward branch or jump
     for j_, x_ in enumerate(insns):
         t_ = x_.branch_target if x_.is_branch else (x_.jump_target if x_.is_j else None)
         if t_ is not None and a0 <= t_ <= x_.addr:
             loop_heads.add((t_ - a0) // 4)
+    widen_at = set(loop_heads)  # session 34 (widen-heads): where a growing bound is widened after two growths
 
     def join(i, k, v, u):
         if u == v:
@@ -941,6 +975,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return _mkidx(base, hi, None, xb)
         if isinstance(v, tuple) and isinstance(u, tuple) and v[0] == u[0] == PTR and v[1] == u[1]:
             return (PTR, v[1], v[2] if v[2] == u[2] else None)  # a walk through the pointer G holds
+        if hix_join and isinstance(v, tuple) and isinstance(u, tuple) and v[0] == u[0] == HIX and v[1] == u[1] \
+                and len(v) == len(u) == 3:  # session 34 (hix-join): one %hi, either bound
+            return (HIX, v[1], None if v[2] is None or u[2] is None else max(v[2], u[2]))
         x, y = _ub(v), _ub(u)
         if x is not None and y is not None:
             return (UB, max(x, y))
@@ -1007,6 +1044,33 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         u = _ub(e.get(k))
         return None if u is None else (UB, u + outer[i][4][k] * (to - 1))
 
+    def slot_cap(i, st):
+        """Session 34 (likely-slot): cap the walked pointers of the loop whose likely back branch is at i in the state
+        its delay slot runs with (the taken edge): the back edge is taken only in runs before the last, so each pointer
+        is at most its header cap (one stride less when the slot itself steps it)."""
+        h = back_of.get(i)
+        if h is None or i + 1 >= n:
+            return
+        lp = loops[h]
+        in_slot = gpr_writes(insns[i + 1].word)
+        for k, s_ in lp[4].items():
+            cap = loop_value(h, k)
+            if cap is None:
+                continue
+            sub = s_ if k in in_slot else 0
+            v = st.get(k)
+            if cap[0] == IDX:
+                a = _idx(v)
+                if cap[2] is None or a is None or a[0] != cap[1] or not isinstance(v, tuple) or v[0] != IDX:
+                    continue
+                hi = cap[2] - sub
+                if hi >= 0 and (a[1] is None or a[1] > hi):
+                    st[k] = _mkidx(a[0], hi, _iax(v), _xb(v))
+            elif cap[0] == UB and isinstance(v, tuple) and v[0] == UB:
+                hi = cap[1] - sub
+                if hi >= 0 and v[1] > hi:
+                    st[k] = (UB, hi)
+
     def merge(i, st, src=None):
         if not (0 <= i < n):
             return
@@ -1027,6 +1091,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return
         new = {}
         lost: list = []  # session 31 (arg-keep, join-keep): (k, value) of an address the join dropped
+        negs: tuple = ({}, {})  # session 34 (neg-keep): the negative constants the join dropped, from old / from st
         for k in (set(old) | set(st)) if arg_join else list(old):
             v = old.get(k)
             if k in carry.get(i, ()) and (cap := carry_value(i, k)) is not None:
@@ -1052,13 +1117,18 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if (arg_keep and arg_join) if isinstance(j, tuple) and j[0] == ARG else join_keep:
                 lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_, shadow_image)
                          and not _covers(j, x_, multi_base)]
+            if neg_keep:
+                for side_, x_ in enumerate((v, st.get(k))):
+                    if isinstance(x_, int) and (-0x10000 < x_ < 0 or 0xFFFF0000 <= x_ <= 0xFFFFFFFF) and j != x_:
+                        negs[side_][k] = x_
             if j is None:
                 continue
             # widening: a bound that grows twice at the same point is dropped
-            if j != v and isinstance(j, tuple) and j[0] in (IDX, UB):
+            if j != v and isinstance(j, tuple) and (j[0] in (IDX, UB) or hix_join and j[0] == HIX and j[2] is not None):
                 c = grow[(i, k)] = grow.get((i, k), 0) + 1
-                if c > 2:
-                    j = ((IDX, j[1], None) + (j[3:] if multi_base else ())) if j[0] == IDX else None
+                if c > (2 if not widen_heads or i in widen_at else FWD_GROW_MAX):
+                    j = ((IDX, j[1], None) + (j[3:] if multi_base else ())) if j[0] == IDX else \
+                        (HIX, j[1], None) if j[0] == HIX else None
                     if j is None:
                         continue
             new[k] = j
@@ -1072,6 +1142,20 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             got.add(x_)
             sh = dict(new)
             sh[k] = x_
+            key = (i, frozenset(sh.items()))
+            if key not in shadow_seen:
+                shadow_seen.add(key)
+                work.append((i, sh))
+        for ng_ in negs:  # session 34 (neg-keep): one shadow with every negative constant one side brought (they go
+            if not ng_:   # together: k = -1 and 16 * k in another register)
+                continue
+            got = shadow_lost.setdefault((i, "neg"), set())
+            fz_ = frozenset(ng_.items())
+            if fz_ not in got and len(got) >= SHADOW_MAX:
+                continue
+            got.add(fz_)
+            sh = dict(new)
+            sh.update(ng_)
             key = (i, frozenset(sh.items()))
             if key not in shadow_seen:
                 shadow_seen.add(key)
@@ -1444,6 +1528,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             edge_first = slot_refine and ins.is_branch and cond is not None and i + 1 < n
             if i + 1 < n and not edge_first:  # (with edge_first each edge steps the slot itself)
                 st_d = dict(st)
+                if likely and ins.is_branch:
+                    slot_cap(i, st_d)  # (st_d runs the slot: only the taken edge uses it)
                 ev += step(insns[i + 1], st_d)
             else:
                 st_d = st
@@ -1459,6 +1545,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif ins.is_branch and edge_first:
                 st_t = dict(st)
                 refine(st_t, cond, True)
+                if likely:
+                    slot_cap(i, st_t)
                 ev += step(insns[i + 1], st_t)
                 merge(index(ins.branch_target), st_t, src=i)
                 st_f = dict(st)
@@ -1485,9 +1573,13 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 merge(index(ins.jump_target), st_d)
             elif ins.is_jr and not ins.is_jr_ra and (jt := jump_table(st.get(mips.rs(w)))):
                 for j in jt:  # a switch whose table we read: each case
+                    if widen_heads and index(j) <= i:
+                        widen_at.add(index(j))  # (a case before the jr closes a cycle: widen there)
                     merge(index(j), st_d)
             elif ins.is_jr and not ins.is_jr_ra and starts:
                 for j in starts:  # a switch: any label may be a case
+                    if widen_heads and index(j) <= i:
+                        widen_at.add(index(j))
                     merge(index(j), st_d)
         else:
             ev += step(ins, st)
@@ -1741,6 +1833,18 @@ def main() -> int:
     ap.add_argument("--no-idx-span", action="store_true",
                     help="a bounded index that ends past the next name pins only that name, not the names after it "
                          "up to its end (session 33)")
+    ap.add_argument("--no-likely-slot", action="store_true",
+                    help="a countdown loop's likely back branch's delay slot sees the walked pointers one stride past "
+                         "the runs that take the back edge (before session 34)")
+    ap.add_argument("--no-widen-heads", action="store_true",
+                    help="a bound that grows twice at any point is widened, not only at a loop head (before session 34)")
+    ap.add_argument("--no-hix-join", action="store_true",
+                    help="two lui + index values of one %%hi join to nothing (before session 34)")
+    ap.add_argument("--no-neg-keep", action="store_true",
+                    help="a small negative constant dropped at a join gets no shadow visit (before session 34)")
+    ap.add_argument("--no-align-end", action="store_true",
+                    help="a bounded indexed access ends at its largest offset + width, not rounded down to the width "
+                         "its alignment allows (before session 34)")
     ap.add_argument("--span-log", type=Path, help="write each bounded indexed base whose accesses end past the next "
                     "name: the names inside the overrun and the accesses that reach it (session 33)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
@@ -1844,6 +1948,8 @@ def main() -> int:
                        stored_idx=not a.no_stored_idx, multi_base=not a.no_multi_base,
                        sign_prune=not a.no_sign_prune, widen_bases=not a.no_widen_bases,
                        shadow_image=not a.no_shadow_image, arg_drop=not a.no_arg_drop,
+                       likely_slot=not a.no_likely_slot, widen_heads=not a.no_widen_heads,
+                       hix_join=not a.no_hix_join, neg_keep=not a.no_neg_keep,
                        visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
                        arg_bound=not a.no_arg_bound and is_func)
 
@@ -1921,7 +2027,7 @@ def main() -> int:
                 continue
             if kind == "idx":
                 idx_all.setdefault(base, set()).add(name)
-                end = None if disp is None else base + disp + width
+                end = None if disp is None else aligned_end(base, disp, width, not a.no_align_end)
                 why.setdefault(base, set()).add("idx" if end is None else "idx-ub")
                 if base not in idx_end or (idx_end[base] is not None and (end is None or end > idx_end[base])):
                     idx_end[base] = end
@@ -2300,7 +2406,7 @@ def main() -> int:
                     continue
                 pc, b_, disp, width, _k = e
                 k_ = (name, pc, b_)
-                end = None if disp is None else b_ + disp + width
+                end = None if disp is None else aligned_end(b_, disp, width, not a.no_align_end)
                 if k_ not in tight_end or (tight_end[k_] is not None and (end is None or end > tight_end[k_])):
                     tight_end[k_] = end
         for base, i, nxt in spans:

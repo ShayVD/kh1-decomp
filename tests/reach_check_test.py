@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read; session 27-32 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-34 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -335,5 +335,76 @@ assert idx_end(run(tbl([andi_(V1, A0, 0xFF)])), 0x003F3150) == 0x3FC
 assert idx_end(run(tbl([andi_(V1, A0, 0xFF)]), tight=True), 0x003F3150) is None
 cmp10 = tbl([lbu(V1, A0, 0), sltiu(V0, V1, 10), beq(V0, 0, 6), NOP])
 assert idx_end(run(cmp10), 0x003F3150) == 36 and idx_end(run(cmp10, tight=True), 0x003F3150) == 36
+
+# 22. likely-slot (session 34): func_001497c8 `for (i = 0; i < 3; i++) if (D_0054C1B0[i].x10 == a) return i;` loads
+# +0x10 before the loop and again in the bnezl's slot, after a3 += 0x20: the slot runs only when the back edge is
+# taken (runs 0 and 1 of 3), so the loads end at +0x54 (the last at +0x50), not at the header cap + 0x20 (+0x70)
+bnezl = lambda rs, off: (0x15 << 26) | (rs << 21) | (off & 0xFFFF)
+f97 = [lui(V0, 0x0055), move(A2, 0), addiu(V0, V0, -15952), addiu(7, V0, 16), lw(V1, 7, 0), NOP,
+       addiu(7, 7, 32), move(V0, A2), addiu(A2, A2, 1), beq(V1, A0, 6), slti(A1, A2, 3), NOP, NOP,
+       bnezl(A1, -8), lw(V1, 7, 0), addiu(V0, 0, -1), JR_RA, NOP]
+assert idx_end(run(f97), 0x0054C1C0) == 0x40, idx_end(run(f97), 0x0054C1C0)
+assert idx_end(run(f97, likely_slot=False), 0x0054C1C0) == 0x60
+assert idx_end(run(f97, tight=True), 0x0054C1C0) == 0x40
+assert all(idx_end(run(f97, visit_rng=random.Random(sd)), 0x0054C1C0) == 0x40 for sd in range(8))
+# func_0021cfc8's shape: the step a0 += 4 before the back branch (in a beqz's slot), the load in the bnezl's slot: six
+# words (+0x14), not seven
+cf = [lui(A0, 0x003F), addiu(A0, A0, 0x5C18), move(A1, 0), lw(V0, A0, 0), beq(V0, 0, 2), addiu(A0, A0, 4), NOP,
+      addiu(A1, A1, 1), slti(V0, A1, 6), bnezl(V0, -6), lw(V0, A0, 0), JR_RA, NOP]
+assert idx_end(run(cf), 0x003F5C18) == 0x14 and idx_end(run(cf, likely_slot=False), 0x003F5C18) == 0x18
+# the step in the slot itself: `bnezl t,loop; addiu p,p,4` after `lw v0,0(p)` in the body: the body's loads see
+# p up to the header cap (6 words), and the slot's step adds nothing to them
+ss = [lui(A0, 0x003F), addiu(A0, A0, 0x5C18), move(A1, 0), lw(V0, A0, 0), addiu(A1, A1, 1), slti(V0, A1, 6),
+      bnezl(V0, -4), addiu(A0, A0, 4), JR_RA, NOP]
+assert idx_end(run(ss), 0x003F5C18) == 0x14 and idx_end(run(ss, likely_slot=False), 0x003F5C18) == 0x14
+
+# 23. widen-heads (session 34): func_002705f8 (atanf) sets id to -1, 0, 1, 2 or 3 on five paths that meet at one point,
+# then reads atanhi[id] (D_00493F38, 4 floats). A bound that grew three times there was widened away in the orders
+# that saw the values in ascending order (the default among them); widening is for loop heads, so every order keeps
+# the bound; with widen_heads=False some order loses it
+def b_(off): return beq(0, 0, off)
+fj = [beq(A0, 0, 9), NOP, beq(A1, 0, 9), NOP, beq(A2, 0, 9), NOP, beq(7, 0, 9), NOP,
+      b_(9), addiu(V1, 0, 3), b_(7), addiu(V1, 0, -1), b_(5), addiu(V1, 0, 0), b_(3), addiu(V1, 0, 1),
+      b_(1), addiu(V1, 0, 2), bltz(V1, 7), sll(V1, V1, 2), lui(V0, 0x0049), addiu(V0, V0, 0x3F38), addu(V0, V0, V1),
+      lw(V0, V0, 0), NOP, NOP, JR_RA, NOP]
+assert idx_end(run(fj), 0x00493F38) == 12
+assert all(idx_end(run(fj, visit_rng=random.Random(sd)), 0x00493F38) == 12 for sd in range(16))
+assert any(idx_end(run(fj, widen_heads=False, visit_rng=random.Random(sd)), 0x00493F38) is None for sd in range(16))
+# a loop head still widens: an unbounded walk (no counter) ends unbounded
+walk = [lui(V0, 0x0049), addiu(V0, V0, 0x3F38), lw(V1, V0, 0), bne(V1, 0, -2), addiu(V0, V0, 4), JR_RA, NOP]
+assert idx_end(run(walk), 0x00493F38) is None
+
+# 24. align-end (session 34): a bounded access wider than a byte ends at its largest offset rounded down to its width.
+# func_0014a398: `p < &D_0054F440` (p walks D_0054C440 in 192-byte steps), `ld 0(p)`: p <= END - 1, but the last
+# doubleword starts at END - 8, so the walk ends at END, not END + 7; a byte load is not rounded
+assert R.aligned_end(0x0054C440, 0x0054F43F - 0x0054C440, 8) == 0x0054F440
+assert R.aligned_end(0x0054C440, 0x0054F43F - 0x0054C440, 8, align=False) == 0x0054F447
+assert R.aligned_end(0x0054C440, 0x2FFF, 1) == 0x0054F440 and R.aligned_end(0x003F5C18, 0x15, 4) == 0x003F5C30
+assert R.aligned_end(0x003F5C18, 0x14, 4) == 0x003F5C30 and R.aligned_end(0x00200000, 0x1F, 16) == 0x00200020
+
+# 25. hix-join (session 34): atanf reads atanhi[id] as `lui at,0x49; addu at,at,v0; lwc1 $f2,%lo(D_00493F38)(at)`, a
+# lui + index (HIX). Two of them joined to nothing, and join-keep's shadows widened the fourth bound to unbounded;
+# they now join to the larger bound (with widen-heads: the default order keeps +12; either switch loses it)
+def lwc1(ft, rs, v): return (0x31 << 26) | (rs << 21) | (ft << 16) | (v & 0xFFFF)
+AT = 1
+# (the values in the order the default visits them, as in atanf: the fall-through path first, then the branches
+# from the last one back)
+fh = fj[:8] + [b_(9), addiu(V1, 0, -1), b_(7), addiu(V1, 0, 3), b_(5), addiu(V1, 0, 2), b_(3), addiu(V1, 0, 1),
+               b_(1), addiu(V1, 0, 0), bltz(V1, 7), sll(V0, V1, 2), lui(AT, 0x0049), addu(AT, AT, V0),
+               lwc1(2, AT, 0x3F38), NOP, NOP, NOP, JR_RA, NOP]
+assert idx_end(run(fh), 0x00493F38) == 12
+assert all(idx_end(run(fh, visit_rng=random.Random(sd)), 0x00493F38) == 12 for sd in range(16))
+assert idx_end(run(fh, hix_join=False), 0x00493F38) is None and idx_end(run(fh, widen_heads=False), 0x00493F38) is None
+
+# 26. neg-keep (session 34): func_001571a8 keeps k = -1 until it finds a free slot, then writes &D_00551608[k]
+# unchecked. The -1 path's state was joined with the other one (an upper bound, nothing below zero) before it was
+# visited in the default order, so the write at D_00551608 - 34 was seen only in some orders; now a dropped small
+# negative constant gets a shadow visit, with the other negatives from the same side (k and 16 * k go together)
+S3 = 19
+nk = [beq(A0, 0, 3), addiu(S3, 0, -1), addiu(S3, 0, 2), NOP, sll(V1, S3, 4), addu(V1, V1, S3), sll(V1, V1, 1),
+      lui(V0, 0x0055), addiu(V0, V0, 0x1608), addu(V0, V0, V1), sw(0, V0, 0), JR_RA, NOP]
+below = lambda ev: {e[1] for e in ev if len(e) == 5 and e[4] in ("mem", "idx") and e[1] < 0x00551608}
+assert below(run(nk)) == {0x00551608 - 34} and not below(run(nk, neg_keep=False))
+assert all(below(run(nk, visit_rng=random.Random(sd))) == {0x00551608 - 34} for sd in range(8))
 
 print("reach_check_test: PASS")

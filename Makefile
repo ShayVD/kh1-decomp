@@ -190,7 +190,11 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # --no-multi-base (base + index made from a choice of bases keeps only the lowest base), --no-widen-bases (a widened
 # shadow keeps only the lowest base), --no-sign-prune (bltz/bgez/blez/bgtz on an exact value take both edges),
 # --no-shadow-image and --no-arg-drop (two causes of visit orders that never end) (session 32), --no-idx-span (a
-# bounded index that ends past the next name pins only that name, not the ones up to its tight end) (session 33).
+# bounded index that ends past the next name pins only that name, not the ones up to its tight end) (session 33),
+# --no-likely-slot (a likely back branch's delay slot sees the walked pointers one stride past the runs that take it),
+# --no-widen-heads (a growing bound is widened at any point, not only at loop heads), --no-hix-join (two lui + index
+# values of one %hi join to nothing) and --no-align-end (an aligned access's end is not rounded down to its width)
+# (session 34).
 # keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
