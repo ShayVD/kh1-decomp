@@ -60,40 +60,6 @@ typedef struct {
 extern Big D_00389C90;
 typedef struct { s32 x0; s32 x4; u8 pad8[8]; f32 pos[3]; u8 pad1c[0x354]; u64 f370; } Obj;
 Obj *func_001230a0(Obj *);
-s32 func_001d59a0(VM *vm) {
-    VmMsg m;
-    Obj *p;
-    m.type = 14;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
-        if (((s32)(p->f370 >> 37) & 3) == 2) {
-            m.x = p->x4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
-s32 func_001d5a50(VM *vm) {
-    VmMsg m;
-    Obj *p;
-    m.type = 13;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
-        if (((s32)(p->f370 >> 37) & 3) == 2) {
-            m.x = p->x4;
-            func_001c4640(&m);
-        }
-    }
-    return 2;
-}
 s32 func_00123618(s32);
 s32 func_001d7040(VM *vm) {
     VmMsg m;

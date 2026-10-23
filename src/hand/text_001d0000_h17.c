@@ -45,7 +45,6 @@ extern Big D_00389C90;
 #include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_0037A378.h"
-extern s32 D_002E27A8;
 extern u64 D_0038CD00;
 typedef struct { s32 f0; s32 f4; s32 f8; } S5AD0;
 typedef struct { s32 f0; s32 f4; s32 f8; u8 padc[0x24]; s32 a30[15]; s32 f6c; } S5BB0;
@@ -53,70 +52,14 @@ extern volatile S5AD0 D_002C5AD0;
 extern volatile S5BB0 D_002C5BB0;
 typedef struct Node { s32 x0; s32 f4; } Node;
 
-s32 func_00123298(void);
 Node *func_001230a0(Node *);
 Node *func_00123220(Node *);
 s32 func_00123618(s32);
 void func_001248e8(s32);
-void func_0013c638(s32, s32);
-void func_0013c778(s32, s32, s32);
 s32 func_0024d490(void);
 void func_00105d38(s32, s32);
 s32 func_00131de0(s32, s32);
 void func_00124218(s32);
-
-s32 func_001d54a8(VM *vm) {
-    if (func_00123298() <= 0) return 2;
-    return 4;
-}
-
-s32 func_001d5618(VM *vm) {
-    s32 n = 0;
-    Node *p;
-    for (p = func_001230a0(0); p; p = func_00123220(p)) {
-        if (func_00123618(p->f4) == 0xcd) n++;
-    }
-    vm->sp++;
-    vm->stk[vm->sp] = n;
-    return 2;
-}
-
-s32 func_001d56a8(VM *vm) {
-    vm->sp++;
-    if (D_002E27A8 == 2) vm->stk[vm->sp] = 1;
-    else vm->stk[vm->sp] = 0;
-    return 2;
-}
-
-s32 func_001d56f0(VM *vm) {
-    VmMsg m;
-    m.type = 37;
-    m.val = 0;
-    m.x = vm->x0;
-    func_001c4640(&m);
-    return 2;
-}
-
-s32 func_001d5738(VM *vm) {
-    VmMsg m;
-    m.type = 38;
-    m.val = 0;
-    m.x = vm->x0;
-    func_001c4640(&m);
-    return 2;
-}
-
-s32 func_001d5780(VM *vm) {
-    func_0013c638(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d5b00(VM *vm) {
-    func_0013c778(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 3;
-    return 2;
-}
 
 s32 func_001d6348(VM *vm) {
     s32 n = 0;

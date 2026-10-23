@@ -492,3 +492,31 @@ s32 func_001d5168(VmRec *vm) {
     vm->sp--;
     return 2;
 }
+
+/* func_001d5408 .. func_001d58a0 are in vm_lib.c. */
+
+extern VmMgr D_00389C90;
+
+/* Remove the entity x3158[0] names, and unlink it from the field VMs.  Kept
+ * h43's view of D_00389C90 with x3158[0] as a `struct VmObj *` (VmRec.obj's
+ * type): the stores to p->obj then reload it every iteration, as the
+ * original does (VmMgr's s32 is hoisted; a `*(struct VmObj **)&x3158[0]`
+ * cast folds the offset into the base). */
+typedef struct { u8 pad0[0x3158]; struct VmObj *f3158; } VmMgr3158;
+#define MGR_OBJ (((VmMgr3158 *)&D_00389C90)->f3158)
+s32 func_001d58c8(VmRec *vm) {
+    s32 i, n;
+    VmRec *p;
+    func_001248e8((s32)MGR_OBJ);
+    p = D_0038D170;
+    n = D_0039A570;
+    for (i = 0; i < n; i++, p++) {
+        if (p->x0 == (s32)MGR_OBJ) p->obj = 0;
+    }
+    p = D_0039A580;
+    n = D_003A7980;
+    for (i = 0; i < n; i++, p++) {
+        if (p->x0 == (s32)MGR_OBJ) p->obj = 0;
+    }
+    return 2;
+}

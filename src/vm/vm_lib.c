@@ -23,6 +23,7 @@
 #include "data/pieces/D_002BC098.h"
 #include "data/pieces/D_003DABD0.h"
 #include "data/data_002B.h"
+#include "data/data_002E.h"
 #include "data/data_0038.h"
 #include "data/data_003C.h"
 #include "data/data_003D.h"
@@ -2498,6 +2499,204 @@ s32 func_001d5388(VmRec *vm) {
             vm->stk[vm->sp] = o->f164;
         }
     }
+    return 2;
+}
+
+/* ---- 0x001d5408-0x001d5b58 ---- */
+
+s32 func_00141468(struct VmObj *, s32);
+s32 func_00141540(struct VmObj *, s32);
+s32 func_0012cac8(s32, s32);
+s32 func_0013c6a8(s32);
+s32 func_00123298(void);
+struct VmObj *func_001230a0(struct VmObj *);
+void func_0013c638(s32, s32);
+void func_0013c778(s32, s32, s32);
+
+s32 func_001d5408(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141468(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d5458(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141540(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d54a8(VmRec *vm) {
+    if (func_00123298() <= 0) return 2;
+    return 4;
+}
+
+s32 func_001d54d8(void) {
+    func_0012cac8(0, 0);
+    return 2;
+}
+
+s32 func_001d5500(void) {
+    func_0012cac8(0, 1);
+    return 2;
+}
+
+s32 func_001d5528(void) {
+    func_0012cac8(1, 0);
+    return 2;
+}
+
+s32 func_001d5550(void) {
+    func_0012cac8(1, 1);
+    return 2;
+}
+
+s32 func_001d5578(void) {
+    func_0012cac8(2, 0);
+    return 2;
+}
+
+s32 func_001d55a0(void) {
+    func_0012cac8(2, 1);
+    return 2;
+}
+
+s32 func_001d55c8(void) {
+    func_0012cac8(6, 0);
+    return 2;
+}
+
+s32 func_001d55f0(void) {
+    func_0012cac8(6, 1);
+    return 2;
+}
+
+/* Push how many entities in the list have func_00123618 kind 0xcd. */
+s32 func_001d5618(VmRec *vm) {
+    s32 n = 0;
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->x4) == 0xcd) n++;
+    }
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d56a8(VmRec *vm) {
+    vm->sp++;
+    if (D_002E27A8 == 2) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001d56f0(VmRec *vm) {
+    VmMsg m;
+    m.type = 37;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5738(VmRec *vm) {
+    VmMsg m;
+    m.type = 38;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5780(VmRec *vm) {
+    func_0013c638(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d57d0(VmRec *vm) {
+    vm->stk[vm->sp] = func_0013c6a8(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d5828(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDEC;
+    return 2;
+}
+
+s32 func_001d5850(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF0;
+    return 2;
+}
+
+s32 func_001d5878(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF4;
+    return 2;
+}
+
+s32 func_001d58a0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF8;
+    return 2;
+}
+
+/* func_001d58c8 is in vm_lib.nofill.c. */
+
+s32 func_001d5978(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDE8;
+    return 2;
+}
+
+/* Message 14 (func_001d59a0) or 13 (func_001d5a50) to every entity whose
+ * flag bits 37-38 are 2. */
+s32 func_001d59a0(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 14;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((s32)(p->f370.flags >> 37) & 3) == 2) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d5a50(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 13;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((s32)(p->f370.flags >> 37) & 3) == 2) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d5b00(VmRec *vm) {
+    func_0013c778(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
     return 2;
 }
 
