@@ -6,8 +6,8 @@
 #define KH1_DATA_PIECES_D_003F7EA0_H
 
 #include "common.h"
-#include "data/types/text_00220000_h48.h"
+#include "list/listmenu.h"
 
-extern Win D_003F7EA0;
+extern ListMenuDesc D_003F7EA0;
 
 #endif /* KH1_DATA_PIECES_D_003F7EA0_H */

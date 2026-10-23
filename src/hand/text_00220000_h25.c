@@ -9,8 +9,6 @@ typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
 s32 func_001ba3f0(s32);
-s32 func_001f40c8(void);
-void func_001f82b0(void);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 u128 *func_00237790(u8 *, u128 *, s32);
@@ -21,7 +19,6 @@ s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
 extern u128 D_00351E10[];
-extern s32 D_003F7EC4;
 extern Str82A8 D_003F82A8;
 extern u128 D_003F8380[];
 extern u8 D_003F8F80[];
@@ -47,15 +44,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-s32 func_00232960(void) {
-    if (func_001f40c8() != 0) {
-        func_001f82b0();
-        return 0;
-    }
-    D_003F7EC4 = 0;
-    return 4;
-}
 
 void func_00232d60(void) {
     u128 *s = D_003F8380;

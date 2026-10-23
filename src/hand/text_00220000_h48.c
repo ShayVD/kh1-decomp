@@ -2,47 +2,8 @@
 #include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
-s16 *func_0011ef10(s32, void *);
-void func_001f3110(void);
-void *func_001f31a8(void *, s32);
 
 extern void *D_003F71C8[];
-
-typedef struct { u8 pad[0x664]; u32 x664, x668, x66c, x670; } Scr;
-#include "data/types/text_00220000_h48.h"
-extern s32 D_003F7EC4;
-extern s32 D_003F7EC8;
-extern Win D_003F7EA0;
-extern s32 D_006476F8;
-extern s32 D_006476FC;
-extern Scr *D_00647700; /* src/data/bss_0064.c: u16 *D_00647700 */
-extern void *D_00647704; /* src/data/bss_0064.c: u8 *D_00647704 */
-extern void *D_00647708; /* src/data/bss_0064.c: s32 D_00647708 */
-extern void *D_0064770C;
-void func_00232960(void);
-
-void func_002329a0(Scr *arg0, s32 arg1, s32 arg2) {
-    u32 x, y;
-    s32 w;
-    func_001f3110();
-    D_003F7EC4 = 1;
-    D_003F7EC8 = 1;
-    D_00647700 = arg0;
-    D_006476F8 = arg1;
-    D_006476FC = arg2;
-    D_00647704 = (u8 *)arg0 + 4;
-    D_00647708 = (u8 *)arg0 + 0x644;
-    x = (arg0->x664 - 0x7000) >> 4;
-    y = (arg0->x668 - 0x7400) >> 4;
-    w = ((arg0->x66c - 0x7000) >> 4) - x;
-    D_003F7EA0.x10 = w + 1;
-    D_003F7EA0.x12 = ((arg0->x670 - 0x7400) >> 4) - y + 1;
-    D_003F7EA0.x18 = w - 39;
-    D_003F7EA0.xc = x;
-    D_003F7EA0.xe = y;
-    D_0064770C = func_001f31a8(&D_003F7EA0, 0);
-    func_0011ef10(0x2C01A, func_00232960);
-}
 
 typedef struct { s32 type; s32 id; s32 a[6]; } Cmd;
 extern Cmd D_006477B0[64];
@@ -183,4 +144,3 @@ void *D_003F71C8[0x6] ALIGNED(8) = {
     (void *)D_003F7090, 0,
 };
 #include "data/data_003F.h"
-#include "data/pieces/D_003F7EA0.h"
