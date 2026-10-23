@@ -1,11 +1,5 @@
 #include "common.h"
 #include "data/bss_0064.h"
-#include "data/pieces/D_003E8E08.h"
-void func_0021b820(void);
-void func_0021c9a0(void *, s32, s32);
-void func_0021cb00(void *, s32, s32, s32, s32);
-s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
-s32 func_0021b800(s32);
 
 typedef struct O98 {
     u8 pad[0xc];
@@ -49,13 +43,6 @@ s32 func_001fe570(void *);
 O98 *func_001f31a8(s32, s32);
 void func_001f3e48(void *, void *);
 #include "vm/script_vm.h"
-extern s32 D_003F6854;
-extern s32 D_003F6828[];
-extern s32 D_003F6840[];
-extern s32 D_003F6740[];
-s32 func_00223650(s32);
-s32 func_00223638(s32);
-void func_0021bbe0(void *, s32, s32, s32, s32, s32, s32);
 extern s32 D_006436D4;
 extern s32 D_00643740;
 extern s32 D_00643734;
@@ -127,24 +114,6 @@ extern s32 D_003F7240[];
 #include "data/pieces/D_003F7238.h"
 void func_00219320(s32);
 void func_00209820(void *, s32, s32, s32, void *);
-
-void func_002236d0(void *a0) {
-    s32 i, y, s;
-    func_0021b820();
-    func_0021c9a0(a0, 16, 72);
-    func_0021cb00(a0, 32, 103, 11, 25);
-    func_0021cb00(a0, 280, 103, 11, 25);
-    y = 106;
-    for (i = 0; i < D_003F6854; i++) {
-        s = D_003F6828[i];
-        func_0021bbe0(a0, 287, y, 0, 0, 30, func_00223650(s));
-        func_001f94f0(a0, 0, 326, y + 4, func_00223638(s), 15, 0x80461e00);
-        (*(S4_3e8e08 *)&D_003E8E08).a = D_003F6840[i];
-        (*(S4_3e8e08 *)&D_003E8E08).b = D_003F6740[s];
-        func_001f94f0(a0, 0, 391, y + 28, func_0021b800(47), 15, 0x80461e00);
-        y += 50;
-    }
-}
 
 void func_002247c8(O98 *a0) {
     O98 *o;

@@ -9,7 +9,6 @@ M2C_UNK func_0020a9b0(s32);
 M2C_UNK func_0020ab88(s32);
 M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0020be10(M2C_UNK);
-extern M2C_UNK D_003F6788;
 extern M2C_UNK D_006436F8; /* src/data/bss_0064.c: s32 D_006436F8[2] */
 extern M2C_UNK D_00643700; /* src/data/bss_0064.c: s32 D_00643700[2] */
 extern M2C_UNK func_00223de0;
@@ -25,10 +24,6 @@ s32 func_001f42b8();
 void func_00109268(void);
 void func_0020a8f0(void);
 void func_0020b968(void);
-
-s32 func_00223650(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&D_003F6788 + (arg0 * 4));
-}
 
 void func_00223980(s32 arg0, s32 arg1, s32 arg2) {
     s32 temp_v1;

@@ -45,35 +45,7 @@ void func_001f3e48(s32, s32);
 s32 func_001f42b8(void);
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
-
-extern S5C30 D_003F5C30;
-extern s32 D_003F6740[];
-extern s32 D_003F6758[];
-extern s32 D_003F6770[];
-extern s32 D_003F6828[];
-extern s32 D_003F6840[];
-extern s32 D_003F6854;
 #include "vm/script_vm.h"
-s32 func_001ec5d8(s32);
-
-void func_00223508(void) {
-    s32 i;
-    D_003F6854 = 0;
-    for (i = 0; i < 5; i++) {
-        if (func_001ec5d8(i) != 0) {
-            D_003F6828[D_003F6854] = i;
-            func_001c0da0(D_003F6758[i], D_003F6770[i], &D_003F6840[D_003F6854]);
-            D_003F6854++;
-        }
-    }
-    D_003F5C30.x10 = 0;
-    if (D_003F6854 == 5) {
-        for (i = 0; i < 5; i++) {
-            if (D_003F6840[i] != D_003F6740[i]) return;
-        }
-        D_003F5C30.x10 = 1;
-    }
-}
 
 void func_0011d768(s32);
 s32 func_001f42b8(void);
@@ -243,6 +215,5 @@ s32 D_003F5C50[0x4] ALIGNED(16) = {
 };
 #include "data/data_003F.h"
 #include "data/data_0049.h"
-#include "data/pieces/D_003F5C30.h"
 #include "data/pieces/D_003F6DF0.h"
 #include "data/pieces/D_003F3488.h"
