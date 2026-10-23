@@ -18,11 +18,6 @@ typedef struct {
     s32 w12340; s32 w12344; u8 pad12348[52]; u64 d12400; u64 d12408;
     u8 pad12416[192]; s32 w12608; s32 *p12612;
 } Big;
-/* D_003C5510: three interpolation channels. */
-typedef struct {
-    u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u8 pad44[8]; s32 m[3];
-    u8 pad64[32]; f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3]; f32 save;
-} Tween;
 #include "data/types/text_001b0000_h14.h"
 typedef struct { f32 x, y, z, w; } V4;
 
@@ -30,13 +25,9 @@ typedef struct { f32 x, y, z, w; } V4;
 extern Slot *D_0037A16C;
 extern s32 D_0037A168;
 extern Big D_00389C90;
-extern Tween D_003C5510;
 extern f32 D_002BBDFC;
 extern f32 D_003C55E0, D_003C55E4, D_003C55E8, D_003C55F4, D_003C55F8, D_003C5630, D_003C5634;
-extern V4 D_003C55F0[];
-extern u64 D_0038CD00;
 extern s32 D_0038CD04;
-extern f32 D_0036266C;
 extern u8 D_0062A130[];
 extern Ent176 D_00629E70[4];
 typedef struct { u16 h; u8 pad[174]; } E176;
@@ -46,10 +37,6 @@ extern E176 D_006298F6[], D_006298F8[];
 void func_001bffa0(s32 i);
 void func_001c07f0(void);
 void func_001dd170(void);
-void func_001c6890(VM *v);
-void func_001c6a20(Tween *t);
-void func_001e9fe8(V4 *dst, V4 *src);
-void func_001e9f18(V4 *dst, V4 *a, V4 *b, f32 t);
 void func_0010bdd0(void *a, void *fn);
 void func_0010bd90(void *a, void *fn);
 void func_001caa20(void);
@@ -137,148 +124,7 @@ void func_001c06f8(void) {
     func_001dd170();
 }
 
-s32 func_001c8478(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55E0;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c84c8(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55E4;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c8518(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55E8;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c8568(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55F0[0].x / 3.1415928f * 180.0f;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c85d8(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55F4 / 3.1415928f * 180.0f;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c8648(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C55F8 / 3.1415928f * 180.0f;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c86b8(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C5630;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-s32 func_001c8708(VM *v) {
-    f32 f;
-    func_001c6890(v);
-    f = D_003C5634;
-    v->sp++;
-    v->stack[v->sp] = f;
-    return 2;
-}
-
-void func_001c8c10(void) {
-    Tween *p = &D_003C5510;
-    p->t[0] += D_002BBDFC;
-    if (p->dur[0] < p->t[0]) {
-        p->t[0] = p->dur[0];
-        p->flags &= ~4;
-    }
-    p->cur[0] = p->start[0] + (p->end[0] - p->start[0]) / p->dur[0] * p->t[0];
-    do { func_001c6a20(p); break; } while (1);
-}
-
-void func_001c8d18(void) {
-    Tween *p = &D_003C5510;
-    p->t[1] += D_002BBDFC;
-    if (p->dur[1] < p->t[1]) {
-        p->t[1] = p->dur[1];
-        p->flags &= ~8;
-    }
-    p->cur[1] = p->start[1] + (p->end[1] - p->start[1]) / p->dur[1] * p->t[1];
-    do { func_001c6a20(p); break; } while (1);
-}
-
-s32 func_001c92e8(void) {
-    return ((u32)(D_0038CD00 >> 37) & 1) ? 4 : 2;
-}
-
-void func_001c9d40(void) {
-    Tween *p = &D_003C5510;
-    p->t[2] += D_002BBDFC;
-    if (p->dur[2] < p->t[2]) {
-        p->flags &= ~0x200;
-        D_0036266C = p->end[2];
-        return;
-    }
-    D_0036266C = (p->end[2] - p->start[2]) * (p->t[2] / p->dur[2]);
-}
-
-s32 func_001ca5f8(VM *v) {
-    V4 out, tmp;
-    V4 *b = D_003C55F0;
-    func_001c6890(v);
-    func_001e9fe8(&tmp, b);
-    func_001e9f18(&out, b - 1, &tmp, b[4].x);
-    v->sp++;
-    v->stack[v->sp] = out.x;
-    return 2;
-}
-
-s32 func_001ca680(VM *v) {
-    V4 out, tmp;
-    V4 *b = D_003C55F0;
-    func_001c6890(v);
-    func_001e9fe8(&tmp, b);
-    func_001e9f18(&out, b - 1, &tmp, b[4].x);
-    v->sp++;
-    v->stack[v->sp] = out.y;
-    return 2;
-}
-
-s32 func_001ca708(VM *v) {
-    V4 out, tmp;
-    V4 *b = D_003C55F0;
-    func_001c6890(v);
-    func_001e9fe8(&tmp, b);
-    func_001e9f18(&out, b - 1, &tmp, b[4].x);
-    v->sp++;
-    v->stack[v->sp] = out.z;
-    return 2;
-}
-
+/* func_001c8478 .. func_001c8708, func_001c8c10, func_001c8d18, func_001c92e8, func_001c9d40 and func_001ca5f8 .. func_001ca708 are in src/camera/camera.c. */
 s32 func_001caa50(void) {
     s32 i;
     for (i = 0; i < 4; i++) {

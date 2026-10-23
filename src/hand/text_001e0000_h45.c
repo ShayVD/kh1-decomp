@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
@@ -40,14 +41,6 @@ typedef struct { s32 x0; Rec98s s; } Rec98;
 typedef struct { u8 pad[0x664]; s32 a, b, c, d; } Big498;
 
 /* Message passed to func_001c4640. */
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
 
 extern Big20 D_00389C90;
 extern Cb20 D_006305C0;
@@ -128,9 +121,6 @@ s32 func_0011ef10(s32, void (*)());
 void func_00120748(void *, s32, void (*)(), s32);
 Ent88 *func_001230a0(Ent88 *);
 s32 func_00123618(s32);
-void func_001c2ec8(s32, s32);
-void func_001c4198(void *, s32);
-void func_001c4640(Msg *m);
 void func_001caf58(void);
 void func_001e2748(void);
 void func_001e27b0(void);
@@ -729,19 +719,19 @@ void func_001ea498(s32 a) {
     D_00389C90.f34d0 = a;
     if (!((D_00389C90.f3070 >> 54) & 1)) {
         D_00389C90.f3070 |= 0x10000000000LL;
-        func_001c4198(D_003DD320, 0);
+        func_001c4198((s8 *)D_003DD320, 0);
         {
             s32 *q = &D_0037A378;
             D_00389C90.f3070 &= ~0x800000000000000LL;
             *q |= 2;
         }
     } else {
-        func_001c2ec8(D_002BCDE4, 99);
+        func_001c2ec8((s8 *)D_002BCDE4, 99);
     }
 }
 
 s32 func_001ea6b8(VM2 *vm) {
-    Msg m;
+    VmMsg m;
     E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
     if (e) {
         m.type = 13;
@@ -758,7 +748,7 @@ s32 func_001ea6b8(VM2 *vm) {
 }
 
 s32 func_001ea760(VM2 *vm) {
-    Msg m;
+    VmMsg m;
     E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
     if (e) {
         m.type = 14;
@@ -775,7 +765,7 @@ s32 func_001ea760(VM2 *vm) {
 }
 
 s32 func_001ea908(VM2 *vm) {
-    Msg m;
+    VmMsg m;
     E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
     if (e) {
         m.type = 35;
@@ -792,7 +782,7 @@ s32 func_001ea908(VM2 *vm) {
 }
 
 s32 func_001ea9c8(VM2 *vm) {
-    Msg m;
+    VmMsg m;
     E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
     if (e) {
         m.type = 36;
@@ -809,7 +799,7 @@ s32 func_001ea9c8(VM2 *vm) {
 }
 
 s32 func_001eaa88(void) {
-    Msg m;
+    VmMsg m;
     Ent88 *p = func_001230a0(0);
     while (p) {
         if (func_00123618(p->id) >= 0 && func_00123618(p->id) < 10 && ((u8 *)p)[6] == 3) {
@@ -828,7 +818,7 @@ s32 func_001eaa88(void) {
 }
 
 s32 func_001eab78(void) {
-    Msg m;
+    VmMsg m;
     Ent88 *p = func_001230a0(0);
     while (p) {
         if (func_00123618(p->id) >= 0 && func_00123618(p->id) < 10 && ((u8 *)p)[6] == 3) {

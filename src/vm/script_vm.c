@@ -17,6 +17,7 @@
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
+#include "vm/vm_find.h"
 #include "data/data_0038.h"
 #include "data/data_003C.h"
 #include "data/pieces/D_0038D170.h"
@@ -77,7 +78,6 @@ extern s32 D_006277E0, D_006277E4, D_006297F0, D_006297F4;
 
 void *func_0011ef10(s32, void *);
 void *func_00232cc0(s32);
-VmRec *func_001e98d0(s32, s32);
 VmTask *func_0011f090(void *, s32, void *);
 s32 func_00123488(s32);
 void func_0012cb78(Obj *, s32);

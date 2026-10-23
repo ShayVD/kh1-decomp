@@ -3,7 +3,6 @@
 #include "platform/math.h"
 
 #include "data/types/text_001c0000_b10.h"
-typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 
 typedef struct VmObj {
     u8 pad0[0x10];
@@ -67,27 +66,10 @@ extern Big D_00389C90;
 #include "data/pieces/D_003C21A8.h"
 #include "data/pieces/D_003C3A70.h"
 extern CamS D_003C5510;
-extern Vec D_003C55F0;
-#include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
-#include "data/pieces/D_002E27A4.h"
 extern f32 D_002BBDFC;
 extern s32 D_002BBAB0, D_002BBAB8, D_002BBAC8;
 extern u8 D_003C5660[], D_003C5680[], D_003C56A0[], D_003C56C0[], D_003C56F0[], D_003C5728[], D_003C5750[], D_003C5780[], D_003C57B0[];
 
-void *memset(void *, s32, u32);
-s32 rand(void);
-void func_001c6890(void);
-void func_001e9fe8(f32 *, f32 *);
-void func_00124c68(f32);
-void sceVu0UnitMatrix(Mtx);
-void func_00267768(Mtx, Mtx, f32);
-void func_00267810(Mtx, Mtx, f32);
-void func_002676c0(Mtx, Mtx, f32);
-void func_00267578(Mtx, Mtx, f32 *);
-void func_002672f8(f32 *, Mtx, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
 s32 func_001c4640(Msg *);
 void func_002673b8(f32 *, f32 *);
 Save *func_00232cc0(s32);
@@ -96,234 +78,10 @@ Ent2 *func_00147840(s32);
 void *func_0011ef10(s32, void *);
 void func_001caa50(void);
 
-void func_001c6a20(void) {
-    Vec rot;
-    Mtx m;
-    Vec v;
-    Vec t;
-    memset(rot, 0, 16);
-    memset(v, 0, 16);
-    v[3] = 1.0f;
-    memset(t, 0, 16);
-    t[3] = 1.0f;
-    func_001e9fe8(rot, D_003C55F0);
-    if (rot[0] > 1.5707964f || rot[0] < -1.5707964f) {
-        if (rot[2] < 0.0f) rot[2] = rot[2] + 3.1415928f;
-        else rot[2] = rot[2] - 3.1415928f;
-    }
-    func_00124c68(D_003C5510.f124);
-/*P*/
-    D_003C5510.v100[0] = 0.0f;
-    D_003C5510.v100[2] = 1.0f;
-    D_003C5510.v100[1] = 0.0f;
-    t[2] = D_003C5510.f120;
-    D_003C5510.v100[3] = 1.0f;
-    D_003C5510.v110[1] = 1.0f;
-    D_003C5510.v110[3] = 1.0f;
-    D_003C5510.v110[0] = 0.0f;
-    D_003C5510.v110[2] = 0.0f;
-/*Q*/
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, D_003C5510.rx);
-    func_00267810(m, m, D_003C5510.ry);
-    func_002676c0(m, m, D_003C5510.rz);
-    func_00267578(m, m, t);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(v, m, v);
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(D_003C5510.v100, m, D_003C5510.v100);
-    v[0] = -v[0];
-    v[1] = -v[1];
-    v[2] = -v[2];
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, rot[2]);
-    func_002672f8(D_003C5510.v110, m, D_003C5510.v110);
-    v[0] += D_003C5510.pos[0];
-    v[1] += D_003C5510.pos[1];
-    v[2] += D_003C5510.pos[2];
-    func_002675a8(&D_002E2780.x, v);
-    func_002675a8(&D_002E2790.x, D_003C5510.pos);
-    D_002E27A4 = rot[2];
-}
+/* func_001c6a20 is in src/camera/camera.c. */
+void func_001c6a20(void);
 
-s32 func_001c8e20(void) {
-    Vec v;
-    Mtx m;
-    Vec rot;
-    f32 x, y, z, k;
-    z = x = y = 0.0f;
-    func_001c6890();
-    switch (D_003C5510.smode) {
-    case 0:
-        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f;
-        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f;
-        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f;
-        break;
-    case 1:
-        k = D_003C5510.st / D_003C5510.sdur;
-        if (0.5f < k) k = (1.0f - k) * 2.0f;
-        else k = k * 2.0f;
-        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
-        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
-        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
-        break;
-    case 2:
-        k = D_003C5510.st / D_003C5510.sdur;
-        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
-        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
-        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
-        break;
-    case 3:
-        k = 1.0f - D_003C5510.st / D_003C5510.sdur;
-        x = (f32)rand() / 2147483647.0f * D_003C5510.amp[0]; x -= D_003C5510.amp[0] * 0.5f; x *= k;
-        y = (f32)rand() / 2147483647.0f * D_003C5510.amp[1]; y -= D_003C5510.amp[1] * 0.5f; y *= k;
-        z = (f32)rand() / 2147483647.0f * D_003C5510.amp[2]; z -= D_003C5510.amp[2] * 0.5f; z *= k;
-        break;
-    }
-    func_001e9fe8(rot, D_003C5510.rot);
-    v[0] = x;
-    v[1] = y;
-    v[2] = z;
-    v[3] = 1.0f;
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002672f8(v, m, v);
-    func_00267518(D_003C5510.pos, D_003C5510.base, v);
-    func_001c6a20();
-    D_003C5510.st += D_002BBDFC;
-    if (D_003C5510.sdur <= D_003C5510.st) {
-        D_003C5510.b8 = 0;
-        func_002675a8(D_003C5510.pos, D_003C5510.base);
-    }
-    return 4;
-}
-
-void func_001c9308(void) {
-    f32 a[4];
-    f32 b[4];
-    s32 i;
-    f32 s, u, u2, u3, d;
-    f32 *p0, *p1;
-    for (i = 0; i < 3; i++) {
-        a[i] = 0.0f;
-        b[i] = 0.0f;
-    }
-    D_003C5510.t[0] += D_002BBDFC;
-    p0 = D_003C5510.p0[0];
-    p1 = D_003C5510.p1[0];
-    switch (D_003C5510.mode[0]) {
-    case 0:
-    case 3:
-        s = D_003C5510.dur[0];
-        for (i = 0; i < 3; i++) a[i] = (p1[i] - p0[i]) / s;
-        break;
-    case 1:
-    case 2:
-        for (i = 2; i >= 0; i--) a[i] = 0.0f;
-        break;
-    }
-    switch (D_003C5510.mode[0]) {
-    case 0:
-    case 2:
-        s = D_003C5510.dur[0];
-        for (i = 0; i < 3; i++) b[i] = (p1[i] - p0[i]) / s;
-        break;
-    case 1:
-    case 3:
-        for (i = 2; i >= 0; i--) b[i] = 0.0f;
-        break;
-    }
-    s = 0.0f;
-    if (D_003C5510.t[0] == s) {
-        D_003C5510.pos[0] = p0[0];
-        D_003C5510.pos[1] = p0[1];
-        D_003C5510.pos[2] = p0[2];
-    } else if (D_003C5510.dur[0] <= D_003C5510.t[0]) {
-        D_003C5510.pos[0] = p1[0];
-        D_003C5510.pos[1] = p1[1];
-        D_003C5510.pos[2] = p1[2];
-    } else {
-        d = D_003C5510.dur[0] - s;
-        u = (D_003C5510.t[0] - s) / d;
-        u2 = u * u;
-        u3 = u * u2;
-        for (i = 0; i < 3; i++) {
-            D_003C5510.pos[i] = (2.0f * u3 - 3.0f * u2 + 1.0f) * p0[i]
-                + (-2.0f * u3 + 3.0f * u2) * p1[i]
-                + ((u3 - 2.0f * u2 + u) * a[i] + (u3 - u2) * b[i]) * d;
-        }
-    }
-    func_001c6a20();
-    if (D_003C5510.t[0] > D_003C5510.dur[0]) D_003C5510.b4 = 0;
-}
-
-void func_001c96c0(void) {
-    f32 a[4];
-    f32 b[4];
-    s32 i;
-    f32 s, u, u2, u3, d;
-    f32 *p0, *p1;
-    for (i = 0; i < 3; i++) {
-        a[i] = 0.0f;
-        b[i] = 0.0f;
-    }
-    D_003C5510.t[1] += D_002BBDFC;
-    p0 = D_003C5510.p0[1];
-    p1 = D_003C5510.p1[1];
-    s = D_003C5510.dur[1];
-    switch (D_003C5510.mode[1]) {
-    case 0:
-    case 3:
-        for (i = 0; i < 3; i++) a[i] = (p1[i] - p0[i]) / s;
-        break;
-    case 1:
-    case 2:
-        for (i = 2; i >= 0; i--) a[i] = 0.0f;
-        break;
-    }
-    switch (D_003C5510.mode[1]) {
-    case 0:
-    case 2:
-        s = D_003C5510.dur[1];
-        for (i = 0; i < 3; i++) b[i] = (p1[i] - p0[i]) / s;
-        break;
-    case 1:
-    case 3:
-        for (i = 2; i >= 0; i--) b[i] = 0.0f;
-        break;
-    }
-    s = 0.0f;
-    if (D_003C5510.t[1] == s) {
-        D_003C5510.rot[0] = p0[0];
-        D_003C5510.rot[1] = p0[1];
-        D_003C5510.rot[2] = p0[2];
-    } else if (D_003C5510.dur[1] <= D_003C5510.t[1]) {
-        D_003C5510.rot[0] = p1[0];
-        D_003C5510.rot[1] = p1[1];
-        D_003C5510.rot[2] = p1[2];
-    } else {
-        d = D_003C5510.dur[1] - s;
-        u = (D_003C5510.t[1] - s) / d;
-        u2 = u * u;
-        u3 = u * u2;
-        for (i = 0; i < 3; i++) {
-            D_003C5510.rot[i] = (2.0f * u3 - 3.0f * u2 + 1.0f) * p0[i]
-                + (-2.0f * u3 + 3.0f * u2) * p1[i]
-                + ((u3 - 2.0f * u2 + u) * a[i] + (u3 - u2) * b[i]) * d;
-        }
-    }
-    func_001c6a20();
-    if (D_003C5510.t[1] > D_003C5510.dur[1]) D_003C5510.b5 = 0;
-}
-
+/* func_001c8e20, func_001c9308 and func_001c96c0 are in src/camera/camera.c. */
 s32 func_001d2c68(VM *vm) {
     Vec v;
     Msg m;
