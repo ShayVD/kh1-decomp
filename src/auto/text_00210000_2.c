@@ -8,14 +8,8 @@ extern s32 D_003F34DC;
 extern s32 D_003F34E4;
 extern s32 D_003F34EC;
 extern s32 D_003F34F4;
-extern s32 D_003F3504;
 extern s32 D_003F3514;
 extern s32 D_003F351C;
-
-void func_0021b470(void) {
-    D_003F3504 += 1;
-    D_003F34C8 -= 1;
-}
 
 void func_0021d228(void) {
     D_003F34DC += 1;

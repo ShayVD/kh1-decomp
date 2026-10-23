@@ -2,8 +2,6 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0064.h"
-
-M2C_UNK func_001efcb0(s32, s32);
 M2C_UNK func_0021ae28();
 M2C_UNK func_0021cfc8();
 M2C_UNK func_0021d188();
@@ -14,25 +12,6 @@ M2C_UNK func_002210c0();
 M2C_UNK func_00222b50();
 M2C_UNK func_002234b8();
 M2C_UNK func_00223948();
-M2C_UNK func_00266f38(s32, M2C_UNK *);
-extern M2C_UNK D_00642EB0;
-extern M2C_UNK D_00642F60;
-extern s32 D_003F34E8;
-extern s32 D_00643100;
-s32 func_00266c08(M2C_UNK);
-
-s32 func_0021b7f0(void) {
-    return D_00643100;
-}
-
-void func_0021b800(s32 arg0) {
-    func_001efcb0(D_003F34E8, arg0);
-}
-
-void func_0021b820(void) {
-    func_00266f38(func_00266c08(2), &D_00642EB0);
-    func_00266f38(func_00266c08(2), &D_00642F60);
-}
 
 void func_0021dad8(void) {
     func_0021d188();

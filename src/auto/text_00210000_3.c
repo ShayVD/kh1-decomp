@@ -12,19 +12,8 @@ extern M2C_UNK D_00642EB0;
 extern M2C_UNK D_00642F60;
 extern s32 D_003F34E0;
 extern s32 D_003F5C20;
-s32 D_006430EC ALIGNED(4);
-extern s32 D_006430F0;
-extern s32 D_006430F8;
-extern s32 D_00643100;
 extern s32 D_0064311C;
 extern s32 D_00643120;
-
-void func_0021b4a0(void) {
-    D_006430F0 = 0;
-    D_006430F8 = -1;
-    D_00643100 = 0;
-    D_006430EC = 0;
-}
 
 void func_0021cb00(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 var_s0;

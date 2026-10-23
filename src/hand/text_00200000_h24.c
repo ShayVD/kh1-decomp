@@ -6,43 +6,6 @@ typedef W606Mem_304be8 S4BE8e;
 
 #include "data/pieces/D_003F34B8.h"
 
-#include "data/pieces/D_003F59A0.h"
-extern f32 D_003F59B0;
-extern s32 D_003F59B4, D_003F59B8;
-extern s32 D_003F59C8[];
-extern s32 D_006430F4;
-extern s32 D_00643108, D_0064310C;
-
-void func_0021b1b0(s32 a0, s32 a1, f32 x, f32 y) {
-    u32 i;
-    D_003F59B0 = x;
-    D_003F59A0[1] = y;
-    for (i = 0; i < 2; i++) {
-        if (D_003F59C8[i] == D_006430F4) {
-            D_003F59A0[1] = 0.0f;
-            break;
-        }
-    }
-    D_00643108 = a0;
-    D_0064310C = a1;
-    D_003F59B4 = a0 - 256;
-    D_003F59B8 = a1 - 192;
-}
-
-typedef struct { s32 f0; u8 pad[16]; u8 f14[200 - 20]; s32 fc8; s32 fcc; } S3020;
-extern S3020 D_00643020;
-extern s32 D_00643100;
-void func_00162110(s32, void *);
-void func_00176310(s32);
-void func_0021b418(void) {
-    if (D_00643020.fcc) {
-        func_00162110(D_00643020.f0, D_00643020.f14);
-        if (D_00643020.fc8) func_00176310(D_00643020.fc8);
-        D_00643020.fcc = 0;
-        D_00643100 = 0;
-    }
-}
-
 extern s32 D_00642EA0;
 extern u8 D_00642E98[];
 #include "data/pieces/D_003F5C18.h"

@@ -6,161 +6,17 @@
    with wqb03_rr.py in a copy without func_0021b6a0 (the tool puts all .rodata at one address). */
 
 /* ---- faf38/match.c ---- */
-
-typedef f32 Mtx[4][4];
-#include "data/pieces/D_00425F70.h"
-typedef struct { u8 pad[8]; s32 x8; s32 xc; } P8_q1;
-typedef struct {
-    s32 x0;
-    u8 pad4[4];
-    s32 x8;
-    s32 xc;
-    s32 x10;
-    s32 x14;
-    u8 x18[4];
-    s32 x1c;
-    u8 pad20[8];
-    s32 x28;
-    s32 x2c;
-    s32 x30;
-    s8 x34[4];
-    s8 x38[3];
-    s8 x3b;
-    s32 x3c;
-    s8 x40[6];
-    s8 x46;
-    s8 x47;
-    s32 x48;
-    u8 pad4c[4];
-    s32 x50;
-    u8 pad54[0x60 - 0x54];
-    u64 x60;
-    u64 x68;
-    f32 x70;
-    s32 x74;
-    s32 x78;
-    u8 pad7c[0xC0 - 0x7C];
-    s32 xc0;
-    u8 padc4[4];
-    P8_q1 *xc8;
-    s32 xcc;
-} G20_q1;
-extern G20_q1 D_00643020;
-#include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
 extern s32 D_006430F8;
 extern s32 D_00643100;
 extern f32 D_002BBDFC;
-#include "data/pieces/D_002BC140.h"
-#include "data/pieces/D_002BC144.h"
-extern u8 D_003F5990[];
-#include "data/pieces/D_003F59A0.h"
-typedef struct { u8 pad[0x90]; s32 x90; } Ob_q1;
-s32 func_001301d8(void *, s32, s32, s32);
-void func_001655e0(void *, s32, s32, f32);
-s32 func_0021ade8(s32);
-void func_002675a8(s32, void *);
-void func_00236a58(void);
-void func_002678b8(void *, void *, void *);
-void func_00131cc8(s32, void *);
-void sceVu0MulMatrix(void *, void *, void *);
-void func_00267578(void *, void *, void *);
-void func_00167d70(s32, f32);
-s32 func_00167698(s32);
-void func_00161de8(s32, void *, void *, s32);
-
-void func_0021af38(Ob_q1 *a) {
-    Mtx m;
-    Mtx m2;
-    f32 v[4];
-    s32 r;
-    if (D_00643100 == 0) return;
-    if (func_0021ade8(D_006430F8)) {
-        D_00425F70->v1b0[0] = 1.0f;
-        D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
-        D_00425F70->v1b0[1] = 1.0f;
-        D_00425F70->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
-    }
-    r = func_001301d8(D_00643020.x18, 0, 0, 0);
-    func_00236a58();
-    func_002678b8(m, D_00425CE0, D_003F59A0);
-    func_00131cc8(D_006430F8, m2);
-    sceVu0MulMatrix(m, m, m2);
-    func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, D_00425F70->m80, m);
-    func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
-    D_00643020.x70 += D_002BBDFC;
-    func_00167d70(D_00643020.x14, D_002BBDFC);
-    if ((f32)func_00167698(r) <= D_00643020.x70) D_00643020.x70 = 0.0f;
-    D_00643020.x30 = 60000;
-    v[3] = 1.0f;
-    D_00643020.x34[3] = a->x90;
-    v[0] = 0;
-    v[1] = 0;
-    v[2] = 0;
-    func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
-    (*(void **)&D_002BC144) = D_00425F70->m40;
-    (*(void **)&D_002BC140) = D_00425F70->m80;
-    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
-    func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
-}
 
 /* ---- fb6a0/d.c ---- */
-
-extern s32 D_003F34C8;
-extern s32 D_003F3504;
-extern s32 D_006430F0;
 extern s32 D_006430F8;
-extern s32 D_006430FC;
 extern s32 D_00643100;
-s32 func_001560f8(s32, void *);
-void func_0021b470(void);
-void FlushCache(s32);
-void func_0021b250(s32);
 
 /* rodata */
-void func_0021b6a0(void) {
-    switch (D_006430F0) {
-    case 0:
-        break;
-    case 1:
-        switch (D_003F3504) {
-        case 0:
-            D_003F34C8++;
-            D_003F3504 = 1;
-            D_006430F0++;
-            func_001560f8(D_006430FC, func_0021b470);
-            D_006430F8 = D_006430FC;
-            break;
-        case 1:
-            D_006430F0++;
-            break;
-        default:
-            D_006430F0 = 3;
-            break;
-        }
-        break;
-    case 2:
-        if (D_003F3504 == 2) D_006430F0++;
-        break;
-    case 3:
-        if (D_006430F8 == D_006430FC) {
-            FlushCache(0);
-            func_0021b250(D_006430FC);
-            D_006430F0++;
-            D_00643100 = 1;
-        } else {
-            D_006430F0 = 1;
-            D_003F3504 = 0;
-        }
-        break;
-    case 4:
-        break;
-    }
-}
 
 /* ---- fd860/MATCH_d860.c ---- */
 
@@ -1177,6 +1033,5 @@ err:
 #include "data/data_0042.h"
 #include "data/data_003E.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_003F34C8.h"
 #include "data/pieces/D_003F50E0.h"
 #include "data/pieces/D_00425CAC.h"
