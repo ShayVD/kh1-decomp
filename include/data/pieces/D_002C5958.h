@@ -7,6 +7,9 @@
 
 #include "common.h"
 
+/* s6_02's view of the flag word's bits (session 31); other users test masks. */
+typedef struct { u32 b0 : 2; u32 b2 : 1; u32 b3 : 24; u32 b27 : 1; u32 r : 4; } Fl_2c5958;
+
 extern u32 D_002C5958;
 extern s16 D_002C595A;
 

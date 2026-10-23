@@ -106,6 +106,6 @@ typedef struct B3Ob {
     u8 pad4a0[0x4ac - 0x4a0];
     f32 x4ac;
 } B3Ob;
-typedef struct { B3Ob *x0; s32 x4, x8, xc; } B3Tbl;
+typedef struct { void *x0; s32 x4, x8, xc; } B3Tbl; /* x0: the slot's model (b03 B3Ob, h33 Mdl, c02 u8 *) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00130000_B03_P3_H */

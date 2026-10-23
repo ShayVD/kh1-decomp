@@ -63,7 +63,7 @@ s32 func_0012dea0(Q8 *q, s32 i) {
     D_002E3190.b0 = o->f6;
     D_002E3190.b1 = o->f7;
     D_002E319C = o;
-    while (D_00524F40 != ((Q8 **)&D_002E3170)) func_0012dd38();
+    while (D_00524F40 != D_002E3170) func_0012dd38();
     return 1;
 }
 typedef union { u64 x; struct { u32 lo0; u32 x32:3; u32 f35:1; u32 x36:1; u32 kind:2; u32 hi:25; } b; } F370b;

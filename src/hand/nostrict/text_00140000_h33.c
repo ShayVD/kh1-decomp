@@ -121,7 +121,6 @@ typedef struct {
 /* ---- misc ---- */
 typedef struct { V4f p; V4f d; V4f hit; s16 h30; s32 w34; u8 pad38[8]; } Ray;
 typedef struct { u8 pad[0x350]; s32 a[4]; } Mdl;
-typedef struct { Mdl *m; u8 pad[0xC]; } MdlEnt;
 typedef struct { u8 x0, x1, x2; } Item;
 typedef struct { u32 type:8; u32 id:16; u32 hi:8; s32 w4; } Cmd;
 typedef struct { u8 id; u8 pad[3]; s32 w4; s32 w8; } Cmd8;
@@ -543,7 +542,7 @@ s32 func_00142388(V4f *p, s32 *out) {
         if (r.w34 == -1) {
             func_00105c98(r.h30, out);
         } else {
-            Mdl *m = ((MdlEnt *)&D_003044E0)[r.w34].m;
+            Mdl *m = D_003044E0[r.w34].x0;
             for (i = 0; i < 4; i++) {
                 out[i] = m->a[i];
             }
