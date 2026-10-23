@@ -7,30 +7,6 @@ extern s32 D_00640E00[];
 extern s32 D_00640E20;
 extern s32 D_00640E24;
 extern s32 D_00640E28;
-s32 func_002014a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00201550(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00201600(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00206370(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_00201440(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i, s32 j) {
-    return func_002014a0(a, b, c, d, e, f, g, h, i, 15);
-}
-
-s32 func_00201460(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i, s32 j) {
-    return func_00201550(a, b, c, d, e, f, g, h, i, 15);
-}
-
-s32 func_00201480(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i, s32 j) {
-    return func_00201600(a, b, c, d, e, f, g, h, i, 15);
-}
-
-s32 func_002066b0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
-    return func_00206370(a, b, c, d, 2, e, f, e, f);
-}
-
-s32 func_00206710(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
-    return func_00206370(a, b, c, 2, d, e, e, f, f);
-}
 
 void func_00206e28(void) {
     s32 i;

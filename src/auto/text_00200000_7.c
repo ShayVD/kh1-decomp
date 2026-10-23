@@ -18,9 +18,6 @@ extern M2C_UNK D_003F3258;
 extern s32 D_00640E24;
 extern s32 D_00640E28;
 #include "data/pieces/D_003E3D68.h"
-s32 func_001f94f0(s32, s32, s32, s32, s32, s32, s32);
-s32 func_00202678(s32, s32, s32);
-s32 func_00203a10(s32, s32);
 s32 func_00207358(void);
 s32 func_002079c8(s32);
 s32 func_0020ec50(s32);
@@ -29,9 +26,6 @@ s32 func_0020fc58(s32);
 void func_001f9010(s32);
 void func_001f9270(s32, s32, s32, s32, s32, s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-void func_001f9e48(s32, s32, s32, s32, s32, s32, s32);
-void func_00200648(s32, s32, s32, s32, s32, s32);
-void func_00206130(s32, s32, s32, s32, s32, s32);
 void func_00206e28(void);
 void func_00206f20(void);
 void func_00206ff0(void);
@@ -48,42 +42,6 @@ void func_00219118(void);
 void func_0021adc8(void);
 void func_0021db30(void);
 void func_00229850(void);
-
-void func_00201550(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6, s32 arg7, s32 arg_sp0, s32 arg_sp8) {
-    u32 temp_a3;
-
-    func_00200648(arg0, arg1, arg3, arg4, arg5, arg7);
-    temp_a3 = 0x1A - arg_sp8;
-    func_001f94f0(arg0, arg2, arg6, arg4 + ((s32) (temp_a3 + (temp_a3 >> 0x1F)) >> 1), arg_sp0, arg_sp8, M2C_FIELD(arg7, s32 *, 0x10));
-}
-
-void func_00201600(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6, s32 arg7, s32 arg_sp0, s32 arg_sp8) {
-    u32 temp_a3;
-
-    func_00200648(arg0, arg1, arg3, arg4, arg5, arg7);
-    temp_a3 = 0x1A - arg_sp8;
-    func_001f9e48(arg0, arg2, arg6, arg4 + ((s32) (temp_a3 + (temp_a3 >> 0x1F)) >> 1), arg_sp0, arg_sp8, M2C_FIELD(arg7, s32 *, 0x10));
-}
-
-void func_00202fc0(s32 arg0) {
-    func_00202678(arg0, ((s32) (M2C_FIELD(arg0, u16 *, 0xBE) << 0x10) >> 0x14) - 0x10, 0x80C8C8C8);
-}
-
-s32 func_00202ff0(s32 arg0) {
-    return func_00202678(arg0, ((s32) (M2C_FIELD(arg0, s16 *, 0xBE) + M2C_FIELD(arg0, s16 *, 0xC2)) >> 4) + 4, 0x80C8C8C8);
-}
-
-void func_002040c8(s32 arg0) {
-    func_00203a10(arg0, ((s32) (M2C_FIELD(arg0, s16 *, 0xBE) + M2C_FIELD(arg0, s16 *, 0xC2)) >> 4) + 4);
-}
-
-void func_00206110(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    func_00206130(arg0, arg1, arg2, arg3, arg4, 0x80F04646);
-}
-
-void func_002066e8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    func_00206130(arg0, arg1, arg2, 2, arg3, 0x80F04646);
-}
 
 void func_00207618(void) {
     func_0020be10(0x10);

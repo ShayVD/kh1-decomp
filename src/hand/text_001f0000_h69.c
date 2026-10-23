@@ -1,63 +1,30 @@
 #include "common.h"
-typedef struct { u8 pad[0xd8]; s16 n; } WinM;
-typedef struct {
-    u8 pad0[0xbe];
-    s16 be;
-    u8 padc0[2];
-    s16 c2;
-    s16 c4;
-    s16 c6;
-    u8 padc8[0xcc - 0xc8];
-    s16 cc;
-    s16 ce;
-    u8 padd0[0xd8 - 0xd0];
-    s16 d8;
-} Win;
-u8 *func_001efc10(s32);
+#include "text/textwin.h"
 void func_001f8e18(void *);
 void func_001f8f30(void);
-s32 func_001f94f0(void *, s32, s32, s32, u8 *, s32, s32);
-s32 func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fc308(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_001fd518(void *);
 s32 func_001fd538(void *);
 s32 func_001fd590(void *);
 s32 func_001fd618(void *);
-s32 func_001fd658(void *);
-void func_00207830(Win *, s32, s32, s32, s32, s32, s32);
-void func_00207870(Win *, s32, s32, s32, s32, s32, s32);
-void func_002078b0(Win *, s32, s32, s32, s32, s32, s32);
-void func_002078f0(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_00207938(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_00207980(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_00207830(TextWin *, s32, s32, s32, s32, s32, s32);
+void func_00207870(TextWin *, s32, s32, s32, s32, s32, s32);
+void func_002078b0(TextWin *, s32, s32, s32, s32, s32, s32);
+void func_002078f0(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_00207938(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_00207980(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
 
-void func_00203890(WinM *o, s32 x, s32 y, s32 x2, s32 col) {
-    s32 cur, mid, a, b;
-    if (o->n < 2) return;
-    cur = func_001fd538(o);
-    a = cur == 0 ? 17 : 15;
-    b = cur == o->n - 1 ? 18 : 16;
-    func_001fc308(o, x, y, 0, 0, a, 0, col, col);
-    func_001fc308(o, x2, y, 0, 0, b, 0, col, col);
-    y--;
-    mid = x + (x2 - x + 9) / 2;
-    func_001fb428(o, 1, 0, 0, mid - 7, y, func_001fd538(o) + 1, 15, col);
-    func_001f94f0(o, 0, mid - 7, y, func_001efc10(84), 15, col);
-    func_001fb428(o, 0, 0, 0, mid + 6, y, func_001fd658(o), 15, col);
-}
-
-void func_00209340(Win *o, s32 a1, s32 *strs) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
+void func_00209340(TextWin *o, s32 a1, s32 *strs) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
     s32 sr = func_001fd518(o);
     s32 sc = func_001fd538(o);
     s32 idx = func_001fd618(o);
     s32 y = func_001fd590(o);
-    s32 rows = o->ce;
-    s32 w = dx - (o->c6 >> 4);
-    s32 cnt = o->cc;
-    s32 cols = o->d8;
+    s32 rows = o->xce;
+    s32 w = dx - (o->xc6 >> 4);
+    s32 cnt = o->xcc;
+    s32 cols = o->xd8;
     s32 r, c, x;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
@@ -74,18 +41,18 @@ done:
     func_001f8f30();
 }
 
-void func_002094e0(Win *o, s32 a1, s32 *strs) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
+void func_002094e0(TextWin *o, s32 a1, s32 *strs) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
     s32 sr = func_001fd518(o);
     s32 sc = func_001fd538(o);
     s32 idx = func_001fd618(o);
     s32 y = func_001fd590(o);
-    s32 rows = o->ce;
-    s32 w = dx - (o->c6 >> 4);
-    s32 cnt = o->cc;
-    s32 cols = o->d8;
+    s32 rows = o->xce;
+    s32 w = dx - (o->xc6 >> 4);
+    s32 cnt = o->xcc;
+    s32 cols = o->xd8;
     s32 r, c, x;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
@@ -102,18 +69,18 @@ done:
     func_001f8f30();
 }
 
-void func_00209680(Win *o, s32 a1, s32 *strs) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
+void func_00209680(TextWin *o, s32 a1, s32 *strs) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
     s32 sr = func_001fd518(o);
     s32 sc = func_001fd538(o);
     s32 idx = func_001fd618(o);
     s32 y = func_001fd590(o);
-    s32 rows = o->ce;
-    s32 w = dx - (o->c6 >> 4);
-    s32 cnt = o->cc;
-    s32 cols = o->d8;
+    s32 rows = o->xce;
+    s32 w = dx - (o->xc6 >> 4);
+    s32 cnt = o->xcc;
+    s32 cols = o->xd8;
     s32 r, c, x;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
@@ -130,18 +97,18 @@ done:
     func_001f8f30();
 }
 
-void func_00209820(Win *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
-    s32 x0 = o->be >> 4;
-    s32 dx = o->c2 >> 4;
-    s32 dy = o->c4 >> 4;
+void func_00209820(TextWin *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
     s32 sr = func_001fd518(o);
     s32 sc = func_001fd538(o);
     s32 idx = func_001fd618(o);
     s32 y = func_001fd590(o);
-    s32 rows = o->ce;
-    s32 w = dx - (o->c6 >> 4);
-    s32 cnt = o->cc;
-    s32 cols = o->d8;
+    s32 rows = o->xce;
+    s32 w = dx - (o->xc6 >> 4);
+    s32 cnt = o->xcc;
+    s32 cols = o->xd8;
     s32 r, c, x;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
@@ -158,19 +125,19 @@ done:
     func_001f8f30();
 }
 
-void func_002099d8(Win *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
+void func_002099d8(TextWin *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
     s32 x0, dx, dy, sr, sc, idx, y, rows, w, r, cnt, cols, c, x;
-    x0 = o->be >> 4;
-    dx = o->c2 >> 4;
-    dy = o->c4 >> 4;
+    x0 = o->xbe >> 4;
+    dx = o->xc2 >> 4;
+    dy = o->xc4 >> 4;
     sr = func_001fd518(o);
     sc = func_001fd538(o);
     idx = func_001fd618(o);
     y = func_001fd590(o);
-    rows = o->ce;
-    w = dx - (o->c6 >> 4);
-    cnt = o->cc;
-    cols = o->d8;
+    rows = o->xce;
+    w = dx - (o->xc6 >> 4);
+    cnt = o->xcc;
+    cols = o->xd8;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
         x = x0;
@@ -187,19 +154,19 @@ done:
     func_001f8f30();
 }
 
-void func_00209b90(Win *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
+void func_00209b90(TextWin *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
     s32 x0, dx, dy, sr, sc, idx, y, rows, w, r, cnt, cols, c, x;
-    x0 = o->be >> 4;
-    dx = o->c2 >> 4;
-    dy = o->c4 >> 4;
+    x0 = o->xbe >> 4;
+    dx = o->xc2 >> 4;
+    dy = o->xc4 >> 4;
     sr = func_001fd518(o);
     sc = func_001fd538(o);
     idx = func_001fd618(o);
     y = func_001fd590(o);
-    rows = o->ce;
-    w = dx - (o->c6 >> 4);
-    cnt = o->cc;
-    cols = o->d8;
+    rows = o->xce;
+    w = dx - (o->xc6 >> 4);
+    cnt = o->xcc;
+    cols = o->xd8;
     func_001f8e18(o);
     for (r = 0; r < rows + 1; r++) {
         x = x0;
