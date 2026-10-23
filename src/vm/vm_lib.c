@@ -51,6 +51,7 @@
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
+#include "data/pieces/D_00377364.h"
 #include "data/pieces/D_00377360.h"
 #include "data/pieces/D_0037735C.h"
 #include "data/pieces/D_00377358.h"
@@ -4123,6 +4124,161 @@ s32 func_001d9ff8(void) {
 s32 func_001da040(VmRec *vm) {
     func_001ba2f8(vm->stk[vm->sp]);
     vm->sp--;
+    return 2;
+}
+
+/* ---- 0x001da088-0x001da6d0 ---- */
+
+void func_00141218(struct VmObj *);
+s32 func_002394f8(void);
+extern s32 D_003F6E24;
+typedef struct { u16 a:4; u16 b:4; u16 c:8; } VmB16;
+VmB16 *func_00147778(s32);
+void func_0013c9e0(s32, s32);
+s32 func_00111660(s32, s32);
+void func_00105c70(s32, s32 *);
+s32 func_00142388(f32 *, void *);
+void func_00142470(struct VmObj *, void *);
+
+s32 func_001da088(VmRec *vm) {
+    func_00141218(func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da0e8(void) {
+    if (D_002C595A & 1) return 4;
+    return 2;
+}
+
+s32 func_001da108(void) {
+    if (D_002C5958 & 0x6000) return 4;
+    return 2;
+}
+
+s32 func_001da128(VmRec *vm) {
+    D_00377364(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da178(void) {
+    return func_002394f8() ? 4 : 2;
+}
+
+s32 func_001da1a8(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_003F6E24;
+    return 2;
+}
+
+s32 func_001da1d0(VmRec *vm) {
+    VmB16 *p = func_00147778(vm->stk[vm->sp]);
+    switch (p->a) {
+    case 0:
+        func_0013c9e0(p->c, p->b);
+        break;
+    case 1:
+        func_0013c8c8(p->c, p->b);
+        break;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da260(VmRec *vm) {
+    s32 a = vm->stk[vm->sp - 1];
+    s32 b = vm->stk[vm->sp];
+    vm->sp--;
+    vm->stk[vm->sp] = func_00111660(a, b);
+    return 2;
+}
+
+/* Message 23 with the point func_00105c70 gives for stk[sp-1] (in 1/128). */
+s32 func_001da2c8(VmRec *vm) {
+    VmMsg m;
+    s32 buf[3];
+    func_00105c70(vm->stk[vm->sp - 1], buf);
+    m.type = 23;
+    m.v[0] = buf[0] * 0.0078125f;
+    m.val = (u32)vm->stk[vm->sp];
+    m.v[1] = buf[1] * 0.0078125f;
+    m.v[2] = buf[2] * 0.0078125f;
+    m.x = vm->x0;
+    m.v[3] = vm->obj->fac;
+    func_001c4640(&m);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da3b8(VmRec *vm) {
+    W606Mem_304be8 *e = D_00304BE8->m;
+    e += vm->stk[vm->sp];
+    vm->stk[vm->sp] = e->sub.lv;
+    return 2;
+}
+
+/* Component 0 / 1 / 2 of what func_00142388 gives for the point
+ * stk[sp-2..sp]. */
+s32 func_001da400(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[0];
+    return 2;
+}
+
+s32 func_001da490(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[1];
+    return 2;
+}
+
+s32 func_001da520(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[2];
+    return 2;
+}
+
+s32 func_001da5b0(VmRec *vm) {
+    s32 v[3];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    if (vm->obj) func_00142470(vm->obj, v);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001da628(VmRec *vm) {
+    f32 v[4];
+    f32 r[4];
+    struct VmObj *o;
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, r);
+    o = vm->obj;
+    if (o) {
+        func_00142470(o, r);
+    }
+    vm->sp -= 3;
     return 2;
 }
 

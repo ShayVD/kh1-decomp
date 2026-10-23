@@ -32,7 +32,9 @@ struct VmObj {
     u8 pad5c[0x6c - 0x5c];
     struct VmObj6c *f6c;    /* 0x6c */
     s32 f70;                /* 0x70: pushed by func_001d9850 */
-    u8 pad74[0x130 - 0x74];
+    u8 pad74[0xac - 0x74];
+    f32 fac;                /* 0xac: sent by func_001da2c8 */
+    u8 padb0[0x130 - 0xb0];
     struct VmObj130 *f130;  /* 0x130 */
     u8 pad134[0x164 - 0x134];
     s32 f164;               /* 0x164: pushed by func_001d5350 / func_001d5388 */

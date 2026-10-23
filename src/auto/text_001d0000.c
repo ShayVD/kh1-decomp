@@ -20,7 +20,6 @@ extern s32 D_002BD110;
 extern s32 D_002C5958;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_0037A378.h"
-extern s32 D_003F6E24;
 extern s32 D_0062A220;
 extern s32 D_0062A224;
 #include "data/pieces/D_002C6440.h"
@@ -31,15 +30,6 @@ void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001da1a8(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_003F6E24;
-    return 2;
-}
 
 s32 func_001da9f0(void) {
     D_002BCDE8 = 0;

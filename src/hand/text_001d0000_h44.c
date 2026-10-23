@@ -61,40 +61,7 @@ void func_0010ef70(void *, void *, void (*)());
 void func_001e2810(void);
 
 
-void func_00105c70(s32, s32 *);
-s32 func_001da2c8(VM *vm) {
-    VmMsg m;
-    s32 buf[3];
-    func_00105c70(vm->stk[vm->sp - 1], buf);
-    m.type = 23;
-    m.v[0] = buf[0] * 0.0078125f;
-    m.val = (u32)vm->stk[vm->sp];
-    m.v[1] = buf[1] * 0.0078125f;
-    m.v[2] = buf[2] * 0.0078125f;
-    m.x = vm->x0;
-    m.v[3] = vm->obj->fac;
-    func_001c4640(&m);
-    vm->sp -= 2;
-    return 2;
-}
 
-s32 func_00142388(f32 *, f32 *);
-void func_00142470(Obj *, f32 *);
-s32 func_001da628(VM *vm) {
-    f32 v[4];
-    f32 r[4];
-    Obj *o;
-    v[0] = vm->stk[vm->sp - 2];
-    v[1] = vm->stk[vm->sp - 1];
-    v[2] = vm->stk[vm->sp];
-    func_00142388(v, r);
-    o = vm->obj;
-    if (o) {
-        func_00142470(o, r);
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
 s32 func_001dc000(VM *vm) {
     VmMsg m;
