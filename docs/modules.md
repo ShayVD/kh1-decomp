@@ -387,6 +387,109 @@ func_001d4538, where `new_var` / `temp_s1 = arg0 + 4` were needed only on
 `void *`), s7_w3's func_001d0380 on `vm->fl.b.b5` (u32 bit-fields inside
 VmFl's union) and b10's func_001d4798 in nofill on `fl.b.b0` / `b5`.
 
+## Session 33: the rest of the library file, 0x001d5408-0x001dcad0
+
+Worker s33module moved the remaining 301 functions of the library file into
+the four vm_lib files, in eleven chunks (one commit each), in address order
+above the table.  0x001cd238-0x001dcad0 is now entirely src/vm/vm_lib*.c:
+577 functions (vm_lib.c 539 with the dispatcher, nofill 30, nostrict 4,
+nostrict_nofill 4).  No new sibling mode was needed.
+
+| chunk | functions | sources | siblings |
+|---|---|---|---|
+| 0x001d5408-0x001d5b58 | 26 | auto text_001d0000.c (16), h17 (7), h43 (2) | nofill: nofill/h43's func_001d58c8 |
+| 0x001d5b58-0x001d6000 | 7 | auto (4), auto _8, session1_probes' func_001d5f80 | nofill: nofill/s6_15's func_001d5b58 |
+| 0x001d6000-0x001d6d60 | 43 | auto (26), _10 (2), _12 (2), _7 (2), _2, _4, h17 (5), h43 (2), s8_w8 | nofill: nofill/h17's func_001d6658 |
+| 0x001d6d60-0x001d7678 | 29 | auto (16), _10 (2), _2, h17 (6), h43 (4) | |
+| 0x001d7678-0x001d8680 | 15 | h18 (6), auto (3), _10, _4, c10's func_001d7ef8, h67's func_001d8400 | nofill: nofill/b11's func_001d7898 / func_001d7b88 |
+| 0x001d8680-0x001d9480 | 36 | auto (20), _7 (2), h18 (8), h67 (2), s6_15 (2), nofill/s8_w1's func_001d9268 | nofill: nofill/s6_15's func_001d9348 |
+| 0x001d9480-0x001da088 | 37 | h18 (22), auto (8), _2 (2), _7 (2), h44 (2) | nostrict: nostrict/text_001d0000.c's func_001d9510 |
+| 0x001da088-0x001da6d0 | 15 | h18 (12), h44 (2), auto | |
+| 0x001da6d0-0x001db080 | 24 | h19 (11), auto (8), _4, _7, _9, h44, b11's func_001dad58 | |
+| 0x001db080-0x001dbae0 | 27 | h19 (19), auto (4), _16, _6, s7_w5, s12_s12w5 | |
+| 0x001dbae0-0x001dcad0 | 42 | h19 (13), auto (9), _7 (5), _4 (2), _2 (2), _1, _11, _12, _14, _20, h44 (5) | nostrict: nostrict/h19's func_001dbdc8 |
+
+func_001dca88 (not a table entry) went with the last chunk: it is a push
+like its neighbours (`stk[++sp] = func_0021add8()`), and the dispatcher
+follows it directly.  The library file is therefore 0x001cd238-0x001dcb00.
+
+Deleted as empty (22 files): h17, h18, h43, s8_w8, s7_w5, s12_s12w5,
+nofill/h17, nofill/h43 (with include/data/types/nofill_text_001d0000_h43.h),
+nofill/s8_w1, nostrict/text_001d0000.c, nostrict/h19, auto
+text_001d0000_1 / _4 / _6 / _9 / _10 / _11 / _12 / _14 / _16 / _20.
+Partly emptied (the rest is after the dispatcher): auto text_001d0000.c,
+_2, _7, _8, h19 (keeps D_0062A640 with its user func_001dd170), h44, h67,
+c10, b11, nofill/b11, s6_15, nofill/s6_15; session1_probes lost
+func_001d5f80.  objdiff units 900 -> 879.
+
+**Types named.**
+
+- *VmRec* (vm_rec.h): `f24`, `f28` at 0x24 (the move func_001d9480 starts
+  and func_001d9348 steps; was pad).  The views' v08 / f14..f1c / f340..f348
+  / f2f4 / flags are `p`, `f14[3]`, `f340[3]`, `x2f4`, `fl`.
+- *VmMgr* (vm_mgr.h, additive): the camera tween at 0x3460, `cdur`, `ct`,
+  `c0`, `c1` (CamS_2BC0F0: start and target of func_001d9100 /
+  func_001d8f38; vm_mgr.h now includes the D_002BC0F0 piece), so VmMgr is
+  0x34d0 bytes (under the 0x34d8 other files declare); h67's Str and
+  s8_w1's Big92 views of those fields are gone from the library.  VmBox is
+  `aligned(8)` (s8_w8's and h43's box views were: func_001d63e8 copies a box
+  with ld / sd).  The trigger boxes (h43's ent3180 / s8_w8's e[]) are
+  `box[]` / `nbox`, the slots' id / f8 / f10 / f14 are `e[i].obj / snd /
+  x10 / h`, x3170 / x3174 are auto _8's [3164] / [3165].
+- *struct VmObj* (vm_obj.h): `f70`, `fac` (0xac), and two more members of
+  the 0x370 union: `b` (h44's bit 44) and `k` (h44's bits 37-38, `kind`).
+  h17's `Node`, h43's `Obj`, h44's `Obj3` and h19's `Obj { flags }` are
+  VmObj (`x4` the id, `x0` the flag word).
+- Local types in vm_lib.c: `VmSave1` (save block 1's four lists at 0xa80,
+  c10's Rec / h67's Save), `VmB16` (func_00147778's result), `VmP147840`,
+  `VmMsgE` (nofill: the jump's message with the step e[3]).
+- Prototypes that disagreed: func_0014ec10 is `void` (as _12 had it; with
+  s32 func_001d6080 picked another register); func_00142388 is `s32 (f32 *,
+  void *)` (h18: void (f32 *, s32 *), h44: s32 (f32 *, f32 *): both match);
+  func_0011ea10 is unprototyped (func_001dbd20 passes a third u64 argument
+  through a cast; h19's func_001dbcd8 passes two).
+
+**Kept as views or offsets, with a comment:**
+
+- func_001d58c8 (nofill): a one-field view of D_00389C90 with x3158 as
+  `struct VmObj *`: the p->obj stores must alias it (reloaded each
+  iteration); VmMgr's s32 is hoisted, and `*(struct VmObj **)&x3158[0]`
+  folds the offset into the base.
+- func_001d7438 / func_001d74b8: h17's view of the eight slots with obj as
+  a pointer (`VmSlotP`); VmSlot's s32 obj made sp load after the store, and
+  a cast of `&e[i].obj` folded the slot base into one constant.
+- func_001d9268: s8_w1's view of the tween fields as B48 unions (`VmMgrB48`);
+  through VmMgr the copy addresses fold into constants.
+- func_001d6b70: h17's volatile views of D_002C5AD0 / D_002C5BB0 (S5AD0 via
+  a cast macro, S5BB0 as an extern): the pieces' W29S70 / PadSt have no
+  fields there.
+- func_001d9510 (nostrict): the auto body with fields by offset (`VMF`); on
+  VmRec / VmObj it schedules differently (51 words).
+- func_001d9750: sp read by offset (`VM_SP`): as a struct field gcc 2.96
+  treats the store to the scalar D_0038D0E0 as not aliasing it
+  (MEM_IN_STRUCT_P vs a fixed scalar) and keeps sp in a register; the
+  original reloads it.
+- func_001db658 keeps s7_w5's address arithmetic (`&m[k].sub.x19[j]` is
+  longer); func_001db9f8 / func_001dbe78 / func_001dc580 read D_00304BE8 by
+  offset (0x580, 0x36 + 0x74 k, and the u16 counters 0x84e-0x866 in its
+  pad); func_001dc280 passes `vm + 4 sp` as the auto file did.
+- The D_0038CD00 bit tests (h18's F64 / F64b views) became shifts,
+  `(s32)(D_0038CD00 >> 61) & 1` ..., and matched.
+
+**The dispatcher.**  Adding names above the table flipped func_001dcad0
+between `lw D_003D9FE0(k)` and lui / addiu / addu (2 or 3 extra prototypes
+did it; s33types saw the same from script_vm.h).  The likely cause is cse's
+hash of a SYMBOL_REF, which uses the address of its name string, so it
+depends on every name allocated before it.  `VmLibFn` and `extern VmLibFn
+D_003D9FE0[];` are now declared at the top of vm_lib.c, and 0-6 extra
+declarations at the top or above the table no longer change it.
+
+**Checks after each commit**: `make -j2` byte-identical (6979 functions),
+`make report` 6979 at 100%, `s31_warndiff` 0 new warnings in the edited
+files, and the m12 float build (`SHIFT_OVERLAYS` empty): float_covered.txt
+identical to the session's base, kh1-shift.elf symbols at the same
+addresses (sorted nm identical) and .text / .data / .reginfo identical.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -471,7 +574,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
   A new directory needs no registration.
 - link-script, patch, verify, progress: work from out/gen/placements.tsv (symbol ->
   address); `decompiled_addrs` (rank) scans all of src/.
-- objdiff / report: one unit per source file (src/vm/ is nine units, src/camera/ three and src/msgwin/ one; 924 after session 31, 921 after session 32's first half, 900 after its second half).
+- objdiff / report: one unit per source file (src/vm/ is nine units, src/camera/ three and src/msgwin/ one; 924 after session 31, 921 after session 32's first half, 900 after its second half, 879 after session 33).
 - autodecomp `--write` only creates new src/auto/ files keyed by address (or
   `--out-dir`); it never touches modules, and a function defined anywhere is not
   retried. Its default flags come from the `src/auto` path.
@@ -483,7 +586,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 32, after each step)
+## Verification (sessions 30 to 33, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -499,31 +602,27 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The rest of the library file** 0x001d5408-0x001dcad0 into src/vm/vm_lib.c,
-  above the table, in address order (session 32 "Second half").  About 300
-  functions remain: auto text_001d0000.c (115), h18 (48), h19 (43), h17 (18),
-  auto text_001d0000_7.c (12), h44 (10), h43 (8), and a few each from
-  text_001d0000_2 / _4 / _10 / _12, h67, s6_15, b11, nofill/s6_15, nofill/b11,
-  nostrict/h19, nostrict/text_001d0000.c, nofill/s8_w1, s8_w8, s7_w5,
-  s12_s12w5, c10 and src/anon/session1_probes.c (func_001d5f80).  Next is
-  0x001d5408-0x001d5b58 (26: auto text_001d0000.c (16), h17 (7), h43 (2),
-  nofill/h43's func_001d58c8), then nofill/s6_15's func_001d5b58 (896
-  bytes) and 0x001d5ed8-0x001d6000 (auto, auto _8 and session1_probes'
-  func_001d5f80).  h18 and h19 hold most of 0x001d6000-
-  0x001dca88: each is a long run, so they make natural chunks.  Keep using
-  `include/vm/vm_obj.h` for the entity and add fields there.
-  func_001dca88 (just before the dispatcher, not a table entry) goes with
-  the last chunk if it belongs there.
 - **After the dispatcher**: 0x001dcb00 onwards (no table entries until
-  0x001ddc78; then 154 entries to 0x001ec678) is other code; find its groups by
-  data as for the message windows.
-- Remaining views of the camera data: b10 still declares the D_003C5510 piece
-  (CamS) and the D_003C21A8 / D_003C3A70 pieces it no longer uses, and h14
-  keeps its multi-name `extern f32 D_003C55E0, D_003C55E4 ...` line (unused
-  now, kept for cover_check; drop them with a float_covered check).
-- Other files' prototypes of VM functions that differ from script_vm.h
-  (`s32 func_001c4640`, `func_001c19f8(VMa *, s32)`, `func_001c2df0(s32, s32)`):
-  retype one file at a time with `make`.
+  0x001ddc78; then 154 entries to 0x001ec678) is other code; find its groups
+  by data as for the message windows.  What is there now: auto
+  text_001d0000.c (6), _2 (8), _7 (2), h19 (4, and the data D_0062A640),
+  h44, h67, c10, b11, nofill/b11, s6_15, nofill/s6_15 and the 0x001e
+  files.  Whether the 154 later entries belong to vm_lib.c (code after the
+  dispatcher in the same file) or to other files is open: try them appended
+  to vm_lib.c and look at their data before deciding.
+- The library's prototypes of its own functions: the table still declares
+  every entry `s32 func_X();`, including the ones now defined above it
+  (harmless; a `void` one would conflict, none does).
+- Remaining views in vm_lib*.c (see "Session 33" and "Session 32"): each
+  was tried on the shared types and is a genuine second view; leave them
+  unless a type change makes one fit.
+- Remaining views of the camera data: h14 keeps its multi-name `extern f32
+  D_003C55E0, D_003C55E4 ...` line (unused, kept for cover_check; drop it
+  with a float_covered check).  b10 is gone (session 32).
+- Other files' prototypes of VM functions that differ from script_vm.h:
+  retype one file at a time with `make` (worker s33types did a first pass;
+  8 mismatches remained in b11, h17, s6_15, h18, h44: h17 and h18 are
+  gone now).
 - Leave alone the files another worker is retyping in the same session.
 
 ## Checklist for a module move
