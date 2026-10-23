@@ -22,7 +22,6 @@ typedef struct {
     u8 pad98[0x18];
 } Win;
 
-typedef struct { u8 pad0[8]; u16 w[1]; u8 pad[0x48f - 10]; u8 b48f; u8 b490; } SaveB;
 typedef struct { s32 a; s32 n; void (*fn)(); } Cb;
 typedef struct { s32 x0; char s[9][32]; u8 pad[0x644 - 4 - 9 * 32]; char x644[0x20]; s32 a, b, c, d; } Big498;
 typedef struct {
@@ -466,15 +465,15 @@ s32 func_001e5d78(void) {
     D_002C5958 |= 0xC;
     func_001e4b08();
     for (i = 0; i < 10; i++) {
-        if (((SaveB *)D_00304BE8)->w[i + 1000] < 9) {
+        if (D_00304BE8->cnt[i] < 9) {
             buf[0] = 1;
             buf[1] = 1;
-            buf[2] = ((SaveB *)D_00304BE8)->w[i + 1000] + 33;
+            buf[2] = D_00304BE8->cnt[i] + 33;
             buf[3] = 1;
             buf[4] = 0;
         } else {
-            buf[0] = (((SaveB *)D_00304BE8)->w[i + 1000] + 1) / 10 + 33;
-            buf[1] = (((SaveB *)D_00304BE8)->w[i + 1000] + 1) % 10 + 33;
+            buf[0] = (D_00304BE8->cnt[i] + 1) / 10 + 33;
+            buf[1] = (D_00304BE8->cnt[i] + 1) % 10 + 33;
             buf[2] = 1;
             buf[3] = 0;
         }

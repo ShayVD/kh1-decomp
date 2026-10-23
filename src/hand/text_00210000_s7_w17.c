@@ -1,21 +1,8 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
-typedef struct {
-    u8 x0;
-    u8 pad1[0x17];
-    u8 n18;
-    u8 a19[8];
-    u8 n21;
-    u8 a22[0x10];
-    u8 x32;
-    u8 pad33[9];
-    s32 x3c;
-    u8 a40[12];
-    u8 a4c[12];
-    u8 a58[12];
-    u8 a64[12];
-} SaveSub;
-typedef struct { s32 x0; SaveSub s; } SaveE;
+typedef Sub_304be8 SaveSub;
+typedef W606Mem_304be8 SaveE;
 #include "data/pieces/D_003E3D70.h"
 typedef E3D70_3E3D70_3 E3D70;
 typedef struct { u8 pad[0x24]; s32 x24; } Obj;
@@ -45,9 +32,9 @@ void func_00208310(void *, s32, s32, s32, s32, s32);
 /* rodata */
 void func_00218218(Obj *a) {
     s32 n = a->x24;
-    SaveE *e = &((SaveE *)D_00304BE8)[n];
+    SaveE *e = &D_00304BE8->m[n];
     E3D70 *r = &D_003E3D70.e3D70_3[n];
-    SaveSub *s = &e->s;
+    SaveSub *s = &e->sub;
     u32 k = D_00642CF0[func_001fd538(a)];
     s32 y = D_00642D18 * 28 + 11;
     s32 x, i, j;
@@ -80,10 +67,10 @@ void func_00218218(Obj *a) {
         D_003E8E08[0] = r->x50;
         func_001f9438(a, 0, 22, 139, 283, 15, 0x80E6E6E6);
         func_00206130(a, 22, 154, 139, 2, 0x80323232);
-        D_003E8E08[0] = s->x0;
+        D_003E8E08[0] = s->lv;
         func_001f9438(a, 0, 22, 165, 284, 15, 0x80E6E6E6);
         func_00206130(a, 22, 180, 139, 2, 0x80323232);
-        D_003E8E08[0] = s->x3c;
+        D_003E8E08[0] = s->exp;
         func_001f9438(a, 0, 22, 191, 285, 15, 0x80E6E6E6);
         func_00206130(a, 22, 206, 139, 2, 0x80323232);
         D_003E8E08[0] = r->x68;
@@ -107,8 +94,8 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 86, 290, 15, 0x80E6E6E6);
         x = 30;
         y = 129;
-        for (i = 0; i < s->n18; i++) {
-            func_001f94f0(a, 0, x, y - 15, func_001eebb0(s->a19[i]), 15, 0x80E6E6E6);
+        for (i = 0; i < s->x18; i++) {
+            func_001f94f0(a, 0, x, y - 15, func_001eebb0(s->x19[i]), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;
             if (i & 1) {
@@ -122,9 +109,9 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 33, 291, 15, 0x80E6E6E6);
         x = 30;
         y = 75;
-        m = s->n21;
+        m = s->x21;
         for (i = 0; i < m; i++) {
-            func_001f94f0(a, 0, x, y - 15, func_001ee698(s->a22[i]), 15, 0x80E6E6E6);
+            func_001f94f0(a, 0, x, y - 15, func_001ee698(s->x22[i]), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;
             if (i & 1) {
@@ -138,7 +125,7 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 33, 292, 15, 0x80E6E6E6);
         x = 30;
         y = 75;
-        for (i = 0; i < 12 && (k = s->a40[i]); i++) {
+        for (i = 0; i < 12 && (k = s->name[i]); i++) {
             func_001f94f0(a, 0, x, y - 15, func_001ef540(k), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;
@@ -153,7 +140,7 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 33, 292, 15, 0x80E6E6E6);
         x = 30;
         y = 75;
-        for (i = 12; i < 24 && (k = s->a40[i]); i++) {
+        for (i = 12; i < 24 && (k = s->name[i]); i++) {
             func_001f94f0(a, 0, x, y - 15, func_001ef540(k), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;
@@ -168,7 +155,7 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 33, 292, 15, 0x80E6E6E6);
         x = 30;
         y = 75;
-        for (i = 24; i < 36 && (k = s->a40[i]); i++) {
+        for (i = 24; i < 36 && (k = s->name[i]); i++) {
             func_001f94f0(a, 0, x, y - 15, func_001ef540(k), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;
@@ -183,7 +170,7 @@ void func_00218218(Obj *a) {
         func_001f9438(a, 0, 30, 33, 292, 15, 0x80E6E6E6);
         x = 30;
         y = 75;
-        for (i = 36; i < 48 && (k = s->a40[i]); i++) {
+        for (i = 36; i < 48 && (k = s->name[i]); i++) {
             func_001f94f0(a, 0, x, y - 15, func_001ef540(k), 15, 0x80E6E6E6);
             func_00206130(a, x, y, 128, 2, 0x80323232);
             x = 190;

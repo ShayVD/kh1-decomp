@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x152ff8-0x15b098 (worker 58). Built without
  * strict aliasing. */
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
 
 #include "data/types/nostrict_text_00150000_h58_p.h"
@@ -1006,8 +1007,8 @@ s32 func_00158ec8(void) {
 }
 
 /* ---- func_0015ae48 ---- */
-typedef struct { u8 b0, b1, b2, b3, b4, b5, b6, b7; u8 pad8[0x10]; u8 b18; u8 pad19[8]; u8 b21; u8 pad22[0x4e]; } Sub116;
-typedef struct { s32 x0; Sub116 s; } Ent116;
+typedef Sub_304be8 Sub116;
+typedef W606Mem_304be8 Ent116;
 typedef struct { u8 pad[0x40]; s32 x40; u8 pad44[4]; s32 x48; s32 x4c; s32 x50; u8 pad54[0x8c]; s32 xe0; } St6c;
 typedef struct { u8 pad[0x6c]; St6c *x6c; } P6c;
 #include "data/pieces/D_00304BE8.h"
@@ -1016,56 +1017,56 @@ void func_00141468(P6c *, s32);
 void func_00141540(P6c *, s32);
 void func_0013c8c8(s32, s32);
 void func_0015ae48(s32 i, u32 k) {
-    Sub116 *s = &((Ent116 *)D_00304BE8)[i].s;
+    Sub116 *s = &D_00304BE8->m[i].sub;
     P6c *p = func_0013daf8(i);
     s32 v;
     switch (k) {
     case 0:
         break;
     case 1:
-        s->b2 += 3;
+        s->hpmax += 3;
         if (p) {
             p->x6c->x40 += 3;
             func_00141468(p, 3);
             return;
         }
-        s->b1 += 3;
+        s->x1 += 3;
         break;
     case 2:
-        s->b4 += 1;
+        s->mpmax += 1;
         if (p) {
             p->x6c->x48 += 1;
             func_00141540(p, 1);
             return;
         }
-        s->b3 += 1;
+        s->x3 += 1;
         break;
     case 3:
-        s->b5 = s->b5 + 2 > 100 ? 100 : s->b5 + 2;
+        s->pad_5[0] = s->pad_5[0] + 2 > 100 ? 100 : s->pad_5[0] + 2;
         if (p) {
             v = p->x6c->xe0 + 2;
             p->x6c->xe0 = v < 101 ? v : 100;
         }
         break;
     case 4:
-        s->b6 = s->b6 + 2 > 100 ? 100 : s->b6 + 2;
+        s->pad_5[1] = s->pad_5[1] + 2 > 100 ? 100 : s->pad_5[1] + 2;
         if (p) {
             v = p->x6c->x4c + 2;
             p->x6c->x4c = v < 101 ? v : 100;
         }
         break;
     case 5:
-        s->b7 = s->b7 + 2 > 100 ? 100 : s->b7 + 2;
+        s->pad_5[2] = s->pad_5[2] + 2 > 100 ? 100 : s->pad_5[2] + 2;
         if (p) {
             v = p->x6c->x50 + 2;
             p->x6c->x50 = v < 101 ? v : 100;
         }
         break;
     case 6:
-        s->b21++;
+        s->x21++;
         break;
     case 7:
-        s->b18++;
+        s->x18++;
         break;
     default:
         func_0013c8c8(k & ~0x80, i);

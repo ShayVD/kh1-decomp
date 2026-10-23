@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
@@ -7,7 +8,7 @@ typedef int u128 __attribute__((mode(TI)));
 #include "data/types/text_00220000_h25.h"
 typedef struct { s32 a, b; } P2;
 typedef struct { u8 pad[0xCC]; u16 cc; u16 ce; u16 d0; s16 d2; } Obj;
-typedef struct { u8 pad[0x25]; u8 n; u8 ids[0x4E]; } Ent74;
+typedef W606Mem_304be8 Ent74;
 #include "data/types/text_00220000_h25_p.h"
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
@@ -324,11 +325,11 @@ void func_00231a80(void) {
 }
 
 s32 func_00231b38(s32 arg0, s32 arg1) {
-    Ent74 *e = &((Ent74 *)D_00304BE8)[arg0];
+    Ent74 *e = &D_00304BE8->m[arg0];
     s32 c = 0;
     s32 i;
-    for (i = 0; i < e->n; i++) {
-        if (e->ids[i] == arg1) c++;
+    for (i = 0; i < e->sub.x21; i++) {
+        if (e->sub.x22[i] == arg1) c++;
     }
     return c;
 }

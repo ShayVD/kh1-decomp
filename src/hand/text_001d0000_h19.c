@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
 
 /* Script VM handlers: value stack at +0x184, top index at +0x180. */
@@ -89,7 +90,7 @@ void func_0011ea10(void (*)(), s32 (*)());
 s32 func_001559f0(s32, s32);
 s32 func_00120748(void *, s32, void (*)(), s32);
 extern u8 D_004906C0[];
-typedef struct { u8 pad0[0x36]; u8 f36; u8 pad37[116 - 0x37]; } E116;
+typedef W606Mem_304be8 E116;
 #include "data/pieces/D_00304BE8.h"
 
 s32 func_001da6d0(VM *vm) {
@@ -251,7 +252,7 @@ s32 func_001db550(VM *vm) {
 }
 
 s32 func_001db600(VM *vm) {
-    ((E116 *)D_00304BE8)[vm->stk[vm->sp - 1]].f36 = vm->stk[vm->sp];
+    D_00304BE8->m[vm->stk[vm->sp - 1]].sub.x32 = vm->stk[vm->sp];
     vm->sp -= 2;
     return 2;
 }
