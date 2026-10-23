@@ -9,15 +9,6 @@ extern s32 D_006437C4;
 extern s32 D_006437D8;
 s32 func_001efd98(M2C_UNK);
 
-void func_00223a30(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = func_001efd98(0x190) * 0x170;
-    M2C_FIELD(arg0, s32 *, 0xB4) = (s32) (M2C_FIELD(arg0, s32 *, 0xB4) - temp_v1);
-    M2C_FIELD(arg0, u16 *, 0xBA) = (u16) (M2C_FIELD(arg0, u16 *, 0xBA) + temp_v1);
-    M2C_FIELD(arg0, u16 *, 0xC0) = (u16) (M2C_FIELD(arg0, u16 *, 0xC0) + temp_v1);
-}
-
 void func_00224698(void *arg0) {
     s32 temp_v1;
 

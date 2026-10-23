@@ -3,15 +3,10 @@
 #include "m2c.h"
 #include "data/bss_0064.h"
 M2C_UNK func_0022f818();
-extern s32 D_003F34C0;
 extern s32 D_00646A20; /* src/data/bss_0064.c: u32 D_00646A20 */
 extern s32 D_00646A24; /* src/data/bss_0064.c: u32 D_00646A24 */
 extern s32 D_00646A28;
 extern s32 D_00647644;
-
-void func_002245a8(void) {
-    D_003F34C0 &= ~2;
-}
 
 void func_0022d138(void) {
 

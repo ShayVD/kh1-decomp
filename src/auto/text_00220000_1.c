@@ -13,7 +13,6 @@ M2C_UNK func_00223980(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_00224698(s32);
 M2C_UNK func_00233ef8(M2C_UNK);
 extern M2C_UNK D_003F6950;
-extern s32 D_003F34C8;
 extern s32 D_003F6E28;
 extern s32 D_003F6E30;
 extern s32 D_006436D0;
@@ -21,15 +20,8 @@ extern s32 D_006436D4;
 extern s32 D_00643708;
 extern s32 D_0064373C;
 extern s32 D_00643758;
-extern s32 D_00643794;
 extern s32 D_00643798;
 s32 func_001f31a8(M2C_UNK *, M2C_UNK);
-
-void func_00223e68(void) {
-    D_00643798 += 1;
-    D_00643794 += 1;
-    D_003F34C8 -= 1;
-}
 
 void func_002259c8(void *arg0) {
     s32 temp_v0;
@@ -60,4 +52,3 @@ void func_00229820(void) {
 #include "data/bss_0064_mixed.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_003F6DF0.h"
-#include "data/pieces/D_003F34C8.h"

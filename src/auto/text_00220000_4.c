@@ -21,7 +21,6 @@ extern f32 D_002BBDFC;
 extern f32 D_006469B8[]; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
 extern s32 D_003F34C8;
 extern s32 D_003F34D4;
-extern s32 D_003F34FC;
 extern s32 D_00643734;
 extern s32 D_00643740;
 extern s32 D_00646990;
@@ -35,16 +34,6 @@ void func_00205e30(s32, s32);
 void func_00206130(s32, s32, s32, s32, s32, s32);
 void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0020ca30(s32, s32, s32, s32);
-
-void func_00223d98(s32 arg0) {
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xAE, 0xC, 0x191, 0x11, 0x8078C850);
-}
-
-void func_00223de0(void) {
-    D_003F34FC += 1;
-    D_003F34C8 -= 1;
-}
 
 void func_002245c8(s32 arg0) {
     func_001f9010(0x17);

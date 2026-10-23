@@ -17,70 +17,8 @@ typedef struct Ob {
 #include "data/pieces/D_00425BC8.h"
 typedef PadSt_425bc8 Cfg;
 s32 func_001f42b8(void *);
-s32 func_001f3758(void *);
-void func_0011d768(s32);
-void func_001fd858(void *);
-s32 func_001fd518(void *);
-s32 func_001fe570(void *);
 Ob *func_001f31a8(u8 *, s32);
 #include "vm/script_vm.h"
-
-#include "data/pieces/D_003E3D68.h"
-extern s32 D_00643708;
-extern s32 D_0064370C;
-extern u8 D_00643770[];
-extern s32 D_00643760[];
-extern s32 D_00643780[];
-void func_0020bd18(void *, s32);
-void func_001f3d58(void *, s32);
-s32 func_001ee5f0(s32);
-void func_00207870(void *, s32, s32, s32, s32, s32, s32);
-
-void func_00223a90(void *a) {
-    s32 buf[4];
-    s32 i, j, n, sel, y, v, t;
-    n = 0;
-    for (i = 1; i < D_003E3D68; i++) {
-        if (i != D_00643708 + 1) buf[n++] = D_00643770[i];
-        else j = i;
-    }
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3758(a);
-            func_0011d768(3);
-        } else {
-            func_001fd858(a);
-            func_0020bd18(a, 8);
-            D_0064370C = func_001fd518(a);
-            for (i = 0; i < D_003E3D68; i++) {
-                if (D_00643770[i] == buf[D_0064370C]) D_00643780[i] = 140;
-                else if (D_00643770[i] == D_00643770[D_00643708 + 1]) D_00643780[i] = 96; else D_00643780[i] = 48;
-            }
-            if (func_001fe570(a)) {
-                for (i = 0; i < D_003E3D68; i++)
-                    if (i == D_00643760[D_00643708 + 1]) D_00643780[i] = 96; else D_00643780[i] = 32;
-                sel = buf[D_0064370C];
-                for (i = 1; i < D_003E3D68; i++) {
-                    if (D_00643770[i] == sel) {
-                        t = D_00643770[j];
-                        buf[D_0064370C] = t;
-                        D_00643770[i] = t;
-                        D_00643770[j] = sel;
-                        sel = D_00643760[i];
-                        D_00643760[i] = D_00643760[j];
-                        D_00643760[j] = sel;
-                        break;
-                    }
-                }
-                func_001f3d58(a, 5);
-                func_001f3758(a);
-            }
-        }
-    }
-    sel = func_001fd518(a);
-    for (i = 0, y = 0; i < n; i++, y += 28)
-        func_00207870(a, i == sel, 1, 0, y, 122, func_001ee5f0(buf[i]));
-}
 
 extern s32 D_00647FB4, D_00647FC8, D_00647FD8, D_00647FD4, D_00647FB0, D_00647FC4;
 typedef struct { s32 x0, x4; } S2;

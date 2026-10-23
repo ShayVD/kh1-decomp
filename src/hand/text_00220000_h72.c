@@ -497,69 +497,6 @@ void func_0022c730(O98 *a0) {
 
 /* needs make: uses rodata */
 #include "menu/partymdl.h"
-extern s32 D_003F34FC;
-extern s32 D_00643794;
-extern s32 D_00643790;
-extern s32 D_00643798;
-extern s32 D_0064379C;
-extern s32 D_003F34C8;
-extern s32 D_003F3504;
-extern u8 D_003F37A0[];
-extern PartyMdl D_003F3530[4];
-void func_00223e10(void);
-void func_00223e68(void);
-void func_0024f210(void *, void (*)(void));
-
-void func_00223ea8(void) {
-    switch (D_00643794) {
-    case 0:
-        if (D_00304BE8->x48e[3] != 255) {
-            switch (D_003F34FC) {
-            case 0:
-                func_00223e10();
-            case 1:
-                D_00643794++;
-                break;
-            default:
-                D_00643794 = 2;
-                break;
-            }
-        } else {
-            D_00643794 = 5;
-            D_00643790 = 1;
-        }
-        break;
-    case 1:
-        if (D_003F34FC == 2) D_00643794 = 2;
-        break;
-    case 2:
-        D_00643798 = 1;
-        D_00643794++;
-        D_003F34C8++;
-        D_003F3504 = 0;
-        func_0024f210(D_003F37A0, func_00223e68);
-        return;
-    case 3:
-        break;
-    case 5:
-        break;
-    case 4:
-        if (D_003F3530[3].active == 0) {
-            func_0020a248(3);
-            D_003F3530[3].active = 1;
-        }
-        D_00643790 = 1;
-        D_0064379C = 1;
-        D_00643794++;
-        break;
-    }
-}
-
-extern s32 D_0064375C;
-void func_00224030(void) {
-    D_0064375C++;
-    D_003F34C8--;
-}
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 extern u8 D_003F63C0[];
@@ -579,4 +516,3 @@ s32 D_003F6568[0xa] ALIGNED(8) = {
 #include "data/data_003F.h"
 #include "data/data_003E.h"
 #include "data/pieces/D_003F6DF0.h"
-#include "data/pieces/D_003F34C8.h"

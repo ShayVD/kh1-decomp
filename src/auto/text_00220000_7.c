@@ -22,21 +22,16 @@ extern s32 D_006437DC;
 extern s32 D_006437E0;
 extern s32 D_006437E4;
 extern s32 D_006469A4;
-#include "data/pieces/D_00425BC8.h"
 extern void *D_00643740; /* src/data/bss_0064.c: s32 D_00643740 */
 extern void *D_00646990; /* src/data/bss_0064.c: s32 D_00646990 */
 s32 func_0011d768(s32);
 s32 func_001f31a8(s32, s32);
 s32 func_001f3520(s32, s32);
-s32 func_001f42b8(s32);
-s32 func_001fe570(s32);
-s32 func_00207bb0(s32, s32);
 void func_001f36b8(s32);
 void func_001f3758(s32);
 void func_001f3d58(s32, s32);
 void func_001f3e48(s32, s32);
 void func_001f4058(s32, s32);
-void func_0020bd18(s32, s32);
 void func_0020bda8(s32);
 void func_00223980(s32, s32, s32);
 void func_00224698(s32);
@@ -50,21 +45,6 @@ void func_00229bd8(s32);
 void func_00229cf8(s32);
 void func_00229e18(s32);
 void func_00233ef8(s32);
-
-s32 func_002239b0(s32 arg0) {
-    if (func_001f42b8(arg0) != 0) {
-        if (M2C_FIELD(D_00425BC8, s32 *, 8) & 0x4000) {
-            func_001f36b8(arg0);
-            func_0011d768(3);
-        } else {
-            func_0020bd18(arg0, 8);
-            if (func_001fe570(arg0) != 0) {
-                func_001f36b8(arg0);
-            }
-        }
-    }
-    return func_00207bb0(arg0, 0x190);
-}
 
 void func_002246f8(s32 arg0) {
     s32 temp_v0;
