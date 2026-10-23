@@ -16,24 +16,14 @@ typedef struct Ob {
 } Ob;
 #include "data/pieces/D_00425BC8.h"
 typedef PadSt_425bc8 Cfg;
-typedef struct { u8 pad[16]; void *x10; } P10;
-extern u16 D_003E9104;
 s32 func_001f42b8(void *);
 s32 func_001f3758(void *);
 void func_0011d768(s32);
 void func_001fd858(void *);
 s32 func_001fd518(void *);
-s32 func_001fd668(void *);
 s32 func_001fe570(void *);
 Ob *func_001f31a8(u8 *, s32);
-void func_001f3e48(Ob *, void *);
 #include "vm/script_vm.h"
-s32 func_0010eb78(s32);
-void func_00203788(void *, s32, s32, s32, u32);
-s32 func_001f94f0(void *, s32, s32, s32, s32, s32, s32);
-void func_00207428(void *, s32, s32);
-void func_0021b820(void);
-void func_0021c4f8(void *);
 
 #include "data/pieces/D_003E3D68.h"
 extern s32 D_00643708;
@@ -90,83 +80,6 @@ void func_00223a90(void *a) {
     sel = func_001fd518(a);
     for (i = 0, y = 0; i < n; i++, y += 28)
         func_00207870(a, i == sel, 1, 0, y, 122, func_001ee5f0(buf[i]));
-}
-
-extern P10 *D_006436A0; /* src/data/bss_0064.c: s32 D_006436A0 */
-extern s32 D_006436B8;
-extern s32 D_006436BC;
-extern s32 D_006436C0;
-extern s32 D_006436C4;
-extern u8 D_006436A8[];
-extern u8 D_003F6650[];
-extern s32 D_003F3520;
-s32 func_00222cb0(s32);
-s32 func_00222c98(s32);
-s32 func_00206fb8(s32);
-
-void func_00222e90(Ob *a) {
-    s32 i, j, y, step, id;
-    Ob *o;
-    if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3758(D_006436A0);
-            func_0011d768(3);
-        } else {
-            u32 b;
-            s32 n, k;
-            func_001fd858(a);
-            D_006436BC = func_001fd518(a);
-            b = D_00425BC8->x10;
-            k = 0;
-            n = a->xd8;
-            if (b & 0x80000480) {
-                if (a->xda > 0) {
-                    a->xda -= 16;
-                    k = 1;
-                }
-            } else if (b & 0x20000820) {
-                s32 m = n - 1;
-                if (a->xda < m * 16) {
-                    a->xda += 16;
-                    k = 1;
-                }
-            }
-            D_006436C0 = func_001fd668(a);
-            if (k) {
-                func_0011d768(1);
-                if (D_006436B8 < 4 || D_006436C0 == n - 1) {
-                    a->xcc = a->xce = (D_006436B8 - 1) % 4 + 1;
-                } else {
-                    a->xcc = a->xce = 4;
-                }
-            }
-            if (func_001fe570(a)) {
-                func_001f3758(D_006436A0->x10);
-                o = func_001f31a8(D_003F6650, 50);
-                if (o) {
-                    func_001f3e48(o, a);
-                    id = D_006436A8[D_006436C0 * 4 + D_006436BC];
-                    o->xa0 = D_003E9104;
-                    k = func_0010eb78((s32)func_001c2df0((s8 *)D_003F3520, func_00222cb0(id)));
-                    o->xd8 = (k + 1) / 2;
-                    D_006436C4 = 0;
-                    o->xda = D_006436C4 << 4;
-                    o->x24 = id;
-                }
-            }
-        }
-    }
-    func_00203788(a, 372, 40, 486, 0x80C8C8C8);
-    step = a->xc4 >> 4;
-    y = 116;
-    for (i = D_006436C0 * 4, j = 0; j < 4 && i < D_006436B8; j++) {
-        id = D_006436A8[i++];
-        func_001f94f0(a, 0, 322, y, func_00222c98(id), 15, 0x80461E00);
-        if (!func_00206fb8(id)) func_00207428(a, 450, y + 10);
-        y += step;
-    }
-    func_0021b820();
-    func_0021c4f8(a);
 }
 
 extern s32 D_00647FB4, D_00647FC8, D_00647FD8, D_00647FD4, D_00647FB0, D_00647FC4;

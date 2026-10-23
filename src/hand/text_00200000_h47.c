@@ -46,33 +46,6 @@ s32 func_001f42b8(void);
 s32 func_001f31a8(s32, s32);
 void func_001f3e48(s32, s32);
 
-extern s32 D_003F5C34;
-extern u8 D_006436A8[];
-extern s32 D_006436B8;
-s32 func_001ebc38(s32);
-s32 func_00206fb8(u8);
-void func_00207298(s32);
-void func_002072e0(s32);
-
-void func_00222ba8(void) {
-    s32 i;
-    D_006436B8 = 0;
-    for (i = 0; i < 13; i++) {
-        if (func_001ebc38(i) != 0) {
-            D_006436A8[D_006436B8++] = i;
-        }
-    }
-    for (i = 0; i < D_006436B8; i++) {
-        if (func_00206fb8(D_006436A8[i]) == 0) {
-            func_00207298(1);
-            goto end;
-        }
-    }
-    func_002072e0(1);
-end:
-    D_003F5C34 = D_006436B8 == 13;
-}
-
 extern S5C30 D_003F5C30;
 extern s32 D_003F6740[];
 extern s32 D_003F6758[];

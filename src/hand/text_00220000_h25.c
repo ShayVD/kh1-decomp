@@ -30,9 +30,6 @@ void func_001fc308(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_001fe570(s32);
 void func_00205e30(s32, void *);
 void func_00206130(s32, s32, s32, s32, s32, s32);
-s32 func_00206fb8(u8);
-void func_00207298(s32);
-void func_002072e0(s32);
 void func_00207bb0(s32, s32);
 void func_0020b998(void);
 void func_0020bd18(s32, s32);
@@ -76,8 +73,6 @@ extern u128 D_0040EF80[];
 extern u8 D_0040E780[];
 extern u8 D_0040EB80[];
 #include "data/pieces/D_00425BC8.h"
-extern u8 D_006436A8[];
-extern s32 D_006436B8;
 extern s32 D_006436D0;
 extern s32 D_006436D4;
 extern P2 D_006436D8; /* src/data/bss_0064.c: s32 D_006436D8[2] */
@@ -116,17 +111,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00223418(void) {
-    s32 i;
-    for (i = 0; i < D_006436B8; i++) {
-        if (func_00206fb8(D_006436A8[i]) == 0) {
-            func_00207298(1);
-            return;
-        }
-    }
-    func_002072e0(1);
-}
 
 void func_00223870(void *arg0) {
     void *h[2];

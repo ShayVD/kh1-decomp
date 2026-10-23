@@ -39,9 +39,7 @@ typedef struct O98 {
     s16 xda;
 } O98;
 void func_0011d768(s32);
-void func_00203788(void *, s32, s32, s32, s32);
 #include "data/pieces/D_00425BC8.h"
-typedef PadSt_425bc8 F8;
 extern s32 D_003F6568[];
 s32 func_001f42b8(void);
 void func_001f3758(void *);
@@ -50,19 +48,7 @@ s32 func_001fd518(void *);
 s32 func_001fe570(void *);
 O98 *func_001f31a8(s32, s32);
 void func_001f3e48(void *, void *);
-
-extern s32 D_006436C4;
-extern s32 D_003F3520;
-s32 func_001fd668(void *);
-s32 func_00222cb0(s32);
 #include "vm/script_vm.h"
-s32 func_0010edb0(s32, s32, s32, s32, s32, s32);
-extern u8 D_003F66E0[];
-extern u8 D_003F66B0[];
-extern u8 D_003F6680[];
-extern s32 D_006436B8;
-extern s32 D_006436BC;
-extern s32 D_006436C0;
 extern s32 D_003F6854;
 extern s32 D_003F6828[];
 extern s32 D_003F6840[];
@@ -141,74 +127,6 @@ extern s32 D_003F7240[];
 #include "data/pieces/D_003F7238.h"
 void func_00219320(s32);
 void func_00209820(void *, s32, s32, s32, void *);
-
-s32 func_00222cb8(O98 *a0) {
-    s32 x, y, r;
-    if (func_001f42b8()) {
-        F8 *p = D_00425BC8;
-        if (p->x8 & 0x4000) {
-            func_001f3758(a0);
-            func_0011d768(3);
-        } else {
-            s32 f = 0;
-            s32 n = a0->xd8;
-            u32 b = p->x10;
-            if (b & 0x80000480) {
-                if (a0->xda > 0) {
-                    a0->xda -= 16;
-                    f = 1;
-                }
-            } else if (b & 0x20000820) {
-                if (a0->xda < (n - 1) << 4) {
-                    a0->xda += 16;
-                    f = 1;
-                }
-            }
-            if (f) func_0011d768(f);
-            D_006436C4 = func_001fd668(a0);
-        }
-    }
-    func_00203788(a0, 372, 40, 486, 0x80c8c8c8);
-    func_0021b820();
-    func_0021c9a0(a0, 16, 72);
-    func_0021cb00(a0, 32, 108, 9, 30);
-    func_0021cb00(a0, 280, 108, 9, 30);
-    x = ((a0->xb0 - 0x7000) >> 4) + 32;
-    y = ((a0->xb4 - 0x7400) >> 4) + 84;
-    r = func_00222cb0(a0->x24.i);
-    return func_0010edb0(x, y, 256, D_006436C4 * 2, a0->x90, (s32)func_001c2df0((s8 *)D_003F3520, r));
-}
-
-void func_00223260(O98 *a0) {
-    O98 *objs[3];
-    s32 *pa, *pb, *pc;
-    s32 n, sel;
-    O98 *o;
-    objs[0] = func_001f31a8((s32)D_003F66E0, 50);
-    if (!objs[0]) return;
-    func_001f3e48(objs[0], a0);
-    objs[1] = func_001f31a8((s32)D_003F66B0, 50);
-    if (!objs[1]) return;
-    func_001f3e48(objs[1], objs[0]);
-    objs[2] = func_001f31a8((s32)D_003F6680, 50);
-    if (!objs[2]) return;
-    func_001f3e48(objs[2], objs[1]);
-    pa = &D_006436C0;
-    pb = &D_006436B8;
-    if ((*pb / 4) * 4 < *pa * 4) {
-        *pa = 0;
-    }
-    sel = *pa;
-    n = *pb;
-    if (n < sel * 4 + D_006436BC) D_006436BC = 0;
-    o = objs[2];
-    o->xca = *(u16 *)pb;
-    o->xd8 = (n + 3) / 4;
-    o->xda = *pa << 4;
-    if (n < 4 || sel == o->xd8 - 1) o->xcc = (n - 1) % 4 + 1;
-    else o->xcc = 4;
-    o->xd2 = *(u16 *)&D_006436BC << 4;
-}
 
 void func_002236d0(void *a0) {
     s32 i, y, s;
