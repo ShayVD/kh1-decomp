@@ -1,7 +1,5 @@
 #include "common.h"
 #include "data/bss_0064.h"
-
-#include "data/pieces/D_003E8E08.h"
 typedef struct O98 {
     u8 pad[0xc];
     struct O98 *xc;
@@ -35,96 +33,16 @@ typedef struct O98 {
     s16 xda;
 } O98;
 #include "data/pieces/D_00425BC8.h"
-extern s32 D_006469B0;
-extern s32 D_006469B4;
-extern u8 D_003F7210[];
-extern s32 D_003F7228[];
-extern s32 D_003F7230[];
-#include "data/pieces/D_003F7238.h"
-extern s32 D_003F7248[];
 void func_0011d768(s32);
 s32 func_001f42b8(void);
 s32 func_001fe570(void *);
-void func_001fdfd0(void *);
-s32 func_001fd538(void *);
-s32 func_001f9438(void *, s32, s32, s32, s32, s32, s32);
-void func_001f3708(void *, s32);
-void func_0020bc48(s32, s32, s32);
 void func_00201440(void *, s32, s32, s32, s32, s32, s32, void *, s32);
 void func_002066b0(void *, s32, s32, s32, s32, s32);
-void func_002053e8(void *, s32, s32, s32, s32, s32);
-void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001efbb8(s32);
-s32 func_002192f8(void);
-s32 func_00219348(void);
-s32 func_00219380(void);
-s32 func_002193b8(void);
-s32 func_002193f0(void);
-s32 func_00219428(void);
-s32 func_00219458(s32);
 #include "data/types/text_00220000_c16.h"
 s32 func_001fd518(void *);
 void func_001fd858(void *);
 void func_0020bd18(void *, s32);
 void func_0020be10(s32);
-
-void func_0022bd58(O98 *a0) {
-    s32 s, x, y;
-    if (func_001f42b8()) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 12);
-            func_0011d768(3);
-            D_006469B4 = D_006469B0;
-            D_006469B0 = D_006469B0 - 1;
-        } else {
-            func_001fdfd0(a0);
-            x = a0->xb0 + a0->xda * 96 + (u32)(a0->xbe - 0x7000);
-            y = a0->xb4 + a0->xc4 * a0->xd2 / 16;
-            func_0020bc48(8, (s32)(x + a0->xc2 - a0->xc6) >> 4, (y + a0->xc0 - 0x7400) >> 4);
-            if (func_001fe570(a0)) {
-                if (func_001fd538(a0) == 0) {
-                    D_006469B4 = D_006469B0;
-                    D_006469B0 = D_006469B0 + 1;
-                    func_001f3708(a0, 11);
-                } else {
-                    D_006469B4 = D_006469B0;
-                    D_006469B0 = func_00219428() ? 1 : 2;
-                    func_001f3708(a0, 12);
-                }
-            }
-        }
-    }
-    func_00201440(a0, 2, 2, 11, 81, 122, 72, D_003F7210, 87);
-    func_002066b0(a0, -64, 112, 640, 0x80c2726e, 0x80c2726e);
-    func_002053e8(a0, -64, 114, 640, 156, 0x40000000);
-    func_002066b0(a0, -64, 270, 640, 0x80c2726e, 0x80c2726e);
-    if (func_00219428()) {
-        func_001f9438(a0, 0, 40, 230, 94, 15, 0x80e6e6e6);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7230[func_002193b8()]);
-        func_001f9438(a0, 0, 128, 126, 450, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_00219458(func_002193f0());
-        func_001f9438(a0, 0, 128, 146, 92, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7238[func_002192f8()]);
-        func_001f9438(a0, 0, 128, 166, 471, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7228[func_00219348()]);
-        func_001f9438(a0, 0, 128, 186, 93, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7248[func_00219380()]);
-        func_001f9438(a0, 0, 128, 206, 476, 15, 0x66ffc8b4);
-    } else {
-        func_001f9438(a0, 0, 40, 230, 94, 15, 0x80e6e6e6);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_00219458(func_002193f0());
-        func_001f9438(a0, 0, 128, 130, 92, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7238[func_002192f8()]);
-        func_001f9438(a0, 0, 128, 150, 471, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7228[func_00219348()]);
-        func_001f9438(a0, 0, 128, 170, 93, 15, 0x66ffc8b4);
-        (*(S4_3e8e08 *)&D_003E8E08).a = func_001efbb8(D_003F7248[func_00219380()]);
-        func_001f9438(a0, 0, 128, 190, 476, 15, 0x66ffc8b4);
-    }
-    s = func_001fd538(a0);
-    func_002078f0(a0, s == 0, 2, 2, 256, a0->xc0 >> 4, 90, 301, 44);
-    func_002078f0(a0, s == 1, 2, 2, 352, a0->xc0 >> 4, 90, 397, 45);
-}
 
 extern s32 D_003F7778;
 extern f32 D_002BBDFC;

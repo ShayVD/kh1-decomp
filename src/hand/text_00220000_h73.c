@@ -1,99 +1,6 @@
 #include "common.h"
 #include "data/pieces/D_00425F70.h"
-#include "data/pieces/D_00425BC8.h"
-typedef struct { u8 pad[0xb0]; s32 xb0; s32 xb4; u8 p1[6]; s16 xbe; s16 xc0; s16 xc2; s16 xc4; s16 xc6; u8 p2[0xd2-0xc8]; s16 xd2; u8 p3[4]; s16 xd8; s16 xda; } O;
-extern s32 D_006469B0, D_006469B4;
-extern s32 D_003F7308[];
-extern u8 D_003F7210[];
-#include "data/pieces/D_003F47A8.h"
-s32 func_001f42b8(void *);
-void func_001f3708(void *, s32);
 void func_0011d768(s32);
-s32 func_00219428(void);
-void func_00219418(s32);
-void func_0020bc48(s32, s32, s32);
-void func_001fd858(void *);
-s32 func_001fe570(void *);
-s32 func_001fd518(void *);
-void func_00201440(void *, s32, s32, s32, s32, s32, s32, void *, s32);
-void func_002066b0(void *, s32, s32, s32, s32, s32);
-void func_002053e8(void *, s32, s32, s32, s32, s32);
-s32 func_001fa808(void *, s32, s32, s32, s32);
-void func_001f9438(void *, s32, s32, s32, s32, s32, s32);
-void func_00209820(void *, s32, s32, s32, void *);
-
-
-void func_0022c960(O *a0) {
-    s32 i, y; s32 *p;
-    if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 12);
-            func_0011d768(3);
-            if ((D_006469B4 = D_006469B0, func_00219428()) != 0) {
-                D_006469B0--;
-            } else {
-                D_006469B0 = 0;
-            }
-        } else {
-            func_0020bc48(8, (a0->xb0 + a0->xc2 + a0->xbe - 0x7000) >> 4,
-                          (a0->xb4 + a0->xc4 * a0->xd2 / 16 + a0->xc0 - 0x7400) >> 4);
-            func_001fd858(a0);
-            if (func_001fe570(a0) != 0) {
-                func_001f3708(a0, 11);
-                func_00219418(func_001fd518(a0));
-                D_006469B4 = D_006469B0;
-                D_006469B0++;
-            }
-        }
-    }
-    func_00201440(a0, 2, 2, 11, 81, 122, 72, D_003F7210, 87);
-    func_002066b0(a0, -64, 112, 640, 0x80C2726E, 0x80C2726E);
-    func_002053e8(a0, -64, 114, 640, 156, 0x40000000);
-    func_002066b0(a0, -64, 270, 640, 0x80C2726E, 0x80C2726E);
-    func_001fa808(a0, 161, 88, 15, 0x80E6E6E6);
-    y = 166;
-    p = D_003F7308;
-    for (i = 0; i < 3; i++) {
-        func_001f9438(a0, 0, 211, y, *p++, 15, 0x80E6E6E6);
-        y += 28;
-    }
-    func_00209820(a0, 2, 2, 111, D_003F47A8);
-}
-
-void func_001fdfd0(void *);
-s32 func_001fd538(void *);
-void func_002193e0(s32);
-void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-
-void func_0022cba8(O *a0) {
-    s32 v;
-    if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 12);
-            func_0011d768(3);
-            D_006469B4 = D_006469B0;
-            D_006469B0--;
-        } else {
-            func_001fdfd0(a0);
-            func_0020bc48(8, (a0->xb0 + a0->xc2 + (a0->xbe - 0x7000) + a0->xda * 202 - a0->xc6) >> 4,
-                          (a0->xb4 + a0->xc4 * a0->xd2 / 16 + a0->xc0 - 0x7400) >> 4);
-            if (func_001fe570(a0) != 0) {
-                func_001f3708(a0, 11);
-                func_002193e0(func_001fd538(a0));
-                D_006469B4 = D_006469B0;
-                D_006469B0++;
-            }
-        }
-    }
-    func_00201440(a0, 2, 2, 11, 81, 122, 72, D_003F7210, 87);
-    func_002066b0(a0, -64, 112, 640, 0x80C2726E, 0x80C2726E);
-    func_002053e8(a0, -64, 114, 640, 156, 0x40000000);
-    func_002066b0(a0, -64, 270, 640, 0x80C2726E, 0x80C2726E);
-    func_001fa808(a0, 161, 449, 15, 0x80E6E6E6);
-    v = func_001fd538(a0);
-    func_002078f0(a0, v == 0, 2, 2, 85, 174, 140, 155, 447);
-    func_002078f0(a0, v == 1, 2, 2, 231, 174, 196, 329, 448);
-}
 
 typedef struct { u8 pad0[0xA0]; f32 xa0; } Ob;
 void func_001f3110(void);
@@ -505,7 +412,6 @@ s32 func_002357f0(void) {
     }
 }
 
-
 extern s32 D_00648004;
 s32 func_00271038(s32, s32, s32);
 
@@ -544,7 +450,6 @@ s32 func_00235950(void) {
         break;
     }
 }
-
 
 extern s32 D_00648018;
 extern s32 D_00648024;
@@ -637,7 +542,6 @@ void func_00236a58(void) {
     func_002673b8(C->v190, C->v190);
 }
 #undef C
-
 
 void func_002370c8(u64 *p) {
     p[2] = 0xF000000000000001ULL;

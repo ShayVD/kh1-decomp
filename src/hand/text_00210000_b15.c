@@ -1,23 +1,7 @@
 #include "common.h"
 #include "data/bss_0064.h"
-typedef struct Ob {
-    u8 pad[0x24];
-    s32 x24;
-    u8 pad28[0xA0 - 0x28];
-    f32 xa0;
-    u8 pada4[0xC4 - 0xA4];
-    s16 xc4;
-    u8 padc6[0xCC - 0xC6];
-    s16 xcc;
-    s16 xce;
-    u8 padd0[0xD8 - 0xD0];
-    s16 xd8;
-    s16 xda;
-} Ob;
 #include "data/pieces/D_00425BC8.h"
 typedef PadSt_425bc8 Cfg;
-s32 func_001f42b8(void *);
-Ob *func_001f31a8(u8 *, s32);
 #include "vm/script_vm.h"
 
 extern s32 D_00647FB4, D_00647FC8, D_00647FD8, D_00647FD4, D_00647FB0, D_00647FC4;
@@ -216,93 +200,6 @@ void func_00235ee8(void) {
     }
 }
 
-typedef struct { u8 pad[0xD2]; s16 xd2; u8 padd4[0xDA - 0xD4]; s16 xda; } ObC;
-extern s32 D_006469B0;
-extern s32 D_006469B4;
-extern s32 D_003F73A4;
-extern u8 D_003F7350[];
-extern u8 D_003F7320[];
-extern u8 D_003F72E0[];
-extern u8 D_003F72B0[];
-extern u8 D_003F7280[];
-extern u8 D_003F7250[];
-void func_001f36b8(void *);
-void func_001f3e90(void *, void *);
-void func_001f3e20(void *, void *);
-void func_00205938(void *, s32);
-void func_002193e0(s32);
-void func_00219418(s32);
-void func_00219320(s32);
-void func_00219370(s32);
-void func_002193a8(s32);
-s32 func_002193b8(void);
-s32 func_002193f0(void);
-s32 func_002192f8(void);
-s32 func_00219348(void);
-s32 func_00219380(void);
-ObC *func_001f3520(u8 *, s32);
-void func_0020be10(s32);
-
-void func_0022cde8(ObC *a) {
-    ObC *o;
-    s32 k;
-    if (func_001f42b8(a)) {
-        k = D_006469B0 < D_006469B4 ? 11 : 12;
-        switch (D_006469B0) {
-        case 0:
-            func_001f36b8(a);
-            func_0020be10(16);
-            func_002193e0(0);
-            func_00219418(1);
-            func_00219320(0);
-            func_00219370(0);
-            func_002193a8(0);
-            break;
-        case 1:
-            if (!(o = func_001f3520(D_003F7350, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            o->xda = func_002193b8() << 4;
-            break;
-        case 2:
-            if (!(o = (ObC *)func_001f31a8(D_003F7320, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            o->xd2 = func_002193f0() << 4;
-            break;
-        case 3:
-            if (!(o = (ObC *)func_001f31a8(D_003F72E0, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            o->xd2 = func_002192f8() << 4;
-            break;
-        case 4:
-            if (!(o = func_001f3520(D_003F72B0, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            o->xda = func_00219348() << 4;
-            break;
-        case 5:
-            if (!(o = func_001f3520(D_003F7280, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            o->xda = func_00219380() << 4;
-            break;
-        case 6:
-            if (!(o = func_001f3520(D_003F7250, k))) break;
-            func_001f3e90(a, o);
-            func_001f3e20(o, a);
-            break;
-        case 7:
-            func_001f36b8(a);
-            func_0020be10(16);
-            D_003F73A4 = 1;
-            break;
-        }
-    }
-    func_00205938(a, 0x70000000);
-}
-
 typedef struct { u32 a; s32 b; u32 c; } Rec;
 extern Cfg D_002C5AD0;
 extern Cfg D_00647710;
@@ -428,19 +325,6 @@ void func_002336f8(void) {
 }
 
 /* Split out of the func_0022cde8 and func_00233168 layout entries. */
-extern s32 D_003F34A4;
-s32 func_001f40c8(void);
-void func_001f82b0(void);
-void func_0020b998(void);
-s32 func_0022d038(void) {
-    if (func_001f40c8()) {
-        func_001f82b0();
-        func_0020b998();
-        return 0;
-    }
-    D_003F34A4 = 0;
-    return 4;
-}
 
 extern s32 D_00425BC0[];
 void D_00F20000(s32, s32);

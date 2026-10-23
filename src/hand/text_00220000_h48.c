@@ -16,28 +16,6 @@ void func_0020bda8(s32);
 extern void *D_003F71C8[];
 
 extern s32 D_003F34A4;
-extern u8 D_003F7380[];
-extern s32 D_003F73A4;
-extern s32 D_006469B0;
-extern s32 D_006469B4;
-s32 func_00219428(void);
-void func_0022d038(void);
-
-void func_0022d080(s32 arg0) {
-    void *objs[4];
-    s32 v;
-    s32 *p = &D_006469B4, *q = &D_006469B0;
-    func_001f3110();
-    objs[0] = func_001f31a8(D_003F7380, 12);
-    v = func_00219428() != 0 ? 1 : 2;
-    *q = v;
-    *p = v;
-    func_0020bb90(0, 0);
-    func_0020bda8(0x10);
-    D_003F34A4 = 1;
-    D_003F73A4 = 0;
-    func_0011ef10(0x2BFE7, func_0022d038)[1] = arg0;
-}
 
 extern u8 D_003F7510[];
 extern u8 D_003F7540[];
