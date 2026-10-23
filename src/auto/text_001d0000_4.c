@@ -9,11 +9,6 @@ extern s32 D_002C5958;
 s32 func_0013bf68();
 s32 func_0014efe0(s32, s32);
 
-s32 func_001d8638(void) {
-    D_002C5958 &= 0xFFFF7FFF;
-    return 2;
-}
-
 s32 func_001da740(void *arg0) {
     s32 temp_s1;
     s32 temp_v0;

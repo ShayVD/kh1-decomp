@@ -9,6 +9,7 @@
 #include "data/pieces/D_0039A580.h"
 #include "data/data_0039.h"
 #include "data/data_003A.h"
+#include "data/pieces/D_002BBDFC.h"
 
 
 /* func_001cd2d8 (session 9, w7) matched with this message view: u32 val:24
@@ -578,3 +579,131 @@ s32 func_001d6658(VmRec *vm) {
     vm->sp -= 2;
     return 2;
 }
+
+/* func_001d7678 .. func_001d7840 are in vm_lib.c. */
+
+/* The jump (b11): func_001d7b88 starts it (message 2's Msg2 view, with the
+ * 17 / 0x10004 sound), func_001d7898 steps it every frame and sends the
+ * position with the step (VmMsgE: VmMsg plus e[3]). */
+typedef struct { u8 type; u32 val:24; s32 x; s32 a8; s32 ac; f32 v[4]; f32 e[3]; } __attribute__((aligned(8))) VmMsgE;
+f32 func_001e9ec0(f32 *, f32 *);
+
+void func_001d7898(VmRec *vm) {
+    VmMsgE m;
+    f32 len, vx, vz;
+    f32 dt = D_002BBDFC;
+    vm->f4c -= dt;
+    vm->f50 -= dt;
+    if (vm->f4c <= 0.0f) {
+        vm->fl.x &= ~0x400;
+        if (vm->b5d) {
+            m.type = 17;
+            m.val = 0x10007;
+            m.x = vm->x0;
+            m.v[0] = 10.0f;
+            func_001c4640((VmMsg *)&m);
+        }
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = vm->f14[0];
+        m.v[1] = vm->f14[1];
+        m.v[2] = vm->f14[2];
+        m.v[3] = 1.0f;
+        func_001c4640((VmMsg *)&m);
+        return;
+    }
+    if (vm->f50 < 0.0f && vm->b5c == 0) {
+        if (vm->b5d) {
+            m.type = 17;
+            m.val = 0x10005;
+            m.x = vm->x0;
+            m.v[0] = 10.0f;
+            func_001c4640((VmMsg *)&m);
+        }
+        vm->b5c = 1;
+    }
+    if (vm->f50 < 20.0f && vm->b5c == 1) {
+        if (vm->b5d) {
+            m.type = 17;
+            m.val = 6;
+            m.x = vm->x0;
+            m.v[0] = 10.0f;
+            func_001c4640((VmMsg *)&m);
+        }
+        vm->b5c = 2;
+    }
+    len = sqrt((vm->f14[0] - vm->p[0]) * (vm->f14[0] - vm->p[0]) + (vm->f14[2] - vm->p[2]) * (vm->f14[2] - vm->p[2]));
+    vm->f54 += vm->f58;
+    m.e[1] = vm->f54;
+    vm->p[1] += vm->f54;
+    vx = (vm->f14[0] - vm->p[0]) / len * vm->f20;
+    vm->p[0] += vx;
+    vz = (vm->f14[2] - vm->p[2]) / len * vm->f20;
+    vm->p[2] += vz;
+    m.type = 3;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = vm->p[0];
+    m.v[1] = vm->p[1];
+    m.v[2] = vm->p[2];
+    m.v[3] = 1.0f;
+    m.e[0] = vx;
+    m.e[2] = vz;
+    func_001c4640((VmMsg *)&m);
+}
+
+s32 func_001d7b88(VmRec *vm) {
+    f32 v[3];
+    Msg2 m;
+    f32 tx, ty, tz, h, T, y0, H, r, t2, d;
+    double dh, a, b;
+    h = vm->stk[vm->sp - 4];
+    tx = vm->stk[vm->sp - 3];
+    T = vm->stk[vm->sp - 5];
+    ty = vm->stk[vm->sp - 2];
+    tz = vm->stk[vm->sp - 1];
+    vm->f14[2] = tz;
+    vm->f14[0] = tx;
+    vm->f14[1] = ty;
+    vm->p[0] = vm->obj->pos[0];
+    vm->p[1] = y0 = vm->obj->pos[1];
+    vm->p[2] = vm->obj->pos[2];
+    dh = h;
+    a = dh;
+    if (a < 0.0) a = -a;
+    H = a * 2.0 + ty - y0;
+    b = dh;
+    if (b < 0.0) b = -b;
+    r = (b + ty - y0) / H;
+    t2 = T - T * r;
+    v[0] = tx;
+    vm->f54 = h * 2.0f / t2;
+    vm->f58 = (ty - y0) * 2.0f / T / T - vm->f54 * 2.0f / T;
+    v[1] = ty;
+    vm->fl.x |= 0x400;
+    v[2] = tz;
+    d = func_001e9ec0(v, vm->obj->pos);
+    vm->f20 = d / T;
+    vm->p[0] += (vm->f14[0] - vm->p[0]) / d * vm->f20;
+    vm->p[2] += (vm->f14[2] - vm->p[2]) / d * vm->f20;
+    vm->b5d = vm->stk[vm->sp];
+    if (vm->b5d) {
+        m.type = 17;
+        m.val = 0x10004;
+        m.x = vm->x0;
+        m.v[0] = 10.0f;
+        func_001c4640((VmMsg *)&m);
+    }
+    vm->f4c = T * D_002BBDFC;
+    vm->f50 = t2 * D_002BBDFC;
+    vm->sp -= 6;
+    vm->b5c = 0;
+    return 2;
+}
+
+typedef VmRec Ent;
+extern s32 D_0039A570;
+#include "data/pieces/D_0038D170.h"
+extern s32 D_003A7980;
+#include "data/pieces/D_0039A580.h"

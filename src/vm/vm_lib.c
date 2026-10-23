@@ -3374,6 +3374,151 @@ s32 func_001d75d0(VmRec *vm) {
     return 2;
 }
 
+/* ---- 0x001d7678-0x001d8680 ---- */
+
+void func_0013c108(s32, s32);
+s32 func_0013c188(s32, s32);
+s32 func_00132fe0(s32);
+void func_00131f40(s32, void *);
+s32 func_001566a8(s32);
+s32 func_00156678(s32);
+
+s32 func_001d7678(VmRec *vm) {
+    func_0013c108(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d76c8(void) {
+    if ((s32)(D_0038CD00 >> 61) & 1) return 4;
+    return 2;
+}
+
+s32 func_001d76e8(VmRec *vm) {
+    if (func_0013c188(0, vm->stk[vm->sp]) == 0) {
+        vm->stk[vm->sp] = 0;
+    } else {
+        vm->stk[vm->sp] = func_00132fe0(vm->stk[vm->sp]);
+    }
+    return 2;
+}
+
+void func_001d7768(void) {
+    D_00389C90.f3070.x &= ~0x4000000000000000ULL;
+}
+
+s32 func_001d7798(VmRec *vm) {
+    if (func_0011e340(0) == 0) {
+        D_00389C90.f3070.x |= 0x4000000000000000ULL;
+        func_00131f40(vm->stk[vm->sp], func_001d7768);
+    } else {
+        return 4;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7820(void) {
+    if ((s32)(D_0038CD00 >> 62) & 1) return 4;
+    return 2;
+}
+
+/* Set ret of the entity's slots to stk[sp]. */
+s32 func_001d7840(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if ((s32)vm->obj == D_00389C90.e[i].obj) {
+            D_00389C90.e[i].ret = vm->stk[vm->sp];
+        }
+    }
+    vm->sp--;
+    return 2;
+}
+
+/* func_001d7898 and func_001d7b88 are in vm_lib.nofill.c. */
+
+/* Save block 1's four lists at 0xa80 (10, 10, 10 and 50 bytes; 0 is a free
+ * entry). */
+typedef struct { u8 pad[0xa80]; u8 l0[10]; u8 l1[10]; u8 l2[10]; u8 l3[50]; } VmSave1;
+
+/* Free entry stk[sp] - 1 of list stk[sp-1]: if an earlier entry is free,
+ * nothing; else close the gaps and open one at that place. */
+#define D7EF8_BODY(B, N) \
+    for (i = 0; i < N; i++) { \
+        if (B[i] == 0 && vm->stk[vm->sp] - 1 >= i) { vm->sp -= 2; return 2; } \
+    } \
+    for (i = 0; i < N; i++) { \
+        if (B[i] == 0) { \
+            for (k = i; k < N - 1; k++) B[k] = B[k + 1]; \
+        } \
+    } \
+    for (i = 0; i < N; i++) { \
+        if (i == vm->stk[vm->sp] - 1) { \
+            for (k = N - 1; i < k; k--) B[k] = B[k - 1]; \
+            B[i] = 0; \
+            break; \
+        } \
+    } \
+    break;
+
+s32 func_001d7ef8(VmRec *vm) {
+    VmSave1 *r = (VmSave1 *)func_00232cc0(1);
+    s32 sp = vm->sp;
+    s32 i, k;
+
+    switch (vm->stk[sp - 1]) {
+    case 0: D7EF8_BODY(r->l0, 10)
+    case 1: D7EF8_BODY(r->l1, 10)
+    case 2: D7EF8_BODY(r->l2, 10)
+    case 3: D7EF8_BODY(r->l3, 50)
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Push the first free entry (1-based) of list stk[sp]. */
+s32 func_001d8400(VmRec *vm) {
+    VmSave1 *p = (VmSave1 *)func_00232cc0(1);
+    s32 i;
+    switch (vm->stk[vm->sp]) {
+    case 0:
+        for (i = 0; i < 10; i++) if (!p->l0[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 1:
+        for (i = 0; i < 10; i++) if (!p->l1[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 2:
+        for (i = 0; i < 10; i++) if (!p->l2[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 3:
+        for (i = 0; i < 50; i++) if (!p->l3[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    }
+    return 2;
+}
+
+s32 func_001d85a8(VmRec *vm) {
+    func_001566a8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d85f0(VmRec *vm) {
+    func_00156678(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8638(void) {
+    D_002C5958 &= 0xFFFF7FFF;
+    return 2;
+}
+
+s32 func_001d8660(void) {
+    D_002C5958 |= 0x8000;
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 

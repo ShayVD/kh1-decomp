@@ -22,8 +22,6 @@ M2C_UNK func_0013c260(s32);
 M2C_UNK func_0013c3a8(s32);
 M2C_UNK func_001422b0(s32);
 M2C_UNK func_00149eb8(s32);
-M2C_UNK func_00156678(s32);
-M2C_UNK func_001566a8(s32);
 M2C_UNK func_00156c28(s32);
 M2C_UNK func_00157818(s32, s32);
 M2C_UNK func_001ba2f8(s32);
@@ -59,23 +57,6 @@ void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001d85a8(void *arg0) {
-    func_001566a8(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001d85f0(void *arg0) {
-    func_00156678(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001d8660(void) {
-    D_002C5958 |= 0x8000;
-    return 2;
-}
 
 s32 func_001d8738(void *arg0) {
     s32 temp_a1;

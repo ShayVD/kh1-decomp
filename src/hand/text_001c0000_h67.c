@@ -31,27 +31,6 @@ extern V4 D_00490630;
 void sceVu0UnitMatrix(f32 (*)[4]);
 void func_00267518(f32 *, f32 *, f32 *);
 
-typedef struct { u8 pad[0xa80]; u8 a[10]; u8 b[10]; u8 c[10]; u8 d[50]; } Save;
-Save *func_00232cc0(s32);
-s32 func_001d8400(VM *vm) {
-    Save *p = func_00232cc0(1);
-    s32 i;
-    switch (vm->stk[vm->sp]) {
-    case 0:
-        for (i = 0; i < 10; i++) if (!p->a[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 1:
-        for (i = 0; i < 10; i++) if (!p->b[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 2:
-        for (i = 0; i < 10; i++) if (!p->c[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 3:
-        for (i = 0; i < 50; i++) if (!p->d[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    }
-    return 2;
-}
 
 #include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BBDFC;

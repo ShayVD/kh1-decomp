@@ -25,53 +25,6 @@ typedef struct {
 extern VmMgr D_00389C90;
 typedef union { u64 x; struct { u32 lo; u32 b0:29; u32 b29:1; u32 b30:1; u32 b31:1; } b; } F64;
 extern F64 D_0038CD00;
-void func_0013c108(s32, s32);
-s32 func_001d7678(VM *vm) {
-    func_0013c108(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-s32 func_001d76c8(void) {
-    if (D_0038CD00.b.b29) return 4;
-    return 2;
-}
-s32 func_0013c188(s32, s32);
-s32 func_00132fe0(s32);
-s32 func_001d76e8(VM *vm) {
-    if (func_0013c188(0, vm->stk[vm->sp]) == 0) {
-        vm->stk[vm->sp] = 0;
-    } else {
-        vm->stk[vm->sp] = func_00132fe0(vm->stk[vm->sp]);
-    }
-    return 2;
-}
-s32 func_0011e340(s32);
-void func_00131f40(s32, void *);
-void func_001d7768(void);
-s32 func_001d7798(VM *vm) {
-    if (func_0011e340(0) == 0) {
-        D_00389C90.f3070.x |= 0x4000000000000000ULL;
-        func_00131f40(vm->stk[vm->sp], func_001d7768);
-    } else {
-        return 4;
-    }
-    vm->sp--;
-    return 2;
-}
-s32 func_001d7820(void) {
-    if (D_0038CD00.b.b30) return 4;
-    return 2;
-}
-s32 func_001d7840(VM *vm) {
-    s32 i;
-    for (i = 0; i < 8; i++) {
-        if ((s32)vm->obj == D_00389C90.e[i].obj) {
-            D_00389C90.e[i].ret = vm->stk[vm->sp];
-        }
-    }
-    vm->sp--;
-    return 2;
-}
 s32 func_00123488(s32);
 void func_001248e8(s32);
 s32 func_00131de0(s32, s32);
