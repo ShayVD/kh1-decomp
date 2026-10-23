@@ -624,7 +624,7 @@ f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, ((f32 *)&D_002C58D0), ang[2]);
+    func_00267768(m, D_002C58D0[0], ang[2]);
     func_00267810(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;
@@ -664,7 +664,7 @@ f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, ((f32 *)&D_002C58D0), ang[2]);
+    func_00267768(m, D_002C58D0[0], ang[2]);
     func_00267810(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;

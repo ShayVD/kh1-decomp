@@ -558,7 +558,7 @@ void func_00138a78(E24 *e, P24 *a) {
     u32 msk;
     s32 k;
     if (!a->f34 || a->f38 < 0) return;
-    func_00267810(m, (*(Mtx *)&D_002C58D0), atan2f(a->f10, a->f18));
+    func_00267810(m, D_002C58D0, atan2f(a->f10, a->f18));
     func_00267768(m, m, func_00176850() * 3.1415928f - 1.5707964f);
     v.x = 0.0f;
     v.y = 0.0f;

@@ -1,15 +1,12 @@
-/* The data piece D_002C58D0 (src/data/data_002C.s): one struct its
- * users share (phase 4: session 26 cast at each use, session 27 folded the users'
- * views into these types; users not folded still cast). */
+/* The data piece D_002C58D0 (src/data/data_002C.s): the identity matrix
+ * (h30's func_0011edc8 sets it with sceVu0UnitMatrix).  Session 30: one
+ * matrix type, FMtx4 (data/types/fvec.h), for it and c04's M4 locals. */
 #ifndef KH1_DATA_PIECES_D_002C58D0_H
 #define KH1_DATA_PIECES_D_002C58D0_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-typedef struct {
-    u8 pad_0[0x40];
-} M4_2c58d0;
-
-extern M4_2c58d0 D_002C58D0;
+extern FMtx4 D_002C58D0;
 
 #endif /* KH1_DATA_PIECES_D_002C58D0_H */
