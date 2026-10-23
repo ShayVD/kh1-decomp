@@ -1,25 +1,10 @@
 #include "common.h"
-typedef struct {
+#include "data/types/vm_rec.h"
+typedef struct VmObj {
     u8 pad0[0x10];
     f32 pos[3];
 } Actor;
-typedef struct {
-    s32 x0;
-    Actor *obj;
-    f32 v08[3];
-    f32 f14;
-    f32 f18;
-    f32 f1c;
-    f32 f20;
-    f32 f24;
-    f32 f28;
-    u8 pad2c[0x154];
-    s32 sp;
-    s32 stk[92];
-    f32 f2f4;
-    u8 pad2f8[0x30];
-    union { u64 x; s32 i[2]; } flags;
-} VM;
+typedef VmRec VM;
 typedef struct {
     u8 type;
     u64 val:24;
@@ -59,7 +44,7 @@ typedef struct {
     s32 cnt3;
     s32 step3[3];
     u8 pad3140[0x18];
-    void *f3158;
+    struct VmObj *f3158;
     u8 pad315c[0x1c];
     s32 n3178;
     s32 pad317c;
@@ -107,8 +92,8 @@ s32 func_001d1a28(VM *vm) {
 }
 VM *func_001e98d0(s32, s32);
 s32 func_001d1b00(VM *vm) {
-    VM *a = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    VM *b = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    VM *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VM *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     Actor *p = a->obj;
     Actor *q = b->obj;
     f32 d = inl_dist(p->pos[0], p->pos[2], q->pos[0], q->pos[2]);
@@ -117,8 +102,8 @@ s32 func_001d1b00(VM *vm) {
     return 2;
 }
 s32 func_001d1bf8(VM *vm) {
-    VM *a = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    VM *b = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    VM *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VM *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     Actor *p = a->obj;
     Actor *q = b->obj;
     f32 d = inl_dist(p->pos[0], p->pos[2], q->pos[0], q->pos[2]);
@@ -127,8 +112,8 @@ s32 func_001d1bf8(VM *vm) {
     return 2;
 }
 s32 func_001d1ce0(VM *vm) {
-    VM *a = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    VM *b = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    VM *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VM *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     Actor *p = a->obj;
     Actor *q = b->obj;
     f32 d = inl_dist3(p->pos[0], p->pos[2], p->pos[1], q->pos[0], q->pos[2], q->pos[1]);
@@ -137,8 +122,8 @@ s32 func_001d1ce0(VM *vm) {
     return 2;
 }
 s32 func_001d1df0(VM *vm) {
-    VM *a = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    VM *b = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    VM *a = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    VM *b = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     Actor *p = a->obj;
     Actor *q = b->obj;
     f32 d = inl_dist3(p->pos[0], p->pos[2], p->pos[1], q->pos[0], q->pos[2], q->pos[1]);
@@ -156,17 +141,17 @@ s32 func_001d5168(VM *vm) {
     s32 i, n;
     KEnt *p;
     func_001248e8(vm->stk[vm->sp]);
-    vm->flags.x |= 4;
-    vm->f2f4 = 2.0f;
+    vm->fl.x |= 4;
+    vm->x2f4 = 2.0f;
     p = D_0038D170;
     n = D_0039A570;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == vm->stk[vm->sp]) p->val = 0;
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
     }
-    p = ((KEnt *)&D_0039A580);
+    p = D_0039A580;
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == vm->stk[vm->sp]) p->val = 0;
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
     }
     vm->sp--;
     return 2;
@@ -178,12 +163,12 @@ s32 func_001d58c8(VM *vm) {
     p = D_0038D170;
     n = D_0039A570;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == (s32)D_00389C90.f3158) p->val = 0;
+        if (p->x0 == (s32)D_00389C90.f3158) p->obj = 0;
     }
-    p = ((KEnt *)&D_0039A580);
+    p = D_0039A580;
     n = D_003A7980;
     for (i = 0; i < n; i++, p++) {
-        if (p->key == (s32)D_00389C90.f3158) p->val = 0;
+        if (p->x0 == (s32)D_00389C90.f3158) p->obj = 0;
     }
     return 2;
 }

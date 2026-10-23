@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_003F34C4.h"
 typedef N_3f34c4 N;
@@ -154,29 +155,19 @@ void func_0020c1c8(N *o) {
 }
 
 /* party member: 0x74 bytes; item slots at +0x22 */
-typedef struct {
-    u8 pad00[0x22];
-    u8 items[0x74 - 0x22];
-} DbMember;
+typedef W606Mem_304be8 DbMember;
 /* same member viewed from +2 (indexed with item + 32) */
 typedef struct {
     u8 pad00[2];
     u8 a[0x72];
 } DbMemberB;
-typedef struct {
-    u8 pad000[4];
-    DbMember m[10];
-    u8 x48c;
-    u8 x48d;
-    u8 party[4];
-} DbSave;
+typedef Save_304be8 DbSave;
 typedef struct {
     u8 pad000[4];
     DbMemberB m[10];
 } DbSaveB;
 typedef struct { u8 pad[9]; u8 x[1]; } DbSave9;
 typedef struct { u8 pad[0x28]; s32 x28; } DbObj;
-#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D68.h"
 extern u8 D_003F3880[];
 extern u8 D_003F38E0[];
@@ -191,8 +182,8 @@ s32 func_0020db00(s32 a0, s32 slot, s32 item, s32 a3) {
     s32 id, n, i, bits, first;
     DbObj *o;
     if (slot != -1) {
-        DbMember *mp = &((DbSave *)D_00304BE8)->m[D_00304BE8->x48e[slot]];
-        id = mp->items[item];
+        DbMember *mp = &D_00304BE8->m[D_00304BE8->x48e[slot]];
+        id = mp->sub.x22[item];
     } else {
         id = item;
     }

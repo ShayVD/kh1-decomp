@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 typedef struct ObjT {
     u8 pad[0x24];
@@ -96,9 +97,8 @@ void func_00216640(void *a) {
 }
 typedef struct { s32 *p; s32 n; } PN;
 #include "data/pieces/D_003F34B8.h"
-typedef struct { u8 pad[0x44]; u8 name[116 - 0x44]; } Rec74;
-typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[1]; } S4BE8;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 Rec74;
+typedef Save_304be8 S4BE8;
 extern s32 D_00642CCC;
 extern s32 D_00642CD8;
 extern PN D_003F40F8[];
@@ -135,14 +135,14 @@ s32 D_00642D14 ALIGNED(4);
 s32 func_0013c360(s32);
 
 void func_00218020(s32 n) {
-    Rec74 *e = &((S4BE8 *)D_00304BE8)->r[n];
+    Rec74 *e = &D_00304BE8->m[n];
     s32 i;
     D_00642CF0[0] = 0;
     D_00642CF0[1] = 1;
     D_00642CF0[2] = 2;
     D_00642D10 = 3;
     D_00642D14 = 0;
-    for (i = 0; e->name[i]; i++) D_00642D14++;
+    for (i = 0; e->sub.name[i]; i++) D_00642D14++;
     if (D_00642D14 >= 37) {
         D_00642CF0[3] = 3;
         D_00642CF0[4] = 4;
@@ -240,7 +240,7 @@ void func_00218f88(void *a) {
             S4BE8 **b;
             func_001f3e90(o[0], o[1]);
             func_001f3e20(o[1], o[0]);
-            b = ((S4BE8 **)&D_00304BE8);
+            b = &D_00304BE8;
             o[1]->x24 = (Obj *)(u32)(*b)->x48e[*v];
             if ((o[2] = func_001f31a8(D_003F46D0, 6))) {
                 func_001f3e90(o[1], o[2]);

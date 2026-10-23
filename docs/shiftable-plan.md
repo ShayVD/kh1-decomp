@@ -2684,3 +2684,96 @@ mostly because of them: a user's `(s32 *)D_002E26A0` now is a cast of a typed pi
 - s27types changes: at most `S27_JOBS` (default 2) parallel compiles in all the
   s26/s27 tools; s27_fold skips files whose cast form differs from the declaration
   instead of failing, folds `(V **)&N` views (keep mode), and refolds split pieces.
+
+## Session 29: Phase 4 types (worker s29types)
+
+### Result
+
+Counted with `s27_survey.py --summary` (unchanged survey):
+
+| | base 152d0ec | now |
+|---|---|---|
+| view casts (a user's own struct type) | 463 in 84 pieces | 275 in 75 pieces |
+| shared casts (to the piece header's own types) | 213 | 202 |
+| basic casts (s32, u8 *, void *, ...) | 773 | 775 |
+
+The shared count fell because casts to E848_3a7990 / V3_2e2780 went with the
+casts they stood for; the two new basic casts are h62's `((f32 *)&D_002E2780)[j]`.
+
+This session gives a piece and its users' locals one type, instead of renaming
+casts: a file's own view type becomes an alias of the shared type
+(`typedef VmRec VM;`) and its field accesses are renamed to the shared fields at
+the same offsets (`s29_retype.py`), then the casts of the piece go because the
+declaration has that type.
+
+Per piece (view casts, base -> now):
+
+| piece | before | after | how |
+|---|---|---|---|
+| D_0039A580, D_0038D170, D_003C3A70, D_003A7990, D_003B4DA0 | 62 | 0 | `VmRec D_X[]` (data/types/vm_rec.h); VM / VMa / VmC / VmE / VM_c2778 / KEnt / Ent / E848 / E848b / Obj350 of 16 files alias VmRec |
+| D_002E2780, D_002E2790, D_002C58A0, D_002C58B0 | 71 | 0 | `FVec4 D_X` (data/types/fvec.h); the files' V4 / V4f / V3_2e2780 alias FVec4, h53's V53 is `typedef FVec4 V53 __attribute__((aligned(16)))` |
+| D_00304BE8 | 73 | 18 | 22 user files read Save_304be8 / W606Mem_304be8 / Sub_304be8 (aliases; record views with `--shift`) |
+| D_002C58D0 | 4 | 4 | left (see below) |
+
+Also VM-typed locals of those files that do not cast the pieces now alias VmRec
+(h43, h67 VM; s6_13 VmA; h66 VM_c0f30, VM_c1b58, VM_c91e8).
+
+What changed besides the aliases:
+
+- VmRec's `obj` (0x4) is `struct VmObj *`: each file that reads through it
+  completes `struct VmObj` with its own entity view (`--objtag`: its typedef gets
+  the tag).  h43's `D_00389C90.f3158`, compared with VM ids, became
+  `struct VmObj *` too (a `void *` there kept a load in a loop: see hazards).
+- `func_001c1ce8 / func_001c1cf8` take `s8 *` (the script) in c08, h66, h42 as in
+  s6_13 (they read `code` at 0x70 as an s32 before); `func_00123488 / func_00123618`
+  take `s32` in h67 / h68 as in the other files (they passed VM id 0x0 as
+  `void *`).  c09 compares `(u32)pc` with `(u32)lbl[k]` where its view had u32.
+- The top-level flag bits of b10 / b10n / s6_13 / w1 are `fl.b.bN` of VmFl (a union
+  member: same code in every file here).  `f14..f20` is `f14[3], f20`.
+- Users that read D_002E2780 / 90 as `f32[4]` pass `&D_X.x` and write `D_X.w`.
+- Save_304be8's member: 0x18..0x32 is `x18, x19[8], x21, x22[0x10], x32` (counts
+  and lists; h22 indexes x19[j] past 8 as its old a19[0x19] did; h8 reads
+  `sub.x32` for the Q9c view); `x5..x7` named; `sub.x1c` renamed `sub.x18`.
+
+### Left, and why
+
+- D_00304BE8 (18): views whose index expression would change (s12w5
+  `arr[j + 0x590]`, s6_20 DbSaveB `a[item + 32]`, h73 / s8_w8 Base4BE8 byte arrays
+  `r[x * 116]`, s7_w4 `e[k + 1].b74`), arrays laid over other fields (r2_7
+  `x1c[]` from the count byte, h56 `b[8]` over the first member bytes, s7_w3
+  `s32 f844[3]` over s8 x844[3]), b03 / b03n B3Sv (a whole save copy with its
+  own sub layout, also func_00232cc0's return type), s11_w44 P48E (a union),
+  h30's `#define D_00304BE8 (*(C01Tbl74 **)&D_00304BE8)`, s6_21 (nogcse view).
+- D_002C58D0 (4): the matrix users pass it as `f32 (*)[4]`, `u8 (*)[0x40]`,
+  `f32 *` (basic) and as h30's V4 (f32[4]) array, h54n Mtx, c01 C01Mat, h61 V4;
+  one matrix type for those needs h30's array V4 and c04's M4 locals retyped.
+- b11's own VM (a second VM view in the file whose `obj` is an Actor while its Ent
+  `owner` is an Obj): one `struct VmObj` per file; merging Actor and Obj there is
+  needed first.
+- The rest as session 28 left it (D_002A6238 bit-fields, D_002E26A0 actor
+  pointers, D_002C5968, D_00308CDC, D_002E31B0, D_00351E10 ...).
+
+### Hazards found (gcc 2.96)
+
+- Pointer types have their own alias sets: a store through `struct VmObj *` no
+  longer aliased a `void *` load, and gcc hoisted it out of a loop (h43).  Give
+  both sides the same pointee type rather than casting.
+- `typedef T V __attribute__((aligned(16)))` is the same type as T for argument
+  checks, and locals declared V keep their 16-byte alignment: h53 kept its code.
+- A struct alias replaces a view only if every field the file reads is at the same
+  offset with the same type; s29_used finds the reads from gcc's errors, so a
+  field named like a type (`u8 f32;`) must be renamed too (fixed in the tool).
+- Record views that start before / after the shared record (`((T *)D)[k]` with T
+  0x74 bytes from the block's start) fold with `--shift`: `&D->m[k].sub.x22`
+  gives the same code as `&((T *)D)[k].x26` in every file tried.
+- An alias may not land on padding: one map turned h58's b5 into `pad_5[0]`
+  (named x5..x7 now; s29_retype skips pad members).
+
+### Tools (tools/shift/s29types/, README there)
+
+- `s29_stabs.py`: layouts from gcc's stabs (`-gstabs`), headers included.
+- `s29_used.py`: the fields of a type a file reads (renamed-copy compile).
+- `s29_retype.py`: a file's type becomes an alias of a shared one; accesses
+  renamed by layout (`--map`, `--objtag`, `--sub`, `--hdr`, `--shift`, `--force`).
+- `s29_recfold.py`: D_00304BE8 record views (`--shift 4` + `->m[k]`).
+- `s29_uncast.py` (`--scalar`), `s29_asmdiff.py`.

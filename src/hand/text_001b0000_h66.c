@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
 double asin(double);
@@ -6,7 +7,7 @@ double cos(double);
 double atan2(double, double);
 f32 acosf(f32);
 #include "data/pieces/D_002E2780.h"
-typedef V3_2e2780 V4;
+typedef FVec4 V4;
 f32 sinf(f32);
 f32 sqrtf(f32);
 void func_001bf290(f32 *q);
@@ -17,17 +18,11 @@ extern Task_bfcd8 *D_0037A16C;
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
-typedef struct {
-    u8 pad[380]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
-} VM_c0f30;
+typedef VmRec VM_c0f30;
 extern s32 D_0038B4C4[], D_0038ACC4[];
 extern s8 D_003C2D30[];
 s8 *func_00232cc0(s32);
-typedef struct {
-    s32 x0; u8 pad[376]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; union { u64 x; s32 i[2]; } fl;
-} VM_c1b58;
+typedef VmRec VM_c1b58;
 typedef struct {
     u8 type;
     u64 val:24;
@@ -38,11 +33,7 @@ typedef struct {
 } Msg;
 s32 func_001c4640(Msg *m);
 VM_c1b58 *func_001e98d0(s32, s32);
-typedef struct {
-    s32 x0; u8 pad4[108]; s32 w70; s32 w74; s32 w78; s32 w7c; s32 w80; u8 pad84[248]; s32 pc; s32 sp; s32 stack[32]; s32 w516; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; union { u64 x; s32 i[2]; } fl;
-u8 pad816[32];
-} VM_c2778;
+typedef VmRec VM_c2778;
 typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
 extern s32 D_002BCDEC;
 #include "data/pieces/D_0039A580.h"
@@ -50,8 +41,8 @@ extern s32 D_002BCDEC;
 extern s32 D_0039A570, D_003A7980;
 extern s32 (*D_0037A198[])(VM_c2778 *, s32);
 extern u32 D_002C5958;
-s32 func_001c1ce8(s32, s32);
-s32 func_001c1cf8(s32, s32);
+s32 func_001c1ce8(s8 *, s32);
+s32 func_001c1cf8(s8 *, s32);
 void func_0011ef10(s32, void *);
 s32 func_001c1f80();
 typedef struct { u8 pad[16]; V4 pos; u8 pad32[28]; f32 roty; } Obj_c5168;
@@ -269,28 +260,28 @@ void func_001bfcd8(void) {
 s32 func_001c0f30(VM_c0f30 *v, s32 idx) {
     s8 *a = func_00232cc0(1);
     s8 *b = func_00232cc0(2);
-    v->w516 = idx;
+    v->stk[32] = idx;
     if (idx < 0x800) {
-        v->stack[++v->sp] = a[idx];
+        v->stk[++v->sp] = a[idx];
     } else if (idx < 0x900) {
-        v->stack[++v->sp] = a[idx];
+        v->stk[++v->sp] = a[idx];
     } else if (idx < 0xb00) {
         idx -= 0x900;
-        if ((s32)(v->flags >> 5) & 1) {
-            v->stack[++v->sp] = D_0038B4C4[idx];
+        if ((s32)(v->fl.x >> 5) & 1) {
+            v->stk[++v->sp] = D_0038B4C4[idx];
         } else {
-            v->stack[++v->sp] = D_0038ACC4[idx];
+            v->stk[++v->sp] = D_0038ACC4[idx];
         }
     } else if (idx < 0xc80) {
-        v->stack[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
+        v->stk[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
     } else if (idx < 0xcc0) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else if (idx < 0xd00) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else if (idx < 0xd40) {
-        v->stack[++v->sp] = D_003C2D30[idx];
+        v->stk[++v->sp] = D_003C2D30[idx];
     } else {
-        v->stack[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
+        v->stk[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
     }
     return 2;
 }
@@ -299,18 +290,18 @@ s32 func_001c1b58(VM_c1b58 *v) {
     s32 id, lvl, j;
     VM_c1b58 *t;
     Msg m;
-    id = v->stack[v->sp--];
-    lvl = v->stack[v->sp--];
+    id = v->stk[v->sp--];
+    lvl = v->stk[v->sp--];
     if (lvl < 0) lvl = 0;
     else if (lvl >= 8) lvl = 7;
     t = func_001e98d0((s32)(v->fl.x >> 5) & 1, id);
     if (t == v) return 6;
     t->ret[lvl] = -1;
-    if (lvl != t->depth) return 2;
+    if (lvl != t->rsp) return 2;
     for (j = lvl + 1; j < 8; j++) {
         if (t->ret[j] != -1) {
             t->pc = t->ret[j];
-            t->depth = j;
+            t->rsp = j;
             break;
         }
     }
@@ -338,17 +329,17 @@ s32 func_001c2778(void) {
     Msg m;
     if (D_002BCDEC == 0) return 0;
     if (D_00389C90.w12340 == 0) {
-        p = ((VM_c2778 *)&D_0038D170);
+        p = D_0038D170;
         cnt = &D_0039A570;
     } else {
-        p = ((VM_c2778 *)&D_0039A580);
+        p = D_0039A580;
         cnt = &D_003A7980;
     }
     for (i = 1, p++; i < *cnt; i++, p++) {
-        p->pc = p->w7c;
+        p->pc = p->lbl[0];
         while (1) {
-            op = func_001c1ce8(p->w70, p->pc);
-            arg = func_001c1cf8(p->w70, p->pc);
+            op = func_001c1ce8(p->code, p->pc);
+            arg = func_001c1cf8(p->code, p->pc);
             if (op == 5) break;
             r = D_0037A198[op](p, arg);
             if (r & 2) p->pc++;
@@ -359,8 +350,8 @@ s32 func_001c2778(void) {
                 break;
             }
         }
-        p->w78 = 1;
-        p->pc = p->w80;
+        p->x78 = 1;
+        p->pc = p->lbl[1];
     }
     if (stop) return 4;
     if (D_00389C90.w12340 == 0) {
@@ -368,7 +359,7 @@ s32 func_001c2778(void) {
         return 4;
     }
     cnt = &D_0039A570;
-    p = ((VM_c2778 *)&D_0038D170);
+    p = D_0038D170;
     for (i = 1, p++; i < *cnt; i++, p++) {
         if ((u32)p->fl.i[0] % 2 == 1) {
 /*P*/
@@ -548,8 +539,8 @@ void func_001c6890(void) {
     memset(&a, 0, 16);
     a.w = 1.0f;
     memset(&r, 0, 16);
-    func_002675a8(&a, ((V3_2e2780 *)&D_002E2780));
-    func_002675a8(&D_003C5510.v208, ((V4 *)&D_002E2790));
+    func_002675a8(&a, &D_002E2780);
+    func_002675a8(&D_003C5510.v208, &D_002E2790);
     D_003C5510.f288 = func_001e9e58(&a, &D_003C5510.v208);
     D_003C5510.f292 = D_002E27A0;
     func_001e9d00(&r, &D_003C5510.v208, &a, D_002E27A4);
@@ -699,19 +690,7 @@ void func_001ca800(void) {
 #undef D_003C5510
 #undef B
 
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0x68];
-    s32 code;
-    u8 pad74[8];
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[92];
-    u8 pad2f4[0x34];
-    u64 flags;
-} VM_c91e8;
+typedef VmRec VM_c91e8;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4_c91e8;
 typedef struct {
     union {

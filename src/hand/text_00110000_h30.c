@@ -502,8 +502,8 @@ void func_0011f988(void) {
         p->x3 = 0;
         p->x2 = 0;
         for (j = 0; j < 2; j++) {
-            func_002675a8(p->a[j], (*(V4 *)&D_002C58B0));
-            func_002675a8(p->b[j], (*(V4 *)&D_002C58B0));
+            func_002675a8(p->a[j], &D_002C58B0.x);
+            func_002675a8(p->b[j], &D_002C58B0.x);
         }
     }
     D_002C5BB0.rep = 0;

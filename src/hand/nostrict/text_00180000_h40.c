@@ -722,7 +722,7 @@ void func_0019dac8(void) {
         if (p->flags & 0x200)
             continue;
         {
-            func_00267530(d.f, D_002E2780, p->pos);
+            func_00267530(d.f, &D_002E2780.x, p->pos);
             func_00267548(d.f, d.f, d.f);
             D_0061E310[D_0061E710] = p;
             D_0061E710++;

@@ -275,31 +275,26 @@ s32 func_001d7040(VM *vm) {
     }
     return 2;
 }
-typedef struct { u8 pad0[0x25]; u8 cnt; u8 items[0x4e]; } PEnt;
-typedef union {
-    PEnt ent[20];
-    struct { u8 pad0[1166]; u8 slot[11]; u8 have[1]; } s;
-} PSave;
-#include "data/pieces/D_00304BE8.h"
+#include "data/pieces/D_00304BE8_s.h"
 s32 func_001d6a60(VM *vm) {
     s32 k = vm->stk[vm->sp];
     s32 item = vm->stk[vm->sp - 1];
     s32 r = 0;
     s32 j;
-    for (j = 0; j < ((PSave *)D_00304BE8)->ent[k].cnt; j++) {
-        if (((PSave *)D_00304BE8)->ent[k].items[j] == 0) {
-            ((PSave *)D_00304BE8)->ent[k].items[j] = item;
+    for (j = 0; j < D_00304BE8->m[k].sub.x21; j++) {
+        if (D_00304BE8->m[k].sub.x22[j] == 0) {
+            D_00304BE8->m[k].sub.x22[j] = item;
             r = 0;
             break;
         }
     }
-    if (j == ((PSave *)D_00304BE8)->ent[k].cnt) {
-        s32 v = ((PSave *)D_00304BE8)->s.have[item] + 1;
+    if (j == D_00304BE8->m[k].sub.x21) {
+        s32 v = D_00304BE8->items[item] + 1;
         if (v >= 100) {
-            ((PSave *)D_00304BE8)->s.have[item] = 99;
+            D_00304BE8->items[item] = 99;
             r = 1;
         } else {
-            ((PSave *)D_00304BE8)->s.have[item] = v;
+            D_00304BE8->items[item] = v;
             r = 0;
         }
     }

@@ -452,7 +452,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
     o->x39e = 0;
     o->f.b46 = 0;
-    func_002675a8(&o->x120, ((V53 *)&D_002C58A0));
+    func_002675a8(&o->x120, &D_002C58A0);
     for (e = 0; (e = func_0014a398(e)) != 0;) {
         if (e->owner == o && (e->u.w & 3) == 1) e->u.b.b16 = 0;
     }
@@ -483,11 +483,11 @@ s32 func_00125000(void) {
     V53 d, r;
     M53 m;
     func_00110a48(D_004F7650);
-    func_00267530(&d, ((V53 *)&D_002E2790), ((V53 *)&D_002E2780));
+    func_00267530(&d, &D_002E2790, &D_002E2780);
     func_002673b8(&d, &d);
     func_00120cf8(&d, m, func_00120c88(D_002E27A4));
     func_002672f8(&r, m, &D_002E26B0);
-    func_00267930(D_004F76E0[D_002C5950], ((V53 *)&D_002E2780), &d, &r);
+    func_00267930(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
     sceVu0CopyMatrix((*(M53 *)&D_002E2700), D_004F76E0[D_002C5950]);
     sceVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
     sceVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
@@ -495,7 +495,7 @@ s32 func_00125000(void) {
     sceVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
     D_002E27AC = D_004F7660[D_002C5950];
     func_00110ba8();
-    D_004F77E0 = func_00124d28(((V53 *)&D_002E2780), ((V53 *)&D_002E2790));
+    D_004F77E0 = func_00124d28(&D_002E2780, &D_002E2790);
     return 0;
 }
 
@@ -563,7 +563,7 @@ void func_001271b0(u8 *o, V53 *v) {
     if (D_002E3190.flag & 1) {
         if ((FLD(s32, o, 0x164) == 7 || FLD(s32, o, 0x164) == 12) && (FLD(s32, o, 0x70) == 0 || FLD(s32, o, 0x70) == 12)) {
             FLD(u32, o, 0) &= ~4;
-            func_002675a8(&s, ((V53 *)&D_002C58A0));
+            func_002675a8(&s, &D_002C58A0);
             p = func_0013dfb8(o, &s);
             if (p) FLD(f32, o, 0x3b0) = FLD(f32, p, 4) = 2.0f;
         }
@@ -644,7 +644,7 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
             return;
         }
         if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
-            func_00267530(out, ((V53 *)&D_002C58A0), (V53 *)(o + 0x20));
+            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
         } else {
             func_002675a8(out, o + 0x20);
         }

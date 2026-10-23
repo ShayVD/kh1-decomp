@@ -1,6 +1,7 @@
 /* Hand-matched functions near 0x152ff8-0x15b098 (worker 58). Built without
  * strict aliasing. */
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
 
 #include "data/types/nostrict_text_00150000_h58_p.h"
@@ -111,9 +112,9 @@ void func_00152ff8(Act *a) {
     if (k >= 72 && (k < 74 || k == 76)) {
         func_002675a8(&v, &q->v30);
     } else {
-        func_00267530(&v, &((V4 *)&D_002C58A0)[0], &q->v30);
+        func_00267530(&v, &D_002C58A0, &q->v30);
     }
-    func_002675a8(p, &((V4 *)&D_002C58A0)[1]);
+    func_002675a8(p, (&D_002C58A0 + 1));
     func_00152d50(a, 1, &v);
 }
 
@@ -150,7 +151,7 @@ s32 func_00153668(Act *a, S98 *b, s32 c) {
         func_0013dfa0(b);
         a->x144->w4 = 1;
         a->x144->f1c = 12.0f;
-        func_002675a8(&a->x3c0, &((V4 *)&D_002C58A0)[1]);
+        func_002675a8(&a->x3c0, (&D_002C58A0 + 1));
         func_0014f658(a, 4);
         break;
     case 29:
@@ -588,7 +589,7 @@ void func_00159978(Act *a, V4 *o) {
     o->y = 0.0f;
     func_00121fc4(o, o);
     if (o->w < 200.0f) {
-        func_00267530(o, &((V4 *)&D_002C58A0)[0], o);
+        func_00267530(o, &D_002C58A0, o);
         o->w = 1.0f;
     } else if (o->w > 250.0f) {
         o->w = 1.0f;
@@ -653,8 +654,8 @@ s32 func_00159cd8(void) {
             func_002674f0(&D_00551740.v210, &w, &D_00551740.v210, D_00551700.f30);
         }
     }
-    func_002675a8(((V4 *)&D_002E2790), &D_00551740.v220);
-    func_002675a8(((V4 *)&D_002E2780), &D_00551740.v210);
+    func_002675a8(&D_002E2790, &D_00551740.v220);
+    func_002675a8(&D_002E2780, &D_00551740.v210);
     func_00124c68(70.0f);
     return 0;
 }
@@ -1006,8 +1007,8 @@ s32 func_00158ec8(void) {
 }
 
 /* ---- func_0015ae48 ---- */
-typedef struct { u8 b0, b1, b2, b3, b4, b5, b6, b7; u8 pad8[0x10]; u8 b18; u8 pad19[8]; u8 b21; u8 pad22[0x4e]; } Sub116;
-typedef struct { s32 x0; Sub116 s; } Ent116;
+typedef Sub_304be8 Sub116;
+typedef W606Mem_304be8 Ent116;
 typedef struct { u8 pad[0x40]; s32 x40; u8 pad44[4]; s32 x48; s32 x4c; s32 x50; u8 pad54[0x8c]; s32 xe0; } St6c;
 typedef struct { u8 pad[0x6c]; St6c *x6c; } P6c;
 #include "data/pieces/D_00304BE8.h"
@@ -1016,56 +1017,56 @@ void func_00141468(P6c *, s32);
 void func_00141540(P6c *, s32);
 void func_0013c8c8(s32, s32);
 void func_0015ae48(s32 i, u32 k) {
-    Sub116 *s = &((Ent116 *)D_00304BE8)[i].s;
+    Sub116 *s = &D_00304BE8->m[i].sub;
     P6c *p = func_0013daf8(i);
     s32 v;
     switch (k) {
     case 0:
         break;
     case 1:
-        s->b2 += 3;
+        s->hpmax += 3;
         if (p) {
             p->x6c->x40 += 3;
             func_00141468(p, 3);
             return;
         }
-        s->b1 += 3;
+        s->x1 += 3;
         break;
     case 2:
-        s->b4 += 1;
+        s->mpmax += 1;
         if (p) {
             p->x6c->x48 += 1;
             func_00141540(p, 1);
             return;
         }
-        s->b3 += 1;
+        s->x3 += 1;
         break;
     case 3:
-        s->b5 = s->b5 + 2 > 100 ? 100 : s->b5 + 2;
+        s->x5 = s->x5 + 2 > 100 ? 100 : s->x5 + 2;
         if (p) {
             v = p->x6c->xe0 + 2;
             p->x6c->xe0 = v < 101 ? v : 100;
         }
         break;
     case 4:
-        s->b6 = s->b6 + 2 > 100 ? 100 : s->b6 + 2;
+        s->x6 = s->x6 + 2 > 100 ? 100 : s->x6 + 2;
         if (p) {
             v = p->x6c->x4c + 2;
             p->x6c->x4c = v < 101 ? v : 100;
         }
         break;
     case 5:
-        s->b7 = s->b7 + 2 > 100 ? 100 : s->b7 + 2;
+        s->x7 = s->x7 + 2 > 100 ? 100 : s->x7 + 2;
         if (p) {
             v = p->x6c->x50 + 2;
             p->x6c->x50 = v < 101 ? v : 100;
         }
         break;
     case 6:
-        s->b21++;
+        s->x21++;
         break;
     case 7:
-        s->b18++;
+        s->x18++;
         break;
     default:
         func_0013c8c8(k & ~0x80, i);

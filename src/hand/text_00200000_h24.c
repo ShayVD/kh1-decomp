@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
 #include "data/pieces/D_003F2C40.h"
@@ -272,14 +273,14 @@ void func_00211480(Sbbc0 *a0, s32 a1) {
     a0->f24 = a1;
 }
 
-typedef struct { u8 pad[54]; u8 f36; u8 pad2[116 - 55]; } S4BE8e;
+typedef W606Mem_304be8 S4BE8e;
 #include "data/pieces/D_00304BE8.h"
 extern s32 D_00641BF0[], D_00641BE0[];
 
 void func_00211698(void) {
     u32 i;
     for (i = 0; i < D_003E3D68; i++) {
-        s32 v = ((S4BE8e *)D_00304BE8)[((u8 *)D_00304BE8)[0x48e + i]].f36;
+        s32 v = D_00304BE8->m[((u8 *)D_00304BE8)[0x48e + i]].sub.x32;
         D_00641BF0[i] = D_00641BE0[i] = v;
     }
 }

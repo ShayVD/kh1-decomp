@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
 #include "data/pieces/D_003E8E08.h"
@@ -9,12 +10,11 @@ typedef struct Obj { u8 pad[0x10]; struct Obj *x10; u8 p14[0x10]; s32 x24; s32 x
 typedef struct Obj7 { u8 pad[0x10]; struct Obj7 *x10; u8 p14[0x10]; struct Obj7 *x24; s32 x28; u8 p2c[0xBA - 0x2C]; s16 xba; u8 pbc[0xCC - 0xBC]; s16 xcc; s16 xce; s16 xd0; s16 xd2; } Obj7;
 #include "data/pieces/D_00425BC8.h"
 #include "data/types/text_00210000_b14_p.h"
-typedef struct { u8 pad[0x40]; u8 items[0x30]; } Sub;
-typedef struct { u8 pad[4]; Sub sub; } Rec74;
-typedef struct { Rec74 r[10]; u8 pad[6]; u8 x48e[0x10b]; u8 x599[1]; } S4BE8;
+typedef Sub_304be8 Sub;
+typedef W606Mem_304be8 Rec74;
+typedef Save_304be8 S4BE8;
 #include "data/types/text_00210000_b14.h"
 #include "data/pieces/D_003F34B8.h"
-#include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3E50.h"
 extern u8 D_003F3B10[];
@@ -244,7 +244,7 @@ void func_00212930(Obj *a) {
 }
 
 #define D_00642C3C (*(u32 *)&D_00642C3C)
-#define BYTE D_00642C30->items[D_00642C34]
+#define BYTE D_00642C30->name[D_00642C34]
 void func_002145d8(Obj *a) {
     s32 buf[3];
     s32 f, v;
@@ -328,7 +328,7 @@ void func_00214b20(Obj *a) {
     k = a->x24;
     n = D_00642C78[k];
     k = D_00304BE8->x48e[k];
-    sub = &((S4BE8 *)D_00304BE8)->r[k].sub;
+    sub = &D_00304BE8->m[k].sub;
     if (n == 0) return;
     if (D_00642C24 < 3) {
         m = 0;
@@ -353,7 +353,7 @@ void func_00214b20(Obj *a) {
             D_00642C5C = a->xd0 >> 4;
             D_00642C60 = a->xd2 >> 4;
             idx = func_001fd548(a);
-            it = sub->items[idx];
+            it = sub->name[idx];
             id = it & 0x7f;
             if ((p = a->x10)) p->x24 = func_001ef580(id);
             if (func_001fe5a0(a)) {
@@ -384,8 +384,8 @@ void func_00214b20(Obj *a) {
                     D_00642C54 = it;
                     D_00642C50 = id;
                     D_00642C24 = 5;
-                    sub->items[D_00642C34] = *(u8 *)&D_00642C54;
-                    sub->items[D_00642C4C] = *(u8 *)&D_00642C3C;
+                    sub->name[D_00642C34] = *(u8 *)&D_00642C54;
+                    sub->name[D_00642C4C] = *(u8 *)&D_00642C3C;
                 }
             }
         }
@@ -398,7 +398,7 @@ void func_00214b20(Obj *a) {
     lim = a->xce + 1;
     func_001f8ee0(a);
     for (j = 0; j < lim && i < n; j++, i++) {
-        idx = sub->items[i];
+        idx = sub->name[i];
         func_00214290(a, !fl ? 2 : !(idx & 0x80) ? j == sel : money < func_001ef5c0(idx & ~0x80) ? (j == sel ? 3 : 2) : j == sel, 0, y, 166, idx);
         y += 28;
     }
@@ -429,13 +429,13 @@ void func_00214fc8(Obj *a) {
             if (!m) D_00642C24 = 0;
             else D_00642C24 = 2;
         } else {
-            S4BE8 **b = ((S4BE8 **)&D_00304BE8);
+            S4BE8 **b = &D_00304BE8;
             func_001fe158(a);
             func_0020bd18(a, 8);
             D_00642C64 = a->xd0 >> 4;
             D_00642C68 = a->xd2 >> 4;
             idx = func_001fd548(a);
-            it = (*b)->x599[idx];
+            it = (*b)->list599[idx];
             id = it & 0x7f;
             if ((p = a->x10)) p->x24 = func_001ef580(id);
             if (func_001fe5a0(a)) {
@@ -465,8 +465,8 @@ void func_00214fc8(Obj *a) {
                     D_00642C54 = it;
                     D_00642C50 = id;
                     D_00642C24 = 5;
-                    (*b)->x599[D_00642C34] = *(u8 *)&D_00642C54;
-                    (*b)->x599[D_00642C4C] = *(u8 *)&D_00642C3C;
+                    (*b)->list599[D_00642C34] = *(u8 *)&D_00642C54;
+                    (*b)->list599[D_00642C4C] = *(u8 *)&D_00642C3C;
                 }
             }
         }
@@ -520,7 +520,7 @@ void func_00215420(Obj *a) {
                         D_00642C28 = D_00642C58;
                         k = D_00304BE8->x48e[D_00642C28];
                         D_00642C2C = k;
-                        D_00642C30 = &((S4BE8 *)D_00304BE8)->r[k].sub;
+                        D_00642C30 = &D_00304BE8->m[k].sub;
                         D_00642C24 = 1;
                         func_001f3708(a, 5);
                         if ((o = a->x10)) {

@@ -441,7 +441,7 @@ void func_00107e60(void) {
     f32 m[4][4] __attribute__((aligned(16)));
     f32 v[4] __attribute__((aligned(16)));
     f32 *p = v;
-    func_00267530(p, D_002E2790, D_002E2780);
+    func_00267530(p, &D_002E2790.x, &D_002E2780.x);
     func_002673b8(p, p);
     func_002678b8(D_002A6C10, &D_0029B280, p);
 }

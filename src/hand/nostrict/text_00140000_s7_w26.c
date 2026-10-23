@@ -1,7 +1,7 @@
 #include "common.h"
 
 #include "data/pieces/D_002C58A0.h"
-typedef V4_2c58a0 V4f;
+typedef FVec4 V4f;
 typedef struct { u8 pad[0x30]; u64 d30; u8 pad38[8]; V4f p; f32 f50; f32 f54; u8 pad58[4]; s32 w5c; u8 pad60[0x40]; V4f va0; f32 fb0; f32 fb4; f32 fb8; f32 fbc; } Sub148;
 typedef struct {
     u32 flags;

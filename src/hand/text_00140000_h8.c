@@ -613,7 +613,7 @@ void func_0014c530(W8Act *a) {
 
 /* needs make: uses rodata */
 s32 func_00149678(void) {
-    switch (D_00304BE8->m[0].sub.x2c.x6) {
+    switch (D_00304BE8->m[0].sub.x32) {
     case 88:
     case 91:
     case 99:

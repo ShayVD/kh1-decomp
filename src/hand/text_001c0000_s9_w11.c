@@ -76,8 +76,8 @@ s32 func_001ca0f8(VM *vm) {
     f = vm->stk[vm->sp];
     func_00177900(a, b, vm->stk[vm->sp - 2] * 3.1415928f / 180.0f);
     if (vm->stk[vm->sp] == 0) {
-        func_002675a8(D_002E2780, a);
-        func_002675a8(D_002E2790, b);
+        func_002675a8(&D_002E2780, a);
+        func_002675a8(&D_002E2790, b);
         vm->sp -= 3;
         return 2;
     }

@@ -1,7 +1,8 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
-typedef struct Ent2 {
+typedef struct VmObj {
     u8 pad0[0x10];
     f32 pos[3];
     u8 pad1c[0x370 - 0x1c];
@@ -10,19 +11,7 @@ typedef struct Ent2 {
 
 /* Script VM context (same layout as h15/h16): pc at +0x17c, sp at +0x180,
    value stack at +0x184, flags at +0x328. */
-typedef struct {
-    s32 x0;
-    struct Ent2 *ent;
-    u8 pad8[0x68];
-    s32 code;
-    u8 pad74[8];
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[92];
-    u8 pad2f4[0x34];
-    u64 flags;
-} VM;
+typedef VmRec VM;
 
 typedef struct { s32 x0; s32 id; } PQ;
 typedef struct { s32 x0; PQ *q; u8 pad8[0x74]; s32 a[1]; u8 pad80[0x2f8-0x80]; s32 b[8]; } P;
@@ -35,7 +24,7 @@ s32 func_001c19f8(VM *vm, s32 k) {
     P *p;
     if (b < 0) b = 0;
     else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->flags >> 5) & 1, a);
+    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
     func_001c1980(p, b, p->a[k]);
     return 2;
 }
@@ -46,7 +35,7 @@ s32 func_001c1aa8(VM *vm) {
     P *p;
     if (b < 0) b = 0;
     else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->flags >> 5) & 1, a);
+    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
     if (p->b[b] != -1) {
         vm->pc -= 2;
         return 4;
@@ -54,8 +43,8 @@ s32 func_001c1aa8(VM *vm) {
     return 2;
 }
 
-s32 func_001c1ce8(s32, s32);
-s32 func_001c1cf8(s32, s32);
+s32 func_001c1ce8(s8 *, s32);
+s32 func_001c1cf8(s8 *, s32);
 extern s32 (*D_0037A198[])(VM *, s32);
 
 void func_001c1d20(VM *vm, s32 k) {
@@ -163,8 +152,8 @@ s32 func_001c4de0(s32 a, s32 b) {
     Msg m;
     D_00389C90.x3170 = a;
     D_00389C90.x3174 = b;
-    if (D_00389C90.x3034 == 0) vm = ((VM *)&D_0038D170);
-    else vm = ((VM *)&D_0039A580);
+    if (D_00389C90.x3034 == 0) vm = D_0038D170;
+    else vm = D_0039A580;
     D_00389C90.x3450 = 0;
     func_001c1d20(vm, 10);
     if (b == 1) {
@@ -579,13 +568,13 @@ s32 func_001cf110(VM *vm) {
 }
 s32 func_001cf210(VM *vm) {
     Msg m;
-    if (vm->ent != 0) {
+    if (vm->obj != 0) {
         m.type = 23;
         m.val = (u32)(vm->stk[vm->sp] * 2);
         m.x = vm->x0;
-        m.v[0] = vm->ent->col[0] * 0.0078125f;
-        m.v[1] = vm->ent->col[1] * 0.0078125f;
-        m.v[2] = vm->ent->col[2] * 0.0078125f;
+        m.v[0] = vm->obj->col[0] * 0.0078125f;
+        m.v[1] = vm->obj->col[1] * 0.0078125f;
+        m.v[2] = vm->obj->col[2] * 0.0078125f;
         m.v[3] = 1.0f;
         func_001c4640(&m);
     }

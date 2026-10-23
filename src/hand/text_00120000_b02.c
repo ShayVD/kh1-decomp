@@ -129,7 +129,7 @@ void func_00128738(QW *buf, s32 idx) {
 }
 
 #include "data/pieces/D_002C58A0.h"
-typedef V4_2c58a0 V4;
+typedef FVec4 V4;
 typedef union { u64 x; struct { u32 b0:2; u32 b2:1; u32 b3:1; u32 b4:1; u32 b5:1; u32 b6:1; u32 b7:4; u32 b11:1; u32 b12:1; u32 r13:19; s32 hi; } b; } F160;
 typedef union { u64 x; struct { u32 lo; u32 r0:13; u32 b45:1; u32 r46:4; u32 b50:1; u32 r51:13; } b; } F370;
 typedef struct { s32 f0; f32 f4; f32 f8; f32 fc; } Q8e;
