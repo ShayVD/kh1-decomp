@@ -198,6 +198,195 @@ s11_w1c, s19_s19m1) include script_vm.h and use VmMsg; h44 and h45 lost local
 prototypes that conflicted with the header (calls got `(s8 *)` casts); s19m1
 keeps its `volatile` message and passes `(VmMsg *)&m`. No code changed.
 
+## Session 32: the message windows, and the library file src/vm/vm_lib.c
+
+| file | functions |
+|---|---|
+| `src/msgwin/msgwin.c` | 44: every function from 0x001ca9e8 to 0x001cce38, in address order, with the data D_0062A1E0, D_0062A1F0 and D_00629920 |
+| `include/msgwin/msgwin.h` | `MsgWin` (the 0xb0-byte template / window record of D_006298F0[8], D_00629E70[4], D_0062A130) and the two functions other code calls |
+| `src/vm/vm_lib.c` | the library file's first 32 functions, 0x001cd238-0x001cdf98, except the two below; then opcode 24's table D_003D9FE0 and its dispatcher func_001dcad0 |
+| `src/vm/vm_lib.nofill.c` | func_001cd2d8 (send message 2: turn towards a point) |
+| `src/vm/vm_lib.nostrict.c` | func_001cd600 (set the entity's rotation from degrees); func_001cf348 (second half) |
+| `src/vm/vm_lib.nostrict_nofill.c` | second half: func_001ce4b8, func_001ce5f0, func_001ce750, func_001ce880 (turn to a heading: messages 4 / 21 / 22) |
+| `include/vm/vm_obj.h` | second half: `struct VmObj`, the entity as the four vm_lib files read it |
+
+The second half of the session (below) moved 241 more functions, 0x001cdf98-0x001d5408, into the same four files.
+
+**The message windows, 0x001ca9e8-0x001cce38 (44 functions).** Evidence:
+
+- *Data.* Their constants D_003C5640-D_003C5890 (the strings and tables in
+  func_001cb120, func_001cb440, func_001cb738, func_001cb7d0, func_001caa20,
+  func_001cccf0, func_001cafe8 ...) sit between the camera's D_003C5510
+  (0x130 bytes, ending at 0x003C5640) and opcode 1's D_003C5898: the same
+  order as the code (camera, message windows, vm_calc). No other code uses
+  them.
+- *Shared state.* All of them work on the window templates D_006298F0[0..7],
+  the 4 open windows D_00629E70 and D_0062A130 (entry 12 of the same 0xb0
+  array), and VmMgr's window fields: wst[4] (0x0, state of open window i),
+  tst[8] (0x4, state of template k), xc (0xc), tbl[8][256] / cnt[8] (the
+  message ids queued per template) and ids[4] (0x1030, the template each window
+  shows). The views were h14's / s7_w24's `Big` (b, c, u.d, w, idx), h42's
+  (b0, b4, bc, h10, w1010, c1030), h67's / s7_w3's `Str` (st, x4, tbl, cnt,
+  ids), h15's (a, b, c) and s7_w37's `BigE`; all now VmMgr.
+- *Call graph.* The script functions start a window with func_0010bdd0 /
+  func_0010ef70 / func_0010bd90 and a callback from this group (func_001cae20,
+  func_001cafe8, func_001cbab0, func_001cbd80, func_001cbea0, func_001cac60,
+  func_001ca9f8 / func_001caa20); outside callers are only script_vm.c
+  (func_001cab48, the template reset at script load) and h45 (func_001caf58,
+  close all), declared in msgwin.h.
+- 30 of the 44 are D_003D9FE0 entries (0-7, 33, 80-83, 88, 89, 107, 153,
+  176-180, 358, 359, 365, 475, 605, 695, 741, 753, 754); the other 14 are the
+  callbacks and the two resets.
+- Everything matches in one file with the default flags, including
+  func_001cac98 (s7_w37), whose old file's comment ("6 words off, nostrict")
+  was stale.
+
+Where they came from: h14 (8), h42 (8), h67 (4), h15 (11), b10 (1), s7_w24
+(1), s7_w3 (1), s8_w20 (2), s7_w37 (1), auto text_001c0000.c (2),
+text_001c0000_2.c / _6.c / _7.c / _11.c / _12.c (1 each). Deleted as empty:
+s8_w20, text_001cac98_s7_w37.c, auto _7, _11 and _12.
+
+Types: `MsgWin` is h42's / s8_w20's `Obj` (h15's and h67's `Win { u64 d[22]
+}` gave the same struct copies). VmMgr's `u8 x0[0x10]` became `wst[4]`,
+`tst[8]`, `xc[4]` (indexed up to 7 by the resets, as h42's `bc[4]` was) and
+its pad at 0x3144 `s32 *x3144` (h14's p12612, where the choice callback
+stores the answer). The VMs are VmRec; func_001cb440's view from +4 is a local
+`MsgVmSub` taken as `(MsgVmSub *)&vm->obj`, and it matched.
+
+Kept as they were: func_001ccda8 / func_001ccdf0 keep m2c's s32-arithmetic
+bodies and the volatile labels D_00629920 (defined here) / D_00629924; two
+VmRec forms tried were 9-17 words off. func_001cc170 / func_001cc1c0 keep
+h14's labels D_006298F6 / D_006298F8 (`MsgWinH`): writing
+`D_006298F0[k].h6 / .h8` matched too, but cover_check then no longer saw
+D_006298F8 and float_covered.txt lost it (.bss 52 bytes shorter). Keep the
+labels a function used when cover_check lists them.
+
+**h42 retype.** h42 includes script_vm.h; its five message senders use VmMsg,
+and the CONTEXT_ONLY func_001c4640, the queue externs and D_0037A21C are gone.
+No code changed (the probe of session 31 was right).
+
+**The library file: 0x001cd238-0x001dcad0.** D_003D9FE0 (763 entries) is
+not one module's list: entries 0-7 are message windows, 34-52 and 13 later
+ones camera, and 547 entries lie in 0x001cd238-0x001dcad0.
+Sorted by address those 547 indices form an increasing run of 480 (53
+inversions), from entry 8 (func_001cd280) to the last entry, 762
+(func_001dca48), which is the last table entry before func_001dcad0. After the
+dispatcher no function up to 0x001ddc78 is an entry; the remaining 154 entries
+(0x001ddc78-0x001ec678) belong to later code. The library data agrees: the
+string tables D_003C58E0 / D_003D97E0 (func_001cf478 / func_001cf5d0), then
+D_003D9FE0 itself, then D_003DABCC / D_003DABD0 ... used from 0x001cd238 on.
+So 0x001cd238-0x001dcad0 looks like one source file of about 600 functions
+that ends with the dispatcher (func_001dca88, a non-entry just before it, is
+still to place). It is src/vm/vm_lib.c, filled from both ends:
+
+- the dispatcher and the table moved first: `s32 func_001dcad0(VmRec *vm, s32
+  k) { return D_003D9FE0[k](vm); }` (the handler returns the library
+  function's result), the table typed `VmLibFn D_003D9FE0[0x2fb]` with
+  `s32 func_X();` declarations of its 763 entries;
+- then 0x001cd238-0x001cdf98 (34 functions, from h15 (17), h42 (1), auto
+  text_001c0000.c (11), text_001c0000_3.c (1), s6_na (1), s6_nb (1), nofill/s9_w7
+  (1), nostrict/s7_w24 (1)) above it. h15 and nofill/s9_w7 were left empty and
+  deleted. VmRec replaced the views (h15's `VM`, s6_na / s6_nb's `VM` and
+  `Msg`, s7_w24's union VM, s9_w7's VM5 / Obj5); `struct VmObj` is completed
+  with pos (0x10), rot (0x30) and flags (0x370). The m2c bodies of the
+  `vm->sp - 1` and `func_00106780(stk[sp])` functions were rewritten on VmRec
+  and match. func_001cd2d8 keeps its message view Msg2 (`u32 val:24`; VmMsg's
+  u64 bit-field reads differently) and passes `(VmMsg *)&m`.
+
+When a later move puts a library function above the table whose definition
+disagrees with `s32 func_X();` (a `void` one), change that declaration.
+
+**Checks after each commit.** `make -j4` byte-identical (6979 functions),
+`make report` 6979 at 100%, `s31_warndiff` no new warnings in the edited
+files, and the m12 float build: float_covered.txt identical to the base, and
+kh1-shift.elf has the same symbols at the same addresses (nm) and the same
+loaded sections. objdiff units: 924 -> 920 (msgwin) -> 921 (vm_lib.c, its two
+siblings, minus h15 and s9_w7).
+
+**Files edited** (for the types worker's merge): include/vm/vm_mgr.h,
+src/hand/text_001b0000_h14.c, text_001c0000_h42.c, text_001c0000_h67.c,
+text_001c0000_b10.c, text_s7_w24.c, text_s7_w3.c, text_00100000_s6_na.c,
+text_001c0000_s6_nb.c, nostrict/text_s7_w24.c, src/auto/text_001c0000.c,
+text_001c0000_2.c, text_001c0000_3.c, text_001c0000_6.c, text_001d0000_14.c.
+Deleted: src/hand/text_001c0000_h15.c, text_001c0000_s8_w20.c,
+text_001cac98_s7_w37.c, nofill/text_001c0000_s9_w7.c, src/auto/text_001c0000_7.c,
+_11.c, _12.c.
+
+### Second half: 0x001cdf98-0x001d5408 (241 functions)
+
+Six chunks, each its own commit, in address order above the table (the
+sibling files take the functions whose old file had other flags):
+
+| chunk | functions | into vm_lib.c | siblings |
+|---|---|---|---|
+| 0x001cdf98-0x001cfff8 | 63 | 57: h16 (32), h42 (5), h67 (2), h43, s7_w22, s11_w1c, s19_s19m1, auto text_001c0000.c / _1 / _2 / _3 / _6 / _10 (14) | nostrict_nofill: h42 (3), h67 (1); nofill: h42's func_001cede8; nostrict: s7_w24's func_001cf348 |
+| 0x001cfff8-0x001d17d0 | 59 | 58: the rest of h16 (13), h43 (5), h67 (2), s7_w3, auto text_001d0000.c / _1 / _2 / _7 / _8 / _10 (37) | nofill: h67's func_001d1080 |
+| 0x001d17d0-0x001d3610 | 54 | 41: h17 (9), s6_15 (2), h67, b10, h43, auto (27) | nofill: h43 (8), h67 (2), text_001d0000.c (3) |
+| 0x001d3610-0x001d4000 | 25 | 21: h17 (6), s6_15 (2), h43, auto (12) | nofill: h17 (3), h67's func_001d3e30 |
+| 0x001d4000-0x001d4c08 | 20 | 19: h17 (6), h43, auto (12) | nofill: b10's func_001d4798 |
+| 0x001d4c08-0x001d5408 | 20 | 17: h17 (4), h43 (2), auto (11) | nofill: h43 (3) |
+
+Deleted as empty (22 files): h16, h42, b10, s7_w22, s11_w1c,
+s19_s19m1, nofill/h42, nofill/h67, nofill/b10, nofill/text_001d0000.c,
+nostrict/s7_w24, nostrict_nofill/h42 and h67, auto text_001c0000_1 / _3 /
+_10, text_001d0000_3 / _13 / _15 / _17 / _18 / _19.  objdiff units 921 ->
+900.  b10's leftover D_003C5510 / D_003C21A8 / D_003C3A70 declarations went
+with it (float_covered.txt unchanged).
+
+**Types.**  Every function is on VmRec / VmMgr / VmMsg except the four
+below.  What the moves named:
+
+- *VmRec* (data/types/vm_rec.h): `f68` / `f6c` (0x68: the target heading and
+  the step, degrees, of messages 4 / 21 / 22).  Other fields the views used
+  map as: cur / v08 = `p`, tgt / f14..f1c = `f14[3]`, spd = `f20`, the
+  views' u64 / union flags = `fl.x`, their u32 bit-fields b0 .. b7 =
+  `fl.b.bN`, h17's f318 = `rsp`.
+- *VmMgr* (include/vm/vm_mgr.h): the effect fade at 0x3098 (`fxk`, `fxn`,
+  `fxd[3]`, `fx[4]`, VmFx records: h16 / h42's idx, cnt, d, ptrs and Fx),
+  the alpha and colour fades of D_002BC080 at 0x3128 (`an`, `ad`, `rgbn`,
+  `rgbd[3]`: h16's cnt2 / step2 / cnt3 / step3), the three screen points of
+  func_001d2fd8 / func_001d3078 / func_001d33c8 (`py0`, `px1`, `py1`, `px2`,
+  `py2` at 0x3080; the first x is `f3078.b.hi`, since h17's `w[1]` was the
+  high word of the 0x3078 flags) and `x3094`.  h67's f316c is `x316c`, the
+  auto files' `D_00389C90[1550]` / `[1551]` (s64) are `f3070.x` /
+  `f3078.x` and `[3154]` (s32) is `x3148`.
+- *struct VmObj* moved from four copies into include/vm/vm_obj.h: x0 (a
+  flag word), x4 (id), pos, rot, f3c (heading), p50 (home position), f6c,
+  f130, f164, f16c, and at 0x370 a union of the u64 flags and h42's `col[4]`.
+  func_001e98d0 / func_001e9b98 return `VmRec *` (the VM with that id), so
+  the result views (s19's R, h17's Ent, b10's Ref, s6_15's Ent) are gone.
+- *Effects*: D_0038CD3C is `VmFx *[]` in vm_lib (the piece header's `Lt *` is
+  h42's view of f0c only).
+
+Kept as they were, with a comment: func_001cf960 keeps s11_w1c's VM view
+(`VmRecW`, u64 bit-fields directly in the struct; the session 11 alias-set
+reason), func_001cfc28 its message with volatile type / v3 and the `$f0`
+register pin (`VmMsgV`), func_001d2c68 and func_001d4798 b10's 16-aligned
+message (`VmMsgA`), func_001d1080 / func_001d3e30 the message with the
+step (`VmMsgD`).  func_001d2720 keeps the shared `(Cam0_2BC0F0 *)&D_002BC0F0`
+cast: `D_002BC0F0.cam0.f20` (the union member) made it longer.
+func_001d3828 reads `*(u8 *)(stk + (s32)D_00304BE8 + 0x499)`: indexing a
+`u8 *` (two spellings) moved the add.  func_001cfed8 keeps the auto file's
+s32 arithmetic as `(s32)D_002C5958 & ~4 & 0xF7FFFFFF` (with the u32 piece
+type the two masks fold into one).  The two D_002C5BB4 / D_002C5BB8 reads
+keep the auto file's `extern s32` (the piece declares u64 for D_002C5BB8,
+which would load with ld).
+
+**VmMgr's slots** (the D_00389C90 casts of h18's func_001d7840, in the
+library range): vm_mgr.h's union at 0x3180 of h42's `box[15]` and the
+eight slots is gone.  `box[10]` (0x3180-0x3360, as many as fit before the
+slots; script_vm.c indexes it only by nbox) and `e[8]` at 0x3384 are plain
+fields, so `D_00389C90.e[i].ret` addresses D + 0x3390 + 0x18 i in one step,
+as h18's whole-object view did; script_vm.c's `u.s.e[i]` / `u.box[i]`
+became `e[i]` / `box[i]` with the same code (s30_hdrdiff SAME for every
+includer).  h18 declares VmMgr and its Big / Big2 / E18 views are gone.
+
+What matched as plain code, with the views gone: the m2c bodies (all of
+them, including the permuter ones, func_001cf838, func_001d44b8 ..
+func_001d4538, where `new_var` / `temp_s1 = arg0 + 4` were needed only on
+`void *`), s7_w3's func_001d0380 on `vm->fl.b.b5` (u32 bit-fields inside
+VmFl's union) and b10's func_001d4798 in nofill on `fl.b.b0` / `b5`.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -267,8 +456,9 @@ one sibling file (func_001c4808 calls func_001c3770 above it, as in b10).
   src/auto/text_001c0000_10.c into src/vm/vm_calc.c with nothing else to change.
 - **Removing a function from an old file**: if a function left in that file calls
   it from below, leave a CONTEXT_ONLY copy (or `{}` stub) at its place, since the
-  caller may have matched with the definition above it. h42 keeps a CONTEXT_ONLY
-  func_001c4640 for its five callers below it. Delete what only the moved
+  caller may have matched with the definition above it (h42 kept a CONTEXT_ONLY
+  func_001c4640 for its five callers until session 32 showed they do not need
+  it). Delete what only the moved
   functions used (views, `#define D_X (*(View *)&D_X)` macros, externs,
   prototypes), files left empty, and their include/data/types headers.
 
@@ -281,7 +471,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
   A new directory needs no registration.
 - link-script, patch, verify, progress: work from out/gen/placements.tsv (symbol ->
   address); `decompiled_addrs` (rank) scans all of src/.
-- objdiff / report: one unit per source file (src/vm/ is five units and src/camera/ three; 924 in all after session 31).
+- objdiff / report: one unit per source file (src/vm/ is nine units, src/camera/ three and src/msgwin/ one; 924 after session 31, 921 after session 32's first half, 900 after its second half).
 - autodecomp `--write` only creates new src/auto/ files keyed by address (or
   `--out-dir`); it never touches modules, and a function defined anywhere is not
   retried. Its default flags come from the `src/auto` path.
@@ -293,7 +483,11 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 and 31, after each step)
+## Verification (sessions 30 to 32, after each step)
+
+Session 32's second half ran the same checks after each of its seven commits
+(`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
+and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 - `make`: OK, byte-identical, 6979 decompiled functions (same as before).
 - `make objdiff` / `make report`: all 6979 functions at 100%; placements.tsv
@@ -305,20 +499,28 @@ Nothing assumes the src/auto / src/hand names except where noted:
 
 ## Next module moves
 
-- **The script-function library** 0x001c6d08-0x001ec678: the 763 entries of
-  D_003D9FE0 (func_001dcad0's table, opcode 24), in 0x001c/0x001d/0x001e
-  (153 / 505 / 105 entries). The camera's 32 were the first group. Find the next
-  groups by data (each group's shared global, like D_003C5510 for the camera)
-  and by "needs X defined above", and move func_001dcad0 with D_003D9FE0 once
-  the group around 0x001dcad0 is known. The functions right after the camera
-  (0x001ca9e8-0x001cce38: h14, h42, h67, h15, b10 ...) work on VmMgr and are
-  the next candidates.
-- Remaining views of the camera data: b10 still includes the D_003C5510 piece
-  header (CamS) for its other functions, and h14 keeps its multi-name
-  `extern f32 D_003C55E0, D_003C55E4 ...` line (unused now, kept for
-  cover_check; drop it with a float_covered check).
-- h42's CONTEXT_ONLY func_001c4640 (still `Msg *`) is not needed by its callers
-  (a probe without it changes nothing): retype h42 to script_vm.h and drop it.
+- **The rest of the library file** 0x001d5408-0x001dcad0 into src/vm/vm_lib.c,
+  above the table, in address order (session 32 "Second half").  About 300
+  functions remain: auto text_001d0000.c (115), h18 (48), h19 (43), h17 (18),
+  auto text_001d0000_7.c (12), h44 (10), h43 (8), and a few each from
+  text_001d0000_2 / _4 / _10 / _12, h67, s6_15, b11, nofill/s6_15, nofill/b11,
+  nostrict/h19, nostrict/text_001d0000.c, nofill/s8_w1, s8_w8, s7_w5,
+  s12_s12w5, c10 and src/anon/session1_probes.c (func_001d5f80).  Next is
+  0x001d5408-0x001d5b58 (26: auto text_001d0000.c (16), h17 (7), h43 (2),
+  nofill/h43's func_001d58c8), then nofill/s6_15's func_001d5b58 (896
+  bytes) and 0x001d5ed8-0x001d6000 (auto, auto _8 and session1_probes'
+  func_001d5f80).  h18 and h19 hold most of 0x001d6000-
+  0x001dca88: each is a long run, so they make natural chunks.  Keep using
+  `include/vm/vm_obj.h` for the entity and add fields there.
+  func_001dca88 (just before the dispatcher, not a table entry) goes with
+  the last chunk if it belongs there.
+- **After the dispatcher**: 0x001dcb00 onwards (no table entries until
+  0x001ddc78; then 154 entries to 0x001ec678) is other code; find its groups by
+  data as for the message windows.
+- Remaining views of the camera data: b10 still declares the D_003C5510 piece
+  (CamS) and the D_003C21A8 / D_003C3A70 pieces it no longer uses, and h14
+  keeps its multi-name `extern f32 D_003C55E0, D_003C55E4 ...` line (unused
+  now, kept for cover_check; drop them with a float_covered check).
 - Other files' prototypes of VM functions that differ from script_vm.h
   (`s32 func_001c4640`, `func_001c19f8(VMa *, s32)`, `func_001c2df0(s32, s32)`):
   retype one file at a time with `make`.
@@ -346,6 +548,6 @@ Nothing assumes the src/auto / src/hand names except where noted:
    where their declarations are already identical.
 5. `make` (identical, same function count), `make objdiff`, and
    `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1 SHIFT_OVERLAYS=<empty dir>`
-   (run tools/shift/data_owners.py first in a fresh tree); compare
+   (in a fresh tree run a plain `make shift` first, then tools/shift/data_owners.py, which needs its M0 link); compare
    float_covered.txt with the same build before the move.
 6. Update this page's module table.

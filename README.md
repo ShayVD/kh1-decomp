@@ -84,7 +84,7 @@ functions.tsv     symbol registry
 layout.tsv        function boundaries (generated)
 kh1.ld            link script for the patch-in-place build
 src/              decompiled code (built); src/auto/ = matched m2c output, not cleaned up;
-                  src/hand/ = hand-matched; src/vm/ = the script VM, the first named module (docs/modules.md)
+                  src/hand/ = hand-matched; src/vm/, src/camera/, src/msgwin/ = named modules (docs/modules.md)
 nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests

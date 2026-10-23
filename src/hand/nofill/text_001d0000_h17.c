@@ -49,36 +49,6 @@ Ent *func_001e9b98(s32, s32);
 
 void func_00104268(f32, f32);
 
-s32 func_001d3cb8(VM *vm) {
-    vm->sp++;
-    if (vm->obj) {
-        vm->stk[vm->sp] = vm->obj->p50[0];
-    } else {
-        vm->stk[vm->sp] = 0;
-    }
-    return 2;
-}
-
-s32 func_001d3d08(VM *vm) {
-    vm->sp++;
-    if (vm->obj) {
-        vm->stk[vm->sp] = vm->obj->p50[1];
-    } else {
-        vm->stk[vm->sp] = 0;
-    }
-    return 2;
-}
-
-s32 func_001d3d58(VM *vm) {
-    vm->sp++;
-    if (vm->obj) {
-        vm->stk[vm->sp] = vm->obj->p50[2];
-    } else {
-        vm->stk[vm->sp] = 0;
-    }
-    return 2;
-}
-
 s32 func_001d6658(VM *vm) {
     func_00104268(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
     vm->sp -= 2;

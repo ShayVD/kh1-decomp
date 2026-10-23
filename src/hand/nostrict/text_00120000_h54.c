@@ -68,8 +68,8 @@ void func_00127960(E1 *e, s32 a1, s32 a2) {
 #include "data/pieces/D_002C58A0.h"
 typedef FVec4 V4;
 typedef struct { V4 a; V4 b; V4 c; s16 f30; s16 pad32; s32 f34; } Ray2;
-typedef struct { s32 type; u32 flags; u8 pad8[4]; f32 fc; V4 v10; V4 v20; u8 pad30[0x10]; } Lt2;
 #include "data/pieces/D_002C5C80.h"
+typedef Lt64_2c5c80 Lt2;
 typedef union { u64 x; struct { u32 lo:24; u32 b3:8; u32 b4:8; u32 k:2; u32 hi:22; } b; } F370;
 typedef struct { u8 pad[0x50]; V4 pos; u8 p60[0x2c4-0x60]; f32 f2c4; u8 p2c8[4]; s32 f2cc; u8 p2d0[0x320-0x2d0]; V4 v320; u8 p330[0x370-0x330]; F370 f370; } E2;
 extern s32 func_001232f0(E2 *);
@@ -97,12 +97,12 @@ void func_00128218(E2 *e, f32 k) {
         e->f2cc = r.f34;
     }
     k *= e->f370.b.b3 * 0.0078125f;
-    l = (*(Lt2 (*)[31])&D_002C5C80);
+    l = &D_002C5C80;
     for (i = 0; i < 31; i++, l++) {
         if (!(l->flags & 4)) continue;
-        switch (l->type) {
+        switch (l->kind) {
         case 2:
-            func_002675a8(&v, &l->v20);
+            func_002675a8(&v, &l->dir);
             v.w = 1.0f;
             func_00127c20(e, &v, k);
             break;
@@ -110,9 +110,9 @@ void func_00128218(E2 *e, f32 k) {
         case 5:
             func_002675a8(&v, &e->pos);
             v.y -= e->f2c4;
-            func_00267530(&v, &v, &l->v10);
+            func_00267530(&v, &v, &l->pos);
             func_00121fc4(&v, &v);
-            if (v.w < l->fc && v.y > 0.5f) {
+            if (v.w < l->radius && v.y > 0.5f) {
                 v.w = 1.0f;
                 func_00127c20(e, &v, k);
             }

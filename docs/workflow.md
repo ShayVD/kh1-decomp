@@ -1001,3 +1001,25 @@ found that the next session needs:
 - Workers ran in `git worktree`s (/home/user/wt-*, toolchain symlinked, ELF copied); the only merge conflict was
   the two appended sections in docs/shiftable-plan.md. In a fresh container the ELF is in the project files'
   uploads folder (check its SHA-256 against kh1.toml).
+
+## Session 32: what changed
+
+- **No Mac again** (away until Monday 2026-10-26): no boot tests. Every unbooted float change, with the switch that
+  undoes it and its risk, is now in **docs/float-untested.md**; sessions without the Mac add to it, the first one
+  with the Mac boots the current default and clears it.
+- **reach_check multi-base** (`--no-multi-base`; docs/shiftable-plan.md "Session 32: reach_check"): an index chosen
+  from several bases keeps every base, which closes the D_003F4C90 gap. Also widen-bases, sign-prune, and
+  shadow-image / arg-drop (two visit orders, seeds 4 and 6, never finished: memchr grew to 10 GB). 1,358 -> 1,362
+  pinned without overlays (4 newly pinned, none released), 2,043 float by default. `--no-multi-base --no-sign-prune
+  --no-shadow-image --no-arg-drop` reproduces session 31's float_reach.txt and .log byte for byte. Hazard written
+  down, not fixed: a bounded index that runs past the next name pins only that name (26 floating names listed).
+- **Modules** (workers s32module, s32module2; docs/modules.md "Session 32"): `src/msgwin/` (the 44 message-window
+  functions 0x001ca9e8-0x001cce38, MsgWin in include/msgwin/msgwin.h); `src/vm/vm_lib.c` with its nofill, nostrict
+  and nostrict_nofill siblings holds func_001dcad0, the D_003D9FE0 table (`VmLibFn`) and the library functions
+  0x001cd238-0x001d5408 (275), rewritten on VmRec / VmMgr / VmMsg; shared `struct VmObj` in include/vm/vm_obj.h.
+  0x001cd238-0x001dcad0 looks like one source file ending with the dispatcher. h42 includes script_vm.h. objdiff
+  units 924 -> 900. The float layout is unchanged (float_covered.txt, kh1-shift.elf symbols).
+- **Phase 4 types** (workers s32types, s32module2): view casts 56 -> 18 (the camera move had turned 52 into 56).
+  VmMgr's 0x3180 union is gone (`box[10]`, `e[8]` at 0x3384). What is left is listed in docs/shiftable-plan.md
+  "Session 32: Phase 4 types" and is mostly genuine second views (union-like buffers, copy widths, volatile).
+- In a fresh worktree run `make` and a plain `make shift` before `tools/shift/data_owners.py` and the float build.

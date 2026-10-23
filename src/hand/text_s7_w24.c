@@ -44,33 +44,7 @@ void func_001763f0(H63 *h) {
     }
 }
 
-typedef struct { u8 pad[0x180]; s32 sp; s32 stk[64]; } VM3c0;
-typedef struct {
-    u8 b[4]; u8 c[8];
-    union { u8 d[8]; struct { u8 pad[4]; u16 tbl[8][256]; } t; } u;
-    s32 w[4]; u8 pad4128[16]; s8 idx[4]; u8 pad4148[8192];
-    s32 w12340; s32 w12344; u8 pad12348[52]; u64 d12400; u64 d12408;
-    u8 pad12416[192]; s32 w12608; s32 *p12612;
-} Big;
-extern Big D_00389C90;
-#include "data/pieces/D_00389C80.h"
-#include "data/pieces/D_00388480.h"
-extern u8 D_003C57E0[];
-s32 func_001cb3c0(VM3c0 *vm) {
-    s32 n, i, k;
-    u16 h;
-    Big *b;
-    b = &D_00389C90;
-    n = vm->stk[vm->sp];
-    i = (*(union { s32 i; u16 h; }(*))&D_00389C80).i;
-    h = (*(union { s32 i; u16 h; }(*))&D_00389C80).h;
-    D_00388480[i] = D_003C57E0;
-    k = b->w[n];
-    b->w[n] = k + 1;
-    ((u16 *)b)[8 + n * 256 + k] = h;
-    vm->sp--;
-    return 2;
-}
+/* func_001cb3c0 is in src/msgwin/msgwin.c. */
 
 typedef struct { u8 pad[0xD00]; } EntA;
 typedef struct { s32 used[8]; EntA ent[5]; s32 unk4120; s32 unk4124; } G51E50;

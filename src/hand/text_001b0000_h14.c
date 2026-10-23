@@ -1,15 +1,11 @@
-/* Hand-matched functions from 0x001bfed8-0x001cc208 (worker 14). */
+/* Hand-matched functions from 0x001bfed8-0x001c0700 (worker 14; its message-window
+ * functions are in src/msgwin/msgwin.c since session 32). */
 #include "common.h"
 #include "data/bss_0062.h"
 
 /* ---- types ---- */
 /* 48-byte slots of the table D_0037A16C points to. */
 #include "data/types/text_001b0000_h14_p.h"
-/* Script VM: pc at +380, stack (sp at +384) at +388, registers, variables. */
-typedef struct {
-    u8 pad[380]; s32 pc; s32 sp; s32 stack[33]; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
-} VM;
 /* D_00389C90 */
 typedef struct {
     u8 b[4]; u8 c[8];
@@ -27,20 +23,11 @@ extern s32 D_0037A168;
 extern Big D_00389C90;
 extern f32 D_002BBDFC;
 extern f32 D_003C55E0, D_003C55E4, D_003C55E8, D_003C55F4, D_003C55F8, D_003C5630, D_003C5634;
-extern s32 D_0038CD04;
-extern u8 D_0062A130[];
-extern Ent176 D_00629E70[4];
-typedef struct { u16 h; u8 pad[174]; } E176;
-extern E176 D_006298F6[], D_006298F8[];
 
 /* ---- functions ---- */
 void func_001bffa0(s32 i);
 void func_001c07f0(void);
 void func_001dd170(void);
-void func_0010bdd0(void *a, void *fn);
-void func_0010bd90(void *a, void *fn);
-void func_001caa20(void);
-void func_001cae20(void *a, Ent176 *e);
 
 s32 func_001bfed8(s32 a0) {
     s32 i;
@@ -123,78 +110,10 @@ void func_001c06f8(void) {
     func_001dd170();
 }
 
+/* func_001caa50, func_001caae0, func_001cac60, func_001cae00, func_001cae20, func_001caf58, func_001cc170 and func_001cc1c0 are in src/msgwin/msgwin.c. */
+
 /* func_001c8478 .. func_001c8708, func_001c8c10, func_001c8d18, func_001c92e8, func_001c9d40 and func_001ca5f8 .. func_001ca708 are in src/camera/camera.c. */
-s32 func_001caa50(void) {
-    s32 i;
-    for (i = 0; i < 4; i++) {
-        if (D_00389C90.b[i] != 0) break;
-    }
-    if (i < 4) return 0;
-    func_0010bdd0(D_0062A130, func_001caa20);
-    D_00389C90.idx[0] = 0;
-    D_00389C90.b[0] = 2;
-    return 4;
-}
 
-void func_001caae0(void) {
-    s32 i;
-    for (i = 0; i < 4; i++) {
-        D_00389C90.b[i] = 0;
-        D_00389C90.w[i] = 0;
-    }
-    for (i = 0; i < 8; i++) {
-        D_00389C90.c[i] = 0;
-        D_00389C90.u.d[i] = 0;
-    }
-}
-
-void func_001cac60(s32 x) {
-    D_00389C90.w12608 = x;
-    D_00389C90.d12400 &= ~(1ULL << 32);
-    *D_00389C90.p12612 = x;
-}
-
-s32 func_001cae00(void) {
-    return (D_0038CD04 & 1) ? 4 : 2;
-}
-
-void func_001cae20(void *a, Ent176 *e) {
-    s32 i;
-    for (i = 0; i < 4; i++) {
-        if (&D_00629E70[i] == e) {
-            s32 k = D_00389C90.idx[i];
-            D_00389C90.b[i] = 0;
-            D_00389C90.c[k] = 0;
-            D_00389C90.w[k] = 0;
-        }
-    }
-}
-
-void func_001caf58(void) {
-    s32 i;
-    for (i = 0; i < 4; i++) {
-        if (D_00389C90.b[i]) {
-            func_0010bd90(&D_00629E70[i], func_001cae20);
-            D_00389C90.b[i] = 3;
-        }
-    }
-}
-
-s32 func_001cc170(VM *v) {
-    s32 k = v->stack[v->sp - 1];
-    u16 val = v->stack[v->sp];
-    v->sp -= 2;
-    D_006298F6[k].h = val;
-    return 2;
-}
-
-s32 func_001cc1c0(VM *v) {
-    s32 k = v->stack[v->sp - 1];
-    u16 val = v->stack[v->sp];
-    v->sp -= 2;
-    D_006298F8[k].h = val;
-    return 2;
-}
 #include "data/bss_0062_mixed.h"
 #include "data/bss_0062_typed.h"
 #include "data/data_0036.h"

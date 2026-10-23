@@ -103,8 +103,10 @@ void func_001c5168(void) {
 
 /* func_001c53c8 is in camera.nostrict_nofill.c. */
 
-static inline void cp_q(CamV4q *d, CamV4q *a) {
-    *d = *a;
+/* Copy a 16-byte vector as CamV4q (two ld / sd pairs) between CamState's
+ * CamVec slots and the path output. */
+static inline void cp_q(void *d, void *a) {
+    *(CamV4q *)d = *(CamV4q *)a;
 }
 
 /* Per-frame callback: play the loaded path at half the frame time (scaled
@@ -118,22 +120,22 @@ s32 func_001c5b88(void) {
     if ((f32)c->last->n < t) {
         c->t = (f32)c->last->n;
         func_001c53c8(c->t);
-        cp_q((CamV4q *)D_003C5510.pos, (CamV4q *)&c->a);
-        cp_q((CamV4q *)D_003C5510.rot, (CamV4q *)&c->d);
-        cp_q((CamV4q *)&D_003C5510.rx, (CamV4q *)&c->e);
-        cp_q((CamV4q *)D_003C5510.v110, (CamV4q *)&c->c);
-        cp_q((CamV4q *)D_003C5510.v100, (CamV4q *)&c->b);
+        cp_q(D_003C5510.pos, &c->a);
+        cp_q(D_003C5510.rot, &c->d);
+        cp_q(&D_003C5510.rx, &c->e);
+        cp_q(D_003C5510.v110, &c->c);
+        cp_q(D_003C5510.v100, &c->b);
         D_003C5510.f120 = c->f60;
         D_003C5510.f124 = c->fE0F4;
         func_001c6a20();
         g->f3070.x &= ~(1ULL << 37);
     } else {
         func_001c53c8(t);
-        cp_q((CamV4q *)D_003C5510.pos, (CamV4q *)&c->a);
-        cp_q((CamV4q *)D_003C5510.rot, (CamV4q *)&c->d);
-        cp_q((CamV4q *)&D_003C5510.rx, (CamV4q *)&c->e);
-        cp_q((CamV4q *)D_003C5510.v110, (CamV4q *)&c->c);
-        cp_q((CamV4q *)D_003C5510.v100, (CamV4q *)&c->b);
+        cp_q(D_003C5510.pos, &c->a);
+        cp_q(D_003C5510.rot, &c->d);
+        cp_q(&D_003C5510.rx, &c->e);
+        cp_q(D_003C5510.v110, &c->c);
+        cp_q(D_003C5510.v100, &c->b);
         D_003C5510.f120 = c->f60;
         D_003C5510.f124 = c->fE0F4;
         func_001c6a20();
@@ -142,8 +144,9 @@ s32 func_001c5b88(void) {
     return 4;
 }
 
-static inline void cp_v(V4_37A380 *d, V4_37A380 *s) {
-    *d = *s;
+/* The same copy as one lq / sq (V4_37A380 is 16-byte aligned). */
+static inline void cp_v(void *d, void *s) {
+    *(V4_37A380 *)d = *(V4_37A380 *)s;
 }
 
 /* Per-frame callback (started by func_001c5ee8): step the path one key
@@ -155,11 +158,11 @@ s32 func_001c5db8(void) {
         return 4;
     }
     func_001c53c8(CAM.t);
-    cp_v((V4_37A380 *)D_003C5510.pos, &CAM.a);
-    cp_v((V4_37A380 *)D_003C5510.rot, &CAM.d);
-    cp_v((V4_37A380 *)&D_003C5510.rx, &CAM.e);
-    cp_v((V4_37A380 *)D_003C5510.v110, &CAM.c);
-    cp_v((V4_37A380 *)D_003C5510.v100, &CAM.b);
+    cp_v(D_003C5510.pos, &CAM.a);
+    cp_v(D_003C5510.rot, &CAM.d);
+    cp_v(&D_003C5510.rx, &CAM.e);
+    cp_v(D_003C5510.v110, &CAM.c);
+    cp_v(D_003C5510.v100, &CAM.b);
     D_003C5510.f120 = CAM.f60;
     D_003C5510.f124 = CAM.fE0F4;
     func_001c6a20();
