@@ -18,6 +18,7 @@
 #define KH1_VM_VM_MGR_H
 
 #include "common.h"
+#include "data/pieces/D_002BC0F0.h"
 
 /* 0x3070 */
 typedef union {
@@ -123,6 +124,12 @@ typedef struct {
     s32 x3444;
     u8 pad3448[0x3450 - 0x3448];
     s32 x3450;
+    u8 pad3454[0x3460 - 0x3454];
+    f32 cdur;               /* 0x3460: camera tween length (func_001d9100) */
+    f32 ct;                 /* 0x3464: its time (func_001d8f38) */
+    u8 pad3468[8];
+    CamS_2BC0F0 c0;         /* 0x3470: tween start (a camera setting, D_002BC0F0's 0x30 bytes) */
+    CamS_2BC0F0 c1;         /* 0x34a0: tween target */
 } VmMgr;
 
 #endif /* KH1_VM_VM_MGR_H */

@@ -25,57 +25,8 @@ typedef struct {
 extern VmMgr D_00389C90;
 typedef union { u64 x; struct { u32 lo; u32 b0:29; u32 b29:1; u32 b30:1; u32 b31:1; } b; } F64;
 extern F64 D_0038CD00;
-s32 func_00123488(s32);
-void func_001248e8(s32);
-s32 func_00131de0(s32, s32);
-s32 func_001d8838(VM *vm) {
-    s32 r = -1;
-    while ((r = func_00131de0(r, vm->stk[vm->sp])) != -1) {
-        if (func_00123488(r) != 0) func_001248e8(r);
-    }
-    vm->sp--;
-    return 2;
-}
 s32 func_00111090(void);
-s32 func_001d8b68(void) {
-    if (func_00111090() == 2) return 2;
-    return 4;
-}
 s32 func_00111090(void);
-s32 func_001d8c00(void) {
-    if (func_00111090() != 4) return 4;
-    return 2;
-}
-void func_001116b0(s32, s32);
-s32 func_001d8c30(VM *vm) {
-    func_001116b0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-void func_0013c2a0(s32, s32);
-s32 func_001d8cc8(VM *vm) {
-    func_0013c2a0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-void func_001054d0(s32, s32, s32);
-s32 func_001d8db8(VM *vm) {
-    func_001054d0(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 3;
-    return 2;
-}
-void func_00105710(s32, s32);
-s32 func_001d8e10(VM *vm) {
-    func_00105710(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-void func_00105760(s32, s32);
-s32 func_001d8e60(VM *vm) {
-    func_00105760(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
 s32 func_001d9480(VM *vm) {
     vm->flags.x |= 0x800;
     vm->f24 = (f32)vm->stk[vm->sp - 3] * 2.0f;

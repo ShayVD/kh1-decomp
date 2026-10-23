@@ -707,3 +707,34 @@ extern s32 D_0039A570;
 #include "data/pieces/D_0038D170.h"
 extern s32 D_003A7980;
 #include "data/pieces/D_0039A580.h"
+
+/* func_001d7ef8 .. func_001d9268 are in vm_lib.c. */
+
+/* Step the move from p to f14 over f24 (message 3 with the point; at the
+ * end, clear flag 11). */
+void func_001d9348(VmRec *vm) {
+    VmMsg m;
+    f32 t;
+    vm->f28 += D_002BBDFC;
+    if (vm->f24 < vm->f28) {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = vm->f14[0];
+        m.v[1] = vm->f14[1];
+        m.v[2] = vm->f14[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+        vm->fl.x &= ~0x800ULL;
+    } else {
+        t = vm->f28 / vm->f24;
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = vm->p[0] + (vm->f14[0] - vm->p[0]) * t;
+        m.v[1] = vm->p[1] + (vm->f14[1] - vm->p[1]) * t;
+        m.v[2] = vm->p[2] + (vm->f14[2] - vm->p[2]) * t;
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+}

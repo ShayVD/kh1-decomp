@@ -11,27 +11,12 @@ extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001c1df8;
 extern M2C_UNK func_001d9d48;
 extern M2C_UNK func_001dd5c0;
-extern f32 D_002BBE00;
 extern s32 D_0029B410;
 extern s32 D_0029B414;
-extern s32 D_002C5958;
 #include "data/pieces/D_0037A378.h"
 extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_001763f0(s32);
-
-s32 func_001d87b8(void) {
-    D_00389C90[1551] = (s64) (D_00389C90[1551] | 1);
-    return 2;
-}
-
-s32 func_001d87d8(void) {
-    D_00389C90[1551] = (s64) (D_00389C90[1551] & ~1);
-    D_0037A378 &= ~1;
-    D_002BBE00 = 1.0f;
-    D_002C5958 &= ~0x400;
-    return 2;
-}
 
 s32 func_001d9d90(void) {
     func_0011ef10(0xC352, &func_001d9d48);

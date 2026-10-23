@@ -3519,6 +3519,335 @@ s32 func_001d8660(void) {
     return 2;
 }
 
+/* ---- 0x001d8680-0x001d8f38 ---- */
+
+s32 func_001586d8(s32);
+s32 func_0013c250(s32);
+s32 func_0013c260(s32);
+s32 func_0013c1b8(s32);
+s32 func_00149eb8(s32);
+s32 func_00114800();
+s32 func_00114810();
+s32 func_00112e08();
+s32 func_00111090(void);
+s32 func_00111020(s32);
+s32 func_00111060();
+void func_001116b0(s32, s32);
+s32 func_001422b0(s32);
+void func_0013c2a0(s32, s32);
+s32 func_0013c2f0(s32);
+s32 func_00156c28(s32);
+void func_001054d0(s32, s32, s32);
+void func_00105710(s32, s32);
+void func_00105760(s32, s32);
+s32 func_001ee200();
+s32 func_001124c0();
+s32 func_001124d8();
+
+/* Message 40 to this VM (func_001d8680), or with no target (func_001d86e0). */
+s32 func_001d8680(VmRec *vm) {
+    VmMsg m;
+    m.type = 40;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d86e0(void) {
+    VmMsg m;
+    m.type = 40;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d8738(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->x324;
+    return 2;
+}
+
+s32 func_001d8760(VmRec *vm) {
+    vm->stk[vm->sp] = func_001586d8(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d87b8(void) {
+    D_00389C90.f3078.x |= 1;
+    return 2;
+}
+
+s32 func_001d87d8(void) {
+    D_00389C90.f3078.x &= ~1;
+    D_0037A378 &= ~1;
+    D_002BBE00 = 1.0f;
+    D_002C5958 &= ~0x400;
+    return 2;
+}
+
+/* Remove the entities func_00131de0 finds for stk[sp] that exist. */
+s32 func_001d8838(VmRec *vm) {
+    s32 r = -1;
+    while ((r = func_00131de0(r, vm->stk[vm->sp])) != -1) {
+        if (func_00123488(r) != 0) func_001248e8(r);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d88c8(VmRec *vm) {
+    func_0013c250(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8910(VmRec *vm) {
+    func_0013c260(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8958(VmRec *vm) {
+    func_0013c1b8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d89a0(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(3, 1);
+    } else {
+        func_0012cac8(3, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8a00(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(4, 1);
+    } else {
+        func_0012cac8(4, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8a60(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(5, 1);
+    } else {
+        func_0012cac8(5, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8ac0(VmRec *vm) {
+    func_00149eb8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8b08(void) {
+    func_00114800();
+    return 2;
+}
+
+s32 func_001d8b28(void) {
+    func_00114810();
+    return 2;
+}
+
+s32 func_001d8b48(void) {
+    func_00112e08();
+    return 2;
+}
+
+s32 func_001d8b68(void) {
+    if (func_00111090() == 2) return 2;
+    return 4;
+}
+
+s32 func_001d8b98(VmRec *vm) {
+    func_00111020(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8be0(void) {
+    func_00111060();
+    return 2;
+}
+
+s32 func_001d8c00(void) {
+    if (func_00111090() != 4) return 4;
+    return 2;
+}
+
+s32 func_001d8c30(VmRec *vm) {
+    func_001116b0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8c80(VmRec *vm) {
+    func_001422b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8cc8(VmRec *vm) {
+    func_0013c2a0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8d18(VmRec *vm) {
+    vm->stk[vm->sp] = func_0013c2f0(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d8d70(VmRec *vm) {
+    func_00156c28(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8db8(VmRec *vm) {
+    func_001054d0(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d8e10(VmRec *vm) {
+    func_00105710(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8e60(VmRec *vm) {
+    func_00105760(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8eb0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_001ee200();
+    return 2;
+}
+
+s32 func_001d8ef8(void) {
+    func_001124c0();
+    return 2;
+}
+
+s32 func_001d8f18(void) {
+    func_001124d8();
+    return 2;
+}
+
+/* ---- 0x001d8f38-0x001d9480 ---- */
+
+/* Step the camera tween func_001d9100 starts: D_002BC0F0 from c0 to c1
+ * over cdur. */
+void func_001d8f38(void) {
+    VmMgr *g = &D_00389C90;
+    f32 r, t;
+    t = g->ct + D_002BBDFC;
+    g->ct = t;
+    if (g->cdur < t) {
+        D_002BC0F0.camS = g->c1;
+        g->f3078.x &= ~2ULL;
+        return;
+    }
+    r = g->ct / g->cdur;
+    D_002BC0F0.camS.b[0] = g->c0.b[0] + (g->c1.b[0] - g->c0.b[0]) * r;
+    g->ct += D_002BBDFC;
+    D_002BC0F0.camS.b[1] = g->c0.b[1] + (g->c1.b[1] - g->c0.b[1]) * r;
+    D_002BC0F0.camS.b[2] = g->c0.b[2] + (g->c1.b[2] - g->c0.b[2]) * r;
+    D_002BC0F0.camS.a[0] = g->c0.a[0] + (g->c1.a[0] - g->c0.a[0]) * r;
+    D_002BC0F0.camS.a[1] = g->c0.a[1] + (g->c1.a[1] - g->c0.a[1]) * r;
+    D_002BC0F0.camS.a[2] = g->c0.a[2] + (g->c1.a[2] - g->c0.a[2]) * r;
+    D_002BC0F0.camS.a[3] = g->c0.a[3] + (g->c1.a[3] - g->c0.a[3]) * r;
+    if (g->cdur < g->ct) {
+        D_002BC0F0.camS = g->c1;
+        g->f3078.x &= ~2ULL;
+    }
+}
+
+/* Start a camera tween to stk[sp-6..sp] over stk[sp-7] frames. */
+s32 func_001d9100(VmRec *vm) {
+    VmMgr *g = &D_00389C90;
+    g->c1 = g->c0 = D_002BC0F0.camS;
+    g->ct = 0.0f;
+    g->cdur = vm->stk[vm->sp - 7] * 2.0f;
+    g->c1.b[0] = vm->stk[vm->sp - 6];
+    g->c1.b[1] = vm->stk[vm->sp - 5];
+    g->c1.b[2] = vm->stk[vm->sp - 4];
+    g->c1.a[0] = vm->stk[vm->sp - 2];
+    g->c1.a[1] = vm->stk[vm->sp - 3];
+    g->c1.a[2] = vm->stk[vm->sp - 1];
+    g->c1.a[3] = vm->stk[vm->sp];
+    if (g->cdur < 2.0f) {
+        D_002BC0F0.camS.b[0] = g->c1.b[0];
+        D_002BC0F0.camS.b[1] = g->c1.b[1];
+        D_002BC0F0.camS.b[2] = g->c1.b[2];
+        D_002BC0F0.camS.a[0] = g->c1.a[0];
+        D_002BC0F0.camS.a[1] = g->c1.a[1];
+        D_002BC0F0.camS.a[2] = g->c1.a[2];
+        D_002BC0F0.camS.a[3] = g->c1.a[3];
+        g->f3078.x &= ~2ULL;
+    } else {
+        g->f3078.x |= 2;
+    }
+    vm->sp -= 8;
+    return 2;
+}
+
+/* Start a tween from D_002BC0F0 to D_002BC0C0 over stk[sp] frames.  Kept
+ * s8_w1's view of D_00389C90 (the camera settings as B48 unions, the flags
+ * as a union): the unions alias vm->sp, which keeps it after the copies;
+ * through VmMgr (a cast of &c0 / &c1) the copy addresses fold into
+ * constants. */
+typedef struct {
+    u8 pad0[0x3078];
+    union { u64 x; s32 i[2]; } flags;
+    u8 pad3080[0x3460 - 0x3080];
+    f32 cdur;
+    f32 ct;
+    u8 pad3468[8];
+    B48_2BC0C0 c0;
+    B48_2BC0C0 c1;
+} VmMgrB48;
+#define MGRB (*(VmMgrB48 *)&D_00389C90)
+
+s32 func_001d9268(VmRec *vm) {
+    f32 x;
+    s32 i;
+    MGRB.c1 = D_002BC0C0.b48;
+    MGRB.c0 = D_002BC0F0.b48;
+    i = vm->sp;
+    MGRB.ct = 0;
+    x = vm->stk[i] * 2.0f;
+    MGRB.flags.x |= 2;
+    vm->sp--;
+    MGRB.cdur = x;
+    return 2;
+}
+
+/* func_001d9348 is in vm_lib.nofill.c. */
+
 /* ---- the table and the dispatcher ---- */
 
 
