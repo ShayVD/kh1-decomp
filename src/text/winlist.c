@@ -1,17 +1,110 @@
+/* The lists of the menu windows (docs/modules.md "Session 38"),
+ * 0x00208ea8-0x00209d48: each draws the visible cells of a window's list
+ * (rows +0xce + 1 from the scroll, columns +0xd8, items +0xcc; the cell
+ * under the cursor in the second colour) between func_001f8e18 and
+ * func_001f8f30 (the scissor): message ids, strings and outlined strings
+ * (func_00208ea8 / func_00209030 / func_002091b8), and rows in a colour set
+ * of D_003F2C40 (func_00209340 ...). */
 #include "common.h"
 #include "text/textwin.h"
-void func_001f8e18(void *);
+
+void func_001f8e18(TextWin *);
 void func_001f8f30(void);
-s32 func_001fd518(void *);
-s32 func_001fd538(void *);
-s32 func_001fd590(void *);
-s32 func_001fd618(void *);
+s32 func_001fd518(TextWin *);
+s32 func_001fd538(TextWin *);
+s32 func_001fd590(TextWin *);
+s32 func_001fd618(TextWin *);
+s32 func_001f9438(TextWin *, s32, s32, s32, s32, s32, s32);   /* func_00208ea8 needs the s32 */
+s32 func_001f94f0(TextWin *, s32, s32, s32, s32, s32, s32);
+s32 func_001f9e48(TextWin *, s32, s32, s32, s32, s32, s32);
 void func_00207830(TextWin *, s32, s32, s32, s32, s32, s32);
 void func_00207870(TextWin *, s32, s32, s32, s32, s32, s32);
 void func_002078b0(TextWin *, s32, s32, s32, s32, s32, s32);
 void func_002078f0(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207938(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207980(TextWin *, s32, s32, s32, s32, s32, s32, s32, s32);
+
+void func_00208ea8(TextWin *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
+    s32 sr = func_001fd518(o);
+    s32 sc = func_001fd538(o);
+    s32 idx = func_001fd618(o);
+    s32 y = func_001fd590(o);
+    s32 cnt = o->xcc;
+    s32 rows = o->xce;
+    s32 cols = o->xd8;
+    s32 r, c, x;
+    func_001f8e18(o);
+    for (r = 0; r < rows + 1; r++) {
+        x = x0;
+        for (c = 0; c < cols; c++) {
+            if (idx >= cnt) goto done;
+            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f9438(o, 0, x, y, strs[idx], k, col); }
+            idx++;
+            x += dx;
+        }
+        y += dy;
+    }
+done:
+    func_001f8f30();
+}
+
+void func_00209030(TextWin *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
+    s32 x0 = o->xbe >> 4;
+    s32 dx = o->xc2 >> 4;
+    s32 dy = o->xc4 >> 4;
+    s32 sr = func_001fd518(o);
+    s32 sc = func_001fd538(o);
+    s32 idx = func_001fd618(o);
+    s32 y = func_001fd590(o);
+    s32 cnt = o->xcc;
+    s32 rows = o->xce;
+    s32 cols = o->xd8;
+    s32 r, c, x;
+    func_001f8e18(o);
+    for (r = 0; r < rows + 1; r++) {
+        x = x0;
+        for (c = 0; c < cols; c++) {
+            if (idx >= cnt) goto done;
+            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f94f0(o, 0, x, y, strs[idx], k, col); }
+            idx++;
+            x += dx;
+        }
+        y += dy;
+    }
+done:
+    func_001f8f30();
+}
+
+void func_002091b8(TextWin *o, s32 a1, s32 *strs, s32 k, s32 c0, s32 c1) {
+    s32 x0, dx, dy, sr, sc, idx, y, cnt, rows, cols;
+    s32 r, c, x;
+    x0 = o->xbe >> 4;
+    dx = o->xc2 >> 4;
+    dy = o->xc4 >> 4;
+    sr = func_001fd518(o);
+    sc = func_001fd538(o);
+    idx = func_001fd618(o);
+    y = func_001fd590(o);
+    rows = o->xce + 1;
+    cnt = o->xcc;
+    cols = o->xd8;
+    func_001f8e18(o);
+    for (r = 0; r < rows; r++) {
+        x = x0;
+        for (c = 0; c < cols; c++) {
+            if (idx >= cnt) goto done;
+            { s32 col = (r == sr && c == sc) ? c1 : c0; func_001f9e48(o, 0, x, y, strs[idx], k, col); }
+            idx++;
+            x += dx;
+        }
+        y += dy;
+    }
+done:
+    func_001f8f30();
+}
 
 void func_00209340(TextWin *o, s32 a1, s32 *strs) {
     s32 x0 = o->xbe >> 4;
@@ -182,5 +275,3 @@ void func_00209b90(TextWin *o, s32 a1, s32 a2, s32 a3, s32 *strs) {
 done:
     func_001f8f30();
 }
-
-/* needs make: uses rodata */

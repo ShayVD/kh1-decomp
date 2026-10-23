@@ -1,21 +1,10 @@
+/* The function of src/text/winlist.c that needs nostrict
+ * (docs/modules.md "Session 38"): func_00208458 draws a list's frame of n
+ * rows in a window (a GIF packet through path 2, scaled like the others). */
 #include "common.h"
+#include "text/textwin.h"
+#include "data/pieces/D_003F1E70.h"
 
-/* func_00208458 (s12w16), hand/nostrict, checkfile MATCH, natural. Sibling style of func_001f54f8/func_00203a10
-   (struct packet, fields in order). (X + w) - 32 / (Y + h) - 32 written inline so cse reuses X + w / Y + h; color in a u32;
-   the transform reads back from the packet (v[5].x copies v[4].x untransformed, as in the original); s[0].y1 is stored after
-   the second transform group; the last loop uses the int cx (its (f32)cx becomes a hoisted copy of fcx). */
-typedef struct {
-    u8 pad0[0x48];
-    s32 x48;
-    u8 pad4c[0x74 - 0x4c];
-    f32 sx, sy;
-    u8 pad7c[0x90 - 0x7c];
-    s32 x90;
-    f32 x94;
-    u8 pad98[0xb0 - 0x98];
-    s32 xb0, xb4;
-    s16 xb8, xba;
-} Wnd;
 typedef struct { u64 c, q; s32 x, y, z, f; } V;
 typedef struct { u64 c, q; s32 x0, y0, z0, f0; s32 x1, y1, z1, f1; } S2;
 typedef struct {
@@ -32,18 +21,22 @@ typedef struct {
     u64 tag4, regs4;
     S2 s[1];
 } PK;
-#include "data/pieces/D_003F1E70.h"
+
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
 s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
-s32 func_001f4570(Wnd *);
-s32 func_001f45e0(Wnd *);
+s32 func_001f4570(TextWin *);
+s32 func_001f45e0(TextWin *);
 u32 func_001edd88(u32, s32);
-void func_00206130(Wnd *, s32, s32, s32, s32, s32);
+void func_00206130(TextWin *, s32, s32, s32, s32, s32);
 
-void func_00208458(Wnd *o, s32 x, s32 y, u32 col, s32 n) {
+/* func_00208458 (s12w16), hand/nostrict, checkfile MATCH, natural. Sibling style of func_001f54f8/func_00203a10
+   (struct packet, fields in order). (X + w) - 32 / (Y + h) - 32 written inline so cse reuses X + w / Y + h; color in a u32;
+   the transform reads back from the packet (v[5].x copies v[4].x untransformed, as in the original); s[0].y1 is stored after
+   the second transform group; the last loop uses the int cx (its (f32)cx becomes a hoisted copy of fcx). */
+void func_00208458(TextWin *o, s32 x, s32 y, u32 col, s32 n) {
     u64 *buf;
     u32 ub;
     s32 x90;
@@ -120,13 +113,13 @@ void func_00208458(Wnd *o, s32 x, s32 y, u32 col, s32 n) {
         s->x1 = s[-1].x0 + 1296; s->y1 = q->v[7].y; s->z1 = 0x100000; s->f1 = 0;
         s++;
     }
-    if (o->x48 & 1) {
+    if (o->u48.w.lo & 1) {
         s32 a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11;
         s32 b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11;
         cx = func_001f4570(o);
         cy = func_001f45e0(o);
-        sx = o->sx;
-        sy = o->sy;
+        sx = o->x74;
+        sy = o->x78;
         fcx = cx;
         fcy = cy;
         a0 = fcx + (f32)(q->v[0].x - cx) * sx;
