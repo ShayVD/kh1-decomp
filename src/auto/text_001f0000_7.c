@@ -4,8 +4,6 @@
 M2C_UNK func_001fade0(s32, s32, s32, s32, s32, s32);
 extern s32 D_003F1A60;
 s32 func_001eff50(s32);
-s32 func_001f31a8(s32, s32);
-s32 func_001f3520(s32, s32);
 s32 func_001f5e10(s32);
 s32 func_001f86e0(s32, s32, s32, s32, s32);
 s32 func_001f92f0(s32, s32, s32, s32, s32, s32);
@@ -22,14 +20,6 @@ void func_001fd5e0(s32, s32);
 void func_001fd610(s32, s32);
 void func_001fd660(s32, s32);
 void func_001ff488(s32, s32, s32, s32, s32, s32);
-
-s32 func_001f3190(s32 arg0) {
-    return func_001f31a8(arg0, 6);
-}
-
-s32 func_001f3508(s32 arg0) {
-    return func_001f3520(arg0, 6);
-}
 
 void func_001f52a8(s32 arg0) {
     func_001ff488(arg0, 0, 0, (s32) (M2C_FIELD(arg0, u16 *, 0xB8) << 0x10) >> 0x14, (s32) (M2C_FIELD(arg0, u16 *, 0xBA) << 0x10) >> 0x14, M2C_FIELD(arg0, s32 *, 0x6C));

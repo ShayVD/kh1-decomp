@@ -9,14 +9,6 @@ typedef Save_304be8 SaveM;
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
 
-typedef struct Nd {
-    u8 pad0[0xc];
-    struct Nd *x0c;
-    struct Nd *x10;
-    u8 pad14[0x8c - 0x14];
-    s32 x8c;
-} Nd;
-
 typedef struct {
     u8 pad0[0xce];
     s16 ce;
@@ -68,8 +60,6 @@ u64 *func_00122048(u32, u32);
 void func_001220b8(void *);
 u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
-void func_001f3680(Nd *);
-void func_001f3698(Nd *, s32);
 void func_001f4778(Win46 *);
 void func_001f4d10(Win46 *);
 void func_001f52a8(Win46 *);
@@ -113,50 +103,6 @@ f32 func_001f46a0(Txt *t);
 void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-s32 func_001f3978(Nd *n, s32 skip, s32 cnt) {
-    s32 i;
-    if (n == 0) return -1;
-    for (i = 0; i < skip && n->x0c; i++) n = n->x0c;
-    i = i + cnt + 1;
-    do {
-        if (i <= 0) return 0;
-        switch (n->x8c) {
-        case 0:
-        case 4:
-        case 5:
-            break;
-        default:
-            func_001f3680(n);
-            break;
-        }
-        n = n->x10;
-        i--;
-    } while (n);
-    return 0;
-}
-
-s32 func_001f3a30(Nd *n, s32 skip, s32 cnt, s32 arg) {
-    s32 i;
-    if (n == 0) return -1;
-    for (i = 0; i < skip && n->x0c; i++) n = n->x0c;
-    i = i + cnt + 1;
-    do {
-        if (i <= 0) return 0;
-        switch (n->x8c) {
-        case 0:
-        case 4:
-        case 5:
-            break;
-        default:
-            func_001f3698(n, arg);
-            break;
-        }
-        n = n->x10;
-        i--;
-    } while (n);
-    return 0;
-}
 
 void func_001f8f30(void) {
     void *u;

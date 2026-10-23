@@ -27,11 +27,17 @@
  * left / right / centre; the end position is left in D_0063F74C /
  * D_0063F750, and D_0063F740 is the line height.  func_001f1fc8 and
  * func_001f2630 (still assembly) draw at once; func_001f2a50 ... func_001f2d68
- * build a packet in a scratch buffer and send it through path 2. */
+ * build a packet in a scratch buffer and send it through path 2.
+ * func_001f2eb8 (text.nofill.c) uploads the font image D_003E9660 and its
+ * CLUT D_003F1660 and sets up the packet headers of D_003F1A70, D_003F1E70,
+ * D_003F2270 and D_003F27D0; the text windows follow (textwin.c). */
 #include "common.h"
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_003F2270.h"
+#include "data/pieces/D_003E9660.h"
+#include "data/pieces/D_003F1660.h"
+#include "data/types/nofill_text_001f0000_h69.h" /* Q, a GIF packet quadword */
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { u8 pad[0x10]; s32 o10; s32 o14; } MsgHdr;
@@ -49,7 +55,6 @@ extern u16 *D_0063F748;
 extern u8 D_00490940[];
 extern s32 D_0063F74C;
 
-typedef Q_3f1a70 Q; /* a GIF packet quadword */
 
 void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
@@ -663,3 +668,10 @@ s32 func_001f2d68(s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sc, u32 
     func_001220b8(buf);
     return D_0063F74C;
 }
+
+void func_001f2e98(Q **img, Q **clut) {
+    *img = D_003E9660;
+    *clut = D_003F1660;
+}
+
+/* func_001f2eb8 is in text.nofill.c. */

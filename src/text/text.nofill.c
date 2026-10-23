@@ -2,7 +2,7 @@
  * message id, from 1, to its string) and four GIF packet builders
  * (docs/modules.md "Session 37"): func_001f0ea8 draws a two-byte string,
  * func_001f12c0 an ASCII one, func_001f15f0 one glyph and func_001f18e8 a
- * number.  func_001f0ea8 needs the CONTEXT_ONLY copies of its callees from
+ * number; func_001f2eb8 sets up the font.  func_001f0ea8 needs the CONTEXT_ONLY copies of its callees from
  * text.c above it.
  *
  * func_001f18e8 (session 18, s18m1, from s11w52's 2-word draft) keeps a dead
@@ -18,7 +18,14 @@
 #include "data/pieces/D_003F1A70.h"
 
 typedef Glyph_3e8e28 Glyph;
-typedef Q_3f1a70 Q; /* a GIF packet quadword */
+#include "data/types/nofill_text_001f0000_h69.h" /* Q, a GIF packet quadword */
+#include "data/pieces/D_003F1E70.h"
+#include "data/pieces/D_003F2270.h"
+#include "data/pieces/D_003F27D0.h"
+#include "data/pieces/D_003E9660.h"
+#include "data/pieces/D_003F2670.h"
+#include "data/pieces/D_003F1660.h"
+#include "data/pieces/D_003F2720.h"
 typedef union { s32 i; f32 f; } UF;
 /* one sprite: tag, then UV, XYZ, UV, XYZ */
 typedef struct {
@@ -49,6 +56,11 @@ extern s32 D_003E8E2C;
 extern s32 D_0063F740;
 extern s32 D_0063F74C;
 extern s32 D_0063F750;
+extern s32 D_003F1A68;
+
+void func_0011fb78(Q *, s32, Q *);
+Q *func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, u32, Q *, Q *);
+void func_001f3110(void);
 
 u8 *func_001efc10(s32 a) {
     return &D_003E5ED8[D_003E890E[a]];
@@ -485,4 +497,70 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     D_0063F74C = (val - 0x7000) >> 4;
     D_0063F750 = (cy - 0x7400) >> 4;
     return p;
+}
+
+void func_001f2eb8(void) {
+    Q *p, *d;
+    p = &D_003F1A70;
+    d = p;
+    p++;
+    p->a = 0x1000000000008001;
+    p->b = 14;
+    p++;
+    p->b = 0x47;
+    p->a = 0x4000d;
+    p++;
+    func_0011fb78(d, 7, p);
+    func_0011fbb0(0x3d7c, 4, 20, 0, 0, 256, 256, 2048, D_003E9660, D_003F2670);
+    func_0011fbb0(0x3dfc, 1, 0, 0, 0, 16, 16, 64, D_003F1660, D_003F2720);
+    p = &D_003F1E70;
+    d = p;
+    p++;
+    p->a = 0x1000000000008004;
+    p->b = 14;
+    p++;
+    p->a = 0x4000d;
+    p->b = 0x47;
+    p++;
+    p->b = 0x3f;
+    p->a = 0;
+    p++;
+    p->a = 0x2007bf8621413d7c;
+    p->b = 6;
+    p++;
+    p->a = 0x61;
+    p->b = 0x14;
+    p++;
+    func_0011fb78(d, 7, p);
+    p = &D_003F2270;
+    d = p;
+    p++;
+    p->a = 0x1000000000008004;
+    p->b = 14;
+    p++;
+    p->a = 0x4000d;
+    p->b = 0x47;
+    p++;
+    p->b = 0x3f;
+    p->a = 0;
+    p++;
+    p->a = 0x2007ff8622411000;
+    p->b = 6;
+    p++;
+    p->a = 0x61;
+    p->b = 0x14;
+    p++;
+    func_0011fb78(d, 7, p);
+    p = D_003F27D0;
+    d = p;
+    p++;
+    p->a = 0x1000000000008001;
+    p->b = 14;
+    p++;
+    p->b = 0x47;
+    p->a = 0x5000d;
+    p++;
+    func_0011fb78(d, 7, p);
+    D_003F1A68 = 0;
+    func_001f3110();
 }

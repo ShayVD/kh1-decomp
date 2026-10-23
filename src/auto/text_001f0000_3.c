@@ -4,25 +4,6 @@
 
 extern void *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
 
-void *func_001f4260(void) {
-    void *temp_v0;
-    void *var_a0;
-    void *var_v1;
-
-    var_v1 = D_00640DD8;
-    if (var_v1 != NULL) {
-        var_a0 = M2C_FIELD(var_v1, void **, 0x18);
-        if (var_a0 != NULL) {
-            do {
-                var_v1 = var_a0;
-                temp_v0 = M2C_FIELD(var_v1, void **, 0x18);
-                var_a0 = temp_v0;
-            } while (temp_v0 != NULL);
-        }
-    }
-    return var_v1;
-}
-
 void func_001f8170(void *arg0) {
     M2C_UNK (*temp_v0)();
     void *temp_a0;
