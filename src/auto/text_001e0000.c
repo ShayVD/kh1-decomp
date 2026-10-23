@@ -30,16 +30,12 @@ M2C_UNK func_001efc10(M2C_UNK);
 M2C_UNK func_001efdb8(s32);
 M2C_UNK func_001effc0(s32);
 M2C_UNK func_002583e0(M2C_UNK);
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
-M2C_UNK func_00266f38(s32, s32);
 extern M2C_UNK D_003E5ED8;
 extern M2C_UNK D_003E8910;
 extern M2C_UNK D_00F20000;
 extern M2C_UNK func_001e7fe0;
 extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e8628;
-extern s32 D_003DACB8;
-extern s32 D_003DACBC;
 extern s32 D_003DD260;
 extern s32 D_003E3C80;
 extern s32 D_003E8E00;
@@ -55,29 +51,14 @@ s32 func_0011e340(M2C_UNK);
 s32 func_001ee768();
 s32 func_001efbb8();
 s32 func_00232cc0(M2C_UNK);
-s32 func_00266c08(M2C_UNK);
 u16 *func_00147840();
 u32 func_001ee118();
 void *func_001496c8();
 
-void func_001e05a8(s32 arg0) {
-    s32 temp_s0;
+/* func_001e05a8, func_001e1418 are in src/screen/screen.c. */
 
-    temp_s0 = func_00266c08(2);
-    func_002583e0(0);
-    func_00265bc0(0, 0);
-    func_00266f38(temp_s0, arg0);
-    func_00265bc0(0, 0);
-}
 
-void func_001e1418(s32 arg0, s32 arg1) {
-    D_003DACB8 = arg0 * 0x10;
-    D_003DACBC = arg1 * 0x10;
-}
-
-s32 func_001e2800(s32 arg0) {
-    return (u32) (arg0 - 1) < 0x10U;
-}
+/* func_001e2800 is in src/shop/shop.c. */
 
 s32 func_001e7488(void *arg0) {
     s32 temp_v1;

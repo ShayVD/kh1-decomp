@@ -19,6 +19,7 @@
 
 #include "common.h"
 #include "data/pieces/D_002BC0F0.h"
+#include "data/types/vm_rec.h"
 
 /* 0x3070 */
 typedef union {
@@ -110,7 +111,8 @@ typedef struct {
     s32 *x3144;             /* 0x3144: where func_001cac60 stores the choice */
     u32 x3148;
     f32 x314c;
-    u8 pad3150[0x3158 - 0x3150];
+    s32 x3150;              /* 0x3150: set by func_001dcd98 */
+    VmRec *x3154;           /* 0x3154: the VM func_001dcd98 resumes */
     s32 x3158[5];
     void *x316c;
     s32 x3170;

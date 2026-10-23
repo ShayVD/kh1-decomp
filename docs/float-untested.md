@@ -29,15 +29,25 @@ back, boot, and narrow down within the session that fixes it.
 | 32 | `--no-multi-base` | 4 newly pinned, none released | D_003F4C90, D_003C21A0, D_002BD170, D_00454700 | layout only |
 | 32 | `--no-sign-prune --no-shadow-image --no-arg-drop` | log only, same names | (termination and order fixes) | none |
 | 33 | `--no-idx-span` | 11 newly pinned, none released | D_003F5C20, D_003F5C24, D_003F5C28, D_003F5C2C, D_004E3A1C, D_003C39B0, D_003C39F0, D_003C3A30 (real), D_003C39AC, D_0054C218, D_00575784 (not reached, safe) | layout only (fixes: the menu's D_003F5C18[i < 6], D_004E39F8[4], the script VM's byte variables) |
+| 34 | `--no-likely-slot` | **released (float)** | 14: D_002C1310, D_002C1320, D_00304BE8, D_003F59C0, D_003F59C8, D_003F5E58, D_003F5E60, D_0046BE88, D_0046C210, D_0046C250, D_0054C218, D_00669390, D_006693B0, D_006693D0 (each read one entry too far by the analysis; D_00551600 is kept: neg-keep, float_keep.txt) | D_0054C218 (summon/effect slots), D_00669390 ... D_006693D0 (tables passed to func_002474e8), D_003F59C0 / D_003F5E58 (menus) |
+| 34 | `--no-widen-heads` | **released (float)** 2, newly pinned 2 | released D_00531B70, D_00531F70 (the loader's 128-entry id/handle table); pinned D_002BD1F0, D_00454468 (not real, safe) | D_00531B70 (every file load registers in it: area load, save load) |
+| 34 | `--no-hix-join` | **released (float)** | 3: D_00493F38, D_00493F48, D_00493F58 (atanf's atanhi / atanlo / aT) | atan everywhere (camera, steering, aiming): any wrong angle |
+| 34 | `--no-align-end --no-neg-keep` | order only, same names | (D_0054F444 in random orders; D_00551600 now pinned in every order) | none |
+| 34 | none (float_keep.txt) | module move only, same names | D_0062F840 (the shop's third window) kept by float_keep.txt: h20's 0x100-byte view of D_0062F790 used to cover it; src/shop/shop.c types the windows as MsgWin (0xb0). It can float after a `SHIFT_FLOAT_FORCE=D_0062F840` boot that plays a shop | none |
 
-Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043) and session 33's (2,032) were never
-booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-idx-span"` gives session 32's names; add
+Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043), session 33's (2,032) and session 34's
+(2,049) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
+--no-hix-join --no-align-end --no-neg-keep"` gives session 33's names (float_reach.txt and .log byte-identical);
+`--no-hix-join` alone puts back the three atanf tables, `--no-widen-heads` those and D_00531B70 / D_00531F70 (and
+re-floats D_002BD1F0 and D_00454468), `--no-likely-slot` the other 14. Add `--no-idx-span` for session 32's names; add
 `--no-multi-base` for session 31's;
 add `--no-arg-keep --no-join-keep --no-stored-idx` for session 30's, then `--no-path-step --no-arg-bound
 --no-wr-span` for session 29's (the last booted). Boot the current default first and walk back only if it
 fails; within a session, drop its switches one at a time. If session 30's default fails and 31's passes,
 D_003F6770 is the first suspect. Sessions 31, 32 and 33 released nothing, so a failure that their switches fix
-points at layout shift around the newly pinned names, not at a wrong release.
+points at layout shift around the newly pinned names, not at a wrong release. **Session 34 released 19 names** (the
+first releases since session 30): if its default fails and session 33's passes, try `--no-hix-join` first (atanf),
+then `--no-widen-heads`, then `--no-likely-slot`; docs/shiftable-plan.md "Session 34: reach_check" has the verdicts.
 
 ## Known hazard to read before booting (sessions 32-33)
 

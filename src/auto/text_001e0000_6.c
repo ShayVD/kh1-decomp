@@ -3,7 +3,6 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_001ed000(M2C_UNK, s32, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_001efc10(u16);
 M2C_UNK func_001efd20(s32, s32);
@@ -16,89 +15,31 @@ extern M2C_UNK D_003E3CB8;
 #include "data/pieces/D_003E3CF8.h"
 #include "data/pieces/D_003E3E50.h"
 extern M2C_UNK D_003E4658;
-extern M2C_UNK D_0062F6E0;
-extern M2C_UNK func_001e0898;
-extern M2C_UNK func_001e08d8;
-extern M2C_UNK func_001e10f8;
-extern M2C_UNK func_001e4268;
 #include "data/pieces/D_003DACA0.h"
-extern s32 D_003DAD38;
 #include "data/pieces/D_003DAD3C.h"
-extern s32 D_003DC470;
-extern s32 D_003DC474;
-extern s32 D_003DC480;
-extern s32 D_003DC488;
-extern s32 D_003DC490;
 extern s32 D_003E8E2C;
-extern s32 D_0062F6D0;
 extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
-extern s8 D_0062F810; /* src/data/bss_0062.c: u8 D_0062F810[0x30] */
 #include "data/pieces/D_003F34B8.h"
-s32 func_0010e3f0(s32);
 s32 func_00147840(s32);
 s32 func_001ee768();
 s32 func_001efbb8();
 s32 func_00232cc0(s32);
-u32 func_001559f0(M2C_UNK, M2C_UNK);
 u32 func_001ee118();
-void func_0010bdd0(s32, s32);
-void func_0010ef70(s32, s32, s32);
-void func_001e2778(void);
 void func_001efaf0(void);
 void func_001efb58(s32);
 void func_001efb78(s32);
 void func_001efb98(s32);
 void func_00216180(void);
 void func_00219128(void);
-void func_0022fc88(s32);
-void func_00231958(void);
 void func_00232de0(void);
 
-void func_001e01b8(void) {
-    D_003DACA0 = (Tbl_3daca0 *)(func_001559f0(0x3C, 4));
-}
 
-void func_001e13e8(s32 arg0) {
-    D_0062F6D0 = arg0;
-    func_0011ef10(0x2E630, &func_001e10f8);
-}
+/* func_001e13e8, func_001e25e8, func_001e2628 are in src/screen/screen.c. */
 
-s32 func_001e25e8(void) {
-    func_0011ef10(0x2E630, &func_001e0898);
-    D_003DAD3C = 0;
-    D_003DAD38 = 1;
-    return 2;
-}
 
-s32 func_001e2628(void) {
-    func_0011ef10(0x2E630, &func_001e08d8);
-    D_003DAD3C = 0;
-    D_003DAD38 = 1;
-    return 2;
-}
 
-void func_001e3c08(s32 arg0) {
-    D_003DC470 = arg0;
-    if (arg0 != D_003DC474) {
-        D_003DC474 = arg0;
-        func_0010e3f0((s32) &D_0062F810);
-        func_0010ef70((s32) (&D_0062F810 - 0x80), (s32) (M2C_UNK *)&D_003DC390, 0);
-    }
-}
+/* func_001e3c08, func_001e44e0 are in src/shop/shop.c. */
 
-void func_001e44e0(s32 arg0) {
-    D_003DC490 = 0;
-    if (D_003DC488 == arg0) {
-        func_001e2778();
-        func_00231958();
-        return;
-    }
-    D_003DC480 = arg0;
-    func_0022fc88(arg0 - 1);
-    func_0010bdd0((s32) &D_0062F6E0, (s32) &func_001e4268);
-    D_003DC470 = 0;
-    D_003DC474 = 0;
-}
 
 void func_001ec380(s32 arg0) {
     M2C_FIELD(func_00232cc0(1), s8 *, 0xDD0) = (s8) arg0;

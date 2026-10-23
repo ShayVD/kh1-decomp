@@ -6046,3 +6046,91 @@ VmLibFn D_003D9FE0[0x2fb] ALIGNED(32) = {
 s32 func_001dcad0(VmRec *vm, s32 k) {
     return D_003D9FE0[k](vm);
 }
+
+/* After the dispatcher (session 34): the VM helpers other code calls, up to
+ * the event effects (src/event/) at 0x001dd148.  func_001dcea8 steps the
+ * moves the library starts (func_001d1080 .. func_001d9510 have no other
+ * caller), so they are this file's.  func_001dcb00 is in vm_lib.nofill.c. */
+
+/* Resume the running VM (the one x3154 points at, in the table x3034
+ * selects) at label 8 with (3, its index); a > 0 also clears bit 3 of
+ * D_0037A378. */
+void func_001dcd98(s32 a) {
+    VmRec *vm;
+    s32 n, i;
+    D_00389C90.x3150 = a;
+    if (D_00389C90.x3034 == 0) {
+        vm = D_0038D170;
+        n = D_0039A570;
+    } else {
+        n = D_003A7980;
+        vm = D_0039A580;
+    }
+    for (i = 0; i < n; i++) {
+        if (&vm[i] == D_00389C90.x3154) break;
+    }
+    if (a > 0) D_0037A378 &= ~8;
+    vm->stk[++vm->sp] = 3;
+    vm->stk[++vm->sp] = i;
+    func_001c19f8(vm, 8);
+}
+
+void func_001dce90(void) {
+    D_00389C90.x3380 = D_00389C90.x3380 + 1;
+}
+
+void func_001d1080(VmRec *);
+void func_001d7898(VmRec *);
+void func_001d9510(VmRec *);
+void func_001d9348(VmRec *);
+
+/* Every frame (script_vm.c's drivers): step the moves of flag bits 6, 9,
+ * 10 and 12 (D_002BBDFC / 2 times) and the move of bit 11. */
+void func_001dcea8(VmRec *vm) {
+    s32 n, i;
+    n = D_002BBDFC * 0.5f;
+    if (n == 0) n = 1;
+    for (i = 0; i < n; i++) {
+        if ((s32)(vm->fl.x >> 6) & 1) func_001d1080(vm);
+        if ((s32)(vm->fl.x >> 9) & 1) func_001d3e30(vm);
+        if ((s32)(vm->fl.x >> 10) & 1) func_001d7898(vm);
+        if ((s32)(vm->fl.x >> 12) & 1) func_001d9510(vm);
+    }
+    if ((s32)(vm->fl.x >> 11) & 1) func_001d9348(vm);
+}
+
+/* Every frame: while bit 14 (bit 15) is set, send message 39 with the
+ * entity's position less 20 in y (with f340) until f330 runs out. */
+void func_001dcfd0(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *e;
+    if ((s32)(vm->fl.x >> 14) & 1) {
+        e = vm->obj;
+        if (e) {
+            m.type = 39;
+            m.x = vm->x0;
+            m.val = 0;
+            m.v[0] = e->pos[0];
+            m.v[1] = e->pos[1] - 20.0f;
+            m.v[2] = e->pos[2];
+            m.v[3] = 1.0f;
+            func_001c4640(&m);
+        }
+        vm->f330 -= D_002BBDFC;
+        if (vm->f330 < 0.0f) vm->fl.x &= ~0x4000;
+    }
+    if ((s32)(vm->fl.x >> 15) & 1) {
+        if (vm->obj) {
+            m.type = 39;
+            m.x = vm->x0;
+            m.val = 0;
+            m.v[0] = vm->f340[0];
+            m.v[1] = vm->f340[1];
+            m.v[2] = vm->f340[2];
+            m.v[3] = 1.0f;
+            func_001c4640(&m);
+        }
+        vm->f330 -= D_002BBDFC;
+        if (vm->f330 < 0.0f) vm->fl.x &= ~0x8000;
+    }
+}

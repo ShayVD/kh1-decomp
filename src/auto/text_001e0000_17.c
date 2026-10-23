@@ -4,10 +4,8 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK);
 M2C_UNK func_0010bdd0(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_0010ef70(M2C_UNK *, M2C_UNK *, M2C_UNK);
 M2C_UNK func_00111be8();
 M2C_UNK func_0011c7a8(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0011e9a8(M2C_UNK *, M2C_UNK *);
@@ -15,7 +13,6 @@ M2C_UNK func_0011eb88(s32, M2C_UNK *, s32, M2C_UNK *);
 M2C_UNK func_0011ec08(s32, M2C_UNK *, s32, M2C_UNK *);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_00147840();
-M2C_UNK func_001e2778();
 M2C_UNK func_001e61c0(M2C_UNK, M2C_UNK *);
 M2C_UNK func_001e9650();
 M2C_UNK func_001ef948();
@@ -37,33 +34,17 @@ M2C_UNK func_00232790();
 M2C_UNK func_00232ac8();
 M2C_UNK func_00233610();
 M2C_UNK func_00233a80();
-M2C_UNK func_002660c0(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_002672f8(s32, void *, s32);
 M2C_UNK func_00267518(s32, s32, s32);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_002676c0(void *, void *, f32);
 M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
-M2C_UNK sceGsExecStoreImage(void *, M2C_UNK *);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 #include "data/pieces/D_003DC390.h"
-extern M2C_UNK D_003E1CB0;
-extern M2C_UNK D_003E3700;
 extern M2C_UNK D_003E3CB8;
-extern M2C_UNK D_0062F670;
-extern M2C_UNK D_0062F790;
-extern M2C_UNK D_0062FB00; /* src/data/bss_0062.c: s32 D_0062FB00[0x100] */
-extern M2C_UNK D_0062FF00; /* src/data/bss_0062.c: s32 D_0062FF00[0x100] */
 extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 extern M2C_UNK D_00631570; /* src/data/bss_0063.c: Win D_00631570 */
 extern M2C_UNK D_00F20000;
-extern M2C_UNK func_001e0ab0;
-extern M2C_UNK func_001e0d98;
-extern M2C_UNK func_001e15a0;
-extern M2C_UNK func_001e1838;
-extern M2C_UNK func_001e1c20;
 extern M2C_UNK func_001e72a0;
 extern M2C_UNK func_001e7fe0;
 extern M2C_UNK func_001e8010;
@@ -71,25 +52,16 @@ extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e8338;
 extern M2C_UNK func_001e8628;
 extern M2C_UNK func_001e8658;
-extern f32 D_003DACB0;
-extern f32 D_003DACB4;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003DABD0.h"
-extern s32 D_003DAD38;
-extern s32 D_003DC470;
-extern s32 D_003DC474;
-extern s32 D_003DC484;
 extern s32 D_003DD258;
 extern s32 D_003DD28C;
-extern s32 D_003F7A64;
-extern s32 D_0062F6D0;
 extern s32 D_006314CC;
 extern s32 D_006314D0;
 extern s32 D_006314D4;
 extern s32 D_006314D8;
 extern s32 D_006314DC;
 extern s64 D_00389C90[];
-extern s8 D_0062FA00; /* src/data/bss_0062.c: u8 D_0062FA00[0x100] */
 f32 func_001edc50(s32);
 f32 func_001edcd8(f32);
 s32 func_0011e340(M2C_UNK);
@@ -98,105 +70,25 @@ s32 func_001efc68();
 #include "vm/script_vm.h"
 void memset(s32, s32, s32);
 
-void func_001e07a8(s32 arg0) {
-    s32 temp_s0;
+/* func_001e07a8, func_001e0d68, func_001e1088, func_001e10b8, func_001e1438, func_001e1480, func_001e1688, func_001e1bf8, func_001e2470 are in src/screen/screen.c. */
 
-    sceGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    temp_s0 = arg0 * 0x600;
-    sceGsExecLoadImage(&D_0062F670, (s32)D_003DABD0[1] + temp_s0);
-    sceGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_0062F670, (s32)D_003DABD0[1] + temp_s0 + 0x48000);
-}
 
-void func_001e0d68(s32 arg0) {
-    D_0062F6D0 = arg0;
-    func_0011ef10(0x2E630, &func_001e0ab0);
-}
 
-void func_001e1088(s32 arg0) {
-    D_0062F6D0 = arg0;
-    func_0011ef10(0x2E630, &func_001e0d98);
-}
 
-s32 func_001e10b8(void) {
-    D_003DAD38 = 0;
-    return 4;
-}
 
-void func_001e1438(s32 arg0, s32 arg1) {
-    D_003DACB0 = (f32) arg0 / 100.0f;
-    D_003DACB4 = (f32) arg1 / 100.0f;
-}
 
-void func_001e1480(void) {
-    s32 sp[28];
-    func_002660c0(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecStoreImage(sp, &D_00F20000);
-}
 
-void func_001e1688(void) {
-    func_0011ef10(0x280A0, &func_001e15a0);
-}
 
-void func_001e1bf8(void) {
-    func_0011ef10(0x280A0, &func_001e1838);
-}
 
-void func_001e2470(void) {
-    func_0011ef10(0x280A0, &func_001e1c20);
-}
+/* func_001e27b0, func_001e2f88, func_001e3178, func_001e3a98, func_001e3b28, func_001e3da8, func_001e4048, func_001e4250, func_001e4558 are in src/shop/shop.c. */
 
-void func_001e27b0(void) {
-    s32 sp[4];
-    func_001c2d20((s8 *) &D_003E1CB0, sp, (s8 **) &D_0062FB00);
-    func_001c2d20((s8 *) &D_003E3700, sp, (s8 **) &D_0062FF00);
-    D_0062FA00 = 0;
-}
 
-void func_001e2f88(s32 arg0) {
-    D_003DC484 = arg0;
-}
 
-s32 func_001e3178(void) {
-    if (D_003F7A64 == 0) {
-        func_001e2778();
-        return 4;
-    }
-    return 0;
-}
 
-void func_001e3a98(s32 arg0) {
-    D_003DC484 = arg0;
-}
 
-void func_001e3b28(void) {
-    func_001e2778();
-}
 
-void func_001e3da8(void) {
-    func_0010ef70(&D_0062F790, (M2C_UNK *)&D_003DC390, 0);
-}
 
-void func_001e4048(s32 arg0) {
-    D_003DC470 = arg0;
-    if (D_003DC474 == 0) {
-        D_003DC474 = arg0;
-    }
-}
 
-void func_001e4250(void) {
-    func_001e2778();
-}
-
-void func_001e4558(void) {
-    func_0010bd90(&D_0062F790, 0);
-}
 
 void func_001e6388(void) {
     func_001e61c0(0, &D_00630510);

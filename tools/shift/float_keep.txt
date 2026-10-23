@@ -70,3 +70,16 @@ D_00482260
 # reach_check pins it through an unbounded index of its own; this keeps it if that ever changes (tight idx-span
 # does not see a byte's 0xFF: docs/shiftable-plan.md "Session 33: reach_check").
 D_003F3530
+#
+# Session 34: func_001571a8 (sound bank slots, text_00150000_h58.c) looks for a free D_00551608[j] (34-byte entries)
+# with k = -1 as "none yet" and then writes e = &D_00551608[k] without a check: with every slot busy it writes
+# entry -1, D_00551608 - 34 = 0x005515E6 ... 0x00551607, over D_005512A0's tail and all of D_00551600. Until session
+# 34 reach_check pinned D_00551600 by chance (func_00155a90's bound one entry long) and saw the -1 path only in some
+# visit orders; its neg-keep rule now sees it in every order. This keeps it if that changes (negative indices that
+# are not constants are not modelled: docs/shiftable-plan.md "Session 34: reach_check").
+D_00551600
+# Session 34: the shop's third window D_0062F840 (0xb0 bytes, src/data/bss_0062.c). Until session 34 it stayed in
+# place only because text_001e0000_h20.c declared D_0062F790 as a 0x100-byte view that covered it; src/shop/shop.c
+# now declares all three windows as MsgWin (0xb0). Kept here so the move does not change the float build; nothing
+# needs it in place, so it can float once a SHIFT_FLOAT_FORCE=D_0062F840 build has played a shop.
+D_0062F840

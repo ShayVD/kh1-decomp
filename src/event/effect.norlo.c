@@ -1,38 +1,31 @@
+/* func_001dd5c0 of src/event/effect.c: needs norlo (-fno-rerun-loop-opt;
+ * s7_w10: without it the second loop pass reverses the case-9 counter j
+ * into a countdown). */
 #include "common.h"
+#include "data/types/vm_rec.h"
+#include "event/effect.h"
+#include "vm/vm_obj.h"
 #include "data/bss_0062.h"
-/* func_001dd5c0: MATCH in hand with -fno-rerun-loop-opt (rodata jump table at 0x4907b0, verified with wqb03_rr). Without the flag the second loop pass reverses the case-9 counter j into a countdown. */
-typedef struct { u8 pad0[0x14]; s32 f14; } Sub14c;
-typedef struct { u8 pad0[0x10]; f32 pos[3]; u8 pad1c[0x14c - 0x1c]; Sub14c *f14c; } Ob5;
-typedef struct { s32 x0; Ob5 *f4; } HS5;
-typedef struct { f32 *f0; s32 *f4; f32 *f8; f32 *fc; u8 *f10; s32 f14; u8 pad18[60 - 0x18]; } E60;
-typedef struct { u8 pad0[0x10]; void *f10; HS5 *f14; s32 f18; f32 f1c; u8 pad20[8]; s32 f28; s32 f2c; f32 f30; u8 pad34[0xc]; f32 f40[3]; } Hd5;
-extern u8 D_0062A630[];
-extern E60 D_0062A428[]; /* src/data/bss_0062.c: u8 D_0062A428[0x8] */
-extern s32 D_0062A608[];
+#include "data/data_0029.h"
 #include "data/pieces/D_0037A378.h"
-extern s32 D_0062A220, D_0062A224, D_0029B418, D_0029B41C, D_0029B410, D_0029B414;
 #include "data/pieces/D_00350CE0.h"
-s32 func_001dd5c0(Hd5 *);
-s32 func_001dd208(Hd5 *);
-s32 func_001dd320(Hd5 *);
-s32 func_001dd488(Hd5 *);
-s32 func_001dd550(Hd5 *);
-Hd5 *func_0011f090(void *, s32, s32 (*)(Hd5 *));
-s32 func_00176040(s32, s32, s32, s32);
+
+s32 func_00176040(void *, void *, s32, s32);
 s32 func_00176078(s32, s32, s32, s32);
 s32 func_00176008(s32, s32, s32, s32);
-s32 func_00176488(s32, E60 *, s32, s32);
+s32 func_00176488(s32, EvFx *, s32, s32);
 void func_001761d0(void);
 void func_001761b0(void);
-E60 *func_001760d0(s32);
-E60 *func_001760f0(s32);
-E60 *func_001760b0(s32);
-void func_00176310(E60 *);
-s32 func_001765f8(E60 *);
-/* rodata */
-s32 func_001dd5c0(Hd5 *t) {
-    E60 *e;
-    Hd5 *n;
+void func_00176310(EvFx *);
+s32 func_001765f8(EvFx *);
+
+/* Run the request t->f2c for effect t->f28: start it (0, 3, 6, 11 with the
+ * buffers of the three kinds; 10 / 16 also follow the entity), stop it
+ * (2, 5, 12; 1 / 4 stop all), start one of the eight model effects on the
+ * entity (7, 8, 13; 9 / 14 stop them), or fade its colour (15). */
+s32 func_001dd5c0(EvTask *t) {
+    EvFx *e;
+    EvTask *n;
     s32 i;
     switch (t->f2c) {
     case 0:
@@ -61,9 +54,9 @@ s32 func_001dd5c0(Hd5 *t) {
         break;
     case 7:
         func_00176488((s32)t->f10, &D_0062A428[t->f18], t->f28, 100000);
-        D_0062A428[t->f18].f0[0] = t->f14->f4->pos[0];
-        D_0062A428[t->f18].f0[1] = t->f14->f4->pos[1];
-        D_0062A428[t->f18].f0[2] = t->f14->f4->pos[2];
+        D_0062A428[t->f18].f0[0] = t->f14->obj->pos[0];
+        D_0062A428[t->f18].f0[1] = t->f14->obj->pos[1];
+        D_0062A428[t->f18].f0[2] = t->f14->obj->pos[2];
         if (func_001765f8(&D_0062A428[t->f18]) < 0) break;
         n = func_0011f090(D_0062A630, 1, func_001dd208);
         n->f10 = &D_0062A428[t->f18];
@@ -79,9 +72,9 @@ s32 func_001dd5c0(Hd5 *t) {
     case 8:
         func_00176488((s32)t->f10, &D_0062A428[t->f18], t->f28, 100000);
         *D_0062A428[t->f18].f10 = 1;
-        D_0062A428[t->f18].f0[0] = t->f14->f4->pos[0];
-        D_0062A428[t->f18].f0[1] = t->f14->f4->pos[1];
-        D_0062A428[t->f18].f0[2] = t->f14->f4->pos[2];
+        D_0062A428[t->f18].f0[0] = t->f14->obj->pos[0];
+        D_0062A428[t->f18].f0[1] = t->f14->obj->pos[1];
+        D_0062A428[t->f18].f0[2] = t->f14->obj->pos[2];
         if (func_001765f8(&D_0062A428[t->f18]) < 0) break;
         n = func_0011f090(D_0062A630, 1, func_001dd208);
         n->f10 = &D_0062A428[t->f18];
@@ -130,10 +123,10 @@ s32 func_001dd5c0(Hd5 *t) {
         if (e) func_00176310(e);
         return 4;
     case 13:
-        func_00176488(t->f14->f4->f14c->f14, D_0062A428, t->f28, 100000);
-        D_0062A428->f0[0] = t->f14->f4->pos[0];
-        D_0062A428->f0[1] = t->f14->f4->pos[1];
-        D_0062A428->f0[2] = t->f14->f4->pos[2];
+        func_00176488(t->f14->obj->f14c->f14, D_0062A428, t->f28, 100000);
+        D_0062A428->f0[0] = t->f14->obj->pos[0];
+        D_0062A428->f0[1] = t->f14->obj->pos[1];
+        D_0062A428->f0[2] = t->f14->obj->pos[2];
         if (func_001765f8(D_0062A428) < 0) break;
         n = func_0011f090(D_0062A630, 1, func_001dd208);
         n->f10 = D_0062A428;
@@ -156,13 +149,3 @@ s32 func_001dd5c0(Hd5 *t) {
     }
     return 4;
 }
-/* Hidden function at 0x1ddbf8 (inside layout symbol func_001dd5c0), untested:
-extern s32 D_0062A220;
-void func_001763f0(s32);
-void func_001ddbf8(void) {
-    func_001763f0(D_0062A220);
-    D_00389C90.f3070 &= ~(1ULL << 44);
-}
-*/
-#include "data/data_0029.h"
-#include "data/pieces/D_00389C90.h"
