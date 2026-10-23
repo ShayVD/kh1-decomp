@@ -80,7 +80,7 @@ void func_002177c8(Obj *a) {
                         S4BE8 **b;
                         s32 *pd;
                         func_001f3e48(o[0], p);
-                        b = ((S4BE8 **)&D_00304BE8);
+                        b = &D_00304BE8;
                         func_001f3d58(o[0], 6);
                         pd = &D_00642CD8;
                         *pd = D_003F34B8->a[D_00304BE8->x48e[D_00642CCC]];

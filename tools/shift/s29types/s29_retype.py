@@ -50,6 +50,8 @@ def auto_map(tl, sl, used, shift=0):
         bo, bs, sp, k = top[f]
         cands = []
         for sbo, sbs, ssp, spath, sk in sl:
+            if re.match(r"(.*\.)?pad", spath):
+                continue  # never map onto S's padding
             if k.startswith("bits"):
                 if sk.startswith("bits") and sbo == bo and sbs == bs:
                     cands.append(spath)

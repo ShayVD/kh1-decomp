@@ -1042,21 +1042,21 @@ void func_0015ae48(s32 i, u32 k) {
         s->x3 += 1;
         break;
     case 3:
-        s->pad_5[0] = s->pad_5[0] + 2 > 100 ? 100 : s->pad_5[0] + 2;
+        s->x5 = s->x5 + 2 > 100 ? 100 : s->x5 + 2;
         if (p) {
             v = p->x6c->xe0 + 2;
             p->x6c->xe0 = v < 101 ? v : 100;
         }
         break;
     case 4:
-        s->pad_5[1] = s->pad_5[1] + 2 > 100 ? 100 : s->pad_5[1] + 2;
+        s->x6 = s->x6 + 2 > 100 ? 100 : s->x6 + 2;
         if (p) {
             v = p->x6c->x4c + 2;
             p->x6c->x4c = v < 101 ? v : 100;
         }
         break;
     case 5:
-        s->pad_5[2] = s->pad_5[2] + 2 > 100 ? 100 : s->pad_5[2] + 2;
+        s->x7 = s->x7 + 2 > 100 ? 100 : s->x7 + 2;
         if (p) {
             v = p->x6c->x50 + 2;
             p->x6c->x50 = v < 101 ? v : 100;
