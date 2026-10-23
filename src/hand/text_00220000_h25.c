@@ -1,20 +1,16 @@
 #include "common.h"
-#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
 
 /* 64-entry command ring at D_006477B0 (head D_00647FB8, id counter D_00647FC0) */
 #include "data/types/text_00220000_h25.h"
-typedef W606Mem_304be8 Ent74;
 #include "data/types/text_00220000_h25_p.h"
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } Pkt;
 s32 func_001ba3f0(s32);
-void func_001ec380(s32);
 s32 func_001f40c8(void);
 void func_001f82b0(void);
-void func_0020b998(void);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 u128 *func_00237790(u8 *, u128 *, s32);
@@ -24,10 +20,7 @@ s32 func_002448d8(void);
 s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
-
-#include "data/pieces/D_00304BE8.h"
 extern u128 D_00351E10[];
-extern s32 D_003F7E94;
 extern s32 D_003F7EC4;
 extern Str82A8 D_003F82A8;
 extern u128 D_003F8380[];
@@ -38,9 +31,6 @@ extern u8 D_003FA780[];
 extern u128 D_0040EF80[];
 extern u8 D_0040E780[];
 extern u8 D_0040EB80[];
-extern s32 D_00647664;
-extern s32 D_00647668;
-extern s32 D_006476F4;
 extern Cmd D_006477B0[64];
 extern s32 D_00647FB0;
 extern s32 D_00647FB8;
@@ -57,41 +47,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00231a80(void) {
-    s32 d = D_00647668 - D_006476F4;
-    if (d < 4) {
-        s32 s = D_00647664;
-        if (s < 4) {
-            func_001ec380(s + 1);
-        } else if (s == 4) {
-            if (d == 0) func_001ec380(5);
-        } else if (s == 5) {
-            if (d == 0) func_001ec380(6);
-        }
-    }
-}
-
-s32 func_00231b38(s32 arg0, s32 arg1) {
-    Ent74 *e = &D_00304BE8->m[arg0];
-    s32 c = 0;
-    s32 i;
-    for (i = 0; i < e->sub.x21; i++) {
-        if (e->sub.x22[i] == arg1) c++;
-    }
-    return c;
-}
-
-s32 func_002325f8(void) {
-    if (func_001f40c8() != 0) {
-        func_001f82b0();
-        func_0020b998();
-        return 0;
-    }
-    D_003F7E94 = 0;
-    func_00231a80();
-    return 4;
-}
 
 s32 func_00232960(void) {
     if (func_001f40c8() != 0) {

@@ -27,11 +27,6 @@ extern s32 D_00648000;
 extern s32 D_00648014;
 extern s32 D_00648018;
 extern s32 D_0064801C;
-s32 func_001ec360();
-
-s32 func_00231b10(void) {
-    return func_001ec360() == 6;
-}
 
 void func_00233158(void) {
     D_00351E10 = 0;

@@ -1,9 +1,14 @@
+/* The synthesis menu's recipe list (src/shop/synth.c, docs/modules.md "Session 43"):
+ * seven rows of D_003F7C48 from D_00647654, greyed when func_00231dd0 says the
+ * recipe cannot be made, marked when made once (D_00647670); the party's
+ * portraits with the count each holds of the item made.  Matches only with
+ * -fforce-addr (session 7 flag sweep; without it one lui is scheduled after
+ * the sll it precedes in the original). */
 #include "common.h"
 #include "data/bss_0064.h"
-/* func_00231ea0: matches with -fforce-addr (session 7 flag sweep; without it one lui is scheduled after the sll it precedes in the original). */
+#include "text/textwin.h"
 
 #include "data/types/faddr_text_00230000_s7.h"
-typedef struct { u8 pad[0x90]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0; s32 xb4; u8 padb8[0xcc - 0xb8]; s16 xcc; } W17;
 #include "data/pieces/D_003E8E08.h"
 extern s32 D_003F7E98;
 extern s32 D_00647654;
@@ -42,7 +47,7 @@ s32 func_001ef0c0(s32);
 s32 func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00242ef8(s32, s32, s32, s32 *, s32 *);
 
-void func_00231ea0(W17 *w) {
+void func_00231ea0(TextWin *w) {
     s32 pos[2];
     s32 col[4];
     s32 id;
