@@ -26,25 +26,10 @@ extern M2C_UNK D_00642F60;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_002B6478;
 extern s32 D_003F34E8;
-extern s32 D_00642CCC;
-extern s32 D_00642CD0;
-extern s32 D_00642CD4;
-extern s32 D_00642CD8;
-extern s32 D_00642CDC;
-extern s32 D_00642CE0;
 extern s32 D_00642D18;
 extern s32 D_00642D24;
 extern s32 D_00643100;
 s32 func_00266c08(M2C_UNK);
-
-void func_00217fe8(void) {
-    D_00642CCC = 0;
-    D_00642CD0 = 0;
-    D_00642CD4 = 0;
-    D_00642CD8 = 0;
-    D_00642CDC = 0;
-    D_00642CE0 = 0;
-}
 
 void func_00219118(void) {
     D_00642D18 = 0;

@@ -18,22 +18,6 @@ extern s32 D_00642410;
 extern s32 D_00641C10[];
 extern s32 D_00642410;
 
-extern s32 D_00642CA8[];
-extern s32 D_00642CC8;
-s32 func_0013c188(s32, s32);
-
-void func_00216280(void) {
-    s32 i;
-    D_00642CC8 = 0;
-    for (i = 0; i < 7; i++) {
-        if (func_0013c188(0, i) != 0) {
-            D_00642CA8[D_00642CC8++] = i;
-        }
-    }
-    D_00642CA8[D_00642CC8] = 7;
-    D_00642CC8++;
-}
-
 typedef struct { u8 pad[0xd2]; s16 xd2; } Oac38;
 extern u8 D_003F4BF0[];
 extern u8 D_003F4C90[];

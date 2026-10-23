@@ -4,19 +4,12 @@
 M2C_UNK func_0021af38(s32);
 M2C_UNK func_0021b820();
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-extern M2C_UNK D_003F4488;
 extern M2C_UNK D_003F47B8;
 extern M2C_UNK D_003F4BD0;
-extern s32 D_00642CD0;
 extern s32 D_00642D24;
 #include "data/pieces/D_003F34B8.h"
 void func_001f9010(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-
-void func_002165e0(s32 arg0) {
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xAE, 0xC, *(M2C_UNK *)((s8 *)(s8 *)&D_003F4488 + (D_00642CD0 * 4)), 0x11, 0x80C87850);
-}
 
 void func_002192e8(s32 arg0) {
     M2C_FIELD(D_003F34B8, s32 *, 4) = arg0;

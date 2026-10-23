@@ -28,10 +28,6 @@ void func_001eb0a0(s32, s32);
 void func_00207830(s32, s32, s32, s32, s32, s32, s32);
 void func_0021c450(s32, s32, s32, s32);
 
-void func_00217f28(s32 arg0) {
-    func_00207830(arg0, 4, 2, 0, 0, 0x7A, 0x6C);
-}
-
 void func_00218f58(s32 arg0) {
     func_00207830(arg0, 4, 2, 0, 0, 0x7A, 0x6D);
 }

@@ -2,8 +2,6 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-#include "data/pieces/D_003E3D68.h"
-
 typedef W606Mem_304be8 S4BE8e;
 
 void func_001f9010(s32);
@@ -13,34 +11,6 @@ void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 
 #include "data/pieces/D_003F34B8.h"
 typedef S34B8_3f34b8 S34B8;
-void func_002161e8(s32, s32);
-void func_00216180(void) {
-    s32 i;
-    for (i = 0; i < 10; i++) {
-        D_003F34B8->a[i] = 4;
-        func_002161e8(i, 4);
-    }
-}
-
-extern s32 *D_003F41E8[];
-extern s32 D_003F4200[][9];
-void func_00170d60(s32, s32, s32);
-void func_002161e8(s32 a0, s32 a1) {
-    s32 *p;
-    s32 i;
-    if (a1 != 4) p = D_003F41E8[a1];
-    else p = D_003F4200[a0];
-    for (i = 0; i < 9; i++) func_00170d60(a0, i, p[i]);
-}
-
-extern u32 D_00642CCC; /* src/data/bss_0064.c: s32 D_00642CCC */
-void func_00216280(void);
-void func_00217fb0(void) {
-    u32 *p = &D_00642CCC;
-    u32 n = D_003E3D68 - 1;
-    if (n < *p) *p = n;
-    func_00216280();
-}
 
 extern s32 D_00642D18;
 
