@@ -448,48 +448,6 @@ void func_00237318(void) {
     func_00237018(D_006480D0, 22, 1);
 }
 
-/* needs make: uses rodata */
-typedef int u128 __attribute__((mode(TI)));
-extern u128 D_003F8380[];
-extern u128 D_003F8F80[];
-extern u128 D_003F9F80[];
-extern u128 D_003FA380[];
-extern u128 D_003FA780[];
-extern u128 D_0040E780[];
-extern u128 D_0040EB80[];
-
-static inline void clr(u128 *p, s32 n) { for (; n > 0; n--) *p++ = 0; }
-
-s32 func_00232ad0(s32 a) {
-
-    switch (a) {
-    case -1:
-        clr(D_003F8380, 5824);
-        return 0;
-    case 0:
-        clr(D_003F8380, 192);
-        return 0;
-    case 1:
-        clr(D_003F8F80, 256);
-        return 0;
-    case 2:
-        clr(D_003F9F80, 64);
-        return 0;
-    case 3:
-        clr(D_003FA380, 64);
-        return 0;
-    case 4:
-        clr(D_003FA780, 5120);
-        return 0;
-    case 5:
-        clr(D_0040E780, 64);
-        return 0;
-    case 6:
-        clr(D_0040EB80, 64);
-        return 0;
-    }
-    return -1;
-}
 extern s32 D_00647FB4, D_00647FB0, D_00647FC4, D_00647FC8, D_00647FD4, D_00647FD8, D_00647FF0;
 extern s32 D_00425C10, D_00425C14, D_00425CA8, D_00425CAC;
 extern void (*D_00648034)(s32);

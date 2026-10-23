@@ -20,14 +20,6 @@ s32 func_00245f18(void);
 s32 func_002474a8(void);
 extern u128 D_00351E10[];
 extern Str82A8 D_003F82A8;
-extern u128 D_003F8380[];
-extern u8 D_003F8F80[];
-extern u8 D_003F9F80[];
-extern u8 D_003FA380[];
-extern u8 D_003FA780[];
-extern u128 D_0040EF80[];
-extern u8 D_0040E780[];
-extern u8 D_0040EB80[];
 extern Cmd D_006477B0[64];
 extern s32 D_00647FB0;
 extern s32 D_00647FB8;
@@ -44,24 +36,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00232d60(void) {
-    u128 *s = D_003F8380;
-    u128 *d = D_0040EF80;
-    s32 i;
-    for (i = 0x16C0; i > 0; i--) {
-        *d++ = *s++;
-    }
-}
-
-void func_00232da0(void) {
-    u128 *s = D_0040EF80;
-    u128 *d = D_003F8380;
-    s32 i;
-    for (i = 0x16C0; i > 0; i--) {
-        *d++ = *s++;
-    }
-}
 
 Str82A8 *func_00232fc8(u32 arg0) {
     D_003F82A8.e = arg0 / 10 + '0';
@@ -235,18 +209,6 @@ s32 func_0023c8c8(void) {
 }
 
 /* needs make: uses rodata */
-void *func_00232cc0(u32 arg0) {
-    switch (arg0) {
-    case 0: return D_003F8380;
-    case 1: return D_003F8F80;
-    case 2: return D_003F9F80;
-    case 3: return D_003FA380;
-    case 4: return D_003FA780;
-    case 5: return D_0040E780;
-    case 6: return D_0040EB80;
-    }
-    return 0;
-}
 
 #include "data/bss_0064_typed.h"
 #include "data/data_003F.h"
