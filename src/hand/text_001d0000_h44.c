@@ -60,35 +60,6 @@ void func_001ea268(void *, s32);
 void func_0010ef70(void *, void *, void (*)());
 void func_001e2810(void);
 
-s32 func_001d95f0(VM *vm) {
-    vm->fl.x |= 0x1000;
-    vm->f44 = (f32)vm->stk[vm->sp - 3] * 2;
-    if (vm->obj->f370.b.b44 == 1) {
-        vm->f2c[0] = vm->obj->v30[0];
-        vm->f2c[1] = vm->obj->v30[1];
-        vm->f2c[2] = vm->obj->v30[2];
-    } else {
-        vm->f2c[0] = 0;
-        vm->f2c[1] = vm->obj->v30[3];
-        vm->f2c[2] = 0;
-    }
-    vm->f38[0] = vm->f2c[0] + vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
-    vm->f38[1] = vm->f2c[1] + vm->stk[vm->sp - 1] * 3.1415928f / 180.0f;
-    vm->f38[2] = vm->f2c[2] + vm->stk[vm->sp] * 3.1415928f / 180.0f;
-    vm->obj->f370.b.b44 = 1;
-    vm->f48 = 0;
-    vm->sp -= 4;
-    return 2;
-}
-
-void func_00103810(void);
-void func_00103280(f32, f32, f32, f32);
-s32 func_001d9780(VM *vm) {
-    func_00103810();
-    func_00103280(vm->stk[vm->sp - 3] / 100.0f, vm->stk[vm->sp - 2] / 100.0f, vm->stk[vm->sp - 1] / 100.0f, vm->stk[vm->sp] / 100.0f);
-    vm->sp -= 4;
-    return 2;
-}
 
 void func_00105c70(s32, s32 *);
 s32 func_001da2c8(VM *vm) {

@@ -51,6 +51,16 @@
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
+#include "data/pieces/D_00377360.h"
+#include "data/pieces/D_0037735C.h"
+#include "data/pieces/D_00377358.h"
+#include "data/pieces/D_00377354.h"
+#include "data/pieces/D_00377350.h"
+#include "data/pieces/D_0037734C.h"
+#include "data/pieces/D_00377348.h"
+#include "data/pieces/D_00377344.h"
+#include "data/pieces/D_00377340.h"
+#include "data/pieces/D_0037733C.h"
 
 
 extern VmMgr D_00389C90;
@@ -3847,6 +3857,274 @@ s32 func_001d9268(VmRec *vm) {
 }
 
 /* func_001d9348 is in vm_lib.nofill.c. */
+
+/* ---- 0x001d9480-0x001da088 ---- */
+
+s32 func_001118f0();
+s32 func_0011c788();
+void func_00103810(void);
+void func_00103280(f32, f32, f32, f32);
+s32 func_00103828();
+void func_00108650(s32, s32);
+void func_001086b8(s32, s32);
+void func_00144eb0(s32, f32 *);
+void func_00245280(s32, s32);
+void func_0013c8c8(s32, s32);
+s32 func_0013c3a8(s32);
+s32 func_001ba2f8(s32);
+
+/* Start a move to stk[sp-2..sp] over stk[sp-3] frames (func_001d9348
+ * steps it). */
+s32 func_001d9480(VmRec *vm) {
+    vm->fl.x |= 0x800;
+    vm->f24 = (f32)vm->stk[vm->sp - 3] * 2.0f;
+    vm->f14[0] = vm->stk[vm->sp - 2];
+    vm->f14[1] = vm->stk[vm->sp - 1];
+    vm->f14[2] = vm->stk[vm->sp];
+    vm->sp -= 4;
+    vm->p[0] = vm->obj->pos[0];
+    vm->p[1] = vm->obj->pos[1];
+    vm->p[2] = vm->obj->pos[2];
+    vm->f28 = 0;
+    return 2;
+}
+
+/* func_001d9510 is in vm_lib.nostrict.c. */
+
+/* Start a turn by stk[sp-2..sp] degrees over stk[sp-3] frames
+ * (func_001d9510 steps it). */
+s32 func_001d95f0(VmRec *vm) {
+    vm->fl.x |= 0x1000;
+    vm->f44 = (f32)vm->stk[vm->sp - 3] * 2;
+    if (vm->obj->f370.b.b44 == 1) {
+        vm->f2c[0] = vm->obj->rot[0];
+        vm->f2c[1] = vm->obj->rot[1];
+        vm->f2c[2] = vm->obj->rot[2];
+    } else {
+        vm->f2c[0] = 0;
+        vm->f2c[1] = vm->obj->f3c;
+        vm->f2c[2] = 0;
+    }
+    vm->f38[0] = vm->f2c[0] + vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
+    vm->f38[1] = vm->f2c[1] + vm->stk[vm->sp - 1] * 3.1415928f / 180.0f;
+    vm->f38[2] = vm->f2c[2] + vm->stk[vm->sp] * 3.1415928f / 180.0f;
+    vm->obj->f370.b.b44 = 1;
+    vm->f48 = 0;
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9728(void) {
+    func_001118f0();
+    func_0011c788();
+    return 6;
+}
+
+/* sp read as a plain s32 at vm + 0x180 (the auto file's form): as a
+ * struct field, gcc 2.96 assumes the scalar D_0038D0E0 cannot alias it
+ * (MEM_IN_STRUCT_P vs a fixed scalar) and keeps sp in a register; the
+ * original reloads it after the store. */
+#define VM_SP(vm) (*(s32 *)((s8 *)(vm) + 0x180))
+s32 func_001d9750(VmRec *vm) {
+    D_0038D0E0 = vm->stk[VM_SP(vm)];
+    VM_SP(vm) = VM_SP(vm) - 1;
+    return 2;
+}
+
+s32 func_001d9780(VmRec *vm) {
+    func_00103810();
+    func_00103280(vm->stk[vm->sp - 3] / 100.0f, vm->stk[vm->sp - 2] / 100.0f, vm->stk[vm->sp - 1] / 100.0f, vm->stk[vm->sp] / 100.0f);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9830(void) {
+    func_00103828();
+    return 2;
+}
+
+s32 func_001d9850(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->obj->f70;
+    return 2;
+}
+
+s32 func_001d9880(VmRec *vm) {
+    func_00108650(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d98d0(VmRec *vm) {
+    func_001086b8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+void func_001d9920(void) {
+    D_00389C90.f3070.x &= ~0x200000000000ULL;
+}
+
+s32 func_001d9950(VmRec *vm) {
+    D_00377344(vm->stk[vm->sp - 1], vm->stk[vm->sp], func_001d9920);
+    D_00389C90.f3070.x |= 0x200000000000ULL;
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d99d0(void) {
+    if ((s32)(D_0038CD00 >> 45) & 1) return 4;
+    return 2;
+}
+
+void func_001d99f0(void) {
+}
+
+s32 func_001d99f8(VmRec *vm) {
+    D_0037733C(vm->stk[vm->sp], func_001d99f0);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9a50(VmRec *vm) {
+    D_00377340(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9aa0(VmRec *vm) {
+    D_00377348(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9af8(VmRec *vm) {
+    D_0037734C(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d9b58(VmRec *vm) {
+    D_00377350(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9bb0(VmRec *vm) {
+    D_00377354(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9c08(VmRec *vm) {
+    D_00377358(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9c60(VmRec *vm) {
+    D_0037735C(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9cb0(VmRec *vm) {
+    f32 v[3];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00144eb0(vm->stk[vm->sp - 3], v);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9d30(VmRec *vm) {
+    vm->sp++;
+    return 2;
+}
+
+/* The wait func_001d9d90 starts. */
+s32 func_001d9d48(void) {
+    if (!((s32)(D_0038CD08 >> 2) & 1)) return 4;
+    func_00245280(1, (*(s32 *)&D_002E26A0));
+    return 0;
+}
+
+s32 func_001d9d90(void) {
+    func_0011ef10(50002, func_001d9d48);
+    D_00389C90.f3078.x |= 4;
+    return 2;
+}
+
+s32 func_001d9dd0(void) {
+    D_00389C90.f3078.x &= ~4;
+    return 2;
+}
+
+s32 func_001d9df0(VmRec *vm) {
+    D_00377360(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9e40(VmRec *vm) {
+    func_0013c8c8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9e90(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB4 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9eb8(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB8 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9ee0(VmRec *vm) {
+    D_002BBABC = vm->stk[vm->sp - 1];
+    D_002BBAC0 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9f20(VmRec *vm) {
+    D_002BBAD0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp - 1];
+    D_002BBAE0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp];
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d9f88(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAC4 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9fb0(VmRec *vm) {
+    func_0013c3a8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9ff8(void) {
+    (*(volatile s32 *)&D_0037A378) &= ~4;
+    D_00389C90.f3070.x &= ~0x2000000000ULL;
+    return 2;
+}
+
+s32 func_001da040(VmRec *vm) {
+    func_001ba2f8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
 
 /* ---- the table and the dispatcher ---- */
 

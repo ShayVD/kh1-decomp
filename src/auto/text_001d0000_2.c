@@ -13,15 +13,6 @@ void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
 
-void func_001d99f0(void) {
-
-}
-
-s32 func_001d9d30(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) + 1);
-    return 2;
-}
-
 s32 func_001dbc90(void *arg0) {
     s32 temp_v1;
 

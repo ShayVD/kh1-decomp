@@ -31,7 +31,8 @@ struct VmObj {
     f32 p50[3];             /* 0x50: home position (func_001d3aa8 sends the entity there) */
     u8 pad5c[0x6c - 0x5c];
     struct VmObj6c *f6c;    /* 0x6c */
-    u8 pad70[0x130 - 0x70];
+    s32 f70;                /* 0x70: pushed by func_001d9850 */
+    u8 pad74[0x130 - 0x74];
     struct VmObj130 *f130;  /* 0x130 */
     u8 pad134[0x164 - 0x134];
     s32 f164;               /* 0x164: pushed by func_001d5350 / func_001d5388 */
@@ -41,6 +42,7 @@ struct VmObj {
     union {
         u64 flags;
         u8 col[4];          /* func_001cf210 */
+        struct { u32 lo; u32 p:12; u32 b44:1; u32 hi:19; } b;  /* h44's func_001d95f0 */
     } f370;                 /* 0x370 */
 };
 

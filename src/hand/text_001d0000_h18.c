@@ -22,159 +22,21 @@ typedef struct {
     union { u64 x; s32 i[2]; } flags;
 } VM;
 #include "vm/vm_mgr.h"
-extern VmMgr D_00389C90;
-typedef union { u64 x; struct { u32 lo; u32 b0:29; u32 b29:1; u32 b30:1; u32 b31:1; } b; } F64;
-extern F64 D_0038CD00;
 s32 func_00111090(void);
 s32 func_00111090(void);
-s32 func_001d9480(VM *vm) {
-    vm->flags.x |= 0x800;
-    vm->f24 = (f32)vm->stk[vm->sp - 3] * 2.0f;
-    vm->f14 = vm->stk[vm->sp - 2];
-    vm->f18 = vm->stk[vm->sp - 1];
-    vm->f1c = vm->stk[vm->sp];
-    vm->sp -= 4;
-    vm->v08[0] = vm->obj->pos[0];
-    vm->v08[1] = vm->obj->pos[1];
-    vm->v08[2] = vm->obj->pos[2];
-    vm->f28 = 0;
-    return 2;
-}
-typedef struct { u8 pad[0x70]; s32 f70; } Obj70;
-s32 func_001d9850(VM *vm) {
-    vm->sp++;
-    vm->stk[vm->sp] = ((Obj70 *)vm->obj)->f70;
-    return 2;
-}
-void func_00108650(s32, s32);
-s32 func_001d9880(VM *vm) {
-    func_00108650(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-void func_001086b8(s32, s32);
-s32 func_001d98d0(VM *vm) {
-    func_001086b8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-void func_001d9920(void) {
-    D_00389C90.f3070.x &= ~0x200000000000ULL;
-}
-void func_001d9920(void);
 extern void (*D_00377344)(s32, s32, void *);
-s32 func_001d9950(VM *vm) {
-    D_00377344(vm->stk[vm->sp - 1], vm->stk[vm->sp], func_001d9920);
-    D_00389C90.f3070.x |= 0x200000000000ULL;
-    vm->sp -= 2;
-    return 2;
-}
-typedef union { u64 x; struct { u32 lo; u32 b0:13; u32 b13:1; u32 r:18; } b; } F64b;
-s32 func_001d99d0(void) {
-    if (((F64b *)&D_0038CD00)->b.b13) return 4;
-    return 2;
-}
-void func_001d99f0(void);
 extern void (*D_0037733C)(s32, void *);
-s32 func_001d99f8(VM *vm) {
-    D_0037733C(vm->stk[vm->sp], func_001d99f0);
-    vm->sp--;
-    return 2;
-}
 extern void (*D_00377340)(s32);
-s32 func_001d9a50(VM *vm) {
-    D_00377340(vm->stk[vm->sp]);
-    vm->sp--;
-    return 2;
-}
 extern void (*D_00377348)(s32, s32);
-s32 func_001d9aa0(VM *vm) {
-    D_00377348(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
 extern void (*D_0037734C)(s32, s32, s32);
-s32 func_001d9af8(VM *vm) {
-    D_0037734C(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 3;
-    return 2;
-}
 extern void (*D_00377350)(s32, s32);
-s32 func_001d9b58(VM *vm) {
-    D_00377350(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
 extern void (*D_00377354)(s32, s32);
-s32 func_001d9bb0(VM *vm) {
-    D_00377354(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
 extern void (*D_00377358)(s32, s32);
-s32 func_001d9c08(VM *vm) {
-    D_00377358(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
 extern void (*D_0037735C)(s32);
-s32 func_001d9c60(VM *vm) {
-    D_0037735C(vm->stk[vm->sp]);
-    vm->sp--;
-    return 2;
-}
-void func_00144eb0(s32, f32 *);
-s32 func_001d9cb0(VM *vm) {
-    f32 v[3];
-    v[0] = vm->stk[vm->sp - 2];
-    v[1] = vm->stk[vm->sp - 1];
-    v[2] = vm->stk[vm->sp];
-    func_00144eb0(vm->stk[vm->sp - 3], v);
-    vm->sp -= 4;
-    return 2;
-}
-extern u64 D_0038CD08;
 #include "data/pieces/D_002E26A0.h"
-void func_00245280(s32, s32);
-s32 func_001d9d48(void) {
-    if (!((s32)(D_0038CD08 >> 2) & 1)) return 4;
-    func_00245280(1, (*(s32 *)&D_002E26A0));
-    return 0;
-}
 extern void (*D_00377360)(s32);
-s32 func_001d9df0(VM *vm) {
-    D_00377360(vm->stk[vm->sp]);
-    vm->sp--;
-    return 2;
-}
 void func_0013c8c8(s32, s32);
-s32 func_001d9e40(VM *vm) {
-    func_0013c8c8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-extern s32 D_002BBABC;
-extern s32 D_002BBAC0;
-s32 func_001d9ee0(VM *vm) {
-    D_002BBABC = vm->stk[vm->sp - 1];
-    D_002BBAC0 = vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
-extern s32 D_002BBAD0[];
-extern s32 D_002BBAE0[];
-s32 func_001d9f20(VM *vm) {
-    D_002BBAD0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp - 1];
-    D_002BBAE0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp];
-    vm->sp -= 3;
-    return 2;
-}
 #include "data/pieces/D_0037A378.h"
-s32 func_001d9ff8(void) {
-    (*(volatile s32 *)&D_0037A378) &= ~4;
-    D_00389C90.f3070.x &= ~0x2000000000ULL;
-    return 2;
-}
 typedef struct { s32 f0; s32 f4; } P8;
 P8 *func_001e98d0(s32, s32);
 void func_00141218(s32);
