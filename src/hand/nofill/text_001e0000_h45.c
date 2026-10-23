@@ -1,7 +1,7 @@
 #include "common.h"
 
 #include "data/pieces/D_003A7990.h"
-typedef E848_3a7990 E848;
+typedef VmRec E848;
 typedef struct { u8 pad0[0x3034]; s32 f3034; s32 f3038; u8 pad303c[0x130]; s32 f316c; } Big98;
 typedef struct { f32 x, y, z; } Vec3;
 extern Big98 D_00389C90;
@@ -17,18 +17,18 @@ double sqrt(double);
 f32 atan2f(f32, f32);
 
 E848 *func_001e98d0(s32 a, s32 b) {
-    if (D_00389C90.f316c) return &((E848 *)&D_003C3A70)[b];
+    if (D_00389C90.f316c) return &D_003C3A70[b];
     if (a == 1) {
         if (!D_00389C90.f3038) {
-            if (b < D_003B4D90) return &((E848_3a7990 *)&D_003A7990)[b];
+            if (b < D_003B4D90) return &D_003A7990[b];
         } else {
-            if (b < D_003C21A0) return &((E848 *)&D_003B4DA0)[b];
+            if (b < D_003C21A0) return &D_003B4DA0[b];
         }
     } else {
         if (!D_00389C90.f3034) {
-            if (b < D_0039A570) return &((E848 *)&D_0038D170)[b];
+            if (b < D_0039A570) return &D_0038D170[b];
         } else {
-            if (b < D_003A7980) return &((E848 *)&D_0039A580)[b];
+            if (b < D_003A7980) return &D_0039A580[b];
         }
     }
     return 0;

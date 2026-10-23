@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -337,12 +338,12 @@ s32 func_001da260(VM *vm) {
     vm->stk[vm->sp] = func_00111660(a, b);
     return 2;
 }
-typedef struct { u8 pad[4]; u8 f4; u8 pad5[0x6f]; } E74;
+typedef W606Mem_304be8 E74;
 #include "data/pieces/D_00304BE8.h"
 s32 func_001da3b8(VM *vm) {
-    E74 *e = ((E74 *)D_00304BE8);
+    E74 *e = D_00304BE8->m;
     e += vm->stk[vm->sp];
-    vm->stk[vm->sp] = e->f4;
+    vm->stk[vm->sp] = e->sub.lv;
     return 2;
 }
 void func_00142388(f32 *, s32 *);

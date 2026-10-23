@@ -1,10 +1,11 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "platform/math.h"
 
 #include "data/types/text_001c0000_b10.h"
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 
-typedef struct {
+typedef struct VmObj {
     u8 pad0[0x10];
     f32 x10, x14, x18;
     u8 pad1c[0x14];
@@ -12,30 +13,7 @@ typedef struct {
 } Obj;
 
 /* Script VM instance (0x350 bytes). */
-typedef struct {
-    s32 x0;
-    Obj *obj;
-    u8 pad8[0xc];
-    f32 x14, x18, x1c, x20;
-    u8 pad24[0x3c];
-    Obj *x60;
-    s32 x64;
-    u8 pad68[8];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[91];
-    s32 x2f0;
-    f32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    u8 pad31c[0xc];
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:22;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VM;
+typedef VmRec VM;
 
 typedef struct {
     u8 pad0[0x10];
@@ -190,7 +168,7 @@ void func_001c4198(s8 *h, s32 a1)
   D_00389C90.x304c = o1;
   p = h + o[(a1 + (n1 + n0)) + 1];
   p += 12;
-  e = ((VM *)&D_003C3A70);
+  e = D_003C3A70;
   cnt = &D_003C54F0;
   *cnt = *(p++);
   for (i = 0; i < (*cnt); i++, e++)
@@ -212,17 +190,17 @@ void func_001c4198(s8 *h, s32 a1)
 
     p += 4;
     e->ret[7] = e->pc;
-    e->b0 = 0;
+    e->fl.b.b0 = 0;
     e2 = e;
-    e2->b1 = 0;
-    e->b2 = 0;
-    e->b3 = 0;
-    e->b4 = 0;
-    e->b5 = 0;
-    e->b6 = 0;
-    e->b7 = 0;
-    e2->b8 = 0;
-    e2->b9 = 0;
+    e2->fl.b.b1 = 0;
+    e->fl.b.b2 = 0;
+    e->fl.b.b3 = 0;
+    e->fl.b.b4 = 0;
+    e->fl.b.b5 = 0;
+    e->fl.b.b6 = 0;
+    e->fl.b.b7 = 0;
+    e2->fl.b.b8 = 0;
+    e2->fl.b.b9 = 0;
     k = 0;
     for (m = 0; m < e2->n; m++)
     {
@@ -240,7 +218,7 @@ void func_001c4198(s8 *h, s32 a1)
   }
 
   func_001c2d20(q, &D_00389C80, D_00388480);
-  e = ((VM *)&D_003C3A70);
+  e = D_003C3A70;
   cnt = &D_003C54F0;
   for (i = 0; i < (*cnt); i++, e++)
   {
@@ -275,7 +253,7 @@ void func_001c4198(s8 *h, s32 a1)
   if (done == 0)
   {
     t = func_0011f090(D_006297F8, 1, func_001c3b10);
-    t->vm = ((VM *)&D_003C3A70);
+    t->vm = D_003C3A70;
     t->n = D_003C54F0;
     t->x18 = 0;
   }
@@ -333,8 +311,8 @@ void func_001c6a20(void) {
     v[0] += D_003C5510.pos[0];
     v[1] += D_003C5510.pos[1];
     v[2] += D_003C5510.pos[2];
-    func_002675a8((*(Vec *)&D_002E2780), v);
-    func_002675a8((*(Vec *)&D_002E2790), D_003C5510.pos);
+    func_002675a8(&D_002E2780.x, v);
+    func_002675a8(&D_002E2790.x, D_003C5510.pos);
     D_002E27A4 = rot[2];
 }
 
@@ -539,7 +517,7 @@ s32 func_001d2c68(VM *vm) {
     m.y = 0.0f;
     m.z = -(vm->obj->x18 - (f32)vm->stk[vm->sp]);
     m.ang = 1.0f;
-    vm->b1 = 1;
+    vm->fl.b.b1 = 1;
     func_001c4640(&m);
     m.type = 12;
     m.id = 0;
@@ -556,11 +534,11 @@ s32 func_001d2c68(VM *vm) {
     m.x = v[0] = v[0] * s;
     m.z = v[2] = v[2] * s;
     func_001c4640(&m);
-    vm->x20 = s;
-    vm->b2 = 1;
-    vm->x14 = vm->stk[vm->sp - 2];
-    vm->x18 = vm->stk[vm->sp - 1];
-    vm->x1c = vm->stk[vm->sp];
+    vm->f20 = s;
+    vm->fl.b.b2 = 1;
+    vm->f14[0] = vm->stk[vm->sp - 2];
+    vm->f14[1] = vm->stk[vm->sp - 1];
+    vm->f14[2] = vm->stk[vm->sp];
     vm->sp -= 4;
     vm->x2f4 = r * (2.0f - D_002BBDFC + 2.0f);
     return 6;

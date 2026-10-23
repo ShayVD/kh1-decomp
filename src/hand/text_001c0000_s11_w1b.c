@@ -1,21 +1,8 @@
 #include "common.h"
-/* func_001c3b10 (s11w1, hand strict): from s10 r2_3 (4w nostrict, 2w strict); the x18 loop stores the msg fields straight from w in struct order (m.x = w->x0; m.v[0..2] = w->f14..f1c), which fixes the lwc1 x14/x18 issue order and FP registers. */
+#include "data/types/vm_rec.h"
+/* func_001c3b10 (s11w1, hand strict): from s10 r2_3 (4w nostrict, 2w strict); the x18 loop stores the msg fields straight from w in struct order (m.x = w->x0; m.v[0..2] = w->f14[0..2]), which fixes the lwc1 x14/x18 issue order and FP registers. */
 
-typedef struct {
-    s32 x0;
-    s32 x4;
-    u8 pad8[0xc];
-    f32 f14, f18, f1c, f20;
-    u8 pad24[0x4c];
-    s8 *code;
-    u8 pad74[0x17c - 0x74];
-    s32 pc;
-    u8 pad180[0x2f4 - 0x180];
-    f32 x2f4;
-    u8 pad2f8[0x328 - 0x2f8];
-    union { u64 x; s32 i; struct { u32 b0:1, rest:31; u32 hi; } __attribute__((aligned(8))) b; } fl;
-    u8 pad330[0x350 - 0x330];
-} __attribute__((aligned(8))) VMa;
+typedef VmRec VMa;
 
 typedef struct {
     u8 pad0[0x3034];
@@ -144,12 +131,12 @@ s32 func_001c3b10(Task *t) {
             if (i != 0) continue;
             if (t->x18) {
                 D_00389C90.x3034 = 0;
-                w = ((VMa *)&D_0038D170);
+                w = D_0038D170;
                 for (j = 1, w++; j < t->n; j++, w++) {
                     if (w->fl.b.b0 == 1) {
                         m.type = 2;
                         m.val = (u32)w->f20;
-                        m.x = w->x0; m.v[0] = w->f14; m.v[1] = w->f18; m.v[2] = w->f1c;
+                        m.x = w->x0; m.v[0] = w->f14[0]; m.v[1] = w->f14[1]; m.v[2] = w->f14[2];
                         m.v[3] = 10.0f;
                         func_001c4640(&m);
                     }

@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct {
+#include "data/types/vm_rec.h"
+typedef struct VmObj {
     u8 pad0[0x10];
     f32 pos[3];
     u8 pad1c[0x20];
@@ -7,25 +8,7 @@ typedef struct {
     u8 pad40[0x330];
     u64 f370;
 } Ent;
-typedef struct {
-    s32 x0;
-    Ent *ent;
-    u8 pad8[0x60];
-    f32 f68;
-    s32 f6c;
-    s32 code;
-    u8 pad74[8];
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[92];
-    f32 f2f4;
-    u8 pad2f8[0x30];
-    u64 flags;
-    f32 f330;
-    u8 pad334[0xc];
-    f32 f340[3];
-} VM;
+typedef VmRec VM;
 typedef struct {
     u8 type;
     u64 val:24;
@@ -164,7 +147,7 @@ s32 func_001cf5d0(VM *vm) {
 }
 
 #include "data/pieces/D_003A7990.h"
-typedef E848_3a7990 Obj350;
+typedef VmRec Obj350;
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
 extern s32 D_003B4D90;
@@ -172,7 +155,7 @@ extern s32 D_003B4D90;
 extern s32 D_0039A570;
 #include "data/pieces/D_0039A580.h"
 extern s32 D_003A7980;
-s32 func_00123488(void *);
+s32 func_00123488(s32);
 s32 func_001d0b90(VM *vm) {
     Msg m;
     s32 i;
@@ -184,26 +167,26 @@ s32 func_001d0b90(VM *vm) {
     m.v[3] = 1.0f;
     if (D_00389C90.f316c) {
         for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(((Obj350 *)&D_003C3A70)[i].p)) { m.x = (s32)((Obj350 *)&D_003C3A70)[i].p; func_001c4640(&m); }
+            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
         }
-    } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
+    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(((E848_3a7990 *)&D_003A7990)[i].p)) { m.x = (s32)((E848_3a7990 *)&D_003A7990)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(((Obj350 *)&D_0039A580)[i].p)) { m.x = (s32)((Obj350 *)&D_0039A580)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
             }
         }
     } else {
         if (D_00389C90.f3034 == 0) {
             for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(((Obj350 *)&D_0038D170)[i].p)) { m.x = (s32)((Obj350 *)&D_0038D170)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(((Obj350 *)&D_0039A580)[i].p)) { m.x = (s32)((Obj350 *)&D_0039A580)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
             }
         }
     }
@@ -221,26 +204,26 @@ s32 func_001d0dd0(VM *vm) {
     m.v[3] = 1.0f;
     if (D_00389C90.f316c) {
         for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(((Obj350 *)&D_003C3A70)[i].p)) { m.x = (s32)((Obj350 *)&D_003C3A70)[i].p; func_001c4640(&m); }
+            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
         }
-    } else if (((s32)(vm->flags >> 5) & 1) == 1U) {
+    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(((E848_3a7990 *)&D_003A7990)[i].p)) { m.x = (s32)((E848_3a7990 *)&D_003A7990)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(((Obj350 *)&D_0039A580)[i].p)) { m.x = (s32)((Obj350 *)&D_0039A580)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
             }
         }
     } else {
         if (D_00389C90.f3034 == 0) {
             for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(((Obj350 *)&D_0038D170)[i].p)) { m.x = (s32)((Obj350 *)&D_0038D170)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
             }
         } else {
             for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(((Obj350 *)&D_0039A580)[i].p)) { m.x = (s32)((Obj350 *)&D_0039A580)[i].p; func_001c4640(&m); }
+                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
             }
         }
     }
@@ -265,19 +248,19 @@ s32 func_001d2958(VM *vm) {
     f32 m[4][4] __attribute__((aligned(16)));
     Ent *e;
     v = D_00490630;
-    e = vm->ent;
+    e = vm->obj;
     if (e) {
         rot[0] = vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
-        rot[1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f + vm->ent->f3c;
+        rot[1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f + vm->obj->f3c;
         rot[2] = 0.0f;
         func_001e9fe8(out, rot);
         sceVu0UnitMatrix(m);
         func_00267768(m, m, out[0]);
         func_00267810(m, m, out[1]);
         func_002672f8(&v, m, &v);
-        func_001315c0(vm->ent, 0, t, 0.0f);
+        func_001315c0(vm->obj, 0, t, 0.0f);
         func_00267518(v.x, t, v.x);
-        func_0014f9b0(vm->ent, &v, vm->stk[vm->sp] * 2.0f);
+        func_0014f9b0(vm->obj, &v, vm->stk[vm->sp] * 2.0f);
     }
 end:
     vm->sp -= 3;
@@ -364,8 +347,8 @@ s32 func_001d9100(VM *vm) {
 void func_001dcfd0(VM *vm) {
     Msg m;
     Ent *e;
-    if ((s32)(vm->flags >> 14) & 1) {
-        e = vm->ent;
+    if ((s32)(vm->fl.x >> 14) & 1) {
+        e = vm->obj;
         if (e) {
             m.type = 39;
             m.x = vm->x0;
@@ -377,10 +360,10 @@ void func_001dcfd0(VM *vm) {
             func_001c4640(&m);
         }
         vm->f330 -= D_002BBDFC;
-        if (vm->f330 < 0.0f) vm->flags &= ~0x4000;
+        if (vm->f330 < 0.0f) vm->fl.x &= ~0x4000;
     }
-    if ((s32)(vm->flags >> 15) & 1) {
-        if (vm->ent) {
+    if ((s32)(vm->fl.x >> 15) & 1) {
+        if (vm->obj) {
             m.type = 39;
             m.x = vm->x0;
             m.val = 0;
@@ -391,7 +374,7 @@ void func_001dcfd0(VM *vm) {
             func_001c4640(&m);
         }
         vm->f330 -= D_002BBDFC;
-        if (vm->f330 < 0.0f) vm->flags &= ~0x8000;
+        if (vm->f330 < 0.0f) vm->fl.x &= ~0x8000;
     }
 }
 
@@ -411,13 +394,13 @@ s32 func_001dedd8(Task *o) {
     f32 t[4];
     f32 d;
     if (o->q->f14 & 2) return 4;
-    d = func_001e9e58(D_002E2790, D_002E2780);
-    func_00267530(v, D_002E2790, D_002E2780);
+    d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
+    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
     v[0] = v[0] / d * o->f1c;
     v[1] = v[1] / d * o->f1c;
     v[2] = v[2] / d * o->f1c;
-    func_00267518(v, D_002E2780, v);
-    func_001e9d00(r, D_002E2790, D_002E2780, 0.0f);
+    func_00267518(v, &D_002E2780.x, v);
+    func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
     t[0] = o->f20;
     t[1] = o->f24;
     t[2] = 0.0f;
@@ -440,14 +423,14 @@ s32 func_001def20(VM *vm) {
     f32 d, s;
     Q10 *k;
     Task *n;
-    d = func_001e9e58(D_002E2790, D_002E2780);
-    func_00267530(v, D_002E2790, D_002E2780);
+    d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
+    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
     s = vm->stk[vm->sp - 2];
     v[0] = v[0] / d * s;
     v[1] = v[1] / d * s;
     v[2] = v[2] / d * s;
-    func_00267518(v, D_002E2780, v);
-    func_001e9d00(r, D_002E2790, D_002E2780, 0.0f);
+    func_00267518(v, &D_002E2780.x, v);
+    func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
     t[0] = vm->stk[vm->sp - 1];
     t[1] = vm->stk[vm->sp];
     t[2] = 0.0f;

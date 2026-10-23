@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
 /* Script VM (sp at +0x180, value stack at +0x184). */
@@ -39,24 +40,8 @@ typedef struct { u8 pad[0xad0]; u32 ad0; } SvA;
 Sv *func_00232cc0(s32);
 
 /* Party member (0x74 bytes) in the save block at D_00304BE8. */
-typedef struct {
-    u8 pad0[0x18];
-    u8 n18;
-    u8 a19[8];
-    u8 n21;
-    u8 a22[0x10];
-    u8 b32;
-    u8 pad33[0x74 - 0x33];
-} Mem74;
-typedef struct {
-    u8 pad0[4];
-    Mem74 m[10];
-    u8 x48c;
-    u8 x48d;
-    u8 x48e[3];
-    u8 x491;
-} SaveM;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 Mem74;
+typedef Save_304be8 SaveM;
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
  * two-byte codes, >= 0x20 one byte. */
@@ -259,21 +244,21 @@ s32 func_001edba0(void) {
 
 s32 func_001ef140(s32 i, s32 id) {
     s32 c = 0;
-    Mem74 *m = &((SaveM *)D_00304BE8)->m[i];
+    Mem74 *m = &D_00304BE8->m[i];
     s32 t = func_001ee768(id);
     s32 j, n;
     if (t == 0) {
-        n = m->n21;
+        n = m->sub.x21;
         for (j = 0; j < n; j++) {
-            if (m->a22[j] == id) c++;
+            if (m->sub.x22[j] == id) c++;
         }
     } else if (t == 1) {
-        n = m->n18;
+        n = m->sub.x18;
         for (j = 0; j < n; j++) {
-            if (m->a19[j] == id) c++;
+            if (m->sub.x19[j] == id) c++;
         }
     } else if (t >= 2 && t < 12) {
-        c = m->b32 == id;
+        c = m->sub.x32 == id;
     }
     return c;
 }

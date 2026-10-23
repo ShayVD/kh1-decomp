@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 
 typedef struct {
@@ -142,10 +143,7 @@ void func_001c0010(void) {
     func_001bfcd8();
 }
 
-typedef struct {
-    u8 pad[380]; s32 pc; s32 sp; s32 stack[33]; s32 regs[26]; s32 vars[32]; s32 vidx;
-    s32 w756; s32 ret[8]; s32 depth; u8 pad796[12]; u64 flags;
-} VmA;
+typedef VmRec VmA;
 u8 *func_00232cc0(s32);
 s32 func_001c1330(VmA *v, s32 a) {
     u8 *p1 = func_00232cc0(1);
@@ -153,7 +151,7 @@ s32 func_001c1330(VmA *v, s32 a) {
     s32 bit = a % 8;
     s32 q = a / 8;
     a = q - 3392;
-    v->stack[++v->sp] = (*(s8 *)(p2 + a) >> bit) & 1;
+    v->stk[++v->sp] = (*(s8 *)(p2 + a) >> bit) & 1;
     return 2;
 }
 
@@ -207,24 +205,7 @@ s8 *func_001c2df0(s8 *p, s32 k) {
     return 0;
 }
 
-typedef struct {
-    s32 x0, x4;
-    u8 pad8[0x68];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[91];
-    s32 x2f0;
-    f32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    u8 pad31c[0xc];
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, brest:22;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VmC;
+typedef VmRec VmC;
 typedef struct { u8 type; u8 pad[3]; s32 x4; } MsgC;
 #include "data/pieces/D_003B4DA0.h"
 #include "data/pieces/D_003A7990.h"
@@ -247,13 +228,13 @@ s32 func_001c3408(void) {
         return 4;
     }
     D_00389C90.x316c = 0;
-    if (D_00389C90.x3038 == 0) { e = ((VmC *)&D_003A7990); cnt = &D_003B4D90; }
-    else { e = ((VmC *)&D_003B4DA0); cnt = &D_003C21A0; }
+    if (D_00389C90.x3038 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
+    else { e = D_003B4DA0; cnt = &D_003C21A0; }
     done = 0;
     m = func_001c4730();
     if (((s32)(D_00389C90.f3070 >> 37) & 1) == 1U) func_0011ef10(99999, func_001c5b88);
     for (i = 0; i < *cnt; i++, e++) {
-        if (e->b3) {
+        if (e->fl.b.b3) {
             if (i != 0) continue;
             if (D_00389C90.x3038 != 0) {
                 D_00389C90.x3038 = 0;
@@ -266,25 +247,25 @@ s32 func_001c3408(void) {
                 return 4;
             }
         }
-        if (e->b8) continue;
-        if (e->b2) {
+        if (e->fl.b.b8) continue;
+        if (e->fl.b.b2) {
             e->x2f4 -= D_002BBDFC;
             if (e->x2f4 > 0.0f) continue;
-            e->b2 = 0;
+            e->fl.b.b2 = 0;
         }
         if (m) {
             switch (m->type) {
             case 2:
-                if (m->x4 == e->x0) { done = 1; e->b0 = 0; }
+                if (m->x4 == e->x0) { done = 1; e->fl.b.b0 = 0; }
                 break;
             case 4:
-                if (m->x4 == e->x0) { done = 1; e->b1 = 0; }
+                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
                 break;
             case 21:
-                if (m->x4 == e->x0) { done = 1; e->b1 = 0; }
+                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
                 break;
             case 22:
-                if (m->x4 == e->x0) { done = 1; e->b1 = 0; }
+                if (m->x4 == e->x0) { done = 1; e->fl.b.b1 = 0; }
                 break;
             }
         }
@@ -315,7 +296,7 @@ s32 func_001c4788(void *m) {
 
 typedef struct { s32 x0; s32 id; } Obj;
 #include "data/pieces/D_0039A580.h"
-typedef VM_39a580 VmE;
+typedef VmRec VmE;
 #include "data/pieces/D_0038D170.h"
 extern s32 D_0039A570, D_003A7980;
 extern s32 D_0037A190;
@@ -332,20 +313,20 @@ s32 func_001c4ed0(Obj *o, s32 unused, s32 a2) {
     if (a2 < -1) return 0;
     if ((*(Bits_37a378 *)&D_0037A378).b2 || (D_002C5958 & 0x12000)) return 0;
     if (D_00389C90.x3034 == 0) {
-        vm = ((VmE *)&D_0038D170);
+        vm = D_0038D170;
         n = D_0039A570;
     } else {
-        vm = &D_0039A580;
+        vm = D_0039A580;
         n = D_003A7980;
     }
     for (i = 0; i < n; i++) {
-        if (vm[i].id == o->id) break;
+        if (vm[i].x0 == o->id) break;
     }
     if (i >= n) return 0;
     t = &vm[i];
-    if (t->x318 != 3 || a2 >= 0) {
+    if (t->rsp != 3 || a2 >= 0) {
         if (D_0037A190 == 0) {
-            if (func_001c1ce8(t->code, t->xa0) != 5) {
+            if (func_001c1ce8(t->code, t->lbl[9]) != 5) {
                 vm->stk[++vm->sp] = 3;
                 vm->stk[++vm->sp] = i;
                 func_001c19f8(vm, 9);

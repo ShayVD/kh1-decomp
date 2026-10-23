@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_TEXT_00160000_C04_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-typedef struct { f32 x, y, z, w; } V4;
+typedef FVec4 V4;
 
 #endif /* KH1_DATA_TYPES_TEXT_00160000_C04_H */

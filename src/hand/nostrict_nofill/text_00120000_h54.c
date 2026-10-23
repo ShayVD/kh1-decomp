@@ -107,7 +107,7 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
         }
     }
     if (lim >= 0 && !(s < lim)) return -1;
-    if (a->f0->f370.b.f35 && func_0012f0f8(D_002E2780, tmp, 0)) return s;
+    if (a->f0->f370.b.f35 && func_0012f0f8(&D_002E2780.x, tmp, 0)) return s;
     if (!func_0012f0f8(pos, tmp, 0)) return -1;
     if (func_0012eaf8(a->f0)) s |= 0x10000;
     return s;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 
 /* D_00389C90: script/event manager state. */
 typedef struct {
@@ -38,12 +39,12 @@ void func_001c3770(s8 *p, s32 a1) {
     h0 = ((s32 *)p)[0];
     { u32 n = (a1 + (((s32 *)p)[1] + h0)) * 4; p += *(s32 *)((u32)p + n + 16); }
     p += 12;
-    if (a1 == 0) { e = ((VM *)&D_003A7990); cnt = &D_003B4D90; }
+    if (a1 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
     else { e = D_003B4DA0; cnt = &D_003C21A0; }
     *cnt = *p++;
     for (i = 0; i < *cnt; i++, e++) {
         e->x0 = 0;
-        e->x4 = 0;
+        e->obj = 0;
         e->code = p + 4;
         e->n = *p;
         e->pc = 0;
@@ -54,9 +55,9 @@ void func_001c3770(s8 *p, s32 a1) {
         for (j = 7; j >= 0; j--) e->ret[j] = -1;
         p += 4;
         e->ret[7] = e->pc;
-        e->b0 = 0; e2 = e; e2->b1 = 0; e->b2 = 0; e->b3 = 0; e->b4 = 0;
-        e->b5 = 1;
-        e->b6 = 0; e->b7 = 0; e2->b8 = 0; e2->b9 = 0;
+        e->fl.b.b0 = 0; e2 = e; e2->fl.b.b1 = 0; e->fl.b.b2 = 0; e->fl.b.b3 = 0; e->fl.b.b4 = 0;
+        e->fl.b.b5 = 1;
+        e->fl.b.b6 = 0; e->fl.b.b7 = 0; e2->fl.b.b8 = 0; e2->fl.b.b9 = 0;
         k = 0;
         for (j = 0; j < e2->n; j++) {
             e2->lbl[j] = k;
@@ -64,7 +65,7 @@ void func_001c3770(s8 *p, s32 a1) {
             p += 4; k++;
         }
     }
-    if (a1 == 0) { e = ((VM *)&D_003A7990); cnt = &D_003B4D90; }
+    if (a1 == 0) { e = D_003A7990; cnt = &D_003B4D90; }
     else { e = D_003B4DA0; cnt = &D_003C21A0; }
     for (i = 0; i < *cnt; i++, e++) {
         e->pc = e->lbl[0];

@@ -181,7 +181,8 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # (an unbounded index keeps the next name even inside its own piece) (session 25), --no-dead-arg,
 # --no-counter-cap, --no-slot-refine, --no-str-arg, --no-list-arg, --no-dma-count and --no-dma-chain
 # (session 27), --no-end-ptr (a compare against a name's address does not tie the object before it to
-# the name; session 28). keep_check.py then
+# the name; session 28), --no-nest-carry (a counter an inner loop steps and the outer loop carries over is not
+# bounded by both loops' trip counts; session 29). keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=
@@ -194,6 +195,9 @@ SHIFT_FLOAT_ONLY_DATA ?=
 # SHIFT_FLOAT_FORCE: names (or @FILE) taken out of the keep list, so they may float although a check or
 # float_keep.txt keeps them (session 24; runtime hypotheses only, keep_check is not enforced).
 SHIFT_FLOAT_FORCE ?=
+# SHIFT_FLOAT_RELEASE: names (or @FILE) the default build floats although a check keeps them: whole pieces a
+# PCSX2 build floated and played (session 29; tools/shift/float_release.txt). Empty keeps them in place again.
+SHIFT_FLOAT_RELEASE ?= @tools/shift/float_release.txt
 # SHIFT_FLOAT_PTR_ONLY=1: also float data names that only a piece's .word or a C pointer table names
 # (no code user; tools/shift/ptr_only.py lists the C ones). Off in sessions 20-23: entries a pointer
 # table points at one by one (D_0048F700 ...) can be walked by stride, and in session 20 floating them
@@ -276,7 +280,8 @@ endif
 			$(SHIFT)/data_owners.tsv >> $(SHIFT_OUT)/float_covered.txt; \
 			$(SHIFT_PY) tools/shift/ptr_only.py >> $(SHIFT_OUT)/float_covered.txt; fi; \
 		$(SHIFT_PY) tools/shift/keep_check.py $(SHIFT_OUT)/float_covered.txt || [ -n "$(SHIFT_REACH_FLAGS)$(SHIFT_FLOAT_FORCE)" ]; \
-		if [ -n "$(SHIFT_FLOAT_FORCE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt $(SHIFT_FLOAT_FORCE); fi; fi; \
+		if [ -n "$(SHIFT_FLOAT_FORCE)$(SHIFT_FLOAT_RELEASE)" ]; then $(SHIFT_PY) tools/shift/float_force.py $(SHIFT_OUT)/float_covered.txt \
+			$(SHIFT_FLOAT_RELEASE) $(SHIFT_FLOAT_FORCE); fi; fi; \
 	$(SHIFT_PY) tools/shift/shift_ld.py gen --mode $(SHIFT_MODE) --out-dir $(SHIFT_OUT) --data-shift $(SHIFT_DATA_SHIFT) \
 		--reloc-tier $(SHIFT_RELOC_TIER) $$variants $$ovl $$drafts $(if $(filter 1,$(SHIFT_FIXED_ARENA)),--fixed-arena) $(if $(filter 1,$(SHIFT_FIXED_HEAP)),--fixed-heap) $(if $(filter 1,$(SHIFT_FLOAT)),--float-vars $(if $(filter 1,$(SHIFT_FLOAT_COMPACT)),--float-compact) --float-skip-file $(SHIFT_OUT)/float_covered.txt --float-bss-budget $(SHIFT_FLOAT_BSS_BUDGET) --float-data-budget $(SHIFT_FLOAT_DATA_BUDGET) --float-pad $(SHIFT_FLOAT_PAD) --float-bss-pad $(SHIFT_FLOAT_BSS_PAD) --float-bss-gap $(SHIFT_FLOAT_BSS_GAP) --float-data-gap $(SHIFT_FLOAT_DATA_GAP) $(foreach n,$(SHIFT_FLOAT_SKIP),--float-skip $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY),--float-only $(n)) $(foreach n,$(SHIFT_FLOAT_ONLY_DATA),--float-only-data $(n)) $(foreach n,$(SHIFT_FLOAT_BSS_SLOTS),--float-bss-slots $(n))) \
 		$$(for o in $(SHIFT)/asm/*.o; do [ -e $$o ] && echo --asm-obj $$o; done) \

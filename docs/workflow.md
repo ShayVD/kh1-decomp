@@ -931,3 +931,23 @@ found that the next session needs:
   the main checkout; merge its branch when it reports.
 - A fresh container without the Mac can still run `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1
   SHIFT_OVERLAYS=<empty dir>` to check links (the overlay table is empty, so such an ELF is not for booting).
+
+## Session 29: what changed
+
+- **The pending floats played** (docs/shiftable-plan.md "Session 29"): KH1_F29_F (IOP block D_0063D640 + D_BLOB's
+  D_00272C70) and KH1_F29_G (also the staging arena D_003F8380 and DMA chains 0-2) both played save 06 with the
+  party, test T, a desert fight, End of the World and the warp drive to Neverland. They float by default now.
+- **tools/shift/float_release.txt** (Makefile `SHIFT_FLOAT_RELEASE`): names a check pins that a PCSX2 build proved
+  safe to float whole; applied after keep_check. Add a name only after a boot of the usual route.
+- **reach_check nest-carry** (`--no-nest-carry`): counters carried across nested loops (func_00103a70's 4x4 copy);
+  10 names released, 1,338 pinned. The new default (KH1_F29_N) plays the usual route.
+- **Phase 4** (worker s29types): view casts 463 -> 275. The VM tables share `VmRec`
+  (include/data/types/vm_rec.h) and the vector pieces `FVec4` (include/data/types/fvec.h); each file's own view
+  type is a typedef of them. Helpers in tools/shift/s29types/ (README there).
+- **PCSX2 loop without device_bash**: when the Mac's sandbox does not start ("Workspace unavailable"), the folder
+  tools still copy ELFs to Downloads/kh1-test, but patch_iso.py has to run on the Mac: a Remote Control session
+  (start_remote_control in the Projects folder) ran it three times, then the Mac's permission classifier blocked it
+  and the user ran it in Terminal. A running Remote Control session withholds the folder tools: commit the ELFs
+  first, and stop it before the next copy. The Mac's disk had 2.6 GB free, so there is no room for a second ISO.
+- PCSX2 world map: the left stick moves between worlds (hold W/A 0.25-0.8 s); arrows only toggle Normal / Warp
+  Drive. From End of the World: W 0.8 s (warp hole), A 0.25 s (Neverland), L, then pick a landing point.

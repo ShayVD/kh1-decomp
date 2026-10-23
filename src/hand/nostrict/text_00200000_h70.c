@@ -203,7 +203,7 @@ void func_00213258(N *a0) {
             D_00641BC4 = func_001fd518(a0);
             o = a0->x10;
             if (o != 0 && (o = o->x10) != 0) {
-                s32 v = D_00304BE8->m[D_00304BE8->x48e[D_00641BC4]].sub.x1c + 1;
+                s32 v = D_00304BE8->m[D_00304BE8->x48e[D_00641BC4]].sub.x18 + 1;
                 o->xcc = v;
                 if (v < 9) {
                     o->xce = v;

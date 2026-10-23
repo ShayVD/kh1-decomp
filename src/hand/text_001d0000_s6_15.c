@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
 
 typedef struct {
@@ -28,9 +29,8 @@ typedef struct {
     f32 f330;
 } VM;
 Ent *func_001e98d0(s32, s32);
-typedef struct { u8 pad0[0x1f]; u8 n; u8 items[0x74 - 0x20]; } Chr;
-typedef struct { u8 pad0[6]; Chr ch[10]; u8 a48e[11]; u8 a499[1]; } Save;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 Chr;
+typedef Save_304be8 Save;
 
 s32 func_001d2768(VM *vm) {
     Msg m;
@@ -81,7 +81,7 @@ s32 func_001d3610(VM *vm) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c < 20) {
-            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
             
         }
     }
@@ -96,7 +96,7 @@ s32 func_001d3710(VM *vm) {
     for (i = 0; i < 4; i++) { if (i == 3) break;
         c = D_00304BE8->x48e[i];
         if (c < 20) {
-            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (((Save *)D_00304BE8)->ch[c].items[j] == k) n++; }
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
         }
     }
     n += D_00304BE8->items[k];

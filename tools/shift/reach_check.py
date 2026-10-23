@@ -354,6 +354,121 @@ def countdown_loops(insns: list[mips.Insn], counters: bool = False) -> dict[int,
     return out
 
 
+def nested_carries(insns: list[mips.Insn], loops: dict[int, tuple]) -> tuple[dict, dict]:
+    """Session 29 (nest-carry): a counter an inner loop steps and the outer loop carries over, as in
+    func_00103a70's 4x4 copy:
+
+        t5 = 0; t7 = 0; outer: t4 = 3; inner: ...; t5 += 1; ...; t4--; bgez t4, inner; ...
+        t7 += 1; slti v0, t7, 4; bnez v0, outer
+
+    t5 is never reset, so neither loop alone bounds it, but the inner body runs at most
+    (outer trips) * (inner trips) times in all. The inner loop is one of countdown_loops'; the outer
+    loop is the same pattern (a down-counter or an up-counter from an exact start, written once per
+    iteration outside the inner loops, header the only way in) except that it may contain inner
+    loops whose back edges are its only backward branches. A carried counter c is written exactly
+    once in the outer body, by `addiu c, c, k` (k > 0) inside the inner body (a path that skips the
+    step only lowers c). A register stepped once per outer iteration outside the inner loops
+    (`t6 += 4`) is capped at the outer header like countdown_loops' walked pointers. Returns
+    ({outer header: (back-branch index, counter, k, kind, {r: step}, lim)}, {inner header: {c: (outer
+    header, k)}})."""
+    n = len(insns)
+    a0 = insns[0].addr if n else 0
+    jumps = []
+    for j, x in enumerate(insns):
+        t_ = x.branch_target if x.is_branch else (x.jump_target if x.is_j else None)
+        if t_ is not None:
+            jumps.append((j, (t_ - a0) // 4))
+        if x.is_jr and not x.is_jr_ra:
+            return {}, {}  # a switch: analyse() sends its `jr` to every label
+    outer: dict[int, tuple] = {}
+    carry: dict[int, dict] = {}
+    for b, ins in enumerate(insns):
+        w = ins.word
+        o = mips.op(w)
+        c = None
+        if o in (0x07, 0x17) and mips.rt(w) == 0:
+            c, kind = mips.rs(w), "gtz"
+        elif o in (0x05, 0x15) and (mips.rs(w) == 0) != (mips.rt(w) == 0):
+            c, kind = mips.rs(w) or mips.rt(w), "nez"
+        elif o == mips.OP_REGIMM and mips.rt(w) in (0x01, 0x03):
+            c, kind = mips.rs(w), "gez"
+        if not c or b + 1 >= n:
+            continue
+        h = (ins.branch_target - a0) // 4
+        inner = [(hi, lp[0]) for hi, lp in loops.items() if h < hi and lp[0] < b]
+        if not (0 <= h <= b) or not inner or h in loops:
+            continue
+        if any(h < t_ <= b + 1 and not h <= j <= b + 1 for j, t_ in jumps):
+            continue  # a way into the body other than the header
+        in_inner = lambda j: any(hi <= j <= bi + 1 for hi, bi in inner)
+        ok = True
+        skipped = set()
+        writes: dict[int, list[int]] = {}
+        for j in range(h, b + 2):
+            x = insns[j]
+            for r in gpr_writes(x.word):
+                writes.setdefault(r, []).append(j)
+            if j >= b:
+                continue
+            tgt = x.branch_target if x.is_branch else (x.jump_target if x.is_j else None)
+            if tgt is None:
+                continue
+            ti = (tgt - a0) // 4
+            if ti <= j:
+                if (ti, j) not in inner:
+                    ok = False  # a backward branch that is not an inner loop's back edge
+            elif ti <= b + 1:
+                likely = mips.op(x.word) in (0x14, 0x15, 0x16, 0x17) or (
+                    mips.op(x.word) == mips.OP_REGIMM and mips.rt(x.word) in (0x02, 0x03, 0x12, 0x13))
+                skipped.update(range(j + (1 if likely else 2), ti))
+        if not ok:
+            continue
+        wc = writes.get(c, [])
+        if kind == "nez" and wc and wc[-1] < b:
+            wc = [wc[-1]]
+            if mips.op(insns[wc[0]].word) not in (0x0A, 0x0B):
+                wc = writes.get(c, [])
+        if len(wc) != 1 or wc[0] in skipped or in_inner(wc[0]):
+            continue
+        x = insns[wc[0]].word
+        lim, tst = None, None
+        if kind == "nez" and mips.op(x) in (0x0A, 0x0B) and mips.rt(x) == c and mips.rs(x) not in (0, c) \
+                and wc[0] < b and (mips.op(x) == 0x0A or mips.imm(x) >= 0):
+            tst, c, lim = c, mips.rs(x), mips.imm(x)
+            wi = writes.get(c, [])
+            if len(wi) != 1 or wi[0] in skipped or in_inner(wi[0]):
+                continue
+            y = insns[wi[0]].word
+            if not (mips.op(y) in (0x09, 0x19) and mips.rs(y) == c and mips.rt(y) == c and mips.imm(y) > 0):
+                continue
+            k = mips.imm(y)
+            kind = "gtz" if wi[0] < wc[0] else "gtz-slot"
+        else:
+            if not (mips.op(x) in (0x09, 0x19) and mips.rs(x) == c and mips.rt(x) == c and mips.imm(x) < 0):
+                continue
+            k = -mips.imm(x)
+            if kind == "nez" and k != 1:
+                continue
+            kind += "-slot" if wc[0] == b + 1 else ""
+        ps = {}  # registers the outer body steps once, outside the inner loops (t6 += 4 in func_00103a70)
+        for r, js in writes.items():
+            if r in (0, c, tst) or len(js) != 1 or in_inner(js[0]):
+                continue
+            y = insns[js[0]].word
+            if mips.op(y) in (0x09, 0x19) and mips.rs(y) == r and mips.rt(y) == r and mips.imm(y) > 0:
+                ps[r] = mips.imm(y)
+        outer.setdefault(h, (b, c, k, kind, ps, lim))
+        for hi, bi in inner:
+            ic = loops[hi][1]
+            for r, js in writes.items():
+                if r in (0, c, tst, ic) or len(js) != 1 or not hi <= js[0] <= bi + 1:
+                    continue
+                y = insns[js[0]].word
+                if mips.op(y) in (0x09, 0x19) and mips.rs(y) == r and mips.rt(y) == r and mips.imm(y) > 0:
+                    carry.setdefault(hi, {}).setdefault(r, (h, mips.imm(y)))
+    return outer, carry
+
+
 def back_edges(kind: str, n: int, k: int) -> int:
     """How many times a countdown loop's back edge can be taken when its counter enters at most n.
     The test sees the decremented counter (kind without -slot) or the counter before the
@@ -374,7 +489,7 @@ def back_edges(kind: str, n: int, k: int) -> int:
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
-            slot_refine: bool = True, end_ptr: bool = True):
+            slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -408,6 +523,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     grow: dict[tuple, int] = {}
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
     loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
+    outer, carry = nested_carries(insns, loops) if countdown and nest_carry else ({}, {})
     loop_entry: dict[int, dict] = {}  # loop header -> joined state of the edges that enter the loop
     loop_heads = set()  # targets of a backward branch or jump
     for j_, x_ in enumerate(insns):
@@ -452,7 +568,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         if lim is not None:  # an up-counter: from an exact start to the limit
             i0 = e.get(c)
             nmax = lim - i0 if isinstance(i0, int) and -0x10000 < i0 < 0x10000 else None
-        if a is None or a[1] is None or nmax is None:
+        if nmax is None:
+            return None
+        if nest_carry and a is None and (u := _ub(e.get(k))) is not None:
+            # session 29: a stepped offset, not a pointer (func_00103a70's t3 = t6 * 4, +4 per inner run)
+            return (UB, u + ps[k] * back_edges(kind, nmax, step_))
+        if a is None or a[1] is None:
             return None
         return (IDX, a[0], a[1] + ps[k] * back_edges(kind, nmax, step_))
 
@@ -467,10 +588,48 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return None
         return (UB, max(i0, lim - 1 + (step_ if kind == "gtz-slot" else 0)))
 
+    def trips(lp, e):
+        """How many times a loop's body can run in one entry, from its entry state e (None: unknown)."""
+        _b, c, step_, kind, _ps, lim = lp  # countdown_loops' or nested_carries' outer tuple
+        if lim is not None:
+            i0 = e.get(c)
+            nmax = lim - i0 if isinstance(i0, int) and -0x10000 < i0 < 0x10000 else None
+        else:
+            nmax = _ub(e.get(c))
+        return None if nmax is None else back_edges(kind, nmax, step_) + 1
+
+    def carry_value(i, k):
+        """Session 29 (nest-carry): carried counter k at inner header i: start + step * (all runs - 1)."""
+        ho, step_ = carry[i][k]
+        eo, ei = loop_entry.get(ho), loop_entry.get(i)
+        if eo is None or ei is None:
+            return None
+        c0, to, ti = _ub(eo.get(k)), trips(outer[ho], eo), trips(loops[i], ei)
+        if c0 is None or to is None or ti is None or to * ti > 0x10000:
+            return None
+        return (UB, c0 + step_ * (to * ti - 1))
+
+    def outer_value(i, k):
+        """Session 29 (nest-carry): a register the outer loop steps once per iteration, at its header."""
+        e = loop_entry.get(i)
+        to = trips(outer[i], e) if e is not None else None
+        if to is None:
+            return None
+        a = _idx(e.get(k))
+        if a is not None and a[1] is not None:
+            return (IDX, a[0], a[1] + outer[i][4][k] * (to - 1))
+        u = _ub(e.get(k))
+        return None if u is None else (UB, u + outer[i][4][k] * (to - 1))
+
     def merge(i, st, src=None):
         if not (0 <= i < n):
             return
         lp = loops.get(i)
+        op_ = outer.get(i)
+        if op_ is not None and src != op_[0]:  # an edge into an outer loop (nest-carry)
+            e = loop_entry.get(i)
+            loop_entry[i] = dict(st) if e is None else {k: j for k, v in e.items()
+                                                          if (j := join(i, k, v, st.get(k))) is not None}
         if lp is not None and src != lp[0]:  # an edge into the loop, not its back edge
             e = loop_entry.get(i)
             loop_entry[i] = dict(st) if e is None else {k: j for k, v in e.items()
@@ -483,11 +642,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         new = {}
         for k in (set(old) | set(st)) if arg_join else list(old):
             v = old.get(k)
+            if k in carry.get(i, ()) and (cap := carry_value(i, k)) is not None:
+                new[k] = cap  # a counter the outer loop carries over (session 29)
+                continue
             if lp is not None and k in lp[4] and (cap := loop_value(i, k)) is not None:
                 new[k] = cap  # the counter bounds the walk: no widening
                 continue
             if counter_cap and lp is not None and k == lp[1] and (cap := counter_value(i)) is not None:
                 new[k] = cap  # the up-counter itself (session 27)
+                continue
+            if op_ is not None and k in op_[4] and (cap := outer_value(i, k)) is not None:
+                new[k] = cap  # stepped once per outer iteration (session 29)
                 continue
             j = join(i, k, v, st.get(k))
             if j is None:
@@ -1057,6 +1222,8 @@ def main() -> int:
     ap.add_argument("--no-end-ptr", action="store_true",
                     help="a compare or subtract against a name's address does not tie the object before it to "
                          "the name (session 28)")
+    ap.add_argument("--no-nest-carry", action="store_true",
+                    help="do not bound a counter an inner loop steps and its outer loop carries over (session 29)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1148,7 +1315,8 @@ def main() -> int:
                          hi_index=not a.no_hi_index, cases=not a.no_switch,
                          read_word=read_word if is_func and not a.no_switch else None,
                          ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
-                         slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr):
+                         slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
+                         nest_carry=not a.no_nest_carry):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])

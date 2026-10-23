@@ -362,7 +362,7 @@ void func_0016e3f8(void) {
 
 /* ---- func_001707d0 ---- */
 #include "data/pieces/D_002C58B0.h"
-typedef V4D0_2c58b0 V4D0;
+typedef FVec4 V4D0;
 typedef struct { u8 pad[0x18]; f32 f18; } Sub130D0;
 typedef struct { u8 pad[0x44]; s32 w44; s32 w48; } Sub6CD0;
 typedef struct { u8 pad[1]; u8 b1; } SubB1;

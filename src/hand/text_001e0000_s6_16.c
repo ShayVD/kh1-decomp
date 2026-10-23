@@ -1,4 +1,6 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
+#include "data/types/vm_rec.h"
 typedef struct {
     u8 type;
     u64 val:24;
@@ -104,9 +106,8 @@ s32 func_001ea888(E848 *e) {
     return 2;
 }
 
-typedef struct { u8 pad[28]; u8 n1c; u8 l1d[25]; u8 b36; u8 pad37[116 - 55]; } C116;
+typedef W606Mem_304be8 C116;
 typedef struct { u8 pad[0x48e]; u8 f48e[4]; } W17;
-#include "data/pieces/D_00304BE8_s.h"
 
 s32 func_001eeeb8(s32 id) {
     s32 n = 0, i;
@@ -115,8 +116,8 @@ s32 func_001eeeb8(s32 id) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)D_00304BE8)[c];
-        if (e->b36 == id) n++;
+        e = &D_00304BE8->m[c];
+        if (e->sub.x32 == id) n++;
     }
     return n;
 }
@@ -128,9 +129,9 @@ s32 func_001eef38(s32 id) {
     for (i = 0; i < 4; i++) {
         c = D_00304BE8->x48e[i];
         if (c == 0xff) break;
-        e = &((C116 *)D_00304BE8)[c];
-        for (j = 0; j < e->n1c; j++) {
-            if (e->l1d[j] == id) n++;
+        e = &D_00304BE8->m[c];
+        for (j = 0; j < e->sub.x18; j++) {
+            if (e->sub.x19[j] == id) n++;
         }
     }
     return n;
@@ -154,13 +155,13 @@ s32 func_001e99e8(s32 kind, E848b *p) {
         if (D_00389C90.f3038 == 0) {
             for (i = 0; i < D_003B4D90; i++) if (&D_003A7990[i] == p) return i;
         } else {
-            for (i = 0; i < D_003C21A0; i++) if (&((E848b *)&D_003B4DA0)[i] == p) return i;
+            for (i = 0; i < D_003C21A0; i++) if (&D_003B4DA0[i] == p) return i;
         }
     } else {
         if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) if (&((E848b *)&D_0038D170)[i] == p) return i;
+            for (i = 0; i < D_0039A570; i++) if (&D_0038D170[i] == p) return i;
         } else {
-            for (i = 0; i < D_003A7980; i++) if (&((E848b *)&D_0039A580)[i] == p) return i;
+            for (i = 0; i < D_003A7980; i++) if (&D_0039A580[i] == p) return i;
         }
     }
     return -1;

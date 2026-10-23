@@ -3,9 +3,10 @@
 #define KH1_DATA_TYPES_NOSTRICT_TEXT_00150000_H58_P_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 #include "platform/math.h"
 #include "data/types/nostrict_text_00150000_h58.h"
 
-typedef struct { f32 x, y, z, w; } V4;
+typedef FVec4 V4;
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00150000_H58_P_H */

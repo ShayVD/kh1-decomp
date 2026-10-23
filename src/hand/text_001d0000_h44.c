@@ -1,6 +1,7 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
-typedef struct {
+typedef struct VmObj {
     u8 pad0[0x30];
     f32 v30[4];
     u8 pad40[0x68 - 0x40];
@@ -10,21 +11,7 @@ typedef struct {
     u8 padb0[0x370 - 0xb0];
     union { u64 x; struct { u32 lo; u32 p:12; u32 b44:1; u32 hi:19; } b; } f370;
 } Obj;
-typedef struct {
-    s32 x0;
-    Obj *obj;
-    u8 pad8[0x2c - 8];
-    f32 f2c[3];
-    f32 f38[3];
-    f32 f44;
-    s32 f48;
-    u8 pad4c[0x180 - 0x4c];
-    s32 sp;
-    s32 stk[92];
-    u8 pad2f4[0x34];
-    union { u64 x; s32 i[2]; } flags; /* 0x328 */
-    u8 pad330[0x20];
-} VM;
+typedef VmRec VM;
 
 typedef struct {
     u8 type;
@@ -82,7 +69,7 @@ void func_0010ef70(void *, void *, void (*)());
 void func_001e2810(void);
 
 s32 func_001d95f0(VM *vm) {
-    vm->flags.x |= 0x1000;
+    vm->fl.x |= 0x1000;
     vm->f44 = (f32)vm->stk[vm->sp - 3] * 2;
     if (vm->obj->f370.b.b44 == 1) {
         vm->f2c[0] = vm->obj->v30[0];
@@ -234,11 +221,11 @@ void func_001dcd98(s32 a) {
     s32 n, i;
     D_00389C90.x3150 = a;
     if (D_00389C90.x3034 == 0) {
-        vm = ((VM *)&D_0038D170);
+        vm = D_0038D170;
         n = D_0039A570;
     } else {
         n = D_003A7980;
-        vm = ((VM *)&D_0039A580);
+        vm = D_0039A580;
     }
     for (i = 0; i < n; i++) {
         if (&vm[i] == D_00389C90.x3154) break;
@@ -259,12 +246,12 @@ void func_001dcea8(VM *vm) {
     n = D_002BBDFC * 0.5f;
     if (n == 0) n = 1;
     for (i = 0; i < n; i++) {
-        if ((s32)(vm->flags.x >> 6) & 1) func_001d1080(vm);
-        if ((s32)(vm->flags.x >> 9) & 1) func_001d3e30(vm);
-        if ((s32)(vm->flags.x >> 10) & 1) func_001d7898(vm);
-        if ((s32)(vm->flags.x >> 12) & 1) func_001d9510(vm);
+        if ((s32)(vm->fl.x >> 6) & 1) func_001d1080(vm);
+        if ((s32)(vm->fl.x >> 9) & 1) func_001d3e30(vm);
+        if ((s32)(vm->fl.x >> 10) & 1) func_001d7898(vm);
+        if ((s32)(vm->fl.x >> 12) & 1) func_001d9510(vm);
     }
-    if ((s32)(vm->flags.x >> 11) & 1) func_001d9348(vm);
+    if ((s32)(vm->fl.x >> 11) & 1) func_001d9348(vm);
 }
 
 s32 func_001dd208(Handler *h) {
@@ -319,7 +306,7 @@ s32 func_001de130(VM *vm) {
     Handler *h;
     HSub *r;
     h = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     h->f2c = 10;
     h->f14 = r->f4 ? r : 0;
     h->f28 = vm->stk[vm->sp - 1];
@@ -331,7 +318,7 @@ s32 func_001de1e0(VM *vm) {
     Handler *h;
     HSub *r;
     h = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
     h->f2c = 16;
     h->f14 = r->f4 ? r : 0;
     h->f28 = vm->stk[vm->sp - 1];
@@ -355,7 +342,7 @@ s32 func_001de5b0(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760d0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd208);
         h->f10 = o;
@@ -372,7 +359,7 @@ s32 func_001de6a8(VM *vm) {
     HObj *o;
     HSub *r;
     o = func_001760d0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         func_001315c0(r->f4, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
         func_002675a8(o->f0, buf);
@@ -386,7 +373,7 @@ s32 func_001de778(VM *vm) {
     HObj *o;
     HSub *r;
     o = func_001760f0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         func_001315c0(r->f4, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
         func_002675a8(o->f0, buf);
@@ -401,7 +388,7 @@ s32 func_001de848(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd3f8);
         h->f10 = o;
@@ -417,7 +404,7 @@ s32 func_001de910(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760d0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd320);
         h->f10 = o;
@@ -434,7 +421,7 @@ s32 func_001de9e0(VM *vm) {
     HObj *o;
     HSub *r;
     o = func_001760d0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
     if (o && r) {
         func_00131a30(r->f4, vm->stk[vm->sp], buf);
         o->f4[0] = buf[0] * 32768.0f / 3.1415928f;
@@ -450,7 +437,7 @@ s32 func_001deaf8(VM *vm) {
     HObj *o;
     HSub *r;
     o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
     if (o && r) {
         func_00131a30(r->f4, vm->stk[vm->sp], buf);
         o->f4[0] = buf[0] * 32768.0f / 3.1415928f;
@@ -466,7 +453,7 @@ s32 func_001dec10(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760f0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd208);
         h->f10 = o;
@@ -483,7 +470,7 @@ s32 func_001ded08(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 1]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd320);
         h->f10 = o;
@@ -511,7 +498,7 @@ s32 func_001df698(Handler *h);
 s32 func_001df708(VM *vm) {
     HSub *r;
     Handler *h;
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (r) {
         h = func_0011f090(D_0062A630, 1, func_001df698);
         h->f10 = (HObj *)D_0062A428;
@@ -539,7 +526,7 @@ s32 func_001dfea8(VM *vm) {
     HSub *r;
     Handler *h;
     o = func_001760b0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp - 2]);
+    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         h = func_0011f090(D_0062A630, 1, func_001dd208);
         h->f10 = o;

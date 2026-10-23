@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 /* func_001c2ec8 (s11w1): the op loop reaches D_002C5958 as &D_002C5950[2], a different RTL address (const (plus D_002C5950 8)) from the top `D_002C5958 |= 0xc`, so gcse PRE does not share the two and the hoisted lui/addiu orders as in the original. */
 typedef struct {
@@ -23,26 +24,7 @@ typedef struct {
     u8 pad3080[0x3178 - 0x3080];
     s32 x3178;
 } Big;
-typedef struct {
-    s32 x0, x4;
-    u8 pad8[0x68];
-    s8 *code;
-    s32 n;
-    s32 x78;
-    s32 lbl[64];
-    s32 pc;
-    s32 sp;
-    s32 stk[33];
-    s32 var[26];
-    u8 pad270[0x2f0 - 0x270];
-    s32 x2f0;
-    s32 x2f4;
-    s32 ret[8];
-    s32 rsp;
-    u8 pad31c[0xc];
-    u32 b0:1, b1:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1, b8:1, b9:1, b10:1, b11:1, b12:1, b13:1, b14:1, b15:1, brest:16;
-    u8 pad32c[0x24];
-} __attribute__((aligned(8))) VM;
+typedef VmRec VM;
 #include "data/pieces/D_0037A378.h"
 extern Big D_00389C90;
 #include "data/pieces/D_0039A580.h"
@@ -113,12 +95,12 @@ void func_001c2ec8(s8 *p, s32 a1) {
     q = p + *t;
     c = p + t[(a1 + (D_00389C90.x305c + h0)) + 1];
     c += 12;
-    if (a1 == 0) { e = ((VM *)&D_0038D170); cnt = &D_0039A570; }
-    else { e = ((VM *)&D_0039A580); cnt = &D_003A7980; }
+    if (a1 == 0) { e = D_0038D170; cnt = &D_0039A570; }
+    else { e = D_0039A580; cnt = &D_003A7980; }
     *cnt = *c++;
     for (i = 0; i < *cnt; i++, e++) {
         e->x0 = 0;
-        e->x4 = 0;
+        e->obj = 0;
         e->code = c + 4;
         e->n = *c;
         e->pc = 0;
@@ -130,8 +112,8 @@ void func_001c2ec8(s8 *p, s32 a1) {
         e->ret[7] = e->pc;
         for (j = 0; j < 26; j++) e->var[j] = 0;
         c += 4;
-        e->b0 = 0; e->b1 = 0; e->b2 = 0; e->b3 = 0; e->b4 = 0; e->b5 = 0; e->b6 = 0; e->b7 = 0;
-        e->b8 = 0; e->b9 = 0; e->b10 = 0; e->b11 = 0; e->b12 = 0; e->b13 = 0; e->b14 = 0; e->b15 = 0;
+        e->fl.b.b0 = 0; e->fl.b.b1 = 0; e->fl.b.b2 = 0; e->fl.b.b3 = 0; e->fl.b.b4 = 0; e->fl.b.b5 = 0; e->fl.b.b6 = 0; e->fl.b.b7 = 0;
+        e->fl.b.b8 = 0; e->fl.b.b9 = 0; e->fl.b.b10 = 0; e->fl.b.b11 = 0; e->fl.b.b12 = 0; e->fl.b.b13 = 0; e->fl.b.b14 = 0; e->fl.b.b15 = 0;
         k = 0;
         for (j = 0; j < e->n; j++) {
             e->lbl[j] = k;
@@ -140,8 +122,8 @@ void func_001c2ec8(s8 *p, s32 a1) {
         }
     }
     func_001c2d20(q, &D_00389C80, ((s8 **)&D_00388480));
-    if (a1 == 0) e = ((VM *)&D_0038D170);
-    else e = ((VM *)&D_0039A580);
+    if (a1 == 0) e = D_0038D170;
+    else e = D_0039A580;
     fn = D_0037A198;
     fl = &D_002C5950[2];
     e->pc = e->lbl[0];

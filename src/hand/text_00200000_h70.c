@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 #include "data/types/text_00200000_h70.h"
 typedef struct {
@@ -40,9 +41,8 @@ void func_00209e18(P9e18 *p) {
 extern f32 *D_003F31D0[];
 extern f32 D_003F3150[];
 extern f32 D_003F3178[];
-typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74;
-typedef struct { T74 e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 T74;
+typedef Save_304be8 G4BE8;
 void func_00209d48(void);
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 #define K84 0.83999986946582794189453125f
@@ -185,7 +185,7 @@ void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 s32 func_001fb428(s32, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_0020be68(s32 a0, s32 x, u32 k) {
     s32 n = D_00304BE8->x48e[k];
-    u8 *t = &((G4BE8 *)D_00304BE8)->e[n].x4;
+    u8 *t = &D_00304BE8->m[n].sub.lv;
     E3D70 *e = &D_003E3D70.e3D70[n];
     func_001f94f0(a0, 2, x - 39, 5, func_001ee5f0(n), 13, 0x80808080);
     func_001fb428(a0, 1, 3, 0, x - 2, 25, *t, 11, 0x80208080);
@@ -379,7 +379,7 @@ void func_0020e280(s32 a0) {
                 func_001f3708(a0, 6);
                 if (!func_001fd538(a0)) {
                     if (D_00641228 != -1) {
-                        ((G4BE8 *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = 0;
+                        D_00304BE8->m[D_00304BE8->x48e[D_00641228]].sub.x22[D_00641230] = 0;
                     } else {
                         D_00304BE8->items[D_00641230]--;
                     }
