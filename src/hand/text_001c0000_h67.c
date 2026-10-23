@@ -14,88 +14,8 @@ double sin(double);
 double cos(double);
 #include "data/types/text_001c0000_h67.h"
 extern Str D_00389C90;
-#include "data/pieces/D_00389C80.h"
-#include "data/pieces/D_00388480.h"
-typedef struct { u64 d[22]; } Win;
-extern Win D_00629E70[]; /* src/data/bss_0062.c: Ent176 D_00629E70[4] */
-#include "data/pieces/D_0037A378.h"
-void func_0010ef70(Win *, char *, void *);
-s32 func_001cbd80();
-extern u8 D_003C5650[];
-char D_0062A1F0[0x20] ALIGNED(16);
 
-s32 func_001cb7d0(VM *vm) {
-    s32 val = vm->stk[vm->sp];
-    s32 idx = vm->stk[vm->sp - 1];
-    s32 n, i, j, d, q;
-    vm->sp -= 2;
-    n = 1;
-    for (d = val / 10; d > 0; d /= 10) n++;
-    for (i = 0; i < n; i++) {
-        d = 1;
-        for (j = 0; j < n - 1 - i; j++) d *= 10;
-        q = val / d;
-        D_0062A1F0[i] = q + 33;
-        val -= q * d;
-    }
-    for (j = 0; (u32)j < 12; j++) D_0062A1F0[i++] = D_003C5650[j];
-    ((char **)&D_00388480)[D_00389C80] = D_0062A1F0;
-    D_00389C90.tbl[idx][D_00389C90.cnt[idx]++] = *(u16 *)&D_00389C80;
-    D_00389C80++;
-    return 2;
-}
-
-s32 func_001cb960(VM *vm) {
-    s32 idx, v, i;
-    if (D_0037A378 & 1) { vm->sp -= 2; return 2; }
-    idx = vm->stk[vm->sp - 1];
-    v = vm->stk[vm->sp];
-    vm->sp -= 2;
-    D_00389C90.tbl[idx][D_00389C90.cnt[idx]++] = v;
-    for (i = 0; i < 4; i++) if (idx == D_00389C90.ids[i]) break;
-    if (i < 4) {
-        if (D_00389C90.st[i] == 4) {
-            D_00389C90.st[i] = 2;
-            D_00389C90.x4[idx] = 2;
-            func_0010ef70(&D_00629E70[i], ((char **)&D_00388480)[v], func_001cbd80);
-        }
-    }
-    return 2;
-}
-
-extern Win D_006298F0[];
-void func_0010bdd0(Win *, void *);
-s32 func_001cbab0();
-s32 func_001cbbd0(VM *vm) {
-    s32 idx, i;
-    if (D_0037A378 & 1) { vm->sp--; return 2; }
-    idx = vm->stk[vm->sp];
-    for (i = 0; i < 4; i++) if (D_00389C90.st[i] == 0) break;
-    if (i >= 4 || D_00389C90.x4[idx] != 0) return 4;
-    vm->sp--;
-    D_00629E70[i] = D_006298F0[idx];
-    D_00389C90.ids[i] = idx;
-    func_0010bdd0(&D_00629E70[i], func_001cbab0);
-    D_00389C90.st[i] = 1;
-    D_00389C90.x4[idx] = 1;
-    return 2;
-}
-
-s32 func_001cbea0();
-s32 func_001cbfc0(VM *vm) {
-    s32 idx, i;
-    if (D_0037A378 & 1) { vm->sp--; return 2; }
-    idx = vm->stk[vm->sp];
-    for (i = 0; i < 4; i++) if (D_00389C90.st[i] == 0) break;
-    if (i >= 4 || D_00389C90.x4[idx] != 0) return 4;
-    vm->sp--;
-    D_00629E70[i] = D_006298F0[idx];
-    D_00389C90.ids[i] = idx;
-    func_0010bdd0(&D_00629E70[i], func_001cbea0);
-    D_00389C90.st[i] = 1;
-    D_00389C90.x4[idx] = 1;
-    return 2;
-}
+/* func_001cb7d0, func_001cb960, func_001cbbd0 and func_001cbfc0 (and D_0062A1F0) are in src/msgwin/msgwin.c. */
 
 #include "data/pieces/D_003DABD0.h"
 extern char D_003C58E0[][256];

@@ -11,7 +11,6 @@ M2C_UNK func_00109f48(s32);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_001336b8();
-M2C_UNK func_0017e768();
 #include "data/pieces/D_003DABD0.h"
 extern M2C_UNK D_006297F8; /* src/data/bss_0062.c: u8 D_006297F8[0x10] */
 M2C_UNK D_00629808[0x3a] ALIGNED(8);
@@ -29,16 +28,8 @@ void func_001c07f0(void) {
     func_0011ef10(0xC352, &func_001c07c8);
 }
 
-/* func_001ca790 and func_001ca7c8 are in src/camera/camera.c. */
-s32 func_001cc628(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001ccbd8(void) {
-    func_0017e768();
-    return 2;
-}
+/* func_001ca790 and func_001ca7c8 are in src/camera/camera.c,
+ * func_001cc628 and func_001ccbd8 in src/msgwin/msgwin.c. */
 
 void func_001cd238(void) {
     M2C_FIELD(&D_003DABD0, s32 *, 0) = func_001559f0(0x34, 4);

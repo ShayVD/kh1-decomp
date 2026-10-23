@@ -4,11 +4,8 @@
 
 M2C_UNK func_00104300(M2C_UNK);
 M2C_UNK func_001043f8(M2C_UNK);
-M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0011f130(M2C_UNK *, M2C_UNK);
 extern M2C_UNK D_006297F8; /* src/data/bss_0062.c: u8 D_006297F8[0x10] */
-extern M2C_UNK D_0062A130; /* src/data/bss_0062.c: u8 D_0062A130[0xb0] */
-extern M2C_UNK func_001ca9e8;
 extern s32 D_0037A168;
 extern s32 D_0037A16C;
 extern s64 D_00389C90[];
@@ -33,9 +30,7 @@ s32 func_001c07c8(void) {
     return 0;
 }
 
-void func_001ca9f8(void) {
-    func_0010bd90(&D_0062A130, &func_001ca9e8);
-}
+/* func_001ca9f8 is in src/msgwin/msgwin.c. */
 
 s32 func_001ceee8(void) {
     func_00104300(0x10);

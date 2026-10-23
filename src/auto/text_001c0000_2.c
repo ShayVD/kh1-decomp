@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK func_001bfac8();
-extern s8 D_00389C90;
 f32 func_00176850();
 
 void func_001c0688(s32 arg0) {
@@ -18,9 +17,7 @@ void func_001c0688(s32 arg0) {
     }
 }
 
-void func_001ca9e8(void) {
-    D_00389C90 = 0;
-}
+/* func_001ca9e8 is in src/msgwin/msgwin.c. */
 
 s32 func_001ce440(void *arg0) {
     s32 temp_s1;

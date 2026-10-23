@@ -18,27 +18,6 @@ typedef struct {
     union { u64 x; s32 i[2]; } flags;
 } VM;
 
-/* 0xB0-byte entries at D_006298F0. */
-typedef struct {
-    u8 pad0[4];
-    u16 h4;
-    u8 pad6[6];
-    u16 hc;
-    u16 he;
-    u8 pad10[0xc];
-    f32 f1c;
-    u8 pad20[0x10];
-    f32 v30[2];
-    u8 pad38[8];
-    f32 v40[2];
-    u8 pad48[0x4c];
-    f32 f94;
-    u8 pad98[0x18];
-} __attribute__((aligned(8))) Obj;
-
-extern Obj D_006298F0[];
-extern s32 D_003C5870[];
-#include "data/pieces/D_0037A378.h"
 
 typedef struct {
     u8 a[4];
@@ -58,104 +37,8 @@ extern s32 D_002BC090, D_002BC094, D_002BC09C, D_002BC0A0, D_002BC0A4, D_002BBE0
 #include "data/pieces/D_002BC098.h"
 extern Big D_00389C90;
 
-s32 func_001cc210(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 1];
-    f32 v = vm->stk[sp];
-    vm->sp = sp - 2;
-    D_006298F0[i].f1c = v;
-    return 2;
-}
-
-s32 func_001cc260(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 2];
-    f32 a = vm->stk[sp - 1];
-    f32 b = vm->stk[sp];
-    vm->sp = sp - 3;
-    D_006298F0[i].v30[0] = a;
-    D_006298F0[i].v30[1] = b;
-    return 2;
-}
-
-s32 func_001cc2c8(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 2];
-    f32 a = vm->stk[sp - 1];
-    f32 b = vm->stk[sp];
-    vm->sp = sp - 3;
-    D_006298F0[i].v40[0] = a;
-    D_006298F0[i].v40[1] = b;
-    return 2;
-}
-
-s32 func_001cc330(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 1];
-    u16 v = vm->stk[sp];
-    vm->sp = sp - 2;
-    D_006298F0[i].h4 = v;
-    return 2;
-}
-
-s32 func_001cc380(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 1];
-    u16 v = vm->stk[sp];
-    vm->sp = sp - 2;
-    D_006298F0[i].hc = v;
-    return 2;
-}
-
-s32 func_001cc3d0(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 1];
-    u16 v = vm->stk[sp];
-    vm->sp = sp - 2;
-    D_006298F0[i].he = v;
-    return 2;
-}
-
-s32 func_001cc420(VM *vm) {
-    s32 sp = vm->sp;
-    s32 i = vm->stk[sp - 1];
-    f32 v = vm->stk[sp];
-    vm->sp = sp - 2;
-    D_006298F0[i].f94 = v;
-    return 2;
-}
-
-s32 func_001cc470(VM *vm) {
-    s32 i;
-    if (D_0037A378 & 1) return 2;
-    for (i = 0; i < 4; i++) {
-        if (D_00389C90.a[i] && D_00389C90.c[i] != 7) break;
-    }
-    if (i < 4) {
-        if (!((s32)(vm->flags.x >> 4) & 1)) return 4;
-    }
-    return 2;
-}
-
-s32 func_001cc508(VM *vm) {
-    s32 sp = vm->sp;
-    u8 c = D_00389C90.b[vm->stk[sp]];
-    if (c != 0 && c != 4) return 4;
-    vm->sp = sp - 1;
-    return 2;
-}
-
-s32 func_001cccf0(VM *vm) {
-    D_003C5870[vm->stk[vm->sp - 1]] = vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
-
-Obj func_001ccd30(s32 i) {
-    return D_006298F0[i];
-}
-
-/* func_001cce38 .. func_001cd1d0 (the opcode 1 operations) are in src/vm/vm_calc.c. */
+/* func_001cc210 .. func_001cc508, func_001cccf0 and func_001ccd30 are in src/msgwin/msgwin.c,
+ * func_001cce38 .. func_001cd1d0 (the opcode 1 operations) in src/vm/vm_calc.c. */
 
 s32 func_001cd280(VM *vm) {
     vm->flags.x |= 4;
