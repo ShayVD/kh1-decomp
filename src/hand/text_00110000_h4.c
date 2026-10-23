@@ -329,7 +329,7 @@ Ent40 *func_001226f0(s32 a, s32 b, s32 c) {
     for (i = 0; i < 31; i++, e++) {
         if (e->kind == 0) {
             e->kind = a; e->flags = b; e->c = c;
-            func_002675a8(&e->col, ((Vec4 *)&D_002C5C60));
+            func_002675a8(&e->col, &D_002C5C60);
             return e;
         }
     }

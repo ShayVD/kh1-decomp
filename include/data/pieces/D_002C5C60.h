@@ -4,7 +4,9 @@
 #define KH1_DATA_PIECES_D_002C5C60_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-extern u8 D_002C5C60[0x10];
+/* a 4-vector (session 32: FVec4, as h4 passes it to func_002675a8) */
+extern FVec4 D_002C5C60;
 
 #endif /* KH1_DATA_PIECES_D_002C5C60_H */
