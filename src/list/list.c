@@ -1,7 +1,7 @@
 /* The record lists (docs/modules.md "Session 35"), 0x001e4918-0x001e7e78.
  *
  * Menus a script opens over save block 1's four lists at 0xa80 (10, 10, 10
- * and 50 entries, 0 = empty; vm_lib.c's VmSave1): func_001e58c0(list) shows
+ * and 50 entries, 0 = empty; include/save/save1.h): func_001e58c0(list) shows
  * a list with each entry's name and text from the tables D_006310C8 /
  * D_00631148 / D_006311C8 / D_00631248 (loaded by func_001e4918 at script
  * load), func_001e74b0(list) picks an entry (the pick is read back by
@@ -16,6 +16,7 @@
  * alone: it follows the shop's D_0062FF00 / D_003DC494, and the code after
  * 0x001e7e78 works on the D_006314CC counters instead. */
 #include "common.h"
+#include "save/save1.h"
 #include "data/types/vm_rec.h"
 #include "vm/vm_mgr.h"
 #include "msgwin/msgwin.h"
@@ -42,16 +43,6 @@ typedef struct {
     s32 a, b, c, d;         /* 0x664 */
     u8 pad674[0x10];
 } ListMenu;
-/* Save block 1 (func_00232cc0(1)): the four lists, and at 0xad0 which of
- * them are open (bits 0-3). */
-typedef struct {
-    u8 pad[0xa80];
-    u8 a[10];
-    u8 b[10];
-    u8 c[10];
-    u8 d[50];
-    u32 open;               /* 0xad0 */
-} ListSave;
 
 extern VmMgr D_00389C90;
 extern volatile s32 D_002C5958;
@@ -248,17 +239,17 @@ void func_001e4d20(void) {
 }
 
 void func_001e4d50(void) {
-    ListSave *s = func_00232cc0(1);
+    Save1 *s = func_00232cc0(1);
     func_001ea128(D_00630FC8, D_003DD248);
     func_001ea268(D_00630FC8, D_003DD270);
     switch (D_003DD25C) {
     case 0:
-        if (s->a[D_003DD258]) {
+        if (s->l0[D_003DD258]) {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
-            func_001ea268(D_00630FC8, D_006310C8[s->a[D_003DD258] - 1].a);
+            func_001ea268(D_00630FC8, D_006310C8[s->l0[D_003DD258] - 1].a);
             func_001ea268(D_00630FC8, D_003DD230);
             func_001ea268(D_00630FC8, D_003DD278);
-            func_001ea268(D_00630FC8, D_006310C8[s->a[D_003DD258] - 1].b);
+            func_001ea268(D_00630FC8, D_006310C8[s->l0[D_003DD258] - 1].b);
         } else {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
             func_001ea268(D_00630FC8, D_003DCB90[0]);
@@ -272,12 +263,12 @@ void func_001e4d50(void) {
         }
         break;
     case 1:
-        if (s->b[D_003DD258]) {
+        if (s->l1[D_003DD258]) {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
-            func_001ea268(D_00630FC8, D_00631148[s->b[D_003DD258] - 1].a);
+            func_001ea268(D_00630FC8, D_00631148[s->l1[D_003DD258] - 1].a);
             func_001ea268(D_00630FC8, D_003DD230);
             func_001ea268(D_00630FC8, D_003DD278);
-            func_001ea268(D_00630FC8, D_00631148[s->b[D_003DD258] - 1].b);
+            func_001ea268(D_00630FC8, D_00631148[s->l1[D_003DD258] - 1].b);
         } else {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
             func_001ea268(D_00630FC8, D_003DCB90[0]);
@@ -291,12 +282,12 @@ void func_001e4d50(void) {
         }
         break;
     case 2:
-        if (s->c[D_003DD258]) {
+        if (s->l2[D_003DD258]) {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
-            func_001ea268(D_00630FC8, D_006311C8[s->c[D_003DD258] - 1].a);
+            func_001ea268(D_00630FC8, D_006311C8[s->l2[D_003DD258] - 1].a);
             func_001ea268(D_00630FC8, D_003DD230);
             func_001ea268(D_00630FC8, D_003DD278);
-            func_001ea268(D_00630FC8, D_006311C8[s->c[D_003DD258] - 1].b);
+            func_001ea268(D_00630FC8, D_006311C8[s->l2[D_003DD258] - 1].b);
         } else {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258]);
             func_001ea268(D_00630FC8, D_003DCB90[0]);
@@ -310,7 +301,7 @@ void func_001e4d50(void) {
         }
         break;
     case 3:
-        if (!s->d[D_003DD258 + D_006305CC * 10]) {
+        if (!s->l3[D_003DD258 + D_006305CC * 10]) {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258 + D_006305CC * 10]);
             func_001ea268(D_00630FC8, D_003DCB90[0]);
             func_001ea268(D_00630FC8, D_003DD230);
@@ -322,10 +313,10 @@ void func_001e4d50(void) {
             func_001ea268(D_00630FC8, D_003DCB90[2]);
         } else {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258 + D_006305CC * 10]);
-            func_001ea268(D_00630FC8, D_00631248[s->d[D_003DD258 + D_006305CC * 10] - 1].a);
+            func_001ea268(D_00630FC8, D_00631248[s->l3[D_003DD258 + D_006305CC * 10] - 1].a);
             func_001ea268(D_00630FC8, D_003DD230);
             func_001ea268(D_00630FC8, D_003DD278);
-            func_001ea268(D_00630FC8, D_00631248[s->d[D_003DD258 + D_006305CC * 10] - 1].b);
+            func_001ea268(D_00630FC8, D_00631248[s->l3[D_003DD258 + D_006305CC * 10] - 1].b);
         }
         break;
     }
@@ -334,7 +325,7 @@ void func_001e4d50(void) {
 }
 
 void func_001e5198(void) {
-    ListSave *s = func_00232cc0(1);
+    Save1 *s = func_00232cc0(1);
     s32 *m = &D_003DD25C;
     s32 i;
 
@@ -353,13 +344,13 @@ void func_001e5198(void) {
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_006305D0[i]);
-                if (!s->d[i]) {
+                if (!s->l3[i]) {
                     func_001ea268(D_006307C8, D_003DD250);
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
                     func_001ea268(D_006307C8, D_003DD250);
-                    func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
             }
@@ -398,13 +389,13 @@ void func_001e5198(void) {
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_006305D0[i]);
-                if (!s->d[i]) {
+                if (!s->l3[i]) {
                     func_001ea268(D_006307C8, D_003DD250);
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
                     func_001ea268(D_006307C8, D_003DD250);
-                    func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
             }
@@ -462,7 +453,7 @@ void func_001e5810(void) {
 }
 
 void func_001e58c0(s32 mode) {
-    ListSave *s;
+    Save1 *s;
     s32 i;
 
     D_003DD25C = mode;
@@ -482,13 +473,13 @@ void func_001e58c0(s32 mode) {
             func_001ea268(D_006307C8, D_003DD238);
             func_001ea268(D_006307C8, D_003DD238);
             func_001ea268(D_006307C8, D_006305D0[i]);
-            if (!s->d[i]) {
+            if (!s->l3[i]) {
                 func_001ea268(D_006307C8, D_003DD250);
                 func_001ea268(D_006307C8, D_003DCB90[0]);
                 func_001ea268(D_006307C8, D_003DD230);
             } else {
                 func_001ea268(D_006307C8, D_003DD250);
-                func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                 func_001ea268(D_006307C8, D_003DD230);
             }
         }
@@ -513,35 +504,35 @@ void func_001e58c0(s32 mode) {
             func_001ea268(D_006307C8, D_006305D0[i]);
             switch (mode) {
             case 0:
-                if (!s->a[i]) {
+                if (!s->l0[i]) {
                     func_001ea268(D_006307C8, D_003DD250);
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
                     func_001ea268(D_006307C8, D_003DD250);
-                    func_001ea268(D_006307C8, D_006310C8[s->a[i] - 1].a);
+                    func_001ea268(D_006307C8, D_006310C8[s->l0[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
             case 1:
-                if (!s->b[i]) {
+                if (!s->l1[i]) {
                     func_001ea268(D_006307C8, D_003DD250);
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
                     func_001ea268(D_006307C8, D_003DD250);
-                    func_001ea268(D_006307C8, D_00631148[s->b[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631148[s->l1[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
             case 2:
-                if (!s->c[i]) {
+                if (!s->l2[i]) {
                     func_001ea268(D_006307C8, D_003DD250);
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
                     func_001ea268(D_006307C8, D_003DD250);
-                    func_001ea268(D_006307C8, D_006311C8[s->c[i] - 1].a);
+                    func_001ea268(D_006307C8, D_006311C8[s->l2[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
@@ -635,20 +626,20 @@ void func_001e5ee0(void) {
 
 /* Plain globals (no pointer locals), `if (!D_003DD284) return 4;` first and the return 0 last. */
 s32 func_001e6038(void) {
-    ListSave *sv = func_00232cc0(1);
+    Save1 *sv = func_00232cc0(1);
     if (D_003DD284 == 0) return 4;
     if (--D_003DD288 < 0) {
         D_003DD284 = 0;
         func_001ea128(D_00630FC8, D_003DD270);
-        if (sv->a[D_003DD258] == 0) {
+        if (sv->l0[D_003DD258] == 0) {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258 + 1]);
             func_001ea268(D_00630FC8, D_003DCB90[0]);
         } else {
             func_001ea268(D_00630FC8, D_006305D0[D_003DD258 + 1]);
-            func_001ea268(D_00630FC8, D_006310C8[sv->a[D_003DD258] - 1].a);
+            func_001ea268(D_00630FC8, D_006310C8[sv->l0[D_003DD258] - 1].a);
             func_001ea268(D_00630FC8, D_003DD230);
             func_001ea268(D_00630FC8, D_003DD278);
-            func_001ea268(D_00630FC8, D_006310C8[sv->a[D_003DD258] - 1].b);
+            func_001ea268(D_00630FC8, D_006310C8[sv->l0[D_003DD258] - 1].b);
         }
         func_0010e3f0(D_006304E0);
         func_0010ef70(D_006304E0 - 0x80, D_00630FC8, 0);
@@ -659,7 +650,7 @@ s32 func_001e6038(void) {
 
 void func_001e61c0() {
     s32 ok = 0;
-    ListSave *sv = func_00232cc0(1);
+    Save1 *sv = func_00232cc0(1);
     switch (D_003DD258) {
     case 1:
         func_0010bd90(&D_00630460, 0);
@@ -667,16 +658,16 @@ void func_001e61c0() {
     case 2:
         switch (D_003DD25C) {
         case 0:
-            if (sv->open & 1) ok = 1;
+            if (sv->ad0.open & 1) ok = 1;
             break;
         case 1:
-            if (sv->open & 2) ok = 1;
+            if (sv->ad0.open & 2) ok = 1;
             break;
         case 2:
-            if (sv->open & 4) ok = 1;
+            if (sv->ad0.open & 4) ok = 1;
             break;
         case 3:
-            if (sv->open & 8) ok = 1;
+            if (sv->ad0.open & 8) ok = 1;
             break;
         }
         if (ok == 1) {
@@ -759,7 +750,7 @@ void func_001e6580(s32 a) {
 }
 
 void func_001e65d0(void) {
-    ListSave *s = func_00232cc0(1);
+    Save1 *s = func_00232cc0(1);
     s32 i;
 
     if (D_003DD25C == 3) {
@@ -779,11 +770,11 @@ void func_001e65d0(void) {
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_006305D0[i]);
-                if (!s->d[i]) {
+                if (!s->l3[i]) {
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
-                    func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
             }
@@ -821,11 +812,11 @@ void func_001e65d0(void) {
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_003DD238);
                 func_001ea268(D_006307C8, D_006305D0[i]);
-                if (!s->d[i]) {
+                if (!s->l3[i]) {
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
-                    func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
             }
@@ -944,21 +935,21 @@ s32 func_001e6eb0(void) {
 }
 
 void func_001e6f28(void) {
-    ListSave *s = func_00232cc0(1);
+    Save1 *s = func_00232cc0(1);
     s32 i, j;
     switch (D_003DD25C) {
     case 0:
-        if (s->open & 1) {
+        if (s->ad0.open & 1) {
             D_003DC498.n = 9;
             func_001ea128(D_006307C8, D_006305D0[0]);
             func_001ea268(D_006307C8, D_003DCB90[0]);
             func_001ea128(D_003DC498.last, D_006307C8);
             for (i = 0; i < 9; i++) {
                 func_001ea128(D_006307C8, D_006305D0[i + 1]);
-                if (s->a[i + 1] == 0) {
-                    func_001ea268(D_006307C8, D_003DCB90[s->a[i + 1]]);
+                if (s->l0[i + 1] == 0) {
+                    func_001ea268(D_006307C8, D_003DCB90[s->l0[i + 1]]);
                 } else {
-                    func_001ea268(D_006307C8, D_006310C8[s->a[i + 1] - 1].a);
+                    func_001ea268(D_006307C8, D_006310C8[s->l0[i + 1] - 1].a);
                 }
                 func_001ea128(D_003DC498.str[i], D_006307C8);
             }
@@ -969,13 +960,13 @@ void func_001e6f28(void) {
         }
         break;
     case 1:
-        if (!(s->open & 2)) {
+        if (!(s->ad0.open & 2)) {
             for (i = 1; i < 10; i++) {
-                if (s->b[i] == 0) {
+                if (s->l1[i] == 0) {
                     func_001ea128(D_00630FC8, D_003DCDF0);
                     func_001ea268(D_00630FC8, D_003DD270);
                     func_001ea268(D_00630FC8, D_006305D0[i - 1]);
-                    func_001ea268(D_00630FC8, D_003DCB90[s->b[i - 1]]);
+                    func_001ea268(D_00630FC8, D_003DCB90[s->l1[i - 1]]);
                     func_001ea268(D_00630FC8, D_003DD278);
                     for (j = 0; j < 3; j++) {
                         func_001ea268(D_00630FC8, D_003DD230);
@@ -1017,22 +1008,22 @@ void func_001e7278(void) {
 }
 
 void func_001e72a0(void) {
-    ListSave *sv = func_00232cc0(1);
+    Save1 *sv = func_00232cc0(1);
     s32 i;
     func_001ea128(D_006307C8, D_003DCB10[0]);
     func_001ea268(D_006307C8, D_003DD230);
     D_003DD268 = 1;
-    if (sv->open & 1) {
+    if (sv->ad0.open & 1) {
         func_001ea268(D_006307C8, D_003DCB10[1]);
         func_001ea268(D_006307C8, D_003DD230);
         D_003DD268++;
     }
-    if (sv->open & 2) {
+    if (sv->ad0.open & 2) {
         func_001ea268(D_006307C8, D_003DCB10[2]);
         func_001ea268(D_006307C8, D_003DD230);
         D_003DD268++;
     }
-    if (sv->open & 4) {
+    if (sv->ad0.open & 4) {
         func_001ea268(D_006307C8, D_003DCB10[3]);
         func_001ea268(D_006307C8, D_003DD230);
         D_003DD268++;
@@ -1058,7 +1049,7 @@ s32 func_001e7488(VmRec *vm) {
 }
 
 void func_001e74b0(s32 mode) {
-    ListSave *s = func_00232cc0(1);
+    Save1 *s = func_00232cc0(1);
     s32 i;
     D_003DD25C = mode;
     D_003DD28C = 0;
@@ -1072,11 +1063,11 @@ void func_001e74b0(s32 mode) {
             func_001ea268(D_006307C8, D_003DD238);
             func_001ea268(D_006307C8, D_003DD238);
             func_001ea268(D_006307C8, D_006305D0[i]);
-            if (!s->d[i]) {
+            if (!s->l3[i]) {
                 func_001ea268(D_006307C8, D_003DCB90[0]);
                 func_001ea268(D_006307C8, D_003DD230);
             } else {
-                func_001ea268(D_006307C8, D_00631248[s->d[i] - 1].a);
+                func_001ea268(D_006307C8, D_00631248[s->l3[i] - 1].a);
                 func_001ea268(D_006307C8, D_003DD230);
             }
         }
@@ -1091,29 +1082,29 @@ void func_001e74b0(s32 mode) {
             func_001ea268(D_006307C8, D_006305D0[i]);
             switch (mode) {
             case 0:
-                if (!s->a[i]) {
+                if (!s->l0[i]) {
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
-                    func_001ea268(D_006307C8, D_006310C8[s->a[i] - 1].a);
+                    func_001ea268(D_006307C8, D_006310C8[s->l0[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
             case 1:
-                if (!s->b[i]) {
+                if (!s->l1[i]) {
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
-                    func_001ea268(D_006307C8, D_00631148[s->b[i] - 1].a);
+                    func_001ea268(D_006307C8, D_00631148[s->l1[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
             case 2:
-                if (!s->c[i]) {
+                if (!s->l2[i]) {
                     func_001ea268(D_006307C8, D_003DCB90[0]);
                     func_001ea268(D_006307C8, D_003DD230);
                 } else {
-                    func_001ea268(D_006307C8, D_006311C8[s->c[i] - 1].a);
+                    func_001ea268(D_006307C8, D_006311C8[s->l2[i] - 1].a);
                     func_001ea268(D_006307C8, D_003DD230);
                 }
                 break;
@@ -1214,7 +1205,7 @@ void func_001e7b50(void) {
 }
 
 void func_001e7ba8(void) {
-    ListSave *sv = func_00232cc0(1);
+    Save1 *sv = func_00232cc0(1);
     s32 i;
     switch (D_003DD258) {
     default: return;
@@ -1227,11 +1218,11 @@ void func_001e7ba8(void) {
     case 3:
         D_003DC498.n = 9;
         func_001ea128(D_006307C8, D_006305D0[0]);
-        func_001ea268(D_006307C8, D_003DCB90[sv->a[0]]);
+        func_001ea268(D_006307C8, D_003DCB90[sv->l0[0]]);
         func_001ea128(D_003DC498.last, D_006307C8);
         for (i = 1; i < 10; i++) {
             func_001ea128(D_006307C8, D_006305D0[i]);
-            func_001ea268(D_006307C8, D_003DCB90[sv->a[i]]);
+            func_001ea268(D_006307C8, D_003DCB90[sv->l0[i]]);
             func_001ea128(D_003DC498.str[i - 1], D_006307C8);
         }
         func_002329a0(&D_003DC498, func_001e7b48, func_001e7b50);

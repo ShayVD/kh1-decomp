@@ -9,6 +9,7 @@
  * not part of the library's increasing run.  func_001dd5c0 (the task that
  * runs a request) is in effect.norlo.c, func_001ddbf8 in effect.nofill.c. */
 #include "common.h"
+#include "vm/vm_sub.h"
 #include "data/types/vm_rec.h"
 #include "event/effect.h"
 #include "vm/vm_obj.h"
@@ -206,12 +207,11 @@ s32 func_001ddf98(VmRec *vm) {
 
 /* h20's view of a VM from +4 (obj, then the stack at +0x180): four
  * requests index the stack off vm + 4, as the original does. */
-typedef struct { struct VmObj *obj; u8 pad4[0x17c]; s32 stk[33]; } EvVmSub;
 
 /* Start effect stk[sp] (request 0), on this VM's entity if it has one. */
 s32 func_001ddfb8(VmRec *vm) {
     EvTask *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    EvVmSub *s = (EvVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i;
     t->f2c = 0;
     i = vm->sp;
@@ -224,7 +224,7 @@ s32 func_001ddfb8(VmRec *vm) {
 /* The same with request 10 (start and follow the entity). */
 s32 func_001de030(VmRec *vm) {
     EvTask *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    EvVmSub *s = (EvVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i;
     t->f2c = 10;
     i = vm->sp;
@@ -237,7 +237,7 @@ s32 func_001de030(VmRec *vm) {
 /* The same with request 16 (the second kind, following the entity). */
 s32 func_001de0b0(VmRec *vm) {
     EvTask *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    EvVmSub *s = (EvVmSub *)&vm->obj;
+    VmSub *s = (VmSub *)&vm->obj;
     s32 i;
     t->f2c = 16;
     i = vm->sp;
@@ -575,10 +575,10 @@ s32 func_001df170(VmRec *vm) {
 s32 func_001df1d8(VmRec *vm) {
     if (D_0029B418 && D_0029B41C) {
         EvTask *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-        EvVmSub *s;
+        VmSub *s;
         s32 i;
         t->f2c = 3;
-        s = (EvVmSub *)&vm->obj;
+        s = (VmSub *)&vm->obj;
         i = vm->sp;
         t->f14 = s->obj ? vm : 0;
         t->f28 = s->stk[i];

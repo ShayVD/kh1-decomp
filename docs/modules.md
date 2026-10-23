@@ -654,13 +654,11 @@ D_003E3C80 and starts the next group.
 
 **Types.**
 - **VmSub** (include/vm/vm_sub.h): the "+4 view" of the VM,
-  `(VmSub *)&vm->obj`, then `s->stk[vm->sp]`.  sound.c uses it.  EvVmSub,
-  ScrVmSub and ShopVmSub (session 34) are the same shape and can switch to
-  it.
+  `(VmSub *)&vm->obj`, then `s->stk[vm->sp]`.  sound.c uses it, and
+  since session 36 effect.c, screen.c and shop.c too.
 - **Save1** (include/save/save1.h, 0xdd8 bytes; every offset checked with
-  a probe compile): the save record the flag commands read.  list.c's
-  ListSave and vm_lib's VmSave1 are views of the same record and can fold
-  into it.
+  a probe compile): the save record the flag commands read.  list.c and
+  vm_lib.c use it too since session 36.
 - **WavePkt** (include/screen/wave.h, 0x1960 bytes) with WaveU128 /
   WaveQ / WaveTag.
 - vm_mgr.h's VmMgr gains `x34d0` in its tail padding (set by
@@ -684,6 +682,76 @@ temporary for the byte toggle of `vm->x0` (16 words differed before).
 `s31_warndiff` 0 new warnings, and the m12 float build with float_covered.txt,
 float_reach.txt, the loaded sections and the symbols the same as the base
 (the one known symbol diff is D_006305DA, a label).  `make test` passes.
+
+## Session 36: the rest of the 0x001e files, 0x001ec7c0-0x001f0000
+
+Session 36 moved the 171 functions from func_001ec7c0 to 0x001f0000 in
+four chunks, one commit each, split by their data and calls (the helpers and
+the play timer shared a commit).  No Mac:
+static checks only.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the sound driver's RPC client (platform code) | src/sound/snd_rpc.c (49) | 0x001ec7c0-0x001edc50 | 49 |
+| small helpers (vectors, angle wrap, RGBA, a GS scissor packet) | src/util/util.c (6), util.nofill.c (1) | 0x001edc50-0x001ee118 | 7 |
+| the play timer | src/game/playtime.c (8), playtime.nofill.c (1) | 0x001ee118-0x001ee428 | 9 |
+| the game-data queries (items, abilities, party, munny, init list) | src/game/gamedata.c (76) | 0x001ee428-0x001ef950 | 76 |
+| the text functions, first part | src/text/text.c (29), text.nofill.c (1) | 0x001ef950-0x001f0000 | 30 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x001ec7c0-0x001edc50 | db656ad | auto _8 to _13, _23, _24 |
+| 0x001edc50-0x001ee428 | 3957687 | h21, s19_s19m1, s9_r2_5, nofill/text_001e0000 |
+| 0x001ee428-0x001ef950 | cae1266 | auto _2, _3, _22, _25, s6_16 |
+| 0x001ef950-0x001f0000 | 79f3b8e | auto text_001e0000, _1, _4 to _7, _17, _26, h68, s8_w6 |
+
+That is 27 files deleted and 8 new units: objdiff units 860 -> 841.  Every
+src/auto/text_001e0000*.c file is gone.  h22, nofill/h22 and h46 remain for
+their functions after 0x001f0000 (h46 also holds func_002081b0).
+
+**What the groups are.**
+- **snd_rpc.c** binds SIF RPC server 17 and talks to the IOP through the
+  0x2000-byte buffer D_00633640 (word 0 in, word 0 back).  Most commands go
+  into the 1024-slot queue D_00635640 (func_001ed000) and func_001edba0 sends
+  it (RPC 30).  The IOP writes the status block D_0063D640 (24 SndSe slots
+  of 0xb4, then 4 SndStream of 0x48 at D_0063EE40) and the message buffer
+  D_0063F640 by DMA.  D_003E3C80 (func_001ec7c0) masks four command groups.
+  This is the Vita layer's job (docs/portability.md "sound"); no Plat
+  wrapper yet.
+- **playtime.c**: func_001ee118 is frames (D_002BBDF4 times D_002BBDEC);
+  216000 / 3600 / 60 give hours, minutes, seconds.
+- **gamedata.c**: func_00147840(id) is an item record (ItemRec, kind at +2),
+  func_001478a0(id & 0x7f) an ability record (AbilRec, AP cost at +0); the
+  party is Save_304be8 (D_00304BE8, include/data/pieces/D_00304BE8_s.h:
+  h22's Member, h46's Mem74 and s6_16's C116 were all W606Mem_304be8);
+  munny is save block 5's x1c (D_003F34B8, at most 99999).
+- **text.c**: message blocks (MsgHdr: +0x10 offsets, +0x14 strings; h22's
+  Tbl was the same), the control-code walkers over D_003E8D28, the glyph
+  table D_003E8E28.  The module goes on after 0x001f0000.
+
+**m2c artefacts fixed on the way.**  Getters that pass their argument
+through in a0 had lost it (`func_00147840()` for `func_00147840(id)`); they
+take it again, and the K&R `()` prototypes went with it.  Tail-call thunks
+written as `void` return the callee's value (func_001efe68 adds 1 to
+func_001efd98's).  func_001ed320 / 410 / 738 lost the eight float
+parameters m2c passed through (the floats never leave f12-f19).
+
+**Views.**  func_001ecf40 reads the IOP message buffer signed: with a
+`(s8 *)` cast on the u8 array gcc keeps the address in a register
+differently (8 bytes longer), so snd_rpc.c declares `extern s8
+D_0063F640[256]` (bss_0063.c defines it u8) and does not include
+bss_0063_mixed.h.  gamedata.c types D_003E3CB8 as u16[] (the lhu) and does
+not include data_003E.h, whose M2C_UNK view would conflict.
+
+**Types (static).**  EvVmSub (effect.c), ScrVmSub (screen.c) and ShopVmSub
+(shop.c) are VmSub now; list.c's ListSave (lists a-d, open) and vm_lib.c's
+VmSave1 are Save1 (l0-l3, ad0.open).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `make report` 6979 at 100%, `s31_warndiff`
+0 new warnings in the edited files, and the m12 float build with
+float_covered.txt, float_reach.txt, the loaded bytes and the symbols the
+same as the base.  `make test` passes.
 
 ## Flags: what a module takes
 
@@ -781,7 +849,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 35, after each step)
+## Verification (sessions 30 to 36, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -797,21 +865,22 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x001ec7c0-0x001f0000** (about 170 functions) is the rest of the
-  0x001e files: auto text_001e0000 / _1 ... _13 / _17 / _22-_26, h21, h22,
-  h46, h68, b12, s6_16, s8_w6, s9_r2_5, s19_s19m1, nofill/text_001e0000,
-  nofill/h22 and nostrict/b12 (h46 also holds func_002081b0, far away).
-  It starts with func_001ec7c0, which sets D_003E3C80; the D_003E3C80 users
-  (auto text_001e0000 / _22 / _23 / _24, and func_001ecc68 in
-  text_001c0000_s6_nb.c) are the first group.  auto _6 to _13 hold many
-  short 0x58-byte commands from 0x001ed0d0 on; split them by data and
-  calls, as in session 35 (the D_003D9FE0 index run rises in address order
-  through all of these groups, so it does not mark a file edge).
-- The +4 VM views (EvVmSub, ScrVmSub, ShopVmSub; session 34) can switch to
-  VmSub (include/vm/vm_sub.h, session 35).  list.c's ListSave and vm_lib's
-  VmSave1 can fold into Save1 (include/save/save1.h).  Check each with
-  `make` and the float build.
+- **0x001f0000 on**: the text functions go on (func_001f00d0 ... in auto
+  text_001f0000_7 / _4 / _2 / _12 / _14, s8_w5, h46's func_001f0340,
+  s6_nb's func_001f0448 with its CONTEXT_ONLY func_001efba8, h22's
+  func_001f0600).  Move them into src/text/text*.c first (keep CONTEXT_ONLY
+  stubs where a function matched only with one), then split the rest of the
+  0x001f files by data and calls.  Check where the text group ends by its
+  users of D_0063F744 / D_003E8E28 / D_003E8D28 and calls to func_001efbb8 /
+  func_001efc10.
+- What is left of h22, nofill/h22 and h46 after that; h46's func_002081b0
+  is far away.
 - Keep sized externs in .c files: cover_check reads only those (session 35).
+- `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
+  the old files (bodies plus every declaration they use, views side by side)
+  and `mod.py remove func...` deletes the definitions and the declarations
+  only they used (prints EMPTY / NOTE lines).  Session 36 used it for every
+  chunk; the checklist below still applies.
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it
   (harmless; a `void` one would conflict, none does).
@@ -821,12 +890,10 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 - Remaining views of the camera data: h14 keeps its multi-name `extern f32
   D_003C55E0, D_003C55E4 ...` line (unused, kept for cover_check; drop it
   with a float_covered check).  b10 is gone (session 32).
-- Other files' prototypes of VM functions: session 33 retyped every one
-  outside the library files (docs/shiftable-plan.md "Session 33: Phase 4
-  types").  `python3 -I tools/shift/s33types/s33_protodiff.py` lists what is
-  left: none since session 34 (h44's `HSub *func_001e98d0` went with h44).  Retype one file at a time with
-  `make`; `--defs` also lists declarations of functions no header declares
-  yet (func_001c4de0, func_001c4ed0, func_001cd238 ...).
+- Other files' prototypes of VM functions: `python3 -I
+  tools/shift/s33types/s33_protodiff.py` lists what is left (none since
+  session 34).  `--defs` also lists declarations of functions no header
+  declares yet (func_001c4de0, func_001c4ed0, func_001cd238 ...).
 - Leave alone the files another worker is retyping in the same session.
 
 ## Checklist for a module move

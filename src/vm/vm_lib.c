@@ -13,6 +13,7 @@
  * (src/camera/, 32), the message windows (src/msgwin/, 30) and 154 functions
  * after 0x001dcad0 (0x001ddc78-0x001ec678). */
 #include "common.h"
+#include "save/save1.h"
 #include "vm/vm_obj.h"
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
@@ -3482,7 +3483,6 @@ s32 func_001d7840(VmRec *vm) {
 
 /* Save block 1's four lists at 0xa80 (10, 10, 10 and 50 bytes; 0 is a free
  * entry). */
-typedef struct { u8 pad[0xa80]; u8 l0[10]; u8 l1[10]; u8 l2[10]; u8 l3[50]; } VmSave1;
 
 /* Free entry stk[sp] - 1 of list stk[sp-1]: if an earlier entry is free,
  * nothing; else close the gaps and open one at that place. */
@@ -3505,7 +3505,7 @@ typedef struct { u8 pad[0xa80]; u8 l0[10]; u8 l1[10]; u8 l2[10]; u8 l3[50]; } Vm
     break;
 
 s32 func_001d7ef8(VmRec *vm) {
-    VmSave1 *r = (VmSave1 *)func_00232cc0(1);
+    Save1 *r = (Save1 *)func_00232cc0(1);
     s32 sp = vm->sp;
     s32 i, k;
 
@@ -3521,7 +3521,7 @@ s32 func_001d7ef8(VmRec *vm) {
 
 /* Push the first free entry (1-based) of list stk[sp]. */
 s32 func_001d8400(VmRec *vm) {
-    VmSave1 *p = (VmSave1 *)func_00232cc0(1);
+    Save1 *p = (Save1 *)func_00232cc0(1);
     s32 i;
     switch (vm->stk[vm->sp]) {
     case 0:
