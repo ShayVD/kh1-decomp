@@ -3,99 +3,12 @@
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
 
-void func_001ea128(char *dst, char *src) {
-    s32 n = 0, i = 0;
-    while (src[i] != 0) {
-        dst[n] = src[i];
-        if ((u8)(src[i] - 5) < 3) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        } else if (src[i] == 11) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        } else if (src[i] == 10) {
-            i++; n++;
-            dst[n] = src[i];
-            if (dst[n] == 0) {
-                i++; n++;
-                dst[n] = src[i];
-                i++; n++;
-                dst[n] = src[i];
-            }
-        } else if (src[i] == 13) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        }
-        if ((u8)(src[i] - 9) < 23) {
-            i++; n++;
-            dst[n] = src[i];
-        }
-        i++; n++;
-    }
-    dst[n] = 0;
-}
+/* func_001ea128 is in src/vm/vm_util.c. */
 
-s32 func_001ea5f8(VmRec *e) {
-    VmMsg m;
-    m.type = 13;
-    m.val = 0;
-    m.v[3] = 1.0f;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    return 2;
-}
+/* func_001ea5f8, func_001ea658, func_001ea808, func_001ea888 are in src/vm/vm_ent.c. */
 
-s32 func_001ea658(VmRec *e) {
-    VmMsg m;
-    m.type = 14;
-    m.val = 0;
-    m.v[3] = 1.0f;
-    m.v[0] = 0;
-    m.v[1] = 0;
-    m.v[2] = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    return 2;
-}
 
-s32 func_001ea808(VmRec *e) {
-    VmMsg m;
-    m.type = 35;
-    m.val = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    m.type = 42;
-    m.val = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    return 2;
-}
 
-s32 func_001ea888(VmRec *e) {
-    VmMsg m;
-    m.type = 36;
-    m.val = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    m.type = 43;
-    m.val = 0;
-    m.x = e->x0;
-    func_001c4640(&m);
-    return 2;
-}
 
 typedef W606Mem_304be8 C116;
 typedef struct { u8 pad[0x48e]; u8 f48e[4]; } W17;

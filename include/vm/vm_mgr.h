@@ -132,6 +132,7 @@ typedef struct {
     u8 pad3468[8];
     CamS_2BC0F0 c0;         /* 0x3470: tween start (a camera setting, D_002BC0F0's 0x30 bytes) */
     CamS_2BC0F0 c1;         /* 0x34a0: tween target */
+    s32 x34d0;              /* 0x34d0: set by func_001ea498 (src/vm/vm_ent.c) */
 } VmMgr;
 
 #endif /* KH1_VM_VM_MGR_H */

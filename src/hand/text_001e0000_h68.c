@@ -2,80 +2,19 @@
 #include "data/bss_0062.h"
 
 typedef int u128 __attribute__((mode(TI)));
-typedef struct { s32 a, b, c, d; } Q4;
-typedef union { u128 q; u32 w; } U128;
-typedef struct { U128 dma; u64 gif[8]; Q4 v[400]; U128 end; } Pkt620;
-
-typedef struct {
-    s32 x0;
-    s16 h4, h6, h8, ha, hc, he;
-    u8 pad10[0xc];
-    f32 f1c;
-    u8 pad20[0x10];
-    f32 f30, f34;
-    u8 pad38[8];
-    f32 f40, f44;
-    u8 pad48[0x48];
-    u8 b90;
-    u8 pad91[3];
-    f32 f94;
-    u8 pad98[0x18];
-} Win;
-
-typedef struct { s32 a; s32 n; void (*fn)(); } Cb;
-typedef struct { s32 x0; char s[9][32]; u8 pad[0x644 - 4 - 9 * 32]; char x644[0x20]; s32 a, b, c, d; } Big498;
-typedef struct {
-    u8 pad0[0x3034];
-    s32 f3034;
-    s32 f3038;
-    u8 pad303c[0x3070 - 0x303c];
-    u64 f3070;
-} Big20;
-typedef struct {
-    u8 pad0[0xa80];
-    u8 a80[10];
-    u8 pada8a[0xad0 - 0xa8a];
-    u32 ad0;
-} Sv;
-typedef Sv SvA80;
-typedef Sv SvAD0;
 #include "data/types/text_001e0000_h68.h"
 typedef struct { s8 used; u8 pad1[3]; s32 x4; s32 x8; s32 xc; s32 x10; u8 pad[180 - 20]; } Ent180;
 typedef struct { u8 b0; u8 b1; s8 x2; s8 x3; s8 used; u8 pad5[11]; s32 x10; u8 pad[72 - 20]; } Ent72;
 
-extern Win D_00630300;
-extern Win D_00630460;
-extern Win D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
 #include "data/pieces/D_00304BE8_s.h"
-extern Cb D_006305C0;
-extern Big498 D_003DC498;
-extern Big20 D_00389C90;
 extern s32 D_003F7A68;
-extern volatile s32 D_002C5958;
 #include "data/pieces/D_003DBA68.h"
 #include "data/pieces/D_003DC2A8.h"
 #include "data/pieces/D_003DC370.h"
-extern u8 D_003DCB10[][32];
 #include "data/pieces/D_003DCB90.h"
-extern u8 D_003DCEF0[];
 #include "data/pieces/D_003DD230.h"
 extern s32 D_003DD258;
-extern s32 D_003DD25C;
-extern s32 D_003DD264;
-extern s32 D_003DD268;
-extern s32 D_003DD27C;
-extern s32 D_003DD280;
-extern s32 D_003DD284;
-extern s32 D_003DD288;
 extern s32 D_003DD28C;
-extern s32 D_003DD308;
-extern s32 D_003DD30C;
-extern s32 D_003DD310;
-extern s32 D_003DD314;
-extern char D_006305D0[][10];
-extern u8 D_006304E0[];
-extern s8 D_006307C8[]; /* src/data/bss_0063.c: char D_006307C8[0x800] */
-extern u8 D_00630FC8[]; /* src/data/bss_0063.c: char D_00630FC8[0x100] */
 extern s32 D_003C21A0;
 #include "data/pieces/D_003C3A70.h"
 extern s32 D_003C54F0;
@@ -88,36 +27,11 @@ extern Ent72 D_0063EE40[];
 extern u8 D_0063F640[256];
 extern char D_00490910[];
 extern u8 D_00490940[];
-extern Pkt620 D_00631620;
 
-void func_0010bd90(void *, void (*)());
-void func_0010bdd0(void *, void (*)());
-void func_0010e3f0(void *);
-void func_0010ef70(void *, void *, void *);
-void func_0010f558(void *, void *, s32);
-s32 func_0011ef10(s32, void (*)());
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 s32 func_001205f0(void *, void *);
 void *func_001559f0(s32, s32);
-void func_001e4b08(void);
-void func_001e4c20(void);
-void func_001e5810();
-s32 func_001e6038(void);
-void func_001e6578();
-void func_001e6580();
-void func_001e6ba8();
-void func_001e6e20();
-void func_001e6eb0();
-void func_001e7228();
-void func_001e7278();
-void func_001e7b48();
-void func_001e7b50();
-s32 func_001e9418(void);
-void func_001ea128(void *, void *);
-void func_001ea268(void *, void *);
 void func_001ec7c0(s32);
-void func_002329a0(void *, void (*)(), void (*)());
-Sv *func_00232cc0(s32);
 s32 func_00266c08(s32);
 void func_00266f38(s32, void *);
 s32 sceGsSyncPath(s32, s32);
@@ -133,236 +47,13 @@ int printf(const char *, ...);
 
 
 
-s32 func_001e5d78(void) {
-    u8 buf[16];
-    s32 i;
-    D_003DD264 = 0;
-    D_002C5958 |= 0xC;
-    func_001e4b08();
-    for (i = 0; i < 10; i++) {
-        if (D_00304BE8->cnt[i] < 9) {
-            buf[0] = 1;
-            buf[1] = 1;
-            buf[2] = D_00304BE8->cnt[i] + 33;
-            buf[3] = 1;
-            buf[4] = 0;
-        } else {
-            buf[0] = (D_00304BE8->cnt[i] + 1) / 10 + 33;
-            buf[1] = (D_00304BE8->cnt[i] + 1) % 10 + 33;
-            buf[2] = 1;
-            buf[3] = 0;
-        }
-        func_001ea268(D_006307C8, buf);
-    }
-    func_001e4c20();
-    D_00630300.f30 = -60.0f;
-    D_00630300.f34 = -30.0f;
-    D_00630300.f40 = 10.0f;
-    D_00630300.f44 = 11.0f;
-    func_0010bdd0(&D_00630300, func_001e5810);
-    return 2;
-}
+/* func_001e5d78, func_001e5ee0, func_001e61c0, func_001e72a0, func_001e7ba8 are in src/list/list.c. */
 
-void func_001e5ee0(void) {
-    D_00630460.f30 = -130.0f;
-    D_00630460.f34 = -90.0f;
-    D_00630460.f40 = 7.0f;
-    D_00630460.f44 = 5.0f;
-    D_00630460.h4 = 6;
-    D_00630460.hc = 2;
-    D_00630460.he = 2;
-    D_00630460.h6 = 1;
-    D_00630460.h8 = 13;
-    D_00630460.b90 = 0;
-    D_00630460.f1c = 135.0f;
-    D_00630460.x0 = -1;
-    D_00630460.f94 = 1.0f;
-    D_00630510.f30 = 100.0f;
-    D_00630510.f34 = -90.0f;
-    D_00630510.f40 = 5.0f;
-    D_00630510.f44 = 4.5f;
-    D_00630510.h4 = 2;
-    D_00630510.hc = 2;
-    D_00630510.he = 2;
-    D_00630510.h6 = 1;
-    D_00630510.h8 = 13;
-    D_00630510.b90 = 0;
-    D_00630510.f1c = 200.0f;
-    D_00630510.x0 = -1;
-    D_00630510.f94 = 1.0f;
-    D_00630300.f30 = 110.0f;
-    D_00630300.f34 = 0.0f;
-    D_00630300.f40 = 10.0f;
-    D_00630300.f44 = 11.0f;
-    D_00630300.h4 = 6;
-    D_00630300.hc = 1;
-    D_00630300.he = 1;
-    D_00630300.h6 = 0;
-    D_00630300.h8 = 13;
-    D_00630300.b90 = 0;
-    D_00630300.f1c = 200.0f;
-    D_00630300.x0 = -1;
-    D_00630300.f94 = 1.0f;
-    D_003DC498.a = 0x7E60;
-    D_003DC498.b = 0x7540;
-    D_003DC498.c = 0x8FE0;
-    D_003DC498.d = 0x8B20;
-}
 
-void func_001e61c0(void) {
-    s32 ok = 0;
-    SvAD0 *sv = func_00232cc0(1);
-    switch (D_003DD258) {
-    case 1:
-        func_0010bd90(&D_00630460, 0);
-        break;
-    case 2:
-        switch (D_003DD25C) {
-        case 0:
-            if (sv->ad0 & 1) ok = 1;
-            break;
-        case 1:
-            if (sv->ad0 & 2) ok = 1;
-            break;
-        case 2:
-            if (sv->ad0 & 4) ok = 1;
-            break;
-        case 3:
-            if (sv->ad0 & 8) ok = 1;
-            break;
-        }
-        if (ok == 1) {
-            func_002329a0(&D_003DC498, func_001e6578, func_001e6580);
-            func_0010bdd0(&D_00630300, func_001e6ba8);
-            func_0010e3f0(D_006304E0);
-            func_0010ef70(D_006304E0 - 0x80, D_003DCEF0, 0);
-            D_003DD284 = ok;
-            D_003DD288 = 60;
-            func_0011ef10(0xC350, (void (*)())func_001e6038);
-            D_003DD280 = 0;
-            D_003DD27C = 0;
-        } else {
-            func_0010e3f0(D_006304E0);
-            func_0010ef70(D_006304E0 - 0x80, D_00630FC8, 0);
-            do { func_0010bdd0(&D_00630510, func_001e6e20); } while (0);
-        }
-        break;
-    }
-}
 
-void func_001e72a0(void) {
-    SvAD0 *sv = func_00232cc0(1);
-    s32 i;
-    func_001ea128(D_006307C8, D_003DCB10[0]);
-    func_001ea268(D_006307C8, D_003DD230);
-    D_003DD268 = 1;
-    if (sv->ad0 & 1) {
-        func_001ea268(D_006307C8, D_003DCB10[1]);
-        func_001ea268(D_006307C8, D_003DD230);
-        D_003DD268++;
-    }
-    if (sv->ad0 & 2) {
-        func_001ea268(D_006307C8, D_003DCB10[2]);
-        func_001ea268(D_006307C8, D_003DD230);
-        D_003DD268++;
-    }
-    if (sv->ad0 & 4) {
-        func_001ea268(D_006307C8, D_003DCB10[3]);
-        func_001ea268(D_006307C8, D_003DD230);
-        D_003DD268++;
-    }
-    i = 0;
-    while (D_006307C8[i] != 0) {
-        i += (u32)((u8)D_006307C8[i] - 9) < 23;
-        i++;
-    }
-    D_006307C8[i] = 4;
-    func_0010ef70(&D_00630510, D_006307C8, func_001e7278);
-    D_006305C0.n = D_003DD268 + 1;
-    D_006305C0.fn = func_001e7228;
-    D_006305C0.a = 1;
-    func_0010f558(&D_006305C0, &D_00630510, 1);
-    func_0011ef10(0xC350, func_001e6eb0);
-    D_003DD28C = 1;
-}
 
-void func_001e7ba8(void) {
-    SvA80 *sv = func_00232cc0(1);
-    s32 i;
-    switch (D_003DD258) {
-    default: return;
-    case 1:
-        D_00389C90.f3070 &= ~0x0020000000000000ULL;
-        break;
-    case 2:
-        D_00389C90.f3070 &= ~0x0020000000000000ULL;
-        break;
-    case 3:
-        D_003DC498.x0 = 9;
-        func_001ea128(D_006307C8, D_006305D0[0]);
-        func_001ea268(D_006307C8, D_003DCB90[sv->a80[0]]);
-        func_001ea128(D_003DC498.x644, D_006307C8);
-        for (i = 1; i < 10; i++) {
-            func_001ea128(D_006307C8, D_006305D0[i]);
-            func_001ea268(D_006307C8, D_003DCB90[sv->a80[i]]);
-            func_001ea128(D_003DC498.s[i - 1], D_006307C8);
-        }
-        func_002329a0(&D_003DC498, func_001e7b48, func_001e7b50);
-        func_0010bdd0(&D_00630300, 0);
-        break;
-        break;
-    }
-}
 
-void func_001e9670(void) {
-#define pk (&D_00631620)
-    Q4 *p;
-    s32 i;
-    Pkt620 *q;
-    U128 *e;
-    pk->dma.q = 0;
-    pk->dma.w = 0x10000194;
-    pk->gif[0] = 0x1000000000000002ULL;
-    pk->gif[1] = 14;
-    pk->gif[2] = 0x4000d;
-    pk->gif[3] = 71;
-    pk->gif[4] = 68;
-    pk->gif[5] = 66;
-    pk->gif[6] = 0x2024c000000080c8ULL;
-    pk->gif[7] = 65;
-    p = pk->v;
-    for (i = 0; i < 100; i++) {
-        p->a = i + 32;
-        p->b = i + 96;
-        p->c = i + 16;
-        p->d = 96;
-        p++;
-        p->a = 0x7880;
-        p->b = (i + 2098) << 4;
-        p->c = 0xFFFFFF;
-        p->d = 0;
-        p++;
-        p->a = i + 32;
-        p->b = i + 96;
-        p->c = i + 16;
-        p->d = 96;
-        p++;
-        p->a = 0x8780;
-        p->b = (i + 2098) << 4;
-        p->c = 0xFFFFFF;
-        p->d = 0;
-        p++;
-    }
-    q = &D_00631620;
-    e = &q->end;
-    e->q = 0;
-    e->w = 0x70000000;
-    D_003DD308 = 0;
-    D_003DD30C = 0;
-    D_003DD310 = 4;
-    D_003DD314 = 2;
-    func_0011ef10(0xC350, (void (*)())func_001e9418);
-}
+/* func_001e9670 is in src/screen/wave.c. */
 
 /* func_001e9b98 is in src/vm/vm_find.nofill.c. */
 

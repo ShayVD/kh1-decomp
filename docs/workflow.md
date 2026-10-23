@@ -1060,3 +1060,15 @@ found that the next session needs:
   oversized view used to keep it in place), so the float layout is unchanged by the move.
 - Workers ran in git worktrees /home/user/wt-{module,reach}; the only merge conflict was the appended entries in
   tools/shift/float_keep.txt (keep both).
+
+## Session 35: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only, no boot test. Nothing new floats: docs/float-untested.md
+  has a session 35 row with no names.
+- **Modules** (docs/modules.md "Session 35"): 0x001e4918-0x001ec7c0 (204 functions, 6 chunks) into src/list/list.c,
+  src/event/sound.c, src/screen/wave*.c, src/vm/vm_util*.c, src/vm/vm_ent.c and src/save/flags*.c. 17 files deleted,
+  objdiff units 866 -> 860. No workers.
+- **New shared types:** VmSub (include/vm/vm_sub.h, the "+4 view" of the VM) and Save1 (include/save/save1.h, the
+  0xdd8-byte save record).
+- **cover_check reads only .c files:** a sized extern moved into a header changes float_covered.txt. Keep sized
+  externs in the .c files (wave.h holds types only).

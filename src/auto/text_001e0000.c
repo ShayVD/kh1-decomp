@@ -3,25 +3,11 @@
 #include "m2c.h"
 #include "data/bss_0063.h"
 
-M2C_UNK func_00101728(M2C_UNK);
 M2C_UNK func_00111b10();
 M2C_UNK func_00111b48();
 M2C_UNK func_00111b90();
-M2C_UNK func_0011c7d8(M2C_UNK);
-M2C_UNK func_0011c7f0(s32);
-M2C_UNK func_0011c9a0();
-M2C_UNK func_0011c9b0();
-M2C_UNK func_0011d448();
-M2C_UNK func_0011d588();
-M2C_UNK func_0011d688(s32);
-M2C_UNK func_0011e518();
-M2C_UNK func_0011e528();
-M2C_UNK func_0011e9a8(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_0011eb88(s32, M2C_UNK *, s32, M2C_UNK *);
-M2C_UNK func_0011ec08(s32, M2C_UNK *, s32, M2C_UNK *);
 M2C_UNK func_00147808(u16);
 M2C_UNK func_001478a0();
-M2C_UNK func_001557b0(s32);
 M2C_UNK func_001ba1e8();
 M2C_UNK func_001ba208();
 M2C_UNK func_001ee6d0();
@@ -32,25 +18,14 @@ M2C_UNK func_001effc0(s32);
 M2C_UNK func_002583e0(M2C_UNK);
 extern M2C_UNK D_003E5ED8;
 extern M2C_UNK D_003E8910;
-extern M2C_UNK D_00F20000;
-extern M2C_UNK func_001e7fe0;
-extern M2C_UNK func_001e8308;
-extern M2C_UNK func_001e8628;
-extern s32 D_003DD260;
 extern s32 D_003E3C80;
 extern s32 D_003E8E00;
 extern s32 D_003E8E04;
-extern s32 D_006314CC;
-extern s32 D_006314D0;
-extern s32 D_006314D8;
-extern s32 D_006314DC;
 extern s32 D_0063F248;  /* src/data/data_0063.s: inside the IOP block D_0063D640 */
 extern s32 D_0063F540;
 #include "data/pieces/D_003F34B8.h"
-s32 func_0011e340(M2C_UNK);
 s32 func_001ee768();
 s32 func_001efbb8();
-s32 func_00232cc0(M2C_UNK);
 u16 *func_00147840();
 u32 func_001ee118();
 void *func_001496c8();
@@ -60,129 +35,31 @@ void *func_001496c8();
 
 /* func_001e2800 is in src/shop/shop.c. */
 
-s32 func_001e7488(void *arg0) {
-    s32 temp_v1;
+/* func_001e7488 is in src/list/list.c. */
 
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_003DD260;
-    return 2;
-}
+/* func_001e8010, func_001e8338, func_001e8658, func_001e89e0, func_001e8a10, func_001e8a30, func_001e8b08, func_001e8bc0, func_001e90c8, func_001e90d0, func_001e9108, func_001e9150, func_001e9170, func_001e9190, func_001e91f0 are in src/event/sound.c. */
 
-s32 func_001e8010(void) {
-    if (func_0011e340(0) == 0) {
-        func_0011ec08(D_006314D0, &D_00F20000, D_006314D8, &func_001e7fe0);
-        return 4;
-    }
-    return 0;
-}
 
-s32 func_001e8338(void) {
-    if (func_0011e340(0) == 0) {
-        func_0011eb88(D_006314CC, &D_00F20000, D_006314DC, &func_001e8308);
-        return 4;
-    }
-    return 0;
-}
 
-s32 func_001e8658(void) {
-    if (func_0011e340(0) == 0) {
-        func_0011e9a8(&func_001e8628, &D_00F20000);
-        return 4;
-    }
-    return 0;
-}
 
-s32 func_001e89e0(void) {
-    func_0011e518();
-    func_0011c7d8(0);
-    func_0011c7d8(1);
-    return 2;
-}
 
-s32 func_001e8a10(void) {
-    func_0011e518();
-    return 2;
-}
 
-s32 func_001e8a30(void) {
-    func_0011e528();
-    return 2;
-}
 
-s32 func_001e8b08(void *arg0) {
-    func_0011c7f0(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184) - 1);
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
 
-s32 func_001e8bc0(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 4);
-    return 2;
-}
 
-s32 func_001e90c8(void) {
-    return 2;
-}
 
-s32 func_001e90d0(void *arg0) {
-    func_0011d588();
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
 
-s32 func_001e9108(void *arg0) {
-    func_0011d688(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184) * 8);
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
 
-s32 func_001e9150(void) {
-    func_0011c9a0();
-    return 2;
-}
 
-s32 func_001e9170(void) {
-    func_0011c9b0();
-    return 2;
-}
 
-s32 func_001e9190(void) {
-    func_0011c9b0();
-    func_00101728(0);
-    func_0011d448();
-    return 2;
-}
 
-s32 func_001e91f0(void *arg0) {
-    func_001557b0(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
+/* func_001ea430 is in src/vm/vm_util.c. */
 
-void func_001ea430(void) {
+/* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
 
-}
 
-s32 func_001eafd8(void) {
-    return func_00232cc0(1) + 0xAD1;
-}
 
-s32 func_001eaff8(void) {
-    return func_00232cc0(1) + 0x904;
-}
 
-s32 func_001eb018(void) {
-    return func_00232cc0(1) + 0x909;
-}
-
-s32 func_001eb5f0(s32 arg0, s32 arg1) {
-    return M2C_FIELD(((((arg0 * 5) + arg1) * 4) + func_00232cc0(1)), s32 *, 0xB14);
-}
-
-void func_001eb640(s32 arg0, s32 arg1, s32 arg2) {
-    M2C_FIELD(((((arg0 * 5) + arg1) * 4) + func_00232cc0(1)), s32 *, 0xB14) = arg2;
-}
 
 void func_001ec7c0(s32 arg0) {
     D_003E3C80 = arg0;

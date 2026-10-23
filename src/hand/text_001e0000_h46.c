@@ -3,28 +3,6 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-/* Save data block returned by func_00232cc0(1) (same layout as h21's Sv). */
-typedef struct {
-    u8 pad0[0x34c];
-    s32 a34c[7];
-    s32 a368[0x5a][4];
-    u8 pad[0xad1 - 0x368 - 0x5a * 16];
-    u8 name[10];
-    u8 pad2[8];
-    u8 fl[0x20];
-    u8 fl2[0x11];
-    s32 tbl[32][5];
-    u32 w[11];
-    u8 fl3[4];
-    u32 dc4;
-    u8 fl5[4];
-    s32 dcc;
-    s32 dd0;
-    u32 dd4;
-} Sv;
-/* Flag word at +0xad0 of the same block. */
-typedef struct { u8 pad[0xad0]; u32 ad0; } SvA;
-Sv *func_00232cc0(s32);
 
 /* Party member (0x74 bytes) in the save block at D_00304BE8. */
 typedef W606Mem_304be8 Mem74;
@@ -168,36 +146,8 @@ void func_001f4698(Txt *t, f32 v);
 f32 func_001f46a0(Txt *t);
 void func_001f46a8(Txt *t, f32 v);
 
-void func_001ebca0(s32 n, s32 on) {
-    s32 q = n / 8;
-    s32 s = 7 - (n % 8);
-    Sv *v = func_00232cc0(1);
-    if (on) v->fl3[q] |= 1 << s;
-    else v->fl3[q] &= ~(1 << s);
-}
+/* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
 
-s32 func_001ec0d8(VmRec *vm) {
-    SvA *v = (SvA *)func_00232cc0(1);
-    switch (vm->stk[vm->sp]) {
-    case 0: v->ad0 |= 1; break;
-    case 1: v->ad0 |= 2; break;
-    case 2: v->ad0 |= 4; break;
-    case 3: v->ad0 |= 8; break;
-    }
-    vm->sp--;
-    return 2;
-}
-
-s32 func_001ec1a0(VmRec *vm) {
-    SvA *v = (SvA *)func_00232cc0(1);
-    switch (vm->stk[vm->sp]) {
-    case 0: vm->stk[vm->sp] = (u8)v->ad0 & 1; break;
-    case 1: vm->stk[vm->sp] = (v->ad0 >> 1) & 1; break;
-    case 2: vm->stk[vm->sp] = (v->ad0 >> 2) & 1; break;
-    case 3: vm->stk[vm->sp] = (v->ad0 >> 3) & 1; break;
-    }
-    return 2;
-}
 
 void func_001ed000(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
     s32 *pn = &D_003E3CB0;
