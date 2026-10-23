@@ -233,7 +233,7 @@ void func_001229c0(Obj430 *o, f32 m[4][4]) {
     for (i = 0, e = &D_002C5C80, b = 1, row = m[0]; i < 31; i++, e++) {
         if (o->mask & (b << i)) {
             if (e->kind < 5) if (e->kind >= 2) {
-                func_002675a8(row, e->v.v);
+                func_002675a8(row, &e->col.x);
                 row += 4;
             }
         }

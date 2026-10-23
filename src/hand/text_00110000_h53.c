@@ -287,12 +287,12 @@ void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
     f32 dot, r;
     n = 0;
     sceVu0CopyMatrix(m, D_002C5910);
-    l = ((Light53 *)&D_002C5C80);
+    l = &D_002C5C80;
     for (i = 0; i < 31; i++, l++) {
         if (!(*(u32 *)(o + 0x420) & (1 << i))) continue;
-        switch (l->type) {
+        switch (l->kind) {
         case 2:
-            for (j = 0; j < 3; j++) m[j][n] = -l->dir[j];
+            for (j = 0; j < 3; j++) m[j][n] = -(&l->dir.x)[j];
             n++;
             break;
         case 3:
@@ -307,7 +307,7 @@ void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
         case 4:
             func_00267530(&d, &l->pos, pos);
             func_00121fc4(&d, &d);
-            dot = -func_00267390(l->dir, &d);
+            dot = -func_00267390(&l->dir.x, &d);
             r = l->radius;
             if (r < dot) {
                 func_00267560(&d, &d, (dot - r) / (1.0f - r));
@@ -587,10 +587,10 @@ void func_00122588(u8 *o) {
     u32 mask = 0;
     f32 dist, r;
     func_002675a8(acc, &D_002C5C70);
-    l = ((Light53 *)&D_002C5C80);
+    l = &D_002C5C80;
     for (i = 0; i < 31; i++, l++) {
         if (l->flags & 0x11) continue;
-        switch (l->type) {
+        switch (l->kind) {
         case 1:
             func_00267548(acc, acc, &l->col);
             break;
