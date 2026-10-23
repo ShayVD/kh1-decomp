@@ -49,7 +49,7 @@ make && make report                                 # the build is still the jud
 `--write` groups matches into `src/auto/text_XXXX0000.c` (one file per 64 KiB
 of address space, `_1`, `_2`… when m2c's extern declarations conflict). The
 original translation units are unknown, so these files are provisional;
-phase 4 moves functions into real modules. The code uses `M2C_FIELD(ptr,
+phase 4 moves functions into real modules (docs/modules.md). The code uses `M2C_FIELD(ptr,
 type *, offset)` and `M2C_UNK` from `include/m2c.h` for fields and types not
 recovered yet. Replacing them with real structs must keep the match.
 

@@ -143,18 +143,6 @@ void func_001c0010(void) {
     func_001bfcd8();
 }
 
-typedef VmRec VmA;
-u8 *func_00232cc0(s32);
-s32 func_001c1330(VmA *v, s32 a) {
-    u8 *p1 = func_00232cc0(1);
-    u8 *p2 = func_00232cc0(2);
-    s32 bit = a % 8;
-    s32 q = a / 8;
-    a = q - 3392;
-    v->stk[++v->sp] = (*(s8 *)(p2 + a) >> bit) & 1;
-    return 2;
-}
-
 void func_001c2d20(s8 *p, s32 *cnt, s8 **tbl) {
     s32 n = *(s32 *)p;
     s32 i;

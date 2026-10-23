@@ -18,11 +18,6 @@ extern Task_bfcd8 *D_0037A16C;
 extern s32 D_0037A164, D_0037A168, D_0037A174;
 extern u8 *D_006257D4;
 void func_001be820(void *p, u32 n);
-typedef VmRec VM_c0f30;
-extern s32 D_0038B4C4[], D_0038ACC4[];
-extern s8 D_003C2D30[];
-s8 *func_00232cc0(s32);
-typedef VmRec VM_c1b58;
 typedef struct {
     u8 type;
     u64 val:24;
@@ -32,7 +27,6 @@ typedef struct {
     f32 v[4];
 } Msg;
 s32 func_001c4640(Msg *m);
-VM_c1b58 *func_001e98d0(s32, s32);
 typedef VmRec VM_c2778;
 typedef struct { u8 pad[12340]; s32 w12340; } Big_c2778;
 extern s32 D_002BCDEC;
@@ -255,68 +249,6 @@ void func_001bfcd8(void) {
         q->w8 = 0;
         q->arg = 0;
     }
-}
-
-s32 func_001c0f30(VM_c0f30 *v, s32 idx) {
-    s8 *a = func_00232cc0(1);
-    s8 *b = func_00232cc0(2);
-    v->stk[32] = idx;
-    if (idx < 0x800) {
-        v->stk[++v->sp] = a[idx];
-    } else if (idx < 0x900) {
-        v->stk[++v->sp] = a[idx];
-    } else if (idx < 0xb00) {
-        idx -= 0x900;
-        if ((s32)(v->fl.x >> 5) & 1) {
-            v->stk[++v->sp] = D_0038B4C4[idx];
-        } else {
-            v->stk[++v->sp] = D_0038ACC4[idx];
-        }
-    } else if (idx < 0xc80) {
-        v->stk[++v->sp] = *(u8 *)(idx + (u32)a - 0x200);
-    } else if (idx < 0xcc0) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else if (idx < 0xd00) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else if (idx < 0xd40) {
-        v->stk[++v->sp] = D_003C2D30[idx];
-    } else {
-        v->stk[++v->sp] = *(s8 *)(idx + (u32)b - 0xd40);
-    }
-    return 2;
-}
-
-s32 func_001c1b58(VM_c1b58 *v) {
-    s32 id, lvl, j;
-    VM_c1b58 *t;
-    Msg m;
-    id = v->stk[v->sp--];
-    lvl = v->stk[v->sp--];
-    if (lvl < 0) lvl = 0;
-    else if (lvl >= 8) lvl = 7;
-    t = func_001e98d0((s32)(v->fl.x >> 5) & 1, id);
-    if (t == v) return 6;
-    t->ret[lvl] = -1;
-    if (lvl != t->rsp) return 2;
-    for (j = lvl + 1; j < 8; j++) {
-        if (t->ret[j] != -1) {
-            t->pc = t->ret[j];
-            t->rsp = j;
-            break;
-        }
-    }
-    if ((u32)t->fl.i[0] % 2 == 1) {
-        m.type = 18;
-        m.val = 0;
-        m.v[0] = 0.0f;
-        m.v[1] = 0.0f;
-        m.v[2] = 0.0f;
-        m.v[3] = 1.0f;
-        m.x = t->x0;
-        func_001c4640(&m);
-        t->fl.x &= ~1;
-    }
-    return 2;
 }
 
 #define D_00389C90 (*(Big_c2778 *)&D_00389C90)

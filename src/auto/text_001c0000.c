@@ -27,88 +27,10 @@ extern u32 D_002C5958;
 s32 func_0011e340(M2C_UNK);
 s32 func_00123618(s32);
 s32 func_001559f0(M2C_UNK, M2C_UNK);
-s32 func_00232cc0(M2C_UNK);
-s64 func_001c0bf0(s32, M2C_UNK);
 
 void func_001c07f0(void) {
     func_0011efa8(&D_006297F8, &D_00629808, 0x1C, 8);
     func_0011ef10(0xC352, &func_001c07c8);
-}
-
-s32 func_001c08e8(void) {
-    return 2;
-}
-
-s32 func_001c0960(void) {
-    return 2;
-}
-
-s32 func_001c0968(void *arg0, s32 arg1) {
-    M2C_FIELD(((arg1 * 4) + arg0), s32 *, 0x270) = (s32) M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184);
-    M2C_FIELD(arg0, s32 *, 0x2F0) = arg1;
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001c0b28(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x2F0) = (s32) (M2C_FIELD(arg0, s32 *, 0x2F0) - 1);
-    return 2;
-}
-
-s32 func_001c0d20(void *arg0, s32 arg1) {
-    s32 temp_a0;
-    s64 temp_a1;
-
-    temp_a1 = (s64) (func_001c0bf0(arg1, 4) << 0x20) >> 0x20;
-    temp_a0 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_a0;
-    M2C_FIELD(((temp_a0 * 4) + arg0), s32 *, 0x184) = (s32) temp_a1;
-    return 2;
-}
-
-s32 func_001c0d70(void *arg0, s32 arg1) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) M2C_FIELD(((arg1 * 4) + arg0), s32 *, 0x208);
-    return 2;
-}
-
-s32 func_001c0e50(s32 arg0) {
-    return func_00232cc0(2) + arg0;
-}
-
-s32 func_001c1318(void) {
-    return 2;
-}
-
-s32 func_001c1320(void) {
-    return 2;
-}
-
-s32 func_001c1328(void) {
-    return 2;
-}
-
-s32 func_001c1960(void *arg0, s32 arg1) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = arg1;
-    return 2;
-}
-
-s8 func_001c1ce8(s32 arg0, s32 arg1) {
-    return M2C_FIELD(((arg1 * 4) + arg0), s8 *, 3);
-}
-
-s32 func_001c1cf8(s32 arg0, s32 arg1) {
-    void *temp_a1;
-
-    temp_a1 = (arg1 * 4) + arg0;
-    return M2C_FIELD(temp_a1, u8 *, 0) | (M2C_FIELD(temp_a1, u8 *, 1) << 8) | (M2C_FIELD(temp_a1, s8 *, 2) << 0x10);
 }
 
 void func_001c4d90(s32 arg0, s32 arg1, s32 arg2) {

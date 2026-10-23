@@ -13,36 +13,6 @@ typedef struct VmObj {
    value stack at +0x184, flags at +0x328. */
 typedef VmRec VM;
 
-typedef struct { s32 x0; s32 id; } PQ;
-typedef struct { s32 x0; PQ *q; u8 pad8[0x74]; s32 a[1]; u8 pad80[0x2f8-0x80]; s32 b[8]; } P;
-P *func_001e98d0(s32, s32);
-s32 func_001c1980(P *, s32, s32);
-
-s32 func_001c19f8(VM *vm, s32 k) {
-    s32 a = vm->stk[vm->sp--];
-    s32 b = vm->stk[vm->sp--];
-    P *p;
-    if (b < 0) b = 0;
-    else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
-    func_001c1980(p, b, p->a[k]);
-    return 2;
-}
-
-s32 func_001c1aa8(VM *vm) {
-    s32 a = vm->stk[vm->sp--];
-    s32 b = vm->stk[vm->sp--];
-    P *p;
-    if (b < 0) b = 0;
-    else if (b >= 8) b = 7;
-    p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, a);
-    if (p->b[b] != -1) {
-        vm->pc -= 2;
-        return 4;
-    }
-    return 2;
-}
-
 s32 func_001c1ce8(s8 *, s32);
 s32 func_001c1cf8(s8 *, s32);
 extern s32 (*D_0037A198[])(VM *, s32);

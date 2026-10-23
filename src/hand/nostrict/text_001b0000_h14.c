@@ -58,22 +58,6 @@ void func_0010bd90(void *a, void *fn);
 void func_001caa20(void);
 void func_001cae20(void *a, Ent176 *e);
 
-s32 func_001c1980(VM *v, s32 a, s32 b) {
-    if (a < v->depth) {
-        v->w756 = 0;
-        v->ret[v->depth] = v->pc;
-        v->depth = a;
-        v->pc = b;
-        v->flags &= ~4;
-    } else if (a == v->depth) {
-        v->pc = b;
-        v->w756 = 0;
-        v->flags &= ~4;
-    }
-    v->ret[a] = b;
-    return 1;
-}
-
 s32 func_001c8c90(VM *v) {
     Tween *p;
     s32 sp;

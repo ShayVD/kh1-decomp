@@ -140,59 +140,6 @@ void func_001c06f8(void) {
     func_001dd170();
 }
 
-s32 func_001c08f0(VM *v, s32 off) {
-    v->pc += off;
-    return off < 0 ? 4 : 1;
-}
-
-s32 func_001c0910(VM *v, s32 off) {
-    if (v->stack[v->sp--] == 0) {
-        v->pc += off;
-        return off < 0 ? 4 : 1;
-    }
-    return 2;
-}
-
-s32 func_001c09a0(VM *v, s32 x) {
-    v->sp++;
-    if (v->vars[v->vidx] == x) v->stack[v->sp] = 1;
-    else v->stack[v->sp] = 0;
-    return 2;
-}
-
-s32 func_001c09e8(VM *v, s32 x) {
-    v->sp++;
-    if (v->vars[v->vidx] < x) v->stack[v->sp] = 1;
-    else v->stack[v->sp] = 0;
-    return 2;
-}
-
-s32 func_001c0a38(VM *v, s32 x) {
-    v->sp++;
-    if (v->vars[v->vidx] <= x) v->stack[v->sp] = 1;
-    else v->stack[v->sp] = 0;
-    return 2;
-}
-
-s32 func_001c0a88(VM *v, s32 x) {
-    v->sp++;
-    if (v->vars[v->vidx] > x) v->stack[v->sp] = 1;
-    else v->stack[v->sp] = 0;
-    return 2;
-}
-
-s32 func_001c0ad8(VM *v, s32 x) {
-    v->sp++;
-    if (v->vars[v->vidx] >= x) v->stack[v->sp] = 1;
-    else v->stack[v->sp] = 0;
-    return 2;
-}
-
-s32 func_001c13b8(VM *v, s32 i) {
-    v->regs[i] = v->stack[v->sp--];
-    return 2;
-}
-
 s32 func_001c1df8(void) {
     if (D_003F34A4 == 1) return 0;
     D_00389C90.d12408 &= ~0x1000;
