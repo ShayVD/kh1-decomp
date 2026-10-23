@@ -7,20 +7,6 @@ typedef struct { s32 x, y; u8 pad[0x18]; } Vtx20;
 typedef struct { u8 pad[0x60]; Vtx20 v[4]; } S631620;
 
 typedef struct {
-    s32 x0;
-    void *obj;
-    f32 v08[3];
-    f32 f14;
-    f32 f18;
-    f32 f1c;
-    f32 f20;
-    u8 pad24[0x15c];
-    s32 sp;
-    s32 stk[92];
-    u8 pad2f4[0x34];
-    union { u64 x; s32 i[2]; } flags;
-} VM;
-typedef struct {
     u8 pad0[0x34c];
     s32 a34c[7];
     s32 a368[0x5a][4];
@@ -131,7 +117,7 @@ void func_001eb0a0(s32 n, s32 on) {
     else v->fl[q] &= ~(1 << s);
 }
 
-s32 func_001eb140(VM *vm) {
+s32 func_001eb140(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -140,7 +126,7 @@ s32 func_001eb140(VM *vm) {
     return 2;
 }
 
-s32 func_001eb1d8(VM *vm) {
+s32 func_001eb1d8(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -149,7 +135,7 @@ s32 func_001eb1d8(VM *vm) {
     return 2;
 }
 
-s32 func_001eb278(VM *vm) {
+s32 func_001eb278(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -163,7 +149,7 @@ s32 func_001eb318(s32 n) {
     return (func_00232cc0(1)->fl2[q] >> s) & 1;
 }
 
-s32 func_001eb380(VM *vm) {
+s32 func_001eb380(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -180,7 +166,7 @@ void func_001eb418(s32 n, s32 on) {
     else v->fl2[q] &= ~(1 << s);
 }
 
-s32 func_001eb4b8(VM *vm) {
+s32 func_001eb4b8(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -188,7 +174,7 @@ s32 func_001eb4b8(VM *vm) {
     return 2;
 }
 
-s32 func_001eb558(VM *vm) {
+s32 func_001eb558(VmRec *vm) {
     Sv *v = func_00232cc0(1);
     s32 i, c;
     for (i = 0, c = 0; i < 100; i++) {
@@ -201,7 +187,7 @@ s32 func_001eb558(VM *vm) {
     return 2;
 }
 
-s32 func_001eb910(VM *vm) {
+s32 func_001eb910(VmRec *vm) {
     s32 a = vm->stk[vm->sp - 1];
     s32 b = vm->stk[vm->sp] - 1;
     Sv *v = func_00232cc0(1);
@@ -222,7 +208,7 @@ void func_001eb9f8(s32 a, s32 b, s32 on) {
     else v->w[a] &= ~(1 << s);
 }
 
-s32 func_001eba80(VM *vm) {
+s32 func_001eba80(VmRec *vm) {
     s32 a = vm->stk[vm->sp - 1];
     s32 b = vm->stk[vm->sp];
     s32 s = 32 - b;
@@ -231,7 +217,7 @@ s32 func_001eba80(VM *vm) {
     return 2;
 }
 
-s32 func_001ebb10(VM *vm) {
+s32 func_001ebb10(VmRec *vm) {
     s32 a = vm->stk[vm->sp - 1];
     s32 b = vm->stk[vm->sp];
     s32 s = 32 - b;
@@ -240,7 +226,7 @@ s32 func_001ebb10(VM *vm) {
     return 2;
 }
 
-s32 func_001ebba0(VM *vm) {
+s32 func_001ebba0(VmRec *vm) {
     s32 b = vm->stk[vm->sp];
     s32 a = vm->stk[vm->sp - 1];
     s32 s = 32 - b;
@@ -256,7 +242,7 @@ s32 func_001ebc38(s32 n) {
     return (func_00232cc0(1)->fl3[q] >> s) & 1;
 }
 
-s32 func_001ebd48(VM *vm) {
+s32 func_001ebd48(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -265,7 +251,7 @@ s32 func_001ebd48(VM *vm) {
     return 2;
 }
 
-s32 func_001ebde0(VM *vm) {
+s32 func_001ebde0(VmRec *vm) {
     s32 n = vm->stk[vm->sp];
     s32 q = n / 8;
     s32 s = 7 - (n % 8);
@@ -273,7 +259,7 @@ s32 func_001ebde0(VM *vm) {
     return 2;
 }
 
-s32 func_001ec040(VM *vm) {
+s32 func_001ec040(VmRec *vm) {
     Sv *v = func_00232cc0(1);
     if (vm->stk[vm->sp]) v->dc4 |= 2;
     else v->dc4 &= ~2;
@@ -295,7 +281,7 @@ void func_001ec2c0(s32 n, s32 on) {
     else v->fl5[q] &= ~(1 << s);
 }
 
-s32 func_001ec3f8(VM *vm) {
+s32 func_001ec3f8(VmRec *vm) {
     Sv *v = func_00232cc0(1);
     if (vm->stk[vm->sp]) v->dc4 |= 8;
     else v->dc4 &= ~8;

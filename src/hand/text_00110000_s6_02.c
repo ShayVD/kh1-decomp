@@ -205,7 +205,7 @@ void func_0017f678(void);
 void func_00132550(void);
 void func_00175f58(s32, s32, s32, s32);
 void func_00100ab0(void);
-void func_001c3770(s32, s32);
+#include "vm/script_vm.h"
 void func_00114830(void);
 void func_001115e0(void);
 void func_00111380(void);
@@ -222,7 +222,7 @@ s32 func_00113558(void) {
     if (D_0029B410 && D_0029B414) func_00175f58(D_0029B410, D_0029B414, D_002BC130 + 1, 100000);
     func_00100ab0();
     { Fl_2c5958 *p = (Fl_2c5958 *)&D_002C5958; p->b2 = 0; p->b27 = 0; }
-    func_001c3770(D_002BCC90, 0);
+    func_001c3770((s8 *)D_002BCC90, 0);
     D_002BCDBC = 0;
     D_002BCDC0 = 0;
     D_002BCDD8 = 0;

@@ -12,8 +12,7 @@ M2C_UNK func_00135df0(void *, void *);
 M2C_UNK func_00136428(void *, s32, s32, void *, f32);
 M2C_UNK func_00137688(s32, f32);
 M2C_UNK func_001763f0(void *);
-M2C_UNK func_001c4808(s32, s32);
-M2C_UNK func_001c48c8(s32, s32, s32);
+#include "vm/script_vm.h"
 M2C_UNK func_00267548(void *, void *, s32);
 extern M2C_UNK D_002E31F0;
 extern M2C_UNK D_003031F0;
@@ -107,7 +106,7 @@ s32 func_00133738(void) {
             func_001c4808(M2C_FIELD(M2C_FIELD(var_s0, void **, 4), s32 *, 4), M2C_FIELD(var_s0, s32 *, 8));
             break;
         default:
-            func_001c48c8(M2C_FIELD(M2C_FIELD(var_s0, void **, 4), s32 *, 4), temp_a1, M2C_FIELD(var_s0, s32 *, 8));
+            func_001c48c8(M2C_FIELD(M2C_FIELD(var_s0, void **, 4), s32 *, 4), temp_a1, (s32 *) M2C_FIELD(var_s0, s32 *, 8));
             break;
         }
         var_s1 -= 1;

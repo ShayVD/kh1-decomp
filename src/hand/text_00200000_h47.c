@@ -590,7 +590,7 @@ extern s32 D_003F6770[];
 extern s32 D_003F6828[];
 extern s32 D_003F6840[];
 extern s32 D_003F6854;
-void func_001c0da0(s32, s32, s32 *);
+#include "vm/script_vm.h"
 s32 func_001ec5d8(s32);
 
 void func_00223508(void) {

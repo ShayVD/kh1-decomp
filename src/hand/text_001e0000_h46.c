@@ -1,20 +1,7 @@
 #include "common.h"
+#include "data/types/vm_rec.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
-
-/* Script VM (sp at +0x180, value stack at +0x184). */
-typedef struct {
-    s32 x0;
-    void *obj;
-    f32 v08[3];
-    f32 f14;
-    f32 f18;
-    f32 f1c;
-    f32 f20;
-    u8 pad24[0x15c];
-    s32 sp;
-    s32 stk[92];
-} VM;
 
 /* Save data block returned by func_00232cc0(1) (same layout as h21's Sv). */
 typedef struct {
@@ -189,7 +176,7 @@ void func_001ebca0(s32 n, s32 on) {
     else v->fl3[q] &= ~(1 << s);
 }
 
-s32 func_001ec0d8(VM *vm) {
+s32 func_001ec0d8(VmRec *vm) {
     SvA *v = (SvA *)func_00232cc0(1);
     switch (vm->stk[vm->sp]) {
     case 0: v->ad0 |= 1; break;
@@ -201,7 +188,7 @@ s32 func_001ec0d8(VM *vm) {
     return 2;
 }
 
-s32 func_001ec1a0(VM *vm) {
+s32 func_001ec1a0(VmRec *vm) {
     SvA *v = (SvA *)func_00232cc0(1);
     switch (vm->stk[vm->sp]) {
     case 0: vm->stk[vm->sp] = (u8)v->ad0 & 1; break;

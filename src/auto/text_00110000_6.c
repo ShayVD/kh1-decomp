@@ -63,8 +63,7 @@ void func_0011c778(void);
 void func_0011c798(void);
 void func_00122330(void);
 void func_001c07a8(void);
-void func_001c1f60(void);
-void func_001c2ec8(s32, s32);
+#include "vm/script_vm.h"
 
 void func_00110448(s32 arg0) {
     D_002BBDF4 = arg0;
@@ -130,7 +129,7 @@ void func_001134d8(s32 arg0) {
     D_002BCDE4 = arg0;
     if (arg0 != 0) {
         D_002BCDEC = 0;
-        func_001c2ec8(arg0, 0);
+        func_001c2ec8((s8 *) arg0, 0);
         return;
     }
     func_00110360();

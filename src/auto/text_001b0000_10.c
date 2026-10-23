@@ -15,8 +15,7 @@ M2C_UNK func_001bbce0();
 M2C_UNK func_001bd470();
 M2C_UNK func_001be670(M2C_UNK);
 M2C_UNK func_001be820(M2C_UNK *, M2C_UNK);
-M2C_UNK func_001c0da0(s32, M2C_UNK, void *);
-M2C_UNK func_001c0e80(s32, M2C_UNK, void *);
+#include "vm/script_vm.h"
 M2C_UNK func_002672f8(M2C_UNK *, void *, s32);
 M2C_UNK func_00267328(s32, s32, void *);
 M2C_UNK func_00267620(void *);

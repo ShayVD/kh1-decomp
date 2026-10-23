@@ -48,6 +48,7 @@ s32 func_001c19f8(VmRec *vm, s32 k);
 /* the runtime half of src/vm/script_vm.c */
 void func_001c1d20(VmRec *vm, s32 k);
 s32 func_001c1e30(void);
+void func_001c1f60(void);
 s32 func_001c1f80(void);
 s32 func_001c2778(void);
 void func_001c29d8(void);
@@ -62,5 +63,7 @@ s32 func_001c4640(VmMsg *m);
 VmMsg *func_001c4730(void);
 s32 func_001c4788(void *m);
 void func_001c4808(s32 a, u32 b);
+void func_001c48c8(s32 id, u32 kind, s32 *p);
+void func_001c4d90(s32 a0, s32 a1, s32 a2);
 
 #endif /* KH1_VM_SCRIPT_VM_H */

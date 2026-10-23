@@ -1,16 +1,7 @@
 #include "common.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/types/vm_rec.h"
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-typedef struct { s32 x0; u8 pad[844]; } E848;
-s32 func_001c4640(Msg *m);
+#include "vm/script_vm.h"
 
 void func_001ea128(char *dst, char *src) {
     s32 n = 0, i = 0;
@@ -54,8 +45,8 @@ void func_001ea128(char *dst, char *src) {
     dst[n] = 0;
 }
 
-s32 func_001ea5f8(E848 *e) {
-    Msg m;
+s32 func_001ea5f8(VmRec *e) {
+    VmMsg m;
     m.type = 13;
     m.val = 0;
     m.v[3] = 1.0f;
@@ -67,8 +58,8 @@ s32 func_001ea5f8(E848 *e) {
     return 2;
 }
 
-s32 func_001ea658(E848 *e) {
-    Msg m;
+s32 func_001ea658(VmRec *e) {
+    VmMsg m;
     m.type = 14;
     m.val = 0;
     m.v[3] = 1.0f;
@@ -80,8 +71,8 @@ s32 func_001ea658(E848 *e) {
     return 2;
 }
 
-s32 func_001ea808(E848 *e) {
-    Msg m;
+s32 func_001ea808(VmRec *e) {
+    VmMsg m;
     m.type = 35;
     m.val = 0;
     m.x = e->x0;
@@ -93,8 +84,8 @@ s32 func_001ea808(E848 *e) {
     return 2;
 }
 
-s32 func_001ea888(E848 *e) {
-    Msg m;
+s32 func_001ea888(VmRec *e) {
+    VmMsg m;
     m.type = 36;
     m.val = 0;
     m.x = e->x0;

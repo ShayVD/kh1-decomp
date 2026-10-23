@@ -10,7 +10,7 @@ M2C_UNK func_0011e9a8(M2C_UNK *, s32);
 M2C_UNK func_0011eb88(s32, s32, s32, M2C_UNK *);
 M2C_UNK func_0011ec08(s32, s32, s32, M2C_UNK *);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
-M2C_UNK func_001c2d20(M2C_UNK *, void *, M2C_UNK *);
+#include "vm/script_vm.h"
 M2C_UNK func_002672f8(void *, void *, void *);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_00267768(void *, void *, f32);
@@ -82,10 +82,10 @@ void func_001e4268(void) {
 
 void func_001e4918(void) {
     s32 sp[4];
-    func_001c2d20(&D_003E0D20, sp, &D_006310C8);
-    func_001c2d20(&D_003E0F40, sp, &D_00631148);
-    func_001c2d20(&D_003E1150, sp, &D_006311C8);
-    func_001c2d20(&D_003E12E0, sp, &D_00631248);
+    func_001c2d20((s8 *) &D_003E0D20, sp, (s8 **) &D_006310C8);
+    func_001c2d20((s8 *) &D_003E0F40, sp, (s8 **) &D_00631148);
+    func_001c2d20((s8 *) &D_003E1150, sp, (s8 **) &D_006311C8);
+    func_001c2d20((s8 *) &D_003E12E0, sp, (s8 **) &D_00631248);
 }
 
 void func_001e4d20(void) {

@@ -18,7 +18,7 @@ s32 func_0014dab8(void);
 extern s32 D_00531B64, D_00531B68;
 typedef struct { u8 pad[4]; s32 x4; u8 pad8[0x144-8]; s32 x144; u8 pad148[0x376-0x148]; u16 x376; } W8Obj;
 void func_0012bce0(s32, s32, s32, void *, s32);
-void func_001c48c8(s32, s32, s32);
+#include "vm/script_vm.h"
 
 #include "data/types/text_00140000_h8.h"
 #include "data/pieces/D_0035C710.h"
@@ -165,7 +165,7 @@ void func_00146600(W8Obj *a, s32 b) {
     s64 t = (s32)a->x376;
     if ((s32)t & 1) {
         if (a->x144) { buf[0] = (s32)&b; buf[1] = 4; func_0012bce0(a->x144, 0, 1, buf, 0); }
-    } else func_001c48c8(a->x4, 2, b);
+    } else func_001c48c8(a->x4, 2, (s32 *)b);
 }
 
 void func_00146678(void *a, void (*cb)(void *, W8Ent78 *)) {

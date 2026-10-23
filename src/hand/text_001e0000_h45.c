@@ -1,5 +1,6 @@
 #include "common.h"
 #include "vm/script_vm.h"
+#include "vm/vm_find.h"
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
@@ -17,13 +18,6 @@ typedef struct {
         struct { void *obj; u8 pad[0x178]; s32 sp; } h;
     } u;
 } VM;
-/* Same VM, indexed directly (stack at +0x184, flag word at +0x328). */
-typedef struct {
-    u8 pad0[0x180];
-    s32 sp;
-    s32 stk[105];
-    s64 f328;
-} VM2;
 
 /* Menu window (0xb0 bytes); D_0062F6E0/D_0062F790/D_0062F840 and
  * D_00630300/D_006303B0/D_00630460 are runs of these. */
@@ -32,7 +26,6 @@ typedef struct {
 typedef struct { s32 a; s32 b; void (*fn)(); s32 d; } Cb20;
 #include "data/types/text_001e0000_h45_p.h"
 typedef struct Actor { s32 x0; u8 pad4[0x5c]; f32 f60; f32 f64; } Obj26;
-typedef struct { s32 x0; u8 pad[844]; } E848;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; u8 pad3080[0x450]; s32 f34d0; } Big20;
 typedef struct { f32 x, y, z; } Vec3;
 typedef struct { s32 x0; s32 id; } Ent88;
@@ -160,7 +153,6 @@ void func_001e8628();
 void func_001e8ed8();
 void func_001e92e0();
 void func_001e9670(void);
-E848 *func_001e98d0(s32, s32);
 void func_0022fba8(void);
 void func_00230f18(void);
 void func_00231740(s32, void *, void (*)(), void (*)());
@@ -730,9 +722,9 @@ void func_001ea498(s32 a) {
     }
 }
 
-s32 func_001ea6b8(VM2 *vm) {
+s32 func_001ea6b8(VmRec *vm) {
     VmMsg m;
-    E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
+    VmRec *e = func_001e98d0(vm->fl.b.b5, vm->stk[vm->sp]);
     if (e) {
         m.type = 13;
         m.val = 0;
@@ -747,9 +739,9 @@ s32 func_001ea6b8(VM2 *vm) {
     return 2;
 }
 
-s32 func_001ea760(VM2 *vm) {
+s32 func_001ea760(VmRec *vm) {
     VmMsg m;
-    E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
+    VmRec *e = func_001e98d0(vm->fl.b.b5, vm->stk[vm->sp]);
     if (e) {
         m.type = 14;
         m.val = 0;
@@ -764,9 +756,9 @@ s32 func_001ea760(VM2 *vm) {
     return 2;
 }
 
-s32 func_001ea908(VM2 *vm) {
+s32 func_001ea908(VmRec *vm) {
     VmMsg m;
-    E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
+    VmRec *e = func_001e98d0(vm->fl.b.b5, vm->stk[vm->sp]);
     if (e) {
         m.type = 35;
         m.val = 0;
@@ -781,9 +773,9 @@ s32 func_001ea908(VM2 *vm) {
     return 2;
 }
 
-s32 func_001ea9c8(VM2 *vm) {
+s32 func_001ea9c8(VmRec *vm) {
     VmMsg m;
-    E848 *e = func_001e98d0((s32)(vm->f328 >> 5) & 1, vm->stk[vm->sp]);
+    VmRec *e = func_001e98d0(vm->fl.b.b5, vm->stk[vm->sp]);
     if (e) {
         m.type = 36;
         m.val = 0;

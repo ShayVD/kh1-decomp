@@ -437,7 +437,7 @@ s32 func_00131c30(s32);
 s32 func_0021dc08(s32);
 void func_001f3e48(Eff_q5 *, Obj_q5 *);
 s32 func_0021dc38(s32);
-s32 func_001c2df0(s32, s32);
+#include "vm/script_vm.h"
 s32 func_0010eb78(s32);
 void func_00203788(Obj_q5 *, s32, s32, s32, u32);
 s32 func_0021dc20(s32);
@@ -506,7 +506,7 @@ void func_0021ed60(Obj_q5 *o) {
                 p->x40 = func_0021dc08(D_00643274);
                 func_001f3e48(p, o);
                 { f32 f = D_003E9104; D_00643250 = 0; p->xa0 = f; }
-                n = func_0010eb78(func_001c2df0(D_003F34F8, func_0021dc38(D_00643274)));
+                n = func_0010eb78((s32)func_001c2df0((s8 *)D_003F34F8, func_0021dc38(D_00643274)));
                 p->xda = D_00643250 << 4;
                 p->xd8 = (n + 1) / 2;
             }
