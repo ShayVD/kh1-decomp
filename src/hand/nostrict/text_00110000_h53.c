@@ -180,7 +180,7 @@ void func_00124060(u8 *o, V53 *pos) {
             FLD(f32, FLD(u8 *, o, 0x148), 0xe0) = 0.0f;
         }
         func_00145240(o);
-        func_002675a8(FLD(u8 *, o, 0x148) + 0x160, ((V53 *)&D_002C58B0));
+        func_002675a8(FLD(u8 *, o, 0x148) + 0x160, &D_002C58B0);
         func_001358b8(o, 12);
     }
     if (FLD(u8 *, o, 0x14c)) {
@@ -207,8 +207,8 @@ void func_00124060(u8 *o, V53 *pos) {
     func_00137448(o);
     FLD(f32, o, 0x4ac) = 60.0f;
     func_001238d0(o, pos);
-    func_002675a8(o + 0x3c0, ((V53 *)&D_002C58B0));
-    func_002675a8(o + 0x120, ((V53 *)&D_002C58B0));
+    func_002675a8(o + 0x3c0, &D_002C58B0);
+    func_002675a8(o + 0x120, &D_002C58B0);
 }
 
 extern V53 D_002C6490;
