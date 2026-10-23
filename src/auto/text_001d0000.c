@@ -2,11 +2,8 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 
-M2C_UNK func_00112230();
 M2C_UNK func_001259b0(M2C_UNK);
 M2C_UNK func_0013bf90(s32);
-M2C_UNK func_00157818(s32, s32);
-M2C_UNK func_001ec570(s32, M2C_UNK);
 M2C_UNK func_001ec7c0(M2C_UNK);
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
@@ -14,8 +11,6 @@ extern s32 D_002B6474;
 extern s32 D_002BC128;
 extern s32 D_002BCA04;
 extern s32 D_002BCC1C;
-extern s32 D_002BCC20;
-extern s32 D_002BCDE8;
 extern s32 D_002BD110;
 extern s32 D_002C5958;
 #include "data/pieces/D_00304BE8.h"
@@ -24,68 +19,11 @@ extern s32 D_0062A220;
 extern s32 D_0062A224;
 #include "data/pieces/D_002C6440.h"
 s32 func_001bad78(s32);
-s32 func_001ef7a0();
 s32 func_0021add8();
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001da9f0(void) {
-    D_002BCDE8 = 0;
-    return 2;
-}
-
-s32 func_001daa00(void) {
-    D_002BCDE8 = 1;
-    return 2;
-}
-
-s32 func_001daad8(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) + 1);
-    M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184) = func_001ef7a0();
-    return 2;
-}
-
-s32 func_001dab48(void *arg0) {
-    s32 temp_v0;
-
-    temp_v0 = M2C_FIELD(arg0, s32 *, 4);
-    if (temp_v0 != 0) {
-        func_00157818(temp_v0, M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    }
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001dab98(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_002BCC20;
-    return 2;
-}
-
-s32 func_001dabc0(void *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(arg0, s32 *, 0x180) + 1;
-    M2C_FIELD(arg0, s32 *, 0x180) = temp_v1;
-    M2C_FIELD(((temp_v1 * 4) + arg0), s32 *, 0x184) = (s32) D_002BCC1C;
-    return 2;
-}
-
-s32 func_001db018(void *arg0) {
-    func_001ec570(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184), 1);
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001db060(void) {
-    func_00112230();
-    return 2;
-}
 
 s32 func_001db5a0(void) {
     D_0037A378 |= 0x10;

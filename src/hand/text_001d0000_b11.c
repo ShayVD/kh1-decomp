@@ -116,7 +116,6 @@ void func_0010ef70(void *, char *, void *);
 void func_0010bdd0(void *, void *);
 void func_0010e3f0(void *);
 void func_002329a0(void *, void *, void *);
-void func_00112150(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_001ec758(s32, s32, s32);
 void func_001e4b08(void);
 void func_001e4d20();
@@ -340,26 +339,6 @@ void func_001e7228(s32 a) {
     D_003DD28C = 0;
     D_003DD258 = a;
     if (D_003DD268 < a) func_0010bd90(D_00630460, 0);
-}
-
-/* needs make: uses rodata */
-s32 func_001dad58(VM *vm) {
-    switch (vm->stk[vm->sp - 1]) {
-    case 0: func_00112150(7, 1, 1, 1, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
-    case 1: func_00112150(8, 1, 1, 0, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
-    case 2: func_00112150(9, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 151, 1); break;
-    case 3: func_00112150(2, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 295, 1); break;
-    case 4: func_00112150(2, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 15, 1); break;
-    case 5: func_00112150(0, 0, 0, 1, vm->stk[vm->sp], 0, 2, 0, 0, 1); break;
-    case 6: func_00112150(3, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
-    case 7: func_00112150(4, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
-    case 8: func_00112150(4, 1, 0, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
-    case 9: func_00112150(5, 1, 1, 1, vm->stk[vm->sp], 0, 3, 0, 295, 1); break;
-    case 10: func_00112150(5, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
-    case 11: func_00112150(6, 0, 0, 0, vm->stk[vm->sp], 1, 3, 0, 295, 1); break;
-    }
-    vm->sp -= 2;
-    return 2;
 }
 
 void func_001e6f28(void) {

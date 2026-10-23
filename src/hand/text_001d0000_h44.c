@@ -563,22 +563,6 @@ s32 func_001e2920(void) {
 }
 
 /* needs make: uses rodata */
-typedef struct { u8 pad0[2]; u8 f2; } P147840;
-P147840 *func_00147840(s32);
-s32 func_001daa18(VM *vm) {
-    s32 r = -1;
-    switch (func_00147840(vm->stk[vm->sp])->f2) {
-    case 0: r = 0; break;
-    case 12: r = 1; break;
-    case 13: r = 2; break;
-    case 2: r = 4; break;
-    case 3: r = 5; break;
-    case 4: r = 6; break;
-    case 1: r = 3; break;
-    }
-    vm->stk[vm->sp] = r;
-    return 2;
-}
 
 #include "data/types/text_001d0000_h44_p.h"
 extern Tbl55 D_004906D0;

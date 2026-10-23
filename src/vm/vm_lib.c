@@ -51,6 +51,35 @@
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
+#include "data/pieces/D_003773D8.h"
+#include "data/pieces/D_003773D4.h"
+#include "data/pieces/D_003773D0.h"
+#include "data/pieces/D_003773CC.h"
+#include "data/pieces/D_003773C8.h"
+#include "data/pieces/D_003773C4.h"
+#include "data/pieces/D_003773C0.h"
+#include "data/pieces/D_003773BC.h"
+#include "data/pieces/D_003773B8.h"
+#include "data/pieces/D_003773B4.h"
+#include "data/pieces/D_003773B0.h"
+#include "data/pieces/D_003773AC.h"
+#include "data/pieces/D_003773A8.h"
+#include "data/pieces/D_003773A4.h"
+#include "data/pieces/D_003773A0.h"
+#include "data/pieces/D_0037739C.h"
+#include "data/pieces/D_00377398.h"
+#include "data/pieces/D_00377394.h"
+#include "data/pieces/D_00377390.h"
+#include "data/pieces/D_0037738C.h"
+#include "data/pieces/D_00377388.h"
+#include "data/pieces/D_00377384.h"
+#include "data/pieces/D_00377380.h"
+#include "data/pieces/D_0037737C.h"
+#include "data/pieces/D_00377378.h"
+#include "data/pieces/D_00377374.h"
+#include "data/pieces/D_00377370.h"
+#include "data/pieces/D_0037736C.h"
+#include "data/pieces/D_00377368.h"
 #include "data/pieces/D_00377364.h"
 #include "data/pieces/D_00377360.h"
 #include "data/pieces/D_0037735C.h"
@@ -4279,6 +4308,199 @@ s32 func_001da628(VmRec *vm) {
         func_00142470(o, r);
     }
     vm->sp -= 3;
+    return 2;
+}
+
+/* ---- 0x001da6d0-0x001db080 ---- */
+
+void func_00131c78(s32, s32);
+s32 func_0014efe0(struct VmObj *, s32);
+s32 func_001ef7a0();
+s32 func_00157818(struct VmObj *, s32);
+s32 func_00149c80(s32, void *);
+s32 func_001ec570(s32, s32);
+s32 func_00112230();
+typedef struct { u8 pad0[2]; u8 f2; } VmP147840;
+VmP147840 *func_00147840(s32);
+void func_00112150(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
+extern s32 D_002BCDE8;
+extern s32 D_002BCC20;
+extern s32 D_002BCC1C;
+
+s32 func_001da6d0(VmRec *vm) {
+    vm->fl.x |= 0x8000;
+    vm->f330 = (f32)vm->stk[vm->sp - 3] * 2;
+    vm->f340[0] = vm->stk[vm->sp - 2];
+    vm->f340[1] = vm->stk[vm->sp - 1];
+    vm->f340[2] = vm->stk[vm->sp];
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001da740(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = func_0014efe0(o, vm->stk[vm->sp]);
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001da7b8(VmRec *vm) {
+    func_00131c78(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da808(VmRec *vm) {
+    D_00377368(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da860(VmRec *vm) {
+    D_0037736C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da8b8(VmRec *vm) {
+    D_00377370(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da910(VmRec *vm) {
+    D_00377378(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da968(VmRec *vm) {
+    VmMsg m;
+    m.type = 41;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    func_001c4640(&m);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001da9f0(void) {
+    D_002BCDE8 = 0;
+    return 2;
+}
+
+s32 func_001daa00(void) {
+    D_002BCDE8 = 1;
+    return 2;
+}
+
+/* Map func_00147840(stk[sp])'s kind to 0-6 (-1 for others). */
+s32 func_001daa18(VmRec *vm) {
+    s32 r = -1;
+    switch (func_00147840(vm->stk[vm->sp])->f2) {
+    case 0: r = 0; break;
+    case 12: r = 1; break;
+    case 13: r = 2; break;
+    case 2: r = 4; break;
+    case 3: r = 5; break;
+    case 4: r = 6; break;
+    case 1: r = 3; break;
+    }
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+s32 func_001daad8(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_001ef7a0();
+    return 2;
+}
+
+s32 func_001dab20(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 4) & 1) return 4;
+    return 2;
+}
+
+s32 func_001dab48(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00157818(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001dab98(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002BCC20;
+    return 2;
+}
+
+s32 func_001dabc0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002BCC1C;
+    return 2;
+}
+
+s32 func_001dabe8(VmRec *vm) {
+    D_0037737C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dac40(VmRec *vm) {
+    D_00377380(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+void func_001daca8(void) {
+    D_00389C90.f3078.x &= ~0x20;
+}
+
+s32 func_001dacc8(VmRec *vm) {
+    if (func_00149c80(vm->stk[vm->sp], func_001daca8) != 0) {
+        D_00389C90.f3078.x |= 0x20;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001dad30(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 5) & 1) return 4;
+    return 2;
+}
+
+s32 func_001dad58(VmRec *vm) {
+    switch (vm->stk[vm->sp - 1]) {
+    case 0: func_00112150(7, 1, 1, 1, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
+    case 1: func_00112150(8, 1, 1, 0, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
+    case 2: func_00112150(9, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 151, 1); break;
+    case 3: func_00112150(2, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 295, 1); break;
+    case 4: func_00112150(2, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 15, 1); break;
+    case 5: func_00112150(0, 0, 0, 1, vm->stk[vm->sp], 0, 2, 0, 0, 1); break;
+    case 6: func_00112150(3, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
+    case 7: func_00112150(4, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
+    case 8: func_00112150(4, 1, 0, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
+    case 9: func_00112150(5, 1, 1, 1, vm->stk[vm->sp], 0, 3, 0, 295, 1); break;
+    case 10: func_00112150(5, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
+    case 11: func_00112150(6, 0, 0, 0, vm->stk[vm->sp], 1, 3, 0, 295, 1); break;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db018(VmRec *vm) {
+    func_001ec570(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001db060(void) {
+    func_00112230();
     return 2;
 }
 

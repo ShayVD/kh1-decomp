@@ -22,7 +22,6 @@ typedef struct {
 } VM;
 
 
-void func_00131c78(s32, s32);
 extern void (*D_00377368)(s32, s32);
 extern void (*D_0037736C)(s32, s32);
 extern void (*D_00377370)(s32, s32);
@@ -77,85 +76,10 @@ typedef struct { u8 pad0[0x3078]; u64 f3078; } Big19;
 extern Big19 D_00389C90;
 s32 D_00F20000();
 void func_001dbcb8();
-void func_001dbd90();
 void func_0011ea10(void (*)(), s32 (*)());
 s32 func_001559f0(s32, s32);
-s32 func_00120748(void *, s32, void (*)(), s32);
-extern u8 D_004906C0[];
 typedef W606Mem_304be8 E116;
 #include "data/pieces/D_00304BE8.h"
-
-s32 func_001da6d0(VM *vm) {
-    vm->flags.x |= 0x8000;
-    vm->f330 = (f32)vm->stk[vm->sp - 3] * 2;
-    vm->f340 = vm->stk[vm->sp - 2];
-    vm->f344 = vm->stk[vm->sp - 1];
-    vm->f348 = vm->stk[vm->sp];
-    vm->sp -= 4;
-    return 2;
-}
-
-s32 func_001da7b8(VM *vm) {
-    func_00131c78(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001da808(VM *vm) {
-    D_00377368(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001da860(VM *vm) {
-    D_0037736C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001da8b8(VM *vm) {
-    D_00377370(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001da910(VM *vm) {
-    D_00377378(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001da968(VM *vm) {
-    VmMsg m;
-    m.type = 41;
-    m.val = (u32)vm->stk[vm->sp];
-    m.x = vm->x0;
-    func_001c4640(&m);
-    vm->sp -= 1;
-    return 2;
-}
-
-s32 func_001dab20(VM *vm) {
-    if ((s32)(D_0038CD08 >> 4) & 1) return 4;
-    return 2;
-}
-
-s32 func_001dabe8(VM *vm) {
-    D_0037737C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001dac40(VM *vm) {
-    D_00377380(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
-    vm->sp -= 4;
-    return 2;
-}
-
-s32 func_001dad30(VM *vm) {
-    if ((s32)(D_0038CD08 >> 5) & 1) return 4;
-    return 2;
-}
 
 s32 func_001db080(VM *vm) {
     D_00377384(vm->stk[vm->sp]);

@@ -17,10 +17,6 @@ extern s64 D_00389C90[];
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_001763f0(s32);
 
-void func_001daca8(void) {
-    D_00389C90[1551] = (s64) (D_00389C90[1551] & ~0x20);
-}
-
 s32 func_001dbb20(void) {
     D_00389C90[1551] = (s64) (D_00389C90[1551] & ~0x80);
     return 2;
