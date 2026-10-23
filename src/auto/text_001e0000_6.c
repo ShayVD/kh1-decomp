@@ -3,7 +3,6 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_001ed000(M2C_UNK, s32, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_001efc10(u16);
 M2C_UNK func_001efd20(s32, s32);
@@ -17,12 +16,8 @@ extern M2C_UNK D_003E3CB8;
 #include "data/pieces/D_003E3E50.h"
 extern M2C_UNK D_003E4658;
 extern M2C_UNK D_0062F6E0;
-extern M2C_UNK func_001e0898;
-extern M2C_UNK func_001e08d8;
-extern M2C_UNK func_001e10f8;
 extern M2C_UNK func_001e4268;
 #include "data/pieces/D_003DACA0.h"
-extern s32 D_003DAD38;
 #include "data/pieces/D_003DAD3C.h"
 extern s32 D_003DC470;
 extern s32 D_003DC474;
@@ -30,7 +25,6 @@ extern s32 D_003DC480;
 extern s32 D_003DC488;
 extern s32 D_003DC490;
 extern s32 D_003E8E2C;
-extern s32 D_0062F6D0;
 extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 extern s8 D_0062F810; /* src/data/bss_0062.c: u8 D_0062F810[0x30] */
 #include "data/pieces/D_003F34B8.h"
@@ -54,24 +48,9 @@ void func_00231958(void);
 void func_00232de0(void);
 
 
-void func_001e13e8(s32 arg0) {
-    D_0062F6D0 = arg0;
-    func_0011ef10(0x2E630, &func_001e10f8);
-}
+/* func_001e13e8, func_001e25e8, func_001e2628 are in src/screen/screen.c. */
 
-s32 func_001e25e8(void) {
-    func_0011ef10(0x2E630, &func_001e0898);
-    D_003DAD3C = 0;
-    D_003DAD38 = 1;
-    return 2;
-}
 
-s32 func_001e2628(void) {
-    func_0011ef10(0x2E630, &func_001e08d8);
-    D_003DAD3C = 0;
-    D_003DAD38 = 1;
-    return 2;
-}
 
 void func_001e3c08(s32 arg0) {
     D_003DC470 = arg0;

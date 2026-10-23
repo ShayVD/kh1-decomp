@@ -4,7 +4,6 @@
 #include "data/bss_0062.h"
 #include "data/bss_0063.h"
 
-M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_0010bd90(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0011e9a8(M2C_UNK *, s32);
 M2C_UNK func_0011eb88(s32, s32, s32, M2C_UNK *);
@@ -15,15 +14,11 @@ M2C_UNK func_002672f8(void *, void *, void *);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, M2C_UNK *);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_003DBD68;
 extern M2C_UNK D_003E0D20;
 extern M2C_UNK D_003E0F40;
 extern M2C_UNK D_003E1150;
 extern M2C_UNK D_003E12E0;
-extern M2C_UNK D_0062F670;
 extern M2C_UNK D_0062F6E0;
 extern M2C_UNK D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern M2C_UNK D_00630460;
@@ -32,8 +27,6 @@ extern M2C_UNK D_006310C8; /* src/data/bss_0063.c: Pair D_006310C8[0x10] */
 extern M2C_UNK D_00631148; /* src/data/bss_0063.c: Pair D_00631148[0x10] */
 extern M2C_UNK D_006311C8; /* src/data/bss_0063.c: Pair D_006311C8[0x10] */
 extern M2C_UNK D_00631248; /* src/data/bss_0063.c: Pair D_00631248[0x50] */
-extern M2C_UNK D_00F20000;
-extern M2C_UNK func_001e10b8;
 extern M2C_UNK func_001e4990;
 extern M2C_UNK func_001e61c0;
 extern M2C_UNK func_001e6d20;
@@ -49,7 +42,6 @@ extern s32 D_003DC48C;
 extern s32 D_003DC490;
 extern s32 D_003DD264;
 extern s32 D_003F7A68;
-extern s32 D_0062F6D0;
 extern s32 D_006314CC;
 extern s32 D_006314D0;
 extern s32 D_006314D8;
@@ -57,21 +49,8 @@ extern s32 D_006314DC;
 s32 func_0011e340(M2C_UNK);
 void func_0010ef70(s32, s32, s32);
 
-void func_001e10c8(s32 arg0) {
-    D_0062F6D0 = arg0;
-    func_0011ef10(0x2E630, &func_001e10b8);
-}
+/* func_001e10c8, func_001e14e0 are in src/screen/screen.c. */
 
-void func_001e14e0(void) {
-    sceGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_0062F670, &D_00F20000);
-    sceGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_0062F670, (s8 *)&D_00F20000 + 0x48000);
-}
 
 void func_001e4268(void) {
     D_003DC490 = 1;

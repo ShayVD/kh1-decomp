@@ -11,7 +11,6 @@ extern M2C_UNK D_0062F6E0;
 extern M2C_UNK func_001e2810;
 extern M2C_UNK func_001e8e38;
 extern s32 D_002C5958;
-extern s32 D_003DAD38;
 extern s32 D_003DC470;
 extern s32 D_003DC484;
 extern s32 D_003DC490;
@@ -28,12 +27,7 @@ extern s32 D_0063F748; /* src/data/bss_0063.c: u16 *D_0063F748 */
 s32 func_0011e340(M2C_UNK);
 s32 func_001ee768();
 
-/* func_001e0010 is in src/event/effect.c. */
-
-s32 func_001e2668(void) {
-    D_003DAD38 = 0;
-    return 2;
-}
+/* func_001e2668 is in src/screen/screen.c. */
 
 void func_001e2a30(s32 arg0) {
     D_003DC484 = arg0;

@@ -17,17 +17,8 @@ typedef struct {
 extern u64 D_0038CD00;
 #include "data/pieces/D_003DACA0.h"
 s32 func_0011e340(void *);
-typedef struct { s32 a, b, c, d; } Q4;
-extern Q4 D_003DACC0;
-extern u64 D_003DB028;
-extern s32 D_003DACCC;
-extern s32 D_003DACD0;
 s32 func_0011ef10(s32, void (*)());
-void func_001e15a0();
-void func_001e2678();
 #include "data/pieces/D_003DAD3C.h"
-extern f32 D_003DAD40;
-extern s32 D_003DAD44;
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; } Big20;
 extern Big20 D_00389C90;
 extern s32 D_002BBBA0;
@@ -129,58 +120,11 @@ void func_0011d350(s32, s32);
 
 
 
-/* func_001e0318 is in src/event/voice.c. */
+/* func_001e16b0, func_001e1748, func_001e17e0, func_001e25c8, func_001e26b8 are in src/screen/screen.c. */
 
-s32 func_001e16b0(VM *vm) {
-    Sub *s = &vm->u.s;
-    u64 r;
-    D_003DACC0.a = s->stk[vm->u.h.sp - 2];
-    D_003DACC0.b = s->stk[vm->u.h.sp - 1];
-    D_003DACC0.c = s->stk[vm->u.h.sp];
-    r = (s64)D_003DACC0.a | 0x100000000LL; r |= (s64)D_003DACC0.c << 16 | (s64)D_003DACC0.b << 8; r |= (s64)D_003DACC0.d << 24;
-    vm->u.h.sp -= 3; D_003DB028 = r;
-    return 2;
-}
 
-s32 func_001e1748(VM *vm) {
-    s32 n = vm->u.s.stk[vm->u.h.sp];
-    if (n > 0) {
-        D_003DACD0 = 128 / n; D_003DACCC = 0;
-    } else {
-        D_003DACD0 = 0;
-        D_003DACCC = 128;
-    }
-    func_0011ef10(0x280a0, func_001e15a0);
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001e17e0(VM *vm) {
-    s32 n = vm->u.s.stk[vm->u.h.sp];
-    if (n > 0) {
-        D_003DACD0 = -128 / n;
-    } else {
-        D_003DACD0 = -128;
-    }
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001e25c8(VM *vm) {
-    if ((s32)(D_0038CD00 >> 50) & 1) return 4;
-    return 2;
-}
-
-s32 func_001e26b8(VM *vm) {
-    Sub *s = &vm->u.s;
-    s32 i = vm->u.h.sp;
-    f32 x = s->stk[i - 1], y = s->stk[i];
-    D_003DAD44 = y;
-    D_003DAD40 = (x - D_003DAD3C) / y;
-    func_0011ef10(50000, func_001e2678);
-    vm->u.h.sp -= 2;
-    return 2;
-}
 
 void func_001e2778(void) {
     D_002BBBA0 = 0;

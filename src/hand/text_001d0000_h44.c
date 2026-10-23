@@ -2,19 +2,7 @@
 #include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
-typedef VmRec VM;
 
-typedef struct {
-    u8 pad0[0x3034];
-    s32 x3034;
-    u8 pad3038[0x3070 - 0x3038];
-    union { u64 x; struct { u64 b0:50; u64 b50:1; u64 b51:1; u64 b52:1; u64 r:11; } b; } x3070;
-    union { u64 x; struct { u64 b0:3; u64 b3:1; u64 r:60; } b; } x3078;
-    u8 pad3080[0x3150 - 0x3080];
-    s32 x3150;
-    VM *x3154;
-} G389C90;
-extern G389C90 D_00389C90;
 extern f32 D_002BBDFC;
 extern s32 D_003DC470;
 extern s32 D_003DC474;
@@ -69,40 +57,8 @@ void func_001e2810(void);
 
 #include "data/types/text_001d0000_h44.h"
 extern Col4 D_003DACC0;
-extern s32 D_003DACD0;
-extern u64 D_003DB028;
 extern u8 D_00F20000[];
-extern u8 D_003DB050[];
-void func_001e1480(void);
-void func_001e14e0(void);
-void func_001e05a8(void *);
-s32 func_001e15a0(void) {
-    s32 i, j;
-    u8 *p;
-    D_003DACC0.d += D_003DACD0;
-    if (D_003DACC0.d > 128) {
-        D_003DACC0.d = 128;
-    } else if (D_003DACC0.d < 0) {
-        return 4;
-    }
-    {
-        u64 r = (s64)D_003DACC0.a | 0x100000000LL;
-        r |= (s64)D_003DACC0.c << 16 | (s64)D_003DACC0.b << 8;
-        r |= (s64)D_003DACC0.d << 24;
-        D_003DB028 = r;
-    }
-    func_001e1480();
-    p = D_00F20000;
-    for (i = 0; i < 384; i++) {
-        for (j = 0; j < 512; j++) {
-            p[2] = p[0] = p[1];
-            p += 3;
-        }
-    }
-    func_001e14e0();
-    func_001e05a8(D_003DB050);
-    return 0;
-}
+/* func_001e15a0, func_001e24c8 are in src/screen/screen.c. */
 
 void func_001e2810(void) {
     s32 n = D_003DC470;
@@ -150,25 +106,7 @@ s32 func_001e2920(void) {
 #include "data/types/text_001d0000_h44_p.h"
 extern Tbl55 D_004906D0;
 
-extern char D_003DACD8[][6];
 extern u8 D_00F20000[];
-char *strcat(char *, const char *);
-char *strcpy(char *, const char *);
-int sprintf(char *, const char *, ...);
-s32 func_00120748(void *, void *, void (*)(), s32);
-void func_001e2498();
-s32 func_001e24c8(VM *vm) {
-    char buf[256];
-    char tmp[16];
-    strcpy(buf, "image/");
-    strcat(buf, D_003DACD8[vm->stk[vm->sp - 1]]);
-    sprintf(tmp, "_%03d.rgb", vm->stk[vm->sp]);
-    strcat(buf, tmp);
-    func_00120748(buf, D_00F20000, func_001e2498, 0);
-    D_00389C90.x3070.b.b50 = 1;
-    vm->sp -= 2;
-    return 2;
-}
 
 #include "data/bss_0062_mixed.h"
 #include "data/data_0039.h"
