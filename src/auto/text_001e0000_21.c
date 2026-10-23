@@ -3,21 +3,16 @@
 #include "m2c.h"
 #include "data/bss_0063.h"
 
-extern s32 D_002BBBA0;
 extern s32 D_002C1364;
 extern s32 D_002C5958;
 extern s32 D_006314D4;
-extern s64 D_00389C90[];
 s32 func_0011e340(s32);
 s32 func_0011e368(s32, s32);
 void func_0011c7d8(s32);
 void func_00155878(void);
 void func_001e7e78(void);
 
-void func_001e2748(void) {
-    D_002BBBA0 = 1;
-    D_00389C90[1550] = (s64) (D_00389C90[1550] | ((s64) 0x8000 << 0x1F));
-}
+/* func_001e2748 is in src/shop/shop.c. */
 
 s32 func_001e7ea8(s32 arg0) {
     D_006314D4 = M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184) - 1;

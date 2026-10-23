@@ -21,35 +21,12 @@ s32 func_0011ef10(s32, void (*)());
 #include "data/pieces/D_003DAD3C.h"
 typedef struct { u8 pad0[0x3070]; u64 f3070; u64 f3078; } Big20;
 extern Big20 D_00389C90;
-extern s32 D_002BBBA0;
 #include "data/pieces/D_002E26A0.h"
-void func_0022eee0(s32);
-extern s32 D_003DC490;
-extern u8 D_003DC1E8[];
-typedef struct { u8 pad0[0x44]; f32 f44; u8 pad48[0x38]; u8 sub[0x80]; } Mgr20;
-extern Mgr20 D_0062F790;
 #include "data/types/text_001e0000_h20.h"
-extern Cb20 D_0062F8F0;
-void func_001e2f98();
-void func_001e2f88();
 void func_0010ef70(void *, void *, void *);
 void func_0010f558(void *, void *, s32);
-extern u8 D_0062F840[];
-void func_001e39f0();
 void func_0010bd90(void *, void (*)());
-extern s32 D_003DC484;
-void func_00231b98(void *);
-void func_0010e3f0(void *);
-extern u8 D_003DC3C0[];
 #include "data/pieces/D_003DC390.h"
-extern u8 D_003DC268[];
-extern s32 D_003DC48C;
-void func_001e3a00(void);
-void func_001e3a98();
-extern u8 D_003DC228[];
-void func_001e3f20();
-void func_001e3ef0();
-void func_001e4578();
 void func_0010bdd0(void *, void (*)());
 extern s32 D_002C5BB8;
 extern s32 D_003DD264;
@@ -126,57 +103,13 @@ void func_0011d350(s32, s32);
 
 
 
-void func_001e2778(void) {
-    D_002BBBA0 = 0;
-    D_00389C90.f3070 &= ~0x400000000000LL;
-}
+/* func_001e2778, func_001e2a40, func_001e30f8, func_001e3aa8, func_001e3ed0, func_001e3fc8, func_001e42b0 are in src/shop/shop.c. */
 
-void func_001e2a40(s32 a) {
-    if (a == 3) {
-        if (!D_002E26A0[1]) a = 2;
-        if (!D_002E26A0[2]) a = a - 1;
-    }
-    func_0022eee0(a);
-}
 
-void func_001e30f8(void) {
-    D_003DC490 = 1;
-    func_0010ef70(&D_0062F790, D_003DC1E8, func_001e2f98);
-    D_0062F8F0.a = 1;
-    D_0062F8F0.b = 2;
-    D_0062F8F0.fn = func_001e2f88;
-    func_0010f558(&D_0062F8F0, &D_0062F790, 1);
-}
 
-void func_001e3aa8(void) {
-    D_003DC48C = 1;
-    func_0010ef70(D_0062F840, D_003DC268, func_001e3a00);
-    D_0062F8F0.a = 1;
-    D_0062F8F0.b = 2;
-    D_0062F8F0.fn = func_001e3a98;
-    func_0010f558(&D_0062F8F0, D_0062F840, 1);
-}
 
-s32 func_001e3ed0(VM *vm) {
-    if ((s32)(D_0038CD00 >> 46) & 1) return 4;
-    return 2;
-}
 
-void func_001e3fc8(void) {
-    D_003DC490 = 1;
-    func_0010ef70(&D_0062F790, D_003DC228, func_001e3f20);
-    D_0062F8F0.a = 1;
-    D_0062F8F0.b = 2;
-    D_0062F8F0.fn = func_001e3ef0;
-    func_0010f558(&D_0062F8F0, &D_0062F790, 1);
-}
 
-void func_001e42b0(void) {
-    D_0062F790.f44 = 2.0f;
-    if (D_002E26A0[1]) D_0062F790.f44 = 3.0f;
-    if (D_002E26A0[2]) D_0062F790.f44 = 4.0f;
-    func_0010bdd0(&D_0062F790, func_001e4578);
-}
 
 s32 func_001e4a68(void) {
     if (D_002C5BB8 & 2) {

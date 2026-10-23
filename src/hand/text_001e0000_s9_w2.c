@@ -1,30 +1,11 @@
 #include "common.h"
 
 /* Menu window, 0xb0 bytes (full layout in src/hand/text_001e0000_h45.c). */
-typedef struct { u8 b[0xb0]; } Win;
-extern Win D_0062F840; /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
-extern u8 D_0062F810[];
-extern s32 D_003DC484;
-extern u8 D_003DC3C0[];
 #include "data/pieces/D_003DC390.h"
-void func_001e39f0(void);
-void func_0010bd90(void *, void (*)());
-void func_00231b98(void);
 void func_0010e3f0(void *);
 void func_0010ef70(void *, void *, void *);
 
-/* func_00231b98 takes no arguments; D_0062F810 written out in both branches (gcse hoists it). */
-void func_001e3a00(void) {
-    func_0010bd90(&D_0062F840, func_001e39f0);
-    if (D_003DC484 == 1) {
-        func_00231b98();
-        func_0010e3f0(D_0062F810);
-        func_0010ef70(D_0062F810 - 0x80, D_003DC3C0, 0);
-    } else {
-        func_0010e3f0(D_0062F810);
-        func_0010ef70(D_0062F810 - 0x80, D_003DC390, 0);
-    }
-}
+/* func_001e3a00 is in src/shop/shop.c. */
 
 typedef struct { u8 pad[0xa80]; u8 a80[16]; } SvA80;
 typedef struct { char *a; char *b; } StrPair;

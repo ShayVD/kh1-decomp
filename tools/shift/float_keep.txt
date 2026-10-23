@@ -70,3 +70,9 @@ D_00482260
 # reach_check pins it through an unbounded index of its own; this keeps it if that ever changes (tight idx-span
 # does not see a byte's 0xFF: docs/shiftable-plan.md "Session 33: reach_check").
 D_003F3530
+#
+# Session 34: the shop's third window D_0062F840 (0xb0 bytes, src/data/bss_0062.c). Until session 34 it stayed in
+# place only because text_001e0000_h20.c declared D_0062F790 as a 0x100-byte view that covered it; src/shop/shop.c
+# now declares all three windows as MsgWin (0xb0). Kept here so the move does not change the float build; nothing
+# needs it in place, so it can float once a SHIFT_FLOAT_FORCE=D_0062F840 build has played a shop.
+D_0062F840

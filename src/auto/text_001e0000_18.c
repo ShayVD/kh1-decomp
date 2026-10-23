@@ -14,12 +14,10 @@ M2C_UNK func_002672f8(void *, void *, void *);
 M2C_UNK func_00267620(void *);
 M2C_UNK func_00267768(void *, void *, f32);
 M2C_UNK func_00267810(void *, void *, f32);
-extern M2C_UNK D_003DBD68;
 extern M2C_UNK D_003E0D20;
 extern M2C_UNK D_003E0F40;
 extern M2C_UNK D_003E1150;
 extern M2C_UNK D_003E12E0;
-extern M2C_UNK D_0062F6E0;
 extern M2C_UNK D_006303B0; /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern M2C_UNK D_00630460;
 extern M2C_UNK D_00630510; /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
@@ -38,8 +36,6 @@ extern M2C_UNK func_001e8308;
 extern M2C_UNK func_001e84a0;
 extern M2C_UNK func_001e8628;
 #include "data/pieces/D_003DABD4.h"
-extern s32 D_003DC48C;
-extern s32 D_003DC490;
 extern s32 D_003DD264;
 extern s32 D_003F7A68;
 extern s32 D_006314CC;
@@ -47,17 +43,11 @@ extern s32 D_006314D0;
 extern s32 D_006314D8;
 extern s32 D_006314DC;
 s32 func_0011e340(M2C_UNK);
-void func_0010ef70(s32, s32, s32);
 
 /* func_001e10c8, func_001e14e0 are in src/screen/screen.c. */
 
 
-void func_001e4268(void) {
-    D_003DC490 = 1;
-    D_003F7A68 = 1;
-    D_003DC48C = 0;
-    func_0010ef70((s32) &D_0062F6E0, (s32) &D_003DBD68, 0);
-}
+/* func_001e4268 is in src/shop/shop.c. */
 
 void func_001e4918(void) {
     s32 sp[4];
