@@ -16,73 +16,12 @@ void func_001f3708(Sbbc0 *, s32);
 s32 func_001fe570(Sbbc0 *);
 void func_00207bb0(Sbbc0 *, s32);
 
-void func_002113f0(Sbbc0 *a0) {
-    if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 6);
-            func_0011d768(3);
-        } else {
-            func_0020bd18(a0, 8);
-            if (func_001fe570(a0)) func_001f3708(a0, 6);
-        }
-    }
-    func_00207bb0(a0, a0->f24);
-}
-
-void func_00211480(Sbbc0 *a0, s32 a1) {
-    s32 v = func_001efd98(a1) * 368;
-    a0->b4 -= v;
-    a0->ba += v;
-    a0->c0 += v;
-    a0->f24 = a1;
-}
-
 typedef W606Mem_304be8 S4BE8e;
-#include "data/pieces/D_00304BE8.h"
-extern s32 D_00641BF0[], D_00641BE0[];
-
-void func_00211698(void) {
-    u32 i;
-    for (i = 0; i < D_003E3D68; i++) {
-        s32 v = D_00304BE8->m[((u8 *)D_00304BE8)[0x48e + i]].sub.x32;
-        D_00641BF0[i] = D_00641BE0[i] = v;
-    }
-}
 
 void func_001f9010(s32);
-extern s32 D_00641BCC, D_00641BC8;
-typedef struct { u8 pad[24]; u8 a[26]; u8 b; } S1BB0;
-extern S1BB0 *D_00641BB0; /* src/data/bss_0064.c: s32 D_00641BB0 */
-s32 func_001eebd8(s32);
-s32 func_001eec00(s32);
-void func_001f94f0(s32, s32, s32, s32, s32, s32, s32);
-void func_00212c20(s32 a0) {
-    s32 v;
-    if (D_00641BC8 + D_00641BCC == 0) {
-        v = func_001eebd8(D_00641BB0->b);
-    } else {
-        v = func_001eec00(D_00641BB0->a[D_00641BCC]);
-    }
-    func_001f9010(23);
-    func_001f94f0(a0, 0, 174, 12, v, 17, 0x80c87850);
-}
-
-extern s32 D_00641BC4;
 #include "data/pieces/D_003E8E08.h"
 s32 func_001ee618(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-void func_002131e8(s32 a0) {
-    s32 x;
-    s32 t;
-    func_001f9010(23);
-    t = D_00641BC4;
-    x = 165;
-    if (t) {
-        (*(s32 *)&D_003E8E08) = func_001ee618(t);
-        x = 166;
-    }
-    func_001f9438(a0, 0, 174, 12, x, 17, 0x80c87850);
-}
 
 void func_00214030(Sbbc0 *a0) {
     if (func_001f42b8(a0)) {

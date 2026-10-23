@@ -26,15 +26,6 @@ extern M2C_UNK D_00642F60;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_002B6478;
 extern s32 D_003F34E8;
-extern s32 D_00641BC4;
-extern s32 D_00641BC8;
-extern s32 D_00641BCC;
-extern s32 D_00641BD0;
-extern s32 D_00641BD4;
-extern s32 D_00641BD8;
-extern s32 D_00641BDC;
-extern s32 D_00641C04;
-extern s32 D_00641C08;
 extern s32 D_00642C58; /* src/data/bss_0064.c: u32 D_00642C58 */
 extern s32 D_00642C5C;
 extern s32 D_00642C60;
@@ -54,18 +45,6 @@ extern s32 D_00643100;
 s32 func_001ef5c0(s32);
 s32 func_001ef5f8(s32);
 s32 func_00266c08(M2C_UNK);
-
-void func_00213d30(void) {
-    D_00641BC4 = 0;
-    D_00641BC8 = 0;
-    D_00641BCC = 0;
-    D_00641BD0 = 0;
-    D_00641BD4 = 0;
-    D_00641BD8 = 0;
-    D_00641BDC = 0;
-    D_00641C04 = 0;
-    D_00641C08 = 0;
-}
 
 s32 func_00213d80(s32 arg0) {
     return (func_001ef5f8(arg0 & ~0x80) << 0x10) | (arg0 & 0x80);

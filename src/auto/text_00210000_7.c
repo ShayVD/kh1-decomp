@@ -1,20 +1,15 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_001f31a8(M2C_UNK *, M2C_UNK);
 M2C_UNK func_0021af38(s32);
 M2C_UNK func_0021b820();
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-extern M2C_UNK D_003F3B40;
 extern M2C_UNK D_003F3E18;
 extern M2C_UNK D_003F4488;
 extern M2C_UNK D_003F47B8;
 extern M2C_UNK D_003F4BD0;
 #include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_003E8E08.h"
-extern s32 D_003F34C0;
-extern s32 D_00641BC4;
 extern s32 D_00642C70;
 extern s32 D_00642CD0;
 extern s32 D_00642D24;
@@ -24,13 +19,6 @@ extern u32 D_00642C58;
 s32 func_001ee5f0(s32);
 void func_001f9010(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-
-void func_00212270(void) {
-    if (D_00641BC4 != 3) {
-        func_001f31a8(&D_003F3B40, 0);
-        D_003F34C0 |= 2;
-    }
-}
 
 void func_00214380(s32 arg0) {
     func_001f9010(0x17);
