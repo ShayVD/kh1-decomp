@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/bss_0062.h"
 
 /* Script VM handlers: value stack at +0x184, top index at +0x180. */
@@ -39,15 +40,6 @@ typedef struct {
     struct { void *id; s32 f4; s32 f8; s32 fc; s32 f10; s32 f14; } e3384[8];
 } Big;
 extern Big D_00389C90;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 #include "data/pieces/D_00304BE8_s.h"
 typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;
 typedef struct { u8 pad0[0x6c]; Sub6c *f6c; } Sub4;
@@ -190,7 +182,7 @@ s32 func_001d39b0(VM *vm) {
 }
 
 s32 func_001d3aa8(VM *vm) {
-    Msg m;
+    VmMsg m;
     Actor *o = vm->obj;
     if (o) {
         m.type = 3;
@@ -252,7 +244,7 @@ s32 func_001d4610(VM *vm) {
 }
 
 s32 func_001d4710(VM *vm) {
-    Msg m;
+    VmMsg m;
     vm->flags.x &= ~1ULL;
     vm->flags.x &= ~0x40ULL;
     vm->flags.x &= ~0x200ULL;
@@ -277,7 +269,7 @@ s32 func_001d5090(VM *vm) {
 }
 
 s32 func_001d5278(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 33;
     m.val = 0;
     m.x = vm->x0;
@@ -286,7 +278,7 @@ s32 func_001d5278(VM *vm) {
 }
 
 s32 func_001d52c0(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 34;
     m.val = 0;
     m.x = vm->x0;
@@ -324,7 +316,7 @@ s32 func_001d56a8(VM *vm) {
 }
 
 s32 func_001d56f0(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 37;
     m.val = 0;
     m.x = vm->x0;
@@ -333,7 +325,7 @@ s32 func_001d56f0(VM *vm) {
 }
 
 s32 func_001d5738(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 38;
     m.val = 0;
     m.x = vm->x0;
@@ -420,7 +412,7 @@ s32 func_001d7238(VM *vm) {
 }
 
 s32 func_001d7258(VM *vm) {
-    Msg m;
+    VmMsg m;
     Actor *o = vm->obj;
     if (o) {
         m.x = vm->x0;

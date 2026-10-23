@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
 typedef struct VmObj {
@@ -13,15 +14,6 @@ typedef struct VmObj {
 } Obj;
 typedef VmRec VM;
 
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef struct {
     u8 pad0[0x3034];
     s32 x3034;
@@ -100,7 +92,7 @@ s32 func_001d9780(VM *vm) {
 
 void func_00105c70(s32, s32 *);
 s32 func_001da2c8(VM *vm) {
-    Msg m;
+    VmMsg m;
     s32 buf[3];
     func_00105c70(vm->stk[vm->sp - 1], buf);
     m.type = 23;
@@ -134,7 +126,7 @@ s32 func_001da628(VM *vm) {
 }
 
 s32 func_001dc000(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 44;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;
@@ -150,7 +142,7 @@ s32 func_001dc000(VM *vm) {
 typedef struct { u8 pad0[4]; s32 f4; u8 pad8[0x370 - 8]; union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b; } f370; } Obj3;
 Obj3 *func_001230a0(Obj3 *);
 s32 func_001dc3c0(void) {
-    Msg m;
+    VmMsg m;
     Obj3 *o;
     m.type = 27;
     m.val = 0;
@@ -168,7 +160,7 @@ s32 func_001dc3c0(void) {
 }
 
 s32 func_001dc470(void) {
-    Msg m;
+    VmMsg m;
     Obj3 *o;
     m.type = 28;
     m.val = 0;
@@ -215,7 +207,6 @@ s32 func_001dc8c8(VM *vm) {
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 #include "data/pieces/D_0037A378.h"
-void func_001c19f8(VM *, s32);
 void func_001dcd98(s32 a) {
     VM *vm;
     s32 n, i;

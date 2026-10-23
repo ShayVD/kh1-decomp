@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 typedef struct {
     u8 pad0[0x10];
     f32 pos[3];
@@ -186,15 +187,6 @@ void func_001cebe8(void) {
 }
 void func_00104300(s32);
 void func_001043f8(s32);
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 s32 func_001cef20(VM *vm) {
     func_00104300(vm->stk[vm->sp]);
     D_00389C90.f3078.x |= 1;
@@ -208,7 +200,7 @@ s32 func_001cefb8(VM *vm) {
     return 2;
 }
 s32 func_001cf0c8(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 20;
     m.val = 0;
     m.x = vm->x0;
@@ -219,7 +211,7 @@ void func_00135978(void *, s32, s32);
 void func_001359c0(void *, s32, s32);
 s32 func_00131b08(void *);
 s32 func_001cf300(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 24;
     m.val = 0;
     m.x = vm->x0;
@@ -243,7 +235,7 @@ s32 func_001cfad0(VM *vm) {
     return func_00131b08(vm->obj) ? 2 : 4;
 }
 s32 func_001cfb00(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 27;
     m.val = 0;
     m.x = vm->x0;
@@ -251,7 +243,7 @@ s32 func_001cfb00(VM *vm) {
     return 2;
 }
 s32 func_001cfb90(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 5;
     m.val = (u32)(vm->stk[vm->sp] | 0x10000);
     m.x = vm->x0;
@@ -267,7 +259,7 @@ void func_001065a8(s32, s32, s32, s32);
 void func_00106648(s32, s32, s32, s32);
 s32 D_00F20000(s32, s32);
 s32 func_001cfb48(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 28;
     m.val = 0;
     m.x = vm->x0;

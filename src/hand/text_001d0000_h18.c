@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/pieces/D_00304BE8_s.h"
 typedef struct {
     u8 pad0[0x10];
@@ -26,15 +27,6 @@ typedef struct {
     union { u64 x; s32 i[2]; } f3078;
 } Big;
 extern Big D_00389C90;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef union { u64 x; struct { u32 lo; u32 b0:29; u32 b29:1; u32 b30:1; u32 b31:1; } b; } F64;
 extern F64 D_0038CD00;
 void func_0013c108(s32, s32);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
 
@@ -20,15 +21,6 @@ typedef struct {
     f32 f348;
 } VM;
 
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 
 void func_00131c78(s32, s32);
 extern void (*D_00377368)(s32, s32);
@@ -134,7 +126,7 @@ s32 func_001da910(VM *vm) {
 }
 
 s32 func_001da968(VM *vm) {
-    Msg m;
+    VmMsg m;
     m.type = 41;
     m.val = (u32)vm->stk[vm->sp];
     m.x = vm->x0;

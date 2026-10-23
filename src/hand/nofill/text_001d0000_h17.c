@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 
 /* Built without assembler delay-slot filling. */
 typedef struct {
@@ -38,15 +39,6 @@ typedef struct {
     struct { void *id; s32 f4; s32 f8; s32 fc; s32 f10; s32 f14; } e3384[8];
 } Big;
 extern Big D_00389C90;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef struct { u8 pad0[0x48e]; u8 a48e[11]; u8 a499[1]; } Save;
 #include "data/pieces/D_00304BE8.h"
 typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;

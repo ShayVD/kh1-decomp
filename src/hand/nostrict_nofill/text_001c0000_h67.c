@@ -1,4 +1,5 @@
 #include "common.h"
+#include "vm/script_vm.h"
 typedef struct {
     u8 pad0[0x370];
     u64 f370;
@@ -19,19 +20,10 @@ typedef struct {
     u8 pad2f8[0x30];
     u64 flags;
 } VM;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 double sin(double);
 double cos(double);
 s32 func_001ce5f0(VM *vm) {
-    Msg m;
+    VmMsg m;
     f32 a;
     double d;
     Ent *e;

@@ -1,19 +1,11 @@
 #include "common.h"
+#include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
 typedef struct VmObj {
     u8 pad0[0x10];
     f32 pos[3];
 } Actor;
 typedef VmRec VM;
-typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-void func_001c4640(Msg *m);
 typedef struct {
     s32 x0;
     u8 pad4[8];
