@@ -182,7 +182,10 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # --no-counter-cap, --no-slot-refine, --no-str-arg, --no-list-arg, --no-dma-count and --no-dma-chain
 # (session 27), --no-end-ptr (a compare against a name's address does not tie the object before it to
 # the name; session 28), --no-nest-carry (a counter an inner loop steps and the outer loop carries over is not
-# bounded by both loops' trip counts; session 29). keep_check.py then
+# bounded by both loops' trip counts; session 29), --no-path-step (a loop's steps are proved by single writes only,
+# not over the paths of its body), --no-arg-bound (an index made from an argument is not bounded by the constants
+# every direct caller passes) and --no-wr-span (an indexed store's displacement counted twice in the bytes it may
+# write) (session 30). keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=

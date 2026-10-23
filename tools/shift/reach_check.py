@@ -38,6 +38,7 @@ import mips  # noqa: E402
 from elf32 import Elf  # noqa: E402
 
 BLOB_START, BSS_START, IMAGE_END = 0x00272C70, 0x00494080, 0x00675018
+TEXT_START = 0x00100000
 CALLER_SAVED = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 24, 25, 31}
 WIDTH = {0x20: 1, 0x24: 1, 0x28: 1, 0x21: 2, 0x25: 2, 0x29: 2, 0x23: 4, 0x27: 4, 0x2B: 4, 0x31: 4,
          0x39: 4, 0x22: 1, 0x26: 1, 0x2A: 1, 0x2E: 1, 0x37: 8, 0x3F: 8, 0x1A: 1, 0x1B: 1, 0x2C: 1, 0x2D: 1,
@@ -169,6 +170,8 @@ HIX = "hix"  # register = a lui + an index: ("hix", value, upper bound or None);
 JT = "jt"  # register = a word of a jump table: ("jt", table address, largest byte offset)
 PTR = "ptr"  # register = the word loaded from a pointer global G, + an offset: ("ptr", G, off or None if indexed)
 SET_MAX = 8  # a join of more addresses becomes base + bounded offset (IDX)
+AX = "ax"  # session 30 (arg-bound): register = argument k on entry * m + a, a scaled index: ("ax", k, m, a);
+# an IDX/HIX made from one carries it as a 4th element ("ax", k, m, a) with a an upper bound
 
 
 def pieces_from_ld(ld: Path, sizes: dict[str, int]):
@@ -209,6 +212,15 @@ def _idx(v):
     if isinstance(v, tuple) and v[0] == SET:  # used as a base for an index: lowest + span
         lo, hi = min(v[1]), max(v[1])
         return (lo, hi - lo) if hi - lo < 0x10000 else None
+    return None
+
+
+def _ax(v):
+    """Session 30 (arg-bound): v as a scaled argument ("ax", k, m, a) (an argument + off is ("ax", k, 1, off))."""
+    if isinstance(v, tuple) and v[0] == ARG and len(v) == 3:  # (not one that a join made: see analyse's join)
+        return (AX, v[1], 1, v[2])
+    if isinstance(v, tuple) and v[0] == AX:
+        return v
     return None
 
 
@@ -469,6 +481,233 @@ def nested_carries(insns: list[mips.Insn], loops: dict[int, tuple]) -> tuple[dic
     return outer, carry
 
 
+def _likely(w: int) -> bool:
+    """A branch-likely: its delay slot runs only when the branch is taken (bc1fl/bc1tl too)."""
+    o = mips.op(w)
+    return o in (0x14, 0x15, 0x16, 0x17) or (o == mips.OP_REGIMM and mips.rt(w) in (0x02, 0x03, 0x12, 0x13)) \
+        or (o in (mips.OP_COP1, mips.OP_COP2) and mips.rs(w) == 0x08 and mips.rt(w) & 2 != 0)
+
+
+def path_loops(insns: list[mips.Insn], counters: bool = True) -> dict[int, tuple]:
+    """Session 30 (path-step): countdown_loops' loops, proved over the paths of the body instead of by
+    single writes. countdown_loops wants the counter written once, by a step every path executes; gcc
+    also puts the step in a likely branch's delay slot on the path that loops and returns on the other
+    (func_0011e248: `bnel v0,s1,next; addiu v1,v1,1` ... `jr ra`), or in both arms of an if
+    (func_001269d8: `blezl a0,test; addiu t0,t0,1` and `addiu t0,t0,1` on the fall-through), and it
+    walks a pointer through a copy (func_00111510: `move a1,a0; ...; addiu a0,a1,4`).
+
+    The body [header, back branch's delay slot] must have no backward branch but the back edge, no
+    switch `jr`, no linking branch, and no way in but the header (as countdown_loops). Every path from
+    the header that reaches the back edge is followed (the body is acyclic; paths that branch or jump
+    out, or return, leave the loop and do not matter), tracking each register as {its header value or
+    another register's + a constant} (or unknown), and a `slti/sltiu t, i, L` result as (that
+    instruction, i's value there). On the edge that loops:
+      - a down-counter c (`bgtz/bgez/bne c,$0`; bne only with k = 1) is c - k on every path, and the
+        branch tests c - k on every path (kind) or c on every path (kind-slot: the step is in the slot);
+      - an up-counter i (`bne t,$0` with t = slti i, L on every path, from one instruction) is i + k on
+        every path, and that slti saw i + k (gtz) or i (gtz-slot) on every path;
+      - a walked register p is p + d on every path with 0 <= d, max d = s > 0 (a path that steps less
+        only lowers it).
+    Returns {header index: (back-branch index, c, k, kind, {p: s}, L or None)} like countdown_loops."""
+    n = len(insns)
+    a0 = insns[0].addr if n else 0
+    jumps = []
+    for j, x in enumerate(insns):
+        t_ = x.branch_target if x.is_branch else (x.jump_target if x.is_j else None)
+        if t_ is not None:
+            jumps.append((j, (t_ - a0) // 4))
+        if x.is_jr and not x.is_jr_ra:
+            return {}  # a switch: analyse() sends its `jr` to every label
+    out = {}
+    TOP = None
+
+    def get(stt, r):
+        return frozenset({("r", r, 0)}) if r not in stt else stt[r]
+
+    def put(stt, r, v):
+        if r:
+            stt[r] = v
+
+    def ex(stt, j):
+        """Execute insns[j] on a path state (a copy is returned)."""
+        stt = dict(stt)
+        w = insns[j].word
+        o, s, t = mips.op(w), mips.rs(w), mips.rt(w)
+        if o in (0x09, 0x19):  # addiu / daddiu
+            v = get(stt, s)
+            put(stt, t, TOP if v is TOP or any(e[0] != "r" for e in v)
+                else frozenset(("r", e[1], e[2] + mips.imm(w)) for e in v))
+        elif o in (0x0A, 0x0B):  # slti / sltiu
+            v = get(stt, s)
+            put(stt, t, TOP if v is TOP or s == 0 or any(e[0] != "r" for e in v)
+                else frozenset(("lt", j, e[1], e[2]) for e in v))
+        elif o == mips.OP_SPECIAL and mips.funct(w) in (0x21, 0x2D, 0x25) and (s == 0 or t == 0):  # move
+            put(stt, mips.rd(w), get(stt, t if s == 0 else s))
+        elif o == mips.OP_SPECIAL and mips.funct(w) == 0x0C:  # syscall: v0/v1 and the like
+            for r in CALLER_SAVED:
+                put(stt, r, TOP)
+        else:
+            for r in gpr_writes(w):
+                put(stt, r, TOP)
+        return stt
+
+    def join(x, y):
+        if x is None:
+            return y
+        z = {}
+        for r in set(x) | set(y):
+            u, v = get(x, r), get(y, r)
+            z[r] = TOP if u is TOP or v is TOP or len(u | v) > 4 else u | v
+        return z
+
+    for b, ins in enumerate(insns):
+        w = ins.word
+        o = mips.op(w)
+        if not ins.is_branch or b + 1 >= n:
+            continue
+        h = (ins.branch_target - a0) // 4
+        if not (0 <= h < b):
+            continue
+        c = None
+        if o in (0x07, 0x17) and mips.rt(w) == 0:
+            c, kind = mips.rs(w), "gtz"
+        elif o in (0x05, 0x15) and (mips.rs(w) == 0) != (mips.rt(w) == 0):
+            c, kind = mips.rs(w) or mips.rt(w), "nez"
+        elif o == mips.OP_REGIMM and mips.rt(w) in (0x01, 0x03):
+            c, kind = mips.rs(w), "gez"
+        if not c:
+            continue
+        if any(h < t_ <= b + 1 and not h <= j <= b + 1 for j, t_ in jumps):
+            continue  # a way into the body other than the header
+        ok = True
+        ins_st: dict[int, dict] = {h: {}}  # instruction index -> joined state of the paths reaching it
+        for j in range(h, b):
+            x = insns[j]
+            stt = ins_st.get(j)
+            if stt is None:
+                continue  # no path from the header reaches j (or only as a delay slot, done below)
+            xw = x.word
+            ctl = x.is_branch or x.is_j or x.is_jr or x.is_jal or x.is_jalr
+            if not ctl:
+                ins_st[j + 1] = join(ins_st.get(j + 1), ex(stt, j))
+                continue
+            if j + 1 >= b or (x.is_jr and not x.is_jr_ra) \
+                    or (mips.op(xw) == mips.OP_REGIMM and mips.rt(xw) in (0x10, 0x11, 0x12, 0x13)):
+                ok = False  # a slot that is the back branch, a switch, or a linking branch
+                break
+            if x.is_jal or x.is_jalr:  # a call: its slot, then the callee clobbers (gpr_writes), then j + 2
+                ins_st[j + 2] = join(ins_st.get(j + 2), ex(ex(stt, j + 1), j))
+                continue
+            s0 = ex(stt, j)
+            slot = ex(s0, j + 1)
+            if x.is_jr_ra:
+                continue  # returns: the path leaves the loop
+            tgt = x.branch_target if x.is_branch else x.jump_target
+            ti = (tgt - a0) // 4
+            if a0 <= tgt and ti <= j:
+                ok = False  # a second back edge or an inner loop
+                break
+            if h < ti <= b + 1:  # (a target outside the body leaves the loop)
+                ins_st[ti] = join(ins_st.get(ti), slot)
+            if x.is_j:
+                continue
+            always = (mips.op(xw) == 0x04 and mips.rs(xw) == mips.rt(xw)) or (
+                mips.op(xw) == mips.OP_REGIMM and mips.rt(xw) in (0x01, 0x11) and mips.rs(xw) == 0)
+            if not always:
+                ins_st[j + 2] = join(ins_st.get(j + 2), s0 if _likely(xw) else slot)
+        if not ok:
+            continue
+        at_b = ins_st.get(b)
+        if at_b is None:
+            continue
+        taken = ex(at_b, b + 1)  # the delay slot runs on the edge that loops (likely or not)
+        tv = get(at_b, c)
+        lim, tst = None, None
+        if tv is TOP or len(tv) != 1:
+            continue
+        (tk,) = tv
+        if kind == "nez" and tk[0] == "lt":
+            _lt, jl, i_, d_ = tk
+            y = insns[jl].word
+            if not (mips.op(y) == 0x0A or mips.imm(y) >= 0) or i_ == c:
+                continue
+            iv = get(taken, i_)
+            if iv is TOP or len(iv) != 1:
+                continue
+            (_r, src, k), = iv
+            if _r != "r" or src != i_ or k <= 0 or d_ not in (0, k):
+                continue
+            tst, c, lim = c, i_, mips.imm(y)
+            kind = "gtz" if d_ == k else "gtz-slot"
+        else:
+            cv = get(taken, c)
+            if cv is TOP or len(cv) != 1:
+                continue
+            (_r0, s0_, dB), (_r1, s1_, dS) = tk, next(iter(cv))
+            if _r0 != "r" or _r1 != "r" or s0_ != c or s1_ != c or dS >= 0:
+                continue
+            k = -dS
+            if kind == "nez" and k != 1:
+                continue
+            if dB == dS:
+                pass
+            elif dB == 0:
+                kind += "-slot"
+            else:
+                continue
+        ps = {}
+        for r in range(1, 32):
+            if r in (c, tst):
+                continue
+            v = get(taken, r)
+            if v is TOP or any(e[0] != "r" or e[1] != r or e[2] < 0 for e in v):
+                continue
+            s_ = max(e[2] for e in v)
+            if s_ > 0:
+                ps[r] = s_
+        if ps or (counters and lim is not None):
+            out.setdefault(h, (b, c, k, kind, ps, lim))
+    return out
+
+
+def arg_bounds(funcs, calls_to: dict, direct_only, caller_of) -> dict[int, tuple]:
+    """Session 30 (arg-bound): for each function f in funcs, the largest value each argument register can hold
+    on entry (None: unknown), over its call sites calls_to[f] = {call pc: (value per argument register)}: an exact
+    int (a negative one is unknown), ("arg", k, off) = the caller's own argument k + off (caller_of(pc) is the
+    caller; it must be in funcs), or None. Only a function with direct_only(f) (every way in is one of these calls)
+    is bounded. A least fixpoint from "no call yet"; a recursion whose bound keeps growing gives up."""
+    n = len(ARG_REGS)
+    BOT, TOP = "bot", "top"
+    ubs = {f_: [BOT] * n if direct_only(f_) else [TOP] * n for f_ in funcs}
+
+    def site(v_, pc_):
+        if isinstance(v_, int):
+            return v_ if v_ >= 0 else TOP
+        if isinstance(v_, tuple):
+            u_ = ubs.get(caller_of(pc_), [TOP] * n)[v_[1]]
+            return u_ if u_ in (BOT, TOP) else (u_ + v_[2] if u_ + v_[2] >= 0 else TOP)
+        return TOP
+
+    for _round in range(64):
+        changed = False
+        for f_ in sorted(funcs):
+            if not direct_only(f_):
+                continue
+            for k_ in range(n):
+                vals = [site(vs[k_], pc_) for pc_, vs in calls_to[f_].items()]
+                new = TOP if TOP in vals else max((x_ for x_ in vals if x_ != BOT), default=BOT)
+                old = ubs[f_][k_]
+                if old == TOP or new == old or new == BOT or (old != BOT and new != TOP and new < old):
+                    continue
+                ubs[f_][k_] = new if old == BOT or new == TOP else max(old, new)
+                changed = True
+        if not changed:
+            break
+    else:
+        return {f_: (None,) * n for f_ in funcs}  # no fixpoint
+    return {f_: tuple(None if u_ in (BOT, TOP) else u_ for u_ in v_) for f_, v_ in ubs.items()}
+
+
 def back_edges(kind: str, n: int, k: int) -> int:
     """How many times a countdown loop's back edge can be taken when its counter enters at most n.
     The test sees the decremented counter (kind without -slot) or the counter before the
@@ -489,7 +728,8 @@ def back_edges(kind: str, n: int, k: int) -> int:
 def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool = False,
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
-            slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True):
+            slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True,
+            path_step: bool = True, wr_span: bool = True, arg_bound: bool = True):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -523,6 +763,14 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     grow: dict[tuple, int] = {}
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
     loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
+    if countdown and path_step:  # session 30: the loops whose steps only the paths of the body prove
+        for h_, lp_ in path_loops(insns, counters=counter_cap).items():
+            old_ = loops.get(h_)
+            if old_ is not None and old_[:4] == lp_[:4] and old_[5] == lp_[5]:  # the same loop: walks of both
+                lp_ = lp_[:4] + ({r_: max(old_[4].get(r_, 0), lp_[4].get(r_, 0))
+                                  for r_ in set(old_[4]) | set(lp_[4])},) + lp_[5:]
+            if old_ is None or old_[:4] == lp_[:4] and old_[5] == lp_[5]:
+                loops[h_] = lp_
     outer, carry = nested_carries(insns, loops) if countdown and nest_carry else ({}, {})
     loop_entry: dict[int, dict] = {}  # loop header -> joined state of the edges that enter the loop
     loop_heads = set()  # targets of a backward branch or jump
@@ -534,11 +782,14 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     def join(i, k, v, u):
         if u == v:
             return v
+        if arg_bound and isinstance(v, tuple) and isinstance(u, tuple) and v[0] == u[0] == ARG and v[1:3] == u[1:3]:
+            return v[:3] + ("j",)  # (one side came through a join below)
         av = [t_ for t_ in (v, u) if isinstance(t_, tuple) and t_[0] == ARG]
         if arg_join and len(av) == 1:
             # an argument on one path and something else on the other (a reused register, p = p->next):
             # not a walk of the argument. Accesses through the join count as the argument's reach.
-            return av[0]
+            # Session 30 (arg-bound): marked ("j"), so it is not taken for the argument's value as an index.
+            return av[0][:3] + ("j",) if arg_bound else av[0]
         for t_ in av:
             wide.add(t_[1])  # two offsets of one argument (a walk), or two arguments
         if joins and i not in loop_heads:  # at a loop head a join is a walk (base + offset), not a choice
@@ -686,7 +937,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 if a[1] is None or a[1] > hi:
                     st[r] = (IDX, a[0], hi)
             return
-        if -0x10000 < lim < 0x10000 and (cur is None or _ub(cur) is not None or isinstance(cur, tuple) and cur[0] == PTR
+        if -0x10000 < lim < 0x10000 and (cur is None or _ub(cur) is not None or isinstance(cur, tuple) and cur[0] in (PTR, AX)
                                           or cases and isinstance(cur, tuple) and cur[0] == ARG):
             # (an argument below a small limit is a number, not a pointer: switch(a0 + 1) and such)
             u = _ub(cur)
@@ -717,10 +968,14 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         before = dict(st)
         if o == mips.OP_LUI:
             st[t] = (HI, (w & 0xFFFF) << 16)
+            if arg_bound and TEXT_START <= st[t][1] < BLOB_START:
+                ev.append(("codeaddr", st[t][1]))
         elif o in (0x09, 0x19):  # addiu / daddiu
             b = st.get(s)
             if isinstance(b, tuple) and b[0] == HI:  # %hi + %lo: a relocated address (shift_cmp maps it)
                 st[t] = (b[1] + mips.imm(w)) & 0xFFFFFFFF
+                if arg_bound and TEXT_START <= st[t] < BLOB_START:
+                    ev.append(("codeaddr", st[t]))  # a code address built: a function called through a pointer
                 if st[t] >> 28 in (2, 3) and BLOB_START <= st[t] & 0x0FFFFFFF < IMAGE_END + 0x10000:
                     ev.append((ins.addr, st[t] & 0x0FFFFFFF, None, 0, "uncached"))
             elif isinstance(b, int):
@@ -728,16 +983,22 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 if (w & 0xFFFF) != 0 or s != t:
                     ev.append((ins.addr, b, mips.imm(w), 0, "addr"))
                 st[t] = v if b > 0x10000 or not (b + mips.imm(w)) < 0 else b + mips.imm(w)
+                if arg_bound and TEXT_START <= v < BLOB_START:
+                    ev.append(("codeaddr", v))
             elif isinstance(b, tuple) and b[0] == ARG:
-                st[t] = (ARG, b[1], b[2] + mips.imm(w))
+                st[t] = (ARG, b[1], b[2] + mips.imm(w)) + b[3:]
             elif isinstance(b, tuple) and b[0] == PTR:
                 st[t] = (PTR, b[1], None if b[2] is None else b[2] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == IDX:
                 st[t] = (IDX, b[1], None if b[2] is None else b[2] + mips.imm(w))
+                if len(b) > 3 and b[2] is None:  # (session 30) the scaled argument index, + imm
+                    st[t] = st[t] + ((AX, b[3][1], b[3][2], b[3][3] + mips.imm(w)),)
             elif isinstance(b, tuple) and b[0] == UB:
                 st[t] = (UB, b[1] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == HIX:  # &D[i] built as lui + addu + addiu %lo
-                st[t] = (IDX, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2])
+                st[t] = (IDX, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2]) + b[3:]
+            elif isinstance(b, tuple) and b[0] == AX:
+                st[t] = (AX, b[1], b[2], b[3] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == SET:
                 if (w & 0xFFFF) != 0 or s != t:
                     ev += [(ins.addr, x, mips.imm(w), 0, "addr") for x in sorted(b[1])]
@@ -769,13 +1030,22 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     ev += [("wr", (x + mips.imm(w)) & 0xFFFFFFFF, WIDTH[o]) for x in sorted(_addrs(b))]
                 elif isinstance(b, tuple) and b[0] in (IDX, HIX):
                     lo_ = (b[1] + (mips.imm(w) if b[0] == IDX else 0)) & 0xFFFFFFFF
-                    ev.append(("wr", lo_, None if b[2] is None else b[2] + mips.imm(w) + WIDTH[o]))
+                    # session 30 (wr-span): from lo_ (which has the displacement of an IDX base) the store
+                    # reaches offset + width; the displacement was added twice (too short when it is negative)
+                    span = b[2] + WIDTH[o] + (mips.imm(w) if b[0] == HIX or not wr_span else 0) \
+                        if b[2] is not None else None
+                    ev.append(("wr", lo_, span))
             if isinstance(b, tuple) and b[0] == PTR:
                 ev.append(("ptrmem", b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o]))
             if isinstance(b, int):
                 ev.append((ins.addr, b, mips.imm(w), WIDTH[o], "mem"))
             elif isinstance(b, tuple) and b[0] == SET:
                 ev += [(ins.addr, x, mips.imm(w), WIDTH[o], "mem") for x in sorted(b[1])]
+            elif isinstance(b, tuple) and b[0] == HIX and len(b) > 3:  # D[a*m] (session 30): bounded by the callers
+                ev.append(("argidx", ins.addr, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[3][1], b[3][2], b[3][3],
+                           WIDTH[o]))
+            elif isinstance(b, tuple) and b[0] == IDX and len(b) > 3:
+                ev.append(("argidx", ins.addr, b[1], b[3][1], b[3][2], b[3][3] + mips.imm(w), WIDTH[o]))
             elif isinstance(b, tuple) and b[0] == HIX:  # D[i] as lui + addu + lw %lo(D)
                 ev.append((ins.addr, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2], WIDTH[o], "idx"))
             elif isinstance(b, tuple) and b[0] == IDX:
@@ -809,6 +1079,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 # lui + addu index: the %lo load or addiu that follows indexes from %hi + %lo
                 u = _ub(hx[0][1])
                 st[d] = (HIX, hx[0][0][1], u if u is not None and u >= 0 else None)
+                if arg_bound and st[d][2] is None and (ax_ := _ax(hx[0][1])) is not None:
+                    st[d] = st[d] + (ax_,)  # (session 30) lui + addu of a scaled argument
                 x = y = "done"
             x = None if isinstance(x, tuple) and x[0] in (HI, LT) else x
             y = None if isinstance(y, tuple) and y[0] in (HI, LT) else y
@@ -841,6 +1113,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 u = _ub(other)
                 if mips.funct(w) == 0x25 or a[1] is None or u is None:
                     st[d] = (IDX, a[0], None)
+                    if arg_bound and mips.funct(w) != 0x25 and a[1] is not None and (ax_ := _ax(other)) is not None:
+                        st[d] = st[d] + ((AX, ax_[1], ax_[2], ax_[3] + a[1]),)  # (session 30) &D + a*m
                 else:
                     st[d] = (IDX, a[0], a[1] + u)
             elif _ub(x) is not None and _ub(y) is not None and mips.funct(w) != 0x25:
@@ -864,6 +1138,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st[d] = (st[t] << sh) & 0xFFFFFFFF if mips.funct(w) == 0x00 else st[t] << sh
             elif x is not None and x >= 0 and sh < 16 and d != 0:
                 st[d] = (UB, x << sh)
+            elif arg_bound and mips.funct(w) == 0x00 and sh < 16 and d != 0 and (ax_ := _ax(st.get(t))) is not None:
+                st[d] = (AX, ax_[1], ax_[2] << sh, ax_[3] << sh)  # (session 30) an argument scaled
             else:
                 st.pop(d, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x2A, 0x2B):  # slt sltu: t = s < t
@@ -905,6 +1181,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
 
     def call_events(ins, st, target):
         ev = []
+        if arg_bound:  # (session 30) each argument register at a direct call: an exact value, the caller's own
+            # argument + an offset ("arg", k, off; not one a join made), or None
+            ev.append(("callargs", target, ins.addr, tuple(
+                st.get(r) if isinstance(st.get(r), int) and -0x10000 < st.get(r) < 0x10000
+                else st.get(r) if isinstance(st.get(r), tuple) and st.get(r)[0] == ARG and len(st.get(r)) == 3
+                and -0x10000 < st.get(r)[2] < 0x10000 else None for r in ARG_REGS)))
         # a known block function: its pointer arguments with their byte counts
         for ptr, size in BLOCK_CALLS.get(target, ()):
             b, n_ = st.get(ptr), size(st)
@@ -1224,6 +1506,14 @@ def main() -> int:
                          "the name (session 28)")
     ap.add_argument("--no-nest-carry", action="store_true",
                     help="do not bound a counter an inner loop steps and its outer loop carries over (session 29)")
+    ap.add_argument("--no-path-step", action="store_true",
+                    help="prove a loop's counter step and walked pointers only by single writes, not over the paths "
+                         "of its body (session 30)")
+    ap.add_argument("--no-wr-span", action="store_true",
+                    help="count an indexed store's displacement twice in the bytes it may write (before session 30)")
+    ap.add_argument("--no-arg-bound", action="store_true",
+                    help="an index made from a function's argument is unbounded even when every caller passes a "
+                         "constant (session 30)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1294,6 +1584,9 @@ def main() -> int:
     explain: list[str] = []
     writes: list = []  # (address, bytes or None for an unbounded index) of every store from a known base
     end_uses: dict[int, dict] = {}  # address compared or subtracted as an end -> kind -> functions (end-ptr)
+    codeaddr: set[int] = set()  # code addresses some code builds (arg-bound: functions called through pointers)
+    calls_to: dict[int, dict] = {}  # callee -> call pc -> exact argument values at the call (None: unknown)
+    argidx: list = []  # (function name, start, pc, address, k, m, a, width): D[arg k * m + a] (arg-bound)
 
     def check(name, base, disp, width, kind):
         pb, nb = piece(base)
@@ -1316,7 +1609,9 @@ def main() -> int:
                          read_word=read_word if is_func and not a.no_switch else None,
                          ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
                          slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
-                         nest_carry=not a.no_nest_carry):
+                         nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
+                         wr_span=not a.no_wr_span,
+                         arg_bound=not a.no_arg_bound and is_func):
             if e[0] == "argmem":
                 _k, k, off, width = e
                 r = own.setdefault(fstart, {}).setdefault(k, [off, off + width])
@@ -1324,6 +1619,20 @@ def main() -> int:
                 continue
             if e[0] == "storedto":
                 ptr_stores.setdefault(e[2], set()).add(e[1])
+                continue
+            if e[0] == "codeaddr":  # session 30 (arg-bound)
+                codeaddr.add(e[1])
+                continue
+            if e[0] == "callargs":
+                cs_ = calls_to.setdefault(e[1], {})
+                v_ = e[3] if is_func else None
+                if e[2] in cs_:  # the call seen again with another state: what both allow
+                    o_ = cs_[e[2]]
+                    v_ = None if o_ is None or v_ is None else tuple(x_ if x_ == y_ else None for x_, y_ in zip(o_, v_))
+                cs_[e[2]] = v_
+                continue
+            if e[0] == "argidx":
+                argidx.append((name, fstart) + e[1:])
                 continue
             if e[0] == "wr":
                 writes.append((e[1], e[2]))
@@ -1379,6 +1688,103 @@ def main() -> int:
                     idx.setdefault(base, set()).add(name)
                 continue
             check(name, base, disp, width, kind)
+    # Session 30 (arg-bound): an access D[a_k * m + a] whose index is argument k of its function F, scaled. When
+    # every way into F is a direct call (jal F or a tail call j F) that the analysis saw, with argument k an exact
+    # value >= 0 at each, the index is at most m * (largest of them) + a. F is not proved when its address is
+    # taken: a word equal to F anywhere in the ELF or an overlay, code that builds F (lui/addiu), a jal/j word for F
+    # the analysis did not see as a call (or from an overlay), a branch into F from outside it, or code before F
+    # that may fall into it. Otherwise (or with --no-arg-bound) the access stays unbounded, as before.
+    if argidx:
+        fn_end = {s_: e_ for s_, e_, _n in funcs}
+        need = {f_ for _n, f_, *_r in argidx}
+        img_words: set[int] = set()
+        jal_pcs: dict[int, set] = {}
+        blobs = [(elf.data, lambda off: next((sg.vaddr + off - sg.offset for sg in elf.segments
+                                               if sg.offset <= off < sg.offset + sg.filesz and sg.type == 1), None))]
+        for p_ in sorted(a.overlays.glob("*.x")) if a.overlays.is_dir() else []:
+            blobs.append((p_.read_bytes(), lambda off: None))  # an overlay: any call or word is unknown
+        for data_, vaddr_of in blobs:
+            for (wd,) in struct.iter_unpack("<I", data_[: len(data_) & ~3]):
+                img_words.add(wd)
+            for off in range(0, len(data_) - 3, 4):
+                wd = int.from_bytes(data_[off:off + 4], "little")
+                if wd >> 26 in (2, 3) and (((wd & 0x3FFFFFF) << 2) in fn_end):
+                    jal_pcs.setdefault((wd & 0x3FFFFFF) << 2, set()).add(vaddr_of(off))
+        branched, targets = set(), set()
+        for _rn, insns_ in regions:
+            for x_ in insns_ or ():
+                t_ = x_.branch_target if x_.is_branch else (x_.jump_target if x_.is_j else None)
+                targets.add(t_)
+                if x_.is_branch and x_.branch_target in fn_end and not (
+                        x_.branch_target <= x_.addr < fn_end.get(x_.branch_target, 0)):
+                    branched.add(x_.branch_target)
+
+        def falls_into(f_):
+            """Whether the code just before f_ may run on into it (no unconditional jump ends it)."""
+            p_ = f_ - 4
+            for _k in range(16):
+                wd = read_word(p_)
+                if wd is None:
+                    return True
+                if wd != 0:
+                    break
+                p_ -= 4
+            else:
+                return False  # only padding
+
+            def uncond(x):
+                return x is not None and (x == mips.JR_RA or (x >> 26 == 0 and x & 0x3F == 0x08) or x >> 26 == 2
+                                          or (x >> 26 == 4 and (x >> 21) & 31 == (x >> 16) & 31))
+            return not (uncond(read_word(p_)) or uncond(read_word(p_ - 4)) and p_ not in targets)
+
+        arg_stats: dict[str, int] = {}
+        fstarts = sorted(fn_end)
+
+        def caller_of(pc_):
+            i_ = bisect.bisect_right(fstarts, pc_) - 1
+            return fstarts[i_] if i_ >= 0 and pc_ < fn_end[fstarts[i_]] else None
+
+        direct: dict[int, bool] = {}
+
+        def direct_only(f_):
+            """Every way into f_ is a direct call the analysis saw (its argument values may still be unknown)."""
+            if f_ not in direct:
+                cs = calls_to.get(f_, {})
+                direct[f_] = bool(cs) and f_ not in img_words and f_ not in codeaddr and f_ not in branched \
+                    and not falls_into(f_) and all(pc_ in cs for pc_ in jal_pcs.get(f_, ())) \
+                    and all(v_ is not None for v_ in cs.values())
+                if not direct[f_] and f_ in need:
+                    why_f = ("no direct call" if not cs else "address taken" if f_ in img_words or f_ in codeaddr
+                             else "branched or fallen into" if f_ in branched or falls_into(f_)
+                             else "a call not analysed" if not all(pc_ in cs for pc_ in jal_pcs.get(f_, ()))
+                             else "a call from an overlay")
+                    arg_stats[why_f] = arg_stats.get(why_f, 0) + 1
+            return direct[f_]
+
+        closure, todo = set(), sorted(need)  # the functions whose bounds are needed, and their callers'
+        while todo:
+            f_ = todo.pop()
+            if f_ in closure:
+                continue
+            closure.add(f_)
+            if direct_only(f_):
+                for pc_, vs in calls_to.get(f_, {}).items():
+                    if any(isinstance(v_, tuple) for v_ in vs) and (g_ := caller_of(pc_)) is not None:
+                        todo.append(g_)
+        ubs = arg_bounds(closure, calls_to, direct_only, caller_of)
+        arg_ub: dict[int, tuple | None] = {f_: ubs[f_] for f_ in need}
+        for name, f_, _pc, b_, k_, m_, a_, wdt in argidx:
+            u_ = (arg_ub.get(f_) or (None,) * len(ARG_REGS))[k_]
+            end = None if u_ is None or m_ < 0 else b_ + m_ * u_ + a_ + wdt
+            if a.explain:
+                explain.append(f"{b_:08x}\t{'idx-arg' if end is not None else 'idx'}\t{name}\t-\targ{k_}*{m_}+{a_}\t"
+                               f"ub={u_}\tend={'+' + str(end - b_) if end is not None else None}\tpc={_pc:08x}")
+            idx_all.setdefault(b_, set()).add(name)
+            why.setdefault(b_, set()).add("idx" if end is None else "idx-arg")
+            if b_ not in idx_end or (idx_end[b_] is not None and (end is None or end > idx_end[b_])):
+                idx_end[b_] = end
+            if piece(b_)[0] is not None:
+                idx.setdefault(b_, set()).add(name)
     # Session 25: an address stored into a pointer global G is reached through every load of G. func_00106ed0
     # sets D_00494BAC = D_00472190 (chain 1's table, 16-byte ref tags) and func_00107548 indexes the pointer
     # with a 32-byte stride by a count loaded from room data, so the table runs into chain 2. Each address
@@ -1653,6 +2059,10 @@ def main() -> int:
                 print(f"debug: {name} passes {v:08x} as arg{j} to {fname.get(callee, hex(callee))}: "
                       f"reach {reach.get(callee, {}).get(j)}")
     print(f"# {len(stored)} addresses are stored to memory", file=sys.stderr)
+    if argidx:
+        print(f"# {len(arg_ub)} functions index by an argument, {sum(1 for f_ in arg_ub if direct[f_])} called "
+              f"directly only (arg-bound); not: " + ", ".join(f"{v_} {k_}" for k_, v_ in sorted(arg_stats.items())),
+              file=sys.stderr)
     print(f"# {dma_chain} DMA chain arguments are bounded by their parsed tags (dma-chain)", file=sys.stderr)
     print(f"# {list_arg} list arguments are bounded by a list literal's count (list-arg)", file=sys.stderr)
     print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
