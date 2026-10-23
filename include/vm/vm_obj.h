@@ -19,6 +19,11 @@ struct VmObj6c {
     s32 f44;                /* read by func_001d4448 */
 };
 
+struct VmObj14c {
+    u8 pad0[0x14];
+    s32 f14;
+};
+
 struct VmObj {
     s32 x0;                 /* flags (bit 25: func_001d5308 / func_001d5330) */
     s32 x4;                 /* 0x4: its id */
@@ -31,7 +36,8 @@ struct VmObj {
     f32 f3c;                /* 0x3c: heading (radians) */
     u8 pad40[0x10];
     f32 p50[3];             /* 0x50: home position (func_001d3aa8 sends the entity there) */
-    u8 pad5c[0x6c - 0x5c];
+    u8 pad5c[0x68 - 0x5c];
+    void *f68;              /* 0x68: a model (src/event/: kinds 7 / 8) */
     struct VmObj6c *f6c;    /* 0x6c */
     s32 f70;                /* 0x70: pushed by func_001d9850 */
     u8 pad74[0x90 - 0x74];
@@ -40,9 +46,12 @@ struct VmObj {
     f32 fac;                /* 0xac: sent by func_001da2c8 */
     u8 padb0[0x130 - 0xb0];
     struct VmObj130 *f130;  /* 0x130 */
-    u8 pad134[0x150 - 0x134];
+    u8 pad134[0x14c - 0x134];
+    struct VmObj14c *f14c;  /* 0x14c: f14 is a model (func_001dd5c0) */
     f32 f150;               /* 0x150: heading func_001dcb00 sets */
-    u8 pad154[0x164 - 0x154];
+    u8 pad154[0x15c - 0x154];
+    s32 f15c;               /* 0x15c: its skeleton (func_001dd3f8) */
+    u8 pad160[0x164 - 0x160];
     s32 f164;               /* 0x164: pushed by func_001d5350 / func_001d5388 */
     u8 pad168[0x16c - 0x168];
     f32 f16c;               /* 0x16c: pushed halved by func_001d4358 / func_001d4690 */

@@ -17,10 +17,6 @@ void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
 
-void func_001dd1f0(s32 arg0, s32 arg1) {
-    D_0062A220 = arg0;
-    D_0062A224 = arg1;
-}
 
 s32 func_001de558(void *arg0) {
     void *temp_v0;

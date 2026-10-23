@@ -57,7 +57,6 @@ extern s32 D_0062A220;
 extern s32 D_0062A224;
 extern s32 D_0062A628;
 extern u8 D_0062A630[];
-u8 D_0062A640[0x5000] ALIGNED(64);
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0011ef10(s32, void (*)());
 void func_001dd148();
@@ -75,36 +74,9 @@ typedef W606Mem_304be8 E116;
 #include "data/pieces/D_00304BE8.h"
 
 
-s32 func_001dd170(void) {
-    s32 *p = &D_0062A220;
-    s32 r;
-    *p = func_001559f0(50, 2);
-    D_0062A224 = *p + 0x7d000;
-    func_0011efa8(D_0062A630, D_0062A640, 80, 256);
-    r = func_0011ef10(0xc34f, func_001dd148);
-    D_0062A628 = 0;
-    return r;
-}
+/* func_001dd170, func_001dd3f8 and func_001dd550 (and D_0062A640) are in src/event/effect.c. */
 
-s32 func_001dd3f8(Handler *h) {
-    M64 *m;
-    if ((s32)(D_0038CD00 >> 40) & 1) return 4;
-    if (h->f10->f14 & 2) return 4;
-    m = func_001623e0(h->f14->f4->f15c);
-    h->f10->f0[0] = m[h->f18].v[0];
-    h->f10->f0[1] = m[h->f18].v[1];
-    h->f10->f0[2] = m[h->f18].v[2];
-    return 0;
-}
 
-s32 func_001dd550(Handler *h) {
-    u8 buf[64];
-    if ((s32)(D_0038CD00 >> 40) & 1) return 4;
-    if (h->f10->f14 & 2) return 4;
-    func_001318e8(h->f14->f4, h->f18, buf);
-    func_00147e08(h->f10, buf);
-    return 0;
-}
 
 s32 func_001ddf98(VM *vm) {
     if ((s32)(D_0038CD00 >> 44) & 1) return 4;

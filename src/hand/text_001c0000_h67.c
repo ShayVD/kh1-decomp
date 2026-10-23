@@ -148,49 +148,11 @@ s32 func_001e08d8(void) {
 char *strcpy(char *, const char *);
 char *strcat(char *, const char *);
 int sprintf(char *, const char *, ...);
-char D_0062A228[0x100]; /* no ALIGNED: a known 8-byte alignment turns the strcpy below into ld/sd moves */
 extern char D_0062A328[];
 extern char D_003DABD8[][6];
 s32 func_001ddc48();
-s32 func_001ddc78(VM *vm) {
-    char buf[256];
-    void **pp = &D_0062A220;
-    void *p = func_001559f0(50, 2);
-    strcpy(D_0062A228, "eveffect/");
-    *pp = p;
-    D_0062A224 = (u8 *)p + 0x7d000;
-    strcat(D_0062A228, D_003DABD8[vm->stk[vm->sp - 1]]);
-    sprintf(buf, "_%03d", vm->stk[vm->sp]);
-    strcat(D_0062A228, buf);
-    strcpy(D_0062A328, D_0062A228);
-    strcat(D_0062A228, ".dpp");
-    strcat(D_0062A328, ".dpx");
-    func_00120748(D_0062A228, D_0062A224, func_001ddc48, 0);
-    D_00389C90.f3070.x |= 0x100000000000ULL;
-    D_00389C90.f3094 = vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
+/* func_001ddc78 and func_001dde08 (and D_0062A228) are in src/event/effect.c. */
 
-s32 func_001dde08(VM *vm) {
-    char buf[256];
-    void **pp = &D_0062A220;
-    void *p = func_001559f0(60, 2);
-    strcpy(D_0062A228, "eveffect/");
-    *pp = p;
-    D_0062A224 = (u8 *)p + 0x7d000;
-    strcat(D_0062A228, D_003DABD8[vm->stk[vm->sp - 1]]);
-    sprintf(buf, "_%03d", vm->stk[vm->sp]);
-    strcat(D_0062A228, buf);
-    strcpy(D_0062A328, D_0062A228);
-    strcat(D_0062A228, ".dpp");
-    strcat(D_0062A328, ".dpx");
-    func_00120748(D_0062A228, D_0062A224, func_001ddc48, 0);
-    D_00389C90.f3070.x |= 0x100000000000ULL;
-    D_00389C90.f3094 = vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/data_003B.h"

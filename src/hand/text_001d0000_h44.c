@@ -75,53 +75,9 @@ extern s32 D_003A7980;
 /* func_001dcd98 and func_001dcea8 are in src/vm/vm_lib.c. */
 
 
-s32 func_001dd208(Handler *h) {
-    f32 buf[4];
-    f32 *p;
-    HObj *ho;
-    HObj4 *o;
-    if ((s32)(D_00389C90.x3070.x >> 40) & 1) return 4;
-    if (h->f10->f14 & 2) return 4;
-    func_001315c0(h->f14->f4, h->f18, buf, h->f1c);
-    h->f10->f0[0] = buf[0];
-    h->f10->f0[1] = buf[1];
-    h->f10->f0[2] = buf[2];
-    if (h->f18 == 4236 || h->f18 == 4247) {
-        if (!((s32)(D_00389C90.x3078.x >> 3) & 1)) {
-            h->f10->fc[0] = h->f14->f4->c[0] * 0.0078125f;
-            h->f10->fc[1] = h->f14->f4->c[1] * 0.0078125f;
-            h->f10->fc[2] = h->f14->f4->c[2] * 0.0078125f;
-        }
-    }
-    return 0;
-}
+/* func_001dd208, func_001dd320 and func_001dd488 are in src/event/effect.c. */
 
-s32 func_001dd320(Handler *h) {
-    f32 buf[4];
-    if ((s32)(D_0038CD00 >> 40) & 1) return 4;
-    if (h->f10->f14 & 2) return 4;
-    func_00131a30(h->f14->f4, h->f18, buf);
-    h->f10->f4[0] = buf[0] * 32768.0f / 3.1415928f;
-    h->f10->f4[1] = buf[1] * 32768.0f / 3.1415928f;
-    h->f10->f4[2] = buf[2] * 32768.0f / 3.1415928f;
-    return 0;
-}
 
-s32 func_001dd488(Handler *h) {
-    f32 *c;
-    if ((s32)(D_0038CD00 >> 40) & 1) return 4;
-    if (h->f10->f14 & 2) return 4;
-    h->f30 -= D_002BBDFC;
-    if (h->f30 < 0.0f) return 4;
-    c = h->f10->fc;
-    c[0] += h->f40[0];
-    c[1] += h->f40[1];
-    c[2] += h->f40[2];
-    if (h->f10->fc[0] < 0.0f) h->f10->fc[0] = 0.0f;
-    if (h->f10->fc[1] < 0.0f) h->f10->fc[1] = 0.0f;
-    if (h->f10->fc[2] < 0.0f) h->f10->fc[2] = 0.0f;
-    return 0;
-}
 
 s32 func_001de130(VM *vm) {
     Handler *h;
