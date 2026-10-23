@@ -3,7 +3,6 @@
 #include "data/bss_0064.h"
 
 typedef int u128 __attribute__((mode(TI)));
-typedef struct { s32 a, b, c, d; } Q4;
 typedef struct { u8 pad0[0xA0]; f32 xa0; u8 pad[0x10]; s32 xb4; u8 pad2[2]; u16 xba; u8 pad3[4]; u16 xc0; u8 pad4[0xA]; u16 xcc; u8 pad5[2]; s16 xd0; s16 xd2; } Obj;
 
 void func_00109278(void);
@@ -22,75 +21,10 @@ s32 func_001f42b8(void);
 void func_0020bb90(s32, s32);
 void func_0020bd18(void *, s32);
 void func_0020bda8(s32);
-s32 func_0020d030(void);
-void func_0020d2f8(void);
-void func_0020d530(void);
-void func_00228e70(void *);
-void func_00229490(s32);
 void func_00233ef8(s32);
-
-extern s32 D_003F3468[];
-extern s32 D_003F3488[];
-extern s32 D_003F34A8;
-#include "data/pieces/D_003F34C4.h"
-extern u8 D_003F6D10[];
-extern void *D_003F6E18[];
-extern s32 D_003F6E24;
-extern s32 D_003F6E2C;
 extern u8 D_003F6FD0[];
 extern s32 D_003F6FF8[];
-extern Q4 D_00643720; /* src/data/bss_0064.c: s32 D_00643720[0x4] */
-extern s32 D_00643730;
 extern s32 D_006437C4;
-
-void func_002295a0(s32 arg0, s32 arg1) {
-    s32 r;
-    func_001f3110();
-    D_003F34A8 = 1;
-    func_0020d530();
-    D_003F6E24 = 1;
-    D_003F6E2C = arg1;
-    if (arg1 != 1) {
-        D_00643720.a = 0;
-        D_00643720.b = 1;
-        D_00643720.c = 2;
-        D_00643720.d = 3;
-        D_00643730 = 4;
-    } else {
-        D_00643730 = 3;
-        D_00643720.b = arg1;
-        D_00643720.c = 3;
-        D_00643720.a = 0;
-    }
-    func_0011d768(6);
-    r = func_0020d030();
-    D_003F34C4 = (N_3f34c4 *)r;
-    if (r != 0) {
-        func_00229490(r);
-    }
-    func_0011ef10(0x270FF, func_0020d2f8)[1] = arg0;
-}
-
-void func_00229690(void *arg0) {
-    void *objs[3];
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        objs[i] = func_001f31a8(D_003F6E18[i], D_003F3468[i]);
-        if (objs[i] != 0) {
-            func_001f3e48(objs[i], arg0);
-            func_001f3d58(objs[i], D_003F3488[i]);
-            arg0 = objs[i];
-        }
-    }
-    objs[0] = func_001f31a8(D_003F6D10, 4);
-    if (objs[0] != 0) {
-        func_001f3e48(objs[0], arg0);
-        func_00228e70(objs[0]);
-    }
-    func_0020bb90(0x85, 0);
-    func_0020bd18(objs[0], 8);
-    func_0020bda8(0x10);
-}
 
 void func_0022b2e0(void *arg0) {
     Obj *o;
@@ -493,7 +427,6 @@ void func_00231b98(void) {
     }
 }
 
-
 void func_00231cd0(s32 arg0) {
     E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[D_0064765C];
     T7A70 *l;
@@ -517,7 +450,6 @@ void func_00231cd0(s32 arg0) {
     }
 }
 
-
 s32 func_00231dd0(s32 k) {
     E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[k];
     T7A70 *l;
@@ -535,7 +467,6 @@ s32 func_00231dd0(s32 k) {
     }
     return D_00304BE8->items[c->id] < 99 ? 0 : -2;
 }
-
 
 extern s32 D_003F7E94;
 extern s32 D_003F7E98;
@@ -582,7 +513,6 @@ void func_00232640(s32 arg0, s32 arg1) {
     }
 }
 
-
 typedef struct { u8 pad[0x664]; u32 x664, x668, x66c, x670; } Scr;
 #include "data/types/text_00220000_h48.h"
 extern s32 D_003F7EC4;
@@ -619,7 +549,6 @@ void func_002329a0(Scr *arg0, s32 arg1, s32 arg2) {
     func_0011ef10(0x2C01A, func_00232960);
 }
 
-
 typedef struct { s32 type; s32 id; s32 a[6]; } Cmd;
 extern Cmd D_006477B0[64];
 extern s32 D_00647FB0;
@@ -652,7 +581,6 @@ none:
     return 0;
 }
 
-
 extern s32 D_00647FC0;
 
 s32 func_00234098(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
@@ -670,7 +598,6 @@ s32 func_00234098(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     return id;
 }
 
-
 s32 func_00234148(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 i = D_00647FB8;
     s32 id = D_00647FC0;
@@ -686,7 +613,6 @@ s32 func_00234148(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     D_006477B0[i].a[5] = arg5;
     return id;
 }
-
 
 s32 func_00234440(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 i = D_00647FB8;
@@ -704,7 +630,6 @@ s32 func_00234440(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     return id;
 }
 
-
 s32 func_002345a0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 i = D_00647FB8;
     s32 id = D_00647FC0;
@@ -721,7 +646,6 @@ s32 func_002345a0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     return id;
 }
 
-
 s32 func_00234668(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     s32 i = D_00647FB8;
     s32 id = D_00647FC0;
@@ -737,8 +661,6 @@ s32 func_00234668(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
     D_006477B0[i].a[5] = arg5;
     return id;
 }
-
-
 
 s32 func_00234730(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     s32 i = D_00647FB8;
@@ -766,5 +688,4 @@ void *D_003F71C8[0x6] ALIGNED(8) = {
     (void *)D_003F7090, 0,
 };
 #include "data/data_003F.h"
-#include "data/pieces/D_003F3488.h"
 #include "data/pieces/D_003F7EA0.h"

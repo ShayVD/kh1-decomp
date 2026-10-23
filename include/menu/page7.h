@@ -1,6 +1,6 @@
 /* Page 7 of the menu (docs/modules.md "Session 42"): src/menu/party.c (the
  * party change), save.c / save.nostrict.c (the save and load windows) and
- * page7.c (the page's frame). */
+ * page7.c (the page's frame and its list). */
 #ifndef KH1_MENU_PAGE7_H
 #define KH1_MENU_PAGE7_H
 
@@ -12,7 +12,9 @@ typedef struct PtWin {
     u8 pad0[0xc];
     struct PtWin *xc;
     struct PtWin *x10;
-    u8 pad14[0xb4 - 0x14];
+    u8 pad14[0x90 - 0x14];
+    s32 x90;
+    u8 pad94[0xb4 - 0x94];
     s32 xb4;
     u8 padb8[2];
     u16 xba;

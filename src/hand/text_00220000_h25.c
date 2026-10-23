@@ -6,8 +6,6 @@ typedef int u128 __attribute__((mode(TI)));
 
 /* 64-entry command ring at D_006477B0 (head D_00647FB8, id counter D_00647FC0) */
 #include "data/types/text_00220000_h25.h"
-typedef struct { s32 a, b; } P2;
-typedef struct { u8 pad[0xCC]; u16 cc; u16 ce; u16 d0; s16 d2; } Obj;
 typedef W606Mem_304be8 Ent74;
 #include "data/types/text_00220000_h25_p.h"
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
@@ -19,10 +17,7 @@ s32 func_001ba3f0(s32);
 void func_001ec380(s32);
 u32 func_001ef7a0();
 void func_001ef7f0(s32);
-void *func_001f31a8(void *, s32);
 void func_001f36b8();
-void func_001f3dc0(void *);
-void func_001f3e48(void *, void *);
 s32 func_001f40c8(void);
 s32 func_001f42b8(s32);
 void func_001f82b0(void);
@@ -33,7 +28,6 @@ void func_00206130(s32, s32, s32, s32, s32, s32);
 void func_00207bb0(s32, s32);
 void func_0020b998(void);
 void func_0020bd18(s32, s32);
-void func_0020ccb0(s32);
 void func_002336f8(void);
 void func_002365e0(void);
 void func_00237018(void *, s32, s32);
@@ -49,11 +43,6 @@ s32 func_002474a8(void);
 #include "data/pieces/D_00304BE8.h"
 extern u128 D_00351E10[];
 extern s32 D_003F34A4;
-extern u8 D_003F6CA0[];
-extern u8 D_003F6CE0[];
-extern u8 D_003F6DA8[];
-extern s32 D_003F6E24;
-extern s32 D_003F6E28;
 extern s32 D_003F6FC8[];
 extern u8 D_003F7128[];
 extern s32 D_003F7774;
@@ -70,19 +59,6 @@ extern u128 D_0040EF80[];
 extern u8 D_0040E780[];
 extern u8 D_0040EB80[];
 #include "data/pieces/D_00425BC8.h"
-extern s32 D_006436D0;
-extern s32 D_006436D4;
-extern P2 D_006436D8; /* src/data/bss_0064.c: s32 D_006436D8[2] */
-extern P2 D_006436E0; /* src/data/bss_0064.c: s32 D_006436E0[2] */
-extern s32 D_006436E8;
-extern s32 D_006436EC;
-extern s32 D_006436F0;
-extern P2 D_006436F8; /* src/data/bss_0064.c: s32 D_006436F8[2] */
-extern P2 D_00643700; /* src/data/bss_0064.c: s32 D_00643700[2] */
-extern s32 D_00643708;
-extern s32 D_0064370C;
-extern void *D_00643718;
-extern u16 D_00643730; /* src/data/bss_0064.c: s32 D_00643730 */
 extern s32 D_006437C4;
 extern s32 D_00646A18;
 extern s32 D_00646A28;
@@ -108,49 +84,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00229220(s32 arg0) {
-    func_00205e30(arg0, D_003F6DA8);
-    func_00206130(arg0, 0, 0, 0x200, 2, 0x8078C850);
-    func_0020ccb0(arg0);
-    func_001fc308(arg0, 0xA0, 0xC, 0, 0x3F, 0x14, 0, 0x4078C850, 0x4078C850);
-}
-
-void func_002293f0(void *arg0) {
-    Obj *h[2];
-    h[0] = func_001f31a8(D_003F6CE0, 6);
-    if (h[0] != 0) {
-        func_001f3e48(h[0], arg0);
-        h[0]->cc = h[0]->ce = D_00643730;
-        h[0]->d2 = *(u16 *)&D_006436D0 * 16;
-        h[1] = func_001f31a8(D_003F6CA0, 6);
-        if (h[1] != 0) {
-            func_001f3e48(h[1], h[0]);
-            func_001f3dc0(h[0]);
-        }
-    }
-    D_00643718 = arg0;
-}
-
-void func_00229850(void) {
-    D_006436D0 = 0;
-    D_006436D4 = 0;
-    D_006436D8.a = 0;
-    D_006436D8.b = 0;
-    D_006436E0.a = 0;
-    D_006436E0.b = 0;
-    D_006436E8 = 0;
-    D_006436EC = 0;
-    D_006436F0 = 0;
-    D_006436F8.a = 0;
-    D_006436F8.b = 0;
-    D_00643700.a = 0;
-    D_00643700.b = 0;
-    D_00643708 = 0;
-    D_0064370C = 0;
-    D_003F6E24 = 0;
-    D_003F6E28 = 0;
-}
 
 void func_0022b248(s32 arg0) {
     if (func_001f42b8(arg0) != 0) {

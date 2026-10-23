@@ -33,7 +33,11 @@ extern u8 D_00643210[];
 extern s32 D_00643278[3]; /* src/data/bss_0064.c: s32 D_00643278[0x6] */
 extern u16 D_003F5C60[0x17];
 extern u16 D_003F5C90[0xb8];
-extern s32 D_003F5C50[];
+extern u8 D_00491030[], D_00491048[], D_00491060[];
+/* The entries' files (func_0021e538), by list. */
+s32 D_003F5C50[0x4] ALIGNED(16) = {
+    (s32)D_00491060, (s32)D_00491048, (s32)D_00491030, 0,
+};
 extern s32 D_003F5E58[2];
 extern s32 D_003F5F18[3];
 extern s32 D_003F34C8;

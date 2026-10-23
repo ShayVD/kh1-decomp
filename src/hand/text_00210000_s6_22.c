@@ -74,37 +74,6 @@ typedef struct {
 
 typedef struct { s32 a, b, c, d; } S4_q6;
 #include "data/pieces/D_003E8E08.h"
-typedef struct O98_q6 {
-    u8 pad[0xc];
-    struct O98_q6 *xc;
-    s32 x10;
-    u8 pad14[0x24 - 0x14];
-    union { s32 i; u16 h; } x24;
-    u8 p0[0x90 - 0x28];
-    s32 x90;
-    u8 p1[0xa0 - 0x94];
-    f32 xa0;
-    u8 p2[0xb0 - 0xa4];
-    s32 xb0;
-    s32 xb4;
-    u8 p3[0xba - 0xb8];
-    s16 xba;
-    s16 xbc;
-    s16 xbe;
-    s16 xc0;
-    s16 xc2;
-    s16 xc4;
-    s16 xc6;
-    s16 xc8;
-    s16 xca;
-    s16 xcc;
-    s16 xce;
-    u8 p5[0xd2 - 0xd0];
-    s16 xd2;
-    u8 p6[0xd8 - 0xd4];
-    s16 xd8;
-    s16 xda;
-} O98_q6;
 typedef struct { u8 pad[8]; s32 x8; s32 xc; u32 x10; } F8_q6;
 extern F8_q6 *D_00425BC8_q6 __asm__("D_00425BC8");
 extern s32 D_006469B0;
@@ -148,11 +117,9 @@ extern Save3C_q6 D_00645250[];
 extern void *D_00646990;
 s32 func_001ee428(s32);
 s32 func_001ee440(s32);
-void *func_001f31a8_q6(void *, s32) __asm__("func_001f31a8");
 void func_001f3758_q6(void *) __asm__("func_001f3758");
 void func_001f3d58(void *, s32);
 void func_001f3dc0(void *);
-void func_001f3e48_q6(void *, void *) __asm__("func_001f3e48");
 void func_001f8ba8(void *);
 void func_001f8f30(void);
 s32 func_001f9e48(void *, s32, s32, s32, void *, s32, s32);
@@ -177,31 +144,17 @@ typedef struct { s32 x0; u8 pad[0xc]; s32 x10; } C28_q6;
 extern s32 D_006436D0;
 extern s32 D_006436D4;
 extern s32 D_006436F0;
-extern s32 D_00643708;
 extern s32 D_00643720[];
 extern s32 D_00643730;
 extern s32 D_0064373C;
 extern s32 D_00643758;
-extern s32 D_0064375C;
-extern s32 D_00643760[];
-extern u8 D_00643770[];
-extern u8 D_00643778[];
-extern s32 D_00643780[];
-extern s32 D_00643790;
-extern s32 D_00643794;
-extern s32 D_0064379C;
 #include "data/pieces/D_00304BE8.h"
-#include "data/pieces/D_003E3D68.h"
-extern s32 D_003F34C0;
 #include "data/pieces/D_003F34C4.h"
 extern s32 D_003F6E2C;
 #include "data/pieces/D_00425C28.h"
 extern u8 D_003F6C30[];
 extern u8 D_003F6C00[];
 extern u8 D_003F6BD0[];
-extern u8 D_003F68F0[];
-extern u8 D_003F68C0[];
-extern u8 D_003F6860[];
 extern u8 D_003F6C60[];
 extern s32 D_003F6CC8[];
 void func_001f3840(void *);
@@ -210,7 +163,6 @@ void func_00233ef8(s32);
 void func_001f4040(void *, s32);
 void func_001f40a0(void *, s32);
 void func_001f4058(void *, s32);
-void func_00223a30(void *);
 void *func_001f3520(void *, s32);
 void func_00228700(void *);
 void func_001f37c0(void *, s32);
@@ -218,54 +170,6 @@ void *func_001f4468(void *);
 void func_0020d1d8(void *);
 void func_002075f8(void);
 void func_00207830(void *, s32, s32, s32, s32, s32, s32);
-
-extern void *D_00643718;
-void func_00228e70(void *arg0) {
-    O98_q6 *objs[3];
-    s32 i, n;
-    if ((n = D_003E3D68 - 1) != 0) {
-        D_003F34C0 |= 2;
-        for (i = 0; i < 4; i++) {
-            D_00643760[i] = i;
-            D_00643770[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
-            if (i == D_00643708 + 1) D_00643780[i] = 96; else D_00643780[i] = 32;
-        }
-        D_0064375C = 0;
-        D_00643790 = 0;
-        D_00643794 = 0;
-        D_0064379C = 0;
-        for (i = 0; i < 4; i++) {
-            D_00643778[i] = (((u8 *)D_00304BE8) + 0x48E)[i];
-        }
-        objs[0] = func_001f31a8_q6(D_003F68F0, 6);
-        if (objs[0]) {
-            func_001f3e48_q6(objs[0], arg0);
-            n = D_003E3D68;
-            objs[0]->xcc = n;
-            objs[0]->xba = n * 448 - 32;
-            objs[0]->xce = n;
-            if (D_00643708 >= n) {
-                D_00643708 = 0;
-            }
-            objs[0]->xd2 = *(u16 *)&D_00643708 << 4;
-            objs[1] = func_001f31a8_q6(D_003F68C0, 6);
-            if (objs[1]) {
-                func_001f3e48_q6(objs[1], objs[0]);
-                func_001f3dc0(objs[0]);
-            }
-        }
-    } else {
-        func_0011d768(4);
-        objs[0] = func_001f31a8_q6(D_003F6860, 6);
-        if (objs[0]) {
-            func_001f3e48_q6(objs[0], arg0);
-            func_001f4058(objs[0], 1);
-            func_001f3d58(objs[0], 6);
-            func_00223a30(objs[0]);
-        }
-    }
-    D_00643718 = arg0;
-}
 
 /* ---- fa698/noctx.c ---- */
 
