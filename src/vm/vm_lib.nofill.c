@@ -10,6 +10,7 @@
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/pieces/D_002BBDFC.h"
+#include "data/types/fvec.h"
 
 
 /* func_001cd2d8 (session 9, w7) matched with this message view: u32 val:24
@@ -737,4 +738,71 @@ void func_001d9348(VmRec *vm) {
         m.v[3] = 1.0f;
         func_001c4640(&m);
     }
+}
+
+/* func_001dcd98 .. func_001dcfd0 (after the dispatcher) are in vm_lib.c. */
+
+typedef FVec4 V4 __attribute__((aligned(16)));
+void func_00267530(V4 *, V4 *, V4 *);
+void func_00121fc4(V4 *, V4 *);
+f32 func_00121840(V4 *, V4 *);
+void func_00121860(V4 *, V4 *, V4 *, f32);
+void func_002675a8(V4 *, V4 *);
+void func_00137688(struct VmObj *, f32);
+f32 atan2f(f32, f32);
+
+/* Move the entity towards target by at most a (turning by b, or by the
+ * angle to it slowed near the end when b is 0); returns the distance left,
+ * or 0 when a VM driving it waits for it (f60 == its f8) or it has been
+ * blocked (f90) for over 60 frames.  Called by func_001342c8. */
+f32 func_001dcb00(struct VmObj *o, V4 *target, f32 a, f32 b) {
+    V4 v;
+    f32 len, t;
+    s32 i;
+    VmRec *e;
+    func_00267530(&v, target, (V4 *)o->pos);
+    func_00121fc4(&v, &v);
+    if (b == 0.0f) {
+        b = func_00121840((V4 *)o->dir, &v);
+        t = v.w / a * 0.3f;
+        if (1.0f < t) b /= t;
+    }
+    len = v.w;
+    if (len < a) a = len;
+    func_00121860((V4 *)o->dir, &v, &v, b);
+    o->f150 = atan2f(v.x, v.z);
+    func_00137688(o, o->f150);
+    v.w = a;
+    func_002675a8((V4 *)o->dir, &v);
+    for (i = 0; i < D_0039A570; i++) {
+        e = &D_0038D170[i];
+        if (e->obj == o && e->f60 && e->f60 == o->f8) len = 0.0f;
+    }
+    for (i = 0; i < D_003A7980; i++) {
+        e = &D_0039A580[i];
+        if (e->obj == o && e->f60 && e->f60 == o->f8) len = 0.0f;
+    }
+    for (i = 0; i < D_0039A570; i++) {
+        e = &D_0038D170[i];
+        if (e->obj == o) {
+            if (o->f90) {
+                e->f64 += 1.0f;
+                if (60.0f < e->f64) len = 0.0f;
+            } else {
+                e->f64 = 0.0f;
+            }
+        }
+    }
+    for (i = 0; i < D_003A7980; i++) {
+        e = &D_0039A580[i];
+        if (e->obj == o) {
+            if (e->obj->f90) {
+                e->f64 += 1.0f;
+                if (60.0f < e->f64) len = 0.0f;
+            } else {
+                e->f64 = 0.0f;
+            }
+        }
+    }
+    return len;
 }

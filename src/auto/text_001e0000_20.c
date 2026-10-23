@@ -13,13 +13,7 @@ void func_0011c7d8(s32, f32, f32, f32, f32, f32, f32, f32, f32);
 void func_001e86a0(void);
 void func_001e8728(void);
 
-void func_001e01f0(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFEFFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
-
-void func_001e2498(void) {
-    D_00389C90[1550] = (s64) (D_00389C90[1550] & (((((s64) 0xFFFBFFFF << 0x10) | 0xFFFF) << 0x10) | 0xFFFF));
-}
+/* func_001e2498 is in src/screen/screen.c. */
 
 void func_001e78d8(void) {
     func_0010bd90(&D_00630460, 0);
