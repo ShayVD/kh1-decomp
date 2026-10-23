@@ -1,73 +1,9 @@
 #include "common.h"
 #include "data/pieces/D_00425F70.h"
 void func_0011d768(s32);
-
-typedef struct { u8 pad0[0xA0]; f32 xa0; } Ob;
 void func_001f3110(void);
 void *func_001f31a8(void *, s32);
-void func_001f3d58(void *, s32);
-void func_001f3dc0(void *);
-void func_001f3e20(void *, void *);
-void func_001f3e90(void *, void *);
 s16 *func_0011ef10(s32, void *);
-s32 func_0022d498(void);
-extern u8 D_003F74D0[], D_003F74A0[], D_003F73B0[], D_003F73E0[], D_003F7410[], D_003F7440[], D_003F7470[];
-extern s32 D_003F34A4;
-extern s32 D_006469B8[];
-
-void func_0022d4d8(s32 arg0) {
-    Ob *o[7];
-    s32 i;
-    func_001f3110();
-    o[0] = func_001f31a8(D_003F74D0, 48);
-    if (o[0] != NULL) {
-        func_001f3d58(o[0], 0);
-        o[1] = func_001f31a8(D_003F74A0, 46);
-        if (o[1] != NULL) {
-            func_001f3e90(o[0], o[1]);
-            func_001f3e20(o[1], o[0]);
-            func_001f3d58(o[1], 47);
-            o[2] = func_001f31a8(D_003F73B0, 48);
-            if (o[2] != NULL) {
-                func_001f3e90(o[1], o[2]);
-                func_001f3e20(o[2], o[1]);
-                func_001f3d58(o[2], 49);
-                o[3] = func_001f31a8(D_003F73E0, 48);
-                if (o[3] != NULL) {
-                    func_001f3e90(o[2], o[3]);
-                    func_001f3e20(o[3], o[2]);
-                    func_001f3d58(o[3], 49);
-                    o[3]->xa0 = 1.0f;
-                    o[4] = func_001f31a8(D_003F7410, 48);
-                    if (o[4] != NULL) {
-                        func_001f3e90(o[3], o[4]);
-                        func_001f3e20(o[4], o[3]);
-                        func_001f3d58(o[4], 49);
-                        o[4]->xa0 = 2.0f;
-                        o[5] = func_001f31a8(D_003F7440, 48);
-                        if (o[5] != NULL) {
-                            func_001f3e90(o[4], o[5]);
-                            func_001f3e20(o[5], o[4]);
-                            func_001f3d58(o[5], 49);
-                            o[5]->xa0 = 3.0f;
-                            o[6] = func_001f31a8(D_003F7470, 48);
-                            if (o[6] != NULL) {
-                                func_001f3e90(o[5], o[6]);
-                                func_001f3e20(o[6], o[5]);
-                                func_001f3d58(o[6], 49);
-                                o[6]->xa0 = 4.0f;
-                                func_001f3dc0(o[0]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    D_003F34A4 = 1;
-    for (i = 5; i >= 0; i--) D_006469B8[i] = 0;
-    func_0011ef10(0x2BFE9, func_0022d498)[1] = arg0;
-}
 
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"

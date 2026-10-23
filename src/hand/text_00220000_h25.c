@@ -71,15 +71,6 @@ Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
 
-s32 func_0022d498(void) {
-    if (func_001f40c8() != 0) {
-        func_001f82b0();
-        return 0;
-    }
-    D_003F34A4 = 0;
-    return 4;
-}
-
 s32 func_0022da58(void) {
     if (func_001f40c8() != 0) {
         func_001f82b0();
