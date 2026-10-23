@@ -19,12 +19,3 @@ void func_001c0688(s32 arg0) {
 
 /* func_001ca9e8 is in src/msgwin/msgwin.c. */
 
-s32 func_001ce440(void *arg0) {
-    s32 temp_s1;
-    s32 temp_s2;
-
-    temp_s2 = arg0 + 4;
-    temp_s1 = M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s2), s32 *, 0x180);
-    M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s2), s32 *, 0x180) = (s32) ((func_00176850() * (f32) temp_s1) + 0.5f);
-    return 2;
-}

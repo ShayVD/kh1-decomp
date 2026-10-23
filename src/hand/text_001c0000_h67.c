@@ -17,167 +17,19 @@ extern Str D_00389C90;
 
 /* func_001cb7d0, func_001cb960, func_001cbbd0 and func_001cbfc0 (and D_0062A1F0) are in src/msgwin/msgwin.c. */
 
-#include "data/pieces/D_003DABD0.h"
-extern char D_003C58E0[][256];
+/* func_001cf478 and func_001cf5d0 are in src/vm/vm_lib.c. */
 void *func_001559f0(s32, s32);
 void func_00120748(char *, void *, void *, s32);
-s32 func_001cf348();
-s32 func_001cf3e0();
-s32 func_001cf478(VM *vm) {
-    switch (vm->stk[vm->sp - 1]) {
-    case 1:
-        D_003DABD0[0] = func_001559f0(52, 4);
-        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
-        D_00389C90.f3070.x |= 0x200000000ULL;
-        break;
-    case 2:
-        D_003DABD0[1] = func_001559f0(56, 4);
-        func_00120748(D_003C58E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
-        D_00389C90.f3070.x |= 0x400000000ULL;
-        break;
-    }
-    vm->sp -= 2;
-    return 2;
-}
-
-extern char D_003D97E0[][256];
-s32 func_001cf5d0(VM *vm) {
-    switch (vm->stk[vm->sp - 1]) {
-    case 1:
-        D_003DABD0[0] = func_001559f0(52, 4);
-        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf348, 0);
-        D_00389C90.f3070.x |= 0x200000000ULL;
-        break;
-    case 2:
-        D_003DABD0[1] = func_001559f0(56, 4);
-        func_00120748(D_003D97E0[vm->stk[vm->sp]], D_003DABD0[vm->stk[vm->sp - 1] - 1], func_001cf3e0, 0);
-        D_00389C90.f3070.x |= 0x400000000ULL;
-        break;
-    }
-    vm->sp -= 2;
-    return 2;
-}
 
 #include "data/pieces/D_003A7990.h"
-typedef VmRec Obj350;
 #include "data/pieces/D_003C3A70.h"
-extern s32 D_003C54F0;
-extern s32 D_003B4D90;
 #include "data/pieces/D_0038D170.h"
-extern s32 D_0039A570;
 #include "data/pieces/D_0039A580.h"
-extern s32 D_003A7980;
-s32 func_00123488(s32);
-s32 func_001d0b90(VM *vm) {
-    VmMsg m;
-    s32 i;
-    m.type = 13;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    if (D_00389C90.f316c) {
-        for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
-        }
-    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
-        if (D_00389C90.f3038 == 0) {
-            for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    } else {
-        if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    }
-    return 2;
-}
-
-s32 func_001d0dd0(VM *vm) {
-    VmMsg m;
-    s32 i;
-    m.type = 14;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    if (D_00389C90.f316c) {
-        for (i = 0; i < D_003C54F0; i++) {
-            if (func_00123488(D_003C3A70[i].x0)) { m.x = D_003C3A70[i].x0; func_001c4640(&m); }
-        }
-    } else if (((s32)(vm->fl.x >> 5) & 1) == 1U) {
-        if (D_00389C90.f3038 == 0) {
-            for (i = 0; i < D_003B4D90; i++) {
-                if (func_00123488(D_003A7990[i].x0)) { m.x = D_003A7990[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    } else {
-        if (D_00389C90.f3034 == 0) {
-            for (i = 0; i < D_0039A570; i++) {
-                if (func_00123488(D_0038D170[i].x0)) { m.x = D_0038D170[i].x0; func_001c4640(&m); }
-            }
-        } else {
-            for (i = 0; i < D_003A7980; i++) {
-                if (func_00123488(D_0039A580[i].x0)) { m.x = D_0039A580[i].x0; func_001c4640(&m); }
-            }
-        }
-    }
-    return 2;
-}
 
 #include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;
-void func_001e9fe8(f32 *, f32 *);
 void sceVu0UnitMatrix(f32 (*)[4]);
-void func_00267768(f32 (*)[4], f32 (*)[4], f32);
-void func_00267810(f32 (*)[4], f32 (*)[4], f32);
-void func_002672f8(V4 *, f32 (*)[4], V4 *);
-void func_001315c0(Ent *, s32, f32 *, f32);
 void func_00267518(f32 *, f32 *, f32 *);
-void func_0014f9b0(Ent *, V4 *, f32);
-s32 func_001d2958(VM *vm) {
-    V4 v;
-    f32 rot[4];
-    f32 out[4];
-    f32 t[4];
-    f32 m[4][4] __attribute__((aligned(16)));
-    Ent *e;
-    v = D_00490630;
-    e = vm->obj;
-    if (e) {
-        rot[0] = vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
-        rot[1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f + vm->obj->f3c;
-        rot[2] = 0.0f;
-        func_001e9fe8(out, rot);
-        sceVu0UnitMatrix(m);
-        func_00267768(m, m, out[0]);
-        func_00267810(m, m, out[1]);
-        func_002672f8(&v, m, &v);
-        func_001315c0(vm->obj, 0, t, 0.0f);
-        func_00267518(v.x, t, v.x);
-        func_0014f9b0(vm->obj, &v, vm->stk[vm->sp] * 2.0f);
-    }
-end:
-    vm->sp -= 3;
-    return 2;
-}
 
 typedef struct { u8 pad[0xa80]; u8 a[10]; u8 b[10]; u8 c[10]; u8 d[50]; } Save;
 Save *func_00232cc0(s32);

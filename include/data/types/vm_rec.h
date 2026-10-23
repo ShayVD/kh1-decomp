@@ -39,7 +39,8 @@ typedef struct {
     u8 pad5e[0x2];
     s32 f60;                /* 0x060 */
     f32 f64;                /* 0x064 */
-    u8 pad68[0x8];
+    f32 f68;                /* 0x068: target angle (degrees) of messages 4 / 21 / 22 */
+    f32 f6c;                /* 0x06c: turn step (degrees) */
     s8 *code;               /* 0x070: script */
     s32 n;                  /* 0x074 */
     s32 x78;                /* 0x078 */

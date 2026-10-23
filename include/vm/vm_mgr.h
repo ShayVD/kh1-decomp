@@ -6,8 +6,13 @@
  * Where those views disagreed on a field's type or bit layout, the field is a
  * union and each function keeps the member that gives its code: the flag
  * words at 0x3070 / 0x3078 as `x` (u64), `b` (u32 bit-fields) or `w` (u64
- * bit-fields, b09).  0x3180-0x3450 is either h42's trigger boxes or (from
- * 0x3380) the eight sound / event slots.  The size stays below the largest
+ * bit-fields, b09).  0x3180 holds h42's trigger boxes and 0x3384 the eight
+ * sound / event slots.  h42 declared 15 boxes, which would run into the
+ * slots; until session 32 the two were a union, but h18's func_001d7840
+ * reads the slots through a whole-object view (D + 0x3384 + 0x18 i, in one
+ * step), which a member of a union cannot give.  So box[] stops at 10
+ * (script_vm.c indexes it by nbox only) and the slots are plain fields;
+ * script_vm.c's slot and box accesses compile the same.  The size stays below the largest
  * view other files declare (0x34d8), so the float keep list does not change. */
 #ifndef KH1_VM_VM_MGR_H
 #define KH1_VM_VM_MGR_H
@@ -41,6 +46,17 @@ typedef union {
         u64 b8 : 2; u64 b10 : 1; u64 b11 : 1; u64 b12 : 1; u64 b13 : 1; u64 rest : 50;
     } w;
 } VmMgrF3078;
+
+/* An effect record of D_0038CD3C[] (made by func_001226f0; src/vm/vm_lib.c):
+ * x0, the fade f0c, two positions and the colour v30. */
+typedef struct VmFx {
+    s32 x0;
+    u8 pad4[8];
+    f32 f0c;
+    f32 v10[4];
+    f32 v20[4];
+    f32 v30[4];             /* colour (r, g, b, a) */
+} VmFx;
 
 /* h42's trigger box: id, centre, size */
 typedef struct { s32 id; u8 pad[12]; f32 c[4]; f32 s[4]; } VmBox;
@@ -76,7 +92,19 @@ typedef struct {
     s32 x306c;
     VmMgrF3070 f3070;       /* 0x3070 */
     VmMgrF3078 f3078;       /* 0x3078 */
-    u8 pad3080[0x3140 - 0x3080];
+    s32 py0;                /* 0x3080: three screen points (func_001d2fd8 ..): y of the first, */
+    s32 px1, py1;           /*   whose x is f3078.b.hi (h17's w[1]) */
+    s32 px2, py2;
+    s32 x3094;
+    s32 fxk;                /* 0x3098: the effect func_001cebe8 fades (D_0038CD3C index) */
+    s32 fxn;                /* 0x309c: frames left */
+    f32 fxd[3];             /* 0x30a0: colour step */
+    VmFx *fx[4];            /* 0x30ac */
+    u8 pad30bc[0x3128 - 0x30bc];
+    s32 an;                 /* 0x3128: frames left of the alpha fade (func_001cff28, D_002BC080[3]) */
+    s32 ad;                 /* 0x312c: alpha step */
+    s32 rgbn;               /* 0x3130: frames left of the colour fade (func_001cfff8, D_002BC080[0..2]) */
+    s32 rgbd[3];            /* 0x3134 */
     s32 x3140;
     s32 *x3144;             /* 0x3144: where func_001cac60 stores the choice */
     u32 x3148;
@@ -88,15 +116,12 @@ typedef struct {
     s32 x3174;
     s32 nbox;               /* 0x3178 */
     u8 pad317c[4];
-    union {
-        VmBox box[15];      /* 0x3180 */
-        struct {
-            u8 pad3180[0x3380 - 0x3180];
-            s32 x3380;
-            VmSlot e[8];    /* 0x3384 */
-            s32 x3444;
-        } s;
-    } u;
+    VmBox box[10];          /* 0x3180: h42's trigger boxes (nbox of them) */
+    u8 pad3360[0x3380 - 0x3360];
+    s32 x3380;
+    VmSlot e[8];            /* 0x3384 */
+    s32 x3444;
+    u8 pad3448[0x3450 - 0x3448];
     s32 x3450;
 } VmMgr;
 
