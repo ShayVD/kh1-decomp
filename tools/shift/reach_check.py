@@ -256,21 +256,26 @@ def _ax(v):
     return None
 
 
+ARG_DROP_MAX = 8  # session 32 (arg-drop): an argument walk dropped this often at a point is not taken back
 SHADOW_MAX = 3  # arg-keep/join-keep: distinct values a register gets from shadow visits at a point before widening
 
 
-def _addressy(v):
+def _addressy(v, image_only=False):
     """Session 31 (arg-keep, join-keep): a value whose uses make events (an address, a %hi, an indexed base, a pointer
-    global's word, a jump table word), so dropping it at a join drops accesses."""
+    global's word, a jump table word), so dropping it at a join drops accesses. Session 32 (shadow-image): an exact
+    value only when it is in the image (main drops every event from anything else). func_0025632c (memchr) keeps
+    0xFFFFFFFF in v1; in some visit orders each shadow of it carried a new argument offset from the loop, so the
+    shadows never ended (--visit-seed 4 and 6 did not terminate)."""
     if isinstance(v, int):
-        return v > 0x10000
+        return BLOB_START <= v < IMAGE_END + 0x10000 if image_only else v > 0x10000
     return isinstance(v, tuple) and v[0] in (SET, IDX, HIX, PTR, HI, JT)
 
 
-def _widen(v, got=(), multi_base=False):
+def _widen(v, got=(), multi_base=False, widen_bases=False):
     """Session 31 (arg-keep, join-keep): an address value with its offset made unknown: from the lowest base of v and
     the values got (of the same kind, within 64 KiB of v's) + any index. Session 32 (multi-base): v's other bases
-    are kept."""
+    are kept; (widen-bases) and so are the bases of the values got (shadows of several addresses at one point:
+    func_0021d348 passes one of six state words in t3, and the widened value kept only the lowest)."""
     if isinstance(v, tuple) and v[0] in (PTR, HI, JT):
         return (PTR, v[1], None) if v[0] == PTR else v
     kind = HIX if isinstance(v, tuple) and v[0] == HIX else IDX
@@ -284,6 +289,13 @@ def _widen(v, got=(), multi_base=False):
         return None if a_ is None else a_[0]
     b0 = base(v)
     lo = min([b0] + [b_ for x_ in got if (b_ := base(x_)) is not None and abs(b_ - b0) < 0x10000])
+    if multi_base and widen_bases and kind == IDX:
+        vs = [v] + list(got)
+        rs = [(r_, x_) for x_ in vs if (r_ := _idx(x_)) is not None and r_[1] is not None]
+        # (not a walk's position: an address inside another value's bounded range, as in analyse's join)
+        bs = {b_ for b_ in frozenset().union(*map(_bases, vs)) if abs(b_ - b0) < 0x10000 and not any(
+              r_[0] <= b_ <= r_[0] + r_[1] and b_ not in _bases(x_) for r_, x_ in rs)}
+        return _mkidx(lo, None, None, bs)
     if multi_base and kind == IDX and _xb(v):
         return _mkidx(lo, None, None, _bases(v))
     return (kind, lo, None)
@@ -818,7 +830,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
             slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True,
             path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
-            join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, visit_rng=None):
+            join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, sign_prune: bool = True, widen_bases: bool = True,
+            shadow_image: bool = True, arg_drop: bool = True,
+            visit_rng=None):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -869,6 +883,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     shadow_seen: set = set()  # (i, frozen state) of every shadow visit pushed
     shadow_lost: dict[tuple, set] = {}  # (i, k) -> the values shadows gave k at i
     grow: dict[tuple, int] = {}
+    arg_gone: dict = {}  # (point, register) -> times two offsets of an argument joined to nothing there (arg-drop)
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
     loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
     if countdown and path_step:  # session 30: the loops whose steps only the paths of the body prove
@@ -1022,9 +1037,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if op_ is not None and k in op_[4] and (cap := outer_value(i, k)) is not None:
                 new[k] = cap  # stepped once per outer iteration (session 29)
                 continue
-            j = join(i, k, v, st.get(k))
+            # (session 32, arg-drop) a register dropped ARG_DROP_MAX times as a walk of an argument stays dropped
+            j = None if arg_drop and arg_gone.get((i, k), 0) >= ARG_DROP_MAX else join(i, k, v, st.get(k))
+            if arg_drop and j is None and isinstance(v, tuple) and v[0] == ARG \
+                    and isinstance(st.get(k), tuple) and st[k][0] == ARG:
+                # session 32 (arg-drop): two offsets of an argument join to nothing (a walk), but the next arrival
+                # (argument + 1 more) joined with that nothing came back as the argument (arg-join), so the point
+                # could alternate forever: func_0025632c (memchr) did not terminate with --visit-seed 4
+                arg_gone[(i, k)] = arg_gone.get((i, k), 0) + 1
             if (arg_keep and arg_join) if isinstance(j, tuple) and j[0] == ARG else join_keep:
-                lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_) and not _covers(j, x_, multi_base)]
+                lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_, shadow_image)
+                         and not _covers(j, x_, multi_base)]
             if j is None:
                 continue
             # widening: a bound that grows twice at the same point is dropped
@@ -1041,7 +1064,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         for k, x_ in lost:  # session 31 (arg-keep, join-keep): visit i again with the address the join dropped
             got = shadow_lost.setdefault((i, k), set())
             if x_ not in got and len(got) >= SHADOW_MAX:
-                x_ = _widen(x_, got, multi_base)  # a value that keeps changing here (a walk): base + unknown offset
+                x_ = _widen(x_, got, multi_base, widen_bases)  # a value that keeps changing here (a walk): base + unknown offset
             got.add(x_)
             sh = dict(new)
             sh[k] = x_
@@ -1358,6 +1381,22 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     ev.append(("pass", target, j, v, ins.addr))
         return ev
 
+    def sign_test(w, v):
+        """Session 32 (sign-prune): whether a bltz/bgez/blez/bgtz (or its likely form) on an exact value v is taken;
+        None when v is not exact. (s4 = -1 until a better entry is found, then `if (s4 >= 0) f(&D[s4])`: without it
+        an order that visits the test before the loop's states are joined passed &D[-1], func_00169f28.)"""
+        if not isinstance(v, int):
+            return None
+        x = v - (1 << 32) if v >= 1 << 31 else v
+        o_ = mips.op(w)
+        if o_ == mips.OP_REGIMM and mips.rt(w) in (0x00, 0x01, 0x02, 0x03):
+            return x < 0 if mips.rt(w) in (0x00, 0x02) else x >= 0
+        if o_ in (0x06, 0x16):
+            return x <= 0
+        if o_ in (0x07, 0x17):
+            return x > 0
+        return None
+
     def jump_table(v):
         """The case addresses of a jump table register (all inside this function), or None."""
         if not (isinstance(v, tuple) and v[0] == JT):
@@ -1420,10 +1459,13 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st_t = dict(st_d)
                 if cond and cond[0] in st and st.get(cond[0]) == st_d.get(cond[0]):
                     refine(st_t, cond, True)
-                merge(index(ins.branch_target), st_t, src=i)
+                # session 32 (sign-prune): a sign test of an exact value takes one edge only
+                taken = sign_test(w, st.get(mips.rs(w))) if sign_prune else None
+                if taken is not False:
+                    merge(index(ins.branch_target), st_t, src=i)
                 always = (mips.op(w) == 0x04 and mips.rs(w) == mips.rt(w)) or (
                     mips.op(w) == mips.OP_REGIMM and mips.rt(w) in (0x01, 0x11) and mips.rs(w) == 0)
-                if not always:  # `b` is beq $0,$0 (or bgez $0): no fall-through
+                if not always and taken is not True:  # `b` is beq $0,$0 (or bgez $0): no fall-through
                     st_f = dict(st if likely else st_d)
                     if cond and cond[0] in st and st.get(cond[0]) == st_f.get(cond[0]):
                         refine(st_f, cond, False)
@@ -1674,6 +1716,17 @@ def main() -> int:
                     help="storing base + an index (&D[i]) does not count as storing D (before session 31)")
     ap.add_argument("--no-multi-base", action="store_true",
                     help="base + index made from a choice of bases keeps only the lowest base (before session 32)")
+    ap.add_argument("--no-sign-prune", action="store_true",
+                    help="a bltz/bgez/blez/bgtz on an exact value takes both edges (before session 32)")
+    ap.add_argument("--no-widen-bases", action="store_true",
+                    help="a register widened after SHADOW_MAX shadow values keeps only the lowest base (before "
+                         "session 32; needs multi-base)")
+    ap.add_argument("--no-shadow-image", action="store_true",
+                    help="any exact value above 0x10000 dropped at a join gets a shadow visit, not only an image "
+                         "address (before session 32; some visit orders do not terminate)")
+    ap.add_argument("--no-arg-drop", action="store_true",
+                    help="an argument dropped at a join (two offsets: a walk) may come back as the argument at the "
+                         "next arrival (before session 32; some visit orders do not terminate)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1774,6 +1827,8 @@ def main() -> int:
                          nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
                          wr_span=not a.no_wr_span, arg_keep=not a.no_arg_keep, join_keep=not a.no_join_keep,
                          stored_idx=not a.no_stored_idx, multi_base=not a.no_multi_base,
+                         sign_prune=not a.no_sign_prune, widen_bases=not a.no_widen_bases,
+                         shadow_image=not a.no_shadow_image, arg_drop=not a.no_arg_drop,
                          visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
                          arg_bound=not a.no_arg_bound and is_func):
             if e[0] == "argmem":
