@@ -616,6 +616,75 @@ can float once a SHIFT_FLOAT_FORCE=D_0062F840 build has played a shop.
   compared, not the line order.
 - `make test` passes at the end.
 
+## Session 35: after the shop, 0x001e4918-0x001ec7c0
+
+Session 35 moved the 204 functions from the shop's end (0x001e4918) to
+func_001ec7c0 (the first D_003E3C80 user) in six chunks, one commit each.
+The groups were split by their own data and calls.  The D_003D9FE0 index
+run did not help here: it rises in address order across all of these
+groups, so it does not mark a file edge.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the record lists | src/list/list.c (56) | 0x001e4918-0x001e7e78 | 56 |
+| the script's sound commands | src/event/sound.c (58); include/vm/vm_sub.h | 0x001e7e78-0x001e92b8 | 58 |
+| the wave transition | src/screen/wave.c (7), wave.nofill.c (2); include/screen/wave.h | 0x001e92b8-0x001e98d0 | 9 |
+| (src/vm/vm_find.nofill.c, already a module) | | 0x001e98d0-0x001e9d00 | |
+| the VM helpers | src/vm/vm_util.c (6), vm_util.nofill.c (3) | 0x001e9d00-0x001ea438 | 9 |
+| the entity commands | src/vm/vm_ent.c (14) | 0x001ea438-0x001eac68 | 14 |
+| the save-data commands | src/save/flags.c (57), flags.fmam.c (1); include/save/save1.h | 0x001eac68-0x001ec7c0 | 58 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x001e4918-0x001e7e78 | 545fe68 | c10, s9_w2, include/data/pieces/D_003DC498.h |
+| 0x001e7e78-0x001e92b8 | 49073d4 | h20, nostrict/text_001e0000.c, auto _21 |
+| 0x001e92b8-0x001e98d0 | cace848 | auto _19; nofill/h68 renamed to src/screen/wave.nofill.c |
+| 0x001eac68-0x001ec7c0 | 851e940 | b11, fmam/s7_w19 (src/hand/fmam/ is gone; the kh1.toml mode entry stays) |
+| 0x001ea438-0x001eac68 | 4984fba | auto _20 |
+| 0x001e9d00-0x001ea438 | f152d77 | auto _18, nofill/h21, nofill/h45, h45, s8_w2 |
+
+That is 17 files deleted and 11 new units: objdiff units 866 -> 860.
+
+**Boundaries that differ from session 34's guesses.**  The sound group
+runs to 0x001e92b8: it takes func_001e8e38, the eventse loader and the
+0x0011c* sound-layer commands.  The wave group is 0x001e92b8-0x001e98d0.
+The stretch 0x001e9d00-0x001ec7c0 had no bss of its own; by calls it is
+three files (vm_util, vm_ent, the save flags).  func_001ec7c0 sets
+D_003E3C80 and starts the next group.
+
+**Types.**
+- **VmSub** (include/vm/vm_sub.h): the "+4 view" of the VM,
+  `(VmSub *)&vm->obj`, then `s->stk[vm->sp]`.  sound.c uses it.  EvVmSub,
+  ScrVmSub and ShopVmSub (session 34) are the same shape and can switch to
+  it.
+- **Save1** (include/save/save1.h, 0xdd8 bytes; every offset checked with
+  a probe compile): the save record the flag commands read.  list.c's
+  ListSave and vm_lib's VmSave1 are views of the same record and can fold
+  into it.
+- **WavePkt** (include/screen/wave.h, 0x1960 bytes) with WaveU128 /
+  WaveQ / WaveTag.
+- vm_mgr.h's VmMgr gains `x34d0` in its tail padding (set by
+  func_001ea498).
+- list.c: ListCb, ListMenu (0x684), ListSave; the windows are MsgWin.
+- The D_00389C90 masks that m2c wrote as `[1550]` are now
+  `D_00389C90.f3070.x &= ~0x...ULL` (0x3070) or `.f3078.x` (0x3078).
+
+**Sized externs stay in the .c files.**  tools/shift/cover_check.py sizes
+only the `extern` lines in .c files, not in headers.  A sized `extern
+WavePkt D_00631620;` moved into wave.h changed float_covered.txt
+(D_00633640 became covered).  So the extern is in both wave .c files, with
+a comment, and wave.h holds only the types.
+
+**Flag modes.**  The two nostrict functions (func_001e80d0 / func_001e83f8)
+match with the default flags in sound.c.  func_001ea580 needed a u8
+temporary for the byte toggle of `vm->x0` (16 words differed before).
+
+**Nothing was reverted, and nothing new floats.**  After each commit:
+`make` byte-identical (6979 functions), `make report` 6979 at 100%,
+`s31_warndiff` 0 new warnings, and the m12 float build with float_covered.txt,
+float_reach.txt, the loaded sections and the symbols the same as the base
+(the one known symbol diff is D_006305DA, a label).  `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -712,7 +781,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 34, after each step)
+## Verification (sessions 30 to 35, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -728,26 +797,21 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x001e4918-0x001ec678** (205 functions, after the shop) is still in
-  the 0x001e files, as h20, h21, h45, h46, h68, c10, b11, s6_16, s8_w2,
-  s9_w2, s7_w19 and auto text_001e0000 / _1 / _4 / _6 / _17-_23.  Its
-  groups, by their bss / data:
-  - **0x001e4918-0x001e7e78** (about 56 functions): D_00630300-D_006314C8
-    and D_003DC498-D_003DD28C.  It starts with auto _18's init
-    func_001e4918 (called by func_001c0750), and c10 / b11 have its large
-    functions.  It is the next move.
-  - **0x001e7e78-0x001e8e68**: the D_006314CC-D_006314E0 counters, with
-    D_003DABD4.
-  - **0x001e8e68-0x001e9830**: the D_00631560 / D_00631570 / D_00631620
-    users, and D_003DD2F0-D_003DD31C.
-  - **0x001e98d0-0x001e9d00**: src/vm/vm_find.nofill.c (already a module).
-  - **0x001e9d00-0x001ec678**: no bss of their own; mostly h21 and auto _1.
-    Find their groups by the call graph.
-  Check the D_003D9FE0 index run of each group as in session 34.
-- The +4 VM views (EvVmSub, ScrVmSub, ShopVmSub; session 34) are one shape
-  in three files.  The 0x001e4918 group's script functions likely need it
-  too.  A shared header type could hold it, but keep the view: VmRec does
-  not match there.
+- **0x001ec7c0-0x001f0000** (about 170 functions) is the rest of the
+  0x001e files: auto text_001e0000 / _1 ... _13 / _17 / _22-_26, h21, h22,
+  h46, h68, b12, s6_16, s8_w6, s9_r2_5, s19_s19m1, nofill/text_001e0000,
+  nofill/h22 and nostrict/b12 (h46 also holds func_002081b0, far away).
+  It starts with func_001ec7c0, which sets D_003E3C80; the D_003E3C80 users
+  (auto text_001e0000 / _22 / _23 / _24, and func_001ecc68 in
+  text_001c0000_s6_nb.c) are the first group.  auto _6 to _13 hold many
+  short 0x58-byte commands from 0x001ed0d0 on; split them by data and
+  calls, as in session 35 (the D_003D9FE0 index run rises in address order
+  through all of these groups, so it does not mark a file edge).
+- The +4 VM views (EvVmSub, ScrVmSub, ShopVmSub; session 34) can switch to
+  VmSub (include/vm/vm_sub.h, session 35).  list.c's ListSave and vm_lib's
+  VmSave1 can fold into Save1 (include/save/save1.h).  Check each with
+  `make` and the float build.
+- Keep sized externs in .c files: cover_check reads only those (session 35).
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it
   (harmless; a `void` one would conflict, none does).
