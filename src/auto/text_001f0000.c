@@ -3,24 +3,10 @@
 #include "m2c.h"
 
 M2C_UNK func_0011d768(M2C_UNK);
-M2C_UNK func_001f5e10();
 M2C_UNK func_001fd858();
 M2C_UNK func_001fdfd0(s32);
-M2C_UNK func_00266f38(s32, M2C_UNK *);
-#include "data/pieces/D_003F2670.h"
-#include "data/pieces/D_003F2720.h"
 s32 func_001fe1b8();
 s32 func_001fe5a0();
-s32 func_00266c08(M2C_UNK);
-
-void func_001f8108(void) {
-    func_001f5e10();
-}
-
-void func_001f8270(void) {
-    func_00266f38(func_00266c08(2), ((M2C_UNK *)&D_003F2670));
-    func_00266f38(func_00266c08(2), ((M2C_UNK *)&D_003F2720));
-}
 
 s32 func_001fd518(void *arg0) {
     return (s32) (M2C_FIELD(arg0, s16 *, 0xD2) + (M2C_FIELD(arg0, u16 *, 0xD0) & 0xF) + 8) >> 4;

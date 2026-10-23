@@ -27,20 +27,6 @@ typedef struct { u8 pad0[0x94]; f32 f94; } Obj207;
 typedef struct { u8 pad0[0xbe]; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; } Obj207a;
 #include "data/pieces/D_003F2C40.h"
 typedef E20_3F2C40_2 E20;
-
-typedef struct {
-    s32 x0;
-    s32 x4;
-    s32 x8;
-    u8 padc[0xa0 - 0xc];
-    f32 fa0, fa4, fa8;
-    u32 ac;
-    s32 pad_b0;
-    s32 b4;
-    s16 pad_b8;
-    s16 ba;
-} Txt;
-typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
 extern s32 D_003F1A60;
@@ -60,12 +46,6 @@ u64 *func_00122048(u32, u32);
 void func_001220b8(void *);
 u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
-void func_001f4778(Win46 *);
-void func_001f4d10(Win46 *);
-void func_001f52a8(Win46 *);
-void func_001f52e8(Win46 *);
-void func_001f54f8(Win46 *);
-void func_001f5988(Win46 *);
 s32 func_001f94f0(void *, s32, s32, s32, u8 *, s32, s32);
 void func_001f9e48(s32, s32, s32, s32, s32, s32, s32);
 void func_001fa8b0(s32, s32, s32, s32, s32, s32);
@@ -88,19 +68,6 @@ void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc);
 void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g);
 void func_001fd708(void);
 void func_001fd720(s32 m);
-s32 func_001f45e0(Txt *t);
-s32 func_001f4650(Txt *t);
-void func_001f4658(Txt *t, s32 v);
-void func_001f4660(Txt *t);
-s32 func_001f4668(Txt *t);
-void func_001f4670(Txt *t, s32 v);
-void func_001f4678(Txt *t);
-f32 func_001f4680(Txt *t);
-void func_001f4688(Txt *t, f32 v);
-f32 func_001f4690(Txt *t);
-void func_001f4698(Txt *t, f32 v);
-f32 func_001f46a0(Txt *t);
-void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
 
@@ -354,75 +321,6 @@ void func_002081b0(void *o, s32 i, s32 x, s32 y, s32 n) {
 }
 
 /* needs make: uses rodata (switch jump tables) */
-s32 func_001f45e0(Txt *t) {
-    switch (t->ac) {
-    case 0:
-    case 3:
-    case 4:
-    default:
-        return t->b4 + t->ba / 2;
-    case 1:
-    case 5:
-    case 6:
-        return t->b4;
-    case 2:
-    case 7:
-    case 8:
-        return t->b4 + t->ba - 16;
-    }
-}
-
-s32 func_001f4650(Txt *t) { return t->x8; }
-
-void func_001f4658(Txt *t, s32 v) { t->x8 = v; }
-
-void func_001f4660(Txt *t) { t->x8 = 0; }
-
-s32 func_001f4668(Txt *t) { return t->x0; }
-
-void func_001f4670(Txt *t, s32 v) { t->x0 = v; }
-
-void func_001f4678(Txt *t) { t->x0 = 0; }
-
-f32 func_001f4680(Txt *t) { return t->fa0; }
-
-void func_001f4688(Txt *t, f32 v) { t->fa0 = v; }
-
-f32 func_001f4690(Txt *t) { return t->fa4; }
-
-void func_001f4698(Txt *t, f32 v) { t->fa4 = v; }
-
-f32 func_001f46a0(Txt *t) { return t->fa8; }
-
-void func_001f46a8(Txt *t, f32 v) { t->fa8 = v; }
-
-void func_001f46b0(Win46 *w) {
-    if (!(w->x88 & 1)) return;
-    switch (w->x70) {
-    case 0:
-        break;
-    case 1:
-        func_001f4778(w);
-        if (w->x88 & 2) {
-            func_001f54f8(w);
-            return;
-        }
-        break;
-    case 2:
-        func_001f4d10(w);
-        if (w->x88 & 2) {
-            func_001f5988(w);
-            return;
-        }
-        break;
-    case 3:
-        func_001f52e8(w);
-        return;
-    case 4:
-        func_001f52a8(w);
-        break;
-    }
-}
 
 /* func_001fe5a0 only matches with func_001fe558 defined above it. */
 typedef struct { u8 pad0[0xbc]; s16 bc; u8 padbe[0x12]; u64 d0; } Fade2;

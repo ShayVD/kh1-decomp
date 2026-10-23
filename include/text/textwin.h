@@ -40,10 +40,14 @@ typedef struct TextWin {
         struct { u64 lo:32; u64 hi:32; } a;
         struct { u64 :32; u64 b0:1; u64 :31; } b;
         struct { u32 x40; u32 x44; } v;
+        struct { u32 x40; u32 b44:1; u32 r44:31; } w;
     } u40;
-    u64 c0:1;
-    u64 crest:63;
-    u64 x50;
+    union {
+        struct { u64 c0:1; u64 crest:63; } a;
+        u64 q;                      /* func_001f5e10 sets bit 0 */
+        struct { s32 lo, hi; } w;   /* bit 0 of lo: scale around the anchor */
+    } u48;
+    s32 x50, x54;           /* func_001f31a8 clears both with one sd */
     s32 x58, x5c;
     TextWinDesc *desc;      /* +0x60 */
     void *x64;              /* default D_00490AE0 */

@@ -2,10 +2,23 @@
  * opening, closing, the open / focus / chain lists and their queries.  The
  * slots, lists and states are described in include/text/textwin.h.
  * func_001f3110 empties every slot and resets the text colour
- * (D_003F1A60) and width (D_003F1A64). */
+ * (D_003F1A60) and width (D_003F1A64).
+ *
+ * From 0x001f45e0: accessors, the frame dispatcher func_001f46b0 (by kind
+ * +0x70; the frames themselves are in textwin.nostrict.c), func_001f5e10
+ * (the start positions of the animation +0x80, which textwin.nofill.c's
+ * func_001f5fe0 runs) and the per-frame update func_001f82b0: it runs every
+ * open window's +0x0 callback newest first, then oldest first steps its
+ * state (1-3 opening and open, 4-5 closing; +0x9c the animation time,
+ * +0xa0 a delay, +0xa4 an auto-close time), draws the frame and calls
+ * +0x4; then it frees the windows asked to close and brings the focus list
+ * to the front of the open list. */
 #include "common.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00490AE0.h"
+#include "data/pieces/D_002BBDFC.h"
+#include "data/pieces/D_003F2670.h"
+#include "data/pieces/D_003F2720.h"
 
 extern TextWin D_0063F758[24]; /* src/data/bss_0063.c: Obj D_0063F758[24] */
 extern TextWin *D_00640DD8; /* src/data/bss_0064.c: s32 D_00640DD8 */
@@ -13,11 +26,15 @@ extern TextWin *D_00640DDC; /* src/data/bss_0064.c: s32 D_00640DDC */
 extern s32 D_003F1A60, D_003F1A64;
 extern s32 D_003F1A68;
 extern TextWinDesc D_003E9630;
+extern u16 D_003E90A0[];
 
 void func_001efb78(s32);
 void func_001efb98(s32);
 s32 func_002366d8(s32, s32);
 void func_001fd708(void);
+s32 func_00266c08(s32);
+void func_00266f38(s32, void *);
+void func_001ff488(TextWin *, s32, s32, s32, s32, s32);
 
 TextWin *func_001f31a8(TextWinDesc *a, s32 b);
 TextWin *func_001f3520(TextWinDesc *a, s32 b);
@@ -28,6 +45,17 @@ s32 func_001f4378(TextWin *);
 s32 func_001f4390(TextWin *);
 s32 func_001f43c8(TextWin *);
 s32 func_001f4400(TextWin *);
+s32 func_001f4570(TextWin *);
+void func_001f4778(TextWin *);
+void func_001f4d10(TextWin *);
+void func_001f52a8(TextWin *);
+void func_001f52e8(TextWin *);
+void func_001f54f8(TextWin *);
+void func_001f5988(TextWin *);
+void func_001f5e10(TextWin *);
+void func_001f5fe0(TextWin *);
+void func_001f8170(TextWin *);
+void func_001f8270(void);
 
 void func_001f3110(void) {
     s32 i;
@@ -83,7 +111,7 @@ TextWin *func_001f31a8(TextWinDesc *a, s32 b) {
         p->x8 = a->x4;
         p->u40.a.lo = 0;
         p->u40.b.b0 = 0;
-        p->c0 = 0;
+        p->u48.a.c0 = 0;
         p->x0 = 0;
         p->prev = 0;
         p->x64 = D_00490AE0;
@@ -98,7 +126,7 @@ TextWin *func_001f31a8(TextWinDesc *a, s32 b) {
         p->x34 = 0;
         p->x38 = 0;
         p->x3c = 0;
-        p->x50 = 0;
+        *(u64 *)&p->x50 = 0;
         p->desc = a;
         p->x68 = 0;
         p->x70 = 1;
@@ -824,4 +852,367 @@ void func_001f4560(TextWin *w, s32 n) {
 
 void func_001f4568(TextWin *w) {
     w->x7c = 0;
+}
+
+/* func_001f4570 is in textwin.nostrict.c. */
+
+/* The anchor y, by alignment +0xac (rodata: jump table). */
+s32 func_001f45e0(TextWin *t) {
+    switch ((u32)t->xac) {
+    case 0:
+    case 3:
+    case 4:
+    default:
+        return t->xb4 + t->xba / 2;
+    case 1:
+    case 5:
+    case 6:
+        return t->xb4;
+    case 2:
+    case 7:
+    case 8:
+        return t->xb4 + t->xba - 16;
+    }
+}
+
+s32 func_001f4650(TextWin *t) { return t->x8; }
+
+void func_001f4658(TextWin *t, s32 v) { t->x8 = v; }
+
+void func_001f4660(TextWin *t) { t->x8 = 0; }
+
+void (*func_001f4668(TextWin *t))(TextWin *) { return t->x0; }
+
+void func_001f4670(TextWin *t, void (*v)(TextWin *)) { t->x0 = v; }
+
+void func_001f4678(TextWin *t) { t->x0 = 0; }
+
+f32 func_001f4680(TextWin *t) { return t->xa0; }
+
+void func_001f4688(TextWin *t, f32 v) { t->xa0 = v; }
+
+f32 func_001f4690(TextWin *t) { return t->xa4; }
+
+void func_001f4698(TextWin *t, f32 v) { t->xa4 = v; }
+
+f32 func_001f46a0(TextWin *t) { return t->xa8; }
+
+void func_001f46a8(TextWin *t, f32 v) { t->xa8 = v; }
+
+void func_001f46b0(TextWin *w) {
+    if (!(w->x88 & 1)) return;
+    switch ((u32)w->x70) {
+    case 0:
+        break;
+    case 1:
+        func_001f4778(w);
+        if (w->x88 & 2) {
+            func_001f54f8(w);
+            return;
+        }
+        break;
+    case 2:
+        func_001f4d10(w);
+        if (w->x88 & 2) {
+            func_001f5988(w);
+            return;
+        }
+        break;
+    case 3:
+        func_001f52e8(w);
+        return;
+    case 4:
+        func_001f52a8(w);
+        break;
+    }
+}
+
+/* func_001f4778, func_001f4d10 are in textwin.nostrict.c. */
+
+void func_001f52a8(TextWin *w) {
+    func_001ff488(w, 0, 0, (s32)((u16)w->xb8 << 0x10) >> 0x14, (s32)((u16)w->xba << 0x10) >> 0x14, w->x6c);
+}
+
+/* func_001f52e8, func_001f54f8, func_001f5988 are in textwin.nostrict.c. */
+
+/* rodata: jump table */
+void func_001f5e10(TextWin *o) {
+    switch ((u32)o->x80) {
+    case 0:
+    case 1:
+    case 2:
+        break;
+    case 3:
+    case 4:
+        o->x50 = o->xb4;
+        break;
+    case 5:
+    case 6:
+        o->x50 = o->xb0;
+        break;
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 25:
+    case 26:
+        o->x50 = o->xb0;
+        o->x54 = o->xb4;
+        break;
+    case 27:
+        o->u48.q |= 1;
+        o->x50 = o->xb0;
+        o->x54 = o->xb4;
+        break;
+    case 11: case 12: case 13: case 14: case 15: case 16: case 17: case 18:
+    case 19: case 20: case 21: case 22: case 23: case 24:
+    case 28: case 29: case 30: case 31: case 32: case 33: case 34: case 35:
+        o->u48.q |= 1;
+        break;
+    case 36:
+        o->u48.q |= 1;
+        o->xac = 2;
+        o->x50 = o->xb4;
+        break;
+    case 37:
+        o->u48.q |= 1;
+        o->xac = 1;
+        o->x50 = o->xb4;
+        break;
+    case 39:
+        o->u48.q |= 1;
+        o->xac = 3;
+        o->x50 = o->xb0;
+        break;
+    case 40:
+        o->u48.q |= 1;
+        o->xac = 1;
+        o->x50 = o->xb4;
+        break;
+    case 41:
+        o->u48.q |= 1;
+        o->xac = 2;
+        o->x50 = o->xb4;
+        break;
+    case 42:
+        o->u48.q |= 1;
+        o->xac = 3;
+        o->x50 = o->xb0;
+        break;
+    case 48:
+        {
+            s32 b = o->xb0;
+            o->x58 = b + 0xa0;
+            o->x54 = b - 0x200;
+            o->x5c = b;
+            o->x50 = b + 0xd00;
+
+        }
+        break;
+    case 49:
+        {
+            s32 b = o->xb0;
+            o->x54 = b + 0x2a0;
+            o->x58 = b;
+            o->x50 = b - 0x500;
+        }
+        break;
+    case 52:
+        o->u48.q |= 1;
+        o->xac = 1;
+        o->x50 = o->xb4;
+        break;
+    case 53:
+        o->u48.q |= 1;
+        o->xac = 2;
+        o->x50 = o->xb4;
+        break;
+    case 38:
+    case 43:
+    case 54:
+        o->u48.q |= 1;
+        o->xac = 4;
+        o->x50 = o->xb0;
+        break;
+    }
+}
+
+/* func_001f5fe0 is in textwin.nofill.c. */
+
+void func_001f8108(TextWin *w) {
+    func_001f5e10(w);
+}
+
+void func_001f8120(TextWin *w) {
+    w->x9c = w->x9c + D_002BBDFC;
+    func_001f5fe0(w);
+}
+
+void func_001f8150(TextWin *w) {
+    w->x80 = w->x84;
+    func_001f5e10(w);
+}
+
+/* Free a window: its +0x8 callback, state 0, out of the open list. */
+void func_001f8170(TextWin *w) {
+    void (*fn)(TextWin *);
+    TextWin *p;
+    TextWin *q;
+    TextWin *o;
+
+    fn = (void (*)(TextWin *))w->x8;
+    if (fn != 0) {
+        fn(w);
+    }
+    p = w->x14;
+    w->state = 0;
+    if (p != 0) {
+        p->x18 = w->x18;
+        q = w->x18;
+        if (q != 0) {
+            q->x14 = w->x14;
+        }
+    } else {
+        o = w->x18;
+        D_00640DD8 = o;
+        if (o != 0) {
+            o->x14 = 0;
+        }
+    }
+}
+
+void func_001f81e8(TextWin *w) {
+    f32 t;
+
+    t = w->x9c - D_002BBDFC;
+    w->x9c = t;
+    if (t <= 0.0f) {
+        w->x9c = 0.0f;
+    }
+    func_001f5fe0(w);
+    if ((w->x9c <= 0.0f) || (w->state >= 6)) {
+        func_001f8170(w);
+    }
+}
+
+void func_001f8270(void) {
+    func_00266f38(func_00266c08(2), D_003F2670);
+    func_00266f38(func_00266c08(2), D_003F2720);
+}
+
+/* rodata: jump tables */
+void func_001f82b0(void) {
+    TextWin *list[24];
+    TextWin *w, *t;
+    s32 n;
+    w = D_00640DD8;
+    if (w == 0) return;
+    func_001f8270();
+    n = 0;
+    do {
+        list[n++] = w;
+        if (!(w->x88 & 0x40) && w->x0) {
+            switch (w->state) {
+            case 1:
+            case 2:
+                if (w->xa0 != 0.0f) break;
+            case 3:
+                w->x0(w);
+                break;
+            case 4:
+            case 5:
+                w->x0(w);
+                break;
+            }
+        }
+        w = w->x18;
+    } while (w);
+    for (n--; ; n--) {
+    w = list[n];
+    {
+        if (!(w->x88 & 0x40)) {
+            switch (w->state) {
+            case 0:
+                break;
+            case 1:
+                func_001f8108(w);
+                w->state++;
+            case 2:
+                if (w->xa0 != 0.0f) {
+                    w->xa0 -= D_002BBDFC;
+                    if (w->xa0 < 0.0f) w->xa0 = 0.0f;
+                } else {
+                    func_001f8120(w);
+                    func_001f46b0(w);
+                    ((void (*)(TextWin *))w->x4)(w);
+                    w->x94 += D_002BBDFC;
+                    w->x98 += D_002BBDFC;
+                    if (w->xa8 != 0.0f) {
+                        w->xa8 -= D_002BBDFC;
+                        if (w->xa8 < 0.0f) w->xa8 = 0.0f;
+                    }
+                }
+                break;
+            case 3:
+                func_001f46b0(w);
+                ((void (*)(TextWin *))w->x4)(w);
+                w->x94 += D_002BBDFC;
+                w->x98 += D_002BBDFC;
+                if (w->xa8 != 0.0f) {
+                    w->xa8 -= D_002BBDFC;
+                    if (w->xa8 < 0.0f) w->xa8 = 0.0f;
+                }
+                if (w->xa4 != 0.0f) {
+                    w->xa4 -= D_002BBDFC;
+                    if (w->xa4 <= 0.0f) func_001f3680(w);
+                }
+                break;
+            case 4:
+                func_001f8150(w);
+                w->state++;
+            case 5:
+                func_001f81e8(w);
+                func_001f46b0(w);
+                ((void (*)(TextWin *))w->x4)(w);
+                w->x94 += D_002BBDFC;
+                w->x98 += D_002BBDFC;
+                if (w->xa8 != 0.0f) {
+                    w->xa8 -= D_002BBDFC;
+                    if (w->xa8 < 0.0f) w->xa8 = 0.0f;
+                }
+                break;
+            }
+        }
+    }
+    if (n == 0) break;
+    }
+    for (n = 0, w = D_0063F758; n < 24; n++, w++) {
+        if (w->state == 0) continue;
+        if (w->x88 & 0x40) {
+            if (w->u40.w.b44) {
+                func_001f3648(w);
+                func_001f8170(w);
+            }
+        } else if (w->u40.w.b44) {
+            if (w->state == 3) {
+                w->x9c = D_003E90A0[w->x84];
+                w->u40.w.b44 = 0;
+                func_001f3648(w);
+            } else if (w->x88 & 0x20) {
+                w->u40.w.b44 = 0;
+                func_001f3648(w);
+            }
+        }
+    }
+    if (D_00640DDC == 0) return;
+    w = D_00640DDC;
+    while (w->x20) w = w->x20;
+    do {
+        func_001f3d70(w);
+        t = w;
+        w = w->x1c;
+        t->x1c = 0;
+        t->x20 = 0;
+    } while (w);
+    D_00640DDC = 0;
 }
