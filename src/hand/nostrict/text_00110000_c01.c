@@ -95,7 +95,8 @@ void func_001252f8(void) {
     D_002E27C8.b29 = func_0013c968(59, 0);
 }
 
-typedef f32 C01Mat[4][4];
+#include "data/types/fvec.h"
+typedef FMtx4 C01Mat;
 typedef struct {
     u8 pad000[0x40];
     f32 x40[3];
@@ -222,7 +223,7 @@ void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
     e[1] -= o->x414 * 0.5f;
     func_00267930(m4, e, dir, D_002E2800);
     func_00121620(m, pos, pos[0], pos[1], pos[2], pos[0] * o->x50 + pos[1] * (o->x54 - o->x414 * 0.5f) + pos[2] * o->x58);
-    sceVu0CopyMatrix(m3, (*(C01Mat *)&D_002C58D0));
+    sceVu0CopyMatrix(m3, D_002C58D0);
     m3[3][0] = -o->x50;
     m3[3][1] = o->x414 * 0.5f - o->x54;
     m3[3][2] = -o->x58;

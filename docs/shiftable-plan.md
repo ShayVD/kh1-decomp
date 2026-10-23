@@ -2827,3 +2827,89 @@ What changed besides the aliases:
   renamed by layout (`--map`, `--objtag`, `--sub`, `--hdr`, `--shift`, `--force`).
 - `s29_recfold.py`: D_00304BE8 record views (`--shift 4` + `->m[k]`).
 - `s29_uncast.py` (`--scalar`), `s29_asmdiff.py`.
+
+## Session 30: Phase 4 types (worker s30types)
+
+### Result
+
+Counted with `s27_survey.py --summary` (unchanged survey):
+
+| | base d7b6a3f | now |
+|---|---|---|
+| view casts (a user's own struct type) | 275 in 75 pieces | 217 in 72 pieces |
+| shared casts (to the piece header's own types) | 202 | 202 |
+| basic casts (s32, u8 *, void *, ...) | 775 | 750 |
+
+The basic count fell with D_002C58D0's `f32 (*)[4]` / `u8 (*)[0x40]` / `f32 *` casts
+(29 -> 5, the auto files' `M2C_UNK *` stay) and s7_w4's `(u8 *)D_00304BE8 + 0x874`.
+
+Per piece (view casts, base -> now):
+
+| piece | before | after | how |
+|---|---|---|---|
+| D_002C58D0 | 4 | 0 | `FMtx4 D_002C58D0` (`typedef f32 FMtx4[4][4]`, data/types/fvec.h): users pass `D_002C58D0` (f32 (*)[4] / void * / Mtx parameters) or `D_002C58D0[0]` (f32 * parameters); c04's M4, c01's C01Mat, h54n's Mtx alias FMtx4; h61's `#define D_002C58D0 (*(V4 *)&...)` goes |
+| D_00304BE8 | 18 | 1 | s8_w8, h73, s7_w4, s7_w3, s12w5, s6_20, h56, b03, b03n, s11_w44, h30n, s6_21 read Save_304be8 / W606Mem_304be8 / Sub_304be8 |
+| D_002A6238 | 27 | 2 | the word at 0x10 is a union Fl20_2a6238 of the users' five bit splits; h1 Ent20, h28 Ent14, h51 Tri20, h52 Plane52 / PolyV52, r2_10 ColE alias Ent20_2a6238 |
+| D_002A62B0 | 8 | 0 | typed `Ent20_2a6238 *` (the second table h28 walks; s11_w56 casts the loaded address) |
+| D_002A6274 | 4 | 0 | typed `Ent20_2a6238 *` (the table D_002A6238 is set from); h51n's Tri20 aliases Ent20_2a6238 |
+
+Also b11 (nofill): its Actor (the jump op's obj, pos[3] at 0x10) is its Obj
+(`struct VmObj`, V4 pos at 0x10; V4 is `FVec4` aligned 16), and its VM is
+`typedef VmRec VM` (`flags` -> `fl`).  No piece casts there, so no count change.
+
+What changed in the shared types:
+
+- Save_304be8: 0x0 is `s32 x0` (b03's save copy sets it to 5), Sub_304be8's 0x8 is
+  `x8[0x10]` (was pad), 0x38 `u16 x38` (b03n reads it unsigned; h6 / h7 only store
+  0), and 0x34 is `union { struct { u8 x34; u8 x35; u16 x36; } h; struct { u32 :16;
+  u32 b16:1; u32 :15; } b; } w34` (h30n read b16 as `x36 & 1` through a u16 view;
+  `sub.x34` is `sub.w34.h.x34`, `sub.b16` is `sub.w34.b.b16`).
+- Ent20_2a6238: 0xa / 0xb are `act` / `id` (h28's names; h1 b11, h51 group, r2_10
+  xA), 0xc is an anonymous union `{ f32 d; s32 i; u16 h; }` (h51n reads an id there
+  before the load stores the plane's d), 0x10 is `Fl20_2a6238 f` = `union { u32 w;
+  EntBits_2a6238 e; OnBits_2a6238 o; TriBits_2a6238 t; PlaneBits_2a6238 p;
+  ColBits_2a6238 c; }`.  Users that took `&D[i].f` as a word pointer use `.f.w`.
+- Record views that started at the block (`((T *)D_00304BE8)[k]`, `r[k * 116]`,
+  `e[k + 1].b74`, `arr[j + 0x590]`, `x[item + 0x490]`) became `m[k]`, `m[k].bits`,
+  `list599[j]`, `items[item]` with the same code in every file tried here, the loop /
+  PRE-sensitive s12w5 and the FLAGGED s11_w44 included.
+- s7_w3's CONTEXT_ONLY copy of func_0012d368 read the three party slots at 0x844 as
+  s32; it reads `x844[i]` (s8) like h31's real func_0012d368 now.  The context
+  function's own -S changed (it is weak in `.ctx`, not placed); kh1.elf did not.
+
+### Left, and why
+
+- D_00304BE8 (1): r2_7's G4BE8c record starts at the block (`e = &v[n]`, then
+  `&e->x4`, `e->x1c[s]`): with `&D->m[n].sub` gcc folds the +4 into `e` and the
+  register / stack slot of `t` change (the file's comment documents a giv order).
+- D_002A6238 (2): r2_10 reads the word at 0x10 as a u64 (`ColTri`, `(w & 0xff) >> 4
+  == 11` compares with `dli`); a `kind == 11` bit-field compare uses `li`.  A u64
+  member at 0x10 would run past the 20-byte record.
+- h1's five `((Ent20 *)((u8 *)D_002A6238 + off))` (off = idx * 20) keep their basic
+  `(u8 *)` cast: `D_002A6238[idx]` swaps two addu operands.
+- h30's V4 (`f32[4]` aligned 16, used by seven data headers) was not retyped: its
+  D_002C58D0 cast went without it (sceVu0UnitMatrix's `V4 *` accepts FMtx4).
+- The rest as session 29 left it (D_002E26A0 actor pointers 24, D_002C5968 volatile
+  flag views 15, D_00308CDC config views 15, D_002E31B0 14, D_00351E10 10, ...).
+
+### Hazards found (gcc 2.96)
+
+- A direct union member access is alias set 0 in strict files: h52's two bit-field
+  reads `D_002A6238[id].f.p.x40` / `.k` with a store between them reloaded the word.
+  `(&D_002A6238[id].f.p)->x40` (through a pointer) keeps the code; the other users'
+  union accesses (h28 writes, h51 writes, h1 / r2_10 reads) kept theirs as written.
+- A union containing a bit-field struct: the struct's bits count from the union's
+  start, so a split that began after a byte member needs its own leading pad (`u32
+  :16` for b16 when x34 / x35 were outside it).
+- `s29_retype` renames only accesses gcc rejects: a view field whose name is also a
+  shared field elsewhere (`d`) stayed on the shared field and changed code; the tool
+  now refuses such maps (see Tools).
+- Removing a view's +N base (r2_7 `e` at the record start - 4) changes register
+  allocation even when every address is the same.
+
+### Tools (tools/shift/s30types/, README there)
+
+- `s30_hdrdiff.py HEADER..`: -S check of every source that includes a header,
+  directly or through other headers (before `make` when a shared header changes).
+- `s29_retype.py` refuses a "name clash" map (a renamed field whose name the shared
+  type also uses).

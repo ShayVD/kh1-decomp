@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002A6238.h"
 #include "data/bss_0049.h"
 
 typedef __builtin_va_list va_list;
@@ -25,7 +26,7 @@ typedef struct { u8 pad[0x10]; f32 f10, f14; u8 pad18[4]; u8 b1c, b1d, b1e; } Ta
 typedef struct { u8 pad[0x18]; s32 (*f18)(s32); s32 (*f1c)(void); } Api;
 typedef struct { u8 pad[0x1c]; f32 ry; } Rot;
 typedef struct { u8 pad[0x24]; s32 b; s32 a; } Seq;
-typedef struct { u8 pad[0xa]; u8 act; u8 id; u8 pad2[4]; u32 on:1; u32 rest:31; } Ent14;
+typedef Ent20_2a6238 Ent14;
 typedef struct { u8 pad[0xc]; s32 v; } Res;
 typedef struct { u8 pad[16]; void *p; } Obj10;
 typedef struct {
@@ -54,7 +55,6 @@ extern Cam80 D_00494310[2];
 extern E90 D_00494F20[][2];
 #include "data/pieces/D_002AA060.h"
 extern ED0 D_00494D80[];
-#include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002A62B0.h"
 #include "data/pieces/D_002A3F60.h"
 #include "data/pieces/D_002A4060.h"
@@ -478,14 +478,14 @@ void func_00104850(f32 *pos, s32 *out) {
 void func_001057b8(s32 id, s32 on) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        if (((Ent14 *)D_002A6238)[i].id == id) {
-            ((Ent14 *)D_002A6238)[i].on = on;
+        if (D_002A6238[i].id == id) {
+            D_002A6238[i].f.o.on = on;
         }
     }
     if (D_002A3F28 != 0) {
         for (i = 0; i < D_002A62D0; i++) {
-            if (((Ent14 *)D_002A62B0)[i].id == id) {
-                ((Ent14 *)D_002A62B0)[i].on = on;
+            if (D_002A62B0[i].id == id) {
+                D_002A62B0[i].f.o.on = on;
             }
         }
     }
@@ -494,19 +494,19 @@ void func_001057b8(s32 id, s32 on) {
 void func_00105860(void) {
     s32 i;
     for (i = 0; i < D_002A6258; i++) {
-        if (((Ent14 *)D_002A6238)[i].act != 0 && ((Ent14 *)D_002A6238)[i].id != 0 && ((Ent14 *)D_002A6238)[i].id < 100) {
-            ((Ent14 *)D_002A6238)[i].on = 0;
-            if (((Ent14 *)D_002A6238)[i].id != D_002BC130 + 1) {
-                ((Ent14 *)D_002A6238)[i].on = 1;
+        if (D_002A6238[i].act != 0 && D_002A6238[i].id != 0 && D_002A6238[i].id < 100) {
+            D_002A6238[i].f.o.on = 0;
+            if (D_002A6238[i].id != D_002BC130 + 1) {
+                D_002A6238[i].f.o.on = 1;
             }
         }
     }
     if (D_002A3F28 != 0) {
         for (i = 0; i < D_002A62D0; i++) {
-            if (((Ent14 *)D_002A62B0)[i].id != 0 && ((Ent14 *)D_002A62B0)[i].id < 100) {
-                ((Ent14 *)D_002A62B0)[i].on = 0;
-                if (((Ent14 *)D_002A62B0)[i].id != D_002BC130 + 1) {
-                    ((Ent14 *)D_002A62B0)[i].on = 1;
+            if (D_002A62B0[i].id != 0 && D_002A62B0[i].id < 100) {
+                D_002A62B0[i].f.o.on = 0;
+                if (D_002A62B0[i].id != D_002BC130 + 1) {
+                    D_002A62B0[i].f.o.on = 1;
                 }
             }
         }

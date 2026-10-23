@@ -161,7 +161,6 @@ void func_0022d4d8(s32 arg0) {
     func_0011ef10(0x2BFE9, func_0022d498)[1] = arg0;
 }
 
-typedef struct { u8 p0[4]; u8 r[0x48e - 4]; u8 sel[0x499 - 0x48e]; u8 cnt[1]; } Base4BE8;
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
 extern u32 D_00646A24;
@@ -182,7 +181,7 @@ void func_0022f818(void) {
         return;
     }
     if (sel < D_003E3D6C) {
-        D_00647634 = &((Base4BE8 *)D_00304BE8)->r[D_00304BE8->x48e[sel] * 116];
+        D_00647634 = &D_00304BE8->m[D_00304BE8->x48e[sel]].sub.lv;
         n = D_00647634[0x21];
         D_00647630 = 0;
         for (i = 0; i < n; i++) {

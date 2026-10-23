@@ -6,11 +6,9 @@
 
 #include "common.h"
 
-typedef struct {
-    u8 pad_0[0x10];
-    s32 w16;
-} Ent20b_2a6274;
+#include "data/pieces/D_002A6238.h"
 
-extern Ent20b_2a6274 *D_002A6274;
+/* session 30: the table D_002A6238 is set from (func_00104528) */
+extern Ent20_2a6238 *D_002A6274;
 
 #endif /* KH1_DATA_PIECES_D_002A6274_H */

@@ -128,6 +128,14 @@ def retype(rel, T, S, header, aliases=(), manual=None, objtags=(), uncast=(), su
     if why:
         rep.append("unmapped: " + "; ".join(f"{a}: {b}" for a, b in sorted(why.items())))
         return None, rep
+    # session 30: a field of TYPE renamed to another S field while S has a field of
+    # the same name (h1's s16 `d` at 0x6, Ent20_2a6238's f32 `d` at 0xc) is never
+    # reported by gcc, so it would stay pointing at S's field: refuse, rename it first
+    s_top = {re.split(r"[.\[]", p)[0] for _, _, _, p, _ in sl}
+    clash = sorted(f for f, g in fmap.items() if g != f and f in s_top)
+    if clash:
+        rep.append("name clash (also an S field elsewhere; rename with --sub first): " + " ".join(clash))
+        return None, rep
     # the definition
     ct = U.blank_attrs(C.strip_comments(text))
     d = C.find_def(text, T, ct)

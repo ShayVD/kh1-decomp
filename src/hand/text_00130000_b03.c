@@ -1,5 +1,6 @@
 /* Hand-matched functions (worker b03). */
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 
 typedef struct { u8 pad[0xcc]; f32 xcc; } B3Mv;
 typedef struct B3Ob {
@@ -196,7 +197,7 @@ s32 func_0013abf8(u16 *o) {
     if (t < 0.0f) t = 0.0f;
     t = (cosf(t * 3.1415928f) + 1.0f) * 0.5f;
     func_002674f0(b, D_00304B30, D_0052AD30, t);
-    func_00267810(rm, (*(f32 (*)[4])&D_002C58D0), func_00120c88(D_0052AD04 * t));
+    func_00267810(rm, D_002C58D0[0], func_00120c88(D_0052AD04 * t));
     func_002672f8(D_0052AD10, rm, D_0052AD40);
     func_00267560(D_0052AD10, D_0052AD10, D_0052AD08 + D_0052AD0C * t);
     func_00267518(a, b, D_0052AD10);
@@ -208,36 +209,8 @@ s32 func_0013abf8(u16 *o) {
     return 0;
 }
 
-typedef struct {
-    u8 x0, x1, x2, x3, x4, x5, x6, x7;
-    u8 x8[16];
-    u8 x18;
-    u8 x19[8];
-    u8 x21;
-    u8 x22[16];
-    u8 x32, x33, x34, x35;
-    u16 x36, x38, x3a;
-    s32 x3c;
-    u8 x40[48];
-    u8 x70[4];
-} B3SvEnt;
-typedef struct {
-    B3SvEnt e[10];
-    u8 x488[2];
-    u8 x48a;
-    u8 x48b[3];
-    u8 x48e[7];
-    u8 x495[256];
-    u8 x595[48];
-    u8 x5c5[0x7cc - 0x5c5];
-    u8 x7cc[7];
-    u8 x7d3[0x840 - 0x7d3];
-    u8 x840[3];
-} B3SvSub;
-typedef struct {
-    s32 x0;
-    B3SvSub b;
-} B3Sv;
+typedef W606Mem_304be8 B3SvEnt;
+typedef Save_304be8 B3Sv;
 typedef struct {
     u8 x0, x1, x2, x3, x4;
     u8 x5[16];
@@ -255,47 +228,45 @@ void func_0013cb98(void) {
     B3Sv *s;
     B3SvSrc *d;
     B3SvEnt *e;
-    B3SvSub *b;
     s32 i, j;
 
-    B3Sv **pp = ((B3Sv **)&D_00304BE8);
+    B3Sv **pp = &D_00304BE8;
     s = func_00232cc0(0);
     *pp = s;
     s->x0 = 5;
-    for (i = 0; i < 256; i++) s->b.x495[i] = 0;
+    for (i = 0; i < 256; i++) s->items[i] = 0;
     for (i = 0; i < 10; i++) {
-        s->b.e[i].x32 = D_00304BC0[i];
+        s->m[i].sub.x32 = D_00304BC0[i];
         func_0013c9e0(D_00304BC0[i], 12);
     }
-    s->b.x48a = 0;
-    for (i = 1; i < 4; i++) (&s->b.x48a)[i] = -1;
-    for (i = 0; i < 48; i++) s->b.x595[i] = 0;
-    b = &s->b;
-    e = b->e;
+    s->x48e[0] = 0;
+    for (i = 1; i < 4; i++) s->x48e[i] = -1;
+    for (i = 0; i < 48; i++) s->list599[i] = 0;
+    e = s->m;
     d = func_001477c8(14808);
     for (i = 0; i < 10; i++) {
-        e->x34 = 1;
-        e->x0 = 1;
-        e->x1 = e->x2 = d->x0;
-        e->x3 = e->x4 = d->x1;
-        e->x38 = 0;
-        e->x5 = d->x2;
-        e->x6 = d->x3;
-        e->x7 = d->x4;
-        e->x18 = d->x15;
-        e->x21 = d->x16;
-        e->x3c = 0;
-        for (j = 0; j < 16; j++) e->x8[j] = d->x5[j];
-        for (j = 0; j < 8; j++) e->x19[j] = 0;
-        for (j = 0; j < 16; j++) e->x22[j] = 0;
-        for (j = 0; j < 48; j++) e->x40[j] = 0;
+        e->sub.w34.h.x34 = 1;
+        e->sub.lv = 1;
+        e->sub.x1 = e->sub.hpmax = d->x0;
+        e->sub.x3 = e->sub.mpmax = d->x1;
+        e->sub.x38 = 0;
+        e->sub.x5 = d->x2;
+        e->sub.x6 = d->x3;
+        e->sub.x7 = d->x4;
+        e->sub.x18 = d->x15;
+        e->sub.x21 = d->x16;
+        e->sub.exp = 0;
+        for (j = 0; j < 16; j++) e->sub.x8[j] = d->x5[j];
+        for (j = 0; j < 8; j++) e->sub.x19[j] = 0;
+        for (j = 0; j < 16; j++) e->sub.x22[j] = 0;
+        for (j = 0; j < 48; j++) e->sub.name[j] = 0;
         e++;
         d++;
     }
     for (i = 0; i < 512; i++) func_0013c638(i, (*(u16 (*)[512])&D_00351530)[i] & 1);
-    for (i = 0; i < 7; i++) s->b.x7cc[i] = -1;
-    for (i = 0; i < 7; i++) ((B3Sv *)D_00304BE8)->b.x48e[i] = 1;
-    for (i = 0; i < 3; i++) b->x840[i] = -1;
+    for (i = 0; i < 7; i++) s->x7d0[i] = -1;
+    for (i = 0; i < 7; i++) D_00304BE8->b492[i] = 1;
+    for (i = 0; i < 3; i++) s->x844[i] = -1;
 }
 #include "data/data_0030.h"
 #include "data/pieces/D_002C5958.h"

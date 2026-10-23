@@ -204,9 +204,9 @@ void func_00114c18(Ent52 *o, s32 idx, s32 col) {
 }
 
 typedef f32 V4_52[4] __attribute__((aligned(16)));
-typedef struct { u32 lo : 11; u32 k : 4; u32 m : 3; u32 x40 : 4; u32 hi : 10; } Bf52;
-typedef struct { f32 a, b, c, d; Bf52 bf; } Plane52;
 #include "data/pieces/D_002A6238.h"
+typedef PlaneBits_2a6238 Bf52;
+typedef Ent20_2a6238 Plane52;
 void func_00104eb0(s32, V4_52);
 void func_00104f10(s32, V4_52);
 s32 func_00104ae0(s32, V4_52 *);
@@ -325,8 +325,8 @@ void func_00117710(Src52 *a, Dst52 *b) {
     b->p[3] = 1.0f;
     if (a->x2c == -1) {
         func_001156f0(id, b);
-        b->x40 = ((Plane52 *)D_002A6238)[id].bf.x40;
-        k = ((Plane52 *)D_002A6238)[id].bf.k;
+        b->x40 = (&D_002A6238[id].f.p)->x40;
+        k = (&D_002A6238[id].f.p)->k;
     } else {
         func_0011aac8(id, b, a->x2c);
         bp = func_0011ab38(a->x2c, id);
@@ -338,7 +338,6 @@ void func_00117710(Src52 *a, Dst52 *b) {
 
 extern s32 D_002BD150[];
 extern s32 D_002BD160[];
-typedef struct { s16 v[10]; } PolyV52;
 typedef struct { u16 poly; u16 i0; u16 i1; } Edge52;
 s32 func_00104a90(s32, s32 *);
 void func_0011a818(s32 *, s32 *, Edge52 *);
@@ -351,13 +350,13 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
     s32 *idx;
     u32 *f, *g;
     if (grp == -1) {
-        s32 ta = ((PolyV52 *)D_002A6238)[e->poly].v[e->i0];
-        s32 tb = ((PolyV52 *)D_002A6238)[e->poly].v[e->i1];
+        s32 ta = D_002A6238[e->poly].v[e->i0];
+        s32 tb = D_002A6238[e->poly].v[e->i1];
         a = ta;
         b = tb;
         for (i = 0; i < n; i++) {
             id = list[i];
-            f = (u32 *)&((Plane52 *)D_002A6238)[id].bf;
+            f = &D_002A6238[id].f.w;
             if (e->poly == id) continue;
             cnt = func_00104a90(id, v);
             if (cnt == 3) idx = D_002BD150;
@@ -693,7 +692,7 @@ s32 *func_0011af48(s32 g, Qry52 *q, s32 mode, s32 *out) {
     for (i = 0; i < list[0]; i++) {
         u32 *w;
         id = list[i + 1];
-        w = (u32 *)&tbl[id].bf;
+        w = &tbl[id].f.w;
         switch (mode) {
         case 0:
             if (!(*w & 0x106) && func_0011ab88(g, id, q)) {
@@ -764,7 +763,7 @@ s32 func_0011bbe8(Obj52 *o, f32 *p, s32 g, f32 *out) {
     for (i = 0; i < list[0]; i++) {
         Bf52 *w;
         id = list[i + 1];
-        w = &tbl[id].bf;
+        w = &tbl[id].f.p;
         if (D_002BC128 == 10 && D_002BC130 == 7 && D_002C1300(w)) break;
         if (func_0011b908(g, id, p)) {
             ids[cnt] = id;
