@@ -32,10 +32,10 @@ back, boot, and narrow down within the session that fixes it.
 Session 30's default (2,100 float), session 31's (2,047) and session 32's (2,043) were never booted.
 To go back one session at a time: `SHIFT_REACH_FLAGS="--no-multi-base"` gives session 31's names;
 add `--no-arg-keep --no-join-keep --no-stored-idx` for session 30's, then `--no-path-step --no-arg-bound
---no-wr-span` for session 29's (the last booted). Boot the current
-default first; if it fails, rebuild with session 31's three switches (= session 30's default), then add
-session 30's switches one at a time. If session 30's default fails and 31's passes, D_003F6770 is the
-first suspect.
+--no-wr-span` for session 29's (the last booted). Boot the current default first and walk back only if it
+fails; within a session, drop its switches one at a time. If session 30's default fails and 31's passes,
+D_003F6770 is the first suspect. Sessions 31 and 32 released nothing, so a failure that their switches fix
+points at layout shift around the newly pinned names, not at a wrong release.
 
 ## Known hazard to read before booting (session 32)
 

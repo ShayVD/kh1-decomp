@@ -8,21 +8,25 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac is away until after the weekend of 2026-10-24/25** (the user said so on 2026-10-23). Before Monday
-2026-10-26, do not ask for the Mac or wait on it: skip item 1, keep every float candidate marked untested, and do
-the static items. From Monday on, ask for the Mac and PCSX2 at the start (the connect card in the Claude desktop app).
+**The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23). Before then, do not ask for the Mac
+or wait on it: skip item 1, add every float change to docs/float-untested.md as untested, and do the static items.
+From Monday on, ask for the Mac and PCSX2 at the start (the connect card in the Claude desktop app) and make item 1
+the first thing.
 
-## Where we stopped (end of session 31, 2026-10-23)
+## Where we stopped (end of session 32, 2026-10-23)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-31.
-- **Two default float builds are unbooted**: session 30's (2,100 names float) and session 31's (2,047 names: the
-  arg-join fix pinned 54 more and released none). Session 31's is the current default and the one to boot.
-- **reach_check** (worker s31reach): arg-keep, join-keep, stored-idx (`--no-arg-keep`, `--no-join-keep`,
-  `--no-stored-idx`); 1,358 pinned without overlays. `--visit-seed N` shuffles visit order; the one real gap left
-  is D_003F4C90 (func_00219f98: a loop join keeps only the lower of two bases). docs/shiftable-plan.md "Session 31".
-- **Modules** (worker s31module): src/vm/vm_calc.c, src/vm/vm_find.nofill.c, and a second module src/camera/
-  (0x001c5168-0x001ca9e8). docs/modules.md "Session 31".
-- **Phase 4 types** (worker s31types): view casts 214 -> 52 (22 pieces). docs/shiftable-plan.md "Session 31: Phase 4 types".
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-32.
+- **Three default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047) and 32 (2,043, the current
+  default). docs/float-untested.md lists every change since the last booted build (KH1_F29_N), the switch that undoes
+  each, the risk, and a hazard to read first (bounded indexes that run past the next name; 26 floating names).
+- **reach_check** (worker s32reach): multi-base closed the D_003F4C90 gap; widen-bases, sign-prune, shadow-image and
+  arg-drop fixed order dependence and two hangs. 1,362 pinned without overlays, 4 newly pinned, none released.
+  docs/shiftable-plan.md "Session 32: reach_check" (what is still order-dependent: widening, not lost bases).
+- **Modules** (workers s32module, s32module2): src/msgwin/ (0x001ca9e8-0x001cce38) and src/vm/vm_lib*.c (the
+  dispatcher func_001dcad0, the D_003D9FE0 table and 275 library functions 0x001cd238-0x001d5408). docs/modules.md
+  "Session 32" and "Next module moves".
+- **Phase 4 types**: view casts 56 -> 18; VmMgr's 0x3180 union is gone. docs/shiftable-plan.md "Session 32: Phase 4
+  types" lists the 18 and why each stays.
 
 ## What is left (9 functions)
 
@@ -32,23 +36,21 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 32 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 33 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run tools/shift/data_owners.py, stage out/overlays
-   from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to Downloads/kh1-test/s32
-   and /mnt/project-files/kh1-runtime/s32, patch KH1_BIG.iso, and run the usual route: load menu, save 06 with
-   Donald and Goofy, test T, the desert fight, the in-game menu, save 05 End of the World, and the warp drive to
-   Neverland. If it breaks, rebuild with `SHIFT_REACH_FLAGS="--no-arg-keep --no-join-keep --no-stored-idx"`
-   (= session 30's default) and bisect session 30's releases with `--no-path-step`, `--no-arg-bound`,
-   `--no-wr-span` (riskiest list in docs/shiftable-plan.md "Session 30: reach_check"). Without the Mac: skip.
-2. **reach_check**: the D_003F4C90 gap (an IDX with several bases, or an unbounded `idx` from each base a join
-   folds in); `--no-*` must reproduce session 31's list byte for byte. Any new release is untested until booted.
-3. **Phase 4 modules**: docs/modules.md "Next module moves": split the D_003D9FE0 script-function library
-   (0x001c6d08-0x001ec678) group by group, starting with the VmMgr functions 0x001ca9e8-0x001cce38; then move
-   func_001dcad0 and D_003D9FE0; retype h42 to script_vm.h and drop its CONTEXT_ONLY func_001c4640. `make` must
-   stay byte-identical.
-4. **Phase 4 types**: the last 52 view casts (D_002E26A0 8, the VM-area views D_003C5510 / D_00389C90 /
-   D_0037A380 13 now that the VM and camera modules exist, D_002C5C80 4, D_002E3170 3, D_002E31A0 3).
+1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
+   stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
+   Downloads/kh1-test/s33 and /mnt/project-files/kh1-runtime/s33, patch KH1_BIG.iso, and run the route in
+   docs/float-untested.md. If it breaks, bisect with the switches listed there. Move what boots into
+   docs/shiftable-plan.md and clear docs/float-untested.md. Without the Mac: skip.
+2. **Phase 4 modules**: the rest of the library file 0x001d5408-0x001dcad0 into src/vm/vm_lib*.c in chunks (next
+   0x001d5408-0x001d5b58, then the long h18 and h19 runs), then the code after the dispatcher (0x001dcb00 on) by
+   its data. `make` byte-identical and the float layout unchanged after every chunk.
+3. **reach_check (static)**: read the 26 floating names in "Session 32: reach_check" whose bounded index overruns
+   into them (func_0021cfc8's D_003F5C18[i < 6] first) and decide case by case; a fix that pins is safe, a release
+   goes into docs/float-untested.md as untested.
+4. **Phase 4 types (small)**: the 18 left are mostly genuine second views; only take the ones the module moves make
+   easy. Prototype mismatches of VM functions (docs/modules.md "Next module moves") are a better use of a worker.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=32`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=33`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).
