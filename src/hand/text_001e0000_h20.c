@@ -14,36 +14,6 @@ typedef struct {
         struct { void *obj; u8 pad[0x178]; s32 sp; } h;
     } u;
 } VM;
-typedef struct {
-    u8 pad0[0x14];
-    void *owner;
-    u8 pad18[0x10];
-    s32 arg;
-    s32 kind;
-} Task;
-extern u8 D_0062A630[];
-Task *func_0011f090(void *, s32, void *);
-void func_001dd5c0();
-typedef struct { f32 *v; } Obj760;
-Obj760 *func_001760d0(s32);
-Obj760 *func_001760f0(s32);
-extern s32 D_0029B418;
-extern s32 D_0029B41C;
-Obj760 *func_001760b0(s32);
-typedef struct { f32 x, y, z; } Vec3;
-typedef struct { Vec3 *pos; u8 pad4[0x10]; s32 flags; } Ent698;
-typedef struct { u8 pad0[4]; s32 id; } Mdl698;
-typedef struct {
-    u8 pad0[0x10];
-    Ent698 *ent;
-    Mdl698 *mdl;
-    s32 k;
-    f32 t;
-} Ctx698;
-void func_001315c0(s32, s32, Vec3 *, f32);
-f32 *D_0062A430 ALIGNED(16);
-extern f32 *D_0062A428;
-typedef struct { u8 pad0[0x10]; f32 x, y, z; } Obj9c0;
 extern u64 D_0038CD00;
 typedef struct { s32 x0; s32 n; s32 tbl[1]; } Tbl;
 #include "data/pieces/D_003DACA0.h"
@@ -150,123 +120,16 @@ void func_0011d108(s32, s32, s32);
 s32 func_0011e368(s32, s32);
 void func_0011d350(s32, s32);
 
-s32 func_001ddfb8(VM *vm) {
-    Task *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    Sub *s = &vm->u.s;
-    s32 i;
-    t->kind = 0;
-    i = vm->u.h.sp;
-    t->owner = s->obj ? vm : 0;
-    t->arg = s->stk[i];
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001de030(VM *vm) {
-    Task *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    Sub *s = &vm->u.s;
-    s32 i;
-    t->kind = 10;
-    i = vm->u.h.sp;
-    t->owner = s->obj ? vm : 0;
-    t->arg = s->stk[i];
-    vm->u.h.sp -= 1;
-    return 2;
-}
+/* func_001ddfb8, func_001de030, func_001de0b0, func_001de290, func_001df170, func_001df1d8, func_001df310, func_001df698, func_001df940, func_001dfb20 are in src/event/effect.c. */
 
-s32 func_001de0b0(VM *vm) {
-    Task *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    Sub *s = &vm->u.s;
-    s32 i;
-    t->kind = 16;
-    i = vm->u.h.sp;
-    t->owner = s->obj ? vm : 0;
-    t->arg = s->stk[i];
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001de290(VM *vm) {
-    Sub *s = &vm->u.s;
-    Obj760 *o = func_001760d0(s->stk[vm->u.h.sp - 3]);
-    s32 i;
-    if (o) {
-        f32 *v = o->v;
-        i = vm->u.h.sp;
-        v[0] = s->stk[i - 2];
-        v[1] = s->stk[i - 1];
-        v[2] = s->stk[i];
-    } else {
-        i = vm->u.h.sp;
-    }
-    vm->u.h.sp = i - 4;
-    return 2;
-}
 
-s32 func_001df170(VM *vm) {
-    Task *t = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    t->kind = 2;
-    t->arg = vm->u.s.stk[vm->u.h.sp];
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001df1d8(VM *vm) {
-    if (D_0029B418 && D_0029B41C) { Task *t = func_0011f090(D_0062A630, 0, func_001dd5c0); Sub *s; s32 i; t->kind = 3; s = &vm->u.s; i = vm->u.h.sp; t->owner = s->obj ? vm : 0; t->arg = s->stk[i]; }
-    vm->u.h.sp -= 1;
-    return 2;
-}
 
-s32 func_001df310(VM *vm) {
-    Sub *s = &vm->u.s;
-    Obj760 *o = func_001760f0(s->stk[vm->u.h.sp - 3]);
-    s32 i;
-    if (o) {
-        f32 *v = o->v;
-        i = vm->u.h.sp;
-        v[0] = s->stk[i - 2];
-        v[1] = s->stk[i - 1];
-        v[2] = s->stk[i];
-    } else {
-        i = vm->u.h.sp;
-    }
-    vm->u.h.sp = i - 4;
-    return 2;
-}
 
-s32 func_001df698(Ctx698 *c) {
-    Vec3 v;
-    Vec3 *p;
-    if (c->ent->flags & 2) return 4;
-    func_001315c0(c->mdl->id, c->k, &v, c->t);
-    p = c->ent->pos;
-    p->x = v.x;
-    p->y = v.y;
-    p->z = v.z;
-    return 0;
-}
 
-s32 func_001df940(VM *vm) {
-    Sub *s = &vm->u.s; s32 i = vm->u.h.sp; f32 *p = D_0062A430; f32 x = s->stk[i - 2], y = s->stk[i - 1], z = s->stk[i]; vm->u.h.sp = i - 4; p[0] = x / 100.0f; p[1] = y / 100.0f; p[2] = z / 100.0f;
-    return 2;
-}
 
-s32 func_001dfb20(VM *vm) {
-    Sub *s = &vm->u.s;
-    Obj760 *o = func_001760b0(s->stk[vm->u.h.sp - 3]);
-    s32 i;
-    if (o) {
-        f32 *v = o->v;
-        i = vm->u.h.sp;
-        v[0] = s->stk[i - 2];
-        v[1] = s->stk[i - 1];
-        v[2] = s->stk[i];
-    } else {
-        i = vm->u.h.sp;
-    }
-    vm->u.h.sp = i - 4;
-    return 2;
-}
 
 s32 func_001e0318(VM *vm) {
     if ((s32)(D_0038CD00 >> 52) & 1) return 4;

@@ -2,16 +2,6 @@
 #include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
 #include "data/bss_0062.h"
-typedef struct VmObj {
-    u8 pad0[0x30];
-    f32 v30[4];
-    u8 pad40[0x68 - 0x40];
-    void *f68;
-    u8 pad6c[0xac - 0x6c];
-    f32 fac;
-    u8 padb0[0x370 - 0xb0];
-    union { u64 x; struct { u32 lo; u32 p:12; u32 b44:1; u32 hi:19; } b; } f370;
-} Obj;
 typedef VmRec VM;
 
 typedef struct {
@@ -25,24 +15,7 @@ typedef struct {
     VM *x3154;
 } G389C90;
 extern G389C90 D_00389C90;
-typedef struct { u8 pad0[0x370]; u8 c[3]; } HObj4;
-typedef struct { f32 *f0; s32 *f4; f32 *f8; f32 *fc; u8 pad10[4]; s32 f14; } HObj;
-typedef struct { u8 pad0[4]; HObj4 *f4; } HSub;
-typedef struct { u8 pad0[0x10]; HObj *f10; HSub *f14; s32 f18; f32 f1c; u8 pad20[8]; s32 f28; s32 f2c; f32 f30; u8 pad34[0xc]; f32 f40[3]; } Handler;
 extern f32 D_002BBDFC;
-extern u8 D_0062A630[];
-s32 func_001dd5c0(Handler *);
-Handler *func_0011f090(void *, s32, s32 (*)(Handler *));
-HSub *func_001e98d0(s32, s32);
-HObj *func_001760d0(s32);
-void func_001315c0(HObj4 *, s32, f32 *, f32);
-HObj *func_001760f0(s32);
-void func_002675a8(f32 *, f32 *);
-void func_00131a30(HObj4 *, s32, f32 *);
-s32 func_001dd320(Handler *h);
-s32 func_001dd208(Handler *h);
-HObj *func_001760b0(s32);
-extern u64 D_0038CD00;
 extern s32 D_003DC470;
 extern s32 D_003DC474;
 extern s32 D_003DC478;
@@ -63,14 +36,11 @@ void func_001e2810(void);
 
 
 
-typedef struct { u8 pad0[4]; s32 f4; u8 pad8[0x370 - 8]; union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b; } f370; } Obj3;
 
 #include "data/pieces/D_0037A178.h"
 
 #include "data/pieces/D_0038D170.h"
 #include "data/pieces/D_0039A580.h"
-extern s32 D_0039A570;
-extern s32 D_003A7980;
 #include "data/pieces/D_0037A378.h"
 /* func_001dcd98 and func_001dcea8 are in src/vm/vm_lib.c. */
 
@@ -79,258 +49,23 @@ extern s32 D_003A7980;
 
 
 
-s32 func_001de130(VM *vm) {
-    Handler *h;
-    HSub *r;
-    h = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
-    h->f2c = 10;
-    h->f14 = r->f4 ? r : 0;
-    h->f28 = vm->stk[vm->sp - 1];
-    vm->sp -= 2;
-    return 2;
-}
+/* func_001de130, func_001de1e0, func_001de420, func_001de5b0, func_001de6a8, func_001de778, func_001de848, func_001de910, func_001de9e0, func_001deaf8, func_001dec10, func_001ded08, func_001df4a0, func_001df708, func_001dfcb0, func_001dfea8, func_001e0078 are in src/event/effect.c. */
 
-s32 func_001de1e0(VM *vm) {
-    Handler *h;
-    HSub *r;
-    h = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
-    h->f2c = 16;
-    h->f14 = r->f4 ? r : 0;
-    h->f28 = vm->stk[vm->sp - 1];
-    vm->sp -= 2;
-    return 2;
-}
 
-s32 func_001de420(VM *vm) {
-    HObj *p = func_001760d0(vm->stk[vm->sp - 3]);
-    if (p) {
-        p->f8[0] = vm->stk[vm->sp - 2] / 100.0f;
-        p->f8[1] = vm->stk[vm->sp - 1] / 100.0f;
-        p->f8[2] = vm->stk[vm->sp] / 100.0f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001de5b0(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760d0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd208);
-        h->f10 = o;
-        h->f14 = r;
-        h->f18 = vm->stk[vm->sp - 1];
-        h->f1c = vm->stk[vm->sp] * 0.5f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001de6a8(VM *vm) {
-    f32 buf[4];
-    HObj *o;
-    HSub *r;
-    o = func_001760d0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (o && r) {
-        func_001315c0(r->f4, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
-        func_002675a8(o->f0, buf);
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001de778(VM *vm) {
-    f32 buf[4];
-    HObj *o;
-    HSub *r;
-    o = func_001760f0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (o && r) {
-        func_001315c0(r->f4, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
-        func_002675a8(o->f0, buf);
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001dd3f8(Handler *h);
-s32 func_001de848(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd3f8);
-        h->f10 = o;
-        h->f14 = r;
-        h->f18 = vm->stk[vm->sp];
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001de910(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760d0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd320);
-        h->f10 = o;
-        h->f14 = r;
-        h->f1c = 0;
-        h->f18 = vm->stk[vm->sp];
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001de9e0(VM *vm) {
-    f32 buf[4];
-    HObj *o;
-    HSub *r;
-    o = func_001760d0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    if (o && r) {
-        func_00131a30(r->f4, vm->stk[vm->sp], buf);
-        o->f4[0] = buf[0] * 32768.0f / 3.1415928f;
-        o->f4[1] = buf[1] * 32768.0f / 3.1415928f;
-        o->f4[2] = buf[2] * 32768.0f / 3.1415928f;
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001deaf8(VM *vm) {
-    f32 buf[4];
-    HObj *o;
-    HSub *r;
-    o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    if (o && r) {
-        func_00131a30(r->f4, vm->stk[vm->sp], buf);
-        o->f4[0] = buf[0] * 32768.0f / 3.1415928f;
-        o->f4[1] = buf[1] * 32768.0f / 3.1415928f;
-        o->f4[2] = buf[2] * 32768.0f / 3.1415928f;
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001dec10(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760f0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd208);
-        h->f10 = o;
-        h->f14 = r;
-        h->f18 = vm->stk[vm->sp - 1];
-        h->f1c = vm->stk[vm->sp] * 0.5f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001ded08(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760f0(vm->stk[vm->sp - 2]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 1]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd320);
-        h->f10 = o;
-        h->f14 = r;
-        h->f1c = 0;
-        h->f18 = vm->stk[vm->sp];
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001df4a0(VM *vm) {
-    HObj *p = func_001760f0(vm->stk[vm->sp - 3]);
-    if (p) {
-        p->f8[0] = vm->stk[vm->sp - 2] / 100.0f;
-        p->f8[1] = vm->stk[vm->sp - 1] / 100.0f;
-        p->f8[2] = vm->stk[vm->sp] / 100.0f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-extern u8 D_0062A428[];
-s32 func_001df698(Handler *h);
-s32 func_001df708(VM *vm) {
-    HSub *r;
-    Handler *h;
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (r) {
-        h = func_0011f090(D_0062A630, 1, func_001df698);
-        h->f10 = (HObj *)D_0062A428;
-        h->f14 = r;
-        h->f18 = vm->stk[vm->sp - 1];
-        h->f1c = vm->stk[vm->sp] * 0.5f;
-    }
-    vm->sp -= 3;
-    return 2;
-}
 
-s32 func_001dfcb0(VM *vm) {
-    HObj *p = func_001760b0(vm->stk[vm->sp - 3]);
-    if (p) {
-        p->f8[0] = vm->stk[vm->sp - 2] / 100.0f;
-        p->f8[1] = vm->stk[vm->sp - 1] / 100.0f;
-        p->f8[2] = vm->stk[vm->sp] / 100.0f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001dfea8(VM *vm) {
-    HObj *o;
-    HSub *r;
-    Handler *h;
-    o = func_001760b0(vm->stk[vm->sp - 3]);
-    r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
-    if (o && r) {
-        h = func_0011f090(D_0062A630, 1, func_001dd208);
-        h->f10 = o;
-        h->f14 = r;
-        h->f18 = vm->stk[vm->sp - 1];
-        h->f1c = vm->stk[vm->sp] * 0.5f;
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
-s32 func_001e0078(VM *vm) {
-    Handler *h;
-    f32 t;
-    h = func_0011f090(D_0062A630, 0, func_001dd5c0);
-    h->f2c = 15;
-    h->f28 = vm->stk[vm->sp - 4];
-    t = vm->stk[vm->sp];
-    h->f30 = t * 2;
-    h->f40[0] = (vm->stk[vm->sp - 3] - 255.0f) / 255.0f / t;
-    h->f40[1] = (vm->stk[vm->sp - 2] - 255.0f) / 255.0f / t;
-    h->f40[2] = (vm->stk[vm->sp - 1] - 255.0f) / 255.0f / t;
-    h->f10 = func_001760f0(h->f28);
-    D_00389C90.x3078.b.b3 = 1;
-    vm->sp -= 5;
-    return 2;
-}
 
 #include "data/types/text_001d0000_h44.h"
 extern Col4 D_003DACC0;

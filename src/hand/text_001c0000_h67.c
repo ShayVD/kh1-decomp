@@ -1,25 +1,12 @@
 #include "common.h"
 #include "vm/script_vm.h"
 #include "data/types/vm_rec.h"
-typedef struct VmObj {
-    u8 pad0[0x10];
-    f32 pos[3];
-    u8 pad1c[0x20];
-    f32 f3c;
-    u8 pad40[0x330];
-    u64 f370;
-} Ent;
-typedef VmRec VM;
-double sin(double);
-double cos(double);
 #include "data/types/text_001c0000_h67.h"
 extern Str D_00389C90;
 
 /* func_001cb7d0, func_001cb960, func_001cbbd0 and func_001cbfc0 (and D_0062A1F0) are in src/msgwin/msgwin.c. */
 
 /* func_001cf478 and func_001cf5d0 are in src/vm/vm_lib.c. */
-void *func_001559f0(s32, s32);
-void func_00120748(char *, void *, void *, s32);
 
 #include "data/pieces/D_003A7990.h"
 #include "data/pieces/D_003C3A70.h"
@@ -28,8 +15,6 @@ void func_00120748(char *, void *, void *, s32);
 
 #include "data/types/text_001c0000_h67_p.h"
 extern V4 D_00490630;
-void sceVu0UnitMatrix(f32 (*)[4]);
-void func_00267518(f32 *, f32 *, f32 *);
 
 
 #include "data/pieces/D_002BC0F0.h"
@@ -37,79 +22,10 @@ extern f32 D_002BBDFC;
 
 /* func_001dcfd0 is in src/vm/vm_lib.c. */
 
-typedef struct { s32 x0; u8 pad4[0x10]; s32 f14; } Q10;
-typedef struct { u8 pad0[0x10]; Q10 *q; u8 * f14; s32 f18; f32 f1c; f32 f20; f32 f24; } Task;
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_002E2780.h"
-f32 func_001e9e58(f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_001e9d00(f32 *, f32 *, f32 *, f32);
-void func_001e9dc8(f32 *, f32 *, f32 *);
-void func_002675a8(s32, f32 *);
-s32 func_001dedd8(Task *o) {
-    f32 v[4];
-    f32 r[4];
-    f32 t[4];
-    f32 d;
-    if (o->q->f14 & 2) return 4;
-    d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
-    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
-    v[0] = v[0] / d * o->f1c;
-    v[1] = v[1] / d * o->f1c;
-    v[2] = v[2] / d * o->f1c;
-    func_00267518(v, &D_002E2780.x, v);
-    func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
-    t[0] = o->f20;
-    t[1] = o->f24;
-    t[2] = 0.0f;
-    t[3] = 1.0f;
-    func_001e9dc8(v, r, t);
-    func_002675a8(o->q->x0, v);
-    return 0;
-}
+/* func_001dedd8, func_001def20 are in src/event/effect.c. */
 
-extern void *D_0062A220; /* src/data/bss_0062.c: s32 D_0062A220 */
-extern void *D_0062A224; /* src/data/bss_0062.c: s32 D_0062A224 */
-extern u8 D_0062A630[];
-s32 func_00176040(void *, void *, s32, s32);
-Q10 *func_001760d0(s32);
-Task *func_0011f090(void *, s32, void *);
-s32 func_001def20(VM *vm) {
-    f32 v[4];
-    f32 r[4];
-    f32 t[4];
-    f32 d, s;
-    Q10 *k;
-    Task *n;
-    d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
-    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
-    s = vm->stk[vm->sp - 2];
-    v[0] = v[0] / d * s;
-    v[1] = v[1] / d * s;
-    v[2] = v[2] / d * s;
-    func_00267518(v, &D_002E2780.x, v);
-    func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
-    t[0] = vm->stk[vm->sp - 1];
-    t[1] = vm->stk[vm->sp];
-    t[2] = 0.0f;
-    t[3] = 1.0f;
-    func_001e9dc8(v, r, t);
-    func_00176040(D_0062A220, D_0062A224, vm->stk[vm->sp - 3], 0);
-    k = func_001760d0(vm->stk[vm->sp - 3]);
-    if (k) {
-        func_002675a8(k->x0, v);
-        n = func_0011f090(D_0062A630, 0, func_001dedd8);
-        n->f18 = 0;
-        n->q = k;
-        n->f14 = 0;
-        n->f1c = vm->stk[vm->sp - 2];
-        n->f20 = vm->stk[vm->sp - 1];
-        n->f24 = vm->stk[vm->sp];
-    }
-    vm->sp -= 4;
-    return 2;
-}
 
 extern s32 D_003DAD38;
 #include "data/pieces/D_003DAD3C.h"
@@ -145,12 +61,7 @@ s32 func_001e08d8(void) {
 }
 
 /* needs make: uses rodata */
-char *strcpy(char *, const char *);
-char *strcat(char *, const char *);
-int sprintf(char *, const char *, ...);
-extern char D_0062A328[];
 extern char D_003DABD8[][6];
-s32 func_001ddc48();
 /* func_001ddc78 and func_001dde08 (and D_0062A228) are in src/event/effect.c. */
 
 #include "data/data_0039.h"
