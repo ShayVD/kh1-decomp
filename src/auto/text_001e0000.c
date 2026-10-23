@@ -2,28 +2,14 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0063.h"
-
-M2C_UNK func_00111b10();
-M2C_UNK func_00111b48();
-M2C_UNK func_00111b90();
-M2C_UNK func_00147808(u16);
-M2C_UNK func_001478a0();
-M2C_UNK func_001ba1e8();
-M2C_UNK func_001ba208();
-M2C_UNK func_001ee6d0();
 M2C_UNK func_001efb18(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_001efc10(M2C_UNK);
 M2C_UNK func_001efdb8(s32);
 M2C_UNK func_001effc0(s32);
 extern M2C_UNK D_003E5ED8;
 extern M2C_UNK D_003E8910;
 extern s32 D_003E8E00;
 extern s32 D_003E8E04;
-#include "data/pieces/D_003F34B8.h"
-s32 func_001ee768();
 s32 func_001efbb8();
-u16 *func_00147840();
-void *func_001496c8();
 
 /* func_001e05a8, func_001e1418 are in src/screen/screen.c. */
 
@@ -36,78 +22,6 @@ void *func_001496c8();
 /* func_001ea430 is in src/vm/vm_util.c. */
 
 /* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
-
-void func_001ee428(void) {
-    func_00111b10();
-}
-
-void func_001ee440(void) {
-    func_00111b48();
-}
-
-void func_001ee458(void) {
-    func_00111b90();
-}
-
-void func_001ee698(s32 arg0) {
-    if (arg0 != 0) {
-        func_00147808(*func_00147840());
-        return;
-    }
-    func_001efc10(0x97);
-}
-
-s32 func_001ee9b8(void) {
-    return func_001ee768() != 0xD;
-}
-
-s32 func_001ee9e0(void) {
-    return func_001ee768() == 0;
-}
-
-void func_001eeaf0(void) {
-    func_001ba208();
-}
-
-void func_001eeb08(void) {
-    func_001ba1e8();
-}
-
-void func_001eebd8(s32 arg0) {
-    if (arg0 != 0) {
-        func_001ee6d0();
-        return;
-    }
-    func_001efc10(0xA8);
-}
-
-void func_001eec00(s32 arg0) {
-    if (arg0 != 0) {
-        func_001ee6d0();
-        return;
-    }
-    func_001efc10(0xA8);
-}
-
-s8 func_001eec28(void) {
-    return M2C_FIELD(func_001496c8(), s8 *, 0x30);
-}
-
-s32 func_001ef250(void) {
-    return func_001ee768() - 2;
-}
-
-void func_001ef528(void) {
-    func_001478a0();
-}
-
-s32 func_001ef7a0(void) {
-    return M2C_FIELD(D_003F34B8, s32 *, 0x1C);
-}
-
-void func_001ef948(void) {
-
-}
 
 void func_001efaf0(void) {
     func_001efb18(&D_003E5ED8, &D_003E8910);

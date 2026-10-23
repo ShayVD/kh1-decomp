@@ -3,8 +3,7 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-/* Party member (0x74 bytes) in the save block at D_00304BE8. */
-typedef W606Mem_304be8 Mem74;
+/* The save block at D_00304BE8. */
 typedef Save_304be8 SaveM;
 
 /* Text layout: control codes < 0x15 index a length table, 0x15-0x1f are
@@ -53,8 +52,6 @@ typedef struct {
     s16 ba;
 } Txt;
 typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
-#include "data/pieces/D_003E3D68.h"
-#include "data/pieces/D_003E3D6C.h"
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
 extern u8 D_003E8D28[];
@@ -75,8 +72,6 @@ f32 sinf(f32);
 u64 *func_0011fb38(s32, u64, u64 *);
 u64 *func_00122048(u32, u32);
 void func_001220b8(void *);
-void func_00141b10(s32, void *);
-s32 func_001ee768(s32);
 s32 func_001efb88(void);
 u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
@@ -137,38 +132,6 @@ f32 func_001f46a0(Txt *t);
 void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-s32 func_001ef140(s32 i, s32 id) {
-    s32 c = 0;
-    Mem74 *m = &D_00304BE8->m[i];
-    s32 t = func_001ee768(id);
-    s32 j, n;
-    if (t == 0) {
-        n = m->sub.x21;
-        for (j = 0; j < n; j++) {
-            if (m->sub.x22[j] == id) c++;
-        }
-    } else if (t == 1) {
-        n = m->sub.x18;
-        for (j = 0; j < n; j++) {
-            if (m->sub.x19[j] == id) c++;
-        }
-    } else if (t >= 2 && t < 12) {
-        c = m->sub.x32 == id;
-    }
-    return c;
-}
-
-void func_001ef830(void) {
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        if (D_00304BE8->x48e[i] == 0xff) break;
-    }
-    D_003E3D6C = i;
-    D_003E3D68 = i;
-    if (D_00304BE8->x48e[3] != 0xff) D_003E3D68 = i + 1;
-    for (i = 0; i < 10; i++) func_00141b10(i, &D_003E3D70.e228[i]);
-}
 
 u8 *func_001efcd8(MsgHdr *h, s32 a, s32 n) {
     u8 *t = (u8 *)h + h->o14;
