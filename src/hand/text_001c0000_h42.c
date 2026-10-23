@@ -79,8 +79,6 @@ CONTEXT_ONLY s32 func_001c4640(Msg *m) {
 extern volatile s32 D_002BBE04;
 
 #include "data/pieces/D_0037A380.h"
-extern u8 D_003C55E0[];
-/* D_003C55E0 is +0xd0 into this block. */
 /* func_001c5db8 is in src/camera/camera.c. */
 
 /* func_001c8168, func_001c8260, func_001c8308, func_001c8758, func_001c8878 and func_001c8930 are in src/camera/camera.c. */

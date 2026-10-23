@@ -1,4 +1,4 @@
-/* The event camera, 0x001c5168-0x001c6d08 (include/camera/camera.h,
+/* The event camera, 0x001c5168-0x001ca9e8 (include/camera/camera.h,
  * docs/modules.md "src/camera/"), in address order:
  *
  * - func_001c5168: move the path output with the objects it follows;
@@ -10,8 +10,12 @@
  * - func_001c6720 (reset), func_001c6890 (camera from the view) and
  *   func_001c6a20 (view from the camera).
  *
- * The script functions that drive the camera (0x001c6d08-0x001ca9e8) call
- * these and are the next part of this module. */
+ * Then the camera's script functions, 0x001c6d08-0x001ca9e8 (entries of
+ * func_001dcad0's table D_003D9FE0; eight of them are in camera.nostrict.c):
+ * set / push the position, rotation and f120 / f124, start the five tween
+ * channels and the shake (CamState in camera.h), and func_001ca800, which
+ * runs the active channels every frame.  They need func_001c6890 defined
+ * above them, so core and script functions were one translation unit. */
 #include "common.h"
 #include "camera/camera.h"
 #include "vm/vm_mgr.h"

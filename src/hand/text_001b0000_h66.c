@@ -22,22 +22,8 @@ void func_001be820(void *p, u32 n);
 #include "data/pieces/D_0038D170.h"
 extern u32 D_002C5958;
 extern f32 D_002BBDFC;
-void func_001c6890(void);
-typedef struct {
-    u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u32 m[8]; u8 pad76[20];
-    f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3];
-} Tw_c9ac8;
-typedef struct {
-    u64 flags; u8 pad8[4]; f32 dur[3]; u8 pad24[8]; f32 t[3]; u32 m[8]; u8 pad76[20];
-    f32 start[3]; u8 pad108[36]; f32 end[3]; u8 pad156[132]; f32 cur[3];
-} Tw_c9e80;
-typedef struct { u64 flags; u8 pad[184]; V4 v192; V4 v208; } Tw_ca800;
-s32 func_001c5b88(void);
-void func_001c9ac8(void);
-void func_001c9e80(void);
 #include "data/pieces/D_0037A380.h"
 extern u8 D_00389C90[];
-extern u8 D_003C5510[];
 
 void func_001bea58(f32 *a, f32 *b) {
     s32 i;
@@ -192,48 +178,7 @@ void func_001bfcd8(void) {
 
 /* func_001c5168, func_001c5b88, func_001c6720 and func_001c6890 are in src/camera/camera.c. */
 
-#define D_003C5510 (*(Tw_c9ac8 *)&D_003C5510)
-#undef D_003C5510
-
-#define D_003C5510 (*(Tw_c9e80 *)&D_003C5510)
-#undef D_003C5510
-
-#define D_003C5510 (*(Tw_ca800 *)&D_003C5510)
-#define B(n) ((s32)(D_003C5510.flags >> (n)) & 1)
-#undef D_003C5510
-#undef B
-
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4_c91e8;
-typedef struct {
-    union {
-        u64 flags;
-        struct { s32 lo; f32 dur0; f32 dur1; } s;
-    } u;
-    u8 pad10[8];
-    f32 t0;
-    f32 t1;
-    u8 pad20[0xc];
-    s32 x2c;
-    u8 pad30[0x10];
-    V4_c91e8 p40;
-    V4_c91e8 p50;
-    V4_c91e8 p60;
-    V4_c91e8 p70;
-    V4_c91e8 p80;
-    u8 pad90[0x10];
-    f32 r[3];
-    s32 xac;
-    f32 fb0;
-    s32 xb4;
-    u8 padb8[8];
-    V4_c91e8 v0;
-    V4_c91e8 a, b, c, d, e;
-    f32 f50;
-    f32 f54;
-} Cam_c91e8;
-#define D_003C5510 (*(Cam_c91e8 *)&D_003C5510)
 /* func_001c91e8, func_001c9ac8, func_001c9e80 and func_001ca800 are in src/camera/camera.c. */
-#undef D_003C5510
 #include "data/data_002B.h"
 #include "data/data_002E.h"
 #include "data/data_0037.h"
