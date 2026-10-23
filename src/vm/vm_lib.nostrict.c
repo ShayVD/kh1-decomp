@@ -50,3 +50,59 @@ void func_001cf348(void) {
         t = 0;
     }
 }
+
+/* func_001d0380 .. func_001d9480 are in vm_lib.c. */
+
+extern f32 D_002BBDFC;
+
+/* Step the turn func_001d95f0 starts: rot from f2c to f38 over f44 (time
+ * f48, as f32); at the end clear flag 12.  Kept the auto file's body, fields
+ * by offset (VMF: 0x2c f2c, 0x38 f38, 0x44 f44, 0x48 f48, obj's 0x30 rot):
+ * written on VmRec / struct VmObj the struct accesses schedule differently
+ * (51 words off). */
+#define VMF(p, t, off) (*(t *)((s8 *)(p) + (off)))
+void func_001d9510(VmRec *vm) {
+    f32 temp_f0;
+    f32 temp_f1;
+    f32 temp_f1_2;
+    f32 temp_f1_3;
+    f32 temp_f2;
+    void *temp_v0;
+    void *temp_v1;
+
+    temp_f2 = VMF(vm, f32, 0x44);
+    temp_f0 = VMF(vm, f32, 0x48) + D_002BBDFC;
+    VMF(vm, f32, 0x48) = temp_f0;
+    if (temp_f2 < temp_f0) {
+        temp_v1 = VMF(vm, void *, 4);
+        VMF(temp_v1, f32, 0x30) = (f32) VMF(vm, f32, 0x38);
+        VMF(temp_v1, f32, 0x34) = (f32) VMF(vm, f32, 0x3C);
+        VMF(temp_v1, f32, 0x38) = (f32) VMF(vm, f32, 0x40);
+        VMF(vm, s64, 0x328) = (s64) (VMF(vm, s64, 0x328) & ~0x1000);
+        return;
+    }
+    temp_f1 = VMF(vm, f32, 0x2C);
+    temp_v0 = VMF(vm, void *, 4);
+    VMF(temp_v0, f32, 0x30) = (f32) (temp_f1 + ((VMF(vm, f32, 0x38) - temp_f1) * (temp_f0 / temp_f2)));
+    temp_f1_2 = VMF(vm, f32, 0x30);
+    VMF(temp_v0, f32, 0x34) = (f32) (temp_f1_2 + ((VMF(vm, f32, 0x3C) - temp_f1_2) * (VMF(vm, f32, 0x48) / VMF(vm, f32, 0x44))));
+    temp_f1_3 = VMF(vm, f32, 0x34);
+    VMF(temp_v0, f32, 0x38) = (f32) (temp_f1_3 + ((VMF(vm, f32, 0x40) - temp_f1_3) * (VMF(vm, f32, 0x48) / VMF(vm, f32, 0x44))));
+}
+
+/* func_001d95f0 .. func_001dbd90 are in vm_lib.c. */
+
+void func_001dbd90();
+s32 func_001559f0(s32, s32);
+s32 func_00120748(void *, s32, void (*)(), s32);
+extern u8 D_004906C0[];
+
+/* Load file (stk[sp-1], stk[sp]) and start it with func_001dbd90 as the
+ * callback (flag 9 of 0x3078 until then). */
+s32 func_001dbdc8(VmRec *vm) {
+    s32 r = func_001559f0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    func_00120748(D_004906C0, r, func_001dbd90, 0);
+    D_00389C90.f3078.x |= 0x200;
+    vm->sp -= 2;
+    return 2;
+}

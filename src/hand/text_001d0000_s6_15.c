@@ -3,15 +3,6 @@
 #include "data/bss_0062.h"
 
 typedef struct {
-    u8 type;
-    u64 val:24;
-    s32 x;
-    s32 a8;
-    s32 ac;
-    f32 v[4];
-} Msg;
-s32 func_001c4640(Msg *m);
-typedef struct {
     s32 x0;
     void *obj;
     u8 pad8[0x178];
@@ -25,29 +16,6 @@ typedef struct {
 typedef W606Mem_304be8 Chr;
 typedef Save_304be8 Save;
 
-s32 func_001d8680(VM *vm) {
-    Msg m;
-    m.type = 40;
-    m.val = 0;
-    m.x = vm->x0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    func_001c4640(&m);
-    return 2;
-}
-s32 func_001d86e0(void) {
-    Msg m;
-    m.type = 40;
-    m.val = 0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    func_001c4640(&m);
-    return 2;
-}
 typedef struct { u8 pad0[0x10]; void *f10; VM *f14; s32 f18; u8 pad1c[0xc]; s32 f28; s32 f2c; } Tsk;
 typedef struct { u8 pad0[0x68]; void *f68; } O68;
 extern u8 D_0062A630[];

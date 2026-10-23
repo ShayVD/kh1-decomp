@@ -31,82 +31,9 @@ extern V4 D_00490630;
 void sceVu0UnitMatrix(f32 (*)[4]);
 void func_00267518(f32 *, f32 *, f32 *);
 
-typedef struct { u8 pad[0xa80]; u8 a[10]; u8 b[10]; u8 c[10]; u8 d[50]; } Save;
-Save *func_00232cc0(s32);
-s32 func_001d8400(VM *vm) {
-    Save *p = func_00232cc0(1);
-    s32 i;
-    switch (vm->stk[vm->sp]) {
-    case 0:
-        for (i = 0; i < 10; i++) if (!p->a[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 1:
-        for (i = 0; i < 10; i++) if (!p->b[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 2:
-        for (i = 0; i < 10; i++) if (!p->c[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    case 3:
-        for (i = 0; i < 50; i++) if (!p->d[i]) { vm->stk[vm->sp] = i + 1; break; }
-        break;
-    }
-    return 2;
-}
 
 #include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BBDFC;
-void func_001d8f38(void) {
-    Str *g = &D_00389C90;
-    f32 r, t;
-    t = g->t + D_002BBDFC;
-    g->t = t;
-    if (g->dur < t) {
-        D_002BC0F0.camS = g->tgt;
-        g->f3078.x &= ~2ULL;
-        return;
-    }
-    r = g->t / g->dur;
-    D_002BC0F0.camS.b[0] = g->start.b[0] + (g->tgt.b[0] - g->start.b[0]) * r;
-    g->t += D_002BBDFC;
-    D_002BC0F0.camS.b[1] = g->start.b[1] + (g->tgt.b[1] - g->start.b[1]) * r;
-    D_002BC0F0.camS.b[2] = g->start.b[2] + (g->tgt.b[2] - g->start.b[2]) * r;
-    D_002BC0F0.camS.a[0] = g->start.a[0] + (g->tgt.a[0] - g->start.a[0]) * r;
-    D_002BC0F0.camS.a[1] = g->start.a[1] + (g->tgt.a[1] - g->start.a[1]) * r;
-    D_002BC0F0.camS.a[2] = g->start.a[2] + (g->tgt.a[2] - g->start.a[2]) * r;
-    D_002BC0F0.camS.a[3] = g->start.a[3] + (g->tgt.a[3] - g->start.a[3]) * r;
-    if (g->dur < g->t) {
-        D_002BC0F0.camS = g->tgt;
-        g->f3078.x &= ~2ULL;
-    }
-}
-
-s32 func_001d9100(VM *vm) {
-    Str *g = &D_00389C90;
-    g->tgt = g->start = D_002BC0F0.camS;
-    g->t = 0.0f;
-    g->dur = vm->stk[vm->sp - 7] * 2.0f;
-    g->tgt.b[0] = vm->stk[vm->sp - 6];
-    g->tgt.b[1] = vm->stk[vm->sp - 5];
-    g->tgt.b[2] = vm->stk[vm->sp - 4];
-    g->tgt.a[0] = vm->stk[vm->sp - 2];
-    g->tgt.a[1] = vm->stk[vm->sp - 3];
-    g->tgt.a[2] = vm->stk[vm->sp - 1];
-    g->tgt.a[3] = vm->stk[vm->sp];
-    if (g->dur < 2.0f) {
-        D_002BC0F0.camS.b[0] = g->tgt.b[0];
-        D_002BC0F0.camS.b[1] = g->tgt.b[1];
-        D_002BC0F0.camS.b[2] = g->tgt.b[2];
-        D_002BC0F0.camS.a[0] = g->tgt.a[0];
-        D_002BC0F0.camS.a[1] = g->tgt.a[1];
-        D_002BC0F0.camS.a[2] = g->tgt.a[2];
-        D_002BC0F0.camS.a[3] = g->tgt.a[3];
-        g->f3078.x &= ~2ULL;
-    } else {
-        g->f3078.x |= 2;
-    }
-    vm->sp -= 8;
-    return 2;
-}
 
 void func_001dcfd0(VM *vm) {
     VmMsg m;

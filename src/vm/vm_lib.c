@@ -23,6 +23,7 @@
 #include "data/pieces/D_002BC098.h"
 #include "data/pieces/D_003DABD0.h"
 #include "data/data_002B.h"
+#include "data/data_002E.h"
 #include "data/data_0038.h"
 #include "data/data_003C.h"
 #include "data/data_003D.h"
@@ -50,9 +51,60 @@
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0062.h"
+#include "data/pieces/D_0037A178.h"
+#include "data/pieces/D_004906D0.h"
+#include "data/pieces/D_003773E0.h"
+#include "data/pieces/D_003773D8.h"
+#include "data/pieces/D_003773D4.h"
+#include "data/pieces/D_003773D0.h"
+#include "data/pieces/D_003773CC.h"
+#include "data/pieces/D_003773C8.h"
+#include "data/pieces/D_003773C4.h"
+#include "data/pieces/D_003773C0.h"
+#include "data/pieces/D_003773BC.h"
+#include "data/pieces/D_003773B8.h"
+#include "data/pieces/D_003773B4.h"
+#include "data/pieces/D_003773B0.h"
+#include "data/pieces/D_003773AC.h"
+#include "data/pieces/D_003773A8.h"
+#include "data/pieces/D_003773A4.h"
+#include "data/pieces/D_003773A0.h"
+#include "data/pieces/D_0037739C.h"
+#include "data/pieces/D_00377398.h"
+#include "data/pieces/D_00377394.h"
+#include "data/pieces/D_00377390.h"
+#include "data/pieces/D_0037738C.h"
+#include "data/pieces/D_00377388.h"
+#include "data/pieces/D_00377384.h"
+#include "data/pieces/D_00377380.h"
+#include "data/pieces/D_0037737C.h"
+#include "data/pieces/D_00377378.h"
+#include "data/pieces/D_00377374.h"
+#include "data/pieces/D_00377370.h"
+#include "data/pieces/D_0037736C.h"
+#include "data/pieces/D_00377368.h"
+#include "data/pieces/D_00377364.h"
+#include "data/pieces/D_00377360.h"
+#include "data/pieces/D_0037735C.h"
+#include "data/pieces/D_00377358.h"
+#include "data/pieces/D_00377354.h"
+#include "data/pieces/D_00377350.h"
+#include "data/pieces/D_0037734C.h"
+#include "data/pieces/D_00377348.h"
+#include "data/pieces/D_00377344.h"
+#include "data/pieces/D_00377340.h"
+#include "data/pieces/D_0037733C.h"
 
 
 extern VmMgr D_00389C90;
+
+/* A library function: takes the VM, returns the handler result.  The table
+ * is declared here, before the library: gcc's cse hashes a symbol by the
+ * address of its name, so naming D_003D9FE0 first keeps the dispatcher's
+ * code (lw D_003D9FE0(k)) from depending on how many names the functions
+ * above it add. */
+typedef s32 (*VmLibFn)();
+extern VmLibFn D_003D9FE0[];
 extern u64 D_0038CD00;
 extern VmFx *D_0038CD3C[];
 
@@ -2501,11 +2553,2537 @@ s32 func_001d5388(VmRec *vm) {
     return 2;
 }
 
+/* ---- 0x001d5408-0x001d5b58 ---- */
+
+s32 func_00141468(struct VmObj *, s32);
+s32 func_00141540(struct VmObj *, s32);
+s32 func_0012cac8(s32, s32);
+s32 func_0013c6a8(s32);
+s32 func_00123298(void);
+struct VmObj *func_001230a0(struct VmObj *);
+void func_0013c638(s32, s32);
+void func_0013c778(s32, s32, s32);
+
+s32 func_001d5408(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141468(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d5458(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141540(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d54a8(VmRec *vm) {
+    if (func_00123298() <= 0) return 2;
+    return 4;
+}
+
+s32 func_001d54d8(void) {
+    func_0012cac8(0, 0);
+    return 2;
+}
+
+s32 func_001d5500(void) {
+    func_0012cac8(0, 1);
+    return 2;
+}
+
+s32 func_001d5528(void) {
+    func_0012cac8(1, 0);
+    return 2;
+}
+
+s32 func_001d5550(void) {
+    func_0012cac8(1, 1);
+    return 2;
+}
+
+s32 func_001d5578(void) {
+    func_0012cac8(2, 0);
+    return 2;
+}
+
+s32 func_001d55a0(void) {
+    func_0012cac8(2, 1);
+    return 2;
+}
+
+s32 func_001d55c8(void) {
+    func_0012cac8(6, 0);
+    return 2;
+}
+
+s32 func_001d55f0(void) {
+    func_0012cac8(6, 1);
+    return 2;
+}
+
+/* Push how many entities in the list have func_00123618 kind 0xcd. */
+s32 func_001d5618(VmRec *vm) {
+    s32 n = 0;
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->x4) == 0xcd) n++;
+    }
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d56a8(VmRec *vm) {
+    vm->sp++;
+    if (D_002E27A8 == 2) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001d56f0(VmRec *vm) {
+    VmMsg m;
+    m.type = 37;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5738(VmRec *vm) {
+    VmMsg m;
+    m.type = 38;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5780(VmRec *vm) {
+    func_0013c638(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d57d0(VmRec *vm) {
+    vm->stk[vm->sp] = func_0013c6a8(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d5828(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDEC;
+    return 2;
+}
+
+s32 func_001d5850(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF0;
+    return 2;
+}
+
+s32 func_001d5878(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF4;
+    return 2;
+}
+
+s32 func_001d58a0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDF8;
+    return 2;
+}
+
+/* func_001d58c8 is in vm_lib.nofill.c. */
+
+s32 func_001d5978(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDE8;
+    return 2;
+}
+
+/* Message 14 (func_001d59a0) or 13 (func_001d5a50) to every entity whose
+ * flag bits 37-38 are 2. */
+s32 func_001d59a0(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 14;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((s32)(p->f370.flags >> 37) & 3) == 2) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d5a50(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 13;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((s32)(p->f370.flags >> 37) & 3) == 2) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d5b00(VmRec *vm) {
+    func_0013c778(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+/* ---- 0x001d5b58-0x001d6000 ---- */
+
+/* func_001d5b58 is in vm_lib.nofill.c. */
+
+void func_0014ec10(s32);
+
+s32 func_001d5ed8(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBE00 = (f32)vm->stk[sp] / 100.0f;
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d5f18(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002A6200 = (f32)vm->stk[sp] / 100.0f;
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d5f58(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CE00;
+    return 2;
+}
+
+s32 func_001d5f80(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CE04;
+    return 2;
+}
+
+s32 func_001d5fa8(VmRec *vm) {
+    D_00389C90.x3170 = vm->stk[vm->sp - 1];
+    D_00389C90.x3174 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d5ff0(VmRec *vm) {
+    func_0014ec10(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* ---- 0x001d6000-0x001d6d60 ---- */
+
+void func_0014ec38(s32);
+s32 func_00145080(s32, s32);
+s32 func_00145138();
+s32 func_00112e90();
+s32 func_00141b10(s32, void *);
+s32 func_00111778(s32);
+s32 func_001eac68();
+s32 func_0024d418();
+s32 func_0024d490(void);
+s32 func_00104288();
+s32 func_00100ab0();
+s32 func_00100ae0();
+s32 func_0017f078(s32);
+s32 func_0017f110();
+s32 func_00135a10(struct VmObj *, s32);
+s32 func_00135a38(struct VmObj *, s32);
+s32 func_002414a8(s32, s32);
+s32 func_00105ce0(s32);
+void func_00105d38(s32, s32);
+s32 func_001118a0();
+s32 func_001118b0();
+void func_001248e8(s32);
+extern s32 D_002BD110;
+
+s32 func_001d6038(VmRec *vm) {
+    func_0014ec38(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6080(void) {
+    s32 i;
+    for (i = 1; i < 0x20; i++) {
+        func_0014ec10(i);
+    }
+    return 2;
+}
+
+s32 func_001d60c0(void) {
+    s32 i;
+    for (i = 1; i < 0x20; i++) {
+        func_0014ec38(i);
+    }
+    return 2;
+}
+
+s32 func_001d6100(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB0 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+/* Push how many of the four party slots x48e[] hold a member (< 20). */
+s32 func_001d6128(VmRec *vm) {
+    s32 i = 3, n = 0;
+    u8 *p = D_00304BE8->x48e;
+    do {
+        n += *p++ < 20;
+        i--;
+    } while (i >= 0);
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d6180(VmRec *vm) {
+    func_00145080(0, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d61c8(VmRec *vm) {
+    func_00145080(1, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6210(void) {
+    func_00145138();
+    return 2;
+}
+
+s32 func_001d6230(void) {
+    func_00112e90();
+    return 2;
+}
+
+/* Add trigger box nbox: id stk[sp-6], centre stk[sp-5..sp-3], size
+ * stk[sp-2..sp]. */
+s32 func_001d6250(VmRec *vm) {
+    s32 n = D_00389C90.nbox;
+    D_00389C90.box[n].id = vm->stk[vm->sp - 6];
+    D_00389C90.box[n].c[0] = vm->stk[vm->sp - 5];
+    D_00389C90.box[n].c[1] = vm->stk[vm->sp - 4];
+    D_00389C90.box[n].c[2] = vm->stk[vm->sp - 3];
+    D_00389C90.box[n].s[0] = vm->stk[vm->sp - 2];
+    D_00389C90.box[n].s[1] = vm->stk[vm->sp - 1];
+    D_00389C90.box[n].s[2] = vm->stk[vm->sp];
+    D_00389C90.nbox++;
+    vm->sp -= 7;
+    return 2;
+}
+
+/* How many entities of kind stk[sp] are in the list. */
+s32 func_001d6348(VmRec *vm) {
+    s32 n = 0;
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_00123220(p)) {
+        if (func_00123618(p->x4) == vm->stk[vm->sp]) n++;
+    }
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+/* Remove the trigger boxes with id stk[sp]. */
+s32 func_001d63e8(VmRec *vm) {
+    s32 i, j, k;
+    for (i = 0; i < D_00389C90.nbox; i = k) {
+        if (D_00389C90.box[i].id == vm->stk[vm->sp]) {
+            k = i + 1;
+            if (k < D_00389C90.nbox) {
+                for (j = k; j < D_00389C90.nbox; j++) D_00389C90.box[j - 1] = D_00389C90.box[j];
+                k = i;
+                D_00389C90.nbox--;
+            } else D_00389C90.nbox--;
+        } else k = i + 1;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d64f8(VmRec *vm) {
+    s32 buf[60];
+    func_00141b10(vm->stk[vm->sp], buf);
+    vm->stk[vm->sp] = buf[15];
+    return 2;
+}
+
+s32 func_001d6558(VmRec *vm) {
+    s32 buf[60];
+    func_00141b10(vm->stk[vm->sp], buf);
+    vm->stk[vm->sp] = buf[17];
+    return 2;
+}
+
+s32 func_001d65b8(VmRec *vm) {
+    func_00111778(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6600(void) {
+    func_001eac68();
+    func_0024d418();
+    return 2;
+}
+
+s32 func_001d6628(VmRec *vm) {
+    if (!func_0024d490()) return 4;
+    return 2;
+}
+
+/* func_001d6658 is in vm_lib.nofill.c. */
+
+s32 func_001d66b8(void) {
+    func_00104288();
+    return 2;
+}
+
+s32 func_001d66d8(void) {
+    func_00100ab0();
+    return 2;
+}
+
+s32 func_001d66f8(void) {
+    func_00100ae0();
+    return 2;
+}
+
+s32 func_001d6718(VmRec *vm) {
+    func_0017f078(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6760(void) {
+    func_0017f110();
+    return 2;
+}
+
+s32 func_001d6780(VmRec *vm) {
+    func_00135a10(vm->obj, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d67c8(VmRec *vm) {
+    func_00135a38(vm->obj, vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6810(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6858(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 3);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d68a0(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d68e8(VmRec *vm) {
+    func_002414a8(vm->stk[vm->sp], 0);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6930(void) {
+    D_002C5958 &= 0xF7FFFFFF;
+    return 2;
+}
+
+s32 func_001d6958(void) {
+    D_002C5958 |= 0x08000000;
+    return 2;
+}
+
+s32 func_001d6978(VmRec *vm) {
+    vm->stk[vm->sp] = func_00105ce0(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d69d0(VmRec *vm) {
+    func_00105d38(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d6a20(void) {
+    func_001118a0();
+    return 2;
+}
+
+s32 func_001d6a40(void) {
+    func_001118b0();
+    return 2;
+}
+
+/* Give item stk[sp-1] to party member stk[sp]: into a free slot of its
+ * x22[], else into the stock (at most 99; pushes 1 when it was full). */
+s32 func_001d6a60(VmRec *vm) {
+    s32 k = vm->stk[vm->sp];
+    s32 item = vm->stk[vm->sp - 1];
+    s32 r = 0;
+    s32 j;
+    for (j = 0; j < D_00304BE8->m[k].sub.x21; j++) {
+        if (D_00304BE8->m[k].sub.x22[j] == 0) {
+            D_00304BE8->m[k].sub.x22[j] = item;
+            r = 0;
+            break;
+        }
+    }
+    if (j == D_00304BE8->m[k].sub.x21) {
+        s32 v = D_00304BE8->items[item] + 1;
+        if (v >= 100) {
+            D_00304BE8->items[item] = 99;
+            r = 1;
+        } else {
+            D_00304BE8->items[item] = v;
+            r = 0;
+        }
+    }
+    vm->sp--;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+/* func_001d6b70 keeps h17's volatile views of D_002C5AD0 / D_002C5BB0 (the
+ * pieces' types, W29S70 / PadSt, have no fields at these offsets). */
+typedef struct { s32 f0; s32 f4; s32 f8; } S5AD0;
+typedef struct { s32 f0; s32 f4; s32 f8; u8 padc[0x24]; s32 a30[15]; s32 f6c; } S5BB0;
+extern volatile S5BB0 D_002C5BB0;
+#define D_002C5AD0V (*(volatile S5AD0 *)&D_002C5AD0)
+
+s32 func_001d6b70(VmRec *vm) {
+    if (!((s32)(D_0038CD00 >> 58) & 1)) return 4;
+    D_002C5AD0V.f8 = 0;
+    D_002C5AD0V.f4 = 0;
+    D_002C5BB0.f6c = 0;
+    D_002C5BB0.f4 = 0;
+    D_002C5BB0.f8 = 0;
+    D_002C5BB0.a30[0] = 0;
+    D_002C5BB0.a30[1] = 0;
+    D_002C5BB0.a30[2] = 0;
+    D_002C5BB0.a30[3] = 0;
+    D_002C5BB0.a30[4] = 0;
+    D_002C5BB0.a30[5] = 0;
+    D_002C5BB0.a30[6] = 0;
+    D_002C5BB0.a30[7] = 0;
+    D_002C5BB0.a30[8] = 0;
+    D_002C5BB0.a30[9] = 0;
+    D_002C5BB0.a30[10] = 0;
+    D_002C5BB0.a30[11] = 0;
+    D_002C5BB0.a30[12] = 0;
+    D_002C5BB0.a30[13] = 0;
+    D_002C5BB0.a30[14] = 0;
+    return 0;
+}
+
+s32 func_001d6bf8(void) {
+    D_002BD110 = 0;
+    return 2;
+}
+
+s32 func_001d6c08(void) {
+    D_002BD110 = 1;
+    return 2;
+}
+
+s32 func_001d6c20(void) {
+    D_00389C90.f3070.x |= 0x8000000000000000ULL >> 4;
+    return 2;
+}
+
+s32 func_001d6c48(void) {
+    D_00389C90.f3070.x &= ~(0x8000000000000000ULL >> 4);
+    return 2;
+}
+
+/* Remove every entity whose flag bits 37-38 are 2 (func_001d6c80), or
+ * whose kind is 300-350 (func_001d6cf0). */
+s32 func_001d6c80(void) {
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (((p->f370.flags >> 37) & 3) == 2) {
+            func_001248e8(p->x4);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d6cf0(VmRec *vm) {
+    struct VmObj *p;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if (func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) func_001248e8(p->x4);
+    }
+    return 2;
+}
+
+/* ---- 0x001d6d60-0x001d7678 ---- */
+
+s32 func_00141608(struct VmObj *, s32);
+s32 func_00131de0(s32, s32);
+void func_00124218(s32);
+s32 func_00125a00(s32);
+s32 func_001ef7b0(s32);
+s32 func_00112c20(s32);
+f32 func_001e9e58(f32 *, f32 *);
+s32 func_0014e510(s32);
+s32 func_001331d8(s32, s32, void *);
+
+s32 func_001d6d60(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00141608(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6db0(void) {
+    D_002C5958 &= ~0x800;
+    return 2;
+}
+
+s32 func_001d6dd0(void) {
+    D_002C5958 |= 0x800;
+    return 2;
+}
+
+s32 func_001d6df0(void) {
+    D_002C5958 &= ~0x200;
+    return 2;
+}
+
+s32 func_001d6e10(void) {
+    D_002C5958 |= 0x200;
+    return 2;
+}
+
+s32 func_001d6e30(void) {
+    D_002C5958 &= ~0x400;
+    return 2;
+}
+
+s32 func_001d6e50(void) {
+    D_002C5958 |= 0x400;
+    return 2;
+}
+
+/* Remove every entity func_00131de0 finds for stk[sp]. */
+s32 func_001d6e70(VmRec *vm) {
+    s32 i = -1;
+    while ((i = func_00131de0(i, vm->stk[vm->sp])) != -1) func_00124218(i);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6ef0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_00125a00(1);
+    return 2;
+}
+
+s32 func_001d6f38(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D010;
+    return 2;
+}
+
+s32 func_001d6f60(void) {
+    D_0038D010 = 0;
+    return 2;
+}
+
+s32 func_001d6f70(void) {
+    D_002C5958 |= 0x1000;
+    return 2;
+}
+
+s32 func_001d6f90(void) {
+    D_002C5958 &= ~0x1000;
+    return 2;
+}
+
+s32 func_001d6fb0(VmRec *vm) {
+    func_001ef7b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d6ff8(VmRec *vm) {
+    func_00112c20(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* Message 7 (func_001d7040) or 6 (func_001d7118) to every entity of kind
+ * 300-350 or 400-539. */
+s32 func_001d7040(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 7;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001d7118(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    m.type = 6;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            m.x = p->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+void func_001d71f0(void) {
+    D_00389C90.f3070.x &= ~0x1000000000000000ULL;
+}
+
+s32 func_001d7220(VmRec *vm) {
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7238(VmRec *vm) {
+    if ((s32)(D_0038CD00 >> 60) & 1) return 4;
+    return 2;
+}
+
+/* Message 39 with the point 20 below the entity. */
+s32 func_001d7258(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *o = vm->obj;
+    if (o) {
+        m.x = vm->x0;
+        m.type = 39;
+        m.val = 0;
+        m.v[0] = o->pos[0];
+        m.v[1] = o->pos[1] - 20.0f;
+        m.v[2] = o->pos[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d72e0(VmRec *vm) {
+    vm->fl.x |= 0x4000;
+    vm->f330 = (f32)vm->stk[vm->sp] * 2;
+    vm->sp--;
+    return 2;
+}
+
+/* Push the distance to the nearest entity of kind 300-350 or 400-539 (-1
+ * if none). */
+s32 func_001d7320(VmRec *vm) {
+    struct VmObj *p;
+    s32 found = 0;
+    f32 best = -1.0f;
+    f32 d;
+    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
+        if ((func_00123618(p->x4) >= 300 && func_00123618(p->x4) < 351) ||
+            (func_00123618(p->x4) >= 400 && func_00123618(p->x4) < 540)) {
+            if (!found) {
+                found = 1;
+                best = func_001e9e58(vm->obj->pos, p->pos);
+            } else {
+                d = func_001e9e58(vm->obj->pos, p->pos);
+                if (d < best) best = d;
+            }
+        }
+    }
+    vm->sp++;
+    vm->stk[vm->sp] = best;
+    return 2;
+}
+
+/* Give the entity a slot (free or its own) of the eight at 0x3384: snd and
+ * x10 (func_001d7438), or h (func_001d74b8).  Kept h17's view of the slots
+ * with obj as a pointer: a pointer store does not alias vm->sp (VmSlot's
+ * s32 obj loads sp after the store), and a cast of &e[i].obj folds the
+ * slot base into one constant. */
+typedef struct { struct VmObj *obj; s32 x4, snd, ret, x10, h; } VmSlotP;
+typedef struct { u8 pad0[0x3384]; VmSlotP e[8]; } VmMgrSlotP;
+#define SLOT(i) (((VmMgrSlotP *)&D_00389C90)->e[i])
+s32 func_001d7438(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (SLOT(i).obj == 0 || SLOT(i).obj == vm->obj) {
+            SLOT(i).obj = vm->obj;
+            SLOT(i).snd = vm->stk[vm->sp - 1];
+            SLOT(i).x10 = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d74b8(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if (SLOT(i).obj == 0 || SLOT(i).obj == vm->obj) {
+            SLOT(i).obj = vm->obj;
+            SLOT(i).h = vm->stk[vm->sp];
+            break;
+        }
+    }
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001d7520(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D0D4;
+    return 2;
+}
+
+s32 func_001d7548(VmRec *vm) {
+    vm->stk[vm->sp] = func_0014e510(vm->stk[vm->sp]);
+    return 2;
+}
+
+void func_001d75a0(void) {
+    D_00389C90.f3070.x &= ~0x2000000000000000ULL;
+}
+
+s32 func_001d75d0(VmRec *vm) {
+    if (func_001331d8(vm->stk[vm->sp - 1], vm->stk[vm->sp], func_001d75a0)) {
+        D_00389C90.f3070.x &= ~0x2000000000000000ULL;
+    } else {
+        D_00389C90.f3070.x |= 0x2000000000000000ULL;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+/* ---- 0x001d7678-0x001d8680 ---- */
+
+void func_0013c108(s32, s32);
+s32 func_0013c188(s32, s32);
+s32 func_00132fe0(s32);
+void func_00131f40(s32, void *);
+s32 func_001566a8(s32);
+s32 func_00156678(s32);
+
+s32 func_001d7678(VmRec *vm) {
+    func_0013c108(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d76c8(void) {
+    if ((s32)(D_0038CD00 >> 61) & 1) return 4;
+    return 2;
+}
+
+s32 func_001d76e8(VmRec *vm) {
+    if (func_0013c188(0, vm->stk[vm->sp]) == 0) {
+        vm->stk[vm->sp] = 0;
+    } else {
+        vm->stk[vm->sp] = func_00132fe0(vm->stk[vm->sp]);
+    }
+    return 2;
+}
+
+void func_001d7768(void) {
+    D_00389C90.f3070.x &= ~0x4000000000000000ULL;
+}
+
+s32 func_001d7798(VmRec *vm) {
+    if (func_0011e340(0) == 0) {
+        D_00389C90.f3070.x |= 0x4000000000000000ULL;
+        func_00131f40(vm->stk[vm->sp], func_001d7768);
+    } else {
+        return 4;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d7820(void) {
+    if ((s32)(D_0038CD00 >> 62) & 1) return 4;
+    return 2;
+}
+
+/* Set ret of the entity's slots to stk[sp]. */
+s32 func_001d7840(VmRec *vm) {
+    s32 i;
+    for (i = 0; i < 8; i++) {
+        if ((s32)vm->obj == D_00389C90.e[i].obj) {
+            D_00389C90.e[i].ret = vm->stk[vm->sp];
+        }
+    }
+    vm->sp--;
+    return 2;
+}
+
+/* func_001d7898 and func_001d7b88 are in vm_lib.nofill.c. */
+
+/* Save block 1's four lists at 0xa80 (10, 10, 10 and 50 bytes; 0 is a free
+ * entry). */
+typedef struct { u8 pad[0xa80]; u8 l0[10]; u8 l1[10]; u8 l2[10]; u8 l3[50]; } VmSave1;
+
+/* Free entry stk[sp] - 1 of list stk[sp-1]: if an earlier entry is free,
+ * nothing; else close the gaps and open one at that place. */
+#define D7EF8_BODY(B, N) \
+    for (i = 0; i < N; i++) { \
+        if (B[i] == 0 && vm->stk[vm->sp] - 1 >= i) { vm->sp -= 2; return 2; } \
+    } \
+    for (i = 0; i < N; i++) { \
+        if (B[i] == 0) { \
+            for (k = i; k < N - 1; k++) B[k] = B[k + 1]; \
+        } \
+    } \
+    for (i = 0; i < N; i++) { \
+        if (i == vm->stk[vm->sp] - 1) { \
+            for (k = N - 1; i < k; k--) B[k] = B[k - 1]; \
+            B[i] = 0; \
+            break; \
+        } \
+    } \
+    break;
+
+s32 func_001d7ef8(VmRec *vm) {
+    VmSave1 *r = (VmSave1 *)func_00232cc0(1);
+    s32 sp = vm->sp;
+    s32 i, k;
+
+    switch (vm->stk[sp - 1]) {
+    case 0: D7EF8_BODY(r->l0, 10)
+    case 1: D7EF8_BODY(r->l1, 10)
+    case 2: D7EF8_BODY(r->l2, 10)
+    case 3: D7EF8_BODY(r->l3, 50)
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Push the first free entry (1-based) of list stk[sp]. */
+s32 func_001d8400(VmRec *vm) {
+    VmSave1 *p = (VmSave1 *)func_00232cc0(1);
+    s32 i;
+    switch (vm->stk[vm->sp]) {
+    case 0:
+        for (i = 0; i < 10; i++) if (!p->l0[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 1:
+        for (i = 0; i < 10; i++) if (!p->l1[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 2:
+        for (i = 0; i < 10; i++) if (!p->l2[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    case 3:
+        for (i = 0; i < 50; i++) if (!p->l3[i]) { vm->stk[vm->sp] = i + 1; break; }
+        break;
+    }
+    return 2;
+}
+
+s32 func_001d85a8(VmRec *vm) {
+    func_001566a8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d85f0(VmRec *vm) {
+    func_00156678(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8638(void) {
+    D_002C5958 &= 0xFFFF7FFF;
+    return 2;
+}
+
+s32 func_001d8660(void) {
+    D_002C5958 |= 0x8000;
+    return 2;
+}
+
+/* ---- 0x001d8680-0x001d8f38 ---- */
+
+s32 func_001586d8(s32);
+s32 func_0013c250(s32);
+s32 func_0013c260(s32);
+s32 func_0013c1b8(s32);
+s32 func_00149eb8(s32);
+s32 func_00114800();
+s32 func_00114810();
+s32 func_00112e08();
+s32 func_00111090(void);
+s32 func_00111020(s32);
+s32 func_00111060();
+void func_001116b0(s32, s32);
+s32 func_001422b0(s32);
+void func_0013c2a0(s32, s32);
+s32 func_0013c2f0(s32);
+s32 func_00156c28(s32);
+void func_001054d0(s32, s32, s32);
+void func_00105710(s32, s32);
+void func_00105760(s32, s32);
+s32 func_001ee200();
+s32 func_001124c0();
+s32 func_001124d8();
+
+/* Message 40 to this VM (func_001d8680), or with no target (func_001d86e0). */
+s32 func_001d8680(VmRec *vm) {
+    VmMsg m;
+    m.type = 40;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d86e0(void) {
+    VmMsg m;
+    m.type = 40;
+    m.val = 0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d8738(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->x324;
+    return 2;
+}
+
+s32 func_001d8760(VmRec *vm) {
+    vm->stk[vm->sp] = func_001586d8(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d87b8(void) {
+    D_00389C90.f3078.x |= 1;
+    return 2;
+}
+
+s32 func_001d87d8(void) {
+    D_00389C90.f3078.x &= ~1;
+    D_0037A378 &= ~1;
+    D_002BBE00 = 1.0f;
+    D_002C5958 &= ~0x400;
+    return 2;
+}
+
+/* Remove the entities func_00131de0 finds for stk[sp] that exist. */
+s32 func_001d8838(VmRec *vm) {
+    s32 r = -1;
+    while ((r = func_00131de0(r, vm->stk[vm->sp])) != -1) {
+        if (func_00123488(r) != 0) func_001248e8(r);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d88c8(VmRec *vm) {
+    func_0013c250(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8910(VmRec *vm) {
+    func_0013c260(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8958(VmRec *vm) {
+    func_0013c1b8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d89a0(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(3, 1);
+    } else {
+        func_0012cac8(3, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8a00(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(4, 1);
+    } else {
+        func_0012cac8(4, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8a60(VmRec *vm) {
+    if (vm->stk[vm->sp] != 0) {
+        func_0012cac8(5, 1);
+    } else {
+        func_0012cac8(5, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8ac0(VmRec *vm) {
+    func_00149eb8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8b08(void) {
+    func_00114800();
+    return 2;
+}
+
+s32 func_001d8b28(void) {
+    func_00114810();
+    return 2;
+}
+
+s32 func_001d8b48(void) {
+    func_00112e08();
+    return 2;
+}
+
+s32 func_001d8b68(void) {
+    if (func_00111090() == 2) return 2;
+    return 4;
+}
+
+s32 func_001d8b98(VmRec *vm) {
+    func_00111020(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8be0(void) {
+    func_00111060();
+    return 2;
+}
+
+s32 func_001d8c00(void) {
+    if (func_00111090() != 4) return 4;
+    return 2;
+}
+
+s32 func_001d8c30(VmRec *vm) {
+    func_001116b0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8c80(VmRec *vm) {
+    func_001422b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8cc8(VmRec *vm) {
+    func_0013c2a0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8d18(VmRec *vm) {
+    vm->stk[vm->sp] = func_0013c2f0(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001d8d70(VmRec *vm) {
+    func_00156c28(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d8db8(VmRec *vm) {
+    func_001054d0(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d8e10(VmRec *vm) {
+    func_00105710(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8e60(VmRec *vm) {
+    func_00105760(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d8eb0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_001ee200();
+    return 2;
+}
+
+s32 func_001d8ef8(void) {
+    func_001124c0();
+    return 2;
+}
+
+s32 func_001d8f18(void) {
+    func_001124d8();
+    return 2;
+}
+
+/* ---- 0x001d8f38-0x001d9480 ---- */
+
+/* Step the camera tween func_001d9100 starts: D_002BC0F0 from c0 to c1
+ * over cdur. */
+void func_001d8f38(void) {
+    VmMgr *g = &D_00389C90;
+    f32 r, t;
+    t = g->ct + D_002BBDFC;
+    g->ct = t;
+    if (g->cdur < t) {
+        D_002BC0F0.camS = g->c1;
+        g->f3078.x &= ~2ULL;
+        return;
+    }
+    r = g->ct / g->cdur;
+    D_002BC0F0.camS.b[0] = g->c0.b[0] + (g->c1.b[0] - g->c0.b[0]) * r;
+    g->ct += D_002BBDFC;
+    D_002BC0F0.camS.b[1] = g->c0.b[1] + (g->c1.b[1] - g->c0.b[1]) * r;
+    D_002BC0F0.camS.b[2] = g->c0.b[2] + (g->c1.b[2] - g->c0.b[2]) * r;
+    D_002BC0F0.camS.a[0] = g->c0.a[0] + (g->c1.a[0] - g->c0.a[0]) * r;
+    D_002BC0F0.camS.a[1] = g->c0.a[1] + (g->c1.a[1] - g->c0.a[1]) * r;
+    D_002BC0F0.camS.a[2] = g->c0.a[2] + (g->c1.a[2] - g->c0.a[2]) * r;
+    D_002BC0F0.camS.a[3] = g->c0.a[3] + (g->c1.a[3] - g->c0.a[3]) * r;
+    if (g->cdur < g->ct) {
+        D_002BC0F0.camS = g->c1;
+        g->f3078.x &= ~2ULL;
+    }
+}
+
+/* Start a camera tween to stk[sp-6..sp] over stk[sp-7] frames. */
+s32 func_001d9100(VmRec *vm) {
+    VmMgr *g = &D_00389C90;
+    g->c1 = g->c0 = D_002BC0F0.camS;
+    g->ct = 0.0f;
+    g->cdur = vm->stk[vm->sp - 7] * 2.0f;
+    g->c1.b[0] = vm->stk[vm->sp - 6];
+    g->c1.b[1] = vm->stk[vm->sp - 5];
+    g->c1.b[2] = vm->stk[vm->sp - 4];
+    g->c1.a[0] = vm->stk[vm->sp - 2];
+    g->c1.a[1] = vm->stk[vm->sp - 3];
+    g->c1.a[2] = vm->stk[vm->sp - 1];
+    g->c1.a[3] = vm->stk[vm->sp];
+    if (g->cdur < 2.0f) {
+        D_002BC0F0.camS.b[0] = g->c1.b[0];
+        D_002BC0F0.camS.b[1] = g->c1.b[1];
+        D_002BC0F0.camS.b[2] = g->c1.b[2];
+        D_002BC0F0.camS.a[0] = g->c1.a[0];
+        D_002BC0F0.camS.a[1] = g->c1.a[1];
+        D_002BC0F0.camS.a[2] = g->c1.a[2];
+        D_002BC0F0.camS.a[3] = g->c1.a[3];
+        g->f3078.x &= ~2ULL;
+    } else {
+        g->f3078.x |= 2;
+    }
+    vm->sp -= 8;
+    return 2;
+}
+
+/* Start a tween from D_002BC0F0 to D_002BC0C0 over stk[sp] frames.  Kept
+ * s8_w1's view of D_00389C90 (the camera settings as B48 unions, the flags
+ * as a union): the unions alias vm->sp, which keeps it after the copies;
+ * through VmMgr (a cast of &c0 / &c1) the copy addresses fold into
+ * constants. */
+typedef struct {
+    u8 pad0[0x3078];
+    union { u64 x; s32 i[2]; } flags;
+    u8 pad3080[0x3460 - 0x3080];
+    f32 cdur;
+    f32 ct;
+    u8 pad3468[8];
+    B48_2BC0C0 c0;
+    B48_2BC0C0 c1;
+} VmMgrB48;
+#define MGRB (*(VmMgrB48 *)&D_00389C90)
+
+s32 func_001d9268(VmRec *vm) {
+    f32 x;
+    s32 i;
+    MGRB.c1 = D_002BC0C0.b48;
+    MGRB.c0 = D_002BC0F0.b48;
+    i = vm->sp;
+    MGRB.ct = 0;
+    x = vm->stk[i] * 2.0f;
+    MGRB.flags.x |= 2;
+    vm->sp--;
+    MGRB.cdur = x;
+    return 2;
+}
+
+/* func_001d9348 is in vm_lib.nofill.c. */
+
+/* ---- 0x001d9480-0x001da088 ---- */
+
+s32 func_001118f0();
+s32 func_0011c788();
+void func_00103810(void);
+void func_00103280(f32, f32, f32, f32);
+s32 func_00103828();
+void func_00108650(s32, s32);
+void func_001086b8(s32, s32);
+void func_00144eb0(s32, f32 *);
+void func_00245280(s32, s32);
+void func_0013c8c8(s32, s32);
+s32 func_0013c3a8(s32);
+s32 func_001ba2f8(s32);
+
+/* Start a move to stk[sp-2..sp] over stk[sp-3] frames (func_001d9348
+ * steps it). */
+s32 func_001d9480(VmRec *vm) {
+    vm->fl.x |= 0x800;
+    vm->f24 = (f32)vm->stk[vm->sp - 3] * 2.0f;
+    vm->f14[0] = vm->stk[vm->sp - 2];
+    vm->f14[1] = vm->stk[vm->sp - 1];
+    vm->f14[2] = vm->stk[vm->sp];
+    vm->sp -= 4;
+    vm->p[0] = vm->obj->pos[0];
+    vm->p[1] = vm->obj->pos[1];
+    vm->p[2] = vm->obj->pos[2];
+    vm->f28 = 0;
+    return 2;
+}
+
+/* func_001d9510 is in vm_lib.nostrict.c. */
+
+/* Start a turn by stk[sp-2..sp] degrees over stk[sp-3] frames
+ * (func_001d9510 steps it). */
+s32 func_001d95f0(VmRec *vm) {
+    vm->fl.x |= 0x1000;
+    vm->f44 = (f32)vm->stk[vm->sp - 3] * 2;
+    if (vm->obj->f370.b.b44 == 1) {
+        vm->f2c[0] = vm->obj->rot[0];
+        vm->f2c[1] = vm->obj->rot[1];
+        vm->f2c[2] = vm->obj->rot[2];
+    } else {
+        vm->f2c[0] = 0;
+        vm->f2c[1] = vm->obj->f3c;
+        vm->f2c[2] = 0;
+    }
+    vm->f38[0] = vm->f2c[0] + vm->stk[vm->sp - 2] * 3.1415928f / 180.0f;
+    vm->f38[1] = vm->f2c[1] + vm->stk[vm->sp - 1] * 3.1415928f / 180.0f;
+    vm->f38[2] = vm->f2c[2] + vm->stk[vm->sp] * 3.1415928f / 180.0f;
+    vm->obj->f370.b.b44 = 1;
+    vm->f48 = 0;
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9728(void) {
+    func_001118f0();
+    func_0011c788();
+    return 6;
+}
+
+/* sp read as a plain s32 at vm + 0x180 (the auto file's form): as a
+ * struct field, gcc 2.96 assumes the scalar D_0038D0E0 cannot alias it
+ * (MEM_IN_STRUCT_P vs a fixed scalar) and keeps sp in a register; the
+ * original reloads it after the store. */
+#define VM_SP(vm) (*(s32 *)((s8 *)(vm) + 0x180))
+s32 func_001d9750(VmRec *vm) {
+    D_0038D0E0 = vm->stk[VM_SP(vm)];
+    VM_SP(vm) = VM_SP(vm) - 1;
+    return 2;
+}
+
+s32 func_001d9780(VmRec *vm) {
+    func_00103810();
+    func_00103280(vm->stk[vm->sp - 3] / 100.0f, vm->stk[vm->sp - 2] / 100.0f, vm->stk[vm->sp - 1] / 100.0f, vm->stk[vm->sp] / 100.0f);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9830(void) {
+    func_00103828();
+    return 2;
+}
+
+s32 func_001d9850(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->obj->f70;
+    return 2;
+}
+
+s32 func_001d9880(VmRec *vm) {
+    func_00108650(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d98d0(VmRec *vm) {
+    func_001086b8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+void func_001d9920(void) {
+    D_00389C90.f3070.x &= ~0x200000000000ULL;
+}
+
+s32 func_001d9950(VmRec *vm) {
+    D_00377344(vm->stk[vm->sp - 1], vm->stk[vm->sp], func_001d9920);
+    D_00389C90.f3070.x |= 0x200000000000ULL;
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d99d0(void) {
+    if ((s32)(D_0038CD00 >> 45) & 1) return 4;
+    return 2;
+}
+
+void func_001d99f0(void) {
+}
+
+s32 func_001d99f8(VmRec *vm) {
+    D_0037733C(vm->stk[vm->sp], func_001d99f0);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9a50(VmRec *vm) {
+    D_00377340(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9aa0(VmRec *vm) {
+    D_00377348(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9af8(VmRec *vm) {
+    D_0037734C(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d9b58(VmRec *vm) {
+    D_00377350(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9bb0(VmRec *vm) {
+    D_00377354(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9c08(VmRec *vm) {
+    D_00377358(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9c60(VmRec *vm) {
+    D_0037735C(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9cb0(VmRec *vm) {
+    f32 v[3];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00144eb0(vm->stk[vm->sp - 3], v);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001d9d30(VmRec *vm) {
+    vm->sp++;
+    return 2;
+}
+
+/* The wait func_001d9d90 starts. */
+s32 func_001d9d48(void) {
+    if (!((s32)(D_0038CD08 >> 2) & 1)) return 4;
+    func_00245280(1, (*(s32 *)&D_002E26A0));
+    return 0;
+}
+
+s32 func_001d9d90(void) {
+    func_0011ef10(50002, func_001d9d48);
+    D_00389C90.f3078.x |= 4;
+    return 2;
+}
+
+s32 func_001d9dd0(void) {
+    D_00389C90.f3078.x &= ~4;
+    return 2;
+}
+
+s32 func_001d9df0(VmRec *vm) {
+    D_00377360(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9e40(VmRec *vm) {
+    func_0013c8c8(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9e90(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB4 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9eb8(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAB8 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9ee0(VmRec *vm) {
+    D_002BBABC = vm->stk[vm->sp - 1];
+    D_002BBAC0 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d9f20(VmRec *vm) {
+    D_002BBAD0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp - 1];
+    D_002BBAE0[vm->stk[vm->sp - 2]] = vm->stk[vm->sp];
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001d9f88(VmRec *vm) {
+    s32 sp = vm->sp;
+    D_002BBAC4 = vm->stk[sp];
+    vm->sp = sp - 1;
+    return 2;
+}
+
+s32 func_001d9fb0(VmRec *vm) {
+    func_0013c3a8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d9ff8(void) {
+    (*(volatile s32 *)&D_0037A378) &= ~4;
+    D_00389C90.f3070.x &= ~0x2000000000ULL;
+    return 2;
+}
+
+s32 func_001da040(VmRec *vm) {
+    func_001ba2f8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* ---- 0x001da088-0x001da6d0 ---- */
+
+void func_00141218(struct VmObj *);
+s32 func_002394f8(void);
+extern s32 D_003F6E24;
+typedef struct { u16 a:4; u16 b:4; u16 c:8; } VmB16;
+VmB16 *func_00147778(s32);
+void func_0013c9e0(s32, s32);
+s32 func_00111660(s32, s32);
+void func_00105c70(s32, s32 *);
+s32 func_00142388(f32 *, void *);
+void func_00142470(struct VmObj *, void *);
+
+s32 func_001da088(VmRec *vm) {
+    func_00141218(func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da0e8(void) {
+    if (D_002C595A & 1) return 4;
+    return 2;
+}
+
+s32 func_001da108(void) {
+    if (D_002C5958 & 0x6000) return 4;
+    return 2;
+}
+
+s32 func_001da128(VmRec *vm) {
+    D_00377364(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da178(void) {
+    return func_002394f8() ? 4 : 2;
+}
+
+s32 func_001da1a8(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_003F6E24;
+    return 2;
+}
+
+s32 func_001da1d0(VmRec *vm) {
+    VmB16 *p = func_00147778(vm->stk[vm->sp]);
+    switch (p->a) {
+    case 0:
+        func_0013c9e0(p->c, p->b);
+        break;
+    case 1:
+        func_0013c8c8(p->c, p->b);
+        break;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001da260(VmRec *vm) {
+    s32 a = vm->stk[vm->sp - 1];
+    s32 b = vm->stk[vm->sp];
+    vm->sp--;
+    vm->stk[vm->sp] = func_00111660(a, b);
+    return 2;
+}
+
+/* Message 23 with the point func_00105c70 gives for stk[sp-1] (in 1/128). */
+s32 func_001da2c8(VmRec *vm) {
+    VmMsg m;
+    s32 buf[3];
+    func_00105c70(vm->stk[vm->sp - 1], buf);
+    m.type = 23;
+    m.v[0] = buf[0] * 0.0078125f;
+    m.val = (u32)vm->stk[vm->sp];
+    m.v[1] = buf[1] * 0.0078125f;
+    m.v[2] = buf[2] * 0.0078125f;
+    m.x = vm->x0;
+    m.v[3] = vm->obj->fac;
+    func_001c4640(&m);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da3b8(VmRec *vm) {
+    W606Mem_304be8 *e = D_00304BE8->m;
+    e += vm->stk[vm->sp];
+    vm->stk[vm->sp] = e->sub.lv;
+    return 2;
+}
+
+/* Component 0 / 1 / 2 of what func_00142388 gives for the point
+ * stk[sp-2..sp]. */
+s32 func_001da400(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[0];
+    return 2;
+}
+
+s32 func_001da490(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[1];
+    return 2;
+}
+
+s32 func_001da520(VmRec *vm) {
+    f32 v[3];
+    s32 o[4];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, o);
+    vm->sp -= 2;
+    vm->stk[vm->sp] = o[2];
+    return 2;
+}
+
+s32 func_001da5b0(VmRec *vm) {
+    s32 v[3];
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    if (vm->obj) func_00142470(vm->obj, v);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001da628(VmRec *vm) {
+    f32 v[4];
+    f32 r[4];
+    struct VmObj *o;
+    v[0] = vm->stk[vm->sp - 2];
+    v[1] = vm->stk[vm->sp - 1];
+    v[2] = vm->stk[vm->sp];
+    func_00142388(v, r);
+    o = vm->obj;
+    if (o) {
+        func_00142470(o, r);
+    }
+    vm->sp -= 3;
+    return 2;
+}
+
+/* ---- 0x001da6d0-0x001db080 ---- */
+
+void func_00131c78(s32, s32);
+s32 func_0014efe0(struct VmObj *, s32);
+s32 func_001ef7a0();
+s32 func_00157818(struct VmObj *, s32);
+s32 func_00149c80(s32, void *);
+s32 func_001ec570(s32, s32);
+s32 func_00112230();
+typedef struct { u8 pad0[2]; u8 f2; } VmP147840;
+VmP147840 *func_00147840(s32);
+void func_00112150(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
+extern s32 D_002BCDE8;
+extern s32 D_002BCC20;
+extern s32 D_002BCC1C;
+
+s32 func_001da6d0(VmRec *vm) {
+    vm->fl.x |= 0x8000;
+    vm->f330 = (f32)vm->stk[vm->sp - 3] * 2;
+    vm->f340[0] = vm->stk[vm->sp - 2];
+    vm->f340[1] = vm->stk[vm->sp - 1];
+    vm->f340[2] = vm->stk[vm->sp];
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001da740(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = func_0014efe0(o, vm->stk[vm->sp]);
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001da7b8(VmRec *vm) {
+    func_00131c78(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da808(VmRec *vm) {
+    D_00377368(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da860(VmRec *vm) {
+    D_0037736C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da8b8(VmRec *vm) {
+    D_00377370(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da910(VmRec *vm) {
+    D_00377378(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001da968(VmRec *vm) {
+    VmMsg m;
+    m.type = 41;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    func_001c4640(&m);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001da9f0(void) {
+    D_002BCDE8 = 0;
+    return 2;
+}
+
+s32 func_001daa00(void) {
+    D_002BCDE8 = 1;
+    return 2;
+}
+
+/* Map func_00147840(stk[sp])'s kind to 0-6 (-1 for others). */
+s32 func_001daa18(VmRec *vm) {
+    s32 r = -1;
+    switch (func_00147840(vm->stk[vm->sp])->f2) {
+    case 0: r = 0; break;
+    case 12: r = 1; break;
+    case 13: r = 2; break;
+    case 2: r = 4; break;
+    case 3: r = 5; break;
+    case 4: r = 6; break;
+    case 1: r = 3; break;
+    }
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+s32 func_001daad8(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_001ef7a0();
+    return 2;
+}
+
+s32 func_001dab20(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 4) & 1) return 4;
+    return 2;
+}
+
+s32 func_001dab48(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00157818(o, vm->stk[vm->sp]);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001dab98(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002BCC20;
+    return 2;
+}
+
+s32 func_001dabc0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002BCC1C;
+    return 2;
+}
+
+s32 func_001dabe8(VmRec *vm) {
+    D_0037737C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dac40(VmRec *vm) {
+    D_00377380(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+void func_001daca8(void) {
+    D_00389C90.f3078.x &= ~0x20;
+}
+
+s32 func_001dacc8(VmRec *vm) {
+    if (func_00149c80(vm->stk[vm->sp], func_001daca8) != 0) {
+        D_00389C90.f3078.x |= 0x20;
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001dad30(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 5) & 1) return 4;
+    return 2;
+}
+
+s32 func_001dad58(VmRec *vm) {
+    switch (vm->stk[vm->sp - 1]) {
+    case 0: func_00112150(7, 1, 1, 1, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
+    case 1: func_00112150(8, 1, 1, 0, vm->stk[vm->sp], 0, 1, 0, 295, 1); break;
+    case 2: func_00112150(9, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 151, 1); break;
+    case 3: func_00112150(2, 1, 1, 1, vm->stk[vm->sp], 0, 2, 0, 295, 1); break;
+    case 4: func_00112150(2, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 15, 1); break;
+    case 5: func_00112150(0, 0, 0, 1, vm->stk[vm->sp], 0, 2, 0, 0, 1); break;
+    case 6: func_00112150(3, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
+    case 7: func_00112150(4, 1, 0, 1, vm->stk[vm->sp], 0, 3, 0, 295, 0); break;
+    case 8: func_00112150(4, 1, 0, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
+    case 9: func_00112150(5, 1, 1, 1, vm->stk[vm->sp], 0, 3, 0, 295, 1); break;
+    case 10: func_00112150(5, 1, 1, 0, vm->stk[vm->sp], 0, 0, 0, 295, 1); break;
+    case 11: func_00112150(6, 0, 0, 0, vm->stk[vm->sp], 1, 3, 0, 295, 1); break;
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db018(VmRec *vm) {
+    func_001ec570(vm->stk[vm->sp], 1);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001db060(void) {
+    func_00112230();
+    return 2;
+}
+
+/* ---- 0x001db080-0x001dbae0 ---- */
+
+s32 func_001bad78(s32);
+
+s32 func_001db080(VmRec *vm) {
+    D_00377384(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db0d0(VmRec *vm) {
+    if (D_00377388(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp])) {
+        vm->sp -= 3;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001db140(VmRec *vm) {
+    D_0037738C(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db198(VmRec *vm) {
+    D_0037739C(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db208(VmRec *vm) {
+    D_003773A0(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db278(VmRec *vm) {
+    D_00377390(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001db2e0(VmRec *vm) {
+    D_00377394(vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 4;
+    return 2;
+}
+
+s32 func_001db348(VmRec *vm) {
+    D_00377398(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db3b8(VmRec *vm) {
+    D_003773A4(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db408(VmRec *vm) {
+    D_003773A8(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db458(VmRec *vm) {
+    D_003773AC(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db4a8(VmRec *vm) {
+    D_003773B0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001db500(VmRec *vm) {
+    D_003773B4(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db550(VmRec *vm) {
+    D_003773B8(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001db5a0(void) {
+    D_0037A378 |= 0x10;
+    return 2;
+}
+
+s32 func_001db5c0(void) {
+    D_0037A378 &= ~0x10;
+    return 2;
+}
+
+s32 func_001db5e0(void) {
+    func_001ec7c0(0);
+    return 2;
+}
+
+s32 func_001db600(VmRec *vm) {
+    D_00304BE8->m[vm->stk[vm->sp - 1]].sub.x32 = vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Put item stk[sp] into the first free one of member stk[sp-1]'s x18
+ * slots x19[] (s7_w5's address arithmetic: &m[k].sub.x19[j] is 2 words
+ * longer). */
+s32 func_001db658(VmRec *vm) {
+    s32 i = vm->sp;
+    s32 j;
+    for (j = 0; j < D_00304BE8->m[vm->stk[i - 1]].sub.x18; j++) {
+        u8 *p = (u8 *)((u32)(j + vm->stk[i - 1] * 0x74) + (u32)D_00304BE8) + 29;
+        if (*p == 0) { *p = vm->stk[i]; break; }
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+/* Clear the flag bit (0x80) of the first entry whose 7-bit id is stk[sp]
+ * in list599 (stk[sp-1] == 11) or member stk[sp-1]'s name[].  Its shape
+ * (s12w5's notes):
+ * - `for (;;)` with the exits at the bottom: expand_end_loop rotates it (the `!X` break is the
+ *   only exit in its 30-insn window), the leftover `jump start` block takes gcse's PRE insertion
+ *   of the list599[j] / name[j] addresses, so loop.c calls the loop phony and hoists nothing (stk[sp], D address).
+ * - the cleared value as `(u8)(b << 1) >> 1`: a separate pseudo that combine turns into a copy
+ *   of the compare value, which makes `b & 0x7f` block-local (4 qtys: qsort order in local-alloc;
+ *   with 3 qtys local-alloc's hand-sort gives the D chain v0) and gives loop 2 its `move v0,v1`. */
+s32 func_001db718(VmRec *vm) {
+    s32 j;
+    u8 b;
+
+    if (vm->stk[vm->sp - 1] == 11) {
+        j = 0;
+        if (D_00304BE8->list599[j] & 0x7f) {
+            for (;;) {
+                b = D_00304BE8->list599[j];
+                if ((b & 0x7f) == vm->stk[vm->sp] && (b & 0x80)) {
+                    D_00304BE8->list599[j] = (u8)(b << 1) >> 1;
+                    goto end;
+                }
+                if (++j >= 48) goto end;
+                if (!(D_00304BE8->list599[j] & 0x7f)) break;
+            }
+        }
+    } else {
+        Sub_304be8 *e = &D_00304BE8->m[vm->stk[vm->sp - 1]].sub;
+        j = 0;
+        if (e->name[j] & 0x7f) {
+            for (;;) {
+                b = e->name[j];
+                if ((b & 0x7f) == vm->stk[vm->sp] && (b & 0x80)) {
+                    e->name[j] = (u8)(b << 1) >> 1;
+                    goto end;
+                }
+                if (++j >= 48) goto end;
+                if (!(e->name[j] & 0x7f)) break;
+            }
+        }
+    }
+end:
+    vm->sp -= 2;
+    return 2;
+}
+
+
+s32 func_001db888(VmRec *vm) {
+    vm->stk[vm->sp] = func_001bad78(vm->stk[vm->sp]);
+    return 2;
+}
+
+s32 func_001db8e0(VmRec *vm) {
+    s32 r = D_003773C0(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 1;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+s32 func_001db950(VmRec *vm) {
+    D_003773BC(vm->stk[vm->sp - 4], vm->stk[vm->sp - 3], vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001db9c0(VmRec *vm) {
+    if (D_003773C4()) return 2;
+    return 4;
+}
+
+s32 func_001db9f8(VmRec *vm) {
+    vm->stk[vm->sp] = *(u16 *)((s8 *)D_00304BE8 + vm->stk[vm->sp] * 2 + 0x580);
+    return 2;
+}
+
+/* Push the sum of cnt[0..50]. */
+s32 func_001dba30(VmRec *vm) {
+    s32 i = 50, n = 0;
+    u16 *p = D_00304BE8->cnt;
+    do {
+        n += *p++;
+        i--;
+    } while (i >= 0);
+    vm->sp++;
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001dba88(VmRec *vm) {
+    D_003773CC(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+/* ---- 0x001dbae0-0x001dcad0 ---- */
+
+void func_0011ea10();
+void func_001763f0(s32);
+s32 func_0013bf90(s32);
+s32 func_001259b0(s32);
+void func_001ba358(s32, s32);
+s32 func_001f1e98(s32, s32, s32, s32, s32);
+s32 func_001f2d68(s32, s32, s32, s32, s32, u16, s32, s32);
+s32 func_0013bf68();
+s32 func_0022dee0(s32);
+s32 func_001c1df8(void);
+s32 func_002193f0(void);
+s32 func_0021add8();
+extern s32 D_002BCA04;
+extern s32 D_0038D160;
+extern s32 D_002B6474;
+extern s32 D_003F76B8;
+
+s32 func_001dbae0(void) {
+    D_002C5958 |= 0x20;
+    return 2;
+}
+
+s32 func_001dbb00(void) {
+    D_002C5958 &= ~0x20;
+    return 2;
+}
+
+s32 func_001dbb20(void) {
+    D_00389C90.f3078.x &= ~0x80;
+    return 2;
+}
+
+s32 func_001dbb40(void) {
+    D_00389C90.f3078.x |= 0x80;
+    return 2;
+}
+
+s32 func_001dbb60(VmRec *vm) {
+    s32 sp = vm->sp;
+    if (D_002BCA04 & vm->stk[sp]) {
+        vm->sp = sp - 1;
+        return 2;
+    }
+    return 4;
+}
+
+s32 func_001dbba0(VmRec *vm) {
+    D_003773D0(vm->stk[vm->sp]);
+    vm->sp -= 1;
+    return 2;
+}
+
+s32 func_001dbbf0(void) {
+    D_002C5958 |= 0x200000;
+    return 2;
+}
+
+s32 func_001dbc10(void) {
+    D_002C5958 &= 0xFFDFFFFF;
+    return 2;
+}
+
+s32 func_001dbc38(VmRec *vm) {
+    D_003773D4(vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dbc90(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038D160;
+    return 2;
+}
+
+void func_001dbcb8(void) {
+    D_00389C90.f3078.x &= ~0x100;
+}
+
+s32 func_001dbcd8(VmRec *vm) {
+    D_00389C90.f3078.x |= 0x100;
+    func_0011ea10(func_001dbcb8, D_00F20000);
+    return 2;
+}
+
+/* The auto file's call passes the third argument as a u64 (h19's
+ * func_001dbcd8 passes two), so func_0011ea10 is unprototyped here. */
+s32 func_001dbd20(void) {
+    D_00389C90.f3078.x |= 0x100;
+    ((void (*)(void *, void *, u64))func_0011ea10)(func_001dbcb8, &D_003DABD4, 0x100);
+    return 2;
+}
+
+s32 func_001dbd68(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 8) & 1) return 4;
+    return 2;
+}
+
+void func_001dbd90(s32 a0, s32 a1, s32 a2) {
+    func_001763f0(a2);
+    D_00389C90.f3078.x &= ~0x200;
+}
+
+/* func_001dbdc8 is in vm_lib.nostrict.c. */
+
+s32 func_001dbe50(VmRec *vm) {
+    if ((s32)(D_0038CD08 >> 9) & 1) return 4;
+    return 2;
+}
+
+/* Member stk[sp]'s x36 (low byte). */
+s32 func_001dbe78(VmRec *vm) {
+    vm->stk[vm->sp] = *((u8 *)D_00304BE8 + vm->stk[vm->sp] * 0x74 + 0x36);
+    return 2;
+}
+
+s32 func_001dbec0(VmRec *vm) {
+    D_003773D8(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+s32 func_001dbf20(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        if (vm->obj->x0 & 0x4000) vm->stk[vm->sp] = 1;
+        else vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001dbf68(VmRec *vm) {
+    vm->fl.x |= 4;
+    vm->x2f4 = (f32)vm->stk[vm->sp] * 2 / 100.0f;
+    vm->sp -= 1;
+    return 6;
+}
+
+s32 func_001dbfb8(VmRec *vm) {
+    func_0013bf90(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* Message 44: colour stk[sp-4..sp-2] / 255, stk[sp-1] / 128. */
+s32 func_001dc000(VmRec *vm) {
+    VmMsg m;
+    m.type = 44;
+    m.val = (u32)vm->stk[vm->sp];
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 4] / 255.0f;
+    m.v[1] = vm->stk[vm->sp - 3] / 255.0f;
+    m.v[2] = vm->stk[vm->sp - 2] / 255.0f;
+    m.v[3] = vm->stk[vm->sp - 1] * 0.0078125f;
+    func_001c4640(&m);
+    vm->sp -= 5;
+    return 2;
+}
+
+s32 func_001dc100(void) {
+    func_001259b0(1);
+    return 2;
+}
+
+s32 func_001dc120(void) {
+    func_001259b0(0);
+    return 2;
+}
+
+s32 func_001dc140(void) {
+    Tbl55 t = D_004906D0;
+    u32 i;
+    for (i = 0; i < 55; i++) {
+        func_001ba358(t.a[i], 99);
+    }
+    return 2;
+}
+
+/* D_003773E8 gets stk[sp] and vm + 4 sp (the auto file's form). */
+s32 func_001dc280(VmRec *vm) {
+    s8 *p = (s8 *)(vm->sp * 4 + (s32)vm);
+    if (!(D_003773E8(*(s32 *)(p + 0x184), p) != 0)) {
+        return 4;
+    }
+    vm->sp = vm->sp - 1;
+    return 2;
+}
+
+s32 func_001dc2e0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002B6474;
+    return 2;
+}
+
+s32 func_001dc308(VmRec *vm) {
+    s8 *p = func_00232cc0(1);
+    vm->sp++;
+    vm->stk[vm->sp] = (*(u32 *)(p + 0xdc4) >> 4) & 1;
+    return 2;
+}
+
+s32 func_001dc358(VmRec *vm) {
+    if (D_003773C8(vm->stk[vm->sp - 1], vm->stk[vm->sp])) {
+        vm->sp -= 2;
+        return 2;
+    }
+    return 4;
+}
+
+/* Message 27 (func_001dc3c0) or 28 (func_001dc470) to every entity whose
+ * flag bits 37-38 are 2. */
+s32 func_001dc3c0(void) {
+    VmMsg m;
+    struct VmObj *o;
+    m.type = 27;
+    m.val = 0;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.v[3] = 1.0f;
+    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
+        if (o->f370.k.kind == 2) {
+            m.x = o->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001dc470(void) {
+    VmMsg m;
+    struct VmObj *o;
+    m.type = 28;
+    m.val = 0;
+    m.v[0] = 0;
+    m.v[1] = 0;
+    m.v[2] = 0;
+    m.v[3] = 1.0f;
+    for (o = func_001230a0(0); o; o = func_001230a0(o)) {
+        if (o->f370.k.kind == 2) {
+            m.x = o->x4;
+            func_001c4640(&m);
+        }
+    }
+    return 2;
+}
+
+s32 func_001dc520(VmRec *vm) {
+    D_00377374(vm->stk[vm->sp - 2], vm->stk[vm->sp - 1], vm->stk[vm->sp]);
+    vm->sp -= 3;
+    return 2;
+}
+
+/* The counters screen func_001dc7c0 shows: labels 0x1af-0x1b6 and the
+ * save's u16 counters at 0x84e .. 0x866 (in its pad). */
+#define SAVE_U16(off) (*(u16 *)((s8 *)D_00304BE8 + (off)))
+s32 func_001dc580(void) {
+    func_001f1e98(0x80FFFFFF, 0x46, 0x14, 0x1AF, 0x10);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x28, 0x1B0, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x3D, SAVE_U16(0x856), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x50, 0x1B1, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x65, SAVE_U16(0x866), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x78, 0x1B2, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x8D, SAVE_U16(0x85C), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xA0, 0x1B3, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0xB5, SAVE_U16(0x862), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xC8, 0x1B4, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0xDD, SAVE_U16(0x860), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0xF0, 0x1B5, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x105, SAVE_U16(0x864), 0x10, 0x80FFFFFF);
+    func_001f1e98(0x80FFFFFF, 0xF, 0x118, 0x1B6, 0x10);
+    func_001f2d68(1, 0xA, 0, 0xF2, 0x12D, SAVE_U16(0x84E), 0x10, 0x80FFFFFF);
+    return 0;
+}
+
+s32 func_001dc7c0(void) {
+    if (func_0013bf68() == 1) {
+        func_0011ef10(190001, (s32 (*)(void))func_001dc580);
+    }
+    return 2;
+}
+
+s32 func_001dc800(VmRec *vm) {
+    s32 r;
+    vm->sp++;
+    r = func_0013bf68();
+    if (r == 1) {
+        vm->stk[vm->sp] = r;
+        return 2;
+    }
+    vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+s32 func_001dc868(VmRec *vm) {
+    vm->sp++;
+    if (!func_002193f0()) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+/* Set (stk[sp] 1) or clear (0) flag stk[sp-1] (0-127) of D_0037A178,
+ * most significant bit first; func_001dc9a0 reads one. */
+s32 func_001dc8c8(VmRec *vm) {
+    s32 id = vm->stk[vm->sp - 1];
+    s32 v, q, b;
+    if (id < 0 || id >= 128) {
+        vm->sp -= 2;
+        return 2;
+    }
+    v = vm->stk[vm->sp];
+    if (v < 0 || v >= 2) {
+        vm->sp -= 2;
+        return 2;
+    }
+    q = id / 32;
+    b = 31 - (id - q * 32);
+    if (v) {
+        D_0037A178[q] |= 1 << b;
+    } else {
+        D_0037A178[q] &= ~(1 << b);
+    }
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001dc9a0(VmRec *vm) {
+    if ((u32)vm->stk[vm->sp] >= 128) return 2;
+    vm->stk[vm->sp] = (D_0037A178[vm->stk[vm->sp] / 32] >> (31 - vm->stk[vm->sp] % 32)) & 1;
+    return 2;
+}
+
+s32 func_001dca00(void) {
+    func_0022dee0(0xFFFF);
+    func_0011ef10(50001, func_001c1df8);
+    D_00389C90.f3078.x |= 0x1000;
+    return 6;
+}
+
+s32 func_001dca48(VmRec *vm) {
+    vm->sp++;
+    if (!D_003F76B8) vm->stk[vm->sp] = 1;
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+/* Not a table entry, but a library function like the others (push
+ * func_0021add8()), the last before the dispatcher. */
+s32 func_001dca88(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = func_0021add8();
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 
-/* A library function: takes the VM, returns the handler result. */
-typedef s32 (*VmLibFn)();
 
 s32 func_001c6d08();
 s32 func_001c71e8();
