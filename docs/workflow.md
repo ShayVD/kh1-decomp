@@ -1072,3 +1072,15 @@ found that the next session needs:
   0xdd8-byte save record).
 - **cover_check reads only .c files:** a sized extern moved into a header changes float_covered.txt. Keep sized
   externs in the .c files (wave.h holds types only).
+
+## Session 36: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only, no boot test. Nothing new floats: docs/float-untested.md
+  has a session 36 row with no names.
+- **Modules** (docs/modules.md "Session 36"): 0x001ec7c0-0x001f0000 (171 functions, 4 commits) into
+  src/sound/snd_rpc.c (the IOP sound driver's RPC client: platform code), src/util/util*.c, src/game/playtime*.c,
+  src/game/gamedata.c and src/text/text*.c (continues after 0x001f0000). 27 files deleted, every
+  src/auto/text_001e0000*.c among them; objdiff units 860 -> 841. No workers.
+- **Types:** EvVmSub / ScrVmSub / ShopVmSub are VmSub; list.c's ListSave and vm_lib.c's VmSave1 are Save1.
+- **tools/shift/s36move/mod.py** drafts a module from the old files (`draft`) and removes moved definitions with the
+  declarations only they used (`remove`); ctop.py splits a C file into top-level items losslessly.
