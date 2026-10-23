@@ -49,10 +49,12 @@ typedef struct { s32 id; u8 pad[12]; f32 c[4]; f32 s[4]; } VmBox;
 typedef struct { s32 obj, x4, snd, ret, x10, h; } VmSlot;
 
 typedef struct {
-    u8 x0[0x10];
-    u16 tbl[8][256];        /* 0x0010 */
+    u8 wst[4];              /* 0x0000: state of the 4 open message windows (src/msgwin/) */
+    u8 tst[8];              /* 0x0004: state of the 8 window templates */
+    u8 xc[4];               /* 0x000c: cleared for 8 templates (runs into tbl) */
+    u16 tbl[8][256];        /* 0x0010: each template's message ids (D_00388480 indices) */
     s32 cnt[8];             /* 0x1010 */
-    s8 ids[4];              /* 0x1030 */
+    s8 ids[4];              /* 0x1030: the template each open window shows */
     s32 a1034[512];         /* 0x1034 */
     s32 a1834[512];         /* 0x1834 */
     s32 a2034[512];         /* 0x2034: saved copy of a1034 */
@@ -76,7 +78,7 @@ typedef struct {
     VmMgrF3078 f3078;       /* 0x3078 */
     u8 pad3080[0x3140 - 0x3080];
     s32 x3140;
-    u8 pad3144[4];
+    s32 *x3144;             /* 0x3144: where func_001cac60 stores the choice */
     u32 x3148;
     f32 x314c;
     u8 pad3150[0x3158 - 0x3150];

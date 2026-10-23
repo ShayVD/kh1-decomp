@@ -14,34 +14,6 @@ typedef struct VmObj {
 /* Script VM instance (0x350 bytes). */
 typedef VmRec VM;
 
-typedef struct {
-    u8 pad0[0x10];
-    u16 h10[8][256];
-    s32 cnt[8];
-    u8 pad1030[0x3034 - 0x1030];
-    s32 x3034;
-    s32 x3038;
-    s32 x303c;
-    s8 *x3040;
-    s8 *x3044;
-    s32 x3048;
-    s32 *x304c;
-    s32 x3050;
-    s32 *x3054;
-    u8 pad3058[4];
-    s32 x305c;
-    s32 *x3060;
-    s32 x3064;
-    s32 *x3068;
-    u8 pad306c[4];
-    u64 f3070;
-    u64 f3078;
-    u8 pad3080[0xc0];
-    s32 x3140;
-    u8 pad3144[4];
-    s32 x3148;
-    f32 f314c;
-} Big;
 
 /* Camera state: channels 0-3 (pos, rot, ...) with Hermite moves, plus shake. */
 
@@ -56,32 +28,19 @@ typedef struct {
     f32 ang;
 } __attribute__((aligned(16))) Msg;
 
-typedef struct { u8 pad[0xdc4]; u32 xdc4; } Save;
-typedef struct { u16 t:4, s:4, b1:8; } Ent;
-typedef struct { u8 b0, b1, b2; } Ent2;
-
-extern Big D_00389C90;
-#include "data/pieces/D_00389C80.h"
-#include "data/pieces/D_00388480.h"
 #include "data/pieces/D_003C21A8.h"
 #include "data/pieces/D_003C3A70.h"
 extern CamS D_003C5510;
 extern f32 D_002BBDFC;
-extern s32 D_002BBAB0, D_002BBAB8, D_002BBAC8;
-extern u8 D_003C5660[], D_003C5680[], D_003C56A0[], D_003C56C0[], D_003C56F0[], D_003C5728[], D_003C5750[], D_003C5780[], D_003C57B0[];
 
 s32 func_001c4640(Msg *);
 void func_002673b8(f32 *, f32 *);
-Save *func_00232cc0(s32);
-Ent *func_00147778(s32);
-Ent2 *func_00147840(s32);
-void *func_0011ef10(s32, void *);
-void func_001caa50(void);
 
 /* func_001c6a20 is in src/camera/camera.c. */
 void func_001c6a20(void);
 
-/* func_001c8e20, func_001c9308 and func_001c96c0 are in src/camera/camera.c. */
+/* func_001c8e20, func_001c9308 and func_001c96c0 are in src/camera/camera.c,
+ * func_001cb120 in src/msgwin/msgwin.c. */
 s32 func_001d2c68(VM *vm) {
     Vec v;
     Msg m;
@@ -140,46 +99,6 @@ s32 func_001d2c68(VM *vm) {
 }
 
 /* needs make: uses rodata */
-s32 func_001cb120(VM *vm) {
-    s32 id = vm->stk[vm->sp];
-    s32 k = vm->stk[vm->sp - 1];
-    Save *sv = func_00232cc0(1);
-    Ent *e = func_00147778(id);
-    s32 n;
-    switch (e->t) {
-    case 0:
-        n = D_002BBAB0 = e->b1;
-        D_002BBAC8 = e->s;
-        switch (func_00147840(n)->b2) {
-        case 0: D_00388480[D_00389C80] = D_003C5660; break;
-        case 12: D_00388480[D_00389C80] = D_003C5680; break;
-        case 13: D_00388480[D_00389C80] = D_003C56A0; break;
-        case 2: D_00388480[D_00389C80] = D_003C5750; break;
-        case 3: D_00388480[D_00389C80] = D_003C5780; break;
-        case 4: D_00388480[D_00389C80] = D_003C57B0; break;
-        case 1: D_00388480[D_00389C80] = D_003C5728; break;
-        }
-        break;
-    case 1:
-        if (e->s == 11) {
-            D_002BBAB8 = e->b1;
-            D_002BBAC8 = e->s;
-            D_00388480[D_00389C80] = D_003C56F0;
-            if (!((sv->xdc4 >> 4) & 1)) {
-                sv->xdc4 |= 0x10;
-                func_0011ef10(50000, func_001caa50);
-            }
-        } else {
-            D_002BBAB8 = e->b1;
-            D_002BBAC8 = e->s;
-            D_00388480[D_00389C80] = D_003C56C0;
-        }
-        break;
-    }
-    { u16 v = D_00389C80; n = D_00389C90.cnt[k]++; D_00389C90.h10[k][n] = v; }
-    vm->sp -= 2;
-    return 2;
-}
 #include "data/bss_0062_mixed.h"
 #include "data/data_002B.h"
 #include "data/data_003C.h"
