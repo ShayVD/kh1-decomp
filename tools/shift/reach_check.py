@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import random
 import re
 import struct
 import sys
@@ -222,6 +223,54 @@ def _ax(v):
     if isinstance(v, tuple) and v[0] == AX:
         return v
     return None
+
+
+SHADOW_MAX = 3  # arg-keep/join-keep: distinct values a register gets from shadow visits at a point before widening
+
+
+def _addressy(v):
+    """Session 31 (arg-keep, join-keep): a value whose uses make events (an address, a %hi, an indexed base, a pointer
+    global's word, a jump table word), so dropping it at a join drops accesses."""
+    if isinstance(v, int):
+        return v > 0x10000
+    return isinstance(v, tuple) and v[0] in (SET, IDX, HIX, PTR, HI, JT)
+
+
+def _widen(v, got=()):
+    """Session 31 (arg-keep, join-keep): an address value with its offset made unknown: from the lowest base of v and
+    the values got (of the same kind, within 64 KiB of v's) + any index."""
+    if isinstance(v, tuple) and v[0] in (PTR, HI, JT):
+        return (PTR, v[1], None) if v[0] == PTR else v
+    kind = HIX if isinstance(v, tuple) and v[0] == HIX else IDX
+
+    def base(x_):
+        if kind == HIX:
+            return x_[1] if isinstance(x_, tuple) and x_[0] == HIX else None
+        if isinstance(x_, tuple) and x_[0] == SET:
+            return min(x_[1])
+        a_ = _idx(x_)
+        return None if a_ is None else a_[0]
+    b0 = base(v)
+    return (kind, min([b0] + [b_ for x_ in got if (b_ := base(x_)) is not None and abs(b_ - b0) < 0x10000]), None)
+
+
+def _covers(j, x):
+    """Session 31 (arg-keep, join-keep): a join result j makes at least the events address value x makes."""
+    if j == x:
+        return True
+    if not isinstance(j, tuple) or isinstance(x, tuple) and x[0] in (HI, JT):
+        return False
+    if j[0] == SET:
+        return _addrs(x) is not None and _addrs(x) <= j[1]
+    if j[0] == IDX:
+        a = _idx(x)
+        return a is not None and j[1] <= a[0] and (j[2] is None or a[1] is not None and a[0] + a[1] <= j[1] + j[2])
+    if j[0] == HIX:
+        return isinstance(x, tuple) and x[0] == HIX and x[1] == j[1] and (
+            j[2] is None or x[2] is not None and x[2] <= j[2])
+    if j[0] == PTR:
+        return isinstance(x, tuple) and x[0] == PTR and x[1] == j[1] and (j[2] is None or x[2] == j[2])
+    return False
 
 
 def _addrs(v):
@@ -729,7 +778,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             countdown: bool = True, joins: bool = True, arg_join: bool = True, hi_index: bool = True,
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
             slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True,
-            path_step: bool = True, wr_span: bool = True, arg_bound: bool = True):
+            path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
+            join_keep: bool = True, stored_idx: bool = True, visit_rng=None):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -748,7 +798,20 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     the counter's trip count as its bound (`countdown`), and a join of a few exact addresses
     (`o->p = cond ? A : B`) stays a SET of them (`joins`): accesses, stores and call arguments
     through it are made at each address, not from the lowest one with an unknown index. Code
-    after a `jr` that nothing branches to (a switch's cases) is analysed from a fresh state."""
+    after a `jr` that nothing branches to (a switch's cases) is analysed from a fresh state.
+
+    Session 31 (`arg_keep`): the arg-join keeps the argument when one path holds it and another an
+    address, and dropped the address. Events come from every state a point is visited with, so the
+    address's accesses were seen only when its path happened to be visited first. Now such a join also
+    visits the point once more with the joined state but the address in that register (a shadow visit:
+    its events are reported, its successors are merged as usual), whichever side arrived first.
+    `join_keep` does the same for any other join that does not cover an address (an address joined with
+    an unknown value, two bases that end up unrelated). A register that keeps getting new values from
+    shadows at one point (a walk) is widened to base + unknown after SHADOW_MAX of them, so it ends.
+    `stored_idx`: a store of base + index (&D[i]) stores the base (before, only an exact address did).
+    visit_rng (tests, --visit-seed): a random.Random that picks the next point to visit instead of the
+    last one pushed; the output should not depend on it (docs/shiftable-plan.md "Session 31" lists what
+    still does)."""
     n = len(insns)
     if not n:
         return
@@ -758,8 +821,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     if args:
         entry.update({r: (ARG, k, 0) for k, r in enumerate(ARG_REGS)})
     states: dict[int, dict] = {0: entry}
-    work = [0]
+    work: list = [0]  # points to visit; a tuple (i, state) is a shadow visit (session 31, arg-keep/join-keep)
     seen_out = set()
+    shadow_seen: set = set()  # (i, frozen state) of every shadow visit pushed
+    shadow_lost: dict[tuple, set] = {}  # (i, k) -> the values shadows gave k at i
     grow: dict[tuple, int] = {}
     wide: set[int] = set()  # arguments this function walks or indexes (reach not bounded by its offsets)
     loops = countdown_loops(insns, counters=counter_cap) if countdown else {}
@@ -891,6 +956,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             work.append(i)
             return
         new = {}
+        lost: list = []  # session 31 (arg-keep, join-keep): (k, value) of an address the join dropped
         for k in (set(old) | set(st)) if arg_join else list(old):
             v = old.get(k)
             if k in carry.get(i, ()) and (cap := carry_value(i, k)) is not None:
@@ -906,6 +972,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 new[k] = cap  # stepped once per outer iteration (session 29)
                 continue
             j = join(i, k, v, st.get(k))
+            if (arg_keep and arg_join) if isinstance(j, tuple) and j[0] == ARG else join_keep:
+                lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_) and not _covers(j, x_)]
             if j is None:
                 continue
             # widening: a bound that grows twice at the same point is dropped
@@ -919,6 +987,17 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         if new != old:
             states[i] = new
             work.append(i)
+        for k, x_ in lost:  # session 31 (arg-keep, join-keep): visit i again with the address the join dropped
+            got = shadow_lost.setdefault((i, k), set())
+            if x_ not in got and len(got) >= SHADOW_MAX:
+                x_ = _widen(x_, got)  # a value that keeps changing here (a walk): base + unknown offset
+            got.add(x_)
+            sh = dict(new)
+            sh[k] = x_
+            key = (i, frozenset(sh.items()))
+            if key not in shadow_seen:
+                shadow_seen.add(key)
+                work.append((i, sh))
 
     def refine(st, cond, taken):
         """Apply a `bne/beq t, $0` edge: cond = the branch's (register, sense)."""
@@ -1025,6 +1104,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 g_ = _gaddr(b, w)
                 if g_ is not None:  # ... into a pointer global G (session 25: followed through G's loads)
                     ev += [("storedto", x, g_) for x in sorted(_addrs(st[t]))]
+            elif stored_idx and o in (0x2B, 0x3F) and t != 0 and isinstance(st.get(t), tuple) and st[t][0] == IDX:
+                # session 31 (stored-idx): &D[i] stored is D stored (before, only an exact address counted, so a
+                # store seen only with the joined state of a loop, base + index, was not reported)
+                ev.append((ins.addr, st[t][1], None, 0, "stored"))
             if o in mips.OP_STORES or o in (0x1F, 0x3E):  # the bytes a store may write (session 27)
                 if _addrs(b):
                     ev += [("wr", (x + mips.imm(w)) & 0xFFFFFFFF, WIDTH[o]) for x in sorted(_addrs(b))]
@@ -1225,8 +1308,11 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
 
     after_jr = sorted(insns[k + 2].addr for k in range(n - 2) if insns[k].is_jr) if cases else []
     while work:
-        i = work.pop()
-        st = dict(states[i])
+        i = work.pop(visit_rng.randrange(len(work)) if visit_rng else -1)
+        if isinstance(i, tuple):  # a shadow visit (session 31, arg-keep)
+            i, st = i[0], dict(i[1])
+        else:
+            st = dict(states[i])
         ins = insns[i]
         ev = []
         if ins.is_branch or ins.is_j or ins.is_jr or ins.is_jal or ins.is_jalr:
@@ -1514,10 +1600,20 @@ def main() -> int:
     ap.add_argument("--no-arg-bound", action="store_true",
                     help="an index made from a function's argument is unbounded even when every caller passes a "
                          "constant (session 30)")
+    ap.add_argument("--no-arg-keep", action="store_true",
+                    help="an argument joined with an address drops the address (the address's accesses are seen only "
+                         "when its path is visited first; before session 31)")
+    ap.add_argument("--no-join-keep", action="store_true",
+                    help="a join of an address with an unknown value (or one it does not cover) drops the address "
+                         "(before session 31)")
+    ap.add_argument("--no-stored-idx", action="store_true",
+                    help="storing base + an index (&D[i]) does not count as storing D (before session 31)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
                     "with its callee, bound and reason")
+    ap.add_argument("--visit-seed", type=int, help="visit each function's points in a random order from this seed "
+                    "(a check of order dependence: diff the output against the default order's; session 31)")
     ap.add_argument("--debug", type=lambda x: int(x, 16), help="print the call sites passing this address")
     a = ap.parse_args()
 
@@ -1610,7 +1706,9 @@ def main() -> int:
                          ptr_globals=not a.no_ptr_global, counter_cap=not a.no_counter_cap,
                          slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
                          nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
-                         wr_span=not a.no_wr_span,
+                         wr_span=not a.no_wr_span, arg_keep=not a.no_arg_keep, join_keep=not a.no_join_keep,
+                         stored_idx=not a.no_stored_idx,
+                         visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
                          arg_bound=not a.no_arg_bound and is_func):
             if e[0] == "argmem":
                 _k, k, off, width = e

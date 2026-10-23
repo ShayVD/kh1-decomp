@@ -185,7 +185,9 @@ SHIFT_FLOAT_DATA_BUDGET ?= 0x100000
 # bounded by both loops' trip counts; session 29), --no-path-step (a loop's steps are proved by single writes only,
 # not over the paths of its body), --no-arg-bound (an index made from an argument is not bounded by the constants
 # every direct caller passes) and --no-wr-span (an indexed store's displacement counted twice in the bytes it may
-# write) (session 30). keep_check.py then
+# write) (session 30), --no-arg-keep (an argument joined with an address drops the address), --no-join-keep (any other
+# join that does not cover an address drops it) and --no-stored-idx (storing &D[i] does not store D) (session 31).
+# keep_check.py then
 # checks that the names the PCSX2 bisections found are still kept; it fails the build only when
 # SHIFT_REACH_FLAGS is empty.
 SHIFT_REACH_FLAGS ?=
