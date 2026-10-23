@@ -25,9 +25,7 @@ extern M2C_UNK D_00642EB0;
 extern M2C_UNK D_00642F60;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_002B6478;
-#include "data/pieces/D_003E3D68.h"
 extern s32 D_003F34E8;
-extern s32 D_00641250;
 extern s32 D_00641BC4;
 extern s32 D_00641BC8;
 extern s32 D_00641BCC;
@@ -53,19 +51,9 @@ extern s32 D_00642CE0;
 extern s32 D_00642D18;
 extern s32 D_00642D24;
 extern s32 D_00643100;
-s32 func_001ebea8();
 s32 func_001ef5c0(s32);
 s32 func_001ef5f8(s32);
 s32 func_00266c08(M2C_UNK);
-
-void func_00211358(void) {
-    s32 temp_a1;
-
-    temp_a1 = D_003E3D68 + func_001ebea8();
-    if (temp_a1 < D_00641250) {
-        D_00641250 = temp_a1;
-    }
-}
 
 void func_00213d30(void) {
     D_00641BC4 = 0;
