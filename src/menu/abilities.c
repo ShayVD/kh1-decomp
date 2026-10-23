@@ -41,7 +41,13 @@ extern s32 D_003F3E18[], D_003F3EB8[];
 extern void *D_00642C20;
 extern s32 D_00642C24, D_00642C28, D_00642C2C;
 extern Sub_304be8 *D_00642C30;
-extern s32 D_00642C34, D_00642C38, D_00642C40, D_00642C4C, D_00642C50;
+
+/* The chosen ability (index, id, entry), whether its AP is short, and where it moves to. */
+s32 D_00642C34 ALIGNED(4);
+s32 D_00642C38 ALIGNED(8);
+s32 D_00642C40 ALIGNED(16);
+s32 D_00642C4C ALIGNED(4);
+s32 D_00642C50 ALIGNED(16);
 extern u32 D_00642C58;
 extern s32 D_00642C5C, D_00642C60, D_00642C64, D_00642C68, D_00642C6C, D_00642C70;
 extern s32 D_00642C78[];
