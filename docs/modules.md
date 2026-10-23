@@ -490,6 +490,132 @@ files, and the m12 float build (`SHIFT_OVERLAYS` empty): float_covered.txt
 identical to the session's base, kh1-shift.elf symbols at the same
 addresses (sorted nm identical) and .text / .data / .reginfo identical.
 
+## Session 34: after the dispatcher, 0x001dcb00-0x001e4918
+
+Worker s34module moved the 159 functions from the end of the dispatcher
+(0x001dcb00) to the start of the next group (0x001e4918) in six chunks, one
+commit each, in address order.  Five functions stay in the library file.
+The rest is four new modules.
+
+| module | files | range | functions |
+|---|---|---|---|
+| vm_lib (the end of the library) | src/vm/vm_lib.c (+4), vm_lib.nofill.c (+1) | 0x001dcb00-0x001dd148 | 5 |
+| the event effects | src/event/effect.c (62), effect.norlo.c (1), effect.nofill.c (1); include/event/effect.h | 0x001dd148-0x001e01b8 | 64 |
+| the event voices | src/event/voice.c (3), voice.nofill.c (4) | 0x001e01b8-0x001e05a8 | 7 |
+| the frame transfer | src/screen/frame.c (6) | 0x001e05a8-0x001e0ab0 | 6 |
+| the screen image effects | src/screen/screen.c (27), screen.nofill.c (2) | 0x001e0ab0-0x001e2748 | 29 |
+| the shops | src/shop/shop.c (48) | 0x001e2748-0x001e4918 | 48 |
+
+| chunk | commit | functions | from | deleted |
+|---|---|---|---|---|
+| 0x001dcb00-0x001dd148 | 555abc2 | 5 | h44, auto text_001d0000_8.c, h67, nofill/b11 | nofill/b11 |
+| 0x001dd148-0x001ddf98 | 67a1552 | 13 | h19, h44, norlo/s7_w10, nofill/s6_15b, auto _8 ... | norlo/s7_w10 (renamed effect.norlo.c), nofill/s6_15b, auto text_001d0000_8 |
+| 0x001ddf98-0x001e01b8 | 4bc8479 | 51 | h44 (17), h20 (10), auto (18), h67 (2), s6_15 (2), s8_w6, h19 | h19, s6_15, s8_w6, auto text_001d0000 / _2 / _5 / _7 |
+| 0x001e01b8-0x001e05a8 | fc2719e | 7 | nofill/s6_15 (4), auto text_001e0000_6 / _20, h20 | nofill/s6_15 (renamed voice.nofill.c) |
+| 0x001e05a8-0x001e2748 | 44ff82b | 35 | h67, s11_w55, nofill/s11_w66, nofill/s12_s12w18, h20, auto ... | those four, auto text_001e0000_15 / _16 / _27 |
+| 0x001e2748-0x001e4918 | 134ae83 | 48 | h20, h44, h45, h68, s9_w2, s9_r2_1, auto text_001e0000 / _4 / _6 / _14 / _17 / _18 / _21 | auto text_001e0000_14, h44, s9_r2_1 |
+
+That is 22 files deleted and 9 new units: objdiff units 879 -> 866.
+
+**How the groups were found.**
+- **The library's index run.**  The library's D_003D9FE0 entries rise with the
+  address, from 0x001cd238 to the dispatcher.  The 154 later entries do not
+  continue that run.  Their indices interleave with it, one module at a time.
+  So they are other files, not code after the dispatcher in vm_lib.c.
+- **The data of each group:**
+  - effects: bss D_0062A220-D_0062A640 (after vm_lib's D_0062A210) and the
+    name table D_003DABD8.
+  - voices: D_003DAC40 / D_003DACA0.
+  - screen: D_003DACB0-D_003DB070 and bss D_0062F640-D_0062F6D0.
+  - shop: D_003DB078-D_003DC494 and bss D_0062F6E0-D_0062FF00.
+  - The next group starts at 0x001e4918 with D_00630300 and D_003DC498.
+- **The calls.**  The five functions that stay in the library use only
+  the VM's own data and callers:
+  - func_001dcea8 is the only caller of the library's move steps
+    (func_001d1080, func_001d3e30, func_001d7898, func_001d9348,
+    func_001d9510).
+  - func_001dcfd0 has the same two callers as func_001dcea8, the VM
+    drivers func_001c1f80 / func_001c3b10 (script_vm.c).
+  - func_001dcd98 and func_001dcb00 (nofill, the walk-to step) read the VM
+    records D_0038D170 / D_0039A570 / D_0039A580 / D_003A7980.
+    func_001dcd98 resumes the VM in VmMgr.x3154.
+  - func_001dce90 increments VmMgr.x3380.
+  The next function, func_001dd148, starts the effects' own data.
+- **Where frame.c ends.**  frame.c is split from screen.c by the
+  "callee defined above" effect.  The three cross-fades (s11_w55) only
+  match while func_001e0608 / func_001e07a8 are not defined above them in
+  the same file.  When they are, a store moves into a branch delay slot.
+  screen.c also has its own copy of the packet send (func_001e14e0 =
+  func_001e0608).  The voices share no state with the effects, so they are
+  their own file too.
+
+**Types named.**
+- *include/event/effect.h*:
+  - `EvFx`, the 0x3c-byte effect instance (D_0062A428[]): s7_w10's E60 and
+    h44's HObj.
+  - `EvTask`, the task record: Hd5 / Handler / Task / Tsk.
+  - D_0062A220 / D_0062A224 are `void *`.  As s32, func_001ddc78 and
+    func_001dde08 do not match.
+- *VmMgr* (vm_mgr.h, which now includes vm_rec.h) gains `x3150` and
+  `VmRec *x3154`.
+- *struct VmObj* (vm_obj.h) gains these fields:
+  - `f8`, `dir[4]` (0x20), `f90` (u64), `f150`, used by func_001dcb00.
+  - `f68`, a model.
+  - `struct VmObj14c *f14c`.
+  - `f15c`, the skeleton.
+- *The shop:*
+  - Its three windows D_0062F6E0 / D_0062F790 / D_0062F840 are `MsgWin`.
+    h20's f30 / f34 / f40 / f44 are `v30[0..1]` / `v40[0..1]`.
+  - The callback D_0062F8F0 is `ShopCb`.  h20's Cb20 `.b` is `.n`.
+  - The item lists D_003DB078 / D_003DB718 are `ShopList`.
+  - D_002C5958 is `volatile s32`.
+- *Defined in the modules:*
+  - effect.c: D_0062A228, D_0062A430, D_0062A640.
+  - screen.c: D_0062F640-66C.
+  - shop.c: D_0062F900.
+- *h44's prototype.*  h44's `HSub *func_001e98d0` went with h44.  Every
+  declaration now returns `VmRec *`, and `s33_protodiff.py` reports 0.
+
+**Kept as views or offsets, with a comment:**
+- **The VM seen from +4** (`EvVmSub` in effect.c, `ScrVmSub` in screen.c,
+  `ShopVmSub` in shop.c).  It is
+  `{ struct VmObj *obj; u8 pad4[0x17c]; s32 stk[33]; }` taken as
+  `(X *)&vm->obj`.  It is used by four effect requests, three screen script
+  functions and the buy / sell openers func_001e3770 / func_001e38b0.  The
+  original indexes the stack off vm + 4.  On VmRec, gcc indexes it off vm,
+  and the code differs.
+- **The shop's text labels.**  The shop calls
+  `func_0010ef70(D_0062F760 - 0x80, ...)` and `func_0010e3f0(D_0062F760)`
+  (the item window's text).  With `&D_0062F6E0` four functions differ:
+  the original builds both addresses from one register.  D_0062F810 (the
+  choice window's text) is a label too.
+- **The image buffer.**  screen.nofill.c reads the 512x384 frame through
+  `IMG ((RGB *)D_00F20000)`.
+- **View casts.**  `s27_survey.py --summary` gives 22 at both this
+  session's base and the end.  The docs' "18" came from session 32's
+  count.  None of the 22 is in the moved code, so no view casts were
+  removed.  The basic casts went 742 -> 739.
+
+**The float build: D_0062F840.**  h20 used to declare D_0062F790 as a
+0x100-byte `Mgr20`, which covered D_0062F840 (at +0xb0).  So cover_check
+kept D_0062F840 in place.  With the windows as MsgWin (0xb0), it would
+float.  It is now in tools/shift/float_keep.txt with a note.  The keep set,
+the symbols and the loaded sections are identical to the base.  Only
+D_0062F840's line in float_covered.txt moved, to the float_keep part.  It
+can float once a SHIFT_FLOAT_FORCE=D_0062F840 build has played a shop.
+
+**Nothing was reverted.**
+
+**Checks after each commit:**
+- `make -j2` byte-identical (6979 functions).
+- `make report` 6979 at 100%.
+- `s31_warndiff` 0 new warnings in the edited and new files.
+- The m12 float build (`SHIFT_OVERLAYS` empty): float_covered.txt
+  identical, kh1-shift.elf symbols at the same addresses, and .text /
+  .data / .reginfo identical.  For the shop commit the keep set was
+  compared, not the line order.
+- `make test` passes at the end.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -586,7 +712,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 33, after each step)
+## Verification (sessions 30 to 34, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -602,14 +728,26 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **After the dispatcher**: 0x001dcb00 onwards (no table entries until
-  0x001ddc78; then 154 entries to 0x001ec678) is other code; find its groups
-  by data as for the message windows.  What is there now: auto
-  text_001d0000.c (6), _2 (8), _7 (2), h19 (4, and the data D_0062A640),
-  h44, h67, c10, b11, nofill/b11, s6_15, nofill/s6_15 and the 0x001e
-  files.  Whether the 154 later entries belong to vm_lib.c (code after the
-  dispatcher in the same file) or to other files is open: try them appended
-  to vm_lib.c and look at their data before deciding.
+- **0x001e4918-0x001ec678** (205 functions, after the shop) is still in
+  the 0x001e files, as h20, h21, h45, h46, h68, c10, b11, s6_16, s8_w2,
+  s9_w2, s7_w19 and auto text_001e0000 / _1 / _4 / _6 / _17-_23.  Its
+  groups, by their bss / data:
+  - **0x001e4918-0x001e7e78** (about 56 functions): D_00630300-D_006314C8
+    and D_003DC498-D_003DD28C.  It starts with auto _18's init
+    func_001e4918 (called by func_001c0750), and c10 / b11 have its large
+    functions.  It is the next move.
+  - **0x001e7e78-0x001e8e68**: the D_006314CC-D_006314E0 counters, with
+    D_003DABD4.
+  - **0x001e8e68-0x001e9830**: the D_00631560 / D_00631570 / D_00631620
+    users, and D_003DD2F0-D_003DD31C.
+  - **0x001e98d0-0x001e9d00**: src/vm/vm_find.nofill.c (already a module).
+  - **0x001e9d00-0x001ec678**: no bss of their own; mostly h21 and auto _1.
+    Find their groups by the call graph.
+  Check the D_003D9FE0 index run of each group as in session 34.
+- The +4 VM views (EvVmSub, ScrVmSub, ShopVmSub; session 34) are one shape
+  in three files.  The 0x001e4918 group's script functions likely need it
+  too.  A shared header type could hold it, but keep the view: VmRec does
+  not match there.
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it
   (harmless; a `void` one would conflict, none does).
@@ -622,8 +760,7 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 - Other files' prototypes of VM functions: session 33 retyped every one
   outside the library files (docs/shiftable-plan.md "Session 33: Phase 4
   types").  `python3 -I tools/shift/s33types/s33_protodiff.py` lists what is
-  left: after the session 33 library move only h44's `HSub *func_001e98d0`
-  (the header returns `VmRec *`).  Retype one file at a time with
+  left: none since session 34 (h44's `HSub *func_001e98d0` went with h44).  Retype one file at a time with
   `make`; `--defs` also lists declarations of functions no header declares
   yet (func_001c4de0, func_001c4ed0, func_001cd238 ...).
 - Leave alone the files another worker is retyping in the same session.
