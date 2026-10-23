@@ -19,7 +19,7 @@ typedef struct { u8 pad0[5]; u8 b5; u8 pad6[0xe]; struct { u8 pad0[1]; u8 b1; } 
     u32 w0; u8 pad4[4]; s32 x8; u8 padc[4]; V4 pos; V4 x20; V4 x30; V4 x40; u8 pad50[0x18]; s32 x68; struct { u8 pad[0x3c]; s32 x3c; } *x6c; s32 x70; P8 x74; u8 pad7c[0xc]; s32 x88; s32 x8c; u64 x90; S98 *x98; u8 pad9c[0x24]; V4 xc0; f32 xd0[4][4]; u8 pad110[0x10]; V4 x120; \
     struct { u8 pad[0x44]; f32 x44; s16 x48; u8 pad4a[2]; u16 x4c; } *x130; S134 *x134; u8 pad138[0xc]; T144 *x144; \
     struct { u8 pad[0x160]; V4 v160; } *x148; u8 pad14c[0x1d4]; V4 x320; u8 pad330[0x40]; u64 x370; u8 pad378[0x26]; u8 x39e; u8 pad39f[0x11]; f32 x3b0; u8 pad3b4[0xc]; V4 x3c0; u8 pad3d0[0x14]; f32 x3e4; u8 pad3e8[8]; V4 x3f0; s32 x400; u8 pad404[0x9c]; void *x4a0;
-typedef struct { ACT_BODY(S144) } Act;
+typedef struct Actor { ACT_BODY(S144) } Act;
 
 void func_001315c0(void *, s32, void *, f32);
 void func_00267530(void *, void *, void *);
@@ -474,7 +474,7 @@ s32 func_00158780(s32 k) {
     case 82:
         for (i = 1; i < 3; i++) {
             if (!D_002E26A0[i] || func_00153d78(D_002E26A0[i]) || !func_0012f040(D_002E26A0[i], -1)) return 0;
-            func_00267530(&d, &((Act *)D_002E26A0[i])->pos, &((Act *)D_002E26A0[0])->pos);
+            func_00267530(&d, &D_002E26A0[i]->pos, &D_002E26A0[0]->pos);
             if (func_00267390(&d, &d) > 250000.0f) return 0;
         }
         break;
@@ -494,7 +494,7 @@ void func_00158960(void) {
     s32 i, k, r, best, bk;
     if (D_002C595A & 1) return;
     if ((D_002E31A8 >> 1) & 1) return;
-    if (((Act *)D_002E26A0[0])->x70) return;
+    if (D_002E26A0[0]->x70) return;
     if (D_00351A48 != 5) return;
     if (!func_00122ff8((Act *)D_002E31B0.f0)) return;
     if (((s32)(((Act *)D_002E31B0.f0)->x370 >> 37) & 3) != 2) return;

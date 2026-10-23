@@ -394,7 +394,7 @@ void func_00108b60(SlotHdr *h, SlotObj *o) {
     o->owner = h;
 }
 /* Same object as *D_002BCB60 above, seen as rows of 4 floats. */
-typedef struct { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
+typedef struct Actor { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
 
 void func_00111340(Src *s, s32 i) {
     (D_002BCB60)->m[i][4] = s->x;

@@ -89,7 +89,7 @@ typedef union {
     struct { u32 lo0; u32 x0 : 1; u32 b33 : 1; u32 x2 : 14; u32 b48 : 1; u32 x17 : 5; u32 b54 : 1; u32 x23 : 9; } b;
     struct { u64 lo : 33; u64 b33 : 1; u64 m : 14; u64 b48 : 1; u64 m2 : 5; u64 b54 : 1; u64 hi : 9; } c;
 } ObjFlags;
-typedef struct {
+typedef struct Actor {
     u32 x0;
     u8 pad4[300];
     Info123 *info;

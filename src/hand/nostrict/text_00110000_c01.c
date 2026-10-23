@@ -16,12 +16,34 @@ typedef struct { u8 pad[0x18]; u8 n; u8 id[1]; } C01Cnt;
 typedef struct { u8 pad[0x10]; f32 x10; u8 pad14[0xc8 - 0x14]; C01Cnt *xc8; } C01Sub6C;
 typedef struct { u8 pad[0x4c]; u16 x4c; } C01Sub130;
 typedef struct {
-    u8 pad[0x6c];
+    u32 lo : 4;
+    u32 b4 : 1;
+} __attribute__((aligned(8))) C01Bits160;
+typedef struct Actor {
+    u32 x0;
+    u8 pad4[0x38];
+    f32 x3c;
+    f32 x40[4];
+    u8 pad50[0x1c];
     C01Sub6C *x6c;
-    u8 pad70[0x130 - 0x70];
+    u8 pad70[0x30];
+    f32 xa0[4];
+    u8 padb0[0x80];
     C01Sub130 *x130;
-    u8 pad134[0x148 - 0x134];
+    u8 pad134[0x14];
     C01Sub148 *x148;
+    u8 pad14c[0x14];
+    C01Bits160 x160;
+    u8 pad168[0x1e8];
+    f32 x350[4];
+    u8 pad360[0x10];
+    u64 x370;
+    u8 pad378[0x48];
+    f32 x3c0[3];
+    f32 x3cc;
+    s32 x3d0;
+    u8 pad3d4[0x6c];
+    u64 x440;
 } C01Ply;
 typedef struct { u16 a; u16 b; } C01Pr;
 
@@ -248,30 +270,8 @@ typedef struct {
     f32 x10[4];
 } __attribute__((aligned(8))) C01Cmd;
 #include "data/types/nostrict_text_00110000_c01.h"
-typedef struct {
-    u32 lo : 4;
-    u32 b4 : 1;
-} __attribute__((aligned(8))) C01Bits160;
-typedef struct {
-    u32 x0;
-    u8 pad004[0x3c - 0x4];
-    f32 x3c;
-    f32 x40[4];
-    u8 pad050[0xa0 - 0x50];
-    f32 xa0[4];
-    u8 pad0b0[0x160 - 0xb0];
-    C01Bits160 x160;
-    u8 pad168[0x350 - 0x168];
-    f32 x350[4];
-    u8 pad360[0x370 - 0x360];
-    u64 x370;
-    u8 pad378[0x3c0 - 0x378];
-    f32 x3c0[3];
-    f32 x3cc;
-    s32 x3d0;
-    u8 pad3d4[0x440 - 0x3d4];
-    u64 x440;
-} C01Act3;
+
+typedef C01Ply C01Act3;
 typedef struct {
     u8 pad[0x30];
     s8 x30[4];
@@ -371,7 +371,7 @@ void func_00133a88(void) {
         case 14:
             a->x440 |= 1ULL << 32;
             a->x0 &= ~4;
-            if ((C01Act3 *)D_002E26A0[1] == a || (C01Act3 *)D_002E26A0[2] == a) {
+            if (D_002E26A0[1] == a || D_002E26A0[2] == a) {
                 func_00171f58(a);
                 func_00153d88(a);
             }

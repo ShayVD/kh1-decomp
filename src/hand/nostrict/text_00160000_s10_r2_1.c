@@ -20,7 +20,7 @@ extern PrmEA D_0035AE80;
 extern TalkEA D_00575310;
 #include "data/pieces/D_002C5C60.h"
 
-extern s32 func_00122ff8(ChrEA *);
+extern s32 func_00122ff8(void *); /* an actor */
 extern void func_00122768();
 extern void func_001224c8(s32 *, void *, void *, f32);
 extern EntEA *func_00123158(ChrEA *, EntEA *);
@@ -77,12 +77,12 @@ s32 func_0016ea58(void) {
     WkEA *w2;
     s32 i, j, n;
     f32 d1, d2, k;
-    for (i = 2; i >= 0; i--) D_0035BD40.chrEA[i] = 0;
+    for (i = 2; i >= 0; i--) D_0035BD40.vp[i] = 0;
     w2 = 0;
     w1 = 0;
-    if (func_00122ff8(D_002E26A0[0])) D_0035BD40.chrEA[0] = D_002E26A0[0];
-    if (func_00122ff8(D_002E26A0[1]) && (w1 = ((ChrEA *)D_002E26A0[1])->p144) != 0) D_0035BD40.chrEA[1] = D_002E26A0[1];
-    if (func_00122ff8(D_002E26A0[2]) && (w2 = ((ChrEA *)D_002E26A0[2])->p144) != 0) D_0035BD40.chrEA[2] = D_002E26A0[2];
+    if (func_00122ff8(D_002E26A0[0])) D_0035BD40.vp[0] = D_002E26A0[0];
+    if (func_00122ff8(D_002E26A0[1]) && (w1 = ((ChrEA *)D_002E26A0[1])->p144) != 0) D_0035BD40.vp[1] = D_002E26A0[1];
+    if (func_00122ff8(D_002E26A0[2]) && (w2 = ((ChrEA *)D_002E26A0[2])->p144) != 0) D_0035BD40.vp[2] = D_002E26A0[2];
 
     if (D_0035BD40.chrEA[0] == 0 || (D_0035BD40.chrEA[1] == 0 && D_0035BD40.chrEA[2] == 0)) return 0;
     func_0016e0d0(1);

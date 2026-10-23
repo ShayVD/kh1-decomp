@@ -2,7 +2,7 @@
 #include "data/bss_0057.h"
 
 #include "data/types/text_00170000_h61.h"
-typedef struct { u8 pad[0xd0]; V4 xd0; } ActD0;
+typedef struct Actor { u8 pad[0xd0]; V4 xd0; } ActD0;
 typedef struct Cam {
     u8 pad0[0x10];
     V4 x10;         /* 0x10 */
@@ -108,7 +108,7 @@ s32 func_00177740(V4 *a0) {
     V4 c, l, r, u, d, dir;
     func_002675a8(&c, &D_00362670);
     c.x = c.z = 0.0f;
-    func_002672f8(&c, &(*(ActD0 **)&D_002E26A0)->xd0, &c);
+    func_002672f8(&c, &D_002E26A0[0]->xd0, &c);
     func_00267530(&dir, &c, a0);
     func_00267810(m, D_002C58D0, 0.26179939f);
     func_002672f8(&l, m, &dir);

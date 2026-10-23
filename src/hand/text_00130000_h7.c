@@ -209,8 +209,8 @@ typedef struct {
     u8 x5d;
 } W7Info;
 
-typedef struct W7Obj W7Obj;
-struct W7Obj {
+typedef struct Actor W7Obj;
+struct Actor {
     u32 flags;
     u8 pad004[0x130 - 0x4];
     W7Info *info;

@@ -4,7 +4,9 @@
 #define KH1_DATA_PIECES_D_003044E0_H
 
 #include "common.h"
-#include "data/types/nostrict_text_00130000_b03_p3.h"
+
+/* a 0x10-byte model slot; x0 is the slot's model (b03 B3Ob, h33 Mdl, c02 u8 *) */
+typedef struct { void *x0; s32 x4, x8, xc; } B3Tbl;
 
 extern B3Tbl D_003044E0[];
 

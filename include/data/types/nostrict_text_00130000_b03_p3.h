@@ -30,7 +30,7 @@ typedef struct {
     f32 x170;
 } B3Wk;
 typedef struct { u8 pad[0x4c]; u16 x4c; } B3Inf;
-typedef struct B3Ob {
+typedef struct Actor {
     u32 x0;
     s32 x4;
     u8 pad08[0x10 - 0x8];
@@ -88,7 +88,7 @@ typedef struct B3Ob {
     u64 x370;
     s32 x378;
     u8 pad37c[0x398 - 0x37c];
-    struct B3Ob *x398;
+    struct Actor *x398;
     u8 x39c;
     u8 pad39d;
     u8 x39e;
@@ -106,6 +106,5 @@ typedef struct B3Ob {
     u8 pad4a0[0x4ac - 0x4a0];
     f32 x4ac;
 } B3Ob;
-typedef struct { void *x0; s32 x4, x8, xc; } B3Tbl; /* x0: the slot's model (b03 B3Ob, h33 Mdl, c02 u8 *) */
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00130000_B03_P3_H */

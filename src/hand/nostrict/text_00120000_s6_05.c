@@ -33,14 +33,14 @@ typedef O8_2e319c O8;
 typedef struct T23 { u8 b0; u8 pad[19]; } T23;
 typedef struct Info { u8 pad[4]; u32 f4; u8 pad8[0x57]; u8 f5f; } Info;
 typedef struct Info2 { u8 pad[7]; u8 f7; u8 pad8[0x14]; T23 *f1c; } Info2;
-typedef struct Ent {
+typedef struct Actor {
     u32 f0;
     u8 pad4[0x2c];
     f32 f30[4];
     u8 pad40[0x30];
     s32 f70;
     u8 pad74[0x24];
-    struct Ent *f98;
+    struct Actor *f98;
     u8 pad9c[0x130 - 0x9c];
     Info *f130;
     Info2 *f134;

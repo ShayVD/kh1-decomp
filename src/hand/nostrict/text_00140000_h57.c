@@ -67,7 +67,7 @@ typedef struct {
 } Obj57_0678;
 typedef struct { u8 pad0[0x34]; f32 f34; } Arg57_0678;
 typedef struct { u8 pad0[0x4c]; u16 h4c; } Info57_0ec8;
-typedef struct { u8 pad0[0x130]; Info57_0ec8 *info; } Pl57_0ec8;
+typedef struct Actor { u8 pad0[0x130]; Info57_0ec8 *info; } Pl57_0ec8;
 typedef struct { s32 i0; u8 pad4[4]; s32 i8; f32 fc; f32 v10[4]; u8 pad20[0x2c-0x20]; f32 f2c; u8 pad30[4]; s32 i34; } Ev57_0ec8;
 typedef struct {
     s32 flags;

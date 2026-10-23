@@ -425,7 +425,7 @@ s32 func_001354b8(E20 *e, O20 *x) {
 }
 
 typedef struct { u8 p[0x4c]; u16 f4c; } I21;
-typedef struct { u32 f0; u8 p4[2]; u8 f6; u8 p7[0x118 - 7]; f32 f118; u8 p11c[0x130 - 0x11c]; I21 *f130; u8 p134[0x144 - 0x134]; s32 f144; u8 p148[0x370 - 0x148]; u64 f370; u8 p378[0x38c - 0x378]; s32 f38c; u8 p390[4]; s32 f394; u8 p398[0x430 - 0x398]; V4 f430; } E21;
+typedef struct Actor { u32 f0; u8 p4[2]; u8 f6; u8 p7[0x118 - 7]; f32 f118; u8 p11c[0x130 - 0x11c]; I21 *f130; u8 p134[0x144 - 0x134]; s32 f144; u8 p148[0x370 - 0x148]; u64 f370; u8 p378[0x38c - 0x378]; s32 f38c; u8 p390[4]; s32 f394; u8 p398[0x430 - 0x398]; V4 f430; } E21;
 typedef struct { void *p; s32 n; } Arg21;
 extern f32 func_00135ca0(f32);
 extern void func_00122588(E21 *);

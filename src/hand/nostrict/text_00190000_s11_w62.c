@@ -295,7 +295,7 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
     s32 u0, u1, t0, t1;
     u32 cur;
     f32 (*buf)[2][4];
-    u8 *src;
+    void *src; /* the actor (D_002E26A0[0]) or pA0 */
     s32 same;
     f32 *v0p;
     f32 *v1p;
