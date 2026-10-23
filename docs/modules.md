@@ -429,13 +429,13 @@ one sibling file (func_001c4808 calls func_001c3770 above it, as in b10).
 
 - **Module header** (`include/<module>/<name>.h`): prototypes of the functions
   other files call, with the real types. The module includes it, so the
-  definitions are checked against it. Other files still declare their own
-  prototypes, mostly different from the header (`void func_001c19f8(VMa *, s32)`,
-  `s32 func_001c2df0(s32, s32)` ...). Switching them changes their types (return
+  definitions are checked against it. Other files should include it rather
+  than declare their own prototypes. Switching a file changes its types (return
   types and pointer types can change code: see "Hazards" above and
   docs/shiftable-plan.md "Session 29"), so each is a retype checked with `make`.
-  s6_13 (session 30) and the 15 `void func_001c4640(Msg *)` users (session 31)
-  now include script_vm.h.
+  s6_13 (session 30), the 15 `void func_001c4640(Msg *)` users (session 31) and
+  20 more files (session 33) now include script_vm.h / vm_find.h; only the
+  library files the module move owns still differ (s33_protodiff.py).
 - **Externs**: use the shared data headers (include/data/data_00XX.h,
   include/data/pieces/D_X.h, include/data/types/*.h), not file-local `extern`s.
   script_vm.c includes data_0038.h / data_003C.h and the piece headers at the top. tools/shift/cover_check.py
@@ -521,9 +521,15 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
   (CamS) and the D_003C21A8 / D_003C3A70 pieces it no longer uses, and h14
   keeps its multi-name `extern f32 D_003C55E0, D_003C55E4 ...` line (unused
   now, kept for cover_check; drop them with a float_covered check).
-- Other files' prototypes of VM functions that differ from script_vm.h
-  (`s32 func_001c4640`, `func_001c19f8(VMa *, s32)`, `func_001c2df0(s32, s32)`):
-  retype one file at a time with `make`.
+- Other files' prototypes of VM functions: session 33 retyped every one
+  outside the library files (docs/shiftable-plan.md "Session 33: Phase 4
+  types").  `python3 -I tools/shift/s33types/s33_protodiff.py` lists what is
+  left: 8 declarations in 6 files that the library move owns (nofill/b11,
+  nofill/h17, nofill/s6_15, h18, h44, s6_15: `func_001c4640(Msg *)`,
+  `Ent *func_001e98d0` ...).  Retype them as those files move or after,
+  one file at a time with `make`; `--defs` also lists declarations of
+  functions no header declares yet (func_001c4de0, func_001c4ed0,
+  func_001cd238, h44's func_001d1080 / func_001d3e30).
 - Leave alone the files another worker is retyping in the same session.
 
 ## Checklist for a module move
