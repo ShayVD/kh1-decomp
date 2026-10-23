@@ -8,8 +8,9 @@
  * func_0021add8 reads it) once all six D_003F5C30 flags are set.
  * func_0021cd68 is the list of sections (D_00642E98, D_00642EA0 of them,
  * filled by func_0021cfc8 from D_003F5C18); a section opens a window from
- * D_003F59E8 and calls its opener D_003F5A00[k] (0x0021dbb8 on, not moved
- * yet), whose set up and reset are in func_0021dad8 / func_0021db30.  Most
+ * D_003F59E8 and calls its opener D_003F5A00[k] (src/menu/journal_s0.c ...
+ * journal_s5.c, include/menu/journal.h), whose set up and reset are in
+ * func_0021dad8 / func_0021db30.  Most
  * likely Jiminy's journal; not proved by a boot.
  *
  * Window views: JWin (plain s16 at +0xcc / +0xd2: TextWin's +0xd0 union

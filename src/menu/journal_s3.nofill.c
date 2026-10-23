@@ -1,3 +1,8 @@
+/* Page 5's section 3 (src/menu/journal_s3.c, docs/modules.md "Session 42"):
+ * func_00220c28 matches only with -fno-fill (nofill).  It draws the 99
+ * entries as two grids of numbered boxes (func_001fb428), a sprite
+ * (journalfx.c's func_0021bf68) with a random scale and turn on each one found
+ * (D_00643430[k]), and the count found (message 18). */
 #include "common.h"
 #include "data/bss_0064.h"
 typedef struct { s32 x0, x4, x8, xc, x10; u32 x14; f32 x18, x1c; } St;

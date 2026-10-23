@@ -1179,6 +1179,84 @@ float build with float_covered.txt, float_reach.txt, the loaded bytes and the
 symbols the same as the base.  At the end `make report` 6979 at 100% and
 `make test` passes.
 
+## Session 42: page 5's six sections and page 7, 0x0021dbb8-0x002298e0
+
+Session 42 moved 178 functions in ten commits into src/menu/.  No Mac:
+static checks only.  Page 5's six sections each end with their opener
+(D_003F5A00[k] keeps the section's window), set up and reset; the files are
+numbered by k, the index in the opener table, not by address (in memory the
+order is 2, 0, 3, 5, 1, 4).  Page 7 starts right after them, at 0x00223980:
+the party change, the save / load windows and the page's frame.
+
+| module | files | range | functions |
+|---|---|---|---|
+| page 5's section 2: three lists of entries (0-48, 49-126, 127-183, flags func_001eb038(func_0021dc08(i)), names messages 0x51 + i), the "complete" flags D_00643278 / D_003F5C38, the entry list func_0021ed60, the entry's detail with its model func_0021e8d8, the model viewer func_0021e670, the file load func_0021e538 (D_003F5C50) | src/menu/journal_s2.c (26), journal_s2.nostrict.c (2) | 0x0021dbb8-0x0021fbb8 | 28 |
+| section 0: 31 entries of D_003F5FF0 / D_003F6070 accepted by func_001eb9a8, four rows a page, an entry's text (func_001c2df0 on D_003F3518) | journal_s0.c | 0x0021fbb8-0x002205e0 | 14 |
+| section 3: 99 numbered entries (func_001eb318) in nine groups (D_003F61E0[i / 3]), the group list and the 99 as a grid (func_00220c28, nofill) | journal_s3.c (12), journal_s3.nofill.c (1) | 0x002205e0-0x002210f8 | 13 |
+| section 5: eight record pages (func_001ec538's flags; five rows of func_001eb5f0(table, row) with three numbers, most likely times) | journal_s5.c | 0x002210f8-0x00222ba8 | 32 |
+| section 1: 13 entries of func_001ebc38, four rows a page, an entry's text (D_003F3520) | journal_s1.c | 0x00222ba8-0x00223508 | 14 |
+| section 4: five entries of func_001ec5d8 with a count (func_001c0da0) against a goal D_003F6740[i] | journal_s4.c | 0x00223508-0x00223980 | 11 |
+| page 7's party change: the list func_00224060 (D_00643770: Sora and the members; func_0013c778 sets the party), the swap list func_00223a90, the model loads func_00223e10 (also called by journal.c's func_0021d348) / func_00223ea8 | src/menu/party.c | 0x00223980-0x002245c8 | 12 |
+| page 7's save and load windows: the port choice func_002280c0, the 99-slot list func_00225330 (D_00351E10's directory: magic 'KHSQ', version 0x01317f14), the free-space bar func_00228330, a dozen message boxes with their title setters, and the card task func_00225ea8 (nostrict) | src/menu/savemenu.c (37), savemenu.nostrict.c (1) | 0x002245c8-0x00228760 | 38 |
+| page 7's frame (message 0x70): the list func_002287f8 (save, party, a message box, leave), open func_002293f0, set up func_00229820, reset func_00229850; func_002295a0 opens the menu on this page by itself (D_003F34A8 = 1) and func_002297a0 the party change (D_003F34A8 = 2) | src/menu/page7.c | 0x00228760-0x002298e0 | 16 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x0021dbb8-0x0021fbb8 | 4cb16a5 | auto text_00210000_1 _7 _12, cc, nostrict/b14, nostrict/s19_s19m1 |
+| 0x0021fbb8-0x002205e0 | 5ea1109 | auto text_00210000, _3, _6 |
+| 0x002205e0-0x002210f8 | e2ea004 | h71, nofill/c2 |
+| 0x002210f8-0x00222ba8 | d4887c2 | h24 |
+| 0x00222ba8-0x00223508 | e3365b2 | (nothing) |
+| 0x00223508-0x00223980 | 06eb7cc | (nothing) |
+| 0x00223980-0x002245c8 | a120a18 | c15 |
+| 0x002245c8-0x00228760 | a50ee18 | nostrict/s6_g2 (renamed to savemenu.nostrict.c) |
+| 0x00228760-0x002298e0 | b1f6d51 | h47, s8_w5, auto text_00220000_1 _10 _11 |
+
+objdiff units 786 -> 779.  The names (journal sections, party, savemenu,
+page7) come from what the code reads; none is proved by a boot.  Page 7 is
+most likely the save point's menu (save, change the party).
+
+**Shared views.**  include/menu/journal.h: JsWin, the TextWin fields the
+sections read (+0xc / +0x10 chain, +0x24, +0x40, +0x90, +0xa0, +0xb0 /
++0xb4, +0xc4 s16, +0xca ... +0xce, +0xd2 a plain s16, +0xd8 / +0xda).
+include/menu/page7.h: PtWin (+0xba / +0xc0 as u16: the title setters add to
+them with lhu) and func_00223980.  Both could fold into TextWin later
+(tools/shift/s38move/fold.py) where +0xd2 is not read as plain s16.
+
+**Data moved with its users**: D_006435BC / C0 / E8, D_00643610 / 38 (from
+h71) into journal_s3.c; D_006436C8 (from auto text_00220000_4) into
+journal_s4.c as `JsWin *`; D_003F5C50 (from h47) into journal_s2.c;
+D_00643710 stays in savemenu.nostrict.c.
+
+**Traps.**
+- **A deleted file's initialized data**: h47's `s32 D_003F5C50[0x4]
+  ALIGNED(16) = {...}` was lost with the file and `make` still said
+  byte-identical (data_003F.s's piece keeps the bytes); only the float check
+  saw it (float_covered.txt / float_reach.txt changed: D_003F5C50 left both).
+  Before deleting a file, list its definitions with a pattern that keeps
+  `ALIGNED(` lines (`grep -n "^[a-zA-Z][^(]*D_[0-9A-F]\{8\}[^;]*ALIGNED"`).
+- **A union alias set**: journal_s5.c's func_00222670 stores the page
+  window's +0x24 through a `union { s32 i; u16 h; }` (local view JsWin24); with
+  the plain s32 of JsWin one load moves (8 words).
+- **Return types still change code**: func_001f94f0 must return s32 in
+  journal_s2.c's func_0021f5f8 (void: 7 words) and func_00233f18 s32 in
+  savemenu.c's func_002280c0 (void: 4 words, two registers swap).
+- m2c's `func_001f42b8()` (no argument) takes the window that is still in a0:
+  writing `func_001f42b8(a)` gives the same code everywhere in this range.
+- func_00227f90 passes three extra registers to func_0020bda8, so savemenu.c
+  declares it unprototyped (`void func_0020bda8();`).
+- tools/checkfile.py differences that are only relocations: jump tables
+  (func_00223ea8, func_00225ea8), double constants in .rodata
+  (func_00220c28), data defined in the same file (D_006435E8 ...,
+  D_006436C8, D_00643710).  `make` is the judge.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings in the edited
+old files, the new files compile without warnings, and the m12 float build
+with float_covered.txt, float_reach.txt, the loaded bytes and the symbols the
+same as the base.  At the end `make report` 6979 at 100% and `make test`
+passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1275,7 +1353,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 41, after each step)
+## Verification (sessions 30 to 42, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1291,22 +1369,18 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x0021dbb8 on: page 5's six sections, then page 7.**  Page 5's frame
-  is done (session 41).  Its sections, in address order, each end with its
-  opener (D_003F5A00), set up (func_0021dad8's list) and reset
-  (func_0021db30's list): 0x0021dbb8-~0x0021fbb8 (opener func_0021faf8, set
-  up func_0021fb28, reset func_0021fb50; 30 functions, 2 nostrict),
-  then func_00220580 / func_00220590 / func_002205c0, func_002210b0 /
-  func_002210c0 / func_002210f0, func_00222b40 / func_00222b50 /
-  func_00222b80, func_002234a8 / func_002234b8 / func_002234e8,
-  func_00223938 / func_00223948 / func_00223978, and func_00223e10 (called
-  by func_0021d348).  Page 7: title func_00229088 (message 0x70), open
-  func_002293f0, set up func_00229820, reset func_00229850; where it starts
-  is not known yet.  Old files there: auto text_00210000* and
-  text_00220000*, h24, h47, h71, h72, s6_22, b15, h25, cc, h48, c16,
-  nostrict/b14, nostrict/s19_s19m1 ...; `python3 -I
-  tools/shift/s37move/refs.py 0021dbb8 00224100` lists them.
-- What is left of h24, h47 and h71 after that (h70, b13, b14 are gone).
+- **0x002298e0 on.**  Page 5 and page 7 are done (session 42).  Next is the
+  window D_003F6E40 (func_002298e0, a status line like func_00228760) and a
+  second set of memory card windows on D_00646990 (func_00229928 ...
+  func_00229e78, the slot list func_00229ec0 in c16: most likely the load
+  screen of the title menu, like savemenu.c's), then from 0x0022a3a0 on more
+  of the same old files.  Old files there: auto text_00220000*, c16, s6_22,
+  h25, h48, h72, h73, b15, nofill/b15 ...; `python3 -I
+  tools/shift/s37move/refs.py 002298e0 00230000` lists them.  Find the
+  openers first (h48's func_0022b2e0 / func_0022b8a0 ... and the window
+  tables in data_003F.s after D_003F6E40) and split by them.
+- What is left of s6_22, h25, h48, h72 and b15 after that (h24, h47, h71,
+  c15, cc are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
