@@ -50,7 +50,7 @@ static inline s32 inl_00168318(u32 *p) {
 }
 
 #include "data/pieces/D_0035BD40.h"
-typedef ObjBD40_35BD40 ObjBD40;
+typedef struct Actor { u32 flags; u8 pad[0x140]; s32 w144; } ObjBD40;
 typedef struct Node57 { s32 id; s32 mask; s32 (*cb)(ObjBD40 *, s32, s32, s32); s32 arg; struct Node57 *next; } Node57;
 extern Node57 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
 extern Node57 *D_00575784; /* src/data/bss_0057.c: void *D_00575784 */
@@ -285,10 +285,10 @@ void func_0016e0d0(s32 mask) {
 void func_0016f548(void) {
     s32 i;
     Node57 **pp;
-    if (func_00122ff8(D_002E26A0[1]) && ((ObjBD40 *)D_002E26A0[1])->w144 != 0)
-        func_0016f3d0(D_002E26A0[1], ((ObjBD40 *)D_002E26A0[1])->w144);
-    if (func_00122ff8(D_002E26A0[2]) && ((ObjBD40 *)D_002E26A0[2])->w144 != 0)
-        func_0016f3d0(D_002E26A0[2], ((ObjBD40 *)D_002E26A0[2])->w144);
+    if (func_00122ff8(D_002E26A0[1]) && D_002E26A0[1]->w144 != 0)
+        func_0016f3d0(D_002E26A0[1], D_002E26A0[1]->w144);
+    if (func_00122ff8(D_002E26A0[2]) && D_002E26A0[2]->w144 != 0)
+        func_0016f3d0(D_002E26A0[2], D_002E26A0[2]->w144);
     { s32 j; for (j = 2; j >= 0; j--) D_00575310[j].a = 0; }
     pp = &D_00575784;
     for (i = 0; i < 30; i++) {

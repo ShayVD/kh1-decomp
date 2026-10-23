@@ -43,8 +43,8 @@ static inline void inl_001711d0(ChrEA *self, LockEA *out, f32 r) {
     EntEA *p;
     s32 i;
     f32 best, d;
-    out->part = -1;
-    out->tgt = 0;
+    out->f4 = -1;
+    out->f0 = 0;
     if (r <= 0.0f) best = D_0048E950;
     else best = r * r;
     p = 0;
@@ -58,9 +58,9 @@ static inline void inl_001711d0(ChrEA *self, LockEA *out, f32 r) {
             func_00267530(b, a, &self->pos);
             d = func_00267390(b, b);
             if (d < best) {
-                out->tgt = p;
+                out->f0 = p;
                 best = d;
-                out->part = i;
+                out->f4 = i;
             }
         }
     }
@@ -81,8 +81,8 @@ s32 func_0016ea58(void) {
     w2 = 0;
     w1 = 0;
     if (func_00122ff8(D_002E26A0[0])) D_0035BD40.vp[0] = D_002E26A0[0];
-    if (func_00122ff8(D_002E26A0[1]) && (w1 = ((ChrEA *)D_002E26A0[1])->p144) != 0) D_0035BD40.vp[1] = D_002E26A0[1];
-    if (func_00122ff8(D_002E26A0[2]) && (w2 = ((ChrEA *)D_002E26A0[2])->p144) != 0) D_0035BD40.vp[2] = D_002E26A0[2];
+    if (func_00122ff8(D_002E26A0[1]) && (w1 = D_002E26A0[1]->p144) != 0) D_0035BD40.vp[1] = D_002E26A0[1];
+    if (func_00122ff8(D_002E26A0[2]) && (w2 = D_002E26A0[2]->p144) != 0) D_0035BD40.vp[2] = D_002E26A0[2];
 
     if (D_0035BD40.chrEA[0] == 0 || (D_0035BD40.chrEA[1] == 0 && D_0035BD40.chrEA[2] == 0)) return 0;
     func_0016e0d0(1);
@@ -113,22 +113,22 @@ s32 func_0016ea58(void) {
         w2 = 0;
     }
     if ((D_002C5958 & 1) && (D_002E3168 & 1)) {
-        if ((*(LockEA *)&D_002E31B0).tgt != 0) {
-            D_00575080 = (*(LockEA *)&D_002E31B0);
+        if (D_002E31B0.f0 != 0) {
+            D_00575080 = D_002E31B0;
         } else {
             inl_001711d0(D_0035BD40.chrEA[0], &D_00575080, D_0035AF40);
-            if (D_00575080.part < 0) D_00575080.tgt = 0;
+            if (D_00575080.f4 < 0) D_00575080.f0 = 0;
         }
-        if (D_00575080.tgt != 0) {
-            if (w1 != 0 && func_0012f040(D_0035BD40.chrEA[1], -1)) d1 = func_001629b0(&D_00575080.tgt->pos, &D_0035BD40.chrEA[1]->pos);
+        if (D_00575080.f0 != 0) {
+            if (w1 != 0 && func_0012f040(D_0035BD40.chrEA[1], -1)) d1 = func_001629b0(&D_00575080.f0->pos, &D_0035BD40.chrEA[1]->pos);
             else d1 = D_0048E950;
-            if (w2 != 0 && func_0012f040(D_0035BD40.chrEA[2], -1)) d2 = func_001629b0(&D_00575080.tgt->pos, &D_0035BD40.chrEA[2]->pos);
+            if (w2 != 0 && func_0012f040(D_0035BD40.chrEA[2], -1)) d2 = func_001629b0(&D_00575080.f0->pos, &D_0035BD40.chrEA[2]->pos);
             else d2 = D_0048E950;
             if (d1 < d2) {
-                if (w2 != 0 && w1->f64 > 0.0f && w1->p90 == D_00575080.tgt) w2->w38 |= 8;
+                if (w2 != 0 && w1->f64 > 0.0f && w1->p90 == D_00575080.f0) w2->w38 |= 8;
                 else w1->w38 |= 8;
             } else if (d2 < d1) {
-                if (w1 != 0 && w2->f64 > 0.0f && w2->p90 == D_00575080.tgt) w1->w38 |= 8;
+                if (w1 != 0 && w2->f64 > 0.0f && w2->p90 == D_00575080.f0) w1->w38 |= 8;
                 else w2->w38 |= 8;
             }
         } else if (w1 != 0) {
