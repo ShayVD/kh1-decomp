@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 
 #include "data/types/text_00110000_h53_p.h"
@@ -135,8 +136,6 @@ typedef struct {
     u8 *buf;
     u32 result;
 } CdReq53;
-typedef struct { u32 b0 : 1; u32 b1 : 1; u32 b2 : 1; u32 r : 29; } F5968;
-#include "data/pieces/D_002C5968.h"
 extern char D_0048D260[];
 extern u32 D_002C5B44;
 extern void (*D_0046A6A8)(s32);
@@ -189,8 +188,8 @@ rd:
 out:
     if (err) {
         D_0046A6A8(4);
-        (*(volatile F5968 *)&D_002C5968).b2 = 1;
-        do func_0010c150(); while ((*(volatile F5968 *)&D_002C5968).b2);
+        (*(volatile Fl_2c5968 *)&D_002C5968).b2 = 1;
+        do func_0010c150(); while ((*(volatile Fl_2c5968 *)&D_002C5968).b2);
         func_002193e0(0);
         r->lsn += D_004F3200;
         func_0010c170(func_001201d0, r);
