@@ -3,91 +3,7 @@
 #include "data/bss_0064.h"
 
 typedef W606Mem_304be8 S4BE8e;
-
-#include "data/pieces/D_003F34B8.h"
-typedef S34B8_3f34b8 S34B8;
-
-void func_00219128(void) {
-    S34B8 *p = D_003F34B8;
-    p->f2c = 1;
-    p->f8 = 0;
-    p->f4 = 0;
-    p->fc = 0;
-    p->f10 = 0;
-    p->f14 = 0;
-    p->f18 = 0;
-    p->f0 = 0;
-}
-
-#include "data/pieces/D_003F59A0.h"
-extern f32 D_003F59B0;
-extern s32 D_003F59B4, D_003F59B8;
-extern s32 D_003F59C8[];
-extern s32 D_006430F4;
-extern s32 D_00643108, D_0064310C;
-
-void func_0021b1b0(s32 a0, s32 a1, f32 x, f32 y) {
-    u32 i;
-    D_003F59B0 = x;
-    D_003F59A0[1] = y;
-    for (i = 0; i < 2; i++) {
-        if (D_003F59C8[i] == D_006430F4) {
-            D_003F59A0[1] = 0.0f;
-            break;
-        }
-    }
-    D_00643108 = a0;
-    D_0064310C = a1;
-    D_003F59B4 = a0 - 256;
-    D_003F59B8 = a1 - 192;
-}
-
-typedef struct { s32 f0; u8 pad[16]; u8 f14[200 - 20]; s32 fc8; s32 fcc; } S3020;
-extern S3020 D_00643020;
-extern s32 D_00643100;
-void func_00162110(s32, void *);
-void func_00176310(s32);
-void func_0021b418(void) {
-    if (D_00643020.fcc) {
-        func_00162110(D_00643020.f0, D_00643020.f14);
-        if (D_00643020.fc8) func_00176310(D_00643020.fc8);
-        D_00643020.fcc = 0;
-        D_00643100 = 0;
-    }
-}
-
-extern s32 D_00642EA0;
-extern u8 D_00642E98[];
-#include "data/pieces/D_003F5C18.h"
-void func_0021cfc8(void) {
-    s32 i;
-    D_00642EA0 = 0;
-    for (i = 0; i < 6; i++) {
-        if (D_003F5C18[i]) D_00642E98[D_00642EA0++] = i;
-    }
-}
-
-extern s32 D_00643010, D_00643014;
-extern s32 D_003F5C30[];
 void func_0021fb50(void);
-void func_002205c0(void);
-void func_002210f0(void);
-void func_00223978(void);
-void func_00222b80(void);
-void func_002234e8(void);
-void func_0021db30(void) {
-    s32 i;
-    D_00643010 = 0;
-    D_00643014 = 0;
-    D_003F34B8->b112[1] = 0;
-    for (i = 5; i >= 0; i--) D_003F5C30[i] = 0;
-    func_0021fb50();
-    func_002205c0();
-    func_002210f0();
-    func_00223978();
-    func_00222b80();
-    func_002234e8();
-}
 
 extern s32 D_0064324C, D_00643250;
 extern s32 D_00643258[], D_00643268[];
@@ -158,30 +74,4 @@ void func_00222ab0(void) {
 }
 
 /* needs make: uses rodata */
-
-s32 func_00219158(s32 a0) {
-    switch (a0) {
-    case 0: return D_003F34B8->f0;
-    case 1: return D_003F34B8->f4;
-    case 2: return D_003F34B8->f8;
-    case 3: return D_003F34B8->f10;
-    case 4: return D_003F34B8->f14;
-    case 5: return D_003F34B8->f18;
-    case 6:
-    default: return D_003F34B8->f2c;
-    }
-}
-
-void func_002191f0(s32 a0, s32 a1) {
-    switch (a0) {
-    case 0: D_003F34B8->f0 = a1; break;
-    case 1: D_003F34B8->f4 = a1; break;
-    case 2: D_003F34B8->f8 = a1; break;
-    case 3: D_003F34B8->f10 = a1; break;
-    case 4: D_003F34B8->f14 = a1; break;
-    case 5: D_003F34B8->f18 = a1; break;
-    case 6:
-    default: D_003F34B8->f2c = a1; break;
-    }
-}
 #include "data/data_003F.h"

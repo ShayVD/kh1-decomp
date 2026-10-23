@@ -1105,6 +1105,80 @@ warnings in the new files), and the m12 float build with float_covered.txt
 and the symbols the same as the base.  At the end, with data_owners.py
 rerun, the same; `make report` 6979 at 100% and `make test` passes.
 
+## Session 41: the settings, the config page and page 5's frame, 0x00219128-0x0021dbb8
+
+Session 41 moved 109 functions in five chunks, one commit each, into
+src/menu/.  No Mac: static checks only.  Pages 6 and 5 end like pages 0 to 4
+(first window with the title func_00207830(o, 4, 2, 0, 0, 122, message),
+open = topmenu.c's D_003F32E8[page], then set up / reset from
+func_0020d530's / func_0020d748's lists).  Page 5 differs: its set up and
+reset also call six section set ups / resets far on (0x0021dbb8 ...
+0x00223978), so its frame was split in three by what the code does and its
+sections are left for later.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the settings block's accessors: D_003F34B8 f0 f4 f8 f10 f14 f18 f2c, numbered 0-6 by func_00219158 (get) / func_002191f0 (set), a get / wrapper / set each, the reset func_00219128; func_00219428 tests D_002B6478 == 2 | src/menu/settings.c (28), include/menu/settings.h | 0x00219128-0x00219440 | 28 |
+| the config page (page 6, message 0x6f): the option list func_00219f98 (eight rows, D_00642D24 the cursor, row 7 resets), the three two-choice windows (func_00219a88 / c18 / da8), func_00219870's twelve-box frame (D_003F4A48), func_00219500 loads two textures that func_00219598 draws (GS packet + sceGsSyncPath); open func_0021ad08, set up func_0021adb0, reset func_0021adc8, and func_0021add8 (D_003F34B8->b112[1], the top menu's marker on page 5) | src/menu/config.c (16), config.nostrict.c (1) | 0x00219440-0x0021ade8 | 17 |
+| page 5's model: D_00643020 (JMdl, 0xd0 bytes, one type for three views), asked for by func_0021b4c8 / func_0021b5c8, loaded by the steps of func_0021b6a0 (D_006430F0), set up func_0021b250, drawn func_0021af38, freed func_0021b418; the camera func_0021ae28 | src/menu/journalmdl.c (15) | 0x0021ade8-0x0021b860 | 15 |
+| page 5's sprite frames: func_0021b860 / func_0021bbe0 / func_0021bf68 draw sprites of D_003F4CF0 (GS packets + sceGsSyncPath), the frames func_0021c450 ... func_0021c9a0, the cursor func_0021c4f8, a labelled bar func_0021cbc8, the title box func_0021ccd0 | src/menu/journalfx.c (10), journalfx.nostrict.c (3) | 0x0021b860-0x0021cd68 | 13 |
+| page 5's frame (message 0x6e): the section list func_0021cd68 (D_00642E98 / D_00642EA0, openers D_003F5A00), the first window func_0021d348 (loads six files, D_00642EA4 the step; sets D_003F34B8->b112[1] once all six D_003F5C30 flags are set), open func_0021daa0, set up func_0021dad8, reset func_0021db30 | src/menu/journal.c (21) | 0x0021cd68-0x0021dbb8 | 21 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x00219128-0x00219440 | cb17378 | (nothing: auto text_00210000*, h24 lose their accessors) |
+| 0x00219440-0x0021ade8 | b7e60f4 | nostrict/s9_w7, s9_r2_5 (only a CONTEXT_ONLY stub left) |
+| 0x0021ade8-0x0021b860 | d3e8e24 | s9_w5 |
+| 0x0021b860-0x0021cd68 | 30df3b5 | nostrict/s6_22, nostrict/c15, auto text_00210000_10 _11 |
+| 0x0021cd68-0x0021dbb8 | df796a8 | auto text_00210000_2 _4; c15's `#if 0` draft of func_0021d860 |
+
+objdiff units 788 -> 786 (seven new files, nine
+deleted).  The names (settings, config, journal) come from what the code
+reads (seven stepped options and a reset row; six files loaded, six
+section flags, a model per entry); none is proved by a boot.
+
+**Data moved with its users**: D_003F4A48 (from s6_22) into config.c;
+D_006430EC (from auto text_00210000_3) into journalmdl.c; D_00642E90 (from
+auto text_00210000_4), D_003F59E8 / D_003F5A00 (from h71) and D_003F5C08
+(from h47) into journal.c.
+
+**Struct findings.**
+- **D_003F34B8** (S34B8_3f34b8): f0 f4 f8 f10 f14 f18 f2c are seven
+  settings (index 0-6 of func_00219158 / func_002191f0, maximum
+  D_003F4C18[n]); fc has no accessor; **b112[1]** (+0x74) is page 5's
+  "complete" marker (set by func_0021d348, cleared by func_0021db30, read by
+  func_0021add8 for the top menu).
+- **D_00643020** is page 5's model object: one JMdl in journalmdl.c
+  (x0 the file, x14 the loaded data freed with &x14, xc8 a JP8 *, xcc
+  "loaded"); h24's S3020 view (f0 / f14 / fc8 / fcc) was the same fields.
+- func_0021b800 returns func_001efcb0's value (s32; it was void in h24 and
+  journalfx.c's func_0021cbc8 passes it on).
+
+**Traps.**
+- **A body of the callee above the caller turns one branch into a
+  branch-likely**: func_00219f98 needs a CONTEXT_ONLY func_00219380 above it
+  (any body; settings.c defines the real one) and func_00219870 a
+  CONTEXT_ONLY func_00219598 (an empty body is enough; the real one is in
+  config.nostrict.c).  Without them one bne becomes bnel (1 word).
+- **mod.py remove can leave a caller without a prototype**: h71's
+  func_0021cd68 called func_0021c5e0, defined above it in h71; after the move
+  it was implicit int (2 words).  h71 now declares it.  Check moved names
+  for callers below their old definitions (a quick script: the first call of
+  each name in a file with no declaration before it).
+- refs.py's third column lists callees: `grep -v NAME` on its output also
+  drops the callers of NAME (func_00219870 nearly stayed behind).
+- tools/checkfile.py shows relocation words as differences for data defined
+  in the same file (D_003F4A48, D_006430EC, D_00642E90) and for jump tables;
+  `-v` lists them; `make` is the judge.
+- func_0021d860 needs func_001f9438 / func_001fc308 declared s32 (void: 7
+  words, from c15's old note).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings, and the m12
+float build with float_covered.txt, float_reach.txt, the loaded bytes and the
+symbols the same as the base.  At the end `make report` 6979 at 100% and
+`make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1201,7 +1275,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 40, after each step)
+## Verification (sessions 30 to 41, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1217,16 +1291,21 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x00219128 on: the rest of the pages.**  Pages 0 to 4 are done
-  (session 40).  Next: the accessors of D_003F34B8 (the settings block:
-  0x00219128 ... about 0x00219400, tiny get / set functions in auto
-  text_00210000*, h24), then pages 6 (open func_0021ad08) and 5 (open
-  func_0021daa0; page 5 is in D_00640E00 only when func_001ec510), and page
-  7 (func_002293f0, far on).  Split each page where its title / open / set
-  up / reset end it.  Old files there: auto text_00210000* and
-  text_00220000*, h24, h47, h71, h72, s6_22, c15, b15, h25, cc, h48, c16,
-  nostrict/b14 ...; `python3 -I tools/shift/s37move/refs.py 00219128
-  0021e000` lists them.
+- **0x0021dbb8 on: page 5's six sections, then page 7.**  Page 5's frame
+  is done (session 41).  Its sections, in address order, each end with its
+  opener (D_003F5A00), set up (func_0021dad8's list) and reset
+  (func_0021db30's list): 0x0021dbb8-~0x0021fbb8 (opener func_0021faf8, set
+  up func_0021fb28, reset func_0021fb50; 30 functions, 2 nostrict),
+  then func_00220580 / func_00220590 / func_002205c0, func_002210b0 /
+  func_002210c0 / func_002210f0, func_00222b40 / func_00222b50 /
+  func_00222b80, func_002234a8 / func_002234b8 / func_002234e8,
+  func_00223938 / func_00223948 / func_00223978, and func_00223e10 (called
+  by func_0021d348).  Page 7: title func_00229088 (message 0x70), open
+  func_002293f0, set up func_00229820, reset func_00229850; where it starts
+  is not known yet.  Old files there: auto text_00210000* and
+  text_00220000*, h24, h47, h71, h72, s6_22, b15, h25, cc, h48, c16,
+  nostrict/b14, nostrict/s19_s19m1 ...; `python3 -I
+  tools/shift/s37move/refs.py 0021dbb8 00224100` lists them.
 - What is left of h24, h47 and h71 after that (h70, b13, b14 are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from

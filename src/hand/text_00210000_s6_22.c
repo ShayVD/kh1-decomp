@@ -4,306 +4,22 @@
    conflicting extern/prototype declarations use __asm__ labels so each function keeps
    the exact declarations it matched with. func_0022a698 rodata (0x491260) was verified
    with wqb03_rr.py in a copy without func_0021b6a0 (the tool puts all .rodata at one address). */
-/* ---- f9870/v1.c ---- */
-
-typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd_q0;
-typedef struct { s32 u, v; u64 pad; s32 x, y, z, f; } UV_q0;
-typedef struct { u64 h[14]; u64 rgba, q; UV_q0 v[2]; } Pk_q0;
-extern u8 D_00642D30[];
-extern u8 D_00642DE0[];
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
-void func_001220b8(void *);
-s32 func_001f4570(Wnd_q0 *);
-s32 func_001f45e0(Wnd_q0 *);
-
-CONTEXT_ONLY void func_00219598(Wnd_q0 *o, s32 x, s32 y) {
-    u64 *buf;
-    Pk_q0 *s;
-    void *u;
-    s32 cx, cy;
-    f32 fx, fy, sx, sy, ax, ay, bx, by;
-    s32 x0, y0, x1, y1;
-    s32 X, Y;
-    u64 t12, t13;
-    t13 = 0x4343E;
-    t12 = 0x50AB400000008001;
-    func_00266f38(func_00266c08(2), D_00642D30);
-    func_00266f38(func_00266c08(2), D_00642DE0);
-    x <<= 4;
-    y <<= 4;
-    buf = func_00122048(1024, 128);
-    s = (Pk_q0 *)(buf + 2);
-    s->h[11] = 66;
-    s->h[0] = 0x5000000000008001;
-    s->h[1] = 0xEEEEE;
-    s->h[2] = 0x4000D;
-    s->h[3] = 71;
-    s->h[5] = 63;
-    s->h[6] = 0x2006D005E1313600;
-    s->h[12] = t12;
-    s->h[7] = 6;
-    s->h[8] = 97;
-    s->h[9] = 20;
-    s->h[4] = 0;
-    s->h[10] = 68;
-    s->h[13] = t13;
-    s->rgba = (u32)(o->x90 << 24 | 0x808080);
-    s->v[0].u = 24;
-    s->q = 1;
-    s->v[0].v = 24;
-    s->v[0].x = X = o->xb0 + x;
-    s->v[0].y = Y = o->xb4 + y;
-    s->v[1].u = 2168;
-    s->v[1].v = 1368;
-    s->v[0].f = 0x8000;
-    s->v[1].x = X + 2160;
-    s->v[1].y = Y + 1360;
-    s->v[0].z = 0x100000;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    s->v[1].f = 0;
-    s->v[1].z = 0x100000;
-    if (o->x48 & 1) {
-        cx = func_001f4570(o);
-        cy = func_001f45e0(o);
-        sx = o->sx;
-        sy = o->sy;
-        fx = cx;
-        fy = cy;
-        x0 = fx + (f32)(s->v[0].x - cx) * sx;
-        y0 = fy + (f32)(s->v[0].y - cy) * sy;
-        x1 = fx + (f32)(s->v[1].x - cx) * sx;
-        y1 = fy + (f32)(s->v[1].y - cy) * sy;
-        s->v[0].x = x0;
-        s->v[0].y = y0;
-        s->v[1].x = x1;
-        s->v[1].y = y1;
-    }
-    buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-}
-
-typedef struct { s32 a, b, c, d; } R4_q0;
-#include "data/types/text_00210000_s6_22.h"
-extern s32 D_00642D28;
-extern s32 D_003F34CC;
-extern s32 D_003F4818[], D_003F4848[], D_003F4878[], D_003F48A8[];
-extern R4_q0 *D_003F4A48[];
-extern s32 D_003F4A78[];
-extern P2_q0 D_003F4AA8[];
-void func_001f9270(void *, s32, s32, s32, s32, s32);
-s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-void func_001fc308(void *, s32, s32, s32, s32, s32, s32, u32, u32);
-void func_00206130(void *, s32, s32, s32, s32, u32);
-
-void func_00219870(Wnd_q0 *o) {
-    s32 i, n;
-    R4_q0 *r;
-    P2_q0 *q;
-    s32 *np;
-    R4_q0 **rp;
-    func_001f9270(o, 0, 16, 325, 15, 0x801EC8C8);
-    for (i = 0; i < 12; i++) {
-        func_001f9438(o, D_003F4878[i], D_003F4818[i], D_003F4848[i], D_003F48A8[i], 15, i == D_00642D28 ? 0x80B4B4B4 : 0x40808080);
-    }
-    if (D_003F34CC == 2) func_00219598(o, 176, 61);
-    rp = D_003F4A48;
-    np = D_003F4A78;
-    for (i = 0; i < 12; i++) {
-        n = *np;
-        r = *rp;
-        for (; n > 0; n--) {
-            func_00206130(o, r->a, r->b, r->c, r->d, i == D_00642D28 ? 0x80F35054 : 0x33F35054);
-            r++;
-        }
-        np++;
-        rp++;
-    }
-    q = &D_003F4AA8[D_00642D28];
-    func_001fc308(o, q->x, q->y, 0, 0, 10, 0, 0x33F35054, 0x33F35054);
-    func_001fc308(o, q->x, q->y + 15, 0, 0, 11, 0, 0x33F35054, 0x33F35054);
-}
 
 /* ---- faf38/match.c ---- */
-
-typedef f32 Mtx[4][4];
-#include "data/pieces/D_00425F70.h"
-typedef struct { u8 pad[8]; s32 x8; s32 xc; } P8_q1;
-typedef struct {
-    s32 x0;
-    u8 pad4[4];
-    s32 x8;
-    s32 xc;
-    s32 x10;
-    s32 x14;
-    u8 x18[4];
-    s32 x1c;
-    u8 pad20[8];
-    s32 x28;
-    s32 x2c;
-    s32 x30;
-    s8 x34[4];
-    s8 x38[3];
-    s8 x3b;
-    s32 x3c;
-    s8 x40[6];
-    s8 x46;
-    s8 x47;
-    s32 x48;
-    u8 pad4c[4];
-    s32 x50;
-    u8 pad54[0x60 - 0x54];
-    u64 x60;
-    u64 x68;
-    f32 x70;
-    s32 x74;
-    s32 x78;
-    u8 pad7c[0xC0 - 0x7C];
-    s32 xc0;
-    u8 padc4[4];
-    P8_q1 *xc8;
-    s32 xcc;
-} G20_q1;
-extern G20_q1 D_00643020;
-#include "data/pieces/D_00425CE0.h"
 typedef struct { u8 pad[0xc]; s32 xc; } PC_q1;
 extern PC_q1 *D_006430E8;
 extern s32 D_006430F8;
 extern s32 D_00643100;
 extern f32 D_002BBDFC;
-#include "data/pieces/D_002BC140.h"
-#include "data/pieces/D_002BC144.h"
-extern u8 D_003F5990[];
-#include "data/pieces/D_003F59A0.h"
-typedef struct { u8 pad[0x90]; s32 x90; } Ob_q1;
-s32 func_001301d8(void *, s32, s32, s32);
-void func_001655e0(void *, s32, s32, f32);
-s32 func_0021ade8(s32);
-void func_002675a8(s32, void *);
-void func_00236a58(void);
-void func_002678b8(void *, void *, void *);
-void func_00131cc8(s32, void *);
-void sceVu0MulMatrix(void *, void *, void *);
-void func_00267578(void *, void *, void *);
-void func_00167d70(s32, f32);
-s32 func_00167698(s32);
-void func_00161de8(s32, void *, void *, s32);
-
-void func_0021af38(Ob_q1 *a) {
-    Mtx m;
-    Mtx m2;
-    f32 v[4];
-    s32 r;
-    if (D_00643100 == 0) return;
-    if (func_0021ade8(D_006430F8)) {
-        D_00425F70->v1b0[0] = 1.0f;
-        D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
-        D_00425F70->v1b0[1] = 1.0f;
-        D_00425F70->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
-    }
-    r = func_001301d8(D_00643020.x18, 0, 0, 0);
-    func_00236a58();
-    func_002678b8(m, D_00425CE0, D_003F59A0);
-    func_00131cc8(D_006430F8, m2);
-    sceVu0MulMatrix(m, m, m2);
-    func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, D_00425F70->m80, m);
-    func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
-    D_00643020.x70 += D_002BBDFC;
-    func_00167d70(D_00643020.x14, D_002BBDFC);
-    if ((f32)func_00167698(r) <= D_00643020.x70) D_00643020.x70 = 0.0f;
-    D_00643020.x30 = 60000;
-    v[3] = 1.0f;
-    D_00643020.x34[3] = a->x90;
-    v[0] = 0;
-    v[1] = 0;
-    v[2] = 0;
-    func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
-    (*(void **)&D_002BC144) = D_00425F70->m40;
-    (*(void **)&D_002BC140) = D_00425F70->m80;
-    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
-    func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
-}
 
 /* ---- fb6a0/d.c ---- */
-
-extern s32 D_003F34C8;
-extern s32 D_003F3504;
-extern s32 D_006430F0;
 extern s32 D_006430F8;
-extern s32 D_006430FC;
 extern s32 D_00643100;
-s32 func_001560f8(s32, void *);
-void func_0021b470(void);
-void FlushCache(s32);
-void func_0021b250(s32);
 
 /* rodata */
-void func_0021b6a0(void) {
-    switch (D_006430F0) {
-    case 0:
-        break;
-    case 1:
-        switch (D_003F3504) {
-        case 0:
-            D_003F34C8++;
-            D_003F3504 = 1;
-            D_006430F0++;
-            func_001560f8(D_006430FC, func_0021b470);
-            D_006430F8 = D_006430FC;
-            break;
-        case 1:
-            D_006430F0++;
-            break;
-        default:
-            D_006430F0 = 3;
-            break;
-        }
-        break;
-    case 2:
-        if (D_003F3504 == 2) D_006430F0++;
-        break;
-    case 3:
-        if (D_006430F8 == D_006430FC) {
-            FlushCache(0);
-            func_0021b250(D_006430FC);
-            D_006430F0++;
-            D_00643100 = 1;
-        } else {
-            D_006430F0 = 1;
-            D_003F3504 = 0;
-        }
-        break;
-    case 4:
-        break;
-    }
-}
 
 /* ---- fd860/MATCH_d860.c ---- */
-
-extern u8 D_003F5AE8[];
-extern s32 D_00643014;
-extern s32 D_003F59D0[];
-void func_00205b30(void *, void *);
-void func_00206130(void *, s32, s32, s32, s32, u32);
-void func_0020ca30(void *, s32, u32, u32);
-s32 func_001fc308_q3(void *, s32, s32, s32, s32, s32, s32, u32, u32) __asm__("func_001fc308");
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-
-void func_0021d860(void *a) {
-    func_00205b30(a, D_003F5AE8);
-    func_00205b30(a, D_003F5AE8 + 32);
-    func_00206130(a, 0, 62, 512, 2, 0x80364B2C);
-    func_0020ca30(a, 0, 0x804C7F33, 0x805BB66A);
-    func_001fc308_q3(a, 160, 35, 0, 19, 20, 0, 0x80399BFF, 0x80399BFF);
-    func_001f9438(a, 0, 173, 35, D_003F59D0[D_00643014], 19, 0x80399BFF);
-}
 
 /* ---- fdc40/MATCH_dc40.c ---- */
 
@@ -534,7 +250,6 @@ draw:
 
 /* ---- f8e70/MATCH_8e70.c ---- */
 
-
 typedef struct {
     s32 magic;
     s32 ver;
@@ -645,7 +360,6 @@ void func_00233f18(void);
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 
-
 typedef struct Nd_q6 { u8 pad[0x10]; struct Nd_q6 *x10; } Nd_q6;
 typedef struct { s32 x0; u8 pad[0xc]; s32 x10; } C28_q6;
 extern s32 D_006436D0;
@@ -742,7 +456,6 @@ void func_00228e70(void *arg0) {
 }
 
 /* ---- fa698/noctx.c ---- */
-
 
 typedef struct {
     s32 magic;
@@ -854,8 +567,6 @@ void func_00233f18(void);
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 
-
-
 extern s32 D_003F7778;
 extern f32 D_002BBDFC;
 extern s32 D_006469D0;
@@ -900,7 +611,6 @@ void func_002246f8(void *);
 void func_00224920(void *);
 void func_00224ad8(void *);
 void func_00225288(void *);
-
 
 extern s32 D_006437D8;
 extern s32 D_006437E0;
@@ -1232,7 +942,6 @@ end:
 
 /* ---- febf8/MATCH_ebf8.c ---- */
 
-
 typedef struct {
     u8 pad00[0x21];
     u8 n;
@@ -1303,29 +1012,9 @@ err:
     D_00646A18 = -1;
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-extern u8 D_003F48D8[];
-extern u8 D_003F4908[];
-extern u8 D_003F4918[];
-extern u8 D_003F4928[];
-extern u8 D_003F4948[];
-extern u8 D_003F4968[];
-extern u8 D_003F4988[];
-extern u8 D_003F49A8[];
-extern u8 D_003F49C8[];
-extern u8 D_003F49E8[];
-extern u8 D_003F4A08[];
-extern u8 D_003F4A28[];
-R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
-    (void *)D_003F48D8, (void *)D_003F4908, (void *)D_003F4918, (void *)D_003F4928,
-    (void *)D_003F4948, (void *)D_003F4968, (void *)D_003F4988, (void *)D_003F49A8,
-    (void *)D_003F49C8, (void *)D_003F49E8, (void *)D_003F4A08, (void *)D_003F4A28,
-};
 #include "data/data_003F.h"
 #include "data/data_0042.h"
 #include "data/data_003E.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_003F34C8.h"
 #include "data/pieces/D_003F50E0.h"
 #include "data/pieces/D_00425CAC.h"
-#include "data/pieces/D_003F4AA8.h"

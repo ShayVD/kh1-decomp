@@ -40,9 +40,10 @@ back, boot, and narrow down within the session that fixes it.
 | 38 | none | module move, view folds into TextWin and D_0063F758 typed TextWin[24], same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 37 after every commit | none |
 | 39 | none | module move into src/menu/ (D_003F3530 typed PartyMdl[4]; D_00640E40, D_003F31D0, D_006411E0 ... D_00641218, D_003F32C8 and D_003F32E8 defined by their modules), same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 38 after every commit | none |
 | 40 | none | module move into src/menu/ (the item page's frame, the equipment, abilities, customize and status pages; D_003F3DE0 and D_00642D10 / D_00642D14 defined by their modules), same names | none: float_covered.txt (as a set: one line moved), float_reach.txt, the loaded bytes and the symbols match session 39 after every commit | none |
+| 41 | none | module move into src/menu/ (the settings accessors, the config page, page 5's model, sprite frames and frame; D_003F4A48, D_006430EC, D_00642E90, D_003F59E8, D_003F5A00 and D_003F5C08 defined by their modules; D_00643020 typed JMdl), same names | none: float_covered.txt, float_reach.txt, the loaded bytes and the symbols match session 40 after every commit | none |
 
 Session 30's default (2,100 float), session 31's (2,047), session 32's (2,043), session 33's (2,032) and session 34's
-(2,049, unchanged in sessions 35 to 40) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
+(2,049, unchanged in sessions 35 to 41) were never booted. To go back one session at a time: `SHIFT_REACH_FLAGS="--no-likely-slot --no-widen-heads
 --no-hix-join --no-align-end --no-neg-keep"` gives session 33's names (float_reach.txt and .log byte-identical);
 `--no-hix-join` alone puts back the three atanf tables, `--no-widen-heads` those and D_00531B70 / D_00531F70 (and
 re-floats D_002BD1F0 and D_00454468), `--no-likely-slot` the other 14. Add `--no-idx-span` for session 32's names; add
