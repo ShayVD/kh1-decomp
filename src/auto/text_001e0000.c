@@ -15,14 +15,10 @@ M2C_UNK func_001efb18(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_001efc10(M2C_UNK);
 M2C_UNK func_001efdb8(s32);
 M2C_UNK func_001effc0(s32);
-M2C_UNK func_002583e0(M2C_UNK);
 extern M2C_UNK D_003E5ED8;
 extern M2C_UNK D_003E8910;
-extern s32 D_003E3C80;
 extern s32 D_003E8E00;
 extern s32 D_003E8E04;
-extern s32 D_0063F248;  /* src/data/data_0063.s: inside the IOP block D_0063D640 */
-extern s32 D_0063F540;
 #include "data/pieces/D_003F34B8.h"
 s32 func_001ee768();
 s32 func_001efbb8();
@@ -32,48 +28,15 @@ void *func_001496c8();
 
 /* func_001e05a8, func_001e1418 are in src/screen/screen.c. */
 
-
 /* func_001e2800 is in src/shop/shop.c. */
 
 /* func_001e7488 is in src/list/list.c. */
 
 /* func_001e8010, func_001e8338, func_001e8658, func_001e89e0, func_001e8a10, func_001e8a30, func_001e8b08, func_001e8bc0, func_001e90c8, func_001e90d0, func_001e9108, func_001e9150, func_001e9170, func_001e9190, func_001e91f0 are in src/event/sound.c. */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* func_001ea430 is in src/vm/vm_util.c. */
 
 /* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
-
-
-
-
-
-void func_001ec7c0(s32 arg0) {
-    D_003E3C80 = arg0;
-}
-
-s32 func_001ecfb0(void) {
-    func_002583e0(0);
-    return D_0063F248;
-}
-
-s32 func_001ecfd8(void) {
-    func_002583e0(0);
-    return D_0063F540;
-}
 
 u32 func_001ee1d0(void) {
     return func_001ee118() / 3600U;

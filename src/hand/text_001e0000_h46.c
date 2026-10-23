@@ -3,7 +3,6 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-
 /* Party member (0x74 bytes) in the save block at D_00304BE8. */
 typedef W606Mem_304be8 Mem74;
 typedef Save_304be8 SaveM;
@@ -54,12 +53,6 @@ typedef struct {
     s16 ba;
 } Txt;
 typedef struct { u8 pad0[0x70]; u32 x70; u8 pad74[0x14]; s32 x88; } Win46;
-
-extern s32 D_00635640[][8]; /* src/data/bss_0063.c: s32 D_00635640[1024][8] */
-extern s32 D_003E3CB0;
-extern char D_00490928[];
-extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
-extern u8 D_003E3C88[];
 #include "data/pieces/D_003E3D68.h"
 #include "data/pieces/D_003E3D6C.h"
 #include "data/pieces/D_003E3D70.h"
@@ -77,9 +70,6 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 extern f32 D_002BBDFC;
 extern s32 D_003F2F10[];
-
-int printf(const char *, ...);
-int sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
 s32 sceGsSyncPath(s32, u16);
 f32 sinf(f32);
 u64 *func_0011fb38(s32, u64, u64 *);
@@ -147,37 +137,6 @@ f32 func_001f46a0(Txt *t);
 void func_001f46a8(Txt *t, f32 v);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-
-void func_001ed000(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    s32 *pn = &D_003E3CB0;
-    s32 n = *pn;
-    D_00635640[n][0] = a;
-    D_00635640[n][1] = b;
-    D_00635640[n][2] = c;
-    D_00635640[n][3] = d;
-    D_00635640[n][4] = e;
-    D_00635640[n][5] = f;
-    D_00635640[n][6] = g;
-    D_00635640[n][7] = h;
-    *pn = n + 1;
-    if (n + 1 >= 1024) {
-        *pn = 0;
-        printf(D_00490928);
-    }
-}
-
-s32 func_001edba0(void) {
-    s32 i, j;
-    if (D_00635640[0][0] != -1) {
-        sceSifCallRpc(D_003E3C88, 30, 0, D_00635640, 0x2000, D_00635640, 0x2000, 0, 0);
-        D_003E3CB0 = 0;
-        for (i = 0; i < 1024; i++) {
-            for (j = 7; j >= 0; j--) D_00635640[i][j] = -1;
-        }
-    }
-    return D_00633640;
-}
 
 s32 func_001ef140(s32 i, s32 id) {
     s32 c = 0;

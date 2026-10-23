@@ -2,25 +2,6 @@
 #include "data/bss_0066.h"
 /* func_001cdcb8 is in src/vm/vm_lib.c. */
 
-/* func_001ecc68: early `return G;` duplicated before the call (crossjump) */
-extern s32 D_003E3C80;
-extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
-void func_001ed000(s32, u8 *, s32, s32, s32, s32, s32, s32);
-
-s32 func_001ecc68(u8 *p, s32 a, s32 b, s32 c) {
-    s32 v, x, y;
-    v = p[16] << 24 | p[17] << 16;
-    v |= p[18] << 8;
-    v |= p[19];
-    v = v * 4096 / 48000;
-    x = p[30];
-    y = p[31];
-    if (D_003E3C80 & 4) return D_00633640;
-    func_001ed000(18, p, a, b, c, v, x, y);
-    return D_00633640;
-}
-
-
 /* func_001f0448: needs CONTEXT_ONLY func_001efba8 above; the q-loop divides by a local `ten` set before the pad test */
 extern s32 D_003E8E04;
 CONTEXT_ONLY s32 func_001efba8(void) { return D_003E8E04; }

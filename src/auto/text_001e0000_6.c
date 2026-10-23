@@ -2,15 +2,11 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0062.h"
-
-M2C_UNK func_001ed000(M2C_UNK, s32, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_001efc10(u16);
 M2C_UNK func_001efd20(s32, s32);
 M2C_UNK func_0021dbb8();
-M2C_UNK sceSifCallRpc(M2C_UNK *, M2C_UNK, M2C_UNK, s32 *, M2C_UNK, s32 *, M2C_UNK, M2C_UNK, s32);
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003DC390.h"
-extern M2C_UNK D_003E3C88;
 extern M2C_UNK D_003E3CB8;
 #include "data/pieces/D_003E3CF8.h"
 #include "data/pieces/D_003E3E50.h"
@@ -18,7 +14,6 @@ extern M2C_UNK D_003E4658;
 #include "data/pieces/D_003DACA0.h"
 #include "data/pieces/D_003DAD3C.h"
 extern s32 D_003E8E2C;
-extern s32 D_00633640; /* src/data/bss_0063.c: u32 D_00633640[2048] */
 #include "data/pieces/D_003F34B8.h"
 s32 func_00147840(s32);
 s32 func_001ee768();
@@ -32,114 +27,11 @@ void func_00216180(void);
 void func_00219128(void);
 void func_00232de0(void);
 
-
 /* func_001e13e8, func_001e25e8, func_001e2628 are in src/screen/screen.c. */
-
-
 
 /* func_001e3c08, func_001e44e0 are in src/shop/shop.c. */
 
-
 /* func_001ec380 is in src/save/flags.c. */
-
-s32 func_001ec9a8(void) {
-    sceSifCallRpc(&D_003E3C88, 0x1F, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001eca00(void) {
-    sceSifCallRpc(&D_003E3C88, 0x20, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001eca58(void) {
-    sceSifCallRpc(&D_003E3C88, 0x21, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ecab0(void) {
-    sceSifCallRpc(&D_003E3C88, 0x22, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed0d0(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 1, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed128(s32 arg0, s32 arg1) {
-    func_001ed000(0x26, arg0, arg1, 0, 0, 0, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed170(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x27, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed1c8(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0xF, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed5a8(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x2F, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed600(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x30, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed828(s32 arg0, s32 arg1) {
-    func_001ed000(0x2B, arg0, arg1, 0, 0, 0, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed870(void) {
-    sceSifCallRpc(&D_003E3C88, 0x16, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed8c8(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x17, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed920(void) {
-    sceSifCallRpc(&D_003E3C88, 0x18, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001ed9e0(void) {
-    sceSifCallRpc(&D_003E3C88, 0x1B, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001eda38(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x1D, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001edaf0(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x23, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
-
-s32 func_001edb48(s32 arg0) {
-    D_00633640 = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x24, 0, &D_00633640, 0x2000, &D_00633640, 0x2000, 0, 0);
-    return D_00633640;
-}
 
 f32 func_001edcd8(f32 fparg0) {
     f32 var_f12;
