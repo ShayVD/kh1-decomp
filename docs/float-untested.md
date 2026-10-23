@@ -26,8 +26,22 @@ back, boot, and narrow down within the session that fixes it.
 | 30 | `--no-wr-span` | fix, no release on its own | keeps D_00370140 / D_00370170 / D_003701B0 pinned | low |
 | 30 | `--no-arg-bound` | newly pinned | D_003728C0, D_00372908 | none (back in place) |
 | 31 | `--no-arg-keep --no-join-keep --no-stored-idx` | 54 newly pinned, none released | docs/shiftable-plan.md "Session 31: reach_check arg-join" | layout only: every floated name after them moved |
+| 32 | `--no-multi-base` | 4 newly pinned, none released | D_003F4C90, D_003C21A0, D_002BD170, D_00454700 | layout only |
+| 32 | `--no-sign-prune --no-shadow-image --no-arg-drop` | log only, same names | (termination and order fixes) | none |
 
-Session 30's default (2,100 float) and session 31's (2,047 float) were never booted. Boot the current
+Session 30's default (2,100 float), session 31's (2,047) and session 32's (2,043) were never booted.
+To go back one session at a time: `SHIFT_REACH_FLAGS="--no-multi-base"` gives session 31's names;
+add `--no-arg-keep --no-join-keep --no-stored-idx` for session 30's, then `--no-path-step --no-arg-bound
+--no-wr-span` for session 29's (the last booted). Boot the current
 default first; if it fails, rebuild with session 31's three switches (= session 30's default), then add
 session 30's switches one at a time. If session 30's default fails and 31's passes, D_003F6770 is the
 first suspect.
+
+## Known hazard to read before booting (session 32)
+
+A bounded index that runs past the next name pins only that one name, so the names after it can float
+while code still reads them: func_0021cfc8 reads `D_003F5C18[i]` for i < 6, but D_003F5C20 / 24 / 28 / 2C
+float in the session 30-32 defaults. A general rule pinned 512 more names (mostly loose bounds) and was
+dropped. docs/shiftable-plan.md "Session 32: reach_check" lists the 26 floating names with an overrun under
+0x80 bytes, among them D_00351A00 (session 30 path-step) and D_003F31F0 (session 30 arg-bound). If the
+menus misbehave in a boot, read those first and add keep entries only for the real ones.
