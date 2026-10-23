@@ -1,6 +1,10 @@
 #include "common.h"
 
 typedef struct { u64 x[20]; } Blk160;
+/* Copy one 160-byte record as Blk160 (20 ld / sd pairs). */
+static inline void cp160(void *d, void *s) {
+    *(Blk160 *)d = *(Blk160 *)s;
+}
 typedef struct { s32 m[32][16]; s32 v[4]; } Blk810;
 typedef struct { u8 kind[16]; u8 pad10[4]; u16 n0; u16 n1; } Setup;
 #include "data/pieces/D_002A3F3C.h"
@@ -34,7 +38,7 @@ s32 func_00101048(void) {
     src = (Blk160 *)((u8 *)h + h->o0);
     D_002A3F20 = h->sz4 / sizeof(Blk160);
     for (; i < D_002A3F20; i++) {
-        ((Blk160 *)&D_0029B420)[i] = src[i];
+        cp160(&D_0029B420[i], &src[i]);
     }
     s = (Setup *)((u8 *)h + h->o8);
     tex = (u8 *)h + h->o10;
