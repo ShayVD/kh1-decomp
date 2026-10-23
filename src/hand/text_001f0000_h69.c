@@ -32,7 +32,6 @@ extern u32 D_00640DF4; /* src/data/bss_0064.c: s32 D_00640DF4 */
 extern u32 D_00640DF8; /* src/data/bss_0064.c: s32 D_00640DF8 */
 
 void func_0011d768(s32);
-u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
 void func_001f8e18(void *);
 void func_001f8f30(void);
@@ -50,25 +49,6 @@ void func_002078b0(Win *, s32, s32, s32, s32, s32, s32);
 void func_002078f0(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207938(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_00207980(Win *, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_001fa318(void *o, s32 a1, s32 x, s32 y, s32 str, s32 a5, s32 col, s32 ecol) {
-    u8 *s;
-    if (str == 0) return x;
-    s = func_001efbb8(str);
-    func_001f94f0(o, a1, x - 1, y - 1, s, a5, ecol);
-    func_001f94f0(o, a1, x + 1, y - 1, s, a5, ecol);
-    func_001f94f0(o, a1, x - 1, y + 1, s, a5, ecol);
-    func_001f94f0(o, a1, x + 1, y + 1, s, a5, ecol);
-    return func_001f94f0(o, a1, x, y, s, a5, col);
-}
-
-s32 func_001fbb50(void *a0, s32 a1, s32 a2, s32 a3, s32 x, s32 y, s32 a6, s32 a7, s32 col, s32 ecol) {
-    func_001fb428(a0, a1, a2, a3, x - 1, y - 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x + 1, y - 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x - 1, y + 1, a6, a7, ecol);
-    func_001fb428(a0, a1, a2, a3, x + 1, y + 1, a6, a7, ecol);
-    return func_001fb428(a0, a1, a2, a3, x, y, a6, a7, col);
-}
 
 void func_001fdfd0(WinK *w) {
     s32 n = w->n;

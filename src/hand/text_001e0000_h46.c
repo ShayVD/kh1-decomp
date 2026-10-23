@@ -29,7 +29,6 @@ typedef struct { u8 pad0[0xbe]; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; } Obj207
 typedef E20_3F2C40_2 E20;
 #include "data/pieces/D_003E3D70.h"
 typedef E228_3E3D70 E228;
-extern s32 D_003F1A60;
 extern s32 D_00640DE0;
 extern s32 D_00640DE4;
 extern s32 D_00640DE8;
@@ -39,19 +38,9 @@ extern s32 D_00640DF4;
 extern s32 D_00640DF8;
 extern f32 D_002BBDFC;
 extern s32 D_003F2F10[];
-s32 sceGsSyncPath(s32, u16);
 f32 sinf(f32);
-u64 *func_0011fb38(s32, u64, u64 *);
-u64 *func_00122048(u32, u32);
-void func_001220b8(void *);
-u8 *func_001efbb8(s32);
 u8 *func_001efc10(s32);
 s32 func_001f94f0(void *, s32, s32, s32, u8 *, s32, s32);
-void func_001f9e48(s32, s32, s32, s32, s32, s32, s32);
-void func_001fa8b0(s32, s32, s32, s32, s32, s32);
-void func_001fade0(s32, s32, s32, s32, s32, s32);
-void func_001fb248(s32, s32, s32, s32, s32, s32);
-void func_001fb408(s32, s32, s32, s32, s32, s32, s32, s32);
 void func_001fb428(void *, s32, s32, s32, s32, s32, s32, s32, s32);
 void func_001fc308(Obj207 *, s32, s32, s32, s32, s32, s32, u32, u32);
 s32 func_001fd538(void *);
@@ -62,69 +51,10 @@ void func_00201c60(void *, s32, s32, s32);
 void func_00203028(Obj203 *, s32, s32, s32, s32);
 void func_002053e8(Obj207 *, s32, s32, s32, s32, u32);
 void func_002078f0(Obj207a *, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc);
-void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g);
 void func_001fd708(void);
 void func_001fd720(s32 m);
 
 /* func_001ebca0, func_001ec0d8, func_001ec1a0 are in src/save/flags.c. */
-
-void func_001f8f30(void) {
-    void *u;
-    u64 *p = func_00122048(0x400, 0x80);
-    u64 *buf = p;
-    p += 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    p[0] = 0x1000000000008001;
-    p[1] = 0xe;
-    buf[0] = ((s32)((u8 *)func_0011fb38(0x40, 0x017F000001FF0000, p + 2) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-}
-
-s32 func_001f9438(void *a, s32 b, s32 c, s32 d, s32 id, s32 f, s32 g) {
-    if (id == 0) return c;
-    return func_001f94f0(a, b, c, d, func_001efbb8(id), f, g);
-}
-
-void func_001fa5b0(s32 a, s32 b, s32 x, s32 y, s32 e, s32 f, s32 c, s32 sc) {
-    func_001f9e48(a, b, x - 1, y - 1, e, f, sc);
-    func_001f9e48(a, b, x + 1, y - 1, e, f, sc);
-    func_001f9e48(a, b, x - 1, y + 1, e, f, sc);
-    func_001f9e48(a, b, x + 1, y + 1, e, f, sc);
-    func_001f9e48(a, b, x, y, e, f, c);
-}
-
-void func_001facd8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fa8b0(a, x - 1, y - 1, d, e, sc);
-    func_001fa8b0(a, x + 1, y - 1, d, e, sc);
-    func_001fa8b0(a, x - 1, y + 1, d, e, sc);
-    func_001fa8b0(a, x + 1, y + 1, d, e, sc);
-    func_001fa8b0(a, x, y, d, e, c);
-}
-
-void func_001fb140(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fade0(a, x - 1, y - 1, d, e, sc);
-    func_001fade0(a, x + 1, y - 1, d, e, sc);
-    func_001fade0(a, x - 1, y + 1, d, e, sc);
-    func_001fade0(a, x + 1, y + 1, d, e, sc);
-    func_001fade0(a, x, y, d, e, c);
-}
-
-void func_001fb2b8(s32 a, s32 x, s32 y, s32 d, s32 e, s32 c, s32 sc) {
-    func_001fb248(a, x - 1, y - 1, d, e, sc);
-    func_001fb248(a, x + 1, y - 1, d, e, sc);
-    func_001fb248(a, x - 1, y + 1, d, e, sc);
-    func_001fb248(a, x + 1, y + 1, d, e, sc);
-    func_001fb248(a, x, y, d, e, c);
-}
-
-void func_001fb3c0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g) {
-    func_001fb408(a, b, c, d, e, f, g, D_003F1A60);
-}
 
 void func_001fd708(void) {
     func_001fd720(0);

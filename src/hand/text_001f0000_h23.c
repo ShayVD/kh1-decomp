@@ -22,40 +22,14 @@ typedef struct Win {
 #include "data/pieces/D_00425BC8.h"
 typedef struct { u8 pad[36]; s32 v[1]; } Menu;
 #include "data/pieces/D_003F34B8.h"
-extern s32 D_003F1A60;
 extern s32 D_00640E00[];
 extern s32 D_00640E20;
 extern s32 D_00640E24;
 extern s32 D_00640E28;
-
-s32 func_001fb428(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fbcd8(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-s32 func_001fc330(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_002014a0(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201550(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00201600(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32);
 s32 func_00206370(s32, s32, s32, s32, s32, s32, s32, s32, s32);
-
-s32 func_001fb3e0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fb428(a, b, c, d, e, f, g, h, D_003F1A60);
-}
-
-s32 func_001fb408(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fb428(a, b, c, d, e, f, g, 18, h);
-}
-
-s32 func_001fbcb0(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
-    return func_001fbcd8(a, b, c, d, e, f, g, h, 0x80808080);
-}
-
-s32 func_001fc308(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h, s32 i) {
-    return func_001fc330(a, b, c, d, e, f, g, h, h, i, i);
-}
-
-void func_001fd070(s32 a, s32 b, s32 c) {
-    func_001fc308(a, b, c, 0, 0, 57, 0, 0x64323296, 0x64323296);
-    func_001fc308(a, b + 14, c + 6, 0, 0, 56, 0, 0x64ffffff, 0x64ffffff);
-}
 
 s32 func_001fd590(Win *w) {
     return ((s16)w->f192 >> 4) - ((s16)w->f196 >> 4) * (w->f208 & 0xf) / 16;
