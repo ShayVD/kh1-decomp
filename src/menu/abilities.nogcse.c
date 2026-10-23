@@ -1,3 +1,7 @@
+/* The abilities page (src/menu/abilities.c; docs/modules.md "Session 40"; was
+ * src/hand/nogcse/text_00210000_s6_21.c): func_00214f50 counts the shared
+ * abilities (D_00304BE8->list599, up to 48) into D_00642C88.  It needs
+ * -fno-gcse. */
 #include "common.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -17,4 +21,3 @@ void func_00214f50(void) {
         }
     }
 }
-#include "data/data_003F.h"

@@ -26,13 +26,6 @@ extern M2C_UNK D_00642F60;
 #include "data/pieces/D_003F34B8.h"
 extern s32 D_002B6478;
 extern s32 D_003F34E8;
-extern s32 D_00642C58; /* src/data/bss_0064.c: u32 D_00642C58 */
-extern s32 D_00642C5C;
-extern s32 D_00642C60;
-extern s32 D_00642C64;
-extern s32 D_00642C68;
-extern s32 D_00642C6C;
-extern s32 D_00642C70;
 extern s32 D_00642CCC;
 extern s32 D_00642CD0;
 extern s32 D_00642CD4;
@@ -42,36 +35,7 @@ extern s32 D_00642CE0;
 extern s32 D_00642D18;
 extern s32 D_00642D24;
 extern s32 D_00643100;
-s32 func_001ef5c0(s32);
-s32 func_001ef5f8(s32);
 s32 func_00266c08(M2C_UNK);
-
-s32 func_00213d80(s32 arg0) {
-    return (func_001ef5f8(arg0 & ~0x80) << 0x10) | (arg0 & 0x80);
-}
-
-s32 func_00213db8(s32 arg0) {
-    s32 temp_s0;
-    s32 temp_s1;
-
-    temp_s0 = arg0 & ~0x80;
-    temp_s1 = func_001ef5c0(temp_s0);
-    return (temp_s1 << 0x18) | (func_001ef5f8(temp_s0) << 8) | (arg0 & 0x80);
-}
-
-s32 func_00213e18(s32 arg0) {
-    return ((arg0 & 0x80) << 0x10) | func_001ef5f8(arg0 & ~0x80);
-}
-
-void func_00216140(void) {
-    D_00642C58 = 0;
-    D_00642C5C = 0;
-    D_00642C60 = 0;
-    D_00642C64 = 0;
-    D_00642C68 = 0;
-    D_00642C6C = 0;
-    D_00642C70 = 0;
-}
 
 void func_00217fe8(void) {
     D_00642CCC = 0;

@@ -2,19 +2,7 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-typedef struct { u8 pad0[0x24]; s32 f24; u8 pad[0xb0 - 0x28]; s32 b0; s32 b4; s16 b8; s16 ba; s16 bc; s16 be; s16 c0; s16 c2; s16 c4; s16 c6; u8 pad3[10]; s16 d2; u8 pad4[6]; s16 da; } Sbbc0;
-
 #include "data/pieces/D_003E3D68.h"
-
-#include "data/pieces/D_00425BC8.h"
-void func_0011d768(s32);
-
-s32 func_001efd98(s32);
-
-s32 func_001f42b8(Sbbc0 *);
-void func_001f3708(Sbbc0 *, s32);
-s32 func_001fe570(Sbbc0 *);
-void func_00207bb0(Sbbc0 *, s32);
 
 typedef W606Mem_304be8 S4BE8e;
 
@@ -22,27 +10,6 @@ void func_001f9010(s32);
 #include "data/pieces/D_003E8E08.h"
 s32 func_001ee618(s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
-
-void func_00214030(Sbbc0 *a0) {
-    if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
-            func_001f3708(a0, 6);
-            func_0011d768(3);
-        } else {
-            func_0020bd18(a0, 8);
-            if (func_001fe570(a0)) func_001f3708(a0, 6);
-        }
-    }
-    func_00207bb0(a0, a0->f24);
-}
-
-void func_002140c0(Sbbc0 *a0, s32 a1) {
-    s32 v = func_001efd98(a1) * 368;
-    a0->b4 -= v;
-    a0->ba += v;
-    a0->c0 += v;
-    a0->f24 = a1;
-}
 
 #include "data/pieces/D_003F34B8.h"
 typedef S34B8_3f34b8 S34B8;
