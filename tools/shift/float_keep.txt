@@ -9,8 +9,10 @@
 # IOP's write at D_0063F248's old place). Session 28: the whole block is one piece
 # (src/data/data_0063.s, the three fields are labels in it), so it can float whole; kept until a
 # SHIFT_FLOAT_FORCE=D_0063D640 build has played (the IOP gets the block's new address from
-# D_00633640[0], which is a relocation).
-D_0063D640
+# D_00633640[0], which is a relocation). Session 29: KH1_F29_F (SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640")
+# played the load menu, save 06 with the party, test T, a desert fight, save 05 End of the World and the
+# warp drive to Neverland, so the block floats by default now through float_release.txt (reach_check also
+# pins it: D_00635640's index).
 #
 # The renderer's GIF packet buffer: func_00162428 and friends store D_00573AC0 | 0x20000000
 # (uncached) into D_0055C648 and func_0015f8c8 builds the packet through that pointer, far
@@ -27,7 +29,7 @@ D_00573AD0
 # piece it is far over the data budget; kept so a budget change cannot float it untested.
 # Session 27: floated whole with chains 0 and 1-2 (KH1_F27_C2, SHIFT_FLOAT_FORCE, compact layout), save 05
 # loads with the field drawn; still kept because reach_check pins it too (D_003F8370's index).
-D_003F8380
+# Session 29: floats by default through float_release.txt (KH1_F29_G played the usual route).
 #
 # Six VIF1 DMA chains of 0x4040 bytes at D_0046E120 + k * 0x4040 (k = 0..5), each one piece since
 # session 23: a 0x20-byte object (two ref tags: D_0048BFD0 qwc 9, D_0048C060 qwc 42), a 0x10-byte
@@ -42,9 +44,8 @@ D_003F8380
 # halves). Floated alone, chain 1's table overwrote the names floated after it (D_002A3F30 ...). Chains 1
 # and 2 are one 0x8080 piece now (D_004761A0 is a label), and KH1_F24_REC3 (chain 0 and chains 1-2
 # floated, SHIFT_FLOAT_FORCE) plays Gate Plaza and a fight. They stay here only because they are far over
-# the data budget; reach_check keeps chains 3-5 anyway (idx-next).
-D_0046E120
-D_00472160
+# the data budget; reach_check keeps chains 3-5 anyway (idx-next). Session 29: chain 0 and chains 1-2
+# float by default through float_release.txt (KH1_F29_G played the usual route).
 D_004761A0
 D_0047A1E0
 D_0047E220
@@ -58,8 +59,8 @@ D_00482260
 # D_00272C70 is the first data object, at D_BLOB: floated (dma-chain releases it), shift_cmp maps D_BLOB
 # through it to the copy and fails the _gp/D_BLOB/D_BSS/_end check. It stays until shift_cmp maps D_BLOB
 # as the blob start. Session 28: shift_cmp checks D_BLOB as the .data start, and
-# SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640" links and passes M12-FLOAT; kept until that build has played.
-D_00272C70
+# SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640" links and passes M12-FLOAT. Session 29: KH1_F29_F played the
+# usual route, so it floats by default now (no line here).
 #
 # (The actor table D_002C64A0, kept here in session 27 after floating it lost Donald and Goofy, is pinned
 # by reach_check's end-ptr rule since session 28: func_00123810 compares the walk against &D_002E26A0.)

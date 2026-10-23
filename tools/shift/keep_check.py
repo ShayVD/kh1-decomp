@@ -10,7 +10,10 @@ change must not let one of them float again; `make shift SHIFT_FLOAT=1` runs thi
 when one is missing. A name merged into a larger piece (merge_pieces.py --group / --split) moves
 with the whole object, so only the piece's own name is checked. A name with a tail is needed only while its tail stays in place (the head of a
 0x4000-byte table declared 0x40 bytes: when the tail floats with it, the copy reads the right bytes).
-With --reach, each name also says whether reach_check's own list has it."""
+With --reach, each name also says whether reach_check's own list has it. The check runs before
+SHIFT_FLOAT_RELEASE (tools/shift/float_release.txt, session 29) takes the names a PCSX2 build proved
+safe out of the keep list: D_003F8380, D_0046E120, D_00472160 and D_0063D640 (the piece holding
+D_0063F248 / D_0063F540) float whole by default."""
 from __future__ import annotations
 
 import argparse

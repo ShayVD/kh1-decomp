@@ -1,0 +1,22 @@
+# Names the default SHIFT_FLOAT build floats although a check keeps them (session 29). Each is a whole
+# piece that a PCSX2 build floated and played the usual route with (Makefile SHIFT_FLOAT_RELEASE; applied
+# with float_force.py after keep_check, which reports them as released). One name per line; # comments.
+#
+# The staging arena (one 0x16C00 piece, float_keep.txt). reach_check pins it as idx-next: func_00233168
+# (the memory card state machine, text_00230000_s8_w7.c) writes D_003F8370[D_00351E10.x4], a 0x10-byte
+# array indexed by a global no rule bounds. KH1_F27_C2 and KH1_F29_G floated it and played: save 05 and 06
+# load (memory card reads go through func_00233168), test T, a desert fight, the warp drive to Neverland.
+D_003F8380
+#
+# VIF1 DMA chain 0 and chains 1-2 (one 0x8080 piece), float_keep.txt. reach_check pins them as idx-next
+# (piece-next: an unbounded index into chain 0's / chain 1's table keeps the next name). Session 24 found
+# the real overrun (chain 1's table into chain 2) and merged them. KH1_F24_REC3, KH1_F27_C2 and KH1_F29_G
+# floated both and played Gate Plaza and fights.
+D_0046E120
+D_00472160
+#
+# The sound IOP module's status block (one 0x2000-byte piece since session 28, src/data/data_0063.s).
+# reach_check pins it as idx-next: func_001ec7d0 / func_001ed000 / func_001edba0 index D_00635640 (the
+# buffer before it) without a bound it can see. KH1_F29_F and KH1_F29_G floated it and played the route
+# above with sound and memory card loads working.
+D_0063D640
