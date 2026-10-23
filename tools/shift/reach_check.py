@@ -173,6 +173,8 @@ PTR = "ptr"  # register = the word loaded from a pointer global G, + an offset: 
 SET_MAX = 8  # a join of more addresses becomes base + bounded offset (IDX)
 AX = "ax"  # session 30 (arg-bound): register = argument k on entry * m + a, a scaled index: ("ax", k, m, a);
 # an IDX/HIX made from one carries it as a 4th element ("ax", k, m, a) with a an upper bound
+# Session 32 (multi-base): an IDX that a choice of bases made (SET + index, or a join of two bases) carries the
+# other bases as a 5th element: ("idx", lowest base, bound from it, ax or None, frozenset of the other bases).
 
 
 def pieces_from_ld(ld: Path, sizes: dict[str, int]):
@@ -216,6 +218,35 @@ def _idx(v):
     return None
 
 
+def _iax(v):
+    """The ("ax", k, m, a) an IDX carries (session 30), or None."""
+    return v[3] if isinstance(v, tuple) and v[0] == IDX and len(v) > 3 else None
+
+
+def _xb(v):
+    """Session 32 (multi-base): the bases of an address value other than the one _idx gives (a SET's other
+    addresses, an IDX's 5th element)."""
+    if isinstance(v, tuple) and v[0] == SET:
+        return frozenset(v[1]) - {min(v[1])}
+    if isinstance(v, tuple) and v[0] == IDX and len(v) > 4:
+        return v[4]
+    return frozenset()
+
+
+def _bases(v):
+    """Session 32 (multi-base): every base an address value indexes from."""
+    a = _idx(v)
+    return frozenset() if a is None else _xb(v) | {a[0]}
+
+
+def _mkidx(base, ub, ax=None, xb=frozenset()):
+    """An IDX from base with bound ub, the scaled argument ax and (multi-base) the other bases xb."""
+    xb = frozenset(xb) - {base}
+    if xb:
+        return (IDX, base, ub, ax, xb)
+    return (IDX, base, ub) + ((ax,) if ax is not None else ())
+
+
 def _ax(v):
     """Session 30 (arg-bound): v as a scaled argument ("ax", k, m, a) (an argument + off is ("ax", k, 1, off))."""
     if isinstance(v, tuple) and v[0] == ARG and len(v) == 3:  # (not one that a join made: see analyse's join)
@@ -236,9 +267,10 @@ def _addressy(v):
     return isinstance(v, tuple) and v[0] in (SET, IDX, HIX, PTR, HI, JT)
 
 
-def _widen(v, got=()):
+def _widen(v, got=(), multi_base=False):
     """Session 31 (arg-keep, join-keep): an address value with its offset made unknown: from the lowest base of v and
-    the values got (of the same kind, within 64 KiB of v's) + any index."""
+    the values got (of the same kind, within 64 KiB of v's) + any index. Session 32 (multi-base): v's other bases
+    are kept."""
     if isinstance(v, tuple) and v[0] in (PTR, HI, JT):
         return (PTR, v[1], None) if v[0] == PTR else v
     kind = HIX if isinstance(v, tuple) and v[0] == HIX else IDX
@@ -251,11 +283,16 @@ def _widen(v, got=()):
         a_ = _idx(x_)
         return None if a_ is None else a_[0]
     b0 = base(v)
-    return (kind, min([b0] + [b_ for x_ in got if (b_ := base(x_)) is not None and abs(b_ - b0) < 0x10000]), None)
+    lo = min([b0] + [b_ for x_ in got if (b_ := base(x_)) is not None and abs(b_ - b0) < 0x10000])
+    if multi_base and kind == IDX and _xb(v):
+        return _mkidx(lo, None, None, _bases(v))
+    return (kind, lo, None)
 
 
-def _covers(j, x):
-    """Session 31 (arg-keep, join-keep): a join result j makes at least the events address value x makes."""
+def _covers(j, x, multi_base=False):
+    """Session 31 (arg-keep, join-keep): a join result j makes at least the events address value x makes.
+    Session 32 (multi-base): an unbounded IDX covers only the bases it carries (an unbounded index from a base ties
+    that base to its own next name, not to the next names of the bases above it)."""
     if j == x:
         return True
     if not isinstance(j, tuple) or isinstance(x, tuple) and x[0] in (HI, JT):
@@ -264,6 +301,8 @@ def _covers(j, x):
         return _addrs(x) is not None and _addrs(x) <= j[1]
     if j[0] == IDX:
         a = _idx(x)
+        if multi_base and a is not None and j[2] is None:
+            return _bases(x) <= _bases(j)
         return a is not None and j[1] <= a[0] and (j[2] is None or a[1] is not None and a[0] + a[1] <= j[1] + j[2])
     if j[0] == HIX:
         return isinstance(x, tuple) and x[0] == HIX and x[1] == j[1] and (
@@ -779,7 +818,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             read_word=None, cases: bool = True, ptr_globals: bool = True, counter_cap: bool = True,
             slot_refine: bool = True, end_ptr: bool = True, nest_carry: bool = True,
             path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
-            join_keep: bool = True, stored_idx: bool = True, visit_rng=None):
+            join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, visit_rng=None):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -809,6 +848,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     an unknown value, two bases that end up unrelated). A register that keeps getting new values from
     shadows at one point (a walk) is widened to base + unknown after SHADOW_MAX of them, so it ends.
     `stored_idx`: a store of base + index (&D[i]) stores the base (before, only an exact address did).
+    Session 32 (`multi_base`): base + index made from a choice of bases (a SET + an index, or a join of two bases
+    that is not a loop head's walk) kept only the lowest base, so an unbounded index tied only that base to its
+    next name. The IDX now carries the other bases (_mkidx) and every access, store, `wr` and call argument
+    through it is reported from each of them; an unbounded IDX covers (_covers) only the bases it carries.
     visit_rng (tests, --visit-seed): a random.Random that picks the next point to visit instead of the
     last one pushed; the output should not depend on it (docs/shiftable-plan.md "Session 31" lists what
     still does)."""
@@ -864,11 +907,19 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         a, b = _idx(v), _idx(u)
         if a is not None and b is not None and abs(a[0] - b[0]) < 0x10000:
             base = min(a[0], b[0])
+            # session 32 (multi-base): a choice keeps every base; a loop head's walk (base, base + stride) keeps
+            # only the bases its sides already carried, and so does a position of a walk joined elsewhere (an
+            # address inside the other side's bounded range: an intermediate state, seen in some visit orders)
+            xb = ()
+            if multi_base:
+                xb = _bases(v) | _bases(u) if i not in loop_heads else _xb(v) | _xb(u)
+                xb = {x for x in xb if not any(p_[1] is not None and p_[0] <= x <= p_[0] + p_[1] and x not in _bases(q_)
+                                               for p_, q_ in ((a, v), (b, u)))}
             if a[1] is None or b[1] is None:
-                return (IDX, base, None)
+                return _mkidx(base, None, None, xb)
             hi = max(a[0] + a[1], b[0] + b[1]) - base
             # a pointer walking a table (p = D; ... p += 0x2c in a loop): base + bounded offset
-            return (IDX, base, hi)
+            return _mkidx(base, hi, None, xb)
         if isinstance(v, tuple) and isinstance(u, tuple) and v[0] == u[0] == PTR and v[1] == u[1]:
             return (PTR, v[1], v[2] if v[2] == u[2] else None)  # a walk through the pointer G holds
         x, y = _ub(v), _ub(u)
@@ -891,7 +942,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return (UB, u + ps[k] * back_edges(kind, nmax, step_))
         if a is None or a[1] is None:
             return None
-        return (IDX, a[0], a[1] + ps[k] * back_edges(kind, nmax, step_))
+        return _mkidx(a[0], a[1] + ps[k] * back_edges(kind, nmax, step_), None, _xb(e.get(k)) if multi_base else ())
 
     def counter_value(i):
         """Session 27 (counter-cap): an up-counter `i = i0; do { ...; i += k; } while (i < L)` at its
@@ -933,7 +984,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return None
         a = _idx(e.get(k))
         if a is not None and a[1] is not None:
-            return (IDX, a[0], a[1] + outer[i][4][k] * (to - 1))
+            return _mkidx(a[0], a[1] + outer[i][4][k] * (to - 1), None, _xb(e.get(k)) if multi_base else ())
         u = _ub(e.get(k))
         return None if u is None else (UB, u + outer[i][4][k] * (to - 1))
 
@@ -973,14 +1024,14 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 continue
             j = join(i, k, v, st.get(k))
             if (arg_keep and arg_join) if isinstance(j, tuple) and j[0] == ARG else join_keep:
-                lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_) and not _covers(j, x_)]
+                lost += [(k, x_) for x_ in (v, st.get(k)) if _addressy(x_) and not _covers(j, x_, multi_base)]
             if j is None:
                 continue
             # widening: a bound that grows twice at the same point is dropped
             if j != v and isinstance(j, tuple) and j[0] in (IDX, UB):
                 c = grow[(i, k)] = grow.get((i, k), 0) + 1
                 if c > 2:
-                    j = (IDX, j[1], None) if j[0] == IDX else None
+                    j = ((IDX, j[1], None) + (j[3:] if multi_base else ())) if j[0] == IDX else None
                     if j is None:
                         continue
             new[k] = j
@@ -990,7 +1041,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
         for k, x_ in lost:  # session 31 (arg-keep, join-keep): visit i again with the address the join dropped
             got = shadow_lost.setdefault((i, k), set())
             if x_ not in got and len(got) >= SHADOW_MAX:
-                x_ = _widen(x_, got)  # a value that keeps changing here (a walk): base + unknown offset
+                x_ = _widen(x_, got, multi_base)  # a value that keeps changing here (a walk): base + unknown offset
             got.add(x_)
             sh = dict(new)
             sh[k] = x_
@@ -1014,7 +1065,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if lim > a[0] and lim - a[0] < 0x100000:  # sltu p, END
                 hi = lim - 1 - a[0]
                 if a[1] is None or a[1] > hi:
-                    st[r] = (IDX, a[0], hi)
+                    st[r] = _mkidx(a[0], hi, None, _xb(cur) if multi_base else ())
             return
         if -0x10000 < lim < 0x10000 and (cur is None or _ub(cur) is not None or isinstance(cur, tuple) and cur[0] in (PTR, AX)
                                           or cases and isinstance(cur, tuple) and cur[0] == ARG):
@@ -1069,9 +1120,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif isinstance(b, tuple) and b[0] == PTR:
                 st[t] = (PTR, b[1], None if b[2] is None else b[2] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == IDX:
-                st[t] = (IDX, b[1], None if b[2] is None else b[2] + mips.imm(w))
-                if len(b) > 3 and b[2] is None:  # (session 30) the scaled argument index, + imm
-                    st[t] = st[t] + ((AX, b[3][1], b[3][2], b[3][3] + mips.imm(w)),)
+                ax_ = _iax(b)
+                if ax_ is not None and b[2] is None:  # (session 30) the scaled argument index, + imm
+                    ax_ = (AX, ax_[1], ax_[2], ax_[3] + mips.imm(w))
+                st[t] = _mkidx(b[1], None if b[2] is None else b[2] + mips.imm(w), ax_ if b[2] is None else None, _xb(b))
             elif isinstance(b, tuple) and b[0] == UB:
                 st[t] = (UB, b[1] + mips.imm(w))
             elif isinstance(b, tuple) and b[0] == HIX:  # &D[i] built as lui + addu + addiu %lo
@@ -1107,7 +1159,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif stored_idx and o in (0x2B, 0x3F) and t != 0 and isinstance(st.get(t), tuple) and st[t][0] == IDX:
                 # session 31 (stored-idx): &D[i] stored is D stored (before, only an exact address counted, so a
                 # store seen only with the joined state of a loop, base + index, was not reported)
-                ev.append((ins.addr, st[t][1], None, 0, "stored"))
+                ev += [(ins.addr, x, None, 0, "stored") for x in [st[t][1]] + sorted(_xb(st[t]))]
             if o in mips.OP_STORES or o in (0x1F, 0x3E):  # the bytes a store may write (session 27)
                 if _addrs(b):
                     ev += [("wr", (x + mips.imm(w)) & 0xFFFFFFFF, WIDTH[o]) for x in sorted(_addrs(b))]
@@ -1118,6 +1170,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                     span = b[2] + WIDTH[o] + (mips.imm(w) if b[0] == HIX or not wr_span else 0) \
                         if b[2] is not None else None
                     ev.append(("wr", lo_, span))
+                    for x in sorted(_xb(b)):  # session 32 (multi-base): from each other base, to the same end
+                        x_ = (x + mips.imm(w)) & 0xFFFFFFFF
+                        ev.append(("wr", x_, None if span is None else max(0, lo_ + span - x_)))
             if isinstance(b, tuple) and b[0] == PTR:
                 ev.append(("ptrmem", b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o]))
             if isinstance(b, int):
@@ -1127,12 +1182,16 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif isinstance(b, tuple) and b[0] == HIX and len(b) > 3:  # D[a*m] (session 30): bounded by the callers
                 ev.append(("argidx", ins.addr, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[3][1], b[3][2], b[3][3],
                            WIDTH[o]))
-            elif isinstance(b, tuple) and b[0] == IDX and len(b) > 3:
-                ev.append(("argidx", ins.addr, b[1], b[3][1], b[3][2], b[3][3] + mips.imm(w), WIDTH[o]))
+            elif isinstance(b, tuple) and b[0] == IDX and _iax(b) is not None:
+                ev += [("argidx", ins.addr, x, b[3][1], b[3][2], b[3][3] + mips.imm(w) + b[1] - x, WIDTH[o])
+                       for x in [b[1]] + sorted(_xb(b))]  # (session 32: from each base, to the same end)
             elif isinstance(b, tuple) and b[0] == HIX:  # D[i] as lui + addu + lw %lo(D)
                 ev.append((ins.addr, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2], WIDTH[o], "idx"))
             elif isinstance(b, tuple) and b[0] == IDX:
                 ev.append((ins.addr, b[1], None if b[2] is None else b[2] + mips.imm(w), WIDTH[o], "idx"))
+                for x in sorted(_xb(b)):  # session 32 (multi-base): from each other base, to the same end
+                    ev.append((ins.addr, x, None if b[2] is None else max(0, b[2] + mips.imm(w) + b[1] - x),
+                               WIDTH[o], "idx"))
             elif isinstance(b, tuple) and b[0] == ARG:
                 ev.append(("argmem", b[1], b[2] + mips.imm(w), WIDTH[o]))
             if (ins.is_load or o == 0x1E) and o not in (0x31, 0x35, 0x36):  # gpr destination (lq too)
@@ -1193,13 +1252,15 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 st[d] = (PTR, pv[1], off)
             elif _idx(x) is not None or _idx(y) is not None:
                 a, other = (_idx(x), y) if _idx(x) is not None else (_idx(y), x)
+                xb = (_xb(x) if _idx(x) is not None else _xb(y)) if multi_base else ()  # (session 32)
                 u = _ub(other)
                 if mips.funct(w) == 0x25 or a[1] is None or u is None:
-                    st[d] = (IDX, a[0], None)
+                    ax_ = None
                     if arg_bound and mips.funct(w) != 0x25 and a[1] is not None and (ax_ := _ax(other)) is not None:
-                        st[d] = st[d] + ((AX, ax_[1], ax_[2], ax_[3] + a[1]),)  # (session 30) &D + a*m
+                        ax_ = (AX, ax_[1], ax_[2], ax_[3] + a[1])  # (session 30) &D + a*m
+                    st[d] = _mkidx(a[0], None, ax_, xb)
                 else:
-                    st[d] = (IDX, a[0], a[1] + u)
+                    st[d] = _mkidx(a[0], a[1] + u, None, xb)
             elif _ub(x) is not None and _ub(y) is not None and mips.funct(w) != 0x25:
                 st[d] = (UB, _ub(x) + _ub(y))
             else:
@@ -1211,7 +1272,7 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             if isinstance(x, tuple) and x[0] == ARG:
                 wide.add(x[1])
             if _idx(x) is not None and d != 0:
-                st[d] = (IDX, _idx(x)[0], None)
+                st[d] = _mkidx(_idx(x)[0], None, None, _xb(x) if multi_base else ())
             else:
                 st.pop(d, None)
         elif o == mips.OP_SPECIAL and mips.funct(w) in (0x00, 0x38, 0x3C):  # sll dsll dsll32
@@ -1290,6 +1351,9 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 a_ = _idx(v)
                 if a_ is not None:  # &D_X[i] passed to a call: an indexed access the callee makes (session 20)
                     ev.append(("passidx", target, j, a_[0], a_[1], ins.addr, blk.get(j)))
+                    for x in sorted(_xb(v) if isinstance(v, tuple) and v[0] == IDX else ()):  # (session 32)
+                        ev.append(("passidx", target, j, x, None if a_[1] is None else max(0, a_[0] + a_[1] - x),
+                                   ins.addr, blk.get(j)))
                 if (isinstance(v, int) and v > 0x10000) or (isinstance(v, tuple) and v[0] == ARG):
                     ev.append(("pass", target, j, v, ins.addr))
         return ev
@@ -1608,6 +1672,8 @@ def main() -> int:
                          "(before session 31)")
     ap.add_argument("--no-stored-idx", action="store_true",
                     help="storing base + an index (&D[i]) does not count as storing D (before session 31)")
+    ap.add_argument("--no-multi-base", action="store_true",
+                    help="base + index made from a choice of bases keeps only the lowest base (before session 32)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
                     help="variable sizes and the default pieces (a copy with pieces split tests a layout)")
     ap.add_argument("--explain", type=Path, help="write one line per indexed argument (&B[i] passed to a call) "
@@ -1707,7 +1773,7 @@ def main() -> int:
                          slot_refine=not a.no_slot_refine, end_ptr=not a.no_end_ptr,
                          nest_carry=not a.no_nest_carry, path_step=not a.no_path_step,
                          wr_span=not a.no_wr_span, arg_keep=not a.no_arg_keep, join_keep=not a.no_join_keep,
-                         stored_idx=not a.no_stored_idx,
+                         stored_idx=not a.no_stored_idx, multi_base=not a.no_multi_base,
                          visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
                          arg_bound=not a.no_arg_bound and is_func):
             if e[0] == "argmem":

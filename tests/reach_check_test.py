@@ -6,7 +6,7 @@
 Covers the session 21 rules: a pointer walk capped by a decrementing counter (func_00232ad0's
 clears) or by an up-counter, a join of two addresses that is stored (`o->p = c ? A : B`), an
 argument joined with an unrelated value, D[i] built as lui + addu + %lo, and a switch whose jump
-table is read; session 27-30 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
+table is read; session 27-32 rules below. Each rule's switch (countdown=False, ...) must bring back the old answer.
 """
 import struct
 import sys
@@ -72,8 +72,10 @@ join = [lw(V1, A1, 0), lui(V0, 0x0047), beq(V1, 0, 3), addiu(V0, V0, 0x2160),
 stored = sorted(e[1] for e in run(join) if len(e) == 5 and e[4] == "stored")
 assert stored == [0x0046E120, 0x00472160], [hex(x) for x in stored]
 assert not [e for e in run(join, joins=False, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
-# (session 31, stored-idx: without joins the store is of the lowest address + an index, which stores that base)
-assert [e[1] for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120]
+# (session 31, stored-idx: without joins the store is of the lowest address + an index, which stores that base;
+# session 32, multi-base: the index carries the other address too, so both are stored)
+assert [e[1] for e in run(join, joins=False, multi_base=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120]
+assert [e[1] for e in run(join, joins=False) if len(e) == 5 and e[4] == "stored"] == [0x0046E120, 0x00472160]
 
 # 4. a0 reused on one path (p = cond ? arg : other): the argument is not walked
 reuse = [beq(A1, 0, 2), NOP, lw(A0, A2, 0), lw(V0, A0, 8), JR_RA, NOP]
@@ -253,5 +255,29 @@ assert not [e for e in run(walk_, join_keep=False) if len(e) == 5 and e[4] == "i
 sti = [andi_(V0, A0, 0x1C), lui(V1, 0x0037), addiu(V1, V1, 0x0140), addu(V1, V1, V0), sw(V1, A1, 0), JR_RA, NOP]
 assert [e[1] for e in run(sti) if len(e) == 5 and e[4] == "stored"] == [0x00370140]
 assert not [e for e in run(sti, stored_idx=False) if len(e) == 5 and e[4] == "stored"]
+
+# 17. multi-base (session 32): func_00219f98's `p = c ? D_003F4C68 : D_003F4C78; p[k * 2 + 1]` with k loaded: the SET
+# + an unknown index kept only the lower base, so B's unbounded index (B tied to its next name) was seen only in the
+# orders that visited the join point with B alone first. The IDX carries both bases, in every order.
+mb = [lw(S1, A2, 0), beq(A0, 0, 3), lui(V0, 0x003F), beq(0, 0, 2), addiu(V0, V0, 0x4C68), addiu(V0, V0, 0x4C78),
+      sll(V1, S1, 3), addu(A1, V1, V0), lw(V0, A1, 4), JR_RA, NOP]
+ibases = lambda ev: sorted({e[1] for e in ev if len(e) == 5 and e[4] == "idx" and e[2] is None})
+assert ibases(run(mb)) == [0x003F4C68, 0x003F4C78], [hex(x) for x in ibases(run(mb))]
+assert all(ibases(run(mb, visit_rng=random.Random(sd))) == [0x003F4C68, 0x003F4C78] for sd in range(16))
+assert ibases(run(mb, multi_base=False)) == [0x003F4C68]  # the old answer in the default order
+# the same through a join of two indexed values (each path indexes its own table): both bases, the store too
+mj = [lw(S1, A2, 0), sll(V1, S1, 3), beq(A0, 0, 4), lui(V0, 0x003F), addiu(V0, V0, 0x4C68), beq(0, 0, 3),
+      addu(A1, V1, V0), addiu(V0, V0, 0x4C78), addu(A1, V1, V0), lw(V0, A1, 4), sw(A1, A3, 0), JR_RA, NOP]
+assert all(ibases(run(mj, visit_rng=random.Random(sd))) == [0x003F4C68, 0x003F4C78] for sd in range(16))
+assert sorted(e[1] for e in run(mj) if len(e) == 5 and e[4] == "stored") == [0x003F4C68, 0x003F4C78]
+assert ibases(run(mj, multi_base=False)) == [0x003F4C68]
+# a join elsewhere of a walk's position with the walk's bounded range (an intermediate state some orders visit) is
+# not a choice either: p = c ? &D[k & 7] : &D[4]; *p: D + 16 is inside D + [0, 28], no second base
+mw = [andi_(V1, A1, 0x1C), lui(V0, 0x003F), beq(A0, 0, 3), addiu(V0, V0, 0x4C68), beq(0, 0, 2), addu(A1, V0, V1),
+      addiu(A1, V0, 0x10), lw(V0, A1, 0), JR_RA, NOP]
+assert all({e[1] for e in run(mw, visit_rng=random.Random(sd)) if len(e) == 5 and e[4] == "idx"} == {0x003F4C68}
+           for sd in range(16))
+# a loop head's join is a walk (D, D + 16, ...), not a choice: the walk's steps are not bases
+assert {e[1] for e in run(clear, countdown=False) if len(e) == 5 and e[4] == "idx"} == {0x003F8380}
 
 print("reach_check_test: PASS")
