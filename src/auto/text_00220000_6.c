@@ -4,18 +4,6 @@
 
 s32 func_00205938(s32, s32);
 
-s32 func_0022da40(s32 arg0) {
-    return func_00205938(arg0, 0x56000000);
-}
-
-s32 func_0022de80(s32 arg0) {
-    return func_00205938(arg0, 0x56000000);
-}
-
-s32 func_0022e308(s32 arg0) {
-    return func_00205938(arg0, 0x56000000);
-}
-
 s32 func_0022ea88(s32 arg0) {
     return func_00205938(arg0, 0x40000000);
 }
