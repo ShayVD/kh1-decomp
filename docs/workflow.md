@@ -975,3 +975,29 @@ found that the next session needs:
   `<name>.<mode>.c` anywhere under src/ gets that mode's flags (script_vm.nosi.c, script_vm.nostrict.c). Types come
   from VmRec, include/vm/script_vm.h and vm_mgr.h (one VmMgr for D_00389C90 instead of ten views). Callee
   prototypes must be copied exactly (return type, volatile). objdiff has 927 units; the float keep list is unchanged.
+
+## Session 31: what changed
+
+- **No Mac this session** (the user was away from it all weekend): no boot tests. Session 30's default float build
+  and this session's are both unbooted; docs/next-session.md carries the route.
+- **reach_check arg-keep, join-keep and stored-idx** (`--no-arg-keep`, `--no-join-keep`, `--no-stored-idx`;
+  docs/shiftable-plan.md "Session 31: reach_check arg-join"): a join that drops an address (an argument or an unknown
+  value on the other path) now also visits the point with the address (a shadow visit), so its accesses no longer
+  depend on block visit order; storing `&D[i]` counts as storing D. 1,304 -> 1,358 pinned without overlays (54
+  newly pinned, none released; D_003F6770 from session 30's path-step is back in place), 2,047 float by default
+  (was 2,100). The old `--no-arg-join` (session 20) is unchanged. `--visit-seed N` shuffles the visit order to check
+  for order dependence; what remains is listed there (D_003F4C90: a loop join keeps only the lower base).
+- **Modules** (worker s31module; docs/modules.md "Session 31"): the VM gained `src/vm/vm_calc.c` (opcode 1 with its
+  table D_003C5898) and `vm_find.nofill.c` (the three VmMgr list walks). A second module, `src/camera/` (camera.c
+  plus nostrict and nostrict_nofill siblings, CamState in include/camera/camera.h), holds the camera core and its 47
+  script functions, 0x001c5168-0x001ca9e8. The 15 `func_001c4640(Msg *)` users include script_vm.h. func_001dcad0
+  stays with D_003D9FE0, a 763-entry script-function library 0x001c6d08-0x001ec678 that is the next thing to split.
+  float_covered.txt gained 6 labels inside the D_003C5510 piece (already kept): the float layout is unchanged.
+- **Phase 4 types** (worker s31types): view casts 214 -> 52 (session 30's 217 counts 214 with the same survey;
+  shared 202 -> 235). D_002E26A0 and D_002E31B0 point to `struct Actor`, an incomplete tag each user file completes
+  with its own tagged view. Helpers s31_tag, s31_merge, s31_recast and s31_warndiff in tools/shift/s31types/;
+  retypes must not add warnings (s31_warndiff). Hazard: in a cast lvalue keep the typedef name the file already
+  uses (`(*(O8 **)&D)`); recasting to the declared type changes the code.
+- Workers ran in `git worktree`s (/home/user/wt-*, toolchain symlinked, ELF copied); the only merge conflict was
+  the two appended sections in docs/shiftable-plan.md. In a fresh container the ELF is in the project files'
+  uploads folder (check its SHA-256 against kh1.toml).
