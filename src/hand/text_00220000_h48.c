@@ -4,99 +4,16 @@
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { u8 pad0[0xA0]; f32 xa0; u8 pad[0x10]; s32 xb4; u8 pad2[2]; u16 xba; u8 pad3[4]; u16 xc0; u8 pad4[0xA]; u16 xcc; u8 pad5[2]; s16 xd0; s16 xd2; } Obj;
-
-void func_00109278(void);
 void func_0011d768(s32);
 s16 *func_0011ef10(s32, void *);
-s32 func_001efd98(s32);
 void func_001f3110(void);
 void *func_001f31a8(void *, s32);
-void func_001f3d58(void *, s32);
-void func_001f3dc0(void *);
 void func_001f3e48(void *, void *);
-void func_001f4040(void *, s32);
-void func_001f4058(void *, s32);
-void func_001f40a0(void *, s32);
-s32 func_001f42b8(void);
 void func_0020bb90(s32, s32);
 void func_0020bd18(void *, s32);
 void func_0020bda8(s32);
-void func_00233ef8(s32);
-extern u8 D_003F6FD0[];
-extern s32 D_003F6FF8[];
-extern s32 D_006437C4;
-
-void func_0022b2e0(void *arg0) {
-    Obj *o;
-    s32 d;
-    func_0011d768(4);
-    o = func_001f31a8(D_003F6FD0, 6);
-    if (o != NULL) {
-        func_001f3e48(o, arg0);
-        func_001f4058(o, 2);
-        func_001f3d58(o, 6);
-        d = func_001efd98(D_003F6FF8[D_006437C4]) * 0x170;
-        o->xb4 -= d;
-        o->xba += d;
-        o->xc0 += d;
-        func_0020bda8(0x10);
-    }
-}
-
-extern u8 D_003F7000[];
-extern u8 D_003F7030[];
-extern u8 D_003F7060[];
-#include "data/pieces/D_00425C28.h"
-extern s32 D_006437E4;
-extern s32 D_006469A4;
-
-void func_0022b8a0(void *arg0) {
-    Obj *o[3];
-    if (func_001f42b8() != 0) {
-        func_00109278();
-        func_00233ef8(0);
-        D_006469A4 = 0;
-        D_006437E4 = 0;
-        ((s32 *)&D_00425C28)[0] = 3;
-        ((s32 *)&D_00425C28)[4] = 3;
-        o[0] = func_001f31a8(D_003F7060, 6);
-        if (o[0] != NULL) {
-            func_001f3e48(o[0], arg0);
-            func_001f4040(o[0], 4);
-            func_001f40a0(o[0], 0x5A000000);
-            o[1] = func_001f31a8(D_003F7030, 6);
-            if (o[1] != NULL) {
-                func_001f3e48(o[1], o[0]);
-                o[1]->xd2 = *(u16 *)&D_006437C4 << 4;
-                o[2] = func_001f31a8(D_003F7000, 6);
-                if (o[2] != NULL) {
-                    func_001f3e48(o[2], o[1]);
-                    func_001f3dc0(o[1]);
-                }
-            }
-        }
-    }
-}
 
 extern void *D_003F71C8[];
-extern s32 D_003F71E0[];
-extern s32 D_003F71F8[];
-
-void func_0022bb48(void *arg0) {
-    void *objs[5];
-    s32 i;
-    for (i = 0; i < 5; i++) {
-        objs[i] = func_001f31a8(D_003F71C8[i], D_003F71E0[i]);
-        if (objs[i] != 0) {
-            func_001f3e48(objs[i], arg0);
-            func_001f3d58(objs[i], D_003F71F8[i]);
-            arg0 = objs[i];
-        }
-    }
-    func_001f3dc0(objs[4]);
-    func_0020bb90(0, 0);
-    func_0020bda8(0x10);
-}
 
 extern s32 D_003F34A4;
 extern u8 D_003F7380[];

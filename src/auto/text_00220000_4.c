@@ -2,61 +2,14 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0064.h"
-
-M2C_UNK func_00109268();
-M2C_UNK func_0011d768(M2C_UNK);
 M2C_UNK func_001efb78(M2C_UNK);
 M2C_UNK func_001f36b8(void *);
-M2C_UNK func_001f9010(M2C_UNK);
-M2C_UNK func_001f9438(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_001f94f0(s32, M2C_UNK, M2C_UNK, M2C_UNK, s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_001fade0(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, s32);
-M2C_UNK func_00205938(void *, M2C_UNK);
-M2C_UNK func_0020ab88(s32);
-extern M2C_UNK D_003F70E8;
 extern f32 D_002BBDFC;
 extern f32 D_006469B8[]; /* src/data/bss_0064.c: s32 D_006469B8[0x6] */
-#include "data/pieces/D_00425BC8.h"
 s32 func_001efc10(M2C_UNK);
-s32 func_001f4390();
 s32 func_001f4400();
-void func_00205e30(s32, s32);
-void func_00206130(s32, s32, s32, s32, s32, s32);
-void func_00207830(s32, s32, s32, s32, s32, s32, s32);
-void func_0020ca30(s32, s32, s32, s32);
-
-void func_0022b3c8(s32 arg0) {
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xAE, 0xC, 0x199, 0x11, 0x80399BFF);
-}
-
-void func_0022b630(void) {
-    func_00109268();
-}
-
-void func_0022b9a8(s32 arg0) {
-    func_00207830(arg0, 4, 2, 0, 0, 0x7A, 0x192);
-}
-
-void func_0022b9d8(s32 arg0) {
-    func_00205e30(arg0, (s32) &D_003F70E8);
-    func_00206130(arg0, 0, 0x3E, 0x200, 2, 0x80399BFF);
-    func_0020ca30(arg0, 0, 0x80221F8F, 0x806360E1);
-}
-
-void func_0022bac0(void *arg0) {
-    u32 temp_a0;
-
-    temp_a0 = M2C_FIELD(arg0, u32 *, 0x90);
-    func_0020ab88((s32) (temp_a0 + (temp_a0 >> 0x1F)) >> 1);
-    func_00205938(arg0, 0x64000000);
-}
-
-void func_0022bb00(void) {
-    if ((func_001f4390() != 0) && (M2C_FIELD(D_00425BC8, s32 *, 8) & 8)) {
-        func_0011d768(4);
-    }
-}
 
 void func_0022d140(void *arg0) {
     f32 temp_f0;
