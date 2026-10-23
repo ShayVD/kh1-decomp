@@ -3,38 +3,8 @@
 #include "m2c.h"
 
 extern s32 (*D_003773E8)(s32, void *);
-s32 func_00135838(s32);
-void *func_001e98d0(s32, s32);
 void func_0014ec10(s32);
 void func_0014ec38(s32);
-
-s32 func_001d4d68(void *arg0) {
-    s32 temp_s1;
-    s32 temp_v1;
-
-    temp_s1 = arg0 + 4;
-    temp_v1 = M2C_FIELD(func_001e98d0((s32) ((s64) (M2C_FIELD(arg0, s64 *, 0x328) << 0x1B) >> 0x20) & 1, M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180)), s32 *, 4);
-    if (temp_v1 != 0) {
-        M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) = func_00135838(temp_v1);
-    }
-    return 2;
-}
-
-s32 func_001d5388(void *arg0) {
-    s32 temp_s1;
-    void *temp_a0;
-    void *temp_v0;
-
-    temp_s1 = arg0 + 4;
-    temp_v0 = func_001e98d0((s32) ((s64) (M2C_FIELD(arg0, s64 *, 0x328) << 0x1B) >> 0x20) & 1, M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180));
-    if (temp_v0 != NULL) {
-        temp_a0 = M2C_FIELD(temp_v0, void **, 4);
-        if (temp_a0 != NULL) {
-            M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + temp_s1), s32 *, 0x180) = (s32) M2C_FIELD(temp_a0, s32 *, 0x164);
-        }
-    }
-    return 2;
-}
 
 s32 func_001d6080(void) {
     s32 var_s0;

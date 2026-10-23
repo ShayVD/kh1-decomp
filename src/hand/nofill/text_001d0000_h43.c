@@ -50,25 +50,6 @@ extern s32 D_0039A570;
 extern s32 D_003A7980;
 #include "data/pieces/D_0039A580.h"
 void func_001248e8(s32);
-s32 func_001d5168(VM *vm) {
-    s32 i, n;
-    KEnt *p;
-    func_001248e8(vm->stk[vm->sp]);
-    vm->fl.x |= 4;
-    vm->x2f4 = 2.0f;
-    p = D_0038D170;
-    n = D_0039A570;
-    for (i = 0; i < n; i++, p++) {
-        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
-    }
-    p = D_0039A580;
-    n = D_003A7980;
-    for (i = 0; i < n; i++, p++) {
-        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
-    }
-    vm->sp--;
-    return 2;
-}
 s32 func_001d58c8(VM *vm) {
     s32 i, n;
     KEnt *p;
@@ -89,16 +70,6 @@ s32 func_001d58c8(VM *vm) {
 /* needs make: uses rodata */
 double sin(double);
 double cos(double);
-s32 func_001d4c08(VM *vm) {
-    f32 r = sin(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
-    vm->stk[vm->sp] = r;
-    return 2;
-}
-s32 func_001d4cb8(VM *vm) {
-    f32 r = cos(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
-    vm->stk[vm->sp] = r;
-    return 2;
-}
 #include "data/data_0039.h"
 #include "data/data_003A.h"
 #include "data/data_0038.h"

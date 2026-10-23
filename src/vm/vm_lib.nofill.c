@@ -5,6 +5,10 @@
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
 #include "data/pieces/D_0037A378.h"
+#include "data/pieces/D_0038D170.h"
+#include "data/pieces/D_0039A580.h"
+#include "data/data_0039.h"
+#include "data/data_003A.h"
 
 
 /* func_001cd2d8 (session 9, w7) matched with this message view: u32 val:24
@@ -442,5 +446,49 @@ s32 func_001d4798(VmRec *vm) {
     vm->f20 = m.id;
     vm->f60 = (s32)rf->obj;
     vm->f64 = 0;
+    return 2;
+}
+
+/* func_001d4ac8 .. func_001d4b60 are in vm_lib.c. */
+
+/* 10000 sin / cos of stk[sp] degrees. */
+double sin(double);
+double cos(double);
+
+s32 func_001d4c08(VmRec *vm) {
+    f32 r = sin(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+s32 func_001d4cb8(VmRec *vm) {
+    f32 r = cos(vm->stk[vm->sp] * 3.1415928f / 180.0f) * 10000.0;
+    vm->stk[vm->sp] = r;
+    return 2;
+}
+
+/* func_001d4d68 .. func_001d5118 are in vm_lib.c. */
+
+/* Remove entity stk[sp], and unlink it from the field VMs D_0038D170 /
+ * D_0039A580 that drive it. */
+void func_001248e8(s32);
+
+s32 func_001d5168(VmRec *vm) {
+    s32 i, n;
+    VmRec *p;
+    func_001248e8(vm->stk[vm->sp]);
+    vm->fl.x |= 4;
+    vm->x2f4 = 2.0f;
+    p = D_0038D170;
+    n = D_0039A570;
+    for (i = 0; i < n; i++, p++) {
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
+    }
+    p = D_0039A580;
+    n = D_003A7980;
+    for (i = 0; i < n; i++, p++) {
+        if (p->x0 == vm->stk[vm->sp]) p->obj = 0;
+    }
+    vm->sp--;
     return 2;
 }

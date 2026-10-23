@@ -49,6 +49,7 @@
 #include "data/pieces/D_00490630.h"
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
+#include "data/bss_0062.h"
 
 
 extern VmMgr D_00389C90;
@@ -2333,6 +2334,170 @@ s32 func_001d4b60(VmRec *vm) {
     m.v[2] = vm->stk[vm->sp];
     func_001c4640(&m);
     vm->sp -= 3;
+    return 2;
+}
+
+/* ---- 0x001d4c08-0x001d5408 ---- */
+
+/* func_001d4c08 and func_001d4cb8 are in vm_lib.nofill.c. */
+
+s32 func_00135838(struct VmObj *);
+struct VmObj *func_00123220(struct VmObj *);
+void func_00103988(s32);
+void func_001038b0(s32);
+void func_0011ef10(s32, s32 (*)(void));
+
+s32 func_001d4d68(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = func_00135838(o);
+    }
+    return 2;
+}
+
+s32 func_001d4de0(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_002C5958 & 1;
+    return 2;
+}
+
+s32 func_001d4e10(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->x31c;
+    return 2;
+}
+
+s32 func_001d4e38(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = vm->x320;
+    return 2;
+}
+
+/* Messages 7 and 9 (func_001d4e60) or 6 and 8 (func_001d4f10) to every
+ * entity in the list func_00123220 walks. */
+s32 func_001d4e60(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    for (p = func_00123220(0); p; p = func_00123220(p)) {
+        m.type = 7;
+        m.val = 0;
+        m.x = p->x4;
+        func_001c4640(&m);
+        m.type = 9;
+        m.val = 0;
+        m.x = p->x4;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d4f10(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *p;
+    for (p = func_00123220(0); p; p = func_00123220(p)) {
+        m.type = 6;
+        m.val = 0;
+        m.x = p->x4;
+        func_001c4640(&m);
+        m.type = 8;
+        m.val = 0;
+        m.x = p->x4;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d4fc0(VmRec *vm) {
+    D_002A61F0 = 0;
+    func_00103988(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d5010(VmRec *vm) {
+    D_002A61F0 = 0;
+    func_001038b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* The countdown func_001d5090 starts. */
+s32 func_001d5060(void) {
+    s32 n = D_0062A210 - 1;
+    D_0062A210 = n;
+    if (n < 0) {
+        D_002A61F0 = 0;
+        return 4;
+    }
+    return 0;
+}
+
+s32 func_001d5090(VmRec *vm) {
+    D_002A61F0 = 1;
+    func_00103988(vm->stk[vm->sp]);
+    D_0062A210 = vm->stk[vm->sp];
+    func_0011ef10(50000, func_001d5060);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d5118(VmRec *vm) {
+    D_002A61F0 = 1;
+    func_001038b0(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* func_001d5168 is in vm_lib.nofill.c. */
+
+s32 func_001d5278(VmRec *vm) {
+    VmMsg m;
+    m.type = 33;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d52c0(VmRec *vm) {
+    VmMsg m;
+    m.type = 34;
+    m.val = 0;
+    m.x = vm->x0;
+    func_001c4640(&m);
+    return 2;
+}
+
+s32 func_001d5308(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        o->x0 &= 0xFDFFFFFF;
+    }
+    return 2;
+}
+
+s32 func_001d5330(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        o->x0 |= 0x02000000;
+    }
+    return 2;
+}
+
+s32 func_001d5350(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) vm->stk[vm->sp] = vm->obj->f164;
+    return 2;
+}
+
+s32 func_001d5388(VmRec *vm) {
+    VmRec *p = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    if (p != 0) {
+        struct VmObj *o = p->obj;
+        if (o != 0) {
+            vm->stk[vm->sp] = o->f164;
+        }
+    }
     return 2;
 }
 

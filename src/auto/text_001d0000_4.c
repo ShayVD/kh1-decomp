@@ -9,16 +9,6 @@ extern s32 D_002C5958;
 s32 func_0013bf68();
 s32 func_0014efe0(s32, s32);
 
-s32 func_001d5308(void *arg0) {
-    s32 *temp_a0;
-
-    temp_a0 = M2C_FIELD(arg0, s32 **, 4);
-    if (temp_a0 != NULL) {
-        *temp_a0 &= 0xFDFFFFFF;
-    }
-    return 2;
-}
-
 s32 func_001d6930(void) {
     D_002C5958 &= 0xF7FFFFFF;
     return 2;

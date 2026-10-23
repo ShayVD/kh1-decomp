@@ -3,14 +3,11 @@
 #include "m2c.h"
 #include "data/bss_0062.h"
 
-M2C_UNK func_001038b0(s32);
 M2C_UNK func_001248e8(s32);
 #include "data/pieces/D_002E26A0.h"
 extern M2C_UNK D_0062A630; /* src/data/bss_0062.c: u8 D_0062A630[0x10] */
 extern M2C_UNK func_001dd5c0;
-extern s32 D_002A61F0;
 extern s32 D_0038D160;
-extern s32 D_0062A210;
 s32 func_0013bf68();
 s32 func_0014e510(s32);
 void *func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
@@ -18,25 +15,6 @@ void *func_001230a0(void *);
 void *func_001760b0(s32);
 void *func_001760d0(s32);
 void *func_001760f0(s32);
-
-s32 func_001d5010(void *arg0) {
-    D_002A61F0 = 0;
-    func_001038b0(M2C_FIELD(((M2C_FIELD(arg0, s32 *, 0x180) * 4) + arg0), s32 *, 0x184));
-    M2C_FIELD(arg0, s32 *, 0x180) = (s32) (M2C_FIELD(arg0, s32 *, 0x180) - 1);
-    return 2;
-}
-
-s32 func_001d5060(void) {
-    s32 temp_v0;
-
-    temp_v0 = D_0062A210 - 1;
-    D_0062A210 = temp_v0;
-    if (temp_v0 < 0) {
-        D_002A61F0 = 0;
-        return 4;
-    }
-    return 0;
-}
 
 s32 func_001d6c80(void) {
     void *var_s0;

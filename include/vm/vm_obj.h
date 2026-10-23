@@ -20,7 +20,7 @@ struct VmObj6c {
 };
 
 struct VmObj {
-    s32 x0;
+    s32 x0;                 /* flags (bit 25: func_001d5308 / func_001d5330) */
     s32 x4;                 /* 0x4: its id */
     u8 pad8[0x8];
     f32 pos[3];             /* 0x10 */
@@ -33,7 +33,9 @@ struct VmObj {
     struct VmObj6c *f6c;    /* 0x6c */
     u8 pad70[0x130 - 0x70];
     struct VmObj130 *f130;  /* 0x130 */
-    u8 pad134[0x16c - 0x134];
+    u8 pad134[0x164 - 0x134];
+    s32 f164;               /* 0x164: pushed by func_001d5350 / func_001d5388 */
+    u8 pad168[0x16c - 0x168];
     f32 f16c;               /* 0x16c: pushed halved by func_001d4358 / func_001d4690 */
     u8 pad170[0x370 - 0x170];
     union {
