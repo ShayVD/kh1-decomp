@@ -9,7 +9,6 @@ M2C_UNK func_00209e18();
 M2C_UNK func_0020a9b0(s32);
 M2C_UNK func_0020ab88(s32);
 M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_0020be10(M2C_UNK);
 M2C_UNK func_002660c0(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsExecStoreImage(M2C_UNK *, s32 *);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
@@ -19,12 +18,10 @@ extern s32 D_00640E24;
 extern s32 D_00640E28;
 #include "data/pieces/D_003E3D68.h"
 s32 func_00207358(void);
-s32 func_002079c8(s32);
 s32 func_0020ec50(s32);
 s32 func_0020f530(s32);
 s32 func_0020fc58(s32);
 void func_001f9010(s32);
-void func_001f9270(s32, s32, s32, s32, s32, s32);
 void func_001f9438(s32, s32, s32, s32, s32, s32, s32);
 void func_00206e28(void);
 void func_00206f20(void);
@@ -42,24 +39,6 @@ void func_00219118(void);
 void func_0021adc8(void);
 void func_0021db30(void);
 void func_00229850(void);
-
-void func_00207618(void) {
-    func_0020be10(0x10);
-}
-
-s32 func_00207b38(s32 arg0, s32 arg1) {
-    func_001f9270(arg0, 0, 0x10, 0x32, 0xC, 0x801EC8C8);
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xE, 0x22, arg1, 0xF, 0x80E6E6E6);
-    return func_002079c8(arg0);
-}
-
-s32 func_00207bb0(s32 arg0, s32 arg1) {
-    func_001f9270(arg0, 0, 0x10, 0x31, 0xC, 0x801EC8C8);
-    func_001f9010(0x17);
-    func_001f9438(arg0, 0, 0xE, 0x22, arg1, 0xF, 0x80E6E6E6);
-    return func_002079c8(arg0);
-}
 
 void func_0020a8f0(void) {
     s32 sp[184];

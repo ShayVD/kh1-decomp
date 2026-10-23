@@ -4,20 +4,13 @@
 #include "data/bss_0064.h"
 
 M2C_UNK func_001f31a8(M2C_UNK *, M2C_UNK);
-M2C_UNK func_00207598();
 extern M2C_UNK D_003F3420;
-extern s32 D_00640E28;
 extern s32 D_006411E0;
 extern s32 D_006411FC;
 extern s32 D_00641210; /* src/data/bss_0064.c: f32 D_00641210 */
 extern s32 D_00641214; /* src/data/bss_0064.c: f32 D_00641214 */
 extern s32 D_00641218; /* src/data/bss_0064.c: f32 D_00641218 */
 s32 func_001ee7a8();
-
-void func_002075f8(void) {
-    D_00640E28 = 7;
-    func_00207598();
-}
 
 void func_0020b968(void) {
     D_006411FC = 3;
