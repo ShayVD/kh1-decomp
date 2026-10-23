@@ -10,17 +10,10 @@ M2C_UNK func_0020ab88(s32);
 M2C_UNK func_0020b120(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0020be10(M2C_UNK);
 extern s32 D_003F34A4;
-extern s32 D_003F34C0;
 extern s32 D_003F720C;
 s32 func_001f42b8();
-void func_00109268(void);
 void func_0020a8f0(void);
 void func_0020b968(void);
-
-void func_002282f8(void) {
-    func_00109268();
-    D_003F34C0 &= ~2;
-}
 
 void func_00228e18(s32 arg0) {
     if (func_001f42b8() != 0) {

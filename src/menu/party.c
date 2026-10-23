@@ -20,24 +20,7 @@
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D68.h"
 #include "menu/partymdl.h"
-
-/* The TextWin fields (include/text/textwin.h) these windows use, with
- * +0xba / +0xc0 as u16 and +0xd2 as a plain s16. */
-typedef struct PtWin {
-    u8 pad0[0xc];
-    struct PtWin *xc;
-    struct PtWin *x10;
-    u8 pad14[0xb4 - 0x14];
-    s32 xb4;
-    u8 padb8[2];
-    u16 xba;
-    u8 padbc[0xc0 - 0xbc];
-    u16 xc0;
-    u8 padc2[0xcc - 0xc2];
-    s16 xcc, xce;
-    u8 padd0[2];
-    s16 xd2;
-} PtWin;
+#include "menu/page7.h"
 
 extern s32 D_003F34A8;
 extern s32 D_003F34C0;

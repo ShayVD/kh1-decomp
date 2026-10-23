@@ -49,7 +49,6 @@ s32 func_002474a8(void);
 #include "data/pieces/D_00304BE8.h"
 extern u128 D_00351E10[];
 extern s32 D_003F34A4;
-extern s32 D_003F6B98[];
 extern u8 D_003F6CA0[];
 extern u8 D_003F6CE0[];
 extern u8 D_003F6DA8[];
@@ -109,21 +108,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00227ef8(s32 arg0) {
-    if (func_001f42b8(arg0) != 0) {
-        if (((s32 *)D_00425BC8)[2] & 0x4000) {
-            func_001f36b8(arg0);
-            func_0011d768(3);
-        } else {
-            func_0020bd18(arg0, 8);
-            if (func_001fe570(arg0) != 0) {
-                func_001f36b8(arg0);
-            }
-        }
-    }
-    func_00207bb0(arg0, D_003F6B98[D_006436D4]);
-}
 
 void func_00229220(s32 arg0) {
     func_00205e30(arg0, D_003F6DA8);
