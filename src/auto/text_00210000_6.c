@@ -2,8 +2,6 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0064.h"
-
-M2C_UNK func_001efbb8(s32);
 M2C_UNK func_00206ea8(s32);
 M2C_UNK func_00207140(s32);
 M2C_UNK func_0021b820();
@@ -11,7 +9,6 @@ M2C_UNK func_0021c780(s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb00(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0021cb88(s32, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 extern s32 D_003F34C8;
-extern s32 D_003F34CC;
 extern s32 D_003F34F0;
 extern s32 D_003F350C;
 extern s32 D_00643110;
@@ -19,19 +16,9 @@ extern s32 D_00643114;
 extern u16 D_003F5C60;
 s32 func_0010ef90(s32, s32);
 #include "vm/script_vm.h"
-s32 func_00219440();
 void func_0010eee0(s32, s32, s32, s32);
 void func_001eb0a0(s32, s32);
 void func_0021c450(s32, s32, s32, s32);
-
-void func_00219458(void) {
-    func_001efbb8(func_00219440());
-}
-
-void func_002194d0(void) {
-    D_003F34CC += 1;
-    D_003F34C8 -= 1;
-}
 
 void func_0021ccd0(s32 arg0, s32 arg1) {
     s32 sp[4];

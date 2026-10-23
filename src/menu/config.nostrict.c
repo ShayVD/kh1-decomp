@@ -1,5 +1,8 @@
+/* The config page's background (docs/modules.md "Session 41"): func_00219598
+ * draws the two textures config.c's func_00219500 loads (D_00642D30,
+ * D_00642DE0) with a GS packet and sceGsSyncPath (a platform call; the Vita
+ * layer replaces it).  -fno-strict-aliasing (nostrict). */
 #include "common.h"
-
 typedef struct {
     u8 pad0[0x48];
     s32 x48;
@@ -21,6 +24,7 @@ s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(Wnd2 *);
 s32 func_001f45e0(Wnd2 *);
+#include "data/bss_0064_mixed.h"
 
 void func_00219598(Wnd2 *w, s32 px, s32 py) {
     u64 *buf, *p;
@@ -83,4 +87,5 @@ void func_00219598(Wnd2 *w, s32 px, s32 py) {
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
 }
-#include "data/bss_0064_mixed.h"
+
+

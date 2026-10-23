@@ -6,11 +6,6 @@ M2C_UNK func_0021af38(s32);
 M2C_UNK func_0021b800(s32);
 M2C_UNK func_0021b820();
 M2C_UNK func_0021ccd0(s32, M2C_UNK);
-#include "data/pieces/D_003F34B8.h"
-
-s32 func_0021add8(void) {
-    return M2C_FIELD(D_003F34B8, s32 *, 0x74);
-}
 
 void func_0021cf90(s32 arg0) {
     func_0021b820();

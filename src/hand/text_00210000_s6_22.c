@@ -4,129 +4,6 @@
    conflicting extern/prototype declarations use __asm__ labels so each function keeps
    the exact declarations it matched with. func_0022a698 rodata (0x491260) was verified
    with wqb03_rr.py in a copy without func_0021b6a0 (the tool puts all .rodata at one address). */
-/* ---- f9870/v1.c ---- */
-
-typedef struct { u8 pad0[0x48]; s32 x48; u8 pad4c[0x74 - 0x4c]; f32 sx, sy; u8 pad7c[0x90 - 0x7c]; s32 x90; u8 pad94[0xb0 - 0x94]; s32 xb0, xb4; } Wnd_q0;
-typedef struct { s32 u, v; u64 pad; s32 x, y, z, f; } UV_q0;
-typedef struct { u64 h[14]; u64 rgba, q; UV_q0 v[2]; } Pk_q0;
-extern u8 D_00642D30[];
-extern u8 D_00642DE0[];
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
-void func_001220b8(void *);
-s32 func_001f4570(Wnd_q0 *);
-s32 func_001f45e0(Wnd_q0 *);
-
-CONTEXT_ONLY void func_00219598(Wnd_q0 *o, s32 x, s32 y) {
-    u64 *buf;
-    Pk_q0 *s;
-    void *u;
-    s32 cx, cy;
-    f32 fx, fy, sx, sy, ax, ay, bx, by;
-    s32 x0, y0, x1, y1;
-    s32 X, Y;
-    u64 t12, t13;
-    t13 = 0x4343E;
-    t12 = 0x50AB400000008001;
-    func_00266f38(func_00266c08(2), D_00642D30);
-    func_00266f38(func_00266c08(2), D_00642DE0);
-    x <<= 4;
-    y <<= 4;
-    buf = func_00122048(1024, 128);
-    s = (Pk_q0 *)(buf + 2);
-    s->h[11] = 66;
-    s->h[0] = 0x5000000000008001;
-    s->h[1] = 0xEEEEE;
-    s->h[2] = 0x4000D;
-    s->h[3] = 71;
-    s->h[5] = 63;
-    s->h[6] = 0x2006D005E1313600;
-    s->h[12] = t12;
-    s->h[7] = 6;
-    s->h[8] = 97;
-    s->h[9] = 20;
-    s->h[4] = 0;
-    s->h[10] = 68;
-    s->h[13] = t13;
-    s->rgba = (u32)(o->x90 << 24 | 0x808080);
-    s->v[0].u = 24;
-    s->q = 1;
-    s->v[0].v = 24;
-    s->v[0].x = X = o->xb0 + x;
-    s->v[0].y = Y = o->xb4 + y;
-    s->v[1].u = 2168;
-    s->v[1].v = 1368;
-    s->v[0].f = 0x8000;
-    s->v[1].x = X + 2160;
-    s->v[1].y = Y + 1360;
-    s->v[0].z = 0x100000;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
-    s->v[1].f = 0;
-    s->v[1].z = 0x100000;
-    if (o->x48 & 1) {
-        cx = func_001f4570(o);
-        cy = func_001f45e0(o);
-        sx = o->sx;
-        sy = o->sy;
-        fx = cx;
-        fy = cy;
-        x0 = fx + (f32)(s->v[0].x - cx) * sx;
-        y0 = fy + (f32)(s->v[0].y - cy) * sy;
-        x1 = fx + (f32)(s->v[1].x - cx) * sx;
-        y1 = fy + (f32)(s->v[1].y - cy) * sy;
-        s->v[0].x = x0;
-        s->v[0].y = y0;
-        s->v[1].x = x1;
-        s->v[1].y = y1;
-    }
-    buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
-    func_001220b8(buf);
-}
-
-typedef struct { s32 a, b, c, d; } R4_q0;
-#include "data/types/text_00210000_s6_22.h"
-extern s32 D_00642D28;
-extern s32 D_003F34CC;
-extern s32 D_003F4818[], D_003F4848[], D_003F4878[], D_003F48A8[];
-extern R4_q0 *D_003F4A48[];
-extern s32 D_003F4A78[];
-extern P2_q0 D_003F4AA8[];
-void func_001f9270(void *, s32, s32, s32, s32, s32);
-s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
-void func_001fc308(void *, s32, s32, s32, s32, s32, s32, u32, u32);
-void func_00206130(void *, s32, s32, s32, s32, u32);
-
-void func_00219870(Wnd_q0 *o) {
-    s32 i, n;
-    R4_q0 *r;
-    P2_q0 *q;
-    s32 *np;
-    R4_q0 **rp;
-    func_001f9270(o, 0, 16, 325, 15, 0x801EC8C8);
-    for (i = 0; i < 12; i++) {
-        func_001f9438(o, D_003F4878[i], D_003F4818[i], D_003F4848[i], D_003F48A8[i], 15, i == D_00642D28 ? 0x80B4B4B4 : 0x40808080);
-    }
-    if (D_003F34CC == 2) func_00219598(o, 176, 61);
-    rp = D_003F4A48;
-    np = D_003F4A78;
-    for (i = 0; i < 12; i++) {
-        n = *np;
-        r = *rp;
-        for (; n > 0; n--) {
-            func_00206130(o, r->a, r->b, r->c, r->d, i == D_00642D28 ? 0x80F35054 : 0x33F35054);
-            r++;
-        }
-        np++;
-        rp++;
-    }
-    q = &D_003F4AA8[D_00642D28];
-    func_001fc308(o, q->x, q->y, 0, 0, 10, 0, 0x33F35054, 0x33F35054);
-    func_001fc308(o, q->x, q->y + 15, 0, 0, 11, 0, 0x33F35054, 0x33F35054);
-}
 
 /* ---- faf38/match.c ---- */
 
@@ -534,7 +411,6 @@ draw:
 
 /* ---- f8e70/MATCH_8e70.c ---- */
 
-
 typedef struct {
     s32 magic;
     s32 ver;
@@ -645,7 +521,6 @@ void func_00233f18(void);
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 
-
 typedef struct Nd_q6 { u8 pad[0x10]; struct Nd_q6 *x10; } Nd_q6;
 typedef struct { s32 x0; u8 pad[0xc]; s32 x10; } C28_q6;
 extern s32 D_006436D0;
@@ -742,7 +617,6 @@ void func_00228e70(void *arg0) {
 }
 
 /* ---- fa698/noctx.c ---- */
-
 
 typedef struct {
     s32 magic;
@@ -854,8 +728,6 @@ void func_00233f18(void);
 s32 func_00233f40(s32, s32);
 void func_00233ff8(s32, s32);
 
-
-
 extern s32 D_003F7778;
 extern f32 D_002BBDFC;
 extern s32 D_006469D0;
@@ -900,7 +772,6 @@ void func_002246f8(void *);
 void func_00224920(void *);
 void func_00224ad8(void *);
 void func_00225288(void *);
-
 
 extern s32 D_006437D8;
 extern s32 D_006437E0;
@@ -1232,7 +1103,6 @@ end:
 
 /* ---- febf8/MATCH_ebf8.c ---- */
 
-
 typedef struct {
     u8 pad00[0x21];
     u8 n;
@@ -1303,24 +1173,6 @@ err:
     D_00646A18 = -1;
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-extern u8 D_003F48D8[];
-extern u8 D_003F4908[];
-extern u8 D_003F4918[];
-extern u8 D_003F4928[];
-extern u8 D_003F4948[];
-extern u8 D_003F4968[];
-extern u8 D_003F4988[];
-extern u8 D_003F49A8[];
-extern u8 D_003F49C8[];
-extern u8 D_003F49E8[];
-extern u8 D_003F4A08[];
-extern u8 D_003F4A28[];
-R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
-    (void *)D_003F48D8, (void *)D_003F4908, (void *)D_003F4918, (void *)D_003F4928,
-    (void *)D_003F4948, (void *)D_003F4968, (void *)D_003F4988, (void *)D_003F49A8,
-    (void *)D_003F49C8, (void *)D_003F49E8, (void *)D_003F4A08, (void *)D_003F4A28,
-};
 #include "data/data_003F.h"
 #include "data/data_0042.h"
 #include "data/data_003E.h"
@@ -1328,4 +1180,3 @@ R4_q0 *D_003F4A48[0xc] ALIGNED(8) = {
 #include "data/pieces/D_003F34C8.h"
 #include "data/pieces/D_003F50E0.h"
 #include "data/pieces/D_00425CAC.h"
-#include "data/pieces/D_003F4AA8.h"

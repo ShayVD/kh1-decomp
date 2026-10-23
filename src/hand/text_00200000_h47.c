@@ -19,52 +19,12 @@ extern s32 D_00641C10[];
 extern s32 D_00642410;
 
 typedef struct { u8 pad[0xd2]; s16 xd2; } Oac38;
-extern u8 D_003F4BF0[];
-extern u8 D_003F4C90[];
-extern u16 D_00642D24; /* src/data/bss_0064.c: s32 D_00642D24 */
-extern s32 D_00642D20;
 s32 func_001f31a8(s32, s32);
 void func_001f3dc0(s32);
 void func_001f3e20(s32, s32);
 void func_001f3e90(s32, s32);
 s32 func_001f42b8(void);
 void func_00207830(s32, s32, s32, s32, s32, s32, s32);
-
-void func_0021ac38(s32 a0) {
-    s32 b[2];
-    if (func_001f42b8() != 0) {
-        b[0] = func_001f31a8((s32)D_003F4C90, 6);
-        if (b[0] != 0) {
-            func_001f3e90(a0, b[0]);
-            func_001f3e20(b[0], a0);
-            ((Oac38 *)b[0])->xd2 = D_00642D24 * 16;
-            b[1] = func_001f31a8((s32)D_003F4BF0, 6);
-            if (b[1] != 0) {
-                func_001f3e90(b[0], b[1]);
-                func_001f3e20(b[1], b[0]);
-                func_001f3dc0(b[0]);
-            }
-        }
-    }
-    func_00207830(a0, 4, 2, 0, 0, 122, 111);
-}
-
-void func_0021ad08(s32 a0) {
-    s32 b[2];
-    b[0] = func_001f31a8((s32)D_003F4C90, 6);
-    if (b[0] != 0) {
-        func_001f3e90(a0, b[0]);
-        func_001f3e20(b[0], a0);
-        ((Oac38 *)b[0])->xd2 = D_00642D24 * 16;
-        b[1] = func_001f31a8((s32)D_003F4BF0, 6);
-        if (b[1] != 0) {
-            func_001f3e90(b[0], b[1]);
-            func_001f3e20(b[1], b[0]);
-            func_001f3dc0(b[0]);
-        }
-    }
-    D_00642D20 = a0;
-}
 
 #include "data/types/text_00200000_h47_p.h"
 #include "data/pieces/D_00425D80.h"
