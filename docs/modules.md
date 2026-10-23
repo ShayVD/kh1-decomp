@@ -753,6 +753,99 @@ byte-identical (6979 functions), `make report` 6979 at 100%, `s31_warndiff`
 float_covered.txt, float_reach.txt, the loaded bytes and the symbols the
 same as the base.  `make test` passes.
 
+## Session 37: the text module goes on, 0x001f00d0-0x001fd248
+
+Session 37 moved 216 functions in four chunks, one commit each, split by
+their data and calls.  No Mac: static checks only.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the text functions, second part (string widths, the GIF glyph builders and their send wrappers, the font setup) | src/text/text.c (+30), text.nofill.c (+5), text.nostrict_nofill.c (1) | 0x001f00d0-0x001f2e98, func_001f2e98 / 2eb8 | 36 |
+| the text windows: slots, lists, open / close, queries | src/text/textwin.c (74), textwin.nofill.c (1); include/text/textwin.h | 0x001f3110-0x001f4570 | 75 |
+| the window frames, the open / close animation, the update loop | src/text/textwin.c (+22), textwin.nostrict.c (6), textwin.nofill.c (+1) | 0x001f4570-0x001f86e0 | 29 |
+| text in the windows: scissor, colour / width, the print wrappers, glyph / number / icon builders | src/text/wintext.c (67), wintext.nostrict.c (6), wintext.nostrict_nogcse.c (3) | 0x001f86e0-0x001fd248 | 76 |
+
+func_001f1fc8 and func_001f2630 (unmatched) sit inside the first range; text.c
+has a comment at their place.
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x001f00d0-0x001f2e98 | af2befa | s8_w5, nofill/s18_s18m1, nofill/s6_17, nostrict_nofill/s7_w32 |
+| 0x001f2e98-0x001f4570 | ac204b0 | h22, nofill/h22, nofill/h69, s11_w2, auto _9 _10 _11 _16, include/data/types/text_001e0000_h22.h |
+| 0x001f4570-0x001f86e0 | 6045646 | b12, nofill/s11_w70, nostrict/s7_w22, auto _3 |
+| 0x001f86e0-0x001fd248 | ec775f4 | s6_17, nostrict/s6_18, nostrict/s11_w42, nostrict/s12_s12w16, nostrict_nogcse/s6_f9, s11_w41, s11_w9, auto _8 _13 _14 _15 |
+
+That is 27 files deleted and 7 new units: objdiff units 841 -> 821.
+
+**What the groups are.**
+- **text.c** (second part): func_001f0148 / func_001f0340 / func_001f0448 measure
+  a message string, a two-byte string and a number at size sz (18 is the
+  glyph table's own size).  The builders write a GIF header and one sprite per
+  glyph after pk and return the end; mode 0/1/2 aligns left / right / centre,
+  the end position goes to D_0063F74C / D_0063F750, D_0063F740 is the line
+  height.  func_001f2a50 ... func_001f2d68 build into a scratch buffer
+  (func_00122048) and send it through path 2.  func_001f2eb8 uploads the font
+  image D_003E9660 and its CLUT D_003F1660 and sets up the packet headers of
+  D_003F1A70 / D_003F1E70 / D_003F2270 / D_003F27D0, then func_001f3110
+  resets the windows.
+- **textwin.c**: 24 window slots of 0xf0 bytes at D_0063F758 (**TextWin**,
+  include/text/textwin.h).  func_001f31a8 opens one from a descriptor
+  (TextWinDesc; D_003E9630 is a scratch one) at the head of the open list
+  D_00640DD8 (+0x14 newer, +0x18 older) and the focus list D_00640DDC (+0x1c /
+  +0x20); +0xc / +0x10 chain windows side by side.  States: 0 free, 1-3
+  opening / open, 4-5 closing; func_001f3680 sets the close request (bit 0 of
+  the word at +0x44).  The per-frame func_001f82b0 runs every window's +0x0
+  callback newest first, then oldest first steps the state, draws the frame
+  (func_001f46b0 by kind +0x70) and calls +0x4, then frees the windows asked
+  to close and brings the focus list to the front.  func_001f5fe0
+  (textwin.nofill.c, 8.5 KB) runs the animation +0x80 with time +0x9c.
+- **wintext.c**: drawing inside a window.  Positions are in 1/16 pixels with
+  the window at +0xb0 / +0xb4 (0x7000 / 0x7400 is the GS offset); with bit 0 of
+  +0x48 everything is scaled by +0x74 / +0x78 around the anchor
+  (func_001f4570 / func_001f45e0, by alignment +0xac).  D_003F1A60 is the
+  current text colour and D_003F1A64 the width.  The wrappers centre in the
+  window (x = +0xb8 / 2, y = (20 - sz) / 2 + 2) or add a one-pixel outline in
+  a second colour.  func_001fc330 / func_001fc750 / func_001fcdc8 draw icons of
+  the sprite table D_003E9138.
+
+**TextWin.**  It folds h22's Obj, h23's Obj, h46's Nd / Txt / Win46, s11_w2's W,
+b12's Win, h69's Ob / Wnd3 / Wnd4 / Wn, s6_17's Ob, s6_18 / s11_w9 /
+s11_w41 / s11_w42 / s6_f9 / s12w16's Txt9, s11_w70's G2Wn and nofill/h22's O68.
+Where the views disagreed:
+- **+0x4 stays s32** although b12 calls it: with a function pointer (or any
+  pointer) type, func_001f31a8's copy `p->x4 = a->x0` schedules differently
+  (28 words).  b12's call is `((void (*)(TextWin *))w->x4)(w)`.
+  TextWinDesc's +0x0 is s32 for the same reason.
+- **+0x40** is a union: `a` (u64 lo:32 / hi:32: bit 0 of hi is the close
+  request), `b` (the same bit as b0), `v` (two u32: func_001f3d10 reads +0x44
+  with lw) and `w` (u32 x40, b44:1: b12's lw / sw of the bit).
+- **+0x48** is a union: `a` (u64 c0:1 / crest:63, s11_w2), `q` (the u64,
+  func_001f5e10 / func_001f5fe0 `|= 1`, `&= ~1`) and `w` (two s32: the frame
+  and text builders test bit 0 of the low word with lw).
+- **+0x50 / +0x54 are two s32** (the animation's positions);
+  func_001f31a8 clears both with `*(u64 *)&p->x50 = 0` (one sd).
+- **+0x70, +0x80, +0xac** are s32; the switches that read them as u32 cast:
+  `switch ((u32)w->x70)` gives the same code.
+- +0x68 is `void *` (an entry of D_003E8E30, or 0); +0x94 ... +0xa8 are f32.
+
+**Return types.**  func_001fbb50 matches only when it returns
+func_001fb428's value (9 words otherwise), so wintext.c declares
+func_001fb428 `s32` although its definition (wintext.nostrict_nogcse.c)
+returns nothing; the comment says so.  Elsewhere the m2c `void` thunks
+return their callee's value, as in session 36.
+
+**Flag modes.**  Every function kept its old flags; the nostrict / nogcse /
+nofill functions went to sibling files with the CONTEXT_ONLY copies they
+needed (text.nofill.c and text.nostrict_nofill.c carry func_001efb78 ...
+func_001f0340).  func_001f4778 matched in textwin.nostrict.c with the real
+func_001f4570 above it (s7_w22 had a `{ return 0; }` stub).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings, and the m12
+float build with float_covered.txt, float_reach.txt, the loaded bytes and the
+symbols the same as the base.  At the end `make report` 6979 at 100% and
+`make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -849,7 +942,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 36, after each step)
+## Verification (sessions 30 to 37, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -865,21 +958,24 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x001f0000 on**: the text functions go on (func_001f00d0 ... in auto
-  text_001f0000_7 / _4 / _2 / _12 / _14, s8_w5, h46's func_001f0340,
-  s6_nb's func_001f0448 with its CONTEXT_ONLY func_001efba8, h22's
-  func_001f0600).  Move them into src/text/text*.c first (keep CONTEXT_ONLY
-  stubs where a function matched only with one), then split the rest of the
-  0x001f files by data and calls.  Check where the text group ends by its
-  users of D_0063F744 / D_003E8E28 / D_003E8D28 and calls to func_001efbb8 /
-  func_001efc10.
-- What is left of h22, nofill/h22 and h46 after that; h46's func_002081b0
-  is far away.
+- **0x001fd248 on**: the window menus.  0x001fd248-0x001fd6f0 are TextWin
+  accessors of the text area (+0xb0 ... +0xda: origin, cell size, margins,
+  rows / columns, scroll and cursor, in 1/16 pixels) in auto
+  text_001f0000 / _2 / _4 / _5 / _6 / _12 and h23; func_001fd720 sets the pad
+  masks D_00640DE0 ... D_00640DF8 (h46); func_001fd858 is unmatched (cursor
+  input); func_001fdfd0 ... func_001fe9a8 move cursors with the pad
+  D_00425BC8 (h69, s11_w33, h46, s6_18, h23: some take other menu structs,
+  Menu / Menu24, not TextWin); func_001fea38 (s7_w32 in text_00100000),
+  func_001feff0 (nostrict/b12), func_001ff488 (nostrict/s9_r2_4),
+  func_001ffb30 (nostrict/s11_w23) draw the cursor and scroll marks.  h23's
+  Win view puts a 64-byte array at +0xdc, past TextWin's end: check it before
+  folding.  Then go on after 0x00200000 by data and calls.
+- What is left of h46 and h23 after that; h46's func_002081b0 is far away.
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
   and `mod.py remove func...` deletes the definitions and the declarations
-  only they used (prints EMPTY / NOTE lines).  Session 36 used it for every
+  only they used (prints EMPTY / NOTE lines).  Sessions 36 and 37 used it for every
   chunk; the checklist below still applies.
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it

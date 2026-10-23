@@ -1084,3 +1084,22 @@ found that the next session needs:
 - **Types:** EvVmSub / ScrVmSub / ShopVmSub are VmSub; list.c's ListSave and vm_lib.c's VmSave1 are Save1.
 - **tools/shift/s36move/mod.py** drafts a module from the old files (`draft`) and removes moved definitions with the
   declarations only they used (`remove`); ctop.py splits a C file into top-level items losslessly.
+
+## Session 37: what changed
+
+- **No Mac** (away until Monday 2026-10-26): static work only, no boot test. Nothing new floats: docs/float-untested.md
+  has a session 37 row with no names.
+- **Modules** (docs/modules.md "Session 37"): 0x001f00d0-0x001fd248 (216 functions, 4 commits) into src/text/text*.c
+  (string widths, glyph packet builders, font setup), src/text/textwin*.c (the 24 text windows: lists, open / close,
+  frames, animation, the per-frame update) and src/text/wintext*.c (text, numbers and icons drawn in a window).
+  27 files deleted; objdiff units 841 -> 821. No workers.
+- **New shared type:** TextWin / TextWinDesc (include/text/textwin.h) for the window slots D_0063F758, folding about
+  twenty file-local views. Unions at +0x40 and +0x48 keep each function's access width.
+- **Type traps found:** (1) a pointer-typed field can change scheduling: TextWin's +0x4 had to stay s32 (a function
+  pointer or `void *` there moved 28 words of func_001f31a8). (2) Whether a wrapper returns its callee's value can
+  change the code of the calls before it: func_001fbb50 matches only as `return func_001fb428(...)`. Try a retype in
+  a scratch copy (src/text/zz.c with checkfile) and bisect the type change before blaming flags.
+- **New helpers** in tools/shift/s37move/: refs.py lists each function's calls and D_ names from the object relocs
+  (`python3 -I tools/shift/s37move/refs.py 001fd248 00200000`), the fastest way to split a range by data and calls;
+  fcheck.sh runs the m12 float build and compares float_covered / float_reach / loaded bytes / symbols with a
+  `base` snapshot (run `fcheck.sh base` first).
