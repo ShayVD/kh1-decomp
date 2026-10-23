@@ -3203,3 +3203,136 @@ and float_covered.txt is the same as the base.
 - `s31_tag.py`: gives a file's view a shared incomplete tag and drops the casts.
 - `s31_merge.py`: merges a file's second views by stabs offset.
 - `s31_warndiff.py`: lists new warnings against HEAD.
+
+## Session 32: Phase 4 types (worker s32types)
+
+### Result
+
+These counts come from `s27_survey.py --summary`, with the survey unchanged.
+The survey gives 52 views at the session 31 types HEAD (e5b2c10), as session 31
+said.  At this session's base (4ca7f69, main after the session 31 merges) it
+gives 56: the camera module (src/camera/camera.c) rewrote h66's 7 D_003C5510
+casts as 15 copy casts, and D_00389C90 fell from 4 to 2 (D_0037A380's casts in
+camera.c are to its own header types, so they count as shared).
+
+| | base 4ca7f69 | now |
+|---|---|---|
+| view casts (a user's own struct type) | 56 in 21 pieces | 20 in 13 pieces |
+| shared casts (to the piece header's own types) | 223 | 223 |
+| basic casts (s32, u8 *, void *, ...) | 750 | 750 |
+
+Per piece (view casts, base -> now):
+
+| piece | before | after | how |
+|---|---|---|---|
+| D_003C5510 | 15 | 0 | camera.c's `cp_q` / `cp_v` copy helpers take `void *` and cast inside (below) |
+| D_002E26A0 | 8 | 1 | script_vm.c's Actor, h37's ObjBD40 and r2_1's ChrEA complete `struct Actor` |
+| D_002C5C80 | 4 | 0 | `Lt64_2c5c80` gained the users' fields (flags, radius, pos, dir, col: FVec4) |
+| D_002E3170 | 3 | 0 | h49's Spr and s11_w19's Spr17 are Q8_2e3170 |
+| D_002E31B0 | 2 | 0 | r2_1's LockEA is S31b0_2e31b0 |
+| D_003044D8 | 2 | 0 | x8 is `struct Actor *`; c02's C02Ob2 completes it |
+| D_002C5C60, D_002A62AC, D_0029B420 | 1 each | 0 | FVec4; Grid_2a6234 *; s7_w4's cp160 copy helper |
+| the other 13 pieces | 21 | 20 | see "Left, and why" |
+
+What got typed:
+
+- **D_002C5C80** (31 light records of 0x40 bytes).  `Lt64_2c5c80` is
+  `{ s32 kind; u32 flags; s32 c; f32 radius; FVec4 pos; FVec4 dir; Vec4_2c5c80 col; }`
+  and `Vec4_2c5c80` is now `typedef FVec4`.  h53's Light53, h54's Lt2,
+  h30's Ent5C80, h4's Ent40 and s6_04's Lt64 alias it.  Users that read the
+  vectors as `f32[4]` pass `&l->dir.x` / `&e->col.x` and index `(&l->dir.x)[j]`
+  (same code).  h4's Vec4 is FVec4, so its `.v[3]` / `->v[2]` are `.w` / `->z`.
+- **D_002E3170**.  The block's 0x14 bytes are `ids[0x10]` then `bright[0x10]`
+  (h49's per-item 0x73 / 0xe6 levels at 0x24), and f4 is the u32 item mask.
+  As s32, h49's `f4 & (1 << i)` compiled as `sra` / `andi` (a signed shift)
+  instead of `sll` / `and`.
+- **struct Actor, more completers**.
+  - src/vm/script_vm.c's Actor (s31_tag; func_001c1e30 reads `D_002E26A0[0]->pos`).
+  - D_0035BD40.h (the union of actor-pointer views) declares `struct Actor;`
+    and its `objBD40` / `chrEA` members are `struct Actor *`.  It no longer
+    includes r2_1's types header, which h60 (another completer) would have
+    pulled in.  h37 completes the tag with ObjBD40.  r2_1's header completes
+    it with ChrEA, and EntEA (the lock-on target view, f370 at 0x370) is
+    merged into ChrEA (`typedef ChrEA EntEA`).  r2_1's LockEA is
+    `typedef S31b0_2e31b0 LockEA` (tgt / part -> f0 / f4).  bss_0057_typed.h's
+    other includers (s6_08, b06, bss_0057.c) do not complete struct Actor.
+  - D_003044D8's x8 (the owner of a collision entry) is `struct Actor *`.  c02's
+    C02Ob2 tag became Actor.  h6's func_00137450 takes `struct Actor *`.
+- **D_002C5C60** is `FVec4`.  h60 and r2_1 pass `&D_002C5C60`.
+- **D_002A62AC** is `Grid_2a6234 *`.  It is the saved grid that D_002A6234 is
+  set from, like D_002A62B0 for D_002A6238.  s11_w56 converts the loaded
+  address as it does for D_002A62B0.
+- **Copy-width casts** (D_003C5510's 15, D_0029B420's 1).  These casts chose
+  how 16 or 160 bytes are copied, not how D_X is laid out.
+  - camera.c's `cp_q` copies as `CamV4q` (8-aligned: two ld/sd).
+  - `cp_v` copies as `V4_37A380` (16-aligned: lq/sq).
+  - s7_w4's Tex records are copied as `Blk160` (20 ld/sd).
+  - The helpers now take `void *` and cast inside.  The callers pass
+    `D_003C5510.pos` / `&D_0029B420[i]` with their declared types.
+
+`make` stayed byte-identical after every commit, and no file gained a warning
+(s31_warndiff).  `make test` passes.  `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`
+with no overlays prints M12-FLOAT OK.  No data .s or piece size changed.
+
+### Left, and why
+
+- **D_002E31A0 (3)**.  s6_05 and r2_7 store with `(*(O8 **)&D_002E31A0) = ...`
+  (the session 31 lvalue hazard).  `(*(struct O8_2e319c **)&D)`, with a tag
+  added to O8_2e319c, keeps the code, because the pointer types are different
+  nodes.  The survey would still count it as a view: D_002E31A0.h defines no
+  type of its own (O8_2e319c is in D_002E319C.h).  So the code was left as it is.
+- **D_00389C90 (2)**.  These are h18's func_001d7840 slot reads.  VmMgr has the
+  slots (`u.s.e[i].obj` / `.ret` = h18's key / val), but inside its 0x3180
+  union.  Every spelling through VmMgr was tried: `D.u.s.e[i]`,
+  `(&D.u.s)->e[i]`, a `VmMgr *` local, and `((VmMgr alias *)&D)->u.s.e[i]`.
+  Each one folds the address as D+0x3180, then +0x204, and changes the code.
+  It needs the 0x3380 slots outside the union in include/vm/vm_mgr.h.  Also,
+  func_001d7840 is in the script-function library that the module worker is
+  splitting, so this is left for after the module merge.
+- **D_002E26A0 (1)**.  h4's `a < (Act *)&D_002E26A0` is the end pointer of
+  D_002C64A0's actor array, not a view.  `D_002C64A0 + 96` would relocate
+  against another symbol.
+- **D_00362434 (1) and D_00304AD8 (1)**.  These are pointers stored from
+  another view of the record.
+  - h62's Rec20 reads 0x1c as an s32 id, while CamPt_362434 has the u8 x1c
+    (s7_w2).
+  - b02's O15 against h32's W32Obj3.  h32 already completes struct Actor with
+    W32Ply, whose x130 pointee differs from W32Obj3's.
+  - `D = (T *)r` keeps the code in both files, but that only moves the cast
+    onto the record.  Both are genuinely two views of one record.
+- **Union-like words, unchanged since session 31**.
+  - D_0046A568 (2): a u32 word table read as bit-fields (w12) and as s16 halves
+    (w3).
+  - D_00364130 (2): two overlapping layouts.
+  - D_002A6238 (2): r2_10 reads it as u64.
+  - D_00350D88 (1): h55 reads it as u64.
+  - D_003626F0 (1): h11's Arg union stores.
+  - D_002BC070 (1): a volatile s32[4] read as Col.
+- **D_002A3F48 (2)**.  The auto files use it as an s32 byte address
+  (`D + k * 0x10`).  A pointer type changes their arithmetic.
+- **D_00304BE8 (1)**: r2_7, as session 30 left it.
+
+### Hazards found (gcc 2.96)
+
+- **Signedness of a mask field.**  With `s32 f4`, `f4 & (1 << i)` in a loop
+  compiles as `(f4 >> i) & 1` with `sra`.  With u32 it compiles as
+  `sll` + `and`.  A shared field must take the users' signedness even for bit
+  tests.
+- **Pointer store against int store (strict files).**  h6's `e->x8 = o`
+  (struct Actor * field) reordered the surrounding stores; `*(s32 *)&e->x8 =
+  (s32)o` keeps the code.  Same alias-set cause as session 29's VmObj hoist.
+- **A member inside a union folds its offset in two steps.**
+  `&D.u.s.e[i]` addresses D+0x3180 and then adds the rest.  A cast view
+  `((Big2 *)&D)->e[i]` addresses D and then adds 0x3384+12.  Neither a pointer
+  local nor an alias cast brings back the one-step form.
+- **A shared header that includes a file's types header** spreads that file's
+  struct tags to every includer.  D_0035BD40.h had to drop r2_1's header before
+  r2_1 could complete struct Actor.
+
+### Tools
+
+No new helpers.  This session used s27_survey / s27_check, s30_hdrdiff, and
+s31_tag / s31_warndiff.  s27_check needs `out/gen/objects.mk`, so run `make`
+once in a fresh worktree.  A fresh worktree's
+`make shift ... SHIFT_FLOAT=1` needs `python3 -I tools/shift/data_owners.py`
+first, to write out/shift/data_owners.tsv.
