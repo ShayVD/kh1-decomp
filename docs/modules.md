@@ -846,6 +846,88 @@ float build with float_covered.txt, float_reach.txt, the loaded bytes and the
 symbols the same as the base.  At the end `make report` 6979 at 100% and
 `make test` passes.
 
+## Session 38: the window menus, 0x001fd248-0x00209d48
+
+Session 38 moved 179 functions in six chunks, one commit each, split by
+their data and calls.  No Mac: static checks only.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the text area of a window (getters / setters of +0xb0 ... +0xda), the pad masks, the cursor movers, the cursor bar and frame, the panels | src/text/winmenu.c (66), winmenu.nostrict.c (3) | 0x001fd248-0x00200000 | 69 |
+| the window parts: row highlights, list frames, scroll arrows and bars, page tabs and counter, boxes, lines, sprites | src/text/winpart.c (18), winpart.nostrict.c (21) | 0x00200000-0x00206e28 | 39 |
+| the bit sets of D_003F34B8 (clear all / clear / set / test) | src/game/bitsets.c (28) | 0x00206e28-0x00207428 | 28 |
+| rows in the colour sets D_003F2C40, tabs, titles, the "n pages" and icon helpers | src/text/winrow.c (32) | 0x00207428-0x00208458 | 32 |
+| the lists: the visible cells of a window's list, the list frame | src/text/winlist.c (9), winlist.nostrict.c (1) | 0x00208458-0x00209d48 | 10 |
+
+func_001fd858 (cursor input) and func_00200e28 (unmatched) sit inside these
+ranges; winmenu.c has a comment at func_001fd858's place.
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x001fd248-0x001fea38 | d75ed2d | auto _0 _1 _2 _5 _6 _7 (text_001f0000), s11_w33, s6_18 |
+| 0x001fea38-0x00200000 | f3b02a2 | auto text_001f0000_4 _12, nostrict/s11_w23, nostrict/s9_r2_4, c12 |
+| 0x00200000-0x00206e28 | f506736 | nostrict/b12, nostrict/h69, nostrict/s6_19, nostrict/c13, nostrict/c2, nostrict/s10_w14, nostrict/s11_w72, nostrict/s8_w12, s11_w50 |
+| 0x00206e28-0x00207428 | acea043 | (none: h23 and the auto files kept other functions) |
+| 0x00207428-0x00208458 | 615e19f | h23, h46, auto text_00200000_9 _10, include/data/types/text_001f0000_h23.h |
+| 0x00208458-0x00209d48 | 4e08a5c | nostrict/s12_s12w16, h69 |
+
+That is 28 files deleted and 8 new units: objdiff units 821 -> 801.  h23,
+h46 and h69 are gone; every src/auto/text_001f0000*.c file is gone.
+
+**What the groups are.**
+- **winmenu.c**: the text area of a TextWin in 1/16 pixels: origin +0xb0 /
+  +0xb4 (with the GS offset 0x7000), size +0xb8 / +0xba, margins and cell size
+  +0xbe ... +0xc8, items +0xca (+0xcc rows of +0xd8 columns, rounded up),
+  +0xce, then the scroll +0xd0, the cursor +0xd2, their steps +0xd4 / +0xd6
+  (the sign is the direction) and the column cursor +0xda.  func_001fd720 sets
+  the pad masks D_00640DE4 ... D_00640DF8 by mode (0 d-pad and stick, 1 d-pad,
+  2 stick).  func_001fdfd0 moves the column cursor with the pad's repeat x10
+  and trigger x8 (wrapping), func_001fe1b8 scrolls smoothly (a quarter cell a
+  frame at D_002BBDFC), func_001fe408 fades the row highlights +0xdc,
+  func_001fe5a0 is the confirm (button 0x2000, waiting for the scroll to stop).
+  func_001fe660 ... func_001fe9a8 move a menu's own cursor array at +0x24
+  (MenuCur, not a window): up / down, left / right, either (+ shoulders), with
+  and without wrap.
+- **winpart.c**: a list row (frame func_00200648 in the colours cols, then a
+  message id / string / outlined string in a 26-pixel band, colour cols[4]),
+  the scroll bars (func_00202678, func_00203a10) and the page counter
+  "n / m" between the tabs (message 84 is the slash).
+- **bitsets.c**: D_003F34B8 (the block that holds the munny at x1c) has seven
+  bit sets (b48 64 bits, b56 and b60 32, b64 320, b104, b108, b112); each has
+  a clear-all, clear, set and test.  What they record is not known yet.
+- **winrow.c**: D_003F2C40 holds row colour sets of 0x14 bytes (+0x0 frame,
+  +0x10 text); func_00207a38 draws the two tabs, func_00207b38 ... a title,
+  func_00207598 finds D_00640E28 in the id list D_00640E00 (D_00640E20 ids).
+- **winlist.c**: the visible cells of a list (rows +0xce + 1 from the scroll,
+  columns +0xd8, items +0xcc), the cell under the cursor in the second colour,
+  inside the scissor func_001f8e18 / func_001f8f30.
+
+**TextWin.**  +0xd0 ... +0xd6 are a union `ud0` now: `s` (four s16),
+`u` (u16 +0xd0 / +0xd2: func_001fe1b8 and func_00200038 load them with lhu)
+and `q` (the u64: func_001fe558 tests its high word).  Every other view of
+these files fitted TextWin's members: tools/shift/s38move/fold.py folded 16
+views in place (`fold.py FILE.c TYPE --write`, then `make`), one file at a
+time, before the move.  Two traps:
+- **func_001fea38** reads +0xd2 as `((s16 *)&o->ud0)[1]`: as `o->ud0.s.xd2`
+  two loads swap (the union member changes the scheduling).
+- **func_00202678** keeps its own view WinUF (winpart.c): +0x74 and +0x90 are
+  unions there (alias set 0), which its note says the original's order needs.
+- D_0063F758 is defined `TextWin D_0063F758[24]` (bss_0063.c,
+  bss_0063_typed.h); h23's Obj is gone.
+
+**Return types and parameters.**  func_001fd610 / func_001fd660 take an s32
+(an s16 parameter made the callers sign-extend).  func_002014a0 / 1550 /
+1600 return their callee's value (their wrappers func_00201440 ... return it);
+func_001f9e48 is declared s32 in winpart.c although wintext.c defines it void,
+and func_001ff488 s32 in winmenu.c (func_001ffaf0 returns it).  func_001fe1b8
+keeps its s32 parameter (the dead `if (a <= 0)` lever needs it).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings, and the m12
+float build with float_covered.txt, float_reach.txt, the loaded bytes and the
+symbols the same as the base.  At the end `make report` 6979 at 100% and
+`make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -942,7 +1024,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 37, after each step)
+## Verification (sessions 30 to 38, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -958,25 +1040,23 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x001fd248 on**: the window menus.  0x001fd248-0x001fd6f0 are TextWin
-  accessors of the text area (+0xb0 ... +0xda: origin, cell size, margins,
-  rows / columns, scroll and cursor, in 1/16 pixels) in auto
-  text_001f0000 / _2 / _4 / _5 / _6 / _12 and h23; func_001fd720 sets the pad
-  masks D_00640DE0 ... D_00640DF8 (h46); func_001fd858 is unmatched (cursor
-  input); func_001fdfd0 ... func_001fe9a8 move cursors with the pad
-  D_00425BC8 (h69, s11_w33, h46, s6_18, h23: some take other menu structs,
-  Menu / Menu24, not TextWin); func_001fea38 (s7_w32 in text_00100000),
-  func_001feff0 (nostrict/b12), func_001ff488 (nostrict/s9_r2_4),
-  func_001ffb30 (nostrict/s11_w23) draw the cursor and scroll marks.  h23's
-  Win view puts a 64-byte array at +0xdc, past TextWin's end: check it before
-  folding.  Then go on after 0x00200000 by data and calls.
-- What is left of h46 and h23 after that; h46's func_002081b0 is far away.
+- **0x00209d48 on**: a new group starts: func_00209d48 ... func_0020a8f0 use
+  the party D_00304BE8, D_003F3530 / D_003F3870 / D_003F3050 (h47, h70, c3,
+  auto text_00200000 _2 _4 _5), then GS image transfers and more window code
+  (b13, h70, h24, s8_w18) up to 0x0020c1c8, then the menus' open / update
+  functions (s6_20, h70, h24, h47, c14, s7_w15, n32/s6_n32) to 0x00210000.
+  `python3 -I tools/shift/s37move/refs.py 00209d48 00210000` lists them.
+  Fold each old file's window view into TextWin first
+  (tools/shift/s38move/fold.py, then `make`), then draft.
+- What is left of h24, h47, h70, b13 and s7_w19 after that.
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
   and `mod.py remove func...` deletes the definitions and the declarations
-  only they used (prints EMPTY / NOTE lines).  Sessions 36 and 37 used it for every
-  chunk; the checklist below still applies.
+  only they used (prints EMPTY / NOTE lines).  Sessions 36 to 38 used it for every
+  chunk; the checklist below still applies.  It does not copy `static inline`
+  helpers (inl_sc) and does not call a file EMPTY while one is left: delete
+  such files by hand (session 38: s11_w50, s6_19, c13, s8_w12).
 - The library's prototypes of its own functions: the table still declares
   every entry `s32 func_X();`, including the ones now defined above it
   (harmless; a `void` one would conflict, none does).
