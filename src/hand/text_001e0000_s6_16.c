@@ -3,47 +3,7 @@
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
 
-void func_001ea128(char *dst, char *src) {
-    s32 n = 0, i = 0;
-    while (src[i] != 0) {
-        dst[n] = src[i];
-        if ((u8)(src[i] - 5) < 3) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        } else if (src[i] == 11) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        } else if (src[i] == 10) {
-            i++; n++;
-            dst[n] = src[i];
-            if (dst[n] == 0) {
-                i++; n++;
-                dst[n] = src[i];
-                i++; n++;
-                dst[n] = src[i];
-            }
-        } else if (src[i] == 13) {
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-            i++; n++;
-            dst[n] = src[i];
-        }
-        if ((u8)(src[i] - 9) < 23) {
-            i++; n++;
-            dst[n] = src[i];
-        }
-        i++; n++;
-    }
-    dst[n] = 0;
-}
+/* func_001ea128 is in src/vm/vm_util.c. */
 
 /* func_001ea5f8, func_001ea658, func_001ea808, func_001ea888 are in src/vm/vm_ent.c. */
 

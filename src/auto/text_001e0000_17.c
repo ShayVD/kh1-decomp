@@ -25,12 +25,6 @@ M2C_UNK func_00232790();
 M2C_UNK func_00232ac8();
 M2C_UNK func_00233610();
 M2C_UNK func_00233a80();
-M2C_UNK func_002672f8(s32, void *, s32);
-M2C_UNK func_00267518(s32, s32, s32);
-M2C_UNK func_00267620(void *);
-M2C_UNK func_002676c0(void *, void *, f32);
-M2C_UNK func_00267768(void *, void *, f32);
-M2C_UNK func_00267810(void *, void *, f32);
 #include "data/pieces/D_003DC390.h"
 extern M2C_UNK D_003E3CB8;
 #include "data/pieces/D_00304BE8.h"
@@ -77,15 +71,7 @@ void memset(s32, s32, s32);
 
 /* func_001e92b8 is in src/screen/wave.c. */
 
-void func_001e9dc8(s32 arg0, void *arg1, s32 arg2) {
-    s32 sp[16];
-    func_00267620(sp);
-    func_00267768(sp, sp, M2C_FIELD(arg1, f32 *, 0));
-    func_00267810(sp, sp, M2C_FIELD(arg1, f32 *, 4));
-    func_002676c0(sp, sp, M2C_FIELD(arg1, f32 *, 8));
-    func_002672f8(arg2, sp, arg2);
-    func_00267518(arg0, arg0, arg2);
-}
+/* func_001e9dc8 is in src/vm/vm_util.c. */
 
 /* func_001ea580 is in src/vm/vm_ent.c. */
 

@@ -53,9 +53,7 @@ void *func_001496c8();
 
 
 
-void func_001ea430(void) {
-
-}
+/* func_001ea430 is in src/vm/vm_util.c. */
 
 /* func_001eafd8, func_001eaff8, func_001eb018, func_001eb5f0, func_001eb640 are in src/save/flags.c. */
 
