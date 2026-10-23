@@ -72,43 +72,8 @@ typedef struct { u8 pad0[4]; s32 f4; u8 pad8[0x370 - 8]; union { u64 x; struct {
 extern s32 D_0039A570;
 extern s32 D_003A7980;
 #include "data/pieces/D_0037A378.h"
-void func_001dcd98(s32 a) {
-    VM *vm;
-    s32 n, i;
-    D_00389C90.x3150 = a;
-    if (D_00389C90.x3034 == 0) {
-        vm = D_0038D170;
-        n = D_0039A570;
-    } else {
-        n = D_003A7980;
-        vm = D_0039A580;
-    }
-    for (i = 0; i < n; i++) {
-        if (&vm[i] == D_00389C90.x3154) break;
-    }
-    if (a > 0) D_0037A378 &= ~8;
-    vm->stk[++vm->sp] = 3;
-    vm->stk[++vm->sp] = i;
-    func_001c19f8(vm, 8);
-}
+/* func_001dcd98 and func_001dcea8 are in src/vm/vm_lib.c. */
 
-void func_001d1080(VM *);
-void func_001d3e30(VM *);
-void func_001d7898(VM *);
-void func_001d9510(VM *);
-void func_001d9348(VM *);
-void func_001dcea8(VM *vm) {
-    s32 n, i;
-    n = D_002BBDFC * 0.5f;
-    if (n == 0) n = 1;
-    for (i = 0; i < n; i++) {
-        if ((s32)(vm->fl.x >> 6) & 1) func_001d1080(vm);
-        if ((s32)(vm->fl.x >> 9) & 1) func_001d3e30(vm);
-        if ((s32)(vm->fl.x >> 10) & 1) func_001d7898(vm);
-        if ((s32)(vm->fl.x >> 12) & 1) func_001d9510(vm);
-    }
-    if ((s32)(vm->fl.x >> 11) & 1) func_001d9348(vm);
-}
 
 s32 func_001dd208(Handler *h) {
     f32 buf[4];

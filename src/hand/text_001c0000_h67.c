@@ -35,39 +35,7 @@ void func_00267518(f32 *, f32 *, f32 *);
 #include "data/pieces/D_002BC0F0.h"
 extern f32 D_002BBDFC;
 
-void func_001dcfd0(VM *vm) {
-    VmMsg m;
-    Ent *e;
-    if ((s32)(vm->fl.x >> 14) & 1) {
-        e = vm->obj;
-        if (e) {
-            m.type = 39;
-            m.x = vm->x0;
-            m.val = 0;
-            m.v[0] = e->pos[0];
-            m.v[1] = e->pos[1] - 20.0f;
-            m.v[2] = e->pos[2];
-            m.v[3] = 1.0f;
-            func_001c4640(&m);
-        }
-        vm->f330 -= D_002BBDFC;
-        if (vm->f330 < 0.0f) vm->fl.x &= ~0x4000;
-    }
-    if ((s32)(vm->fl.x >> 15) & 1) {
-        if (vm->obj) {
-            m.type = 39;
-            m.x = vm->x0;
-            m.val = 0;
-            m.v[0] = vm->f340[0];
-            m.v[1] = vm->f340[1];
-            m.v[2] = vm->f340[2];
-            m.v[3] = 1.0f;
-            func_001c4640(&m);
-        }
-        vm->f330 -= D_002BBDFC;
-        if (vm->f330 < 0.0f) vm->fl.x &= ~0x8000;
-    }
-}
+/* func_001dcfd0 is in src/vm/vm_lib.c. */
 
 typedef struct { s32 x0; u8 pad4[0x10]; s32 f14; } Q10;
 typedef struct { u8 pad0[0x10]; Q10 *q; u8 * f14; s32 f18; f32 f1c; f32 f20; f32 f24; } Task;
