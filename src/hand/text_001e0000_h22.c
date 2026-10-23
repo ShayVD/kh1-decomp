@@ -165,7 +165,7 @@ s32 func_001eefd8(s32 a, s32 skip) {
         Member *m;
         if (i == skip) continue;
         m = &D_00304BE8->m[i];
-        for (j = 0; j < m->sub.x1c; j++) {
+        for (j = 0; j < m->sub.x18; j++) {
             if (m->sub.x19[j] == a) n++;
         }
     }
@@ -178,7 +178,7 @@ s32 func_001ef050(s32 a) {
     for (i = 0; i < 10; i++) {
         Member *m = &d->m[i];
         if (m->sub.x32 == a) n++;
-        for (j = 0; j < m->sub.x1c; j++) {
+        for (j = 0; j < m->sub.x18; j++) {
             if (m->sub.x19[j] == a) n++;
         }
     }
@@ -192,7 +192,7 @@ s32 func_001ef0c0(s32 a) {
     for (i = 0; i < 10; i++) {
         Member *m = &d->m[i];
         if (m->sub.x32 == a) n--;
-        for (j = 0; j < m->sub.x1c; j++) {
+        for (j = 0; j < m->sub.x18; j++) {
             if (m->sub.x19[j] == a) n--;
         }
     }

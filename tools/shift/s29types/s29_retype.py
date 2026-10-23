@@ -38,9 +38,10 @@ def shared_leaves(rel, S, header):
     return leaves_of(rel, probe, S)
 
 
-def auto_map(tl, sl, used):
-    """{field: S path} for the used top-level fields of TYPE (tl/sl: leaves of TYPE / S)"""
-    top = {path: (bo, bs, sp, k) for bo, bs, sp, path, k in tl if "." not in path}
+def auto_map(tl, sl, used, shift=0):
+    """{field: S path} for the used top-level fields of TYPE (tl/sl: leaves of TYPE / S);
+    shift: TYPE's offset o is S's offset o - shift (a view that starts `shift` bytes early)"""
+    top = {path: (bo - 8 * shift, bs, sp, k) for bo, bs, sp, path, k in tl if "." not in path}
     out, why = {}, {}
     for f in sorted(used):
         if f not in top:
@@ -107,7 +108,7 @@ def restore():
         p.write_text(t)
 
 
-def retype(rel, T, S, header, aliases=(), manual=None, objtags=(), uncast=(), subs=(), hdr=None):
+def retype(rel, T, S, header, aliases=(), manual=None, objtags=(), uncast=(), subs=(), hdr=None, shift=0):
     """(new text or None, report lines)"""
     rep = []
     text = (L.ROOT / rel).read_text()
@@ -115,7 +116,7 @@ def retype(rel, T, S, header, aliases=(), manual=None, objtags=(), uncast=(), su
     used = sorted(set(f for _, f in U.used(rel, names)[0]))
     _, _, tl = leaves_of(rel, None, T)
     _, _, sl = shared_leaves(rel, S, header)
-    fmap, why = auto_map(tl, sl, used)
+    fmap, why = auto_map(tl, sl, used, shift)
     fmap.update(manual or {})
     for f in list(why):
         if f in fmap:
@@ -175,6 +176,9 @@ def retype(rel, T, S, header, aliases=(), manual=None, objtags=(), uncast=(), su
             return None, rep
         t2 = t2.replace(old, new)
     inc = f'#include "{header}"'
+    td = t2.find(f"typedef {S} {T};")
+    if inc in t2 and td >= 0 and t2.index(inc) > td:
+        t2 = t2.replace(inc, "/*s29blank*/", 1)  # included below the definition: moved up
     if inc not in t2:
         m = re.search(r'#include "common.h"\n', t2)
         if m:
@@ -252,11 +256,14 @@ def main(argv):
     ap.add_argument("--uncast", nargs="*", default=[])
     ap.add_argument("--sub", nargs="*", default=[], help="OLD=>NEW text edits made first")
     ap.add_argument("--hdr", help="TYPE is defined in this include/ header (edited too)")
+    ap.add_argument("--shift", type=lambda x: int(x, 0), default=0,
+                    help="TYPE starts this many bytes before S (field at o is S's o - shift)")
     ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--force", action="store_true", help="write even when the -S differs")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     manual = dict(x.split("=", 1) for x in a.map)
-    t2, rep = retype(a.file, a.type, a.shared, a.header, a.alias, manual, a.objtag, a.uncast, a.sub, a.hdr)
+    t2, rep = retype(a.file, a.type, a.shared, a.header, a.alias, manual, a.objtag, a.uncast, a.sub, a.hdr, a.shift)
     for r in rep:
         print(r)
     if t2 is None:
@@ -267,7 +274,11 @@ def main(argv):
         Path(a.out).write_text(t2)
     res, info = check(a.file, t2)
     print(res, *info[:8])
-    if res == "SAME" and a.apply:
+    if a.force and res in ("SAME", "CODE"):
+        (L.ROOT / a.file).write_text(t2)
+        TOUCHED.clear()
+        print("written (--force: a step of a two-type change; check the next step)")
+    elif res == "SAME" and a.apply:
         (L.ROOT / a.file).write_text(t2)
         TOUCHED.clear()
         print("applied")

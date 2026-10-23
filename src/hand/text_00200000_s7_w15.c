@@ -1,9 +1,9 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
-typedef struct { u8 pad[4]; u8 x4; u8 pad5[0x21]; u8 x26[0x4e]; } T74e;
-typedef struct { T74e e[10]; u8 pad[0x48e - 0x488]; u8 x48e[11]; u8 x499[256]; } G4BE8e;
-#include "data/pieces/D_00304BE8_s.h"
+typedef W606Mem_304be8 T74e;
+typedef Save_304be8 G4BE8e;
 #include "data/pieces/D_00425BC8.h"
 typedef struct ObjE {
     u8 pad00[0x10];
@@ -173,7 +173,7 @@ void func_0020f530(ObjE *o) {
                                 func_001f3758(o);
                                 D_00641244 = v;
                                 D_00641248 = v;
-                                ((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]].x26[D_00641230] = v;
+                                D_00304BE8->m[D_00304BE8->x48e[D_00641228]].sub.x22[D_00641230] = v;
                                 D_00304BE8->items[v]--;
                                 if (D_00641234) D_00304BE8->items[D_00641234]++;
                                 D_00641224 = 5;
@@ -187,9 +187,9 @@ void func_0020f530(ObjE *o) {
                         func_001f3758(o);
                         D_00641244 = v;
                         D_00641248 = v;
-                        e = &((G4BE8e *)D_00304BE8)->e[D_00304BE8->x48e[D_00641228]];
-                        t = &e->x4;
-                        e->x26[D_00641230] = v;
+                        e = &D_00304BE8->m[D_00304BE8->x48e[D_00641228]];
+                        t = &e->sub.lv;
+                        e->sub.x22[D_00641230] = v;
                         D_00304BE8->items[v]--;
                         cnt = t[33];
                         q = 0;

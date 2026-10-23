@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
  * Built without strict aliasing (several of these need the reloads). */
@@ -8,41 +9,10 @@ typedef FVec4 V4f;
 typedef struct { s32 x, y, z; } V3i;
 
 /* ---- save data (D_00304BE8), shared with h7 ---- */
-typedef struct {
-    u8 lv;
-    u8 x1;
-    u8 x2;
-    u8 x3;
-    u8 pad04[0x21 - 0x4];
-    u8 nslot;
-    u8 slot[0x38 - 0x22];
-    s16 x38;
-    u8 pad3a[2];
-    s32 exp;
-    u8 name[0x30];
-    u8 bits;
-    u8 pad71[3];
-} W7Member;
+typedef W606Mem_304be8 W7Member;
 
-typedef struct {
-    u8 pad000[4];
-    W7Member m[10];
-    u8 x48c;
-    u8 x48d;
-    u8 party[4];
-    u8 pad492[0x499 - 0x492];
-    u8 inv[0x599 - 0x499];
-    u8 list599[0x30];
-    u8 pad5c9[0x5CC - 0x5C9];
-    u32 bits5cc[(0x7D0 - 0x5CC) / 4];
-    s8 x7d0[7];
-    u8 pad7d7[0x844 - 0x7D7];
-    s8 x844[3];
-    u8 pad847[0x878 - 0x847];
-    u64 x878;
-} W7Save;
+typedef Save_304be8 W7Save;
 
-#include "data/pieces/D_00304BE8_s.h"
 
 /* ---- actor object ---- */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
@@ -320,12 +290,12 @@ void func_001318e8(Act *, s32, V4f *);
 s32 func_0013c9e0(s32 item, u32 who) {
     if (item & 0x400) return 255;
     if (who < 10) {
-        W7Member *m = &((W7Save *)D_00304BE8)->m[who];
+        W7Member *m = &D_00304BE8->m[who];
         if (func_00147840(item)->x2 == 0) {
             s32 k;
-            for (k = 0; k < m->nslot; k++) {
-                if (m->slot[k] == 0) {
-                    m->slot[k] = item;
+            for (k = 0; k < m->sub.x21; k++) {
+                if (m->sub.x22[k] == 0) {
+                    m->sub.x22[k] = item;
                     return who;
                 }
             }
@@ -340,11 +310,11 @@ s32 func_0013c9e0(s32 item, u32 who) {
 
 s32 func_0013cae8(u32 who, s32 item) {
     if (who < 10) {
-        W7Member *m = &((W7Save *)D_00304BE8)->m[who];
+        W7Member *m = &D_00304BE8->m[who];
         s32 k;
-        for (k = 0; k < m->nslot; k++) {
-            if (m->slot[k] == item) {
-                m->slot[k] = 0;
+        for (k = 0; k < m->sub.x21; k++) {
+            if (m->sub.x22[k] == item) {
+                m->sub.x22[k] = 0;
                 return who;
             }
         }
