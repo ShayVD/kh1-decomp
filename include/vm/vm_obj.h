@@ -12,6 +12,13 @@ struct VmObj130 {
     f32 f18;                /* 0x18: read / set by func_001d3be8 / func_001d3bb0 */
 };
 
+struct VmObj6c {
+    u8 pad0[0x3c];
+    s32 f3c;                /* read by func_001d43d8 */
+    u8 pad40[4];
+    s32 f44;                /* read by func_001d4448 */
+};
+
 struct VmObj {
     s32 x0;
     s32 x4;                 /* 0x4: its id */
@@ -22,9 +29,13 @@ struct VmObj {
     f32 f3c;                /* 0x3c: heading (radians) */
     u8 pad40[0x10];
     f32 p50[3];             /* 0x50: home position (func_001d3aa8 sends the entity there) */
-    u8 pad5c[0x130 - 0x5c];
+    u8 pad5c[0x6c - 0x5c];
+    struct VmObj6c *f6c;    /* 0x6c */
+    u8 pad70[0x130 - 0x70];
     struct VmObj130 *f130;  /* 0x130 */
-    u8 pad134[0x370 - 0x134];
+    u8 pad134[0x16c - 0x134];
+    f32 f16c;               /* 0x16c: pushed halved by func_001d4358 / func_001d4690 */
+    u8 pad170[0x370 - 0x170];
     union {
         u64 flags;
         u8 col[4];          /* func_001cf210 */

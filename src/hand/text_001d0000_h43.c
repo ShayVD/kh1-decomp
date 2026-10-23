@@ -58,19 +58,6 @@ typedef struct {
     E48 ent3180[1];
 } Big;
 extern Big D_00389C90;
-s32 func_001d4b60(VM *vm) {
-    VmMsg m;
-    m.type = 32;
-    m.val = 0;
-    m.x = vm->x0;
-    m.v[0] = vm->stk[vm->sp - 2];
-    m.v[3] = 1.0f;
-    m.v[1] = vm->stk[vm->sp - 1];
-    m.v[2] = vm->stk[vm->sp];
-    func_001c4640(&m);
-    vm->sp -= 3;
-    return 2;
-}
 typedef struct { s32 x0; s32 x4; u8 pad8[8]; f32 pos[3]; u8 pad1c[0x354]; u64 f370; } Obj;
 Obj *func_00123220(Obj *);
 s32 func_001d4e60(VM *vm) {

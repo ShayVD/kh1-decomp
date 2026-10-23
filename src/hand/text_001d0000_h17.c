@@ -41,11 +41,6 @@ typedef struct {
 } Big;
 extern Big D_00389C90;
 #include "data/pieces/D_00304BE8_s.h"
-typedef struct { u8 pad0[0x3c]; s32 f3c; u8 pad40[4]; s32 f44; } Sub6c;
-typedef struct { u8 pad0[0x6c]; Sub6c *f6c; } Sub4;
-typedef struct { u8 pad0[4]; Sub4 *f4; u8 pad8[0x318 - 8]; s32 f318; } Ent;
-Ent *func_001e98d0(s32, s32);
-Ent *func_001e9b98(s32, s32);
 
 #include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_002E26A0.h"
@@ -74,52 +69,6 @@ s32 func_0024d490(void);
 void func_00105d38(s32, s32);
 s32 func_00131de0(s32, s32);
 void func_00124218(s32);
-
-s32 func_001d40b0(VM *vm) {
-    s32 i = vm->stk[vm->sp];
-    if (i < 4) vm->stk[vm->sp] = D_00304BE8->x48e[i];
-    return 2;
-}
-
-s32 func_001d42f0(VM *vm) {
-    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
-    vm->stk[vm->sp] = e->f318;
-    return 2;
-}
-
-s32 func_001d43d8(VM *vm) {
-    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
-    vm->stk[vm->sp] = e->f4->f6c->f3c;
-    return 2;
-}
-
-s32 func_001d4448(VM *vm) {
-    Ent *e = func_001e98d0((s32)(vm->flags.x >> 5) & 1, vm->stk[vm->sp]);
-    vm->stk[vm->sp] = e->f4->f6c->f44;
-    return 2;
-}
-
-s32 func_001d4610(VM *vm) {
-    Ent *e = func_001e9b98((s32)(vm->flags.x >> 5) & 1, D_00304BE8->x48e[vm->stk[vm->sp]]);
-    if (e) vm->stk[vm->sp] = e->f318;
-    return 2;
-}
-
-s32 func_001d4710(VM *vm) {
-    VmMsg m;
-    vm->flags.x &= ~1ULL;
-    vm->flags.x &= ~0x40ULL;
-    vm->flags.x &= ~0x200ULL;
-    m.type = 18;
-    m.val = 0;
-    m.x = vm->x0;
-    m.v[0] = 0.0f;
-    m.v[1] = 0.0f;
-    m.v[2] = 0.0f;
-    m.v[3] = 1.0f;
-    func_001c4640(&m);
-    return 2;
-}
 
 s32 func_001d5090(VM *vm) {
     D_002A61F0 = 1;

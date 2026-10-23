@@ -2168,6 +2168,174 @@ s32 func_001d3ff0(VmRec *vm) {
     return 2;
 }
 
+/* ---- 0x001d4000-0x001d4c08 ---- */
+
+VmRec *func_001e9b98(s32 k, s32 id);
+void func_001008d8(f32);
+
+/* Party member stk[sp] (< 4) of D_00304BE8. */
+s32 func_001d40b0(VmRec *vm) {
+    s32 i = vm->stk[vm->sp];
+    if (i < 4) vm->stk[vm->sp] = D_00304BE8->x48e[i];
+    return 2;
+}
+
+/* The position x / y / z, the heading (degrees), rsp and f16c / 2 of the
+ * entity of VM stk[sp]. */
+s32 func_001d40f0(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = o->pos[0];
+    }
+    return 2;
+}
+
+s32 func_001d4168(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = o->pos[1];
+    }
+    return 2;
+}
+
+s32 func_001d41e0(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = o->pos[2];
+    }
+    return 2;
+}
+
+s32 func_001d4258(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = o->f3c * 180.0f / 3.1415928f;
+    }
+    return 2;
+}
+
+s32 func_001d42f0(VmRec *vm) {
+    VmRec *e = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->rsp;
+    return 2;
+}
+
+s32 func_001d4358(VmRec *vm) {
+    struct VmObj *o = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp])->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = o->f16c * 0.5f;
+    }
+    return 2;
+}
+
+s32 func_001d43d8(VmRec *vm) {
+    VmRec *e = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->obj->f6c->f3c;
+    return 2;
+}
+
+s32 func_001d4448(VmRec *vm) {
+    VmRec *e = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp]);
+    vm->stk[vm->sp] = e->obj->f6c->f44;
+    return 2;
+}
+
+/* The position x / y / z of party member stk[sp] (D_002E26A0). */
+s32 func_001d44b8(VmRec *vm) {
+    void *t = D_002E26A0[vm->stk[vm->sp]];
+    struct VmObj *a = t;
+    if (a != 0) {
+        vm->stk[vm->sp] = a->pos[0];
+    }
+    return 2;
+}
+
+s32 func_001d44f8(VmRec *vm) {
+    void *t = D_002E26A0[vm->stk[vm->sp]];
+    struct VmObj *a = t;
+    if (a != 0) {
+        vm->stk[vm->sp] = a->pos[1];
+    }
+    return 2;
+}
+
+s32 func_001d4538(VmRec *vm) {
+    void *t = D_002E26A0[vm->stk[vm->sp]];
+    struct VmObj *a = t;
+    if (a != 0) {
+        vm->stk[vm->sp] = a->pos[2];
+    }
+    return 2;
+}
+
+/* The heading (degrees), rsp and f16c / 2 of party member stk[sp]'s entity. */
+s32 func_001d4578(VmRec *vm) {
+    struct VmObj *o = func_00123488(D_00304BE8->x48e[vm->stk[vm->sp]]);
+    if (o != 0) {
+        vm->stk[vm->sp] = o->f3c * 180.0f / 3.1415928f;
+    }
+    return 2;
+}
+
+s32 func_001d4610(VmRec *vm) {
+    VmRec *e = func_001e9b98((s32)(vm->fl.x >> 5) & 1, D_00304BE8->x48e[vm->stk[vm->sp]]);
+    if (e) vm->stk[vm->sp] = e->rsp;
+    return 2;
+}
+
+s32 func_001d4690(VmRec *vm) {
+    struct VmObj *o = func_00123488(D_00304BE8->x48e[vm->stk[vm->sp]]);
+    if (o != 0) {
+        vm->stk[vm->sp] = o->f16c * 0.5f;
+    }
+    return 2;
+}
+
+/* Stop the moves (flag bits 0, 6, 9) and send message 18. */
+s32 func_001d4710(VmRec *vm) {
+    VmMsg m;
+    vm->fl.x &= ~1ULL;
+    vm->fl.x &= ~0x40ULL;
+    vm->fl.x &= ~0x200ULL;
+    m.type = 18;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = 0.0f;
+    m.v[1] = 0.0f;
+    m.v[2] = 0.0f;
+    m.v[3] = 1.0f;
+    func_001c4640(&m);
+    return 2;
+}
+
+/* func_001d4798 is in vm_lib.nofill.c. */
+
+s32 func_001d4ac8(VmRec *vm) {
+    func_001008d8(vm->stk[vm->sp] * 3.1415928f / 180.0f);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d4b38(VmRec *vm) {
+    vm->sp++;
+    vm->stk[vm->sp] = D_0038CDE0;
+    return 2;
+}
+
+s32 func_001d4b60(VmRec *vm) {
+    VmMsg m;
+    m.type = 32;
+    m.val = 0;
+    m.x = vm->x0;
+    m.v[0] = vm->stk[vm->sp - 2];
+    m.v[3] = 1.0f;
+    m.v[1] = vm->stk[vm->sp - 1];
+    m.v[2] = vm->stk[vm->sp];
+    func_001c4640(&m);
+    vm->sp -= 3;
+    return 2;
+}
+
 /* ---- the table and the dispatcher ---- */
 
 

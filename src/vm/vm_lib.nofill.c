@@ -387,3 +387,60 @@ void func_001d3e30(VmRec *vm) {
         func_001c4640((VmMsg *)&m);
     }
 }
+
+/* func_001d3ff0 .. func_001d4710 are in vm_lib.c. */
+
+/* func_001d4798's message: b10's 16-aligned one with a u32 bit-field header. */
+typedef struct {
+    u32 type:8, id:24;
+    s32 x4;
+    u8 pad8[8];
+    f32 x, y, z;
+    f32 ang;
+} __attribute__((aligned(16))) VmMsgA;
+
+/* Send message 2 (turn towards the entity of VM stk[sp]), as func_001cd2d8
+ * does for a point; the sqrt / atan2 libcall sequences keep their delay-slot
+ * nops (nofill). */
+s32 func_001d4798(VmRec *vm) {
+    VmMsgA m;
+    f32 d[3];
+    f32 len, a, b, f;
+    double r;
+    VmRec *rf;
+    s32 type;
+    rf = func_001e98d0(vm->fl.b.b5, vm->stk[vm->sp]);
+    vm->fl.b.b0 = 1;
+    d[0] = rf->obj->pos[0] - vm->obj->pos[0];
+    d[1] = rf->obj->pos[1] - vm->obj->pos[1];
+    d[2] = rf->obj->pos[2] - vm->obj->pos[2];
+    len = sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    d[2] /= len;
+    d[0] /= len;
+    d[1] /= len;
+    a = atan2(d[2], d[0]);
+    b = atan2(vm->obj->rot[2], vm->obj->rot[0]);
+    r = a - b;
+    type = 2;
+    if (r < 0.0) r = 0.0 - r;
+    f = r;
+    if (f > 3.1415928f) f = 3.1415928f - (f - 3.1415928f);
+    if (f * 180.0f / 3.1415928f < 0.0) {
+    }
+    m.type = type;
+    m.id = vm->stk[vm->sp - 1];
+    m.x4 = vm->x0;
+    m.x = rf->obj->pos[0];
+    m.y = rf->obj->pos[1];
+    m.z = rf->obj->pos[2];
+    m.ang = 179.99998f;
+    func_001c4640((VmMsg *)&m);
+    vm->f14[0] = rf->obj->pos[0];
+    vm->f14[1] = rf->obj->pos[1];
+    vm->f14[2] = rf->obj->pos[2];
+    vm->sp -= 2;
+    vm->f20 = m.id;
+    vm->f60 = (s32)rf->obj;
+    vm->f64 = 0;
+    return 2;
+}
