@@ -341,7 +341,7 @@ void func_0012d6c0(A7 *a0, u32 *a1) {
     do { func_0012ccb0(2); } while (0);
 }
 
-typedef f32 Mtx[4][4];
+typedef FMtx4 Mtx;
 #include "data/pieces/D_002C58D0.h"
 
 typedef struct { u8 p[0x3c]; s32 f3c; u8 p40[0x9c - 0x40]; f32 f9c; f32 fa0; } M6c;

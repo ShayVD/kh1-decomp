@@ -95,7 +95,8 @@ void func_001252f8(void) {
     D_002E27C8.b29 = func_0013c968(59, 0);
 }
 
-typedef f32 C01Mat[4][4];
+#include "data/types/fvec.h"
+typedef FMtx4 C01Mat;
 typedef struct {
     u8 pad000[0x40];
     f32 x40[3];
