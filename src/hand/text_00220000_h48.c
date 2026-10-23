@@ -460,7 +460,6 @@ void func_002319d0(void) {
 
 #include "data/pieces/D_003F7C48.h"
 typedef T7C48_3f7c48 E7C48;
-typedef T7A70 E7A70;
 extern s32 D_00647660;
 extern s32 D_0064765C;
 void func_001ec2c0(s32, s32);
@@ -470,7 +469,7 @@ void func_00231b98(void) {
     s32 *k;
     s32 *e;
     E7C48 *c;
-    E7A70 *l;
+    T7A70 *l;
     s32 n;
     if (*p > 0) {
         func_0011d768(18);
@@ -497,7 +496,7 @@ void func_00231b98(void) {
 
 void func_00231cd0(s32 arg0) {
     E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[D_0064765C];
-    E7A70 *l;
+    T7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[D_0064765C] != 0) {
         D_00647660 = -3;
@@ -521,7 +520,7 @@ void func_00231cd0(s32 arg0) {
 
 s32 func_00231dd0(s32 k) {
     E7C48 *c = &((T7C48_3f7c48 *)&D_003F7C48)[k];
-    E7A70 *l;
+    T7A70 *l;
     s32 n;
     if (c->flag == 1 && D_00647670[k] != 0) {
         return -3;

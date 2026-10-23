@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/bss_0052.h"
 
 /* Hand-matched functions 0x0012b7a8-0x0012fcd0 (session 6, worker 05). Nostrict region. */
@@ -58,7 +59,6 @@ typedef struct Ent {
 typedef struct V8 { Ent *a; s32 b; } V8;
 typedef struct Hit { s32 f0; Ent *e; } Hit;
 #include "data/pieces/D_00304BE8_s.h"
-typedef struct S88 { u32 f0; u8 pad[28]; } S88;
 
 /* ---- data ---- */
 extern Node D_004F8310[64];
@@ -78,7 +78,6 @@ extern f32 D_00524F78; /* src/data/bss_0052.c: s32 D_00524F78 */
 extern u32 D_002C5958;
 extern f32 D_002BBDFC;
 extern u32 D_002C5BB8;
-#include "data/pieces/D_00350D88.h"
 extern s32 D_0052528C;
 extern V8 D_00524F80[]; /* src/data/bss_0052.c: P5c0 D_00524F80[0x61] */
 extern V8 *D_00525288; /* src/data/bss_0052.c: s32 D_00525288 */
@@ -630,7 +629,7 @@ s32 func_0012fcd0(void) {
         func_0012fc58();
         return 0;
     }
-    if (D_002E31B8 >= 3 && pl->f70 != 1 && !((((S88 *)&D_00350D88)[pl->f70].f0 >> 2) & 1)) {
+    if (D_002E31B8 >= 3 && pl->f70 != 1 && !((D_00350D88[pl->f70].f0 >> 2) & 1)) {
         func_0012fc58();
         return 0;
     }

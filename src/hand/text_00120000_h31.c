@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
 
@@ -505,8 +506,6 @@ void func_0012f5c0(P5c0 *e) {
 }
 
 typedef struct { u8 pad[0x70]; s32 f70; } Gb20;
-typedef struct { u32 f0; u8 pad[28]; } Tb20;
-#include "data/pieces/D_00350D88.h"
 extern s32 D_00524F78;
 extern s32 D_002E31BC;
 extern void func_001337e0(s32, s32, s32);
@@ -519,7 +518,7 @@ void func_0012fb20(S31b0 *e, s32 m) {
     switch (m) {
     case 3:
         func_001337e0(3, e->f0, 0);
-        if ((((Tb20 *)&D_00350D88)[((Gb20 *)D_002E26A0[0])->f70].f0 >> 2) & 1) func_0011d768(68);
+        if ((D_00350D88[((Gb20 *)D_002E26A0[0])->f70].f0 >> 2) & 1) func_0011d768(68);
         break;
     case 4:
         D_00524F78 = 0;

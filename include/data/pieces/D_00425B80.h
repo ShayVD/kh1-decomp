@@ -6,8 +6,12 @@
 
 #include "common.h"
 
+/* A 0x3c-byte save header record (session 31): x0 / x4 are the magic
+ * 0x5153484B and 0x01317F14 (src/auto/text_00230000_3.c), s6_g2's SvF and
+ * s8_w7's R60 records have the same layout. */
 typedef struct {
-    u8 pad_0[0x8];
+    s32 x0;
+    s32 x4;
     s32 x8;
     s32 xc;
     s32 x10;

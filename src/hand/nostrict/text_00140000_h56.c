@@ -1,4 +1,5 @@
 #include "common.h"
+#include "data/pieces/D_00350D88.h"
 #include "data/bss_0053.h"
 void func_002675a8(f32 *, f32 *);
 void func_00267518(f32 *, f32 *, f32 *);
@@ -85,8 +86,6 @@ void func_00143d20(Ch3 *o, f32 *v, void *arg) {
 }
 
 typedef void (*MvFn)(void *, f32 *);
-typedef struct { u32 f0; u8 pad4[0xc]; MvFn f10; void *f14; u8 pad18[8]; } MvTab;
-#include "data/pieces/D_00350D88.h"
 #include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 typedef struct {
@@ -131,7 +130,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
         break;
     default:
-        fn = ((MvTab *)&D_00350D88)[o->st70].f10;
+        fn = D_00350D88[o->st70].f10;
         if (fn) {
             fn(o, v);
         } else {
@@ -139,7 +138,7 @@ void func_00143eb8(Mv *o, f32 *v) {
         }
         break;
     }
-    if ((((MvTab *)&D_00350D88)[o->st70].f0 >> 3) & 1) {
+    if ((D_00350D88[o->st70].f0 >> 3) & 1) {
         func_001568e8(o, t);
         func_00267518(v, v, t);
     }
@@ -202,7 +201,7 @@ s32 func_00144060(St *o) {
         if (s1) return o->st70;
         break;
     default:
-        fn = (StFn)((MvTab *)&D_00350D88)[o->st70].f14;
+        fn = (StFn)D_00350D88[o->st70].f14;
         if (fn) return fn(o, s1);
         if (s1) goto two;
         break;

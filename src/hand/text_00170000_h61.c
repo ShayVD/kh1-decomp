@@ -406,10 +406,8 @@ void func_0017ae48(void) {
 #undef D_002C5958
 #undef D_00575894
 
-typedef struct { f32 x, y, z, len; } Seg;
-typedef struct Path {
-    s32 n; f32 x4; f32 x8; f32 xc; u8 pad10[4]; f32 x14; s32 flags; u8 pad1c[4]; Seg seg[1];
-} Path;
+typedef Seg_362438 Seg;
+typedef Path_362438 Path;
 typedef struct Cam940 {
     V4 x0; V4 x10; V4 x20; V4 x30;
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
@@ -437,7 +435,6 @@ void func_0017b200(void) {
 }
 
 #define D_00575894 (*(ActB **)&D_00575894)
-#define D_00362438 (*(Path **)&D_00362438)
 #define D_002C5958 (*(u32 *)&D_002C5958)
 
 void func_0017d238(void) {
@@ -461,20 +458,20 @@ void func_0017d238(void) {
         D_00575890 &= ~4;
         D_00575940.x65 = 1;
     }
-    if (!D_00575920 || (path->flags & 0x10)) func_0017c9a8();
+    if (!D_00575920 || (path->x18 & 0x10)) func_0017c9a8();
     else func_0017cf08();
     if (D_00575940.x65 != 0) {
         if (D_00575940.x65 == 1) {
             func_0017ba80(2);
             D_00575940.x40 = D_00575940.x44;
             D_00575940.x48 = D_00575940.x4c;
-            func_0017b308(m, path->seg, path->n, D_00575940.x40, path->flags & 1);
+            func_0017b308(m, path->seg, path->n, D_00575940.x40, path->x18 & 1);
             func_0017b250(&D_00575940, m, D_00575940.x48);
             func_002675a8(&D_00575940.x20, &D_005758D0);
             D_00575940.x65++;
             D_00575940.x66 = 0;
         }
-        if (func_0017b7e8() || (path->flags & 0x20)) {
+        if (func_0017b7e8() || (path->x18 & 0x20)) {
             step = D_002BBDFC * 8.0f;
             func_00267530(&v, &D_00575940.x0, &D_00575940.x20);
             len = func_00120bf8(&v);
@@ -483,10 +480,10 @@ void func_0017d238(void) {
             func_00267518(&D_00575940.x20, &D_00575940.x20, &v);
             if (len < 50.0f) D_00575940.x65 = 0;
         }
-        if (path->flags & 2) func_0017b740(&D_005758D0, &D_00575940.x20);
+        if (path->x18 & 2) func_0017b740(&D_005758D0, &D_00575940.x20);
         else func_002675a8(&D_005758D0, &D_00575940.x20);
     } else {
-        if (path->flags & 2) func_0017b740(&D_005758D0, &D_00575940.x0);
+        if (path->x18 & 2) func_0017b740(&D_005758D0, &D_00575940.x0);
         else func_002675a8(&D_005758D0, &D_00575940.x0);
     }
     if ((u32)(&D_002C5BB0)->x8 & 0x8000) {
@@ -497,7 +494,6 @@ void func_0017d238(void) {
     }
 }
 #undef D_002C5958
-#undef D_00362438
 #undef D_00575894
 
 extern f32 D_003624B8;
