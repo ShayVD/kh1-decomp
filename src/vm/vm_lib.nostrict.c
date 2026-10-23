@@ -1,20 +1,12 @@
 /* The library functions of src/vm/vm_lib.c that need -fno-strict-aliasing
  * (docs/modules.md "Session 32"). */
 #include "common.h"
+#include "vm/vm_obj.h"
 #include "data/types/vm_rec.h"
 #include "vm/vm_mgr.h"
 #include "data/types/text_001c0000_h16.h"
 #include "data/pieces/D_003DABD0.h"
 
-/* The entity a VM drives (as in vm_lib.c). */
-struct VmObj {
-    u8 pad0[0x10];
-    f32 pos[3];             /* 0x10 */
-    u8 pad1c[0x14];
-    f32 rot[3];             /* 0x30: radians */
-    u8 pad3c[0x370 - 0x3c];
-    u64 flags;              /* 0x370 */
-};
 
 extern VmMgr D_00389C90;
 void func_00155be0(void *p);
@@ -35,7 +27,7 @@ s32 func_001cd600(VmRec *vm) {
         o->rot[0] = x * 3.1415928f / 180.0f;
         o2->rot[1] = y * 3.1415928f / 180.0f;
         o2->rot[2] = z * 3.1415928f / 180.0f;
-        o2->flags |= 0x100000000000ULL;
+        o2->f370.flags |= 0x100000000000ULL;
     }
     vm->sp -= 3;
     return 2;

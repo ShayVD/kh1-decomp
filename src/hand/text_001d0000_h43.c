@@ -71,20 +71,6 @@ s32 func_001d4b60(VM *vm) {
     vm->sp -= 3;
     return 2;
 }
-void func_001d3e30(VM *);
-s32 func_001d3ff0(VM *vm) {
-    vm->flags.x |= 0x200;
-    vm->f14 = vm->stk[vm->sp - 2];
-    vm->f18 = vm->stk[vm->sp - 1];
-    vm->f20 = vm->stk[vm->sp - 3] / 50.0f;
-    vm->f1c = vm->stk[vm->sp];
-    vm->v08[0] = vm->obj->pos[0];
-    vm->v08[1] = vm->obj->pos[1];
-    vm->v08[2] = vm->obj->pos[2];
-    func_001d3e30(vm);
-    vm->sp -= 4;
-    return 2;
-}
 typedef struct { s32 x0; s32 x4; u8 pad8[8]; f32 pos[3]; u8 pad1c[0x354]; u64 f370; } Obj;
 Obj *func_00123220(Obj *);
 s32 func_001d4e60(VM *vm) {

@@ -1,19 +1,11 @@
 /* The library functions of src/vm/vm_lib.c that need nofill (docs/modules.md
  * "Session 32"). */
 #include "common.h"
+#include "vm/vm_obj.h"
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
+#include "data/pieces/D_0037A378.h"
 
-/* The entity a VM drives (as in vm_lib.c). */
-struct VmObj {
-    u8 pad0[0x10];
-    f32 pos[3];             /* 0x10 */
-    u8 pad1c[0x14];
-    f32 rot[3];             /* 0x30: radians */
-    f32 f3c;                /* 0x3c: heading (radians) */
-    u8 pad40[0x370 - 0x40];
-    u64 flags;              /* 0x370 */
-};
 
 /* func_001cd2d8 (session 9, w7) matched with this message view: u32 val:24
  * (VmMsg's u64 bit-field reads differently in `vm->f20 = m.val`), aligned(8),
@@ -321,4 +313,77 @@ s32 func_001d2270(VmRec *vm) {
     vm->stk[vm->sp] = inl_deg(out[1]) - a;
     if (vm->stk[vm->sp] < 0) vm->stk[vm->sp] += 360;
     return 2;
+}
+
+/* func_001d35a0 .. func_001d3c70 are in vm_lib.c. */
+
+/* Push the entity's home position x / y / z (0 without one). */
+s32 func_001d3cb8(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        vm->stk[vm->sp] = vm->obj->p50[0];
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001d3d08(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        vm->stk[vm->sp] = vm->obj->p50[1];
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001d3d58(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        vm->stk[vm->sp] = vm->obj->p50[2];
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+/* func_001d3da8 .. func_001d3e08 are in vm_lib.c. */
+
+/* Step the move func_001d3ff0 started, as func_001d1080 (flag bit 9; it
+ * also arrives at once while D_0037A378 bit 0 is set). */
+void func_001d3e30(VmRec *vm) {
+    VmMsgD m;
+    f32 dx, dy, dz, dist, spd;
+    dx = vm->f14[0] - vm->p[0];
+    dy = vm->f14[1] - vm->p[1];
+    dz = vm->f14[2] - vm->p[2];
+    dist = sqrt(dx * dx + dy * dy + dz * dz);
+    spd = vm->f20;
+    if (dist < spd || (D_0037A378 & 1)) {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = vm->f14[0];
+        m.v[1] = vm->f14[1];
+        m.v[2] = vm->f14[2];
+        m.v[3] = 1.0f;
+        func_001c4640((VmMsg *)&m);
+        vm->fl.x &= ~0x200ULL;
+    } else {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[3] = 1.0f;
+        m.d[0] = (vm->f14[0] - vm->p[0]) / dist * spd;
+        m.d[1] = (vm->f14[1] - vm->p[1]) / dist * spd;
+        m.d[2] = (vm->f14[2] - vm->p[2]) / dist * spd;
+        vm->p[0] += m.d[0];
+        vm->p[1] += m.d[1];
+        vm->p[2] += m.d[2];
+        m.v[0] = vm->p[0];
+        m.v[1] = vm->p[1];
+        m.v[2] = vm->p[2];
+        func_001c4640((VmMsg *)&m);
+    }
 }

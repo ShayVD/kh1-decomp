@@ -60,8 +60,6 @@ extern volatile S5AD0 D_002C5AD0;
 extern volatile S5BB0 D_002C5BB0;
 typedef struct Node { s32 x0; s32 f4; } Node;
 
-s32 func_001059d0(void *);
-void func_00176ba8(s32, s32);
 void func_00103988(s32);
 void func_0011ef10(s32, void (*)());
 void func_001d5060();
@@ -76,64 +74,6 @@ s32 func_0024d490(void);
 void func_00105d38(s32, s32);
 s32 func_00131de0(s32, s32);
 void func_00124218(s32);
-
-s32 func_001d3858(VM *vm) {
-    s32 v = D_00304BE8->items[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];
-    if (v >= 100) D_00304BE8->items[vm->stk[vm->sp - 1]] = 99;
-    else if (v < 0) D_00304BE8->items[vm->stk[vm->sp - 1]] = 0;
-    else D_00304BE8->items[vm->stk[vm->sp - 1]] += vm->stk[vm->sp];
-    vm->sp -= 2;
-    return 2;
-}
-
-s32 func_001d3948(VM *vm) {
-    void *d = D_002E26A0[0];
-    vm->sp++;
-    if (d) vm->stk[vm->sp] = func_001059d0(d);
-    else vm->stk[vm->sp] = 0;
-    return 2;
-}
-
-s32 func_001d39b0(VM *vm) {
-    s32 x = D_00389C90.f3040 + D_00389C90.f3060[vm->stk[vm->sp]];
-    if (!(D_0037A378 & 1)) {
-        func_00176ba8(x, 0);
-    }
-    vm->sp--;
-    return 2;
-}
-
-s32 func_001d3aa8(VM *vm) {
-    VmMsg m;
-    Actor *o = vm->obj;
-    if (o) {
-        m.type = 3;
-        m.val = 0;
-        m.x = vm->x0;
-        m.v[0] = o->p50[0];
-        m.v[1] = o->p50[1];
-        m.v[2] = o->p50[2];
-        m.v[3] = 1.0f;
-        func_001c4640(&m);
-    }
-    return 2;
-}
-
-s32 func_001d3bb0(VM *vm) {
-    if (vm->obj) {
-        vm->obj->f130->f18 = vm->stk[vm->sp];
-    }
-    vm->sp--;
-    return 2;
-}
-
-s32 func_001d3be8(VM *vm) {
-    vm->sp++;
-    if (vm->obj) {
-        vm->stk[vm->sp] = vm->obj->f130->f18;
-    }
-    return 2;
-}
 
 s32 func_001d40b0(VM *vm) {
     s32 i = vm->stk[vm->sp];

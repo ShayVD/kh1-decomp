@@ -25,35 +25,6 @@ typedef struct {
 typedef W606Mem_304be8 Chr;
 typedef Save_304be8 Save;
 
-s32 func_001d3610(VM *vm) {
-    s32 n = 0;
-    s32 i, j, c;
-    s32 k = vm->stk[vm->sp];
-    for (i = 0; i < 4; i++) {
-        c = D_00304BE8->x48e[i];
-        if (c < 20) {
-            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
-            
-        }
-    }
-    n += D_00304BE8->items[k];
-    vm->stk[vm->sp] = n;
-    return 2;
-}
-s32 func_001d3710(VM *vm) {
-    s32 n = 0;
-    s32 i, j, c;
-    s32 k = vm->stk[vm->sp];
-    for (i = 0; i < 4; i++) { if (i == 3) break;
-        c = D_00304BE8->x48e[i];
-        if (c < 20) {
-            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
-        }
-    }
-    n += D_00304BE8->items[k];
-    vm->stk[vm->sp] = n;
-    return 2;
-}
 s32 func_001d8680(VM *vm) {
     Msg m;
     m.type = 40;

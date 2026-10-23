@@ -13,6 +13,7 @@
  * (src/camera/, 32), the message windows (src/msgwin/, 30) and 154 functions
  * after 0x001dcad0 (0x001ddc78-0x001ec678). */
 #include "common.h"
+#include "vm/vm_obj.h"
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
@@ -47,22 +48,8 @@
 #include "data/pieces/D_002BC0F0.h"
 #include "data/pieces/D_00490630.h"
 #include "platform/math.h"
+#include "data/pieces/D_00304BE8_s.h"
 
-/* The entity a VM drives, as the library functions read it. */
-struct VmObj {
-    s32 x0;
-    s32 x4;                 /* 0x4: its id */
-    u8 pad8[0x8];
-    f32 pos[3];             /* 0x10 */
-    u8 pad1c[0x14];
-    f32 rot[3];             /* 0x30: radians */
-    f32 f3c;                /* 0x3c: heading (radians) */
-    u8 pad40[0x370 - 0x40];
-    union {
-        u64 flags;
-        u8 col[4];          /* func_001cf210 */
-    } f370;                 /* 0x370 */
-};
 
 extern VmMgr D_00389C90;
 extern u64 D_0038CD00;
@@ -1962,6 +1949,222 @@ s32 func_001d3558(VmRec *vm) {
 s32 func_001d35a0(VmRec *vm) {
     func_00137330(func_00123488(vm->stk[vm->sp - 1]), 0, vm->stk[vm->sp]);
     vm->sp -= 2;
+    return 2;
+}
+
+/* ---- 0x001d3610-0x001d4000 ---- */
+
+s32 func_00105960(struct VmObj *, s32);
+s32 func_001059d0(void *);
+void func_00176ba8(s8 *, s32);
+void func_00176c60(s32);
+void func_00135848(struct VmObj *);
+void func_00135870(struct VmObj *);
+f32 *func_0014f370(struct VmObj *);
+void func_0014f398(struct VmObj *);
+void func_0013c7d8(s32);
+void func_0013c840(s32);
+void func_00112d80(void);
+void func_0011c710(void);
+void func_00111380(void);
+void func_00232d60(void);
+void func_001d3e30(VmRec *vm);
+
+/* How many of item stk[sp] the party (func_001d3610: all four members,
+ * func_001d3710: the first three) has equipped, plus the stock. */
+s32 func_001d3610(VmRec *vm) {
+    s32 n = 0;
+    s32 i, j, c;
+    s32 k = vm->stk[vm->sp];
+    for (i = 0; i < 4; i++) {
+        c = D_00304BE8->x48e[i];
+        if (c < 20) {
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
+            
+        }
+    }
+    n += D_00304BE8->items[k];
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d3710(VmRec *vm) {
+    s32 n = 0;
+    s32 i, j, c;
+    s32 k = vm->stk[vm->sp];
+    for (i = 0; i < 4; i++) { if (i == 3) break;
+        c = D_00304BE8->x48e[i];
+        if (c < 20) {
+            for (j = 0; j < ((u8 *)D_00304BE8)[c * 0x74 + 0x25]; j++) { if (D_00304BE8->m[c].sub.x22[j] == k) n++; }
+        }
+    }
+    n += D_00304BE8->items[k];
+    vm->stk[vm->sp] = n;
+    return 2;
+}
+
+s32 func_001d3828(VmRec *vm) {
+    /* the byte table at D_00304BE8 + 0x499, added as an s32 address */
+    vm->stk[vm->sp] = *(u8 *)(vm->stk[vm->sp] + (s32)D_00304BE8 + 0x499);
+    return 2;
+}
+
+/* Add stk[sp] to the stock of item stk[sp-1], clamped to 0-99. */
+s32 func_001d3858(VmRec *vm) {
+    s32 v = D_00304BE8->items[vm->stk[vm->sp - 1]] + vm->stk[vm->sp];
+    if (v >= 100) D_00304BE8->items[vm->stk[vm->sp - 1]] = 99;
+    else if (v < 0) D_00304BE8->items[vm->stk[vm->sp - 1]] = 0;
+    else D_00304BE8->items[vm->stk[vm->sp - 1]] += vm->stk[vm->sp];
+    vm->sp -= 2;
+    return 2;
+}
+
+s32 func_001d38d0(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        vm->stk[vm->sp] = func_00105960(o, vm->stk[vm->sp]);
+    } else {
+        vm->stk[vm->sp] = 0;
+    }
+    return 2;
+}
+
+s32 func_001d3948(VmRec *vm) {
+    void *d = D_002E26A0[0];
+    vm->sp++;
+    if (d) vm->stk[vm->sp] = func_001059d0(d);
+    else vm->stk[vm->sp] = 0;
+    return 2;
+}
+
+/* Play the sound of the script file's table entry stk[sp] (not while
+ * D_0037A378 bit 0 is set). */
+s32 func_001d39b0(VmRec *vm) {
+    s8 *x = D_00389C90.x3040 + D_00389C90.x3060[vm->stk[vm->sp]];
+    if (!(D_0037A378 & 1)) {
+        func_00176ba8(x, 0);
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3a28(void) {
+    func_00176c60(0);
+    return 2;
+}
+
+s32 func_001d3a48(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00135848(o);
+    }
+    return 2;
+}
+
+s32 func_001d3a78(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_00135870(o);
+    }
+    return 2;
+}
+
+/* Send the entity to its home position p50 (message 3). */
+s32 func_001d3aa8(VmRec *vm) {
+    VmMsg m;
+    struct VmObj *o = vm->obj;
+    if (o) {
+        m.type = 3;
+        m.val = 0;
+        m.x = vm->x0;
+        m.v[0] = o->p50[0];
+        m.v[1] = o->p50[1];
+        m.v[2] = o->p50[2];
+        m.v[3] = 1.0f;
+        func_001c4640(&m);
+    }
+    return 2;
+}
+
+s32 func_001d3b20(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_0014f370(o)[2] = vm->stk[vm->sp];
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3b80(VmRec *vm) {
+    struct VmObj *o = vm->obj;
+    if (o != 0) {
+        func_0014f398(o);
+    }
+    return 2;
+}
+
+s32 func_001d3bb0(VmRec *vm) {
+    if (vm->obj) {
+        vm->obj->f130->f18 = vm->stk[vm->sp];
+    }
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3be8(VmRec *vm) {
+    vm->sp++;
+    if (vm->obj) {
+        vm->stk[vm->sp] = vm->obj->f130->f18;
+    }
+    return 2;
+}
+
+s32 func_001d3c28(VmRec *vm) {
+    func_0013c7d8(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+s32 func_001d3c70(VmRec *vm) {
+    func_0013c840(vm->stk[vm->sp]);
+    vm->sp--;
+    return 2;
+}
+
+/* func_001d3cb8, func_001d3d08 and func_001d3d58 are in vm_lib.nofill.c. */
+
+s32 func_001d3da8(void) {
+    func_00112d80();
+    D_00389C90.f3070.x |= 0x10000000000ULL;
+    return 8;
+}
+
+s32 func_001d3de8(void) {
+    func_0011c710();
+    return 2;
+}
+
+s32 func_001d3e08(void) {
+    func_00111380();
+    func_00232d60();
+    return 2;
+}
+
+/* func_001d3e30 is in vm_lib.nofill.c. */
+
+/* Start a move (flag bit 9, stepped by func_001d3e30) to stk[sp-2..sp] at
+ * speed stk[sp-3] / 50, and take the first step. */
+s32 func_001d3ff0(VmRec *vm) {
+    vm->fl.x |= 0x200;
+    vm->f14[0] = vm->stk[vm->sp - 2];
+    vm->f14[1] = vm->stk[vm->sp - 1];
+    vm->f20 = vm->stk[vm->sp - 3] / 50.0f;
+    vm->f14[2] = vm->stk[vm->sp];
+    vm->p[0] = vm->obj->pos[0];
+    vm->p[1] = vm->obj->pos[1];
+    vm->p[2] = vm->obj->pos[2];
+    func_001d3e30(vm);
+    vm->sp -= 4;
     return 2;
 }
 

@@ -1,17 +1,9 @@
 /* The library functions of src/vm/vm_lib.c that need -fno-strict-aliasing
  * and nofill (docs/modules.md "Session 32"). */
 #include "common.h"
+#include "vm/vm_obj.h"
 #include "vm/script_vm.h"
 
-/* The entity a VM drives (as in vm_lib.c). */
-struct VmObj {
-    u8 pad0[0x10];
-    f32 pos[3];             /* 0x10 */
-    u8 pad1c[0x14];
-    f32 rot[3];             /* 0x30: radians */
-    u8 pad3c[0x370 - 0x3c];
-    u64 flags;              /* 0x370 */
-};
 
 double sin(double);
 double cos(double);
@@ -57,7 +49,7 @@ s32 func_001ce5f0(VmRec *vm) {
     vm->fl.x |= 2;
     func_001c4640(&m);
     e = vm->obj;
-    if (e) e->flags &= ~0x100000000000ULL;
+    if (e) e->f370.flags &= ~0x100000000000ULL;
     vm->sp -= 2;
     return 2;
 }
