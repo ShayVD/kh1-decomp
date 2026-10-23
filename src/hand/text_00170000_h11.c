@@ -260,8 +260,8 @@ s32 func_0017b170(void) {
     Blk26C0 *s = &D_003626C0;
     f32 r;
     if (!s->flag) return 0;
-    func_002675a8(D_005758D0, s->a);
-    func_002675a8(D_005758E0, s->b);
+    func_002675a8(D_005758D0, &s->a);
+    func_002675a8(D_005758E0, &s->b);
     func_00267530(v, &D_00575970, D_005758D0);
     r = func_00120c18(v);
     s->flag = 0;

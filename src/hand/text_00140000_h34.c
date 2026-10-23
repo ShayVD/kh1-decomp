@@ -536,19 +536,17 @@ s32 func_0014e510(s32 key) {
 }
 
 /* 0x14E5B8 */
-typedef struct { union { u64 x; u8 id; } f; u8 pad8[8]; f32 mn[4]; f32 mx[4]; } W34Box;
-typedef struct { u8 pad[4]; u8 n; u8 pad5[0xb]; W34Box box[1]; } W34Boxes;
 #include "data/pieces/D_00350D78.h"
 s32 func_0014e5b8(f32 *p) {
-    W34Box *b;
+    Box57_f1b8 *b;
     s32 m, n, i;
     if (!D_00350D78) return 0;
     n = D_00350D78->n;
-    b = ((W34Boxes *)D_00350D78)->box;
+    b = D_00350D78->box;
     m = 0;
     for (i = 0; i < n; i++, b++) {
-        if ((b->f.x & 0x200) || (p[0] >= b->mn[0] && p[0] <= b->mx[0] && p[2] >= b->mn[2] && p[2] <= b->mx[2]))
-            m |= 1 << (b->f.id - 1);
+        if ((b->u.flags & 0x200) || (p[0] >= b->lo[0] && p[0] <= b->hi[0] && p[2] >= b->lo[2] && p[2] <= b->hi[2]))
+            m |= 1 << (b->u.c.id - 1);
     }
     return m;
 }

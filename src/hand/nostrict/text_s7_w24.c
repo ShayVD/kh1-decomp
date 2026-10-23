@@ -12,7 +12,7 @@ void func_001cf348(void) {
     Tbl *base;
     Tbl *t;
     D_00389C90.d12400 &= ~0x200000000ULL;
-    base = (Tbl *)D_003DABD0[0];
+    base = D_003DABD0[0];
     n = base->n;
     t = base;
     for (i = 0; i < n; i++) {

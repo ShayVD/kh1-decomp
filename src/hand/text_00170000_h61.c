@@ -425,12 +425,11 @@ void func_0017cf08(void);
 void func_0017ba80(s32);
 s32 func_0017b7e8(void);
 void func_0017b740(V4 *, V4 *);
-typedef struct { V4 a, b; s32 on; } S26C0;
 #include "data/pieces/D_003626C0.h"
 
 void func_0017b200(void) {
-    func_002675a8(&(*(S26C0 *)&D_003626C0).a, &D_005758D0);
-    func_002675a8(&(*(S26C0 *)&D_003626C0).b, &D_005758E0);
+    func_002675a8(&D_003626C0.a, &D_005758D0);
+    func_002675a8(&D_003626C0.b, &D_005758E0);
     D_003626C0.flag = 1;
 }
 

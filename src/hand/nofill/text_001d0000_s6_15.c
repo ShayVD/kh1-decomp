@@ -149,7 +149,7 @@ s32 func_001e0220(VM *vm) {
     if (!(D_0037A378 & 1)) {
         if (func_0011e340(0) == 0) {
             sprintf(buf, "voice/event/%s_%03d.vset", D_003DAC40[vm->stk[vm->sp - 1]], vm->stk[vm->sp]);
-            pp = (s32 *)((Tbl **)&D_003DACA0);
+            pp = (s32 *)&D_003DACA0;
             *pp = func_001559f0(60, 4); func_00120748(buf, *pp, func_001e01f0, 0);
             D_00389C90.f3070 |= 0x8000ULL << 37;
         } else {

@@ -112,7 +112,6 @@ void func_00233ff8(s32, s32);
 
 
 #include "data/pieces/D_003F34C4.h"
-typedef struct { s32 x0; u8 pad[0xc]; s32 x10; } C28;
 extern s32 D_006436D0;
 extern s32 D_006436D4;
 extern s32 D_006436F0;
@@ -182,8 +181,8 @@ void func_002287f8(void *arg0) {
                     func_00233ef8(0);
                     D_00643758 = 0;
                     D_0064373C = 0;
-                    (*(C28 *)&D_00425C28).x0 = 3;
-                    (*(C28 *)&D_00425C28).x10 = 3;
+                    D_00425C28[0].x0 = 3;
+                    D_00425C28[1].x0 = 3;
 
                     objs[0] = func_001f31a8(D_003F6C30, 6);
                     if (objs[0]) {

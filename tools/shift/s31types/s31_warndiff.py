@@ -24,6 +24,7 @@ def one(rel):
 
 def main(argv):
     rels = []
+    L.recipes()  # fill the recipe table before the threads read it
     for a in argv:
         if a.endswith(".c"):
             rels.append(a)

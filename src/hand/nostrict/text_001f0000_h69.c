@@ -126,7 +126,7 @@ void func_00206130(Ob *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), ((Q *)&D_003F1E70));
+    func_00266f38(func_00266c08(2), &D_003F1E70);
     buf = func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);

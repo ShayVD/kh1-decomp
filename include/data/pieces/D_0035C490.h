@@ -4,7 +4,8 @@
 #define KH1_DATA_PIECES_D_0035C490_H
 
 #include "common.h"
+#include "data/types/fvec.h"
 
-extern u8 D_0035C490[0x10];
+extern FVec4 D_0035C490;
 
 #endif /* KH1_DATA_PIECES_D_0035C490_H */

@@ -3,7 +3,6 @@
 typedef struct { f32 x, y, z; } V3;
 typedef struct { V3 a; V3 b; f32 c; u8 x1c, x1d, x1e; } S870;
 #include "data/pieces/D_00362438.h"
-typedef Path_362438 P1c;
 #include "data/pieces/D_002E2780.h"
 #include "data/pieces/D_002E2790.h"
 extern f32 D_002E27A0;
@@ -23,7 +22,7 @@ S870 *func_0017f1c8(void) {
     d->x1c = *(u8 *)&D_002E27A8;
     if (D_002E27A8 == 9) {
         if (D_00362434) {
-            d->x1d = ((P1c *)D_00362434)->x1c;
+            d->x1d = D_00362434->x1c;
             d->x1e = 0;
         } else if (D_00362438) {
             d->x1d = D_00362438->x1c;

@@ -5,11 +5,8 @@
 #define KH1_DATA_PIECES_D_003F2270_H
 
 #include "common.h"
+#include "data/pieces/D_003F1A70.h"
 
-typedef struct {
-    u8 pad_0[0x10];
-} Q_3f2270;
-
-extern Q_3f2270 D_003F2270;
+extern Q_3f1a70 D_003F2270;
 
 #endif /* KH1_DATA_PIECES_D_003F2270_H */

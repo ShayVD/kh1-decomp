@@ -3,7 +3,8 @@
 #define KH1_DATA_TYPES_NOFILL_TEXT_001F0000_H69_H
 
 #include "common.h"
+#include "data/pieces/D_003F1A70.h"
 
-typedef struct { u64 a, b; } Q;
+typedef Q_3f1a70 Q; /* a GIF packet quadword */
 
 #endif /* KH1_DATA_TYPES_NOFILL_TEXT_001F0000_H69_H */

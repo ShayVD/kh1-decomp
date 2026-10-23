@@ -6,9 +6,11 @@
 
 #include "common.h"
 
+/* A GIF packet quadword (session 31): D_003F1A70, D_003F1E70 and D_003F2270
+ * are 0x400-byte packet buffers h69's func_001f2eb8 fills with these. */
 typedef struct {
     u64 a;
-    u8 pad_8[0x8];
+    u64 b;
 } Q_3f1a70;
 
 extern Q_3f1a70 D_003F1A70;
