@@ -6,12 +6,13 @@ Paste this to start the next session.
 
 Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), retail `SLPS_251.98`, SHA-256 1993a4da…. Read README.md and everything in docs/ first; they are the only notes carried between sessions. My own `SLPS_251.98` is in my Downloads folder (never commit it).
 
-## Where we stopped (end of session 28, 2026-10-22)
+## Where we stopped (end of session 29, 2026-10-23)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-28.
-- **reach_check end-ptr rule** (docs/shiftable-plan.md "Session 28: end pointers, the IOP block and D_BLOB"): finds the actor table D_002C64A0 by itself; it left float_keep.txt and keep_check enforces it. The default float set is unchanged from KH1_F27_R12.
-- **Ready but never booted** (no PCSX2 access in session 28): the IOP block is one piece D_0063D640 (src/data/data_0063.s), and shift_cmp accepts a floated D_00272C70 (D_BLOB checked as the .data start). `SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"` links and passes M12-FLOAT. Both stay in float_keep.txt until that build has played.
-- **Phase 4**: view casts 796 -> 463 (worker s28types); D_002E26A0 and D_003044D8 typed. What is left and why: "Session 28: Phase 4 types".
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-29.
+- **Runtime**: the IOP block D_0063D640, D_00272C70, the staging arena D_003F8380 and DMA chains 0-2 (D_0046E120, D_00472160) all float by default now. The ones reach_check still pins are in the new tools/shift/float_release.txt (Makefile `SHIFT_FLOAT_RELEASE`). The default build KH1_F29_N plays the usual route (docs/shiftable-plan.md "Session 29").
+- **reach_check nest-carry** (`--no-nest-carry`): counters carried across nested loops. 1,348 -> 1,338 names pinned.
+- **Phase 4** (worker s29types): view casts 463 -> 275. The VM tables share `VmRec` and the vector pieces share `FVec4`. What is left and why: docs/shiftable-plan.md "Session 29: Phase 4 types".
+- **PCSX2 loop**: the Mac's shell sandbox did not start in session 29, so patch_iso.py ran through a Remote Control session, and once through me in Terminal (docs/workflow.md "Session 29"). Try device_bash first.
 
 ## What is left (9 functions)
 
@@ -21,10 +22,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 29 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 30 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
-1. **Boot the pending floats first** (ask for the Mac and PCSX2 at the start): stage out/overlays from Downloads/kh1-test/ovl, build the default (expect = F27_R12) and `SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"`, boot the usual route (save 06 with Donald and Goofy, test T, a desert fight, Neverland ship fight, End of the World). If it plays, drop both from float_keep.txt. Then try D_003F8380 / D_0046E120 / D_00472160 forced (F27_C2 played) and decide whether to make them default via float_keep comments or a targeted reach_check exception.
-2. **reach_check idx**: relational bounds for nested loops whose inner counter carries over the outer loop (func_00103a70's 4x4 copy). The stored group (func_0023aed0) is not worth it (pointers go into its Out record).
-3. **Phase 4**: the remaining 463 view casts: a VM type shared by D_0039A580 / D_0038D170 / D_003C3A70 / D_003A7990 / D_003B4DA0, one vector type set (V4/V3) for D_002E2780/2790, D_002C58A0/B0, D_002C58D0, and the D_00304BE8 overlaps. `make` must stay identical.
-4. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-5. End with `make progress-update SESSION=29`, commit, open a PR, and refresh this prompt.
+1. **reach_check, the next largest groups** (`--explain`, float_reach.log): the idx tail (2-6 names per function) and `stored` (func_0023b570's stack arguments to func_0023aed0, 38 names: follow stack arguments into the callee's `lw aN, off(sp)`). Every rule gets a `--no-*` switch and a test case in tests/reach_check_test.py, and `--no-*` must reproduce the old list byte for byte.
+2. **Boot the result** (ask for the Mac and PCSX2 if a rule releases names): stage out/overlays from Downloads/kh1-test/ovl, build the default, copy the ELF to Downloads/kh1-test/s30, patch KH1_BIG.iso, and run the usual route: save 06 with Donald and Goofy, test T, the desert fight, save 05 End of the World, and the warp drive to Neverland. A new name pinned by a check that played can go in float_release.txt.
+3. **Phase 4**: the remaining 275 view casts: D_002C58D0 (one matrix type: retype h30's `V4` array and c04's `M4` locals first), the 18 left in D_00304BE8, D_002A6238's bit-field views, and b11's Actor/Obj views before its VM view. `make` must stay identical.
+4. **Phase 4 step 5 (start)**: begin moving functions out of the provisional src/auto/text_XXXX0000.c files into real modules (docs/shiftable-plan.md), starting with one subsystem whose data types are now shared (the VM tables / VmRec users). The build must stay byte-identical.
+5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
+6. End with `make progress-update SESSION=30`, commit, open a PR, and refresh this prompt.

@@ -2685,6 +2685,56 @@ mostly because of them: a user's `(s32 *)D_002E26A0` now is a cast of a typed pi
   s26/s27 tools; s27_fold skips files whose cast form differs from the declaration
   instead of failing, folds `(V **)&N` views (keep mode), and refolds split pieces.
 
+## Session 29: the pending floats played, float_release.txt and nest-carry
+
+### Runtime (PCSX2 on the user's Mac, 2026-10-23)
+
+The Mac's shell sandbox (device_bash) would not start this session, so patch_iso.py ran through a Remote
+Control session on the Mac (the folder tools only copy whole files and the ISO is 3.6 GB). A later run of the same
+command was refused by that Mac's own Claude permission classifier ("Code from External"); the user then ran it
+in Terminal. Each ELF is in /mnt/project-files/kh1-runtime/s29/ and Downloads/kh1-test/s29/.
+
+| ELF | build | result |
+| --- | --- | --- |
+| KH1_F29_D | the session 28 default (`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`) | load menu, save 06 with the party, test T: OK |
+| KH1_F29_F | D + `SHIFT_FLOAT_FORCE="D_00272C70 D_0063D640"` | save 06 with the party, test T, a desert fight, save 05 End of the World (field drawn), warp drive to Neverland (ship hold): OK |
+| KH1_F29_G | F + `D_003F8380 D_0046E120 D_00472160` | the same route (Neverland: the clock tower): OK |
+| KH1_F29_N | the new default (G's floats + nest-carry's 10 names; sha256 cc278ac0...) | save 06 with the party, test T, a desert fight, save 05 End of the World, warp drive to Neverland (ship hold): OK |
+
+The IOP block floated means the sound module's replies, memory card reads and every area load went through the
+moved block; nothing missing or garbled. Route notes: from save 06 test T's alley leads (walk left 4 s, right 3 s,
+forward 3 s) into the desert at night ("砂漠への道"), where a fight starts within a few steps. On the world map
+the left stick (W/A/S/D held 0.8 s / 0.25 s) moves between worlds and the D-pad toggles Normal / Warp Drive: from
+End of the World, W 0.8 s is the warp hole and A 0.25 s is Neverland; its landing list is hold, cabin, clock tower.
+
+### float_release.txt (`SHIFT_FLOAT_RELEASE ?= @tools/shift/float_release.txt`)
+
+D_00272C70 left float_keep.txt (nothing else keeps it). D_0063D640, D_003F8380, D_0046E120 and D_00472160 also
+left float_keep.txt, but reach_check pins them as idx-next (an index from the object before them that no rule
+bounds: D_00635640's, D_003F8370's memory card slot index, the DMA chains' piece-next). They are listed in the new
+tools/shift/float_release.txt, which float_force.py applies after keep_check in the default build: whole pieces a
+PCSX2 build floated and played. keep_check still checks the keep list before the release (39/39). With the release
+the default ELF was byte-identical to KH1_F29_G. `SHIFT_FLOAT_RELEASE=` (empty) keeps them in place again.
+float_force.py now skips `#` comments in an @FILE.
+
+### reach_check nest-carry (`--no-nest-carry`)
+
+`nested_carries()` finds an outer loop around countdown_loops' inner loops (the same counter pattern, but inner
+back edges are allowed), and:
+
+- a register written once in the outer body, by `addiu r, r, k` inside an inner body and never reset (t5 in
+  func_00103a70's 4x4 copy), is capped at the inner header at entry + k * (outer trips * inner trips - 1);
+- a register the outer body steps once per iteration outside the inner loops (t6 += 4) is capped at the outer
+  header like a walked pointer;
+- countdown_loops' walked registers that are offsets, not pointers (t3 = t6 * 4, +4 per inner run), get the same
+  cap from their entry bound (only with nest-carry on).
+
+Trip counts come from back_edges() on the loops' entry states. It releases 10 names (1,348 -> 1,338 pinned):
+D_0048CAE0 / D_0048CB28 / D_0048CB70 / D_0048CBB8 and D_00494930 / D_00494970 / D_004949B0 (func_00103a70's
+matrix copies), D_003F4A48 / D_003F4A78 (func_00219870, 12 words each) and D_0048C630 (after the D_0048C390
+piece, func_00107ec0). `--no-nest-carry` reproduces the session 28 list byte for byte; tests/reach_check_test.py
+case 11 covers it.
+
 ## Session 29: Phase 4 types (worker s29types)
 
 ### Result
