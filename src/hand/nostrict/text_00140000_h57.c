@@ -53,33 +53,8 @@ typedef struct {
     u8 pad3d0[4];
     f32 f3d4;
 } Obj57_c850;
-typedef struct { u8 pad0[0x130]; f32 v130[4]; } Sub57_0678;
-typedef struct {
-    s32 flags;
-    u8 pad4[0x30-4];
-    f32 v30[4];
-    u8 pad40[0x148-0x40];
-    Sub57_0678 *o148;
-    u8 pad14c[0x150-0x14c];
-    f32 f150;
-    u8 pad154[0x3c0-0x154];
-    f32 v3c0[4];
-} Obj57_0678;
-typedef struct { u8 pad0[0x34]; f32 f34; } Arg57_0678;
-typedef struct { u8 pad0[0x4c]; u16 h4c; } Info57_0ec8;
-typedef struct Actor { u8 pad0[0x130]; Info57_0ec8 *info; } Pl57_0ec8;
-typedef struct { s32 i0; u8 pad4[4]; s32 i8; f32 fc; f32 v10[4]; u8 pad20[0x2c-0x20]; f32 f2c; u8 pad30[4]; s32 i34; } Ev57_0ec8;
-typedef struct {
-    s32 flags;
-    u8 pad4[0x10-4];
-    f32 v10[4];
-    f32 v20[4];
-    u8 pad30[0x144-0x30];
-    Ev57_0ec8 *ev;
-} Obj57_0ec8;
 #include "data/types/nostrict_text_00140000_h57.h"
 #include "data/types/nostrict_text_00140000_h57_p.h"
-typedef struct { u8 pad0[3]; u8 b3; } Q57_15d0;
 
 extern u32 D_002C5958;
 extern Src57_c130 D_0054C440[64];
@@ -87,12 +62,6 @@ extern s32 D_0054F440; /* src/data/bss_0054.c: u32 D_0054F440 */
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
 extern f32 D_0054F444;
-extern s32 D_0054F738; /* src/data/bss_0054.c: f32 D_0054F738 */
-#include "data/pieces/D_002E26A0.h"
-#include "data/pieces/D_002C58B0.h"
-extern Slot57_15d0 D_0054F750[8];
-extern s32 D_0054F740;
-extern Kind57_15d0 D_003514E8[];
 
 Ent57_c130 *func_00121e28(s32, s32);
 void func_00121ee0(Ent57_c130 *);
@@ -105,23 +74,6 @@ void func_002675a8(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 f32 func_00120bf8(f32 *);
 void func_00267560(f32 *, f32 *, f32);
-f32 sinf(f32);
-f32 cosf(f32);
-f32 func_00120c88(f32);
-f32 func_00267390(f32 *, f32 *);
-void func_00137688(Obj57_0678 *, f32);
-void func_00137308(Obj57_0678 *, Arg57_0678 *);
-s32 func_0014f658(void *, s32);
-void func_001315c0(Pl57_0ec8 *, s32, f32 *, f32);
-s32 func_001453a8(Pl57_0ec8 *, f32 *, s32);
-s32 func_0013c9e0(s32, s32);
-void func_00243630(s32, s32);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_001473a8(s32, s32, f32 *);
-void func_00137418(Obj57_15d0 *, f32);
-Q57_15d0 *func_00147840(void *);
-Obj57_15d0 *func_00124218(s32);
-f32 func_00176850(void);
 
 s32 func_0014c130(void) {
     Ent57_c130 *tbl;
@@ -207,112 +159,7 @@ void func_0014c850(Obj57_c850 *o, f32 *v) {
     o->v3c0[1] = v[1];
     D_0054F444 = func_00120bf8(v);
 }
-
-void func_00150678(Obj57_0678 *o, Arg57_0678 *p) {
-    f32 v[4];
-    f32 a;
-    f32 d;
-
-    a = p->f34;
-    v[1] = 0.0f;
-    v[0] = sinf(a);
-    v[1] = 0.0f;
-    v[2] = cosf(a);
-    v[3] = 1.0f;
-    if (func_00120c18(o->v3c0) < 1.0f) d = func_00267390(v, o->v30);
-    else d = func_00267390(v, o->v3c0);
-    if (d > 0.0f) {
-        o->flags |= 0x800000;
-        a = p->f34;
-    } else {
-        o->flags &= ~0x800000;
-        a = func_00120c88(p->f34 + 3.1415928f);
-    }
-    o->f150 = a;
-    func_00137688(o, a);
-    func_00267560(o->o148->v130, o->v3c0, D_002BBDFC * 0.5f);
-    func_00137308(o, p);
-    func_0014f658(o, 26);
-    D_0054F738 = 0;
-}
-
-s32 func_00150ec8(Obj57_0ec8 *o) {
-    f32 v[4];
-    Pl57_0ec8 *pl;
-    Ev57_0ec8 *e;
-    s32 r;
-
-    pl = D_002E26A0[0];
-    func_001315c0(pl, 0x8003, v, 0.0f);
-    e = o->ev;
-    if (!(o->flags & 0x20)) {
-        if (func_001453a8(pl, o->v10, e->i34)) {
-            r = func_0013c9e0(e->i8, pl->info->h4c);
-            if (r == 255) {
-                if (e->f2c <= 0.0f) func_00243630(2, e->i8);
-                e->f2c = 60.0f;
-                goto end;
-            }
-            e->i0 = 2;
-            func_00267530(e->v10, o->v10, v);
-            func_00243630(r == 12, e->i8);
-            func_001473a8(27, 0, o->v10);
-            e->fc = 30.0f;
-            o->flags |= 0x30;
-            func_002675a8(o->v20, (*(f32 (*)[0x4])&D_002C58B0));
-            return 1;
-        }
-    }
-end:
-    return 0;
-}
-
-s32 func_001515d0(void *owner, f32 *pos, s32 type) {
-    Slot57_15d0 *best;
-    Slot57_15d0 *e;
-    s32 i;
-    Q57_15d0 *q;
-    Obj57_15d0 *o;
-
-    best = 0;
-    e = D_0054F750;
-    for (i = 0; i < 8; i++, e++) {
-        if (e->obj == 0) break;
-        if (best == 0 || best->age > e->age) best = e;
-    }
-    if (i >= 8) {
-        func_00137418(best->obj, 12.0f);
-        best->obj->slot = 0;
-        e = best;
-    }
-    q = func_00147840(owner);
-    o = func_00124218(D_003514E8[q->b3].id);
-    o->f40 = o->f44 = o->f48 = e->f20 = D_003514E8[q->b3].f4;
-    e->owner = owner;
-    e->obj = o;
-    e->x0 = 0;
-    e->f24 = 1.0f;
-    e->age = D_0054F740++;
-    e->x2c = 0;
-    e->x34 = type;
-    o->slot = e;
-    o->flags |= 0x20;
-    func_002675a8(o->v10, pos);
-    o->f20 = func_00176850() * 10.0f - 5.0f;
-    o->f28 = func_00176850() * 10.0f - 5.0f;
-    switch (type) {
-    case 0:
-        o->f24 = func_00176850() * 10.0f + -30.0f;
-        break;
-    case 1:
-        o->f24 = func_00176850() * 10.0f + -20.0f;
-        e->f30 = 1.0f;
-        break;
-    }
-    return func_0014f658(o, 20);
-}
 #include "data/bss_0054_typed.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002C5970.h"
-#include "data/pieces/D_003514E8.h"

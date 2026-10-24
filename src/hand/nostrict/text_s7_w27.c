@@ -4,7 +4,6 @@
 #define B b
 typedef struct { f32 x, y, z, w; } V4FC;
 typedef struct { u8 pad0[0x10]; V4FC pos; } ChrFC;
-typedef struct { u8 pad0[0x90]; void *p90; s32 part; } WkFC;
 extern u32 D_002C5958;
 extern f32 D_0048E9EC;
 extern s32 func_00122ff8(void *);
@@ -40,14 +39,6 @@ static inline s32 inl_best(void *p, ChrFC *c) {
         }
     }
     return best;
-}
-
-void func_0016fc60(ChrFC *c, WkFC *w) {
-    if (func_00122ff8(w->p90)) {
-        if (w->part < 0 || !inl_valid(w->p90, w->part)) w->part = inl_best(w->p90, c);
-    } else {
-        w->p90 = 0;
-    }
 }
 
 typedef struct { f32 x, y, z, len; } SegB;

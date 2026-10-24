@@ -1992,6 +1992,101 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings; new files
 checked with `-Wimplicit-function-declaration`.
 
+## Session 52: the party control, the model renderer and motion, the object classes, 0x00150000-0x00170170
+
+Session 52 moved 418 functions in three commits.  No Mac: static checks
+only.  After it every function of 0x00150000-0x00170170 is in a module
+except the VU0 routines in src/hand/vu0.c, the unmatched func_001636d0
+(asm) and func_001550a0 (see Traps).  The names are read from the code and
+none is proved by a boot; each file's top comment says what it does.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the party members' control: the action handlers the AI tables name, the follow positions, the target search func_0016ea58, the party's callback list (D_00575528 nodes) and its reset | src/ai/partyctl.c, partyctl.nostrict.c | 0x00168500-0x00170170 | 43 |
+| the model renderer's DMA side: the channel handlers, the double-buffered packet lists D_00551D90 / D_00559DC0 (defined here), the GS uploads | src/model/mdlgs.c, mdlgs.nostrict.c | 0x0015ea98-0x00160370 | 22 |
+| the model renderer's draw side: the draw task func_00160370, the per-model draw (bucket tables D_0055BE00 / D_0055BEC0 / D_0055C280 defined here), func_00161a08 relocates a "MOBJ" model or a "MENV" map environment, the setup func_00162500 | src/model/mdldraw.c, .nostrict.c, .nostrict_nofill.c | 0x00160370-0x001625c8 | 23 |
+| matrix helpers of the model code (the VU0 routines between them stay in vu0.c) | src/model/mtxutil.c, mtxutil.nostrict.c | 0x001625c8-0x00163150 | 8 |
+| the skeleton's bone matrices | src/model/skel.nostrict.c | 0x00163150-0x00164768 | 2 |
+| motion curves, events and poses (func_00164768 evaluates a key curve, func_00166570 the bone chain) | src/model/motion.nostrict.c | 0x00164768-0x001675c0 | 9 |
+| texture animation ("TEXA" chunks: func_001681b8 finds a chunk by tag, func_001680d8 relocates one) | src/model/texanim.c, texanim.nostrict.c | 0x001675c0-0x00168500 | 21 |
+| object classes 0x1A, 0x1B, 0x1C, 0x04, 0x1D, 0x1E, 0x00, 0x0F, 0x12, 0x0C, 0x18, 0x19: each file pair holds the handlers its setup registers with func_0014f830(class, ...) in the class table D_00350D88 (32-byte records: a parameter and seven handlers), and their helpers; D_00351970 (class 0x1C's action table) is defined in class1c.nostrict.c | src/obj/class1a ... class19 (.c, .nostrict.c) | 0x00150000-0x00153d88, 0x00155630-0x00155730, 0x00157f70-0x001586a8, 0x00159148-0x00159978, 0x0015a258-0x0015a470, 0x0015ca50-0x0015ea98 | 150 |
+| hit reactions (the reaction handlers by state, func_00154e38's tables, the tuning block *D_00308CDC) | src/obj/hitreact.c, hitreact.nostrict.c | 0x00153d88-0x00155630 | 19 |
+| object data slots: 64 headers D_00550400 for the 0x40000-byte areas at D_00FE0000 that object files load into; the pool D_0054F980 is defined here | src/obj/objslot.c, .nofill.c, .nostrict.c | 0x00155730-0x00156260 | 22 |
+| the point list D_00551600 (nearest point to a position) | src/obj/objpoint.c, objpoint.nostrict.c | 0x00156260-0x00156c28 | 11 |
+| party heal objects (func_00156c68 heals the members below their maximum HP) | src/obj/objheal.c, .nostrict.c, .nostrict_nogcse.c | 0x00156c28-0x00157090 | 4 |
+| object sounds and voices: the four play slots D_00551670 through snd_rpc, the party members' voice banks (".vsb") in D_00551608 | src/sound/objse.c, objse.nostrict.c | 0x00157090-0x00157f70 | 22 |
+| likely the Trinity marks (five kinds in D_00351A30, both partners near, "xl_limit.dat", the code loaded at D_00F20000; the name is a guess) | src/game/trinity.c, trinity.nostrict.c | 0x001586a8-0x00159148 | 15 |
+| the leader's trail: func_00159ea8 follows an object and records 32 positions (D_00551700, D_00551740; D_00551734 defined here) | src/obj/trail.c, trail.nostrict.c | 0x00159978-0x0015a258 | 6 |
+| objects the player touches (contact handlers with the tables D_00351AA0 / D_00351AB0) | src/obj/objtouch.c, objtouch.nostrict.c | 0x0015a470-0x0015ae48 | 15 |
+| level-up: func_0015b268 raises a member's level, func_0015ae48 applies the bonus, the notice buffers D_00551970 (defined here) | src/game/levelup.c, levelup.nostrict.c | 0x0015ae48-0x0015b4a8 | 5 |
+| cylinder hits between objects (overlap and push-out by shape pair, an object's cylinder from its bone) | src/obj/cylhit.c, cylhit.nostrict.c | 0x0015b4a8-0x0015ca50 | 21 |
+
+| chunk | commit |
+|---|---|
+| partyctl* | eba014a |
+| src/model/* (and assemble.py's array aliases) | 6a7ca8c |
+| 0x00150000-0x0015ea98 (and the rest of the tool changes) | f2ef927 |
+
+**Data moved with its users**: D_0055BE00, D_0055BEC0, D_0055C280
+(mdldraw.nostrict.c), D_00559DC0 (mdlgs.nostrict.c), D_0054F980
+(objslot.c), D_005516D0 and D_005516E0 (class1d.nostrict.c), D_00551734
+(trail.nostrict.c), D_00551970 (levelup.nostrict.c), the pointer table
+D_00351970 (class1c.nostrict.c).
+
+**Tool changes** (tools/shift/s50move/assemble.py): every view of a data
+name is an `__asm__` alias with the function's own type (`extern T
+D_X_<fn>[] __asm__("D_X"); #define D_X D_X_<fn>`), not a cast; multi-name
+prototypes (`void f(), g();`) are split per name, for the scope and for
+views; a function only taken by address (`&f`) gets no function view (a
+cast view is not an lvalue).  tools/checkfile.py skips a local helper that
+has no original address instead of stopping.
+
+**Traps.**
+- **Cast views change code**: an array view `((T *) D_X)` changed the
+  address folding of D_00573F10 (func_00166570, 989 words), D_00575528,
+  D_00575328 and D_002E26A0; a value-cast view of a pointer that the
+  function assigns (`D_0054F950 = ...` in func_00151808) changed its size;
+  a value-cast view of a volatile scalar dropped the volatile
+  (func_0015ee10).  An `__asm__` alias gives the old file's own
+  declaration and matched every time; assemble.py now emits only aliases.
+- **struct Actor again**: functions that read members through
+  D_002E26A0 (or D_002E31B0.f0) where their old file completed `struct
+  Actor` need an alias with their own type (`extern Act
+  *D_002E26A0_58780[3] __asm__("D_002E26A0");`) or a pointer cast at the
+  use (func_00158780, func_00158960, func_001557d0, func_0016f548).
+- **Data definitions are lost silently**: assemble.py turns an old file's
+  definitions into externs and `mod.py remove` deletes the old file, but
+  `make` stays byte-identical (the blob fills the gap).  Only the float
+  check sees it (sizes in float_covered.txt).  After each chunk compare the
+  names of out/gen/data.tsv with the base: session 52 had to put back 11
+  (listed above), one of them an initialised pointer table.
+- **Rerun tools/shift/data_owners.py after deleting an owner file**, before
+  fcheck.sh: its stale owner rows otherwise make cover_check flag the next
+  piece.
+- **Removing a function can change another one in the old file**:
+  taking func_001550a0 out of hand/nostrict/text_00130000_c02.c swapped s6
+  and s7 (the two jump-table bases) in func_0013cfe8 further down, even
+  with an empty CONTEXT_ONLY stub or extra labels; only a full CONTEXT_ONLY
+  copy put it back.  func_001550a0 stays in c02 until func_0013cfe8 moves
+  (the 0x0013 session).  Likewise func_0016e1f0 in partyctl.nostrict.c
+  matched or not depending on unrelated declarations above it (an extra
+  `extern int x;` fixed it before the D_00575328 alias did): gcc 2.96's
+  output here depends on what was allocated before the function, so `make`
+  after each change is the only judge.
+- **group.py's summary hides compile errors**: a draft that does not
+  compile prints its errors but no FAIL line; check each new file
+  compiled (a MATCH / FAIL line per function) before `mod.py remove`.
+- Implicit `fabsf` calls came from the old files (s7_w34, h59, h36, h36's
+  cylinder code) and matched there too: left as they were.
+  func_0015bad0 / func_0015bb88 got prototypes in class0f.nostrict.c.
+
+**Nothing was reverted, and nothing new floats.**  After each commit:
+`make` byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh`
+with float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, the names of out/gen/data.tsv the same as at
+the start of the session, and `s31_warndiff` 0 new warnings; new files
+checked with `-Wimplicit-function-declaration`.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -2088,7 +2183,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 51, after each step)
+## Verification (sessions 30 to 52, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -2104,20 +2199,24 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x00170170 to 0x0024f2e0** (session
-  51), except the VU0 routines in src/hand/vu0.c and two probes in
-  src/anon/session1_probes.c (func_0018ad70, func_001882f8).  The 2,257
-  functions still in src/auto and src/hand (33 of them VU0 routines in
-  vu0.c) lie in 0x001001f8-0x00170170 (out/gen/placements.tsv): 106 in
-  0x0016, 313 in 0x0015, 315 in 0x0014, 325 in 0x0013, 471 in 0x0012, 391
-  in 0x0011, 303 in 0x0010.  Next is the party control, 0x00168500-0x00170170
-  (43 functions, Session 51 "Struct tags completed differently"), then the
-  rest of 0x0016.  `python3 -I tools/shift/s50move/group.py src/DIR/NAME LO
-  HI` drafts a range per flag mode; check its NEW DIFF lines, `mod.py
-  remove` the functions, `make`, fcheck.sh, and scan the new files for
-  implicit declarations (Session 50, Traps).  Group by what the functions
-  do (`refs.py LO HI`: their calls and data); leave whole-VU0 functions in
-  place (docs/matching-tips.md).
+- **The game segment is in modules from 0x00150000 to 0x0024f2e0** (session
+  52), except the VU0 routines in src/hand/vu0.c, two probes in
+  src/anon/session1_probes.c (func_0018ad70, func_001882f8), the unmatched
+  func_001636d0 and func_001550a0 (left in hand/nostrict/text_00130000_c02.c,
+  Session 52 Traps).  The functions still in src/auto and src/hand lie in
+  0x001001f8-0x00150000 (out/gen/placements.tsv): 315 in 0x0014, 325 in
+  0x0013, 471 in 0x0012, 391 in 0x0011, 303 in 0x0010, plus func_001550a0
+  and the VU0 routines.  Next is 0x0014: the actor core under the object
+  classes (func_0014f830 registers a class in D_00350D88, func_0014f658 sets
+  an actor's state, the item and party data D_00304BE8, the effect and
+  sound requests ...).  `python3 -I tools/shift/s50move/group.py
+  src/DIR/NAME LO HI` drafts a range per flag mode; check that every new
+  file compiled and its NEW DIFF lines, `mod.py remove` the functions,
+  `make`, `tools/shift/data_owners.py`, fcheck.sh, compare out/gen/data.tsv's
+  names with the base, and scan the new files for implicit declarations
+  (Sessions 50 to 52, Traps).  Group by what the functions do (`refs.py LO
+  HI`: their calls and data); leave whole-VU0 functions in place
+  (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

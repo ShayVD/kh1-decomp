@@ -113,46 +113,6 @@ typedef struct {
     u8 pad110[0x460-0x110];
     f32 v460[4];
 } Obj57_fc68;
-typedef struct { u8 x[20]; } Col57_07d0;
-typedef struct { u8 pad0[4]; u8 n[4]; u8 pad8[8]; Col57_07d0 *cols[4]; } ColSet57_07d0;
-typedef struct { u8 pad0[0x54]; s8 kind; } Info57_07d0;
-typedef struct { u8 pad0[0xc]; f32 fc; } Sub57_07d0;
-typedef struct { u8 pad0[0x140]; s32 i140; } Sub148_07d0;
-typedef struct {
-    u8 pad0[0x130];
-    Info57_07d0 *info;
-    ColSet57_07d0 *cs;
-    u8 pad138[0x144-0x138];
-    Sub57_07d0 *o144;
-    Sub148_07d0 *o148;
-    u8 pad14c[0x164-0x14c];
-    u32 i164;
-} Chr57_07d0;
-typedef struct { u8 pad0[0x54]; s8 kind; } Info57_0930;
-typedef struct { u8 pad0[0xc]; f32 fc; } Sub57_0930;
-typedef struct { u8 pad0[4]; f32 f4; } Ret57_0930;
-typedef struct { u8 pad0[8]; f32 f8; } Prm57_0930;
-typedef struct Chr57_0930 {
-    u8 pad0[0x10];
-    f32 v10[4];
-    u8 pad20[0x6c-0x20];
-    Prm57_0930 *prm;
-    u8 pad70[0x98-0x70];
-    struct Chr57_0930 *o98;
-    u8 pad9c[0x130-0x9c];
-    Info57_0930 *info;
-    u8 pad134[0x144-0x134];
-    Sub57_0930 *o144;
-    u8 pad148[0x3b0-0x148];
-    f32 f3b0;
-    f32 f3b4;
-    f32 f3b8;
-    u8 pad3bc[4];
-    f32 v3c0[1];
-    f32 f3c4;
-    u8 pad3c8[4];
-    f32 f3cc;
-} Chr57_0930;
 
 extern f32 D_002BBDFC;
 #include "data/pieces/D_002C58A0.h"
@@ -225,13 +185,6 @@ void func_00267768(f32 *, f32 *, f32);
 void func_00267810(f32 *, f32 *, f32);
 f32 asinf(f32);
 void func_002674f0(f32 *, f32 *, f32 *, f32);
-void func_0015bad0(Chr57_07d0 *, Col57_07d0 *, f32 *);
-s32 func_0015b998(f32 *, f32 *);
-Chr57_07d0 *func_001230a0(Chr57_07d0 *);
-s32 func_00123330(Chr57_07d0 *);
-void func_00150678(Chr57_07d0 *, Chr57_07d0 *);
-Ret57_0930 *func_0014cb90(Chr57_0930 *);
-s32 func_0014f658(Chr57_0930 *, s32);
 
 void func_0014c6c0(Obj57_c6c0 *o, f32 *v) {
     f32 t[4];
@@ -672,68 +625,6 @@ f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
     dir[3] = 0.0f;
     func_002672f8(dir, m, dir);
     return len;
-}
-
-s32 func_001507d0(Chr57_07d0 *o) {
-    f32 a[8];
-    f32 b[8];
-    Chr57_07d0 *p;
-    Col57_07d0 *c;
-    s32 n;
-    s32 i;
-
-    p = 0;
-    func_0015bad0(o, o->cs->cols[0], a);
-    while ((p = func_001230a0(p)) != 0) {
-        if (p->info->kind != 11) continue;
-        if (!func_00123330(p)) continue;
-        if (p->i164 >= 2) continue;
-        if (p->o144 && p->o144->fc > 0.0f) continue;
-        n = p->cs->n[3];
-        c = p->cs->cols[3];
-        for (i = 0; i < n; i++, c++) {
-            if ((c->x[0] & 0xf) != 3) continue;
-            func_0015bad0(p, c, b);
-            if (func_0015b998(a, b)) {
-                o->o148->i140 = i;
-                func_00150678(o, p);
-                return 1;
-            }
-        }
-    }
-    return (s32)p;
-}
-
-void func_00150930(Chr57_0930 *o, Chr57_0930 *t, f32 *v) {
-    f32 a[4];
-    f32 h;
-    f32 d;
-    f32 k;
-    f32 vy;
-
-    if (o->o98 && o->o98->info->kind == 11) o->o98->o144->fc = 180.0f;
-    func_0014cb90(o)->f4 = 4.0f;
-    func_0012ec88(t, a);
-    if (t->info->kind == 11) {
-        a[0] = t->v10[0];
-        a[2] = t->v10[2];
-        a[1] += 120.0f;
-    }
-    func_00267530(v, a, o->v10);
-    h = v[1];
-    v[1] = 0.0f;
-    func_00121fc4(v, v);
-    d = v[3];
-    k = (d / o->prm->f8 > 30.0f) ? d / o->prm->f8 : 30.0f;
-    vy = (h - k * 0.484693862498f * k * 0.5f) / k;
-    func_00267560(o->v3c0, v, d / k);
-    o->f3b4 = 0.484693862498f;
-    o->f3cc = 0.99f;
-    o->f3b0 = 0.0f;
-    o->f3c4 = vy;
-    o->f3b8 = -vy / 0.484693862498f;
-    func_0014f658(o, 3);
-    func_001376e8(o, v);
 }
 #include "data/bss_0054_typed.h"
 #include "data/data_002B.h"
