@@ -1,3 +1,11 @@
+/* The HUD's textures (docs/modules.md "Session 45"), 0x00238a70-0x00239368;
+ * hudtex.nofill.c has func_002389f0.  func_00238a70 loads
+ * "command2/uitex.bin" into the buffer func_001559f0(52, 12) gives (kept in
+ * D_00440994) and sets up its 21 images, found by func_002389f0(n): six with their own
+ * CLUT row (D_00426790 ... D_004268B0, CLUTs into D_00648230), three into
+ * D_00426970 / D_0042B790 / D_004305B0 (D_004268E0 / D_00426910 /
+ * D_00426940), two more into D_006483B0 (D_00426820 / D_00431D20) and ten
+ * into D_00431F30[] (D_00431D50[]).  hud.c's func_00239368 calls it. */
 #include "common.h"
 #include "data/pieces/D_004268B0.h"
 typedef Tex_4268b0 GsTexHdr;
@@ -31,7 +39,6 @@ void func_00249eb8(void *, void *);
 void func_00249d50(void *, s32, s32);
 GsTexHdr *func_00249da0(void *);
 void *func_002389f0(s32 n);
-/* rodata */
 void func_00238a70(void) {
     s32 i, j;
     void *t;

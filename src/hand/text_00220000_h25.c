@@ -12,24 +12,11 @@ s32 func_001ba3f0(s32);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 void func_0023c7a0(void);
-s32 func_00243bd8(void);
-s32 func_002448d8(void);
-s32 func_00245228(void);
-s32 func_00245f18(void);
-s32 func_002474a8(void);
 extern u128 D_00351E10[];
 extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-s32 func_002394f8(void) {
-    if (func_002448d8()) return 1;
-    if (func_00245228()) return 1;
-    if (func_00243bd8()) return 1;
-    if (func_00245f18()) return 1;
-    return func_002474a8() != 0;
-}
 
 Slot *func_0023c228(void) {
     s32 i;
