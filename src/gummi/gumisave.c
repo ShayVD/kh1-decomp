@@ -361,8 +361,8 @@ void func_001ba358(s32 arg0, s32 arg1) {
     *temp_s2 = (u8) var_v0;
 }
 
-void func_001ba3d8(void) {
-    func_001bb740();
+s32 func_001ba3d8(void) {
+    return func_001bb740();
 }
 
 u8 func_001ba3f0(s32 i) {

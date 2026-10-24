@@ -166,7 +166,7 @@ void func_00137688(void *arg0, f32 fparg0) {
 
 /* func_001376e8 (from auto/text_00130000_2.c). */
 f32 func_0026b9a8(f32, f32);
-void func_001376e8(void *arg0, void *arg1) {
-    M2C_FIELD(arg0, f32 *, 0x150) = func_0026b9a8(M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg1, f32 *, 8));
+f32 func_001376e8(void *arg0, void *arg1) {
+    return M2C_FIELD(arg0, f32 *, 0x150) = func_0026b9a8(M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg1, f32 *, 8));
 }
 

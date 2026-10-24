@@ -101,11 +101,11 @@ s32 func_00131f78(s32 key) {
 
 /* func_00132008 (from auto/text_00130000_13.c). */
 #define func_00123488 ((M2C_UNK (*)(s32, void *)) func_00123488)
-void func_00132008(void *arg0) {
+M2C_UNK func_00132008(void *arg0) {
     void *temp_a1;
 
     temp_a1 = M2C_FIELD(arg0, void **, 0x130);
-    func_00123488(*(M2C_UNK *)((s32) ((M2C_FIELD(temp_a1, s16 *, 0x52) * 0x78)) + (s32) D_005252A8), temp_a1);
+    return func_00123488(*(M2C_UNK *)((s32) ((M2C_FIELD(temp_a1, s16 *, 0x52) * 0x78)) + (s32) D_005252A8), temp_a1);
 }
 #undef func_00123488
 

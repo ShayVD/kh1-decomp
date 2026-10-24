@@ -140,13 +140,13 @@ typedef struct { u8 pad[0x4C]; u16 h4C; } S130_157818;
 typedef struct { u8 pad[0x6C]; s32 w6C; u8 pad70[0x4D]; s8 idx; } S6C_157818;
 typedef struct { u8 pad[0x6C]; S6C_157818 *p6C; u8 pad70[0xC0]; S130_157818 *p130; u8 pad134[0x374]; s32 *tbl; } Obj157818;
 extern E551670 D_00551670[];
-void func_00157648(void);
+void func_00157648(void *);
 /* ---- func_00157818 ---- */
 E551670 *func_00157818(Obj157818 *a, s32 k) {
     E551670 *e;
     u32 h;
     s8 v;
-    func_00157648();
+    func_00157648(a);
     if ((D_002C5958 >> 20) & 1) return 0;
     e = &D_00551670[a->p6C->idx];
     h = a->p130->h4C;

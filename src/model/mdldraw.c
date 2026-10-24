@@ -61,8 +61,8 @@ void func_00161f80(void) {
 
 /* func_00162058 (from auto/text_00160000.c). */
 M2C_UNK func_00161a08();
-void func_00162058(void) {
-    func_00161a08();
+void func_00162058(void *h) {
+    func_00161a08(h);
 }
 
 /* func_00162070 (from auto/text_00160000_2.c). */
@@ -70,7 +70,7 @@ M2C_UNK func_00167f68(s32, void *);
 s32 func_001617c0();
 void func_00162070(void *arg0, s32 *arg1, s32 *arg2, s32 *arg3) {
     if (M2C_FIELD(arg0, s32 *, 0) == 0x4A424F4D) {
-        *arg3 = func_001617c0();
+        *arg3 = func_001617c0(arg0);
         *arg1 = M2C_FIELD(arg0, s32 *, 0x20);
         *arg2 = M2C_FIELD(arg0, s32 *, 0x30);
         func_00167f68(*arg3, arg0);
@@ -121,8 +121,8 @@ void func_00162110(s32 *arg0, void **arg1) {
 
 /* func_001621e0 (from auto/text_00160000_5.c). */
 M2C_UNK func_001606d0();
-void func_001621e0(void) {
-    func_001606d0();
+void func_001621e0(void *o, s32 m, void *p, void *arg) {
+    func_001606d0(o, m, p, arg);
 }
 
 /* func_001621f8 (from auto/text_00160000_5.c). */

@@ -47,7 +47,7 @@ help:
 	@echo "make shift SHIFT_MODE=m1|m2|m12   code rotated / data moved / both, inverse-map comparator against M0"
 	@echo "make shift SHIFT_MODE=m12 SHIFT_DRAFTS=1   near-miss C drafts in place of their asm exports (static diff)"
 	@echo "make data-relocs      regenerate data_relocs.tsv (pointers in the data blob)"
-	@echo "make host-census      phase 5: compile the game C with gcc -m32 (KH1_HOST), count failures and undefined symbols"
+	@echo "make host-census      phase 5: compile the game C with gcc -m32 (KH1_HOST), count failures and undefined symbols, link out/host/kh1-host"
 
 $(ORIG):
 	@echo "error: $(ORIG) not found. Copy the ELF from your own disc to the repo root." >&2
@@ -72,7 +72,7 @@ build: $(PATCHED)
 # host compiler (HOST_CC, default gcc) under -m32 -DKH1_HOST. Needs the data pieces
 # a PS2 build cuts. Touches only out/host/.
 host-census: $(PIECES_STAMP)
-	@$(PY) -I tools/host/census.py --link
+	@$(PY) -I tools/host/census.py --exe
 
 $(PATCHED): $(ORIG) layout.tsv kh1.ld $(GEN)/symbols.ld $(OBJS) tools/kh1tool.py
 	@$(KH1) link-script

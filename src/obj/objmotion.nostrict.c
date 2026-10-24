@@ -231,7 +231,7 @@ s32 func_00130e48(void *arg0, s32 arg1) {
     f32 var_f0;
     s32 var_v0;
 
-    var_f0 = func_00130d20();
+    var_f0 = func_00130d20(arg0);
     if ((var_f0 >= 0.0f) || (var_f0 = func_00130dd0(arg0), var_v0 = 0, (var_f0 >= 0.0f))) {
         temp_f1 = M2C_FIELD(arg0, f32 *, 0x280);
         temp_f20 = temp_f1 * var_f0;

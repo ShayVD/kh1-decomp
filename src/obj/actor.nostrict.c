@@ -162,7 +162,7 @@ W3d D_004F71D0[0x3] ALIGNED(16);  /* moved from hand/nostrict/text_00110000_h53.
 extern s32 D_002BC130;
 extern s32 D_002BC128;
 extern s32 D_002BC134;
-s32 func_001499a0(void);
+s32 func_001499a0(void *);
 u32 func_0013c318(u32);
 void func_00141e68(Obj3d *);
 void func_00153d88(Obj3d *);
@@ -172,7 +172,7 @@ R3d *func_00157818(Obj3d *, s32);
 void func_00123d48(Obj3d *o) {
     u32 n, k;
     W3d *w;
-    o->x14c = func_001499a0();
+    o->x14c = func_001499a0(o);
     n = func_0013c318(o->info->x4c);
     k = n;
     if (n >= 3) return;

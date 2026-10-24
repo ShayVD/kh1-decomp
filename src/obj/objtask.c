@@ -308,8 +308,8 @@ s32 func_00138130(void) {
 /* func_001383d8 (from auto/text_00130000.c). */
 M2C_UNK func_0011f090(M2C_UNK *, s32, s32);
 extern M2C_UNK D_0052AA58;
-void func_001383d8(s32 arg0, s32 arg1) {
-    func_0011f090(&D_0052AA58, arg0, arg1);
+M2C_UNK func_001383d8(s32 arg0, s32 arg1) {
+    return func_0011f090(&D_0052AA58, arg0, arg1);
 }
 
 /* func_001386f8 (from auto/text_00130000_8.c). */
@@ -468,11 +468,11 @@ s32 func_001389e8(void *arg0) {
 
 /* func_00138a20 (from auto/text_00130000.c). */
 M2C_UNK func_00121fc4(void *, void *);
-M2C_UNK func_0014cce0();
-void func_00138a20(s32 arg0, void *arg1) {
+f32 func_0014cce0(s32, f32);
+void func_00138a20(s32 arg0, void *arg1, f32 f) {
     f32 temp_f20;
 
-    func_0014cce0();
+    func_0014cce0(arg0, f);
     temp_f20 = M2C_FIELD(arg1, f32 *, 0xC);
     func_00121fc4(arg1, arg1);
     PlatVu0ScaleVector(arg0 + 0x3C0, arg1, temp_f20);

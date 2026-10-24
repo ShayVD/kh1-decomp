@@ -416,7 +416,7 @@ game files call the include/platform/ wrappers):
 | 0x00267248 | sceDmaPause | DI, the D_ENABLEW hold bit, STR cleared, old CHCR returned |
 | 0x002672e0 | sceDmaRestart | CHCR written back, old STR returned |
 
-Left unnamed in that range: func_00266a10 (installs a DMAC interrupt handler on cause 2), func_00266ab0 /
+Left unnamed in that range: func_00266a10 (installs a handler on INTC cause 2, VBlank start, and returns the old one: sceGsSyncVCallback, named in session 62 from the code), func_00266ab0 /
 func_00266b20 (the two timeout waits), func_00266ba8 (scratchpad address to its DMA form), func_00266bd0 (a
 byte clear), func_00265558 (reads 256 entries of a file named at D_00492920) and func_002655f8 (syscall 0x80).
 
@@ -430,7 +430,7 @@ arguments), func_0025db10 (returns s64: a 64-bit lseek), func_0025c448 (6 argume
 arguments, 4 files), func_00269fd0 ((s32), a sync), func_00269da8, func_0026a728, func_0026a9d0,
 func_002696b8 ((s32, void *, s32)), func_0026ab38, func_0026abf0, func_0026aca8 ((void *)), func_00269960
 ((void *, s32)); func_0025b550 / func_0025ed28 / func_0025ed48 / func_0025f1f0 / func_0025f228 (discfile.c,
-the IOP module loads and reboot); func_00262c78 (field.c, no arguments) and func_00250360 ((void *, s32,
+the IOP module loads and reboot); func_00262c78 (field.c, no arguments: `__main`, session 62) and func_00250360 ((void *, s32,
 s32, void *): cmdmenu / objreact, a libc sort?).  Name each from its code and the library order (as libdma
 above) before wrapping it: the cd / iop wrapper is the next one.
 
@@ -472,5 +472,18 @@ loadfile bind 0x0025e328 and version check 0x0025e428, 0x0025eeb8 / 0x0025efa8 (
 memory get / set), 0x00269f38 (N command 14, the disk-ready wait sceCdRead runs first), the libcdvd command
 locks 0x00269dc8 / 0x0026a0e0 and the callback thread 0x002695f8.  The game's census in "Session 56" is now
 all wrapped except dkmovie.c's sceIpuInit / sceIpuSync (libipu) and field.c's func_00262c78 (a once-only call
-of 0x00262bb8 in the libgcc range; not identified).
+of 0x00262bb8 in the libgcc range; session 62: `__main`, the once-only `__do_global_ctors` call gcc puts at
+the top of main(); 0x00262b28 / 0x00262bb8 are `__do_global_dtors` / `__do_global_ctors`).
+
+## Session 62: the SDK functions the host link needs by address
+
+host/port/sdk_host.c names the 20 SDK func_ the game (or the data blob's tables) still reaches by address, from
+`kh1tool.py asm` (whose labels come from functions.tsv) and the code: 0x0024f318 bsearch, 0x00250054 memset,
+0x0026b6f8 cosf, 0x0026b7d0 sinf, 0x0026b8b8 tanf, 0x0026b978 acosf, 0x0026b9a8 atan2f, 0x0026b9c0 fmodf,
+0x00262c78 `__main`, 0x00266a10 sceGsSyncVCallback, 0x00266c30 sceDmaReset, 0x00266c08 / 0x00266f38
+sceDmaGetChan / sceDmaSend (three drafts of unmatched functions call them directly); in the data blob only
+0x002583e0 FlushCache, 0x00258a58 SyncDCache, 0x00259468 (a putchar that writes `\r` before `\n`, through
+0x00259380) and the word-copy loops 0x0025f3f0, 0x0025f428, 0x0025f620, 0x0025f790, 0x0025fa40, 0x002608e0.
+newlib's rand / srand (the LCG above) and `__assert(file, line, expression)` are in C there too, because glibc's
+differ.
 

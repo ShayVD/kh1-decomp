@@ -516,7 +516,7 @@ void func_00105a70(s32 arg0, s32 arg1, s32 arg2) {
         func_00104528();
         return;
     }
-    func_0011a978();
+    func_0011a978(arg0, arg1, arg2);
 }
 #undef func_00104528
 #undef func_001047c8

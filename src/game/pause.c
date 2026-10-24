@@ -52,7 +52,7 @@ void func_00113de0(void) {
 /* func_00113df8 (from auto/text_00110000.c). */
 M2C_UNK func_001ed1c8();
 void func_00113df8(s32 arg0) {
-    func_001ed1c8();
+    func_001ed1c8(arg0);
     D_004D932C = arg0;
 }
 

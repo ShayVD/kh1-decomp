@@ -78,7 +78,8 @@ The **VU0 macro-mode asm** (src/asm/vu0_render_1.s and vu0_render_2.s: func_001b
 from its disassembly (not matching: a functional C version for the port only, in src/vita/). The same for
 src/asm/text_0024e0a4.s (sq context save, lq / VU0 code, decoders, the 0x00121F6C block copy, the 0x00121FC4
 normalize, the 0x00162C5C matrix multiply) and src/asm/text_001aa1f8.s (128-bit clears and the func_001bfac8
-context switch, which becomes a Vita thread or a ucontext switch). The 116 game files with `__asm__`
+context switch, which becomes a Vita thread or a ucontext switch). Session 62: host/port/asm_c.c and
+tasks.c have C for every one the link needs, the seven packet builders and func_001aa1f8 as stubs (5.1b). The 116 game files with `__asm__`
 (mostly `sync`, `sync.l`, `mfc0` and VU0 macros) need a `KH1_PS2` guard or a C equivalent each: a script can
 list them (`grep -rln __asm__ src --include=*.c | grep -v ^src/sdk`).
 
@@ -274,6 +275,87 @@ What resolved since session 60:
 host libc. That needs src/host/memmap.c for the 8 fixed addresses, a decision for the 13 low D_, C for
 the 20 src/asm functions (or stubs to start), the 20 SDK func_ named, and task.nostrict.c's
 `__builtin_args_info` rewritten. Then run to the first PlatCdRead.
+
+### 5.1b Session 62: the first link, and the run to the first PlatCdRead
+
+`make host-census` now also links: `python3 -I tools/host/census.py --exe` builds **out/host/kh1-host**
+(`gcc -m32 -no-pie`, the host libc and libm, 558 objects: 520 game files including the 8 drafts of
+shift/drafts.tsv's unmatched game functions, 29 data, 9 null platform / port) with **no undefined symbol**,
+and it runs the boot from the game's own main (func_00100558: `__main`, func_00109288, then func_00109770 for
+ever) through the IOP reboot and the module loads to **the first PlatCdRead: func_00120ba0's read of one
+sector at lsn 0 into D_004F2A00** (the file it searched for: the null platform answers every search "found
+at sector 0"). The null platform stops there (exit 0); `KH1_HOST_CD=go` lets it carry on. A crash prints a
+backtrace (host/null/main.c); census objects carry `-g` so gdb and addr2line name the game function.
+
+What closed the 109 undefined of 5.1a:
+
+| what | where | notes |
+| --- | --- | --- |
+| 8 fixed-map D_ | host/port/memmap.c | one 25 MiB block (0x6A0000-0x1FE0000, aligned 0x40000) with each D_ at its offset, so the regions keep their order and distances (heap.c compares with D_009A0000; objslot.c maps an address to its 0x40000 slot) |
+| D_12000000 | memmap.c | GS PMODE, written by src/screen/fade.c's func_00113ab0: a plain u64 until gs.h takes the write |
+| 13 D_ below 0x100000 | memmap.c | **offsets, not addresses**: src/gummi/gumisave.c adds &D_00009B38 ... &D_0000AC20 to the Gummi save block func_00232cc0(4) returns; absolute symbols (`.set D_00009B38, 0x9B38`) |
+| 20 SDK func_ | host/port/sdk_host.c | named (docs/sdk.md "Session 62"): libc / libm wrappers, `__main` a no-op, sceGsSyncVCallback keeps the callback (kh1_vsync_cb), the data blob's table entries empty; plus newlib's rand / srand and `__assert` argument order |
+| 20 src/asm | host/port/asm_c.c, tasks.c | C below; the VU0 packet builders and the GS upload are stubs that draw nothing |
+| `__builtin_args_info` | src/util/task.nostrict.c | `__builtin_va_arg` under `#ifndef KH1_PS2` |
+| 7 unmatched | shift/drafts.tsv | the drafts compile for the host (001636d0's one `sqc2 $vf0` got a C `#else`); three call sceDmaGetChan / sceDmaSend / sceGsSyncPath by address, which sdk_host.c routes to dma.h / gs.h |
+| 2 sceIpu | sdk_host.c | no-ops until the movie decision (section 3) |
+| functions.tsv aliases | out/host/aliases.ld | the data blob and the drafts say func_<addr> for a function C defines under its functions.tsv name: `PROVIDE(func_x = name)` in a linker script (an assembler `.set` to another object's symbol stays undefined) |
+
+**The hand asm in C** (host/port/asm_c.c; read from the disassembly, functional, not matching):
+
+- func_00121f6c (src, dst, n): lq / sq copy in 128-byte blocks, do-while n > 0 (a short tail still copies 128).
+- func_00121fc4 (d, s): d.xyz = s.xyz / |s.xyz| and **d.w = |s.xyz|**; |s|^2 == 0 gives (0, 0, 1, 0) (vmr32 of vf0).
+- func_00162c5c (d, a, b): row i of d = a applied to row i of b (all loads before the stores).
+- **The two decoders of src/util/decode.c** (func_0024e75c method 1, func_0024e8d4 method 2), a byte-oriented LZ:
+  header byte 0 the method and bytes 1-4 the size; then codes: 0 the end; 1-125 that many literals; 126 n c:
+  n + 4 copies of c; 127 lo hi c: (hi << 8 | lo) copies of c; 0x80 and up a back reference of length
+  ((code >> 3) & 15) + 3 and distance ((code & 7) << 8 | next) + 1 (method 2: (code >> 4) & 7 and code & 15).
+  Within the first 2047 (method 2: 4095) bytes of output a reference before the start writes zeros.
+  Returns the bytes read; *size the bytes written.
+- func_0024edf0 (m, p[8]): 255 when D_002BBDE0 == 3 and all eight points m p[i] are outside one clip plane
+  (vclipw: x > |w|, x < -|w|, y, and z < -|w|; the far plane, bit 0x10, is not counted), else 0: a bounding
+  box cull.
+- func_0024ef88 (func_00242b68(1) and (2), then func_00241c60 on the two objects at D_002E26A0 + 4 / + 8)
+  and func_001001d8 (func_00106c10, then 0).
+- Stubs: func_001aa1f8 (16x16 GS image uploads through the scratchpad), the six model packet builders of
+  opdma.c's func_001aaf88 and keshptail's func_001b8198 (they return the packet end: the stubs return the
+  current one, D_00616224, so nothing is drawn).
+
+**The two task systems** (host/port/tasks.c, POSIX ucontext; the Vita needs its own switch, it has no
+ucontext): every task gets a 256 KiB host stack (task.c's small slots have 0x9b0 bytes, sized for EE code)
+and the game's context blocks keep only the fields its C reads.
+
+- src/util/sa_task.c's (func_0024e0a4 clear, func_0024e0f0 (entry, arg, priority) create, func_0024e1d0 one
+  pass): a context of 0x10320 bytes holds the entry's four argument words (+0), the priority (+32, 16
+  lists), the entry (+48), a live word (+176: the EE's saved ra), first-run (+768) and frames-to-wait (+784);
+  the pass lists the live ones by priority, counts every task it visits and runs those whose wait reaches 0
+  until they wait again or end (the entry's end frees the context). The wait call is 0x0024e468 (func_0024e468
+  (frames) in C): **nothing in the main ELF calls it** (no jal, j or %hi/%lo of it), so in the ELF every task
+  runs to its end in its first pass; the overlays may wait.
+- src/util/task.c's (func_001bfac8, the yield): the running task saves itself and the next queue entry
+  runs, new ones from ctx->ra with ctx->a[0..7]; at the queue's end func_001c0460 rebuilds it and the main
+  loop (slot 0) runs; a task that returns is ended by func_001bffa0, off its own stack (tasks.c runs that on a
+  separate context: a new task may take the same slot).
+
+**Register passthrough (portability.md rule 10).** The run's first crash was m2c's: func_001209d8 called
+func_00120930() with no argument because on the EE its own a0 (the module name) was still in the register.
+tools/host/argcheck.py lists the two kinds of this the source shows (calls with fewer arguments than the
+callee's definition; void-defined functions whose callers use a value). Session 62 fixed 57 of the 119
+short calls and 360 of the 644 value uses (49 functions now return their callee's value), every object
+bit-identical: **62 calls (30 callees) and 284 value uses (111 functions) are left** (out/host/argcheck.tsv
+after `--tsv`). Some are benign (func_00201440's last parameter is unused: callers pass 9 of 10), dkmovie.c's
+func_00111238 passes garbage on the EE too (a keep-alive stub), and the rest want the same treatment: read
+the caller's asm (`kh1tool.py asm`) for which registers reach the callee, add them as parameters, and for
+a value use make the callee return what is in v0 / $f0 at its end (often a tail call: `return g(...)`; when
+not, the last call's value or a stored one, case by case).
+
+**The null platform's answers** changed where the game polls: PlatSifRebootIop / SyncIop / LoadModule /
+LoadStartModule 1 (iop.h says so; the stubs answered 0 and the boot looped), PlatCdPowerOff 1,
+PlatCdSearchFile "found" with lsn 0 / size 0 (the game retries a failed search for ever).
+
+**Next for the host build**: the rest of argcheck's list; a disc behind PlatCdSearchFile / PlatCdRead
+(KINGDOM.IDX / IMG from the user's ISO, tools/shift/extract_kingdom.py reads them) to run past the first read
+to the title's logic; then a frame loop that answers vsync (kh1_vsync_cb) so the game's waits return.
 
 ### 5.2 Session 60: overlays, dktitle.x
 

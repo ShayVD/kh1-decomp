@@ -36,7 +36,7 @@ s32 func_0015a348(A348 *a, s32 f) {
 M2C_UNK func_0014cb90(s32);
 s32 func_0013db30();
 void func_0015a3d8(s32 arg0) {
-    if (func_0013db30() != 0) {
+    if (func_0013db30(arg0) != 0) {
         func_0014cb90(arg0);
     }
 }

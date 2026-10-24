@@ -63,7 +63,7 @@ void func_0013ecf8(s32 arg0, void *arg1, void *arg2) {
 M2C_UNK func_0013ed88();
 M2C_UNK func_0013ee40(s32, s32, s32);
 void func_0013f0c0(s32 arg0, s32 arg1, s32 arg2) {
-    func_0013ed88();
+    func_0013ed88(arg0, arg1, arg2);
     func_0013ee40(arg0, arg1, arg2);
 }
 

@@ -41,7 +41,7 @@ s32 func_001375f0();
 s32 func_00140f08(void *arg0, s32 arg1) {
     s32 var_v0;
 
-    if (!((M2C_FIELD(arg0, u16 *, 0x30C) == 0xFFFF) || (func_001375f0() == 0) || (var_v0 = 0xB, !(M2C_FIELD(arg0, f32 *, 0x24) < 0.0f)))) {
+    if (!((M2C_FIELD(arg0, u16 *, 0x30C) == 0xFFFF) || (func_001375f0(arg0) == 0) || (var_v0 = 0xB, !(M2C_FIELD(arg0, f32 *, 0x24) < 0.0f)))) {
         return var_v0;
     }
     var_v0 = 0xA;
@@ -56,8 +56,8 @@ s32 func_00140f08(void *arg0, s32 arg1) {
 
 /* func_00140f88 (from auto/text_00140000.c). */
 M2C_UNK func_00140db8();
-s32 func_00140f88(void) {
-    func_00140db8();
+s32 func_00140f88(void *o, void *v) {
+    func_00140db8(o, v);
     return 0;
 }
 

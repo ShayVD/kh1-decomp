@@ -132,7 +132,7 @@ void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
 
 /* func_001804d0 (from auto/text_00180000_4.c). */
 #define func_001803b8 ((s32 *(*)()) func_001803b8)
-s32 * func_001804d0(s32 arg0, s32 arg1) {
+s32 *func_001804d0(s32 arg0, s32 arg1) {
     s32 *var_v1;
     s32 temp_v0;
     s32 var_a0;

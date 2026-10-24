@@ -86,14 +86,14 @@ void func_0011c798(void) {
 
 /* func_0011c7a8 (from auto/text_00110000.c). */
 M2C_UNK func_001ed4b8();
-void func_0011c7a8(void) {
-    func_001ed4b8();
+void func_0011c7a8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    func_001ed4b8(arg0, arg1, arg2, arg3, arg4, arg5);
 }
 
 /* func_0011c7c0 (from auto/text_00110000.c). */
 M2C_UNK func_001ed560();
-void func_0011c7c0(void) {
-    func_001ed560();
+void func_0011c7c0(s32 arg0, s32 arg1, s32 arg2) {
+    func_001ed560(arg0, arg1, arg2);
 }
 
 /* func_0011c7d8 (from auto/text_00110000.c). */
@@ -104,26 +104,26 @@ void func_0011c7d8(s32 a) {
 
 /* func_0011c7f0 (from auto/text_00110000.c). */
 M2C_UNK func_001ed5a8();
-void func_0011c7f0(void) {
-    func_001ed5a8();
+void func_0011c7f0(s32 arg0) {
+    func_001ed5a8(arg0);
 }
 
 /* func_0011c808 (from auto/text_00110000.c). */
 M2C_UNK func_001ed600();
-void func_0011c808(void) {
-    func_001ed600();
+s32 func_0011c808(s32 arg0) {
+    return func_001ed600(arg0);
 }
 
 /* func_0011c820 (from auto/text_00110000.c). */
 M2C_UNK func_001ecfd8();
-void func_0011c820(void) {
-    func_001ecfd8();
+s32 func_0011c820(void) {
+    return func_001ecfd8();
 }
 
 /* func_0011c838 (from auto/text_00110000.c). */
 M2C_UNK func_001ed278();
-void func_0011c838(void) {
-    func_001ed278();
+void func_0011c838(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+    func_001ed278(arg0, arg1, arg2, arg3, arg4);
 }
 
 /* func_0011c850 (from auto/text_00110000.c). */
@@ -140,8 +140,8 @@ void func_0011c868(s32 a, s32 b, s32 c, s32 d, s32 e) {
 
 /* func_0011c880 (from auto/text_00110000.c). */
 M2C_UNK func_001ed3c0();
-void func_0011c880(void) {
-    func_001ed3c0();
+void func_0011c880(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+    func_001ed3c0(arg0, arg1, arg2, arg3, arg4);
 }
 
 /* func_0011c898 (from hand/text_00110000_h30.c). */
@@ -1033,8 +1033,8 @@ void func_0011e1c8(s32 x) {
 /* func_0011e220 (from auto/text_00110000.c). */
 M2C_UNK func_001ecc68();
 #define func_0011e1c8 ((M2C_UNK (*)(s32)) func_0011e1c8)
-void func_0011e220(s32 arg0) {
-    func_001ecc68();
+void func_0011e220(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    func_001ecc68(arg0, arg1, arg2, arg3);
     func_0011e1c8(arg0);
 }
 #undef func_0011e1c8

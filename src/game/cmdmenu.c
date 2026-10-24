@@ -407,16 +407,16 @@ f32 func_0012eba0(E21 *e, s32 a, s32 b, s32 c, f32 *out) {
 }
 
 /* func_0012ec60 (from auto/text_00120000_3.c). */
-#define func_0012eba0 ((void (*)(s32, s32, s32, s32, s32)) func_0012eba0)
-void func_0012ec60(s32 arg0, s32 arg1, s32 arg2) {
-    func_0012eba0(arg0, 0, -1, arg1, arg2);
+#define func_0012eba0 ((f32 (*)(s32, s32, s32, s32, s32)) func_0012eba0)
+f32 func_0012ec60(s32 arg0, s32 arg1, s32 arg2) {
+    return func_0012eba0(arg0, 0, -1, arg1, arg2);
 }
 #undef func_0012eba0
 
 /* func_0012ec88 (from auto/text_00120000_4.c). */
 #define func_0012ec60 ((f32 (*)(s32, s32, s32)) func_0012ec60)
-void func_0012ec88(s32 arg0, s32 arg1) {
-    func_0012ec60(arg0, 0, arg1);
+f32 func_0012ec88(s32 arg0, s32 arg1) {
+    return func_0012ec60(arg0, 0, arg1);
 }
 #undef func_0012ec60
 

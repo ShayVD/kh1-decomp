@@ -28,8 +28,8 @@ s32 func_00147730(s32 arg0) {
 /* func_00147760 (from auto/text_00140000.c). */
 s32 func_00147808();
 #define func_00147808 ((M2C_UNK (*)(s32)) func_00147808)
-void func_00147760(s32 arg0) {
-    func_00147808(arg0 + 0x127);
+s32 func_00147760(s32 arg0) {
+    return func_00147808(arg0 + 0x127);
 }
 #undef func_00147808
 
@@ -49,8 +49,8 @@ void func_00147790(s32 i) {
 /* func_001477e0 (from auto/text_00140000_4.c). */
 extern M2C_UNK D_00308C70;
 #define func_001477c8 ((M2C_UNK (*)(s32)) func_001477c8)
-void func_001477e0(s32 arg0) {
-    func_001477c8(*(M2C_UNK *)((s8 *)&D_00308C70 + (arg0 * 4)));
+void *func_001477e0(s32 arg0) {
+    return func_001477c8(*(M2C_UNK *)((s8 *)&D_00308C70 + (arg0 * 4)));
 }
 #undef func_001477c8
 

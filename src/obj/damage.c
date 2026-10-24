@@ -464,11 +464,11 @@ void func_001358f8(Actor *arg0, s32 arg1) {
 /* func_00135938 (from auto/text_00130000_1.c). */
 M2C_UNK func_00167978(s32, s32, s32);
 #define func_00135888 ((s32 (*)()) func_00135888)
-void func_00135938(Actor *arg0, s32 arg1) {
+s32 func_00135938(Actor *arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0->unk15C;
-    func_00167978(temp_s0, func_00135888(), arg1 & 0xFFFF);
+    return func_00167978(temp_s0, func_00135888(), arg1 & 0xFFFF);
 }
 #undef func_00135888
 

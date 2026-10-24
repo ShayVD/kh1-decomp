@@ -285,8 +285,8 @@ s32 func_001120c8(void) {
 
 /* func_00112150 (from hand/text_00110000_h29.c). */
 void func_002485b8(W29Clock *);
-#define func_0011ef10 ((void (*)(s32, void (*)(void))) func_0011ef10)
-void func_00112150(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, s32 a7, s32 s0, s32 s8) {
+#define func_0011ef10 ((M2C_UNK (*)(s32, void (*)(void))) func_0011ef10)
+M2C_UNK func_00112150(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, s32 a7, s32 s0, s32 s8) {
     D_004D9288.x20 = a1;
     D_004D9288.x0 = a0;
     D_004D9260 = a4;
@@ -305,7 +305,7 @@ void func_00112150(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, s32 a
     D_004D9288.x14 = D_004D9274;
     func_002485b8(&D_004D9288);
     D_004D9280 = 0;
-    func_0011ef10(0x280A0, func_001120c8);
+    return func_0011ef10(0x280A0, func_001120c8);
 }
 #undef func_0011ef10
 

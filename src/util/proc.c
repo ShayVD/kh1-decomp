@@ -28,15 +28,15 @@
 /* func_0011ef10 (from auto/text_00110000_1.c). */
 M2C_UNK func_0011f090(M2C_UNK *, s32, s32);
 extern M2C_UNK D_004E3A48;
-void func_0011ef10(s32 arg0, s32 arg1) {
-    func_0011f090(&D_004E3A48, arg0, arg1);
+M2C_UNK func_0011ef10(s32 arg0, s32 arg1) {
+    return func_0011f090(&D_004E3A48, arg0, arg1);
 }
 
 /* func_0011ef38 (from auto/text_00110000.c). */
 M2C_UNK func_0011f2e0_ef38() __asm__("func_0011f2e0");
 #define func_0011f2e0 ((M2C_UNK (*)(M2C_UNK *, s32)) func_0011f2e0_ef38)
-void func_0011ef38(s32 arg0) {
-    func_0011f2e0(&D_004E3A48, arg0);
+M2C_UNK func_0011ef38(s32 arg0) {
+    return func_0011f2e0(&D_004E3A48, arg0);
 }
 #undef func_0011f2e0
 

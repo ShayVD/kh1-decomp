@@ -279,7 +279,7 @@ f32 func_0026b9a8(f32, f32);
 void func_00121a10(void *arg0, void *arg1) {
     f32 temp_f0;
 
-    M2C_FIELD(arg1, f32 *, 0) = func_0026b9a8(-M2C_FIELD(arg0, f32 *, 4), func_00120c18());
+    M2C_FIELD(arg1, f32 *, 0) = func_0026b9a8(-M2C_FIELD(arg0, f32 *, 4), func_00120c18(arg0));
     temp_f0 = func_0026b9a8(M2C_FIELD(arg0, f32 *, 0), M2C_FIELD(arg0, f32 *, 8));
     M2C_FIELD(arg1, s32 *, 8) = 0;
     M2C_FIELD(arg1, f32 *, 4) = temp_f0;

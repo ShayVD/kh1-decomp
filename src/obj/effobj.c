@@ -103,7 +103,7 @@ s32 func_00147d18(s32 arg0) {
 
 /* func_00147ed8 (from auto/text_00140000_5.c). */
 #define func_00147c98 ((s32 *(*)()) func_00147c98)
-s32 * func_00147ed8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+s32 *func_00147ed8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 *temp_v0;
 
     temp_v0 = func_00147c98();
@@ -329,9 +329,9 @@ s32 func_00148b70(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
 }
 
 /* func_00148b98 (from auto/text_00140000_10.c). */
-#define func_001487f8 ((void (*)(s32, s32, s32, s32)) func_001487f8)
-void func_00148b98(s32 arg0, s32 arg1, s32 arg2) {
-    func_001487f8(M2C_FIELD(arg0, s32 *, 0x68), arg1, arg0, arg2);
+#define func_001487f8 ((void *(*)(s32, s32, s32, s32)) func_001487f8)
+void *func_00148b98(s32 arg0, s32 arg1, s32 arg2) {
+    return func_001487f8(M2C_FIELD(arg0, s32 *, 0x68), arg1, arg0, arg2);
 }
 #undef func_001487f8
 

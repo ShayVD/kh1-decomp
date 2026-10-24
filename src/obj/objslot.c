@@ -45,8 +45,8 @@ void func_00155760(s32 arg0) {
 /* func_001557b0 (from auto/text_00150000.c). */
 s32 func_001320a8();
 #define func_00155760 ((M2C_UNK (*)(s32)) func_00155760)
-void func_001557b0(void) {
-    func_00155760(func_001320a8());
+void func_001557b0(u32 a) {
+    func_00155760(func_001320a8(a));
 }
 #undef func_00155760
 

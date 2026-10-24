@@ -97,8 +97,8 @@ s32 func_0013fba0(void *arg0, s32 arg1) {
 
 /* func_0013fc08 (from auto/text_00130000.c). */
 M2C_UNK func_0013f770();
-s32 func_0013fc08(void) {
-    func_0013f770();
+s32 func_0013fc08(void *o, void *v) {
+    func_0013f770(o, v);
     return 0;
 }
 

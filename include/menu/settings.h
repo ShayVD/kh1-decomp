@@ -15,7 +15,7 @@ s32 func_002192c0(void);
 void func_002192d0(void);
 void func_002192e8(s32 arg0);
 s32 func_002192f8(void);
-void func_00219308(void);
+s32 func_00219308(void);
 void func_00219320(s32 arg0);
 s32 func_00219330(void);
 s32 func_00219338(void);

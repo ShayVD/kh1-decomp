@@ -311,8 +311,8 @@ void *func_0010fce8(s32 arg0, s32 arg1) {
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 #define func_0010fce8 ((M2C_UNK (*)(s32, s32)) func_0010fce8)
-void func_0010fd18(void) {
-    func_0010fce8(D_002BC128, D_002BC130);
+void *func_0010fd18(void) {
+    return func_0010fce8(D_002BC128, D_002BC130);
 }
 #undef func_0010fce8
 

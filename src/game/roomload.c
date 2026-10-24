@@ -576,8 +576,8 @@ void func_00112fe0(void) {
 
 /* func_00113008 (from auto/text_00110000_12.c). */
 #define func_001559f0 ((M2C_UNK (*)(M2C_UNK, M2C_UNK)) func_001559f0)
-void func_00113008(void) {
-    func_001559f0(0x3D, 3);
+void *func_00113008(void) {
+    return func_001559f0(0x3D, 3);
 }
 #undef func_001559f0
 

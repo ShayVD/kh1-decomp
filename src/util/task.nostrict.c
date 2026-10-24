@@ -36,7 +36,11 @@ s32 func_001c00e8(s32 prio, s32 fn, u128 q) {
 }
 
 s32 func_001c01b0(s32 prio, void *fn, ...) {
+#ifdef KH1_PS2
     char *ap;
+#else
+    __builtin_va_list va; /* off the EE: the eight words after fn, read with va_arg */
+#endif
     s32 i, n;
     TaskQW tmp;
     Task *t;
@@ -46,7 +50,11 @@ s32 func_001c01b0(s32 prio, void *fn, ...) {
         puts(D_00490300);
         return -1;
     }
+#ifdef KH1_PS2
     ap = (char *)__builtin_next_arg(fn) - 8 * (8 - __builtin_args_info(2));
+#else
+    __builtin_va_start(va, fn);
+#endif
     { u32 off = n * 48; t = (Task *)(off + (u32)D_0037A16C); }
     t->used = 1;
     t->prio = prio;
@@ -57,22 +65,37 @@ s32 func_001c01b0(s32 prio, void *fn, ...) {
     D_0037A16C[n].ctx->ra = tmp.q;
     tmp.q = KH1_Q(0);
     for (i = 0; i < 8; i++) {
+#ifdef KH1_PS2
         { char *p = ap; ap += 8; tmp.w = *(s32 *)p; }
+#else
+        tmp.w = __builtin_va_arg(va, s32);
+#endif
         ((u128 *)D_0037A16C[n].ctx)[20 + i] = tmp.q; /* a[i] */
     }
+#ifndef KH1_PS2
+    __builtin_va_end(va);
+#endif
     D_0037A16C[n].q = KH1_Q(0);
     return n;
 }
 
 s32 func_001c0310(s32 prio, void *fn, ...) {
+#ifdef KH1_PS2
     char *ap;
+#else
+    __builtin_va_list va; /* off the EE: the eight words after fn, read with va_arg */
+#endif
     s32 i, n;
     TaskQW tmp;
     Task *t;
     if (prio < 0) prio = 0xffff;
     n = func_001bfed8(1);
     if (n < 0) return -1;
+#ifdef KH1_PS2
     ap = (char *)__builtin_next_arg(fn) - 8 * (8 - __builtin_args_info(2));
+#else
+    __builtin_va_start(va, fn);
+#endif
     { u32 off = n * 48; t = (Task *)(off + (u32)D_0037A16C); }
     t->used = 1;
     t->prio = prio;
@@ -83,9 +106,16 @@ s32 func_001c0310(s32 prio, void *fn, ...) {
     D_0037A16C[n].ctx->ra = tmp.q;
     tmp.q = KH1_Q(0);
     for (i = 0; i < 8; i++) {
+#ifdef KH1_PS2
         { char *p = ap; ap += 8; tmp.w = *(s32 *)p; }
+#else
+        tmp.w = __builtin_va_arg(va, s32);
+#endif
         ((u128 *)D_0037A16C[n].ctx)[20 + i] = tmp.q; /* a[i] */
     }
+#ifndef KH1_PS2
+    __builtin_va_end(va);
+#endif
     D_0037A16C[n].q = KH1_Q(0);
     return n;
 }

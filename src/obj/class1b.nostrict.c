@@ -452,7 +452,7 @@ void func_00151fa0(void *arg0) {
     void *temp_s1;
 
     temp_s1 = M2C_FIELD(arg0, void **, 0x144);
-    if (func_00151e28() != 0) {
+    if (func_00151e28(arg0) != 0) {
         temp_f0 = M2C_FIELD(temp_s1, f32 *, 4) + D_002BBDFC;
         M2C_FIELD(temp_s1, f32 *, 4) = temp_f0;
         if (temp_f0 > 12.0f) {
