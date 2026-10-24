@@ -32,8 +32,8 @@ typedef struct B4Ln { struct B4Ln *x0; B4Obj *x4; } B4Ln;
 typedef struct { s32 x0; s32 x4; s32 x8; s32 xc; s32 x10; B4Pr x14[2][72]; u8 pad494[4]; B4Obj x498[2][78]; B4Dsl x3558[2][480]; } B4Gl;
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } B4Task;
 extern B4Gl D_0055C698;
-extern B4Ln *D_005739F0;
-extern B4Ln D_005736F0[0x60];
+B4Ln *D_005739F0 ALIGNED(16);  /* D_005739F0 and D_005736F0 moved from hand/nostrict/text_00140000_b04.c (session 53) */
+B4Ln D_005736F0[0x60] ALIGNED(16);
 void func_00121eb0(void *);
 B4Task *func_0015ed80(s32, void *);
 B4Task *func_0015ee78(s32, void *);

@@ -109,20 +109,3 @@ void func_0012c760(E13 *e) {
     e->f14c->f24 = -1;
 }
 
-typedef struct { u8 pad0[0x40]; f32 f40[4]; u8 pad50[0x15c - 0x50]; s32 f15c; u8 pad160[0x220 - 0x160]; f32 f220[4]; u8 pad230[0x370 - 0x230]; u64 f370; } E598;
-extern void func_00267e90(f32 *, f32 *, f32);
-extern void func_002672f8(f32 *, f32 *, f32 *);
-extern void func_001219c8(f32 *, f32 *, f32 *);
-extern void func_00267530(f32 *, f32 *, f32 *);
-extern void func_00166570(f32 *, s32, f32);
-void func_00130598(E598 *e, f32 *m, f32 a, f32 b) {
-    f32 v[4];
-    func_00267e90(v, e->f220, b);
-    v[3] = 0.0f;
-    func_002672f8(v, m, v);
-    if ((s32)(e->f370 >> 45) & 1) func_001219c8(v, v, e->f40);
-    func_00267530(m + 12, m + 12, v);
-    m[15] = 1.0f;
-    func_00166570(m, e->f15c, a);
-}
-

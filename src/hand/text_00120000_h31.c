@@ -110,7 +110,6 @@ void func_00125cf0(E3 *e, f32 k, f32 lim) {
     }
 }
 
-
 #include "data/types/text_00120000_h31.h"
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
@@ -544,57 +543,9 @@ void func_0012fb20(S31b0 *e, s32 m) {
     func_0012fa98();
 }
 
-typedef struct { s32 type; u16 a; u16 b; s32 c; s32 d; } Ec28;
-typedef struct { u8 pad0[0x15c]; s32 f15c; u8 pad160[8]; s32 f168; u8 pad16c[0x1d4 - 0x16c]; s32 *f1d4; } Oc28;
-extern s32 func_00164f18(s32, s32, Ec28 *, s32);
-extern void func_00146ff0(Oc28 *, u16, u16, s32);
-
-void func_00130c28(Oc28 *e) {
-    Ec28 buf[8];
-    s32 n, j;
-    n = func_00164f18(e->f15c, e->f1d4[e->f168], buf, 8);
-    for (j = 0; j < n; j++) {
-        switch (buf[j].type) {
-        case 0:
-            if (!((D_002C5958 >> 8) & 1)) func_0012c010((E10 *)e, buf[j].a, buf[j].b);
-            break;
-        case 1:
-            if (!((D_002C5958 >> 10) & 1)) func_00146ff0(e, buf[j].a, buf[j].b, buf[j].c);
-            break;
-        }
-    }
-}
-
-typedef struct { u8 pad0[0x164]; s32 f164; s32 f168; u8 pad16c[0x1d4 - 0x16c]; s32 *f1d4; } Od20;
-extern f32 func_0013fe10(Od20 *);
-extern void func_00167698(s32);
-
-f32 func_00130d20(Od20 *e) {
-    f32 t;
-    if ((u32)(e->f164 - 21) >= 2) return -1.0f;
-    t = func_0013fe10(e);
-    func_00167698(e->f1d4[e->f168]);
-    if (e->f164 == 21) t = 1.0f - t;
-    return (t < 0.0f) ? 0.0f : ((1.0f < t) ? 1.0f : t);
-}
-
 typedef struct Ob50 Ob50;
 typedef struct { u32 f0; u8 pad4[8]; void (*fc)(Ob50 *); } Sb50;
 struct Ob50 { u32 f0; u8 pad4[0x15c]; u64 f160; u8 pad168[0x178 - 0x168]; s32 f178; Sb50 f17c; };
-extern s32 func_00131ab0(Ob50 *);
-extern void func_00131500(Ob50 *);
-
-void func_00131b50(Ob50 *e) {
-    Sb50 *s;
-    e->f160 &= ~0x80;
-    if (!func_00131ab0(e)) return;
-    if (e->f178 <= 0) return;
-    s = &e->f17c;
-    if (s->f0 & 0x40000000) e->f0 &= ~4;
-    if (s->f0 & 0x100000) func_00131500(e);
-    if (s->fc) s->fc(e);
-    e->f160 |= 0x80;
-}
 
 /* needs make: uses rodata */
 
@@ -632,44 +583,6 @@ s32 func_00125a28(s32 a0) {
         if (e->f70) return 0;
     }
     return 1;
-}
-
-typedef struct { u8 pad[8]; u32 *f8; } O070;
-
-u32 func_00130070(O070 *o, u32 v, s32 a2, s32 a3) {
-    u32 *t;
-    u32 w;
-    u32 n, r;
-    if ((v & 0x20000000) || !(t = o->f8)) return v;
-    r = v & 0xffff;
-    w = t[r];
-    n = w & 0xfff;
-    v &= 0xffff0000;
-    if (n == 0xfff) return v | 0x200000;
-    r = n;
-    switch ((w >> 12) & 7) {
-    case 1:
-        r = n | 0x10000000;
-        break;
-    case 3:
-        if (a2) {
-            if (!((D_002C5958 >> 12) & 1) && a3) r = n + 2;
-            else r = n + 1;
-        }
-        break;
-    case 0:
-        r = n | 0x8000000;
-        break;
-    case 4:
-        if (!((D_002C5958 >> 12) & 1)) {
-            if (a3 && a2) r = n + 1;
-        }
-        break;
-    case 2:
-        break;
-    }
-    if ((w >> 15) & 1) v |= 0x4000000;
-    return r | v;
 }
 #include "data/bss_004F_mixed.h"
 #include "data/bss_004F_typed.h"

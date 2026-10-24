@@ -22,7 +22,7 @@ void func_001315c0(void *, s32, f32, void *);
 extern f32 D_002BBDFC;
 typedef struct { u8 pad[0x20]; f32 x20; f32 x24; f32 x28; u8 pad2c[0x3b0 - 0x2c]; f32 x3b0; } B4E5;
 extern u32 D_002E3190;
-extern f32 D_00551D70;
+f32 D_00551D70 ALIGNED(16);  /* moved from hand/nostrict/text_00140000_b04.c (session 53) */
 void func_0014f658(B4E5 *, s32);
 f32 func_0012ec60(struct Actor_5e178 *, s32, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
