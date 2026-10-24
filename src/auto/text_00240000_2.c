@@ -8,23 +8,9 @@ extern s32 D_0046A618;
 extern s32 D_0046A674;
 extern s32 D_0046A67C;
 extern s32 D_0046A680;
-s32 D_00652898 ALIGNED(8);
-extern s32 D_00655264;
 extern s32 D_00669A38;
 extern s32 D_00669A3C;
 extern s32 D_00669A7C;
-
-void func_00242bc0(void) {
-    D_00655264 = 1;
-}
-
-void func_00242bd0(void) {
-    D_00652898 = 0;
-}
-
-void func_00242be0(void) {
-    D_00652898 = 1;
-}
 
 s32 func_0024a488(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x88);

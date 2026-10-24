@@ -4,7 +4,6 @@
 #include "data/bss_0066.h"
 
 M2C_UNK func_00149c80(u16, M2C_UNK *);
-M2C_UNK func_002401f0(s32, s32);
 M2C_UNK func_0024a588(void *, void *);
 M2C_UNK func_0024b7a0(s32, s32, M2C_UNK);
 M2C_UNK func_0024e0f0();
@@ -22,60 +21,9 @@ extern s32 D_00669A3C;
 extern u32 D_002C5AD8;
 extern u32 D_002C5AE0;
 extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
-s32 func_0023feb8();
-s32 func_0023ff38(void *, s32);
-s32 func_00240170();
 s32 func_0024b778();
 s32 func_0024f4f0(s32);
 s32 func_0026aaa0();
-void *func_00240910();
-
-s32 func_00240118(void *arg0, s32 arg1) {
-    if (*M2C_FIELD(arg0, f32 **, 0xA88) != 0.0f) {
-        return func_0023ff38(arg0, func_0023feb8());
-    }
-    return arg1;
-}
-
-void func_002403d0(s32 arg0) {
-    func_002401f0(arg0, func_00240170());
-}
-
-void func_00240978(void) {
-    void *temp_v0;
-
-    temp_v0 = func_00240910();
-    if ((temp_v0 != NULL) && (M2C_FIELD(temp_v0, s32 *, 0x9D0) == 0)) {
-        M2C_FIELD(temp_v0, s32 *, 0x9D0) = 1;
-    }
-}
-
-void func_002409b0(void) {
-    void *temp_v0;
-
-    temp_v0 = func_00240910();
-    if (temp_v0 != NULL) {
-        M2C_FIELD(temp_v0, s32 *, 0x9D4) = 1;
-    }
-}
-
-void func_00242b00(void) {
-    void *temp_v0;
-
-    temp_v0 = func_00240910();
-    if ((temp_v0 != NULL) && (M2C_FIELD(temp_v0, s32 *, 0x770) == 0)) {
-        M2C_FIELD(temp_v0, s32 *, 0x770) = 1;
-    }
-}
-
-void func_00242b38(void) {
-    void *temp_v0;
-
-    temp_v0 = func_00240910();
-    if (temp_v0 != NULL) {
-        M2C_FIELD(temp_v0, s32 *, 0x774) = 1;
-    }
-}
 
 s32 func_0024a1c0(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x74);

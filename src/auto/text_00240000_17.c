@@ -1,18 +1,8 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-#include "data/pieces/D_00426850.h"
 extern M2C_UNK D_00469FC8[];
-s32 func_0023d700(s32, s32, s32, s32, s32, f32);
 s32 memcpy(s32, s32, s32);
-
-s32 func_00240ae0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
-    if (!(M2C_FIELD(arg0, s32 *, 0x250) != 0)) {
-        return arg3;
-    }
-    return func_0023d700(M2C_FIELD(arg0, s32 *, 0), (s32) &D_00426850, arg1, arg2, arg3, fparg0);
-    return arg3;
-}
 
 s32 func_0024b0c8(s32 arg0, s32 arg1, s32 arg2) {
     u32 wide;

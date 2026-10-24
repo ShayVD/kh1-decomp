@@ -1,39 +1,6 @@
 #include "common.h"
 #include "data/pieces/D_002C5968.h"
 /* 241948 */
-typedef struct {
-    u8 pad[0x9C];
-    void *unk9C;
-    u8 padA0[0xA30 - 0xA0];
-    s32 unkA30;
-    u8 padA34[0xD00 - 0xA34];
-} Ent;
-typedef struct {
-    s32 used[8];
-    Ent ent[5];
-} G;
-extern G D_00651E50;
-extern s32 D_00454810, D_00454814, D_00454818;
-void func_002407b0(Ent *, s32);
-void func_00241948(s32 i, s32 k) {
-
-    Ent *e; s32 on = D_00651E50.used[i]; e = &D_00651E50.ent[i];
-    if (e->unk9C != 0) return;
-    switch (k) {
-    case 0:
-        func_002407b0(e, 2);
-        e->unkA30 = D_00454810;
-        break;
-    case 1:
-        func_002407b0(e, 3);
-        e->unkA30 = D_00454814;
-        break;
-    case 2:
-        func_002407b0(e, 4);
-        e->unkA30 = D_00454818;
-        break;
-    }
-}
 
 /* 2433e8 */
 
