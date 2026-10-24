@@ -34,9 +34,10 @@ typedef struct PppClass {
     void *frame;  /* +0x04 */
     void *fn08;   /* +0x08: never set */
     void *draw;   /* +0x0C */
-    void *fn10;   /* +0x10: never set */
-    void *fn14;   /* +0x14: returns a float (3 classes) */
-    void *fn18;   /* +0x18: pppKeAcmSolid only */
+    void *fn10;   /* +0x10: never set (func_001822f8 calls it) */
+    void *fn14;   /* +0x14: 3 classes, all take nothing and return nothing
+                   * (func_00182368 passes the system: harmless) */
+    void *fn18;   /* +0x18: pppKeAcmSolid only, empty (func_001823d8) */
     void *con;    /* +0x1C */
     void *reset;  /* +0x20 */
     void *des;    /* +0x24 */

@@ -5,10 +5,12 @@
     python3 -I tests/host/fake_disc.py OUT.iso
     KH1_HOST_ISO=OUT.iso KH1_HOST_TRACE=1 out/host/kh1-host
 
-Root directory: SYSTEM.CNF (a BOOT2 line), KINGDOM.IDX (one entry: the
-"kingdom.img" name, hashed like func_001200f8, pointing at a few zero
-sectors after it, relative to SYSTEM.CNF as the game reads them) and a
-DIR\\FILE.BIN to test a path search. It tests the search and the read, not the
+Root directory: SYSTEM.CNF (a BOOT2 line), KINGDOM.IDX (two entries, sorted
+by hash: the "kingdom.img" name, hashed like func_001200f8, pointing at a few
+zero sectors after it, relative to SYSTEM.CNF as the game reads them, and a
+one-sector "dktitle.x" that is not code, which the boot loads through the
+loader thread before it calls the overlay) and a DIR\\FILE.BIN to test a path
+search. It tests the search and the read, not the
 game: the real run needs the user's own disc.
 """
 import struct
@@ -56,12 +58,15 @@ def main():
     out = sys.argv[1]
     root, sub, cnf, idx, fbin, img = 19, 20, 21, 22, 23, 24
     cnf_data = b"BOOT2 = cdrom0:\\SLPS_251.98;1\r\nVER = 1.00\r\nVMODE = NTSC\r\n"
-    idx_data = struct.pack("<4I", kh_hash("kingdom.img"), 0, img - cnf, 4 * S) + bytes(16)
+    ovl = img + 4
+    ents = sorted([(kh_hash("kingdom.img"), 0, img - cnf, 4 * S),
+                   (kh_hash("dktitle.x"), 0, ovl - cnf, S)])
+    idx_data = b"".join(struct.pack("<4I", *e) for e in ents) + bytes(16)
     fbin_data = b"kh1-host fake disc\n"
     sectors = [bytes(S)] * 16
     pvd = bytearray(S)
     pvd[0:7] = b"\x01CD001\x01"
-    pvd[80:88] = both32(img + 4)
+    pvd[80:88] = both32(ovl + 1)
     pvd[120:124] = both16(1)
     pvd[124:128] = both16(1)
     pvd[128:132] = both16(S)
@@ -76,6 +81,7 @@ def main():
     for d in (cnf_data, idx_data, fbin_data):
         sectors.append(d.ljust(S, b"\0"))
     sectors += [bytes(S)] * 4
+    sectors.append(b"kh1-host fake dktitle.x: not code\n".ljust(S, b"\0"))
     open(out, "wb").write(b"".join(sectors))
     print("%s: %d sectors" % (out, len(sectors)))
 

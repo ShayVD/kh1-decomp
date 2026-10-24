@@ -876,11 +876,12 @@ void func_00182270(void) {
 }
 
 /* func_001822f8 (from hand/text_00180000_h12.c). */
+/* The system's mods are the program's class list: func_00182c10 sets mods to
+ * the words after the count at the program's +0x8 offset, the same words
+ * pppRelocProgram turns from class ids into &D_00370200[id]. So fn[4..6] are
+ * PppClass fn10 / fn14 / fn18 (include/ppp.h). */
 typedef struct PppSys PppSys;
 typedef void (*PppSysFn)(PppSys *);
-typedef struct {
-    void *fn[8];
-} PppModule;
 typedef struct {
     u8 pad[0x9C];
     u8 unk9C;
@@ -903,7 +904,7 @@ struct PppSys {
     s32 nslot;         /* +0x68 */
     u8 pad6C[8];
     s32 unk74;         /* +0x74 */
-    PppModule **mods;  /* +0x78 */
+    PppClass **mods;   /* +0x78: &D_00370200[id], pppRelocProgram */
     s32 pad7C;
     PppSlotE *slots;   /* +0x80 */
     u8 unk84;          /* +0x84 */
@@ -915,7 +916,7 @@ void func_001822f8(PppSys *s) {
     s32 i;
 
     for (i = 0; i < s->nmod; i++) {
-        PppSysFn fn = (PppSysFn) s->mods[i]->fn[4];
+        PppSysFn fn = (PppSysFn) s->mods[i]->fn10;
         if (fn)
             fn(s);
     }
@@ -926,7 +927,7 @@ void func_00182368(PppSys *s) {
     s32 i;
 
     for (i = 0; i < s->nmod; i++) {
-        PppSysFn fn = (PppSysFn) s->mods[i]->fn[5];
+        PppSysFn fn = (PppSysFn) s->mods[i]->fn14;
         if (fn)
             fn(s);
     }
@@ -937,7 +938,7 @@ void func_001823d8(PppSys *s) {
     s32 i;
 
     for (i = 0; i < s->nmod; i++) {
-        PppSysFn fn = (PppSysFn) s->mods[i]->fn[6];
+        PppSysFn fn = (PppSysFn) s->mods[i]->fn18;
         if (fn)
             fn(s);
     }
