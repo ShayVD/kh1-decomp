@@ -71,6 +71,14 @@ static __inline__ kh1_s128 kh1_q(unsigned long long v) {
 #define CONTEXT_ONLY __attribute__((weak))
 #endif
 
+/* A local pinned to an EE register (`register f32 k KH1_REG("$f0");`), which
+ * some matches need for register allocation; off the EE a plain local. */
+#ifdef KH1_PS2
+#define KH1_REG(r) __asm__(r)
+#else
+#define KH1_REG(r)
+#endif
+
 /* Alignment of a variable defined in C (phase 4): DMA packets and VU data need
  * 16 bytes (qword), wherever the shiftable build puts them. */
 #define ALIGNED(n) __attribute__((aligned(n)))

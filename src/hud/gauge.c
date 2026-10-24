@@ -87,7 +87,7 @@ s32 func_0023d1e0(f32 x) {
 
 void func_0023d528(Gauge *o, s32 *p1, s32 *p2) {
     s32 r[2];
-    register T16 *t asm("$5");
+    register T16 *t KH1_REG("$5");
     switch (o->unk0) {
     case 0:
         t = D_00454650;

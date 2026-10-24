@@ -114,9 +114,9 @@ typedef struct {
 
 s32 func_001a9c30(W8Dtt *d) {
     s32 buf[4];
-    register W8Dtt *p asm("$6") = d;
-    register u8 *q asm("$4") = p->p24;
-    register s32 r asm("$5");
+    register W8Dtt *p KH1_REG("$6") = d;
+    register u8 *q KH1_REG("$4") = p->p24;
+    register s32 r KH1_REG("$5");
 
     __asm__ volatile(
         ".set noreorder\n"

@@ -1094,7 +1094,7 @@ typedef struct H39Sys {
     u64 flags;         /* +0xB0 */
 } H39Sys;
 void pppStepPrograms(void);
-#define D_00615E60 ((H39Sys *) D_00615E60)
+#define D_00615E60 (*(H39Sys **)&D_00615E60)
 s32 func_00183878(H39Sys *s) {
     s32 t;
 
@@ -1120,7 +1120,7 @@ s32 func_00183878(H39Sys *s) {
 #undef D_00615E60
 
 /* func_00183958 (from hand/text_00180000_h12.c). */
-#define D_00615E60 ((PppSys *) D_00615E60)
+#define D_00615E60 (*(PppSys **)&D_00615E60)
 s32 func_00183958(PppSys *s) {
     s32 t;
 

@@ -7,7 +7,7 @@
  *
  * func_001f18e8 (session 18, s18m1, from s11w52's 2-word draft) keeps a dead
  * FP test after the second call, and the 63 header constant is a local
- * register variable `register u64 k3 asm("$3")` (plain C, no inline asm).
+ * register variable `register u64 k3 KH1_REG("$3")` (plain C, no inline asm).
  * With k3 pinned to v1, `k3 = 63;` can be set right after the d[0] store
  * (li 63 born early, so sched2 issues it in the slot after li 0xeeee as in
  * the original) without local-alloc moving it to t0; `d[9] = 1;` written
@@ -354,7 +354,7 @@ Q *func_001f18e8(Q *p, s32 a1, s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val,
     u8 f7;
     s32 i;
     u64 k4, k5, k6, k7;
-    u64 kk; register u64 k3 asm("$3");
+    u64 kk; register u64 k3 KH1_REG("$3");
     u64 cl;
 
     neg = 0;

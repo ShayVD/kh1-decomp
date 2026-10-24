@@ -8,7 +8,7 @@
  * func_0021e120: MATCHED (session 19, s19m1). From s18m1's 3w pinned basin
  * (nonmatchings/session18/s18m1__0021e120_3w.c: 66 in t0 and 68 in a0 as local
  * register variables). The 63 and 0x2006D0059D30B600 header constants are
- * pinned too, to a2/a3 (`register u64 k5 asm("$6"), k6 asm("$7")`): the
+ * pinned too, to a2/a3 (`register u64 k5 KH1_REG("$6"), k6 KH1_REG("$7")`): the
  * a2/a3/t0 argument moves of the 2nd func_0011fbb0 call then share an output
  * dependence on a pinned header set, so they keep source order. `p[0] = k0;`
  * after the k6 set came from an exhaustive two-line position search.
@@ -92,7 +92,7 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
     s32 cx, cy, X, Y;
     u32 c;
     f32 fx, fy, sx, sy;
-    register u64 k66 asm("$8"); register u64 k68 asm("$4"); register u64 k6 asm("$7"); register u64 k5 asm("$6");
+    register u64 k66 KH1_REG("$8"); register u64 k68 KH1_REG("$4"); register u64 k6 KH1_REG("$7"); register u64 k5 KH1_REG("$6");
     u64 t1, k0, k2, k3, k7, k8, k9, k10, k11, k12, k13;
     s32 nx, ny, nx2, ny2;
     func_00205618(o, x, y, 64, 64, D_003F5E00[D_0064324C].a);

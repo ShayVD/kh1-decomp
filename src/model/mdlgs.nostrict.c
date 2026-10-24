@@ -93,7 +93,7 @@ void func_0011efa8(void *, void *, s32, s32);
 s32 func_0015eea0();
 extern GsBuf D_00551D90_0015ec68[] __asm__("D_00551D90");
 #define D_00551D90 D_00551D90_0015ec68
-#define D_00559DB0 ((GsBuf *) D_00559DB0)
+#define D_00559DB0 (*(GsBuf **)&D_00559DB0)
 void func_0015ec68(void) {
     s32 i;
     for (i = 0; i < 2; i++) {
@@ -428,7 +428,7 @@ typedef struct { u16 qwc; u8 b2; u8 id; u32 addr; u32 pad[2]; } DT59;
 typedef struct { DT59 dma; GT59 tag; AD59 ad[4]; GT59 img; DT59 ref; } Pk59;
 typedef struct { u8 x0, x1; u8 pad[2]; u16 w, h; } Img59;
 typedef struct { u8 pad[4]; u8 n; u8 pad5[3]; u32 data[4]; Img59 *img[4]; } Src59;
-#define D_0055C648 ((Pk59 *) D_0055C648)
+#define D_0055C648 (*(Pk59 **)&D_0055C648)
 void func_0015f8c8(Src59 *s, s32 k) {
     s32 i;
     for (i = 0; i < (s->n & 7); i++) {
@@ -455,7 +455,7 @@ void func_0015f8c8(Src59 *s, s32 k) {
 
 /* func_0015fa20 (from hand/nostrict/text_00150000_h59.c). */
 typedef struct { u16 n; u8 pad2[2]; u16 w, h; u32 data; u32 clut; } Tex59;
-#define D_0055C648 ((Pk59 *) D_0055C648)
+#define D_0055C648 (*(Pk59 **)&D_0055C648)
 void func_0015fa20(Tex59 *t) {
     PlatSync();
     D_0055C648 = (Pk59 *)((u32)D_00573AC0 | 0x20000000);

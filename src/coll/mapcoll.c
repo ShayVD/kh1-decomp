@@ -466,8 +466,8 @@ void func_00115940(s32 id) {
     Tri25 *t = &D_002A6238[id];
     u16 *q = &t->v[0];
     Vtx25 *p0, *p1, *p2, *p3;
-    register s32 r asm("$2");
-    register s32 r2 asm("$3");
+    register s32 r KH1_REG("$2");
+    register s32 r2 KH1_REG("$3");
     p0 = &((Vec3_2a624c *)D_002A624C)[*q++];
     p1 = &((Vec3_2a624c *)D_002A624C)[*q++];
     p2 = &((Vec3_2a624c *)D_002A624C)[*q++];

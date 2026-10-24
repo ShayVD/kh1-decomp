@@ -598,7 +598,7 @@ void func_0011d768(s32);
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
 #define D_00362660 (*(V4 (*)) &D_00362660)
-#define D_00575890 ((u32 ) D_00575890)
+#define D_00575890 (*(u32 *)&D_00575890)
 #define D_002C5BB0 (*(PadC4 (*)) &D_002C5BB0)
 #define func_001779e8 ((void (*)(V4 *, V4 *, f32)) func_001779e8)
 void func_00178ef8(void) {
@@ -893,7 +893,7 @@ typedef struct {
     u8 pad0[0x10]; V4 x10; u8 pad20[0x10]; V4 x30; u8 pad40[0x30]; s32 x70; u8 pad74[0x34C]; V4 x3c0;
 } CamC4_79ee8;
 typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S5920;
-#define D_00575894 (*(CamC4_79ee8 * *)&D_00575894)
+#define D_00575894 (*(CamC4_79ee8 **)&D_00575894)
 #define D_00575890 (*(u32 *)&D_00575890)
 extern V4 D_00362530;
 extern V4 D_00362540;

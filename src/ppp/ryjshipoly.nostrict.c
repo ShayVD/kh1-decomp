@@ -22,7 +22,7 @@ typedef kh1_s128 u128;
 extern u128 D_00372710;
 void func_001996d0(u128 *a, s32 n, u128 *b) {
     u128 buf[32];
-    register u128 *c asm("$2") = &D_00372710;
+    register u128 *c KH1_REG("$2") = &D_00372710;
 
     __asm__ volatile(
         ".set noreorder\n"
@@ -645,7 +645,7 @@ void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {
 extern u128 D_00372730;
 void func_0019a828(u128 *a, s32 n, u128 *b) {
     u128 buf[128];
-    register u128 *c asm("$2") = &D_00372730;
+    register u128 *c KH1_REG("$2") = &D_00372730;
 
     __asm__ volatile(
         ".set noreorder\n"
