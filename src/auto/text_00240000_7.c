@@ -4,8 +4,6 @@
 
 M2C_UNK free(void *);
 M2C_UNK func_00248678(M2C_UNK *, void *);
-M2C_UNK func_0024ae00(s32);
-M2C_UNK func_0024af00(s32);
 M2C_UNK func_0024b1f0();
 M2C_UNK func_0024b228(M2C_UNK, s32, s32, s32);
 M2C_UNK func_0024b448(M2C_UNK);
@@ -42,13 +40,6 @@ void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00246ea8(s32 arg0, s32 arg1) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-    }
-    func_0024af00(arg1);
 }
 
 void func_00247408(s32 arg0, s32 arg1) {

@@ -1,5 +1,4 @@
 #include "common.h"
-#include "data/pieces/D_0045FAC0.h"
 #include "data/bss_0066.h"
 
 /* 16-byte list entries; the D_00667F50/D_00667F54-style globals are
@@ -13,8 +12,6 @@ typedef int u128 __attribute__((mode(TI)));
 
 /* Render-packet headers set up before func_00237018 (D_00667DF0, D_006697C0). */
 typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
-typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
-typedef Fx E930;
 typedef struct { u8 r, g, b, a; } RGBA;
 typedef struct {
     s32 x0; s32 x4; u8 pad8[0x10]; s32 x18; s32 x1c; s32 x20;
@@ -59,12 +56,6 @@ typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
 extern Q4 D_00351E10[];
-Panel D_00668F90 ALIGNED(16);
-extern Q4 *D_00668F80;
-extern u8 D_0045E1F0[];
-extern u8 D_0045FA80[];
-extern u8 D_0045FA88[];
-extern u8 D_0045FA90[];
 Panel D_006691E0 ALIGNED(32);
 extern Q4 *D_006691D0;
 extern Q4 *D_006691D4;
@@ -92,15 +83,11 @@ extern s32 D_0066AAA0;
 extern void (*D_0066AA80)(void);
 s32 sprintf(char *, const char *, ...);
 u32 strlen(const char *);
-void func_0011ef10(s32, void *);
-s32 func_0011ef38(void *);
 Q4 *func_001f12c0(Q4 *, s32, s32, s32, s32, s32, s32);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 Q4 *func_002388b8(void *, s32, Q4 *);
 void func_002393d8(void);
-void func_00246ed8(s32, S70d0 *);
-void func_00247190(void);
 void func_00247b50(Ctx *);
 void func_00247bd0(Ctx *);
 void func_00247c50(Ctx *);
@@ -108,8 +95,6 @@ void func_00247cf8(Ctx *);
 void func_002480d8(Ctx *);
 s32 func_0024a1c0(void *);
 void func_0024aa48(s32, void *, s32);
-void func_0024aac8(void *);
-void func_0024af40(void *, void *, void *);
 Q4 *func_001f0638(Q4 *, s32, s32, s32, s32, s32);
 void func_00248fb8(void *, void *);
 void func_0024ae00(void *);
@@ -130,52 +115,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00246dc0(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
-    s32 i;
-    Panel *d = &D_00668F90;
-    func_0024aa48(a0, d, a1);
-    for (i = 0; i < 4; i++) { s32 *r = &d->r[i].b; r[-1] += dx << 4; r[0] += dy << 4; }
-    for (i = 0; i < 4; i++) {
-        D_00668F90.q[i].d = D_00668F90.q[i].d * s;
-    }
-    D_00668F80 = func_002388b8(&D_00668F90, 1, D_00668F80);
-}
-
-void func_002470d0(S70d0 *p) {
-    s32 r = 0;
-    switch (p->state) {
-    case 0:
-        return;
-    case 1:
-        p->state = 2;
-        r = 1;
-        break;
-    case 2:
-        if (func_0024a1c0(p->sub) & 4) p->state++;
-        break;
-    case 3:
-        p->state = 0;
-        break;
-    }
-    p->cnt++;
-    func_00246ed8(r, p);
-}
-
-void func_00247258(void) {
-    s32 i;
-    E930 *p;
-    func_0024aac8(D_0045E1F0);
-    p = D_0045FAC0;
-    for (i = 0; i < 10; i++) {
-        func_0024af40(D_0045FA80, p->a, D_0045E1F0);
-        func_0024af40(D_0045FA88, p->b, D_0045E1F0);
-        func_0024af40(D_0045FA90, p->c, D_0045E1F0);
-        p++;
-    }
-    if (func_0011ef38(func_00247190) == 0)
-        func_0011ef10(0x28489, func_00247190);
-}
 
 void func_002474e8(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
     s32 i;
