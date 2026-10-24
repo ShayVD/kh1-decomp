@@ -4,8 +4,6 @@
 #include "data/bss_0066.h"
 
 M2C_UNK func_00149c80(u16, M2C_UNK *);
-M2C_UNK func_0024b7a0(s32, s32, M2C_UNK);
-M2C_UNK func_0024e0f0();
 extern M2C_UNK D_0046A620;
 #include "data/pieces/D_0046A628.h"
 extern M2C_UNK D_0046A640;
@@ -20,17 +18,7 @@ extern s32 D_00669A3C;
 extern u32 D_002C5AD8;
 extern u32 D_002C5AE0;
 extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
-s32 func_0024b778();
-s32 func_0024f4f0(s32);
 s32 func_0026aaa0();
-
-void func_0024b760(void) {
-    func_0024e0f0();
-}
-
-void func_0024b958(s32 arg0) {
-    func_0024b7a0(arg0, func_0024f4f0(func_0024b778()), 1);
-}
 
 void func_0024ba00(s32 arg0) {
     D_00669A38 = arg0;

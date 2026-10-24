@@ -61,54 +61,9 @@ void func_0024cfa0(void *a) {
 }
 
 /* needs make: uses rodata */
-
-typedef struct { void *unk0; void *unk4; s32 unk8; u8 *unkC; u8 *unk10; u8 *unk14; s32 unk18; void *unk1C; s32 unk20; void *unk24; } Task;
-extern Task *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern void *D_00469FF8[];
 extern s32 D_00469FD8[];
 extern void *D_0046A018[];
-#include "data/pieces/D_0046A03C.h"
-#include "data/pieces/D_0046A040.h"
-#include "data/pieces/D_0046A044.h"
-extern s32 D_0046A048;
-void func_0024b1e8(const char *, const char *, s32);
-void func_0024e0a4(void);
-
-Task *func_0024b7a0(s32 grp, Task *t, void *arg) {
-    u8 *a, *b, *c;
-    s32 i, off;
-    u8 *s40;
-    s32 s48;
-    off = grp * 0x10320;
-    s40 = (u8 *)D_0046A040;
-    s48 = D_0046A048;
-    a = (u8 *)t + 40;
-    if ((u32)a & 15) a = a - ((u32)a & 15) + 16;
-    t->unkC = a;
-    for (i = 0; i < 8; i++) if (D_00669A18[i] == NULL) break;
-    if (i == 8) func_0024b1e8("i!=TASK_GRUPE_MAX", "src/sa_task.c", 257);
-    b = a + off;
-    c = b + 0x370;
-    t->unk20 = i;
-    t->unkC = a;
-    (*(u8 **)&D_0046A03C) = a;
-    t->unk10 = b;
-    D_0046A040 = (s32)b;
-    t->unk14 = c;
-    D_0046A044 = c;
-    t->unk18 = grp;
-    D_0046A048 = grp;
-    t->unk0 = D_00469FF8[i];
-    t->unk8 = D_00469FD8[i];
-    t->unk4 = D_0046A018[i];
-    t->unk24 = arg;
-    D_00669A18[i] = t;
-    t->unk1C = NULL;
-    func_0024e0a4();
-    D_0046A040 = (s32)s40;
-    D_0046A048 = s48;
-    return t;
-}
 
 typedef struct { s32 unk0; char *(*unk4)(void); s32 unk8; s32 unkC; s32 unk10; } HddCtx;
 extern HddCtx D_0046A688;
@@ -152,41 +107,4 @@ s32 func_0024db78(s32 size) {
     return D_0046A674;
 }
 
-/* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-void func_0024b508();
-void func_0024b520();
-void func_0024b538();
-void func_0024b550();
-void func_0024b568();
-void func_0024b580();
-void func_0024b598();
-void func_0024b5b0();
-void *D_00469FF8[0x8] ALIGNED(8) = {
-    (void *)func_0024b508, (void *)func_0024b520, (void *)func_0024b538, (void *)func_0024b550,
-    (void *)func_0024b568, (void *)func_0024b580, (void *)func_0024b598, (void *)func_0024b5b0,
-};
-void func_0024b2c8();
-void func_0024b2f8();
-void func_0024b328();
-void func_0024b358();
-void func_0024b388();
-void func_0024b3b8();
-void func_0024b3e8();
-void func_0024b418();
-s32 D_00469FD8[0x8] ALIGNED(8) = {
-    (s32)func_0024b2c8, (s32)func_0024b2f8, (s32)func_0024b328, (s32)func_0024b358,
-    (s32)func_0024b388, (s32)func_0024b3b8, (s32)func_0024b3e8, (s32)func_0024b418,
-};
-void func_0024b610();
-void func_0024b628();
-void func_0024b640();
-void func_0024b658();
-void func_0024b670();
-void func_0024b688();
-void func_0024b6a0();
-void func_0024b6b8();
-void *D_0046A018[0x8] ALIGNED(8) = {
-    (void *)func_0024b610, (void *)func_0024b628, (void *)func_0024b640, (void *)func_0024b658,
-    (void *)func_0024b670, (void *)func_0024b688, (void *)func_0024b6a0, (void *)func_0024b6b8,
-};
 #include "data/data_0046.h"

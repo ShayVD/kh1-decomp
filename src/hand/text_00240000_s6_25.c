@@ -1,5 +1,4 @@
 #include "common.h"
-#include "data/pieces/D_002C5968.h"
 /* 241948 */
 
 /* 2433e8 */
@@ -31,32 +30,6 @@ void func_00237018(void *, s32, s32);
 /* 24aac8 */
 
 /* 24b448 */
-extern Prm *D_0046A038;
-#include "data/pieces/D_0046A03C.h"
-#include "data/pieces/D_0046A040.h"
-#include "data/pieces/D_0046A044.h"
-extern s32 D_0046A048;
-extern Prm *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */
-void func_0024e1d0(void);
-void func_0024b448(s32 i) {
-    s32 o40, o48, t10, t18;
-    Prm *p;
-    o40 = D_0046A040;
-    o48 = D_0046A048;
-    switch ((*(volatile Sema_2c5968 *)&D_002C5968).mode) { default: return; case 0: break; }
-    p = D_00669A18[i];
-    D_0046A038 = p;
-    D_0046A03C = p->unkC;
-    t10 = p->unk10;
-    (*(s32 *)&D_0046A044) = p->unk14;
-    D_0046A040 = t10;
-    t18 = p->unk18;
-    D_0046A048 = t18;
-    p->unk1C++;
-    func_0024e1d0();
-    D_0046A040 = o40;
-    D_0046A048 = o48;
-}
 
 /* 24ba28 */
 extern s8 D_0046A070[];
@@ -94,4 +67,3 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
 #include "data/data_0046.h"
 #include "data/data_0045.h"
 #include "data/data_0049.h"
-#include "data/pieces/D_0046A038.h"

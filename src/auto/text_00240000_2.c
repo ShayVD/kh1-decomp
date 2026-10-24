@@ -12,10 +12,6 @@ extern s32 D_00669A38;
 extern s32 D_00669A3C;
 extern s32 D_00669A7C;
 
-void func_0024b1e8(void) {
-
-}
-
 s32 func_0024b9c0(void) {
     return D_00669A38;
 }
