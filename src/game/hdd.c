@@ -16,6 +16,7 @@
  * are a reading, not proved by a boot (and the HDD path needs the
  * Japanese HDD unit). */
 #include "common.h"
+#include "platform/cd.h"
 #include "platform/thread.h"
 #include "data/bss_0066.h"
 #include "data/data_0046.h"
@@ -71,7 +72,6 @@ s32 func_0025daf0(char *);
 s64 func_0025db10(s32, s32, s32);
 s32 func_0025dd48(const char *, s32, s32, s32, void *, s32);
 s32 func_0025e990(const char *);
-void func_00269960(void *, s32);
 void func_0024d808(void);
 /* hdd.nofill.c */
 void func_0024d618(void *);
@@ -127,7 +127,7 @@ void func_0024d808(void) {
     tp.stack = D_00669A80;
     tp.initial_priority = 1;
     PlatStartThread(PlatCreateThread(&tp), (void *) sema);
-    func_00269960(func_0024d7b0, sema);
+    PlatCdPOffCallback(func_0024d7b0, sema);
 }
 
 char *func_0024d8a0(void) {

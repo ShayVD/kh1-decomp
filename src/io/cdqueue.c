@@ -12,6 +12,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/cd.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h30.h"
@@ -42,15 +43,11 @@ void func_0011fd40(void) {
 
 /* func_0011fd60 (from hand/text_00110000_h30.c). */
 extern u8 D_002C5C38[];
-s32 sceCdDiskReady(s32);
-s32 sceCdRead(u32, u32, void *, void *);
-s32 func_00269fd0(s32);
-s32 func_0026aaa0(void);
 void func_0011fd60(u32 lsn, u32 n, void *buf) {
     do {
-        while (sceCdDiskReady(1) != 2 || !sceCdRead(lsn, n, buf, D_002C5C38)) func_0011fd40();
-        while (func_00269fd0(1)) func_0011fd40();
-    } while (func_0026aaa0());
+        while (PlatCdDiskReady(1) != 2 || !PlatCdRead(lsn, n, buf, D_002C5C38)) func_0011fd40();
+        while (PlatCdSync(1)) func_0011fd40();
+    } while (PlatCdGetError());
 }
 
 /* func_0011fec0 (from hand/text_00110000_h30.c). */
