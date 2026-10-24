@@ -124,7 +124,7 @@ typedef struct { s32 d; E15_2cf48 *e; } P15;
 extern s32 func_00122ff8();
 extern s32 func_00122fd0(E15_2cf48 *);
 extern E15_2cf48 *func_001230a0(E15_2cf48 *);
-extern void func_00250360(void *, s32, s32, void *);
+extern void qsort(void *, s32, s32, void *);
 extern s32 func_0012cf38();
 /* func_0012cf48 only matches with its callee func_0012cd10 defined above it. */
 s32 func_0012cf48(E15_2cf48 *e, P15 *out) {
@@ -153,7 +153,7 @@ s32 func_0012cf48(E15_2cf48 *e, P15 *out) {
             }
         }
     }
-    func_00250360(out, n, 8, func_0012cf38);
+    qsort(out, n, 8, func_0012cf38);
 done:
     return n;
 }

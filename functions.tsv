@@ -856,3 +856,4 @@ sceCdGetError	0026aaa0	# hand (session 57): libcdvd in the library order; S comm
 sceCdStatus	0026ab38	# hand (session 57): libcdvd in the library order; S command 12 ("status called")
 sceCdBreak	0026abf0	# hand (session 57): libcdvd in the library order; S command 22
 sceCdPowerOff	0026aca8	# hand (session 57): libcdvd in the library order; S command 33 (int *result)
+qsort	00250360	# hand (session 57): newlib qsort.c (BSD); recursive on the smaller part, the swap macros inlined; cmdmenu / objreact sort 8-byte entries

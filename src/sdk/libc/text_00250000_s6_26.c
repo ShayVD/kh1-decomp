@@ -140,7 +140,7 @@ _Bigint *d2b(struct _reent *ptr, double _d, int *e, int *bits) {
 #undef d0
 #undef d1
 
-/* func_00250360 is newlib qsort (libc/stdlib/qsort.c, BSD); it could be named qsort. */
+/* newlib qsort (libc/stdlib/qsort.c, BSD); named in session 57. */
 #define min(a, b) (a) < (b) ? a : b
 
 #define swapcode(TYPE, parmi, parmj, n) {     \
@@ -180,7 +180,7 @@ static inline char *med3(char *a, char *b, char *c, int (*cmp)()) {
         : (cmp(b, c) > 0 ? b : (cmp(a, c) < 0 ? a : c));
 }
 
-void func_00250360(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *)) {
+void qsort(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *)) {
     char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
     int d, r, swaptype, swap_cnt;
 
@@ -246,7 +246,7 @@ loop:
     r = min(pd - pc, pn - pd - es);
     vecswap(pb, pn - r, r);
     if ((r = pb - pa) > es)
-        func_00250360(a, r / es, es, cmp);
+        qsort(a, r / es, es, cmp);
     if ((r = pd - pc) > es) {
         a = pn - r;
         n = r / es;

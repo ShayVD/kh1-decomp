@@ -254,7 +254,7 @@ Ea4 *func_00123158(Ea4 *, Ea4 *);
 s32 func_001375d8(Ea4 *);
 void func_00267530(V4f *, V4f *, V4f *);
 f32 func_00120bf8(V4f *);
-void func_00250360(void *, s32, s32, void *);
+void qsort(void *, s32, s32, void *);
 s32 func_0013a430();
 Ea4 *func_0013a440(Ea4 *o, s32 *w, f32 range, s32 lv) {
     V4f t;
@@ -278,7 +278,7 @@ Ea4 *func_0013a440(Ea4 *o, s32 *w, f32 range, s32 lv) {
         }
     }
     n = p - buf;
-    func_00250360(buf, n, 8, func_0013a430);
+    qsort(buf, n, 8, func_0013a430);
     if (n > 0) e = buf[0].e;
     v = func_00176850() * 100.0f;
     v -= w[0];
