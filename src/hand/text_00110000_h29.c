@@ -659,34 +659,6 @@ s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {
     return func_001198c8(-1, i, out) != 0;
 }
 
-extern s32 D_003044D0;
-extern u8 D_002BF250[];
-typedef struct { u32 h; s32 i; void *p; } W29Lnk;
-typedef struct { u8 pad[0x18]; u16 x18; u8 pad1a[2]; s32 x1c; W29Lnk l[1]; } W29Grp;
-s32 func_0011a728(W29Grp *, s32);
-void func_0011a410(s32);
-void *func_0011af48(s32, W29Grp *, s32, void *);
-
-void func_0011b108(W29Grp *g, s32 k) {
-    void *prev = D_002BF250;
-    s32 i;
-    for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].flags.b0 != 1 && func_0011a728(g, i)) {
-            void *r;
-            func_0011a410(i);
-            r = func_0011af48(i, g, 1, prev);
-            if (g->x18 != 0) {
-                g->x1c++;
-                g->l[k].h = g->x18;
-                g->l[k].i = i;
-                g->l[k].p = prev;
-                k++;
-            }
-            prev = r;
-        }
-    }
-}
-
 /* needs make: uses rodata */
 #include "data/pieces/D_002BCB60.h"
 void func_0013c7d8(s32);

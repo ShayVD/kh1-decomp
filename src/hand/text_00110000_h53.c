@@ -37,24 +37,6 @@ static inline void w53_add(void *d, void *a, void *b) {
         : : "r"(d), "r"(a), "r"(b) : "memory");
 }
 
-void func_0011a978(s32, s32, V53 *);
-void func_0011a9c8(s32, s32, V53 *);
-
-s32 func_0011bfc8(s32 a0, s32 a1, void *p0, void *dir, void *out) {
-    V53 n, p;
-    f32 den, t;
-    func_0011a978(a0, a1, &n);
-    den = w53_dot(&n, dir);
-    if (den >= 0.0f) return 0;
-    func_0011a9c8(a0, a1, &p);
-    t = (w53_dot(&n, &p) - w53_dot(&n, p0)) / den;
-    if (t < 0.0f) return 0;
-    if (t > 1.0f) return 0;
-    w53_scale(out, dir, t);
-    w53_add(out, out, p0);
-    return 1;
-}
-
 #include "data/types/text_00110000_h53_p2.h"
 float cosf(float);
 char D_004F7150[0x4][32] ALIGNED(16);

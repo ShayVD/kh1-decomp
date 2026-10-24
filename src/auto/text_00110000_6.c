@@ -7,7 +7,6 @@ M2C_UNK func_00115940();
 M2C_UNK func_00176388(M2C_UNK);
 M2C_UNK strcpy(s32, s32);
 extern M2C_UNK D_002BCC28[];
-extern M2C_UNK D_004E2458;
 M2C_UNK D_004E42C0[0x80] ALIGNED(64);
 extern M2C_UNK func_001129c8;
 extern s32 D_002A62F0;
@@ -16,8 +15,6 @@ extern s32 D_002B6474;
 extern s32 D_002BCDE4;
 extern s32 D_002BCDEC;
 extern s32 D_002C12C0;
-extern s32 D_003F34A4;
-extern s32 D_003F720C;
 extern s32 D_004D9320;
 extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
 extern s8 D_002BCB68;
@@ -33,7 +30,6 @@ s32 func_0011ef10(s32, s32);
 u32 func_00111b08();
 u32 func_00232cc0(M2C_UNK);
 void func_00104f10(s32, s32);
-void func_00109558(s32);
 void func_00114810(void);
 void func_00114820(void);
 void func_00115408(s32, s32, s32, s32);
@@ -42,12 +38,9 @@ void func_001178b8(s32);
 void func_00118060(s32, s32, s32, s32);
 void func_00118378(s32, s32, s32, s32);
 void func_0011a978(s32, s32, s32);
-void func_0011c5e8(void);
-void func_0011c710(void);
 void func_0011c778(void);
 void func_0011c798(void);
 void func_00122330(void);
-void func_001c07a8(void);
 #include "vm/script_vm.h"
 
 void func_00110448(s32 arg0) {
@@ -254,28 +247,6 @@ void func_00118628(s32 arg0, s32 arg1) {
 
 void func_00118648(s32 arg0) {
     func_00118060(arg0, 0xA, 1, -1);
-}
-
-s32 func_0011ab38(s32 arg0, s32 arg1) {
-    return *(M2C_UNK *)((s8 *)&D_004E2458 + (arg0 << 6)) + (arg1 * 0x14) + 0x10;
-}
-
-u8 func_0011ab60(s32 arg0, s32 arg1) {
-    return M2C_FIELD(((arg1 * 0x14) + *(M2C_UNK *)((s8 *)&D_004E2458 + (arg0 << 6))), u8 *, 0xB);
-}
-
-s32 func_0011c630(void) {
-    if (D_003F34A4 == 0) {
-        if (D_003F720C == 1) {
-            func_0011c5e8();
-            func_00109558(0xF);
-            func_001c07a8();
-            return 4;
-        }
-        func_0011c710();
-        return 4;
-    }
-    return 0;
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */

@@ -16,8 +16,6 @@ static inline void CopyQword(void *dst, void *src) {
 #include "data/pieces/D_002BD250.h"
 extern s32 D_002C12C4;
 extern s32 D_004D9370;
-extern s32 D_002BBE0C;
-extern s32 D_002C1304;
 
 /* Entry with a 4-bit kind in the high nibble of its first byte. */
 typedef struct {
@@ -49,31 +47,12 @@ typedef struct {
 } Query40;
 
 /* 20-byte record (ten halfwords) pointed to by the D_004E2450 table. */
-typedef struct {
-    u16 v[10];
-} Rec20;
-typedef struct {
-    s16 v[10];
-} Rec20s;
 
 /* 64-byte table at D_004E2430; the asm names +0x20 as D_004E2450 and +0x28
  * as D_004E2458. */
-typedef struct {
-    u128 *x0;
-    u128 *x4;
-    Rec20 *x8;
-    u8 pad[52];
-} Ent2450;
-extern Ent2450 D_004E2450[];
-typedef struct {
-    Rec20 *x0;
-    u8 pad[60];
-} Ent2458;
-extern Ent2458 D_004E2458[];
 
 /* Sound-slot table: D_004E344C entries of 24 bytes at *D_004E3450. */
 #include "data/types/text_00110000_h3.h"
-extern s32 D_004E2430[64][16];
 
 /* Strings in .rodata, referenced through their data symbols so the copies
  * stay block moves without emitting new rodata: "%3d", "amusic/music",
@@ -102,16 +81,8 @@ void func_00118378(void *, s32, s32, s32);
 s32 func_001191c8(void *, void *, s32);
 void func_001195d8(void *, void *);
 s32 func_001198c8(s32, void *, void *);
-void func_0011a978(s32, s32, u128 *);
 void func_0011b108(void *, s32);
 void func_002675a8(void *, void *);
-void func_00114820(void);
-void func_0017f678(void);
-void func_0022eb00(s32);
-void func_0011e518(void);
-void func_0011ef10(s32, void *);
-void func_0011c698(void);
-void func_0011d688(s32);
 
 /* Taking &a (an ADDRESSOF that gcc later folds away) is what keeps the
  * original from turning the call into a sibcall. */
@@ -247,55 +218,6 @@ s32 func_00119788(void *a0) {
 }
 
 /* Clear word 12 of each of the 64 table entries. */
-s32 func_0011a068(void) {
-    s32 i;
-    for (i = 0; i < 64; i++) D_004E2430[i][12] = 0;
-    return 0;
-}
-
-s32 func_0011a7c0(s32 a0, s32 a1, u16 *a2) {
-    Rec20 *t = D_004E2458[a0].x0;
-    a2[0] = t[a1].v[0];
-    a2[1] = t[a1].v[1];
-    a2[2] = t[a1].v[2];
-    a2[3] = t[a1].v[3];
-    return a2[3] == 0xffff ? 3 : 4;
-}
-
-void func_0011a818(s32 *a0, s32 *a1, u16 *a2, s32 a3) {
-    *a0 = ((Rec20s *)D_004E2458[a3].x0)[a2[0]].v[a2[1]];
-    *a1 = ((Rec20s *)D_004E2458[a3].x0)[a2[0]].v[a2[2]];
-}
-
-void func_0011a978(s32 a0, s32 a1, u128 *a2) {
-    Ent2450 *e = &D_004E2450[a0];
-    CopyQword(a2, &e->x4[((s16 *)&e->x8[a1])[4]]);
-}
-
-void func_0011a9c8(s32 a0, s32 a1, u128 *a2) {
-    Ent2450 *e = &D_004E2450[a0];
-    CopyQword(a2, &e->x0[((s16 *)&e->x8[a1])[0]]);
-}
-
-void func_0011aac8(s32 a0, f32 *a1, s32 a2) {
-    f32 *v = a1 + 4;
-    func_0011a978(a2, a0, (u128 *)v);
-    a1[8] = -v[0];
-    a1[9] = -a1[5];
-    a1[10] = -a1[6];
-    a1[11] = 1.0f;
-}
-
-void func_0011c710(void) {
-    D_002BBE0C = 0;
-    D_002C1304 = 1;
-    func_00114820();
-    func_0017f678();
-    func_0022eb00(0xffff);
-    func_0011e518();
-    func_0011ef10(30000, func_0011c698);
-    func_0011d688(120);
-}
 
 /* Claim the first inactive slot; the extra arguments pass straight through. */
 #include "data/bss_004E_typed.h"

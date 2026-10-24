@@ -4,7 +4,6 @@
 M2C_UNK func_00102a48(M2C_UNK, M2C_UNK);
 M2C_UNK func_00111340(s32, M2C_UNK);
 M2C_UNK func_0013c078();
-M2C_UNK func_002193e0(M2C_UNK);
 M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675b8(M2C_UNK *, M2C_UNK *);
 #include "data/pieces/D_002BBE20.h"
@@ -25,7 +24,6 @@ extern M2C_UNK D_004D9180; /* src/data/bss_004D.c: Mtx52 D_004D9180 */
 extern M2C_UNK D_004D91C0; /* src/data/bss_004D.c: Mtx52 D_004D91C0 */
 M2C_UNK D_004D9200[0x10] ALIGNED(64);
 extern M2C_UNK func_00113ee0;
-extern s32 D_002B6478;
 #include "data/pieces/D_002BCB60.h"
 extern s32 D_002BCC24;
 #include "data/pieces/D_002BCDA0.h"
@@ -33,7 +31,6 @@ extern s32 D_002BCDD8;
 extern s32 D_002BCDDC;
 #include "data/pieces/D_002E26A0.h"
 extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
-s32 func_002193b8();
 void *func_0011ef10(M2C_UNK, M2C_UNK *);
 
 void func_00110ba8(void) {
@@ -136,12 +133,6 @@ s32 func_001166c8(u32 *arg0) {
 
 s32 func_001166d8(u32 *arg0) {
     return ((u32) *arg0 >> 9) & 1;
-}
-
-void func_0011c5e8(void) {
-    if ((func_002193b8() == 1) && (D_002B6478 != 2)) {
-        func_002193e0(0);
-    }
 }
 #include "data/data_002B.h"
 #include "data/pieces/D_002BCC24.h"

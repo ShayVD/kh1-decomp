@@ -37,7 +37,6 @@ extern M2C_UNK D_002BCC88;
 #include "data/pieces/D_002BCCE0.h"
 extern M2C_UNK D_002BCD20;
 #include "data/pieces/D_002BCD60.h"
-#include "data/pieces/D_002BD250.h"
 extern M2C_UNK D_0048CFF8;
 extern M2C_UNK D_0048D000;
 extern M2C_UNK func_001017e8;
@@ -63,7 +62,6 @@ extern s32 D_004D92E0;
 extern volatile s32 D_002BD114;
 extern volatile s32 D_002C5AD0[];
 extern volatile s32 D_002C5BB0[];
-s32 func_0011af48(s32, s32, s32, s32);
 s32 func_0011d768(s32, f32, f32, f32, f32, f32, f32, f32, f32);
 s32 func_001559f0(M2C_UNK, M2C_UNK);
 void func_001017b8(void);
@@ -71,7 +69,6 @@ void func_00111130(void);
 void func_00113e28(s32);
 void func_00114830(void);
 void func_00118378(s32, s32, s32, s32);
-void func_0011a410(s32);
 void func_001edb48(s32);
 
 void func_00110020(s32 arg0, s32 arg1) {
@@ -261,11 +258,6 @@ void func_00118668(s32 arg0) {
 
 void func_00118688(s32 arg0, s32 arg1) {
     func_00118378(arg0, 3, 0, arg1);
-}
-
-s32 func_0011b0c0(s32 arg0, s32 arg1) {
-    func_0011a410(arg0);
-    return func_0011af48(arg0, arg1, 0, (s32) &D_002BD250);
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"

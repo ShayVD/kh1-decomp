@@ -31,51 +31,7 @@ typedef int u128 __attribute__((mode(TI)));
 static inline void CopyQword1(void *dst, void *src) {
     __asm__ volatile("lq $6, 0(%1)\nsq $6, 0(%0)\nnop" : : "r"(dst), "r"(src) : "$6");
 }
-typedef struct { s16 v[10]; } Rec20s;
-typedef struct { f32 x, y, z; } V3;
 /* 64-byte table entries at D_004E2450 (= D_004E2430 + 0x20). */
-typedef struct {
-    u128 *x0;
-    u128 *x4;
-    Rec20s *x8;
-    f32 *xc;
-    u8 pad[48];
-} Ent2450;
-extern Ent2450 D_004E2450[];
-
-s32 func_0011a868(s32 a0, s32 a1, f32 *a2) {
-    Ent2450 *e = &D_004E2450[a0];
-    V3 *b = (V3 *)e->xc;
-    V3 *p0 = (V3 *)((u32)e->x8[a1].v[0] * 12 + (u32)b);
-    V3 *p1 = (V3 *)((u32)e->x8[a1].v[1] * 12 + (u32)b);
-    V3 *p2 = (V3 *)((u32)e->x8[a1].v[2] * 12 + (u32)b);
-    V3 *p3 = (V3 *)((u32)e->x8[a1].v[3] * 12 + (u32)b);
-    a2[0] = p0->x; a2[1] = p0->y; a2[2] = p0->z; a2[3] = 1.0f;
-    a2[4] = p1->x; a2[5] = p1->y; a2[6] = p1->z; a2[7] = 1.0f;
-    a2[8] = p2->x; a2[9] = p2->y; a2[10] = p2->z; a2[11] = 1.0f;
-    if (e->x8[a1].v[3] == -1) return 3;
-    a2[12] = p3->x; a2[13] = p3->y; a2[14] = p3->z; a2[15] = 1.0f;
-    return 4;
-}
-
-s32 func_0011aa18(s32 a0, s32 a1, u128 *a2) {
-    Ent2450 *e = &D_004E2450[a0];
-    CopyQword1(&a2[0], &e->x0[e->x8[a1].v[0]]);
-    CopyQword1(&a2[1], &e->x0[e->x8[a1].v[1]]);
-    CopyQword1(&a2[2], &e->x0[e->x8[a1].v[2]]);
-    if (e->x8[a1].v[3] == -1) return 3;
-    CopyQword1(&a2[3], &e->x0[e->x8[a1].v[3]]);
-    return 4;
-}
-
-typedef struct { f32 min[4]; f32 max[4]; u8 pad[32]; } Box64;
-extern Box64 D_004E2430[];
-s32 func_0011a728(f32 *a, s32 i) {
-    if (a[3] >= D_004E2430[i].min[0] && D_004E2430[i].max[0] >= a[0] &&
-        a[4] >= D_004E2430[i].min[1] && a[1] <= D_004E2430[i].max[1] &&
-        a[5] >= D_004E2430[i].min[2] && a[2] <= D_004E2430[i].max[2]) return 1;
-    return 0;
-}
 
 s32 func_001197e0(f32 *a, f32 *b, f32 *c) {
     s32 t;
@@ -131,101 +87,10 @@ static inline f32 vdist2(void *a, void *b) {
         : "=f"(r) : "r"(a), "r"(b) : "$2");
     return r;
 }
-typedef struct { u8 pad[16]; s32 x10; } Rec20w;
-typedef struct { Rec20w *x0; u8 pad[60]; } Ent2458;
-extern Ent2458 D_004E2458[];
 /* 16-byte collision entries at D_003044D8, D_003044D0 of them. */
 #include "data/pieces/D_003044D8.h"
 typedef ColFlags_3044d8 ColFlags;
 typedef ColEnt_3044d8 ColEnt;
-extern s32 D_003044D0;
-void func_001158c8(void *);
-s32 func_0011ab88(s32, s32, void *);
-s32 func_0011bfc8(s32, s32, void *, void *, void *);
-s32 func_001198c8(s32, s32, void *);
-
-s32 func_0011c118(s32 a0, f32 *p, void *dir, void *q, f32 *out) {
-    s32 ids[32];
-    V4 hits[32];
-    V4 tmp;
-    V4 pad;
-    u8 *h;
-    u16 *list;
-    Rec20w *rec;
-    s32 i, n, best, idx;
-    f32 min, d;
-    h = D_003044D8[a0].x4;
-    h += *(s32 *)(h + 16);
-    list = (u16 *)(h + *(s32 *)(h + 32));
-    rec = D_004E2458[a0].x0;
-    func_001158c8(q);
-    n = 0;
-    for (i = 0; i < list[0]; i++) {
-        idx = list[i + 1];
-        { Rec20w *r = &rec[idx]; if (r->x10 & 0xe) continue; }
-        if (func_0011ab88(a0, idx, q) && func_0011bfc8(a0, idx, p, dir, tmp) && func_001198c8(a0, idx, tmp)) {
-            CopyQword1(hits[n], tmp);
-            ids[n] = idx;
-            n++;
-        }
-    }
-    if (n != 0) {
-        idx = 0;
-        min = 1.0e12f;
-        for (i = 0; i < n; i++) {
-            d = vdist2(p, hits[i]);
-            if (d < min) { min = d; idx = i; }
-        }
-        CopyQword1(out, hits[idx]);
-        return ids[idx];
-    }
-    return -1;
-}
-
-void func_0011a410(s32);
-s32 func_0011c338(f32 *box, f32 *p, void *dir, f32 *out, s32 mask, s32 *idout) {
-    s32 list[64];
-    V4 hits[64];
-    s32 res[64];
-    s32 i, cnt, best, id, r;
-    f32 min, d;
-    cnt = 0;
-    if (mask == -1) {
-        for (i = 0; i < D_003044D0; i++) {
-            if (D_003044D8[i].flags.b0 == 1) continue;
-            if (func_0011a728(box, i)) {
-                func_0011a410(i);
-                list[cnt++] = i;
-            }
-        }
-    } else {
-        for (i = 0; i < D_003044D0; i++) {
-            if (D_003044D8[i].flags.b0 == 1) continue;
-            if ((D_003044D8[i].flags.mask & mask) != mask) continue;
-            if (func_0011a728(box, i)) {
-                func_0011a410(i);
-                list[cnt++] = i;
-            }
-        }
-    }
-    if (cnt == 0) return -1;
-    if (cnt == 1) {
-        i = list[0];
-        r = func_0011c118(i, p, dir, box, out);
-        *idout = i;
-        return r;
-    }
-    min = 1.0e12f;
-    best = 0;
-    for (i = 0; i < cnt; i++) {
-        res[i] = func_0011c118(list[i], p, dir, box, hits[i]);
-        d = vdist2(p, hits[i]);
-        if (d < min) { min = d; best = i; }
-    }
-    CopyQword1(out, hits[best]);
-    *idout = list[best];
-    return res[best];
-}
 
 typedef struct { f32 mn[3]; f32 mx[3]; s16 cnt; u8 pad[6]; } Qry;
 typedef struct { V4 x0; V4 x10; f32 x20; u8 pad24[12]; V4 x30; } Mov;
@@ -321,105 +186,6 @@ static inline void vapply(void *d, void *m, void *v) {
         "sqc2 $vf9, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(m), "r"(v) : "memory");
-}
-typedef struct { V4 x0; V4 mn; V4 mx; V4 c[8]; } BoxWork;
-void *func_00122048(s32, s32);
-void func_001220b8(void *);
-void func_0011a0a0(void) {
-    BoxWork *w;
-    s32 i, j, k;
-    u8 *h;
-    f32 mn, mx, v;
-    w = func_00122048(176, 4);
-    w->x0[3] = w->mn[3] = w->mx[3] = w->c[0][3] = w->c[1][3] = w->c[2][3] = w->c[3][3] = w->c[4][3] = w->c[5][3] = w->c[6][3] = w->c[7][3] = 1.0f;
-    for (i = 0; i < D_003044D0; i++) {
-        h = D_003044D8[i].x4;
-        h += *(s32 *)(h + 16);
-        h += *(s32 *)h;
-        w->mn[0] = ((f32 *)h)[0];
-        w->mn[1] = ((f32 *)h)[1];
-        w->mn[2] = ((f32 *)h)[2];
-        w->mx[0] = ((f32 *)h)[4];
-        w->mx[1] = ((f32 *)h)[5];
-        w->mx[2] = ((f32 *)h)[6];
-        w->c[0][0] = w->mn[0]; w->c[0][1] = w->mn[1]; w->c[0][2] = w->mn[2];
-        w->c[1][0] = w->mx[0]; w->c[1][1] = w->mn[1]; w->c[1][2] = w->mn[2];
-        w->c[2][0] = w->mn[0]; w->c[2][1] = w->mx[1]; w->c[2][2] = w->mn[2];
-        w->c[3][0] = w->mx[0]; w->c[3][1] = w->mx[1]; w->c[3][2] = w->mn[2];
-        w->c[4][0] = w->mn[0]; w->c[4][1] = w->mn[1]; w->c[4][2] = w->mx[2];
-        w->c[5][0] = w->mx[0]; w->c[5][1] = w->mn[1]; w->c[5][2] = w->mx[2];
-        w->c[6][0] = w->mn[0]; w->c[6][1] = w->mx[1]; w->c[6][2] = w->mx[2];
-        w->c[7][0] = w->mx[0]; w->c[7][1] = w->mx[1]; w->c[7][2] = w->mx[2];
-        vapply(w->c[0], (f32 *)D_003044D8[i].x0, w->c[0]);
-        vapply(w->c[1], (f32 *)D_003044D8[i].x0, w->c[1]);
-        vapply(w->c[2], (f32 *)D_003044D8[i].x0, w->c[2]);
-        vapply(w->c[3], (f32 *)D_003044D8[i].x0, w->c[3]);
-        vapply(w->c[4], (f32 *)D_003044D8[i].x0, w->c[4]);
-        vapply(w->c[5], (f32 *)D_003044D8[i].x0, w->c[5]);
-        vapply(w->c[6], (f32 *)D_003044D8[i].x0, w->c[6]);
-        vapply(w->c[7], (f32 *)D_003044D8[i].x0, w->c[7]);
-        for (j = 0; j < 3; j++) {
-            mn = mx = w->c[0][j];
-            for (k = 1; k < 8; k++) {
-                v = w->c[k][j];
-                if (v < mn) mn = v;
-                if (mx < v) mx = v;
-            }
-            D_004E2430[i].min[j] = mn;
-            D_004E2430[i].max[j] = mx;
-        }
-    }
-    func_001220b8(w);
-}
-
-#include "data/pieces/D_002C1300.h"
-void func_00116690(void);
-void func_001166a0(void);
-void func_001166b0(void);
-void func_001166c0(void);
-void func_001166c8(void);
-void func_001166d8(void);
-u64 func_0011b220(s32, f32 *, f32 *, s32, f32);
-u64 func_0011b6a0(ColObj *o, f32 *pos, s32 a2) {
-    f32 box[6];
-    f32 box2[6];
-    f32 r, g, y;
-    s32 i;
-    u64 res;
-    switch (o->flags & 0x7c) {
-    case 4: (*(void **)&D_002C1300) = func_00116690; break;
-    case 16: (*(void **)&D_002C1300) = func_001166a0; break;
-    case 8: (*(void **)&D_002C1300) = func_001166b0; break;
-    case 32: (*(void **)&D_002C1300) = func_001166c0; break;
-    case 64: (*(void **)&D_002C1300) = func_001166c8; break;
-    default: (*(void **)&D_002C1300) = func_001166d8; break;
-    }
-    r = D_002C1250 + o->r * 0.5f;
-    res = 0;
-    for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].flags.b0 == 1) continue;
-        y = pos[1] - o->h;
-        g = D_002C1250;
-        box[0] = pos[0] - g;
-        box[2] = pos[2] - g;
-        box[1] = y - g;
-        box[3] = pos[0] + g;
-        box[5] = pos[2] + g;
-        box[4] = y + g;
-        if (func_0011a728(box, i)) {
-            func_0011a410(i);
-            box2[0] = pos[0] - r;
-            box2[3] = pos[0] + r;
-            pos[1] = pos[1] - o->h;
-            box2[2] = pos[2] - r;
-            box2[5] = pos[2] + r;
-            box2[4] = pos[1] + r;
-            box2[1] = pos[1] - r;
-            res |= func_0011b220(i, pos, box2, a2, o->r);
-            pos[1] = pos[1] + o->h;
-        }
-    }
-    return res;
 }
 
 #include "data/bss_004E_mixed.h"

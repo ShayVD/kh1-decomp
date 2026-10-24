@@ -206,7 +206,6 @@ void func_00114c18(Ent52 *o, s32 idx, s32 col) {
 typedef f32 V4_52[4] __attribute__((aligned(16)));
 #include "data/pieces/D_002A6238.h"
 typedef PlaneBits_2a6238 Bf52;
-typedef Ent20_2a6238 Plane52;
 void func_00104eb0(s32, V4_52);
 void func_00104f10(s32, V4_52);
 s32 func_00104ae0(s32, V4_52 *);
@@ -669,176 +668,13 @@ s32 func_00118b58(Probe52 *o) {
     func_00104528();
     return 0;
 }
-
-typedef struct { Plane52 *tbl; u8 pad[60]; } Grp52;
-extern Grp52 D_004E2458[];
 #include "data/types/text_00110000_h52_p2.h"
-#include "data/pieces/D_003044DC.h"
-typedef struct { u8 pad[0x18]; s16 cnt; } Qry52;
-void func_001158c8(Qry52 *);
-s32 func_0011ab88(s32, s32, Qry52 *);
-
-s32 *func_0011af48(s32 g, Qry52 *q, s32 mode, s32 *out) {
-    Mdl52 *m;
-    u16 *list;
-    Plane52 *tbl;
-    s32 cnt, i, id;
-    cnt = 0;
-    m = D_003044DC[g].m;
-    tbl = D_004E2458[g].tbl;
-    m = (Mdl52 *)((u8 *)m + m->x10);
-    list = (u16 *)((u8 *)m + m->x20);
-    func_001158c8(q);
-    for (i = 0; i < list[0]; i++) {
-        u32 *w;
-        id = list[i + 1];
-        w = &tbl[id].f.w;
-        switch (mode) {
-        case 0:
-            if (!(*w & 0x106) && func_0011ab88(g, id, q)) {
-                out[cnt] = id;
-                cnt++;
-            }
-            break;
-        case 1:
-            if ((*w & 0x406) == 0x400 && func_0011ab88(g, id, q)) {
-                out[cnt] = id;
-                cnt++;
-            }
-            break;
-        }
-    }
-    q->cnt = cnt;
-    return out + cnt;
-}
-
-void func_0011a9c8(s32, s32, f32 *);
-void func_0011a978(s32, s32, f32 *);
-void func_0011aa18(s32, s32, V4_52 *);
-
-void func_0011b9f8(s32 g, s32 id, f32 *p, f32 *out) {
-    V4_52 a, n, e1, e2, tri[4];
-    f32 d;
-    func_0011a9c8(g, id, a);
-    func_0011a978(g, id, n);
-    d = v52_dot(n, a);
-    if (fabsf(n[1]) > 0.09999999776f) {
-        *out = (d - (n[0] * p[0] + n[2] * p[2])) / n[1];
-        return;
-    }
-    func_0011aa18(g, id, tri);
-    v52_sub(e1, tri[0], tri[1]);
-    v52_sub(e2, tri[2], tri[1]);
-    v52_cross(n, e1, e2);
-    v52_normalize(n, n);
-    d = v52_dot(n, a);
-    if (n[1] != 0.0f) {
-        *out = (d - (n[0] * p[0] + n[2] * p[2])) / n[1];
-    } else {
-        *out = 1000000.0f;
-    }
-}
-
-extern s32 D_002BC128;
-extern s32 D_002BC130;
-#include "data/pieces/D_002C1300.h"
-typedef struct { f32 x0, x4; u8 pad8[0x1c]; f32 x24; } Obj52;
-s32 func_0011b908(s32, s32, f32 *);
-
-s32 func_0011bbe8(Obj52 *o, f32 *p, s32 g, f32 *out) {
-    s32 ids[512];
-    f32 h[2];
-    Mdl52 *m;
-    u16 *list;
-    s32 best, cnt, i, id;
-    Plane52 *tbl;
-    f32 e, dy;
-    *out = 1000000.0f;
-    best = -1;
-    cnt = 0;
-    m = D_003044DC[g].m;
-    tbl = D_004E2458[g].tbl;
-    m = (Mdl52 *)((u8 *)m + m->x10);
-    list = (u16 *)((u8 *)m + m->x20);
-    for (i = 0; i < list[0]; i++) {
-        Bf52 *w;
-        id = list[i + 1];
-        w = &tbl[id].f.p;
-        if (D_002BC128 == 10 && D_002BC130 == 7 && D_002C1300(w)) break;
-        if (func_0011b908(g, id, p)) {
-            ids[cnt] = id;
-            cnt++;
-        }
-    }
-    e = *out;
-    for (i = 0; i < cnt; i++) {
-        func_0011b9f8(g, ids[i], p, &h[1]);
-        dy = fabsf(o->x4 - h[1]);
-        if (dy < e) {
-            if (h[1] < p[1] - o->x24) {
-                if (dy < o->x24) {
-                    e = dy;
-                    *out = h[1];
-                    best = ids[i];
-                }
-            } else {
-                e = dy;
-                *out = h[1];
-                best = ids[i];
-            }
-        }
-    }
-    return best;
-}
-
-#include "data/pieces/D_003044D8.h"
-extern s32 D_003044D0;
-s32 func_0011a728(void *, s32);
-void func_0011a410(s32);
-
-s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
-    Box52 bx;
-    s32 gs[64];
-    f32 hs[64];
-    s32 rs[64];
-    s32 i, n, bi;
-    f32 best;
-    n = 0;
-    bx.mn[0] = p[0];
-    bx.mn[2] = p[2];
-    bx.mx[0] = p[0];
-    bx.mx[2] = p[2];
-    bx.mn[1] = p[1] - o->x24;
-    bx.mx[1] = p[1] + 1000000.0f;
-    for (i = 0; i < D_003044D0; i++) {
-        if (D_003044D8[i].flags.b0 == 1) continue;
-        if (func_0011a728(&bx, i)) {
-            func_0011a410(i);
-            gs[n] = i;
-            n++;
-        }
-    }
-    if (n == 0) return -1;
-    best = 1000000.0f;
-    bi = 0;
-    for (i = 0; i < n; i++) {
-        rs[i] = func_0011bbe8(o, p, gs[i], &hs[i]);
-        if (hs[i] < best) {
-            best = hs[i];
-            bi = i;
-        }
-    }
-    *out = best;
-    *og = gs[bi];
-    return rs[bi];
-}
 #include "data/bss_004D_typed.h"
 #include "data/data_002A.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"
 #include "data/data_0030.h"
 #include "data/pieces/D_0046E120.h"
-#include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_002BCC24.h"
 #include "data/pieces/D_002BD114.h"
 #include "data/pieces/D_002C1308.h"

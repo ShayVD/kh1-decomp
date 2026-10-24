@@ -6,10 +6,6 @@ typedef struct { s32 x0, x4, x8; } Slot12;
 #include "data/types/text_00110000_h30.h"
 Slot12 D_004E3818[0x28] ALIGNED(8);
 
-extern s32 D_002BD150[];
-extern s32 D_002BD160[];
-s32 func_0011aa18(s32, s32, V4 *);
-
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
@@ -30,23 +26,6 @@ static inline void vcross(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
-}
-
-s32 func_0011b908(s32 a0, s32 a1, f32 *a2) {
-    V4 e, f, c;
-    V4 pts[4];
-    s32 i;
-    s32 *idx;
-    s32 n = func_0011aa18(a0, a1, pts);
-    if (n == 3) idx = D_002BD150;
-    else idx = D_002BD160;
-    for (i = 0; i < n; i++) {
-        vsubv(e, pts[idx[i]], pts[i]);
-        vsubv(f, a2, pts[i]);
-        vcross(c, e, f);
-        if (c[1] < 0.0f) return 0;
-    }
-    return 1;
 }
 
 static inline f32 vdist(void *a, void *b) {
