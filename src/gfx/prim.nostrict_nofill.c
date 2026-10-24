@@ -6,7 +6,7 @@
 #include "common.h"
 #include "gfx/gspkt.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_002386c0(u128 *src, s32 n, u128 *buf) {
     s32 k = 2;
@@ -22,7 +22,7 @@ void func_002386c0(u128 *src, s32 n, u128 *buf) {
         d[4] = src[i * 6 + 4];
         d[5] = src[i * 6 + 5];
     }
-    buf[1] = 0;
+    buf[1] = KH1_Q(0);
     ((u64 *)&buf[1])[1] = 0x43413E;
     t = n | 0x8000;
     t |= (u64)0x60AB4000 << 32;
@@ -37,7 +37,7 @@ u128 *func_002388b8(u128 *src, s32 n, u128 *buf) {
     u64 *e;
     s32 i;
     u64 t;
-    buf[0] = 0;
+    buf[0] = KH1_Q(0);
     t = (n * 2) | 0x8000;
     t |= (u64)0xC0ADC000 << 32;
     ((u64 *)buf)[0] = t;

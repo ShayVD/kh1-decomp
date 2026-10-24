@@ -15,7 +15,7 @@
 #include "data/pieces/D_00449990.h"
 #include "data/pieces/D_0044A820.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { s32 used; s32 x; u8 pad[0xD8]; } Slot;
 typedef struct { u8 pad[0x60]; u64 x60; u8 pad2[0x78]; u64 xe0; u8 tail[0x160 - 0xE8]; } GsEnv;
 

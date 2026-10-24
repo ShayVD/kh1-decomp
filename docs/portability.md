@@ -164,7 +164,27 @@ rewrite matched code.
    The `Plat` wrappers make the same thing possible here: a `null` platform
    that implements every wrapper as a no-op or a file read lets phase 4/5 run
    the game logic on a PC first. Keep wrappers narrow enough that a stub of
-   each is a few lines.
+   each is a few lines. **Started in session 60**: `make host-census`
+   (tools/host/census.py, `gcc -m32 -malign-double -DKH1_HOST`) and the null
+   platform host/null/plat_null.c; counts in docs/vita-port-plan.md section 5.1.
+9. **Write new C so the host compiler takes it too** (session 60). The
+   matching build is unchanged by each of these (the macros expand to the
+   same tokens on `KH1_PS2`), so use them in new matches:
+   - `u128` constants: `x = KH1_Q(0);` not `x = 0;` (common.h: off the EE a
+     u128 is a 16-byte struct, so only copies and KH1_Q stores compile;
+     the game does no other u128 arithmetic). Declare the type as
+     `typedef kh1_s128 u128;` (or kh1_u128), never `mode(TI)` in a game file.
+   - A register-pinned local: `register f32 k KH1_REG("$f0");`.
+   - A `#define D_X ((T *) D_X)` view that is assigned to is a cast as an
+     lvalue (gcc 2.96 only): write `#define D_X (*(T **)&D_X)`. Where that
+     changes the match (two cases: src/ai/partyai.c, src/camera/camctl.c),
+     keep the cast under `#ifdef KH1_PS2` with the lvalue form in `#else`.
+   - Bare `sync` / `sync; ei` / `break`: PlatSync() / PlatSyncEi() /
+     PlatBreak() (platform/thread.h).
+   - Varargs: `__builtin_stdarg_start` is gcc 2.96's; guard it
+     (src/text/fldtext.c) or use src/sdk/libc/stdarg.h's va_start.
+   - VU0 macro-mode and other MIPS `__asm__` cannot be guarded mechanically:
+     they need a C equivalent (the 39 files that still fail, vita-port-plan 5.1).
 
 ## Known absolute addresses in matched code
 

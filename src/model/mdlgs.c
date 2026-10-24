@@ -79,7 +79,7 @@ s32 func_0015efc0(void)
     *p = PlatIFlushCacheFn;
     func_0015ea98();
     *p = PlatFlushCacheFn;
-    __asm__ volatile("sync\n\tei");
+    PlatSyncEi();
     return 0;
 }
 

@@ -466,8 +466,8 @@ void func_00115940(s32 id) {
     Tri25 *t = &D_002A6238[id];
     u16 *q = &t->v[0];
     Vtx25 *p0, *p1, *p2, *p3;
-    register s32 r asm("$2");
-    register s32 r2 asm("$3");
+    register s32 r KH1_REG("$2");
+    register s32 r2 KH1_REG("$3");
     p0 = &((Vec3_2a624c *)D_002A624C)[*q++];
     p1 = &((Vec3_2a624c *)D_002A624C)[*q++];
     p2 = &((Vec3_2a624c *)D_002A624C)[*q++];
@@ -2202,7 +2202,7 @@ zero:
 }
 
 /* func_001198c8 (from hand/text_00110000_cc.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 extern u128 D_002C12F0;
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
     __asm__ volatile(

@@ -147,6 +147,91 @@ Nothing in the port needs the PS2 addresses, but these still assume them (docs/s
 8. **Performance**: the Cortex-A9 at 444 MHz runs C compiled from the EE's code; the VU0 maths in NEON
    (vu.h) and the renderer's CPU decode are the likely hot spots; measure on the host build first.
 
+### 5.1 Session 60: the host build census
+
+`make host-census` (tools/host/census.py; after a PS2 `make`, which cuts the data pieces) compiles every
+game C file (src/ minus src/sdk/: 512 files) with the host compiler to 32-bit x86 objects in out/host/, and
+with `--link` also assembles src/data/*.s for x86 (`.word` read as `.long`), compiles the null platform
+host/null/plat_null.c and counts the symbols still undefined. Flags: `-m32 -malign-double -std=gnu89 -O1
+-fno-strict-aliasing -fno-pic -fno-stack-protector -DKH1_HOST` and gcc 2.96's leniency (implicit
+declarations, int / pointer conversions) as warnings. `-malign-double` matters: i386 aligns long long to 4
+inside structs, the EE and the Vita's EABI to 8 (actor.h's layout check fails without it). The PS2 build is
+unchanged: every commit built byte-identical, the 677 objects are bit-identical to session 59's and `make
+shift` passes M0.
+
+**Compile census** (first error per file; `--files CAUSE` lists them, `--show FILE` prints one):
+
+| step | gcc 13 | what fixed it |
+| --- | --- | --- |
+| start (KH1_PS2 headers, no fixes) | 298 / 512 | |
+| common.h: `KH1_HOST` target (takes the platform headers' `#else` side), u64 / s64 as long long off the EE | | bitfields wider than their type (178 errors), struct size checks (62) |
+| u128: `typedef kh1_s128 u128;` in the 50 files (common.h: TI on the EE, a 16-byte aligned struct of four u32 elsewhere) | 443 | "unable to emulate TI" (69) |
+| `KH1_Q(v)` for the 53 constant stores into u128 (clears, GIF tags, GS register words) | 459 | the game does **no u128 arithmetic**: every u128 use is a copy or a constant store |
+| builtins on (as the EE game code has them), CONTEXT_ONLY = weak only off the EE | 463 | fabsf implicit-declaration clashes, a `.ctx` section with code and data |
+| PlatSync / PlatSyncEi / PlatBreak (thread.h) for 21 bare `sync`, one `sync; ei` and src/util/param.c's `break` traps | 465 | |
+| `KH1_REG("$n")` for 34 register-pinned locals | 469 | |
+| lvalue form of 14 cast defines that are assigned (`#define D_X (*(T **)&D_X)`; 2 kept as casts under `#ifdef KH1_PS2` because the lvalue form changed the match) | 473 | |
+| **now** | **473 / 512** (clang 18: 470) | |
+
+**The 39 files left** all fail on inline MIPS asm: 118 VU0 macro-mode statements in 32 files (`lqc2`,
+`vmul`, `qmtc2` ...: 29 of the files are src/ppp/, the particle / effect code, plus src/coll/ 3,
+src/model/ 3, src/sound/sndctl.c, src/util/vecutil.nostrict.c, src/hand/vu0.c), 6 lq / sq copies in 2
+files, 3 MMI (`pextlb` ...) in 3 and one FPU statement. Each needs a C equivalent in a `#else` (a C / NEON
+version of the same VU0 sequence; the sceVu0 C routines of §1's vu.h row are the model), not a guard:
+this is real port work, about 130 statements, most of them small (`vcopymatrix`, `VU0_RAND`, the
+`H39_*` frame macros shared by the ppp files). src/gfx/opdma.c also stores two 96-bit literals into
+u128s (gcc 2.96 cannot build one from halves, "unsupported wide integer operation"): it needs a
+`#ifdef KH1_PS2` pair there.
+
+**Link census** (`--link`, 503 objects: 473 game, 29 data, the null platform): 561 symbols undefined.
+
+| count | kind | next step |
+| --- | --- | --- |
+| 308 | defined in one of the 39 files above | the asm work above |
+| 94 | D_ data / bss that only the PS2 linker script defines (out/gen/symbols.ld: bss with no C definition) | generate host definitions with sizes (from the data tables), or define them in C |
+| 39 | libc / libm the host supplies (memcpy, sprintf, sinf, atan2f ...) plus `__builtin_args_info` | src/util/task.nostrict.c reads the EE's saved argument registers (`__builtin_next_arg(fn) - 8 * (8 - __builtin_args_info(2))`): rewrite with va_list for the port |
+| 36 | sceVu0* called directly (not through vu.h) | the C / NEON libvu0 of §1 (vu.h already has the names) |
+| 22 | game func_ in no host object: the 9 unmatched (their drafts, SHIFT_DRAFTS) and ppp functions a macro defines in a failing file | |
+| 20 | func_ in the SDK segment (libc / libgraph helpers the game calls by address) | name them and map to the host libc or the platform |
+| 18 | defined in src/asm/ (the hand asm) | C rewrites (§2) |
+| 13 | D_ below 0x100000 (kernel / scratchpad offsets) | look at each |
+| 8 | D_ in the fixed memory map (§4) | src/host/memmap.c |
+| 3 | sceIpu* (dkmovie.c), sceVpu0Reset | the movie decision (§3); a no-op |
+
+Every Plat* resolves against the null platform (98 stubs generated from the headers' `#else` sides: a call
+succeeds and answers "done" or "nothing there", PlatCdDiskReady 2, PlatSifSearchModuleByName -1, PlatFsDevctl
+-1; PlatSpr is the 16 KiB scratchpad). host/ is outside src/, so the PS2 build never sees it.
+
+**Next for the host build**: the opdma.c pair; the VU0 statements file by file (start with the macros
+several ppp files share); generate the 94 bss definitions and the memory map; then a first `-m32` link
+(`ld -m elf_i386` with a main() that calls the game's entry) and the run to the first PlatCdRead.
+
+### 5.2 Session 60: overlays, dktitle.x
+
+The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
+is ready but not run. `python3 -I tools/ovl/inventory.py dktitle.x [--tsv out/ovl/dktitle.layout.tsv]`
+(stdlib only, uses tools/shift/scan_overlay.py's decoder and names) lists the overlay's functions (the
+entry, jal targets inside the file, and what follows an unconditional jump and its delay slot when no
+branch reaches past it), where code ends and data starts, each function's size, calls inside the overlay,
+calls into the main ELF (game / SDK, named) and %hi/%lo data references, and the count of strings in the
+data part (never their text). `--selftest` runs the function finder on three slices of the main ELF
+against layout.tsv: every start found, 0-0.6% extra splits.
+
+What is known already (shiftable-plan "Session 13: overlay fixups"): dktitle.x loads at 0x00F20000, entry
+`int entry(int cmd, int arg)` at its first byte, called from func_00109770 / func_00109630 as entry(0, 0);
+292 jal and 13 j into the main ELF, 99 %hi/%lo pairs, 13 mid-function references, 5 ambiguous; it writes
+D_0046A6A8 and names 0x9A0000 / 0xBA0000 (the load area) itself.
+
+**Plan to decompile it** (the user's file is the target, like SLPS_251.98 is now; never committed):
+1. Run the inventory; write its `--tsv` as an overlay layout (functions named `ovl_dktitle_XXXXXXXX`).
+2. Toolchain check as in session 1: m2c drafts of 5-8 small leaf functions, built with ee-gcc 2.96 `-O2
+   -G0` and compared with objdiff against the overlay's bytes. If they match, the overlay uses the main
+   ELF's compiler and flags; if not, try the flag modes of kh1.toml (nofill, nostrict ...).
+3. A second build target in kh1tool (an overlay config: file, base 0xF20000, layout) that links the
+   overlay's C at its addresses with the main ELF's symbols as externs (symbols.ld) and patches a copy of
+   the file, verified byte-identical like the main ELF.
+4. Its calls into the main ELF are then ordinary calls by name, so the port links it with the rest.
+
 ## 6. Open questions
 
 - The sound driver's command set and the sequence format (needs the IRX from the disc).

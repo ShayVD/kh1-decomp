@@ -17,7 +17,7 @@
 
 /* pppKeThFrame (from hand/nostrict/text_00180000_c05.c). */
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-typedef int u128_8bee0 __attribute__((mode(TI)));
+typedef kh1_s128 u128_8bee0;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 typedef struct {
     s32 unk0;
@@ -103,7 +103,7 @@ void pppKeThFrame(PppObject *obj, PppThKey *key, PppEntry *e) {
     if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
         return;
     PlatVu0CopyMatrix(m, D_00615E68->m);
-    *(u128_8bee0 *) m[3] = 0;
+    *(u128_8bee0 *) m[3] = KH1_Q(0);
     m[3][3] = 1.0f;
     PlatVu0ApplyMatrix(dir, m, pos);
     PlatVu0Normalize(dir, dir);

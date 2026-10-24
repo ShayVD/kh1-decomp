@@ -9,14 +9,14 @@
 #include "platform/gs.h"
 #include "platform/dma.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_00237018(u128 *p, s32 n, s32 wait) {
     PlatDmaChan *ch;
     u32 hi = PLAT_DMA_SPR;
     n--;
     if (n > 0) {
-        *p = 0;
+        *p = KH1_Q(0);
         *(s32 *)p = n | 0x70000000;
         if ((u32)p < PLAT_SPR_BASE) {
             hi = 0;

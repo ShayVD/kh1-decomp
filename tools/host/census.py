@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+"""Host build census (phase 5, docs/vita-port-plan.md section 5 step 1).
+
+Compiles every game C file (src/ minus src/sdk/, which the port replaces) with
+a host compiler as a 32-bit x86 object under -DKH1_HOST, the null-platform
+side of include/platform/, and counts what fails by cause. Nothing here
+touches the PS2 build: objects go to out/host/.
+
+    python3 -I tools/host/census.py                 # summary by cause
+    python3 -I tools/host/census.py --files CAUSE   # the files failing with CAUSE
+    python3 -I tools/host/census.py --cc clang
+
+A file is counted under the cause of its first error; --all-errors counts
+every error line instead. The summary is also written to out/host/census.tsv.
+
+--link also assembles src/data/*.s for x86 (`.word` read as `.long`; needs
+the pieces a PS2 `make` cuts into out/data/pieces/), compiles the null
+platform host/null/*.c and counts the symbols the compiled objects still
+leave undefined, by kind (out/host/undefined.txt lists them).
+"""
+import argparse
+import os
+import re
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+OUT = os.path.join(ROOT, "out", "host")
+
+# -malign-double: long long / double align to 8 inside structs, as on the EE
+# and the Vita's EABI (i386's default is 4, which moves fields).
+# Builtins stay on as for the EE game code (implicit fabsf is the builtin).
+# gnu89 + the -Wno-error list: gcc 2.96 C (implicit declarations, int <->
+# pointer conversions) that gcc 14 refuses by default.
+CFLAGS = [
+    "-m32", "-malign-double", "-std=gnu89", "-O1", "-w",
+    "-fno-strict-aliasing", "-fno-pic", "-fno-stack-protector", "-DKH1_HOST", "-Iinclude", "-Isrc",
+    "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
+    "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
+]
+
+# (cause, regex on the error text). First match wins.
+CAUSES = [
+    ("asm: MIPS instruction", r"Error: (no such instruction|invalid instruction suffix|bad register name|unknown pseudo-op|invalid char)"),
+    ("asm: register variable", r"invalid register name for"),
+    ("asm: constraint", r"impossible constraint|must specify a single register|invalid 'asm'|unknown register name|matching constraint|asm operand"),
+    ("asm: other", r"\bError: "),
+    ("u128 arithmetic", r"(incompatible types when assigning to type '\w+' \{aka '(kh1_[su]128|struct <anonymous>)'\}|invalid operands to binary .*kh1_[su]128|kh1_[su]128.*(used struct type value where scalar|incompatible type)|aggregate value used where an integer|used struct type value where scalar is required|conversion to non-scalar type|wrong type argument to (unary|increment|decrement))"),
+    ("bitfield wider than type", r"width of '.*' exceeds its type"),
+    ("struct size check", r"size of array '.*_check_.*' is negative|size of array '.*' is negative"),
+    ("cast as lvalue", r"lvalue required as"),
+    ("builtin / libc clash", r"conflicting types for '(fabsf|sqrtf|memcpy|memset|strlen|strcpy|abs|sinf|cosf|atan2f|printf|sprintf|memcmp|strcmp)'"),
+    ("conflicting types", r"conflicting types for"),
+    ("unknown type", r"unknown type name|storage size of .* isn't known|has incomplete type|invalid use of undefined type"),
+    ("undeclared", r"undeclared"),
+]
+
+
+def game_files():
+    out = []
+    for d, dirs, files in os.walk(os.path.join(ROOT, "src")):
+        rel = os.path.relpath(d, ROOT)
+        if rel == "src/sdk" or rel.startswith("src/sdk/"):
+            continue
+        for f in files:
+            if f.endswith(".c") and not f.startswith("."):
+                out.append(os.path.join(rel, f))
+    return sorted(out)
+
+
+def classify(text):
+    for name, rx in CAUSES:
+        if re.search(rx, text):
+            return name
+    return "other"
+
+
+def first_error(stderr):
+    lines = [l for l in stderr.splitlines() if re.search(r"\berror: |\bError: ", l)]
+    return lines
+
+
+def compile_one(cc, path):
+    obj = os.path.join(OUT, path + ".o")
+    os.makedirs(os.path.dirname(obj), exist_ok=True)
+    p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, path], cwd=ROOT,
+                       capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
+    errs = first_error(p.stderr)
+    if p.returncode == 0:
+        return path, True, []
+    if not errs:
+        errs = [p.stderr.strip().splitlines()[-1] if p.stderr.strip() else "unknown failure"]
+    return path, False, errs
+
+
+def assemble_data():
+    objs = []
+    d = os.path.join(OUT, "data")
+    os.makedirs(d, exist_ok=True)
+    for f in sorted(os.listdir(os.path.join(ROOT, "src", "data"))):
+        if not f.endswith(".s"):
+            continue
+        src = open(os.path.join(ROOT, "src", "data", f)).read()
+        src = re.sub(r"^(\s*)\.word\b", r"\1.long", src, flags=re.M)
+        tmp = os.path.join(d, f)
+        open(tmp, "w").write(src)
+        obj = tmp[:-2] + ".o"
+        p = subprocess.run(["as", "--32", "-o", obj, tmp], cwd=ROOT, capture_output=True, text=True)
+        if p.returncode:
+            print("data: %s does not assemble: %s" % (f, p.stderr.strip().splitlines()[0]))
+        else:
+            objs.append(obj)
+    return objs
+
+
+def nm(objs, defined):
+    args = ["nm", "--defined-only" if defined else "--undefined-only"] + objs
+    out = subprocess.run(args, capture_output=True, text=True).stdout
+    syms = set()
+    for l in out.splitlines():
+        parts = l.split()
+        if defined and len(parts) == 3 and parts[1] not in "Nn":
+            syms.add(parts[2])
+        elif not defined and len(parts) == 2 and parts[0] == "U":
+            syms.add(parts[1])
+    return syms
+
+
+def sym_kind(s, failing_defs, asm_defs):
+    if s in failing_defs:
+        return "defined in a game file that does not compile yet"
+    if s in asm_defs:
+        return "defined in src/asm/ (hand asm: needs C)"
+    if s.startswith("sce"):
+        return "SDK call outside include/platform/ (" + s[:6] + "*)"
+    if s.startswith("D_"):
+        a = int(s[2:10], 16)
+        if a < 0x100000:
+            return "D_ below 0x100000 (kernel / scratchpad offsets)"
+        if a >= 0x6A0000:
+            return "D_ in the fixed memory map (vita-port-plan section 4)"
+        return "D_ data / bss only the PS2 linker script defines"
+    if s.startswith("func_"):
+        a = int(s[5:13], 16)
+        if a >= 0x0024F2E0:
+            return "func_ in the SDK segment (libc / libgraph ...: the port's own)"
+        return "func_ game code in no host object (the 9 unmatched; ppp functions a macro defines in a failing file)"
+    return "libc / libm / compiler (" + s + ")" if len(s) < 24 else "other"
+
+
+def link_census(results, cc):
+    ok_objs = [os.path.join(OUT, p + ".o") for p, ok, _ in results if ok]
+    data_objs = assemble_data()
+    null_objs = []
+    nd = os.path.join(ROOT, "host", "null")
+    for f in sorted(os.listdir(nd)):
+        if f.endswith(".c"):
+            obj = os.path.join(OUT, "null", f + ".o")
+            os.makedirs(os.path.dirname(obj), exist_ok=True)
+            p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, os.path.join("host", "null", f)], cwd=ROOT,
+                               capture_output=True, text=True)
+            if p.returncode:
+                print("null platform: %s does not compile:\n%s" % (f, p.stderr))
+            else:
+                null_objs.append(obj)
+    objs = ok_objs + data_objs + null_objs
+    defined = nm(objs, True)
+    # functions.tsv names: C defines the name, the data blob's .word uses func_<addr>
+    alias = {}
+    for l in open(os.path.join(ROOT, "functions.tsv")):
+        parts = l.split("\t")
+        if len(parts) >= 2 and not l.startswith("#") and parts[1].split():
+            alias[parts[0]] = "func_" + parts[1].split()[0].lower()[-8:]
+    defined |= set(alias[n] for n in defined if n in alias)
+    undefined = nm(objs, False) - defined
+    # where the missing names are defined on the PS2 side
+    failing_defs, asm_defs = set(), set()
+    for p, ok, _ in results:
+        if not ok:
+            src = open(os.path.join(ROOT, p), errors="replace").read()
+            # definitions: a function head (no `;` on its line) or a variable
+            names = set(re.findall(r"^(?!extern|typedef)[A-Za-z_][\w \t\*]*?\b(\w+)[ \t]*\([^;\n]*$", src, re.M))
+            names |= set(re.findall(r"^(?!extern|typedef)[A-Za-z_][\w \t\*]*?\b((?:D|func)_[0-9A-Fa-f]{8}\w*)[ \t]*[\[=;]", src, re.M))
+            failing_defs |= names | set(alias[n] for n in names if n in alias)
+    for f in os.listdir(os.path.join(ROOT, "src", "asm")):
+        src = open(os.path.join(ROOT, "src", "asm", f), errors="replace").read()
+        asm_defs |= set(re.findall(r"^\s*(?:glabel\s+|\.globl\s+)?(func_[0-9a-f]{8})\s*:?", src, re.M))
+    kinds = {}
+    for s in undefined:
+        kinds.setdefault(sym_kind(s, failing_defs, asm_defs), []).append(s)
+    with open(os.path.join(OUT, "undefined.txt"), "w") as f:
+        for k in sorted(kinds):
+            for s in sorted(kinds[k]):
+                f.write("%s\t%s\n" % (k, s))
+    print("link: %d objects (%d game, %d data, %d null platform), %d symbols undefined"
+          % (len(objs), len(ok_objs), len(data_objs), len(null_objs), len(undefined)))
+    small = []
+    for k, v in sorted(kinds.items(), key=lambda kv: -len(kv[1])):
+        if k.startswith("libc"):
+            small.extend(v)
+        else:
+            print("  %5d  %s" % (len(v), k))
+    if small:
+        print("  %5d  libc / libm / compiler: %s" % (len(small), " ".join(sorted(small))))
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--cc", default=os.environ.get("HOST_CC", "gcc"))
+    ap.add_argument("--files", metavar="CAUSE", help="list the files whose first error is CAUSE (a prefix)")
+    ap.add_argument("--all-errors", action="store_true", help="count every error line, not one per file")
+    ap.add_argument("--show", metavar="FILE", help="print one file's errors")
+    ap.add_argument("--link", action="store_true", help="also count the symbols left undefined (see above)")
+    ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
+    a = ap.parse_args()
+
+    files = [a.show] if a.show else game_files()
+    with ThreadPoolExecutor(a.j) as ex:
+        results = list(ex.map(lambda f: compile_one(a.cc, f), files))
+
+    if a.show:
+        print("\n".join(results[0][2]) or "compiles")
+        return 0
+
+    by_cause = {}
+    for path, ok, errs in results:
+        if ok:
+            continue
+        if a.all_errors:
+            for e in errs:
+                by_cause.setdefault(classify(e), []).append(path)
+        else:
+            by_cause.setdefault(classify(errs[0]), []).append(path)
+
+    if a.files:
+        for cause, paths in sorted(by_cause.items()):
+            if cause.startswith(a.files):
+                print("\n".join(sorted(set(paths))))
+        return 0
+
+    nok = sum(1 for r in results if r[1])
+    os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "census.tsv"), "w") as f:
+        f.write("path\tok\tcause\tfirst_error\n")
+        for path, ok, errs in results:
+            f.write("%s\t%d\t%s\t%s\n" % (path, ok, "" if ok else classify(errs[0]),
+                                          "" if ok else errs[0].replace("\t", " ")))
+    print("%s: %d / %d game files compile (%d fail)" % (a.cc, nok, len(results), len(results) - nok))
+    for cause, paths in sorted(by_cause.items(), key=lambda kv: -len(kv[1])):
+        print("  %5d  %s" % (len(paths), cause))
+    if a.link:
+        link_census(results, a.cc)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

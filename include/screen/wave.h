@@ -7,7 +7,7 @@
 
 #include "common.h"
 
-typedef int WaveU128 __attribute__((mode(TI)));
+typedef kh1_s128 WaveU128;
 typedef struct { s32 a, b, c, d; } WaveQ;
 typedef union { WaveU128 q; u32 w; } WaveTag;
 typedef struct { WaveTag dma; u64 gif[8]; WaveQ v[400]; WaveTag end; } WavePkt;

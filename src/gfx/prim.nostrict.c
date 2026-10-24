@@ -8,7 +8,7 @@
 #include "common.h"
 #include "platform/vu.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 V4f[4] __attribute__((aligned(16)));
 typedef struct { u128 q[7]; } Ent70;
 void func_00237018(u128 *, s32, s32);
@@ -27,7 +27,7 @@ void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
     tag = (n | 0x8000) | ((u64)0x6005C000 << 32);
     h = buf + 1;
     cnt = 0;
-    *h = 0;
+    *h = KH1_Q(0);
     ((u64 *)h)[0] = tag;
     ((u64 *)h)[1] = 0x414141;
     k = 2;
@@ -93,7 +93,7 @@ void func_00238768(u128 *src, s32 n, u128 *buf) {
         d[22] = src[i * 14 + 9];
         d[23] = src[i * 14 + 13];
     }
-    buf[1] = 0;
+    buf[1] = KH1_Q(0);
     t = (n * 2) | 0x8000;
     t |= (u64)0xC0ADC000 << 32;
     ((u64 *)&buf[1])[0] = t;

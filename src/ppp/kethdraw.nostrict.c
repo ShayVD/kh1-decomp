@@ -7,7 +7,7 @@
 #include "common.h"
 #include "platform/vu.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 typedef f32 Vec[4] __attribute__((aligned(16)));
 

@@ -6,7 +6,7 @@
 #include "common.h"
 #include "gfx/drawlist.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_00237680(DrawList *h, DrawNode *node, s32 idx) {
     s32 max = 1 << h->bits;
@@ -24,7 +24,7 @@ u128 *func_00237ec0(u128 *src, u128 *dst) {
     for (i = 0; i < ((s32 *)src)[2]; i++) {
         dst[n++] = src[i + 1];
     }
-    *dst = 0;
+    *dst = KH1_Q(0);
     *(s32 *)dst = (n - 1) | 0x10000000;
     return dst + n;
 }

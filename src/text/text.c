@@ -42,7 +42,7 @@
 #include "data/pieces/D_003F1660.h"
 #include "data/types/nofill_text_001f0000_h69.h" /* Q, a GIF packet quadword */
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { u8 pad[0x10]; s32 o10; s32 o14; } MsgHdr;
 
 extern u8 D_003E4658[];

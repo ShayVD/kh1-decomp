@@ -400,7 +400,7 @@ void func_00180ea0(SEA0 *s) {
 }
 
 /* func_00180f18 (from hand/text_00180000_b07.c). */
-typedef int u128_80f18 __attribute__((mode(TI)));
+typedef kh1_s128 u128_80f18;
 typedef struct {
     s32 key;
     s32 mask;
@@ -436,7 +436,7 @@ s32 func_00180f18(Slot *slots, s32 cnt, SlotOwner *o, u8 n) {
             return slots[i].start;
         }
     }
-    buf.q = 0;
+    buf.q = KH1_Q(0);
     for (i = 0; i < cnt; i++) {
         if (slots[i].used) {
             j = slots[i].len;
@@ -1094,7 +1094,7 @@ typedef struct H39Sys {
     u64 flags;         /* +0xB0 */
 } H39Sys;
 void pppStepPrograms(void);
-#define D_00615E60 ((H39Sys *) D_00615E60)
+#define D_00615E60 (*(H39Sys **)&D_00615E60)
 s32 func_00183878(H39Sys *s) {
     s32 t;
 
@@ -1120,7 +1120,7 @@ s32 func_00183878(H39Sys *s) {
 #undef D_00615E60
 
 /* func_00183958 (from hand/text_00180000_h12.c). */
-#define D_00615E60 ((PppSys *) D_00615E60)
+#define D_00615E60 (*(PppSys **)&D_00615E60)
 s32 func_00183958(PppSys *s) {
     s32 t;
 

@@ -55,7 +55,7 @@ Col func_001eddc0(Col a0, Col b0, f32 t) {
     Col c, a, b;
     u8 *pa, *pb, *pc;
     u32 f, g;
-    register s32 ar asm("$4");
+    register s32 ar KH1_REG("$4");
     b = b0; a = a0;
     ar = a.r;
     g = (b.r - ar) * t;

@@ -22,7 +22,7 @@
 #include "gfx/drawlist.h"
 #include "gfx/gspkt.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 typedef struct { s32 x, y, z, w; } __attribute__((aligned(16))) I4b;
 typedef I4b I4;
@@ -93,14 +93,14 @@ u128 *func_00237790(Item *src, u128 *dst, void *m) {
         return dst;
     }
     h = dst + 1;
-    *h = 0;
+    *h = KH1_Q(0);
     ((u64 *)h)[0] = 0x4004C00000008001;
     ((u64 *)h)[1] = 0x5151;
     PlatVu0RotTransPersN(out, m, &src->q[1], 2, 1);
     dst[2] = src->q[3];
     dst[3] = out[0];
     dst[4] = src->q[4];
-    dst[0] = 0;
+    dst[0] = KH1_Q(0);
     dst[5] = out[1];
     *(s32 *)dst = 0x10000005;
     return dst + 6;
@@ -120,7 +120,7 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
         return dst;
     }
     h = dst + 1;
-    *h = 0;
+    *h = KH1_Q(0);
     ((u64 *)h)[0] = 0x6025C00000008001;
     ((u64 *)h)[1] = 0x414141;
     PlatVu0RotTransPersN(out, m, &src->q[1], 3, 0);
@@ -132,7 +132,7 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
     dst[5] = out[1].q;
     out[2].i[3] = 0;
     dst[6] = src->q[6];
-    dst[0] = 0;
+    dst[0] = KH1_Q(0);
     dst[7] = out[2].q;
     *(s32 *)dst = 0x10000007;
     return dst + 8;
@@ -172,7 +172,7 @@ u128 *func_00237b30(ObjB *o, u128 *dst, void *m) {
         return dst;
     }
     h = dst + 1;
-    *h = 0;
+    *h = KH1_Q(0);
     ((u64 *)h)[0] = ((u64)(o->n * 3 | 0x58) << 47) | 0xA000400000008001ULL;
     ((u64 *)h)[1] = 0x512512512EULL;
     k = 2;
@@ -220,7 +220,7 @@ u128 *func_00237d48(ObjC *o, u128 *dst, void *m) {
         return dst;
     }
     h = dst + 1;
-    *h = 0;
+    *h = KH1_Q(0);
     ((u64 *)h)[0] = 0xA02DC00000008001ULL;
     ((u64 *)h)[1] = 0x512512512EULL;
     { U64x2 *c = (U64x2 *)&dst[2]; *c = o->col; }
@@ -238,7 +238,7 @@ u128 *func_00237d48(ObjC *o, u128 *dst, void *m) {
         *d++ = *(u128 *)&t2;
         *d++ = *(u128 *)&iv;
     }
-    dst[0] = 0;
+    dst[0] = KH1_Q(0);
     *(s32 *)dst = 0x1000000B;
     return dst + 12;
 }
@@ -360,7 +360,7 @@ void func_00238258(DrawList *h, s32 a1, u128 *dst, s32 a3, void *m) {
         }
     }
     if (num != 0) {
-        dst[1] = 0;
+        dst[1] = KH1_Q(0);
         ((u64 *)dst)[2] = num | 0x8000 | 0xA02DC00000000000ULL;
         ((u64 *)dst)[3] = 0x512512512EULL;
         func_00237018(dst, k, 1);

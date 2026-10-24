@@ -488,7 +488,11 @@ extern void vsprintf(char *, const char *, va_list);
 s32 func_0010d388(char *buf, const char *fmt, ...) {
     va_list ap;
     s32 n;
+#ifdef KH1_PS2
     __builtin_stdarg_start(ap, fmt);
+#else
+    __builtin_va_start(ap, fmt);
+#endif
     vsprintf(buf, fmt, ap);
     for (n = 0; *buf != 0; n++) {
         if (*buf == ' ') {

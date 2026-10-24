@@ -6,7 +6,7 @@
 #include "common.h"
 #include "gfx/gspkt.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 u128 *func_00237790(u8 *, u128 *, s32);
 
 u128 D_00648070[0x6] ALIGNED(16);

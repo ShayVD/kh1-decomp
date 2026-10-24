@@ -59,7 +59,7 @@ typedef struct {
 extern s32 D_0061621C;
 extern PppSystem *D_00615E60;
 extern PppMdlBank *D_00615E64;
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct {
     s32 frame;
     s32 id;       /* +0x4 */

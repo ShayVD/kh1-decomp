@@ -18,7 +18,7 @@
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 typedef struct {

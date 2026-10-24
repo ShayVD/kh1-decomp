@@ -135,7 +135,7 @@ s32 sceCdDiskReady(s32 mode) {
 
 /* libipu: IPU reset, BCLR, then SETIQ (intra, non-intra), SETVQ, SETTH. The
  * tables are read through volatile: the original reloads each quadword. */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 extern u128 D_0046E0B0[];   /* IQ tables */
 extern u128 D_0046E100[];   /* VQ CLUT */
 #define IPU_CMD (*(volatile u32 *)0x10002000)

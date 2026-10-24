@@ -14,7 +14,7 @@
 #include "data/types/nostrict_text_00180000_h40.h"
 #include "data/pieces/D_003701F0.h"
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef union {
     f32 f[4];
     u128 q;

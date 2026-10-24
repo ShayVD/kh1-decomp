@@ -55,7 +55,7 @@ typedef struct {
     u64 tag2;         /* +0x50 */
     f32 sx, sy;       /* +0x58 */
 } PppDttDraw;
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 extern u8 D_00616040[];
 extern s32 D_00616228;
 void func_001a99e8(PppDttDraw *);

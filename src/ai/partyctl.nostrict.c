@@ -2630,7 +2630,7 @@ s32 func_0011ef38(s32 (*)());
 s32 func_001383d8(s32, s32 (*)());
 void func_00170e30(s32);
 #define D_00575310 ((P86F *) &D_00575310)
-#define D_00575780 ((Node6F *) D_00575780)
+#define D_00575780 (*(Node6F **)&D_00575780)
 #define D_00575784 (*(Node6F *(*)) &D_00575784)
 #define func_0016ea58 ((s32 (*)()) func_0016ea58)
 void func_0016f640(void) {

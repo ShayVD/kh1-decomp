@@ -93,7 +93,7 @@ void func_0011efa8(void *, void *, s32, s32);
 s32 func_0015eea0();
 extern GsBuf D_00551D90_0015ec68[] __asm__("D_00551D90");
 #define D_00551D90 D_00551D90_0015ec68
-#define D_00559DB0 ((GsBuf *) D_00559DB0)
+#define D_00559DB0 (*(GsBuf **)&D_00559DB0)
 void func_0015ec68(void) {
     s32 i;
     for (i = 0; i < 2; i++) {
@@ -156,7 +156,7 @@ void func_0015f018(void) {
 }
 
 /* func_0015f128 (from hand/nostrict/text_00140000_s6_07.c). */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct {
     u64 NLOOP : 15;
     u64 EOP : 1;
@@ -211,7 +211,7 @@ static inline void setTag(DmaTag *t, s32 qwc, s32 id, DmaTag *next) {
     t->qwc = qwc;
 }
 static inline void setGif(GifTag *g, s32 nloop, s32 nreg) {
-    *(u128 *)g = 0;
+    *(u128 *)g = KH1_Q(0);
     g->NLOOP = nloop;
     g->EOP = 1;
     g->NREG = nreg;
@@ -221,12 +221,12 @@ static inline void setGif(GifTag *g, s32 nloop, s32 nreg) {
 void func_0015f128(void) {
     s32 i;
     Pk1 *p;
-    u128 z = 0;
+    u128 z = KH1_Q(0);
 
     for (i = 0; i < 7; i++) {
         p = &D_00573AD0[i];
-        *(u128 *)&p->gif = 0;
-        *(u128 *)&p->img = 0;
+        *(u128 *)&p->gif = KH1_Q(0);
+        *(u128 *)&p->img = KH1_Q(0);
 
         p->gif.NLOOP = 4;
         p->gif.NREG = 1;
@@ -269,7 +269,7 @@ void func_0015f128(void) {
 extern DmaChcr *D_0055C644;
 s32 func_0015f388(void) {
     u64 *p;
-    __asm__ volatile("sync");
+    PlatSync();
     p = (u64 *)((u32)D_00573E40 | 0x20000000);
     p[12] = 0x5080B;
     p[14] = (128LL << 32) | 0x2A;
@@ -277,12 +277,12 @@ s32 func_0015f388(void) {
     p[16] = 0x31000070;
     p[20] = 0x800D0;
     p[22] = 5;
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C644->mod = 1;
     D_0055C644->asp = 0;
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     PlatDmaSend((void *)D_0055C644, &D_00573E40[2]);
     return 2;
 }
@@ -355,7 +355,7 @@ void func_0015f488(B4Drw *a) {
     }
     q->xa0 = a->x0->x8;
     q->xb0 = 5;
-    __asm__ volatile("sync");
+    PlatSync();
     if (a->x0->x40) {
         D_0055C680.x0 = 0x3600;
         D_0055C680.x2 = 4;
@@ -397,13 +397,13 @@ void func_0015f798(S798 *o) {
     }
     d = (u32 *)((u32)D_00272DE4 | 0x20000000);
     d[3] = e->x3C;
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C640->dir = 1;
     D_0055C640->mod = 1;
     D_0055C640->asp = 0;
     D_0055C640->tte = 1;
     D_0055C640->tie = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     PlatDmaSend((void *)D_0055C640, D_00272CF0);
 }
 
@@ -428,7 +428,7 @@ typedef struct { u16 qwc; u8 b2; u8 id; u32 addr; u32 pad[2]; } DT59;
 typedef struct { DT59 dma; GT59 tag; AD59 ad[4]; GT59 img; DT59 ref; } Pk59;
 typedef struct { u8 x0, x1; u8 pad[2]; u16 w, h; } Img59;
 typedef struct { u8 pad[4]; u8 n; u8 pad5[3]; u32 data[4]; Img59 *img[4]; } Src59;
-#define D_0055C648 ((Pk59 *) D_0055C648)
+#define D_0055C648 (*(Pk59 **)&D_0055C648)
 void func_0015f8c8(Src59 *s, s32 k) {
     s32 i;
     for (i = 0; i < (s->n & 7); i++) {
@@ -455,9 +455,9 @@ void func_0015f8c8(Src59 *s, s32 k) {
 
 /* func_0015fa20 (from hand/nostrict/text_00150000_h59.c). */
 typedef struct { u16 n; u8 pad2[2]; u16 w, h; u32 data; u32 clut; } Tex59;
-#define D_0055C648 ((Pk59 *) D_0055C648)
+#define D_0055C648 (*(Pk59 **)&D_0055C648)
 void func_0015fa20(Tex59 *t) {
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C648 = (Pk59 *)((u32)D_00573AC0 | 0x20000000);
     D_0055C648->dma.id = 0x10;
     D_0055C648->dma.addr = 0;
@@ -484,12 +484,12 @@ void func_0015fa20(Tex59 *t) {
     D_0055C648->dma.id = 0x70;
     D_0055C648->dma.addr = 0;
     D_0055C648->dma.qwc = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C644->mod = 1;
     D_0055C644->asp = 0;
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     PlatDmaSend(D_0055C644, D_00573AC0);
 }
 #undef D_0055C648
@@ -526,7 +526,7 @@ void func_0015fc00(A0 *a) {
     D_0055C640->asp = 0;
     D_0055C640->tte = 1;
     D_0055C640->tie = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     fl = e->fl;
     v = e->o->x48;
     if (fl & 8) {
@@ -658,7 +658,7 @@ s32 func_0015ff78(B4Dm *d) {
     u64 b;
     u32 x;
     u32 st;
-    __asm__ volatile("sync");
+    PlatSync();
     r = 2;
     s = d->x10;
     switch (st = d->x14) {
@@ -679,19 +679,19 @@ s32 func_0015ff78(B4Dm *d) {
         if (*(u32 *)&s->x4 & 8) {
             b = s->x0->x0;
             a = s->x0->x8;
-            __asm__ volatile("sync");
+            PlatSync();
             g = (B4Gp *)((u32)D_00351C40 | 0x20000000);
             g->x180 = a;
             g->x3 = 112;
             g->x0 = 24;
             g->x170 = b;
             g->x4 = 0;
-            __asm__ volatile("sync");
+            PlatSync();
             D_0055C644->mod = 1;
             D_0055C644->asp = 0;
             D_0055C644->tte = 0;
             D_0055C644->tie = 0;
-            __asm__ volatile("sync");
+            PlatSync();
             PlatDmaSend(D_0055C644, D_00351C40);
         } else {
             D_0055C648 = (B4Pk *)((u32)D_00573AC0 | 0x20000000);
@@ -700,12 +700,12 @@ s32 func_0015ff78(B4Dm *d) {
             D_0055C648->x3 = 96;
             D_0055C648->x4 = 0;
             D_0055C648->x0 = 0;
-            __asm__ volatile("sync");
+            PlatSync();
             D_0055C644->mod = 1;
             D_0055C644->asp = 0;
             D_0055C644->tte = 0;
             D_0055C644->tie = 0;
-            __asm__ volatile("sync");
+            PlatSync();
             PlatDmaSend(D_0055C644, D_00573E40);
         }
         CALLFD();
@@ -723,7 +723,7 @@ s32 func_0015ff78(B4Dm *d) {
         D_0055C640->asp = 0;
         D_0055C640->tte = 1;
         D_0055C640->tie = 0;
-        __asm__ volatile("sync");
+        PlatSync();
         PlatDmaSend(D_0055C640, (void *)((B4Rec2 *)(((u8 *)s)[7] * 4 + tb))->x18);
         d->x14 = 5; st = 5;
         break;

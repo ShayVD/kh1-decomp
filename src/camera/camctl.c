@@ -410,7 +410,11 @@ s32 func_0017e428(V4 *a, V4 *b)
 
 /* func_0017e7d8 (from auto/text_00170000_5.c). */
 extern s32 D_003623F0;
+#ifdef KH1_PS2 /* the lvalue form changes this match */
 #define D_00575894 ((void *) D_00575894)
+#else
+#define D_00575894 (*(void **)&D_00575894)
+#endif
 void func_0017e7d8(void) {
     if (D_00575894 != NULL) {
         M2C_FIELD(D_00575894, s32 *, 0) = (s32) (M2C_FIELD(D_00575894, s32 *, 0) | 1);
@@ -430,7 +434,7 @@ typedef struct Actor {
     u8 pad40[0x30];
     s32 x70;    /* 0x70: state */
 } Actor;
-#define D_00575894 ((Actor *) D_00575894)
+#define D_00575894 (*(Actor **)&D_00575894)
 void func_0017e840(void) {
     if (D_003623F0) {
         if ((D_00575894 = D_002E26A0[0]) != 0) {
@@ -449,7 +453,7 @@ void func_0017e8a0(void) {
 
 /* func_0017e8c8 (from hand/text_00170000_h11.c). */
 extern f32 D_00362684;
-#define D_00575894 ((Actor *) D_00575894)
+#define D_00575894 (*(Actor **)&D_00575894)
 void func_0017e8c8(void) {
     Arg *p = ((Arg *)&D_003626F0);
     p[0].i = 1;
@@ -517,7 +521,7 @@ void func_0017eb20(void) {
 /* func_0017eb88 (from auto/text_00170000_6.c). */
 s32 func_0017d628(void);
 s32 func_0017ecf8(void);
-#define D_00575894 ((s32 ) D_00575894)
+#define D_00575894 (*(s32 *)&D_00575894)
 void func_0017eb88(void) {
     D_00575894 = (*(s32 *)&D_002E26A0);
     func_0017eaa0();
@@ -529,7 +533,7 @@ void func_0017eb88(void) {
 #undef D_00575894
 
 /* func_0017ebd0 (from auto/text_00170000_1.c). */
-#define D_00575894 ((s32 ) D_00575894)
+#define D_00575894 (*(s32 *)&D_00575894)
 void func_0017ebd0(void) {
     D_00575894 = 0;
     D_002E27A8 = 0;
@@ -649,7 +653,7 @@ void func_0017ef40(s32 a) {
 void func_0017d5a0(void);
 /* defined above it in its old file (h11): without it one word differs */
 CONTEXT_ONLY s32 func_001773b0(void) { return 1; }
-#define D_00575894 ((Actor *) D_00575894)
+#define D_00575894 (*(Actor **)&D_00575894)
 #define D_00575920 (*(s32 (*)) &D_00575920)
 void func_0017eff8(void) {
     D_00575920 = 0;

@@ -379,7 +379,7 @@ void func_001aa9d0(s32);
 void func_001aa750(u8 *, s32, s32, s32);
 #define D_00615E60 (*(DttPad *(*)) &D_00615E60)
 #define D_00615E64 ((DttSys *) D_00615E64)
-#define D_00616224 ((u8 *) D_00616224)
+#define D_00616224 (*(u8 **)&D_00616224)
 /* 0018f268 pppKeMdlDttDraw: MATCH (hand/nostrict). From w11's 47w draft: nostrict load/store order is source order (stack stores vs pointer loads alias), so buf->test before buf->test_a, r = w.scissor before buf->clamp_a, flag = w.flag before buf->cache, then-block use, cache, rd, and w.pkt stored after w.colA (pkt's shorter life lets id win v1). */
 void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
     DttWork w;
@@ -475,10 +475,10 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
     flag = w.flag;
     buf->cache = w.cache;
     {
-        register void *m0 asm("$6") = w.mtx0;
-        register void *m1 asm("$5") = w.mtx1;
-        register f32 *ca asm("$4") = w.colA;
-        register f32 *cb asm("$3") = w.colB;
+        register void *m0 KH1_REG("$6") = w.mtx0;
+        register void *m1 KH1_REG("$5") = w.mtx1;
+        register f32 *ca KH1_REG("$4") = w.colA;
+        register f32 *cb KH1_REG("$3") = w.colB;
         __asm__ volatile(
         ".set noreorder\n"
         "vsub.xyzw $vf9xyzw, $vf0xyzw, $vf0xyzw\n"

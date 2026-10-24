@@ -704,18 +704,18 @@ extern GifTag8 *volatile D_0055C648;
 extern u8 D_00573AC0[];
 void func_0015f8c8(void);
 void func_00162428(void) {
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C648 = (GifTag8 *)((u32)D_00573AC0 | 0x20000000);
     func_0015f8c8();
     D_0055C648->b3 = 0x70;
     D_0055C648->w4 = 0;
     D_0055C648->h0 = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     D_0055C644->mod = 1;
     D_0055C644->asp = 0;
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
-    __asm__ volatile("sync");
+    PlatSync();
     PlatDmaSend(D_0055C644, D_00573AC0);
 }
 

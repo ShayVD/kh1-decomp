@@ -114,7 +114,11 @@ s32 func_00170f08(void *a, s32 *key, s32 v) {
 
 /* func_00170f50 (from auto/text_00170000_4.c). */
 extern void *D_00575784;
+#ifdef KH1_PS2 /* the lvalue form changes this match */
 #define D_00575780 ((void *) D_00575780)
+#else
+#define D_00575780 (*(void **)&D_00575780)
+#endif
 void func_00170f50(s32 arg0, s32 *arg1, s32 arg2, s32 arg3, s32 arg4) {
     void *temp_v0;
 

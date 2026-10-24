@@ -7,7 +7,7 @@
 #include "common.h"
 
 /* A 128-bit EE register / quadword (lq/sq). */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 /* A 4x4 VU0 matrix (ppp). */
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 

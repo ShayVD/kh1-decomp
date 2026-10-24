@@ -22,7 +22,7 @@
 #include "data/pieces/D_002C58B0.h"
 
 /* func_00142470 (from hand/text_00130000_h7.c). */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct {
     u8 pad[0x350];
     u128 x350;

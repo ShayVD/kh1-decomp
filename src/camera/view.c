@@ -185,9 +185,9 @@ void func_0017f510(void);
 void func_00125240(void) {
     V4f *p = &D_002E2780;
     f32 y, x;
-    register f32 k asm("$f0");
-    register f32 m asm("$f2");
-    register f32 one asm("$f3");
+    register f32 k KH1_REG("$f0");
+    register f32 m KH1_REG("$f2");
+    register f32 one KH1_REG("$f3");
     f32 *q = &D_002E27A4;
     m = -10000.0f;
     p->y = m;

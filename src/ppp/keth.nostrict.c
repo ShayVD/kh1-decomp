@@ -12,7 +12,7 @@
 #include "platform/gs.h"
 #include "platform/dma.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 Vec[4] __attribute__((aligned(16)));
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 
@@ -507,7 +507,7 @@ void func_001a8c40(TNd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
         x.end = *buf + 16;
         if (func_001a7718(&x)) {
             t = (Tag *)*buf;
-            t->q = 0;
+            t->q = KH1_Q(0);
             t->s.id = 0x70;
             *x.flag |= 0x8000;
             t->s.qwc = (u32)(x.end - *buf) / 16 - 1;

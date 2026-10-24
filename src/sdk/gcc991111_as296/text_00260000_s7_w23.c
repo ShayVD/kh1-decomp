@@ -238,7 +238,7 @@ extern char D_00493290[], D_004932A8[];
 s32 func_00269f38(void);
 void func_00269790(u32);
 void func_00269558(s32 *);
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 extern u128 D_0046E0B0[];
 extern u128 D_0046E100[];
 void func_00272738(s32);

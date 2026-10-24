@@ -925,7 +925,7 @@ s32 func_001cfb90(VmRec *vm) {
  * the top (update_equiv_regs moves the li.s next to its use after sched1)
  * plus volatile type and v3 in the message, which put the li.s after the
  * dsll as in the original.  The c*2.0f chain is a local register variable
- * `register f32 t asm("$f0")` set by `t = (f32)c; t = t + t;`, so
+ * `register f32 t KH1_REG("$f0")` set by `t = (f32)c; t = t + t;`, so
  * local-alloc can no longer give f0 to the moved 1.0 (it gets f1 as in the
  * original).  FLAGGED: two volatile fields in the stack message (without them
  * 6w) and the pin (`t = c * 2.0f` in one statement: 6w). */
@@ -953,7 +953,7 @@ s32 func_001cfc28(VmRec *vm) {
         m.type = 29;
         m.val = (u32)b;
         {
-            register f32 t asm("$f0");
+            register f32 t KH1_REG("$f0");
             t = (f32)c;
             t = t + t;
             m.v[0] = t;

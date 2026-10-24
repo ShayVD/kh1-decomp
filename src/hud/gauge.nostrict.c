@@ -194,7 +194,7 @@ extern I4b D_004546C0[];
 extern I4b D_00454700[];
 CONTEXT_ONLY void func_0023d528(Gauge *o, s32 *p1, s32 *p2) {
     s32 r[2];
-    register I4b *t asm("$5");
+    register I4b *t KH1_REG("$5");
     switch (o->unk0) {
     case 0:
         t = D_00454650;

@@ -11,7 +11,7 @@
 #include "platform/vu.h"
 #include "ppp.h"
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 typedef struct {
@@ -73,7 +73,7 @@ void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
     PppMegaBirth *w = (PppMegaBirth *) ((u8 *) obj + e->offsets[2] + 0xA0);
 
     PlatVu0UnitMatrix(w->m);
-    w->q = 0;
+    w->q = KH1_Q(0);
     w->i[0] = 0;
     w->i[1] = 0;
     w->i[2] = 0;
