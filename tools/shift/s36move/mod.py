@@ -79,6 +79,11 @@ def remove(funcs):
         keep=[it for it in its if not (it[1]=='func' and it[2] in fs)]
         gone=set().union(*(idents(it[0]) for it in its if it[1]=='func' and it[2] in fs))|fs
         got={it[2] for it in its if it[1]=='func'} & fs
+        for f in fs-got:  # a macro-generated definition: delete its MACRO(f, ...) line (session 50)
+            for i,(t,k,n) in enumerate(keep):
+                m=re.search(r'^[ \t]*(\w+)\(\s*'+f+r'\b.*\)[ \t]*\n',t,flags=re.M)
+                if m and k!='func':
+                    keep[i]=(t[:m.start()]+t[m.end():],k,n); gone|=idents(m.group(0)); got.add(f); break
         assert got==fs,(path,fs-got)
         prune(path,keep,gone)
 def prune(path,its,gone):

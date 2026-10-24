@@ -3,9 +3,10 @@
  * (pppRyjMegaBirthModelFrame) allocates n particles of 0xB0 bytes (and the
  * optional 64-byte and 32-byte extras) on its first frame, then
  * func_001a0628 moves the live ones (func_001a0190: spin, scale, speed,
- * gravity, size, fade in / out) and starts new ones with func_0019f1f0 (a
- * CONTEXT_ONLY copy here, from the pppRyjMegaBirth class's file) after the
- * key's wait.  The draw (pppRyjMegaBirthModelDraw) builds each live
+ * gravity, size, fade in / out) and starts new ones with func_0019f1f0
+ * (defined here since session 50; its random numbers come from vu0.c's
+ * func_0019f100, a CONTEXT_ONLY copy here, as is ryjmbmodel.c's
+ * func_0019f148) after the key's wait.  The draw (pppRyjMegaBirthModelDraw) builds each live
  * particle's matrix (func_001a0908, func_001a09d0) and colour and draws the
  * model through opdma.c's func_001aaf88.  The Con and Des are in
  * ryjmbmodel.c.  Read from the code, not proved by a boot. */
@@ -353,8 +354,15 @@ CONTEXT_ONLY s8 func_0019f148(u8 a) {
     return (f32) (a * 2) * f - (f32) (a >> 1);
 }
 
+/* func_0019f1f0 (from text_00190000_s12_s12w8.c): two empty do { } while
+ * (0) barriers per TAIL copy (after the int loads, before the stores)
+ * reproduce the original sched order; the FP register swap is fixed by
+ * making fz, fu and one function-level variables (set in both TAIL copies, so
+ * global-alloc assigns them after local-alloc: ft takes f1 locally, then fu
+ * f2, fz f3, one f4 by global priority) and multiplying in place (`fu *=
+ * key->sc[1]`). */
 #define R func_0019f100()
-#define ORTHO do { \
+#define ORTHO { \
         p->m[1][0] *= key->sc[0]; \
         p->m[1][1] *= key->sc[1]; \
         p->m[1][2] *= key->sc[2]; \
@@ -363,21 +371,24 @@ CONTEXT_ONLY s8 func_0019f148(u8 a) {
         func_002673b8(z, z); \
         func_00267370(p->m[0], z, y); \
         func_002673b8(p->m[0], p->m[0]); \
-    } while (0)
-#define TAIL do { \
-        v = tbl[*ip]; \
-        p->m[3][0] = (f32)v.x * key->sc[0]; \
-        p->m[3][1] = (f32)v.y * key->sc[1]; \
+    }
+#define TAIL(E) { \
+        v = tbl[E]; \
+        t = v.x; p->m[3][0] = (f32)t * key->sc[0]; \
+        u = v.y; p->m[3][1] = (f32)u * key->sc[1]; \
         p->m[3][2] = (f32)v.z * key->sc[2]; \
+            }
+#define TAIL2 { \
         p->m[3][3] = 1.0f; \
         if ((u8)(key->type - 8) < 2) { \
             f32 *y = p->m[1], *z = p->m[2]; \
             func_002673b8(y, p->m[3]); \
             ORTHO; \
         } \
-    } while (0)
+    }
 
-CONTEXT_ONLY void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
+/* FLAGGED: empty do { } while (0) sched barriers in the TAIL copies */
+void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void *a, MgB *b) {
     f32 vec[4] __attribute__((aligned(16)));
     f32 ang[4] __attribute__((aligned(16)));
     f32 m[4][4] __attribute__((aligned(16)));
@@ -386,7 +397,8 @@ CONTEXT_ONLY void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void 
     f32 rng = key->b27;
     f32 rng2 = 2.0f * rng;
     s32 i;
-    f32 f, r;
+    s32 t, u, k;
+    f32 f, r, fz, fu, one;
 
     memset(p, 0, sizeof(MgPart2));
     if (a)
@@ -494,8 +506,8 @@ CONTEXT_ONLY void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void 
         default:
             if (obj->h22 >= (s16)s->n)
                 obj->h22 = 0;
-            { s32 k = obj->h22++; ip = s->idx; ip += k; }
-            goto got;
+            { s32 k = s->idx[obj->h22++]; { f32 ft, s0; s32 z; v = tbl[k]; t = v.x; ft = (f32)t; s0 = key->sc[0]; z = v.z; u = v.y; do { } while (0); fz = (f32)z; one = 1.0f; fu = (f32)u; do { } while (0); p->m[3][0] = ft * s0; fu *= key->sc[1]; p->m[3][1] = fu; fz *= key->sc[2]; p->m[3][2] = fz; p->m[3][3] = one; } }
+            goto ty;
         case 1:
             R;
             r = R;
@@ -515,9 +527,13 @@ CONTEXT_ONLY void func_0019f1f0(MgObj2 *obj, s32 keyi, MgE *e, MgPart2 *p, void 
         }
         if (obj->h22 >= (s16)s->n)
             obj->h22 = 0;
-        ip = (u16 *)((s32)(r * (f32)(s16)s->n) * 2 + (u32)s->idx);
-    got:
-        TAIL;
+        { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; { f32 ft, s0; s32 z; v = tbl[k]; t = v.x; ft = (f32)t; s0 = key->sc[0]; z = v.z; u = v.y; do { } while (0); fz = (f32)z; one = 1.0f; fu = (f32)u; do { } while (0); p->m[3][0] = ft * s0; fu *= key->sc[1]; p->m[3][1] = fu; fz *= key->sc[2]; p->m[3][2] = fz; p->m[3][3] = one; } }
+    ty:
+        if ((u8)(key->type - 8) < 2) {
+            f32 *y = p->m[1], *z = p->m[2];
+            func_002673b8(y, p->m[3]);
+            ORTHO;
+        }
         break;
     }
     }
@@ -892,6 +908,7 @@ typedef struct {
 } MdObj;
 #define D_00616224 (*(volatile s32 *) &D_00616224)
 
+void func_00267518(PppVec4, PppVec4, PppVec4);
 void pppRyjMegaBirthModelDraw(PppObject *obj, MdKey *key, PppEntry *e) {
     PppMtx m0;
     PppMtx m1;

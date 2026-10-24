@@ -5,13 +5,6 @@ typedef void (*H39CompFn)(void *, PppEntry *);
 
 /* The current matrix object (D_00615E68): +0x10 its matrix, +0x50 a
  * second (drawing) matrix. */
-typedef struct {
-    u8 pad[0x10];
-    f32 m[4][4];  /* +0x10 */
-    f32 m2[4][4]; /* +0x50 */
-} H39MObj;
-
-extern H39MObj *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 void func_002672f8(f32 *, f32 (*)[4], f32 *);
 
 /* A texture header inside a sprite record (+0x10): +8/+0xC are offsets
@@ -184,91 +177,8 @@ void pppDesObject(H39Inst *obj) {
 }
 
 typedef union { f32 f[4]; } H39V4 __attribute__((aligned(16)));
-typedef struct { u8 pad[0xC]; s32 slot; s32 off; } H39NKey;
-extern H39PSys *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
-    H39V4 v;
-    H39Inst *inst;
-    H39Slot2 *s;
-    f32 *out;
-
-    if (key->slot == -1)
-        return;
-    inst = NULL;
-    s = &D_00615E60->slots[key->slot];
-    if (s != NULL) {
-        inst = func_00182588(D_00615E60, s);
-        inst->unk04 = owner;
-    }
-    v.f[0] = pos[0];
-    v.f[1] = pos[1];
-    v.f[2] = pos[2];
-    v.f[3] = 1.0f;
-    func_002672f8(v.f, D_00615E68->m, v.f);
-    out = (f32 *) ((u8 *) inst + key->off + 0xA0);
-    out[0] = v.f[0];
-    out[1] = v.f[1];
-    out[2] = v.f[2];
-}
 
 /* The object a program runs in: +0x0C is its frame counter. */
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame; /* +0x0C */
-} PppObject;
-
-typedef struct {
-    s32 frame;
-    u16 d[4]; /* +0x4 */
-} H39ColKey;
-
-typedef struct {
-    u16 c[4]; /* +0x0 */
-    u32 rgba; /* +0x8: c scaled by the system colour, packed */
-} H39Col;
-
-extern s32 D_0061621C;
-
-void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
-    H39Col *w = (H39Col *) ((u8 *) obj + e->offsets[0] + 0xA0);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame == obj->frame) {
-        w->c[0] += key->d[0];
-        w->c[1] += key->d[1];
-        w->c[2] += key->d[2];
-        w->c[3] += key->d[3];
-    }
-    /* Widen the four u16 to words, scale by col in VU0, pack to bytes. */
-    __asm__ volatile(
-        "lw $2, 4(%0)\n"
-        "pextlw $2, $2, $0\n"
-        "lw $3, 0(%0)\n"
-        "or $2, $2, $3\n"
-        "pextlh $2, $0, $2\n"
-        "qmtc2 $2, $vf1\n"
-        "vitof0.xyzw $vf1xyzw, $vf1xyzw\n"
-        "lqc2 $vf2, 0(%1)\n"
-        "vmul.xyzw $vf1xyzw, $vf1xyzw, $vf2xyzw\n"
-        "vftoi0.xyzw $vf1xyzw, $vf1xyzw\n"
-        "qmfc2 $2, $vf1\n"
-        "psrlw $2, $2, 7\n"
-        "ppach $2, $0, $2\n"
-        "ppacb $2, $0, $2\n"
-        "sw $2, 8(%0)\n"
-        :
-        : "r"(w), "r"(D_00615E60->col)
-        : "$2", "$3", "memory");
-}
-
-
-void func_00183be0(f32 (*)[4], f32 *);
-void func_001a5250(f32 (*)[4], f32 *);
-void func_001a52e0(f32 (*)[4], f32 *);
-void func_001a5370(f32 (*)[4], f32 *);
-void func_001a5400(f32 (*)[4], f32 *);
-void func_001a5490(f32 (*)[4], f32 *);
 
 /* Scales the xyz of a matrix row in VU0. */
 static inline void h39ScaleRow(f32 *row, f32 s) {
@@ -283,170 +193,11 @@ static inline void h39ScaleRow(f32 *row, f32 s) {
 
 /* The matrix classes: work 0 is the position, 1 the rotation (made into
  * the matrix by the class's rotation order), 2 the scale. */
-#define H39_MATRIX_FRAME(name, rot)                                       \
-    void name(void *obj, void *key, PppEntry *e) {                        \
-        f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);           \
-        f32 *ang = (f32 *) ((u8 *) obj + e->offsets[1] + 0xA0);           \
-        f32 *scl = (f32 *) ((u8 *) obj + e->offsets[2] + 0xA0);           \
-                                                                          \
-        rot(D_00615E68->m, ang);                                          \
-        h39ScaleRow(D_00615E68->m[0], scl[0]);                            \
-        h39ScaleRow(D_00615E68->m[1], scl[1]);                            \
-        h39ScaleRow(D_00615E68->m[2], scl[2]);                            \
-        D_00615E68->m[3][0] = pos[0];                                     \
-        D_00615E68->m[3][1] = pos[1];                                     \
-        D_00615E68->m[3][2] = pos[2];                                     \
-    }
-
-H39_MATRIX_FRAME(pppMatrixFrame, func_00183be0)
-H39_MATRIX_FRAME(pppMatrixXZYFrame, func_001a5250)
-H39_MATRIX_FRAME(pppMatrixYZXFrame, func_001a52e0)
-H39_MATRIX_FRAME(pppMatrixYXZFrame, func_001a5370)
-H39_MATRIX_FRAME(pppMatrixZXYFrame, func_001a5400)
-H39_MATRIX_FRAME(pppMatrixZYXFrame, func_001a5490)
-
-void sceVu0UnitMatrix(f32 (*)[4]);
-
-void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
-    f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);
-    f32 *scl = (f32 *) ((u8 *) obj + e->offsets[1] + 0xA0);
-
-    sceVu0UnitMatrix(D_00615E68->m);
-    D_00615E68->m[0][0] = scl[0];
-    D_00615E68->m[1][1] = scl[1];
-    D_00615E68->m[2][2] = scl[2];
-    D_00615E68->m[3][0] = pos[0];
-    D_00615E68->m[3][1] = pos[1];
-    D_00615E68->m[3][2] = pos[2];
-}
-
-#include "data/pieces/D_003701F0.h"
-extern f32 D_006160C0[4][4];
-extern f32 D_00616080[4][4]; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
-void func_00267560(f32 *, f32 *, f32);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-
-void pppDrawMatrixWoodFrame(void) {
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], D_003701F0[0]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], D_003701F0[1]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], D_003701F0[2]);
-    *(u128 *) D_00615E68->m2[3] = *(u128 *) D_00615E68->m[3];
-    sceVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
-    func_002672f8(D_00615E68->m2[3], D_00616080, D_00615E68->m[3]);
-}
-
-typedef struct {
-    s32 frame;
-    s32 unk04;
-    f32 d[6]; /* +0x8 */
-} H39TsKey;
 
 /* Work 2: two (value, speed, accel) triples, stepped every frame; the
  * keyframe adds to all six. */
-void pppDrawMdlTsFrame(PppObject *obj, H39TsKey *key, PppEntry *e) {
-    f32 *w = (f32 *) ((u8 *) obj + e->offsets[2] + 0xA0);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w[1] += w[2];
-    w[0] += w[1];
-    w[4] += w[5];
-    w[3] += w[4];
-    if (key->frame == obj->frame) {
-        w[0] += key->d[0];
-        w[1] += key->d[1];
-        w[2] += key->d[2];
-        w[3] += key->d[3];
-        w[4] += key->d[4];
-        w[5] += key->d[5];
-    }
-}
-
-typedef struct {
-    s32 frame;
-    s32 slot;   /* +0x4: program slot to start, -1 none */
-    s32 off;    /* +0x8: work offset of its position */
-    u8 every;   /* +0xC */
-} H39PApKey;
 
 /* Every `every` frames, starts the slot's program at work 0's position. */
-void pppPointApFrame(PppObject *obj, H39PApKey *key, PppEntry *e) {
-    f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);
-    u8 *w = (u8 *) obj + e->offsets[1] + 0xA0;
-    H39Inst *inst;
-    H39Slot2 *s;
-    f32 *out;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (w[1] == 0) {
-        if (key->slot == -1)
-            return;
-        inst = NULL;
-        s = &D_00615E60->slots[key->slot];
-        if (s != NULL) {
-            inst = func_00182588(D_00615E60, s);
-            inst->unk04 = (s32) obj;
-        }
-        out = (f32 *) ((u8 *) inst + key->off + 0xA0);
-        out[0] = pos[0];
-        out[1] = pos[1];
-        out[2] = pos[2];
-        w[1] = key->every;
-    }
-    w[1]--;
-}
-
-/* --- The float-vector random classes (pppSRand*FVFrame): on the first
- * frame they draw one random number per component into the work area, then
- * add amp * r - amp (amp * r for Up/Down) to the vector in the object. */
-
-extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
-
-typedef struct {
-    s32 frame;
-    s32 dst;    /* +0x4: work offset of the value, -1: scratch */
-    f32 amp[3]; /* +0x8 */
-    u8 twice;   /* +0x14 */
-} H39RandFVKey;
-
-f32 func_001892a8(u8);
-f32 func_00189470(u8);
-f32 func_00189648(u8);
-f32 func_00189298(f32, f32);
-f32 func_00189468(f32, f32);
-f32 func_00189640(f32, f32);
-
-#define H39_SRAND_FV(name, rnd, add)                                       \
-    void name(PppObject *obj, H39RandFVKey *key, PppEntry *e) {            \
-        f32 *w;                                                            \
-        f32 *v;                                                            \
-                                                                           \
-        if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))    \
-            return;                                                        \
-        if (obj->frame == 0) {                                             \
-            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
-            w[0] = rnd(key->twice);                                        \
-            w[1] = rnd(key->twice);                                        \
-            w[2] = rnd(key->twice);                                        \
-        } else {                                                           \
-            if (key->frame != obj->frame)                                  \
-                return;                                                    \
-            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
-        }                                                                  \
-        if (key->dst != -1)                                                \
-            v = (f32 *) ((u8 *) obj + key->dst + 0xA0);                    \
-        else                                                               \
-            v = &D_00575A00;                                               \
-        v[0] += add(key->amp[0], w[0]);                                    \
-        v[1] += add(key->amp[1], w[1]);                                    \
-        v[2] += add(key->amp[2], w[2]);                                    \
-    }
-
-H39_SRAND_FV(pppSRandFVFrame, func_001892a8, func_00189298)
-H39_SRAND_FV(pppSRandUpFVFrame, func_00189470, func_00189468)
-H39_SRAND_FV(pppSRandDownFVFrame, func_00189648, func_00189640)
-
 
 /* --- Depth sorting of the effect objects (D_00364130, 256 of 0xC0). */
 
@@ -606,40 +357,4 @@ void pppRelocProgram(H39RHdr *h, PppClass *classes) {
         ta[j] = (s32) &classes[ta[j]];
     for (k = 0; k < nb; k++)
         tb[k] += (s32) h;
-}
-
-typedef struct { s32 frame; s32 id; u16 speed; } H39ShKey;
-typedef struct { u16 time, frame, prev; } H39ShW;
-void pppDrawShapeFrame(PppObject *obj, H39ShKey *key, PppEntry *e) {
-    H39ShW *w;
-    H39Shape *sh;
-    H39ShFrm *f;
-    u16 cur;
-    H39ShEnt *se;
-    s8 fl;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = (H39ShW *) ((u8 *) obj + e->offsets[0] + 0xA0);
-    if (key->id == 0xFFFF)
-        return;
-    cur = w->frame;
-    se = &D_00615E64->shapes[key->id];
-    sh = se->shape;
-    f = &sh->frm[w->prev];
-    w->prev = cur;
-    w->time += key->speed;
-    if (w->time < f->dur)
-        return;
-    w->time -= f->dur;
-    w->frame = cur + 1;
-    if (w->frame < sh->n)
-        return;
-    fl = f->flags;
-    w->time = 0;
-    if (fl & 0x80) {
-        w->frame = 0;
-        return;
-    }
-    w->frame--;
 }

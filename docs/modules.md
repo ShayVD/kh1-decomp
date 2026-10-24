@@ -1801,6 +1801,114 @@ byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh` with
 float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings.
 
+## Session 50: the ppp effect classes, 0x00183c70-0x001a0000
+
+Session 50 moved 446 functions in thirteen commits, then fixed three missing
+prototypes and deleted eight old files left with no function.  No Mac:
+static checks only.  After it every function of 0x00183c70-0x001a0000 is in
+a module except the VU0 routines func_0019baf8 and func_0019f100 in
+src/hand/vu0.c.  All of it is ppp, the effect system: each module holds
+classes of the class table D_00370200 (docs/structs.md; their Con / Des /
+Frame / Draw slots point here) or the helpers only they call.  The names
+come from the table's class names; the split by class is a guess, and
+none of it is proved by a boot.  Each file's top comment says what it
+does as read from the code.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the basic component classes: pppPoint, pppMove / Accele, pppAngle / AngMove / AngAccele, pppScale ..., pppColor ..., pppDrawHookDraw | src/ppp/pppcomp.c, pppcomp.nostrict.c | 0x00183c70-0x001847d0 | 25 |
+| pppVertexAp / ApLc / ApAt (start effects at a mesh's vertices), pppVtMimeDraw | src/ppp/pppvertex.c, pppvertex.nostrict.c | 0x001847f8-0x001854f0 | 17 |
+| the matrix classes: pppMatrixLoc, pppParMatrix, pppChrScl*, pppDrawMatrix / Front / NoRot, pppSMatrix, the rotation-order frames | src/ppp/pppmatrix.c, pppmatrix.nostrict.c | 0x00185538-0x00186158 | 20 |
+| pppDrawMdlTs, pppDrawShape | src/ppp/pppdraw.c, pppdraw.nostrict.c | 0x00186178-0x001867c8 | 8 |
+| pppPObjPoint, pppPointAp / RAp (start an effect at the owner's position) | src/ppp/ppppoint.c, ppppoint.nostrict.c | 0x001868d0-0x00186ab0 | 5 |
+| pppRand* / pppSRand* (random values: frame and con functions, many made by one macro) | src/ppp/ppprand.c, ppprand.nostrict.c | 0x00186d00-0x0018a300 | 62 |
+| pppEiWind | src/ppp/eiwind.c, eiwind.nostrict.c | 0x0018a438-0x0018a7d8 | 9 |
+| the loop classes: pppMoveLoop / AngMoveLoop / SclMoveLoop, pppPointLoop / AngleLoop / ScaleLoop, pppDrawMatrixLoop, pppDrawMdlLoop(Z) | src/ppp/ppploop.c, ppploop.nostrict.c | 0x0018a7e0-0x0018bde0 | 40 |
+| the KeTh classes: pppKeTh, KeThTp / Tp2, KeThHitBorn, KeThSft, the 24 KeThRes | src/ppp/kethcls.c, kethcls.nostrict.c | 0x0018bee0-0x0018d000 | 36 |
+| pppKeBornRnd | src/ppp/kebornrnd.c, .nostrict.c, .nostrict_nofill.c | 0x0018d038-0x0018e728 | 23 |
+| pppKeMdl | src/ppp/kemdl.c, kemdl.nostrict.c | 0x0018e888-0x0018fcb0 | 15 |
+| pppKeShpTail (with the base frame and draw) | src/ppp/keshptail.c, keshptail.nostrict.c | 0x0018fcb8-0x00191ae0 | 17 |
+| pppKeShpDtt | src/ppp/keshpdtt.c, keshpdttdraw.nostrict.c | 0x00191b10-0x00191e20 | 3 |
+| the lens flare classes: pppKeLnsLp / Arnd / Clm / Crn / Fls, their T versions, KeLnsLpSft | src/ppp/kelnscls.c, kelnscls.nostrict.c | 0x00191e40-0x00193a00 | 38 |
+| pppKeMove | src/ppp/kemove.c, kemove.nostrict.c | 0x00193a20-0x00194268 | 14 |
+| pppKeMat | src/ppp/kemat.c, kemat.nostrict.c | 0x00194288-0x00194bb8 | 10 |
+| pppDrawMdlTs2 / Ts3 and the other model draws | src/ppp/drawmdl.c, drawmdl.nostrict.c | 0x00194cb8-0x00195cc0 | 12 |
+| pppKeMdlTfd3, pppKeMdlTfdUv3 | src/ppp/kemdltfd3.c, kemdltfd3.nostrict.c | 0x00195f50-0x00196450 | 4 |
+| pppKeShpTailX | src/ppp/keshptailx.c, keshptailx.nostrict.c | 0x00196490-0x00198578 | 13 |
+| pppRyjDrawMatrixWorld | src/ppp/ryjmtxworld.c, ryjmtxworld.nostrict.c | 0x001985a8-0x001995d0 | 21 |
+| pppRyjShipoly | src/ppp/ryjshipoly.c, ryjshipoly.nostrict.c | 0x001996d0-0x0019bab0 | 18 |
+| pppRyjMegaBirth | src/ppp/ryjmb.c, .nostrict.c, .nostrict_nofill.c | 0x0019bb40-0x0019d8a8 | 11 |
+| pppRyjMegaBirthPrize | src/ppp/ryjmbprize.c, ryjmbprize.nostrict.c | 0x0019d920-0x0019df80 | 5 |
+| pppRyjMegaPlace | src/ppp/ryjmplace.c, ryjmplace.nostrict.c | 0x0019dfc8-0x0019f0d0 | 17 |
+| MegaBirthModel's helpers 0019f148 / 0019f1a8 / 0019f1f0 (the real 0019f1f0 replaced its CONTEXT_ONLY copy) | src/ppp/ryjmbmodel.c, ryjmbmodel.nostrict.c | 0x0019f148-0x0019f1f0 | 3 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| ryjmb*, ryjmbprize*, ryjmplace* | e134fc8 | auto text_00190000_1 / _3 / _14, nostrict s7_w9 / s12_s12w8, nostrict_nofill b08 |
+| ryjshipoly*, the s50move tools | 973c54a | auto text_00190000_10, nostrict s11_w62 |
+| ryjmtxworld* | bf3dd9d | auto text_00190000_8 |
+| keshptailx* | ba266d0 | none |
+| drawmdl*, kemdltfd3* | c772a22 | none |
+| kemat*, kemove* | deda55c | auto text_00190000_7 / _11 |
+| kelnscls* | a554f83 | auto text_00190000_2 / _4 / _6, nostrict s18_s18m2 |
+| keshptail*, keshpdtt* (0x0019 done) | 54741e0 | auto text_00190000 / _5 / _9 / _12 / _13, nostrict b08 / h64 |
+| KeShpTail's frame and draw, kemdl* | 65ec4ea | auto text_00180000_19 |
+| kebornrnd*, kethcls* | bca1eae | auto text_00180000_9 / _17, nostrict c05 / s7_w2 |
+| ppploop*, eiwind* | ab5a2cb | none |
+| ppprand* | 0eae1ab | hand/nostrict/ppp_rand.c |
+| pppcomp*, pppvertex*, pppmatrix*, pppdraw*, ppppoint* | e027599 | auto text_00180000_7 / _8 / _11 / _14 / _15 / _20, hand/ppp.c, nostrict text_00180000 / s6_11 |
+| three missing prototypes | 58a9ab2 | none |
+| files left with no function | e17f355 | auto text_00180000_13 / _16 / _18, h40 and nostrict h40, nostrict h63, s7_w30, nostrict_nofill s6_11 |
+
+**Data moved with its users**: D_0061E2D0 (from h12 into ryjmb.c).
+
+**New tools** (tools/shift/s50move/):
+- `group.py src/ppp/NAME LO HI [--skip f,...]` drafts one file per flag mode
+  for every src/auto / src/hand function in the range (vu0.c excepted),
+  appending to files that exist, prunes them and runs checkfile on each; a
+  FAIL is reported as "same as its old file (rodata)" when the differing
+  words match the old file's (jump tables and rodata, placed by `make`), else
+  "NEW DIFF".
+- `assemble.py OUT.c func...` (or `--onto MODULE.c`) writes the module:
+  each function gets what it saw above it in its old file and uses, emitted
+  once; clashing typedefs, tags and static inline helpers are renamed
+  NAME_<last 5 address digits>; a clashing extern or prototype becomes a
+  per-function view (`#define` ... `#undef`); includes are hoisted to the
+  top and what the headers declare counts as declared; macro-generated
+  definitions (`MACRO(func, ...)` lines) are followed; it prints CONFLICT
+  lines for prototypes it left out.
+- `prune.py FILE` drops file-scope declarations nothing uses.
+- `mod.py remove` (s36move) now also deletes the `MACRO(func, ...)` line of
+  a macro-generated definition.
+
+**Traps.**
+- **View by value, not by memory**: in a strict-aliasing (default-flag)
+  file, `#define D_X (*(T *)&D_X)` loses the scalar's MEM_SCALAR_P and
+  reorders its loads (the WoodFrame functions).  View a scalar by value,
+  `((T) D_X)`, an array by address, `((T *) D_X)`; keep the memory view only
+  where the code takes the address (`&D_X` of a value cast does not compile).
+  Where an extern clashes, make the array declaration the base: an array
+  view of a scalar base changed D_00615FC0's address folding.
+- **Implicit declarations**: three calls had no prototype in scope
+  (func_00182588 in pppvertex / ppppoint, func_00267518 in ryjmbmodel, the
+  last one from session 49) and still matched.  Check new modules with
+  `-Wimplicit-function-declaration` (the ee-gcc command of checkfile.py plus
+  that flag): a float argument or a non-int return would not match.
+- **A function view for a disagreeing prototype**: `#define F ((RET
+  (*)(ARGS)) F)` keeps the call a `jal` and lets one function call with
+  three arguments what another declares with two.
+- **Old files with only static inline helpers left**: `mod.py remove` does
+  not call them EMPTY; `git rm` them (eight this session).
+- **Data definitions** still move by hand (D_0061E2D0).
+- **The CONTEXT_ONLY copy was not the real code**: ryjmbmodel.nostrict.c's
+  copy of func_0019f1f0 did not match once it became the definition; the
+  body from s12_s12w8 does.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh` with
+float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, and `s31_warndiff` 0 new warnings.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1897,7 +2005,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 49, after each step)
+## Verification (sessions 30 to 50, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1913,18 +2021,22 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x001a0000 to 0x0024f2e0** (session
-  49), except the 17 VU0 routines in src/hand/vu0.c.  The 3,099 functions
-  still in src/auto and src/hand lie in 0x001001f8-0x001a0000
-  (out/gen/placements.tsv): 186 in 0x0019, 335 in 0x0018 and more below.
-  Go on downwards from 0x0019f1f0: 0x0019c838-0x0019f1f0 is the rest of the
-  MegaBirth family (pppRyjMegaBirth / MegaPlaceModel, class table entries
-  206 on; func_0019f1f0 is in s12_s12w8, 0019f100 in vu0.c, 0019f148 in
-  h12), whose helpers the ryjmb*.c files already copy as CONTEXT_ONLY.
-  Fold those copies into the new module when it lands.  List a range with
-  `python3 -I tools/shift/s37move/refs.py LO HI`, group it by the class
-  table (docs/structs.md) where the functions are a class's slots, else by
-  what they do; leave whole-VU0 functions in place (docs/matching-tips.md).
+- **The game segment is in modules from 0x00183c70 to 0x0024f2e0** (session
+  50), except the VU0 routines in src/hand/vu0.c and two probes in
+  src/anon/session1_probes.c (func_0018ad70, func_001882f8).  The 2,653
+  functions still in src/auto and src/hand lie in 0x001001f8-0x00183c70
+  (out/gen/placements.tsv): 73 in 0x0018, 324 in 0x0017 and more below.
+  Next is the ppp manager core, 0x00180000-0x00183c70 (pppStepPrograms,
+  pppRelocProgram, pppDesObject, func_00182588 (make an instance), the
+  depth sort func_00181608, the texture slots func_001808f8 ...), spread
+  over hand h12, h39 and nostrict h39, h11, h38, s6_10, b07 and auto
+  text_00180000*; make it src/ppp/pppsys*.c, then go on into 0x0017.
+  `python3 -I tools/shift/s50move/group.py src/ppp/NAME LO HI` drafts a
+  range per flag mode; check its NEW DIFF lines, `mod.py remove` the
+  functions, `make`, fcheck.sh, and scan the new files for implicit
+  declarations (Session 50, Traps).  Group by the class table
+  (docs/structs.md) where the functions are a class's slots, else by what
+  they do; leave whole-VU0 functions in place (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
