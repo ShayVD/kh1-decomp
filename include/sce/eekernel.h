@@ -28,4 +28,8 @@ int RemoveDmacHandler(int channel, int handler_id);
 int EnableDmac(int channel);
 int DisableDmac(int channel);
 
+/* libpc: the performance counters (COP0 PCCR / PCR0 / PCR1). */
+int scePcStart(int control, int counter0, int counter1);
+void scePcStop(void);
+
 #endif /* KH1_SCE_EEKERNEL_H */

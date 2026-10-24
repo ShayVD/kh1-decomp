@@ -11,6 +11,7 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002E26A0.h"
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/math.h"
 #include "data/pieces/D_002BBDE0.h"
 #include "data/types/text_00110000_h4_p.h"
@@ -186,8 +187,7 @@ void func_001220b8(void) {
 #undef D_004F6EB8
 
 /* func_001220d0 (from auto/text_00120000.c). */
-M2C_UNK func_00270b40();
 void func_001220d0(void) {
-    func_00270b40();
+    PlatPcStop();
 }
 

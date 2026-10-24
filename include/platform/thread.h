@@ -4,7 +4,9 @@
  * The game runs one worker thread fed by a semaphore (src/util/thread.c),
  * waits on and signals semaphores from the file and sound queues, writes the
  * data cache back before every DMA send (PlatFlushCache(0); PlatIFlushCache
- * from an interrupt handler) and hooks the DMAC interrupt of a channel.  On
+ * from an interrupt handler) and hooks the DMAC interrupt of a channel.
+ * PlatPcStart / PlatPcStop run the CPU performance counters (src/pad/padread.c
+ * at boot, src/util/heap.c); the Vita build can make them no-ops.  On
  * the matching PS2 build each wrapper is a macro for the kernel call; the
  * casts take the game's own ThreadParam / SemaParam blocks.  The Vita port
  * maps threads and semaphores onto sceKernel* and makes the cache calls
@@ -31,6 +33,8 @@
 #define PlatRemoveDmacHandler(ch, id) RemoveDmacHandler((ch), (id))
 #define PlatEnableDmac(ch) EnableDmac(ch)
 #define PlatDisableDmac(ch) DisableDmac(ch)
+#define PlatPcStart(control, c0, c1) scePcStart((control), (c0), (c1))
+#define PlatPcStop() scePcStop()
 #else
 void PlatFlushCache(int op);
 void PlatIFlushCache(int op);
@@ -47,6 +51,8 @@ int PlatAddDmacHandler(int ch, int (*handler)(int), int next);
 int PlatRemoveDmacHandler(int ch, int id);
 int PlatEnableDmac(int ch);
 int PlatDisableDmac(int ch);
+int PlatPcStart(int control, int c0, int c1);
+void PlatPcStop(void);
 #endif
 
 #endif /* KH1_PLATFORM_THREAD_H */

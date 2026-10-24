@@ -9,6 +9,7 @@
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/pad.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h53_p.h"
@@ -143,9 +144,8 @@ void func_0011fa88(void) {
 }
 
 /* func_0011fad0 (from auto/text_00110000_6.c). */
-M2C_UNK scePcStart(M2C_UNK, M2C_UNK, M2C_UNK);
 s32 func_0011fad0(void) {
-    scePcStart(0x8000F8DE, 0, 0);
+    PlatPcStart(0x8000F8DE, 0, 0);
     return 0;
 }
 
