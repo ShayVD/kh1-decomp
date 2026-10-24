@@ -1476,6 +1476,108 @@ symbols the same as the base; the libvu0 commit adds the 39 names (same
 addresses) and drops five func_ aliases nothing references.  At the end `make
 report` 6979 at 100% and `make test` passes.
 
+## Session 46: the HUD's parts, 0x00239558-0x00249fb0 (the gauges 0x0023cfe8-0x00243168 left)
+
+Session 46 moved 206 functions into src/hud/ in 17 commits.  No Mac: static
+checks only.  The range is the HUD: hud.c's set up (session 45) calls one set
+up per part, each part registering a draw hook with func_0011ef10(priority,
+fn) when func_0011ef38(fn) is 0, with a step for hud.c's step (all off), a
+busy check, its own GS drawing environment (a 0x160-byte packet: unkE0 = 5,
+unk60 = 0x30003, sometimes TEST_1 0x8000000048 at +0x70), D_00351E10 as its
+staging buffer and func_002388b8 to add a sprite.  The gauge part
+0x0023cfe8-0x00243168 (about 70 functions, ttlib/ui_gauge.c) was left for
+session 47: see "Next module moves".
+
+| module | files | range | functions |
+|---|---|---|---|
+| the HUD's drawing helpers: a glyph through text's func_001f0638, a sprite and its second layer (func_00239630 / func_00239778), a vertical list of entries with a selection frame (func_00239e30) | src/hud/hudspr.c (c17 renamed), .nofill.c, .nostrict.c, .nostrict_nofill.c | 0x00239558-0x0023a318 | 9 |
+| the command menu: its draw hook func_0023a968 (the slide D_00449908.f7c / f80, the entries' fade, each open list of D_002E3170), the frame list func_0023a608, the set up func_0023b570; CmdMenu / HudSpr types, the 63 sprite buffers as HudSpr arrays (from s6_24) | src/hud/cmdmenu.c (s11_w19 renamed), .nofill.c, .nostrict.c, .nostrict_nofill.c | 0x0023a318-0x0023c1b0 | 11 |
+| markers over actors (ten in D_00651310), the lock-on mark (func_0023c7a0), the three-sprite sign (D_0044A820) | src/hud/marker.c, .nofill.c, .nostrict.c, .nostrict_nofill.c | 0x0023c1b0-0x0023cfe8 | 19 |
+| the notice: a queue of five (D_006561D0, NoticeMgr / Notice / NoticeQueue) shown at (160, 344) with the name of an id; most likely "obtained" | src/hud/notice.c, .nostrict.c | 0x00243168-0x00243c10 | 16 |
+| the party popups: a title bar, middle and bottom lines of sprites and texts | src/hud/popup.c, .nostrict.c | 0x00243c10-0x00244960 | 11 |
+| the counter: a value in five digits (func_00244b10) and its sprites | src/hud/counter.c, .nostrict.c | 0x00244960-0x00245238 | 11 |
+| the mark over an actor (D_006627B0: kind, actor, state, alpha) | src/hud/actmark.c, .nostrict.c | 0x00245238-0x00245798 | 9 |
+| numbers over the field (ten DmgNum in D_00662A30); most likely damage and heal | src/hud/dmgnum.c, .nostrict.c | 0x00245798-0x00245f58 | 14 |
+| the marks over the two party members (PMark D_00668040), read by the battle code h60 | src/hud/partymark.c | 0x00245f58-0x00246570 | 10 |
+| the target's gauge (TgtGauge D_00668370), fed by marker.c's func_0023c1b0 | src/hud/tgtgauge.c | 0x00246570-0x00246cf0 | 9 |
+| labelled numbers over the field (ten LblNum in .data D_0045FAC0) and their entry points | src/hud/lblnum.c, .nostrict.c (s8_w10 renamed) | 0x00246cf0-0x002474e8 | 13 |
+| the timer and score display (MgSlot D_00669350 points at a caller's MgHud: score, distance, time, record); func_002485f0's bits move tgtgauge / marker down; most likely the minigames' | src/hud/timer.c, .nostrict.c | 0x002474e8-0x00248628 | 20 |
+| the banner: a five-entry queue (Vec12Queue in D_00669700) shown at (160, 344) in seven parts and an end part | src/hud/banner.c | 0x00248628-0x00248fb8 | 15 |
+| a two-sprite display shown once (D_00469F60, D_00669A10) | src/hud/oneshot.c | 0x00248fb8-0x002492d0 | 7 |
+| math helpers: a fade step, rotation / translation / look-at / scale matrices on libvu0 (called by name), the GS-to-screen offset, a clip test, Hermite segments (func_00249618 Catmull-Rom, nogcse), an angle wrap, a clamp, a lerp | src/hud/hudmath.c, hudmath.nogcse.c (s8_w5 renamed) | 0x002492d0-0x002499f0 | 20 |
+| TIM2 picture uploads: image and CLUT (func_00249a48), image only (func_00249dc8), a list of them, the TEX0 fields (func_00249f08 / func_00249d50), the "TIM2" test, the CLUT copy | src/hud/timload.c | 0x002499f0-0x00249fb0 | 12 |
+
+Each file's top comment says what its code reads and what is a guess; none
+of the names is proved by a boot.  objdiff units 774 -> 782; src/hud has 217
+functions.
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x00239558-0x0023a318 | a65654a | h48 nostrict_nofill (c17 became hudspr.c) |
+| 0x0023a318-0x0023c1b0 | 2ba6e16 | c18 nostrict, auto text_00230000_10 (s11_w19 became cmdmenu.c) |
+| 0x0023c1b0-0x0023cfe8 | 47608aa | h25, auto text_00230000_1 / _2 / _11 |
+| 0x00243168-0x00243c10 | 4550448 | auto text_00240000_14 |
+| 0x00243c10-0x00244960 | cf83298 | (nothing) |
+| 0x00244960-0x00245238 | 7872427 | (nothing) |
+| 0x00245238-0x00245798 | a4f8762 | (nothing) |
+| 0x00245798-0x00245f58 | 7f70a64 | (nothing; s7_w1 nostrict keeps its other functions) |
+| 0x00245f58-0x00246570 | b5a38b9 | e8040, auto text_00240000_15 |
+| 0x00246570-0x00246cf0 | f5a1b55 | (func_002466e8 out of src/anon/session1_probes.c) |
+| 0x00246cf0-0x00247350 | dc5d28e | (s8_w10 nostrict became lblnum.nostrict.c) |
+| 0x00247350-0x002474e8 | 1c1736a | auto text_00240000_1 |
+| 0x002474e8-0x002485b8 | 49c79c2 | b16 |
+| 0x002485b8-0x00248fb8 | 21c97f9 | sw, auto text_00240000_6 / _19 |
+| 0x00248fb8-0x002492d0 | 1d2a914 | (nothing) |
+| 0x002492d0-0x002499f0 | e176401 | s11_w34, auto text_00240000_9 / _10 / _11 (s8_w5 nogcse became hudmath.nogcse.c) |
+| 0x002499f0-0x00249fb0 | 5aca32e | c2, auto text_00240000_12 |
+
+**Source names.**  The assert strings name the original files: "ttlib/ui_gauge.c"
+(func_00240400, lines 2727 / 2747, "tt_gaugeWorldmap.barrier": D_00454A20 is
+tt_gaugeWorldmap) for the gauge part, and "ttlib/ui.c" (func_00249fb0,
+func_0024a1c8, func_0024a300, func_0024a490: lines 14, 100, 137, 199) for the
+sprite library from 0x00249fb0 on (docs/elf-notes.md).  So 0x00249fb0-0x0024f2e0
+is one library file, not HUD parts: move it as src/hud/ui.c (or src/ttlib/).
+
+**Data moved with its users** (by hand, same type and alignment): each part's
+drawing environment and sprite buffers (D_00648630, D_00648790, D_00650F40,
+D_00650DE0, D_006510A0, D_00656254 ... D_006560F0, D_006562C0, D_00656424,
+D_00656430, D_0065FCA0 ... D_0065FC94, D_006627B8 ... D_006626C4, D_006627E0,
+D_00662950, D_00662944, D_00667F60 ... D_00667DF0, D_00668290, D_00668120,
+D_00668284, D_00668E20, D_00668F90, D_00668F84, D_00669070, D_006691E0,
+D_006692C0 ... D_00669338, D_006694B0, D_00669614, D_00669620, D_006697C0,
+D_00669924, D_00669930).  The names in src/data/bss_006x.c stay there.
+
+**Traps.**
+- **CONTEXT_ONLY copies**: mod.py draft skips them.  func_0023a968 needs a
+  CONTEXT_ONLY func_0023a720 above it (beql / beq), cmdmenu.nostrict.c one of
+  func_00239a80, dmgnum.nostrict.c func_00245a08 / func_00245ad8.  Grep the
+  old file for CONTEXT_ONLY above each moved function.
+- **A callee leaving a file**: func_0023a490 failed at link time after
+  func_00239630 left h74; a prototype in h74 fixed it.
+- **The f32 argument's place**: callers that passed the f32 in another
+  position than the definition (EABI: f12 whatever the order) reordered the
+  code; popup.c and timer.c call through a `#ifdef KH1_PS2` cast macro
+  (DRAW_TEXT) as the old files did.
+- **u32 against s32 switches** (sltiu / slti): func_002464f8 needs
+  `switch ((s32)...)`, LblNum an `s32 state`.
+- **Unused parameters**: a function its callers in the same file give more
+  arguments (func_00246750, func_002480d8) takes them.
+- **Count the functions before deleting a file**: text_s7_w1 nostrict was
+  deleted by mistake (6977) and restored with only its part cut out.
+- **A label cover_check needs**: banner.c keeps `extern Vec12Queue
+  D_00669714` (D_00669700.q by its own name); without a sized declaration of
+  it D_00669760 after it became covered (float_covered.txt changed).
+- Header type clash: a local Pkt clashed with bss_0064.h's; marker.c names
+  it GsEnv and does not include the header.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings on the edited
+files, 0 warnings in the new ones, and the m12 float build with
+float_covered.txt, float_reach.txt and the loaded bytes the same as the base;
+the symbols too, except D_006561E4 (a label inside D_006561D0) and
+func_00267f50 (sceVu0ClipAll's old alias), which nothing references any more.
+At the end `make report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1572,7 +1674,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 45, after each step)
+## Verification (sessions 30 to 46, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1588,17 +1690,30 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x00239558 on.**  Done up to the HUD's step (session 45).  Next: the
-  HUD's drawing helpers func_00239558 (h48 nostrict_nofill: a glyph through
-  text's func_001f0638), func_00239630 / func_00239860 / func_00239b90 (h74:
-  a sprite into D_00648900 sent with func_002388b8), func_00239778 / func_00239e30
-  (c17), func_002399f0 (s6_24 nostrict), func_00239a80 / func_00239d20 (h49
-  nofill), then the HUD parts from 0x0023a318 (h74, h49, b16, c17, h50, h75,
-  s7_w36 ...) up to 0x0024f2e0, each with its set up and step from hud.c's
-  lists.  `python3 -I tools/shift/s37move/refs.py 00239558 0023b000` lists
-  them.  Name the parts from their strings and data (command2/, the gauges).
-- What is left of h25, h48 and b16 (h73, s6_23, b15, s6_22, c16, h72,
-  h24, h47, h71, c15, cc are gone).
+- **The gauges, 0x0023cfe8-0x00243168** (72 functions, ttlib/ui_gauge.c; left
+  by session 46).  The party's HP / MP gauges and the world map's
+  (tt_gaugeWorldmap, D_00454A20), in 27 files: h75 nostrict (9), h49
+  nostrict (8), b16 nostrict (6), h74 nostrict_nofill (6), auto
+  text_00240000 (6) and _3 (5), h26 (4 + 2 nostrict) ...  Several views of
+  D_00454A20 (S16 in h74, others in h49 / h75) and of the gauge object
+  (h74's Obj with unk9E0 ... unkA94) and conflicting prototypes of
+  func_0023d700 / func_0023e160 (the bar drawers): settle one GaugeObj type
+  first.  Split by the set ups / steps hud.c lists (func_0023d0xx ...).
+  `python3 -I tools/shift/s37move/refs.py 0023cfe8 00243168` lists them.
+- **ttlib/ui.c, 0x00249fb0-0x0024e0a4** (123 functions): the sprite
+  animation library every HUD part calls (func_0024aa48 a sprite into a
+  packet, func_0024aac8 / func_0024afc0 the set up from a file, func_0024ae00
+  start, func_0024af00 step, func_0024ac08 / func_0024ac68 the rectangle and
+  colour, func_0024a1c0 the flags).  One library file: move it as one module
+  (src/hud/ui.c and its flag-mode siblings, or src/ttlib/ui.c), in address
+  order.  0x0024e0a4-0x0024f004 is hand-written assembly
+  (src/asm/text_0024e0a4.s: VU0 code and decoders; it stays), then five
+  functions 0x0024f008-0x0024f2e0 (auto text_00240000 / _3, s6_25
+  nostrict_nogcse, h50) end the game segment.
+- What is left of h26, h49, h50, h74, h75 and the auto text_0023 / text_0024
+  files after the gauges and ui.c (h25, h48, b16, h73, s6_23, b15, s6_22,
+  c16, h72, h24, h47, h71, c15, cc are gone; h25 / b16 / h48 / h74 /
+  h49 have flag-mode siblings left).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
