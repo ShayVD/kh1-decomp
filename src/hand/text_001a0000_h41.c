@@ -565,86 +565,15 @@ void func_001be4d8(void) {
     }
 }
 
-/* ---- func_001bebd0 ---- */
 typedef f32 Mtx[4][4];
-typedef struct { f32 v[4][4]; f32 pos[4]; f32 rot[4]; } Xf;
 void sceVu0UnitMatrix(Mtx);
 void sceVu0MulMatrix(Mtx, Mtx, Mtx);
-void sceVu0CopyMatrix(Mtx, Mtx);
-void func_002678b8(Mtx, Mtx, f32 *);
-void func_001be8a8(Mtx, f32 *, f32 *, f32 *, f32 *);
 
-void func_001bebd0(Mtx *o, Xf *x, Mtx *p) {
-    Mtx t, r, s;
-    sceVu0UnitMatrix(t);
-    func_002678b8(r, t, x->rot);
-    sceVu0MulMatrix(o[1], p[1], r);
-    func_00267578(t, t, x->pos);
-    sceVu0MulMatrix(r, r, t);
-    func_001be8a8(s, x->v[0], x->v[1], x->v[2], x->v[3]);
-    sceVu0MulMatrix(o[2], s, r);
-    sceVu0MulMatrix(o[3], p[0], o[2]);
-    sceVu0CopyMatrix(o[0], p[2]);
-}
-
-/* ---- func_001becb8 ---- */
 float sqrtf(float);
 
-void func_001becb8(f32 (*m)[4], f32 *v, s32 neg) {
-    f32 ny, l, a, b;
-    if (neg) {
-        v[0] = -v[0];
-        v[1] = -v[1];
-        v[2] = -v[2];
-    }
-    ny = -v[1];
-    l = sqrtf(1.0f - v[1] * v[1]);
-    a = v[0] / l;
-    b = v[2] / l;
-    m[1][1] = l;
-    m[0][1] = 0;
-    m[0][3] = 0;
-    m[1][3] = 0;
-    m[0][2] = -a;
-    m[1][0] = a * ny;
-    m[0][0] = b;
-    m[1][2] = b * ny;
-    m[2][0] = v[0];
-    m[2][1] = v[1];
-    m[2][2] = v[2];
-    m[3][3] = 1.0f;
-    m[3][0] = 0;
-    m[3][1] = 0;
-    m[3][2] = 0;
-    m[2][3] = 0;
-}
-
-/* ---- func_001bedd0 ---- */
 float sqrtf(float);
 
-f32 func_001bedd0(f32 *v) {
-    f32 l = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    if (l == 0.0f) return l;
-    v[0] /= l;
-    v[1] /= l;
-    v[2] /= l;
-    return l;
-}
-
-/* ---- func_001bf2b0 ---- */
 typedef struct { f32 x, y, z, w; } Q;
-
-void func_001bf2b0(Q *d, Q *a, Q *b) {
-    Q r;
-    r.x = a->w * b->x + b->w * a->x + (a->y * b->z - a->z * b->y);
-    r.y = a->w * b->y + b->w * a->y + (a->z * b->x - a->x * b->z);
-    r.z = a->w * b->z + b->w * a->z + (a->x * b->y - a->y * b->x);
-    r.w = a->w * b->w - (a->x * b->x + a->y * b->y + a->z * b->z);
-    d->x = r.x;
-    d->y = r.y;
-    d->z = r.z;
-    d->w = r.w;
-}
 
 /* needs make: uses rodata */
 

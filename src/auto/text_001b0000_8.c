@@ -58,36 +58,6 @@ s32 func_001baf38(s32 arg0) {
     } while (var_v1 >= 0);
     return var_a1;
 }
-
-void func_001be9f0(f32 *arg0) {
-    f32 *var_a0;
-    f32 temp_f0;
-    f32 var_f1;
-    s32 var_v0;
-
-    var_a0 = arg0;
-    var_v0 = 3;
-    do {
-        var_f1 = *var_a0;
-        if (var_f1 < -3.141592503f) {
-            temp_f0 = var_f1 + 6.28318501f;
-            *var_a0 = temp_f0;
-            var_f1 = temp_f0;
-        }
-        var_v0 -= 1;
-        if (var_f1 > 3.141592503f) {
-            *var_a0 = var_f1 - 6.28318501f;
-        }
-        var_a0 += 1;
-    } while (var_v0 >= 0);
-}
-
-void func_001bf290(void *arg0) {
-    M2C_FIELD(arg0, f32 *, 0xC) = 1.0f;
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, s32 *, 8) = 0;
-    M2C_FIELD(arg0, s32 *, 0) = 0;
-}
 #include "data/data_0037.h"
 #include "data/data_0048.h"
 #include "data/data_0049.h"

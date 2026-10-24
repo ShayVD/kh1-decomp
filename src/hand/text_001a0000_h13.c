@@ -433,91 +433,11 @@ s32 func_001be710(void) {
 }
 
 /* Zero n bytes (the head loop clears p & 7 bytes, as in the original). */
-void func_001be820(u8 *p, u32 n) {
-    u32 i;
-    for (i = (u32)p & 7; i != 0; i--) {
-        *p++ = 0;
-        n--;
-    }
-    while (n >= 8) {
-        *(u64 *)p = 0;
-        n -= 8;
-        p += 8;
-    }
-    while (n != 0) {
-        *p++ = 0;
-        n--;
-    }
-}
 
 /* Stack of 16 quadwords with a parallel s32 value per entry. The char member
  * makes the quadword stores alias n, as in the original (n is reloaded). */
-typedef union { u128 q; u8 c[16]; } Q16;
-typedef struct {
-    Q16 q[16];      /* 0x000 */
-    s32 val[16];    /* 0x100 */
-    s32 cur;        /* 0x140 */
-    Q16 *top;       /* 0x144 */
-    s32 n;          /* 0x148 */
-} QStack;
-
-void func_001be758(QStack *s, s32 v, u128 q) {
-    s32 i = s->n;
-    s->val[i] = v;
-    s->q[i].q = q;
-    s->cur = v;
-    s->top = &s->q[s->n];
-    s->n++;
-}
-
-void func_001be798(QStack *s, u128 q) {
-    s->n--;
-    s->q[s->n - 1].q = q;
-    s->top = &s->q[s->n - 1];
-    s->cur = s->val[s->n - 1];
-}
-
-void func_001be988(f32 *out, f32 *a, f32 *b, s32 num, s32 den) {
-    f32 t = (f32)num / (f32)den;
-    s32 i;
-    for (i = 0; i < 4; i++) out[i] = (b[i] - a[i]) * t + a[i];
-}
-
-float sqrtf(float);
-
-f32 func_001bee80(f32 *a, f32 *b) {
-    f32 d[3];
-    d[0] = a[0] - b[0];
-    d[1] = a[1] - b[1];
-    d[2] = a[2] - b[2];
-    return sqrtf(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
-}
-
-void func_001bef40(char *d, char *s, char *t) {
-    while (*s) *d++ = *s++;
-    while (*t) *d++ = *t++;
-    *d = 0;
-}
-
-void func_001bef98(char *d, char *s) {
-    while (*s) *d++ = *s++;
-    *d = 0;
-}
 
 /* Piecewise-linear lookup in {time, value} keys ending with a negative time. */
-typedef struct { s32 t; f32 v; } Key;
-
-f32 func_001befc8(s32 t, Key *k) {
-    s32 pt = 0;
-    f32 pv = 0.0f;
-    for (; k->t >= 0; k++) {
-        if (t == k->t) return k->v;
-        if (t < k->t) return (k->v - pv) * ((f32)(t - pt) / (f32)(k->t - pt)) + pv;
-        pv = k->v;
-        pt = k->t;
-    }
-    return 0.0f;
-}
 
 /* needs make: uses rodata */
 

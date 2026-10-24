@@ -22,8 +22,6 @@ extern s32 D_00623228;
 extern s32 D_00623E30;
 extern s32 D_00625748;
 extern s32 D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
-f32 func_0026b6f8(f32);
-f32 func_0026b7d0(f32);
 s32 func_001ba458(s32);
 s32 func_001ba9a8();
 
@@ -138,55 +136,5 @@ s32 func_001be660(void) {
 
 void func_001be670(s32 arg0) {
     D_0037A158 = arg0;
-}
-
-void func_001be7d8(void *arg0) {
-    M2C_FIELD(arg0, M2C_UNK (**)(s32), 0x140)(M2C_FIELD(arg0, s32 *, 0x144));
-}
-
-s32 func_001be800(u32 arg0, u32 arg1) {
-    return arg0 + (arg1 - (arg0 % arg1));
-}
-
-void func_001bf098(void *arg0, void *arg1) {
-    M2C_FIELD(arg0, f32 *, 0) = (f32) M2C_FIELD(arg1, f32 *, 0);
-    M2C_FIELD(arg0, f32 *, 4) = (f32) M2C_FIELD(arg1, f32 *, 4);
-    M2C_FIELD(arg0, f32 *, 8) = (f32) M2C_FIELD(arg1, f32 *, 8);
-    M2C_FIELD(arg0, f32 *, 0x10) = (f32) M2C_FIELD(arg1, f32 *, 0x10);
-    M2C_FIELD(arg0, f32 *, 0x14) = (f32) M2C_FIELD(arg1, f32 *, 0x14);
-    M2C_FIELD(arg0, f32 *, 0x18) = (f32) M2C_FIELD(arg1, f32 *, 0x18);
-    M2C_FIELD(arg0, f32 *, 0x20) = (f32) M2C_FIELD(arg1, f32 *, 0x20);
-    M2C_FIELD(arg0, f32 *, 0x24) = (f32) M2C_FIELD(arg1, f32 *, 0x24);
-    M2C_FIELD(arg0, f32 *, 0x28) = (f32) M2C_FIELD(arg1, f32 *, 0x28);
-}
-
-void func_001bf360(void *arg0, void *arg1) {
-    f32 temp_f0;
-    f32 temp_f1;
-    f32 temp_f2;
-    f32 temp_f2_2;
-    f32 temp_f3;
-
-    temp_f1 = M2C_FIELD(arg1, f32 *, 0);
-    temp_f2 = M2C_FIELD(arg1, f32 *, 0xC);
-    temp_f3 = M2C_FIELD(arg1, f32 *, 4);
-    temp_f0 = M2C_FIELD(arg1, f32 *, 8);
-    temp_f2_2 = (temp_f2 * temp_f2) + (temp_f1 * temp_f1) + (temp_f3 * temp_f3) + (temp_f0 * temp_f0);
-    M2C_FIELD(arg0, f32 *, 0) = (f32) (-temp_f1 / temp_f2_2);
-    M2C_FIELD(arg0, f32 *, 4) = (f32) (-M2C_FIELD(arg1, f32 *, 4) / temp_f2_2);
-    M2C_FIELD(arg0, f32 *, 8) = (f32) (-M2C_FIELD(arg1, f32 *, 8) / temp_f2_2);
-    M2C_FIELD(arg0, f32 *, 0xC) = (f32) (M2C_FIELD(arg1, f32 *, 0xC) / temp_f2_2);
-}
-
-void func_001bf698(void *arg0, void *arg1, f32 fparg0) {
-    f32 temp_f0;
-    f32 temp_f20;
-
-    temp_f20 = fparg0 * 0.5f;
-    M2C_FIELD(arg0, f32 *, 0xC) = func_0026b6f8(temp_f20);
-    temp_f0 = func_0026b7d0(temp_f20);
-    M2C_FIELD(arg0, f32 *, 0) = (f32) (M2C_FIELD(arg1, f32 *, 0) * temp_f0);
-    M2C_FIELD(arg0, f32 *, 4) = (f32) (M2C_FIELD(arg1, f32 *, 4) * temp_f0);
-    M2C_FIELD(arg0, f32 *, 8) = (f32) (M2C_FIELD(arg1, f32 *, 8) * temp_f0);
 }
 #include "data/data_0037.h"

@@ -16,13 +16,7 @@ M2C_UNK func_001bd470();
 M2C_UNK func_001be670(M2C_UNK);
 M2C_UNK func_001be820(M2C_UNK *, M2C_UNK);
 #include "vm/script_vm.h"
-M2C_UNK func_002672f8(M2C_UNK *, void *, s32);
 M2C_UNK func_00267328(s32, s32, void *);
-M2C_UNK func_00267620(void *);
-M2C_UNK func_002676c0(void *, void *, f32);
-M2C_UNK func_00267768(void *, void *, f32);
-M2C_UNK func_00267810(void *, void *, f32);
-M2C_UNK func_00267930(s32, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK memset(s32, M2C_UNK, M2C_UNK);
 extern M2C_UNK D_00621220; /* src/data/bss_0062.c: Lt2 D_00621220 */
 extern M2C_UNK D_00625648; /* src/data/bss_0062.c: s32 D_00625648[0x40] */
@@ -140,17 +134,5 @@ void func_001be430(s32 arg0) {
     memset(func_001ba9d8(arg0 - D_00625640), 0, 0xF70);
     func_001bb880(0);
     func_001bd470();
-}
-
-void func_001be8a8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
-    s32 sp[28];
-    func_00267620(sp);
-    func_00267768(sp, sp, M2C_FIELD(arg4, f32 *, 0));
-    func_00267810(sp, sp, M2C_FIELD(arg4, f32 *, 4));
-    func_002676c0(sp, sp, M2C_FIELD(arg4, f32 *, 8));
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, arg2);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x50), sp, arg3);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x60), sp, arg1);
-    func_00267930(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x60), &M2C_FIELD(sp, M2C_UNK *, 0x40), &M2C_FIELD(sp, M2C_UNK *, 0x50));
 }
 #include "data/data_0037.h"

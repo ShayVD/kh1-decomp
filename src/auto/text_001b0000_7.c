@@ -84,31 +84,3 @@ void func_001babe8(void) {
     func_001ba930(0x25, -1);
     func_001ba930(0x26, -1);
 }
-
-void func_001bf548(void *arg0, void *arg1) {
-    f32 temp_f0;
-    f32 temp_f0_2;
-    f32 temp_f0_3;
-    f32 temp_f1;
-    f32 temp_f1_2;
-    f32 temp_f2;
-
-    temp_f0 = M2C_FIELD(arg1, f32 *, 4);
-    temp_f1 = M2C_FIELD(arg1, f32 *, 8);
-    M2C_FIELD(arg0, f32 *, 0) = (f32) (1.0f - (2.0f * ((temp_f0 * temp_f0) + (temp_f1 * temp_f1))));
-    M2C_FIELD(arg0, f32 *, 0x10) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 0) * M2C_FIELD(arg1, f32 *, 4)) - (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 8))));
-    M2C_FIELD(arg0, f32 *, 0x20) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 0) * M2C_FIELD(arg1, f32 *, 8)) + (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 4))));
-    M2C_FIELD(arg0, f32 *, 4) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 0) * M2C_FIELD(arg1, f32 *, 4)) + (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 8))));
-    temp_f0_2 = M2C_FIELD(arg1, f32 *, 0);
-    temp_f1_2 = M2C_FIELD(arg1, f32 *, 8);
-    M2C_FIELD(arg0, f32 *, 0x14) = (f32) (1.0f - (2.0f * ((temp_f0_2 * temp_f0_2) + (temp_f1_2 * temp_f1_2))));
-    M2C_FIELD(arg0, f32 *, 0x24) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 4) * M2C_FIELD(arg1, f32 *, 8)) - (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 0))));
-    M2C_FIELD(arg0, f32 *, 8) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 0) * M2C_FIELD(arg1, f32 *, 8)) - (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 4))));
-    M2C_FIELD(arg0, f32 *, 0x18) = (f32) (2.0f * ((M2C_FIELD(arg1, f32 *, 4) * M2C_FIELD(arg1, f32 *, 8)) + (M2C_FIELD(arg1, f32 *, 0xC) * M2C_FIELD(arg1, f32 *, 0))));
-    temp_f0_3 = M2C_FIELD(arg1, f32 *, 0);
-    temp_f2 = M2C_FIELD(arg1, f32 *, 4);
-    M2C_FIELD(arg0, s32 *, 0x2C) = 0;
-    M2C_FIELD(arg0, s32 *, 0xC) = 0;
-    M2C_FIELD(arg0, s32 *, 0x1C) = 0;
-    M2C_FIELD(arg0, f32 *, 0x28) = (f32) (1.0f - (2.0f * ((temp_f0_3 * temp_f0_3) + (temp_f2 * temp_f2))));
-}
