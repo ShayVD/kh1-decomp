@@ -14,6 +14,7 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002C5C48.h"
 #include "common.h"
+#include "platform/file.h"
 #include "platform/cd.h"
 #include "platform/iop.h"
 #include "platform/thread.h"
@@ -120,20 +121,16 @@ typedef struct {
 extern char D_0048D260[];
 extern u32 D_002C5B44;
 extern void (*D_0046A6A8)(s32);
-s32 func_0025b588(char *, s32);
-s32 func_0025b990(s32, s32, s32);
-s32 func_0025bbc8(s32, u8 *, s32);
-s32 func_0025b810(s32);
 void func_002193e0(s32);
 void func_0010c170(void (*)(CdReq53 *), CdReq53 *);
 #define func_0010c1b8 ((void (*)(void (*)(CdReq53 *))) func_0010c1b8)
 void func_001202c0(CdReq53 *r) {
     s32 err = 0;
     s32 fd, left, n;
-    fd = func_0025b588(D_0048D260, 1);
+    fd = PlatFsOpen(D_0048D260, 1);
     if (fd >= 0) {
         if (!(D_002C5B44 & 0x2000)) {
-            func_0025b990(fd, r->lsn << 11, 0);
+            PlatFsLseek(fd, r->lsn << 11, 0);
             goto rd;
         }
         err = 1;
@@ -145,14 +142,14 @@ rd:
     n = 0;
     left = r->size;
     while (left > 0) {
-        n = func_0025bbc8(fd, r->buf, left);
+        n = PlatFsRead(fd, r->buf, left);
         if (n < 0) {
             err = 1;
             break;
         }
         left -= n;
     }
-    func_0025b810(fd);
+    PlatFsClose(fd);
     if (err == 0) {
         if (r->comp) {
             PlatFlushCache(0);
@@ -391,13 +388,12 @@ void func_00120aa0(void) {
 /* func_00120b10 (from hand/text_00110000_h4.c). */
 extern char D_0048D288[];
 u8 D_004F35B0[0x1000] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
-void func_0025b550(void);
 s32 func_0025f228(char *);
 s32 func_0025f1f0(void);
 void func_001101e8(void);
 void func_00120b10(void) {
     PlatSifInitRpc(0);
-    func_0025b550();
+    PlatFsReset();
     PlatCdInit(0);
     PlatCdMmode(2);
     while (!func_0025f228(D_0048D288));

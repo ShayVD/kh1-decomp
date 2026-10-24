@@ -9,23 +9,23 @@
  * 1 and, when the modules loaded (func_0024d4a0), signals the thread.  The
  * ioctl numbers' meanings are not known; not proved by a boot. */
 #include "common.h"
+#include "platform/file.h"
 #include "platform/cd.h"
 #include "platform/thread.h"
 #include "data/data_0046.h"
 #include "data/pieces/D_002C5968.h"
 
-s32 func_0025dd48(const char *, s32, s32, s32, void *, s32);
 s32 func_0025e990(const char *);
 /* hdd.c */
 s32 func_0024d4a0(void);
 void func_0024d5d0(s32);
 
 static inline s32 hdd_ok(void) { return func_0025e990("hdd"); }
-static inline s32 hdd_ctl(s32 cmd) { return func_0025dd48("hdd:", cmd, 0, 0, 0, 0); }
+static inline s32 hdd_ctl(s32 cmd) { return PlatFsDevctl("hdd:", cmd, 0, 0, 0, 0); }
 static inline void wait_dev9x(void) {
-    while (func_0025dd48("dev9x:", 0x4402, 0, 0, 0, 0) < 0) func_0024d5d0(100000);
+    while (PlatFsDevctl("dev9x:", 0x4402, 0, 0, 0, 0) < 0) func_0024d5d0(100000);
 }
-static inline void pfs_ctl(void) { func_0025dd48("pfs:", 0x5003, 0, 0, 0, 0); }
+static inline void pfs_ctl(void) { PlatFsDevctl("pfs:", 0x5003, 0, 0, 0, 0); }
 
 void func_0024d618(s32 sema) {
     u8 buf[16];
