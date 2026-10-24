@@ -258,6 +258,8 @@ def _ax(v):
 
 ARG_DROP_MAX = 8  # session 32 (arg-drop): an argument walk dropped this often at a point is not taken back
 FWD_GROW_MAX = 16  # session 34 (widen-heads): growths of a bound at a point that is not a loop head before widening
+JT_MAX = 0x400  # largest byte offset of a bounded jump table index
+JT_WORDS = 256  # session 59 (jt-read): words read from a table whose index has no bound
 SHADOW_MAX = 3  # arg-keep/join-keep: distinct values a register gets from shadow visits at a point before widening
 
 
@@ -845,7 +847,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             path_step: bool = True, wr_span: bool = True, arg_bound: bool = True, arg_keep: bool = True,
             join_keep: bool = True, stored_idx: bool = True, multi_base: bool = True, sign_prune: bool = True, widen_bases: bool = True,
             shadow_image: bool = True, arg_drop: bool = True, likely_slot: bool = True,
-            widen_heads: bool = True, hix_join: bool = True, neg_keep: bool = True, visit_rng=None, tight: bool = False):
+            widen_heads: bool = True, hix_join: bool = True, neg_keep: bool = True, jt_read: bool = True,
+            visit_rng=None, tight: bool = False):
     """Yield (pc, base, disp, width, kind) for accesses from a known base. kind: 'mem',
     'addr' (addiu to a new register), 'idx' (load/store through base + unknown; disp is
     the largest offset from base the access can reach, or None if unbounded),
@@ -904,7 +907,12 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
     zero; -1 or its 32-bit form 0xFFFFFFFF, -16 as 0xFFFFFFF0) get one shadow visit with all of them from that side, like
     a dropped address (join-keep): an index of -1 is an address below the base.
     func_001571a8 keeps k = -1 until it finds a free slot and then writes &D_00551608[k] unchecked; only some visit
-    orders saw the -1 path (D_00551608 - 34, in D_005512A0 and D_00551600) before it was joined away."""
+    orders saw the -1 path (D_00551608 - 34, in D_005512A0 and D_00551600) before it was joined away.
+    Session 59 (`jt_read`): a word loaded from a known table address with an index that has no bound (or one past
+    JT_MAX) is a jump table word too when the table's first word is an address in this function: (JT, table, None).
+    Its `jr` goes to every word read from the table while they are addresses in this function (at most JT_WORDS),
+    and to the branch labels as before. Before, only the labels: a case entry nothing branches to was analysed from
+    a fresh state (the code after a `jr`) or not at all, so accesses through the switch's registers were missed."""
     n = len(insns)
     if not n:
         return
@@ -1318,8 +1326,10 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
                 elif o == 0x25:  # lhu
                     st[t] = (UB, 0xFFFF)
                 elif o == 0x23 and read_word and isinstance(b, tuple) and b[0] == HIX and b[2] is not None \
-                        and 0 <= b[2] <= 0x400:
+                        and 0 <= b[2] <= JT_MAX:
                     st[t] = (JT, (b[1] + mips.imm(w)) & 0xFFFFFFFF, b[2])  # a switch's jump table
+                elif o == 0x23 and read_word and jt_read and (jt_ := unbounded_table(b, w)) is not None:
+                    st[t] = (JT, jt_, None)  # session 59 (jt-read): a switch on an index with no bound
                 elif o == 0x23 and ptr_globals and _gaddr(b, w) is not None:
                     st[t] = (PTR, _gaddr(b, w), 0)  # the pointer a global holds
                 else:
@@ -1492,11 +1502,32 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             return x > 0
         return None
 
+    def unbounded_table(b, w):
+        """Session 59 (jt-read): the address an `lw` through b reads when b is a known table address with an index that
+        has no bound (lui + index, or base + index with one base) and the word there is an address in this
+        function (a jump table's first case); else None."""
+        if isinstance(b, tuple) and b[0] == HIX and (b[2] is None or b[2] > JT_MAX):
+            x = (b[1] + mips.imm(w)) & 0xFFFFFFFF
+        elif isinstance(b, tuple) and b[0] == IDX and b[2] is None and not _xb(b):
+            x = (b[1] + mips.imm(w)) & 0xFFFFFFFF
+        else:
+            return None
+        y = read_word(x)
+        return x if y is not None and a0 <= y < a0 + 4 * n and not y & 3 else None
+
     def jump_table(v):
-        """The case addresses of a jump table register (all inside this function), or None."""
+        """The case addresses of a jump table register (all inside this function), or None. An unbounded one
+        (session 59, jt-read): the words from the table's start while they are addresses in this function."""
         if not (isinstance(v, tuple) and v[0] == JT):
             return None
         out = []
+        if v[2] is None:
+            for off in range(0, 4 * JT_WORDS, 4):
+                x = read_word(v[1] + off)
+                if x is None or not (a0 <= x < a0 + 4 * n) or x & 3:
+                    break
+                out.append(x)
+            return out or None
         for off in range(0, v[2] + 4, 4):
             x = read_word(v[1] + off)
             if x is None or not (a0 <= x < a0 + 4 * n) or x & 3:
@@ -1572,6 +1603,8 @@ def analyse(insns: list[mips.Insn], starts: set[int] | None = None, args: bool =
             elif ins.is_j:
                 merge(index(ins.jump_target), st_d)
             elif ins.is_jr and not ins.is_jr_ra and (jt := jump_table(st.get(mips.rs(w)))):
+                if st.get(mips.rs(w))[2] is None and starts:  # (jt-read: the labels too, as before)
+                    jt = sorted(set(jt) | set(starts))
                 for j in jt:  # a switch whose table we read: each case
                     if widen_heads and index(j) <= i:
                         widen_at.add(index(j))  # (a case before the jr closes a cycle: widen there)
@@ -1845,6 +1878,12 @@ def main() -> int:
     ap.add_argument("--no-align-end", action="store_true",
                     help="a bounded indexed access ends at its largest offset + width, not rounded down to the width "
                          "its alignment allows (before session 34)")
+    ap.add_argument("--no-fmt-read", action="store_true",
+                    help="a format string passed to a printf-family callee gets the callee's reach from its argument "
+                         "(order-dependent), not its own bytes up to the NUL (before session 59)")
+    ap.add_argument("--no-jt-read", action="store_true",
+                    help="a jump table whose index has no bound sends its `jr` to the branch labels only, not to the "
+                         "words read from the table (before session 59)")
     ap.add_argument("--span-log", type=Path, help="write each bounded indexed base whose accesses end past the next "
                     "name: the names inside the overrun and the accesses that reach it (session 33)")
     ap.add_argument("--data-tsv", type=Path, default=ROOT / "out/gen/data.tsv",
@@ -1949,7 +1988,7 @@ def main() -> int:
                        sign_prune=not a.no_sign_prune, widen_bases=not a.no_widen_bases,
                        shadow_image=not a.no_shadow_image, arg_drop=not a.no_arg_drop,
                        likely_slot=not a.no_likely_slot, widen_heads=not a.no_widen_heads,
-                       hix_join=not a.no_hix_join, neg_keep=not a.no_neg_keep,
+                       hix_join=not a.no_hix_join, neg_keep=not a.no_neg_keep, jt_read=not a.no_jt_read,
                        visit_rng=None if a.visit_seed is None else random.Random(a.visit_seed * 1000003 + fstart),
                        arg_bound=not a.no_arg_bound and is_func)
 
@@ -2213,12 +2252,33 @@ def main() -> int:
             return None
         return string_end(elf.read(base, obj_end - base), ub, sk)
 
+    def fmt_end(callee, j, base):
+        """Session 59 (fmt-read): the bytes a printf-family callee reads from a format string literal at base passed
+        as argument j: up to and with its NUL, when the format is clean (every '%' starts a whole conversion, so the
+        printer never skips the NUL) and nothing the analysis sees writes those bytes; else None. The printer reads
+        the format forward a byte at a time; its other reads (`ld / lw / lhu -8($s3)`, the va_list on the stack)
+        are not from the format, but func_00259698's loop joins the two pointers in some visit orders, which gave
+        the format argument a reach of [-2, +6) (session 32's order-dependent libc strings)."""
+        if a.no_fmt_read or STRING_ARGS.get(callee, {}).get(j) != "fmt" or not (BLOB_START <= base < BSS_START):
+            return None
+        data = elf.read(base, min(0x400, BSS_START - base))
+        z = data.find(b"\0")
+        if z <= 0 or any(c < 0x20 and c not in (9, 10, 13) or c == 0x7F for c in data[:z]) \
+                or _FMT.sub(b"", data[:z]).count(b"%") or obj_written(base, base + z + 1):
+            return None
+        return z + 1
+
+    fmt_read = 0
     for name, callee, j, v in sites:
         c = reach.get(callee, {}).get(j)
         if callee in BLOCK_CALLS:  # their own byte count is checked at the call
             continue
         if str_bound(callee, j, v, 0) is not None:
             continue  # the callee's quadword reads past the NUL are discarded (session 27)
+        if (fe_ := fmt_end(callee, j, v)) is not None:  # session 59 (fmt-read): the format's own bytes only
+            fmt_read += 1
+            check(name, v, 0, fe_, f"arg{j}:{fname.get(callee, hex(callee))}:fmt")
+            continue
         if c and c[1] - c[0] <= 0x40000:
             check(name, v, c[0], c[1] - c[0], f"arg{j}:{fname.get(callee, hex(callee))}:")
     # &B[i] passed as argument j: the callee reaches [lo, hi) from it, so the access ends at
@@ -2478,6 +2538,7 @@ def main() -> int:
     print(f"# {dma_chain} DMA chain arguments are bounded by their parsed tags (dma-chain)", file=sys.stderr)
     print(f"# {list_arg} list arguments are bounded by a list literal's count (list-arg)", file=sys.stderr)
     print(f"# {str_arg} string arguments end at their NUL inside their object (str-arg)", file=sys.stderr)
+    print(f"# {fmt_read} format arguments are read to their NUL only (fmt-read)", file=sys.stderr)
     print(f"# {dead_arg} indexed arguments are dropped: the callee never reads the register (dead-arg)",
           file=sys.stderr)
     print(f"# {len(uncached)} addresses have their uncached alias built", file=sys.stderr)
