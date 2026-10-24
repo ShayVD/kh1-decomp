@@ -65,7 +65,7 @@ s32 sceDmaPutEnv(DmaEnv *);
 void sceVu0ScaleVector(f32 *, f32 *, f32);
 void sceVu0Normalize(f32 *, f32 *);
 void sceVu0TransposeMatrix(f32 *, f32 *);
-void *func_002654e0(void);
+void *sceGsGetGParam(void);
 s32 func_0026a0e0(s32);
 s32 func_002585f0(void);
 s64 func_00258680(void);

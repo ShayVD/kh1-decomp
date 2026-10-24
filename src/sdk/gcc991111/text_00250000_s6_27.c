@@ -194,7 +194,7 @@ typedef struct {
     u64 trxdir, trxdiraddr;
 } GsStoreImage;
 
-s32 func_002660c0(GsStoreImage *sp, s16 sbp, s16 sbw, s16 spsm, s16 x, s16 y, s16 w, s16 h) {
+s32 sceGsSetDefStoreImage(GsStoreImage *sp, s16 sbp, s16 sbw, s16 spsm, s16 x, s16 y, s16 w, s16 h) {
     *(u128 *)&sp->giftag = 0;
     sp->vifcode[0] = 0;
     sp->vifcode[1] = 0x06008000;

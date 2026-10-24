@@ -106,7 +106,7 @@ void func_00263fa8(void) {
     free(func_00263ee8());
 }
 
-M2C_UNK *func_002654e0(void) {
+M2C_UNK *sceGsGetGParam(void) {
     return &D_0046C500;
 }
 

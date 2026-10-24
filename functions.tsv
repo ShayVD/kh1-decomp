@@ -797,3 +797,9 @@ sceDmaSync	002671d8	# hand (session 56): libdma in the library order; mode 1: CH
 sceDmaWatch	00267210	# hand (session 56): libdma in the library order; mode 1: MADR < addr; else waits until MADR reaches addr
 sceDmaPause	00267248	# hand (session 56): libdma in the library order; DI, the DMAC hold bit (D_ENABLEW 0x1000f590), CHCR.STR cleared, returns the old CHCR
 sceDmaRestart	002672e0	# hand (session 56): libdma in the library order; writes CHCR back, returns its old STR bit
+sceGsResetGraph	00265350	# hand (session 56): libgraph in the library order; (mode, inter, omode, ffmd) as shorts; mode 0 resets the GS (CSR, the SMODE / SYNCV tables) and keeps the three in the GParam, 1 only reinitialises the GS registers
+sceGsGetGParam	002654e0	# hand (session 56): libgraph in the library order; returns the static GParam D_0046C500 (interlace, omode, ffmode, ...)
+sceGsResetPath	002654f0	# hand (session 56): libgraph in the library order; VIF1 FBRST (0x10003c10) reset, VIF1 ERR, the VU1 reset bit of vi28 (cfc2 / ctc2), GIF reset (asm in libkernl_asm.s)
+sceGsPutDispEnv	00265980	# hand (session 56): libgraph in the library order; writes PMODE, SMODE2, DISPFB, DISPLAY, BGCOLOR from the env to the GS CSR block 0x12000000
+sceGsSyncV	00265b28	# hand (session 56): libgraph in the library order; waits for the vsync (the kernel VSync wait), returns the field from CSR bit 13 when interlaced
+sceGsSetDefStoreImage	002660c0	# hand (session 56): libgraph in the library order; the store packet: BITBLTBUF (sbp, sbw, spsm), TRXPOS, TRXREG (w, h), FINISH, TRXDIR 1; the pair of SetDefLoadImage

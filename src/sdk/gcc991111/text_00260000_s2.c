@@ -57,7 +57,7 @@ s32 sceDmaPutEnv(DmaEnv *);
 void sceVu0ScaleVector(f32 *, f32 *, f32);
 void sceVu0Normalize(f32 *, f32 *);
 void sceVu0TransposeMatrix(f32 *, f32 *);
-void *func_002654e0(void);
+void *sceGsGetGParam(void);
 s32 func_0026a0e0(s32);
 s32 func_002585f0(void);
 s64 func_00258680(void);
@@ -286,8 +286,8 @@ s32 func_00265558(void) {
     return func_002729d8(&buf[i - 9]) > 0x1315670;
 }
 
-void func_00265980(DispEnv *d) {
-    if (((GsState *)func_002654e0())->h6 == 1) {
+void sceGsPutDispEnv(DispEnv *d) {
+    if (((GsState *)sceGsGetGParam())->h6 == 1) {
         *(volatile u64 *)0x12000000 = d->pmode;
         *(volatile u64 *)0x12000070 = d->dispfb;
         *(volatile u64 *)0x12000080 = d->display;
@@ -316,8 +316,8 @@ s32 sceGsPutDrawEnv(u64 *tag) {
     return 0;
 }
 
-s32 func_00265b28(void) {
-    GsState *g = func_002654e0();
+s32 sceGsSyncV(void) {
+    GsState *g = sceGsGetGParam();
     s64 f;
     if (g->x8 == 0) {
         func_002585f0();

@@ -19,7 +19,7 @@ extern s32 D_0046C5D0;
 s32 AddIntcHandler(M2C_UNK, s32, M2C_UNK);
 s32 func_00266ba8(s32);
 s32 sceVu0CopyVector(s32, s32);
-void *func_002654e0();
+void *sceGsGetGParam();
 void func_00266ab0(void *);
 void func_00266b20(s32, s32, s32);
 
@@ -68,7 +68,7 @@ s32 func_00266a10(s32 arg0) {
     s32 temp_s2;
     void *temp_s0;
 
-    temp_s0 = func_002654e0();
+    temp_s0 = sceGsGetGParam();
     temp_s2 = M2C_FIELD(temp_s0, s32 *, 8);
     if (arg0 == 0) {
         func_00258c40(2);
