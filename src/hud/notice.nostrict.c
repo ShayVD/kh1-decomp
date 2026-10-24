@@ -22,10 +22,15 @@ typedef struct {
     s32 cnt;
 } S61D0;
 
-extern Gm *D_00656230;
-Gm *D_00656254 ALIGNED(4);
-Gm *D_00656278 ALIGNED(8);
-Gm *D_0065629C ALIGNED(4);
+/* The four sprite sets func_00243a90 fills (notice.c: func_0024afc0 writes nine words from
+ * &D_00656230[0], [9], [18] and [27]): one array in the original, so one definition here
+ * (session 68; the host's separate names left the sets 0x24 bytes apart in no order, and the
+ * fill wrote over D_006561D0).  Each set's first word is the Gm the draw reads. */
+Gm *D_00656230_sets[4][9] __asm__("D_00656230") ALIGNED(16);
+#define D_00656230 (D_00656230_sets[0][0])
+#define D_00656254 (D_00656230_sets[1][0])
+#define D_00656278 (D_00656230_sets[2][0])
+#define D_0065629C (D_00656230_sets[3][0])
 extern S61D0 D_006561D0;
 Q D_00655F80 ALIGNED(64);
 QW *D_006560E4 ALIGNED(4);

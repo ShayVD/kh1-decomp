@@ -83,11 +83,17 @@ int PlatCdStatus(void) { return 0; }
 int PlatCdBreak(void) { return 0; }
 int PlatCdPowerOff(int *result) { return 1; }
 
-/* platform/dma.h */
+/* platform/dma.h: a transfer is done as soon as it starts.  Its channel's interrupt status (the
+ * D_STAT bit) is set then and cleared by a PlatDmaPutStat of that bit (write 1 to clear), and an
+ * enabled channel with a handler (PlatAddDmacHandler) runs it (null_dmac_run below). */
+static void null_dmac_done(int ch);
 PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]; }
-void PlatDmaSend(PlatDmaChan *ch, void *tag) {}
-void PlatDmaPutStat(u32 v) {}
-void PlatDmaPutVif1Chcr(u32 v) {}
+void PlatDmaSend(PlatDmaChan *ch, void *tag) { null_dmac_done((struct PlatDmaChan *)ch - null_chan); }
+void PlatDmaPutStat(u32 v);
+/* CHCR's STR (0x100) starts channel 1 (VIF1) */
+void PlatDmaPutVif1Chcr(u32 v) {
+    if (v & 0x100) null_dmac_done(1);
+}
 void PlatDmaPutVif1Qwc(u32 v) {}
 void PlatDmaPutVif1Tadr(u32 v) {}
 void PlatVifPutErr(int n, u32 v) {}
@@ -237,10 +243,60 @@ int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data
 void PlatFlushCache(int op) {}
 void PlatIFlushCache(int op) {}
 /* threads and semaphores: host/null/threads.c */
-int PlatAddDmacHandler(int ch, int (*handler)(int), int next) { return 0; }
-int PlatRemoveDmacHandler(int ch, int id) { return 0; }
-int PlatEnableDmac(int ch) { return 0; }
-int PlatDisableDmac(int ch) { return 0; }
+/* The DMAC interrupts.  The one user is src/model/mdlgs.c: func_0015eb78 starts the frame's GS
+ * task list with channels 1 and 2 masked (PlatDisableDmac, PlatDmaPutStat(6)), runs it until a
+ * task starts a transfer and asks to go on in the interrupt (bit 2 of its answer), then enables
+ * both; the handler func_0015efc0 runs the rest of the list one transfer at a time and clears
+ * D_00559DB4 at its end, which func_0015ef60 waits for.  Unanswered it waited for ever (session
+ * 68, KH1_HOST_OVL=stub:2).  Here an enabled channel whose status is set runs its handler
+ * (cause = the channel), after the call that set or enabled it and never inside a handler: a
+ * transfer a handler starts runs the handler again once it returns, as the next interrupt. */
+#define NULL_DMAC_HANDLERS 4
+static int (*null_dmac_fn[16][NULL_DMAC_HANDLERS])(int);
+static u32 null_dmac_stat, null_dmac_mask;
+static void null_dmac_run(void) {
+    static int running;
+    int ch, i;
+    u32 due;
+    if (running) return;
+    running = 1;
+    while ((due = null_dmac_stat & null_dmac_mask) != 0) {
+        for (ch = 0; !(due & (1u << ch)); ch++)
+            ;
+        null_dmac_stat &= ~(1u << ch);
+        for (i = 0; i < NULL_DMAC_HANDLERS; i++)
+            if (null_dmac_fn[ch][i]) null_dmac_fn[ch][i](ch);
+    }
+    running = 0;
+}
+static void null_dmac_done(int ch) {
+    null_dmac_stat |= 1u << (ch & 15);
+    null_dmac_run();
+}
+void PlatDmaPutStat(u32 v) { null_dmac_stat &= ~(v & 0xFFFF); }
+/* the id is the handler's slot + 1 (0 would read as "none" to a caller) */
+int PlatAddDmacHandler(int ch, int (*handler)(int), int next) {
+    int i;
+    for (i = 0; i < NULL_DMAC_HANDLERS; i++)
+        if (!null_dmac_fn[ch & 15][i]) {
+            null_dmac_fn[ch & 15][i] = handler;
+            return i + 1;
+        }
+    return -1;
+}
+int PlatRemoveDmacHandler(int ch, int id) {
+    if (id >= 1 && id <= NULL_DMAC_HANDLERS) null_dmac_fn[ch & 15][id - 1] = 0;
+    return 0;
+}
+int PlatEnableDmac(int ch) {
+    null_dmac_mask |= 1u << (ch & 15);
+    null_dmac_run();
+    return 0;
+}
+int PlatDisableDmac(int ch) {
+    null_dmac_mask &= ~(1u << (ch & 15));
+    return 0;
+}
 int PlatPcStart(int control, int c0, int c1) { return 0; }
 void PlatPcStop(void) {}
 
