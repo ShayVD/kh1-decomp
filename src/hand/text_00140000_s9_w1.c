@@ -11,10 +11,6 @@ typedef struct {
     u8 pad74[0x3d0 - 0x74];
     s32 x3d0;
 } E30o;
-extern f32 D_002BBDFC;
-void func_0014cce0(E30o *o, f32 f);
-void func_00130398(E30o *o, s32 k, f32 f);
-void func_0014f658(E30o *o, s32 k);
 typedef struct {
     u32 flags;
     u8 pad4[0xC];
@@ -65,47 +61,3 @@ CONTEXT_ONLY s32 func_00142c80(E30o *o, V4f *v) {
 }
 /* func_00142e30: needs CONTEXT_ONLY func_00142cf0 and func_00142c80 above (plain beq/bnezl slots).
    One shared `end: return d;` (no return-value local): d has 3 refs, so z (0.0f) wins f21. */
-f32 func_00142e30(E30o *o, V4f *tg, s32 mode) {
-    s32 an = -1;
-    f32 spd;
-    f32 z;
-    f32 d;
-    s32 n;
-    switch (mode & 0xffff) {
-    case 0:
-        an = 1;
-        spd = o->x6c->x4;
-        break;
-    case 1:
-        an = 2;
-        spd = o->x6c->x8;
-        break;
-    case 2:
-        spd = o->x6c->xc;
-        break;
-    default:
-        spd = 0.0f;
-        break;
-    }
-    z = 0.0f;
-    d = func_00142cf0((O2cf0 *)o, tg, spd, z);
-    if (d < spd * D_002BBDFC) return z;
-    if (o->x70 == 2) goto end;
-    if (o->flags & 0x100) goto end;
-    n = func_00142c80(o, &o->x20);
-    if (n > 0) {
-        if (n >= 3) {
-            if (n == 3) return -1.0f;
-        } else {
-            if (mode & 0x10000) return -1.0f;
-            an = -1;
-            func_0014cce0(o, o->x6c->x10);
-            func_00130398(o, (o->x3d0 + 4) | 0x10000, z);
-            func_0014f658(o, 2);
-        }
-    }
-    if (an >= 0) func_00130398(o, an, 8.0f);
-end:
-    return d;
-}
-#include "data/pieces/D_002BBDFC.h"

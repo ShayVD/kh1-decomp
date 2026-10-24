@@ -6,40 +6,9 @@ M2C_UNK func_0014aab0(M2C_UNK *);
 extern M2C_UNK D_0054C440;
 #include "data/pieces/D_00350D88.h"
 f32 PlatSqrtf(f32);
-s32 func_001375f0();
 s32 func_001477c8(M2C_UNK);
 s32 func_0014ee88();
-void func_00142b30(void *, void *);
 void func_0014cc38(s32);
-void func_002673b8(void *);
-void func_00267560(void *, void *, f32);
-
-s32 func_00140f08(void *arg0, s32 arg1) {
-    s32 var_v0;
-
-    if (!((M2C_FIELD(arg0, u16 *, 0x30C) == 0xFFFF) || (func_001375f0() == 0) || (var_v0 = 0xB, !(M2C_FIELD(arg0, f32 *, 0x24) < 0.0f)))) {
-        return var_v0;
-    }
-    var_v0 = 0xA;
-    if (arg1 == 0) {
-        var_v0 = 0;
-        if (M2C_FIELD(arg0, f32 *, 0x24) <= 0.0f) {
-            var_v0 = 0xA;
-        }
-    }
-    return var_v0;
-}
-
-void func_00142c80(void *arg0) {
-    s32 sp[4];    void *temp_v0;
-
-    func_002673b8(sp);
-    func_00267560(sp, sp, 2.0f * M2C_FIELD(arg0, f32 *, 0x2C0));
-    temp_v0 = M2C_FIELD(arg0, void **, 0x6C);
-    M2C_FIELD(sp, f32 *, 0x4) = -M2C_FIELD(temp_v0, f32 *, 0x10);
-    M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD(temp_v0, f32 *, 0x10) * 0.7f;
-    func_00142b30(arg0, sp);
-}
 
 s32 func_00147808(s32 arg0) {
     return *(M2C_UNK *)((s32) ((arg0 * 4)) + (s32) (func_001477c8(0x258)));

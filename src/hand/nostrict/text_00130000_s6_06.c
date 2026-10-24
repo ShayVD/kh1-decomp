@@ -7,8 +7,6 @@
 #include "data/pieces/D_00304BE8_s.h"
 typedef W606Mem_304be8 W606Mem;
 
-
-
 typedef struct W606Ch W606Ch;
 struct W606Ch {
     u32 flags;
@@ -100,97 +98,6 @@ s32 func_0013c458(s32 i, s32 n) {
         }
     }
     return m->sub.exp;
-}
-
-typedef struct { u8 pad[0x38]; s16 x38; } W606T12c8;
-typedef struct { u8 pad[0x40]; s32 x40; s32 x44; s32 x48; u8 pad4c[0xbe - 0x4c]; s16 xbe; u8 padc0[8]; W606T12c8 *xc8; } W606T12s;
-typedef struct { u8 pad[0x6c]; W606T12s *x6c; } W606T12o;
-void func_00141468(W606T12o *o, s32 a);
-s32 func_00141540(W606T12o *o, s32 a);
-void func_00141218(W606T12o *o) {
-    s32 n;
-    if (o == 0) return;
-    func_00141468(o, o->x6c->x40);
-    n = o->x6c->x48;
-    if (o->x6c->x44 < n) {
-        func_00141540(o, n);
-        o->x6c->xbe = 0;
-        if (o->x6c->xc8) o->x6c->xc8->x38 = 0;
-    }
-}
-
-f32 func_00144368(W606Ch *o);
-s32 func_00142618(W606Ch *o) {
-    W606Ch *p = o->x398;
-    s32 r;
-    f32 d;
-    if (p != 0 && !((p->x370 >> 39) & 1)) {
-        r = p->info[0x5d];
-    } else {
-    r = o->x360;
-    if (o->x14 >= o->x2d4) {
-        d = func_00144368(o);
-        if (d < 20.0f) r = 10;
-        else if (d < 50.0f) r = 11;
-        else r = 12;
-    }
-    }
-    return r;
-}
-
-typedef struct { f32 x, y, z, w; } W606V4f;
-typedef struct { u8 pad[0x30]; u64 d30; u8 pad38[8]; W606V4f p; f32 f50; f32 f54; u8 pad58[4]; s32 w5c; } W606S148;
-typedef struct {
-    u32 flags;
-    u8 pad4[0xC];
-    W606V4f pos;
-    u8 pad20[0x148 - 0x20];
-    W606S148 *p148;
-    u8 pad14c[0x1CC - 0x14C];
-    u32 w1cc;
-    u8 pad1d0[0x2A0 - 0x1D0];
-    W606V4f v2a0;
-    W606V4f v2b0;
-    f32 f2c0;
-    u8 pad2c4[0x2D0 - 0x2C4];
-    u32 w2d0;
-    u8 pad2d4[0x2F0 - 0x2D4];
-    W606V4f v2f0;
-    f32 f300;
-    f32 f304;
-    u8 pad308[0x314 - 0x308];
-    u16 h314;
-} W606F3;
-s32 func_001166e8(W606V4f *);
-void func_002673b8(W606V4f *, W606V4f *);
-void func_00267e90(W606V4f *, W606V4f *, f32);
-void func_00267530(W606V4f *, W606V4f *, W606V4f *);
-s32 func_001429f8(W606V4f *, W606V4f *, W606V4f *);
-
-s32 func_00143080(W606F3 *o, W606V4f *v) {
-    W606V4f t, hit;
-    s32 r = 1;
-    if (!func_001166e8(&o->v2a0) && !(o->w2d0 & 1)) return r;
-    func_002673b8(&t, v);
-    func_00267e90(&t, &t, o->f2c0 + 10.0f);
-    t.y = -200.0f;
-    t.w = 200.0f;
-    if (func_001429f8(&o->v2a0, &t, &hit)) goto zero;
-    func_00267530(&o->v2b0, &hit, &o->v2a0);
-    o->v2b0.w = 1.0f;
-    if (func_001166e8(&o->v2a0) && (o->w2d0 & 1)) goto zero;
-    return 1;
-zero:
-    return 0;
-}
-
-typedef struct { f32 f; s32 pad; } W606F8;
-extern W606F8 D_00304D60[];
-s32 func_001443a8(W606Ch *o) {
-    if (o->x148 != 0 && ((s32)(o->x370 >> 56) & 1)) {
-        if (D_00304D60[*(u16 *)(o->info + 0x4c)].f < o->x14 - o->x2d4) return 1;
-    }
-    return 0;
 }
 
 typedef struct { u8 pad[0xc]; f32 xc; } W606T7v;

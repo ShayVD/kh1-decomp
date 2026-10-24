@@ -55,33 +55,7 @@ typedef struct { s32 x0, x4, x8, xc, x10, x14, x18; } W55Hdr;
 typedef struct { s32 x0, x4, x8, xc, x10; } W55Hd5;
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } W55Ev;
 typedef struct { u8 x0, x1; s8 x2; } W55EvInf;
-typedef struct { f32 pos[4]; u8 pad10[0x10]; f32 x20; f32 x24; s32 x28; } W55Col;
-typedef struct { f32 pos[4]; f32 dir[4]; f32 hit[4]; s16 id; s16 pad32; s32 x34; } W55Ray;
 #include "data/types/nostrict_text_00130000_h55.h"
-typedef struct {
-    s32 x0;
-    f32 x4, x8;
-    u8 pad0c[4];
-    f32 x10, x14, x18, x1c, x20, x24, x28, x2c, x30, x34, x38;
-    s32 x3c, x40, x44, x48, x4c, x50, x54;
-    f32 x58;
-    s32 x5c;
-    f32 x60, x64;
-    s32 x68, x6c, x70, x74;
-    f32 x78[16];
-    s32 xb8;
-    u8 xbc, xbd;
-    s16 xbe, xc0, xc2;
-    f32 xc4;
-    s32 xc8;
-    f32 xcc;
-    u8 xd0, xd1;
-    s16 xd2;
-    f32 xd4;
-    s32 xd8;
-    f32 xdc;
-    s32 xe0;
-} W55Cam;
 
 extern f32 D_002BBDFC;
 extern u32 D_002C5958;
@@ -101,23 +75,13 @@ extern W55Hdr *D_0052AE58; /* src/data/bss_0052.c: void *D_0052AE58 */
 extern W55Hd5 *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
 extern s32 D_0052AE60;
 f32 D_0052AE68 ALIGNED(8);
-extern W55Cache D_0052CB20[4];
-extern W55Cache *D_0052EB40;
-extern s32 D_0052EB44;
-extern s32 D_002BC128;
-extern s32 D_002BC130;
-extern s32 D_002BC134;
 extern s32 D_0029B410;
 
 void D_00F20000(s32 a, void *b);
 void func_00105a30(s32 a, s32 id, f32 *v);
-void func_00105ad0(s32 a, s32 id, f32 *v);
-s32 func_00105b68(s32 a, s32 b);
 u32 func_00105bc0(s32 a, s32 id);
 s32 func_00117bb0(s32 id, f32 *a, f32 *b, f32 *c);
-void func_00118628(W55Ray *r, s32 m);
 void func_0011f090(void *a, s32 b, void *c);
-f32 func_00120c18(f32 *v);
 f32 func_00121550(f32 *o, f32 *a, f32 *d, f32 *p, f32 *v);
 void func_00121fc4(f32 *d, f32 *s);
 W55Ob *func_001230a0(W55Ob *p);
@@ -129,11 +93,9 @@ void func_00124d08(void);
 void func_0012c560(W55Ob *o, void *a, s32 id);
 void func_0012ec60(void *a, s32 b, f32 *v);
 void func_00130340(void *o, s32 a, f32 f);
-void func_00130398(void *o, s32 a, f32 f);
 void *func_00130578(void *, s32, f32);
 void func_00131498(W55Ob *o, void *a);
 void func_00131500(W55Ob *o);
-f32 func_00131a68(W55Ob *o, s32 a);
 s32 func_00133000(W55Ob *o, s32 id);
 void func_001333e0(W55Ob *o, s32 id, void *p);
 void func_00133708(void);
@@ -147,18 +109,14 @@ s32 func_0013b4e8();
 void func_0013e638(W55Ob *o, W55Ev *e, void *q);
 void func_0013e978(W55Ob *o, W55Ev *e, void *q);
 void func_0013ecf8(W55Ob *o, void *a, void *q);
-f32 func_0013fd88(f32 y);
 void func_00145080(s32 a, s32 b);
 W55Fx *func_00147c98(s32 a, s32 b, s32 c);
 void func_00147d50(W55Fx *f, f32 *v);
 W55EvInf *func_001478c8(s32 t);
-s32 func_0014f5c8(W55Ob *o);
-s32 func_0014f600(W55Ob *o);
 s32 func_0014f658(void *, s32);
 void func_00150930(W55Ob *o, s32 a, void *q);
 void func_00157a30(W55Ob *o, s32 k, void *a);
 void func_00158b88(W55Ob *o, W55Ev *e, s32 t);
-s32 func_0015bcb8(W55Ob *o, f32 *r);
 void func_00176310(s32 a);
 void func_00176388(s32 a);
 void func_001763a0(s32 a);
@@ -168,18 +126,10 @@ s32 func_001ecfd8(void);
 void func_002414a8(s32 a, s32 b);
 f32 func_00267390(f32 *a, f32 *b);
 void func_002673b8(f32 *d, f32 *s);
-void func_002674f0(f32 *d, f32 *a, f32 *b, f32 t);
-void func_00267518(f32 *d, f32 *a, f32 *b);
 void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_00267560(f32 *d, f32 *s, f32 k);
 void func_002675a8(f32 *d, f32 *s);
-f32 fmodf(f32 x, f32 y);
-f32 atan2f(f32 y, f32 x);
-f32 sinf(f32 x);
 f32 fabsf(f32);
-
-#define W55MIN(a, b) ((a) < (b) ? (a) : (b))
-#define W55MAX2(a, b) ((a) > (b) ? (a) : (b))
 
 s32 func_0013b238(void) {
     W55Ob *p = 0;
@@ -391,230 +341,6 @@ s32 func_0013ff00(W55Ob *o, f32 *seg, f32 *v, f32 *r) {
     return 1;
 }
 
-s32 func_00140070(W55Ob *o, f32 *dir, f32 *r) {
-    f32 pts[4][4];
-    f32 v[4], d[4];
-    f32 h;
-    if (o->x2de == 0xffff) return 0;
-    func_00105a30(-1, o->x2de, v);
-    func_002675a8(d, dir);
-    d[1] = 0.0f;
-    func_002673b8(d, d);
-    if (func_00267390(v, d) > -0.7f) return 0;
-    func_00105ad0(-1, o->x2de, pts[0]);
-    h = o->pos[1] - o->x2c4;
-    if (h < W55MIN(pts[0][1], W55MIN(pts[1][1], pts[2][1]))) return 0;
-    if (!func_0013ff00(o, pts[0], v, r)) return 0;
-    if (func_0015bcb8(o, r)) return 0;
-    func_002675a8(o->x148, v);
-    return 1;
-}
-
-s32 func_00140370(W55Ob *o, f32 *d) {
-    f32 r[4];
-    f32 m;
-    s32 k;
-    k = func_00140070(o, d, r);
-    if (k == 1) {
-        if (o->x30c != 0xffff) return 0;
-        m = fmodf(o->pos[1], 66.66666412353516f);
-        if (m < 0.0f) m += 66.66666412353516f;
-        if (m < 10.0f) r[1] -= m;
-        else if (m > 56.66666412353516f) r[1] += 66.66666412353516f - m;
-        else return 0;
-        if (func_0015bcb8(o, r)) return 0;
-        func_0014f658(o, 10);
-        func_00130398(o, 0x1000014, 0.0f);
-        func_00130578(o, 0x40000011, 0.0f);
-        func_002675a8(o->pos, r);
-        func_00267560(d, o->x148, -1.0f);
-        d[3] = 0.0f;
-        o->x20[3] = 0.0f;
-        o->x150 = atan2f(-o->x148[0], -o->x148[2]);
-    }
-    return k;
-}
-
-s32 func_001404d8(W55Ob *o, f32 *d) {
-    f32 pts[4][4];
-    f32 v[4], r[4];
-    f32 t;
-    if (o->x30c == 0xffff || !func_001375f0(o)) goto fail;
-    func_00105a30(-1, o->x30c, v);
-    if (func_00267390(v, d) < -0.7f) return 0;
-    func_00105ad0(-1, o->x30c, pts[0]);
-    if (!func_0013ff00(o, pts[0], v, r)) return 0;
-    r[1] = W55MAX2(W55MAX2(pts[0][1], pts[1][1]), pts[2][1]) + o->x2c4;
-    t = func_0013fd88(r[1]);
-    if (t > 0.015f && t < 0.985f) r[1] += (1.0f - t) * 66.66666412353516f;
-    if (func_0015bcb8(o, r)) {
-    fail:
-        return 0;
-    }
-    func_002675a8(o->x148 + 4, o->pos);
-    func_002675a8(o->x148 + 8, r);
-    o->x148[12] = 0.0f;
-    func_002675a8(o->x148, v);
-    func_0014f658(o, 9);
-    func_00130398(o, 0x1010012, 0.0f);
-    func_002675a8(d, o->x148);
-    d[3] = 0.0f;
-    return 1;
-}
-
-void func_001406d0(W55Ob *o, f32 *d) {
-    f32 t;
-    o->x148[12] += D_002BBDFC;
-    t = o->x148[12] / func_00131a68(o, 18);
-    if (t >= 1.0f) {
-        func_0014f658(o, 10);
-        func_00130398(o, 20, 0.0f);
-        func_00130578(o, 0x40000011, 0.0f);
-        func_002675a8(o->pos, o->x148 + 8);
-        o->x20[1] = 0.0f;
-        o->x20[3] = 0.0f;
-        return;
-    }
-    func_002674f0(d, o->x148 + 8, o->x148 + 4, t);
-    d[1] -= sinf(t * 3.1415928f) * 50.0f;
-    func_00267530(d, d, o->pos);
-    func_00121fc4(o->x20, d);
-    o->x20[3] /= D_002BBDFC;
-    o->x150 = atan2f(-o->x148[0], -o->x148[2]);
-}
-
-void func_001418b8(W55Cam *c) {
-    s32 i;
-    c->x4 = 2.0f;
-    c->x0 = 0;
-    c->x8 = 8.0f;
-    c->x10 = 190.0f;
-    c->x14 = 0.1f;
-    c->x18 = 0.95f;
-    c->x1c = 1.04719746112823486328125f;
-    c->x20 = 1.22173035144805908203125f;
-    c->x24 = 0.034906583f;
-    c->x2c = 3.1415928f;
-    c->x30 = 3.1415928f;
-    c->x28 = 0.523598730564117431640625f;
-    c->x34 = 3.1415928f;
-    c->x38 = 3.1415928f;
-    c->x40 = 18;
-    c->x48 = 3;
-    c->x4c = 0;
-    c->x50 = 0;
-    c->xe0 = 0;
-    c->x54 = 0;
-    c->x5c = 0;
-    c->x3c = 18;
-    c->x60 = 1.0f;
-    c->x64 = 1.0f;
-    c->x68 = 0;
-    c->x44 = 3;
-    c->x70 = 0;
-    c->x58 = 0.5f;
-    c->x74 = 0;
-    c->x6c = 0x1000;
-    for (i = 15; i >= 0; i--) c->x78[i] = 1.0f;
-    c->xb8 = 0;
-    c->xbc = 0;
-    c->xbe = 0;
-    c->xbd = 3;
-    c->xc0 = 0;
-    c->xc2 = 0;
-    c->xc4 = 1.0f;
-    c->xc8 = 0;
-    c->xcc = 0.19634955f;
-    c->xd1 = 3;
-    c->xd0 = 3;
-    c->xd2 = 0;
-    c->xd4 = 1.0f;
-    c->xd8 = 0;
-    c->xdc = 1.0f;
-}
-
-void func_00142058(s32 lim) {
-    W55Cache *best = D_0052CB20;
-    W55Cache *e;
-    s32 key, i;
-    D_0052EB40 = 0;
-    key = (D_002BC128 << 16) | (D_002BC130 << 8) | D_002BC134;
-    e = D_0052CB20;
-    for (i = 0; i < 4; i++, e++) {
-        if (e->key == key && e->age >= D_0052EB44 - lim) {
-            if (!D_0052EB40 || D_0052EB40->age < e->age) D_0052EB40 = e;
-        }
-        if (e->key < 0 || (best->key >= 0 && e->age < best->age)) best = e;
-    }
-    if (!D_0052EB40) {
-        D_0052EB40 = best;
-        best->key = key;
-        for (i = 0; i < 256; i++) D_0052EB40->e[i].a = -1;
-    } else {
-        for (i = 0; i < 4; i++) {
-            if (D_0052CB20[i].age < D_0052EB40->age) D_0052CB20[i].age++;
-        }
-    }
-    D_0052EB40->age = D_0052EB44++;
-}
-
-s32 func_00142480(f32 *from, f32 *vec, s32 mask, f32 *out) {
-    W55Ray r;
-    s32 n, i;
-    func_002675a8(r.pos, from);
-    n = func_00120c18(vec) / 100.0f;
-    if (n >= 2) {
-        func_00267560(r.dir, vec, 1.0f / n);
-    } else {
-        func_002675a8(r.dir, vec);
-        n = 1;
-    }
-    r.dir[3] = 1.0f;
-    for (i = 0; i < n; i++) {
-        r.pos[3] = 1.0f;
-        func_00118628(&r, mask);
-        if (r.id >= 0) {
-            func_002675a8(out, r.hit);
-            return func_00105b68(r.x34, r.id);
-        }
-        func_00267518(r.pos, r.pos, r.dir);
-    }
-    return -1;
-}
-
-f32 func_001427d0(W55Ob *o, W55Col *c) {
-    if ((u32)(o->x70 - 18) < 2) {
-        c->x24 = o->x134->x10->x8;
-        c->x20 = 25.0f;
-    } else if (o->x0 & 0x4000000) {
-        c->x24 = o->x134->x10->x8;
-        c->x20 = o->x134->x10->xc;
-    } else {
-        c->x24 = o->x134->x10->x8 * o->x44;
-        c->x20 = o->x134->x10->xc * o->x40;
-    }
-    func_002675a8(c->pos, o->pos);
-    c->pos[3] = 1.0f;
-    c->x28 = 0;
-    if (o->x398 || func_0014f5c8(o) || func_0014f600(o)) c->x28 |= 1;
-    if (o->x370.b.b39 || (o->x130->x4 & 0x200)) c->x28 |= 2;
-    if (o->x370.b.kind == 2 || (o->x0 & 0x100)) {
-        if (func_0014f5c8(o)) c->x28 |= 0x10;
-        else c->x28 |= 4;
-    } else {
-        switch (((u8 *)o)[6]) {
-        case 9: case 10:
-            if (o->x130->x54 == 9) c->x28 |= 8;
-            else c->x28 |= 0x40;
-            break;
-        case 8:
-            c->x28 |= 0x20;
-            break;
-        }
-    }
-    return (c->x20 < c->x24 ? c->x20 : c->x24) * 0.7f;
-}
-
 /* needs make: uses rodata */
 void func_0013eab0(W55Ob *o, W55Ev *e, f32 *q) {
     f32 v[4];
@@ -718,32 +444,6 @@ s32 func_0013fe28(W55Ob *o) {
     if (t < 0.015f || t > 0.985f) r = 1;
     return r;
 }
-
-s32 func_001401d8(W55Ob *o, f32 *d) {
-    f32 r[4];
-    f32 m;
-    s32 k;
-    if (!func_001375f0(o) || d[3] == 0.0f) return 0;
-    k = func_00140070(o, d, r);
-    if (k == 1) {
-        if (!func_0013fe28(o)) {
-            m = fmodf(o->pos[1] + 10.0f, 66.66666412353516f);
-            if (m < 0.0f) m += 66.66666412353516f;
-            r[1] = r[1] + 10.0f - m;
-        }
-        if (func_0015bcb8(o, r)) return 0;
-        func_002675a8(o->pos, r);
-        func_002675a8(o->x148 + 8, r);
-        func_0014f658(o, 10);
-        func_00130398(o, 0x1000013, 4.0f);
-        func_00130578(o, 0x40000011, 0.0f);
-        func_00267560(d, o->x148, -1.0f);
-        d[3] = 0.0f;
-        o->x150 = atan2f(-o->x148[0], -o->x148[2]);
-        o->x148[5] = o->pos[1];
-    }
-    return k;
-}
 #include "data/bss_0052_typed.h"
 #include "data/data_0029.h"
 #include "data/data_002B.h"
@@ -752,4 +452,3 @@ s32 func_001401d8(W55Ob *o, f32 *d) {
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C5978.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_002BC128.h"

@@ -5,24 +5,15 @@
 M2C_UNK func_00141e68(s32);
 M2C_UNK func_00149170(s32, s32);
 M2C_UNK func_0014cc38();
-M2C_UNK func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK *);
 M2C_UNK func_00176310(M2C_UNK *);
 M2C_UNK func_002675a8(s32, s32);
 #include "data/pieces/D_002E26A0.h"
 extern M2C_UNK D_00547C00; /* src/data/bss_0054.c: W34Mdl3C D_00547C00[256] */
-extern M2C_UNK func_00144350;
-extern M2C_UNK func_00144958;
-extern M2C_UNK func_00144ce0;
-extern M2C_UNK func_00144d08;
 extern M2C_UNK func_00148bc0;
 s32 *func_00147c98();
 s32 func_00121e28(s32, s32);
 s32 func_0013daa8(s32);
 s32 func_00147d18(s32);
-
-void func_00144e38(void) {
-    func_0014f830(0x11, 1, &func_00144350, 0, &func_00144958, &func_00144ce0, 0, 0, &func_00144d08);
-}
 
 s32 * func_00147ed8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 *temp_v0;

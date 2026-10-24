@@ -14,7 +14,6 @@ typedef W606Mem_304be8 W7Member;
 
 typedef Save_304be8 W7Save;
 
-
 /* ---- actor object ---- */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
 typedef struct S130 { u8 pad[0x5C]; u8 b5c; } S130;
@@ -69,92 +68,14 @@ typedef struct {
 } ObjF3;
 
 /* ---- level/stat block (o->p6c) ---- */
-typedef struct {
-    u32 flags;
-    u8 pad4[0x38];
-    s32 w3c;
-    s32 w40;
-    s32 w44;
-    s32 w48;
-    s32 w4c;
-    s32 w50;
-    u8 pad54[0x68 - 0x54];
-    s32 w68;
-    u8 pad6c[4];
-    s32 w70;
-    u8 pad74[4];
-    f32 f78[16];
-    s32 wb8;
-    u8 bbc;
-    u8 padbd;
-    u16 hbe;
-    u16 hc0;
-    u16 hc2;
-    f32 fc4;
-    void *pc8;
-    u8 padcc[6];
-    u16 hd2;
-    u8 padd4[4];
-    s32 wd8;
-    f32 fdc;
-} Lv;
-typedef struct Actor { u8 pad[0x6C]; Lv *p6c; } Pl;
-
-typedef struct {
-    s32 w0;
-    s32 w4;
-    s32 w8;
-    u16 hc;
-    u8 pade[2];
-    u16 h10;
-    u8 pad12[2];
-    s32 w14;
-    f32 f18;
-    s32 w1c;
-    u16 h20;
-    u8 pad22[2];
-    f32 f24;
-    s32 a28[16];
-    s32 w68;
-} LvInit;
 
 /* ---- misc ---- */
-typedef struct { V4f p; V4f d; V4f hit; s16 h30; s32 w34; u8 pad38[8]; } Ray;
-typedef struct { u8 pad[0x350]; s32 a[4]; } Mdl;
 typedef struct { u8 x0, x1, x2; } Item;
 typedef struct { u32 type:8; u32 id:16; u32 hi:8; s32 w4; } Cmd;
 typedef struct { u8 id; u8 pad[3]; s32 w4; s32 w8; } Cmd8;
 typedef struct { f32 x, y, z; s32 w; } V4;
 typedef struct { u8 pad[0x54]; s8 b54; } Sub130;
 typedef struct { u8 pad[0x130]; Sub130 *p130; } Obj130;
-typedef struct { u8 pad[0x3C]; s32 w3c; s32 w40; } S6C;
-typedef union {
-    u64 x;
-    struct { u64 lo:48; u64 b48:1; u64 hi:15; } d;
-    struct { u32 lo0; u32 lo:5; u32 kind:2; u32 hi:25; } b;
-} B370;
-typedef struct {
-    u8 pad0[6];
-    u8 b6;
-    u8 pad7[0x6C - 7];
-    S6C *p6c;
-    u8 pad70[0x144 - 0x70];
-    s32 w144;
-    u8 pad148[0x370 - 0x148];
-    B370 f370;
-} P141;
-typedef struct { P141 *p; s32 x4; } A141;
-typedef struct { void *p; s32 n; } Pair;
-typedef struct { s32 ok; s32 a; s32 b; } R141;
-typedef struct {
-    u32 flags;
-    u8 pad4[0xC];
-    V4f pos;
-    V4f v20;
-    V4f v30;
-    u8 pad40[0x150 - 0x40];
-    f32 f150;
-} O2cf0;
 #include "data/types/nostrict_text_00140000_h33.h"
 typedef struct { u8 pad[0x80]; s32 w80; } Blk;
 typedef struct { f32 p; s32 id; } Drop;
@@ -178,12 +99,7 @@ extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
-#include "data/pieces/D_002E26A0.h"
-extern f32 D_00304D54;
-#include "data/pieces/D_00304B78.h"
-#include "data/pieces/D_003044E0.h"
 extern s32 D_002BC128;
-extern s32 D_002BC130;
 #include "data/pieces/D_002E27C8.h"
 extern Snd *D_0052EB58;
 extern Snd D_0052EB50;
@@ -232,22 +148,6 @@ s32 func_0013f330(ObjF3 *, s32);
 void func_00130398(ObjF3 *, s32, f32);
 void func_00267518(V4f *, V4f *, V4f *);
 void func_0014cc88(ObjF3 *, f32);
-s32 func_0013c968(s32, s32);
-void func_0012bce0(s32, s32, s32, Pair *, s32);
-void func_002458a0(V4f *, s32);
-void func_0013c548(s32);
-void D_00F20000(s32, s32);
-u8 *func_00147730(s32);
-void func_00118668(Ray *);
-void func_00105c98(s32, s32 *);
-s32 func_00105bc0(s32, s32);
-f32 func_00121840(V4f *, V4f *);
-void func_00121860(V4f *, V4f *, V4f *, f32);
-f32 atan2f(f32, f32);
-void func_00137688(O2cf0 *, f32);
-s32 func_001443a8(ObjF3 *);
-void func_00153e80(ObjF3 *);
-void func_00144958(ObjF3 *, V4f *);
 void func_00150de0(s32);
 void func_00176310(Eff154 *);
 f32 func_00121b08(f32);
@@ -441,160 +341,6 @@ void func_0013f770(ObjF3 *o, V4f *v) {
     v->w = 2.0f;
     func_0014cc88(o, s);
     o->flags |= fl;
-}
-
-void func_00140db8(ObjF3 *o, V4f *v) {
-    f32 s;
-    u32 fl = 0;
-    if (v->y < 0.0f) {
-        s = 20.0f;
-        func_00130398(o, 5, 0.0f);
-        func_00130578(o, 6, 0.0f);
-    } else if (v->w > 0.0f) {
-        s = 15.0f;
-        func_00130398(o, 5, 0.0f);
-        func_00130578(o, 6, 0.0f);
-    } else {
-        s = 5.0f;
-        fl = 0x10000;
-        func_00130398(o, 6, 12.0f);
-    }
-    v->y = 0.0f;
-    func_00267518(v, v, (V4f *)o->p148);
-    func_002673b8(v, v);
-    v->w = 2.0f;
-    func_0014cc88(o, s);
-    o->flags |= fl;
-}
-
-s32 func_00141348(A141 *a, R141 *r) {
-    Pair pr[2];
-    if (func_0013c968(10, 0) > 0 && a->p->b6 == 3 && a->p->f370.b.kind != 1) {
-        r->ok = 1;
-        r->a = a->p->p6c->w3c;
-        r->b = a->p->p6c->w40;
-        if ((s32)(a->p->f370.x >> 48) & 1) {
-            if (a->p->w144) {
-                pr[0].p = &a->x4;
-                pr[0].n = 4;
-                pr[1].p = &r;
-                pr[1].n = 4;
-                func_0012bce0(a->p->w144, 3, 2, pr, 0);
-            }
-        }
-    } else {
-        r->ok = 0;
-    }
-    return r->ok;
-}
-
-void func_001417a0(V4f *p, s32 n) {
-    V4f t;
-    if (D_002E26A0[0] == 0 || D_002E26A0[0]->p6c->w3c > 0) {
-        func_002675a8(&t, p);
-        t.w = 1.0f;
-        n = n * D_00304D54 + 0.5f;
-        func_002458a0(&t, n);
-        func_0013c548(n);
-        if (((*(u32 *)&D_00304B78) & 0xF) == 9) {
-            D_00F20000(5, n);
-        }
-    }
-}
-
-void func_00141f10(Pl *o, LvInit *in) {
-    Lv *s = o->p6c;
-    s32 i;
-    s32 v = in->w0;
-    s->w48 = 0;
-    s->w40 = v;
-    s->w3c = v;
-    s->w44 = 0;
-    s->hbe = 0;
-    s->w4c = func_00147730(in->w4)[0];
-    s->w50 = func_00147730(in->w8)[1];
-    s->hc0 = in->hc;
-    s->hc2 = in->h10;
-    s->wb8 = 0;
-    s->bbc = 0;
-    s->fc4 = in->f18;
-    s->w68 = in->w1c;
-    s->hd2 = in->h20;
-    s->wd8 = in->w14;
-    s->fdc = in->f24;
-    for (i = 0; i < 16; i++) {
-        s->f78[i] = in->a28[i] / 100.0f;
-    }
-    s->w70 = in->w68;
-}
-
-s32 func_00142388(V4f *p, s32 *out) {
-    Ray r;
-    s32 i;
-    func_002675a8(&r.p, p);
-    r.p.w = 1.0f;
-    r.d.x = 0;
-    r.d.y = 100000.0f;
-    r.d.z = 0;
-    r.d.w = 1.0f;
-    func_00118668(&r);
-    if (r.h30 >= 0) {
-        if (r.w34 == -1) {
-            func_00105c98(r.h30, out);
-        } else {
-            Mdl *m = D_003044E0[r.w34].x0;
-            for (i = 0; i < 4; i++) {
-                out[i] = m->a[i];
-            }
-        }
-        return func_00105bc0(r.w34, r.h30);
-    }
-    return 0;
-}
-
-f32 func_00142cf0(O2cf0 *o, V4f *tg, f32 spd, f32 r) {
-    V4f t;
-    f32 d;
-    func_00267530(&t, tg, &o->pos);
-    if (!(o->flags & 0x10)) t.y = 0;
-    func_00121fc4(&t, &t);
-    if (r == 0.0f) {
-        f32 k;
-        r = func_00121840(&o->v30, &t);
-        k = t.w / spd * 0.3f;
-        if (k > 1.0f) r /= k;
-    }
-    d = t.w;
-    if (d < spd) spd = d;
-    func_00121860(&o->v30, &t, &t, r);
-    o->f150 = atan2f(t.x, t.z);
-    func_00137688(o, o->f150);
-    t.w = spd;
-    func_002675a8(&o->v20, &t);
-    return d;
-}
-
-s32 func_00144510(ObjF3 *o, V4f *v) {
-    s32 k;
-    f32 f;
-    if (D_002BC128 == 13 && D_002BC130 == 8) return 0;
-    if (!func_001443a8(o)) return 0;
-    func_0014f658(o, 17);
-    func_00267560(&o->p148->va0, v, v->w * 0.5f);
-    o->p148->va0.y = o->f3c4;
-    f = 16.0f;
-    o->f3c4 = o->f3c4 / D_002BBDFC;
-    k = 45;
-    if (v->w > 0.0f) o->f3c4 = o->f3c4 * 0.19999999f;
-    if (o->w88 & 0x20) {
-        func_00153e80(o);
-    } else {
-        func_00130398(o, k, f);
-        o->flags &= ~4;
-        v->w = 0.0f;
-        func_00144958(o, v);
-    }
-    return 1;
 }
 
 void func_00145080(s32 on, s32 n) {
@@ -881,48 +627,6 @@ Blk7c *func_00148a60(Act *o, s32 fl) {
 
 /* func_00141468 and func_00141540 only match with func_00141448 defined
  * above them. */
-#include "data/pieces/D_00304C70.h"
-typedef St6C_304c70 St6C;
-typedef St6C_304c70 St6Cb;
-typedef struct { u8 pad[0x4C]; u16 h4c; } S130b;
-typedef struct { u8 pad[0x6C]; St6C *p6c; u8 pad70[0x18]; u32 w88; u8 pad8c[0x130 - 0x8C]; S130b *p130; } O1468;
-
-s32 func_00141448(s32 a, s32 b, s32 max) {
-    s32 v = a + b;
-    if (max < v) {
-        v = max;
-    } else if (v < 0) {
-        v = 0;
-    }
-    return v;
-}
-
-s32 func_00141468(O1468 *o, s32 x) {
-    St6C *s = o->p6c;
-    s32 v;
-    if (s == 0 || s == &D_00304C70) return 0;
-    v = func_00141448(s->w3c, x, s->w40);
-    if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->w3c + (s32)((v - s->w3c) * (*(Cfg_308cdc **)&D_00308CDC)->f88);
-    }
-    s->w3c = v;
-    s->flags &= ~4;
-    if (s->pc8) s->pc8->b1 = v;
-    return v;
-}
-
-s32 func_00141540(O1468 *o, s32 x) {
-    St6Cb *s = (St6Cb *)o->p6c;
-    s32 v;
-    if (s == 0 || s == &D_00304C70) return 0;
-    v = func_00141448(s->x44, x, s->w48);
-    if ((o->w88 & 0x20) && !func_0013c968(9, o->p130->h4c)) {
-        v = s->x44 + (s32)((v - s->x44) * (*(Cfg_308cdc **)&D_00308CDC)->f88);
-    }
-    s->x44 = v;
-    if (s->pc8) s->pc8->b3 = v;
-    return v;
-}
 #include "data/bss_0053_mixed.h"
 #include "data/data_002B.h"
 #include "data/data_0030.h"

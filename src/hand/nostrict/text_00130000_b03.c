@@ -1,7 +1,6 @@
 /* Hand-matched functions (worker b03), built without strict aliasing. */
 #include "common.h"
 #include "data/pieces/D_0035C710.h"
-#include "data/pieces/D_00304BE8_s.h"
 
 #include "data/types/nostrict_text_00130000_b03_p3.h"
 extern f32 D_002BBDFC;
@@ -12,8 +11,6 @@ void *func_00130578(B3Ob *, s32, f32);
 void func_002675a8(f32 *, f32 *);
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } B3Ev;
 #include "data/pieces/D_002C58B0.h"
-typedef W606Mem_304be8 B3SvEnt;
-#include "data/pieces/D_00304BE8.h"
 
 extern f32 D_002C5970;
 void func_00267560(f32 *, f32 *, f32);
@@ -83,252 +80,18 @@ void func_0013f910(B3Ob *o, f32 *v) {
         func_00130398(o, func_0013f330(o, k) | 0x40000000, f);
     }
 }
-
-typedef struct {
-    u8 pad08[0x1c - 0x8];
-    f32 x1c, x20, x24, x28, x2c, x30, x34, x38;
-    s32 x3c, x40, x44, x48, x4c, x50;
-    u8 pad54[0x5c - 0x54];
-    f32 x5c;
-    u8 pad60[0x68 - 0x60];
-    s32 x68;
-    u8 pad6c[0x78 - 0x6c];
-    f32 x78[16];
-    s32 xb8;
-    u8 xbc;
-    u8 xbd;
-    u16 xbe, xc0, xc2;
-    f32 xc4;
-    B3SvEnt *xc8;
-    u8 padcc[0xd0 - 0xcc];
-    u8 xd0, xd1;
-    u8 padd2[0xd4 - 0xd2];
-    f32 xd4;
-    u8 padd8[0xe0 - 0xd8];
-    s32 xe0;
-} B3StB;
-typedef struct {
-    s32 x0, x4;
-    B3StB b;
-} B3St;
-typedef struct { u8 pad[0x30]; s8 x30; u8 pad31[7]; s8 x38; } B3Eq;
-typedef struct { s8 x0, x1, x2, x3, x4, x5; s8 x6[16]; } B3It;
-extern f32 D_00304C48[];
-B3Eq *func_00149740(s32);
-B3It *func_00147860(s32);
-s32 func_0013c968(s32, s32);
-s32 func_0013c598(s32);
-
-void func_00141b10(s32 n, B3St *p) {
-    B3StB *b;
-    B3SvEnt *e = &D_00304BE8->m[n];
-    B3Eq *r;
-    B3It *q;
-    s32 i, j;
-
-    p->b.x40 = e->sub.hpmax;
-    p->b.x48 = e->sub.mpmax;
-    p->b.xbe = e->sub.x38;
-    p->b.x4c = e->sub.x6;
-    p->b.x50 = e->sub.x7;
-    p->b.xe0 = e->sub.x5;
-    p->b.xc0 = 0;
-    p->b.xc2 = 0;
-    p->b.xc4 = 1.0f;
-    p->b.xb8 = 0;
-    p->b.xbc = 0;
-    for (i = 0, b = &p->b; i < 16; i++) p->b.x78[i] = e->sub.x8[i] / 100.0f;
-    r = func_00149740(n);
-    if (r) {
-        p->b.x4c += r->x30;
-        p->b.x48 += r->x38;
-    }
-    for (i = 0; i < e->sub.x18; i++) {
-        if (e->sub.x19[i]) {
-            q = func_00147860(e->sub.x19[i]);
-            p->b.x40 += q->x0;
-            p->b.x48 += q->x1;
-            p->b.x4c += q->x2;
-            p->b.x50 += q->x3;
-            p->b.xe0 += q->x4;
-            for (j = 0; j < 16; j++) b->x78[j] *= q->x6[j] / 100.0f;
-        }
-    }
-    p->b.x3c = (e->sub.x1 < p->b.x40) ? e->sub.x1 : p->b.x40;
-    p->b.x44 = (e->sub.x3 < p->b.x48) ? e->sub.x3 : p->b.x48;
-    p->b.xbe = (e->sub.x38 < p->b.x48 * 30) ? e->sub.x38 : p->b.x48 * 30;
-    p->b.x4c = (p->b.x4c < 101) ? p->b.x4c : 100;
-    p->b.x50 = (p->b.x50 < 101) ? p->b.x50 : 100;
-    p->b.xe0 = (p->b.xe0 < 101) ? p->b.xe0 : 100;
-    p->b.xc8 = e;
-    p->b.xd0 = func_0013c968(6, n) + 3;
-    p->b.xd1 = func_0013c968(7, n) + 3;
-    p->b.xd4 = (f32)func_0013c968(8, n) + 1.0f;
-    p->b.x5c = D_00304C48[n];
-    p->b.x68 = func_0013c598(n);
-    p->b.x1c = 1.0471974909305573f;
-    p->b.x38 = 0.87266458570957184f;
-    p->b.x2c = 0.34906581789255142f;
-    p->b.x20 = 1.570796400308609f;
-    p->b.x34 = 0.87266458570957184f;
-    p->b.x30 = 0.34906581789255142f;
-    p->b.x24 = 0.017453290987759829f;
-}
-
-#include "data/pieces/D_003044E0.h"
-#include "data/pieces/D_002E26A0.h"
-f32 func_001427d0(B3Ob *, f32 *);
-s32 func_0015c738(B3Ob *, f32 *);
-void func_00137440(B3Ob *, s32);
-void func_00143818(B3Ob *, f32 *, s32);
 void func_00121fc4(f32 *, f32 *);
 void func_00267560(f32 *, f32 *, f32);
 void func_00267518(f32 *, f32 *, f32 *);
 void func_002673b8(f32 *, f32 *);
-void func_00143180(B3Ob *, f32 *);
-void func_00151b98(B3Ob *, f32 *);
 void func_001337e0(s32 a, void *b, s32 c);
-void func_00117710(f32 *, f32 *);
-
-void func_00143a70(B3Ob *o, f32 *v, s32 a2) {
-    f32 t[4];
-    f32 f, step;
-    u32 fl;
-    u16 last;
-    B3Ob *p;
-    s32 i;
-    u16 k;
-
-    f = func_001427d0(o, o->x2a0);
-    step = (f < o->x4ac) ? f : o->x4ac;
-    o->x4ac = f;
-    if (o->x398) o->x370 &= ~0x20000000000000ULL;
-    func_00137440(o, func_0015c738(o, v));
-    func_00143818(o, v, a2);
-    func_00121fc4(t, v);
-    if (t[3] / step > 4.0f) t[3] = step * 4.0f;
-    last = 0;
-    fl = 1;
-    do {
-        if (step < t[3]) {
-            func_00267560(v, t, step);
-            t[3] -= step;
-        } else {
-            func_00267560(v, t, t[3]);
-            t[3] = 0.0f;
-        }
-        func_001427d0(o, o->x2a0);
-        func_00143180(o, v);
-        fl |= o->x2d0 & ~1;
-        fl &= (o->x2d0 & 1) | ~1;
-        if (o->x130->x4c == 201) func_00151b98(o, v);
-        func_00267518(o->x10, o->x10, v);
-        if (o->x2d8) {
-            k = o->x2d8;
-            if (k != last) {
-                if ((o->x2d0 & 4) || o == D_002E26A0[0]) {
-                    func_001337e0(-2, o, k);
-                }
-                last = o->x2d8;
-            }
-        }
-        o->x448 = o->x2d8;
-    } while (t[3] > 0.0f);
-    o->x2d0 = fl;
-    func_00117710(o->x2a0, o->x320);
-    func_002673b8(o->xc0, o->x340);
-    o->xcc = 1.0f;
-    p = o->x398;
-    if (o->x2cc != -1) {
-        p = D_003044E0[o->x2cc].x0;
-        if (!(o->x2d0 & 1)) func_00137440(o, (s32)p);
-    }
-    if (p) {
-        for (i = 0; i < 4; i++) o->x350[i] = p->x350[i];
-    }
-}
 
 #include "data/types/nostrict_text_00130000_b03_p2.h"
-#include "data/pieces/D_00304D64.h"
-extern u32 D_002C5BB4;
 extern f32 D_002C5970;
-s32 func_001232f0(B3Ob *);
 void func_00121fc4(f32 *, f32 *);
 void func_00267560(f32 *, f32 *, f32);
 void func_00267518(f32 *, f32 *, f32 *);
 void func_00267e90(f32 *, f32 *, f32);
-s32 func_00137660(B3Ob *);
-void func_00144810(B3Ob *, f32 *);
-f32 atan2f(f32, f32);
-
-void func_00144958(B3Ob *o, f32 *v) {
-    f32 t[4];
-    f32 h, k, r, s, sc, nh;
-
-    if (!func_001232f0(o)) {
-        func_002675a8(o->x20, v);
-        func_002675a8(o->x148->xa0, (*(f32 (*)[0x4])&D_002C58B0));
-        o->x148->xb0 = 0.0f;
-        return;
-    }
-    func_002675a8(t, o->x148->xa0);
-    t[1] = 0.0f;
-    func_00121fc4(t, t);
-    if (0.0f < o->x148->xb0) {
-        if (0.0f < o->x148->xbc) {
-            sc = 0.0f;
-            s = 1.0f;
-            o->x148->xbc -= D_002BBDFC;
-        } else {
-            if (o->x148->xb4 < o->x148->xb0) {
-                s = o->x148->xb8;
-                if (!(D_002C5BB4 & 4)) o->x148->xb0 = o->x148->xb4;
-                sc = 0.0f;
-            } else {
-                r = o->x148->xb0 / o->x148->xb4;
-                s = (o->x148->xb8 - 4.0f) * r + 4.0f;
-                sc = r * -0.5f + 0.5f;
-            }
-            o->x148->xb0 -= D_002BBDFC;
-        }
-        func_00267560(t, t, s);
-        t[3] = s;
-    } else {
-        sc = 0.5f;
-        func_00267e90(t, t, t[3]);
-        if (func_00137660(o)) {
-            if (0.0f < v[3]) {
-                func_00130398(o, 46, 16.0f);
-            } else {
-                func_00130398(o, 45, 16.0f);
-            }
-        }
-    }
-    h = o->x2d4 + D_00304D64[o->x130->x4c].x0 - o->x10[1];
-    t[1] = h;
-    nh = -h;
-    if (h < 0.0f) {
-        k = h * (D_002C5970 * 0.015f);
-    } else {
-        k = h * (D_002C5970 * 0.1f);
-    }
-    t[1] = k + o->x3c0[1];
-    o->x3c0[1] = t[1] * 0.8f;
-    func_002675a8(o->x20, t);
-    if (t[0] != 0.0f && t[2] != 0.0f) o->x150 = atan2f(t[0], t[2]);
-    if (0.0f < v[3]) {
-        s = (20.0f < nh) ? 2.0f : 4.0f;
-        func_00267560(v, v, sc);
-        func_00267518(v, v, t);
-        v[1] = 0.0f;
-        func_00121fc4(v, v);
-        func_00267560(t, v, v[3] < (t[3] < s ? s : t[3]) ? v[3] : (t[3] < s ? s : t[3]));
-    } else {
-        func_00267560(t, t, 0.9f);
-    }
-    func_002675a8(o->x148->xa0, t);
-    func_00144810(o, v);
-}
 
 #include "data/types/nostrict_text_00130000_b03.h"
 typedef struct {
