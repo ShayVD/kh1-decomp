@@ -5,6 +5,7 @@
  * "MENV" map environment in place), func_00161de8, func_00162218,
  * func_00162428.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "platform/math.h"
 #include "data/pieces/D_00308CDC.h"
@@ -638,7 +639,6 @@ typedef struct {
 } G698;
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } Tk62;
 s32 func_0015eea0();
-s32 sceGsSyncPath(s32, s32);
 #define D_0055C698 (*(G698 (*)) &D_0055C698)
 #define func_001606d0 ((void (*)(void)) func_001606d0)
 #define func_0015ee78 ((Tk62 *(*)(s32, void *)) func_0015ee78)
@@ -661,7 +661,7 @@ void func_00161de8(void) {
     }
     func_0015ee78(0, func_0015f388);
     func_0015eea0();
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     p = &D_0055C698.pr[D_0055C698.x0][cC];
     for (i = cC; i < D_0055C698.xC; i++, p++) {
         if (p->a) {

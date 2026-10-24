@@ -21,6 +21,7 @@
 #include "data/pieces/D_002BC140.h"
 #include "data/pieces/D_002BC144.h"
 #include "common.h"
+#include "platform/gs.h"
 #include "data/bss_004D.h"
 #include "data/types/text_00100000_h2.h"
 #include "data/pieces/D_002B677C.h"
@@ -43,36 +44,33 @@
 
 /* func_0010f580 (from auto/text_00100000_9.c). */
 M2C_UNK func_00106b18(M2C_UNK *);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BBC20;
 void func_0010f580(void) {
     func_00106b18(&D_002BBC20);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_0010f5a8 (from auto/text_00100000_9.c). */
 extern M2C_UNK D_002BBCF0;
 void func_0010f5a8(void) {
     func_00106b18(&D_002BBCF0);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_0010f5d0 (from auto/text_00100000_9.c). */
 extern M2C_UNK D_002BBD30;
 void func_0010f5d0(void) {
     func_00106b18(&D_002BBD30);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_0010f5f8 (from hand/text_00100000_h2.c). */
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
 void func_0010f5f8(void) {
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     *(volatile u64 *)0x12000000 = 0xff03;
     *(volatile u64 *)0x12000070 = 0x11b0;
     *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;
 }
-#undef sceGsSyncPath
 
 /* func_0010f658 (from hand/text_00110000_s6_02.c). */
 extern u8 D_002BBCC0[];
@@ -82,17 +80,16 @@ void func_001fd100(s32, s32);
 u8 *func_001efc10(s32);
 void func_001f1ed8(s32, s32, s32, u8 *, s32);
 void func_00207748(s32, s32, s32, s32);
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
 #define func_00106b18 ((s32 (*)(void *)) func_00106b18)
 void func_0010f658(s32 a) {
     if ((*(volatile u8 *)((W_2c5968 *)&D_002C5968) >> 3) & 3) return;
     if (a == 0) {
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
         func_001104e0();
         *(volatile u64 *)0x12000000 = 0x22;
         return;
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001104e0();
     if (a & 4) {
         func_0010f580();
@@ -133,7 +130,6 @@ void func_0010f658(s32 a) {
         return;
     }
 }
-#undef sceGsSyncPath
 #undef func_00106b18
 
 /* func_0010f8a0 (from auto/text_00100000_3.c). */

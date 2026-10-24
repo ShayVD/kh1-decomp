@@ -9,6 +9,7 @@
  * (func_001f4570, func_001f45e0).  func_001f4778 and func_001f4d10 need
  * func_001f4570 defined above them. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1A70.h"
@@ -28,7 +29,6 @@ extern s32 D_003F1A68;
 Q *func_00122048(s32, s32);
 u32 func_001edd88(s32, s32);
 s32 func_001f45e0(TextWin *);
-s32 sceGsSyncPath(s32, u16);
 void func_001220b8(void *);
 
 /* rodata: jump table */
@@ -117,7 +117,7 @@ void func_001f4778(TextWin *o) {
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -209,7 +209,7 @@ void func_001f4d10(TextWin *o) {
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -229,7 +229,7 @@ void func_001f52e8(TextWin *o) {
         p->x0 = t0; p->y0 = t1; t3 = fb + (p->y1 - b) * sy; p->y1 = t3; p->x1 = t2;
     }
     buf->a = ((Q *)(p + 1) - buf - 1) | 0x70000000;
-    PlatDmaSend(PlatDmaGetChan(2), ub); sceGsSyncPath(0, 0); func_001220b8(buf);
+    PlatDmaSend(PlatDmaGetChan(2), ub); PlatGsSyncPath(0, 0); func_001220b8(buf);
 }
 
 void func_001f54f8(TextWin *o) {
@@ -297,7 +297,7 @@ void func_001f54f8(TextWin *o) {
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -368,6 +368,6 @@ void func_001f5988(TextWin *o) {
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }

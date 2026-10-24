@@ -12,6 +12,7 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/pieces/D_002A6274.h"
@@ -45,19 +46,17 @@
 
 /* func_00106b18 (from auto/text_00100000.c). */
 M2C_UNK func_002583e0(M2C_UNK);
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
 extern PlatDmaChan *D_002A6B84;
 void func_00106b18(s32 arg0) {
     func_002583e0(0);
-    func_00265bc0(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_002A6B84, arg0);
 }
 
 /* func_00106b58 (from hand/text_00100000_h1.c). */
-s32 sceGsSyncPath(s32, s32);
 void func_00106b58(u32 x) {
     u32 v = x | 0x80000000;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_002A6B84, v);
 }
 

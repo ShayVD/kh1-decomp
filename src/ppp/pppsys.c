@@ -16,6 +16,7 @@
  * Each section names the file its code came from.  Read from the code, not
  * proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/types/text_00170000_h38.h"
 #include "data/types/text_00170000_h38_p.h"
@@ -274,16 +275,13 @@ typedef struct {
     u64 q[12];
 } H39LoadImage;
 void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
-void sceGsSetDefLoadImage(H39LoadImage *, s16, s16, s16, s16, s16, s16, s16);
-s32 sceGsExecLoadImage(H39LoadImage *, void *);
 typedef struct { s16 dbp, b, c, d, e, f, g, h; s32 pad[4]; u8 data[1]; } AB;
 void func_00180ab8(AB *a, s16 base) {
     H39LoadImage li; s16 v = a->dbp;
     if (v >= 0x3800) v = v + base - 0x3800;
-    sceGsSetDefLoadImage(&li, v, a->c, a->d, a->e, a->f, a->g, a->h);
-    FlushCache(0); sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&li, a->data);
+    PlatGsSetDefLoadImage(&li, v, a->c, a->d, a->e, a->f, a->g, a->h);
+    FlushCache(0); PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&li, a->data);
 }
 
 /* func_00180b40 (from hand/text_00180000_h39.c). */
@@ -303,17 +301,17 @@ void func_00180b40(H39Img *img, s16 base) {
         dbp = dbp + base - 0x3D40;
     switch (img->psm) {
     case 19:
-        sceGsSetDefLoadImage(&li, dbp, 1, 0, 0, 0, 16, 16);
+        PlatGsSetDefLoadImage(&li, dbp, 1, 0, 0, 0, 16, 16);
         break;
     case 20:
-        sceGsSetDefLoadImage(&li, dbp, 1, 0, 0, 0, 8, 2);
+        PlatGsSetDefLoadImage(&li, dbp, 1, 0, 0, 0, 8, 2);
         break;
     default:
         return;
     }
     FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&li, (u8 *) img + img->off18 + 0x20);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&li, (u8 *) img + img->off18 + 0x20);
 }
 
 /* func_00180c20 (from hand/text_00180000_h39.c). */
@@ -735,7 +733,7 @@ void func_00181b30(void) {
                 first = 0;
                 func_00180e10(D_00370130);
                 FlushCache(0);
-                sceGsSyncPath(0, 0);
+                PlatGsSyncPath(0, 0);
                 PlatDmaSend(D_00372908, D_00370140);
             }
             if (!e->x90 && !e->xb0.b[7] && e->x91) {
@@ -745,7 +743,7 @@ void func_00181b30(void) {
                 if (e->xa0.s.a6) func_00180d50(e->key, e->own->xb0, e->xa0.s.a6);
                 if (e->xa0.d & 0xFFFFFFFF00000000) {
                     FlushCache(0);
-                    sceGsSyncPath(0, 0);
+                    PlatGsSyncPath(0, 0);
                     PlatDmaSend(D_00372908, D_00370140);
                 }
             } else {
@@ -780,7 +778,7 @@ void func_00181b30(void) {
         }
     }
     FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, D_00370170);
     func_001220b8(h);
 }

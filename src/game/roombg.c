@@ -6,6 +6,7 @@
  * src/game/roomload.c's names. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/gs.h"
 #include "data/pieces/D_0037A378.h"
 #include "data/pieces/D_002A6238.h"
 #include "data/bss_0049.h"
@@ -114,47 +115,44 @@ void func_00100c30(void) {
 
 /* func_00100d18 (from auto/text_00100000_3.c). */
 M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, s16, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC1B0;
 void func_00100d18(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg1, 1, 0, 0, 0, 8, 2);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg1, 1, 0, 0, 0, 8, 2);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg0);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, arg0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00100d90 (from auto/text_00100000_3.c). */
 void func_00100d90(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg1, 1, 0, 0, 0, 0x10, 0x10);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg1, 1, 0, 0, 0, 0x10, 0x10);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg0);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, arg0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00100e08 (from auto/text_00100000_3.c). */
 void func_00100e08(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg1, 8, 0x14, 0, 0, 0x200, 0x100);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg1, 8, 0x14, 0, 0, 0x200, 0x100);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg0);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, arg0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00100e80 (from auto/text_00100000_3.c). */
 void func_00100e80(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg1, 4, 0x13, 0, 0, 0x100, 0x100);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg1, 4, 0x13, 0, 0, 0x100, 0x100);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg0);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, arg0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00100ef8 (from auto/text_00100000_3.c). */
 void func_00100ef8(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg1, 4, 0x1B, 0, 0, 0x100, 0x400);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg1, 4, 0x1B, 0, 0, 0x100, 0x400);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg0);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, arg0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00100f70 (from hand/text_00100000_h28.c). */

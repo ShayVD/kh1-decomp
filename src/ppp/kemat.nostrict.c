@@ -8,6 +8,7 @@
 
 /* pppKeTkFadeDraw (from hand/nostrict/text_00180000_b07.c). */
 #include "common.h"
+#include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -57,7 +58,6 @@ extern s32 D_0061621C;
 extern PppSystem *D_00615E60;
 extern PppMdlBank *D_00615E64;
 void func_00267530(f32 *, f32 *, f32 *);
-s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 typedef unsigned int u128 __attribute__((mode(TI)));
 typedef struct {
     s32 frame;
@@ -82,8 +82,6 @@ void func_001aa9d0(s32);
 void func_00267518(f32 *, f32 *, f32 *);
 void func_002674b0(f32 *, f32 *, f32);
 void FlushCache(s32);
-s32 sceGsExecLoadImage(void *, void *);
-s32 sceGsSyncPath(s32, s32);
 /* --- pppKeTkFadeDraw: build a faded 256-entry CLUT and upload it --- */
 void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 0);
@@ -156,10 +154,10 @@ void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
         func_00267518(a, a, b);
         p += buf->tbl[i & 0x1F];
     }
-    sceGsSetDefLoadImage(li, (u16) ((tex >> 37) & 0x3FFF), 4, (u16) ((tex >> 51) & 0xF), 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(li, (u16) ((tex >> 37) & 0x3FFF), 4, (u16) ((tex >> 51) & 0xF), 0, 0, 16, 16);
     FlushCache(0);
-    sceGsExecLoadImage(li, buf);
-    sceGsSyncPath(0, 0);
+    PlatGsExecLoadImage(li, buf);
+    PlatGsSyncPath(0, 0);
     func_001aa9d0(0x420);
 }
 

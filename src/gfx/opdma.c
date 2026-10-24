@@ -18,13 +18,12 @@
  * draw routine for a model from its flags (bit 2, bits 8-9, bit 7).
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/types/text_001a0000_h13.h"
 #include "data/types/text_001a0000_h13_p.h"
 
-s32 sceGsSyncPath(s32, s32);
 void FlushCache(s32);
-s32 func_00265bc0(s32, s32);
 s32 rand(void);
 void func_001a9e90(void);
 void func_001aa918(void);
@@ -99,10 +98,10 @@ void func_001aa008(void) {
     u128 *p = &D_0061E8B0;
     u128 save = *p;
     *p = 0x70000006;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     FlushCache(0);
     PlatDmaSend(D_00372908, p);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     *p = save;
 }
 
@@ -118,11 +117,11 @@ void func_001aa080(void) {
 
 void func_001aa650(void) {
     void *p = D_0061EEA0;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, p);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* The original clears the tag with `sq $0`, which ee-gcc 2.96 cannot emit
@@ -310,12 +309,12 @@ extern s32 D_00616230;
 extern u8 D_00373000[], D_00373030[];
 
 void func_001aaed0(void) {
-    func_00265bc0(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, &D_00373000);
 }
 
 void func_001aaf00(void) {
-    func_00265bc0(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, &D_00373030);
 }
 
@@ -327,7 +326,7 @@ void func_001aaf30(void) {
     Gs060 *d = &D_00373060;
     d->a = D_0061E800_g.a;
     d->b = D_0061E800_g.b;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, d);
 }
 

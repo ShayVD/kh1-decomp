@@ -6,6 +6,7 @@
  * func_00175708 sets everything up from a file.  texspot.c has the two
  * intersection tests.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_0035BD40.h"
 #include "data/pieces/D_002E27C8.h"
@@ -93,7 +94,6 @@ typedef struct { s32 a, b; u8 *c; u8 *d; } Hd16;
 extern Pkt D_0035C4A0;
 extern Pkt D_0035C550;
 Hd16 D_005757A0 ALIGNED(16);
-s32 sceGsSyncPath(s32, s32);
 void func_0015fa20(void *);
 s32 func_00175600(Spr *s) {
     Pkt *p;
@@ -109,9 +109,9 @@ s32 func_00175600(Spr *s) {
     }
     p->xf0 = s->x10->x0[0];
     p->x100 = s->x10->x0[1];
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_0015fa20(&D_005757A0);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     PlatDmaSend(PlatDmaGetChan(2), &D_0035C550);
     return 0;
 }

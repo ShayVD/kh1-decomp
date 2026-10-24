@@ -2,6 +2,7 @@
  * (docs/modules.md "Session 38"): func_00208458 draws a list's frame of n
  * rows in a window (a GIF packet through path 2, scaled like the others). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
@@ -24,7 +25,6 @@ typedef struct {
 } PK;
 
 u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
@@ -179,7 +179,7 @@ void func_00208458(TextWin *o, s32 x, s32 y, u32 col, s32 n) {
     }
     buf[0] = ((((s32)s - (s32)buf) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     func_00206130(o, x + 2, y + 22, n * 79 + 25, 2, 0x80602020);
 }

@@ -5,6 +5,7 @@
  * uploads (func_001090e8, func_00109180). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/gs.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
 #include "data/pieces/D_002BC0A8.h"
@@ -314,15 +315,12 @@ void func_00108fd0(s32 a, s32 b, s32 c, s32 d, s32 e) {
 
 /* func_00109180 (from auto/text_00100000_9.c). */
 M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, s16, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC210;
 void func_00109180(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC210, arg1, 0, 0, 0, 0, 8, 2);
+    PlatGsSetDefLoadImage(&D_002BC210, arg1, 0, 0, 0, 0, 8, 2);
     FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC210, arg0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC210, arg0);
 }
 
 /* func_001091f8 (from auto/text_00100000_12.c). */

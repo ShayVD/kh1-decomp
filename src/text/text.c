@@ -32,6 +32,7 @@
  * CLUT D_003F1660 and sets up the packet headers of D_003F1A70, D_003F1E70,
  * D_003F2270 and D_003F27D0; the text windows follow (textwin.c). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003E8E08.h"
@@ -58,7 +59,6 @@ extern s32 D_0063F74C;
 
 
 void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 s32 func_001205f0(void *, void *);
 u64 *func_00122048(u32, u32);
@@ -101,15 +101,15 @@ void func_001ef950(void)
     func_0011fbb0(16380, 1, 0, 0, 0, 16, 16, 64, p + 0x10000, a);
     FlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), a);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_0011fbb0(4096, 4, 36, 0, 0, 256, 256, 2048, p, b);
     FlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), b);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_0011fbb0(4096, 4, 44, 0, 0, 256, 256, 2048, p + 0x8000, b);
     FlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), b);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 void func_001efaa8(void) {
@@ -621,7 +621,7 @@ s32 func_001f2a50(u32 color, s32 x, s32 y, u8 *str, s32 sc) {
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f12c0((Q *)(buf + 2), 1, color, x, y, str, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     return D_0063F74C;
 }
@@ -634,7 +634,7 @@ s32 func_001f2b58(u32 color, s32 x, s32 y, s32 glyph, s32 sc) {
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f15f0((Q *)(buf + 2), 1, color, x, y, glyph, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     return D_0063F74C;
 }
@@ -647,7 +647,7 @@ s32 func_001f2c60(u32 color, s32 x, s32 y, s32 code, s32 sc) {
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f1868((Q *)(buf + 2), 1, color, x, y, code, sc) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     return D_0063F74C;
 }
@@ -663,7 +663,7 @@ s32 func_001f2d68(s32 mode, s32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sc, u32 
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     buf[0] = ((s32)((u8 *)func_001f18e8((Q *)p, 1, mode, nd, pad, x, y, val, sc, col) - (u8 *)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     return D_0063F74C;
 }

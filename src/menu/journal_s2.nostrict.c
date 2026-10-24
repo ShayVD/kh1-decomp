@@ -14,6 +14,7 @@
  * after the k6 set came from an exhaustive two-line position search.
  * FLAGGED: four register variables (plain C, no inline asm). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/bss_0064.h"
 
@@ -56,7 +57,6 @@ extern s32 D_003F34F8;
 void func_00205618(Wnd *, s32, s32, s32, s32, s32 *);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(Wnd *);
 s32 func_001f45e0(Wnd *);
@@ -185,7 +185,7 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

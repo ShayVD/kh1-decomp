@@ -4,6 +4,7 @@
  * and func_001fb428 a number (D_003E8CD0 the minus sign, D_003E8CD8 the
  * digits), scaled like func_001f94f0 (wintext.nostrict.c). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003E8E28.h"
@@ -29,7 +30,6 @@ s32 func_001eff50(s32);
 s32 func_001f0340(u8 *, s32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 sceGsSyncPath(s32, s32);
 
 void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     u64 *base;
@@ -159,7 +159,7 @@ void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
         }
         xx += wp;
         PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
         continue;
     }
 done:
@@ -285,7 +285,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
         }
         xx += wp;
         PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
     }
 done:
     func_001220b8(base);
@@ -470,7 +470,7 @@ void func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val,
     hdr[1] = 0x4343e;
     base[0] = (((s32)p - (s32)base) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(base);
     D_003F2BD0 = (val - ox) >> 4;
     D_003F2BD4 = (yy - oy) >> 4;

@@ -19,6 +19,7 @@
  * +0xd0 to clear) and six movers of a menu's own cursor array (MenuCur, not
  * a window): up / down, left / right and either, with or without wrap. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00425BC8.h"
@@ -48,7 +49,6 @@ void func_001220b8(void *);
 s32 func_001f4378(TextWin *);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 sceGsSyncPath(s32, u16);
 f32 sinf(f32);
 void func_001fd5e0(TextWin *w, s32 n);
 void func_001fd610(TextWin *w, s32 v);
@@ -728,7 +728,7 @@ void func_001fea38(TextWin *o) {
     ((s32 *)q)[0] = x[1]; ((s32 *)q)[1] = y[2]; ((s32 *)q)[2] = 0x100000; ((s32 *)q)[3] = 0; q += 2;
     p[0] = ((s32)((u8 *)q - (u8 *)p) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(p);
 }
 

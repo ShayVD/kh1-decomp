@@ -4,6 +4,7 @@
  * offset); pppRyjDrawKekotoDraw builds its GS packet (ryjkekoto.c has the
  * Frame and Con).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "ppp.h"
 #include "data/pieces/D_003701D0.h"
@@ -149,7 +150,6 @@ void func_002673b8(f32 *, f32 *);
 void func_002675e0(s32 *, f32 *);
 s32 func_00267ea8(f32 *);
 void FlushCache(s32);
-void sceGsSyncPath(s32, s32);
 
 static inline f32 kkSqrt(f32 x) {
     f32 r;
@@ -370,7 +370,7 @@ void pppRyjDrawKekotoDraw(u8 *obj, KkKey *key, PppEntry *e)
     *(s32 *) &p->tag = ((((u8 *) out - (u8 *) p) >> 4) - 1) | 0x70000000;
     FlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), dma);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     { s8 *sp = &D_00372EA0; s32 k = *sp; *sp = k - 1; }
 }
 

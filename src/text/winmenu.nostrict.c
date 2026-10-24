@@ -7,6 +7,7 @@
  * path 2.  With bit 0 of +0x48 the window's points are scaled by +0x74 /
  * +0x78 around its anchor. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
@@ -27,7 +28,6 @@ u32 func_001eddc0(u32, u32, f32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
 void func_001f8270(void);
-s32 sceGsSyncPath(s32, s32);
 
 void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e) {
     u32 c[2];
@@ -132,7 +132,7 @@ void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -357,7 +357,7 @@ void func_001ff488(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     }
     buf[0] = ((((s32)(p + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -543,6 +543,6 @@ void func_001ffb30(s32 px, s32 py, s32 pw, s32 ph, u32 col) {
     p->v[23].z = 0x100000;
     buf[0] = ((((s32)(p + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }

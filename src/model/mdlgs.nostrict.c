@@ -4,6 +4,7 @@
  * tasks func_0015eb78 and func_0015eea0), the GS uploads through libdma's
  * channels D_0055C640 / D_0055C644 (func_0015f018 ... func_0015ff78).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00140000_s6_07.h"
@@ -26,11 +27,10 @@
 Nea98 *D_00551D80 ALIGNED(16);
 volatile s32 D_00559DB8 ALIGNED(8);
 extern volatile s32 D_00559DB4;
-s32 func_00265bc0(s32, s32);
 s32 func_0015ea98(void) {
     s32 r;
 
-    while (func_00265bc0(1, 0) != 0) {
+    while (PlatGsSyncPath(1, 0) != 0) {
     }
     while (D_00551D80 != 0) {
         D_00559DB8++;
@@ -70,7 +70,7 @@ s32 func_0015eb78(void) {
     D_00559DB0 = p = &D_00551D90[idx];
     p->x8 = 0;
     p->xc = 0;
-    while (func_00265bc0(1, 0) != 0) {
+    while (PlatGsSyncPath(1, 0) != 0) {
     }
     func_00258d10(2);
     func_00258d10(1);
@@ -114,17 +114,16 @@ void func_0015ec68(void) {
 #undef D_00559DB0
 
 /* func_0015eea0 (from hand/nostrict/text_00150000_h36.c). */
-s32 sceGsSyncPath(s32, u16);
 s32 func_0015eea0(void) {
     GsTask *t = D_0055BDE0->x8;
     FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     while (t) {
         if (!(t->cb(t) & 0x20)) {
             t->h0 = 0;
             t = t->next;
         }
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
     }
     D_0055BDE0->x8 = 0;
     D_0055BDE0->xC = 0;
@@ -138,7 +137,7 @@ extern u8 D_00272C70[];
 void func_00162500(void);
 void func_0015f018(void) {
     DmaChcr *c;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     *(volatile u32 *)0x10003820 = 6;
     c = PlatDmaGetChanAs(DmaChcr *, 0);
     c->dir = 1;
@@ -155,7 +154,7 @@ void func_0015f018(void) {
     c->tte = 1;
     c->tie = 0;
     PlatDmaSend(c, D_00272C70);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_00162500();
 }
 

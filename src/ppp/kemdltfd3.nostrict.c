@@ -7,6 +7,7 @@
 
 /* pppKeMdlTfd3Draw (from hand/nostrict/text_00190000_h64.c). */
 #include "common.h"
+#include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -66,7 +67,6 @@ typedef struct {
 } DSys;
 extern DSys *D_00615E64;
 extern s32 D_00616224;
-s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_001a9460(f32, s32, s32, void *);
 void func_001aa6b0(void *, s32, s32, s32);
 void func_001a9790(s32, void *, s32, s32, s32, s32, void *);
@@ -104,7 +104,7 @@ void pppKeMdlTfd3Draw(PppObject *obj, PppTfd3Key *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w->a, key->u, key->v, q + 0x70);
@@ -173,7 +173,7 @@ void pppKeMdlTfdUv3Draw(PppObject *obj, PppTfdUv3Key *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w->a, key->u, key->v, q + 0x70);

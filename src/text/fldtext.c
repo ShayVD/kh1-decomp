@@ -5,6 +5,7 @@
  * func_0010ea70 ...) around the unmatched layout func_0010d470. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/gs.h"
 #include "data/bss_0049.h"
 #include "data/bss_004D.h"
 #include "data/types/text_00100000_h2.h"
@@ -87,40 +88,31 @@ void func_0010c410(s32 arg0) {
 
 /* func_0010c438 (from auto/text_00100000_3.c). */
 M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, s16, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC1B0;
 void func_0010c438(s16 arg0, s32 arg1) {
-    sceGsSetDefLoadImage(&D_002BC1B0, arg0, 1, 0, 0, 0, 8, 2);
-    sceGsSyncPath(0, 0);
+    PlatGsSetDefLoadImage(&D_002BC1B0, arg0, 1, 0, 0, 0, 8, 2);
+    PlatGsSyncPath(0, 0);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, arg1);
+    PlatGsExecLoadImage(&D_002BC1B0, arg1);
 }
 
 /* func_0010c4b0 (from hand/text_00100000_h2.c). */
 #define FlushCache ((void (*)(s32)) FlushCache)
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
 #define D_002BC1B0 (*(GsImagePacket (*)) &D_002BC1B0)
-#define sceGsSetDefLoadImage ((void (*)(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16)) sceGsSetDefLoadImage)
-#define sceGsExecLoadImage ((s32 (*)(GsImagePacket *, void *)) sceGsExecLoadImage)
 s32 func_0010c4b0(void) {
     switch (D_002BD118) {
     case 5:
     case 6:
         return 0;
     }
-    sceGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 0, 0, 0, 256, 256);
-    sceGsSyncPath(0, 0);
+    PlatGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 0, 0, 0, 256, 256);
+    PlatGsSyncPath(0, 0);
     FlushCache(0);
-    sceGsExecLoadImage(&D_002BC1B0, D_00495280);
+    PlatGsExecLoadImage(&D_002BC1B0, D_00495280);
     return 0;
 }
 #undef FlushCache
-#undef sceGsSyncPath
 #undef D_002BC1B0
-#undef sceGsSetDefLoadImage
-#undef sceGsExecLoadImage
 
 /* func_0010c540 (from auto/text_00100000_12.c). */
 M2C_UNK func_00106cd0(void *, s32);
@@ -640,7 +632,7 @@ void func_0010e750(void) {
     func_0010c438(0x3FF1, M2C_FIELD(sp, s32 *, 0x14));
     func_0010c438(0x3FF2, M2C_FIELD(sp, s32 *, 0x18));
     func_0010c438(0x3FF3, M2C_FIELD(sp, s32 *, 0x1C));
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_00121ee0(M2C_FIELD(sp, s32 *, 0x0));
     func_00121ee0(M2C_FIELD(sp, s32 *, 0x4));
     func_00121ee0(M2C_FIELD(sp, s32 *, 0x8));

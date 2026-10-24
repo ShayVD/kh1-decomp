@@ -7,11 +7,9 @@
  * still by their SDK names (sceGsSetDefLoadImage / sceGsExecLoadImage), not
  * yet behind a platform wrapper.  Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/gs.h"
 
-s32 sceGsSyncPath(s32, s32);
 s32 FlushCache(s32);
-s32 sceGsSetDefLoadImage(void *, s16, s16, s16, s16, s16, s16, s16);
-s32 sceGsExecLoadImage(void *, void *);
 M2C_UNK func_001aa1f8(s32, u8, u16, s32);
 extern u8 D_003727F0[];
 
@@ -70,16 +68,16 @@ void func_001aa0e0(Tm2 *t) {
         s32 tbp = ph->t0.tbp0;
         img = (u8 *)t + 64;
         t->bF = 111;
-        sceGsSetDefLoadImage(li, tbp, ph->b28 >> 2, psm, ph->b2a * 16, ph->b2b * 16, ph->width, ph->height);
-        sceGsSyncPath(0, 0);
+        PlatGsSetDefLoadImage(li, tbp, ph->b28 >> 2, psm, ph->b2a * 16, ph->b2b * 16, ph->width, ph->height);
+        PlatGsSyncPath(0, 0);
         FlushCache(0);
-        sceGsExecLoadImage(li, img);
+        PlatGsExecLoadImage(li, img);
     }
     if (ph->clutSize) {
-        sceGsSetDefLoadImage(lc, ph->t1.cbp, 1, D_003727F0[ph->clutType], 0, 0, 16, ph->clutSize >> 6);
-        sceGsSyncPath(0, 0);
+        PlatGsSetDefLoadImage(lc, ph->t1.cbp, 1, D_003727F0[ph->clutType], 0, 0, 16, ph->clutSize >> 6);
+        PlatGsSyncPath(0, 0);
         FlushCache(0);
-        sceGsExecLoadImage(lc, img + ph->imageSize);
+        PlatGsExecLoadImage(lc, img + ph->imageSize);
     }
 }
 
@@ -91,11 +89,11 @@ typedef M2C_UNK (*ExecImg388)(void *, s32);
 void func_001aa388(void *arg0, s32 arg1) {
     s32 sp[24];
     ((LoadImg388)sceGsSetDefLoadImage)(sp, M2C_FIELD(arg0, u16 *, 0) & 0x3FFF, (u8) M2C_FIELD(arg0, u8 *, 0xA) >> 2, M2C_FIELD(arg0, u8 *, 0x18), M2C_FIELD(arg0, u8 *, 8) * 0x10, M2C_FIELD(arg0, u8 *, 9) * 0x10, M2C_FIELD(arg0, s16 *, 0xC), M2C_FIELD(arg0, s16 *, 0xE));
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     FlushCache(0);
     ((ExecImg388)sceGsExecLoadImage)(sp, M2C_FIELD(arg0, s32 *, 0x14));
     if (arg1 != 0) {
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
     }
 }
 

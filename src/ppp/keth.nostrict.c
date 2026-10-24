@@ -7,6 +7,7 @@
  * kethdraw.nostrict.c's func_001a7718 on DMA channel 2 (pppKeThDraw).
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 
 typedef int u128 __attribute__((mode(TI)));
@@ -497,7 +498,6 @@ void func_001a8ae8(NdArg *a) {
 typedef struct TNd { struct TNd *next; } TNd;
 typedef union { u128 q; struct { u16 qwc; u8 b2; u8 id; } s; } Tag;
 typedef struct { s32 a; TNd *n; u8 *end; s32 c; s32 b; u64 *flag; s64 d; s64 e; } Ctx;
-s32 sceGsSyncPath(s32, s32);
 void FlushCache(s32);
 s32 func_001a7718(Ctx *);
 
@@ -511,7 +511,7 @@ void func_001a8c40(TNd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
     x.b = b;
     x.d = d;
     x.e = e;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     for (; n; n = n->next) {
         x.n = n;
         x.end = *buf + 16;
@@ -523,7 +523,7 @@ void func_001a8c40(TNd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
             t->s.qwc = (u32)(x.end - *buf) / 16 - 1;
             FlushCache(0);
             PlatDmaSend(ch, t);
-            sceGsSyncPath(0, 0);
+            PlatGsSyncPath(0, 0);
         }
     }
 }

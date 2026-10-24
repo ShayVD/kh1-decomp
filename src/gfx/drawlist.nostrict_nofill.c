@@ -15,6 +15,7 @@
  * the main ELF (overlays, most likely); func_00237a48 is the HUD's and the
  * sprites' projection.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "gfx/drawlist.h"
 #include "gfx/gspkt.h"
@@ -33,7 +34,6 @@ typedef struct { u128 tag; V4 v[3]; V4 nrm[3]; U64x2 col; V4 uv[3]; } ObjC;
 typedef struct Nd { struct Nd *next; s32 type; u8 pad8[8]; u128 v[3]; u128 n[3]; u64 t0, t1; u128 c[3]; } Nd;
 
 void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
 void sceVu0ApplyMatrix(V4 *, void *, V4 *);
 void sceVu0DivVectorXYZ(V4 *, V4 *, f32);
 void sceVu0ScaleVector(V4 *, void *, f32);
@@ -269,7 +269,7 @@ void func_00237f20(DrawList *h, s32 *b0, s32 *b1, s32 a3, void *m) {
                     q = PlatDmaGetChanAs(s32 *, 2);
                     *q |= 0x40;
                     FlushCache(0);
-                    sceGsSyncPath(0, 0);
+                    PlatGsSyncPath(0, 0);
                     PlatDmaSend(q, buf);
                     buf = (buf == b0) ? b1 : b0;
                 }
@@ -278,7 +278,7 @@ void func_00237f20(DrawList *h, s32 *b0, s32 *b1, s32 a3, void *m) {
             } while (p != 0);
         }
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00237f20 with one DMA send per bucket: the bucket's packets run on
@@ -310,13 +310,13 @@ void func_002380c0(DrawList *h, s32 *b0, s32 *b1, s32 a3, void *m) {
                 q = PlatDmaGetChanAs(s32 *, 2);
                 *q |= 0x40;
                 FlushCache(0);
-                sceGsSyncPath(0, 0);
+                PlatGsSyncPath(0, 0);
                 PlatDmaSend(q, buf);
                 buf = (buf == b0) ? b1 : b0;
             }
         }
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_00237f20 for lists of kind 3 nodes only: every triangle in one packet

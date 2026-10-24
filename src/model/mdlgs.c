@@ -11,6 +11,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/gs.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -61,12 +62,11 @@ void func_0015ee78(s32 arg0, s32 arg1) {
 
 /* func_0015ef60 (from hand/text_00150000_h10.c). */
 extern volatile s32 D_00559DB4;
-s32 sceGsSyncPath(s32, u16);
 s32 DisableDmac(s32);
 void func_0015ef60(void) {
     D_002BBDF8;
     while (D_00559DB4) ;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     DisableDmac(1);
     DisableDmac(2);
 }

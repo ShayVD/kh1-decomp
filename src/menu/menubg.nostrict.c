@@ -1,6 +1,7 @@
 /* The gradients and sprites of src/menu/menubg.c that need -fno-strict-aliasing
  * (docs/modules.md "Session 39"). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 
@@ -16,8 +17,6 @@ extern u8 D_00641080[];
 extern u8 D_00641130[];
 
 s32 FlushCache(s32);
-s32 sceGsExecStoreImage(void *, void *);
-s32 sceGsSyncPath(s32, s32);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 u64 *func_00122048(s32, s32);
 void func_001220b8(void *);
@@ -71,7 +70,7 @@ void func_0020a9b0(s32 a) {
     q += 20;
     p[0] = (((s32)q - (s32)p) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(p);
 }
 
@@ -122,7 +121,7 @@ void func_0020ab88(u32 a) {
     p->e[7].x = 0x9000; p->e[7].y = 0x8c00; p->e[7].z = 0x100000; p->e[7].w = 0;
     buf[0] = ((((s32)p - (s32)buf + 496) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -215,7 +214,7 @@ void func_0020b120(s32 prim, s32 al, u32 c0, u32 c1, u32 c2, u32 c3) {
     q += 20;
     p[0] = (((s32)q - (s32)p) >> 4) - 1 | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), u);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(p);
 }
 
@@ -277,6 +276,6 @@ void func_0020b3d8(TextWin *w, s32 px, s32 py) {
     }
     buf[0] = ((((s32)p - (s32)buf + 192) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }

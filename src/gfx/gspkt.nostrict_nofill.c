@@ -5,11 +5,11 @@
  * p (bit 31 set for the scratchpad, 0x70000000 and up).  Platform code: the
  * Vita build replaces it (include/platform/ candidate, docs/portability.md). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 
 typedef int u128 __attribute__((mode(TI)));
 void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
 
 void func_00237018(u128 *p, s32 n, s32 wait) {
     PlatDmaChan *ch;
@@ -23,11 +23,11 @@ void func_00237018(u128 *p, s32 n, s32 wait) {
         }
         ch = PlatDmaGetChan(2);
         FlushCache(0);
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
         PlatDmaSend(ch, (u32)p | hi);
         if (wait) {
             do {
-                sceGsSyncPath(0, 0);
+                PlatGsSyncPath(0, 0);
             } while (0);
         }
     }

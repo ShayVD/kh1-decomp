@@ -8,6 +8,7 @@
  * (func_0020b6a8: the alpha pulses with D_002BBDF8);  func_0020bbc0 /
  * func_0020bd18 point at the cursor cell of a TextWin. */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_002BBDF8.h"
@@ -31,7 +32,6 @@ f32 D_00641214 ALIGNED(4);
 f32 D_00641218 ALIGNED(8);
 void *func_00122048(s32, s32);
 void func_001220b8(void *);
-s32 sceGsSyncPath(s32, s32);
 f32 sinf(f32);
 s32 func_0020bb78(void);
 void func_0020bb90(s32, s32);
@@ -88,7 +88,7 @@ void func_0020b6a8(void) {
     buf[0] = (((s32)((u8 *)p - (u8 *)buf + 0xC0) >> 4) - 1) | 0x70000000;
 
     PlatDmaSend(PlatDmaGetChan(2), ua);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

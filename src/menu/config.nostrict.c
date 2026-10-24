@@ -1,8 +1,9 @@
 /* The config page's background (docs/modules.md "Session 41"): func_00219598
  * draws the two textures config.c's func_00219500 loads (D_00642D30,
- * D_00642DE0) with a GS packet and sceGsSyncPath (a platform call; the Vita
+ * D_00642DE0) with a GS packet and PlatGsSyncPath(a platform call; the Vita
  * layer replaces it).  -fno-strict-aliasing (nostrict). */
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 typedef struct {
     u8 pad0[0x48];
@@ -19,7 +20,6 @@ typedef struct {
 extern u8 D_00642D30[];
 extern u8 D_00642DE0[];
 u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(Wnd2 *);
 s32 func_001f45e0(Wnd2 *);
@@ -83,7 +83,7 @@ void func_00219598(Wnd2 *w, s32 px, s32 py) {
     }
     buf[0] = ((((s32)p - (s32)buf + 192) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

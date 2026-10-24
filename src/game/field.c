@@ -12,6 +12,7 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_0037A378.h"
 #include "data/types/text_00100000_h28.h"
@@ -48,9 +49,8 @@
 
 /* func_001001f8 (from auto/text_00100000.c). */
 M2C_UNK func_00106c78();
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
 s32 func_001001f8(void) {
-    func_00265bc0(0, 0);
+    PlatGsSyncPath(0, 0);
     func_00106c78();
     return 0;
 }
