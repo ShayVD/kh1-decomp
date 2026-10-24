@@ -11,9 +11,7 @@ M2C_UNK func_001104c0();
 M2C_UNK func_00112270(s32, M2C_UNK *);
 M2C_UNK func_00114820();
 M2C_UNK func_0011cb08(void *);
-M2C_UNK func_0011cbe0(M2C_UNK, s32, s32, M2C_UNK *);
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
-M2C_UNK func_001205f0(M2C_UNK *, s32);
 M2C_UNK func_00120748(void *, s32, M2C_UNK *, M2C_UNK);
 M2C_UNK func_001ec7d0(M2C_UNK);
 M2C_UNK func_001ed128(M2C_UNK, M2C_UNK);
@@ -42,11 +40,9 @@ extern M2C_UNK D_002BCD20;
 #include "data/pieces/D_002BD250.h"
 extern M2C_UNK D_0048CFF8;
 extern M2C_UNK D_0048D000;
-extern M2C_UNK D_0048D140;
 extern M2C_UNK func_001017e8;
 extern M2C_UNK func_00112840;
 extern M2C_UNK func_00113558;
-extern M2C_UNK func_0011e7f8;
 extern f32 D_002BBDEC;
 extern s32 D_002A3F40;
 extern s32 D_002A3F44;
@@ -58,7 +54,6 @@ extern s32 D_002BC130;
 extern s32 D_002BCAE0;
 extern s32 D_002BCB34;
 extern s32 D_002BCDC0;
-extern s32 D_002C137C;
 extern s32 D_004D8EC0[];
 extern s32 D_004D90FC;
 extern s32 D_004D9280;
@@ -271,14 +266,6 @@ void func_00118688(s32 arg0, s32 arg1) {
 s32 func_0011b0c0(s32 arg0, s32 arg1) {
     func_0011a410(arg0);
     return func_0011af48(arg0, arg1, 0, (s32) &D_002BD250);
-}
-
-void func_0011cb80(s32 arg0) {
-    func_001205f0(&D_0048D140, arg0);
-}
-
-void func_0011e8a0(s32 arg0, s32 arg1, s32 arg2) {
-    func_0011cbe0(1, arg2, D_002C137C, &func_0011e7f8);
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"

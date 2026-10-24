@@ -205,17 +205,6 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
 }
 
 /* needs make: uses rodata */
-typedef struct { s32 id; f32 *pos; s32 x8, handle, x10; u8 active, on, kind, x17; } Snd01;
-#include "data/pieces/D_002BBDE0.h"
-extern s32 D_002C1370;
-extern s32 D_003F34A4;
-extern s32 D_002C1360;
-extern s32 D_002C1384;
-extern V4_01 D_004E3A20; /* src/data/bss_004E.c: V4 D_004E3A20 */
-extern V4_01 D_004E3A30; /* src/data/bss_004E.c: V4 D_004E3A30 */
-s32 func_00104f10(f32 *, V4_01);
-s32 func_00119fc0(f32 *, V4_01, V4_01, V4_01, f32 *);
-s32 func_00119ad8(s32, f32 *, V4_01, V4_01, V4_01, f32 *);
 
 static inline f32 vd01(void *a, void *b) {
     f32 r;
@@ -236,162 +225,7 @@ static inline f32 vd01(void *a, void *b) {
     return r;
 }
 
-void func_0011d7e0(Snd01 *e, s32 *a, s32 *b) {
-    V4_01 hit;
-    V4_01 n;
-    f32 md;
-    V4_01 unused;
-    f32 *t;
-    f32 *p;
-    f32 s, d;
-    if (e->x8 == 0x3fff) return;
-    if ((D_002BBDE0 == 5 || D_002BBDE0 == 7) && D_002C1370) {
-        *a = 0x3fff;
-        *b = 0x3fff;
-        return;
-    }
-    if (D_003F34A4) {
-        *a = 0;
-        *b = 0;
-        return;
-    }
-    p = e->pos;
-    s = 0.0f;
-    switch (e->kind) {
-    case 0:
-        s = D_002C1360;
-        break;
-    case 1:
-    case 2:
-    case 4:
-        s = D_002C1384;
-        break;
-    case 3:
-        md = 5000.0f;
-        func_00104f10(p, n);
-        t = D_004E3A20;
-        s = 50.0f;
-        if (func_00119fc0(p, n, t, hit, &md) || func_00119ad8(-1, p, n, t, hit, &md)) {
-            d = vd01(t, hit);
-            *a = 16383.0f - d * d / s;
-        } else {
-            *a = 0;
-        }
-        t = D_004E3A30;
-        if (func_00119fc0(p, n, t, hit, &md)) {
-            d = vd01(t, hit);
-            *b = 16383.0f - d * d / s;
-        } else if (func_00119ad8(-1, p, n, t, hit, &md)) {
-            d = vd01(t, hit);
-            *b = 16383.0f - d * d / s;
-        } else {
-            *b = 0;
-        }
-        return;
-    }
-    d = vd01(D_004E3A20, p);
-    *a = 16383.0f - d * d / s;
-    d = vd01(D_004E3A30, p);
-    *b = 16383.0f - d * d / s;
-}
-
 /* needs make: uses rodata */
-typedef struct { s32 x0, x4, x8; } Sl01;
-typedef struct { s32 a, b; } Pr01;
-extern s32 D_004E3A18;
-extern s32 D_004E3A1C;
-extern s32 D_004E3A40;
-extern Pr01 D_004E39F8[]; /* src/data/bss_004E.c: Pair D_004E39F8[0x4] */
-extern Sl01 *D_004E3454; /* src/data/bss_004E.c: Slot12 *D_004E3454 */
-extern s32 D_004E344C;
-extern Snd01 *D_004E3450; /* src/data/bss_004E.c: SndSlot *D_004E3450 */
-void func_0011dc28(Snd01 *, s32 *, s32 *);
-void func_0011dba0(s32 *, s32 *, s32, s32);
-void func_0011dc98(Snd01 *);
-void func_0011c838(s32, s32, s32, s32, s32);
-void func_0011c880(s32, s32, s32, s32, s32);
-void func_0011c850(s32, s32, s32);
-void func_0011e248(s32);
-void func_0011e368(s32, s32);
-void func_0011ddd0(void);
-void func_001edba0(void);
-
-void func_0011de90(void) {
-    s32 l, r;
-    s32 i;
-    Sl01 *sl;
-    Snd01 *s;
-    sl = D_004E3454;
-    D_004E3A18 = 0;
-    for (i = 0; i < 4; i++) {
-        if (D_004E39F8[i].b) {
-            D_004E3A18 = 1;
-            D_004E39F8[i].b--;
-        }
-    }
-    D_004E3A1C = 0;
-    for (i = 0; i < D_004E344C; i++, sl++) {
-        if (sl->x8) {
-            sl->x8--;
-            D_004E3A1C = 1;
-        }
-    }
-    func_0011e248(0);
-    func_0011e368(-1, -1);
-    func_0011ddd0();
-    s = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, s++) {
-        switch (s->active) {
-        case 0:
-            break;
-        case 1:
-            func_0011d7e0(s, &l, &r);
-            func_0011dc28(s, &l, &r);
-            func_0011dba0(&l, &r, s->x8, s->kind);
-            func_0011c838(s->handle, s->id, s->x10, l, r);
-            s->active = 3;
-            func_0011dc98(s);
-            break;
-        case 2:
-            if (D_004E3A40 == 0) {
-                func_0011d7e0(s, &l, &r);
-                func_0011dba0(&l, &r, s->x8, s->kind);
-                if (l || r) {
-                    func_0011c838(s->handle, s->id, s->x10, l, r);
-                    s->on = 1;
-                }
-                s->active = 4;
-            }
-            break;
-        case 3:
-            func_0011d7e0(s, &l, &r);
-            func_0011dba0(&l, &r, s->x8, s->kind);
-            func_0011c880(s->handle, s->id, s->x10, l, r);
-            break;
-        case 4:
-            if (D_004E3A40 == 0) {
-                func_0011d7e0(s, &l, &r);
-                func_0011dba0(&l, &r, s->x8, s->kind);
-                if (l == 0 && r == 0) {
-                    s->on = 0;
-                    func_0011c850(s->handle, s->id, s->x10);
-                    break;
-                }
-                if (s->on == 0) {
-                    func_0011c838(s->handle, s->id, s->x10, l, r);
-                } else if (l != 0x3fff || r != 0x3fff) {
-                    func_0011c880(s->handle, s->id, s->x10, l, r);
-                }
-                s->on = 1;
-            } else {
-                s->on = 0;
-                func_0011c850(s->handle, s->id, s->x10);
-            }
-            break;
-        }
-    }
-    func_001edba0();
-}
 
 /* needs make: uses rodata */
 
@@ -400,23 +234,6 @@ void func_0011de90(void) {
 #undef FLD
 
 /* Split out of func_0011d7e0 / func_0011de90's old layout entries. */
-void func_0011db50(s32 *a, s32 *b) {
-    if (*a < 0) *a = 0;
-    if (*b < 0) *b = 0;
-    if (*a >= 0x4000) *a = 0x3fff;
-    if (*b >= 0x4000) *b = 0x3fff;
-}
-
-void func_0011e1c8(s32 x) {
-    s32 i;
-    i = 0;
-    do {
-        if (D_004E39F8[i].a == 0) break;
-        i++;
-    } while (i < 4);
-    D_004E39F8[i].a = x;
-    D_004E39F8[i].b = 2;
-}
 
 #include "data/data_002C.h"
 #include "data/data_003F.h"

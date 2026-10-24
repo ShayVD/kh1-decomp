@@ -1,19 +1,9 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_00101628();
 M2C_UNK func_00102a48(M2C_UNK, M2C_UNK);
 M2C_UNK func_00111340(s32, M2C_UNK);
-M2C_UNK func_00113df8(M2C_UNK);
-M2C_UNK func_0011c898(M2C_UNK);
-M2C_UNK func_0011c9a0();
 M2C_UNK func_0013c078();
-M2C_UNK func_001ed128(M2C_UNK, M2C_UNK);
-M2C_UNK func_001ed170(M2C_UNK);
-M2C_UNK func_001ed2d8(M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_001ed520(M2C_UNK);
-M2C_UNK func_001edba0();
 M2C_UNK func_002193e0(M2C_UNK);
 M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675b8(M2C_UNK *, M2C_UNK *);
@@ -152,24 +142,6 @@ void func_0011c5e8(void) {
     if ((func_002193b8() == 1) && (D_002B6478 != 2)) {
         func_002193e0(0);
     }
-}
-
-void func_0011c9c0(void) {
-    func_0011c9a0();
-    func_0011c898(0);
-    func_001ed520(0);
-    func_001ed520(1);
-    func_001ed2d8(-0x64, -1, -1);
-    func_001ed128(0, 0);
-    func_001ed128(0, 1);
-    func_001ed128(1, 0);
-    func_001ed128(1, 1);
-    func_001ed128(0, -8);
-    func_001ed128(3, -8);
-    func_001ed170(0xA);
-    func_00113df8(0);
-    func_001edba0();
-    func_00101628();
 }
 #include "data/data_002B.h"
 #include "data/pieces/D_002BCC24.h"

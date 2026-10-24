@@ -285,7 +285,7 @@ s32 func_00120748(char *name, s32 buf, void (*cb)(void), s32 wait) {
 
 /* func_001207f8 (from hand/text_00110000_h4.c). */
 typedef struct { u8 pad[68]; s32 x44; s32 x48; } Ent4C;
-extern Ent4C D_004E4528[0x10];
+Ent4C D_004E4528[0x10] ALIGNED(8);  /* moved from hand/text_00110000_h4.c (session 54) */
 s32 func_0011f2d0(Ent4C *);
 s32 func_001207f8(s32 id) {
     s32 i;
@@ -380,7 +380,7 @@ void func_00120a70(void) {
 typedef struct Node { u16 type; u16 f2; s32 key; struct Node *next; s32 data; } Node;
 typedef struct { u16 size; u16 count; u8 *base; Node *head; u8 *cur; } Pool;
 typedef struct { u32 flags; u8 pad[44]; s32 x30; s32 x34; } Slot;
-extern Slot D_004F3230[0x10];
+Slot D_004F3230[0x10] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
 void func_0011efa8(Pool *, void *, s32, s32);
 #define D_004E49E8 (*(Pool (*)) &D_004E49E8)
 #define func_00120038 ((void (*)(Slot *)) func_00120038)
@@ -397,7 +397,7 @@ void func_00120aa0(void) {
 
 /* func_00120b10 (from hand/text_00110000_h4.c). */
 extern char D_0048D288[];
-extern u8 D_004F35B0[0x1000];
+u8 D_004F35B0[0x1000] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
 void sceSifInitRpc(s32);
 void func_0025b550(void);
 s32 sceCdInit(s32);

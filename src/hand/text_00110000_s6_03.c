@@ -1,149 +1,9 @@
 #include "common.h"
 #include "data/bss_004E.h"
-typedef struct {
-    s32 id;
-    s32 x4;
-    s32 x8;
-    s32 handle;
-    s32 x10;
-    u8 active;
-    u8 x15;
-    u8 kind;
-    u8 x17;
-} SndSlot;
-extern s32 D_004E344C;
-extern SndSlot *D_004E3450;
 void func_001ed2d8(s32, s32, s32);
 void func_001ed370(s32, s32, s32, s32, s32);
 CONTEXT_ONLY void func_0011c850(s32 a, s32 b, s32 c) { func_001ed2d8(a, b, c); }
 CONTEXT_ONLY void func_0011c868(s32 a, s32 b, s32 c, s32 d, s32 e) { func_001ed370(a, b, c, d, e); }
-
-void func_0011d350(s32 a0, s32 a1) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->id == a0 && e->x10 == a1) {
-            e->active = 0;
-            func_0011c850(e->handle, a0, a1);
-            return;
-        }
-    }
-}
-
-void func_0011d3c8(s32 a0, s32 a1, s32 a2) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->id == a0 && e->x10 == a1) {
-            e->active = 0;
-            func_0011c868(e->handle, a0, a1, -1, a2);
-            return;
-        }
-    }
-}
-
-void func_0011d448(void) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->active && e->kind == 4) {
-            e->active = 0;
-            func_0011c850(e->handle, e->id, e->x10);
-        }
-    }
-}
-
-void func_0011d4e0(s32 a0) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->active && e->kind == 4) {
-            e->active = 0;
-            func_0011c868(e->handle, e->id, e->x10, -1, a0);
-        }
-    }
-}
-
-void func_0011d5f0(void) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->active && e->kind == 2) {
-            e->active = 0;
-            func_0011c850(e->handle, e->id, e->x10);
-        }
-    }
-}
-
-typedef struct { s32 off; s32 size; } Chunk;
-typedef struct { u8 pad[16]; Chunk c[2]; } SndHdr;
-extern void (*D_004E3430)(void);
-void func_001ed128(s32, s32);
-s32 func_001ed220();
-void func_001ed658(s32, void *, s32);
-void func_001edba0(void);
-s32 func_001ecfd8(void);
-void func_001104e0(void);
-extern char D_0048D158[];
-void func_0011ef10(s32, void (*)(void));
-void func_0011cba0(void);
-s32 strcmp(const char *, const char *);
-typedef struct { s32 n; u8 pad[12]; Chunk c[1]; } SndHdr2;
-
-void func_0011cd20(s32 a0, SndHdr *a1, void (*a3)(void)) {
-    Chunk *c = &a1->c[0];
-    s32 off0 = c->off, sz0 = c->size;
-    s32 off1, sz1;
-    u8 *p0, *p1;
-    c = &a1->c[1];
-    off1 = c->off; sz1 = c->size;
-    D_004E3430 = a3;
-    p0 = (u8 *)a1 + off0;
-    p1 = (u8 *)a1 + off1;
-    func_001ed128(0, 2);
-    func_001ed128(2, 2);
-    func_001ed220(a0, p0, sz0);
-    func_001ed658(a0, p1, sz1);
-    func_001edba0();
-    while (!func_001ecfd8()) func_001104e0();
-}
-
-void func_0011cdf0(s32 a0, SndHdr2 *h, void (*cb)(void)) {
-    s32 i, cnt, total, n;
-    Chunk *c;
-    u8 *p0;
-    Chunk *c0;
-    char *s;
-    cnt = 0;
-    total = 0;
-    c = c0 = h->c;
-    n = h->n;
-    p0 = (u8 *)h + c->off;
-    for (i = 0; i < n; i++, c++) {
-        s = (char *)h + c->off;
-        if (strcmp(s, D_0048D158) == 0) {
-            cnt++;
-            total += *(s32 *)(s + 12) + 16;
-        }
-    }
-    if (cnt) {
-        func_001ed128(0, a0);
-        func_001ed128(3, a0);
-        func_001ed220(a0, p0, total);
-        c = c0 + cnt;
-        for (i = 0; i < n - cnt; i++, c++) {
-            func_001ed658(a0, (u8 *)h + c->off, c->size);
-        }
-        D_004E3430 = cb;
-        func_0011ef10(10000, func_0011cba0);
-    } else {
-        cb();
-    }
-}
-
-extern s32 D_002C1388;
-extern void (*D_004E3434)(void);
-extern s32 D_004E3444;
 extern s32 D_002C1390;
 CONTEXT_ONLY void func_0011e528(void) { D_002C1390 = 0; }
 typedef struct { u32 b0 : 1; u32 rest : 31; } Bits5958;
@@ -164,12 +24,6 @@ CONTEXT_ONLY void func_0011e610(void) {
         else func_0011c7a8(0, 0, D_004E3438, D_004E343C, 0, 120);
         D_002C1364 = 0;
     }
-}
-
-void func_0011e700(void) {
-    if (!D_002C1388) func_0011e528();
-    if (!D_004E3444) func_0011e610();
-    if (D_004E3434) D_004E3434();
 }
 
 typedef int u128 __attribute__((mode(TI)));
@@ -517,7 +371,6 @@ void func_0011a0a0(void) {
     }
     func_001220b8(w);
 }
-
 
 #include "data/pieces/D_002C1300.h"
 void func_00116690(void);

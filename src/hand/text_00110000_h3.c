@@ -73,43 +73,12 @@ extern Ent2458 D_004E2458[];
 
 /* Sound-slot table: D_004E344C entries of 24 bytes at *D_004E3450. */
 #include "data/types/text_00110000_h3.h"
-extern s32 D_004E344C;
-extern SndSlot *D_004E3450;
-extern SndSlot D_004E3458[];
-extern Slot12 *D_004E3454;
-extern void (*D_004E3430)(void);
 extern s32 D_004E2430[64][16];
-#include "data/pieces/D_002A3F50.h"
-extern s32 D_002A3F44;
-#include "data/pieces/D_002BCAF0.h"
-extern s32 D_002BC128;
 
 /* Strings in .rodata, referenced through their data symbols so the copies
  * stay block moves without emitting new rodata: "%3d", "amusic/music",
  * ".dat", "amusic/se". */
-typedef struct {
-    char c[13];
-} Str13;
 #include "data/types/text_00110000_h3_p.h"
-extern char D_0048D110[];
-extern Str13 D_0048D118;
-extern char D_0048D128[];
-extern Str10 D_0048D130;
-
-int sprintf(char *, const char *, ...);
-char *strcat(char *, const char *);
-void func_00112270(s32, char *);
-s32 func_001ecfd8(void);
-void func_0011cf88(s32, s32, s32, s32, s32, SndSlot *, s32);
-void func_0011c838(s32, s32, s32, s32, s32);
-void func_0011c850(s32, s32, s32);
-void func_0011c868(s32, s32, s32, s32, s32);
-void func_0011c880(s32, s32, s32, s32, s32);
-void func_0011d028(s32, s32);
-void func_001ed320(s32, s32, s32, s32);
-s32 func_001ecb08(s32, s32, s32);
-void func_0011d240(s32, s32, void *, s32);
-void func_0011db50(s32 *, s32 *);
 
 typedef struct {
     s32 n;
@@ -328,130 +297,7 @@ void func_0011c710(void) {
     func_0011d688(120);
 }
 
-void func_0011ca68(s32 a0, char *a1) {
-    char buf[80];
-    sprintf(buf, D_0048D110, a0);
-    if (buf[0] == ' ') {
-        buf[0] = '0';
-        if (buf[1] == ' ') buf[1] = '0';
-    }
-    *(Str13 *)a1 = D_0048D118;
-    strcat(a1, buf);
-    strcat(a1, D_0048D128);
-}
-
-void func_0011cb08(char *a0) {
-    char buf[16];
-    *(Str10 *)a0 = D_0048D130;
-    func_00112270(D_002BC128, buf);
-    strcat(a0, buf);
-    strcat(a0, D_0048D128);
-}
-
-s32 func_0011cba0(void) {
-    if (func_001ecfd8()) return 0;
-    if (D_004E3430) D_004E3430();
-    return 4;
-}
-
 /* Claim the first inactive slot; the extra arguments pass straight through. */
-SndSlot *func_0011cfa8(s32 a0, s32 a1, s32 a2, s32 a3, s32 t0) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->active == 0) {
-            func_0011cf88(a0, a1, a2, a3, t0, e, a0 < 1000 ? 2 : -1);
-            return e;
-        }
-    }
-    return 0;
-}
-
-void func_0011d028(s32 a0, s32 a1) {
-    s32 i;
-    Slot12 *p = D_004E3454;
-    for (i = 0; i < D_004E344C; i++, p++) {
-        if (!p->x0) goto found;
-    }
-found:
-    p->x0 = a0;
-    p->x4 = a1;
-    p->x8 = 2;
-}
-
-void func_0011d080(s32 a0, s32 a1) {
-    func_0011c838(a0 < 1000 ? 2 : -8, a0, a1, 0x3fff, 0x3fff);
-    func_0011d028(a0, a1);
-}
-
-void func_0011d0d8(s32 a0, s32 a1) {
-    func_0011c850(a0 < 1000 ? 2 : -8, a0, a1);
-}
-
-void func_0011d108(s32 a0, s32 a1, s32 a2) {
-    func_0011c868(a0 < 1000 ? 2 : -8, a0, a1, -1, a2);
-}
-
-void func_0011d140(s32 a0, s32 a1) {
-    func_0011c838(a0 < 1000 ? 2 : -1, a0, a1, 0x3fff, 0x3fff);
-}
-
-void func_0011d178(s32 a0, s32 a1) {
-    func_0011c850(a0 < 1000 ? 2 : -1, a0, a1);
-}
-
-void func_0011d1a8(s32 a0, s32 a1, s32 a2) {
-    func_0011c868(a0 < 1000 ? 2 : -1, a0, a1, -1, a2);
-}
-
-void func_0011d2d0(s32 a0, s32 a1, s32 a2) {
-    s32 i;
-    SndSlot *e = D_004E3458;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->id == a0 && e->x10 == a1) {
-            func_001ed320(e->handle, a0, a1, a2);
-            return;
-        }
-    }
-}
-
-void func_0011d588(void) {
-    s32 i;
-    for (i = 0; i < 2; i++) {
-        func_0011d240(((s32 *)&D_002A3F50)[i], i, D_002BCAF0, 0x3fff);
-    }
-}
-
-s32 func_0011d6f0(s32 a0, s32 a1) {
-    s32 i;
-    SndSlot *e = D_004E3450;
-    for (i = 0; i < D_004E344C; i++, e++) {
-        if (e->id == a0 && e->x10 == a1) return func_001ecb08(e->handle, a0, a1);
-    }
-    return 0;
-}
-
-void func_0011d790(s32 a0, s32 a1) {
-    s32 v = 0x3fff;
-    if (a1) v = 0x1fff;
-    func_0011c880(2, a0, 0, v, v);
-}
-
-void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
-    if (a3 == 2 && D_002A3F44) {
-        *a0 = 0;
-        *a1 = 0;
-        return;
-    }
-    if (a2 == 0x3fff) {
-        *a0 = a2;
-        *a1 = a2;
-        return;
-    }
-    *a0 += a2;
-    *a1 += a2;
-    func_0011db50(a0, a1);
-}
 #include "data/bss_004E_typed.h"
 #include "data/bss_004E_mixed.h"
 #include "data/data_002A.h"
@@ -460,5 +306,3 @@ void func_0011dba0(s32 *a0, s32 *a1, s32 a2, s32 a3) {
 #include "data/data_0035.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002BC170.h"
-#include "data/pieces/D_002BC128.h"
-#include "data/pieces/D_0048D130.h"

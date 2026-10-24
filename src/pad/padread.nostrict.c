@@ -1,50 +1,94 @@
+/* The pads. Platform code (docs/portability.md: libpad2 and libdbc calls;
+ * the Vita build replaces this file): func_0011fa88 opens the two pad
+ * sockets (sceDbcInit, scePad2Init, scePad2CreateSocket), func_0011f668
+ * reads the buttons each frame (scePad2GetButtonProfile into D_004E44C8),
+ * func_0011f370 the analog sticks, func_0011f548 / func_0011f628 the repeat
+ * and the stick state, func_0011f988 resets the pad state and the repeat
+ * timings D_002C5C20-D_002C5C2C, func_0011fad0 / func_0011fb00 the
+ * performance counter (scePcStart). Flag mode: nostrict (the other modes are
+ * in the sibling files). Read from the code, not proved by a boot
+ * (docs/modules.md "Session 54"). */
 #include "common.h"
 #include "data/pieces/D_002C5968.h"
+#include "data/pieces/D_002C5910.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
-typedef struct Node { u16 type; u16 f2; s32 key; struct Node *next; s32 data; } Node;
-typedef struct { u16 size; u16 count; u8 *base; Node *head; u8 *cur; } Pool;
-u8 *func_0011efe8(Pool *p);
-Node *func_0011f090(Pool *l, s32 key, s32 val) {
-    Node *n = (Node *)func_0011efe8(l);
-    Node *prev, *p;
-    if (n) {
-        n->data = val;
-        n->type = 17;
-        prev = 0;
-        n->key = key;
-        n->f2 = 0;
-        for (p = l->head; p && key >= p->key; p = p->next) prev = p;
-        if (prev) prev->next = n;
-        else l->head = n;
-        n->next = p;
-    }
-    l->cur = (u8 *)n;
-    return n;
-}
 #include "data/types/nostrict_text_00110000_s6_04_p.h"
 #include "data/pieces/D_002C5960.h"
+#include "data/pieces/D_002C58B0.h"
+
+/* func_0011f548 (from hand/nostrict/text_00110000_h30.c). */
+typedef struct {
+    u16 active;
+    u8 x2;
+    u8 x3;
+    u32 cur;
+    u32 press;
+    u32 release;
+    u32 rep;
+    u32 rep2;
+    s32 x18;
+    s32 t1;
+    s32 t2;
+    u8 pad24[12];
+    V4 a[2];
+    V4 b[2];
+} PadState;
+extern s32 D_002C5C28;
+extern s32 D_002C5C24;
+extern f32 D_002BBDFC;
+void func_0011f548(PadState *p, u32 b) {
+    u32 old = p->cur;
+    u32 x, pr;
+    p->rep2 = 0;
+    p->rep = 0;
+    p->release = 0;
+    p->press = 0;
+    p->cur = b;
+    if (p->active == 0) return;
+    pr = (old ^ b) & b;
+    p->release = (old ^ b) & ~b;
+    p->press = pr;
+    if (pr) {
+        s32 t = D_002C5C24;
+        p->t2 = t;
+        p->t1 = t;
+        p->rep2 = pr;
+        p->rep = pr;
+        return;
+    }
+    if (b == 0) return;
+    p->t1 = p->t1 - D_002BBDFC;
+    p->t2 = p->t2 - D_002BBDFC;
+    if (p->t1 <= 0.0f) {
+        s32 t = D_002C5C28;
+        p->rep = b;
+        p->t1 = t;
+    }
+    if (p->t2 <= 0.0f) {
+        p->rep2 = b;
+        p->t2 = 0;
+    }
+}
+
+/* func_0011f668 (from hand/nostrict/text_00110000_s6_04.c). */
 typedef struct { u8 x0[2]; u8 x2; u8 pad[17]; } Prof;
 extern s16 D_002C597A;
 extern PadSt D_002C5AD0[];
 extern PadSt D_002C5BB0;
-extern s32 D_004E4280;
 extern s32 D_004E44C0[];
-Prof D_004E44C8[0x2] ALIGNED(8);
-extern s32 D_004E44F0;
-#include "data/pieces/D_002C58B0.h"
+Prof D_004E44C8[0x2] ALIGNED(8);  /* moved from hand/nostrict/text_00110000_s6_04.c (session 54) */
 extern u8 D_002C5A80[];
 s32 scePad2GetState(s32);
 s32 scePad2GetButtonProfile(s32, void *);
 s32 scePad2Read(s32, u8 *);
 s32 sceVibSetActParam(s32, s32, u8 *, s32, s32 *);
 s32 func_0011f370(PadSt *, u8 *);
-void func_0011f548(PadSt *, s32);
 u32 func_0011f628(u32);
 s32 func_00219348(void);
 void func_0011fec0(void);
 void func_002675a8(void *, void *);
-
+#define func_0011f548 ((void (*)(PadSt *, s32)) func_0011f548)
 void func_0011f668(void) {
     u8 buf[256];
     s32 vib;
@@ -103,31 +147,5 @@ join:
     }
     func_0011fec0();
 }
-#include "data/types/nostrict_text_00110000_s6_04.h"
-extern FileEnt D_004E4A00[];
-extern s32 D_002C5C30;
-extern u32 D_004F3200;
-extern s32 D_004F3208;
-void func_00120580(char *, FileEnt *);
-FileEnt *func_00120190(char *);
-/* rodata */
-void func_0011fe20(void) {
-    FileEnt *p;
-    func_00120580("\\KINGDOM.IDX;1", D_004E4A00);
-    D_002C5C30 = 0;
-    p = D_004E4A00;
-    while (p->lsn != 0 || p->size != 0) {
-        p->lsn += D_004F3208;
-        D_002C5C30++;
-        p++;
-        if (D_002C5C30 >= 3584) goto done;
-    }
-done:
-    {FileEnt *e = func_00120190("kingdom.img"); D_004F3200 = e->lsn;}
-}
-#ifdef KH1_OVL_FIXUPS
-#endif
-#include "data/bss_004E_mixed.h"
-#include "data/bss_004E_typed.h"
-#include "data/data_002C.h"
-#include "data/pieces/D_002C5BB0.h"
+#undef func_0011f548
+
