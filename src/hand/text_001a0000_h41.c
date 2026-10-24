@@ -181,62 +181,6 @@ void func_001a47b0(PGrp *g, PKey *k, s32 a2) {
 }
 
 
-/* ---- func_001a8828 ---- */
-typedef struct Lnk { u8 p0[8]; struct Lnk *next; struct Lnk *pprev; } Lnk;
-typedef struct { u8 p[48]; } Ent48;
-typedef struct {
-    u8 p0[8]; Lnk *next; Lnk *pprev; u8 p10[36];
-    u16 h34; u8 p36[2]; u16 h38; u8 p3a[2]; u16 h3c; u16 h3e;
-    Ent48 e[1];
-} Hdr9;
-void func_001a67b8(Ent48 *, s32);
-
-void func_001a8828(Hdr9 *h) {
-    Ent48 *e = h->e;
-    s32 n = h->h3c;
-    s32 f = h->h3e & 0x20;
-    for (; n > 0; n--) func_001a67b8(e++, f);
-    e = &h->e[h->h34];
-    for (n = h->h38; n > 0; n--) func_001a67b8(e++, f);
-    if (h->pprev) {
-        if (h->next) h->next->pprev = h->pprev;
-        *(Lnk **)h->pprev = h->next;
-    }
-}
-
-/* ---- func_001a89f0 ---- */
-typedef struct DL { struct DL *next; struct DL *prev; } DL;
-typedef struct { DL l; u8 p8[40]; s32 w30; u8 p34[10]; u16 h3e; u8 e40[28]; s32 w5c; u8 e60[32]; } Hdr10;
-typedef struct { DL *next; u8 f; } Grp10;
-typedef struct { u8 p0; u8 n; } Pool10;
-typedef struct { Hdr10 *h; u8 n; } Bld10;
-Hdr10 *func_001a8900(Pool10 *);
-void func_001a8780(Bld10 *);
-void func_001a9098(void *, s32);
-
-void func_001a89f0(Grp10 *g, Pool10 *pl, s32 a, s32 b) {
-    Hdr10 *h = func_001a8900(pl);
-    Bld10 bl;
-    s32 fl;
-    if (h == NULL) return;
-    bl.h = h;
-    bl.n = pl->n;
-    fl = 0x100;
-    func_001a8780(&bl);
-    h->w5c = 0;
-    h->w30 = 0;
-    if (g->f & 4) fl = 0x180;
-    if (g->f & 0x10) fl |= 0x200;
-    if (g->f & 8) fl |= 0x400;
-    if (g->f & 0x20) fl |= 0x1000;
-    h->h3e |= fl;
-    func_001a9098(h->e40, a);
-    func_001a9098(h->e60, b);
-    if (g->next) g->next->prev = &h->l;
-    h->l.next = g->next;
-    h->l.prev = (DL *)g;
-    g->next = &h->l;
-}
 
 void func_001be820(void *, u32);
 
