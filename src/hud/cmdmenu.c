@@ -1,20 +1,55 @@
+/* The command menu (docs/modules.md "Session 46"), default flags part.
+ * func_0023a968 is the menu's draw hook (func_0023b570 registers it with
+ * func_0011ef10): it moves the menu's slide (D_00449908.f7c by f80 times
+ * D_002BBDFC, the frame step, unless D_002C5960 bit 0, the pause, is set), picks the menu's
+ * sprite set from D_002C5958 bit 0 (func_0023a8d0), fades the entries
+ * (func_0023a7e8) and draws each open list of D_002E3170 (the top list at
+ * 16, 260, the sub lists beside their parent, no lower than y 348; kind 5,
+ * the frame of func_0023a608, at 16, 282), keeping each list's position, size
+ * and cursor in D_00449908.  "Command menu" is a guess from the layout; not
+ * proved by a boot. */
 #include "common.h"
-/* func_0023a968: rodata (jump table at 0x004914A0); CONTEXT_ONLY copy of func_0023a720 (matched in src/hand/nofill/text_00230000_h49.c) above it. */
-
-typedef struct { s32 x, y; } Pt17;
+#include "data/data_0042.h"
 #include "data/pieces/D_00449908.h"
 #include "data/pieces/D_002E3170.h"
+#include "data/pieces/D_002C5960.h"
+#include "data/pieces/D_002BBDFC.h"
+extern s32 D_002C5958;
+void func_0024ae00(void *);
+void func_0024af00(void *);
 typedef Q8_2e3170 It17;
 #include "data/types/text_00230000_s11_w19.h"
-#include "data/pieces/D_002C5960.h"
 extern f32 D_002BBDFC;
 extern Ob17 D_00650120[];
-void func_0023a8d0(Ob17 *);
+/* D_00650120[i]: two sprite sets at 0x40 / 0x100 and the one in use. */
+typedef struct { u8 pad[0x40]; u8 s0[0xc0]; u8 s1[0xc0]; void *cur; s32 alt; u8 pad1c8[8]; } Menu17;
+void func_0023a8d0(Menu17 *);
 void func_0023a7e8(void);
 void func_0023a720(void);
 void func_0023a318(s32, It17 *, s32, s32, Ob17 *, s32, s32, f32);
 void func_0023a608(s32, It17 *, s32, s32, f32);
+#include "data/bss_0065_typed.h"
 
+void func_0023a8d0(Menu17 *m) {
+    s32 chg = 0;
+    if (D_002C5958 & 1) {
+        if (m->cur != m->s0) {
+            m->cur = m->s0;
+            func_0024ae00(m->s0);
+            chg = 1;
+            m->alt = 0;
+        }
+    } else if (m->cur != m->s1) {
+        m->cur = m->s1;
+        func_0024ae00(m->s1);
+        chg = 1;
+        m->alt = 1;
+    }
+    if (chg) return;
+    func_0024af00(m->cur);
+}
+
+/* func_0023a968 matches only with func_0023a720 (cmdmenu.nofill.c) above it. */
 CONTEXT_ONLY void func_0023a720(void) {
     It17 **pp;
     It17 *p;
@@ -31,7 +66,7 @@ CONTEXT_ONLY void func_0023a720(void) {
         }
     }
 }
-/* rodata */
+
 s32 func_0023a968(void) {
     It17 **list;
     It17 *o;
@@ -49,7 +84,7 @@ s32 func_0023a968(void) {
         }
     }
     chg = 0;
-    func_0023a8d0(&D_00650120[0]);
+    func_0023a8d0((Menu17 *)&D_00650120[0]);
     func_0023a7e8();
     list = D_002E3170;
     o = *list;
@@ -131,5 +166,3 @@ s32 func_0023a968(void) {
     } while (1);
     return 0;
 }
-#include "data/bss_0065_typed.h"
-#include "data/pieces/D_002BBDFC.h"

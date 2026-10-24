@@ -1,16 +1,21 @@
+/* Labelled numbers over the field (docs/modules.md "Session 46"), nostrict
+ * part.  func_00246ed8 steps a number's sprites and, when its position is on
+ * screen, draws the label, the digits (13 pixels apart) and the frame 40
+ * pixels above it in one GIF send.  One Item *it is reused for the steps and
+ * the draw loop (its kill keeps the gcse PRE copy of &p->unk30). */
 #include "common.h"
-/* func_00246ed8: CONTEXT_ONLY 00246cf0 and 00246ea8 above; one Item *it reused for the
-   init calls and the draw loop (its kill keeps the gcse PRE copy for &p->unk30). */
 #include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
-extern QW D_00351E10[]; /* the staging arena as quadwords */
-extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
-QW *D_00668F84 ALIGNED(4);
 #include "data/pieces/D_002E26C0.h"
 #include "data/pieces/D_00426820.h"
 #include "data/pieces/D_004267F0.h"
+
 typedef struct { u8 pad[0xC0]; } Item;
 typedef struct { u8 pad0[0x10]; u8 unk10[0x10]; s32 unk20; u8 pad24[0xC]; Item unk30; Item unkF0; Item items[10]; } Pan2;
 typedef struct { s32 x, y, z, w; } V4;
+
+QW *D_00668F84 ALIGNED(4);
+extern QW D_00351E10[]; /* the staging arena as quadwords */
+extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
 s32 func_00249580(void *);
 void func_00237a48(V4 *, void *, void *, s32);
 void func_00249558(V4 *, V4 *);
@@ -18,6 +23,9 @@ void func_00246dc0(Item *, void *, s32, s32, f32);
 void func_00237018(void *, s32, s32);
 void func_0024ae00(void *);
 void func_0024af00(void *);
+
+/* func_00246ed8 matches only with copies of func_00246cf0 / func_00246ea8
+ * (lblnum.c) above it. */
 CONTEXT_ONLY s32 func_00246cf0(s32 arg0, s32 *arg1) {
     s32 *var_a1;
     s32 temp_lo;

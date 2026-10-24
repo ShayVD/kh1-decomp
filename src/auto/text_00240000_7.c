@@ -3,166 +3,24 @@
 #include "m2c.h"
 
 M2C_UNK free(void *);
-M2C_UNK func_002431b8(M2C_UNK *, void *);
-M2C_UNK func_00248678(M2C_UNK *, void *);
-M2C_UNK func_0024ae00(s32);
-M2C_UNK func_0024af00(s32);
 M2C_UNK func_0024b1f0();
 M2C_UNK func_0024b228(M2C_UNK, s32, s32, s32);
 M2C_UNK func_0024b448(M2C_UNK);
-M2C_UNK func_00267518(s32, s32, void *);
-M2C_UNK func_00267530(void *, s32, s32);
-M2C_UNK func_002675a8(void *, s32);
-M2C_UNK func_002676c0(f32);
-M2C_UNK func_00267768(s32, s32, f32);
-M2C_UNK func_00267810(s32, s32, f32);
-M2C_UNK func_00267e90(void *, void *, f32);
-#include "data/pieces/D_002E26C0.h"
-extern M2C_UNK D_00469F90;
-extern M2C_UNK D_00469FA0;
 extern M2C_UNK D_0046A058[];
-extern M2C_UNK D_00491840;
 extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
-extern M2C_UNK D_006561E4;
-extern M2C_UNK D_00669714;
 extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);
-extern s32 D_006627B0[];
-extern s32 D_00668370[];
 extern volatile s32 D_00668040[];
-s32 func_002457c8(void);
-s32 func_00247388(void);
 s32 func_0025daf0(M2C_UNK *);
-s32 func_00267f50(M2C_UNK *, M2C_UNK *, M2C_UNK *, void *, M2C_UNK);
-s32 strncmp(s32, s32, s32);
 void *func_00120190(M2C_UNK *);
-void func_001315c0(s32, s32, s32, f32);
-void func_00245798(s32, s32, s32);
-void func_00247228(s32, s32, s32);
-void memset(s32, s32, s32);
 
 void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00243168(s32 arg0, s32 arg1, s32 arg2) {
-    memset(arg0, 0, 0x10);
-    M2C_FIELD(arg0, s32 *, 0) = arg1;
-    M2C_FIELD(arg0, s32 *, 4) = arg2;
-}
-
-void func_00243630(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    M2C_FIELD(sp, s32 *, 0x4) = arg1;
-    M2C_FIELD(sp, s32 *, 0x0) = arg0;
-    M2C_FIELD(sp, f32 *, 0x8) = 1.0f;
-    func_002431b8(&D_006561E4, sp);
-}
-
-void func_002452c8(void) {
-    if ((D_006627B0[2] != 0) && (D_006627B0[2] < 4)) {
-        D_006627B0[2] = 4;
-    }
-}
-
-void func_00245840(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    s32 temp_s1;
-
-    temp_s1 = func_002457c8();
-    func_001315c0(arg0, 0x8004, (s32) sp, 0.0f);
-    func_00245798(temp_s1, arg1, (s32) sp);
-}
-
-void func_00245ad8(s32 arg0, s32 arg1) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-    }
-    func_0024af00(arg1);
-}
-
-void func_00246a70(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    D_00668370[3] = arg2;
-    D_00668370[4] = arg3;
-    D_00668370[681] = arg0;
-    D_00668370[682] = arg1;
-    D_00668370[680] = 1;
-    if (D_00668370[0] == 0) {
-        D_00668370[0] = 1;
-    }
-}
-
-void func_00246ea8(s32 arg0, s32 arg1) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-    }
-    func_0024af00(arg1);
-}
-
-void func_00247408(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    s32 temp_s1;
-
-    temp_s1 = func_00247388();
-    func_001315c0(arg0, 0x8004, (s32) sp, 0.0f);
-    func_00247228(temp_s1, arg1, (s32) sp);
-}
-
-void func_00248628(s32 arg0, s32 arg1, s32 arg2) {
-    memset(arg0, 0, 0x10);
-    M2C_FIELD(arg0, s32 *, 0) = arg1;
-    M2C_FIELD(arg0, s32 *, 4) = arg2;
-}
-
-void func_00248ac8(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    M2C_FIELD(sp, s32 *, 0x4) = arg1;
-    M2C_FIELD(sp, s32 *, 0x0) = arg0;
-    M2C_FIELD(sp, f32 *, 0x8) = 1.0f;
-    func_00248678(&D_00669714, sp);
-}
-
-void func_00249370(s32 arg0, s32 arg1, void *arg2) {
-    func_002676c0(M2C_FIELD(arg2, f32 *, 8));
-    func_00267768(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
-    func_00267810(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
-}
-
-s32 func_00249580(s32 arg0) {
-    s32 sp[4];
-    func_002675a8(sp, arg0);
-    return func_00267f50(&D_00469F90, &D_00469FA0, (M2C_UNK *)&D_002E26C0, sp, 1) != 0;
-}
-
-void func_002498a0(f32 *arg0) {
-    f32 temp_f0;
-    f32 var_f1;
-
-    var_f1 = *arg0;
-    if (var_f1 < 3.141592503f) {
-        temp_f0 = var_f1 + 6.28318501f;
-        *arg0 = temp_f0;
-        var_f1 = temp_f0;
-    }
-    if (var_f1 > 3.141592503f) {
-        *arg0 = var_f1 + -6.28318501f;
-    }
-}
-
-void func_00249988(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
-    s32 sp[4];
-    func_00267530(sp, arg2, arg1);
-    func_00267e90(sp, sp, fparg0);
-    func_00267518(arg0, arg1, sp);
-}
-
-s32 func_00249da8(s32 arg0) {
-    return strncmp(arg0, (s32) &D_00491840, 4);
 }
 
 void func_0024b2c8(s32 arg0, s32 arg1, s32 arg2) {

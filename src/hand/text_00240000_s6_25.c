@@ -36,206 +36,30 @@ void func_00241948(s32 i, s32 k) {
 }
 
 /* 2433e8 */
-extern s32 D_00458548, D_0045854C;
-extern s32 D_006560E0;
-s32 func_001f0638(s32, s32, s32, s32, s32, s32);
-void func_002433e8(s32 x, s32 y, s32 a2, s32 sel, f32 f) {
-    u8 col[4];
-    u8 *p;
-    if (sel) {
-        p = col; *p++ = 0x73; *p++ = 0x73; *p++ = 0x73;
-        *p = (u32)(f * 128.0f);
-    } else {
-        p = col; *p++ = 0xe6; *p++ = 0xe6; *p++ = 0xe6;
-        *p = (u32)(f * 128.0f);
-    }
-    D_006560E0 = func_001f0638(D_006560E0, 1, *(s32 *)col,
-        ((((x + D_00458548) << 4) + 0x7000) >> 4) - 0x700,
-        ((((y + D_0045854C) << 4) + 0x7400) >> 4) - 0x740, a2);
-}
 
 /* 243bd8 */
-typedef struct { s32 on; u8 pad[0x10]; u8 x14[1]; } S61D0;
-extern S61D0 D_006561D0;
-s32 func_00243278(void *, void *);
-s32 func_00243bd8(void) {
-    s32 buf[4];
-    if (D_006561D0.on) return 1;
-    return func_00243278(D_006561D0.x14, buf) != 0;
-}
 
 /* 243da0 */
-typedef struct { s32 r, g, b; } C3;
 extern s32 D_00656420;
-void func_00243da0(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
-    u8 col[4]; u8 *p;
-    p = col; *p++ = c->r; *p++ = c->g; *p++ = c->b;
-    *p = (u32)(f * 128.0f);
-    D_00656420 = func_001f0638(D_00656420, 1, *(s32 *)col,
-        (((x << 4) + 0x7000) >> 4) - 0x700,
-        (((y << 4) + 0x7400) >> 4) - 0x740, a2);
-}
 
 /* 243e58 */
 extern s32 D_00656420;
-s32 func_001f0868(s32, s32, s32, s32, s32, s32, s32, s32);
-void func_00243e58(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
-    u8 col[4]; u8 *p;
-    p = col; *p++ = c->r; *p++ = c->g; *p++ = c->b;
-    *p = (u32)(f * 128.0f);
-    D_00656420 = func_001f0868(D_00656420, 1, 1, *(s32 *)col, x, y, a2, 12);
-}
 
 /* 244d00 */
 #include "data/types/text_00240000_s6_25.h"
-extern Obj D_0065FD80[5][10];
-extern Obj D_00662300[3]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
-void func_0024a568(Obj *);
-void func_0024a678(Obj *);
-void func_0024a0c0(Obj *);
-void func_0024a088(Obj *);
-void func_0024a2e0(Obj *);
-void func_0024a450(Obj *);
-void func_0024af00(Obj *);
-void func_00244d00(s32 a, s32 b) {
-    s32 i, j; Obj *o;
-    if (a) {
-        for (i = 0; i < 5; i++) {
-            for (j = 0; j < 10; j++) {
-                func_0024a568(&D_0065FD80[i][j]);
-                func_0024a678(&D_0065FD80[i][j]);
-            }
-        }
-        o = D_00662300;
-        for (i = 0; i < 3; i++, o++) {
-            func_0024a568(o);
-            func_0024a678(o);
-        }
-    }
-    if (b) {
-        for (i = 0; i < 5; i++) {
-            for (j = 0; j < 10; j++) {
-                Obj *o = &D_0065FD80[i][j];
-                if (o->fl & 2) { func_0024a0c0(o); func_0024a088(o); }
-                if (o->fl & 0x40) { func_0024a2e0(o); func_0024a450(o); }
-            }
-        }
-        o = D_00662300;
-        for (i = 0; i < 3; i++, o++) {
-            if (o->fl & 2) { func_0024a0c0(o); func_0024a088(o); }
-            if (o->fl & 0x40) { func_0024a2e0(o); func_0024a450(o); }
-        }
-    }
-    for (i = 0; i < 5; i++)
-        for (j = 0; j < 10; j++)
-            func_0024af00(&D_0065FD80[i][j]);
-    o = D_00662300;
-    for (i = 0; i < 3; i++, o++)
-        func_0024af00(o);
-}
 
 /* 249a48 */
-typedef struct {
-    u32 total;
-    u32 clutSize;
-    u32 imageSize;
-    u16 hdrSize;
-    u16 clutColors;
-    u8 fmt;
-    u8 mip;
-    u8 clutType;
-    u8 imageType;
-    s16 w;
-    s16 h;
-    u64 tex0;
-    u64 tex1;
-    u32 flags;
-    u32 clut;
-} TimPic;
-typedef struct { u8 pad[0x10]; TimPic pic; u8 data[1]; } Tim;
 #include "data/types/text_00240000_s6_25_p.h"
-extern PsmEnt D_00469FB0[];
 void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 s32 sceGsExecLoadImage(void *, void *);
-void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
 void func_00237018(void *, s32, s32);
-
-void func_00249a48(Tim *t, s32 sync) {
-    u8 li[0x60];
-    u64 pk[6];
-    TimPic *p = &t->pic;
-    u8 *img = NULL;
-    u8 *clut;
-    s16 psm, cpsm; u16 cbp;
-    if (p->imageSize) {
-        img = t->data;
-        sceGsSetDefLoadImage(li, (u16)(p->tex0 & 0x3FFF), (u16)(p->tex0 >> 14 & 0x3F), (u16)((p->tex0 & 0x3F00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, img);
-    }
-    sceGsSyncPath(0, 0);
-    pk[2] = 0x1000000000008001;
-    pk[3] = 14;
-    pk[5] = 0x3F;
-    pk[4] = 0;
-    func_00237018(pk, 3, 1);
-    if (p->clutSize) {
-        cbp = p->tex0 >> 37 & 0x3FFF;
-        cpsm = D_00469FB0[p->clutType].psm;
-        clut = img + p->imageSize;
-        psm = D_00469FB0[p->imageType].psm;
-        if (psm == 19) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 16, 16);
-        } else if (psm == 20) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 8, 2);
-        }
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, clut);
-    }
-    sceGsSyncPath(0, 0);
-    pk[2] = 0x1000000000008001;
-    pk[3] = 14;
-    pk[5] = 0x3F;
-    pk[4] = 0;
-    func_00237018(pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
-}
 
 /* 249dc8 */
-typedef struct {
-    u8 pad[8]; s32 x8; u8 padc[8]; s16 w; s16 h;
-    u64 tex;
-    u8 pad20[0x10];
-} GsTexHdr;
-typedef struct { u8 pad[0x10]; GsTexHdr h; u8 data[1]; } GsTex;
-typedef struct { u64 a[6]; } Pkt6;
 s32 sceGsExecLoadImage(void *, void *);
 s32 sceGsSyncPath(s32, s32);
 void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_00237018(void *, s32, s32);
-void func_00249dc8(GsTex *t, s32 sync) {
-    u8 li[0x60];
-    Pkt6 pk;
-    GsTexHdr *h = &t->h;
-    u8 *d = NULL;
-    if (h->x8) {
-        d = t->data;
-        sceGsSetDefLoadImage(li, (u16)(h->tex & 0x3fff), (u16)((h->tex >> 14) & 0x3f), (u16)((h->tex & 0x3f00000) >> 20), 0, 0, h->w, h->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, d);
-    }
-    sceGsSyncPath(0, 0);
-    pk.a[2] = 0x1000000000008001ULL;
-    pk.a[3] = 0xe;
-    pk.a[5] = 0x3f;
-    pk.a[4] = 0;
-    func_00237018(&pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
-}
 
 /* 24aac8 */
 typedef struct { s32 dur; u8 pad[0xc]; f32 v[4]; } Frame;
@@ -339,5 +163,4 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
 #include "data/data_0046.h"
 #include "data/data_0045.h"
 #include "data/data_0049.h"
-#include "data/pieces/D_00469FB0.h"
 #include "data/pieces/D_0046A038.h"
