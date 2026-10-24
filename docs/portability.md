@@ -281,6 +281,15 @@ rewrite matched code.
     definition at their PS2 distances (one block between two C definitions), so only names a C
     file defines need this.
 
+    layoutcheck reads addresses, so it cannot see C that names one variable and lands exactly on
+    the next (`&D_00650120[6]` is D_00650C00's address: an access to D_00650C00 there, past
+    D_00650120's end on the host). `python3 -I tools/host/relcheck.py` (session 70, after `make
+    host-census`) reads the host objects' relocations, where the C name and its offset are kept,
+    and lists each `name + offset` outside the host definition holding the name; keep it at 0 too
+    (`--all` adds references exactly at an end: loop ends and C's `&a[N]`, read in session 70). A
+    separate `s32 [5]` at an address that is 4 but not 8 aligned does not link: ee-gcc pads it to 8;
+    merge it with the name before it instead (bss_0064.c's D_00642C70).
+
 ## Known absolute addresses in matched code
 
 - func_00171078 (src/hand/text_00170000_s9_w9.c) reads `((s32 *)0x35BD40)[i]`: the original

@@ -54,7 +54,7 @@ extern s32 D_00642C64;
 extern s32 D_00642C68;
 extern s32 D_00642C6C;
 extern s32 D_00642C70;
-extern s32 D_00642C78[];
+extern s32 D_00642C78[]; /* D_00642C74 + 4 */
 extern void *D_00642C90;
 extern s32 D_00642CA0;
 extern s32 D_00642CA8[];

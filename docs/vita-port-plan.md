@@ -714,6 +714,43 @@ call through a pointer to miss (CLANG-READ; abicheck reads their declarations as
 draft's `register f32 *d asm("$10")` (an EE register name), is now under `#ifdef KH1_PS2` (the host a plain local),
 and clang parses the draft: no new row.
 
+### 5.1j Session 70: names that land on the next variable (relcheck), the unbounded index rows
+
+Static only (the Mac was away). kh1.elf is byte-identical; 7 PS2 objects changed (bss_0054 / 55 / 57 / 63 / 64 / 65
+and objslot.c), every other out/build object is bit-identical.
+
+**layoutcheck's 733 `--all` rows** (726 idx-next, 7 uncached) were sorted by what follows the base (`gdb` gave each
+name's host type: 556 rows have nothing that hints at a split; the rest are a scalar or one-element base, a next name
+of the base's element size, or two arrays of one type). Read by hand: the command menu's sprite arrays (cmdmenu
+.nostrict.c, 61 rows) are bounded by the counts func_0023aed0 is passed; the journal / synth / load-menu tables
+are indexed within their sizes. An idx-next row is any index the analysis cannot bound, so the list does not
+shrink by reading; the useful finding was why the real splits were not rows at all.
+
+**tools/host/relcheck.py** (new): layoutcheck reads the linked PS2 ELF, where `&D_00650120[6]` (cmdmenu.c) is just
+0x00650C00, D_00650C00's own address, so it reads as an access to D_00650C00. relcheck reads the host objects'
+relocations instead (i386 REL, the addend in the instruction), where the C name stays, and lists every `name +
+offset` that falls outside the host run holding the name (layoutcheck's runs: one definition, a data piece, a
+census block). At the start: **103 rows** (`--all`: 144 with the references exactly at an end). Most were the
+compiler's: a loop's end pointer to a field (`&a[N].f`, compared, never read: 18 objects), an index folded into
+the displacement (`a[i - 1]`, wave.c's `(i + 2098) << 4`: 17), and func_0010d470's draft; they are its REVIEWED
+table. The `--all` end rows were read too: loop ends and C's `&a[N]`, except the ones below. Now **0 rows**.
+
+Made one definition (portability rule 12):
+
+| object | was | now |
+| --- | --- | --- |
+| D_00650120 command menus (Ob17, 0x1d0) | [6], D_00650C00 its own; cmdmenu.c draws the second kind-4 menu as D_00650120[6] | [7] (bss_0065.c), D_00650C00 a view |
+| D_00550400 object slots (0x48) | [0x34], D_005512A0[12] (objslot.c) its own; func_001557d0 clears 64 | [0x40] (bss_0055.c), D_005512A0 = [52] |
+| D_00573AC0 DMA packet area | 0x10 (the call tag), D_00573AD0 a census block; func_0015fa20 builds its packets to +0x104 | u8 [0x380] (bss_0057.c) |
+| D_0054C440 hit records (64 x 0xc0, no C definition) + areabox's groups D_0054F438 | a census block of 0x2ff8 and Grp57 [0x20]: record 63's last 8 bytes are group 0's first 8 (groups count from 1) | u8 [0x32f8] (bss_0054.c), both views |
+| D_006305C0 list's choice callback (ListCb a, n, fn, d) | a 0xc block, D_006305CC (d, the page) its own s32 | u8 [0x10] (bss_0063.c) |
+| D_00642C74 ability counts | a 4-byte block, D_00642C78[4] its own; abilities.nosi.c counts into (&D_00642C74[1])[slot] | D_00642C70 s32 [6] (bss_0064.c): a separate s32 [5] at 0x00642C74 is padded to 8 by ee-gcc and fails the link |
+
+The float build floats 2,041 names (2 newly pinned: D_00642C70, D_00650DD0; float-untested.md row 70). layoutcheck
+0, relcheck 0, abicheck 0, indcheck unchanged (241 rows), argcheck unchanged (3 value uses). The fake-disc host run
+stops where session 69's did (the overlay entry; with `KH1_HOST_OVL=stub:2`, func_00132790 on the missing room file,
+reached from func_001136a8 through the sound and file queue); valgrind 0 errors to the fault.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

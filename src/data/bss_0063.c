@@ -13,7 +13,8 @@ s32 D_00631560 ALIGNED(16);
 u8 D_006303B0[0xb0] ALIGNED(16);
 u8 D_00630460_rec[0xb0] __asm__("D_00630460") ALIGNED(16); /* a window record (MsgWin), its text D_006304E0 at +0x80 */
 u8 D_00630510[0xb0] ALIGNED(16);
-s32 D_006305CC ALIGNED(4);
+u8 D_006305C0[0x10] ALIGNED(16); /* list.c's choice list (ListCb a, n, fn, d): D_006305CC, its page, is d. One
+                                 * definition (vita-port-plan 5.1j) */
 char D_006307C8[0x800] ALIGNED(8);
 char D_00630FC8[0x100] ALIGNED(8);
 s8 D_006314C8 ALIGNED(8);

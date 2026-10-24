@@ -13,7 +13,7 @@
 #include "data/types/text_00240000_s6_25.h"
 
 extern Ob17 D_00650120[];
-extern Ob570 D_00650C00;
+extern Ob570 D_00650C00; /* D_00650120[6] */
 extern Pkt D_00651210;
 extern Slot D_00651310[10];
 extern QW *D_00651D60;
