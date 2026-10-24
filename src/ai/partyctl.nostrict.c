@@ -14,6 +14,7 @@
  * types use `__asm__` aliases (`extern T *D_X_<addr>[] __asm__("D_X")`);
  * a cast view `((T **) D_X)` changed the address folding. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002E27C8.h"
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -176,27 +177,25 @@ typedef struct {
 } L60;
 s32 func_00119688(f32 *);
 f32 func_00162a58(f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
 void func_001689d0(Chr *self, L60 *l) {
     f32 a[4];
     f32 b[4];
     f32 c[8];
     if (((s32)((s64)(l->w38 << 22) >> 32) & 1) || l->tgt == 0) {
         if (l->fE4 < 0.0f) {
-            func_00267518(a, D_0035BD40.chr[0]->pos, l->v20);
-            func_00267530(b, self->pos, D_0035BD40.chr[0]->pos);
+            PlatVu0AddVector(a, D_0035BD40.chr[0]->pos, l->v20);
+            PlatVu0SubVector(b, self->pos, D_0035BD40.chr[0]->pos);
         } else {
-            func_00267518(a, self->pos, l->v20);
-            func_00267530(b, D_0035BD40.chr[0]->pos, self->pos);
+            PlatVu0AddVector(a, self->pos, l->v20);
+            PlatVu0SubVector(b, D_0035BD40.chr[0]->pos, self->pos);
         }
     } else {
         if (l->fA0 < 0.0f) {
-            func_00267518(a, l->tgt->pos, l->v20);
-            func_00267530(b, self->pos, l->tgt->pos);
+            PlatVu0AddVector(a, l->tgt->pos, l->v20);
+            PlatVu0SubVector(b, self->pos, l->tgt->pos);
         } else {
-            func_00267518(a, self->pos, l->v20);
-            func_00267530(b, l->tgt->pos, self->pos);
+            PlatVu0AddVector(a, self->pos, l->v20);
+            PlatVu0SubVector(b, l->tgt->pos, self->pos);
         }
     }
     if (func_00119688(a) < 0 && func_00162a58(b) < 500.0f) l->w58 = 0;
@@ -218,9 +217,6 @@ typedef struct { f32 x, y, z, w; } Hit68;
 extern f32 D_002BBDFC;
 s32 func_00105ad0(s32, s32, Hit68 *);
 void func_00118608(Ray68 *);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 #define func_0013dfb8 ((void (*)(Ent68 *, void *)) func_0013dfb8)
 s32 func_00168b30(Ent68 *e, Wk68 *w, s32 flag, f32 *unused) {
     Ray68 r;
@@ -232,11 +228,11 @@ s32 func_00168b30(Ent68 *e, Wk68 *w, s32 flag, f32 *unused) {
     f32 m, d;
     s32 i;
     if (e->w90 == 0) return 0;
-    func_00267518(r.p, e->pos, w->v20);
-    func_00267370(b, e->vC0, e->v30);
-    func_00267370(a, b, e->vC0);
-    func_002673b8(a, a);
-    func_00267560(r.d, a, w->f30 + e->p6C->f8 * D_002BBDFC);
+    PlatVu0AddVector(r.p, e->pos, w->v20);
+    PlatVu0OuterProduct(b, e->vC0, e->v30);
+    PlatVu0OuterProduct(a, b, e->vC0);
+    PlatVu0Normalize(a, a);
+    PlatVu0ScaleVector(r.d, a, w->f30 + e->p6C->f8 * D_002BBDFC);
     func_00118608(&r);
     if (r.h < 0) goto fail;
     n = func_00105ad0(r.x, r.h, h);
@@ -281,9 +277,7 @@ typedef struct {
 #define W8D_F12C(w) (*(f32 *)((u8 *)(w) + 0x12C))
 extern f32 D_00575020[][4];
 extern f32 D_0035B054;
-void func_002675a8(f32 *, f32 *);
 f32 func_00162c20(f32 *);
-f32 func_00267390(f32 *, f32 *);
 #define G27C8 D_002E27C8
 static inline s32 inl_chk(E8D *e) { if ((u16)(e->x130->h4C - 1) >= 2) return 0; if (G27C8.b8) return 1; return G27C8.b7 != 0; }
 #define func_00168b30 ((s32 (*)(E8D *, W8D *, s32, f32 *)) func_00168b30)
@@ -295,16 +289,16 @@ void func_00168d20(E8D *e, W8D *w) {
     f32 y, k;
     s32 f;
     if ((D_002C5958 & 1) && w->w90 != 0 && w->w94 >= 0 && !((s32)w->w38 & 1)) {
-        func_002675a8(v, w->vB0);
+        PlatVu0CopyVector(v, w->vB0);
         lock = 1;
         w->w38 &= ~0x400;
     } else {
         lock = 0;
-        func_002675a8(v, D_00575020[w->w0]);
+        PlatVu0CopyVector(v, D_00575020[w->w0]);
         w->w38 |= 0x400;
     }
     if (func_00168b30(e, w, lock, v) != 0) return;
-    func_00267530(w->v120, v, e->pos);
+    PlatVu0SubVector(w->v120, v, e->pos);
     y = w->v120[1];
     w->v120[1] = 0.0f;
     func_00162c20(w->v120);
@@ -312,10 +306,10 @@ void func_00168d20(E8D *e, W8D *w) {
     k = !lock ? w->fFC : w->fDC;
     if (e->w70 == 17) {
         if (!(D_0035B054 < k)) return;
-        func_002675a8(u, e->v30);
+        PlatVu0CopyVector(u, e->v30);
         u[1] = 0.0f;
-        func_002673b8(u, u);
-        if (!(func_00267390(w->v120, u) > 0.97999996f)) return;
+        PlatVu0Normalize(u, u);
+        if (!(PlatVu0InnerProduct(w->v120, u) > 0.97999996f)) return;
         func_0013dfb8((Obj18 *)e, w->pad100 + 0x20);
         if ((*(u32 *)&D_002E27C8) >> 6 & 1) W8D_F12C(w) = 30.0f;
         else W8D_F12C(w) = 20.0f;
@@ -329,10 +323,10 @@ void func_00168d20(E8D *e, W8D *w) {
     f = inl_chk(e);
     if (!f) return;
     if (!(D_0035B054 < k)) return;
-    func_002675a8(u, e->v30);
+    PlatVu0CopyVector(u, e->v30);
     u[1] = 0.0f;
-    func_002673b8(u, u);
-    if (!(func_00267390(w->v120, u) > 0.97999996f)) return;
+    PlatVu0Normalize(u, u);
+    if (!(PlatVu0InnerProduct(w->v120, u) > 0.97999996f)) return;
     func_00168618((Obj18 *)e, (Ent18_68d20 *)w);
     W8D_F12C(w) = 30.0f;
 }
@@ -357,16 +351,16 @@ void func_00169008(Ent69 *e, Wk69 *w) {
     s32 lock;
     f32 y, len, k;
     if ((D_002C5958 & 1) && w->w90 != 0 && w->w94 >= 0 && !((s32)w->w38 & 1)) {
-        func_002675a8(v, w->vB0);
+        PlatVu0CopyVector(v, w->vB0);
         lock = 1;
         w->w38 &= ~0x400;
     } else {
         lock = 0;
-        func_002675a8(v, D_00575020[w->w0]);
+        PlatVu0CopyVector(v, D_00575020[w->w0]);
         w->w38 |= 0x400;
     }
     if (func_00168b30((Ent68 *)e, (Wk68 *)w, lock, v) != 0) return;
-    func_00267530(w->v120, v, e->pos);
+    PlatVu0SubVector(w->v120, v, e->pos);
     y = w->v120[1];
     w->v120[1] = 0.0f;
     k = -10.0f;
@@ -378,10 +372,10 @@ void func_00169008(Ent69 *e, Wk69 *w) {
     func_001687d8(e, w, lock);
     w->v120[1] = k;
     if (k == 0.0f && D_0035AE80.f1D4 < len && (((*(u32 *)&D_002E27C8) >> 6) & 1)) {
-        func_002675a8(u, e->v30);
+        PlatVu0CopyVector(u, e->v30);
         u[1] = 0.0f;
-        func_002673b8(u, u);
-        if (func_00267390(w->v120, u) > 0.97999996f) {
+        PlatVu0Normalize(u, u);
+        if (PlatVu0InnerProduct(w->v120, u) > 0.97999996f) {
             func_0014f658(e, 25);
             w->f68 = D_0035AE80.f1D8;
         }
@@ -397,16 +391,16 @@ void func_00169210(Ent69 *e, Wk69 *w) {
     s32 lock;
     f32 y, len, k;
     if ((D_002C5958 & 1) && w->w90 != 0 && w->w94 >= 0 && !((s32)w->w38 & 1)) {
-        func_002675a8(v, w->vB0);
+        PlatVu0CopyVector(v, w->vB0);
         lock = 1;
         w->w38 &= ~0x400;
     } else {
         lock = 0;
-        func_002675a8(v, D_00575020[w->w0]);
+        PlatVu0CopyVector(v, D_00575020[w->w0]);
         w->w38 |= 0x400;
     }
     if (func_00168b30((Ent68 *)e, (Wk68 *)w, lock, v) != 0) return;
-    func_00267530(w->v120, v, e->pos);
+    PlatVu0SubVector(w->v120, v, e->pos);
     y = w->v120[1];
     w->v120[1] = 0.0f;
     k = -10.0f;
@@ -418,7 +412,7 @@ void func_00169210(Ent69 *e, Wk69 *w) {
     func_001687d8(e, w, lock);
     w->v120[1] = k;
     if (e->w70 == 21) {
-        if (len < w->p4->f4 || func_00267390(e->v20, w->v120) <= 0.0f) func_0014c448(e);
+        if (len < w->p4->f4 || PlatVu0InnerProduct(e->v20, w->v120) <= 0.0f) func_0014c448(e);
     }
 }
 #undef func_001687d8
@@ -449,10 +443,10 @@ void func_001693c8(Ent69 *e, Wk6B *w) {
     if (w->v120[1] == 0.0f && w->v120[3] == 0.0f) {
         if ((s32)((s64)(w->w38 << 22) >> 32) & 1) {
             w->w38 |= 0x80;
-            func_00267560(v, w->vF0, 0.39999998f);
-            func_00267518(v, v, e->v30);
+            PlatVu0ScaleVector(v, w->vF0, 0.39999998f);
+            PlatVu0AddVector(v, v, e->v30);
             v[1] = 0.0f;
-            func_002673b8(w->v120, v);
+            PlatVu0Normalize(w->v120, v);
         }
     } else {
         w->w38 &= ~0x80;
@@ -567,15 +561,15 @@ s32 func_00162a88(Vec *);
 void func_00171790(Obj *, Wk *);
 #define GETDIR(o, w, v, r) \
     if ((D_002C5958 & 1) && w->x90 != 0 && w->x94 >= 0 && !(w->x38.i & 1)) { \
-        func_002675a8(v, &w->xb0); \
+        PlatVu0CopyVector(v, &w->xb0); \
         r = 1; \
         w->x38.x &= ~0x400; \
     } else { \
-        func_002675a8(v, &D_00575020[w->x0]); \
+        PlatVu0CopyVector(v, &D_00575020[w->x0]); \
         r = 0; \
         w->x38.x |= 0x400; \
     } \
-    func_00267530(v, v, &o->x10);
+    PlatVu0SubVector(v, v, &o->x10);
 static inline void Tail(Obj *o, Wk *w) {
     if (o->x70 != 2) {
         func_0013dfb8(o, &w->x120);
@@ -587,10 +581,6 @@ static inline void Tail(Obj *o, Wk *w) {
 #define func_0014f658 ((void (*)(Obj *, s32)) func_0014f658)
 #define func_00162c20 ((f32 (*)(Vec *)) func_00162c20)
 #define func_00168618 ((s32 (*)(Obj *, Wk *)) func_00168618)
-#define func_00267390 ((f32 (*)(Vec *, Vec *)) func_00267390)
-#define func_00267530 ((void (*)(Vec *, Vec *, Vec *)) func_00267530)
-#define func_00267560 ((void (*)(Vec *, Vec *, f32)) func_00267560)
-#define func_002675a8 ((void (*)(Vec *, Vec *)) func_002675a8)
 /* func_00169688 (hand/nostrict), rodata jtbl_0048E870 (verify with wqb03_rr.py 0048E870), s11w64. Natural, no flagged code.
    From session9 w3's 4w draft; new: case 10 as two paths that each load p = o->x148 and jump to one
    shared block: `if (!(D & 1)) { p = o->x148; if (hi & 1) goto c10b; goto r1; } p = o->x148; c10b: B; r1: return 1;`
@@ -673,11 +663,11 @@ s32 func_00169688(Obj *o, Wk *w) {
         return 1;
     case 18:
         GETDIR(o, w, &v, r);
-        d = func_00267390(&o->x148->xc0, &v);
-        func_00267560(&t, &o->x148->xc0, d);
-        func_00267530(&v, &v, &t);
-        e = func_00267390(&t, &t);
-        if (func_00267390(&v, &v) < e) {
+        d = PlatVu0InnerProduct(&o->x148->xc0, &v);
+        PlatVu0ScaleVector(&t, &o->x148->xc0, d);
+        PlatVu0SubVector(&v, &v, &t);
+        e = PlatVu0InnerProduct(&t, &t);
+        if (PlatVu0InnerProduct(&v, &v) < e) {
             if (o->x70 != 2) {
                 func_0013dfb8(o, &w->x120);
             }
@@ -692,7 +682,7 @@ s32 func_00169688(Obj *o, Wk *w) {
         }
         q = &w->x120;
         v.y = 0.0f;
-        func_002675a8(q, &v);
+        PlatVu0CopyVector(q, &v);
         len = func_00162c20(q);
         switch (r) {
         case 0:
@@ -744,7 +734,7 @@ s32 func_00169688(Obj *o, Wk *w) {
         GETDIR(o, w, &v, r);
         v.y = 0.0f;
         v.w = func_00162c20(&v);
-        func_002675a8(&w->x120, &v);
+        PlatVu0CopyVector(&w->x120, &v);
         w->x120.w = 30.0f;
         if (o->x90 != 0 || w->x68 <= 0.0f || v.w < 60.0f) {
             func_0014f658(o, 24);
@@ -759,10 +749,6 @@ s32 func_00169688(Obj *o, Wk *w) {
 #undef func_0014f658
 #undef func_00162c20
 #undef func_00168618
-#undef func_00267390
-#undef func_00267530
-#undef func_00267560
-#undef func_002675a8
 #undef GETDIR
 
 /* func_0016a3f8 (from hand/nostrict/text_00160000_c03.c). */
@@ -1001,8 +987,8 @@ static inline f32 inl_d(C03Chr *p, s32 j, C03Chr *tg) {
     f32 v[4];
     f32 d2[4];
     func_0012ec60(p, j, v);
-    func_00267530(d2, v, tg->pos);
-    return func_00267390(d2, d2);
+    PlatVu0SubVector(d2, v, tg->pos);
+    return PlatVu0InnerProduct(d2, d2);
 }
 #define D_0035AE80 (*(PrmB1 (*)) &D_0035AE80)
 #define func_00171b18 ((void (*)(C03Chr *, C03AW *)) func_00171b18)
@@ -1178,7 +1164,7 @@ s32 func_0016b1f0(C03Chr *e, C03AW *w) {
                 if (((s32)w->w38 & 1) || w->t90.p == 0) {
                     func_001693c8(e, w);
                 } else {
-                    func_002675a8(w->v120, e->v30);
+                    PlatVu0CopyVector(w->v120, e->v30);
                     w->v120[1] = w->f12C = 0.0f;
                 }
             }
@@ -1272,7 +1258,6 @@ out:
 #define func_0012ee70 ((s32 (*)(void *, s32)) func_0012ee70)
 #define func_0014cce0 ((void (*)(ObjB6 *, f32)) func_0014cce0)
 #define func_00169510 ((s32 (*)(ObjB6 *, WkB6 *, s32)) func_00169510)
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 s32 func_0016b670(ObjB6 *o, WkB6 *w, KB6 *k, s32 mode) {
     RngB6 *rng = k->rng;
     Res8 *r;
@@ -1299,7 +1284,7 @@ s32 func_0016b670(ObjB6 *o, WkB6 *w, KB6 *k, s32 mode) {
         w->w80.c.b4 = 1;
         w->w80.b.id = rng->id.h;
         func_001376e8(o, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->w12C = 0;
         r = inl_00171b80(o, w, w->w80.b.id);
         w->w4C = r->h0;
@@ -1336,7 +1321,6 @@ s32 func_0016b670(ObjB6 *o, WkB6 *w, KB6 *k, s32 mode) {
 #undef func_0012ee70
 #undef func_0014cce0
 #undef func_00169510
-#undef func_002675a8
 
 /* func_0016bb68 (from hand/nostrict/text_00160000_s8_w10.c). */
 typedef EntB_35BD40 EntB;
@@ -1540,7 +1524,7 @@ s32 func_0016c480(Ent6C4 *e, Wk6C4 *w, s32 unused, s32 mode) {
         break;
     case 2:
         func_001376e8(e, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->v120[3] = 0;
         w->w80.b.m = mode;
         w->w80.b.z = 0;
@@ -1573,8 +1557,8 @@ static inline s32 inl_001715b0(void *grp, Ent370 *self, f32 r) {
         if (p == self) continue;
         if (((s32)(p->f370 >> 37) & 3) != 2) continue;
         if (!func_00123368(p)) continue;
-        func_00267530(v, p->pos, self->pos);
-        if (func_00267390(v, v) < r2) n++;
+        PlatVu0SubVector(v, p->pos, self->pos);
+        if (PlatVu0InnerProduct(v, v) < r2) n++;
     }
     return n;
 }
@@ -1603,14 +1587,11 @@ static inline s32 inl_ok_6c650(ObjC6 *e, s32 K) {
         if (f < D_0035AE80.z[i].d0) return 0; \
         if (D_0035AE80.z[i].d1 < f) return 0; \
         break;
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 #define D_0035AE80 (*(PrmC6 (*)) &D_0035AE80)
 #define func_00123158 ((Ent370 *(*)(void *, Ent370 *)) func_00123158)
 #define func_00123368 ((s32 (*)(Ent370 *)) func_00123368)
 #define func_00133000 ((s32 (*)(ObjC6 *, s32)) func_00133000)
 #define func_00141200 ((s32 (*)(void *, s32)) func_00141200)
-#define func_00267530 ((void (*)(void *, void *, void *)) func_00267530)
-#define func_00267390 ((f32 (*)(void *, void *)) func_00267390)
 /* ---- func_0016c650 ---- */
 s32 func_0016c650(ObjC6 *o, WkC6 *w, s32 k, s32 mode) {
     f32 f;
@@ -1635,7 +1616,7 @@ s32 func_0016c650(ObjC6 *o, WkC6 *w, s32 k, s32 mode) {
         break;
     case 2:
         func_001376e8(o, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->w12C = 0;
         w->w80.b.m = mode;
         w->w80.b.id = 1;
@@ -1644,14 +1625,11 @@ s32 func_0016c650(ObjC6 *o, WkC6 *w, s32 k, s32 mode) {
     }
     return 1;
 }
-#undef func_002675a8
 #undef D_0035AE80
 #undef func_00123158
 #undef func_00123368
 #undef func_00133000
 #undef func_00141200
-#undef func_00267530
-#undef func_00267390
 #undef ZONE
 
 /* func_0016cb98 (from hand/nostrict/text_00160000_h60.c). */
@@ -1690,7 +1668,7 @@ s32 func_0016cb98(Ent6C4 *e, Wk6C4 *w, s32 unused, s32 mode) {
         break;
     case 2:
         func_001376e8(e, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->v120[3] = 0;
         w->w80.b.m = mode;
         w->w80.b.z = 2;
@@ -1810,7 +1788,6 @@ static inline s32 inl_thr(Wk6D0 *w, u32 a) {
 #define func_00133000 ((s32 (*)(void *, s32)) func_00133000)
 #define func_00141200 ((s32 (*)(void *, s32)) func_00141200)
 #define func_001376e8 ((f32 (*)(void *, f32 *)) func_001376e8)
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 /* --- func_0016d040 --- */
 s32 func_0016d040(Ent6D0 *e, Wk6D0 *w, s32 unused, s32 mode) {
     f32 f;
@@ -1845,7 +1822,7 @@ s32 func_0016d040(Ent6D0 *e, Wk6D0 *w, s32 unused, s32 mode) {
         break;
     case 2:
         func_001376e8(e, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->v120[3] = 0;
         w->w80.b.m = mode;
         w->w80.b.z = 4;
@@ -1858,7 +1835,6 @@ s32 func_0016d040(Ent6D0 *e, Wk6D0 *w, s32 unused, s32 mode) {
 #undef func_00133000
 #undef func_00141200
 #undef func_001376e8
-#undef func_002675a8
 
 /* func_0016d2d0 (from hand/nostrict/text_00160000_b05.c). */
 typedef struct { u8 pad[0x88]; u32 x88; } T88;
@@ -1883,7 +1859,6 @@ static inline s32 inl_ok_6d2d0(Ent7 *e, s32 K) {
 #define func_00133000 ((s32 (*)(void *, s32)) func_00133000)
 #define func_00141200 ((s32 (*)(void *, s32)) func_00141200)
 #define func_001376e8 ((f32 (*)(void *, f32 *)) func_001376e8)
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 #define func_00123158 ((Ent370 *(*)(void *, Ent370 *)) func_00123158)
 #define func_00123368 ((s32 (*)(Ent370 *)) func_00123368)
 /* --- func_0016d2d0 --- */
@@ -1911,7 +1886,7 @@ s32 func_0016d2d0(Ent6D0 *e, Wk6D0 *w, s32 unused, s32 mode) {
         break;
     case 2:
         func_001376e8(e, w->vD0);
-        func_002675a8(w->v120, w->vD0);
+        PlatVu0CopyVector(w->v120, w->vD0);
         w->v120[3] = 0;
         w->w80.b.m = mode;
         w->w80.b.z = 5;
@@ -1924,7 +1899,6 @@ s32 func_0016d2d0(Ent6D0 *e, Wk6D0 *w, s32 unused, s32 mode) {
 #undef func_00133000
 #undef func_00141200
 #undef func_001376e8
-#undef func_002675a8
 #undef func_00123158
 #undef func_00123368
 #undef CASE_6D2
@@ -2140,7 +2114,6 @@ typedef struct {
 f32 cosf(f32);
 void func_00137688(Ent6E *, f32);
 void func_0014d428(Ent6E *, f32 *, f32, f32);
-void func_00267e90(f32 *, f32 *, f32);
 f32 sinf(f32);
 static inline s32 inl_in(s32 k, Wk6E *w) {
     if (k < 13) { if (k >= 3) return 1; }
@@ -2161,7 +2134,7 @@ void func_0016df30(Ent6E *e, Wk6E *w) {
     func_00171790(e, w);
     if (w->p90 != 0) {
         func_00137688(e, func_001376e8(e, w->vC0));
-        func_00267e90(w->v120, e->v30, 1.0f);
+        PlatVu0ScaleVectorXYZ(w->v120, e->v30, 1.0f);
     }
     if (w->f68 <= 0.0f && ((s32)((s64)(w->w38 << 17) >> 32) & 1)) {
         t = &w->p14[func_001627e8(w->w10 << 12) >> 12];
@@ -2170,7 +2143,7 @@ void func_0016df30(Ent6E *e, Wk6E *w) {
         v[1] = 0.0f;
         v[2] = cosf(ang);
         v[3] = 0.0f;
-        func_00267560(v, v, t->scale);
+        PlatVu0ScaleVector(v, v, t->scale);
         v[1] = t->y;
         func_0014d428(e, v, t->a, t->b);
         w->w38 &= ~0x8000;
@@ -2231,27 +2204,27 @@ void func_0016e1f0(s32 i) {
     if (D_0035BD40.chr[i]->w70 == 8 || D_0035BD40.chr[i]->w70 == 24 || D_0035BD40.chr[i]->w70 == 25) return;
     if (D_00575020[i][1] < D_0035BD40.chr[i]->pos[1] - D_0035BD40.chr[i]->p6C->f10) return;
     if (D_0035BD40.chr[i]->pos[1] + D_0035BD40.chr[i]->p6C->f10 < D_00575020[i][1]) return;
-    func_00267560(a, D_0035BD10, D_0035BD40.chr[i]->p6C->f10);
-    func_00267530(r.p, D_00575020[i], a);
-    func_00267560(r.d, a, 2.0f);
+    PlatVu0ScaleVector(a, D_0035BD10, D_0035BD40.chr[i]->p6C->f10);
+    PlatVu0SubVector(r.p, D_00575020[i], a);
+    PlatVu0ScaleVector(r.d, a, 2.0f);
     func_00118668(&r);
     if (r.h < 0) {
     w->w38 |= 0x4000;
     k = 0;
-    func_00267530(a, D_00575090[0], D_00575020[i]);
-    best = func_00267390(a, a);
+    PlatVu0SubVector(a, D_00575090[0], D_00575020[i]);
+    best = PlatVu0InnerProduct(a, a);
     for (j = 1; j < 40; j++) {
-        func_00267530(a, D_00575090[j], D_00575020[i]);
-        d = func_00267390(a, a);
+        PlatVu0SubVector(a, D_00575090[j], D_00575020[i]);
+        d = PlatVu0InnerProduct(a, a);
         if (d < best) {
             best = d;
             k = j;
         }
     }
-    func_00267518(a, D_00575090[k], D_00575050[i]);
-    func_00267560(D_00575020[i], a, 0.5f);
+    PlatVu0AddVector(a, D_00575090[k], D_00575050[i]);
+    PlatVu0ScaleVector(D_00575020[i], a, 0.5f);
     } else {
-        func_002675a8(D_00575020[i], r.hit);
+        PlatVu0CopyVector(D_00575020[i], r.hit);
     }
 }
 
@@ -2266,11 +2239,7 @@ static inline s32 inl_k(void) {
     if (D_0035BD40.chrE3[0]->x70 == 13 || D_0035BD40.chrE3[0]->x70 == 10) return 1;
     return 0;
 }
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
-#define func_00267530 ((void (*)(void *, void *, void *)) func_00267530)
 #define func_00162c20 ((f32 (*)(V4E3 *)) func_00162c20)
-#define func_00267518 ((void (*)(V4E3 *, V4E3 *, V4E3 *)) func_00267518)
-#define func_00267560 ((void (*)(V4E3 *, V4E3 *, f32)) func_00267560)
 /* ---- func_0016e3f8 ---- */
 void func_0016e3f8(void) {
     V4E3 v0, v1, a1, a2, b1, b2;
@@ -2278,99 +2247,95 @@ void func_0016e3f8(void) {
     WkE3 *w2 = 0;
     f32 d1, d2, d3, d4;
     s32 k;
-    func_002675a8(&D_00575060[0], &D_00575030[0]);
-    func_002675a8(&D_00575060[1], &D_00575030[1]);
+    PlatVu0CopyVector(&D_00575060[0], &D_00575030[0]);
+    PlatVu0CopyVector(&D_00575060[1], &D_00575030[1]);
     func_00162878(&v0, &D_0035BD40.chrE3[0]->xd0, &D_0035BD20[0]);
     func_00162878(&v1, &D_0035BD40.chrE3[0]->xd0, &D_0035BD20[1]);
     d1 = d2 = d3 = d4 = 0.0f;
     if (D_0035BD40.chrE3[1] != 0 && (w1 = D_0035BD40.chrE3[1]->p144) != 0) {
         w1->w38 &= ~0x80000ULL;
-        func_00267530(&w1->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[1]->pos);
+        PlatVu0SubVector(&w1->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[1]->pos);
         w1->fA4 = w1->vE0.y;
-        func_002675a8(&w1->vF0, &w1->vE0);
+        PlatVu0CopyVector(&w1->vF0, &w1->vE0);
         w1->vF0.y = 0.0f;
         w1->vE0.w = func_00162c20(&w1->vE0);
         w1->vF0.w = func_00162c20(&w1->vF0);
-        func_00267560(&a1, &v0, w1->p4->f8);
-        func_00267518(&a1, &a1, &D_0035BD40.chrE3[0]->pos);
-        func_00267560(&a2, &v1, w1->p4->f8);
-        func_00267518(&a2, &a2, &D_0035BD40.chrE3[0]->pos);
+        PlatVu0ScaleVector(&a1, &v0, w1->p4->f8);
+        PlatVu0AddVector(&a1, &a1, &D_0035BD40.chrE3[0]->pos);
+        PlatVu0ScaleVector(&a2, &v1, w1->p4->f8);
+        PlatVu0AddVector(&a2, &a2, &D_0035BD40.chrE3[0]->pos);
         d1 = func_001629b0(&a1, &D_0035BD40.chrE3[1]->pos);
         d2 = func_001629b0(&a2, &D_0035BD40.chrE3[1]->pos);
     }
     if (D_0035BD40.chrE3[2] != 0 && (w2 = D_0035BD40.chrE3[2]->p144) != 0) {
         w2->w38 &= ~0x80000ULL;
-        func_00267530(&w2->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[2]->pos);
+        PlatVu0SubVector(&w2->vE0, &D_0035BD40.chrE3[0]->pos, &D_0035BD40.chrE3[2]->pos);
         w2->fA4 = w2->vE0.y;
-        func_002675a8(&w2->vF0, &w2->vE0);
+        PlatVu0CopyVector(&w2->vF0, &w2->vE0);
         w2->vF0.y = 0.0f;
         w2->vE0.w = func_00162c20(&w2->vE0);
         w2->vF0.w = func_00162c20(&w2->vF0);
-        func_00267560(&b1, &v0, w2->p4->f8);
-        func_00267518(&b1, &b1, &D_0035BD40.chrE3[0]->pos);
-        func_00267560(&b2, &v1, w2->p4->f8);
-        func_00267518(&b2, &b2, &D_0035BD40.chrE3[0]->pos);
+        PlatVu0ScaleVector(&b1, &v0, w2->p4->f8);
+        PlatVu0AddVector(&b1, &b1, &D_0035BD40.chrE3[0]->pos);
+        PlatVu0ScaleVector(&b2, &v1, w2->p4->f8);
+        PlatVu0AddVector(&b2, &b2, &D_0035BD40.chrE3[0]->pos);
         d3 = func_001629b0(&b1, &D_0035BD40.chrE3[2]->pos);
         d4 = func_001629b0(&b2, &D_0035BD40.chrE3[2]->pos);
     }
     if (w1 != 0) {
         if (w2 != 0) {
             if (d1 <= d2 && d1 <= d3 && d1 <= d4) {
-                func_002675a8(&D_00575030[0], &a1);
+                PlatVu0CopyVector(&D_00575030[0], &a1);
                 d3 = func_001629b0(&b1, &D_00575030[0]);
-                if (d3 <= func_001629b0(&b2, &D_00575030[0])) func_002675a8(&D_00575030[1], &b2);
-                else func_002675a8(&D_00575030[1], &b1);
+                if (d3 <= func_001629b0(&b2, &D_00575030[0])) PlatVu0CopyVector(&D_00575030[1], &b2);
+                else PlatVu0CopyVector(&D_00575030[1], &b1);
             } else if (d2 <= d1 && d2 <= d3 && d2 <= d4) {
-                func_002675a8(&D_00575030[0], &a2);
+                PlatVu0CopyVector(&D_00575030[0], &a2);
                 d3 = func_001629b0(&b1, &D_00575030[0]);
-                if (d3 <= func_001629b0(&b2, &D_00575030[0])) func_002675a8(&D_00575030[1], &b2);
-                else func_002675a8(&D_00575030[1], &b1);
+                if (d3 <= func_001629b0(&b2, &D_00575030[0])) PlatVu0CopyVector(&D_00575030[1], &b2);
+                else PlatVu0CopyVector(&D_00575030[1], &b1);
             } else if (d3 <= d1 && d3 <= d2 && d3 <= d4) {
-                func_002675a8(&D_00575030[1], &b1);
+                PlatVu0CopyVector(&D_00575030[1], &b1);
                 d1 = func_001629b0(&a1, &D_00575030[1]);
-                if (d1 <= func_001629b0(&a2, &D_00575030[1])) func_002675a8(&D_00575030[0], &a2);
-                else func_002675a8(&D_00575030[0], &a1);
+                if (d1 <= func_001629b0(&a2, &D_00575030[1])) PlatVu0CopyVector(&D_00575030[0], &a2);
+                else PlatVu0CopyVector(&D_00575030[0], &a1);
             } else if (d4 <= d1 && d4 <= d2 && d4 <= d3) {
-                func_002675a8(&D_00575030[1], &b2);
+                PlatVu0CopyVector(&D_00575030[1], &b2);
                 d1 = func_001629b0(&a1, &D_00575030[1]);
-                if (d1 <= func_001629b0(&a2, &D_00575030[1])) func_002675a8(&D_00575030[0], &a2);
-                else func_002675a8(&D_00575030[0], &a1);
+                if (d1 <= func_001629b0(&a2, &D_00575030[1])) PlatVu0CopyVector(&D_00575030[0], &a2);
+                else PlatVu0CopyVector(&D_00575030[0], &a1);
             }
             if (inl_k()) {
                 if (w1->vE0.w < w2->vE0.w) {
                     w1->w38 |= 0x80000ULL;
-                    func_002675a8(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
+                    PlatVu0CopyVector(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
                 } else {
                     w2->w38 |= 0x80000ULL;
-                    func_002675a8(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
+                    PlatVu0CopyVector(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
                 }
             }
             func_0016e1f0(1);
             func_0016e1f0(2);
         } else {
-            if (d1 <= d2) func_002675a8(&D_00575030[0], &a1);
-            else func_002675a8(&D_00575030[0], &a2);
+            if (d1 <= d2) PlatVu0CopyVector(&D_00575030[0], &a1);
+            else PlatVu0CopyVector(&D_00575030[0], &a2);
             if (inl_k()) {
                 w1->w38 |= 0x80000ULL;
-                func_002675a8(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
+                PlatVu0CopyVector(&D_00575030[0], &D_0035BD40.chrE3[0]->x50);
             }
             func_0016e1f0(1);
         }
     } else if (w2 != 0) {
-        if (d3 <= d4) func_002675a8(&D_00575030[1], &b1);
-        else func_002675a8(&D_00575030[1], &b2);
+        if (d3 <= d4) PlatVu0CopyVector(&D_00575030[1], &b1);
+        else PlatVu0CopyVector(&D_00575030[1], &b2);
         if (inl_k()) {
             w2->w38 |= 0x80000ULL;
-            func_002675a8(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
+            PlatVu0CopyVector(&D_00575030[1], &D_0035BD40.chrE3[0]->x50);
         }
         func_0016e1f0(2);
     }
 }
-#undef func_002675a8
-#undef func_00267530
 #undef func_00162c20
-#undef func_00267518
-#undef func_00267560
 
 /* func_0016ea58 (hand/nostrict): the target search is matched func_001711d0 written as a static inline helper (inl_001711d0, its exact body); the set1/set2 gotos written out as separate w1->w38 |= 8 / w2->w38 |= 8 statements (jump2 cross-jumps them; the extra refs give w1/w2 s4/s5 over the hoisted const 2), the d2<d1 arm as one && / || condition, w2 = 0 before w1 = 0. */
 /* func_0016ea58 (from hand/nostrict/text_00160000_s10_r2_1.c). */
@@ -2400,8 +2365,8 @@ static inline void inl_001711d0(ChrEA *self, LockEA *out, f32 r) {
         for (i = -1; (i = func_0012ee70(p, i)) >= 0;) {
             if (!func_0012f040(p, i)) continue;
             func_0012ec60(p, i, a);
-            func_00267530(b, a, &self->pos);
-            d = func_00267390(b, b);
+            PlatVu0SubVector(b, a, &self->pos);
+            d = PlatVu0InnerProduct(b, b);
             if (d < best) {
                 out->f0 = p;
                 best = d;
@@ -2423,9 +2388,6 @@ static inline s32 inl_dead(ChrEA *c) {
 #define func_0012f040 ((s32 (*)(void *, s32)) func_0012f040)
 #define func_00141200 ((s32 (*)(EntEA *, s32)) func_00141200)
 #define func_001629b0 ((f32 (*)(V4EA *, V4EA *)) func_001629b0)
-#define func_00267390 ((f32 (*)(void *, void *)) func_00267390)
-#define func_00267530 ((void (*)(void *, void *, void *)) func_00267530)
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 /* func_0016ea58 (hand/nostrict): the target search is matched func_001711d0 written as a static inline helper (inl_001711d0, its exact body); the set1/set2 gotos written out as separate w1->w38 |= 8 / w2->w38 |= 8 statements (jump2 cross-jumps them; the extra refs give w1/w2 s4/s5 over the hoisted const 2), the d2<d1 arm as one && / || condition, w2 = 0 before w1 = 0. */
 s32 func_0016ea58(void) {
     V4EA v;
@@ -2446,16 +2408,16 @@ s32 func_0016ea58(void) {
     if (D_00575088 == 0) {
         n = 39;
         for (i = 39; i >= 0; i--) {
-            func_002675a8(&D_00575090[n--], &D_0035BD40.chrEA[0]->pos);
+            PlatVu0CopyVector(&D_00575090[n--], &D_0035BD40.chrEA[0]->pos);
             D_00575090[i].w = D_0035BD40.chrEA[0]->f3C;
         }
         D_00575088 = 1;
     } else {
-        func_00267530(&v, &D_00575090[0], &D_0035BD40.chrEA[0]->pos);
-        if (func_00267390(&v, &v) > 1600.0f) {
+        PlatVu0SubVector(&v, &D_00575090[0], &D_0035BD40.chrEA[0]->pos);
+        if (PlatVu0InnerProduct(&v, &v) > 1600.0f) {
             D_0057508C = 1;
-            for (i = 38; i >= 0; i--) func_002675a8(&D_00575090[i + 1], &D_00575090[i]);
-            func_002675a8(&D_00575090[0], &D_0035BD40.chrEA[0]->pos);
+            for (i = 38; i >= 0; i--) PlatVu0CopyVector(&D_00575090[i + 1], &D_00575090[i]);
+            PlatVu0CopyVector(&D_00575090[0], &D_0035BD40.chrEA[0]->pos);
             D_00575090[0].w = D_0035BD40.chrEA[0]->f3C;
         }
     }
@@ -2534,9 +2496,6 @@ s32 func_0016ea58(void) {
 #undef func_0012f040
 #undef func_00141200
 #undef func_001629b0
-#undef func_00267390
-#undef func_00267530
-#undef func_002675a8
 
 /* func_0016f1f0 (from hand/nostrict/text_00160000_h60.c). */
 void func_00242b00(Chr *);
@@ -2775,7 +2734,7 @@ void func_0016fa10(Ent6FA *e, Wk6FA *w, Sub6FA *pr) {
         } else {
             if (e->w70 == 0 && w->fFC < fabsf(w->fA4)) {
                 if (w->fFC <= w->p4->f8) w->w38 &= ~1;
-                func_00267530(v, D_00575020[w->w0], e->pos);
+                PlatVu0SubVector(v, D_00575020[w->w0], e->pos);
                 v[1] = 0.0f;
                 if (func_00162a58(v) <= w->f30) w->w38 &= ~1;
             }
@@ -2820,8 +2779,8 @@ static inline s32 inl_best(void *p, ChrFC *c) {
         while ((i = func_0012ee70(p, i)) >= 0) {
             if (!func_0012f040(p, i)) continue;
             func_0012ec60(p, i, a);
-            func_00267530(b, a, &c->pos);
-            d = func_00267390(b, b);
+            PlatVu0SubVector(b, a, &c->pos);
+            d = PlatVu0InnerProduct(b, b);
             if (d < bd) {
                 bd = d;
                 best = i;
@@ -2833,8 +2792,6 @@ static inline s32 inl_best(void *p, ChrFC *c) {
 #define func_0012ec60 ((void (*)(void *, s32, f32 *)) func_0012ec60)
 #define func_0012ee70 ((s32 (*)(void *, s32)) func_0012ee70)
 #define func_0012f040 ((s32 (*)(void *, s32)) func_0012f040)
-#define func_00267390 ((f32 (*)(void *, void *)) func_00267390)
-#define func_00267530 ((void (*)(void *, void *, void *)) func_00267530)
 /* func_0016fc60: MATCH hand/nostrict */
 void func_0016fc60(ChrFC *c, WkFC *w) {
     if (func_00122ff8(w->p90)) {
@@ -2846,8 +2803,6 @@ void func_0016fc60(ChrFC *c, WkFC *w) {
 #undef func_0012ec60
 #undef func_0012ee70
 #undef func_0012f040
-#undef func_00267390
-#undef func_00267530
 
 /* func_0016fd98 (from hand/nostrict/text_00160000_b05.c). */
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x50]; s32 w70; u8 pad74[0x250]; f32 f2C4; } EntF;
@@ -2876,8 +2831,8 @@ static inline void inl_find(Ent370 *self, LockF *out, f32 r) {
         for (i = -1; (i = func_0012ee70(p, i)) >= 0;) {
             if (!func_0012f040(p, i)) continue;
             func_0012ec60(p, i, a);
-            func_00267530(b, a, self->pos);
-            d = func_00267390(b, b);
+            PlatVu0SubVector(b, a, self->pos);
+            d = PlatVu0InnerProduct(b, b);
             if (d < best) {
                 out->tgt = p;
                 best = d;
@@ -2887,7 +2842,6 @@ static inline void inl_find(Ent370 *self, LockF *out, f32 r) {
     }
 }
 #define func_00141200 ((s32 (*)(void *, s32)) func_00141200)
-#define func_002675a8 ((void (*)(void *, void *)) func_002675a8)
 #define func_00123158 ((Ent370 *(*)(void *, Ent370 *)) func_00123158)
 #define func_00123368 ((s32 (*)(Ent370 *)) func_00123368)
 #define func_0012ee70 ((s32 (*)(void *, s32)) func_0012ee70)
@@ -2911,8 +2865,8 @@ void func_0016fd98(EntF *e, WkF *w) {
     if (w->l90.tgt != 0 && w->l90.part >= 0) {
     w->f9C = func_0012ec60(w->l90.tgt, w->l90.part, w->vB0);
     if (((s32)(w->w38 >> 20) & 1) || e->w70 == 8 || e->w70 == 24 || e->w70 == 25) w->vB0[1] += e->f2C4;
-    func_00267530(w->vC0, w->vB0, e->pos);
-    func_002675a8(w->vD0, w->vC0);
+    PlatVu0SubVector(w->vC0, w->vB0, e->pos);
+    PlatVu0CopyVector(w->vD0, w->vC0);
     w->fA0 = w->vD0[1];
     w->vD0[1] = 0;
     w->fCC = func_00162c20(w->vC0);
@@ -2923,7 +2877,6 @@ void func_0016fd98(EntF *e, WkF *w) {
     }
 }
 #undef func_00141200
-#undef func_002675a8
 #undef func_00123158
 #undef func_00123368
 #undef func_0012ee70

@@ -7,6 +7,7 @@
 #include "m2c.h"
 #include "data/pieces/D_0035BD40.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0057.h"
 #include "data/pieces/D_002BBFA0.h"
 #include "data/pieces/D_002C58B0.h"
@@ -26,8 +27,6 @@ void func_00168518(void) {
 /* func_00168530 (from auto/text_00160000_6.c). */
 M2C_UNK func_00123a88(s32, void *);
 M2C_UNK func_00137688(void *, f32);
-M2C_UNK func_00267530(s32, s32, s32);
-M2C_UNK func_002675a8(s32, s32);
 extern volatile unsigned char D_00575020;
 f32 func_001376e8(void *, s32);
 f32 func_00162c20(s32);
@@ -41,8 +40,8 @@ void func_00168530(void *arg0) {
   temp_s3 = *((void **) (((s8 *) arg0) + 0x144));
   temp_s0 = temp_s3 + 0xE0;
   temp_s2 = temp_s3 + 0xF0;
-  func_00267530(temp_s0, D_0035BD40.i + 0x10, arg0 + 0x10);
-  func_002675a8(temp_s2, temp_s3 + 0xE0);
+  PlatVu0SubVector(temp_s0, D_0035BD40.i + 0x10, arg0 + 0x10);
+  PlatVu0CopyVector(temp_s2, temp_s3 + 0xE0);
   *((s32 *) (((s8 *) temp_s3) + 0xF4)) = 0;
   *((f32 *) (((s8 *) temp_s3) + 0xEC)) = func_00162c20(temp_s3 + 0xE0);
   *((f32 *) (((s8 *) temp_s3) + 0xFC)) = func_00162c20(temp_s2);
@@ -115,9 +114,7 @@ s32 func_00137618(E9F *);
 s32 func_00153d78(E9F *);
 void func_0013dfb8(E9F *, void *);
 s32 func_00135838(E9F *);
-f32 func_00267390(f32 *, f32 *);
 void func_00135b88(E9F *, f32 (*)[4]);
-void sceVu0CopyMatrix(Mtx, Mtx);
 void func_00162c5c(Mtx, Mtx, Mtx);
 s32 func_0024edf0(Mtx, f32 (*)[4]);
 void func_00116660(Q9F *);
@@ -169,19 +166,19 @@ static inline s32 inl_find(E9F *e, W9F *w) {
         Q9F q;
         s32 vis;
         p = D_00575090[i];
-        func_00267530(v, p, D_0035BD40.chr9F[0]->pos);
+        PlatVu0SubVector(v, p, D_0035BD40.chr9F[0]->pos);
         { f32 a = v[1] * w->fE4; if (p) { if (0.0999999940395355224609375f < a) continue; } else { if (0.0999999940395355224609375f < a) continue; } }
         v[1] = 0.0f;
-        { f32 a = func_00267390(v, w->vF0); if (p) { if (0.0999999940395355224609375f < a) continue; } else { if (0.0999999940395355224609375f < a) continue; } }
+        { f32 a = PlatVu0InnerProduct(v, w->vF0); if (p) { if (0.0999999940395355224609375f < a) continue; } else { if (0.0999999940395355224609375f < a) continue; } }
         func_00135b88(e, m10);
-        sceVu0CopyMatrix(m90, e->mD0);
-        func_002675a8(m90[3], p);
+        PlatVu0CopyMatrix(m90, e->mD0);
+        PlatVu0CopyVector(m90[3], p);
         m90[3][3] = 1.0f;
         func_00162c5c(m90, D_002BBFA0, m90);
         if (!func_0024edf0(m90, m10)) continue;
         func_00116660(&q);
-        func_002675a8(q.a, p);
-        func_002675a8(q.b, (*(f32 (*)[0x4])&D_002C58B0));
+        PlatVu0CopyVector(q.a, p);
+        PlatVu0CopyVector(q.b, (*(f32 (*)[0x4])&D_002C58B0));
         q.c0 = e->x2C0;
         q.c1 = e->x2C4;
         q.c2 = 0;
@@ -196,8 +193,6 @@ static inline s32 inl_find(E9F *e, W9F *w) {
     }
     return bi;
 }
-#define func_00267530 ((void (*)(f32 *, f32 *, f32 *)) func_00267530)
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 /* ---- func_00169f28 ---- */
 s32 func_00169f28(E9F *e, W9F *w) {
     s32 ok, t;
@@ -249,6 +244,4 @@ s32 func_00169f28(E9F *e, W9F *w) {
 r0:
     return 0;
 }
-#undef func_00267530
-#undef func_002675a8
 
