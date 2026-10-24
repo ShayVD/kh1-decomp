@@ -561,12 +561,12 @@ s32 func_001fe660(MenuCur *m, s32 i, s32 n) {
 s32 func_001fe718(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
     u32 f = D_00425BC8->x10;
-    if (f & 0x10000010) {
+    if (f & PAD_DIR(PAD_UP)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
         }
-    } else if (f & 0x40000040) {
+    } else if (f & PAD_DIR(PAD_DOWN)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
@@ -601,12 +601,12 @@ s32 func_001fe7a8(MenuCur *m, s32 i, s32 n) {
 s32 func_001fe860(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
     u32 f = D_00425BC8->x10;
-    if (f & 0x80000080) {
+    if (f & PAD_DIR(PAD_LEFT)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
         }
-    } else if (f & 0x20000020) {
+    } else if (f & PAD_DIR(PAD_RIGHT)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
@@ -641,12 +641,12 @@ s32 func_001fe8f0(MenuCur *m, s32 i, s32 n) {
 s32 func_001fe9a8(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
     u32 f = D_00425BC8->x10;
-    if (f & 0x80000480) {
+    if (f & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
         }
-    } else if (f & 0x20000820) {
+    } else if (f & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;

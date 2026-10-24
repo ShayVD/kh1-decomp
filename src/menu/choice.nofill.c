@@ -2,6 +2,7 @@
  * -fno-fill.  Each row's highlight x24[row] goes to 1 on the cursor and fades
  * by 0.08 a frame elsewhere; the colours blend by it (func_001eddc0). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/pieces/D_00425BC8.h"
 
 /* The window's +0x24 ... +0x2c as the rows' highlights (TextWin has s32 there). */
@@ -39,7 +40,7 @@ void func_0022d730(ChWin *a) {
             func_001f3840(a);
             func_0011d768(3);
             func_0020be10(16);
-        } else if (fl & 0x4000) {
+        } else if (fl & PAD_CROSS) {
             D_003F76B4 = 0;
             func_001fd648(a, 0);
             func_0011d768(3);
@@ -85,7 +86,7 @@ void func_0022db98(ChWin *a) {
     if (func_001f42b8(a)) {
         u32 fl = D_00425BC8->x8;
         if (fl & 8) {
-        } else if (fl & 0x4000) {
+        } else if (fl & PAD_CROSS) {
             D_003F76B8 = 1;
             func_001fd648(a, 1);
             func_0011d768(3);
@@ -135,7 +136,7 @@ void func_0022dfd8(ChWin *a) {
             func_001f3840(a);
             func_0011d768(3);
             func_0020be10(16);
-        } else if (fl & 0x4000) {
+        } else if (fl & PAD_CROSS) {
             D_003F76BC = 0;
             func_001fd648(a, 0);
             func_0011d768(3);
