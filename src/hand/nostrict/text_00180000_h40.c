@@ -702,7 +702,6 @@ typedef struct {
     u8 h, w, y;  /* +0x21 */
 } PppTexMode2;
 
-
 #include "data/pieces/D_0035C710.h"
 extern PppLight *D_0061E310[256];
 extern s32 D_0061E710;
@@ -855,38 +854,4 @@ s32 func_0019e1e8(PppPool *pool, PppSrcB *src) {
     return 1;
 }
 
-/* needs make: uses rodata */
-typedef struct {
-    u8 pad[0x26];
-    u8 mode;   /* +0x26 */
-} PppMdlMode;
-
-typedef struct {
-    u8 pad[0x14];
-    s32 parent; /* +0x14 */
-} PppMdlOwn;
-
-void func_001a0908(PppMtx m, PppMdlMode *p, PppMdlOwn *o) {
-    s32 parent = o->parent;
-
-    sceVu0UnitMatrix(m);
-    switch (p->mode) {
-    case 0:
-    case 2:
-    case 4:
-    case 6:
-    case 8:
-    default:
-        if (parent == 0)
-            sceVu0MulMatrix(m, (f32 (*)[4]) D_00615FC0, D_00615E68->m);
-        return;
-    case 1:
-    case 3:
-    case 5:
-    case 7:
-    case 9:
-        sceVu0MulMatrix(m, (f32 (*)[4]) D_00615FC0, D_00615E68->m);
-        return;
-    }
-}
 #include "data/pieces/D_003727B0.h"
