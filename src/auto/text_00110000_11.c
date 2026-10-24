@@ -68,7 +68,6 @@ void func_001017b8(void);
 void func_00111130(void);
 void func_00113e28(s32);
 void func_00114830(void);
-void func_00118378(s32, s32, s32, s32);
 void func_001edb48(s32);
 
 void func_00110020(s32 arg0, s32 arg1) {
@@ -250,14 +249,6 @@ void func_00114250(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f
     D_002BD114 = 1;
     D_002BBE0C = 0;
     func_0011d768(6, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
-}
-
-void func_00118668(s32 arg0) {
-    func_00118378(arg0, 3, 0, -1);
-}
-
-void func_00118688(s32 arg0, s32 arg1) {
-    func_00118378(arg0, 3, 0, arg1);
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"

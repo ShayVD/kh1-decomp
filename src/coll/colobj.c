@@ -138,10 +138,7 @@ void func_0011a0a0(void) {
 }
 #undef D_004E2430
 
-/* func_0011a410 (from hand/text_00110000_s8_lead.c).  Its matching notes:
- * the first `e` keeps the (s32)&D[i] + 32 cast; the second, after the norms
- * alloc, is written as integer arithmetic (i * sizeof + 32) + base, which
- * gives the original's operand order.  Plain hand, strict. */
+/* func_0011a410 (from hand/text_00110000_s8_lead.c). */
 static inline void vcopymatrix(void *d, void *s) {
     __asm__ volatile(
         "lq $6, 0(%1)\n"
@@ -288,8 +285,9 @@ typedef struct {
     Rec20 *x0;
     u8 pad[60];
 } Ent2458;
-/* Sized for tools/shift/cover_check.py, which needs a size for D_004E2458:
- * the table runs to D_004E3430 (0xFD8 bytes, 63 whole entries). */
+/* D_004E2430 is a 64-entry table of 64-byte records; the asm names +0x20
+ * D_004E2450 and +0x28 D_004E2458.  Sized for tools/shift/cover_check.py,
+ * which needs a size for D_004E2458: the table ends at D_004E3430. */
 extern Ent2458 D_004E2458[63];
 s32 func_0011a7c0(s32 a0, s32 a1, u16 *a2) {
     Rec20 *t = D_004E2458[a0].x0;

@@ -110,29 +110,5 @@ s32 func_00113f18(void) {
     D_004D9330 = 3;
     return 4;
 }
-
-s32 func_00116690(u32 *arg0) {
-    return ((u32) *arg0 >> 0x11) & 1;
-}
-
-s32 func_001166a0(u32 *arg0) {
-    return ((u32) *arg0 >> 0x1A) & 1;
-}
-
-s32 func_001166b0(void *arg0) {
-    return M2C_FIELD(arg0, u8 *, 3) & 1;
-}
-
-s32 func_001166c0(void) {
-    return 0;
-}
-
-s32 func_001166c8(u32 *arg0) {
-    return ((u32) *arg0 >> 0x1B) & 1;
-}
-
-s32 func_001166d8(u32 *arg0) {
-    return ((u32) *arg0 >> 9) & 1;
-}
 #include "data/data_002B.h"
 #include "data/pieces/D_002BCC24.h"

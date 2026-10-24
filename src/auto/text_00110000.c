@@ -5,15 +5,12 @@
 #include "data/bss_004E.h"
 
 M2C_UNK func_00102a48(M2C_UNK, M2C_UNK);
-M2C_UNK func_00104528();
-M2C_UNK func_001047c8();
 M2C_UNK func_001104e0();
 M2C_UNK func_001112b8();
 M2C_UNK func_001116b0(s32, s32);
 M2C_UNK func_00112b18();
 M2C_UNK func_001137f8();
 M2C_UNK func_00113a00();
-M2C_UNK func_00118060(s32, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_0011c898(M2C_UNK);
 M2C_UNK func_00120748(M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK);
 M2C_UNK func_00122330();
@@ -259,12 +256,6 @@ void func_00114830(void) {
 void func_00114c00(void) {
     D_004D936C = 0;
     D_004D9370 = 0;
-}
-
-void func_00118d78(s32 arg0) {
-    func_001047c8();
-    func_00118060(arg0, 3, 0, -1);
-    func_00104528();
 }
 #include "data/bss_004D_mixed.h"
 #include "data/data_002A.h"

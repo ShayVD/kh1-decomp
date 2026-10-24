@@ -12,7 +12,6 @@ extern s32 D_002BC134;
 extern s32 D_002BCDA8;
 #include "data/pieces/D_002BCB60.h"
 s32 func_00111660(s32, s32);
-void func_00116368(s32, s32);
 
 void func_00111830(void) {
     s32 temp_a0;
@@ -30,10 +29,6 @@ void func_00111830(void) {
 void func_00112b18(void) {
     func_00100ae0();
     func_0011ef10(0x2E630, &func_00112ad8);
-}
-
-void func_001178b8(s32 arg0) {
-    func_00116368(arg0, 0);
 }
 #include "data/data_002B.h"
 #include "data/data_002C.h"

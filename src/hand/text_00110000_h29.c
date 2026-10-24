@@ -436,22 +436,6 @@ void func_00114e50(void) {
     for (j = 0; j < 64; j++) func_00114c18(&D_004D9420[j], j, 2);
 }
 
-typedef struct { u8 pad[0x10]; void *x10; } W29Task;
-extern s32 D_00351BD0;
-#include "data/pieces/D_003044D8.h"
-void func_00108d90(void);
-W29Task *func_0015ed80(void *, void (*)(void));
-void func_00114db0(s32, s32);
-
-void func_00114f50(void *a, s32 i) {
-    if (i == -1) {
-        func_0015ed80(a, func_00108d90)->x10 = &D_004D9380[D_00351BD0];
-        return;
-    }
-    func_00114db0(i, D_003044D8[i].x0);
-    func_0015ed80(a, func_00108d90)->x10 = &D_004D9420[i][D_00351BD0];
-}
-
 static inline f32 w29_dot(void *a, void *b) {
     f32 r;
     __asm__ volatile(
@@ -486,35 +470,7 @@ static inline void w29_add(void *d, void *a, void *b) {
         : : "r"(d), "r"(a), "r"(b) : "memory");
 }
 
-s32 func_00115200(void *p0, void *dir, void *p1, void *n, void *out) {
-    f32 den, t;
-    den = w29_dot(n, dir);
-    if (den >= 0.0f) return 0;
-    t = (w29_dot(n, p1) - w29_dot(n, p0)) / den;
-    if (t > 1.0f) return 0;
-    w29_scale(out, dir, t);
-    w29_add(out, out, p0);
-    return 1;
-}
-
 #include "data/types/text_00110000_h29_p2.h"
-void func_00104f10(void *, W29V4 *);
-void func_00104eb0(void *, W29V4 *);
-
-s32 func_001152c8(void *obj, void *p0, void *dir, void *out) {
-    W29V4 nrm, pt;
-    f32 den, t;
-    func_00104f10(obj, &nrm);
-    den = w29_dot(&nrm, dir);
-    if (den >= 0.0f) return 0;
-    func_00104eb0(obj, &pt);
-    t = (w29_dot(&nrm, &pt) - w29_dot(&nrm, p0)) / den;
-    if (t < 0.0f) return 0;
-    if (t > 1.0f) return 0;
-    w29_scale(out, dir, t);
-    w29_add(out, out, p0);
-    return 1;
-}
 
 static inline void w29_sub(void *d, void *a, void *b) {
     __asm__ volatile(
@@ -537,57 +493,7 @@ static inline void w29_outer(void *d, void *a, void *b) {
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
 }
-
-extern s32 D_002BD150[];
-extern s32 D_002BD160[];
-s32 func_00104ae0(void *, W29V4 *);
-
-s32 func_00115600(void *obj, void *p) {
-    W29V4 e, d, c, v[4];
-    s32 n, i, *idx;
-    n = func_00104ae0(obj, v);
-    if (n == 3) idx = D_002BD150;
-    else idx = D_002BD160;
-    for (i = 0; i < n; i++) {
-        w29_sub(&e, &v[idx[i]], &v[i]);
-        w29_sub(&d, p, &v[i]);
-        w29_outer(&c, &e, &d);
-        if (c.v[1] < 0.0f) return 0;
-    }
-    return 1;
-}
-
-typedef struct { s32 f; u8 pad[12]; } W29Mark;
-typedef struct { u8 hdr[8]; W29Mark e[1]; } W29MarkTbl;
-extern W29MarkTbl *D_004E0420; /* src/data/bss_004E.c: M2C_UNK *D_004E0420 */
-extern s32 D_004E0428[];
-#include "data/pieces/D_002A623C.h"
 extern s32 D_002BD170;
-s32 func_00104940(void *, s32 *, s32);
-
-s32 func_00115d58(void *a) {
-    s32 buf[1024];
-    s32 n, i, j, k, cnt;
-    u16 *l;
-    n = func_00104940(a, buf, 1024);
-    if (n == -1) return D_002BD170;
-    cnt = 0;
-    for (i = 0; i < n; i++) {
-        l = D_002A623C[buf[i]];
-        if (l == (u16 *)-1) continue;
-        k = l[0];
-        for (j = 0; j < k; j++) {
-            u16 id = l[j + 1];
-            if (D_004E0420->e[id].f == 0) {
-                D_004E0420->e[id].f = 1;
-                D_004E0428[cnt++] = id;
-            }
-        }
-    }
-    for (k = 0; k < cnt; k++) D_004E0420->e[D_004E0428[k]].f = 0;
-    D_002BD170 = cnt;
-    return cnt;
-}
 
 static inline void w29_copy(void *d, void *s) {
     __asm__ volatile(
@@ -595,45 +501,6 @@ static inline void w29_copy(void *d, void *s) {
         "sq $6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "$6", "memory");
-}
-
-extern W29V4 D_002BD1E0;
-
-s32 func_00118db0(void *p, W29V4 *v) {
-    W29V4 c, prev, e[4];
-    s32 i;
-    s32 *idx = D_002BD160;
-    for (i = 0; i < 4; i++) w29_sub(&e[i], &v[i], p);
-    w29_copy(&prev, &D_002BD1E0);
-    for (i = 0; i < 4; i++) {
-        w29_outer(&c, &e[i], &e[idx[i]]);
-        if (w29_dot(&prev, &c) < 0.0f) return 0;
-        w29_copy(&prev, &c);
-    }
-    return 1;
-}
-
-typedef struct { f32 mn[3]; f32 mx[3]; } W29Box;
-void func_00267518(W29V4 *, W29V4 *, W29V4 *);
-
-void func_001195d8(W29V4 *a, W29Box *b) {
-    W29V4 t;
-    func_00267518(&t, a, a + 1);
-    {
-        f32 p, q; q = t.v[0]; p = a->v[0];
-        if (q > p) { b->mn[0] = p; b->mx[0] = q; }
-        else { b->mx[0] = p; b->mn[0] = q; }
-    }
-    {
-        f32 p, q; q = t.v[1]; p = a->v[1];
-        if (q > p) { b->mn[1] = p; b->mx[1] = q; }
-        else { b->mx[1] = p; b->mn[1] = q; }
-    }
-    {
-        f32 p = a->v[2], q = t.v[2];
-        if (p < q) { b->mn[2] = p; b->mx[2] = q; }
-        else { b->mx[2] = p; b->mn[2] = q; }
-    }
 }
 
 static inline void w29_scale4(void *d, void *s, f32 t) {
@@ -644,19 +511,6 @@ static inline void w29_scale4(void *d, void *s, f32 t) {
         "vmulx.xyzw $vf6xyzw, $vf4xyzw, $vf5x\n"
         "sqc2 $vf6, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
-}
-
-#include "data/pieces/D_002A6238.h"
-s32 func_001198c8(s32, s32, void *);
-
-s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {
-    W29V4 t;
-    f32 d;
-    d = w29_dot(p, n) + D_002A6238[i].d;
-    if (*maxd < d) return 0;
-    w29_scale4(&t, n, d);
-    w29_sub(out, p, &t);
-    return func_001198c8(-1, i, out) != 0;
 }
 
 /* needs make: uses rodata */
@@ -702,4 +556,3 @@ s32 D_002BD170 ALIGNED(16) = 0;
 #include "data/pieces/D_002BBE04.h"
 #include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_002BCC1C.h"
-#include "data/pieces/D_002BD1E0.h"

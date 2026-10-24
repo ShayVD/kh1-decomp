@@ -378,7 +378,6 @@ s32 func_00114a38(s32 a, Hdr *h, s32 id, s32 d) {
 
 /* ---- 00115158 ---- */
 typedef f32 V4_52[4] __attribute__((aligned(16)));
-void func_00104f10(s32, V4_52);
 
 static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
     __asm__ volatile(
@@ -404,36 +403,7 @@ static inline f32 v52_dot(f32 *a, f32 *b) {
     return r;
 }
 
-s32 func_00115158(f32 *a, f32 *b, f32 *n) {
-    V4_52 v;
-    v52_sub(v, b, a);
-    if (v52_dot(v, n) >= 0.0f) return 0;
-    return 1;
-}
-
-s32 func_001151a8(s32 id, f32 *n) {
-    V4_52 v;
-    func_00104f10(id, v);
-    if (v52_dot(v, n) >= 0.0f) return 0;
-    return 1;
-}
-
 /* ---- 00116628 ---- */
-typedef struct { u8 pad[0x2c]; s32 x2c; s32 x30; u8 pad34[4]; s16 x38; s16 x3a; u8 pad3c[2]; s16 x3e; u8 pad40[0x20]; s32 x60; u8 pad64[8]; s16 x6c; s16 x6e; s16 x70; u8 pad72[2]; s16 x74; s16 x76; } Ent628;
-
-void func_00116628(Ent628 *e) {
-    e->x30 = 0;
-    e->x38 = 0;
-    e->x2c = -1;
-    e->x60 = 0;
-    e->x76 = -1;
-    e->x74 = -1;
-    e->x70 = -1;
-    e->x6e = -1;
-    e->x6c = -1;
-    e->x3e = -1;
-    e->x3a = -1;
-}
 #include "data/data_0029.h"
 #include "data/data_002B.h"
 #include "data/data_002C.h"

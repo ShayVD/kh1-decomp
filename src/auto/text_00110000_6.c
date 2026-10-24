@@ -1,43 +1,26 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_001158a8(M2C_UNK *, s32);
-M2C_UNK func_00115940();
 M2C_UNK func_00176388(M2C_UNK);
 M2C_UNK strcpy(s32, s32);
 extern M2C_UNK D_002BCC28[];
 M2C_UNK D_004E42C0[0x80] ALIGNED(64);
 extern M2C_UNK func_001129c8;
-extern s32 D_002A62F0;
 extern s32 D_002B6474;
 #include "data/pieces/D_002BCB60.h"
 extern s32 D_002BCDE4;
 extern s32 D_002BCDEC;
-extern s32 D_002C12C0;
 extern s32 D_004D9320;
 extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
 extern s8 D_002BCB68;
-#include "data/pieces/D_002C1260.h"
 #include "data/pieces/D_002BBDF4.h"
 extern volatile s32 D_002BD114;
-s32 func_00104c38(s32, s32);
 s32 func_00110360(void);
-s32 func_0011a868(s32, s32, s32);
-s32 func_0011aa18(s32, s32, s32);
-s32 func_0011b0c0(s32, s32);
 s32 func_0011ef10(s32, s32);
 u32 func_00111b08();
 u32 func_00232cc0(M2C_UNK);
-void func_00104f10(s32, s32);
 void func_00114810(void);
 void func_00114820(void);
-void func_00115408(s32, s32, s32, s32);
-void func_00116628(s32);
-void func_001178b8(s32);
-void func_00118060(s32, s32, s32, s32);
-void func_00118378(s32, s32, s32, s32);
-void func_0011a978(s32, s32, s32);
 void func_0011c778(void);
 void func_0011c798(void);
 void func_00122330(void);
@@ -127,126 +110,6 @@ void func_00114840(void) {
     func_00114810();
     func_0011c778();
     func_0011c798();
-}
-
-void func_00114f18(s32 arg0, s32 arg1) {
-    if (arg1 == -1) {
-        func_001178b8(arg0);
-        return;
-    }
-    func_0011b0c0(arg1, arg0);
-}
-
-s32 func_00115018(s32 arg0, s32 arg1, s32 arg2) {
-    if (arg0 == -1) {
-        return func_00104c38(arg1, arg2);
-    }
-    return func_0011a868(arg0, arg1, arg2);
-}
-
-void func_00115058(s32 arg0, s32 arg1, s32 arg2) {
-    if (arg0 == -1) {
-        func_00104c38(arg1, arg2);
-        return;
-    }
-    func_0011aa18(arg0, arg1, arg2);
-}
-
-void func_00115098(s32 arg0, s32 arg1, s32 arg2) {
-    if (arg0 == -1) {
-        func_00104f10(arg1, arg2);
-        return;
-    }
-    func_0011a978(arg0, arg1, arg2);
-}
-
-void func_001158c8(s32 arg0) {
-    func_001158a8(&D_002C1260, arg0);
-    func_001158a8(((s8 *)&D_002C1260) + 0x30, arg0 + 0xC);
-    func_001158a8(((s8 *)&D_002C1260) + 0x10, arg0 + 4);
-    func_001158a8(((s8 *)&D_002C1260) + 0x40, arg0 + 0x10);
-    func_001158a8(((s8 *)&D_002C1260) + 0x20, arg0 + 8);
-    func_001158a8(((s8 *)&D_002C1260) + 0x50, arg0 + 0x14);
-}
-
-void func_00116130(s32 arg0, s32 *arg1) {
-    if (!(*arg1 & 0x106)) {
-        func_00115940();
-    }
-}
-
-void func_00116160(s32 arg0, s32 *arg1) {
-    if ((*arg1 & 0x406) == 0x400) {
-        func_00115940();
-    }
-}
-
-void func_00116198(s32 arg0, s32 *arg1) {
-    if ((*arg1 & 0xF6) == 0x20) {
-        func_00115940();
-    }
-}
-
-void func_001161d0(s32 arg0, s32 *arg1) {
-    if (!(*arg1 & 0xE)) {
-        func_00115940();
-    }
-}
-
-void func_00116240(s32 arg0, s32 *arg1) {
-    if (!(*arg1 & 0x10006)) {
-        func_00115940();
-    }
-}
-
-void func_00116278(s32 arg0, s32 *arg1) {
-    if ((*arg1 & 0xF6) == 0x50) {
-        func_00115940();
-    }
-}
-
-void func_00116330(s32 arg0, u32 *arg1) {
-    if (!(((u32) *arg1 >> 0x11) & 1)) {
-        func_00115940();
-    }
-}
-
-void func_00116660(s32 arg0) {
-    func_00116628(arg0);
-    M2C_FIELD(arg0, s16 *, 0x3C) = -1;
-}
-
-void func_00118548(s32 arg0) {
-    if (D_002A62F0 != 0) {
-        func_00118060(arg0, 9, 1, -1);
-        return;
-    }
-    M2C_FIELD(arg0, s32 *, 0x34) = -1;
-    M2C_FIELD(arg0, s16 *, 0x30) = -1;
-}
-
-void func_00118590(s32 arg0, s32 arg1) {
-    s16 temp_a0;
-
-    func_00118378(arg0, 5, arg1, -1);
-    if (D_002C12C0 != 0) {
-        temp_a0 = M2C_FIELD(arg0, s16 *, 0x30);
-        if ((temp_a0 != -1) && (M2C_FIELD(arg0, s32 *, 0x34) == -1)) {
-            func_00115408((s32) temp_a0, arg0 + 0x20, arg0 + 0x24, 1);
-        }
-    }
-}
-
-void func_00118608(s32 arg0) {
-    func_00118060(arg0, 3, 0, -1);
-}
-
-void func_00118628(s32 arg0, s32 arg1) {
-    func_00118060(arg0, 3, 0, arg1);
-}
-
-void func_00118648(s32 arg0) {
-    func_00118060(arg0, 0xA, 1, -1);
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
