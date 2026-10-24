@@ -16,9 +16,11 @@ inline helpers, CONTEXT_ONLY copies), emitted once:
   the same text;
 - a prototype that disagrees with an earlier one (or the definition) is
   left out and listed as CONFLICT (check its return / float arguments);
-- includes go where the old file had them (trailing ones at the end).
+- a prototype that disagrees in its return kind, argument count or a float
+  argument is viewed for the function: `#define F ((RET (*)(ARGS)) F)`;
+- includes go where the old file had them (trailing ones are dropped).
 
-Old files' trailing includes are kept at the end.  The result is a draft:
+The result is a draft:
 check it with tools/checkfile.py, prune what it does not need
 (tools/shift/s50move/prune.py), then `mod.py remove`, `make` and fcheck.sh.
 """
@@ -157,6 +159,41 @@ def view(name, decl, base):
     return '#define %s (*(%s) &%s)' % (name, sub(s, name, '(*)'), name)
 
 
+def sig(s):
+    """'RET NAME(ARGS)...' -> (ret, [arg kinds]) with kinds f (float), d (double), x."""
+    s = no_attr(strip(s)).strip().rstrip(';').split('{')[0]
+    m = re.match(r'(.*?)\b(\w+)\s*\((.*)\)\s*$', s, flags=re.S)
+    if not m: return None
+    ret = re.sub(r'\b(extern|static|inline|__inline__)\b', '', m.group(1)).split()
+    ret = 'void' if ret == ['void'] else ('f' if ret and ret[-1] in ('f32', 'float') else ('d' if ret and ret[-1] in ('f64', 'double') else 'x'))
+    args = [a.strip() for a in split_top(m.group(3))] if m.group(3).strip() not in ('', 'void') else []
+    kinds = []
+    for a in args:
+        w = re.findall(r'\w+', a)
+        if '*' in a or '[' in a or '(' in a: kinds.append('x')
+        elif w and w[0] in ('f32', 'float'): kinds.append('f')
+        elif w and w[0] in ('f64', 'double'): kinds.append('d')
+        elif a == '...': kinds.append('...')
+        else: kinds.append('x')
+    return ret, kinds
+
+
+def risky(a, b):
+    """two prototypes of one function that can compile differently: the return
+    kind, the argument count or a float / double argument differs."""
+    sa, sb = sig(a), sig(b)
+    if not sa or not sb: return False
+    if (sa[0] == 'void') != (sb[0] == 'void') and 'void' not in (sa[0], sb[0]): return True
+    return sa[0] != sb[0] and 'void' not in (sa[0], sb[0]) or sa[1] != sb[1]
+
+
+def fview(name, proto):
+    """call `name` through this prototype: #define NAME ((RET (*)(ARGS)) NAME)."""
+    s = no_attr(strip(proto)).strip().rstrip(';')
+    s = re.sub(r'^\s*extern\s+', '', s)
+    return '#define %s ((%s) %s)' % (name, sub(s, name, '(*)'), name)
+
+
 def main(out, funcs):
     src = placements()
     files = {}
@@ -253,7 +290,11 @@ def main(out, funcs):
             if kind == 'proto':
                 if nm in emitted:
                     if emitted[nm][1] != norm(t2):
-                        conflicts.append('%s: %s  vs  %s' % (f, norm(t2), emitted[nm][1]))
+                        if risky(emitted[nm][1], norm(t2)):
+                            views.append(fview(nm, t2))
+                            conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
+                        else:
+                            conflicts.append('%s: %s  vs  %s' % (f, norm(t2), emitted[nm][1]))
                     continue
                 emitted[nm] = ('proto', norm(t2)); sec.append(t2); continue
             if kind == 'define':
@@ -279,8 +320,8 @@ def main(out, funcs):
             if nxt.get(nm) != macros.get(nm):
                 sec.append('#undef ' + nm); macros.pop(nm, None)
         lines += sec
-        for t in tail_incs:
-            if t not in seen_inc and t not in trailing: trailing.append(t)
+        # an old file's trailing includes only checked its own declarations
+        # against the shared headers; the module's may differ, so drop them
     lines.append('')
     lines += trailing
     open(out, 'w').write(re.sub(r'\n{3,}', '\n\n', '\n'.join(lines) + '\n'))

@@ -15,9 +15,6 @@ typedef union {
     u128 q;
 } PppQv;
 
-extern PppQv D_00615FC0[4];
-extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-
 typedef struct {
     s32 unk0;
     u8 *inst;   /* +0x4 */
@@ -370,86 +367,6 @@ typedef struct {
 void func_0018e0b0(void *owner, PppBorn3Key *key, s16 *pos);
 
 /* pppKeLnsLp: a lens-flare loop. */
-typedef struct {
-    s32 frame;
-    f32 b, a;   /* +0x4 */
-    u8 c, d;    /* +0xC */
-    u8 e, f, g; /* +0xE (LnsLpT) */
-} PppLnsKey;
-
-typedef struct {
-    u8 pad00[0x80];
-    f32 pos[3];   /* +0x80 */
-    u8 pad8C;
-    u8 unk8D;     /* +0x8D */
-    u8 c, d;      /* +0x8E */
-    f32 v[3];     /* +0x90 */
-    f32 b;        /* +0x9C */
-    u8 padA0[8];
-    f32 a;        /* +0xA8 */
-    u8 padAC[0x14];
-    u8 unkC0, unkC1; /* +0xC0 */
-} PppLnsWork;
-
-typedef struct {
-    PppLnsWork *w;
-    f32 *pos;
-    void *m1;
-    void *m2;
-} PppLnsArg;
-
-void func_001a57c0(PppLnsArg *);
-
-void pppKeLnsLpDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
-    PppVec4 v;
-    PppLnsArg arg;
-    PppLnsWork *w = PPP_WORK(PppLnsWork, obj, e, 0);
-
-    if (key->frame == obj->frame) {
-        w->a += key->a;
-        w->c = key->c;
-        w->b += key->b;
-        w->d = key->d;
-    }
-    if (w->d) {
-        *(u128 *) v = 0;
-        v[3] = v[2] = 1.0f;
-        func_002672f8(v, D_00615E68->m[0], v);
-        func_001a9098(w->v, v);
-    }
-    w->pos[0] = D_00615E68->m[3][0];
-    w->pos[1] = D_00615E68->m[3][1];
-    w->pos[2] = D_00615E68->m[3][2];
-    arg.m1 = D_00615FC0;
-    arg.m2 = D_00616040;
-    arg.w = w;
-    arg.pos = D_00615E68->m[3];
-    func_001a57c0(&arg);
-}
-
-void func_00192958(PppLnsWork *, s32, s32);
-
-void pppKeLnsLpTDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
-    PppVec4 v;
-    PppLnsWork *w;
-    f32 one;
-
-    pppKeLnsLpDraw(obj, key, e);
-    w = PPP_WORK(PppLnsWork, obj, e, 0);
-    if (key->frame == obj->frame) {
-        w->unkC0 = key->e << 3;
-        w->unkC1 = key->f << 2;
-        w->unk8D = key->g;
-    }
-    one = 1.0f;
-    v[3] = one;
-    v[0] = 0.0f;
-    v[1] = 0.0f;
-    v[2] = 0.0f;
-    func_002672f8(v, D_00615E68->m2[0], v);
-    func_00267560((f32 *) ((u8 *) w + 0xB0), v, one / v[3]);
-    func_00192958(w, 0, 0);
-}
 
 typedef struct {
     u8 pad00[0x10];
@@ -469,29 +386,6 @@ typedef struct {
 } PppSpriteArg;
 
 void func_001a62c0(PppSpriteArg *, s32);
-
-typedef struct {
-    s32 frame;
-    f32 a, b; /* +0x4 */
-} PppKey2f;
-
-void pppKeLnsLpSftFrame(PppObject *obj, PppKey2f *key, PppEntry *e) {
-    f32 *v;
-    PppLnsWork *w;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    v = PPP_WORK(f32, obj, e, 0);
-    w = PPP_WORK(PppLnsWork, obj, e, 1);
-    if (obj->frame == key->frame) {
-        v[0] += key->a;
-        v[1] += key->b;
-        if (obj->frame == 0 && obj->unk9D == 0)
-            return;
-    }
-    w->b += v[0];
-    w->a += v[1];
-}
 
 typedef struct {
     u8 pad00[0x40];

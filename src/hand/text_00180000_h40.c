@@ -10,7 +10,6 @@
 
 /* A 16-byte aligned VU0 vector. */
 #include "data/types/text_00180000_h40.h"
-extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 typedef struct {
     s32 unk0;
@@ -321,38 +320,6 @@ typedef struct {
 void func_001a57c0(PppLnsArg *);
 
 void func_00192958(PppLnsWork *, s32, s32);
-
-typedef struct {
-    u8 pad00[0x10];
-    u8 unk10[0x10]; /* +0x10 */
-    f32 unk20;      /* +0x20 */
-    s32 unk24;      /* +0x24 */
-    f32 w, h;       /* +0x28 */
-} PppSprite;
-
-typedef struct {
-    PppSprite *s;  /* +0x0 */
-    s32 unk4;      /* +0x4 */
-    void *m;       /* +0x8 */
-    f32 unkC;      /* +0xC */
-    u16 w, h;      /* +0x10 */
-    u8 *p;         /* +0x14 */
-} PppSpriteArg;
-
-void func_001a62c0(PppSpriteArg *, s32);
-
-void func_00193408(PppSprite *s) {
-    PppSpriteArg a;
-
-    a.unk4 = s->unk24;
-    a.w = (u32) s->w;
-    a.h = (u32) s->h;
-    a.p = s->unk10;
-    a.s = s;
-    a.unkC = s->unk20;
-    a.m = D_00616040;
-    func_001a62c0(&a, 0);
-}
 
 typedef struct {
     s32 frame;

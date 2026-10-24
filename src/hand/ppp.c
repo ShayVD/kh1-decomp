@@ -19,10 +19,6 @@ typedef struct {
 } PppU64S32;
 
 typedef struct {
-    s32 a, b;
-} PppS32x2;
-
-typedef struct {
     f32 x, y, z;
 } PppVec3;
 
@@ -42,13 +38,6 @@ void pppKeBornRnd5Con(void *obj, PppEntry *e) {
 
 void pppKeMdlDttCon(void *obj, PppEntry *e) {
     PppU64S32 *w = PPP_WORK(PppU64S32, obj, e, 0);
-
-    w->a = 0;
-    w->b = 0;
-}
-
-void pppKeLnsLpSftCon(void *obj, PppEntry *e) {
-    PppS32x2 *w = PPP_WORK(PppS32x2, obj, e, 0);
 
     w->a = 0;
     w->b = 0;

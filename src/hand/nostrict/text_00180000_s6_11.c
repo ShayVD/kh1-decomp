@@ -253,34 +253,6 @@ void pppKeThReset(void *obj, PppEntry *e) {
     s->f2C = 0;
 }
 
-typedef struct {
-    u8 pad[0x30];
-    u8 v30[0x10];
-    f32 f40, f44;
-    s32 i48;
-} A8Obj;
-typedef struct {
-    A8Obj *o;
-    s32 i;
-    void *m;
-    f32 f44;
-    f32 f40;
-    void *v;
-} A8Arg;
-extern u8 D_00616040[];
-void func_001a5ce8(A8Arg *, s32);
-
-void func_001931a8(A8Obj *o) {
-    A8Arg a;
-    a.o = o;
-    a.f40 = o->f40;
-    a.i = o->i48;
-    a.f44 = o->f44;
-    a.m = D_00616040;
-    a.v = o->v30;
-    func_001a5ce8(&a, 0);
-}
-
 #include "data/types/nostrict_text_00180000_s6_11.h"
 
 /* VU0 */

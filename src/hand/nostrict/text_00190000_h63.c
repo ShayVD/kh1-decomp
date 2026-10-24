@@ -134,33 +134,6 @@ extern u8 D_00616140[];
 extern u8 D_00616100[];
 extern s32 D_00616224;
 
-extern u8 D_00616040[];
-#include "data/pieces/D_003701F0.h"
-
-typedef struct {
-    void *work;    /* +0x00 */
-    u8 col[4];     /* +0x04 */
-    void *p08;     /* +0x08 */
-    f32 f0C;       /* +0x0C */
-    void *p10;     /* +0x10 */
-} PppLnsDraw;
-
-typedef struct {
-    s32 frame;
-    s32 unk4;
-    u8 col[4];     /* +0x8 */
-    f32 f0C;       /* +0xC */
-} PppLnsKey;
-
-typedef struct {
-    void *work;    /* +0x00 */
-    u8 col[4];     /* +0x04 */
-    void *p08;     /* +0x08 */
-    f32 f0C;       /* +0x0C */
-    f32 f10;       /* +0x10 */
-    void *p14;     /* +0x14 */
-} PppLnsClmDraw;
-
 typedef struct {
     s32 frame;
     s32 unk4;
@@ -169,15 +142,6 @@ typedef struct {
     u16 h10, h12;  /* +0x10 */
     u16 h14;       /* +0x14 */
 } PppLnsClmKey;
-
-typedef struct {
-    void *work;    /* +0x00 */
-    u8 col[4];     /* +0x04 */
-    void *p08;     /* +0x08 */
-    f32 f0C;       /* +0x0C */
-    u16 h10, h12;  /* +0x10 */
-    void *p14;     /* +0x14 */
-} PppLnsCrnDraw;
 
 typedef struct {
     s32 frame;
@@ -764,187 +728,9 @@ void pppKeShpTail2Frame(PppObject *obj, PppShpTail2Key *key, PppEntry *e) {
     }
 }
 
-void func_00191fc8(PppObject *, PppLnsKey *, PppEntry *);
-void func_001a60e8(PppLnsDraw *, s32);
-
-void pppKeLnsArndDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
-    PppLnsDraw d;
-
-    func_00191fc8(obj, key, e);
-    d.col[0] = key->col[0] * D_00615E60->col[0];
-    d.col[1] = key->col[1] * D_00615E60->col[1];
-    d.col[2] = key->col[2] * D_00615E60->col[2];
-    d.col[3] = key->col[3] * D_00615E60->col[3];
-    d.p08 = D_00616040;
-    d.p10 = D_003701F0;
-    d.f0C = key->f0C;
-    d.work = PPP_WORK(void, obj, e, 0);
-    func_001a60e8(&d, 0);
-}
-
-void func_00192208(PppObject *, PppLnsClmKey *, PppEntry *);
-void func_001a5ce8(PppLnsClmDraw *, s32);
-
-void pppKeLnsClmDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsClmDraw d;
-
-    func_00192208(obj, key, e);
-    d.f10 = key->h14;
-    d.col[0] = key->col[0] * D_00615E60->col[0];
-    d.col[1] = key->col[1] * D_00615E60->col[1];
-    d.col[2] = key->col[2] * D_00615E60->col[2];
-    d.col[3] = key->col[3] * D_00615E60->col[3];
-    d.p08 = D_00616040;
-    d.f0C = key->f0C;
-    d.work = PPP_WORK(void, obj, e, 0);
-    d.p14 = D_003701F0;
-    func_001a5ce8(&d, 0);
-}
-
-void func_001924a8(PppObject *, PppLnsClmKey *, PppEntry *);
-void func_001a62c0(PppLnsCrnDraw *, s32);
-
-void pppKeLnsCrnDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsCrnDraw d;
-
-    func_001924a8(obj, key, e);
-    d.col[0] = key->col[0] * D_00615E60->col[0];
-    d.col[1] = key->col[1] * D_00615E60->col[1];
-    d.col[2] = key->col[2] * D_00615E60->col[2];
-    d.col[3] = key->col[3] * D_00615E60->col[3];
-    d.p08 = D_00616040;
-    d.h10 = key->h10;
-    d.h12 = key->h12;
-    d.f0C = key->f0C;
-    d.work = PPP_WORK(void, obj, e, 0);
-    d.p14 = D_003701F0;
-    func_001a62c0(&d, 0);
-}
+void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);
 
 void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);
-void func_001a6550(PppLnsCrnDraw *, s32);
-
-void pppKeLnsFlsDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsCrnDraw d;
-
-    func_00192708(obj, key, e);
-    d.col[0] = key->col[0] * D_00615E60->col[0];
-    d.col[1] = key->col[1] * D_00615E60->col[1];
-    d.col[2] = key->col[2] * D_00615E60->col[2];
-    d.col[3] = key->col[3] * D_00615E60->col[3];
-    d.p08 = D_00616040;
-    d.f0C = key->f0C;
-    d.h10 = key->h10;
-    d.h12 = key->h12;
-    d.work = PPP_WORK(void, obj, e, 0);
-    d.p14 = D_003701F0;
-    func_001a6550(&d, 0);
-}
-
-typedef struct {
-    u8 pad[0x10];
-    PppVec4 v;     /* +0x10 */
-    f32 f20;       /* +0x20 */
-    u8 col[4];     /* +0x24 */
-} PppLnsArndT;
-
-void func_00192f78(PppLnsArndT *, s32, s32);
-
-void pppKeLnsArndTDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
-    PppLnsArndT *w = PPP_WORK(PppLnsArndT, obj, e, 0);
-
-    func_00191fc8(obj, key, e);
-    if (key->frame == obj->frame)
-        w->f20 = key->f0C;
-    w->col[0] = key->col[0] * D_00615E60->col[0];
-    w->col[1] = key->col[1] * D_00615E60->col[1];
-    w->col[2] = key->col[2] * D_00615E60->col[2];
-    w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
-    func_00192f78(w, 0, 0);
-}
-
-typedef struct {
-    u8 pad[0x30];
-    PppVec4 v;     /* +0x30 */
-    f32 f40;       /* +0x40 */
-    f32 f44;       /* +0x44 */
-    u8 col[4];     /* +0x48 */
-} PppLnsClmT;
-
-void func_001931a8(PppLnsClmT *, s32, s32);
-
-void pppKeLnsClmTDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsClmT *w = PPP_WORK(PppLnsClmT, obj, e, 0);
-
-    func_00192208(obj, key, e);
-    if (key->frame == obj->frame) {
-        w->f44 = key->f0C;
-        w->f40 = key->h14;
-    }
-    w->col[0] = key->col[0] * D_00615E60->col[0];
-    w->col[1] = key->col[1] * D_00615E60->col[1];
-    w->col[2] = key->col[2] * D_00615E60->col[2];
-    w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
-    func_001931a8(w, 0, 0);
-}
-
-typedef struct {
-    u8 pad[0x10];
-    PppVec4 v;     /* +0x10 */
-    f32 f20;       /* +0x20 */
-    u8 col[4];     /* +0x24 */
-    f32 f28, f2C;  /* +0x28 */
-} PppLnsCrnT;
-
-void func_00193408(PppLnsCrnT *, s32, s32);
-
-void pppKeLnsCrnTDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsCrnT *w = PPP_WORK(PppLnsCrnT, obj, e, 0);
-
-    func_001924a8(obj, key, e);
-    if (key->frame == obj->frame) {
-        w->f20 = key->f0C;
-        w->f28 = key->h10;
-        w->f2C = key->h12;
-    }
-    w->col[0] = key->col[0] * D_00615E60->col[0];
-    w->col[1] = key->col[1] * D_00615E60->col[1];
-    w->col[2] = key->col[2] * D_00615E60->col[2];
-    w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
-    func_00193408(w, 0, 0);
-}
-
-typedef struct {
-    u8 pad[0x10];
-    PppVec4 v;     /* +0x10 */
-    f32 f20;       /* +0x20 */
-    u8 col[4];     /* +0x24 */
-    f32 f28;       /* +0x28 */
-    u16 h2C;       /* +0x2C */
-} PppLnsFlsT;
-
-void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);
-void func_001936c0(PppLnsFlsT *, s32, s32);
-
-void pppKeLnsFlsTDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
-    PppLnsFlsT *w = PPP_WORK(PppLnsFlsT, obj, e, 0);
-
-    func_00192708(obj, key, e);
-    if (key->frame == obj->frame) {
-        w->f20 = key->f0C;
-        w->f28 = key->h10;
-        w->h2C = key->h12;
-    }
-    w->col[0] = key->col[0] * D_00615E60->col[0];
-    w->col[1] = key->col[1] * D_00615E60->col[1];
-    w->col[2] = key->col[2] * D_00615E60->col[2];
-    w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
-    func_001936c0(w, 0, 0);
-}
 
 /* needs make: uses rodata */
 
