@@ -21,12 +21,14 @@ M2C_UNK func_001452a0(void *);
 extern M2C_UNK D_00350D94;
 f32 func_001216d8(f32, f32, f32);
 void func_00137688(void *, f32);
-void func_0013e558(void *arg0) {
+/* The class's +0xC handler takes (obj, dir) (func_0015a258 ...): the EE passes the
+ * caller's a1, func_0013f198's direction, still in its register (session 66). */
+void func_0013e558(void *arg0, void *arg1) {
     M2C_UNK (*temp_v0)();
 
     temp_v0 = *(M2C_UNK *)((s8 *)(s8 *)&D_00350D94 + (M2C_FIELD(arg0, s32 *, 0x70) << 5));
     if (temp_v0 != NULL) {
-        temp_v0(arg0);
+        temp_v0(arg0, arg1);
     }
     if (M2C_FIELD(arg0, s32 *, 0x70) == 4) {
         PlatVu0CopyVector(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58A0));

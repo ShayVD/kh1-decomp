@@ -504,6 +504,53 @@ objreq.c, func_0012cab8 cmdmenu.c, D_00304B6C, vm_lib's hooks) and gumisave.c's 
 overlay's entry with no arguments (func_001b9c10 / func_001b9c60: a0 is still FlushCache's 2 on the EE
 if the kernel keeps it, a1 what was left): check what each overlay passes and reads.
 
+### 5.1f Session 66: every indirect call resolved, one more passthrough, the null sound answer
+
+Static only (the Mac was away until 2026-10-26). Every out/build object is bit-identical to session 65's
+(sha1 of all 677), kh1.elf byte-identical.
+
+**indcheck: 0 `?` left** (of 93). 242 rows: **107 OK, 41 READ, 70 OVERLAY, 3 DATA, 1 OPEN**, 7 `?def`, 13
+CLANG. What it learned to follow (its docstring has the details):
+
+- **Record tables filled by a setter** (RECORD_SETTERS), by the offset of the field the call reads: the
+  actor class table D_00350D88 (59 records of 0x20, func_0014f830(class, f0 ... f1c) from every class's
+  setup; the pieces D_00350D94 / D_00350DA0 / D_00350DA4 are fields of it) and the party's timed
+  callbacks (D_00575528's 30 nodes, func_00170f50, the list heads D_00575780 / D_00575784).
+- **Static record tables in the ELF** (RECORD_TABLES): ppp's class table D_00370200 (236 x 0x28), so
+  pppsys's frame / draw / con / reset / des calls read each record's word at the field's offset.
+- **Locals**: `fn = func_X; fn()`, a local table's initializer (hitreact's Tbl6), `t->f14 = fn` with fn
+  assigned in a switch, and the field a local was loaded from (`fn = D_X[i].f10; fn()`).
+- **Record layouts** (Layout): offsets computed from the tree with gcc's -m32 -malign-double rules (checked
+  against gcc's offsetof on nested structs, unions, bit fields and arrays). A field whose name spells its
+  offset (f408, x408, cb44) at 0x40 or more meets the same offset under other typedefs (`~@0x408`): two
+  views of the actor (O15 / O16, Ob7.f4a0 / x4a0) now share their stores. FIELD_SAME lists the rest read by
+  hand (the task pools' fn at +0xC is `@func_0011f090#2`; T15 / T16; T155ef8 / W9Task; W34E32 / Ent9c).
+- **A lead for `?` rows**: the functions the ELF's code stores at the same field offset (lui / addiu /
+  sw, any struct). It decides nothing; it found the motion entries' callbacks and the party AI's +0x48.
+- `--takes NAME...` prints parameter counts (functions, data, fields, `@func#i`) for reading by hand.
+- New verdicts: **DATA** (a pointer read from a file loaded at run time: pppsys.c's three PSys.mods calls,
+  fn[4..6] of the effect file's module list, which no code found relocates: see them in a real-disc run)
+  and **OPEN** (selector.c's Range52.fn: from fldtext's event record, not traced). A READ note never hides a
+  SHORT.
+
+The 23 new OVERLAY rows: mcstep.c's 13 calls of the request hook D_00648034 (every queue call in the main
+ELF passes 0), partyctl's w->cb44 (4; only cleared), textwin.c's TextWin.x0 (2; its only setter
+func_001f4670 has no caller), plact.c's D_002E27D4 and pppcomp.c's hook table D_00616220 (only cleared),
+proc.c's func_0011f228 and vmath.c's handler stack (no caller in the main ELF).
+
+**The passthrough it found**: func_0013e558 (plctl.c, called by func_0013f198 with `(o, &dir)`) called
+the class's +0xC handler (D_00350D94[class]) with the object only, while 19 of the 24 handlers take
+`(obj, dir)`: on the EE a1 still holds the direction. It takes and passes `arg1` now (the PS2 object is the
+same: a1 is live from entry to the jalr).
+
+**The null platform's answers**: PlatSifCallRpc answers RPC 0x30 with 1. The sound server's answer is word 0
+of the buffer the request was written to (snd_rpc.c), so an unanswered call reads back its request: the
+event command func_001e8b50 polls RPC 0x30 (func_001ed600) until what RPC 0x2F started is ready, and for
+index 1 it would have waited forever. No caller in the main ELF reads any other RPC answer.
+PlatPadGetButtonProfile answers -1 (no pad; padread skips the read). The memory card's counts: PlatMcSync's
+-10 is GetDir's count too, so func_00235228 stores -1 and error 3 and never reads the table (Read the same).
+The fake-disc run: 120 frames, valgrind 60 frames 0 errors.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
