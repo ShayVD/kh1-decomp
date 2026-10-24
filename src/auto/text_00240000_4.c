@@ -13,10 +13,3 @@ void func_00241c00(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     M2C_FIELD(temp_v0, s32 *, 0xA90) = arg2;
     M2C_FIELD(temp_v0, s32 *, 0xA94) = arg3;
 }
-
-void func_002492d0(void *arg0, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3) {
-    M2C_FIELD(arg0, f32 *, 0) = fparg0;
-    M2C_FIELD(arg0, f32 *, 4) = fparg1;
-    M2C_FIELD(arg0, f32 *, 0xC) = fparg2;
-    M2C_FIELD(arg0, f32 *, 8) = fparg3;
-}

@@ -90,27 +90,8 @@ void func_002474e8(s32, void *, s32, s32, f32);
 
 /* Needs func_002486c8/func_00248738 defined above it. */
 
-typedef struct { f32 val; f32 speed; } Fade;
-#include "data/pieces/D_002C5960.h"
-
 /* Steps a fade by speed*dt (unless paused): 2 when it reaches 0, 1 when it
  * reaches 128. */
-s32 func_002492e8(Fade *p, s32 dt) {
-    if (p->speed != 0.0f) {
-        if (!((*(u32 *)&D_002C5960) & 1)) p->val += p->speed * (f32)dt;
-        if (p->val <= 0.0f) {
-            p->val = 0.0f;
-            p->speed = 0.0f;
-            return 2;
-        }
-        if (p->val >= 128.0f) {
-            p->val = 128.0f;
-            p->speed = 0.0f;
-            return 1;
-        }
-    }
-    return 0;
-}
 
 typedef struct {
     u64 a : 14;

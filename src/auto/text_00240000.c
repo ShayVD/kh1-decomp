@@ -77,33 +77,6 @@ void func_00242b38(void) {
     }
 }
 
-void func_00249558(void *arg0, void *arg1) {
-    M2C_FIELD(arg0, s32 *, 0) = (s32) ((s32) (M2C_FIELD(arg1, s32 *, 0) - 0x7000) >> 4);
-    M2C_FIELD(arg0, s32 *, 4) = (s32) ((s32) (M2C_FIELD(arg1, s32 *, 4) - 0x7400) >> 4);
-}
-
-void func_002495c8(void *arg0, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3) {
-    M2C_FIELD(arg0, f32 *, 0xC) = fparg0;
-    M2C_FIELD(arg0, f32 *, 8) = fparg2;
-    M2C_FIELD(arg0, f32 *, 4) = (f32) ((((fparg0 * -3.0f) + (fparg1 * 3.0f)) - (2.0f * fparg2)) - fparg3);
-    M2C_FIELD(arg0, f32 *, 0) = (f32) (((2.0f * fparg0) - (2.0f * fparg1)) + fparg2 + fparg3);
-}
-
-f32 func_00249950(f32 *arg0, f32 fparg0, f32 fparg1) {
-    f32 var_f0;
-
-    var_f0 = *arg0;
-    if (var_f0 < fparg0) {
-        *arg0 = fparg0;
-        var_f0 = fparg0;
-    }
-    if (fparg1 < var_f0) {
-        *arg0 = fparg1;
-        var_f0 = fparg1;
-    }
-    return var_f0;
-}
-
 s32 func_00249da0(s32 arg0) {
     return arg0 + 0x10;
 }

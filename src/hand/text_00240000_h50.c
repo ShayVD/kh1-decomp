@@ -14,7 +14,6 @@ typedef int u128 __attribute__((mode(TI)));
 typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
 
 #include "data/types/text_00240000_h50_p.h"
-typedef union { f32 m[4][4]; u128 q[4]; } M44;
 
 /* GS texture header: TEX0-style bitfield word at +0x18. */
 typedef struct {
@@ -49,7 +48,6 @@ typedef union {
 typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
-extern V4 D_00491830;
 extern s32 D_0046A60C;
 extern s32 D_0046A610;
 extern HddCfg D_0046A688;
@@ -61,8 +59,6 @@ extern s32 D_0046A6B0[];
 extern s32 D_0066AAA0;
 extern void (*D_0066AA80)(void);
 s32 sprintf(char *, const char *, ...);
-void func_002673b8(V4 *, V4 *);
-void func_00267370(V4 *, V4 *, V4 *);
 void __assert(const char *, s32, const char *);
 s32 func_00120a20(const char *, s32, char *, s32 *);
 void func_0024d808(void);
@@ -183,21 +179,6 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
 
 /* func_00248010 must stay above this one (beqz vs beqzl). */
 
-void func_00249420(M44 *m, V4 *dir) {
-    V4 x, y, z, up;
-    up = D_00491830;
-    func_002673b8(&z, dir);
-    func_00267370(&x, &up, &z);
-    func_00267370(&y, &z, &x);
-    func_002673b8(&x, &x);
-    func_002673b8(&y, &y);
-    m->m[0][0] = x.x; m->m[0][1] = x.y; m->m[0][2] = x.z; m->m[0][3] = 0;
-    m->m[1][0] = y.x; m->m[1][1] = y.y; m->m[1][2] = y.z; m->m[1][3] = 0;
-    m->m[2][0] = z.x; m->m[2][1] = z.y; m->m[2][2] = z.z; m->m[2][3] = 0;
-    m->q[3] = 0;
-    m->m[3][3] = 1.0f;
-}
-
 void func_00249fb0(Ui *u, s32 dt) {
     if ((u->h.flags & 10) == 10) {
         Anim *ra = &u->s.a;
@@ -284,4 +265,3 @@ s32 func_0024d8f0(void) {
 #include "data/data_002C.h"
 #include "data/data_0046.h"
 #include "data/data_0045.h"
-#include "data/pieces/D_00491830.h"

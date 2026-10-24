@@ -11,7 +11,6 @@ M2C_UNK func_00240810(void *);
 M2C_UNK func_00241d60();
 M2C_UNK func_0024aac8(M2C_UNK *);
 M2C_UNK func_0025dd48(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_00267620();
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
 extern M2C_UNK (*D_0066AA80)();
 #include "data/pieces/D_0044A830.h"
@@ -76,13 +75,6 @@ void func_00242b68(s32 arg0) {
 
 s32 func_00242bf0(s32 arg0) {
     return *(M2C_UNK *)((s8 *)&D_00651E50 + (arg0 * 4));
-}
-
-void func_00249518(void *arg0, f32 fparg0) {
-    func_00267620();
-    M2C_FIELD(arg0, f32 *, 0x28) = fparg0;
-    M2C_FIELD(arg0, f32 *, 0x14) = fparg0;
-    M2C_FIELD(arg0, f32 *, 0) = fparg0;
 }
 
 s32 func_0024d138(void) {

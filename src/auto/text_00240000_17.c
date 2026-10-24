@@ -14,18 +14,6 @@ s32 func_00240ae0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
     return arg3;
 }
 
-void func_00249820(s32 arg0, s32 arg1) {
-    s32 temp_v0;
-    s32 var_a2;
-
-    var_a2 = 0;
-    do {
-        temp_v0 = var_a2 * 4;
-        var_a2 += 1;
-        *(M2C_UNK *)((s32) temp_v0 + (s32) arg0) = *(M2C_UNK *)((s32) temp_v0 + (s32) arg1);
-    } while (var_a2 < 4);
-}
-
 s32 func_0024b0c8(s32 arg0, s32 arg1, s32 arg2) {
     u32 wide;
     s32 temp_s0;
