@@ -29,4 +29,12 @@ int sceMount(const char *fsdev, const char *blockdev, int flag, void *arg, int a
 int sceUmount(const char *fsdev);
 int sceDevctl(const char *devname, int cmd, const void *arg, unsigned int arglen, void *buf, unsigned int buflen);
 
+/* IOP modules (loadfile) and the IOP reboot (iopreset); SCE's sifdev.h
+ * declares them too. */
+int sceSifLoadModule(const char *filename, int arglen, const char *args);
+int sceSifLoadStartModule(const char *filename, int arglen, const char *args, int *result);
+int sceSifSearchModuleByName(const char *name);
+int sceSifRebootIop(const char *image);
+int sceSifSyncIop(void);
+
 #endif /* KH1_SCE_SIFDEV_H */

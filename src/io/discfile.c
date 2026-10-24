@@ -338,7 +338,6 @@ char *func_00120930(char *name) {
 }
 
 /* func_001209d8 (from auto/text_00120000.c). */
-s32 func_0025ed28(s32, M2C_UNK, M2C_UNK);
 #define func_00120930 ((s32 (*)()) func_00120930)
 void func_001209d8(void) {
     s32 temp_a0;
@@ -348,15 +347,14 @@ void func_001209d8(void) {
     temp_a0 = temp_s0;
     do {
 
-    } while (func_0025ed28(temp_a0, 0, 0) < 0);
+    } while (PlatSifLoadModule(temp_a0, 0, 0) < 0);
 }
 #undef func_00120930
 
 /* func_00120a20 (from auto/text_00120000_3.c). */
-M2C_UNK func_0025ed48(s32, s32, s32, s32);
 #define func_00120930 ((s32 (*)()) func_00120930)
 void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    func_0025ed48(func_00120930(), arg1, arg2, arg3);
+    PlatSifLoadStartModule(func_00120930(), arg1, arg2, arg3);
 }
 #undef func_00120930
 
@@ -388,16 +386,14 @@ void func_00120aa0(void) {
 /* func_00120b10 (from hand/text_00110000_h4.c). */
 extern char D_0048D288[];
 u8 D_004F35B0[0x1000] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
-s32 func_0025f228(char *);
-s32 func_0025f1f0(void);
 void func_001101e8(void);
 void func_00120b10(void) {
     PlatSifInitRpc(0);
     PlatFsReset();
     PlatCdInit(0);
     PlatCdMmode(2);
-    while (!func_0025f228(D_0048D288));
-    while (!func_0025f1f0());
+    while (!PlatSifRebootIop(D_0048D288));
+    while (!PlatSifSyncIop());
     func_001101e8();
     PlatSifInitRpc(0);
     PlatCdInit(0);

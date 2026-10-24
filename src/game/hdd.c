@@ -16,6 +16,7 @@
  * are a reading, not proved by a boot (and the HDD path needs the
  * Japanese HDD unit). */
 #include "common.h"
+#include "platform/iop.h"
 #include "platform/file.h"
 #include "platform/cd.h"
 #include "platform/thread.h"
@@ -62,7 +63,6 @@ s32 strcmp(const char *, const char *);
 char *func_0011fd30(void);
 FileEnt *func_00120190(char *);
 s32 func_00120a20(const char *, s32, char *, s32 *);
-s32 func_0025e990(const char *);
 void func_0024d808(void);
 /* hdd.nofill.c */
 void func_0024d618(void *);
@@ -289,7 +289,7 @@ s32 func_0024ddf8(void) {
     dst[4] = s[5];
     if (memcmp(dst, "25198", 5) == 0) D_0046A678 = 1;
     func_0024d9a0();
-    if (func_0025e990(D_00491978) < 0) goto fail;
+    if (PlatSifSearchModuleByName(D_00491978) < 0) goto fail;
     if (func_0024dcc8(D_004919B0, D_0046A628)) {
         ok = 1;
         D_0046A6AC = 1;
