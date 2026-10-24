@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/bss_0052.h"
@@ -240,9 +241,6 @@ extern void func_001229c0(void);
 extern void func_00135ed0_fn(void) __asm__("func_00135ed0");
 extern void func_00175600(void);
 extern R14 *func_001357b8(void);
-extern void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-extern void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-extern void func_002675a8(f32 *, V4 *);
 extern void func_00135a68(u8 *, f32, f32);
 extern s32 func_00121000(f32 (*)[4], u8 *);
 extern void func_001621e0(s32, f32 (*)[4], S14 *, O14 *);
@@ -298,10 +296,10 @@ void func_00136428(O14 *o, u32 fl, s32 a2, f32 *col, f32 alpha) {
     } else {
         s.f54 = 0;
     }
-    sceVu0CopyMatrix(m, o->fd0);
-    func_002675a8(m[3], &o->f50);
+    PlatVu0CopyMatrix(m, o->fd0);
+    PlatVu0CopyVector(m[3], &o->f50);
     m[3][3] = 1.0f;
-    sceVu0MulMatrix(m, D_002E26C0, m);
+    PlatVu0MulMatrix(m, D_002E26C0, m);
     if (!((o->f370 >> 49) & 1)) {
         func_00135a68(buf, o->f410, o->f414);
         if (func_00121000(m, buf)) s.f40 |= 0x100;
@@ -324,7 +322,6 @@ typedef struct { void *p; s32 n; } Arg21;
 extern f32 func_00135ca0(f32);
 extern void func_00122588(E21 *);
 extern void func_00135df0(E21 *, V4 *);
-extern void func_00267548(V4 *, V4 *, V4 *);
 extern s32 func_00135bb0(E21 *);
 extern void func_0012bce0(s32, s32, s32, Arg21 *, s32);
 extern void func_00128218(E2 *, f32);
@@ -336,7 +333,7 @@ void func_00136768(E21 *e) {
     f32 s = func_00135ca0(e->f118);
     func_00122588(e);
     func_00135df0(e, &v);
-    func_00267548(&v, &v, &e->f430);
+    PlatVu0MulVector(&v, &v, &e->f430);
     if (v.w <= 0.0f) return;
     if (func_00135bb0(e) && (e->f0 & 1)) {
         s32 f = e->f38c;
@@ -456,18 +453,7 @@ typedef struct {
 extern u8 D_003044C0[];
 extern u8 D_003044B0[];
 
-void sceVu0CopyMatrix_d38(void *dst, void *src) __asm__("sceVu0CopyMatrix");
 f32 func_00120c88(f32 x);
-void func_00267768(void *dst, void *src, f32 a);
-void func_00267810(void *dst, void *src, f32 a);
-void func_002676c0(void *dst, void *src, f32 a);
-void func_002672f8(void *dst, void *m, void *v);
-void func_00267530(void *dst, void *a, void *b);
-void func_00267518(void *dst, void *a, void *b);
-void func_00267560(void *dst, void *a, f32 s);
-void func_002675a8_d38(void *dst, void *src) __asm__("func_002675a8");
-void func_00267370(void *dst, void *a, void *b);
-void func_002673b8(void *dst, void *src);
 void func_00118668(C02Ray *r);
 s32 func_001232f0(C02Obj *o);
 void func_00121958(void *dst, void *src, void *v);
@@ -488,7 +474,7 @@ void func_00136d38(C02Obj *o)
     u16 k;
 
     m = o->mtx[0];
-    sceVu0CopyMatrix_d38(save, m);
+    PlatVu0CopyMatrix(save, m);
     if ((s32)(o->fl.w >> 44) & 1) {
         f32 *r = o->rot;
         i = 2;
@@ -496,13 +482,13 @@ void func_00136d38(C02Obj *o)
             *r = func_00120c88(*r);
             r++;
         } while (--i >= 0);
-        func_00267768(m, D_002C58D0, o->rot[0]);
-        func_00267810(m, m, o->rot[1]);
-        func_002676c0(m, m, o->rot[2]);
+        PlatVu0RotMatrixX(m, D_002C58D0, o->rot[0]);
+        PlatVu0RotMatrixY(m, m, o->rot[1]);
+        PlatVu0RotMatrixZ(m, m, o->rot[2]);
         if (o->desc->x54 == 10) {
-            func_002672f8(o->mtx[3], m, D_003044C0);
-            func_00267530(o->mtx[3], o->pos, o->mtx[3]);
-            func_00267518(o->mtx[3], o->mtx[3], D_003044C0);
+            PlatVu0ApplyMatrix(o->mtx[3], m, D_003044C0);
+            PlatVu0SubVector(o->mtx[3], o->pos, o->mtx[3]);
+            PlatVu0AddVector(o->mtx[3], o->mtx[3], D_003044C0);
             o->mtx[0][3] = 0;
             o->mtx[1][3] = 0;
             o->mtx[2][3] = 0;
@@ -513,9 +499,9 @@ void func_00136d38(C02Obj *o)
         if (func_001232f0(o) && o->info->x4 >= 3) {
             C02Rec *rec = o->info->recs + 1;
             for (i = 0; i < 2; i++) {
-                func_00267560(dir, o->rot, rec->x4 * 100.0f);
-                func_00267518(pts[i], o->pos, dir);
-                func_002675a8_d38(ray.pos, pts[i]);
+                PlatVu0ScaleVector(dir, o->rot, rec->x4 * 100.0f);
+                PlatVu0AddVector(pts[i], o->pos, dir);
+                PlatVu0CopyVector(ray.pos, pts[i]);
 /*P*/
                 ray.pos[1] -= rec->x8 + rec->xc;
                 ray.pos[3] = 1.0f;
@@ -526,22 +512,22 @@ void func_00136d38(C02Obj *o)
 /*Q*/
                 func_00118668(&ray);
                 if (ray.hit >= 0)
-                    func_002675a8_d38(pts[i], ray.out);
+                    PlatVu0CopyVector(pts[i], ray.out);
             }
-            func_00267530(dir, pts[1], pts[0]);
-            func_002673b8(dir, dir);
+            PlatVu0SubVector(dir, pts[1], pts[0]);
+            PlatVu0Normalize(dir, dir);
             up = dir;
         } else {
             up = o->rot;
         }
-        func_00267370(m, up, D_003044B0);
-        func_002673b8(m, m);
-        func_00267530(o->mtx[2], &D_002C58A0, up);
-        func_00267370(o->mtx[1], o->mtx[2], m);
-        func_002673b8(o->mtx[1], o->mtx[1]);
+        PlatVu0OuterProduct(m, up, D_003044B0);
+        PlatVu0Normalize(m, m);
+        PlatVu0SubVector(o->mtx[2], &D_002C58A0, up);
+        PlatVu0OuterProduct(o->mtx[1], o->mtx[2], m);
+        PlatVu0Normalize(o->mtx[1], o->mtx[1]);
     }
     o->fl.w &= ~(1UL << 45);
-    func_002675a8_d38(scale, o->scale);
+    PlatVu0CopyVector(scale, o->scale);
     scale[1] *= o->x480;
     k = o->desc->x4c;
     if (k != 0x204 && k != 0x23) {
@@ -554,7 +540,7 @@ void func_00136d38(C02Obj *o)
     }
     if ((s32)(o->fl.w >> 45) & 1)
         func_00121958(m, m, scale);
-    func_002675a8_d38(o->mtx[3], o->pos);
+    PlatVu0CopyVector(o->mtx[3], o->pos);
     o->mtx[0][3] = 0;
     o->mtx[3][3] = 1.0f;
     o->mtx[1][3] = 0;
@@ -564,7 +550,7 @@ void func_00136d38(C02Obj *o)
     if (o->x1cc & 8) {
         f32 t = o->v450[3];
         o->v450[3] = 0;
-        func_002672f8(o->v1f0, m, o->v450);
+        PlatVu0ApplyMatrix(o->v1f0, m, o->v450);
         o->v1f0[3] = t;
     }
     if (o->x6 == 5) {

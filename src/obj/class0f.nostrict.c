@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class0f.c. Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00150000_h36.h"
@@ -13,7 +14,6 @@
 #include "data/pieces/D_003044E0.h"
 
 /* func_0015cb48 (from hand/nostrict/text_00150000_h36.c). */
-void func_002675a8(void *, void *);
 typedef struct { u8 b0; u8 type; u16 bone; f32 off; f32 dy; f32 r; f32 h; } CylSrc;
 typedef struct { u8 pad[4]; u8 n4, n5, n6, n7; u8 pad8[0xC]; CylSrc *cyl; CylSrc *cyl2; } CylHdr;
 typedef struct { u8 pad[0xD0]; f32 m[4][4]; } Mtx0D0;
@@ -24,20 +24,19 @@ typedef struct {
     u16 h30E; u8 pad310[0x60]; u64 flags; u8 pad378[0x2C]; u32 mask; u32 mask2;
     u8 pad3ac[0x14]; f32 x3C0[4];
 } CylObj;
-void func_002672f8(f32 *, void *, f32 *);
 void func_0015cac0(void *, f32 *, f32 *, f32 *);
 void func_00137688(void *, f32);
 f32 atan2f(f32, f32);
 s32 func_0015cb48(CylObj *o) {
     f32 v0[4], v1[4], v2[4];
     if (o->p148->mtx == 0) {
-        func_002675a8(v0, o->p148->v70);
-        func_002675a8(v1, o->p148->v80);
-        func_002675a8(v2, o->p148->v60);
+        PlatVu0CopyVector(v0, o->p148->v70);
+        PlatVu0CopyVector(v1, o->p148->v80);
+        PlatVu0CopyVector(v2, o->p148->v60);
     } else {
-        func_002672f8(v0, o->p148->mtx->m, o->p148->v70);
-        func_002672f8(v1, o->p148->mtx->m, o->p148->v80);
-        func_002672f8(v2, o->p148->mtx->m, o->p148->v60);
+        PlatVu0ApplyMatrix(v0, o->p148->mtx->m, o->p148->v70);
+        PlatVu0ApplyMatrix(v1, o->p148->mtx->m, o->p148->v80);
+        PlatVu0ApplyMatrix(v2, o->p148->mtx->m, o->p148->v60);
     }
     func_0015cac0(o, v0, v1, o->pos);
     o->rot = atan2f(v1[2], -v1[0]);
@@ -85,23 +84,16 @@ typedef struct {
 f32 func_0015ca50(C02Ob3 *o);
 f32 func_0015ca70(C02Ob3 *o);
 void func_001178d0(C02GBox *b);
-void func_00267530(void *dst, void *a, void *b);
 void func_00105a30(s32 mesh, s32 id, f32 *out);
 s32 func_00105ad0(s32 mesh, s32 id, C02V4 *out);
 s32 func_00117948(C02Edge *e, s32 n, s32 *list, s32 mesh);
 f32 func_00121550(f32 *out, f32 *p0, f32 *d0, f32 *p1, f32 *d1);
 f32 func_00120c18(f32 *v);
-void func_002674f0(f32 *out, f32 *a, f32 *b, f32 t);
-void func_002673b8(void *dst, void *src);
 s32 func_0015bcb8(C02Ob3 *o, f32 *p);
-void func_00267440(void *dst, void *src);
-void sceVu0CopyMatrix(void *dst, void *src);
-void func_002673f8(void *dst, void *src);
 s32 func_0014f658(C02Ob3 *o, s32 st);
 void func_00130340(C02Ob3 *o, s32 f, f32 x);
 void func_00130578(C02Ob3 *o, s32 f, f32 x);
 #define func_0015cac0 ((void (*)(C02Ob3 *o, f32 *p, f32 *n, f32 *out)) func_0015cac0)
-#define func_002672f8 ((void (*)(void *dst, void *m, void *v)) func_002672f8)
 #define func_0015cb48 ((s32 (*)(C02Ob3 *o)) func_0015cb48)
 s32 func_0015cc48(C02Ob3 *o, f32 *pos)
 {
@@ -150,7 +142,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
     func_001178d0(&box);
     if (box.n == 0)
         return 0;
-    func_002675a8(pc, pos);
+    PlatVu0CopyVector(pc, pos);
     bst.dist = r;
     for (i = 0; i < box.n; i++) {
         cnt = box.e[i].cnt;
@@ -171,8 +163,8 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
                 q.i1 = k2;
                 v0 = verts[k];
                 v1 = verts[k2];
-                func_00267530(edge, v1, v0);
-                func_00267530(d, o->pos, v1);
+                PlatVu0SubVector(edge, v1, v0);
+                PlatVu0SubVector(d, o->pos, v1);
                 if (edge[0] * d[2] - edge[2] * d[0] < 0.0f)
                     continue;
                 if (!func_00117948(&q, cnt, list, mesh))
@@ -189,13 +181,13 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
                     continue;
                 if (1.0f < t)
                     continue;
-                func_00267530(d, hit, o->pos);
+                PlatVu0SubVector(d, hit, o->pos);
                 dist = func_00120c18(d);
                 if (bst.dist <= dist)
                     continue;
-                func_002675a8(bn, tri);
-                func_002674f0(bp, v1, v0, t);
-                func_002675a8(be, edge);
+                PlatVu0CopyVector(bn, tri);
+                PlatVu0InterVector(bp, v1, v0, t);
+                PlatVu0CopyVector(be, edge);
                 bst.mesh = mesh;
                 bst.id = *lp;
                 bst.dist = dist;
@@ -204,7 +196,7 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
     }
     if (r <= bst.dist)
         return 0;
-    func_002673b8(edge, be);
+    PlatVu0Normalize(edge, be);
     edge[3] = 0;
     func_0015cac0(o, bp, edge, hit);
     if (func_0015bcb8(o, hit))
@@ -217,18 +209,18 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
     bn[3] = 0;
     if (mo == 0) {
         f32 *n0 = bn;
-        func_002675a8(o->x148 + 0x70, bp);
-        func_002675a8(o->x148 + 0x60, n0);
-        func_002675a8(o->x148 + 0x80, edge);
+        PlatVu0CopyVector(o->x148 + 0x70, bp);
+        PlatVu0CopyVector(o->x148 + 0x60, n0);
+        PlatVu0CopyVector(o->x148 + 0x80, edge);
     } else {
-        func_00267440(m, mo + 0xD0);
+        PlatVu0InversMatrix(m, mo + 0xD0);
         n = bn;
-        func_002672f8(o->x148 + 0x70, m, bp);
-        sceVu0CopyMatrix(m, mo + 0xD0);
-        func_002675a8(m[3], &D_002C58A0);
-        func_002673f8(m, m);
-        func_002672f8(o->x148 + 0x60, m, n);
-        func_002672f8(o->x148 + 0x80, m, edge);
+        PlatVu0ApplyMatrix(o->x148 + 0x70, m, bp);
+        PlatVu0CopyMatrix(m, mo + 0xD0);
+        PlatVu0CopyVector(m[3], &D_002C58A0);
+        PlatVu0TransposeMatrix(m, m);
+        PlatVu0ApplyMatrix(o->x148 + 0x60, m, n);
+        PlatVu0ApplyMatrix(o->x148 + 0x80, m, edge);
     }
     func_0015cb48(o);
     func_0014f658(o, 15);
@@ -239,14 +231,11 @@ s32 func_0015cc48(C02Ob3 *o, f32 *pos)
     return 1;
 }
 #undef func_0015cac0
-#undef func_002672f8
 #undef func_0015cb48
 
 /* func_0015d2c8 (from hand/nostrict/text_00150000_h36.c). */
 typedef struct { s32 type; f32 r; f32 h; s32 idx; f32 pos[4] __attribute__((aligned(16))); } Cyl;
 void *func_001230a0(void *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 s32 func_00137450(void *);
 s32 func_00105b10(s32, s32);
 void func_0015bad0(CylObj *, void *, Cyl *); /* src/obj/cylhit.nostrict.c */
@@ -258,9 +247,9 @@ s32 func_0015d2c8(CylObj *o) {
     if (func_00105b10(func_00137450(o->p148->mtx), o->p148->x90) != 1) return 0;
     p = 0;
     func_0015bad0(o, o->hdr->cyl, &c);
-    func_00267560(c.pos, o->vel, 85.0f);
+    PlatVu0ScaleVector(c.pos, o->vel, 85.0f);
     c.pos[1] = -func_0015ca50(o);
-    func_00267518(c.pos, c.pos, o->pos);
+    PlatVu0AddVector(c.pos, c.pos, o->pos);
     while ((p = func_001230a0(p)) != 0) {
         if (p == o) continue;
         if (func_0015bb88(&c, p, 0)) return 0;
@@ -280,7 +269,7 @@ void func_0015d248();
 void func_0015d3b8(CylObj *o, f32 *s) {
     f32 t;
     if (o->p148->x90 != 0xFFFF && func_0015cb48(o)) {
-        func_002675a8(o->x20, o->vel);
+        PlatVu0CopyVector(o->x20, o->vel);
         o->x20[3] = 0;
         t = o->x20[3];
         if (!(t < s[3])) return;

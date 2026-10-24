@@ -3,6 +3,7 @@
  * its positions in a ring of 32 (D_00551740, func_00159b48); the task
  * func_00159cd8, func_00159978, func_00159f78 (an object's move step).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
@@ -40,8 +41,6 @@ typedef struct { u8 pad0[5]; u8 b5; u8 pad6[0xe]; struct { u8 pad0[1]; u8 b1; } 
     struct { u8 pad[0x160]; V4 v160; } *x148; u8 pad14c[0x1d4]; V4 x320; u8 pad330[0x40]; u64 x370; u8 pad378[0x26]; u8 x39e; u8 pad39f[0x11]; f32 x3b0; u8 pad3b4[0xc]; V4 x3c0; u8 pad3d0[0x14]; f32 x3e4; u8 pad3e8[8]; V4 x3f0; s32 x400; u8 pad404[0x9c]; void *x4a0;
 typedef struct Actor_59978 { ACT_BODY(S144) } Act;
 void func_001315c0(void *, s32, void *, f32);
-void func_00267530(void *, void *, void *);
-f32 func_00267390(void *, void *);
 s32 func_00122ff8(void *);
 void func_00121fc4(void *, void *);
 typedef struct { Act *p; s32 w4; } Arg159178;
@@ -56,11 +55,11 @@ void func_00159978(Act *a, V4 *o) {
     Act *p = D_002E26A0[0];
     if (!func_00122ff8(p)) return;
     a->x98 = (S98 *)p;
-    func_00267530(o, &p->x320, &a->pos);
+    PlatVu0SubVector(o, &p->x320, &a->pos);
     o->y = 0.0f;
     func_00121fc4(o, o);
     if (o->w < 200.0f) {
-        func_00267530(o, &D_002C58A0, o);
+        PlatVu0SubVector(o, &D_002C58A0, o);
         o->w = 1.0f;
     } else if (o->w > 250.0f) {
         o->w = 1.0f;
@@ -77,9 +76,9 @@ void func_00159978(Act *a, V4 *o) {
         if (((s32)(s.p->x370 >> 37) & 3) == 1) continue;
         if (!func_00123368(s.p)) continue;
         func_001315c0(s.p, 0x8003, &d, 0.0f);
-        func_00267530(&d, &d, &a->pos);
+        PlatVu0SubVector(&d, &d, &a->pos);
         func_00121fc4(&d, &d);
-        if (d.w < 300.0f && func_00267390(&d, &a->x30) > 0.7f) {
+        if (d.w < 300.0f && PlatVu0InnerProduct(&d, &a->x30) > 0.7f) {
             func_00159178(a, 11, &s, o);
             return;
         }
@@ -87,7 +86,6 @@ void func_00159978(Act *a, V4 *o) {
 }
 
 /* func_00159b48 (from hand/nostrict/text_00150000_h35.c). */
-void func_002675a8(void *, void *);
 typedef struct { f32 x, y, z, w; } Vec154768;
 typedef struct { s32 w0; s32 idx; u8 pad8[8]; Vec154768 e[32]; } S551740;
 extern S551740 D_00551740;
@@ -98,11 +96,11 @@ void func_00159b48(Vec154768 *p) {
     S551740 *s = &D_00551740;
     Vec154768 *e = s->e;
     Vec154768 t;
-    func_00267530(&t, p, &e[s->idx]);
+    PlatVu0SubVector(&t, p, &e[s->idx]);
     t.w = func_00120bf8(&t);
     if (D_00551734 * 0.03125f <= t.w) {
         s->idx = (s->idx + 1) % 32;
-        func_002675a8(&e[s->idx], p);
+        PlatVu0CopyVector(&e[s->idx], p);
         s->e[s->idx].w = t.w;
     }
 }
@@ -116,9 +114,6 @@ typedef struct { s32 w0; Act_59cd8 *obj; s32 pad[2]; V4 a; V4 b; f32 f30; f32 f3
 typedef struct { union { u64 d; s32 w; } h; u8 pad8[0x208]; V4 v210; V4 v220; } Trail;
 extern Tr700 D_00551700;
 extern s32 D_002E27A8;
-void sceVu0CopyMatrix(void *, void *);
-void func_002674f0(void *, void *, void *, f32);
-void func_002672f8(void *, void *, void *);
 void func_00159c10(f32, V4 *);
 void func_00124c68(f32);
 #define D_00551740 (*(Trail (*)) &D_00551740)
@@ -131,26 +126,26 @@ s32 func_00159cd8(void) {
     if (!func_00122ff8(D_00551700.obj)) return 4;
     if (D_002C5958.b.b1 || D_002E27A8 == 9) return 0;
     if (!(D_00551700.w0 & 1)) {
-        sceVu0CopyMatrix(m, D_00551700.obj->xd0);
+        PlatVu0CopyMatrix(m, D_00551700.obj->xd0);
         if (func_0014f600(D_00551700.obj))
-            func_002674f0(m[3], &D_00551700.obj->pos, &D_00551700.obj->x320, 0.5f);
+            PlatVu0InterVector(m[3], &D_00551700.obj->pos, &D_00551700.obj->x320, 0.5f);
         else
-            func_002675a8(m[3], &D_00551700.obj->pos);
+            PlatVu0CopyVector(m[3], &D_00551700.obj->pos);
         func_00159b48((V4 *)m[3]);
-        func_002672f8(&u, D_00551700.obj->xd0, &D_00551700.a);
+        PlatVu0ApplyMatrix(&u, D_00551700.obj->xd0, &D_00551700.a);
         func_00159c10(D_00551700.f34, (V4 *)m[3]);
-        func_002672f8(&w, m, &D_00551700.b);
+        PlatVu0ApplyMatrix(&w, m, &D_00551700.b);
         if (D_00551740.h.w & 1) {
-            func_002675a8(&D_00551740.v220, &u);
-            func_002675a8(&D_00551740.v210, &w);
+            PlatVu0CopyVector(&D_00551740.v220, &u);
+            PlatVu0CopyVector(&D_00551740.v210, &w);
             D_00551740.h.d &= ~1;
         } else {
-            func_002674f0(&D_00551740.v220, &u, &D_00551740.v220, D_00551700.f30);
-            func_002674f0(&D_00551740.v210, &w, &D_00551740.v210, D_00551700.f30);
+            PlatVu0InterVector(&D_00551740.v220, &u, &D_00551740.v220, D_00551700.f30);
+            PlatVu0InterVector(&D_00551740.v210, &w, &D_00551740.v210, D_00551700.f30);
         }
     }
-    func_002675a8(&D_002E2790, &D_00551740.v220);
-    func_002675a8(&D_002E2780, &D_00551740.v210);
+    PlatVu0CopyVector(&D_002E2790, &D_00551740.v220);
+    PlatVu0CopyVector(&D_002E2780, &D_00551740.v210);
     func_00124c68(70.0f);
     return 0;
 }
@@ -170,14 +165,14 @@ TaskReg *func_0011ef10(s32, void *);
 #define D_00551740 (*(Trail_59ea8 (*)) &D_00551740)
 Tr700_59ea8 *func_00159ea8(ObjP *obj, void *a, void *b) {
     D_00551700.obj = obj;
-    func_002675a8(D_00551700.a, a);
-    func_002675a8(D_00551700.b, b);
+    PlatVu0CopyVector(D_00551700.a, a);
+    PlatVu0CopyVector(D_00551700.b, b);
     if (func_0011ef38(func_00159cd8) == 0) {
         D_00551700.f30 = 1.0f;
         D_00551700.f34 = 300.0f;
         D_00551700.w0 = 0;
         D_00551740.h.s.head = 0;
-        func_002675a8(&D_00551740.e[0], obj->pos);
+        PlatVu0CopyVector(&D_00551740.e[0], obj->pos);
         D_00551740.e[0].len = 0;
         D_00551740.h.s.w8 = 0;
         D_00551740.h.d |= 1;
@@ -212,7 +207,7 @@ void func_00159f78(B4E9 *e, f32 *v, s32 n) {
     s32 k;
     if (v[0] == 0.0f && v[1] == 0.0f && v[2] == 0.0f) goto zero;
     func_001376e8(e, v);
-    func_002675a8(e->x20, v);
+    PlatVu0CopyVector(e->x20, v);
     if (e->x0 & 4) return;
     if ((s32)(e->x440 >> 33) & 1) return;
     if (v[3] == 0.0f) {
@@ -242,7 +237,7 @@ void func_00159f78(B4E9 *e, f32 *v, s32 n) {
     }
     return;
 zero:
-    func_002675a8(e->x20, e->x30);
+    PlatVu0CopyVector(e->x20, e->x30);
     e->x20[3] = 0.0f;
 }
 #undef func_001315c0

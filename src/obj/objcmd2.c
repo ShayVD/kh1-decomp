@@ -30,6 +30,7 @@
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
@@ -99,23 +100,21 @@ void func_001768e8(Arg *a) {
 }
 
 /* func_00176920 (from auto/text_00170000_8.c). */
-M2C_UNK func_002675a8(s32, s32);
 void func_00176920(void *arg0) {
-    func_002675a8(M2C_FIELD(arg0, s32 *, 4), *M2C_FIELD(arg0, s32 **, 0));
+    PlatVu0CopyVector(M2C_FIELD(arg0, s32 *, 4), *M2C_FIELD(arg0, s32 **, 0));
 }
 
 /* func_00176940 (from auto/text_00170000_8.c). */
 void func_00176940(void *arg0) {
-    func_002675a8(M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(M2C_FIELD(arg0, void **, 0), s32 *, 8));
+    PlatVu0CopyVector(M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(M2C_FIELD(arg0, void **, 0), s32 *, 8));
 }
 
 /* func_001769f0 (from auto/text_00170000_8.c). */
-M2C_UNK func_00267370(s32, s32, s32);
 void func_001769f0(void *arg0) {
     s32 temp_v0;
 
     temp_v0 = M2C_FIELD(arg0, s32 *, 0);
-    func_00267370(temp_v0, temp_v0, M2C_FIELD(arg0, s32 *, 4));
+    PlatVu0OuterProduct(temp_v0, temp_v0, M2C_FIELD(arg0, s32 *, 4));
 }
 
 /* func_00176a18 (from hand/text_00170000_h11.c). */
@@ -128,12 +127,12 @@ void func_00176a18(Arg *a) {
 
 /* func_00176a60 (from auto/text_00170000_9.c). */
 void func_00176a60(s32 *arg0) {
-    func_002675a8(*arg0, ((M2C_UNK *)&D_002E2780));
+    PlatVu0CopyVector(*arg0, ((M2C_UNK *)&D_002E2780));
 }
 
 /* func_00176a80 (from auto/text_00170000_9.c). */
 void func_00176a80(s32 *arg0) {
-    func_002675a8(*arg0, ((M2C_UNK *)&D_002E2790));
+    PlatVu0CopyVector(*arg0, ((M2C_UNK *)&D_002E2790));
 }
 
 /* func_00176aa0 (from auto/text_00170000_8.c). */

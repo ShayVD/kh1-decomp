@@ -8,6 +8,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
@@ -17,11 +18,9 @@
 #include "data/pieces/D_00304BE8.h"
 
 /* func_00156260 (from auto/text_00150000_3.c). */
-M2C_UNK func_002673b8(s32, void *);
-M2C_UNK func_002675a8(s32, M2C_UNK *);
 void func_00156260(void *arg0, void *arg1) {
-    func_002675a8(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58B0));
-    func_002673b8(arg0 + 0x3F0, arg1);
+    PlatVu0CopyVector(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58B0));
+    PlatVu0Normalize(arg0 + 0x3F0, arg1);
     M2C_FIELD(arg0, f32 *, 0x3FC) = (f32) (M2C_FIELD(arg1, f32 *, 0xC) * 0.22314355f);
     M2C_FIELD(arg0, s32 *, 0x88) = (s32) (M2C_FIELD(arg0, s32 *, 0x88) | 0x40);
 }
@@ -60,13 +59,12 @@ void func_001566a8(void) {
 #undef func_00156628
 
 /* func_001566d8 (from hand/text_00140000_h9.c). */
-f32 func_00267390(f32 *a, f32 *b);
 s32 func_001566d8(f32 (*pl)[4], f32 *pt) {
     s32 i;
     f32 *w = &pl[0][3];
     f32 *p = pl[0];
     for (i = 0; i < 6; i++) {
-        if (func_00267390(p, pt) - *w < 0.0f) return 0;
+        if (PlatVu0InnerProduct(p, pt) - *w < 0.0f) return 0;
         p += 4;
         w += 4;
     }

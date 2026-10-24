@@ -10,6 +10,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -27,7 +28,6 @@ typedef union { u8 b; u32 w; } U2E3190;
 extern U2E3190 D_002E3190;
 void func_0013dc10(void *, s32);
 Task *func_00130578(void *, s32, f32);
-void func_002673b8(void *, void *, void *);
 typedef struct { u8 pad[0xC]; f32 fC; } F158068;
 void func_00158068(void *a, s32 b, F158068 *c) {
     if (D_002E3190.b == 1) {
@@ -38,7 +38,7 @@ void func_00158068(void *a, s32 b, F158068 *c) {
         c->fC = f;
     } else {
         f32 f = c->fC;
-        func_002673b8(c, c, c);
+        PlatVu0Normalize(c, c);
         c->fC = f;
     }
 }

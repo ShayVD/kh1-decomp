@@ -3,6 +3,7 @@
  * default (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0053.h"
 #include "data/bss_0054.h"
 #include "vm/script_vm.h"
@@ -34,11 +35,10 @@ void func_0014c428(W8Act *a) {
 }
 
 /* func_0014c448 (from hand/text_00140000_h8.c). */
-void func_00267560(void *, void *, f32);
 void func_0014cce0(W8Act *, f32);
 void func_00130398(W8Act *, s32, f32);
 void func_0014c448(W8Act *a) {
-    func_00267560(a->x3c0, a->x3c0, 0.7f);
+    PlatVu0ScaleVector(a->x3c0, a->x3c0, 0.7f);
     func_0014cce0(a, 8.0f);
     func_00130398(a, 6, 8.0f);
 }
@@ -48,7 +48,7 @@ void func_0014f658(W8Act *, s32);
 s32 func_0014c4a8(W8Act *a) {
     if (a->x148->x100.f <= 0.0f && 50.0f < a->x3d4) {
         func_00130398(a, 113, 16.0f);
-        func_00267560(a->x3c0, a->x3c0, 0.5f);
+        PlatVu0ScaleVector(a->x3c0, a->x3c0, 0.5f);
         func_0014f658(a, 21);
         return 1;
     }
@@ -75,14 +75,13 @@ void func_0014c580(void *arg0) {
 /* func_0014c5c8 (from hand/text_00140000_h34.c). */
 extern f32 D_002BBDFC;
 typedef struct { u8 pad[0x100]; f32 x100; u64 f:32; } W34Tm;
-void func_002675a8(f32 *, f32 *);
 typedef struct { u8 pad[4]; s32 x4; } W34Pad;
 typedef struct { u8 pad[0x30]; f32 pos[4]; u8 pad40[0x148 - 0x40]; W34Tm *x148; } W34Pl;
 #define func_0014c448 ((void (*)()) func_0014c448)
 void func_0014c5c8(W34Pl *o, W34Pad *b, f32 *v) {
     s32 m;
     if (v[0] == 0.0f && v[1] == 0.0f && v[2] == 0.0f) {
-        func_002675a8(v, o->pos);
+        PlatVu0CopyVector(v, o->pos);
         v[3] = 0.0f;
     }
     if (o->x148->x100 > 0.0f) {
@@ -132,7 +131,7 @@ void func_0014c6c0(Obj57_c6c0 *o, f32 *v) {
         } else if (a < -0.523598730564117431640625f) {
             id = 116;
         } else {
-            func_002675a8(t, o->v3c0);
+            PlatVu0CopyVector(t, o->v3c0);
             t[1] = 0.0f;
             func_00121fc4(t, t);
             if (t[3] > 8.0f) id = 114;
@@ -155,7 +154,6 @@ void func_0014c6c0(Obj57_c6c0 *o, f32 *v) {
 #undef func_00130398
 
 /* func_0014ca38 (from hand/text_00140000_h34.c). */
-void func_00267530(f32 *, f32 *, f32 *);
 f32 func_00120bf8(f32 *);
 typedef struct { s32 x0; u8 pad4[0xc]; f32 x10[4]; u8 pad20[0x50]; s32 x70; u8 pad74[0x148 - 0x74]; W34Tm *x148; u8 pad14c[0x490 - 0x14c]; f32 x490[4]; } W34Pl2;
 extern u32 D_002C5958;
@@ -169,7 +167,7 @@ s32 func_0014ca38(W34Pl2 *o, s32 a) {
     }
     if (!a) goto call;
     if (o->x148->x100 <= 0.0f) {
-        func_00267530(v, o->x10, o->x490);
+        PlatVu0SubVector(v, o->x10, o->x490);
         if (v[1] < 0.0f) {
         call:
             func_0014c448(o);

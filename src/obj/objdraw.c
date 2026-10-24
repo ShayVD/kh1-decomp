@@ -9,6 +9,7 @@
 #include "actor.h"
 #include "vm/script_vm.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/types/text_00130000_h32.h"
 #include "data/pieces/D_002E26A0.h"
@@ -26,7 +27,6 @@
 /* func_001366d8 (from auto/text_00130000_8.c). */
 M2C_UNK func_00135df0(void *, void *);
 M2C_UNK func_00136428(void *, s32, s32, void *, f32);
-M2C_UNK func_00267548(void *, void *, s32);
 f32 func_00135ca0(f32);
 void func_001366d8(Actor *arg0, s32 arg1, s32 arg2) {
     s32 sp[4];
@@ -34,7 +34,7 @@ void func_001366d8(Actor *arg0, s32 arg1, s32 arg2) {
 
     temp_f20 = func_00135ca0(arg0->unk118);
     func_00135df0(arg0, sp);
-    func_00267548(sp, sp, arg2);
+    PlatVu0MulVector(sp, sp, arg2);
     func_00136428(arg0, ~(1 << (arg1 - 1)), arg0->unk394, sp, temp_f20);
 }
 
@@ -70,14 +70,13 @@ void func_00122588(W32Col *o);
 s32 func_00135bb0(W32Col *o);
 void func_00128218(W32Col *o, f32 f);
 extern f32 D_002C6450[4];
-#define func_00267548 ((void (*)(f32 *d, f32 *a, f32 *b)) func_00267548)
 #define func_00136428 ((void (*)(W32Col *o, s32 a, s32 b, f32 *c, f32 f)) func_00136428)
 void func_001368e8(W32Col *o) {
     f32 v[4] __attribute__((aligned(16)));
     f32 k = func_00135ca0(o->x118);
     func_00122588(o);
     func_00135df0(o, v);
-    func_00267548(v, v, D_002C6450);
+    PlatVu0MulVector(v, v, D_002C6450);
     if (v[3] > 0.0f && func_00135bb0(o) && (o->flags & 1)) {
         if (D_002BC0A8.i & 1) {
             o->u370.x |= 1ULL << 35;
@@ -87,7 +86,6 @@ void func_001368e8(W32Col *o) {
     }
     if (o->flags & 2) func_00128218(o, v[3] * k * 3.063725307583809e-05f);
 }
-#undef func_00267548
 #undef func_00136428
 
 /* func_00136ab8 (from hand/text_00130000_h32.c). */
@@ -162,7 +160,6 @@ s32 func_00136c98(void) {
 
 /* func_00136cc0 (from auto/text_00130000_13.c). */
 M2C_UNK func_001318e8(void *, u16, void *);
-M2C_UNK func_00267328(void *, void *, void *);
 s32 func_00122ff8(void *);
 void func_00136cc0(void *arg0) {
     s32 sp[16];
@@ -173,7 +170,7 @@ void func_00136cc0(void *arg0) {
     if ((func_00122ff8(temp_s1) != 0) && ((s32) ((u64) M2C_FIELD(M2C_FIELD(arg0, void **, 0x3A0), u64 *, 0x370) >> 0x2B) & 1)) {
         func_001318e8(temp_s1, M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x50), sp);
         temp_a0 = arg0 + 0xD0;
-        func_00267328(temp_a0, sp, temp_a0);
+        PlatVu0MulMatrix(temp_a0, sp, temp_a0);
     }
 }
 

@@ -10,6 +10,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -133,7 +134,6 @@ s32 func_0015aac0(Sub130 *a) {
 
 /* func_0015ab50 (from auto/text_00150000_17.c). */
 M2C_UNK func_001247e8(void *);
-M2C_UNK func_00267530(void *, s32, s32);
 f32 func_00120bf8(void *);
 #define func_0015aa30 ((M2C_UNK (*)(void *, s32)) func_0015aa30)
 #define func_00122ff8 ((s32 (*)(s32)) func_00122ff8)
@@ -143,7 +143,7 @@ void func_0015ab50(void *arg0) {
 
     temp_s0 = (*(s32 *)&D_002E26A0);
     if (func_00122ff8(temp_s0) != 0) {
-        func_00267530(sp, arg0 + 0x10, temp_s0 + 0x10);
+        PlatVu0SubVector(sp, arg0 + 0x10, temp_s0 + 0x10);
         if (func_00120bf8(sp) < M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), f32 *, 0x44)) {
             func_0015aa30(arg0, temp_s0);
             func_001247e8(arg0);
@@ -175,7 +175,6 @@ typedef struct { u8 pad[0xC]; void *cb; } Task;
 typedef struct { u32 flags; u8 pad[0x3BC]; u8 x3C0[4]; } Obj15A;
 void func_00130398(void *, s32, f32);
 void func_0014cce0(void *, f32);
-void func_002675a8(void *, void *);
 #define func_00130578 ((Task *(*)(void *, s32, f32)) func_00130578)
 void func_0015ac58(Obj15A *a) {
     f32 z = 0.0f;
@@ -183,7 +182,7 @@ void func_0015ac58(Obj15A *a) {
     func_00130578(a, 0x40000006, 8.0f)->cb = func_0015ac30;
     func_0014cce0(a, z);
     a->flags &= ~0x400;
-    func_002675a8(a->x3C0, &D_002C58B0);
+    PlatVu0CopyVector(a->x3C0, &D_002C58B0);
 }
 #undef func_00130578
 

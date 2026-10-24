@@ -5,6 +5,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002E26A0.h"
 
@@ -24,20 +25,13 @@ typedef struct Actor_4fe48 {
     union { u64 x; struct { struct Actor_4fe48 *lo; u32 hi; } w; } x470;
 } B4Ent;
 void func_001315c0(void *, s32, f32, void *);
-void func_002675a8(void *, void *);
 s32 func_00122ff8(B4Ent *);
 extern f32 D_002BBDFC;
-void func_00267560(void *, void *, f32);
 f32 cosf(f32);
 f32 acosf(f32);
 f32 func_0014fc68(B4Ent *, B4Ent *, f32 *, f32);
 f32 func_0014fab0(B4Ent *, B4Ent *, f32 *, f32);
-f32 func_00267390(f32 *, f32 *);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
 void func_00120cf8(f32 *, f32 (*)[4], f32);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 void func_0014fe48(B4Ent *e) {
     f32 v[4];
     f32 ax[4];
@@ -76,26 +70,26 @@ void func_0014fe48(B4Ent *e) {
             v[2] = -1.0f;
         }
     }
-    a = acosf(func_00267390(e->x450, v));
+    a = acosf(PlatVu0InnerProduct(e->x450, v));
     lim = e->x6c->x24 * D_002BBDFC;
     if (lim < a) a = lim;
-    func_00267370(ax, e->x450, v);
-    func_002673b8(ax, ax);
+    PlatVu0OuterProduct(ax, e->x450, v);
+    PlatVu0Normalize(ax, ax);
     func_00120cf8(ax, m, a);
     e->x450[3] = 0.0f;
-    func_002672f8(e->x450, m, e->x450);
-    func_002673b8(e->x450, e->x450);
+    PlatVu0ApplyMatrix(e->x450, m, e->x450);
+    PlatVu0Normalize(e->x450, e->x450);
     if (e->x450[2] <= -1.0f) return;
     c = -cosf(e->x6c->x28);
     if (e->x450[2] < c) e->x450[3] = (-1.0f - e->x450[2]) / (-1.0f - c);
     else e->x450[3] = 1.0f;
     if (e->x130->x4c == 507) {
-        sceVu0CopyMatrix(m, e->xd0);
+        PlatVu0CopyMatrix(m, e->xd0);
         func_001315c0(e, 0, 0.5f, m[3]);
-        func_002675a8(v, e->x450);
-        func_00267560(v, v, d);
+        PlatVu0CopyVector(v, e->x450);
+        PlatVu0ScaleVector(v, v, d);
         v[3] = 1.0f;
-        func_002672f8(e->x1f0, m, v);
+        PlatVu0ApplyMatrix(e->x1f0, m, v);
         e->x1fc = e->x450[3];
         e->x1cc |= 4;
     } else {

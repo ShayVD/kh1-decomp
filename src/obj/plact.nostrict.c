@@ -7,6 +7,7 @@
  * modes are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
 #include "data/pieces/D_002E27C8.h"
@@ -124,21 +125,19 @@ void func_001252f8(void) {
 }
 
 /* func_00126108 (from hand/nostrict/text_00120000_sw.c). */
-extern void func_00267530(void *, void *, void *);
 extern void func_00121fc4(f32 *, f32 *);
 typedef struct { u8 pad[0x10]; f32 f10[16]; } E4;
 typedef struct { u8 pad[0x28]; s32 f28, f2c, f30, f34, f38; } C4;
 extern f32 D_002E27CC;
 extern f32 D_002E27D0;
-extern f32 func_00267390(f32 *, f32 *);
 void func_00126108(E4 *e, f32 *dir, f32 *pos, f32 a, C4 *c, f32 b) {
     f32 v[4];
     f32 d;
-    func_00267530(v, pos, e->f10);
+    PlatVu0SubVector(v, pos, e->f10);
     v[1] = 0.0f;
     func_00121fc4(v, v);
     v[3] = v[3] * b - a;
-    d = func_00267390(v, dir);
+    d = PlatVu0InnerProduct(v, dir);
     if (D_004F77F4 < d) {
         if (v[3] < D_002E27D0) {
             c->f38++;
@@ -185,7 +184,6 @@ void func_00126238(E5 *e, C5 *c, void *s) {
 
 /* func_00126360 (from hand/nostrict/text_00120000_sw.c). */
 extern s32 func_00122ff8(void *);
-extern void func_002675a8(void *, void *);
 typedef struct { f32 x, y, z, w; } C01Vec;
 typedef struct { u8 pad[0x10]; f32 x10; u8 pad2[0xd0 - 0x14]; u8 xd0; } C01Sub6c;
 typedef struct { u8 pad[0x29]; u8 x29; } C01Sub14c;
@@ -229,7 +227,7 @@ s32 func_00126360(C01Obj2 *o, s32 *ctx, C01Vec *v) {
         func_00126238((E5 *)o, (C5 *)v, fl);
     } else {
         d = func_0012ec60(ctx[0], ctx[1], (f32 *)&a);
-        func_00267530(v, &a, &o->x10);
+        PlatVu0SubVector(v, &a, &o->x10);
         y = -v->y;
         v->y = 0;
         func_00121fc4((f32 *)v, (f32 *)v);
@@ -250,7 +248,7 @@ s32 func_00126360(C01Obj2 *o, s32 *ctx, C01Vec *v) {
             if ((*(u32 *)&D_002E27C8) >> 23 & 1) fl[12] = fl[13];
         }
     }
-    func_002675a8(&b, v);
+    PlatVu0CopyVector(&b, v);
     b.w = 20.0f;
     if (func_001562d0(o, &b)) fl[2] = 1;
     if (((*(u32 *)&D_002E27C8) >> 3 & 1) && fl[8] > 0 && !fl[11]) fl[6] = 1;

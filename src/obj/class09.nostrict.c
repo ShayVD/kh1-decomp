@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/types/nostrict_text_00130000_h55.h"
 #include "data/pieces/D_002E26A0.h"
@@ -117,14 +118,12 @@ typedef struct Actor_3ff00 {
 } W55Ob_3ff00;
 f32 func_00121550(f32 *o, f32 *a, f32 *d, f32 *p, f32 *v);
 void func_00121fc4(f32 *d, f32 *s);
-void func_00267530(f32 *d, f32 *a, f32 *b);
-void func_00267560(f32 *d, f32 *s, f32 k);
 f32 fabsf(f32);
 s32 func_0013ff00(W55Ob_3ff00 *o, f32 *seg, f32 *v, f32 *r) {
     f32 d[4], w[4], tmp[4];
     f32 t;
     if (fabsf(seg[1] - seg[5]) > 5.0f) seg += 4;
-    func_00267530(d, seg + 4, seg);
+    PlatVu0SubVector(d, seg + 4, seg);
     func_00121fc4(d, d);
     t = func_00121550(tmp, seg, d, o->pos, v);
     if (t < 0.0f) {
@@ -134,7 +133,7 @@ s32 func_0013ff00(W55Ob_3ff00 *o, f32 *seg, f32 *v, f32 *r) {
         if (d[3] + 20.0f < t) return 0;
         t = d[3];
     }
-    func_00267560(w, v, o->x2c0 - 1.0f);
+    PlatVu0ScaleVector(w, v, o->x2c0 - 1.0f);
     r[0] = seg[0] + d[0] * t + w[0];
     r[1] = o->pos[1];
     r[2] = seg[2] + d[2] * t + w[2];

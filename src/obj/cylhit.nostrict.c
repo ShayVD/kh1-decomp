@@ -5,6 +5,7 @@
  * func_0015bb88 / func_0015bcb8 test an object against the others, and
  * func_0015c738 finds the object under a point.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00150000_h36.h"
@@ -13,25 +14,22 @@
 
 /* func_0015b4a8 (from hand/nostrict/text_00150000_h36.c). */
 typedef struct { s32 type; f32 r; f32 h; s32 idx; f32 pos[4] __attribute__((aligned(16))); } Cyl;
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267548(f32 *, f32 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
 s32 func_0015b4a8(Cyl *a, Cyl *b) {
     f32 d[4];
     f32 s[4];
     f32 one = 1.0f;
     s[0] = s[2] = one / (a->r + b->r);
     s[1] = one / (a->h + b->h);
-    func_00267530(d, b->pos, a->pos);
-    func_00267548(d, d, s);
-    return func_00267390(d, d) < one;
+    PlatVu0SubVector(d, b->pos, a->pos);
+    PlatVu0MulVector(d, d, s);
+    return PlatVu0InnerProduct(d, d) < one;
 }
 
 /* func_0015b550 (from hand/nostrict/text_00150000_h36.c). */
 s32 func_0015b550(Cyl *a, Cyl *b) {
     f32 d[4];
     f32 ad, rr;
-    func_00267530(d, b->pos, a->pos);
+    PlatVu0SubVector(d, b->pos, a->pos);
     ad = fabsf(d[1]);
     if (a->h + b->h <= ad) return 0;
     if (b->h < ad) {
@@ -41,14 +39,14 @@ s32 func_0015b550(Cyl *a, Cyl *b) {
         rr = a->r + b->r;
     }
     d[1] = 0;
-    return func_00267390(d, d) < rr * rr;
+    return PlatVu0InnerProduct(d, d) < rr * rr;
 }
 
 /* func_0015b6c0 (from hand/nostrict/text_00150000_h36.c). */
 s32 func_0015b6c0(Cyl *a, Cyl *b) {
     f32 d[4];
     f32 r, rr, s;
-    func_00267530(d, a->pos, b->pos);
+    PlatVu0SubVector(d, a->pos, b->pos);
     d[1] = fabsf(d[1]);
     if (a->h + b->h <= d[1]) return 0;
     if (b->h < d[1]) {
@@ -75,7 +73,7 @@ s32 func_0015b6c0(Cyl *a, Cyl *b) {
 s32 func_0015b7e8(Cyl *a, Cyl *b) {
     f32 d[4];
     f32 r, rr;
-    func_00267530(d, a->pos, b->pos);
+    PlatVu0SubVector(d, a->pos, b->pos);
     d[1] = fabsf(d[1]);
     rr = a->h + b->h;
     if (rr <= d[1]) return 0;
@@ -101,7 +99,7 @@ typedef struct { s32 type; f32 r; f32 h; u8 padc[4]; V4 pos; } CylV;
 s32 func_0015b8e0(CylV *a, CylV *b) {
     V4 d;
     f32 s;
-    func_00267530((f32 *)&d, (f32 *)&a->pos, (f32 *)&b->pos);
+    PlatVu0SubVector((f32 *)&d, (f32 *)&a->pos, (f32 *)&b->pos);
     s = a->r + b->r;
     if (s < d.x) return 0;
     if (d.x < -s) return 0;
@@ -200,14 +198,13 @@ fail:
 /* func_0015bcb8 (from hand/nostrict/text_00150000_h36.c). */
 void *func_001230a0(void *);
 s32 func_001425d0(void *);
-void func_00267518(f32 *, f32 *, f32 *);
 s32 func_0015bcb8(CylObj *o, f32 *at) {
     Cyl c;
     f32 v[4];
     CylObj *p = 0;
     func_0015bad0(o, o->hdr->cyl, &c);
-    func_00267530(v, at, o->pos);
-    func_00267518(c.pos, c.pos, v);
+    PlatVu0SubVector(v, at, o->pos);
+    PlatVu0AddVector(c.pos, c.pos, v);
     while ((p = func_001230a0(p)) != 0) {
         if (p == o) continue;
         if (!func_001425d0(p)) continue;
@@ -245,7 +242,6 @@ fail:
 }
 
 /* func_0015beb0 (from hand/nostrict/text_00150000_h59.c). */
-void func_00267560(f32 *, f32 *, f32);
 void func_0015beb0(Cyl *a, Cyl *b, f32 *out) {
     f32 res[4];
     f32 sc[4];
@@ -253,12 +249,12 @@ void func_0015beb0(Cyl *a, Cyl *b, f32 *out) {
     f32 len;
     sc[0] = sc[2] = 1.0f / (a->r + b->r);
     sc[1] = 1.0f / (a->h + b->h);
-    func_00267530(d, b->pos, a->pos);
-    func_00267548(res, d, sc);
+    PlatVu0SubVector(d, b->pos, a->pos);
+    PlatVu0MulVector(res, d, sc);
     d[1] = 0.0f;
     len = res[0] * res[0] + res[2] * res[2];
     if (d[1] < len) {
-        func_00267560(out, res, (PlatSqrtf((1.0f - res[1] * res[1]) / len) - 1.0f) * (a->r + b->r + 5.0f));
+        PlatVu0ScaleVector(out, res, (PlatSqrtf((1.0f - res[1] * res[1]) / len) - 1.0f) * (a->r + b->r + 5.0f));
     } else {
         out[0] = a->r + b->r + 5.0f;
         out[2] = d[1];
@@ -270,10 +266,10 @@ void func_0015beb0(Cyl *a, Cyl *b, f32 *out) {
 void func_0015bff8(Cyl *a, Cyl *b, f32 *out) {
     f32 d[4];
     f32 ad, l, r;
-    func_00267530(d, b->pos, a->pos);
+    PlatVu0SubVector(d, b->pos, a->pos);
     ad = fabsf(d[1]);
     d[1] = 0;
-    l = func_00267390(d, d);
+    l = PlatVu0InnerProduct(d, d);
     if (0.0f < l) {
         if (b->h < ad) {
             ad = (ad - b->h) / a->h;
@@ -283,7 +279,7 @@ void func_0015bff8(Cyl *a, Cyl *b, f32 *out) {
         }
         r += 5.0f;
         l = PlatSqrtf(l);
-        func_00267560(out, d, (r - l) / l);
+        PlatVu0ScaleVector(out, d, (r - l) / l);
     } else {
         out[0] = a->r + b->r + 5.0f;
         out[2] = 0.0f;
@@ -295,13 +291,13 @@ void func_0015bff8(Cyl *a, Cyl *b, f32 *out) {
 void func_0015c128(Cyl *a, Cyl *b, f32 *out) {
     f32 d[4];
     f32 l, s;
-    func_00267530(d, b->pos, a->pos);
+    PlatVu0SubVector(d, b->pos, a->pos);
     d[1] = 0;
-    l = func_00267390(d, d);
+    l = PlatVu0InnerProduct(d, d);
     if (0.0f < l) {
         s = a->r + b->r + 5.0f;
         l = PlatSqrtf(l);
-        func_00267560(out, d, (s - l) / l);
+        PlatVu0ScaleVector(out, d, (s - l) / l);
     } else {
         out[0] = a->r + b->r + 5.0f;
         out[2] = 0.0f;
@@ -314,7 +310,7 @@ void func_0015c1f8(Cyl *a, Cyl *b, f32 *out) {
     f32 d[4];
     f32 e[4];
     f32 r, rr;
-    func_00267530(d, a->pos, b->pos);
+    PlatVu0SubVector(d, a->pos, b->pos);
     d[1] = fabsf(d[1]);
     r = b->h;
     if (r < d[1]) {
@@ -357,7 +353,7 @@ void func_0015c3a0(Cyl *a, Cyl *b, f32 *out) {
     f32 d[4];
     f32 e[4];
     f32 r;
-    func_00267530(d, a->pos, b->pos);
+    PlatVu0SubVector(d, a->pos, b->pos);
     e[0] = fabsf(d[0]);
     e[2] = fabsf(d[2]);
     e[1] = fabsf(d[1]);
@@ -392,7 +388,7 @@ void func_0015c3a0(Cyl *a, Cyl *b, f32 *out) {
 void func_0015c508(Cyl *a, Cyl *b, f32 *out) {
     f32 d[4];
     f32 s;
-    func_00267530(d, a->pos, b->pos);
+    PlatVu0SubVector(d, a->pos, b->pos);
     s = a->r + b->r + 5.0f;
     if (fabsf(d[0]) > fabsf(d[2])) {
         if (0.0f < d[0]) out[0] = d[0] - s; else out[0] = d[0] + s;
@@ -432,7 +428,7 @@ void func_0015c5d0(Cyl *a, Cyl *b, f32 *out) {
         if (b->type == 3) func_0015c508(a, b, out);
         break;
     }
-    if (sw) func_00267530(out, (*(f32 (*)[0x4])&D_002C58A0), out);
+    if (sw) PlatVu0SubVector(out, (*(f32 (*)[0x4])&D_002C58A0), out);
 }
 
 /* func_0015c738 (from hand/nostrict/text_00150000_h59.c). */
@@ -462,7 +458,7 @@ Obj59 *func_0015c738(Obj59 *self, f32 *pos) {
     hi = (pos[1] < self->x2c4 * 0.5f) ? self->x2c4 * 0.5f : pos[1];
     lo = 0.0f;
     if (!func_0014f600(self)) lo = -hi;
-    func_00267518(p, self->pos, pos);
+    PlatVu0AddVector(p, self->pos, pos);
     o = 0;
     while ((o = func_001230a0(o)) != 0) {
         if (o == self) continue;
@@ -472,11 +468,11 @@ Obj59 *func_0015c738(Obj59 *self, f32 *pos) {
             switch (s->type) {
             case 2:
                 func_0015bad0(o, s, &c);
-                func_00267530(d, p, c.pos);
+                PlatVu0SubVector(d, p, c.pos);
                 y = d[1] + c.h;
                 if (lo <= y && y < hi) {
                     d[1] = 0.0f;
-                    if (func_00267390(d, d) < c.r * c.r) {
+                    if (PlatVu0InnerProduct(d, d) < c.r * c.r) {
                         pos[1] -= y;
                         return o;
                     }
@@ -484,7 +480,7 @@ Obj59 *func_0015c738(Obj59 *self, f32 *pos) {
                 break;
             case 3:
                 func_0015bad0(o, s, &c);
-                func_00267530(d, p, c.pos);
+                PlatVu0SubVector(d, p, c.pos);
                 y = d[1] + c.h;
                 if (lo <= y && y < hi) {
                     d[1] = 0.0f;

@@ -5,6 +5,7 @@
  * other modes are in the sibling files). Read from the code, not proved by a
  * boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002C58D0.h"
@@ -369,9 +370,8 @@ void func_001356a8(void) {
 #undef func_001350d0
 
 /* func_00135788 (from auto/text_00130000.c). */
-M2C_UNK func_002675a8(s32, s32);
 void func_00135788(void *arg0) {
-    func_002675a8(arg0 + 0x10, arg0 + 0x100);
+    PlatVu0CopyVector(arg0 + 0x10, arg0 + 0x100);
     M2C_FIELD(arg0, s32 *, 0x3A0) = 0;
 }
 

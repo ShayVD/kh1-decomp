@@ -5,6 +5,7 @@
  * nostrict (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00130000_h32.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
@@ -110,7 +111,6 @@ extern C01CmdInfo D_0030433C[];
 C01Act3 *func_00123488(s32);
 void func_001336d8(void);
 void func_00133708(void);
-void func_002675a8(f32 *, f32 *);
 void func_00123a88(s32, f32 *);
 void func_001339c0(C01Act3 *);
 f32 atan2f(f32, f32);
@@ -153,7 +153,7 @@ void func_00133a88(void) {
             func_00133708();
             break;
         case 3:
-            func_002675a8(v, c->x10);
+            PlatVu0CopyVector(v, c->x10);
             v[3] = a->x3c;
             func_00123a88(c->x4, v);
             break;
@@ -205,7 +205,7 @@ void func_00133a88(void) {
             break;
         case 12:
             func_0014cce0(a, fabsf(c->x10[1]));
-            func_002675a8(a->x3c0, c->x10);
+            PlatVu0CopyVector(a->x3c0, c->x10);
             a->x3c0[1] = a->x3cc = 0.0f;
             if (!((a->x440 >> 33) & 1)) {
                 a->x3d0 = 0;
@@ -282,14 +282,14 @@ void func_00133a88(void) {
             func_00133978(a, 30);
             e = func_00133868(a, c);
             c = 0;
-            func_002675a8(e->x40, a->x40);
+            PlatVu0CopyVector(e->x40, a->x40);
             break;
         case 31:
             func_00133868(a, c);
             c = 0;
             break;
         case 32:
-            func_002675a8(v, c->x10);
+            PlatVu0CopyVector(v, c->x10);
             v[3] = a->x3c;
             func_00124060(a, v);
             break;

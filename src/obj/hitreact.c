@@ -4,6 +4,7 @@
 #include "m2c.h"
 #include "data/pieces/D_00308CDC.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/bss_0054.h"
 #include "data/pieces/D_002E31B0.h"
@@ -149,7 +150,6 @@ typedef struct Actor_54258 {
     void *x4a0;
 } W9Ent;
 f32 func_001348e0(W9Ent *e, f32 *o);
-void func_00267e90(f32 *out, f32 *in, f32 s);
 void func_00154258(W9Ent *e, f32 *o, f32 *out) {
     f32 k = e->x6c->xc4;
     f32 s;
@@ -158,7 +158,7 @@ void func_00154258(W9Ent *e, f32 *o, f32 *out) {
     } else {
         s = (*(Cfg_308cdc **)&D_00308CDC)->x34 * k;
     }
-    func_00267e90(out, o + 4, s);
+    PlatVu0ScaleVectorXYZ(out, o + 4, s);
 }
 
 /* func_00154be0 (from auto/text_00150000_3.c). */

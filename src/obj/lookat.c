@@ -5,6 +5,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
@@ -96,9 +97,8 @@ typedef struct Actor_4f9b0 {
     f32 x490[4];
     void *x4a0;
 } W9Ent;
-void func_002675a8(void *dst, void *src);
 void func_0014f9b0(W9Ent *e, f32 *src, f32 t) {
-    func_002675a8(e->x1f0, src);
+    PlatVu0CopyVector(e->x1f0, src);
     if (0.0f < t) {
         e->x1f0[3] = 0.0f;
         e->x45c = 1.0f / t;
@@ -177,12 +177,7 @@ typedef struct {
 f32 atan2f(f32, f32);
 void func_00121fc4(f32 *, f32 *);
 void func_001315c0(void *, s32, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
 void func_0012ec88();
-void func_002673f8(f32 *, f32 *);
-void func_002672f8(f32 *, f32 *, f32 *);
-void func_00267768(f32 *, f32 *, f32);
-void func_00267810(f32 *, f32 *, f32);
 f32 asinf(f32);
 f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
     f32 a[4];
@@ -193,12 +188,12 @@ f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
 
     func_001315c0(o, 0, a, 0.5f);
     func_0012ec88(id, b);
-    func_00267530(dir, b, a);
+    PlatVu0SubVector(dir, b, a);
     func_00121fc4(dir, dir);
     len = dir[3];
-    func_002673f8(m, o->md0);
+    PlatVu0TransposeMatrix(m, o->md0);
     dir[3] = 0.0f;
-    func_002672f8(dir, m, dir);
+    PlatVu0ApplyMatrix(dir, m, dir);
     if (lim < dir[2]) return 0.0f;
     ang[1] = atan2f(-dir[0], -dir[2]);
     ang[2] = asinf(dir[1]);
@@ -212,13 +207,13 @@ f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, D_002C58D0[0], ang[2]);
-    func_00267810(m, m, ang[1]);
+    PlatVu0RotMatrixX(m, D_002C58D0[0], ang[2]);
+    PlatVu0RotMatrixY(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;
     dir[2] = -1.0f;
     dir[3] = 0.0f;
-    func_002672f8(dir, m, dir);
+    PlatVu0ApplyMatrix(dir, m, dir);
     return len;
 }
 
@@ -232,8 +227,6 @@ typedef struct {
     u8 pad110[0x460-0x110];
     f32 v460[4];
 } Obj57_fc68;
-void func_002674f0(f32 *, f32 *, f32 *, f32);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
     f32 a[4];
     f32 b[4];
@@ -243,14 +236,14 @@ f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
 
     func_001315c0(o, 0, a, 0.5f);
     func_0012ec88(id, b);
-    func_002674f0(b, o->v460, b, 0.9f);
-    func_002675a8(o->v460, b);
-    func_00267530(dir, b, a);
+    PlatVu0InterVector(b, o->v460, b, 0.9f);
+    PlatVu0CopyVector(o->v460, b);
+    PlatVu0SubVector(dir, b, a);
     func_00121fc4(dir, dir);
     len = dir[3];
-    func_002673f8(m, o->md0);
+    PlatVu0TransposeMatrix(m, o->md0);
     dir[3] = 0.0f;
-    func_002672f8(dir, m, dir);
+    PlatVu0ApplyMatrix(dir, m, dir);
     if (lim < dir[2]) return 0.0f;
     ang[1] = atan2f(-dir[0], -dir[2]);
     ang[2] = asinf(dir[1]);
@@ -264,14 +257,13 @@ f32 func_0014fc68(Obj57_fc68 *o, s32 id, f32 *dir, f32 lim) {
     } else {
         if (o->prm->f38 < ang[1]) ang[1] = o->prm->f38;
     }
-    func_00267768(m, D_002C58D0[0], ang[2]);
-    func_00267810(m, m, ang[1]);
+    PlatVu0RotMatrixX(m, D_002C58D0[0], ang[2]);
+    PlatVu0RotMatrixY(m, m, ang[1]);
     dir[0] = 0.0f;
     dir[1] = 0.0f;
     dir[2] = -1.0f;
     dir[3] = 0.0f;
-    func_002672f8(dir, m, dir);
+    PlatVu0ApplyMatrix(dir, m, dir);
     return len;
 }
-#undef func_002675a8
 

@@ -3,6 +3,7 @@
  * default (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/bss_0053.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -85,21 +86,19 @@ f32 func_00144378(Actor *arg0) {
 
 /* func_001447a0 (from hand/text_00130000_h7.c). */
 void func_0014cc88(W7Ob *o, f32 f);
-void func_00267560(f32 *d, f32 *s, f32 f);
 extern f32 D_002C5970;
 void func_001447a0(W7Ob *o) {
     func_0014cc88(o, 0.0f);
     o->flags &= ~0x400;
     o->x3b0 = 6.0f;
     o->x3b4 -= 8.724489212036133f;
-    func_00267560(o->x3c0, o->x200, D_002C5970);
+    PlatVu0ScaleVector(o->x3c0, o->x200, D_002C5970);
 }
 
 /* func_00144ce0 (from auto/text_00140000_10.c). */
-M2C_UNK func_00267e90(s32, s32, f32);
 extern f32 D_002BBDFC;
 void func_00144ce0(s32 arg0, s32 arg1) {
-    func_00267e90(arg1, arg0 + 0x20, D_002BBDFC);
+    PlatVu0ScaleVectorXYZ(arg1, arg0 + 0x20, D_002BBDFC);
 }
 
 /* func_00144e38 (from auto/text_00140000_5.c). */

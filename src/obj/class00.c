@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class00.nostrict.c.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "m2c.h"
 #include "actor.h"
 #include "data/pieces/D_00304BE8.h"
@@ -20,12 +21,11 @@ typedef struct {
     u8 pad168[0x320 - 0x168];
     f32 x320[4];
 } A348;
-void func_002675a8(f32 *, f32 *);
 void func_0015ac58(A348 *);
 /* session 7 w2: func_0015a348 (strict). func_0015ac58 takes the object in a0; passing it fixes the beqzl/alignment layout. */
 s32 func_0015a348(A348 *a, s32 f) {
     if (f != 0 || (a->w0 & 0x1000)) {
-        if (a->w0 & 0x100) { func_002675a8(a->pos, a->x320); return a->x70; }
+        if (a->w0 & 0x100) { PlatVu0CopyVector(a->pos, a->x320); return a->x70; }
         if (a->x164 == 220) func_0015ac58(a);
         return 2;
     }

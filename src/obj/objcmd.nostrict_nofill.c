@@ -5,6 +5,7 @@
  * nostrict_nofill (the other modes are in the sibling files). Read from the
  * code, not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 
 /* func_001342c8 (from hand/nostrict_nofill/text_00120000_b02.c). */
 typedef struct { f32 x, y, z, w; } V4;
@@ -37,8 +38,6 @@ extern f32 func_001dcb00(Ob11 *, V4 *, f32, f32);
 extern void func_00133950(Ob11 *, Nd11 *);
 extern f32 func_00120c88(f32);
 extern void func_00137688(Ob11 *, f32);
-extern void func_002675a8(V4 *, V4 *);
-extern void func_002674f0(V4 *, V4 *, V4 *, f32);
 extern s32 func_00135938(Ob11 *, s32);
 extern void func_001358b8(Ob11 *, s32);
 extern void func_001358f8(Ob11 *, s32);
@@ -80,7 +79,7 @@ void func_001342c8(Ob11 *o) {
             o->f150 = func_00120c88(*(f32 *)((u8 *)o + 0x3c) + r);
             }
             func_00137688(o, o->f150);
-            func_002675a8(&o->f20, &o->f30);
+            PlatVu0CopyVector(&o->f20, &o->f30);
             *(s32 *)((u8 *)o + 0x2c) = 0;
             break;
         case 23:
@@ -111,9 +110,9 @@ void func_001342c8(Ob11 *o) {
             a = (f32)VAL(c);
             t = n->f4 / a;
             if (t < 1.0f) {
-                func_002674f0(&o->f40, &c->f10, &n->f40, t);
+                PlatVu0InterVector(&o->f40, &c->f10, &n->f40, t);
             } else {
-                func_002675a8(&o->f40, &c->f10);
+                PlatVu0CopyVector(&o->f40, &c->f10);
                 func_00133950(o, n);
             }
             break;

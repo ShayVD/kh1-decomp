@@ -4,6 +4,7 @@
  * other modes are in the sibling files). Read from the code, not proved by a
  * boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h57_p.h"
 #include "data/types/text_00140000_h57.h"
@@ -44,34 +45,30 @@ typedef struct {
 } Obj57_cee8;
 extern f32 D_002BBDFC;
 void func_00121fc4(f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 void func_0014cdc8(Obj57_cee8 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267e90(f32 *, f32 *, f32);
 void func_0014cee8(Obj57_cee8 *o, f32 *v) {
     f32 d;
 
     if (o->flags & 0x1000) {
         o->f3b0 = o->f3b8 = 0.0f;
         o->f3b4 = o->f14;
-        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
+        PlatVu0CopyVector(v, (*(f32 (*)[0x4])&D_002C58A0));
     } else {
         if (o->f2c > 0.0f) {
             d = func_00120c18(o->v3c0);
-            func_00267560(v, o->v20, o->f2c * o->prm->f14);
-            func_00267518(v, v, o->v3c0);
+            PlatVu0ScaleVector(v, o->v20, o->f2c * o->prm->f14);
+            PlatVu0AddVector(v, v, o->v3c0);
             v[1] = 0.0f;
             func_00121fc4(v, v);
             if (!(o->prm->f8 < d)) d = o->prm->f8;
             if (d < v[3]) v[3] = d;
-            func_00267e90(v, v, v[3]);
+            PlatVu0ScaleVectorXYZ(v, v, v[3]);
         } else {
-            func_00267560(v, o->v3c0, o->prm->f18);
+            PlatVu0ScaleVector(v, o->v3c0, o->prm->f18);
         }
-        func_002675a8(o->v3c0, v);
-        func_00267e90(v, v, D_002BBDFC);
+        PlatVu0CopyVector(o->v3c0, v);
+        PlatVu0ScaleVectorXYZ(v, v, D_002BBDFC);
         o->f3b0 += D_002BBDFC;
         func_0014cdc8(o, v);
     }
@@ -79,7 +76,6 @@ void func_0014cee8(Obj57_cee8 *o, f32 *v) {
 }
 
 /* func_0014d070 (from hand/text_00140000_h34.c). */
-void func_00267530(f32 *, f32 *, f32 *);
 s32 func_00130340(void *, s32, f32);
 void func_00130578(void *, s32, f32);
 f32 func_0014cc88(void *, f32);
@@ -101,7 +97,7 @@ typedef struct {
 } W34Pl4;
 void func_0014d070(W34Pl4 *o, f32 *b) {
     f32 v[4] __attribute__((aligned(16)));
-    func_00267530(v, o->x2e0, o->x2a0);
+    PlatVu0SubVector(v, o->x2e0, o->x2a0);
     if (b[1] < v[1]) {
         switch (o->x70) {
         case 2:
@@ -236,7 +232,7 @@ void func_0014d210(W34Pl5 *o, f32 *v) {
         o->x150 = atan2f(v[0], v[2]);
         if (o->x164 == 220) func_00130398(o, 6, 8.0f);
     }
-    func_002675a8(o->x20, v);
+    PlatVu0CopyVector(o->x20, v);
 }
 #undef func_0014d180
 
@@ -328,12 +324,11 @@ s32 func_0014d3c8(void) {
 
 /* func_0014d428 (from auto/text_00140000_6.c). */
 M2C_UNK func_0014f658(void *, M2C_UNK);
-#define func_002675a8 ((M2C_UNK (*)(s32)) func_002675a8)
 void func_0014d428(void *arg0, void *arg1, f32 fparg0, f32 fparg1) {
     f32 temp_f0;
     f32 temp_f20;
 
-    func_002675a8(arg0 + 0x3C0);
+    PlatVu0CopyVector(arg0 + 0x3C0, arg1);
     M2C_FIELD(arg0, f32 *, 0x3CC) = fparg0;
     temp_f20 = fparg1 * 0.5f;
     M2C_FIELD(arg0, s32 *, 0x3B0) = 0;
@@ -349,14 +344,12 @@ void func_0014d428(void *arg0, void *arg1, f32 fparg0, f32 fparg1) {
     }
     M2C_FIELD(arg0, s32 *, 0) = (s32) (M2C_FIELD(arg0, s32 *, 0) & 0xFFFEFFFF);
 }
-#undef func_002675a8
 
 /* func_0014d4f8 (from auto/text_00140000_16.c). */
-#define func_002675a8 ((M2C_UNK (*)(s32)) func_002675a8)
 void func_0014d4f8(void *arg0, void *arg1, f32 fparg0, f32 fparg1) {
   f32 *new_var;
   f32 *new_var2;
-  func_002675a8(arg0 + 0x3C0);
+  PlatVu0CopyVector(arg0 + 0x3C0, arg1);
   *((f32 *) (((s8 *) arg0) + 0x3CC)) = fparg0;
   *((f32 *) (((s8 *) arg0) + 0x3B4)) = fparg1;
   new_var2 = (f32 *) (((s8 *) arg0) + 0x3B8);
@@ -366,7 +359,6 @@ void func_0014d4f8(void *arg0, void *arg1, f32 fparg0, f32 fparg1) {
   *new_var2 = (f32) ((-(*new_var)) / fparg1);
   func_0014f658(arg0, 3);
 }
-#undef func_002675a8
 
 /* func_0014d570 (from hand/text_00140000_s6_07.c). */
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
@@ -388,7 +380,7 @@ void func_0014d570(f32 *v, f32 lo, f32 hi, f32 max, f32 g) {
     t = MIN(MAX(lo, v[3] / max), hi);
     b = (-g * t) * k;
     t = (PlatSqrtf(b * b - c) - b) / (a + a);
-    func_00267560(v, v, MIN(v[3] / t, max));
+    PlatVu0ScaleVector(v, v, MIN(v[3] / t, max));
     v[1] = b;
 }
 #undef MAX
@@ -396,11 +388,10 @@ void func_0014d570(f32 *v, f32 lo, f32 hi, f32 max, f32 g) {
 
 /* func_0014d6b0 (from auto/text_00140000_10.c). */
 M2C_UNK func_0014cd38(void *);
-#define func_00267e90 ((M2C_UNK (*)(s32, s32, f32)) func_00267e90)
 void func_0014d6b0(void *arg0, s32 arg1) {
     f32 temp_f3;
 
-    func_00267e90(arg1, arg0 + 0x3C0, D_002BBDFC);
+    PlatVu0ScaleVectorXYZ(arg1, arg0 + 0x3C0, D_002BBDFC);
     M2C_FIELD(arg0, f32 *, 0x3C0) = (f32) (M2C_FIELD(arg0, f32 *, 0x3C0) * M2C_FIELD(arg0, f32 *, 0x3CC));
     temp_f3 = M2C_FIELD(arg0, f32 *, 0x3C4) + (M2C_FIELD(arg0, f32 *, 0x3B4) * D_002BBDFC);
     M2C_FIELD(arg0, f32 *, 0x3C8) = (f32) (M2C_FIELD(arg0, f32 *, 0x3C8) * M2C_FIELD(arg0, f32 *, 0x3CC));
@@ -411,7 +402,6 @@ void func_0014d6b0(void *arg0, s32 arg1) {
     M2C_FIELD(arg0, f32 *, 0x3B0) = (f32) (M2C_FIELD(arg0, f32 *, 0x3B0) + D_002BBDFC);
     func_0014cd38(arg0);
 }
-#undef func_00267e90
 
 /* func_0014d760 (from auto/text_00140000_10.c). */
 s32 func_0014d760(void *arg0, s32 arg1) {
@@ -435,8 +425,7 @@ s32 func_0014d778(void *arg0, s32 arg1) {
 /* func_0014d7b8 (from auto/text_00140000_17.c). */
 f32 func_0014cce0(s32, f32);
 #define func_0014f658 ((s32 (*)(s32, s32)) func_0014f658)
-#define func_002675a8 ((s32 (*)(s32, s32)) func_002675a8)
-s32 func_0014d7b8(s32 arg0, s32 arg1) {
+void func_0014d7b8(s32 arg0, s32 arg1) {
   f32 temp_f1;
   s32 temp_s0;
   s32 temp_v1;
@@ -462,10 +451,9 @@ s32 func_0014d7b8(s32 arg0, s32 arg1) {
     *((f32 *) (((s8 *) arg0) + 0x3B0)) = (f32) (temp_f1 + D_002BBDFC);
  do { *((s32 *) (((s8 *) arg1) + 0xC)) = 0; } while (0);
   }
-  return func_002675a8(arg0 + 0x20, arg1);
+  PlatVu0CopyVector(arg0 + 0x20, arg1);
 }
 #undef func_0014f658
-#undef func_002675a8
 
 /* func_0014d878 (from auto/text_00140000_10.c). */
 s32 func_0014d878(void *arg0, s32 arg1) {

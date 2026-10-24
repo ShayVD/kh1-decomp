@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class1b.nostrict.c.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
@@ -270,7 +271,6 @@ typedef struct {
     C130g *x130;
 } Tg;
 typedef struct { u8 pad[8]; Tg *x8; u8 padc[4]; f32 pos[4]; } Og;
-void func_00267530(f32 *, f32 *, f32 *);
 f32 fabsf(f32);
 s32 func_00151e28(Og *o) {
     f32 d[4];
@@ -279,7 +279,7 @@ s32 func_00151e28(Og *o) {
     f32 lim;
 
     if (!t || t->x98 || t->x70 || t->x130->x4c || (t->x0 & 4)) return 0;
-    func_00267530(d, o->pos, t->pos);
+    PlatVu0SubVector(d, o->pos, t->pos);
     lim = 10.0f;
     if (fabsf(d[1]) > lim) return 0;
     lim = 25.0f;
@@ -413,19 +413,16 @@ typedef struct Actor_52370 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_52370;
-void func_00267560(void *out, void *in, f32 s);
-void func_00267518(void *out, void *a, void *b);
 void func_00152370(W9Ent_52370 *e, f32 *v) {
     if (e->x98) {
-        func_00267560(e->x20, v, v[3] * D_002BBDFC);
-        func_00267518(e->x98->x120, e->x98->x120, e->x20);
+        PlatVu0ScaleVector(e->x20, v, v[3] * D_002BBDFC);
+        PlatVu0AddVector(e->x98->x120, e->x98->x120, e->x20);
     }
 }
 
 /* func_001523e8 (from auto/text_00150000_16.c). */
-M2C_UNK func_002675a8(s32, M2C_UNK *);
 void func_001523e8(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
+    PlatVu0CopyVector(arg1, ((M2C_UNK *)&D_002C58A0));
 }
 
 /* func_00152408 (from hand/text_00140000_h9.c). */
@@ -475,19 +472,17 @@ typedef struct Actor_52408 {
     void *x4a0;
 } W9Ent_52408;
 void func_00137318(W9Ent_52408 *e);
-#define func_00267530 ((void (*)(void *out, void *a, void *b)) func_00267530)
 s32 func_00152408(W9Ent_52408 *e, s32 a1) {
     f32 t[4];
     s32 r = 2;
     if (a1 == 0) {
-        func_00267530(t, e->x10, e->x490);
+        PlatVu0SubVector(t, e->x10, e->x490);
         if (fabsf(t[0] - e->x120[0]) > 0.001f || fabsf(t[1] - e->x120[1]) > 0.001f ||
             fabsf(t[2] - e->x120[2]) > 0.001f) func_00137318(e);
         r = e->x70;
     }
     return r;
 }
-#undef func_00267530
 
 /* func_001524a8 (from auto/text_00150000_2.c). */
 void func_001524a8(void) {

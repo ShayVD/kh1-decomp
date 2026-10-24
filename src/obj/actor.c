@@ -8,6 +8,7 @@
  * modes are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h53_p.h"
@@ -497,7 +498,6 @@ typedef struct {
     u8 pad8[0x88];
     Act53 *owner;
 } Ent53;
-void func_002675a8(V53 *, V53 *);
 f32 func_00120c88(f32);
 float sinf(float);
 float cosf(float);
@@ -507,9 +507,9 @@ Ent53 *func_0014a398(Ent53 *);
 void func_001238d0(Act53 *o, V53 *p) {
     Ent53 *e;
     f32 a;
-    func_002675a8(&o->pos, p);
+    PlatVu0CopyVector(&o->pos, p);
     o->pos.w = 1.0f;
-    func_002675a8(&o->prev, &o->pos);
+    PlatVu0CopyVector(&o->prev, &o->pos);
     if (!((*(u64 *)&o->f >> 44) & 1)) {
         a = func_00120c88(p->w);
         o->x30 = sinf(a);
@@ -517,7 +517,7 @@ void func_001238d0(Act53 *o, V53 *p) {
         o->x38 = cosf(a);
         o->x150 = a;
         o->x3c = a;
-        func_002675a8(&o->rot, (V53 *)&o->x30);
+        PlatVu0CopyVector(&o->rot, (V53 *)&o->x30);
     }
     o->rot.w = 0.0f;
     o->x3b4 = p->y;
@@ -529,7 +529,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     o->xcc = 1.0f;
     o->xc8 = 0.0f;
     func_00136d38(o);
-    func_002675a8(&o->x2a0, &o->pos);
+    PlatVu0CopyVector(&o->x2a0, &o->pos);
     func_00116660(&o->x2a0);
     if (!(o->info->flags & 0x40000)) {
         o->col[3] = 128;
@@ -539,7 +539,7 @@ void func_001238d0(Act53 *o, V53 *p) {
     }
     o->x39e = 0;
     o->f.b46 = 0;
-    func_002675a8(&o->x120, &D_002C58A0);
+    PlatVu0CopyVector(&o->x120, &D_002C58A0);
     for (e = 0; (e = func_0014a398(e)) != 0;) {
         if (e->owner == o && (e->u.w & 3) == 1) e->u.b.b16 = 0;
     }
@@ -556,27 +556,23 @@ void func_00123a88(s32 arg0, s32 arg1) {
 
 /* func_00123ab8 (from auto/text_00120000_11.c). */
 #define func_00136d38 ((M2C_UNK (*)(void *)) func_00136d38)
-#define func_002675a8 ((M2C_UNK (*)(void *, s32)) func_002675a8)
 #define func_00123488 ((void *(*)()) func_00123488)
 void func_00123ab8(s32 arg0, s32 arg1) {
     void *temp_v0;
 
     temp_v0 = func_00123488();
     M2C_FIELD(temp_v0, s64 *, 0x370) = (s64) (M2C_FIELD(temp_v0, s64 *, 0x370) | ((s64) 0x8000 << 0x1D));
-    func_002675a8(temp_v0 + 0x30, arg1);
+    PlatVu0CopyVector(temp_v0 + 0x30, arg1);
     func_00136d38(temp_v0);
 }
 #undef func_00136d38
-#undef func_002675a8
 #undef func_00123488
 
 /* func_00123b10 (from auto/text_00120000_9.c). */
-#define func_002675a8 ((M2C_UNK (*)(s32, s32)) func_002675a8)
 #define func_00123488 ((s32 (*)()) func_00123488)
 void func_00123b10(s32 arg0, s32 arg1) {
-    func_002675a8(func_00123488() + 0x40, arg1);
+    PlatVu0CopyVector(func_00123488() + 0x40, arg1);
 }
-#undef func_002675a8
 #undef func_00123488
 
 /* func_001247e8 (from hand/text_00110000_h30.c). */

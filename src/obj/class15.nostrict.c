@@ -3,6 +3,7 @@
  * nostrict (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/nostrict_text_00140000_h57.h"
 #include "data/types/nostrict_text_00140000_h57_p.h"
@@ -26,10 +27,8 @@ typedef struct {
 } Obj57_c850;
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
-void func_002675a8(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 f32 func_00120bf8(f32 *);
-void func_00267560(f32 *, f32 *, f32);
 void func_0014c850(Obj57_c850 *o, f32 *v) {
     f32 d;
     f32 lim;
@@ -52,8 +51,8 @@ void func_0014c850(Obj57_c850 *o, f32 *v) {
         d += D_002BBDFC * 0.399999983609f;
         if (lim < d) d = lim;
     }
-    func_002675a8(v, o->v30);
-    func_00267560(v, v, d * D_002BBDFC);
+    PlatVu0CopyVector(v, o->v30);
+    PlatVu0ScaleVector(v, v, d * D_002BBDFC);
     if (k * D_002BBDFC < o->v3c0[1]) {
         v[1] = k;
     } else {
@@ -62,7 +61,7 @@ void func_0014c850(Obj57_c850 *o, f32 *v) {
         }
         v[1] = o->v3c0[1] + D_002BBDFC * 0.484693862498f;
     }
-    func_00267560(o->v3c0, v, D_002C5970);
+    PlatVu0ScaleVector(o->v3c0, v, D_002C5970);
     o->v3c0[1] = v[1];
     D_0054F444 = func_00120bf8(v);
 }

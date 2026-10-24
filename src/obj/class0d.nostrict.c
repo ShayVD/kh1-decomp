@@ -3,6 +3,7 @@
  * Flag mode: nostrict (the other modes are in the sibling files). Read from
  * the code, not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0053.h"
@@ -66,20 +67,17 @@ typedef struct {
     u8 pad39f[0x3C4 - 0x39F];
     f32 f3c4;
 } ObjF3;
-void func_00267560(V4f *, V4f *, f32);
-void func_002675a8(V4f *, V4f *);
-void func_00267530(V4f *, V4f *, V4f *);
 void func_00121fc4(V4f *, V4f *);
 void func_0013f358(ObjF3 *o) {
     V4f t;
-    func_002675a8(&o->p148->p, &o->v2f0);
+    PlatVu0CopyVector(&o->p148->p, &o->v2f0);
     o->p148->f50 = o->f300;
     o->p148->f54 = o->p148->p.y + o->f304;
     o->p148->w5c = o->h314;
-    func_00267530(&t, &o->v2f0, &o->pos);
+    PlatVu0SubVector(&t, &o->v2f0, &o->pos);
     t.y = 0;
     func_00121fc4(&t, &t);
-    func_00267560(&t, &t, o->p148->f50 + o->f2c0);
+    PlatVu0ScaleVector(&t, &t, o->p148->f50 + o->f2c0);
     o->pos.x = o->p148->p.x - t.x;
     o->pos.z = o->p148->p.z - t.z;
     o->flags |= 0x200000;
@@ -115,8 +113,6 @@ s32 func_0013f510(ObjF3 *o, s32 a) {
 }
 
 /* func_0013f770 (from hand/nostrict/text_00140000_h33.c). */
-void func_002673b8(V4f *, V4f *);
-void func_00267518(V4f *, V4f *, V4f *);
 void func_0014cc88(ObjF3 *, f32);
 void func_0013f770(ObjF3 *o, V4f *v) {
     V4f t;
@@ -136,9 +132,9 @@ void func_0013f770(ObjF3 *o, V4f *v) {
         func_00130398(o, 6, 12.0f);
     }
     v->y = 0.0f;
-    func_00267560(&t, (V4f *)((u8 *)o + 0x30), -1.0f);
-    func_00267518(v, v, &t);
-    func_002673b8(v, v);
+    PlatVu0ScaleVector(&t, (V4f *)((u8 *)o + 0x30), -1.0f);
+    PlatVu0AddVector(v, v, &t);
+    PlatVu0Normalize(v, v);
     v->w = 2.0f;
     func_0014cc88(o, s);
     o->flags |= fl;
@@ -148,10 +144,6 @@ void func_0013f770(ObjF3 *o, V4f *v) {
 extern f32 D_002C5970;
 void func_0013f6d0(B3Ob *, f32 *);
 #define func_00130398 ((void (*)(B3Ob *o, s32 a, f32 f)) func_00130398)
-#define func_00267560 ((void (*)(f32 *, f32 *, f32)) func_00267560)
-#define func_00267518 ((void (*)(f32 *, f32 *, f32 *)) func_00267518)
-#define func_00267530 ((void (*)(f32 *, f32 *, f32 *)) func_00267530)
-#define func_002673b8 ((void (*)(f32 *, f32 *)) func_002673b8)
 #define func_00121fc4 ((void (*)(f32 *, f32 *)) func_00121fc4)
 #define func_0014f658 ((void (*)(B3Ob *o, s32 t)) func_0014f658)
 #define func_0013f330 ((s32 (*)(B3Ob *, s32)) func_0013f330)
@@ -161,19 +153,19 @@ void func_0013f910(B3Ob *o, f32 *v) {
     B3Wk *w;
     s32 k;
 
-    func_00267560(v, v, v[3] * D_002BBDFC);
+    PlatVu0ScaleVector(v, v, v[3] * D_002BBDFC);
     if ((o->x2d0 & 0x10) && v[1] > 0.0f) {
         func_0014f658(o, 14);
         func_0013f6d0(o, o->x20);
         return;
     }
-    func_00267518(t, v, o->x10);
+    PlatVu0AddVector(t, v, o->x10);
     y = t[1];
-    func_00267530(t, t, o->x148->x40);
+    PlatVu0SubVector(t, t, o->x148->x40);
     t[1] = 0.0f;
-    func_002673b8(t, t);
-    func_00267560(t, t, o->x148->x50 + o->x2c0);
-    func_00267518(t, t, o->x148->x40);
+    PlatVu0Normalize(t, t);
+    PlatVu0ScaleVector(t, t, o->x148->x50 + o->x2c0);
+    PlatVu0AddVector(t, t, o->x148->x40);
     w = o->x148;
     if (y < w->x54) {
         t[1] = w->x54;
@@ -182,7 +174,7 @@ void func_0013f910(B3Ob *o, f32 *v) {
     } else {
         t[1] = y;
     }
-    func_00267530(t, t, o->x10);
+    PlatVu0SubVector(t, t, o->x10);
     func_00121fc4(o->x20, t);
     o->x20[3] *= D_002C5970;
     if (o->x0 & 4) return;
@@ -192,7 +184,7 @@ void func_0013f910(B3Ob *o, f32 *v) {
         k = 32;
         if (7.0f < o->x20[3]) k = 31;
     } else {
-        func_00267530(t, o->x10, o->x148->x40);
+        PlatVu0SubVector(t, o->x10, o->x148->x40);
         c = t[0] * v[2] - t[2] * v[0];
         if (c < 0.0f) {
             k = 34;
@@ -214,10 +206,6 @@ void func_0013f910(B3Ob *o, f32 *v) {
     }
 }
 #undef func_00130398
-#undef func_00267560
-#undef func_00267518
-#undef func_00267530
-#undef func_002673b8
 #undef func_00121fc4
 #undef func_0014f658
 #undef func_0013f330

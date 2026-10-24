@@ -1,6 +1,7 @@
 /* Party heal objects, without strict aliasing or gcse (docs/modules.md
  * "Session 52"): func_00156e88 (the object's effect state).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 /* func_00156e88 (from hand/nostrict_nogcse/text_00140000_s6_07.c). */
 typedef struct {
@@ -40,7 +41,6 @@ void *func_00121e28(s32, void *);
 void * func_00250054(void *, s32, s32);
 void func_0013c2a0(s32, s32);
 Eff6e88 *func_00147ed8(s32, s32, s32, f32 *);
-void func_002675a8(f32 *, f32 *);
 void func_00156d88(void);
 void func_00156e88(A6e88 *a) {
     St6e88 *s;
@@ -64,14 +64,14 @@ void func_00156e88(A6e88 *a) {
         s = a->x144;
     }
     *s->x4->x34 = !s->b1;
-    func_002675a8(a->x144->x4->x8, a->x40);
+    PlatVu0CopyVector(a->x144->x4->x8, a->x40);
     a->x144->b1 = a->w0 & 1;
     s = a->x144;
     e = s->x8;
     if (e == 0) {
         if (s->b0) {
             a->x144->x8 = func_00147ed8(a->x68, 1, 20000, a->x10);
-            func_002675a8(a->x144->x8->x8, a->x40);
+            PlatVu0CopyVector(a->x144->x8->x8, a->x40);
             s = a->x144;
         }
     } else if ((t = e->x14 & 3) != 1) {

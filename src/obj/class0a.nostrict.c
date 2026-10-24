@@ -6,6 +6,7 @@
  * nostrict (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/types/nostrict_text_00130000_h55.h"
 #include "data/pieces/D_002C58B0.h"
@@ -75,9 +76,6 @@ typedef struct Actor_40070 {
 void func_00105a30(s32 a, s32 id, f32 *v);
 void func_00105ad0(s32 a, s32 id, f32 *v);
 s32 func_0015bcb8(W55Ob *o, f32 *r);
-f32 func_00267390(f32 *a, f32 *b);
-void func_002673b8(f32 *d, f32 *s);
-void func_002675a8(f32 *d, f32 *s);
 s32 func_0013ff00(W55Ob *o, f32 *seg, f32 *v, f32 *r);
 #define W55MIN(a, b) ((a) < (b) ? (a) : (b))
 s32 func_00140070(W55Ob *o, f32 *dir, f32 *r) {
@@ -86,16 +84,16 @@ s32 func_00140070(W55Ob *o, f32 *dir, f32 *r) {
     f32 h;
     if (o->x2de == 0xffff) return 0;
     func_00105a30(-1, o->x2de, v);
-    func_002675a8(d, dir);
+    PlatVu0CopyVector(d, dir);
     d[1] = 0.0f;
-    func_002673b8(d, d);
-    if (func_00267390(v, d) > -0.7f) return 0;
+    PlatVu0Normalize(d, d);
+    if (PlatVu0InnerProduct(v, d) > -0.7f) return 0;
     func_00105ad0(-1, o->x2de, pts[0]);
     h = o->pos[1] - o->x2c4;
     if (h < W55MIN(pts[0][1], W55MIN(pts[1][1], pts[2][1]))) return 0;
     if (!func_0013ff00(o, pts[0], v, r)) return 0;
     if (func_0015bcb8(o, r)) return 0;
-    func_002675a8(o->x148, v);
+    PlatVu0CopyVector(o->x148, v);
     return 1;
 }
 #undef W55MIN
@@ -149,7 +147,6 @@ void func_00130398(void *o, s32 a, f32 f);
 void *func_00130578(void *, s32, f32);
 s32 func_001375f0(W55Ob_401d8 *o);
 s32 func_0014f658(void *, s32);
-void func_00267560(f32 *d, f32 *s, f32 k);
 f32 fmodf(f32 x, f32 y);
 f32 atan2f(f32 y, f32 x);
 #define func_0015bcb8 ((s32 (*)(W55Ob_401d8 *o, f32 *r)) func_0015bcb8)
@@ -175,12 +172,12 @@ s32 func_001401d8(W55Ob_401d8 *o, f32 *d) {
             r[1] = r[1] + 10.0f - m;
         }
         if (func_0015bcb8(o, r)) return 0;
-        func_002675a8(o->pos, r);
-        func_002675a8(o->x148 + 8, r);
+        PlatVu0CopyVector(o->pos, r);
+        PlatVu0CopyVector(o->x148 + 8, r);
         func_0014f658(o, 10);
         func_00130398(o, 0x1000013, 4.0f);
         func_00130578(o, 0x40000011, 0.0f);
-        func_00267560(d, o->x148, -1.0f);
+        PlatVu0ScaleVector(d, o->x148, -1.0f);
         d[3] = 0.0f;
         o->x150 = atan2f(-o->x148[0], -o->x148[2]);
         o->x148[5] = o->pos[1];
@@ -251,8 +248,8 @@ s32 func_00140370(W55Ob_40370 *o, f32 *d) {
         func_0014f658(o, 10);
         func_00130398(o, 0x1000014, 0.0f);
         func_00130578(o, 0x40000011, 0.0f);
-        func_002675a8(o->pos, r);
-        func_00267560(d, o->x148, -1.0f);
+        PlatVu0CopyVector(o->pos, r);
+        PlatVu0ScaleVector(d, o->x148, -1.0f);
         d[3] = 0.0f;
         o->x20[3] = 0.0f;
         o->x150 = atan2f(-o->x148[0], -o->x148[2]);
@@ -316,7 +313,7 @@ s32 func_001404d8(W55Ob_404d8 *o, f32 *d) {
     f32 t;
     if (o->x30c == 0xffff || !func_001375f0(o)) goto fail;
     func_00105a30(-1, o->x30c, v);
-    if (func_00267390(v, d) < -0.7f) return 0;
+    if (PlatVu0InnerProduct(v, d) < -0.7f) return 0;
     func_00105ad0(-1, o->x30c, pts[0]);
     if (!func_0013ff00(o, pts[0], v, r)) return 0;
     r[1] = W55MAX2(W55MAX2(pts[0][1], pts[1][1]), pts[2][1]) + o->x2c4;
@@ -326,13 +323,13 @@ s32 func_001404d8(W55Ob_404d8 *o, f32 *d) {
     fail:
         return 0;
     }
-    func_002675a8(o->x148 + 4, o->pos);
-    func_002675a8(o->x148 + 8, r);
+    PlatVu0CopyVector(o->x148 + 4, o->pos);
+    PlatVu0CopyVector(o->x148 + 8, r);
     o->x148[12] = 0.0f;
-    func_002675a8(o->x148, v);
+    PlatVu0CopyVector(o->x148, v);
     func_0014f658(o, 9);
     func_00130398(o, 0x1010012, 0.0f);
-    func_002675a8(d, o->x148);
+    PlatVu0CopyVector(d, o->x148);
     d[3] = 0.0f;
     return 1;
 }
@@ -388,8 +385,6 @@ typedef struct Actor_406d0 {
 extern f32 D_002BBDFC;
 void func_00121fc4(f32 *d, f32 *s);
 f32 func_00131a68(W55Ob_406d0 *o, s32 a);
-void func_002674f0(f32 *d, f32 *a, f32 *b, f32 t);
-void func_00267530(f32 *d, f32 *a, f32 *b);
 f32 sinf(f32 x);
 void func_001406d0(W55Ob_406d0 *o, f32 *d) {
     f32 t;
@@ -399,14 +394,14 @@ void func_001406d0(W55Ob_406d0 *o, f32 *d) {
         func_0014f658(o, 10);
         func_00130398(o, 20, 0.0f);
         func_00130578(o, 0x40000011, 0.0f);
-        func_002675a8(o->pos, o->x148 + 8);
+        PlatVu0CopyVector(o->pos, o->x148 + 8);
         o->x20[1] = 0.0f;
         o->x20[3] = 0.0f;
         return;
     }
-    func_002674f0(d, o->x148 + 8, o->x148 + 4, t);
+    PlatVu0InterVector(d, o->x148 + 8, o->x148 + 4, t);
     d[1] -= sinf(t * 3.1415928f) * 50.0f;
-    func_00267530(d, d, o->pos);
+    PlatVu0SubVector(d, d, o->pos);
     func_00121fc4(o->x20, d);
     o->x20[3] /= D_002BBDFC;
     o->x150 = atan2f(-o->x148[0], -o->x148[2]);
@@ -442,17 +437,15 @@ typedef struct {
 } ObjF3;
 f32 func_0013fe80(f32);
 s32 func_001186a8(V4f *);
-void func_00267518(V4f *, V4f *, V4f *);
-#define func_002675a8 ((void (*)(V4f *, V4f *)) func_002675a8)
 #define func_0015bcb8 ((s32 (*)(ObjF3 *, V4f *)) func_0015bcb8)
 /* func_00140838: the failure tail (flag set + return 0) written once per failing test; jump2 cross-jumps the copies into one block but the register choice follows the per-path copies. */
 s32 func_00140838(ObjF3 *o, V4f *v) {
     V4f t;
     s32 r;
-    func_002675a8(&o->v2a0, &o->pos);
+    PlatVu0CopyVector(&o->v2a0, &o->pos);
     o->v2a0.y = func_0013fe80(o->pos.y);
     o->v2a0.w = 1.0f;
-    func_002675a8(&o->v2b0, &D_002C58A0);
+    PlatVu0CopyVector(&o->v2b0, &D_002C58A0);
     if (v->y < 0.0f) {
         r = 1;
         o->v2a0.y -= 66.66666412353516f;
@@ -464,14 +457,13 @@ s32 func_00140838(ObjF3 *o, V4f *v) {
         o->p148->d30 |= (u64)0x8000 << 17;
         return 0;
     }
-    func_00267518(&t, &o->pos, &o->v2b0);
+    PlatVu0AddVector(&t, &o->pos, &o->v2b0);
     if (func_0015bcb8(o, &t)) {
         o->p148->d30 |= (u64)0x8000 << 17;
         return 0;
     }
     return r;
 }
-#undef func_002675a8
 #undef func_0015bcb8
 
 /* func_00140960 (from hand/nostrict/text_s7_w34.c). */
@@ -496,11 +488,8 @@ typedef struct {
     V4f_40960 x490;
 } O96;
 s32 func_001375d8(O96 *);
-void func_00267370(V4f_40960 *, void *, void *);
 #define func_00130398 ((void (*)(O96 *, s32, f32)) func_00130398)
 #define func_00140838 ((s32 (*)(O96 *, V4f_40960 *)) func_00140838)
-#define func_00267530 ((void (*)(V4f_40960 *, V4f_40960 *, V4f_40960 *)) func_00267530)
-#define func_002675a8 ((void (*)(V4f_40960 *, V4f_40960 *)) func_002675a8)
 /* func_00140960 (s7 w34): MATCH with wqb03_rr.py 0048e1f0 (rodata jtbl 0x48e1f0). Fix: the k=3/4 cross product goes through a function-level f32 c that the d-block cross product also assigns (a pseudo used in two blocks is not tied by local-alloc, so the sub.s result gets f0). */
 void func_00140960(O96 *o, V4f_40960 *v) {
     V4f_40960 tmp;
@@ -518,7 +507,7 @@ void func_00140960(O96 *o, V4f_40960 *v) {
             v->y = -1.0f;
             v->z = 0.0f;
             v->w = (o->x10.y - (o->p148->f14 + (o->p148->f24 - o->p148->f14) * (t / 15.0f))) / D_002BBDFC;
-            func_002675a8(&o->x20, v);
+            PlatVu0CopyVector(&o->x20, v);
         }
         } else {
             v->w = 0.0f;
@@ -574,11 +563,11 @@ void func_00140960(O96 *o, V4f_40960 *v) {
     case 4:
         break;
     }
-    func_00267370(&tmp, v, o->p148);
-    func_00267370(&o->x20, o->p148, &tmp);
+    PlatVu0OuterProduct(&tmp, v, o->p148);
+    PlatVu0OuterProduct(&o->x20, o->p148, &tmp);
     o->x20.w = v->w;
     o->x150 = atan2f(-o->p148->x, -o->p148->z);
-    func_00267530(&d, &o->x10, &o->x490);
+    PlatVu0SubVector(&d, &o->x10, &o->x490);
     if (d.y == 0.0f) {
         if (d.x == 0.0f && d.z == 0.0f) {
             if (!(o->x1cc & 0x100000)) func_00130398(o, 17, 8.0f);
@@ -590,8 +579,6 @@ void func_00140960(O96 *o, V4f_40960 *v) {
 }
 #undef func_00130398
 #undef func_00140838
-#undef func_00267530
-#undef func_002675a8
 
 /* func_00140db8 (from hand/nostrict/text_00140000_h33.c). */
 typedef struct Eff154 { u8 pad[0x10]; u8 *p10; u32 w14; } Eff154;
@@ -647,7 +634,6 @@ typedef struct {
 } ObjF3_40db8;
 void func_0014cc88(ObjF3_40db8 *, f32);
 #define func_00130578 ((void (*)(ObjF3_40db8 *, s32, f32)) func_00130578)
-#define func_002673b8 ((void (*)(V4f *, V4f *)) func_002673b8)
 #define func_00130398 ((void (*)(ObjF3_40db8 *, s32, f32)) func_00130398)
 void func_00140db8(ObjF3_40db8 *o, V4f *v) {
     f32 s;
@@ -666,13 +652,12 @@ void func_00140db8(ObjF3_40db8 *o, V4f *v) {
         func_00130398(o, 6, 12.0f);
     }
     v->y = 0.0f;
-    func_00267518(v, v, (V4f *)o->p148);
-    func_002673b8(v, v);
+    PlatVu0AddVector(v, v, (V4f *)o->p148);
+    PlatVu0Normalize(v, v);
     v->w = 2.0f;
     func_0014cc88(o, s);
     o->flags |= fl;
 }
 #undef func_00130578
-#undef func_002673b8
 #undef func_00130398
 

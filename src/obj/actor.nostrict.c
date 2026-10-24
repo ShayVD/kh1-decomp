@@ -8,6 +8,7 @@
  * modes are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
@@ -72,8 +73,6 @@ void func_001133a0(V53 *);
 void func_00123ab8(s32, f32 *);
 void func_0014eab0(Obj3b *, V53 *);
 void func_0014eb60(Obj3b *, V53 *);
-void func_00267530(V53 *, V53 *, V53 *);
-void func_002675a8(void *, void *);
 void func_0014e668(V53 *, s32, V53 *, f32, f32);
 float atan2f(float, float);
 void func_00123b40(Obj3b *o, V53 *out) {
@@ -118,17 +117,17 @@ void func_00123b40(Obj3b *o, V53 *out) {
     case 2:
         if (D_002E26A0[0] == 0) return;
         func_0014eab0(o, out);
-        func_00267530(&d, (V53 *)((u8 *)D_002E26A0[0] + 16), out);
+        PlatVu0SubVector(&d, (V53 *)((u8 *)D_002E26A0[0] + 16), out);
         out->w = atan2f(d.x, d.z);
         break;
     case 3:
         if (D_002E26A0[0] == 0) return;
         func_0014eb60(o, out);
-        func_00267530(&d, (V53 *)((u8 *)D_002E26A0[0] + 16), out);
+        PlatVu0SubVector(&d, (V53 *)((u8 *)D_002E26A0[0] + 16), out);
         out->w = atan2f(d.x, d.z);
         break;
     case 4:
-        func_002675a8(&d, out);
+        PlatVu0CopyVector(&d, out);
         func_0014e668(&d, o->info->x58, out, 0.0f, 500.0f);
         break;
     }
@@ -273,7 +272,7 @@ void func_00124060(u8 *o, V53 *pos) {
             FLD(f32, FLD(u8 *, o, 0x148), 0xe0) = 0.0f;
         }
         func_00145240(o);
-        func_002675a8(FLD(u8 *, o, 0x148) + 0x160, &D_002C58B0);
+        PlatVu0CopyVector(FLD(u8 *, o, 0x148) + 0x160, &D_002C58B0);
         func_001358b8(o, 12);
     }
     if (FLD(u8 *, o, 0x14c)) {
@@ -300,8 +299,8 @@ void func_00124060(u8 *o, V53 *pos) {
     func_00137448(o);
     FLD(f32, o, 0x4ac) = 60.0f;
     func_001238d0(o, pos);
-    func_002675a8(o + 0x3c0, &D_002C58B0);
-    func_002675a8(o + 0x120, &D_002C58B0);
+    PlatVu0CopyVector(o + 0x3c0, &D_002C58B0);
+    PlatVu0CopyVector(o + 0x120, &D_002C58B0);
 }
 
 /* func_00124218 (from hand/nostrict/text_00110000_h30.c). */
@@ -652,7 +651,7 @@ void func_00124a28(void) {
                 func_001247e8(o);
                 break;
             }
-            func_002675a8(&v, o + 0x10);
+            PlatVu0CopyVector(&v, o + 0x10);
             if (!func_0014f5c8(o) && func_001232f0(o)) {
                 v.y -= FLD(f32, FLD(u8 *, FLD(u8 *, o, 0x134), 0x10), 8);
                 func_00142480(&v, &D_002C6490, 0, &v);

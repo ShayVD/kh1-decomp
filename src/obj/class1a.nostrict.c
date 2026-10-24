@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class1a.c. Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/nostrict_text_00140000_h57.h"
 #include "data/types/nostrict_text_00140000_h57_p.h"
@@ -144,10 +145,8 @@ typedef struct {
 } Obj57_0678;
 typedef struct { u8 pad0[0x34]; f32 f34; } Arg57_0678;
 f32 func_00120c18(f32 *);
-void func_00267560(f32 *, f32 *, f32);
 f32 sinf(f32);
 f32 cosf(f32);
-f32 func_00267390(f32 *, f32 *);
 void func_00137688(Obj57_0678 *, f32);
 void func_00137308(Obj57_0678 *, Arg57_0678 *);
 s32 func_0014f658(void *, s32);
@@ -164,8 +163,8 @@ void func_00150678(Obj57_0678 *o, Arg57_0678 *p) {
     v[1] = 0.0f;
     v[2] = cosf(a);
     v[3] = 1.0f;
-    if (func_00120c18(o->v3c0) < 1.0f) d = func_00267390(v, o->v30);
-    else d = func_00267390(v, o->v3c0);
+    if (func_00120c18(o->v3c0) < 1.0f) d = PlatVu0InnerProduct(v, o->v30);
+    else d = PlatVu0InnerProduct(v, o->v3c0);
     if (d > 0.0f) {
         o->flags |= 0x800000;
         a = p->f34;
@@ -175,7 +174,7 @@ void func_00150678(Obj57_0678 *o, Arg57_0678 *p) {
     }
     o->f150 = a;
     func_00137688(o, a);
-    func_00267560(o->o148->v130, o->v3c0, D_002BBDFC * 0.5f);
+    PlatVu0ScaleVector(o->o148->v130, o->v3c0, D_002BBDFC * 0.5f);
     func_00137308(o, p);
     func_0014f658(o, 26);
     D_0054F738 = 0;

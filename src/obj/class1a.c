@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class1a.nostrict.c.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
@@ -226,8 +227,6 @@ typedef struct Chr57_0930 {
     f32 f3cc;
 } Chr57_0930;
 void func_00121fc4(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
 void func_001376e8(void *, f32 *);
 void func_0012ec88();
 Ret57_0930 *func_0014cb90(Chr57_0930 *);
@@ -247,14 +246,14 @@ void func_00150930(Chr57_0930 *o, Chr57_0930 *t, f32 *v) {
         a[2] = t->v10[2];
         a[1] += 120.0f;
     }
-    func_00267530(v, a, o->v10);
+    PlatVu0SubVector(v, a, o->v10);
     h = v[1];
     v[1] = 0.0f;
     func_00121fc4(v, v);
     d = v[3];
     k = (d / o->prm->f8 > 30.0f) ? d / o->prm->f8 : 30.0f;
     vy = (h - k * 0.484693862498f * k * 0.5f) / k;
-    func_00267560(o->v3c0, v, d / k);
+    PlatVu0ScaleVector(o->v3c0, v, d / k);
     o->f3b4 = 0.484693862498f;
     o->f3cc = 0.99f;
     o->f3b0 = 0.0f;
@@ -310,7 +309,6 @@ typedef struct Actor_50af0 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_50af0;
-void func_002675a8(void *dst, void *src);
 extern f32 D_002C5970;
 void func_0014cce0(W9Ent_50af0 *e, f32 s);
 #define func_00121fc4 ((void (*)(void *dst, void *src)) func_00121fc4)
@@ -318,7 +316,7 @@ void func_0014cce0(W9Ent_50af0 *e, f32 s);
 void func_00150af0(W9Ent_50af0 *e, f32 *v) {
     func_0014cb90(e)->w[1].f = 4.0f;
     func_0014cce0(e, e->x6c->x10);
-    func_002675a8(v, e->x148->x130);
+    PlatVu0CopyVector(v, e->x148->x130);
     v[1] = 0.0f;
     func_00121fc4(v, v);
     v[3] *= D_002C5970;
@@ -372,20 +370,18 @@ typedef struct Actor_50b70 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_50b70;
-#define func_00267560 ((void (*)(void *out, void *in, f32 s)) func_00267560)
 #define func_0014cb90 ((W9Obj144 *(*)(W9Ent_50b70 *e)) func_0014cb90)
 #define func_0014cce0 ((void (*)(W9Ent_50b70 *e, f32 s)) func_0014cce0)
 void func_00150b70(W9Ent_50b70 *e) {
     f32 t[4];
     if (e->x98) return;
     func_0014cb90(e)->w[1].f = 4.0f;
-    func_002675a8(t, e->x148->x130);
+    PlatVu0CopyVector(t, e->x148->x130);
     t[1] = 0.0f;
-    func_00267560(e->x3c0, t, D_002C5970);
+    PlatVu0ScaleVector(e->x3c0, t, D_002C5970);
     func_0014cce0(e, 10.0f);
     e->flags &= ~0x400;
 }
-#undef func_00267560
 #undef func_0014cb90
 #undef func_0014cce0
 
@@ -441,16 +437,14 @@ typedef struct Actor_50c18 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_50c18;
-#define func_00267530 ((void (*)(void *out, void *a, void *b)) func_00267530)
 #define func_0015bad0 ((void (*)(W9Obj98 *o, void *ent, f32 *out)) func_0015bad0)
 void func_00150c18(W9Ent_50c18 *e, f32 *out) {
     f32 m[2][4];
     func_0015bad0(e->x98, e->x98->x134->x1c + e->x148->x140 * 20, m[0]);
-    func_00267530(out, m[1], e->x10);
+    PlatVu0SubVector(out, m[1], e->x10);
     out[1] += 120.0f;
-    if (e->x164.i == 191) func_002675a8(e->x148->x130, out);
+    if (e->x164.i == 191) PlatVu0CopyVector(e->x148->x130, out);
 }
-#undef func_00267530
 #undef func_0015bad0
 
 /* func_00150cb0 (from auto/text_00150000_2.c). */

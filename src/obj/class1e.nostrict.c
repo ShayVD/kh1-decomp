@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class1e.c. Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002C58B0.h"
@@ -24,18 +25,14 @@
 /* func_00159178 (from hand/nostrict/text_00150000_h35.c). */
 s32 func_00130578(void *, s32, f32);
 typedef struct { u8 pad[0xC4]; f32 fC4; } S6C_1541a8;
-void func_002675a8(void *, void *);
 typedef struct { u8 pad[0x160]; u8 x160[4]; } S148_1545f0;
 typedef struct { u8 pad[0x30]; u8 x30[0x118]; S148_1545f0 *p148; u8 pad14c[0x274]; u8 x3C0[4]; } Obj1545f0;
-void func_00267560(void *, void *, f32);
 typedef struct { f32 x, y, z, w; } Vec154768;
-void func_00267530(void *, void *, void *);
 typedef struct { u8 pad[0x30]; Vec154768 v30; u8 pad40[0x2C]; S6C_1541a8 *p6C; u8 pad70[0x350]; u8 x3C0[4]; } Obj154c60;
 s32 func_00122ff8(Act1576a8 *);
 typedef struct { s32 w0; s32 w4; } Arg159178;
 void func_0013dc10(void *, s32);
 void func_0012ec60(s32, s32, void *);
-void func_002673b8(void *, void *);
 void func_00159148(void *, f32);
 /* ---- func_00159178 ---- */
 void func_00159178(Obj154c60 *a, s32 b, Arg159178 *s, Vec154768 *o) {
@@ -44,13 +41,13 @@ void func_00159178(Obj154c60 *a, s32 b, Arg159178 *s, Vec154768 *o) {
     func_00130578(a, 6, 8.0f);
     if (func_00122ff8((Act1576a8 *)s->w0)) {
         func_0012ec60(s->w0, s->w4, &t);
-        func_00267530(&t, &t, (u8 *)a + 0x10);
-        func_002673b8(o, &t);
+        PlatVu0SubVector(&t, &t, (u8 *)a + 0x10);
+        PlatVu0Normalize(o, &t);
     } else {
-        func_002675a8(o, &a->v30);
+        PlatVu0CopyVector(o, &a->v30);
     }
-    func_00267560(a->x3C0, o, 8.0f);
-    func_00267560(((Obj1545f0 *)a)->p148->x160, ((Obj1545f0 *)a)->p148->x160, 0.5f);
+    PlatVu0ScaleVector(a->x3C0, o, 8.0f);
+    PlatVu0ScaleVector(((Obj1545f0 *)a)->p148->x160, ((Obj1545f0 *)a)->p148->x160, 0.5f);
     func_00159148(a, 20.0f);
     o->w = 0.0f;
 }
@@ -73,10 +70,10 @@ s32 func_00159258(void) {
             (*pp)->f30 -= 0.003f;
             if ((*pp)->f30 < 0.0f) (*pp)->f30 = 0.0f;
         }
-        func_002675a8(&D_002E2780, D_00351A50);
+        PlatVu0CopyVector(&D_002E2780, D_00351A50);
     }
-    if (func_0014efe0(p, 2)) func_002675a8(&D_002E2780, D_00351A60);
-    if (func_0014efe0(p, 3)) func_002675a8(&D_002E2780, D_00351A70);
+    if (func_0014efe0(p, 2)) PlatVu0CopyVector(&D_002E2780, D_00351A60);
+    if (func_0014efe0(p, 3)) PlatVu0CopyVector(&D_002E2780, D_00351A70);
     return 0;
 }
 
@@ -91,7 +88,7 @@ typedef struct { u8 pad[0x6C]; S6C_159350 *p6C; } Obj159350;
 void func_00159350(Obj1545f0 *a) {
     S5516E0 *r;
     ((Obj159350 *)a)->p6C->f8 = 6.0f;
-    func_00267560(a->p148->x160, a->p148->x160, 0.1f);
+    PlatVu0ScaleVector(a->p148->x160, a->p148->x160, 0.1f);
     if ((void *)a == D_002E26A0[0]) {
         r = func_00159ea8(a, D_00351A80, D_00351A90);
         D_005516F0 = r;
@@ -114,9 +111,7 @@ typedef struct { u8 pad0[5]; u8 b5; u8 pad6[0xe]; struct { u8 pad0[1]; u8 b1; } 
     struct { u8 pad[0x44]; f32 x44; s16 x48; u8 pad4a[2]; u16 x4c; } *x130; S134 *x134; u8 pad138[0xc]; T144 *x144; \
     struct { u8 pad[0x160]; V4 v160; } *x148; u8 pad14c[0x1d4]; V4 x320; u8 pad330[0x40]; u64 x370; u8 pad378[0x26]; u8 x39e; u8 pad39f[0x11]; f32 x3b0; u8 pad3b4[0xc]; V4 x3c0; u8 pad3d0[0x14]; f32 x3e4; u8 pad3e8[8]; V4 x3f0; s32 x400; u8 pad404[0x9c]; void *x4a0;
 typedef struct Actor_59440 { ACT_BODY(S144) } Act;
-void func_00267518(void *, void *, void *);
 void func_00130398(void *, s32, f32);
-void func_00267370(void *, void *, void *);
 f32 func_001376e8(void *, void *);
 s32 func_00137618(void *);
 void func_0012bd98(void *, s32, u32, void *);
@@ -126,12 +121,12 @@ void func_00159440(Act *a, V4 *o) {
     V4 t;
     s32 k = 0;
     u32 fl = 0x80000100;
-    func_002675a8(&m, &a->x148->v160);
+    PlatVu0CopyVector(&m, &a->x148->v160);
     m.y = 0.0f;
-    func_002673b8(&m, &m);
+    PlatVu0Normalize(&m, &m);
     if (o->w > 0.0f) {
         o->w = 0.3f;
-        func_00267370(&t, &m, o);
+        PlatVu0OuterProduct(&t, &m, o);
         if (t.y > 0.9f) {
             fl = 0x40000100;
             k = 203;
@@ -142,9 +137,9 @@ void func_00159440(Act *a, V4 *o) {
     }
     if (func_00137618(a)) func_00130398(a, k | 0x40000000, 8.0f);
     func_0012bd98(a, a->x39e, fl, &a->pos);
-    func_002675a8(&a->x20, o);
-    func_00267560(&t, &m, a->x148->v160.w);
-    func_00267518(&t, &t, &a->x3c0);
+    PlatVu0CopyVector(&a->x20, o);
+    PlatVu0ScaleVector(&t, &m, a->x148->v160.w);
+    PlatVu0AddVector(&t, &t, &a->x3c0);
     func_001376e8(a, &t);
 }
 
@@ -153,14 +148,13 @@ typedef struct Actor_595a8 { ACT_BODY(S144) } Act_595a8;
 extern f32 D_002BBDFC;
 void func_00121fc4(void *, void *);
 f32 func_00121748(void *, void *);
-void func_00267e90(void *, void *, f32);
 /* ---- func_001595a8 ---- */
 void func_001595a8(Act_595a8 *a, V4 *o) {
     V4 m;
     f32 f;
     if (a->x20.w > 0.0f) {
-        func_00267560(o, &a->x20, a->x20.w * D_002BBDFC);
-        func_00267518(o, o, &a->x3c0);
+        PlatVu0ScaleVector(o, &a->x20, a->x20.w * D_002BBDFC);
+        PlatVu0AddVector(o, o, &a->x3c0);
         func_00121fc4(o, o);
     } else {
         func_00121fc4(o, &a->x3c0);
@@ -172,12 +166,12 @@ void func_001595a8(Act_595a8 *a, V4 *o) {
     if (o->w < 0.0f) f = 0.0f;
     else if (o->w > 6.0f) f = 6.0f;
     else f = o->w;
-    func_00267560(&a->x3c0, o, f);
-    func_00267370(&m, &a->xc0, o);
-    func_002673b8(&m, &m);
-    func_00267370(o, &m, &a->xc0);
-    func_002673b8(o, o);
-    func_00267e90(o, o, f * D_002BBDFC);
+    PlatVu0ScaleVector(&a->x3c0, o, f);
+    PlatVu0OuterProduct(&m, &a->xc0, o);
+    PlatVu0Normalize(&m, &m);
+    PlatVu0OuterProduct(o, &m, &a->xc0);
+    PlatVu0Normalize(o, o);
+    PlatVu0ScaleVectorXYZ(o, o, f * D_002BBDFC);
 }
 
 /* func_00159740 (from hand/nostrict/text_00150000_h35.c). */
@@ -197,7 +191,7 @@ Ret157ea8 *func_00159740(Obj159740 *a, Vec154768 *o) {
     a->f3B0 = 0.0f;
     a->p148->f100 = 0.0f;
     func_00159148(a, ((S308CDC_e *)(*(Cfg_308cdc **)&D_00308CDC))->e[a->p130->h4C].a);
-    func_002675a8(o, a->p148->x160);
+    PlatVu0CopyVector(o, a->p148->x160);
     o->y = 0.0f;
     func_00121fc4(o, o);
     return r;
@@ -211,13 +205,13 @@ typedef struct { u8 pad[0x20]; Vec154768 v20; u8 pad30[0x118]; S148_159808 *p148
 void func_00159808(Obj159808 *a, Vec154768 *b) {
     Vec154768 t, u;
     if (b->w > 0.0f) b->w = 6.0f;
-    func_002675a8(&a->v20, b);
+    PlatVu0CopyVector(&a->v20, b);
     if (func_00137618(a)) {
-        func_002675a8(&t, a->p148->x160);
+        PlatVu0CopyVector(&t, a->p148->x160);
         t.y = 0.0f;
-        func_002673b8(&t, &t);
-        func_00267560(&u, &t, a->p148->f16C);
-        func_00267518(&u, &u, a->x3C0);
+        PlatVu0Normalize(&t, &t);
+        PlatVu0ScaleVector(&u, &t, a->p148->f16C);
+        PlatVu0AddVector(&u, &u, a->x3C0);
         func_001376e8(a, &u);
     }
 }

@@ -6,6 +6,7 @@
  * modes are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_004F.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_002BC0F0.h"
@@ -39,15 +40,11 @@ typedef struct { u8 p0[4]; s32 *rot; u8 p8[4]; f32 *scl; } R3;
 extern R3 *func_00147ed8(s32, s32, s32, f32 *);
 extern void func_001315c0(void *, s32, f32 *, f32);
 typedef FMtx4 Mtx;
-extern void func_002672f8(V4 *, Mtx, V4 *);
-extern void func_00267518(V4 *, V4 *, V4 *);
 extern f32 atan2f(f32, f32);
 typedef struct { u8 p0[2]; u16 f2; f32 f4; u8 p8[4]; f32 fc; f32 f10; } R24;
 typedef struct { u8 p0[6]; u8 f6; u8 p7[0x18 - 7]; R24 *f18; } T24;
 typedef struct { u8 p0[0x134]; T24 *f134; u8 p138[0x3a8 - 0x138]; u32 f3a8; } E24;
 typedef struct { u8 p0[0x10]; f32 f10; f32 f14; f32 f18; u8 p1c[0x34 - 0x1c]; s32 f34; s32 f38; } P24;
-extern void func_00267810(Mtx, Mtx, f32);
-extern void func_00267768(Mtx, Mtx, f32);
 extern f32 func_00176850(void);
 void func_00138a78(E24 *e, P24 *a) {
     Mtx m;
@@ -58,13 +55,13 @@ void func_00138a78(E24 *e, P24 *a) {
     u32 msk;
     s32 k;
     if (!a->f34 || a->f38 < 0) return;
-    func_00267810(m, D_002C58D0, atan2f(a->f10, a->f18));
-    func_00267768(m, m, func_00176850() * 3.1415928f - 1.5707964f);
+    PlatVu0RotMatrixY(m, D_002C58D0, atan2f(a->f10, a->f18));
+    PlatVu0RotMatrixX(m, m, func_00176850() * 3.1415928f - 1.5707964f);
     v.x = 0.0f;
     v.y = 0.0f;
     v.z = 1.0f;
     v.w = 1.0f;
-    func_002672f8(&v, m, &v);
+    PlatVu0ApplyMatrix(&v, m, &v);
     k = (s32)(func_00176850() * (f32)e->f134->f6);
     while (e->f3a8 & (1 << k)) k = (k + 1) % e->f134->f6;
     r = &e->f134->f18[k];
@@ -72,18 +69,16 @@ void func_00138a78(E24 *e, P24 *a) {
     v.x *= r->fc;
     v.y *= r->f10;
     v.z *= r->fc;
-    func_00267518(&o, &o, &v);
+    PlatVu0AddVector(&o, &o, &v);
     func_00147ed8(a->f34, a->f38, -10000, (f32 *)&o);
 }
 
 /* func_00139240 (from hand/nostrict/text_00120000_s6_05.c). */
-void func_002675a8(f32 *, f32 *);
 typedef struct { u64 f0; u8 p8[8]; f32 f10[2]; f32 f18; } E39;
 typedef struct { u8 p0[0x20]; f32 f20[3]; f32 f2c; f32 f30[4]; u8 p40[0x88-0x40]; u32 f88; u8 p8c[0x150-0x8c]; f32 f150; u8 p154[0x3e4-0x154]; f32 f3e4; u8 p3e8[2]; u16 f3ea; } O39;
 extern s32 func_0014f600(O39 *);
 extern s32 func_00130040(O39 *, s32);
 extern void func_00139170(O39 *, E39 *);
-extern f32 func_00267390(f32 *, f32 *);
 extern s32 func_00130340(O39 *, s32, f32);
 extern void *func_00130578(O39 *, s32, f32);
 extern void func_00137688(O39 *, f32);
@@ -96,7 +91,7 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
         return;
     }
     o->f3ea = k;
-    if (func_00267390(o->f30, e->f10) < 0.0f) {
+    if (PlatVu0InnerProduct(o->f30, e->f10) < 0.0f) {
         func_00130340(o, o->f3ea | 0x1000000, 0.0f);
         func_00130578(o, o->f3ea + 1, 0.0f);
         ang = atan2f(-e->f10[0], -e->f18);
@@ -107,7 +102,7 @@ void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
     }
     func_00137688(o, ang);
     o->f150 = ang;
-    func_002675a8(o->f20, e->f10);
+    PlatVu0CopyVector(o->f20, e->f10);
     o->f2c = b;
     func_00138a20(o, a, o->f20);
     if (!(o->f88 & 2)) o->f3e4 = c;
@@ -252,7 +247,6 @@ void *func_00122048(s32, s32);
 void func_001220b8(void *);
 Ea4 *func_00123158(Ea4 *, Ea4 *);
 s32 func_001375d8(Ea4 *);
-void func_00267530(V4f *, V4f *, V4f *);
 f32 func_00120bf8(V4f *);
 void qsort(void *, s32, s32, void *);
 s32 func_0013a430();
@@ -269,7 +263,7 @@ Ea4 *func_0013a440(Ea4 *o, s32 *w, f32 range, s32 lv) {
         if (!(e->flags & 0x8000)) continue;
         if (e->x88 & 0x20) continue;
         if (func_001375d8(e)) continue;
-        func_00267530(&t, &e->x10, &o->x10);
+        PlatVu0SubVector(&t, &e->x10, &o->x10);
         d = func_00120bf8(&t);
         if (e->x80 < lv && d < range) {
             p->d = d;
@@ -294,12 +288,12 @@ Ea4 *func_0013a440(Ea4 *o, s32 *w, f32 range, s32 lv) {
                 v -= w[3];
                 if (v < 0) {
                     if (o->x74) {
-                        func_00267530(&t, &o->x74->x10, &o->x10);
+                        PlatVu0SubVector(&t, &o->x74->x10, &o->x10);
                         if (func_00120bf8(&t) < range) e = o->x74;
                     }
                 } else {
                     if (o->x7c) {
-                        func_00267530(&t, &o->x7c->x10, &o->x10);
+                        PlatVu0SubVector(&t, &o->x7c->x10, &o->x10);
                         if (func_00120bf8(&t) < range) e = o->x7c;
                     }
                 }

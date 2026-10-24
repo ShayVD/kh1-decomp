@@ -11,6 +11,7 @@
 #include "data/pieces/D_002E31A8.h"
 #include "data/pieces/D_00304BE8.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002C58D0.h"
@@ -269,10 +270,6 @@ typedef struct {
     F370 f370;
 } Ob8;
 typedef struct { u8 p0[0x30]; V4 f30; } Ct8;
-extern void func_00267518(V4 *, V4 *, V4 *);
-extern void func_002675a8(V4 *, V4 *);
-extern void func_002673f8(f32 (*)[4], V4 *);
-extern void func_002672f8(V4 *, f32 (*)[4], V4 *);
 extern void func_001219c8(V4 *, V4 *, V4 *);
 extern void func_00131500(Ob8 *);
 extern void func_0013df40(Ob8 *, s32);
@@ -288,19 +285,19 @@ void func_00130898(Ob8 *o, Ct8 *c) {
 
     if (o->f160.b.b2) {
         if (s->f8 == 0.0f) {
-            func_00267518(&c->f30, &c->f30, &o->f210);
-            func_002675a8(&o->f220, &D_002C58A0);
+            PlatVu0AddVector(&c->f30, &c->f30, &o->f210);
+            PlatVu0CopyVector(&o->f220, &D_002C58A0);
         } else {
-            func_002673f8(b, &o->f230);
-            func_002675a8(&a, &o->f210);
+            PlatVu0TransposeMatrix(b, &o->f230);
+            PlatVu0CopyVector(&a, &o->f210);
             a.w = 0.0f;
-            func_002672f8(&o->f220, b, &a);
+            PlatVu0ApplyMatrix(&o->f220, b, &a);
             if (o->f370.b.b45) func_001219c8(&o->f220, &o->f220, &o->f40);
         }
     } else {
-        func_002675a8(&o->f220, &D_002C58A0);
+        PlatVu0CopyVector(&o->f220, &D_002C58A0);
     }
-    func_002675a8(&o->f210, &D_002C58A0);
+    PlatVu0CopyVector(&o->f210, &D_002C58A0);
     if ((o->f160.b.hi = *(u16 *)s)) o->f370.b.b50 = D_002C5958 & 1;
     r = func_00130190(o, s->f0);
     if (o->f160.b.b5 && (r & 0x200000)) {
