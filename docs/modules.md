@@ -1578,6 +1578,81 @@ the symbols too, except D_006561E4 (a label inside D_006561D0) and
 func_00267f50 (sceVu0ClipAll's old alias), which nothing references any more.
 At the end `make report` 6979 at 100% and `make test` passes.
 
+## Session 47: the gauges, ttlib/ui.c and the rest of the game segment, 0x0023cfe8-0x00243168 and 0x00249fb0-0x0024f2e0
+
+Session 47 moved 200 functions in six commits.  No Mac: static checks only.
+After it no C file under src/auto or src/hand is left in
+0x00239558-0x0024f2e0: the game segment ends in modules (the hand asm
+src/asm/text_0024e0a4.s stays).  The "123 functions of ttlib/ui.c" in the
+plan were five original files, told apart by their assert strings and the
+order of their data:
+
+| module | files | range | functions |
+|---|---|---|---|
+| the gauges (ttlib/ui_gauge.c): the party's round HP / MP gauges and the world map's (tt_gaugeWorldmap, D_00454A20); one Gauge object (0xD00 bytes) and GaugeTbl (D_00651E50) in include/hud/gauge.h | src/hud/gauge.c, .nofill.c, .nostrict.c, .nostrict_nofill.c (h74 renamed) | 0x0023cfe8-0x00243168 | 72 |
+| ttlib/ui.c: the sprite animation library (UiSpr with its three tracks, UiPkt; include/hud/ui.h) | src/hud/ui.c, ui.nostrict.c | 0x00249fb0-0x0024b0c8 | 31 |
+| src/decode.c: packed blocks through the method table D_00469FC8 (copy, or the asm decoders), the empty assert handler func_0024b1e8 | src/util/decode.c | 0x0024b0c8-0x0024b1f0 | 4 |
+| src/sa_task.c: eight cooperative tasks with their own stacks, started and switched by the hand asm (TASK_GRUPE_MAX) | src/util/sa_task.c, sa_task.nostrict.c | 0x0024b1f0-0x0024b9a8 | 34 |
+| the movie names (D_0046A058: opn.dat, end.dat, end2.dat, demo.dat, end3.dat, ffx2.dat) and the one chosen | src/game/movies.c | 0x0024b9a8-0x0024ba28 | 6 |
+| a named parameter-list reader (a BREAK when a name is missing) | src/util/param.c | 0x0024ba28-0x0024bc68 | 4 |
+| the name-entry screen: a five-page character grid, eight characters in D_00669A40, written into a save slot | src/menu/nameentry.c, .nofill.c (s12_s12w14 renamed) | 0x0024bc68-0x0024d4a0 | 19 |
+| the HDD install and start-up: dev9 / atad / hdd / pfs.irx, the HDD thread and its semaphore, the installed kingdom.img check | src/game/hdd.c, hdd.nofill.c (s6_25 nofill renamed) | 0x0024d4a0-0x0024e0a4 | 25 |
+| the player's model change: swap the controlled character for an object by id, load a character's model | src/game/plmodel.c, plmodel.nostrict_nogcse.c (s6_25 nostrict_nogcse renamed) | 0x0024f008-0x0024f2e0 | 5 |
+
+Each file's top comment says what its code reads and what is a guess; none
+of the names is proved by a boot (the HDD path needs the Japanese HDD
+unit).  objdiff units 782 -> 757.
+
+| chunk | commit | deleted |
+|---|---|---|
+| the gauges | 1cc32e1 | 16 files: auto text_00230000 / _3 / _6 and text_00240000_4, h25 nofill, h49 nofill and nostrict, s6_24 and its nostrict, and the nostrict b16, c2, s7_w2, h75, s6_g1, s7_w36, s7_w3 (h74 nostrict_nofill became gauge.nostrict_nofill.c) |
+| ttlib/ui.c | d2e3965 | gs, auto text_00240000_5 / _16 / _18 |
+| decode.c, sa_task.c | 83471be | h26 and its nostrict, auto text_00240000_8 / _13 / _17 |
+| movies, param, name entry | 982d2f6 | s6_25, s9_w3, s10_w12, b17, text_001c0000_s6_nb |
+| the HDD | 6456b62 | text_00240000.c, h27, h75, s8_w5, d7b0 nofill, auto text_00240000_2 / _7 |
+| the player's model | eb15dfe | h50, auto text_00240000 / _3 |
+
+**Data moved with its users** (same type and alignment): D_00651C00 (QA),
+D_00651D70 (Pkt), D_00652888, D_00652898 and D_00654570 (the gauges);
+D_00469FC8 (decode.c); D_00469FF8, D_00469FD8 and D_0046A018 (the task
+entry tables); D_0046A058 (the movie names); D_00669A80 (the HDD thread's
+stack).  The names in src/data/ stay there.
+
+**Traps.**
+- **Union members change the alias set.**  An s32 store and a pointer store
+  schedule differently under strict aliasing, and any access through a
+  union member uses the union's alias set.  func_00241b60 stores the
+  actor through Gauge's `unk4i` (an s32 member beside `GActor *unk4`) to
+  keep its order; in sa_task.c a union broke func_0024b7a0, so the
+  functions that read the stacks as words use a second view, TaskW, and
+  Task keeps plain pointers.
+- **One base pointer**: ui.c's track functions (a0c0 / a2e0 / a568) need the
+  flags inside each track (UiAnim.flags), so they read `s->flags` from the
+  track's own pointer.
+- **Element types decide the loads**: Gauge's unk90 is `s32 (*)[4]`
+  (a `u8 *` gave lbu loads).
+- **CONTEXT_ONLY copies again**: gauge.nostrict.c needs a CONTEXT_ONLY
+  func_0023d528 above func_0023d698 and a stub of func_0023e330 above
+  func_0023ee80 (beql / beq in ee80, f250 and 1260).
+- **The f32 argument's place**: gauge.nostrict.c calls through `#ifdef
+  KH1_PS2` cast macros (D208, E160_F, AE0_F) as the old files did.
+- **A return type decides a register**: plmodel.c's func_00124218 must
+  return s32 (void moved a temp from v1 to v0).
+- **A label cover_check needs** (as in session 46): hdd.c declares
+  `extern char D_004919A8[8]`; with `[]` D_004919B0 after it became covered.
+- **Static inline helpers**: mod.py skips them and leaves the old file with
+  only them; hdd.nofill.c copies s6_25's four, and the old file was deleted
+  by hand.
+- checkfile.py stops at a section overlap when a moved function's file
+  changes size; a copy with `--no-check-sections` (not committed) was used
+  for the drafts, and `make` judged.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions) and the m12 float build with
+float_covered.txt, float_reach.txt, the loaded bytes and the program headers
+the same as the base.  At the end `make report` 6979 at 100%, `make test`
+passes and `s31_warndiff` reports 0 new warnings.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1674,7 +1749,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 46, after each step)
+## Verification (sessions 30 to 47, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1690,30 +1765,14 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The gauges, 0x0023cfe8-0x00243168** (72 functions, ttlib/ui_gauge.c; left
-  by session 46).  The party's HP / MP gauges and the world map's
-  (tt_gaugeWorldmap, D_00454A20), in 27 files: h75 nostrict (9), h49
-  nostrict (8), b16 nostrict (6), h74 nostrict_nofill (6), auto
-  text_00240000 (6) and _3 (5), h26 (4 + 2 nostrict) ...  Several views of
-  D_00454A20 (S16 in h74, others in h49 / h75) and of the gauge object
-  (h74's Obj with unk9E0 ... unkA94) and conflicting prototypes of
-  func_0023d700 / func_0023e160 (the bar drawers): settle one GaugeObj type
-  first.  Split by the set ups / steps hud.c lists (func_0023d0xx ...).
-  `python3 -I tools/shift/s37move/refs.py 0023cfe8 00243168` lists them.
-- **ttlib/ui.c, 0x00249fb0-0x0024e0a4** (123 functions): the sprite
-  animation library every HUD part calls (func_0024aa48 a sprite into a
-  packet, func_0024aac8 / func_0024afc0 the set up from a file, func_0024ae00
-  start, func_0024af00 step, func_0024ac08 / func_0024ac68 the rectangle and
-  colour, func_0024a1c0 the flags).  One library file: move it as one module
-  (src/hud/ui.c and its flag-mode siblings, or src/ttlib/ui.c), in address
-  order.  0x0024e0a4-0x0024f004 is hand-written assembly
-  (src/asm/text_0024e0a4.s: VU0 code and decoders; it stays), then five
-  functions 0x0024f008-0x0024f2e0 (auto text_00240000 / _3, s6_25
-  nostrict_nogcse, h50) end the game segment.
-- What is left of h26, h49, h50, h74, h75 and the auto text_0023 / text_0024
-  files after the gauges and ui.c (h25, h48, b16, h73, s6_23, b15, s6_22,
-  c16, h72, h24, h47, h71, c15, cc are gone; h25 / b16 / h48 / h74 /
-  h49 have flag-mode siblings left).
+- **The game segment is in modules from 0x001c0838 to 0x0024f2e0** (session
+  47).  The 3,426 functions still in src/auto and src/hand all lie in
+  0x001001f8-0x001c0830 (out/gen/placements.tsv): 14 in 0x001c, 172 in 0x001b,
+  158 in 0x001a, 186 in 0x0019 and more below.  Go on downwards from
+  0x001c0830 (the next part below the script VM and the camera), taking the
+  largest contiguous runs first (`python3 -I tools/shift/s37move/refs.py LO
+  HI`) and grouping by original file where assert strings or data order show
+  one.
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

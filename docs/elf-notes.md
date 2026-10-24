@@ -28,7 +28,14 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
 - Statically linked SCE libraries, SDK 2.5.0: libkernl, libgraph, libdma,
   libipu, libpad2, libdbc, libvib, libcdvd, libpc, libmc.
 - Source file names that survive in asserts: `ttlib/ui.c`, `ttlib/ui_gauge.c`,
-  `src/decode.c`, `src/sa_task.c`.
+  `src/decode.c`, `src/sa_task.c`.  Session 47 found where each ends from
+  the strings and the data order: ttlib/ui_gauge.c 0x0023cfe8-0x00243168
+  (src/hud/gauge*.c), ttlib/ui.c 0x00249fb0-0x0024b0c8 (src/hud/ui*.c),
+  src/decode.c 0x0024b0c8-0x0024b1f0 (src/util/decode.c), src/sa_task.c
+  0x0024b1f0-0x0024b9a8 (src/util/sa_task*.c).  The code after them up to
+  the hand asm at 0x0024e0a4 has no assert names: the movie names, a
+  parameter-list reader, the name-entry screen and the HDD install
+  (docs/modules.md "Session 47").
 
 ## Segments (kh1.toml `[[segment]]`)
 
