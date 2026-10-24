@@ -11,7 +11,6 @@ extern M2C_UNK D_00362670;
 extern M2C_UNK D_00575310; /* src/data/bss_0057.c: TalkEA D_00575310 */
 extern f32 D_005758C0;
 #include "data/pieces/D_002E26A0.h"
-extern s32 D_0035C6F0;
 extern void *D_00575894;
 f32 func_00120c88(f32);
 f32 func_001224c8(s32, s32, s32, f32);
@@ -21,7 +20,6 @@ s32 func_00232cc0(M2C_UNK);
 void func_00121eb0(s32);
 void func_0016f3d0(s32, s32);
 void func_0017f178();
-void func_00181b30(void);
 void func_002672f8(M2C_UNK *, void *, M2C_UNK *);
 void func_00267518(s32, M2C_UNK *, M2C_UNK *);
 void func_002675a8(M2C_UNK *, M2C_UNK *);
@@ -66,14 +64,6 @@ s32 func_00171ef0(s32 *arg0) {
     }
     var_v0 = 1;
     return var_v0;
-}
-
-s32 func_00175b70(void) {
-    if (D_0035C6F0 == 0) {
-        return 0;
-    }
-    func_00181b30();
-    return 0;
 }
 
 void func_00177900(s32 arg0, M2C_UNK *arg1, f32 fparg0) {

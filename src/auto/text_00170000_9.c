@@ -3,42 +3,14 @@
 #include "m2c.h"
 
 M2C_UNK func_00120c18(M2C_UNK *);
-M2C_UNK func_00175be0(M2C_UNK *, s32, s32, M2C_UNK, s32, M2C_UNK, M2C_UNK);
 M2C_UNK func_0017b250(M2C_UNK *, void *, f32);
 M2C_UNK func_0017b308(void *, void *, s32, s32, s32);
 M2C_UNK func_00267530(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
 #include "data/pieces/D_002E2780.h"
 #include "data/pieces/D_002E2790.h"
-extern M2C_UNK D_0035FB20;
-extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00575970;
-extern s32 D_0035C6F8;
-extern s32 D_0035C6FC;
 #include "data/pieces/D_00362438.h"
-void func_001759c0(void);
-void func_001759e8(void);
-void func_00175a20(void);
-void func_00182058(void);
-void func_00182270(void);
-
-void func_00175a48(void) {
-    func_00182270();
-    func_00182058();
-    func_001759c0();
-    func_001759e8();
-    func_00175a20();
-    D_0035C6F8 = 1;
-    D_0035C6FC = 0;
-}
-
-void func_00175f98(s32 arg0, s32 arg1, s32 arg2) {
-    func_00175be0(&D_0035FB20, arg0, arg1, -1, arg2, -1, 2);
-}
-
-void func_00175fd0(s32 arg0, s32 arg1, s32 arg2) {
-    func_00175be0(&D_00360F30, arg0, arg1, -1, arg2, -1, 3);
-}
 
 void func_00176a60(s32 *arg0) {
     func_002675a8(*arg0, ((M2C_UNK *)&D_002E2780));

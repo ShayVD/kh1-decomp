@@ -7,26 +7,10 @@ M2C_UNK func_001081a0(s32);
 M2C_UNK func_00122768(s32);
 M2C_UNK func_001386f8(s32);
 M2C_UNK func_0016f548();
-M2C_UNK func_001759c0();
-M2C_UNK func_001759e8();
-M2C_UNK func_00175be0(M2C_UNK *, s32, s32, s32, s32, M2C_UNK, M2C_UNK);
-M2C_UNK func_00175da8(M2C_UNK *, s32);
-M2C_UNK func_00175e38(M2C_UNK *);
-M2C_UNK func_00175ec8(M2C_UNK *);
-M2C_UNK func_00175f10(M2C_UNK *);
 M2C_UNK func_00176c60(M2C_UNK);
 M2C_UNK func_00176cc8(M2C_UNK);
 M2C_UNK func_001784c8();
 M2C_UNK func_0017f178();
-M2C_UNK func_0017f910();
-M2C_UNK func_0017f9d8();
-M2C_UNK func_0017fa68();
-M2C_UNK func_0017faa8();
-M2C_UNK func_0017fb98();
-M2C_UNK func_0017fc48();
-M2C_UNK func_0017fd88();
-M2C_UNK func_0017fe60();
-M2C_UNK func_0017ff98();
 M2C_UNK func_001a9e70();
 M2C_UNK func_001a9eb8();
 M2C_UNK func_001a9f88();
@@ -35,10 +19,6 @@ M2C_UNK func_00267370(s32, s32, s32);
 M2C_UNK func_00267530(void *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675a8(s32, s32);
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
-#include "data/pieces/D_0035C710.h"
-#include "data/pieces/D_0035E710.h"
-extern M2C_UNK D_0035FB20;
-extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00362660;
 extern M2C_UNK D_00575010; /* src/data/bss_0057.c: s32 D_00575010 */
 extern M2C_UNK D_005757B0; /* src/data/bss_0057.c: T44 D_005757B0[0x2] */
@@ -70,100 +50,6 @@ void func_00170e98(void) {
     func_0016f548();
     func_001386f8(M2C_FIELD(&D_00575010, s32 *, 0));
     func_001386f8(M2C_FIELD(&D_00575010, s32 *, 4));
-}
-
-void func_00175a20(void) {
-    memset(((M2C_UNK *)&D_0035C710), 0, 0x2000);
-}
-
-void func_00175f58(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    func_00175be0(((M2C_UNK *)&D_0035E710), arg0, arg1, arg2, arg3, -1, 1);
-}
-
-void func_00176110(s32 arg0) {
-    func_00175da8(((M2C_UNK *)&D_0035E710), arg0);
-}
-
-void func_00176130(s32 arg0) {
-    func_00175da8(&D_0035FB20, arg0);
-}
-
-void func_00176150(s32 arg0) {
-    func_00175da8(&D_00360F30, arg0);
-}
-
-void func_00176170(void) {
-    func_00175e38(((M2C_UNK *)&D_0035E710));
-    func_001759c0();
-}
-
-void func_00176190(void) {
-    func_00175e38(&D_0035FB20);
-    func_001759e8();
-}
-
-void func_001761f0(void) {
-    func_00175ec8(((M2C_UNK *)&D_0035E710));
-}
-
-void func_00176210(void) {
-    func_00175ec8(&D_0035FB20);
-}
-
-void func_00176230(void) {
-    func_00175ec8(&D_00360F30);
-}
-
-void func_00176250(void) {
-    func_00175f10(((M2C_UNK *)&D_0035E710));
-}
-
-void func_00176270(void) {
-    func_00175f10(&D_0035FB20);
-}
-
-void func_00176290(void) {
-    func_00175f10(&D_00360F30);
-}
-
-void func_001762b0(void) {
-    func_0017f910();
-}
-
-void func_001762c8(void) {
-    func_0017f9d8();
-}
-
-void func_001762e0(void) {
-    func_0017fa68();
-}
-
-void func_001762f8(void) {
-    func_0017faa8();
-}
-
-void func_00176310(void) {
-    func_0017fb98();
-}
-
-void func_00176328(void) {
-    func_0017fc48();
-}
-
-void func_00176358(void) {
-    func_0017fd88();
-}
-
-void func_00176370(void) {
-    func_0017fe60();
-}
-
-void func_001765f8(void) {
-    func_0017ff98();
-}
-
-u16 func_00176610(void *arg0) {
-    return M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x2C), void **, 0x8C), u16 *, 0xFC);
 }
 
 void func_00176920(void *arg0) {

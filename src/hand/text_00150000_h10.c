@@ -59,11 +59,6 @@ extern f32 D_00551D74;
 extern volatile s32 D_00559DB4;
 typedef struct Node70 { s32 id; s32 w4; s32 w8; s32 wC; struct Node70 *next; } Node70;
 extern Node70 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
-extern s32 D_0035C6F0, D_0035C6F4, D_0061621C;
-#include "data/pieces/D_002BC144.h"
-#include "data/pieces/D_002BC140.h"
-#include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
 
 /* ---- callees ---- */
 s32 D_00F20000(); /* code at a fixed address (overlay) */
@@ -112,8 +107,6 @@ s32 func_001684e0(s32);
 u32 *func_00232cc0(s32);
 void func_0013dfb8(void *, void *);
 s32 func_00133000(void *, s32);
-void func_00182148(s32, s32, void *, void *);
-void func_00181738(void);
 
 s32 func_00157560(A157560 *a) {
     E551670 *e = &D_00551670[a->p6C->idx];
@@ -514,15 +507,6 @@ typedef struct { u8 pad[0x164]; s32 w164; } Obj737;
 s32 func_00173718(Obj737 *o) {
     s32 v = o->w164;
     if (v == 63 || v == 140) return 1;
-    return 0;
-}
-
-s32 func_00175af0(void) {
-    if (D_0035C6F0 == 0) return 0;
-    if (D_0035C6F4) D_0061621C = 1;
-    else D_0061621C = 0;
-    func_00182148(D_002BC140, D_002BC144, &D_002E2780, &D_002E2790);
-    func_00181738();
     return 0;
 }
 #include "data/bss_0055_mixed.h"

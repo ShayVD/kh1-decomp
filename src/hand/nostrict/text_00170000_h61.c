@@ -148,32 +148,6 @@ void func_00174ad8(void);
 extern u8 D_0035C350[];
 void func_00174ca8(void);
 void func_00174b90(void);
-typedef struct Ppp {
-u8 pad0[0x88];
-s32 x88;
-u8 pad8c[0x93 - 0x8c];
-u8 x93;
-void *x94;
-s32 x98;
-u8 pad9c[0xa8 - 0x9c];
-s32 xa8;
-} Ppp;
-typedef struct Obj3C {
-void *x0, *x4, *x8, *xc, *x10;
-s32 x14;
-void *x18, *x1c, *x20, *x24, *x28, *x2c;
-s32 x30;
-void *x34;
-} Obj3C;
-extern s32 D_0035C6F8;
-extern s32 D_0035C6FC;
-void func_00181fe0(Ppp **);
-s32 func_00181410(s32);
-void func_001803f0(s32, s32, s32 *, Ppp *);
-s32 func_00181318(void);
-s32 func_00181368(s32);
-void func_00182c10(Ppp *, s32, s32);
-void func_00182840(Ppp *);
 #include "data/types/nostrict_text_00170000_h61.h"
 extern T44 D_005757B0[];
 extern f32 D_002BBDFC;
@@ -291,57 +265,6 @@ s32 func_00174798(Wk3 *w, Ac4 *o, R160 *p, s32 a3) {
         return 1;
     }
     return 1;
-}
-
-s32 func_00176658(s32 a0, Obj3C *o, s32 size, s32 a3) {
-    Ppp *p;
-    s32 q;
-    s32 ok = 1;
-    q = 0;
-    p = 0;
-    func_00181fe0(&p);
-    if (!p) {
-        if (!func_00181410(a3)) {
-            ok = 0;
-            goto end;
-        }
-        func_00181fe0(&p);
-    }
-    p->x88 = a0;
-    p->x93 = size;
-    p->x94 = o;
-    p->xa8 = D_0035C6F8++;
-    o->x14 = 17;
-    o->x0 = p;
-    o->x4 = (u8 *)p + 16;
-    o->x8 = (u8 *)p + 32;
-    o->xc = (u8 *)p + 48;
-    o->x10 = (u8 *)p + 133;
-    o->x18 = (u8 *)p + 160;
-    o->x20 = (u8 *)p + 177;
-    o->x24 = (u8 *)p + 64;
-    o->x28 = (u8 *)p + 96;
-    o->x2c = p;
-    o->x30 = D_0035C6FC++;
-    o->x34 = (u8 *)p + 183;
-    func_001803f0(a0, size, &q, p);
-    p->x98 = a3;
-    if (!q) {
-        ok = 0;
-    } else {
-        if (func_00181318() > 0x7ffff) {
-            do {
-                if (!func_00181368(a3)) {
-                    ok = 0;
-                    goto end;
-                }
-            } while (func_00181318() > 0x7ffff);
-        }
-        func_00182c10(p, q, 1);
-    }
-end:
-    if (!ok && p) func_00182840(p);
-    return ok;
 }
 
 void func_00176cc8(s32 i) {

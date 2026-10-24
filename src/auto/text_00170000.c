@@ -1,25 +1,12 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
-M2C_UNK func_00175a98();
-M2C_UNK func_00175d60(M2C_UNK *, s32);
-M2C_UNK func_00175e80(M2C_UNK *);
-M2C_UNK func_00176ea8();
 M2C_UNK func_0017f178();
-M2C_UNK func_0017fcd8();
-M2C_UNK func_0017ff38();
-M2C_UNK func_00180540();
-M2C_UNK func_00182270();
 M2C_UNK func_00183a48();
 M2C_UNK func_001a9f88();
 M2C_UNK func_001aa650();
 M2C_UNK func_00250054(M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_002675a8(M2C_UNK *, M2C_UNK *);
-#include "data/pieces/D_0035E710.h"
-extern M2C_UNK D_0035FB20;
-extern M2C_UNK D_00360F30;
 extern M2C_UNK D_00362400;
 extern M2C_UNK D_00362410;
 extern M2C_UNK D_00362660;
@@ -30,7 +17,6 @@ extern M2C_UNK D_00362690;
 extern M2C_UNK D_005758F0;
 extern M2C_UNK D_00575920; /* src/data/bss_0057.c: S920 D_00575920 */
 extern M2C_UNK D_00575940;
-extern M2C_UNK func_00176ee0;
 #include "data/pieces/D_00362424.h"
 #include "data/pieces/D_00362428.h"
 #include "data/pieces/D_0036242C.h"
@@ -49,90 +35,6 @@ s32 func_00219308();
 
 f32 func_00171aa8(f32 fparg0, f32 fparg1) {
     return fparg0 + (func_001629e8() * (fparg1 - fparg0));
-}
-
-void func_00175980(void) {
-    func_00176ea8();
-    func_0011ef10(0x4E21, &func_00176ee0);
-}
-
-void func_001759a8(void) {
-    func_00175a98();
-}
-
-void func_001759c0(void) {
-    func_00250054(((M2C_UNK *)&D_0035E710), 0, 0x1410);
-}
-
-void func_001759e8(void) {
-    func_00250054(&D_0035FB20, 0, 0x1410);
-    func_00250054(&D_00360F30, 0, 0x1410);
-}
-
-void func_001760b0(s32 arg0) {
-    func_00175d60(((M2C_UNK *)&D_0035E710), arg0);
-}
-
-void func_001760d0(s32 arg0) {
-    func_00175d60(&D_0035FB20, arg0);
-}
-
-void func_001760f0(s32 arg0) {
-    func_00175d60(&D_00360F30, arg0);
-}
-
-void func_001761d0(void) {
-    func_00175e80(&D_0035FB20);
-}
-
-void func_00176340(void) {
-    func_0017fcd8();
-}
-
-void func_00176388(void) {
-    func_0017ff38();
-}
-
-void func_00176640(void) {
-    func_00180540();
-}
-
-void func_00176838(void) {
-    func_00182270();
-}
-
-void func_00176898(void) {
-
-}
-
-void func_001768a0(void) {
-
-}
-
-void func_001768a8(void) {
-
-}
-
-void func_001768b0(void) {
-
-}
-
-void func_001768b8(void) {
-
-}
-
-void func_001768c0(void) {
-
-}
-
-void func_001768c8(void **arg0) {
-    void *temp_v0;
-
-    temp_v0 = *arg0;
-    if (temp_v0 != NULL) {
-        *M2C_FIELD(temp_v0, s8 **, 0x10) = 1;
-    }
-    *arg0 = NULL;
 }
 
 s32 func_00177070(void) {

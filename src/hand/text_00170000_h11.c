@@ -2,44 +2,9 @@
 #include "common.h"
 
 /* --- 0x3C-byte entry table (func_00175ba0..func_00175da8) --- */
-typedef struct Ent {
-    u8 pad0[0xC];
-    s32 unkC;     /* 0x0C */
-    u8 pad10[4];
-    s32 flags;    /* 0x14: bit 0 = in use */
-    u8 pad18[4];
-    struct { u8 pad[8]; s32 id; } *unk1C; /* 0x1C */
-    u8 pad20[0xC];
-    struct { u8 pad[0x8c]; u8 *unk8C; } *unk2C; /* 0x2C */
-    u8 pad30[0xC];
-} Ent; /* 0x3C */
-
-typedef struct Mgr {
-    u8 pad0[0xC];
-    Ent ents[64];        /* 0x00C */
-    u8 padF0C[0x1010 - 0xF0C];
-    u8 m1010[64][16];    /* 0x1010 */
-} Mgr;
-
-typedef struct { u8 pad0[0x20]; s32 flags; u8 pad24[0x3c - 0x24]; } E3C;
 
 /* --- relocatable pack: header, n items of 0x20 bytes, then a count and
  * that many offsets (func_001763f0..func_00176578) --- */
-typedef struct Item {
-    s32 data;   /* 0x00: offset, relocated to a pointer */
-    s32 size;   /* 0x04 */
-    s32 id;     /* 0x08 */
-    s32 pad0C;
-    s32 mask1;  /* 0x10 */
-    s32 mask2;  /* 0x14 */
-    u64 mask3;  /* 0x18 */
-} Item;
-
-typedef struct Pack {
-    u8 pad0[0xC];
-    s32 n;      /* 0x0C */
-    Item items[1];
-} Pack;
 
 /* script handler arguments */
 #include "data/types/text_00170000_h11_p4.h"
@@ -76,70 +41,6 @@ s32 func_0017dc40(void);
 void func_00176f08(s32, f32);
 void func_00267530(void *, void *, void *);
 void func_002675a8(void *, void *);
-
-s32 func_00175ba0(E3C *a) {
-    s32 i;
-    for (i = 0; i < 64; i++) {
-        if (!(a[i].flags & 3)) return i;
-    }
-    return -1;
-}
-
-Ent *func_00175d60(Mgr *m, s32 id) {
-    s32 i;
-    Ent *e = m->ents;
-    for (i = 0; i < 64; i++, e++) {
-        if ((e->flags & 1) && e->unk1C->id == id) return e;
-    }
-    return 0;
-}
-
-void func_00267548(s32, void *, s32);
-void func_00175da8(Mgr *m, s32 arg1) {
-    s32 i = 0;
-    Ent *e = m->ents;
-    u8 *p = m->m1010[0];
-loop:
-    if ((e->flags & 1) && e->unk2C->unk8C[0xfb] == 0)
-        func_00267548(e->unkC, p, arg1);
-    i++; e++; p += 16;
-    if (i < 64) goto loop;
-}
-
-s32 func_00181368(s32);
-void func_001763a0(s32 a) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if (!func_00181368(a)) break;
-    }
-}
-
-s32 func_00176658(s32, void *, s32, s32);
-typedef struct { u8 pad[0x38]; Pack *pack; } Obj38;
-s32 func_00176488(Pack *h, Obj38 *obj, s32 id, s32 arg3) {
-    s32 i;
-    Item *it = h->items;
-    s32 found = 0;
-    for (i = 0; i < h->n; i++, it++) {
-        if (it->id == id) { found = 1; break; }
-    }
-    if (!found) return 0;
-    if (!func_00176658(it->data, obj, it->size, arg3)) return 0;
-    obj->pack = h;
-    return 1;
-}
-
-s32 func_00176578(Pack *h, s32 m1, s32 m2, u64 m3) {
-    s32 i;
-    Item *it = h->items;
-    for (i = 0; i < h->n; i++, it++) {
-        if (m1 != (m1 & it->mask1) && m1) continue;
-        if (m2 != (m2 & it->mask2) && m2) continue;
-        if (m3 != (m3 & it->mask3) && m3) continue;
-        return it->id;
-    }
-    return -1;
-}
 
 typedef struct { u8 pad[0x20]; u8 *p20; } Obj20;
 void func_001768e8(Arg *a) {

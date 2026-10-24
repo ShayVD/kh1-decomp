@@ -223,10 +223,6 @@ void func_001752a0(Ob52 *o, f32 *c) {
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { s32 x0; void *x4; s32 x8; void *xc; u8 pad10[4]; s32 x14; u8 pad18[4]; void *x1c; u8 pad20[0xC]; u8 *x2c; u8 pad30[0xC]; } Ent5B;
 typedef struct { s32 x0; void *x4; void *x8; Ent5B ent[64]; s32 idx[64]; u8 pad[4]; f32 vec[64][4]; } W5B;
-typedef struct { s32 id; s32 x4; s32 key; u8 padc[4]; f32 v10[4]; u128 q20; f32 v30[4]; f32 v40[4]; } It5B;
-typedef struct { u8 pad0[4]; s32 n; u8 pad8[8]; It5B items[1]; } Hd5B;
-s32 func_00176488(s32, Ent5B *, s32, s32);
-void func_00267e40(s32, f32 *);
 
 CONTEXT_ONLY s32 func_00175ba0(W5B *w) {
     s32 i;
@@ -234,32 +230,6 @@ CONTEXT_ONLY s32 func_00175ba0(W5B *w) {
         if (!(w->ent[i].x14 & 3)) return i;
     }
     return -1;
-}
-
-s32 func_00175be0(W5B *w, s32 a1, void *hv, s32 id, s32 a4, s32 key, s32 b) { Hd5B *h = hv;
-    It5B *it;
-    s32 i, k;
-    Ent5B *e;
-    w->x0 = a1;
-    w->x4 = h;
-    w->x8 = it = h->items;
-    for (i = 0; i < h->n; i++, it++) {
-        if (it->id != id && id != -1) continue;
-        if (it->key != key && key != -1) continue;
-        k = func_00175ba0(w);
-        e = &w->ent[k];
-        if (func_00176488(a1, e, it->x4, a4)) {
-            func_00267e40(e->x0, it->v10);
-            func_00267e40(e->x8, it->v30);
-            func_002675a8(e->xc, it->v40);
-            func_002675a8(w->vec[k], it->v40);
-            w->idx[k] = i;
-            *(u128 *)e->x4 = it->q20;
-            e->x1c = it;
-            e->x2c[0xB5] = b;
-        }
-    }
-    return 1;
 }
 
 /* 00176960 */
