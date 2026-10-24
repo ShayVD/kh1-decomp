@@ -1,5 +1,15 @@
-/* worker c07: nostrict region (0x1a3720-0x1a5c9c). */
+/* The pppRyjMegaBirthModelFilter class, -fno-strict-aliasing
+ * (docs/modules.md "Session 49"; c07 renamed): func_001a3650 is a VU0
+ * random number in 0 .. 1, func_001a3720 starts a particle from the key,
+ * func_001a4168 moves one (as ryjmbfilter.nostrict_nofill.c's
+ * func_001a2830 for the sprite class); the frame
+ * (pppRyjMegaBirthModelFilterFrame) allocates the particles and fades the
+ * emitter by distance; func_001a4a98 builds a particle's model matrix and
+ * the draw (pppRyjMegaBirthModelFilterDraw) draws each live one through
+ * opdma.c's func_001aaf88.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "ppp.h"
+#include "data/pieces/D_003701D0.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
@@ -413,4 +423,266 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
         func_001a3720(e, p, s);
     }
 }
+
+/* The frame (from text_001a0000_h65.c). */
+typedef FV4_3701d0 FV4;
+void *memset(void *, s32, u32);
+void *func_0017f958(void *, s32);
+extern void *D_00615E64;
+typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x38]; } MbPart;
+typedef struct { u8 pad[0x20]; } MbSub;
+static inline f32 vlen3_w65(FV4 *v) {
+    f32 r;
+    __asm__ volatile(
+        "lqc2 $vf10, 0(%1)\n"
+        "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
+        "vaddx.y $vf10y, $vf10y, $vf10x\n"
+        "vaddy.z $vf10z, $vf10z, $vf10y\n"
+        "vsqrt Q, $vf10z\n"
+        "vwaitq\n"
+        "vaddq.x $vf10x, $vf0x, Q\n"
+        "qmfc2 $2, $vf10\n"
+        "mtc1 $2, %0\n"
+        : "=f"(r) : "r"(v) : "$2", "memory");
+    return r;
+}
+
+
+typedef struct { MbPart *parts; MbSub *subs; s32 n; f32 alpha; u16 timer; u8 active; } MbmWork;
+typedef struct { u8 pad0[0xa]; u16 n; u8 padc[0xe8 - 0xc]; f32 dist; f32 fade; u8 test; u8 padf1; u8 sub; } MbmfKey;
+s32 func_001a36f0();
+void func_001a47b0(MbmWork *, MbmfKey *, void *);
+
+void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
+    MbmWork *w = (MbmWork *)((u8 *)obj + e->offsets[2] + 0xA0);
+    void *w2 = (u8 *)obj + e->offsets[1] + 0xA0;
+    FV4 d;
+    f32 len, r;
+
+    if (w->parts == NULL) {
+        w->n = k->n;
+        w->parts = func_0017f958(D_00615E64, w->n * 0xA0);
+        if (w->parts != NULL)
+            memset(w->parts, 0, w->n * 0xA0);
+        if (k->sub) {
+            w->subs = func_0017f958(D_00615E64, w->n << 5);
+            if (w->subs != NULL)
+                memset(w->subs, 0, w->n << 5);
+        }
+    }
+    if (!func_001a36f0(w, k))
+        return;
+    if (k->test) {
+        func_00267530((f32 *)&d, (f32 *)&D_00615F70, (f32 *)&D_003701D0);
+        len = vlen3_w65(&d);
+        if (k->dist < len) {
+            w->active = 0;
+        } else {
+            w->active = 1;
+            r = k->dist - len;
+            if (r < k->fade)
+                w->alpha = r / k->fade;
+            else
+                w->alpha = 1.0f;
+        }
+    }
+    if (w->active)
+        func_001a47b0(w, k, w2);
+}
+
+
+void sceVu0UnitMatrix(f32 (*)[4]);
+void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
+
+extern u8 D_00615EB0[];
+extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
+
+typedef f32 Mtx4[4][4];
+typedef struct { u8 pad[0xe0]; f32 mul; f32 add; } RkKey;
+typedef struct {
+    u8 pad0[0x28];
+    union { u64 d; s32 i[2]; } r01;
+    s32 r2;
+    u8 pad34[0x54 - 0x34];
+    f32 scale[3];
+} RkObj;
+
+f32 func_001a4a98(void *a0, f32 (*m)[4], RkKey *k, void *a3, RkObj *o) {
+    Mtx4 rm;
+    f32 rot[3];
+    f32 z;
+    s32 i;
+    sceVu0UnitMatrix(m);
+    if (o->r01.d || o->r2) {
+        for (i = 0; i < 3; i++)
+            rot[i] = (f32)o->r01.i[i] * 3.1415926f * 3.0517578125e-05f;
+        func_002678b8(rm, D_006161C0, rot);
+        sceVu0MulMatrix(m, m, rm);
+    }
+    for (i = 0; i < 3; i++)
+        func_00267560(m[i], m[i], o->scale[i]);
+    func_002675a8(m[3], (f32 *)o);
+    func_002672f8(m[3], (void *)D_00615EB0, m[3]);
+    m[3][1] *= k->mul;
+    z = m[3][2];
+    m[3][1] += k->add;
+    sceVu0MulMatrix(m, D_00616040, m);
+    return z;
+}
+
+/* The draw (from text_001a0000_b09.c). */
+#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
+typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
+extern s32 D_00616224;
+#define D_00616224 (*(volatile s32 *)&D_00616224)
+typedef struct { u8 pad[0x10]; PppMtx m; PppMtx m2; s32 unk90; s32 unk94; } MfMtxOwner;
+extern s32 D_00615E68;
+#define D_00615E68 (*(MfMtxOwner **)&D_00615E68)
+extern u8 D_00616240[];
+typedef struct { s16 off; s16 dur; s32 pad; } FdFrame;
+typedef struct { u8 pad0[0x10]; FdFrame f[1]; } FdShape;
+typedef struct { FdShape *shape; s32 unk4; } FdShapeEnt;
+typedef struct { u32 flags; u8 pad04[0x12]; u16 unk16; } MfMdl;
+typedef struct { s32 pad0[7]; MfMdl *mdl; s32 unk20; } MfSlot;
+typedef struct { u8 pad00[0x10]; MfSlot *slots; FdShapeEnt *shapes; } PppSys9;
+#define D_00615E64 (*(PppSys9 **)&D_00615E64)
+
+typedef struct {
+    s32 flags;
+    void *p04;
+    u16 h08;
+    u8 b0A;
+    s32 w0C;
+    union { u64 d; struct { s32 u, v; } s; } t10;
+    u8 r, g, b, a;
+    s32 w1C;
+    void *p20;
+    void *p24;
+    void *p28;
+    void *p2C;
+    void *p30;
+    s32 w34;
+    s32 w38;
+    s32 w3C;
+    s32 w40;
+    void *p44;
+    s32 w48;
+    u8 b4C;
+    u8 b4D;
+    u8 pad4E[0x12];
+} MfParam;
+
+typedef struct { u8 pad[8]; u8 r, g, b, a; } MfCol;
+typedef struct { f32 f[4]; u8 pad[0x10]; } MfSub;
+typedef struct {
+    u8 pad0[0x20];
+    u16 alive;
+    s8 c[4];
+    u8 pad26[0x7c - 0x26];
+    f32 u, v;
+    u8 pad84[0x94 - 0x84];
+    f32 alpha;
+    u64 flags;
+} MfPart;
+typedef struct { MfPart *parts; MfSub *subs; s32 n; f32 alpha; u16 timer; u8 active; } MfWork;
+typedef struct { u8 pad0[4]; s32 id; u8 x08; u8 pad09[0xc7]; f32 dist; f32 fade; } MfKey;
+
+void func_001a4a90(PppMtx m, MfKey *k, MfWork *w);
+s32 func_001aaf88(MfMdl *, MfParam *, s32);
+
+void pppRyjMegaBirthModelFilterDraw(void *obj, MfKey *k, PppEntry *e) {
+    PppMtx m0;
+    PppMtx m1;
+    MfParam p;
+    MfWork *w = PPP_WORK(MfWork, obj, e, 2);
+    MfCol *c = PPP_WORK(MfCol, obj, e, 1);
+    MfPart *pt = w->parts;
+    MfSub *sb = w->subs;
+    s32 n = w->n;
+    MfSlot *s;
+    MfMdl *mdl;
+    s32 cr, cg, cb, ca;
+    s32 i;
+    s32 id;
+    u8 f8;
+
+    if (!func_001a36f0(w, k))
+        return;
+    if (!w->active)
+        return;
+    id = k->id;
+    if (id == 0xFFFF)
+        return;
+    func_001a4a90(m0, k, w);
+    s = &D_00615E64->slots[id];
+    mdl = s->mdl;
+    p.p44 = 0;
+    p.p2C = 0;
+    p.p28 = 0;
+    f8 = k->x08;
+    p.p24 = 0;
+    p.b0A = 0;
+    p.w1C = 0;
+    p.w38 = D_00615E68->unk90;
+    p.w3C = D_00615E68->unk94;
+    p.p20 = m1;
+    p.w0C = 0;
+    p.t10.d = 0;
+    p.p04 = D_00616240;
+    p.flags = 4;
+    p.w40 = 0;
+    if (f8) p.flags = 0x204;
+    p.b4D = 1;
+    cr = c->r;
+    cg = c->g;
+    p.h08 = mdl->unk16;
+    cb = c->b;
+    ca = c->a;
+    for (i = 0; i < n; i++) {
+        if (pt->alive && !(pt->flags & 0x100)) {
+            f32 d, dist, fade;
+            s32 r, g, bl, al;
+            d = func_001a4a98(m0, m1, (RkKey *)k, w, (RkObj *)pt);
+            dist = k->dist;
+            fade = k->fade;
+            if (d < dist - fade) {
+                pt->alpha = 0.0f;
+            } else if (d < dist) {
+                pt->alpha *= 1.0f - (dist - d) / fade;
+            }
+            r = cr + pt->c[0];
+            g = cg + pt->c[1];
+            bl = cb + pt->c[2];
+            al = ca + pt->c[3];
+            if (sb) {
+                r += (s32)sb->f[0];
+                g += (s32)sb->f[1];
+                bl += (s32)sb->f[2];
+                al += (s32)sb->f[3];
+            }
+            if (r < 0) r = 0; else if (r >= 256) r = 255;
+            if (g < 0) g = 0; else if (g >= 256) g = 255;
+            if (bl < 0) bl = 0; else if (bl >= 256) bl = 255;
+            if (al < 0) al = 0; else if (al >= 128) al = 127;
+            p.a = al;
+            p.r = r;
+            p.g = g;
+            p.b = bl;
+            p.a = p.a * pt->alpha * w->alpha;
+            p.t10.s.u = pt->u * 65536.0f;
+            p.t10.s.v = pt->v * 65536.0f;
+            if (p.a) {
+                p.w34 = D_00616224;
+                D_00616224 = func_001aaf88(mdl, &p, s->unk20);
+            }
+        }
+        if (sb)
+            sb++;
+        pt++;
+    }
+}
+
+#undef D_00615E64
+#undef D_00615E68
+#undef D_00616224
 
