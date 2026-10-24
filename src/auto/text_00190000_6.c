@@ -5,12 +5,7 @@
 M2C_UNK func_001a62a8(s32);
 M2C_UNK func_001a6538(s32);
 M2C_UNK func_001a67a0(s32);
-M2C_UNK func_002672f8(M2C_UNK *, s32, s32);
-M2C_UNK func_00267328(s32, M2C_UNK *, s32);
-M2C_UNK func_002673b8(M2C_UNK *, s32);
-M2C_UNK func_002675a8(s32, M2C_UNK *);
 extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-extern s32 D_00615E68;
 void func_001a60d0(s32);
 void func_001a60e8(s32, s32);
 
@@ -54,20 +49,4 @@ void pppKeLnsFlsTCon(s32 arg0, PppEntry *arg1) {
 
 void pppKeLnsFlsTDes(void) {
 
-}
-
-void pppKeParMatRFrame(void *arg0) {
-    s32 sp[20];    s32 temp_a0;
-    s32 temp_s0;
-    s32 temp_s1;
-
-    temp_s0 = M2C_FIELD(arg0, s32 *, 4);
-    temp_s1 = temp_s0 + 0x10;
-    func_002673b8(sp, temp_s1);
-    func_002673b8(&M2C_FIELD(sp, M2C_UNK *, 0x10), temp_s0 + 0x20);
-    func_002673b8(&M2C_FIELD(sp, M2C_UNK *, 0x20), temp_s0 + 0x30);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), temp_s1, D_00615E68 + 0x40);
-    temp_a0 = D_00615E68 + 0x10;
-    func_00267328(temp_a0, sp, temp_a0);
-    func_002675a8(D_00615E68 + 0x40, &M2C_FIELD(sp, M2C_UNK *, 0x40));
 }

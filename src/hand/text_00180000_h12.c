@@ -323,7 +323,6 @@ typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 void sceVu0UnitMatrix(PppMtx);
 void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-void sceVu0CopyMatrix(PppMtx, PppMtx);
 
 typedef struct {
     u8 pad[0x10];
@@ -494,48 +493,6 @@ void func_001936c0(PppCbSrc2 *p) {
     a.tbl = D_00616040;
     a.sub = p->unk10;
     func_001a6550(&a, 0);
-}
-
-typedef struct {
-    s32 frame;
-    PppWord a, b;
-} PppKeyF2;
-
-typedef struct {
-    PppWord a;
-    s32 tgt;
-} PppHitBall;
-
-typedef struct {
-    PppWord a, b;
-    s32 tgt;
-} PppGrvTgt;
-
-void pppKeGrvTgtFrame(PppObject *obj, PppKeyF2 *k, PppEntry *e) {
-    if (obj->frame == k->frame) {
-        PppGrvTgt *w = (PppGrvTgt *) ((u8 *) obj + e->offsets[1] + 0xA0);
-        w->a.f = k->a.f;
-        w->b.f = k->b.f;
-        w->tgt = (s32) obj + e->offsets[0] + 0xA0;
-    }
-}
-
-void pppKeHitBallFrame(PppObject *obj, PppKeyF2 *k, PppEntry *e) {
-    if (obj->frame == k->frame) {
-        PppHitBall *w = (PppHitBall *) ((u8 *) obj + e->offsets[1] + 0xA0);
-        w->tgt = (s32) obj + e->offsets[0] + 0xA0;
-        w->a.f = k->a.f;
-    }
-}
-
-extern PppMtx D_00615FC0;
-
-void pppKeDMatFrame(void *obj, void *k, PppEntry *e) {
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[1] + 0xA0);
-
-    sceVu0MulMatrix(D_00615E68->m2, D_00615FC0, D_00615E68->m);
-    sceVu0CopyMatrix(w, D_00615E68->m2);
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
 }
 
 #include "data/types/text_00180000_h12_p.h"

@@ -10,8 +10,6 @@
 
 /* A 16-byte aligned VU0 vector. */
 #include "data/types/text_00180000_h40.h"
-
-extern PppQv D_00615FC0[4];
 extern PppQv D_00616040[4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 
 typedef struct {
@@ -156,16 +154,6 @@ void pppSclMoveLoopFrame(PppObject *obj, PppFVecKey *key, PppEntry *e) {
         pos->z += vel->z;
     }
 }
-
-typedef struct {
-    u8 pad[0x10];
-    PppMtx m;    /* +0x10 */
-    PppMtx m2;   /* +0x50 */
-} PppMtxOwner;
-
-extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-
-void func_00183be0(PppMtx, void *);
 void func_001a5250(PppMtx, PppFVec *);
 void func_001a5370(PppMtx, PppFVec *);
 void func_001a52e0(PppMtx, PppFVec *);
@@ -217,9 +205,7 @@ typedef struct {
 } PppBornKey;
 
 u8 *func_00182588(PppSystem *, PppSlot *);
-void func_002672f8(PppVec4, f32 *, PppVec4);
 void func_00267530(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, PppVec4, f32);
 s32 func_001a8f30(void);
 void func_001a5520(PppObject *, PppBornKey *, void *, void *, s16, u8, u8);
 void func_0018d390(void *owner, PppBornKey *key, s16 *pos);
@@ -372,53 +358,7 @@ typedef struct {
     s32 frame;
     f32 a, b; /* +0x4 */
 } PppKey2f;
-
-typedef struct {
-    u8 pad00[0x40];
-    f32 m[3][4];   /* +0x40 */
-    u128 row3;     /* +0x70 */
-    PppIVec prev;  /* +0x80 */
-} PppMatSN;
-
-extern PppMatSN *D_00616214; /* src/data/bss_0061.c: s32 D_00616214 */
-extern u128 D_003727B0;
-
-void pppKeMatSNFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMatSN *w = PPP_WORK(PppMatSN, obj, e, 0);
-    PppIVec *r = PPP_WORK(PppIVec, obj, e, 1);
-    PppIVec d;
-
-    D_00616214 = w;
-    d = w->prev;
-    w->prev.x = r->x;
-    w->prev.y = r->y;
-    w->prev.z = r->z;
-    d.x -= w->prev.x;
-    d.y -= w->prev.y;
-    d.z -= w->prev.z;
-    func_00183be0((void *) w->m, &d);
-    w->row3 = D_003727B0;
-}
-
-extern PppMtx D_0061E7C0;
 void func_002675a8(f32 *, f32 *);
-
-extern PppMtx D_0061E780;
-#include "data/pieces/D_003701F0.h"
-
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-
-void pppKeDMatPhtFrFrame(PppObject *obj, void *key, PppEntry *e) {
-    func_00267560(D_0061E780[0], D_0061E7C0[0], D_003701F0[0]);
-    func_00267560(D_0061E780[1], D_0061E7C0[1], D_003701F0[1]);
-    func_00267560(D_0061E780[2], D_0061E7C0[2], D_003701F0[2]);
-    func_002672f8(D_0061E780[3], (f32 *) D_00615FC0, D_0061E7C0[3]);
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], D_003701F0[0]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], D_003701F0[1]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], D_003701F0[2]);
-    func_002672f8(D_00615E68->m2[3], (f32 *) D_00615FC0, D_00615E68->m[3]);
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
-}
 
 typedef struct {
     s32 frame;
@@ -534,4 +474,3 @@ typedef struct {
 } PppPool;
 
 PppMdlRec *func_0019dfc8(s32);
-#include "data/pieces/D_003727B0.h"

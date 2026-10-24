@@ -66,7 +66,6 @@ typedef struct {
     f32 b, db, ddb;  /* +0x10 */
 } PppMdlLoop;
 
-
 u8 *func_00182588(PppSystem *, PppSlot *);
 void func_001a9098(void *, void *);
 
@@ -120,7 +119,6 @@ typedef struct {
     s32 unk4;
 } PppAnimRef;
 
-
 extern PppMtx D_00615E70;
 void func_002675a8(PppVec4, f32 *);
 
@@ -135,7 +133,6 @@ extern u8 D_00616240[];
 extern u8 D_00616140[];
 extern u8 D_00616100[];
 extern s32 D_00616224;
-
 
 extern u8 D_00616040[];
 #include "data/pieces/D_003701F0.h"
@@ -155,7 +152,6 @@ typedef struct {
     f32 f0C;       /* +0xC */
 } PppLnsKey;
 
-
 typedef struct {
     void *work;    /* +0x00 */
     u8 col[4];     /* +0x04 */
@@ -174,7 +170,6 @@ typedef struct {
     u16 h14;       /* +0x14 */
 } PppLnsClmKey;
 
-
 typedef struct {
     void *work;    /* +0x00 */
     u8 col[4];     /* +0x04 */
@@ -183,10 +178,6 @@ typedef struct {
     u16 h10, h12;  /* +0x10 */
     void *p14;     /* +0x14 */
 } PppLnsCrnDraw;
-
-
-f32 func_001a9350(PppVec4);
-void func_001a9110(void *, void *, PppVec4);
 
 typedef struct {
     s32 frame;
@@ -425,7 +416,6 @@ typedef struct PppHitNode {
     PppJoint joints[1];       /* +0x40 */
 } PppHitNode;
 
-
 void pppKeThHitBornFrame(PppObject *obj, PppHitBornKey *key, PppEntry *e) {
     u8 *w = PPP_WORK(u8, obj, e, 1);
     PppHitNode *n;
@@ -493,7 +483,6 @@ void func_0018d7d8(PppObject *owner, PppBorn2Key *key, s16 *pos) {
     func_001a9098((void *) c, v);
 }
 
-
 s32 func_0018df30(f32 *v, f32 *out) {
     f32 x = v[0];
     f32 y = v[1];
@@ -523,8 +512,6 @@ s32 func_0018df30(f32 *v, f32 *out) {
     *out = r;
     return 1;
 }
-
-
 
 s32 func_0018e5a8(f32 *v, f32 *out) {
     f32 x = v[0];
@@ -959,109 +946,6 @@ void pppKeLnsFlsTDraw(PppObject *obj, PppLnsClmKey *key, PppEntry *e) {
     func_001936c0(w, 0, 0);
 }
 
-typedef struct {
-    s32 frame;
-    f32 rate;     /* +0x4 */
-    s32 slot;     /* +0x8 */
-    s32 off;      /* +0xC */
-} PppHmgKey;
-
-typedef struct {
-    f32 rate;
-    f32 *target;  /* +0x4 */
-} PppHmg;
-
-typedef union {
-    PppVec4 f;
-    u64 d[2];
-} PppV4U;
-
-void func_00267518(PppVec4, PppVec4, PppVec4);
-void func_002674f0(PppVec4, PppVec4, PppVec4, f32);
-s32 func_001a8f30(void);
-
-void pppKeHmgEffFrame(PppObject *obj, PppHmgKey *key, PppEntry *e) {
-    PppVec4 a;
-    PppV4U c;
-    PppVec4 b;
-    PppHmg *w = PPP_WORK(PppHmg, obj, e, 2);
-    f32 *p, *q;
-    f32 len;
-
-    if (obj->frame == key->frame) {
-        w->rate = key->rate;
-        if (key->slot != -1)
-            p = (f32 *) (D_00615E60->slots[key->slot].inst + key->off + 0xA0);
-        else
-            p = &D_00575A00;
-        w->target = p;
-        if (obj->frame == 0 && ((PppObjectB *) obj)->unk9D == 0)
-            return;
-    }
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (w->target == &D_00575A00)
-        return;
-    q = PPP_WORK(f32, obj, e, 1);
-    func_00267530(a, w->target, PPP_WORK(f32, obj, e, 0));
-    func_002673b8(a, a);
-    func_002675a8(b, q);
-    len = func_001a9350(b);
-    func_002673b8(b, b);
-    func_00267518(c.f, b, a);
-    if (c.d[0] == 0 && c.d[1] == 0)
-        a[func_001a8f30() % 3] += 0.05f;
-    func_002674f0(a, a, b, w->rate);
-    func_002673b8(a, a);
-    func_00267560(a, a, len);
-    func_001a9098(q, a);
-}
-
-typedef struct {
-    s32 frame;
-    s32 slot;     /* +0x4 */
-    s32 off;      /* +0x8 */
-} PppGrvKey;
-
-typedef struct {
-    f32 range;    /* +0x0 */
-    f32 force;    /* +0x4 */
-    f32 *pos;     /* +0x8 */
-} PppGrvSrc;
-
-void pppKeGrvEffFrame(PppObject *obj, PppGrvKey *key, PppEntry *e) {
-    PppVec4 a;
-    PppGrvSrc **w = PPP_WORK(PppGrvSrc *, obj, e, 2);
-    PppGrvSrc *t;
-    f32 *q;
-    f32 len;
-
-    if (obj->frame == key->frame) {
-        PppGrvSrc *p;
-
-        if (key->slot != -1)
-            p = (PppGrvSrc *) (D_00615E60->slots[key->slot].inst + key->off + 0xA0);
-        else
-            p = (PppGrvSrc *) &D_00575A00;
-        *w = p;
-        if (obj->frame == 0 && ((PppObjectB *) obj)->unk9D == 0)
-            return;
-    }
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    t = *w;
-    if (t == (PppGrvSrc *) &D_00575A00)
-        return;
-    q = PPP_WORK(f32, obj, e, 1);
-    func_00267530(a, t->pos, PPP_WORK(f32, obj, e, 0));
-    len = func_001a9350(a);
-    func_002673b8(a, a);
-    if (len < t->range) {
-        func_00267560(a, a, (1.0f - len / t->range) * t->force);
-        func_001a9110(q, q, a);
-    }
-}
-
 /* needs make: uses rodata */
 
 typedef struct {
@@ -1072,8 +956,6 @@ typedef struct {
     s32 unk14;
     s32 off1;     /* +0x18 */
 } PppBorn3Key;
-
-
 
 void func_0018e0b0(PppObject *owner, PppBorn3Key *key, s16 *pos) {
     PppVec4 v;

@@ -63,49 +63,4 @@ void pppKeLnsLpTDes(void) {
 void pppKeLnsClmTDes(void) {
 
 }
-
-void pppKeHmgEffCon(void) {
-
-}
-
-void pppKeGrvTgtCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[1]), s32 *, 0xA8) = 0;
-}
-
-void pppKeGrvEffCon(void) {
-
-}
-
-void pppKeHitBallCon(void) {
-
-}
-
-void pppKeHitBornCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[2]), s8 *, 0xA0) = 0;
-}
-
-void pppKeHitChkPxBCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + arg1->offsets[2] + 0xA0;
-    M2C_FIELD(temp_a0, f32 *, 0xC) = 1.0f;
-    M2C_FIELD(temp_a0, s8 *, 0x10) = 0;
-}
-
-void pppKeDrctFrame(void *arg0, void *arg1, void *arg2) {
-    void *temp_v0;
-    void *temp_v0_2;
-
-    if (M2C_FIELD(arg0, s32 *, 0xC) == M2C_FIELD(arg1, s32 *, 0)) {
-        temp_v0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC);
-        temp_v0_2 = temp_v0 + 0xA0;
-        M2C_FIELD(temp_v0, f32 *, 0xA0) = (f32) M2C_FIELD(arg1, f32 *, 4);
-        M2C_FIELD(temp_v0_2, f32 *, 4) = (f32) M2C_FIELD(arg1, f32 *, 8);
-        M2C_FIELD(temp_v0_2, f32 *, 8) = (f32) M2C_FIELD(arg1, f32 *, 0xC);
-    }
-}
-
-void pppKeDrctCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), f32 *, 0xAC) = 1.0f;
-}
 #include "data/bss_0061_mixed.h"

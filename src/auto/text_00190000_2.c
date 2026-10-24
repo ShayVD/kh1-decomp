@@ -56,23 +56,3 @@ void pppKeLnsLpTReset(s32 arg0, PppEntry *arg1) {
     M2C_FIELD(temp_a0, s32 *, 0x9C) = 0;
     M2C_FIELD(temp_a0, s32 *, 0xA8) = 0;
 }
-
-void pppKeMatSNCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
-    M2C_FIELD(temp_a0, s32 *, 0x80) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0x84) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0x88) = 0;
-}
-
-void pppKeTkFadeCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
-}

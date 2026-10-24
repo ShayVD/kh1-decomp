@@ -502,30 +502,7 @@ typedef struct {
 
 extern PppMatSN *D_00616214;
 extern u128 D_003727B0;
-
-extern PppMtx D_0061E7C0;
-
-void sceVu0UnitMatrix(PppMtx);
 void func_002675a8(f32 *, f32 *);
-
-void pppKeMatPhtFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a5490(D_0061E7C0, r);
-    vu0ScaleRow(D_0061E7C0[0], s->x);
-    vu0ScaleRow(D_0061E7C0[1], s->y);
-    vu0ScaleRow(D_0061E7C0[2], s->z);
-    D_0061E7C0[3][0] = t->x;
-    D_0061E7C0[3][1] = t->y;
-    D_0061E7C0[3][2] = t->z;
-    sceVu0UnitMatrix(D_00615E68->m);
-    D_00615E68->m[0][0] = s->x;
-    D_00615E68->m[1][1] = s->y;
-    D_00615E68->m[2][2] = s->z;
-    func_002675a8(D_00615E68->m[3], D_0061E7C0[3]);
-}
 
 extern PppMtx D_0061E780;
 #include "data/pieces/D_003701F0.h"
