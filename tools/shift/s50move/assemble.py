@@ -78,6 +78,7 @@ def no_attr(s):
     """drop __attribute__((...)) with balanced parentheses."""
     while True:
         i = s.find('__attribute__')
+        if i < 0: i = s.find('ALIGNED(')  # include/common.h's __attribute__((aligned(n)))
         if i < 0: return s
         j = s.index('(', i); d = 0
         for k in range(j, len(s)):
@@ -107,16 +108,22 @@ def classify(t, k, name):
         m = re.search(r'\(\s*\*\s*(\w+)\s*\)', body)
         if m: return 'typedef', [m.group(1)]
         n = re.findall(r'(\w+)\s*(?:\[[^\]]*\]\s*)*[;,]', body)
+        m = re.match(r'typedef\s+(struct|union|enum)\s+(\w+)\s*\{', s2)
+        if m and m.group(2) not in n: n = n + [m.group(2) + '#tag']  # the tag it declares too
         return 'typedef', n
     m = re.match(r'(struct|union|enum)\s+(\w+)\s*(\{.*\})?\s*;$', s2, flags=re.S)
     if m: return 'tag', [m.group(2) + '#tag']  # the tag namespace
+    m = re.match(r'([^(]*?)\b(\w+)\s*(\[[^\]]*\]\s*)*__asm__\s*\(', s2, flags=re.S) \
+        or re.match(r'([^(]*?)\b(\w+)\s*(\(.*\))\s*__asm__\s*\(', s2, flags=re.S)
+    if m:  # `extern T D_X __asm__("D_X");` (or a prototype) under `#define D_X D_X_<addr>`: a renamed alias
+        return 'asmvar', [m.group(2) + '#asm']
     m = re.match(r'[^(]*?\b(\w+)\s*\(', re.sub(r'\{.*\}', '', s2, flags=re.S))
     if m and m.group(1) not in KW:  # the first '(' follows a name: a prototype
         return 'proto', [m.group(1)]
     names = []
     body = re.sub(r'=.*$', '', s2.rstrip(';'), flags=re.S)
     for part in split_top(body):
-        m = re.search(r'\(\s*\*+\s*(\w+)\s*\)', part)
+        m = re.search(r'\(\s*\*+\s*(\w+)\s*(\[[^\]]*\]\s*)*\)', part)  # (*f)(...), (*f[n])(...)
         if m: names.append(m.group(1)); continue
         m = re.search(r'(\w+)\s*(\[[^\]]*\]\s*)*$', part.strip())
         if m and m.group(1) not in KW: names.append(m.group(1))
@@ -172,7 +179,10 @@ def view(name, decl, base, addr=False):
     Anything else is `(*(T (*)) &D_X)`."""
     s, k = shape(name, decl)
     s0, k0 = shape(name, base)
-    if k == 'scalar' and k0 == 'scalar' and not addr:  # (&D_X needs an lvalue)
+    def wide(t):  # a 64-bit integer (a pointer has a '*')
+        return '*' not in t and bool(re.search(r'\b(u64|s64|long\s+long)\b', t))
+    if k == 'scalar' and k0 == 'scalar' and not addr and wide(s) == wide(s0):  # (&D_X needs an lvalue;
+        # a value cast of a 32-bit base to u64 would load 32 bits)
         return '#define %s ((%s) %s)' % (name, sub(s, name, ''), name)
     if k == 'array':
         el = re.sub(r'\[[^\]]*\]', '', sub(s, name, '(*)'), count=1)
@@ -182,7 +192,8 @@ def view(name, decl, base, addr=False):
 
 
 def sig(s):
-    """'RET NAME(ARGS)...' -> (ret, [arg kinds]) with kinds f (float), d (double), x."""
+    """'RET NAME(ARGS)...' -> (ret, [arg kinds]) with kinds f (float), d (double),
+    n (a char or short: the caller truncates it), x."""
     s = no_attr(strip(s)).strip().rstrip(';').split('{')[0]
     m = re.match(r'(.*?)\b(\w+)\s*\((.*)\)\s*$', s, flags=re.S)
     if not m: return None
@@ -196,6 +207,7 @@ def sig(s):
         elif w and w[0] in ('f32', 'float'): kinds.append('f')
         elif w and w[0] in ('f64', 'double'): kinds.append('d')
         elif a == '...': kinds.append('...')
+        elif w and w[0] in ('s8', 'u8', 's16', 'u16', 'char', 'short'): kinds.append('n')  # narrowed by the callee
         else: kinds.append('x')
     return ret, kinds
 
@@ -207,6 +219,31 @@ def risky(a, b):
     if not sa or not sb: return False
     if (sa[0] == 'void') != (sb[0] == 'void') and 'void' not in (sa[0], sb[0]): return True
     return sa[0] != sb[0] and 'void' not in (sa[0], sb[0]) or sa[1] != sb[1]
+
+
+def unnamed(proto):
+    """a prototype's text without parameter names, extern and spacing."""
+    s = no_attr(strip(proto)).strip().rstrip(';')
+    s = re.sub(r'^\s*(extern|static)\s+', '', s)
+    m = re.match(r'(.*?\b\w+)\s*\((.*)\)\s*$', s, flags=re.S)
+    if not m: return norm(s)
+    args = []
+    for a in split_top(m.group(2)):
+        a = a.strip()
+        if a in ('', 'void', '...'): args.append(a); continue
+        a = re.sub(r'\(\s*\*+\s*\w+\s*\)', '(*)', a)  # function pointer names
+        a = re.sub(r'\b\w+\s*((\[[^\]]*\]\s*)*)$', lambda x: x.group(1), a) \
+            if len(re.findall(r'\w+', re.sub(r'\[[^\]]*\]', '', a))) > 1 and '(*)' not in a else a
+        args.append(re.sub(r'\s+', ' ', a).replace(' *', '*').strip())
+    return re.sub(r'\s+', ' ', m.group(1)).replace(' *', '*') + '(' + ','.join(args) + ')'
+
+
+def defret(proto):
+    """the return type text of a prototype."""
+    s = no_attr(strip(proto)).strip()
+    s = re.sub(r'^\s*(extern|static)\s+', '', s)
+    m = re.match(r'(.*?)\b\w+\s*\(', s, flags=re.S)
+    return m.group(1).strip() if m else 'int'
 
 
 def fview(name, proto):
@@ -222,6 +259,10 @@ def main(out, funcs, onto=False):
     for f in funcs:
         files.setdefault(src[f][1], citems(open(src[f][1]).read()))
     inmod = set(funcs)
+    defhead = {}  # the module's own definitions: header text
+    for f in funcs:
+        for t, k, n in files[src[f][1]]:
+            if k == 'func' and n == f: defhead[f] = strip(t).split('{')[0].strip() + ';'
     plan = []  # (func, [(kind, names, text)], body)
     for f in funcs:
         addr, path = src[f]
@@ -236,18 +277,23 @@ def main(out, funcs, onto=False):
             if kind == 'func' and n == f:
                 body = t.strip('\n') + '\n'; break
             if kind == 'undef':
-                for x in names: scope.pop(x, None)
+                for x in names: scope.pop(x + '#def', None)
                 continue
             if kind == 'include':
                 incs.append((order, t.strip())); continue
             if kind == 'var':
                 for nm, d in var_decls(t):
+                    if nm in src and not nm.startswith('D_'):  # m2c's `extern M2C_UNK func_X;` (an address)
+                        scope[nm] = (order, 'proto', '%s %s();' % (defret(defhead[nm]) if nm in defhead else 'void', nm))
+                        continue
+                    if not re.match(r'\s*(extern|static)\b', d) and '=' not in d:
+                        d = 'extern ' + re.sub(r'\s+;', ';', no_attr(d).strip())  # a definition stays in its file: declare it
                     scope[nm] = (order, 'var', d)
                 continue
             if kind == 'func':
                 continue  # a real definition above: not copied (see the docstring)
-            for x in names:
-                scope[x] = (order, kind, t.strip('\n'))
+            for x in names:  # a macro has its own key: `#define D_X (*(T *)&D_X)` needs D_X's extern too
+                scope[x + '#def' if kind == 'define' else x] = (order, kind, t.strip('\n'))
         if body is None:  # a macro-generated definition: MACRO(f, ...)
             order = 0; scope = {}
             for t, k, n in its:
@@ -257,18 +303,18 @@ def main(out, funcs, onto=False):
                     body = m.group(0).strip() + '\n'; break
                 kind, names = classify(t, k, n)
                 if kind == 'undef':
-                    for x in names: scope.pop(x, None)
+                    for x in names: scope.pop(x + '#def', None)
                 elif kind == 'var':
                     for nm, d in var_decls(t): scope[nm] = (order, 'var', d)
                 elif kind not in ('include', 'func', 'other'):
-                    for x in names: scope[x] = (order, kind, t.strip('\n'))
+                    for x in names: scope[x + '#def' if kind == 'define' else x] = (order, kind, t.strip('\n'))
         assert body, (f, path)
         need, used = {}, idents(body)
         changed = True
         while changed:
             changed = False
             for x0 in list(used):
-                for x in (x0, x0 + '#tag'):
+                for x in (x0, x0 + '#tag', x0 + '#asm', x0 + '#def'):
                     if x in scope and x not in need and x != f:
                         if scope[x][1] == 'ctx' and x in inmod: continue
                         need[x] = scope[x]; used |= idents(scope[x][2]); changed = True
@@ -291,6 +337,7 @@ def main(out, funcs, onto=False):
         for nm, v in pl[3]:
             if v[1] == 'var' and shape(nm, v[2])[1] == 'array' and nm not in arrays: arrays[nm] = v[2]
     emitted = {}  # name -> (kind, norm text)
+    emac = {}     # name -> the macro naming it when its declaration was emitted
     macros = {}   # active macro name -> norm text
     lines = ['/* TODO: what this module is (docs/modules.md). */']
     seen_inc = set()
@@ -373,22 +420,50 @@ def main(out, funcs, onto=False):
             return t
         views = []
         mine = []
+        owndefs = {nm.split('#')[0] for nm, kind, t in items if kind == 'define'}
+        done_txt = set()
         for nm, kind, t in items:
             r = nm.split('#')[0]
             t2 = cur(t); n2 = ren.get(r, r) + nm[len(r):]
+            r0 = n2.split('#')[0]
+            if kind == 'asmvar':  # emitted as it is, once per text and rename macro
+                key = '%s@%s@%s' % (n2, norm(t2), macros.get(r0))
+                if emitted.get(key): continue
+                emitted[key] = (kind, norm(t2)); sec.append(t2); continue
+            if kind in ('typedef', 'tag', 'inline', 'ctx') and norm(t2) in done_txt:
+                continue  # (a typedef needed by two of its names)
             if kind in ('typedef', 'tag', 'inline', 'ctx'):
-                if n2 in emitted and emitted[n2][1] == norm(t2): continue
-                if n2 in macros: sec.append('#undef ' + n2); macros.pop(n2)
-                emitted[n2] = (kind, norm(t2)); sec.append(t2); continue
+                done_txt.add(norm(t2))
+                # under this function's own `#define NAME NAME_<addr>` the
+                # declaration names another identifier: emit it again
+                if n2 in emitted and emitted[n2][1] == norm(t2) and emac.get(n2) == macros.get(r0): continue
+                if r0 in macros and r0 not in mine: sec.append('#undef ' + r0); macros.pop(r0)
+                emitted[n2] = (kind, norm(t2)); emac[n2] = macros.get(r0); sec.append(t2)
+                if kind == 'typedef':  # its other names (a struct tag) are taken too
+                    for x in classify(t2, 'decl', None)[1]:
+                        if x not in emitted: emitted[x] = (kind, norm(t2)); emac[x] = macros.get(x.split('#')[0])
+                continue
             if kind == 'var':
-                if nm in macros: sec.append('#undef ' + nm); macros.pop(nm)
+                if nm in macros and nm not in owndefs: sec.append('#undef ' + nm); macros.pop(nm)
                 if nm not in emitted:
                     b = arrays.get(nm, t2)
                     known = all(x in emitted or x in KW or x == nm or x in INTS for x in idents(b))
                     if b != t2 and not known: b = t2
                     emitted[nm] = ('var', norm(b), b); sec.append(b)
-                if emitted[nm][1] != norm(t2):
+                if emitted[nm][1] != norm(t2) and nm not in owndefs:  # (the function's own macro views it)
                     views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None))
+                continue
+            if kind == 'proto' and nm in inmod and emitted.get(nm, ('',))[0] in ('', 'proto', 'kr') \
+                    and unnamed(t2) != unnamed(defhead[nm]):
+                # a prototype of a function defined later in the module that
+                # disagrees with its definition: declare it old-style (the
+                # definition's return type when the declarations know it) and
+                # view this function's prototype
+                if nm not in emitted:
+                    rt = defret(defhead[nm])
+                    if not all(x in emitted or x in KW or x in INTS for x in idents(rt)): rt = defret(t2)
+                    sec.append('%s %s();' % (rt, nm)); emitted[nm] = ('kr', '')
+                if sig(t2) and sig(t2)[1]: views.append(fview(nm, t2))
                 continue
             if kind == 'proto':
                 if nm in emitted:
@@ -396,11 +471,17 @@ def main(out, funcs, onto=False):
                         if risky(emitted[nm][1], norm(t2)):
                             views.append(fview(nm, t2))
                             conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
+                        elif emitted[nm][0] != 'kr' and unnamed(emitted[nm][1]) != unnamed(t2) and sig(t2):
+                            # other pointer types: the function's own types
+                            # (a member of the result, a struct argument)
+                            views.append(fview(nm, t2))
+                            conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
                         else:
                             conflicts.append('%s: %s  vs  %s' % (f, norm(t2), emitted[nm][1]))
                     continue
                 emitted[nm] = ('proto', norm(t2)); sec.append(t2); continue
             if kind == 'define':
+                nm = n2.split('#')[0]
                 if macros.get(nm) == norm(t2): continue
                 if nm in macros: sec.append('#undef ' + nm)
                 macros[nm] = norm(t2); mine.append(nm); sec.append(t2); continue
@@ -418,7 +499,7 @@ def main(out, funcs, onto=False):
         nxt = {}  # the next later definition of each macro (kept if it is the same)
         for pl in plan[idx + 1:]:
             for nm, v in pl[3]:
-                if v[1] == 'define' and nm not in nxt: nxt[nm] = norm(v[2])
+                if v[1] == 'define' and nm.split('#')[0] not in nxt: nxt[nm.split('#')[0]] = norm(v[2])
         for nm in mine:
             if nxt.get(nm) != macros.get(nm):
                 sec.append('#undef ' + nm); macros.pop(nm, None)

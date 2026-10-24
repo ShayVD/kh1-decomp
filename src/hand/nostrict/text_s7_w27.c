@@ -1,5 +1,4 @@
 #include "common.h"
-#include "data/pieces/D_00362438.h"
 /* func_0016fc60: MATCH hand/nostrict */
 #define A a
 #define B b
@@ -51,52 +50,6 @@ void func_0016fc60(ChrFC *c, WkFC *w) {
     }
 }
 
-/* func_0017b4f8: MATCH hand/nostrict */
 typedef struct { f32 x, y, z, len; } SegB;
-typedef struct { f32 len, x, y, z; } SegL;
-
-s32 func_0017b4f8(s32 *pi, f32 *pt, f32 dt) {
-    s32 i = *pi;
-    Path_362438 *p = D_00362438;
-    s32 changed = 0;
-    f32 inv, t, rem;
-    s32 nl;
-    inv = 1.0f / ((SegL *)((u8 *)p + 0x2c))[i].len;
-    { s32 f = p->x18 & 1; nl = f != 0; }
-    t = *pt;
-    t += dt * inv;
-    if (!(t < 0.0f)) goto pos;
-    if (!nl || i != 0) goto neg;
-    t = 0.0f;
-    i = 0;
-    goto store;
-neg:
-    rem = (t - 0.0f) / inv;
-    { s32 j = i - 1; if (j < 0) j = p->n - 1; i = j; }
-    t = 1.0f;
-    changed = 1;
-    goto again;
-pos:
-    if (!(1.0f < t)) goto store;
-    if (nl && !(i < p->n - 2)) {
-        i = p->n - 2;
-        t = 1.0f;
-        goto store;
-    }
-    i = (i + 1 < p->n) ? i + 1 : 0;
-    rem = (t - 1.0f) / inv;
-    changed = 1;
-    t = 0.0f;
-again:
-    inv = 1.0f / ((SegL *)((u8 *)p + 0x2c))[i].len;
-    t += rem * inv;
-    if (!(t < 0.0f)) goto pos;
-    if (!nl || i != 0) goto neg;
-    t = 0.0f;
-store:
-    *pi = i;
-    *pt = t;
-    return changed;
-}
 #include "data/data_0048.h"
 #include "data/pieces/D_002C5958.h"

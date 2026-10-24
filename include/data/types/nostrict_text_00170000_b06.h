@@ -5,7 +5,10 @@
 #include "common.h"
 #include "data/types/fvec.h"
 
+#ifndef KH1_V4_IS_FVEC4
+#define KH1_V4_IS_FVEC4
 typedef FVec4 V4;
+#endif
 typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S920;
 
 #endif /* KH1_DATA_TYPES_NOSTRICT_TEXT_00170000_B06_H */

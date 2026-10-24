@@ -1909,6 +1909,89 @@ byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh` with
 float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings.
 
+## Session 51: the ppp manager core, the camera, the party AI, 0x00170170-0x00183c70
+
+Session 51 moved 396 functions in six commits.  No Mac: static checks only.
+After it every function of 0x00170170-0x00183c70 is in a module except the
+VU0 routine func_00176850 in src/hand/vu0.c.  The names are read from the
+code (what each function writes and calls) and none of it is proved by a
+boot; each file's top comment says what it does.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the ppp manager core: the resource walkers and program relocation, the sprite and texture uploads to GS memory, func_00182588 (make an instance), the depth sort func_00181608 ... | src/ppp/pppsys.c, pppsys.nostrict.c | 0x00180000-0x00183c70 | 73 |
+| the ppp object controls: the third ppp task func_0017f8e0, the work buffer (D_00575E40, 0x20000 bytes), the effect heap and draw-list wrappers | src/ppp/pppobj.c, pppobj.nostrict.c | 0x0017f8e0-0x00180000 | 19 |
+| the ppp interface to the game: func_00175918 registers the three per-frame tasks, the manager's enable flags (D_0035C6F0 ...) | src/ppp/pppapi.c, pppapi.nostrict.c | 0x00175918-0x001768e8 | 63 |
+| the object scripts' second command table: the 21 commands of D_00362340, which the descriptor D_002E2F20 lists after D_002E2810 | src/obj/objcmd2.c, objcmd2.nostrict.c | 0x00176898-0x00176ba8 | 21 |
+| pad vibration: two players (D_005757B0[2]) step a vibration pattern into the pad's actuator bytes D_002C5AD0[i][2..3] | src/pad/padvib.c, padvib.nostrict.c | 0x00176ba8-0x00176f08 | 5 |
+| the field camera's core and its modes, the mode table D_00362458 ({frame, leave} x 12) | src/camera/fieldcam.c, fieldcam.nostrict.c | 0x00176f08-0x0017b250 | 46 |
+| the camera's path mode (mode 9): a cubic Bezier along the path D_00362438 the player's zone picked | src/camera/campath.c, campath.nostrict.c | 0x0017b250-0x0017d628 | 25 |
+| the camera's control: a map's camera data (func_0017d9c8 relocates it), modes 10 and 7, the calls the game makes | src/camera/camctl.c, camctl.nostrict.c | 0x0017d628-0x0017f8e0 | 37 |
+| the party members' AI: the setup functions of the eight member kinds and their action tables, the setup table D_0035BC80 | src/ai/partyai.c, .nostrict.c, .nostrict_nosib.c | 0x00170170-0x00174fc0 | 102 |
+| two texture spots slid over triangle meshes (segment-triangle and segment-plane hits; D_00575790, D_005757A0) | src/gfx/texspot.c, texspot.nostrict.c | 0x00174fc0-0x00175918 | 5 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| pppsys* | 2d99998 | auto text_00180000 / _1 ... _6 / _12, hand h12 / h39 / b07 / text_00170000_s6_10, nostrict b07 / c2 / h39 / h62 / s7_w11 / s7_w13 |
+| pppapi* | 47205c2 | hand text_s7_w24 |
+| pppobj* | 5b3ff51 | none |
+| objcmd2*, padvib* | 2cf022b | hand text_00170000_s9_w7 |
+| fieldcam*, campath*, camctl* | 9113c86 | auto text_00170000_1 / _3 / _5 / _6 / _9 / _11 / _12, hand c04 / b06 / h11 / h61 / s8_w16 / text_00180000_h62, nostrict b06 / s6_10 / s7_w2 / s9_r2_2 |
+| partyai*, texspot* | ecdc7a5 | auto text_00170000 / _2 / _4 / _7 / _8 / _10, hand text_00170000 / h38 / s9_w9, nostrict h38 / h61 / s7_w6 |
+
+**Data moved with its users**: D_00575A10, D_00615EF0, D_00615F90,
+D_00615FA0, D_00615FB0, D_00615E80 / 90 / A0 and the class-name table
+D_003701C0 (pppsys); D_00575E40, D_00616238 (pppobj); D_00362458 and 18 bss
+definitions (the camera); D_0035BC80 (from h60 into partyai.nostrict.c);
+D_00575790, D_005757A0 (texspot).
+
+**Tool changes** (tools/shift/s50move/assemble.py, prune.py): old-style
+declarations plus views for module functions whose prototype disagrees with
+the definition; definitions of data become externs (ALIGNED kept); narrow
+int arguments count as risky; `__asm__` aliases of variables and prototypes
+(`#define D_X D_X_<addr>` + `extern T D_X_<addr> __asm__("D_X")`) are kept,
+by classify and by prune; a typedef under its own rename macro is emitted
+again; macros get their own scope key; a function with its own view macro
+gets no generated view; a 64-bit view of a 32-bit base is a memory view; a
+typedef's struct tag counts as a name and duplicates are found by text;
+prototypes whose pointer types differ are viewed; m2c's `extern M2C_UNK
+func_X;` becomes a prototype; `(*D_X[n])(...)` declarations parse; prune
+reads `} __attribute__((...)) NAME;`.
+
+**Traps.**
+- **CONTEXT_ONLY stubs for callees defined above**: where the old file
+  defined a callee above the function, the module needs a `CONTEXT_ONLY s32
+  f(void) { return 0; }` copy of it too, or a likely branch's delay slot
+  changes (beql vs beqz words): func_0017adf8 / func_001773b0 in camctl.c,
+  func_00176f08 / 00177358 / 0017b200 in campath.c, func_001770b8 in
+  campath.nostrict.c.
+- **An inline definition gets inlined**: when the callee's definition moves
+  into the same file, gcc inlines it.  Call it through an alias, `s32
+  f_x(...) __asm__("f");` with `#define f f_x` around the caller
+  (func_00174ad8 calls func_00171ae8 that way).
+- **A 64-bit view of a 32-bit base** must be a memory view `(*(u64 *)&D_X)`;
+  a value cast changes the load.
+- **Rename macros**: an old file's `#define D_X D_X_<addr>` with an
+  `__asm__` extern is an alias; keep both lines together.
+- **Struct tags completed differently**: several old files each complete
+  `struct Actor` (D_002E26A0.h declares `struct Actor *D_002E26A0[3]`) with
+  their own members.  Renaming the tag breaks the header's array type, not
+  renaming it lets the first completion win; 0x00168500-0x00170170
+  (partyctl) was left for that reason (draft: 4 default-flag functions fine,
+  39 nostrict with 3 NEW DIFFs: 0016a3f8, 0016e1f0, 0016f548).  Give those
+  functions their own view of D_002E26A0 (`((struct Actor_x **) D_002E26A0)`)
+  and an untagged struct.
+- **V4 in two headers**: include/data/types/nostrict_text_00170000_s6_10.h
+  and _b06.h both `typedef FVec4 V4;` under the guard KH1_V4_IS_FVEC4.
+- **mod.py remove drops an include a remaining typedef needs**:
+  text_00160000_c04.c lost data/types/fvec.h; put it back by hand.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh` with
+float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, and `s31_warndiff` 0 new warnings; new files
+checked with `-Wimplicit-function-declaration`.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -2005,7 +2088,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 50, after each step)
+## Verification (sessions 30 to 51, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -2021,22 +2104,20 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x00183c70 to 0x0024f2e0** (session
-  50), except the VU0 routines in src/hand/vu0.c and two probes in
-  src/anon/session1_probes.c (func_0018ad70, func_001882f8).  The 2,653
-  functions still in src/auto and src/hand lie in 0x001001f8-0x00183c70
-  (out/gen/placements.tsv): 73 in 0x0018, 324 in 0x0017 and more below.
-  Next is the ppp manager core, 0x00180000-0x00183c70 (pppStepPrograms,
-  pppRelocProgram, pppDesObject, func_00182588 (make an instance), the
-  depth sort func_00181608, the texture slots func_001808f8 ...), spread
-  over hand h12, h39 and nostrict h39, h11, h38, s6_10, b07 and auto
-  text_00180000*; make it src/ppp/pppsys*.c, then go on into 0x0017.
-  `python3 -I tools/shift/s50move/group.py src/ppp/NAME LO HI` drafts a
-  range per flag mode; check its NEW DIFF lines, `mod.py remove` the
-  functions, `make`, fcheck.sh, and scan the new files for implicit
-  declarations (Session 50, Traps).  Group by the class table
-  (docs/structs.md) where the functions are a class's slots, else by what
-  they do; leave whole-VU0 functions in place (docs/matching-tips.md).
+- **The game segment is in modules from 0x00170170 to 0x0024f2e0** (session
+  51), except the VU0 routines in src/hand/vu0.c and two probes in
+  src/anon/session1_probes.c (func_0018ad70, func_001882f8).  The 2,257
+  functions still in src/auto and src/hand (33 of them VU0 routines in
+  vu0.c) lie in 0x001001f8-0x00170170 (out/gen/placements.tsv): 106 in
+  0x0016, 313 in 0x0015, 315 in 0x0014, 325 in 0x0013, 471 in 0x0012, 391
+  in 0x0011, 303 in 0x0010.  Next is the party control, 0x00168500-0x00170170
+  (43 functions, Session 51 "Struct tags completed differently"), then the
+  rest of 0x0016.  `python3 -I tools/shift/s50move/group.py src/DIR/NAME LO
+  HI` drafts a range per flag mode; check its NEW DIFF lines, `mod.py
+  remove` the functions, `make`, fcheck.sh, and scan the new files for
+  implicit declarations (Session 50, Traps).  Group by what the functions
+  do (`refs.py LO HI`: their calls and data); leave whole-VU0 functions in
+  place (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

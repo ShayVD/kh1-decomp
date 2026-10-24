@@ -29,11 +29,6 @@ typedef union { u8 b; u32 w; } U2E3190;
 typedef struct { u32 lo:16; u32 b16:1; u32 m:6; u32 b23:1; u32 hi:8; } Flg2C5958;
 typedef union { u32 w; Flg2C5958 f; } U2C5958;
 
-typedef union { u64 d; } Flg64;
-typedef struct { u8 pad[0x34]; f32 f34; Flg64 f38; u8 pad40[0xC]; s32 w4C; u8 pad50[8]; s32 w58; u8 pad5c[4]; s32 w60; } Sub144;
-typedef struct { u8 pad[0x130]; Sub130 *p130; u8 pad134[0x10]; Sub144 *p144; u8 pad148[0x1C]; s32 w164; } Obj71F;
-typedef struct { u8 pad[0x70]; s32 w70; } Obj714;
-
 /* ---- data ---- */
 extern E551670 D_00551670[];
 extern U2E3190 D_002E3190;
@@ -57,13 +52,6 @@ extern f32 D_002BBDFC;
 extern f32 D_00551D74;
 #include "data/pieces/D_002BBDF8.h"
 extern volatile s32 D_00559DB4;
-typedef struct Node70 { s32 id; s32 w4; s32 w8; s32 wC; struct Node70 *next; } Node70;
-extern Node70 *D_00575780; /* src/data/bss_0057.c: void *D_00575780 */
-extern s32 D_0035C6F0, D_0035C6F4, D_0061621C;
-#include "data/pieces/D_002BC144.h"
-#include "data/pieces/D_002BC140.h"
-#include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
 
 /* ---- callees ---- */
 s32 D_00F20000(); /* code at a fixed address (overlay) */
@@ -109,11 +97,6 @@ f32 func_00121b08(void *, f32);
 s32 sceGsSyncPath(s32, u16);
 s32 DisableDmac(s32);
 s32 func_001684e0(s32);
-u32 *func_00232cc0(s32);
-void func_0013dfb8(void *, void *);
-s32 func_00133000(void *, s32);
-void func_00182148(s32, s32, void *, void *);
-void func_00181738(void);
 
 s32 func_00157560(A157560 *a) {
     E551670 *e = &D_00551670[a->p6C->idx];
@@ -414,115 +397,6 @@ s32 func_00168318(u32 *p) {
     case 0x564E454D:
         return 1;
     }
-    return 0;
-}
-
-void func_00170d60(s32 a, s32 b, s32 c) {
-    u32 *p = &func_00232cc0(6)[a];
-    *p = (*p & ~(3LL << (b * 2))) | (c << (b * 2));
-}
-
-s32 func_00170f08(void *a, s32 *key, s32 v) {
-    Node70 *n;
-    s32 cnt = 0;
-    for (n = D_00575780; n != 0; n = n->next) {
-        if (n->id == *key && n->w8 == v) cnt++;
-    }
-    return cnt;
-}
-
-typedef struct { u8 pad[0x3C]; s32 w3C, w40, w44, w48; } Stat6C;
-typedef struct { u32 flags; u8 pad[0x68]; Stat6C *p6C; } Obj710;
-s32 func_00171098(Obj710 *o, u8 pct) {
-    if (o->flags & 0x200) return 0;
-    if (o->p6C->w40 * pct < o->p6C->w3C * 255) return 0;
-    return 1;
-}
-
-s32 func_001710d8(Obj710 *o, u8 pct) {
-    if (o->flags & 0x200) return 0;
-    if (o->p6C->w48 * pct < o->p6C->w44 * 255) return 0;
-    return 1;
-}
-
-void func_00171460(Obj714 *o, u8 *b) {
-    if (o->w70 != 2) func_0013dfb8(o, b + 0x120);
-}
-
-s32 func_00171498(Obj714 *o, s32 b) {
-    switch (o->w70) {
-    case 0:
-    case 8:
-    case 24:
-        if (func_00133000(o, b)) return 1;
-        break;
-    }
-    return 0;
-}
-
-typedef struct { u8 pad[0x4C]; s32 w4C; } Obj718;
-s32 func_001718e0(void *a, Obj718 *b, s32 v) {
-    s32 w = v;
-    if (v >= 0 && (v < 3 || (v < 131 && w >= 124))) return 1;
-    return v == b->w4C;
-}
-
-typedef struct { u64 flags; } Tgt71B;
-typedef struct { u8 pad[0x3C]; Tgt71B **p3C; union { Tgt71B *p; u64 d; } p40; } Obj71A;
-inline s32 func_00171ae8(void *a, Obj71A *o) {
-    if (o->p3C && o->p40.p) {
-        if (*o->p3C == o->p40.p) return 1;
-    }
-    return 0;
-}
-
-void func_00171b18(void *a, Obj71A *o) {
-    if (func_00171ae8(a, o)) {
-        o->p40.p->flags &= ~0x100;
-        o->p40.p->flags &= ~0xC;
-    }
-    o->p3C = 0;
-    o->p40.p = 0;
-}
-
-void func_00171f58(Obj71F *o) {
-    Sub144 *s = o->p144;
-    if ((s32)(s->f38.d >> 6) & 1) {
-        o->p130->f18 = s->f34;
-        s->f38.d &= ~0x40;
-    }
-    s->w58 = 0;
-    s->w60 = 0;
-}
-
-void func_00171fa0(Obj71F *o) {
-    if ((u16)(o->p130->h4C - 1) < 2) {
-        Sub144 *s = o->p144;
-        s32 save = s->w4C;
-        s32 r, v, w;
-        s->w4C = -1;
-        v = o->w164;
-        w = v;
-        if (w < 3 && v >= 0) r = 1;
-        else r = v == s->w4C;
-        if (r) s->f38.d |= 0x100;
-        s->w4C = save;
-    }
-}
-
-typedef struct { u8 pad[0x164]; s32 w164; } Obj737;
-s32 func_00173718(Obj737 *o) {
-    s32 v = o->w164;
-    if (v == 63 || v == 140) return 1;
-    return 0;
-}
-
-s32 func_00175af0(void) {
-    if (D_0035C6F0 == 0) return 0;
-    if (D_0035C6F4) D_0061621C = 1;
-    else D_0061621C = 0;
-    func_00182148(D_002BC140, D_002BC144, &D_002E2780, &D_002E2790);
-    func_00181738();
     return 0;
 }
 #include "data/bss_0055_mixed.h"

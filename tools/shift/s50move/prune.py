@@ -21,11 +21,12 @@ while True:
             if '}' not in l or not re.search(r'\}\s*\w+\s*(__attribute__.*)?;',l):
                 while not re.match(r'\}\s*\w+.*;',lines[j]): j+=1
             blk='\n'.join(lines[i:j+1]); m=re.search(r'\}\s*(\w+)[^}]*;\s*(/\*.*\*/)?\s*$',strip(blk).rstrip()+'\n' if False else blk)
-            names=re.findall(r'\}\s*(\w+)',strip(blk))
+            names=re.findall(r'\}\s*(\w+)',re.sub(r'__attribute__\s*\(\(.*?\)\)\s*','',strip(blk)))  # } __attribute__((...)) NAME;
             blocks.append((i,j,names[-1:] ))
             i=j+1; continue
         s=strip(l).strip()
-        if l.startswith(('extern ','void ','s32 ','f32 ','u32 ','s8 ','u8 ','M2C_UNK ','int ')) and s.endswith(';') and '{' not in s:
+        if '__asm__' in s: pass  # an alias under a rename macro (`#define D_X D_X_<addr>`): kept
+        elif l.startswith(('extern ','void ','s32 ','f32 ','u32 ','s8 ','u8 ','M2C_UNK ','int ')) and s.endswith(';') and '{' not in s:
             if '(' in s and not s.startswith('extern'):
                 m=re.search(r'(\w+)\s*\(',s); names=[m.group(1)] if m else []
             else:
