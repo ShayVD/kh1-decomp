@@ -4,19 +4,13 @@
 #include "data/bss_0066.h"
 M2C_UNK func_00123a88(s32, M2C_UNK *);
 M2C_UNK func_00124218(s32);
-M2C_UNK func_0025dd48(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 extern M2C_UNK (*D_0066AA80)();
-#include "data/pieces/D_004919B0.h"
 extern M2C_UNK D_0066AA90; /* src/data/bss_0066.c: V4f D_0066AA90 */
 extern s32 (*D_0066AA80)();
 extern s32 *D_0066AA84;
 extern s32 D_0066AAA0;
 f32 func_0024ef88();
 void func_00131d68(s32, s32);
-
-void func_0024daa0(void) {
-    func_0025dd48((M2C_UNK *)&D_004919B0, 0x4807, 0, 0, 0, 0);
-}
 
 void func_0024f008(void) {
     func_00124218(*D_0066AA84);

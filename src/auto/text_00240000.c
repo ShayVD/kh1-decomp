@@ -4,43 +4,8 @@
 #include "data/bss_0066.h"
 
 M2C_UNK func_00149c80(u16, M2C_UNK *);
-extern M2C_UNK D_0046A620;
-#include "data/pieces/D_0046A628.h"
-extern M2C_UNK D_0046A640;
-#include "data/pieces/D_0046A650.h"
-extern M2C_UNK D_0046A660;
 extern M2C_UNK func_0024f008;
-extern s32 D_0046A60C;
-extern s32 D_0046A67C;
 extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
-
-s32 func_0024d4a0(void) {
-    return D_0046A60C;
-}
-
-M2C_UNK *func_0024d8a0(void) {
-    return &D_0046A620;
-}
-
-M2C_UNK *func_0024d8b0(void) {
-    return (M2C_UNK *)&D_0046A628;
-}
-
-M2C_UNK *func_0024d8c0(void) {
-    return &D_0046A640;
-}
-
-M2C_UNK *func_0024d8d0(void) {
-    return (M2C_UNK *)&D_0046A650;
-}
-
-M2C_UNK *func_0024d8e0(void) {
-    return &D_0046A660;
-}
-
-s32 func_0024e078(void) {
-    return D_0046A67C;
-}
 
 void func_0024f070(void) {
     func_00149c80(M2C_FIELD(D_0066AA84, u16 *, 0x4C), &func_0024f008);
