@@ -598,6 +598,62 @@ stack). Valgrind: 0 errors up to the fault. This is the stop 5.1c expected for t
 Mac) should show the same three reads with the real sizes. Next for the host: the native dktitle.x build
 (5.2).
 
+### 5.1h Session 68: past the overlay entry (a test stub), the DMAC interrupts, the notice's sprite sets
+
+Static only (the Mac was away). kh1.elf is byte-identical; one PS2 object changed (src/hud/notice.nostrict.c.o,
+below), every other out/build object is bit-identical (sha1 before and after).
+
+**indcheck: 0 `?def` left** (117 OK, 42 READ, 70 OVERLAY, 13 CLANG). The 7 rows' targets are assembly or SDK
+functions, read by hand into ASM_TAKES (indcheck.py): FlushCache / iFlushCache (syscall 100 / 102, the mode in a0)
+and the host's PlatFlushCache / PlatIFlushCache take 1, sceVu0RotMatrixZ / X / Y take 3 (out a0, in a1, the angle
+in f12), SyncDCache 2. The flush hook D_00351BC8 is an 8-byte piece whose second word is SyncDCache; the five
+`D_00351BC8(0)` calls read the first word only, so a piece called as one pointer (no index, no field) now reaches
+its first `.word` entry only (the others are other data).
+
+**KH1_HOST_OVL=stub[:N]** (host/null/main.c, a test switch, nothing in the game code). The jump into the overlay
+area faults on its first instruction (the memory map is not executable), so the call's stack is intact: the fault
+handler moves EIP to a host function with the entry's convention, which prints the call and returns 0. Every call in
+src/ is to the entry D_00F20000 (135 references); a fault further in means the bytes ran, which is what valgrind
+does (it does not keep data from running), so the stub does not work under valgrind. With `:N` the title's first
+entry call (0, 0) also asks for game state N with func_00109558 (the request roomload.c and gameover.c use: next
+state D_00495164, after a 2-frame countdown D_00495160). A guess at what dktitle.x does when the player picks; state
+2 is func_00109770's case 2 (func_00109588: D_002BCDD8 = 0, func_00101660, func_001559f0(0, 0x40); then
+func_001095b0).
+
+- **`stub` alone**: the main loop stays in state 1 (the title's state; only the overlay moves it on) for 600
+  frames with no more reads. Nothing else waits.
+- **`stub:2`** reaches **the first room: Dive to the Heart**. After the call the boot loads (func_001204a0's names,
+  in order) btltbl.bin, command2/uitex.bin, allset.set, kanji.knj, amusic/se000.dat, allarea.nam, menu/sysfont.bin
+  and dktitle.x before the call, and dh.wdt, amusic/sedh.dat, dh00_01.bin, dh00_01.img, dh01.ard after it. So 2 is
+  the new game (the game starts at Dive to the Heart). On the fake disc none of these files exist (func_001204a0
+  answers a missing name with result 0, size 0, and the load's callback runs on the old bytes), so the run ends in
+  func_00132790 (src/obj/roomobj.nostrict.c, the room file's header) reading an offset from data that is not
+  there: that is the fake disc's end, not a host cause. **On the real disc** (the Mac session) this run is the next
+  step: `KH1_HOST_ISO=... KH1_HOST_OVL=stub:2 KH1_HOST_TRACE=1 out/host/kh1-host`.
+
+Two host-only causes found on the way:
+
+- **The DMAC interrupts** (host/null/plat_null.c). The model renderer's GS task list (src/model/mdlgs*.c,
+  func_0015eb78, a task each frame) runs with channels 1 and 2 masked until a task starts a transfer and asks to
+  go on in the interrupt (bit 2 of its answer); it then enables both, and the handler func_0015efc0 runs the rest
+  one transfer at a time and clears D_00559DB4 at the end. func_0015ef60 (from func_0011eda8, the frame's end)
+  waits for D_00559DB4 == 0: with the null PlatEnableDmac doing nothing it waited for ever on the first frame
+  after the new game's setup. The null platform now keeps the handlers (PlatAddDmacHandler), a status bit per
+  channel (set when a transfer starts: PlatDmaSend on its channel, PlatDmaPutVif1Chcr with STR; cleared by
+  PlatDmaPutStat, write 1 to clear) and the enable mask, and runs an enabled channel's handlers when its bit is
+  set, after the call that set or enabled it and never inside a handler (a transfer a handler starts runs it again
+  once it returns, as the next interrupt would). mdlgs.c is the only user.
+- **The notice's sprite sets are one array** (a layout dependency like opdma's, 5.1c). func_00243a90
+  (src/hud/notice.c) fills four sprite sets of nine words through func_0024afc0 at &D_00656230[0], [9], [18] and
+  [27]; notice.nostrict.c defined the first words of the last three as their own variables (D_00656254,
+  D_00656278, D_0065629C) and D_00656230 had no C definition. On the host, census.py sized D_00656230 to the next
+  known name (0x24 bytes) and the fill wrote 0x90 bytes over D_006561D0 (the notice queue), which crashed
+  func_00243278 on the next frame. notice.nostrict.c now defines `Gm *D_00656230_sets[4][9]` as D_00656230
+  (16-aligned) with the four names as `#define` views. kh1.elf byte-identical; the shift build's data names lose
+  D_00656254 / D_00656278 / D_0065629C and gain D_00656230 (one 0x90 definition). fcheck: the m12 float ELF's
+  loaded bytes and program headers are the same, float_covered / float_reach swap the three names for D_00656230
+  (the float build already kept the four sets together at 0x61D2B0), so there is no row for float-untested.md.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -27,7 +27,7 @@ and what its callee expression reads, and finds the targets in:
 
 Verdicts: SHORT (a known target takes more than the call passes), SHORT? (the
 same, found only through a struct field), OK, ?def (targets known, none defined
-in C), ? (none found; its note may give a lead: the functions the ELF's code
+in C or read into ASM_TAKES, the assembly / SDK functions' parameters), ? (none found; its note may give a lead: the functions the ELF's code
 stores at the same offset of any struct), and from the table below (read by
 hand): READ, OVERLAY, DATA (a pointer from a file loaded at run time: look in a
 host run on the real disc) and OPEN (read, not traced to the end). A note never
@@ -201,6 +201,26 @@ RECORD_TABLES = {
     ("PppClass", "Cls"): (0x00370200, 0x28, 236),
 }
 VM_HOOKS = "OVERLAY: src/vm/vm_lib.c's hooks D_0037733C ... D_003773E8 are 0 in the ELF and nothing in src/ sets them"
+
+# Parameters of call targets defined only in assembly or the SDK (no C definition to count),
+# read by hand from the code: the argument registers each reads before it writes them
+# (session 68). They count like a C definition's.
+ASM_TAKES = {
+    # FlushCache / iFlushCache (src/sdk/libkernl/syscall.s): `li v1,100 / 102; syscall`, the
+    # kernel reads the mode in a0. PlatFlushCache / PlatIFlushCache are the host's (void (int)).
+    "func_002583e0": 1,
+    "iFlushCache": 1,
+    "func_00258410": 1,
+    "PlatFlushCache": 1,
+    "PlatIFlushCache": 1,
+    # sceVu0RotMatrixZ / X / Y (src/sdk/libvu0/vu0.s): out a0, in a1 (lqc2 0($a1)), the angle
+    # in f12 (c.lt.s $f12 ...); a2 / a3 are written before they are read.
+    "func_002676c0": 3,
+    "func_00267768": 3,
+    "func_00267810": 3,
+    # SyncDCache(start, end) (src/sdk/libkernl/cache.c)
+    "func_00258a58": 2,
+}
 
 
 def strip(n):
@@ -661,7 +681,7 @@ class FileScan:
 def data_tables():
     """PIECE name -> function names in its .word entries, from the src .s files, and
     every piece's (start, size)."""
-    tabs, pieces = {}, []
+    tabs, pieces, first = {}, [], {}
     for d, _, fs in os.walk(os.path.join(ROOT, "src")):
         for f in fs:
             if not f.endswith(".s"):
@@ -674,11 +694,16 @@ def data_tables():
                 m = re.match(r"\s*PIECE(?:_BEGIN)?\s+(\w+)", l) or re.match(r"(\w+):", l)
                 if m:
                     cur = m.group(1)
+                    at0 = True
                     continue
                 m = re.match(r"\s*\.word\s+([A-Za-z_]\w*)\s*$", l)
                 if m and cur and not m.group(1).startswith(("D_", "jtbl", ".L")):
                     tabs.setdefault(cur, []).append(m.group(1))
-    return tabs, sorted(pieces)
+                    if at0:
+                        first[cur] = m.group(1)
+                if cur and l.strip() and not l.lstrip().startswith(("/*", "#")):
+                    at0 = False
+    return tabs, sorted(pieces), first
 
 
 def elf_words(pieces):
@@ -800,8 +825,13 @@ def main():
     for s in scans:
         for k, v in s.defs.items():
             defs.setdefault(norm(k), v)
-    tabs, pieces = data_tables()
+    for k, v in ASM_TAKES.items():
+        defs.setdefault(k, (v, False))
+    tabs, pieces, first = data_tables()
     tabs = {k: [norm(x) for x in v] for k, v in tabs.items()}
+    # a piece called as one pointer (no index, no field) reaches its first word only: the
+    # .word entries after it are other data (D_00351BC8's +4, SyncDCache)
+    later = {k: set(v) - {norm(first[k])} for k, v in tabs.items() if k in first}
     look, look_at = elf_words(pieces)
     stores = elf_stores()
     fnargs, fields = {}, {}
@@ -860,6 +890,9 @@ def main():
             # a table defined in C or as .word entries is read from there, else from the ELF
             targets = {t for b in bases for t in (tabs.get(b.rstrip("[]")) or look(b))}
             targets |= {norm(b[1:]) for b in bases if b.startswith("&")}
+            if not flds and not off:
+                for b in bases:
+                    targets -= later.get(b, set())
             for names, (lo, size, count) in RECORD_TABLES.items():
                 if off is not None and topf and topf.split(".")[0] in names:
                     targets |= set(look_at(lo + off, size, count))
