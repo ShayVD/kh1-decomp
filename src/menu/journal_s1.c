@@ -9,6 +9,7 @@
  * page, names are messages 0x13 + i, func_00222c98), func_00222cb8 an entry's
  * text (func_001c2df0 on D_003F3520).  Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "vm/script_vm.h"
@@ -122,7 +123,7 @@ void func_00222e90(JsWin *a) {
     s32 i, j, y, step, id;
     JsWin *o;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_006436A0);
             func_0011d768(3);
         } else {

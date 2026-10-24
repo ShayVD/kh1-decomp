@@ -16,6 +16,9 @@
  * are a reading, not proved by a boot (and the HDD path needs the
  * Japanese HDD unit). */
 #include "common.h"
+#include "platform/iop.h"
+#include "platform/file.h"
+#include "platform/cd.h"
 #include "platform/thread.h"
 #include "data/bss_0066.h"
 #include "data/data_0046.h"
@@ -60,18 +63,6 @@ s32 strcmp(const char *, const char *);
 char *func_0011fd30(void);
 FileEnt *func_00120190(char *);
 s32 func_00120a20(const char *, s32, char *, s32 *);
-s32 func_0025b588(const char *, s32);
-s32 func_0025b810(s32);
-s32 func_0025c448(s32, s32, s32, s32, s32, s32);
-s32 func_0025cd70(const char *);
-s32 func_0025ce38(s32);
-s32 func_0025cfa0(s32, Dirent *);
-s32 func_0025d880(const char *, const char *, s32, s32, s32);
-s32 func_0025daf0(char *);
-s64 func_0025db10(s32, s32, s32);
-s32 func_0025dd48(const char *, s32, s32, s32, void *, s32);
-s32 func_0025e990(const char *);
-void func_00269960(void *, s32);
 void func_0024d808(void);
 /* hdd.nofill.c */
 void func_0024d618(void *);
@@ -127,7 +118,7 @@ void func_0024d808(void) {
     tp.stack = D_00669A80;
     tp.initial_priority = 1;
     PlatStartThread(PlatCreateThread(&tp), (void *) sema);
-    func_00269960(func_0024d7b0, sema);
+    PlatCdPOffCallback(func_0024d7b0, sema);
 }
 
 char *func_0024d8a0(void) {
@@ -157,7 +148,7 @@ s32 func_0024d8f0(void) {
         char *n = c->name();
         s32 r;
         sprintf(buf, "hdd0:%s,%s", n, c->pass());
-        r = func_0025d880("pfs0:", buf, 0, 0, 0);
+        r = PlatFsMount("pfs0:", buf, 0, 0, 0);
         if (r < 0) return (r == -5) ? -1 : 1;
         c->mounted = 1;
     }
@@ -168,7 +159,7 @@ s32 func_0024d9a0(void) {
     s32 r;
 
     if (D_0046A688.mounted != 0) {
-        r = func_0025daf0(D_004919A8);
+        r = PlatFsUmount(D_004919A8);
         if (r == 0) {
             D_0046A688.mounted = 0;
             return r;
@@ -182,14 +173,14 @@ s32 func_0024d9f0(void) {
     s32 fd, r;
     s64 sz;
     *st = 90;
-    fd = func_0025b588(func_0024d8e0(), 1);
+    fd = PlatFsOpen(func_0024d8e0(), 1);
     *st = 100;
     if (fd < 0) {
         r = 1;
     } else {
-        sz = func_0025db10(fd, 0, 2);
+        sz = PlatFsLseek64(fd, 0, 2);
         *st = 110;
-        func_0025b810(fd);
+        PlatFsClose(fd);
         *st = 120;
         r = 1;
         if (D_0046A608 == sz) r = 0;
@@ -198,15 +189,15 @@ s32 func_0024d9f0(void) {
 }
 
 s32 func_0024daa0(void) {
-    return func_0025dd48(D_004919B0, 0x4807, 0, 0, 0, 0);
+    return PlatFsDevctl(D_004919B0, 0x4807, 0, 0, 0, 0);
 }
 
 s32 func_0024dad0(const char *a0, s32 n) {
     u32 v;
-    func_0025dd48(a0, 0x4802, 0, 0, 0, 0);
+    PlatFsDevctl(a0, 0x4802, 0, 0, 0, 0);
     D_0046A614 = 60;
     v = 0;
-    if (func_0025dd48(a0, 0x480A, 0, 0, &v, 4) != 0) return 0;
+    if (PlatFsDevctl(a0, 0x480A, 0, 0, &v, 4) != 0) return 0;
     D_0046A614 = 70;
     if ((s32)(v >> 18) < n) return 0;
     return 1;
@@ -228,12 +219,12 @@ s32 func_0024db78(s32 size) {
     if (flag) func_0024d9a0();
     D_0046A614 = 40;
     sprintf(buf, "hdd0:%s,,%s", c->name(), D_0046A650);
-    fd = func_0025b588(buf, 1);
+    fd = PlatFsOpen(buf, 1);
     if (fd >= 0) {
-        used = func_0025c448(fd, 0x6803, 0, 0, 0, 0);
+        used = PlatFsIoctl2(fd, 0x6803, 0, 0, 0, 0);
         if (used < 0) used = 0;
         used++;
-        func_0025ce38(fd);
+        PlatFsDclose(fd);
     }
     D_0046A614 = 50;
     n = ((((u32)(size + 0xFFFFF) >> 20) + 127) >> 7) + 1;
@@ -246,18 +237,18 @@ s32 func_0024db78(s32 size) {
 s32 func_0024dcc8(const char *path, const char *name) {
     Dirent d;
     s32 fd, n, found = 0;
-    fd = func_0025cd70(path);
+    fd = PlatFsDopen(path);
     if (fd < 0) return 0;
     n = 0;
-    while (func_0025cfa0(fd, &d) > 0) n++;
-    func_0025ce38(fd);
+    while (PlatFsDread(fd, &d) > 0) n++;
+    PlatFsDclose(fd);
     if (n == 0) return 0;
-    fd = func_0025cd70(path);
+    fd = PlatFsDopen(path);
     if (fd < 0) return 0;
-    while (func_0025cfa0(fd, &d) > 0) {
+    while (PlatFsDread(fd, &d) > 0) {
         if (strcmp(d.name, name) == 0) found = 1;
     }
-    func_0025ce38(fd);
+    PlatFsDclose(fd);
     return found;
 }
 
@@ -298,7 +289,7 @@ s32 func_0024ddf8(void) {
     dst[4] = s[5];
     if (memcmp(dst, "25198", 5) == 0) D_0046A678 = 1;
     func_0024d9a0();
-    if (func_0025e990(D_00491978) < 0) goto fail;
+    if (PlatSifSearchModuleByName(D_00491978) < 0) goto fail;
     if (func_0024dcc8(D_004919B0, D_0046A628)) {
         ok = 1;
         D_0046A6AC = 1;

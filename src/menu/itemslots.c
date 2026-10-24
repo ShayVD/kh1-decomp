@@ -5,6 +5,7 @@
  * member.  ObjE is this file's view of a TextWin: +0xd0 / +0xd2 are u16 here
  * and +0x40 is s32 (TextWin has u32), so it stays. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
@@ -74,7 +75,7 @@ void func_0020e588(ObjE *o) {
         c3 = 0;
     }
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641224 = 1;
@@ -212,7 +213,7 @@ void func_0020ec50(ObjE *o) {
     func_001fd610(o, n);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(o);
             func_0011d768(3);
             if (!fl) D_00641224 = 0;

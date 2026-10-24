@@ -14,6 +14,7 @@
  * (part 2).  Window titles: func_00207bb0 / func_001efd98 on message 0x190.
  * Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
 #include "data/pieces/D_00425BC8.h"
@@ -75,7 +76,7 @@ void func_00223980(s32 k, s32 a, s32 b) {
 
 s32 func_002239b0(PtWin *arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(arg0);
             func_0011d768(3);
         } else {
@@ -106,7 +107,7 @@ void func_00223a90(PtWin *a) {
         else j = i;
     }
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -225,7 +226,7 @@ void func_00224060(PtWin *o) {
     if (func_001f42b8(o)) {
         switch (D_0064375C) {
         case 0:
-            if (D_00425BC8->x8 & 0x4000) {
+            if (D_00425BC8->x8 & PAD_CROSS) {
                 if (D_003F34A8 != 2 && D_00643770[1] == D_00643778[1] && D_00643770[2] == D_00643778[2] && D_00643770[3] == D_00643778[3]) {
                     func_001f37c0(o, 5);
                     func_0011d768(3);

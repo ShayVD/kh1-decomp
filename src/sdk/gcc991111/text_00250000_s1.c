@@ -165,7 +165,7 @@ extern Ring D_0066C700;
 Pk *func_00259ee8(Ring *p);
 int func_00260590(u32, void *, int, u32, u32, u32);
 int func_0025b1e8(int);
-int func_0025b2f0(void);
+int sceFsInit(void);
 extern int D_0046AED8;
 typedef struct { int a, b; } Pair;
 extern Pair D_0066DAC0;
@@ -495,7 +495,7 @@ int func_0025b228(int a, int b) {
     int old;
     func_0025b1e8(27);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     {
         int r = DIntr();
         old = p->a;
@@ -525,7 +525,7 @@ int func_0025cc30(int a) {
     FioReq *rq = &D_0066C780;
     func_0025b1e8(15);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     rq->u.arg[0] = a;
     sp.max = 1;
     sp.init = 0;
@@ -550,12 +550,12 @@ int func_0025cc30(int a) {
     return res;
 }
 
-int func_0025cd70(const char *name) {
+int sceDopen(const char *name) {
     E16 *p;
     int r;
     func_0025b1e8(9);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     func_0025b218();
     p = func_0025ace0();
     if (!p)
@@ -574,7 +574,7 @@ int func_0025cd70(const char *name) {
     return r;
 }
 
-int func_0025b810(int fd) {
+int sceClose(int fd) {
     SemaParam sp;
     int res;
     int sema, r;
@@ -624,7 +624,7 @@ int func_0025c628(const char *name, int fno) {
     FioReq *rq = &D_0066C780;
     func_0025b1e8(fno);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.name[i] = name[i]) == 0)
             break;
@@ -655,10 +655,10 @@ int func_0025c628(const char *name, int fno) {
     return res;
 }
 
-int func_0025c7d0(const char *a) { return func_0025c628(a, 6); }
-int func_0025c9a0(const char *a) { return func_0025c628(a, 8); }
+int sceRemove(const char *a) { return func_0025c628(a, 6); }
+int sceRmdir(const char *a) { return func_0025c628(a, 8); }
 int func_0025cd50(const char *a) { return func_0025c628(a, 16); }
-int func_0025ce38(int fd) {
+int sceDclose(int fd) {
     SemaParam sp;
     int res;
     int sema, r;
@@ -698,7 +698,7 @@ int func_0025ce38(int fd) {
     if (res < 0) return res; return 0;
 }
 
-int func_0025cfa0(int fd, int a) {
+int sceDread(int fd, int a) {
     SemaParam sp;
     int res;
     int sema, r;
@@ -738,7 +738,7 @@ int func_0025cfa0(int fd, int a) {
     return res;
 }
 
-int func_0025d0f8(const char *name, int a) {
+int sceGetstat(const char *name, int a) {
     unsigned char c;
     SemaParam sp;
     int res;
@@ -746,7 +746,7 @@ int func_0025d0f8(const char *name, int a) {
     FioReq *rq = &D_0066C780;
     func_0025b1e8(12);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     i = 0;
     c = rq->u.an.name[0] = name[0];
     if (c) {
@@ -785,15 +785,15 @@ int func_0025d0f8(const char *name, int a) {
     return res;
 }
 
-int func_0025d6c8(const char *a) { return func_0025c628(a, 18); }
-int func_0025d6e8(const char *name, int a) {
+int sceChdir(const char *a) { return func_0025c628(a, 18); }
+int sceSync(const char *name, int a) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(19);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.bn.name[i] = name[i]) == 0)
             break;
@@ -852,7 +852,7 @@ int func_0025e428(void) {
     return r;
 }
 
-int func_0025e900(int a) {
+int sceSifUnloadModule(int a) {
     if (func_0025e328() < 0)
         return -0x10000;
     if (func_0025e428())
@@ -863,7 +863,7 @@ int func_0025e900(int a) {
     return D_0066DB00.r0;
 }
 
-int func_0025e990(const char *a) {
+int sceSifSearchModuleByName(const char *a) {
     if (func_0025e328() < 0)
         return -0x10000;
     if (func_0025e428())
@@ -875,7 +875,7 @@ int func_0025e990(const char *a) {
     return D_0066DB00.r0;
 }
 
-int func_0025ea30(int a) {
+int sceSifSearchModuleByAddress(int a) {
     if (func_0025e328() < 0)
         return -0x10000;
     if (func_0025e428())
@@ -886,8 +886,8 @@ int func_0025ea30(int a) {
     return D_0066DB00.r0;
 }
 
-int func_0025eae0(int a) { return func_0025e4f0(a); }
-int func_0025ed48(int a, int b, int c, int d) { return func_0025eb00(a, b, c, d, 0); }
+int sceSifLoadStartModuleBuffer(int a) { return func_0025e4f0(a); }
+int sceSifLoadStartModule(int a, int b, int c, int d) { return func_0025eb00(a, b, c, d, 0); }
 int func_0025ed68(const char *a, const char *b, int *out, int c) {
     if (func_0025e328() < 0)
         return -0x10000;
@@ -906,8 +906,8 @@ int func_0025ed68(const char *a, const char *b, int *out, int c) {
     return 0;
 }
 
-int func_0025ee70(const char *a, const char *b, int *c) { return func_0025ed68(a, b, c, 1); }
-int func_0025ee90(const char *a, int *b) { return func_0025ed68(a, D_00492348, b, 1); }
+int sceSifLoadElfPart(const char *a, const char *b, int *c) { return func_0025ed68(a, b, c, 1); }
+int sceSifLoadElf(const char *a, int *b) { return func_0025ed68(a, D_00492348, b, 1); }
 
 int func_0025eeb8(int a, void *out, u32 size) {
     if (func_0025e328() < 0)
@@ -947,7 +947,7 @@ int func_0025efa8(int a, void *data, int size) {
     return 0;
 }
 
-int func_0025f088(const char *path, int mode) {
+int sceSifResetIop(const char *path, int mode) {
     DmaT dt;
     u32 dst;
     int i;
@@ -977,7 +977,7 @@ int func_0025f088(const char *path, int mode) {
     return 0;
 }
 
-int func_0025f1f0(void) {
+int sceSifSyncIop(void) {
     if (sceSifGetReg(4) & 0x40000) {
         func_002585e0();
         return 1;
@@ -993,7 +993,7 @@ u32 *func_0025f428(u32 *p, u32 *end, u32 v) {
     return p;
 }
 
-int func_0025f228(const char *arg) {
+int sceSifRebootIop(const char *arg) {
     char buf[80];
     char *d;
     const char *s = D_00492350;
@@ -1012,7 +1012,7 @@ int func_0025f228(const char *arg) {
     while (*arg)
         *d++ = *arg++;
     *d = 0;
-    return func_0025f088(buf, 0);
+    return sceSifResetIop(buf, 0);
 }
 
 void func_0025f4b0(void) {
@@ -1206,14 +1206,14 @@ int func_0025fff8(int a, char b) {
     return Deci2Call(-7, buf);
 }
 
-int func_0025c7f0(const char *name, int a) {
+int sceMkdir(const char *name, int a) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(7);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.an.name[i] = name[i]) == 0)
             break;
@@ -1244,14 +1244,14 @@ int func_0025c7f0(const char *name, int a) {
     DeleteSema(sema);
     return res;
 }
-int func_0025d4d8(const char *n1, const char *n2) {
+int sceRename(const char *n1, const char *n2) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(17);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.nn.n1[i] = n1[i]) == 0)
             break;
@@ -1348,14 +1348,14 @@ void func_0025ac40(Q *q) {
     }
 }
 
-int func_0025e160(const char *name, void *buf, unsigned int len) {
+int sceReadlink(const char *name, void *buf, unsigned int len) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(17);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.bn.name[i] = name[i]) == 0)
             break;
@@ -1389,7 +1389,7 @@ int func_0025e160(const char *name, void *buf, unsigned int len) {
     return res;
 }
 void *memcpy(void *, const void *, unsigned int);
-int func_0025c448(int fd, int cmd, void *arg, unsigned int alen, void *buf, unsigned int blen) {
+int sceIoctl2(int fd, int cmd, void *arg, unsigned int alen, void *buf, unsigned int blen) {
     SemaParam sp;
     int res;
     int sema, r;
@@ -1397,7 +1397,7 @@ int func_0025c448(int fd, int cmd, void *arg, unsigned int alen, void *buf, unsi
     E16 *p = func_0025ad68(fd);
     func_0025b1e8(26);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     if (!p || !p->w[1]) {
         func_0025b218();
         return -9;
@@ -1438,14 +1438,14 @@ int func_0025c448(int fd, int cmd, void *arg, unsigned int alen, void *buf, unsi
     DeleteSema(sema);
     return res;
 }
-int func_0025df80(const char *n1, const char *n2) {
+int sceSymlink(const char *n1, const char *n2) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(17);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.nn.n1[i] = n1[i]) == 0)
             break;
@@ -1503,7 +1503,7 @@ int func_0025e4f0(int a, int len, void *data, int *out) {
         return r;
     }
 }
-int func_0025e6f8(int a, int len, void *data, int *out) {
+int sceSifStopModule(int a, int len, void *data, int *out) {
     if (func_0025e328() < 0)
         return -0x10000;
     if (func_0025e428())
@@ -1554,14 +1554,14 @@ int func_0025eb00(const char *name, int len, void *data, int *out, int fno) {
         return r;
     }
 }
-int func_0025dd48(const char *name, int cmd, const char *arg, unsigned int alen, void *buf, unsigned int blen) {
+int sceDevctl(const char *name, int cmd, const char *arg, unsigned int alen, void *buf, unsigned int blen) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(23);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.dv.name[i] = name[i]) == 0)
             break;
@@ -1601,7 +1601,7 @@ int func_0025dd48(const char *name, int cmd, const char *arg, unsigned int alen,
     return res;
 }
 typedef struct { char c[64]; } B64;
-int func_0025d298(const char *name, void *stat, int mask) {
+int sceChstat(const char *name, void *stat, int mask) {
     unsigned char c;
     SemaParam sp;
     int res;
@@ -1609,7 +1609,7 @@ int func_0025d298(const char *name, void *stat, int mask) {
     FioReq *rq = &D_0066C780;
     func_0025b1e8(13);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     i = 0;
     c = rq->u.cs.name[0] = name[0];
     if (c) {
@@ -1649,14 +1649,14 @@ int func_0025d298(const char *name, void *stat, int mask) {
     DeleteSema(sema);
     return res;
 }
-int func_0025c9c0(const char *n1, const char *n2, const char *arg, int alen) {
+int sceFormat(const char *n1, const char *n2, const char *arg, int alen) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(14);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.mt.n1[i] = n1[i]) == 0)
             break;
@@ -1701,14 +1701,14 @@ int func_0025c9c0(const char *n1, const char *n2, const char *arg, int alen) {
     DeleteSema(sema);
     return res;
 }
-int func_0025d880(const char *n1, const char *n2, int flag, const char *arg, int alen) {
+int sceMount(const char *n1, const char *n2, int flag, const char *arg, int alen) {
     SemaParam sp;
     int res;
     int sema, r, i;
     FioReq *rq = &D_0066C780;
     func_0025b1e8(20);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     for (i = 0; i < 1024; i++)
         if ((rq->u.mf.n1[i] = n1[i]) == 0)
             break;
@@ -1797,7 +1797,7 @@ void sceSifInitRpc(int mode) {
         ;
     sceSifSetReg(0x80000002, 1);
 }
-int func_0025b588(const char *name, int flags, ...) {
+int sceOpen(const char *name, int flags, ...) {
     va_list ap;
     SemaParam sp;
     int res;
@@ -1808,7 +1808,7 @@ int func_0025b588(const char *name, int flags, ...) {
     mode = *(int *) ap;
     func_0025b1e8(0);
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     if (func_0025b4c0()) {
         func_0025b218();
         return -0x10004;

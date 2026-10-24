@@ -147,7 +147,7 @@ s32 func_00111798(void);
 void func_001117b8(void);
 void func_0010c378(void);
 s32 func_00110218(void) {
-    if (*(volatile u64 *)0x12001000 & 0x2000) {
+    if (PlatGsGetCsr() & PLAT_GS_CSR_FIELD) {
         D_002BBDE8 = 1;
     } else {
         D_002BBDE8 = 0;

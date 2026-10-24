@@ -15,6 +15,7 @@
  * not proved by a boot.  The card calls (func_00233d08 ... func_002348d0) are
  * the candidates for a platform wrapper (docs/portability.md). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_typed.h"
 #include "data/data_0042.h"
@@ -107,7 +108,7 @@ void func_002298e0(PtWin *arg0) {
 
 void func_00229928(PtWin *arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(LdFrame);
             func_0011d768(3);
         } else {
@@ -162,7 +163,7 @@ s32 func_00229ad0(PtWin *arg0) {
                 func_001f3e48(temp_v0, arg0);
                 func_001f3dc0(LdFrame);
             }
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(LdFrame);
             func_0011d768(3);
         } else {
@@ -189,7 +190,7 @@ s32 func_00229c38(PtWin *arg0) {
         if (func_00233f40(D_006437C4, 0) != 0) {
             func_00233ff8(D_006437C4, 0);
             func_00229a10(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(LdFrame);
             func_0011d768(3);
         } else {
@@ -216,7 +217,7 @@ s32 func_00229d58(PtWin *arg0) {
         if (func_00233f40(D_006437C4, 0) != 0) {
             func_00233ff8(D_006437C4, 0);
             func_00229a10(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(LdFrame);
             func_0011d768(3);
         } else {
@@ -253,7 +254,7 @@ void func_00229ec0(PtWin *arg0) {
             func_00233ff8(D_006437C4, 0);
             func_001f3d58(arg0, 6);
             func_00229a10(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3d58(arg0, 6);
             func_001f3758(LdFrame);
             func_0011d768(3);

@@ -2,7 +2,7 @@
 #include "common.h"
 
 s32 iSignalSema(s32);
-s32 sceCdSearchFile(void *, const char *, s32);
+s32 sceCdLayerSearchFile(void *, const char *, s32);
 s32 func_0025fd10(s32);
 s64 func_00272c38(const char *, char **, s32);
 s32 func_00260a20(s32);
@@ -15,7 +15,7 @@ s32 func_002585d0(void);
 s32 sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
 s32 sceDbcDeleteSocket(s32);
 s32 sceDbcGetDepNumber(s32);
-s32 func_00269fd0(s32);
+s32 sceCdSync(s32);
 s32 DIntr(void);
 s32 EIntr(void);
 void SyncDCache(void *, void *);
@@ -33,9 +33,9 @@ s32 func_00257e20(s32, void *);
 void func_00260f40(void);
 u32 strlen(const char *);
 s32 func_00269dc8(s32);
-s32 func_0025b588(const char *, s32);
-s32 func_0025bbc8(s32, void *, s32);
-s32 func_0025b810(s32);
+s32 sceOpen(const char *, s32);
+s32 sceRead(s32, void *, s32);
+s32 sceClose(s32);
 void FlushCache(s32);
 void func_00260738(void *, s32);
 void func_00260928(s32, s32);
@@ -179,7 +179,7 @@ s32 sceSifInitRpc(s32);
 s32 sceSifBindRpc(void *, u32, s32);
 s32 sceMcSync(s32 mode, s32 *cmd, s32 *result);
 s32 sceDbcSetWorkAddr(s32 addr);
-s32 func_0026a070(s32);
+s32 sceCdSyncS(s32);
 void func_00269830(void);
 extern s32 D_00670000[16];      /* libdbc device table */
 extern u8 D_0066FF80[];         /* libdbc work area */
@@ -274,15 +274,15 @@ s32 func_00265558(void) {
     s32 fd;
     u32 i;
     char *p;
-    fd = func_0025b588(D_00492920, 1);
+    fd = sceOpen(D_00492920, 1);
     if (fd < 0) return -1;
     i = 0;
     p = buf;
     for (; i < 256; i++) {
-        func_0025bbc8(fd, p, 1);
+        sceRead(fd, p, 1);
         if (*p++ == 0) break;
     }
-    func_0025b810(fd);
+    sceClose(fd);
     return func_002729d8(&buf[i - 9]) > 0x1315670;
 }
 
@@ -916,7 +916,7 @@ void func_00269490(u16 n) {
 
 s32 func_002694f8(s32 a) {
     s32 e, old;
-    if (func_00269fd0(1)) return 0;
+    if (sceCdSync(1)) return 0;
     e = DIntr();
     old = D_00673340;
     D_00673340 = a;
@@ -939,7 +939,7 @@ void func_00269558(s32 *p) {
     VS(D_0046C654) = 0;
 }
 
-s32 func_002696b8(s32 prio, void *stack, s32 size) {
+s32 sceCdInitEeCB(s32 prio, void *stack, s32 size) {
     s32 r = 1;
     if (D_0046C614 == 0) {
         s32 id = GetThreadId();
@@ -973,7 +973,7 @@ void func_00269790(u32 a) {
     func_00269558((s32 *)&D_0046C654);
 }
 
-void *func_00269960(void *cb, s32 arg) {
+void *sceCdPOffCallback(void *cb, s32 arg) {
     s32 e;
     void *old;
     if (D_0046C63C < 0) func_00269a18();
@@ -1002,8 +1002,8 @@ s32 func_00269a18(void) {
     return 1;
 }
 
-s32 func_00269da8(void *file, const char *name) {
-    return sceCdSearchFile(file, name, 0);
+s32 sceCdSearchFile(void *file, const char *name) {
+    return sceCdLayerSearchFile(file, name, 0);
 }
 
 s32 func_00269dc8(s32 cmd) {
@@ -1015,7 +1015,7 @@ s32 func_00269dc8(s32 cmd) {
     }
     D_0046C61C = cmd;
     ReferThreadStatus(D_00673350, D_00673358);
-    if (func_00269fd0(1)) {
+    if (sceCdSync(1)) {
         SignalSema(VS(D_0046C628));
         return 0;
     }
@@ -1048,7 +1048,7 @@ s32 func_00269f38(void) {
     return r;
 }
 
-s32 func_00269fd0(s32 mode) {
+s32 sceCdSync(s32 mode) {
     if (mode == 0) {
         if (D_0046C610 > 0) scePrintf(D_004931B8);
         while (D_0046C630 || func_0025a750(D_0046D7D0)) func_00269490(60);
@@ -1058,7 +1058,7 @@ s32 func_00269fd0(s32 mode) {
     return 0;
 }
 
-s32 func_0026a070(s32 mode) {
+s32 sceCdSyncS(s32 mode) {
     if (mode == 0) {
         if (D_0046C610 > 0) scePrintf(D_004931C8);
         while (func_0025a750(D_0046E048)) func_00269490(60);
@@ -1076,7 +1076,7 @@ s32 func_0026a0e0(s32 cmd) {
     }
     D_0046C618 = cmd;
     ReferThreadStatus(D_00673350, D_00673358);
-    if (func_0026a070(1)) {
+    if (sceCdSyncS(1)) {
         SignalSema(VS(D_0046C62C));
         return 0;
     }
@@ -1097,7 +1097,7 @@ s32 func_0026a0e0(s32 cmd) {
     return 1;
 }
 
-s32 func_0026a728(s32 a) {
+s32 sceCdMmode(s32 a) {
     s32 *p = &D_0046DC40;
     s32 r;
     if (!func_0026a0e0(34)) return 0;
@@ -1112,7 +1112,7 @@ s32 func_0026a728(s32 a) {
     return r;
 }
 
-s32 func_0026aaa0(void) {
+s32 sceCdGetError(void) {
     s32 r;
     if (!func_0026a0e0(3)) return -1;
     if (sceSifCallRpc(D_0046E048, 4, 0, 0, 0, D_0046D800, 4, 0, 0) < 0) {
@@ -1124,7 +1124,7 @@ s32 func_0026aaa0(void) {
     return r;
 }
 
-s32 func_0026ab38(void) {
+s32 sceCdStatus(void) {
     s32 r;
     if (!func_0026a0e0(2)) return -1;
     if (sceSifCallRpc(D_0046E048, 12, 0, 0, 0, D_0046D800, 4, 0, 0) < 0) {
@@ -1137,7 +1137,7 @@ s32 func_0026ab38(void) {
     return r;
 }
 
-s32 func_0026abf0(void) {
+s32 sceCdBreak(void) {
     s32 r;
     if (!func_0026a0e0(30)) return 0;
     VS(D_0046C654) = 8;
@@ -1152,7 +1152,7 @@ s32 func_0026abf0(void) {
     return r;
 }
 
-s32 func_0026aca8(s32 *out) {
+s32 sceCdPowerOff(s32 *out) {
     s32 r;
     if (!func_0026a0e0(33)) return 0;
     if (sceSifCallRpc(D_0046E048, 33, 0, 0, 0, D_0046D800, 8, 0, 0) < 0) {

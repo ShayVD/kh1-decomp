@@ -465,7 +465,12 @@ in that frame.
   `EXTWRITE`. `func_00110020` moves `DISPLAY.DX/DY` (screen position
   setting). `func_0010f5f8` writes `PMODE=0xFF03`, `DISPFB1 = 0x360000`
   CT32 512 and a DISPLAY1 128 lines tall: a special display used by the
-  screens built in `func_0010f6xx` (inferred: memory-card/system messages).
+  screens built in `func_0010f6xx` (inferred: memory-card/system messages);
+  src/screen/fade.c's ending does the same.  Since session 57 these writes
+  (and `func_0010f658`'s `PMODE = 0x22`, the EXTWRITE clear and the CSR
+  field read) go through `PlatGsPutPmode` / `PutDispfb1` / `PutDisplay1` /
+  `PutExtwrite` / `PlatGsGetCsr` in include/platform/gs.h: the Vita display
+  pass takes its values from them.
   `func_0010fea0` picks `0x14996C4`/`0x112A84E` from a 1.0 frame-rate factor
   (inferred: a VSync timing constant).
 

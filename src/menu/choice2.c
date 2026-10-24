@@ -9,6 +9,7 @@
  * D_006469F4 count 40 frames while the window is in states 2 and 5.  What
  * it asks is not known; not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_00425BC8.h"
 #include "text/textwin.h"
@@ -70,7 +71,7 @@ void func_0022e460(TextWin *a0) {
     if (func_001f42b8(a0)) {
         switch (D_006469E4) {
         case 0:
-            if (D_00425BC8->x8 & 0x4000) {
+            if (D_00425BC8->x8 & PAD_CROSS) {
                 D_003F7778 = 0;
                 func_001fd648(a0, 0);
                 func_0011d768(3);

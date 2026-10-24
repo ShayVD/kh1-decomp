@@ -722,7 +722,7 @@ typedef struct W55ObC {
 typedef struct { s32 d; W55ObC *p; } W55EntC;
 void *func_00122048(s32 n, s32 a);
 void func_001220b8(void *p);
-void func_00250360(void *b, s32 n, s32 sz, void *cmp);
+void qsort(void *b, s32 n, s32 sz, void *cmp);
 f32 func_00120bf8(f32 *v);
 W55ObC *func_001231b8(W55ObC *o, W55ObC *p);
 W55ObC *func_0013a670(W55ObC *o, s32 *w, f32 rng, f32 lim) {
@@ -743,7 +743,7 @@ W55ObC *func_0013a670(W55ObC *o, s32 *w, f32 rng, f32 lim) {
         e++;
     }
     n = e - base;
-    func_00250360(base, n, 8, func_0013a430);
+    qsort(base, n, 8, func_0013a430);
     if (n > 0) p = base[0].p;
     r = (s32)(func_00176850() * 100.0f);
     if ((r -= w[0]) >= 0) {

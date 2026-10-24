@@ -18,6 +18,7 @@
  * Views: JsWin (include/menu/journal.h), Ed (the model viewer: f32 at +0x24 /
  * +0x28). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "vm/script_vm.h"
@@ -250,35 +251,35 @@ void func_0021e538(void) {
 
 void func_0021e670(Ed *a) {
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(a);
             func_0011d768(3);
         } else {
-            if (D_00425BC8->x4 & 0x100000) {
+            if (D_00425BC8->x4 & PAD_RSTICK(PAD_UP)) {
                 a->x24 -= 0.02f;
                 if (a->x24 < 0.1f) a->x24 = 0.1f;
-            } else if (D_00425BC8->x4 & 0x400000) {
+            } else if (D_00425BC8->x4 & PAD_RSTICK(PAD_DOWN)) {
                 a->x24 += 0.02f;
                 if (10.0f < a->x24) a->x24 = 10.0f;
             }
-            if (D_00425BC8->x4 & 0x800000) {
+            if (D_00425BC8->x4 & PAD_RSTICK(PAD_LEFT)) {
                 a->x28 += 0.05235987755982988f;
                 a->x28 = func_001edcd8(a->x28);
-            } else if (D_00425BC8->x4 & 0x200000) {
+            } else if (D_00425BC8->x4 & PAD_RSTICK(PAD_RIGHT)) {
                 a->x28 -= 0.05235987755982988f;
                 a->x28 = func_001edcd8(a->x28);
             }
             if ((s32)D_00425BC8->x4 < 0) {
                 a->x2c -= 4;
                 if (a->x2c < 0) a->x2c = 0;
-            } else if (D_00425BC8->x4 & 0x20000000) {
+            } else if (D_00425BC8->x4 & PAD_LSTICK(PAD_RIGHT)) {
                 a->x2c += 4;
                 if (a->x2c > 512) a->x2c = 512;
             }
-            if (D_00425BC8->x4 & 0x10000000) {
+            if (D_00425BC8->x4 & PAD_LSTICK(PAD_UP)) {
                 a->x30 -= 4;
                 if (a->x30 < 0) a->x30 = 0;
-            } else if (D_00425BC8->x4 & 0x40000000) {
+            } else if (D_00425BC8->x4 & PAD_LSTICK(PAD_DOWN)) {
                 a->x30 += 4;
                 if (a->x30 > 384) a->x30 = 384;
             }
@@ -325,7 +326,7 @@ void func_0021ed60(JsWin *o) {
     s32 ch, n, k, v, j, i, y, dy, c, x, cnt;
     JsWin *p;
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643110->x10);
             func_0011d768(3);
             goto draw;
@@ -335,12 +336,12 @@ void func_0021ed60(JsWin *o) {
         D_00643268[D_0064324C] = func_001fd518(o);
         ch = 0;
         n = o->xd8;
-        if (D_00425BC8->x10 & 0x80000480) {
+        if (D_00425BC8->x10 & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
             if (o->xda > 0) {
                 o->xda -= 16;
                 ch = 1;
             }
-        } else if (D_00425BC8->x10 & 0x20000820) {
+        } else if (D_00425BC8->x10 & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
             if (o->xda < (n - 1) << 4) {
                 o->xda += 16;
                 ch = 1;
@@ -451,7 +452,7 @@ void func_0021f410(JsWin *a) {
 void func_0021f5f8(JsWin *a) {
     s32 i, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643110);
             func_0011d768(3);
         } else {

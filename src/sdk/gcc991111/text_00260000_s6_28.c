@@ -12,8 +12,8 @@ s32 PollSema(s32 sema);
 s32 ReferThreadStatus(s32 id, void *status);
 void func_00260738(void *addr, s32 size); /* cache writeback */
 void func_00269830(void);
-s32 func_00269fd0(s32 mode);
-s32 func_0026a070(s32 mode);
+s32 sceCdSync(s32 mode);
+s32 sceCdSyncS(s32 mode);
 void func_00272738(s32 mode);
 void *memcpy(void *, const void *, u32);
 
@@ -32,7 +32,7 @@ extern s32 D_00673350;      /* caller thread id */
 extern u8 D_00673358[];     /* thread status buffer */
 extern s32 D_0046D800[];    /* RPC receive buffer */
 
-/* sceCdSearchFile's RPC block: the file record comes back in place. */
+/* sceCdLayerSearchFile's RPC block: the file record comes back in place. */
 typedef struct { u32 lsn; u32 size; char name[16]; u8 date[8]; u32 flag; } CdlFile;
 typedef struct { CdlFile file; char name[256]; void *addr; s32 mode; } CdSearchArg;
 extern CdSearchArg D_006733C0;
@@ -40,7 +40,7 @@ extern u8 D_00673540[];     /* search-file RPC client */
 extern s32 D_00673500[];    /* search-file RPC result */
 extern char D_00493108[], D_00493128[], D_00493140[], D_00493150[], D_00493160[];
 
-s32 sceCdSearchFile(CdlFile *fp, const char *name, s32 mode) {
+s32 sceCdLayerSearchFile(CdlFile *fp, const char *name, s32 mode) {
     s32 i;
     s32 r;
     s32 j;
@@ -48,7 +48,7 @@ s32 sceCdSearchFile(CdlFile *fp, const char *name, s32 mode) {
     if (VS(D_0046C628) != PollSema(VS(D_0046C628))) return 0;
     D_0046C61C = 1;
     ReferThreadStatus(D_00673350, D_00673358);
-    if (func_00269fd0(1)) {
+    if (sceCdSync(1)) {
         SignalSema(VS(D_0046C628));
         return 0;
     }
@@ -103,7 +103,7 @@ s32 sceCdDiskReady(s32 mode) {
     if (D_0046C610 > 0) scePrintf(D_00493248);
     func_00269830();
     if (VS(D_0046C62C) != PollSema(VS(D_0046C62C))) return 6;
-    if (func_0026a070(1)) {
+    if (sceCdSyncS(1)) {
         SignalSema(VS(D_0046C62C));
         return mode != 8 ? 6 : -1;
     }

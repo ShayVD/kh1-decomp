@@ -14,6 +14,7 @@
  * number with 59 ... 64).  Not proved by a boot; most likely the records of
  * the mini games and fights. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003E8E08.h"
@@ -121,7 +122,7 @@ s32 func_00221428(s32 i) {
 }
 
 void func_00221440(JsWin *arg0) {
-    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & 0x4000)) {
+    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & PAD_CROSS)) {
         func_001f3758(arg0->xc);
         func_0011d768(3);
     }
@@ -164,7 +165,7 @@ void func_00221648(void) {
 void func_00221660(JsWin *a) {
     s32 i, n, y, id, msg;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -452,7 +453,7 @@ void func_00222670(JsWin *a0) {
     JsWin *objs[2];
     s32 s, i, y, step;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643660);
             func_0011d768(3);
         } else {
@@ -504,7 +505,7 @@ void func_00222670(JsWin *a0) {
 }
 
 void func_002228f0(JsWin *arg0) {
-    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & 0x4000)) {
+    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & PAD_CROSS)) {
         func_001f3758(D_00643660);
         func_0011d768(3);
     }

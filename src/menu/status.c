@@ -14,6 +14,7 @@
  * member list keeps topmenu.c's N_3f34c4 (D_003F34C4.h) and func_00218f88
  * StWin (a pointer at +0x24 and plain s16 at +0xd2). */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -310,7 +311,7 @@ void func_00218dd0(N_3f34c4 *a) {
     s32 v, k, s, y;
     u32 i;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758((void *)D_00642CE8);
             func_0011d768(3);
         } else {

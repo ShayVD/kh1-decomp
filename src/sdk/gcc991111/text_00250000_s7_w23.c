@@ -1,8 +1,8 @@
 #include "common.h"
-/* w23: func_0025db10 (fio lseek64). Context = header of src/sdk/gcc991111/text_00250000_s6_26.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/func_0025b218); the session-6 draft matches as is with it. */
+/* w23: sceLseek64 (fio lseek64). Context = header of src/sdk/gcc991111/text_00250000_s6_26.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/func_0025b218); the session-6 draft matches as is with it. */
 /* libkernl file I/O (lseek, read, write), ee-gcc 2.9-991111a -O2 -G0. sdk segment,
  * session 6. Types copied from text_00250000_s1.c; these functions sit after
- * func_0025b810 there (the CONTEXT_ONLY callees are copies of its definitions).
+ * sceClose there (the CONTEXT_ONLY callees are copies of its definitions).
  * The nowait semaphore table D_0046AE58 is volatile. */
 #include "common.h"
 
@@ -169,7 +169,7 @@ extern Ring D_0066C700;
 Pk *func_00259ee8(Ring *p);
 int func_00260590(u32, void *, int, u32, u32, u32);
 int func_0025b1e8(int);
-int func_0025b2f0(void);
+int sceFsInit(void);
 extern int D_0046AED8;
 typedef struct { int a, b; } Pair;
 extern Pair D_0066DAC0;
@@ -238,7 +238,7 @@ CONTEXT_ONLY E16 *func_0025ad68(u32 i) {
 
 CONTEXT_ONLY void func_0025b218(void) { SignalSema(D_0046AEDC); }
 
-long func_0025db10(int fd, long ofs, int whence) {
+long sceLseek64(int fd, long ofs, int whence) {
     SemaParam sp;
     long res;
     int sema, r, i, mode;

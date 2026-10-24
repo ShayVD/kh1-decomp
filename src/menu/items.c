@@ -10,6 +10,7 @@
  * two stock lists D_00641390 / D_00641798 (sorted by func_0020f290), the
  * rows are drawn in src/menu/items.n32.c. */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00425BC8.h"
@@ -88,7 +89,7 @@ void func_0020fc58(TextWin *);
 
 void func_0020d7d8(TextWin *a0) {
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -113,7 +114,7 @@ void func_0020d890(TextWin *a0, s32 a1) {
 
 void func_0020d900(TextWin *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -134,7 +135,7 @@ void func_0020d990(TextWin *a0, s32 a1) {
 
 void func_0020da00(TextWin *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -207,7 +208,7 @@ void func_0020e280(TextWin *a0) {
     TextWin *p;
     TextWin *o;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -347,7 +348,7 @@ void func_0020fc58(TextWin *o) {
     func_001fd610(o, 8);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641224 = 0;

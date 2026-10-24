@@ -12,6 +12,7 @@
  * before its only use); life1 deletes it, but it stops combine folding the
  * la into lui/addu/lw sym+16. */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -53,7 +54,7 @@ void func_00216ea8(void);
 void func_002163e0(TextWin *a0) {
     s32 i, y, sel;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a0);
             func_0011d768(3);
             D_00642C94 = 1;
@@ -99,7 +100,7 @@ void func_00217000(CuWin7 *a) {
     sel = 11;
     if (func_001f42b8(a)) {
         sel = 1;
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             func_001f3d58(a, 5);
@@ -111,19 +112,19 @@ void func_00217000(CuWin7 *a) {
         cur = D_00642CCC;
         if (D_003E3D68 >= 3) {
             ch = 0;
-            if (D_00425BC8->x10 & 0x10000010) {
+            if (D_00425BC8->x10 & PAD_DIR(PAD_UP)) {
                 if (cur >= 2) {
                     cur--;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x10000010) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_UP)) {
                     cur = D_003E3D68 - 1;
                     ch = 1;
                 }
-            } else if (D_00425BC8->x10 & 0x40000040) {
+            } else if (D_00425BC8->x10 & PAD_DIR(PAD_DOWN)) {
                 if (cur < D_003E3D68 - 1) {
                     cur++;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x40000040) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_DOWN)) {
                     cur = 1;
                     ch = 1;
                 }
@@ -141,21 +142,21 @@ void func_00217000(CuWin7 *a) {
         }
         func_0020bd18(a, 8);
         ch = 0;
-        if (D_00425BC8->x10 & 0x80000080) {
+        if (D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) {
             p = &D_00642CD8;
             if (*p > 0) {
                 *p = *p - 1;
                 ch = 1;
-            } else if (D_00425BC8->x8 & 0x80000080) {
+            } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                 *p = 5;
                 ch = 1;
             }
-        } else if (D_00425BC8->x10 & 0x20000020) {
+        } else if (D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) {
             p2 = &D_00642CD8;
             if (*p2 < 5) {
                 *p2 = *p2 + 1;
                 ch = 1;
-            } else if (D_00425BC8->x8 & 0x20000020) {
+            } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                 *p2 = 0;
 
                 ch = 1;

@@ -12,6 +12,7 @@
  * boxes.  Group names are messages 8 + group (func_002207f0).  Not proved by
  * a boot; 99 numbered collectibles in nine groups. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003E8E08.h"
@@ -81,7 +82,7 @@ s32 func_00220808(s32 i) {
 }
 
 void func_00220848(JsWin *arg0) {
-    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & 0x4000)) {
+    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & PAD_CROSS)) {
         func_001f3758(D_00643428->x10);
         func_0011d768(3);
     }

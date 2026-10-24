@@ -36,4 +36,30 @@ int PlatPadRead(int socket, u8 *data);
 int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data);
 #endif
 
+/* The game's decoded buttons (src/pad/padread*.c, session 57): libpad2's
+ * digital bits made active high (bytes 0-1 xor 0xffff), the right stick's
+ * directions in bits 20-23 and the left stick's in bits 28-31 (the d-pad
+ * bits shifted up, func_0011f370).  The game confirms with circle and
+ * cancels with cross (the Japanese layout). */
+#define PAD_SELECT 0x0001u
+#define PAD_L3 0x0002u
+#define PAD_R3 0x0004u
+#define PAD_START 0x0008u
+#define PAD_UP 0x0010u
+#define PAD_RIGHT 0x0020u
+#define PAD_DOWN 0x0040u
+#define PAD_LEFT 0x0080u
+#define PAD_L2 0x0100u
+#define PAD_R2 0x0200u
+#define PAD_L1 0x0400u
+#define PAD_R1 0x0800u
+#define PAD_TRIANGLE 0x1000u
+#define PAD_CIRCLE 0x2000u
+#define PAD_CROSS 0x4000u
+#define PAD_SQUARE 0x8000u
+#define PAD_RSTICK(dir) ((dir) << 16)
+#define PAD_LSTICK(dir) ((dir) << 24)
+/* A direction on the d-pad or the left stick. */
+#define PAD_DIR(dir) ((dir) | PAD_LSTICK(dir))
+
 #endif /* KH1_PLATFORM_PAD_H */

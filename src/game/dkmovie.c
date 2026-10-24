@@ -13,6 +13,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/cd.h"
 #include "platform/thread.h"
 #include "data/bss_0049.h"
 #include "data/types/text_00100000_h2.h"
@@ -154,18 +155,14 @@ void func_001111b0(void) {
 
 /* func_00111238 (from auto/text_00110000_11.c). */
 M2C_UNK func_0024b138();
-M2C_UNK func_0026aaa0();
-M2C_UNK func_0026ab38();
-M2C_UNK func_0026abf0();
-M2C_UNK sceCdRead(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceIpuInit();
 M2C_UNK sceIpuSync();
 void func_00111238(void) {
-    sceCdRead(0, 0, 0, 0);
+    PlatCdRead(0, 0, 0, 0);
     func_0024b138();
-    func_0026ab38();
-    func_0026abf0();
-    func_0026aaa0();
+    PlatCdStatus();
+    PlatCdBreak();
+    PlatCdGetError();
     sceIpuInit();
     sceIpuSync();
 }

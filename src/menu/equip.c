@@ -20,6 +20,7 @@
  * functions need (an f32 at +0x24 / +0x28, a u8 at +0x24, plain s16 / u16 at
  * +0xd0 / +0xd2: TextWin's +0xd0 is a union, and a union access reorders). */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -132,7 +133,7 @@ void func_002114f0(void *, s32, s32, s32, s32, s32);
 
 void func_002113f0(TextWin *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -290,7 +291,7 @@ void func_00211ed0(WinF28 *a) {
     s32 v, sel, i, y, k;
     WinF28 *o;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -479,7 +480,7 @@ void func_00212930(TextWin *a) {
     TextWin *q[2];
     s32 k, t, s, n, y, i, j, r;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             D_00641BA4 = 1;
@@ -560,7 +561,7 @@ void func_00212cc0(WinU16 *o) {
     e = &((Save74 *)D_00304BE8)->e[n];
     t = &e->x4;
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(o);
             func_0011d768(3);
             D_00641BA4 = 0;

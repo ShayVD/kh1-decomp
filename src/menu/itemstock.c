@@ -4,6 +4,7 @@
  * func_0020ff80 the window that gives the chosen item to a member.  ObjE is
  * this file's view of a TextWin: +0x70 and +0x88 are read by halves. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0064.h"
 
@@ -126,7 +127,7 @@ void func_0020f530(ObjE *o) {
     func_001fd610(o, n);
     func_001fd688(o);
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(o);
             func_0011d768(3);
             if (!fl) D_00641224 = 0;
@@ -286,7 +287,7 @@ void func_0020ff80(ObjE *o) {
         fl = 1;
     }
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             if (!fl) {
                 func_001f3758(D_00641220);
             } else {

@@ -87,7 +87,7 @@ void func_0010ffb8(s32 *arg0, s32 *arg1) {
 #define D_004D8EC0 (*(DispEnv (*)) &D_004D8EC0)
 void func_0010ffe0(void) {
     PlatGsResetGraph(1, 1, 2, 0);
-    *(volatile u64 *)0x120000d0 = 0;
+    PlatGsPutExtwrite(0);
     PlatGsPutDispEnv(&D_004D8EC0);
 }
 #undef D_004D8EC0

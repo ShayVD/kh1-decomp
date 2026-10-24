@@ -15,12 +15,13 @@
  * Then the cursor movers: on a window (func_001fdfd0, wrapping, with the
  * pad's repeat x10 and trigger x8), the smooth scroll (func_001fe1b8: a
  * quarter cell per frame at speed D_002BBDFC), the row highlight fade +0xdc,
- * the confirm (func_001fe5a0: button 0x2000, waiting for the high word of
+ * the confirm (func_001fe5a0: circle, PAD_CIRCLE, waiting for the high word of
  * +0xd0 to clear) and six movers of a menu's own cursor array (MenuCur, not
  * a window): up / down, left / right and either, with or without wrap. */
 #include "common.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_002BBDFC.h"
@@ -296,30 +297,30 @@ void func_001fd720(s32 m) {
     switch (m) {
     case 0:
         D_00640DE0 = m;
-        D_00640DE4 = 0x10000010;
-        D_00640DE8 = 0x40000040;
-        D_00640DEC = 0x50000050;
-        D_00640DF0 = 0x80000080;
-        D_00640DF4 = 0x20000020;
-        D_00640DF8 = 0xA00000A0;
+        D_00640DE4 = PAD_DIR(PAD_UP);
+        D_00640DE8 = PAD_DIR(PAD_DOWN);
+        D_00640DEC = PAD_DIR(PAD_UP | PAD_DOWN);
+        D_00640DF0 = PAD_DIR(PAD_LEFT);
+        D_00640DF4 = PAD_DIR(PAD_RIGHT);
+        D_00640DF8 = PAD_DIR(PAD_LEFT | PAD_RIGHT);
         break;
     case 1:
         D_00640DE0 = m;
-        D_00640DE4 = 0x10;
-        D_00640DE8 = 0x40;
-        D_00640DEC = 0x50;
-        D_00640DF0 = 0x80;
-        D_00640DF4 = 0x20;
-        D_00640DF8 = 0xA0;
+        D_00640DE4 = PAD_UP;
+        D_00640DE8 = PAD_DOWN;
+        D_00640DEC = PAD_UP | PAD_DOWN;
+        D_00640DF0 = PAD_LEFT;
+        D_00640DF4 = PAD_RIGHT;
+        D_00640DF8 = PAD_LEFT | PAD_RIGHT;
         break;
     case 2:
         D_00640DE0 = m;
-        D_00640DE4 = 0x10000000;
-        D_00640DE8 = 0x40000000;
-        D_00640DEC = 0x50000000;
-        D_00640DF0 = 0x80000000;
-        D_00640DF4 = 0x20000000;
-        D_00640DF8 = 0xA0000000;
+        D_00640DE4 = PAD_LSTICK(PAD_UP);
+        D_00640DE8 = PAD_LSTICK(PAD_DOWN);
+        D_00640DEC = PAD_LSTICK(PAD_UP | PAD_DOWN);
+        D_00640DF0 = PAD_LSTICK(PAD_LEFT);
+        D_00640DF4 = PAD_LSTICK(PAD_RIGHT);
+        D_00640DF8 = PAD_LSTICK(PAD_LEFT | PAD_RIGHT);
         break;
     }
 }
@@ -518,7 +519,7 @@ s32 func_001fe570(TextWin *w) {
 s32 func_001fe5a0(TextWin *o) {
     switch (o->xbc) {
     case 0:
-        if (D_00425BC8->x8 & 0x2000) {
+        if (D_00425BC8->x8 & PAD_CIRCLE) {
             if (func_001fe558(o)) o->xbc++;
             else o->xbc = 2;
         }
@@ -536,19 +537,19 @@ s32 func_001fe5a0(TextWin *o) {
 /* Up / down on m->cur[i] of n, wrapping on a new press. */
 s32 func_001fe660(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x10000010) {
+    if (D_00425BC8->x10 & PAD_DIR(PAD_UP)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x10000010) {
+        } else if (D_00425BC8->x8 & PAD_DIR(PAD_UP)) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x40000040) {
+    } else if (D_00425BC8->x10 & PAD_DIR(PAD_DOWN)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x40000040) {
+        } else if (D_00425BC8->x8 & PAD_DIR(PAD_DOWN)) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -577,19 +578,19 @@ s32 func_001fe718(MenuCur *m, s32 i, s32 n) {
 /* Left / right, wrapping. */
 s32 func_001fe7a8(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000080) {
+    if (D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000080) {
+        } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000020) {
+    } else if (D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000020) {
+        } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
             m->cur[i] = 0;
             r = 1;
         }
@@ -617,19 +618,19 @@ s32 func_001fe860(MenuCur *m, s32 i, s32 n) {
 /* Left / right or the shoulder buttons (0x400 / 0x800), wrapping. */
 s32 func_001fe8f0(MenuCur *m, s32 i, s32 n) {
     s32 r = 0;
-    if (D_00425BC8->x10 & 0x80000480) {
+    if (D_00425BC8->x10 & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
         if (m->cur[i] > 0) {
             m->cur[i]--;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x80000480) {
+        } else if (D_00425BC8->x8 & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
             m->cur[i] = n - 1;
             r = 1;
         }
-    } else if (D_00425BC8->x10 & 0x20000820) {
+    } else if (D_00425BC8->x10 & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
         if (m->cur[i] < n - 1) {
             m->cur[i]++;
             r = 1;
-        } else if (D_00425BC8->x8 & 0x20000820) {
+        } else if (D_00425BC8->x8 & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
             m->cur[i] = 0;
             r = 1;
         }

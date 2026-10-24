@@ -15,6 +15,7 @@
  * Not proved by a boot.  The card calls are the candidates for a platform
  * wrapper (docs/portability.md). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_00425C28.h"
@@ -108,7 +109,7 @@ void func_002245c8(PtWin *arg0) {
 
 void func_00224610(PtWin *arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -155,7 +156,7 @@ void func_002247c8(PtWin *a0) {
         if (func_00233f40(D_006436D4, 0)) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(a0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(a0);
             func_0011d768(3);
         } else {
@@ -199,7 +200,7 @@ void func_00224980(PtWin *a0) {
         if (func_00233f40(D_006436D4, 0)) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(a0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(a0);
             func_0011d768(3);
         } else {
@@ -253,7 +254,7 @@ s32 func_00224b38(PtWin *arg0) {
                 func_001f3e48(temp_v0, arg0);
                 func_001f3dc0(D_00643740);
             }
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -280,7 +281,7 @@ s32 func_00224ca8(PtWin *arg0) {
         if (func_00233f40(D_006436D4, 0) != 0) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -307,7 +308,7 @@ s32 func_00224dc8(PtWin *arg0) {
         if (func_00233f40(D_006436D4, 0) != 0) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -335,7 +336,7 @@ void func_00224ee8(PtWin *a0) {
         if (func_00233f40(D_006436D4, 0)) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(a0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -377,7 +378,7 @@ s32 func_00225090(PtWin *arg0) {
         if (func_00233f40(D_006436D4, 0) != 0) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00643740);
             func_0011d768(3);
         } else {
@@ -404,7 +405,7 @@ void func_002251b0(PtWin *a0) {
         if (func_00233f40(D_006436D4, 0) != 0) {
             func_00233ff8(D_006436D4, 0);
             func_002246f8(a0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(a0);
             func_0011d768(3);
         } else {
@@ -443,7 +444,7 @@ void func_00225330(PtWin *arg0) {
             func_00233ff8(D_006436D4, 0);
             func_001f3d58(arg0, 6);
             func_002246f8(arg0);
-        } else if (D_00425BC8->x8 & 0x4000) {
+        } else if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3d58(arg0, 6);
             func_001f3758(D_00643740);
             func_0011d768(3);
@@ -669,7 +670,7 @@ void func_00225dd8(PtWin *arg0) {
 
 void func_00227ef8(PtWin *arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(arg0);
             func_0011d768(3);
         } else {
@@ -711,7 +712,7 @@ void func_002280c0(PtWin *a0) {
     PtWin *objs[2];
     if (func_001f42b8(a0)) {
         if (func_001f44a0(D_003F6A70)) goto end;
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a0->xc);
             func_0011d768(3);
         } else {
@@ -791,7 +792,7 @@ void func_00228588(PtWin *a0) {
     u8 buf[4];
     s32 i, j, c;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(a0);
             func_0011d768(3);
         } else {

@@ -14,6 +14,7 @@
  * after the k6 set came from an exhaustive two-line position search.
  * FLAGGED: four register variables (plain C, no inline asm). */
 #include "common.h"
+#include "platform/pad.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/bss_0064.h"
@@ -196,7 +197,7 @@ void func_0021e8d8(Wnd *o) {
     if (func_001f42b8()) {
         func_0021e538();
         if (o->x28 == 0) {
-            if (D_00425BC8->x8 & 0x4000) {
+            if (D_00425BC8->x8 & PAD_CROSS) {
                 func_0011d768(3);
                 func_0021b5c8(0xC009B, 0, 128, 128, 5.0f);
                 o->x28 = 1;
@@ -205,12 +206,12 @@ void func_0021e8d8(Wnd *o) {
                 case 0:
                     ch = 0;
                     n = o->xd8;
-                    if (D_00425BC8->x10 & 0x80000480) {
+                    if (D_00425BC8->x10 & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
                         if (o->xda > 0) {
                             o->xda -= 16;
                             ch = 1;
                         }
-                    } else if (D_00425BC8->x10 & 0x20000820) {
+                    } else if (D_00425BC8->x10 & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
                         if (o->xda < (n - 1) << 4) {
                             o->xda += 16;
                             ch = 1;
@@ -218,7 +219,7 @@ void func_0021e8d8(Wnd *o) {
                     }
                     if (ch) func_0011d768(ch);
                     D_00643250 = func_001fd668(o);
-                    if (D_00425BC8->x8 & 0x1000) {
+                    if (D_00425BC8->x8 & PAD_TRIANGLE) {
                         if (func_0021e898(D_00643274)) {
                             func_0011d768(4);
                         } else {

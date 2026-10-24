@@ -146,17 +146,17 @@ s32 func_00258910(void) {
     return 1;
 }
 
-void func_0025eac0(s32 arg0, s32 arg1, s32 arg2) {
+void sceSifLoadModuleBuffer(s32 arg0, s32 arg1, s32 arg2) {
     s32 sp[4];
     func_0025e4f0(arg0, arg1, arg2, (s32) sp);
 }
 
-void func_0025ed28(s32 arg0, s32 arg1, s32 arg2) {
+void sceSifLoadModule(s32 arg0, s32 arg1, s32 arg2) {
     s32 sp[4];
     func_0025eb00(arg0, arg1, arg2, (s32) sp, 0);
 }
 
-s32 func_0025f1c8(void) {
+s32 sceSifIsAliveIop(void) {
     if ((sceSifGetReg(4) & 0x10000) != 0) {
         return 1;
     }

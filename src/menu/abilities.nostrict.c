@@ -4,6 +4,7 @@
  * the shared list) into D_00642C48 and sorts (func_00213fb0).  It needs
  * -fno-strict-aliasing. */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
@@ -23,7 +24,7 @@ void func_00213fb0(void);
 void func_002143e0(TextWin *a0) {
     s32 sel;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a0);
             func_0011d768(3);
             D_00642C24 = 2;

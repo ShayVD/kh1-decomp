@@ -71,6 +71,32 @@ rewrite matched code.
    convert (func_0011fa88 stores the int socket into a u32) the variable keeps
    the other type.  A void vs int return can also change registers after a
    call (sceGsResetGraph is declared void).
+   **Session 57 wrapped the disc and the files** (each byte-identical, the
+   float check, the data names the same): `cd.h` (libcdvd: PlatCdRead /
+   Sync / GetError / DiskReady / SearchFile / Seek for the sector reads of
+   src/io/discfile.c and cdqueue.c, PlatCdInit / Mmode / InitEeCB at boot,
+   PlatCdPOffCallback / PowerOff in src/game/hdd*.c, PlatCdGetError in
+   movies.c and dkmovie.c's keep-alive stub), `file.h` (sifdev: PlatFsOpen /
+   Lseek / Read / Close for discfile.c's HDD read path and src/gfx/opfile.c,
+   the directory, mount, 64-bit seek, ioctl2 and devctl calls of hdd*.c,
+   PlatFsReset) and `iop.h`'s second half (PlatSifRebootIop / SyncIop,
+   PlatSifLoadModule / LoadStartModule, PlatSifSearchModuleByName).  The SCE
+   side is include/sce/libcdvd.h and sifdev.h (sceOpen variadic as in the
+   SDK: the calls compile the same).  `gs.h` gained the privileged-register
+   helpers (PlatGsPutPmode / PutDispfb1 / PutDisplay1 / PutExtwrite,
+   PlatGsGetCsr() & PLAT_GS_CSR_FIELD) for framectl.c, fade.c, dispenv.c and
+   display.c, and `pad.h` the button names (PAD_CROSS ... PAD_SQUARE,
+   PAD_RSTICK / PAD_LSTICK / PAD_DIR for the stick directions in bits 20-23
+   and 28-31): winmenu.c, customize.c and every `D_00425BC8->xN & 0xV` test
+   (132 in 31 files, tools/shift/s57pad/padmask.py).  No game file calls
+   libcdvd, sifdev, loadfile or the IOP reboot by func_ address now.
+   **Still direct:** dkmovie.c's sceIpuInit / sceIpuSync (libipu, no
+   wrapper yet), src/gfx/opimage.c (two libgraph calls through typed
+   function pointers), src/model/mdlgs*.c (FlushCache / iFlushCache as a
+   hook pointer), the VIF / DMA registers of src/model/mdlgs.nostrict.c and
+   src/gfx/shadow.c (through PlatDmaGetChanAs), the libvu0 calls (about
+   3,000, most by func_ address: the vector maths header is next) and the
+   pad buttons read through other pointers than D_00425BC8 (not counted).
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under

@@ -11,6 +11,7 @@
  * D_003F6788[i]), the name (message 0x2a + i) and "count / goal" (message
  * 47).  Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003E8E08.h"
@@ -73,7 +74,7 @@ s32 func_00223650(s32 i) {
 }
 
 void func_00223668(JsWin *arg0) {
-    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & 0x4000)) {
+    if ((func_001f42b8(arg0) != 0) && (D_00425BC8->x8 & PAD_CROSS)) {
         func_001f3758(D_006436C8);
         func_0011d768(3);
     }

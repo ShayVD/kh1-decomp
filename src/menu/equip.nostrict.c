@@ -5,6 +5,7 @@
  * D_00641BAC / D_00641BB0 and opens the slot list (D_003F3CC0).  It needs
  * -fno-strict-aliasing (was in src/hand/nostrict/text_00200000_h70.c). */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -36,7 +37,7 @@ void func_00213258(TextWin *a0) {
     u32 i;
     s32 sel, k;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00641BA0);
             func_0011d768(3);
         } else {
