@@ -3,7 +3,6 @@
 #include "ppp.h"
 #include "data/bss_0061.h"
 
-
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
 typedef struct {
@@ -12,24 +11,12 @@ typedef struct {
 } PppObject;
 
 typedef struct {
-    s32 frame;  /* +0x0 */
-    s32 dst;    /* +0x4 */
-    f32 amp[3]; /* +0x8 */
-    u8 twice;   /* +0x14 */
-} PppRandFVKey;
-
-typedef struct {
     u8 pad[0xB0];
     u64 flags; /* +0xB0 */
 } PppSystem;
 
 extern s32 D_0061621C;
 extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
-
-f32 func_00187df0(f32, f32);
-f32 func_00187f98(f32, f32);
-f32 func_00188148(f32, f32);
 
 static inline f32 vu0Rand(void) {
     f32 r;
@@ -55,38 +42,6 @@ static inline f32 vu0Rand(void) {
         : "$8");
     return r;
 }
-
-typedef struct {
-    s32 frame;
-    s32 dst;
-    s32 amp[3]; /* +0x8 */
-    u8 twice;   /* +0x14 */
-} PppRandIVKey;
-
-typedef struct {
-    s32 frame;
-    s32 dst;
-    s8 amp[4]; /* +0x8 */
-    u8 twice;  /* +0xC */
-} PppRandCVKey;
-
-typedef struct {
-    s32 frame;
-    s32 dst;
-    s16 amp[4]; /* +0x8 */
-    u8 twice;   /* +0x10 */
-} PppRandHCVKey;
-
-s32 func_001882f8(s32, f32);
-s32 func_00188498(s32, f32);
-s32 func_00188640(s32, f32);
-s8 func_001887e8(s8, f32);
-s8 func_001889b0(s8, f32);
-s8 func_00188b78(s8, f32);
-s16 func_00188d40(s16, f32);
-s16 func_00188f08(s16, f32);
-s16 func_001890d0(s16, f32);
-
 
 /* D_00615E64: the current texture/vertex system; D_00615E68: the current
  * program object. */
@@ -246,7 +201,6 @@ typedef struct {
 
 void func_00184918(PppObject *, VtxApKey *, VtxS16 *);
 
-
 void pppVertexApFrame(PppObject *obj, VtxApKey *key, PppEntry *e) {
     VtxS16 v;
     VtxApWork *w = PPP_WORK(VtxApWork, obj, e, 0);
@@ -379,7 +333,6 @@ typedef struct {
     f32 y, z;
     VtxS16 *buf; /* +0xC */
 } MWork;
-
 
 void pppVtMimeDraw(PppObject *obj, MKey *key, PppEntry *e) {
     MWork *w;
@@ -611,310 +564,4 @@ void pppDrawMdlTsDraw(PppObject *obj, DKey *key, PppEntry *e) {
     p.b4D = 0;
     p.w34 = D_00616224;
     D_00616224 = func_001aaf88(m, &p, s->unk20);
-}
-
-void pppRandFVFrame(PppObject *obj, PppRandFVKey *key, PppEntry *e) {
-    f32 *w;
-    f32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (obj->frame == 0) {
-        r = vu0Rand();
-        if (key->twice)
-            r += vu0Rand();
-        else
-            r += r;
-        w = PPP_WORK(f32, obj, e, 0);
-        *w = r;
-    } else {
-        if (key->frame != obj->frame)
-            return;
-        w = PPP_WORK(f32, obj, e, 0);
-    }
-    if (key->dst != -1)
-        v = (f32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (f32 *) &D_00575A00;
-    v[0] += func_00187df0(key->amp[0], *w);
-    v[1] += func_00187df0(key->amp[1], *w);
-    v[2] += func_00187df0(key->amp[2], *w);
-}
-
-void pppRandUpFVFrame(PppObject *obj, PppRandFVKey *key, PppEntry *e) {
-    f32 *w;
-    f32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (obj->frame == 0) {
-        r = vu0Rand();
-        if (key->twice)
-            r = (r + vu0Rand()) * 0.5f;
-        w = PPP_WORK(f32, obj, e, 0);
-        *w = r;
-    } else {
-        if (key->frame != obj->frame)
-            return;
-        w = PPP_WORK(f32, obj, e, 0);
-    }
-    if (key->dst != -1)
-        v = (f32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (f32 *) &D_00575A00;
-    v[0] += func_00187f98(key->amp[0], *w);
-    v[1] += func_00187f98(key->amp[1], *w);
-    v[2] += func_00187f98(key->amp[2], *w);
-}
-
-void pppRandDownFVFrame(PppObject *obj, PppRandFVKey *key, PppEntry *e) {
-    f32 *w;
-    f32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (obj->frame == 0) {
-        r = vu0Rand();
-        r = -r;
-        if (key->twice)
-            r = (r - vu0Rand()) * 0.5f;
-        w = PPP_WORK(f32, obj, e, 0);
-        *w = r;
-    } else {
-        if (key->frame != obj->frame)
-            return;
-        w = PPP_WORK(f32, obj, e, 0);
-    }
-    if (key->dst != -1)
-        v = (f32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (f32 *) &D_00575A00;
-    v[0] += func_00188148(key->amp[0], *w);
-    v[1] += func_00188148(key->amp[1], *w);
-    v[2] += func_00188148(key->amp[2], *w);
-}
-
-void pppRandIVFrame(PppObject *obj, PppRandIVKey *key, PppEntry *e) {
-    f32 *w;
-    s32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r += vu0Rand();
-    else
-        r += r;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (s32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (s32 *) &D_00575A00;
-    v[0] += func_001882f8(key->amp[0], *w);
-    v[1] += func_001882f8(key->amp[1], *w);
-    v[2] += func_001882f8(key->amp[2], *w);
-}
-
-void pppRandUpIVFrame(PppObject *obj, PppRandIVKey *key, PppEntry *e) {
-    f32 *w;
-    s32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r = (r + vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (s32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (s32 *) &D_00575A00;
-    v[0] += func_00188498(key->amp[0], *w);
-    v[1] += func_00188498(key->amp[1], *w);
-    v[2] += func_00188498(key->amp[2], *w);
-}
-
-void pppRandDownIVFrame(PppObject *obj, PppRandIVKey *key, PppEntry *e) {
-    f32 *w;
-    s32 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    r = -r;
-    if (key->twice)
-        r = (r - vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (s32 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (s32 *) &D_00575A00;
-    v[0] += func_00188640(key->amp[0], *w);
-    v[1] += func_00188640(key->amp[1], *w);
-    v[2] += func_00188640(key->amp[2], *w);
-}
-
-void pppRandCVFrame(PppObject *obj, PppRandCVKey *key, PppEntry *e) {
-    f32 *w;
-    u8 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r += vu0Rand();
-    else
-        r += r;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u8 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u8 *) &D_00575A00;
-    v[0] += func_001887e8(key->amp[0], *w);
-    v[1] += func_001887e8(key->amp[1], *w);
-    v[2] += func_001887e8(key->amp[2], *w);
-    v[3] += func_001887e8(key->amp[3], *w);
-}
-
-void pppRandUpCVFrame(PppObject *obj, PppRandCVKey *key, PppEntry *e) {
-    f32 *w;
-    u8 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r = (r + vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u8 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u8 *) &D_00575A00;
-    v[0] += func_001889b0(key->amp[0], *w);
-    v[1] += func_001889b0(key->amp[1], *w);
-    v[2] += func_001889b0(key->amp[2], *w);
-    v[3] += func_001889b0(key->amp[3], *w);
-}
-
-void pppRandDownCVFrame(PppObject *obj, PppRandCVKey *key, PppEntry *e) {
-    f32 *w;
-    u8 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    r = -r;
-    if (key->twice)
-        r = (r - vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u8 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u8 *) &D_00575A00;
-    v[0] += func_00188b78(key->amp[0], *w);
-    v[1] += func_00188b78(key->amp[1], *w);
-    v[2] += func_00188b78(key->amp[2], *w);
-    v[3] += func_00188b78(key->amp[3], *w);
-}
-
-void pppRandHCVFrame(PppObject *obj, PppRandHCVKey *key, PppEntry *e) {
-    f32 *w;
-    u16 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r += vu0Rand();
-    else
-        r += r;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u16 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u16 *) &D_00575A00;
-    v[0] += func_00188d40(key->amp[0], *w);
-    v[1] += func_00188d40(key->amp[1], *w);
-    v[2] += func_00188d40(key->amp[2], *w);
-    v[3] += func_00188d40(key->amp[3], *w);
-}
-
-void pppRandUpHCVFrame(PppObject *obj, PppRandHCVKey *key, PppEntry *e) {
-    f32 *w;
-    u16 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    if (key->twice)
-        r = (r + vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u16 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u16 *) &D_00575A00;
-    v[0] += func_00188f08(key->amp[0], *w);
-    v[1] += func_00188f08(key->amp[1], *w);
-    v[2] += func_00188f08(key->amp[2], *w);
-    v[3] += func_00188f08(key->amp[3], *w);
-}
-
-void pppRandDownHCVFrame(PppObject *obj, PppRandHCVKey *key, PppEntry *e) {
-    f32 *w;
-    u16 *v;
-    f32 r;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame != obj->frame)
-        return;
-    r = vu0Rand();
-    r = -r;
-    if (key->twice)
-        r = (r - vu0Rand()) * 0.5f;
-    w = PPP_WORK(f32, obj, e, 0);
-    *w = r;
-    if (key->dst != -1)
-        v = (u16 *) ((u8 *) obj + key->dst + 0xA0);
-    else
-        v = (u16 *) &D_00575A00;
-    v[0] += func_001890d0(key->amp[0], *w);
-    v[1] += func_001890d0(key->amp[1], *w);
-    v[2] += func_001890d0(key->amp[2], *w);
-    v[3] += func_001890d0(key->amp[3], *w);
 }

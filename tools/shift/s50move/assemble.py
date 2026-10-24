@@ -228,6 +228,20 @@ def main(out, funcs, onto=False):
                 continue  # a real definition above: not copied (see the docstring)
             for x in names:
                 scope[x] = (order, kind, t.strip('\n'))
+        if body is None:  # a macro-generated definition: MACRO(f, ...)
+            order = 0; scope = {}
+            for t, k, n in its:
+                order += 1
+                m = re.search(r'^[ \t]*(\w+)\(\s*' + f + r'\b.*\)[ \t]*$', t, flags=re.M)
+                if m and k != 'func':
+                    body = m.group(0).strip() + '\n'; break
+                kind, names = classify(t, k, n)
+                if kind == 'undef':
+                    for x in names: scope.pop(x, None)
+                elif kind == 'var':
+                    for nm, d in var_decls(t): scope[nm] = (order, 'var', d)
+                elif kind not in ('include', 'func', 'other'):
+                    for x in names: scope[x] = (order, kind, t.strip('\n'))
         assert body, (f, path)
         need, used = {}, idents(body)
         changed = True
@@ -369,10 +383,10 @@ def main(out, funcs, onto=False):
         sec.append(b.rstrip('\n'))
         for v in views:
             sec.append('#undef ' + re.match(r'#define (\w+)', v).group(1))
-        nxt = {}
-        if idx + 1 < len(plan):
-            for nm, v in plan[idx + 1][3]:
-                if v[1] == 'define': nxt[nm] = norm(v[2])
+        nxt = {}  # the next later definition of each macro (kept if it is the same)
+        for pl in plan[idx + 1:]:
+            for nm, v in pl[3]:
+                if v[1] == 'define' and nm not in nxt: nxt[nm] = norm(v[2])
         for nm in mine:
             if nxt.get(nm) != macros.get(nm):
                 sec.append('#undef ' + nm); macros.pop(nm, None)

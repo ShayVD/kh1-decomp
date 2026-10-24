@@ -262,7 +262,6 @@ void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
         : "$2", "$3", "memory");
 }
 
-
 void func_00183be0(f32 (*)[4], f32 *);
 void func_001a5250(f32 (*)[4], f32 *);
 void func_001a52e0(f32 (*)[4], f32 *);
@@ -396,57 +395,6 @@ void pppPointApFrame(PppObject *obj, H39PApKey *key, PppEntry *e) {
     }
     w[1]--;
 }
-
-/* --- The float-vector random classes (pppSRand*FVFrame): on the first
- * frame they draw one random number per component into the work area, then
- * add amp * r - amp (amp * r for Up/Down) to the vector in the object. */
-
-extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
-
-typedef struct {
-    s32 frame;
-    s32 dst;    /* +0x4: work offset of the value, -1: scratch */
-    f32 amp[3]; /* +0x8 */
-    u8 twice;   /* +0x14 */
-} H39RandFVKey;
-
-f32 func_001892a8(u8);
-f32 func_00189470(u8);
-f32 func_00189648(u8);
-f32 func_00189298(f32, f32);
-f32 func_00189468(f32, f32);
-f32 func_00189640(f32, f32);
-
-#define H39_SRAND_FV(name, rnd, add)                                       \
-    void name(PppObject *obj, H39RandFVKey *key, PppEntry *e) {            \
-        f32 *w;                                                            \
-        f32 *v;                                                            \
-                                                                           \
-        if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))    \
-            return;                                                        \
-        if (obj->frame == 0) {                                             \
-            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
-            w[0] = rnd(key->twice);                                        \
-            w[1] = rnd(key->twice);                                        \
-            w[2] = rnd(key->twice);                                        \
-        } else {                                                           \
-            if (key->frame != obj->frame)                                  \
-                return;                                                    \
-            w = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);               \
-        }                                                                  \
-        if (key->dst != -1)                                                \
-            v = (f32 *) ((u8 *) obj + key->dst + 0xA0);                    \
-        else                                                               \
-            v = &D_00575A00;                                               \
-        v[0] += add(key->amp[0], w[0]);                                    \
-        v[1] += add(key->amp[1], w[1]);                                    \
-        v[2] += add(key->amp[2], w[2]);                                    \
-    }
-
-H39_SRAND_FV(pppSRandFVFrame, func_001892a8, func_00189298)
-H39_SRAND_FV(pppSRandUpFVFrame, func_00189470, func_00189468)
-H39_SRAND_FV(pppSRandDownFVFrame, func_00189648, func_00189640)
-
 
 /* --- Depth sorting of the effect objects (D_00364130, 256 of 0xC0). */
 
