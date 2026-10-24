@@ -1,3 +1,7 @@
+/* The OEF2 relocation (docs/modules.md "Session 49"): func_001aab98(d, s)
+ * adds the base s to each non-zero offset of six tables (counts n1..n6,
+ * offsets o1..o6) and stores the pointers into d; s must be 16-byte aligned
+ * ("op_oef2_set error").  -fno-strict-aliasing.  Read from the code. */
 #include "common.h"
 typedef struct { s32 p; } R4;
 typedef struct { u8 pad[20]; s32 p; u8 pad2[8]; } R32;

@@ -99,36 +99,6 @@ void pppKeMdlTfdUvCon(void *obj, PppEntry *e) {
     w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
 }
 
-typedef struct {
-    u128 q;     /* +0x00 */
-    s32 i[4];   /* +0x10 */
-    s16 h[2];   /* +0x20 */
-} PppMegaBirthModel;
-
-void pppRyjMegaBirthModelCon(void *obj, PppEntry *e) {
-    PppMegaBirthModel *w = PPP_WORK(PppMegaBirthModel, obj, e, 2);
-
-    w->q = 0;
-    w->i[0] = 0;
-    w->i[1] = 0;
-    w->i[2] = 0;
-    w->i[3] = 0;
-    w->h[0] = 0;
-    w->h[1] = 0;
-}
-
-typedef struct {
-    u128 m[8];
-} PppKekoto;
-
-void pppRyjDrawKekotoCon(void *obj, PppEntry *e) {
-    PppKekoto *w = PPP_WORK(PppKekoto, obj, e, 2);
-    s32 i;
-
-    for (i = 7; i >= 0; i--)
-        w->m[i] = 0;
-}
-
 void pppDrawMdlTs2Con(void *obj, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 2);
 

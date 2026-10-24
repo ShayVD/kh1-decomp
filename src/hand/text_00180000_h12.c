@@ -8,8 +8,6 @@ extern u8 D_00616040[];
 typedef PppOwner_364130 PppOwner;
 typedef PppMng_364130 PppMng;
 
-
-
 typedef struct {
     u8 pad00[0x14];
     s32 flags;
@@ -266,7 +264,6 @@ void func_00183b20(PppHeap *h, u8 *p) {
 }
 
 #include "data/types/text_00180000_h12.h"
-
 
 typedef struct {
     s32 unk0;
@@ -608,8 +605,6 @@ void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
 
 #include "data/types/text_00180000_h12_p.h"
 
-
-
 #include "data/pieces/D_0035E710.h"
 
 PppTblEnt *func_0019dfc8(s32 key) {
@@ -691,195 +686,5 @@ s32 func_0019f1a8(PppF1a8A *p, PppF1a8B *q) {
     if (q->unk101 != 0 && p->unk18 == 0)
         return 0;
     return 1;
-}
-
-void func_00122768(void *);
-
-void pppRyjLightDes(void *obj, PppEntry *e) {
-    void **w = (void **) ((u8 *) obj + e->offsets[2] + 0xA0);
-
-    if (*w) {
-        func_00122768(*w);
-        *w = NULL;
-    }
-}
-
-typedef struct {
-    PppMtx out;   /* +0x00 */
-    PppMtx local; /* +0x40 */
-} PppDttWork;
-
-void pppRyjDrawMatrixWorldDttFrame(void *obj, void *k, PppEntry *e) {
-    PppDttWork *w = (PppDttWork *) ((u8 *) obj + e->offsets[1] + 0xA0);
-
-    sceVu0MulMatrix(D_00615E68->m2, w->local, D_00615E68->m);
-    sceVu0MulMatrix(D_00615E68->m2, D_00615EB0, D_00615E68->m2);
-    sceVu0CopyMatrix(w->out, D_00615E68->m2);
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
-}
-
-f32 func_001a2178(void);
-
-s8 func_001a21c0(u8 a) {
-    f32 f;
-
-    f = func_001a2178();
-    return (f32) (a * 2) * f - (f32) (a >> 1);
-}
-
-typedef struct {
-    s32 unk0;
-    s32 unk4;
-} PppA2218A;
-
-typedef struct {
-    u8 pad[0xB6];
-    u8 unkB6;
-} PppA2218B;
-
-s32 func_001a2218(PppA2218A *p, PppA2218B *q) {
-    if (p->unk0 == 0)
-        return 0;
-    if (q->unkB6 != 0 && p->unk4 == 0)
-        return 0;
-    return 1;
-}
-
-f32 func_001a3650(void);
-
-s8 func_001a3698(u8 a) {
-    f32 f;
-
-    f = func_001a3650();
-    return (f32) (a * 2) * f - (f32) (a >> 1);
-}
-
-typedef struct {
-    u8 pad[0xF2];
-    u8 unkF2;
-} PppA36f0B;
-
-s32 func_001a36f0(PppA2218A *p, PppA36f0B *q) {
-    if (p->unk0 == 0)
-        return 0;
-    if (q->unkF2 != 0 && p->unk4 == 0)
-        return 0;
-    return 1;
-}
-
-extern f32 D_003732D0[]; /* sine table, 4096 entries per turn */
-
-void func_001a50d0(f32 m[4][4], u32 a) {
-    f32 s = D_003732D0[(a >> 4) & 0xFFF];
-    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
-
-    m[0][0] = 1.0f;
-    m[1][0] = 0.0f;
-    m[2][0] = 0.0f;
-    m[3][0] = 0.0f;
-    m[0][1] = 0.0f;
-    m[1][1] = c;
-    m[2][1] = -s;
-    m[3][1] = 0.0f;
-    m[0][2] = 0.0f;
-    m[1][2] = s;
-    m[2][2] = c;
-    m[3][2] = 0.0f;
-    m[0][3] = 0.0f;
-    m[1][3] = 0.0f;
-    m[2][3] = 0.0f;
-    m[3][3] = 1.0f;
-}
-
-void func_001a5150(f32 m[4][4], u32 a) {
-    f32 s = D_003732D0[(a >> 4) & 0xFFF];
-    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
-
-    m[0][0] = c;
-    m[1][0] = 0.0f;
-    m[2][0] = s;
-    m[3][0] = 0.0f;
-    m[0][1] = 0.0f;
-    m[1][1] = 1.0f;
-    m[2][1] = 0.0f;
-    m[3][1] = 0.0f;
-    m[0][2] = -s;
-    m[1][2] = 0.0f;
-    m[2][2] = c;
-    m[3][2] = 0.0f;
-    m[0][3] = 0.0f;
-    m[1][3] = 0.0f;
-    m[2][3] = 0.0f;
-    m[3][3] = 1.0f;
-}
-
-void func_001a51d0(f32 m[4][4], u32 a) {
-    f32 s = D_003732D0[(a >> 4) & 0xFFF];
-    f32 c = D_003732D0[((a + 0x4000) >> 4) & 0xFFF];
-
-    m[0][0] = c;
-    m[1][0] = -s;
-    m[2][0] = 0.0f;
-    m[3][0] = 0.0f;
-    m[0][1] = s;
-    m[1][1] = c;
-    m[2][1] = 0.0f;
-    m[3][1] = 0.0f;
-    m[0][2] = 0.0f;
-    m[1][2] = 0.0f;
-    m[2][2] = 1.0f;
-    m[3][2] = 0.0f;
-    m[0][3] = 0.0f;
-    m[1][3] = 0.0f;
-    m[2][3] = 0.0f;
-    m[3][3] = 1.0f;
-}
-
-typedef struct {
-    s16 unk0;
-    s16 dur;    /* +0x2 */
-    s8 flags;   /* +0x4 */
-    u8 pad[3];
-} PppAnimKey;
-
-typedef struct {
-    s16 pad[3];
-    s16 n;              /* +0x6 */
-    u8 pad8[8];
-    PppAnimKey keys[1]; /* +0x10 */
-} PppAnimHdr;
-
-typedef struct {
-    PppAnimHdr *hdr;
-} PppAnim;
-
-typedef struct {
-    u16 time;
-    u8 idx;
-} PppAnimState;
-
-typedef struct {
-    PppAnim *anim;
-    PppAnimState *st;
-} PppAnimPlayer;
-
-void func_001a56a0(PppAnimPlayer *p) {
-    PppAnimState *st = p->st;
-    PppAnimKey *k = &p->anim->hdr->keys[st->idx];
-
-    st->time += 512;
-    if ((s16) st->time >= k->dur) {
-        st->time -= k->dur;
-        st->idx++;
-        if (st->idx >= p->anim->hdr->n) {
-            if (k->flags & 0x80) {
-                st->idx = 0;
-                st->time = 0;
-                return;
-            }
-            st->time = 0;
-            st->idx--;
-        }
-    }
 }
 #include "data/data_0037.h"

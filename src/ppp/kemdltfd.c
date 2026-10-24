@@ -1,8 +1,14 @@
+/* The KeMdlTfd helpers (docs/modules.md "Session 49"), with
+ * kemdltfd.nostrict.c: func_001a9460 fills a 256-entry colour ramp from c0
+ * to c1 split at t (the store order from the 32-entry table D_00372790, a
+ * swizzled CLUT), in a scratch block from opdma.c's packet stack;
+ * kemdltfd.nostrict.c's func_001a9790 draws a model of the resource through
+ * opdma.c's func_001aaf88.  Both are called by the pppKeMdlTfd*Draw classes.
+ * Read from the code, not proved by a boot. */
 #include "common.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) GV4;
-typedef struct { u128 a, b; } __attribute__((aligned(16))) GT32;
 extern u128 D_00372770[2];
 extern s8 D_00372790[];
 s8 *func_001aa950(s32);
@@ -65,6 +71,5 @@ void func_001a9460(f32 t, u32 c0, u32 c1, u32 *dst) {
     func_001aa9d0(32);
 }
 
-#include "data/pieces/D_0037A378.h"
 
 #include "data/data_0037.h"
