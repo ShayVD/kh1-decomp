@@ -12,6 +12,7 @@
  * 2 func_001ed278, 4 func_001ecc68, 8 func_001ece70.  The IOP writes the
  * status block by DMA; the readers flush the cache first. */
 #include "common.h"
+#include "platform/iop.h"
 #include "platform/thread.h"
 #include "data/types/text_001e0000_h68.h"
 
@@ -35,8 +36,6 @@ extern s8 D_0063F640[256];
 extern char D_00490910[];
 extern char D_00490928[];
 
-int sceSifBindRpc(void *, u32, s32);
-int sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
 int printf(const char *, ...);
 
 void func_001ec7c0(s32);
@@ -53,7 +52,7 @@ s32 func_001ec7d0(s32 arg) {
     { u8 *p = (u8 *)D_0063D640; for (i = 0; i < 8192; i++) p[i] = 0; }
     { u8 *p = (u8 *)D_0063F640; for (i = 0; i < 256; i++) p[i] = 0; }
     for (;;) {
-        if (sceSifBindRpc(&D_003E3C88, 17, 0) < 0) {
+        if (PlatSifBindRpc(&D_003E3C88, 17, 0) < 0) {
             printf(D_00490910);
             return -1;
         }
@@ -67,27 +66,27 @@ s32 func_001ec7d0(s32 arg) {
     D_00633640[0] = (u32)D_0063D640;
     D_00633640[1] = arg;
     D_00633640[2] = (u32)D_0063F640;
-    sceSifCallRpc(&D_003E3C88, 0, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return 0;
 }
 
 s32 func_001ec9a8(void) {
-    sceSifCallRpc(&D_003E3C88, 0x1F, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x1F, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001eca00(void) {
-    sceSifCallRpc(&D_003E3C88, 0x20, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x20, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001eca58(void) {
-    sceSifCallRpc(&D_003E3C88, 0x21, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x21, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ecab0(void) {
-    sceSifCallRpc(&D_003E3C88, 0x22, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x22, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
@@ -218,7 +217,7 @@ void func_001ed000(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f, s32 g, s32 h) {
 
 s32 func_001ed0d0(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 1, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 1, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
@@ -229,13 +228,13 @@ s32 func_001ed128(s32 arg0, s32 arg1) {
 
 s32 func_001ed170(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x27, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x27, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ed1c8(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0xF, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0xF, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
@@ -304,13 +303,13 @@ s32 func_001ed560(s32 arg0, s32 arg1, s32 arg2) {
 
 s32 func_001ed5a8(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x2F, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x2F, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ed600(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x30, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x30, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
@@ -352,18 +351,18 @@ s32 func_001ed828(s32 arg0, s32 arg1) {
 }
 
 s32 func_001ed870(void) {
-    sceSifCallRpc(&D_003E3C88, 0x16, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x16, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ed8c8(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x17, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x17, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ed920(void) {
-    sceSifCallRpc(&D_003E3C88, 0x18, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x18, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
@@ -372,44 +371,44 @@ s32 func_001ed978(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     D_00633640[1] = arg1;
     D_00633640[2] = arg2;
     D_00633640[3] = arg3;
-    sceSifCallRpc(&D_003E3C88, 0x19, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x19, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001ed9e0(void) {
-    sceSifCallRpc(&D_003E3C88, 0x1B, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x1B, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001eda38(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x1D, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x1D, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001eda90(s32 arg0, s32 arg1) {
     D_00633640[0] = arg0;
     D_00633640[1] = arg1;
-    sceSifCallRpc(&D_003E3C88, 0x32, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x32, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001edaf0(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x23, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x23, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001edb48(s32 arg0) {
     D_00633640[0] = arg0;
-    sceSifCallRpc(&D_003E3C88, 0x24, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
+    PlatSifCallRpc(&D_003E3C88, 0x24, 0, D_00633640, 0x2000, D_00633640, 0x2000, 0, 0);
     return D_00633640[0];
 }
 
 s32 func_001edba0(void) {
     s32 i, j;
     if (D_00635640[0][0] != -1) {
-        sceSifCallRpc(&D_003E3C88, 30, 0, D_00635640, 0x2000, D_00635640, 0x2000, 0, 0);
+        PlatSifCallRpc(&D_003E3C88, 30, 0, D_00635640, 0x2000, D_00635640, 0x2000, 0, 0);
         D_003E3CB0 = 0;
         for (i = 0; i < 1024; i++) {
             for (j = 7; j >= 0; j--) D_00635640[i][j] = -1;

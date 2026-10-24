@@ -14,6 +14,7 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002C5C48.h"
 #include "common.h"
+#include "platform/iop.h"
 #include "platform/thread.h"
 #include "platform/math.h"
 #include "data/pieces/D_002BBDE0.h"
@@ -396,7 +397,6 @@ void func_00120aa0(void) {
 /* func_00120b10 (from hand/text_00110000_h4.c). */
 extern char D_0048D288[];
 u8 D_004F35B0[0x1000] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
-void sceSifInitRpc(s32);
 void func_0025b550(void);
 s32 sceCdInit(s32);
 void func_0026a728(s32);
@@ -405,14 +405,14 @@ s32 func_0025f1f0(void);
 void func_001101e8(void);
 void func_002696b8(s32, void *, s32);
 void func_00120b10(void) {
-    sceSifInitRpc(0);
+    PlatSifInitRpc(0);
     func_0025b550();
     sceCdInit(0);
     func_0026a728(2);
     while (!func_0025f228(D_0048D288));
     while (!func_0025f1f0());
     func_001101e8();
-    sceSifInitRpc(0);
+    PlatSifInitRpc(0);
     sceCdInit(0);
     func_0026a728(2);
     func_002696b8(0, D_004F35B0, 4096);
