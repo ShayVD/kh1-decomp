@@ -1,8 +1,6 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_001aab98(void *, void *);
 M2C_UNK func_002672f8(s32, void *, s32);
 M2C_UNK func_00267328(void *, M2C_UNK *, void *);
 M2C_UNK func_00267560(s32, s32, f32);
@@ -29,11 +27,4 @@ void pppRyjDrawMatrixWorldDttFrFrame(s32 arg0, s32 arg1, void *arg2) {
     func_002675b8(temp_s1, D_00615E68 + 0x50);
     temp_a0 = D_00615E68 + 0x50;
     func_00267328(temp_a0, &D_00616040, temp_a0);
-}
-
-void func_001aadd0(s32 arg0) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + 0x10;
-    func_001aab98(temp_a0, temp_a0 + M2C_FIELD(temp_a0, s32 *, 0x3C));
 }

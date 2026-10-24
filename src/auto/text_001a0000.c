@@ -4,8 +4,6 @@
 #include "ppp.h"
 
 M2C_UNK func_00183b20(s32, s32);
-M2C_UNK func_001a9e90();
-M2C_UNK func_001aa918();
 M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
 M2C_UNK func_00266f38(s32, M2C_UNK *);
 M2C_UNK func_002673b8(M2C_UNK *, M2C_UNK *);
@@ -89,10 +87,4 @@ void func_001a60d0(void *arg0) {
     M2C_FIELD(arg0, s8 *, 9) = 0;
     M2C_FIELD(arg0, M2C_UNK **, 0) = &D_00575A00;
 }
-
-void func_001a9e70(void) {
-    func_001a9e90();
-    func_001aa918();
-}
-
 

@@ -89,37 +89,3 @@ f32 func_001a9350(f32 *v) {
 }
 
 typedef int u128 __attribute__((mode(TI)));
-typedef union Tag {
-    u128 q;
-    struct { s32 tag; union Tag *next; union Tag *self; s32 pad; } s;
-} Tag;
-extern Tag D_0061EEA0[]; /* src/data/bss_0061.c: GsTag D_0061EEA0[0x10] */
-extern u8 D_0061E800[];
-extern u8 D_0061E8B0[];
-void func_001aa6b0(void *, s32, s32, s32);
-void func_001aa700(void *, s32, s32, s32);
-void func_001a9f88(void) {
-    Tag *p = D_0061EEA0;
-    u128 k = 0x20000000;
-    s32 i;
-    for (i = 0; i < 288; i++) {
-        __asm__ volatile("sq %0, 0(%1)" : : "r"(k), "r"(p));
-        p->s.next = p + 1;
-        p->s.self = p;
-        p++;
-    }
-    __asm__ volatile("sq %0, 0(%1)" : : "r"(k), "r"(p));
-    p->s.tag = 0x70000000;
-    func_001aa6b0(D_0061E800, 7, 0, 0);
-    func_001aa700(D_0061E8B0, 7, 15, 0);
-}
-
-s32 rand(void);
-void func_001aa080(void) {
-    s32 r;
-    r = rand();
-    __asm__ volatile(
-        "qmtc2 %0, $vf31\n"
-        "vrxor R, $vf31x\n"
-        : : "r"(r) : "$2");
-}

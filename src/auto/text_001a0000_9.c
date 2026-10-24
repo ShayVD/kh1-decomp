@@ -69,22 +69,3 @@ void func_001a9418(void *arg0, u16 *arg1, s32 arg2) {
     *var_a1 = -1U;
   }
 }
-
-s32 func_001aa0a8(s32 arg0) {
-  s32 var_a1;
-  s32 var_v1;
-  int new_var;
-  var_v1 = 1;
-  var_a1 = 0;
-  new_var = 1;
-  if (arg0 > new_var)
-  {
-    do
-    {
-      var_v1 *= 2;
-      var_a1 += new_var;
-    }
-    while (var_v1 < arg0);
-  }
-  return var_a1;
-}
