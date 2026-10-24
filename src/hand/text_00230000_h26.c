@@ -89,43 +89,8 @@ void func_0024ae00(void *);
 /* Three rows of five 0xA00-byte cells, with a used count per row. */
 
 /* Ten 0x860-byte channels: a free one, else the oldest. */
-typedef struct { s32 a, b, c, d; } Q4;
-extern Q4 D_00668040[2]; /* src/data/bss_0066.c: u8 D_00668040[0x20] */
-
-void func_002464f8(s32 *out) {
-    s32 i;
-    for (i = 0; i < 2; i++) {
-        switch (D_00668040[i].a) {
-        case 0: out[i] = 0; break;
-        case 4: out[i] = 0; break;
-        case 5: out[i] = 0; break;
-        case 6: out[i] = 0; break;
-        default: out[i] = 1; break;
-        }
-    }
-}
 
 /* Splits x into five 300-wide steps, halved. */
-void func_00246658(s32 x, s32 *out) {
-    s32 t[5];
-    s32 i;
-    for (i = 0; i < 5; i++) out[i] = 0;
-    for (i = 0; i < 5; i++) {
-        if (x >= 0) {
-            t[i] = x + 1;
-            if (x + 1 > 300) t[i] = 300;
-            x -= 300;
-            out[i] = t[i] / 2;
-        }
-    }
-}
-
-typedef struct { u64 a; s32 unk8; u8 pad[0xC0 - 12]; } Blk;
-
-void func_00246708(Blk *d, Blk *s, s32 v) {
-    *d = *s;
-    d->unk8 = v;
-}
 
 /* Ten 0x930-byte slots: a free one, else the oldest. */
 #include "data/types/text_00230000_h26.h"

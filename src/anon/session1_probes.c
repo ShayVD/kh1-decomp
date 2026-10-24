@@ -40,14 +40,6 @@ void func_0018ad70(int a, int *p)
     p[3] = a;
 }
 
-int func_002466e8(int a)
-{
-    int v = a / 2;
-    if (v > 150)
-        v = 150;
-    return v;
-}
-
 typedef struct {
     int flags;
     char pad0[1184];

@@ -28,7 +28,6 @@ extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);
-extern s32 D_00668370[];
 extern volatile s32 D_00668040[];
 s32 func_00247388(void);
 s32 func_0025daf0(M2C_UNK *);
@@ -42,17 +41,6 @@ void memset(s32, s32, s32);
 void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
-    }
-}
-
-void func_00246a70(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    D_00668370[3] = arg2;
-    D_00668370[4] = arg3;
-    D_00668370[681] = arg0;
-    D_00668370[682] = arg1;
-    D_00668370[680] = 1;
-    if (D_00668370[0] == 0) {
-        D_00668370[0] = 1;
     }
 }
 

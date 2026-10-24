@@ -15,7 +15,6 @@ typedef int u128 __attribute__((mode(TI)));
 typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
 typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
 typedef Fx E930;
-typedef struct { u32 state; f32 t; s32 x8; s32 xc; s32 x10; u8 pad[0xa8c]; s32 xaa0; } S8370;
 typedef struct { u8 r, g, b, a; } RGBA;
 typedef struct {
     s32 x0; s32 x4; u8 pad8[0x10]; s32 x18; s32 x1c; s32 x20;
@@ -60,10 +59,6 @@ typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
 extern Q4 D_00351E10[];
-Panel D_00668290 ALIGNED(16);
-extern Q4 *D_00668280;
-extern S8370 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
-extern f32 D_002BBDFC;
 Panel D_00668F90 ALIGNED(16);
 extern Q4 *D_00668F80;
 extern u8 D_0045E1F0[];
@@ -104,7 +99,6 @@ void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 Q4 *func_002388b8(void *, s32, Q4 *);
 void func_002393d8(void);
-void func_00246750(s32, s32, s32, f32);
 void func_00246ed8(s32, S70d0 *);
 void func_00247190(void);
 void func_00247b50(Ctx *);
@@ -136,17 +130,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00246570(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
-    s32 i;
-    Panel *d = &D_00668290;
-    func_0024aa48(a0, d, a1);
-    for (i = 0; i < 4; i++) { s32 *r = &d->r[i].b; r[-1] += dx << 4; r[0] += dy << 4; }
-    for (i = 0; i < 4; i++) {
-        D_00668290.q[i].d = D_00668290.q[i].d * s;
-    }
-    D_00668280 = func_002388b8(&D_00668290, 1, D_00668280);
-}
 
 void func_00246dc0(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
     s32 i;
@@ -373,43 +356,6 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
 /* ---- the functions below need make: they use rodata (jump tables,
  * string literals) ---- */
 
-s32 func_00246aa8(void) {
-    S8370 *p = &D_00668370;
-    s32 f = p->xaa0;
-    p->xaa0 = 0;
-    switch (p->state) {
-    case 0:
-        return 0;
-    case 1:
-        p->t = 0.0f;
-        p->state++;
-        break;
-    case 2:
-        p->t += D_002BBDFC * 0.199999988079071044921875f;
-        if (p->t >= 1.0f) {
-            p->t = 1.0f;
-            p->state++;
-        }
-        break;
-    case 3:
-        if (f == 0) p->state++;
-        break;
-    case 4:
-        p->state++;
-        p->t = 1.0f;
-        break;
-    case 5:
-        p->t -= D_002BBDFC * 0.199999988079071044921875f;
-        if (p->t <= 0.0f) {
-            p->t = 0.0f;
-            p->state = 0;
-        }
-        break;
-    }
-    func_00246750(p->xc, p->x10, f, p->t);
-    return 0;
-}
-
 void func_00248010(Ctx *p) {
     char buf[16];
     u8 col[3];
@@ -544,5 +490,4 @@ s32 func_0024d8f0(void) {
 #include "data/data_002C.h"
 #include "data/data_0046.h"
 #include "data/data_0045.h"
-#include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_00491830.h"

@@ -9,7 +9,8 @@
  * drawing environment D_00667DF0; sent only when func_00242bf0 of the
  * member's kind allows it) 54 pixels above the member's point 0x8004
  * (func_00246120; kind 0 has the sprite, the others draw nothing).
- * func_00246020 is the HUD's step (both off). */
+ * func_00246020 is the HUD's step (both off); func_002464f8 tells h60 which
+ * of the two is shown or coming (states 1-3). */
 #include "common.h"
 #include "data/types/text_00240000_h50.h"
 #include "data/pieces/D_002E26C0.h"
@@ -170,4 +171,17 @@ void func_00246438(void) {
     D_00668060 = l.b;
     if (func_0011ef38(func_00246320) == 0)
         func_0011ef10(0x28489, func_00246320);
+}
+
+void func_002464f8(s32 *out) {
+    s32 i;
+    for (i = 0; i < 2; i++) {
+        switch ((s32)D_00668040[i].state) {
+        case 0: out[i] = 0; break;
+        case 4: out[i] = 0; break;
+        case 5: out[i] = 0; break;
+        case 6: out[i] = 0; break;
+        default: out[i] = 1; break;
+        }
+    }
 }
