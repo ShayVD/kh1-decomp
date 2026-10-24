@@ -1992,6 +1992,119 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings; new files
 checked with `-Wimplicit-function-declaration`.
 
+## Session 53: 0x0013 and 0x0014, the object and party code under the classes, 0x00130000-0x00150000
+
+Session 53 moved 632 functions in six commits.  No Mac: static checks
+only.  After it every function of 0x00130000-0x00150000 is in a module
+except the nine of "Left" below.  The names are read from the code and
+none is proved by a boot; each file's top comment says what it does.
+
+| module | files | range | functions |
+|---|---|---|---|
+| an object's motion: the motion table lookup (func_00130070), the motion change every class calls (func_00130340, func_00130398(o, motion, blend), func_00130578), the per-frame bone update (func_00130660, func_00130f18) | src/obj/objmotion.c, .nostrict.c | 0x00130000-0x00131438 | 22 |
+| positions on an object's bones (func_001315c0(o, bone, out, t), func_001318e8) | src/obj/objbone.c | 0x00131438-0x00131de0 | 17 |
+| the room's object lists D_00525298, D_005252C8 / D_005252F8 / D_00525328 (func_00132c70 builds them for the world / room / area, func_00131e40 loads the objects one by one, func_001320a8 finds a record); D_00525290 defined here | src/obj/roomobj.c, .nostrict.c | 0x00131de0-0x00132f00 | 21 |
+| the party members' seven loaded files at D_00720000 (records D_00525368, sizes D_00304318); D_00525430 defined here | src/game/memberfile.c, .nostrict.c | 0x00132f00-0x00133738 | 23 |
+| object commands: 32 nodes D_00525A40, 32 triples D_00526640, the task func_00133a88, a node chain (func_001342c8) | src/obj/objcmd.c, .nostrict.c, .nostrict_nofill.c | 0x00133738-0x001347f0 | 13 |
+| damage: kinds and thresholds of *D_00308CDC, the damage of an attack (func_001349d0, func_00134ba8), the hit records D_005267C0 / D_005277C0 and the hit test func_001350d8; D_0052A110 defined here | src/obj/damage.c, .nostrict.c | 0x001347f0-0x00135a68 | 31 |
+| whether an object is drawn: its box, the on-screen test func_00135bb0, the distance fade func_00135ca0, the colour fade | src/obj/objvis.c, .nostrict.c | 0x00135a68-0x00135ed0 | 6 |
+| object draw jobs on D_0052A100 (func_001371f0 queues one, func_00136bc0 runs it) and the per-kind draw callbacks; D_00529800 defined here | src/obj/objdraw.c, .nostrict.c | 0x00135ed0-0x00137308 | 11 |
+| small object helpers every class uses (func_001375f0, func_00137618, func_00137688, func_001376e8 ...), the id lists D_0052ABF0 (defined here) / D_0052ACF0 | src/obj/objutil.c, .nostrict.c | 0x00137308-0x00137718 | 14 |
+| the objects' update tasks (func_00138400 picks one by kind; func_00137ea8, func_00138130, func_00138258); D_0052A158 defined here | src/obj/objtask.c, .nostrict.c | 0x00137718-0x00138a78 | 28 |
+| reactions to commands and hits (*D_00308CDC), the message loop func_00139da8, the nearest target in range (func_0013a440) | src/obj/objreact.c, .nostrict.c | 0x00138a78-0x0013a910 | 27 |
+| likely the summons (a guess): func_0013a910 asks whether one is allowed, D_0052AE54 loads its two files named from D_00304B00, the object D_0052AE38 of class 40 (func_0013bf20), the party swap and its end; D_00304B40, D_00304B44, D_00304B68, D_0052AD00-D_0052AD58, D_0052AD78, D_0052AE3C, D_0052AE40 defined here | src/game/summon.c, .nofill.c, .nostrict.c | 0x0013a910-0x0013bf68 | 26 |
+| the members' records in the save data D_00304BE8 (func_0013c968 has-ability, func_0013cb98 builds the records from D_00351530) | src/game/memberdata.c, .nofill.c, .nostrict.c | 0x0013bf68-0x0013cec8 | 32 |
+| party helpers: a member's slot (func_0013daa8), the leader, the per-class callbacks D_00350DA4, whether the party is together (func_0013dd40); D_00304BF0 (a pointer table) and D_0052AE68 defined here | src/game/partyutil.c, .nostrict.c | 0x0013daa8-0x0013e000 | 10 |
+| the player-controlled object's move (func_0013e1f8, func_0013f198) and its motion events (func_0013eab0, func_0013ee40) | src/obj/plctl.c, .nostrict.c | 0x0013e000-0x0013f358 | 14 |
+| object classes 0xD and 0xE (func_0013fc80) | src/obj/class0d.c, .nostrict.c | 0x0013f358-0x0013fd10 | 14 |
+| the first handlers of classes 9 and 0xA and the helpers class0a calls (func_0013fe28, func_0013ff00 ...) | src/obj/class09.c, .nostrict.c | 0x0013fd10-0x00140000 | 9 |
+| object classes 9, 0xA and 0xB (func_00141138 registers them) | src/obj/class0a.c, .nostrict.c | 0x00140000-0x00141200 | 17 |
+| the members' HP / MP changes (func_00141468, func_00141540) and stats rebuilt from the save data (func_00141b10) | src/game/partystat.c, .nostrict.c | 0x00141200-0x00142030 | 21 |
+| a four-entry cache keyed by world / room / area (D_0052CB20, D_0052EB40) | src/game/roomcache.c, .nostrict.c | 0x00142030-0x00142388 | 6 |
+| an object's ground movement: the ground ray, steering, the move with walls (func_00143180 stays in c02, a CONTEXT_ONLY copy is here), the per-state velocity through D_00350D88 | src/obj/objmove.c, .nostrict.c | 0x00142388-0x00144350 | 22 |
+| object class 0x11 (func_00144e38) | src/obj/class11.c, .nostrict.c | 0x00144350-0x00144e88 | 13 |
+| prizes (a guess: the HP / MP balls and munny drops): drop tables, the pool D_0052EB60 with D_0035C710, the free list D_0052EB50 | src/obj/prize.c, .nofill.c, .nostrict.c | 0x00144e88-0x001467e8 | 23 |
+| load and spawn requests: 128 load records D_00531B70 (func_00146a68), the effect entries spawned by id (func_00146bd0, func_001473a8); D_00531F80 defined here | src/game/objreq.c, .nostrict.c | 0x001467e8-0x00147730 | 23 |
+| lookups into the data tables D_00547BA0 ... (func_00147840 an item's record, func_00147860 its bonuses) | src/game/datatbl.c, .nofill.c, .nostrict.c | 0x00147730-0x00147a68 | 12 |
+| effect objects: 256 records D_00547C00 handed out from D_0054B800, their tasks, func_00148768 starts one; D_00547BC0, D_0054B818, D_0054C160 defined here | src/obj/effobj.c, .nostrict.c | 0x00147a68-0x00148fb0 | 39 |
+| the members' items and equipment, the three weapon models D_0054C1B0 (func_00149c80); D_00350D10, D_00350D14 defined here | src/game/memberitem.c, .nostrict.c | 0x00148fb0-0x0014a0f0 | 25 |
+| attack hits: 64 records D_0054C440 (func_0014a4a8 fills one, func_0014bdc0 updates them), the mask D_0054F440, the hit timers | src/obj/atkhit.c, .nogcse.c, .nostrict.c | 0x0014a0f0-0x0014c400 | 33 |
+| object class 0x15 (func_0014cb38) | src/obj/class15.c, .nostrict.c | 0x0014c400-0x0014cb90 | 11 |
+| jump arcs (func_0014cc88, func_0014cce0; gravity 0.48469386) | src/obj/objjump.c | 0x0014cb90-0x0014cee8 | 6 |
+| object classes 1, 2, 3 and 5 (func_0014d890) | src/obj/class01.c | 0x0014cee8-0x0014d988 | 15 |
+| object class 8 (func_0014e4b8) | src/obj/class08.c | 0x0014d988-0x0014e510 | 13 |
+| the room's area boxes D_00350D78 (func_0014f1b8 installs a set, func_0014e5b8 / func_0014ee88 which boxes hold a point / touch a capsule, func_0014f028 the leader's box) | src/obj/areabox.c | 0x0014e510-0x0014f370 | 15 |
+| the actor core: func_0014f830 registers a class in D_00350D88, func_0014f5c8 / func_0014f600 / func_0014f658 call a class's handlers, the default handlers | src/obj/actcore.c | 0x0014f370-0x0014f9b0 | 15 |
+| an entity's look-at (func_0014f9b0 / func_0014fa38 start and stop it, func_0014fe48 turns) | src/obj/lookat.c, .nostrict.c | 0x0014f9b0-0x00150000 | 5 |
+
+| chunk | commit |
+|---|---|
+| 0x00140000-0x00144e88 | d111a04 |
+| 0x00144e88-0x0014c400 | b8c783b |
+| 0x0014c400-0x00150000 | d1e1a05 |
+| 0x00130000-0x00135ed0 | fbe72b7 |
+| 0x00135ed0-0x0013bf68 | 3193236 |
+| 0x0013bf68-0x00140000 | a60cc4f |
+
+**Left** (9 functions, for the c02 move): hand/nostrict/text_00130000_c02.c
+keeps func_00135ed0, func_00136d38, func_0013cec8, func_0013cfe8,
+func_00143180 and func_001550a0 (taking func_00143180 out swapped
+registers in func_0013cfe8 again, as func_001550a0 did in session 52);
+hand/text_00130000_h7.c keeps func_0013cf28 and func_0013cfc0 and
+auto/text_00130000.c func_0013cf78, the stack pops of func_0013cfe8's
+queue (W7Stack), left to move with it.  objmove.nostrict.c holds a
+CONTEXT_ONLY copy of func_00143180 so the functions below it compile as
+before.
+
+**Data moved with its users** (32 definitions): the files that held them
+were deleted when their last function moved, and `make` stayed
+byte-identical each time; the names check of out/gen/data.tsv found them
+(1 after the second chunk, 7 after the third, 1, 4 and 21 after the 0x0013
+chunks).  Each is now defined at its user's extern line with the old
+ALIGNED and a "moved from" comment; pointer tables keep their
+initialisers (D_00350D10, D_00350D14, D_00304B40, D_00304B44, D_00304B68,
+D_00304BF0).
+
+**Traps.**
+- **The same register swap, another function**: func_00136bc0 (h32) lost
+  3 words when the functions above it moved; a CONTEXT_ONLY copy of
+  func_00135d38 alone put it back (found by trying each moved function as
+  the only copy), and the copy went away when func_00136bc0 itself moved.
+  func_001401d8 matches only with func_0013fe28 above it (an old note):
+  class0a.nostrict.c has a CONTEXT_ONLY copy (the real one is in
+  class09.nostrict.c).
+- **Function-pointer externs**: assemble.py reads `extern M2C_UNK
+  (*D_X)(s32);` as a clash with the M2C_UNK typedef and leaves the name
+  undeclared (D_0054C210, D_00525364): give the function an alias
+  `extern M2C_UNK (*D_X_<fn>)(s32) __asm__("D_X");`.
+- **Prototype views of a function defined below**: `W34A9c *
+  func_0014a398();` then `#define func_0014a398 ((T) func_0014a398)`
+  conflicts with the definition later in the same file: an asm alias of
+  the function (`T *func_0014a398_4a0f0(T *) __asm__("func_0014a398");`)
+  works.  A call that an old file made with an implicit declaration and
+  now meets a `void` prototype (func_001473a8 in func_00146ff0) needs a
+  function view with the result type.
+- **A cast view drops a sized extern**: `#define D_0052EB50 (*(Snd (*))
+  &D_0052EB50)` over `extern u8 D_0052EB50[]` matched but cover_check no
+  longer saw `extern Snd D_0052EB50;`, so D_0052EB60 (inside it) left
+  float_covered.txt.  Declare the old sized type plainly and alias the
+  functions that used the array.
+- **mod.py drops includes a remaining typedef needs**: FVec4 came from
+  data/pieces/D_002C58A0.h in h33 and b02; `#include
+  "data/types/fvec.h"` (or the piece) above the `typedef FVec4 V4;` fixes
+  the parse errors.
+- struct Actor again (func_001417a0, func_0014a4a8, func_0013a910,
+  func_0013bb20, func_00143180's D_003044D8 owner): an alias of
+  D_002E26A0 with the function's own type, or a pointer cast at the use.
+- Implicit `fabsf` calls came from the old files and matched there too.
+
+**Nothing was reverted, and nothing new floats.**  After each commit:
+`make` byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh`
+with float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, the names of out/gen/data.tsv the same as at
+the start of the session, `s31_warndiff` 0 new warnings, and the new files
+checked with `-Wimplicit-function-declaration`.
+
 ## Session 52: the party control, the model renderer and motion, the object classes, 0x00150000-0x00170170
 
 Session 52 moved 418 functions in three commits.  No Mac: static checks
@@ -2199,23 +2312,27 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x00150000 to 0x0024f2e0** (session
-  52), except the VU0 routines in src/hand/vu0.c, two probes in
-  src/anon/session1_probes.c (func_0018ad70, func_001882f8), the unmatched
-  func_001636d0 and func_001550a0 (left in hand/nostrict/text_00130000_c02.c,
-  Session 52 Traps).  The functions still in src/auto and src/hand lie in
-  0x001001f8-0x00150000 (out/gen/placements.tsv): 315 in 0x0014, 325 in
-  0x0013, 471 in 0x0012, 391 in 0x0011, 303 in 0x0010, plus func_001550a0
-  and the VU0 routines.  Next is 0x0014: the actor core under the object
-  classes (func_0014f830 registers a class in D_00350D88, func_0014f658 sets
-  an actor's state, the item and party data D_00304BE8, the effect and
-  sound requests ...).  `python3 -I tools/shift/s50move/group.py
+- **The game segment is in modules from 0x00130000 to 0x0024f2e0** (session
+  53), except the VU0 routines in src/hand/vu0.c, two probes in
+  src/anon/session1_probes.c (func_0018ad70, func_001882f8; func_00137418
+  is a probe too), the unmatched func_001636d0 and the nine functions of
+  "Session 53", Left (c02 and the stack pops).  The functions still in
+  src/auto and src/hand lie in 0x001001f8-0x00130000
+  (out/gen/placements.tsv): 471 in 0x0012, 391 in 0x0011, 303 in 0x0010,
+  plus those nine and the VU0 routines.  Next is 0x0012 (from the top
+  down, as sessions 50 to 53 went), and the c02 move: take
+  func_0013cfe8 with func_0013cec8 and its stack pops (func_0013cf28,
+  func_0013cf78, func_0013cfc0) into one module and check whether
+  func_00135ed0, func_00136d38, func_00143180 and func_001550a0 can then
+  join objdraw / objmove / their neighbours (CONTEXT_ONLY copies where
+  the old order matters).  `python3 -I tools/shift/s50move/group.py
   src/DIR/NAME LO HI` drafts a range per flag mode; check that every new
   file compiled and its NEW DIFF lines, `mod.py remove` the functions,
   `make`, `tools/shift/data_owners.py`, fcheck.sh, compare out/gen/data.tsv's
-  names with the base, and scan the new files for implicit declarations
-  (Sessions 50 to 52, Traps).  Group by what the functions do (`refs.py LO
-  HI`: their calls and data); leave whole-VU0 functions in place
+  names with the base (every deleted file can take data definitions with
+  it), and scan the new files for implicit declarations (Sessions 50 to
+  53, Traps).  Group by what the functions do (`refs.py LO HI`: their
+  calls and data); leave whole-VU0 functions in place
   (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
