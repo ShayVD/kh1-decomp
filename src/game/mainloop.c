@@ -37,7 +37,7 @@ typedef struct { u16 type; s16 f2; } NodeHd;
 extern s32 D_002C5950;
 extern s32 D_002C596C;
 extern u8 D_004E3A48[];
-extern u8 D_004E3A58[0x828];
+u8 D_004E3A58[0x828] ALIGNED(8);
 void sceVu0UnitMatrix(V4 *);
 void func_0011efa8(void *, void *, s32, s32);
 void func_0015ec68(void);

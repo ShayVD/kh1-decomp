@@ -42,8 +42,23 @@
 /* func_00122dc8 (from hand/text_00110000_h53.c). */
 typedef struct { u8 pad[0x130]; u8 *name; } Obj53;
 extern s32 D_002C648C;
-extern char D_004F7150[0x4][32];
-extern char *D_002C6460[];
+char D_004F7150[0x4][32] ALIGNED(16);
+extern u8 D_0048D2C8[];
+extern u8 D_0048D2D0[];
+extern u8 D_0048D2D8[];
+extern u8 D_0048D2E0[];
+extern u8 D_0048D2E8[];
+extern u8 D_0048D2F0[];
+extern u8 D_0048D2F8[];
+extern u8 D_0048D300[];
+extern u8 D_0048D308[];
+extern u8 D_0048D310[];
+extern u8 D_0048D318[];
+char *D_002C6460[0xb] ALIGNED(16) = {
+    (void *)D_0048D318, (void *)D_0048D310, (void *)D_0048D308, (void *)D_0048D300,
+    (void *)D_0048D2F8, (void *)D_0048D2F0, (void *)D_0048D2E8, (void *)D_0048D2E0,
+    (void *)D_0048D2D8, (void *)D_0048D2D0, (void *)D_0048D2C8,
+};
 extern char D_0048D320[];
 extern char D_0048D330[];
 extern char D_0048D328[];

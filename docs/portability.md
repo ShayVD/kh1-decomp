@@ -30,6 +30,14 @@ rewrite matched code.
    (libcdvd: sceCdInit, sceCdRead, sceCdDiskReady, sceCdSearchFile;
    sceSifInitRpc) for an `iop` / `cd` wrapper, and src/sound/sndctl.c, which
    only calls src/sound/snd_rpc.c (already the platform file for sound).
+   Session 55 added: src/util/thread.c (the kernel's threads and semaphores:
+   CreateThread, CreateSema, WaitSema, iSignalSema), src/gfx/dmapool.c (libdma
+   sends on the channel D_002A6B84, the packet buffers), src/game/dkmovie.c
+   (the movie overlay dkmovie.x at D_00F20000 and sceIpuInit / sceIpuSync),
+   src/screen/dispenv.c and src/screen/display.c (sceGsDefDispEnv,
+   sceGsPutDrawEnv, the GS CSR at 0x12001000 / 0x12000000 read and written
+   directly), src/screen/capture.c (sceGsExecStoreImage / LoadImage of the
+   frame) and src/game/framectl.c's func_0010f658 (the display flip).
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under

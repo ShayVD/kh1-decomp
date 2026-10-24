@@ -83,8 +83,8 @@ kh1.toml          target ELF, SHA-256, compiler, flags, progress segments
 functions.tsv     symbol registry
 layout.tsv        function boundaries (generated)
 kh1.ld            link script for the patch-in-place build
-src/              decompiled code (built); src/auto/ = matched m2c output, not cleaned up;
-                  src/hand/ = hand-matched; src/vm/, src/camera/, src/msgwin/, src/sound/ ... = named modules (docs/modules.md)
+src/              decompiled code (built), in named modules: src/vm/, src/camera/, src/game/, src/sound/ ...
+                  (docs/modules.md); src/hand/vu0.c = the VU0 routines; src/auto/ = new autodecomp output
 nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests

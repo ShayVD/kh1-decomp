@@ -1992,6 +1992,104 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings; new files
 checked with `-Wimplicit-function-declaration`.
 
+## Session 55: 0x0011 and 0x0010, the end of src/auto and src/hand, 0x001001f8-0x0011c768
+
+Session 55 moved the last 576 functions in four commits and deleted the
+36 src/hand files left from earlier sessions with no function in them
+(fifth commit).  No Mac: static checks only.  **src/auto is gone and
+src/hand holds only vu0.c**: every matched C function of the game segment
+is in a module except the 33 VU0 routines of src/hand/vu0.c and the
+probes of src/anon/session1_probes.c (func_00111f70 and func_0010ef70 are
+two more).  The names are read from the code and none is proved by a boot;
+each file's top comment says what it does and marks its guesses.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the field's set up and frame, the sky and background draws (a guess) | src/game/field.c | 0x001001f8-0x00100b18 | 18 |
+| the room's background files and textures (a guess) | src/game/roombg.c | 0x00100b18-0x00101970 | 18 |
+| texture animations (a guess) | src/gfx/texanim.c, .nostrict.c | 0x00101970-0x00102a48 | 14 |
+| full-screen effects: glow rings, a zoom, a colour pulse, a warp grid (a guess) | src/gfx/sceneeff.c, .nostrict.c | 0x00102a48-0x00104528 | 29 |
+| the map collision file's tables and triangle accessors | src/coll/mapdata.c, .nostrict.c | 0x00104528-0x00105f28 | 37 |
+| the screen's brightness fades D_002BC070 (a guess) | src/screen/brightfade.c | 0x00105f28-0x00106b18 | 20 |
+| DMA sends and the packet buffers (platform code) | src/gfx/dmapool.c | 0x00106b18-0x00106e18 | 10 |
+| a 1024-cell grid surface, double buffered (a guess) | src/gfx/grideff.c, .nostrict.c | 0x00106e18-0x00108900 | 22 |
+| model packet templates, VIF1 chains, image uploads (a guess) | src/gfx/mdlpkt.c, .nostrict.c | 0x00108900-0x00109268 | 18 |
+| the boot and the game's state machine (a guess) | src/game/gamestate.c, .nostrict.c | 0x00109268-0x00109cd0 | 12 |
+| the frame captured to D_00F20000 and the fades over it (a guess) | src/screen/capture.c, .nostrict.c | 0x00109cd0-0x0010a4d8 | 15 |
+| windows drawn at objects (a guess) | src/gfx/objwin.c, .nostrict.c | 0x0010a4d8-0x0010c0c8 | 17 |
+| a worker thread and its semaphores (platform code) | src/util/thread.c | 0x0010c0c8-0x0010c3c0 | 9 |
+| the field's text: the kanji font, glyphs, a printf, text objects (a guess) | src/text/fldtext.c, .nogcse_nosi.c, .nogcse_nosib.c, .nostrict.c, .nostrict_nogcse.c | 0x0010c3c0-0x0010ef90 | 35 |
+| a value selector on the pad's repeat (a guess) | src/text/selector.c | 0x0010ef90-0x0010f580 | 7 |
+| the frame's end (the display flip), allset.set / allarea.nam, the pad read with the demo playback (a guess) | src/game/framectl.c | 0x0010f580-0x0010fe80 | 15 |
+| the display environment | src/screen/dispenv.c | 0x0010fe80-0x00110000 | 7 |
+| the frame counters, the drawing environment, the camera matrices | src/screen/display.c | 0x00110000-0x00110fc8 | 18 |
+| the movie overlay dkmovie.x (platform code: the IPU) | src/game/dkmovie.c | 0x00110fc8-0x00111288 | 14 |
+| the story progress D_002BCB60, world events (a guess) | src/game/progress.c | 0x00111288-0x00111b08 | 22 |
+| frame-count splits, count-up / down timers, the timer display's feed (a guess) | src/game/gametimer.c | 0x00111b08-0x00112270 | 23 |
+| the worlds' file prefixes D_002BCC28, the room files and the room change (a guess) | src/game/roomload.c | 0x00112270-0x001137f8 | 46 |
+| a screen colour overlay (a guess) | src/screen/fade.c | 0x001137f8-0x00113de0 | 5 |
+| the pause and the menus opened from the field (a guess) | src/game/pause.c | 0x00113de0-0x00114880 | 21 |
+| the room's models and the 64 collision objects' packets (a guess) | src/gfx/roommdl.c | 0x00114880-0x00114f18 | 9 |
+| collision against the map's triangles (a guess at the name) | src/coll/mapcoll.c | 0x00114f18-0x0011a068 | 85 |
+| collision against the room's collision objects D_003044D8 (a guess at the name) | src/coll/colobj.c | 0x0011a068-0x0011c5e8 | 26 |
+| the game over's continue (a guess) | src/game/gameover.c | 0x0011c5e8-0x0011c768 | 4 |
+
+| chunk | commit |
+|---|---|
+| 0x0011a068-0x0011c768 | 40dc597 |
+| 0x00114f18-0x0011a068 | 3a21b33 |
+| 0x00110000-0x00114f18 | be6d5ce |
+| 0x001001f8-0x00110000 | ca8851e |
+| the 36 leftover src/hand files | 2b7dd21 |
+
+**Data moved with its users** (51 definitions, each at its user's extern
+line with the old type and ALIGNED): 37 went with files deleted in the
+moves (D_002BCC28, D_004D9248, D_004D9200, D_004E42C0, D_00494BE0 ...; the
+callback tables D_002BD178 / D_002BD1A8 came over with assemble.py) and 14
+with the leftover files (D_004E3818, D_004E3A58, D_00351BE0, D_00574F30,
+D_004F7150, D_002C6460, D_00525294, D_00525358, D_005297C0, D_00551D80,
+D_00559DB8, D_00559DBC, D_00574FB0, D_00575014).  Every loss showed in the
+names check of out/gen/data.tsv with `make` still byte-identical, as in
+session 54.  **A grep for definitions misses `T D_X ALIGNED(n);` when it
+filters prototypes with `\([^)]*\);$`**: trust the names check, not the
+grep.
+
+**Traps.**
+- **A `#define D_X (*(T *(*)) &D_X)` view of a pointer global** (assemble.py's
+  view of D_00494BA8 for func_00107548) made the function 220 words off;
+  an `__asm__` alias view (`extern Ent *D_00494BA8_00107548
+  __asm__("D_00494BA8")`) matches.  Its old file also defined D_00494BE0
+  beside it, which the module now does (only the relocation then differs in
+  checkfile).
+- **Defined above versus not**: func_00100988 has beql when func_00100670 is
+  defined above it and beq when not (its old file had it below): field.c
+  puts func_00100670 after it with a prototype.
+- **assemble.py crashes on a name declared both as a variable and as a
+  function** (D_00F20000: the overlay's entry, called as a function, and its
+  load address): draft the module without the function that views it as
+  data, then add that one by hand with an `__asm__` data alias
+  (dkmovie.c's func_00111020, gamestate.c's func_00109770).
+- **A sized extern can leave with its file**: auto/text_00110000_6.c's
+  `extern M2C_UNK D_004E2458;` was the only sized declaration of
+  D_004E2458, and without it cover_check kept D_004E3430 ("after
+  D_004E2458, whose size no C declaration gives"), so fcheck.sh said DIFF
+  float_covered.txt.  colobj.c now declares `Ent2458 D_004E2458[63]`
+  (D_004E2430 is a 64-entry table of 64-byte records, D_004E2458 its +0x28).
+- **group.py appending to an existing module** (`--onto`) broke display.c
+  (a definition turned extern, a prototype clash): start a new file
+  instead (dispenv.c).
+- **mod.py leaves files with only CONTEXT_ONLY copies, helpers or data**:
+  after each chunk list the old files with no function left in
+  out/gen/placements.tsv, move their data definitions and delete them.
+
+**Nothing was reverted, and nothing new floats.**  After each commit:
+`make` byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh`
+with float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, the names of out/gen/data.tsv the same as at
+the start of the session, `s31_warndiff` 0 new warnings on the changed old
+files, the new files checked with `-Werror=implicit-function-declaration`
+(none), and `make test` PASS at the end.
+
 ## Session 54: the c02 move, 0x0012, and 0x0011c768-0x00120000
 
 Session 54 moved 598 functions in eight commits.  No Mac: static checks
@@ -2427,27 +2525,15 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x0011c768 to 0x0024f2e0** (session
-  54), except the VU0 routines in src/hand/vu0.c, two probes in
-  src/anon/session1_probes.c (func_0018ad70, func_001882f8; func_00137418
-  is a probe too), the unmatched func_001636d0 and the hand asm of
-  src/asm/ (func_00121f6c, func_00121fc4 in text_0024e0a4.s).  The
-  functions still in src/auto and src/hand lie in 0x001001f8-0x0011c768
-  (out/gen/placements.tsv): 273 in 0x0011 and 303 in 0x0010 (plus 2 VU0
-  routines there).  Next is 0x0011 from 0x0011c768 down (0x0011c118 /
-  0x0011c338 use the collision entries D_003044D8; 0x0011c5e8-0x0011c768
-  call the HDD / settings code func_002193b8 and func_0022bcb8, look at
-  them first), then 0x0010.  `python3 -I tools/shift/s50move/group.py
-  src/DIR/NAME LO HI` drafts a range per flag mode; check that every new
-  file compiled and its NEW DIFF lines, `mod.py remove` the functions,
-  `make`, `tools/shift/data_owners.py`, fcheck.sh, compare out/gen/data.tsv's
-  names with the base (every deleted file can take data definitions with
-  it: check the deleted files' definitions with `git show HEAD:FILE`), and
-  scan the new files for implicit declarations (Sessions 50 to 54, Traps).
-  Group by what the functions do (`refs.py LO HI`: their calls and data;
-  inverting a whole-segment `refs.py 00100000 00272c70` gives each
-  function's callers); leave whole-VU0 functions in place
-  (docs/matching-tips.md).
+- **Every matched C function of the game segment is in a module** (session
+  55) except the 33 VU0 routines of src/hand/vu0.c, the probes of
+  src/anon/session1_probes.c (func_0018ad70, func_001882f8, func_00137418,
+  func_00111f70, func_0010ef70), the unmatched functions and the hand asm
+  of src/asm/.  src/auto is gone.  What is left for the shiftable layout:
+  the probes (give them a module each, or fold them into their neighbours'
+  modules), the VU0 routines (leave them: docs/matching-tips.md), better
+  names for the "(a guess)" modules once a boot shows what they do, and the
+  platform wrappers (docs/portability.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

@@ -1937,7 +1937,7 @@ typedef struct {
     union { u64 w; struct { u64 lo:32; u64 m:8; u64 z:16; u64 hi:8; } b; } w80;
     Ent7 *x88; s32 x8c; Tg7 *p90; u8 pad94[0x48]; f32 fDC;
 } Wk7;
-extern Ent7 *D_00574FB0;
+Ent7 *D_00574FB0 ALIGNED(16);
 static inline s32 inl_ok_6d768(Ent7 *e, s32 K) {
     switch (e->w70) {
     case 0:
@@ -2666,7 +2666,7 @@ void func_0016f548(void) {
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_00575010;
-extern s32 D_00575014;
+s32 D_00575014 ALIGNED(4);
 s32 func_0011ef38(s32 (*)());
 s32 func_001383d8(s32, s32 (*)());
 void func_00170e30(s32);
