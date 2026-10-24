@@ -3635,3 +3635,38 @@ only removed the overrun that made it pin D_0054F444.
   instructions not at all (a gap that can miss accesses, not only bound them loosely). widen-heads fixed
   func_00241d60's; reading the table's words when its address is known but its index is not would close it.
 - D_00492138 & co (above) and session 31's widening / partial loop_entry mechanisms stay.
+
+## Session 59: reach_check (jt-read, fmt-read)
+
+Both "Left" items of session 34 are closed. reach_check pins **1,352** names (was 1,356; without the overlays):
+**4 released, none newly pinned**. The default float build floats **2,053** names (was 2,049), links and passes
+M12-FLOAT and keep_check (39/39). `make` is unchanged (tools only), `make test` passes (tests/reach_check_test.py
+case 27). With `--no-fmt-read` float_reach.txt is byte-identical to session 58's. **The four releases are UNTESTED
+until a PCSX2 boot** (docs/float-untested.md has the rows).
+
+| rule (switch) | names | what it does |
+| --- | --- | --- |
+| jt-read (`--no-jt-read`) | 0 | An `lw` through a known table address with an index that has no bound (lui + index, or one base + index; or a bound past JT_MAX = 0x400) makes a jump-table value (JT, table, None) when the table's first word is an address in the function. Its `jr` goes to the words read from the table while they are aligned addresses in the function (at most JT_WORDS = 256), and to the branch labels as before. Eight switches had no bound: func_00109770, func_001315c0, func_0016f7b8, func_001bd880, func_001f1fc8, func_001f94f0, func_00218218, func_002541b8; **86 case entries** that no branch targets are now analysed from the switch's state (before: from a fresh state as code after a `jr`, or not at all). The log gains func_001f1fc8 / func_001f94f0's text colour read `D_003E8D04[s[1]]` (a byte index past the 9-word table into D_003E8D28, which other functions pin already) and loses one of func_001bd880's D_00625750 lines (the name is pinned by its other accesses). float_reach.txt is unchanged. |
+| fmt-read (`--no-fmt-read`) | 4 released | A string literal passed as the format of a printf-family callee (STRING_ARGS kind "fmt": func_00259c88, scePrintf, printf, sprintf's argument 1) reaches its own bytes up to and with its NUL, when every '%' starts a whole conversion, it has no control bytes but tab / newline / return, and no store the analysis sees writes it. Before, such an argument got the callee's reach from the argument register: func_00259698 (the printer) walks its va_list with `ld / lw / lhu -8($s3)`, and in some visit orders its loop joined that pointer with the format's, so the format reached [-2, +6) and pinned the string before it. str-arg (session 27) did not apply because these strings share an object with the strings after them (the NUL is followed by more text, not padding). 33 format arguments take the rule. |
+
+### Verdicts
+
+| name | function | access | verdict | now |
+| --- | --- | --- | --- | --- |
+| D_00492138 | func_00258f08 (src/sdk/libkernl, TTY) | `func_00259c88(D_00492150, ...)` ("TTY: err ti->wlen=%08x\n"): the analysis read 2 bytes before it, into D_00492138 ("TTY: send err %d\n") | not real (va_list reads) | released |
+| D_00492B00 | func_00265ed8 (libgraph) | scePrintf(D_00492B30, ...): D_00492B00 is "sceGsSyncPath: GIF does not terminate\r\n" | not real | released |
+| D_00492CF8 | func_00266380 (libgraph) | scePrintf(D_00492D38, ...): D_00492CF8 is "sceGsExecStoreImage: DMA Ch.1 (GS->MEM) does not terminate\r\n" | not real | released |
+| D_004932A8 | func_0026ab38 (libcdvd) | scePrintf(D_004932B8, ...): D_004932A8 is "cdread end\n" | not real | released |
+
+### Order dependence (`--visit-seed 1..8`, all rules on)
+
+float_reach.txt is the same as the default order's in seeds 1-6 and 8. Seed 7 adds D_00654570 (session 32's struct
+copy in func_00241d60), which cover_check keeps in every order, so **the float set is the same in every order**.
+
+### Left
+
+- Negative indices are modelled only through exact values (neg-keep); an index that may be negative but is not a
+  constant pins nothing before the base.
+- A jump table whose first word is not code in the function (a table of another function's addresses, or data) is
+  still not read; none was seen.
+- Session 31's widening / partial loop_entry mechanisms stay (they change event sets in random orders, not names).
