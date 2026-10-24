@@ -50,10 +50,6 @@ typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
 extern Q4 D_00351E10[];
-Panel D_00669620 ALIGNED(32);
-extern Q4 *D_00669610;
-extern s32 D_00469C94;
-extern s32 D_00469C98;
 S7df0 D_006697C0 ALIGNED(64);
 extern Q4 *D_00669920; /* src/data/bss_0066.c: s32 D_00669920 */
 Q4 *D_00669924 ALIGNED(4);
@@ -73,10 +69,7 @@ extern void (*D_0066AA80)(void);
 s32 sprintf(char *, const char *, ...);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
-Q4 *func_002388b8(void *, s32, Q4 *);
 s32 func_0024a1c0(void *);
-void func_0024aa48(s32, void *, s32);
-Q4 *func_001f0638(Q4 *, s32, s32, s32, s32, s32);
 void func_00248fb8(void *, void *);
 void func_0024ae00(void *);
 void func_0024af00(void *);
@@ -96,29 +89,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00248798(s32 a0, s32 a1, s32 dx, s32 dy) {
-    s32 i;
-    Panel *d = &D_00669620;
-    func_0024aa48(a0, d, a1);
-    for (i = 0; i < 4; i++) { s32 *r = &d->r[i].b; r[-1] += dx << 4; r[0] += dy << 4; }
-    D_00669610 = func_002388b8(&D_00669620, 1, D_00669610);
-}
-
-void func_002488a8(s32 x, s32 y, s32 a2, s32 sel, f32 f) {
-    u8 col[4];
-    u8 *p;
-    if (sel) {
-        p = col; *p++ = 0x73; *p++ = 0x73; *p++ = 0x73;
-        *p = (u32)(f * 128.0f);
-    } else {
-        p = col; *p++ = 0xe6; *p++ = 0xe6; *p++ = 0xe6;
-        *p = (u32)(f * 128.0f);
-    }
-    D_00669610 = func_001f0638(D_00669610, 1, *(s32 *)col,
-        ((((x + D_00469C94) << 4) + 0x7000) >> 4) - 0x700,
-        ((((y + D_00469C98) << 4) + 0x7400) >> 4) - 0x740, a2);
-}
 
 void func_00249010(void) {
     s32 i;

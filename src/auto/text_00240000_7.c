@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK free(void *);
-M2C_UNK func_00248678(M2C_UNK *, void *);
 M2C_UNK func_0024b1f0();
 M2C_UNK func_0024b228(M2C_UNK, s32, s32, s32);
 M2C_UNK func_0024b448(M2C_UNK);
@@ -21,7 +20,6 @@ extern M2C_UNK D_0046A058[];
 extern M2C_UNK D_00491840;
 extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
-extern M2C_UNK D_00669714;
 extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
@@ -31,26 +29,11 @@ s32 func_0025daf0(M2C_UNK *);
 s32 func_00267f50(M2C_UNK *, M2C_UNK *, M2C_UNK *, void *, M2C_UNK);
 s32 strncmp(s32, s32, s32);
 void *func_00120190(M2C_UNK *);
-void memset(s32, s32, s32);
 
 void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00248628(s32 arg0, s32 arg1, s32 arg2) {
-    memset(arg0, 0, 0x10);
-    M2C_FIELD(arg0, s32 *, 0) = arg1;
-    M2C_FIELD(arg0, s32 *, 4) = arg2;
-}
-
-void func_00248ac8(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    M2C_FIELD(sp, s32 *, 0x4) = arg1;
-    M2C_FIELD(sp, s32 *, 0x0) = arg0;
-    M2C_FIELD(sp, f32 *, 0x8) = 1.0f;
-    func_00248678(&D_00669714, sp);
 }
 
 void func_00249370(s32 arg0, s32 arg1, void *arg2) {

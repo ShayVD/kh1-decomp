@@ -1,12 +1,15 @@
 /* The timer and score display (docs/modules.md "Session 46"),
- * 0x002474e8-0x002485b8, default flags part.  D_00669350 (MgSlot) points at a
+ * 0x002474e8-0x00248628, default flags part.  D_00669350 (MgSlot) points at a
  * caller's MgHud: a score "a" or "a/b" (x4, the digits by mode 1-4), a
  * distance in metres (x18, x1c), and a time (x20; hours only with x2c)
  * drawn with sprites at (x, y), the record time in red under it
  * (func_00247930) and the timer's icon (func_00248238).  func_00248380 is the
  * draw hook (registered by func_00248400, the set up): its drawing
  * environment D_00669070, then func_00248140 (sprites and texts in one GIF
- * send).  Most likely the minigames' display; not proved by a boot. */
+ * send).  func_002485b8 shows a MgHud and func_002485d0 / func_002485e0 hide
+ * it; func_002485f0 returns 1 when its time shows and 2 when its score does
+ * (the markers of src/hud/marker.c move down for them).  Most likely the
+ * minigames' display; not proved by a boot. */
 #include "common.h"
 #include "data/types/text_00240000_h50.h"
 #include "data/pieces/D_00467408.h"
@@ -257,4 +260,26 @@ s32 func_00248380(void) {
     func_00248140(&D_00669350);
     func_00248238(&D_00669350);
     return 0;
+}
+
+void func_002485b8(MgHud *c) {
+    D_00669350.on = 1;
+    D_00669350.c = c;
+}
+
+void func_002485d0(void) {
+    D_00669350.on = 0;
+}
+
+void func_002485e0(void) {
+    D_00669350.on = 0;
+}
+
+s32 func_002485f0(void) {
+    s32 r = 0;
+    if (D_00669350.on == 1) {
+        r = D_00669350.c->x20 != 0;
+        if (D_00669350.c->x4 != 0) r |= 2;
+    }
+    return r;
 }

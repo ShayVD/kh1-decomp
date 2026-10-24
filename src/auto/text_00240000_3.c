@@ -9,10 +9,7 @@ M2C_UNK func_00124218(s32);
 M2C_UNK func_0023d1a0();
 M2C_UNK func_00240810(void *);
 M2C_UNK func_00241d60();
-M2C_UNK func_00248798(s32, s32, s32, s32);
 M2C_UNK func_0024aac8(M2C_UNK *);
-M2C_UNK func_0024ae00(s32);
-M2C_UNK func_0024af00(s32);
 M2C_UNK func_0024afc0(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0025dd48(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_00267620();
@@ -29,7 +26,6 @@ extern M2C_UNK D_00469F50;
 #include "data/pieces/D_004919B0.h"
 extern M2C_UNK D_00651E50;
 M2C_UNK D_00652888[0x4] ALIGNED(8);
-extern M2C_UNK D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 M2C_UNK D_00669930[0x38] ALIGNED(16);
 extern M2C_UNK D_00669A10; /* src/data/bss_0066.c: void *D_00669A10[0x2] */
 extern M2C_UNK D_00669A40; /* src/data/bss_0066.c: s16 D_00669A40[0xc] */
@@ -90,24 +86,6 @@ void func_00242b68(s32 arg0) {
 
 s32 func_00242bf0(s32 arg0) {
     return *(M2C_UNK *)((s8 *)&D_00651E50 + (arg0 * 4));
-}
-
-void func_002485b8(s32 arg0) {
-    M2C_FIELD(&D_00669350, s32 *, 0) = 1;
-    M2C_FIELD(&D_00669350, s32 *, 4) = arg0;
-}
-
-void func_00248788(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0xC) = 0;
-    M2C_FIELD(arg0, s32 *, 8) = 0;
-}
-
-void func_00248840(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-    }
-    func_0024af00(arg1);
-    func_00248798(arg1, arg2, arg3, arg4);
 }
 
 void func_00248fb8(s32 arg0, s32 arg1) {
