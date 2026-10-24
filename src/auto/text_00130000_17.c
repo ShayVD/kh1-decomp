@@ -2,60 +2,12 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0052.h"
-
-M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
-M2C_UNK func_0011f090(M2C_UNK *, M2C_UNK, M2C_UNK *);
 #include "data/pieces/D_002C58A0.h"
 M2C_UNK D_0052A158[0x240] ALIGNED(8);
-extern M2C_UNK D_0052AA58; /* src/data/bss_0052.c: u8 D_0052AA58[0x10] */
-extern M2C_UNK D_0052ACF0; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
-extern M2C_UNK func_00138130;
-extern M2C_UNK func_00138258;
-extern M2C_UNK func_00138718;
-extern s32 D_0052ACF8;
 f32 func_0014cce0(s32, f32);
-s32 func_0011ef38(M2C_UNK *);
 s32 func_00130340(s32, s32, f32);
 s32 func_0014f600(s32);
 s32 func_002675a8(s32, s32);
-void func_0011ef10(M2C_UNK, M2C_UNK *);
-
-s32 func_001375d8(void *arg0) {
-  u32 new_var2;
-  long new_var3;
-  s8 *new_var;
-  new_var = (s8 *) arg0;
-  new_var2 = (new_var3 = *((u32 *) (new_var + 0x444)));
-  return ((new_var2 << 0x20) >> 0x20) & 1;
-}
-
-s32 func_00137660(void *arg0) {
-  int new_var;
-  int new_var2;
-  s32 var_v1;
-  var_v1 = 0;
-  if (!((*((s32 *) (((s8 *) arg0) + 0))) & 4))
-  {
-    new_var2 = 1;
-    new_var = (((u64) (*((u64 *) (((s8 *) arg0) + 0x440)))) >> 0x21) & new_var2;
-    var_v1 = new_var == 0;
-  }
-  return var_v1;
-}
-
-void func_00138738(void) {
-  *((s32 *) (((s8 *) (&D_0052ACF0)) + 0)) = (*((s32 *) (((s8 *) (&D_0052ACF0)) + 4)) = 0);
-  D_0052ACF8 = 0;
-  func_0011efa8(&D_0052AA58, &D_0052A158, 0x18, 0x60);
-  if (func_0011ef38(&func_00138258) == 0)
-  {
-    func_0011ef10(0x13880, &func_00138258);
-  }
-  func_0011f090(&D_0052AA58, 0x3E8, &func_00138718);
-  func_0011f090(&D_0052AA58, -0x3E8, &func_00138130);
-  func_0011f090(&D_0052AA58, 0x1388, &func_00138130);
-  func_0011f090(&D_0052AA58, 0x1F40, &func_00138130);
-}
 
 s32 func_0013f108(s32 arg0) {
   s8 *new_var;

@@ -822,43 +822,6 @@ CONTEXT_ONLY void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
 
 #include "data/types/nostrict_text_00120000_s6_05.h"
 QD D_005297C0 ALIGNED(64);
-
-typedef struct { u64 f0; u8 p8[8]; f32 f10[2]; f32 f18; } E39;
-typedef struct { u8 p0[0x20]; f32 f20[3]; f32 f2c; f32 f30[4]; u8 p40[0x88-0x40]; u32 f88; u8 p8c[0x150-0x8c]; f32 f150; u8 p154[0x3e4-0x154]; f32 f3e4; u8 p3e8[2]; u16 f3ea; } O39;
-extern s32 func_0014f600(O39 *);
-extern s32 func_00130040(O39 *, s32);
-extern void func_00139170(O39 *, E39 *);
-extern f32 func_00267390(f32 *, f32 *);
-extern s32 func_00130340(O39 *, s32, f32);
-extern void *func_00130578(O39 *, s32, f32);
-extern f32 atan2f(f32, f32);
-extern void func_00137688(O39 *, f32);
-extern void func_00138a20(O39 *, f32, f32 *);
-void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
-    f32 ang;
-    if (!k) k = func_0014f600(o) ? 92 : 82;
-    if (!func_00130040(o, k)) {
-        func_00139170(o, e);
-        return;
-    }
-    o->f3ea = k;
-    if (func_00267390(o->f30, e->f10) < 0.0f) {
-        func_00130340(o, o->f3ea | 0x1000000, 0.0f);
-        func_00130578(o, o->f3ea + 1, 0.0f);
-        ang = atan2f(-e->f10[0], -e->f18);
-    } else {
-        func_00130340(o, (o->f3ea + 5) | 0x1000000, 0.0f);
-        func_00130578(o, o->f3ea + 6, 0.0f);
-        ang = atan2f(e->f10[0], e->f18);
-    }
-    func_00137688(o, ang);
-    o->f150 = ang;
-    func_002675a8(o->f20, e->f10);
-    o->f2c = b;
-    func_00138a20(o, a, o->f20);
-    if (!(o->f88 & 2)) o->f3e4 = c;
-    e->f0 |= 2;
-}
 #include "data/data_002E.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002E3190.h"

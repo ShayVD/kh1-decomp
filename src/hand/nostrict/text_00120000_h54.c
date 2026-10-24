@@ -340,162 +340,10 @@ void func_0012d6c0(A7 *a0, u32 *a1) {
     }
     do { func_0012ccb0(2); } while (0);
 }
-
-typedef FMtx4 Mtx;
-#include "data/pieces/D_002C58D0.h"
 static inline s32 min54(s32 a, s32 b) { return a < b ? a : b; }
 static inline s32 max54(s32 a, s32 b) { return a > b ? a : b; }
-
-typedef struct { u8 p[0x4c]; u16 f4c; } I21;
-typedef struct Actor { u32 f0; u8 p4[2]; u8 f6; u8 p7[0x118 - 7]; f32 f118; u8 p11c[0x130 - 0x11c]; I21 *f130; u8 p134[0x144 - 0x134]; s32 f144; u8 p148[0x370 - 0x148]; u64 f370; u8 p378[0x38c - 0x378]; s32 f38c; u8 p390[4]; s32 f394; u8 p398[0x430 - 0x398]; V4 f430; } E21;
-typedef struct { void *p; s32 n; } Arg21;
 extern f32 func_00135ca0(f32);
-extern void func_00122588(E21 *);
-extern void func_00135df0(E21 *, V4 *);
-extern void func_00267548(V4 *, V4 *, V4 *);
-extern s32 func_00135bb0(E21 *);
-extern s32 func_00136428(E21 *, f32, s32, s32, V4 *);
-extern void func_0012bce0(s32, s32, s32, Arg21 *, s32);
 extern void func_00128218(E2 *, f32);
-void func_00136768(E21 *e) {
-    Arg21 a;
-    V4 v;
-    s32 w;
-    f32 s = func_00135ca0(e->f118);
-    func_00122588(e);
-    func_00135df0(e, &v);
-    func_00267548(&v, &v, &e->f430);
-    if (v.w <= 0.0f) return;
-    if (func_00135bb0(e) && (e->f0 & 1)) {
-        s32 f = e->f38c;
-        if (e->f130->f4c == 8) {
-            if (e->f6 == 3) {
-                if (e->f0 & 0x4000) f |= 2;
-            }
-        }
-        w = func_00136428(e, s, f, e->f394, &v);
-        if (((s32)(e->f370 >> 48) & 1) && e->f144) {
-            a.p = &w;
-            a.n = 4;
-            func_0012bce0(e->f144, 4, 1, &a, 0);
-        }
-        e->f370 |= 0x800000000LL;
-    }
-    if (e->f0 & 2) {
-        if (e == D_002E26A0[0] && D_00304BE8->f880) return;
-        func_00128218((E2 *)e, v.w * s * (1.0f / 32640.0f));
-    }
-}
-
-typedef struct E22 { u8 p0[6]; u8 f6; u8 p7[0x10 - 7]; V4 f10; f32 f20[3]; s32 f2c; f32 f30[3]; s32 f3c; u8 p40[0x70 - 0x40]; s32 f70; u8 p74[0xd0 - 0x74]; Mtx fd0; V4 f110; V4 f120; u8 p130[0x370 - 0x130]; u64 f370; u8 p378[0x398 - 0x378]; struct E22 *f398; } E22;
-extern void func_001625c8(Mtx, Mtx);
-extern void func_00136d38(E22 *);
-extern void *func_001230a0(void *);
-extern void func_002672f8(V4 *, Mtx, V4 *);
-extern void func_00267518(V4 *, V4 *, V4 *);
-extern void func_00143d20(E22 *, V4 *, s32);
-extern void func_00137688(E22 *, f32);
-extern f32 atan2f(f32, f32);
-void func_00137ab8(E22 *e) {
-    Mtx m;
-    V4 v;
-    E22 *p = 0;
-    func_001625c8(e->fd0, m);
-    func_00136d38(e);
-    while ((p = func_001230a0(p)) != 0) {
-        if (p->f398 != e) continue;
-        func_002675a8(&v, &p->f10);
-        v.w = 1.0f;
-        func_002672f8(&v, m, &v);
-        v.w = 1.0f;
-        func_002672f8(&v, e->fd0, &v);
-        func_00267530(&v, &v, &p->f10);
-        if ((s32)(p->f370 >> 34) & 1) {
-            func_00143d20(p, &v, 0);
-            func_00136d38(p);
-        } else {
-            func_00267518(&p->f120, &p->f120, &v);
-        }
-        if ((u32)(p->f6 - 9) < 2) {
-            p->f3c = 0;
-            func_002672f8(&v, m, (V4 *)p->f30);
-            func_002672f8(&v, e->fd0, &v);
-            func_00137688(p, atan2f(v.x, v.z));
-        } else if (p->f70 == 0 || p->f70 == 40 || p->f70 == 41) {
-            p->f2c = 0;
-            func_002672f8(&v, m, (V4 *)p->f20);
-            func_002672f8((V4 *)p->f20, e->fd0, &v);
-        }
-    }
-}
-
-extern O23 D_002C64A0[96];
-extern s32 D_0052ACF0[]; /* src/data/bss_0052.c: s32 D_0052ACF0[2] */
-extern s32 D_0052ACF8;
-extern s32 D_003044D0;
-extern s32 D_0052AA68;
-extern u8 D_0052AA58[];
-#include "data/pieces/D_00304AD8.h"
-#include "data/pieces/D_00304B84.h"
-extern s32 func_0011f130(void *, s32);
-extern void func_0013dd40(void);
-s32 func_00138258(void) {
-    s32 i;
-    O23 *p;
-    D_0052ACF0[D_0052ACF8] = 0;
-    D_003044D0 = 0;
-    D_0052AA68 = 0;
-    p = D_002C64A0;
-    for (i = 0; i < 96; i++, p++) { p->f370 &= ~(1LL << 34); p->f370 &= ~(1LL << 55); }
-    func_0011f130(D_0052AA58, 0);
-    D_00304AD8 = 0;
-    p = D_002C64A0;
-    for (i = 0; i < 96; i++, p++) p->f8c = 0;
-    p = 0;
-    while ((p = func_001230a0(p)) != 0) {
-        O23 *q;
-        for (q = p->f398; q; q = q->f398) q->f8c++;
-        p->f370 |= 1LL << 57;
-    }
-    func_0013dd40();
-    if (!(D_002C5958 & 1)) D_00304B84 = 0;
-    D_0052ACF8 ^= 1;
-    return 0;
-}
-
-typedef struct { u8 p0[2]; u16 f2; f32 f4; u8 p8[4]; f32 fc; f32 f10; } R24;
-typedef struct { u8 p0[6]; u8 f6; u8 p7[0x18 - 7]; R24 *f18; } T24;
-typedef struct { u8 p0[0x134]; T24 *f134; u8 p138[0x3a8 - 0x138]; u32 f3a8; } E24;
-typedef struct { u8 p0[0x10]; f32 f10; f32 f14; f32 f18; u8 p1c[0x34 - 0x1c]; s32 f34; s32 f38; } P24;
-extern void func_00267810(Mtx, Mtx, f32);
-extern void func_00267768(Mtx, Mtx, f32);
-extern f32 func_00176850(void);
-void func_00138a78(E24 *e, P24 *a) {
-    Mtx m;
-    V4 v;
-    V4 o;
-    T24 *t;
-    R24 *r;
-    u32 msk;
-    s32 k;
-    if (!a->f34 || a->f38 < 0) return;
-    func_00267810(m, D_002C58D0, atan2f(a->f10, a->f18));
-    func_00267768(m, m, func_00176850() * 3.1415928f - 1.5707964f);
-    v.x = 0.0f;
-    v.y = 0.0f;
-    v.z = 1.0f;
-    v.w = 1.0f;
-    func_002672f8(&v, m, &v);
-    k = (s32)(func_00176850() * (f32)e->f134->f6);
-    while (e->f3a8 & (1 << k)) k = (k + 1) % e->f134->f6;
-    r = &e->f134->f18[k];
-    func_001315c0(e, r->f2, (f32 *)&o, r->f4);
-    v.x *= r->fc;
-    v.y *= r->f10;
-    v.z *= r->fc;
-    func_00267518(&o, &o, &v);
-    func_00147ed8(a->f34, a->f38, -10000, (f32 *)&o);
-}
 
 /* needs make: uses rodata */
 s32 D_00525358 ALIGNED(8);
@@ -506,6 +354,5 @@ s32 D_00525294 ALIGNED(4);
 #include "data/data_0030.h"
 #include "data/data_002E.h"
 #include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002C64A0.h"
 #include "data/pieces/D_002E2FD8.h"
 #include "data/pieces/D_002BBDFC.h"

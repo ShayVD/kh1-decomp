@@ -51,29 +51,18 @@ typedef struct Actor {
     W55Fx *x488;
     s32 x48c;
 } W55Ob;
-typedef struct { s32 x0, x4, x8, xc, x10, x14, x18; } W55Hdr;
-typedef struct { s32 x0, x4, x8, xc, x10; } W55Hd5;
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } W55Ev;
 typedef struct { u8 x0, x1; s8 x2; } W55EvInf;
 #include "data/types/nostrict_text_00130000_h55.h"
 
 extern f32 D_002BBDFC;
 extern u32 D_002C5958;
-extern u32 D_002C5978;
-#include "data/pieces/D_002C58B0.h"
 #include "data/pieces/D_002E26A0.h"
 extern W55Ev D_002E3190;
 extern s32 D_002E3194;
 extern f32 D_00304C40;
-#include "data/pieces/D_0037A378.h"
-extern u8 D_0052AD68[];
-extern W55Ob *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
 W55Ob *D_0052AE3C ALIGNED(4);
 f32 D_0052AE40[4] ALIGNED(16);
-extern s32 D_0052AE54;
-extern W55Hdr *D_0052AE58; /* src/data/bss_0052.c: void *D_0052AE58 */
-extern W55Hd5 *D_0052AE5C; /* src/data/bss_0052.c: void *D_0052AE5C */
-extern s32 D_0052AE60;
 f32 D_0052AE68 ALIGNED(8);
 extern s32 D_0029B410;
 
@@ -81,166 +70,36 @@ void D_00F20000(s32 a, void *b);
 void func_00105a30(s32 a, s32 id, f32 *v);
 u32 func_00105bc0(s32 a, s32 id);
 s32 func_00117bb0(s32 id, f32 *a, f32 *b, f32 *c);
-void func_0011f090(void *a, s32 b, void *c);
 f32 func_00121550(f32 *o, f32 *a, f32 *d, f32 *p, f32 *v);
 void func_00121fc4(f32 *d, f32 *s);
 W55Ob *func_001230a0(W55Ob *p);
-void func_00123438(W55Ob *p, u32 f);
-void func_00123460(W55Ob *p);
-void func_00123a88(s32 a, f32 *b);
-void func_001247e8(W55Ob *p);
-void func_00124d08(void);
 void func_0012c560(W55Ob *o, void *a, s32 id);
 void func_0012ec60(void *a, s32 b, f32 *v);
 void func_00130340(void *o, s32 a, f32 f);
 void *func_00130578(void *, s32, f32);
-void func_00131498(W55Ob *o, void *a);
-void func_00131500(W55Ob *o);
 s32 func_00133000(W55Ob *o, s32 id);
 void func_001333e0(W55Ob *o, s32 id, void *p);
-void func_00133708(void);
 void func_001337e0(s32 a, void *b, s32 c);
 void func_00137330(void *a, W55Ob *o, s32 t);
-void func_001373f8(W55Ob *o, f32 f);
-void func_00137448(W55Ob *o);
 s32 func_001375f0(W55Ob *o);
 void func_0013aaa0(void);
-s32 func_0013b4e8();
 void func_0013e638(W55Ob *o, W55Ev *e, void *q);
 void func_0013e978(W55Ob *o, W55Ev *e, void *q);
 void func_0013ecf8(W55Ob *o, void *a, void *q);
-void func_00145080(s32 a, s32 b);
 W55Fx *func_00147c98(s32 a, s32 b, s32 c);
 void func_00147d50(W55Fx *f, f32 *v);
 W55EvInf *func_001478c8(s32 t);
-s32 func_0014f658(void *, s32);
 void func_00150930(W55Ob *o, s32 a, void *q);
 void func_00157a30(W55Ob *o, s32 k, void *a);
 void func_00158b88(W55Ob *o, W55Ev *e, s32 t);
-void func_00176310(s32 a);
-void func_00176388(s32 a);
-void func_001763a0(s32 a);
 s32 func_00176578(s32 a, s32 b, s32 c, s64 d);
 #include "vm/script_vm.h"
-s32 func_001ecfd8(void);
-void func_002414a8(s32 a, s32 b);
 f32 func_00267390(f32 *a, f32 *b);
 void func_002673b8(f32 *d, f32 *s);
 void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_00267560(f32 *d, f32 *s, f32 k);
 void func_002675a8(f32 *d, f32 *s);
 f32 fabsf(f32);
-
-s32 func_0013b238(void) {
-    W55Ob *p = 0;
-    W55Ob **pl;
-    W55Hdr **ph;
-    u32 *fl;
-    u32 f;
-    while ((p = func_001230a0(p))) {
-        f = p->x0;
-        if (p == D_0052AE38) {
-            f |= 0x30;
-            f &= ~2;
-            func_001373f8(p, 0.0f);
-            p->x370.x |= 1UL << 52;
-        } else {
-            f &= ~0x8000;
-            func_00137448(p);
-            func_002675a8(p->x120, (*(f32 (*)[0x4])&D_002C58B0));
-        }
-        func_00123438(p, f);
-    }
-    pl = &D_0052AE38;
-    func_002675a8(D_0052AE40, (*pl)->pos);
-    D_0052AE40[3] = (*pl)->x3c;
-    func_00123a88((*pl)->x4, (*(f32 (*)[0x4])&D_002C58B0));
-    func_00176310(D_0052AE60);
-    func_001763a0(0);
-    func_00176388(1);
-    fl = &D_002C5958;
-    *fl = (*fl & ~0x100000) | 0x4000;
-    if ((s32)((D_002C5978 >> 8) & 3) < 2) {
-        ph = &D_0052AE58;
-        if ((*ph)->x14 != (*ph)->x10) {
-            func_00131498(*pl, (u8 *)*ph + (*ph)->xc);
-            func_001c4d90((s32)((u8 *)*ph + (*ph)->x10), (s32)((u8 *)*ph + (*ph)->x14), (s32)((u8 *)*ph + (*ph)->x18));
-        }
-    }
-    return 4;
-}
-
-void func_0013b5d8(void) {
-    W55Ob *p;
-    W55Ob **pl;
-    u32 *fl;
-    func_00133708();
-    func_00124d08();
-    func_002414a8(0, 1);
-    for (p = func_001230a0(0); p; p = func_001230a0(p)) {
-        if ((s32)(p->x370.x >> 33) & 1) continue;
-        if (p == D_002E26A0[1]) continue;
-        if (p == D_002E26A0[2]) continue;
-        func_00123460(p);
-    }
-    pl = &D_0052AE38;
-    func_0014f658(*pl, 0);
-    func_00123a88((*pl)->x4, D_0052AE40);
-    func_00131500(*pl);
-    func_00130340(*pl, 0x40000000, 0.0f);
-    (*pl)->x370.x &= ~(1UL << 52);
-    (*pl)->x0 &= ~0x200000;
-    (*pl)->x444 = 0;
-    func_00176388(0);
-    fl = &D_002C5958;
-    *fl &= ~0x4000;
-    func_00145080(0, 4);
-    func_0011f090(D_0052AD68, 0, func_0013b4e8);
-}
-
-s32 func_0013b740(void) {
-    W55Ob *p;
-    W55Ob **q;
-    W55Ob **pl;
-    W55Hd5 **ph;
-    if ((((u32)D_0037A378) >> 2) & 1) goto fail;
-    if (D_0052AE54 != 4 || func_001ecfd8()) {
-    fail:
-        return 0;
-    }
-    func_0013b5d8();
-    D_0052AE3C = 0;
-    for (p = 0; (p = func_001230a0(p));) {
-        if (((u8 *)p)[6] == 7) {
-            D_0052AE3C = p;
-            break;
-        }
-    }
-    q = &D_0052AE3C;
-    if (*q) {
-        if (D_0052AE5C->x8 - D_0052AE5C->x4 > 0) {
-            func_00131498(*q, (u8 *)D_0052AE5C + D_0052AE5C->x4);
-            func_00130340(*q, 0, 0.0f);
-            (*q)->x0 &= ~0x30;
-        }
-        (*q)->x444 = 0;
-    }
-    if (((D_002C5978 >> 8) & 3) != 1) {
-        ph = &D_0052AE5C;
-        if ((*ph)->xc - (*ph)->x8 > 0) {
-            W55Ob **pm = &D_0052AE38;
-            func_00131498(*pm, (u8 *)*ph + (*ph)->x8);
-            func_00130340(*pm, 0, 0.0f);
-        }
-        D_00F20000(0, (*ph)->x10 - (*ph)->xc > 0 ? (u8 *)*ph + (*ph)->xc : 0);
-        return 1;
-    }
-    func_001247e8(D_0052AE3C);
-    pl = &D_0052AE38;
-    func_00131500(*pl);
-    func_00130340(*pl, 0x40000000, 0.0f);
-    return 1;
-}
 
 void func_0013dd40(void) {
     f32 v[4];
@@ -450,5 +309,4 @@ s32 func_0013fe28(W55Ob *o) {
 #include "data/data_0030.h"
 #include "data/data_002E.h"
 #include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002C5978.h"
 #include "data/pieces/D_002BBDFC.h"

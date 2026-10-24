@@ -2,15 +2,9 @@
 #include "data/pieces/D_00304BE8_s.h"
 typedef W606Mem_304be8 W606Mem;
 
-
 typedef struct { u8 pad[0x40]; s32 x40; s32 x44; s32 x48; } W606S6c;
 typedef struct Actor { u8 pad[0x6c]; W606S6c *x6c; } W606O26a0;
 #include "data/pieces/D_002E26A0.h"
-#include "data/pieces/D_002E27C8.h"
-
-f32 func_0013bb20(void) {
-    return (f32)((D_002E26A0[0]->x6c->x48 + (s32)(((*(u32 *)&D_002E27C8) >> 10) & 7)) * 3000);
-}
 
 s32 func_0013c2f0(s32 b) {
     return D_00304BE8->x878 & ((u64)1 << b);

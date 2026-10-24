@@ -31,46 +31,6 @@ struct W606Ch {
     W606Ch *x398;
 };
 
-extern u32 *D_0052AE38; /* src/data/bss_0052.c: s32 D_0052AE38 */
-extern s32 D_0052AE60;
-#include "data/pieces/D_00350CE0.h"
-#include "data/pieces/D_002E26A0.h"
-extern u8 D_0052AD68[];
-void func_0014f658(void *, s32);
-s32 func_00130340(void *, s32, f32);
-void func_001373f8(void *o, f32 f);
-s32 func_00148768(s32, s32, void *, s32, f32);
-void func_00124ce0(f32);
-void func_001336d8(void);
-void func_002414a8(s32 a, s32 b);
-void func_00145080(s32 a, s32 b);
-void *func_0011f090(void *, s32, void *);
-void func_0011ef10(s32, void *);
-s32 func_0013ab30();
-void func_0013abf8();
-s32 func_0013b050(void) {
-    s32 i;
-    s32 *pp;
-    func_0014f658(D_0052AE38, 40);
-    func_00130340(D_0052AE38, 0x1010040, 20.0f);
-    func_001373f8(D_0052AE38, 0.0f);
-    *D_0052AE38 |= 0x200000;
-    pp = &D_0052AE60;
-    *pp = func_00148768(D_00350CE0, 0, D_0052AE38, 28, 0.5f);
-    func_00124ce0(53.0f);
-    func_001336d8();
-    func_002414a8(0, 3);
-    func_002414a8(1, 3);
-    func_002414a8(2, 3);
-    func_00145080(1, 4);
-    for (i = 0; i < 2; i++) {
-        if (D_002E26A0[i + 1]) *((u32 *)D_002E26A0[i + 1]) |= 0x1000000;
-    }
-    func_0011f090(D_0052AD68, 0, func_0013ab30);
-    func_0011ef10(100000, func_0013abf8);
-    return 1;
-}
-
 extern u16 *D_00304BB0[];
 extern u16 *D_00304B88[];
 void *func_001477c8(void *p);
