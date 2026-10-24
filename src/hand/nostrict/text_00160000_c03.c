@@ -243,21 +243,15 @@ struct C03Act {
     s32 pad;
 };
 typedef struct { u8 pad[0xBC]; f32 fBC; u8 padC0[0xCC - 0xC0]; f32 fCC; } C03Prm;
-
-extern s32 D_0035BCA8[];
-extern C03Act *D_00575328[];
 extern C03Prm D_0035AE80;
-extern s32 D_0035BCB0;
 
 s32 func_00170dd8(u16, s32);
-u32 func_001627e8(s32);
 s32 func_00123368(C03Chr *);
 s32 func_00141200(C03Chr *, s32);
 s32 func_0012f040(C03Chr *, s32);
 void func_0012ec60(C03Chr *, s32, f32 *);
 s32 func_0012ee70(C03Chr *, s32);
 C03Chr *func_00123158(C03Chr *, C03Chr *);
-void func_00171b18(C03Chr *, C03AW *);
 f32 func_00267390(f32 *, f32 *);
 void func_00267530(f32 *, f32 *, f32 *);
 
@@ -315,93 +309,6 @@ static inline s32 inl_t(C03Chr *e, C03AW *w) {
     s32 t = -1;
     if (w->n78 > 0 && w->hist[0]) t = func_00170dd8(e->p130->h4C, w->hist[0]->x0);
     return t;
-}
-
-s32 func_0016a3f8(C03Chr *e, C03AW *w) {
-    C03Act *last;
-    s32 again;
-    C03Act *sel;
-    C03Act *a;
-    C03Act *cur;
-    u32 m;
-    s32 n, i, j, kv, t, r;
-
-    cur = w->p74;
-    if (cur && (s32)((s64)(w->w38 << 31) >> 32) & 1) {
-        w->w54++;
-        if (inl_ok(e, w, cur->fl)) {
-            if (cur->cb(e, w, cur, 1)) return w->p74->cb(e, w, w->p74, 2);
-        }
-        w->w38 &= ~2;
-    }
-    func_00171b18(e, w);
-    w->w38 &= ~0x20000;
-    w->w54 = 0;
-    if (w->w50 >= 2) return 0;
-    if (w->n78 >= 2) {
-        for (j = 1; j < 2; j++) if (w->hist[0] != w->hist[j]) break;
-        if (j >= 2) { last = w->hist[0]; goto got; }
-    }
-    last = 0;
-got:
-    sel = 0;
-    again = 0;
-    for (m = 0; m < 2; m++) {
-        kv = D_0035BCA8[m];
-        n = 0;
-        if (kv == 1) {
-            t = inl_t(e, w);
-            if (t == 1) {
-                if (!(func_001627e8(100) & 7)) again = t;
-                break;
-            }
-        }
-        for (i = 0; i < w->n18; i++) {
-            a = &w->p1C[i];
-            if (func_00170dd8(e->p130->h4C, a->x0) != kv) continue;
-            if (!inl_ok(e, w, a->fl)) continue;
-            if (a->cb && a->cb(e, w, a, 1)) {
-                if (a != last) {
-                    if (n < 128) D_00575328[n++] = a;
-                } else again = 1;
-            }
-        }
-        if (n > 0) {
-            { C03Act **tb = D_00575328; i = func_001627e8(n << 12) >> 12; sel = tb[i]; }
-            break;
-        }
-    }
-    if (!sel) {
-        if (again || !(func_001627e8(100) & 0xF)) {
-            kv = D_0035BCB0;
-            n = 0;
-            for (i = 0; i < w->n18; i++) {
-                a = &w->p1C[i];
-                if (func_00170dd8(e->p130->h4C, a->x0) != kv) continue;
-                if (!inl_ok(e, w, a->fl)) continue;
-                if (a->cb && a->cb(e, w, a, 1) && a != last && n < 128) D_00575328[n++] = a;
-            }
-            if (n > 0) sel = D_00575328[func_001627e8(n << 12) >> 12];
-
-        }
-    }
-    if (sel) {
-        if (w->cb44) {
-            w->cb44(e, w);
-            w->cb44 = 0;
-        }
-        w->w50++;
-        r = sel->cb(e, w, sel, 2);
-        for (j = 1; j > 0; j--) w->hist[j] = w->hist[j - 1];
-        w->hist[0] = sel;
-        w->p74 = sel;
-        if (++w->n78 >= 3) w->n78 = 2;
-        return r;
-    } else {
-        r = 0;
-        w->n78 = w->n78 - 1 < 0 ? 0 : w->n78 - 1;
-    }
-    return r;
 }
 
 /* needs make: uses rodata */

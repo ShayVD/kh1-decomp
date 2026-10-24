@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK func_001606d0();
-M2C_UNK func_00170e98();
 M2C_UNK func_00267390(void *, void *);
 M2C_UNK func_00267530(void *, s32, s32);
 M2C_UNK func_002675a8(s32, s32);
@@ -30,8 +29,4 @@ void func_001629b0(s32 arg0, s32 arg1) {
 
 void func_001676d8(s32 arg0, s32 arg1) {
     func_002675a8(arg1, arg0 + 0xC0);
-}
-
-void func_00168518(void) {
-    func_00170e98();
 }

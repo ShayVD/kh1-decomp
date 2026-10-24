@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK func_00161a08();
-M2C_UNK func_0016f640();
 
 void func_00162058(void) {
     func_00161a08();
@@ -48,8 +47,4 @@ void func_001676b0(void *arg0, void *arg1) {
     M2C_FIELD(arg1, f32 *, 4) = (f32) M2C_FIELD(arg0, f32 *, 0x94);
     M2C_FIELD(arg1, f32 *, 8) = (f32) M2C_FIELD(arg0, f32 *, 0x98);
     M2C_FIELD(arg1, f32 *, 0xC) = (f32) M2C_FIELD(arg0, f32 *, 0x9C);
-}
-
-void func_00168500(void) {
-    func_0016f640();
 }

@@ -49,19 +49,12 @@ typedef struct {
 typedef struct { f32 a[4]; f32 b[4]; f32 c0; f32 c1; s32 c2; s32 c3; u8 pad[0x50]; } Q9F;
 #include "data/pieces/D_0035BD40.h"
 typedef Chr9F_35BD40 Chr9F;
-
-extern s32 D_00574FB4;
-extern s32 D_0057508C;
-extern f32 D_002BBDFC;
 extern f32 D_0048E8D4;
 extern f32 D_00575090[][4];
 #include "data/pieces/D_002BBFA0.h"
 #include "data/pieces/D_002C58B0.h"
-extern s32 D_002E27A8;
-s32 func_00137618(E9F *);
 s32 func_00153d78(E9F *);
 void func_0013dfb8(E9F *, void *);
-s32 func_00135838(E9F *);
 void func_00267530(f32 *, f32 *, f32 *);
 f32 func_00267390(f32 *, f32 *);
 void func_00135b88(E9F *, f32 (*)[4]);
@@ -148,57 +141,6 @@ static inline s32 inl_find(E9F *e, W9F *w) {
     }
     return bi;
 }
-s32 func_00169f28(E9F *e, W9F *w) {
-    s32 ok, t;
-    s32 i, bi;
-    f32 best, d;
-    f32 *p;
-    if (w->b6) {
-        if (e->x0 & 0x80) goto r0;
-        w->b6 = 0;
-        ((S130 *)e->x130)->x18 = w->f34;
-        goto r0;
-    }
-    ok = 0;
-    if (D_00574FB4 != 1) {
-        if (D_00574FB4 == 0) goto r0;
-    } else if ((s32)(e->x370 >> 50) & 1) return 0;
-    if (!func_00137618(e)) return 0;
-    { s32 r = func_00153d78(e); s32 t2; if (r || (e->x0 & 0x200)) t2 = 1; else t2 = 0; if (t2) goto r0; }
-    if (0.0f < w->f70) w->f70 -= D_002BBDFC;
-    if (0.0f < w->f70) goto r0;
-    if (w->w58 >= 240) ok = 1;
-    else if (w->w58 >= 160 || (w->w58 >= 80 && D_0057508C != 0)) {
-        s32 save = w->w4C;
-        w->w4C = -1;
-        switch (e->x70) {
-        case 10: case 13: case 15: case 18: case 26: inl_rst(e, w); break;
-        case 0: ok = inl_a(e->x164, w); break;
-        case 8: ok = inl_b(e->x164, w); break;
-        case 24: ok = inl_c(e->x164, w); break;
-        case 17: ok = inl_d(e->x164, w); break;
-        }
-        w->w4C = save;
-    }
-    if (!ok) goto r0;
-    if (func_00135838(e)) goto r0;
-    bi = inl_find(e, w);
-    if (bi >= 0) {
-        inl_go(e, D_00575090[bi]);
-        w->b6 = 1;
-        w->w58 = 0;
-        w->w60 = 0;
-        if (D_002E27A8 == 2) w->f70 = 600.0f;
-        else w->f70 = 240.0f;
-        return 1;
-    }
-    w->w60++;
-    if (w->w60 >= 10) w->w60 = 0;
-    goto r0;
-r0:
-    return 0;
-}
 #include "data/bss_0057_mixed.h"
 #include "data/data_002E.h"
 #include "data/data_0048.h"
-#include "data/pieces/D_002BBDFC.h"
