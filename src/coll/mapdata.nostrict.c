@@ -2,6 +2,7 @@
  * in the files beside it). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00100000_h51.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/types/nostrict_text_00100000_h51_p2.h"
@@ -106,7 +107,6 @@ extern u16 D_002A62F8[];
 void func_0011d270(s32, s32, s32, s32);
 void func_00104f10(s32, Vec4 *);
 void func_00104eb0(s32, Vec4 *);
-f32 func_00267390(Vec4 *, Vec4 *);
 void func_001050d0(void) {
     Vec4 b;
     Vec4 a;
@@ -120,7 +120,7 @@ void func_001050d0(void) {
             D_002A62F8[D_002A6230++] = D_002A6274[i].h;
             func_00104f10(i, &a);
             func_00104eb0(i, &b);
-            {f32 r = func_00267390(&a, &b);
+            {f32 r = PlatVu0InnerProduct(&a, &b);
             Tri20 *e = D_002A6274;
             e[i].d = -r;
             e[i].f.t.b25 = 0;}
