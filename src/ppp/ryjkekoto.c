@@ -30,5 +30,5 @@ void pppRyjDrawKekotoCon(void *obj, PppEntry *e) {
     s32 i;
 
     for (i = 7; i >= 0; i--)
-        w->m[i] = 0;
+        w->m[i] = KH1_Q(0);
 }

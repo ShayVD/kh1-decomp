@@ -20,7 +20,7 @@ extern u128 D_0040E780[];
 extern u128 D_0040EB80[];
 extern u128 D_0040EF80[];
 
-static inline void clr(u128 *p, s32 n) { for (; n > 0; n--) *p++ = 0; }
+static inline void clr(u128 *p, s32 n) { for (; n > 0; n--) *p++ = KH1_Q(0); }
 
 s32 func_00232ad0(s32 a) {
 

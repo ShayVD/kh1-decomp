@@ -103,7 +103,7 @@ void pppKeThFrame(PppObject *obj, PppThKey *key, PppEntry *e) {
     if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
         return;
     PlatVu0CopyMatrix(m, D_00615E68->m);
-    *(u128_8bee0 *) m[3] = 0;
+    *(u128_8bee0 *) m[3] = KH1_Q(0);
     m[3][3] = 1.0f;
     PlatVu0ApplyMatrix(dir, m, pos);
     PlatVu0Normalize(dir, dir);

@@ -76,7 +76,7 @@ void pppKeLnsLpDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
         w->d = key->d;
     }
     if (w->d) {
-        *(u128 *) v = 0;
+        *(u128 *) v = KH1_Q(0);
         v[3] = v[2] = 1.0f;
         PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
         func_001a9098(w->v, v);
@@ -306,23 +306,23 @@ void func_00192958(FlareObj *o, s32 a1, s32 frame) {
     register u128_92958 ks asm("$5");
     register u128_92958 kx asm("$7");
 
-    *(u128_92958 *) &pk->frame = 0x800d0;
+    *(u128_92958 *) &pk->frame = KH1_Q(0x800d0);
     pk->frame_a = 76;
-    *(u128_92958 *) &pk->zbuf = 0x31000070;
+    *(u128_92958 *) &pk->zbuf = KH1_Q(0x31000070);
     pk->zbuf_a = 78;
-    kx = 0x740000007000ULL;
+    kx = KH1_Q(0x740000007000ULL);
     *(u128_92958 *) xy = kx;
     pk->xyoffset_a = 24;
-    ks = 0x17f000001ff0000ULL;
+    ks = KH1_Q(0x17f000001ff0000ULL);
     *(u128_92958 *) sc = ks;
     pk->scissor_a = 64;
-    *(u128_92958 *) &pk->prmodecont = 0;
+    *(u128_92958 *) &pk->prmodecont = KH1_Q(0);
     pk->prmodecont_a = 26;
-    *(u128_92958 *) &pk->colclamp = 1;
+    *(u128_92958 *) &pk->colclamp = KH1_Q(1);
     pk->colclamp_a = 70;
-    *(u128_92958 *) &pk->dthe = 0;
+    *(u128_92958 *) &pk->dthe = KH1_Q(0);
     pk->dthe_a = 69;
-    *(u128_92958 *) &pk->test = 0x5000d;
+    *(u128_92958 *) &pk->test = KH1_Q(0x5000d);
     pk->test_a = 71;
     if (o->f7C == 0.0f)
         return;

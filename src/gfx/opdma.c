@@ -80,7 +80,7 @@ void func_001a9eb8(void) {
 
 void func_001a9f88(void) {
     GsTag *p = D_0061EEA0;
-    u128 k = 0x20000000;
+    u128 k = KH1_Q(0x20000000);
     s32 i;
     for (i = 0; i < 288; i++) {
         __asm__ volatile("sq %0, 0(%1)" : : "r"(k), "r"(p));
@@ -97,7 +97,7 @@ void func_001a9f88(void) {
 void func_001aa008(void) {
     u128 *p = &D_0061E8B0;
     u128 save = *p;
-    *p = 0x70000006;
+    *p = KH1_Q(0x70000006);
     PlatGsSyncPath(0, 0);
     PlatFlushCache(0);
     PlatDmaSend(D_00372908, p);

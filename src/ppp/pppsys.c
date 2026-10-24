@@ -436,7 +436,7 @@ s32 func_00180f18(Slot *slots, s32 cnt, SlotOwner *o, u8 n) {
             return slots[i].start;
         }
     }
-    buf.q = 0;
+    buf.q = KH1_Q(0);
     for (i = 0; i < cnt; i++) {
         if (slots[i].used) {
             j = slots[i].len;

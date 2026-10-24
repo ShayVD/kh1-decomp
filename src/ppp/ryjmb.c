@@ -73,7 +73,7 @@ void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
     PppMegaBirth *w = (PppMegaBirth *) ((u8 *) obj + e->offsets[2] + 0xA0);
 
     PlatVu0UnitMatrix(w->m);
-    w->q = 0;
+    w->q = KH1_Q(0);
     w->i[0] = 0;
     w->i[1] = 0;
     w->i[2] = 0;

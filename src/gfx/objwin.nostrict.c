@@ -39,7 +39,7 @@ void func_0010a5d0(s32 a0, u8 *p, s32 n, s32 mode, s32 sub) {
     s32 loc[2];
     s32 two;
     u64 *q;
-    *(u128 *)p = 0;
+    *(u128 *)p = KH1_Q(0);
     *(s32 *)p = 0x7000000e;
     q = (u64 *)(p + 16);
     q[0] = ((u64)n << 47) | 0xd000400000008001ULL;
@@ -123,7 +123,7 @@ void func_0010a780(Win *win, void *a1, u128 *buf, s32 a3, s32 mode) {
 
     nx = win->w;
     ny = win->h;
-    *buf = 0;
+    *buf = KH1_Q(0);
     if (mode == 1) {
         cnt = (nx + 2) * (ny + 2);
         *(u32 *)buf = cnt * 13 + 0x70000001;

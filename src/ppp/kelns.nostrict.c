@@ -101,8 +101,8 @@ void func_001a57c0(Arg57c0 *a) {
         PlatVu0ScaleVector(v90, m1[3], -1.0f);
         PlatVu0SubVector(va0, v90, v80);
     } else {
-        *(u128 *)v80 = 0;
-        *(u128 *)v90 = 0;
+        *(u128 *)v80 = KH1_Q(0);
+        *(u128 *)v90 = KH1_Q(0);
         v80[3] = 1.0f;
         v90[3] = 1.0f;
         PlatVu0UnitMatrix(m0);

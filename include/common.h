@@ -34,9 +34,24 @@ typedef float              f32;
 #ifdef KH1_PS2
 typedef int kh1_s128 __attribute__((mode(TI)));
 typedef unsigned int kh1_u128 __attribute__((mode(TI)));
+/* A 128-bit value from a constant up to 64 bits: KH1_Q(v) zero-extends it.
+ * The game only stores constants into its u128s (packet tags, GS register
+ * words, clears), no arithmetic. gcc 2.96 cannot build one from two halves
+ * ("unsupported wide integer operation"), so src/gfx/opdma.c's two 96-bit
+ * literals stay literals. */
+#define KH1_Q(v) (v)
 #else
 typedef struct { u32 w[4]; } kh1_s128 __attribute__((aligned(16)));
 typedef kh1_s128 kh1_u128;
+static __inline__ kh1_s128 kh1_q(unsigned long long v) {
+    kh1_s128 r;
+    r.w[0] = (u32)v;
+    r.w[1] = (u32)(v >> 32);
+    r.w[2] = 0;
+    r.w[3] = 0;
+    return r;
+}
+#define KH1_Q(v) kh1_q(v)
 #endif
 
 #ifndef NULL
@@ -48,7 +63,13 @@ typedef kh1_s128 kh1_u128;
  * its register use while compiling them (the callee-earlier effect,
  * docs/context-only-plan.md). The build never places it; calls resolve to the
  * original address. Must not be static. */
+#ifdef KH1_PS2
 #define CONTEXT_ONLY __attribute__((weak, section(".ctx")))
+#else
+/* off the EE a weak copy is enough: the real definition wins at link (and
+ * one .ctx section cannot hold both code and data) */
+#define CONTEXT_ONLY __attribute__((weak))
+#endif
 
 /* Alignment of a variable defined in C (phase 4): DMA packets and VU data need
  * 16 bytes (qword), wherever the shiftable build puts them. */

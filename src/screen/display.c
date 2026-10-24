@@ -107,7 +107,7 @@ void func_001100a8(void) {
         D_004D8EF0.r[i + 13].d = D_002BC830[i];
         D_004D8EF0.r[i + 13].a = D_002BC7C0[i];
     }
-    D_004D8EF0.tag.q = 0;
+    D_004D8EF0.tag.q = KH1_Q(0);
     D_004D8EF0.tag.b.nloop = 31;
     D_004D8EF0.tag.b.eop = 1;
     D_004D8EF0.tag.b.nreg = 1;

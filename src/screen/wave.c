@@ -85,7 +85,7 @@ void func_001e9670(void) {
     s32 i;
     WavePkt *q;
     WaveTag *e;
-    pk->dma.q = 0;
+    pk->dma.q = KH1_Q(0);
     pk->dma.w = 0x10000194;
     pk->gif[0] = 0x1000000000000002ULL;
     pk->gif[1] = 14;
@@ -121,7 +121,7 @@ void func_001e9670(void) {
 #undef pk
     q = &D_00631620;
     e = &q->end;
-    e->q = 0;
+    e->q = KH1_Q(0);
     e->w = 0x70000000;
     D_003DD308 = 0;
     D_003DD30C = 0;

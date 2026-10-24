@@ -26,7 +26,7 @@ s32 func_001c00e8(s32 prio, s32 fn, u128 q) {
     s = D_0037A16C;
     s[i].used = 1;
     s[i].prio = prio;
-    t.q = 0;
+    t.q = KH1_Q(0);
     t.w = (s32)s[i].stk;
     s[i].ctx->sp = t.q;
     t.w = fn;
@@ -50,17 +50,17 @@ s32 func_001c01b0(s32 prio, void *fn, ...) {
     { u32 off = n * 48; t = (Task *)(off + (u32)D_0037A16C); }
     t->used = 1;
     t->prio = prio;
-    tmp.q = 0;
+    tmp.q = KH1_Q(0);
     tmp.w = (s32)t->stk;
     t->ctx->sp = tmp.q;
     tmp.w = (s32)fn;
     D_0037A16C[n].ctx->ra = tmp.q;
-    tmp.q = 0;
+    tmp.q = KH1_Q(0);
     for (i = 0; i < 8; i++) {
         { char *p = ap; ap += 8; tmp.w = *(s32 *)p; }
         ((u128 *)D_0037A16C[n].ctx)[20 + i] = tmp.q; /* a[i] */
     }
-    D_0037A16C[n].q = 0;
+    D_0037A16C[n].q = KH1_Q(0);
     return n;
 }
 
@@ -76,16 +76,16 @@ s32 func_001c0310(s32 prio, void *fn, ...) {
     { u32 off = n * 48; t = (Task *)(off + (u32)D_0037A16C); }
     t->used = 1;
     t->prio = prio;
-    tmp.q = 0;
+    tmp.q = KH1_Q(0);
     tmp.w = (s32)t->stk;
     t->ctx->sp = tmp.q;
     tmp.w = (s32)fn;
     D_0037A16C[n].ctx->ra = tmp.q;
-    tmp.q = 0;
+    tmp.q = KH1_Q(0);
     for (i = 0; i < 8; i++) {
         { char *p = ap; ap += 8; tmp.w = *(s32 *)p; }
         ((u128 *)D_0037A16C[n].ctx)[20 + i] = tmp.q; /* a[i] */
     }
-    D_0037A16C[n].q = 0;
+    D_0037A16C[n].q = KH1_Q(0);
     return n;
 }

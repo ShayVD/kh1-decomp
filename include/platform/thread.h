@@ -8,6 +8,10 @@
  * src/model/mdlgs*.c keeps the flush in a hook pointer (D_00351BC8, called by
  * the model code): PlatFlushCacheFn normally, PlatIFlushCacheFn while
  * func_0015efc0 runs the draw from an interrupt.
+ * PlatSync / PlatSyncEi / PlatBreak are the bare `sync` (before a DMA kick
+ * or a draw from src/model/), `sync; ei` (src/model/mdlgs.c re-enabling
+ * interrupts) and `break` (src/util/param.c's debug traps): a compiler
+ * barrier, nothing and a trap off the EE.
  * PlatPcStart / PlatPcStop run the CPU performance counters (src/pad/padread.c
  * at boot, src/util/heap.c); the Vita build can make them no-ops.  On
  * the matching PS2 build each wrapper is a macro for the kernel call; the
@@ -40,6 +44,9 @@
 #define PlatDisableDmac(ch) DisableDmac(ch)
 #define PlatPcStart(control, c0, c1) scePcStart((control), (c0), (c1))
 #define PlatPcStop() scePcStop()
+#define PlatSync() __asm__ volatile("sync")
+#define PlatSyncEi() __asm__ volatile("sync\n\tei")
+#define PlatBreak() __asm__ volatile("break")
 #else
 void PlatFlushCache(int op);
 void PlatIFlushCache(int op);
@@ -60,6 +67,9 @@ int PlatEnableDmac(int ch);
 int PlatDisableDmac(int ch);
 int PlatPcStart(int control, int c0, int c1);
 void PlatPcStop(void);
+#define PlatSync() __asm__ volatile("" : : : "memory")
+#define PlatSyncEi() __asm__ volatile("" : : : "memory")
+#define PlatBreak() __builtin_trap()
 #endif
 
 #endif /* KH1_PLATFORM_THREAD_H */

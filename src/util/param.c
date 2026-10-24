@@ -8,9 +8,10 @@
  * name is missing.  Its own file by the code order; who builds the lists
  * is not yet known. */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/data_0046.h"
 
-#define BREAK() __asm__ volatile("break")
+#define BREAK() PlatBreak()
 
 typedef struct { void *dst; s32 id; } Req;
 

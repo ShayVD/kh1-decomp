@@ -356,8 +356,8 @@ void pppRyjDrawKekotoDraw(u8 *obj, KkKey *key, PppEntry *e)
     }
     tag[0] = cnt | 0x8000 | (0xC0B9ULL << 46);
     tag[1] = 0x412;
-    __asm__ volatile("sync");
-    p->tag = 0;
+    PlatSync();
+    p->tag = KH1_Q(0);
     *(s32 *) &p->tag = ((((u8 *) out - (u8 *) p) >> 4) - 1) | 0x70000000;
     PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), dma);
