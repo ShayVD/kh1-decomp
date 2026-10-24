@@ -117,18 +117,6 @@ void pppRyjMegaBirthModelCon(void *obj, PppEntry *e) {
     w->h[1] = 0;
 }
 
-typedef struct {
-    u128 m[8];
-} PppKekoto;
-
-void pppRyjDrawKekotoCon(void *obj, PppEntry *e) {
-    PppKekoto *w = PPP_WORK(PppKekoto, obj, e, 2);
-    s32 i;
-
-    for (i = 7; i >= 0; i--)
-        w->m[i] = 0;
-}
-
 void pppDrawMdlTs2Con(void *obj, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 2);
 

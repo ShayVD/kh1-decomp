@@ -688,31 +688,6 @@ s32 func_0019f1a8(PppF1a8A *p, PppF1a8B *q) {
     return 1;
 }
 
-void func_00122768(void *);
-
-void pppRyjLightDes(void *obj, PppEntry *e) {
-    void **w = (void **) ((u8 *) obj + e->offsets[2] + 0xA0);
-
-    if (*w) {
-        func_00122768(*w);
-        *w = NULL;
-    }
-}
-
-typedef struct {
-    PppMtx out;   /* +0x00 */
-    PppMtx local; /* +0x40 */
-} PppDttWork;
-
-void pppRyjDrawMatrixWorldDttFrame(void *obj, void *k, PppEntry *e) {
-    PppDttWork *w = (PppDttWork *) ((u8 *) obj + e->offsets[1] + 0xA0);
-
-    sceVu0MulMatrix(D_00615E68->m2, w->local, D_00615E68->m);
-    sceVu0MulMatrix(D_00615E68->m2, D_00615EB0, D_00615E68->m2);
-    sceVu0CopyMatrix(w->out, D_00615E68->m2);
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
-}
-
 f32 func_001a2178(void);
 
 s8 func_001a21c0(u8 a) {

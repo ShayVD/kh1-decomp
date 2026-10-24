@@ -1,5 +1,60 @@
+/* The pppRyjDrawKekoto class, -fno-strict-aliasing (docs/modules.md
+ * "Session 49"; s8_w11 renamed): func_001a1158 sets the eight UVs of a quad
+ * strip from the key's three selectors (width 1 / 0.5 / 0.25, a quarter
+ * offset); pppRyjDrawKekotoDraw builds its GS packet (ryjkekoto.c has the
+ * Frame and Con).  Read from the code, not proved by a boot. */
 #include "common.h"
 #include "ppp.h"
+#include "data/pieces/D_003701D0.h"
+
+typedef FV4_3701d0 FV4;
+typedef struct { u8 pad[0x31]; u8 a, b, c; } UvSrc;
+
+void func_001a1158(UvSrc *s, FV4 *v) {
+    f32 u0, u1, a, h, f;
+    switch (s->a) {
+    case 1: a = 0.49f; break;
+    case 2: a = 0.24f; break;
+    case 0: default: a = 0.99f; break;
+    }
+    switch (s->b) {
+    case 1: h = 0.49f; break;
+    case 2: h = 0.24f; break;
+    case 0: default: h = 0.99f; break;
+    }
+    switch (s->c) {
+    case 1: f = 0.25f; break;
+    case 2: f = 0.5f; break;
+    case 3: f = 0.75f; break;
+    case 0: default: f = 0.0f; break;
+    }
+    u1 = f + a;
+    u0 = f + 0.01f;
+    v[7].x = u0;
+    v[6].x = u0;
+    v[1].x = u0;
+    v[5].x = u1;
+    v[4].x = u1;
+    v[3].x = u1;
+    v[7].y = h;
+    v[5].y = h;
+    v[3].y = h;
+    v[6].y = 0.01f;
+    v[4].y = 0.01f;
+    v[2].y = 0.01f;
+    v[7].z = 1.0f;
+    v[6].z = 1.0f;
+    v[5].z = 1.0f;
+    v[4].z = 1.0f;
+    v[3].z = 1.0f;
+    v[2].z = 1.0f;
+    v[1].z = 1.0f;
+    v[1].y = h;
+    v[0].z = 1.0f;
+    v[2].x = u1;
+    v[0].y = 0.01f;
+    v[0].x = u0;
+}
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 KkV4[4] __attribute__((aligned(16)));

@@ -17,10 +17,6 @@ extern M2C_UNK D_0061E730; /* src/data/bss_0061.c: u8 D_0061E730[0x50] */
 extern s32 D_00372908;
 extern s32 D_00615E64;
 
-void pppRyjLightCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[2]), s32 *, 0xA0) = 0;
-}
-
 void func_001a30d0(void) {
 
 }
