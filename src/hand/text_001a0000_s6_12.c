@@ -15,7 +15,6 @@ s32 func_001a8f30(void) {
     return r * 32768.0f;
 }
 
-
 typedef struct {
     f32 o[4];
     f32 d[4];
@@ -47,7 +46,6 @@ s32 func_001a8f70(Ray *s) {
     return ret;
 }
 
-
 f32 func_001a9058(f32 a, f32 b) {
     QV r;
     r.x = a;
@@ -59,7 +57,6 @@ f32 func_001a9058(f32 a, f32 b) {
         : "=m"(r) : "m"(r));
     return r.x;
 }
-
 
 f32 func_001a9328(f32 a) {
     QV r;
@@ -117,7 +114,6 @@ void func_001a9f88(void) {
     func_001aa700(D_0061E8B0, 7, 15, 0);
 }
 
-
 s32 rand(void);
 void func_001aa080(void) {
     s32 r;
@@ -126,46 +122,4 @@ void func_001aa080(void) {
         "qmtc2 %0, $vf31\n"
         "vrxor R, $vf31x\n"
         : : "r"(r) : "$2");
-}
-
-extern s32 D_00623220;
-extern s32 D_00623224;
-void func_001bb7b0(void);
-s32 func_00120748(char *, void *, void *, s32);
-void func_001bfac8(void);
-s32 func_001bb7c8(char *a, void *b) {
-    D_00623220 = 1;
-    D_00623224 = -1;
-    func_00120748(a, b, func_001bb7b0, 0);
-    while (D_00623220) func_001bfac8();
-    return D_00623224;
-}
-
-typedef union { u16 h; struct { u16 x : 4; u16 y : 4; u16 z : 4; u16 w : 4; } b; } N3;
-typedef struct { s8 x, y, z, w; } V4c;
-extern V4c D_0037A130[];
-typedef struct {
-    u16 f0;
-    N3 rot;
-    u16 id;
-} Obj;
-s32 func_001bb6d0(s32);
-s32 func_001bbdf0(Obj *o) {
-    N3 s, r;
-    s32 ax, ay, az;
-    
-    s.h = func_001bb6d0(o->id - 1);
-    ax = D_0037A130[o->rot.b.x].x * s.b.x;
-    ay = D_0037A130[o->rot.b.x].y * s.b.x;
-    az = D_0037A130[o->rot.b.x].z * s.b.x;
-    ax += D_0037A130[o->rot.b.y].x * s.b.y;
-    ay += D_0037A130[o->rot.b.y].y * s.b.y;
-    az += D_0037A130[o->rot.b.y].z * s.b.y;
-    ax += D_0037A130[o->rot.b.z].x * s.b.z;
-    ay += D_0037A130[o->rot.b.z].y * s.b.z;
-    az += D_0037A130[o->rot.b.z].z * s.b.z;
-    r.b.x = abs(ax);
-    r.b.y = abs(ay);
-    r.b.z = abs(az);
-    return r.h;
 }

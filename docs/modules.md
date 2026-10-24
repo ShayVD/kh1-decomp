@@ -1653,6 +1653,81 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program headers
 the same as the base.  At the end `make report` 6979 at 100%, `make test`
 passes and `s31_warndiff` reports 0 new warnings.
 
+## Session 48: the Gummi ships, the maths helpers, the task slots and the VM resets, 0x001b9b30-0x001c08e8
+
+Session 48 moved 185 functions in four commits.  No Mac: static checks
+only.  After it the only function of 0x001b0000-0x001c08e8 left in src/hand
+is the VU0 routine func_001b99b8 (src/hand/vu0.c); the rest of 0x001b0000
+was already asm (src/asm/vu0_render*.s).  No assert names here; the groups
+come from the strings ("GUMI", "Run Gumi Edit" / "gb.x", "Run WorldMap" /
+"wm.x", "already max task!"), the save block's layout and what each
+function does.  The data names are ordered with the code (D_003772D0 ...
+D_0037A178), so this was most likely one or two original files; the split
+below is by purpose and is a guess.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the Gummi save block (block 4 of the save image, 0xB040 bytes, "GUMI" v0x101: the ship order, ten ships, the held blocks, part values, the mission records, the world flags) and the Gummi Edit / World Map modes (the overlays gb.x / wm.x at 0x00F20000 and the pad block D_00621220 they read) | src/gummi/gumisave.c | 0x001b9b30-0x001bb438 | 69 |
+| a downward memory stack (D_0037A148 ... D_0037A154, D_00623200) | src/util/memstack.c | 0x001bb438-0x001bb558 | 6 |
+| the Gummi ships: the block table D_00377848, block turns and places as matrices, the garage's lists, a ship's bounds / summary / stats, the part slots | src/gummi/ship.c | 0x001bb558-0x001be758 | 59 |
+| maths and memory helpers: a 16-deep stack of 128-bit words, the memory clear func_001be820, Euler / camera matrices, lerp, angle wraps, string copies, key interpolation, quaternions and slerp | src/util/vmath.c | 0x001be758-0x001bfac8 | 28 |
+| a second task system (400 slots of 48 bytes at D_0037A16C, the run queue D_0037A170 the asm switcher func_001bfac8 walks); the starts are -fno-strict-aliasing | src/util/task.c, task.nostrict.c | 0x001bfc90-0x001c06f8 | 17 |
+| the script manager's resets before the VM runtime (D_00389C90 as VmMgr, the event queue D_006297F8 with its pool D_00629808) | src/vm/vm_init.c | 0x001c06f8-0x001c08e8 | 6 |
+
+Types: include/gummi/gummi.h (GumiShip, GumiPiece, GumiBlock,
+GumiBlockTbl, GumiDir, GumiInfo, GumiStat, GumiCell, GumiSlot; one ship type
+for the old CdEnt / BbEnt / S9f78 / Inv / ItOwner / Chr_* views, one block
+type for ItemInfo / It28) and include/util/task.h (Task, TaskCtx; the old
+Slot / Task_bfcd8 / Wk views).  The libvu0 calls in vmath.c use their names.
+Each file's top comment says what its code reads and what is a guess; none
+of the names is proved by a boot.  objdiff units 757 -> 732.
+
+| chunk | commit | deleted |
+|---|---|---|
+| the task slots, the VM resets | 60a5d09 | auto text_001c0000 / _2 / _4 / _5 / _6, h14, nostrict h66 |
+| vmath.c | 5926749 | h66, auto text_001b0000_9 / _13 |
+| memstack.c, ship.c | 8985a4b | c08, s10_r2_8, s11_w17, s7_w34, auto text_001b0000_3 |
+| gumisave.c | 35ab2b9 | s11_w4, s12_s12w17, h65, auto text_001b0000 / _1 / _2 / _4 / _5 / _6 / _7 / _8 / _10 / _11 / _12 |
+
+**Data moved with its users** (same type and alignment): D_00629808 (the
+event pool, vm_init.c), D_00623200 (memstack.c), D_00621318 (gumisave.c).
+
+**Traps.**
+- **A sized extern for cover_check, again**: the old auto file declared
+  `extern volatile M2C_UNK D_00623ED4` (4 bytes); with only h41's unsized
+  `u8 D_00623ED4[][96]` left, D_00625640 became covered ("after D_00623ED4,
+  whose size no C declaration gives").  ship.c keeps `extern s32
+  D_00623ED4` and reads the names through a `u8 (*)[96]` cast.
+- **Three views of one array** (D_00621308, the sticks): func_001ba708 needs
+  volatile stores through base + offsets in a fixed order, func_001ba778
+  the `s32 [][2]` indexing (one address, then a move), func_001ba520 plain
+  reads.  The file declares `[][2]`; func_001ba708 stores through a local
+  `volatile s32 *` (a volatile cast of the array, or `&D[1][1]`, gives
+  separate addresses).
+- **A union member reloads**: GumiPiece.rot is a union (bit-fields for
+  func_001bbdf0 / func_001bbf88); func_001bbbd0 reads it as `*(u16 *)&o->rot`
+  (through `o->rot.h` it grew from 268 to 344 bytes).
+- **A u8 return makes the compare unsigned**: func_001b9e88 calls
+  func_001ba3f0 (u8) through an `s32 (*)(s32)` cast (sltu otherwise); the
+  other callers kept their `s32` prototype or did not care.
+- **Byte reads of word fields**: func_001bc900 reads the stats' x16 / x36 and
+  D_00625640 as `*(u8 *)&` (the old files declared them u8).
+- **A store pair needs two pointers**: func_001c0078 sets bit 0 of the
+  flags in two branches through two different pointer variables (one
+  variable cross-jumps the stores).
+- **Indexing changes the code**: task.nostrict.c writes the saved
+  arguments as `((u128 *)ctx)[20 + i]`, not `ctx->a[i]`.
+- **No-argument calls**: m2c's func_001bbce0() / func_001bb260() /
+  func_001bb658() took the caller's a0 and a1; the module writes them
+  (func_001bbf38(m, pc), func_001bb3f8(w), func_001ba1e8(i)).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions) and the m12 float build with
+float_covered.txt, float_reach.txt, the loaded bytes, the program headers
+and the symbols the same as the base.  At the end `make report` 6979 at
+100%, `make test` passes, the seven new files compile with no warnings and
+`s31_warndiff` reports 0 new warnings for h13 / h41 / nostrict h41.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1749,7 +1824,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 47, after each step)
+## Verification (sessions 30 to 48, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1765,14 +1840,17 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x001c0838 to 0x0024f2e0** (session
-  47).  The 3,426 functions still in src/auto and src/hand all lie in
-  0x001001f8-0x001c0830 (out/gen/placements.tsv): 14 in 0x001c, 172 in 0x001b,
-  158 in 0x001a, 186 in 0x0019 and more below.  Go on downwards from
-  0x001c0830 (the next part below the script VM and the camera), taking the
-  largest contiguous runs first (`python3 -I tools/shift/s37move/refs.py LO
-  HI`) and grouping by original file where assert strings or data order show
-  one.
+- **The game segment is in modules from 0x001b9b30 to 0x0024f2e0** (session
+  48), except the VU0 routine func_001b99b8 (src/hand/vu0.c).  The 3,241
+  functions still in src/auto and src/hand lie in 0x001001f8-0x001b9b30
+  (out/gen/placements.tsv): 158 in 0x001a, 186 in 0x0019, 335 in 0x0018,
+  324 in 0x0017 and more below.  Go on downwards from 0x001a9eb8 or so; the
+  top of 0x001a (0x001a8780-0x001aa950) is renderer code: VU0 (vu0.c, the
+  hand asm text_001aa1f8.s), GS image loads (sceGsExecLoadImage) and 41
+  nostrict functions, so take its plain C runs first and leave whole-VU0
+  functions in place (docs/matching-tips.md).  List a range with
+  `python3 -I tools/shift/s37move/refs.py LO HI`, group it by original file
+  where assert strings or data order show one, else by what it does.
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)
