@@ -101,7 +101,7 @@ void func_0015d848(Ob59 *o, f32 *v) {
 
 /* func_0015dac0 (from hand/nostrict/text_00150000_h36.c). */
 void func_00137688(void *, f32);
-void func_0014cce0(void *, f32);
+f32 func_0014cce0(void *, f32);
 f32 func_00120c88(f32);
 void func_0015dac0(CylObj *o) {
     f32 z;

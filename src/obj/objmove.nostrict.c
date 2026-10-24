@@ -783,7 +783,7 @@ typedef struct {
     f32 v490[4];
 } Pl;
 extern f32 D_002C5970;
-void func_0014cc88(Pl *, f32);
+f32 func_0014cc88(Pl *, f32);
 s32 func_0014f658(Pl *, s32);
 #define func_00121fc4 ((void (*)(f32 *, f32 *)) func_00121fc4)
 void func_001441b8(Pl *o) {

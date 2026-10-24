@@ -168,7 +168,12 @@ typedef struct {
     f32 f284;
 } __attribute__((aligned(8))) O660;
 void func_00166248(C01Mat, s32, s32, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00165cf8(C01Mat, s32, f32, s32);
+#else
+void func_00165cf8(C01Mat, s32, s32, f32);
+#define func_00165cf8(a1, a2, a3, a4) (func_00165cf8)(a1, a2, a4, a3)
+#endif
 void func_001676d8(s32, f32 *);
 void func_001675c0(s32);
 void func_00130648(C01Obj3 *);

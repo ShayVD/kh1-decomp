@@ -1470,10 +1470,10 @@ func_001b8198:  /* 0x001B8198 */
 	.word	0x0000282D  /* 001B9814 move $a1,$zero */
 	.word	0x240200FF  /* 001B9818 li $v0,255 */
 	.word	0x0043280A  /* 001B981C movz $a1,$v0,$v1 */
-	.word	0x3C040000  /* 001B9820 lui $a0,%hi(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_HI16, D_0061EFA0
-	.word	0x24840000  /* 001B9824 addiu $a0,$a0,%lo(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_LO16, D_0061EFA0
+	.word	0x3C040000  /* 001B9820 lui $a0,%hi(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_HI16, D_0061EEA0+0x100
+	.word	0x24840000  /* 001B9824 addiu $a0,$a0,%lo(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_LO16, D_0061EEA0+0x100
 	.word	0x70421048  /* 001B9828 psubw $v0,$v0,$v0 */
 	.word	0x3C022000  /* 001B982C lui $v0,0x2000 */
 	.word	0x20C3FFFF  /* 001B9830 addi $v1,$a2,-1 */
@@ -1500,10 +1500,10 @@ func_001b8198:  /* 0x001B8198 */
 	.word	0x0000282D  /* 001B9884 move $a1,$zero */
 	.word	0x240200FF  /* 001B9888 li $v0,255 */
 	.word	0x0043280A  /* 001B988C movz $a1,$v0,$v1 */
-	.word	0x3C040000  /* 001B9890 lui $a0,%hi(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_HI16, D_0061EFA0
-	.word	0x24840000  /* 001B9894 addiu $a0,$a0,%lo(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_LO16, D_0061EFA0
+	.word	0x3C040000  /* 001B9890 lui $a0,%hi(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_HI16, D_0061EEA0+0x100
+	.word	0x24840000  /* 001B9894 addiu $a0,$a0,%lo(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_LO16, D_0061EEA0+0x100
 	.word	0x70421048  /* 001B9898 psubw $v0,$v0,$v0 */
 	.word	0x3C022000  /* 001B989C lui $v0,0x2000 */
 	.word	0x20C3FFFF  /* 001B98A0 addi $v1,$a2,-1 */
@@ -3478,10 +3478,10 @@ func_001b1ab8:  /* 0x001B1AB8 */
 	.word	0xD85B0030  /* 001B1F24 lqc2 $vf27,48($v0) */
 	.word	0xD85C0040  /* 001B1F28 lqc2 $vf28,64($v0) */
 	.word	0xD85D0050  /* 001B1F2C lqc2 $vf29,80($v0) */
-	.word	0x3C080000  /* 001B1F30 lui $t0,%hi(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_HI16, D_0061EFA0
-	.word	0x25080000  /* 001B1F34 addiu $t0,$t0,%lo(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_LO16, D_0061EFA0
+	.word	0x3C080000  /* 001B1F30 lui $t0,%hi(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_HI16, D_0061EEA0+0x100
+	.word	0x25080000  /* 001B1F34 addiu $t0,$t0,%lo(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_LO16, D_0061EEA0+0x100
 	.word	0xAEC80180  /* 001B1F38 sw $t0,384($s6) */
 	.word	0x3C021000  /* 001B1F3C lui $v0,0x1000 */
 	.word	0x3442D000  /* 001B1F40 ori $v0,$v0,0xd000 */
@@ -5618,10 +5618,10 @@ func_001afac0:  /* 0x001AFAC0 */
 	.word	0xD85B0030  /* 001B026C lqc2 $vf27,48($v0) */
 	.word	0xD85C0040  /* 001B0270 lqc2 $vf28,64($v0) */
 	.word	0xD85D0050  /* 001B0274 lqc2 $vf29,80($v0) */
-	.word	0x3C080000  /* 001B0278 lui $t0,%hi(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_HI16, D_0061EFA0
-	.word	0x25080000  /* 001B027C addiu $t0,$t0,%lo(D_0061EFA0) */
-	.reloc	.-4, R_MIPS_LO16, D_0061EFA0
+	.word	0x3C080000  /* 001B0278 lui $t0,%hi(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_HI16, D_0061EEA0+0x100
+	.word	0x25080000  /* 001B027C addiu $t0,$t0,%lo(D_0061EEA0+0x100) */
+	.reloc	.-4, R_MIPS_LO16, D_0061EEA0+0x100
 	.word	0xAEC80180  /* 001B0280 sw $t0,384($s6) */
 	.word	0x3C021000  /* 001B0284 lui $v0,0x1000 */
 	.word	0x3442D000  /* 001B0288 ori $v0,$v0,0xd000 */

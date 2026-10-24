@@ -284,7 +284,7 @@ void func_0013dfb8(Obj3d0 *, V4f *);
 s32 func_001443a8(Obj3d0 *);
 void func_0013ecf8(Obj3d0 *, u8 *, V4f *);
 void func_0013dc10(Obj3d0 *, s32);
-void func_00130578(Obj3d0 *, f32, s32);
+void func_00130578(Obj3d0 *, s32, f32);
 f32 func_001376e8(Obj3d0 *, V4f *);
 void func_00137688(Obj3d0 *, f32);
 void func_0015abd0(Obj3d0 *);
@@ -317,7 +317,7 @@ void func_00126f18(Obj3d0 *o, Ctx4 *c, V4f *v) {
         if ((((*(u32 *)&D_002E27C8) >> 4) & 1) && (!(((*(u32 *)&D_002E27C8) >> 5) & 1) || v->w < o->x6c->x8)) {
             func_0013ecf8(o, (*(u8 (*)[0x8])&D_002E31B0), v);
             func_0013dc10(o, 61);
-            func_00130578(o, 0.0f, 0x40000000);
+            func_00130578(o, 0x40000000, 0.0f);
             o->x14c->x29 = 1;
             return;
         }

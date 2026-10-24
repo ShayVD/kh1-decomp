@@ -72,7 +72,7 @@ void func_0015def8(void *arg0, s32 arg1) {
 typedef struct { u8 pad[0x10]; f32 f10; } Sub6C;
 typedef struct { u8 pad[0x6C]; Sub6C *p6C; u8 pad70[0xD8]; u8 *p148; } ObjDA;
 typedef struct { u8 pad[4]; union { f32 f; void *p; } f4; } RetDA;
-void func_0014cce0(void *, f32);
+f32 func_0014cce0(void *, f32);
 RetDA *func_0014cb90(void *);
 #define func_00121fc4 ((void (*)(f32 *, f32 *)) func_00121fc4)
 RetDA *func_0015e0a8(ObjDA *a, f32 *v) {

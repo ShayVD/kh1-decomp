@@ -164,7 +164,7 @@ f32 func_00120c88(f32);
 void func_001247e8(B4A51 *);
 void func_00137688(B4A51 *, f32);
 void func_00151208(B4A51 *);
-#define func_001315c0 ((void (*)(void *, s32, f32, void *)) func_001315c0)
+#define func_001315c0 ((void (*)(void *, s32, void *, f32)) func_001315c0)
 #define func_00150ec8 ((s32 (*)(B4A51 *)) func_00150ec8)
 #define func_00151010 ((void (*)(B4A51 *)) func_00151010)
 #define func_00151148 ((void (*)(B4A51 *)) func_00151148)
@@ -174,7 +174,7 @@ void func_00151268(B4A51 *e) {
     f32 k;
     B4W51 *w = e->x144;
     if (!w) return;
-    func_001315c0(D_002E26A0[0], 0x8003, 0.0f, v);
+    func_001315c0(D_002E26A0[0], 0x8003, v, 0.0f);
     if (w->x24 < 1.0f) {
         w->x24 += 0.09999999590218067169189453125f;
         if (1.0f < w->x24) w->x24 = 1.0f;

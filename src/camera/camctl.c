@@ -480,7 +480,7 @@ void func_0017e910(void) {
 }
 
 /* func_0017eaa0 (from auto/text_00170000_4.c). */
-f32 func_0017b0e0(void);
+void func_0017b0e0(void);
 void func_00177a98(void);
 void func_001784b0(void);
 void func_00179d08(void);

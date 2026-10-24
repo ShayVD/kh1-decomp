@@ -50,7 +50,7 @@ void func_0024aac8(void *);
 void func_0024af40(void *, void *, void *);
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
-void func_00243ef8(s32, void *, void *, void *, void *, void *, void *, s32, f32, s32, s32, s32, s32, s32, void *, void *);
+void func_00243ef8(s32, void *, void *, void *, void *, void *, void *, s32, s32, s32, s32, s32, s32, void *, void *, f32);
 s32 func_0013c318(u16);
 s32 func_00147808(s32);
 
@@ -103,8 +103,8 @@ void func_00244188(Ent *o) {
         o->unk0 = 0;
         break;
     }
-    func_00243ef8(f, o->unk30, o->unk330, o->unk4B0, o->unk930, D_004267C0, D_004267F0, o->unk10, o->unk9F0,
-                  o->unk14, o->unk18, o->unk24, o->unk1C, o->unk20, o->unk9F4, o->unk9F8);
+    func_00243ef8(f, o->unk30, o->unk330, o->unk4B0, o->unk930, D_004267C0, D_004267F0, o->unk10, o->unk14,
+                  o->unk18, o->unk24, o->unk1C, o->unk20, o->unk9F4, o->unk9F8, o->unk9F0);
 }
 
 s32 func_00244298(void) {

@@ -43,7 +43,7 @@ void func_0024ac08(void *, s32 *);
 s32 func_00122ff8(s32);
 void func_0024ae00(void *);
 void func_0024af00(void *);
-void func_0012ec60(s32, s32, V4 *);
+f32 func_0012ec60(s32, s32, V4 *);
 s32 func_00249580(V4 *);
 f32 func_00237a48(I4 *, void *, V4 *, s32);
 void func_00249558(I4 *, I4 *);

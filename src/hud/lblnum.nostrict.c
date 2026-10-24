@@ -17,7 +17,7 @@ QW *D_00668F84 ALIGNED(4);
 extern QW D_00351E10[]; /* the staging arena as quadwords */
 extern QW *D_00668F80; /* src/data/bss_0066.c: Q4 *D_00668F80 */
 s32 func_00249580(void *);
-void func_00237a48(V4 *, void *, void *, s32);
+f32 func_00237a48(V4 *, void *, void *, s32);
 void func_00249558(V4 *, V4 *);
 void func_00246dc0(Item *, void *, s32, s32, f32);
 void func_00237018(void *, s32, s32);

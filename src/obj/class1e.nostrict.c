@@ -32,7 +32,7 @@ typedef struct { u8 pad[0x30]; Vec154768 v30; u8 pad40[0x2C]; S6C_1541a8 *p6C; u
 s32 func_00122ff8(Act1576a8 *);
 typedef struct { s32 w0; s32 w4; } Arg159178;
 void func_0013dc10(void *, s32);
-void func_0012ec60(s32, s32, void *);
+f32 func_0012ec60(s32, s32, void *);
 void func_00159148(void *, f32);
 /* ---- func_00159178 ---- */
 void func_00159178(Obj154c60 *a, s32 b, Arg159178 *s, Vec154768 *o) {
@@ -200,7 +200,7 @@ Ret157ea8 *func_00159740(Obj159740 *a, Vec154768 *o) {
 /* func_00159808 (from hand/nostrict/text_00150000_h35.c). */
 typedef struct { u8 pad[0x160]; u8 x160[0xC]; f32 f16C; } S148_159808;
 typedef struct { u8 pad[0x20]; Vec154768 v20; u8 pad30[0x118]; S148_159808 *p148; u8 pad14c[0x274]; u8 x3C0[4]; } Obj159808;
-#define func_001376e8 ((void (*)(void *, void *)) func_001376e8)
+#define func_001376e8 ((f32 (*)(void *, void *)) func_001376e8)
 /* ---- func_00159808 ---- */
 void func_00159808(Obj159808 *a, Vec154768 *b) {
     Vec154768 t, u;

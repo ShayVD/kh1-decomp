@@ -24,7 +24,7 @@ typedef struct Actor_4fe48 {
     u8 pad378[0x450 - 0x378]; f32 x450[4]; u8 pad460[0x470 - 0x460];
     union { u64 x; struct { struct Actor_4fe48 *lo; u32 hi; } w; } x470;
 } B4Ent;
-void func_001315c0(void *, s32, f32, void *);
+void func_001315c0(void *, s32, void *, f32);
 s32 func_00122ff8(B4Ent *);
 extern f32 D_002BBDFC;
 f32 cosf(f32);
@@ -85,7 +85,7 @@ void func_0014fe48(B4Ent *e) {
     else e->x450[3] = 1.0f;
     if (e->x130->x4c == 507) {
         PlatVu0CopyMatrix(m, e->xd0);
-        func_001315c0(e, 0, 0.5f, m[3]);
+        func_001315c0(e, 0, m[3], 0.5f);
         PlatVu0CopyVector(v, e->x450);
         PlatVu0ScaleVector(v, v, d);
         v[3] = 1.0f;

@@ -142,7 +142,7 @@ QD D_005297C0 ALIGNED(64);
 extern QD *func_00134f80(QD *, s32);
 extern void func_00135000(BD *, QD *);
 extern f32 func_00176850(void);
-extern s32 func_00176578(s32, s32, s32, s32);
+extern s32 func_00176578(s32, s32, s32, u64);
 extern s32 func_00134ba8(AD *, BD *, u32 *);
 extern void func_00121fc4(V4D *, V4D *);
 QD *func_001350d8(AD *a, u32 mask, BD *b) {

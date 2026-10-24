@@ -220,7 +220,7 @@ void func_001333e0(B3Ob *o, s32 id, void *p);
 void func_0013bb60(B3Ob *o, s32 id);
 void func_0012c560(B3Ob *o, void *a, s32 id);
 void func_001337e0(s32 a, void *b, s32 c);
-void func_001376e8(B3Ob *o, f32 *q);
+f32 func_001376e8(B3Ob *o, f32 *q);
 void func_00137330(void *a, B3Ob *o, s32 t);
 void func_0014f658(B3Ob *o, s32 t);
 void func_001519c0(B3Ob *o, void *a);
@@ -351,7 +351,7 @@ typedef struct {
     f32 f3c4;
 } ObjF3;
 typedef struct { u32 type:8; u32 id:16; u32 hi:8; s32 w4; } Cmd;
-void func_0014cce0(ObjF3 *, f32);
+f32 func_0014cce0(ObjF3 *, f32);
 #define func_00133000 ((s32 (*)(ObjF3 *, s32)) func_00133000)
 #define func_00130340 ((void (*)(ObjF3 *, s32, f32)) func_00130340)
 #define func_00130578 ((void (*)(ObjF3 *, s32, f32)) func_00130578)
@@ -430,7 +430,7 @@ typedef struct Actor_3eab0 {
     s32 x48c;
 } W55Ob_3eab0;
 typedef struct { u32 type:8; u32 id:16; u32 b24:1; u32 f25:1; u32 hi:6; void *x4; s32 x8; } W55Ev;
-void func_0012ec60(void *a, s32 b, f32 *v);
+f32 func_0012ec60(void *a, s32 b, f32 *v);
 #define func_0012c560 ((void (*)(W55Ob_3eab0 *o, void *a, s32 id)) func_0012c560)
 #define func_00130340 ((void (*)(void *o, s32 a, f32 f)) func_00130340)
 #define func_00130578 ((void *(*)(void *, s32, f32)) func_00130578)

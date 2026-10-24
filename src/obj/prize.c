@@ -108,7 +108,7 @@ void func_00145138(void) {
 
 /* func_00145240 (from auto/text_00140000_4.c). */
 M2C_UNK func_0011d350(M2C_UNK, s32);
-f32 func_00176310(s32);
+void func_00176310(s32);
 void func_00145240(Actor *arg0) {
     s32 temp_v1;
 

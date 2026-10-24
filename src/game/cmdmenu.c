@@ -421,7 +421,7 @@ f32 func_0012ec88(s32 arg0, s32 arg1) {
 #undef func_0012ec60
 
 /* func_0012eca8 (from auto/text_00120000_3.c). */
-#define func_001315c0 ((f32 (*)(void *, u16, void *, f32)) func_001315c0)
+#define func_001315c0 ((void (*)(void *, u16, void *, f32)) func_001315c0)
 #define func_0015c960 ((u8 *(*)(void *, M2C_UNK, u32, s32)) func_0015c960)
 f32 func_0012eca8(void *arg0, void *arg1) {
     u8 *var_s0;

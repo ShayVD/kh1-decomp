@@ -556,7 +556,7 @@ typedef struct {
     u8 padc0[0x120 - 0xc0];
     Vec x120;
 } Wk;
-void func_0014cce0(Obj *, f32);
+f32 func_0014cce0(Obj *, f32);
 s32 func_00162a88(Vec *);
 void func_00171790(Obj *, Wk *);
 #define GETDIR(o, w, v, r) \
@@ -942,7 +942,7 @@ C03Chr *func_00123158(C03Chr *, C03Chr *);
 s32 func_00141200(C03Chr *, s32);
 s32 func_0012ee70(C03Chr *, s32);
 s32 func_0012f040(C03Chr *, s32);
-void func_0012ec60(C03Chr *, s32, f32 *);
+f32 func_0012ec60(C03Chr *, s32, f32 *);
 static inline s32 inl_1890_6abc0(C03Chr *a, C03AW *b, s32 v) {
     s32 w = v;
     if (w < 3 && v >= 0) return 1;
@@ -1208,7 +1208,7 @@ typedef struct { u8 pad[4]; s32 flags; u8 pad8[4]; RngB6 *rng; } KB6;
 extern void *D_00574FC0[20];
 extern void func_00130340(ObjB6 *, s32, f32);
 extern Task0C *func_00130578(ObjB6 *, s32, f32);
-extern void func_001376e8(void *, f32 *);
+extern f32 func_001376e8(void *, f32 *);
 extern Res8 *func_0013dbe0(ObjB6 *, s32);
 extern Res8 *func_0013dc10(ObjB6 *, s32);
 extern s32 func_00141288(ObjB6 *, s32);
@@ -1256,7 +1256,7 @@ out:
 }
 #define func_0012f040 ((s32 (*)(void *, s32)) func_0012f040)
 #define func_0012ee70 ((s32 (*)(void *, s32)) func_0012ee70)
-#define func_0014cce0 ((void (*)(ObjB6 *, f32)) func_0014cce0)
+#define func_0014cce0 ((f32 (*)(ObjB6 *, f32)) func_0014cce0)
 #define func_00169510 ((s32 (*)(ObjB6 *, WkB6 *, s32)) func_00169510)
 s32 func_0016b670(ObjB6 *o, WkB6 *w, KB6 *k, s32 mode) {
     RngB6 *rng = k->rng;
@@ -2383,7 +2383,7 @@ static inline s32 inl_dead(ChrEA *c) {
 #define D_0035AE80 (*(PrmEA (*)) &D_0035AE80)
 #define func_00123158 ((EntEA *(*)(ChrEA *, EntEA *)) func_00123158)
 #define func_00123368 ((s32 (*)(EntEA *)) func_00123368)
-#define func_0012ec60 ((void (*)(EntEA *, s32, f32 *)) func_0012ec60)
+#define func_0012ec60 ((f32 (*)(EntEA *, s32, f32 *)) func_0012ec60)
 #define func_0012ee70 ((s32 (*)(EntEA *, s32)) func_0012ee70)
 #define func_0012f040 ((s32 (*)(void *, s32)) func_0012f040)
 #define func_00141200 ((s32 (*)(EntEA *, s32)) func_00141200)
@@ -2789,7 +2789,7 @@ static inline s32 inl_best(void *p, ChrFC *c) {
     }
     return best;
 }
-#define func_0012ec60 ((void (*)(void *, s32, f32 *)) func_0012ec60)
+#define func_0012ec60 ((f32 (*)(void *, s32, f32 *)) func_0012ec60)
 #define func_0012ee70 ((s32 (*)(void *, s32)) func_0012ee70)
 #define func_0012f040 ((s32 (*)(void *, s32)) func_0012f040)
 /* func_0016fc60: MATCH hand/nostrict */

@@ -35,7 +35,7 @@ void func_0014c428(W8Act *a) {
 }
 
 /* func_0014c448 (from hand/text_00140000_h8.c). */
-void func_0014cce0(W8Act *, f32);
+f32 func_0014cce0(W8Act *, f32);
 void func_00130398(W8Act *, s32, f32);
 void func_0014c448(W8Act *a) {
     PlatVu0ScaleVector(a->x3c0, a->x3c0, 0.7f);

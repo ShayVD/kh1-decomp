@@ -952,7 +952,12 @@ typedef struct {
 } PppSystemB7;
 void func_0019aa60(BoneKey *, s32 *, s32 *, s32 *, s32 *);
 s32 func_00122ff8(void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_001315c0(void *, s32, f32, f32 *);
+#else
+void func_001315c0(void *, s32, f32 *, f32);
+#define func_001315c0(a1, a2, a3, a4) (func_001315c0)(a1, a2, a4, a3)
+#endif
 #define D_00615E60 (*(PppSystemB *(*)) &D_00615E60)
 /* func_0019ab38: hand/nostrict (fill), rodata at 0x48fbb0, no context. MATCH (wqb03_rr.py), FLAGGED:
    the same dead FP tests as func_00199ac8 above (its while loop ported from that match), plus

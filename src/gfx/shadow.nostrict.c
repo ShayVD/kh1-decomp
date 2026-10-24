@@ -37,7 +37,7 @@ u32 *func_00121e28(s32, s32 *);
 s32 func_00115018(void *, s32, f32 (*)[4]);
 void func_00115058(void *, s32, f32 (*)[4]);
 void func_00115098(void *, s32, f32 *);
-void func_00120ef0(f32 *, void *, f32 *);
+f32 func_00120ef0(f32 *, void *, f32 *);
 void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
     f32 v[4][4];
     f32 c[4][4];

@@ -177,7 +177,7 @@ typedef struct {
 f32 atan2f(f32, f32);
 void func_00121fc4(f32 *, f32 *);
 void func_001315c0(void *, s32, f32 *, f32);
-void func_0012ec88();
+f32 func_0012ec88();
 f32 asinf(f32);
 f32 func_0014fab0(Obj57_fab0 *o, s32 id, f32 *dir, f32 lim) {
     f32 a[4];

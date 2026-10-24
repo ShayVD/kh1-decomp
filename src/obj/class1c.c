@@ -721,7 +721,7 @@ typedef struct Actor_53b68 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_53b68;
-void func_00130398(W9Ent_53b68 *e, f32 s, s32 n);
+void func_00130398(W9Ent_53b68 *e, s32 n, f32 s);
 void func_00153b68(W9Ent_53b68 *e, s32 a1, f32 *v) {
     s32 n;
     if (0.0f < v[3]) {
@@ -731,7 +731,7 @@ void func_00153b68(W9Ent_53b68 *e, s32 a1, f32 *v) {
         v[3] = 0.0f;
         n = 182;
     }
-    func_00130398(e, 8.0f, n);
+    func_00130398(e, n, 8.0f);
 }
 
 /* func_00153bb0 (from auto/text_00150000_18.c). */

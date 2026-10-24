@@ -429,7 +429,7 @@ extern B3Pj D_0052EB60[];
 extern f32 *D_00531B68;
 #define func_00145858 ((void (*)(B3Pj *, B3PjE *)) func_00145858)
 #define func_00145aa0 ((s32 (*)(B3Pj *, B3PjE *)) func_00145aa0)
-#define func_001315c0 ((void (*)(s32, s32, f32, f32 *)) func_001315c0)
+#define func_001315c0 ((void (*)(s32, s32, f32 *, f32)) func_001315c0)
 s32 func_00145ce8(B3Pj *o) {
     f32 t[4];
     f32 u[4];
@@ -475,7 +475,7 @@ s32 func_00145ce8(B3Pj *o) {
         PlatVu0ApplyMatrix(u, m, o->x20);
         PlatVu0CopyVectorXYZ(o->x20, u);
         PlatVu0ScaleVectorXYZ(u, o->x20, s);
-        func_001315c0(o->x1c, 0x8003, 0.0f, t);
+        func_001315c0(o->x1c, 0x8003, t, 0.0f);
         PlatVu0AddVector(e->v, t, u);
         e->x10 = r;
         o->x18 -= D_002BBDFC;

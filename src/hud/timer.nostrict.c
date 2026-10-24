@@ -68,7 +68,12 @@ void func_002474e8(Spr2 *, Fnt *, s32, s32, f32);
 void func_0024afc0(void *, void *, void *);
 void func_00248380(void);
 s32 sprintf(char *, const char *, ...);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_002475d0(s32, s32, s8 *, f32, char *, void *);
+#else
+void func_002475d0(s32, s32, s8 *, char *, void *, f32);
+#define func_002475d0(a1, a2, a3, a4, a5, a6) (func_002475d0)(a1, a2, a3, a5, a6, a4)
+#endif
 
 void func_00247930(MgHud *c) {
     s8 col[16];

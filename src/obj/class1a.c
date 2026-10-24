@@ -227,8 +227,8 @@ typedef struct Chr57_0930 {
     f32 f3cc;
 } Chr57_0930;
 void func_00121fc4(f32 *, f32 *);
-void func_001376e8(void *, f32 *);
-void func_0012ec88();
+f32 func_001376e8(void *, f32 *);
+f32 func_0012ec88();
 Ret57_0930 *func_0014cb90(Chr57_0930 *);
 s32 func_0014f658(Chr57_0930 *, s32);
 void func_00150930(Chr57_0930 *o, Chr57_0930 *t, f32 *v) {
@@ -310,7 +310,7 @@ typedef struct Actor_50af0 {
     void *x4a0;
 } W9Ent_50af0;
 extern f32 D_002C5970;
-void func_0014cce0(W9Ent_50af0 *e, f32 s);
+f32 func_0014cce0(W9Ent_50af0 *e, f32 s);
 #define func_00121fc4 ((void (*)(void *dst, void *src)) func_00121fc4)
 #define func_0014cb90 ((W9Obj144 *(*)(W9Ent_50af0 *e)) func_0014cb90)
 void func_00150af0(W9Ent_50af0 *e, f32 *v) {
@@ -371,7 +371,7 @@ typedef struct Actor_50b70 {
     void *x4a0;
 } W9Ent_50b70;
 #define func_0014cb90 ((W9Obj144 *(*)(W9Ent_50b70 *e)) func_0014cb90)
-#define func_0014cce0 ((void (*)(W9Ent_50b70 *e, f32 s)) func_0014cce0)
+#define func_0014cce0 ((f32 (*)(W9Ent_50b70 *e, f32 s)) func_0014cce0)
 void func_00150b70(W9Ent_50b70 *e) {
     f32 t[4];
     if (e->x98) return;

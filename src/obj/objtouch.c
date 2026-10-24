@@ -174,7 +174,7 @@ void func_0015ac30(void *arg0) {
 typedef struct { u8 pad[0xC]; void *cb; } Task;
 typedef struct { u32 flags; u8 pad[0x3BC]; u8 x3C0[4]; } Obj15A;
 void func_00130398(void *, s32, f32);
-void func_0014cce0(void *, f32);
+f32 func_0014cce0(void *, f32);
 #define func_00130578 ((Task *(*)(void *, s32, f32)) func_00130578)
 void func_0015ac58(Obj15A *a) {
     f32 z = 0.0f;

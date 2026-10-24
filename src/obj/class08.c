@@ -26,7 +26,7 @@
 
 /* func_0014d988 (from hand/text_00140000_s6_07.c). */
 f32 func_0012ec60(struct Actor *, s32, f32 *);
-void func_001315c0(void *, s32, f32, f32 *);
+void func_001315c0(void *, s32, f32 *, f32);
 f32 func_00121748(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 void func_0014d988(void *o, s32 unused, f32 *v, f32 r, f32 off, f32 scale, f32 lim) {
@@ -40,7 +40,7 @@ void func_0014d988(void *o, s32 unused, f32 *v, f32 r, f32 off, f32 scale, f32 l
 
     z = 0.0f;
     h = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, d);
-    func_001315c0(o, 0x8003, z, p);
+    func_001315c0(o, 0x8003, p, z);
     PlatVu0SubVector(d, d, p);
     if (r < func_00121748(d, v)) {
         s = (func_00120c18(d) - h - off) * scale;
@@ -402,7 +402,7 @@ typedef struct {
 } Obj57_df60;
 void func_00121fc4(f32 *, f32 *);
 s32 func_001375f0(Obj57_df60 *);
-void func_001376e8(void *, f32 *);
+f32 func_001376e8(void *, f32 *);
 #define func_00130398 ((void (*)(void *, s32, f32)) func_00130398)
 void func_0014df60(Obj57_df60 *o, f32 *v) {
     f32 t[4];
@@ -554,13 +554,13 @@ typedef struct Actor_4e3a0 {
     f32 x490[4];
     void *x4a0;
 } W9Ent_4e3a0;
-void func_0014cc88(W9Ent_4e3a0 *e, f32 s);
-#define func_00130398 ((void (*)(W9Ent_4e3a0 *e, f32 s, s32 n)) func_00130398)
+f32 func_0014cc88(W9Ent_4e3a0 *e, f32 s);
+#define func_00130398 ((void (*)(W9Ent_4e3a0 *e, s32 n, f32 s)) func_00130398)
 void func_0014e3a0(W9Ent_4e3a0 *e) {
     f32 s = 12.0f;
     PlatVu0ScaleVector(e->x3c0, e->x3c0, 0.7f);
     func_0014cc88(e, s);
-    func_00130398(e, s, 6);
+    func_00130398(e, 6, s);
 }
 #undef func_00130398
 

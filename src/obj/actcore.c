@@ -283,7 +283,7 @@ s32 func_0014f658(W9Ent_4f658 *e, s32 s) {
 }
 
 /* func_0014f6f8 (from auto/text_00140000_11.c). */
-M2C_UNK func_001376e8();
+f32 func_001376e8();
 void func_0014f6f8(s32 arg0, void *arg1) {
     if (M2C_FIELD(arg1, f32 *, 0xC) > 0.0f) {
         func_001376e8(arg0, arg1);
@@ -395,7 +395,7 @@ void func_0014f868(void) {
 }
 
 /* func_0014f948 (from auto/text_00140000_10.c). */
-M2C_UNK func_0012ec88(s32, void *);
+f32 func_0012ec88(s32, void *);
 s32 func_00122ff8(s32);
 void func_0014f948(void *arg0, s32 arg1) {
     if (M2C_FIELD(arg0, s32 *, 0x470) != arg1) {

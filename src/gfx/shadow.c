@@ -222,7 +222,7 @@ extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
 #define func_001284a0 ((void (*)(A6 *, s32)) func_001284a0)
 #define func_00128738 ((void (*)(B6 *, s32)) func_00128738)
-#define func_0011fb38 ((void *(*)(s32, s32, void *)) func_0011fb38)
+#define func_0011fb38 ((void *(*)(s32, u64, void *)) func_0011fb38)
 #define func_0011fb48 ((void (*)(void *, s32, void *)) func_0011fb48)
 #define func_0011fb78 ((void (*)(void *, s32, void *)) func_0011fb78)
 void func_00128b20(void) {

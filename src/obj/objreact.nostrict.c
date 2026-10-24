@@ -82,7 +82,12 @@ extern void func_00139170(O39 *, E39 *);
 extern s32 func_00130340(O39 *, s32, f32);
 extern void *func_00130578(O39 *, s32, f32);
 extern void func_00137688(O39 *, f32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 extern void func_00138a20(O39 *, f32, f32 *);
+#else
+extern void func_00138a20(O39 *, f32 *, f32);
+#define func_00138a20(a1, a2, a3) (func_00138a20)(a1, a3, a2)
+#endif
 void func_00139240(O39 *o, E39 *e, s32 k, f32 a, f32 b, f32 c) {
     f32 ang;
     if (!k) k = func_0014f600(o) ? 92 : 82;

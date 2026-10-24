@@ -19,7 +19,7 @@
 #include "data/pieces/D_00304BE8_s.h"
 
 /* func_0015e178 (from hand/nostrict/text_00140000_b04.c). */
-void func_001315c0(void *, s32, f32, void *);
+void func_001315c0(void *, s32, void *, f32);
 extern f32 D_002BBDFC;
 typedef struct { u8 pad[0x20]; f32 x20; f32 x24; f32 x28; u8 pad2c[0x3b0 - 0x2c]; f32 x3b0; } B4E5;
 extern u32 D_002E3190;
@@ -55,7 +55,7 @@ void func_0015e178(B4E5 *e, s32 unused, f32 *v) {
     }
     if (D_002E31B8 >= 3 && 0.0f < v[3] && v[1] == 0.0f) {
         d = func_0012ec60(D_002E31B0.f0, D_002E31B0.f4, a);
-        func_001315c0(e, 0x8003, 0.0f, b);
+        func_001315c0(e, 0x8003, b, 0.0f);
         PlatVu0SubVector(a, a, b);
         if (0.5f < func_00121748(a, v)) {
             t = (func_00120c18(a) - d - 200.0f) * 0.7999999523162842f;
@@ -79,7 +79,7 @@ typedef struct {
     u8 pad17c[0x440 - 0x17c];
     u64 x440;
 } Ob5e;
-void func_001376e8(Ob5e *, f32 *);
+f32 func_001376e8(Ob5e *, f32 *);
 s32 func_001375f0(Ob5e *);
 void func_00130398(void *, s32, f32);
 void func_0015e438(Ob5e *o, f32 *v) {

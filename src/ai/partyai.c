@@ -139,7 +139,7 @@ s32 func_00170f90(void *arg0, void *arg1) {
 }
 
 /* func_00170fa8 (from auto/text_00170000_10.c). */
-f32 func_001224c8(s32, s32, s32, f32);
+void func_001224c8(s32, s32, s32, f32);
 s32 func_001226f0(s32, s32, s32);
 #define D_00575310 (*(M2C_UNK (*)) &D_00575310)
 void func_00170fa8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
@@ -373,7 +373,7 @@ void func_00172028();
 void func_001732b0();
 void func_00173360();
 void func_00173478();
-f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, s32);
+void func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, s32);
 void func_00172d90(s32 arg0, void *arg1) {
     M2C_FIELD(arg1, s32 *, 0x18) = 0x17;
     M2C_FIELD(arg1, M2C_UNK **, 0x1C) = &D_0035BE50;
