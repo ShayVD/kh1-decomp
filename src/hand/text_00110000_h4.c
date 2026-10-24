@@ -119,7 +119,6 @@ void func_00120438(s32 a, s32 b) {
     while (sceCdDiskReady(1) != 2 || func_00269da8(a, b) == 0) func_0011fd40();
 }
 
-
 typedef struct { u8 pad[68]; s32 x44; s32 x48; } Ent4C;
 Ent4C D_004E4528[0x10] ALIGNED(8);
 s32 func_0011f2d0(Ent4C *);
@@ -319,102 +318,7 @@ u32 func_00122048(u32 size, u32 align) {
     return v;
 }
 
-typedef Lt64_2c5c80 Ent40;
-#include "data/pieces/D_002C5C60.h"
-void func_002675a8(Vec4 *, Vec4 *);
-
-Ent40 *func_001226f0(s32 a, s32 b, s32 c) {
-    s32 i;
-    Ent40 *e = &D_002C5C80;
-    for (i = 0; i < 31; i++, e++) {
-        if (e->kind == 0) {
-            e->kind = a; e->flags = b; e->c = c;
-            func_002675a8(&e->col, &D_002C5C60);
-            return e;
-        }
-    }
-    return 0;
-}
-
-typedef struct { u8 pad[0x44]; f32 f44; u8 pad2[0x16]; u8 b5e; u8 b5f; } Sub130;
-typedef struct {
-    u32 flags; u8 pad[0x12c]; Sub130 *p130; u8 pad2[0x18]; s32 x14c; s32 pad3; s32 x154;
-    u8 pad4[0x78]; s32 x1d0; u8 pad5[0x19c]; u64 x370;
-} Obj;
-
-void func_00122f20(Obj *o, s32 *out) {
-    out[0] = o->x154;
-    if (o->x14c) out[1] = *(s32 *)o->x14c; else out[1] = 0;
-    out[2] = o->x1d0;
-}
-
-s32 func_00122fd0(Obj *o) {
-    s32 r = 0;
-    if (o->p130->b5f) {
-        if (!(o->flags & 0x2000000)) r = 1;
-    }
-    return r;
-}
-
-s32 func_00122ff8(Obj *o) {
-    s32 r = 0;
-    if (o) {
-        if ((o->x370 & 0x300000000) == 0x100000000) r = 1;
-    }
-    return r;
-}
-
 /* Actor table: 1200-byte entries from D_002C64A0 up to D_002E26A0. */
-typedef struct Act {
-    u8 pad0[6]; u8 b6; u8 pad7[0x6d]; struct Act *x74; s32 x78; s32 pad7c; s32 x80;
-    u8 pad84[0x2ec];
-    union { u64 x370; struct { u32 lo0; u32 lo : 5; u32 kind : 2; u32 hi : 25; } b370; } u370;
-    u8 pad378[0x138];
-} Act;
-extern Act D_002C64A0[];
-#include "data/pieces/D_002E26A0.h"
-Act *func_001230a0(Act *a);
-s32 func_00123118(s32, Act *);
-
-void func_00123030(Act *x, Act *a1, s32 a2) {
-    Act *a;
-    x->x74 = a1;
-    x->x78 = a2;
-    a = 0;
-    while ((a = func_001230a0(a)) != 0) a->x80 = 0;
-    while ((a = func_001230a0(a)) != 0) {
-        if (a->x74) a->x74->x80++;
-    }
-}
-
-Act *func_001230a0(Act *a) {
-    if (a == 0) a = D_002C64A0; else a++;
-    for (; a < ((Act *)&D_002E26A0); a++) {
-        if ((a->u370.x370 & 0x300000000) == 0x100000000) return a;
-    }
-    return 0;
-}
-
-Act *func_00123158(s32 k, Act *a) {
-    while ((a = func_001230a0(a)) != 0) {
-        if (func_00123118(k, a)) return a;
-    }
-    return 0;
-}
-
-Act *func_001231b8(Act *x, Act *a) {
-    while ((a = func_001230a0(a)) != 0) {
-        if (x != a && x->u370.b370.kind == a->u370.b370.kind) return a;
-    }
-    return 0;
-}
-
-Act *func_00123220(Act *a) {
-    while ((a = func_001230a0(a)) != 0) {
-        if (a->b6 == 2 || a->b6 == 9 || a->b6 == 10 || a->u370.b370.kind == 2) return a;
-    }
-    return 0;
-}
 
 /* needs make: uses rodata */
 /* "%3d" at D_0048D110, "amusic/music" at D_0048D118 (inlined strcpy). */

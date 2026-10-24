@@ -217,47 +217,6 @@ void func_00121c78(void) {
     p->x8 = 0;
     func_0011ef10(200000, func_00121b98)->x2 = -1;
 }
-#include "data/pieces/D_002C5C80.h"
-typedef Lt64_2c5c80 Lt64;
-typedef struct { u8 pad[0x420]; u32 mask; u8 pad2[0xc]; f32 pos[4]; } Obj430;
-#include "data/pieces/D_002C5910.h"
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-
-void func_001229c0(Obj430 *o, f32 m[4][4]) {
-    s32 i;
-    s32 b;
-    f32 *row;
-    Lt64 *e;
-    sceVu0CopyMatrix(m, D_002C5910);
-    { s32 j; for (j = 3; j >= 0; j--) m[3][j] = 1.0f; }
-    for (i = 0, e = &D_002C5C80, b = 1, row = m[0]; i < 31; i++, e++) {
-        if (o->mask & (b << i)) {
-            if (e->kind < 5) if (e->kind >= 2) {
-                func_002675a8(row, &e->col.x);
-                row += 4;
-            }
-        }
-    }
-    func_002675a8(m[3], o->pos);
-}
-typedef struct { u8 pad[0x44]; f32 x44; u8 pad48[0x16]; u8 x5e; u8 x5f; } Sub130;
-typedef struct { u8 pad[0x130]; Sub130 *p; } Obj130;
-void func_00122f58(Obj130 *o, f32 a, f32 b, f32 c) {
-    o->p->x44 = a;
-    o->p->x5e = b;
-    o->p->x5f = c;
-}
-typedef struct { u8 pad[6]; volatile u8 x6; } Sub134;
-typedef struct { u64 x0; u8 pad8[0x12c]; Sub134 *x134; u8 pad138[0x270]; u32 x3a8; } Ent3a8;
-s32 func_00123368(Ent3a8 *e) {
-    Sub134 *s = e->x134;
-    s32 i;
-    if (s == 0 || s->x6 == 0 || ((u8 *)e)[6] == 2 || (e->x0 & 0x8048) != 0x8000) return 0;
-    for (i = 0; i < s->x6; i++) {
-        if (!(e->x3a8 & (1 << i))) return 1;
-    }
-    return 0;
-}
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004E_typed.h"
 #include "data/data_002C.h"

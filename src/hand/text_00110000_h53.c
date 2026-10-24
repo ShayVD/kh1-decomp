@@ -229,233 +229,17 @@ s32 func_00121168(V53 *out, V53 *a, V53 *b, f32 t) {
     return 1;
 }
 
-extern s32 D_002BC128, D_002BC130, D_002BC134;
-extern u32 D_002C5958;
-extern s32 D_002C5C4C, D_002C5C50, D_002C5C54;
-void func_0012b738(void);
-void func_00124b90(void);
-void func_00142030(void);
-void func_001561b0(void);
-void func_00132c70(s32, s32);
-void func_00133520(void);
-void func_00146590(void);
-void func_00151808(void);
-void func_001356a8(void);
-void func_0014c378(void);
-void func_0012ff80(void);
-void func_00122cf0(void);
-void func_00134718(void);
-void func_0013bd08(void);
-void func_0012ea38(void);
-
-void func_00122198(s32 a0, s32 a1) {
-    D_002C5958 = 0;
-    if (D_002BC128 == 16 && (D_002BC130 == 26 || D_002BC130 == 33 || D_002BC130 == 34)) {
-        *(volatile u32 *)&D_002C5958 |= 0x20;
-    }
-    D_002C5C4C = D_002BC128 == 9 || (D_002BC128 == 16 && D_002BC130 == 21);
-    D_002C5C50 = D_002BC128 == 10 || (D_002BC128 == 16 && D_002BC130 == 22);
-    D_002C5C54 = D_002BC128 == 15 && D_002BC134 == 10;
-    func_0012b738();
-    func_00124b90();
-    func_00142030();
-    func_001561b0();
-    func_00132c70(a0, a1);
-    func_00133520();
-    func_00146590();
-    func_00151808();
-    func_001356a8();
-    func_0014c378();
-    func_0012ff80();
-    func_00122cf0();
-    func_00134718();
-    func_0013bd08();
-    func_0012ea38();
-}
-
 #include "data/types/text_00110000_h53_p2.h"
-#include "data/pieces/D_002C5C80.h"
-#include "data/pieces/D_002C5910.h"
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-f32 func_00267390(f32 *, V53 *);
 float cosf(float);
-
-void func_00122770(u8 *o, V53 *pos, f32 m[4][4]) {
-    V53 d;
-    Light53 *l;
-    s32 i, j, n;
-    f32 dot, r;
-    n = 0;
-    sceVu0CopyMatrix(m, D_002C5910);
-    l = &D_002C5C80;
-    for (i = 0; i < 31; i++, l++) {
-        if (!(*(u32 *)(o + 0x420) & (1 << i))) continue;
-        switch (l->kind) {
-        case 2:
-            for (j = 0; j < 3; j++) m[j][n] = -(&l->dir.x)[j];
-            n++;
-            break;
-        case 3:
-            func_00267530(&d, &l->pos, pos);
-            func_00121fc4(&d, &d);
-            if (d.w < l->radius) {
-                func_00267560(&d, &d, cosf(d.w / l->radius * 3.1415928f * 0.5f));
-                for (j = 0; j < 3; j++) m[j][n] = ((f32 *)&d)[j];
-            }
-            n++;
-            break;
-        case 4:
-            func_00267530(&d, &l->pos, pos);
-            func_00121fc4(&d, &d);
-            dot = -func_00267390(&l->dir.x, &d);
-            r = l->radius;
-            if (r < dot) {
-                func_00267560(&d, &d, (dot - r) / (1.0f - r));
-                for (j = 0; j < 3; j++) m[j][n] = ((f32 *)&d)[j];
-            }
-            n++;
-            break;
-        }
-    }
-    m[3][3] = 1.0f;
-}
-
-typedef struct { u8 pad[0x130]; u8 *name; } Obj53;
-extern s32 D_002C648C;
 char D_004F7150[0x4][32] ALIGNED(16);
 extern char *D_002C6460[];
-extern char D_0048D320[], D_0048D328[], D_0048D330[];
 extern u8 D_00491A18[];
-Obj53 *func_00123488(u32);
-u8 *func_001320a8(u32);
-int sprintf(char *, const char *, ...);
-u32 strlen(const char *);
 
 static inline s32 w53_toupper(s32 c) {
     return ((D_00491A18 + 1)[c] & 2) ? c - 32 : c;
 }
-
-char *func_00122dc8(u32 id, char *buf) {
-    Obj53 *o = func_00123488(id);
-    u8 *p;
-    s32 n, i;
-    char c;
-    if (o) {
-        p = o->name;
-    } else {
-        p = func_001320a8(id);
-    }
-    if (!buf) {
-        buf = D_004F7150[D_002C648C];
-        D_002C648C = (D_002C648C + 1) % 4;
-    }
-    if (p) {
-        sprintf(buf, D_0048D320, D_002C6460[(id >> 16) & 0xff], p + 104);
-    } else if (((id >> 16) & 0xff) < 11) {
-        sprintf(buf, D_0048D328, D_002C6460[(id >> 16) & 0xff], id);
-    } else {
-        sprintf(buf, D_0048D330, (id >> 16) & 0xff, id);
-    }
-    n = strlen(buf);
-    for (i = 0; i < n; i++) {
-        buf[i] = w53_toupper(buf[i]);
-    }
-    return buf;
-}
-
-typedef struct { u8 pad[4]; u32 flags; } Info8;
-typedef struct {
-    u64 lo : 44;
-    u64 b44 : 1;
-    u64 b45 : 1;
-    u64 b46 : 1;
-    u64 hi : 17;
-} F370;
-typedef struct Act53 {
-    u8 pad0[0x10];
-    V53 pos;
-    V53 rot;
-    f32 x30, x34, x38, x3c;
-    u8 pad40[0x10];
-    V53 prev;
-    u8 pad60[0x60];
-    f32 xc0;
-    f32 xc4;
-    f32 xc8;
-    f32 xcc;
-    u8 padd0[0x50];
-    V53 x120;
-    Info8 *info;
-    u8 pad134[0x1c];
-    f32 x150;
-    u8 pad154[0x14c];
-    V53 x2a0;
-    u8 pad2b0[0xa0];
-    s32 col[4];
-    u8 pad360[0x10];
-    F370 f;
-    u8 pad378[0x26];
-    u8 x39e;
-    u8 pad39f[0x11];
-    f32 x3b0;
-    f32 x3b4;
-    f32 x3b8;
-    f32 x3bc;
-} Act53;
-typedef struct {
-    union { u32 w; u64 d; struct { u64 lo : 16; u64 b16 : 1; u64 hi : 47; } b; } u;
-    u8 pad8[0x88];
-    Act53 *owner;
-} Ent53;
-#include "data/pieces/D_002C58A0.h"
 void func_002675a8(V53 *, V53 *);
-f32 func_00120c88(f32);
-float sinf(float);
 float cosf(float);
-void func_00136d38(Act53 *);
-void func_00116660(V53 *);
-Ent53 *func_0014a398(Ent53 *);
-
-void func_001238d0(Act53 *o, V53 *p) {
-    Ent53 *e;
-    f32 a;
-    func_002675a8(&o->pos, p);
-    o->pos.w = 1.0f;
-    func_002675a8(&o->prev, &o->pos);
-    if (!((*(u64 *)&o->f >> 44) & 1)) {
-        a = func_00120c88(p->w);
-        o->x30 = sinf(a);
-        o->x34 = 0.0f;
-        o->x38 = cosf(a);
-        o->x150 = a;
-        o->x3c = a;
-        func_002675a8(&o->rot, (V53 *)&o->x30);
-    }
-    o->rot.w = 0.0f;
-    o->x3b4 = p->y;
-    o->x3b0 = 0.0f;
-    o->x3b8 = 0.0f;
-    o->x3bc = 0.0f;
-    o->xc0 = 0.0f;
-    o->xc4 = 1.0f;
-    o->xcc = 1.0f;
-    o->xc8 = 0.0f;
-    func_00136d38(o);
-    func_002675a8(&o->x2a0, &o->pos);
-    func_00116660(&o->x2a0);
-    if (!(o->info->flags & 0x40000)) {
-        o->col[3] = 128;
-        o->col[2] = 128;
-        o->col[1] = 128;
-        o->col[0] = 128;
-    }
-    o->x39e = 0;
-    o->f.b46 = 0;
-    func_002675a8(&o->x120, &D_002C58A0);
-    for (e = 0; (e = func_0014a398(e)) != 0;) {
-        if (e->owner == o && (e->u.w & 3) == 1) e->u.b.b16 = 0;
-    }
-}
 
 #include "data/types/text_00110000_h53.h"
 extern f32 D_004F7650, D_004F77E0;
@@ -463,47 +247,7 @@ extern f32 D_004F7650, D_004F77E0;
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 
 /* needs make: uses rodata */
-extern V53 D_002C5C70;
 void func_002675a8(V53 *, V53 *);
-void func_00267548(V53 *, V53 *, V53 *);
-
-void func_00122588(u8 *o) {
-    V53 *acc = (V53 *)(o + 0x430);
-    V53 d;
-    Light53 *l;
-    s32 i;
-    u32 mask = 0;
-    f32 dist, r;
-    func_002675a8(acc, &D_002C5C70);
-    l = &D_002C5C80;
-    for (i = 0; i < 31; i++, l++) {
-        if (l->flags & 0x11) continue;
-        switch (l->kind) {
-        case 1:
-            func_00267548(acc, acc, &l->col);
-            break;
-        case 2:
-            mask |= 1 << i;
-            break;
-        case 3:
-            mask |= 1 << i;
-            break;
-        case 4:
-            mask |= 1 << i;
-            break;
-        case 5:
-            func_00267530(&d, (V53 *)(o + 0x10), &l->pos);
-            dist = func_00120bf8(&d);
-            r = l->radius;
-            if (dist < r) {
-                func_002674f0(&d, &l->col, &D_002C5C70, cosf(dist / r * 3.1415928f * 0.5f));
-                func_00267548(acc, acc, &d);
-            }
-            break;
-        }
-    }
-    *(u32 *)(o + 0x420) = mask;
-}
 
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 extern f32 D_004F77E0;
@@ -531,7 +275,4 @@ char *D_002C6460[0xb] ALIGNED(16) = {
 #include "data/data_002E.h"
 #include "data/data_0049.h"
 #include "data/data_0048.h"
-#include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_0046A6A8.h"
-#include "data/pieces/D_002C5C70.h"

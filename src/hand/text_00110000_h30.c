@@ -81,26 +81,6 @@ void func_002672f8(f32 *, V4 *, f32 *);
 extern f32 D_002BBDFC;
 void func_002675a8(f32 *, f32 *);
 #include "data/pieces/D_002C5910.h"
-typedef struct { u8 pad0[12]; s32 xC; u8 pad10[60]; u16 x4C; u8 pad4e[6]; s8 kind; u8 pad55[4]; u8 x59; } Info123;
-typedef union {
-    u64 v;
-    struct { u32 lo0; u32 x0 : 1; u32 b33 : 1; u32 x2 : 14; u32 b48 : 1; u32 x17 : 5; u32 b54 : 1; u32 x23 : 9; } b;
-    struct { u64 lo : 33; u64 b33 : 1; u64 m : 14; u64 b48 : 1; u64 m2 : 5; u64 b54 : 1; u64 hi : 9; } c;
-} ObjFlags;
-typedef struct Actor {
-    u32 x0;
-    u8 pad4[300];
-    Info123 *info;
-    u8 pad134[4];
-    s32 x138;
-    u8 pad13c[8];
-    s32 x144;
-    u8 pad148[552];
-    ObjFlags fl;
-    u8 pad378[40];
-    s32 x3a0;
-} Obj123;
-#include "data/pieces/D_002E26A0.h"
 
 extern s32 D_002BD150[];
 extern s32 D_002BD160[];
@@ -727,82 +707,6 @@ void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
     out[3] = 0;
     func_002672f8(out, m, out);
 }
-
-#include "data/pieces/D_002C5C80.h"
-typedef Lt64_2c5c80 Ent5C80;
-#include "data/pieces/D_002BC0A8.h"
-extern V4 D_002C6450;
-extern TPool D_004F6EC0;
-void func_00107e10(Ent5C80 *);
-void func_00110e68(f32 *);
-void func_00267548(f32 *, f32 *, f32 *);
-
-s32 func_00122ab0(void) {
-    s32 i;
-    Ent5C80 *e;
-    func_0011f130(&D_004F6EC0, 0);
-    D_002C6450[0] = D_002C6450[1] = D_002C6450[2] = D_002C6450[3] = 1.0f;
-    D_002BC0A8.u &= ~0x10;
-    e = &D_002C5C80;
-    for (i = 0; i < 31; i++, e++) {
-        if (e->flags & 0x12) continue;
-        if (e->kind != 1) {
-            if (e->kind == 3) {
-                func_00107e10(e);
-                D_002BC0A8.u |= 0x10;
-            }
-        } else {
-            func_00267548(D_002C6450, D_002C6450, &e->col.x);
-        }
-    }
-    D_002C6450[3] = 1.0f;
-    func_00110e68(D_002C6450);
-    return 0;
-}
-
-typedef struct { u8 pad0[880]; u64 flags; u8 pad378[312]; } Obj1200;
-extern Obj1200 D_002C64A0[];
-#include "data/pieces/D_002E26AC.h"
-void *memset(void *, s32, u32);
-
-Obj1200 *func_00123810(void) {
-    s32 i;
-    Obj1200 *p;
-    for (i = 0; i < 96; i++) {
-        p = D_002E26AC;
-        D_002E26AC = p + 1;
-        if ((void *)D_002E26AC >= (void *)D_002E26A0) D_002E26AC = D_002C64A0;
-        if (!((s32)(p->flags >> 32) & 1)) {
-            memset(p, 0, sizeof(Obj1200));
-            p->flags |= 1ULL << 32;
-            return p;
-        }
-    }
-    return 0;
-}
-
-extern s32 D_00350D80;
-s32 func_00122ff8(Obj123 *);
-s32 func_0014f658(Obj123 *, s32);
-void func_001574b0(u16);
-void func_00170e48(Obj123 *);
-void func_0014ed30(Obj123 *);
-
-void func_001247e8(Obj123 *o) {
-    s32 i;
-    if (func_00122ff8(o) == 0) return;
-    func_0014f658(o, 0);
-    for (i = 0; i < 3; i++) {
-        if (D_002E26A0[i] == o) {
-            func_001574b0(o->info->x4C);
-            if (o->info->kind == 1) func_00170e48(o);
-            D_002E26A0[i] = 0;
-        }
-    }
-    o->fl.c.b33 = 1;
-    if (!o->fl.b.b54) D_00350D80 -= o->info->x59;
-    func_0014ed30(o);
-}
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004F_mixed.h"
 #include "data/bss_004F_typed.h"
@@ -814,7 +718,6 @@ void func_001247e8(Obj123 *o) {
 #include "data/pieces/D_002C1378.h"
 #include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002C1368.h"
-#include "data/pieces/D_002C6450.h"
 #include "data/pieces/D_002C1320.h"
 #include "data/pieces/D_002C1330.h"
 #include "data/pieces/D_002C1340.h"

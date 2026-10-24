@@ -5,24 +5,13 @@
 #include "data/bss_004F.h"
 
 M2C_UNK func_00121f6c(s32, s32, s32);
-M2C_UNK func_00149860(void *);
-M2C_UNK func_00162110(s32, void *);
 M2C_UNK func_0025ed48(s32, s32, s32, s32);
 M2C_UNK func_002676c0(f32);
 M2C_UNK func_00267768(s32, s32, f32);
 M2C_UNK func_00267810(s32, s32, f32);
-#include "data/pieces/D_002C5C80.h"
 extern M2C_UNK D_004F45B0; /* src/data/bss_004F.c: Block D_004F45B0[0x200] */
-extern M2C_UNK func_00122ab0;
-#include "data/pieces/D_002C6440.h"
 #include "data/pieces/D_002E26A0.h"
-s32 *func_00123488();
-s32 func_0011ef10(s32, s32);
-s32 func_0011ef38(s32);
 s32 func_00120930();
-s32 func_001226f0(s32, s32, s32);
-s32 func_00123368();
-void func_00122bd8(void);
 
 void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_0025ed48(func_00120930(), arg1, arg2, arg3);
@@ -69,85 +58,6 @@ s32 func_00121b98(void) {
         } while (var_s0 != NULL);
     }
     return 0;
-}
-
-void func_00122cf0(void) {
-    s8 *var_v0;
-    s32 temp_v0;
-    s32 var_v1;
-
-    var_v1 = 0x1E;
-    var_v0 = &D_002C5C80;
-    do {
-        var_v1 -= 1;
-        M2C_FIELD(var_v0, s32 *, 0) = 0;
-        M2C_FIELD(var_v0, s32 *, 4) = 0;
-        var_v0 += 0x40;
-    } while (var_v1 >= 0);
-    temp_v0 = func_001226f0(2, 7, 0);
-    D_002C6440 = temp_v0;
-    M2C_FIELD(temp_v0, s32 *, 0x20) = 0;
-    M2C_FIELD(D_002C6440, f32 *, 0x24) = 1.0f;
-    M2C_FIELD(D_002C6440, s32 *, 0x28) = 0;
-    M2C_FIELD(D_002C6440, f32 *, 0x2C) = 1.0f;
-    M2C_FIELD(D_002C6440, f32 *, 0x30) = 1.0f;
-    M2C_FIELD(D_002C6440, f32 *, 0x34) = 1.0f;
-    M2C_FIELD(D_002C6440, f32 *, 0x38) = 1.0f;
-    M2C_FIELD(D_002C6440, f32 *, 0x3C) = 1.0f;
-    func_00122bd8();
-    if (func_0011ef38((s32) &func_00122ab0) != 0) {
-        return;
-    }
-    func_0011ef10(0xEA60, (s32) &func_00122ab0);
-}
-
-s32 func_001233e8(Actor *arg0) {
-    s32 var_s1;
-
-    var_s1 = 0;
-    if (func_00123368() != 0) {
-        var_s1 = (arg0->unk000 & 0x01000080) == 0;
-    }
-    return var_s1;
-}
-
-void func_00123648(s32 arg0, s32 arg1) {
-    s32 *temp_v0;
-
-    temp_v0 = func_00123488();
-    *temp_v0 |= 1 << arg1;
-}
-
-void func_00123680(s32 arg0, s32 arg1) {
-    s32 *temp_v0;
-
-    temp_v0 = func_00123488();
-    *temp_v0 &= ~(1 << arg1);
-}
-
-s32 func_001236c0(s32 arg0, s32 arg1) {
-    return *func_00123488() & (1 << arg1);
-}
-
-void func_001236f8(void *arg0) {
-    s32 temp_v0;
-
-    if (!(((u64) M2C_FIELD(arg0, u64 *, 0x370) >> 0x27) & 1)) {
-        temp_v0 = M2C_FIELD(arg0, s32 *, 0x154);
-        if (temp_v0 != 0) {
-            func_00162110(temp_v0, arg0 + 0x15C);
-            if (M2C_FIELD(arg0, s32 *, 0x14C) != 0) {
-                func_00149860(arg0);
-            }
-            M2C_FIELD(arg0, s32 *, 0x154) = 0;
-            M2C_FIELD(arg0, s32 *, 0x134) = 0;
-        }
-    }
-}
-
-void func_001238c0(void *arg0, f32 fparg0, f32 fparg1) {
-    M2C_FIELD(arg0, f32 *, 0x410) = fparg0;
-    M2C_FIELD(arg0, f32 *, 0x414) = fparg1;
 }
 #include "data/bss_0052_mixed.h"
 #include "data/data_002E.h"
