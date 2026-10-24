@@ -9,6 +9,7 @@
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h53_p.h"
 #include "platform/math.h"
@@ -132,16 +133,13 @@ void func_0011f988(void) {
 }
 
 /* func_0011fa88 (from auto/text_00110000_6.c). */
-M2C_UNK sceDbcInit();
-M2C_UNK scePad2Init(M2C_UNK);
 extern M2C_UNK D_002C5A88;
 M2C_UNK D_004E42C0[0x80] ALIGNED(64);
-extern s32 D_004E44C0;
-u32 scePad2CreateSocket(M2C_UNK *, M2C_UNK *);
+extern u32 D_004E44C0; /* u32: the int socket number converts on the store, as in the original */
 void func_0011fa88(void) {
-    sceDbcInit();
-    scePad2Init(0);
-    D_004E44C0 = scePad2CreateSocket(&D_002C5A88, &D_004E42C0);
+    PlatDbcInit();
+    PlatPadInit(0);
+    D_004E44C0 = PlatPadCreateSocket(&D_002C5A88, &D_004E42C0);
 }
 
 /* func_0011fad0 (from auto/text_00110000_6.c). */

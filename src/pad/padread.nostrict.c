@@ -9,6 +9,7 @@
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/pieces/D_002C5910.h"
 #include "data/bss_004E.h"
@@ -79,10 +80,6 @@ extern PadSt D_002C5BB0;
 extern s32 D_004E44C0[];
 Prof D_004E44C8[0x2] ALIGNED(8);  /* moved from hand/nostrict/text_00110000_s6_04.c (session 54) */
 extern u8 D_002C5A80[];
-s32 scePad2GetState(s32);
-s32 scePad2GetButtonProfile(s32, void *);
-s32 scePad2Read(s32, u8 *);
-s32 sceVibSetActParam(s32, s32, u8 *, s32, s32 *);
 s32 func_0011f370(PadSt *, u8 *);
 u32 func_0011f628(u32);
 s32 func_00219348(void);
@@ -101,13 +98,13 @@ void func_0011f668(void) {
     i = 0;
     goto top;
 body:
-    if (p->active == 0 && scePad2GetButtonProfile(D_004E44C0[i], &D_004E44C8[i]) < 0) goto join;
-    if (scePad2Read(D_004E44C0[i], buf) >= 0) {
+    if (p->active == 0 && PlatPadGetButtonProfile(D_004E44C0[i], &D_004E44C8[i]) < 0) goto join;
+    if (PlatPadRead(D_004E44C0[i], buf) >= 0) {
         btn = (buf[0] | (buf[1] << 8)) ^ 0xffff;
         if ((D_004E44C8[i].x2 & 0xf) == 0xf) btn |= func_0011f370(p, buf);
         if (func_00219348() == 0 && !(D_002C597A & 1)) {
             { u32 t = p->b3 << 1; vib = (u32)p->b2 >> 31; vib |= t; }
-            sceVibSetActParam(D_004E44C0[i], 1, D_002C5A80, 2, &vib);
+            PlatVibSetActParam(D_004E44C0[i], 1, D_002C5A80, 2, &vib);
         }
         p->b3 = 0;
         act = 1;
@@ -118,7 +115,7 @@ top:
     p = &D_002C5AD0[i ^ D_004E4280];
     act = 0;
     btn = 0;
-    if (scePad2GetState(D_004E44C0[i]) == 1) goto body;
+    if (PlatPadGetState(D_004E44C0[i]) == 1) goto body;
 join:
     func_0011f548(p, btn);
     i++;
