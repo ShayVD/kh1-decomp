@@ -36,31 +36,14 @@ void func_00241948(s32 i, s32 k) {
 }
 
 /* 2433e8 */
-s32 func_001f0638(s32, s32, s32, s32, s32, s32);
 
 /* 243bd8 */
 
 /* 243da0 */
-typedef struct { s32 r, g, b; } C3;
 extern s32 D_00656420;
-void func_00243da0(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
-    u8 col[4]; u8 *p;
-    p = col; *p++ = c->r; *p++ = c->g; *p++ = c->b;
-    *p = (u32)(f * 128.0f);
-    D_00656420 = func_001f0638(D_00656420, 1, *(s32 *)col,
-        (((x << 4) + 0x7000) >> 4) - 0x700,
-        (((y << 4) + 0x7400) >> 4) - 0x740, a2);
-}
 
 /* 243e58 */
 extern s32 D_00656420;
-s32 func_001f0868(s32, s32, s32, s32, s32, s32, s32, s32);
-void func_00243e58(s32 x, s32 y, s32 a2, C3 *c, f32 f) {
-    u8 col[4]; u8 *p;
-    p = col; *p++ = c->r; *p++ = c->g; *p++ = c->b;
-    *p = (u32)(f * 128.0f);
-    D_00656420 = func_001f0868(D_00656420, 1, 1, *(s32 *)col, x, y, a2, 12);
-}
 
 /* 244d00 */
 #include "data/types/text_00240000_s6_25.h"

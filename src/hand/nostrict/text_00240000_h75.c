@@ -382,84 +382,14 @@ void func_00242ef8(ObG *o, s32 n, s32 a2, s32 *pos, s32 *col) {
 }
 
 #include "data/types/nostrict_text_00240000_h75.h"
-extern Tbl D_00656510;
 
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Pk;
-Pk D_006562C0 ALIGNED(64);
-extern QW *D_00656420; /* src/data/bss_0065.c: s32 D_00656420 */
-QW *D_00656424 ALIGNED(4);
 void func_002370c8(void *);
 void func_00237018(void *, s32, s32);
-void func_00244188(Ent *);
-
-s32 func_00244298(void) {
-    s32 i, j, n;
-    s32 x;
-    s32 left;
-    s32 px;
-    s32 py;
-    Ent *e;
-    px = 16;
-    py = 16;
-    x = 200;
-    left = 16;
-    D_00656510.frame++;
-    func_002370c8(&D_006562C0);
-    D_006562C0.unkE0 = 5;
-    D_006562C0.unk60 = 0x30003;
-    func_00237018(&D_006562C0, 22, 1);
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < D_00656510.cnt[i]; j++) {
-            e = &D_00656510.e[i][j];
-            D_00656424 = D_00351E10;
-            D_00656420 = D_00351E10 + 1;
-            if (e->unk0 == 0) continue;
-            n = e->unk18;
-            if (left < n + 1) {
-                px = x + 16;
-                x += 200;
-                py = 16;
-                left = 16;
-            }
-            left = left - n - 1;
-            e->unk14 = py;
-            e->unk10 = px;
-            py = py + n * 22 + 22;
-            func_00244188(e);
-            func_00237018(D_00656424, D_00656420 - D_00656424, 1);
-        }
-    }
-    return 0;
-}
-
-extern u8 D_00458560[];
-extern u8 D_00459C50[];
-extern u8 D_00459C68[];
-extern u8 D_00459C78[];
-extern u8 D_00459C98[];
 void *memset(void *, s32, u32);
 void func_0024aac8(void *);
-void func_0024af40(void *, void *, void *);
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
-s32 func_00244298(void);
-
-void func_00244500(void) {
-    s32 i, j;
-    Ent *e;
-    memset(&D_00656510, 0, sizeof(Tbl));
-    func_0024aac8(D_00458560);
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < 5; j++) {
-            e = &D_00656510.e[i][j];
-            func_0024af40(D_00459C50, e->unk30, D_00458560);
-            func_0024af40(D_00459C68, e->unk330, D_00458560);
-            func_0024af40(D_00459C78, e->unk4B0, D_00458560);
-            func_0024af40(D_00459C98, e->unk930, D_00458560);
-        }
-    }
-    if (func_0011ef38(func_00244298) == 0) func_0011ef10(0x29811, func_00244298);
-}
 
 extern QW *D_006691D0; /* src/data/bss_0066.c: Q4 *D_006691D0 */
 extern QW *D_006691D4; /* src/data/bss_0066.c: Q4 *D_006691D4 */
@@ -547,63 +477,6 @@ void func_00248400(void) {
 }
 
 /* needs make: uses rodata */
-typedef struct { u8 pad[0x130]; C130 *unk130; } Chr2;
-extern u8 D_00459CA0[];
-extern u8 D_00459CB0[];
-extern u8 D_00459CC0[];
-extern u8 D_00459CD0[];
-extern u8 D_00459CE0[];
-extern u8 D_00459CF0[];
-extern u8 D_00459D00[];
-extern u8 D_00459D10[];
-s32 func_0013c318(u16);
-s32 func_00147808(s32);
-
-void func_00244670(Chr2 *o, s32 a, s32 b) {
-    s32 g = -1;
-    s32 k, f, n;
-    Ent *e;
-    k = func_0013c318(o->unk130->unk4C);
-    switch (k) {
-    case 0: g = 0; break;
-    case 1: g = 1; break;
-    case 2: g = 2; break;
-    }
-    f = a != 0;
-    if (b) f++;
-    if (D_00656510.stamp[g] != D_00656510.frame) D_00656510.cnt[g] = 0;
-    if (D_00656510.cnt[g] == 5) return;
-    D_00656510.stamp[g] = D_00656510.frame;
-    e = &D_00656510.e[g][D_00656510.cnt[g]];
-    D_00656510.cnt[g]++;
-    e->unk8 = k;
-    e->unk18 = f;
-    e->unk1C = a;
-    e->unk20 = b;
-    e->unk9F0 = 1.0f;
-    e->unk0 = 1;
-    e->unkC = 0;
-    switch (o->unk130->unk4C) {
-    case 0: e->unk9F4 = D_00459CA0; e->unk9F8 = D_00459CE0; break;
-    case 1: e->unk9F4 = D_00459CB0; e->unk9F8 = D_00459CF0; break;
-    case 2: e->unk9F4 = D_00459CC0; e->unk9F8 = D_00459D00; break;
-    default: e->unk9F4 = D_00459CD0; e->unk9F8 = D_00459D10; break;
-    }
-    switch (o->unk130->unk4C) {
-    case 0: n = 295; break;
-    case 1: n = 296; break;
-    case 2: n = 297; break;
-    case 3: n = 298; break;
-    case 4: n = 299; break;
-    case 5: n = 300; break;
-    case 6: n = 301; break;
-    case 7: n = 302; break;
-    case 8: n = 303; break;
-    case 9: n = 304; break;
-    default: return;
-    }
-    e->unk24 = func_00147808(n);
-}
 
 typedef struct { u32 unk0; s32 unk4; s32 unk8; u8 padC[8]; void *unk14; } St;
 extern St D_00662540; /* src/data/bss_0066.c: Hud D_00662540 */

@@ -161,30 +161,6 @@ void func_00241c60(s32 b, s32 i) {
         e->unkA30 = 0;
     }
 }
-Pkt D_00656430 ALIGNED(16);
-extern s32 D_00656420;
-
-void func_00243c10(s32 a0, s32 a1, s32 x, s32 y, s32 *v, f32 s) {
-    s32 i;
-    s32 *p;
-    s32 dx, dy;
-    func_0024aa48(a0, &D_00656430, a1);
-    dx = x * 16;
-    dy = y * 16;
-    p = &D_00656430.p[0].y;
-    for (i = 0; i < 4; i++) {
-        p[-1] += dx;
-        *p += dy;
-        p += 4;
-    }
-    for (i = 0; i < 4; i++) {
-        D_00656430.c[i].x = v[0];
-        D_00656430.c[i].y = v[1];
-        D_00656430.c[i].z = v[2];
-        D_00656430.c[i].w = D_00656430.c[i].w * s;
-    }
-    D_00656420 = func_002388b8(&D_00656430, 1, D_00656420);
-}
 Pkt D_0065FCA0 ALIGNED(32);
 QW *D_0065FC90 ALIGNED(16);
 
@@ -588,54 +564,6 @@ void func_00240b68(Obj4 *o_) {
     if (e->unk0 == 0) e->unkA2C = func_00240b28(e);
 }
 #undef D_00651E50
-typedef struct {
-    u32 unk0;
-    s32 unk4;
-    s32 unk8;
-    s32 unkC;
-    s32 unk10, unk14, unk18, unk1C, unk20, unk24;
-    u8 pad28[8];
-    u8 unk30[0x300];
-    u8 unk330[0x180];
-    u8 unk4B0[0x480];
-    u8 unk930[0xC0];
-    f32 unk9F0;
-    s32 unk9F4;
-    s32 unk9F8;
-} Wipe;
-#include "data/pieces/D_004267C0.h"
-void func_00243ef8(s32, void *, void *, void *, void *, void *, void *, s32, f32, s32, s32, s32, s32, s32, s32, s32);
-
-void func_00244188(Wipe *o) {
-    s32 f = 0;
-    switch (o->unk0) {
-    case 0:
-        return;
-    case 1:
-        f = 1;
-        o->unk0++;
-        break;
-    case 2:
-    case 4:
-        o->unk0++;
-        break;
-    case 3:
-        if (++o->unkC >= 91) o->unk0++;
-        break;
-    case 5:
-        o->unk9F0 -= 0.125f;
-        if (o->unk9F0 < 0.0f) {
-            o->unk9F0 = 0.0f;
-            o->unk0++;
-        }
-        break;
-    case 6:
-        o->unk0 = 0;
-        break;
-    }
-    func_00243ef8(f, o->unk30, o->unk330, o->unk4B0, o->unk930, D_004267C0, D_004267F0, o->unk10, o->unk9F0,
-                  o->unk14, o->unk18, o->unk24, o->unk1C, o->unk20, o->unk9F4, o->unk9F8);
-}
 s32 func_00122ff8(s32);
 s32 func_001375d8(s32);
 void func_002452c8(void);
