@@ -1,5 +1,4 @@
 #include "common.h"
-#include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004D.h"
 typedef W_2c5968 F5968;
@@ -8,18 +7,12 @@ typedef W_2c5968 F5968;
 extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
 extern s32 D_004D9330, D_004D9320, D_002BD110;
-#include "data/pieces/D_002B6778.h"
-#include "data/pieces/D_002BBDE0.h"
 s32 func_00102a48(s32, s32);
 s32 func_00112d80(void);
 s32 sceGsSyncPath(s32, s32);
 void func_00121ee0(s32);
 void func_00176388(s32);
 CONTEXT_ONLY void func_00113a48(void) {}
-
-void func_00114880(void) {
-    if (D_002BBDE0 == 3) { if (D_002BD110) do { func_00113a48(); } while (0); }
-}
 
 /* ---- 0010f658 ---- */
 extern u8 D_002BBCC0[];
@@ -175,75 +168,12 @@ s32 func_0010f918(void) {
 }
 
 /* ---- 00111b48 ---- */
-u32 func_00111b08(u32);
-u32 func_00111b48(u32 a) {
-    u32 t, h, m;
-    t = func_00111b08(a);
-    h = t / 216000;
-    t = t % 216000;
-    m = t / 3600;
-    return m;
-}
-u32 func_00111b90(u32 a) {
-    u32 t, h, m, s;
-    t = func_00111b08(a);
-    h = t / 216000;
-    t = t % 216000;
-    m = t / 3600;
-    t = t % 3600;
-    s = t / 60;
-    return s;
-}
 
 /* ---- 00113558 ---- */
-extern s32 D_002BBE0C;
-extern s32 D_002B6774, D_002BCDEC, D_0029B410, D_0029B414, D_002BC130;
-extern volatile u32 D_002C5958;
-extern s32 D_002BCC90, D_002BCDBC, D_002BCDC0, D_002BCDD8, D_002C1388, D_002BBE1C, D_002B6474, D_002BCDC4;
-s32 func_00105860(void);
-void func_0017f678(void);
-void func_00132550(void);
-void func_00175f58(s32, s32, s32, s32);
-void func_00100ab0(void);
 #include "vm/script_vm.h"
-void func_00114830(void);
-void func_001115e0(void);
-void func_00111380(void);
-void func_001118c0(void);
-void func_001ec7c0(s32);
-
-s32 func_00113558(void) {
-    if (D_002B6774) return 0;
-    D_002BBE0C = 1;
-    func_00105860();
-    func_0017f678();
-    func_00132550();
-    D_002BCDEC = 1;
-    if (D_0029B410 && D_0029B414) func_00175f58(D_0029B410, D_0029B414, D_002BC130 + 1, 100000);
-    func_00100ab0();
-    { Fl_2c5958 *p = (Fl_2c5958 *)&D_002C5958; p->b2 = 0; p->b27 = 0; }
-    func_001c3770((s8 *)D_002BCC90, 0);
-    D_002BCDBC = 0;
-    D_002BCDC0 = 0;
-    D_002BCDD8 = 0;
-    func_00114830();
-    D_002C1388 = 0;
-    if (D_002BBE1C == 1 || D_002B6474 == 1) func_001115e0();
-    D_002BBE1C = 0;
-    func_00111380();
-    func_001118c0();
-    func_001ec7c0(0);
-    D_002BCDC4 = 0;
-    return 4;
-}
 
 /* ---- 00113af8 ---- */
-extern s32 D_004D9340, D_004D9344, D_004D9348, D_004D9364;
 extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
-#include "data/pieces/D_002BD118.h"
-void func_00113a00(void);
-void func_00113ab0(s32);
-void func_00113df8(s32);
 void func_00113e28(s32);
 CONTEXT_ONLY void func_001137f8(void) {}
 
@@ -254,58 +184,6 @@ static inline void add6(s32 a, s32 b, s32 c, s32 d, s32 e, s32 f) {
     D_004D9358 += d;
     D_004D935C += e;
     D_004D9360 += f;
-}
-void func_00113af8(void) {
-    switch (D_004D9340) {
-    case 1:
-        switch (D_004D9344) {
-        case 0:
-            if (D_004D9348 < 2) {
-                add6(0, 0, 0, 50, 15, 25);
-                break;
-            }
-            D_004D9344 = 1;
-        case 1:
-            if (D_004D9348 < 5) {
-                add6(25, 2, -68, 9, 15, 25);
-                break;
-            }
-            D_004D9344 = 2;
-        case 2:
-            D_004D9364 = 0;
-            func_00113a00();
-            break;
-        }
-        break;
-    case 2:
-        switch (D_004D9344) {
-        case 0:
-            if (D_004D9348 < 2) {
-                add6(0, 0, 0, -14, -15, -25);
-                break;
-            }
-            D_004D9344 = 1;
-        case 1:
-            if (D_004D9348 < 5) {
-                add6(-25, -2, 68, -33, -15, -25);
-                break;
-            }
-            D_004D9344 = 2;
-        case 2:
-            func_00113ab0(0);
-            if (D_002BD118 == 2) func_00113df8(0);
-            else func_00113e28(0);
-            D_004D9340 = 0;
-            return;
-
-        }
-        break;
-    case 0:
-    default:
-        return;
-    }
-    func_001137f8();
-    D_004D9348++;
 }
 
 /* ---- 00113fa8 ---- */
@@ -319,62 +197,9 @@ void func_00121ee0(s32);
 void func_00176388(s32);
 void func_00113a48(void);
 
-s32 func_00113fa8(void) {
-    func_00102a48(128, 0);
-    if (D_003F6E28) {
-        D_003F6E28 = 0;
-        func_00112d80();
-    }
-    D_004D9330 = 0;
-    D_002BD114 = 0;
-    sceGsSyncPath(0, 0);
-    func_00121ee0(D_002B6778);
-    func_00176388(0);
-    D_004D9320 = 0;
-    return 4;
-}
-
 /* ---- 00114a38 ---- */
 typedef struct { u8 *data; s32 *hdr; s32 pad8[2]; f32 m[4][4]; f32 pad50[3][4]; f32 v[8][4]; } Obj110;
-typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
 Obj110 *D_004D9368 ALIGNED(8);
-extern s32 D_004D936C;
-#include "data/pieces/D_002BBFA0.h"
-#include "data/pieces/D_0029B280.h"
-extern u8 D_002BD140[];
-Obj110 *func_00122048(s32, s32);
-void func_002672f8(f32 *, s32, u8 *);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-s32 func_0024edf0(f32 (*)[4], f32 (*)[4]);
-void func_00106bd8(void *, s32);
-void func_00108df8(s32, s32, s32, u8 *, s32);
-void func_001220b8(Obj110 *);
-
-s32 func_00114a38(s32 a, Hdr *h, s32 id, s32 d) {
-    s32 r;
-    Obj110 *o;
-    o = func_00122048(272, 128);
-    D_004D9368 = o;
-    o->hdr = &h->ofs;
-    o->data = (u8 *)h + h->ofs;
-    r = 0;
-    func_002672f8(o->v[0], a, o->data);
-    func_002672f8(D_004D9368->v[1], a, D_004D9368->data + 16);
-    func_002672f8(D_004D9368->v[2], a, D_004D9368->data + 32);
-    func_002672f8(D_004D9368->v[3], a, D_004D9368->data + 48);
-    func_002672f8(D_004D9368->v[4], a, D_004D9368->data + 64);
-    func_002672f8(D_004D9368->v[5], a, D_004D9368->data + 80);
-    func_002672f8(D_004D9368->v[6], a, D_004D9368->data + 96);
-    func_002672f8(D_004D9368->v[7], a, D_004D9368->data + 112);
-    sceVu0MulMatrix(D_004D9368->m, D_002BBFA0, (*(f32 (*)[4][4])&D_0029B280));
-    if (func_0024edf0(D_004D9368->m, (f32 (*)[4])D_004D9368->v) == 0) {
-        if (id == 40000) func_00106bd8(D_002BD140, 40000);
-        func_00108df8(D_004D936C++, id, a, D_004D9368->data, d);
-        r = 1;
-    }
-    func_001220b8(D_004D9368);
-    return r;
-}
 
 /* ---- 00115158 ---- */
 typedef f32 V4_52[4] __attribute__((aligned(16)));

@@ -311,59 +311,8 @@ void func_0010ffe0(void) {
     func_00265980(&D_004D8EC0);
 }
 extern f32 D_002BBDEC;
-#include "data/pieces/D_002BBDF0.h"
-#include "data/pieces/D_002BBDF8.h"
-extern f32 D_002BBDFC;
-extern s32 D_002BBE10;
-extern s32 D_002BBE0C;
-#include "data/pieces/D_002BCAF0.h"
-extern s32 D_002BD110;
-void sceVu0UnitMatrix(f32 (*)[4]);
-void func_00110458(void) {
-    D_002BBDF0 = 0;
-    D_002BBDF8 = 0;
-    D_002BBE10 = 0;
-    D_002BBE0C = 0;
-    D_002BBDFC = D_002BBDEC;
-    sceVu0UnitMatrix(D_002BCAF0);
-    D_002B6774 = 0;
-    D_002BD110 = 0;
-}
-
-extern s32 D_002BCAE0;
-s32 D_00F20000(s32, s32); /* code at a fixed address (overlay) */
-
-s32 func_00111090(void) {
-    if (!D_002BCAE0) return 0;
-    return D_00F20000(2, 0);
-}
-
-#include "data/pieces/D_002BCB60.h"
-typedef V32_2bcb60 V32;
 
 /* Object at *D_002BCB60. */
-typedef Ctx_2bcb60 Ctx;
-void func_00111288(void);
-void func_001112b8(void) {
-    s32 i;
-    func_00111288();
-    for (i = 0; i < 234; i++) D_002BCB60->flags[i] = 0;
-    D_002BCB60->w40 = 0;
-    D_002BCB60->w44 = 0;
-    D_002BCB60->w10[0] = 0;
-    D_002BCB60->w10[1] = 0;
-    D_002BCB60->w10[2] = 0;
-    D_002BCB60->w10[3] = 0;
-    D_002BCB60->w10[4] = 0;
-    D_002BCB60->w10[5] = 0;
-    D_002BCB60->w10[6] = 0;
-    D_002BCB60->w10[7] = 0;
-    D_002BCB60->w10[8] = 0;
-    D_002BCB60->w10[9] = 0;
-    D_002BCB60->w10[10] = 0;
-    D_002BCB60->w10[11] = 0;
-    D_002BCB60->w158 = 0;
-}
 
 typedef struct {
     u8 pad[0x30];
@@ -394,205 +343,16 @@ void func_00108b60(SlotHdr *h, SlotObj *o) {
     o->owner = h;
 }
 /* Same object as *D_002BCB60 above, seen as rows of 4 floats. */
-typedef struct Actor { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
-
-void func_00111340(Src *s, s32 i) {
-    (D_002BCB60)->m[i][4] = s->x;
-    (D_002BCB60)->m[i][5] = s->y;
-    (D_002BCB60)->m[i][6] = s->z;
-    (D_002BCB60)->m[i][7] = s->w;
-}
-#include "data/pieces/D_002E26A0.h"
-void func_00111480(void);
-
-void func_00111380(void) {
-    Src *p;
-    func_00111480();
-    p = D_002E26A0[0];
-    if (p) func_00111340(p, 0);
-    p = D_002E26A0[1];
-    if (p) func_00111340(p, 1);
-    p = D_002E26A0[2];
-    if (p) func_00111340(p, 2);
-}
-
-extern s32 D_002BC128, D_002BC130, D_002BCDA8;
-V32 *func_0017f1c8(void);
-void func_00111480(void) {
-    Ctx *c = D_002BCB60;
-    c->w40 = D_002BC128;
-    c->w44 = D_002BC130;
-    c->w48 = D_002BCDA8;
-    c->blk = *func_0017f1c8();
-}
-s32 func_00111798(void) {
-    if (D_002BCB60) return D_002BCB60->w15c;
-    return 0;
-}
 
 extern s32 D_004D925C, D_004D9250, D_002BCC1C, D_004D9254;
-s32 func_00111cb8(void);
-s32 func_00111d90(s32 a) {
-    D_004D925C = 0;
-    D_004D9250 = D_002BBDF0;
-    D_002BCC1C = 0;
-    if (!a) D_004D9254 = 0x34b84;
-    else D_004D9254 = 0x14996c4;
-    return func_0011ef10(0x2c04c, func_00111cb8);
-}
-
-extern s32 D_004D9258;
-s32 func_00111e00(void);
-s32 func_00111ef0(s32 sec, s32 b) {
-    D_004D9258 = b;
-    D_004D925C = 0;
-    D_004D9250 = D_002BBDF0;
-    D_002BCC1C = D_004D9254 = sec * 60;
-    return func_0011ef10(0x2c04c, func_00111e00);
-}
-typedef struct {
-    u8 pad[0x10];
-    s32 w10;
-    s32 w14;
-    s32 w18;
-    s32 w1c;
-} Hud;
-extern Hud D_004D9288; /* src/data/bss_004D.c: W29Clock D_004D9288 */
 extern s32 D_002BCC1C, D_004D9260, D_002BCC20, D_004D9274, D_004D9280;
-void func_00112018(s32, s32);
-s32 func_001120c8(void) {
-    func_00112018(0, D_002BCC1C);
-    func_00112018(1, D_004D9260);
-    if (D_002BCC20 < 0) D_002BCC20 = 0;
-    if (D_004D9274 < 0) D_004D9274 = 0;
-    D_004D9288.w10 = D_002BCC20;
-    D_004D9288.w14 = D_004D9274;
-    D_004D9288.w1c = D_002BCC20;
-    return D_004D9280 ? 4 : 0;
-}
-extern volatile u32 D_002C5958;
-#include "data/pieces/D_002BC148.h"
-void func_0012cac8(s32, s32);
-void func_00112d28(void);
 #include "vm/script_vm.h"
-s32 func_00112cf8(void);
-s32 func_00109558(s32);
-s32 func_00112d80(void) {
-    func_0012cac8(2, 0);
-    func_0012cac8(6, 0);
-    D_002C5958 |= 0x80000;
-    func_00112d28();
-    func_001c1f60();
-    func_0011ef10(0x2e630, func_00112cf8);
-    D_002BC148[0] = D_002BC128;
-    D_002BC148[1] = D_002BC130;
-    return func_00109558(4);
-}
 #include "data/types/text_00100000_h2_p2.h"
-#include "data/pieces/D_002BCDC8.h"
-
-void func_00113048(void);
-s32 func_00112e08(void) {
-    D_002C5958 |= 0x80000;
-    func_00112d28();
-    func_001c1f60();
-    func_00113048();
-    func_0011ef10(0x2e630, func_00112cf8);
-    D_002BCDC8.a = D_002BC128;
-    D_002BCDC8.b = D_002BC130;
-    D_002BCDC8.c = D_002BCDA8;
-    return func_00109558(6);
-}
 
 /* Saved copies of the three D_002E26A0 objects' positions. */
 f32 D_004D92F0[3][4] ALIGNED(16);
-void func_00113048(void) {
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        Src *s = D_002E26A0[i];
-        if (s) {
-            D_004D92F0[i][0] = s->x;
-            D_004D92F0[i][1] = s->y;
-            D_004D92F0[i][2] = s->z;
-            D_004D92F0[i][3] = s->w;
-        }
-    }
-}
-
-void func_001130a0(s32 i, f32 *d) {
-    d[0] = D_004D92F0[i][0];
-    d[1] = D_004D92F0[i][1];
-    d[2] = D_004D92F0[i][2];
-    d[3] = D_004D92F0[i][3];
-}
-#include "data/pieces/D_002BCDA0.h"
-#include "data/pieces/D_002BCDA4.h"
-
-s32 func_001130e0(void) {
-    s32 i;
-    for (i = 0; i < D_002BCDA4; i++) {
-        if (D_002BC130 == ((Ent40_2bcda0 *)D_002BCDA0)[i].id) return i;
-    }
-    return 1000;
-}
 
 /* These three only match with func_001130a0 defined above them. */
-extern s32 D_002BCDD8;
-extern s32 D_002BCDDC;
-extern s32 D_002BBE1C;
-void func_00104fd0(s32, f32 *);
-void func_00111590(s32, f32 *);
-
-void func_00113138(f32 *out) {
-    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
-    if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[0][0];
-        out[1] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[0][1];
-        out[2] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[0][2];
-        out[3] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[0][3];
-        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(0, out);
-        if (D_002BBE1C == 1) func_00111590(0, out);
-    } else {
-        func_00104fd0(0, out);
-    }
-}
-
-void func_00113270(f32 *out) {
-    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
-    if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[1][0];
-        out[1] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[1][1];
-        out[2] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[1][2];
-        out[3] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[1][3];
-        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(1, out);
-        if (D_002BBE1C == 1) func_00111590(1, out);
-    } else {
-        func_00104fd0(0, out);
-    }
-}
-
-void func_001133a0(f32 *out) {
-    if (D_002BCDA8 == -1) D_002BCDA8 = func_001130e0();
-    if (D_002BCDA8 < D_002BCDA4) {
-        out[0] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[2][0];
-        out[1] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[2][1];
-        out[2] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[2][2];
-        out[3] = ((Ent40_2bcda0 *)D_002BCDA0)[D_002BCDA8].v[2][3];
-        if (D_002BCDD8 && D_002BCDDC == 1) func_001130a0(2, out);
-        if (D_002BBE1C == 1) func_00111590(2, out);
-    } else {
-        func_00104fd0(0, out);
-    }
-}
-extern s32 D_004D934C, D_004D9350, D_004D9354, D_004D9358, D_004D935C, D_004D9360;
-void func_00113a00(void) {
-    D_004D934C = 205;
-    D_004D9350 = 135;
-    D_004D9354 = 50;
-    D_004D9358 = 128;
-    D_004D935C = 76;
-    D_004D9360 = 128;
-}
 typedef struct {
     u8 pad[0xc0];
     void *owner;
@@ -633,9 +393,5 @@ void func_00108970(SlotRows *a, s32 i, s32 j) {
 #include "data/data_0048.h"
 #include "data/pieces/D_002BC170.h"
 #include "data/pieces/D_002BC1B0.h"
-#include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDEC.h"
-#include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_002BCC1C.h"
-#include "data/pieces/D_002BD110.h"
