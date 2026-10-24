@@ -195,8 +195,9 @@ s32 D_00642C60 ALIGNED(16);
 s32 D_00642C64 ALIGNED(4);
 s32 D_00642C68 ALIGNED(8);
 s32 D_00642C6C ALIGNED(4);
-s32 D_00642C70 ALIGNED(16);
-s32 D_00642C78[0x4] ALIGNED(8);
+s32 D_00642C70_blk[6] __asm__("D_00642C70") ALIGNED(16); /* D_00642C70, D_00642C74, then D_00642C78[4]:
+    * abilities.nosi.c counts into (&D_00642C74[1])[slot], which is D_00642C78[slot]. One definition (vita-port-plan
+    * 5.1j; a separate s32 [5] at 0x00642C74 is padded to 8 by ee-gcc) */
 void *D_00642C90 ALIGNED(16);
 s32 D_00642CA8[0x8] ALIGNED(8);
 s32 D_00642CC8 ALIGNED(8);

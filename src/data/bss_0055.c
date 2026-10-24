@@ -12,7 +12,8 @@ s32 D_005516EC ALIGNED(4);
 s32 D_00559DB0 ALIGNED(16);
 s32 D_0055BDE0 ALIGNED(16);
 u8 D_0055C698[0xda58] ALIGNED(8);
-E550400 D_00550400[0x34] ALIGNED(64);
+E550400 D_00550400[0x40] ALIGNED(64); /* 64 slots (func_001557d0 clears all 64); D_005512A0 = [52] the 12
+                                        * objslot.c sets up. One definition (vita-port-plan 5.1j) */
 E551670 D_00551670[0x4] ALIGNED(16);
 Beb78 D_00551D90[0x2] ALIGNED(16);
 DmaChcr *D_0055C640 ALIGNED(16);

@@ -16,8 +16,8 @@ s32 D_006560E0 ALIGNED(16);
 s32 D_00656420 ALIGNED(16);
 void *D_00651BD8[0x4] ALIGNED(8);
 void *D_00651BE8[0x6] ALIGNED(8);
-Ob17 D_00650120[0x6] ALIGNED(32);
-Ob570 D_00650C00 ALIGNED(64);
+Ob17 D_00650120[0x7] ALIGNED(32); /* the six menus and D_00650C00 (the second kind-4 menu): cmdmenu.c draws it as
+                                     * D_00650120[6]. One definition (vita-port-plan 5.1j) */
 Pkt D_00651210 ALIGNED(16);
 Slot D_00651310[10] ALIGNED(16);
 Tbl D_00656510 ALIGNED(16);

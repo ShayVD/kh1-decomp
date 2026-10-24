@@ -17,10 +17,11 @@ W34Mdl3C D_00547C00[256] ALIGNED(64);
 W34Mdl3C *D_0054B800 ALIGNED(16);
 Ent9c D_0054C1B0[0x3] ALIGNED(16);
 W34E3C D_0054C218[0x9] ALIGNED(8);
-/* areabox.c's groups count from 1: D_0054F438[k] is group k, D_0054F450 = D_0054F438[1] the 31 groups, and
- * entry 0 holds D_0054F440 ... D_0054F44C (a box with id 0 writes them in the original). One definition, so
- * the host's D_0054F438[k] is the group (vita-port-plan 5.1i). */
-Grp57_f1b8 D_0054F438[0x20] ALIGNED(8);
+/* The 64 hit records D_0054C440 (atkhit, 0xc0 each, no C definition before) end at 0x0054F440, inside
+ * areabox.c's group 0: the groups count from 1 (D_0054F438[k] is group k, D_0054F450 = D_0054F438[1] the 31
+ * groups), entry 0 holds D_0054F440 ... D_0054F44C, and its first 8 bytes are record 63's last 8. One
+ * definition for both (vita-port-plan 5.1i, 5.1j); the names are views (out/host/aliases.ld). */
+u8 D_0054C440[0x32f8] ALIGNED(64);
 Slot57_15d0 D_0054F750[8] ALIGNED(16);
 f32 D_0054F738 ALIGNED(8);
 void *D_0054F950 ALIGNED(16);

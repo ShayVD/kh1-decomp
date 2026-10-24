@@ -102,6 +102,7 @@ def main() -> int:
     ap.add_argument("--all", action="store_true", help="also the unbounded index and uncached-alias rows")
     ap.add_argument("--tsv", type=Path, help="write the rows as TSV")
     ap.add_argument("--exe", type=Path, default=ROOT / "out/host/kh1-host")
+    ap.add_argument("--benign", action="store_true", help="print the rows left out as benign, with the reason")
     a = ap.parse_args()
     ps2, host = ps2_names(), host_names(a.exe)
     rs = runs(ps2, host)
@@ -138,16 +139,16 @@ def main() -> int:
         if kind in ("idx-next", "uncached") and not a.all:
             continue
         nb, nt = owner(b), owner(t)
-        if kind == "end-ptr" and nb and t == ps2[nb][0] + host[nb][1]:
-            benign += 1
-            continue
-        if kind.startswith("arg") and f[1].split(":")[1] in LIBC_STR:
-            benign += 1
-            continue
         key = (nb or "%08x" % b, nt or "%08x" % t)
         fs = [x for x in f[2].split() if x.startswith("func_")]
-        if key in REVIEWED or (fs and all(int(x[5:], 16) >= SDK_START for x in fs)):
+        why = ("end-ptr" if kind == "end-ptr" and nb and t == ps2[nb][0] + host[nb][1] else
+               "string" if kind.startswith("arg") and f[1].split(":")[1] in LIBC_STR else
+               "reviewed" if key in REVIEWED else
+               "sdk" if fs and all(int(x[5:], 16) >= SDK_START for x in fs) else None)
+        if why:
             benign += 1
+            if a.benign:
+                print("benign:%s\t%s\t%s\t%s\t%s" % (why, key[0], key[1], f[1], " ".join(fs[:6])))
             continue
         r = rows.setdefault(key, [set(), set(), []])
         r[0].add(kind)

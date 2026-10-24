@@ -106,7 +106,7 @@ s32 func_001559a8(u8 *p) {
 #undef D_00FE0000
 
 /* func_00155a50 (from hand/text_00140000_h9.c). */
-W9Blk D_005512A0[0xc] ALIGNED(32);  /* moved from hand/text_00140000_h9.c (session 53) */
+extern W9Blk D_005512A0[0xc];  /* D_00550400[52..63] (bss_0055.c, one definition, vita-port-plan 5.1j) */
 extern u8 D_01CE0000[];
 u8 *func_00155a50(void) {
     s32 i;
