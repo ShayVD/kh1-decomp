@@ -211,7 +211,7 @@ static inline void setTag(DmaTag *t, s32 qwc, s32 id, DmaTag *next) {
     t->qwc = qwc;
 }
 static inline void setGif(GifTag *g, s32 nloop, s32 nreg) {
-    *(u128 *)g = 0;
+    *(u128 *)g = KH1_Q(0);
     g->NLOOP = nloop;
     g->EOP = 1;
     g->NREG = nreg;
@@ -221,12 +221,12 @@ static inline void setGif(GifTag *g, s32 nloop, s32 nreg) {
 void func_0015f128(void) {
     s32 i;
     Pk1 *p;
-    u128 z = 0;
+    u128 z = KH1_Q(0);
 
     for (i = 0; i < 7; i++) {
         p = &D_00573AD0[i];
-        *(u128 *)&p->gif = 0;
-        *(u128 *)&p->img = 0;
+        *(u128 *)&p->gif = KH1_Q(0);
+        *(u128 *)&p->img = KH1_Q(0);
 
         p->gif.NLOOP = 4;
         p->gif.NREG = 1;

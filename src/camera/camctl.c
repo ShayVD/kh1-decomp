@@ -410,7 +410,11 @@ s32 func_0017e428(V4 *a, V4 *b)
 
 /* func_0017e7d8 (from auto/text_00170000_5.c). */
 extern s32 D_003623F0;
+#ifdef KH1_PS2 /* the lvalue form changes this match */
 #define D_00575894 ((void *) D_00575894)
+#else
+#define D_00575894 (*(void **)&D_00575894)
+#endif
 void func_0017e7d8(void) {
     if (D_00575894 != NULL) {
         M2C_FIELD(D_00575894, s32 *, 0) = (s32) (M2C_FIELD(D_00575894, s32 *, 0) | 1);
