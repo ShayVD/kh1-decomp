@@ -1,6 +1,6 @@
 #include "common.h"
 /* libcdvd (w23, session 7): func_002695f8, func_00269830, func_002698c8, sceCdRead
- * (0x26a7f0) and func_0026a9d0 match in sdk/gcc991111_as296 with no asm barrier.
+ * (0x26a7f0) and sceCdSeek match in sdk/gcc991111_as296 with no asm barrier.
  * The libcdvd state words D_0046C610-D_0046C658 are volatile in the original:
  * written as VS() accesses, 991111a's reorg keeps them out of delay slots and the
  * 2.96 assembler fills those slots itself (the session-7 w4 drafts needed an empty
@@ -23,7 +23,7 @@ s32 func_002585d0(void);
 s32 sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
 s32 sceDbcDeleteSocket(s32);
 s32 sceDbcGetDepNumber(s32);
-s32 func_00269fd0(s32);
+s32 sceCdSync(s32);
 s32 DIntr(void);
 s32 EIntr(void);
 void SyncDCache(void *, void *);
@@ -41,9 +41,9 @@ s32 func_00257e20(s32, void *);
 void func_00260f40(void);
 u32 strlen(const char *);
 s32 func_00269dc8(s32);
-s32 func_0025b588(const char *, s32);
-s32 func_0025bbc8(s32, void *, s32);
-s32 func_0025b810(s32);
+s32 sceOpen(const char *, s32);
+s32 sceRead(s32, void *, s32);
+s32 sceClose(s32);
 void FlushCache(s32);
 void func_00260738(void *, s32);
 void func_00260928(s32, s32);
@@ -187,7 +187,7 @@ s32 sceSifInitRpc(s32);
 s32 sceSifBindRpc(void *, u32, s32);
 s32 sceMcSync(s32 mode, s32 *cmd, s32 *result);
 s32 sceDbcSetWorkAddr(s32 addr);
-s32 func_0026a070(s32);
+s32 sceCdSyncS(s32);
 void func_00269830(void);
 extern s32 D_00670000[16];      /* libdbc device table */
 extern u8 D_0066FF80[];         /* libdbc work area */
@@ -340,7 +340,7 @@ s32 sceCdRead(u32 lbn, u32 sectors, void *buf, CdRMode *mode) {
     return 1;
 }
 
-s32 func_0026a9d0(s32 a) {
+s32 sceCdSeek(s32 a) {
     CdReadArg *p = &D_0046C700;
     if (func_00269f38() == 6) return 0;
     if (!func_00269dc8(9)) return 0;

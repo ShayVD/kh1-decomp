@@ -1,5 +1,5 @@
 #include "common.h"
-/* func_0025b2f0: D_0066DAC0 is the Hook {fn ptr; int} that func_0025b2c0 receives; the two field stores then have different alias sets, which drops their sched2 dependence and fixes the prologue save order. Header copied from src/sdk/gcc991111/text_00250000_s1.c. */
+/* sceFsInit: D_0066DAC0 is the Hook {fn ptr; int} that func_0025b2c0 receives; the two field stores then have different alias sets, which drops their sched2 dependence and fixes the prologue save order. Header copied from src/sdk/gcc991111/text_00250000_s1.c. */
 
 typedef char *va_list;
 #define va_start(v, l) (v = (char *) __builtin_next_arg(l) - 8 * (8 - __builtin_args_info(2)))
@@ -164,7 +164,7 @@ extern Ring D_0066C700;
 Pk *func_00259ee8(Ring *p);
 int func_00260590(u32, void *, int, u32, u32, u32);
 int func_0025b1e8(int);
-int func_0025b2f0(void);
+int sceFsInit(void);
 extern int D_0046AED8;
 typedef struct { int a, b; } Pair;
 typedef struct { void (*func)(int); int arg; } Hook;
@@ -224,7 +224,7 @@ extern u8 D_0066DA80[];
 extern u32 D_0066C740;
 extern u8 D_0066D400[];
 typedef struct { char c[4]; } C4;
-int func_0025b2f0(void) {
+int sceFsInit(void) {
     int st, i;
     E16 *e;
     Client *c;

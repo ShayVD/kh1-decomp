@@ -86,17 +86,17 @@ void func_0025b198(void) {
     }
 }
 
-s32 func_0025b550(void) {
+s32 sceFsReset(void) {
     D_0046AED8 = 0;
     memset(&D_0066DA68, 0, 4);
     return 0;
 }
 
-s32 func_0025daf0(s32 arg0) {
+s32 sceUmount(s32 arg0) {
     return func_0025c628(arg0, 0x15);
 }
 
-s32 func_0025e4b8(void) {
+s32 sceSifLoadFileReset(void) {
     D_0046AEEC = -1;
     memset(&D_0066DD28, 0, 4);
     return 0;

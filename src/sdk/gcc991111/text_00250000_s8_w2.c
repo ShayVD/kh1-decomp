@@ -1,5 +1,5 @@
 #include "common.h"
-/* s8 w2: func_0025c0f8 (fio ioctl). Context = header of text_00250000_s7_w23.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/func_0025b218). The constant 1 kept in s5 from the entry block for the case-1 compare is a local `one = 1` that CSE substitutes into the switch compare (cf. `two = 2` in 0010a5d0); its only other use is a constant-true `if (one)`. */
+/* s8 w2: sceIoctl (fio ioctl). Context = header of text_00250000_s7_w23.c (volatile D_0046AE58, CONTEXT_ONLY func_0025ad68/func_0025b218). The constant 1 kept in s5 from the entry block for the case-1 compare is a local `one = 1` that CSE substitutes into the switch compare (cf. `two = 2` in 0010a5d0); its only other use is a constant-true `if (one)`. */
 /* SCE SDK leftovers (libkernl: SIF/DECI2/file I/O helpers), matched with
  * ee-gcc 2.9-991111a -O2 -G0. sdk segment, session s1. */
 
@@ -166,7 +166,7 @@ extern Ring D_0066C700;
 Pk *func_00259ee8(Ring *p);
 int func_00260590(u32, void *, int, u32, u32, u32);
 int func_0025b1e8(int);
-int func_0025b2f0(void);
+int sceFsInit(void);
 extern int D_0046AED8;
 typedef struct { int a, b; } Pair;
 extern Pair D_0066DAC0;
@@ -234,7 +234,7 @@ CONTEXT_ONLY E16 *func_0025ad68(u32 i) {
 }
 
 CONTEXT_ONLY void func_0025b218(void) { SignalSema(D_0046AEDC); }
-int func_0025c0f8(int fd, int cmd, void *arg) {
+int sceIoctl(int fd, int cmd, void *arg) {
     SemaParam sp;
     int res;
     int sema, r, i, one = 1;
@@ -243,7 +243,7 @@ int func_0025c0f8(int fd, int cmd, void *arg) {
     func_0025b1e8(5);
     if (one) D_0066C744 = arg;
     if (!D_0046AED8)
-        func_0025b2f0();
+        sceFsInit();
     if (!p || !p->w[1]) {
         func_0025b218();
         return -9;

@@ -36,7 +36,7 @@ void func_00260738(void *addr, s32 size);
 void func_00269830(void);
 void func_002698c8(void);
 void func_00269a18(void);
-s32 func_0026a070(s32 mode);
+s32 sceCdSyncS(s32 mode);
 #define VS(x) (*(volatile s32 *)&(x))
 #define UNC(x) (*(s32 *)((u32)&(x) | 0x20000000))
 typedef struct { u8 pad[0x24]; void *server; } SifClient;
@@ -50,7 +50,7 @@ s32 sceCdInit(s32 mode) {
     s32 r, b, j;
     s32 v3, v1, v2;
     s32 *res;
-    if (func_0026a070(1)) return 0;
+    if (sceCdSyncS(1)) return 0;
     sceSifInitRpc(0);
     j = GetThreadId();
 

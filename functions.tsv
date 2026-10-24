@@ -582,7 +582,7 @@ scePad2GetState	00268eb0	# hand: (socket) returns state byte 0 of the latest buf
 scePad2StateIntToStr	002692c0	# hand: (state, str) state < 4 copies a name from a table with strcpy, else ""
 sceVibGetProfile	002692f8	# hand (libvib): (socket, profile) sceDbcReceiveData into the caller's buffer
 sceVibSetActParam	00269378	# hand: 5 args (socket, profile_size, profile, data_size, data); memcpy then sceDbcSendData2
-sceCdSearchFile	00269a90	# hand: 'Libcdvd bind err CdSearchFile'
+sceCdLayerSearchFile	00269a90	# hand: 'Libcdvd bind err CdSearchFile'; (file, name, layer), the search server 0x80000597 RPC 0 (sessions 1-56 called it sceCdSearchFile)
 sceCdInit	0026a250	# hand: 'Libcdvd bind err %d CD_Init', 'Libcdvd Exit'
 sceCdDiskReady	0026a530	# hand: 'Libcdvd bind err CdDiskReady'
 sceCdRead	0026a7f0	# hand: 'call cdread cmd'
@@ -803,3 +803,56 @@ sceGsResetPath	002654f0	# hand (session 56): libgraph in the library order; VIF1
 sceGsPutDispEnv	00265980	# hand (session 56): libgraph in the library order; writes PMODE, SMODE2, DISPFB, DISPLAY, BGCOLOR from the env to the GS CSR block 0x12000000
 sceGsSyncV	00265b28	# hand (session 56): libgraph in the library order; waits for the vsync (the kernel VSync wait), returns the field from CSR bit 13 when interlaced
 sceGsSetDefStoreImage	002660c0	# hand (session 56): libgraph in the library order; the store packet: BITBLTBUF (sbp, sbw, spsm), TRXPOS, TRXREG (w, h), FINISH, TRXDIR 1; the pair of SetDefLoadImage
+sceFsInit	0025b2f0	# hand (session 57): sifdev in the library order; sceSifInitRpc, binds the fileio server (0x80000001), RPC 255 asks the IOMAN version; every file call below runs it first
+sceFsReset	0025b550	# hand (session 57): sifdev; clears the bind state (D_0046AED8) and the 4-byte client flag with memset; discfile.c calls it before rebooting the IOP
+sceOpen	0025b588	# hand (session 57): sifdev in the library order; fileio RPC 0 (name, flags), an iob slot from the semaphore pool, returns the fd
+sceClose	0025b810	# hand (session 57): sifdev in the library order; fileio RPC 1 (fd)
+sceLseek	0025b990	# hand (session 57): sifdev in the library order; fileio RPC 4 (fd, offset, whence)
+sceRead	0025bbc8	# hand (session 57): sifdev in the library order; fileio RPC 2 (fd, buf, n)
+sceWrite	0025be38	# hand (session 57): sifdev in the library order; fileio RPC 3 (fd, buf, n)
+sceIoctl	0025c0f8	# hand (session 57): sifdev in the library order; fileio RPC 5 (fd, request, arg)
+sceIoctl2	0025c448	# hand (session 57): sifdev in the library order; fileio RPC 26 (fd, request, arg, arglen, buf, buflen)
+sceRemove	0025c7d0	# hand (session 57): sifdev; the name-only RPC helper (0x0025C628) with RPC 6
+sceMkdir	0025c7f0	# hand (session 57): sifdev in the library order; fileio RPC 7 (name, mode)
+sceRmdir	0025c9a0	# hand (session 57): sifdev; the name-only RPC helper with RPC 8
+sceFormat	0025c9c0	# hand (session 57): sifdev in the library order; fileio RPC 14 (dev, blockdev, arg, arglen)
+sceDopen	0025cd70	# hand (session 57): sifdev in the library order; an iob slot, then the name-only RPC helper with RPC 9
+sceDclose	0025ce38	# hand (session 57): sifdev in the library order; fileio RPC 10 (fd)
+sceDread	0025cfa0	# hand (session 57): sifdev in the library order; fileio RPC 11 (fd, dirent)
+sceGetstat	0025d0f8	# hand (session 57): sifdev in the library order; fileio RPC 12 (name, stat)
+sceChstat	0025d298	# hand (session 57): sifdev in the library order; fileio RPC 13 (name, stat, cbit)
+sceRename	0025d4d8	# hand (session 57): sifdev in the library order; fileio RPC 17 (old, new)
+sceChdir	0025d6c8	# hand (session 57): sifdev; the name-only RPC helper with RPC 18
+sceSync	0025d6e8	# hand (session 57): sifdev in the library order; fileio RPC 19 (dev, flag)
+sceMount	0025d880	# hand (session 57): sifdev in the library order; fileio RPC 20 (fsdev, blockdev, flag, arg, arglen)
+sceUmount	0025daf0	# hand (session 57): sifdev; the name-only RPC helper with RPC 21
+sceLseek64	0025db10	# hand (session 57): sifdev in the library order; fileio RPC 22 (fd, s64 offset, whence), returns s64
+sceDevctl	0025dd48	# hand (session 57): sifdev in the library order; fileio RPC 23 (dev, cmd, arg, arglen, buf, buflen)
+sceSymlink	0025df80	# hand (session 57): sifdev in the library order; fileio RPC 24 (old, new)
+sceReadlink	0025e160	# hand (session 57): sifdev in the library order; fileio RPC 25 (name, buf, buflen)
+sceSifLoadFileReset	0025e4b8	# hand (session 57): loadfile; clears the bind state (D_0046AEEC = -1) and the client with memset
+sceSifStopModule	0025e6f8	# hand (session 57): loadfile in the library order; RPC 7 (modid, arglen, args, result)
+sceSifUnloadModule	0025e900	# hand (session 57): loadfile in the library order; RPC 8 (modid)
+sceSifSearchModuleByName	0025e990	# hand (session 57): loadfile in the library order; RPC 9 (name, strlen-checked)
+sceSifSearchModuleByAddress	0025ea30	# hand (session 57): loadfile in the library order; RPC 10 (addr)
+sceSifLoadModuleBuffer	0025eac0	# hand (session 57): loadfile; the buffer loader (RPC 6, 0x0025E4F0) with a result slot on the stack
+sceSifLoadStartModuleBuffer	0025eae0	# hand (session 57): loadfile; the buffer loader with the caller's result pointer
+sceSifLoadModule	0025ed28	# hand (session 57): loadfile; the module loader (0x0025EB00, RPC 0 / 4) with a result slot on the stack, flag 0
+sceSifLoadStartModule	0025ed48	# hand (session 57): loadfile; the module loader with the caller's result pointer, flag 0
+sceSifLoadElfPart	0025ee70	# hand (session 57): loadfile; the ELF loader (0x0025ED68, RPC 1 / 5) (name, section, info), flag 1
+sceSifLoadElf	0025ee90	# hand (session 57): loadfile; the ELF loader with the section "all"
+sceSifResetIop	0025f088	# hand (session 57): iopreset; the reset packet sent with sceSifSetDma, the SIF flag registers set
+sceSifIsAliveIop	0025f1c8	# hand (session 57): iopreset; SIF register 4 (SMFLAG) bit 0x10000
+sceSifSyncIop	0025f1f0	# hand (session 57): iopreset; SIF register 4 bit 0x40000 (boot end), acknowledged through 0x002585E0
+sceSifRebootIop	0025f228	# hand (session 57): iopreset; "rom0:UDNL <image>" ("too long parameter '%s'"), sceSifInitRpc, sceSifResetIop
+sceCdInitEeCB	002696b8	# hand (session 57): libcdvd in the library order; (priority, stack, size) creates and starts the callback thread (0x002695F8, "sceCdCbfunc")
+sceCdPOffCallback	00269960	# hand (session 57): libcdvd in the library order; (func, arg) stores the power-off callback, installs the SIF command handler 0x80000012 once, returns the old func
+sceCdSearchFile	00269da8	# hand (session 57): libcdvd; sceCdLayerSearchFile(file, name, 0)
+sceCdSync	00269fd0	# hand (session 57): libcdvd in the library order; (mode) waits for the N command ("N cmd wait"); mode 1 polls
+sceCdSyncS	0026a070	# hand (session 57): libcdvd in the library order; (mode) the same for the S commands ("S cmd wait")
+sceCdMmode	0026a728	# hand (session 57): libcdvd in the library order; S command 34 (media)
+sceCdSeek	0026a9d0	# hand (session 57): libcdvd in the library order; N command 5 (lsn)
+sceCdGetError	0026aaa0	# hand (session 57): libcdvd in the library order; S command 4, no arguments
+sceCdStatus	0026ab38	# hand (session 57): libcdvd in the library order; S command 12 ("status called")
+sceCdBreak	0026abf0	# hand (session 57): libcdvd in the library order; S command 22
+sceCdPowerOff	0026aca8	# hand (session 57): libcdvd in the library order; S command 33 (int *result)
