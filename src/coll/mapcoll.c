@@ -520,7 +520,7 @@ void func_00115d18(void) {
 /* func_00115d58 (from hand/text_00110000_h29.c). */
 typedef struct { s32 f; u8 pad[12]; } W29Mark;
 typedef struct { u8 hdr[8]; W29Mark e[1]; } W29MarkTbl;
-extern s32 D_002BD170;
+s32 D_002BD170 ALIGNED(16) = 0;
 s32 func_00104940(void *, s32 *, s32);
 extern W29MarkTbl *D_004E0420_00115d58 __asm__("D_004E0420");
 #define D_004E0420 D_004E0420_00115d58

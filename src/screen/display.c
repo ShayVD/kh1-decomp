@@ -94,7 +94,7 @@ typedef struct {
     } tag;
     W29Ad r[31];
 } W29Env;
-extern W29Env D_004D8EF0;
+W29Env D_004D8EF0 ALIGNED(16);
 extern u64 D_002BC750[];
 extern u64 D_002BC7C0[];
 extern u64 D_002BC830[];

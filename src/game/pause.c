@@ -221,12 +221,12 @@ void func_00114250(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f
 typedef struct { s16 h0; s16 h2; } Tsk;
 extern volatile s32 D_002BBE08;
 extern s32 D_002B6774;
-extern s32 D_004D933C;
-extern s32 D_004D9338;
+s32 D_004D933C ALIGNED(4);
+s32 D_004D9338 ALIGNED(8);
 extern volatile s32 D_004D9364;
 extern f32 D_002BBDFC;
 extern volatile s32 D_002C5AD0[3];
-extern s32 D_004D9324;
+s32 D_004D9324 ALIGNED(4);
 extern s32 D_002C5AD8;
 extern s32 (*D_0046A6A4)(void);
 extern s32 D_002B6478;

@@ -590,7 +590,7 @@ void func_00113028(void) {
 
 /* func_00113048 (from hand/text_00100000_h2.c). */
 typedef struct Actor_13048 { u8 pad[0x10]; f32 x, y, z; u8 pad2[0x20]; f32 w; } Src;
-extern f32 D_004D92F0[3][4];
+f32 D_004D92F0[3][4] ALIGNED(16);
 void func_00113048(void) {
     s32 i;
     for (i = 0; i < 3; i++) {

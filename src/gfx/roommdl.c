@@ -109,7 +109,7 @@ s32 func_001149e8(s32 a0, u8 *a1, s32 a2, s32 a3) {
 /* func_00114a38 (from hand/text_00110000_s6_02.c). */
 typedef struct { u8 *data; s32 *hdr; s32 pad8[2]; f32 m[4][4]; f32 pad50[3][4]; f32 v[8][4]; } Obj110;
 typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
-extern Obj110 *D_004D9368;
+Obj110 *D_004D9368 ALIGNED(8);
 extern u8 D_002BD140[];
 Obj110 *func_00122048(s32, s32);
 void func_002672f8(f32 *, s32, u8 *);
@@ -215,8 +215,8 @@ typedef struct { s32 a, b; } W29P8;
 typedef struct { W29P8 p; u8 pad[0x88]; } W29Cell;
 extern const W29P8 D_0048BFD0;
 typedef struct { u8 b[0x50]; } W29E50;
-extern W29E50 D_004D9380[2];
-extern W29E50 D_004D9420[0x40][2];
+W29E50 D_004D9380[2] ALIGNED(64);
+W29E50 D_004D9420[0x40][2] ALIGNED(32);
 extern W29Cell D_004DBC20_00114e50[2][64] __asm__("D_004DBC20");
 #define D_004DBC20 D_004DBC20_00114e50
 #define func_00114c18 ((void (*)(void *, s32, s32)) func_00114c18)
