@@ -1,44 +1,6 @@
 #include "common.h"
 #include "data/bss_0066.h"
 
-typedef struct { s32 dur; u8 pad[0xc]; f32 v[4][4]; } Frame50;
-typedef struct { s32 time; s32 idx; s32 n; Frame50 *fr; } Anim50;
-typedef struct { u8 pad[0x78]; Anim50 b; } UiB;
-void __assert(const char *, s32, const char *);
-
-
-typedef union {
-    struct { u8 pad[0x60]; u64 flags; } h;
-    struct { u8 pad[0x20]; s32 m[4][4]; u32 flags; } s;
-} UiC;
-void func_0024a0e0(UiC *, s32 *);
-void func_0024a300(UiB *, s32 (*)[4]);
-
-void func_0024ac68(UiC *u, s32 (*out)[4]) {
-    s32 i, j;
-    if ((u->h.flags & 10) == 10) {
-        s32 t[4];
-        func_0024a0e0(u, t);
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = t[j];
-    } else if ((u->h.flags & 0xC0) == 0xC0) {
-        s32 t[4][4];
-        func_0024a300((UiB *)u, t);
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = t[i][j];
-    } else if (u->s.flags & 0x20) {
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = u->s.m[i][j];
-    } else {
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = u->s.m[0][j];
-    }
-}
-
 extern s32 D_0046A558;
 extern s32 D_0046A55C;
 extern s32 D_0046A560;
@@ -99,23 +61,6 @@ void func_0024cfa0(void *a) {
 }
 
 /* needs make: uses rodata */
-void func_0024a300(UiB *u, s32 (*out)[4]) {
-    Anim50 *ra = &u->b;
-    s32 i, j;
-    if (!ra) __assert("ttlib/ui.c", 137, "ra");
-    if (ra->idx < ra->n - 1) {
-        f32 t = (f32)ra->time / (f32)ra->fr[ra->idx].dur;
-        Frame50 *f = &ra->fr[ra->idx];
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = f->v[i][j] + (f[1].v[i][j] - f->v[i][j]) * t;
-    } else {
-        Frame50 *f = &ra->fr[ra->idx];
-        for (i = 0; i < 4; i++)
-            for (j = 0; j < 4; j++)
-                out[i][j] = f->v[i][j];
-    }
-}
 
 typedef struct { void *unk0; void *unk4; s32 unk8; u8 *unkC; u8 *unk10; u8 *unk14; s32 unk18; void *unk1C; s32 unk20; void *unk24; } Task;
 extern Task *D_00669A18[8]; /* src/data/bss_0066.c: s32 D_00669A18[8] */

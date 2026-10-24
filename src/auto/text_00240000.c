@@ -4,7 +4,6 @@
 #include "data/bss_0066.h"
 
 M2C_UNK func_00149c80(u16, M2C_UNK *);
-M2C_UNK func_0024a588(void *, void *);
 M2C_UNK func_0024b7a0(s32, s32, M2C_UNK);
 M2C_UNK func_0024e0f0();
 extern M2C_UNK D_0046A620;
@@ -24,21 +23,6 @@ extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
 s32 func_0024b778();
 s32 func_0024f4f0(s32);
 s32 func_0026aaa0();
-
-s32 func_0024a1c0(void *arg0) {
-    return M2C_FIELD(arg0, s32 *, 0x74);
-}
-
-void func_0024ac08(void *arg0, void *arg1) {
-    if ((M2C_FIELD(arg0, s64 *, 0x60) & 0x14) == 0x14) {
-        func_0024a588(arg0, arg1);
-        return;
-    }
-    M2C_FIELD(arg1, s32 *, 0) = (s32) M2C_FIELD(arg0, s32 *, 0);
-    M2C_FIELD(arg1, s32 *, 4) = (s32) M2C_FIELD(arg0, s32 *, 4);
-    M2C_FIELD(arg1, s32 *, 8) = (s32) M2C_FIELD(arg0, s32 *, 8);
-    M2C_FIELD(arg1, s32 *, 0xC) = (s32) M2C_FIELD(arg0, s32 *, 0xC);
-}
 
 void func_0024b760(void) {
     func_0024e0f0();

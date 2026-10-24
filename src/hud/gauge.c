@@ -55,7 +55,7 @@ void func_0024ac08(void *, s32 *);
 void func_0024ae00(void *);
 /* gauge.nofill.c */
 s32 func_0023d490(Gauge *);
-QW *func_0023d700(GSpr *, Tex_4268b0 *, s32, s32, QW *, f32);
+QW *func_0023d700(UiSpr *, Tex_4268b0 *, s32, s32, QW *, f32);
 /* gauge.nostrict.c */
 QW *func_0023dd48(Gauge *, QW *);
 QW *func_0023f0d8(Gauge *, QW *);

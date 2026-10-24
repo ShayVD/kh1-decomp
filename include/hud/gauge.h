@@ -11,18 +11,15 @@
 #include "data/types/nostrict_text_00240000_s7_w36.h" /* QW */
 #include "data/types/nostrict_text_00230000_b16.h"    /* GW: tt_gaugeWorldmap */
 #include "data/pieces/D_004268B0.h"                   /* Tex_4268b0 */
-
-/* A ui.c sprite object (0xC0 bytes: func_0024aa48 draws one, func_0024ae00
- * starts it, func_0024af00 steps it, +0x9C its flags). */
-typedef struct { s32 v[48]; } __attribute__((aligned(8))) GSpr;
+#include "hud/ui.h"                                   /* UiSpr */
 
 /* Three sprites played in turn by func_002409e0 (state unk250). */
 typedef struct {
-    GSpr *unk0;
+    UiSpr *unk0;
     u8 pad4[0xC];
-    GSpr unk10;
-    GSpr unkD0;
-    GSpr unk190;
+    UiSpr unk10;
+    UiSpr unkD0;
+    UiSpr unk190;
     u32 unk250;
     s32 unk254;
     u8 pad258[0x260 - 0x258];
@@ -57,13 +54,13 @@ typedef struct {
         GActor *unk4;
         s32 unk4i;      /* func_00241b60 stores it as an s32 */
     };
-    GSpr *unk8[7];      /* +0x08 the frame's sprites */
+    UiSpr *unk8[7];      /* +0x08 the frame's sprites */
     s32 unk24;
-    GSpr *unk28[4];     /* +0x28 */
+    UiSpr *unk28[4];     /* +0x28 */
     s32 unk38;
-    GSpr *unk3C[2];     /* +0x3C */
+    UiSpr *unk3C[2];     /* +0x3C */
     s32 unk44;
-    GSpr *unk48[8];     /* +0x48 the bars' pieces */
+    UiSpr *unk48[8];     /* +0x48 the bars' pieces */
     s32 unk68;
     Tex_4268b0 *unk6C;  /* +0x6C the textures */
     Tex_4268b0 *unk70;
@@ -72,8 +69,8 @@ typedef struct {
     s32 (*unk90)[4];    /* the bars' sizes (x, y, the width) */
     s32 unk94;
     s32 unk98;
-    GSpr *unk9C;        /* the sprite playing (func_002407b0) */
-    GSpr unkA0[6];
+    UiSpr *unk9C;        /* the sprite playing (func_002407b0) */
+    UiSpr unkA0[6];
     GFade unk520;
     GFade unk780;
     s32 unk9E0;
@@ -91,9 +88,9 @@ typedef struct {
     s32 unkA28;
     s32 unkA2C;
     s32 unkA30;
-    struct GaugeWm { GSpr *a[5]; GSpr *b; GSpr *c[4]; GSpr *d[5]; } unkA34; /* the world map's parts */
+    struct GaugeWm { UiSpr *a[5]; UiSpr *b; UiSpr *c[4]; UiSpr *d[5]; } unkA34; /* the world map's parts */
     u8 padA70[0xA84 - 0xA70];
-    GSpr *unkA84;
+    UiSpr *unkA84;
     f32 *unkA88;        /* kind 3: the values it shows */
     f32 *unkA8C;
     f32 *unkA90;

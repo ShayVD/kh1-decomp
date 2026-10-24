@@ -22,7 +22,7 @@ void func_002492d0(void *, f32, f32, f32, f32);
 s32 func_002492e8(void *, s32);
 /* gauge.c, gauge.nofill.c, gauge.nostrict.c */
 void func_0023d528(Gauge *, s32 *, s32 *);
-QW *func_0023d700(GSpr *, Tex_4268b0 *, s32, s32, QW *, f32);
+QW *func_0023d700(UiSpr *, Tex_4268b0 *, s32, s32, QW *, f32);
 QW *func_0023da08(Gauge *, void *, void *, s32, s32, QW *);
 QW *func_0023e160(s32 *, s32 *, Col *, QW *, f32, f32, f32);
 QW *func_0023f700(Gauge *, QW *);
@@ -143,7 +143,7 @@ QW *func_0023dfd8(Gauge *g, QW *buf) {
 QW *func_0023e330(Gauge *e, QW *buf) {
     s32 p1[4];
     s32 p2[4];
-    GSpr big;
+    UiSpr big;
     Col q = D_004915A0;
     f32 v;
     s32 i, n, t, rem;
@@ -165,12 +165,12 @@ QW *func_0023e330(Gauge *e, QW *buf) {
         fr = rem / 3000.0f;
         p2[0] = p2[0] + (1.0f - fr) * 26.0f;
         big = *e->unk48[5];
-        big.v[2] = big.v[2] * (fr + 0.0625f);
+        big.s.r[2] = big.s.r[2] * (fr + 0.0625f);
         buf = func_0023d700(&big, e->unk6C, p2[0], p2[1], buf, e->unkA1C);
     } else {
         p2[0] += 26;
     }
-    e->unk48[7]->v[0] = 414;
+    e->unk48[7]->s.r[0] = 414;
     return func_0023d700(e->unk48[7], e->unk6C, p2[0], p2[1], buf, e->unkA1C);
 }
 

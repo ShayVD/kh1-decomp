@@ -10,7 +10,7 @@
 #include "data/data_0045.h"
 #include "data/pieces/D_00454A20.h"
 
-void func_0024aa48(GSpr *, Pkt *, Tex_4268b0 *);
+void func_0024aa48(UiSpr *, Pkt *, Tex_4268b0 *);
 QW *func_002388b8(Pkt *, s32, QW *);
 void func_0024afc0(void *, void *, s32);
 
@@ -65,7 +65,7 @@ s32 func_0023d490(Gauge *a) {
 
 Pkt D_00651D70 ALIGNED(16);
 
-QW *func_0023d700(GSpr *a0, Tex_4268b0 *a1, s32 x, s32 y, QW *q, f32 s) {
+QW *func_0023d700(UiSpr *a0, Tex_4268b0 *a1, s32 x, s32 y, QW *q, f32 s) {
     s32 i;
     s32 *p;
     s32 dx, dy;

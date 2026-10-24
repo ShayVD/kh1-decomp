@@ -20,22 +20,6 @@ void func_002474e8(s32, void *, s32, s32, f32);
 /* Steps a fade by speed*dt (unless paused): 2 when it reaches 0, 1 when it
  * reaches 128. */
 
-typedef struct {
-    u64 lo : 20;
-    u64 f20 : 6;
-    u64 mid : 30;
-    u64 f56 : 5;
-    u64 f61 : 3;
-} Tag;
-typedef struct { u8 pad[0x18]; u64 unk18; } Src;
-void func_0024a6b8(Tag *, void *, u64);
-void func_0024aa48(void *a, Tag *t, Src *s) {
-    func_0024a6b8(t, a, s->unk18);
-    t->f56 = 0;
-    t->f61 = 1;
-    t->f20 = 0x13;
-}
-
 /* Runs func_0024e0f0 with the globals at 0x0046A03C..0x0046A048 loaded from a
  * parameter block; the ones at +0x40 and +0x48 are restored after. */
 typedef struct { s32 unk0, unk4, unk8, unkC, unk10, unk14, unk18; } Prm;

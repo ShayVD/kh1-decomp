@@ -12,30 +12,6 @@ extern s32 D_00669A38;
 extern s32 D_00669A3C;
 extern s32 D_00669A7C;
 
-s32 func_0024a488(void *arg0) {
-    return M2C_FIELD(arg0, s32 *, 0x88);
-}
-
-s32 func_0024a6b0(void *arg0) {
-    return M2C_FIELD(arg0, s32 *, 0x9C);
-}
-
-void func_0024abd8(s32 arg0, void *arg1) {
-    s32 var_a0;
-    void *var_a1;
-
-    var_a0 = arg0;
-    var_a1 = arg1;
-    if (var_a0 > 0) {
-        do {
-            var_a0 -= 1;
-            M2C_FIELD(var_a1, s32 *, 0x10) = 0;
-            M2C_FIELD(var_a1, s32 *, 0x14) = 0;
-            var_a1 += 0x20;
-        } while (var_a0 != 0);
-    }
-}
-
 void func_0024b1e8(void) {
 
 }
