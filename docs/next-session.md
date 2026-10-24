@@ -8,32 +8,32 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23; sessions 49 and 50 ran without it).
-Before then, do not ask for the Mac or wait on it: skip item 1, add every float change to docs/float-untested.md as
+**The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23; sessions 49 to 51 ran without it).
+If this session starts before then, do not ask for the Mac or wait on it: skip item 1, add every float change to docs/float-untested.md as
 untested, and do the static items. **From Monday 2026-10-26 on, ask for the Mac and PCSX2 at the start** (the connect
 card in the Claude desktop app) **and make item 1 the first thing**: five float builds are waiting for a boot.
 
-## Where we stopped (end of session 50, 2026-10-24)
+## Where we stopped (end of session 51, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-50.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-51.
 - **Five default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032) and 34
-  (2,049, still the current default: sessions 35 to 50 changed no data names). docs/float-untested.md lists every
+  (2,049, still the current default: sessions 35 to 51 changed no data names). docs/float-untested.md lists every
   change since the last booted build (KH1_F29_N) and the switch that undoes each. **Session 34 released 19 names**
-  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-50 released nothing.
-- **Modules** (session 50): 446 functions moved, and **the game segment is in modules from 0x00183c70 to its end
+  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-51 released nothing.
+- **Modules** (session 51): 396 functions moved, and **the game segment is in modules from 0x00170170 to its end
   0x0024f2e0** (except the VU0 routines in src/hand/vu0.c, two probes in src/anon/session1_probes.c and the hand
-  asm). All of it was ppp, the effect system: 25 class groups in src/ppp/ (pppcomp, pppvertex, pppmatrix, pppdraw,
-  ppppoint, ppprand, eiwind, ppploop, kethcls, kebornrnd, kemdl, keshptail, keshpdtt, kelnscls, kemove, kemat,
-  drawmdl, kemdltfd3, keshptailx, ryjmtxworld, ryjshipoly, ryjmb, ryjmbprize, ryjmplace, plus ryjmbmodel's helpers),
-  one file per flag mode each, named from the class table D_00370200 (docs/structs.md). docs/modules.md "Session
-  50" has the tables and the traps: **view a scalar by value** `((T) D_X)`, an array by address, and use a memory
-  view `(*(T *)&D_X)` only where the address is taken (a memory view reorders loads in strict-aliasing files);
-  **check new modules for implicit declarations** (three slipped through and still matched); a function view
-  `#define F ((RET (*)(ARGS)) F)` for prototypes that disagree; files left with only static inline helpers must
-  be `git rm`'d by hand.
-- **2,653 functions are still in src/auto and src/hand**, all in 0x001001f8-0x00183c70 (out/gen/placements.tsv):
-  73 in 0x0018 (the ppp manager core), 324 in 0x0017, 117 in 0x0016, 313 in 0x0015, 315 in 0x0014, 325 in 0x0013,
-  471 in 0x0012, 391 in 0x0011.
+  asm): the ppp manager core src/ppp/pppsys, the ppp interface pppapi and object controls pppobj, the object
+  scripts' second command table src/obj/objcmd2, pad vibration src/pad/padvib, the field camera
+  src/camera/fieldcam / campath / camctl, the party AI src/ai/partyai and the texture spots src/gfx/texspot, one
+  file per flag mode each. docs/modules.md "Session 51" has the tables and the traps: **CONTEXT_ONLY stubs** for
+  callees the old file defined above the function (else a likely branch's delay slot changes); call a callee whose
+  definition is now in the same file through an **`__asm__` alias** so gcc does not inline it; a **64-bit view of a
+  32-bit base** is a memory view; keep rename macros with their `__asm__` externs; **struct tags completed
+  differently** in several old files (`struct Actor`, D_002E26A0.h) need per-function views. Session 50's traps still
+  hold (view a scalar by value, check new modules for implicit declarations).
+- **2,257 functions are still in src/auto and src/hand** (33 of them VU0 routines in vu0.c), all in
+  0x001001f8-0x00170170 (out/gen/placements.tsv): 106 in 0x0016, 313 in 0x0015, 315 in 0x0014, 325 in 0x0013, 471
+  in 0x0012, 391 in 0x0011, 303 in 0x0010.
 - **Original source names** (docs/elf-notes.md): ttlib/ui_gauge.c, ttlib/ui.c, src/decode.c, src/sa_task.c, with
   their ranges; none below 0x001c08e8 so far (session 48 used the Gummi strings, sessions 49 and 50 the renderer's op_* strings
   and the ppp class table).
@@ -71,11 +71,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 51 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 52 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s51 and /mnt/project-files/kh1-runtime/s51, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s52 and /mnt/project-files/kh1-runtime/s52, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -85,12 +85,14 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    gauge, a minigame with a timer or score if one is near, and anything using atan: camera, lock-on). If it breaks,
    bisect with the switches listed there, session 34's first. Move what boots into docs/shiftable-plan.md and clear
    docs/float-untested.md. Without the Mac: skip.
-2. **Phase 4 modules** (docs/modules.md "Next module moves"): go on downwards from 0x00183c70, the top of what is
-   left in src/auto and src/hand. First the ppp manager core, 0x00180000-0x00183c70 (73 functions: pppStepPrograms,
-   pppRelocProgram, pppDesObject, func_00182588 which makes an instance, the depth sort func_00181608, the texture
-   slots func_001808f8 ...; in hand h12, h39 and nostrict h39, h11, h38, s6_10, b07 and auto text_00180000*):
-   make it src/ppp/pppsys*.c with `python3 -I tools/shift/s50move/group.py src/ppp/pppsys 00180000 00183c70`, then
-   go on into 0x0017 (324 functions; list them with `python3 -I tools/shift/s37move/refs.py 00170000 00180000` and
+2. **Phase 4 modules** (docs/modules.md "Next module moves"): go on downwards from 0x00170170, the top of what is
+   left in src/auto and src/hand. First the party control, 0x00168500-0x00170170 (43 functions; session 51 left it:
+   `python3 -I tools/shift/s50move/group.py src/ai/partyctl 00168500 00170170` drafts it, the 4 default-flag
+   functions match, the nostrict file breaks on `struct Actor` completed differently by its old files c03, h37 and
+   h60 (D_002E26A0.h declares `struct Actor *D_002E26A0[3]`): give those functions their own view of D_002E26A0 and
+   an untagged struct, patch func_00169688's helper to `((Prm6x *) &D_0035AE80)->b80` again, and fix the NEW DIFFs
+   0016a3f8 (7 words), 0016e1f0 (17) and 0016f548 (59, D_002E26A0's address folding)). Then the rest of 0x0016 (63
+   more), and on into 0x0015 (313; list them with `python3 -I tools/shift/s37move/refs.py 00150000 00160000` and
    group them by what they do or by original-name strings). Leave whole-VU0 functions where they are. `make`
    byte-identical and the float layout unchanged after every chunk (fcheck.sh), and scan the new files with
    `-Wimplicit-function-declaration`; run `make`, not only checkfile, after each `mod.py remove`.
@@ -104,5 +106,5 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    skip case entries nothing branches to (can miss accesses); and the four libc string arguments still order-dependent
    (docs/shiftable-plan.md "Session 34: reach_check", "Left"). Any release goes into docs/float-untested.md as untested.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=51`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=52`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).
