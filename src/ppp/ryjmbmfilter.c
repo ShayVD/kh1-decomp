@@ -9,6 +9,7 @@
  * up and free the particle blocks.  Read from the code, not proved by a
  * boot. */
 #include "m2c.h"
+#include "platform/vu.h"
 #include "ppp.h"
 
 f32 func_001a3650(void);
@@ -38,10 +39,8 @@ s32 func_001a36f0(PppA2218A *p, PppA36f0B *q) {
     return 1;
 }
 
-void func_002672f8(void *, void *, void *);
 void *memset(void *, s32, u32);
 f32 func_001a3650(void);
-void func_002673b8(void *, void *);
 void func_001a3720(void *, void *, void *);
 extern u8 D_00615F30[];
 typedef struct { f32 x, y, z, w; } V4_1a4028;
@@ -72,7 +71,7 @@ void func_001a4028(s32 a0, Emit_1a4028 *e, V4_1a4028 *m, void *b) {
     t.y = e->p[1];
     t.z = e->p[2];
     t.w = 1.0f;
-    func_002673b8(m + 1, &t);
+    PlatVu0Normalize(m + 1, &t);
     r = e->r0 + e->r1;
     d = r + r;
     do {
@@ -81,7 +80,7 @@ void func_001a4028(s32 a0, Emit_1a4028 *e, V4_1a4028 *m, void *b) {
         m->z = d * func_001a3650() - r;
     } while (r < vlen3_1a4028(m));
     m->w = 1.0f;
-    func_002672f8(m, D_00615F30, m);
+    PlatVu0ApplyMatrix(m, D_00615F30, m);
     func_001a3720(e, m, b);
 }
 
@@ -143,7 +142,6 @@ void func_001a4a90(void) {
 
 }
 
-M2C_UNK func_00267530(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 extern M2C_UNK D_00615F80; /* src/data/bss_0061.c: u128 D_00615F80 */
 extern M2C_UNK D_0061E730; /* src/data/bss_0061.c: u8 D_0061E730[0x50] */
@@ -151,8 +149,8 @@ extern M2C_UNK D_0061E730; /* src/data/bss_0061.c: u8 D_0061E730[0x50] */
 #undef D_00615E60
 
 void pppRyjMegaBirthModelFilterFn14(void) {
-    func_00267530(&D_0061E730, &D_00615F80, &D_00615F70);
-    func_002673b8(&D_0061E730, &D_0061E730);
+    PlatVu0SubVector(&D_0061E730, &D_00615F80, &D_00615F70);
+    PlatVu0Normalize(&D_0061E730, &D_0061E730);
     M2C_FIELD(&D_0061E730, f32 *, 0xC) = 1.0f;
 }
 

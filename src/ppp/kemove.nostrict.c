@@ -10,6 +10,7 @@
 
 /* pppKeHmgEffFrame (from hand/nostrict/text_00190000_h63.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -37,14 +38,10 @@ typedef struct {
 } PppObject;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 void func_001a9098(void *, void *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(PppVec4, PppVec4);
-void func_00267560(f32 *, PppVec4, f32);
 typedef struct {
     u8 pad[0x9D];
     u8 unk9D;  /* +0x9D */
 } PppObjectB;
-void func_002675a8(PppVec4, f32 *);
 f32 func_001a9350(PppVec4);
 typedef struct {
     s32 frame;
@@ -60,8 +57,6 @@ typedef union {
     PppVec4 f;
     u64 d[2];
 } PppV4U;
-void func_00267518(PppVec4, PppVec4, PppVec4);
-void func_002674f0(PppVec4, PppVec4, PppVec4, f32);
 s32 func_001a8f30(void);
 void pppKeHmgEffFrame(PppObject *obj, PppHmgKey *key, PppEntry *e) {
     PppVec4 a;
@@ -86,17 +81,17 @@ void pppKeHmgEffFrame(PppObject *obj, PppHmgKey *key, PppEntry *e) {
     if (w->target == &D_00575A00)
         return;
     q = PPP_WORK(f32, obj, e, 1);
-    func_00267530(a, w->target, PPP_WORK(f32, obj, e, 0));
-    func_002673b8(a, a);
-    func_002675a8(b, q);
+    PlatVu0SubVector(a, w->target, PPP_WORK(f32, obj, e, 0));
+    PlatVu0Normalize(a, a);
+    PlatVu0CopyVector(b, q);
     len = func_001a9350(b);
-    func_002673b8(b, b);
-    func_00267518(c.f, b, a);
+    PlatVu0Normalize(b, b);
+    PlatVu0AddVector(c.f, b, a);
     if (c.d[0] == 0 && c.d[1] == 0)
         a[func_001a8f30() % 3] += 0.05f;
-    func_002674f0(a, a, b, w->rate);
-    func_002673b8(a, a);
-    func_00267560(a, a, len);
+    PlatVu0InterVector(a, a, b, w->rate);
+    PlatVu0Normalize(a, a);
+    PlatVu0ScaleVector(a, a, len);
     func_001a9098(q, a);
 }
 
@@ -136,11 +131,11 @@ void pppKeGrvEffFrame(PppObject *obj, PppGrvKey *key, PppEntry *e) {
     if (t == (PppGrvSrc *) &D_00575A00)
         return;
     q = PPP_WORK(f32, obj, e, 1);
-    func_00267530(a, t->pos, PPP_WORK(f32, obj, e, 0));
+    PlatVu0SubVector(a, t->pos, PPP_WORK(f32, obj, e, 0));
     len = func_001a9350(a);
-    func_002673b8(a, a);
+    PlatVu0Normalize(a, a);
     if (len < t->range) {
-        func_00267560(a, a, (1.0f - len / t->range) * t->force);
+        PlatVu0ScaleVector(a, a, (1.0f - len / t->range) * t->force);
         func_001a9110(q, q, a);
     }
 }
@@ -268,16 +263,16 @@ void pppKeHitChkPxBFrame(PppObject_93fe0 *obj, PppHitBornKey *key, PppEntry *e) 
     if (t->r == 0.0f)
         return;
     q.r = t->r;
-    func_00267530(q.a, (f32 *) w0, t->pos);
-    func_002675a8(q.b, (f32 *) w1);
+    PlatVu0SubVector(q.a, (f32 *) w0, t->pos);
+    PlatVu0CopyVector(q.b, (f32 *) w1);
     if (!func_001a8f70(&q))
         return;
     if (q.t < 0.0f || q.t > 1.0f)
         return;
     w->flags |= 1;
-    func_00267560(c, q.b, q.t);
-    func_00267518(c, c, q.a);
-    func_00267518(w->v, w->tgt->pos, c);
+    PlatVu0ScaleVector(c, q.b, q.t);
+    PlatVu0AddVector(c, c, q.a);
+    PlatVu0AddVector(w->v, w->tgt->pos, c);
     if (w->flags & 2) {
         func_001a90f8(w1, w, w0);
         obj->frame = 0xFFFF0000;

@@ -8,6 +8,7 @@
 
 /* pppKeTkFadeDraw (from hand/nostrict/text_00180000_b07.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "ppp.h"
@@ -58,7 +59,6 @@ typedef struct {
 extern s32 D_0061621C;
 extern PppSystem *D_00615E60;
 extern PppMdlBank *D_00615E64;
-void func_00267530(f32 *, f32 *, f32 *);
 typedef unsigned int u128 __attribute__((mode(TI)));
 typedef struct {
     s32 frame;
@@ -80,8 +80,6 @@ extern u128 D_00372770[2];
 extern s8 D_00372790[];
 void *func_001aa950(s32);
 void func_001aa9d0(s32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_002674b0(f32 *, f32 *, f32);
 /* --- pppKeTkFadeDraw: build a faded 256-entry CLUT and upload it --- */
 void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 0);
@@ -147,11 +145,11 @@ void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
     b[1] = (s32) ((c0 >> 8) & 0xFF);
     b[2] = (s32) ((c0 >> 16) & 0xFF);
     b[3] = (s32) (c0 >> 24);
-    func_00267530(b, b, a);
-    func_002674b0(b, b, sc);
+    PlatVu0SubVector(b, b, a);
+    PlatVu0DivVector(b, b, sc);
     for (; i < n; i++) {
         *p = ((u32) a[3] << 24) | ((u32) a[2] << 16) | ((u32) a[1] << 8) | (u32) a[0];
-        func_00267518(a, a, b);
+        PlatVu0AddVector(a, a, b);
         p += buf->tbl[i & 0x1F];
     }
     PlatGsSetDefLoadImage(li, (u16) ((tex >> 37) & 0x3FFF), 4, (u16) ((tex >> 51) & 0xF), 0, 0, 16, 16);
@@ -186,8 +184,6 @@ static inline void vu0ScaleRow(f32 *row, f32 s) {
         : : "r"(row), "r"(s));
 }
 extern PppMtx D_0061E7C0;
-void sceVu0UnitMatrix(PppMtx);
-void func_002675a8(f32 *, f32 *);
 void pppKeMatPhtFrame(PppObject_949c8 *obj, void *key, PppEntry *e) {
     PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
     PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
@@ -200,11 +196,11 @@ void pppKeMatPhtFrame(PppObject_949c8 *obj, void *key, PppEntry *e) {
     D_0061E7C0[3][0] = t->x;
     D_0061E7C0[3][1] = t->y;
     D_0061E7C0[3][2] = t->z;
-    sceVu0UnitMatrix(D_00615E68->m);
+    PlatVu0UnitMatrix(D_00615E68->m);
     D_00615E68->m[0][0] = s->x;
     D_00615E68->m[1][1] = s->y;
     D_00615E68->m[2][2] = s->z;
-    func_002675a8(D_00615E68->m[3], D_0061E7C0[3]);
+    PlatVu0CopyVector(D_00615E68->m[3], D_0061E7C0[3]);
 }
 
 #include "data/data_0037.h"

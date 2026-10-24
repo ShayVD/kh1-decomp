@@ -4,6 +4,7 @@
  * source's force, scaled by the angle and distance and divided by the key's
  * mass.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 
@@ -43,7 +44,6 @@ typedef struct {
     f32 min;    /* +0x14 */
     f32 force;  /* +0x18 */
 } PppWfacc;
-f32 func_00267390(PppWfacc *, f32 *);
 static inline f32 vu0Normalize(f32 *v) {
     f32 r;
     __asm__ volatile(
@@ -85,7 +85,7 @@ void pppEiWfaccFrame(PppObject *obj, PppWfaccKey *key, PppEntry *e) {
     v[2] = p[2] - b[2];
     len = vu0Normalize(v);
     if (len < a->range) {
-        d = func_00267390(a, v);
+        d = PlatVu0InnerProduct(a, v);
         if (a->min < d) {
             k = a->force * ((d - a->min) / (1.0f - a->min)) * ((a->range - len) / a->range) / key->mass;
             w = PPP_WORK(f32, obj, e, 1);

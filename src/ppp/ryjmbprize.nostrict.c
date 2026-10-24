@@ -7,6 +7,7 @@
  * colour and scale (ten types in the key) and steps its animation.  The Con
  * is in ryjmbprize.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/types/nostrict_text_00180000_h40.h"
@@ -115,8 +116,6 @@ typedef union {
     u128 q;
 } PppQv;
 
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267548(f32 *, f32 *, f32 *);
 
 void func_0019dac8(void) {
     PppQv d;
@@ -130,8 +129,8 @@ void func_0019dac8(void) {
         if (p->u.w & 0x200)
             continue;
         {
-            func_00267530(d.f, &D_002E2780.x, p->v);
-            func_00267548(d.f, d.f, d.f);
+            PlatVu0SubVector(d.f, &D_002E2780.x, p->v);
+            PlatVu0MulVector(d.f, d.f, d.f);
             D_0061E310[D_0061E710] = p;
             D_0061E710++;
             p->v[3] = d.f[0] + d.f[1] + d.f[2];
@@ -183,11 +182,6 @@ typedef struct {
 } PrizeObj;
 
 s32 func_001b8198(void *, DShpParam *, s32);
-void func_00267560(f32 *, f32 *, f32);
-void func_002672f8(f32 *, PppMtx, f32 *);
-void sceVu0UnitMatrix(PppMtx);
-void sceVu0CopyMatrix(PppMtx, PppMtx);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 
 #define D_0061E310 ((PrizeObj **) D_0061E310)
 void pppRyjMegaBirthPrizeDraw(PppObject *obj, PrizeKey *key, PppEntry *e) {
@@ -207,10 +201,10 @@ void pppRyjMegaBirthPrizeDraw(PppObject *obj, PrizeKey *key, PppEntry *e) {
     p.p10 = D_00615E68->m2;
     for (i = 0; i < 10; i++) {
         PrizeEnt *pe = &ents[i];
-        sceVu0UnitMatrix(m[i]);
-        func_00267560(m[i][0], m[i][0], pe->scale);
-        func_00267560(m[i][1], m[i][1], pe->scale);
-        func_00267560(m[i][2], m[i][2], pe->scale);
+        PlatVu0UnitMatrix(m[i]);
+        PlatVu0ScaleVector(m[i][0], m[i][0], pe->scale);
+        PlatVu0ScaleVector(m[i][1], m[i][1], pe->scale);
+        PlatVu0ScaleVector(m[i][2], m[i][2], pe->scale);
     }
     func_0019dac8();
     for (i = 0; i < D_0061E710; i++) {
@@ -245,12 +239,12 @@ void pppRyjMegaBirthPrizeDraw(PppObject *obj, PrizeKey *key, PppEntry *e) {
         sh = s->shape;
         fr = &sh->f[fi];
         src = (u8 *) sh + fr->off;
-        sceVu0CopyMatrix(D_00615E68->m2, mm);
-        func_002672f8(D_00615E68->m2[3], D_00615EB0, o->pos);
-        func_00267560(D_00615E68->m2[0], D_00615E68->m2[0], o->scale);
-        func_00267560(D_00615E68->m2[1], D_00615E68->m2[1], o->scale);
-        func_00267560(D_00615E68->m2[2], D_00615E68->m2[2], o->scale);
-        sceVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
+        PlatVu0CopyMatrix(D_00615E68->m2, mm);
+        PlatVu0ApplyMatrix(D_00615E68->m2[3], D_00615EB0, o->pos);
+        PlatVu0ScaleVector(D_00615E68->m2[0], D_00615E68->m2[0], o->scale);
+        PlatVu0ScaleVector(D_00615E68->m2[1], D_00615E68->m2[1], o->scale);
+        PlatVu0ScaleVector(D_00615E68->m2[2], D_00615E68->m2[2], o->scale);
+        PlatVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
         {
             s32 *gp = &D_00616224;
             p.w14 = *gp;

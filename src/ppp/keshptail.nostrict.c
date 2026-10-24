@@ -11,6 +11,7 @@
 
 /* pppKeShpTail2Frame (from hand/nostrict/text_00190000_h63.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -44,7 +45,6 @@ typedef struct {
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68;
 void func_001a9098(void *, void *);
-void func_002672f8(PppVec4, f32 *, PppVec4);
 typedef struct {
     u8 pad[0x10];
     u32 tex;    /* +0x10 */
@@ -73,7 +73,6 @@ typedef struct {
     s32 unk4;
 } PppAnimRef;
 extern PppMtx D_00615E70;
-void func_002675a8(PppVec4, f32 *);
 typedef struct {
     u8 pad[0x10];
     PppMdlRes *res; /* +0x10 */
@@ -110,15 +109,15 @@ void pppKeShpTail2Frame(PppObject *obj, PppShpTail2Key *key, PppEntry *e) {
         s32 n;
 
         if (key->local2) {
-            func_002672f8(v, D_00615E70[0], D_00615E68->m[3]);
+            PlatVu0ApplyMatrix(v, D_00615E70[0], D_00615E68->m[3]);
             v[3] = 1.0f;
         } else {
-            func_002675a8(v, D_00615E68->m[3]);
+            PlatVu0CopyVector(v, D_00615E68->m[3]);
             v[3] = 1.0f;
         }
         p = w->v[0];
         for (n = w->count; n > 0; n--) {
-            func_002675a8(p, v);
+            PlatVu0CopyVector(p, v);
             p += 4;
         }
     }
@@ -126,7 +125,7 @@ void pppKeShpTail2Frame(PppObject *obj, PppShpTail2Key *key, PppEntry *e) {
         w->idx = w->count;
     w->idx--;
     if (key->local2) {
-        func_002672f8(w->v[w->idx], D_00615E70[0], D_00615E68->m[3]);
+        PlatVu0ApplyMatrix(w->v[w->idx], D_00615E70[0], D_00615E68->m[3]);
         w->v[w->idx][3] = 1.0f;
     } else {
         func_001a9098(w->v[w->idx], D_00615E68->m[3]);
@@ -221,11 +220,7 @@ extern s32 D_00616224;
 extern PppMtx D_00615EB0;
 extern PppMtx D_00615FC0;
 extern PppMtx D_00616040;
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002674b0(f32 *, f32 *, f32);
 f32 func_001a9350(f32 *);
-void sceVu0CopyMatrix(PppMtx, PppMtx);
-void sceVu0UnitMatrix(PppMtx);
 s32 func_001b8198(void *, void *, s32);
 #define V_FTOI_U8(dst, src) \
     __asm__ volatile( \
@@ -380,8 +375,8 @@ void pppKeShpTail2Draw(void *obj, T2Key *key, PppEntry *e) {
     seg = n;
     t2Col(col, key->c0, len);
     t2Col(pos, key->c1, len);
-    func_00267530(p0, col, pos);
-    func_002674b0(dcol, p0, seg);
+    PlatVu0SubVector(p0, col, pos);
+    PlatVu0DivVector(dcol, p0, seg);
     w = PPP_WORK(T2Work, obj, e, 0);
     s = &D_00615E64->shapes[key->id];
     p.d8[0] = p.d8[1] = p.d8[2] = p.d8[3] = 0;
@@ -399,8 +394,8 @@ void pppKeShpTail2Draw(void *obj, T2Key *key, PppEntry *e) {
         T2Frame *f = sh->f;
         src = (u8 *) sh + f[w->prev].off;
     }
-    sceVu0CopyMatrix(m0, D_00615E68->m);
-    sceVu0UnitMatrix(m1);
+    PlatVu0CopyMatrix(m0, D_00615E68->m);
+    PlatVu0UnitMatrix(m1);
     size = key->size;
     len = key->len;
     step = (size - key->size2) / seg;
@@ -411,11 +406,11 @@ void pppKeShpTail2Draw(void *obj, T2Key *key, PppEntry *e) {
     v = w->v;
     start = i;
     last = w->count - 1;
-    func_002675a8(pos, v[i]);
-    func_002675a8(p0, pos);
+    PlatVu0CopyVector(pos, v[i]);
+    PlatVu0CopyVector(p0, pos);
     if (i++ == last) i = 0;
-    func_002675a8(p1, v[i]);
-    func_00267530(d, p1, p0);
+    PlatVu0CopyVector(p1, v[i]);
+    PlatVu0SubVector(d, p1, p0);
     t = len;
     rest = func_001a9350(d);
     seg = rest;
@@ -520,15 +515,15 @@ void pppKeShpTail3Frame(PppObject *obj, PppTail3Key *key, PppEntry *e) {
         s32 n;
 
         if (key->local) {
-            func_002672f8(v, &D_00615E70, D_00615E68->m[3]);
+            PlatVu0ApplyMatrix(v, &D_00615E70, D_00615E68->m[3]);
             v[3] = 1.0f;
         } else {
-            func_002675a8(v, D_00615E68->m[3]);
+            PlatVu0CopyVector(v, D_00615E68->m[3]);
             v[3] = 1.0f;
         }
         p = w->v[0];
         for (n = 28; n > 0; n--) {
-            func_002675a8(p, v);
+            PlatVu0CopyVector(p, v);
             p += 4;
         }
     }
@@ -536,10 +531,10 @@ void pppKeShpTail3Frame(PppObject *obj, PppTail3Key *key, PppEntry *e) {
         w->idx = 28;
     w->idx--;
     if (key->local) {
-        func_002672f8(w->v[w->idx], &D_00615E70, D_00615E68->m[3]);
+        PlatVu0ApplyMatrix(w->v[w->idx], &D_00615E70, D_00615E68->m[3]);
         w->v[w->idx][3] = 1.0f;
     } else {
-        func_002675a8(w->v[w->idx], D_00615E68->m[3]);
+        PlatVu0CopyVector(w->v[w->idx], D_00615E68->m[3]);
     }
     w->h.v0[0] += w->h.a0[0]; w->h.p0[0] += w->h.v0[0];
     w->h.v0[1] += w->h.a0[1]; w->h.p0[1] += w->h.v0[1];
@@ -827,8 +822,8 @@ void pppKeShpTail3Draw(void *obj, T3Key *key, PppEntry *e) {
     t3Col(pos, w->c1, len);
     n = key->n - 1;
     seg = n;
-    func_00267530(p0, col, pos);
-    func_002674b0(dcol, p0, seg);
+    PlatVu0SubVector(p0, col, pos);
+    PlatVu0DivVector(dcol, p0, seg);
     s = &D_00615E64->shapes[key->id];
     p.p10 = buf->out;
     p.d8[0] = p.d8[1] = p.d8[2] = p.d8[3] = 0;
@@ -841,8 +836,8 @@ void pppKeShpTail3Draw(void *obj, T3Key *key, PppEntry *e) {
     if (key->b25 == 1)
         p.flags |= 0x10;
     sh = (T3Shape *) s->shape;
-    sceVu0CopyMatrix(m0, D_00615E68->m);
-    sceVu0UnitMatrix(m1);
+    PlatVu0CopyMatrix(m0, D_00615E68->m);
+    PlatVu0UnitMatrix(m1);
     size = key->size;
     len = key->len;
     step = (size - key->size2) / seg;
@@ -853,11 +848,11 @@ void pppKeShpTail3Draw(void *obj, T3Key *key, PppEntry *e) {
     v = w->v;
     start = i;
     last = 27;
-    func_002675a8(pos, v[i]);
-    func_002675a8(p0, pos);
+    PlatVu0CopyVector(pos, v[i]);
+    PlatVu0CopyVector(p0, pos);
     if (i++ == last) i = 0;
-    func_002675a8(p1, v[i]);
-    func_00267530(d, p1, p0);
+    PlatVu0CopyVector(p1, v[i]);
+    PlatVu0SubVector(d, p1, p0);
     t = len;
     rest = func_001a9350(d);
     seg = rest;
@@ -968,15 +963,15 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         s32 n;
 
         if (key->local) {
-            func_002672f8(v, D_00615E70[0], D_00615E68->m[3]);
+            PlatVu0ApplyMatrix(v, D_00615E70[0], D_00615E68->m[3]);
             v[3] = 1.0f;
         } else {
-            func_002675a8(v, D_00615E68->m[3]);
+            PlatVu0CopyVector(v, D_00615E68->m[3]);
             v[3] = 1.0f;
         }
         p = w->v[0];
         for (n = w->count; n > 0; n--) {
-            func_002675a8(p, v);
+            PlatVu0CopyVector(p, v);
             p += 4;
         }
     }
@@ -984,7 +979,7 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         w->idx = w->count;
     w->idx--;
     if (key->local) {
-        func_002672f8(w->v[w->idx], D_00615E70[0], D_00615E68->m[3]);
+        PlatVu0ApplyMatrix(w->v[w->idx], D_00615E70[0], D_00615E68->m[3]);
         w->v[w->idx][3] = 1.0f;
     } else {
         func_001a9098(w->v[w->idx], D_00615E68->m[3]);
@@ -1199,8 +1194,8 @@ void pppKeShpTailDraw(void *obj, T1Key *key, PppEntry *e) {
         t1Col(col, c->c[0], c->c[1], c->c[2], c->c[3]);
     }
     t1Pos(pos, key->c);
-    func_00267530(p0, col, pos);
-    func_002674b0(dcol, p0, seg);
+    PlatVu0SubVector(p0, col, pos);
+    PlatVu0DivVector(dcol, p0, seg);
     w = PPP_WORK(T2Work, obj, e, 0);
     s = &D_00615E64->shapes[key->id];
     p.w8 = 0;
@@ -1220,11 +1215,11 @@ void pppKeShpTailDraw(void *obj, T1Key *key, PppEntry *e) {
         T2Frame *f = sh->f;
         src = (u8 *) sh + f[w->prev].off;
     }
-    sceVu0CopyMatrix(m0, D_00615E68->m);
+    PlatVu0CopyMatrix(m0, D_00615E68->m);
     V_SCALE_XYZ(m0[0], m0[0], D_003701F0[0]);
     V_SCALE_XYZ(m0[1], m0[1], D_003701F0[1]);
     size = 1.0f;
-    sceVu0UnitMatrix(m1);
+    PlatVu0UnitMatrix(m1);
     step = (size - key->size2) / seg;
     len = key->len;
     dl = len * step;
@@ -1234,11 +1229,11 @@ void pppKeShpTailDraw(void *obj, T1Key *key, PppEntry *e) {
     i = w->idx;
     v = w->v;
     start = i;
-    func_002675a8(pos, v[i]);
-    func_002675a8(p0, pos);
+    PlatVu0CopyVector(pos, v[i]);
+    PlatVu0CopyVector(p0, pos);
     if (i++ == last) i = 0;
-    func_002675a8(p1, v[i]);
-    func_00267530(d, p1, p0);
+    PlatVu0CopyVector(p1, v[i]);
+    PlatVu0SubVector(d, p1, p0);
     t = len;
     rest = func_001a9350(d);
     seg = rest;

@@ -13,6 +13,7 @@
  * its shape frame with func_001b8198.  The Con, Des and the gate
  * func_0019bb98 are in ryjmb.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef struct { s16 x, y, z; } MgV6;
 typedef struct { s16 h0; u16 n; u16 *idx; } MgSet;
@@ -58,12 +59,6 @@ typedef struct { u8 pad[0xB]; u8 bB; } MgE;
 f32 func_0019baf8(void);
 s8 func_0019bb40(u8);
 void *memset(void *, s32, u32);
-void sceVu0UnitMatrix(f32 (*)[4]);
-void sceVu0CopyMatrix(void *, void *);
-void func_002678b8(f32 (*)[4], f32 (*)[4], f32 *);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267e90(void *, f32 *, f32);
 
 CONTEXT_ONLY f32 func_0019baf8(void) {
     f32 ret;
@@ -127,13 +122,13 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
             ang[0] = 0.0f;
             ang[1] = 0.0f;
         }
-        sceVu0UnitMatrix(m);
-        func_002678b8(m, m, ang);
-        func_002672f8(p->dir, m, vec);
+        PlatVu0UnitMatrix(m);
+        PlatVu0RotMatrix(m, m, ang);
+        PlatVu0ApplyMatrix(p->dir, m, vec);
         p->dir[0] *= key->sc[0];
         p->dir[1] *= key->sc[1];
         p->dir[2] *= key->sc[2];
-        func_002673b8(p->dir, p->dir);
+        PlatVu0Normalize(p->dir, p->dir);
     }
     switch (key->type) {
     case 0: case 1: case 2: case 3:
@@ -161,7 +156,7 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
             f = key->fB8 - key->fB8 * R * R * R * 0.5f;
             break;
         }
-        func_00267e90(p, p->dir, f);
+        PlatVu0ScaleVectorXYZ(p, p->dir, f);
         break;
     case 4: case 5:
         if (key->fB8 == 0.0f)
@@ -238,7 +233,7 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
         { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; TAIL(k); }
     ty:
         if ((u8)(key->type - 8) < 2)
-            func_002673b8(p->dir, p->pos);
+            PlatVu0Normalize(p->dir, p->pos);
         break;
     }
     }
@@ -323,10 +318,10 @@ void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
     p->b5C = 0;
     switch (key->cc) {
     case 1:
-        sceVu0CopyMatrix(a, obj);
+        PlatVu0CopyMatrix(a, obj);
         break;
     case 2:
-        sceVu0CopyMatrix(a, D_00615E68->m10);
+        PlatVu0CopyMatrix(a, D_00615E68->m10);
         break;
     }
     if (b) {
@@ -511,8 +506,6 @@ void func_0019cb88(PppMegaObj *obj, PppMegaKey *key, PppEntry *e) {
 #include "data/pieces/D_003701D0.h"
 extern PppMtx D_00615E70;
 void *func_0017f958(DSys *, s32);
-void func_002673b8(f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
 s32 func_0019bb98(void *, void *);
 
 void pppRyjMegaBirthFrame(PppObject *obj, PppMegaKey *key, PppEntry *e) {
@@ -538,7 +531,7 @@ void pppRyjMegaBirthFrame(PppObject *obj, PppMegaKey *key, PppEntry *e) {
         w->v[1] = key->dir[1];
         w->v[2] = key->dir[2];
         w->v[3] = 0.0f;
-        func_002673b8(w->v, w->v);
+        PlatVu0Normalize(w->v, w->v);
     }
     if (!func_0019bb98(w, key))
         return;
@@ -548,15 +541,15 @@ void pppRyjMegaBirthFrame(PppObject *obj, PppMegaKey *key, PppEntry *e) {
     case 5:
     case 7:
     case 9:
-        sceVu0UnitMatrix(w->m);
-        func_00267e90(w->m[0], w->m[0], D_003701F0[0]);
-        func_00267e90(w->m[1], w->m[1], D_003701F0[1]);
-        func_00267e90(w->m[2], w->m[2], D_003701F0[2]);
-        func_002675a8(w->m[3], (*(f32 (*)[4])&D_003701D0));
+        PlatVu0UnitMatrix(w->m);
+        PlatVu0ScaleVectorXYZ(w->m[0], w->m[0], D_003701F0[0]);
+        PlatVu0ScaleVectorXYZ(w->m[1], w->m[1], D_003701F0[1]);
+        PlatVu0ScaleVectorXYZ(w->m[2], w->m[2], D_003701F0[2]);
+        PlatVu0CopyVector(w->m[3], (*(f32 (*)[4])&D_003701D0));
         w->m[3][3] = 1.0f;
         break;
     default:
-        sceVu0CopyMatrix(w->m, D_00615E70);
+        PlatVu0CopyMatrix(w->m, D_00615E70);
         break;
     }
     func_0019cb88(w, key, w1);
@@ -644,8 +637,6 @@ typedef struct {
 
 extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 s32 func_001b8198(void *, DShpParam *, s32);
-void func_00267518(f32 *, f32 *, f32 *);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 void func_0019cfc0(PppMtx, MegaKey *, MegaObj *);
 void func_0019d020(PppMtx, PppMtx, MegaKey *, MegaObj *, MegaPart *, MegaA *, PppMtx, u8);
 
@@ -706,8 +697,8 @@ void pppRyjMegaBirthDraw(PppObject *obj, MegaKey *key, PppEntry *e) {
             u8 *src;
             func_0019d020(m0, m1, key, w, pt, a, mtx, key->bE);
             if (key->bE) {
-                func_00267518(mtx[3], mtx[3], v);
-                sceVu0MulMatrix(mtx, D_00616040, mtx);
+                PlatVu0AddVector(mtx[3], mtx[3], v);
+                PlatVu0MulMatrix(mtx, D_00616040, mtx);
             }
             r = cr + pt->c[0];
             { PppShapeFrame *f = &sh->f[pt->prev]; src = (u8 *) sh + f->off; }

@@ -8,19 +8,13 @@
  * the draw (pppRyjMegaBirthModelFilterDraw) draws each live one through
  * opdma.c's func_001aaf88.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/pieces/D_003701D0.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 typedef f32 Vec[4] __attribute__((aligned(16)));
-void sceVu0CopyMatrix(Mtx, Mtx);
-void func_002672f8(f32 *, Mtx, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
 
 typedef struct {
     u8 pad0[0x10];
@@ -92,14 +86,11 @@ typedef struct {
 
 f32 func_001a3650(void);
 s8 func_001a3698(u8);
-void func_00267e90(f32 *, f32 *, f32);
 extern f32 D_00615F70[4];
 extern u8 D_0061E730[];
 
 void func_001a3720(Em *e, Pt *p, Sub *s);
 
-void func_00267518(f32 *, f32 *, f32 *);
-void func_002678b8(Mtx, Mtx, f32 *);
 extern Mtx D_006161C0;
 
 f32 func_001a3650(void) {
@@ -127,14 +118,6 @@ f32 func_001a3650(void) {
     return ret;
 }
 s8 func_001a3698(u8);
-void func_00267e90(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
-void func_002678b8(f32 (*)[4], f32 (*)[4], f32 *);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
-void func_00267560(f32 *, f32 *, f32);
 extern f32 D_00615F70[4];
 extern f32 D_006161C0[4][4];
 extern u8 D_0061E730[];
@@ -355,11 +338,11 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
         p->scv[2] += e->sca[2];
     }
     p->f78 += e->fc8;
-    func_00267e90(v10, p->vel, p->f78);
-    func_00267518(p->pos, p->pos, v10);
+    PlatVu0ScaleVectorXYZ(v10, p->vel, p->f78);
+    PlatVu0AddVector(p->pos, p->pos, v10);
     p->pos[3] = 1.0f;
-    func_00267530(v0, p->pos, D_00615F70);
-    func_002673b8(v10, v0);
+    PlatVu0SubVector(v0, p->pos, D_00615F70);
+    PlatVu0Normalize(v10, v0);
     v10[3] = 1.0f;
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
@@ -404,7 +387,7 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
     } else if (e->fd8 < dist) {
         p->f94 *= 1.0f - (dist - e->fd8) / e->fd4;
     }
-    if (func_00267390(v10, (f32 *)D_0061E730) < 0.0f) {
+    if (PlatVu0InnerProduct(v10, (f32 *)D_0061E730) < 0.0f) {
         p->fl.x |= 0x100;
     } else {
         p->fl.x &= ~0x100;
@@ -415,10 +398,10 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
         for (i = 0; i < 3; i++) {
             *q++ = func_001a3650() * 1.2566368579864502f - 0.6283184289932251f;
         }
-        func_002678b8(m30, D_006161C0, v20);
-        func_002672f8(v20, m30, v10);
-        func_00267560(v20, v20, -f);
-        func_00267518(p->pos, D_00615F70, v20);
+        PlatVu0RotMatrix(m30, D_006161C0, v20);
+        PlatVu0ApplyMatrix(v20, m30, v10);
+        PlatVu0ScaleVector(v20, v20, -f);
+        PlatVu0AddVector(p->pos, D_00615F70, v20);
         p->pos[3] = 1.0f;
         func_001a3720(e, p, s);
     }
@@ -473,7 +456,7 @@ void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
     if (!func_001a36f0(w, k))
         return;
     if (k->test) {
-        func_00267530((f32 *)&d, (f32 *)&D_00615F70, (f32 *)&D_003701D0);
+        PlatVu0SubVector((f32 *)&d, (f32 *)&D_00615F70, (f32 *)&D_003701D0);
         len = vlen3_w65(&d);
         if (k->dist < len) {
             w->active = 0;
@@ -491,8 +474,6 @@ void pppRyjMegaBirthModelFilterFrame(void *obj, MbmfKey *k, PppEntry *e) {
 }
 
 
-void sceVu0UnitMatrix(f32 (*)[4]);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 
 extern u8 D_00615EB0[];
 extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
@@ -512,21 +493,21 @@ f32 func_001a4a98(void *a0, f32 (*m)[4], RkKey *k, void *a3, RkObj *o) {
     f32 rot[3];
     f32 z;
     s32 i;
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     if (o->r01.d || o->r2) {
         for (i = 0; i < 3; i++)
             rot[i] = (f32)o->r01.i[i] * 3.1415926f * 3.0517578125e-05f;
-        func_002678b8(rm, D_006161C0, rot);
-        sceVu0MulMatrix(m, m, rm);
+        PlatVu0RotMatrix(rm, D_006161C0, rot);
+        PlatVu0MulMatrix(m, m, rm);
     }
     for (i = 0; i < 3; i++)
-        func_00267560(m[i], m[i], o->scale[i]);
-    func_002675a8(m[3], (f32 *)o);
-    func_002672f8(m[3], (void *)D_00615EB0, m[3]);
+        PlatVu0ScaleVector(m[i], m[i], o->scale[i]);
+    PlatVu0CopyVector(m[3], (f32 *)o);
+    PlatVu0ApplyMatrix(m[3], (void *)D_00615EB0, m[3]);
     m[3][1] *= k->mul;
     z = m[3][2];
     m[3][1] += k->add;
-    sceVu0MulMatrix(m, D_00616040, m);
+    PlatVu0MulMatrix(m, D_00616040, m);
     return z;
 }
 

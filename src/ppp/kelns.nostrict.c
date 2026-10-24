@@ -8,6 +8,7 @@
  * animation).  The flare reading is a guess from the class names.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
@@ -15,15 +16,6 @@ typedef f32 Vec[4] __attribute__((aligned(16)));
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 typedef f32 Mtx4[4][4];
 
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-void sceVu0UnitMatrix(f32 (*)[4]);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
 f32 func_001a9350(f32 *);
 f32 func_001a9388(f32 *);
 void func_001a56a0(void *);
@@ -99,39 +91,39 @@ void func_001a57c0(Arg57c0 *a) {
     f32 d;
 
     o = a->o;
-    sceVu0CopyMatrix(m1, *a->mtx);
+    PlatVu0CopyMatrix(m1, *a->mtx);
     if (o->b8f) {
-        sceVu0CopyMatrix(m0, m1);
+        PlatVu0CopyMatrix(m0, m1);
         m0[3][0] = 0;
         m0[3][1] = 0;
         m0[3][2] = 0;
-        func_002672f8(v80, m0, a->v);
-        func_00267560(v90, m1[3], -1.0f);
-        func_00267530(va0, v90, v80);
+        PlatVu0ApplyMatrix(v80, m0, a->v);
+        PlatVu0ScaleVector(v90, m1[3], -1.0f);
+        PlatVu0SubVector(va0, v90, v80);
     } else {
         *(u128 *)v80 = 0;
         *(u128 *)v90 = 0;
         v80[3] = 1.0f;
         v90[3] = 1.0f;
-        sceVu0UnitMatrix(m0);
+        PlatVu0UnitMatrix(m0);
         m0[3][0] = D_00615FC0[3][0] + o->off[0];
         m0[3][1] = D_00615FC0[3][1] + o->off[1];
         m0[3][2] = D_00615FC0[3][2] + o->off[2];
-        sceVu0MulMatrix(m0, D_00616040, m0);
-        func_002672f8(v80, m0, v80);
-        func_00267560(v80, v80, 1.0f / v80[3]);
-        sceVu0UnitMatrix(m0);
-        func_002675a8(m0[3], D_00615FC0[3]);
-        sceVu0MulMatrix(m0, D_00616040, m0);
-        func_002672f8(v90, m0, v90);
-        func_00267560(v90, v90, 1.0f / v90[3]);
-        func_00267530(va0, v90, v80);
+        PlatVu0MulMatrix(m0, D_00616040, m0);
+        PlatVu0ApplyMatrix(v80, m0, v80);
+        PlatVu0ScaleVector(v80, v80, 1.0f / v80[3]);
+        PlatVu0UnitMatrix(m0);
+        PlatVu0CopyVector(m0[3], D_00615FC0[3]);
+        PlatVu0MulMatrix(m0, D_00616040, m0);
+        PlatVu0ApplyMatrix(v90, m0, v90);
+        PlatVu0ScaleVector(v90, v90, 1.0f / v90[3]);
+        PlatVu0SubVector(va0, v90, v80);
         va0[2] = 512.0f;
     }
-    sceVu0UnitMatrix(o->ma);
-    func_002672f8(o->ma[3], m1, a->v);
+    PlatVu0UnitMatrix(o->ma);
+    PlatVu0ApplyMatrix(o->ma[3], m1, a->v);
     if (va0[0] == 0.0f && va0[1] == 0.0f) {
-        func_002675a8(o->m[3], o->ma[3]);
+        PlatVu0CopyVector(o->m[3], o->ma[3]);
     } else {
         __asm__ volatile(
         "lqc2 $vf18, 0(%1)\n"
@@ -161,24 +153,24 @@ void func_001a57c0(Arg57c0 *a) {
     } else {
         o->m[3][2] = (D_00615FC0[3][2] + o->off[2]) * 0.001953125f;
     }
-    func_002673b8(va0, va0);
+    PlatVu0Normalize(va0, va0);
     o->m[3][0] = va0[0] * o->m[3][2];
     o->m[3][1] = va0[1] * o->m[3][2];
-    func_00267530(v90, v90, v80);
+    PlatVu0SubVector(v90, v90, v80);
     d = func_001a9350(v90);
     o->fa4 = func_001a9388(v90);
-    func_002673b8(v80, v90);
+    PlatVu0Normalize(v80, v90);
     if (o->b8f) {
         v90[0] = 0;
         v90[1] = 0;
         v90[2] = 1.0f;
-        v90[0] = (1.0f - (1.0f - func_00267390(v90, v80)) * 0.5f) / 0.3f;
+        v90[0] = (1.0f - (1.0f - PlatVu0InnerProduct(v90, v80)) * 0.5f) / 0.3f;
         o->m[3][3] = v90[0] > 1.0f ? 0.0f : 1.0f - v90[0];
         if (o->v90[3] >= 0.0f) {
-            sceVu0CopyMatrix(m0, m1);
+            PlatVu0CopyMatrix(m0, m1);
             m0[3][2] = m0[3][1] = m0[3][0] = 0.0f;
-            func_002672f8(v90, m0, v90);
-            v90[0] = (1.0f - func_00267390(o->v90, v80)) * 0.5f;
+            PlatVu0ApplyMatrix(v90, m0, v90);
+            v90[0] = (1.0f - PlatVu0InnerProduct(o->v90, v80)) * 0.5f;
             v90[0] = v90[0] / o->v90[3];
             v90[0] = v90[0] > 1.0f ? 0.0f : 1.0f - v90[0];
             o->m[3][3] *= v90[0];
@@ -259,9 +251,9 @@ void func_001a5ce8(C5Arg *a, s32 fl) {
     if (s->x7c == 0.0f)
         return;
     if (s->x8f) {
-        sceVu0CopyMatrix(m0, (f32 (*)[4])s);
+        PlatVu0CopyMatrix(m0, (f32 (*)[4])s);
     } else {
-        sceVu0UnitMatrix(m0);
+        PlatVu0UnitMatrix(m0);
         m0[3][2] = D_00615FF8 + s->x88;
     }
     d.p.col.w = a->col;
@@ -308,7 +300,7 @@ void func_001a5ce8(C5Arg *a, s32 fl) {
         w = w * a->xc;
         m0[0][0] = s->m[0][0] * w * a->x14[0];
         m0[1][1] = s->m[1][1] * w * a->x14[1];
-        sceVu0MulMatrix(m1, *a->m, m0);
+        PlatVu0MulMatrix(m1, *a->m, m0);
         func_001a5740((S5740 *)&d);
     }
 }
@@ -350,19 +342,19 @@ void func_001a60e8(DmArg *a, s32 id) {
     if (o->alpha == 0.0f)
         return;
     if (o->useMtx) {
-        sceVu0CopyMatrix(m, o->m);
+        PlatVu0CopyMatrix(m, o->m);
     } else {
-        sceVu0UnitMatrix(m);
+        PlatVu0UnitMatrix(m);
         m[3][0] = D_00615FC0[3][0] + o->pos[0];
         m[3][1] = D_00615FC0[3][1] + o->pos[1];
         m[3][2] = D_00615FC0[3][2] + o->pos[2];
     }
     m[0][0] *= a->scale;
     m[1][1] *= a->scale;
-    func_00267560(m[0], m[0], a->scl[0]);
-    func_00267560(m[1], m[1], a->scl[1]);
-    func_00267560(m[2], m[2], a->scl[2]);
-    sceVu0MulMatrix(m, a->mtx, m);
+    PlatVu0ScaleVector(m[0], m[0], a->scl[0]);
+    PlatVu0ScaleVector(m[1], m[1], a->scl[1]);
+    PlatVu0ScaleVector(m[2], m[2], a->scl[2]);
+    PlatVu0MulMatrix(m, a->mtx, m);
     c.col = a->col;
     c.col.c.a = c.col.c.a * o->alpha;
     c.mdl = s->mdl;
@@ -415,22 +407,22 @@ void func_001a62c0(DmArg2 *a, s32 id) {
         return;
     if (o->alpha == 0.0f)
         return;
-    func_002675a8(m[0], o->r0);
-    func_002675a8(m[1], o->r1);
-    func_002675a8(m[2], o->r2);
-    func_002675a8(m[3], o->r3);
+    PlatVu0CopyVector(m[0], o->r0);
+    PlatVu0CopyVector(m[1], o->r1);
+    PlatVu0CopyVector(m[2], o->r2);
+    PlatVu0CopyVector(m[3], o->r3);
     f = a->scale * o->size / (f32)a->w;
-    func_00267560(m[0], m[0], -f);
-    func_00267560(m[1], m[1], f);
+    PlatVu0ScaleVector(m[0], m[0], -f);
+    PlatVu0ScaleVector(m[1], m[1], f);
     if (!o->useMtx) {
         m[3][0] = D_00615FC0[3][0] + o->pos[0];
         m[3][1] = D_00615FC0[3][1] + o->pos[1];
         m[3][2] = D_00615FC0[3][2] + o->pos[2];
     }
-    func_00267560(m[0], m[0], a->scl[0]);
-    func_00267560(m[1], m[1], a->scl[1]);
-    func_00267560(m[2], m[2], a->scl[2]);
-    sceVu0MulMatrix(m, a->mtx, m);
+    PlatVu0ScaleVector(m[0], m[0], a->scl[0]);
+    PlatVu0ScaleVector(m[1], m[1], a->scl[1]);
+    PlatVu0ScaleVector(m[2], m[2], a->scl[2]);
+    PlatVu0MulMatrix(m, a->mtx, m);
     c.col = a->col;
     f = o->size / (f32)a->h;
     t = 1.0f < f ? 1.0f : f;
@@ -467,9 +459,9 @@ void func_001a6550(DmArg3 *a, s32 id) {
     if (!(1.0f < f))
         r = 1.0f - f;
     if (o->useMtx) {
-        sceVu0CopyMatrix(m, (f32 (*)[4])o);
+        PlatVu0CopyMatrix(m, (f32 (*)[4])o);
     } else {
-        sceVu0UnitMatrix(m);
+        PlatVu0UnitMatrix(m);
         m[3][0] = D_00615FC0[3][0] + o->pos[0];
         m[3][1] = D_00615FC0[3][1] + o->pos[1];
         m[3][2] = D_00615FC0[3][2] + o->pos[2];
@@ -493,9 +485,9 @@ void func_001a6550(DmArg3 *a, s32 id) {
         m[1][1] = f * sc + sc;
         break;
     }
-    func_00267560(m[0], m[0], a->scl[0]);
-    func_00267560(m[1], m[1], a->scl[1]);
-    sceVu0MulMatrix(m, a->mtx, m);
+    PlatVu0ScaleVector(m[0], m[0], a->scl[0]);
+    PlatVu0ScaleVector(m[1], m[1], a->scl[1]);
+    PlatVu0MulMatrix(m, a->mtx, m);
     c.col = a->col;
     c.col.c.a = c.col.c.a * o->alpha * r;
     c.mdl = s->mdl;

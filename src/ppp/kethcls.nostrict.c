@@ -7,6 +7,7 @@
  * function's own view (tools/shift/s50move/assemble.py).  Read from the
  * code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/pieces/D_003701F0.h"
 #include "data/bss_0061.h"
@@ -87,10 +88,6 @@ typedef struct {
     f32 *v1;
     f32 *v0;
 } PppThArgs;
-void sceVu0CopyMatrix(PppMtx, PppMtx);
-void func_002672f8(f32 *, PppMtx, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
 void func_001a89f0(PppThWork *, u8 *, f32 *, f32 *);
 void func_001a8ae8(PppThArgs *);
 void pppKeThFrame(PppObject *obj, PppThKey *key, PppEntry *e) {
@@ -105,12 +102,12 @@ void pppKeThFrame(PppObject *obj, PppThKey *key, PppEntry *e) {
 
     if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
         return;
-    sceVu0CopyMatrix(m, D_00615E68->m);
+    PlatVu0CopyMatrix(m, D_00615E68->m);
     *(u128_8bee0 *) m[3] = 0;
     m[3][3] = 1.0f;
-    func_002672f8(dir, m, pos);
-    func_002673b8(dir, dir);
-    func_002675a8(org, D_00615E68->m[3]);
+    PlatVu0ApplyMatrix(dir, m, pos);
+    PlatVu0Normalize(dir, dir);
+    PlatVu0CopyVector(org, D_00615E68->m[3]);
     if (obj->frame == key->frame) {
         if (obj->frame == 0) {
             u8 *p;

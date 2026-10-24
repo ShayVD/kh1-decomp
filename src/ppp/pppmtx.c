@@ -7,9 +7,9 @@
  * classes that call them are named) from the angles a[0..2].
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef f32 Mtx[4][4];
-void sceVu0MulMatrix(Mtx, Mtx, Mtx);
 extern f32 D_003732D0[]; /* sine table, 4096 entries per turn */
 
 void func_001a50d0(f32 m[4][4], u32 a) {
@@ -83,9 +83,9 @@ void func_001a5250(Mtx out, s32 *a) {
     Mtx m[4];
     func_001a5150(m[0], a[1]);
     func_001a51d0(m[1], a[2]);
-    sceVu0MulMatrix(m[2], m[0], m[1]);
+    PlatVu0MulMatrix(m[2], m[0], m[1]);
     func_001a50d0(m[3], a[0]);
-    sceVu0MulMatrix(out, m[2], m[3]);
+    PlatVu0MulMatrix(out, m[2], m[3]);
 }
 
 /* YZX */
@@ -93,9 +93,9 @@ void func_001a52e0(Mtx out, s32 *a) {
     Mtx m[4];
     func_001a50d0(m[0], a[0]);
     func_001a51d0(m[1], a[2]);
-    sceVu0MulMatrix(m[2], m[0], m[1]);
+    PlatVu0MulMatrix(m[2], m[0], m[1]);
     func_001a5150(m[3], a[1]);
-    sceVu0MulMatrix(out, m[2], m[3]);
+    PlatVu0MulMatrix(out, m[2], m[3]);
 }
 
 /* YXZ */
@@ -103,9 +103,9 @@ void func_001a5370(Mtx out, s32 *a) {
     Mtx m[4];
     func_001a51d0(m[0], a[2]);
     func_001a50d0(m[1], a[0]);
-    sceVu0MulMatrix(m[2], m[0], m[1]);
+    PlatVu0MulMatrix(m[2], m[0], m[1]);
     func_001a5150(m[3], a[1]);
-    sceVu0MulMatrix(out, m[2], m[3]);
+    PlatVu0MulMatrix(out, m[2], m[3]);
 }
 
 /* ZXY */
@@ -113,9 +113,9 @@ void func_001a5400(Mtx out, s32 *a) {
     Mtx m[4];
     func_001a5150(m[0], a[1]);
     func_001a50d0(m[1], a[0]);
-    sceVu0MulMatrix(m[2], m[0], m[1]);
+    PlatVu0MulMatrix(m[2], m[0], m[1]);
     func_001a51d0(m[3], a[2]);
-    sceVu0MulMatrix(out, m[2], m[3]);
+    PlatVu0MulMatrix(out, m[2], m[3]);
 }
 
 /* ZYX */
@@ -123,9 +123,9 @@ void func_001a5490(Mtx out, s32 *a) {
     Mtx m[4];
     func_001a50d0(m[0], a[0]);
     func_001a5150(m[1], a[1]);
-    sceVu0MulMatrix(m[2], m[0], m[1]);
+    PlatVu0MulMatrix(m[2], m[0], m[1]);
     func_001a51d0(m[3], a[2]);
-    sceVu0MulMatrix(out, m[2], m[3]);
+    PlatVu0MulMatrix(out, m[2], m[3]);
 }
 
 #include "data/data_0037.h"

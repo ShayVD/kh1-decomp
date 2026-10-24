@@ -6,9 +6,9 @@
  * the rest.  Read from the code, not proved by a boot. */
 /* func_00199908 (from auto/text_00190000_10.c). */
 #include "m2c.h"
+#include "platform/vu.h"
 extern M2C_UNK D_00615E70;
 extern s32 D_00615E68;
-void func_002672f8(void *, M2C_UNK *, void *);
 void func_00199908(void *arg0, void *arg1, void *arg2) {
     s32 sp[4];    f32 temp_f20;
 
@@ -17,12 +17,12 @@ void func_00199908(void *arg0, void *arg1, void *arg2) {
     M2C_FIELD(sp, s32 *, 0x0) = 0;
     M2C_FIELD(sp, s32 *, 0x8) = 0;
     M2C_FIELD(sp, f32 *, 0x4) = temp_f20 * 0.5f;
-    func_002672f8(arg1, D_00615E68 + 0x10, sp);
+    PlatVu0ApplyMatrix(arg1, D_00615E68 + 0x10, sp);
     M2C_FIELD(sp, f32 *, 0x4) = -temp_f20 * 0.5f;
-    func_002672f8(arg2, D_00615E68 + 0x10, sp);
+    PlatVu0ApplyMatrix(arg2, D_00615E68 + 0x10, sp);
     if (M2C_FIELD(arg0, u8 *, 0x15) != 0) {
-        func_002672f8(arg1, &D_00615E70, arg1);
-        func_002672f8(arg2, &D_00615E70, arg2);
+        PlatVu0ApplyMatrix(arg1, &D_00615E70, arg1);
+        PlatVu0ApplyMatrix(arg2, &D_00615E70, arg2);
     }
 }
 

@@ -5,6 +5,7 @@
  * (inline VU0).  The rest of the class is in ryjmb.c and ryjmb.nostrict.c.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -24,9 +25,7 @@ typedef struct {
     u8 pad[8];
     u8 r, g, b, a;
 } DColWork;
-void sceVu0UnitMatrix(PppMtx);
 extern PppMtx D_00616040;
-void func_00267518(f32 *, f32 *, f32 *);
 
 typedef struct {
     PppVec4 pos;   /* +0x00 */
@@ -150,8 +149,6 @@ void func_0019c838(MegaObj *w, MegaKey *key, MegaPart *pt, DColWork *c, f32 *b) 
 /* func_0019d020 (from text_00190000_c06.c). */
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 #include "data/pieces/D_003701F0.h"
-void func_002676c0(PppMtx, PppMtx, f32);
-void func_002676c0(PppMtx, PppMtx, f32);
 
 typedef struct {
     f32 pos[4];
@@ -167,14 +164,14 @@ typedef struct {
 } ObjD020;
 
 void func_0019d020(PppMtx a, PppMtx m, ObjD020 *o, PppMtx c, KeyD020 *k, PppMtx b, PppMtx out, u8 flag) {
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m[0][0] = k->sx * D_003701F0[0];
     m[1][1] = k->sy * D_003701F0[1];
     m[2][2] = k->sx * D_003701F0[0];
     if (k->rot != 0.0f) {
-        func_002676c0(m, m, k->rot * 3.141592562f / 180.0f);
+        PlatVu0RotMatrixZ(m, m, k->rot * 3.141592562f / 180.0f);
     }
-    func_00267518(m[3], m[3], k->pos);
+    PlatVu0AddVector(m[3], m[3], k->pos);
     switch (o->mode) {
     case 0:
         __asm__ volatile(

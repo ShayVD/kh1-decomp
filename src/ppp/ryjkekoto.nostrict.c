@@ -4,6 +4,7 @@
  * offset); pppRyjDrawKekotoDraw builds its GS packet (ryjkekoto.c has the
  * Frame and Con).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -140,16 +141,6 @@ extern s8 D_00372EA0;
 #include "data/pieces/D_00372EA8.h"
 
 #include "platform/math.h"
-void sceVu0MulMatrix(KkMtx, KkMtx, KkMtx);
-void func_002672f8(f32 *, KkMtx, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_002673b8(f32 *, f32 *);
-void func_002675e0(s32 *, f32 *);
-s32 func_00267ea8(f32 *);
 
 static inline f32 kkSqrt(f32 x) {
     f32 r;
@@ -210,96 +201,96 @@ void pppRyjDrawKekotoDraw(u8 *obj, KkKey *key, PppEntry *e)
     v1[2] = 0.0f;
     v1[3] = 1.0f;
     if (key->flag) {
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
-        func_002672f8(a, mtx, v0);
-        func_002675a8(b, a);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0ApplyMatrix(a, mtx, v0);
+        PlatVu0CopyVector(b, a);
         b[0] += key->len;
-        func_002672f8(a, D_00616040, a);
-        func_002672f8(b, D_00616040, b);
+        PlatVu0ApplyMatrix(a, D_00616040, a);
+        PlatVu0ApplyMatrix(b, D_00616040, b);
         if (a[3] > 0.0f && b[3] > 0.0f) {
             a[3] = 1.0f / a[3];
-            func_00267e90(a, a, a[3]);
+            PlatVu0ScaleVectorXYZ(a, a, a[3]);
             b[3] = 1.0f / b[3];
-            func_00267e90(b, b, b[3]);
-            func_00267530(a, a, b);
+            PlatVu0ScaleVectorXYZ(b, b, b[3]);
+            PlatVu0SubVector(a, a, b);
             r0 = PlatSqrtf(a[0] * a[0] + a[1] * a[1]);
         } else {
             r0 = 0.0f;
         }
-        func_002672f8(a, mtx, v1);
-        func_002675a8(b, a);
+        PlatVu0ApplyMatrix(a, mtx, v1);
+        PlatVu0CopyVector(b, a);
         b[0] += key->len;
-        func_002672f8(a, D_00616040, a);
-        func_002672f8(b, D_00616040, b);
+        PlatVu0ApplyMatrix(a, D_00616040, a);
+        PlatVu0ApplyMatrix(b, D_00616040, b);
         if (a[3] > 0.0f && b[3] > 0.0f) {
             a[3] = 1.0f / a[3];
-            func_00267e90(a, a, a[3]);
+            PlatVu0ScaleVectorXYZ(a, a, a[3]);
             b[3] = 1.0f / b[3];
-            func_00267e90(b, b, b[3]);
-            func_00267530(a, a, b);
+            PlatVu0ScaleVectorXYZ(b, b, b[3]);
+            PlatVu0SubVector(a, a, b);
             r1 = kkSqrt(a[0] * a[0] + a[1] * a[1]);
         } else {
             r1 = 0.0f;
         }
         if (r0 == 0.0f && r1 == 0.0f) return;
     } else {
-        sceVu0MulMatrix(mtx2, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx2, D_00615FC0, D_00615E68->m);
         a2[0] = a2[1] = a2[2] = 0.0f;
         a2[3] = 1.0f;
-        func_002672f8(a2, mtx2, a2);
-        func_002675a8(b2, a2);
+        PlatVu0ApplyMatrix(a2, mtx2, a2);
+        PlatVu0CopyVector(b2, a2);
         b2[0] += key->len;
-        func_002672f8(a2, D_00616040, a2);
-        func_002672f8(b2, D_00616040, b2);
+        PlatVu0ApplyMatrix(a2, D_00616040, a2);
+        PlatVu0ApplyMatrix(b2, D_00616040, b2);
         if (a2[3] > 0.0f && b2[3] > 0.0f) {
             a2[3] = 1.0f / a2[3];
-            func_00267e90(a2, a2, a2[3]);
+            PlatVu0ScaleVectorXYZ(a2, a2, a2[3]);
             b2[3] = 1.0f / b2[3];
-            func_00267e90(b2, b2, b2[3]);
-            func_00267530(a2, a2, b2);
+            PlatVu0ScaleVectorXYZ(b2, b2, b2[3]);
+            PlatVu0SubVector(a2, a2, b2);
             r0 = r1 = PlatSqrtf(a2[0] * a2[0] + a2[1] * a2[1]);
         } else {
             r0 = r1 = 0.0f;
         }
     }
-    func_002672f8(c[2], D_00615E68->m2, v0);
-    func_002672f8(c[4], D_00615E68->m2, v1);
+    PlatVu0ApplyMatrix(c[2], D_00615E68->m2, v0);
+    PlatVu0ApplyMatrix(c[4], D_00615E68->m2, v1);
     if (c[2][3] <= 0.0f && c[4][3] <= 0.0f) return;
     if (c[2][3] > 0.0f) {
         inv[0] = c[2][3] = 1.0f / c[2][3];
-        func_00267e90(c[2], c[2], inv[0]);
+        PlatVu0ScaleVectorXYZ(c[2], c[2], inv[0]);
     }
     if (c[4][3] > 0.0f) {
         inv[1] = c[4][3] = 1.0f / c[4][3];
-        func_00267e90(c[4], c[4], inv[1]);
+        PlatVu0ScaleVectorXYZ(c[4], c[4], inv[1]);
     }
     dir[0] = c[4][0] - c[2][0];
     dir[1] = c[4][1] - c[2][1];
     dir[2] = 0.0f;
     dir[3] = 0.0f;
-    func_002673b8(dir, dir);
+    PlatVu0Normalize(dir, dir);
     perp[0] = -dir[1];
     perp[1] = dir[0];
     perp[2] = 0.0f;
     perp[3] = 0.0f;
-    func_00267560(tmp, perp, r0);
-    func_00267518(c[3], c[2], tmp);
-    func_00267560(tmp, perp, r1);
-    func_00267518(c[5], c[4], tmp);
+    PlatVu0ScaleVector(tmp, perp, r0);
+    PlatVu0AddVector(c[3], c[2], tmp);
+    PlatVu0ScaleVector(tmp, perp, r1);
+    PlatVu0AddVector(c[5], c[4], tmp);
     perp[0] = -perp[0];
     perp[1] = -perp[1];
-    func_00267560(tmp, perp, r0);
-    func_00267518(c[2], c[2], tmp);
-    func_00267560(tmp, perp, r1);
-    func_00267518(c[4], c[4], tmp);
-    func_00267560(tmp, dir, r0);
-    func_00267530(c[0], c[2], tmp);
-    func_00267530(c[1], c[3], tmp);
-    func_00267560(tmp, dir, r1);
-    func_00267518(c[6], c[4], tmp);
-    func_00267518(c[7], c[5], tmp);
+    PlatVu0ScaleVector(tmp, perp, r0);
+    PlatVu0AddVector(c[2], c[2], tmp);
+    PlatVu0ScaleVector(tmp, perp, r1);
+    PlatVu0AddVector(c[4], c[4], tmp);
+    PlatVu0ScaleVector(tmp, dir, r0);
+    PlatVu0SubVector(c[0], c[2], tmp);
+    PlatVu0SubVector(c[1], c[3], tmp);
+    PlatVu0ScaleVector(tmp, dir, r1);
+    PlatVu0AddVector(c[6], c[4], tmp);
+    PlatVu0AddVector(c[7], c[5], tmp);
     for (i = 0; i < 8; i++) {
-        func_002675e0(d[i], c[i]);
+        PlatVu0FTOI4Vector(d[i], c[i]);
     }
     col0[0] = (f32) col->c[0] * key->sc[0];
     col0[1] = (f32) col->c[1] * key->sc[1];
@@ -334,10 +325,10 @@ void pppRyjDrawKekotoDraw(u8 *obj, KkKey *key, PppEntry *e)
     src = pos;
     dp = d;
     for (i = 0; i < 8; i++, dp++, src++) {
-        if (func_00267ea8(c[i]) == 0) {
+        if (PlatVu0ClipScreen(c[i]) == 0) {
             if (key->flag) {
-                if (i < 4) func_00267560(tmp, pos[i], inv[0]);
-                else func_00267560(tmp, pos[i], inv[1]);
+                if (i < 4) PlatVu0ScaleVector(tmp, pos[i], inv[0]);
+                else PlatVu0ScaleVector(tmp, pos[i], inv[1]);
                 out->f = tmp[0]; out++;
                 out->f = tmp[1]; out++;
                 out->f = tmp[2]; out++;

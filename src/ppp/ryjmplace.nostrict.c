@@ -8,6 +8,7 @@
  * frames and the draw that calls these three.  Read from the code, not proved
  * by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 
@@ -63,8 +64,6 @@ typedef struct {
     s32 unk94;
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-void func_002672f8(f32 *, PppMtx, f32 *);
-void func_002675a8(f32 *, f32 *);
 typedef struct {
     s32 flags;
     void *p04;
@@ -91,8 +90,6 @@ typedef struct {
 } DParam;
 extern u8 D_00616240[];
 s32 func_001aaf88(DMdl *, DParam *, s32);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-void sceVu0UnitMatrix(PppMtx);
 typedef struct {
     u16 unk0;
     u16 flags;
@@ -195,7 +192,7 @@ s32 func_0019e028(PppPool *pool, PppSrcA *src) {
         if (s->src == 0) {
             s->src = src;
             s->rec = func_0019dfc8(src->id);
-            func_002675a8(s->pos, s->rec->org.f);
+            PlatVu0CopyVector(s->pos, s->rec->org.f);
             s->pos[0] += src->ofs[0];
             s->pos[1] += src->ofs[1];
             s->pos[2] += src->ofs[2];
@@ -217,7 +214,7 @@ s32 func_0019e108(PppPool *pool, PppSrcA *src) {
         if (s->src == 0) {
             s->src = src;
             s->rec = func_0019dfc8(src->id);
-            func_002675a8(s->pos, s->rec->org.f);
+            PlatVu0CopyVector(s->pos, s->rec->org.f);
             s->pos[0] += src->ofs[0];
             s->pos[1] += src->ofs[1];
             s->pos[2] += src->ofs[2];
@@ -242,7 +239,7 @@ s32 func_0019e1e8(PppPool *pool, PppSrcB *src) {
             s->a = src->a;
             s->b = src->b;
             s->c = 32767 / src->c;
-            func_002675a8(s->pos, s->rec->org.f);
+            PlatVu0CopyVector(s->pos, s->rec->org.f);
             s->pos[0] += src->ofs[0];
             s->pos[1] += src->ofs[1];
             s->pos[2] += src->ofs[2];
@@ -279,7 +276,6 @@ typedef struct {
     RItem *items;  /* +0x0C */
 } RList;
 extern PppMtx D_00615EB0;
-void sceVu0CopyMatrix(PppMtx, PppMtx);
 
 void func_0019e3f0(RList *l) {
     DShpParam p;
@@ -322,20 +318,20 @@ void func_0019e3f0(RList *l) {
         fr = &sh->f[fi];
         src = (u8 *) sh + fr->off;
         p.p1C = 0;
-        sceVu0UnitMatrix(D_00615E68->m2);
+        PlatVu0UnitMatrix(D_00615E68->m2);
         D_00615E68->m2[0][0] = k->sx;
         D_00615E68->m2[1][1] = k->sy;
         D_00615E68->m2[2][2] = k->sz;
-        func_002672f8(D_00615E68->m2[3], D_00615EB0, it->pos);
+        PlatVu0ApplyMatrix(D_00615E68->m2[3], D_00615EB0, it->pos);
         if (k->b13) {
-            sceVu0CopyMatrix(mtx, D_00615E68->m2);
+            PlatVu0CopyMatrix(mtx, D_00615E68->m2);
             mtx[3][0] += k->ofs[0];
             mtx[3][1] += k->ofs[1];
             mtx[3][2] += k->ofs[2];
-            sceVu0MulMatrix(mtx, D_00616040, mtx);
+            PlatVu0MulMatrix(mtx, D_00616040, mtx);
             p.p1C = mtx;
         }
-        sceVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
+        PlatVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
         {
             s32 *gp = &D_00616224;
             p.w14 = *gp;
@@ -431,18 +427,18 @@ void func_0019e710(MList *l) {
         vu0ScaleRow(D_00615E68->m[0], k->sx);
         vu0ScaleRow(D_00615E68->m[1], k->sy);
         vu0ScaleRow(D_00615E68->m[2], k->sz);
-        func_002675a8(D_00615E68->m[3], it->pos);
+        PlatVu0CopyVector(D_00615E68->m[3], it->pos);
         if (k->b11) {
-            sceVu0MulMatrix(mtx, D_00615EB0, D_00615E68->m);
+            PlatVu0MulMatrix(mtx, D_00615EB0, D_00615E68->m);
             mtx[3][0] += k->ofs[0];
             mtx[3][1] += k->ofs[1];
             mtx[3][2] += k->ofs[2];
-            sceVu0MulMatrix(mtx, D_00616040, mtx);
+            PlatVu0MulMatrix(mtx, D_00616040, mtx);
             p.p44 = mtx;
         } else {
             p.p44 = 0;
         }
-        sceVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m);
+        PlatVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m);
         s = &D_00615E64->slots[k->id];
         m = s->mdl;
         p.flags = 0;
@@ -508,7 +504,6 @@ typedef struct {
 } FList;
 extern PppMtx D_00615EB0;
 extern f32 D_003732D0[];
-void sceVu0CopyMatrix(PppMtx, PppMtx);
 
 void func_0019ea58(FList *l) {
     DShpParam p;
@@ -579,20 +574,20 @@ void func_0019ea58(FList *l) {
         fr = &sh->f[fi];
         src = (u8 *) sh + fr->off;
         p.p1C = 0;
-        sceVu0UnitMatrix(D_00615E68->m2);
+        PlatVu0UnitMatrix(D_00615E68->m2);
         D_00615E68->m2[0][0] = k2->sx;
         D_00615E68->m2[1][1] = k1->sy;
         D_00615E68->m2[2][2] = k1->sz;
-        func_002672f8(D_00615E68->m2[3], D_00615EB0, it->pos);
+        PlatVu0ApplyMatrix(D_00615E68->m2[3], D_00615EB0, it->pos);
         if (k1->b12) {
-            sceVu0CopyMatrix(mtx, D_00615E68->m2);
+            PlatVu0CopyMatrix(mtx, D_00615E68->m2);
             mtx[3][0] += k1->ofs[0];
             mtx[3][1] += k1->ofs[1];
             mtx[3][2] += k1->ofs[2];
-            sceVu0MulMatrix(mtx, D_00616040, mtx);
+            PlatVu0MulMatrix(mtx, D_00616040, mtx);
             p.p1C = mtx;
         }
-        sceVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
+        PlatVu0MulMatrix(D_00615E68->m2, D_00616040, D_00615E68->m2);
         {
             s32 *gp = &D_00616224;
             p.w14 = *gp;

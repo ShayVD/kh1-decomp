@@ -7,6 +7,7 @@
  * (pppRyjMegaBirthFilterDraw) draws each live particle's shape frame through
  * the VU0 routine func_001b8198.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 typedef struct {
     u8 pad[0x80];
@@ -63,11 +64,9 @@ typedef struct {
 } PKey;
 void func_001a2830(PObj *, PKey *, Part *, s32, f32 *);
 void func_001a26f0(PObj *, PKey *, Part *, f32 *);
-void func_002672f8(void *, void *, void *);
 /* ---- func_001a26f0 ---- */
 void *memset(void *, s32, u32);
 f32 func_001a2178(void);
-void func_002673b8(void *, void *);
 void func_001a2248(void *, void *, void *);
 extern u8 D_00615F30[];
 typedef struct { f32 x, y, z, w; } V4_1a26f0;
@@ -100,7 +99,7 @@ CONTEXT_ONLY void func_001a26f0(PObj *a0, PKey *e0, Part *m0, f32 *b) {
     t.y = e->p[1];
     t.z = e->p[2];
     t.w = 1.0f;
-    func_002673b8(m + 1, &t);
+    PlatVu0Normalize(m + 1, &t);
     r = e->r0 + e->r1;
     d = r + r;
     do {
@@ -109,7 +108,7 @@ CONTEXT_ONLY void func_001a26f0(PObj *a0, PKey *e0, Part *m0, f32 *b) {
         m->z = d * func_001a2178() - r;
     } while (r < vlen3_1a26f0(m));
     m->w = 1.0f;
-    func_002672f8(m, D_00615F30, m);
+    PlatVu0ApplyMatrix(m, D_00615F30, m);
     func_001a2248(e, m, b);
 }
 
@@ -162,10 +161,8 @@ void func_001a2d40(PObj *o, PKey *k, s32 a2) {
 void *func_0017f958(void *, s32);
 #include "data/pieces/D_003701D0.h"
 typedef FV4_3701d0 FV4;
-void func_00267560(void *, void *, f32);
 
 extern FV4 D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
-void func_00267530(FV4 *, FV4 *, FV4 *);
 
 typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x38]; } MbPart;
 typedef struct { u8 pad[0x20]; } MbSub;
@@ -210,7 +207,7 @@ void pppRyjMegaBirthFilterFrame(void *obj, MbfKey *k, PppEntry *e) {
     if (!func_001a2218(w, k))
         return;
     if (k->test) {
-        func_00267530(&d, &D_00615F70, &D_003701D0);
+        PlatVu0SubVector(&d, &D_00615F70, &D_003701D0);
         len = vlen3_w65(&d);
         if (k->dist < len) {
             w->active = 0;

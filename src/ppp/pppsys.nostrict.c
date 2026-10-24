@@ -11,6 +11,7 @@
  * allocator (func_00183a48).  pppsys.c has the rest.  Each section names the
  * file its code came from.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00170000_s6_10.h"
 #include "data/pieces/D_00362438.h"
 #include "data/pieces/D_00362424.h"
@@ -30,9 +31,6 @@
 typedef int u128 __attribute__((mode(TI)));
 typedef union { V4 v; u128 q; } V4A;
 void func_00182870();
-void func_00267370(V4A *, V4A *, V4A *);
-void func_002673b8(V4A *, V4A *);
-void sceVu0MulMatrix(V4A *, V4A *, V4A *);
 extern V4A D_00615FC0[4];
 extern V4A D_00615EB0[4];
 extern V4A D_00615E70[4];
@@ -45,25 +43,25 @@ extern V4A D_006160C0[4];
 void func_00180280(void *o) {
     V4A b, a, c;
     func_00182870();
-    sceVu0MulMatrix(D_00615FC0, D_00615EB0, D_00615E70);
-    sceVu0MulMatrix(D_00616080, D_00616040, D_00615FC0);
+    PlatVu0MulMatrix(D_00615FC0, D_00615EB0, D_00615E70);
+    PlatVu0MulMatrix(D_00616080, D_00616040, D_00615FC0);
     a.v.x = D_00615FC0[1].v.x;
     a.v.y = D_00615FC0[1].v.y;
     a.v.z = D_00615FC0[1].v.z;
     a.v.w = 0.0f;
-    func_002673b8(&a, &a);
+    PlatVu0Normalize(&a, &a);
     D_00616010[0].q = a.q;
     b.v.x = a.v.y;
     b.v.y = -a.v.x;
     b.v.z = 0.0f;
     b.v.w = 0.0f;
-    func_002673b8(&b, &b);
+    PlatVu0Normalize(&b, &b);
     D_00616010[-1].q = b.q;
-    func_00267370(&c, &b, &a);
-    func_002673b8(&c, &c);
+    PlatVu0OuterProduct(&c, &b, &a);
+    PlatVu0Normalize(&c, &c);
     D_00616010[1].q = c.q;
     D_00616010[2].q = D_00615FC0[3].q;
-    sceVu0MulMatrix(D_006160C0, D_00616040, &D_00616010[-1]);
+    PlatVu0MulMatrix(D_006160C0, D_00616040, &D_00616010[-1]);
 }
 
 /* func_00180878 (from hand/nostrict/text_00170000_s6_10.c). */
@@ -207,7 +205,6 @@ void func_001814b0(f32 *a, H39Obj **b, s32 lo, s32 hi) {
 }
 
 /* func_00181608 (from hand/nostrict/text_00180000_h39.c). */
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
 #define D_00615EB0 ((f32 (*)[4]) D_00615EB0)
 s32 func_00181608(H39Obj **list) {
     f32 depth[256];
@@ -229,7 +226,7 @@ s32 func_00181608(H39Obj **list) {
             default:
                 v.q = e->pos.q;
                 v.f[3] = 1.0f;
-                func_002672f8(v.f, D_00615EB0, v.f);
+                PlatVu0ApplyMatrix(v.f, D_00615EB0, v.f);
                 depth[n] = v.f[2];
                 break;
             }
@@ -383,7 +380,6 @@ extern V4 D_006161C0[4] __asm__("D_006161C0");
 void func_0017f9a8(void) __asm__("func_0017f9a8");
 void func_00183a00(void *, void *, s32) __asm__("func_00183a00");
 void *memset(void *, s32, u32);
-void sceVu0UnitMatrix(V4 *);
 void func_0017f910(s32, s32) __asm__("func_0017f910");
 void func_00182058(void) {
     Pmgr *m;
@@ -399,7 +395,7 @@ void func_00182058(void) {
     D_00616220 = 0;
     memset(D_00364130, 0, sizeof(D_00364130));
     for (i = 0; i < 256; i++) D_00364130[i].flags = 0;
-    sceVu0UnitMatrix(D_006161C0);
+    PlatVu0UnitMatrix(D_006161C0);
     *(u128_82058 *)&D_00616200 = 0;
     D_00616200.w = 1.0f;
     func_0017f910(0, -1);
@@ -569,7 +565,6 @@ V4F D_00615E90 ALIGNED(16);
 V4F D_00615EA0 ALIGNED(16);
 extern V4F D_00615F70;
 void func_00183be0(void *, void *);
-void func_002675a8(void *, void *);
 void func_00121fc4(void *, void *);
 f32 atan2f(f32, f32);
 f32 asinf(f32);
@@ -614,15 +609,15 @@ void func_00182870(MObj *o) {
     m[3].x = o->own->x80;
     m[3].y = o->own->x84;
     m[3].z = o->own->x88;
-    sceVu0MulMatrix(&D_00615E70, &D_00615E70, m);
+    PlatVu0MulMatrix(&D_00615E70, &D_00615E70, m);
     if (o->own->xfa && o->own->x104 >= 0) {
         func_00183be0(m, o->own->x90);
         vu0ScaleRow2(o->own->xa0 * o->x20, &m[0]);
         vu0ScaleRow2(o->own->xa4 * o->x24, &m[1]);
         vu0ScaleRow2(o->own->xa8 * o->x28, &m[2]);
-        func_002675a8(&D_00615E70, &m[0]);
-        func_002675a8(&(&D_00615E70)[1], &m[1]);
-        func_002675a8(&(&D_00615E70)[2], &m[2]);
+        PlatVu0CopyVector(&D_00615E70, &m[0]);
+        PlatVu0CopyVector(&(&D_00615E70)[1], &m[1]);
+        PlatVu0CopyVector(&(&D_00615E70)[2], &m[2]);
     }
     if (o->xb2) {
         addTrans(&D_00615E70, &D_00615F70);
@@ -642,7 +637,7 @@ void func_00182870(MObj *o) {
     ang[1] = asinf(-m[2].z);
     ang[2] = atan2f(m[2].y, m[2].x);
     for (i = 0; i < 3; i++) D_003701E0[i] = ang[i] * 32768.0f / 3.1415926f;
-    func_002675a8(&D_003701D0, &D_00615EA0);
+    PlatVu0CopyVector(&D_003701D0, &D_00615EA0);
 }
 #undef D_00615E70
 

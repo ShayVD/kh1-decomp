@@ -11,6 +11,7 @@
 #include "ppp.h"
 #include "data/pieces/D_002BBFA0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/shared.h"
 #include "data/types/text_00180000_h40.h"
 #include "data/pieces/D_00364130.h"
@@ -308,11 +309,10 @@ void pppScaleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
 #undef D_00615E60
 
 /* pppDrawMatrixLoopFrame (from auto/text_00180000.c). */
-M2C_UNK func_00267328(s32, M2C_UNK *, s32);
 extern M2C_UNK D_00616080;
 extern s32 D_00615E68;
 void pppDrawMatrixLoopFrame(void) {
-    func_00267328(D_00615E68 + 0x50, &D_00616080, D_00615E68 + 0x10);
+    PlatVu0MulMatrix(D_00615E68 + 0x50, &D_00616080, D_00615E68 + 0x10);
 }
 
 /* pppDrawMdlLoopCon (from auto/text_00180000.c). */
