@@ -6,49 +6,16 @@ M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_0011d768(M2C_UNK);
 M2C_UNK func_0011d7c0(M2C_UNK);
 M2C_UNK func_00141348(s32 *, void *);
-M2C_UNK func_00237018(M2C_UNK *, M2C_UNK, M2C_UNK);
-M2C_UNK func_002370c8(M2C_UNK *);
 M2C_UNK func_00238a70();
 M2C_UNK func_00246a70(s32, s32, s32, s32);
 M2C_UNK func_002499f0();
-M2C_UNK func_002672f8(M2C_UNK *, void *, s32);
-M2C_UNK func_00267620();
-M2C_UNK func_002676c0(void *, void *, f32);
-M2C_UNK func_00267768(void *, M2C_UNK *, f32);
-M2C_UNK func_00267810(void *, void *, f32);
-M2C_UNK func_00267930(s32, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK sceGsExecLoadImage(void *, M2C_UNK *);
 M2C_UNK sceGsSetDefLoadImage(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-#include "data/pieces/D_00425CE0.h"
-extern M2C_UNK D_006480D0; /* src/data/bss_0064.c: u64 D_006480D0[0x2c] */
 extern M2C_UNK D_00648230; /* src/data/bss_0064.c: Slot32 D_00648230[0xc] */
 extern s32 D_00651E50[];
 f32 func_0011d790(M2C_UNK, s32);
 s32 func_00122ff8(s32);
-
-void func_00236c68(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
-    s32 sp[28];
-    func_00267768(sp, (M2C_UNK *)&D_00425CE0, M2C_FIELD(arg4, f32 *, 0));
-    func_00267810(sp, sp, M2C_FIELD(arg4, f32 *, 4));
-    func_002676c0(sp, sp, M2C_FIELD(arg4, f32 *, 8));
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, arg2);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x50), sp, arg3);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x60), sp, arg1);
-    func_00267930(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x60), &M2C_FIELD(sp, M2C_UNK *, 0x40), &M2C_FIELD(sp, M2C_UNK *, 0x50));
-}
-
-void func_00236de8(void *arg0, f32 fparg0) {
-    func_00267620();
-    M2C_FIELD(arg0, f32 *, 0) = (f32) (M2C_FIELD(arg0, f32 *, 0) * fparg0);
-    M2C_FIELD(arg0, f32 *, 0x14) = (f32) (M2C_FIELD(arg0, f32 *, 0x14) * fparg0);
-    M2C_FIELD(arg0, f32 *, 0x28) = (f32) (M2C_FIELD(arg0, f32 *, 0x28) * fparg0);
-}
-
-void func_002372e0(void) {
-    func_002370c8(&D_006480D0);
-    func_00237018(&D_006480D0, 0x16, 1);
-}
 
 void func_00239368(void) {
     s32 sp[24];

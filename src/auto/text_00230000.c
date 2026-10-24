@@ -4,19 +4,8 @@
 #include "data/bss_0064.h"
 
 M2C_UNK func_0011d790(M2C_UNK, s32);
-M2C_UNK func_00239368();
 M2C_UNK func_0023dd48();
 extern s32 D_0044A820;
-
-void func_00236f00(void) {
-    func_00239368();
-}
-
-void *func_00237008(s64 arg0, s64 arg1, void *arg2) {
-    M2C_FIELD(arg2, s64 *, 0) = arg1;
-    M2C_FIELD(arg2, s64 *, 8) = arg0;
-    return arg2 + 0x10;
-}
 
 void func_0023cee8(void) {
     if (D_0044A820 == 0) {

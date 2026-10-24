@@ -5,18 +5,9 @@
 M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_001f2e98(s32 *, s32 *);
 M2C_UNK func_002499f0();
-M2C_UNK func_002676c0(f32);
-M2C_UNK func_00267768(s32, s32, f32);
-M2C_UNK func_00267810(s32, s32, f32);
 M2C_UNK sceGsExecLoadImage(void *, s32);
 M2C_UNK sceGsSetDefLoadImage(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
-
-void func_00236d48(s32 arg0, s32 arg1, void *arg2) {
-    func_002676c0(M2C_FIELD(arg2, f32 *, 8));
-    func_00267768(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
-    func_00267810(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
-}
 
 void func_002393d8(void) {
     s32 sp[28];
