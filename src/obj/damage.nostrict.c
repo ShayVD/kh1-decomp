@@ -139,7 +139,7 @@ typedef struct {
 typedef struct GD { u8 p0[0x88]; u32 f88; } GD;
 extern QD D_005267C0[];
 extern QD D_005277C0[];
-extern QD D_005297C0;
+QD D_005297C0 ALIGNED(64);
 extern QD *func_00134f80(QD *, s32);
 extern void func_00135000(BD *, QD *);
 extern f32 func_00176850(void);

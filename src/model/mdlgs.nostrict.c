@@ -22,8 +22,8 @@
 #include "data/pieces/D_00304BE8_s.h"
 
 /* func_0015ea98 (from hand/nostrict/text_00140000_s6_07.c). */
-extern Nea98 *D_00551D80;
-extern volatile s32 D_00559DB8;
+Nea98 *D_00551D80 ALIGNED(16);
+volatile s32 D_00559DB8 ALIGNED(8);
 extern volatile s32 D_00559DB4;
 s32 func_00265bc0(s32, s32);
 s32 func_0015ea98(void) {
@@ -49,7 +49,7 @@ s32 func_0015ea98(void) {
 /* func_0015eb78 (from hand/nostrict/text_00140000_s6_07.c). */
 extern Beb78 D_00551D90[];
 extern Beb78 * D_00559DB0;
-extern volatile s32 D_00559DBC;
+volatile s32 D_00559DBC ALIGNED(4);
 extern  s32 D_00351BD0;
 void func_002583e0(s32);
 s32 func_00258d10(s32);
@@ -505,7 +505,23 @@ typedef struct { O48 *o; u32 fl; } E10;
 typedef struct { u8 pad[0x10]; E10 *e; } A0;
 extern u8 D_00277E40[];
 extern u8 D_00278210[];
-extern void *D_00351BE0[];
+extern u8 D_00272E20[];
+extern u8 D_002732A0[];
+extern u8 D_002736B0[];
+extern u8 D_00273B30[];
+extern u8 D_00274110[];
+extern u8 D_002747C0[];
+extern u8 D_002757A0[];
+extern u8 D_00276870[];
+extern u8 D_00277AE0[];
+void *D_00351BE0[0x18] ALIGNED(32) = {
+    (void *)D_002732A0, (void *)D_002736B0, (void *)D_00273B30, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+    (void *)D_002747C0, (void *)D_002757A0, (void *)D_00276870, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+    (void *)D_00277AE0, (void *)D_002736B0, (void *)D_00273B30, (void *)D_00274110,
+    (void *)D_00272E20, (void *)D_00272E20, (void *)D_00273B30, (void *)D_00273B30,
+};
 void func_0015fc00(A0 *a) {
     E10 *e = a->e;
     s32 v;

@@ -454,7 +454,7 @@ void func_001655e0(f32 (*pos)[4], C03Mdl *o, f32 f, C03Bits *b) {
 #undef func_00165450
 
 /* func_00165cf8 (from hand/nostrict/text_00160000_c03.c). */
-extern s16 D_00574F30[0x40];
+s16 D_00574F30[0x40] ALIGNED(16);
 void *func_00121e28(s32, void *);
 void func_00121eb0(void *);
 void func_00121f30(void *, void *);

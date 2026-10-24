@@ -148,7 +148,7 @@ typedef struct { s32 id, x4, x8, handle, x10; u8 active, x15, kind, x17; } SndSl
 extern SndSlot_1c898 *D_004E3450;
 extern Slot12 *D_004E3454;
 extern SndSlot D_004E3458[];
-extern Slot12 D_004E3818[0x28];
+Slot12 D_004E3818[0x28] ALIGNED(8);
 extern Pair D_004E39F8[];
 void *func_001559f0(s32, s32);
 extern SndSlot_1c898 D_004E3458_0011c898[] __asm__("D_004E3458");
