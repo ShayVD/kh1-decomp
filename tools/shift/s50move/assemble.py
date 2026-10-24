@@ -78,6 +78,7 @@ def no_attr(s):
     """drop __attribute__((...)) with balanced parentheses."""
     while True:
         i = s.find('__attribute__')
+        if i < 0: i = s.find('ALIGNED(')  # include/common.h's __attribute__((aligned(n)))
         if i < 0: return s
         j = s.index('(', i); d = 0
         for k in range(j, len(s)):
@@ -182,7 +183,8 @@ def view(name, decl, base, addr=False):
 
 
 def sig(s):
-    """'RET NAME(ARGS)...' -> (ret, [arg kinds]) with kinds f (float), d (double), x."""
+    """'RET NAME(ARGS)...' -> (ret, [arg kinds]) with kinds f (float), d (double),
+    n (a char or short: the caller truncates it), x."""
     s = no_attr(strip(s)).strip().rstrip(';').split('{')[0]
     m = re.match(r'(.*?)\b(\w+)\s*\((.*)\)\s*$', s, flags=re.S)
     if not m: return None
@@ -196,6 +198,7 @@ def sig(s):
         elif w and w[0] in ('f32', 'float'): kinds.append('f')
         elif w and w[0] in ('f64', 'double'): kinds.append('d')
         elif a == '...': kinds.append('...')
+        elif w and w[0] in ('s8', 'u8', 's16', 'u16', 'char', 'short'): kinds.append('n')  # narrowed by the callee
         else: kinds.append('x')
     return ret, kinds
 
@@ -207,6 +210,31 @@ def risky(a, b):
     if not sa or not sb: return False
     if (sa[0] == 'void') != (sb[0] == 'void') and 'void' not in (sa[0], sb[0]): return True
     return sa[0] != sb[0] and 'void' not in (sa[0], sb[0]) or sa[1] != sb[1]
+
+
+def unnamed(proto):
+    """a prototype's text without parameter names, extern and spacing."""
+    s = no_attr(strip(proto)).strip().rstrip(';')
+    s = re.sub(r'^\s*(extern|static)\s+', '', s)
+    m = re.match(r'(.*?\b\w+)\s*\((.*)\)\s*$', s, flags=re.S)
+    if not m: return norm(s)
+    args = []
+    for a in split_top(m.group(2)):
+        a = a.strip()
+        if a in ('', 'void', '...'): args.append(a); continue
+        a = re.sub(r'\(\s*\*+\s*\w+\s*\)', '(*)', a)  # function pointer names
+        a = re.sub(r'\b\w+\s*((\[[^\]]*\]\s*)*)$', lambda x: x.group(1), a) \
+            if len(re.findall(r'\w+', re.sub(r'\[[^\]]*\]', '', a))) > 1 and '(*)' not in a else a
+        args.append(re.sub(r'\s+', ' ', a).replace(' *', '*').strip())
+    return re.sub(r'\s+', ' ', m.group(1)).replace(' *', '*') + '(' + ','.join(args) + ')'
+
+
+def defret(proto):
+    """the return type text of a prototype."""
+    s = no_attr(strip(proto)).strip()
+    s = re.sub(r'^\s*(extern|static)\s+', '', s)
+    m = re.match(r'(.*?)\b\w+\s*\(', s, flags=re.S)
+    return m.group(1).strip() if m else 'int'
 
 
 def fview(name, proto):
@@ -222,6 +250,10 @@ def main(out, funcs, onto=False):
     for f in funcs:
         files.setdefault(src[f][1], citems(open(src[f][1]).read()))
     inmod = set(funcs)
+    defhead = {}  # the module's own definitions: header text
+    for f in funcs:
+        for t, k, n in files[src[f][1]]:
+            if k == 'func' and n == f: defhead[f] = strip(t).split('{')[0].strip() + ';'
     plan = []  # (func, [(kind, names, text)], body)
     for f in funcs:
         addr, path = src[f]
@@ -242,6 +274,8 @@ def main(out, funcs, onto=False):
                 incs.append((order, t.strip())); continue
             if kind == 'var':
                 for nm, d in var_decls(t):
+                    if not re.match(r'\s*(extern|static)\b', d) and '=' not in d:
+                        d = 'extern ' + no_attr(d).strip()  # a definition stays in its file: declare it
                     scope[nm] = (order, 'var', d)
                 continue
             if kind == 'func':
@@ -389,6 +423,18 @@ def main(out, funcs, onto=False):
                     emitted[nm] = ('var', norm(b), b); sec.append(b)
                 if emitted[nm][1] != norm(t2):
                     views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None))
+                continue
+            if kind == 'proto' and nm in inmod and emitted.get(nm, ('',))[0] in ('', 'proto', 'kr') \
+                    and unnamed(t2) != unnamed(defhead[nm]):
+                # a prototype of a function defined later in the module that
+                # disagrees with its definition: declare it old-style (the
+                # definition's return type when the declarations know it) and
+                # view this function's prototype
+                if nm not in emitted:
+                    rt = defret(defhead[nm])
+                    if not all(x in emitted or x in KW or x in INTS for x in idents(rt)): rt = defret(t2)
+                    sec.append('%s %s();' % (rt, nm)); emitted[nm] = ('kr', '')
+                if sig(t2) and sig(t2)[1]: views.append(fview(nm, t2))
                 continue
             if kind == 'proto':
                 if nm in emitted:

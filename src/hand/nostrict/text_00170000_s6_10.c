@@ -550,63 +550,12 @@ void func_0017ff38(s32 on) {
 #undef E0C0
 
 /* ---- 0878 ---- */
-typedef struct { s16 idx; s16 pad2; s32 x4; s32 x8; s32 xc; } It10;
 typedef struct { void *p; s32 x4; } E8;
 extern E8 D_00363930[];
 
-s32 *func_00180878(s32 *p, u8 *mask) {
-    s32 n;
-    s32 i;
-    u8 m;
-
-    n = *p++;
-    m = 0;
-    i = 0;
-    for (; i < n; i++, m >>= 1) {
-        It10 *it = (It10 *) *p++;
-        s32 k = i >> 3;
-        s32 j = i & 7;
-
-        if (!j)
-            m = mask[k];
-        if (m & 1) {
-            E8 *d = &D_00363930[it->idx];
-            d->p = it + 1;
-            d->x4 = it->x8;
-        }
-    }
-    return p;
-}
-
 /* ---- 09b8 ---- */
-typedef struct { s32 idx; u16 x4; u16 pad6; u16 x8; u16 pada; } It0C;
 typedef struct { u16 a; u16 b; void *p; } E8b;
 extern E8b D_00363D30[];
-
-s32 *func_001809b8(s32 *p, u8 *mask) {
-    s32 n;
-    s32 i;
-    u8 m;
-
-    n = *p++;
-    m = 0;
-    i = 0;
-    for (; i < n; i++, m >>= 1) {
-        It0C *it = (It0C *) *p++;
-        s32 k = i >> 3;
-        s32 j = i & 7;
-
-        if (!j)
-            m = mask[k];
-        if (m & 1) {
-            E8b *d = &D_00363D30[it->idx];
-            d->a = it->x4;
-            d->b = it->x8;
-            d->p = it + 1;
-        }
-    }
-    return p;
-}
 
 /* ---- 2058 ---- */
 #define D_00362730 D_00362730_2058
@@ -644,29 +593,7 @@ extern V4 D_006161C0[4] __asm__("D_006161C0");
 extern V4 D_00616200 __asm__("D_00616200");
 void func_0017f9a8(void) __asm__("func_0017f9a8");
 void func_00183a00(void *, void *, s32) __asm__("func_00183a00");
-void *memset(void *, s32, u32);
-void sceVu0UnitMatrix(V4 *);
 void func_0017f910(s32, s32) __asm__("func_0017f910");
-
-void func_00182058(void) {
-    Pmgr *m;
-    s32 i;
-    func_0017f9a8();
-    m = &D_00615E40;
-    D_0061621C = 0;
-    func_00183a00(m, D_00595E40, 0x80000);
-    m->x10 = D_00362730;
-    m->x14 = D_00363930;
-    m->x18 = D_00363D30;
-    D_00615E64 = m;
-    D_00616220 = 0;
-    memset(D_00364130, 0, sizeof(D_00364130));
-    for (i = 0; i < 256; i++) D_00364130[i].flags = 0;
-    sceVu0UnitMatrix(D_006161C0);
-    *(u128 *)&D_00616200 = 0;
-    D_00616200.w = 1.0f;
-    func_0017f910(0, -1);
-}
 #undef D_00362730
 #undef D_00363930
 #undef D_00363D30
@@ -684,61 +611,6 @@ void func_00182058(void) {
 #undef func_00183a00
 
 /* ---- 3a48 ---- */
-typedef struct PppBlk {
-    struct PppBlk *next;
-    struct PppBlk *prev;
-    struct PppBlk *used;
-    s32 pad;
-} PppBlk;
-typedef struct {
-    PppBlk *unk0;
-    PppBlk *first;
-    PppBlk *last;
-    PppBlk *unkC;
-} PppHeap;
-
-void *func_00183a48(PppHeap *h, s32 size) {
-    PppBlk *b, *n, *nb, *p;
-    size = ((size + 15) & ~15) + 16;
-    if (h->unk0) {
-        b = h->unk0->next;
-    } else {
-        goto init;
-restart:
-        h->unk0 = 0;
-        b = h->last;
-        goto search;
-init:
-        b = h->first->next;
-        h->unk0 = h->first;
-    }
-search:
-    for (;;) {
-        p = b->prev;
-        if (p == 0) {
-            if (h->unk0) goto restart;
-            return 0;
-        }
-        b = p;
-        if (b->used) continue;
-        n = b->next;
-        if ((u8 *)n - (u8 *)b < size) continue;
-        h->unkC = (PppBlk *)((s32)h->unkC + size);
-        nb = (PppBlk *)((u8 *)b->next - size);
-        if (nb != b && (u32)((u8 *)nb - (u8 *)b) >= 16) {
-            h->unk0 = b;
-            nb->prev = b;
-            nb->next = n;
-            n->prev = nb;
-            b->next = nb;
-            b = nb;
-        } else {
-            h->unk0 = 0;
-        }
-        b->used = (PppBlk *)1;
-        return b + 1;
-    }
-}
 
 #include "data/bss_0061_mixed.h"
 #include "data/bss_0061_typed.h"

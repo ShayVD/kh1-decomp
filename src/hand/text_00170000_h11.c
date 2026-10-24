@@ -57,7 +57,6 @@ typedef struct Actor {
 typedef E0C0_364130_2 E0C0;
 
 #include "data/types/text_00170000_h11.h"
-typedef struct { s32 a, b, c; } V12;
 
 extern Actor *D_00575894; /* src/data/bss_0057.c: void *D_00575894 */
 #include "data/pieces/D_002E26A0.h"
@@ -77,8 +76,6 @@ s32 func_0017dc40(void);
 void func_00176f08(s32, f32);
 void func_00267530(void *, void *, void *);
 void func_002675a8(void *, void *);
-s32 *func_001803b8(void *);
-s32 *func_001803c0(s32 *, s32);
 
 s32 func_00175ba0(E3C *a) {
     s32 i;
@@ -425,74 +422,12 @@ s32 func_0017ff98(s32 key) {
     }
     return -2;
 }
-
-s32 *func_001803c0(s32 *p, s32 n) {
-    s32 i;
-    for (i = 0; i < n; i++) {
-        s32 k = *p++;
-        p += k;
-    }
-    return p;
-}
-
-void func_001804d0(void *, void *);
-void pppRelocProgram(s32, void *);
 #if 2 == 1
 #define TBL ((void *)0x370200)
 #else
 extern u8 D_00370200[];
 #define TBL D_00370200
 #endif
-void func_00180540(void *h) {
-    s32 *p;
-    s32 n, i;
-    func_001804d0(h, h);
-    p = func_001803b8(h);
-    n = *p++;
-    for (i = 0; i < n; i++) pppRelocProgram(*p++, TBL);
-}
-
-typedef struct { u8 pad[0x88]; void *x88; u8 *x8c; u8 pad90[0x14]; s16 xa4; s16 xa6; } O88;
-s32 *func_001805b8(s32 *, void *, s32, s32);
-s32 *func_001806c8(s32 *, void *, s32, s32);
-void func_001807d8(O88 *o) {
-    s32 a = o->xa4;
-    s32 b = o->xa6;
-    void *q = o->x88;
-    s32 *p;
-    if (a == 0 && b == 0) return;
-    p = func_001803b8(q);
-    p = func_001803c0(p, 2);
-    p = func_001805b8(p, o->x8c + 192, a, b);
-    func_001806c8(p, o->x8c + 208, a, b);
-}
-
-void func_00180ab8(s32, s32);
-void func_00180ce0(void *h) {
-    s32 *p = func_001803c0(func_001803b8(h), 1);
-    s32 n = *p++;
-    s32 i;
-    for (i = 0; i < n; i++) func_00180ab8(*p++, 0);
-}
-
-void func_00180b40(s32, s32);
-void func_00180e10(void *h) {
-    s32 *p;
-    s32 n;
-    s32 i;
-    if (!h) return;
-    p = func_001803c0(func_001803b8(h), 1);
-    n = *p++;
-    for (i = 0; i < n; i++) func_00180b40(*p++, 0);
-}
-
-typedef struct { V12 a[10]; V12 b[6]; } SEA0;
-void func_00180e80(V12 *);
-void func_00180ea0(SEA0 *s) {
-    s32 i;
-    for (i = 0; i < 10; i++) func_00180e80(&s->a[i]);
-    for (i = 0; i < 6; i++) func_00180e80(&s->b[i]);
-}
 
 /* needs make: uses rodata */
 s32 func_001772f8(Actor *o) {

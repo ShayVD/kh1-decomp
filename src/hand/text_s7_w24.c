@@ -1,22 +1,5 @@
 #include "common.h"
 
-#include "data/pieces/D_00364130.h"
-typedef E0C0_364130_3 E0C0;
-void func_00181f50(E0C0 *);
-
-void func_00181fe0(E0C0 **out) {
-    s32 i;
-    E0C0 *e;
-    for (i = 0; i < 256; i++) {
-        e = &D_00364130.e0C0_3[i];
-        if (!(e->x80 & 0x3000000000000)) {
-            func_00181f50(e);
-            *out = e;
-            break;
-        }
-    }
-}
-
 typedef struct { s32 x0; u8 pad[28]; } E63;
 typedef struct { u8 pad[0xc]; s32 n; E63 e[1]; } H63;
 void func_00176640(s32);

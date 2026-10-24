@@ -148,8 +148,6 @@ void func_00267560(V4 *, V4 *, f32);
 void func_002675a8(V4 *, V4 *);
 void func_00267810(V4 *, void *, f32);
 void sceVu0MulMatrix(V4A *, V4A *, V4A *);
-s32 *func_001803b8(void *);
-s32 *func_001803c0(s32 *, s32);
 
 s32 func_001743b0(Wk *w, Ob *o, s32 a2, s32 a3) {
     switch (a3) {
@@ -476,73 +474,6 @@ void func_0017ef40(s32 a) {
 }
 
 /* --- shift packed 14-bit x / 14-bit y coordinates of every entry --- */
-typedef struct { s16 off; u8 pad[6]; } TEnt;
-typedef struct Hdr {
-    u8 pad0[6];
-    s16 n;          /* 0x06 */
-    u8 pad8[8];
-    TEnt tbl[1];    /* 0x10 */
-} Hdr;
-typedef struct Ref { u16 x0; u16 x2; u16 x4; } Ref;
-typedef struct Ent {
-    u8 pad0[0x10];
-    union { u16 h; u32 w; } x10;
-    u32 x14;
-} Ent;
-
-void func_00180180(Hdr *h, Ref *r, s16 dx, s16 dy) {
-    s16 ox = 0, oy = 0;
-    s32 n;
-    TEnt *t;
-    if (dx == 0 && dy == 0) return;
-    if (dx) ox = dx - r->x2;
-    if (dy) oy = dy - r->x4;
-    n = h->n;
-    for (t = h->tbl; n > 0; n--, t++) {
-        Ent *e = (Ent *)((u8 *)h + t->off);
-        if (dx && ox) {
-            s32 v = e->x10.h & 0x3fff;
-            if (v >= 0x3800) e->x10.w = (e->x10.w & 0xffffc000) + (v + ox);
-        }
-        if (dy && oy) {
-            u32 w = e->x14;
-            s32 v = (w & 0x7ffe0) >> 5;
-            if (v >= 0x3d40) e->x14 = (w & 0xfff8001f) + ((v + oy) << 5);
-        }
-    }
-}
-
-typedef struct Obj {
-    u8 pad0[0x8c];
-    s32 x8c;    /* 0x8C */
-    u8 pad90;
-    u8 x91;     /* 0x91 */
-    u8 x92;     /* 0x92 */
-} Obj;
-
-void func_001803f0(void *a0, s32 id, s32 *out, Obj *o) {
-    s32 *p = func_001803b8(a0);
-    s32 n, i;
-    *out = 0;
-    n = *p++;
-    for (i = 0; i < n; i++, p++) {
-        if (id == i) {
-            s32 v = *p;
-            o->x8c = v;
-            *out = v + 272;
-        }
-    }
-    p = func_001803c0(p, 4);
-    if (p[0] != -1) {
-        s32 y = (p[1] - 0x3781) / 128;
-        s32 x = (p[3] - 0x3d21) / 32;
-        o->x91 = y;
-        o->x92 = x;
-    } else {
-        o->x91 = 0;
-        o->x92 = 0;
-    }
-}
 #include "data/data_002E.h"
 #include "data/data_0036.h"
 #include "data/data_0035.h"
