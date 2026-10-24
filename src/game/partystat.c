@@ -90,7 +90,7 @@ void func_00141898(void *arg0) {
 typedef struct {
     u8 pad[0xE4];
 } W7Fx;
-extern W7Fx D_0052AE98[32];
+W7Fx D_0052AE98[32] ALIGNED(8);  /* moved from hand/text_00130000_h7.c (session 54) */
 extern u32 D_0052CB18;
 void func_001418b8(W7Fx *p);
 W7Fx *func_00141a40(void) {

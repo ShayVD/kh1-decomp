@@ -1,8 +1,7 @@
 /* An object's movement on the ground: the ground ray (func_00142388),
  * steering toward a target (func_00142cf0, func_00142e30), the move with
- * wall collision against the collision entries D_003044D8 (func_00143180
- * itself stays in hand/nostrict/text_00130000_c02.c: a CONTEXT_ONLY copy is
- * here), and the per-state velocity through the class table D_00350D88
+ * wall collision against the collision entries D_003044D8 (func_00143180),
+ * and the per-state velocity through the class table D_00350D88
  * (func_00143eb8, func_00144060). Flag mode: nostrict (the other modes are
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
@@ -354,8 +353,7 @@ zero:
 #undef func_00267530
 #undef func_001429f8
 
-/* func_00143180 stays in hand/nostrict/text_00130000_c02.c (taking it out changes func_0013cfe8 there,
-   docs/modules.md "Session 53"); a CONTEXT_ONLY copy keeps the functions below as they were. */
+/* func_00143180 (from hand/nostrict/text_00130000_c02.c, session 54). */
 typedef f32 C02V4[4] __attribute__((aligned(16)));
 typedef struct {
     C02V4 v00;      /* 0x2A0 */
@@ -414,7 +412,7 @@ f32 func_00120bf8(void *a);
 #define func_00267530 ((void (*)(void *dst, void *a, void *b)) func_00267530)
 #define func_001166e8 ((u64 (*)(C02Mv *m)) func_001166e8)
 #define func_00143080 ((s32 (*)(C02Ob2 *o, f32 *v)) func_00143080)
-CONTEXT_ONLY void func_00143180(C02Ob2 *o, f32 *v)
+void func_00143180(C02Ob2 *o, f32 *v)
 {
     C02V4 d;
     C02Mv save;
