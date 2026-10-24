@@ -52,6 +52,7 @@ typedef struct {
     u8 pad84[0x2C];
     u64 flags;              /* +0xB0 */
 } H39PSys;
+H39Inst *func_00182588(H39PSys *, H39Slot2 *);
 typedef union { f32 f[4]; } H39V4 __attribute__((aligned(16)));
 typedef struct { u8 pad[0xC]; s32 slot; s32 off; } H39NKey;
 extern H39PSys *D_00615E60;
@@ -207,7 +208,7 @@ void pppVertexApFrame(PppObject *obj, VtxApKey *key, PppEntry *e) {
 #undef D_00615E68
 
 /* func_00184cb8 (from hand/nostrict/text_00180000.c). */
-void *func_00182588(void *, s32, M2C_UNK);
+#define func_00182588 ((void *(*)(void *, s32, M2C_UNK)) func_00182588)
 #define D_00615E60 ((void *) D_00615E60)
 void func_00184cb8(s32 arg0, void *arg1, void *arg2) {
     s32 temp_v0;
@@ -231,6 +232,7 @@ void func_00184cb8(s32 arg0, void *arg1, void *arg2) {
         M2C_FIELD(temp_v0_4, f32 *, 8) = (f32) M2C_FIELD(arg2, s16 *, 4);
     }
 }
+#undef func_00182588
 #undef D_00615E60
 
 /* pppVertexApLcFrame (from hand/nostrict/text_00180000_h62.c). */

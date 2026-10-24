@@ -41,6 +41,7 @@ typedef struct {
     u8 pad84[0x2C];
     u64 flags;              /* +0xB0 */
 } H39PSys;
+H39Inst *func_00182588(H39PSys *, H39Slot2 *);
 extern H39PSys *D_00615E60;
 typedef struct {
     s32 unk00, unk04, unk08;

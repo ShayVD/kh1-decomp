@@ -908,6 +908,7 @@ typedef struct {
 } MdObj;
 #define D_00616224 (*(volatile s32 *) &D_00616224)
 
+void func_00267518(PppVec4, PppVec4, PppVec4);
 void pppRyjMegaBirthModelDraw(PppObject *obj, MdKey *key, PppEntry *e) {
     PppMtx m0;
     PppMtx m1;
