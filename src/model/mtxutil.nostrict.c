@@ -4,6 +4,7 @@
  * look-at style builder func_00162d00.  The VU0 routines stay in
  * src/hand/vu0.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/pieces/D_00351BC8.h"
@@ -22,59 +23,50 @@
 #include "data/types/nostrict_text_00140000_b04.h"
 
 /* func_001625c8 (from hand/nostrict/text_00150000_h36.c). */
-void func_002672f8(f32 *, void *, f32 *);
-void sceVu0CopyMatrix(void *, void *);
 f32 func_00162c20(f32 *);
-void func_002673f8(void *, void *);
-void func_002674d0(f32 *, f32 *, f32);
 void func_001625c8(f32 (*src)[4], f32 (*dst)[4]) {
     f32 sx, sy, sz;
     f32 v[4];
     f32 z;
-    sceVu0CopyMatrix(dst, src);
+    PlatVu0CopyMatrix(dst, src);
     sx = func_00162c20(dst[0]);
     sy = func_00162c20(dst[1]);
     sz = func_00162c20(dst[2]);
-    func_002673f8(dst, dst);
+    PlatVu0TransposeMatrix(dst, dst);
     dst[0][3] = dst[1][3] = dst[2][3] = dst[3][0] = dst[3][1] = dst[3][2] = 0.0f;
     dst[3][3] = 1.0f;
-    func_002674d0(dst[0], dst[0], sx);
-    func_002674d0(dst[1], dst[1], sy);
-    func_002674d0(dst[2], dst[2], sz);
-    func_002672f8(v, dst, src[3]);
+    PlatVu0DivVectorXYZ(dst[0], dst[0], sx);
+    PlatVu0DivVectorXYZ(dst[1], dst[1], sy);
+    PlatVu0DivVectorXYZ(dst[2], dst[2], sz);
+    PlatVu0ApplyMatrix(v, dst, src[3]);
     dst[3][0] = -v[0];
     dst[3][1] = -v[1];
     dst[3][2] = -v[2];
 }
 
 /* func_001626f0 (from hand/nostrict/text_00150000_h36.c). */
-void sceVu0UnitMatrix(void *);
-void func_00267768(void *, void *, f32);
-void func_00267810(void *, void *, f32);
-void func_002676c0(void *, void *, f32);
 void func_001626f0(f32 *scale, f32 *rot, f32 *trans, f32 (*m)[4]) {
     s32 i;
     f32 z;
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     for (i = 0; i < 3; i++) m[i][i] = scale[i];
-    if (rot[0] != 0.0f) func_00267768(m, m, rot[0]);
-    if (rot[1] != 0.0f) func_00267810(m, m, rot[1]);
-    if (rot[2] != 0.0f) func_002676c0(m, m, rot[2]);
+    if (rot[0] != 0.0f) PlatVu0RotMatrixX(m, m, rot[0]);
+    if (rot[1] != 0.0f) PlatVu0RotMatrixY(m, m, rot[1]);
+    if (rot[2] != 0.0f) PlatVu0RotMatrixZ(m, m, rot[2]);
     m[3][0] = trans[0];
     m[3][1] = trans[1];
     m[3][2] = trans[2];
 }
 
 /* func_001628a0 (from hand/nostrict/text_00150000_h36.c). */
-f32 func_00267390(f32 *, f32 *);
 void func_001628a0(f32 (*dst)[4], f32 (*src)[4], f32 *out) {
-    sceVu0CopyMatrix(dst, src);
-    out[0] = PlatSqrtf(func_00267390(dst[0], dst[0]));
-    out[1] = PlatSqrtf(func_00267390(dst[1], dst[1]));
-    out[2] = PlatSqrtf(func_00267390(dst[2], dst[2]));
-    func_002674d0(dst[0], dst[0], out[0]);
-    func_002674d0(dst[1], dst[1], out[1]);
-    func_002674d0(dst[2], dst[2], out[2]);
+    PlatVu0CopyMatrix(dst, src);
+    out[0] = PlatSqrtf(PlatVu0InnerProduct(dst[0], dst[0]));
+    out[1] = PlatSqrtf(PlatVu0InnerProduct(dst[1], dst[1]));
+    out[2] = PlatSqrtf(PlatVu0InnerProduct(dst[2], dst[2]));
+    PlatVu0DivVectorXYZ(dst[0], dst[0], out[0]);
+    PlatVu0DivVectorXYZ(dst[1], dst[1], out[1]);
+    PlatVu0DivVectorXYZ(dst[2], dst[2], out[2]);
 }
 
 /* func_001629e8 (from hand/nostrict/text_00150000_s6_08.c). */
@@ -94,40 +86,32 @@ f32 func_001629e8(void) {
 }
 
 /* func_00162ab8 (from hand/nostrict/text_00150000_h59.c). */
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 s32 func_00162ab8(f32 *p0, f32 *p1, f32 *q0, f32 *q1, f32 *out) {
     f32 m[4];
     f32 n[4];
     f32 a[4];
     f32 b[4];
     f32 da, db;
-    func_00267518(m, q0, q1);
-    func_00267560(m, m, 0.5f);
+    PlatVu0AddVector(m, q0, q1);
+    PlatVu0ScaleVector(m, m, 0.5f);
     n[0] = q1[1] - m[1];
     n[1] = m[0] - q1[0];
-    func_00267530(a, p0, m);
-    func_00267530(b, p1, m);
-    da = func_00267390(a, n);
-    db = func_00267390(b, n);
+    PlatVu0SubVector(a, p0, m);
+    PlatVu0SubVector(b, p1, m);
+    da = PlatVu0InnerProduct(a, n);
+    db = PlatVu0InnerProduct(b, n);
     if (da * db >= 0.0f) return 0;
     db = fabsf(db);
     da = fabsf(da);
-    func_00267560(a, p0, db);
-    func_00267560(b, p1, da);
-    func_00267518(out, a, b);
-    func_00267560(out, out, 1.0f / (da + db));
+    PlatVu0ScaleVector(a, p0, db);
+    PlatVu0ScaleVector(b, p1, da);
+    PlatVu0AddVector(out, a, b);
+    PlatVu0ScaleVector(out, out, 1.0f / (da + db));
     return 1;
 }
 
 /* func_00162d00 (from hand/nostrict/text_00140000_b04.c). */
-void func_00267370(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
 void func_00162c5c(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-#define func_00267768 ((void (*)(f32 (*)[4], f32 (*)[4], f32)) func_00267768)
-#define sceVu0UnitMatrix ((void (*)(f32 (*)[4])) sceVu0UnitMatrix)
-#define sceVu0CopyMatrix ((void (*)(f32 (*)[4], f32 (*)[4])) sceVu0CopyMatrix)
 void func_00162d00(f32 *tgt, s32 flip, f32 (*m0)[4], f32 (*m1)[4], f32 *pole, f32 l1, f32 l2, f32 rot, f32 rot2) {
     f32 d[4];
     f32 u[4];
@@ -155,17 +139,17 @@ void func_00162d00(f32 *tgt, s32 flip, f32 (*m0)[4], f32 (*m1)[4], f32 *pole, f3
         u[1] = pole[1] - p[1];
         u[2] = pole[2] - p[2];
         func_00162c20(u);
-        func_00267370(w, d, u);
+        PlatVu0OuterProduct(w, d, u);
         func_00162c20(w);
-        func_00267370(u, w, d);
+        PlatVu0OuterProduct(u, w, d);
         func_00162c20(u);
     } else {
         u[0] = -d[1];
         u[1] = d[0];
         u[2] = 0.0f;
         func_00162c20(u);
-        func_00267370(w, d, u);
-        func_002673b8(w, w);
+        PlatVu0OuterProduct(w, d, u);
+        PlatVu0Normalize(w, w);
     }
     m[0][3] = 0.0f;
     m[0][0] = d[0];
@@ -184,12 +168,12 @@ void func_00162d00(f32 *tgt, s32 flip, f32 (*m0)[4], f32 (*m1)[4], f32 *pole, f3
     m[3][2] = 0.0f;
     m[3][3] = 1.0f;
     if (rot != 0.0f) {
-        sceVu0UnitMatrix(r);
-        func_00267768(r, r, rot);
+        PlatVu0UnitMatrix(r);
+        PlatVu0RotMatrixX(r, r, rot);
         func_00162c5c(m, m, r);
     }
     if (!m1) {
-        sceVu0CopyMatrix(m0, m);
+        PlatVu0CopyMatrix(m0, m);
         m0[3][0] = p[0];
         m0[3][1] = p[1];
         m0[3][2] = p[2];
@@ -225,8 +209,8 @@ void func_00162d00(f32 *tgt, s32 flip, f32 (*m0)[4], f32 (*m1)[4], f32 *pole, f3
     m1[3][2] = 0.0f;
     m1[3][3] = 1.0f;
     if (rot2 != 0.0f) {
-        sceVu0UnitMatrix(r);
-        func_00267768(r, r, rot2);
+        PlatVu0UnitMatrix(r);
+        PlatVu0RotMatrixX(r, r, rot2);
         func_00162c5c(m1, m1, r);
     }
     y = -(l2 * s) * dist;
@@ -255,7 +239,4 @@ void func_00162d00(f32 *tgt, s32 flip, f32 (*m0)[4], f32 (*m1)[4], f32 *pole, f3
     m0[3][1] = p[1];
     m0[3][2] = p[2];
 }
-#undef func_00267768
-#undef sceVu0UnitMatrix
-#undef sceVu0CopyMatrix
 

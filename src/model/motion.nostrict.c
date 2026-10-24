@@ -4,6 +4,7 @@
  * builders func_001655e0, func_00165cf8, func_00166248 and func_00166570
  * (the bone chain with ground contact).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_002C58A0.h"
@@ -332,7 +333,6 @@ typedef struct {
     f32 (*p168)[4];      /* 0x168 */
     C03Lnk *p16C;        /* 0x16C */
 } C03Mdl;
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 extern C03Mtx D_00573F10[];
 extern f32 D_00574F10[4];
 extern f32 D_00574F20[4];
@@ -340,9 +340,6 @@ void func_001626f0(f32 *, f32 *, f32 *, C03Mtx);
 void func_00162c5c(C03Mtx, C03Mtx, C03Mtx);
 void func_00163490(C03Mdl *);
 void func_001636d0(C03Mdl *, C03Bits *);
-f32 func_00267390(f32 *, f32 *);
-void func_002674b0(f32 *, f32 *, f32);
-void sceVu0UnitMatrix(f32 (*)[4]);
 static inline f32 inl_wrap(f32 v) {
     for (;;) {
         if (v > 3.14159251f) { v -= 6.28318501f; continue; }
@@ -364,24 +361,24 @@ void func_001655e0(f32 (*pos)[4], C03Mdl *o, f32 f, C03Bits *b) {
     s32 j;
 
     fi = f * 256.0f;
-    D_00574F20[0] = PlatSqrtf(func_00267390(pos[0], pos[0]));
-    D_00574F20[1] = PlatSqrtf(func_00267390(pos[1], pos[1]));
-    D_00574F20[2] = PlatSqrtf(func_00267390(pos[2], pos[2]));
+    D_00574F20[0] = PlatSqrtf(PlatVu0InnerProduct(pos[0], pos[0]));
+    D_00574F20[1] = PlatSqrtf(PlatVu0InnerProduct(pos[1], pos[1]));
+    D_00574F20[2] = PlatSqrtf(PlatVu0InnerProduct(pos[2], pos[2]));
     if (o->p4 != b && b) func_00164ba8(o, b);
     o->p4 = b;
     o->wC &= 0xFFFF;
     o->f8 = f;
-    sceVu0CopyMatrix(D_00573F10[0], pos);
+    PlatVu0CopyMatrix(D_00573F10[0], pos);
     D_00573F10[0][1][0] = -D_00573F10[0][1][0];
     D_00573F10[0][1][1] = -D_00573F10[0][1][1];
     D_00573F10[0][1][2] = -D_00573F10[0][1][2];
     D_00573F10[0][2][0] = -D_00573F10[0][2][0];
     D_00573F10[0][2][1] = -D_00573F10[0][2][1];
     D_00573F10[0][2][2] = -D_00573F10[0][2][2];
-    sceVu0CopyMatrix(o->mD0, D_00573F10[0]);
-    func_002674b0(D_00573F10[0][0], D_00573F10[0][0], D_00574F20[0]);
-    func_002674b0(D_00573F10[0][1], D_00573F10[0][1], D_00574F20[1]);
-    func_002674b0(D_00573F10[0][2], D_00573F10[0][2], D_00574F20[2]);
+    PlatVu0CopyMatrix(o->mD0, D_00573F10[0]);
+    PlatVu0DivVector(D_00573F10[0][0], D_00573F10[0][0], D_00574F20[0]);
+    PlatVu0DivVector(D_00573F10[0][1], D_00573F10[0][1], D_00574F20[1]);
+    PlatVu0DivVector(D_00573F10[0][2], D_00573F10[0][2], D_00574F20[2]);
     D_00574F10[0] = D_00573F10[0][3][0];
     D_00574F10[1] = D_00573F10[0][3][1];
     D_00574F10[2] = D_00573F10[0][3][2];
@@ -434,7 +431,7 @@ void func_001655e0(f32 (*pos)[4], C03Mdl *o, f32 f, C03Bits *b) {
     }
     if (fabsf(D_00574F20[0] - 1.0f) > 0.005f || fabsf(D_00574F20[1] - 1.0f) > 0.005f
         || fabsf(D_00574F20[2] - 1.0f) > 0.005f) {
-        sceVu0UnitMatrix(m);
+        PlatVu0UnitMatrix(m);
         m[0][0] = D_00574F20[0];
         m[1][1] = D_00574F20[1];
         m[2][2] = D_00574F20[2];
@@ -460,7 +457,6 @@ void func_00121eb0(void *);
 void func_00121f30(void *, void *);
 void func_001625c8(C03Mtx *, C03Mtx *);
 void func_00162848(f32 *, C03Mtx *, f32 *);
-void func_002675a8(f32 *, f32 *);
 #define func_00164ba8 ((void (*)(C03Mdl *, C03Bits *)) func_00164ba8)
 /* ---- func_00165cf8 ---- */
 void func_00165cf8(f32 *pos, C03Mdl *o, C03Bits *b, f32 f) {
@@ -508,20 +504,20 @@ void func_00165cf8(f32 *pos, C03Mdl *o, C03Bits *b, f32 f) {
         else func_00162848(o->p16C[i].v10, &m, o->p154[D_00574F30[i] + 2][3]);
     }
     o->p16C[n].h0 = -1;
-    func_002675a8(o->vB0, o->vA0);
-    sceVu0CopyMatrix(o->m110, o->mD0);
+    PlatVu0CopyVector(o->vB0, o->vA0);
+    PlatVu0CopyMatrix(o->m110, o->mD0);
     o->p15C = o->p158;
     func_00121f30(o->p158, &o->p15C);
     func_00121e28((*o->p0)->n * 16, &o->p164);
-    for (i = 0; i < (*o->p0)->n; i++) func_002675a8(o->p164[i], o->p150[i][0]);
+    for (i = 0; i < (*o->p0)->n; i++) PlatVu0CopyVector(o->p164[i], o->p150[i][0]);
     func_00121e28((*o->p0)->n * 64, &o->p158);
     func_00164ba8(o, b);
     func_001655e0((f32 (*)[4])pos, o, f, b);
-    func_002675a8(o->vC0, o->vA0);
+    PlatVu0CopyVector(o->vC0, o->vA0);
     o->p160 = o->p158;
     func_00121f30(o->p158, &o->p160);
     func_00121e28((*o->p0)->n * 16, &o->p168);
-    for (i = 0; i < (*o->p0)->n; i++) func_002675a8(o->p168[i], o->p150[i][0]);
+    for (i = 0; i < (*o->p0)->n; i++) PlatVu0CopyVector(o->p168[i], o->p150[i][0]);
     func_001625c8(&o->mD0, &m);
     for (i = 0; o->p16C[i].h0 >= 0; i++) {
         if (o->p16C[i].h2 == 1) func_00162848(o->p16C[i].v20, &m, o->p154[o->p16C[i].h0 + 1][3]);
@@ -570,25 +566,25 @@ void func_00166248(f32 *pos, C03Mdl_66248 *o, C03Bits *b, f32 f) {
         func_00121f30(o->p168, &o->p164);
         o->p168 = 0;
     }
-    func_002675a8(o->vB0, o->vC0);
-    sceVu0CopyMatrix(o->m110, o->mD0);
+    PlatVu0CopyVector(o->vB0, o->vC0);
+    PlatVu0CopyMatrix(o->m110, o->mD0);
     n = 0;
     while (o->p16C[n].h0 >= 0) {
         u32 k = b->p14[o->p16C[n].h0].k;
         if (k == 0 || k != o->p16C[n].h2) {
             for (j = n; o->p16C[j].h0 >= 0; j++) o->p16C[j] = o->p16C[j + 1];
         } else {
-            func_002675a8(o->p16C[n].v10, o->p16C[n].v20);
+            PlatVu0CopyVector(o->p16C[n].v10, o->p16C[n].v20);
             n++;
         }
     }
     func_00164ba8(o, b);
     func_001655e0((f32 (*)[4])pos, o, f, b);
-    func_002675a8(o->vC0, o->vA0);
+    PlatVu0CopyVector(o->vC0, o->vA0);
     o->p160 = o->p158;
     func_00121f30(o->p158, &o->p160);
     func_00121e28((*o->p0)->n * 16, &o->p168);
-    for (i = 0; i < (*o->p0)->n; i++) func_002675a8(o->p168[i], o->p150[i][0]);
+    for (i = 0; i < (*o->p0)->n; i++) PlatVu0CopyVector(o->p168[i], o->p150[i][0]);
     func_001625c8(&o->mD0, &m);
     for (i = 0; o->p16C[i].h0 >= 0; i++) {
         if (o->p16C[i].h2 == 1) func_00162848(o->p16C[i].v20, &m, o->p154[o->p16C[i].h0 + 1][3]);
@@ -631,24 +627,17 @@ void func_001627d0(f32 *, f32 *, f32 *);
 void func_001628a0(G2Mtx, G2Mtx, f32 *);
 f32 func_00162c20(f32 *);
 void func_00162d00(f32 *, s32, G2Mtx, G2Mtx, f32 *, f32, f32, f32, f32);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_002674f0(f32 *, f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267e60(f32 *, f32 *, f32 *, f32);
-void func_00267e90(f32 *, f32 *, f32);
 static inline void inl_scl(G2Mtx d, G2Mtx s, f32 *v) {
-    func_00267e90(d[0], s[0], v[0]);
-    func_00267e90(d[1], s[1], v[1]);
-    func_00267e90(d[2], s[2], v[2]);
-    func_002675a8(d[3], s[3]);
+    PlatVu0ScaleVectorXYZ(d[0], s[0], v[0]);
+    PlatVu0ScaleVectorXYZ(d[1], s[1], v[1]);
+    PlatVu0ScaleVectorXYZ(d[2], s[2], v[2]);
+    PlatVu0CopyVector(d[3], s[3]);
 }
 extern G2Mtx D_00573F10_00166570[] __asm__("D_00573F10");
 #define D_00573F10 D_00573F10_00166570
 #define func_001625c8 ((void (*)(G2Mtx, G2Mtx)) func_001625c8)
 #define func_00162848 ((void (*)(f32 *, G2Mtx, f32 *)) func_00162848)
 #define func_00162c5c ((void (*)(G2Mtx, G2Mtx, G2Mtx)) func_00162c5c)
-#define sceVu0CopyMatrix ((void (*)(G2Mtx, G2Mtx)) sceVu0CopyMatrix)
-#define sceVu0UnitMatrix ((void (*)(G2Mtx)) sceVu0UnitMatrix)
 /* func_00166570: MATCHED (session 16, s16m1), hand/nostrict. From s7 w7's 21w draft: the three
  * work matrices are one local array mm[3] (same frame offsets 0/64/128), the bone-chain loop uses
  * mm[1]/mm[2] directly (s11w37's preheader), and a pointer mp = mm, set after `bones = ...`, is used
@@ -677,20 +666,20 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
     s32 fl;
 
     fl4 = (o->wC >> 4) & 1;
-    D_00574F20[0] = PlatSqrtf(func_00267390(pos[0], pos[0]));
-    D_00574F20[1] = PlatSqrtf(func_00267390(pos[1], pos[1]));
-    D_00574F20[2] = PlatSqrtf(func_00267390(pos[2], pos[2]));
-    sceVu0CopyMatrix(D_00573F10[0], pos);
+    D_00574F20[0] = PlatSqrtf(PlatVu0InnerProduct(pos[0], pos[0]));
+    D_00574F20[1] = PlatSqrtf(PlatVu0InnerProduct(pos[1], pos[1]));
+    D_00574F20[2] = PlatSqrtf(PlatVu0InnerProduct(pos[2], pos[2]));
+    PlatVu0CopyMatrix(D_00573F10[0], pos);
     D_00573F10[0][1][0] = -D_00573F10[0][1][0];
     D_00573F10[0][1][1] = -D_00573F10[0][1][1];
     D_00573F10[0][1][2] = -D_00573F10[0][1][2];
     D_00573F10[0][2][0] = -D_00573F10[0][2][0];
     D_00573F10[0][2][1] = -D_00573F10[0][2][1];
     D_00573F10[0][2][2] = -D_00573F10[0][2][2];
-    func_002674b0(D_00573F10[0][0], D_00573F10[0][0], D_00574F20[0]);
-    func_002674b0(D_00573F10[0][1], D_00573F10[0][1], D_00574F20[1]);
-    func_002674b0(D_00573F10[0][2], D_00573F10[0][2], D_00574F20[2]);
-    func_00267e60(o->vA0, o->vC0, o->vB0, f);
+    PlatVu0DivVector(D_00573F10[0][0], D_00573F10[0][0], D_00574F20[0]);
+    PlatVu0DivVector(D_00573F10[0][1], D_00573F10[0][1], D_00574F20[1]);
+    PlatVu0DivVector(D_00573F10[0][2], D_00573F10[0][2], D_00574F20[2]);
+    PlatVu0InterVectorXYZ(o->vA0, o->vC0, o->vB0, f);
     o->v90[0] = o->vA0[0] * D_00574F20[0] + D_00573F10[0][3][0];
     o->v90[1] = o->vA0[1] * D_00574F20[1] + D_00573F10[0][3][1];
     o->v90[2] = o->vA0[2] * D_00574F20[2] + D_00573F10[0][3][2];
@@ -708,7 +697,7 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
     bones = (*o->p0)->bones;
     mp = mm;
     for (i = 0; i < (*o->p0)->n; i++) {
-        func_002674f0(o->p150[i][0], o->p168[i], o->p164[i], f);
+        PlatVu0InterVector(o->p150[i][0], o->p168[i], o->p164[i], f);
         if (bones[i].b.par == 0x3FF) {
             o->p150[i][1][0] = o->p150[i][0][0];
             o->p150[i][1][1] = o->p150[i][0][1];
@@ -717,14 +706,14 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
             func_001627d0(o->p150[i][1], o->p150[bones[i].b.par][1], o->p150[i][0]);
         }
         if (lnk->h0 == i) {
-            func_00267e60(v, lnk->v20, lnk->v10, f);
+            PlatVu0InterVectorXYZ(v, lnk->v20, lnk->v10, f);
             v[3] = 1.0f;
             func_00162848(v, D_00573F10[0], v);
             o->p158[i][3][0] = o->p150[i][3][0];
             o->p158[i][3][1] = o->p150[i][3][1];
             o->p158[i][3][2] = o->p150[i][3][2];
-            func_00267e60(w, o->p160[i][1], o->p15C[i][1], f);
-            func_00267518(w, w, o->p150[i][3]);
+            PlatVu0InterVectorXYZ(w, o->p160[i][1], o->p15C[i][1], f);
+            PlatVu0AddVector(w, w, o->p150[i][3]);
             w[3] = 0.0f;
             switch (lnk->h2) {
             case 1:
@@ -740,11 +729,11 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
                 continue;
             case 2:
             case 3:
-                func_002675a8(e, o->p164[i + 1]);
-                func_002675a8(ff, o->p168[i + 1]);
+                PlatVu0CopyVector(e, o->p164[i + 1]);
+                PlatVu0CopyVector(ff, o->p168[i + 1]);
                 ff[3] = inl_wrap(ff[3] - e[3]);
                 e[3] = 0.0f;
-                func_002674f0(o->p150[i + 1][0], ff, e, f);
+                PlatVu0InterVector(o->p150[i + 1][0], ff, e, f);
                 o->p150[i + 1][0][3] = inl_wrap(o->p150[i + 1][0][3] + o->p164[i + 1][3]);
                 h = 0.0f;
                 func_001625c8(o->p154[bones[i].b.par], m100);
@@ -790,7 +779,7 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
                 func_00162848(o->p154[i][3], o->p154[bones[i].b.par], o->p150[i][3]);
                 o->p154[i][3][3] = 1.0f;
                 func_001628a0(o->p158[i], o->p154[i], o->p150[i][1]);
-                sceVu0UnitMatrix(mm[0]);
+                PlatVu0UnitMatrix(mm[0]);
                 mm[0][0][0] = 1.0f / o->p150[i][0][0];
                 mm[0][1][1] = 1.0f / o->p150[i][0][1];
                 mm[0][2][2] = 1.0f / o->p150[i][0][2];
@@ -807,22 +796,22 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
         }
         par = bones[i].b.par;
         if (bones[i].b.flag) {
-            sceVu0CopyMatrix(mm[1], o->p15C[i]);
-            sceVu0CopyMatrix(mm[2], o->p160[i]);
+            PlatVu0CopyMatrix(mm[1], o->p15C[i]);
+            PlatVu0CopyMatrix(mm[2], o->p160[i]);
             {
             while (par != 0x3FF && !bones[par].b.flag) {
                 func_00162c5c(mm[1], o->p15C[par], mm[1]);
                 func_00162c5c(mm[2], o->p160[par], mm[2]);
                 par = bones[par].b.par;
             } }
-            func_00267e60(mm[0][3], mm[2][3], mm[1][3], f);
-            func_00267e60(mm[0][0], mp[2][0], mp[1][0], f);
+            PlatVu0InterVectorXYZ(mm[0][3], mm[2][3], mm[1][3], f);
+            PlatVu0InterVectorXYZ(mm[0][0], mp[2][0], mp[1][0], f);
             func_00162c20(mm[0][0]);
-            func_00267e60(mm[0][1], mm[2][1], mm[1][1], f);
+            PlatVu0InterVectorXYZ(mm[0][1], mm[2][1], mm[1][1], f);
             func_00162c20(mm[0][1]);
-            func_00267370(mm[0][2], mm[0][0], mm[0][1]);
+            PlatVu0OuterProduct(mm[0][2], mm[0][0], mm[0][1]);
             func_00162c20(mm[0][2]);
-            func_00267370(mm[0][1], mm[0][2], mm[0][0]);
+            PlatVu0OuterProduct(mm[0][1], mm[0][2], mm[0][0]);
             func_00162c20(mm[0][1]);
             if (par == 0x3FF) {
                 func_00162c5c(o->p158[i], D_00573F10[0], mm[0]);
@@ -840,7 +829,7 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
     }
     if (fabsf(D_00574F20[0] - 1.0f) > 0.005f || fabsf(D_00574F20[1] - 1.0f) > 0.005f
         || fabsf(D_00574F20[2] - 1.0f) > 0.005f) {
-        sceVu0UnitMatrix(mm[1]);
+        PlatVu0UnitMatrix(mm[1]);
         mm[1][0][0] = D_00574F20[0];
         mm[1][1][1] = D_00574F20[1];
         mm[1][2][2] = D_00574F20[2];
@@ -856,6 +845,4 @@ void func_00166570(G2Mtx pos, G2Mdl *o, f32 f) {
 #undef func_001625c8
 #undef func_00162848
 #undef func_00162c5c
-#undef sceVu0CopyMatrix
-#undef sceVu0UnitMatrix
 

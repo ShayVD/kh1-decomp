@@ -5,6 +5,7 @@
  * "MENV" map environment in place), func_00161de8, func_00162218,
  * func_00162428.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -200,10 +201,7 @@ s32 D_0055BE00[48] ALIGNED(64);
 s32 D_0055BEC0[48][5] ALIGNED(64);
 void *D_0055C280[48][5] ALIGNED(64);
 u32 func_00121e28(u32, void *);
-f32 func_00267390(f32 *, f32 *);
-void func_002674d0(f32 *, f32 *, f32);
 void func_00162c5c(void *, void *, void *);
-void sceVu0CopyMatrix(M25, M25);
 #define VU_LOAD_MTX(m) \
     __asm__ volatile( \
         "lqc2 $vf13, 0(%0)\n" \
@@ -325,13 +323,13 @@ DObj25 *func_001606d0(Obj25 *o, M25 m, Prm25 *p, void *arg) {
                 M25 *s = (M25 *)((i << 6) + (u32)mtx);
                 VU_MUL_MTX((i << 7) + (u32)d->x10->x0, s);
                 p->x30(arg, (*s)[3], buf);
-                sceVu0CopyMatrix(mt, *s);
-                l0 = func_00267390(mt[0], mt[0]);
-                l1 = func_00267390(mt[1], mt[1]);
-                l2 = func_00267390(mt[2], mt[2]);
-                if (l0 > 1.0999999046325684f) func_002674d0(mt[0], mt[0], PlatSqrtf(l0));
-                if (l1 > 1.0999999046325684f) { l1 = PlatSqrtf(l1); func_002674d0(mt[1], mt[1], l1); }
-                if (l2 > 1.0999999046325684f) { l2 = PlatSqrtf(l2); func_002674d0(mt[2], mt[2], l2); }
+                PlatVu0CopyMatrix(mt, *s);
+                l0 = PlatVu0InnerProduct(mt[0], mt[0]);
+                l1 = PlatVu0InnerProduct(mt[1], mt[1]);
+                l2 = PlatVu0InnerProduct(mt[2], mt[2]);
+                if (l0 > 1.0999999046325684f) PlatVu0DivVectorXYZ(mt[0], mt[0], PlatSqrtf(l0));
+                if (l1 > 1.0999999046325684f) { l1 = PlatSqrtf(l1); PlatVu0DivVectorXYZ(mt[1], mt[1], l1); }
+                if (l2 > 1.0999999046325684f) { l2 = PlatSqrtf(l2); PlatVu0DivVectorXYZ(mt[2], mt[2], l2); }
                 func_00162c5c((u8 *)d->x10->x0 + i * 128 + 64, buf, mt);
             }
         }
@@ -683,21 +681,19 @@ void func_00161de8(void) {
 #undef func_0015f388
 
 /* func_00162218 (from hand/nostrict/text_00150000_h36.c). */
-void func_002675a8(void *, void *);
 typedef struct { u8 pad[0x2C]; u32 x2C; } Bone48;
 typedef struct { u8 pad[4]; Bone48 *bones; } SkelHdr;
 typedef struct { SkelHdr **skel; u8 pad4[0x14C]; f32 (*m150)[4][4]; f32 (*m154)[4][4]; } SkelObj;
 void func_00162848(f32 *, void *, f32 *);
-void func_00267e60(f32 *, f32 *, f32 *, f32);
 s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
     f32 v[4];
     s32 par = (*o->skel)->bones[idx].x2C & 0x3FF;
     if (par == 0x3FF && t == 1.0f) {
-        func_002675a8(out, o->m154[idx][3]);
+        PlatVu0CopyVector(out, o->m154[idx][3]);
         return -1;
     }
     func_00162848(v, o->m154[par], o->m150[idx][3]);
-    func_00267e60(out, v, o->m154[par][3], t);
+    PlatVu0InterVectorXYZ(out, v, o->m154[par][3], t);
     return ((*o->skel)->bones[par].x2C >> 30) & 1 ? -1 : 0;
 }
 

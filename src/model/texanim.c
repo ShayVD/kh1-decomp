@@ -3,6 +3,7 @@
  * small accessors.  The rest is in texanim.nostrict.c.  Read from the code, not proved by a boot. */
 #include "m2c.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
@@ -89,9 +90,8 @@ void func_001676b0(void *arg0, void *arg1) {
 }
 
 /* func_001676d8 (from auto/text_00160000_5.c). */
-M2C_UNK func_002675a8(s32, s32);
 void func_001676d8(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, arg0 + 0xC0);
+    PlatVu0CopyVector(arg1, arg0 + 0xC0);
 }
 
 /* func_001677e0 (from hand/text_00150000_h10.c). */
