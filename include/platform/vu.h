@@ -187,6 +187,48 @@ static __inline__ u32 PlatVu0SubFlags(const f32 *a, const f32 *b) {
     return f;
 }
 
+/* vclipw.xyz v, v.w: the six clip judgments (+x > |w| 1, -x < -|w| 2, then
+ * y 4 / 8 and z 0x10 / 0x20) */
+static __inline__ u32 PlatVu0ClipW(const f32 *v) {
+    f32 w = v[3] < 0.0f ? -v[3] : v[3];
+    u32 f = 0;
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (v[i] > w)
+            f |= 1 << (i * 2);
+        if (v[i] < -w)
+            f |= 2 << (i * 2);
+    }
+    return f;
+}
+
+/* The screen test src/ppp/ inlines after a projection: the sticky zero /
+ * sign status flags (0x40 / 0x80) of x, y, w - 1 and 4096 - x, 4096 - y
+ * (`ctc2 $0, $vi16`, two vsub into $vf0, `cfc2 $vi16` & 0xc0): 0 when
+ * 0 < x, y < 4096 and w > 1. */
+static __inline__ u32 PlatVu0ScreenFlags(const f32 *v) {
+    f32 t[5];
+    u32 f = 0;
+    int i;
+    t[0] = v[0];
+    t[1] = v[1];
+    t[2] = v[3] - 1.0f;
+    t[3] = 4096.0f - v[0];
+    t[4] = 4096.0f - v[1];
+    for (i = 0; i < 5; i++) {
+        if (t[i] == 0.0f)
+            f |= 0x40;
+        if (PlatVu0Bits(t[i]) & 0x80000000)
+            f |= 0x80;
+    }
+    return f;
+}
+
+/* VU0 microprogram P21 (`vcallms 0`, docs/renderer-spec.md): the rotation
+ * rows of Rx * Ry * Rz (row-vector product) for the angles rot[0..2] in
+ * radians (host/port/vu0.c). */
+void PlatVu0RotRows(f32 (*out)[4], const f32 *rot);
+
 /* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
 static __inline__ s32 PlatVu0Ftoi0(f32 x) {
     if (x >= 2147483648.0f)
