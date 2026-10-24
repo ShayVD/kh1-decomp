@@ -6,6 +6,7 @@
  * models of D_00304BE8->x48e, one turning), func_00209e18 / func_0020a518 /
  * func_0020a758 animate and draw them, func_0020a1d8 frees them. */
 #include "common.h"
+#include "platform/vu.h"
 #include "menu/partymdl.h"
 #include "data/types/text_00200000_h70.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -47,10 +48,6 @@ void func_001655e0(void *, void *, s32, f32);
 s32 func_00167698(s32);
 void func_00167ac0(void *, s32, s32);
 void func_00167d70(void *, f32);
-void func_00267578(Mtx *, Mtx *, void *);
-void func_002678b8(Mtx *, void *, Vec4 *);
-void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
-void sceVu0MulMatrix(void *, void *, void *);
 
 #define K84 0.83999986946582794189453125f
 
@@ -98,17 +95,17 @@ void func_00209f70(void) {
     func_00209d48();
     t = D_003F31D0[D_003F3870 - 1];
     for (i = 0; i < D_003F3870; i++) {
-        func_00267b08(&D_00640E40[i], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
+        PlatVu0ViewScreenMatrix(&D_00640E40[i], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
     }
     t = D_003F31D0[3];
     c = D_003F3050;
     f = &c->x38;
     for (i = 0; i < 4; i++) {
-        func_00267b08(&D_00640E40[i + 4], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
+        PlatVu0ViewScreenMatrix(&D_00640E40[i + 4], 512.0f, 0.7999999523162842f, K84, t[i], 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
         f[i * 16 - 1] = D_003F3150[D_00304BE8->x48e[i]];
         f[i * 16] = D_003F3178[D_00304BE8->x48e[i]];
     }
-    func_00267b08(&D_00640E40[8], 512.0f, 0.7999999523162842f, K84, 2048.0f, 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
+    PlatVu0ViewScreenMatrix(&D_00640E40[8], 512.0f, 0.7999999523162842f, K84, 2048.0f, 1920.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
 }
 
 void func_0020a1d8(void) {
@@ -172,7 +169,7 @@ void func_0020a248(s32 idx) {
             if (D_002BC128 == 9 || (D_002BC128 == 16 && D_002BC130 == 21)) fl = 1;
         }
         for (i = 0; i < e->x74; i++) {
-            sceVu0MulMatrix(e->xc0 + i * 4, &e->x80, m + i);
+            PlatVu0MulMatrix(e->xc0 + i * 4, &e->x80, m + i);
             if (fl) {
                 for (j = 0; j < 3; j++) {
                     for (k = 0; k < 3; k++) {
@@ -247,11 +244,11 @@ void func_0020a758(PartyView *p, s32 n, s32 u2, s32 u3) {
     v.y = (f32)((s32)p->x24 % 256) * 0.00390625f * 6.2831855f - 3.1415928f;
     v.z = -1.57079613208770751953125f;
     v.w = 1.0f;
-    func_002678b8(&m, D_00425CE0, &v);
-    func_00267578(&m, &m, D_003F31E0);
+    PlatVu0RotMatrix(&m, D_00425CE0, &v);
+    PlatVu0TransMatrix(&m, &m, D_003F31E0);
     b = func_001623e0(e->x14) + e->x78;
     for (i = 0; i < e->x74; i++) {
-        sceVu0MulMatrix(b + i, &m, e->xc0 + i * 4);
+        PlatVu0MulMatrix(b + i, &m, e->xc0 + i * 4);
     }
     e->x30 = 0xea61;
     e->u34.w = (p->x90 << 24) | 0x606060;

@@ -10,6 +10,7 @@
  * journal.c, loads six files and counts six sections); not proved by a
  * boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/dma.h"
 #include "data/bss_0064.h"
@@ -92,11 +93,6 @@ void func_00167d70(s32, f32);
 void func_00176310(void *);
 s32 func_001efcb0(s32, s32);
 void func_00236a58(void);
-void func_00267578(void *, void *, void *);
-void func_002675a8(s32, void *);
-void func_002678b8(void *, void *, void *);
-void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
-void sceVu0MulMatrix(void *, void *, void *);
 void func_0021b250(s32);
 void func_0021b418(void);
 void func_0021b470(void);
@@ -127,7 +123,7 @@ loop_1:
 
 void func_0021ae28(void) {
     D_00425F70 = &D_00425D80;
-    func_00267b08(D_00425D80.m40, 512.0f, 0.7999999523162842f, 0.839999854564666748046875f, 2048.0f, 2048.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
+    PlatVu0ViewScreenMatrix(D_00425D80.m40, 512.0f, 0.7999999523162842f, 0.839999854564666748046875f, 2048.0f, 2048.0f, 65792.0f, 16777000.0f, 1.0f, 5000.0f);
     D_00425F70->px = 0.0f;
     D_00425F70->py = -170.0f;
     D_00425F70->pz = -400.0f;
@@ -161,15 +157,15 @@ void func_0021af38(JObj *a) {
         D_00425F70->v1b0[3] = (f32)a->x90 * 0.0078125f;
         D_00425F70->v1b0[1] = 1.0f;
         D_00425F70->v1b0[2] = 1.0f;
-        func_002675a8(D_00643020.xc8->xc, D_00425F70->v1b0);
+        PlatVu0CopyVector(D_00643020.xc8->xc, D_00425F70->v1b0);
     }
     r = func_001301d8(D_00643020.x18, 0, 0, 0);
     func_00236a58();
-    func_002678b8(m, D_00425CE0, D_003F59A0);
+    PlatVu0RotMatrix(m, D_00425CE0, D_003F59A0);
     func_00131cc8(D_006430F8, m2);
-    sceVu0MulMatrix(m, m, m2);
-    func_00267578(m, m, D_003F5990);
-    sceVu0MulMatrix(m, D_00425F70->m80, m);
+    PlatVu0MulMatrix(m, m, m2);
+    PlatVu0TransMatrix(m, m, D_003F5990);
+    PlatVu0MulMatrix(m, D_00425F70->m80, m);
     func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
     D_00643020.x70 += D_002BBDFC;
     func_00167d70(D_00643020.x14, D_002BBDFC);
@@ -180,11 +176,11 @@ void func_0021af38(JObj *a) {
     v[0] = 0;
     v[1] = 0;
     v[2] = 0;
-    func_00267578(m, D_00425CE0, v);
-    sceVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
+    PlatVu0TransMatrix(m, D_00425CE0, v);
+    PlatVu0MulMatrix(D_00425F70->m100, m, D_00425F70->m40);
     (*(void **)&D_002BC144) = D_00425F70->m40;
     (*(void **)&D_002BC140) = D_00425F70->m80;
-    sceVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
+    PlatVu0MulMatrix(D_00425F70->m100, D_00425F70->m40, D_00425F70->m80);
     func_00161de8(D_00643020.x14, D_00425F70->m100, &D_00643020.x28, 0);
 }
 
@@ -276,7 +272,7 @@ void func_0021b250(s32 a) {
         c->v1a0[2] = D_003F59B0;
         D_00643020.xc8 = p;
 
-        func_002675a8(p->x8, c->v1a0);
+        PlatVu0CopyVector(p->x8, c->v1a0);
     } else {
         D_00643020.xc8 = 0;
     }

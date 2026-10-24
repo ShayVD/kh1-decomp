@@ -12,6 +12,7 @@
  * angles (z, x, y and x, y, z order); func_00236de8 is a scale matrix.
  * No C caller of the last four in the main ELF (overlays, most likely). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_00425CE0.h"
 #include "data/pieces/D_00425F70.h"
@@ -21,14 +22,6 @@ typedef f32 VEC[4] __attribute__((aligned(16)));
 
 f32 atan2f(f32, f32);
 void func_00236d48(void *, void *, void *);
-void sceVu0ApplyMatrix(void *, void *, void *);
-void sceVu0Normalize(void *, void *);
-void sceVu0RotMatrixZ(void *, void *, f32);
-void sceVu0RotMatrixX(void *, void *, f32);
-void sceVu0RotMatrixY(void *, void *, f32);
-void sceVu0CameraMatrix(void *, void *, void *, void *);
-void sceVu0UnitMatrix(void *);
-void sceVu0MulMatrix(void *, void *, void *);
 
 #define C D_00425F70
 void func_00236a58(void) {
@@ -50,7 +43,7 @@ void func_00236a58(void) {
         v[1] = 0;
         v[2] = C->dist;
         v[3] = 1.0f;
-        sceVu0ApplyMatrix(v, m, v);
+        PlatVu0ApplyMatrix(v, m, v);
         C->px = C->tx + v[0];
         dx = C->tx - C->px;
         C->py = C->ty + v[1];
@@ -58,19 +51,19 @@ void func_00236a58(void) {
         C->pz = C->tz + v[2];
         dz = C->tz - C->pz;
     }
-    sceVu0RotMatrixX(m, D_00425CE0, C->rx);
-    sceVu0RotMatrixY(m, m, C->ry);
-    sceVu0ApplyMatrix(a, m, C->v160);
-    sceVu0ApplyMatrix(b, m, C->v170);
-    sceVu0CameraMatrix(C->m80, &C->px, a, b);
-    sceVu0UnitMatrix(C->mc0);
+    PlatVu0RotMatrixX(m, D_00425CE0, C->rx);
+    PlatVu0RotMatrixY(m, m, C->ry);
+    PlatVu0ApplyMatrix(a, m, C->v160);
+    PlatVu0ApplyMatrix(b, m, C->v170);
+    PlatVu0CameraMatrix(C->m80, &C->px, a, b);
+    PlatVu0UnitMatrix(C->mc0);
     func_00236d48(C->mc0, C->mc0, &C->rx);
-    sceVu0MulMatrix(C->m0, C->m40, C->m80);
+    PlatVu0MulMatrix(C->m0, C->m40, C->m80);
     C->v190[0] = dx;
     C->v190[1] = dy;
     C->v190[2] = dz;
     C->v190[3] = 1.0f;
-    sceVu0Normalize(C->v190, C->v190);
+    PlatVu0Normalize(C->v190, C->v190);
 }
 #undef C
 
@@ -79,29 +72,29 @@ void func_00236c68(void *out, f32 *pos, f32 *z, f32 *y, f32 *rot) {
     VEC rz;
     VEC ry;
     VEC rp;
-    sceVu0RotMatrixX(m, D_00425CE0, rot[0]);
-    sceVu0RotMatrixY(m, m, rot[1]);
-    sceVu0RotMatrixZ(m, m, rot[2]);
-    sceVu0ApplyMatrix(rz, m, z);
-    sceVu0ApplyMatrix(ry, m, y);
-    sceVu0ApplyMatrix(rp, m, pos);
-    sceVu0CameraMatrix(out, rp, rz, ry);
+    PlatVu0RotMatrixX(m, D_00425CE0, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0RotMatrixZ(m, m, rot[2]);
+    PlatVu0ApplyMatrix(rz, m, z);
+    PlatVu0ApplyMatrix(ry, m, y);
+    PlatVu0ApplyMatrix(rp, m, pos);
+    PlatVu0CameraMatrix(out, rp, rz, ry);
 }
 
 void func_00236d48(void *out, void *in, void *rot) {
-    sceVu0RotMatrixZ(out, in, ((f32 *)rot)[2]);
-    sceVu0RotMatrixX(out, out, ((f32 *)rot)[0]);
-    sceVu0RotMatrixY(out, out, ((f32 *)rot)[1]);
+    PlatVu0RotMatrixZ(out, in, ((f32 *)rot)[2]);
+    PlatVu0RotMatrixX(out, out, ((f32 *)rot)[0]);
+    PlatVu0RotMatrixY(out, out, ((f32 *)rot)[1]);
 }
 
 void func_00236d98(void *out, void *in, f32 *rot) {
-    sceVu0RotMatrixX(out, in, rot[0]);
-    sceVu0RotMatrixY(out, out, rot[1]);
-    sceVu0RotMatrixZ(out, out, rot[2]);
+    PlatVu0RotMatrixX(out, in, rot[0]);
+    PlatVu0RotMatrixY(out, out, rot[1]);
+    PlatVu0RotMatrixZ(out, out, rot[2]);
 }
 
 void func_00236de8(f32 (*m)[4], f32 s) {
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m[0][0] *= s;
     m[1][1] *= s;
     m[2][2] *= s;
