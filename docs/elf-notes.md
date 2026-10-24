@@ -36,6 +36,11 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
   the hand asm at 0x0024e0a4 has no assert names: the movie names, a
   parameter-list reader, the name-entry screen and the HDD install
   (docs/modules.md "Session 47").
+- No assert names below 0x001c08e8 so far.  0x001b9b30-0x001bb438 is told by
+  its strings and the save block: "GUMI" (the signature of save block 4),
+  "Run Gumi Edit" / "gb.x" and "Run WorldMap" / "wm.x" (D_0048FFF0 ...
+  D_00490018, the two overlays), "already max task!" (D_00490300, the task
+  slots at 0x001bfc90); docs/modules.md "Session 48".
 
 ## Segments (kh1.toml `[[segment]]`)
 
