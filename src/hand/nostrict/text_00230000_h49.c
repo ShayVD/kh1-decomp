@@ -161,101 +161,14 @@ void func_00241c60(s32 b, s32 i) {
         e->unkA30 = 0;
     }
 }
-Pkt D_0065FCA0 ALIGNED(32);
-QW *D_0065FC90 ALIGNED(16);
-
-void func_00244968(s32 a0, s32 a1, s32 x, s32 y) {
-    s32 i;
-    s32 *p;
-    s32 dx, dy;
-    func_0024aa48(a0, &D_0065FCA0, a1);
-    dx = x * 16;
-    dy = y * 16;
-    p = &D_0065FCA0.p[0].y;
-    for (i = 0; i < 4; i++) {
-        p[-1] += dx;
-        *p += dy;
-        p += 4;
-    }
-    D_0065FC90 = (QW *)func_002388b8(&D_0065FCA0, 1, (s32)D_0065FC90);
-}
-typedef struct { u8 b[0xC0]; } Spr0C0;
 #include "data/types/nostrict_text_00230000_h49.h"
-extern Hud D_00662540;
-extern Spr0C0 D_0065FD80[5][10]; /* src/data/bss_0065.c: Obj D_0065FD80[5][10] */
-extern Spr0C0 D_00662300[]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
-void func_0024ae90(Spr0C0 *);
-
-void func_00244a10(s32 a0, s32 a1) {
-    s32 i, j;
-    Hud *h = &D_00662540;
-    if (h->unk0 == 0) {
-        h->unk4 = a1;
-        h->unk0 = 1;
-        h->unk14 = a0;
-        for (i = 0; i < 5; i++) {
-            for (j = 0; j < 10; j++) func_0024ae90(&D_0065FD80[i][j]);
-        }
-        for (i = 0; i < 3; i++) func_0024ae90(&D_00662300[i]);
-    } else {
-        h->unk4 += a1;
-    }
-    h->unk8 = 0;
-}
-#include "data/pieces/D_004267F0.h"
-#include "data/pieces/D_00426820.h"
-s32 func_00244b10(s32, s32 *);
-void func_00244be0(s32 a0, s32 y, s32 z) {
-    s32 buf[5];
-    s32 n, k, cy;
-    n = func_00244b10(a0, buf);
-    cy = y;
-    for (k = 0; k < n; k++) {
-        func_00244968((s32)&D_0065FD80[k][buf[5 - n + k]], (s32)D_00426820, cy, z);
-        cy += 13;
-    }
-    cy += 2;
-    func_00244968((s32)&D_00662300[0], (s32)D_004267F0, cy, z);
-    func_00244968((s32)(a0 < 2 ? &D_00662300[1] : &D_00662300[2]), (s32)D_004267F0, cy, z);
-}
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[8]; u64 unk70; u8 pad78[0xE0 - 0x78]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q70;
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
-Q70 D_0065FB30 ALIGNED(16);
-QW *D_0065FC94 ALIGNED(4);
 void func_002370c8(void *);
-void func_00244960(void);
-void func_00244f28(void);
-
-s32 func_00245090(void) {
-    func_002370c8(&D_0065FB30);
-    D_0065FB30.unkE0 = 5;
-    D_0065FB30.unk60 = 0x30003;
-    D_0065FB30.unk70 = 0x8000000048ULL;
-    func_00237018(&D_0065FB30, 0x16, 1);
-    func_00244960();
-    D_0065FC94 = D_00351E10;
-    D_0065FC90 = D_00351E10 + 1;
-    func_00244f28();
-    func_00237018(D_0065FC94, D_0065FC90 - D_0065FC94, 1);
-    return 0;
-}
-extern u8 D_00459D40[];
-extern u8 D_0045B770[];
-extern u8 D_0045B780[];
 void *memset(void *, s32, u32);
 void func_0024aac8(void *);
-void func_0024af40(void *, void *, void *);
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
-
-void func_00245148(void) {
-    s32 i;
-    memset(&D_00662540, 0, 0x18);
-    func_0024aac8(D_00459D40);
-    func_0024af40(D_0045B770, D_00662300, D_00459D40);
-    for (i = 0; i < 5; i++) func_0024af40(D_0045B780, D_0065FD80[i], D_00459D40);
-    if (func_0011ef38(func_00245090) == 0) func_0011ef10(0x28489, func_00245090);
-}
 Pkt D_006626D0 ALIGNED(16);
 QW *D_006626C0 ALIGNED(16);
 

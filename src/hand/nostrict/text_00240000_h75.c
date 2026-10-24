@@ -478,56 +478,6 @@ void func_00248400(void) {
 
 /* needs make: uses rodata */
 
-typedef struct { u32 unk0; s32 unk4; s32 unk8; u8 padC[8]; void *unk14; } St;
-extern St D_00662540; /* src/data/bss_0066.c: Hud D_00662540 */
-extern u8 D_00662300[];
-s32 func_001ef7a0(void);
-s32 func_00122ff8(void *);
-s32 func_001375d8(void *);
-void func_00244b00(void);
-void func_00244be0(s32, s32, s32);
-s32 func_0024a1c0(void *);
-void func_00244d00(s32, s32);
-
-void func_00244f28(void) {
-    St *s = &D_00662540;
-    s32 b = 0;
-    s32 a = 0;
-    switch (s->unk0) {
-    case 0:
-        return;
-    case 1:
-        s->unk0++;
-        a = 1;
-        break;
-    case 3:
-        if (++s->unk8 < 61) break;
-    case 2:
-        s->unk0++;
-        break;
-    case 4:
-        s->unk0++;
-        b = 1;
-        s->unk4 = func_001ef7a0();
-        break;
-    case 5:
-        if (func_0024a1c0(D_00662300) & 4) s->unk0++;
-        break;
-    case 6:
-        s->unk0 = 0;
-        break;
-    }
-    if (s->unk14 == NULL) return;
-    if (func_00122ff8(s->unk14) == 0) return;
-    if (func_001375d8(s->unk14)) {
-        func_00244b00();
-        return;
-    }
-    func_00244d00(a, b);
-    if (s->unk4 > 99999) s->unk4 = 99999;
-    func_00244be0(s->unk4, 25, 238);
-}
-
 typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; s32 unk2C; u8 pad30[0x14]; s32 unk44; s32 unk48; s32 unk4C; s32 unk50; } Clk;
 #include "data/pieces/D_00467408.h"
 s32 sprintf(char *, const char *, ...);

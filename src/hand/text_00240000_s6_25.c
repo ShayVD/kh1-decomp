@@ -47,51 +47,6 @@ extern s32 D_00656420;
 
 /* 244d00 */
 #include "data/types/text_00240000_s6_25.h"
-extern Obj D_0065FD80[5][10];
-extern Obj D_00662300[3]; /* src/data/bss_0066.c: u8 D_00662300[0x240] */
-void func_0024a568(Obj *);
-void func_0024a678(Obj *);
-void func_0024a0c0(Obj *);
-void func_0024a088(Obj *);
-void func_0024a2e0(Obj *);
-void func_0024a450(Obj *);
-void func_0024af00(Obj *);
-void func_00244d00(s32 a, s32 b) {
-    s32 i, j; Obj *o;
-    if (a) {
-        for (i = 0; i < 5; i++) {
-            for (j = 0; j < 10; j++) {
-                func_0024a568(&D_0065FD80[i][j]);
-                func_0024a678(&D_0065FD80[i][j]);
-            }
-        }
-        o = D_00662300;
-        for (i = 0; i < 3; i++, o++) {
-            func_0024a568(o);
-            func_0024a678(o);
-        }
-    }
-    if (b) {
-        for (i = 0; i < 5; i++) {
-            for (j = 0; j < 10; j++) {
-                Obj *o = &D_0065FD80[i][j];
-                if (o->fl & 2) { func_0024a0c0(o); func_0024a088(o); }
-                if (o->fl & 0x40) { func_0024a2e0(o); func_0024a450(o); }
-            }
-        }
-        o = D_00662300;
-        for (i = 0; i < 3; i++, o++) {
-            if (o->fl & 2) { func_0024a0c0(o); func_0024a088(o); }
-            if (o->fl & 0x40) { func_0024a2e0(o); func_0024a450(o); }
-        }
-    }
-    for (i = 0; i < 5; i++)
-        for (j = 0; j < 10; j++)
-            func_0024af00(&D_0065FD80[i][j]);
-    o = D_00662300;
-    for (i = 0; i < 3; i++, o++)
-        func_0024af00(o);
-}
 
 /* 249a48 */
 typedef struct {
