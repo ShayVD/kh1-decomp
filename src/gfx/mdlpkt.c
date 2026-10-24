@@ -5,6 +5,7 @@
  * uploads (func_001090e8, func_00109180). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/pieces/D_002A624C.h"
@@ -260,7 +261,6 @@ s32 func_00108d90(void *arg) {
 extern M2C_UNK D_002AD460;
 extern M2C_UNK D_002BC190;
 void *func_0015ed80(s32, M2C_UNK *);
-void func_00267548(void *, M2C_UNK *, s32);
 #define func_00108cd0 ((M2C_UNK (*)(void *, void *)) func_00108cd0)
 #define func_00108b60 ((void (*)(s32, void *)) func_00108b60)
 #define func_00108c58 ((void (*)(s32, void *)) func_00108c58)
@@ -269,7 +269,7 @@ void func_00108df8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
   s32 temp_s0;
   s32 temp_s1;
   temp_s0 = arg0 * 0xD0;
-  func_00267548(sp, &D_002BC190, arg4);
+  PlatVu0MulVector(sp, &D_002BC190, arg4);
   func_00108b60(arg3, temp_s0 + ((s8 *) (&D_002A6C60)));
   temp_s1 = arg0 * 0x90;
   func_00108c58(arg2, ((D_00351BD0 * 0x2400) + temp_s1) + ((s8 *) (&D_002AD460)));

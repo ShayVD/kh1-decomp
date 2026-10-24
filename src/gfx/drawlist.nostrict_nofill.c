@@ -15,6 +15,7 @@
  * the main ELF (overlays, most likely); func_00237a48 is the HUD's and the
  * sprites' projection.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -34,12 +35,6 @@ typedef struct { u64 a, b; } U64x2;
 typedef struct { u128 tag; V4 v[3]; V4 nrm[3]; U64x2 col; V4 uv[3]; } ObjC;
 typedef struct Nd { struct Nd *next; s32 type; u8 pad8[8]; u128 v[3]; u128 n[3]; u64 t0, t1; u128 c[3]; } Nd;
 
-void sceVu0ApplyMatrix(V4 *, void *, V4 *);
-void sceVu0DivVectorXYZ(V4 *, V4 *, f32);
-void sceVu0ScaleVector(V4 *, void *, f32);
-void sceVu0FTOI0Vector(V4 *, void *);
-void sceVu0RotTransPersN(void *, void *, u128 *, s32, s32);
-s32 sceVu0ClipScreen3(V4 *, V4 *, V4 *);
 /* Two parameters (drawlist.nostrict.c), but func_00237f20 passes a third 0. */
 u128 *func_00237ec0(u128 *src, u128 *dst, s32);
 
@@ -53,13 +48,13 @@ CONTEXT_ONLY void func_00237680(DrawList *h, DrawNode *node, s32 idx) {
 
 s32 func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
     V4 v[3];
-    sceVu0ApplyMatrix(&v[0], m, a);
-    sceVu0ApplyMatrix(&v[1], m, b);
-    sceVu0ApplyMatrix(&v[2], m, c);
-    sceVu0DivVectorXYZ(&v[0], &v[0], v[0].w);
-    sceVu0DivVectorXYZ(&v[1], &v[1], v[1].w);
-    sceVu0DivVectorXYZ(&v[2], &v[2], v[2].w);
-    return sceVu0ClipScreen3(&v[0], &v[1], &v[2]);
+    PlatVu0ApplyMatrix(&v[0], m, a);
+    PlatVu0ApplyMatrix(&v[1], m, b);
+    PlatVu0ApplyMatrix(&v[2], m, c);
+    PlatVu0DivVectorXYZ(&v[0], &v[0], v[0].w);
+    PlatVu0DivVectorXYZ(&v[1], &v[1], v[1].w);
+    PlatVu0DivVectorXYZ(&v[2], &v[2], v[2].w);
+    return PlatVu0ClipScreen3(&v[0], &v[1], &v[2]);
 }
 
 /* An else-if chain in the order 2, 3, 1 with the last arm through a block-local
@@ -80,7 +75,7 @@ s32 func_002376c8(DrawList *h, Node *n, void *m) {
         p = t;
     }
     s = 1 << h->bits;
-    sceVu0ApplyMatrix(&v, m, p);
+    PlatVu0ApplyMatrix(&v, m, p);
     r = s - v.w / 3000.0f * s;
     func_00237680(h, (DrawNode *)n, r);
     return r;
@@ -90,18 +85,18 @@ u128 *func_00237790(Item *src, u128 *dst, void *m) {
     u128 out[2];
     V4 a, b;
     u128 *h;
-    sceVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
-    sceVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
-    sceVu0DivVectorXYZ(&a, &a, a.w);
-    sceVu0DivVectorXYZ(&b, &b, b.w);
-    if (sceVu0ClipScreen3(&a, &b, &b)) {
+    PlatVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
+    PlatVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
+    PlatVu0DivVectorXYZ(&a, &a, a.w);
+    PlatVu0DivVectorXYZ(&b, &b, b.w);
+    if (PlatVu0ClipScreen3(&a, &b, &b)) {
         return dst;
     }
     h = dst + 1;
     *h = 0;
     ((u64 *)h)[0] = 0x4004C00000008001;
     ((u64 *)h)[1] = 0x5151;
-    sceVu0RotTransPersN(out, m, &src->q[1], 2, 1);
+    PlatVu0RotTransPersN(out, m, &src->q[1], 2, 1);
     dst[2] = src->q[3];
     dst[3] = out[0];
     dst[4] = src->q[4];
@@ -115,20 +110,20 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
     Q4 out[3];
     V4 a, b, c;
     u128 *h;
-    sceVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
-    sceVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
-    sceVu0ApplyMatrix(&c, m, (V4 *)&src->q[3]);
-    sceVu0DivVectorXYZ(&a, &a, a.w);
-    sceVu0DivVectorXYZ(&b, &b, b.w);
-    sceVu0DivVectorXYZ(&c, &c, c.w);
-    if (sceVu0ClipScreen3(&a, &b, &c)) {
+    PlatVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
+    PlatVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
+    PlatVu0ApplyMatrix(&c, m, (V4 *)&src->q[3]);
+    PlatVu0DivVectorXYZ(&a, &a, a.w);
+    PlatVu0DivVectorXYZ(&b, &b, b.w);
+    PlatVu0DivVectorXYZ(&c, &c, c.w);
+    if (PlatVu0ClipScreen3(&a, &b, &c)) {
         return dst;
     }
     h = dst + 1;
     *h = 0;
     ((u64 *)h)[0] = 0x6025C00000008001;
     ((u64 *)h)[1] = 0x414141;
-    sceVu0RotTransPersN(out, m, &src->q[1], 3, 0);
+    PlatVu0RotTransPersN(out, m, &src->q[1], 3, 0);
     out[0].i[3] = 0;
     dst[2] = src->q[4];
     out[1].i[3] = 0;
@@ -146,7 +141,7 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
 f32 func_00237a48(I4 *out, void *m, V4 *in, s32 raw) {
     V4 v;
     f32 r;
-    sceVu0ApplyMatrix(&v, m, in);
+    PlatVu0ApplyMatrix(&v, m, in);
     r = 1.0f / v.w;
     v.x *= r;
     v.y *= r;
@@ -200,8 +195,8 @@ u128 *func_00237b30(ObjB *o, u128 *dst, void *m) {
         pi = iv;
         pf = f;
         for (i = 0; i < 3; i++) {
-            sceVu0ScaleVector(&t1, pu, *pf);
-            sceVu0FTOI0Vector(&t2, pn);
+            PlatVu0ScaleVector(&t1, pu, *pf);
+            PlatVu0FTOI0Vector(&t2, pn);
             pf++; pu++;
             dst[k++] = *(u128 *)&t1;
             dst[k++] = *(u128 *)&t2;
@@ -237,8 +232,8 @@ u128 *func_00237d48(ObjC *o, u128 *dst, void *m) {
     i = 2;
     d = dst + 3;
     for (; i >= 0; i--) {
-        sceVu0ScaleVector(p1, pu++, func_00237a48(&iv, m, pv++, 1));
-        sceVu0FTOI0Vector(p2, pn); pn++;
+        PlatVu0ScaleVector(p1, pu++, func_00237a48(&iv, m, pv++, 1));
+        PlatVu0FTOI0Vector(p2, pn); pn++;
         *d++ = *(u128 *)&t1;
         *d++ = *(u128 *)&t2;
         *d++ = *(u128 *)&iv;
@@ -346,8 +341,8 @@ void func_00238258(DrawList *h, s32 a1, u128 *dst, s32 a3, void *m) {
                     d = o + 1;
                     ((u64 *)o)[1] = p->t1;
                     for (j = 0; j < 3; j++) {
-                        sceVu0ScaleVector((V4 *)&t1, pc, func_00237a48((I4 *)&t0, m, (V4 *)pv, 1));
-                        sceVu0FTOI0Vector((V4 *)&t2, pn);
+                        PlatVu0ScaleVector((V4 *)&t1, pc, func_00237a48((I4 *)&t0, m, (V4 *)pv, 1));
+                        PlatVu0FTOI0Vector((V4 *)&t2, pn);
                         pv++; pc++; pn++;
                         { u128 x = t1, y = t2, z;
                         *d++ = x;

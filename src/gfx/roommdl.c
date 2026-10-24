@@ -6,6 +6,7 @@
  * uses. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004D.h"
@@ -112,8 +113,6 @@ typedef struct { u8 pad[0x18]; s32 ofs; } Hdr;
 Obj110 *D_004D9368 ALIGNED(8);
 extern u8 D_002BD140[];
 Obj110 *func_00122048(s32, s32);
-void func_002672f8(f32 *, s32, u8 *);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 s32 func_0024edf0(f32 (*)[4], f32 (*)[4]);
 void func_00106bd8(void *, s32);
 void func_00108df8(s32, s32, s32, u8 *, s32);
@@ -126,15 +125,15 @@ s32 func_00114a38(s32 a, Hdr *h, s32 id, s32 d) {
     o->hdr = &h->ofs;
     o->data = (u8 *)h + h->ofs;
     r = 0;
-    func_002672f8(o->v[0], a, o->data);
-    func_002672f8(D_004D9368->v[1], a, D_004D9368->data + 16);
-    func_002672f8(D_004D9368->v[2], a, D_004D9368->data + 32);
-    func_002672f8(D_004D9368->v[3], a, D_004D9368->data + 48);
-    func_002672f8(D_004D9368->v[4], a, D_004D9368->data + 64);
-    func_002672f8(D_004D9368->v[5], a, D_004D9368->data + 80);
-    func_002672f8(D_004D9368->v[6], a, D_004D9368->data + 96);
-    func_002672f8(D_004D9368->v[7], a, D_004D9368->data + 112);
-    sceVu0MulMatrix(D_004D9368->m, D_002BBFA0, (*(f32 (*)[4][4])&D_0029B280));
+    PlatVu0ApplyMatrix(o->v[0], a, o->data);
+    PlatVu0ApplyMatrix(D_004D9368->v[1], a, D_004D9368->data + 16);
+    PlatVu0ApplyMatrix(D_004D9368->v[2], a, D_004D9368->data + 32);
+    PlatVu0ApplyMatrix(D_004D9368->v[3], a, D_004D9368->data + 48);
+    PlatVu0ApplyMatrix(D_004D9368->v[4], a, D_004D9368->data + 64);
+    PlatVu0ApplyMatrix(D_004D9368->v[5], a, D_004D9368->data + 80);
+    PlatVu0ApplyMatrix(D_004D9368->v[6], a, D_004D9368->data + 96);
+    PlatVu0ApplyMatrix(D_004D9368->v[7], a, D_004D9368->data + 112);
+    PlatVu0MulMatrix(D_004D9368->m, D_002BBFA0, (*(f32 (*)[4][4])&D_0029B280));
     if (func_0024edf0(D_004D9368->m, (f32 (*)[4])D_004D9368->v) == 0) {
         if (id == 40000) func_00106bd8(D_002BD140, 40000);
         func_00108df8(D_004D936C++, id, a, D_004D9368->data, d);

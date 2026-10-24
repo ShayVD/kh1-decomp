@@ -10,6 +10,7 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002C5C80.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/dma.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
@@ -46,12 +47,11 @@ s32 func_00127500(s32 arg0) {
 
 /* func_00127b18 (from hand/text_00120000_h5.c). */
 extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
-extern void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 extern void func_001149e8(f32 (*)[4], s32, s32, void *);
 typedef struct SD0 { u8 pad[0xd0]; f32 m[4][4]; u8 pad110[0x44]; s32 f154; } SD0;
 void func_00127b18(SD0 *a, f32 (*b)[4], s32 c) {
     f32 m[4][4] __attribute__((aligned(16)));
-    sceVu0MulMatrix(m, b, a->m);
+    PlatVu0MulMatrix(m, b, a->m);
     D_002E27F0.f[3] = c;
     func_001149e8(m, a->f154, D_004F82C4 + D_004F82C0++, &D_002E27F0);
 }
@@ -59,12 +59,11 @@ void func_00127b18(SD0 *a, f32 (*b)[4], s32 c) {
 /* func_00127b98 (from auto/text_00120000_15.c). */
 extern u8 D_004F82D0[];
 void func_00127960(void *, void *, s32);
-void func_00267328(void *, M2C_UNK *, s32);
 #define D_004F82D0 (*(M2C_UNK (*)) &D_004F82D0)
 #define func_00127b18 ((void (*)(void *, void *, s32)) func_00127b18)
 void func_00127b98(void *arg0, s32 arg1, f32 fparg0) {
     s32 sp[16];
-    func_00267328(sp, &D_004F82D0, arg1);
+    PlatVu0MulMatrix(sp, &D_004F82D0, arg1);
     if ((s32) ((u64) M2C_FIELD(arg0, u64 *, 0x370) >> 0x27) & 1) {
         func_00127b18(arg0, sp, (s32) fparg0);
         return;
@@ -221,7 +220,6 @@ void func_00128738(QW *buf, s32 idx) {
 extern void func_0011ef10(s32, void *);
 extern A6 D_004F7820[3];
 extern B6 D_004F7C10[3];
-extern void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 #define func_001284a0 ((void (*)(A6 *, s32)) func_001284a0)
 #define func_00128738 ((void (*)(B6 *, s32)) func_00128738)
 #define func_0011fb38 ((void *(*)(s32, s32, void *)) func_0011fb38)
@@ -244,7 +242,7 @@ void func_00128b20(void) {
     func_0011fb48(b, 1, q);
     func_0011fb78(d, 7, q);
     D_00351BC8(0);
-    func_00267b08(D_004F82D0, 32768.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 65535.0f, 1.0f, 65535.0f);
+    PlatVu0ViewScreenMatrix(D_004F82D0, 32768.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 65535.0f, 1.0f, 65535.0f);
     func_0011ef10(0x1fbcf, func_00128440);
 }
 #undef func_001284a0

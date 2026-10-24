@@ -5,6 +5,7 @@
  * func_00107d30 queues them; func_00107e60 / func_00107ec0 its light. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/dma.h"
 #include "data/types/text_00100000_s6_00.h"
@@ -318,8 +319,6 @@ typedef struct { u8 pad[4]; s32 off; u8 pad8[8]; u8 e[1][128]; } Src;
 void *func_00122048(s32, s32);
 void func_001220b8(void *);
 s32 func_00107ab8(f32 (*)[4], void *);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 typedef struct { EN v; } IE;
 extern P8 D_0047A1D0;
 extern P8 D_00472150;
@@ -375,7 +374,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
     D_0029B2FC = 0;
     D_0029B300 = 0;
     w->w = 1.0f;
-    sceVu0MulMatrix(w->m, D_002BBFE0, mtx);
+    PlatVu0MulMatrix(w->m, D_002BBFE0, mtx);
     tbl = (s32 *)(src->off + (s32)src);
     D_00494BA0 = 0;
     last0 = 0;
@@ -401,7 +400,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
                         { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
                         { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
                         { s32 o = i * 32 + 16; w->p[2] = *(f32 *)(o + (s32)q8); } }
-                        func_002672f8(w->v, w->m, w->p);
+                        PlatVu0ApplyMatrix(w->v, w->m, w->p);
                         z0[D_0029B2FC] = w->v[2] * 16.0f;
                         { s32 *kb = &D_00494BA8->key; s32 *key = kb + i * 4;
                         if (last0 != *key) {
@@ -423,7 +422,7 @@ void func_00107548(f32 (*mtx)[4], Src *src) {
                         { s32 o0 = i * 32; w->p[0] = *(f32 *)((s32)q8 + o0); }
                         { s32 o1 = i * 32; w->p[1] = ((Pt *)((s32)pt + o1))->y; }
                         { s32 o = i * 32 + 16; w->p[2] = *(f32 *)(o + (s32)q8); } }
-                        func_002672f8(w->v, w->m, w->p);
+                        PlatVu0ApplyMatrix(w->v, w->m, w->p);
                         z1[D_0029B2F4] = w->v[2] * 16.0f;
                         { s32 *kb = &D_00494BA8->key; s32 *key = kb + i * 4;
                         if (last1 != *key) {
@@ -504,27 +503,23 @@ void func_00107d30(s32 arg0, s32 arg1) {
 #undef func_0015ed80
 
 /* func_00107e10 (from auto/text_00100000_5.c). */
-M2C_UNK func_002675a8(M2C_UNK *, void *);
 extern s32 D_00494BC0[4][4];
 #define D_00494BC0 (*(s8 (*)) &D_00494BC0)
 void func_00107e10(void *arg0) {
-    func_002675a8(&D_00494BC0, arg0 + 0x10);
+    PlatVu0CopyVector(&D_00494BC0, arg0 + 0x10);
     M2C_FIELD(&D_00494BC0, f32 *, 0xC) = (f32) M2C_FIELD(arg0, f32 *, 0xC);
-    func_002675a8(&D_00494BC0 + 0x10, arg0 + 0x30);
+    PlatVu0CopyVector(&D_00494BC0 + 0x10, arg0 + 0x30);
 }
 #undef D_00494BC0
 
 /* func_00107e60 (from hand/text_00100000_h1.c). */
-void func_002673b8(f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002678b8(void *, void *, void *);
 void func_00107e60(void) {
     f32 m[4][4] __attribute__((aligned(16)));
     f32 v[4] __attribute__((aligned(16)));
     f32 *p = v;
-    func_00267530(p, &D_002E2790.x, &D_002E2780.x);
-    func_002673b8(p, p);
-    func_002678b8(D_002A6C10, &D_0029B280, p);
+    PlatVu0SubVector(p, &D_002E2790.x, &D_002E2780.x);
+    PlatVu0Normalize(p, p);
+    PlatVu0RotMatrix(D_002A6C10, &D_0029B280, p);
 }
 
 /* func_00107ec0 (from hand/text_00100000_b00.c). */

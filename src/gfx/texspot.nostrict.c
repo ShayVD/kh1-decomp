@@ -6,6 +6,7 @@
  * func_00175708 sets everything up from a file.  texspot.c has the two
  * intersection tests.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_0035BD40.h"
@@ -17,10 +18,6 @@
 #include "data/pieces/D_0035C490.h"
 
 /* func_001752a0 (from hand/nostrict/text_00160000_s6_09.c). */
-void func_002675a8(void *, void *);
-void func_00267530(void *, void *, void *);
-void func_00267518(void *, void *, void *);
-void func_00267560(void *, void *, f32);
 typedef struct { u64 a, b; } Q16;
 extern Q16 D_0035C430;
 extern Q16 D_0035C450;
@@ -31,7 +28,6 @@ extern u8 *D_0035C42C;
 extern u8 D_0035C470[];
 extern u8 D_0035C480[];
 typedef struct { u8 pad[0x154]; u8 *x154; } Ob52;
-void sceVu0CopyMatrix(void *, void *);
 void func_001625c8(void *, void *);
 void func_00162848(f32 *, void *, f32 *);
 f32 func_00162c20(f32 *);
@@ -45,20 +41,20 @@ void func_001752a0(Ob52 *o, f32 *c) {
     f32 t[4];
     s32 x, y;
     if (D_0035C420 && D_0035C424 && D_0035C428 && D_0035C42C) {
-        sceVu0CopyMatrix(m, o->x154 + 0xB80);
+        PlatVu0CopyMatrix(m, o->x154 + 0xB80);
         func_001625c8(m, m2);
         func_00162848(v, m2, c);
-        func_002675a8(a, (*(f32 (*)[0x4])&D_002C58B0));
-        func_002675a8(b, (*(f32 (*)[0x4])&D_002C58B0));
+        PlatVu0CopyVector(a, (*(f32 (*)[0x4])&D_002C58B0));
+        PlatVu0CopyVector(b, (*(f32 (*)[0x4])&D_002C58B0));
         if (v[1] < 300.0f) v[1] = 300.0f;
         if (func_00174fc0(D_0035C470, v, D_0035C424, D_0035C420, a, c[3])) {
-            func_00267530(t, a, D_0035C440);
+            PlatVu0SubVector(t, a, D_0035C440);
             t[2] = t[3] = 0.0f;
             if (func_00162c20(t) > 0.015f) {
-                func_00267560(t, t, 0.015f);
-                func_00267518(D_0035C440, D_0035C440, t);
+                PlatVu0ScaleVector(t, t, 0.015f);
+                PlatVu0AddVector(D_0035C440, D_0035C440, t);
             } else {
-                func_002675a8(D_0035C440, a);
+                PlatVu0CopyVector(D_0035C440, a);
             }
         }
         x = D_0035C440[0] * 128.0f * 2.0f * 16.0f;
@@ -66,13 +62,13 @@ void func_001752a0(Ob52 *o, f32 *c) {
         D_0035C430.a = (u64)(x - 512) | ((u64)(y - 512) << 16) | ((u64)0xFFFFFFFE << 32);
         D_0035C430.b = (u64)(x + 512) | ((u64)(y + 512) << 16) | ((u64)0xFFFFFFFE << 32);
         if (func_00174fc0(D_0035C480, v, D_0035C42C, D_0035C428, b, c[3])) {
-            func_00267530(t, b, D_0035C460);
+            PlatVu0SubVector(t, b, D_0035C460);
             t[2] = t[3] = 0.0f;
             if (func_00162c20(t) > 0.015f) {
-                func_00267560(t, t, 0.015f);
-                func_00267518(D_0035C460, D_0035C460, t);
+                PlatVu0ScaleVector(t, t, 0.015f);
+                PlatVu0AddVector(D_0035C460, D_0035C460, t);
             } else {
-                func_002675a8(D_0035C460, b);
+                PlatVu0CopyVector(D_0035C460, b);
             }
         }
         x = D_0035C460[0] * 128.0f * 2.0f * 16.0f;
@@ -143,8 +139,8 @@ void func_00175708(void *a0, Fil *f) {
     D_0035C428 = s->x8;
     D_0035C42C = (u8 *)s + s->xc;
     func_001623f8(a0, 16, &D_00575790);
-    func_002675a8(D_0035C440, &D_0035C490);
-    func_002675a8(D_0035C460, &D_0035C490);
+    PlatVu0CopyVector(D_0035C440, &D_0035C490);
+    PlatVu0CopyVector(D_0035C460, &D_0035C490);
     D_0035C4A0.x0 = 10;
     D_0035C550.x0 = 16;
     D_0035C550.x4 = 0;

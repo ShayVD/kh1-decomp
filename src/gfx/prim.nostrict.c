@@ -6,15 +6,11 @@
  * vertices, STQ / RGBA / XYZ2) in one packet; prim.nostrict_nofill.c's
  * func_002388b8 is the same into a caller's buffer. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 V4f[4] __attribute__((aligned(16)));
 typedef struct { u128 q[7]; } Ent70;
-void sceVu0CopyMatrix(V4f *, V4f *);
-void sceVu0ApplyMatrix(f32 *, V4f *, u128 *);
-void sceVu0DivVectorXYZ(f32 *, f32 *, f32);
-s32 sceVu0ClipScreen3(f32 *, f32 *, f32 *);
-void sceVu0RotTransPersN(V4f *, V4f *, u128 *, s32, s32);
 void func_00237018(u128 *, s32, s32);
 
 void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
@@ -27,7 +23,7 @@ void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
     u128 *h;
     u64 tag;
     Ent70 *src = (Ent70 *)srca;
-    sceVu0CopyMatrix(mat, m);
+    PlatVu0CopyMatrix(mat, m);
     tag = (n | 0x8000) | ((u64)0x6005C000 << 32);
     h = buf + 1;
     cnt = 0;
@@ -36,15 +32,15 @@ void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
     ((u64 *)h)[1] = 0x414141;
     k = 2;
     for (i = 0; i < n; i++, src++) {
-        sceVu0ApplyMatrix(v1, mat, &src->q[1]);
-        sceVu0ApplyMatrix(v2, mat, &src->q[2]);
-        sceVu0ApplyMatrix(v3, mat, &src->q[3]);
-        sceVu0DivVectorXYZ(v1, v1, v1[3]);
-        sceVu0DivVectorXYZ(v2, v2, v2[3]);
-        sceVu0DivVectorXYZ(v3, v3, v3[3]);
-        if (sceVu0ClipScreen3(v1, v2, v3) == 0) {
+        PlatVu0ApplyMatrix(v1, mat, &src->q[1]);
+        PlatVu0ApplyMatrix(v2, mat, &src->q[2]);
+        PlatVu0ApplyMatrix(v3, mat, &src->q[3]);
+        PlatVu0DivVectorXYZ(v1, v1, v1[3]);
+        PlatVu0DivVectorXYZ(v2, v2, v2[3]);
+        PlatVu0DivVectorXYZ(v3, v3, v3[3]);
+        if (PlatVu0ClipScreen3(v1, v2, v3) == 0) {
             cnt++;
-            sceVu0RotTransPersN(t, mat, &src->q[1], 3, 0);
+            PlatVu0RotTransPersN(t, mat, &src->q[1], 3, 0);
             ((s32 *)t[0])[3] = 0;
             ((s32 *)t[1])[3] = 0;
             ((s32 *)t[2])[3] = 0;

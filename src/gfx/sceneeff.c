@@ -4,6 +4,7 @@
  * 25x25 warp grid (func_00103c48), and their start / stop tasks. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/pieces/D_002B6778.h"
@@ -130,9 +131,8 @@ void func_00102cc8(s32 *x0, s32 *x1, s32 *y0, s32 *y1) {
 }
 
 /* func_00102d20 (from auto/text_00100000_2.c). */
-M2C_UNK func_002672f8(void *, s32, void *);
 void func_00102d20(s32 arg0, void *arg1, s32 *arg2, s32 *arg3) {
-    func_002672f8(arg1, arg0, arg1);
+    PlatVu0ApplyMatrix(arg1, arg0, arg1);
     *arg2 = (s32) ((M2C_FIELD(arg1, f32 *, 0) * 16.0f) + 4096.0f);
     *arg3 = (s32) ((M2C_FIELD(arg1, f32 *, 4) * 16.0f) + 3072.0f);
 }
@@ -144,7 +144,6 @@ extern s32 D_002BC09C;
 extern s32 D_002BC730;
 extern s32 D_002BC080[4];
 extern volatile u64 D_002A4F60[];
-void func_002676c0(void *, void *, f32);
 #define func_00102d20 ((void (*)(void *, f32 *, s32 *, s32 *)) func_00102d20)
 void func_00102da8(s32 arg0) {
     f32 mat[16];
@@ -165,7 +164,7 @@ void func_00102da8(s32 arg0) {
     }
     D_002A4F60[3] = (u64)D_002BC080[0] | ((u64)D_002BC080[1] << 8) | ((u64)D_002BC080[2] << 16) | ((u64)D_002BC080[3] << 24) | ((u64)1 << 32);
     func_00102cc8(&x0, &x1, &y0, &y1);
-    func_002676c0(mat, D_002BCAF0, f);
+    PlatVu0RotMatrixZ(mat, D_002BCAF0, f);
     v[0] = (x0 >> 4) - 256;
     v[1] = (y0 >> 4) - 192;
     func_00102d20(mat, v, &sx[0], &sy[0]);
@@ -400,36 +399,23 @@ void func_00103a70(void) {
 }
 
 /* func_00103b68 (from auto/text_00100000_9.c). */
-M2C_UNK func_00267620(void *);
-M2C_UNK func_00267768(void *, void *, f32);
-M2C_UNK func_00267810(void *, void *, f32);
-M2C_UNK func_00267930(s32, M2C_UNK *, M2C_UNK *, M2C_UNK *);
-#define func_002672f8 ((M2C_UNK (*)(M2C_UNK *, void *, s32)) func_002672f8)
-#define func_002676c0 ((M2C_UNK (*)(void *, void *, f32)) func_002676c0)
 void func_00103b68(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
     s32 sp[28];
-    func_00267620(sp);
-    func_00267768(sp, sp, M2C_FIELD(arg4, f32 *, 0));
-    func_00267810(sp, sp, M2C_FIELD(arg4, f32 *, 4));
-    func_002676c0(sp, sp, M2C_FIELD(arg4, f32 *, 8));
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, arg2);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x50), sp, arg3);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x60), sp, arg1);
-    func_00267930(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x60), &M2C_FIELD(sp, M2C_UNK *, 0x40), &M2C_FIELD(sp, M2C_UNK *, 0x50));
+    PlatVu0UnitMatrix(sp);
+    PlatVu0RotMatrixX(sp, sp, M2C_FIELD(arg4, f32 *, 0));
+    PlatVu0RotMatrixY(sp, sp, M2C_FIELD(arg4, f32 *, 4));
+    PlatVu0RotMatrixZ(sp, sp, M2C_FIELD(arg4, f32 *, 8));
+    PlatVu0ApplyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, arg2);
+    PlatVu0ApplyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x50), sp, arg3);
+    PlatVu0ApplyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x60), sp, arg1);
+    PlatVu0CameraMatrix(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x60), &M2C_FIELD(sp, M2C_UNK *, 0x40), &M2C_FIELD(sp, M2C_UNK *, 0x50));
 }
-#undef func_002672f8
-#undef func_002676c0
 
 /* func_00103c48 (from hand/text_00100000_s11_w7.c). */
 typedef struct { f32 x, y, z; } V12;
 typedef struct { f32 u, v; } UV;
 void *func_00121e28(s32, void *);
 void func_00121ee0(void *);
-void sceVu0UnitMatrix(f32 (*)[4]);
-void func_002678b8(void *, void *, void *);
-void func_00267578(void *, void *, void *);
-void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
-void sceVu0MulMatrix(void *, void *, void *);
 extern u8 D_002A6110[];
 extern u8 D_002A5FD0[];
 extern f32 D_003732D0[];
@@ -551,12 +537,12 @@ s32 func_00103c48(void) {
     *p++ = 0;
     p[0] = 0;
     p[1] = 0;
-    sceVu0UnitMatrix(mt);
-    func_002678b8(D_004948B0, mt, D_002A60C0);
-    func_00267578(D_004948B0, D_004948B0, D_004948A0);
+    PlatVu0UnitMatrix(mt);
+    PlatVu0RotMatrix(D_004948B0, mt, D_002A60C0);
+    PlatVu0TransMatrix(D_004948B0, D_004948B0, D_004948A0);
     func_00103b68(D_004949B0, D_002A6080, D_002A6090, D_002A60A0, D_002A60B0);
-    func_00267b08(D_004949F0, 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777215.0f, 1.0f, 65536.0f);
-    sceVu0MulMatrix(D_004948F0, D_004949F0, D_004949B0);
+    PlatVu0ViewScreenMatrix(D_004949F0, 512.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 16777215.0f, 1.0f, 65536.0f);
+    PlatVu0MulMatrix(D_004948F0, D_004949F0, D_004949B0);
     func_00103a70();
     D_0048CAD4 = pkt;
     *(volatile u32 *)0x10009020 = 0;
@@ -656,7 +642,7 @@ void func_001043f8(s32 n) {
 
 /* func_00104480 (from auto/text_00100000_2.c). */
 void func_00104480(s32 arg0, void *arg1) {
-    func_00267620(arg1);
+    PlatVu0UnitMatrix(arg1);
     M2C_FIELD(arg1, s32 *, 0x60) = arg0;
 }
 
@@ -668,8 +654,8 @@ void func_001044b8(s32 arg0, void *arg1) {
 /* func_001044c0 (from hand/text_00100000_h1.c). */
 typedef struct { u8 m[64]; u8 v64[16]; u8 v80[16]; s32 w96; } Xf;
 void func_001044c0(Xf *p) {
-    func_002678b8(p, D_002BCAF0, p->v64);
-    func_00267578(p, p, p->v80);
-    if (p->w96 != -1) sceVu0MulMatrix(p, (void *)p->w96, p);
+    PlatVu0RotMatrix(p, D_002BCAF0, p->v64);
+    PlatVu0TransMatrix(p, p, p->v80);
+    if (p->w96 != -1) PlatVu0MulMatrix(p, (void *)p->w96, p);
 }
 
