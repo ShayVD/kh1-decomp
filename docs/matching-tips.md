@@ -741,3 +741,17 @@ from dead code. Read the allocation first, then find the source change.
   The original sometimes has the conversion (func_0011fa88), sometimes not (func_001a9e90).
 - A callee declared `int` instead of `void` can move the registers chosen after the call even when the
   result is unused (func_0010ffe0 with sceGsResetGraph).
+
+## Session 58 (the libvu0 wrappers)
+
+- Routing a call through a prototype that casts every argument (`(f32 *)(x)`, `(f32 (*)[4])(m)`, `(f32)(t)`)
+  changed no code in 2,633 libvu0 calls: pointer casts, int-to-pointer casts and float-to-float casts are
+  free, and void instead of an m2c `M2C_UNK` return changed nothing where the result was unused.
+- m2c leaves out an argument that is still in its register from the caller (`CopyVector(arg0 + 0x3C0)` for
+  `CopyVector(arg0 + 0x3C0, arg1)`, `ApplyMatrix()` for `ApplyMatrix(arg0, arg1, arg2)`); naming it compiles
+  the same.  Where a function passed its own unnamed a1 on (objmove.c's func_00142c80), the function takes
+  a second argument: its caller's cast view confirmed it.
+- Floats and ints go in separate register files (EABI), so a cast view that lists the float first
+  (`(f32, f32 *, V3 *)`) is the same call as libvu0's (v0, v1, f32) with the float last, and
+  DropShadowMatrix's `(m, lp, 0, a, b, c)` is `(m, lp, a, b, c, 0)`; reordering compiled the same here.
+- libgraph's `short` parameters gave the same code as opimage.c's (s32, u32, u8, ..) pointer view.

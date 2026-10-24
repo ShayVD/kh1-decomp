@@ -90,13 +90,41 @@ rewrite matched code.
    and 28-31): winmenu.c, customize.c and every `D_00425BC8->xN & 0xV` test
    (132 in 31 files, tools/shift/s57pad/padmask.py).  No game file calls
    libcdvd, sifdev, loadfile or the IOP reboot by func_ address now.
-   **Still direct:** dkmovie.c's sceIpuInit / sceIpuSync (libipu, no
-   wrapper yet), src/gfx/opimage.c (two libgraph calls through typed
-   function pointers), src/model/mdlgs*.c (FlushCache / iFlushCache as a
-   hook pointer), the VIF / DMA registers of src/model/mdlgs.nostrict.c and
-   src/gfx/shadow.c (through PlatDmaGetChanAs), the libvu0 calls (about
-   3,000, most by func_ address: the vector maths header is next) and the
-   pad buttons read through other pointers than D_00425BC8 (not counted).
+   **Session 58 wrapped the vector maths** (each byte-identical, the float
+   check and the data names the same; one commit per directory):
+   `vu.h` (PlatVu0ApplyMatrix ... PlatVu0ClipAll, PlatVpu0Reset: every
+   libvu0 routine in functions.tsv) over include/sce/libvu0.h, the public
+   signatures with a vector as `f32 *` and a matrix as `f32 (*)[4]`.  The
+   macros cast each argument to the libvu0 type (`(f32)` for a scalar, so a
+   float stays a float), so the game's own V4 / V4f / PppVec4 / Mtx types and
+   m2c's s32 "pointers" pass unchanged; unlike the other headers the macros
+   are the same on every target: the Vita port links a C (NEON) libvu0 under
+   the sceVu0 names (src/ppp/keth.nostrict.c's rotation table points at
+   sceVu0RotMatrixX / Y / Z directly).  2,633 calls in 192 files, through
+   tools/shift/s58vu/conv.py, which drops each file's own prototypes and cast
+   views (any indentation, `__asm__` labels, `_dNN` aliases) and prints
+   ARITY for a call whose argument count is not libvu0's.  What the build
+   caught (docs/matching-tips.md "Session 58"): m2c calls missing a
+   pass-through argument, a cast view that passed the float scale first,
+   DropShadowMatrix's mode written third, two tail calls read as returns.
+   Also: `dma.h` register helpers (PlatDmaPutStat, PlatDmaPutVif1Chcr / Qwc /
+   Tadr for the hand-started VIF1 chains of src/gfx/sceneeff.c, dmapool.c,
+   mdlpkt.c; PlatVifPutErr, PlatVif1GetStat() & PLAT_VIF1_STAT_BUSY in
+   src/model/mdlgs.nostrict.c), `thread.h`'s PlatFlushCacheFn /
+   PlatIFlushCacheFn (mdlgs*.c's flush hook D_00351BC8), src/gfx/opimage.c
+   through gs.h (its typed libgraph pointers were not needed), and the
+   button masks where a local holds the pad state
+   (tools/shift/s57pad/padvar.py: winmenu.c, journal_s0/s1/s3.c,
+   choice.nofill.c).
+   **Still direct:** dkmovie.c's func_00111238 (calls sceIpuInit /
+   sceIpuSync with no arguments, a keep-alive stub: a prototyped wrapper
+   would add argument moves, so it stays as m2c wrote it), src/gfx/shadow.c's
+   func_00127500 (sets VIF1's CHCR bits through the PlatDmaGetChanAs pointer
+   before PlatDmaSend: harmless on a port whose channel is a plain struct),
+   field.c's func_00262c78 (unidentified, libgcc range), the libvu0 inline
+   VU0 macro code (src/hand/vu0.c and the asm functions: renderer-spec.md),
+   and the pad state read through other globals than D_00425BC8 (none
+   found by name; a pointer copied into a struct would not show).
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under
