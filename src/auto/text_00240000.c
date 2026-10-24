@@ -79,11 +79,6 @@ void func_00242b38(void) {
     }
 }
 
-void func_00247678(s32 arg0, s32 *arg1, s32 *arg2) {
-    *arg1 = arg0 / 10;
-    *arg2 = arg0 % 10;
-}
-
 void func_002485d0(void) {
     D_00669350 = 0;
 }

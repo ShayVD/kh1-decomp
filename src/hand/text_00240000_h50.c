@@ -12,12 +12,6 @@ typedef int u128 __attribute__((mode(TI)));
 
 /* Render-packet headers set up before func_00237018 (D_00667DF0, D_006697C0). */
 typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
-typedef struct { u8 r, g, b, a; } RGBA;
-typedef struct {
-    s32 x0; s32 x4; u8 pad8[0x10]; s32 x18; s32 x1c; s32 x20;
-    u8 pad24[8]; s32 x2c; s32 x30;
-} Ctx;
-typedef struct { s32 x0; Ctx *c; } S8140;
 
 #include "data/types/text_00240000_h50_p.h"
 typedef union { f32 m[4][4]; u128 q[4]; } M44;
@@ -56,11 +50,6 @@ typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
 extern Q4 D_00351E10[];
-Panel D_006691E0 ALIGNED(32);
-extern Q4 *D_006691D0;
-extern Q4 *D_006691D4;
-#include "data/pieces/D_00467408.h"
-extern s32 D_0046740C;
 Panel D_00669620 ALIGNED(32);
 extern Q4 *D_00669610;
 extern s32 D_00469C94;
@@ -82,17 +71,9 @@ extern s32 D_0046A6B0[];
 extern s32 D_0066AAA0;
 extern void (*D_0066AA80)(void);
 s32 sprintf(char *, const char *, ...);
-u32 strlen(const char *);
-Q4 *func_001f12c0(Q4 *, s32, s32, s32, s32, s32, s32);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 Q4 *func_002388b8(void *, s32, Q4 *);
-void func_002393d8(void);
-void func_00247b50(Ctx *);
-void func_00247bd0(Ctx *);
-void func_00247c50(Ctx *);
-void func_00247cf8(Ctx *);
-void func_002480d8(Ctx *);
 s32 func_0024a1c0(void *);
 void func_0024aa48(s32, void *, s32);
 Q4 *func_001f0638(Q4 *, s32, s32, s32, s32, s32);
@@ -115,26 +96,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_002474e8(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
-    s32 i;
-    Panel *d = &D_006691E0;
-    func_0024aa48(a0, d, a1);
-    for (i = 0; i < 4; i++) { s32 *r = &d->r[i].b; r[-1] += dx << 4; r[0] += dy << 4; }
-    for (i = 0; i < 4; i++) {
-        D_006691E0.q[i].d = D_006691E0.q[i].d * s;
-    }
-    D_006691D0 = func_002388b8(&D_006691E0, 1, D_006691D0);
-}
-
-void func_002475d0(s32 a0, s32 a1, u8 *c, char *a3, s32 a4, f32 f) {
-    RGBA col;
-    col.r = *c++;
-    col.g = *c++;
-    col.b = *c++;
-    col.a = (u32)(f * 128.0f);
-    D_006691D0 = func_001f12c0(D_006691D0, 1, *(s32 *)&col, a0, a1, (s32)a3, a4);
-}
 
 void func_00248798(s32 a0, s32 a1, s32 dx, s32 dy) {
     s32 i;
@@ -295,38 +256,7 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
 /* ---- the functions below need make: they use rodata (jump tables,
  * string literals) ---- */
 
-void func_00248010(Ctx *p) {
-    char buf[16];
-    u8 col[3];
-    s32 x;
-    col[0] = 0xff;
-    col[1] = 0xff;
-    col[2] = 0xff;
-    sprintf(buf, "%d", p->x1c);
-    x = 69;
-    func_002475d0(x, 22, col, buf, D_00467408, 1.0f);
-    x += strlen(buf) * 13;
-    sprintf(buf, "m");
-    func_002475d0(x + 2, 24, col, buf, D_0046740C, 1.0f);
-}
-
 /* func_00248010 must stay above this one (beqz vs beqzl). */
-void func_00248140(S8140 *a) {
-    Ctx *c;
-    D_006691D4 = D_00351E10;
-    D_006691D0 = D_00351E10 + 1;
-    c = a->c;
-    func_002393d8();
-    if (c->x20) {
-        if (c->x30 == 0) func_00247c50(c);
-        else if (c->x2c == 0) func_00247bd0(c);
-        else func_00247b50(c);
-    }
-    if (c->x4 || c->x18) func_002480d8(c);
-    if (c->x4) func_00247cf8(c);
-    if (c->x18) func_00248010(c);
-    func_00237018(D_006691D4, D_006691D0 - D_006691D4, 1);
-}
 
 void func_00249420(M44 *m, V4 *dir) {
     V4 x, y, z, up;

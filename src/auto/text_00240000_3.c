@@ -10,7 +10,6 @@ M2C_UNK func_0023d1a0();
 M2C_UNK func_00240810(void *);
 M2C_UNK func_00241d60();
 M2C_UNK func_00248798(s32, s32, s32, s32);
-M2C_UNK func_00249a48(void *, M2C_UNK);
 M2C_UNK func_0024aac8(M2C_UNK *);
 M2C_UNK func_0024ae00(s32);
 M2C_UNK func_0024af00(s32);
@@ -44,7 +43,6 @@ extern s32 D_0046A53C;
 extern s32 D_00669920;
 extern s32 D_00669A5C;
 extern s32 D_0066AAA0;
-#include "data/pieces/D_00431F30.h"
 extern s8 D_00651E70;
 extern u32 D_002C5958;
 f32 func_0024ef88();
@@ -92,10 +90,6 @@ void func_00242b68(s32 arg0) {
 
 s32 func_00242bf0(s32 arg0) {
     return *(M2C_UNK *)((s8 *)&D_00651E50 + (arg0 * 4));
-}
-
-void func_00247cc8(s32 arg0) {
-    func_00249a48(((s8 *)&D_00431F30) + (arg0 * 0x1770), 1);
 }
 
 void func_002485b8(s32 arg0) {

@@ -1,17 +1,10 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_00237018(M2C_UNK *, M2C_UNK, M2C_UNK);
-M2C_UNK func_002370c8(M2C_UNK *);
-M2C_UNK func_00248140(s32 *);
-M2C_UNK func_00248238(s32 *);
 M2C_UNK func_002490f0(s32 *);
 #include "data/pieces/D_00426850.h"
 extern M2C_UNK D_00469FC8[];
-M2C_UNK D_00669070[0x58] ALIGNED(16);
 extern s32 D_00469F60;
-extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 s32 func_0023d700(s32, s32, s32, s32, s32, f32);
 s32 memcpy(s32, s32, s32);
 
@@ -21,19 +14,6 @@ s32 func_00240ae0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
     }
     return func_0023d700(M2C_FIELD(arg0, s32 *, 0), (s32) &D_00426850, arg1, arg2, arg3, fparg0);
     return arg3;
-}
-
-s32 func_00248380(void) {
-    if (D_00669350 == 0) {
-        return 0;
-    }
-    func_002370c8(&D_00669070);
-    M2C_FIELD(&D_00669070, s64 *, 0xE0) = 5;
-    M2C_FIELD(&D_00669070, s64 *, 0x60) = 0x30003;
-    func_00237018(&D_00669070, 0x16, 1);
-    func_00248140(&D_00669350);
-    func_00248238(&D_00669350);
-    return 0;
 }
 
 s32 func_002491f8(void) {

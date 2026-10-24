@@ -390,131 +390,14 @@ void *memset(void *, s32, u32);
 void func_0024aac8(void *);
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
-
-extern QW *D_006691D0; /* src/data/bss_0066.c: Q4 *D_006691D0 */
-extern QW *D_006691D4; /* src/data/bss_0066.c: Q4 *D_006691D4 */
-typedef struct { s32 v[4]; } C4;
-typedef struct { s32 x0, y0, x1, y1, u0, v0, u1, v1; C4 c[4]; u8 pad60[0x40]; u64 unkA0; } Spr2;
-extern Spr2 D_006693F0;
-extern u64 D_00491820;
-extern u64 D_00669490;
 #include "data/types/nostrict_text_00240000_h75_p.h"
-#include "data/pieces/D_00431D50.h"
-typedef struct { s32 unk0; s32 unk4; u8 pad8[0x10]; s32 unk18; } Wk;
-typedef struct { u8 pad[4]; Wk *unk4; } Ow;
-void func_00247cc8(s32);
-void func_002474e8(Spr2 *, Fnt *, s32, s32, f32);
 void func_00237018(void *, s32, s32);
-
-void func_00248238(Ow *o) {
-    Wk *w = o->unk4;
-    s32 i;
-    if (w->unk4 == 0 && w->unk18 == 0) return;
-    D_006691D4 = D_00351E10;
-    D_006691D0 = D_00351E10 + 1;
-    func_00247cc8(w->unk0);
-    D_006693F0.x0 = 12;
-    D_006693F0.y0 = 15;
-    D_006693F0.x1 = 64;
-    D_006693F0.y1 = 64;
-    D_006693F0.u0 = 0;
-    D_006693F0.v0 = 0;
-    D_006693F0.u1 = 63;
-    D_006693F0.v1 = 63;
-    for (i = 0; i < 4; i++) {
-        D_006693F0.c[i].v[0] = 128;
-        D_006693F0.c[i].v[1] = 128;
-        D_006693F0.c[i].v[2] = 128;
-        D_006693F0.c[i].v[3] = 128;
-    }
-    D_00669490 = D_00491820;
-    func_002474e8((Spr2 *)((u8 *)&D_00669490 - 0xA0), &D_00431D50[w->unk0], 0, 0, 1.0f);
-    func_00237018(D_006691D4, D_006691D0 - D_006691D4, 1);
-}
-
-extern u8 D_00669350[];
-extern u8 D_004656A0[];
-extern u8 D_00465FD0[];
-extern u8 D_00466180[];
-extern u8 D_004667B0[];
-extern u8 D_00466DE0[];
-extern u8 D_00467350[];
-extern u8 D_00467388[];
-extern u8 D_00467398[];
-extern u8 D_004673C0[];
-extern u8 D_004673E8[];
-extern u8 D_00669358[];
-extern u8 D_00669388[]; /* src/data/bss_0066.c: s32 D_00669388[2] */
-extern u8 D_00669390[]; /* src/data/bss_0066.c: s32 D_00669390[8] */
-extern u8 D_006693B0[]; /* src/data/bss_0066.c: s32 D_006693B0[8] */
-extern u8 D_006693D0[];
-u64 D_006692D8 ALIGNED(8);
-u64 D_00669308 ALIGNED(8);
-u64 D_00669338 ALIGNED(8);
 void *memset(void *, s32, u32);
 void func_0024aac8(void *);
-void func_0024afc0(void *, void *, void *);
 s32 func_0011ef38(void *);
 void func_0011ef10(s32, void *);
-void func_00248380(void);
-
-void func_00248400(void) {
-    memset(D_00669350, 0, 8);
-    func_0024aac8(D_004656A0);
-    func_0024aac8(D_00465FD0);
-    func_0024aac8(D_00466180);
-    func_0024aac8(D_004667B0);
-    func_0024aac8(D_00466DE0);
-    func_0024afc0(D_00467350, D_00669358, D_004656A0);
-    func_0024afc0(D_00467388, D_00669388, D_00465FD0);
-    func_0024afc0(D_00467398, D_00669390, D_00466180);
-    func_0024afc0(D_004673C0, D_006693B0, D_004667B0);
-    func_0024afc0(D_004673E8, D_006693D0, D_00466DE0);
-    D_006692D8 = 0x0007400621413600;
-    D_00669308 = 0x0207400621413600;
-    D_00669338 = 0x0607400621413600;
-    if (func_0011ef38(func_00248380) == 0) func_0011ef10(0x28489, func_00248380);
-}
 
 /* needs make: uses rodata */
-
-typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; s32 unk2C; u8 pad30[0x14]; s32 unk44; s32 unk48; s32 unk4C; s32 unk50; } Clk;
-#include "data/pieces/D_00467408.h"
-s32 sprintf(char *, const char *, ...);
-void func_002475d0(s32, s32, s8 *, f32, char *, void *);
-
-void func_00247930(Clk *c) {
-    s8 col[16];
-    char buf[16];
-    s32 x, y;
-    col[0] = -27;
-    x = c->unk24;
-    x = c->unk2C ? x + 103 : x + 93;
-    col[1] = 78;
-    col[2] = 25;
-    y = c->unk28 + 43;
-    if (c->unk2C) {
-        sprintf(buf, "%02d", c->unk50);
-        func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
-        x += 22;
-        func_002475d0(x, y, col, 0.7999999523162842f, ":", ((void *)D_00467408));
-        x += 11;
-    }
-    sprintf(buf, "%02d", c->unk4C);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
-    x += 22;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
-    x += 11;
-    sprintf(buf, "%02d", c->unk48);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
-    x += 22;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
-    x += 5;
-    func_002475d0(x, y, col, 0.7999999523162842f, "'", ((void *)D_00467408));
-    x += 9;
-    sprintf(buf, "%02d", c->unk44);
-    func_002475d0(x, y, col, 0.7999999523162842f, buf, ((void *)D_00467408));
-}
 #include "data/data_0045.h"
 #include "data/data_0046.h"
 #include "data/data_0049.h"

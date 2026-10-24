@@ -94,44 +94,8 @@ void func_0024ae00(void *);
 
 /* Ten 0x930-byte slots: a free one, else the oldest. */
 #include "data/types/text_00230000_h26.h"
-
-typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; } Mdl;
-extern s32 D_006693B0[8];
-extern s32 D_00669390[8];
-extern s32 D_006693D0[7]; /* src/data/bss_0066.c: u8 D_006693D0[0x20] */
-u8 D_006692C0[0x18] ALIGNED(16);
 void func_002474e8(s32, void *, s32, s32, f32);
-void func_002476a0(Mdl *);
-void func_00247930(Mdl *);
-void func_00247b50(Mdl *m) {
-    s32 i;
-    for (i = 0; i < 8; i++)
-        func_002474e8(D_006693B0[i], D_006692C0, m->unk24, m->unk28, 1.0f);
-    func_002476a0(m);
-    func_00247930(m);
-}
-void func_00247bd0(Mdl *m) {
-    s32 i;
-    for (i = 0; i < 8; i++)
-        func_002474e8(D_00669390[i], D_006692C0, m->unk24, m->unk28, 1.0f);
-    func_002476a0(m);
-    func_00247930(m);
-}
-void func_00247c50(Mdl *m) {
-    s32 i;
-    for (i = 0; i < 7; i++)
-        func_002474e8(D_006693D0[i], D_006692C0, m->unk24, m->unk28, 1.0f);
-    func_002476a0(m);
-}
-
-extern s32 D_00669388[2];
-u8 D_00669320[0x18] ALIGNED(16);
 void func_002474e8(s32, void *, s32, s32, f32);
-void func_002480d8(void) {
-    s32 i;
-    for (i = 0; i < 2; i++)
-        func_002474e8(D_00669388[i], D_00669320, 0, 0, 1.0f);
-}
 void func_00248678(Vec12Queue *q, Vec12 *v) {
     if (q->wr != q->cap) {
         q->buf[q->wr] = *v;
