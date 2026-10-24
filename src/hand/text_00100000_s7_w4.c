@@ -69,7 +69,6 @@ s32 func_00101048(void) {
     return 4;
 }
 
-
 typedef struct { u8 pad[0x29]; u8 x29; } S14c;
 typedef struct { u8 pad[0xd0]; u8 xd0; } S6c;
 typedef struct { u8 pad[0x6c]; S6c *x6c; u8 pad70[0xdc]; S14c *x14c; u8 pad150[0x14]; s32 x164; } Obj164;
@@ -108,32 +107,6 @@ u8 func_001269d8(Obj164 *o, s32 *a1, s32 a2) {
 r25:
     return 25;
 }
-
-
-typedef struct { u8 pad[0x4c]; u16 f4c; } Info;
-typedef struct { u8 pad[0x130]; Info *f130; } Ent;
-typedef struct { u8 pad[0x30]; s32 f30; } Q30;
-typedef struct { s32 f0; u8 pad[8]; Q30 *fc; u8 pad10[0xc]; } T28;
-#include "data/pieces/D_002E31A8.h"
-#include "data/pieces/D_00304BE8_s.h"
-extern T28 D_00525368[]; /* src/data/bss_0052.c: M2C_UNK D_00525368 */
-extern s32 func_00141288(Ent *, s32, s32);
-
-s32 func_00133000(Ent *o, s32 i) {
-    T28 *t = &D_00525368[i];
-    Q30 *q;
-    if ((D_002E31A8 >> 2) & 1) return 0;
-    if (t->f0 == 0) goto r0;
-    if (!(q = t->fc)) return 0;
-    if (D_00304BE8->f874 & 1) goto r0;
-    if ((D_00304BE8->m[o->f130->f4c].bits >> i) & 1) goto call;
-r0:
-    return 0;
-call:
-    return func_00141288(o, q->f30, i);
-}
-
-
 
 /* func_001e8da0 is in src/event/sound.c. */
 

@@ -1,50 +1,14 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_00130c28(void *, f32, f32);
-M2C_UNK func_001655e0(s32, s32, s32, f32);
-f32 func_00130d20();
-f32 func_00130dd0(void *);
 s32 func_00130340(s32, s32, f32);
 s32 func_0013dbe0(s32, s32);
 s32 func_001477c8(s32);
 s32 func_0014a408(void);
 s32 func_0014a908(s32, s32, s32);
 void func_0012c880(s32, s32);
-void func_00137448(s32);
 void func_001487f8(s32, s32, s32, s32);
 void func_00157a30(s32, s32, s32);
-
-s32 func_00130e48(void *arg0, s32 arg1) {
-    f32 temp_f0;
-    f32 temp_f12;
-    f32 temp_f1;
-    f32 temp_f20;
-    f32 var_f0;
-    s32 var_v0;
-
-    var_f0 = func_00130d20();
-    if ((var_f0 >= 0.0f) || (var_f0 = func_00130dd0(arg0), var_v0 = 0, (var_f0 >= 0.0f))) {
-        temp_f1 = M2C_FIELD(arg0, f32 *, 0x280);
-        temp_f20 = temp_f1 * var_f0;
-        temp_f12 = M2C_FIELD(arg0, f32 *, 0x16C);
-        temp_f0 = temp_f20 - temp_f12;
-        if (!(M2C_FIELD(arg0, s32 *, 0x160) & 1) && (temp_f0 > 0.0f) && (temp_f0 < temp_f1)) {
-            func_00130c28(arg0, temp_f12, temp_f20);
-        }
-        M2C_FIELD(arg0, f32 *, 0x16C) = temp_f20;
-        func_001655e0(arg1, M2C_FIELD(arg0, s32 *, 0x15C), *(M2C_UNK *)((s32) ((M2C_FIELD(arg0, s32 *, 0x168) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 0x1D4))), temp_f20);
-        var_v0 = 1;
-    }
-    return var_v0;
-}
-
-void func_00135740(s32 arg0, s32 arg1, s32 arg2) {
-    func_00137448(arg0);
-    M2C_FIELD(arg0, s32 *, 0x3A0) = arg1;
-    M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), s16 *, 0x50) = (s16) arg2;
-}
 
 s32 func_0013dc10(s32 arg0, s32 arg1) {
     s16 temp_v0_2;

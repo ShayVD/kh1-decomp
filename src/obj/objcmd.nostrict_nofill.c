@@ -1,6 +1,12 @@
+/* Object commands: the 32 command nodes D_00525A40 (func_00133868 queues
+ * one), the 32 triples D_00526640 (func_001337e0), the per-frame task
+ * func_00133a88 that runs them (func_00134718 resets both and installs the
+ * tasks), and a node chain an object drags (func_001342c8). Flag mode:
+ * nostrict_nofill (the other modes are in the sibling files). Read from the
+ * code, not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
 
-/* needs make: uses rodata */
+/* func_001342c8 (from hand/nostrict_nofill/text_00120000_b02.c). */
 typedef struct { f32 x, y, z, w; } V4;
 typedef struct Nd11 {
     s32 f0;
@@ -120,4 +126,6 @@ void func_001342c8(Ob11 *o) {
         }
     }
 }
-#include "data/pieces/D_002BBDFC.h"
+#undef VAL
+#undef KIND
+
