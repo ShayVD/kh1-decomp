@@ -263,91 +263,12 @@ void func_00183b20(PppHeap *h, u8 *p) {
 
 #include "data/types/text_00180000_h12.h"
 
-typedef struct {
-    s32 unk0;
-    s32 arg;     /* +0x4 */
-} PppHookData;
-
-extern PppHookFn *D_00616220;
-
-void pppDrawHookDraw(PppHookObj *obj, PppHookData *data, PppEntry *e) {
-    *(s32 *) ((u8 *) obj + e->offsets[0] + 0xA0) = data->arg;
-    if (D_00616220) {
-        PppHookFn fn = D_00616220[obj->hdr->hook];
-        if (fn)
-            fn(obj, data->arg);
-    }
-}
-
 /* The object a program runs in: +0x0C is its frame counter. */
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame; /* +0x0C */
-} PppObject;
 
 /* A work-area word: float stores through it may alias the int frame
  * counters (the original reloads them after the stores). */
-typedef union {
-    f32 f;
-    s32 i;
-} PppWord;
-
-typedef struct {
-    s32 frame;
-    s32 pad[2];
-    f32 x, y, z;  /* +0xC */
-} PppVtMimeKey;
-
-typedef struct {
-    PppWord x, y, z;
-    s32 n;
-} PppVtMime;
-
-void pppVtMimeFrame(PppObject *obj, PppVtMimeKey *k, PppEntry *e) {
-    PppVtMime *w = (PppVtMime *) ((u8 *) obj + e->offsets[0] + 0xA0);
-
-    if (D_0061621C != 0 || (D_00615E60->unkB0 & 0xFF0000FF00ULL))
-        return;
-    w->y.f += w->z.f;
-    w->x.f += w->y.f;
-    if (k->frame == obj->frame) {
-        w->x.f += k->x;
-        w->y.f += k->y;
-        w->z.f += k->z;
-    }
-}
 
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
-
-void sceVu0UnitMatrix(PppMtx);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-
-typedef struct {
-    u8 pad[0x10];
-    PppMtx m;    /* +0x10 */
-    PppMtx m2;   /* +0x50 */
-} PppMtxOwner;
-
-extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-
-typedef struct {
-    s32 frame;
-    f32 scale;  /* +0x4 */
-    f32 max;    /* +0x8 */
-} PppYSclKey;
-
-void pppChrYSclXYZMatrixFrame(void *obj, PppYSclKey *k, PppEntry *e) {
-    PppMtx m;
-    f32 s;
-
-    sceVu0UnitMatrix(m);
-    s = D_00615E60->scale;
-    m[1][1] = s + s * k->scale;
-    if (k->max < m[1][1])
-        m[1][1] = k->max;
-    m[0][0] = m[1][1] = m[2][2];
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-}
 
 /* Pointer-valued fields below are typed s32 so that loads and stores
  * through them alias like the original. */

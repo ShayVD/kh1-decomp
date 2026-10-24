@@ -36,39 +36,3 @@ void func_00180e80(void *arg0) {
     M2C_FIELD(arg0, s8 *, 9) = 0;
     M2C_FIELD(arg0, s8 *, 0xA) = 0;
 }
-
-void pppColorCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
-    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
-}
-
-void pppColMoveCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[1];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
-    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
-}
-
-void pppColAcceleCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[1];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
-    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
-}

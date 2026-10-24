@@ -34,6 +34,23 @@ import ctop
 ROOT = str(Path(__file__).resolve().parents[3]); os.chdir(ROOT)
 
 
+def citems(src):
+    """ctop.items, with macro invocation lines (MACRO(a, b) with no ';', as in
+    a macro-generated definition) split off the declaration ctop runs them
+    into, as items of their own (kind 'macro')."""
+    out = []
+    for t, k, n in ctop.items(src):
+        if k == 'decl':
+            lines = t.split('\n'); i = 0; pre = []
+            while i < len(lines) and (lines[i].strip() == '' or re.match(r'\s*\w+\(.*\)\s*$', lines[i])):
+                pre.append(lines[i]); i += 1
+            if any(l.strip() for l in pre) and i < len(lines):
+                out.append(('\n'.join(pre) + '\n', 'macro', None))
+                out.append(('\n'.join(lines[i:]), k, n)); continue
+        out.append((t, k, n))
+    return out
+
+
 def placements():
     src = {}
     for l in open('out/gen/placements.tsv'):
@@ -89,9 +106,9 @@ def classify(t, k, name):
         n = re.findall(r'(\w+)\s*(?:\[[^\]]*\]\s*)*[;,]', body)
         return 'typedef', n
     m = re.match(r'(struct|union|enum)\s+(\w+)\s*(\{.*\})?\s*;$', s2, flags=re.S)
-    if m: return 'tag', [m.group(2)]
-    if '(' in re.sub(r'\{.*\}', '', s2, flags=re.S) and not re.search(r'\(\s*\*', s2):
-        m = re.search(r'(\w+)\s*\(', s2)
+    if m: return 'tag', [m.group(2) + '#tag']  # the tag namespace
+    m = re.match(r'[^(]*?\b(\w+)\s*\(', re.sub(r'\{.*\}', '', s2, flags=re.S))
+    if m and m.group(1) not in KW:  # the first '(' follows a name: a prototype
         return 'proto', [m.group(1)]
     names = []
     body = re.sub(r'=.*$', '', s2.rstrip(';'), flags=re.S)
@@ -200,7 +217,7 @@ def main(out, funcs, onto=False):
     src = placements()
     files = {}
     for f in funcs:
-        files.setdefault(src[f][1], ctop.items(open(src[f][1]).read()))
+        files.setdefault(src[f][1], citems(open(src[f][1]).read()))
     inmod = set(funcs)
     plan = []  # (func, [(kind, names, text)], body)
     for f in funcs:
@@ -247,10 +264,11 @@ def main(out, funcs, onto=False):
         changed = True
         while changed:
             changed = False
-            for x in list(used):
-                if x in scope and x not in need and x != f:
-                    if scope[x][1] == 'ctx' and x in inmod: continue
-                    need[x] = scope[x]; used |= idents(scope[x][2]); changed = True
+            for x0 in list(used):
+                for x in (x0, x0 + '#tag'):
+                    if x in scope and x not in need and x != f:
+                        if scope[x][1] == 'ctx' and x in inmod: continue
+                        need[x] = scope[x]; used |= idents(scope[x][2]); changed = True
         notes = [t.strip('\n') for t, k, n in its if k == 'comment' and re.search(r'\b' + f + r'\b', t)
                  and not re.search(r'\b(is|are) in\b', t)]
         body = ''.join(x + '\n' for x in notes) + body
@@ -262,6 +280,13 @@ def main(out, funcs, onto=False):
                 tail_incs.append(t.strip())
         plan.append((f, addr, path, sorted(need.items(), key=lambda kv: kv[1][0]), incs, body, tail_incs))
 
+    # the base declaration of an extern the functions declare differently: an
+    # array one if there is one (an access through an array view folds its
+    # offset into the address differently), else the first
+    arrays = {}
+    for pl in plan:
+        for nm, v in pl[3]:
+            if v[1] == 'var' and shape(nm, v[2])[1] == 'array' and nm not in arrays: arrays[nm] = v[2]
     emitted = {}  # name -> (kind, norm text)
     macros = {}   # active macro name -> norm text
     lines = ['/* TODO: what this module is (docs/modules.md). */']
@@ -277,7 +302,7 @@ def main(out, funcs, onto=False):
     def seed(path, done):
         if path in done or not os.path.exists(path): return
         done.add(path)
-        for t, k, n in ctop.items(open(path).read()):
+        for t, k, n in citems(open(path).read()):
             kind, names = classify(t, k, n)
             if kind == 'include':
                 m = re.search(r'#include\s+"([^"]+)"', t)
@@ -298,7 +323,7 @@ def main(out, funcs, onto=False):
     if onto:  # append to an existing module: what it declares counts as emitted
         old = open(out).read()
         lines = [old.rstrip('\n')]
-        for t, k, n in ctop.items(old):
+        for t, k, n in citems(old):
             kind, names = classify(t, k, n)
             if kind == 'include': seen_inc.add(t.strip())
             elif kind == 'undef':
@@ -336,9 +361,9 @@ def main(out, funcs, onto=False):
                 return t
             new = False
             for nm, kind, t in items:
-                if kind in ('typedef', 'tag', 'inline') and nm not in ren and nm in emitted \
+                if kind in ('typedef', 'tag', 'inline') and nm.split('#')[0] not in ren and nm in emitted \
                         and emitted[nm][1] != norm(cur(t)):
-                    ren[nm] = '%s_%s' % (nm, addr[-5:]); new = True
+                    r = nm.split('#')[0]; ren[r] = '%s_%s' % (r, addr[-5:]); new = True
             if not new: break
         def cur(t):
             for a, b in ren.items(): t = sub(t, a, b)
@@ -346,7 +371,8 @@ def main(out, funcs, onto=False):
         views = []
         mine = []
         for nm, kind, t in items:
-            t2 = cur(t); n2 = ren.get(nm, nm)
+            r = nm.split('#')[0]
+            t2 = cur(t); n2 = ren.get(r, r) + nm[len(r):]
             if kind in ('typedef', 'tag', 'inline', 'ctx'):
                 if n2 in emitted and emitted[n2][1] == norm(t2): continue
                 if n2 in macros: sec.append('#undef ' + n2); macros.pop(n2)
@@ -354,8 +380,11 @@ def main(out, funcs, onto=False):
             if kind == 'var':
                 if nm in macros: sec.append('#undef ' + nm); macros.pop(nm)
                 if nm not in emitted:
-                    emitted[nm] = ('var', norm(t2), t2); sec.append(t2)
-                elif emitted[nm][1] != norm(t2):
+                    b = arrays.get(nm, t2)
+                    known = all(x in emitted or x in KW or x == nm or x in INTS for x in idents(b))
+                    if b != t2 and not known: b = t2
+                    emitted[nm] = ('var', norm(b), b); sec.append(b)
+                if emitted[nm][1] != norm(t2):
                     views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None))
                 continue
             if kind == 'proto':

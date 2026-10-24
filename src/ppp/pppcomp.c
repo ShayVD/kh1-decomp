@@ -1,11 +1,35 @@
-/* Matched automatically from m2c output (tools/autodecomp.py); not yet
- * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
+/* The basic ppp component classes, default flags (docs/modules.md "Session
+ * 50"): pppPoint (the owner's position), pppMove / Accele (velocity,
+ * acceleration), pppAngle / AngMove / AngAccele, pppScale / SclMove /
+ * SclAccele and pppColor / ColMove / ColAccele: each Con clears its work
+ * value, each frame adds the key's step at its frame and the next order's
+ * value every frame.  pppDrawHookDraw calls the hook a program names.
+ * pppColorFrame is in pppcomp.nostrict.c.  Read from the code, not proved by
+ * a boot. */
+#include "common.h"
+#include "data/pieces/D_00364130.h"
+#include "ppp.h"
+#include "data/types/text_00180000_h12.h"
 #include "m2c.h"
 
-extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
+/* pppDrawHookDraw (from hand/text_00180000_h12.c). */
+typedef struct {
+    s32 unk0;
+    s32 arg;     /* +0x4 */
+} PppHookData;
+extern PppHookFn *D_00616220;
+void pppDrawHookDraw(PppHookObj *obj, PppHookData *data, PppEntry *e) {
+    *(s32 *) ((u8 *) obj + e->offsets[0] + 0xA0) = data->arg;
+    if (D_00616220) {
+        PppHookFn fn = D_00616220[obj->hdr->hook];
+        if (fn)
+            fn(obj, data->arg);
+    }
+}
+
+/* pppPointFrame (from auto/text_00180000_10.c). */
 extern s32 D_0061621C;
 extern void *D_00615E60;
-
 void pppPointFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_v0;
     void *temp_v0_2;
@@ -19,6 +43,19 @@ void pppPointFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppPointCon (from hand/ppp.c). */
+#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
+typedef struct {
+    f32 x, y, z;
+} PppVec3;
+void pppPointCon(void *obj, PppEntry *e) {
+    PppVec3 *w = PPP_WORK(PppVec3, obj, e, 0);
+
+    w->x = w->y = w->z = 0.0f;
+}
+#undef PPP_WORK
+
+/* pppMoveFrame (from auto/text_00180000_10.c). */
 void pppMoveFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -43,6 +80,17 @@ void pppMoveFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppMoveCon (from auto/text_00180000_20.c). */
+void pppMoveCon(s32 arg0, void *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0, f32 *, 0xA0) = M2C_FIELD(temp_a0_2, f32 *, 4) = M2C_FIELD(temp_a0_2, f32 *, 8) = 0.0f;
+}
+
+/* pppAcceleFrame (from auto/text_00180000_10.c). */
 void pppAcceleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -67,6 +115,17 @@ void pppAcceleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppAcceleCon (from auto/text_00180000_20.c). */
+void pppAcceleCon(s32 arg0, void *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0, f32 *, 0xA0) = M2C_FIELD(temp_a0_2, f32 *, 4) = M2C_FIELD(temp_a0_2, f32 *, 8) = 0.0f;
+}
+
+/* pppAngleFrame (from auto/text_00180000_10.c). */
 void pppAngleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_v0;
     void *temp_v0_2;
@@ -80,6 +139,19 @@ void pppAngleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppAngleCon (from auto/text_00180000_3.c). */
+void pppAngleCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + arg1->offsets[0];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
+    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
+    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
+}
+
+/* pppAngMoveFrame (from auto/text_00180000_10.c). */
 void pppAngMoveFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -104,6 +176,19 @@ void pppAngMoveFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppAngMoveCon (from auto/text_00180000_3.c). */
+void pppAngMoveCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + arg1->offsets[1];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
+    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
+    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
+}
+
+/* pppAngAcceleFrame (from auto/text_00180000_10.c). */
 void pppAngAcceleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -128,6 +213,19 @@ void pppAngAcceleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppAngAcceleCon (from auto/text_00180000_3.c). */
+void pppAngAcceleCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + arg1->offsets[1];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
+    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
+    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
+}
+
+/* pppScaleFrame (from auto/text_00180000_10.c). */
 void pppScaleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_v0;
     void *temp_v0_2;
@@ -141,6 +239,17 @@ void pppScaleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppScaleCon (from auto/text_00180000_20.c). */
+void pppScaleCon(s32 arg0, void *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + *M2C_FIELD(arg1, s32 **, 0xC);
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0, f32 *, 0xA0) = M2C_FIELD(temp_a0_2, f32 *, 4) = M2C_FIELD(temp_a0_2, f32 *, 8) = 0.0f;
+}
+
+/* pppSclMoveFrame (from auto/text_00180000_10.c). */
 void pppSclMoveFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -165,6 +274,17 @@ void pppSclMoveFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppSclMoveCon (from auto/text_00180000_20.c). */
+void pppSclMoveCon(s32 arg0, void *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0, f32 *, 0xA0) = M2C_FIELD(temp_a0_2, f32 *, 4) = M2C_FIELD(temp_a0_2, f32 *, 8) = 0.0f;
+}
+
+/* pppSclAcceleFrame (from auto/text_00180000_10.c). */
 void pppSclAcceleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -189,6 +309,30 @@ void pppSclAcceleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppSclAcceleCon (from auto/text_00180000_20.c). */
+void pppSclAcceleCon(s32 arg0, void *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + M2C_FIELD(M2C_FIELD(arg1, void **, 0xC), s32 *, 4);
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0, f32 *, 0xA0) = M2C_FIELD(temp_a0_2, f32 *, 4) = M2C_FIELD(temp_a0_2, f32 *, 8) = 0.0f;
+}
+
+/* pppColorCon (from auto/text_00180000_4.c). */
+void pppColorCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + arg1->offsets[0];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
+    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
+}
+
+/* pppColMoveFrame (from auto/text_00180000_10.c). */
 void pppColMoveFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -215,6 +359,20 @@ void pppColMoveFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
+/* pppColMoveCon (from auto/text_00180000_4.c). */
+void pppColMoveCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
+
+    temp_a0 = arg0 + arg1->offsets[1];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
+    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
+}
+
+/* pppColAcceleFrame (from auto/text_00180000_10.c). */
 void pppColAcceleFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_a3;
     void *temp_a3_2;
@@ -241,29 +399,16 @@ void pppColAcceleFrame(void *arg0, void *arg1, void *arg2) {
     }
 }
 
-void pppPObjPointFrame(void *arg0, void *arg1, void *arg2) {
-    M2C_UNK *temp_v0_3;
-    M2C_UNK *var_v0;
-    s32 temp_v0_2;
-    void *temp_a2;
-    void *temp_v0;
+/* pppColAcceleCon (from auto/text_00180000_4.c). */
+void pppColAcceleCon(s32 arg0, PppEntry *arg1) {
+    void *temp_a0;
+    void *temp_a0_2;
 
-    if ((D_0061621C == 0) && !(M2C_FIELD(D_00615E60, s64 *, 0xB0) & (((s64) 0xFF << 0x20) | 0xFF00))) {
-        temp_v0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC);
-        temp_a2 = temp_v0 + 0xA0;
-        if (M2C_FIELD(arg1, s32 *, 0) == M2C_FIELD(arg0, s32 *, 0xC)) {
-            temp_v0_2 = M2C_FIELD(arg1, s32 *, 4);
-            if (temp_v0_2 != -1) {
-                var_v0 = M2C_FIELD(((temp_v0_2 * 0x10) + M2C_FIELD(D_00615E60, s32 *, 0x80)), s32 *, 4) + M2C_FIELD(arg1, s32 *, 8) + 0xA0;
-            } else {
-                var_v0 = &D_00575A00;
-            }
-            M2C_FIELD(temp_a2, M2C_UNK **, 0xC) = var_v0;
-        }
-        temp_v0_3 = M2C_FIELD(temp_a2, M2C_UNK **, 0xC);
-        M2C_FIELD(temp_a2, f32 *, 0x0) = (f32) M2C_FIELD(temp_v0_3, f32 *, 0);
-        M2C_FIELD(temp_a2, f32 *, 4) = (f32) M2C_FIELD(temp_v0_3, f32 *, 4);
-        M2C_FIELD(temp_a2, f32 *, 8) = (f32) M2C_FIELD(temp_v0_3, f32 *, 8);
-    }
+    temp_a0 = arg0 + arg1->offsets[1];
+    temp_a0_2 = temp_a0 + 0xA0;
+    M2C_FIELD(temp_a0_2, s16 *, 6) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
+    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
+    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
-#include "data/bss_0061_mixed.h"
+

@@ -6,10 +6,8 @@
 M2C_UNK func_00182368();
 M2C_UNK func_00182ec0(s32);
 M2C_UNK func_001837a8(s32);
-M2C_UNK func_00183b20(s32, s32);
 #include "data/pieces/D_00370130.h"
 extern s32 D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-extern s32 D_00615E64;
 s32 func_00180f18(s32, M2C_UNK, void *, u8);
 
 s32 func_001803b8(s32 arg0) {
@@ -72,32 +70,4 @@ void pppKeAccSpdSvFrame(void) {
 
 void pppKeAccSpdSvCon(void) {
 
-}
-
-void pppSegmentApFrame(void) {
-
-}
-
-void pppFaceApFrame(void) {
-
-}
-
-void pppVtMimeDes(s32 arg0, PppEntry *arg1) {
-    s32 temp_v0;
-    void *temp_s0;
-
-    temp_s0 = arg0 + arg1->offsets[0] + 0xA0;
-    temp_v0 = M2C_FIELD(temp_s0, s32 *, 0xC);
-    if (temp_v0 != 0) {
-        func_00183b20(D_00615E64, temp_v0);
-        M2C_FIELD(temp_s0, s32 *, 0xC) = 0;
-    }
-}
-
-void pppPointApCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA1) = 0;
-}
-
-void pppPointRApCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA1) = 0;
 }

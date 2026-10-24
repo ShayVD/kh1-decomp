@@ -4,9 +4,7 @@
 #include "ppp.h"
 
 #include "data/pieces/D_00364130.h"
-extern void *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 s32 func_00180f18(s32, s32, s32, s32);
-void func_00267620(s32);
 
 void func_00181238(s32 arg0, s32 arg1) {
     s32 temp_v0;
@@ -37,58 +35,4 @@ s32 func_00181318(void) {
         var_a0 += 0xC0;
     } while (var_a1 >= 0);
     return var_a2;
-}
-
-void pppAngleCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
-}
-
-void pppAngMoveCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[1];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
-}
-
-void pppAngAcceleCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[1];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
-}
-
-void pppMatrixLocFrame(s32 arg0, s32 arg1, s32 arg2) {
-    void *temp_s0;
-
-    temp_s0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;
-    func_00267620((s32) (D_00615E68 + 0x10));
-    M2C_FIELD(D_00615E68, f32 *, 0x40) = (f32) M2C_FIELD(temp_s0, f32 *, 0);
-    M2C_FIELD(D_00615E68, f32 *, 0x44) = (f32) M2C_FIELD(temp_s0, f32 *, 4);
-    M2C_FIELD(D_00615E68, f32 *, 0x48) = (f32) M2C_FIELD(temp_s0, f32 *, 8);
-}
-
-void pppDrawShapeCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
-    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
 }
