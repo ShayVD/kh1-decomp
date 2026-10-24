@@ -1,3 +1,17 @@
+/* The pppRyjMegaBirth class, -fno-strict-aliasing (docs/modules.md
+ * "Session 50"): a particle emitter of shapes, the model of the
+ * pppRyjMegaBirthModel / Filter / ModelFilter classes.  func_0019bbf0 starts
+ * a particle (position by the key's type: a direction cone, a box, or a
+ * vertex of a mesh set; speed, spin, size and colour from the key's ranges,
+ * random numbers from vu0.c's func_0019baf8); func_0019cb88 moves the live
+ * ones (func_0019c838, ryjmb.nostrict_nofill.c) and steps each one's shape
+ * animation, starting new ones after the key's wait.  The frame
+ * (pppRyjMegaBirthFrame) allocates n particles of 0x60 bytes (and the
+ * optional 64-byte and 32-byte extras) on its first frame; the draw
+ * (pppRyjMegaBirthDraw) builds each live particle's matrix (func_0019cfc0
+ * in ryjmb.c, func_0019d020 in ryjmb.nostrict_nofill.c) and colour and draws
+ * its shape frame with func_001b8198.  The Con, Des and the gate
+ * func_0019bb98 are in ryjmb.c.  Read from the code, not proved by a boot. */
 #include "common.h"
 
 typedef struct { s16 x, y, z; } MgV6;
@@ -6,7 +20,7 @@ typedef struct { u8 pad[0x14]; MgV6 *v; u8 pad18[0xC]; } MgSlot;
 typedef struct { u8 pad[0x10]; MgSlot *slots; u8 pad14[4]; MgSet *sets; } MgSys;
 typedef struct { u8 pad[0x10]; f32 m10[4][4]; u8 pad50[0x40]; MgV6 *v90; } MgCur;
 extern MgSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-extern MgCur *D_00615E68;
+extern MgCur *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 
 typedef struct {
     u8 pad0[0x22];
@@ -49,8 +63,7 @@ void sceVu0CopyMatrix(void *, void *);
 void func_002678b8(f32 (*)[4], f32 (*)[4], f32 *);
 void func_002672f8(f32 *, f32 (*)[4], f32 *);
 void func_002673b8(f32 *, f32 *);
-void func_00267e90(MgPart *, f32 *, f32);
-
+void func_00267e90(void *, f32 *, f32);
 
 CONTEXT_ONLY f32 func_0019baf8(void) {
     f32 ret;
@@ -84,17 +97,20 @@ CONTEXT_ONLY s8 func_0019bb40(u8 a) {
 }
 
 #define R func_0019baf8()
-CONTEXT_ONLY void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
+/* rodata (jump tables at 0x0048FBF0) */
+#define TAIL(E) { v = tbl[E]; t = v.x; p->pos[0] = (f32)t * key->sc[0]; u = v.y; p->pos[1] = (f32)u * key->sc[1]; p->pos[2] = (f32)v.z * key->sc[2]; }
+void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a, MgB *b) {
     f32 vec[4] __attribute__((aligned(16)));
     f32 ang[4] __attribute__((aligned(16)));
     f32 m[4][4] __attribute__((aligned(16)));
-    MgV6 v;
     MgKey *key = (MgKey *)keyi;
     f32 rng = key->b27;
     f32 rng2 = 2.0f * rng;
     s32 i;
     s32 t;
+    s32 u;
     f32 f, h, r1, r2, r3, r4, r;
+    MgV6 v;
 
     memset(p, 0, sizeof(MgPart));
     if (a)
@@ -198,8 +214,8 @@ CONTEXT_ONLY void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a
         default:
             if (obj->h62 >= (s16)s->n)
                 obj->h62 = 0;
-            { s32 k = obj->h62++; ip = s->idx; ip += k; }
-            goto got;
+            { s32 k = s->idx[obj->h62++]; TAIL(k); }
+            goto ty;
         case 1:
             R;
             r = R;
@@ -219,12 +235,8 @@ CONTEXT_ONLY void func_0019bbf0(MgObj *obj, s32 keyi, MgE *e, MgPart *p, void *a
         }
         if (obj->h62 >= (s16)s->n)
             obj->h62 = 0;
-        ip = (u16 *)((s32)(r * (f32)(s16)s->n) * 2 + (u32)s->idx);
-    got:
-        v = tbl[*ip];
-        p->pos[0] = (f32)v.x * key->sc[0];
-        p->pos[1] = (f32)v.y * key->sc[1];
-        p->pos[2] = (f32)v.z * key->sc[2];
+        { s32 k = s->idx[(s32)(r * (f32)(s16)s->n)]; TAIL(k); }
+    ty:
         if ((u8)(key->type - 8) < 2)
             func_002673b8(p->dir, p->pos);
         break;
@@ -361,7 +373,9 @@ typedef struct {
 } DMdl;
 
 typedef struct {
-    s32 pad[7];
+    s32 pad0[4];
+    u32 tex;    /* +0x10 */
+    s32 pad14[2];
     DMdl *mdl;  /* +0x1C */
     s32 unk20;  /* +0x20 */
 } DSlot;
@@ -391,44 +405,7 @@ typedef struct {
     PppShapeEnt *shapes; /* +0x14 */
 } DSys;
 
-typedef struct {
-    u8 pad00[0x10];
-    u8 m10[0x40]; /* +0x10 */
-    u8 m50[0x40]; /* +0x50 */
-    s32 unk90;    /* +0x90 */
-    s32 unk94;    /* +0x94 */
-} DCur;
-
-typedef struct {
-    s32 flags;  /* +0x00 */
-    void *p04;  /* +0x04 */
-    u16 h08;    /* +0x08 */
-    u8 b0A;     /* +0x0A */
-    s32 w0C;    /* +0x0C */
-    union { u64 d; struct { s32 u, v; } s; } t10; /* +0x10 */
-    u8 r, g, b, a; /* +0x18 */
-    s32 w1C;    /* +0x1C */
-    void *p20;  /* +0x20 */
-    void *p24;  /* +0x24 */
-    void *p28;  /* +0x28 */
-    void *p2C;  /* +0x2C */
-    void *p30;  /* +0x30 */
-    s32 w34;    /* +0x34 */
-    s32 w38;    /* +0x38 */
-    s32 w3C;    /* +0x3C */
-    s32 w40;    /* +0x40 */
-    void *p44;  /* +0x44 */
-    s32 w48;    /* +0x48 */
-    u8 b4C;     /* +0x4C */
-    u8 b4D;     /* +0x4D */
-    u8 pad4E[0x12];
-} DParam;
-
-extern u8 D_00616240[];
-extern u8 D_00616140[];
-extern u8 D_00616100[];
 extern s32 D_00616224;
-s32 func_001aaf88(DMdl *, DParam *, s32);
 
 typedef struct {
     u8 pad[8];
@@ -448,16 +425,26 @@ typedef struct {
     s32 frame;
     s32 id;     /* +0x4 */
     u16 speed;  /* +0x8 */
-    u8 padA[0x14];
+    u8 padA[0x12];
+    u16 n;      /* +0x1C */
     u16 max;    /* +0x1E */
     u16 wait;   /* +0x20 */
+    u8 pad22[4];
+    u8 mode;    /* +0x26 */
+    u8 pad27[0x71];
+    f32 dir[3]; /* +0x98 */
+    u8 padA4[0x25];
+    u8 bC9;     /* +0xC9 */
+    u8 padCA[2];
+    u8 bCC;     /* +0xCC */
 } PppMegaKey;
 
 typedef struct { u8 b[0x40]; } PppMegaA;
 typedef struct { u8 b[0x20]; } PppMegaB;
 
 typedef struct {
-    u8 pad[0x50];
+    PppMtx m;           /* +0x00 */
+    PppVec4 v;          /* +0x40 */
     PppMegaPart *parts; /* +0x50 */
     PppMegaA *a;        /* +0x54 */
     PppMegaB *b;        /* +0x58 */
@@ -518,3 +505,238 @@ void func_0019cb88(PppMegaObj *obj, PppMegaKey *key, PppEntry *e) {
     if (born > 0)
         obj->timer = 0;
 }
+
+/* pppRyjMegaBirthFrame (from text_00190000_h64.c). */
+#include "data/pieces/D_003701F0.h"
+#include "data/pieces/D_003701D0.h"
+extern PppMtx D_00615E70;
+void *func_0017f958(DSys *, s32);
+void func_002673b8(f32 *, f32 *);
+void func_002675a8(f32 *, f32 *);
+s32 func_0019bb98(void *, void *);
+
+void pppRyjMegaBirthFrame(PppObject *obj, PppMegaKey *key, PppEntry *e) {
+    PppMegaObj *w = PPP_WORK(PppMegaObj, obj, e, 2);
+    void *w1 = PPP_WORK(void, obj, e, 1);
+
+    if (w->parts == 0) {
+        w->n = key->n;
+        w->parts = func_0017f958((DSys *) D_00615E64, w->n * 96);
+        if (w->parts)
+            memset(w->parts, 0, w->n * 96);
+        if ((u8) (key->bCC - 1) < 2) {
+            w->a = func_0017f958((DSys *) D_00615E64, w->n * 64);
+            if (w->a)
+                memset(w->a, 0, w->n * 64);
+        }
+        if (key->bC9) {
+            w->b = func_0017f958((DSys *) D_00615E64, w->n * 32);
+            if (w->b)
+                memset(w->b, 0, w->n * 32);
+        }
+        w->v[0] = key->dir[0];
+        w->v[1] = key->dir[1];
+        w->v[2] = key->dir[2];
+        w->v[3] = 0.0f;
+        func_002673b8(w->v, w->v);
+    }
+    if (!func_0019bb98(w, key))
+        return;
+    switch (key->mode) {
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 9:
+        sceVu0UnitMatrix(w->m);
+        func_00267e90(w->m[0], w->m[0], D_003701F0[0]);
+        func_00267e90(w->m[1], w->m[1], D_003701F0[1]);
+        func_00267e90(w->m[2], w->m[2], D_003701F0[2]);
+        func_002675a8(w->m[3], (*(f32 (*)[4])&D_003701D0));
+        w->m[3][3] = 1.0f;
+        break;
+    default:
+        sceVu0CopyMatrix(w->m, D_00615E70);
+        break;
+    }
+    func_0019cb88(w, key, w1);
+}
+
+/* pppRyjMegaBirthDraw's views (from text_00190000_b08.c). */
+typedef struct {
+    u16 unk0;
+    u16 flags;
+    u8 r, g, b, a;
+    u64 d8;
+    void *p10;
+    s32 w14;
+    u8 b18;
+    void *p1C;
+    u8 pad20[0x10];
+} DShpParam;
+
+typedef struct {
+    u8 pad00[0x14];
+    PppShapeEnt *shapes;
+} DSysS;
+
+typedef struct {
+    PppVec4 pos;   /* +0x00 */
+    PppVec4 vel;   /* +0x10 */
+    u16 time;      /* +0x20 */
+    u16 cur;       /* +0x22 */
+    u16 prev;      /* +0x24 */
+    u16 live;      /* +0x26 */
+    s8 c[4];       /* +0x28 */
+    f32 ang;       /* +0x2C */
+    f32 angv;      /* +0x30 */
+    f32 anga;      /* +0x34 */
+    f32 sx, sy;    /* +0x38 */
+    f32 svx, svy;  /* +0x40 */
+    f32 sax, say;  /* +0x48 */
+    f32 spd;       /* +0x50 */
+    f32 grav;      /* +0x54 */
+    f32 alpha;     /* +0x58 */
+    u8 n;          /* +0x5C */
+    u8 fin;        /* +0x5D */
+    u8 fout;       /* +0x5E */
+    u8 pad5F;
+} MegaPart;
+
+typedef struct {
+    s32 frame;
+    s32 id;         /* +0x04 */
+    u8 pad8[4];
+    u8 bC, bD, bE, bF;
+    f32 v10[3];     /* +0x10 */
+    u8 pad1C[6];
+    u16 h22;
+    u8 pad24;
+    u8 b25;
+    u8 pad26[0x12];
+    f32 c38[4];     /* +0x38 */
+    u8 pad48[0x1C];
+    f32 svx, svy;   /* +0x64 */
+    u8 pad6C[0x18];
+    f32 angv;       /* +0x84 */
+    u8 pad88[0x1C];
+    f32 spdv;       /* +0xA4 */
+    f32 spda;       /* +0xA8 */
+    u8 padAC[8];
+    f32 grav;       /* +0xB4 */
+    u8 padB8[0x12];
+    u8 bCA, bCB, bCC, bCD;
+    u8 bCE;
+} MegaKey;
+
+typedef struct { u8 b[0x40]; } MegaA;
+typedef struct { f32 f[8]; } MegaB;
+
+typedef struct {
+    PppMtx m;        /* +0x00 */
+    PppVec4 v;       /* +0x40 */
+    MegaPart *parts; /* +0x50 */
+    MegaA *a;        /* +0x54 */
+    MegaB *b;        /* +0x58 */
+    s32 n;           /* +0x5C */
+    u16 timer;       /* +0x60 */
+} MegaObj;
+
+extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
+s32 func_001b8198(void *, DShpParam *, s32);
+void func_00267518(f32 *, f32 *, f32 *);
+void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
+void func_0019cfc0(PppMtx, MegaKey *, MegaObj *);
+void func_0019d020(PppMtx, PppMtx, MegaKey *, MegaObj *, MegaPart *, MegaA *, PppMtx, u8);
+
+#define D_00616224 (*(volatile s32 *) &D_00616224)
+void pppRyjMegaBirthDraw(PppObject *obj, MegaKey *key, PppEntry *e) {
+    PppMtx m0;
+    PppMtx m1;
+    PppMtx mtx;
+    PppVec4 v;
+    DShpParam p;
+    MegaObj *w = PPP_WORK(MegaObj, obj, e, 2);
+    DColWork *c = PPP_WORK(DColWork, obj, e, 1);
+    MegaPart *pt = w->parts;
+    MegaA *a = w->a;
+    MegaB *b = w->b;
+    s32 n = w->n;
+    PppShapeEnt *s;
+    PppShape *sh;
+    s32 cr, cg, cb, ca;
+    s32 i;
+
+    if (!func_0019bb98(w, key))
+        return;
+    if (key->id == 0xFFFF)
+        return;
+    func_0019cfc0(m0, key, w);
+    s = &((DSysS *) D_00615E64)->shapes[key->id];
+    if (!key->bF)
+        p.flags = 128;
+    else
+        p.flags = 0;
+    if (key->bCD == 1)
+        p.flags |= 0x10;
+    if (key->bC)
+        p.flags |= 0x800;
+    if (key->bD)
+        p.flags |= 0x400;
+    if (key->bE) {
+        p.p1C = mtx;
+        v[0] = key->v10[0];
+        v[1] = key->v10[1];
+        v[2] = key->v10[2];
+        v[3] = 0.0f;
+    } else {
+        p.p1C = 0;
+    }
+    p.d8 = 0;
+    p.b18 = 0;
+    p.p10 = m1;
+    sh = s->shape;
+    cr = c->r;
+    cg = c->g;
+    cb = c->b;
+    ca = c->a;
+    for (i = 0; i < n; i++) {
+        if (pt->live) {
+            s32 r, g, bl, al;
+            u8 *src;
+            func_0019d020(m0, m1, key, w, pt, a, mtx, key->bE);
+            if (key->bE) {
+                func_00267518(mtx[3], mtx[3], v);
+                sceVu0MulMatrix(mtx, D_00616040, mtx);
+            }
+            r = cr + pt->c[0];
+            { PppShapeFrame *f = &sh->f[pt->prev]; src = (u8 *) sh + f->off; }
+            al = (f32) ca + (f32) pt->c[3] - pt->alpha;
+            g = cg + pt->c[1];
+            bl = cb + pt->c[2];
+            if (b) {
+                r += (s32) b->f[0];
+                g += (s32) b->f[1];
+                bl += (s32) b->f[2];
+                al += (s32) b->f[3];
+            }
+            if (r < 0) r = 0; else if (r >= 256) r = 255;
+            if (g < 0) g = 0; else if (g >= 256) g = 255;
+            if (bl < 0) bl = 0; else if (bl >= 256) bl = 255;
+            if (al < 0) al = 0; else if (al >= 128) al = 127;
+            p.r = r;
+            p.g = g;
+            p.b = bl;
+            p.a = al;
+            p.w14 = D_00616224;
+            D_00616224 = func_001b8198(src, &p, s->unk4);
+        }
+        if (a)
+            a++;
+        if (b)
+            b++;
+        pt++;
+    }
+}
+#undef D_00616224
+

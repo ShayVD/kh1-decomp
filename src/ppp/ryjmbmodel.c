@@ -1,5 +1,8 @@
-/* The pppRyjMegaBirthModel class's Con and Des (docs/modules.md "Session
- * 49"): the Con clears the work area's quadword, its four pointers and two
+/* The pppRyjMegaBirthModel class's default-flag functions (docs/modules.md
+ * "Session 49", "Session 50"): func_0019f148 is a random number in -a/2 ..
+ * 3a/2 from vu0.c's func_0019f100; func_0019f1a8 is the gate the frame and
+ * the draw check (the particle block and the extras the key asks for
+ * allocated).  The Con clears the work area's quadword, its four pointers and two
  * counters; the Des frees the three particle blocks with func_00183b20.
  * ryjmbmodel.nostrict.c has the frame and the draw.  Read from the code. */
 #include "m2c.h"
@@ -7,6 +10,40 @@
 
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 typedef unsigned int u128 __attribute__((mode(TI)));
+
+f32 func_0019f100(void);
+
+s8 func_0019f148(u8 a) {
+    f32 f;
+
+    func_0019f100();
+    f = func_0019f100();
+    return (f32) (a * 2) * f - (f32) (a >> 1);
+}
+
+typedef struct {
+    u8 pad[0x10];
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+} PppF1a8A;
+
+typedef struct {
+    u8 pad[0x101];
+    u8 unk101;
+    u8 pad102[4];
+    u8 unk106;
+} PppF1a8B;
+
+s32 func_0019f1a8(PppF1a8A *p, PppF1a8B *q) {
+    if (p->unk10 == 0)
+        return 0;
+    if (q->unk106 != 0 && p->unk14 == 0)
+        return 0;
+    if (q->unk101 != 0 && p->unk18 == 0)
+        return 0;
+    return 1;
+}
 
 typedef struct {
     u128 q;     /* +0x00 */

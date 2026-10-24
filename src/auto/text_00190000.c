@@ -8,10 +8,7 @@ M2C_UNK func_001a5ca0(void *);
 M2C_UNK func_001a62a8(s32);
 M2C_UNK func_001a6538(s32);
 M2C_UNK func_001a67a0(s32);
-M2C_UNK func_00250054(M2C_UNK *, M2C_UNK, M2C_UNK);
-#include "data/pieces/D_0035C710.h"
 extern s32 D_00615E64;
-extern void *D_00615E60;
 
 void pppKeShpTailPhtFrame(void) {
 
@@ -141,19 +138,5 @@ void pppRyjDrawShipolyBoneDes(s32 arg0, PppEntry *arg1) {
         func_00183b20(D_00615E64, temp_v0);
         M2C_FIELD(temp_s0, s32 *, 8) = 0;
     }
-}
-
-void pppRyjMngFlagFrame(void *arg0, void *arg1) {
-    if (M2C_FIELD(arg1, s32 *, 0) == M2C_FIELD(arg0, s32 *, 0xC)) {
-        M2C_FIELD(D_00615E60, u8 *, 0xB2) = (u8) M2C_FIELD(arg1, u8 *, 4);
-        M2C_FIELD(D_00615E60, u8 *, 0xB1) = (u8) M2C_FIELD(arg1, u8 *, 5);
-        M2C_FIELD(D_00615E60, u8 *, 0xB0) = (u8) M2C_FIELD(arg1, u8 *, 6);
-    }
-}
-
-void pppRyjMegaBirthPrizeCon(void) {
-    func_00250054(((M2C_UNK *)&D_0035C710), 0, 0x2000);
-    M2C_FIELD(D_00615E60, s8 *, 0xB3) = 1;
-    M2C_FIELD(D_00615E60, s8 *, 0xB0) = 1;
 }
 #include "data/bss_0061_mixed.h"

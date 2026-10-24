@@ -2,11 +2,6 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "ppp.h"
-
-M2C_UNK func_00183b20(s32, s32);
-M2C_UNK func_0019e3f0(s32);
-M2C_UNK func_0019e710(s32);
-M2C_UNK func_0019ea58(s32);
 M2C_UNK func_001a62a8(s32);
 M2C_UNK func_001a6538(s32);
 M2C_UNK func_001a67a0(s32);
@@ -19,7 +14,6 @@ M2C_UNK func_002675b8(s32, M2C_UNK *);
 #include "data/pieces/D_003701F0.h"
 extern M2C_UNK D_00615E70;
 extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-extern s32 D_00615E64;
 extern s32 D_00615E68;
 void func_001a60d0(s32);
 void func_001a60e8(s32, s32);
@@ -100,37 +94,4 @@ void pppRyjDrawMatrixWorldNoRotCon(s32 arg0, PppEntry *arg1) {
     temp_s0 = arg0 + arg1->offsets[1];
     func_002675a8(temp_s0 + 0xA0, ((M2C_UNK *)&D_003701D0));
     func_002675a8(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
-}
-
-void pppRyjMegaBirthDes(s32 arg0, PppEntry *arg1) {
-    s32 temp_a1;
-    s32 temp_a1_2;
-    s32 temp_v0;
-    void *temp_s0;
-
-    temp_s0 = arg0 + arg1->offsets[2] + 0xA0;
-    temp_v0 = M2C_FIELD(temp_s0, s32 *, 0x50);
-    if (temp_v0 != 0) {
-        func_00183b20(D_00615E64, temp_v0);
-        M2C_FIELD(temp_s0, s32 *, 0x50) = 0;
-    }
-    temp_a1 = M2C_FIELD(temp_s0, s32 *, 0x54);
-    if (temp_a1 != 0) {
-        func_00183b20(D_00615E64, temp_a1);
-        M2C_FIELD(temp_s0, s32 *, 0x54) = 0;
-    }
-    temp_a1_2 = M2C_FIELD(temp_s0, s32 *, 0x58);
-    if (temp_a1_2 != 0) {
-        func_00183b20(D_00615E64, temp_a1_2);
-        M2C_FIELD(temp_s0, s32 *, 0x58) = 0;
-    }
-}
-
-void pppRyjMegaPlaceDraw(s32 arg0, s32 arg1, void *arg2) {
-    s32 temp_s0;
-
-    temp_s0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;
-    func_0019e3f0(temp_s0);
-    func_0019e710(temp_s0);
-    func_0019ea58(temp_s0);
 }

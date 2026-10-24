@@ -179,23 +179,3 @@ void pppRyjDrawShipolyCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD(temp_a0_2, s8 *, 4) = 0;
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
-
-void pppRyjMegaPlaceModelCon(s32 arg0, void *arg1) {
-    void *temp_a0;
-    void *temp_v1;
-
-    temp_v1 = M2C_FIELD(arg1, void **, 0xC);
-    temp_a0 = arg0 + M2C_FIELD(temp_v1, s32 *, 0) + 0xA0;
-    M2C_FIELD((arg0 + M2C_FIELD(temp_v1, s32 *, 4)), s8 *, 0xA0) = 0;
-    M2C_FIELD(temp_a0, s32 *, 4) = (s32) (M2C_FIELD(temp_a0, s32 *, 4) + 1);
-}
-
-void pppRyjMegaPlaceLampCon(s32 arg0, void *arg1) {
-    void *temp_a0;
-    void *temp_v1;
-
-    temp_v1 = M2C_FIELD(arg1, void **, 0xC);
-    temp_a0 = arg0 + M2C_FIELD(temp_v1, s32 *, 0) + 0xA0;
-    M2C_FIELD((arg0 + M2C_FIELD(temp_v1, s32 *, 4)), s8 *, 0xA0) = 0;
-    M2C_FIELD(temp_a0, s32 *, 8) = (s32) (M2C_FIELD(temp_a0, s32 *, 8) + 1);
-}
