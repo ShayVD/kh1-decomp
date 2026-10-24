@@ -51,11 +51,6 @@ void func_00137418(S137418 *s, float x)
     s->flags |= 0x18;
     s->inv = 1.0f / x;
 }
-
-int func_0023d1e0(float x)
-{
-    return x / 0.7853981f; /* original constant is 0x3F490FD9 */
-}
 #include "data/bss_004D_mixed.h"
 #include "data/data_0038.h"
 #include "data/pieces/D_002BCC24.h"

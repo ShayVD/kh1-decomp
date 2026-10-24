@@ -1,23 +1,21 @@
+/* The name-entry screen (src/menu/nameentry.c, docs/modules.md
+ * "Session 47"): the part built with no delay-slot fill.  func_0024c950
+ * draws the name line (a blinking box at the next character, D_00669A68 and
+ * D_00669A6C the x after and before it), the two column-0 buttons
+ * (D_0046A5C0, D_0046A5D0 their labels, lit when chosen) and the frame's
+ * corners. */
 #include "common.h"
 #include "data/bss_0066.h"
-extern s32 D_00669A70;
-extern s32 D_00669A74;
-extern s32 D_00669A78;
-extern s32 D_00669A5C;
-extern s32 D_00669A58;
-extern s32 D_00669A68;
-extern s32 D_00669A6C;
-extern s16 D_00669A40[8];
-extern s32 D_0046A5BC;
-extern s32 D_0046A558;
-extern s32 D_0046A560;
-extern s16 D_0046A5C0[], D_0046A5D0[];
-void func_00206130(void *, s32, s32, s32, s32, s32);
-void func_0024c8b8(void *, s16 *, s32, s32, s32, s32);
-void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
-void func_002077f0(void *, s32, s32, s32, s32, s32);
-void func_001fade0(void *, s32, s32, s32, s32, s32);
+#include "data/bss_0066_mixed.h"
+#include "data/data_0046.h"
+
+s32 func_001fade0(void *, s32, s32, s32, s32, u32);
 s32 func_001fc308(void *, s32, s32, s32, s32, s32, s32, s32, s32);
+void func_00206130(void *, s32, s32, s32, s32, s32);
+void func_002077f0(void *, s32, s32, s32, s32, s32);
+void func_002078f0(void *, s32, s32, s32, s32, s32, s32, s32, s32);
+/* nameentry.c */
+void func_0024c8b8(void *, s16 *, s32, s32, s32, s32);
 
 void func_0024c950(void *a) {
     s32 x, y;
@@ -82,5 +80,3 @@ void func_0024c950(void *a) {
     func_001fc308(a, 452, D_00669A78 + 328, 0, 0, 18, 0, cc, cc);
     func_001fc308(a, 464, D_00669A78 + 323, 0, 0, 9, 0, cc, cc);
 }
-#include "data/bss_0066_mixed.h"
-#include "data/data_0046.h"

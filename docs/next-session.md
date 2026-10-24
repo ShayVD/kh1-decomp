@@ -13,25 +13,26 @@ or wait on it: skip item 1, add every float change to docs/float-untested.md as 
 From Monday on, ask for the Mac and PCSX2 at the start (the connect card in the Claude desktop app) and make item 1
 the first thing.
 
-## Where we stopped (end of session 46, 2026-10-24)
+## Where we stopped (end of session 47, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-46.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-47.
 - **Five default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032) and 34
-  (2,049, still the current default: sessions 35 to 46 changed no data names). docs/float-untested.md lists every
+  (2,049, still the current default: sessions 35 to 47 changed no data names). docs/float-untested.md lists every
   change since the last booted build (KH1_F29_N) and the switch that undoes each. **Session 34 released 19 names**
-  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-46 released nothing.
-- **Modules** (session 46): 0x00239558-0x00249fb0 except the gauges (206 functions) moved into **src/hud/**, one
-  file per HUD part with its flag-mode siblings: hudspr (drawing helpers), cmdmenu (the command menu), marker
-  (markers, lock-on, the sign), notice, popup, counter, actmark, dmgnum (numbers over the field), partymark,
-  tgtgauge (the target's gauge), lblnum, timer (timer and score), banner, oneshot, hudmath (math helpers on
-  libvu0, Hermite segments), timload (TIM2 uploads). objdiff units 782. docs/modules.md "Session 46" has the table
-  and the traps: **CONTEXT_ONLY copies** (mod.py skips them: grep the old file), the **f32 argument's place**
-  (a `#ifdef KH1_PS2` cast macro as in popup.c / timer.c), u32 vs s32 switches, **count a file's functions before
-  deleting it**, and **a label cover_check needs** (banner.c's D_00669714). Each part: a set up registering a draw
-  hook (func_0011ef10 / func_0011ef38), a step, a busy check, its own GS drawing environment, D_00351E10 and
-  func_002388b8.
-- **Original source names**: assert strings "ttlib/ui_gauge.c" (the gauges, D_00454A20 = tt_gaugeWorldmap) and
-  "ttlib/ui.c" (the sprite library from 0x00249fb0).
+  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-47 released nothing.
+- **Modules** (session 47): 200 functions moved, and **the game segment is in modules from 0x001c0838 to its end
+  0x0024f2e0** (the hand asm src/asm/text_0024e0a4.s stays). The gauges (ttlib/ui_gauge.c) are src/hud/gauge*.c
+  with one Gauge type in include/hud/gauge.h; ttlib/ui.c is src/hud/ui*.c (include/hud/ui.h, UiSpr); src/decode.c
+  and src/sa_task.c (the cooperative tasks) are src/util/decode.c and sa_task*.c; after them come the movie names
+  (src/game/movies.c), a parameter-list reader (src/util/param.c), the name-entry screen (src/menu/nameentry*.c),
+  the HDD install and start-up (src/game/hdd*.c) and the player's model change (src/game/plmodel*.c). objdiff units
+  757. docs/modules.md "Session 47" has the table and the traps: **a union member changes the alias set** (Gauge's
+  unk4i, sa_task's TaskW view), element types decide the loads, CONTEXT_ONLY copies, the f32 argument's place
+  (cast macros), a callee's return type deciding a register, a sized extern for cover_check (hdd.c's D_004919A8),
+  static inline helpers mod.py leaves behind.
+- **3,426 functions are still in src/auto and src/hand**, all in 0x001001f8-0x001c0830 (out/gen/placements.tsv).
+- **Original source names** (docs/elf-notes.md): ttlib/ui_gauge.c, ttlib/ui.c, src/decode.c, src/sa_task.c, with
+  their ranges.
 - **libvu0 is named** (session 45): 39 functions in functions.tsv (sceVu0ApplyMatrix ... sceVu0ClipAll,
   _sceVu0ecossin, sceVpu0Reset; docs/sdk.md "Session 45"); the SDK files define them by name, game code still calls
   the func_ names (PROVIDE / shift aliases), the new modules call them by name. Platform wrappers so far:
@@ -39,15 +40,17 @@ the first thing.
 - **Helpers:** `python3 -I tools/shift/s36move/mod.py draft|remove` drafts and removes module code (it skips `static
   inline` helpers, data definitions, CONTEXT_ONLY copies and multi-name extern lines; it does not call a file with
   only one left EMPTY; it leaves each old file's types side by side in a draft); `python3 -I
-  tools/shift/s37move/refs.py LO HI` lists each function's calls and D_ names to split a range;
-  `tools/shift/s37move/fcheck.sh base` then `fcheck.sh NAME` after each chunk is the float check (compare
+  tools/shift/s37move/refs.py LO HI` (addresses without 0x) lists each function's calls and D_ names to split a
+  range; `tools/shift/s37move/fcheck.sh base` then `fcheck.sh NAME` after each chunk is the float check (compare
   float_covered.txt as a sorted set: a move can change its line order); `python3 -I tools/shift/s38move/fold.py
-  FILE.c TYPE --write` folds a file's window view into TextWin. `tools/checkfile.py FILE -v` lists the differing
-  words (relocations of data defined in the same file, jump tables, strings and .rodata doubles show there; `make` is
-  the judge). Keep sized externs in .c files: cover_check does not read headers. m2c's no-argument calls take the
-  value still in a0: write the argument. A fresh container needs `apt-get install libc6:i386 libstdc++5:i386
-  binutils-mips-linux-gnu` (after `dpkg --add-architecture i386`), `make toolchain`, the ELF, a plain `make shift`
-  and tools/shift/data_owners.py before `fcheck.sh base`.
+  FILE.c TYPE --write` folds a file's window view into TextWin; `python3 -I tools/shift/s31types/s31_warndiff.py
+  FILE.c ...` lists new warnings. `tools/checkfile.py FILE -v` lists the differing words (relocations of data
+  defined in the same file, jump tables, strings and .rodata doubles show there; it stops at a section overlap when
+  a file's size changed, so a local copy with that check off helps for drafts; `make` is the judge). Keep sized
+  externs in .c files: cover_check does not read headers. m2c's no-argument calls take the value still in a0: write
+  the argument. A fresh container needs `apt-get install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu` (after
+  `dpkg --add-architecture i386`), `make toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py
+  before `fcheck.sh base`.
 
 ## What is left (9 functions)
 
@@ -57,24 +60,25 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 47 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 48 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s47 and /mnt/project-files/kh1-runtime/s47, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s48 and /mnt/project-files/kh1-runtime/s48, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
-   the title screen, buying and selling in an item shop and a Gummi shop, the Moogle's synthesis, the title screen
-   left idle until its demo, a battle with the HUD (gauges, command menu, lock-on and the target's gauge, damage
-   numbers, an "obtained" notice), a minigame with a timer or score if one is near, and anything using atan:
-   camera, lock-on). If it breaks, bisect with the switches listed there, session 34's first. Move what boots into
-   docs/shiftable-plan.md and clear docs/float-untested.md. Without the Mac: skip.
-2. **Phase 4 modules** (docs/modules.md "Next module moves"): **the gauges 0x0023cfe8-0x00243168** (72 functions,
-   ttlib/ui_gauge.c, 27 files; settle one gauge object type and one D_00454A20 view first) into src/hud/gauge*.c,
-   then **ttlib/ui.c 0x00249fb0-0x0024e0a4** (123 functions, the sprite library) as one module, then the five
-   functions 0x0024f008-0x0024f2e0 (the hand asm 0x0024e0a4-0x0024f004 stays). `make` byte-identical and the float
-   layout unchanged after every chunk (fcheck.sh); run `make`, not only checkfile, after each `mod.py remove`.
+   the title screen, a new game's name entry if one is reachable, buying and selling in an item shop and a Gummi
+   shop, the Moogle's synthesis, the title screen left idle until its demo, a battle with the HUD (the HP / MP
+   gauges, command menu, lock-on and the target's gauge, damage numbers, an "obtained" notice), the world map's
+   gauge, a minigame with a timer or score if one is near, and anything using atan: camera, lock-on). If it breaks,
+   bisect with the switches listed there, session 34's first. Move what boots into docs/shiftable-plan.md and clear
+   docs/float-untested.md. Without the Mac: skip.
+2. **Phase 4 modules** (docs/modules.md "Next module moves"): go on downwards from 0x001c0830, the top of what is
+   left in src/auto and src/hand (14 functions in 0x001c, 172 in 0x001b, 158 in 0x001a ...). List the run with
+   `python3 -I tools/shift/s37move/refs.py 001b0000 001c0838`, group it by original file (assert strings, data
+   order) and by what it does, and move it into named modules. `make` byte-identical and the float layout
+   unchanged after every chunk (fcheck.sh); run `make`, not only checkfile, after each `mod.py remove`.
 3. **Platform wrappers (static, optional)**: include/platform/gs.h for src/gfx/gspkt.nostrict_nofill.c's
    func_00237018 (FlushCache, sceGsSyncPath, libdma's func_00266c08 / func_00266f38: name them sceDmaGetChan /
    sceDmaSend from their code first, as libvu0 and libmc were), src/menu/menubg.c's sceGsExecStoreImage, hud.c's
@@ -85,5 +89,5 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    skip case entries nothing branches to (can miss accesses); and the four libc string arguments still order-dependent
    (docs/shiftable-plan.md "Session 34: reach_check", "Left"). Any release goes into docs/float-untested.md as untested.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=47`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=48`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).

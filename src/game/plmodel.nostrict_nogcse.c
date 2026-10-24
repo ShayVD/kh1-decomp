@@ -1,23 +1,31 @@
+/* The player's model change (src/game/plmodel.c, docs/modules.md "Session
+ * 47"): func_0024f098, built with -fno-strict-aliasing and no gcse.  Swaps
+ * the controlled character (D_00304BE8->x48e[3]) for the object with r's
+ * id, or calls cb at once when it already is that one. */
 #include "common.h"
-#include "data/types/nostrict_nogcse_text_00240000_s6_25.h"
+#include "data/bss_0066_typed.h"
+#include "data/pieces/D_00304BE8_s.h"
+
 typedef struct { u8 pad[0x55]; s8 x55; } EntInfo;
 typedef struct { u8 pad[0x10]; V4f pos; u8 pad20[0x1c]; f32 x3c; u8 pad40[0xf0]; EntInfo *info; } Ent;
 typedef struct { s32 x0; u8 pad[0x48]; u16 id; u8 pad4e[6]; s8 kind; s8 x55; } Obj;
-#include "data/pieces/D_00304BE8_s.h"
 typedef struct { u8 pad[3]; u8 id; } Req;
-extern V4f D_0066AA90;
+
 extern Obj *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
 extern void (*D_0066AA80)(void);
-Ent *func_0013daf8(u8);
-void func_002675a8(V4f *, V4f *);
-void func_00141218(Ent *);
+
 void func_001236f8(Ent *);
 void func_001247e8(Ent *);
 Obj *func_00132040(Obj *);
-s32 func_001571a8(u16, s32);
+Ent *func_0013daf8(u8);
+void func_00141218(Ent *);
 s32 func_001560f8(s32, void *);
-void func_0024f070(void);
+s32 func_001571a8(u16, s32);
+void func_002675a8(V4f *, V4f *);
 void func_0024ef88(void);
+/* plmodel.c */
+void func_0024f070(void);
+
 void func_0024f098(Req *r, void (*cb)(void)) {
     if (r->id != D_00304BE8->x48e[3]) {
         Ent *e = func_0013daf8(D_00304BE8->x48e[3]);
@@ -43,4 +51,3 @@ void func_0024f098(Req *r, void (*cb)(void)) {
         cb();
     }
 }
-#include "data/bss_0066_typed.h"
