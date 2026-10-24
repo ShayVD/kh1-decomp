@@ -14,6 +14,7 @@
  * Window views: CfWin (plain s16 at +0xd2 / +0xda: TextWin's +0xd0 union
  * reorders) and topmenu.c's N_3f34c4 (D_003F34C4.h). */
 #include "common.h"
+#include "platform/pad.h"
 #include "menu/settings.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
@@ -146,7 +147,7 @@ void func_00219a88(N_3f34c4 *a) {
     N_3f34c4 *o;
     s32 v, s, i, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -176,7 +177,7 @@ void func_00219c18(N_3f34c4 *a) {
     N_3f34c4 *o;
     s32 v, s, i, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -206,7 +207,7 @@ void func_00219da8(N_3f34c4 *a) {
     N_3f34c4 *o;
     s32 v, s, i, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -250,10 +251,10 @@ void func_00219f98(void *a) {
     s32 v, k, i, y, ch;
 
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758((void *)D_00642D20);
             func_0011d768(3);
-        } else if (D_00425BC8->x8 & 0x2000) {
+        } else if (D_00425BC8->x8 & PAD_CIRCLE) {
             switch (D_00642D24) {
             case 0:
                 p = func_001f4468(a);
@@ -371,19 +372,19 @@ void func_00219f98(void *a) {
             D_00642D24 = v;
             ch = 0;
             if ((u32)(v - 6) >= 2 && (v != 5 || func_00219428())) {
-                if (D_00425BC8->x10 & 0x80000080) {
+                if (D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) {
                     if (func_00219158(D_00642D24) > 0) {
                         ch = 1;
                         func_002191f0(D_00642D24, func_00219158(D_00642D24) - 1);
-                    } else if (D_00425BC8->x8 & 0x80000080) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                         ch = 1;
                         func_002191f0(D_00642D24, D_003F4C18[D_00642D24]);
                     }
-                } else if (D_00425BC8->x10 & 0x20000020) {
+                } else if (D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) {
                     if (func_00219158(D_00642D24) < D_003F4C18[D_00642D24]) {
                         ch = 1;
                         func_002191f0(D_00642D24, func_00219158(D_00642D24) + 1);
-                    } else if (D_00425BC8->x8 & 0x20000020) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                         func_002191f0(D_00642D24, 0);
                         ch = 1;
                     }

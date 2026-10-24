@@ -8,6 +8,7 @@
  * func_00230e38 / func_00230f18 sell (D_00646A1C as in shopsell.c; the list
  * of what is held is built on the stack). */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003F77B0.h"
@@ -139,24 +140,24 @@ void func_002307c0(TextWin *m) {
             }
             if (max == 0) max = 1;
             snd = 0;
-            if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
+            if ((D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_RIGHT))) {
                 if (D_00646A28 > 1) {
                     D_00646A28--;
                     snd = 1;
                     m->x24 = idx;
-                } else if (D_00425BC8->x8 & 0x80000080) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
                     }
                     m->x24 = idx;
                 }
-            } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
+            } else if ((D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_LEFT))) {
                 if (D_00646A28 < (s32)max) {
                     D_00646A28++;
                     snd = 1;
                     m->x24 = idx;
-                } else if (D_00425BC8->x8 & 0x20000020) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;
@@ -281,24 +282,24 @@ void func_00231018(TextWin *m) {
                 if (idx != m->x24) D_00646A28 = 1;
                 max = vals[idx];
                 snd = 0;
-                if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
+                if ((D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_RIGHT))) {
                     if (D_00646A28 > 1) {
                         D_00646A28--;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (D_00425BC8->x8 & 0x80000080) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                         if (max != 1) {
                             D_00646A28 = max;
                             snd = 1;
                         }
                         m->x24 = idx;
                     }
-                } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
+                } else if ((D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_LEFT))) {
                     if (D_00646A28 < max) {
                         D_00646A28++;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (D_00425BC8->x8 & 0x20000020) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                         if (max != 1) {
                             D_00646A28 = 1;
                             snd = 1;

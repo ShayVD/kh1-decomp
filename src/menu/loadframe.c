@@ -11,6 +11,7 @@
  * the screen's open (both ports' state reset to 3), func_0022bd20 the reset
  * of the cursors.  Most likely the title menu's "load"; not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/data_003F.h"
 #include "data/pieces/D_00425BC8.h"
@@ -81,7 +82,7 @@ void func_002365e0(void);
 
 void func_0022b248(PtWin *arg0) {
     if (func_001f42b8(arg0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f36b8(arg0);
             func_0011d768(3);
         } else {
@@ -121,7 +122,7 @@ void func_0022b410(PtWin *a0) {
     PtWin *objs[2];
 
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3840(a0);
             func_0020be10(16);
             func_0011d768(3);

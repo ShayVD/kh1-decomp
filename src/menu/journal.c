@@ -16,6 +16,7 @@
  * Window views: JWin (plain s16 at +0xcc / +0xd2: TextWin's +0xd0 union
  * reorders), JcWin (the list's +0xc) and topmenu.c's N_3f34c4. */
 #include "common.h"
+#include "platform/pad.h"
 #include "platform/thread.h"
 #include "vm/script_vm.h"
 #include "data/bss_0064.h"
@@ -126,7 +127,7 @@ void func_0021cd68(JcWin *a) {
     s32 i, y, k, v;
     s32 *p;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a->xc);
             func_0011d768(3);
             D_00642E94 = 1;

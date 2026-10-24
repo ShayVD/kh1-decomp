@@ -23,6 +23,7 @@
  * as plain s16 (TextWin's +0xd0 is a union, and a union access reorders) or
  * keep a pointer at +0x24 (as s32 the store moves: the alias set changes). */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -155,7 +156,7 @@ void func_00216640(void *a) {
     s32 i, y, sel, s;
     s32 *pv;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             D_00642C94 = 0;
@@ -209,7 +210,7 @@ void func_00216890(CuWinC *o) {
     pnn = &D_003F40F8[k].n;
     n = *pnn;
     if (func_001f42b8(o)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3dc0(o->x24);
             func_0020bda8(16);
             if (o->xc) o->xc->x24 = D_003F43F0[D_00642CD8];
@@ -217,19 +218,19 @@ void func_00216890(CuWinC *o) {
         } else {
             t = *pnn;
             ch = 0;
-            if (D_00425BC8->x10 & 0x10000010) {
+            if (D_00425BC8->x10 & PAD_DIR(PAD_UP)) {
                 if (D_00642CDC > 0) {
                     D_00642CDC--;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x10000010) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_UP)) {
                     D_00642CDC = t - 1;
                     ch = 1;
                 }
-            } else if (D_00425BC8->x10 & 0x40000040) {
+            } else if (D_00425BC8->x10 & PAD_DIR(PAD_DOWN)) {
                 if (D_00642CDC < t - 1) {
                     D_00642CDC++;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x40000040) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_DOWN)) {
                     D_00642CDC = 0;
                     ch = 1;
                 }
@@ -244,19 +245,19 @@ void func_00216890(CuWinC *o) {
                 func_0011d768(1);
             }
             ch = 0;
-            if (D_00425BC8->x10 & 0x80000080) {
+            if (D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) {
                 if (D_00642CE0 > 0) {
                     D_00642CE0--;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x80000080) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                     D_00642CE0 = 2;
                     ch = 1;
                 }
-            } else if (D_00425BC8->x10 & 0x20000020) {
+            } else if (D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) {
                 if (D_00642CE0 < 2) {
                     D_00642CE0++;
                     ch = 1;
-                } else if (D_00425BC8->x8 & 0x20000020) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                     D_00642CE0 = 0;
                     ch = 1;
                 }
@@ -400,7 +401,7 @@ void func_002177c8(CuWinU *a) {
     u32 i;
     s32 sel, y;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00642C90);
             func_0011d768(3);
         } else {

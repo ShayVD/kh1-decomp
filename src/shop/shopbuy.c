@@ -11,6 +11,7 @@
  * D_00646A00 / D_00646A04 are the hooks of the cursor and of a purchase (set
  * by the frame, shopframe.c).  Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
@@ -179,7 +180,7 @@ void func_0022eef8(TextWin *a0) {
                     D_00646A28--;
                     snd = 1;
                     a0->x24 = D_00646A14;
-                } else if (D_00425BC8->x8 & 0x80000080) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                     if (max != 1) {
                         D_00646A28 = max;
                         snd = 1;
@@ -191,7 +192,7 @@ void func_0022eef8(TextWin *a0) {
                     D_00646A28++;
                     snd = 1;
                     a0->x24 = D_00646A14;
-                } else if (D_00425BC8->x8 & 0x20000020) {
+                } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                     if (max != 1) {
                         D_00646A28 = 1;
                         snd = 1;

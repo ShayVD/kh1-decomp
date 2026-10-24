@@ -13,6 +13,7 @@
  * Each window draws the panel D_003F7210 (func_00201440) and its title.
  * Most likely asked before a new game starts; not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_003E8E08.h"
 #include "data/pieces/D_00425BC8.h"
@@ -68,7 +69,7 @@ s32 func_00219458(s32);
 void func_0022bd58(TextWin *a0) {
     s32 s, x, y;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -126,7 +127,7 @@ void func_0022bd58(TextWin *a0) {
 void func_0022c2a0(TextWin *a0) {
     s32 s, x, y;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -157,7 +158,7 @@ void func_0022c2a0(TextWin *a0) {
 void func_0022c4e8(TextWin *a0) {
     s32 s, x, y;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -188,7 +189,7 @@ void func_0022c4e8(TextWin *a0) {
 void func_0022c730(TextWin *a0) {
     s32 i, y;
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;
@@ -221,7 +222,7 @@ void func_0022c730(TextWin *a0) {
 void func_0022c960(TextWin *a0) {
     s32 i, y; s32 *p;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             if ((D_006469B4 = D_006469B0, func_00219428()) != 0) {
@@ -258,7 +259,7 @@ void func_0022c960(TextWin *a0) {
 void func_0022cba8(TextWin *a0) {
     s32 v;
     if (func_001f42b8(a0) != 0) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 12);
             func_0011d768(3);
             D_006469B4 = D_006469B0;

@@ -11,6 +11,7 @@
  * page, names are messages D_003F5FF0[i] + 0x20, func_0021fd60), func_0021fd90
  * an entry's text (func_001c2df0 on D_003F3518).  Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_003F5C18.h"
@@ -92,7 +93,7 @@ s32 func_0021fd88(s32 arg0) {
 s32 func_0021fd90(JsWin *a) {
     s32 x, y, k;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
         } else {
@@ -135,7 +136,7 @@ void func_0021ff68(JsWin *a) {
     s32 i, j, y, step, id;
     JsWin *o;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_006433F0);
             func_0011d768(3);
         } else {

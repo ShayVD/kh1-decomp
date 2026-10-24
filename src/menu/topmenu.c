@@ -10,6 +10,7 @@
  * func_0020d2f8 until the windows close), func_0020d2a0 closes it,
  * func_0020d748 resets the cursors of the pages. */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003F34C4.h"
@@ -187,7 +188,7 @@ void func_0020c1c8(N *o) {
         break;
     case 1:
         if (func_001f42b8(o)) {
-            if (D_00425BC8->x8 & 0x4000) {
+            if (D_00425BC8->x8 & PAD_CROSS) {
                 func_001f3840(o);
                 func_0011d768(3);
                 func_00207618();

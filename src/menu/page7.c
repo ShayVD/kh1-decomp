@@ -12,6 +12,7 @@
  * func_00229690 -> func_00228e70).  Most likely the save point's menu (save,
  * change the party); not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00425BC8.h"
 #include "data/pieces/D_00425C28.h"
@@ -110,7 +111,7 @@ void func_002287f8(PtWin *arg0) {
     s32 i, n, cur, k, c, y;
 
     if (func_001f42b8(arg0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3840(arg0);
             func_0011d768(3);
             func_0020be10(16);

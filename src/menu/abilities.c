@@ -21,6 +21,7 @@
  * and TextWin's +0xd0 is a union (a union access reorders); WinP24's +0x24 is
  * a pointer (as s32 the store moves: the alias set changes). */
 #include "common.h"
+#include "platform/pad.h"
 #include "text/textwin.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -153,7 +154,7 @@ void func_00213fb0(void) {
 
 void func_00214030(TextWin *a0) {
     if (func_001f42b8(a0)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3708(a0, 6);
             func_0011d768(3);
         } else {
@@ -192,7 +193,7 @@ void func_002145d8(TextWin *a) {
     TextWin *o, *p;
     f = *(u32 *)&D_00642C3C & 0x80;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             D_00642C24 = 1;
@@ -301,7 +302,7 @@ void func_00214b20(AbWin *a) {
     func_001fd688(a);
     money = func_001ef720(k);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -382,7 +383,7 @@ void func_00214fc8(AbWin *a) {
     func_001fd610(a, lim);
     func_001fd688(a);
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(a);
             func_0011d768(3);
             if (!m) D_00642C24 = 0;
@@ -476,7 +477,7 @@ void func_00215420(AbWin *a) {
     u32 v, i;
     s32 sel, y, c, k;
     if (func_001f42b8(a)) {
-        if (D_00425BC8->x8 & 0x4000) {
+        if (D_00425BC8->x8 & PAD_CROSS) {
             func_001f3758(D_00642C20);
             func_0011d768(3);
         } else {

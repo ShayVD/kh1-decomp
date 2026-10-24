@@ -8,6 +8,7 @@
  * -1 munny full, -2 nothing to sell, -3 too many), func_0022fba8 sells
  * (func_001ef7b0 adds the munny).  Not proved by a boot. */
 #include "common.h"
+#include "platform/pad.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_003E3D6C.h"
@@ -173,22 +174,22 @@ void func_0022fcb8(TextWin *m) {
                 max = 1;
                 if (D_003E3D6C <= D_00646A24) max = func_001ef0c0(D_00646A30[idx]);
                 snd = 0;
-                if ((D_00425BC8->x10 & 0x80000080) && !(D_00425BC8->x10 & 0x20000020)) {
+                if ((D_00425BC8->x10 & PAD_DIR(PAD_LEFT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_RIGHT))) {
                     if (D_00646A28 > 1) {
                         D_00646A28--;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (D_00425BC8->x8 & 0x80000080) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_LEFT)) {
                         D_00646A28 = max;
                         snd = max != 1;
                         m->x24 = idx;
                     }
-                } else if ((D_00425BC8->x10 & 0x20000020) && !(D_00425BC8->x10 & 0x80000080)) {
+                } else if ((D_00425BC8->x10 & PAD_DIR(PAD_RIGHT)) && !(D_00425BC8->x10 & PAD_DIR(PAD_LEFT))) {
                     if (D_00646A28 < max) {
                         D_00646A28++;
                         snd = 1;
                         m->x24 = idx;
-                    } else if (D_00425BC8->x8 & 0x20000020) {
+                    } else if (D_00425BC8->x8 & PAD_DIR(PAD_RIGHT)) {
                         if (max != 1) {
                             D_00646A28 = 1;
                             snd = 1;
