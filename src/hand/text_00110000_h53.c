@@ -1,5 +1,4 @@
 #include "common.h"
-#include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 
 #include "data/types/text_00110000_h53_p.h"
@@ -126,109 +125,6 @@ Q53 *func_0011fbb0(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, u32 a
     return r;
 }
 
-typedef struct {
-    u32 b0 : 1;
-    u32 comp : 1;
-    u32 r : 30;
-    u8 pad4[32];
-    u32 lsn;
-    u32 size;
-    u8 *buf;
-    u32 result;
-} CdReq53;
-extern char D_0048D260[];
-extern u32 D_002C5B44;
-extern void (*D_0046A6A8)(s32);
-extern u32 D_004F3200;
-s32 func_0025b588(char *, s32);
-s32 func_0025b990(s32, s32, s32);
-s32 func_0025bbc8(s32, u8 *, s32);
-s32 func_0025b810(s32);
-void FlushCache(s32);
-u32 func_00120040(u8 *, u32);
-void func_0010c150(void);
-void func_002193e0(s32);
-void func_001201d0(CdReq53 *);
-void func_0010c170(void (*)(CdReq53 *), CdReq53 *);
-void func_0010c1b8(void (*)(CdReq53 *));
-
-void func_001202c0(CdReq53 *r) {
-    s32 err = 0;
-    s32 fd, left, n;
-    fd = func_0025b588(D_0048D260, 1);
-    if (fd >= 0) {
-        if (!(D_002C5B44 & 0x2000)) {
-            func_0025b990(fd, r->lsn << 11, 0);
-            goto rd;
-        }
-        err = 1;
-        goto out;
-    }
-    err = 1;
-    goto out;
-rd:
-    n = 0;
-    left = r->size;
-    while (left > 0) {
-        n = func_0025bbc8(fd, r->buf, left);
-        if (n < 0) {
-            err = 1;
-            break;
-        }
-        left -= n;
-    }
-    func_0025b810(fd);
-    if (err == 0) {
-        if (r->comp) {
-            FlushCache(0);
-            n = func_00120040(r->buf, r->size);
-        }
-        r->result = n;
-    }
-out:
-    if (err) {
-        D_0046A6A8(4);
-        (*(volatile Fl_2c5968 *)&D_002C5968).b2 = 1;
-        do func_0010c150(); while ((*(volatile Fl_2c5968 *)&D_002C5968).b2);
-        func_002193e0(0);
-        r->lsn += D_004F3200;
-        func_0010c170(func_001201d0, r);
-    }
-    func_0010c1b8(func_001202c0);
-}
-
-void func_00267530(V53 *, V53 *, V53 *);
-void func_00267518(V53 *, V53 *, V53 *);
-void func_002674f0(V53 *, V53 *, V53 *, f32);
-void func_00121fc4(V53 *, V53 *);
-
-s32 func_00121168(V53 *out, V53 *a, V53 *b, f32 t) {
-    V53 q, d1, d2, x, y;
-    func_00267530(&d1, &a[1], &a[0]);
-    func_00267530(&d2, &b[1], &b[0]);
-    func_00267560(&x, &d1, ((b->y - a->y) + d2.y * (b->x - a->x)) / (d2.x * d1.y - d2.y * d1.x));
-    func_00267518(&x, &x, a);
-    func_00267530(&d1, a, &x);
-    func_00121fc4(&d1, &d1);
-    func_00267530(&d2, b, &x);
-    func_00121fc4(&d2, &d2);
-    func_002674f0(&q, &d2, &d1, t);
-    func_002673b8(&q, &q);
-    func_00267560(&y, &q, d1.w + (d2.w - d1.w) * t);
-    func_00267518(&out[0], &x, &y);
-    out[0].w = 1.0f;
-    func_00267530(&d1, &a[1], &x);
-    func_00121fc4(&d1, &d1);
-    func_00267530(&d2, &b[1], &x);
-    func_00121fc4(&d2, &d2);
-    func_002674f0(&q, &d2, &d1, t);
-    func_002673b8(&q, &q);
-    func_00267560(&y, &q, d1.w + (d2.w - d1.w) * t);
-    func_00267518(&out[1], &x, &y);
-    out[1].w = 1.0f;
-    return 1;
-}
-
 #include "data/types/text_00110000_h53_p2.h"
 float cosf(float);
 char D_004F7150[0x4][32] ALIGNED(16);
@@ -275,4 +171,3 @@ char *D_002C6460[0xb] ALIGNED(16) = {
 #include "data/data_002E.h"
 #include "data/data_0049.h"
 #include "data/data_0048.h"
-#include "data/pieces/D_0046A6A8.h"

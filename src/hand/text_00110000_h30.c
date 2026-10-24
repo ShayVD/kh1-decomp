@@ -56,29 +56,7 @@ s32 sceCdDiskReady(s32);
 s32 sceCdRead(u32, u32, void *, void *);
 s32 func_00269fd0(s32);
 s32 func_0026aaa0(void);
-typedef struct {
-    u32 b0 : 1;
-    u32 comp : 1;
-    u32 r : 30;
-    u8 pad4[32];
-    u32 lsn;
-    u32 size;
-    u8 *buf;
-    u32 result;
-} CdReq;
-void FlushCache(s32);
-typedef struct {
-    u8 pad0[16];
-    char name[40];
-    u8 *buf;
-    void (*cb)(u32, s32, u8 *);
-    s32 wait;
-    s32 user;
-    CdReq *req;
-} LoadTask;
-s32 func_00120678(LoadTask *);
 void func_002672f8(f32 *, V4 *, f32 *);
-extern f32 D_002BBDFC;
 void func_002675a8(f32 *, f32 *);
 #include "data/pieces/D_002C5910.h"
 
@@ -530,183 +508,10 @@ void func_0011fec0(void) {
     D_002C5C3C = 0;
     (*(volatile Fl_2c5968 *)&D_002C5968).b1 = 0;
 }
-
-void func_0010c150(void);
-void func_0010c1b8(void (*)(CdReq *));
-u32 func_00120040(u8 *, u32);
-
-void func_001201d0(CdReq *r) {
-    u32 n = (r->size + 2047) >> 11;
-    u32 res;
-    do {
-        while (sceCdDiskReady(1) != 2 || !sceCdRead(r->lsn, n, r->buf, D_002C5C38)) func_0010c150();
-        while (func_00269fd0(1)) func_0010c150();
-    } while (func_0026aaa0());
-    if (r->comp) {
-        FlushCache(0);
-        res = func_00120040(r->buf, r->size);
-    } else {
-        res = r->size;
-    }
-    func_0010c1b8(func_001201d0);
-    r->result = res;
-}
-
-void func_001201d0(CdReq *);
-typedef struct { s32 x0; u32 flags; u32 lsn; u32 size; } FileEnt;
-extern u32 D_004F3200;
-CdReq *func_0011ffd0(void);
-FileEnt *func_00120190(char *);
-s32 func_002193b8(void);
-void func_0010c170(void (*)(CdReq *), CdReq *);
-void func_001202c0(CdReq *);
-
-CdReq *func_001204a0(char *name, u8 *buf) {
-    CdReq *r = func_0011ffd0();
-    FileEnt *e;
-    r->buf = buf;
-    r->result = -1;
-    e = func_00120190(name);
-    if (e == 0) {
-        r->result = 0;
-    } else {
-        r->size = e->size;
-        r->comp = e->flags & 1;
-        r->lsn = e->lsn;
-        if (func_002193b8() == 0) {
-            func_0010c170(func_001201d0, r);
-            return r;
-        }
-        r->lsn -= D_004F3200;
-        func_0010c170(func_001202c0, r);
-    }
-    return r;
-}
-
-#include "data/pieces/D_002C5C48.h"
-s32 func_00146878(void);
-void func_00120038(CdReq *);
 #ifdef KH1_OVL_FIXUPS
-void kh1_ovl_flush0(CdReq *); /* shift build only (shift/ovl_fixup.c): overlay fixups + FlushCache(0) */
 #endif
-
-s32 func_00120678(LoadTask *t) {
-    CdReq *r;
-    if (t->wait > 0) {
-        t->wait--;
-        return 8;
-    }
-    if (func_00146878() == 0) return 8;
-    if (t->wait == 0) t->req = func_001204a0(t->name, t->buf);
-    r = t->req;
-    t->wait--;
-    if ((s32)r->result < 0) return 8;
-    D_002C5C48 = r->result;
-#ifdef KH1_OVL_FIXUPS
-    kh1_ovl_flush0(r); /* relocate an overlay before it is flushed and run; same size as FlushCache(0) */
-#else
-    FlushCache(0);
-#endif
-    FlushCache(2);
-    if (t->cb) t->cb(r->result, t->user, r->buf);
-    func_00120038(r);
-    return 4;
-}
-
-extern s32 D_004E4520;
-extern u8 D_004E49E8[];
-LoadTask *func_0011f090(void *, s32, s32 (*)(LoadTask *));
-char *strcpy(char *, const char *);
-
-s32 func_00120748(char *name, s32 buf, void (*cb)(void), s32 wait) {
-    s32 *cnt;
-    LoadTask *t = func_0011f090(D_004E49E8, 0, func_00120678);
-    cnt = &D_004E4520;
-    t->user = (*cnt)++;
-    t->wait = wait;
-    strcpy(t->name, name);
-    t->buf = (u8 *)buf;
-    *(s32 *)&t->cb = (s32)cb;
-    *cnt = (u16)*cnt;
-    return t->user;
-}
 
 extern char D_0048D278[] __attribute__((aligned(8)));
-char D_004E4500[0x20] __attribute__((aligned(8)));
-extern u8 D_00491A18[];
-u32 strlen(const char *);
-
-char *func_00120930(char *name) {
-    s32 i, n;
-    __builtin_memcpy(D_004E4500, D_0048D278, 9);
-    strcat(D_004E4500, name);
-    n = strlen(D_004E4500);
-    for (i = 8; i < n; i++) {
-        D_004E4500[i] = __extension__ ({ s32 __c = D_004E4500[i]; ((D_00491A18 + 1)[__c] & 2) ? __c - 'a' + 'A' : __c; });
-    }
-    return D_004E4500;
-}
-
-s32 func_00121000(V4 *m, V4 *pts) {
-    V4 v;
-    s32 i;
-    for (i = 0; i < 8; i++) {
-        func_002672f8(v, m, *pts++);
-        if (v[3] < 1.0f) return 0;
-        v[0] /= v[3];
-        v[1] /= v[3];
-        if (v[0] < 0.0f || v[0] > 4095.0f || v[1] < 0.0f || v[1] > 4095.0f) return 0;
-    }
-    return 1;
-}
-
-void func_001213a0(f32 *y, s32 n, f32 *d) {
-    f32 h[32];
-    s32 i;
-    d[0] = d[n - 1] = 0.0f;
-    for (i = 0; i < n - 1; i++) h[i + 1] = y[i + 1] - y[i];
-    d[1] = h[2] - h[1] - d[0];
-    h[1] = 4.0f;
-    for (i = 1; i < n - 2; i++) {
-        f32 t = 1.0f / h[i];
-        d[i + 1] = h[i + 2] - h[i + 1] - d[i] * t;
-        h[i + 1] = 4.0f - t;
-    }
-    d[n - 2] -= d[n - 1];
-    for (i = n - 2; i > 0; i--) d[i] = (d[i] - d[i + 1]) / h[i];
-}
-
-f32 func_00267390(f32 *, f32 *);
-f32 func_00120bf8(f32 *);
-
-f32 func_00121748(f32 *a, f32 *b) {
-    if (func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b)) < -1.0f) return -1.0f;
-    if (func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b)) > 1.0f) return 1.0f;
-    return func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b));
-}
-
-void func_002673b8(f32 *, f32 *);
-void func_00267370(f32 *, f32 *, f32 *);
-f32 func_00121840(f32 *, f32 *);
-void func_00120cf8(f32 *, V4 *, f32);
-
-void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
-    V4 a, b, ax;
-    V4 m[4];
-    f32 ang, lim;
-    func_002673b8(a, from);
-    func_002673b8(b, to);
-    func_00267370(ax, a, b);
-    func_002673b8(ax, ax);
-    ang = func_00121840(a, b);
-    rate *= D_002BBDFC;
-    if (rate < ang) ang = rate;
-    else if (ang < -rate) ang = -rate;
-    func_00120cf8(ax, m, ang);
-    func_002675a8(out, a);
-    out[3] = 0;
-    func_002672f8(out, m, out);
-}
 #include "data/bss_004E_mixed.h"
 #include "data/bss_004F_mixed.h"
 #include "data/bss_004F_typed.h"
@@ -716,7 +521,6 @@ void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
 #include "data/data_0049.h"
 #include "data/data_0048.h"
 #include "data/pieces/D_002C1378.h"
-#include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_002C1368.h"
 #include "data/pieces/D_002C1320.h"
 #include "data/pieces/D_002C1330.h"
