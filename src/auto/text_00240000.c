@@ -10,32 +10,9 @@ extern M2C_UNK D_0046A640;
 #include "data/pieces/D_0046A650.h"
 extern M2C_UNK D_0046A660;
 extern M2C_UNK func_0024f008;
-extern s32 D_0046A53C;
 extern s32 D_0046A60C;
 extern s32 D_0046A67C;
-extern s32 D_00669A38;
-extern s32 D_00669A3C;
-extern u32 D_002C5AD8;
-extern u32 D_002C5AE0;
 extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
-s32 func_0026aaa0();
-
-void func_0024ba00(s32 arg0) {
-    D_00669A38 = arg0;
-    D_00669A3C = func_0026aaa0();
-}
-
-s32 func_0024be58(void) {
-    return D_002C5AD8 | (((u32) D_002C5AD8 >> 0x18) & 0xF0);
-}
-
-s32 func_0024be70(void) {
-    return D_002C5AE0 | (((u32) D_002C5AE0 >> 0x18) & 0xF0);
-}
-
-s32 func_0024d490(void) {
-    return D_0046A53C;
-}
 
 s32 func_0024d4a0(void) {
     return D_0046A60C;

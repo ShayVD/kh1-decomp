@@ -1,65 +1,6 @@
 #include "common.h"
 #include "data/bss_0066.h"
 
-extern s32 D_0046A558;
-extern s32 D_0046A55C;
-extern s32 D_0046A560;
-extern s32 D_0046A5D8;
-extern s16 D_00669A40[8]; /* src/data/bss_0066.c: s16 D_00669A40[0xc] */
-extern s32 D_00669A60;
-extern s32 D_00669A64;
-extern s32 D_00669A7C;
-void func_0024c460(void *);
-void func_0024be88(void *);
-void func_0024c950(void *);
-void func_001f8f30(void);
-s32 func_0024be58(void);
-void func_0011d768(s32);
-s32 func_001f3840(void *);
-void func_0024cf00(void);
-s32 func_001be010(s32);
-void func_001be3c0(s32);
-
-void func_0024cfa0(void *a) {
-    s32 i;
-    func_0024c460(a);
-    func_0024be88(a);
-    func_0024c950(a);
-    func_001f8f30();
-    if (D_0046A558 != 0 && (func_0024be58() & 0x2000)) {
-        s32 *p = &D_0046A55C;
-        if (*p == 0) {
-            *p = 1;
-            func_0011d768(2);
-            func_001f3840(a);
-            D_0046A5D8 = 0;
-            return;
-        }
-    }
-    if (!(func_0024be58() & 0x2000)) return;
-    if (D_0046A55C != 0) return;
-    if (D_0046A560 == 0) return;
-    for (i = 0; i < 8; i++) {
-        if (D_00669A40[i] == -1) continue;
-        if (D_00669A40[i] != 0) break;
-    }
-    if (i == 8) {
-        func_0011d768(4);
-        return;
-    }
-    D_0046A5D8 = 1;
-    D_0046A55C = 1;
-    func_0011d768(2);
-    func_001f3840(a);
-    if (D_00669A60 < 0) return;
-    func_0024cf00();
-    if (D_00669A64 != 0) {
-        D_00669A7C = func_001be010(D_00669A60);
-        return;
-    }
-    func_001be3c0(D_00669A60);
-}
-
 /* needs make: uses rodata */
 extern void *D_00469FF8[];
 extern s32 D_00469FD8[];
