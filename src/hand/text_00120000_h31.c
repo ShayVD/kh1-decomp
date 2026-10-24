@@ -13,7 +13,6 @@ typedef struct { u8 pad[0x10]; volatile s32 n; } Q14;
 extern s32 func_00122ff8(void *);
 extern f32 func_0012ec60(struct Actor *, s32, f32 *);
 extern void func_00267530(void *, void *, void *);
-extern f32 func_00120c88(f32);
 extern void func_0011ef10(s32, void *);
 extern f32 func_00121748(f32 *, f32 *);
 
@@ -117,46 +116,6 @@ void func_00128b20(void) {
     func_00267b08(D_004F82D0, 32768.0f, 1.0f, 1.0f, 2048.0f, 2048.0f, 1.0f, 65535.0f, 1.0f, 65535.0f);
     func_0011ef10(0x1fbcf, func_00128440);
 }
-
-typedef struct { f32 *m; f32 *rot; } R8;
-#include "data/pieces/D_002C58D0.h"
-extern void func_002678b8(f32 *, f32 *, f32 *);
-extern void func_002672f8(f32 *, f32 *, f32 *);
-
-void func_00129270(R8 *r) {
-    f32 v[4];
-    f32 m[16];
-    s32 i;
-    for (i = 0; i < 3; i++) {
-        v[i] = func_00120c88(r->rot[i] / 180.0f * 3.1415928f);
-    }
-    v[3] = 0.0f;
-    func_002678b8(m, D_002C58D0[0], v);
-    func_002672f8(r->m, m, r->m);
-}
-
-typedef struct { f32 c[4]; s32 f10, f14, f18, f1c; f32 f20; s32 f24; } L9;
-extern s32 D_002BC080[4];
-extern s32 D_002BC090;
-extern s32 D_002BC094;
-#include "data/pieces/D_002BC098.h"
-extern s32 D_002BC09C;
-extern s32 D_002BC0A0;
-extern s32 D_002BC0A4;
-extern s32 D_002BBE04;
-
-void func_0012b450(L9 **pp) {
-    L9 *p = *pp;
-    s32 i;
-    for (i = 0; i < 4; i++) D_002BC080[i] = p->c[i] * 128.0f;
-    D_002BC090 = p->f10;
-    D_002BC094 = p->f14;
-    D_002BC098 = func_00120c88(p->f20 / 180.0f * 3.1415928f);
-    D_002BC09C = p->f24;
-    D_002BC0A0 = p->f18;
-    D_002BC0A4 = p->f1c;
-    D_002BBE04 = 1;
-}
 extern void func_0012cb40(Q14 *, s32, s32);
 
 static inline s32 add(Q14 *q, s32 x) {
@@ -227,6 +186,4 @@ s32 func_00125a28(s32 a0) {
 #include "data/bss_004F_typed.h"
 #include "data/data_002B.h"
 #include "data/data_002E.h"
-#include "data/pieces/D_002BC080.h"
 #include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002BBE04.h"

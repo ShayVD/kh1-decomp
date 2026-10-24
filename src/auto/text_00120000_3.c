@@ -19,9 +19,6 @@ extern f32 D_004F7650;
 extern s32 D_002C5958;
 #include "data/pieces/D_002C6440.h"
 #include "data/pieces/D_002E26A0.h"
-f32 func_00120c88(f32);
-f32 func_0026b6f8(f32);
-f32 func_0026b7d0(f32);
 f32 func_0026b8b8(f32);
 s32 *func_00123488();
 s32 func_0011ef10(s32, s32);
@@ -29,8 +26,6 @@ s32 func_0011ef38(s32);
 s32 func_00120930();
 s32 func_001226f0(s32, s32, s32);
 s32 func_00123368();
-s32 func_00128c60(s32, s32);
-s32 func_001334b8(s32, s32, s32, s32, s32);
 void func_00122bd8(void);
 void func_001252f8(void);
 
@@ -172,30 +167,6 @@ void func_001259b0(s32 arg0) {
         D_002C5958 &= 0xFFBFFFFF;
     }
     func_001252f8();
-}
-
-void func_00128cc8(s32 arg0) {
-    M2C_FIELD(arg0, s32 *, 0) = func_00128c60(arg0, M2C_FIELD(arg0, s32 *, 4));
-}
-
-void func_00128de0(f32 *arg0) {
-    *arg0 = func_0026b7d0(func_00120c88((*arg0 / 180.0f) * 3.141592979f));
-}
-
-void func_00128e38(f32 *arg0) {
-    *arg0 = func_0026b6f8(func_00120c88((*arg0 / 180.0f) * 3.141592979f));
-}
-
-void func_00128f10(f32 *arg0) {
-    *arg0 = func_00120c88((*arg0 / 180.0f) * 3.141592979f);
-}
-
-void func_00129cf0(void *arg0) {
-    M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0), void **, 0x6C), f32 *, 0xCC) = (f32) ((M2C_FIELD(arg0, f32 *, 4) / 180.0f) * 3.141592979f);
-}
-
-void func_0012ac98(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 0) = func_001334b8(M2C_FIELD(arg0, s32 *, 0), M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(arg0, s32 *, 8), M2C_FIELD(arg0, s32 *, 0xC), M2C_FIELD(arg0, s32 *, 0x10));
 }
 #include "data/bss_0052_mixed.h"
 #include "data/data_002E.h"

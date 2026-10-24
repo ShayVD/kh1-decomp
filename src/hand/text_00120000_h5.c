@@ -25,16 +25,9 @@ typedef struct Ent {
 
 /* Script-command argument slot: the handlers take an Arg array and write
  * their result back into slot 0. */
-typedef union Arg {
-    s32 i;
-    u32 u;
-    f32 f;
-    void *p;
-} Arg;
 
 typedef struct FV { f32 f0, f4, f8, f0c; } FV;
 typedef struct S4c { u8 pad[0x4c]; u16 f4c; } S4c;
-typedef struct S3c0 { u8 pad[0x3c0]; u8 f3c0[16]; } S3c0;
 typedef struct V8 { s32 a, b; } V8;
 
 /* 0x730-byte list node (pool D_004F8310[64], chained through next). */
@@ -48,8 +41,6 @@ extern u32 D_002E3190;
 extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
 extern s32 D_004F82C0;
 extern s32 D_004F82C4;
-#include "data/pieces/D_002C58B0.h"
-#include "data/pieces/D_002E31A8.h"
 extern V8 *D_00525288;
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
@@ -61,27 +52,8 @@ extern void func_00124920(void);
 extern void func_001247e8(Ent *);
 extern s32 func_00130030(void *);
 extern void func_002675a8(void *, void *);
-extern void func_002672f8(void *, void *, void *);
-extern void func_00267e90(void *, void *, f32);
 extern void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 extern void func_001149e8(f32 (*)[4], s32, s32, void *);
-extern f32 func_00120bf8(s32);
-extern f32 func_00121748(s32, s32);
-extern void func_0014e668(s32, s32, f32, f32, s32);
-extern void func_001315c0(void *, s32, f32, void *);
-extern f32 func_00142cf0(s32, s32, f32, f32);
-extern f32 func_00142e30(s32, s32, s32);
-extern f32 func_00131a68(s32, s32);
-extern void func_00138a20(s32, f32, s32);
-extern void func_0014f658(void *, s32);
-extern s32 func_0012f1d0(void *, s32);
-extern f32 func_00132f00(s32);
-extern void func_001358b8(void *, s32);
-extern s32 func_0013c318(s32);
-extern void func_002414a8(s32, s32);
-extern void func_00153d88(void *);
-extern s32 func_0013a440(s32, s32, f32, s32);
-extern void func_00176c60(s32);
 
 /* Count entities whose 2-bit state (f370 bits 37-38) is 2. */
 s32 func_00123298(void) {
@@ -188,187 +160,11 @@ void func_00127b18(SD0 *a, f32 (*b)[4], s32 c) {
 
 /* ---- script command handlers (Arg *p) ---- */
 
-void func_00128fc8(Arg *p) {
-    p->f = func_00120bf8(p->i);
-}
-
-void func_00129210(Arg *p) {
-    p[0].f = func_00121748(p[0].i, p[1].i);
-}
-
-void func_00129240(Arg *p) {
-    func_0014e668(p[0].i, 0, p[1].f, p[2].f, p[3].i);
-}
-
-void func_00129460(Arg *p) {
-    func_001315c0(p[0].p, p[1].i, p[2].f, p[3].p);
-}
-
-void func_00129488(Arg *p) {
-    p[0].f = func_00142cf0(p[0].i, p[1].i, p[2].f, p[3].f);
-}
-
-typedef struct S178 { u8 pad[0x178]; s32 f178; } S178;
-void func_00129510(Arg *p) {
-    if (((S178 *)p[0].p)->f178 == 0) p[0].i = 0;
-    else p[0].i = 1;
-}
-
-void func_001295a0(Arg *p) {
-    p[0].f = func_00142e30(p[0].i, p[1].i, p[2].i);
-}
-
-void func_001295d8(Arg *p) {
-    p[0].f = func_00131a68(p[0].i, p[1].i);
-}
-
-void func_00129668(Arg *p) {
-    func_00138a20(p[0].i, p[1].f, p[2].i);
-}
-
-typedef struct S24 { u8 pad[0x24]; f32 f24; } S24;
-typedef struct S18 { u8 pad[0x18]; S24 *f18; } S18;
-typedef struct S14cA { u8 pad[0x14c]; S18 *f14c; } S14cA;
-void func_00129730(Arg *p) {
-    p[0].f = ((S14cA *)p[0].p)->f14c->f18->f24;
-}
-
-typedef struct S3d4 { u8 pad[0x3d4]; f32 f3d4; } S3d4;
-void func_00129898(Arg *p) {
-    p[0].f = ((S3d4 *)p[0].p)->f3d4;
-}
-
 /* f370 bits 37-38 as a bitfield (store zero-extends the u32 arg: lwu). */
-typedef struct B370 { u8 pad[0x370]; u64 lo:37; u64 b37:2; u64 hi:25; } B370;
-void func_00129908(Arg *p) {
-    B370 *e = p[0].p;
-    e->b37 = p[1].u;
-}
-
-void func_00129dc8(Arg *p) {
-    func_0014f658(p[0].p, 4);
-    func_00267e90(((S3c0 *)p[0].p)->f3c0, p[1].p, ((FV *)p[1].p)->f0c);
-}
-
-void func_00129e48(Arg *p) {
-    u8 buf[16];
-    if (D_002E26A0[0] == 0) {
-        p[0].i = 1;
-        return;
-    }
-    func_001315c0(D_002E26A0[0], 0, 1.0f, buf);
-    p[0].i = func_0012f1d0(buf, p[0].i) == 0;
-}
-
-typedef struct E1 {
-    u8 pad0[0x30];
-    FV f30;
-    u8 pad40[0xd0 - 0x40];
-    f32 fd0[4][4];
-    u8 pad110[0x1cc - 0x110];
-    s32 f1cc;
-    u8 pad1d0[0x450 - 0x1d0];
-    FV f450;
-} E1;
-void func_00129ed8(Arg *p) {
-    E1 *e = p[0].p;
-    if (e->f1cc & 8) {
-        func_002675a8(p[1].p, &e->f450);
-        ((FV *)p[1].p)->f0c = 0;
-        func_002672f8(p[1].p, e->fd0, p[1].p);
-        return;
-    }
-    func_002675a8(p[1].p, &e->f30);
-}
-
-void func_0012a068(Arg *p) {
-    func_0014f658(p[0].p, 7);
-    func_00267e90(((S3c0 *)p[0].p)->f3c0, p[1].p, ((FV *)p[1].p)->f0c);
-}
-
-void func_0012a0a8(Arg *p) {
-    Ent *e = p[0].p;
-    p[0].i = e ? (s32)(e->f370 >> 37) & 3 : 0;
-}
-
-void func_0012a1f8(Arg *p) {
-    p[0].f = func_00132f00(p[0].i);
-}
-
-typedef struct S284 { u8 pad[0x284]; f32 f284; } S284;
-void func_0012a2a0(Arg *p) {
-    p[0].f = ((S284 *)p[0].p)->f284;
-}
-
-typedef struct E2 {
-    s32 w0;
-    u8 pad004[0x130 - 4];
-    S4c *f130;
-    u8 pad134[0x370 - 0x134];
-    union { u64 v; u8 b[8]; } f370;
-    u8 pad378[0x3b0 - 0x378];
-    s32 f3b0;
-    u8 pad3b4[0x3c0 - 0x3b4];
-    u8 f3c0[16];
-} E2;
-void func_0012a2b0(Arg *p) {
-    E2 *e = p[0].p;
-    e->w0 |= 0x240;
-    func_001358b8(e, 10);
-    func_0014f658(e, 8);
-    func_002675a8(e->f3c0, &D_002C58B0);
-    e->f3b0 = 0;
-    e->f370.v |= 1ULL << 60;
-    func_002414a8(func_0013c318(e->f130->f4c), 3);
-    func_00153d88(e);
-}
 
 /* Radians -> 16-bit angle units, three components. */
-typedef struct S4p { u8 pad[4]; Arg *f4; } S4p;
-void func_0012a628(Arg *p) {
-    f32 *v = p[1].p;
-    S4p *o = p[0].p;
-    o->f4[0].i = (s32)(v[0] / 6.2831855f * 65536.0f) & 0xffff;
-    o->f4[1].i = (s32)(v[1] / 6.2831855f * 65536.0f) & 0xffff;
-    o->f4[2].i = (s32)(v[2] / 6.2831855f * 65536.0f) & 0xffff;
-}
-
-typedef struct B0 {
-    union {
-        u64 v;
-        struct { u64 lo:2; u64 b2:2; u64 hi:60; } bf;
-    };
-} B0;
-void func_0012a970(Arg *p) {
-    B0 *e = p[0].p;
-    if (e && ((s32)(e->v >> 11) & 1)) e->bf.b2 = p[1].u;
-}
-
-void func_0012aaf8(Arg *p) {
-    p[0].i = func_0013a440(p[0].i, p[1].i, p[2].f, p[3].i);
-}
 
 /* ---- */
-
-void func_0012b2c0(void) {
-    s32 i;
-    D_002E31A8 |= 2;
-    for (i = 0; i < 3; i++) {
-        if (D_002E26A0[i]) *(s32 *)D_002E26A0[i] |= 0x1000080;
-    }
-    func_00176c60(0);
-}
-
-typedef struct S54 { u8 pad[0x54]; s8 f54; } S54;
-typedef struct E3 { u8 pad[0x130]; S54 *f130; } E3;
-void func_0012b690(s32 *out) {
-    Ent *p = 0;
-    s32 n = 0;
-    while ((p = func_001230a0(p)) != 0) {
-        if (((E3 *)p)->f130->f54 == 10) n++;
-    }
-    *out = n;
-}
 
 /* Allocate a node and append it to a's chain. */
 #include "data/bss_004F_typed.h"
