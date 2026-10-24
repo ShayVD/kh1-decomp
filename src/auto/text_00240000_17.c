@@ -11,7 +11,6 @@ M2C_UNK func_002490f0(s32 *);
 extern M2C_UNK D_00469FC8[];
 M2C_UNK D_00669070[0x58] ALIGNED(16);
 extern s32 D_00469F60;
-extern s32 D_00662A30; /* src/data/bss_0066.c: E860 D_00662A30[10] */
 extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 s32 func_0023d700(s32, s32, s32, s32, s32, f32);
 s32 memcpy(s32, s32, s32);
@@ -22,30 +21,6 @@ s32 func_00240ae0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
     }
     return func_0023d700(M2C_FIELD(arg0, s32 *, 0), (s32) &D_00426850, arg1, arg2, arg3, fparg0);
     return arg3;
-}
-
-s32 func_00245f18(void) {
-    s32 *var_a0;
-    s32 temp_v1;
-    s32 var_a1;
-    s32 var_v0;
-
-    var_a1 = 0;
-    var_a0 = &D_00662A30;
-loop_1:
-    temp_v1 = *var_a0;
-    var_a0 += 536;
-    var_v0 = 1;
-    if (temp_v1 != 0) {
-        return var_v0;
-    }
-    var_a1 += 1;
-    if (var_a1 >= 0xA) {
-        var_v0 = 0;
-    } else {
-        goto loop_1;
-    }
-    return var_v0;
 }
 
 s32 func_00248380(void) {

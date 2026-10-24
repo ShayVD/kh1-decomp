@@ -82,17 +82,6 @@ void func_00242b38(void) {
     }
 }
 
-void func_00245798(void *arg0, s32 arg1, s32 arg2) {
-    M2C_FIELD(arg0, s32 *, 8) = arg1;
-    M2C_FIELD(arg0, s32 *, 0) = 1;
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    func_002675a8(arg0 + 0x10, arg2);
-}
-
-void func_00245918(void) {
-
-}
-
 void func_00245ff0(void) {
     s32 *temp_v0;
 

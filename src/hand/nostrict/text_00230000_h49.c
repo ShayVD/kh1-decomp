@@ -129,8 +129,6 @@ void func_00241a38(s32 i) {
 }
 typedef struct { s32 x, y, z, w; } I4;
 typedef struct { u8 pad[0x60]; I4 c[4]; I4 p[4]; } Pkt;
-void func_0024aa48(s32, Pkt *, s32);
-s32 func_002388b8(Pkt *, s32, s32);
 typedef struct { s32 unk0; s32 unk4; s32 unk8; s32 unkC; s32 unk10; } Hp2;
 extern Hp2 D_00454A20;
 #include "data/pieces/D_00451040.h"
@@ -167,28 +165,6 @@ typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tai
 void func_0024ae00(void *);
 void func_0024af00(void *);
 
-
-Pkt D_00662950 ALIGNED(16);
-extern s32 D_00662940;
-
-void func_00245920(s32 a0, s32 a1, s32 x, s32 y, f32 s) {
-    s32 i;
-    s32 *p;
-    s32 dx, dy;
-    func_0024aa48(a0, &D_00662950, a1);
-    dx = x * 16;
-    dy = y * 16;
-    p = &D_00662950.p[0].y;
-    for (i = 0; i < 4; i++) {
-        p[-1] += dx;
-        *p += dy;
-        p += 4;
-    }
-    for (i = 0; i < 4; i++) {
-        D_00662950.c[i].w = D_00662950.c[i].w * s;
-    }
-    D_00662940 = func_002388b8(&D_00662950, 1, D_00662940);
-}
 
 /* needs make: uses rodata */
 

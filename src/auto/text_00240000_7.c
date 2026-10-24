@@ -30,14 +30,12 @@ extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);
 extern s32 D_00668370[];
 extern volatile s32 D_00668040[];
-s32 func_002457c8(void);
 s32 func_00247388(void);
 s32 func_0025daf0(M2C_UNK *);
 s32 func_00267f50(M2C_UNK *, M2C_UNK *, M2C_UNK *, void *, M2C_UNK);
 s32 strncmp(s32, s32, s32);
 void *func_00120190(M2C_UNK *);
 void func_001315c0(s32, s32, s32, f32);
-void func_00245798(s32, s32, s32);
 void func_00247228(s32, s32, s32);
 void memset(s32, s32, s32);
 
@@ -45,22 +43,6 @@ void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00245840(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    s32 temp_s1;
-
-    temp_s1 = func_002457c8();
-    func_001315c0(arg0, 0x8004, (s32) sp, 0.0f);
-    func_00245798(temp_s1, arg1, (s32) sp);
-}
-
-void func_00245ad8(s32 arg0, s32 arg1) {
-    if (arg0 != 0) {
-        func_0024ae00(arg1);
-    }
-    func_0024af00(arg1);
 }
 
 void func_00246a70(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {

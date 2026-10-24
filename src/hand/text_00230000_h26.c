@@ -89,30 +89,6 @@ void func_0024ae00(void *);
 /* Three rows of five 0xA00-byte cells, with a used count per row. */
 
 /* Ten 0x860-byte channels: a free one, else the oldest. */
-typedef struct { s32 used; s32 age; u8 pad8[0x860 - 8]; } Snd;
-extern Snd D_00662A30[10]; /* src/data/bss_0066.c: E860 D_00662A30[10] */
-
-Snd *func_002457c8(void) {
-    Snd *best = 0;
-    s32 max = -1;
-    s32 i;
-    Snd *p = D_00662A30;
-    for (i = 0; i < 10; i++, p++)
-        if (p->used == 0) return p;
-    for (i = 0; i < 10; i++) {
-        p = &D_00662A30[i];
-        if (max < p->age) {
-            max = p->age;
-            best = p;
-        }
-    }
-    return best;
-}
-
-void func_002458e0(void) {
-    s32 i;
-    for (i = 0; i < 10; i++) D_00662A30[i].used = 0;
-}
 
 typedef struct { u8 pad[0x4C]; u16 unk4C; } Info;
 typedef struct { u8 pad[0x130]; Info *unk130; } Act;

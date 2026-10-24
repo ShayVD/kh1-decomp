@@ -16,8 +16,6 @@ typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0
 typedef struct { u8 pad[0x4c]; u16 id; } S130;
 typedef struct { u8 pad[0x130]; S130 *p; } SC;
 typedef struct { u8 pad[0xc]; SC *c; } SArg;
-
-typedef struct { u32 state; s32 cnt; u8 pad[0x18]; u8 sub[1]; } S5cd0;
 typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
 typedef Fx E930;
 typedef struct { u8 pad[0x180]; B192 b; } L240;
@@ -65,11 +63,6 @@ typedef union {
 typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
-
-extern u8 D_0045BC10[];
-extern E860 D_00662A30[10];
-extern u8 D_0045D240[];
-extern u8 D_0045D248[];
 Panel D_00667F60 ALIGNED(32);
 Q4 *D_00667F50 ALIGNED(16);
 Q4 *D_00667F54 ALIGNED(4);
@@ -127,8 +120,6 @@ void func_002370c8(void *);
 Q4 *func_002388b8(void *, s32, Q4 *);
 void func_002393d8(void);
 s32 func_00242bf0(s32);
-void func_00245b08(s32, S5cd0 *);
-void func_00245da0(void);
 void func_00246120(SArg *, s32, f32);
 s32 func_00246320(void);
 void func_00246750(s32, s32, s32, f32);
@@ -163,20 +154,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00245e40(void) {
-    s32 i;
-    E860 *p;
-    func_0024aac8(D_0045BC10);
-    p = D_00662A30;
-    for (i = 0; i < 10; i++) {
-        func_0024af40(D_0045D240, p->a, D_0045BC10);
-        func_0024af40(D_0045D248, p->b, D_0045BC10);
-        p++;
-    }
-    if (func_0011ef38(func_00245da0) == 0)
-        func_0011ef10(0x28489, func_00245da0);
-}
 
 void func_00246038(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
     s32 i;
@@ -451,29 +428,6 @@ s32 func_0024f210(s32 a, void (*cb)(void)) {
 
 /* ---- the functions below need make: they use rodata (jump tables,
  * string literals) ---- */
-
-void func_00245cd0(S5cd0 *p) {
-    s32 r = 0;
-    switch (p->state) {
-    case 0:
-        return;
-    case 1:
-        r = 1;
-        p->state++;
-        break;
-    case 2: case 3: case 4:
-        p->state++;
-        break;
-    case 5:
-        if (func_0024a1c0(p->sub) & 4) p->state++;
-        break;
-    case 6:
-        p->state = 0;
-        return;
-    }
-    p->cnt++;
-    func_00245b08(r, p);
-}
 
 s32 func_00246aa8(void) {
     S8370 *p = &D_00668370;
