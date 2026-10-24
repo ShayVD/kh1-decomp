@@ -167,15 +167,3 @@ void pppRyjMatrixWorldZYXCon(s32 arg0, s32 arg1) {
     M2C_FIELD(temp_s0, f32 *, 0x34) = (f32) M2C_FIELD(&D_003701D0, f32 *, 4);
     M2C_FIELD(temp_s0, f32 *, 0x38) = (f32) M2C_FIELD(&D_003701D0, f32 *, 8);
 }
-
-void pppRyjDrawShipolyCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[2];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s8 *, 5) = 1;
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
-    M2C_FIELD(temp_a0_2, s8 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
-}

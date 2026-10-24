@@ -139,7 +139,6 @@ typedef struct {
 } DSysS;
 s32 func_001b8198(void *, DShpParam *, s32);
 
-
 typedef struct { u8 r, g, b, a; } Col;
 typedef struct {
     s32 frame;
@@ -212,7 +211,6 @@ typedef struct {
     u8 pad[0x54];
     u8 mode;
 } ThKey;
-
 
 void func_001a8d78(ThWork *);
 
@@ -470,71 +468,7 @@ void pppKeShpTail2XFrame(PppObject *obj, Tail2XKey *key, PppEntry *e) {
 }
 
 #include "data/types/nostrict_text_00180000_s6_11.h"
-extern SplV4 D_00372720;
-extern SplV4 D_00372740;
 
 /* VU0 */
-void func_00199888(u128 *out, u128 *p, u128 *q, f32 t) {
-    s32 i = (s32) t;
-    SplV4 *c = &D_00372720;
-
-    p += i;
-    q += i;
-    c->z = t - (f32) i;
-    __asm__ volatile(
-        ".set noreorder\n"
-        "lqc2 $vf1, 0(%1)\n"
-        "lqc2 $vf2, 16(%1)\n"
-        "lqc2 $vf3, 0(%2)\n"
-        "lqc2 $vf4, 16(%2)\n"
-        "lqc2 $vf5, 0(%3)\n"
-        "vsub.xyzw $vf10xyzw, $vf4xyzw, $vf3xyzw\n"
-        "vmuly.xyzw $vf11xyzw, $vf3xyzw, $vf5y\n"
-        "vmulx.xyzw $vf12xyzw, $vf3xyzw, $vf5x\n"
-        "vsub.xyzw $vf13xyzw, $vf2xyzw, $vf1xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf11xyzw, $vf11xyzw, $vf4xyzw\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf12xyzw\n"
-        "vsub.xyzw $vf13xyzw, $vf13xyzw, $vf11xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf13xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf1xyzw\n"
-        "sqc2 $vf10, 0(%0)\n"
-        ".set reorder\n"
-        : : "r"(out), "r"(p), "r"(q), "r"(c) : "memory");
-}
 
 /* VU0 */
-void func_0019a9e0(u128 *out, u128 *p, u128 *q, f32 t) {
-    s32 i = (s32) t;
-    SplV4 *c = &D_00372740;
-
-    p += i;
-    q += i;
-    c->z = t - (f32) i;
-    __asm__ volatile(
-        ".set noreorder\n"
-        "lqc2 $vf1, 0(%1)\n"
-        "lqc2 $vf2, 16(%1)\n"
-        "lqc2 $vf3, 0(%2)\n"
-        "lqc2 $vf4, 16(%2)\n"
-        "lqc2 $vf5, 0(%3)\n"
-        "vsub.xyzw $vf10xyzw, $vf4xyzw, $vf3xyzw\n"
-        "vmuly.xyzw $vf11xyzw, $vf3xyzw, $vf5y\n"
-        "vmulx.xyzw $vf12xyzw, $vf3xyzw, $vf5x\n"
-        "vsub.xyzw $vf13xyzw, $vf2xyzw, $vf1xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf11xyzw, $vf11xyzw, $vf4xyzw\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf12xyzw\n"
-        "vsub.xyzw $vf13xyzw, $vf13xyzw, $vf11xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf13xyzw\n"
-        "vmulz.xyzw $vf10xyzw, $vf10xyzw, $vf5z\n"
-        "vadd.xyzw $vf10xyzw, $vf10xyzw, $vf1xyzw\n"
-        "sqc2 $vf10, 0(%0)\n"
-        ".set reorder\n"
-        : : "r"(out), "r"(p), "r"(q), "r"(c) : "memory");
-}
-#include "data/pieces/D_00372720.h"
-#include "data/pieces/D_00372740.h"
