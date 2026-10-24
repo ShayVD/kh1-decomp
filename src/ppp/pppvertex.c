@@ -125,9 +125,6 @@ void func_00185000(s32 arg0, void *arg1, unsigned short arg2) {
 /* pppVtMimeFrame (from hand/text_00180000_h12.c). */
 typedef struct PppSys PppSys;
 typedef struct {
-    void *fn[8];
-} PppModule;
-typedef struct {
     u8 pad[0x9C];
     u8 unk9C;
 } PppInst;
@@ -149,7 +146,7 @@ struct PppSys {
     s32 nslot;         /* +0x68 */
     u8 pad6C[8];
     s32 unk74;         /* +0x74 */
-    PppModule **mods;  /* +0x78 */
+    PppClass **mods;   /* +0x78: &D_00370200[id], pppRelocProgram */
     s32 pad7C;
     PppSlotE *slots;   /* +0x80 */
     u8 unk84;          /* +0x84 */

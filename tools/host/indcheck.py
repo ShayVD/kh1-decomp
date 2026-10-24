@@ -135,9 +135,9 @@ READ = {
         "no arguments by design (clang cannot parse them)",
     ("src/ppp/pppcomp.c", "pppDrawHookDraw"):
         "OVERLAY: the hook table D_00616220 is 0 in the ELF and the main ELF only clears it (func_00182058)",
-    ("src/ppp/pppsys.c", "*", "PppModule.fn"):
-        "DATA: PSys.mods points into the loaded effect file (func_00182c10: o->mods = q) and no code found "
-        "relocates its words: see what fn[4..6] hold in a host run that loads an effect",
+    ("src/ppp/pppsys.c", "func_001822f8"):
+        "READ: PppSys.mods are &D_00370200[id] (func_00182c10 takes the words pppRelocProgram relocated) "
+        "and fn10 (+0x10) is 0 in all 236 classes: the loop never calls",
     ("src/sound/objse.nostrict.c", "func_001571a8"):
         "READ: cb is always 0 (the only caller, func_00157400, passes 0)",
     ("src/sound/objse.c", "func_001573d8"):
@@ -149,9 +149,6 @@ READ = {
     ("src/gfx/light.c", "func_00122430"):
         "READ: the task's +0x48 is func_001224c8's third argument (partyctl.nostrict.c's func_00122768, 1; "
         "partyai.c's 0); the +0x48 targets of other structs (the party AI's p48) do not reach it",
-    ("src/text/selector.c", "func_0010f368"):
-        "OPEN: the Range52 comes from fldtext.c's Seq.a (+0x28 of func_0010cf38's a, the field text event): "
-        "not traced",
     ("src/text/textwin.c", "func_001f8170"):
         "READ: TextWin.x8 is the descriptor's x4 (func_001f31a8 copies x0 to +4, x4 to +8): the descriptors "
         "of the 141 calls that pass a constant hold x4s that take 0 or 1 (37 calls pass a computed one)",
@@ -179,6 +176,9 @@ FIELD_SAME = [
     ("T15.f14", "T16.f14"),          # objtask.nostrict.c: func_00138400's task, func_00137ea8's
     ("T155ef8.x18", "W9Task.x18"),   # objslot: func_001560f8's task, func_00155ef8's
     ("W34E32.x1c", "Ent9c.x1c"),     # memberitem: func_00149c80's cb, func_00149a88's
+    # the choice list records: func_0010f558(range, win, start) stores range at the window's
+    # +0xA8 (its text object's +0x28), which func_0010cd40 hands func_0010f368 as a Range52
+    ("Range52.fn", "MsgCb.fn", "ListCb.fn", "ShopCb.fn", "Cb20.fn"),
 ]
 # Tables of records a setter fills from its parameters: the setter, the table's start,
 # record size and count, {field offset: the setter's parameter stored there}, and the

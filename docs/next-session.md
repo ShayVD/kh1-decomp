@@ -9,18 +9,19 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
-If this session starts before then (sessions 49 to 66 ran without it), do not ask for the Mac or wait on it: skip items 1
+If this session starts before then (sessions 49 to 67 ran without it), do not ask for the Mac or wait on it: skip items 1
 to 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
 on, ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make item 1 the first
 thing**: six float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO is in Downloads for the host
 run, and the overlay files are in Downloads/kh1-test/ovl.
 
-## Where we stopped (end of session 66, 2026-10-24)
+## Where we stopped (end of session 67, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-66.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-67.
 - **Six default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
-  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; sessions 60 to 65 kept the float ELF's
-  loaded bytes the same: 64's fcheck showed only the name D_0061FFA0 gone, 65 and 66 changed no PS2 object)**. docs/float-untested.md lists every
+  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; sessions 60 to 67 kept the float ELF's
+  loaded bytes the same: 64's fcheck showed only the name D_0061FFA0 gone, 65 and 66 changed no PS2 object,
+  67's fcheck: float_covered, float_reach, loaded bytes all the same)**. docs/float-untested.md lists every
   change since the last booted build (KH1_F29_N) and the switch that undoes each. Session 59 released 4 names
   (`--no-fmt-read`, low risk); session 34 released 19 (bisect order `--no-hix-join`, `--no-widen-heads`,
   `--no-likely-slot`).
@@ -29,33 +30,36 @@ run, and the overlay files are in Downloads/kh1-test/ovl.
   caller in the main ELF; check them against dktitle.x's calls into the main ELF. BENIGN keys may name the
   caller (a third field).
 - **Calls through pointers** (`python3 -I tools/host/indcheck.py [--all] [--tsv out/host/indcheck.tsv]`,
-  clang syntax trees; vita-port-plan.md §5.1e-§5.1f): **0 `?` left** (session 66). 242 rows: 107 OK, 41 READ,
-  70 OVERLAY, 3 DATA (pppsys.c's PSys.mods fn[4..6]: words of the loaded effect file; look in a real-disc
-  run), 1 OPEN (selector.c's Range52.fn, from fldtext's event record), 7 `?def`, 13 CLANG (files clang
-  cannot parse: gcc nested functions in ppp/keshptail(x), kethdraw; a draft's `$10`). It follows record
-  tables by field offset (RECORD_SETTERS: the actor class table func_0014f830, the party's timed callbacks;
-  RECORD_TABLES: ppp's classes D_00370200), locals, real struct layouts (two typedefs of one struct meet at
-  `~@0xOFF` when the field names spell the offset; FIELD_SAME for the rest), and gives `?` rows a lead (what
-  the ELF's code stores at that offset). `--takes NAME...` prints parameter counts for reading by hand.
-  Session 66 fixed one more passthrough: plctl.c's func_0013e558 takes `(o, dir)` and passes dir to the
-  class's +0xC handler (19 of 24 take it). The 70 OVERLAY rows (vm_lib's 41 hooks, mcstep's request hook
-  13, partyctl's cb44 4, textwin's x0 2, the setters func_001c06c0 / func_001468f8 / func_0012cab8,
-  D_00304B6C, D_002E27D4, D_00616220, func_0011f228, vmath's handler stack, gumisave's two overlay entry
-  calls) are for the dktitle.x / overlay check.
+  vita-port-plan.md §5.1e-§5.1g): **0 `?`, 0 DATA, 0 OPEN** (session 67). 242 rows: 110 OK, 42 READ, 70
+  OVERLAY, 7 `?def` (targets only in assembly or the SDK: shadow.c func_00128b20, mdldraw func_00161a08,
+  texanim func_001680d8, objdraw func_00135ed0 x2, keth func_001a7c50 x2), 13 CLANG (gcc nested functions in
+  ppp/keshptail(x), kethdraw; a draft's `$10`). Session 67: PSys.mods are &D_00370200[id] (the words
+  pppRelocProgram relocates), so pppsys.c's system steps call PppClass fn10 (never set) / fn14 / fn18 (all
+  take nothing); the Range52 is func_0010f558's choice list (msgwin / list / shop, FIELD_SAME). The 70
+  OVERLAY rows (vm_lib's 41 hooks, mcstep's request hook 13, partyctl's cb44 4, textwin's x0 2, the setters
+  func_001c06c0 / func_001468f8 / func_0012cab8, D_00304B6C, D_002E27D4, D_00616220, func_0011f228, vmath's
+  handler stack, gumisave's two overlay entry calls) are for the dktitle.x / overlay check.
 - **Argument classes** (portability.md rule 11): `python3 -I tools/host/abicheck.py` (text) and indcheck
   (trees) both 0. Run both after any new declaration.
-- **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs (it
-  polled forever before); PlatPadRead leaves no button pressed, PlatPadGetButtonProfile answers -1.
-  PlatSifCallRpc answers RPC 0x30 with 1 (session 66: the event command func_001e8b50 polls it until what
-  RPC 0x2F started is ready; unanswered, the call read back its own request, 0 for index 1, forever). No
-  other RPC answer is read in the main ELF. The card's GetDir / Read counts are Sync's -10: never read.
+- **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs;
+  PlatPadRead leaves no button pressed, PlatPadGetButtonProfile answers -1. PlatSifCallRpc answers RPC 0x30
+  with 1 (session 66), and (session 67) keeps the sound status block's address from RPC 0 and, a frame after
+  a queue (RPC 30), takes the bank transfers it held (commands 3, 4, 0xB) off the block's +0x1F00 count
+  (D_0063F540): boot waits for it non-zero, the sound tasks / summons / soft reset for 0; unanswered it stayed
+  2. The other status words read 0, which every reader takes as "nothing playing" / "no disc error".
+  **Threads** (session 67, host/null/threads.c): the game's threads run as ucontext coroutines (a thread runs
+  from the main thread's PlatWaitSema until it waits; semaphores count; PlatIReferSemaStatus reports the
+  waiters). This runs src/util/thread.c's loader worker: every func_001204a0 file load reads on it (before,
+  a load's result stayed -1 for ever).
 - **Host build (phase 5)**: `make host-census` links out/host/kh1-host (all 512 game files + the 8 drafts).
   `KH1_HOST_ISO=PATH out/host/kh1-host` reads the user's own disc image by sector (host/port/cd_image.c;
   `KH1_HOST_TRACE=1` prints the searches and reads, `KH1_HOST_FRAMES=N` caps the run, default 600). On
-  tests/host/fake_disc.py's image the boot reads SYSTEM.CNF and KINGDOM.IDX and the main loop runs its frames;
-  **under valgrind 60 frames show 0 errors** (rechecked in session 66) (`apt-get install valgrind libc6-dbg:i386`; `valgrind
-  --track-origins=yes out/host/kh1-host`). **Not yet run on the real ISO** (it is on the Mac). opdma.c's three
-  GS tag lists are one definition now (D_0061EEA0[0x140]; memmap.c's copy is gone).
+  tests/host/fake_disc.py's image (now with a one-sector "dktitle.x" in KINGDOM.IDX) the boot reads SYSTEM.CNF,
+  KINGDOM.IDX and dktitle.x (frame 2, on the loader thread) and calls D_00F20000(0, 0), which faults:
+  main.c prints "fault at PS2 0x00f20000 in the memory map" and the caller. **Valgrind: 0 errors** up to the
+  fault (`apt-get install valgrind libc6-dbg:i386`; under valgrind the fault is a SIGILL). **Not yet run on the
+  real ISO** (it is on the Mac): it should stop at the same call. opdma.c's three GS tag lists are one
+  definition (D_0061EEA0[0x140]).
 - **dktitle.x**: tools/ovl/inventory.py is ready (functions, main-ELF calls and data, code / data split;
   `--selftest` on the main ELF finds every layout.tsv start). Not run: the file is on the Mac. §5.2 has the plan
   to decompile it (toolchain check on 5-8 leaves first).
@@ -88,11 +92,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 67 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 68 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s67 and /mnt/project-files/kh1-runtime/s67, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s68 and /mnt/project-files/kh1-runtime/s68, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -109,8 +113,9 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
    not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), run
    `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` (and once under valgrind) and record in vita-port-plan
-   how far the boot gets and where it stops (expected: the first overlay call D_00F20000(0, 0), which needs §5.2's
-   native overlay build). Fix host-only causes the way sessions 63 and 64 did (platform answers, layout
+   how far the boot gets and where it stops (expected, as on the fake disc since session 67: SYSTEM.CNF,
+   KINGDOM.IDX, dktitle.x read on the loader thread, then the fault at the overlay call D_00F20000(0, 0), which
+   needs §5.2's native overlay build). Fix host-only causes the way sessions 63 and 64 did (platform answers, layout
    dependencies in host/port, the PS2 objects bit-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
    `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
@@ -118,14 +123,13 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    func_002066b0's BENIGN entry against dktitle.x's calls into the main ELF, and indcheck's OVERLAY rows
    (does dktitle.x call the setters func_001c06c0 / func_001468f8 / func_0012cab8 or write vm_lib's hooks? what do
    the targets take?). Without the Mac: skip.
-4. **Static, without the Mac**: (a) the DATA rows: find what writes PSys.mods' words (func_00182c10 takes
-   them from the effect file; is there a relocation like pppRelocProgram's for the module list?) and what
-   fn[4..6] are, and trace the OPEN row (selector.c's Range52 from fldtext.c's event record +0x28: who fills
-   func_0010cf38's a?). (b) What else the null platform answers that the game reads back: the sound status
-   block D_0063D640 / D_0063EE40 the IOP writes by DMA (zero now: no effect, no stream playing; check the
-   waits on it, e.g. a stream's end), PlatCdSync / the CD answers host/port/cd_image.c gives, the thread and
-   semaphore calls (PlatWaitSema / PlatSignalSema: does any loop wait on a semaphore no thread signals?).
-   (c) argcheck's 3 value uses still wait for dktitle.x. Keep every PS2 object the same.
+4. **Static, without the Mac**: (a) the 7 `?def` rows: their targets are only in assembly or the SDK; read
+   each target's code for the argument registers it uses and add what they take (a table like BENIGN, or
+   teach indcheck the asm files' parameter counts). (b) Past the overlay call on the host: a test-only
+   switch (e.g. `KH1_HOST_OVL=stub`) that answers D_00F20000(cmd, arg) with 0 instead of jumping, to see
+   what the boot does next on the fake disc and find the next host-only cause (more platform answers, waits,
+   layout dependencies); keep it out of the game code (host/null or host/port only). (c) argcheck's 3 value
+   uses still wait for dktitle.x. Keep every PS2 object the same.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=67`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=68`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).

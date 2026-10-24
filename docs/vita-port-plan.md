@@ -396,6 +396,7 @@ no system headers: the Vita can share it. `KH1_HOST_TRACE=1` prints every search
 sceGsSyncVCallback) once and count a frame (`KH1_HOST_FRAMES=N`, default 600, ends the run with a
 summary). There is no other thread, so a wait that would block lets a frame pass: the main loop's frame
 wait is func_0010c348 (src/util/thread.c), a semaphore func_00110218 signals through func_0010c378.
+(Session 67: the game's threads run as coroutines now, host/null/threads.c, 5.1g.)
 PlatSifBindRpc marks the client bound (sceSifClientData +0x24) so src/sound/snd_rpc.c's setup stops
 polling.
 
@@ -550,6 +551,52 @@ index 1 it would have waited forever. No caller in the main ELF reads any other 
 PlatPadGetButtonProfile answers -1 (no pad; padread skips the read). The memory card's counts: PlatMcSync's
 -10 is GetDir's count too, so func_00235228 stores -1 and error 3 and never reads the table (Read the same).
 The fake-disc run: 120 frames, valgrind 60 frames 0 errors.
+
+### 5.1g Session 67: the last indirect rows, the sound transfer count, the loader thread
+
+Static only (the Mac was away). Every PS2 object stayed the same (sha1 of every out/build .o before and
+after), kh1.elf is byte-identical and the shift build M0 OK.
+
+**indcheck's DATA and OPEN rows are read** (0 `?`, 0 DATA, 0 OPEN; 110 OK, 42 READ, 70 OVERLAY, 7 `?def`,
+13 CLANG). PSys.mods (+0x78) is not effect-file data: func_00182c10 takes the words after the count at the
+program's +0x8 offset (the program is file + 0x110, func_001803f0), the same words pppRelocProgram turns from
+class ids into &D_00370200[id] (func_00180540 relocates every program when the effect loads). So the
+three system steps call PppClass fn10 / fn14 / fn18 (pppsys.c now types mods as `PppClass **`; pppmatrix.c
+and pppvertex.c's copies of the struct too). fn10 is 0 in all 236 classes (a READ note); fn14's three
+(pppDrawMatrixWoodFn14 empty, the two RyjMegaBirth filters that store a normal) and fn18's one
+(pppKeAcmSolidFn18, empty) take nothing: ppp.h's "returns a float" was the filters' 1.0f store. The OPEN
+row: func_0010f558(range, win, start) stores the range at the window's +0xA8, the +0x28 of its text object
+(objwin.c's Spr at +0x80), which func_0010cd40 hands func_0010f368 as a Range52; the ranges are msgwin.c's
+D_0062A1E0, list.c's D_006305C0 and shop.c's D_0062F8F0 (19 calls, as many jal / j in the ELF), and FIELD_SAME
+joins Range52.fn with their MsgCb / ListCb / ShopCb / Cb20.fn: 14 targets, 12 take the index, 2 take nothing.
+
+**The sound transfer count** (host/null/plat_null.c). The status block's word +0x1F00 (D_0063F540,
+func_001ecfd8) counts bank transfers not done: func_001ed658 / 001ed220 / 001ed460 (commands 3, 4, 0xB) add
+one each and only the IOP's copy of the block counts down. The boot's func_0011cd20 waits for it to be
+non-zero after sending the queue; objse.c's sound tasks, summon.c, objreq.c, the bank task func_0011cba0 and
+the soft reset func_00109658 wait for 0. Unanswered it stayed 2 from the boot on, and func_00109770's state
+0 never got past its load. The null IOP now keeps the block's address from RPC 0 and, a frame after a queue
+(RPC 30), takes the transfers it held off the count (kh1_null_iop_frame from kh1_host_vblank). The other
+status words read back 0 and every reader treats 0 as "nothing playing" (func_001ecb08 / 001ecd08: the
+waits are for the end of a sound) or "no disc error" (+0x1C08, func_0011fec0).
+
+**The loader thread** (host/null/threads.c, new). src/util/thread.c's worker func_0010c0c8 runs the
+callbacks func_0010c170 registers once a frame: every func_001204a0 file load reads in func_001201d0 /
+func_001202c0 on it. PlatStartThread did nothing, so a load's result stayed -1 for ever (checked: with
+PlatStartThread refused, 600 frames and no dktitle.x read). The game's threads now run as coroutines on
+ucontext with host stacks of 256 KiB: a thread runs from the main thread's PlatWaitSema until it waits
+(the EE runs the worker, priority 40, only while main, 30, waits), a signal marks the waiter ready, and the
+main thread's wait then lets a frame pass as before. Semaphores keep counts (initCount, maxCount);
+PlatIReferSemaStatus reports the waiters, so func_0010c378 signals the main loop's frame semaphore only when
+main waits, as on the EE. src/game/hdd.c's thread runs the same way.
+
+**The run now reaches the overlay call.** tests/host/fake_disc.py's image has a one-sector "dktitle.x" in
+KINGDOM.IDX: the boot reads SYSTEM.CNF and KINGDOM.IDX, the loader thread reads dktitle.x into
+0xF20000 on frame 2, and func_00109630 calls D_00F20000(0, 0), which faults in the memory map. host/null/main.c
+reports it ("fault at PS2 0x00f20000 in the memory map", and the caller from the return address on the
+stack). Valgrind: 0 errors up to the fault. This is the stop 5.1c expected for the real disc; that run (the
+Mac) should show the same three reads with the real sizes. Next for the host: the native dktitle.x build
+(5.2).
 
 ### 5.2 Session 60: overlays, dktitle.x
 

@@ -145,10 +145,39 @@ int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) {
  * with send: unanswered, a call reads back its own request. The one answer the main ELF
  * waits on is RPC 0x30 (func_001ed600), the event command func_001e8b50 polling until what
  * RPC 0x2F (func_001ed5a8) started is ready: with no IOP it is ready at once (1). The other
- * answers (RPCs 1, 0xF, 0x1F-0x22, 0x27, 30 ...) are not read by any caller. */
+ * answers (RPCs 1, 0xF, 0x1F-0x22, 0x27, 30 ...) are not read by any caller.
+ *
+ * The status block (RPC 0's word 0, D_0063D640) is the IOP's to write, and one word of it
+ * the game waits on: +0x1F00 (D_0063F540, func_001ecfd8) counts the bank transfers not yet
+ * done. The EE adds one for each transfer it queues (commands 3, 4 and 0xB: func_001ed658,
+ * func_001ed220, func_001ed460) and the IOP's copy takes over once it has them. Boot
+ * (func_0011cd20) waits for the count to be non-zero after sending the queue (RPC 30); the
+ * sound objects (objse.c), the summons (summon.c), the bank task func_0011cba0 and the soft
+ * reset (func_00109658) wait for it to be 0 again. Unanswered it stayed at 2 from boot on. With
+ * no IOP, the transfers a sent queue holds are done at the next frame (null_iop_frame). */
+#define NULL_SND_PENDING 0x1F00
+static u8 *null_snd_status;
+static s32 null_snd_landing;
 int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) {
+    if (num == 0 && send != 0 && ssize >= 4) null_snd_status = (u8 *)(unsigned long)((u32 *)send)[0];
+    if (num == 30 && send != 0) {
+        /* the queue: 8-word commands, unused slots -1 (func_001ed000, func_001edba0) */
+        s32 *q = send;
+        s32 i;
+        for (i = 0; i < ssize / 32 && q[i * 8] != -1; i++)
+            if (q[i * 8] == 3 || q[i * 8] == 4 || q[i * 8] == 0xB) null_snd_landing++;
+    }
     if (num == 0x30 && recv != 0 && rsize >= 4) *(u32 *)recv = 1;
     return 0;
+}
+/* a frame (kh1_host_vblank): the transfers sent before it are done */
+void kh1_null_iop_frame(void) {
+    s32 *pending;
+    if (null_snd_status == 0 || null_snd_landing == 0) return;
+    pending = (s32 *)(null_snd_status + NULL_SND_PENDING);
+    *pending -= null_snd_landing;
+    if (*pending < 0) *pending = 0;
+    null_snd_landing = 0;
 }
 /* iop.h: the reboot and the module loads succeed (module id 1), PlatSifSyncIop 1 */
 int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 1; }
@@ -207,29 +236,7 @@ int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data
 /* platform/thread.h */
 void PlatFlushCache(int op) {}
 void PlatIFlushCache(int op) {}
-int PlatCreateThread(void *param) { return 0; }
-int PlatStartThread(int id, void *arg) { return 0; }
-int PlatChangeThreadPriority(int id, int prio) { return 0; }
-int PlatGetThreadId(void) { return 0; }
-int PlatCreateSema(void *param) { return 0; }
-/* There is no other thread: a wait that would block on the EE lets a frame pass instead (the
- * main loop's frame wait, src/util/thread.c func_0010c348, is a semaphore the vblank handler
- * signals), then returns. */
-int PlatWaitSema(int id) {
-    kh1_host_vblank();
-    return 0;
-}
-int PlatSignalSema(int id) { return 0; }
-int PlatISignalSema(int id) { return 0; }
-/* The kernel's SemaParam: currentCount, maxCount, initCount, numWaitThreads, attr, option.  No
- * thread ever waits (src/util/thread.c func_0010c378 signals only when one does). */
-int PlatIReferSemaStatus(int id, void *param) {
-    int *p = param;
-    int i;
-    for (i = 0; i < 6; i++)
-        p[i] = 0;
-    return id;
-}
+/* threads and semaphores: host/null/threads.c */
 int PlatAddDmacHandler(int ch, int (*handler)(int), int next) { return 0; }
 int PlatRemoveDmacHandler(int ch, int id) { return 0; }
 int PlatEnableDmac(int ch) { return 0; }
