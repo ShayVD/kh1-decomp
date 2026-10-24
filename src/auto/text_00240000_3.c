@@ -10,7 +10,6 @@ M2C_UNK func_0023d1a0();
 M2C_UNK func_00240810(void *);
 M2C_UNK func_00241d60();
 M2C_UNK func_0024aac8(M2C_UNK *);
-M2C_UNK func_0024afc0(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_0025dd48(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK func_00267620();
 M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
@@ -21,22 +20,15 @@ extern M2C_UNK (*D_0066AA80)();
 #include "data/pieces/D_0044F380.h"
 #include "data/pieces/D_0044F4D0.h"
 #include "data/pieces/D_00451040.h"
-extern M2C_UNK D_00469CA0;
-extern M2C_UNK D_00469F50;
 #include "data/pieces/D_004919B0.h"
 extern M2C_UNK D_00651E50;
 M2C_UNK D_00652888[0x4] ALIGNED(8);
-M2C_UNK D_00669930[0x38] ALIGNED(16);
-extern M2C_UNK D_00669A10; /* src/data/bss_0066.c: void *D_00669A10[0x2] */
 extern M2C_UNK D_00669A40; /* src/data/bss_0066.c: s16 D_00669A40[0xc] */
 extern M2C_UNK D_0066AA90; /* src/data/bss_0066.c: V4f D_0066AA90 */
 extern M2C_UNK func_002416a8;
-extern M2C_UNK func_002491f8;
 extern s32 (*D_0066AA80)();
 extern s32 *D_0066AA84;
-extern s32 D_00469F60;
 extern s32 D_0046A53C;
-extern s32 D_00669920;
 extern s32 D_00669A5C;
 extern s32 D_0066AAA0;
 extern s8 D_00651E70;
@@ -45,13 +37,11 @@ f32 func_0024ef88();
 s32 func_0011ef38(M2C_UNK *);
 s32 func_001eafd8(void);
 s32 func_001f40c8(void);
-s32 func_002388b8(s32, s32, s32);
 void func_00114830(void);
 void func_00131d68(s32, s32);
 void func_001ba2a8(s32, s32);
 void func_001efaf0(void);
 void func_001f82b0(void);
-void func_0024aa48(s32, s32, s32);
 void func_0024ce80(s32, s32);
 
 void func_002408d8(s32 arg0) {
@@ -86,20 +76,6 @@ void func_00242b68(s32 arg0) {
 
 s32 func_00242bf0(s32 arg0) {
     return *(M2C_UNK *)((s8 *)&D_00651E50 + (arg0 * 4));
-}
-
-void func_00248fb8(s32 arg0, s32 arg1) {
-    func_0024aa48(arg0, (s32) &D_00669930, arg1);
-    D_00669920 = func_002388b8((s32) &D_00669930, 1, D_00669920);
-}
-
-void func_00249250(void) {
-    D_00469F60 = 0;
-    func_0024aac8(&D_00469CA0);
-    func_0024afc0(&D_00469F50, &D_00669A10, &D_00469CA0);
-    if (func_0011ef38(&func_002491f8) == 0) {
-        func_0011ef10(0x28489, &func_002491f8);
-    }
 }
 
 void func_00249518(void *arg0, f32 fparg0) {

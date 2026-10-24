@@ -14,7 +14,6 @@ extern M2C_UNK D_0046A640;
 #include "data/pieces/D_0046A650.h"
 extern M2C_UNK D_0046A660;
 extern M2C_UNK func_0024f008;
-extern s32 D_00469F60;
 extern s32 D_0046A53C;
 extern s32 D_0046A60C;
 extern s32 D_0046A67C;
@@ -76,14 +75,6 @@ void func_00242b38(void) {
     if (temp_v0 != NULL) {
         M2C_FIELD(temp_v0, s32 *, 0x774) = 1;
     }
-}
-
-void func_00249230(void) {
-    D_00469F60 = 1;
-}
-
-void func_00249240(void) {
-    D_00469F60 = 0;
 }
 
 void func_00249558(void *arg0, void *arg1) {

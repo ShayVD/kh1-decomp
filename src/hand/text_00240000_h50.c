@@ -49,12 +49,6 @@ typedef union {
 typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
-extern Q4 D_00351E10[];
-S7df0 D_006697C0 ALIGNED(64);
-extern Q4 *D_00669920; /* src/data/bss_0066.c: s32 D_00669920 */
-Q4 *D_00669924 ALIGNED(4);
-extern void *D_00669A10[];
-#include "data/pieces/D_004267F0.h"
 extern V4 D_00491830;
 extern s32 D_0046A60C;
 extern s32 D_0046A610;
@@ -67,12 +61,6 @@ extern s32 D_0046A6B0[];
 extern s32 D_0066AAA0;
 extern void (*D_0066AA80)(void);
 s32 sprintf(char *, const char *, ...);
-void func_00237018(void *, s32, s32);
-void func_002370c8(void *);
-s32 func_0024a1c0(void *);
-void func_00248fb8(void *, void *);
-void func_0024ae00(void *);
-void func_0024af00(void *);
 void func_002673b8(V4 *, V4 *);
 void func_00267370(V4 *, V4 *, V4 *);
 void __assert(const char *, s32, const char *);
@@ -89,39 +77,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00249010(void) {
-    s32 i;
-    func_002370c8(&D_006697C0);
-    D_006697C0.xe0 = 5;
-    D_006697C0.x60 = 0x30003;
-    D_006697C0.x70 = 0x8000000048ULL;
-    func_00237018(&D_006697C0, 22, 1);
-    D_00669924 = D_00351E10;
-    D_00669920 = D_00351E10 + 1;
-    for (i = 0; i < 2; i++) {
-        func_00248fb8(D_00669A10[i], D_004267F0);
-    }
-    func_00237018(D_00669924, D_00669920 - D_00669924, 1);
-}
-
-void func_002490f0(s32 *st) {
-    s32 i;
-    switch (*st) {
-    case 1:
-        for (i = 0; i < 2; i++) func_0024ae00(D_00669A10[i]);
-        (*st)++;
-        break;
-    case 2:
-        for (i = 0; i < 2; i++) func_0024af00(D_00669A10[i]);
-        if (func_0024a1c0(D_00669A10[0]) & 4) (*st)++;
-        break;
-    case 3:
-        *st = 0;
-        return;
-    }
-    func_00249010();
-}
 
 GsTexHdr *func_00249f08(GsTex *t, s32 a, s32 b, s32 c, s32 d, s32 e) {
     TexBits *tb = &t->h.tb;
