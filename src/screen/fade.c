@@ -89,9 +89,9 @@ void func_001137f8(void) {
     func_001f1ed8(col, 310, 54, func_001efc10(9), 18);
     func_0010f5d0();
     PlatGsSyncPath(0, 0);
-    *(volatile u64 *)0x12000000 = 0xff03;
-    *(volatile u64 *)0x12000070 = 0x11b0;
-    *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;
+    PlatGsPutPmode(0xff03);
+    PlatGsPutDispfb1(0x11b0);
+    PlatGsPutDisplay1(0x0007f9ff020d227cUL);
 }
 
 /* func_00113a00 (from hand/text_00100000_h2.c). */

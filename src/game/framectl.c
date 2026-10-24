@@ -1,5 +1,5 @@
 /* The frame's end and the field's set-up files (a guess at the name),
- * 0x0010f580-0x0010fe80: func_0010f658 flips the display (the GS CSR at
+ * 0x0010f580-0x0010fe80: func_0010f658 flips the display (the GS PMODE at
  * 0x12000000), func_0010f918 the soft reset / pause check, func_0010fc38 /
  * func_0010fc98 load allset.set and allarea.nam, and func_0010fd40 reads
  * the pads with the demo playback (D_004D9240, D_002BCA00). Read from the
@@ -67,9 +67,9 @@ void func_0010f5d0(void) {
 /* func_0010f5f8 (from hand/text_00100000_h2.c). */
 void func_0010f5f8(void) {
     PlatGsSyncPath(0, 0);
-    *(volatile u64 *)0x12000000 = 0xff03;
-    *(volatile u64 *)0x12000070 = 0x11b0;
-    *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;
+    PlatGsPutPmode(0xff03);
+    PlatGsPutDispfb1(0x11b0);
+    PlatGsPutDisplay1(0x0007f9ff020d227cUL);
 }
 
 /* func_0010f658 (from hand/text_00110000_s6_02.c). */
@@ -86,7 +86,7 @@ void func_0010f658(s32 a) {
     if (a == 0) {
         PlatGsSyncPath(0, 0);
         func_001104e0();
-        *(volatile u64 *)0x12000000 = 0x22;
+        PlatGsPutPmode(0x22);
         return;
     }
     PlatGsSyncPath(0, 0);
