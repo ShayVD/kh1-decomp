@@ -16,8 +16,6 @@ typedef struct {
     u8 pad84[0x2C];
     u64 flags;
 } PppSystem;
-
-extern s32 D_0061621C;
 extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 
 u8 *func_00182588(PppSystem *, PppSlot *);
@@ -85,12 +83,4 @@ CONTEXT_ONLY void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
         }
     }
     w->p = d;
-}
-
-void pppKeBornPtCmplFrame(void *obj, BornKey *key, PppEntry *e) {
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->slot == -1 || key->off10 == -1)
-        return;
-    do { func_0018e348(obj, key, e); } while (0);
 }

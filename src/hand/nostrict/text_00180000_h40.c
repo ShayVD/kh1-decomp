@@ -16,23 +16,6 @@ typedef union {
 } PppQv;
 
 typedef struct {
-    s32 unk0;
-    u8 *inst;   /* +0x4 */
-    s32 time;   /* +0x8 */
-    s32 unkC;
-} PppSlot;
-
-typedef struct {
-    u8 pad[0x80];
-    PppSlot *slots; /* +0x80 */
-    u8 pad84[0x2C];
-    u64 flags;      /* +0xB0 */
-} PppSystem;
-
-extern s32 D_0061621C;
-extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-
-typedef struct {
     s32 unk00, unk04, unk08;
     s32 frame; /* +0x0C */
     u8 pad10[0x8D];
@@ -207,44 +190,6 @@ void pppMatrixLoopZYXFrame(PppObject *obj, void *key, PppEntry *e) {
     D_00615E68->m[3][2] = t->z;
 }
 
-extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
-
-typedef struct {
-    s32 frame;
-    f32 c, a, b;  /* +0x4 */
-    s32 slot;     /* +0x10 */
-    s32 off;      /* +0x14 */
-} PppThTpKey;
-
-typedef struct {
-    u8 pad[0x10];
-    f32 a, b, c;  /* +0x10 */
-    f32 *p;       /* +0x1C */
-} PppThTpWork;
-
-void func_001a9098(void *, f32 *);
-
-void pppKeThTpFrame(PppObject *obj, PppThTpKey *key, PppEntry *e) {
-    PppThTpWork *w = PPP_WORK(PppThTpWork, obj, e, 0);
-
-    if (obj->frame == key->frame) {
-        f32 *p;
-        w->a = key->a;
-        w->c = key->c;
-        w->b = key->b;
-        if (key->slot != -1)
-            p = (f32 *) (D_00615E60->slots[key->slot].inst + key->off + 0xA0);
-        else
-            p = &D_00575A00;
-        w->p = p;
-        if (p == &D_00575A00)
-            w->p = 0;
-    }
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    func_001a9098((void *) w, D_00615E68->m[3]);
-}
-
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 
 /* Keys of the pppKeBornRnd* classes. */
@@ -262,40 +207,8 @@ typedef struct {
     s32 off1;     /* +0x18 */
     s32 off2;     /* +0x1C */
 } PppBornKey;
-
-u8 *func_00182588(PppSystem *, PppSlot *);
-void func_002672f8(PppVec4, f32 *, PppVec4);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(PppVec4, PppVec4);
-void func_00267560(f32 *, PppVec4, f32);
 s32 func_001a8f30(void);
 void func_001a5520(PppObject *, PppBornKey *, void *, void *, s16, u8, u8);
-void func_0018d390(void *owner, PppBornKey *key, s16 *pos);
-void func_0018dd08(void *owner, PppBornKey *key, s16 *pos);
-
-void func_0018d390(void *owner, PppBornKey *key, s16 *pos) {
-    PppVec4 v;
-    PppSlot *slot = &D_00615E60->slots[key->slot];
-    u8 *inst = 0;
-    f32 *a, *b;
-
-    if (slot) {
-        inst = func_00182588(D_00615E60, slot);
-        *(void **) (inst + 4) = owner;
-    }
-    v[0] = pos[0];
-    v[1] = pos[1];
-    v[2] = pos[2];
-    v[3] = 1.0f;
-    a = (f32 *) (inst + key->off0 + 0xA0);
-    b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
-    func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_00267560(v, v, key->speed);
-    func_001a9098((void *) b, v);
-}
 
 typedef struct {
     s32 frame;
@@ -309,55 +222,6 @@ typedef struct {
     s32 off1;     /* +0x14 */
     s32 off2;     /* +0x18 */
 } PppBorn3Key;
-
-void func_0018d5c0(void *owner, PppBorn3Key *key, s16 *pos);
-
-void func_0018d5c0(void *owner, PppBorn3Key *key, s16 *pos) {
-    PppVec4 v;
-    PppSlot *slot = &D_00615E60->slots[key->slot];
-    u8 *inst = 0;
-    f32 *a, *b;
-
-    if (slot) {
-        inst = func_00182588(D_00615E60, slot);
-        *(void **) (inst + 4) = owner;
-    }
-    v[0] = pos[0];
-    v[1] = pos[1];
-    v[2] = pos[2];
-    v[3] = 1.0f;
-    a = (f32 *) (inst + key->off0 + 0xA0);
-    b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
-    func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_001a9098((void *) b, v);
-}
-
-void func_0018dd08(void *owner, PppBornKey *key, s16 *pos) {
-    PppVec4 v;
-    PppSlot *slot = &D_00615E60->slots[key->slot];
-    u8 *inst = 0;
-    f32 *a, *b;
-
-    if (slot) {
-        inst = func_00182588(D_00615E60, slot);
-        *(void **) (inst + 4) = owner;
-    }
-    v[0] = pos[0];
-    v[1] = pos[1];
-    v[2] = pos[2];
-    v[3] = 1.0f;
-    a = (f32 *) (inst + key->off0 + 0xA0);
-    b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
-    func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_00267560(v, v, key->speed);
-    func_001a9098((void *) b, v);
-}
 
 typedef struct {
     s16 a;

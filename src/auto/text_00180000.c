@@ -291,39 +291,3 @@ void pppDrawMdlLoopZCon(s32 arg0, PppEntry *arg1) {
 void pppDrawMdlLoopZDes(void) {
 
 }
-
-void pppKeThDes(void) {
-
-}
-
-void pppKeThTp2Con(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
-    M2C_FIELD(temp_a0, f32 *, 0xC) = 1.0f;
-    M2C_FIELD(temp_a0, s32 *, 0x1C) = 0;
-}
-
-void pppKeThHitBornCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[1]), s8 *, 0xA0) = 0;
-}
-
-void pppKeBornRndCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
-}
-
-void pppKeBornRnd2Con(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
-}
-
-void pppKeBornRnd3Con(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
-}
-
-void pppKeBornRnd4Con(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s16 *, 0xA0) = 0;
-}
-
-void pppKeBornPtCmplCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xA0) = 0;
-}

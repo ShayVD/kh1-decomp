@@ -103,11 +103,3 @@ void pppAngMoveLoopCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
     M2C_FIELD(temp_a0, s32 *, 0xA0) = 0;
 }
-
-void pppKeThTpCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-
-    temp_a0 = arg0 + arg1->offsets[0] + 0xA0;
-    M2C_FIELD(temp_a0, s32 *, 0x1C) = 0;
-    M2C_FIELD(temp_a0, s32 *, 0xC) = 0;
-}

@@ -163,28 +163,9 @@ void pppDrawShapeDraw(void *obj, ShpKey *key, PppEntry *e) {
 }
 
 typedef struct {
-    u8 pad0[0xC];
-    f32 fC;
-    u8 pad10[0x14];
-    f32 f24;
-    u8 pad28[4];
-    f32 f2C;
-} ThSub;
-
-typedef struct {
-    u8 pad0[0x10];
-    ThSub s;          /* +0x10 */
-    u8 pad[0x6C - 0x10 - sizeof(ThSub)];
-    s32 f6C;
-    u64 c[4];         /* +0x70 */
-} ThWork;
-
-typedef struct {
     u8 pad[0x54];
     u8 mode;
 } ThKey;
-
-void func_001a8d78(ThWork *);
 
 typedef struct {
     s32 x0;
@@ -222,35 +203,6 @@ void func_0018b470(B030In *a, B030Out *b) {
     b->xC = z;
     b->x8 = z;
     b->x0 = (s32)a;
-}
-
-void pppKeThCon(void *obj, PppEntry *e) {
-    ThWork *w = PPP_WORK(ThWork, obj, e, 0);
-    ThSub *s = &w->s;
-
-    func_001a8d78(w);
-    w->c[0] = 0;
-    w->c[1] = 0;
-    w->c[2] = 0;
-    w->c[3] = 0;
-    w->f6C = 0;
-    s->fC = 0;
-    s->f24 = 0;
-    s->f2C = 0;
-}
-
-void pppKeThReset(void *obj, PppEntry *e) {
-    ThWork *w = PPP_WORK(ThWork, obj, e, 0);
-    ThSub *s = &w->s;
-
-    w->c[0] = 0;
-    w->c[1] = 0;
-    w->c[2] = 0;
-    w->c[3] = 0;
-    w->f6C = 0;
-    s->fC = 0;
-    s->f24 = 0;
-    s->f2C = 0;
 }
 
 #include "data/types/nostrict_text_00180000_s6_11.h"

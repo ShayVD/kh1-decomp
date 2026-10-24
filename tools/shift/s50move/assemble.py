@@ -252,6 +252,35 @@ def main(out, funcs, onto=False):
     macros = {}   # active macro name -> norm text
     lines = ['/* TODO: what this module is (docs/modules.md). */']
     seen_inc = set()
+    # every old file's includes go at the top (a header's typedef after a
+    # local one of the same name would not compile); what they declare counts
+    # as emitted, so a clashing local typedef is renamed and a clashing extern
+    # viewed
+    hdr_incs = []
+    for pl in plan:
+        for o, t in pl[4]:
+            if t not in hdr_incs: hdr_incs.append(t)
+    def seed(path, done):
+        if path in done or not os.path.exists(path): return
+        done.add(path)
+        for t, k, n in ctop.items(open(path).read()):
+            kind, names = classify(t, k, n)
+            if kind == 'include':
+                m = re.search(r'#include\s+"([^"]+)"', t)
+                if m: seed('include/' + m.group(1), done)
+            elif kind == 'var':
+                for nm, d in var_decls(t): emitted.setdefault(nm, ('var', norm(d), d))
+            elif kind in ('typedef', 'tag', 'proto'):
+                for x in names: emitted.setdefault(x, (kind, norm(t)))
+            elif kind == 'define':
+                for x in names: macros.setdefault(x, norm(t))
+    done = set()
+    if not onto:
+        for t in hdr_incs:
+            m = re.search(r'#include\s+"([^"]+)"', t)
+            if m: seed('include/' + m.group(1), done)
+        lines += hdr_incs
+        seen_inc |= set(hdr_incs)
     if onto:  # append to an existing module: what it declares counts as emitted
         old = open(out).read()
         lines = [old.rstrip('\n')]
@@ -268,13 +297,22 @@ def main(out, funcs, onto=False):
                 for x in names: emitted.setdefault(x, (kind, norm(t)))
             elif kind == 'func':
                 emitted[n] = ('def', norm(t.split('{')[0]))
+        for t in list(seen_inc):
+            m = re.search(r'#include\s+"([^"]+)"', t)
+            if m: seed('include/' + m.group(1), done)
+        new = [x for x in hdr_incs if x not in seen_inc]
+        for t in new:
+            m = re.search(r'#include\s+"([^"]+)"', t)
+            if m: seed('include/' + m.group(1), done)
+        if new:  # after the module's first include
+            ol = lines[0].split('\n')
+            k = next((i for i, l in enumerate(ol) if l.startswith('#include')), 0)
+            lines[0] = '\n'.join(ol[:k + 1] + new + ol[k + 1:])
+        seen_inc |= set(new)
     trailing = []
     conflicts = []
     for idx, (f, addr, path, need, incs, body, tail_incs) in enumerate(plan):
         sec = ['', '/* %s (from %s). */' % (f, path.replace('src/', ''))]
-        for o, t in incs:
-            if t not in seen_inc and (not need or o <= max(v[0] for _, v in need) or True):
-                seen_inc.add(t); sec.append(t)
         items = [(nm, v[1], v[2]) for nm, v in need]
         # renames for typedef / tag conflicts, to a fixed point
         ren = {}
@@ -284,7 +322,7 @@ def main(out, funcs, onto=False):
                 return t
             new = False
             for nm, kind, t in items:
-                if kind in ('typedef', 'tag') and nm not in ren and nm in emitted \
+                if kind in ('typedef', 'tag', 'inline') and nm not in ren and nm in emitted \
                         and emitted[nm][1] != norm(cur(t)):
                     ren[nm] = '%s_%s' % (nm, addr[-5:]); new = True
             if not new: break

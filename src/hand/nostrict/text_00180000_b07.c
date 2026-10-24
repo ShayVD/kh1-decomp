@@ -72,9 +72,6 @@ typedef struct {
     u64 flags;      /* +0xB0 */
 } PppSystem;
 
-extern s32 D_0061621C;
-extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-
 u8 *func_00182588(PppSystem *, PppSlot *);
 
 /* Start an instance of program slot `id` owned by `o`. */
@@ -321,99 +318,6 @@ void pppDrawMdlLoopZDraw(PppObject *obj, PppMdlKey *key, PppEntry *e) {
 
 /* --- pppKeThSft: per-frame shift of a key work area --- */
 
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame;   /* +0x0C */
-    u8 pad10[0x8D];
-    u8 unk9D;    /* +0x9D */
-} PppObjectB;
-
-typedef struct {
-    s32 frame;
-    u16 h[16];   /* +0x04 */
-    f32 v[4];    /* +0x24 */
-    u8 b34;      /* +0x34 */
-} PppThSftKey;
-
-typedef struct {
-    u16 h[16];   /* +0x00 */
-    f32 v[4];    /* +0x20 */
-} PppThSftWork;
-
-typedef struct {
-    u8 pad[0x50];
-    u8 b50;      /* +0x50 */
-    u8 pad51[0x1B];
-    f32 f6C;     /* +0x6C */
-    u16 h[16];   /* +0x70 */
-} PppThSftDst;
-
-typedef struct {
-    u8 pad[0xC];
-    f32 f0C;     /* +0x0C */
-    u8 pad10[0x14];
-    f32 f24;     /* +0x24 */
-    u8 pad28[4];
-    f32 f2C;     /* +0x2C */
-} PppThSftDst2;
-
-void pppKeThSftFrame(PppObjectB *obj, PppThSftKey *key, PppEntry *e) {
-    PppThSftWork *w;
-    PppThSftDst *d;
-    PppThSftDst2 *d2;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = PPP_WORK(PppThSftWork, obj, e, 0);
-    d = PPP_WORK(PppThSftDst, obj, e, 1);
-    d2 = (PppThSftDst2 *) ((u8 *) obj + e->offsets[1] + 0xB0);
-    if (obj->frame == key->frame) {
-        d->b50 = key->b34;
-        w->v[2] += key->v[2];
-        w->v[0] += key->v[0];
-        w->v[1] += key->v[1];
-        w->v[3] += key->v[3];
-        w->h[0] += key->h[0];
-        w->h[1] += key->h[1];
-        w->h[2] += key->h[2];
-        w->h[3] += key->h[3];
-        w->h[4] += key->h[4];
-        w->h[5] += key->h[5];
-        w->h[6] += key->h[6];
-        w->h[7] += key->h[7];
-        w->h[8] += key->h[8];
-        w->h[9] += key->h[9];
-        w->h[10] += key->h[10];
-        w->h[11] += key->h[11];
-        w->h[12] += key->h[12];
-        w->h[13] += key->h[13];
-        w->h[14] += key->h[14];
-        w->h[15] += key->h[15];
-        if (obj->frame == 0 && obj->unk9D == 0)
-            return;
-    }
-    d->f6C += w->v[2];
-    d2->f0C += w->v[0];
-    d2->f24 += w->v[1];
-    d2->f2C += w->v[3];
-    d->h[0] += w->h[0];
-    d->h[1] += w->h[1];
-    d->h[2] += w->h[2];
-    d->h[3] += w->h[3];
-    d->h[4] += w->h[4];
-    d->h[5] += w->h[5];
-    d->h[6] += w->h[6];
-    d->h[7] += w->h[7];
-    d->h[8] += w->h[8];
-    d->h[9] += w->h[9];
-    d->h[10] += w->h[10];
-    d->h[11] += w->h[11];
-    d->h[12] += w->h[12];
-    d->h[13] += w->h[13];
-    d->h[14] += w->h[14];
-    d->h[15] += w->h[15];
-}
-
 /* --- pppKeBornRnd: spawn instances at vertices of a vertex map --- */
 typedef struct {
     s32 frame;
@@ -428,111 +332,10 @@ typedef struct {
     s32 off1;     /* +0x14 */
     s32 off2;     /* +0x18 */
 } PppBornRndKey;
-
-typedef struct {
-    u8 pad[0x10];
-    PppMtx m;    /* +0x10 */
-    PppMtx m2;   /* +0x50 */
-    VtxS16 *vtx; /* +0x90 */
-} PppVtxOwner;
-
-s32 func_001a8f30(void);
 void sceVu0CopyMatrix(void *, void *);
-void func_002672f8(void *, void *, void *);
 void func_001a90f8(void *, void *, void *);
 
 /* --- pppKeBornRnd4: born-at-random plus spawn at vertices --- */
-typedef struct {
-    s32 frame;
-    s16 n;        /* +0x4 */
-    s16 pad6;
-    f32 speed;    /* +0x8 */
-    u8 c;         /* +0xC */
-    u8 mask;      /* +0xD */
-    u8 b;         /* +0xE */
-    u8 padF;
-    s32 slot;     /* +0x10 */
-    s32 off0;     /* +0x14 */
-    s32 off1;     /* +0x18 */
-    s32 off2;     /* +0x1C */
-    s32 off3;     /* +0x20 */
-    s32 off4;     /* +0x24 */
-} PppBorn4Key;
-
-extern s32 D_00616234;
-void func_0018d7d8(void *owner, PppBorn4Key *key, s16 *pos);
-void func_001a5520(PppObject *, PppBorn4Key *, void *, void *, s16, u8, u8);
-void func_001a9098(void *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-
-void pppKeBornRnd4Frame(PppObject *obj, PppBorn4Key *key, PppEntry *e) {
-    PppObject **pp = &obj;
-    PppVec4 v;
-    u16 *w;
-    s32 rnd;
-    s32 r;
-    VtxMap *m;
-    VtxS16 *va;
-    s32 idx;
-    s32 k;
-
-    if (D_00616234 != 0)
-        return;
-    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL) && key->mask != 0xFF &&
-        !((func_001a8f30() >> 8) & key->mask)) {
-        if (key->slot == -1 || key->off1 == -1 || key->off3 == -1)
-            return;
-        func_001a5520(obj, key, func_0018d7d8, PPP_WORK(void, obj, e, 0), key->n, key->b, key->c);
-    }
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    r = func_001a8f30();
-    if (key->mask == 0xFF)
-        return;
-    if ((r >> 8) & key->mask)
-        return;
-    if (key->slot == -1 || key->off1 == -1 || key->off3 == -1)
-        return;
-    w = PPP_WORK(u16, obj, e, 0);
-    m = &D_00615E64->maps[key->n];
-    va = ((PppVtxOwner *) D_00615E68)->vtx;
-    if (va == 0)
-        va = D_00615E64->res[m->slot].vtx;
-    rnd = key->b;
-    if (rnd)
-        idx = r % m->n;
-    else
-        idx = *w;
-    for (k = key->c; k > 0; k--) {
-        u8 *inst = inl_spawn(D_00615E60, key->slot, obj);
-        s32 vi = m->map[idx];
-        u8 *d0 = inst + key->off0 + 0xA0;
-        u8 *d2 = inst + key->off2 + 0xA0;
-        u8 *d1 = inst + key->off4 + 0xA0;
-        VtxS16 *p;
-
-        p = &va[vi];
-        v[0] = p->x;
-        v[1] = p->y;
-        v[2] = p->z;
-        v[3] = 1.0f;
-        idx++;
-        func_002672f8(v, D_00615E68->m, v);
-        func_001a9098(d0, v);
-        func_00267530(v, v, D_00615E68->m[3]);
-        func_002673b8(v, v);
-        func_001a9098(d1, v);
-        func_00267560(v, v, key->speed);
-        func_001a9098(d2, v);
-        if (rnd)
-            idx = func_001a8f30() % m->n;
-        else if (idx >= m->n)
-            idx = 0;
-    }
-    *w = idx;
-}
 
 /* --- pppKeMdlTfdUv / Uv2: scrolled texture page upload, then draw --- */
 

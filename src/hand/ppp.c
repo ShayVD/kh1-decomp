@@ -9,23 +9,11 @@ typedef struct {
 } PppS16x2;
 
 typedef struct {
-    s16 a;
-    s8 b;
-} PppS16S8;
-
-typedef struct {
     f32 x, y, z;
 } PppVec3;
 
 void pppVertexApCon(void *obj, PppEntry *e) {
     PppS16x2 *w = PPP_WORK(PppS16x2, obj, e, 0);
-
-    w->a = 0;
-    w->b = 0;
-}
-
-void pppKeBornRnd5Con(void *obj, PppEntry *e) {
-    PppS16S8 *w = PPP_WORK(PppS16S8, obj, e, 0);
 
     w->a = 0;
     w->b = 0;

@@ -37,7 +37,6 @@ typedef struct {
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 
 f32 fmodf(f32, f32);
-double atan(double);
 
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
@@ -67,7 +66,6 @@ typedef struct {
 } PppMdlLoop;
 
 u8 *func_00182588(PppSystem *, PppSlot *);
-void func_001a9098(void *, void *);
 
 /* Start an instance of program slot `id` owned by `o`. */
 static inline u8 *inl_spawn(PppSystem *sys, s32 id, PppObject *o) {
@@ -80,12 +78,6 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, PppObject *o) {
     }
     return i;
 }
-
-void func_002672f8(PppVec4, f32 *, PppVec4);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(PppVec4, PppVec4);
-void func_00267560(f32 *, PppVec4, f32);
-f32 func_001a9328(f32);
 
 typedef struct {
     u8 pad[0x10];
@@ -354,213 +346,8 @@ void pppDrawMdlLoopZFrame(PppObject *obj, PppMdlLoopKey *key, PppEntry *e) {
     w->b = fmodf(w->b, 32768.0f);
 }
 
-typedef struct {
-    s32 frame;
-    s32 slot;    /* +0x4 */
-    s32 off;     /* +0x8 */
-    u8 on;       /* +0xC */
-} PppHitBornKey;
-
-typedef struct { u8 m[0x30]; } PppJoint;
-
-typedef struct PppHitNode {
-    struct PppHitNode *next;  /* +0x00 */
-    u8 pad04[0x32];
-    u8 joint;                 /* +0x36 */
-    u8 pad37;
-    union { u64 x; u16 h[4]; } flags;                  /* +0x38 */
-    PppJoint joints[1];       /* +0x40 */
-} PppHitNode;
-
-void pppKeThHitBornFrame(PppObject *obj, PppHitBornKey *key, PppEntry *e) {
-    u8 *w = PPP_WORK(u8, obj, e, 1);
-    PppHitNode *n;
-    u8 *inst;
-
-    if (obj->frame == key->frame) {
-        if (key->on)
-            *w |= 2;
-        else
-            *w &= ~2;
-    }
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->slot == -1)
-        return;
-    n = *PPP_WORK(PppHitNode *, obj, e, 0);
-    if (*w & 2) {
-        for (; n; n = n->next) {
-            if (n->flags.h[3] & 0x800) {
-                inst = inl_spawn(D_00615E60, key->slot, obj);
-                func_001a9098(inst + key->off + 0xA0, &n->joints[n->joint]);
-            }
-        }
-    } else {
-        for (; n; n = n->next) {
-            if ((n->flags.x & 0x0840000000000000ULL) == 0x0800000000000000ULL) {
-                inst = inl_spawn(D_00615E60, key->slot, obj);
-                func_001a9098(inst + key->off + 0xA0, &n->joints[n->joint]);
-            }
-        }
-    }
-}
-
-typedef struct {
-    s32 frame;
-    s32 unk4;
-    f32 speed;    /* +0x8 */
-    s32 unkC;
-    s32 slot;     /* +0x10 */
-    s32 off0;     /* +0x14 */
-    s32 unk18;
-    s32 off2;     /* +0x1C */
-    s32 unk20;
-    s32 off1;     /* +0x24 */
-} PppBorn2Key;
-
-void func_0018d7d8(PppObject *owner, PppBorn2Key *key, s16 *pos) {
-    PppVec4 v;
-    u8 *inst = inl_spawn(D_00615E60, key->slot, owner);
-    f32 *a, *b, *c;
-
-    v[0] = pos[0];
-    v[1] = pos[1];
-    v[2] = pos[2];
-    v[3] = 1.0f;
-    a = (f32 *) (inst + key->off0 + 0xA0);
-    c = (f32 *) (inst + key->off2 + 0xA0);
-    b = (f32 *) (inst + key->off1 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
-    func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_001a9098((void *) b, v);
-    func_00267560(v, v, key->speed);
-    func_001a9098((void *) c, v);
-}
-
-s32 func_0018df30(f32 *v, f32 *out) {
-    f32 x = v[0];
-    f32 y = v[1];
-    f32 r = x * y;
-
-    if (0.0f < r) {
-        r = 0.0f;
-        if (!(r < x))
-            r = -3.1415927f;
-        r = r + atan(y / x);
-    } else if (r < 0.0f) {
-        r = 1.5707963f;
-        if (!(0.0f < y))
-            r = -1.5707963f;
-        r = r - atan(x / y);
-    } else if (x != 0.0f) {
-        r = 3.1415927f;
-        if (0.0f < x)
-            r = 0.0f;
-    } else {
-        if (y == 0.0f)
-            return 0;
-        r = -1.5707963f;
-        if (0.0f < y)
-            r = 1.5707963f;
-    }
-    *out = r;
-    return 1;
-}
-
-s32 func_0018e5a8(f32 *v, f32 *out) {
-    f32 x = v[0];
-    f32 y = v[1];
-    f32 r = x * y;
-
-    if (0.0f < r) {
-        r = 0.0f;
-        if (!(r < x))
-            r = -3.1415927f;
-        r = r + atan(y / x);
-    } else if (r < 0.0f) {
-        r = 1.5707963f;
-        if (!(0.0f < y))
-            r = -1.5707963f;
-        r = r - atan(x / y);
-    } else if (x != 0.0f) {
-        r = 3.1415927f;
-        if (0.0f < x)
-            r = 0.0f;
-    } else {
-        if (y == 0.0f)
-            return 0;
-        r = -1.5707963f;
-        if (0.0f < y)
-            r = 1.5707963f;
-    }
-    *out = r;
-    return 1;
-}
-
 void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);
 
 void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);
 
 /* needs make: uses rodata */
-
-typedef struct {
-    s32 frame;
-    s32 unk4, unk8;
-    s32 slot;     /* +0xC */
-    s32 off0;     /* +0x10 */
-    s32 unk14;
-    s32 off1;     /* +0x18 */
-} PppBorn3Key;
-
-void func_0018e0b0(PppObject *owner, PppBorn3Key *key, s16 *pos) {
-    PppVec4 v;
-    f32 ang;
-    u8 *inst = inl_spawn(D_00615E60, key->slot, owner);
-    s32 *r;
-    f32 x, y;
-
-    v[0] = pos[0];
-    v[1] = pos[1];
-    v[2] = pos[2];
-    v[3] = 1.0f;
-    func_001a9098(inst + key->off0 + 0xA0, v);
-    y = v[1];
-    x = v[0];
-    r = (s32 *) (inst + key->off1 + 0xA0);
-    v[1] = x;
-    v[0] = -y;
-    if (func_0018df30(v, &ang))
-        r[2] = ang * 32768.0f / 3.141592654;
-    v[0] = func_001a9328(y * y + x * x);
-    v[1] = -v[2];
-    if (func_0018df30(v, &ang))
-        r[0] = ang * 32768.0f / 3.141592654;
-    r[1] = 0;
-}
-
-void pppKeMvYpEffFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppVec4 t;
-    f32 ang;
-    f32 *v;
-    s32 *r;
-    f32 y, x;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    v = PPP_WORK(f32, obj, e, 1);
-    y = v[1];
-    x = v[0];
-    if (y == 0.0f && x == 0.0f && v[2] == 0.0f)
-        return;
-    r = PPP_WORK(s32, obj, e, 0);
-    t[1] = x;
-    t[0] = -y;
-    if (func_0018e5a8(t, &ang))
-        r[2] = ang * 32768.0f / 3.141592654;
-    t[0] = func_001a9328(y * y + x * x);
-    t[1] = -v[2];
-    if (func_0018e5a8(t, &ang))
-        r[0] = ang * 32768.0f / 3.141592654;
-}
