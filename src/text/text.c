@@ -32,6 +32,7 @@
  * CLUT D_003F1660 and sets up the packet headers of D_003F1A70, D_003F1E70,
  * D_003F2270 and D_003F27D0; the text windows follow (textwin.c). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_003E8E28.h"
@@ -58,7 +59,6 @@ extern u8 D_00490940[];
 extern s32 D_0063F74C;
 
 
-void FlushCache(s32);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 s32 func_001205f0(void *, void *);
 u64 *func_00122048(u32, u32);
@@ -99,15 +99,15 @@ void func_001ef950(void)
     p = func_001559f0(52, 12);
     func_001205f0(D_00490940, p);
     func_0011fbb0(16380, 1, 0, 0, 0, 16, 16, 64, p + 0x10000, a);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), a);
     PlatGsSyncPath(0, 0);
     func_0011fbb0(4096, 4, 36, 0, 0, 256, 256, 2048, p, b);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), b);
     PlatGsSyncPath(0, 0);
     func_0011fbb0(4096, 4, 44, 0, 0, 256, 256, 2048, p + 0x8000, b);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), b);
     PlatGsSyncPath(0, 0);
 }

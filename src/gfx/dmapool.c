@@ -12,6 +12,7 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_002A624C.h"
@@ -45,10 +46,9 @@
 #include "data/pieces/D_002C5968.h"
 
 /* func_00106b18 (from auto/text_00100000.c). */
-M2C_UNK func_002583e0(M2C_UNK);
 extern PlatDmaChan *D_002A6B84;
 void func_00106b18(s32 arg0) {
-    func_002583e0(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatDmaSend(D_002A6B84, arg0);
 }
@@ -61,9 +61,8 @@ void func_00106b58(u32 x) {
 }
 
 /* func_00106b98 (from auto/text_00100000_9.c). */
-f32 iFlushCache(M2C_UNK);
 s32 func_00106b98(void *arg0) {
-    iFlushCache(0);
+    PlatIFlushCache(0);
     PlatDmaSend(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
     return 2;
 }
@@ -129,14 +128,12 @@ void func_00106d48(s32 arg0) {
 
 /* func_00106db0 (from hand/text_00100000_h1.c). */
 typedef struct { u8 pad[16]; u32 w16; } DmaReq;
-#define iFlushCache ((void (*)(s32)) iFlushCache)
 s32 func_00106db0(DmaReq *r) {
     *(volatile u32 *)0x10009020 = 0;
     *(volatile u32 *)0x10009030 = r->w16 & 0x0fffffff;
     *(volatile u32 *)0x1000e010 = 2;
-    iFlushCache(0);
+    PlatIFlushCache(0);
     *(volatile u32 *)0x10009000 = 0x105;
     return 2;
 }
-#undef iFlushCache
 

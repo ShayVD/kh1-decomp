@@ -4,6 +4,7 @@
  * tasks func_0015eb78 and func_0015eea0), the GS uploads through libdma's
  * channels D_0055C640 / D_0055C644 (func_0015f018 ... func_0015ff78).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/pieces/D_002C58A0.h"
@@ -52,15 +53,12 @@ extern Beb78 D_00551D90[];
 extern Beb78 * D_00559DB0;
 volatile s32 D_00559DBC ALIGNED(4);
 extern  s32 D_00351BD0;
-void func_002583e0(s32);
-s32 func_00258d10(s32);
-void func_00258d78(s32);
 s32 func_0015eb78(void) {
     s32 idx;
     Beb78 *cur;
     Beb78 *p;
 
-    func_002583e0(0);
+    PlatFlushCache(0);
     D_00551D80 = D_00559DB0->x8;
     idx = D_00351BD0 ^ 1;
     D_00559DB4 = 1;
@@ -72,13 +70,13 @@ s32 func_0015eb78(void) {
     p->xc = 0;
     while (PlatGsSyncPath(1, 0) != 0) {
     }
-    func_00258d10(2);
-    func_00258d10(1);
+    PlatDisableDmac(2);
+    PlatDisableDmac(1);
     *(volatile s32 *)0x1000e010 = 6;
 
     if (func_0015ea98()) {
-        func_00258d78(2);
-        func_00258d78(1);
+        PlatEnableDmac(2);
+        PlatEnableDmac(1);
     }
     return 0;
 }
@@ -91,7 +89,6 @@ typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
 GsBuf2 D_00559DC0[0x2] ALIGNED(64);
 extern GsBuf2 *D_0055BDE0;
-s32 FlushCache(s32);
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0015eea0();
 extern GsBuf D_00551D90_0015ec68[] __asm__("D_00551D90");
@@ -116,7 +113,7 @@ void func_0015ec68(void) {
 /* func_0015eea0 (from hand/nostrict/text_00150000_h36.c). */
 s32 func_0015eea0(void) {
     GsTask *t = D_0055BDE0->x8;
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     while (t) {
         if (!(t->cb(t) & 0x20)) {

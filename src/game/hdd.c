@@ -16,6 +16,7 @@
  * are a reading, not proved by a boot (and the HDD path needs the
  * Japanese HDD unit). */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/bss_0066.h"
 #include "data/data_0046.h"
 #include "data/data_0049.h"
@@ -56,9 +57,6 @@ s32 abs(s32);
 s32 memcmp(const void *, const void *, u32);
 s32 sprintf(char *, const char *, ...);
 s32 strcmp(const char *, const char *);
-s32 CreateSema(SemaParam *);
-s32 CreateThread(ThreadParam *);
-s32 StartThread(s32, void *);
 char *func_0011fd30(void);
 FileEnt *func_00120190(char *);
 s32 func_00120a20(const char *, s32, char *, s32 *);
@@ -122,13 +120,13 @@ void func_0024d808(void) {
     sp.max_count = 1;
     sp.init_count = 0;
     sp.option = 0;
-    sema = CreateSema(&sp);
+    sema = PlatCreateSema(&sp);
     tp.stack_size = 0x1000;
     tp.gp_reg = D_00494050;
     tp.func = func_0024d618;
     tp.stack = D_00669A80;
     tp.initial_priority = 1;
-    StartThread(CreateThread(&tp), (void *) sema);
+    PlatStartThread(PlatCreateThread(&tp), (void *) sema);
     func_00269960(func_0024d7b0, sema);
 }
 

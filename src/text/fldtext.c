@@ -5,6 +5,7 @@
  * func_0010ea70 ...) around the unmatched layout func_0010d470. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/bss_0049.h"
 #include "data/bss_004D.h"
@@ -87,17 +88,15 @@ void func_0010c410(s32 arg0) {
 }
 
 /* func_0010c438 (from auto/text_00100000_3.c). */
-M2C_UNK FlushCache(M2C_UNK);
 extern M2C_UNK D_002BC1B0;
 void func_0010c438(s16 arg0, s32 arg1) {
     PlatGsSetDefLoadImage(&D_002BC1B0, arg0, 1, 0, 0, 0, 8, 2);
     PlatGsSyncPath(0, 0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsExecLoadImage(&D_002BC1B0, arg1);
 }
 
 /* func_0010c4b0 (from hand/text_00100000_h2.c). */
-#define FlushCache ((void (*)(s32)) FlushCache)
 #define D_002BC1B0 (*(GsImagePacket (*)) &D_002BC1B0)
 s32 func_0010c4b0(void) {
     switch (D_002BD118) {
@@ -107,11 +106,10 @@ s32 func_0010c4b0(void) {
     }
     PlatGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 0, 0, 0, 256, 256);
     PlatGsSyncPath(0, 0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsExecLoadImage(&D_002BC1B0, D_00495280);
     return 0;
 }
-#undef FlushCache
 #undef D_002BC1B0
 
 /* func_0010c540 (from auto/text_00100000_12.c). */

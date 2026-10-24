@@ -18,12 +18,12 @@
  * draw routine for a model from its flags (bit 2, bits 8-9, bit 7).
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/types/text_001a0000_h13.h"
 #include "data/types/text_001a0000_h13_p.h"
 
-void FlushCache(s32);
 s32 rand(void);
 void func_001a9e90(void);
 void func_001aa918(void);
@@ -99,7 +99,7 @@ void func_001aa008(void) {
     u128 save = *p;
     *p = 0x70000006;
     PlatGsSyncPath(0, 0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(D_00372908, p);
     PlatGsSyncPath(0, 0);
     *p = save;
@@ -118,7 +118,7 @@ void func_001aa080(void) {
 void func_001aa650(void) {
     void *p = D_0061EEA0;
     PlatGsSyncPath(0, 0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, p);
     PlatGsSyncPath(0, 0);

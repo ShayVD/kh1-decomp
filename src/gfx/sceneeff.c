@@ -4,6 +4,7 @@
  * 25x25 warp grid (func_00103c48), and their start / stop tasks. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/pieces/D_002B6778.h"
 #include "data/pieces/D_002A624C.h"
@@ -429,7 +430,6 @@ void func_002678b8(void *, void *, void *);
 void func_00267578(void *, void *, void *);
 void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 void sceVu0MulMatrix(void *, void *, void *);
-void FlushCache(s32);
 extern u8 D_002A6110[];
 extern u8 D_002A5FD0[];
 extern f32 D_003732D0[];
@@ -562,7 +562,7 @@ s32 func_00103c48(void) {
     *(volatile u32 *)0x10009020 = 0;
     *(volatile u32 *)0x10009030 = (u32)D_0048C770 & 0x0fffffff;
     *(volatile u32 *)0x1000e010 = 2;
-    FlushCache(0);
+    PlatFlushCache(0);
     *(volatile u32 *)0x10009000 = 0x145;
     func_00121ee0(vtx);
     func_00121ee0(uv);

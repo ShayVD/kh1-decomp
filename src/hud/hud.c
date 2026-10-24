@@ -13,6 +13,7 @@
  * func_002394f8 is 1 while one of five HUD parts is busy (vm_lib.c's
  * func_001da178 reads it). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "gfx/drawlist.h"
 #include "data/data_0042.h"
@@ -41,7 +42,6 @@ void func_00249250(void);
 void func_00238a70(void);
 void func_002499f0(void);
 void func_001f2e98(void **img, void **clut);
-void FlushCache(s32);
 void func_0023cfd8(void);
 void func_00243668(void);
 void func_002444a0(void);
@@ -100,7 +100,7 @@ void func_00239368(void) {
     GsLoadImage li;
     func_00238a70();
     PlatGsSetDefLoadImage(&li, 0x3FD8, 1, 0, 0, 0, 16, 16);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&li, D_00648230);
     func_002499f0();
@@ -112,11 +112,11 @@ void func_002393d8(void) {
     void *clut;
     func_001f2e98(&img, &clut);
     PlatGsSetDefLoadImage(&li, 0x3600, 4, 0x14, 0, 0, 256, 256);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&li, img);
     PlatGsSetDefLoadImage(&li, 0x3A00, 1, 0, 0, 0, 16, 16);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&li, clut);
     func_002499f0();

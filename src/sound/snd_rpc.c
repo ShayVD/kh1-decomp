@@ -12,6 +12,7 @@
  * 2 func_001ed278, 4 func_001ecc68, 8 func_001ece70.  The IOP writes the
  * status block by DMA; the readers flush the cache first. */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/types/text_001e0000_h68.h"
 
 /* The IOP's status block D_0063D640 (0x2000 bytes, src/data/data_0063.s):
@@ -34,7 +35,6 @@ extern s8 D_0063F640[256];
 extern char D_00490910[];
 extern char D_00490928[];
 
-void FlushCache(s32);
 int sceSifBindRpc(void *, u32, s32);
 int sceSifCallRpc(void *, u32, u32, void *, s32, void *, s32, void *, void *);
 int printf(const char *, ...);
@@ -94,7 +94,7 @@ s32 func_001ecab0(void) {
 s32 func_001ecb08(s32 a, s32 b, s32 c) {
     SndSe *p;
     s32 i;
-    FlushCache(0);
+    PlatFlushCache(0);
     p = D_0063D640;
     if (b < 0 && c < 0) {
         for (i = 0; i < 24; i++, p++) {
@@ -132,7 +132,7 @@ s32 func_001ecc68(u8 *p, s32 a, s32 b, s32 c) {
 s32 func_001ecd08(s32 a, s32 b, s32 c) {
     SndStream *p;
     s32 i, n;
-    FlushCache(0);
+    PlatFlushCache(0);
     p = D_0063EE40;
     if (a < 0 && b < 0 && c == 0) {
         n = 0;
@@ -170,7 +170,7 @@ s32 func_001ece70(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 s32 func_001eced0(s32 id) {
     s32 i;
     SndStream *e;
-    FlushCache(0);
+    PlatFlushCache(0);
     for (e = D_0063EE40, i = 0; i < 4; i++, e++) {
         if (e->used != 0 && e->x10 == id) return e->x18;
     }
@@ -189,12 +189,12 @@ s32 func_001ecf40(s8 *dst) {
 }
 
 s32 func_001ecfb0(void) {
-    FlushCache(0);
+    PlatFlushCache(0);
     return D_0063F248;
 }
 
 s32 func_001ecfd8(void) {
-    FlushCache(0);
+    PlatFlushCache(0);
     return D_0063F540;
 }
 

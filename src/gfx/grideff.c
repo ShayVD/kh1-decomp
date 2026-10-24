@@ -5,6 +5,7 @@
  * func_00107d30 queues them; func_00107e60 / func_00107ec0 its light. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/dma.h"
 #include "data/types/text_00100000_s6_00.h"
 #include "data/pieces/D_002BC0F0.h"
@@ -63,10 +64,9 @@ extern PlatDmaChan *D_002A6B84;
 extern s32 D_002A6C54;
 extern s32 D_002A6C50;
 extern u8 D_002BC270[];
-void iFlushCache(s32);
 s32 func_00106e18(void) {
     func_0011fbb0(0x3600, 2, 0, 0, 0, 128, D_002A6C50 << 7, D_002A6C50 << 12, D_002A6C54, D_002BC270);
-    iFlushCache(0);
+    PlatIFlushCache(0);
     PlatDmaSend(D_002A6B84, D_002BC270);
     return 2;
 }

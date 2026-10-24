@@ -10,6 +10,7 @@
 
 /* pppKeLnsLpDraw (from hand/nostrict/text_00180000_h40.c). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
@@ -283,7 +284,6 @@ typedef struct { u8 b[0x70]; } __attribute__((aligned(16))) GsStoreImage;
 void func_002675e0(s32 *, f32 *);
 u8 *func_001aa950(s32);
 void func_001aa9d0(s32);
-void FlushCache(s32);
 /* func_00192958: MATCHED (session 18, s18m2), hand/nostrict. From s10 w11's 17w draft (nonmatchings/session10/w11__00192958_17w.c). FLAGGED: five local register variables (plain C, no inline asm): the scissor and xyoffset TI header constants pinned to a1/a3 (`register u128_92958 ks asm("$5")`, `kx asm("$7")`; without them local-alloc gives zbuf/xy/scissor birth order on a live-length tie, 17w), and the scy0 chain split as e (a1, the raw field), t (a3, the s32 truncate) and u (a1, t << 4), so the truncate is untied from its source as in the original and the o->pos argument move issues after the addu. b[] in order b0, b1, b2, b3 (exhaustive order search). Each pin is needed: without e 7w, without kx 12w, `u + oy` 1w. Unlike s18m1's 001f2630 f4 pin, these pinned computed values are not dissolved: a truncate and a shift into a hard register survive cse. */
 void func_00192958(FlareObj *o, s32 a1, s32 frame) {
     s32 v[4] __attribute__((aligned(16)));
@@ -366,7 +366,7 @@ void func_00192958(FlareObj *o, s32 a1, s32 frame) {
 
     buf = func_001aa950(0x3060);
     PlatGsSetDefStoreImage(&si, pk->zbuf.zbp << 5, pk->frame.fbw, 0x31, ox, oy, w8, h4);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsExecStoreImage(&si, buf + 96);
     p = buf + 96;
     PlatGsSyncPath(0, 0);

@@ -1,6 +1,7 @@
 /* The gradients and sprites of src/menu/menubg.c that need -fno-strict-aliasing
  * (docs/modules.md "Session 39"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "text/textwin.h"
@@ -16,7 +17,6 @@ extern s32 D_003F31F0[];
 extern u8 D_00641080[];
 extern u8 D_00641130[];
 
-s32 FlushCache(s32);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 u64 *func_00122048(s32, s32);
 void func_001220b8(void *);

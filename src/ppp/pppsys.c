@@ -16,6 +16,7 @@
  * Each section names the file its code came from.  Read from the code, not
  * proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/types/text_00170000_h38.h"
@@ -274,13 +275,12 @@ void func_00180aa8(s32 arg0) {
 typedef struct {
     u64 q[12];
 } H39LoadImage;
-void FlushCache(s32);
 typedef struct { s16 dbp, b, c, d, e, f, g, h; s32 pad[4]; u8 data[1]; } AB;
 void func_00180ab8(AB *a, s16 base) {
     H39LoadImage li; s16 v = a->dbp;
     if (v >= 0x3800) v = v + base - 0x3800;
     PlatGsSetDefLoadImage(&li, v, a->c, a->d, a->e, a->f, a->g, a->h);
-    FlushCache(0); PlatGsSyncPath(0, 0);
+    PlatFlushCache(0); PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&li, a->data);
 }
 
@@ -309,7 +309,7 @@ void func_00180b40(H39Img *img, s16 base) {
     default:
         return;
     }
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&li, (u8 *) img + img->off18 + 0x20);
 }
@@ -732,7 +732,7 @@ void func_00181b30(void) {
                 func_00180ce0(D_00370130);
                 first = 0;
                 func_00180e10(D_00370130);
-                FlushCache(0);
+                PlatFlushCache(0);
                 PlatGsSyncPath(0, 0);
                 PlatDmaSend(D_00372908, D_00370140);
             }
@@ -742,7 +742,7 @@ void func_00181b30(void) {
                 if (e->xa0.s.a4) func_00180c20(e->key, e->own->xb0, e->xa0.s.a4);
                 if (e->xa0.s.a6) func_00180d50(e->key, e->own->xb0, e->xa0.s.a6);
                 if (e->xa0.d & 0xFFFFFFFF00000000) {
-                    FlushCache(0);
+                    PlatFlushCache(0);
                     PlatGsSyncPath(0, 0);
                     PlatDmaSend(D_00372908, D_00370140);
                 }
@@ -777,7 +777,7 @@ void func_00181b30(void) {
             }
         }
     }
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatDmaSend(D_00372908, D_00370170);
     func_001220b8(h);

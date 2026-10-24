@@ -11,6 +11,7 @@
  * the event voices' D_003DACA0 / the effects' D_0062A640; the code after
  * 0x001e2748 works on D_002BBBA0 / D_0062F760 instead. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "vm/vm_sub.h"
 #include "data/types/vm_rec.h"
@@ -27,7 +28,6 @@ extern s32 D_0062F670;      /* the image transfer record */
 extern u8 D_00F20000[];     /* the 512x384 RGB frame */
 
 s32 func_0011ef10(s32, void *);
-s32 FlushCache(s32);
 
 /* func_001e05a8 .. func_001e08d8 are in frame.c. */
 void func_001e05a8(void *);
@@ -286,7 +286,7 @@ void func_001e1438(s32 arg0, s32 arg1) {
 void func_001e1480(void) {
     s32 sp[28];
     PlatGsSetDefStoreImage(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecStoreImage(sp, &D_00F20000);
 }
@@ -294,11 +294,11 @@ void func_001e1480(void) {
 /* Load D_00F20000 back (as func_001e0608). */
 void func_001e14e0(void) {
     PlatGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, &D_00F20000);
     PlatGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, (s8 *)&D_00F20000 + 0x48000);
 }

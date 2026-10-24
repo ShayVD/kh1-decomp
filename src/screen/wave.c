@@ -9,6 +9,7 @@
  * (func_001e93c8: DMA channel 2, platform calls).  Closing the window
  * (func_001e92b8) fades the levels out (func_001e9650). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/types/vm_rec.h"
@@ -25,7 +26,6 @@ void func_0010bd90(void *, void *);
 void func_0010bdd0(void *, void *);
 void func_0010ef70(void *, void *, void *);
 s32 func_0011ef10(s32, void *);
-void func_002583e0(s32);
 
 void func_001e92b8(void);
 void func_001e92e0(void);
@@ -66,7 +66,7 @@ s32 func_001e9310(VmRec *vm) {
 
 s32 func_001e93c8(void) {
     PlatDmaChan *ch = PlatDmaGetChan(2);
-    func_002583e0(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatDmaSend(ch, &D_00631620);
     return 4;

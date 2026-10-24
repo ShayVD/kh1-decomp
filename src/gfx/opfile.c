@@ -8,6 +8,7 @@
  * func_0025bbc8 / func_0025b810 look like open / lseek / read / close.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 
 extern char D_0048FE18[];
 s32 func_0025b588(char *, s32);
@@ -16,7 +17,6 @@ s32 func_0025bbc8(s32, void *, s32);
 void func_0025b810(s32);
 int printf(const char *, ...);
 void exit(s32);
-void FlushCache(s32);
 
 s32 func_001aaa70(char *name, void *buf) {
     char tmp[1024];
@@ -30,7 +30,7 @@ s32 func_001aaa70(char *name, void *buf) {
     func_0025b990(fd, 0, 0);
     if (size != func_0025bbc8(fd, buf, size)) size = 0;
     func_0025b810(fd);
-    FlushCache(0);
+    PlatFlushCache(0);
     return size;
 }
 

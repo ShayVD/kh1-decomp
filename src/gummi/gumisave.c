@@ -34,6 +34,7 @@
  *
  * Read from the code and the strings, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "m2c.h"
 #include "gummi/gummi.h"
 #include "vm/script_vm.h"
@@ -80,7 +81,6 @@ extern Lt D_002C5AD0;
 extern GumiShip D_006202A0;
 
 void *func_00232cc0(s32);
-void FlushCache(s32);
 s32 func_001207f8(s32);
 s32 func_001205f0(char *, void *);
 double asin();
@@ -157,8 +157,8 @@ s32 func_001b9c10(void) {
     if (func_001207f8(D_00621210) != 0) {
         return 0;
     }
-    FlushCache(0);
-    FlushCache(2);
+    PlatFlushCache(0);
+    PlatFlushCache(2);
     ((void (*)(void))D_00F20000)();
     return 4;
 }
@@ -166,8 +166,8 @@ s32 func_001b9c10(void) {
 void func_001b9c60(char *a) {
     void (*fn)(void) = (void (*)(void))D_00F20000;
     D_00621210 = func_001205f0(a, fn);
-    FlushCache(0);
-    FlushCache(2);
+    PlatFlushCache(0);
+    PlatFlushCache(2);
     fn();
 }
 

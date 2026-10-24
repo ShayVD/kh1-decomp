@@ -15,6 +15,7 @@
 #include "data/pieces/D_002BBDE0.h"
 #include "data/pieces/D_002BC070.h"
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/bss_004E.h"
 #include "data/types/text_00110000_h29_p.h"
@@ -98,7 +99,6 @@ W29Env D_004D8EF0 ALIGNED(16);
 extern u64 D_002BC750[];
 extern u64 D_002BC7C0[];
 extern u64 D_002BC830[];
-void FlushCache(s32);
 void func_001100a8(void) {
     s32 i;
     for (i = 0; i < 13; i++) {
@@ -122,7 +122,7 @@ void func_001100a8(void) {
     D_004D8EF0.r[29].a = 0x49;
     D_004D8EF0.r[30].d = -4;
     D_004D8EF0.r[30].a = 0x44;
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsPutDrawEnv(&D_004D8EF0);
 }

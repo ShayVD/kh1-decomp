@@ -15,6 +15,7 @@
  * func_00242ef8: a TIM2 sent to the GS directly).  The meanings of the
  * values (HP / MP) are guesses. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "hud/gauge.h"
@@ -61,7 +62,6 @@ void *func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
 void *func_0011fb38(s32, u64, void *);
 void func_0011fb78(void *, s32, void *);
 void func_001220b8(void *);
-void FlushCache(s32);
 void __assert(const char *, s32, const char *);
 f32 sinf(f32);
 f32 cosf(f32);
@@ -1327,7 +1327,7 @@ void func_00242c08(GActor *o, s32 idx, s32 *pos, f32 alpha) {
     ((I4b *)pk)->w = 0;
     pk++;
     func_0011fb78(top, 7, pk);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000));
     PlatGsSyncPath(0, 0);
     func_001220b8(buf);
@@ -1371,7 +1371,7 @@ void func_00242ef8(GActor *o, s32 n, s32 a2, s32 *pos, s32 *col) {
     q->z = 0;
     q->w = 0;
     func_0011fb78(p, 7, q + 1);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatDmaSend(PlatDmaGetChan(2), (void *)(((u32)buf & 0x0FFFFFFF) | 0x80000000));
     PlatGsSyncPath(0, 0);
     func_001220b8(buf);

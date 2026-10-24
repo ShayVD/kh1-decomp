@@ -8,6 +8,7 @@
  * above moves a store into a branch delay slot), and screen.c has its own
  * copy of func_001e0608 (func_001e14e0). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "data/data_003D.h"
@@ -17,15 +18,13 @@
 extern s32 D_0062F670;      /* the image transfer record */
 extern u8 D_00F20000[];     /* the 512x384 RGB frame */
 
-s32 FlushCache(s32);
-s32 func_002583e0(s32);
 
 /* Send the packet list to path 2. */
 void func_001e05a8(void *arg0) {
     s32 temp_s0;
 
     temp_s0 = PlatDmaGetChan(2);
-    func_002583e0(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatDmaSend(temp_s0, (s32)arg0);
     PlatGsSyncPath(0, 0);
@@ -34,11 +33,11 @@ void func_001e05a8(void *arg0) {
 /* Load the frame into VRAM (two halves at 0xe00 / 0x1400). */
 void func_001e0608(void) {
     PlatGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, &D_00F20000);
     PlatGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, (s8 *)&D_00F20000 + 0x48000);
 }
@@ -49,11 +48,11 @@ void func_001e06c8(s32 arg0) {
 
     PlatGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
     temp_s1 = (s8 *)&D_00F20000 + (arg0 * 0x600);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, temp_s1);
     PlatGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, (s8 *)temp_s1 + 0x48000);
 }
@@ -63,12 +62,12 @@ void func_001e07a8(s32 arg0) {
     s32 temp_s0;
 
     PlatGsSetDefLoadImage(&D_0062F670, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     temp_s0 = arg0 * 0x600;
     PlatGsExecLoadImage(&D_0062F670, (void *)((s32)D_003DABD0[1] + temp_s0));
     PlatGsSetDefLoadImage(&D_0062F670, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
+    PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecLoadImage(&D_0062F670, (void *)((s32)D_003DABD0[1] + temp_s0 + 0x48000));
 }

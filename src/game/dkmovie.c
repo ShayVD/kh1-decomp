@@ -13,6 +13,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/thread.h"
 #include "data/bss_0049.h"
 #include "data/types/text_00100000_h2.h"
 #include "data/pieces/D_002B677C.h"
@@ -31,10 +32,9 @@
 /* func_00110fc8 (from auto/text_00110000_16.c). */
 extern s32 D_002BCAE0;
 void D_00F20000(M2C_UNK, s32);
-void FlushCache(M2C_UNK);
 void func_00110fc8(void) {
     D_002BCAE0 = 1;
-    FlushCache(2);
+    PlatFlushCache(2);
     D_00F20000(0, D_004D9244);
 }
 

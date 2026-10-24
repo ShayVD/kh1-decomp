@@ -10,6 +10,7 @@
  * func_00249da8 tests the "TIM2" magic (D_00491840) and func_00249eb8 takes
  * the 0x40-byte CLUT into a CLUT row (the two halves 0x40 apart). */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/types/text_00240000_s6_25_p.h"
 
@@ -39,7 +40,6 @@ typedef struct { s32 n; s32 a[1]; } Lst;
 
 extern PsmEnt D_00469FB0[];
 extern char D_00491840[];
-void FlushCache(s32);
 void func_00237018(void *, s32, s32);
 s32 strncmp(const char *, const char *, u32);
 void func_00249a48(Tim *, s32);
@@ -65,7 +65,7 @@ void func_00249a48(Tim *t, s32 sync) {
     if (p->imageSize) {
         img = t->data;
         PlatGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3FFF), (u16)(p->t.tex0 >> 14 & 0x3F), (u16)((p->t.tex0 & 0x3F00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
+        PlatFlushCache(0);
         PlatGsSyncPath(0, 0);
         PlatGsExecLoadImage(li, img);
     }
@@ -85,7 +85,7 @@ void func_00249a48(Tim *t, s32 sync) {
         } else if (psm == 20) {
             PlatGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 8, 2);
         }
-        FlushCache(0);
+        PlatFlushCache(0);
         PlatGsSyncPath(0, 0);
         PlatGsExecLoadImage(li, clut);
     }
@@ -141,7 +141,7 @@ void func_00249dc8(Tim *t, s32 sync) {
     if (p->imageSize) {
         d = t->data;
         PlatGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3fff), (u16)((p->t.tex0 >> 14) & 0x3f), (u16)((p->t.tex0 & 0x3f00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
+        PlatFlushCache(0);
         PlatGsSyncPath(0, 0);
         PlatGsExecLoadImage(li, d);
     }

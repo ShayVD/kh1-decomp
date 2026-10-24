@@ -10,6 +10,7 @@
  * journal.c, loads six files and counts six sections); not proved by a
  * boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/dma.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
@@ -74,7 +75,6 @@ extern s32 D_00642EB0;
 extern s32 D_00642F60;
 s32 D_006430EC ALIGNED(4);
 
-void FlushCache(s32);
 void func_00131cc8(s32, void *);
 void func_00131d68(s32, JMdl *);
 s32 func_001301d8(void *, s32, s32, s32);
@@ -387,7 +387,7 @@ void func_0021b6a0(void) {
         break;
     case 3:
         if (D_006430F8 == D_006430FC) {
-            FlushCache(0);
+            PlatFlushCache(0);
             func_0021b250(D_006430FC);
             D_006430F0++;
             D_00643100 = 1;

@@ -5,6 +5,7 @@
  * "MENV" map environment in place), func_00161de8, func_00162218,
  * func_00162428.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
 #include "platform/math.h"
@@ -506,7 +507,6 @@ typedef struct { u16 x0; u16 x2; u32 x4; s32 x8; s32 xc; } B4Mb;
 typedef struct { s32 x0; s32 x4; s32 x8; } B4Mk;
 typedef struct { u8 pad[0x14]; s32 x14; u8 pad18[4]; s32 x1c; u8 pad20[4]; s32 x24; s32 x28; u8 pad2c[4]; s32 x30; u8 pad34[4]; s32 x38; B4Mk *x3c; } B4Mo;
 extern s32 D_005739F8[];
-void FlushCache(s32);
 s32 printf(const char *, ...);
 void func_001680d8(B4Hd *);
 s32 func_001681b8(B4Hd *, u32);
@@ -536,7 +536,7 @@ void func_00161a08(B4Hd *h) {
     c = 0;
     t = 0;
     m = 0;
-    FlushCache(0);
+    PlatFlushCache(0);
     o = D_005739F8;
     switch (h->x0) {
     case 0x4a424f4d:
