@@ -8,64 +8,45 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 
 ## The Mac
 
-**The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23; sessions 49 to 54 ran without it).
-If this session starts before then, do not ask for the Mac or wait on it: skip item 1, add every float change to docs/float-untested.md as
+**The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
+If this session starts before then (sessions 49 to 55 ran without it), do not ask for the Mac or wait on it: skip item 1, add every float change to docs/float-untested.md as
 untested, and do the static items. **From Monday 2026-10-26 on, ask for the Mac and PCSX2 at the start** (the connect
 card in the Claude desktop app) **and make item 1 the first thing**: five float builds are waiting for a boot.
 
-## Where we stopped (end of session 54, 2026-10-24)
+## Where we stopped (end of session 55, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-54.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-55.
 - **Five default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032) and 34
-  (2,049, still the current default: sessions 35 to 54 changed no data names). docs/float-untested.md lists every
+  (2,049, still the current default: sessions 35 to 55 changed no data names). docs/float-untested.md lists every
   change since the last booted build (KH1_F29_N) and the switch that undoes each. **Session 34 released 19 names**
-  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-54 released nothing.
-- **Modules** (session 54): 598 functions moved in eight commits, and **the game segment is in modules from
-  0x0011c768 to its end 0x0024f2e0** except the VU0 routines in src/hand/vu0.c, the probes in
-  src/anon/session1_probes.c and the hand asm. The c02 move is done: func_0013cfe8 is a small stack VM and went with
-  its stack helpers into src/vm/stackvm.nostrict.c; func_00135ed0 / func_00136d38 joined src/obj/objdraw,
-  func_00143180 src/obj/objmove (its CONTEXT_ONLY copy is gone), func_001550a0 src/obj/hitreact. New modules: src/io/
-  discfile, cdqueue; src/util/ vecutil, heap, proc; src/game/ gamephase, cmdmenu (a guess), mainloop; src/gfx/ light,
-  shadow, gifpkt; src/obj/ actor, plact (a guess), objfx; src/camera/view; src/vm/ objscmd (the object scripts'
-  225-entry command table at 0x002E2810), objscript (the 64 script nodes), stackvm; src/sound/sndctl; src/pad/padread
-  (platform code). docs/modules.md "Session 54" has the table and the traps: **a deleted file's data definition can
-  vanish with `make` still byte-identical** (D_004F71D0: only the data.tsv names check and fcheck.sh caught it),
-  **never `git checkout src` mid-chunk** (`mod.py remove` then deletes the new modules' definitions), actor.h's
-  `struct Actor` versus the hand files' own (cast at the use), m2c wrappers with no parameters (write them), and a
-  function view of strlen loses the builtin.
-- **576 functions are still in src/auto and src/hand** outside vu0.c, all in 0x001001f8-0x0011c768
-  (out/gen/placements.tsv): 273 in 0x0011, 303 in 0x0010 (plus 2 VU0 routines there, 33 in vu0.c in all).
+  (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`); sessions 31-33 and 35-55 released nothing.
+- **The module moves are done** (session 55): 576 functions in 0x001001f8-0x0011c768 went into 28 modules in four
+  commits, and the 36 src/hand files left from earlier sessions with no function in them were deleted. **src/auto is
+  gone and src/hand holds only vu0.c** (33 VU0 routines). Every matched C function of the game segment is in a
+  module except those and the probes in src/anon/session1_probes.c (func_0018ad70, func_001882f8, func_00137418,
+  func_00111f70, func_0010ef70). New modules: src/coll/ (a new directory) colobj, mapcoll, mapdata; src/game/ gameover,
+  pause, roomload, gametimer, progress, dkmovie, gamestate, framectl, roombg, field; src/screen/ display, dispenv,
+  fade, brightfade, capture; src/gfx/ roommdl, texanim, sceneeff, dmapool, grideff, mdlpkt, objwin; src/text/ fldtext,
+  selector; src/util/thread. Most names are guesses read from the code ("(a guess)" in each file's top comment).
+  docs/modules.md "Session 55" has the table and the traps: **a `#define D_X (*(T *(*)) &D_X)` view of a pointer
+  global cost func_00107548 220 words (an `__asm__` alias view matches)**, beq/beql from a callee defined above or
+  not, assemble.py crashing on D_00F20000 (a function and a variable), a sized extern leaving with its file (cover_check
+  then keeps the next name: D_004E2458 / D_004E3430), and **51 data definitions that left with deleted files, every one
+  caught only by the names check of out/gen/data.tsv** (a grep for `T D_X ALIGNED(n);` missed some).
+- **Platform code found so far** (docs/portability.md rule 2): src/pad/padread*.c, src/io/discfile.c, cdqueue.c
+  (session 54); src/util/thread.c, src/gfx/dmapool.c, src/game/dkmovie.c (the IPU), src/screen/dispenv.c, display.c,
+  capture.c, src/game/framectl.c's func_0010f658 (session 55). Wrappers so far: include/platform/pad.h, mc.h, math.h.
 - **Original source names** (docs/elf-notes.md): ttlib/ui_gauge.c, ttlib/ui.c, src/decode.c, src/sa_task.c, with
-  their ranges; none below 0x001c08e8 so far (session 48 used the Gummi strings, sessions 49 and 50 the renderer's op_* strings
-  and the ppp class table).
-- **libvu0 is named** (session 45): 39 functions in functions.tsv (sceVu0ApplyMatrix ... sceVu0ClipAll,
-  _sceVu0ecossin, sceVpu0Reset; docs/sdk.md "Session 45"); the SDK files define them by name, game code still calls
-  the func_ names (PROVIDE / shift aliases), the new modules call them by name. Platform wrappers so far:
-  include/platform/pad.h, mc.h, math.h; docs/portability.md lists the platform files session 54 found (padread,
-  discfile, cdqueue).
-- **Helpers:** `python3 -I tools/shift/s50move/group.py src/DIR/NAME LO HI [--skip f,...]` (session 50) drafts
-  one module per flag mode for a whole address range with assemble.py (each function gets what it saw above it
-  in its old file; clashing types, tags and inline helpers renamed NAME_<addr>; clashing externs viewed per function
-  through `__asm__` aliases since session 52), prunes it (prune.py) and runs checkfile on each file, calling each
-  FAIL "same as its old file (rodata)" or "NEW DIFF" (a file that does not compile prints only its errors); then
-  `mod.py remove` the functions, `make`, `tools/shift/data_owners.py`, fcheck.sh, and compare `cut -f2
-  out/gen/data.tsv | sort` with the base. Sessions 50 to 54 moved about 2,500 functions this way. `python3 -I
-  tools/shift/s36move/mod.py draft|remove` drafts and removes module code (it skips `static inline` helpers, data
-  definitions, CONTEXT_ONLY copies and multi-name extern lines; it does not call a file with only one left EMPTY;
-  it deletes a file whose functions all moved even when it still defines data; its NOTE lines name matching notes
-  in deleted files: copy them above the moved function); `python3 -I tools/shift/s37move/refs.py LO HI` (addresses
-  without 0x) lists each function's calls and D_ names to split a range; `tools/shift/s37move/fcheck.sh base` then
-  `fcheck.sh NAME` after each chunk is the float check (compare float_covered.txt as a sorted set: a move can change
-  its line order; for a DIFF, `python3 -I tools/shift/cover_check.py | grep NAME` says which extern lost its size);
-  `python3 -I tools/shift/s38move/fold.py FILE.c TYPE --write` folds a file's window view into TextWin; `python3 -I
-  tools/shift/s31types/s31_warndiff.py FILE.c ...` lists new warnings (old files only: it compares with HEAD).
-  `tools/checkfile.py FILE -v` lists the differing words (relocations of data defined in the same file, jump
-  tables, strings and .rodata doubles show there; it stops at a section overlap when a file's size changed, so a
-  local copy with `--no-check-sections` added to its ld line helps for drafts; `make` is the judge). Keep sized
-  externs in .c files: cover_check does not read headers. m2c's no-argument calls take the value still in a0: write
-  the argument. A fresh container needs `apt-get install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu` (after
-  `dpkg --add-architecture i386`), `make toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py
-  before `fcheck.sh base`.
+  their ranges; none below 0x001c08e8 so far.
+- **libvu0 is named** (session 45; docs/sdk.md "Session 45"); the new modules call it by name.
+- **Helpers:** `python3 -I tools/shift/s50move/group.py src/DIR/NAME LO HI` drafts modules per flag mode (sessions 50
+  to 55; do not let it append to an existing module, start a new file), `tools/shift/s36move/mod.py remove`,
+  `tools/shift/s37move/fcheck.sh base|NAME` (compare float_covered.txt as a sorted set), `tools/shift/cover_check.py |
+  grep NAME` for a DIFF, `tools/checkfile.py FILE -v` (relocations of data defined in the same file, jump tables,
+  strings and .rodata doubles differ there; `make` is the judge), `tools/shift/s31types/s31_warndiff.py`. Data
+  definitions: compare `cut -f2 out/gen/data.tsv | sort` with the base after every change. A fresh container needs
+  `apt-get install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu` (after `dpkg --add-architecture i386`), `make
+  toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py before `fcheck.sh base`.
 
 ## What is left (9 functions)
 
@@ -75,11 +56,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 55 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 56 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s55 and /mnt/project-files/kh1-runtime/s55, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s56 and /mnt/project-files/kh1-runtime/s56, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -87,26 +68,26 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    shop, the Moogle's synthesis, the title screen left idle until its demo, a battle with the HUD (the HP / MP
    gauges, command menu, lock-on and the target's gauge, damage numbers, an "obtained" notice), the world map's
    gauge, a minigame with a timer or score if one is near, a level-up, a Trinity mark if one is near, a summon if
-   one is available, enemy drops picked up, and anything using atan: camera, lock-on). If it breaks, bisect with the switches listed there, session 34's first. Move what
-   boots into docs/shiftable-plan.md and clear docs/float-untested.md. Without the Mac: skip.
-2. **Phase 4 modules** (docs/modules.md "Next module moves"): go on downwards from 0x0011c768 through 0x0011 (273
-   functions), then 0x0010 (303). List them with `python3 -I tools/shift/s37move/refs.py 00110000 0011c768` and group
-   them by what they do (the data each group shares and the modules that call them are the best guide). Leave
-   whole-VU0 functions where they are. After every chunk: `make` byte-identical, tools/shift/data_owners.py,
-   fcheck.sh with the float layout unchanged, the names of out/gen/data.tsv the same as the base (put lost
-   definitions back at their user's extern line with the old ALIGNED; `git show HEAD:FILE` of each deleted file
-   shows its definitions), and the new files scanned with `-Wimplicit-function-declaration`; run `make`, not only
-   checkfile, after each `mod.py remove`, and never `git checkout src` while a chunk is in flight.
-3. **Platform wrappers (static, optional)**: include/platform/gs.h for src/gfx/gspkt.nostrict_nofill.c's
-   func_00237018 (FlushCache, sceGsSyncPath, libdma's func_00266c08 / func_00266f38: name them sceDmaGetChan /
-   sceDmaSend from their code first, as libvu0 and libmc were; src/obj/objdraw.nostrict.c's func_00135ed0 calls them
-   too), src/menu/menubg.c's sceGsExecStoreImage, hud.c's sceGsSetDefLoadImage / sceGsExecLoadImage;
-   src/sound/snd_rpc.c's sceSifBindRpc / sceSifCallRpc (a `Plat` sound/iop wrapper, docs/portability.md rule 2); the
-   pad calls of src/pad/padread*.c and the libcdvd calls of src/io/discfile.c / cdqueue.c (session 54); the pad masks
-   in src/text/winmenu.c (func_001fd720) and src/menu/customize.c (func_00216890). Each must compile to the same bytes.
+   one is available, enemy drops picked up, the pause (session 55's src/game/pause.c), a game over and its continue
+   (src/game/gameover.c), a room change and a world change (src/game/roomload.c), a movie (src/game/dkmovie.c), and
+   anything using atan: camera, lock-on). If it breaks, bisect with the switches listed there, session 34's first.
+   Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what the boot shows about the
+   "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
+2. **Platform wrappers (static)**, now the main Phase 4 work (docs/portability.md rule 2): include/platform/gs.h for
+   src/gfx/gspkt.nostrict_nofill.c's func_00237018 (FlushCache, sceGsSyncPath, libdma's func_00266c08 / func_00266f38:
+   name them sceDmaGetChan / sceDmaSend from their code first, as libvu0 and libmc were; src/gfx/dmapool.c and
+   src/obj/objdraw.nostrict.c's func_00135ed0 call them too), the GS image calls (src/menu/menubg.c's
+   sceGsExecStoreImage, hud.c's sceGsSetDefLoadImage / sceGsExecLoadImage, src/screen/capture.c, src/gfx/mdlpkt.c),
+   the display environment (src/screen/dispenv.c, display.c, and the GS CSR writes at 0x12000000 / 0x12001000 in
+   display.c and framectl.c), the threads of src/util/thread.c, the IPU of src/game/dkmovie.c, src/sound/snd_rpc.c's
+   sceSifBindRpc / sceSifCallRpc (a `Plat` sound/iop wrapper), the pad calls of src/pad/padread*.c and the libcdvd
+   calls of src/io/discfile.c / cdqueue.c; the pad masks in src/text/winmenu.c (func_001fd720) and
+   src/menu/customize.c (func_00216890). Each must compile to the same bytes; one wrapper header per commit.
+3. **The probes (static)**: move src/anon/session1_probes.c's five functions into their neighbours' modules (by
+   address and callers, as group.py would) and delete the file if nothing else is in it.
 4. **reach_check (static, optional)**: jump tables whose index has no bound fall back to branch-target labels and
    skip case entries nothing branches to (can miss accesses); and the four libc string arguments still order-dependent
    (docs/shiftable-plan.md "Session 34: reach_check", "Left"). Any release goes into docs/float-untested.md as untested.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=55`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=56`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).
