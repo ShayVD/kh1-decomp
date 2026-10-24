@@ -251,95 +251,6 @@ kill:
 }
 
 #include "data/types/nostrict_text_00120000_h54.h"
-#include "data/pieces/D_00304BE8_s.h"
-extern Q5 D_002E3010;
-extern L5 D_002E3080;
-#include "data/pieces/D_00304B78.h"
-extern u32 D_002C5958;
-#include "data/pieces/D_002E31A8.h"
-extern void func_0013ab08() __attribute__((weak));
-extern void func_0012cb40(Q5 *, s32, s32);
-extern s32 func_0013a910(s32);
-void func_0012d188(s32 a0, u32 *a1) {
-    s32 buf[7];
-    s32 n, i, m;
-    Q5 *q = &D_002E3010;
-    L5 *l;
-    if (func_0013ab08 && ((*(u32 *)&D_00304B78) >> 3 & 1)) {
-        func_0012cb40(q, q->n++, 79);
-        return;
-    }
-    l = &D_002E3080;
-    n = 0;
-    m = -1;
-    for (i = 0; i < 7; i++) {
-        s32 v = D_00304BE8->x7d0[i];
-        if (v != -1) {
-            l->ids[n] = v + 47;
-            buf[n] = v;
-            if (func_0013a910(v)) m &= ~(1 << n);
-            n++;
-        }
-    }
-    l->n = n;
-    if (n > 0) {
-        n = q->n++;
-        func_0012cb40(q, n, 6);
-        if ((D_00304BE8->f874 & 4) || (D_002C5958 >> 13 & 1) || (D_002E31A8 >> 1 & 1)) {
-            q->f4 |= 1 << n;
-            q->f8 |= 1 << n;
-        } else if (m == -1) {
-            q->f4 |= 1 << n;
-        }
-    }
-    l->f8 = m;
-    l->f4 = m;
-}
-
-extern Q38 D_002E2FD8[7];
-extern u8 D_00524F68[];
-typedef struct { u8 pad[0x21]; u8 n; u8 f22[1]; } T7;
-typedef struct { u8 pad[0xc8]; T7 *fc8; } U7;
-typedef struct { u8 pad[0x6c]; U7 *f6c; } A7;
-extern void func_0012ccb0(s32);
-void func_0012d6c0(A7 *a0, u32 *a1) {
-    Q38 *g;
-    Q38 *p;
-    T7 *t;
-    s32 m, cnt, i;
-    if (D_00304BE8->f874 & 0x10) return;
-    g = D_002E2FD8;
-    func_0012cb40((Q5 *)g, 2, 3);
-    p = &g[2];
-    p->f8 = 0;
-    m = -1;
-    p->f4 = 0;
-    i = 0;
-    t = a0->f6c->fc8;
-    cnt = 0;
-    for (; i < t->n; i++) {
-        if (t->f22[i]) {
-            D_00524F68[cnt] = i;
-            m &= ~(1 << cnt);
-            p->ids[cnt] = t->f22[i] + 30;
-            cnt++;
-        }
-    }
-    p->n = cnt;
-    if (cnt > 0) {
-        if (!(p->fc < cnt)) p->fc = cnt - 1;
-        if (!(D_00304BE8->f874 & 2)) {
-            if (!(*a1 >> 6 & 1)) {
-                m = -1;
-                g->f4 |= 4;
-            }
-            p->f8 = m;
-            p->f4 = m;
-            return;
-        }
-    }
-    do { func_0012ccb0(2); } while (0);
-}
 static inline s32 min54(s32 a, s32 b) { return a < b ? a : b; }
 static inline s32 max54(s32 a, s32 b) { return a > b ? a : b; }
 extern f32 func_00135ca0(f32);
@@ -353,6 +264,4 @@ s32 D_00525294 ALIGNED(4);
 #include "data/data_002B.h"
 #include "data/data_0030.h"
 #include "data/data_002E.h"
-#include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002E2FD8.h"
 #include "data/pieces/D_002BBDFC.h"

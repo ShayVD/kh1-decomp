@@ -497,26 +497,6 @@ void func_0012b680(s32 *arg0) {
 void func_0012ba30(s32 arg0) {
     func_0013cec8(arg0 + 8);
 }
-
-s32 func_0012eaf8(void *arg0) {
-    return M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), s32 *, 4) & 0x1000;
-}
-
-s32 func_0012ffd0(void *arg0) {
-    s32 var_v0;
-    void *temp_v1;
-    void *temp_v1_2;
-
-    temp_v1 = M2C_FIELD(arg0, void **, 0x398);
-    var_v0 = 0;
-    if (temp_v1 != NULL) {
-        temp_v1_2 = M2C_FIELD(temp_v1, void **, 0x3A0);
-        if (temp_v1_2 != NULL) {
-            var_v0 = M2C_FIELD(temp_v1_2, u8 *, 6) == 3;
-        }
-    }
-    return var_v0;
-}
 #include "data/bss_0051_mixed.h"
 #include "data/data_0029.h"
 #include "data/data_002B.h"

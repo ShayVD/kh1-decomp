@@ -8,25 +8,18 @@ M2C_UNK func_00121f6c(s32, s32, s32);
 M2C_UNK func_00149860(void *);
 M2C_UNK func_00162110(s32, void *);
 M2C_UNK func_0025ed48(s32, s32, s32, s32);
-M2C_UNK func_002675a8(void *, void *);
 M2C_UNK func_002676c0(f32);
 M2C_UNK func_00267768(s32, s32, f32);
 M2C_UNK func_00267810(s32, s32, f32);
 #include "data/pieces/D_002C5C80.h"
-extern M2C_UNK D_002E2FD8;
-extern M2C_UNK D_002E2FEC;
 extern M2C_UNK D_004F45B0; /* src/data/bss_004F.c: Block D_004F45B0[0x200] */
 extern M2C_UNK func_00122ab0;
 extern f32 D_002E27A0;
 extern f32 D_004F7650;
 extern s32 D_002C5958;
 #include "data/pieces/D_002C6440.h"
-#include "data/pieces/D_00350D88.h"
-#include "data/pieces/D_002E319C.h"
-extern void **D_00524F40;
 #include "data/pieces/D_002E26A0.h"
 f32 func_00120c88(f32);
-f32 func_001315c0(void *, u16, void *, f32);
 f32 func_0026b6f8(f32);
 f32 func_0026b7d0(f32);
 f32 func_0026b8b8(f32);
@@ -37,18 +30,10 @@ s32 func_00120930();
 s32 func_001226f0(s32, s32, s32);
 s32 func_00123368();
 s32 func_00128c60(s32, s32);
-s32 func_0012d930(s32);
-s32 func_0012dea0(void *, s32);
 s32 func_001334b8(s32, s32, s32, s32, s32);
-u8 *func_0015c960(void *, M2C_UNK, u32, s32);
 void func_00122bd8(void);
 void func_001252f8(void);
 void func_0012bbc8(s32, s32, s32, s32, s32);
-void func_0012d068(s32, s32);
-void func_0012d468(s32, s32);
-void func_0012d6c0(s32, s32);
-void func_0012d818(void);
-void func_0012eba0(s32, s32, s32, s32, s32);
 
 void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_0025ed48(func_00120930(), arg1, arg2, arg3);
@@ -216,75 +201,6 @@ void func_0012ac98(void *arg0) {
 
 void func_0012bce0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     func_0012bbc8(arg0, (s32) M2C_FIELD(((arg1 * 2) + arg0), u16 *, 0x724), arg2, arg3, arg4);
-}
-
-u8 func_0012ccf8(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&D_002E2FEC + arg0);
-}
-
-void func_0012dc70(void) {
-    void *temp_s0;
-    void *temp_s1;
-
-    temp_s1 = D_002E26A0[0];
-    temp_s0 = ((s8 *)&D_00350D88) + (M2C_FIELD(temp_s1, s32 *, 0x70) << 5);
-    func_0012d068((s32) temp_s1, (s32) temp_s0);
-    func_0012d468((s32) temp_s1, (s32) temp_s0);
-    func_0012d6c0((s32) temp_s1, (s32) temp_s0);
-    func_0012d818();
-    func_0012d930((s32) temp_s0);
-}
-
-void func_0012e120(void) {
-    void *temp_a0;
-    void *temp_a0_2;
-    void *temp_a1;
-
-    temp_a0 = *D_00524F40;
-    if (func_0012dea0(temp_a0, M2C_FIELD(temp_a0, s32 *, 0xC)) != 0) {
-        temp_a1 = *D_00524F40;
-        if (temp_a1 == &D_002E2FD8) {
-            if (!(D_002E319C->f0 & 0x10)) {
-                M2C_FIELD(temp_a1, s32 *, 0xC) = 0;
-            }
-        }
-    } else {
-        temp_a0_2 = M2C_FIELD(D_002E26A0[0], void **, 0x14C);
-        M2C_FIELD(temp_a0_2, s32 *, 0x28) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 0x28) & 0xFFFEFFFF);
-    }
-}
-
-void func_0012ec60(s32 arg0, s32 arg1, s32 arg2) {
-    func_0012eba0(arg0, 0, -1, arg1, arg2);
-}
-
-f32 func_0012eca8(void *arg0, void *arg1) {
-    u8 *var_s0;
-    void *temp_a0;
-    void *temp_v1;
-
-    var_s0 = func_0015c960(M2C_FIELD(arg0, void **, 0), 0, -1U, M2C_FIELD(arg0, s32 *, 4));
-    if (var_s0 != NULL) {
-        var_s0 = func_0015c960(M2C_FIELD(arg0, void **, 0), 2, (u8) *var_s0 >> 4, 0);
-        if (var_s0 != NULL) {
-            goto block_9;
-        }
-        goto block_4;
-    }
-block_4:
-    temp_a0 = M2C_FIELD(arg0, void **, 0);
-    temp_v1 = M2C_FIELD(temp_a0, void **, 0x134);
-    if ((temp_v1 != NULL) && (M2C_FIELD(temp_v1, u8 *, 5) != 0)) {
-        var_s0 = M2C_FIELD(temp_v1, u8 **, 0x14);
-    }
-    if (var_s0 == NULL) {
-        func_002675a8(arg1, temp_a0 + 0x10);
-        return 0.0f;
-    }
-block_9:
-    func_001315c0(M2C_FIELD(arg0, void **, 0), M2C_FIELD(var_s0, u16 *, 2), arg1, M2C_FIELD(var_s0, f32 *, 4));
-    M2C_FIELD(arg1, f32 *, 4) = (f32) (M2C_FIELD(arg1, f32 *, 4) - (M2C_FIELD(var_s0, f32 *, 8) * M2C_FIELD(M2C_FIELD(arg0, void **, 0), f32 *, 0x44)));
-    return M2C_FIELD(var_s0, f32 *, 0xC);
 }
 #include "data/bss_0052_mixed.h"
 #include "data/data_002E.h"

@@ -123,7 +123,6 @@ extern f32 D_002BBDFC;
 extern s32 D_002C5958;
 #include "data/pieces/D_002C5C48.h"
 extern s32 D_002C5C4C;
-extern s32 D_002E2FD8[];
 extern s32 D_00350D80;
 extern s32 D_004F82C0;
 extern s32 D_00514F10;
@@ -136,7 +135,6 @@ s32 func_001231b8(s32, s32);
 s32 func_00123488(s32);
 s32 func_00128c60(void *, s32);
 s32 func_0012ccf8(s32);
-s32 func_0012f0f8(s32, s32, s32);
 s32 func_001354b8(s32, s32);
 s32 func_00137618(s32);
 s32 func_00142240(s32);
@@ -158,7 +156,6 @@ s32 strlen(s32);
 void *func_00130340(s32, s32, f32);
 void *func_0015ed80(M2C_UNK, M2C_UNK *);
 void func_00131498(s32, s32);
-void func_001315c0(s32, s32, s32, f32);
 
 s32 func_001200f8(s32 arg0) {
     s32 temp_v0;
@@ -819,18 +816,6 @@ void func_0012b6f0(s32 *arg0) {
 
 void func_0012b708(s32 *arg0) {
     *arg0 = func_001559f0(*arg0, 0);
-}
-
-void func_0012cb18(void) {
-    D_002E2FD8[30] = -1;
-    D_002E2FD8[1] = (s32) (D_002E2FD8[1] | 4);
-    D_002E2FD8[29] = -1;
-}
-
-s32 func_0012f1d0(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    func_001315c0(arg1, 0x8003, (s32) sp, 0.0f);
-    return func_0012f0f8(arg0, (s32) sp, 0);
 }
 #include "data/bss_0051_mixed.h"
 #include "data/data_002C.h"

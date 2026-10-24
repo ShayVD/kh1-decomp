@@ -41,8 +41,6 @@ typedef struct V8 { s32 a, b; } V8;
 #include "data/types/text_00120000_h5.h"
 
 #include "data/pieces/D_002E31B0.h"
-#include "data/pieces/D_002E31A0.h"
-typedef O8_2e319c S31a0;
 
 /* ---- data ---- */
 #include "data/pieces/D_002E26A0.h"
@@ -58,16 +56,11 @@ extern u8 D_00524F20[32];
 extern union { Node *p; u64 x; } D_00514F10;
 extern Node *D_00514F14; /* src/data/bss_0051.c: s32 D_00514F14 */
 extern u8 D_00514F20[];
-extern struct { u8 pad[4]; u32 f4; u32 f8; s32 f0c; } D_002E2FD8;
-extern u32 D_00524F44;
-extern void **D_00524F40;
-extern s32 D_002E31BC;
 extern V8 *D_00525288;
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
 
 /* ---- functions ---- */
-extern float fabsf(float);
 extern Ent *func_001230a0(Ent *);
 extern void *func_00123488();
 extern void func_00124920(void);
@@ -100,10 +93,6 @@ extern Node *func_0012b7a8(s32);
 extern void func_00121eb0(void *);
 extern s32 func_00122ff8(void *);
 extern void func_00176310(void *);
-extern void func_0011d768(s32);
-extern s32 func_0012f040(struct Actor *, s32);
-extern s32 func_0012eaf8(s32);
-extern f32 func_0012ed88(void *, void *, void *, void *);
 
 /* Count entities whose 2-bit state (f370 bits 37-38) is 2. */
 s32 func_00123298(void) {
@@ -510,60 +499,6 @@ void func_0012c880(E5 *a, s32 b) {
     a->f14c->f1c.p = 0;
     a->f14c->f20.i = a->f14c->f14.i;
     a->f14c->f24.i = b | 0x40000000;
-}
-
-typedef struct Sub { u32 m0; u32 m1; u8 pad[8]; u8 arr[8]; } Sub;
-typedef struct E6 { u8 pad[4]; Sub s; } E6;
-void func_0012cb40(E6 *a, s32 i, u8 v) {
-    Sub *s = &a->s;
-    u32 m;
-    s->arr[i] = v;
-    m = ~(1 << i);
-    s->m0 &= m;
-    a->s.m1 &= m;
-}
-
-void func_0012ccb0(s32 i) {
-    u32 m = 1 << i;
-    D_002E2FD8.f4 |= m;
-    D_002E2FD8.f8 |= m;
-    D_00524F44 &= ~m;
-}
-
-typedef struct E7 { s32 f0; u8 pad[8]; s32 f0c; } E7;
-void func_0012dce0(E7 *e) {
-    if (e) {
-        *++D_00524F40 = e;
-        func_0011d768(6);
-        if (e->f0 == 4) e->f0c = 0;
-    }
-}
-
-s32 func_0012eb08(s32 *p) {
-    f32 a[4];
-    f32 b[4];
-    if (!func_0012f040(D_002E31B0.f0, D_002E31B0.f4)) return 1;
-    if (func_0012eaf8(*p)) {
-        if (func_0012ed88(D_002E26A0[0], p, a, b) > 1500.0f) return 1;
-        if (fabsf(b[1]) > 1000.0f) return 1;
-    }
-    return 0;
-}
-
-void func_0012fa98(void) {
-    f32 a[4];
-    f32 b[4];
-    f32 d = func_0012ed88(D_002E26A0[0], &D_002E31B0, a, b);
-    s32 *o = &D_002E31BC;
-    S31a0 *x = D_002E31A0;
-    s32 r = 0;
-    if (x) {
-        if (!(d < x->f0c)) {
-            if (d < x->f0e) r = 1;
-            else r = 2;
-        }
-        *o = r;
-    }
 }
 #include "data/bss_004F_typed.h"
 #include "data/data_002E.h"
