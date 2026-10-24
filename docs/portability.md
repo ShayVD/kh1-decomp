@@ -129,7 +129,8 @@ rewrite matched code.
    would add argument moves, so it stays as m2c wrote it), src/gfx/shadow.c's
    func_00127500 (sets VIF1's CHCR bits through the PlatDmaGetChanAs pointer
    before PlatDmaSend: harmless on a port whose channel is a plain struct),
-   field.c's func_00262c78 (unidentified, libgcc range), the libvu0 inline
+   field.c's func_00262c78 (`__main`, session 62: gcc's once-only
+   `__do_global_ctors`), the libvu0 inline
    VU0 macro code (src/hand/vu0.c and the asm functions: renderer-spec.md),
    and the pad state read through other globals than D_00425BC8 (none
    found by name; a pointer copied into a struct would not show).
@@ -191,6 +192,19 @@ rewrite matched code.
      modelled register file (vita-port-plan 5.1a).
    - An uncached-mirror address (`(u32)p | 0x20000000`): PLAT_UNCACHED(p)
      (platform/dma.h).
+10. **No register passthrough** (session 62). On the EE a call that leaves
+    out arguments still works when the caller's own a0-a7 / $f12+ hold them,
+    and a `void` function's caller can read the v0 / $f0 its last call left;
+    on x86 and ARM both read garbage. m2c writes both (`void f(void) { g(); }`
+    for a wrapper that tail-jumps to `g(x)`, `M2C_UNK g();` called with no
+    arguments). Pass every argument the callee's definition takes (add the
+    caller's own parameters: a wrapper of `g(a, b)` is `f(a, b)`), and make a
+    function whose callers use its value return it (`return g(...);`, with the
+    callee's type in the local cast or prototype: a `u16` or `M2C_UNK -> f32`
+    conversion stops the tail call, so declare it as the callee returns it).
+    Both kept every object bit-identical in session 62.
+    `python3 -I tools/host/argcheck.py` lists what is left (a heuristic over
+    the text: some hits are benign, e.g. an unused last parameter).
 
 ## Known absolute addresses in matched code
 
