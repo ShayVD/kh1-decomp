@@ -27,6 +27,22 @@ KW = {'return', 'else', 'do', 'case', 'goto', 'if', 'while', 'for', 'switch', 's
 decl_re = re.compile(r'^\s*(?:extern\s+)?(?:static\s+)?(?P<type>[A-Za-z_]\w*)[\s\*]+' + OLD + r'\s*\(')
 cast_re = re.compile(r'^\s*#\s*(define|undef)\s+' + OLD)
 
+arity = {m.group(1): len(m.group(2).split(',')) if m.group(2).strip() else 0
+         for m in re.finditer(r'^#define (PlatVp?u0\w+)\(([^)]*)\)', (root / 'include/platform/vu.h').read_text(), re.M)}
+
+def calls(txt):
+    # (macro, argument count, line) of every PlatVu0 call in txt
+    for m in re.finditer(r'\b(PlatVp?u0\w+)\(', txt):
+        depth, n, i, empty = 1, 1, m.end(), True
+        while depth and i < len(txt):
+            c = txt[i]
+            if c in '([': depth += 1
+            elif c in ')]': depth -= 1
+            elif c == ',' and depth == 1: n += 1
+            if depth and not c.isspace(): empty = False
+            i += 1
+        yield m.group(1), 0 if empty else n, txt.count('\n', 0, m.start()) + 1
+
 def base(old):
     return names[re.sub(r'_d\d+$', '', old)]
 
@@ -55,6 +71,9 @@ for f in sys.argv[1:]:
         if m: txt = txt[:m.end()] + inc + '\n' + txt[m.end():]
         else: txt = inc + '\n' + txt
     p.write_text(txt)
+    for mac, n, line in calls(txt):
+        if mac in arity and n != arity[mac]:
+            print('ARITY %s:%d %s takes %d, given %d' % (f, line, mac, arity[mac], n))
     for l in txt.split('\n'):
         if re.search(r'\bsceV(pu|u)0\w+\b', l) and not re.search(r'\bPlatV', l) and 'include' not in l:
             print('LEFT', f, l.strip())
