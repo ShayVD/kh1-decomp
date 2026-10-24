@@ -459,120 +459,8 @@ void func_001238d0(Act53 *o, V53 *p) {
 
 #include "data/types/text_00110000_h53.h"
 extern f32 D_004F7650, D_004F77E0;
-#include "data/pieces/D_002E27A4.h"
-extern V53 D_002E26B0;
-#include "data/pieces/D_002E2790.h"
-#include "data/pieces/D_002E2780.h"
-extern s32 D_002C5950;
-extern M53 D_004F76E0[], D_004F7760[], D_004F7660[];
-#include "data/pieces/D_002E2700.h"
-#include "data/pieces/D_002E2740.h"
-#include "data/pieces/D_002BBE20.h"
-#include "data/pieces/D_002E26C0.h"
-extern f32 (*D_002E27AC)[4];
-void func_00110a48(f32);
-void func_00120cf8(V53 *, f32 (*)[4], f32);
-void func_002672f8(V53 *, f32 (*)[4], V53 *);
-void func_00267930(f32 (*)[4], V53 *, V53 *, V53 *);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-void func_00110ba8(void);
-f32 func_00124d28(V53 *, V53 *);
-
-s32 func_00125000(void) {
-    V53 d, r;
-    M53 m;
-    func_00110a48(D_004F7650);
-    func_00267530(&d, &D_002E2790, &D_002E2780);
-    func_002673b8(&d, &d);
-    func_00120cf8(&d, m, func_00120c88(D_002E27A4));
-    func_002672f8(&r, m, &D_002E26B0);
-    func_00267930(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
-    sceVu0CopyMatrix(D_002E2700, D_004F76E0[D_002C5950]);
-    sceVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
-    sceVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
-    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, D_002E2700);
-    sceVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
-    D_002E27AC = D_004F7660[D_002C5950];
-    func_00110ba8();
-    D_004F77E0 = func_00124d28(&D_002E2780, &D_002E2790);
-    return 0;
-}
 
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
-typedef struct { s16 id; u8 pad[18]; } E7810;
-extern E7810 *D_004F7810;
-#include "data/pieces/D_002E27C8.h"
-void func_0012ec60(s32, s32, V53 *);
-
-s32 func_00126838(u8 *o, s32 *a, V53 *v) {
-    s32 t[68];
-    s32 i;
-    for (i = 15; i < 19; i++) t[i] = 0;
-    if (!(FLD(u8, FLD(u8 *, o, 0x14c), 0x29) < FLD(u8, FLD(u8 *, o, 0x6c), 0xd1))) t[16] = 1;
-    if (a[0]) {
-        func_0012ec60(a[0], a[1], v);
-        func_00267530(v, v, (V53 *)(o + 0x10));
-        if (v->y < -100.0f) {
-            t[17] = 1;
-        } else {
-            t[18] = 1;
-            if (FLD(s32, o, 0x70) == 2 && D_002E27C8.b25) t[15] = t[16];
-        }
-        v->y = 0.0f;
-    } else {
-        t[18] = 1;
-    }
-
-    for (i = 15; i < 19; i++) {
-        if (t[i] > 0 && D_004F7810[i].id != FLD(s32, o, 0x164)
-) return i;
-    }
-    for (i = 18; i >= 15; i--) {
-        if (D_004F7810[i].id != FLD(s32, o, 0x164)
-) return i;
-    }
-    return 18;
-}
-
-void *memset(void *, s32, u32);
-typedef struct { u8 type; u8 pad1[2]; s8 flag; s32 a, b; } C3190b;
-extern C3190b D_002E3190;
-extern u8 D_002C5BB0[];
-extern V53 D_004F7800; /* src/data/bss_004F.c: f32 D_004F7800[0x4] */
-#include "data/pieces/D_002E27D4.h"
-s32 func_00137618(u8 *, V53 *);
-void func_00124e08(u8 *o, u8 *p, V53 *out);
-void func_00126f18(u8 *, u8 *, V53 *);
-u8 *func_0013dfb8(u8 *, V53 *);
-void func_00126c10(u8 *, V53 *);
-void func_001586a8(s32);
-
-void func_001271b0(u8 *o, V53 *v) {
-    V53 s;
-    u8 *p;
-    if (func_00137618(o, v)) {
-        func_00124e08(o, D_002C5BB0, v);
-        func_002675a8(&D_004F7800, v);
-        if ((*(s32 (*(*))(u8*,u8*,V53*))&D_002E27D4)) {
-            if ((*(s32 (*(*))(u8*,u8*,V53*))&D_002E27D4)(o, D_002C5BB0, v)) func_00126f18(o, D_002C5BB0, v);
-        } else {
-            func_00126f18(o, D_002C5BB0, v);
-        }
-    }
-    if (D_002E3190.flag & 1) {
-        if ((FLD(s32, o, 0x164) == 7 || FLD(s32, o, 0x164) == 12) && (FLD(s32, o, 0x70) == 0 || FLD(s32, o, 0x70) == 12)) {
-            FLD(u32, o, 0) &= ~4;
-            func_002675a8(&s, &D_002C58A0);
-            p = func_0013dfb8(o, &s);
-            if (p) FLD(f32, o, 0x3b0) = FLD(f32, p, 4) = 2.0f;
-        }
-    } else if (D_002E3190.type) {
-        func_00126c10(o, v);
-    }
-    memset(&D_002E3190, 0, 12);
-    p = FLD(u8 *, o, 0x14c);
-    if (p && FLD(u8 *, p, 0x2c) && (FLD(u32, FLD(u8 *, p, 0x2c), 4) & 1)) func_001586a8(11);
-}
 
 /* needs make: uses rodata */
 extern V53 D_002C5C70;
@@ -618,60 +506,7 @@ void func_00122588(u8 *o) {
 }
 
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
-extern s32 D_002E27A8;
-#include "data/pieces/D_002C58D0.h"
 extern f32 D_004F77E0;
-void func_00267810(f32 (*)[4], f32 (*)[4], f32);
-void func_00124d58(V53 *, V53 *, f32, f32);
-
-void func_00124e08(u8 *o, u8 *p, V53 *out) {
-    f32 m[4][4];
-    V53 v;
-    switch (D_002E27A8) {
-    case 2:
-        func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
-        func_002672f8(out, m, (V53 *)(o + 0x30));
-        out->y = out->w = 0.0f;
-        return;
-    case 11:
-        if (FLD(f32, p, 0x44) <= 0.0f) {
-            func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
-            func_002672f8(out, m, (V53 *)(o + 0x20));
-            out->y = 0.0f;
-            func_002673b8(out, out);
-            out->w = -FLD(f32, p, 0x44);
-            return;
-        }
-        if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
-            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
-        } else {
-            func_002675a8(out, o + 0x20);
-        }
-        out->y = 0.0f;
-        func_002673b8(out, out);
-        out->w = 0.0f;
-        return;
-    }
-    func_002675a8(&v, p + 0x60);
-    switch (FLD(s32, o, 0x70)) {
-    case 10:
-    case 13:
-    case 15:
-        break;
-    case 18:
-        v.y = 0.0f;
-        break;
-    case 29:
-        func_002675a8(out, &v);
-        out->w = FLD(f32, p, 0x4c);
-        return;
-    default:
-        v.z = v.y;
-        v.y = 0.0f;
-        break;
-    }
-    func_00124d58(&v, out, D_004F77E0, FLD(f32, p, 0x4c));
-}
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
 /* D_0046A6A8 stays extern: the dktitle.x overlay also writes it (two %lo fields), so it is shared. */
@@ -700,4 +535,3 @@ char *D_002C6460[0xb] ALIGNED(16) = {
 #include "data/pieces/D_002BC128.h"
 #include "data/pieces/D_0046A6A8.h"
 #include "data/pieces/D_002C5C70.h"
-#include "data/pieces/D_002E26B0.h"

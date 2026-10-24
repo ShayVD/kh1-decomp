@@ -4,9 +4,6 @@
 #include "data/pieces/D_002C5C80.h"
 extern volatile M2C_UNK *D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern volatile M2C_UNK D_004F6DB8;
-s32 func_00266c08(s32);
-void func_00121eb0(s32);
-void func_00266f38(s32, s32);
 
 void func_00122028(void) {
   volatile M2C_UNK *new_var;
@@ -31,14 +28,4 @@ void func_00122cb8(void) {
     var_v1 += 0x40;
   }
   while (var_a0 >= 0);
-}
-
-s32 func_00127500(s32 arg0) {
-  s32 *temp_v0;
-  temp_v0 = func_00266c08(1);
-  *temp_v0 = ((((*temp_v0) | 1) & (~0xC)) | 4) & (~0x30);
-  *temp_v0 = (*temp_v0) & (~0x40);
-  func_00266f38((s32) temp_v0, *((s32 *) (((s8 *) arg0) + 0x10)));
-  func_00121eb0(*((s32 *) (((s8 *) arg0) + 0x10)));
-  return 2;
 }

@@ -25,8 +25,6 @@ typedef struct Ent {
 
 /* Script-command argument slot: the handlers take an Arg array and write
  * their result back into slot 0. */
-
-typedef struct FV { f32 f0, f4, f8, f0c; } FV;
 typedef struct S4c { u8 pad[0x4c]; u16 f4c; } S4c;
 typedef struct V8 { s32 a, b; } V8;
 
@@ -36,11 +34,6 @@ typedef struct V8 { s32 a, b; } V8;
 #include "data/pieces/D_002E31B0.h"
 
 /* ---- data ---- */
-#include "data/pieces/D_002E26A0.h"
-extern u32 D_002E3190;
-extern union { f32 f[4]; s32 i[4]; } D_002E27F0;
-extern s32 D_004F82C0;
-extern s32 D_004F82C4;
 extern V8 *D_00525288;
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
@@ -50,10 +43,6 @@ extern Ent *func_001230a0(Ent *);
 extern void *func_00123488();
 extern void func_00124920(void);
 extern void func_001247e8(Ent *);
-extern s32 func_00130030(void *);
-extern void func_002675a8(void *, void *);
-extern void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-extern void func_001149e8(f32 (*)[4], s32, s32, void *);
 
 /* Count entities whose 2-bit state (f370 bits 37-38) is 2. */
 s32 func_00123298(void) {
@@ -110,52 +99,6 @@ void func_001249d8(void) {
     Ent *p = 0;
     func_00124920();
     while ((p = func_001230a0(p)) != 0) func_001247e8(p);
-}
-
-typedef struct Actor { u8 pad[0x70]; s32 f70; } S70;
-s32 func_00125a00(s32 a) {
-    S70 *p = D_002E26A0[0];
-    if ((a & 1) && p->f70) return 0;
-    return 1;
-}
-
-typedef struct S164 { u8 pad[0x164]; s32 f164; } S164;
-s32 func_00125b68(S164 *e) {
-    if ((D_002E3190 >> 8) & 0xffff) goto no;
-    switch (e->f164) {
-    case 138:
-    case 61:
-        return 1;
-    case 200:
-    case 202:
-        if (func_00130030(e)) return 1;
-        goto no;
-    default:
-        return 0;
-    }
-no:
-    return 0;
-}
-
-typedef struct FTbl { f32 f0, f4, f8; } FTbl;
-typedef struct S6c { u8 pad[0x20]; u8 f20[0x4c]; FTbl *tbl; } S6c;
-void func_00126e80(S6c *a, s32 b, FV *p) {
-    if (0.0f < p->f0c) {
-        if (p->f0c > 0.7999999523162842f) p->f0c = a->tbl->f8;
-        else p->f0c = a->tbl->f4;
-        return;
-    }
-    if (p->f0 == 0.0f && p->f8 == 0.0f) func_002675a8(p, a->f20);
-    p->f4 = 0;
-    p->f0c = 0;
-}
-
-typedef struct SD0 { u8 pad[0xd0]; f32 m[4][4]; u8 pad110[0x44]; s32 f154; } SD0;
-void func_00127b18(SD0 *a, f32 (*b)[4], s32 c) {
-    f32 m[4][4] __attribute__((aligned(16)));
-    sceVu0MulMatrix(m, b, a->m);
-    D_002E27F0.f[3] = c;
-    func_001149e8(m, a->f154, D_004F82C4 + D_004F82C0++, &D_002E27F0);
 }
 
 /* ---- script command handlers (Arg *p) ---- */

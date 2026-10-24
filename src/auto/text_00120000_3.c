@@ -14,12 +14,8 @@ M2C_UNK func_00267810(s32, s32, f32);
 #include "data/pieces/D_002C5C80.h"
 extern M2C_UNK D_004F45B0; /* src/data/bss_004F.c: Block D_004F45B0[0x200] */
 extern M2C_UNK func_00122ab0;
-extern f32 D_002E27A0;
-extern f32 D_004F7650;
-extern s32 D_002C5958;
 #include "data/pieces/D_002C6440.h"
 #include "data/pieces/D_002E26A0.h"
-f32 func_0026b8b8(f32);
 s32 *func_00123488();
 s32 func_0011ef10(s32, s32);
 s32 func_0011ef38(s32);
@@ -27,7 +23,6 @@ s32 func_00120930();
 s32 func_001226f0(s32, s32, s32);
 s32 func_00123368();
 void func_00122bd8(void);
-void func_001252f8(void);
 
 void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_0025ed48(func_00120930(), arg1, arg2, arg3);
@@ -153,20 +148,6 @@ void func_001236f8(void *arg0) {
 void func_001238c0(void *arg0, f32 fparg0, f32 fparg1) {
     M2C_FIELD(arg0, f32 *, 0x410) = fparg0;
     M2C_FIELD(arg0, f32 *, 0x414) = fparg1;
-}
-
-void func_00124c68(f32 fparg0) {
-    D_002E27A0 = fparg0;
-    D_004F7650 = 256.0f / func_0026b8b8(((fparg0 * 0.5f) / 180.0f) * 3.141592979f);
-}
-
-void func_001259b0(s32 arg0) {
-    if (arg0 != 0) {
-        D_002C5958 |= 0x400000;
-    } else {
-        D_002C5958 &= 0xFFBFFFFF;
-    }
-    func_001252f8();
 }
 #include "data/bss_0052_mixed.h"
 #include "data/data_002E.h"

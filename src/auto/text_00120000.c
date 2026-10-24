@@ -4,7 +4,6 @@
 #include "data/bss_004F.h"
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_001247e8(s32);
-M2C_UNK func_00124c68();
 M2C_UNK func_00127340();
 M2C_UNK func_00132e38();
 M2C_UNK func_0013cfe8(s32, M2C_UNK, s32);
@@ -13,24 +12,19 @@ M2C_UNK func_001478e0();
 M2C_UNK func_00148e60();
 M2C_UNK func_0014f868();
 M2C_UNK func_00151b90();
-M2C_UNK func_00266f38(s32, s32);
 M2C_UNK func_0026a9d0(s32);
 M2C_UNK func_0026b978(f32);
-M2C_UNK func_0026b9a8(f32, f32);
 M2C_UNK func_00270b40();
 extern M2C_UNK D_004F6EC0; /* src/data/bss_004F.c: TPool D_004F6EC0 */
 M2C_UNK D_004F6ED0[0xa0] ALIGNED(16);
 extern M2C_UNK func_00120908;
 extern f32 D_002BBDFC;
-extern f32 D_002E27A0;
-extern f32 D_004F77E4;
 extern s32 D_004F6EB8; /* src/data/bss_004F.c: u32 *D_004F6EB8 */
 extern s32 D_00514F14;
 f32 func_00121748();
 s32 func_00120930();
 s32 func_00123488();
 s32 func_0025ed28(s32, M2C_UNK, M2C_UNK);
-s32 func_00266c08(M2C_UNK);
 s32 func_0026a530(M2C_UNK);
 void *func_0011ef10(M2C_UNK, M2C_UNK *);
 void *func_00120190(s32);
@@ -140,20 +134,6 @@ void func_001248e8(void) {
     if (temp_v0 != 0) {
         func_001247e8(temp_v0);
     }
-}
-
-void func_00124ce0(void) {
-    D_004F77E4 = D_002E27A0;
-    func_00124c68();
-}
-
-void func_00124d28(void *arg0, void *arg1) {
-    func_0026b9a8(M2C_FIELD(arg0, f32 *, 0) - M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg0, f32 *, 8) - M2C_FIELD(arg1, f32 *, 8));
-}
-
-s32 func_001274c8(void *arg0) {
-    func_00266f38(func_00266c08(2), M2C_FIELD(arg0, s32 *, 0x10));
-    return 2;
 }
 #include "data/bss_0051_mixed.h"
 #include "data/data_0029.h"
