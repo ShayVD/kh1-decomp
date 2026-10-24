@@ -8,7 +8,7 @@
  * bank), wrappers that kill objects by owner or kind (func_001762b0 ...
  * func_00176388, func_001763a0), the relocatable effect pack (func_001763f0
  * relocates it, func_00176488 starts an item by id, func_00176578 finds one
- * by its masks), and eight empty stubs.  pppapi.nostrict.c has
+ * by its masks).  pppapi.nostrict.c has
  * func_00175be0 (start an effect in a bank) and func_00176658 (spawn an
  * object from a pack item).  Each section names the file its code came
  * from.  Read from the code, not proved by a boot. */
@@ -590,49 +590,6 @@ void func_00176640(void) {
 }
 #undef func_00180540
 
-/* func_00176838 (from auto/text_00170000.c). */
 void func_00176838(void) {
     func_00182270();
 }
-
-/* func_00176898 (from auto/text_00170000.c). */
-void func_00176898(void) {
-
-}
-
-/* func_001768a0 (from auto/text_00170000.c). */
-void func_001768a0(void) {
-
-}
-
-/* func_001768a8 (from auto/text_00170000.c). */
-void func_001768a8(void) {
-
-}
-
-/* func_001768b0 (from auto/text_00170000.c). */
-void func_001768b0(void) {
-
-}
-
-/* func_001768b8 (from auto/text_00170000.c). */
-void func_001768b8(void) {
-
-}
-
-/* func_001768c0 (from auto/text_00170000.c). */
-void func_001768c0(void) {
-
-}
-
-/* func_001768c8 (from auto/text_00170000.c). */
-void func_001768c8(void **arg0) {
-    void *temp_v0;
-
-    temp_v0 = *arg0;
-    if (temp_v0 != NULL) {
-        *M2C_FIELD(temp_v0, s8 **, 0x10) = 1;
-    }
-    *arg0 = NULL;
-}
-

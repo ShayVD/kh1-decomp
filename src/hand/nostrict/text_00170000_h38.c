@@ -209,27 +209,5 @@ void func_00175708(void *a0, Fil *f) {
     D_0035C4A0.x4 = 0;
 }
 
-/* --- 44-byte records at D_005757B0 built from a type-20 header --- */
-typedef struct { s32 type; s32 x4; s32 off[2]; s32 x10[2]; } H20;
-typedef struct { u8 *a; u8 *b; s32 c; s32 d; s32 e; } E20;
-typedef struct { H20 *h; E20 e[2]; } S44;
-extern S44 D_005757B0[]; /* src/data/bss_0057.c: T44 D_005757B0[0x2] */
-void *memset(void *, s32, u32);
-
-void func_00176ba8(H20 *h, s32 i) {
-    S44 *s;
-    s32 j;
-    E20 *e;
-    if (h->type != 20) return;
-    s = &D_005757B0[i];
-    memset(s, 0, 44);
-    s->h = h;
-    for (j = 0, e = s->e; j < 2; j++, e++) {
-        e->a = e->b = (u8 *)(h->off[j] + (s32)h);
-        e->c = h->x10[j];
-        e->d = 0;
-        e->e = 0;
-    }
-}
 #include "data/data_0035.h"
 #include "data/pieces/D_0035C4A0.h"

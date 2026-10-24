@@ -40,35 +40,6 @@ void func_00176f08(s32, f32);
 void func_00267530(void *, void *, void *);
 void func_002675a8(void *, void *);
 
-typedef struct { u8 pad[0x20]; u8 *p20; } Obj20;
-void func_001768e8(Arg *a) {
-    if (a[1].i) {
-        *((Obj20 *)a[0].p)->p20 |= 1;
-    } else {
-        *((Obj20 *)a[0].p)->p20 &= ~1;
-    }
-}
-
-f32 atan2f(f32, f32);
-void func_00176a18(Arg *a) {
-    f32 *p = a[0].p;
-    f32 *q = a[1].p;
-    a[0].f = atan2f(p[0] - q[0], p[2] - q[2]);
-}
-
-void func_0017f580(f32, f32, f32, f32, s32);
-void func_00176af0(Arg *a) {
-    func_0017f580(a[0].f, a[1].f, a[2].f, a[3].f, a[4].i);
-}
-
-typedef struct { u8 pad[0x3c]; s32 x3c; u8 pad40[4]; s32 x44; u8 pad48[0xbe - 0x48]; s16 xbe; } Sub6C;
-void func_00176b80(Arg *a) {
-    Arg *o = a[0].p;
-    ((Sub6C *)o[27].p)->x3c = 1;
-    ((Sub6C *)o[27].p)->x44 = 0;
-    ((Sub6C *)o[27].p)->xbe = 0;
-}
-
 s32 func_00177218(Actor *o) {
     if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
     if (o->x70 < 11) { if (o->x70 >= 9) return 1; }

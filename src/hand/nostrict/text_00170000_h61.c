@@ -149,11 +149,6 @@ extern u8 D_0035C350[];
 void func_00174ca8(void);
 void func_00174b90(void);
 #include "data/types/nostrict_text_00170000_h61.h"
-extern T44 D_005757B0[];
-extern f32 D_002BBDFC;
-extern u8 D_002C5AD2[][112];
-void func_00176ba8(H20 *, s32);
-void func_00176c60(s32);
 
 s32 func_00172810(Wk *w, Ob *o, P160 *p, s32 a3) {
     Prm *q = p->xc;
@@ -266,40 +261,5 @@ s32 func_00174798(Wk3 *w, Ac4 *o, R160 *p, s32 a3) {
     }
     return 1;
 }
-
-void func_00176cc8(s32 i) {
-    T44 *s = &D_005757B0[i];
-    s32 j;
-    F20 *e;
-    if (!s->h) return;
-    for (j = 0; j < 2; j++) {
-        u8 *p;
-        e = &s->e[j];
-        if (e->c <= 0) continue;
-        p = e->b;
-        if (p == e->a) {
-            e->e = p[1];
-        } else {
-            e->e = ((f32)p[1] - (f32)p[-1]) / p[0] * e->d + p[-1];
-            e->d += D_002BBDFC;
-        }
-        if (e->e < 0.0f) e->e = 0.0f;
-        if (e->e >= 256.0f) e->e = 255.0f;
-        D_002C5AD2[i][j] = e->e;
-        if (p[0] <= e->d) {
-            e->d -= p[0];
-            e->b = p + 2;
-            e->c--;
-        }
-    }
-    if (s->e[0].c > 0) return;
-    if (s->e[1].c > 0) return;
-    if (s->h->x4 & 1) {
-        func_00176ba8(s->h, i);
-        return;
-    }
-    func_00176c60(i);
-}
 #include "data/data_0035.h"
 #include "data/pieces/D_002C5AD0.h"
-#include "data/pieces/D_002BBDFC.h"

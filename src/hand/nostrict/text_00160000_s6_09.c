@@ -233,21 +233,6 @@ CONTEXT_ONLY s32 func_00175ba0(W5B *w) {
 }
 
 /* 00176960 */
-typedef struct { f32 x, y, z, w; } V4_69;
-typedef struct { u8 pad[4]; s32 *x4; } Y69;
-typedef struct { Y69 *x0; void *x4; } A69;
-
-void func_00176960(A69 *a) {
-    V4_69 v;
-    v.x = a->x0->x4[0];
-    v.y = a->x0->x4[1];
-    v.z = a->x0->x4[2];
-    v.x = v.x * 3.14159251f * (1.0f / 32768.0f);
-    v.y = v.y * 3.14159251f * (1.0f / 32768.0f);
-    v.z = v.z * 3.14159251f * (1.0f / 32768.0f);
-    v.w = 0.0f;
-    func_002675a8(a->x4, &v);
-}
 
 /* 001784c8 */
 typedef struct { f32 org[4]; f32 dir[4]; u8 pad[32]; } Ray84;
