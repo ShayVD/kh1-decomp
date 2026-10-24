@@ -1,29 +1,5 @@
 #include "common.h"
 #include "data/pieces/D_00425F70.h"
-void func_0011d768(s32);
-void func_001f3110(void);
-void *func_001f31a8(void *, s32);
-s16 *func_0011ef10(s32, void *);
-extern s32 D_00646A28;
-void func_0011d768(s32);
-extern s32 D_00646A28;
-void func_001f3110(void);
-void *func_001f31a8(void *, s32);
-void func_0011d768(s32);
-s16 *func_0011ef10(s32, void *);
-extern s32 D_00647FB0, D_00647FB4, D_00647FB8, D_00647FBC, D_00647FC0, D_00647FC4, D_00647FC8;
-extern s32 D_00647FD4, D_00647FD8;
-extern s32 D_00425C10, D_00425C14, D_00425C18, D_00425C20;
-s32 func_002715a0(s32, s32, s32 *);
-
-extern s32 D_00647FF4;
-extern s32 D_00647FB4, D_00647FB0, D_00647FC4, D_00647FC8, D_00647FD4, D_00647FD8, D_00647FF4;
-extern s32 D_00425C10, D_00425C14, D_00425CA8, D_00425CAC;
-extern void (*D_00648034)(s32);
-extern s32 D_00648020;
-s32 func_002718d0(s32, s32, s32, s32, s32, s32);
-
-s32 func_002715a0(s32, s32, s32 *);
 
 #include "platform/math.h"
 #include "data/bss_0064.h"
@@ -178,15 +154,5 @@ void func_00237318(void) {
     func_00237018(D_006480D0, 22, 1);
 }
 
-extern s32 D_00647FB4, D_00647FB0, D_00647FC4, D_00647FC8, D_00647FD4, D_00647FD8, D_00647FF0;
-extern s32 D_00425C10, D_00425C14, D_00425CA8, D_00425CAC;
-extern void (*D_00648034)(s32);
-s32 func_002718d0(s32, s32, s32, s32, s32, s32);
-s32 func_002715a0(s32, s32, s32 *);
-extern s32 D_00648020;
 #include "data/data_003F.h"
 #include "data/data_0042.h"
-#include "data/pieces/D_00425C10.h"
-#include "data/pieces/D_00425C14.h"
-#include "data/pieces/D_00425CA8.h"
-#include "data/pieces/D_00425CAC.h"

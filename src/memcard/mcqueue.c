@@ -1,8 +1,8 @@
 /* The memory card request queue (docs/modules.md "Session 44"),
  * 0x00233a80-0x00234910 (include/memcard/mcreq.h).  func_00233a80 starts
- * libmc (sceMcInit) and clears the queue; func_00233ac8 resets the state
- * and reads each port's card info once (func_00270e40: most likely
- * sceMcGetSlotMax, RPC 21).  D_00425C28[port][slot] is the card's state (0
+ * libmc (PlatMcInit) and clears the queue; func_00233ac8 resets the state
+ * (D_00425C08[port] the slots of each port) and reads each port's card
+ * info once, waiting for it.  D_00425C28[port][slot] is the card's state (0
  * the same card, 1 / 2 a new card (formatted / not), 3 none),
  * D_00425C48 / 68 / 88 are "changed" flags func_00233f40 / 88 / d0 read
  * and clear (func_00233f68 / b0 / f8 clear).  func_00233ef8(n) /
@@ -10,6 +10,7 @@
  * on the port and slot func_00233f28 sets (D_00647FDC / D_00647FE0). */
 #include "common.h"
 #include "memcard/mcreq.h"
+#include "platform/mc.h"
 #include "data/pieces/D_00425C1C.h"
 #include "data/pieces/D_00425C28.h"
 #include "data/pieces/D_00425C48.h"
@@ -27,10 +28,6 @@ extern s32 D_00647FE8[];
 extern s32 D_00647FEC, D_00647FF0, D_00647FF4, D_00647FF8, D_00647FFC, D_00648000, D_00648004;
 extern s32 D_00648008, D_0064800C, D_00648010, D_00648014, D_00648018, D_0064801C;
 
-s32 sceMcInit();
-s32 func_00270e40(s32);
-s32 func_002715a0(s32, s32, s32 *);
-s32 func_002716d8(s32, s32, s32 *, s32 *, s32 *);
 void func_00233ac8(void);
 void func_002365e0(void);
 /* func_00265b28 is left undeclared on purpose (implicit declaration gives the original code). */
@@ -39,7 +36,7 @@ void func_00233a80(void) {
     s32 var_v0;
     s64 *var_v1;
 
-    sceMcInit();
+    PlatMcInit();
     var_v1 = (s64 *)D_006477B0;
     var_v0 = 0x100;
     do {
@@ -55,7 +52,7 @@ void func_00233ac8(void) {
     s32 *p, *q;
     for (i = 0; i < 2; i++) {
         D_00425CD0[i] = 1;
-        D_00425C08[i] = func_00270e40(i);
+        D_00425C08[i] = PlatMcGetSlotMax(i);
     }
     D_00647FB0 = 0;
     D_00647FB4 = 0;
@@ -80,8 +77,8 @@ void func_00233ac8(void) {
     q = &D_00647FC8;
     p = D_00425C48[-2];
     for (i = 0; i < 2; p += 4) {
-        func_002716d8(i++, 0, &D_00425C18, &D_00425C1C, &D_00425C20);
-        func_002715a0(0, 0, q);
+        PlatMcGetInfo(i++, 0, &D_00425C18, (s32 *)&D_00425C1C, &D_00425C20);
+        PlatMcSync(0, 0, q);
         switch (*q) {
         case 0: *p = 0; break;
         case -1: *p = 1; break;

@@ -633,6 +633,20 @@ copysignf	00270a98	# hand: (float, float) sign merge
 scePcStart	00270ad8	# hand (libpc): (control, counter0, counter1) mtps/mtpc under an eret into kernel mode
 scePcStop	00270b40	# hand: clears the CTE bit (31) of the PCCR with mfps/mtps
 sceMcInit	00270b60	# hand: 'bind error libmc', mcserv/mcman version checks
+sceMcGetSlotMax	00270e40	# hand (session 44): mcserv RPC 21, answered at once (the slots of a port)
+sceMcOpen	00270f00	# hand (session 44): RPC 2 (port, slot, name, mode)
+sceMcMkdir	00271038	# hand (session 44): sceMcOpen with mode 0x40
+sceMcClose	00271070	# hand (session 44): RPC 3 (fd)
+sceMcRead	00271290	# hand (session 44): RPC 5 (fd, buf, size)
+sceMcWrite	002713b0	# hand (session 44): RPC 6 (fd, buf, size), FlushCache first
+sceMcSync	002715a0	# hand (session 44): no RPC: waits for / polls the last command D_0046E090 (mode, cmd, result); docs/sdk.md session 5
+sceMcGetInfo	002716d8	# hand (session 44): RPC 1 (port, slot, type, free, format)
+sceMcGetDir	002718d0	# hand (session 44): RPC 13 (port, slot, name, mode, maxent, table)
+sceMcChdir	00271ab0	# hand (session 44): RPC 12 (port, slot, name, current dir)
+sceMcFormat	00271c00	# hand (session 44): RPC 16 (port, slot)
+sceMcDelete	00271cc8	# hand (session 44): RPC 15 (port, slot, name)
+sceMcRename	00272080	# hand (session 44): RPC 14 (set file info) with valid 0x10, last command 19 (port, slot, name, new name)
+sceMcUnformat	002721e8	# hand (session 44): RPC 17 (port, slot)
 sceIpuSync	002726d0	# hand (libipu): mode 0 waits for IPU_CTRL.BUSY (bit 31) to clear, mode 1 returns it
 sceIpuInit	002727a0	# hand: IPU reset (CTRL=0x40000000), BCLR, then SETIQ x2, SETVQ, SETTH with default tables
 _exit	001001c8	# hand: newlib abort() ends with raise(SIGABRT) then this with 1; exit() tail-calls it
