@@ -745,7 +745,7 @@ void func_00113688(void) {
 /* func_001136a8 (from auto/text_00110000_12.c). */
 M2C_UNK func_00122198(s32, M2C_UNK *);
 extern s32 D_002BCDF0;
-#define func_00113518 ((f32 (*)()) func_00113518)
+#define func_00113518 ((void (*)(void)) func_00113518)
 void func_001136a8(void) {
     func_00113518();
     func_00122198(D_002BCDF0, &func_00113688);

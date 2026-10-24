@@ -654,7 +654,11 @@ extern u8 D_00573E40_0015ff78[] __asm__("D_00573E40");
 #define D_0055C640 ((B4Chcr *) D_0055C640)
 #define func_0015f798 ((void (*)(B4Dm *)) func_0015f798)
 #define func_0015fc00 ((void (*)(B4Dm *)) func_0015fc00)
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the u64 shift in one register */
 #define func_0015fd20 ((s32 (*)(s32, u32, s32, u64, s32)) func_0015fd20)
+#else
+#define func_0015fd20 ((s32 (*)(s32, u32, s32, s32, s32)) func_0015fd20)
+#endif
 #define func_0015f8c8 ((void (*)(B4Drw2 *, s32)) func_0015f8c8)
 s32 func_0015ff78(B4Dm *d) {
     B4Drw2 *s;

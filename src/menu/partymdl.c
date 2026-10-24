@@ -44,7 +44,7 @@ s32 func_00162348(void *, s32);
 s32 func_00162368(void *, s32);
 Mtx9 *func_001623e0(void *);
 void func_001625c8(Mtx9 *, Mtx9 *);
-void func_001655e0(void *, void *, s32, f32);
+void func_001655e0(void *, void *, f32, s32);
 s32 func_00167698(s32);
 void func_00167ac0(void *, s32, s32);
 void func_00167d70(void *, f32);
@@ -75,7 +75,7 @@ void func_00209e18(PartyView *p) {
     for (i = 0; i < D_003F3870; i++) {
         PartyMdl *e = &D_003F3530[i];
         s32 r = func_001301d8(e->x18, 1, 0, 0);
-        func_001655e0(&D_003F3050[i], e->x14, r, e->x70);
+        func_001655e0(&D_003F3050[i], e->x14, e->x70, r);
         e->x50 = 0;
         e->x3c = 0;
         e->x70 += D_002BBDFC;
@@ -156,7 +156,7 @@ void func_0020a248(s32 idx) {
     e->c40[5] = -128;
     e->c40[6] = -128;
     e->x3c = 0;
-    func_001655e0(D_00425CE0, e->x14, func_001301d8(e->x18, 1, 0, 0), e->x70);
+    func_001655e0(D_00425CE0, e->x14, e->x70, func_001301d8(e->x18, 1, 0, 0));
     r = func_00162348(e->x14, 52);
     if (r >= 0) {
         fl = 0;
@@ -195,7 +195,7 @@ void func_0020a518(PartyView *p, s32 a1, s32 *idx, s32 *col) {
         PartyMdl *e = &D_003F3530[n];
         if (e->active) {
             s32 r = func_001301d8(e->x18, a1, 0, 0);
-            func_001655e0(&D_003F3050[n], e->x14, r, e->x70);
+            func_001655e0(&D_003F3050[n], e->x14, e->x70, r);
             e->x70 += D_002BBDFC;
             func_00167d70(e->x14, D_002BBDFC);
             if ((f32)func_00167698(r) <= e->x70) e->x70 = 0.0f;

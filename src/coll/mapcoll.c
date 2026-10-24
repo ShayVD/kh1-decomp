@@ -2225,7 +2225,7 @@ s32 func_00119688(s32 arg0) {
 #undef func_00104528
 
 /* func_00119710 (from auto/text_00110000_16.c). */
-#define func_001195d8 ((f32 (*)(s32, s32)) func_001195d8)
+#define func_001195d8 ((void (*)(s32, s32)) func_001195d8)
 #define func_001191c8 ((s32 (*)(s32, s32, s32)) func_001191c8)
 #define func_0011c338 ((s32 (*)(s32, s32, s32, s32, s32, s32)) func_0011c338)
 s32 func_00119710(s32 arg0) {

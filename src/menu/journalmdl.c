@@ -86,7 +86,7 @@ s32 func_001560f8(s32, void *);
 void func_00161de8(s32, void *, void *, s32);
 void func_00162070(s32, s32 *, s32 *, s32 *);
 void func_00162110(s32, void *);
-void func_001655e0(void *, s32, s32, f32);
+void func_001655e0(void *, s32, f32, s32);
 s32 func_00167698(s32);
 void func_00167ac0(s32, s32, s32);
 void func_00167d70(s32, f32);
@@ -166,7 +166,7 @@ void func_0021af38(JObj *a) {
     PlatVu0MulMatrix(m, m, m2);
     PlatVu0TransMatrix(m, m, D_003F5990);
     PlatVu0MulMatrix(m, D_00425F70->m80, m);
-    func_001655e0(m, D_00643020.x14, r, D_00643020.x70);
+    func_001655e0(m, D_00643020.x14, D_00643020.x70, r);
     D_00643020.x70 += D_002BBDFC;
     func_00167d70(D_00643020.x14, D_002BBDFC);
     if ((f32)func_00167698(r) <= D_00643020.x70) D_00643020.x70 = 0.0f;
@@ -261,7 +261,7 @@ void func_0021b250(s32 a) {
     D_00643020.x46 = -128;
     D_00643020.x3c = 0;
     r = func_001301d8(D_00643020.x18, 0, 0, 0);
-    func_001655e0(D_00425CE0, D_00643020.x14, r, D_00643020.x70);
+    func_001655e0(D_00425CE0, D_00643020.x14, D_00643020.x70, r);
     if (func_0021ade8(a)) {
         p = func_00147b08(D_00643020.xc, a, D_00643020.x14);
         c = D_00425F70;
