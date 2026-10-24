@@ -202,6 +202,7 @@ s32 D_0055BEC0[48][5] ALIGNED(64);
 void *D_0055C280[48][5] ALIGNED(64);
 u32 func_00121e28(u32, void *);
 void func_00162c5c(void *, void *, void *);
+#ifdef KH1_PS2
 #define VU_LOAD_MTX(m) \
     __asm__ volatile( \
         "lqc2 $vf13, 0(%0)\n" \
@@ -236,6 +237,18 @@ void func_00162c5c(void *, void *, void *);
         "sqc2 $vf10, 32(%0)\n" \
         "sqc2 $vf11, 48(%0)\n" \
         : : "r"(d), "r"(s) : "memory")
+#else
+/* $vf13-$vf16 between the two macros */
+static f32 vu_mtx[4][4];
+#define VU_LOAD_MTX(m) __builtin_memcpy(vu_mtx, (void *)(m), sizeof(vu_mtx))
+#define VU_MUL_MTX(d, s) { \
+        f32 (*d_)[4] = (f32 (*)[4])(d), (*s_)[4] = (f32 (*)[4])(s); \
+        PlatVu0Apply(d_[0], vu_mtx, s_[0]); \
+        PlatVu0Apply(d_[1], vu_mtx, s_[1]); \
+        PlatVu0Apply(d_[2], vu_mtx, s_[2]); \
+        PlatVu0Apply(d_[3], vu_mtx, s_[3]); \
+    }
+#endif
 #define ADD_ATT(g, at) { \
     Ref25 *r_ = (at).x4; \
     if (r_ && (at).x10 && !(*(at).x10 & 0xf)) { \
@@ -705,7 +718,7 @@ extern u8 D_00573AC0[];
 void func_0015f8c8(void);
 void func_00162428(void) {
     PlatSync();
-    D_0055C648 = (GifTag8 *)((u32)D_00573AC0 | 0x20000000);
+    D_0055C648 = (GifTag8 *)PLAT_UNCACHED(D_00573AC0);
     func_0015f8c8();
     D_0055C648->b3 = 0x70;
     D_0055C648->w4 = 0;

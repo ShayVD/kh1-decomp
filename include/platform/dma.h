@@ -77,6 +77,16 @@ extern u8 PlatSpr[0x4000];
 #endif
 #define PLAT_SPR_END (PLAT_SPR_BASE + 0x4000)
 
+/* The uncached mirror of main memory (session 61): packets the game builds
+ * for DMA are written through address | 0x20000000 so they skip the data
+ * cache.  PLAT_UNCACHED(p) is that address as a u32 on the PS2 and the plain
+ * address elsewhere (the Vita and the host have no such mirror). */
+#ifdef KH1_PS2
+#define PLAT_UNCACHED(p) ((u32)(p) | 0x20000000)
+#else
+#define PLAT_UNCACHED(p) ((u32)(p))
+#endif
+
 /* VIF1_STAT: FQC (the FIFO's quadword count, bits 24-28) and VPS (bits 0-1,
  * 0 = idle). */
 #define PLAT_VIF1_STAT_BUSY 0x1f000003

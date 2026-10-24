@@ -569,12 +569,16 @@ void func_00121fc4(void *, void *);
 f32 atan2f(f32, f32);
 f32 asinf(f32);
 static inline void vu0ScaleRow2(f32 s, void *row) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %1, $vf9\n"
         "lqc2 $vf10, 0(%0)\n"
         "vmulx.xyz $vf10xyz, $vf10xyz, $vf9x\n"
         "sqc2 $vf10, 0(%0)\n"
         : : "r"(row), "r"(s));
+#else
+    PlatVu0ScaleXYZ(row, s);
+#endif
 }
 static inline void setTrans(V4F *m, MObj *o) {
     m[3].x = o->x0;

@@ -95,7 +95,7 @@ s32 func_00175600(Spr *s) {
     Pkt *p;
     if ((u16)(s->xa - 3) >= 2) return 0;
     PlatDmaSend(PlatDmaGetChan(2), &D_0035C4A0);
-    p = (Pkt *)((u32)&D_0035C550 | 0x20000000);
+    p = (Pkt *)PLAT_UNCACHED(&D_0035C550);
     if (s->xa == 4) {
         p->x68 = D_0035C430.a;
         p->x78 = D_0035C430.b;

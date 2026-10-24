@@ -127,6 +127,11 @@ static __inline__ f32 PlatVu0Rand(void) {
 /* vsqrt Q: the root of the magnitude. */
 static __inline__ f32 PlatVu0Sqrt(f32 x) { return PlatSqrtf(x < 0.0f ? -x : x); }
 
+/* |v| over xyz (vmul.xyz, vaddx.y, vaddy.z, vsqrt) */
+static __inline__ f32 PlatVu0Length3(const f32 *v) {
+    return PlatVu0Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
 /* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
 static __inline__ s32 PlatVu0Ftoi0(f32 x) {
     if (x >= 2147483648.0f)
@@ -136,6 +141,18 @@ static __inline__ s32 PlatVu0Ftoi0(f32 x) {
     return (s32)x;
 }
 static __inline__ s32 PlatVu0Ftoi4(f32 x) { return PlatVu0Ftoi0(x * 16.0f); }
+
+/* d = v.x m[0] + v.y m[1] + v.z m[2] + v.w m[3] (vmulax / vmadday / vmaddaz
+ * / vmaddw: what sceVu0ApplyMatrix does); d may be v. */
+static __inline__ void PlatVu0Apply(f32 *d, f32 (*m)[4], const f32 *v) {
+    f32 x = v[0], y = v[1], z = v[2], w = v[3];
+    int i;
+    for (i = 0; i < 4; i++)
+        d[i] = m[0][i] * x + m[1][i] * y + m[2][i] * z + m[3][i] * w;
+}
+
+/* `cfc2 $vi29`: VPU-STAT (0x100: VU1 running). */
+u32 PlatVu0GetVpuStat(void);
 
 /* `vmulx.xyz` of a row by a scalar: the matrix-scale helper several ppp
  * files inline (w kept). */

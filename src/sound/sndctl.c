@@ -698,6 +698,7 @@ s32 func_00119fc0(f32 *, V4_01, V4_01, V4_01, f32 *);
 s32 func_00119ad8(s32, f32 *, V4_01, V4_01, V4_01, f32 *);
 static inline f32 vd01(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -712,6 +713,16 @@ static inline f32 vd01(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    {
+        f32 *a_ = (f32 *)a, *b_ = (f32 *)b;
+        f32 d[3];
+        d[0] = a_[0] - b_[0];
+        d[1] = a_[1] - b_[1];
+        d[2] = a_[2] - b_[2];
+        r = PlatVu0Length3(d);
+    }
+#endif
     return r;
 }
 /* Split out of func_0011d7e0 / func_0011de90's old layout entries. */
@@ -831,6 +842,7 @@ void func_0011dc98(S0011dc98 *a) {
 /* func_0011dcf0 (from hand/text_00110000_h30.c). */
 static inline f32 vdist(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -845,6 +857,16 @@ static inline f32 vdist(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    {
+        f32 *a_ = (f32 *)a, *b_ = (f32 *)b;
+        f32 d[3];
+        d[0] = a_[0] - b_[0];
+        d[1] = a_[1] - b_[1];
+        d[2] = a_[2] - b_[2];
+        r = PlatVu0Length3(d);
+    }
+#endif
     return r;
 }
 #define D_004E3A20 (*(V4 (*)) &D_004E3A20)

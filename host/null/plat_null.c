@@ -134,3 +134,6 @@ int PlatEnableDmac(int ch) { return 0; }
 int PlatDisableDmac(int ch) { return 0; }
 int PlatPcStart(int control, int c0, int c1) { return 0; }
 void PlatPcStop(void) {}
+
+/* platform/vu.h (off-EE helpers) */
+u32 PlatVu0GetVpuStat(void) { return 0; /* VU1 idle */ }

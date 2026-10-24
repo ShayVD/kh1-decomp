@@ -224,6 +224,7 @@ void func_001a0190(f32 *w, MKeyM *key, MPart *pt, DColWork *c, f32 *b) {
         }
     }
     pt->grav += key->grav;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 0(%1)\n"
@@ -239,6 +240,11 @@ void func_001a0190(f32 *w, MKeyM *key, MPart *pt, DColWork *c, f32 *b) {
         "sqc2 $vf1, 0(%0)\n"
         : : "r"(pt->pos), "r"(pt->vel), "r"(&pt->spd), "r"(w), "r"(&pt->grav)
         : "$8", "$9", "memory");
+#else
+    pt->pos[0] = pt->pos[0] + pt->vel[0] * pt->spd + w[0] * pt->grav;
+    pt->pos[1] = pt->pos[1] + pt->vel[1] * pt->spd + w[1] * pt->grav;
+    pt->pos[2] = pt->pos[2] + pt->vel[2] * pt->spd + w[2] * pt->grav;
+#endif
     pt->sx += pt->svx;
     pt->sy += pt->svy;
     pt->svx += key->svx;
@@ -314,6 +320,7 @@ void *memset(void *, s32, u32);
 CONTEXT_ONLY f32 func_0019f100(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -333,6 +340,9 @@ CONTEXT_ONLY f32 func_0019f100(void) {
         : "=&r"(ret)
         :
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 
