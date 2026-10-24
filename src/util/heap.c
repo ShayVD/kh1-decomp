@@ -12,6 +12,7 @@
 #include "data/pieces/D_002E26A0.h"
 #include "common.h"
 #include "platform/thread.h"
+#include "platform/dma.h"
 #include "platform/math.h"
 #include "data/pieces/D_002BBDE0.h"
 #include "data/types/text_00110000_h4_p.h"
@@ -156,8 +157,8 @@ void func_00122028(void) {
   volatile M2C_UNK *new_var;
   s8 *new_var2;
   new_var2 = (s8 *) (new_var = &D_004F6DB8);
-  *((s32 *) (new_var2 + 4)) = 0x70000000;
-  *((s32 *) (0 + ((s8 *) new_var))) = 0x70000000;
+  *((s32 *) (new_var2 + 4)) = PLAT_SPR_BASE;
+  *((s32 *) (0 + ((s8 *) new_var))) = PLAT_SPR_BASE;
   D_004F6EB8 = &D_004F6DB8;
 }
 
@@ -173,7 +174,7 @@ u32 func_00122048(u32 size, u32 align) {
     v = (old[1] + align - 1) / align * align;
     p[0] = v;
     if (size) D_004F6EB8[1] = v + size;
-    else D_004F6EB8[1] = 0x70004000;
+    else D_004F6EB8[1] = PLAT_SPR_END;
     return v;
 }
 #undef D_004F6EB8

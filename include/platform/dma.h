@@ -60,6 +60,23 @@ void PlatVifPutErr(int n, u32 v);
 u32 PlatVif1GetStat(void);
 #endif
 
+/* The scratchpad (session 59): 16 KiB of fast EE memory at 0x70000000 that
+ * src/util/heap.c runs a frame stack over (D_004F6EB8, from PLAT_SPR_BASE to
+ * PLAT_SPR_END) and that func_00237018 (src/gfx/gspkt.nostrict_nofill.c)
+ * builds packets in: a DMA tag address with bit 31 set (PLAT_DMA_SPR) reads
+ * from the scratchpad, and an address below PLAT_SPR_BASE is main memory.  The
+ * Vita port makes the scratchpad a plain 16 KiB buffer and PLAT_DMA_SPR 0 (a
+ * Vita address can have bit 31 set; the chain walker takes plain pointers). */
+#ifdef KH1_PS2
+#define PLAT_SPR_BASE 0x70000000
+#define PLAT_DMA_SPR 0x80000000
+#else
+extern u8 PlatSpr[0x4000];
+#define PLAT_SPR_BASE ((u32)PlatSpr)
+#define PLAT_DMA_SPR 0
+#endif
+#define PLAT_SPR_END (PLAT_SPR_BASE + 0x4000)
+
 /* VIF1_STAT: FQC (the FIFO's quadword count, bits 24-28) and VPS (bits 0-1,
  * 0 = idle). */
 #define PLAT_VIF1_STAT_BUSY 0x1f000003

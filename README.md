@@ -88,7 +88,8 @@ src/              decompiled code (built), in named modules: src/vm/, src/camera
 nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests
-docs/             findings: toolchain, versions, ELF, SDK, structs, workflow, portability, progress
+docs/             findings: toolchain, versions, ELF, SDK, structs, workflow, portability, progress,
+                  vita-port-plan (phase 5)
 tests/selftest/   synthetic ELF used by `make test`
 ```
 

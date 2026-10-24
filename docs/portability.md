@@ -116,6 +116,14 @@ rewrite matched code.
    button masks where a local holds the pad state
    (tools/shift/s57pad/padvar.py: winmenu.c, journal_s0/s1/s3.c,
    choice.nofill.c).
+   **Session 59:** the scratchpad constants went into `dma.h`
+   (PLAT_SPR_BASE / PLAT_SPR_END for src/util/heap.c's frame stack
+   D_004F6EB8, PLAT_DMA_SPR for func_00237018's bit-31 scratchpad tag in
+   src/gfx/gspkt.nostrict_nofill.c; byte-identical).  The other `| 0x70000000`
+   words in src/text/ and src/gfx/ are DMA tag ids (7, end) with a qword count,
+   a data format the Vita's chain walker reads, not an address.  Rule 2 is done
+   for phase 4: what is left below is replaced whole by the Vita port
+   (docs/vita-port-plan.md).
    **Still direct:** dkmovie.c's func_00111238 (calls sceIpuInit /
    sceIpuSync with no arguments, a keep-alive stub: a prototyped wrapper
    would add argument moves, so it stays as m2c wrote it), src/gfx/shadow.c's

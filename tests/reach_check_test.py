@@ -407,4 +407,16 @@ below = lambda ev: {e[1] for e in ev if len(e) == 5 and e[4] in ("mem", "idx") a
 assert below(run(nk)) == {0x00551608 - 34} and not below(run(nk, neg_keep=False))
 assert all(below(run(nk, visit_rng=random.Random(sd))) == {0x00551608 - 34} for sd in range(8))
 
+# 27. jt-read (session 59): a switch whose index has no bound (no sltiu guard) loads its case from a known table. The
+# `jr` went to the branch labels only (none here), so the cases were never analysed with a2 = &D; now the table's
+# words are read while they are addresses in the function (the third word is not, so the table ends at two)
+uj = [lui(A2, 0x0040), addiu(A2, A2, 0x10), sll(V0, A0, 2), lui(V1, 0x0049), addu(V1, V1, V0), lw(V1, V1, 0x1000),
+      jr(V1), NOP, sw(0, A2, 0), JR_RA, NOP, sw(0, A2, 0x20), JR_RA, NOP]
+tbl = 0x00491000
+uw = {tbl: BASE + 8 * 4, tbl + 4: BASE + 11 * 4, tbl + 8: 0x00123456}
+assert mems(run(uj, read_word=uw.get)) == [0x00400010, 0x00400030], mems(run(uj, read_word=uw.get))
+assert mems(run(uj, read_word=uw.get, jt_read=False)) == []
+# a table word that is not code in this function: no jump table
+assert mems(run(uj, read_word={0x00491000: 0x00123456}.get)) == []
+
 print("reach_check_test: PASS")
