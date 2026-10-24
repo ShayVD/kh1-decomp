@@ -74,10 +74,9 @@ void func_00109cd0(void) {
 #undef D_002BC210
 
 /* func_00109d98 (from auto/text_00100000_9.c). */
-M2C_UNK func_002660c0(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 s32 func_00109d98(void) {
     s32 sp[28];
-    func_002660c0(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
+    PlatGsSetDefStoreImage(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
     FlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecStoreImage(sp, &D_00F20000);
@@ -147,12 +146,11 @@ void func_00109f88(void) {
 /* func_0010a058 (from hand/text_00100000_h2.c). */
 void *func_001559f0(s32, s32);
 #define FlushCache ((void (*)(s32)) FlushCache)
-#define func_002660c0 ((void (*)(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16)) func_002660c0)
 s32 func_0010a058(void) {
     GsImagePacket si;
     void **p;
 
-    func_002660c0(&si, 0x1a00, 8, 1, 0, 0, 512, 384);
+    PlatGsSetDefStoreImage(&si, 0x1a00, 8, 1, 0, 0, 512, 384);
     FlushCache(0);
     PlatGsSyncPath(0, 0);
     p = &D_002B677C;
@@ -161,7 +159,6 @@ s32 func_0010a058(void) {
     return 4;
 }
 #undef FlushCache
-#undef func_002660c0
 
 /* func_0010a0d8 (from hand/text_00100000_h2.c). */
 extern s32 D_002B6774;
@@ -246,19 +243,17 @@ void func_0010a3c0(void) {
 void *func_00121e28(s32, void **);
 extern u8 D_002B6760[];
 #define FlushCache ((void (*)(s32)) FlushCache)
-#define func_002660c0 ((void (*)(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16)) func_002660c0)
 #define func_00106b18 ((void (*)(void *)) func_00106b18)
 void func_0010a3e8(void) {
     GsImagePacket si;
     func_00106b18(D_002B6760);
-    func_002660c0(&si, 0x3600, 4, 1, 0, 0, 256, 192);
+    PlatGsSetDefStoreImage(&si, 0x3600, 4, 1, 0, 0, 256, 192);
     FlushCache(0);
     PlatGsSyncPath(0, 0);
     (*(void **)&D_002B6778) = func_00121e28(0x24000, ((void **)&D_002B6778));
     PlatGsExecStoreImage(&si, ((void *)D_002B6778));
 }
 #undef FlushCache
-#undef func_002660c0
 #undef func_00106b18
 
 /* func_0010a470 (from auto/text_00100000_4.c). */

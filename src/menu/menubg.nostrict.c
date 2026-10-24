@@ -24,7 +24,6 @@ u32 func_001edd88(u32, s32);
 u32 func_001edf40(u32, u32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
 
 #include "data/pieces/D_003F34B0.h"
 #include "data/pieces/D_003F1A70.h"

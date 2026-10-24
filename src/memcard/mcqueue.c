@@ -9,6 +9,7 @@
  * func_00233f18 / func_00233ee8: an automatic card-info poll every n frames
  * on the port and slot func_00233f28 sets (D_00647FDC / D_00647FE0). */
 #include "common.h"
+#include "platform/gs.h"
 #include "memcard/mcreq.h"
 #include "platform/mc.h"
 #include "data/pieces/D_00425C1C.h"
@@ -30,7 +31,7 @@ extern s32 D_00648008, D_0064800C, D_00648010, D_00648014, D_00648018, D_0064801
 
 void func_00233ac8(void);
 void func_002365e0(void);
-/* func_00265b28 is left undeclared on purpose (implicit declaration gives the original code). */
+/* PlatGsSyncV (sceGsSyncV) was left undeclared on purpose before session 56 (an implicit declaration gave the original code); include/platform/gs.h now declares it and the code is the same. */
 
 void func_00233a80(void) {
     s32 var_v0;
@@ -124,20 +125,20 @@ void func_00233db0(s32 id) {
             i &= 63;
             if (x == id) {
                 func_002365e0();
-                func_00265b28(0);
+                PlatGsSyncV(0);
                 goto restart;
             }
         }
         if (D_00647FB0 != 0 && D_00647FC4 == id) {
             do {
                 func_002365e0();
-                func_00265b28(0);
+                PlatGsSyncV(0);
             } while (D_00647FB0 != 0);
         }
     } else {
         while (D_00647FB8 != D_00647FBC || D_00647FB0 != 0) {
             func_002365e0();
-            func_00265b28(0);
+            PlatGsSyncV(0);
         }
     }
 }

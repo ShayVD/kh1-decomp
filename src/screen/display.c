@@ -62,12 +62,11 @@ void func_00110020(s32 arg0, s32 arg1) {
 
 /* func_00110068 (from auto/text_00110000_11.c). */
 M2C_UNK func_0010fea0();
-M2C_UNK func_002654f0();
 M2C_UNK func_00266c30(M2C_UNK);
 M2C_UNK func_00267fe0();
 extern f32 D_002BBDEC;
 void func_00110068(void) {
-    func_002654f0();
+    PlatGsResetPath();
     func_00266c30(1);
     func_00267fe0();
     D_002BBDEC = 1.0f;
@@ -130,10 +129,9 @@ void func_001100a8(void) {
 
 /* func_001101e8 (from auto/text_00110000_11.c). */
 void func_001104c0();
-M2C_UNK func_00265350(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 #define func_001100a8 ((M2C_UNK (*)()) func_001100a8)
 void func_001101e8(void) {
-    func_00265350(0, 1, 2, 0);
+    PlatGsResetGraph(0, 1, 2, 0);
     func_001104c0();
     func_001100a8();
 }

@@ -26,7 +26,6 @@ u32 func_001edd88(u32, s32);
 u32 func_001edf40(u32, u32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
 
 #include "data/pieces/D_003F34B0.h"
 #include "data/pieces/D_003F1A70.h"
@@ -34,8 +33,8 @@ s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
 
 void func_0020a8f0(void) {
     StoreBuf b;
-    func_002660c0(b.si[0], 0, 8, 0, 0x100, 4, 0x10, 1);
-    func_002660c0(b.si[1], 0, 8, 0, 0x100, 0x1BB, 0x10, 1);
+    PlatGsSetDefStoreImage(b.si[0], 0, 8, 0, 0x100, 4, 0x10, 1);
+    PlatGsSetDefStoreImage(b.si[1], 0, 8, 0, 0x100, 0x1BB, 0x10, 1);
     FlushCache(0);
     PlatGsExecStoreImage(b.si[0], b.px[0]);
     PlatGsExecStoreImage(b.si[1], b.px[1]);

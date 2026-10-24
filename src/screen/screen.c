@@ -28,7 +28,6 @@ extern u8 D_00F20000[];     /* the 512x384 RGB frame */
 
 s32 func_0011ef10(s32, void *);
 s32 FlushCache(s32);
-s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
 
 /* func_001e05a8 .. func_001e08d8 are in frame.c. */
 void func_001e05a8(void *);
@@ -286,7 +285,7 @@ void func_001e1438(s32 arg0, s32 arg1) {
 /* Capture the screen into D_00F20000. */
 void func_001e1480(void) {
     s32 sp[28];
-    func_002660c0(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
+    PlatGsSetDefStoreImage(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
     FlushCache(0);
     PlatGsSyncPath(0, 0);
     PlatGsExecStoreImage(sp, &D_00F20000);
