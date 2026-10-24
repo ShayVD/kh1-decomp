@@ -26,22 +26,51 @@ static struct PlatDmaChan null_chan[16];
 int PlatCdInit(int mode) { return 0; }
 int PlatCdInitEeCB(int priority, void *stack, int stacksize) { return 0; }
 void *PlatCdPOffCallback(void (*func)(void *), void *arg) { return 0; }
-/* found, at sector 0 with size 0 (libcdvd's sceCdlFILE: lsn, size, name[16], date[8]): the game
- * retries a search that fails for ever */
+/* With a disc image (KH1_HOST_ISO, host/port/cd_image.c) a search and a read answer from it;
+ * without one every search answers found, at sector 0 with size 0 (the game retries a search
+ * that fails for ever) and the runner stops at the first read.  libcdvd's sceCdlFILE: lsn,
+ * size, name[16], date[8]. */
+int kh1_cd_image_is_open(void);
+int kh1_cd_image_search(const char *name, u32 *lsn, u32 *size);
+int kh1_cd_image_read(u32 lsn, u32 n, void *buf);
+extern int kh1_host_trace;
+extern u32 kh1_host_cd_reads, kh1_host_cd_sectors;
+int printf(const char *, ...);
+void exit(int);
 int PlatCdSearchFile(void *fp, const char *name) {
     u32 *f = (u32 *)fp;
+    int i;
     f[0] = 0;
     f[1] = 0;
+    if (!kh1_cd_image_is_open()) return 1;
+    for (i = 0; i < 16; i++) {
+        ((char *)fp)[8 + i] = name[i];
+        if (!name[i]) break;
+    }
+    if (!kh1_cd_image_search(name, &f[0], &f[1])) {
+        printf("kh1-host: PlatCdSearchFile %s: not on the disc\n", name);
+        return 0;
+    }
+    if (kh1_host_trace) printf("kh1-host: PlatCdSearchFile %s: lsn %u, %u bytes\n", name, f[0], f[1]);
     return 1;
 }
 int PlatCdSync(int mode) { return 0; }
 int PlatCdDiskReady(int mode) { return 2; /* SCECdComplete: the disc is ready */ }
 int PlatCdMmode(int media) { return 0; }
-/* the host runner stops at the first read (host/null/main.c) */
+/* without a disc image the host runner stops at the first read (host/null/main.c); with one the
+ * read is done before PlatCdRead returns, so PlatCdSync and PlatCdGetError answer 0 */
 extern int kh1_host_stop_at_cdread;
-int printf(const char *, ...);
-void exit(int);
 int PlatCdRead(unsigned int lsn, unsigned int sectors, void *buf, void *mode) {
+    if (kh1_cd_image_is_open()) {
+        if (kh1_host_trace) printf("kh1-host: PlatCdRead lsn %u, %u sectors\n", lsn, sectors);
+        kh1_host_cd_reads++;
+        kh1_host_cd_sectors += sectors;
+        if (!kh1_cd_image_read(lsn, sectors, buf)) {
+            printf("kh1-host: PlatCdRead lsn %u, %u sectors: past the end of the image\n", lsn, sectors);
+            return 0;
+        }
+        return 1;
+    }
     if (kh1_host_stop_at_cdread) {
         printf("kh1-host: first PlatCdRead (lsn %u, %u sectors, buf %p): stop\n", lsn, sectors, buf);
         exit(0);
@@ -82,7 +111,13 @@ int PlatFsDevctl(const char *dev, int cmd, const void *arg, unsigned int arglen,
 /* platform/gs.h */
 void PlatGsResetGraph(short mode, short inter, short omode, short ffmd) {}
 void PlatGsResetPath(void) {}
-int PlatGsSyncV(int mode) { return 0; }
+/* a frame: the vblank handler the game installed (sceGsSyncVCallback, host/port/sdk_host.c) runs
+ * once (host/null/main.c kh1_host_vblank) */
+void kh1_host_vblank(void);
+int PlatGsSyncV(int mode) {
+    kh1_host_vblank();
+    return 0;
+}
 int PlatGsSyncPath(int mode, unsigned short timeout) { return 0; }
 int PlatGsSetDefLoadImage(void *lp, short dbp, short dbw, short psm, short x, short y, short w, short h) { return 0; }
 int PlatGsSetDefStoreImage(void *sp, short sbp, short sbw, short psm, short x, short y, short w, short h) { return 0; }
@@ -99,7 +134,13 @@ u64 PlatGsGetCsr(void) { return 0; }
 
 /* platform/iop.h */
 void PlatSifInitRpc(unsigned int mode) {}
-int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) { return 0; }
+/* bound: sceSifClientData's server pointer (+0x24) non-zero, which the game polls for
+ * (src/sound/snd_rpc.c func_001ec7d0); no IOP answers the calls */
+static u32 null_server[16];
+int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) {
+    *(u32 **)((u8 *)client + 0x24) = null_server;
+    return 0;
+}
 int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) { return 0; }
 /* iop.h: the reboot and the module loads succeed (module id 1), PlatSifSyncIop 1 */
 int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 1; }
@@ -142,7 +183,13 @@ int PlatStartThread(int id, void *arg) { return 0; }
 int PlatChangeThreadPriority(int id, int prio) { return 0; }
 int PlatGetThreadId(void) { return 0; }
 int PlatCreateSema(void *param) { return 0; }
-int PlatWaitSema(int id) { return 0; }
+/* There is no other thread: a wait that would block on the EE lets a frame pass instead (the
+ * main loop's frame wait, src/util/thread.c func_0010c348, is a semaphore the vblank handler
+ * signals), then returns. */
+int PlatWaitSema(int id) {
+    kh1_host_vblank();
+    return 0;
+}
 int PlatSignalSema(int id) { return 0; }
 int PlatISignalSema(int id) { return 0; }
 int PlatIReferSemaStatus(int id, void *param) { return 0; }
