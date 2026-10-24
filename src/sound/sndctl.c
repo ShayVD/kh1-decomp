@@ -629,7 +629,7 @@ void func_0011d5f0(void) {
 #undef D_004E3450
 
 /* func_0011d688 (from auto/text_00110000_13.c). */
-#define func_0011c868 ((f32 (*)(M2C_UNK, s32, s32, M2C_UNK, s32)) func_0011c868)
+#define func_0011c868 ((void (*)(M2C_UNK, s32, s32, M2C_UNK, s32)) func_0011c868)
 void func_0011d688(s32 arg0) {
     s32 *var_s1;
     s32 temp_a1;
@@ -1117,7 +1117,7 @@ void func_0011e480(void) {
 
 /* func_0011e4d0 (from auto/text_00110000_7.c). */
 #define func_0011c7c0 ((M2C_UNK (*)(M2C_UNK, M2C_UNK, M2C_UNK)) func_0011c7c0)
-#define func_0011c7a8 ((f32 (*)(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK)) func_0011c7a8)
+#define func_0011c7a8 ((void (*)(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK)) func_0011c7a8)
 void func_0011e4d0(void) {
     func_0011c7c0(1, 0, 0x2D0);
     func_0011c7a8(0, 0, 0x3000, 0x1E0, 1, 0xF0);

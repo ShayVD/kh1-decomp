@@ -600,7 +600,7 @@ void func_0011d768(s32);
 #define D_00362660 (*(V4 (*)) &D_00362660)
 #define D_00575890 (*(u32 *)&D_00575890)
 #define D_002C5BB0 (*(PadC4 (*)) &D_002C5BB0)
-#define func_001779e8 ((void (*)(V4 *, V4 *, f32)) func_001779e8)
+#define func_001779e8 ((f32 (*)(V4 *, V4 *, f32)) func_001779e8)
 void func_00178ef8(void) {
     V4 p;
     V4 a;

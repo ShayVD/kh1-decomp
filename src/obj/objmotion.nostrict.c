@@ -227,7 +227,7 @@ void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
 M2C_UNK func_00130c28(void *, f32, f32);
 f32 func_00130d20();
 f32 func_00130dd0(void *);
-#define func_001655e0 ((M2C_UNK (*)(s32, s32, s32, f32)) func_001655e0)
+#define func_001655e0 ((M2C_UNK (*)(s32, s32, f32, s32)) func_001655e0)
 s32 func_00130e48(void *arg0, s32 arg1) {
     f32 temp_f0;
     f32 temp_f12;
@@ -246,7 +246,7 @@ s32 func_00130e48(void *arg0, s32 arg1) {
             func_00130c28(arg0, temp_f12, temp_f20);
         }
         M2C_FIELD(arg0, f32 *, 0x16C) = temp_f20;
-        func_001655e0(arg1, M2C_FIELD(arg0, s32 *, 0x15C), *(M2C_UNK *)((s32) ((M2C_FIELD(arg0, s32 *, 0x168) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 0x1D4))), temp_f20);
+        func_001655e0(arg1, M2C_FIELD(arg0, s32 *, 0x15C), temp_f20, *(M2C_UNK *)((s32) ((M2C_FIELD(arg0, s32 *, 0x168) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 0x1D4))));
         var_v0 = 1;
     }
     return var_v0;

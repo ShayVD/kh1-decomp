@@ -83,7 +83,7 @@ extern GumiShip D_006202A0;
 void *func_00232cc0(s32);
 s32 func_001207f8(s32);
 s32 func_001205f0(char *, void *);
-double asin();
+double asin(double);
 void func_0010fe80(void);
 void func_0010fe90(void);
 void func_00112fa0(void);
@@ -149,8 +149,9 @@ void func_001b9bb0(s32 arg0, s32 arg1) {
     *(s8 *)((s8 *)&D_00009C00 + (arg0 + (s32)func_00232cc0(4))) = arg1;
 }
 
-void func_001b9bf8(void) {
-    asin();
+/* A wrapper of asin: it leaves the argument in the EE's a0 (portability rule 10). */
+double func_001b9bf8(double x) {
+    return asin(x);
 }
 
 s32 func_001b9c10(void) {

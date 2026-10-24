@@ -325,7 +325,7 @@ extern void func_00135df0(E21 *, V4 *);
 extern s32 func_00135bb0(E21 *);
 extern void func_0012bce0(s32, s32, s32, Arg21 *, s32);
 extern void func_00128218(E2 *, f32);
-#define func_00136428 ((s32 (*)(E21 *, f32, s32, s32, V4 *)) func_00136428)
+#define func_00136428 ((s32 (*)(E21 *, s32, s32, V4 *, f32)) func_00136428)
 void func_00136768(E21 *e) {
     Arg21 a;
     V4 v;
@@ -342,7 +342,7 @@ void func_00136768(E21 *e) {
                 if (e->f0 & 0x4000) f |= 2;
             }
         }
-        w = func_00136428(e, s, f, e->f394, &v);
+        w = func_00136428(e, f, e->f394, &v, s);
         if (((s32)(e->f370 >> 48) & 1) && e->f144) {
             a.p = &w;
             a.n = 4;

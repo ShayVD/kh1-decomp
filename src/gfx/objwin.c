@@ -266,7 +266,15 @@ s32 func_0010ba98(Task *t) {
     case 5:
         w->state = 0;
         if (w->cb) {
+#ifdef KH1_PS2
             w->cb();
+#else
+            /* portability rule 10: on the EE a0 and a1 both still hold w here.
+             * The close callback (func_0010bd90's) of a message window,
+             * msgwin.c's func_001cae20(id, win), frees the slot whose window
+             * is its second argument. */
+            w->cb(w, w);
+#endif
         }
         return 4;
     }

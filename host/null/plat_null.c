@@ -149,10 +149,18 @@ int PlatSifSearchModuleByName(const char *name) { return -1; /* no IOP module is
 int PlatSifRebootIop(const char *image) { return 1; }
 int PlatSifSyncIop(void) { return 1; }
 
-/* platform/mc.h */
+/* platform/mc.h: no card in any slot. Every request is queued (0) and done at the next
+ * PlatMcSync (1), whose result is libmc's "no card detected" (-10): src/memcard/mcstep.c's
+ * steps poll sceMcSync until it answers, then read the result (and GetInfo's type) it wrote. */
+#define NULL_MC_NO_CARD (-10)
 int PlatMcInit(void) { return 0; }
 int PlatMcGetSlotMax(int port) { return 0; }
-int PlatMcGetInfo(int port, int slot, int *type, int *free, int *format) { return 0; }
+int PlatMcGetInfo(int port, int slot, int *type, int *free, int *format) {
+    if (type) *type = 0;  /* no card */
+    if (free) *free = 0;
+    if (format) *format = 0;
+    return 0;
+}
 int PlatMcOpen(int port, int slot, const char *name, int mode) { return 0; }
 int PlatMcClose(int fd) { return 0; }
 int PlatMcRead(int fd, void *buf, int size) { return 0; }
@@ -164,7 +172,11 @@ int PlatMcDelete(int port, int slot, const char *name) { return 0; }
 int PlatMcFormat(int port, int slot) { return 0; }
 int PlatMcUnformat(int port, int slot) { return 0; }
 int PlatMcRename(int port, int slot, const char *name, const char *newname) { return 0; }
-int PlatMcSync(int mode, int *cmd, int *result) { return 0; }
+int PlatMcSync(int mode, int *cmd, int *result) {
+    if (cmd) *cmd = 0;
+    if (result) *result = NULL_MC_NO_CARD;
+    return 1;
+}
 
 /* platform/pad.h */
 int PlatDbcInit(void) { return 0; }
@@ -172,7 +184,12 @@ int PlatPadInit(int mode) { return 0; }
 int PlatPadCreateSocket(void *param, void *addr) { return 0; }
 int PlatPadGetState(int socket) { return 0; }
 int PlatPadGetButtonProfile(int socket, void *profile) { return 0; }
-int PlatPadRead(int socket, u8 *data) { return 0; }
+/* PlatPadGetState never answers 1 (stable), so src/pad/padread.nostrict.c does not read;
+ * should it, the read fails and leaves no button pressed (the buttons are active low). */
+int PlatPadRead(int socket, u8 *data) {
+    data[0] = data[1] = 0xFF;
+    return -1;
+}
 int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data) { return 0; }
 
 /* platform/thread.h */
