@@ -44,6 +44,19 @@ void func_001373f8(void *arg0, f32 fparg0) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((M2C_FIELD(arg0, s32 *, 0) | 0x80) & 0xFFEFFFFF);
 }
 
+/* func_00137418 (from anon/session1_probes.c). */
+typedef struct {
+    int flags;
+    char pad0[1184];
+    float inv;
+} S137418;
+
+void func_00137418(S137418 *s, float x)
+{
+    s->flags |= 0x18;
+    s->inv = 1.0f / x;
+}
+
 /* func_00137440 (from auto/text_00130000.c). */
 void func_00137440(Actor *arg0, s32 arg1) {
     arg0->unk398 = arg1;

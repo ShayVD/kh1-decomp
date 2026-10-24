@@ -229,7 +229,8 @@ void pppAngleLoopReset(s32 arg0, PppEntry *arg1) {
 }
 
 /* pppAngleLoopFrame (from auto/text_00180000_10.c). */
-void func_0018ad70(s32, s32);
+void func_0018ad70(int a, int *p);
+#define func_0018ad70 ((void (*)(s32, s32)) func_0018ad70)
 #define D_00615E60 ((void *) D_00615E60)
 void pppAngleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
     void *temp_s0;
@@ -249,6 +250,16 @@ void pppAngleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 #undef D_00615E60
+#undef func_0018ad70
+
+/* func_0018ad70 (from anon/session1_probes.c). */
+void func_0018ad70(int a, int *p)
+{
+    p[2] = 0;
+    p[1] = 0;
+    p[0] = 0;
+    p[3] = a;
+}
 
 /* func_0018aeb8 (from auto/text_00180000_20.c). */
 void func_0018aeb8(s32 arg0, void *arg1) {

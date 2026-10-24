@@ -2,8 +2,8 @@
 
 Status: **ee-gcc 2.96-ee-001003-1, `-O2 -G0`**, locked as the project compiler by the user in session 1 and **confirmed on the
 pinned retail ELF**: all 8 probe functions are byte-identical and objdiff
-reports 100% (they now live in `src/anon/session1_probes.c` and are rebuilt by
-every `make verify`). The fingerprint survey below was first run on the
+reports 100% (they are rebuilt by every `make verify`; session 56 moved the five
+from `src/anon/session1_probes.c` into their modules). The fingerprint survey below was first run on the
 fan-patched ELF before the retail one was available.
 
 ## Components
@@ -88,7 +88,8 @@ the probes were re-run on the retail ELF (SHA-256 `1993a4da…`) with the same
 | Language | C, probably | Assert-style strings name `.c` files (`ttlib/ui.c`, `ttlib/ui_gauge.c`, `src/decode.c`, `src/sa_task.c`). No gcc2-mangled names found in strings. C++ not ruled out for other modules. |
 | Sibling calls | yes | Tail calls as `ld ra` … `j func` occur; 2.96 at -O2 emits them. |
 
-Probe functions (source in `src/anon/session1_probes.c`): `0x0010ef70`
+Probe functions (session 56: src/text/fldtext.c, src/game/gametimer.c,
+src/obj/objutil.c, src/ppp/ppprand.c, src/ppp/ppploop.c): `0x0010ef70`
 struct field and bit update, `0x00111f70` two global stores, `0x00137418`
 float reciprocal into a struct, `0x001882f8` int/float maths, `0x0018ad70`
 four stores, `0x001d5f80` counter + array append, `0x0023d1e0` float divide by

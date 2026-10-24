@@ -190,6 +190,13 @@ void func_00111f58(void) {
     D_002BCC24 = 1;
 }
 
+/* func_00111f70 (from anon/session1_probes.c): stops the timer. */
+void func_00111f70(void)
+{
+    D_004D925C = 0;
+    D_002BCC24 = 0;
+}
+
 /* func_00111f88 (from auto/text_00110000.c). */
 s32 func_00111f88(void) {
     D_004D925C = 2;

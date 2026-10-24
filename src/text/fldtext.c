@@ -820,3 +820,21 @@ void func_0010eee0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 #undef func_00121ee0
 #undef func_00121e28
 
+/* func_0010ef70 (from anon/session1_probes.c): sets a text object's two
+ * words at +0x80 / +0x84 and clears its flags at +0x92 / +0x93. */
+typedef struct {
+    char pad0[128];
+    int f80;
+    int f84;
+    char pad1[10];
+    unsigned char f92;
+    unsigned char f93;
+} S10EF70;
+
+void func_0010ef70(S10EF70 *s, int a, int b)
+{
+    s->f80 = b;
+    s->f84 = a;
+    s->f93 &= ~1;
+    s->f92 = 0;
+}

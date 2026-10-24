@@ -21,6 +21,12 @@ f32 func_00188148(f32 fparg0, f32 fparg1) {
     return fparg0 * fparg1;
 }
 
+/* func_001882f8 (from anon/session1_probes.c). */
+int func_001882f8(int a, float f)
+{
+    return (float)a * f - (float)a;
+}
+
 /* func_00188498 (from auto/text_00180000.c). */
 s32 func_00188498(s32 arg0, f32 fparg0) {
     return (s32) ((f32) arg0 * fparg0);
