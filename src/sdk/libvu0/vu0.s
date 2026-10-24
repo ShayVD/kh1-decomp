@@ -2,10 +2,10 @@
 	.set	noreorder
 	.set	noat
 
-	.section	.text.func_002672f8,"ax",@progbits
-	.globl	func_002672f8
-	.ent	func_002672f8
-func_002672f8:  /* 0x002672F8 */
+	.section	.text.sceVu0ApplyMatrix,"ax",@progbits
+	.globl	sceVu0ApplyMatrix
+	.ent	sceVu0ApplyMatrix
+sceVu0ApplyMatrix:  /* 0x002672F8 */
 	.word	0xD8A40000  /* 002672F8 lqc2 $vf4,0($a1) */
 	.word	0xD8A50010  /* 002672FC lqc2 $vf5,16($a1) */
 	.word	0xD8A60020  /* 00267300 lqc2 $vf6,32($a1) */
@@ -17,7 +17,7 @@ func_002672f8:  /* 0x002672F8 */
 	.word	0x4BE83A4B  /* 00267318 vmaddw.xyzw $vf9xyzw,$vf7xyzw,$vf8w */
 	.word	0x03E00008  /* 0026731C jr $ra */
 	.word	0xF8890000  /* 00267320 sqc2 $vf9,0($a0) */
-	.end	func_002672f8
+	.end	sceVu0ApplyMatrix
 
 	.section	.text.sceVu0MulMatrix,"ax",@progbits
 	.globl	sceVu0MulMatrix
@@ -42,10 +42,10 @@ sceVu0MulMatrix:  /* 0x00267328 */
 	.word	0x00000000  /* 00267368 nop */
 	.end	sceVu0MulMatrix
 
-	.section	.text.func_00267370,"ax",@progbits
-	.globl	func_00267370
-	.ent	func_00267370
-func_00267370:  /* 0x00267370 */
+	.section	.text.sceVu0OuterProduct,"ax",@progbits
+	.globl	sceVu0OuterProduct
+	.ent	sceVu0OuterProduct
+sceVu0OuterProduct:  /* 0x00267370 */
 	.word	0xD8A40000  /* 00267370 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 00267374 lqc2 $vf5,0($a2) */
 	.word	0x4BC522FE  /* 00267378 vopmula.xyz $ACCxyz,$vf4xyz,$vf5xyz */
@@ -53,12 +53,12 @@ func_00267370:  /* 0x00267370 */
 	.word	0x4A2631AC  /* 00267380 vsub.w $vf6w,$vf6w,$vf6w */
 	.word	0x03E00008  /* 00267384 jr $ra */
 	.word	0xF8860000  /* 00267388 sqc2 $vf6,0($a0) */
-	.end	func_00267370
+	.end	sceVu0OuterProduct
 
-	.section	.text.func_00267390,"ax",@progbits
-	.globl	func_00267390
-	.ent	func_00267390
-func_00267390:  /* 0x00267390 */
+	.section	.text.sceVu0InnerProduct,"ax",@progbits
+	.globl	sceVu0InnerProduct
+	.ent	sceVu0InnerProduct
+sceVu0InnerProduct:  /* 0x00267390 */
 	.word	0xD8840000  /* 00267390 lqc2 $vf4,0($a0) */
 	.word	0xD8A50000  /* 00267394 lqc2 $vf5,0($a1) */
 	.word	0x4BC5216A  /* 00267398 vmul.xyz $vf5xyz,$vf4xyz,$vf5xyz */
@@ -68,12 +68,12 @@ func_00267390:  /* 0x00267390 */
 	.word	0x44820000  /* 002673A8 mtc1 $v0,$f0 */
 	.word	0x03E00008  /* 002673AC jr $ra */
 	.word	0x00000000  /* 002673B0 nop */
-	.end	func_00267390
+	.end	sceVu0InnerProduct
 
-	.section	.text.func_002673b8,"ax",@progbits
-	.globl	func_002673b8
-	.ent	func_002673b8
-func_002673b8:  /* 0x002673B8 */
+	.section	.text.sceVu0Normalize,"ax",@progbits
+	.globl	sceVu0Normalize
+	.ent	sceVu0Normalize
+sceVu0Normalize:  /* 0x002673B8 */
 	.word	0xD8A40000  /* 002673B8 lqc2 $vf4,0($a1) */
 	.word	0x4BC4216A  /* 002673BC vmul.xyz $vf5xyz,$vf4xyz,$vf4xyz */
 	.word	0x4B052941  /* 002673C0 vaddy.x $vf5x,$vf5x,$vf5y */
@@ -89,12 +89,12 @@ func_002673b8:  /* 0x002673B8 */
 	.word	0x4BC0219C  /* 002673E8 vmulq.xyz $vf6xyz,$vf4xyz,$Q */
 	.word	0x03E00008  /* 002673EC jr $ra */
 	.word	0xF8860000  /* 002673F0 sqc2 $vf6,0($a0) */
-	.end	func_002673b8
+	.end	sceVu0Normalize
 
-	.section	.text.func_002673f8,"ax",@progbits
-	.globl	func_002673f8
-	.ent	func_002673f8
-func_002673f8:  /* 0x002673F8 */
+	.section	.text.sceVu0TransposeMatrix,"ax",@progbits
+	.globl	sceVu0TransposeMatrix
+	.ent	sceVu0TransposeMatrix
+sceVu0TransposeMatrix:  /* 0x002673F8 */
 	.word	0x78A80000  /* 002673F8 lq $t0,0($a1) */
 	.word	0x78A90010  /* 002673FC lq $t1,16($a1) */
 	.word	0x78AA0020  /* 00267400 lq $t2,32($a1) */
@@ -112,12 +112,12 @@ func_002673f8:  /* 0x002673F8 */
 	.word	0x7C8A0020  /* 00267430 sq $t2,32($a0) */
 	.word	0x03E00008  /* 00267434 jr $ra */
 	.word	0x7C8B0030  /* 00267438 sq $t3,48($a0) */
-	.end	func_002673f8
+	.end	sceVu0TransposeMatrix
 
-	.section	.text.func_00267440,"ax",@progbits
-	.globl	func_00267440
-	.ent	func_00267440
-func_00267440:  /* 0x00267440 */
+	.section	.text.sceVu0InversMatrix,"ax",@progbits
+	.globl	sceVu0InversMatrix
+	.ent	sceVu0InversMatrix
+sceVu0InversMatrix:  /* 0x00267440 */
 	.word	0x78A80000  /* 00267440 lq $t0,0($a1) */
 	.word	0x78A90010  /* 00267444 lq $t1,16($a1) */
 	.word	0x78AA0020  /* 00267448 lq $t2,32($a1) */
@@ -145,12 +145,12 @@ func_00267440:  /* 0x00267440 */
 	.word	0x7C8A0020  /* 002674A0 sq $t2,32($a0) */
 	.word	0x03E00008  /* 002674A4 jr $ra */
 	.word	0xF8840030  /* 002674A8 sqc2 $vf4,48($a0) */
-	.end	func_00267440
+	.end	sceVu0InversMatrix
 
-	.section	.text.func_002674b0,"ax",@progbits
-	.globl	func_002674b0
-	.ent	func_002674b0
-func_002674b0:  /* 0x002674B0 */
+	.section	.text.sceVu0DivVector,"ax",@progbits
+	.globl	sceVu0DivVector
+	.ent	sceVu0DivVector
+sceVu0DivVector:  /* 0x002674B0 */
 	.word	0xD8A40000  /* 002674B0 lqc2 $vf4,0($a1) */
 	.word	0x44086000  /* 002674B4 mfc1 $t0,$f12 */
 	.word	0x48A82800  /* 002674B8 qmtc2 $t0,$vf5 */
@@ -159,12 +159,12 @@ func_002674b0:  /* 0x002674B0 */
 	.word	0x4BE0211C  /* 002674C4 vmulq.xyzw $vf4xyzw,$vf4xyzw,$Q */
 	.word	0x03E00008  /* 002674C8 jr $ra */
 	.word	0xF8840000  /* 002674CC sqc2 $vf4,0($a0) */
-	.end	func_002674b0
+	.end	sceVu0DivVector
 
-	.section	.text.func_002674d0,"ax",@progbits
-	.globl	func_002674d0
-	.ent	func_002674d0
-func_002674d0:  /* 0x002674D0 */
+	.section	.text.sceVu0DivVectorXYZ,"ax",@progbits
+	.globl	sceVu0DivVectorXYZ
+	.ent	sceVu0DivVectorXYZ
+sceVu0DivVectorXYZ:  /* 0x002674D0 */
 	.word	0xD8A40000  /* 002674D0 lqc2 $vf4,0($a1) */
 	.word	0x44086000  /* 002674D4 mfc1 $t0,$f12 */
 	.word	0x48A82800  /* 002674D8 qmtc2 $t0,$vf5 */
@@ -173,12 +173,12 @@ func_002674d0:  /* 0x002674D0 */
 	.word	0x4BC0211C  /* 002674E4 vmulq.xyz $vf4xyz,$vf4xyz,$Q */
 	.word	0x03E00008  /* 002674E8 jr $ra */
 	.word	0xF8840000  /* 002674EC sqc2 $vf4,0($a0) */
-	.end	func_002674d0
+	.end	sceVu0DivVectorXYZ
 
-	.section	.text.func_002674f0,"ax",@progbits
-	.globl	func_002674f0
-	.ent	func_002674f0
-func_002674f0:  /* 0x002674F0 */
+	.section	.text.sceVu0InterVector,"ax",@progbits
+	.globl	sceVu0InterVector
+	.ent	sceVu0InterVector
+sceVu0InterVector:  /* 0x002674F0 */
 	.word	0xD8A40000  /* 002674F0 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 002674F4 lqc2 $vf5,0($a2) */
 	.word	0x44086000  /* 002674F8 mfc1 $t0,$f12 */
@@ -189,57 +189,57 @@ func_002674f0:  /* 0x002674F0 */
 	.word	0x4BE82A48  /* 0026750C vmaddx.xyzw $vf9xyzw,$vf5xyzw,$vf8x */
 	.word	0x03E00008  /* 00267510 jr $ra */
 	.word	0xF8890000  /* 00267514 sqc2 $vf9,0($a0) */
-	.end	func_002674f0
+	.end	sceVu0InterVector
 
-	.section	.text.func_00267518,"ax",@progbits
-	.globl	func_00267518
-	.ent	func_00267518
-func_00267518:  /* 0x00267518 */
+	.section	.text.sceVu0AddVector,"ax",@progbits
+	.globl	sceVu0AddVector
+	.ent	sceVu0AddVector
+sceVu0AddVector:  /* 0x00267518 */
 	.word	0xD8A40000  /* 00267518 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 0026751C lqc2 $vf5,0($a2) */
 	.word	0x4BE521A8  /* 00267520 vadd.xyzw $vf6xyzw,$vf4xyzw,$vf5xyzw */
 	.word	0x03E00008  /* 00267524 jr $ra */
 	.word	0xF8860000  /* 00267528 sqc2 $vf6,0($a0) */
-	.end	func_00267518
+	.end	sceVu0AddVector
 
-	.section	.text.func_00267530,"ax",@progbits
-	.globl	func_00267530
-	.ent	func_00267530
-func_00267530:  /* 0x00267530 */
+	.section	.text.sceVu0SubVector,"ax",@progbits
+	.globl	sceVu0SubVector
+	.ent	sceVu0SubVector
+sceVu0SubVector:  /* 0x00267530 */
 	.word	0xD8A40000  /* 00267530 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 00267534 lqc2 $vf5,0($a2) */
 	.word	0x4BE521AC  /* 00267538 vsub.xyzw $vf6xyzw,$vf4xyzw,$vf5xyzw */
 	.word	0x03E00008  /* 0026753C jr $ra */
 	.word	0xF8860000  /* 00267540 sqc2 $vf6,0($a0) */
-	.end	func_00267530
+	.end	sceVu0SubVector
 
-	.section	.text.func_00267548,"ax",@progbits
-	.globl	func_00267548
-	.ent	func_00267548
-func_00267548:  /* 0x00267548 */
+	.section	.text.sceVu0MulVector,"ax",@progbits
+	.globl	sceVu0MulVector
+	.ent	sceVu0MulVector
+sceVu0MulVector:  /* 0x00267548 */
 	.word	0xD8A40000  /* 00267548 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 0026754C lqc2 $vf5,0($a2) */
 	.word	0x4BE521AA  /* 00267550 vmul.xyzw $vf6xyzw,$vf4xyzw,$vf5xyzw */
 	.word	0x03E00008  /* 00267554 jr $ra */
 	.word	0xF8860000  /* 00267558 sqc2 $vf6,0($a0) */
-	.end	func_00267548
+	.end	sceVu0MulVector
 
-	.section	.text.func_00267560,"ax",@progbits
-	.globl	func_00267560
-	.ent	func_00267560
-func_00267560:  /* 0x00267560 */
+	.section	.text.sceVu0ScaleVector,"ax",@progbits
+	.globl	sceVu0ScaleVector
+	.ent	sceVu0ScaleVector
+sceVu0ScaleVector:  /* 0x00267560 */
 	.word	0xD8A40000  /* 00267560 lqc2 $vf4,0($a1) */
 	.word	0x44086000  /* 00267564 mfc1 $t0,$f12 */
 	.word	0x48A82800  /* 00267568 qmtc2 $t0,$vf5 */
 	.word	0x4BE52198  /* 0026756C vmulx.xyzw $vf6xyzw,$vf4xyzw,$vf5x */
 	.word	0x03E00008  /* 00267570 jr $ra */
 	.word	0xF8860000  /* 00267574 sqc2 $vf6,0($a0) */
-	.end	func_00267560
+	.end	sceVu0ScaleVector
 
-	.section	.text.func_00267578,"ax",@progbits
-	.globl	func_00267578
-	.ent	func_00267578
-func_00267578:  /* 0x00267578 */
+	.section	.text.sceVu0TransMatrix,"ax",@progbits
+	.globl	sceVu0TransMatrix
+	.ent	sceVu0TransMatrix
+sceVu0TransMatrix:  /* 0x00267578 */
 	.word	0xD8C40000  /* 00267578 lqc2 $vf4,0($a2) */
 	.word	0xD8A50030  /* 0026757C lqc2 $vf5,48($a1) */
 	.word	0x78A70000  /* 00267580 lq $a3,0($a1) */
@@ -251,16 +251,16 @@ func_00267578:  /* 0x00267578 */
 	.word	0x7C890020  /* 00267598 sq $t1,32($a0) */
 	.word	0x03E00008  /* 0026759C jr $ra */
 	.word	0xF8850030  /* 002675A0 sqc2 $vf5,48($a0) */
-	.end	func_00267578
+	.end	sceVu0TransMatrix
 
-	.section	.text.func_002675a8,"ax",@progbits
-	.globl	func_002675a8
-	.ent	func_002675a8
-func_002675a8:  /* 0x002675A8 */
+	.section	.text.sceVu0CopyVector,"ax",@progbits
+	.globl	sceVu0CopyVector
+	.ent	sceVu0CopyVector
+sceVu0CopyVector:  /* 0x002675A8 */
 	.word	0x78A60000  /* 002675A8 lq $a2,0($a1) */
 	.word	0x03E00008  /* 002675AC jr $ra */
 	.word	0x7C860000  /* 002675B0 sq $a2,0($a0) */
-	.end	func_002675a8
+	.end	sceVu0CopyVector
 
 	.section	.text.sceVu0CopyMatrix,"ax",@progbits
 	.globl	sceVu0CopyMatrix
@@ -277,45 +277,45 @@ sceVu0CopyMatrix:  /* 0x002675B8 */
 	.word	0x7C890030  /* 002675D8 sq $t1,48($a0) */
 	.end	sceVu0CopyMatrix
 
-	.section	.text.func_002675e0,"ax",@progbits
-	.globl	func_002675e0
-	.ent	func_002675e0
-func_002675e0:  /* 0x002675E0 */
+	.section	.text.sceVu0FTOI4Vector,"ax",@progbits
+	.globl	sceVu0FTOI4Vector
+	.ent	sceVu0FTOI4Vector
+sceVu0FTOI4Vector:  /* 0x002675E0 */
 	.word	0xD8A40000  /* 002675E0 lqc2 $vf4,0($a1) */
 	.word	0x4BE5217D  /* 002675E4 vftoi4.xyzw $vf5xyzw,$vf4xyzw */
 	.word	0x03E00008  /* 002675E8 jr $ra */
 	.word	0xF8850000  /* 002675EC sqc2 $vf5,0($a0) */
-	.end	func_002675e0
+	.end	sceVu0FTOI4Vector
 
-	.section	.text.func_002675f0,"ax",@progbits
-	.globl	func_002675f0
-	.ent	func_002675f0
-func_002675f0:  /* 0x002675F0 */
+	.section	.text.sceVu0FTOI0Vector,"ax",@progbits
+	.globl	sceVu0FTOI0Vector
+	.ent	sceVu0FTOI0Vector
+sceVu0FTOI0Vector:  /* 0x002675F0 */
 	.word	0xD8A40000  /* 002675F0 lqc2 $vf4,0($a1) */
 	.word	0x4BE5217C  /* 002675F4 vftoi0.xyzw $vf5xyzw,$vf4xyzw */
 	.word	0x03E00008  /* 002675F8 jr $ra */
 	.word	0xF8850000  /* 002675FC sqc2 $vf5,0($a0) */
-	.end	func_002675f0
+	.end	sceVu0FTOI0Vector
 
-	.section	.text.func_00267600,"ax",@progbits
-	.globl	func_00267600
-	.ent	func_00267600
-func_00267600:  /* 0x00267600 */
+	.section	.text.sceVu0ITOF4Vector,"ax",@progbits
+	.globl	sceVu0ITOF4Vector
+	.ent	sceVu0ITOF4Vector
+sceVu0ITOF4Vector:  /* 0x00267600 */
 	.word	0xD8A40000  /* 00267600 lqc2 $vf4,0($a1) */
 	.word	0x4BE5213D  /* 00267604 vitof4.xyzw $vf5xyzw,$vf4xyzw */
 	.word	0x03E00008  /* 00267608 jr $ra */
 	.word	0xF8850000  /* 0026760C sqc2 $vf5,0($a0) */
-	.end	func_00267600
+	.end	sceVu0ITOF4Vector
 
-	.section	.text.func_00267610,"ax",@progbits
-	.globl	func_00267610
-	.ent	func_00267610
-func_00267610:  /* 0x00267610 */
+	.section	.text.sceVu0ITOF0Vector,"ax",@progbits
+	.globl	sceVu0ITOF0Vector
+	.ent	sceVu0ITOF0Vector
+sceVu0ITOF0Vector:  /* 0x00267610 */
 	.word	0xD8A40000  /* 00267610 lqc2 $vf4,0($a1) */
 	.word	0x4BE5213C  /* 00267614 vitof0.xyzw $vf5xyzw,$vf4xyzw */
 	.word	0x03E00008  /* 00267618 jr $ra */
 	.word	0xF8850000  /* 0026761C sqc2 $vf5,0($a0) */
-	.end	func_00267610
+	.end	sceVu0ITOF0Vector
 
 	.section	.text.sceVu0UnitMatrix,"ax",@progbits
 	.globl	sceVu0UnitMatrix
@@ -333,10 +333,10 @@ sceVu0UnitMatrix:  /* 0x00267620 */
 	.word	0xF8870000  /* 00267644 sqc2 $vf7,0($a0) */
 	.end	sceVu0UnitMatrix
 
-	.section	.text.func_00267648,"ax",@progbits
-	.globl	func_00267648
-	.ent	func_00267648
-func_00267648:  /* 0x00267648 */
+	.section	.text._sceVu0ecossin,"ax",@progbits
+	.globl	_sceVu0ecossin
+	.ent	_sceVu0ecossin
+_sceVu0ecossin:  /* 0x00267648 */
 	.word	0x3C080000  /* 00267648 lui $t0,%hi(D_0046C580) */
 	.reloc	.-4, R_MIPS_HI16, D_0046C580
 	.word	0x25080000  /* 0026764C addiu $t0,$t0,%lo(D_0046C580) */
@@ -368,12 +368,12 @@ func_00267648:  /* 0x00267648 */
 	.word	0x4B072904  /* 002676B0 vsubx.x $vf4x,$vf5x,$vf7x */
 	.word	0x03E00008  /* 002676B4 jr $ra */
 	.word	0x00000000  /* 002676B8 nop */
-	.end	func_00267648
+	.end	_sceVu0ecossin
 
-	.section	.text.func_002676c0,"ax",@progbits
-	.globl	func_002676c0
-	.ent	func_002676c0
-func_002676c0:  /* 0x002676C0 */
+	.section	.text.sceVu0RotMatrixZ,"ax",@progbits
+	.globl	sceVu0RotMatrixZ
+	.ent	sceVu0RotMatrixZ
+sceVu0RotMatrixZ:  /* 0x002676C0 */
 	.word	0x44800000  /* 002676C0 mtc1 $zero,$f0 */
 	.word	0x46006034  /* 002676C4 c.lt.s $f12,$f0 */
 	.word	0x3C013FC9  /* 002676C8 lui $at,0x3fc9 */
@@ -383,15 +383,15 @@ func_002676c0:  /* 0x002676C0 */
 	.word	0x00000000  /* 002676D8 nop */
 	.word	0x460C0300  /* 002676DC add.s $f12,$f0,$f12 */
 	.word	0x08000000  /* 002676E0 j .L002676F0 */
-	.reloc	.-4, R_MIPS_26, func_002676c0+0x30
+	.reloc	.-4, R_MIPS_26, sceVu0RotMatrixZ+0x30
 	.word	0x24070001  /* 002676E4 li $a3,1 */
 	.word	0x460C0301  /* 002676E8 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 002676EC move $a3,$zero */
 	.word	0x44086000  /* 002676F0 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 002676F4 qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 002676F8 move $a2,$ra */
-	.word	0x0C000000  /* 002676FC jal func_00267648 */
-	.reloc	.-4, R_MIPS_26, func_00267648
+	.word	0x0C000000  /* 002676FC jal _sceVu0ecossin */
+	.reloc	.-4, R_MIPS_26, _sceVu0ecossin
 	.word	0x00000000  /* 00267700 nop */
 	.word	0x00C0F82D  /* 00267704 move $ra,$a2 */
 	.word	0x4BE62B3C  /* 00267708 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -417,12 +417,12 @@ func_002676c0:  /* 0x002676C0 */
 	.word	0x20840010  /* 00267758 addi $a0,$a0,16 */
 	.word	0x03E00008  /* 0026775C jr $ra */
 	.word	0x00000000  /* 00267760 nop */
-	.end	func_002676c0
+	.end	sceVu0RotMatrixZ
 
-	.section	.text.func_00267768,"ax",@progbits
-	.globl	func_00267768
-	.ent	func_00267768
-func_00267768:  /* 0x00267768 */
+	.section	.text.sceVu0RotMatrixX,"ax",@progbits
+	.globl	sceVu0RotMatrixX
+	.ent	sceVu0RotMatrixX
+sceVu0RotMatrixX:  /* 0x00267768 */
 	.word	0x44800000  /* 00267768 mtc1 $zero,$f0 */
 	.word	0x46006034  /* 0026776C c.lt.s $f12,$f0 */
 	.word	0x3C013FC9  /* 00267770 lui $at,0x3fc9 */
@@ -432,15 +432,15 @@ func_00267768:  /* 0x00267768 */
 	.word	0x00000000  /* 00267780 nop */
 	.word	0x460C0300  /* 00267784 add.s $f12,$f0,$f12 */
 	.word	0x08000000  /* 00267788 j .L00267798 */
-	.reloc	.-4, R_MIPS_26, func_00267768+0x30
+	.reloc	.-4, R_MIPS_26, sceVu0RotMatrixX+0x30
 	.word	0x24070001  /* 0026778C li $a3,1 */
 	.word	0x460C0301  /* 00267790 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 00267794 move $a3,$zero */
 	.word	0x44086000  /* 00267798 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 0026779C qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 002677A0 move $a2,$ra */
-	.word	0x0C000000  /* 002677A4 jal func_00267648 */
-	.reloc	.-4, R_MIPS_26, func_00267648
+	.word	0x0C000000  /* 002677A4 jal _sceVu0ecossin */
+	.reloc	.-4, R_MIPS_26, _sceVu0ecossin
 	.word	0x00000000  /* 002677A8 nop */
 	.word	0x00C0F82D  /* 002677AC move $ra,$a2 */
 	.word	0x4BE62B3C  /* 002677B0 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -467,12 +467,12 @@ func_00267768:  /* 0x00267768 */
 	.word	0x20840010  /* 00267804 addi $a0,$a0,16 */
 	.word	0x03E00008  /* 00267808 jr $ra */
 	.word	0x00000000  /* 0026780C nop */
-	.end	func_00267768
+	.end	sceVu0RotMatrixX
 
-	.section	.text.func_00267810,"ax",@progbits
-	.globl	func_00267810
-	.ent	func_00267810
-func_00267810:  /* 0x00267810 */
+	.section	.text.sceVu0RotMatrixY,"ax",@progbits
+	.globl	sceVu0RotMatrixY
+	.ent	sceVu0RotMatrixY
+sceVu0RotMatrixY:  /* 0x00267810 */
 	.word	0x44800000  /* 00267810 mtc1 $zero,$f0 */
 	.word	0x46006034  /* 00267814 c.lt.s $f12,$f0 */
 	.word	0x3C013FC9  /* 00267818 lui $at,0x3fc9 */
@@ -482,15 +482,15 @@ func_00267810:  /* 0x00267810 */
 	.word	0x00000000  /* 00267828 nop */
 	.word	0x460C0300  /* 0026782C add.s $f12,$f0,$f12 */
 	.word	0x08000000  /* 00267830 j .L00267840 */
-	.reloc	.-4, R_MIPS_26, func_00267810+0x30
+	.reloc	.-4, R_MIPS_26, sceVu0RotMatrixY+0x30
 	.word	0x24070001  /* 00267834 li $a3,1 */
 	.word	0x460C0301  /* 00267838 sub.s $f12,$f0,$f12 */
 	.word	0x0000382D  /* 0026783C move $a3,$zero */
 	.word	0x44086000  /* 00267840 mfc1 $t0,$f12 */
 	.word	0x48A83000  /* 00267844 qmtc2 $t0,$vf6 */
 	.word	0x03E0302D  /* 00267848 move $a2,$ra */
-	.word	0x0C000000  /* 0026784C jal func_00267648 */
-	.reloc	.-4, R_MIPS_26, func_00267648
+	.word	0x0C000000  /* 0026784C jal _sceVu0ecossin */
+	.reloc	.-4, R_MIPS_26, _sceVu0ecossin
 	.word	0x00000000  /* 00267850 nop */
 	.word	0x00C0F82D  /* 00267854 move $ra,$a2 */
 	.word	0x4BE62B3C  /* 00267858 vmove.xyzw $vf6xyzw,$vf5xyzw */
@@ -517,12 +517,12 @@ func_00267810:  /* 0x00267810 */
 	.word	0x20840010  /* 002678AC addi $a0,$a0,16 */
 	.word	0x03E00008  /* 002678B0 jr $ra */
 	.word	0x00000000  /* 002678B4 nop */
-	.end	func_00267810
+	.end	sceVu0RotMatrixY
 
-	.section	.text.func_00267908,"ax",@progbits
-	.globl	func_00267908
-	.ent	func_00267908
-func_00267908:  /* 0x00267908 */
+	.section	.text.sceVu0ClampVector,"ax",@progbits
+	.globl	sceVu0ClampVector
+	.ent	sceVu0ClampVector
+sceVu0ClampVector:  /* 0x00267908 */
 	.word	0x44086000  /* 00267908 mfc1 $t0,$f12 */
 	.word	0x44096800  /* 0026790C mfc1 $t1,$f13 */
 	.word	0xD8A60000  /* 00267910 lqc2 $vf6,0($a1) */
@@ -532,12 +532,12 @@ func_00267908:  /* 0x00267908 */
 	.word	0x4BE53194  /* 00267920 vminix.xyzw $vf6xyzw,$vf6xyzw,$vf5x */
 	.word	0x03E00008  /* 00267924 jr $ra */
 	.word	0xF8860000  /* 00267928 sqc2 $vf6,0($a0) */
-	.end	func_00267908
+	.end	sceVu0ClampVector
 
-	.section	.text.func_00267da0,"ax",@progbits
-	.globl	func_00267da0
-	.ent	func_00267da0
-func_00267da0:  /* 0x00267DA0 */
+	.section	.text.sceVu0RotTransPersN,"ax",@progbits
+	.globl	sceVu0RotTransPersN
+	.ent	sceVu0RotTransPersN
+sceVu0RotTransPersN:  /* 0x00267DA0 */
 	.word	0xD8A40000  /* 00267DA0 lqc2 $vf4,0($a1) */
 	.word	0xD8A50010  /* 00267DA4 lqc2 $vf5,16($a1) */
 	.word	0xD8A60020  /* 00267DA8 lqc2 $vf6,32($a1) */
@@ -560,12 +560,12 @@ func_00267da0:  /* 0x00267DA0 */
 	.word	0x20840010  /* 00267DEC addi $a0,$a0,16 */
 	.word	0x03E00008  /* 00267DF0 jr $ra */
 	.word	0x00000000  /* 00267DF4 nop */
-	.end	func_00267da0
+	.end	sceVu0RotTransPersN
 
-	.section	.text.func_00267df8,"ax",@progbits
-	.globl	func_00267df8
-	.ent	func_00267df8
-func_00267df8:  /* 0x00267DF8 */
+	.section	.text.sceVu0RotTransPers,"ax",@progbits
+	.globl	sceVu0RotTransPers
+	.ent	sceVu0RotTransPers
+sceVu0RotTransPers:  /* 0x00267DF8 */
 	.word	0xD8A40000  /* 00267DF8 lqc2 $vf4,0($a1) */
 	.word	0xD8A50010  /* 00267DFC lqc2 $vf5,16($a1) */
 	.word	0xD8A60020  /* 00267E00 lqc2 $vf6,32($a1) */
@@ -583,12 +583,12 @@ func_00267df8:  /* 0x00267DF8 */
 	.word	0x4A6A497C  /* 00267E30 vftoi0.zw $vf10zw,$vf9zw */
 	.word	0x03E00008  /* 00267E34 jr $ra */
 	.word	0xF88A0000  /* 00267E38 sqc2 $vf10,0($a0) */
-	.end	func_00267df8
+	.end	sceVu0RotTransPers
 
-	.section	.text.func_00267e60,"ax",@progbits
-	.globl	func_00267e60
-	.ent	func_00267e60
-func_00267e60:  /* 0x00267E60 */
+	.section	.text.sceVu0InterVectorXYZ,"ax",@progbits
+	.globl	sceVu0InterVectorXYZ
+	.ent	sceVu0InterVectorXYZ
+sceVu0InterVectorXYZ:  /* 0x00267E60 */
 	.word	0xD8A40000  /* 00267E60 lqc2 $vf4,0($a1) */
 	.word	0xD8C50000  /* 00267E64 lqc2 $vf5,0($a2) */
 	.word	0x44086000  /* 00267E68 mfc1 $t0,$f12 */
@@ -600,24 +600,24 @@ func_00267e60:  /* 0x00267E60 */
 	.word	0x4BC82A48  /* 00267E80 vmaddx.xyz $vf9xyz,$vf5xyz,$vf8x */
 	.word	0x03E00008  /* 00267E84 jr $ra */
 	.word	0xF8890000  /* 00267E88 sqc2 $vf9,0($a0) */
-	.end	func_00267e60
+	.end	sceVu0InterVectorXYZ
 
-	.section	.text.func_00267e90,"ax",@progbits
-	.globl	func_00267e90
-	.ent	func_00267e90
-func_00267e90:  /* 0x00267E90 */
+	.section	.text.sceVu0ScaleVectorXYZ,"ax",@progbits
+	.globl	sceVu0ScaleVectorXYZ
+	.ent	sceVu0ScaleVectorXYZ
+sceVu0ScaleVectorXYZ:  /* 0x00267E90 */
 	.word	0xD8A40000  /* 00267E90 lqc2 $vf4,0($a1) */
 	.word	0x44086000  /* 00267E94 mfc1 $t0,$f12 */
 	.word	0x48A82800  /* 00267E98 qmtc2 $t0,$vf5 */
 	.word	0x4BC52118  /* 00267E9C vmulx.xyz $vf4xyz,$vf4xyz,$vf5x */
 	.word	0x03E00008  /* 00267EA0 jr $ra */
 	.word	0xF8840000  /* 00267EA4 sqc2 $vf4,0($a0) */
-	.end	func_00267e90
+	.end	sceVu0ScaleVectorXYZ
 
-	.section	.text.func_00267ea8,"ax",@progbits
-	.globl	func_00267ea8
-	.ent	func_00267ea8
-func_00267ea8:  /* 0x00267EA8 */
+	.section	.text.sceVu0ClipScreen,"ax",@progbits
+	.globl	sceVu0ClipScreen
+	.ent	sceVu0ClipScreen
+sceVu0ClipScreen:  /* 0x00267EA8 */
 	.word	0x4BE0012C  /* 00267EA8 vsub.xyzw $vf4xyzw,$vf0xyzw,$vf0xyzw */
 	.word	0x3C024580  /* 00267EAC lui $v0,0x4580 */
 	.word	0x00021438  /* 00267EB0 dsll $v0,$v0,0x10 */
@@ -636,12 +636,12 @@ func_00267ea8:  /* 0x00267EA8 */
 	.word	0x48428000  /* 00267EE4 cfc2 $v0,$vi16 */
 	.word	0x03E00008  /* 00267EE8 jr $ra */
 	.word	0x304200C0  /* 00267EEC andi $v0,$v0,0xc0 */
-	.end	func_00267ea8
+	.end	sceVu0ClipScreen
 
-	.section	.text.func_00267ef0,"ax",@progbits
-	.globl	func_00267ef0
-	.ent	func_00267ef0
-func_00267ef0:  /* 0x00267EF0 */
+	.section	.text.sceVu0ClipScreen3,"ax",@progbits
+	.globl	sceVu0ClipScreen3
+	.ent	sceVu0ClipScreen3
+sceVu0ClipScreen3:  /* 0x00267EF0 */
 	.word	0x4BE0012C  /* 00267EF0 vsub.xyzw $vf4xyzw,$vf0xyzw,$vf0xyzw */
 	.word	0x3C024580  /* 00267EF4 lui $v0,0x4580 */
 	.word	0x00021438  /* 00267EF8 dsll $v0,$v0,0x10 */
@@ -666,12 +666,12 @@ func_00267ef0:  /* 0x00267EF0 */
 	.word	0x48428000  /* 00267F44 cfc2 $v0,$vi16 */
 	.word	0x03E00008  /* 00267F48 jr $ra */
 	.word	0x304200C0  /* 00267F4C andi $v0,$v0,0xc0 */
-	.end	func_00267ef0
+	.end	sceVu0ClipScreen3
 
-	.section	.text.func_00267f50,"ax",@progbits
-	.globl	func_00267f50
-	.ent	func_00267f50
-func_00267f50:  /* 0x00267F50 */
+	.section	.text.sceVu0ClipAll,"ax",@progbits
+	.globl	sceVu0ClipAll
+	.ent	sceVu0ClipAll
+sceVu0ClipAll:  /* 0x00267F50 */
 	.word	0xD8E80000  /* 00267F50 lqc2 $vf8,0($a3) */
 	.word	0xD8C40000  /* 00267F54 lqc2 $vf4,0($a2) */
 	.word	0xD8C50010  /* 00267F58 lqc2 $vf5,16($a2) */
@@ -707,12 +707,12 @@ func_00267f50:  /* 0x00267F50 */
 	.word	0x20020001  /* 00267FD0 addi $v0,$zero,1 */
 	.word	0x03E00008  /* 00267FD4 jr $ra */
 	.word	0x00000000  /* 00267FD8 nop */
-	.end	func_00267f50
+	.end	sceVu0ClipAll
 
-	.section	.text.func_00267fe0,"ax",@progbits
-	.globl	func_00267fe0
-	.ent	func_00267fe0
-func_00267fe0:  /* 0x00267FE0 */
+	.section	.text.sceVpu0Reset,"ax",@progbits
+	.globl	sceVpu0Reset
+	.ent	sceVpu0Reset
+sceVpu0Reset:  /* 0x00267FE0 */
 	.word	0x3C021000  /* 00267FE0 lui $v0,0x1000 */
 	.word	0x3C041000  /* 00267FE4 lui $a0,0x1000 */
 	.word	0x34423830  /* 00267FE8 ori $v0,$v0,0x3830 */
@@ -738,4 +738,4 @@ func_00267fe0:  /* 0x00267FE0 */
 	.word	0x78830010  /* 00268030 lq $v1,16($a0) */
 	.word	0x03E00008  /* 00268034 jr $ra */
 	.word	0x7CA30000  /* 00268038 sq $v1,0($a1) */
-	.end	func_00267fe0
+	.end	sceVpu0Reset

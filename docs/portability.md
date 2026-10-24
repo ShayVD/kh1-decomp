@@ -18,6 +18,12 @@ rewrite matched code.
    `include/platform/pad.h` is the template. `include/platform/mc.h` (session 44)
    wraps libmc for src/memcard/, the only code that calls it; the save and
    load screens queue requests (include/memcard/mcreq.h) and never touch libmc.
+   Session 45 put the GS packet code in src/gfx/ (gspkt*.c: the drawing
+   environment and the GIF DMA sender func_00237018, which tests for the
+   scratchpad at 0x70000000; drawlist*.c and prim*.c build GS primitives
+   with libvu0) and named libvu0 (docs/sdk.md): the next wrappers are
+   include/platform/gs.h for func_00237018, FlushCache and sceGsSyncPath, and a
+   vector maths header for the sceVu0 calls.
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under

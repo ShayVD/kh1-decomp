@@ -328,3 +328,59 @@ func_00270d88 (RPC 20, one argument; most likely sceMcChangeThreadPriority) and 
 called by the game and keep their placeholder names. include/sce/libmc.h has the public signatures and
 include/platform/mc.h the PlatMc wrappers (docs/portability.md).
 
+
+## Session 45: libvu0
+
+libvu0's functions are named in functions.tsv (39 names; sceVu0MulMatrix, sceVu0CopyMatrix and sceVu0UnitMatrix were
+named before) from their code: each is the routine its VU0 macro instructions compute, in the order the public
+libvu0 lists them (ApplyMatrix, MulMatrix, OuterProduct ... ClipAll), with the unnamed gaps filled by that order and
+checked against the code.  The SDK definitions (src/sdk/libvu0/vu0.s, src/sdk/gcc991111*/) take the names; game
+code still calls the func_ names, which the normal build PROVIDEs and the shift link aliases (shift_ld.py), so
+callers can switch one file at a time.
+
+| address | name | evidence |
+|---|---|---|
+| 0x002672f8 | sceVu0ApplyMatrix | v0 = m0 x v1 (lqc2 the matrix, vmula/vmadd) |
+| 0x00267370 | sceVu0OuterProduct | vopmula / vopmsub, w cleared |
+| 0x00267390 | sceVu0InnerProduct | vmul.xyz, x+y+z returned in f0 |
+| 0x002673b8 | sceVu0Normalize | vrsqrt of the sum of squares (c2 0x503bd), xyz scaled |
+| 0x002673f8 | sceVu0TransposeMatrix | pextlw / pextuw / pcpyld / pcpyud of four rows |
+| 0x00267440 | sceVu0InversMatrix | transpose of the rotation, -translation (rigid inverse) |
+| 0x002674b0 | sceVu0DivVector | vdiv Q = 1 / f12, xyzw scaled |
+| 0x002674d0 | sceVu0DivVectorXYZ | vdiv Q = 1 / f12, xyz scaled |
+| 0x002674f0 | sceVu0InterVector | v1 * t + v2 * (1 - t), xyzw |
+| 0x00267518 | sceVu0AddVector | vadd.xyzw |
+| 0x00267530 | sceVu0SubVector | vsub.xyzw |
+| 0x00267548 | sceVu0MulVector | vmul.xyzw |
+| 0x00267560 | sceVu0ScaleVector | vmulx.xyzw by f12 |
+| 0x00267578 | sceVu0TransMatrix | copy m1, row 3 += v |
+| 0x002675a8 | sceVu0CopyVector | one lq / sq |
+| 0x002675e0 | sceVu0FTOI4Vector | vftoi4 |
+| 0x002675f0 | sceVu0FTOI0Vector | vftoi0 |
+| 0x00267600 | sceVu0ITOF4Vector | vitof4 |
+| 0x00267610 | sceVu0ITOF0Vector | vitof0 |
+| 0x00267648 | _sceVu0ecossin | the sine / cosine series the rotations call (D_0046C580 coefficients) |
+| 0x002676c0 | sceVu0RotMatrixZ | pi/2 - angle into _sceVu0ecossin, rotates the x / y rows |
+| 0x00267768 | sceVu0RotMatrixX | the y / z rows |
+| 0x00267810 | sceVu0RotMatrixY | the x / z rows |
+| 0x002678b8 | sceVu0RotMatrix | RotMatrixZ (rot[2]), RotMatrixY (rot[1]), RotMatrixX (rot[0]) |
+| 0x00267908 | sceVu0ClampVector | vmaxx / vminix by f12 / f13 |
+| 0x00267930 | sceVu0CameraMatrix | unit, outer products of z and y, normalized, transposed, translated by -p |
+| 0x002679e0 | sceVu0NormalLightMatrix | three light directions scaled by -1 and normalized |
+| 0x00267aa0 | sceVu0LightColorMatrix | four CopyVector calls (c0, c1, c2, ambient) |
+| 0x00267b08 | sceVu0ViewScreenMatrix | the screen distance, aspect and depth range in f12-f19 and a stack float |
+| 0x00267c10 | sceVu0DropShadowMatrix | light vector and plane (a, b, c, d), two modes |
+| 0x00267da0 | sceVu0RotTransPersN | n vertices: m x v, divide by w, vftoi4 (mode: z / w by vftoi0) |
+| 0x00267df8 | sceVu0RotTransPers | the same for one vertex |
+| 0x00267e40 | sceVu0CopyVectorXYZ | three lwc1 / swc1 |
+| 0x00267e60 | sceVu0InterVectorXYZ | InterVector with v1's w kept |
+| 0x00267e90 | sceVu0ScaleVectorXYZ | vmulx.xyz by f12 |
+| 0x00267ea8 | sceVu0ClipScreen | one vertex against (0, 0) and (4096, 4096) through the clip flags (vi16 & 0xc0) |
+| 0x00267ef0 | sceVu0ClipScreen3 | three vertices, the same flags |
+| 0x00267f50 | sceVu0ClipAll | near / far plane clip of a vertex list (min, max, matrix, list, n) |
+| 0x00267fe0 | sceVpu0Reset | VIF0 registers (0x10003810 ... 0x10003830), FBRST bit 1, VIF0 FIFO |
+
+func_00268040 after it is not libvu0 (sceSifCallRpc 0x80000963: another library's RPC) and keeps its placeholder.
+The game uses them through the menu models' camera (src/menu/mdlcam.c), the draw list and the batch senders
+(src/gfx/), and about 300 other call sites; a `Plat` vector maths header (docs/portability.md rule 4) can wrap them
+by these names.

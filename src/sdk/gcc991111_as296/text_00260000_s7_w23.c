@@ -62,9 +62,9 @@ void func_00266bd0(void *, s32);
  * halves, ring buffer address and size. */
 typedef struct { u8 sts, std, mfd, rcyc; u16 express, notify; u16 sqwc, tqwc; void *rbadr; u32 rbmsk; } DmaEnv;
 s32 func_00266d10(DmaEnv *);
-void func_00267560(f32 *, f32 *, f32);
-void func_002673b8(f32 *, f32 *);
-void func_002673f8(f32 *, f32 *);
+void sceVu0ScaleVector(f32 *, f32 *, f32);
+void sceVu0Normalize(f32 *, f32 *);
+void sceVu0TransposeMatrix(f32 *, f32 *);
 void *func_002654e0(void);
 s32 func_0026a0e0(s32);
 s32 func_002585f0(void);

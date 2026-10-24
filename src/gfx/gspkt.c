@@ -1,64 +1,31 @@
+/* GS packets (docs/modules.md "Session 45"), 0x00236fd8-0x00237548 (with
+ * gspkt.nostrict_nofill.c's func_00237018).
+ * func_00236fd8(tag, end) writes a GIFtag for the A+D qwords up to `end`
+ * (NLOOP = qwords - 1, EOP, NREG 1, REGS 0xE) and func_00237008(reg, data,
+ * p) one A+D qword, returning the next.  func_002370c8(p) fills p[2..43]
+ * with the default drawing environment (two GIFtags: FRAME_1 512 wide,
+ * ZBUF_1, XYOFFSET_1 (0x7000, 0x7400), SCISSOR_1 512x384, TEST_1, ALPHA_1,
+ * FBA_1, TEX0/1/2_1, MIPTBP1/2_1, CLAMP_1, PRMODECONT, COLCLAMP, then DTHE,
+ * DIMX, PABE, TEXA); func_002372e0 sends it from D_006480D0 and
+ * func_00237318 sends a variant (TEST_1 0x5000D, ALPHA_1 0x44, CLAMP_1 5).
+ * func_00237018 (gspkt.nostrict_nofill.c) sends a packet of n qwords over
+ * the GIF DMA channel.  Callers outside: the HUD and the sprite code from
+ * 0x00238000 on, the menus' backgrounds. */
 #include "common.h"
-#include "data/pieces/D_00425F70.h"
+#include "gfx/gspkt.h"
 
-#include "platform/math.h"
-#include "data/bss_0064.h"
-typedef f32 MTX[4][4] __attribute__((aligned(16)));
-typedef f32 VEC[4] __attribute__((aligned(16)));
-#include "data/pieces/D_00425CE0.h"
-f32 atan2f(f32, f32);
-void func_00236d48(void *, void *, void *);
-void func_002672f8(void *, void *, void *);
-void func_00267768(void *, void *, f32);
-void func_00267810(void *, void *, f32);
-void func_00267930(void *, void *, void *, void *);
-void sceVu0UnitMatrix(void *);
-void sceVu0MulMatrix(void *, void *, void *);
-void func_002673b8(void *, void *);
+extern u64 D_006480D0[]; /* src/data/bss_0064.c: u64 D_006480D0[0x2c] */
 
-#define C D_00425F70
-void func_00236a58(void) {
-    MTX m;
-    VEC v;
-    VEC a;
-    VEC b;
-    f32 dx, dy, dz;
-    if (C->x1e0 == 0) {
-        dx = C->tx - C->px;
-        dz = C->tz - C->pz;
-        dy = C->ty - C->py;
-        C->rz = 0;
-        C->rx = atan2f(-dy, PlatSqrtf(dx * dx + dz * dz));
-        C->ry = atan2f(dx, dz);
-    } else {
-        func_00236d48(m, D_00425CE0, &C->rx);
-        v[0] = 0;
-        v[1] = 0;
-        v[2] = C->dist;
-        v[3] = 1.0f;
-        func_002672f8(v, m, v);
-        C->px = C->tx + v[0];
-        dx = C->tx - C->px;
-        C->py = C->ty + v[1];
-        dy = C->ty - C->py;
-        C->pz = C->tz + v[2];
-        dz = C->tz - C->pz;
-    }
-    func_00267768(m, D_00425CE0, C->rx);
-    func_00267810(m, m, C->ry);
-    func_002672f8(a, m, C->v160);
-    func_002672f8(b, m, C->v170);
-    func_00267930(C->m80, &C->px, a, b);
-    sceVu0UnitMatrix(C->mc0);
-    func_00236d48(C->mc0, C->mc0, &C->rx);
-    sceVu0MulMatrix(C->m0, C->m40, C->m80);
-    C->v190[0] = dx;
-    C->v190[1] = dy;
-    C->v190[2] = dz;
-    C->v190[3] = 1.0f;
-    func_002673b8(C->v190, C->v190);
+void func_00236fd8(u64 *tag, u64 *end) {
+    tag[1] = 0xE;
+    tag[0] = (((s32)((u8 *)end - (u8 *)tag) >> 4) - 1) | 0x8000 | ((u64)0x8000 << 45);
 }
-#undef C
+
+u64 *func_00237008(u64 reg, u64 data, u64 *p) {
+    p[0] = data;
+    p[1] = reg;
+    return p + 2;
+}
 
 void func_002370c8(u64 *p) {
     p[2] = 0xF000000000000001ULL;
@@ -105,8 +72,10 @@ void func_002370c8(u64 *p) {
     p[43] = 0x3BULL;
 }
 
-extern u64 D_006480D0[];
-void func_00237018(void *, s32, s32);
+void func_002372e0(void) {
+    func_002370c8(D_006480D0);
+    func_00237018(D_006480D0, 22, 1);
+}
 
 void func_00237318(void) {
     D_006480D0[2] = 0xF000000000000001ULL;
@@ -153,6 +122,3 @@ void func_00237318(void) {
     D_006480D0[43] = 0x3BULL;
     func_00237018(D_006480D0, 22, 1);
 }
-
-#include "data/data_003F.h"
-#include "data/data_0042.h"

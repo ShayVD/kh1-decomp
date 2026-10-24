@@ -15,7 +15,5 @@ extern s32 D_00425C20;
 extern s32 D_00425CB0;
 extern s32 D_00425CD0[];
 extern s32 D_00425F78;
-extern M2C_UNK D_00425F80;
-extern M2C_UNK D_00425F88;
 
 #endif /* KH1_DATA_DATA_0042_H */
