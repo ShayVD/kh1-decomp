@@ -5,6 +5,7 @@
  * func_0017ecf8 as a task) and starting a screen shake (func_0017f580).
  * camctl.c has the rest.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00170000_b06.h"
 #include "data/pieces/D_00362438.h"
 #include "data/pieces/D_002C58A0.h"
@@ -39,7 +40,6 @@ extern ActB *D_00575894;
 extern s32 D_00575890;
 extern V4 D_005758E0;
 void func_00176f08(s32, f32);
-void func_002675a8(void *, void *);
 extern s32 D_00362448;
 extern s32 D_002E27A8;
 extern S920 D_00575920;
@@ -54,7 +54,7 @@ s32 func_0017d628(void) {
     if (D_002E27A8 == 2) return 0;
     if (!D_00362424) return 0;
     if (((*(u32 *)&D_002C5960) >> 4) & 1) return 0;
-    func_002675a8(&pos, &D_00575894->x10);
+    PlatVu0CopyVector(&pos, &D_00575894->x10);
     pos.y -= 100.0f;
     for (i = 0; i < D_00362448; i++) {
         e = &D_00362430[i];
@@ -96,7 +96,7 @@ s32 func_0017d628(void) {
         if (D_0036243C->x24 & 1) {
             if (D_0036243C->x24 & 2) {
                 if (D_00575920.x0) {
-                    func_002675a8(&D_00575920.x10, &D_005758E0);
+                    PlatVu0CopyVector(&D_00575920.x10, &D_005758E0);
                     func_00176f08(3, 30.0f);
                 } else {
                     func_00176f08(1, 30.0f);

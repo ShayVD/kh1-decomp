@@ -17,6 +17,7 @@
  * runs the active channels every frame.  They need func_001c6890 defined
  * above them, so core and script functions were one translation unit. */
 #include "common.h"
+#include "platform/vu.h"
 #include "camera/camera.h"
 #include "vm/vm_mgr.h"
 #include "data/types/vm_rec.h"
@@ -45,13 +46,6 @@ typedef struct { u8 pad[16]; FVec4 pos; u8 pad32[28]; f32 roty; } CamObj;
 
 void *memcpy(void *, const void *, u32);
 void *memset(void *, s32, u32);
-void sceVu0UnitMatrix(f32 (*m)[4]);
-void func_00267768(f32 (*d)[4], f32 (*s)[4], f32 r);
-void func_00267810(f32 (*d)[4], f32 (*s)[4], f32 r);
-void func_002676c0(f32 (*d)[4], f32 (*s)[4], f32 r);
-void func_00267578(f32 (*d)[4], f32 (*s)[4], f32 *v);
-void func_002672f8(void *d, f32 (*m)[4], void *s);
-void func_002675a8(void *d, void *s);
 void func_00124c68(f32);
 void func_0011ef10(s32, void *);
 void func_001e9d00(void *d, void *a, void *b, f32 t);
@@ -74,9 +68,9 @@ void func_001c5168(void) {
         break;
     case 2:
         CAM.d.y += ((CamObj *)g->x306c)->roty;
-        sceVu0UnitMatrix(m);
-        func_00267810(m, m, ((CamObj *)g->x306c)->roty);
-        func_002672f8(&CAM.a, m, &CAM.a);
+        PlatVu0UnitMatrix(m);
+        PlatVu0RotMatrixY(m, m, ((CamObj *)g->x306c)->roty);
+        PlatVu0ApplyMatrix(&CAM.a, m, &CAM.a);
         CAM.a.x += ((CamObj *)g->x306c)->pos.x;
         CAM.a.y += ((CamObj *)g->x306c)->pos.y;
         CAM.a.z += ((CamObj *)g->x306c)->pos.z;
@@ -89,9 +83,9 @@ void func_001c5168(void) {
         a.x += ((CamObj *)g->f3070.i[0])->pos.x;
         a.y += ((CamObj *)g->f3070.i[0])->pos.y;
         a.z += ((CamObj *)g->f3070.i[0])->pos.z;
-        sceVu0UnitMatrix(m);
-        func_00267810(m, m, ((CamObj *)g->x306c)->roty);
-        func_002672f8(&CAM.a, m, &CAM.a);
+        PlatVu0UnitMatrix(m);
+        PlatVu0RotMatrixY(m, m, ((CamObj *)g->x306c)->roty);
+        PlatVu0ApplyMatrix(&CAM.a, m, &CAM.a);
         CAM.a.x += ((CamObj *)g->x306c)->pos.x;
         CAM.a.y += ((CamObj *)g->x306c)->pos.y;
         CAM.a.z += ((CamObj *)g->x306c)->pos.z;
@@ -139,7 +133,7 @@ s32 func_001c5b88(void) {
         D_003C5510.f120 = c->f60;
         D_003C5510.f124 = c->fE0F4;
         func_001c6a20();
-        if ((s32)(D_003C5510.fl.x >> 8) & 1) func_002675a8(D_003C5510.base, D_003C5510.pos);
+        if ((s32)(D_003C5510.fl.x >> 8) & 1) PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
     }
     return 4;
 }
@@ -301,7 +295,7 @@ void func_001c6720(void) {
     D_003C5510.f120 = 1000.0f;
     D_003C5510.f124 = 53.0f;
     func_001c6890();
-    func_002675a8(&v, D_003C5510.rot);
+    PlatVu0CopyVector(&v, D_003C5510.rot);
     v.y += 3.1415928f;
     func_001e9fe8(&v, &v);
     D_003C5510.f128 = v.y;
@@ -317,8 +311,8 @@ void func_001c6890(void) {
     memset(&a, 0, 16);
     a.w = 1.0f;
     memset(&r, 0, 16);
-    func_002675a8(&a, &D_002E2780);
-    func_002675a8(D_003C5510.pos, &D_002E2790);
+    PlatVu0CopyVector(&a, &D_002E2780);
+    PlatVu0CopyVector(D_003C5510.pos, &D_002E2790);
     D_003C5510.f120 = func_001e9e58(&a, D_003C5510.pos);
     D_003C5510.f124 = D_002E27A0;
     func_001e9d00(&r, D_003C5510.pos, &a, D_002E27A4);
@@ -330,17 +324,17 @@ void func_001c6890(void) {
     D_003C5510.v110[1] = 1.0f;
     D_003C5510.v110[2] = 0.0f;
     D_003C5510.v110[3] = 1.0f;
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, r.x);
-    func_00267810(m, m, r.y);
-    func_002672f8(D_003C5510.v100, m, D_003C5510.v100);
-    func_002672f8(&a, m, &a);
-    func_002675a8(D_003C5510.rot, &r);
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, r.x);
-    func_00267810(m, m, r.y);
-    func_002676c0(m, m, r.z);
-    func_002672f8(D_003C5510.v110, m, D_003C5510.v110);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, r.x);
+    PlatVu0RotMatrixY(m, m, r.y);
+    PlatVu0ApplyMatrix(D_003C5510.v100, m, D_003C5510.v100);
+    PlatVu0ApplyMatrix(&a, m, &a);
+    PlatVu0CopyVector(D_003C5510.rot, &r);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, r.x);
+    PlatVu0RotMatrixY(m, m, r.y);
+    PlatVu0RotMatrixZ(m, m, r.z);
+    PlatVu0ApplyMatrix(D_003C5510.v110, m, D_003C5510.v110);
 }
 
 /* Set the view from the camera. */
@@ -369,33 +363,33 @@ void func_001c6a20(void) {
     D_003C5510.v110[3] = 1.0f;
     D_003C5510.v110[0] = 0.0f;
     D_003C5510.v110[2] = 0.0f;
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, D_003C5510.rx);
-    func_00267810(m, m, D_003C5510.ry);
-    func_002676c0(m, m, D_003C5510.rz);
-    func_00267578(m, m, t);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(v, m, v);
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, 0.0f);
-    func_002672f8(D_003C5510.v100, m, D_003C5510.v100);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, D_003C5510.rx);
+    PlatVu0RotMatrixY(m, m, D_003C5510.ry);
+    PlatVu0RotMatrixZ(m, m, D_003C5510.rz);
+    PlatVu0TransMatrix(m, m, t);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0RotMatrixZ(m, m, 0.0f);
+    PlatVu0ApplyMatrix(v, m, v);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0RotMatrixZ(m, m, 0.0f);
+    PlatVu0ApplyMatrix(D_003C5510.v100, m, D_003C5510.v100);
     v[0] = -v[0];
     v[1] = -v[1];
     v[2] = -v[2];
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, rot[2]);
-    func_002672f8(D_003C5510.v110, m, D_003C5510.v110);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0RotMatrixZ(m, m, rot[2]);
+    PlatVu0ApplyMatrix(D_003C5510.v110, m, D_003C5510.v110);
     v[0] += D_003C5510.pos[0];
     v[1] += D_003C5510.pos[1];
     v[2] += D_003C5510.pos[2];
-    func_002675a8(&D_002E2780.x, v);
-    func_002675a8(&D_002E2790.x, D_003C5510.pos);
+    PlatVu0CopyVector(&D_002E2780.x, v);
+    PlatVu0CopyVector(&D_002E2790.x, D_003C5510.pos);
     D_002E27A4 = rot[2];
 }
 
@@ -413,9 +407,9 @@ s32 func_001c8168(VmRec *vm) {
     t.z = vm->stk[vm->sp];
     D_003C5510.f120 = func_001e9e58(&t, D_003C5510.pos);
     func_001e9d00(&r, D_003C5510.pos, &t, D_003C5510.rot[2]);
-    func_002675a8(D_003C5510.rot, &r);
+    PlatVu0CopyVector(D_003C5510.rot, &r);
     func_001c6a20();
-    if ((s32)(D_003C5510.fl.x >> 8) & 1) func_002675a8(D_003C5510.base, D_003C5510.pos);
+    if ((s32)(D_003C5510.fl.x >> 8) & 1) PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
     vm->sp -= 3;
     return 2;
 }
@@ -427,7 +421,7 @@ s32 func_001c8260(VmRec *vm) {
     D_003C5510.pos[1] = vm->stk[vm->sp - 1];
     D_003C5510.pos[2] = vm->stk[vm->sp];
     func_001c6a20();
-    if ((s32)(D_003C5510.fl.x >> 8) & 1) func_002675a8(D_003C5510.base, D_003C5510.pos);
+    if ((s32)(D_003C5510.fl.x >> 8) & 1) PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
     vm->sp -= 3;
     return 2;
 }
@@ -647,7 +641,6 @@ void func_001c8d18(void) {
 /* func_001c8d98 (start channel 3, linear) is in camera.nostrict.c. */
 
 s32 rand(void);
-void func_00267518(void *d, void *a, void *b);
 
 /* Bit 8, run as a task while set: shake the camera around `base` by
  * random offsets up to amp, scaled by smode's envelope over sdur frames. */
@@ -690,16 +683,16 @@ s32 func_001c8e20(void) {
     v[1] = y;
     v[2] = z;
     v[3] = 1.0f;
-    sceVu0UnitMatrix(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002672f8(v, m, v);
-    func_00267518(D_003C5510.pos, D_003C5510.base, v);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0ApplyMatrix(v, m, v);
+    PlatVu0AddVector(D_003C5510.pos, D_003C5510.base, v);
     func_001c6a20();
     D_003C5510.st += D_002BBDFC;
     if (D_003C5510.sdur <= D_003C5510.st) {
         D_003C5510.fl.s.b8 = 0;
-        func_002675a8(D_003C5510.pos, D_003C5510.base);
+        PlatVu0CopyVector(D_003C5510.pos, D_003C5510.base);
     }
     return 4;
 }
@@ -715,7 +708,7 @@ s32 func_001c91e8(VmRec *vm) {
         D_003C5510.amp[2] = vm->stk[vm->sp - 2];
         D_003C5510.smode = vm->stk[vm->sp - 1];
         D_003C5510.sdur = vm->stk[vm->sp] * 2.0f;
-        func_002675a8(D_003C5510.base, D_003C5510.pos);
+        PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
     } else {
         D_003C5510.fl.x &= ~0x100;
     }
@@ -1048,8 +1041,8 @@ s32 func_001ca0f8(VmRec *vm) {
     f = vm->stk[vm->sp];
     func_00177900(a, b, vm->stk[vm->sp - 2] * 3.1415928f / 180.0f);
     if (vm->stk[vm->sp] == 0) {
-        func_002675a8(&D_002E2780, a);
-        func_002675a8(&D_002E2790, b);
+        PlatVu0CopyVector(&D_002E2780, a);
+        PlatVu0CopyVector(&D_002E2790, b);
         vm->sp -= 3;
         return 2;
     }
@@ -1212,13 +1205,13 @@ void func_001ca800(void) {
     if (B(0)) {
         func_001c8758();
         if (B(8)) {
-            func_002675a8(D_003C5510.base, D_003C5510.pos);
+            PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
         }
     }
     if (B(4)) {
         func_001c9308();
         if (B(8)) {
-            func_002675a8(D_003C5510.base, D_003C5510.pos);
+            PlatVu0CopyVector(D_003C5510.base, D_003C5510.pos);
         }
     }
     if (B(1)) func_001c8930();

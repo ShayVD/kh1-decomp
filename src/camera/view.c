@@ -15,6 +15,7 @@
 #include "data/pieces/D_002E27A4.h"
 #include "data/pieces/D_002C5C48.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/types/text_00110000_h53_p.h"
 #include "data/types/text_00110000_h53_p2.h"
@@ -60,58 +61,51 @@ void func_00124d28(void *arg0, void *arg1) {
 }
 
 /* func_00124d58 (from auto/text_00120000_8.c). */
-M2C_UNK func_002672f8(void *, void *, void *);
-M2C_UNK func_00267810(void *, M2C_UNK *, f32);
 f32 func_00120c88(f32);
 void func_00124d58(void *arg0, void *arg1, f32 fparg0, f32 fparg1) {
     s32 sp[16];
-    func_00267810(sp, ((M2C_UNK *)&D_002C58D0), -func_00120c88(D_002E27A4));
-    func_002672f8(arg1, sp, arg0);
+    PlatVu0RotMatrixY(sp, ((M2C_UNK *)&D_002C58D0), -func_00120c88(D_002E27A4));
+    PlatVu0ApplyMatrix(arg1, sp, arg0);
     M2C_FIELD(arg1, f32 *, 0) = (f32) -M2C_FIELD(arg1, f32 *, 0);
     M2C_FIELD(arg1, f32 *, 0xC) = fparg1;
-    func_00267810(sp, ((M2C_UNK *)&D_002C58D0), fparg0);
-    func_002672f8(arg1, sp, arg1);
+    PlatVu0RotMatrixY(sp, ((M2C_UNK *)&D_002C58D0), fparg0);
+    PlatVu0ApplyMatrix(arg1, sp, arg1);
 }
 
 /* func_00124e08 (from hand/text_00110000_h53.c). */
-void func_002673b8(void *, void *);
-void func_00267530(V53 *, V53 *, V53 *);
-void func_002675a8(V53 *, V53 *);
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 extern s32 D_002E27A8;
 extern f32 D_004F77E0;
-#define func_002672f8 ((void (*)(V53 *, f32 (*)[4], V53 *)) func_002672f8)
-#define func_00267810 ((void (*)(f32 (*)[4], f32 (*)[4], f32)) func_00267810)
 #define func_00124d58 ((void (*)(V53 *, V53 *, f32, f32)) func_00124d58)
 void func_00124e08(u8 *o, u8 *p, V53 *out) {
     f32 m[4][4];
     V53 v;
     switch (D_002E27A8) {
     case 2:
-        func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
-        func_002672f8(out, m, (V53 *)(o + 0x30));
+        PlatVu0RotMatrixY(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+        PlatVu0ApplyMatrix(out, m, (V53 *)(o + 0x30));
         out->y = out->w = 0.0f;
         return;
     case 11:
         if (FLD(f32, p, 0x44) <= 0.0f) {
-            func_00267810(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
-            func_002672f8(out, m, (V53 *)(o + 0x20));
+            PlatVu0RotMatrixY(m, D_002C58D0, FLD(f32, p, 0x40) * 0.0523598762229085f);
+            PlatVu0ApplyMatrix(out, m, (V53 *)(o + 0x20));
             out->y = 0.0f;
-            func_002673b8(out, out);
+            PlatVu0Normalize(out, out);
             out->w = -FLD(f32, p, 0x44);
             return;
         }
         if ((FLD(u32, p, 8) & 0x400000) && FLD(f32, p, 0x40) == 0.0f) {
-            func_00267530(out, &D_002C58A0, (V53 *)(o + 0x20));
+            PlatVu0SubVector(out, &D_002C58A0, (V53 *)(o + 0x20));
         } else {
-            func_002675a8(out, o + 0x20);
+            PlatVu0CopyVector(out, o + 0x20);
         }
         out->y = 0.0f;
-        func_002673b8(out, out);
+        PlatVu0Normalize(out, out);
         out->w = 0.0f;
         return;
     }
-    func_002675a8(&v, p + 0x60);
+    PlatVu0CopyVector(&v, p + 0x60);
     switch (FLD(s32, o, 0x70)) {
     case 10:
     case 13:
@@ -121,7 +115,7 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
         v.y = 0.0f;
         break;
     case 29:
-        func_002675a8(out, &v);
+        PlatVu0CopyVector(out, &v);
         out->w = FLD(f32, p, 0x4c);
         return;
     default:
@@ -131,13 +125,10 @@ void func_00124e08(u8 *o, u8 *p, V53 *out) {
     }
     func_00124d58(&v, out, D_004F77E0, FLD(f32, p, 0x4c));
 }
-#undef func_002672f8
-#undef func_00267810
 #undef func_00124d58
 #undef FLD
 
 /* func_00125000 (from hand/text_00110000_h53.c). */
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
 extern V53 D_002E26B0;
 extern s32 D_002C5950;
 extern M53 D_004F76E0[];
@@ -146,43 +137,38 @@ extern M53 D_004F7760[];
 extern f32 (*D_002E27AC)[4];
 void func_00110a48(f32);
 void func_00120cf8(V53 *, f32 (*)[4], f32);
-void func_00267930(f32 (*)[4], V53 *, V53 *, V53 *);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void func_00110ba8(void);
-#define func_002672f8 ((void (*)(V53 *, f32 (*)[4], V53 *)) func_002672f8)
 #define func_00124d28 ((f32 (*)(V53 *, V53 *)) func_00124d28)
 s32 func_00125000(void) {
     V53 d, r;
     M53 m;
     func_00110a48(D_004F7650);
-    func_00267530(&d, &D_002E2790, &D_002E2780);
-    func_002673b8(&d, &d);
+    PlatVu0SubVector(&d, &D_002E2790, &D_002E2780);
+    PlatVu0Normalize(&d, &d);
     func_00120cf8(&d, m, func_00120c88(D_002E27A4));
-    func_002672f8(&r, m, &D_002E26B0);
-    func_00267930(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
-    sceVu0CopyMatrix(D_002E2700, D_004F76E0[D_002C5950]);
-    sceVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
-    sceVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
-    sceVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, D_002E2700);
-    sceVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
+    PlatVu0ApplyMatrix(&r, m, &D_002E26B0);
+    PlatVu0CameraMatrix(D_004F76E0[D_002C5950], &D_002E2780, &d, &r);
+    PlatVu0CopyMatrix(D_002E2700, D_004F76E0[D_002C5950]);
+    PlatVu0CopyMatrix(D_004F7760[D_002C5950], D_002BBE20);
+    PlatVu0CopyMatrix(D_002E2740, D_004F7760[D_002C5950]);
+    PlatVu0MulMatrix(D_004F7660[D_002C5950], D_002E2740, D_002E2700);
+    PlatVu0CopyMatrix(D_002E26C0, D_004F7660[D_002C5950]);
     D_002E27AC = D_004F7660[D_002C5950];
     func_00110ba8();
     D_004F77E0 = func_00124d28(&D_002E2780, &D_002E2790);
     return 0;
 }
-#undef func_002672f8
 #undef func_00124d28
 
 /* func_001251a0 (from auto/text_00120000_7.c). */
 M2C_UNK func_00110c30();
-M2C_UNK func_002675b8(M2C_UNK *, void *);
 #define D_004F7660 (*(M2C_UNK (*)) &D_004F7660)
 #define D_004F76E0 (*(M2C_UNK (*)) &D_004F76E0)
 #define D_004F7760 (*(M2C_UNK (*)) &D_004F7760)
 s32 func_001251a0(void) {
-    func_002675b8(((M2C_UNK *)&D_002E2700), (s8 *)&D_004F76E0 + ((D_002C5950 ^ 1) << 6));
-    func_002675b8((M2C_UNK *)&D_002E26C0, (s8 *)&D_004F7660 + ((D_002C5950 ^ 1) << 6));
-    func_002675b8(((M2C_UNK *)&D_002E2740), (s8 *)&D_004F7760 + ((D_002C5950 ^ 1) << 6));
+    PlatVu0CopyMatrix(((M2C_UNK *)&D_002E2700), (s8 *)&D_004F76E0 + ((D_002C5950 ^ 1) << 6));
+    PlatVu0CopyMatrix((M2C_UNK *)&D_002E26C0, (s8 *)&D_004F7660 + ((D_002C5950 ^ 1) << 6));
+    PlatVu0CopyMatrix(((M2C_UNK *)&D_002E2740), (s8 *)&D_004F7760 + ((D_002C5950 ^ 1) << 6));
     func_00110c30();
     return 0;
 }
