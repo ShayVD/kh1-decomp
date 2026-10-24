@@ -1,9 +1,6 @@
 #include "common.h"
 #include "data/bss_0062.h"
 void func_002672f8(void *, void *, void *);
-void *func_00232cc0(s32);
-void *func_001ba9d8(s32);
-void func_001bcd10(void *, void *);
 
 /* ---- func_001a26f0 ---- */
 void *memset(void *, s32, u32);
@@ -342,79 +339,17 @@ s32 func_001aaa70(char *name, void *buf) {
     return size;
 }
 
-/* ---- func_001b9ec0 ---- */
-typedef struct { u8 sig[4]; s32 ver; } SaveHdr;
-typedef struct { u8 p[68]; u8 b44; u8 p45[2]; u8 b47; } Rec9a8;
-void func_001bb580(void);
 void func_001be820(void *, u32);
-void func_001baaf0(void *);
-void func_001b9f78(s32);
-Rec9a8 *func_001ba9a8(void);
-void *func_001ba980(void);
-void func_001baa20(void *);
-void func_001bab80(s32, void *);
-void func_001ba108(u8 *, s32);
 
-void func_001b9ec0(void) {
-    SaveHdr *s;
-    Rec9a8 *r;
-    func_001bb580();
-    s = func_00232cc0(4);
-    func_001be820(s, 0xB040);
-    s->ver = 257;
-    s->sig[0] = 'G';
-    s->sig[1] = 'U';
-    s->sig[2] = 'M';
-    s->sig[3] = 'I';
-    func_001baaf0(s);
-    func_001b9f78(0);
-    r = func_001ba9a8();
-    r->b44 = 1;
-    r->b47 = 1;
-    func_001baa20(func_001ba980());
-    func_001bab80(10, func_001ba9d8(0));
-    func_001ba108(func_001ba9d8(0), 0);
-}
-
-/* ---- func_001ba060 ---- */
 extern s32 D_00377648[];
 extern u8 *D_00377748[];
 void func_001be820(void *, u32);
 u8 *func_001ba228(s32);
 
-void func_001ba060(u8 *p, s32 k) {
-    u8 *d = p;
-    u8 *s;
-    u8 *t;
-    s32 n, i;
-    func_001be820(p, 3952);
-    n = D_00377648[k];
-    s = D_00377748[k];
-    for (i = 0; i < n; i++) *d++ = *s++;
-    t = func_001ba228(k + 71);
-    for (i = 0; i < 32; i++) p[80 + i] = t[i];
-}
-
-/* ---- func_001ba108 ---- */
-extern u8 D_006202A0[];
 extern s32 D_00377648[];
 extern u8 *D_00377748[];
 void func_001be820(void *, u32);
 u8 *func_001ba228(s32);
-
-void func_001ba108(u8 *p, s32 k) {
-    u8 *d = D_006202A0;
-    u8 *s;
-    u8 *t;
-    s32 n, i;
-    func_001be820(d, 3952);
-    n = D_00377648[k];
-    s = D_00377748[k];
-    for (i = 0; i < n; i++) *d++ = *s++;
-    func_001bcd10(p, D_006202A0);
-    t = func_001ba228(k + 71);
-    for (i = 0; i < 32; i++) p[80 + i] = t[i];
-}
 
 #include "data/types/text_001a0000_h41.h"
 
@@ -439,36 +374,7 @@ typedef struct { f32 x, y, z, w; } Q;
 
 /* needs make: uses rodata */
 
-/* ---- func_001bade8 ---- */
-typedef struct { u16 id; u8 p[10]; } Ent12;
-typedef struct { u16 n; u8 p2[110]; Ent12 e[1]; } Inv;
-typedef struct { u8 p0[4]; Inv inv; } Sav2a0;
 s32 func_001baad0(void);
-void func_001ba930(s32, s32);
-
-void func_001bade8(void) {
-    Sav2a0 *sv = func_001ba9d8(func_001baad0());
-    s8 a, b;
-    s32 i;
-    for (i = 0; i < sv->inv.n; i++) {
-        switch (sv->inv.e[i].id) {
-        case 45: case 46: a |= 0x40; break;
-        case 47: case 48: a |= 0x80; break;
-        case 51: a |= 4; break;
-        case 52: a |= 8; break;
-        case 53: a |= 0x10; break;
-        case 54: a |= 0x20; break;
-        case 55: a |= 1; break;
-        case 56: a |= 2; break;
-        case 49: b |= 2; break;
-        case 50: b |= 1; break;
-        case 57: b |= 4; break;
-        case 58: b |= 8; break;
-        }
-    }
-    func_001ba930(28, b);
-    func_001ba930(29, a);
-}
 
 #include "data/data_0037.h"
 #include "data/data_0038.h"

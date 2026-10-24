@@ -209,152 +209,11 @@ void func_001aaf30(void) {
     func_00266f38(D_00372908, d);
 }
 
-extern u8 D_00F20000[];
-extern s32 D_00621210;
-s32 func_001205f0(char *, void *);
-
 /* Loads a program to 0x00F20000 and runs it. */
-void func_001b9c60(char *a) {
-    void (*fn)(void) = (void (*)(void))D_00F20000;
-    D_00621210 = func_001205f0(a, fn);
-    FlushCache(0);
-    FlushCache(2);
-    fn();
-}
-
-s32 func_001ba9a8(s32);
-s32 func_001ba458(s32);
-
-s32 func_001ba2f8(s32 a) {
-    u8 *p = (u8 *)(func_001ba9a8(a) + a);
-    if (*p < func_001ba458(a)) {
-        (*p)++;
-        return 1;
-    }
-    return 0;
-}
-
-typedef struct { u8 pad[11]; u8 max; } ItemInfo;
-ItemInfo *func_001bb658(s32);
-
-s32 func_001ba458(s32 a) {
-    if ((u32)(a - 71) < 48) return 1;
-    return func_001bb658(a)->max;
-}
-
-typedef struct { u64 x[14]; } Blk112;
-extern Blk112 D_00621220; /* src/data/bss_0062.c: Lt2 D_00621220 */
-extern Blk112 D_002C5AD0;
-void func_001ba520(void);
-
-void func_001ba4a8(void) {
-    func_001ba520();
-    D_002C5AD0 = D_00621220;
-}
 
 /* Declared as a real 2-D array: a cast to s32 (*)[2] does not match. */
-extern s32 D_00621308[][2]; /* src/data/bss_0062.c: s32 D_00621308[4] */
-
-void func_001ba778(s32 i, s32 a, s32 b) {
-    D_00621308[i][0] = a;
-    D_00621308[i][1] = b;
-}
-
-extern void *D_003773DC;
-extern void *D_003773E0;
-extern void *D_003773E4;
-extern s32 D_003773EC;
-extern s32 D_003772DC;
-extern s32 D_003772D8;
-extern char D_00490008[];
-extern char D_00490018[];
-void func_001ba848(void);
-void func_001ba850(void);
-void func_001ba860(void);
-void func_001c06f8(void);
-void func_00236f18(void);
-void func_001ba6f8(void);
-int puts(const char *);
-
-void func_001ba870(void) {
-    s32 *cnt;
-    D_003773EC = 1;
-    D_003773DC = func_001ba848;
-    D_003773E0 = func_001ba850;
-    D_003773E4 = func_001ba860;
-    D_003772DC = 2;
-    func_001c06f8();
-    func_00236f18();
-    func_001ba6f8();
-    puts(D_00490008);
-    func_001b9c60(D_00490018);
-    cnt = &D_003772D8;
-    (*cnt)++;
-}
-
-typedef struct { u8 ord[8]; s32 n; } Ord8;
-
-void func_001baa20(Ord8 *o) {
-    s32 i;
-    u8 *p;
-    o->n = 0;
-    p = &o->ord[7];
-    for (i = 7; i >= 0; i--) *p-- = i;
-}
-
-typedef struct { u8 pad[0x9B40]; s32 v[10]; } BigAF0;
-
-void func_001baaf0(BigAF0 *b) {
-    b->v[0] = 16384;
-    b->v[1] = 0x8000;
-    b->v[2] = 1024;
-    b->v[3] = 8192;
-    b->v[4] = 8192;
-    b->v[5] = 8192;
-    b->v[6] = 4096;
-    b->v[7] = 4096;
-    b->v[8] = 4096;
-    b->v[9] = 0;
-}
-
-extern char D_00490020[];
-void func_001be820(u8 *, u32);
-void func_001bef98(char *, char *);
-
-void func_001bab80(s32 n, u8 *p) {
-    s32 i;
-    for (i = 0; i < n; i++) {
-        func_001be820(p, 3952);
-        func_001bef98((char *)(p + 80), D_00490020);
-        p += 3952;
-    }
-}
 
 /* Save data block with per-item "seen" flags at +0xAC20. */
-typedef struct { u8 pad[0xAC20]; u8 flags[1]; } SaveAC20;
-void func_001b9b30(s32);
-SaveAC20 *func_00232cc0(s32);
-s32 func_001bb260(s32);
-s32 func_001ba958(s32);
-
-s32 func_001bb2e0(s32 a) {
-    SaveAC20 *s;
-    func_001b9b30(a);
-    s = func_00232cc0(4);
-    if (s->flags[a] == 0 && func_001ba958(func_001bb260(a)) >= 3) s->flags[a] = 1;
-    return s->flags[a];
-}
-
-extern Str11 D_004900A8;
-
-s32 func_001bb370(void) {
-    Str11 ids = D_004900A8;
-    u8 *p;
-    for (p = ids.c; *p; p++) {
-        if (func_001bb2e0(*p) < 4) return 0;
-    }
-    return 1;
-}
 
 /* Zero n bytes (the head loop clears p & 7 bytes, as in the original). */
 
@@ -366,24 +225,8 @@ s32 func_001bb370(void) {
 /* needs make: uses rodata */
 
 /* Jump table (jtbl_00490070); checked word-for-word except the table relocs. */
-s32 func_001bb260(s32 a) {
-    switch (a) {
-    case 3: return 0;
-    case 4: return 1;
-    case 11: return 2;
-    case 5: return 3;
-    case 8: return 4;
-    case 9: return 6;
-    case 10: return 5;
-    case 13: return 7;
-    case 15: return 8;
-    case 16: return 9;
-    }
-    return 0;
-}
 #include "data/bss_0061_typed.h"
 #include "data/data_0037.h"
 #include "data/data_0048.h"
 #include "data/data_0049.h"
 #include "data/pieces/D_00373060.h"
-#include "data/pieces/D_004900A8.h"
