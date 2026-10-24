@@ -132,6 +132,61 @@ static __inline__ f32 PlatVu0Length3(const f32 *v) {
     return PlatVu0Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
+/* the 4-vector sequences src/coll/ and the ppp files inline (lqc2, one VU
+ * op, sqc2); d may alias a or b */
+static __inline__ void PlatVu0Add4(f32 *d, const f32 *a, const f32 *b) {
+    d[0] = a[0] + b[0]; d[1] = a[1] + b[1]; d[2] = a[2] + b[2]; d[3] = a[3] + b[3];
+}
+static __inline__ void PlatVu0Sub4(f32 *d, const f32 *a, const f32 *b) {
+    d[0] = a[0] - b[0]; d[1] = a[1] - b[1]; d[2] = a[2] - b[2]; d[3] = a[3] - b[3];
+}
+static __inline__ void PlatVu0Scale4(f32 *d, const f32 *v, f32 s) {
+    d[0] = v[0] * s; d[1] = v[1] * s; d[2] = v[2] * s; d[3] = v[3] * s;
+}
+/* vmulx.xyz into a copy of v: w is v's */
+static __inline__ void PlatVu0Scale3W(f32 *d, const f32 *v, f32 s) {
+    d[0] = v[0] * s; d[1] = v[1] * s; d[2] = v[2] * s; d[3] = v[3];
+}
+/* a.x b.x + a.y b.y + a.z b.z (vmul.xyz, vaddy.x, vaddz.x) */
+static __inline__ f32 PlatVu0Dot3(const f32 *a, const f32 *b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+/* |a - b|^2 and |a - b| over xyz */
+static __inline__ f32 PlatVu0DistSq3(const f32 *a, const f32 *b) {
+    f32 x = a[0] - b[0], y = a[1] - b[1], z = a[2] - b[2];
+    return x * x + y * y + z * z;
+}
+static __inline__ f32 PlatVu0Dist3(const f32 *a, const f32 *b) { return PlatVu0Sqrt(PlatVu0DistSq3(a, b)); }
+/* a x b, w 0 (vopmula ACC, a, b; vopmsub d, b, a; vsub.w d, d, d) */
+static __inline__ void PlatVu0Cross3(f32 *d, const f32 *a, const f32 *b) {
+    f32 x = a[1] * b[2] - a[2] * b[1];
+    f32 y = a[2] * b[0] - a[0] * b[2];
+    f32 z = a[0] * b[1] - a[1] * b[0];
+    d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
+}
+/* v / |v| over xyz, w 0 (vsqrt, vdiv Q = 1 / |v|, vmulq.xyz into a cleared
+ * register) */
+static __inline__ void PlatVu0Normalize3(f32 *d, const f32 *v) {
+    f32 q = 1.0f / PlatVu0Length3(v);
+    f32 x = v[0] * q, y = v[1] * q, z = v[2] * q;
+    d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
+}
+/* `vsub.xyzw` then `cfc2 $vi17`: the MAC flags of a - b, Z (bits 0-3) and S
+ * (bits 4-7), w in the low bit of each group, x in the high one (the
+ * underflow / overflow bits stay 0 here) */
+static __inline__ u32 PlatVu0SubFlags(const f32 *a, const f32 *b) {
+    u32 f = 0;
+    int i;
+    for (i = 0; i < 4; i++) {
+        f32 d = a[i] - b[i];
+        if (d == 0.0f)
+            f |= 8 >> i;
+        if (PlatVu0Bits(d) & 0x80000000)
+            f |= 0x80 >> i;
+    }
+    return f;
+}
+
 /* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
 static __inline__ s32 PlatVu0Ftoi0(f32 x) {
     if (x >= 2147483648.0f)
