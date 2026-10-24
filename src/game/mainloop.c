@@ -13,6 +13,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h30.h"
@@ -38,7 +39,6 @@ extern s32 D_002C5950;
 extern s32 D_002C596C;
 extern u8 D_004E3A48[];
 u8 D_004E3A58[0x828] ALIGNED(8);
-void sceVu0UnitMatrix(V4 *);
 void func_0011efa8(void *, void *, s32, s32);
 void func_0015ec68(void);
 void func_00121c78(void);
@@ -49,7 +49,7 @@ void func_0011fb00(void);
 void func_0012fc20(void);
 void func_0011edc8(void) {
     s32 i, j;
-    sceVu0UnitMatrix(D_002C58D0);
+    PlatVu0UnitMatrix(D_002C58D0);
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) D_002C5910[i][j] = 0;
     }

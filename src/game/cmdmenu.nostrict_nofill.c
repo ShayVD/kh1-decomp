@@ -10,6 +10,7 @@
  * are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_002E319C.h"
@@ -169,7 +170,6 @@ done:
 
 /* func_0012f218 (from hand/nostrict_nofill/text_00120000_h54.c). */
 typedef struct { f32 x, y, z, w; } V4;
-extern void func_00267530(V4 *, V4 *, V4 *);
 typedef union { u64 x; struct { u32 lo0; u32 x32:3; u32 f35:1; u32 x36:1; u32 kind:2; u32 hi:25; } b; } F370b;
 typedef struct { u8 pad[4]; u32 f4; } I9;
 typedef struct Actor_2f218 { u8 pad[0x130]; I9 *f130; u8 p134[0x370-0x134]; F370b f370; } E9;
@@ -184,7 +184,7 @@ s32 func_0012f218(f32 *pos, A9 *a, s32 lim) {
     f32 r;
     s32 s, v;
     r = func_0012ec60(a->f0, a->f4, tmp);
-    func_00267530((V4 *)d, (V4 *)tmp, (V4 *)pos);
+    PlatVu0SubVector((V4 *)d, (V4 *)tmp, (V4 *)pos);
     r = func_00120bf8(d) - r;
     if (func_0012eaf8(a->f0) && r > 1200.0f) return -1;
     s = r;

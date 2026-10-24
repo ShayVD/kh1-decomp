@@ -10,6 +10,7 @@
  * the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350D88.h"
 #include "data/bss_0052.h"
@@ -57,51 +58,49 @@ typedef struct Actor_2cd10 {
     u8 pad9c[0x130 - 0x9c];
     CdInfo *info;
 } E15;
-void func_00267530(f32 *, f32 *, f32 *);
 void func_00121fc4(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 f32 func_00120bf8(f32 *);
 void func_0012ec88(E15 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
 /* func_0012cf48 only matches with its callee func_0012cd10 defined above it. */
 s32 func_0012cd10(E15 *o, E15 *t) {
     f32 d[4];
     f32 ay, k;
     switch (o->info->kind) {
     case 0:
-        func_00267530(d, o->pos, t->pos);
+        PlatVu0SubVector(d, o->pos, t->pos);
         ay = fabsf(d[1]);
         d[1] = 0.0f;
         func_00121fc4(d, d);
         if (d[3] < o->info->r) {
             if (ay < o->info->r) {
-                k = 1.0f - func_00267390(t->dir, d);
+                k = 1.0f - PlatVu0InnerProduct(t->dir, d);
                 if (k < 1.0f) return d[3] + d[3] * k * 0.5f;
             }
         }
         break;
     case 1:
-        func_00267530(d, o->pos, t->pos);
+        PlatVu0SubVector(d, o->pos, t->pos);
         if (fabsf(d[1]) < o->info->r) {
             if (func_00120c18(d) < o->info->r) return 0;
         }
         break;
     case 2:
         func_0012ec88(o, d);
-        func_00267530(d, d, t->pos);
+        PlatVu0SubVector(d, d, t->pos);
         if (func_00120bf8(d) < o->info->r) {
             d[1] = 0.0f;
             func_00121fc4(d, d);
-            k = 1.0f - func_00267390(t->dir, d);
+            k = 1.0f - PlatVu0InnerProduct(t->dir, d);
             return d[3] + d[3] * k * 0.5f;
         }
         break;
     case 3:
-        func_00267530(d, o->pos, t->pos);
+        PlatVu0SubVector(d, o->pos, t->pos);
         d[1] = 0.0f;
         func_00121fc4(d, d);
         if (d[3] < o->info->r) {
-            k = 1.0f - func_00267390(t->dir, d);
+            k = 1.0f - PlatVu0InnerProduct(t->dir, d);
             if (k < 1.0f) return d[3] + d[3] * k * 0.5f;
         }
         break;
@@ -707,7 +706,7 @@ CONTEXT_ONLY s32 func_0012f218(f32 *pos, V8 *a, s32 lim) {
     f32 r;
     s32 s, v;
     r = func_0012ec60(a->f0, a->f4, tmp);
-    func_00267530(d, tmp, pos);
+    PlatVu0SubVector(d, tmp, pos);
     r = func_00120bf8(d) - r;
     if (func_0012eaf8(a->f0) && r > 1200.0f) return -1;
     s = r;

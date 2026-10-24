@@ -6,6 +6,7 @@
  * boot (docs/modules.md "Session 53"). */
 #include "m2c.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/types/nostrict_text_00130000_h55.h"
 #include "data/pieces/D_002E26A0.h"
@@ -117,8 +118,6 @@ extern u32 D_002C5958;
 extern f32 D_00304C40;
 f32 D_0052AE68 ALIGNED(8);  /* moved from hand/nostrict/text_00130000_h55.c (session 53) */
 W55Ob *func_001230a0(W55Ob *p);
-f32 func_00267390(f32 *a, f32 *b);
-void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_0013dd40(void) {
     f32 v[4];
     W55Ob *pl, *p;
@@ -134,9 +133,9 @@ void func_0013dd40(void) {
         if (!pl) continue;
         for (p = 0; (p = func_001230a0(p));) {
             if (p->x370.b.kind != 2) continue;
-            func_00267530(v, pl->pos, p->pos);
+            PlatVu0SubVector(v, pl->pos, p->pos);
             v[1] = 0.0f;
-            if (func_00267390(v, v) < lim) { near = 1; break; }
+            if (PlatVu0InnerProduct(v, v) < lim) { near = 1; break; }
         }
     }
     if (D_00304C40 > 0.0f) D_00304C40 -= D_002BBDFC;
