@@ -380,28 +380,6 @@ typedef struct {
     s32 pad;
 } W7F8;
 extern W7F8 D_00304D60[];
-
-extern s32 D_00531B64;
-void func_001315c0(W7Ch *o, s32 k, void *buf, f32 f);
-void func_00144eb0(s32 v, void *buf);
-
-void func_00145008(W7Ch *o, s32 k) {
-    u8 buf[16];
-    s32 v;
-    if (D_00531B64) return;
-    switch (k) {
-    case 0:
-        v = o->info->x48;
-        break;
-    case 1:
-        v = o->info->x4a;
-        break;
-    default:
-        return;
-    }
-    func_001315c0(o, 0x8003, buf, 0.0f);
-    func_00144eb0(v, buf);
-}
 #include "data/bss_0052_mixed.h"
 #include "data/data_0030.h"
 #include "data/pieces/D_00350DA4.h"

@@ -99,30 +99,3 @@ s32 func_0013c458(s32 i, s32 n) {
     }
     return m->sub.exp;
 }
-
-typedef struct { u8 pad[0xc]; f32 xc; } W606T7v;
-typedef struct { u8 pad[0xc]; W606T7v *xc; u8 pad10[4]; u32 x14; } W606T7a;
-typedef struct { u8 pad[0x14]; W606T7a *x14; u8 pad18[4]; f32 x1c; } W606T7o;
-extern f32 D_002BBDFC;
-void func_00176310();
-s32 func_00147ff0(W606T7o *o) {
-    W606T7a *a = o->x14;
-    W606T7v *v;
-    f32 f;
-    if (a != 0) {
-        if ((a->x14 & 3) == 1) {
-            v = a->xc;
-            f = v->xc - o->x1c * D_002BBDFC;
-            if (!(f <= 0.0f)) goto st;
-            func_00176310(a, o);
-        } else {
-            return 4;
-        }
-    }
-    return 4;
-st:
-    v->xc = f;
-    return 0;
-}
-
-#include "data/pieces/D_002BBDFC.h"

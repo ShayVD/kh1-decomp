@@ -4,10 +4,8 @@
 #include "data/bss_0053.h"
 /* Hand-matched functions near 0x13C000-0x149000 (worker 33).
  * Built without strict aliasing (several of these need the reloads). */
-
 #include "data/pieces/D_002C58A0.h"
 typedef FVec4 V4f;
-typedef struct { s32 x, y, z; } V3i;
 
 /* ---- save data (D_00304BE8), shared with h7 ---- */
 typedef W606Mem_304be8 W7Member;
@@ -77,45 +75,14 @@ typedef struct { f32 x, y, z; s32 w; } V4;
 typedef struct { u8 pad[0x54]; s8 b54; } Sub130;
 typedef struct { u8 pad[0x130]; Sub130 *p130; } Obj130;
 #include "data/types/nostrict_text_00140000_h33.h"
-typedef struct { u8 pad[0x80]; s32 w80; } Blk;
-typedef struct { f32 p; s32 id; } Drop;
-typedef struct { s32 n[7]; Drop d[3]; } DropTbl;
-typedef struct { u8 pad[0x10]; s16 h10; s16 st; LdHdr *hdr; void (*cb)(s32); s32 arg; } LdTask;
-typedef struct { s16 h0; s16 h2; } Prc;
-typedef struct { f32 m[4][4]; u8 buf[0x3C]; s32 w7c; s32 w80; s32 w84; } MdlBlk;
-typedef struct { V4f *pos; V3i *rot; } RotObj;
-typedef struct {
-    union { u64 d; struct { u32 lo; u8 b4; u8 b5; s16 h6; } s; } u;
-    s32 w8;
-    f32 fc;
-    V4f v10;
-    V4f v20;
-} Eff;
-typedef struct { u8 pad[0x18]; void **p18; } Blk7c;
-typedef struct { u8 pad[0x68]; s32 w68; u8 pad6c[0x1C]; u32 w88; } Act;
 
 /* ---- data ---- */
 extern u32 D_002C5958;
 #include "data/pieces/D_002C5960.h"
 extern u32 D_002C5AD4;
 extern f32 D_002BBDFC;
-extern s32 D_002BC128;
 #include "data/pieces/D_002E27C8.h"
-extern Snd *D_0052EB58;
-extern Snd D_0052EB50;
-extern s32 D_00531B64;
-extern Blk *D_00531B60; /* src/data/bss_0053.c: B3Col *D_00531B60 */
-extern f32 D_00306840;
-extern f32 D_00306844;
-extern f32 D_00306848;
-extern LdEnt D_00531B70[128];
-extern u8 D_00531F70[];
 u8 D_00531F80[0xc00] ALIGNED(64);
-extern s32 D_00532B80;
-extern Ent32 D_00532B90[128];
-extern s32 D_00533B90;
-extern u16 D_00307226[];
-extern u16 D_003085D8[];
 u8 D_0054C160[0x50] ALIGNED(32);
 
 /* ---- functions ---- */
@@ -148,42 +115,6 @@ s32 func_0013f330(ObjF3 *, s32);
 void func_00130398(ObjF3 *, s32, f32);
 void func_00267518(V4f *, V4f *, V4f *);
 void func_0014cc88(ObjF3 *, f32);
-void func_00150de0(s32);
-void func_00176310(Eff154 *);
-f32 func_00121b08(f32);
-void func_0011d3c8(s32, s32, s32);
-Blk *func_00122048(s32, s32);
-s32 func_0011f130(Snd *, s32);
-void func_001220b8(Blk *);
-void func_00146188(s32, s32, s32);
-f32 func_00176850(void);
-void func_001515d0(s32, s32, s32);
-s32 func_0011e248(s32);
-void func_001ed658(s32, u8 *, s32);
-s32 func_001ed220(s32, u8 *, s32);
-s32 func_001ecfd8(void);
-LdTask *func_0011f090(u8 *, s32, s32 (*)(LdTask *));
-void func_00147338(s32, s32);
-void func_00146928(s32);
-void func_0011efa8(u8 *, u8 *, s32, s32);
-s32 func_0011ef38(void (*)(void));
-Prc *func_0011ef10(s32, void (*)(void));
-void func_001474a0(void);
-s32 func_001473a8(s32, s32, V4f *);
-void *func_00176488(s32, u8 *, s32, s32);
-s32 func_001765f8(void *);
-s32 func_00162368(s32, s32);
-s32 func_001320a8(s32);
-u8 *func_001623e0(s32);
-void sceVu0CopyMatrix(void *, void *);
-void func_00147a68(void);
-void func_00121a10(s32, V4f *);
-void func_00121a78(V4f *, V4f *);
-Eff *func_00148438(void *, s32);
-void func_001315c0(s32, s32, V4f *, f32);
-Blk7c *func_00147c98(s32, s32, s32);
-Eff *func_00148570(Blk7c *, s32, s32);
-void func_001318e8(Act *, s32, V4f *);
 
 s32 func_0013c9e0(s32 item, u32 who) {
     if (item & 0x400) return 255;
@@ -343,288 +274,6 @@ void func_0013f770(ObjF3 *o, V4f *v) {
     o->flags |= fl;
 }
 
-void func_00145080(s32 on, s32 n) {
-    f32 f = n;
-    Snd *p;
-    D_00531B64 = on;
-    D_00306840 = f;
-    p = D_0052EB58;
-    if (on) {
-        for (; p; p = p->next) {
-            if (p->st < 2) {
-                p->st = 4;
-                p->f18 = f;
-            }
-        }
-    } else {
-        for (; p; p = p->next) {
-            if (p->st == 4) {
-                p->st = 5;
-                p->f18 = f;
-            }
-        }
-    }
-    func_00150de0(on);
-}
-
-void func_001452a0(ObjF3 *o) {
-    Eff154 *e = o->p148->p154;
-    s32 k;
-    if (e == 0) return;
-    k = e->w14 & 3;
-    if (k != 1) {
-        o->p148->p154 = 0;
-        return;
-    }
-    if (!(o->flags & 1)) {
-        func_00176310(e);
-        o->p148->p154 = 0;
-        func_0011d3c8(168, o->w4 + 1, 60);
-        return;
-    }
-    o->p148->f158 = func_00121b08(o->p148->f158);
-    if (!(o->p148->f158 <= 0.0f) && !(D_002C5958 & 0x104000)) return;
-    *o->p148->p154->p10 = k;
-    func_0011d3c8(168, o->w4 + 1, 120);
-}
-
-s32 func_001460b8(void) {
-    Snd *p;
-    Blk *b = func_00122048(160, 16);
-    *(Blk *volatile *)&D_00531B60 = b;
-    b->w80 = 1;
-    if (func_0011f130(&D_0052EB50, 0) >= 205) {
-        for (p = D_0052EB50.next; p; p = p->next) {
-            if (p->st == 1) {
-                p->st = 3;
-                p->f18 = 12.0f;
-                break;
-            }
-        }
-    }
-    func_001220b8(D_00531B60);
-    return 0;
-}
-
-void func_00146380(DropTbl *t, s32 a, s32 b) {
-    s32 i, j, n;
-    if (D_00531B64) return;
-    for (i = 0; i < 7; i++) {
-        n = t->n[i] * D_00306844;
-        for (j = 0; j < n; j++) {
-            func_00146188(i, a, b);
-        }
-    }
-    for (i = 0; i < 3; i++) {
-        f32 p = t->d[i].p * D_00306848;
-        if (func_00176850() < p) {
-            func_001515d0(t->d[i].id, a, b);
-        }
-    }
-}
-
-s32 func_00146998(LdTask *t) {
-    u8 *p;
-    switch (t->st) {
-    case 0:
-        if (func_0011e248(0) == 0) {
-            p = t->hdr->data;
-            if (t->hdr->n0) {
-                func_001ed658(t->h10, p, t->hdr->n0);
-                p += t->hdr->n4;
-            }
-            func_001ed220(t->h10, p, t->hdr->n8);
-            t->st++;
-        }
-        return 8;
-    case 1:
-        if (func_001ecfd8() == 0) {
-            if (t->cb) t->cb(t->arg);
-            return 4;
-        }
-        return 8;
-    }
-    return 8;
-}
-
-s32 func_00146a68(LdHdr *h, s32 id, void (*cb)(s32), s32 arg) {
-    s32 i;
-    LdTask *t;
-    for (i = 0; i < 128; i++) {
-        if (D_00531B70[i].id == id && D_00531B70[i].h == h) {
-            cb(arg);
-            return 1;
-        }
-    }
-    for (i = 0; i < 128; i++) {
-        if (D_00531B70[i].h == 0) {
-            D_00531B70[i].id = id;
-            D_00531B70[i].h = h;
-            break;
-        }
-    }
-    t = func_0011f090(D_00531F70, 0, func_00146998);
-    t->arg = arg;
-    t->h10 = id;
-    t->hdr = h;
-    t->cb = cb;
-    t->st = 0;
-    {
-        s32 *pc = &D_00532B80;
-        (*pc)++;
-    }
-    return 1;
-}
-
-Ent32 *func_00146bd0(s32 n, s32 id) {
-    s32 i;
-    Ent32 *e;
-    if (n <= 0) return 0;
-    if (id > 0) {
-        func_00147338(n, id);
-    } else {
-        s32 *pc = &D_00533B90;
-        id = (*pc)++;
-    }
-    e = D_00532B90;
-    for (i = 0; i < 128; i++, e++) {
-        if (!(e->u.w.lo & 1)) {
-            e->n = n;
-            e->u.f.used = 1;
-            e->u.f.b1 = 1;
-            e->u.f.b2 = 0;
-            e->u.w.id = id;
-            return e;
-        }
-    }
-    return 0;
-}
-
-s32 func_00147138(ObjF3 *o, s32 v) {
-    u32 k = o->p130->b5c;
-    if (v == 4) {
-        v = D_003085D8[k];
-        if (v == 0) return 0;
-    } else {
-        u16 t = D_00307226[o->b39e + (D_002BC128 * 8 + k) * 15];
-        if (t == 0) return 0;
-        v += t;
-    }
-    return func_001473a8(v, o->w4 + 1, &o->pos);
-}
-
-void func_00147628(void) {
-    s32 i;
-    for (i = 0; i < 128; i++) D_00532B90[i].u.f.used = 0;
-    for (i = 127; i >= 0; i--) D_00531B70[i].h = 0;
-    func_00146928(-3);
-    func_00146928(-4);
-    func_00146928(-5);
-    func_00146928(-6);
-    func_00146928(-7);
-    D_00533B90 = 1;
-    func_0011efa8(D_00531F70, D_00531F80, 32, 96);
-    D_00532B80 = 0;
-    if (!func_0011ef38(func_001474a0)) {
-        func_0011ef10(0x23668, func_001474a0)->h2 = -1;
-    }
-}
-
-void *func_00147b08(s32 a, s32 b, s32 c) {
-    s32 r;
-    if (!func_00176488(a, D_0054C160, 0, 20000)) return 0;
-    r = func_001765f8(D_0054C160);
-    if (r >= 0) {
-        MdlBlk *m = (MdlBlk *)(D_0054C160 - 0x40);
-        r = func_00162368(c, r & 0xFFF);
-        m->w80 = r;
-        m->w7c = c;
-        m->w84 = func_001320a8(b);
-        sceVu0CopyMatrix(m, func_001623e0(c) + (r << 6));
-        func_0011ef10(0x21728, func_00147a68)->h2 = -1;
-    }
-    return D_0054C160;
-}
-
-void func_00147d50(RotObj *o, s32 m) {
-    V4f r;
-    func_00121a10(m, &r);
-    o->rot->x = (u16)(s32)(r.x / 6.2831855f * 65536.0f);
-    o->rot->y = (u16)(s32)(r.y / 6.2831855f * 65536.0f);
-    o->rot->z = (u16)(s32)(r.z / 6.2831855f * 65536.0f);
-}
-
-void func_00147e08(RotObj *o, V4f *m) {
-    V4f r;
-    func_00121a78(m, &r);
-    o->rot->x = (u16)(s32)(r.x / 6.2831855f * 65536.0f);
-    o->rot->y = (u16)(s32)(r.y / 6.2831855f * 65536.0f);
-    o->rot->z = (u16)(s32)(r.z / 6.2831855f * 65536.0f);
-    func_002675a8(o->pos, m + 3);
-}
-
-Eff *func_001484c8(V4f **o, s32 a, s32 b, f32 f) {
-    Eff *e = func_00148438(o, a);
-    if (!e) return 0;
-    e->w8 = b;
-    e->u.s.b4 = 1;
-    e->fc = f;
-    func_002675a8(&e->v10, &D_002C58A0);
-    func_001315c0(a, b, &e->v20, f);
-    func_002675a8(*o, &e->v20);
-    return e;
-}
-
-Blk7c *func_00148968(s32 a, s32 b, s32 fl) {
-    Blk7c *k = func_00147c98(b, fl, 20000);
-    s32 r;
-    Eff *e;
-    if (k) {
-        *k->p18 = (void *)a;
-        r = func_001765f8(k);
-        if (r >= 0) {
-            e = func_00148570(k, a, r);
-            if (e) {
-                if (fl & 0x800) e->u.s.h6 = -1;
-                if (fl & 0x1000) e->u.d |= 1;
-            }
-        } else if (fl & 0x800) {
-            e = func_00148438(k, a);
-            e->u.s.h6 = -1;
-            e->u.s.b4 = 0;
-        }
-    }
-    return k;
-}
-
-Blk7c *func_00148a60(Act *o, s32 fl) {
-    Blk7c *k = func_00147c98(o->w68, fl, 20000);
-    s32 r;
-    Eff *e;
-    V4f m[4];
-    if (k) {
-        *k->p18 = o;
-        r = func_001765f8(k);
-        if (r >= 0) {
-            if (o->w88 & 1) {
-                func_001318e8(o, r & 0xFFFEFFFF, m);
-                func_00147e08((RotObj *)k, m);
-                return k;
-            }
-            e = func_00148570(k, (s32)o, r);
-            if (e) {
-                if (fl & 0x800) e->u.s.h6 = -1;
-                if (fl & 0x1000) e->u.d |= 1;
-            }
-        } else if (fl & 0x800) {
-            e = func_00148438(k, (s32)o);
-            e->u.s.h6 = -1;
-            e->u.s.b4 = 0;
-        }
-    }
-    return k;
-}
-
 /* func_00141468 and func_00141540 only match with func_00141448 defined
  * above them. */
 #include "data/bss_0053_mixed.h"
@@ -632,5 +281,3 @@ Blk7c *func_00148a60(Act *o, s32 fl) {
 #include "data/data_0030.h"
 #include "data/pieces/D_002C5958.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_002BC128.h"
-#include "data/pieces/D_003085D8.h"

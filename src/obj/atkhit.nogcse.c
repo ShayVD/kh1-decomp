@@ -1,5 +1,12 @@
-/* matches with -O2 -G0 -fno-gcse (strict or nostrict, fill or nofill); fails 93w with the normal flags (gcse merges the ld reloads of c->x0) */
+/* Attack hits: the 64 hit records D_0054C440 (func_0014a450 takes one,
+ * func_0014a4a8 fills one from an attack definition, func_0014bdc0 updates
+ * them all) and their mask D_0054F440, the hit timers (func_0014a0f0), a
+ * follow offset (func_0014a238). Flag mode: nogcse (the other modes are in
+ * the sibling files). Read from the code, not proved by a boot
+ * (docs/modules.md "Session 53"). */
 #include "common.h"
+
+/* func_0014b550 (from hand/nogcse/text_00140000_s6.c). */
 typedef struct {
     u32 pad0 : 7;
     u32 b7 : 1;
@@ -61,4 +68,4 @@ s32 func_0014b550(Eb5 *a, Eb5 *list, s32 n) {
     }
     return cnt;
 }
-#include "data/data_0035.h"
+

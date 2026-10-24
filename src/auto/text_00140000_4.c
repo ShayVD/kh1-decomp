@@ -3,137 +3,16 @@
 #include "m2c.h"
 #include "actor.h"
 #include "data/bss_0054.h"
-
-M2C_UNK func_0011d350(M2C_UNK, s32);
-M2C_UNK func_001477c8(s32);
-M2C_UNK func_001ed128(M2C_UNK, s32);
 #include "data/pieces/D_00304C70.h"
-extern M2C_UNK D_00308C70;
-extern M2C_UNK D_00531B70; /* src/data/bss_0053.c: LdEnt D_00531B70[128] */
-extern M2C_UNK D_0054B808; /* src/data/bss_0054.c: u8 D_0054B808[0x10] */
 extern s32 D_002C5958;
 #include "data/pieces/D_002E26A0.h"
-#include "data/pieces/D_00304BE8.h"
 #include "data/pieces/D_00350CE0.h"
-extern s32 D_0054C438;
-extern s32 D_0054C43C;
-f32 func_00176310(s32);
-s32 func_0011f090(s32, s32, s32);
 s32 func_00130340(s32, s32, f32);
 s32 func_00130398(s32, s32, f32);
 s32 func_00130578(s32, s32, f32);
-s32 func_00147c98(s32, s32, s32);
-s32 func_00148600(s32, s32, s32, f32);
-s32 func_00148768(s32, s32, s32, s32, f32);
-s32 func_00148968(s32, s32, s32);
-s32 func_00148cb0(s32, f32);
-s32 func_001496c8(s32, s32);
-s32 func_00149fa0(void);
 s32 func_0014f658(s32, s32);
 void func_0011d1e0(s32, s32, s32, s32);
-void func_001412f8(s32, s32);
 void func_00141ab8(s32);
-void func_00149968(void);
-
-void func_00145240(Actor *arg0) {
-    s32 temp_v1;
-
-    temp_v1 = M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), s32 *, 0x154);
-    if (temp_v1 != 0) {
-        func_00176310(temp_v1);
-        M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), s32 *, 0x154) = 0;
-        func_0011d350(0xA8, arg0->unk004 + 1);
-    }
-}
-
-void func_00146928(s32 arg0) {
-    s8 *var_v1;
-    s32 var_a0;
-
-    func_001ed128(0, arg0);
-    func_001ed128(3, arg0);
-    var_v1 = &D_00531B70;
-    var_a0 = 0x7F;
-    do {
-        if (M2C_FIELD(var_v1, s32 *, 0) == arg0) {
-            M2C_FIELD(var_v1, s32 *, 4) = 0;
-        }
-        var_a0 -= 1;
-        var_v1 += 8;
-    } while (var_a0 >= 0);
-}
-
-void func_001477e0(s32 arg0) {
-    func_001477c8(*(M2C_UNK *)((s8 *)&D_00308C70 + (arg0 * 4)));
-}
-
-s32 func_00147d18(s32 arg0) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011f090((s32) &D_0054B808, 0, arg0);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s32 *, 0x1C) = 0;
-    }
-    return temp_v0;
-}
-
-s32 func_00148878(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-
-    temp_v0 = func_00147c98(arg0, arg1, 0x4E20);
-    if (temp_v0 != 0) {
-        temp_v0_2 = func_00148600(temp_v0, arg2, arg3, fparg0);
-        if ((temp_v0_2 != 0) && (arg1 & 0x800)) {
-            M2C_FIELD(temp_v0_2, s16 *, 6) = -1;
-        }
-    }
-    return temp_v0;
-}
-
-s32 func_00148a40(s32 arg0, s32 arg1) {
-    return func_00148968(arg0, M2C_FIELD(arg0, s32 *, 0x68), arg1);
-}
-
-s32 func_00148b70(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
-    return func_00148768(M2C_FIELD(arg0, s32 *, 0x68), arg1, arg0, arg2, fparg0);
-}
-
-void func_00148d18(s32 arg0, s32 arg1, f32 fparg0) {
-    s32 temp_v0;
-
-    temp_v0 = func_00148cb0(arg0, fparg0);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 5) = (s8) arg1;
-        M2C_FIELD(temp_v0, s8 *, 4) = 0;
-    }
-}
-
-void func_00148db0(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
-    s32 temp_v0;
-
-    temp_v0 = func_00148cb0(arg0, fparg0);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s32 *, 8) = arg2;
-        M2C_FIELD(temp_v0, s8 *, 5) = (s8) arg1;
-        M2C_FIELD(temp_v0, s8 *, 4) = 2;
-    }
-}
-
-s32 func_00149740(s32 arg0) {
-    return func_001496c8(arg0, (s32) M2C_FIELD(((arg0 * 0x74) + ((s32)D_00304BE8)), u8 *, 0x36));
-}
-
-s32 func_0014a058(s32 arg0) {
-    func_00149968();
-    D_0054C438 = arg0;
-    D_0054C43C = 0;
-    return func_00149fa0();
-}
-
-void func_0014a380(s32 arg0, s32 arg1) {
-    func_001412f8(arg0, M2C_FIELD(arg1, s32 *, 0x30));
-}
 
 void func_0014cc38(s32 arg0) {
     M2C_FIELD(arg0, s32 *, 0x3B0) = 0;

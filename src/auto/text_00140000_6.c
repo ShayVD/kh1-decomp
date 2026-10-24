@@ -17,22 +17,6 @@ extern M2C_UNK func_0014dd48;
 extern M2C_UNK func_0014df60;
 extern M2C_UNK func_0014e160;
 extern M2C_UNK func_0014e400;
-s32 func_00147c98(s32, s32, s32);
-s32 func_001484c8(s32, s32, s32, f32);
-
-s32 func_00148768(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-
-    temp_v0 = func_00147c98(arg0, arg1, 0x4E20);
-    if (temp_v0 != 0) {
-        temp_v0_2 = func_001484c8(temp_v0, arg2, arg3, fparg0);
-        if ((temp_v0_2 != 0) && (arg1 & 0x800)) {
-            M2C_FIELD(temp_v0_2, s16 *, 6) = -1;
-        }
-    }
-    return temp_v0;
-}
 
 void func_0014cb38(void) {
     func_0014f830(0x15, 5, &func_0014c400, &func_0014c428, &func_0014c6c0, &func_0014c850, &func_0014ca38, &func_0014c5c8, 0);
