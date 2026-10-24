@@ -9,30 +9,6 @@ typedef int u128 __attribute__((mode(TI)));
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 typedef struct {
-    s32 unk0;
-    u8 *inst;
-    s32 time;
-    s32 unkC;
-} PppSlot;
-
-typedef struct {
-    u8 pad[0x80];
-    PppSlot *slots;
-    u8 pad84[0x2C];
-    u64 flags;
-} PppSystem;
-
-extern s32 D_0061621C;
-extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame;
-    u8 pad10[0x8D];
-    u8 unk9D;
-} PppObject;
-
-typedef struct {
     u32 flags;
     u8 pad04[0x12];
     u16 unk16;
@@ -67,10 +43,6 @@ typedef struct {
     s32 unk94;
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-extern PppMtx D_00615E70;
-void func_002672f8(f32 *, PppMtx, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_001a9098(void *, void *);
 typedef struct {
     s32 flags;
     void *p04;
@@ -307,164 +279,6 @@ void func_001931a8(A8Obj *o) {
     a.m = D_00616040;
     a.v = o->v30;
     func_001a5ce8(&a, 0);
-}
-
-typedef struct {
-    u8 n;          /* +0x0 */
-    u8 idx;        /* +0x1 */
-    u16 t;         /* +0x2 */
-    u16 fr;        /* +0x4 */
-    u16 prev;      /* +0x6 */
-    u8 pad8[8];
-    PppVec4 v[1];  /* +0x10 */
-} TailXWork;
-
-typedef struct {
-    s32 frame;
-    s32 id;        /* +0x4 */
-    u16 speed;     /* +0x8 */
-    u8 padA[0x17];
-    u8 local;      /* +0x21 */
-} TailXKey;
-
-void pppKeShpTailXFrame(PppObject *obj, TailXKey *key, PppEntry *e) {
-    TailXWork *w;
-    PppShape *sh;
-    PppShapeFrame *f;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = PPP_WORK(TailXWork, obj, e, 0);
-    if (obj->frame == 0 && obj->unk9D == 0) {
-        PppVec4 v;
-        f32 *p;
-        s32 n;
-
-        if (key->local) {
-            func_002672f8(v, D_00615E70, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        } else {
-            func_002675a8(v, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        }
-        p = w->v[0];
-        for (n = w->n; n > 0; n--) {
-            func_002675a8(p, v);
-            p += 4;
-        }
-    }
-    if (w->idx == 0)
-        w->idx = w->n;
-    w->idx--;
-    if (key->local) {
-        func_002672f8(w->v[w->idx], D_00615E70, D_00615E68->m[3]);
-        w->v[w->idx][3] = 1.0f;
-    } else {
-        func_001a9098(w->v[w->idx], D_00615E68->m[3]);
-    }
-    {
-        u16 fr;
-
-        { PppShapeEnt *se = &((DSysS *) D_00615E64)->shapes[key->id]; sh = se->shape; }
-
-        fr = w->fr;
-        w->prev = fr;
-        f = &sh->f[fr];
-        w->t += key->speed;
-        if (w->t < f->dur)
-            return;
-        w->t -= f->dur;
-        w->fr = fr + 1;
-        if (w->fr < sh->n)
-            return;
-        {
-            s32 fl = f->flags;
-            w->t = 0;
-            if (fl & 0x80)
-                w->fr = 0;
-            else
-                w->fr--;
-        }
-    }
-}
-
-typedef struct {
-    u8 n;          /* +0x0 */
-    u8 idx;        /* +0x1 */
-    u16 t;         /* +0x2 */
-    u16 fr;        /* +0x4 */
-    u16 prev;      /* +0x6 */
-    u8 pad8[8];
-    PppVec4 v[1];  /* +0x10 */
-} Tail2XWork;
-
-typedef struct {
-    s32 frame;
-    s32 id;        /* +0x4 */
-    u16 speed;     /* +0x8 */
-    u8 padA[0x1C];
-    u8 local;      /* +0x26 */
-} Tail2XKey;
-
-void pppKeShpTail2XFrame(PppObject *obj, Tail2XKey *key, PppEntry *e) {
-    Tail2XWork *w;
-    PppShape *sh;
-    PppShapeFrame *f;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = PPP_WORK(Tail2XWork, obj, e, 0);
-    if (obj->frame == 0 && obj->unk9D == 0) {
-        PppVec4 v;
-        f32 *p;
-        s32 n;
-
-        if (key->local) {
-            func_002672f8(v, D_00615E70, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        } else {
-            func_002675a8(v, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        }
-        p = w->v[0];
-        for (n = w->n; n > 0; n--) {
-            func_002675a8(p, v);
-            p += 4;
-        }
-    }
-    if (w->idx == 0)
-        w->idx = w->n;
-    w->idx--;
-    if (key->local) {
-        func_002672f8(w->v[w->idx], D_00615E70, D_00615E68->m[3]);
-        w->v[w->idx][3] = 1.0f;
-    } else {
-        func_001a9098(w->v[w->idx], D_00615E68->m[3]);
-    }
-    {
-        u16 fr;
-
-        { PppShapeEnt *se = &((DSysS *) D_00615E64)->shapes[key->id]; sh = se->shape; }
-
-        fr = w->fr;
-        w->prev = fr;
-        f = &sh->f[fr];
-        w->t += key->speed;
-        if (w->t < f->dur)
-            return;
-        w->t -= f->dur;
-        w->fr = fr + 1;
-        if (w->fr < sh->n)
-            return;
-        {
-            s32 fl = f->flags;
-            w->t = 0;
-            if (fl & 0x80)
-                w->fr = 0;
-            else
-                w->fr--;
-        }
-    }
 }
 
 #include "data/types/nostrict_text_00180000_s6_11.h"

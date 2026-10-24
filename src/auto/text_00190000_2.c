@@ -87,14 +87,3 @@ void pppKeMdlTfd3Con(s32 arg0, PppEntry *arg1) {
     M2C_FIELD(temp_a0_2, s32 *, 4) = 0;
     M2C_FIELD(temp_a0_2, s32 *, 8) = 0;
 }
-
-void pppDrawShapeXCon(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    M2C_FIELD(temp_a0_2, s16 *, 4) = 0;
-    M2C_FIELD(temp_a0_2, s16 *, 2) = 0;
-    M2C_FIELD(temp_a0, s16 *, 0xA0) = 0;
-}

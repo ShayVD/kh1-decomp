@@ -60,17 +60,6 @@ void func_001a9460(f32, s32, s32, void *);
 void func_001aa6b0(void *, s32, s32, s32);
 void func_001a9790(s32, void *, s32, s32, s32, s32, void *);
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-typedef struct {
-    u8 pad[0x10];
-    PppMtx m;
-    PppMtx m2;
-    s32 unk90;
-    s32 unk94;
-} PppMtxOwner;
-extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-extern PppMtx D_00615E70;
-void func_002672f8(f32 *, PppMtx, f32 *);
-void func_002675a8(f32 *, f32 *);
 void func_001a9098(void *, void *);
 
 typedef struct {
@@ -133,93 +122,6 @@ void pppKeMdlTfdUv3Draw(PppObject *obj, PppTfdUv3Key *key, PppEntry *e) {
         void *w3 = PPP_WORK(void, obj, e, 3);
         func_001a9790(key->id, w0, n, (s32) w->d, (s32) w->g,
                       key->b38 | key->b39 | key->b3B | key->b3A | key->b3C, w3);
-    }
-}
-
-typedef struct {
-    u16 p0[4], p1[4], v0[4], a0[4], v1[4], a1[4];
-} PppTail3X;
-typedef struct {
-    s32 frame;
-    s32 id;
-    u8 pad8[0x18];
-    PppTail3X d;
-    u8 pad50[3];
-    u8 local;
-} PppTail3XKey;
-typedef struct {
-    PppTail3X h;
-    PppVec4 v[28];
-    u8 padF0[0xA];
-    u8 idx;
-} PppTail3XWork;
-
-void pppKeShpTail3XFrame(PppObject *obj, PppTail3XKey *key, PppEntry *e) {
-    PppTail3XWork *w;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = PPP_WORK(PppTail3XWork, obj, e, 0);
-    if (obj->frame == 0 && obj->unk9D == 0) {
-        PppVec4 v;
-        f32 *p;
-        s32 n;
-
-        if (key->local) {
-            func_002672f8(v, D_00615E70, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        } else {
-            func_002675a8(v, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        }
-        p = w->v[0];
-        for (n = 28; n > 0; n--) {
-            func_002675a8(p, v);
-            p += 4;
-        }
-    }
-    if (w->idx == 0)
-        w->idx = 28;
-    w->idx--;
-    if (key->local) {
-        func_002672f8(w->v[w->idx], D_00615E70, D_00615E68->m[3]);
-        w->v[w->idx][3] = 1.0f;
-    } else {
-        func_002675a8(w->v[w->idx], D_00615E68->m[3]);
-    }
-    w->h.v0[0] += w->h.a0[0]; w->h.p0[0] += w->h.v0[0];
-    w->h.v0[1] += w->h.a0[1]; w->h.p0[1] += w->h.v0[1];
-    w->h.v0[2] += w->h.a0[2]; w->h.p0[2] += w->h.v0[2];
-    w->h.v0[3] += w->h.a0[3]; w->h.p0[3] += w->h.v0[3];
-    w->h.v1[0] += w->h.a1[0]; w->h.p1[0] += w->h.v1[0];
-    w->h.v1[1] += w->h.a1[1]; w->h.p1[1] += w->h.v1[1];
-    w->h.v1[2] += w->h.a1[2]; w->h.p1[2] += w->h.v1[2];
-    w->h.v1[3] += w->h.a1[3]; w->h.p1[3] += w->h.v1[3];
-    if (obj->frame == key->frame) {
-        w->h.p0[0] += key->d.p0[0];
-        w->h.p0[1] += key->d.p0[1];
-        w->h.p0[2] += key->d.p0[2];
-        w->h.p0[3] += key->d.p0[3];
-        w->h.v0[0] += key->d.v0[0];
-        w->h.v0[1] += key->d.v0[1];
-        w->h.v0[2] += key->d.v0[2];
-        w->h.v0[3] += key->d.v0[3];
-        w->h.a0[0] += key->d.a0[0];
-        w->h.a0[1] += key->d.a0[1];
-        w->h.a0[2] += key->d.a0[2];
-        w->h.a0[3] += key->d.a0[3];
-        w->h.p1[0] += key->d.p1[0];
-        w->h.p1[1] += key->d.p1[1];
-        w->h.p1[2] += key->d.p1[2];
-        w->h.p1[3] += key->d.p1[3];
-        w->h.v1[0] += key->d.v1[0];
-        w->h.v1[1] += key->d.v1[1];
-        w->h.v1[2] += key->d.v1[2];
-        w->h.v1[3] += key->d.v1[3];
-        w->h.a1[0] += key->d.a1[0];
-        w->h.a1[1] += key->d.a1[1];
-        w->h.a1[2] += key->d.a1[2];
-        w->h.a1[3] += key->d.a1[3];
     }
 }
 extern PppMtx D_00616180, D_00616080;

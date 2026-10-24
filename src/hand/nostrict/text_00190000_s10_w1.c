@@ -106,7 +106,6 @@ s32 func_001b8198(void *, void *, s32);
 void *func_001aa950(s32);
 void func_001aa9d0(s32);
 extern const f32 D_0048FB68;
-extern f32 D_0048FB6C;
 extern f32 D_003732D0[];
 
 #define V_FTOI_U8(dst, src) \
@@ -224,7 +223,6 @@ extern f32 D_003732D0[];
         "mtc1 $2, %0\n" \
         : "=f"(_r) : "r"(v) : "$2", "memory"); _r; })
 
-
 typedef unsigned int T3Q __attribute__((mode(TI)));
 
 typedef struct {
@@ -243,26 +241,6 @@ typedef struct {
     u8 b24;       /* +0x51 */
     u8 b25;       /* +0x52 */
 } T3Key;
-
-typedef struct {
-    s32 frame;
-    s32 id;       /* +0x4 */
-    s32 tstep;    /* +0x8 */
-    f32 size;     /* +0xC */
-    f32 size2;    /* +0x10 */
-    f32 rs;       /* +0x14 */
-    f32 len;      /* +0x18 */
-    u8 n;         /* +0x1C */
-    u8 draw;      /* +0x1D */
-    u16 rot;      /* +0x1E */
-    u8 pad20[0x30];
-    u8 f800;      /* +0x50 */
-    u8 f400;      /* +0x51 */
-    u8 work3;     /* +0x52 */
-    u8 local;     /* +0x53 */
-    u8 b24;       /* +0x54 */
-    u8 b25;       /* +0x55 */
-} T3XKey;
 
 typedef struct {
     s16 c0[4];    /* +0x0 */
@@ -485,177 +463,6 @@ void pppKeShpTail3Draw(void *obj, T3Key *key, PppEntry *e) {
         p.flags = 0;
     if (key->b25 == 1)
         p.flags |= 0x10;
-    sh = (T3Shape *) s->shape;
-    sceVu0CopyMatrix(m0, D_00615E68->m);
-    sceVu0UnitMatrix(m1);
-    size = key->size;
-    len = key->len;
-    step = (size - key->size2) / seg;
-    dl = len * (step / size);
-    if (len == 0.0f)
-        n = -1;
-    i = w->idx;
-    v = w->v;
-    start = i;
-    last = 27;
-    func_002675a8(pos, v[i]);
-    func_002675a8(p0, pos);
-    if (i++ == last) i = 0;
-    func_002675a8(p1, v[i]);
-    func_00267530(d, p1, p0);
-    t = len;
-    rest = func_001a9350(d);
-    seg = rest;
-    base = w->t;
-    rnd = w->seed;
-    dur = sh->f[0].dur;
-    nfr = sh->nfr;
-    t3Init(key);
-    V3_LOAD(buf);
-    V3_INIT(pos, p0, d, p1);
-    if (!key->draw)
-        goto skip;
-    {
-    loop:
-        rnd = (rnd * 2061 + 7) & 0xFFFF;
-        r = rnd / 65535.0f;
-        src = (u8 *) sh + sh->f[((base + rnd) / dur) % nfr].off;
-        V_FTOI_U8(p.col, col);
-        r = 1.0f - r * key->rs;
-        tmp[0] = size * r;
-        V3_SIZE(tmp);
-        if (key->rot) {
-            tmp[0] = D_003732D0[rnd >> 4];
-            tmp[1] = D_003732D0[((rnd + 0x4000) >> 4) & 0xFFF];
-            V3_ROT(tmp);
-        }
-        V3_XFORM();
-        p.w14 = D_00616224;
-        V3_SAVE(buf);
-        {
-            s32 *g = &D_00616224;
-            *g = func_001b8198(src, &p, s->unk4);
-        }
-        V3_LOAD(buf);
-    skip:
-        if (n == 0)
-            goto end;
-        V_SUB(col, col, dcol);
-        len -= dl;
-        size -= step;
-        if (len <= 0.0f)
-            goto end;
-        if (len <= rest) {
-            tmp[0] = t / seg;
-            V3_POS(tmp);
-            t += len;
-            n--;
-        } else {
-        more:
-            if (i++ == last) i = 0;
-            if (i == start)
-                goto end;
-            V3_NEXT(v[i]);
-            t -= seg;
-            V3_LEN(tmp);
-            seg = tmp[0];
-            rest += seg;
-            if (!(len <= rest))
-                goto more;
-            tmp[0] = t / seg;
-            V3_POS(tmp);
-            t += len;
-            n--;
-        }
-        rest -= len;
-        goto loop;
-    }
-end:
-    w->t += key->tstep;
-    func_001aa9d0(384);
-}
-
-void pppKeShpTail3XDraw(void *obj, T3XKey *key, PppEntry *e) {
-    PppMtx m0;
-    PppMtx m1;
-    PppVec4 pos;
-    PppVec4 p0;
-    PppVec4 d;
-    PppVec4 p1;
-    PppVec4 tmp;
-    PppVec4 col;
-    PppVec4 dcol;
-    T2Param p;
-    T3Buf *buf;
-/*D*/
-    s32 i;
-    f32 len;
-    void *src;
-    f32 t;
-    T3Work *w;
-    f32 step;
-    f32 rest;
-    f32 dl;
-    T3Shape *sh;
-    T2ShapeEnt *s;
-    f32 seg;
-    s32 start;
-    u32 base;
-    s32 dur;
-    u32 rnd;
-    s32 nfr;
-    s32 n;
-    f32 size;
-    f32 r;
-    s32 off;
-    s32 last;
-    PppVec4 *v;
-/*E*/
-
-    inline void t3Init(T3XKey *k) {
-        f32 o;
-        if (k->local) {
-            T3CPY(buf->a, D_00615EB0);
-        } else {
-            T3CPY(buf->a, D_00615FC0);
-        }
-        o = D_0048FB6C;
-        T3CPY(buf->b, D_00616040);
-        buf->out[0][3] = o;
-        buf->out[1][3] = o;
-        V3_SCALE2(buf, D_00615E68->m, D_003701F0);
-    }
-
-    if (key->id == 0xFFFF)
-        return;
-    off = e->offsets[0];
-    w = (T3Work *) ((u8 *) obj + off + 0xA0);
-    buf = func_001aa950(384);
-    len = PPP_WORK(T2Col, obj, e, 1)->a * 0.0078125f;
-    t3Col(col, w->c0, len);
-    t3Col(pos, w->c1, len);
-    n = key->n - 1;
-    seg = n;
-    func_00267530(p0, col, pos);
-    func_002674b0(dcol, p0, seg);
-    s = &D_00615E64->shapes[key->id];
-    p.p10 = buf->out;
-    p.d8[0] = p.d8[1] = p.d8[2] = p.d8[3] = 0;
-    p.b18 = 0;
-    if (!key->b24)
-        p.flags = 128;
-    else
-        p.flags = 0;
-    if (key->b25 == 1)
-        p.flags |= 0x10;
-    if (key->f800)
-        p.flags |= 0x800;
-    if (key->f400)
-        p.flags |= 0x400;
-    if (key->work3)
-        p.p1C = PPP_WORK(void, obj, e, 3);
-    else
-        p.p1C = 0;
     sh = (T3Shape *) s->shape;
     sceVu0CopyMatrix(m0, D_00615E68->m);
     sceVu0UnitMatrix(m1);
