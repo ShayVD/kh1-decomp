@@ -25,6 +25,7 @@
  *
  * Names are read from the code and the save block, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "gummi/gummi.h"
 #include "data/bss_0062.h"
 #include "data/pieces/D_002BC140.h"
@@ -66,9 +67,6 @@ s32 func_00120748(char *, void *, void (*)(s32), s32);
 void func_001bfac8(void);
 void *memset(void *, s32, u32);
 void func_001be820(void *, u32);
-void sceVu0UnitMatrix(Mtx);
-void sceVu0MulMatrix(Mtx, Mtx, Mtx);
-void sceVu0TransMatrix(Mtx, Mtx, FVec4 *);
 s32 func_001ba3f0(s32);
 s32 func_001ba3d8(void);
 void func_001ba060(GumiShip *, s32);
@@ -261,8 +259,8 @@ void func_001bbce0(f32 (*m)[4], GumiPiece *o) {
     t.y = -((f32)((o->pos >> 4) & 15) * 200.0f + (f32)(((u16)v >> 4) & 15) * 200.0f * 0.5f);
     t.z = (f32)((o->pos >> 8) & 15) * 200.0f + (f32)(((u16)v >> 8) & 15) * 200.0f * 0.5f;
     t.w = 1.0f;
-    sceVu0UnitMatrix(m);
-    func_00267578(m, m, &t);
+    PlatVu0UnitMatrix(m);
+    PlatVu0TransMatrix(m, m, &t);
 }
 
 s32 func_001bbdf0(GumiPiece *o) {
@@ -289,7 +287,7 @@ void func_001bbf38(Mtx m, GumiPiece *pc) {
     Mtx r;
     func_001bbce0(m, pc);
     func_001bbbd0(r, pc);
-    sceVu0MulMatrix(m, m, r);
+    PlatVu0MulMatrix(m, m, r);
 }
 
 void func_001bbf88(GumiPiece *o, s32 axis, s32 dir) {
