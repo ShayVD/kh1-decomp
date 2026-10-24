@@ -16,15 +16,6 @@ typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0
 #include "data/types/text_00240000_h50_p.h"
 
 /* GS texture header: TEX0-style bitfield word at +0x18. */
-typedef struct {
-    u64 f0:14; u64 f14:6; u64 f20:6; u64 f26:11; u64 f37:14; u64 f51:5; u64 f56:5; u64 f61:3;
-} TexBits;
-typedef struct {
-    u8 pad[8]; s32 x8; u8 padc[8]; s16 w; s16 h;
-    TexBits tb;
-    u8 pad20[0x10];
-} GsTexHdr;
-typedef struct { u8 pad[0x10]; GsTexHdr h; } GsTex;
 
 /* ttlib/ui.c: 0xC0-byte UI elements with three keyframe tracks
  * (+0x64 and +0x8C: 32-byte frames, +0x78: 80-byte frames). Each track
@@ -73,16 +64,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-GsTexHdr *func_00249f08(GsTex *t, s32 a, s32 b, s32 c, s32 d, s32 e) {
-    TexBits *tb = &t->h.tb;
-    tb->f0 = a;
-    tb->f20 = b;
-    tb->f37 = c;
-    tb->f56 = d;
-    tb->f61 = e;
-    return &t->h;
-}
 
 void func_0024a0e0(Ui *u, s32 *out) {
     Anim *a = &u->s.a;

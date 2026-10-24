@@ -77,10 +77,6 @@ void func_00242b38(void) {
     }
 }
 
-s32 func_00249da0(s32 arg0) {
-    return arg0 + 0x10;
-}
-
 s32 func_0024a1c0(void *arg0) {
     return M2C_FIELD(arg0, s32 *, 0x74);
 }

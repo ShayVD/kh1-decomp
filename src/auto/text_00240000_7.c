@@ -7,7 +7,6 @@ M2C_UNK func_0024b1f0();
 M2C_UNK func_0024b228(M2C_UNK, s32, s32, s32);
 M2C_UNK func_0024b448(M2C_UNK);
 extern M2C_UNK D_0046A058[];
-extern M2C_UNK D_00491840;
 extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
 extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
@@ -16,17 +15,12 @@ extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);
 extern volatile s32 D_00668040[];
 s32 func_0025daf0(M2C_UNK *);
-s32 strncmp(s32, s32, s32);
 void *func_00120190(M2C_UNK *);
 
 void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-s32 func_00249da8(s32 arg0) {
-    return strncmp(arg0, (s32) &D_00491840, 4);
 }
 
 void func_0024b2c8(s32 arg0, s32 arg1, s32 arg2) {

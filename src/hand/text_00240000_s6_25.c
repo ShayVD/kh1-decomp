@@ -49,107 +49,17 @@ extern s32 D_00656420;
 #include "data/types/text_00240000_s6_25.h"
 
 /* 249a48 */
-typedef struct {
-    u32 total;
-    u32 clutSize;
-    u32 imageSize;
-    u16 hdrSize;
-    u16 clutColors;
-    u8 fmt;
-    u8 mip;
-    u8 clutType;
-    u8 imageType;
-    s16 w;
-    s16 h;
-    u64 tex0;
-    u64 tex1;
-    u32 flags;
-    u32 clut;
-} TimPic;
-typedef struct { u8 pad[0x10]; TimPic pic; u8 data[1]; } Tim;
 #include "data/types/text_00240000_s6_25_p.h"
-extern PsmEnt D_00469FB0[];
 void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 s32 sceGsExecLoadImage(void *, void *);
-void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
 void func_00237018(void *, s32, s32);
-
-void func_00249a48(Tim *t, s32 sync) {
-    u8 li[0x60];
-    u64 pk[6];
-    TimPic *p = &t->pic;
-    u8 *img = NULL;
-    u8 *clut;
-    s16 psm, cpsm; u16 cbp;
-    if (p->imageSize) {
-        img = t->data;
-        sceGsSetDefLoadImage(li, (u16)(p->tex0 & 0x3FFF), (u16)(p->tex0 >> 14 & 0x3F), (u16)((p->tex0 & 0x3F00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, img);
-    }
-    sceGsSyncPath(0, 0);
-    pk[2] = 0x1000000000008001;
-    pk[3] = 14;
-    pk[5] = 0x3F;
-    pk[4] = 0;
-    func_00237018(pk, 3, 1);
-    if (p->clutSize) {
-        cbp = p->tex0 >> 37 & 0x3FFF;
-        cpsm = D_00469FB0[p->clutType].psm;
-        clut = img + p->imageSize;
-        psm = D_00469FB0[p->imageType].psm;
-        if (psm == 19) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 16, 16);
-        } else if (psm == 20) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 8, 2);
-        }
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, clut);
-    }
-    sceGsSyncPath(0, 0);
-    pk[2] = 0x1000000000008001;
-    pk[3] = 14;
-    pk[5] = 0x3F;
-    pk[4] = 0;
-    func_00237018(pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
-}
 
 /* 249dc8 */
-typedef struct {
-    u8 pad[8]; s32 x8; u8 padc[8]; s16 w; s16 h;
-    u64 tex;
-    u8 pad20[0x10];
-} GsTexHdr;
-typedef struct { u8 pad[0x10]; GsTexHdr h; u8 data[1]; } GsTex;
-typedef struct { u64 a[6]; } Pkt6;
 s32 sceGsExecLoadImage(void *, void *);
 s32 sceGsSyncPath(s32, s32);
 void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_00237018(void *, s32, s32);
-void func_00249dc8(GsTex *t, s32 sync) {
-    u8 li[0x60];
-    Pkt6 pk;
-    GsTexHdr *h = &t->h;
-    u8 *d = NULL;
-    if (h->x8) {
-        d = t->data;
-        sceGsSetDefLoadImage(li, (u16)(h->tex & 0x3fff), (u16)((h->tex >> 14) & 0x3f), (u16)((h->tex & 0x3f00000) >> 20), 0, 0, h->w, h->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, d);
-    }
-    sceGsSyncPath(0, 0);
-    pk.a[2] = 0x1000000000008001ULL;
-    pk.a[3] = 0xe;
-    pk.a[5] = 0x3f;
-    pk.a[4] = 0;
-    func_00237018(&pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
-}
 
 /* 24aac8 */
 typedef struct { s32 dur; u8 pad[0xc]; f32 v[4]; } Frame;
@@ -253,5 +163,4 @@ s32 func_0024ba28(s32 *p, char *name, s32 idx, u8 *out) {
 #include "data/data_0046.h"
 #include "data/data_0045.h"
 #include "data/data_0049.h"
-#include "data/pieces/D_00469FB0.h"
 #include "data/pieces/D_0046A038.h"

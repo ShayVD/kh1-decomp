@@ -94,23 +94,6 @@ void func_002474e8(s32, void *, s32, s32, f32);
  * reaches 128. */
 
 typedef struct {
-    u64 a : 14;
-    u64 p0 : 23;
-    u64 b : 14;
-    u64 p1 : 13;
-} Bits;
-typedef struct {
-    u8 pad[0x28];
-    Bits bits;
-} Obj5;
-
-void func_00249d50(Obj5 *e, s32 a, s32 b) {
-    Bits *p = &e->bits;
-    p->a = a;
-    p->b = b;
-}
-
-typedef struct {
     u64 lo : 20;
     u64 f20 : 6;
     u64 mid : 30;
