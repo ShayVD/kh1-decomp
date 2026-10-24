@@ -1728,6 +1728,79 @@ and the symbols the same as the base.  At the end `make report` 6979 at
 100%, `make test` passes, the seven new files compile with no warnings and
 `s31_warndiff` reports 0 new warnings for h13 / h41 / nostrict h41.
 
+## Session 49: the model renderer's helpers and the ppp effect classes, 0x001a0190-0x001aaf88
+
+Session 49 moved 142 functions in six commits.  No Mac: static checks
+only.  After it the only functions of 0x001a0000-0x001b0000 left in src/hand
+are the 16 VU0 routines in src/hand/vu0.c (func_001a9080 ... func_001a9388,
+func_001aae48, func_001aae90).  No assert names here either.  The renderer
+groups come from its error strings ("op_spr_alloc error !", "can't open
+file %s", "op_oef2_set error : ", "op_md0_onef() light no support !",
+docs/elf-notes.md), which suggest original files named op_*.c; the ppp
+groups come from the class table D_00370200 (docs/structs.md), whose
+entries 206 pppRyjMegaPlaceModel ... 229 pppRyjMegaBirthModelFilter point at
+the Con / Des / Frame / Draw functions here.  The split by class is a guess.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the model renderer's DMA chain: packet stacks, priority lists, the draw dispatch func_001aaf88 (defines D_0061FFA0) | src/gfx/opdma.c | 0x001a9e70-0x001aaf88 | 29 |
+| GS image loads (sceGsSetDefLoadImage / sceGsExecLoadImage) | src/gfx/opimage.c | 0x001aa0a8-0x001aa420 | 4 |
+| file loads ("can't open file %s") | src/gfx/opfile.c, opfile.nostrict.c | 0x001aaa70-0x001aadf0 | 6 |
+| ppp's rotation matrices (X / Y / Z and the five compositions) | src/ppp/pppmtx.c | 0x001a50d0-0x001a5490 | 8 |
+| the KeLns draw helpers, the KeBornRnd helper | src/ppp/kelns.c, kelns.nostrict.c, keborn.nostrict.c | 0x001a5520-0x001a67a0 | 16 |
+| the KeTh node pools and lists; the strip draw func_001a7718 with its five helpers (alone because of file-scope #defines) | src/ppp/keth.c, keth.nostrict.c, kethdraw.nostrict.c | 0x001a67b8-0x001a8d78 | 17 |
+| ppp's maths: an LCG, VU0 random, ray / sphere, atan2, powers, square roots, lengths, a u16 id free list | src/ppp/pppmath.c, pppmath.nostrict.c | 0x001a8d88-0x001a9418 | 11 |
+| the KeMdlTfd and KeShpDtt helpers (mostly inline VU0) | src/ppp/kemdltfd.c, kemdltfd.nostrict.c, keshpdtt.nostrict.c | 0x001a9460-0x001a9c30 | 4 |
+| pppRyjDrawMatrixWorldDtt(Fr), pppRyjLight, pppRyjDrawKekoto | src/ppp/ryjdtt.c, ryjlight*.c, ryjkekoto*.c | 0x001a1158-0x001a2090 | 13 |
+| pppRyjMegaBirthModel | src/ppp/ryjmbmodel.c, ryjmbmodel.nostrict.c | 0x001a0190-0x001a10e0 | 8 |
+| pppRyjMegaBirthFilter | src/ppp/ryjmbfilter.c, .nostrict.c, .nostrict_nofill.c | 0x001a2178-0x001a35f0 | 14 |
+| pppRyjMegaBirthModelFilter | src/ppp/ryjmbmfilter.c, ryjmbmfilter.nostrict.c | 0x001a3650-0x001a5070 | 14 |
+
+The libvu0 calls keep their addresses (func_00267328 sceVu0MulMatrix,
+func_002672f8 sceVu0ApplyMatrix, func_00267560 sceVu0ScaleVector,
+func_00267530 sceVu0SubVector, func_002675a8 sceVu0CopyVector,
+func_002673b8 sceVu0Normalize, func_00267390 sceVu0InnerProduct) except
+where an old file already used the SDK name.  Each file's top comment says
+what its code reads and what is a guess; none of the names is proved by a
+boot.
+
+| chunk | commit | deleted |
+|---|---|---|
+| opdma.c, opimage.c, opfile*.c | 45858fd | auto text_001a0000_1 / _7 / _10, c2, s7_w5, s8_w4 (s8_w5 became opfile.nostrict.c) |
+| pppmtx.c, kelns*.c, keborn.nostrict.c | 80254fb | none |
+| keth*.c, kethdraw, pppmath*.c, kemdltfd*.c, keshpdtt | 78512f1 | auto text_001a0000_3 / _9, h13, nostrict h41, s7_w12b (b09 became kemdltfd.c, s7_w8 keshpdtt.nostrict.c) |
+| ryjdtt.c, ryjlight*.c, ryjkekoto*.c | 963f4c3 | auto text_001a0000_4 / _5 / _8 (s8_w11 became ryjkekoto.nostrict.c) |
+| ryjmbmodel*.c | 5db6f8a | auto text_001a0000_2, nostrict ctx, s7_w12 |
+| ryjmbfilter*.c, ryjmbmfilter*.c | c231461 | auto text_001a0000 / _6, c3, h41, nostrict b09 / h65 / s6_12 (c07 became ryjmbmfilter.nostrict.c) |
+
+**Data moved with its users**: D_0061FFA0 (opdma.c), the pointer table
+D_00372750 (keth.nostrict.c).
+
+**Traps.**
+- **A float argument without a prototype becomes a double**: a call to
+  func_00267560 (sceVu0ScaleVector) with no prototype in scope grew the
+  caller; declare `void func_00267560(f32 *, f32 *, f32);`.
+- **A view macro changes the alias set**: in a strict-aliasing file,
+  pppRyjMegaBirthModelFilterCon needs the declared type `extern volatile
+  void *D_00615E60` (a `#define D_00615E60 (*(PppSys **)&D_00615E60)` view
+  reorders its loads), while func_001a47b0 in the same file needs that view.
+  The file declares the base and wraps func_001a47b0 in #define / #undef.
+- **Sized externs for cover_check, again**: opdma.c keeps `extern u128
+  D_0061E8B0;` (without it D_0061EEA0 became covered).
+- **Callees defined above their callers**: the nostrict filter files keep
+  CONTEXT_ONLY copies of 0019f100 / 0019f148 / 0019f1f0 and func_001a26f0;
+  `mod.py remove` and any script that reads a module's definitions must skip
+  CONTEXT_ONLY lines, or they delete the real definitions elsewhere.
+- **K&R definitions**: `mod.py remove` does not parse them
+  (session 49 deleted one in h41 by hand).
+- **File-scope #defines**: kethdraw.nostrict.c is alone because its draw
+  function's #defines would rename fields in the other KeTh functions.
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh` with
+float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, and `s31_warndiff` 0 new warnings.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1824,7 +1897,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 48, after each step)
+## Verification (sessions 30 to 49, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1840,17 +1913,18 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x001b9b30 to 0x0024f2e0** (session
-  48), except the VU0 routine func_001b99b8 (src/hand/vu0.c).  The 3,241
-  functions still in src/auto and src/hand lie in 0x001001f8-0x001b9b30
-  (out/gen/placements.tsv): 158 in 0x001a, 186 in 0x0019, 335 in 0x0018,
-  324 in 0x0017 and more below.  Go on downwards from 0x001a9eb8 or so; the
-  top of 0x001a (0x001a8780-0x001aa950) is renderer code: VU0 (vu0.c, the
-  hand asm text_001aa1f8.s), GS image loads (sceGsExecLoadImage) and 41
-  nostrict functions, so take its plain C runs first and leave whole-VU0
-  functions in place (docs/matching-tips.md).  List a range with
-  `python3 -I tools/shift/s37move/refs.py LO HI`, group it by original file
-  where assert strings or data order show one, else by what it does.
+- **The game segment is in modules from 0x001a0000 to 0x0024f2e0** (session
+  49), except the 17 VU0 routines in src/hand/vu0.c.  The 3,099 functions
+  still in src/auto and src/hand lie in 0x001001f8-0x001a0000
+  (out/gen/placements.tsv): 186 in 0x0019, 335 in 0x0018 and more below.
+  Go on downwards from 0x0019f1f0: 0x0019c838-0x0019f1f0 is the rest of the
+  MegaBirth family (pppRyjMegaBirth / MegaPlaceModel, class table entries
+  206 on; func_0019f1f0 is in s12_s12w8, 0019f100 in vu0.c, 0019f148 in
+  h12), whose helpers the ryjmb*.c files already copy as CONTEXT_ONLY.
+  Fold those copies into the new module when it lands.  List a range with
+  `python3 -I tools/shift/s37move/refs.py LO HI`, group it by the class
+  table (docs/structs.md) where the functions are a class's slots, else by
+  what they do; leave whole-VU0 functions in place (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

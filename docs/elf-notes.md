@@ -41,6 +41,14 @@ docs/target-versions.md); the fan-patched ELF has the same layout.
   "Run Gumi Edit" / "gb.x" and "Run WorldMap" / "wm.x" (D_0048FFF0 ...
   D_00490018, the two overlays), "already max task!" (D_00490300, the task
   slots at 0x001bfc90); docs/modules.md "Session 48".
+- The model renderer under it (0x001a9e70-0x001aaf88) prints "op_spr_alloc
+  error !", "op_spr_rev_alloc error !", "op_spr_free error !",
+  "op_spr_rev_free error !" (0x0048FDA8 ...), "can't open file %s"
+  (0x0048FE18), "op_oef2_set error : " (0x0048FE30) and "(op)
+  op_md0_onef() light no support !" (0x0048FF10): its original files were
+  most likely op_*.c (op_spr, op_oef2, op_md0 ...); src/gfx/op*.c follow
+  that (docs/modules.md "Session 49").  The ppp effects below it are named
+  by the class table D_00370200 (docs/structs.md).
 
 ## Segments (kh1.toml `[[segment]]`)
 
