@@ -12,6 +12,7 @@
  * code came from.  Read from the code, not proved by a boot. */
 /* func_001996d0 (from hand/nostrict/text_00190000_h64.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -218,9 +219,6 @@ typedef struct {
     u16 idx[4];
 } ShipolyVtx4;
 void func_00199908(ShipolyKey *, f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002674f0(f32 *, f32 *, f32 *, f32);
 void func_001999f0(ShipolyKey *, s32 *, s32 *, s32 *, s32 *);
 static inline void inl_alpha(u8 (*c)[4], s32 k, s32 d, f32 a, f32 db) {
     if (k >= d) {
@@ -269,8 +267,8 @@ void func_00199ac8(ShipolySlot *r, ShipolyKey *key, ShipolyWork *w) {
         for (i = 0; (u32) i < n; i++) {
             idx = cur - i;
             idx += (idx < 0) * n;
-            func_002675a8(pts[i], (f32 *) ((u32) buf + (idx * 2 + j) * 16));
-            if (key->b15) func_00267530(pts[i], pts[i], (*(f32 (*)[4])&D_003701D0));
+            PlatVu0CopyVector(pts[i], (f32 *) ((u32) buf + (idx * 2 + j) * 16));
+            if (key->b15) PlatVu0SubVector(pts[i], pts[i], (*(f32 (*)[4])&D_003701D0));
         }
         func_001996d0(pts, n, tmp);
         for (i = 0; i < segs; i++) {
@@ -303,7 +301,7 @@ void func_00199ac8(ShipolySlot *r, ShipolyKey *key, ShipolyWork *w) {
                 v[j][1] = e2[i2 * 2 + j].y;
                 v[j][2] = e2[i2 * 2 + j].z;
             }
-            func_002674f0(v[0], v[0], v[1], a);
+            PlatVu0InterVector(v[0], v[0], v[1], a);
             a -= da;
             e2[i2 * 2].x = v[0][0];
             e2[i2 * 2].y = v[0][1];
@@ -560,8 +558,6 @@ extern u8 D_00616140[];
 extern u8 D_00616100[];
 extern PppMtx D_00615FC0;
 s32 func_001aaf88(DMdl *, DParam *, s32);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-void sceVu0UnitMatrix(PppMtx);
 typedef struct {
     s32 frame;
     s32 slot;
@@ -574,7 +570,6 @@ typedef struct {
 } ShipolyDKey;
 extern PppMtx D_00616180;
 extern PppMtx D_00616080;
-void func_00267e40(f32 *, f32 *);
 void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {
     DParam p;
     PppMtx mtx;
@@ -610,7 +605,7 @@ void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {
     if (key->bA) {
         p.flags |= 0x2000;
         p.p30 = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     }
     p.p44 = 0;
 /*P*/
@@ -622,9 +617,9 @@ void pppRyjDrawShipolyDraw(PppObject *obj, ShipolyDKey *key, PppEntry *e) {
     p.p04 = D_00616240;
 /*Q*/
     if (key->b15) {
-        sceVu0UnitMatrix(D_00615E68->m2);
-        func_00267e40(D_00615E68->m2[3], (*(f32 (*)[4])&D_003701D0));
-        sceVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m2);
+        PlatVu0UnitMatrix(D_00615E68->m2);
+        PlatVu0CopyVectorXYZ(D_00615E68->m2[3], (*(f32 (*)[4])&D_003701D0));
+        PlatVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m2);
         p.p20 = D_00615E68->m2;
     } else {
         p.p20 = D_00616080;
@@ -876,8 +871,8 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
     v1p = w->v1;
     seg = r->w8;
     n = w->n;
-    func_002675a8(buf[cur][0], v0p);
-    func_002675a8(buf[cur][1], v1p);
+    PlatVu0CopyVector(buf[cur][0], v0p);
+    PlatVu0CopyVector(buf[cur][1], v1p);
     same = 0;
     segs = seg + 1;
     ent = r->ent;
@@ -885,7 +880,7 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
         for (i = 0; (u32) i < n; i++) {
             idx = cur - i;
             idx += (idx < 0) * n;
-            func_00267530(pts[i], (f32 *) ((u32) buf + (idx * 2 + j) * 16), (f32 *) (src + 16));
+            PlatVu0SubVector(pts[i], (f32 *) ((u32) buf + (idx * 2 + j) * 16), (f32 *) (src + 16));
         }
         func_0019a828(pts, n, tmp);
         for (i = 0; i < segs; i++) {
@@ -919,7 +914,7 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
                 v[j][1] = e2[i2 * 2 + j].y;
                 v[j][2] = e2[i2 * 2 + j].z;
             }
-            func_002674f0(v[0], v[0], v[1], a);
+            PlatVu0InterVector(v[0], v[0], v[1], a);
             a -= da;
             e2[i2 * 2].x = v[0][0];
             e2[i2 * 2].y = v[0][1];
@@ -1018,7 +1013,7 @@ void func_0019ab38(ShipolySlot *r, BoneKey *key, BoneWork *w) {
         if (func_00122ff8(src)) {
             func_001315c0(src, b0, key->f14, v0p);
             func_001315c0(src, b1, key->f1C, v1p);
-            func_002675a8((f32 *) D_00615E60, v0p);
+            PlatVu0CopyVector((f32 *) D_00615E60, v0p);
         } else {
             ((PppSystemB7 *) D_00615E60)->bB7 = 1;
         }
@@ -1101,8 +1096,8 @@ void func_0019b460(PppObject *obj, BoneKey_9b460 *key, PppEntry *e) {
             ((PppSystemB_9b460 *) D_00615E60)->bB7 = 1;
         }
         for (i = 0; i < w->n; i++) {
-            func_002675a8((f32 *) (w->buf + i * 32), w->v0);
-            func_002675a8((f32 *) (w->buf + i * 32 + 16), w->v1);
+            PlatVu0CopyVector((f32 *) (w->buf + i * 32), w->v0);
+            PlatVu0CopyVector((f32 *) (w->buf + i * 32 + 16), w->v1);
         }
     }
     r = &((ShipolySlot_9b460 *) D_00615E64->slots)[key->id];
@@ -1222,7 +1217,7 @@ void pppRyjDrawShipolyBoneDraw(PppObject *obj, BoneDKey *key, PppEntry *e) {
     if (key->bA) {
         p.flags |= 0x2000;
         p.p30 = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     }
     p.p44 = 0;
 /*P*/
@@ -1233,9 +1228,9 @@ void pppRyjDrawShipolyBoneDraw(PppObject *obj, BoneDKey *key, PppEntry *e) {
     p.w3C = D_00615E68->unk94;
     p.p04 = D_00616240;
 /*Q*/
-    sceVu0UnitMatrix(D_00615E68->m2);
-    func_002675a8(D_00615E68->m2[3], (f32 *) (a + 16));
-    sceVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m2);
+    PlatVu0UnitMatrix(D_00615E68->m2);
+    PlatVu0CopyVector(D_00615E68->m2[3], (f32 *) (a + 16));
+    PlatVu0MulMatrix(D_00615E68->m2, D_00616180, D_00615E68->m2);
 /*P*/
     p.p20 = D_00615E68->m2;
     p.r = w->r;

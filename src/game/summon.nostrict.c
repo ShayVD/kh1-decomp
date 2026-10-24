@@ -8,6 +8,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00350CE0.h"
@@ -119,7 +120,6 @@ void func_00137448(W55Ob *o);
 void func_00176310(s32 a);
 void func_00176388(s32 a);
 void func_001763a0(s32 a);
-void func_002675a8(f32 *d, f32 *s);
 #define D_0052AE38 (*(W55Ob *(*)) &D_0052AE38)
 #define func_001373f8 ((void (*)(W55Ob *o, f32 f)) func_001373f8)
 s32 func_0013b238(void) {
@@ -138,12 +138,12 @@ s32 func_0013b238(void) {
         } else {
             f &= ~0x8000;
             func_00137448(p);
-            func_002675a8(p->x120, (*(f32 (*)[0x4])&D_002C58B0));
+            PlatVu0CopyVector(p->x120, (*(f32 (*)[0x4])&D_002C58B0));
         }
         func_00123438(p, f);
     }
     pl = &D_0052AE38;
-    func_002675a8(D_0052AE40, (*pl)->pos);
+    PlatVu0CopyVector(D_0052AE40, (*pl)->pos);
     D_0052AE40[3] = (*pl)->x3c;
     func_00123a88((*pl)->x4, (*(f32 (*)[0x4])&D_002C58B0));
     func_00176310(D_0052AE60);

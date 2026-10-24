@@ -12,6 +12,7 @@
  * fieldcam.nostrict.c has five more.  Each section names the file its code
  * came from.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0057.h"
 #include "data/types/text_00170000_h61.h"
 #include "data/pieces/D_003626F0.h"
@@ -54,7 +55,6 @@ V4 D_005758B0 ALIGNED(16);
 extern f32 D_005758C4;
 extern s32 D_00575890;
 extern Fn8 D_0036245C[];
-void func_002675a8(V4 *, V4 *);
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
 /* Camera-state functions that follow func_00176f08 / func_00177358 in the
@@ -62,17 +62,17 @@ void func_002675a8(V4 *, V4 *);
 /* callees that must be DEFINED above (real bodies: func_00176f08 in src/hand/text_00170000_h61.c, func_00177680 in src/hand/text_00170000_h38.c); stubs here for testing */
 void func_00176f08(s32 st, f32 t) {
     if (D_002E27A8 == 0) {
-        func_002675a8(&D_005758D0, &D_002E2780);
-        func_002675a8(&D_005758E0, &D_002E2790);
+        PlatVu0CopyVector(&D_005758D0, &D_002E2780);
+        PlatVu0CopyVector(&D_005758E0, &D_002E2790);
         D_005758C4 = 0.0f;
         D_00575890 |= 1;
     } else {
         if (D_005758C4 > 0.0f) {
-            func_002675a8(&D_005758A0, &D_002E2780);
-            func_002675a8(&D_005758B0, &D_002E2790);
+            PlatVu0CopyVector(&D_005758A0, &D_002E2780);
+            PlatVu0CopyVector(&D_005758B0, &D_002E2790);
         } else {
-            func_002675a8(&D_005758A0, &D_005758D0);
-            func_002675a8(&D_005758B0, &D_005758E0);
+            PlatVu0CopyVector(&D_005758A0, &D_005758D0);
+            PlatVu0CopyVector(&D_005758B0, &D_005758E0);
         }
         D_005758C0 = D_005758C4 = t;
         D_00575890 &= ~1;
@@ -220,13 +220,12 @@ ret1:
 #undef D_00575894
 
 /* func_00177440 (from hand/text_00170000_h11.c). */
-void func_00267530(void *, void *, void *);
 s32 func_00119688(void *);
 s32 func_00177440(void *a, void *b) {
     f32 v[4];
     f32 m[12];
-    func_00267530(m, b, a);
-    func_002675a8(v, a);
+    PlatVu0SubVector(m, b, a);
+    PlatVu0CopyVector(v, a);
     return func_00119688(v) != -1;
 }
 
@@ -236,11 +235,11 @@ typedef struct { f32 a[4]; f32 b[4]; s16 c; u8 pad[14]; } M30;
 s32 func_00177608(void *out, void *a, void *b) {
     f32 v[4];
     M30 m;
-    func_00267530(&m, b, a);
-    func_002675a8(v, a);
+    PlatVu0SubVector(&m, b, a);
+    PlatVu0CopyVector(v, a);
     func_00118d78(v);
     if (m.c != -1) {
-        func_002675a8(out, m.b);
+        PlatVu0CopyVector(out, m.b);
         return 1;
     }
     return 0;
@@ -252,40 +251,37 @@ extern f32 D_003624B8;
 /* callees that must be DEFINED above (real bodies: func_00176f08 in src/hand/text_00170000_h61.c, func_00177680 in src/hand/text_00170000_h38.c); stubs here for testing */
 f32 func_00177680(V4 *a, V4 *b) {
     V4 p, q;
-    func_002675a8(&q, b);
+    PlatVu0CopyVector(&q, b);
     q.y -= 10.0f;
-    func_002675a8(&p, b);
+    PlatVu0CopyVector(&p, b);
     p.y += D_003624B8;
     if (func_00177608(a, &q, &p)) {
-        func_00267530(&p, a, b);
+        PlatVu0SubVector(&p, a, b);
         return func_00120bf8(&p);
     }
-    func_002675a8(a, &p);
+    PlatVu0CopyVector(a, &p);
     return 0.0f;
 }
 
 /* func_00177740 (from hand/text_00170000_h61.c). */
 extern V4 D_00362670;
-void func_002672f8(V4 *, void *, V4 *);
-void func_00267518(V4 *, V4 *, V4 *);
-void func_00267810(V4 *, void *, f32);
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 s32 func_00177740(V4 *a0) {
     V4 m[4];
     V4 c, l, r, u, d, dir;
-    func_002675a8(&c, &D_00362670);
+    PlatVu0CopyVector(&c, &D_00362670);
     c.x = c.z = 0.0f;
-    func_002672f8(&c, &D_002E26A0[0]->xd0, &c);
-    func_00267530(&dir, &c, a0);
-    func_00267810(m, D_002C58D0, 0.26179939f);
-    func_002672f8(&l, m, &dir);
-    func_00267518(&l, &l, &D_005758D0);
-    func_00267810(m, D_002C58D0, -0.26179939f);
-    func_002672f8(&r, m, &dir);
-    func_00267518(&r, &r, &D_005758D0);
-    func_002675a8(&u, &c);
+    PlatVu0ApplyMatrix(&c, &D_002E26A0[0]->xd0, &c);
+    PlatVu0SubVector(&dir, &c, a0);
+    PlatVu0RotMatrixY(m, D_002C58D0, 0.26179939f);
+    PlatVu0ApplyMatrix(&l, m, &dir);
+    PlatVu0AddVector(&l, &l, &D_005758D0);
+    PlatVu0RotMatrixY(m, D_002C58D0, -0.26179939f);
+    PlatVu0ApplyMatrix(&r, m, &dir);
+    PlatVu0AddVector(&r, &r, &D_005758D0);
+    PlatVu0CopyVector(&u, &c);
     u.y += 50.0f;
-    func_002675a8(&d, &c);
+    PlatVu0CopyVector(&d, &c);
     d.y -= 50.0f;
     if (func_00177440(&D_005758D0, &c) && func_00177440(&D_005758D0, &l)
         && func_00177440(&D_005758D0, &r) && func_00177440(&D_005758D0, &u)
@@ -298,20 +294,19 @@ s32 func_00177740(V4 *a0) {
 extern M2C_UNK D_00362660;
 f32 func_00120c88(f32);
 void func_0017f178();
-void func_00267768(void *, M2C_UNK *, f32);
 #define D_00362670 (*(M2C_UNK (*)) &D_00362670)
 void func_00177900(s32 arg0, M2C_UNK *arg1, f32 fparg0) {
     s32 sp[20];    f32 temp_f20;
 
     func_0017f178();
-    func_002672f8(arg1, (*(s32 *)&D_002E26A0) + 0xD0, &D_00362670);
+    PlatVu0ApplyMatrix(arg1, (*(s32 *)&D_002E26A0) + 0xD0, &D_00362670);
     temp_f20 = func_00120c88(fparg0);
-    func_00267768(sp, ((M2C_UNK *)&D_002C58D0), func_00120c88(M2C_FIELD(&D_00362660, f32 *, 0)));
-    func_00267810(sp, sp, temp_f20);
-    func_002675a8(&M2C_FIELD(sp, M2C_UNK *, 0x40), ((M2C_UNK *)&D_002C58A0));
+    PlatVu0RotMatrixX(sp, ((M2C_UNK *)&D_002C58D0), func_00120c88(M2C_FIELD(&D_00362660, f32 *, 0)));
+    PlatVu0RotMatrixY(sp, sp, temp_f20);
+    PlatVu0CopyVector(&M2C_FIELD(sp, M2C_UNK *, 0x40), ((M2C_UNK *)&D_002C58A0));
     M2C_FIELD(sp, f32 *, 0x48) = M2C_FIELD(&D_00362660, f32 *, 0xC);
-    func_002672f8(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
-    func_00267518(arg0, arg1, &M2C_FIELD(sp, M2C_UNK *, 0x40));
+    PlatVu0ApplyMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
+    PlatVu0AddVector(arg0, arg1, &M2C_FIELD(sp, M2C_UNK *, 0x40));
 }
 #undef D_00362670
 
@@ -323,13 +318,13 @@ s32 func_00177488(M2C_UNK *, void *, void *);
 void func_001779e8(void *arg0, s32 arg1) {
     s32 sp[8];
     func_00177900();
-    func_002675a8(sp, &D_00362670);
+    PlatVu0CopyVector(sp, &D_00362670);
     M2C_FIELD(sp, f32 *, 0x0) = M2C_FIELD(sp, f32 *, 0x8) = 0.0f;
-    func_002672f8(sp, (*(s32 *)&D_002E26A0) + 0xD0, sp);
+    PlatVu0ApplyMatrix(sp, (*(s32 *)&D_002E26A0) + 0xD0, sp);
     if (func_00177488(&M2C_FIELD(sp, M2C_UNK *, 0x10), sp, arg0) != 0) {
-        func_002675a8(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
+        PlatVu0CopyVector(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x10));
     }
-    func_00267530(&M2C_FIELD(sp, M2C_UNK *, 0x10), arg1, arg0);
+    PlatVu0SubVector(&M2C_FIELD(sp, M2C_UNK *, 0x10), arg1, arg0);
     func_00120bf8(&M2C_FIELD(sp, M2C_UNK *, 0x10));
 }
 #undef func_00120bf8
@@ -354,8 +349,6 @@ extern f32 D_003624BC;
 extern f32 D_003624C0;
 extern f32 D_003624C4;
 extern V4 D_00362680;
-void func_00267560(V4 *, V4 *, f32);
-void func_002673b8(V4 *, V4 *);
 #define D_00575894 (*(CamC4 *(*)) &D_00575894)
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
@@ -369,30 +362,30 @@ s32 func_00177ef8(void) {
     f32 d;
     if (func_00177168()) {
         if (D_00575894->x70 == 2) {
-            func_002675a8(&r.a, &D_005758E0);
-            func_002675a8(&r.b, &D_002C58A0);
+            PlatVu0CopyVector(&r.a, &D_005758E0);
+            PlatVu0CopyVector(&r.b, &D_002C58A0);
             r.b.y = 1000.0f;
             if (func_00119688(&r) == -1) hit = 1;
             else if (D_00575894->x3c0.y > 5.0f) {
-                func_002673b8(&t, &D_00575894->x3c0);
-                func_00267560(&t, &t, 250.0f);
-                func_002675a8(&r.b, &t);
-                func_002675a8(&r.a, &D_00575894->x10);
+                PlatVu0Normalize(&t, &D_00575894->x3c0);
+                PlatVu0ScaleVector(&t, &t, 250.0f);
+                PlatVu0CopyVector(&r.b, &t);
+                PlatVu0CopyVector(&r.a, &D_00575894->x10);
                 hit = func_00119688(&r) == -1;
             }
         }
         D_003624C4 = 0.0f;
     } else if (func_00177070()) {
         if (D_003624C4 > 60.0f) {
-            func_002675a8(&r.a, &D_00575894->x10);
-            func_00267560(&r.b, &D_00575894->x30, 100.0f);
+            PlatVu0CopyVector(&r.a, &D_00575894->x10);
+            PlatVu0ScaleVector(&r.b, &D_00575894->x30, 100.0f);
             n = func_00119688(&r);
             if (n == -1) {
-                func_002675a8(&r.a, &D_00575894->x30);
-                func_00267560(&r.a, &r.a, 30.0f);
-                func_00267518(&r.a, &r.a, &D_00575894->x10);
+                PlatVu0CopyVector(&r.a, &D_00575894->x30);
+                PlatVu0ScaleVector(&r.a, &r.a, 30.0f);
+                PlatVu0AddVector(&r.a, &r.a, &D_00575894->x10);
                 r.a.y -= 100.0f;
-                func_002675a8(&r.b, &D_002C58A0);
+                PlatVu0CopyVector(&r.b, &D_002C58A0);
                 r.b.y = 500.0f;
                 if (func_00119688(&r) == n) hit = 1;
             }
@@ -400,7 +393,7 @@ s32 func_00177ef8(void) {
             D_003624C4 += D_002BBDFC;
         }
     }
-    func_002675a8(&D_00575810, &D_00575894->x10);
+    PlatVu0CopyVector(&D_00575810, &D_00575894->x10);
     busy = func_001772f8(D_00575894) != 0;
     if (hit && !busy) {
         D_00362680.x += D_003624BC / 30.0f * 0.0523598725f;
@@ -411,12 +404,12 @@ s32 func_00177ef8(void) {
     } else {
         D_003624BC = 0.0f;
     }
-    func_002675a8(&r.a, &D_005758D0);
-    func_002675a8(&r.b, &D_002C58A0);
+    PlatVu0CopyVector(&r.a, &D_005758D0);
+    PlatVu0CopyVector(&r.b, &D_002C58A0);
     r.b.y = 55.0f;
     func_00118d78(&r);
     if (r.h30 != -1 && !busy) {
-        func_00267530(&t, &r.c, &D_005758D0);
+        PlatVu0SubVector(&t, &r.c, &D_005758D0);
         d = func_00120bf8(&t);
         if (d < 49.49999714f) {
             d = d / 55.0f;
@@ -431,9 +424,9 @@ s32 func_00177ef8(void) {
         if (D_003624C0 < 0.0f) D_003624C0 = 0.0f;
         if (D_003624C0 <= 0.0f) D_00362680.x += func_00120c88(D_00362660.x - D_00362680.x) * 0.0299999998f;
     }
-    func_00267530(&r.b, &D_005758E0, &D_005758D0);
+    PlatVu0SubVector(&r.b, &D_005758E0, &D_005758D0);
     r.b.y -= 100.0f;
-    func_002675a8(&r.a, &D_005758D0);
+    PlatVu0CopyVector(&r.a, &D_005758D0);
     return func_00119688(&r) == -1;
 }
 #undef D_00575894
@@ -533,11 +526,11 @@ void func_00178a98(void) {
         D_003624D0 = 0.0f;
     }
     if (D_005758F8 <= 0.0f && D_003624D4 > 0.0f) {
-        func_002675a8(&s.b, &D_002C58A0);
-        func_002675a8(&s.a, &D_005758E0);
+        PlatVu0CopyVector(&s.b, &D_002C58A0);
+        PlatVu0CopyVector(&s.a, &D_005758E0);
         s.c.y = 0.0f;
         s.c.x = 250.0f;
-        if (func_00118b58(&s) || (func_002675a8(&s.a, &D_005758D0), func_00118b58(&s))) {
+        if (func_00118b58(&s) || (PlatVu0CopyVector(&s.a, &D_005758D0), func_00118b58(&s))) {
             D_003624CC += D_002BBDFC;
             if (D_003624CC > 60.0f) D_003624CC = 60.0f;
             if (D_003624D0 != 0.0f) D_003624D0 = 90.0f;
@@ -565,7 +558,7 @@ f32 func_00120c18(void *);
 #define D_00362680 (*(f32 (*)) &D_00362680)
 void func_00178d90(void) {
     s32 sp[4];
-    func_00267530(sp, &D_005758D0, &D_005758E0);
+    PlatVu0SubVector(sp, &D_005758D0, &D_005758E0);
     if ((func_00120c18(sp) < 40.0f) && (D_00362680 < 1.0471975f) && (func_001770b8() != 0)) {
         func_001784c8();
     }
@@ -599,7 +592,6 @@ extern u32 D_002C5958;
 f32 func_00124d28(V4 *, V4 *);
 void func_00124c68(f32);
 void func_00121fc4(V4 *, V4 *);
-void func_00267e90(V4 *, V4 *, f32);
 s32 func_00118868(SweepC4 *);
 void func_0011d768(s32);
 #define D_00575894 (*(CamC4 *(*)) &D_00575894)
@@ -640,22 +632,22 @@ void func_00178ef8(void) {
         D_00575890 &= ~4;
     }
     if (D_005758C4 > 0.0f) {
-        func_002672f8(&D_005758E0, &D_00575894->xD0, &D_00362670);
+        PlatVu0ApplyMatrix(&D_005758E0, &D_00575894->xD0, &D_00362670);
     } else {
-        func_002672f8(&a, &D_00575894->xD0, &D_00362670);
-        func_002675a8(&b, &D_00362670);
+        PlatVu0ApplyMatrix(&a, &D_00575894->xD0, &D_00362670);
+        PlatVu0CopyVector(&b, &D_00362670);
         b.z = 0.0f;
         b.x = 0.0f;
-        func_002672f8(&b, &D_00575894->xD0, &b);
-        if (func_00177440(&b, &a)) func_002675a8(&a, &b);
-        func_00267530(&a, &a, &D_005758E0);
+        PlatVu0ApplyMatrix(&b, &D_00575894->xD0, &b);
+        if (func_00177440(&b, &a)) PlatVu0CopyVector(&a, &b);
+        PlatVu0SubVector(&a, &a, &D_005758E0);
         t = a.y;
         a.y = 0.0f;
         func_00121fc4(&a, &a);
-        func_00267e90(&a, &a, a.w * 0.1999999918f);
+        PlatVu0ScaleVectorXYZ(&a, &a, a.w * 0.1999999918f);
         if (t > 0.0f) a.y = t * 0.5f;
         else a.y = t * 0.0999999959f;
-        func_00267518(&D_005758E0, &D_005758E0, &a);
+        PlatVu0AddVector(&D_005758E0, &D_005758E0, &a);
     }
     func_00178e10();
     func_00178890();
@@ -663,69 +655,69 @@ void func_00178ef8(void) {
         func_00178a98();
         if (!(((*(u32 *)&D_002C5960) >> 4) & 1)) func_00178468();
         t = func_00120c88(D_00362680.y);
-        func_00267768(&m, &D_002C58D0, func_00120c88(D_00362680.x));
-        func_00267810(&m, &m, t);
-        func_002675a8(&b, &D_002C58A0);
+        PlatVu0RotMatrixX(&m, &D_002C58D0, func_00120c88(D_00362680.x));
+        PlatVu0RotMatrixY(&m, &m, t);
+        PlatVu0CopyVector(&b, &D_002C58A0);
         b.z = D_00362680.w;
-        func_002672f8(&b, &m, &b);
-        func_00267518(&p, &D_005758E0, &b);
-        func_00267530(&b, &p, &D_005758E0);
+        PlatVu0ApplyMatrix(&b, &m, &b);
+        PlatVu0AddVector(&p, &D_005758E0, &b);
+        PlatVu0SubVector(&b, &p, &D_005758E0);
         if (D_00362660.w + 300.0f < func_00120bf8(&b)) func_001779e8(&p, &D_005758E0, D_00362680.y);
         if (((*(u32 *)&D_002C5960) >> 4) & 1) {
-            func_002675a8(&D_005758D0, &p);
+            PlatVu0CopyVector(&D_005758D0, &p);
         } else {
             lim = 20.0f;
             do {
-                func_002675a8(&s.a, &D_005758D0);
-                func_00267530(&b, &p, &D_005758D0);
+                PlatVu0CopyVector(&s.a, &D_005758D0);
+                PlatVu0SubVector(&b, &p, &D_005758D0);
                 d = func_00120bf8(&b);
                 if (d >= 1000.0f) {
-                    func_002675a8(&D_005758D0, &p);
+                    PlatVu0CopyVector(&D_005758D0, &p);
                     break;
                 }
-                if (d >= lim) func_00267560(&b, &b, lim / d);
-                func_002675a8(&s.b, &b);
+                if (d >= lim) PlatVu0ScaleVector(&b, &b, lim / d);
+                PlatVu0CopyVector(&s.b, &b);
                 s.r = 40.0f;
                 r = func_00118868(&s);
-                func_002675a8(&D_005758D0, &s.out);
+                PlatVu0CopyVector(&D_005758D0, &s.out);
             } while (r == 0 && d >= lim);
         }
         if (!func_00177740(&D_005758D0)) func_001779e8(&D_005758D0, &D_005758E0, D_00362680.y);
     } else {
         if (!(((*(u32 *)&D_002C5960) >> 4) & 1)) func_00177ef8();
         t = func_00120c88(D_00362680.y);
-        func_00267768(&m, &D_002C58D0, func_00120c88(D_00362680.x));
-        func_00267810(&m, &m, t);
-        func_002675a8(&b, &D_002C58A0);
+        PlatVu0RotMatrixX(&m, &D_002C58D0, func_00120c88(D_00362680.x));
+        PlatVu0RotMatrixY(&m, &m, t);
+        PlatVu0CopyVector(&b, &D_002C58A0);
         b.z = D_00362680.w;
-        func_002672f8(&b, &m, &b);
-        func_00267518(&p, &D_005758E0, &b);
-        func_002675a8(&D_005758D0, &p);
-        func_00267530(&b, &p, &D_005758E0);
+        PlatVu0ApplyMatrix(&b, &m, &b);
+        PlatVu0AddVector(&p, &D_005758E0, &b);
+        PlatVu0CopyVector(&D_005758D0, &p);
+        PlatVu0SubVector(&b, &p, &D_005758E0);
         func_00121fc4(&b, &b);
-        func_00267560(&b, &b, 60.0f);
-        func_00267518(&p, &p, &b);
+        PlatVu0ScaleVector(&b, &b, 60.0f);
+        PlatVu0AddVector(&p, &p, &b);
         if (func_00177608(&p, &D_005758E0, &p)) {
-            func_00267530(&b, &D_005758E0, &p);
+            PlatVu0SubVector(&b, &D_005758E0, &p);
             func_00121fc4(&b, &b);
             if (b.w > 60.0f) {
-                func_00267560(&b, &b, 60.0f);
-                func_00267518(&D_005758D0, &p, &b);
+                PlatVu0ScaleVector(&b, &b, 60.0f);
+                PlatVu0AddVector(&D_005758D0, &p, &b);
             } else {
-                func_002675a8(&D_005758D0, &p);
+                PlatVu0CopyVector(&D_005758D0, &p);
             }
         }
-        func_00267530(&b, &D_005758E0, &D_005758D0);
+        PlatVu0SubVector(&b, &D_005758E0, &D_005758D0);
         d = func_00120bf8(&b);
         if (d < 20.0f) {
             d = 20.0f - d;
-            func_002673b8(&b, &b);
-            func_00267560(&b, &b, d);
-            func_00267518(&D_005758E0, &D_005758E0, &b);
+            PlatVu0Normalize(&b, &b);
+            PlatVu0ScaleVector(&b, &b, d);
+            PlatVu0AddVector(&D_005758E0, &D_005758E0, &b);
         }
     }
     if (func_00177070()) func_00178d90();
-    func_00267530(&b, &D_005758D0, &D_005758E0);
+    PlatVu0SubVector(&b, &D_005758D0, &D_005758E0);
     if ((D_002C5BB0.w8 & 0x200) && !func_001375d8(D_00575894)) func_001784c8();
     if ((D_002C5BB0.w8 & 0x8000) && func_00177358(D_00575894) && !func_001375d8(D_00575894)) {
         if (!((D_002C5958 >> 13) & 1)) {
@@ -736,7 +728,7 @@ void func_00178ef8(void) {
         }
     }
     if (func_00177070()) {
-        func_00267530(&b, &D_005758D0, &D_005758E0);
+        PlatVu0SubVector(&b, &D_005758D0, &D_005758E0);
         e = func_00120bf8(&b);
         D_00362680.w = e + (D_00362660.w - e) * 0.0999999959f;
     } else {
@@ -809,11 +801,11 @@ void func_00179700(void) {
             D_00575824 = 0.0f;
         }
     }
-    func_002672f8(&D_005758D0, &D_00575894->xd0, &D_003624E0);
+    PlatVu0ApplyMatrix(&D_005758D0, &D_00575894->xd0, &D_003624E0);
     D_003624F0.y = D_00362500 + sinf(D_00575820) * 100.0f;
     D_003624F0.z = D_003624E0.z - cosf(D_00575820) * 100.0f;
-    func_002672f8(&D_005758E0, &D_00575894->xd0, &D_003624F0);
-    func_002675a8(&D_00362680, &D_00362660);
+    PlatVu0ApplyMatrix(&D_005758E0, &D_00575894->xd0, &D_003624F0);
+    PlatVu0CopyVector(&D_00362680, &D_00362660);
     D_00362680.y = func_00124d28(&D_005758D0, &D_005758E0);
     D_00575820 += D_002C5BB0.x44 * 0.0523598725f * D_002BBDFC;
     if (D_00575820 > 1.047197491f) D_00575820 = 1.047197491f;
@@ -838,7 +830,6 @@ f32 D_0057582C ALIGNED(4);
 f32 D_00575830 ALIGNED(16);
 extern V4 D_00362510;
 void func_001315c0(void *, s32, void *, f32);
-void sceVu0MulMatrix(void *, void *, void *);
 #define D_00575894 ((ActB_79a80 *) D_00575894)
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
@@ -862,11 +853,11 @@ void func_00179a80(void) {
         }
     }
     func_001315c0(D_00575894, 0, &D_005758D0, 0.5f);
-    func_00267768(m, D_002C58D0, D_0057582C);
-    sceVu0MulMatrix(m, D_00575894->xd0, m);
-    func_002675a8(m[3], &D_005758D0);
+    PlatVu0RotMatrixX(m, D_002C58D0, D_0057582C);
+    PlatVu0MulMatrix(m, D_00575894->xd0, m);
+    PlatVu0CopyVector(m[3], &D_005758D0);
     m[3][3] = 1.0f;
-    func_002672f8(&D_005758E0, m, &D_00362510);
+    PlatVu0ApplyMatrix(&D_005758E0, m, &D_00362510);
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     p = &D_002C5BB0;
     b = p->x4;
@@ -912,7 +903,6 @@ extern u32 D_002C5BB8;
 #define D_002C5958 (*(u32 *)&D_002C5958)
 f32 func_0012eca8(void *, V4 *);
 void func_00179d30(void);
-void func_002674f0(V4 *, V4 *, V4 *, f32);
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
 void func_00179ee8(void) {
@@ -926,22 +916,22 @@ void func_00179ee8(void) {
     f32 A, B, l, h, u, k;
     s32 hit;
     if (D_00575890 & 2) D_00575890 &= ~2;
-    func_00267810(m, D_002C58D0, D_00362680.y);
-    func_002675a8(&m[3], &D_00575894->x10);
-    func_002675a8(&e, &D_00362530);
+    PlatVu0RotMatrixY(m, D_002C58D0, D_00362680.y);
+    PlatVu0CopyVector(&m[3], &D_00575894->x10);
+    PlatVu0CopyVector(&e, &D_00362530);
     A = e.y + D_00362550;
     e.y = A;
-    func_002672f8(&a, m, &e);
+    PlatVu0ApplyMatrix(&a, m, &e);
     A = func_0012eca8((*(u8 (*)[0x8])&D_002E31B0), &c);
-    func_00267530(&e, &c, &a);
+    PlatVu0SubVector(&e, &c, &a);
     B = e.y;
     e.y = 0.0f;
     func_00121fc4(&e, &e);
-    func_00267560(&e, &e, A + 100.0f);
+    PlatVu0ScaleVector(&e, &e, A + 100.0f);
     A = -B * 0.5f;
     e.y = A;
-    func_00267518(&b, &c, &e);
-    func_00267530(&e, &b, &a);
+    PlatVu0AddVector(&b, &c, &e);
+    PlatVu0SubVector(&e, &b, &a);
     l = func_00120c18(&e);
     A = e.y;
     h = fabsf(A);
@@ -952,8 +942,8 @@ void func_00179ee8(void) {
         }
         a.y += A * 0.5f;
     }
-    func_002675a8(&f, &D_005758D0);
-    func_00267530(&e, &a, &D_005758D0);
+    PlatVu0CopyVector(&f, &D_005758D0);
+    PlatVu0SubVector(&e, &a, &D_005758D0);
     A = 0.0f;
     B = e.y;
     e.y = A;
@@ -961,14 +951,14 @@ void func_00179ee8(void) {
     e.w -= 75.0f;
     if (A < e.w) {
         e.w *= 0.8999999911f;
-        func_00267560(&e, &e, e.w);
-        func_00267518(&D_005758D0, &D_005758D0, &e);
+        PlatVu0ScaleVector(&e, &e, e.w);
+        PlatVu0AddVector(&D_005758D0, &D_005758D0, &e);
     }
     B *= 0.8999999911f;
     D_005758D0.y += B;
     func_001315c0(D_00575894, 0x8003, &d, A);
     hit = func_00177608(&D_005758D0, &d, &D_005758D0) != 0;
-    func_002672f8(&e, m, &D_00362540);
+    PlatVu0ApplyMatrix(&e, m, &D_00362540);
     B = func_00120c88(D_00362680.y - func_00124d28(&D_005758D0, &e));
     u = func_00120c88(func_00124d28(&D_005758D0, &b) - D_00362680.y);
     if (B + 0.08726645447f < u) k = u - (B + 0.08726645447f);
@@ -978,15 +968,15 @@ void func_00179ee8(void) {
     if (0.1745329089f < k) k = 0.1745329089f;
     else if (k < -0.1745329089f) k = -0.1745329089f;
     D_00362680.y = func_00120c88(D_00362680.y + k);
-    func_00267530(&e, &b, &D_005758D0);
+    PlatVu0SubVector(&e, &b, &D_005758D0);
     l = func_00120c18(&e);
     e.w = 1.0f;
     e.x = 0.0f;
     e.z = -l;
-    func_00267810(m, D_002C58D0, D_00362680.y);
-    func_002675a8(&m[3], &D_002C58A0);
-    func_002672f8(&e, m, &e);
-    func_00267518(&D_005758E0, &D_005758D0, &e);
+    PlatVu0RotMatrixY(m, D_002C58D0, D_00362680.y);
+    PlatVu0CopyVector(&m[3], &D_002C58A0);
+    PlatVu0ApplyMatrix(&e, m, &e);
+    PlatVu0AddVector(&D_005758E0, &D_005758D0, &e);
     D_00362680.y = func_00124d28(&D_005758D0, &D_005758E0);
     func_00179d30();
     if (D_00575920.x4 > 0.0f) {
@@ -994,7 +984,7 @@ void func_00179ee8(void) {
         if (D_00575920.x4 < 0.0f) D_00575920.x4 = 0.0f;
         else {
             A = D_00575920.x4 / 60.0f;
-            func_002674f0(&D_005758E0, &D_005758E0, &D_00575920.x10, cosf(A * 3.141592801f * 0.5f));
+            PlatVu0InterVector(&D_005758E0, &D_005758E0, &D_00575920.x10, cosf(A * 3.141592801f * 0.5f));
         }
     }
     if (!func_001772f8(D_00575894) && !hit) {
@@ -1029,31 +1019,29 @@ extern V4 D_00362560;
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
 #define D_00575894 (*(Cam *(*)) &D_00575894)
-#define func_00267e90 ((void (*)(f32, V4 *, V4 *)) func_00267e90)
 void func_0017a510(void) {
     V4 v, w;
     if (D_00575890 & 2) D_00575890 &= ~2;
     if (0.0f < D_005758C4) {
-        func_002672f8(&D_005758D0, &D_00575894->xd0, &D_00362560);
+        PlatVu0ApplyMatrix(&D_005758D0, &D_00575894->xd0, &D_00362560);
     } else {
-        func_002672f8(&v, &D_00575894->xd0, &D_00362560);
-        func_00267530(&v, &v, &D_005758D0);
+        PlatVu0ApplyMatrix(&v, &D_00575894->xd0, &D_00362560);
+        PlatVu0SubVector(&v, &v, &D_005758D0);
         func_00121fc4(&v, &v);
         v.w -= 100.0f;
         if (0.0f < v.w) {
-            func_00267e90(v.w * 0.3f, &v, &v);
-            func_00267518(&D_005758D0, &D_005758D0, &v);
+            PlatVu0ScaleVectorXYZ(&v, &v, v.w * 0.3f);
+            PlatVu0AddVector(&D_005758D0, &D_005758D0, &v);
         }
     }
-    func_002672f8(&D_005758E0, &D_00575894->xd0, &D_00362570);
-    if (func_00177608(&w, &D_005758E0, &D_005758D0)) func_002675a8(&D_005758D0, &w);
+    PlatVu0ApplyMatrix(&D_005758E0, &D_00575894->xd0, &D_00362570);
+    if (func_00177608(&w, &D_005758E0, &D_005758D0)) PlatVu0CopyVector(&D_005758D0, &w);
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     if (!func_00177218(D_00575894)) func_00176f08(1, 30.0f);
 }
 #undef D_005758D0
 #undef D_005758E0
 #undef D_00575894
-#undef func_00267e90
 
 /* func_0017a6c0 (from hand/text_00170000_h38.c). */
 extern V4 D_00362580;
@@ -1067,9 +1055,9 @@ void func_0017a6c0(void) {
     Actor **pa;
     if (*f & 2) *f &= ~2;
     pa = &D_00575894;
-    func_002672f8(&D_005758E0, &(*pa)->xd0, &D_00362590);
-    func_002672f8(&D_005758D0, &(*pa)->xd0, &D_00362580);
-    if (func_00177608(&t, &D_005758E0, &D_005758D0)) func_002675a8(&D_005758D0, &t);
+    PlatVu0ApplyMatrix(&D_005758E0, &(*pa)->xd0, &D_00362590);
+    PlatVu0ApplyMatrix(&D_005758D0, &(*pa)->xd0, &D_00362580);
+    if (func_00177608(&t, &D_005758E0, &D_005758D0)) PlatVu0CopyVector(&D_005758D0, &t);
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     if (!func_00177258(*pa)) func_00176f08(1, 30.0f);
 }
@@ -1087,17 +1075,17 @@ void func_0017a7b0(void) {
     V4 v, w;
     if (D_00575890 & 2) D_00575890 &= ~2;
     if (0.0f < D_005758C4) {
-        func_002672f8(&D_005758D0, &D_00575894->xd0, &D_003625A0);
+        PlatVu0ApplyMatrix(&D_005758D0, &D_00575894->xd0, &D_003625A0);
     } else {
-        func_002672f8(&v, &D_00575894->xd0, &D_003625A0);
-        func_00267530(&v, &v, &D_005758D0);
+        PlatVu0ApplyMatrix(&v, &D_00575894->xd0, &D_003625A0);
+        PlatVu0SubVector(&v, &v, &D_005758D0);
         if (100.0f < v.y) v.y = (v.y - 100.0f) * 0.3f;
         else if (v.y < -100.0f) v.y = (v.y + 100.0f) * 0.3f;
         else v.y = 0.0f;
-        func_00267518(&D_005758D0, &D_005758D0, &v);
+        PlatVu0AddVector(&D_005758D0, &D_005758D0, &v);
     }
-    func_002672f8(&D_005758E0, &D_00575894->xd0, &D_003625B0);
-    if (func_00177608(&w, &D_005758E0, &D_005758D0)) func_002675a8(&D_005758D0, &w);
+    PlatVu0ApplyMatrix(&D_005758E0, &D_00575894->xd0, &D_003625B0);
+    if (func_00177608(&w, &D_005758E0, &D_005758D0)) PlatVu0CopyVector(&D_005758D0, &w);
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     if (!func_00177288(D_00575894)) func_00176f08(1, 30.0f);
 }
@@ -1132,7 +1120,7 @@ void func_0017a958(void) {
     u32 k;
 
     if (D_00575890 & 2) {
-        func_002675a8(&D_00575840, &D_003625C0);
+        PlatVu0CopyVector(&D_00575840, &D_003625C0);
         D_00575890 &= ~2;
     }
     if (D_005758C4 <= 0.0f) {
@@ -1142,15 +1130,15 @@ void func_0017a958(void) {
         if (k & 0x2000) s = -1.0f;
         if (s != 0.0f) {
             p = D_00575840.x + func_00120c88(s * 0.04363322724f * D_002BBDFC);
-            func_00267768(m, D_002C58D0, func_00120c88(p));
-            func_00267810(m, m, func_00120c88(D_00575850));
-            func_002675a8(&b, &D_002C58A0);
+            PlatVu0RotMatrixX(m, D_002C58D0, func_00120c88(p));
+            PlatVu0RotMatrixY(m, m, func_00120c88(D_00575850));
+            PlatVu0CopyVector(&b, &D_002C58A0);
             b.z = D_00575840.w;
-            func_002672f8(&b, m, &b);
-            func_002672f8(&D_005758E0, D_00575894->xd0, &D_003625D0);
-            func_00267518(&a, &D_005758E0, &b);
-            func_00267530(&r.b, &a, &D_005758E0);
-            func_002675a8(&r.a, &D_005758E0);
+            PlatVu0ApplyMatrix(&b, m, &b);
+            PlatVu0ApplyMatrix(&D_005758E0, D_00575894->xd0, &D_003625D0);
+            PlatVu0AddVector(&a, &D_005758E0, &b);
+            PlatVu0SubVector(&r.b, &a, &D_005758E0);
+            PlatVu0CopyVector(&r.a, &D_005758E0);
             if (func_00119688(&r) == -1) {
                 D_00575840.x = p;
                 if (p > 0.8726645261f) D_00575840.x = 0.8726645261f;
@@ -1172,23 +1160,23 @@ void func_0017a958(void) {
         D_00575840.x = D_00575854 + D_00575858 * s;
     }
     D_00575840.y = func_00120c88(D_00575850);
-    func_00267768(m, D_002C58D0, func_00120c88(D_00575840.x));
-    func_00267810(m, m, D_00575840.y);
-    func_002675a8(&b, &D_002C58A0);
+    PlatVu0RotMatrixX(m, D_002C58D0, func_00120c88(D_00575840.x));
+    PlatVu0RotMatrixY(m, m, D_00575840.y);
+    PlatVu0CopyVector(&b, &D_002C58A0);
     b.z = D_00575840.w;
-    func_002672f8(&b, m, &b);
-    func_002672f8(&D_005758E0, D_00575894->xd0, &D_003625D0);
-    func_00267518(&a, &D_005758E0, &b);
-    func_00267530(&b, &a, &D_005758D0);
+    PlatVu0ApplyMatrix(&b, m, &b);
+    PlatVu0ApplyMatrix(&D_005758E0, D_00575894->xd0, &D_003625D0);
+    PlatVu0AddVector(&a, &D_005758E0, &b);
+    PlatVu0SubVector(&b, &a, &D_005758D0);
     func_00121fc4(&b, &b);
     b.w -= 100.0f;
     if (b.w > 0.0f) {
-        func_00267e90(&b, &b, b.w);
+        PlatVu0ScaleVectorXYZ(&b, &b, b.w);
         D_005758D0.x += b.x;
         D_005758D0.z += b.z;
     }
     D_005758D0.y = a.y;
-    if (func_00177608(&b, &D_005758E0, &D_005758D0)) func_002675a8(&D_005758D0, &b);
+    if (func_00177608(&b, &D_005758E0, &D_005758D0)) PlatVu0CopyVector(&D_005758D0, &b);
     D_00362684 = func_00124d28(&D_005758D0, &D_005758E0);
     if (!func_001772c8(D_00575894)) func_00176f08(1, 30.0f);
 }
@@ -1224,14 +1212,14 @@ void func_0017ae48(void) {
     }
     if (D_00575890 & 1) D_00575890 &= ~1;
     if (D_00575890 & 4) D_00575890 &= ~4;
-    func_002675a8(&D_005758D0, D_00362434);
+    PlatVu0CopyVector(&D_005758D0, D_00362434);
     func_001315c0(D_00575894, 0x8003, &d, 0.0f);
-    func_00267530(&d, &d, &D_005758E0);
+    PlatVu0SubVector(&d, &d, &D_005758E0);
     len = func_00120bf8(&d) < 0.0f ? 0.0f : (func_00120bf8(&d) > 200.0f ? 200.0f : func_00120bf8(&d));
     len = len / 200.0f;
-    func_00267560(&d, &d, len * 0.3f);
-    func_00267518(&D_005758E0, &D_005758E0, &d);
-    func_00267530(&d, &D_005758E0, &D_005758D0);
+    PlatVu0ScaleVector(&d, &d, len * 0.3f);
+    PlatVu0AddVector(&D_005758E0, &D_005758E0, &d);
+    PlatVu0SubVector(&d, &D_005758E0, &D_005758D0);
     if ((len = func_00120bf8(&d)) < 0.0f) func_00124c68(D_00362434->x14);
     else if (D_00362434->x18 < len) func_00124c68(D_00362434->x10);
     else func_00124c68(D_00362434->x14 - (D_00362434->x14 - D_00362434->x10) * (len / D_00362434->x18));
@@ -1275,9 +1263,9 @@ s32 func_0017b170(void) {
     Blk26C0 *s = &D_003626C0;
     f32 r;
     if (!s->flag) return 0;
-    func_002675a8(D_005758D0, &s->a);
-    func_002675a8(D_005758E0, &s->b);
-    func_00267530(v, &D_00575970, D_005758D0);
+    PlatVu0CopyVector(D_005758D0, &s->a);
+    PlatVu0CopyVector(D_005758E0, &s->b);
+    PlatVu0SubVector(v, &D_00575970, D_005758D0);
     r = func_00120c18(v);
     s->flag = 0;
     D_00575970.x28 = r;
@@ -1288,8 +1276,8 @@ s32 func_0017b170(void) {
 #define D_005758D0 (*(V4 (*)) &D_005758D0)
 #define D_005758E0 (*(V4 (*)) &D_005758E0)
 void func_0017b200(void) {
-    func_002675a8(&D_003626C0.a, &D_005758D0);
-    func_002675a8(&D_003626C0.b, &D_005758E0);
+    PlatVu0CopyVector(&D_003626C0.a, &D_005758D0);
+    PlatVu0CopyVector(&D_003626C0.b, &D_005758E0);
     D_003626C0.flag = 1;
 }
 #undef D_005758D0

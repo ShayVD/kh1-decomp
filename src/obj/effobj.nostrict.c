@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/bss_0053.h"
@@ -33,7 +34,6 @@ s32 func_001765f8(void *);
 s32 func_00162368(s32, s32);
 s32 func_001320a8(s32);
 u8 *func_001623e0(s32);
-void sceVu0CopyMatrix(void *, void *);
 void func_00147a68(void);
 void *func_00147b08(s32 a, s32 b, s32 c) {
     s32 r;
@@ -45,7 +45,7 @@ void *func_00147b08(s32 a, s32 b, s32 c) {
         m->w80 = r;
         m->w7c = c;
         m->w84 = func_001320a8(b);
-        sceVu0CopyMatrix(m, func_001623e0(c) + (r << 6));
+        PlatVu0CopyMatrix(m, func_001623e0(c) + (r << 6));
         func_0011ef10(0x21728, func_00147a68)->h2 = -1;
     }
     return D_0054C160;
@@ -65,7 +65,6 @@ void func_00147d50(RotObj *o, s32 m) {
 }
 
 /* func_00147e08 (from hand/nostrict/text_00140000_h33.c). */
-void func_002675a8(V4f *, V4f *);
 void func_00121a78(V4f *, V4f *);
 void func_00147e08(RotObj *o, V4f *m) {
     V4f r;
@@ -73,7 +72,7 @@ void func_00147e08(RotObj *o, V4f *m) {
     o->rot->x = (u16)(s32)(r.x / 6.2831855f * 65536.0f);
     o->rot->y = (u16)(s32)(r.y / 6.2831855f * 65536.0f);
     o->rot->z = (u16)(s32)(r.z / 6.2831855f * 65536.0f);
-    func_002675a8(o->pos, m + 3);
+    PlatVu0CopyVector(o->pos, m + 3);
 }
 
 /* func_00147ff0 (from hand/nostrict/text_00130000_s6_06.c). */
@@ -147,8 +146,6 @@ s32 func_00122ff8(C3Ob *);
 void func_00121eb0(C3D *);
 void func_001315c0(s32, s32, f32, f32 *);
 void func_001318e8(C3Ob *, u32, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 #define func_00176310 ((void (*)(C3Lk *)) func_00176310)
 #define func_00147e08 ((void (*)(C3Lk *, f32 *)) func_00147e08)
 s32 func_001480d0(C3S *s) {
@@ -189,8 +186,8 @@ s32 func_001480d0(C3S *s) {
         case 1:
             v = d->x20;
             func_001315c0((s32)s->x10, m, d->xc, v);
-            func_00267518(v, v, d->x10);
-            func_002675a8(s->x14->x0, v);
+            PlatVu0AddVector(v, v, d->x10);
+            PlatVu0CopyVector(s->x14->x0, v);
             break;
         case 2:
             v = d->x30;
@@ -210,9 +207,9 @@ s32 func_001480d0(C3S *s) {
     switch (d->x4) {
     case 1:
         v = d->x20;
-        func_002675a8(s->x14->x0, v);
+        PlatVu0CopyVector(s->x14->x0, v);
         func_001315c0((s32)s->x10, d->x8, d->xc, v);
-        func_00267518(v, v, d->x10);
+        PlatVu0AddVector(v, v, d->x10);
         break;
     case 2:
         v = d->x30;
@@ -228,7 +225,6 @@ s32 func_001480d0(C3S *s) {
     }
     return 0;
 }
-#undef func_002675a8
 #undef func_00176310
 #undef func_00147e08
 
@@ -248,9 +244,9 @@ Eff *func_001484c8(V4f **o, s32 a, s32 b, f32 f) {
     e->w8 = b;
     e->u.s.b4 = 1;
     e->fc = f;
-    func_002675a8(&e->v10, &D_002C58A0);
+    PlatVu0CopyVector(&e->v10, &D_002C58A0);
     func_001315c0(a, b, &e->v20, f);
-    func_002675a8(*o, &e->v20);
+    PlatVu0CopyVector(*o, &e->v20);
     return e;
 }
 #undef func_001315c0

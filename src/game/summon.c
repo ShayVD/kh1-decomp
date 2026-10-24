@@ -8,6 +8,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00304B84.h"
@@ -156,13 +157,6 @@ f32 func_00120c88(f32);
 void func_00121fc4(f32 *, f32 *);
 void func_001625c8(void *, f32 *);
 f32 func_00176850(void);
-void func_002672f8(f32 *, void *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_002674f0(f32 *, f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267810(f32 *, f32 *, f32);
 s32 func_0013abf8(u16 *o) {
     f32 a[4];
     f32 b[4];
@@ -174,20 +168,20 @@ s32 func_0013abf8(u16 *o) {
     if (*o & 0x10) {
         func_001625c8(D_0052AE38 + 0xd0, m);
         D_002E2780.w = D_002E2790.w = 1.0f;
-        func_002672f8(D_0052AD20, m, &D_002E2780.x);
-        func_002672f8(D_0052AD30, m, &D_002E2790.x);
-        func_00267530(D_0052AD10, D_00304B30, D_0052AD20);
+        PlatVu0ApplyMatrix(D_0052AD20, m, &D_002E2780.x);
+        PlatVu0ApplyMatrix(D_0052AD30, m, &D_002E2790.x);
+        PlatVu0SubVector(D_0052AD10, D_00304B30, D_0052AD20);
         D_0052AD08 = func_00120bf8(D_0052AD10);
-        func_00267530(D_0052AD10, D_0052AD30, D_0052AD20);
-        func_002673b8(D_0052AD10, D_0052AD10);
-        func_00267560(D_0052AD10, D_0052AD10, D_0052AD08);
-        func_00267518(D_0052AD30, D_0052AD10, D_0052AD20);
-        func_00267530(D_0052AD40, D_0052AD20, D_0052AD30);
+        PlatVu0SubVector(D_0052AD10, D_0052AD30, D_0052AD20);
+        PlatVu0Normalize(D_0052AD10, D_0052AD10);
+        PlatVu0ScaleVector(D_0052AD10, D_0052AD10, D_0052AD08);
+        PlatVu0AddVector(D_0052AD30, D_0052AD10, D_0052AD20);
+        PlatVu0SubVector(D_0052AD40, D_0052AD20, D_0052AD30);
         D_0052AD40[1] = 0.0f;
         func_00121fc4(D_0052AD40, D_0052AD40);
         D_0052AD08 = D_0052AD40[3];
         D_0052AD40[3] = 1.0f;
-        func_00267530(D_0052AD10, D_00304B20, D_00304B30);
+        PlatVu0SubVector(D_0052AD10, D_00304B20, D_00304B30);
         D_0052AD0C = func_00120c18(D_0052AD10) - D_0052AD08;
         r = atan2f(D_0052AD20[0] - D_0052AD30[0], D_0052AD20[2] - D_0052AD30[2]);
         D_0052AD04 = func_00120c88(atan2f(D_00304B20[0] - D_00304B30[0], D_00304B20[2] - D_00304B30[2]) - r);
@@ -209,16 +203,16 @@ s32 func_0013abf8(u16 *o) {
     t = D_0052AD50 / 40.0f;
     if (t < 0.0f) t = 0.0f;
     t = (cosf(t * 3.1415928f) + 1.0f) * 0.5f;
-    func_002674f0(b, D_00304B30, D_0052AD30, t);
-    func_00267810(rm, D_002C58D0[0], func_00120c88(D_0052AD04 * t));
-    func_002672f8(D_0052AD10, rm, D_0052AD40);
-    func_00267560(D_0052AD10, D_0052AD10, D_0052AD08 + D_0052AD0C * t);
-    func_00267518(a, b, D_0052AD10);
+    PlatVu0InterVector(b, D_00304B30, D_0052AD30, t);
+    PlatVu0RotMatrixY(rm, D_002C58D0[0], func_00120c88(D_0052AD04 * t));
+    PlatVu0ApplyMatrix(D_0052AD10, rm, D_0052AD40);
+    PlatVu0ScaleVector(D_0052AD10, D_0052AD10, D_0052AD08 + D_0052AD0C * t);
+    PlatVu0AddVector(a, b, D_0052AD10);
     a[3] = 1.0f;
     b[3] = 1.0f;
     a[1] = D_00304B20[1] * t + D_0052AD20[1] * (1.0f - t);
-    func_002672f8(&D_002E2780.x, D_0052AE38 + 0xd0, a);
-    func_002672f8(&D_002E2790.x, D_0052AE38 + 0xd0, b);
+    PlatVu0ApplyMatrix(&D_002E2780.x, D_0052AE38 + 0xd0, a);
+    PlatVu0ApplyMatrix(&D_002E2790.x, D_0052AE38 + 0xd0, b);
     return 0;
 }
 

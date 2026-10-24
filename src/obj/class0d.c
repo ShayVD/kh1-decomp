@@ -8,6 +8,7 @@
 #include "vm/script_vm.h"
 #include "data/pieces/D_00304BE8.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0053.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_002E26A0.h"
@@ -20,18 +21,16 @@ void func_0013f450(void *arg0) {
 }
 
 /* func_0013f478 (from hand/text_00130000_h7.c). */
-void func_00267530(f32 *d, f32 *a, f32 *b);
 void func_00121fc4(f32 *d, f32 *s);
-f32 func_00267390(f32 *a, f32 *b);
 s32 func_0013f478(W7Ob *o, f32 *v) {
     f32 t[4];
     if (o->x300 == 0.0f || v[3] == 0.0f) {
         return 0;
     }
-    func_00267530(t, o->x2f0, o->x10);
+    PlatVu0SubVector(t, o->x2f0, o->x10);
     t[1] = 0.0f;
     func_00121fc4(t, t);
-    if (func_00267390(t, v) < 0.7f) {
+    if (PlatVu0InnerProduct(t, v) < 0.7f) {
         return 0;
     }
     return 1;
@@ -58,11 +57,10 @@ s32 func_0013f618(s32 arg0, s32 arg1) {
 
 /* func_0013f6d0 (from auto/text_00130000_13.c). */
 f32 atan2f(f32, f32);
-void func_002675a8(s32, s32);
 void func_0013f6d0(s32 arg0, s32 arg1) {
     func_00130398(arg0, func_0013f330(arg0, 0x23) | 0x01000000, 8.0f);
     func_00130578(arg0, 0x40000000, 0.0f);
-    func_002675a8(arg1, arg0 + 0x30);
+    PlatVu0CopyVector(arg1, arg0 + 0x30);
     M2C_FIELD(arg1, f32 *, 0xC) = 0.0f;
     M2C_FIELD(arg0, f32 *, 0x150) = atan2f(M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg1, f32 *, 8));
     M2C_FIELD(arg0, s32 *, 0) = (s32) (M2C_FIELD(arg0, s32 *, 0) & 0xFFDFFFFF);
@@ -85,19 +83,17 @@ void func_0013f8a8(s32 arg0, s32 arg1, void *arg2) {
 /* func_0013fba0 (from auto/text_00130000_10.c). */
 M2C_UNK func_00137688(void *, f32);
 f32 func_001376e8(void *, void *);
-#define func_00267530 ((M2C_UNK (*)(void *, s32, s32)) func_00267530)
 s32 func_0013fba0(void *arg0, s32 arg1) {
     s32 sp[4];
     s32 var_v0;
 
     if ((arg1 != 0) || (var_v0 = 0, (M2C_FIELD(arg0, f32 *, 0x24) <= 0.0f))) {
-        func_00267530(sp, M2C_FIELD(arg0, s32 *, 0x148) + 0x40, arg0 + 0x10);
+        PlatVu0SubVector(sp, M2C_FIELD(arg0, s32 *, 0x148) + 0x40, arg0 + 0x10);
         func_00137688(arg0, func_001376e8(arg0, sp));
         var_v0 = M2C_FIELD(arg0, s32 *, 0x70);
     }
     return var_v0;
 }
-#undef func_00267530
 
 /* func_0013fc08 (from auto/text_00130000.c). */
 M2C_UNK func_0013f770();

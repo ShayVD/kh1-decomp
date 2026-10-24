@@ -11,6 +11,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -31,8 +32,6 @@ extern f32 D_002BBDFC;
 f32 atan2f(f32, f32);
 void func_00105a30(M2C_UNK, u16, s32);
 void func_0014f658(void *, M2C_UNK);
-void func_00267518(void *, void *, void *);
-void func_00267560(void *, s32, f32);
 void func_0015d5e8(void *arg0) {
     s32 sp[4];
     void *temp_a0;
@@ -40,11 +39,11 @@ void func_0015d5e8(void *arg0) {
 
     func_00105a30(-1, M2C_FIELD(arg0, u16 *, 0x30E), M2C_FIELD(arg0, void **, 0x148) + 0xC0);
     if (M2C_FIELD(arg0, s32 *, 0x70) != 0x13) {
-        func_00267560(sp, M2C_FIELD(arg0, void **, 0x148) + 0xC0, (25.0f - M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x134), void **, 0x10), f32 *, 0xC)) - 1.5f);
+        PlatVu0ScaleVector(sp, M2C_FIELD(arg0, void **, 0x148) + 0xC0, (25.0f - M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x134), void **, 0x10), f32 *, 0xC)) - 1.5f);
         temp_a0 = arg0 + 0x10;
-        func_00267518(temp_a0, temp_a0, sp);
+        PlatVu0AddVector(temp_a0, temp_a0, sp);
     }
-    func_00267560(arg0 + 0x20, M2C_FIELD(arg0, void **, 0x148) + 0xC0, -1.5f / D_002BBDFC);
+    PlatVu0ScaleVector(arg0 + 0x20, M2C_FIELD(arg0, void **, 0x148) + 0xC0, -1.5f / D_002BBDFC);
     temp_v0 = M2C_FIELD(arg0, void **, 0x148);
     M2C_FIELD(arg0, f32 *, 0x150) = atan2f(M2C_FIELD(temp_v0, f32 *, 0xC0), M2C_FIELD(temp_v0, f32 *, 0xC8));
     M2C_FIELD(M2C_FIELD(arg0, void **, 0x148), s32 *, 0xE4) = (s32) M2C_FIELD(arg0, u16 *, 0x30E);
@@ -66,13 +65,12 @@ s32 func_0015d770(s32 arg0, s32 arg1) {
 }
 
 /* func_0015d7b8 (from auto/text_00150000_22.c). */
-void func_002675a8(s32, s32);
 #define func_0014f658 ((void (*)(s32, s32)) func_0014f658)
 void func_0015d7b8(s32 arg0, s32 arg1) {
     func_0014f658(arg0, 0);
-    func_002675a8(arg0 + 0x20, M2C_FIELD(arg0, s32 *, 0x148) + 0xC0);
+    PlatVu0CopyVector(arg0 + 0x20, M2C_FIELD(arg0, s32 *, 0x148) + 0xC0);
     M2C_FIELD(arg0, f32 *, 0x2C) = (f32) (((M2C_FIELD(M2C_FIELD(M2C_FIELD(arg0, void **, 0x134), void **, 0x10), f32 *, 0xC) - 25.0f) + 5.0f) / D_002BBDFC);
-    func_002675a8(arg1, M2C_FIELD(arg0, s32 *, 0x148) + 0xC0);
+    PlatVu0CopyVector(arg1, M2C_FIELD(arg0, s32 *, 0x148) + 0xC0);
 }
 #undef func_0014f658
 

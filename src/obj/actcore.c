@@ -14,6 +14,7 @@
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
 #include "data/types/text_00140000_h9.h"
@@ -283,44 +284,36 @@ s32 func_0014f658(W9Ent_4f658 *e, s32 s) {
 
 /* func_0014f6f8 (from auto/text_00140000_11.c). */
 M2C_UNK func_001376e8();
-M2C_UNK func_002675a8(s32, void *);
 void func_0014f6f8(s32 arg0, void *arg1) {
     if (M2C_FIELD(arg1, f32 *, 0xC) > 0.0f) {
         func_001376e8();
     }
-    func_002675a8(arg0 + 0x20, arg1);
+    PlatVu0CopyVector(arg0 + 0x20, arg1);
 }
 
 /* func_0014f748 (from auto/text_00140000_11.c). */
-M2C_UNK func_00267e90(s32, void *, f32);
 extern f32 D_002BBDFC;
 void func_0014f748(void *arg0, s32 arg1) {
-    func_00267e90(arg1, arg0 + 0x20, M2C_FIELD(arg0, f32 *, 0x2C) * D_002BBDFC);
+    PlatVu0ScaleVectorXYZ(arg1, arg0 + 0x20, M2C_FIELD(arg0, f32 *, 0x2C) * D_002BBDFC);
 }
 
 /* func_0014f778 (from auto/text_00140000_12.c). */
-#define func_002675a8 ((M2C_UNK (*)(s32, M2C_UNK *)) func_002675a8)
 void func_0014f778(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
+    PlatVu0CopyVector(arg1, ((M2C_UNK *)&D_002C58A0));
 }
-#undef func_002675a8
 
 /* func_0014f798 (from auto/text_00140000_13.c). */
-M2C_UNK func_00267370(void *, void *, void *);
-f32 func_002673b8(void *, void *);
-#define func_00267e90 ((M2C_UNK (*)(void *, void *, f32)) func_00267e90)
 void func_0014f798(void *arg0, void *arg1) {
     s32 sp[4];
     void *temp_s2;
 
     temp_s2 = arg0 + 0xC0;
-    func_00267370(sp, temp_s2, arg0 + 0x20);
-    func_002673b8(sp, sp);
-    func_00267370(arg1, sp, temp_s2);
-    func_002673b8(arg1, arg1);
-    func_00267e90(arg1, arg1, M2C_FIELD(arg0, f32 *, 0x2C) * D_002BBDFC);
+    PlatVu0OuterProduct(sp, temp_s2, arg0 + 0x20);
+    PlatVu0Normalize(sp, sp);
+    PlatVu0OuterProduct(arg1, sp, temp_s2);
+    PlatVu0Normalize(arg1, arg1);
+    PlatVu0ScaleVectorXYZ(arg1, arg1, M2C_FIELD(arg0, f32 *, 0x2C) * D_002BBDFC);
 }
-#undef func_00267e90
 
 /* func_0014f828 (from auto/text_00140000_2.c). */
 s32 func_0014f828(void *arg0) {

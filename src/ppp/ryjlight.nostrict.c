@@ -5,6 +5,7 @@
  * / 255) and intensity.  ryjlight.c has the Con and Des.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/pieces/D_003701D0.h"
 
@@ -24,7 +25,6 @@ typedef struct {
 } LtKey;
 typedef struct { u8 pad[8]; u8 r, g, b, a; } LtCol;
 Light *func_001226f0(s32, s32, s32);
-void func_00267560(void *, void *, f32);
 
 void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     Light **w = (Light **)((u8 *)obj + e->offsets[2] + 0xA0);
@@ -55,6 +55,6 @@ void pppRyjLightFrame(void *obj, LtKey *k, PppEntry *e) {
     l->col.y = c->g;
     l->col.z = c->b;
     l->col.w = c->a;
-    func_00267560(&l->col, &l->col, 0.00392156851f);
+    PlatVu0ScaleVector(&l->col, &l->col, 0.00392156851f);
     l->intensity = k->f10;
 }

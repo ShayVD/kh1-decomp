@@ -8,6 +8,7 @@
  * other modes are in the sibling files). Read from the code, not proved by a
  * boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_0035C710.h"
 #include "data/bss_0053.h"
 #include "data/pieces/D_002C58A0.h"
@@ -192,9 +193,7 @@ typedef struct {
     T5i *info;
 } T5o;
 void func_001315c0(T5o *o, s32 k, void *buf, f32 f);
-void func_00267530(V4f_453a8 *, V4f_453a8 *, V4f_453a8 *);
 s32 func_0013c968(s32, s32);
-f32 func_00267390(V4f_453a8 *, V4f_453a8 *);
 s32 func_001453a8(T5o *o, V4f_453a8 *p, s32 mode) {
     V4f_453a8 t;
     f32 lim;
@@ -203,17 +202,17 @@ s32 func_001453a8(T5o *o, V4f_453a8 *p, s32 mode) {
     switch (mode) {
     case 1:
         func_001315c0(o, 0x8003, &t, 0.0f);
-        func_00267530(&t, &t, p);
+        PlatVu0SubVector(&t, &t, p);
         lim = 14400.0f;
         break;
     case 2:
         func_001315c0(o, 0x8003, &t, 0.0f);
-        func_00267530(&t, &t, p);
+        PlatVu0SubVector(&t, &t, p);
         lim = 40000.0f;
         break;
     case 0:
     default:
-        func_00267530(&t, p, &o->x50);
+        PlatVu0SubVector(&t, p, &o->x50);
         t.y = fabsf(t.y);
         if (o->x70 == 33) t.y -= 50.0f;
         if (t.y > 30.0f) return 0;
@@ -226,12 +225,11 @@ s32 func_001453a8(T5o *o, V4f_453a8 *p, s32 mode) {
         lim = 40000.0f;
         if (n != 1) lim = 160000.0f;
     }
-    if (lim < func_00267390(&t, &t)) return 0;
+    if (lim < PlatVu0InnerProduct(&t, &t)) return 0;
     return 1;
 }
 
 /* func_00145528 (from hand/nostrict/text_00130000_b03.c). */
-void func_002675a8(f32 *, f32 *);
 typedef struct {
     u8 pad0[0x10];
     union {
@@ -247,10 +245,8 @@ extern B3Col *D_00531B60;
 void func_00116660(B3Col *);
 void func_001166e8(B3Col *);
 void func_00121fc4(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 void func_001473a8(s32, s32, f32 *);
 f32 fabsf(f32);
-#define func_00267530 ((void (*)(f32 *, f32 *, f32 *)) func_00267530)
 void func_00145528(B3Pj *o, f32 *v) {
     f32 t[4];
     f32 f;
@@ -263,16 +259,16 @@ void func_00145528(B3Pj *o, f32 *v) {
     func_00116660(D_00531B60);
     D_00531B60->x20 = 55.0f;
     D_00531B60->x24 = 60.0f;
-    func_002675a8(D_00531B60->x0, v);
+    PlatVu0CopyVector(D_00531B60->x0, v);
     D_00531B60->x0[1] += f;
     D_00531B60->x28 = 33;
     if (o->x10.x & 0x10) {
-        func_002675a8(D_00531B60->x10, (*(f32 (*)[0x4])&D_002C58A0));
+        PlatVu0CopyVector(D_00531B60->x10, (*(f32 (*)[0x4])&D_002C58A0));
         o->x10.x &= ~0x10;
     } else {
         func_00121fc4(t, o->x20);
-        if (45.0f < t[3]) func_00267560(o->x20, t, 45.0f);
-        func_002675a8(D_00531B60->x10, o->x20);
+        if (45.0f < t[3]) PlatVu0ScaleVector(o->x20, t, 45.0f);
+        PlatVu0CopyVector(D_00531B60->x10, o->x20);
         D_00531B60->x10[3] = 1.0f;
     }
     func_001166e8(D_00531B60);
@@ -281,7 +277,7 @@ void func_00145528(B3Pj *o, f32 *v) {
             o->x20[1] *= -0.8f;
             if (++o->x10.s.x17 < 3) func_001473a8(D_00304DB0.b3PjInf[o->x10.s.x14].xc, 0, D_00531B60->x40);
         } else {
-            func_002675a8(o->x20, (*(f32 (*)[0x4])&D_002C58A0));
+            PlatVu0CopyVector(o->x20, (*(f32 (*)[0x4])&D_002C58A0));
             if (D_00531B60->x2c == -1) {
                 o->x10.s.x16 = 1;
             } else {
@@ -289,11 +285,11 @@ void func_00145528(B3Pj *o, f32 *v) {
             }
         }
     } else {
-        func_00267530(t, D_00531B60->x40, D_00531B60->x0);
+        PlatVu0SubVector(t, D_00531B60->x40, D_00531B60->x0);
         if (0.1f < fabsf(t[0] - o->x20[0])) o->x20[0] = -o->x20[0];
         if (0.1f < fabsf(t[2] - o->x20[2])) o->x20[2] = -o->x20[2];
     }
-    func_002675a8(v, D_00531B60->x40);
+    PlatVu0CopyVector(v, D_00531B60->x40);
     v[1] -= f;
     v[3] = 1.0f;
     o->x20[1] += 3.0f;
@@ -301,7 +297,6 @@ void func_00145528(B3Pj *o, f32 *v) {
     o->x20[2] *= 0.95f;
     if (0.0f < o->x20[1]) o->x10.x |= 2;
 }
-#undef func_00267530
 
 /* func_00145858 (from hand/nostrict/text_00140000_h56.c). */
 typedef struct { f32 p[4]; f32 d[4]; f32 r20; f32 r24; s32 w28; u8 pad2c[0x14]; f32 out[4]; } Hit;
@@ -316,7 +311,6 @@ typedef struct {
     s32 w1c;
     f32 vel[4];
 } Bo;
-#define func_00267530 ((void (*)(f32 *, f32 *, f32 *)) func_00267530)
 #define D_00531B60 (*(Hit *(*)) &D_00531B60)
 #define func_00116660 ((void (*)(Hit *)) func_00116660)
 #define func_001166e8 ((void (*)(Hit *)) func_001166e8)
@@ -328,24 +322,24 @@ void func_00145858(Bo *o, f32 *pos) {
     func_00116660((*pp));
     (*pp)->r20 = 55.0f;
     (*pp)->r24 = 60.0f;
-    func_002675a8((*pp)->p, pos);
+    PlatVu0CopyVector((*pp)->p, pos);
     (*pp)->p[1] += h;
     func_00121fc4(t, o->vel);
     if (t[3] > 45.0f) {
-        func_00267560(o->vel, t, 45.0f);
+        PlatVu0ScaleVector(o->vel, t, 45.0f);
     }
-    func_002675a8((*pp)->d, o->vel);
+    PlatVu0CopyVector((*pp)->d, o->vel);
     (*pp)->d[3] = 1.0f;
     (*pp)->w28 = 33;
     func_001166e8((*pp));
-    func_00267530(t, (*pp)->out, (*pp)->p);
+    PlatVu0SubVector(t, (*pp)->out, (*pp)->p);
     if (fabsf(t[0] - o->vel[0]) > 0.0999999940395355224609375f) {
         o->vel[0] = -o->vel[0];
     }
     if (fabsf(t[2] - o->vel[2]) > 0.0999999940395355224609375f) {
         o->vel[2] = -o->vel[2];
     }
-    func_002675a8(pos, (*pp)->out);
+    PlatVu0CopyVector(pos, (*pp)->out);
     pos[1] -= h;
     pos[3] = 1.0f;
     if (o->vel[1] < 0.0f) {
@@ -354,7 +348,7 @@ void func_00145858(Bo *o, f32 *pos) {
         o->vel[3] += -0.05f;
         o->vel[1] += o->vel[3];
         if (o->vel[1] < 0.0f) {
-            func_002675a8(o->vel, (*(f32 (*)[0x4])&D_002C58A0));
+            PlatVu0CopyVector(o->vel, (*(f32 (*)[0x4])&D_002C58A0));
             o->u.s.b16 = 1;
         }
     }
@@ -364,7 +358,6 @@ void func_00145858(Bo *o, f32 *pos) {
         o->u.d |= 2;
     }
 }
-#undef func_00267530
 #undef D_00531B60
 #undef func_00116660
 #undef func_001166e8
@@ -388,7 +381,6 @@ void func_001ef7b0(s32);
 void func_00141468(void *, s32);
 void func_00141608(void *, s32);
 void func_00244a10(void *, s32);
-#define func_00267530 ((void (*)(f32 *, f32 *, f32 *)) func_00267530)
 #define func_001315c0 ((void (*)(Pk *, s32, f32 *, f32)) func_001315c0)
 #define func_001453a8 ((s32 (*)(void *, f32 *, s32)) func_001453a8)
 void *func_00145aa0(Bo *o, f32 *pos) {
@@ -398,7 +390,7 @@ void *func_00145aa0(Bo *o, f32 *pos) {
     void *e;
     f32 h = D_00304DB0.htTab[o->u.s.idx].h;
 
-    func_002675a8(t, pos);
+    PlatVu0CopyVector(t, pos);
     t[1] += h;
     for (i = 0; i < 3; i++) {
         e = D_002E26A0[i];
@@ -414,7 +406,7 @@ void *func_00145aa0(Bo *o, f32 *pos) {
         case 6: func_00141608(e, 15); break;
         }
         func_001315c0(e, 0x8003, t, 0.0f);
-        func_00267530(d, pos, t);
+        PlatVu0SubVector(d, pos, t);
         func_00121fc4(o->vel, d);
         if (D_00304DB0.htTab[o->u.s.idx].f4 > 0.0f) {
             func_00145188(e, D_00304DB0.htTab[o->u.s.idx].f4);
@@ -427,7 +419,6 @@ void *func_00145aa0(Bo *o, f32 *pos) {
     }
     return 0;
 }
-#undef func_00267530
 #undef func_001315c0
 #undef func_001453a8
 
@@ -436,11 +427,6 @@ extern f32 D_002BBDFC;
 typedef W8Ent35 B3PjE;
 extern B3Pj D_0052EB60[];
 extern f32 *D_00531B68;
-void func_00267810(f32 *, f32 *, f32);
-void func_002672f8(f32 *, f32 *, f32 *);
-void func_00267e40(f32 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
 #define func_00145858 ((void (*)(B3Pj *, B3PjE *)) func_00145858)
 #define func_00145aa0 ((s32 (*)(B3Pj *, B3PjE *)) func_00145aa0)
 #define func_001315c0 ((void (*)(s32, s32, f32, f32 *)) func_001315c0)
@@ -485,12 +471,12 @@ s32 func_00145ce8(B3Pj *o) {
         r = o->x18 / 40.0f;
         s = o->x20[3] * r;
         a = 30.0f / s;
-        func_00267810(m, D_002C58D0[0], (a < 0.59341193735599518f) ? a : 0.59341193735599518f);
-        func_002672f8(u, m, o->x20);
-        func_00267e40(o->x20, u);
-        func_00267e90(u, o->x20, s);
+        PlatVu0RotMatrixY(m, D_002C58D0[0], (a < 0.59341193735599518f) ? a : 0.59341193735599518f);
+        PlatVu0ApplyMatrix(u, m, o->x20);
+        PlatVu0CopyVectorXYZ(o->x20, u);
+        PlatVu0ScaleVectorXYZ(u, o->x20, s);
         func_001315c0(o->x1c, 0x8003, 0.0f, t);
-        func_00267518(e->v, t, u);
+        PlatVu0AddVector(e->v, t, u);
         e->x10 = r;
         o->x18 -= D_002BBDFC;
         if (o->x18 <= 0.0f) {
@@ -575,7 +561,7 @@ void func_00146188(s32 id, f32 *pos, s32 mode) {
     b = func_0011f090(D_0052EB50, 0, func_00145ce8);
     if (b == 0) return;
     e = &D_0035C710[b - D_0052EB60];
-    func_002675a8(e->v, pos);
+    PlatVu0CopyVector(e->v, pos);
     e->v[3] = 1.0f;
     e->u.id = id;
     e->x10 = 1.0f;

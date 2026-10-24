@@ -8,15 +8,10 @@
  * three, 11 and 13 three, 9-31 one).  The angle and distance helpers that
  * need nofill are in vm_util.nofill.c. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef struct { f32 x, y, z; } VmVec3;
 
-void func_00267620(void *m);                    /* sceVu0UnitMatrix */
-void func_00267768(void *d, void *m, f32 a);    /* rotate about x */
-void func_00267810(void *d, void *m, f32 a);    /* rotate about y */
-void func_002676c0(void *d, void *m, f32 a);    /* rotate about z */
-void func_002672f8(void *d, void *m, void *v);  /* d = m v */
-void func_00267518(void *d, void *a, void *b);  /* d = a + b */
 
 void func_001e9dc8(f32 *pos, f32 *rot, f32 *v);
 void func_001e9f18(f32 *out, f32 *base, f32 *rot, f32 d);
@@ -30,12 +25,12 @@ void func_001ea430(void);
 /* pos += v rotated by rot (x, then y, then z). */
 void func_001e9dc8(f32 *pos, f32 *rot, f32 *v) {
     f32 m[4][4];
-    func_00267620(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002676c0(m, m, rot[2]);
-    func_002672f8(v, m, v);
-    func_00267518(pos, pos, v);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0RotMatrixZ(m, m, rot[2]);
+    PlatVu0ApplyMatrix(v, m, v);
+    PlatVu0AddVector(pos, pos, v);
 }
 
 /* func_001e9e58, func_001e9ec0 are in src/vm/vm_util.nofill.c. */
@@ -49,10 +44,10 @@ void func_001e9f18(f32 *out, f32 *base, f32 *rot, f32 d) {
     out[2] = d;
     out[0] = 0.0f;
     out[1] = 0.0f;
-    func_00267620(m);
-    func_00267768(m, m, rot[0]);
-    func_00267810(m, m, rot[1]);
-    func_002672f8(out, m, out);
+    PlatVu0UnitMatrix(m);
+    PlatVu0RotMatrixX(m, m, rot[0]);
+    PlatVu0RotMatrixY(m, m, rot[1]);
+    PlatVu0ApplyMatrix(out, m, out);
     x = -out[0];
     y = -out[1];
     z = -out[2];

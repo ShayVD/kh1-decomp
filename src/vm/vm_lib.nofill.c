@@ -1,6 +1,7 @@
 /* The library functions of src/vm/vm_lib.c that need nofill (docs/modules.md
  * "Session 32"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "vm/vm_obj.h"
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
@@ -743,11 +744,9 @@ void func_001d9348(VmRec *vm) {
 /* func_001dcd98 .. func_001dcfd0 (after the dispatcher) are in vm_lib.c. */
 
 typedef FVec4 V4 __attribute__((aligned(16)));
-void func_00267530(V4 *, V4 *, V4 *);
 void func_00121fc4(V4 *, V4 *);
 f32 func_00121840(V4 *, V4 *);
 void func_00121860(V4 *, V4 *, V4 *, f32);
-void func_002675a8(V4 *, V4 *);
 void func_00137688(struct VmObj *, f32);
 f32 atan2f(f32, f32);
 
@@ -760,7 +759,7 @@ f32 func_001dcb00(struct VmObj *o, V4 *target, f32 a, f32 b) {
     f32 len, t;
     s32 i;
     VmRec *e;
-    func_00267530(&v, target, (V4 *)o->pos);
+    PlatVu0SubVector(&v, target, (V4 *)o->pos);
     func_00121fc4(&v, &v);
     if (b == 0.0f) {
         b = func_00121840((V4 *)o->dir, &v);
@@ -773,7 +772,7 @@ f32 func_001dcb00(struct VmObj *o, V4 *target, f32 a, f32 b) {
     o->f150 = atan2f(v.x, v.z);
     func_00137688(o, o->f150);
     v.w = a;
-    func_002675a8((V4 *)o->dir, &v);
+    PlatVu0CopyVector((V4 *)o->dir, &v);
     for (i = 0; i < D_0039A570; i++) {
         e = &D_0038D170[i];
         if (e->obj == o && e->f60 && e->f60 == o->f8) len = 0.0f;

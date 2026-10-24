@@ -6,6 +6,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_004F.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_002BC0F0.h"
@@ -28,15 +29,11 @@
 #include "data/pieces/D_00304B6C.h"
 
 /* func_00137ab8 (from hand/nostrict/text_00120000_h54.c). */
-extern void func_002675a8(V4 *, V4 *);
-extern void func_00267530(V4 *, V4 *, V4 *);
 typedef FMtx4 Mtx;
 typedef struct E22 { u8 p0[6]; u8 f6; u8 p7[0x10 - 7]; V4 f10; f32 f20[3]; s32 f2c; f32 f30[3]; s32 f3c; u8 p40[0x70 - 0x40]; s32 f70; u8 p74[0xd0 - 0x74]; Mtx fd0; V4 f110; V4 f120; u8 p130[0x370 - 0x130]; u64 f370; u8 p378[0x398 - 0x378]; struct E22 *f398; } E22;
 extern void func_001625c8(Mtx, Mtx);
 extern void func_00136d38(E22 *);
 extern void *func_001230a0(void *);
-extern void func_002672f8(V4 *, Mtx, V4 *);
-extern void func_00267518(V4 *, V4 *, V4 *);
 extern void func_00143d20(E22 *, V4 *, s32);
 extern void func_00137688(E22 *, f32);
 extern f32 atan2f(f32, f32);
@@ -48,27 +45,27 @@ void func_00137ab8(E22 *e) {
     func_00136d38(e);
     while ((p = func_001230a0(p)) != 0) {
         if (p->f398 != e) continue;
-        func_002675a8(&v, &p->f10);
+        PlatVu0CopyVector(&v, &p->f10);
         v.w = 1.0f;
-        func_002672f8(&v, m, &v);
+        PlatVu0ApplyMatrix(&v, m, &v);
         v.w = 1.0f;
-        func_002672f8(&v, e->fd0, &v);
-        func_00267530(&v, &v, &p->f10);
+        PlatVu0ApplyMatrix(&v, e->fd0, &v);
+        PlatVu0SubVector(&v, &v, &p->f10);
         if ((s32)(p->f370 >> 34) & 1) {
             func_00143d20(p, &v, 0);
             func_00136d38(p);
         } else {
-            func_00267518(&p->f120, &p->f120, &v);
+            PlatVu0AddVector(&p->f120, &p->f120, &v);
         }
         if ((u32)(p->f6 - 9) < 2) {
             p->f3c = 0;
-            func_002672f8(&v, m, (V4 *)p->f30);
-            func_002672f8(&v, e->fd0, &v);
+            PlatVu0ApplyMatrix(&v, m, (V4 *)p->f30);
+            PlatVu0ApplyMatrix(&v, e->fd0, &v);
             func_00137688(p, atan2f(v.x, v.z));
         } else if (p->f70 == 0 || p->f70 == 40 || p->f70 == 41) {
             p->f2c = 0;
-            func_002672f8(&v, m, (V4 *)p->f20);
-            func_002672f8((V4 *)p->f20, e->fd0, &v);
+            PlatVu0ApplyMatrix(&v, m, (V4 *)p->f20);
+            PlatVu0ApplyMatrix((V4 *)p->f20, e->fd0, &v);
         }
     }
 }
@@ -93,7 +90,6 @@ extern void func_001441b8(O15 *);
 extern void func_00137c70(O15 *);
 extern void func_0012c760(O15 *);
 extern void func_00137868(O15 *);
-#define func_002675a8 ((void (*)(f32 *, V4 *)) func_002675a8)
 #define func_00137ab8 ((void (*)(O15 *)) func_00137ab8)
 #define func_00136d38 ((void (*)(O15 *)) func_00136d38)
 s32 func_00137ea8(T15 *t) {
@@ -134,7 +130,7 @@ s32 func_00137ea8(T15 *t) {
         o->b34 = 1;
         D_0052AA70[D_0052AA68++] = o;
     } else {
-        func_002675a8(&o->f120.x, &D_002C58B0);
+        PlatVu0CopyVector(&o->f120.x, &D_002C58B0);
     }
     if (o->f14c) func_0012c760(o);
     if (o->b33) {
@@ -143,7 +139,6 @@ s32 func_00137ea8(T15 *t) {
     }
     return 0;
 }
-#undef func_002675a8
 #undef func_00137ab8
 #undef func_00136d38
 

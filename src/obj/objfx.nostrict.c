@@ -6,6 +6,7 @@
  * them. Flag mode: nostrict (the other modes are in the sibling files). Read
  * from the code, not proved by a boot (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_004F.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_002BC0F0.h"
@@ -20,7 +21,6 @@
 
 /* func_0012bd98 (from hand/nostrict/text_00120000_h54.c). */
 typedef FVec4 V4;
-extern void func_00267530(V4 *, V4 *, V4 *);
 typedef struct { u8 pad[0x4c]; u16 f4c; } I3;
 typedef struct { u32 f0; u8 p4[0x2c]; f32 f30[3]; f32 f3c; f32 f40[2]; u8 p48[0xc0-0x48]; V4 fc0; u8 pd0[0x130-0xd0]; I3 *f130; u8 p134[0x2d4-0x134]; f32 f2d4; u8 p2d8[0x350-0x2d8]; s32 f350[3]; } E3;
 typedef struct { u8 p0[4]; s32 *rot; u8 p8[4]; f32 *scl; } R3;
@@ -28,8 +28,6 @@ extern s32 D_0029B410;
 extern s8 D_002E2FB8[];
 extern s32 func_00176578(s32, s32, u32, s64);
 extern R3 *func_00147ed8(s32, s32, s32, f32 *);
-extern void func_00267370(V4 *, V4 *, V4 *);
-extern void func_002673b8(V4 *, V4 *);
 extern void func_00121a78(V4 *, f32 *);
 R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
     V4 m;
@@ -61,11 +59,11 @@ R3 *func_0012bd98(E3 *e, s32 kind, u32 c, f32 *out) {
         if (e->f0 & 0x400000) out[1] = e->f2d4;
         break;
     default:
-        func_00267530(&a, &D_002C58A0, &e->fc0);
-        func_00267370(&b, (V4 *)e->f30, &a);
-        func_002673b8(&b, &b);
-        func_00267370(&m, &a, &b);
-        func_002673b8(&m, &m);
+        PlatVu0SubVector(&a, &D_002C58A0, &e->fc0);
+        PlatVu0OuterProduct(&b, (V4 *)e->f30, &a);
+        PlatVu0Normalize(&b, &b);
+        PlatVu0OuterProduct(&m, &a, &b);
+        PlatVu0Normalize(&m, &m);
         func_00121a78(&m, ang);
         break;
     }
@@ -221,22 +219,20 @@ void func_0012c760(E13 *e) {
 }
 
 /* func_0012c8e8 (from hand/nostrict/text_00120000.c). */
-M2C_UNK func_002675a8(void *, void *);
 f32 atan2f(f32, f32);
 f32 func_00120c18(M2C_UNK *);
-#define func_00267530 ((M2C_UNK (*)(M2C_UNK *, void *, s32)) func_00267530)
 #define func_0012bd98 ((void *(*)(void *, M2C_UNK, M2C_UNK, void *)) func_0012bd98)
 s32 func_0012c8e8(void *arg0) {
     s32 sp[8];    s32 var_v0;
     void *temp_v0;
 
     if ((M2C_FIELD(arg0, f32 *, 0x2D4) - M2C_FIELD(arg0, f32 *, 0x14)) < 5e+01f) {
-        func_002675a8(sp, arg0 + 0x10);
-        func_00267530(&M2C_FIELD(sp, M2C_UNK *, 0x10), sp, M2C_FIELD(arg0, s32 *, 0x148) + 0xF0);
+        PlatVu0CopyVector(sp, arg0 + 0x10);
+        PlatVu0SubVector(&M2C_FIELD(sp, M2C_UNK *, 0x10), sp, M2C_FIELD(arg0, s32 *, 0x148) + 0xF0);
         if (func_00120c18(arg0 + 0x3C0) > 4.0f) {
             if (func_00120c18(&M2C_FIELD(sp, M2C_UNK *, 0x10)) > 1e+02f) {
                 M2C_FIELD(sp, f32 *, 0x4) = M2C_FIELD(arg0, f32 *, 0x2D4);
-                func_002675a8(M2C_FIELD(arg0, s32 *, 0x148) + 0xF0, sp);
+                PlatVu0CopyVector(M2C_FIELD(arg0, s32 *, 0x148) + 0xF0, sp);
                 temp_v0 = func_0012bd98(arg0, 0, 0x08000100, sp);
                 var_v0 = 1;
                 if (temp_v0 != NULL) {
@@ -255,6 +251,5 @@ block_5:
     var_v0 = 0;
     return var_v0;
 }
-#undef func_00267530
 #undef func_0012bd98
 

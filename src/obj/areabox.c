@@ -7,6 +7,7 @@
  * default (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h34.h"
@@ -64,8 +65,6 @@ s32 func_0014e5b8(f32 *p) {
 
 /* func_0014e668 (from hand/text_00140000_h57.c). */
 f32 func_00120c88(f32);
-void func_002675a8(f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
 f32 func_00176850(void);
 f32 sinf(f32);
 f32 cosf(f32);
@@ -79,7 +78,7 @@ s32 func_0014e668(f32 *pos, s32 n, f32 *out, f32 min, f32 max) {
     f32 a;
     s32 i;
 
-    func_002675a8(base, pos);
+    PlatVu0CopyVector(base, pos);
     r = func_00176850() * (max - min) + min;
     ang = func_00176850() * 6.2831855f;
     for (; r >= min; r -= 100.0f) {
@@ -89,7 +88,7 @@ s32 func_0014e668(f32 *pos, s32 n, f32 *out, f32 min, f32 max) {
             t[1] = 0.0f;
             t[2] = cosf(a) * r;
             t[3] = 1.0f;
-            func_00267518(out, base, t);
+            PlatVu0AddVector(out, base, t);
             if (n == 0 || ((func_0014e5b8(out) >> (n - 1)) & 1)) {
                 func_001426a8(out, 1000.0f);
                 out[1] += -100.0f;
@@ -100,7 +99,7 @@ s32 func_0014e668(f32 *pos, s32 n, f32 *out, f32 min, f32 max) {
             }
         }
     }
-    func_002675a8(out, pos);
+    PlatVu0CopyVector(out, pos);
     out[1] += -100.0f;
     func_001426a8(out, 1000.0f);
     return 0;
@@ -125,7 +124,7 @@ s32 func_0014e878(f32 *pos, s32 id, f32 *out, f32 min, f32 max) {
             t[1] = 0.0f;
             t[2] = cosf(a) * r;
             t[3] = 1.0f;
-            func_00267518(out, pos, t);
+            PlatVu0AddVector(out, pos, t);
             if (id == 0) return 1;
             b = D_00350D78->box;
             for (j = 0; j < D_00350D78->n; j++, b++) {
@@ -140,13 +139,12 @@ s32 func_0014e878(f32 *pos, s32 id, f32 *out, f32 min, f32 max) {
             }
         }
     }
-    func_002675a8(out, pos);
+    PlatVu0CopyVector(out, pos);
     return 0;
 }
 
 /* func_0014eab0 (from auto/text_00140000_10.c). */
 #define func_0014e668 ((M2C_UNK (*)(void *, u8, s32, f32, f32)) func_0014e668)
-#define func_002675a8 ((M2C_UNK (*)(void *, s32)) func_002675a8)
 void func_0014eab0(void *arg0, s32 arg1) {
     s32 sp[4];    f32 var_f20;
     void *temp_v1;
@@ -157,16 +155,14 @@ void func_0014eab0(void *arg0, s32 arg1) {
     } else {
         var_f20 = 0.0f;
     }
-    func_002675a8(sp, (*(s32 *)&D_002E26A0) + 0x10);
+    PlatVu0CopyVector(sp, (*(s32 *)&D_002E26A0) + 0x10);
     M2C_FIELD(sp, f32 *, 0x4) += -200.0f;
     func_0014e668(sp, M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u8 *, 0x58), arg1, var_f20 + 100.0f, var_f20 + 600.0f);
 }
 #undef func_0014e668
-#undef func_002675a8
 
 /* func_0014eb60 (from auto/text_00140000_10.c). */
 #define func_0014e878 ((M2C_UNK (*)(void *, u8, s32, f32, f32)) func_0014e878)
-#define func_002675a8 ((M2C_UNK (*)(void *, s32)) func_002675a8)
 void func_0014eb60(void *arg0, s32 arg1) {
     s32 sp[4];    f32 var_f20;
     void *temp_v1;
@@ -177,12 +173,11 @@ void func_0014eb60(void *arg0, s32 arg1) {
     } else {
         var_f20 = 0.0f;
     }
-    func_002675a8(sp, (*(s32 *)&D_002E26A0) + 0x10);
+    PlatVu0CopyVector(sp, (*(s32 *)&D_002E26A0) + 0x10);
     M2C_FIELD(sp, f32 *, 0x4) += -200.0f;
     func_0014e878(sp, M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u8 *, 0x58), arg1, var_f20 + 100.0f, var_f20 + 600.0f);
 }
 #undef func_0014e878
-#undef func_002675a8
 
 /* func_0014ec10 (from auto/text_00140000.c). */
 void func_0014ec10(s32 arg0) {
@@ -238,7 +233,6 @@ s32 func_0014ee08(f32 *lo, f32 *hi, f32 *box) {
 }
 
 /* func_0014ee88 (from hand/text_00140000_s6_07.c). */
-void func_00267530(f32 *, f32 *, f32 *);
 typedef struct { u8 x[20]; } Col20;
 typedef struct { u8 pad[5]; u8 n; u8 pad6[0xe]; Col20 *cols; } ColSet;
 typedef struct { u8 pad[0x134]; ColSet *cs; } Ob88;
@@ -260,8 +254,8 @@ s32 func_0014ee88(Ob88 *o) {
     func_0015bad0(o, cs->cols, &cap);
     q[0] = q[2] = cap.a[1];
     q[1] = cap.a[2];
-    func_00267530(lo, cap.b, q);
-    func_00267518(hi, cap.b, q);
+    PlatVu0SubVector(lo, cap.b, q);
+    PlatVu0AddVector(hi, cap.b, q);
     b = D_00350D78->box;
     for (; i < D_00350D78->n; i++, b++) {
         if ((b->u.flags & 0x200) || func_0014ee08(lo, hi, (f32 *)b)) m |= 1 << (b->u.c.id - 1);

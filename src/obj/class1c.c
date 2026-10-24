@@ -10,6 +10,7 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0054.h"
 #include "data/types/text_00140000_h9_p.h"
 #include "data/pieces/D_00350D88.h"
@@ -285,10 +286,9 @@ void func_001528f0(W9Ent_528f0 *e) {
 #undef func_00152538
 
 /* func_00152ba8 (from auto/text_00150000_14.c). */
-M2C_UNK func_002675a8(s32);
 #define func_001528f0 ((M2C_UNK (*)(void *)) func_001528f0)
 void func_00152ba8(void *arg0, void *arg1, f32 fparg0) {
-    func_002675a8(arg0 + 0x3C0);
+    PlatVu0CopyVector(arg0 + 0x3C0, arg1);
     M2C_FIELD(arg0, f32 *, 0x3CC) = 1.0f;
     M2C_FIELD(arg0, f32 *, 0x3B4) = fparg0;
     M2C_FIELD(arg0, s32 *, 0x3B0) = 0;
@@ -300,10 +300,8 @@ void func_00152ba8(void *arg0, void *arg1, f32 fparg0) {
 
 /* func_00152c28 (from hand/text_00140000_s6_07.c). */
 void func_00121fc4(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-void func_00267530(f32 *, f32 *, f32 *);
 typedef struct { u8 pad[0x10]; f32 pos[4]; } O2c28;
 #define func_00152ba8 ((void (*)(void *, f32 *, f32)) func_00152ba8)
 void func_00152c28(O2c28 *o, f32 *dst, f32 g) {
@@ -315,7 +313,7 @@ void func_00152c28(O2c28 *o, f32 *dst, f32 g) {
     f32 b;
     f32 k;
 
-    func_00267530(v, dst, o->pos);
+    PlatVu0SubVector(v, dst, o->pos);
     h = -v[1];
     v[1] = 0.0f;
     func_00121fc4(v, v);
@@ -325,7 +323,7 @@ void func_00152c28(O2c28 *o, f32 *dst, f32 g) {
     t = MIN(MAX(20.0f, v[3] / 20.0f), 30.0f);
     b = (-g * t) * k;
     t = (PlatSqrtf(b * b - c) - b) / (a + a);
-    func_00267560(v, v, MIN(v[3] / t, 20.0f));
+    PlatVu0ScaleVector(v, v, MIN(v[3] / t, 20.0f));
     v[1] = b;
     func_00152ba8(o, v, g);
 }
@@ -386,16 +384,14 @@ typedef struct {
     f32 d;
 } W9F4;
 extern W9F4 D_00351930[];
-#define func_00267560 ((void (*)(void *out, void *in, f32 s)) func_00267560)
 #define func_00152ba8 ((void (*)(W9Ent_52d50 *e, f32 *v, f32 s)) func_00152ba8)
 void func_00152d50(W9Ent_52d50 *e, s32 i, f32 *v) {
     f32 t[4];
     e->x144->w[8].i = i;
-    func_00267560(t, v, D_00351930[i].b);
+    PlatVu0ScaleVector(t, v, D_00351930[i].b);
     t[1] = D_00351930[i].c;
     func_00152ba8(e, t, D_00351930[i].d);
 }
-#undef func_00267560
 #undef func_00152ba8
 
 /* func_00152dc8 (from hand/text_00140000_h9.c). */
@@ -584,14 +580,12 @@ s32 func_00153300(W9Ent_53300 *e, W9Obj *o) {
 
 /* func_001533d0 (from auto/text_00150000_17.c). */
 M2C_UNK func_00156260(s32, void *);
-#define func_002675a8 ((M2C_UNK (*)(void *, s32)) func_002675a8)
 void func_001533d0(s32 arg0, s32 arg1) {
     s32 sp[4];
-    func_002675a8(sp, arg1 + 0x10);
+    PlatVu0CopyVector(sp, arg1 + 0x10);
     M2C_FIELD(sp, f32 *, 0xC) = 30.0f;
     func_00156260(arg0, sp);
 }
-#undef func_002675a8
 
 /* func_00153500 (from hand/text_00140000_h9.c). */
 typedef struct Actor_53500 {
@@ -742,17 +736,15 @@ void func_00153b68(W9Ent_53b68 *e, s32 a1, f32 *v) {
 
 /* func_00153bb0 (from auto/text_00150000_18.c). */
 f32 func_001376e8(s32, s32);
-#define func_002675a8 ((s32 (*)(s32, s32)) func_002675a8)
 void func_00153bb0(s32 arg0, s32 arg1) {
     if ((M2C_FIELD(arg1, f32 *, 0) != 0.0f) && (M2C_FIELD(arg1, f32 *, 8) != 0.0f)) {
         func_001376e8(arg0, arg1);
-        func_002675a8(arg0 + 0x20, arg1);
+        PlatVu0CopyVector(arg0 + 0x20, arg1);
         return;
     }
-    func_002675a8(arg0 + 0x20, arg0 + 0x30);
+    PlatVu0CopyVector(arg0 + 0x20, arg0 + 0x30);
     M2C_FIELD(arg0, s32 *, 0x2C) = 0;
 }
-#undef func_002675a8
 
 /* func_00153c38 (from auto/text_00150000_2.c). */
 s32 func_00153c38(void *arg0, s32 arg1) {

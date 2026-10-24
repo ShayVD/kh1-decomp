@@ -5,6 +5,7 @@
  * towards a target by the work area's weight.  Read from the code, not
  * proved by a boot. */
 #include "ppp.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00180000_h39.h"
 #include "data/pieces/D_00362730.h"
 #include "data/bss_0061.h"
@@ -17,7 +18,6 @@ typedef struct {
     f32 m2[4][4]; /* +0x50 */
 } H39MObj;
 extern H39MObj *D_00615E68;
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
 typedef struct {
     u8 pad00[0x20];
     s32 dataoff;  /* +0x20 */
@@ -74,7 +74,7 @@ void func_00184918(s32 owner, H39NKey *key, s16 *pos) {
     v.f[1] = pos[1];
     v.f[2] = pos[2];
     v.f[3] = 1.0f;
-    func_002672f8(v.f, D_00615E68->m, v.f);
+    PlatVu0ApplyMatrix(v.f, D_00615E68->m, v.f);
     out = (f32 *) ((u8 *) inst + key->off + 0xA0);
     out[0] = v.f[0];
     out[1] = v.f[1];

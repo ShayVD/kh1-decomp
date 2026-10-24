@@ -20,6 +20,7 @@
 #include "data/pieces/D_002E27A4.h"
 #include "data/pieces/D_002C5C48.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
 #include "data/types/text_00120000_h5.h"
@@ -381,7 +382,6 @@ s32 func_0012eb08(s32 *p) {
 #undef func_0012ed88
 
 /* func_0012eba0 (from hand/text_00120000_h31.c). */
-extern void func_002675a8(void *, void *);
 typedef struct { u16 h0; u16 h2; f32 f4, f8, fc; } P21;
 typedef struct { u8 pad[5]; u8 b5; u8 pad6[0xe]; P21 *f14; } I21;
 typedef struct { u8 pad[0x10]; f32 f10[12]; f32 f40, f44; u8 pad48[0x134 - 0x48]; I21 *f134; } E21;
@@ -395,7 +395,7 @@ f32 func_0012eba0(E21 *e, s32 a, s32 b, s32 c, f32 *out) {
         if (i && i->b5) p = i->f14;
     }
     if (!p) {
-        func_002675a8(out, e->f10);
+        PlatVu0CopyVector(out, e->f10);
         r = 0.0f;
     } else {
         func_001315c0(e, p->h2, out, p->f4);
@@ -421,7 +421,6 @@ void func_0012ec88(s32 arg0, s32 arg1) {
 #undef func_0012ec60
 
 /* func_0012eca8 (from auto/text_00120000_3.c). */
-#define func_002675a8 ((M2C_UNK (*)(void *, void *)) func_002675a8)
 #define func_001315c0 ((f32 (*)(void *, u16, void *, f32)) func_001315c0)
 #define func_0015c960 ((u8 *(*)(void *, M2C_UNK, u32, s32)) func_0015c960)
 f32 func_0012eca8(void *arg0, void *arg1) {
@@ -444,7 +443,7 @@ block_4:
         var_s0 = M2C_FIELD(temp_v1, u8 **, 0x14);
     }
     if (var_s0 == NULL) {
-        func_002675a8(arg1, temp_a0 + 0x10);
+        PlatVu0CopyVector(arg1, temp_a0 + 0x10);
         return 0.0f;
     }
 block_9:
@@ -452,13 +451,11 @@ block_9:
     M2C_FIELD(arg1, f32 *, 4) = (f32) (M2C_FIELD(arg1, f32 *, 4) - (M2C_FIELD(var_s0, f32 *, 8) * M2C_FIELD(M2C_FIELD(arg0, void **, 0), f32 *, 0x44)));
     return M2C_FIELD(var_s0, f32 *, 0xC);
 }
-#undef func_002675a8
 #undef func_001315c0
 #undef func_0015c960
 
 /* func_0012ed88 (from hand/text_00120000_h31.c). */
 typedef S31b0_2e31b0 S31b0;
-extern void func_00267530(void *, void *, void *);
 extern void func_00121fc4(f32 *, f32 *);
 typedef struct { u8 pad[0x10]; f32 f10[16]; } E22;
 static inline f32 fmx(f32 a, f32 b) { return (b < a) ? a : b; }
@@ -466,7 +463,7 @@ static inline f32 fmx(f32 a, f32 b) { return (b < a) ? a : b; }
 f32 func_0012ed88(E22 *e, S31b0 *s, f32 *pos, f32 *out) {
     f32 r = func_0012ec60(s->f0, s->f4, pos);
     f32 y, w;
-    func_00267530(out, pos, e->f10);
+    PlatVu0SubVector(out, pos, e->f10);
     if (0.0f < out[1]) {
         y = 0.0f;
         if (0.0f < out[1] - r) y = out[1] - r;
@@ -513,7 +510,7 @@ T24 *func_0012ef30(void *e, f32 *mat, f32 *dir, f32 maxd) {
     f32 d;
     f32 v[4];
     for (p = func_00123158(e, 0); p; p = func_00123158(e, p)) {
-        func_00267530(v, p->f10, mat);
+        PlatVu0SubVector(v, p->f10, mat);
         d = func_00120bf8(v);
         if (d < maxd) {
             d *= (1.0f - func_00121748(v, dir)) * dir[3] + 1.0f;
@@ -534,8 +531,8 @@ extern void func_00118648(void *);
 s32 func_0012f0f8(void *p, void *q, u32 mode) {
     S0f8 s;
     u8 r;
-    func_002675a8(s.a, p);
-    func_00267530(s.b, q, p);
+    PlatVu0CopyVector(s.a, p);
+    PlatVu0SubVector(s.b, q, p);
     r = 0;
     s.a[3] = 1.0f;
     s.b[3] = 1.0f;

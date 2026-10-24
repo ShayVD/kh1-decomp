@@ -5,6 +5,7 @@
  * is the state task (D_00351A48) that loads "xl_limit.dat" and runs the
  * code at D_00F20000.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
@@ -39,8 +40,6 @@ typedef struct { u8 pad0[5]; u8 b5; u8 pad6[0xe]; struct { u8 pad0[1]; u8 b1; } 
     struct { u8 pad[0x44]; f32 x44; s16 x48; u8 pad4a[2]; u16 x4c; } *x130; S134 *x134; u8 pad138[0xc]; T144 *x144; \
     struct { u8 pad[0x160]; V4 v160; } *x148; u8 pad14c[0x1d4]; V4 x320; u8 pad330[0x40]; u64 x370; u8 pad378[0x26]; u8 x39e; u8 pad39f[0x11]; f32 x3b0; u8 pad3b4[0xc]; V4 x3c0; u8 pad3d0[0x14]; f32 x3e4; u8 pad3e8[8]; V4 x3f0; s32 x400; u8 pad404[0x9c]; void *x4a0;
 typedef struct Actor_58780 { ACT_BODY(S144) } Act;
-void func_00267530(void *, void *, void *);
-f32 func_00267390(void *, void *);
 typedef struct { u8 pad[0xe]; u16 xe; } R478c8;
 R478c8 *func_001478c8(s32);
 f32 func_0012ed88(Act *, void *, V4 *, V4 *);
@@ -68,8 +67,8 @@ s32 func_00158780(s32 k) {
     case 82:
         for (i = 1; i < 3; i++) {
             if (!D_002E26A0[i] || func_00153d78(D_002E26A0[i]) || !func_0012f040(D_002E26A0[i], -1)) return 0;
-            func_00267530(&d, &D_002E26A0[i]->pos, &D_002E26A0[0]->pos);
-            if (func_00267390(&d, &d) > 250000.0f) return 0;
+            PlatVu0SubVector(&d, &D_002E26A0[i]->pos, &D_002E26A0[0]->pos);
+            if (PlatVu0InnerProduct(&d, &d) > 250000.0f) return 0;
         }
         break;
     }

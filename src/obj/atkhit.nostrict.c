@@ -5,6 +5,7 @@
  * the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_0035C710.h"
 #include "data/bss_0053.h"
 #include "data/pieces/D_002C58A0.h"
@@ -125,7 +126,6 @@ B4P *func_0014a450(void);
 s32 func_0013c318(s32);
 s32 func_002408d8(s32);
 void func_001315c0(void *, s32, f32, void *);
-void func_002675a8(void *, void *);
 extern B4Ent *D_002E26A0_4a4a8[3] __asm__("D_002E26A0");
 #define D_002E26A0 D_002E26A0_4a4a8
 B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {
@@ -184,7 +184,7 @@ B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {
     p->xa0 = 0;
     p->x38_ = 0;
     func_001315c0(e, 0x8003, 0.0f, p->x70);
-    func_002675a8(p->x80, p->x70);
+    PlatVu0CopyVector(p->x80, p->x70);
     p->f.b.b16 = 1;
     p->x94 = (f32)d->x18 * 0.0500000007f * e->x6c->xd4;
     p->x98 = d->x1c;
@@ -233,30 +233,28 @@ W34Prt *func_0014a908(W34EObj *o) {
 #undef func_0014a4a8
 
 /* func_0014ac50 (from hand/nostrict/text_00140000_h56.c). */
-void func_00267530(f32 *, f32 *, f32 *);
 void func_00121fc4(f32 *, f32 *);
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x10]; f32 v30[4]; } Hs;
 f32 sinf(f32);
 f32 atan2f(f32, f32);
 f32 cosf(f32);
 f32 func_00120c88(f32);
-void func_002673b8(f32 *, f32 *);
 void func_0014ac50(Hm *o, Hs *s, f32 *out) {
     f32 a;
 
     if ((s32)(o->d0 >> 6) & 1) {
-        func_00267530(out, s->pos, o->pos);
+        PlatVu0SubVector(out, s->pos, o->pos);
         out[1] = 0.0f;
         func_00121fc4(out, out);
         if (out[3] == 0.0f) {
-            func_00267530(out, (*(f32 (*)[0x4])&D_002C58A0), s->v30);
+            PlatVu0SubVector(out, (*(f32 (*)[0x4])&D_002C58A0), s->v30);
         }
     } else if (((s32)(o->u30.d >> 10) & 1) || !o->u30.s.tg) {
-        func_00267530(out, o->pos, o->v70);
+        PlatVu0SubVector(out, o->pos, o->v70);
         out[1] = 0.0f;
-        func_002673b8(out, out);
+        PlatVu0Normalize(out, out);
     } else {
-        func_00267530(out, s->pos, o->u30.s.tg->pos);
+        PlatVu0SubVector(out, s->pos, o->u30.s.tg->pos);
         out[1] = 0.0f;
         a = func_00120c88(atan2f(out[0], out[2]) - o->u30.s.tg->ang);
         if (a > 0.7853982f) {
@@ -399,7 +397,6 @@ typedef struct {
 } B4O;
 B4O *func_001350d8(B4P_4b090 *, s32, B4Ent_4b090 *);
 B4O *func_00135070(B4Ent_4b090 *, s32);
-void func_00267560(void *, void *, f32);
 void func_001586a8(s32);
 void func_00247408(B4Ent_4b090 *, s32);
 void func_0013c548(s32);
@@ -440,7 +437,7 @@ s32 func_0014b090(B4P_4b090 *a, B4P_4b090 *b) {
             o->f.b.hi = b->x30.w.hi;
             o->x2c = a->x5c;
             o->x8.w.c = b->x30.w.lo;
-            func_00267560(o->x10, a->x30.w.hi->x30, -1.0f);
+            PlatVu0ScaleVector(o->x10, a->x30.w.hi->x30, -1.0f);
             if (d >= -40) o->x8.b.b32 = 6;
             else o->x8.b.b32 = 7;
         }
@@ -472,7 +469,6 @@ typedef struct { u8 pad[0x3e0]; u32 w3e0; } Hp;
 typedef struct { s32 w0; Hp *p4; u8 pad8[4]; Hm *m; f32 v10[4]; f32 v20[4]; } Hz;
 s32 func_0014af60(Hm *, Hm *);
 s32 func_0014a330(Hm *, s32, f32 *, f32 *);
-void func_002674f0(f32 *, f32 *, f32 *, f32);
 #define func_0014b090 ((s32 (*)(Hm *, Hm *)) func_0014b090)
 void func_0014b3e0(Hz *x, Hz *y) {
     f32 t[4];
@@ -495,7 +491,7 @@ void func_0014b3e0(Hz *x, Hz *y) {
         func_0014ac00(m2, a);
     }
     if (ra || rb) return;
-    func_002674f0(t, x->v20, y->v20, 0.5f);
+    PlatVu0InterVector(t, x->v20, y->v20, 0.5f);
     func_00147ed8(D_00350CE0, (a | b) < 32 ? 10 : 11, 20000, t);
 }
 #undef func_0014b090
@@ -527,7 +523,6 @@ void func_00118628(B7Q *, s32);
 s32 func_00105b68(s32, s32);
 void func_00105a30(s32, s32, f32 *);
 void func_0014aaf0(B7P *);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 #define func_00146fb8 ((void (*)(s32, s32, s32)) func_00146fb8)
 #define func_0014a1b0 ((void *(*)(B7P *, s32, f32 *)) func_0014a1b0)
 #define func_0014ac00 ((void (*)(B7P *, s32)) func_0014ac00)
@@ -540,8 +535,8 @@ B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
     void *h;
     B7O *o;
 
-    func_002675a8(q.p, p0);
-    func_00267530(q.d, p1, p0);
+    PlatVu0CopyVector(q.p, p0);
+    PlatVu0SubVector(q.d, p1, p0);
     func_00118628(&q, ((s32)(a->x30.x >> 10) & 1) ? 2 : 1);
     if (q.x30 >= 0) {
         r = func_00105b68(q.x34, q.x30);
@@ -552,12 +547,12 @@ B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
         h = func_0014a1b0(a, k, q.hit);
         if (h) {
             func_00105a30(q.x34, q.x30, v);
-            func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), v);
+            PlatVu0SubVector(v, (*(f32 (*)[0x4])&D_002C58A0), v);
             func_00147d50(h, v);
         }
         func_0014ac00(a, k);
         if ((s32)(a->f.x >> 26) & 1) {
-            func_002675a8(a->x10, q.hit);
+            PlatVu0CopyVector(a->x10, q.hit);
         }
         if (!((s32)(a->x30.x >> 10) & 1) && !(k & 8) && a->x30.w.hi) {
             o = func_00135070(a->x30.w.hi, 0);
@@ -573,7 +568,6 @@ B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
     }
     return a;
 }
-#undef func_002675a8
 #undef func_00146fb8
 #undef func_0014a1b0
 #undef func_0014ac00
@@ -601,10 +595,7 @@ typedef struct {
     s32 i90;
 } Src57;
 typedef struct { s32 kind; s32 a4; s32 a8; Src57 *src; s32 a10; f32 f14; f32 f18; s32 pad1c; f32 v[4]; } Ent57;
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
 void func_0014b550(Ent57 *, Ent57 *, s32);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n) {
     f32 p[4];
     f32 zero;
@@ -617,12 +608,12 @@ s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n) {
     if ((s32)(s->u.flags >> 27) & 1) len += len;
     if (len == 0.0f) return 0;
     e = &tbl[n];
-    func_00267530(d, b, a);
+    PlatVu0SubVector(d, b, a);
     func_00121fc4(d, d);
     cnt = 0;
-    func_00267e90(d, d, len);
+    PlatVu0ScaleVectorXYZ(d, d, len);
     zero = 0.0f;
-    func_002675a8(p, a);
+    PlatVu0CopyVector(p, a);
     f1 = (f1 - f0) / (d[3] / len);
     do {
         e->kind = (s32)(s->u.flags >> 12) & 3;
@@ -630,7 +621,7 @@ s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n) {
         e->a8 = s->i54;
         e->src = s;
         e->a10 = 1;
-        func_002675a8(e->v, p);
+        PlatVu0CopyVector(e->v, p);
         e->f14 = e->f18 = f0;
         f0 += f1;
         func_0014b550(e, tbl, n);
@@ -638,12 +629,11 @@ s32 func_0014b9e0(Src57 *s, f32 *a, f32 *b, f32 f0, f32 f1, Ent57 *tbl, s32 n) {
             e++;
             cnt++;
         }
-        func_00267518(p, p, d);
+        PlatVu0AddVector(p, p, d);
         d[3] -= len;
     } while (zero < d[3]);
     return cnt;
 }
-#undef func_002675a8
 
 /* func_0014bdc0 (from hand/nostrict/text_00140000_b04.c). */
 typedef struct {
@@ -751,7 +741,7 @@ s32 func_0014bdc0(s32 a) {
                     p = 0;
                 } else if (!(p->f.x & 0x10200)) {
                     func_001315c0(e, 0x8003, 0.0f, p->x70);
-                    func_002675a8(p->x80, p->x70);
+                    PlatVu0CopyVector(p->x80, p->x70);
                     p->f.b.b16 = 1;
                 }
             }
@@ -826,7 +816,6 @@ extern s32 D_0054F440_0014c130 __asm__("D_0054F440");
 #define D_0054F440 D_0054F440_0014c130
 #define func_0014bdc0 ((s32 (*)(Ent57_c130 *)) func_0014bdc0)
 #define func_0014b550 ((void (*)(Ent57_c130 *, Ent57_c130 *, s32)) func_0014b550)
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 s32 func_0014c130(void) {
     Ent57_c130 *tbl;
     s32 cnt;
@@ -860,8 +849,8 @@ s32 func_0014c130(void) {
     s = D_0054C440;
     for (i = 0; i < 64; i++, s++) {
         if ((s32)(s->u.flags >> 15) & 1) {
-            func_002675a8(s->v70, s->v10);
-            func_002675a8(s->v80, s->v40);
+            PlatVu0CopyVector(s->v70, s->v10);
+            PlatVu0CopyVector(s->v80, s->v40);
             s->u.flags |= 0x10000;
         } else {
             s->u.flags &= ~0x10000;
@@ -878,5 +867,4 @@ s32 func_0014c130(void) {
 #undef D_0054F440
 #undef func_0014bdc0
 #undef func_0014b550
-#undef func_002675a8
 

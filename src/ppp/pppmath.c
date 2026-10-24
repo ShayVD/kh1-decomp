@@ -8,6 +8,7 @@
  * take from and build a u16 free list of ids.
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/vu.h"
 
 extern s32 D_00372760;
 
@@ -120,11 +121,10 @@ f32 func_001a9350(f32 *v) {
     return r.x;
 }
 
-M2C_UNK func_00267530(void *, s32, s32);
 
 void func_001a93b0(s32 arg0, s32 arg1) {
     s32 sp[4];
-    func_00267530(sp, arg0, arg1);
+    PlatVu0SubVector(sp, arg0, arg1);
     func_001a9350((f32 *)sp);
 }
 

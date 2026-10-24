@@ -7,6 +7,7 @@
 
 /* pppKeShpDttDraw (from hand/nostrict/text_00180000_b07.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -33,7 +34,6 @@ typedef struct {
 extern s32 D_0061621C;
 extern PppSystem *D_00615E60;
 extern s32 D_00616224;
-void func_002672f8(void *, void *, void *);
 void func_001aa6b0(void *, s32, s32, s32);
 typedef struct {
     s32 frame;
@@ -108,7 +108,7 @@ void pppKeShpDttDraw(PppObject *obj, PppDttKey *key, PppEntry *e) {
     d.tag1 = 0x017F000001FF0000ULL;
     d.pos[0] = d.pos[1] = d.pos[2] = d.pos[3] = 0.0f;
     d.pos[1] = -w0[0];
-    func_002672f8(d.pos, w2, d.pos);
+    PlatVu0ApplyMatrix(d.pos, w2, d.pos);
     *(s32 *) &d.pos[3] = key->flags;
     func_001a99e8(&d);
     if (func_001a9c30(&d)) {

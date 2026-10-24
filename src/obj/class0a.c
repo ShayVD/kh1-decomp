@@ -15,6 +15,7 @@
 #include "data/pieces/D_00350D88.h"
 #include "data/pieces/D_00304D64.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/bss_0053.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -23,18 +24,16 @@
 /* func_00140d50 (from auto/text_00140000_4.c). */
 s32 func_00130398(s32, s32, f32);
 s32 func_00130578(s32, s32, f32);
-s32 func_002675a8(s32, s32);
 void func_00140d50(s32 arg0, s32 arg1) {
     func_00130398(arg0, 0x01000007, 8.0f);
     func_00130578(arg0, 0x40000000, 8.0f);
-    func_002675a8(arg1, arg0 + 0x30);
+    PlatVu0CopyVector(arg1, arg0 + 0x30);
 }
 
 /* func_00140ee0 (from auto/text_00140000_10.c). */
-M2C_UNK func_00267560(s32, s32, f32);
 extern f32 D_002BBDFC;
 void func_00140ee0(s32 arg0, s32 arg1) {
-    func_00267560(arg1, arg0 + 0x20, D_002BBDFC);
+    PlatVu0ScaleVector(arg1, arg0 + 0x20, D_002BBDFC);
 }
 
 /* func_00140f08 (from auto/text_00140000_15.c). */
@@ -65,15 +64,13 @@ s32 func_00140f88(void) {
 /* func_00140fa8 (from hand/text_00130000_h7.c). */
 void func_0014cc88(W7Ob *o, f32 f);
 extern f32 D_002C5970;
-#define func_00267560 ((void (*)(f32 *d, f32 *s, f32 f)) func_00267560)
 void func_00140fa8(W7Ob *o) {
     func_0014cc88(o, 0.0f);
     o->flags &= ~0x400;
     o->x3b0 = 6.0f;
     o->x3b4 -= 8.724489212036133f;
-    func_00267560(o->x3c0, o->x200, D_002C5970);
+    PlatVu0ScaleVector(o->x3c0, o->x200, D_002C5970);
 }
-#undef func_00267560
 
 /* func_00141018 (from hand/text_00130000_h7.c). */
 typedef struct {
@@ -92,13 +89,11 @@ void func_00141018(W7Ob *o) {
 /* func_00141078 (from hand/text_00130000_h7.c). */
 f32 func_001376e8(W7Ob *o, f32 *v);
 void func_00137688(W7Ob *o, f32 f);
-#define func_00267560 ((void (*)(f32 *d, f32 *s, f32 f)) func_00267560)
 void func_00141078(W7Ob *o) {
-    func_00267560(o->x20, o->x148, -1.0f);
+    PlatVu0ScaleVector(o->x20, o->x148, -1.0f);
     o->x20[1] = o->x20[3] = 0.0f;
     func_00137688(o, func_001376e8(o, o->x20));
 }
-#undef func_00267560
 
 /* func_001410d8 (from hand/text_00130000_h7.c). */
 #define func_00130398 ((W7Ev *(*)(W7Ob *o, s32 k, f32 f)) func_00130398)

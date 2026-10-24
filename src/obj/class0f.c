@@ -12,6 +12,7 @@
 #include "data/pieces/D_002E26A0.h"
 #include "data/pieces/D_002C58A0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -40,27 +41,23 @@ void func_0015caa8(s32 *arg0) {
 }
 
 /* func_0015cac0 (from auto/text_00150000_16.c). */
-M2C_UNK func_002673b8(void *, void *);
-M2C_UNK func_00267518(s32, s32, void *);
-M2C_UNK func_00267560(void *, void *, f32);
 void func_0015cac0(void *arg0, s32 arg1, void *arg2, s32 arg3) {
     s32 sp[4];
     M2C_FIELD(sp, f32 *, 0x4) = 0.0f;
     M2C_FIELD(sp, f32 *, 0x8) = M2C_FIELD(arg2, f32 *, 0);
     M2C_FIELD(sp, f32 *, 0x0) = -M2C_FIELD(arg2, f32 *, 8);
-    func_002673b8(sp, sp);
-    func_00267560(sp, sp, M2C_FIELD(arg0, f32 *, 0x2C0));
+    PlatVu0Normalize(sp, sp);
+    PlatVu0ScaleVector(sp, sp, M2C_FIELD(arg0, f32 *, 0x2C0));
     M2C_FIELD(sp, f32 *, 0x4) = func_0015ca50(arg0);
-    func_00267518(arg3, arg1, sp);
+    PlatVu0AddVector(arg3, arg1, sp);
 }
 
 /* func_0015d1d0 (from hand/text_00150000_h10.c). */
 void func_00130398(void *, s32, f32);
-void func_00267530(f32 *, f32 *, f32 *);
 void func_0014cc88(void *, f32);
 typedef struct { u32 flags; u8 pad[0x2C]; f32 pos[4]; } ObjD1;
 void func_0015d1d0(ObjD1 *a, f32 *v) {
-    func_00267530(v, (*(f32 (*)[0x4])&D_002C58A0), a->pos);
+    PlatVu0SubVector(v, (*(f32 (*)[0x4])&D_002C58A0), a->pos);
     v[3] = 0.0f;
     func_0014cc88(a, v[3]);
     a->flags |= 0x10000;
@@ -70,15 +67,13 @@ void func_0015d1d0(ObjD1 *a, f32 *v) {
 /* func_0015d248 (from hand/text_00150000_h10.c). */
 extern f32 D_002BBDFC;
 typedef struct { u32 flags; u8 pad4[0x1FC]; u8 x200[0x1B0]; f32 f3B0; f32 f3B4; u8 pad3b8[8]; u8 x3C0[4]; } ObjD2;
-#define func_00267560 ((void (*)(void *, void *, f32)) func_00267560)
 void func_0015d248(ObjD2 *a) {
     func_0014cc88(a, 0.0f);
     a->flags &= ~0x400;
     a->f3B0 = 6.0f;
     a->f3B4 -= 8.724489212036133f;
-    func_00267560(a->x3C0, a->x200, 1.0f / D_002BBDFC);
+    PlatVu0ScaleVector(a->x3C0, a->x200, 1.0f / D_002BBDFC);
 }
-#undef func_00267560
 
 /* func_0015d4e0 (from auto/text_00150000_3.c). */
 void func_0015d4e0(s32 arg0, s32 arg1, void *arg2) {
@@ -90,9 +85,8 @@ void func_0015d4e0(s32 arg0, s32 arg1, void *arg2) {
 }
 
 /* func_0015d518 (from auto/text_00150000_16.c). */
-M2C_UNK func_002675a8(s32, M2C_UNK *);
 void func_0015d518(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, ((M2C_UNK *)&D_002C58A0));
+    PlatVu0CopyVector(arg1, ((M2C_UNK *)&D_002C58A0));
 }
 
 /* func_0015d538 (from auto/text_00150000_16.c). */

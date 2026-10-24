@@ -9,6 +9,7 @@
  * NAME_xxxxx are one function's own view (tools/shift/s50move/assemble.py).
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002BBFA0.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
@@ -99,8 +100,6 @@ typedef struct {
     VtxS16 *vtx; /* +0x90 */
 } PppVtxOwner;
 s32 func_001a8f30(void);
-void sceVu0CopyMatrix(void *, void *);
-void func_002672f8(void *, void *, void *);
 void func_001a90f8(void *, void *, void *);
 /* ---- func_0018d038 (pppKeBornRndFrame) ---- */
 void pppKeBornRndFrame(PppObject *obj, PppBornRndKey *key, PppEntry *e) {
@@ -137,7 +136,7 @@ void pppKeBornRndFrame(PppObject *obj, PppBornRndKey *key, PppEntry *e) {
         va = D_00615E64->res[m->slot].vtx;
     rnd = key->rnd;
     v[3] = 1.0f;
-    sceVu0CopyMatrix(mtx, D_00615E68->m);
+    PlatVu0CopyMatrix(mtx, D_00615E68->m);
     if (rnd)
         idx = r % m->n;
     else
@@ -155,12 +154,12 @@ void pppKeBornRndFrame(PppObject *obj, PppBornRndKey *key, PppEntry *e) {
         v[0] = p->x;
         v[1] = p->y;
         v[2] = p->z;
-        func_002672f8(d0, D_00615E68->m, v);
+        PlatVu0ApplyMatrix(d0, D_00615E68->m, v);
         p = &vb[vi];
         v[0] = p->x;
         v[1] = p->y;
         v[2] = p->z;
-        func_002672f8(v, mtx, v);
+        PlatVu0ApplyMatrix(v, mtx, v);
         func_001a90f8(d1, v, D_00615E68->m[3]);
         if (rnd)
             idx = func_001a8f30() % m->n;
@@ -192,9 +191,6 @@ typedef struct {
     s32 off1;     /* +0x18 */
     s32 off2;     /* +0x1C */
 } PppBornKey;
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(PppVec4, PppVec4);
-void func_00267560(f32 *, PppVec4, f32);
 #define D_00615E68 ((PppMtxOwner_8d390 *) D_00615E68)
 void func_0018d390(void *owner, PppBornKey *key, s16 *pos) {
     PppVec4 v;
@@ -212,11 +208,11 @@ void func_0018d390(void *owner, PppBornKey *key, s16 *pos) {
     v[3] = 1.0f;
     a = (f32 *) (inst + key->off0 + 0xA0);
     b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
+    PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
     func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_00267560(v, v, key->speed);
+    PlatVu0SubVector(v, v, D_00615E68->m[3]);
+    PlatVu0Normalize(v, v);
+    PlatVu0ScaleVector(v, v, key->speed);
     func_001a9098((void *) b, v);
 }
 #undef D_00615E68
@@ -256,10 +252,10 @@ void func_0018d5c0(void *owner, PppBorn3Key *key, s16 *pos) {
     v[3] = 1.0f;
     a = (f32 *) (inst + key->off0 + 0xA0);
     b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
+    PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
     func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
+    PlatVu0SubVector(v, v, D_00615E68->m[3]);
+    PlatVu0Normalize(v, v);
     func_001a9098((void *) b, v);
 }
 #undef D_00615E68
@@ -308,12 +304,12 @@ void func_0018d7d8(PppObject *owner, PppBorn2Key *key, s16 *pos) {
     a = (f32 *) (inst + key->off0 + 0xA0);
     c = (f32 *) (inst + key->off2 + 0xA0);
     b = (f32 *) (inst + key->off1 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
+    PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
     func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
+    PlatVu0SubVector(v, v, D_00615E68->m[3]);
+    PlatVu0Normalize(v, v);
     func_001a9098((void *) b, v);
-    func_00267560(v, v, key->speed);
+    PlatVu0ScaleVector(v, v, key->speed);
     func_001a9098((void *) c, v);
 }
 #undef D_00615E60
@@ -390,12 +386,12 @@ void pppKeBornRnd4Frame(PppObject *obj, PppBorn4Key *key, PppEntry *e) {
         v[2] = p->z;
         v[3] = 1.0f;
         idx++;
-        func_002672f8(v, D_00615E68->m, v);
+        PlatVu0ApplyMatrix(v, D_00615E68->m, v);
         func_001a9098(d0, v);
-        func_00267530(v, v, D_00615E68->m[3]);
-        func_002673b8(v, v);
+        PlatVu0SubVector(v, v, D_00615E68->m[3]);
+        PlatVu0Normalize(v, v);
         func_001a9098(d1, v);
-        func_00267560(v, v, key->speed);
+        PlatVu0ScaleVector(v, v, key->speed);
         func_001a9098(d2, v);
         if (rnd)
             idx = func_001a8f30() % m->n;
@@ -429,11 +425,11 @@ void func_0018dd08(void *owner, PppBornKey *key, s16 *pos) {
     v[3] = 1.0f;
     a = (f32 *) (inst + key->off0 + 0xA0);
     b = (f32 *) (inst + key->off2 + 0xA0);
-    func_002672f8(v, D_00615E68->m[0], v);
+    PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
     func_001a9098((void *) a, v);
-    func_00267530(v, v, D_00615E68->m[3]);
-    func_002673b8(v, v);
-    func_00267560(v, v, key->speed);
+    PlatVu0SubVector(v, v, D_00615E68->m[3]);
+    PlatVu0Normalize(v, v);
+    PlatVu0ScaleVector(v, v, key->speed);
     func_001a9098((void *) b, v);
 }
 #undef D_00615E68

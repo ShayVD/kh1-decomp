@@ -4,6 +4,7 @@
  * func_0010a550 / func_0010a5d0 / func_0010a780 build its GS packets. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/bss_0049.h"
@@ -105,45 +106,36 @@ void func_0010b170(void *arg0) {
 
 /* func_0010b190 (from hand/text_00100000_h2.c). */
 extern u8 D_00495210[];
-void func_00267b08(void *, f32, f32, f32, f32, f32, f32, f32, f32, f32);
 void func_0010b190(u8 *p) {
-    func_00267b08(D_00495210, 512.0f, 1.0f, 1.0f,
+    PlatVu0ViewScreenMatrix(D_00495210, 512.0f, 1.0f, 1.0f,
                   *(f32 *)(p + 0x30) + 2048.0f, *(f32 *)(p + 0x34) + 2048.0f,
                   1.0f, 16777000.0f, 2.0f, 4000000.0f);
 }
 
 /* func_0010b208 (from auto/text_00100000_9.c). */
-M2C_UNK func_00267328(s32, s32, void *);
-M2C_UNK func_00267620(void *);
 void func_0010b208(s32 arg0, s32 arg1, void *arg2) {
     s32 sp[16];
-    func_00267620(sp);
+    PlatVu0UnitMatrix(sp);
     M2C_FIELD(sp, f32 *, 0x0) = M2C_FIELD(arg2, f32 *, 0);
     M2C_FIELD(sp, f32 *, 0x14) = M2C_FIELD(arg2, f32 *, 4);
     M2C_FIELD(sp, f32 *, 0x28) = M2C_FIELD(arg2, f32 *, 8);
-    func_00267328(arg0, arg1, sp);
+    PlatVu0MulMatrix(arg0, arg1, sp);
 }
 
 /* func_0010b270 (from auto/text_00100000_10.c). */
-M2C_UNK func_00267768(void *, M2C_UNK *, f32);
 extern M2C_UNK D_00495190;
-#define func_00267328 ((M2C_UNK (*)(void *, M2C_UNK *, void *)) func_00267328)
 #define D_00495210 (*(M2C_UNK (*)) &D_00495210)
 void func_0010b270(void *arg0, void *arg1) {
     s32 sp[16];
-    func_00267768(sp, (M2C_UNK *)&D_002BCAF0, M2C_FIELD(arg1, f32 *, 0x20));
-    func_00267328(sp, &D_00495190, sp);
-    func_00267328(arg0, &D_00495210, sp);
+    PlatVu0RotMatrixX(sp, (M2C_UNK *)&D_002BCAF0, M2C_FIELD(arg1, f32 *, 0x20));
+    PlatVu0MulMatrix(sp, &D_00495190, sp);
+    PlatVu0MulMatrix(arg0, &D_00495210, sp);
 }
-#undef func_00267328
 #undef D_00495210
 
 /* func_0010b2d0 (from hand/text_00100000_h28.c). */
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 typedef struct { u8 pad[0x1c]; f32 ry; } Rot;
-extern void func_00267578(Mtx, Mtx, void *);
-extern void func_002676c0(Mtx, void *, f32);
-extern void sceVu0MulMatrix(Mtx, Mtx, Mtx);
 extern Mtx D_00495190_0010b2d0 __asm__("D_00495190");
 #define D_00495190 D_00495190_0010b2d0
 extern Mtx D_00495210_0010b2d0 __asm__("D_00495210");
@@ -156,10 +148,10 @@ void func_0010b2d0(Mtx out, Rot *r, void *t) {
     } else {
         a += -180.0f;
     }
-    func_002676c0(m, D_002BCAF0, a / 180.0f * 3.1415928f);
-    func_00267578(m, m, t);
-    sceVu0MulMatrix(m, D_00495190, m);
-    sceVu0MulMatrix(out, D_00495210, m);
+    PlatVu0RotMatrixZ(m, D_002BCAF0, a / 180.0f * 3.1415928f);
+    PlatVu0TransMatrix(m, m, t);
+    PlatVu0MulMatrix(m, D_00495190, m);
+    PlatVu0MulMatrix(out, D_00495210, m);
 }
 #undef D_00495190
 #undef D_00495210
@@ -314,7 +306,6 @@ extern u16 D_002B67C8[];
 extern f32 D_002B6798[];
 extern u16 D_002B6780[];
 Task_0bdd0 *func_0011f090(void *, s32, void *);
-void func_002675a8(V4b *, V4b *);
 void func_0010bdd0(Obj *o, s32 arg) {
     Task_0bdd0 *t;
     u16 type;
@@ -323,7 +314,7 @@ void func_0010bdd0(Obj *o, s32 arg) {
     if (t == 0) return;
     t->spr = &o->spr;
     t->obj = o;
-    func_002675a8(&o->v70, &o->pos);
+    PlatVu0CopyVector(&o->v70, &o->pos);
     o->x18 = 0;
     o->x14 = arg;
     sp = SPR(t);
@@ -370,13 +361,12 @@ s32 func_0010c010(void) {
 }
 
 /* func_0010c040 (from auto/text_00100000.c). */
-M2C_UNK func_00267930(M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_002B74D0;
 extern M2C_UNK D_002B74E0;
 extern M2C_UNK D_002B74F0;
 extern M2C_UNK D_004951D0;
 void func_0010c040(void) {
-    func_00267930(&D_004951D0, &D_002B74D0, &D_002B74E0, &D_002B74F0);
+    PlatVu0CameraMatrix(&D_004951D0, &D_002B74D0, &D_002B74E0, &D_002B74F0);
 }
 
 /* func_0010c078 (from auto/text_00100000_10.c). */

@@ -6,6 +6,7 @@
  * point on that sphere and restarts it with ryjmbfilter.c's func_001a2248.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef f32 Mtx2830[4][4] __attribute__((aligned(16)));
 typedef struct {
@@ -52,14 +53,6 @@ extern f32 D_006161C0[4]; /* src/data/bss_0061.c: u8 D_006161C0[0x40] */
 extern u8 D_0061E720[];
 f32 func_001a2178(void);
 void func_001a2248(E2830 *, P2830 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-f32 func_00267390(f32 *, void *);
-void func_002678b8(Mtx2830, f32 *, f32 *);
-void func_002672f8(f32 *, Mtx2830, f32 *);
-void func_00267560(f32 *, f32 *, f32);
 
 static inline f32 vlen3_2830(f32 *v) {
     f32 r;
@@ -111,11 +104,11 @@ void func_001a2830(s32 a0, E2830 *e, P2830 *p, s32 a3, f32 *b) {
         p->svy += e->ay;
     }
     p->spin += e->spin;
-    func_00267e90(t, p->rot, p->spin);
-    func_00267518(p->pos, p->pos, t);
+    PlatVu0ScaleVectorXYZ(t, p->rot, p->spin);
+    PlatVu0AddVector(p->pos, p->pos, t);
     p->pos[3] = 1.0f;
-    func_00267530(d, p->pos, D_00615F70);
-    func_002673b8(t, d);
+    PlatVu0SubVector(d, p->pos, D_00615F70);
+    PlatVu0Normalize(t, d);
     t[3] = 1.0f;
     len = vlen3_2830(d);
     if (e->h14 != 0 && e->h14 != 0xFFFF) p->h26 += 0xFFFF;
@@ -147,15 +140,15 @@ void func_001a2830(s32 a0, E2830 *e, P2830 *p, s32 a3, f32 *b) {
     } else if (e->near < len) {
         p->alpha *= 1.0f - (len - e->near) / e->fade;
     }
-    if (func_00267390(t, D_0061E720) < 0.0f) p->fl.d |= 0x100;
+    if (PlatVu0InnerProduct(t, D_0061E720) < 0.0f) p->fl.d |= 0x100;
     else p->fl.d &= ~0x100;
     lim = e->near + e->far;
     if (lim < len) {
         for (i = 0; i < 3; i++) r[i] = func_001a2178() * 1.256636888f - 0.6283184439f;
-        func_002678b8(m, D_006161C0, r);
-        func_002672f8(r, m, t);
-        func_00267560(r, r, -lim);
-        func_00267518(p->pos, D_00615F70, r);
+        PlatVu0RotMatrix(m, D_006161C0, r);
+        PlatVu0ApplyMatrix(r, m, t);
+        PlatVu0ScaleVector(r, r, -lim);
+        PlatVu0AddVector(p->pos, D_00615F70, r);
         p->pos[3] = 1.0f;
         func_001a2248(e, p, b);
     }

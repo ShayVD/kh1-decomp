@@ -9,6 +9,7 @@
 #include "actor.h"
 #include "data/pieces/D_002C58A0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -22,9 +23,8 @@ void func_0015e7f8(s32 arg0) {
 }
 
 /* func_0015e820 (from auto/text_00150000_16.c). */
-M2C_UNK func_00267e40(s32, s32);
 void func_0015e820(s32 arg0) {
-    func_00267e40(arg0 + 0x3C0, arg0 + 0x30);
+    PlatVu0CopyVectorXYZ(arg0 + 0x3C0, arg0 + 0x30);
 }
 
 /* func_0015e840 (from hand/text_00150000_h10.c). */
@@ -40,14 +40,13 @@ void func_0015e840(void *a) {
 
 /* func_0015e9c8 (from hand/text_00150000_h10.c). */
 extern f32 D_002BBDFC;
-void func_00267560(void *, void *, f32);
 typedef struct { u8 pad[0x30]; f32 pos[4]; u8 pad40[0x38C]; f32 f3CC; } ObjE9;
 void func_0015e9c8(ObjE9 *a, void *b) {
     f32 f = a->f3CC;
     if (f < 18.0f) {
         f = a->f3CC = (f + D_002BBDFC * 0.5f < 18.0f) ? f + D_002BBDFC * 0.5f : 18.0f;
     }
-    func_00267560(b, a->pos, f * D_002BBDFC);
+    PlatVu0ScaleVector(b, a->pos, f * D_002BBDFC);
 }
 
 /* func_0015ea38 (from auto/text_00150000_16.c). */

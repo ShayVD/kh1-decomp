@@ -6,6 +6,7 @@
  * them. Flag mode: default (the other modes are in the sibling files). Read
  * from the code, not proved by a boot (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_004F.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
@@ -64,8 +65,6 @@ void func_0012c010(E10 *e, s32 bit, s32 b) {
 #undef func_0012bd30
 
 /* func_0012c0e8 (from hand/text_00120000_h5.c). */
-extern void func_002675a8(void *, void *);
-extern void func_00267518(void *, void *, void *);
 extern void func_00121eb0(void *);
 extern s32 func_00122ff8(void *);
 typedef struct C14 { void *f0; u8 pad[0x10]; s32 f14; } C14;
@@ -79,8 +78,8 @@ s32 func_0012c0e8(C0 *a) {
         return 4;
     }
     if (func_00122ff8(a->f10)) {
-        func_002675a8(a->f14->f0, s->f10);
-        func_00267518(s->f10, a->f10->f50, s->f20);
+        PlatVu0CopyVector(a->f14->f0, s->f10);
+        PlatVu0AddVector(s->f10, a->f10->f50, s->f20);
     }
     return 0;
 }
@@ -91,7 +90,6 @@ extern M2C_UNK D_002E2FCF;
 s32 func_00121e28(M2C_UNK, void *);
 s32 func_00147ed8(s32, u8, M2C_UNK, s32);
 void *func_00147d18(M2C_UNK *);
-void func_00267530(s32, s32, s32);
 void func_0012c180(s32 arg0, s32 arg1) {
     s32 temp_s0;
     s32 temp_v0_2;
@@ -102,7 +100,7 @@ void func_0012c180(s32 arg0, s32 arg1) {
     temp_v0_2 = func_00121e28(0x40, temp_v0 + 0x20);
     temp_s0 = temp_v0_2 + 0x10;
     func_0012eba0(arg1, 1, -1, 0, temp_s0);
-    func_00267530(temp_v0_2 + 0x20, temp_s0, arg1 + 0x50);
+    PlatVu0SubVector(temp_v0_2 + 0x20, temp_s0, arg1 + 0x50);
     M2C_FIELD(temp_v0, s32 *, 0x14) = func_00147ed8(D_00350CE0, *(M2C_UNK *)((s8 *)(s8 *)&D_002E2FCF + arg0), 0x4E20, temp_s0);
 }
 
@@ -140,7 +138,7 @@ extern void func_00146c98(E12 *, s32);
 void func_0012c698(E12 *e) {
     f32 v[4];
     if ((u8)(e->f39e - 11) < 2) {
-        func_002675a8(v, e->f50);
+        PlatVu0CopyVector(v, e->f50);
         v[1] = e->f2d4;
         switch (e->f70) {
         case 2: case 3: case 4: case 5:

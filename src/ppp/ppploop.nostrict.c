@@ -6,6 +6,7 @@
  * opdma.c's func_001aaf88.  ppploop.c has the rest.  Read from the code,
  * not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/types/nostrict_text_00180000_h40.h"
@@ -148,7 +149,6 @@ typedef struct {
     s32 unk90, unk94;
 } PppMtxOwner_8b200;
 extern PppMtx D_00615FC0;
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 typedef struct {
     u8 pad[0x10];
     u32 tex;    /* +0x10 */
@@ -247,7 +247,7 @@ void pppDrawMdlLoopDraw(PppObject_8b200 *obj, PppMdlKey *key, PppEntry *e) {
     if (key->f25) {
         d.flags = (d.flags & ~0x10) | 0x2000;
         d.mtx = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     } else {
         d.mtx = 0;
     }
@@ -416,7 +416,7 @@ void pppDrawMdlLoopZDraw(PppObject_8b640 *obj, PppMdlKey_8b640 *key, PppEntry *e
     if (key->f25) {
         d.flags = (d.flags & ~0x10) | 0x2000;
         d.mtx = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     } else {
         d.mtx = 0;
     }

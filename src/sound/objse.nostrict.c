@@ -3,6 +3,7 @@
  * named from the member) into D_00551608, func_00157818 queues a sound for
  * an object, the task func_00157c60 and its setup func_00157dc8.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
@@ -324,7 +325,6 @@ void func_00157dc8(void) {
 
 /* func_00157ea8 (from hand/nostrict/text_00150000_h35.c). */
 s32 func_00130340(void *, s32, f32);
-void func_002675a8(void *, void *);
 typedef struct { f32 x, y, z, w; } Vec154768;
 void func_00137688(void *, f32);
 typedef struct { u8 pad[0x3C]; s32 w3C; s32 w40; s32 w44; s32 w48; u8 pad4c[0x72]; u16 hBE; } S6C_156c68;
@@ -357,7 +357,7 @@ void func_00157ea8(Obj157ea8 *a) {
     a->d370 &= ~(3ULL << 37);
     p = D_002E26A0[0];
     if (func_00122ff8((Act1576a8 *)p)) {
-        func_002675a8(&a->v10, &p->v10);
+        PlatVu0CopyVector(&a->v10, &p->v10);
         func_00137688(a, p->f3C);
         for (i = 0; i < 4; i++) {
             a->w350[i] = p->w350[i];

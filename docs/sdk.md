@@ -336,7 +336,9 @@ named before) from their code: each is the routine its VU0 macro instructions co
 libvu0 lists them (ApplyMatrix, MulMatrix, OuterProduct ... ClipAll), with the unnamed gaps filled by that order and
 checked against the code.  The SDK definitions (src/sdk/libvu0/vu0.s, src/sdk/gcc991111*/) take the names; game
 code still calls the func_ names, which the normal build PROVIDEs and the shift link aliases (shift_ld.py), so
-callers can switch one file at a time.
+callers can switch one file at a time.  (Session 58: every game call now goes through include/platform/vu.h's
+PlatVu0 macros onto include/sce/libvu0.h; sceVu0DropShadowMatrix is (m, lp, a, b, c, int mode), the game passing
+mode 0 from src/util/vecutil.c's func_00121620.)
 
 | address | name | evidence |
 |---|---|---|

@@ -6,9 +6,9 @@
  * helpers point a work area at the empty object D_00575A00.
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/vu.h"
 
 extern void *D_00615E60;
-void func_00267620(s32);
 extern u8 D_00575A00[];
 
 void func_001a5688(void *arg0, void **arg1) {
@@ -62,7 +62,7 @@ void func_001a56a0(PppAnimPlayer *p) {
 
 void func_001a5ca0(s32 arg0) {
     M2C_FIELD(D_00615E60, s8 *, 0xB0) = 2;
-    func_00267620(arg0 + 0x40);
+    PlatVu0UnitMatrix(arg0 + 0x40);
     M2C_FIELD(arg0, f32 *, 0xAC) = 1.0f;
 }
 

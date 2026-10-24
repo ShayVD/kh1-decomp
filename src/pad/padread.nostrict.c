@@ -9,6 +9,7 @@
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/pad.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/pieces/D_002C5910.h"
@@ -84,7 +85,6 @@ s32 func_0011f370(PadSt *, u8 *);
 u32 func_0011f628(u32);
 s32 func_00219348(void);
 void func_0011fec0(void);
-void func_002675a8(void *, void *);
 #define func_0011f548 ((void (*)(PadSt *, s32)) func_0011f548)
 void func_0011f668(void) {
     u8 buf[256];
@@ -129,16 +129,16 @@ join:
     }
     if (D_002C5960.b) {
         D_002C5BB0.active = 0;
-        func_002675a8(&D_002C5BB0.v[0], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[1], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[2], &D_002C58B0);
-        func_002675a8(&D_002C5BB0.v[3], &D_002C58B0);
+        PlatVu0CopyVector(&D_002C5BB0.v[0], &D_002C58B0);
+        PlatVu0CopyVector(&D_002C5BB0.v[1], &D_002C58B0);
+        PlatVu0CopyVector(&D_002C5BB0.v[2], &D_002C58B0);
+        PlatVu0CopyVector(&D_002C5BB0.v[3], &D_002C58B0);
         func_0011f548(&D_002C5BB0, 0);
     } else {
-        func_002675a8(&D_002C5BB0.v[0], &D_002C5AD0[0].v[0]);
-        func_002675a8(&D_002C5BB0.v[1], &D_002C5AD0[0].v[1]);
-        func_002675a8(&D_002C5BB0.v[2], &D_002C5AD0[0].v[2]);
-        func_002675a8(&D_002C5BB0.v[3], &D_002C5AD0[0].v[3]);
+        PlatVu0CopyVector(&D_002C5BB0.v[0], &D_002C5AD0[0].v[0]);
+        PlatVu0CopyVector(&D_002C5BB0.v[1], &D_002C5AD0[0].v[1]);
+        PlatVu0CopyVector(&D_002C5BB0.v[2], &D_002C5AD0[0].v[2]);
+        PlatVu0CopyVector(&D_002C5BB0.v[3], &D_002C5AD0[0].v[3]);
         func_0011f548(&D_002C5BB0, func_0011f628(D_002C5AD0[0].x4));
         D_002C5BB0.active = 1;
     }

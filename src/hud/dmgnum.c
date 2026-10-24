@@ -10,6 +10,7 @@
  * off), func_00245f18 is 1 while one is shown.  Most likely the damage and
  * heal numbers; not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef struct {
     u32 used;          /* +0x0 */
@@ -27,7 +28,6 @@ extern DmgNum D_00662A30[10]; /* src/data/bss_0066.c: E860 D_00662A30[10] */
 extern u8 D_0045BC10[];
 extern u8 D_0045D240[];
 extern u8 D_0045D248[];
-void sceVu0CopyVector(void *, void *);
 void func_001315c0(s32, s32, void *, f32);
 void func_0024ae00(void *);
 void func_0024af00(void *);
@@ -44,7 +44,7 @@ void func_00245798(DmgNum *d, s32 value, void *pos) {
     d->value = value;
     d->used = 1;
     d->age = 0;
-    sceVu0CopyVector(d->pos, pos);
+    PlatVu0CopyVector(d->pos, pos);
 }
 
 DmgNum *func_002457c8(void) {

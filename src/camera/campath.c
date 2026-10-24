@@ -7,6 +7,7 @@
  * (func_0017b4f8) and the searches for the nearest point.  Each section names
  * the file its code came from.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/text_00170000_h38.h"
 #include "data/types/text_00170000_h38_p.h"
 #include "data/pieces/D_002C58D0.h"
@@ -69,21 +70,17 @@ f32 func_0017b668(s32 start, s32 end, f32 t, f32 te) {
 /* func_0017b740 (from hand/text_00170000_h38.c). */
 extern V4 D_00575970;
 void func_00121fc4(V4 *, V4 *);
-void func_00267518(V4 *, V4 *, V4 *);
-void func_00267530(V4 *, V4 *, V4 *);
-void func_00267560(V4 *, V4 *, f32);
-void func_002675a8(V4 *, V4 *);
 void func_0017b740(V4 *out, V4 *in) {
     V4 d;
     Path *p = D_00362438;
-    func_00267530(&d, &D_00575970, in);
+    PlatVu0SubVector(&d, &D_00575970, in);
     d.y = 0.0f;
     func_00121fc4(&d, &d);
     if (p->x8 < d.w) {
-        func_00267560(&d, &d, d.w - p->x8);
-        func_00267518(out, in, &d);
+        PlatVu0ScaleVector(&d, &d, d.w - p->x8);
+        PlatVu0AddVector(out, in, &d);
     } else {
-        func_002675a8(out, in);
+        PlatVu0CopyVector(out, in);
     }
 }
 
@@ -140,7 +137,7 @@ void func_0017bfe8(void) {
     c->x54 += dt;
     c->x54 = (c->x54 < 0.0f) ? 0.0f : ((max < c->x54) ? max : c->x54);
     s = D_00575940.x54;
-    func_00267530(&t, &D_00575940.x0, &D_00575940.x10);
+    PlatVu0SubVector(&t, &D_00575940.x0, &D_00575940.x10);
     d = func_00120bf8(&t);
     if (d < 5.0f) d = 0.0f;
     d = (d < 0.0f) ? 0.0f : ((k < d) ? 100.0f : d);
@@ -158,7 +155,7 @@ void func_0017c110(s32 arg0, f32 fparg0) {
     s32 sp[20];
     func_0017b308(sp, ((void *)D_00362438) + 0x20, M2C_FIELD(D_00362438, s32 *, 0), arg0, M2C_FIELD(D_00362438, s32 *, 0x18) & 1);
     func_0017b250(&M2C_FIELD(sp, M2C_UNK *, 0x40), sp, fparg0);
-    func_00267530(&M2C_FIELD(sp, M2C_UNK *, 0x40), &D_00575970, &M2C_FIELD(sp, M2C_UNK *, 0x40));
+    PlatVu0SubVector(&M2C_FIELD(sp, M2C_UNK *, 0x40), &D_00575970, &M2C_FIELD(sp, M2C_UNK *, 0x40));
     func_00120c18(&M2C_FIELD(sp, M2C_UNK *, 0x40));
 }
 #undef D_00575970
@@ -245,7 +242,6 @@ extern f32 D_005758D0[4];
 extern s32 D_00575890;
 extern V4 D_00362670;
 extern BF D_002C5958;
-void func_002672f8(V4 *, void *, V4 *);
 /* defined above it in its old file (h61): without them five words differ */
 CONTEXT_ONLY void func_00176f08(s32 st, f32 t) { }
 CONTEXT_ONLY s32 func_00177358(void *o) { return 0; }
@@ -258,7 +254,6 @@ typedef struct Cam940 {
     s32 x40; s32 x44; f32 x48; f32 x4c; f32 x50; f32 x54; f32 x58; f32 x5c; f32 x60;
     u8 x64; u8 x65; u8 x66;
 } Cam940;
-void func_002673b8(V4 *, V4 *);
 void func_0017b170(void);
 void func_0017c8e8(void);
 void func_0017c9a8(void);
@@ -275,8 +270,8 @@ void func_0017d238(void) {
     Path *path = D_00362438;
     f32 step, len;
 
-    func_002672f8(&D_00575940.x30, &D_00575894->xd0, &D_00362670);
-    func_00267530(&v, &D_00575940.x30, &D_005758D0);
+    PlatVu0ApplyMatrix(&D_00575940.x30, &D_00575894->xd0, &D_00362670);
+    PlatVu0SubVector(&v, &D_00575940.x30, &D_005758D0);
     D_00575940.x58 = func_00120c18(&v);
     if (D_00575890 & 2) {
         D_00575890 &= ~2;
@@ -299,24 +294,24 @@ void func_0017d238(void) {
             D_00575940.x48 = D_00575940.x4c;
             func_0017b308(m, path->seg, path->n, D_00575940.x40, path->x18 & 1);
             func_0017b250(&D_00575940, m, D_00575940.x48);
-            func_002675a8(&D_00575940.x20, &D_005758D0);
+            PlatVu0CopyVector(&D_00575940.x20, &D_005758D0);
             D_00575940.x65++;
             D_00575940.x66 = 0;
         }
         if (func_0017b7e8() || (path->x18 & 0x20)) {
             step = D_002BBDFC * 8.0f;
-            func_00267530(&v, &D_00575940.x0, &D_00575940.x20);
+            PlatVu0SubVector(&v, &D_00575940.x0, &D_00575940.x20);
             len = func_00120bf8(&v);
-            func_002673b8(&v, &v);
-            func_00267560(&v, &v, step);
-            func_00267518(&D_00575940.x20, &D_00575940.x20, &v);
+            PlatVu0Normalize(&v, &v);
+            PlatVu0ScaleVector(&v, &v, step);
+            PlatVu0AddVector(&D_00575940.x20, &D_00575940.x20, &v);
             if (len < 50.0f) D_00575940.x65 = 0;
         }
         if (path->x18 & 2) func_0017b740(&D_005758D0, &D_00575940.x20);
-        else func_002675a8(&D_005758D0, &D_00575940.x20);
+        else PlatVu0CopyVector(&D_005758D0, &D_00575940.x20);
     } else {
         if (path->x18 & 2) func_0017b740(&D_005758D0, &D_00575940.x0);
-        else func_002675a8(&D_005758D0, &D_00575940.x0);
+        else PlatVu0CopyVector(&D_005758D0, &D_00575940.x0);
     }
     if ((u32)(&D_002C5BB0)->x8 & 0x8000) {
         if (func_00177358(D_00575894) && !func_001375d8(D_00575894) && !((D_002C5958 >> 13) & 1) && !D_00362420) {

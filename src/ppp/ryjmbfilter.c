@@ -11,6 +11,7 @@
  * the unit vector of D_00615F80 - D_00615F70; the Con / Des set up and
  * free the two particle blocks.  Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/vu.h"
 #include "ppp.h"
 
 f32 func_001a2178(void) {
@@ -210,8 +211,6 @@ void func_001a2248(P9Key *a, P9Part *b, P9Out *c) {
 }
 
 void *memset(void *, s32, u32);
-void func_002672f8(void *, void *, void *);
-void func_002673b8(void *, void *);
 extern u8 D_00615F30[];
 typedef struct { f32 x, y, z, w; } V4_1a26f0;
 typedef struct { u8 pad[124]; f32 p[3]; u8 pad2[20]; f32 r0, r1; } Emit_1a26f0;
@@ -241,7 +240,7 @@ void func_001a26f0(s32 a0, Emit_1a26f0 *e, V4_1a26f0 *m, void *b) {
     t.y = e->p[1];
     t.z = e->p[2];
     t.w = 1.0f;
-    func_002673b8(m + 1, &t);
+    PlatVu0Normalize(m + 1, &t);
     r = e->r0 + e->r1;
     d = r + r;
     do {
@@ -250,7 +249,7 @@ void func_001a26f0(s32 a0, Emit_1a26f0 *e, V4_1a26f0 *m, void *b) {
         m->z = d * func_001a2178() - r;
     } while (r < vlen3_1a26f0(m));
     m->w = 1.0f;
-    func_002672f8(m, D_00615F30, m);
+    PlatVu0ApplyMatrix(m, D_00615F30, m);
     func_001a2248((P9Key *)e, (P9Part *)m, (P9Out *)b);
 }
 
@@ -258,10 +257,6 @@ void func_001a30d0(void) {
 
 }
 
-void sceVu0UnitMatrix(f32 (*)[4]);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
-void func_002676c0(f32 (*)[4], f32 (*)[4], f32);
-void func_002675a8(f32 *, void *);
 #include "data/pieces/D_003701F0.h"
 extern f32 D_00615EB0[4][4]; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
@@ -270,28 +265,27 @@ typedef struct { u8 pad[164]; f32 sc, of; } Cam;
 
 f32 func_001a30d8(s32 a0, f32 (*m)[4], Cam *c, s32 a3, Spr *s) {
     f32 r;
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m[0][0] = s->sx * D_003701F0[0];
     m[1][1] = s->sy * D_003701F0[1];
     m[2][2] = s->sx * D_003701F0[0];
-    if (s->rot != 0.0f) func_002676c0(m, m, s->rot * 3.1415927f / 180.0f);
-    func_002675a8(m[3], s);
-    func_002672f8(m[3], D_00615EB0, m[3]);
+    if (s->rot != 0.0f) PlatVu0RotMatrixZ(m, m, s->rot * 3.1415927f / 180.0f);
+    PlatVu0CopyVector(m[3], s);
+    PlatVu0ApplyMatrix(m[3], D_00615EB0, m[3]);
     m[3][1] *= c->sc;
     r = m[3][2];
     m[3][1] += c->of;
-    sceVu0MulMatrix(m, D_00616040, m);
+    PlatVu0MulMatrix(m, D_00616040, m);
     return r;
 }
 
-M2C_UNK func_00267530(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_00615F70; /* src/data/bss_0061.c: f32 D_00615F70[4] */
 extern M2C_UNK D_00615F80; /* src/data/bss_0061.c: u128 D_00615F80 */
 extern M2C_UNK D_0061E720; /* src/data/bss_0061.c: u8 D_0061E720[0x10] */
 
 void pppRyjMegaBirthFilterFn14(void) {
-    func_00267530(&D_0061E720, &D_00615F80, &D_00615F70);
-    func_002673b8(&D_0061E720, &D_0061E720);
+    PlatVu0SubVector(&D_0061E720, &D_00615F80, &D_00615F70);
+    PlatVu0Normalize(&D_0061E720, &D_0061E720);
     M2C_FIELD(&D_0061E720, f32 *, 0xC) = 1.0f;
 }
 

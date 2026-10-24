@@ -4,6 +4,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002C58D0.h"
@@ -143,9 +144,6 @@ typedef struct {
     u64 f370;
 } Ob9;
 typedef struct { f32 a[4]; V4 pos; } Tm9;
-extern void func_002675a8(V4 *, V4 *);
-extern void func_00267518(V4 *, V4 *, V4 *);
-extern void func_002672f8(V4 *, f32 (*)[4], V4 *);
 extern Bn9 *func_0015c960(Ob9 *, s32, s32, s32);
 extern void func_0015bad0(Ob9 *, s32, Tm9 *);
 extern void func_0012ec88(Ob9 *, V4 *);
@@ -161,7 +159,7 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
     Md9 *md;
 
     if (!o || !((s32)(o->f370 >> 32) & 1)) {
-        func_002675a8(out, &D_002C58A0);
+        PlatVu0CopyVector(out, &D_002C58A0);
         return;
     }
     if (id & 0x8000) {
@@ -173,7 +171,7 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
             if (!b) b = func_0015c960(o, 0, -1, 0);
             if (!b) b = (Bn9 *)mdl;
             if (!b) {
-                func_002675a8(out, &o->f10);
+                PlatVu0CopyVector(out, &o->f10);
                 break;
             }
             func_001315c0(o, b->f2, out, b->f4);
@@ -182,18 +180,18 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
         case 0x8003:
             if (mdl) {
                 func_0015bad0(o, mdl, &tm);
-                func_002675a8(out, &tm.pos);
+                PlatVu0CopyVector(out, &tm.pos);
             } else {
-                func_002675a8(out, &o->f50);
+                PlatVu0CopyVector(out, &o->f50);
             }
             break;
         case 0x8004:
             if (mdl) {
                 func_0015bad0(o, mdl, &tm);
-                func_002675a8(out, &tm.pos);
+                PlatVu0CopyVector(out, &tm.pos);
                 out->y -= tm.a[2];
             } else {
-                func_002675a8(out, &o->f50);
+                PlatVu0CopyVector(out, &o->f50);
             }
             break;
         case 0x8007:
@@ -202,10 +200,10 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
         case 0x8006:
             if (mdl) {
                 func_0015bad0(o, mdl, &tm);
-                func_002675a8(out, &tm.pos);
+                PlatVu0CopyVector(out, &tm.pos);
                 out->y -= tm.a[2] * 1.5f;
             } else {
-                func_002675a8(out, &o->f50);
+                PlatVu0CopyVector(out, &o->f50);
             }
             break;
         default:
@@ -215,19 +213,19 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
             v.z = t * 100.0f;
             switch (id) {
             case 0x8002:
-                func_002675a8(out, &o->f50);
+                PlatVu0CopyVector(out, &o->f50);
                 break;
             case 0x8008:
                 v.x = v.z;
                 *(s32 *)&v.z = 0;
-                func_002675a8(out, &o->f50);
+                PlatVu0CopyVector(out, &o->f50);
                 break;
             default:
-                func_002675a8(out, &o->f10);
+                PlatVu0CopyVector(out, &o->f10);
                 break;
             }
-            func_002672f8(&v, o->fd0, &v);
-            func_00267518(out, out, &v);
+            PlatVu0ApplyMatrix(&v, o->fd0, &v);
+            PlatVu0AddVector(out, out, &v);
             break;
         }
     } else {
@@ -239,7 +237,7 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
             }
         }
         id = func_00131558(o, id);
-        if (id <= 0) func_002675a8(out, &o->f10);
+        if (id <= 0) PlatVu0CopyVector(out, &o->f10);
         else func_00162218(o->f15c, id, out, t);
     }
     out->w = 1.0f;
@@ -249,8 +247,6 @@ void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {
 /* func_001318e8 (from hand/text_00120000_h54.c). */
 typedef struct { u8 pad[0xd0]; f32 fd0[4][4]; u8 p110[0x15c - 0x110]; s32 f15c; } E14;
 extern s32 func_00122ff8(E14 *);
-extern void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-extern void func_00267530(f32 *, V4 *, f32 *);
 typedef f32 Mtx[4][4];
 extern Mtx *func_001623e0(s32);
 extern s32 func_00162368(s32, s32);
@@ -258,24 +254,24 @@ extern s32 func_00162368(s32, s32);
 #define func_00131558 ((s32 (*)(E14 *, s32)) func_00131558)
 void func_001318e8(E14 *e, s32 id, f32 (*m)[4]) {
     if (!func_00122ff8(e)) {
-        sceVu0CopyMatrix(m, D_002C58D0);
+        PlatVu0CopyMatrix(m, D_002C58D0);
         return;
     }
     if (id & 0x8000) {
-        func_00267530(m[0], &D_002C58A0, e->fd0[2]);
-        func_00267530(m[1], &D_002C58A0, e->fd0[1]);
-        func_00267530(m[2], &D_002C58A0, e->fd0[0]);
+        PlatVu0SubVector(m[0], &D_002C58A0, e->fd0[2]);
+        PlatVu0SubVector(m[1], &D_002C58A0, e->fd0[1]);
+        PlatVu0SubVector(m[2], &D_002C58A0, e->fd0[0]);
         func_001315c0(e, id, m[3], 0.0f);
     } else if (id & 0x2000) {
         id &= 0xfff;
-        sceVu0CopyMatrix(m, *(func_001623e0(e->f15c) + id));
+        PlatVu0CopyMatrix(m, *(func_001623e0(e->f15c) + id));
     } else {
         id = func_00131558(e, id);
         if (id <= 0) {
-            sceVu0CopyMatrix(m, e->fd0);
+            PlatVu0CopyMatrix(m, e->fd0);
         } else {
             id = func_00162368(e->f15c, id);
-            sceVu0CopyMatrix(m, *(func_001623e0(e->f15c) + id));
+            PlatVu0CopyMatrix(m, *(func_001623e0(e->f15c) + id));
         }
     }
 }

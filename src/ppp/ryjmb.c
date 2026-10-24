@@ -8,6 +8,7 @@
  * particle blocks with func_00183b20.  ryjmb.nostrict.c has the rest of the
  * class.  Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/vu.h"
 #include "ppp.h"
 
 typedef unsigned int u128 __attribute__((mode(TI)));
@@ -21,8 +22,6 @@ typedef struct {
 
 extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
 extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
-void sceVu0UnitMatrix(PppMtx);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 f32 func_0019baf8(void);
 
 s8 func_0019bb40(u8 a) {
@@ -58,8 +57,8 @@ s32 func_0019bb98(PppBb98A *p, PppBb98B *q) {
 void func_0019cfc0(PppMtx out, PppBb98B *q, PppMtx m) {
     if (q->unkCC != 0)
         return;
-    sceVu0MulMatrix(out, m, D_00615E68->m);
-    sceVu0MulMatrix(out, D_00615EB0, out);
+    PlatVu0MulMatrix(out, m, D_00615E68->m);
+    PlatVu0MulMatrix(out, D_00615EB0, out);
 }
 
 PppMtx D_0061E2D0 ALIGNED(16);
@@ -73,7 +72,7 @@ typedef struct {
 void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
     PppMegaBirth *w = (PppMegaBirth *) ((u8 *) obj + e->offsets[2] + 0xA0);
 
-    sceVu0UnitMatrix(w->m);
+    PlatVu0UnitMatrix(w->m);
     w->q = 0;
     w->i[0] = 0;
     w->i[1] = 0;
@@ -81,7 +80,7 @@ void pppRyjMegaBirthCon(void *obj, PppEntry *e) {
     w->i[3] = 0;
     w->h[0] = 0;
     w->h[1] = 0;
-    sceVu0UnitMatrix(D_0061E2D0);
+    PlatVu0UnitMatrix(D_0061E2D0);
 }
 
 M2C_UNK func_00183b20(s32, s32);

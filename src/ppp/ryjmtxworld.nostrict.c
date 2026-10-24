@@ -8,6 +8,7 @@
 
 /* pppRyjDrawMatrixWorldNoRotFrame (from hand/nostrict/text_00180000_h40.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/types/nostrict_text_00180000_h40.h"
@@ -32,28 +33,24 @@ typedef struct {
 } PppMtxOwner;
 extern PppMtxOwner *D_00615E68;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-void func_00267560(f32 *, PppVec4, f32);
-void sceVu0UnitMatrix(PppMtx);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 extern PppMtx D_00615EB0;
-void func_00267548(f32 *, f32 *, f32 *);
 void pppRyjDrawMatrixWorldNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
     PppMtx m;
     f32 *w = PPP_WORK(f32, obj, e, 1);
 
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m[3][0] = w[0];
     m[3][1] = w[1];
     m[3][2] = w[2];
-    sceVu0MulMatrix(m, D_00615EB0, m);
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
-    func_00267548(D_00615E68->m2[3], D_00615E68->m[3], &w[4]);
+    PlatVu0MulMatrix(m, D_00615EB0, m);
+    PlatVu0ScaleVector(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
+    PlatVu0ScaleVector(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
+    PlatVu0ScaleVector(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
+    PlatVu0MulVector(D_00615E68->m2[3], D_00615E68->m[3], &w[4]);
     D_00615E68->m2[3][0] += m[3][0];
     D_00615E68->m2[3][1] += m[3][1];
     D_00615E68->m2[3][2] += m[3][2];
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
+    PlatVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
 }
 
 /* pppRyjMatrixWorldFrame (from hand/nostrict/text_00190000_h64.c). */
@@ -69,7 +66,6 @@ typedef struct {
     s32 unk94;    /* +0x94 */
 } PppMtxOwner_98b50;
 void func_00183be0(PppMtx, void *);
-void func_00267440(PppMtx, PppMtx);
 static inline void vu0ScaleRow(f32 *row, f32 s) {
     __asm__ volatile(
         "qmtc2 %1, $vf9\n"
@@ -94,9 +90,9 @@ void pppRyjMatrixWorldFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -128,9 +124,9 @@ void pppRyjMatrixWorldXZYFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -162,9 +158,9 @@ void pppRyjMatrixWorldYXZFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -196,9 +192,9 @@ void pppRyjMatrixWorldYZXFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -230,9 +226,9 @@ void pppRyjMatrixWorldZXYFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -264,9 +260,9 @@ void pppRyjMatrixWorldZYXFrame(PppObject *obj, void *key, PppEntry *e) {
     m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
     m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
     m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
+    PlatVu0InversMatrix(m, m);
+    PlatVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
+    PlatVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);
@@ -278,7 +274,7 @@ void pppRyjMatrixNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
     PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
     PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
 
-    func_00267440(D_00615E68->m, D_00615EB0);
+    PlatVu0InversMatrix(D_00615E68->m, D_00615EB0);
     vu0ScaleRow(D_00615E68->m[0], s->x);
     vu0ScaleRow(D_00615E68->m[1], s->y);
     vu0ScaleRow(D_00615E68->m[2], s->z);

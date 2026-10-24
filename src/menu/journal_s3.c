@@ -116,10 +116,10 @@ void func_00220af0(JsWin *a0) {
     JsWin *b[2];
     if (func_001f42b8(a0) != 0) {
         s32 fl = D_00425BC8->x8;
-        if (fl & 0x4000) {
+        if (fl & PAD_CROSS) {
             func_001f3758(D_00643428);
             func_0011d768(3);
-        } else if (fl & 0x1000) {
+        } else if (fl & PAD_TRIANGLE) {
             func_0011d768(2);
             func_001f3758(D_00643428->x10);
             b[0] = func_001f31a8(D_003F62A0, 50);

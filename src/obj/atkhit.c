@@ -5,6 +5,7 @@
  * the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/bss_0054.h"
 #include "data/pieces/D_00304BE8_s.h"
@@ -46,16 +47,12 @@ void func_0014a0f0(W34Tmr *a) {
 #undef func_0014a398
 
 /* func_0014a238 (from hand/text_00140000_h34.c). */
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
 typedef struct { u8 pad[4]; f32 x4; f32 x8; u8 padc[4]; f32 pos[4]; } W34Fol;
 typedef struct { u8 pad[0x10]; f32 pos[4]; } W34Pos;
 void func_0014a238(W34Pos *a, W34Fol *b, f32 *out) {
     f32 v[4] __attribute__((aligned(16)));
     f32 y, k, t, lim;
-    func_00267530(v, a->pos, b->pos);
+    PlatVu0SubVector(v, a->pos, b->pos);
     y = v[1];
     lim = b->x8;
     if (lim < y) y = lim;
@@ -64,10 +61,10 @@ void func_0014a238(W34Pos *a, W34Fol *b, f32 *out) {
     k = (1.0f < t) ? 1.0f : t;
     k = PlatSqrtf(1.0f - k * k);
     v[1] = 0.0f;
-    func_002673b8(v, v);
-    func_00267560(v, v, b->x4 * k);
+    PlatVu0Normalize(v, v);
+    PlatVu0ScaleVector(v, v, b->x4 * k);
     v[1] = y;
-    func_00267518(out, b->pos, v);
+    PlatVu0AddVector(out, b->pos, v);
 }
 
 /* func_0014a330 (from auto/text_00140000_10.c). */
@@ -135,12 +132,11 @@ W8P *func_0014a450(void) {
 }
 
 /* func_0014a898 (from hand/text_00140000_h8.c). */
-void func_002675a8(void *, void *);
 void func_0014a898(W8P *p, void *v) {
-    func_002675a8(p->x70, v);
-    func_002675a8(p->x80, v);
-    func_002675a8(p->x10, v);
-    func_002675a8(p->x40, v);
+    PlatVu0CopyVector(p->x70, v);
+    PlatVu0CopyVector(p->x80, v);
+    PlatVu0CopyVector(p->x10, v);
+    PlatVu0CopyVector(p->x40, v);
     p->f.b.f14 = 0;
     p->f.b.f16 = 1;
 }
@@ -231,8 +227,6 @@ void func_0014ac00(void *arg0, s32 arg1) {
 }
 
 /* func_0014af60 (from hand/text_00140000_h34.c). */
-void func_00267810(f32 (*)[4], f32 *, f32);
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
 f32 func_00121748(f32 *, f32 *);
 typedef struct { u8 pad[0x30]; f32 x30[4]; u8 pad40[0x10]; f32 x50[4]; } W34Xf;
 typedef struct { u8 pad[0x60]; f32 x60; f32 x64; } W34Rng;
@@ -247,7 +241,6 @@ typedef struct {
     u8 pad60[0x10];
     f32 x70[4];
 } W34Act2;
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 s32 func_0014af60(W34Act2 *a, W34Act2 *b) {
     f32 m[4][4] __attribute__((aligned(16)));
     f32 v[4] __attribute__((aligned(16)));
@@ -257,30 +250,28 @@ s32 func_0014af60(W34Act2 *a, W34Act2 *b) {
     if (!((s32)(b->x0 >> 6) & 1)) {
         k = (s32)(a->x0 >> 17) & 7;
         if (k == 1 || k == 3 || k == 4 || k == 2) {
-            func_00267810(m, D_002C58D0[0], a->x5c->x60);
-            func_002675a8(v, a->x30.w.x34->x30);
+            PlatVu0RotMatrixY(m, D_002C58D0[0], a->x5c->x60);
+            PlatVu0CopyVector(v, a->x30.w.x34->x30);
             v[3] = 0;
-            func_002672f8(v, m, v);
-            if ((s32)(b->x30.d >> 10) & 1) func_00267530(d, b->x70, b->x10);
-            else func_00267530(d, b->x30.w.x34->x50, a->x30.w.x34->x50);
+            PlatVu0ApplyMatrix(v, m, v);
+            if ((s32)(b->x30.d >> 10) & 1) PlatVu0SubVector(d, b->x70, b->x10);
+            else PlatVu0SubVector(d, b->x30.w.x34->x50, a->x30.w.x34->x50);
             if (func_00121748(v, d) < a->x5c->x64) { r = 0; return r; }
             r = 1;
         } else r = 1;
     } else r = 1;
     return r;
 }
-#undef func_002675a8
 
 /* func_0014b958 (from hand/text_00140000_h8.c). */
-void func_002674f0(f32 *, void *, void *, f32);
 s32 func_0014b768(W8P *, f32 *, f32 *);
 /* 0x14bba8 (needs func_0014b958 defined above) */
 void func_0014b958(W8P *p) {
     f32 a[4];
     f32 b[4];
     if ((s32)(p->f.x >> 16) & 1) {
-        func_002674f0(a, p->x70, p->x80, 0.5f);
-        func_002674f0(b, p->x10, p->x40, 0.5f);
+        PlatVu0InterVector(a, p->x70, p->x80, 0.5f);
+        PlatVu0InterVector(b, p->x10, p->x40, 0.5f);
         func_0014b768(p, a, b);
     }
 }
@@ -321,7 +312,7 @@ s32 func_0014bba8(Src57 *s, Ent57 *tbl, s32 cnt) {
     }
     switch (s->u.w & 3) {
     case 0:
-        func_002675a8(s->v40, s->v10);
+        PlatVu0CopyVector(s->v40, s->v10);
         k = (s32)(s->u.flags >> 17) & 7;
         if (k == 1 || k == 4 || k == 2 || !((s32)(s->u.flags >> 16) & 1)) {
             cnt += func_0014b9e0(s, s->v10, s->v10, s->f0c, s->f0c, tbl, cnt);

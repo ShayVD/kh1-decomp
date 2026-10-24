@@ -1,6 +1,7 @@
 /* Objects the player touches, without strict aliasing (docs/modules.md
  * "Session 52"): func_0015a5b8, func_0015a758, func_0015ad08.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "platform/math.h"
@@ -30,9 +31,6 @@ typedef struct { u8 pad0[5]; u8 b5; u8 pad6[0xe]; struct { u8 pad0[1]; u8 b1; } 
     struct { u8 pad[0x160]; V4 v160; } *x148; u8 pad14c[0x1d4]; V4 x320; u8 pad330[0x40]; u64 x370; u8 pad378[0x26]; u8 x39e; u8 pad39f[0x11]; f32 x3b0; u8 pad3b4[0xc]; V4 x3c0; u8 pad3d0[0x14]; f32 x3e4; u8 pad3e8[8]; V4 x3f0; s32 x400; u8 pad404[0x9c]; void *x4a0;
 typedef struct Actor_5a5b8 { ACT_BODY(S144) } Act;
 void func_001315c0(void *, s32, void *, f32);
-void func_00267530(void *, void *, void *);
-void func_002675a8(void *, void *);
-f32 func_00267390(void *, void *);
 s32 func_00122ff8(void *);
 void *func_00147ed8(s32, s32, s32, void *);
 void func_00121fc4(void *, void *);
@@ -53,10 +51,10 @@ void func_0015a5b8(ActY *a) {
     if (!a->x4a0) a->x4a0 = func_0015a470;
     p = D_002E26A0[0];
     if (!func_00122ff8(p)) return;
-    func_00267530(&d, &a->pos, &p->pos);
+    PlatVu0SubVector(&d, &a->pos, &p->pos);
     d.y = 0.0f;
     func_00121fc4(&d, &d);
-    f = func_00267390(&d, &p->x30);
+    f = PlatVu0InnerProduct(&d, &p->x30);
     e = a->x144;
     if (!e) {
         if (!(f > 0.0f && d.w < 10000.0f)) return;
@@ -66,7 +64,7 @@ void func_0015a5b8(ActY *a) {
         func_001247e8(a);
         return;
     }
-    func_002675a8(e->v, &a->pos);
+    PlatVu0CopyVector(e->v, &a->pos);
     if (func_0015a498(a, 25)) {
         func_001315c0((void *)a->x8, 0x8003, &t, 0.0f);
         t.x = (t.x + a->pos.x) * 0.5f;
@@ -77,8 +75,6 @@ void func_0015a5b8(ActY *a) {
 
 /* func_0015a758 (from hand/nostrict/text_00150000_h58.c). */
 typedef struct Actor_5a758 { ACT_BODY(S144) } Act_5a758;
-void func_00267518(void *, void *, void *);
-void func_00267560(void *, void *, f32);
 void func_0014f658(void *, s32);
 extern f32 D_002BBDFC;
 f32 func_00176850(void);
@@ -88,7 +84,7 @@ void func_0015a758(Act_5a758 *a, f32 *prm) {
     Act_5a758 *p = D_002E26A0[0];
     f32 *dt;
     if (!func_00122ff8(p)) return;
-    func_00267530(&d, &a->pos, &p->pos);
+    PlatVu0SubVector(&d, &a->pos, &p->pos);
     d.y = 0.0f;
     func_00121fc4(&d, &d);
     if (a->x70 == 0) {
@@ -100,7 +96,7 @@ void func_0015a758(Act_5a758 *a, f32 *prm) {
             a->x3b0 = 0.0f;
         }
     } else {
-        if (func_00267390(&d, &p->x30) < 0.0f && d.w > 2000.0f) {
+        if (PlatVu0InnerProduct(&d, &p->x30) < 0.0f && d.w > 2000.0f) {
             func_001247e8(a);
             return;
         }
@@ -111,8 +107,8 @@ void func_0015a758(Act_5a758 *a, f32 *prm) {
         a->x3b0 += prm[0] * *dt;
         if (prm[1] <= a->x3b0) a->x3b0 = prm[1];
         a->x20.w = a->x3b0;
-        func_00267560(&d, &a->x3c0, *dt);
-        func_00267518(&a->x30, &a->x30, &d);
+        PlatVu0ScaleVector(&d, &a->x3c0, *dt);
+        PlatVu0AddVector(&a->x30, &a->x30, &d);
     }
 }
 
@@ -136,7 +132,6 @@ void * func_001354b8(Oad08 *, s32);
 f32 func_00120c88(f32);
 void func_00142388(f32 *, f32 *);
 void func_00142470(Aad08 *, f32 *);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 #define func_001315c0 ((void (*)(Aad08 *, s32, f32, f32 *)) func_001315c0)
 void func_0015ad08(Aad08 *a) {
     f32 v[4];
@@ -156,7 +151,7 @@ void func_0015ad08(Aad08 *a) {
     } else if (a->x8 != 0) {
         o = func_0014a4a8(a, 0, func_001477e0(26));
         o->x0 |= 64;
-        func_002675a8(o->x10, v);
+        PlatVu0CopyVector(o->x10, v);
         func_001354b8(o, a->x8);
         *a->x144 = 30.0f;
 
@@ -165,6 +160,5 @@ void func_0015ad08(Aad08 *a) {
     func_00142388(v, w);
     func_00142470(a, w);
 }
-#undef func_002675a8
 #undef func_001315c0
 

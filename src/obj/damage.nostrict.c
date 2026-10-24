@@ -5,6 +5,7 @@
  * (the other modes are in the sibling files). Read from the code, not proved
  * by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/bss_004F.h"
 #include "data/bss_0052.h"
@@ -101,8 +102,6 @@ typedef struct Actor_350d8 {
     u64 f440;
 } Ent;
 extern Ent *func_001230a0(Ent *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
 typedef struct { u8 p0[0x10]; V4D f10; } XD;
 typedef struct {
     u32 b0:12;
@@ -200,21 +199,21 @@ QD *func_001350d8(AD *a, u32 mask, BD *b) {
     q->f2c = a->f5c;
     q->f20 = -1;
 
-    func_00267530((f32 *)&v, (f32 *)&b->f10, (f32 *)&a->f10);
+    PlatVu0SubVector((f32 *)&v, (f32 *)&b->f10, (f32 *)&a->f10);
     v.y = 0.0f;
     func_00121fc4(&v, &v);
     if (b->f134 && b->f134->f5) lim = b->f134->f14[3] * 0.5f;
     else lim = 0.0f;
     if (v.w <= lim) {
         if (a->u30.s.f34) {
-            func_00267530((f32 *)&v, (f32 *)&b->f10, (f32 *)&a->u30.s.f34->f10);
+            PlatVu0SubVector((f32 *)&v, (f32 *)&b->f10, (f32 *)&a->u30.s.f34->f10);
             v.y = 0.0f;
             func_00121fc4(&q->f10, &v);
         } else {
-            func_00267530((f32 *)&q->f10, (*(f32 (*)[0x4])&D_002C58A0), (f32 *)&b->f30);
+            PlatVu0SubVector((f32 *)&q->f10, (*(f32 (*)[0x4])&D_002C58A0), (f32 *)&b->f30);
         }
     } else {
-        func_002675a8((f32 *)&q->f10, (f32 *)&v);
+        PlatVu0CopyVector((f32 *)&q->f10, (f32 *)&v);
     }
     q->f10.w = 1.0f;
     return q;

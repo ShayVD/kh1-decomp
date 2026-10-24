@@ -5,6 +5,7 @@
  * the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00350CE0.h"
@@ -176,7 +177,6 @@ s32 func_00141608(T16o *o, s32 n) {
 /* func_001417a0 (from hand/nostrict/text_00140000_h33.c). */
 typedef FVec4 V4f;
 extern f32 D_00304D54;
-void func_002675a8(V4f *, V4f *);
 void func_002458a0(V4f *, s32);
 void func_0013c548(s32);
 void D_00F20000(s32, s32);
@@ -186,7 +186,7 @@ extern Act_417a0 *D_002E26A0_417a0[3] __asm__("D_002E26A0");
 void func_001417a0(V4f *p, s32 n) {
     V4f t;
     if (D_002E26A0[0] == 0 || D_002E26A0[0]->p6c->w3c > 0) {
-        func_002675a8(&t, p);
+        PlatVu0CopyVector(&t, p);
         t.w = 1.0f;
         n = n * D_00304D54 + 0.5f;
         func_002458a0(&t, n);

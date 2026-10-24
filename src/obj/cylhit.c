@@ -3,6 +3,7 @@
  * entry by kind) and func_0015c9f8 (set up the entry lists of a header).
  * The rest is in cylhit.nostrict.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
@@ -11,17 +12,15 @@
 #include "data/pieces/D_002C58A0.h"
 
 /* func_0015b628 (from hand/text_00150000_h10.c). */
-void func_00267530(f32 *, f32 *, f32 *);
-f32 func_00267390(f32 *, f32 *);
 typedef struct { u8 pad[4]; f32 r; f32 h; u8 padc[4]; f32 pos[4]; } Coll;
 s32 func_0015b628(Coll *a, Coll *b) {
     f32 d[4];
     f32 r;
-    func_00267530(d, b->pos, a->pos);
+    PlatVu0SubVector(d, b->pos, a->pos);
     if (a->h + b->h <= fabsf(d[1])) return 0;
     r = a->r + b->r;
     d[1] = 0.0f;
-    if (func_00267390(d, d) < r * r) return 1;
+    if (PlatVu0InnerProduct(d, d) < r * r) return 1;
     return 0;
 }
 

@@ -2,6 +2,7 @@
  * in the files beside it). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002E26C0.h"
 #include "data/bss_0049.h"
 #include "data/types/nostrict_text_00100000_s6_01_p2.h"
@@ -278,8 +279,6 @@ typedef struct {
     u8 pad48[0x18];
     u8 m60[0x40];
 } Win_0b390;
-extern void func_00267df8(s32 *, void *, void *, s32);
-extern void func_002673b8(f32 *, f32 *);
 extern void func_00133830(s32, void *);
 void func_0010b390(Win_0b390 *w, f32 *o) {
     s32 t[4];
@@ -299,7 +298,7 @@ void func_0010b390(Win_0b390 *w, f32 *o) {
     o[1] = w->h * 0.5f * 24.0f;
     if (id != -1) {
         w->f6 = 0;
-        func_00267df8(t, D_002E26C0, w->m60, 1);
+        PlatVu0RotTransPers(t, D_002E26C0, w->m60, 1);
         x = w->x + 256.0f;
         y = w->y + 192.0f;
         t[0] = (t[0] >> 4) - 1792;
@@ -320,8 +319,8 @@ void func_0010b390(Win_0b390 *w, f32 *o) {
         b[1] = t[1];
         b[2] = zero;
         b[3] = one;
-        func_002673b8(a, a);
-        func_002673b8(b, b);
+        PlatVu0Normalize(a, a);
+        PlatVu0Normalize(b, b);
         w->f1c = zero;
         if (t[2] <= 0) w->f6 = 0;
         if (t[0] < 0) w->f6 = 1;
@@ -395,9 +394,6 @@ extern void func_00121eb0(s32);
 extern s32 func_00122048(s32, s32);
 extern void func_00106b58(s32);
 extern void func_001220b8(s32);
-extern void func_00267578(Mtx, Mtx, void *);
-extern void func_002676c0(Mtx, void *, f32);
-extern void sceVu0MulMatrix(Mtx, Mtx, Mtx);
 CONTEXT_ONLY void func_0010b2d0(Mtx out, Rot *r, void *t) {
     Mtx m;
     f32 a = r->ry;
@@ -406,10 +402,10 @@ CONTEXT_ONLY void func_0010b2d0(Mtx out, Rot *r, void *t) {
     } else {
         a += -180.0f;
     }
-    func_002676c0(m, D_002BCAF0, a / 180.0f * 3.1415928f);
-    func_00267578(m, m, t);
-    sceVu0MulMatrix(m, D_00495190, m);
-    sceVu0MulMatrix(out, D_00495210, m);
+    PlatVu0RotMatrixZ(m, D_002BCAF0, a / 180.0f * 3.1415928f);
+    PlatVu0TransMatrix(m, m, t);
+    PlatVu0MulMatrix(m, D_00495190, m);
+    PlatVu0MulMatrix(out, D_00495210, m);
 }
 extern void *D_00495250_0010b6c0 __asm__("D_00495250");
 #define D_00495250 D_00495250_0010b6c0

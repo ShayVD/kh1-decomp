@@ -7,6 +7,7 @@
  * (the other modes are in the sibling files). Read from the code, not proved
  * by a boot (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
@@ -36,7 +37,6 @@ u32 *func_00121e28(s32, s32 *);
 s32 func_00115018(void *, s32, f32 (*)[4]);
 void func_00115058(void *, s32, f32 (*)[4]);
 void func_00115098(void *, s32, f32 *);
-f32 func_00267390(f32 *, void *);
 void func_00120ef0(f32 *, void *, f32 *);
 void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
     f32 v[4][4];
@@ -65,7 +65,7 @@ void func_00127568(s32 *list, s32 n, void *a2, void *a3, void *a4, f32 scale) {
         k = func_00115018(a4, list[i], v);
         func_00115058(a4, list[i], c);
         func_00115098(a4, list[i], nrm);
-        if (func_00267390(nrm, a3) >= 0.0f) continue;
+        if (PlatVu0InnerProduct(nrm, a3) >= 0.0f) continue;
         total = count + k;
         if (total > 50) {
             *tag1 = ((count * 3 + 1) << 16) | 0x6C008000;
@@ -217,16 +217,8 @@ extern C01E150 D_004F7820[];
 extern C01E220 D_004F7C10[];
 void func_001274c8(void);
 void func_00121620(C01Mat, f32 *, f32, f32, f32, f32);
-void sceVu0MulMatrix(C01Mat, C01Mat, C01Mat);
-void sceVu0CopyMatrix(C01Mat, C01Mat);
-void func_00267e90(f32 *, f32 *, f32);
 s32 func_0024edf0(void *, f32 (*)[4]);
 void func_00114f18(C01Box *, s32);
-void func_002675a8(f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267930(C01Mat, f32 *, f32 *, void *);
 void func_00127b98(C01Obj4 *, C01Mat, f32);
 #define C01MAX(a, b) ((a) < (b) ? (b) : (a))
 #define func_0015ed80 ((C01Task *(*)(s32, void (*)(void))) func_0015ed80)
@@ -256,11 +248,11 @@ void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
     if (dist < 0.0f) dist = 0.0f;
     D_004F82C4 = 60000;
     func_00121620(m, pos, o->xc0, o->xc4, o->xc8, o->xc0 * o->x320 + o->xc4 * o->x324 + o->xc8 * o->x328);
-    sceVu0MulMatrix(m, m, o->xd0);
+    PlatVu0MulMatrix(m, m, o->xd0);
     sp = o->x40;
     row = m[0];
     for (i = 0; i < 3; i++) {
-        func_00267e90(row, row, *sp++);
+        PlatVu0ScaleVectorXYZ(row, row, *sp++);
         row += 4;
     }
     h = o->x2c4 * o->x40[1];
@@ -285,27 +277,27 @@ void func_00127c20(C01Obj4 *o, f32 *pos, f32 scale) {
     if (func_0024edf0(D_002BBFA0, pts)) return;
     func_00114f18(&box, o->x2cc);
     if (!box.n) return;
-    func_002675a8(dir, pos);
-    func_002673b8(dir, dir);
+    PlatVu0CopyVector(dir, pos);
+    PlatVu0Normalize(dir, dir);
     sz = C01MAX(C01MAX(o->x40[2], (o->x40[0] > o->x40[1] ? o->x40[0] : o->x40[1])), 1.0f);
     sz *= C01MAX(o->x414, o->x410 * 2.0f);
     t = dist / 300.0f;
     sz /= D_002E27E0[(s32)(o->x370 >> 40) & 3];
     sz *= t * 8.0f + 1.0f;
-    func_00267560(dir, dir, sz * 32768.0f);
-    func_00267530(e, &o->x50, dir);
+    PlatVu0ScaleVector(dir, dir, sz * 32768.0f);
+    PlatVu0SubVector(e, &o->x50, dir);
     e[1] -= o->x414 * 0.5f;
-    func_00267930(m4, e, dir, D_002E2800);
+    PlatVu0CameraMatrix(m4, e, dir, D_002E2800);
     func_00121620(m, pos, pos[0], pos[1], pos[2], pos[0] * o->x50 + pos[1] * (o->x54 - o->x414 * 0.5f) + pos[2] * o->x58);
-    sceVu0CopyMatrix(m3, D_002C58D0);
+    PlatVu0CopyMatrix(m3, D_002C58D0);
     m3[3][0] = -o->x50;
     m3[3][1] = o->x414 * 0.5f - o->x54;
     m3[3][2] = -o->x58;
-    sceVu0MulMatrix(m, m3, m);
-    sceVu0CopyMatrix(m2, m4);
+    PlatVu0MulMatrix(m, m3, m);
+    PlatVu0CopyMatrix(m2, m4);
     m2[0][3] = m2[1][3] = m2[2][3] = m2[3][0] = m2[3][1] = m2[3][2] = 0.0f;
     m2[3][3] = 1.0f;
-    sceVu0MulMatrix(m, m2, m);
+    PlatVu0MulMatrix(m, m2, m);
     task = func_0015ed80(D_004F82C4 + D_004F82C0++, func_001274c8);
     task->x10 = &D_004F7820[(s32)(o->x370 >> 40) & 3];
     func_00127b98(o, m4, (s32)((1.0f - t) * 64.0f * scale));
@@ -326,8 +318,6 @@ typedef struct { u8 pad[0x50]; V4_28218 pos; u8 p60[0x2c4-0x60]; f32 f2c4; u8 p2
 extern s32 func_001232f0(E2 *);
 extern void func_00121fc4(V4_28218 *, V4_28218 *);
 extern void func_00118668(Ray2 *);
-#define func_002675a8 ((void (*)(V4_28218 *, V4_28218 *)) func_002675a8)
-#define func_00267530 ((void (*)(V4_28218 *, V4_28218 *, V4_28218 *)) func_00267530)
 #define func_00127c20 ((void (*)(E2 *, V4_28218 *, f32)) func_00127c20)
 void func_00128218(E2 *e, f32 k) {
     V4_28218 v;
@@ -336,7 +326,7 @@ void func_00128218(E2 *e, f32 k) {
     s32 i;
     if (e->f370.b.k == 3) return;
     if (!func_001232f0(e)) {
-        func_002675a8(&r.a, &e->pos);
+        PlatVu0CopyVector(&r.a, &e->pos);
         r.b.w = r.a.w = 1.0f;
         r.b.x = 0;
         r.b.z = 0;
@@ -344,7 +334,7 @@ void func_00128218(E2 *e, f32 k) {
         r.b.y = e->f2c4 + 300.0f;
         func_00118668(&r);
         if (r.f30 < 0) return;
-        func_002675a8(&e->v320, &r.c);
+        PlatVu0CopyVector(&e->v320, &r.c);
         e->f2cc = r.f34;
     }
     k *= e->f370.b.b3 * 0.0078125f;
@@ -353,15 +343,15 @@ void func_00128218(E2 *e, f32 k) {
         if (!(l->flags & 4)) continue;
         switch (l->kind) {
         case 2:
-            func_002675a8(&v, &l->dir);
+            PlatVu0CopyVector(&v, &l->dir);
             v.w = 1.0f;
             func_00127c20(e, &v, k);
             break;
         case 3:
         case 5:
-            func_002675a8(&v, &e->pos);
+            PlatVu0CopyVector(&v, &e->pos);
             v.y -= e->f2c4;
-            func_00267530(&v, &v, &l->pos);
+            PlatVu0SubVector(&v, &v, &l->pos);
             func_00121fc4(&v, &v);
             if (v.w < l->radius && v.y > 0.5f) {
                 v.w = 1.0f;
@@ -371,7 +361,5 @@ void func_00128218(E2 *e, f32 k) {
         }
     }
 }
-#undef func_002675a8
-#undef func_00267530
 #undef func_00127c20
 

@@ -9,6 +9,7 @@
 
 /* pppDrawMdl2Draw (from hand/nostrict/text_00190000_h64.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #include "data/pieces/D_003701F0.h"
@@ -318,9 +319,6 @@ extern PppMtx D_00616000;
 extern PppMtx D_00615EB0;
 extern PppMtx D_00615E70;
 extern PppMtx D_00616040;
-void func_002675a8(f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 typedef struct {
     s32 frame;
     f32 x, y, z;     /* +0x4 */
@@ -331,52 +329,51 @@ void pppKeZCrctFrame(PppObject *obj, PppZCrctKey *key, PppEntry *e) {
     PppMtx m;
     f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[0] + 0xA0);
 
-    func_00267560(m[0], D_00615E68->m[0], key->sx);
-    func_00267560(m[1], D_00615E68->m[1], key->sy);
-    func_00267560(m[2], D_00615E68->m[2], key->sz);
-    func_002675a8(m[3], D_00615E68->m[3]);
+    PlatVu0ScaleVector(m[0], D_00615E68->m[0], key->sx);
+    PlatVu0ScaleVector(m[1], D_00615E68->m[1], key->sy);
+    PlatVu0ScaleVector(m[2], D_00615E68->m[2], key->sz);
+    PlatVu0CopyVector(m[3], D_00615E68->m[3]);
     switch (key->mode) {
     case 0:
         m[3][0] += key->x;
         m[3][1] += key->y;
         m[3][2] += key->z;
-        sceVu0MulMatrix(m, D_00615FC0, m);
+        PlatVu0MulMatrix(m, D_00615FC0, m);
         break;
     case 1:
-        sceVu0MulMatrix(m, D_00615FC0, m);
+        PlatVu0MulMatrix(m, D_00615FC0, m);
         m[3][0] += key->x;
         m[3][1] += key->y;
         m[3][2] += key->z;
         break;
     case 2:
-        sceVu0MulMatrix(m, D_00615E70, m);
+        PlatVu0MulMatrix(m, D_00615E70, m);
         m[3][0] += key->x * D_003701F0[0];
         m[3][1] += key->y * D_003701F0[1];
         m[3][2] += key->z * D_003701F0[2];
-        sceVu0MulMatrix(m, D_00615EB0, m);
+        PlatVu0MulMatrix(m, D_00615EB0, m);
         break;
     case 3:
-        sceVu0MulMatrix(m, D_00616000, m);
+        PlatVu0MulMatrix(m, D_00616000, m);
         m[3][0] += key->x;
         m[3][1] += key->y;
         m[3][2] += key->z;
         break;
     }
-    sceVu0MulMatrix(w, D_00616040, m);
+    PlatVu0MulMatrix(w, D_00616040, m);
 }
 
 /* pppKeZCrctShpFrame (from hand/nostrict/text_00190000_h64.c). */
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-void func_002672f8(f32 *, PppMtx, f32 *);
 void pppKeZCrctShpFrame(PppObject *obj, PppZCrctKey *key, PppEntry *e) {
     PppMtx m;
     PppVec4 v;
     f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[0] + 0xA0);
 
-    func_00267560(m[0], D_00615E68->m[0], D_003701F0[0]);
-    func_00267560(m[1], D_00615E68->m[1], D_003701F0[1]);
-    func_00267560(m[2], D_00615E68->m[2], D_003701F0[2]);
-    func_002675a8(v, D_00615E68->m[3]);
+    PlatVu0ScaleVector(m[0], D_00615E68->m[0], D_003701F0[0]);
+    PlatVu0ScaleVector(m[1], D_00615E68->m[1], D_003701F0[1]);
+    PlatVu0ScaleVector(m[2], D_00615E68->m[2], D_003701F0[2]);
+    PlatVu0CopyVector(v, D_00615E68->m[3]);
     v[0] *= key->sx;
     v[1] *= key->sy;
     v[2] *= key->sz;
@@ -385,23 +382,23 @@ void pppKeZCrctShpFrame(PppObject *obj, PppZCrctKey *key, PppEntry *e) {
         v[0] += key->x;
         v[1] += key->y;
         v[2] += key->z;
-        func_002672f8(m[3], D_00615FC0, v);
+        PlatVu0ApplyMatrix(m[3], D_00615FC0, v);
         break;
     case 1:
-        func_002672f8(m[3], D_00615FC0, v);
+        PlatVu0ApplyMatrix(m[3], D_00615FC0, v);
         m[3][0] += key->x;
         m[3][1] += key->y;
         m[3][2] += key->z;
         break;
     case 2:
-        func_002672f8(m[3], D_00615E70, v);
+        PlatVu0ApplyMatrix(m[3], D_00615E70, v);
         m[3][0] += key->x * D_003701F0[0];
         m[3][1] += key->y * D_003701F0[1];
         m[3][2] += key->z * D_003701F0[2];
-        func_002672f8(m[3], D_00615EB0, m[3]);
+        PlatVu0ApplyMatrix(m[3], D_00615EB0, m[3]);
         break;
     }
-    sceVu0MulMatrix(w, D_00616040, m);
+    PlatVu0MulMatrix(w, D_00616040, m);
 }
 
 /* pppDrawMdl3Draw (from hand/nostrict/text_00190000_h64.c). */
@@ -446,7 +443,7 @@ void pppDrawMdl3Draw(PppObject *obj, DMdl3Key *key, PppEntry *e) {
     if (key->bA) {
         p.flags |= 0x2000;
         p.p30 = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     }
     if (key->bC)
         p.p44 = PPP_WORK(u8, obj, e, 2);
@@ -519,7 +516,7 @@ void pppDrawMdlSemi3Draw(PppObject *obj, DSemi3Key *key, PppEntry *e) {
     if (key->bC) {
         p.flags |= 0x2000;
         p.p30 = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     }
     if (key->bE)
         p.p44 = PPP_WORK(u8, obj, e, 2);
@@ -679,7 +676,7 @@ void pppDrawMdlTs3Draw(PppObject_95cc0 *obj, PppTs3Key *key, PppEntry *e) {
     if (key->f22) {
         p.flags |= 0x2000;
         p.mtx = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
     }
     if (key->f24)
         p.i44 = PPP_WORK(u8, obj, e, 3);

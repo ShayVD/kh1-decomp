@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350D88.h"
 #include "data/bss_0052.h"
@@ -80,18 +81,15 @@ call:
 
 /* func_00130598 (from hand/nostrict/text_00120000_h31.c). */
 typedef struct { u8 pad0[0x40]; f32 f40[4]; u8 pad50[0x15c - 0x50]; s32 f15c; u8 pad160[0x220 - 0x160]; f32 f220[4]; u8 pad230[0x370 - 0x230]; u64 f370; } E598;
-extern void func_00267e90(f32 *, f32 *, f32);
-extern void func_002672f8(f32 *, f32 *, f32 *);
 extern void func_001219c8(f32 *, f32 *, f32 *);
-extern void func_00267530(f32 *, f32 *, f32 *);
 extern void func_00166570(f32 *, s32, f32);
 void func_00130598(E598 *e, f32 *m, f32 a, f32 b) {
     f32 v[4];
-    func_00267e90(v, e->f220, b);
+    PlatVu0ScaleVectorXYZ(v, e->f220, b);
     v[3] = 0.0f;
-    func_002672f8(v, m, v);
+    PlatVu0ApplyMatrix(v, m, v);
     if ((s32)(e->f370 >> 45) & 1) func_001219c8(v, v, e->f40);
-    func_00267530(m + 12, m + 12, v);
+    PlatVu0SubVector(m + 12, m + 12, v);
     m[15] = 1.0f;
     func_00166570(m, e->f15c, a);
 }
@@ -149,9 +147,6 @@ typedef struct {
     f32 f28c;
     f32 f290;
 } __attribute__((aligned(8))) C01Obj3;
-void sceVu0CopyMatrix(C01Mat, C01Mat);
-void func_002675a8(f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
 void func_001655e0(C01Mat, s32, f32, s32);
 typedef struct {
     u8 pad0[0x50];
@@ -175,10 +170,8 @@ typedef struct {
 void func_00166248(C01Mat, s32, s32);
 void func_00165cf8(C01Mat, s32, f32, s32);
 void func_001676d8(s32, f32 *);
-void func_002673f8(C01Mat, C01Mat);
 void func_001675c0(s32);
 void func_00130648(C01Obj3 *);
-#define func_002672f8 ((void (*)(f32 *, C01Mat, f32 *)) func_002672f8)
 #define func_00130598 ((void (*)(C01Obj3 *, C01Mat, f32, f32)) func_00130598)
 /* func_00130660: closest draft (7 words off: f20/f21 swapped), context for func_00130f18. */
 void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
@@ -191,24 +184,24 @@ void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
         if (0.0f < o->f170) {
             func_00166248(m, o->x15c, s);
         } else {
-            sceVu0CopyMatrix(t, m);
+            PlatVu0CopyMatrix(t, m);
             if ((s32)(o->flags >> 12) & 1) {
-                func_002675a8(t[3], o->x50);
+                PlatVu0CopyVector(t[3], o->x50);
                 t[3][3] = 1.0f;
             }
             func_00165cf8(t, o->x15c, d, s);
         }
         func_001676d8(o->x15c, v);
         v[3] = 0;
-        func_002673f8(t, m);
-        func_002672f8(o->x270, t, v);
+        PlatVu0TransposeMatrix(t, m);
+        PlatVu0ApplyMatrix(o->x270, t, v);
         o->x270[3] = 0;
         o->f170 = e;
         o->f174 = k;
-        func_002675a8(v, o->x220);
+        PlatVu0CopyVector(v, o->x220);
         v[3] = 0;
-        func_002672f8(v, o->x230, v);
-        func_00267518(m[3], m[3], v);
+        PlatVu0ApplyMatrix(v, o->x230, v);
+        PlatVu0AddVector(m[3], m[3], v);
         func_00130598(a, m, k / e, 1.0f - k / e);
     } else {
         { f32 c = o->f170;
@@ -223,7 +216,6 @@ void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
     o->x168 = idx;
     o->f16c = d;
 }
-#undef func_002672f8
 #undef func_00130598
 
 /* func_00130e48 (from hand/nostrict/text_00130000.c). */
@@ -266,7 +258,6 @@ s32 func_00167680(s32);
 void func_001752a0(s32, void *);
 void func_001676b0(s32, f32 *);
 void func_00167d70(s32, f32);
-#define func_002672f8 ((void (*)(f32 *, C01Mat, f32 *)) func_002672f8)
 #define func_00130e48 ((s32 (*)(C01Obj3 *, C01Mat)) func_00130e48)
 #define func_00130c28 ((void (*)(C01Obj3 *, f32, f32)) func_00130c28)
 #define func_00130598 ((void (*)(C01Obj3 *, C01Mat, f32, f32)) func_00130598)
@@ -285,15 +276,15 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
 
     D_002E31E8 = (u8 *)o->x130 + 0x68;
     if (o->b4) return;
-    sceVu0CopyMatrix(m, o->xd0);
+    PlatVu0CopyMatrix(m, o->xd0);
     if (o->b2) {
         t3 = o->x210;
-        func_00267530(m[3], m[3], t3);
+        PlatVu0SubVector(m[3], m[3], t3);
         m[3][3] = 1.0f;
     } else {
         t3 = o->x210;
     }
-    func_002675a8(a, m[3]);
+    PlatVu0CopyVector(a, m[3]);
     fl = o->x1cc;
     if ((o->flags0 & 0x10) || o->b11) fl &= ~1;
     if (o->x130->x4c == 507) {
@@ -336,13 +327,13 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
             } else if (o->x178 > 0) {
                 o->f180 += d;
                 func_00130898(o, m);
-                func_002675a8(a, m[3]);
+                PlatVu0CopyVector(a, m[3]);
                 func_00130e48(o, m);
             } else {
                 if (o->b2) {
-                    func_00267518(m[3], m[3], t3);
-                    func_002675a8(a, m[3]);
-                    func_002675a8(t3, (*(f32 (*)[0x4])&D_002C58A0));
+                    PlatVu0AddVector(m[3], m[3], t3);
+                    PlatVu0CopyVector(a, m[3]);
+                    PlatVu0CopyVector(t3, (*(f32 (*)[0x4])&D_002C58A0));
                 }
                 if (o->b3) {
                     func_00130660(o, m, o->x168, o->f280, 0.0f);
@@ -364,23 +355,22 @@ void func_00130f18(C01Obj3 *o, f32 dt) {
         o->b10 = 0;
     }
     if (o->f170 > 0.0f) {
-        func_002672f8(b, m, o->x270);
-        func_00267518(o->x50, o->x10, b);
+        PlatVu0ApplyMatrix(b, m, o->x270);
+        PlatVu0AddVector(o->x50, o->x10, b);
     } else {
         func_001676b0(o->x15c, o->x50);
     }
     if (o->b2 && o->f170 <= 0.0f && !did) {
-        func_00267530(b, o->x50, a);
-        func_00267530(o->x200, b, t3);
-        func_002675a8(t3, b);
+        PlatVu0SubVector(b, o->x50, a);
+        PlatVu0SubVector(o->x200, b, t3);
+        PlatVu0CopyVector(t3, b);
     } else {
-        func_002675a8(o->x200, (*(f32 (*)[0x4])&D_002C58A0));
-        func_002675a8(t3, (*(f32 (*)[0x4])&D_002C58A0));
+        PlatVu0CopyVector(o->x200, (*(f32 (*)[0x4])&D_002C58A0));
+        PlatVu0CopyVector(t3, (*(f32 (*)[0x4])&D_002C58A0));
     }
-    sceVu0CopyMatrix(o->x230, m);
+    PlatVu0CopyMatrix(o->x230, m);
     func_00167d70(o->x15c, dt);
 }
-#undef func_002672f8
 #undef func_00130e48
 #undef func_00130c28
 #undef func_00130598

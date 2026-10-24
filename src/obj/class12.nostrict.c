@@ -4,6 +4,7 @@
  * handlers per class) and their helpers. The rest is in class12.c. Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00150000_h36.h"
@@ -11,7 +12,6 @@
 #include "data/pieces/D_00304BE8_s.h"
 
 /* func_0015d6c8 (from hand/nostrict/text_00150000_h36.c). */
-f32 func_00267390(f32 *, f32 *);
 typedef struct { u8 b0; u8 type; u16 bone; f32 off; f32 dy; f32 r; f32 h; } CylSrc;
 typedef struct { u8 pad[4]; u8 n4, n5, n6, n7; u8 pad8[0xC]; CylSrc *cyl; CylSrc *cyl2; } CylHdr;
 typedef struct { u8 pad[0xD0]; f32 m[4][4]; } Mtx0D0;
@@ -23,15 +23,14 @@ typedef struct {
     u8 pad3ac[0x14]; f32 x3C0[4];
 } CylObj;
 void func_00105a30(s32, s32, f32 *);
-void func_002673b8(f32 *, f32 *);
 void func_0015d5e8(void *);
 s32 func_0015d6c8(CylObj *o, f32 *v) {
     f32 a[4], b[4];
     f32 z = 0.0f;
     if (v[3] == z || o->h30E == 0xFFFF) return 0;
     func_00105a30(-1, o->h30E, a);
-    func_002673b8(b, v);
-    if (z < func_00267390(a, b)) return 0;
+    PlatVu0Normalize(b, v);
+    if (z < PlatVu0InnerProduct(a, b)) return 0;
     func_0015d5e8(o);
     return 1;
 }
@@ -49,11 +48,6 @@ typedef struct {
 } Ob59;
 typedef struct { u8 pad[4]; f32 f4; } Tk59;
 void func_0015d7b8(Ob59 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_002675a8(f32 *, f32 *);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
 void func_00130398(void *, s32, f32);
 Tk59 *func_00130340(Ob59 *, s32, f32);
 void func_0015d848(Ob59 *o, f32 *v) {
@@ -66,7 +60,7 @@ void func_0015d848(Ob59 *o, f32 *v) {
         return;
     }
     st = 52;
-    func_00267530(d, o->m->xD0, o->pos);
+    PlatVu0SubVector(d, o->m->xD0, o->pos);
     c = d[0] * o->m->xC0[2] - d[2] * o->m->xC0[0];
     if (c > 0.0f) {
     } else if (c < 0.0f) {
@@ -74,18 +68,18 @@ void func_0015d848(Ob59 *o, f32 *v) {
     } else {
         st = 50;
     }
-    func_002675a8(o->m->xD0, o->pos);
+    PlatVu0CopyVector(o->m->xD0, o->pos);
     if (v[3] > 0.0f) {
-        func_00267370(t, v, o->m->xC0);
-        func_00267370(t, o->m->xC0, t);
-        func_002673b8(v, t);
-        func_00267560(v, v, 1.5f);
+        PlatVu0OuterProduct(t, v, o->m->xC0);
+        PlatVu0OuterProduct(t, o->m->xC0, t);
+        PlatVu0Normalize(v, t);
+        PlatVu0ScaleVector(v, v, 1.5f);
     } else {
-        func_002675a8(v, (*(f32 (*)[0x4])&D_002C58A0));
+        PlatVu0CopyVector(v, (*(f32 (*)[0x4])&D_002C58A0));
         st = 50;
     }
-    func_00267560(d, o->m->xC0, -1.5f);
-    func_00267518(o->x20, v, d);
+    PlatVu0ScaleVector(d, o->m->xC0, -1.5f);
+    PlatVu0AddVector(o->x20, v, d);
     switch (st) {
     case 50:
         if ((u32)(o->st - 51) < 2) {
@@ -122,6 +116,6 @@ void func_0015dac0(CylObj *o) {
     o->rot = func_00120c88(o->rot + 3.1415928f);
     func_00130398(o, 6, z);
     func_00137688(o, o->rot);
-    func_00267560(o->x3C0, o->vel, 4.0f);
+    PlatVu0ScaleVector(o->x3C0, o->vel, 4.0f);
 }
 

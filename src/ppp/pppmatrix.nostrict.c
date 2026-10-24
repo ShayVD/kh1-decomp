@@ -5,6 +5,7 @@
  * takes position and scale only; pppDrawMatrixWood is a billboard about the
  * camera's up axis.  Read from the code, not proved by a boot. */
 #include "ppp.h"
+#include "platform/vu.h"
 #include "data/types/nostrict_text_00180000_h39.h"
 #include "data/pieces/D_00362730.h"
 #include "data/pieces/D_003701F0.h"
@@ -64,12 +65,11 @@ void func_001a5490(f32 (*)[4], f32 *);
 H39_MATRIX_FRAME(pppMatrixZYXFrame, func_001a5490)
 
 /* pppMatrixSclFrame (from hand/nostrict/text_00180000_h39.c). */
-void sceVu0UnitMatrix(f32 (*)[4]);
 void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
     f32 *pos = (f32 *) ((u8 *) obj + e->offsets[0] + 0xA0);
     f32 *scl = (f32 *) ((u8 *) obj + e->offsets[1] + 0xA0);
 
-    sceVu0UnitMatrix(D_00615E68->m);
+    PlatVu0UnitMatrix(D_00615E68->m);
     D_00615E68->m[0][0] = scl[0];
     D_00615E68->m[1][1] = scl[1];
     D_00615E68->m[2][2] = scl[2];
@@ -80,17 +80,14 @@ void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
 
 /* pppDrawMatrixWoodFrame (from hand/nostrict/text_00180000_h39.c). */
 typedef int u128 __attribute__((mode(TI)));
-void func_002672f8(f32 *, f32 (*)[4], f32 *);
 extern f32 D_006160C0[4][4];
 extern f32 D_00616080[4][4];
-void func_00267560(f32 *, f32 *, f32);
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 void pppDrawMatrixWoodFrame(void) {
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], D_003701F0[0]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], D_003701F0[1]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], D_003701F0[2]);
+    PlatVu0ScaleVector(D_00615E68->m2[0], D_00615E68->m[0], D_003701F0[0]);
+    PlatVu0ScaleVector(D_00615E68->m2[1], D_00615E68->m[1], D_003701F0[1]);
+    PlatVu0ScaleVector(D_00615E68->m2[2], D_00615E68->m[2], D_003701F0[2]);
     *(u128 *) D_00615E68->m2[3] = *(u128 *) D_00615E68->m[3];
-    sceVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
-    func_002672f8(D_00615E68->m2[3], D_00616080, D_00615E68->m[3]);
+    PlatVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
+    PlatVu0ApplyMatrix(D_00615E68->m2[3], D_00616080, D_00615E68->m[3]);
 }
 

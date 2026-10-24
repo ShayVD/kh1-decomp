@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0053.h"
 #include "data/bss_0054.h"
 #include "vm/script_vm.h"
@@ -25,7 +26,6 @@
 #include "data/types/text_00140000_h34.h"
 
 /* func_00147a68 (from hand/text_00140000_h8.c). */
-void func_002675a8(void *, void *);
 typedef struct { u8 pad[0xc]; f32 xc; } W8Fc;
 typedef struct { u8 pad[0x8]; f32 *x8; W8Fc *xc; u8 pad10[0x14 - 0x10]; u32 x14; u8 pad18[0x30 - 0x18]; s32 x30; u8 pad34[0x38 - 0x34]; s32 x38; } W8O60;
 typedef struct { u8 pad[0x2c]; f32 x2c; } W8F2c;
@@ -33,7 +33,6 @@ typedef struct { f32 m[4][4]; W8O60 sub; s32 x7c; s32 x80; W8F2c *x84; } W8Mdl;
 extern W8Mdl D_0054C120;
 void func_00147e08(W8O60 *, W8Mdl *);
 u8 *func_001623e0(s32);
-void sceVu0CopyMatrix(void *, void *);
 s32 func_00147a68(void) {
     W8Mdl *m = &D_0054C120;
     W8O60 *s = &m->sub;
@@ -44,10 +43,10 @@ s32 func_00147a68(void) {
         v[2] = f;
         v[1] = f;
         v[0] = f;
-        func_002675a8((void *)m->sub.x8, v);
+        PlatVu0CopyVector((void *)m->sub.x8, v);
     }
     func_00147e08(s, m);
-    sceVu0CopyMatrix(m, func_001623e0(m->x7c) + m->x80 * 64);
+    PlatVu0CopyMatrix(m, func_001623e0(m->x7c) + m->x80 * 64);
     return 0;
 }
 
@@ -103,18 +102,16 @@ s32 func_00147d18(s32 arg0) {
 #undef D_0054B808
 
 /* func_00147ed8 (from auto/text_00140000_5.c). */
-#define func_002675a8 ((M2C_UNK (*)(s32, s32)) func_002675a8)
 #define func_00147c98 ((s32 *(*)()) func_00147c98)
 s32 * func_00147ed8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 *temp_v0;
 
     temp_v0 = func_00147c98();
     if (temp_v0 != NULL) {
-        func_002675a8(*temp_v0, arg3);
+        PlatVu0CopyVector(*temp_v0, arg3);
     }
     return temp_v0;
 }
-#undef func_002675a8
 #undef func_00147c98
 
 /* func_00147f20 (from hand/text_00140000_h8.c). */
@@ -189,7 +186,6 @@ W8R *func_00148438(W8O60 *o, W8B *b) {
 #undef func_00147d18
 
 /* func_00148570 (from auto/text_00140000_10.c). */
-s32 func_002675b8(s32, s32);
 void func_001318e8(s32, s32, s32);
 #define func_00148438 ((s32 (*)(s32, s32)) func_00148438)
 #define func_00147e08 ((void (*)(s32, s32)) func_00147e08)
@@ -203,7 +199,7 @@ s32 func_00148570(s32 arg0, s32 arg1, s32 arg2) {
     if (temp_v0 != 0) {
         M2C_FIELD(temp_v0, s32 *, 8) = arg2;
         M2C_FIELD(temp_v0, s8 *, 4) = 2;
-        func_002675b8(temp_v0 + 0x30, (s32) sp);
+        PlatVu0CopyMatrix(temp_v0 + 0x30, (s32) sp);
     }
     return temp_v0;
 }
@@ -214,7 +210,6 @@ s32 func_00148570(s32 arg0, s32 arg1, s32 arg2) {
 M2C_UNK func_001315c0(s32, s32, M2C_UNK *, f32);
 #define func_001318e8 ((M2C_UNK (*)(s32, s32, void *)) func_001318e8)
 #define func_00147e08 ((M2C_UNK (*)(s32, void *)) func_00147e08)
-#define func_002675b8 ((M2C_UNK (*)(s32, void *)) func_002675b8)
 #define func_00148438 ((void *(*)(s32, s32)) func_00148438)
 void *func_00148600(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
     s32 sp[16];    void *temp_v0;
@@ -227,13 +222,12 @@ void *func_00148600(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
         M2C_FIELD(temp_v0, s32 *, 8) = arg2;
         M2C_FIELD(temp_v0, s8 *, 4) = 3;
         M2C_FIELD(temp_v0, f32 *, 0xC) = fparg0;
-        func_002675b8(temp_v0 + 0x30, sp);
+        PlatVu0CopyMatrix(temp_v0 + 0x30, sp);
     }
     return temp_v0;
 }
 #undef func_001318e8
 #undef func_00147e08
-#undef func_002675b8
 #undef func_00148438
 
 /* func_001486b0 (from auto/text_00140000.c). */

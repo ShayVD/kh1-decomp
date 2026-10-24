@@ -11,17 +11,16 @@
 
 /* pppRyjDrawMatrixWorldCon (from auto/text_00190000_6.c). */
 #include "m2c.h"
+#include "platform/vu.h"
 #include "ppp.h"
 #include "data/pieces/D_003701D0.h"
 #include "data/pieces/D_003701F0.h"
-M2C_UNK func_002675b8(s32, M2C_UNK *);
 extern M2C_UNK D_00615E70;
 void pppRyjDrawMatrixWorldCon(s32 arg0, PppEntry *arg1) {
-    func_002675b8(arg0 + arg1->offsets[1] + 0xA0, &D_00615E70);
+    PlatVu0CopyMatrix(arg0 + arg1->offsets[1] + 0xA0, &D_00615E70);
 }
 
 /* pppRyjDrawMatrixWorldFrame (from auto/text_00190000_7.c). */
-M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_00615EB0;
 extern M2C_UNK D_00616040;
 extern s32 D_00615E68;
@@ -29,43 +28,39 @@ void pppRyjDrawMatrixWorldFrame(s32 arg0, s32 arg1, void *arg2) {
     M2C_UNK *temp_a0;
     M2C_UNK *temp_a0_2;
 
-    func_00267328(D_00615E68 + 0x50, &D_00615EB0, arg0 + M2C_FIELD(M2C_FIELD(arg2, void **, 0xC), s32 *, 4) + 0xA0);
+    PlatVu0MulMatrix(D_00615E68 + 0x50, &D_00615EB0, arg0 + M2C_FIELD(M2C_FIELD(arg2, void **, 0xC), s32 *, 4) + 0xA0);
     temp_a0 = D_00615E68 + 0x50;
-    func_00267328(temp_a0, &D_00616040, temp_a0);
+    PlatVu0MulMatrix(temp_a0, &D_00616040, temp_a0);
     temp_a0_2 = D_00615E68 + 0x50;
-    func_00267328(temp_a0_2, temp_a0_2, D_00615E68 + 0x10);
+    PlatVu0MulMatrix(temp_a0_2, temp_a0_2, D_00615E68 + 0x10);
 }
 
 /* pppRyjDrawMatrixWorldFrontCon (from auto/text_00190000_6.c). */
-M2C_UNK func_002675a8(s32, M2C_UNK *);
 void pppRyjDrawMatrixWorldFrontCon(s32 arg0, PppEntry *arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + arg1->offsets[1];
-    func_002675a8(temp_s0 + 0xA0, ((M2C_UNK *)&D_003701D0));
-    func_002675a8(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
+    PlatVu0CopyVector(temp_s0 + 0xA0, ((M2C_UNK *)&D_003701D0));
+    PlatVu0CopyVector(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
 }
 
 /* pppRyjDrawMatrixWorldFrontFrame (from auto/text_00190000_8.c). */
-M2C_UNK func_002672f8(s32, void *, s32);
-M2C_UNK func_00267560(s32, s32, f32);
-M2C_UNK func_00267620(void *);
 void pppRyjDrawMatrixWorldFrontFrame(s32 arg0, s32 arg1, void *arg2) {
     s32 sp[16];    void *temp_a0;
     void *temp_s1;
 
     temp_s1 = arg0 + M2C_FIELD(M2C_FIELD(arg2, void **, 0xC), s32 *, 4) + 0xA0;
-    func_00267620(sp);
+    PlatVu0UnitMatrix(sp);
     M2C_FIELD(sp, f32 *, 0x30) = M2C_FIELD(temp_s1, f32 *, 0);
     M2C_FIELD(sp, f32 *, 0x34) = M2C_FIELD(temp_s1, f32 *, 4);
     M2C_FIELD(sp, f32 *, 0x38) = M2C_FIELD(temp_s1, f32 *, 8);
-    func_00267328(sp, &D_00615EB0, sp);
-    func_00267560(D_00615E68 + 0x50, D_00615E68 + 0x10, M2C_FIELD(temp_s1, f32 *, 0x10));
-    func_00267560(D_00615E68 + 0x60, D_00615E68 + 0x20, M2C_FIELD(temp_s1, f32 *, 0x14));
-    func_00267560(D_00615E68 + 0x70, D_00615E68 + 0x30, M2C_FIELD(temp_s1, f32 *, 0x18));
-    func_002672f8(D_00615E68 + 0x80, sp, D_00615E68 + 0x40);
+    PlatVu0MulMatrix(sp, &D_00615EB0, sp);
+    PlatVu0ScaleVector(D_00615E68 + 0x50, D_00615E68 + 0x10, M2C_FIELD(temp_s1, f32 *, 0x10));
+    PlatVu0ScaleVector(D_00615E68 + 0x60, D_00615E68 + 0x20, M2C_FIELD(temp_s1, f32 *, 0x14));
+    PlatVu0ScaleVector(D_00615E68 + 0x70, D_00615E68 + 0x30, M2C_FIELD(temp_s1, f32 *, 0x18));
+    PlatVu0ApplyMatrix(D_00615E68 + 0x80, sp, D_00615E68 + 0x40);
     temp_a0 = D_00615E68 + 0x50;
-    func_00267328(temp_a0, &D_00616040, temp_a0);
+    PlatVu0MulMatrix(temp_a0, &D_00616040, temp_a0);
 }
 
 /* pppRyjDrawMatrixWorldNoRotCon (from auto/text_00190000_6.c). */
@@ -73,8 +68,8 @@ void pppRyjDrawMatrixWorldNoRotCon(s32 arg0, PppEntry *arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0 + arg1->offsets[1];
-    func_002675a8(temp_s0 + 0xA0, ((M2C_UNK *)&D_003701D0));
-    func_002675a8(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
+    PlatVu0CopyVector(temp_s0 + 0xA0, ((M2C_UNK *)&D_003701D0));
+    PlatVu0CopyVector(temp_s0 + 0xB0, (M2C_UNK *)&D_003701F0);
 }
 
 /* pppRyjDrawMatrixWorldWoodCon (from hand/text_00180000_h40.c). */
@@ -90,35 +85,32 @@ typedef struct {
     u8 unk9D;  /* +0x9D */
 } PppObject;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-void func_002673b8(PppVec4, PppVec4);
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
 extern PppQv D_00616010[3];
 extern PppMtx D_006160C0;
-void func_00267370(f32 *, f32 *, f32 *);
 #define D_00616040 ((PppQv *) &D_00616040)
 void pppRyjDrawMatrixWorldWoodCon(PppObject *obj, PppEntry *e) {
     PppQv u, v, c;
     f32 *w = PPP_WORK(f32, obj, e, 1);
 
-    func_002675a8(w, (*(f32 (*)[4])&D_003701D0));
-    func_002675a8(w + 4, D_003701F0);
+    PlatVu0CopyVector(w, (*(f32 (*)[4])&D_003701D0));
+    PlatVu0CopyVector(w + 4, D_003701F0);
     v.f[0] = D_00615FC0[1].f[0];
     v.f[1] = D_00615FC0[1].f[1];
     v.f[2] = D_00615FC0[1].f[2];
     v.f[3] = 0.0f;
-    func_002673b8(v.f, v.f);
+    PlatVu0Normalize(v.f, v.f);
     D_00616010[0].q = v.q;
     u.f[0] = v.f[1];
     u.f[1] = -v.f[0];
     u.f[2] = 0.0f;
     u.f[3] = 0.0f;
-    func_002673b8(u.f, u.f);
+    PlatVu0Normalize(u.f, u.f);
     D_00616010[-1].q = u.q;
-    func_00267370(c.f, u.f, v.f);
-    func_002673b8(c.f, c.f);
+    PlatVu0OuterProduct(c.f, u.f, v.f);
+    PlatVu0Normalize(c.f, c.f);
     D_00616010[1].q = c.q;
     D_00616010[2].q = D_00615FC0[3].q;
-    sceVu0MulMatrix(D_006160C0, (f32 (*)[4]) D_00616040, (f32 (*)[4]) &D_00616010[-1]);
+    PlatVu0MulMatrix(D_006160C0, (f32 (*)[4]) D_00616040, (f32 (*)[4]) &D_00616010[-1]);
 }
 #undef D_00616040
 
@@ -128,7 +120,6 @@ typedef struct {
     PppMtx m;    /* +0x10 */
     PppMtx m2;   /* +0x50 */
 } PppMtxOwner;
-void sceVu0UnitMatrix(PppMtx);
 #define D_00616040 ((PppQv *) &D_00616040)
 #define D_00615E68 ((PppMtxOwner *) D_00615E68)
 #define D_00615EB0 (*(PppMtx (*)) &D_00615EB0)
@@ -136,18 +127,18 @@ void pppRyjDrawMatrixWorldWoodFrame(PppObject *obj, void *key, PppEntry *e) {
     PppMtx m;
     f32 *w = PPP_WORK(f32, obj, e, 1);
 
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m[3][0] = w[0];
     m[3][1] = w[1];
     m[3][2] = w[2];
-    sceVu0MulMatrix(m, D_00615EB0, m);
-    sceVu0MulMatrix(m, (f32 (*)[4]) D_00616040, m);
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
+    PlatVu0MulMatrix(m, D_00615EB0, m);
+    PlatVu0MulMatrix(m, (f32 (*)[4]) D_00616040, m);
+    PlatVu0ScaleVector(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
+    PlatVu0ScaleVector(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
+    PlatVu0ScaleVector(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
     *(u128 *) D_00615E68->m2[3] = *(u128 *) D_00615E68->m[3];
-    sceVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
-    func_002672f8(D_00615E68->m2[3], (f32 *) m, D_00615E68->m[3]);
+    PlatVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
+    PlatVu0ApplyMatrix(D_00615E68->m2[3], (f32 *) m, D_00615E68->m[3]);
 }
 #undef D_00616040
 #undef D_00615E68

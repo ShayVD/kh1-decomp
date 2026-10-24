@@ -82,19 +82,19 @@ s32 func_00222cb8(JsWin *a0) {
     s32 x, y, r;
     if (func_001f42b8(a0)) {
         PadSt_425bc8 *p = D_00425BC8;
-        if (p->x8 & 0x4000) {
+        if (p->x8 & PAD_CROSS) {
             func_001f3758(a0);
             func_0011d768(3);
         } else {
             s32 f = 0;
             s32 n = a0->xd8;
             u32 b = p->x10;
-            if (b & 0x80000480) {
+            if (b & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
                 if (a0->xda > 0) {
                     a0->xda -= 16;
                     f = 1;
                 }
-            } else if (b & 0x20000820) {
+            } else if (b & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
                 if (a0->xda < (n - 1) << 4) {
                     a0->xda += 16;
                     f = 1;
@@ -134,12 +134,12 @@ void func_00222e90(JsWin *a) {
             b = D_00425BC8->x10;
             k = 0;
             n = a->xd8;
-            if (b & 0x80000480) {
+            if (b & (PAD_DIR(PAD_LEFT) | PAD_L1)) {
                 if (a->xda > 0) {
                     a->xda -= 16;
                     k = 1;
                 }
-            } else if (b & 0x20000820) {
+            } else if (b & (PAD_DIR(PAD_RIGHT) | PAD_R1)) {
                 s32 m = n - 1;
                 if (a->xda < m * 16) {
                     a->xda += 16;

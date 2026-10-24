@@ -3,6 +3,7 @@
  * matrices (D_00573F10, D_00351E10).  func_001636d0 between them is one of
  * the nine unmatched functions and stays in asm.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_002C58A0.h"
@@ -31,11 +32,6 @@ extern f32 D_00574F10[];
 void func_001625c8(void *, void *);
 void func_00162878(f32 *, void *, f32 *);
 void func_00162c5c(void *, void *, void *);
-void func_002673b8(f32 *, f32 *);
-void func_00267e60(f32 *, f32 *, f32 *, f32);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
-void func_002675a8(f32 *, f32 *);
 void func_00163150(Obj *o, s32 i) {
     Mtx tmp;
     f32 d[4];
@@ -79,32 +75,32 @@ void func_00163150(Obj *o, s32 i) {
         d[3] = 0;
         func_00162878(d, tmp, d);
         r1 = ml[1];
-        func_002673b8(d, d);
-        func_002673b8(r1, r1);
-        func_00267e60(r1, d, r1, o->x88[3]);
-        func_002673b8(r1, r1);
+        PlatVu0Normalize(d, d);
+        PlatVu0Normalize(r1, r1);
+        PlatVu0InterVectorXYZ(r1, d, r1, o->x88[3]);
+        PlatVu0Normalize(r1, r1);
         a[0] = ml[0][0];
         a[1] = ml[0][1];
         a[2] = ml[0][2];
-        func_002673b8(a, a);
+        PlatVu0Normalize(a, a);
         b[0] = ml[2][0];
         b[1] = ml[2][1];
         b[2] = ml[2][2];
-        func_002673b8(b, b);
+        PlatVu0Normalize(b, b);
         r2 = ml[2];
-        func_00267370(r2, a, r1);
-        func_002673b8(r2, r2);
-        func_00267370(ml[0], r1, r2);
-        func_002673b8(ml[0], ml[0]);
-        func_00267370(r2, ml[0], r1);
-        func_002673b8(r2, r2);
+        PlatVu0OuterProduct(r2, a, r1);
+        PlatVu0Normalize(r2, r2);
+        PlatVu0OuterProduct(ml[0], r1, r2);
+        PlatVu0Normalize(ml[0], ml[0]);
+        PlatVu0OuterProduct(r2, ml[0], r1);
+        PlatVu0Normalize(r2, r2);
         func_00162c5c(tm, par, ml);
         w = (f32 (*)[4])((u32)(i << 6) + (u32)o->x154);
         s = ((Xf *)((u32)(i << 6) + (u32)o->x150))->s;
-        func_00267e90(w[0], tm[0], s[0]);
-        func_00267e90(w[1], tm[1], s[1]);
-        func_00267e90(w[2], tm[2], s[2]);
-        func_002675a8(w[3], tm[3]);
+        PlatVu0ScaleVectorXYZ(w[0], tm[0], s[0]);
+        PlatVu0ScaleVectorXYZ(w[1], tm[1], s[1]);
+        PlatVu0ScaleVectorXYZ(w[2], tm[2], s[2]);
+        PlatVu0CopyVector(w[3], tm[3]);
         o->x154[i][3][0] = save[0];
         o->x154[i][3][1] = save[1];
         o->x154[i][3][2] = save[2];
@@ -164,11 +160,11 @@ void func_00163490(Ent63 *e) {
         func_00162c5c(g, pm, w);
         d = (M64_59 *)(i * 64 + (u32)e->x154);
         sc = ((M64_59 *)(i * 64 + (u32)e->x150))->m[1];
-        func_00267e90(d->m[0], g->m[0], sc[0]);
-        func_00267e90(d->m[1], g->m[1], sc[1]);
-        func_00267e90(d->m[2], g->m[2], sc[2]);
-        func_002675a8(d->m[3], g->m[3]);
-        func_002675a8(e->x154[i].m[3], tmp);
+        PlatVu0ScaleVectorXYZ(d->m[0], g->m[0], sc[0]);
+        PlatVu0ScaleVectorXYZ(d->m[1], g->m[1], sc[1]);
+        PlatVu0ScaleVectorXYZ(d->m[2], g->m[2], sc[2]);
+        PlatVu0CopyVector(d->m[3], g->m[3]);
+        PlatVu0CopyVector(e->x154[i].m[3], tmp);
         if (e->xC & 0xC) func_00163150(e, i);
     }
 }

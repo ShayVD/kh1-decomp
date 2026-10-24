@@ -6,6 +6,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 53"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_003044D8.h"
@@ -287,7 +288,6 @@ void func_00137db0(W32Pc *o) {
 
 /* func_00138130 (from hand/text_00130000_h32.c). */
 extern W32Obj3 *D_0052AA70[];
-void func_002675a8(f32 *d, f32 *s);
 void func_00130f18(W32Obj3 *o, f32 f);
 s32 func_00138130(void) {
     s32 i;
@@ -295,7 +295,7 @@ s32 func_00138130(void) {
         W32Obj3 *o = D_0052AA70[i];
         D_00304AD8 = o;
         if (((s32)(o->x370 >> 39) & 1) || o->x154 == 0) {
-            func_002675a8(o->x50, o->x10);
+            PlatVu0CopyVector(o->x50, o->x10);
         } else if (!(o->x130->x4 & 0x20000) || ((s32)(o->x370 >> 35) & 1)) {
             func_00130f18(o, (o->x88 & 1) ? 0.0f : D_002BBDFC);
             o->x370 |= 1ULL << 43;
@@ -469,13 +469,12 @@ s32 func_001389e8(void *arg0) {
 /* func_00138a20 (from auto/text_00130000.c). */
 M2C_UNK func_00121fc4(void *, void *);
 M2C_UNK func_0014cce0();
-M2C_UNK func_00267560(s32, void *, f32);
 void func_00138a20(s32 arg0, void *arg1) {
     f32 temp_f20;
 
     func_0014cce0();
     temp_f20 = M2C_FIELD(arg1, f32 *, 0xC);
     func_00121fc4(arg1, arg1);
-    func_00267560(arg0 + 0x3C0, arg1, temp_f20);
+    PlatVu0ScaleVector(arg0 + 0x3C0, arg1, temp_f20);
 }
 

@@ -9,6 +9,7 @@
  * not part of the library's increasing run.  func_001dd5c0 (the task that
  * runs a request) is in effect.norlo.c, func_001ddbf8 in effect.nofill.c. */
 #include "common.h"
+#include "platform/vu.h"
 #include "vm/vm_sub.h"
 #include "data/types/vm_rec.h"
 #include "event/effect.h"
@@ -351,7 +352,6 @@ s32 func_001de5b0(VmRec *vm) {
     return 2;
 }
 
-void func_002675a8(f32 *, f32 *);
 
 /* Put instance stk[sp-3] at bone stk[sp-1] of VM stk[sp-2]'s entity once. */
 s32 func_001de6a8(VmRec *vm) {
@@ -362,7 +362,7 @@ s32 func_001de6a8(VmRec *vm) {
     r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         func_001315c0(r->obj, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
-        func_002675a8(o->f0, buf);
+        PlatVu0CopyVector(o->f0, buf);
     }
     vm->sp -= 4;
     return 2;
@@ -376,7 +376,7 @@ s32 func_001de778(VmRec *vm) {
     r = func_001e98d0((s32)(vm->fl.x >> 5) & 1, vm->stk[vm->sp - 2]);
     if (o && r) {
         func_001315c0(r->obj, vm->stk[vm->sp - 1], buf, vm->stk[vm->sp] * 0.5f);
-        func_002675a8(o->f0, buf);
+        PlatVu0CopyVector(o->f0, buf);
     }
     vm->sp -= 4;
     return 2;
@@ -488,8 +488,6 @@ s32 func_001ded08(VmRec *vm) {
 #include "data/pieces/D_002E2790.h"
 #include "data/pieces/D_002E2780.h"
 f32 func_001e9e58(f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
 void func_001e9d00(f32 *, f32 *, f32 *, f32);
 void func_001e9dc8(f32 *, f32 *, f32 *);
 
@@ -502,18 +500,18 @@ s32 func_001dedd8(EvTask *o) {
     f32 d;
     if (o->f10->f14 & 2) return 4;
     d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
-    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
+    PlatVu0SubVector(v, &D_002E2790.x, &D_002E2780.x);
     v[0] = v[0] / d * o->f1c;
     v[1] = v[1] / d * o->f1c;
     v[2] = v[2] / d * o->f1c;
-    func_00267518(v, &D_002E2780.x, v);
+    PlatVu0AddVector(v, &D_002E2780.x, v);
     func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
     t[0] = o->f20;
     t[1] = o->f24;
     t[2] = 0.0f;
     t[3] = 1.0f;
     func_001e9dc8(v, r, t);
-    func_002675a8(o->f10->f0, v);
+    PlatVu0CopyVector(o->f10->f0, v);
     return 0;
 }
 
@@ -527,12 +525,12 @@ s32 func_001def20(VmRec *vm) {
     EvFx *k;
     EvTask *n;
     d = func_001e9e58(&D_002E2790.x, &D_002E2780.x);
-    func_00267530(v, &D_002E2790.x, &D_002E2780.x);
+    PlatVu0SubVector(v, &D_002E2790.x, &D_002E2780.x);
     s = vm->stk[vm->sp - 2];
     v[0] = v[0] / d * s;
     v[1] = v[1] / d * s;
     v[2] = v[2] / d * s;
-    func_00267518(v, &D_002E2780.x, v);
+    PlatVu0AddVector(v, &D_002E2780.x, v);
     func_001e9d00(r, &D_002E2790.x, &D_002E2780.x, 0.0f);
     t[0] = vm->stk[vm->sp - 1];
     t[1] = vm->stk[vm->sp];
@@ -542,7 +540,7 @@ s32 func_001def20(VmRec *vm) {
     func_00176040(D_0062A220, D_0062A224, vm->stk[vm->sp - 3], 0);
     k = func_001760d0(vm->stk[vm->sp - 3]);
     if (k) {
-        func_002675a8(k->f0, v);
+        PlatVu0CopyVector(k->f0, v);
         n = func_0011f090(D_0062A630, 0, func_001dedd8);
         n->f18 = 0;
         n->f10 = k;

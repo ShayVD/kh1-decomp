@@ -9,6 +9,7 @@
  * in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/pad.h"
 #include "data/bss_004F.h"
@@ -34,8 +35,6 @@
 extern f32 D_002C5980[4];
 extern f32 D_002C5C20;
 f32 func_00120bf8(void *);
-void func_002673b8(void *, void *);
-void func_00267560(void *, void *, f32);
 s32 func_0011f370(V53 *st, u8 *pad) {
     s32 bits = 0;
     s32 s, j;
@@ -64,9 +63,9 @@ s32 func_0011f370(V53 *st, u8 *pad) {
         }
         len = func_00120bf8(D_002C5980);
         if (len > 1.0f) len = 1.0f;
-        func_002673b8(&d[5], D_002C5980);
+        PlatVu0Normalize(&d[5], D_002C5980);
         d[5].w = 1.0f;
-        func_00267560(&d[3], &d[5], len);
+        PlatVu0ScaleVector(&d[3], &d[5], len);
         d++;
     }
     return bits;
@@ -102,7 +101,6 @@ typedef struct {
 } PadState;
 extern s32 D_002C5C24;
 extern s32 D_002C5C28;
-void func_002675a8(f32 *, f32 *);
 extern s32 D_002C5C2C;
 extern PadState D_002C5AD0[2];
 extern PadState D_002C5BB0;
@@ -122,8 +120,8 @@ void func_0011f988(void) {
         p->x3 = 0;
         p->x2 = 0;
         for (j = 0; j < 2; j++) {
-            func_002675a8(p->a[j], &D_002C58B0.x);
-            func_002675a8(p->b[j], &D_002C58B0.x);
+            PlatVu0CopyVector(p->a[j], &D_002C58B0.x);
+            PlatVu0CopyVector(p->b[j], &D_002C58B0.x);
         }
     }
     D_002C5BB0.rep = 0;

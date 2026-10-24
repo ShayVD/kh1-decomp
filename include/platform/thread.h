@@ -5,6 +5,9 @@
  * waits on and signals semaphores from the file and sound queues, writes the
  * data cache back before every DMA send (PlatFlushCache(0); PlatIFlushCache
  * from an interrupt handler) and hooks the DMAC interrupt of a channel.
+ * src/model/mdlgs*.c keeps the flush in a hook pointer (D_00351BC8, called by
+ * the model code): PlatFlushCacheFn normally, PlatIFlushCacheFn while
+ * func_0015efc0 runs the draw from an interrupt.
  * PlatPcStart / PlatPcStop run the CPU performance counters (src/pad/padread.c
  * at boot, src/util/heap.c); the Vita build can make them no-ops.  On
  * the matching PS2 build each wrapper is a macro for the kernel call; the
@@ -20,6 +23,8 @@
 #include "sce/eekernel.h"
 #define PlatFlushCache(op) FlushCache(op)
 #define PlatIFlushCache(op) iFlushCache(op)
+#define PlatFlushCacheFn FlushCache
+#define PlatIFlushCacheFn iFlushCache
 #define PlatCreateThread(param) CreateThread((struct ThreadParam *)(param))
 #define PlatStartThread(id, arg) StartThread((id), (void *)(arg))
 #define PlatChangeThreadPriority(id, prio) ChangeThreadPriority((id), (prio))
@@ -38,6 +43,8 @@
 #else
 void PlatFlushCache(int op);
 void PlatIFlushCache(int op);
+#define PlatFlushCacheFn PlatFlushCache
+#define PlatIFlushCacheFn PlatIFlushCache
 int PlatCreateThread(void *param);
 int PlatStartThread(int id, void *arg);
 int PlatChangeThreadPriority(int id, int prio);

@@ -14,6 +14,7 @@
 #include "data/pieces/D_002BBDF4.h"
 #include "vm/script_vm.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_004D.h"
 #include "data/bss_004E.h"
 #include "data/types/text_00110000_h29_p.h"
@@ -145,11 +146,10 @@ typedef struct {
     u8 pad32[14];
 } Query40;
 void func_00118378();
-void func_002675a8(void *, void *);
 #define func_00118378 ((void (*)(void *, s32, s32, s32)) func_00118378)
 void func_001150d8(u8 *a) {
     Query40 q;
-    func_002675a8(&q, a + 64);
+    PlatVu0CopyVector(&q, a + 64);
     q.v[1] = *(f32 *)(a + 68) - 500.0f;
     q.x10 = 0;
     q.x14 = 1000000.0f;
@@ -866,10 +866,6 @@ void func_0011a9c8(s32, s32, f32 *);
 ColTri *func_0011ab38(s32, s32);
 u64 func_0011b6a0(ColO *, f32 *, s32);
 s32 func_0011bdf8(ColO *, f32 *, s32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
 static inline f32 colDist(f32 *a, f32 *b) {
     f32 r;
     __asm__ volatile(
@@ -895,7 +891,6 @@ static inline f32 colDist(f32 *a, f32 *b) {
 #define func_00116368 ((void (*)(ColBox *, s32)) func_00116368)
 #define func_00116628 ((void (*)(ColO *)) func_00116628)
 #define func_0011a978 ((void (*)(s32, s32, f32 *)) func_0011a978)
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 /* func_001166e8 (r2_10 s10): MATCH by wqb03_rr.py 0048D090, mode hand (strict). session8 w20 16w draft with `s32 func_00104f10(s32, f32 *);` instead of void (lever 2: callee return type). */
 u64 func_001166e8(ColO *o)
 {
@@ -962,17 +957,17 @@ u64 func_001166e8(ColO *o)
         return 0;
     }
     vel = o->d;
-    func_00267518(pos, o->pos, vel);
+    PlatVu0AddVector(pos, o->pos, vel);
 again:
     r0 = 0;
     hf = 0;
     if (!(o->fl & 2)) r0 = func_0011b6a0(o, pos, 0);
 again2:
     i = 0;
-    func_002675a8(cur, pos);
+    PlatVu0CopyVector(cur, pos);
     n = 0;
-    func_002675a8(p1, pos);
-    func_002675a8(p2, pos);
+    PlatVu0CopyVector(p1, pos);
+    PlatVu0CopyVector(p2, pos);
     p2[1] -= o->h;
     e = D_002C1250 + o->r * 0.5f;
     box.min[0] = pos[0] - e;
@@ -1023,8 +1018,8 @@ again2:
             if (func_00119a20(id, tmp, pos, hit, &D_002C1250)) {
                 o->st |= 8;
                 hf = 1;
-                func_00267e90(tmp, tmp, o->r);
-                func_00267518(pos, hit, tmp);
+                PlatVu0ScaleVectorXYZ(tmp, tmp, o->r);
+                PlatVu0AddVector(pos, hit, tmp);
                 if (fp->b23) o->x76 = id;
             } else list[n++] = id;
             break;
@@ -1046,8 +1041,8 @@ again2:
             if (fn(fp) == 0) {
                 if (func_00119a20(id, tmp, pos, hit, &D_002C1250)) {
                     hf = 1;
-                    func_00267e90(tmp, tmp, o->r);
-                    func_00267518(pos, hit, tmp);
+                    PlatVu0ScaleVectorXYZ(tmp, tmp, o->r);
+                    PlatVu0AddVector(pos, hit, tmp);
                     if (fp->b23) o->x76 = id;
                 } else list[n++] = id;
             }
@@ -1089,10 +1084,10 @@ again2:
             if (func_00119ad8(-1, id, tmp, pos, hit, &D_002C1250)) {
                 o->st |= 8;
                 hf = 1;
-                func_00267530(pos, pos, hit);
-                func_002673b8(pos, pos);
-                func_00267e90(pos, pos, o->r);
-                func_00267518(pos, hit, pos);
+                PlatVu0SubVector(pos, pos, hit);
+                PlatVu0Normalize(pos, pos);
+                PlatVu0ScaleVectorXYZ(pos, pos, o->r);
+                PlatVu0AddVector(pos, hit, pos);
                 if (fp->b23) o->x76 = id;
             }
             break;
@@ -1110,11 +1105,11 @@ again2:
         default:
             if (fn(fp) == 0) {
                 if (func_00119ad8(-1, id, tmp, pos, hit, &D_002C1250)) {
-                    func_00267530(nrm, pos, hit);
+                    PlatVu0SubVector(nrm, pos, hit);
                     hf = 1;
-                    func_002673b8(nrm, nrm);
-                    func_00267e90(nrm, nrm, o->r);
-                    func_00267518(pos, hit, nrm);
+                    PlatVu0Normalize(nrm, nrm);
+                    PlatVu0ScaleVectorXYZ(nrm, nrm, o->r);
+                    PlatVu0AddVector(pos, hit, nrm);
                     if (fp->b23) o->x76 = id;
                 }
             }
@@ -1135,17 +1130,17 @@ again2:
             goto done;
         }
         if (D_002BC128 == 10 && D_002BC130 == 7) {
-            func_00267530(nrm, pos, p1);
-            func_002673b8(nrm, nrm);
-            func_00267e90(nrm, nrm, o->r);
-            func_00267518(pos, p1, nrm);
+            PlatVu0SubVector(nrm, pos, p1);
+            PlatVu0Normalize(nrm, nrm);
+            PlatVu0ScaleVectorXYZ(nrm, nrm, o->r);
+            PlatVu0AddVector(pos, p1, nrm);
             if (maxit != 4) {
                 maxit = 4;
                 it = 0;
                 goto again;
             }
         } else {
-            func_00267518(pos, o->pos, vel);
+            PlatVu0AddVector(pos, o->pos, vel);
             r0 = 0;
             hf = 0;
             it = 100;
@@ -1153,7 +1148,7 @@ again2:
         }
     }
 done:
-    func_002675a8(cur, pos);
+    PlatVu0CopyVector(cur, pos);
     if (cnt) func_00115758(lastid, o);
     if (!(o->fl & 2)) best2 = func_0011bdf8(o, pos, &tri, &h2);
     box.min[0] = pos[0];
@@ -1197,7 +1192,7 @@ done:
     if (best2 == -1) {
         if (best1 == -1) {
             o->x3C = -1;
-            func_002675a8(o->out, cur);
+            PlatVu0CopyVector(o->out, cur);
             return acc1 | acc0;
         }
         if (D_002C12C0) func_00115408(best1, cur, &h1, 1);
@@ -1254,7 +1249,7 @@ done:
     } else {
         o->x3C = best2;
     }
-    func_002675a8(o->out, cur);
+    PlatVu0CopyVector(o->out, cur);
     return acc1 | acc0;
 }
 #undef func_00104eb0
@@ -1264,7 +1259,6 @@ done:
 #undef func_00116368
 #undef func_00116628
 #undef func_0011a978
-#undef func_002675a8
 
 /* func_00117710 (from hand/text_00110000_h52.c). */
 typedef PlaneBits_2a6238 Bf52;
@@ -1282,12 +1276,12 @@ void func_00117710(Src52 *a, Dst52 *b) {
     a->x34 = 123456.0f;
     if (a->x28 >= 0) return;
     if (D_002A62E8) func_001150d8();
-    func_002675a8(b->x30, ((V4_52 *)D_002A3F48));
+    PlatVu0CopyVector(b->x30, ((V4_52 *)D_002A3F48));
     id = a->x3c;
     a->x28 &= 0x7fffffff;
     b->x40 = 0;
     if (id == 0xffff) {
-        func_002675a8(b, a->x40);
+        PlatVu0CopyVector(b, a->x40);
         b->x20 = 0;
         b->x24 = 1.0f;
         b->x28 = 0;
@@ -1309,7 +1303,7 @@ void func_00117710(Src52 *a, Dst52 *b) {
         b->x40 = bp->x40;
         k = bp->k;
     }
-    func_002675a8(b->x30, ((V4_52 *)D_002A3F48)[k]);
+    PlatVu0CopyVector(b->x30, ((V4_52 *)D_002A3F48)[k]);
 }
 #undef func_001150d8
 #undef func_001156f0
@@ -1567,19 +1561,19 @@ void func_00118060(Ray52 *o, s32 a1, s32 a2, s32 a3) {
     r2 = func_00117c08(w->x18, o->pos, o->dir, w->x30);
     if (r1 != -1) {
         if (r2 == -1) {
-            func_002675a8(o->out, w->x20);
+            PlatVu0CopyVector(o->out, w->x20);
             o->x30 = r1;
             o->x34 = hit;
         } else if (v52_dist(o->pos, w->x20) < v52_dist(o->pos, w->x30)) {
-            func_002675a8(o->out, w->x20);
+            PlatVu0CopyVector(o->out, w->x20);
             o->x30 = r1;
             o->x34 = hit;
         } else {
-            func_002675a8(o->out, w->x30);
+            PlatVu0CopyVector(o->out, w->x30);
             o->x30 = r2;
         }
     } else {
-            func_002675a8(o->out, w->x30);
+            PlatVu0CopyVector(o->out, w->x30);
             o->x30 = r2;
     }
     func_001220b8(w);
@@ -1644,19 +1638,19 @@ void func_00118378(Ray52 *o, s32 a1, s32 a2, s32 a3) {
     r2 = func_00118230(w->x18, o->pos, o->dir, w->x30);
     if (r1 != -1) {
         if (r2 == -1) {
-            func_002675a8(o->out, w->x20);
+            PlatVu0CopyVector(o->out, w->x20);
             o->x30 = r1;
             o->x34 = hit;
         } else if (v52_dist(o->pos, w->x20) < v52_dist(o->pos, w->x30)) {
-            func_002675a8(o->out, w->x20);
+            PlatVu0CopyVector(o->out, w->x20);
             o->x30 = r1;
             o->x34 = hit;
         } else {
-            func_002675a8(o->out, w->x30);
+            PlatVu0CopyVector(o->out, w->x30);
             o->x30 = r2;
         }
     } else {
-            func_002675a8(o->out, w->x30);
+            PlatVu0CopyVector(o->out, w->x30);
             o->x30 = r2;
     }
     func_001220b8(w);
@@ -1735,7 +1729,6 @@ typedef struct { f32 mn[3]; f32 mx[3]; u16 cnt; } Box52;
 typedef struct { V4_52 pos; V4_52 dir; f32 x20; f32 x24; } Probe52;
 #define func_00104f10 ((void (*)(s32, V4_52)) func_00104f10)
 #define func_00116368 ((void (*)(void *, s32)) func_00116368)
-#define func_00267518 ((void (*)(void *, void *, void *)) func_00267518)
 #define func_00119a20 ((s32 (*)(s32, void *, void *, void *, f32 *)) func_00119a20)
 #define func_00119ad8 ((s32 (*)(s32, s32, void *, void *, void *, f32 *)) func_00119ad8)
 s32 func_001186a8(Probe52 *o) {
@@ -1745,7 +1738,7 @@ s32 func_001186a8(Probe52 *o) {
     s32 i, cnt, id;
     cnt = 0;
     D_002C1250 = o->x20 - 0.0079999999f;
-    func_00267518(pt, o->pos, o->dir);
+    PlatVu0AddVector(pt, o->pos, o->dir);
     pt[1] -= o->x24;
     box.mn[0] = pt[0] - D_002C1250;
     box.mn[2] = pt[2] - D_002C1250;
@@ -1770,7 +1763,6 @@ s32 func_001186a8(Probe52 *o) {
 }
 #undef func_00104f10
 #undef func_00116368
-#undef func_00267518
 #undef func_00119a20
 #undef func_00119ad8
 
@@ -1780,7 +1772,6 @@ typedef struct { V4 x0; V4 x10; f32 x20; u8 pad24[12]; V4 x30; } Mov;
 typedef struct { u8 pad[0x20]; f32 r; f32 h; s32 flags; u8 pad2[0x54]; } ColObj;
 void func_001047c8(void);
 void func_00104528(void);
-#define func_002675a8 ((void (*)(f32 *, f32 *)) func_002675a8)
 #define func_00104f10 ((void (*)(s32, f32 *)) func_00104f10)
 #define func_00116368 ((void (*)(Qry *, s32)) func_00116368)
 #define func_00117db0 ((void (*)(Qry *)) func_00117db0)
@@ -1796,7 +1787,7 @@ s32 func_00118868(Mov *o) {
     o->x10[3] = 1.0f;
     retry = 0;
     D_002C1250 = o->x20 - 0.007999999681f;
-    func_00267518(a, o->x0, o->x10);
+    PlatVu0AddVector(a, o->x0, o->x10);
     obj.r = o->x20;
     obj.h = 0.0f;
     func_001047c8();
@@ -1818,8 +1809,8 @@ loop:
         func_00104f10(id, c);
         if (func_00119a20(id, c, a, b, &D_002C1250)) {
             hit = 1;
-            func_00267e90(c, c, o->x20);
-            func_00267518(a, b, c);
+            PlatVu0ScaleVectorXYZ(c, c, o->x20);
+            PlatVu0AddVector(a, b, c);
         } else {
             miss[n++] = id;
         }
@@ -1828,14 +1819,14 @@ loop:
         id = miss[i];
         func_00104f10(id, c);
         if (func_00119ad8(-1, id, c, a, b, &D_002C1250)) {
-            func_00267530(a, a, b);
+            PlatVu0SubVector(a, a, b);
             hit = 1;
-            func_002673b8(a, a);
-            func_00267e90(a, a, o->x20);
-            func_00267518(a, b, a);
+            PlatVu0Normalize(a, a);
+            PlatVu0ScaleVectorXYZ(a, a, o->x20);
+            PlatVu0AddVector(a, b, a);
         }
     }
-    func_002675a8(o->x30, a);
+    PlatVu0CopyVector(o->x30, a);
     if ((hit || res) && retry < 3) {
         retry++;
         goto loop;
@@ -1843,7 +1834,6 @@ loop:
     func_00104528();
     return retry != 0;
 }
-#undef func_002675a8
 #undef func_00104f10
 #undef func_00116368
 #undef func_00117db0
@@ -1853,7 +1843,6 @@ typedef struct { V4_52 a; V4_52 b; f32 r; s32 x24; u8 pad[0x58]; } Sph52;
 #define func_00104f10 ((void (*)(s32, V4_52)) func_00104f10)
 #define func_00116368 ((void (*)(void *, s32)) func_00116368)
 #define func_00117db0 ((void (*)()) func_00117db0)
-#define func_00267518 ((void (*)(void *, void *, void *)) func_00267518)
 #define func_00119a20 ((s32 (*)(s32, void *, void *, void *, f32 *)) func_00119a20)
 #define func_00119ad8 ((s32 (*)(s32, s32, void *, void *, void *, f32 *)) func_00119ad8)
 #define func_0011b6a0 ((s32 (*)(Sph52 *, f32 *, s32)) func_0011b6a0)
@@ -1865,7 +1854,7 @@ s32 func_00118b58(Probe52 *o) {
     s32 i, cnt, id;
     o->dir[3] = o->pos[3] = 1.0f;
     D_002C1250 = o->x20 - 0.0079999999f;
-    func_00267518(pt, o->pos, o->dir);
+    PlatVu0AddVector(pt, o->pos, o->dir);
     s.r = o->x20;
     s.x24 = 0;
     if (func_0011b6a0(&s, pt, 1)) return 1;
@@ -1904,7 +1893,6 @@ s32 func_00118b58(Probe52 *o) {
 #undef func_00104f10
 #undef func_00116368
 #undef func_00117db0
-#undef func_00267518
 #undef func_00119a20
 #undef func_00119ad8
 #undef func_0011b6a0
@@ -2109,10 +2097,9 @@ s32 func_001191c8(Qry01 *q, Obj01 *o, s32 mode) {
 
 /* func_001195d8 (from hand/text_00110000_h29.c). */
 typedef struct { f32 mn[3]; f32 mx[3]; } W29Box;
-#define func_00267518 ((void (*)(W29V4 *, W29V4 *, W29V4 *)) func_00267518)
 void func_001195d8(W29V4 *a, W29Box *b) {
     W29V4 t;
-    func_00267518(&t, a, a + 1);
+    PlatVu0AddVector(&t, a, a + 1);
     {
         f32 p, q; q = t.v[0]; p = a->v[0];
         if (q > p) { b->mn[0] = p; b->mx[0] = q; }
@@ -2129,7 +2116,6 @@ void func_001195d8(W29V4 *a, W29Box *b) {
         else { b->mx[2] = p; b->mn[2] = q; }
     }
 }
-#undef func_00267518
 
 /* func_00119688 (from auto/text_00110000_17.c). */
 #define func_001047c8 ((M2C_UNK (*)()) func_001047c8)

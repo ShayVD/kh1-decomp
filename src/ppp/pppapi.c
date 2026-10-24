@@ -33,6 +33,7 @@
 #include "data/pieces/D_00362450.h"
 #include "data/pieces/D_00362454.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
@@ -189,14 +190,13 @@ Ent *func_00175d60(Mgr *m, s32 id) {
 }
 
 /* func_00175da8 (from hand/text_00170000_h11.c). */
-void func_00267548(s32, void *, s32);
 void func_00175da8(Mgr *m, s32 arg1) {
     s32 i = 0;
     Ent *e = m->ents;
     u8 *p = m->m1010[0];
 loop:
     if ((e->flags & 1) && e->unk2C->unk8C[0xfb] == 0)
-        func_00267548(e->unkC, p, arg1);
+        PlatVu0MulVector(e->unkC, p, arg1);
     i++; e++; p += 16;
     if (i < 64) goto loop;
 }

@@ -31,6 +31,7 @@
 #include "data/pieces/D_002A62E0.h"
 #include "data/pieces/D_002A62E4.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0049.h"
 #include "data/pieces/D_002BC0A8.h"
 #include "data/types/text_00100000_h1.h"
@@ -556,14 +557,13 @@ s32 func_00105c18(s32 sub, s32 idx) {
 }
 
 /* func_00105c70 (from auto/text_00100000_3.c). */
-s32 func_002675a8(s32, s32);
 void func_00105c70(s32 arg0, s32 arg1) {
-    func_002675a8(arg1, D_002A3F48 + (arg0 * 0x10));
+    PlatVu0CopyVector(arg1, D_002A3F48 + (arg0 * 0x10));
 }
 
 /* func_00105c98 (from auto/text_00100000_4.c). */
-s32 func_00105c98(s32 arg0, s32 arg1) {
-    return func_002675a8(arg1, D_002A3F48 + (((u32) M2C_FIELD(((arg0 * 0x14) + ((s32)D_002A6238)), u32 *, 0x10) >> 7) & 0xF0));
+void func_00105c98(s32 arg0, s32 arg1) {
+    PlatVu0CopyVector(arg1, D_002A3F48 + (((u32) M2C_FIELD(((arg0 * 0x14) + ((s32)D_002A6238)), u32 *, 0x10) >> 7) & 0xF0));
 }
 
 /* func_00105ce0 (from hand/text_00100000_h1.c). */

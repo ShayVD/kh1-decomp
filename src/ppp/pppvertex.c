@@ -9,6 +9,7 @@
 #include "m2c.h"
 #include "data/pieces/D_00370130.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/text_00180000_h12.h"
 
 /* pppVertexAttendFrame (from hand/text_00180000_h39.c). */
@@ -40,7 +41,6 @@ typedef struct {
     s16 map;        /* +0xC */
 } H39VKey;
 extern H39VSys *D_00615E64;
-void func_002672f8(H39V4 *, void *, H39V4 *);
 void pppVertexAttendFrame(H39VObj *obj, H39VKey *key, PppEntry *e) {
     H39V4 v;
     H39VMap *m;
@@ -56,7 +56,7 @@ void pppVertexAttendFrame(H39VObj *obj, H39VKey *key, PppEntry *e) {
     v.f[1] = p[1];
     v.f[2] = p[2];
     v.f[3] = 1.0f;
-    func_002672f8(&v, obj->mtx + 0x10, &v);
+    PlatVu0ApplyMatrix(&v, obj->mtx + 0x10, &v);
     out[0] = v.f[0];
     out[1] = v.f[1];
     out[2] = v.f[2];

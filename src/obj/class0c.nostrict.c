@@ -4,13 +4,13 @@
  * handlers per class) and their helpers. The rest is in class0c.c. Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00150000_h36.h"
 #include "data/pieces/D_002BC0F0.h"
 
 /* func_0015dc50 (from hand/nostrict/text_00150000_h36.c). */
-void func_002675a8(void *, void *);
 typedef struct { u8 pad[8]; f32 f8; } EntDC;
 typedef struct { u8 pad[0x10]; union { EntDC *p; f32 f; } p10; } HdrDC;
 typedef struct { u8 pad[0x10]; f32 pos[4]; u8 pad20[0x114]; HdrDC *h; } ObjDC;
@@ -20,7 +20,7 @@ s32 func_0015dc50(void *vo) {
     ObjDC *o = vo;
     Ray r;
     HdrDC *h;
-    func_002675a8(r.a, o->pos);
+    PlatVu0CopyVector(r.a, o->pos);
     h = o->h;
     r.a[1] -= h->p10.p->f8;
     r.b[0] = r.b[2] = 0.0f;
@@ -32,7 +32,6 @@ s32 func_0015dc50(void *vo) {
 
 /* func_0015dd50 (from hand/nostrict/text_00150000_h36.c). */
 void func_0014f658(void *, s32);
-f32 func_00267390(f32 *, f32 *);
 typedef struct { u8 b0; u8 type; u16 bone; f32 off; f32 dy; f32 r; f32 h; } CylSrc;
 typedef struct { u8 pad[4]; u8 n4, n5, n6, n7; u8 pad8[0xC]; CylSrc *cyl; CylSrc *cyl2; } CylHdr;
 typedef struct { u8 pad[0xD0]; f32 m[4][4]; } Mtx0D0;
@@ -46,7 +45,6 @@ typedef struct {
 extern s32 D_002C5C54;
 s32 func_001375f0(void *);
 void func_0015dcc8(void *, f32 *);
-void func_00267e90(f32 *, f32 *, f32);
 s32 func_0015dd50(void *vo, f32 *v) {
     CylObj *o = vo;
     s32 r;
@@ -56,15 +54,15 @@ s32 func_0015dd50(void *vo, f32 *v) {
             r = func_0015dc50(o);
             o->p148->x120 = r;
             if (r >= 0) {
-                func_002675a8(o->p148->x110, (*(f32 (*)[0x4])&D_002C58A0));
+                PlatVu0CopyVector(o->p148->x110, (*(f32 (*)[0x4])&D_002C58A0));
                 z = 0.0f;
                 if (z < v[3]) {
                     func_0015dcc8(o, d);
-                    dd = func_00267390(d, v);
+                    dd = PlatVu0InnerProduct(d, v);
                     if (z < dd) {
                         f32 f;
                         if (0.7999999523162842f < v[3]) f = o->p6C->f8; else f = o->p6C->f4;
-                        func_00267e90(o->p148->x110, d, f * dd);
+                        PlatVu0ScaleVectorXYZ(o->p148->x110, d, f * dd);
                     }
                 }
                 func_0014f658(o, 12);
@@ -84,13 +82,13 @@ s32 func_0015dff8(CylObj *o, s32 flag) {
     f32 d[4];
     if (flag) {
         func_0014cc88(o, 0.0f);
-        func_002675a8(o->x3C0, o->p148->x110);
+        PlatVu0CopyVector(o->x3C0, o->p148->x110);
         return 2;
     }
     r = func_0015dc50(o);
     o->p148->x120 = r;
     if (r < 0) {
-        func_002675a8(d, o->p148->x110);
+        PlatVu0CopyVector(d, o->p148->x110);
         d[1] = 0;
         func_00121fc4(d, d);
         d[3] *= 5.0f;

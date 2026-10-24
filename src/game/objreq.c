@@ -12,6 +12,7 @@
 #include "data/bss_0054.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0053.h"
 #include "vm/script_vm.h"
 #include "data/types/text_00140000_h8.h"
@@ -200,12 +201,11 @@ void func_00147338(s32 arg0, s32 arg1) {
 
 /* func_001473a8 (from hand/text_00140000_h8.c). */
 W8S78 *func_00146bd0(s32, s32);
-void func_002675a8(void *, void *);
 void func_0011d1e0(s32, s32, void *, s32);
 W8S78 *func_001473a8(s32 a, s32 b, void *c) {
     W8S78 *e = func_00146bd0(a, b);
     if (e) {
-        func_002675a8(e->x10, c);
+        PlatVu0CopyVector(e->x10, c);
         func_0011d1e0(e->x8, e->f.w.x4, e->x10, 0);
     }
     return e;

@@ -6,6 +6,7 @@
  * opdma.c's func_001aaf88.  Both are called by the pppKeMdlTfd*Draw classes.
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) GV4;
@@ -13,9 +14,6 @@ extern u128 D_00372770[2];
 extern s8 D_00372790[];
 s8 *func_001aa950(s32);
 void func_001aa9d0(s32);
-void func_00267530(GV4 *, GV4 *, GV4 *);
-void func_002674b0(GV4 *, GV4 *, f32);
-void func_00267518(GV4 *, GV4 *, GV4 *);
 
 void func_001a9460(f32 t, u32 c0, u32 c1, u32 *dst) {
     GV4 a;
@@ -61,11 +59,11 @@ void func_001a9460(f32 t, u32 c0, u32 c1, u32 *dst) {
     a.y = ((u8 *)&c0)[1];
     a.z = ((u8 *)&c0)[2];
     a.w = ((u8 *)&c0)[3];
-    func_00267530(&a, &a, &b);
-    func_002674b0(&a, &a, f);
+    PlatVu0SubVector(&a, &a, &b);
+    PlatVu0DivVector(&a, &a, f);
     for (; i < n; i++) {
         *p = (u32)b.w << 24 | (u32)b.z << 16 | (u32)b.y << 8 | (u32)b.x;
-        func_00267518(&b, &b, &a);
+        PlatVu0AddVector(&b, &b, &a);
         p += tb[i & 0x1f];
     }
     func_001aa9d0(32);

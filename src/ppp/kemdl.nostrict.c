@@ -9,6 +9,7 @@
 
 /* pppKeMdlTfdDraw (from hand/nostrict/text_00190000_h63.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
@@ -373,7 +374,6 @@ typedef struct { u8 pad[0xB0]; u64 pad_b0; } DttPad;
 extern struct { u8 pad[0x90]; s16 *verts; } *D_00615E68;
 extern f32 D_00616040[4][4];
 extern s32 D_00616228;
-void func_00267560(f32 *, f32 *, f32);
 void *func_001aa950(s32);
 void func_001aa9d0(s32);
 void func_001aa750(u8 *, s32, s32, s32);
@@ -421,7 +421,7 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
     col[1] = w1->c[1];
     col[2] = w1->c[2];
     col[3] = w1->c[3];
-    func_00267560(col, col, 1.0f / 255.0f);
+    PlatVu0ScaleVector(col, col, 1.0f / 255.0f);
     mode = key->mode;
     w.mtx0 = D_00616040;
     w.mtx1 = w2;

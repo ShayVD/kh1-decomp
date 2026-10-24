@@ -7,6 +7,7 @@
  * kethdraw.nostrict.c's func_001a7718 on DMA channel 2 (pppKeThDraw).
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -107,13 +108,6 @@ Obj *func_001a8900(Pool *);
 void func_001a8780();  /* defined below with its own view (Bld8) */
 void func_001a9098(void *, void *);
 f32 func_001a9350(f32 *);
-void func_002672f8(f32 *, Mtx, f32 *);
-void func_002673b8(f32 *, f32 *);
-void func_002674f0(f32 *, f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
-void func_00267530(f32 *, f32 *, f32 *);
-void func_00267560(f32 *, f32 *, f32);
-void func_002675a8(f32 *, f32 *);
 
 void func_001a7c50(A7c50 *a) {
     Mtx m;
@@ -247,26 +241,26 @@ void func_001a7c50(A7c50 *a) {
     q.r0 = p->r0;
     q.dw = p->dw;
     q.k = p->k;
-    func_002675a8(tgt, p->pos);
+    PlatVu0CopyVector(tgt, p->pos);
     func_001a9098(dir, v->v20);
     dir[3] = 0.0f;
-    func_002675a8(cur, v->pos);
+    PlatVu0CopyVector(cur, v->pos);
     if ((fl & 0x120) == 0x100) {
-        func_00267530(d, tgt, cur);
+        PlatVu0SubVector(d, tgt, cur);
         q.dist = func_001a9350(d);
         q.w = q.w0;
         if (q.dist < q.r1) q.w = q.w0 + (q.dw - q.dw * (q.dist - q.r0) / (q.r1 - q.r0));
-        func_002673b8(d, d);
-        func_002674f0(dir, d, dir, q.w);
-        if (nrm) func_002673b8(dir, dir);
+        PlatVu0Normalize(d, d);
+        PlatVu0InterVector(dir, d, dir, q.w);
+        if (nrm) PlatVu0Normalize(dir, dir);
         r = func_001a8f30();
         D_00372750[r % 3](m, a, a->c->f28 * (f32)(r % 1001 - 500) / 500.0f);
-        func_002672f8(dir, m, dir);
-        func_002674f0(dir, dir, v->v20, a->c->f24);
-        if (nrm) func_002673b8(dir, dir);
+        PlatVu0ApplyMatrix(dir, m, dir);
+        PlatVu0InterVector(dir, dir, v->v20, a->c->f24);
+        if (nrm) PlatVu0Normalize(dir, dir);
     }
     for (;;) {
-        func_00267530(d, tgt, cur);
+        PlatVu0SubVector(d, tgt, cur);
         q.dist = func_001a9350(d);
         if ((q.k != 0.0f && p->r0 < q.dist) || (q.k == 0.0f && q.dist < p->r0)) {
             if (!p->next) {
@@ -287,7 +281,7 @@ void func_001a7c50(A7c50 *a) {
                 break;
             }
             p = p->next;
-            func_002675a8(tgt, p->pos);
+            PlatVu0CopyVector(tgt, p->pos);
             if (i == 0) o->path = p;
             q.r1 = p->r1;
             q.r0 = p->r0;
@@ -306,22 +300,22 @@ void func_001a7c50(A7c50 *a) {
         } else {
             v++;
         }
-        func_002675a8(sB0, cur);
+        PlatVu0CopyVector(sB0, cur);
         func_001a9098(sA0, dir);
-        func_00267560(sC0, dir, q.scl);
-        func_00267518(cur, cur, sC0);
+        PlatVu0ScaleVector(sC0, dir, q.scl);
+        PlatVu0AddVector(cur, cur, sC0);
         func_001a9098(v->pos, cur);
         q.w = q.w0;
         if (q.dist < q.r1) q.w = q.w0 + (q.dw - q.dw * (q.dist - q.r0) / (q.r1 - q.r0));
-        func_002673b8(d, d);
-        func_002674f0(dir, d, dir, q.w);
-        if (nrm) func_002673b8(dir, dir);
+        PlatVu0Normalize(d, d);
+        PlatVu0InterVector(dir, d, dir, q.w);
+        if (nrm) PlatVu0Normalize(dir, dir);
         r = func_001a8f30();
         D_00372750[r % 3](m, a, a->c->f28 * (f32)(r % 1001 - 500) / 500.0f);
-        func_002672f8(dir, m, dir);
+        PlatVu0ApplyMatrix(dir, m, dir);
         if (i <= rem) {
-                        func_002674f0(dir, dir, v->v20, a->c->f24);
-            if (nrm) func_002673b8(dir, dir);
+                        PlatVu0InterVector(dir, dir, v->v20, a->c->f24);
+            if (nrm) PlatVu0Normalize(dir, dir);
             f = (2.0f * ((f32)r / 2147483647.0f) + -1.0f) * a->c->f3c; f += prev->f1c;
             if (f > 1.0f) f = 1.0f;
             else if (f < 0.0f) f = 0.0f;
@@ -391,11 +385,8 @@ void func_001a7c50(A7c50 *a) {
 }
 
 /* Pointer tables only this file uses (phase 4, tools/shift/define_ptr_tables.py). */
-void func_002676c0();
-void func_00267768();
-void func_00267810();
 void (*D_00372750[0x4])(Mtx, A7c50 *, f32) ALIGNED(16) = {
-    (void *)func_00267768, (void *)func_00267810, (void *)func_002676c0, 0,
+    (void *)sceVu0RotMatrixX, (void *)sceVu0RotMatrixY, (void *)sceVu0RotMatrixZ, 0,
 };
 
 typedef struct { s32 w[4]; } Q4;
@@ -440,7 +431,6 @@ void func_001a8780(Bld8 *b) {
 
 
 typedef f32 Mtx4[4][4];
-void sceVu0UnitMatrix(f32 (*)[4]);
 typedef struct { u8 a[0x20]; u8 b[0x10]; } NdSlot;
 typedef struct Nd {
     struct Nd *next;
@@ -467,7 +457,7 @@ void func_001a8ae8(NdArg *a) {
         fl = 0x20;
         h->fl &= ~2;
     }
-    sceVu0UnitMatrix(c.m);
+    PlatVu0UnitMatrix(c.m);
     c.x4 = a->x4;
     c.pool = a->pool;
     c.x8 = a->x8;

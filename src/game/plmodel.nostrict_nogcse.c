@@ -3,6 +3,7 @@
  * the controlled character (D_00304BE8->x48e[3]) for the object with r's
  * id, or calls cb at once when it already is that one. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/bss_0066_typed.h"
 #include "data/pieces/D_00304BE8_s.h"
 
@@ -21,7 +22,6 @@ Ent *func_0013daf8(u8);
 void func_00141218(Ent *);
 s32 func_001560f8(s32, void *);
 s32 func_001571a8(u16, s32);
-void func_002675a8(V4f *, V4f *);
 void func_0024ef88(void);
 /* plmodel.c */
 void func_0024f070(void);
@@ -31,7 +31,7 @@ void func_0024f098(Req *r, void (*cb)(void)) {
         Ent *e = func_0013daf8(D_00304BE8->x48e[3]);
         Obj **pp;
         s8 v;
-        func_002675a8(&D_0066AA90, &e->pos);
+        PlatVu0CopyVector(&D_0066AA90, &e->pos);
         D_0066AA90.w = e->x3c;
         v = e->info->x55;
         func_00141218(e);

@@ -3,6 +3,7 @@
  * effect at each point of a list in turn.  Read from the code, not proved
  * by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "ppp.h"
 
 /* func_0018e348 (from hand/nostrict_nofill/text_s7_w3.c). */
@@ -36,9 +37,6 @@ typedef struct {
     f32 f8;
 } BornWork;
 void func_001a9098(u8 *, u8 *);
-void func_002675a8(V4 *, u8 *);
-void func_00267530(V4 *, u8 *, V4 *);
-void func_00267560(V4 *, V4 *, f32);
 void func_001a9110(u8 *, V4 *, V4 *);
 /* func_0018e348 (session 7, w3): the slot spawn is written out twice with shared locals (an inline helper gave the first result a0 instead of a2). */
 void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
@@ -64,8 +62,8 @@ void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
     if (w->p == 0) {
         w->f8 = 1.0f / (f32) (key->n + 1);
     } else {
-        func_002675a8(&a, w->p);
-        func_00267530(&b, d, &a);
+        PlatVu0CopyVector(&a, w->p);
+        PlatVu0SubVector(&b, d, &a);
         t = (f32) key->n;
         s = w->f8;
         while (0.0f < t) {
@@ -80,7 +78,7 @@ void func_0018e348(void *obj, BornKey *key, PppEntry *e) {
                 }
             }
             d2 = inst + key->off + 0xA0;
-            func_00267560(&c, &b, s * t);
+            PlatVu0ScaleVector(&c, &b, s * t);
             t -= 1.0f;
             func_001a9110(d2, &a, &c);
         }

@@ -16,6 +16,7 @@
  * Each section names the file its code came from.  Read from the code, not
  * proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -539,11 +540,10 @@ void func_00181280(s32 arg0, void *arg1) {
 
 /* func_001812d0 (from auto/text_00180000_5.c). */
 M2C_UNK func_0024edf0(void *, s32);
-M2C_UNK func_00267328(void *, M2C_UNK *, M2C_UNK *);
 extern M2C_UNK D_00615E70;
 void func_001812d0(void *arg0) {
     s32 sp[16];
-    func_00267328(sp, (M2C_UNK *)&D_002BBFA0, &D_00615E70);
+    PlatVu0MulMatrix(sp, (M2C_UNK *)&D_002BBFA0, &D_00615E70);
     func_0024edf0(sp, M2C_FIELD(arg0, s32 *, 0x8C));
 }
 
@@ -833,13 +833,10 @@ f32 D_00615FB0 ALIGNED(16);
 extern H39Mtx D_00616040;
 extern H39Mtx D_00616180;
 extern f32 D_002E27A0;
-void sceVu0CopyMatrix(H39Mtx *, H39Mtx *);
-void sceVu0MulMatrix(H39Mtx *, H39Mtx *, H39Mtx *);
-void func_00267440(H39Mtx *, H39Mtx *);
 void func_00182148(H39Mtx *view, H39Mtx *world, u128 *eye, u128 *at) {
     H39Mtx unused; /* only takes stack space */
 
-    sceVu0CopyMatrix(&D_00615EF0, &D_00615EB0);
+    PlatVu0CopyMatrix(&D_00615EF0, &D_00615EB0);
     D_00615EB0.r[0] = view->r[0];
     D_00615EB0.r[1] = view->r[1];
     D_00615EB0.r[2] = view->r[2];
@@ -853,8 +850,8 @@ void func_00182148(H39Mtx *view, H39Mtx *world, u128 *eye, u128 *at) {
     D_00615F70 = *eye;
     D_00615F80 = *at;
     D_00615FB0 = D_002E27A0;
-    func_00267440(&D_00615F30, &D_00615EB0);
-    sceVu0MulMatrix(&D_00616180, &D_00616040, &D_00615EB0);
+    PlatVu0InversMatrix(&D_00615F30, &D_00615EB0);
+    PlatVu0MulMatrix(&D_00616180, &D_00616040, &D_00615EB0);
 }
 
 /* func_00182270 (from hand/text_00170000_s6_10.c). */
@@ -1257,8 +1254,8 @@ void func_00183be0(M2C_UNK *arg0, void *arg1) {
     s32 sp[64];
     func_001a51d0(sp, M2C_FIELD(arg1, s32 *, 8));
     func_001a5150(&M2C_FIELD(sp, M2C_UNK *, 0x40), M2C_FIELD(arg1, s32 *, 4));
-    func_00267328(&M2C_FIELD(sp, M2C_UNK *, 0x80), sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
+    PlatVu0MulMatrix(&M2C_FIELD(sp, M2C_UNK *, 0x80), sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
     func_001a50d0(&M2C_FIELD(sp, M2C_UNK *, 0xC0), M2C_FIELD(arg1, s32 *, 0));
-    func_00267328(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x80), &M2C_FIELD(sp, M2C_UNK *, 0xC0));
+    PlatVu0MulMatrix(arg0, &M2C_FIELD(sp, M2C_UNK *, 0x80), &M2C_FIELD(sp, M2C_UNK *, 0xC0));
 }
 

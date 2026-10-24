@@ -3,9 +3,9 @@
  * col >> 7, position x, y, the flags fl) and hands it to opdma.c's
  * func_001aaf88.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 
 typedef f32 Mtx4[4][4];
-void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 typedef struct { u32 flags; u8 pad04[0x12]; u16 h16; } DMdl;
 typedef struct { u8 pad[0x14]; void *x14; u8 pad18[4]; DMdl *mdl; s32 x20; } Ent24;
 typedef struct { u8 pad[0x10]; Mtx4 m; Mtx4 m2; u8 *x90; s32 x94; } PppMtxOwner;
@@ -73,7 +73,7 @@ void func_001a9790(s32 id, u16 *col, s32 h, s32 x, s32 y, u8 fl, void *p) {
     if (fl & 0x10) {
         c.flags |= 0x2000;
         c.p30 = m;
-        sceVu0MulMatrix(m, D_00615FC0, D_00615E68->m);
+        PlatVu0MulMatrix(m, D_00615FC0, D_00615E68->m);
     }
     c.p44 = (fl & 0x20) ? p : 0;
     c.h08 = md->h16;

@@ -10,6 +10,7 @@
 
 /* pppKeLnsLpDraw (from hand/nostrict/text_00180000_h40.c). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "ppp.h"
@@ -37,7 +38,6 @@ typedef struct {
 extern PppMtxOwner *D_00615E68;
 void func_001a9098(void *, f32 *);
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-void func_002672f8(PppVec4, f32 *, PppVec4);
 typedef struct {
     s32 frame;
     f32 b, a;   /* +0x4 */
@@ -78,7 +78,7 @@ void pppKeLnsLpDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
     if (w->d) {
         *(u128 *) v = 0;
         v[3] = v[2] = 1.0f;
-        func_002672f8(v, D_00615E68->m[0], v);
+        PlatVu0ApplyMatrix(v, D_00615E68->m[0], v);
         func_001a9098(w->v, v);
     }
     w->pos[0] = D_00615E68->m[3][0];
@@ -281,7 +281,6 @@ typedef struct {
     u8 bC0, bC1;
 } FlareObj;
 typedef struct { u8 b[0x70]; } __attribute__((aligned(16))) GsStoreImage;
-void func_002675e0(s32 *, f32 *);
 u8 *func_001aa950(s32);
 void func_001aa9d0(s32);
 /* func_00192958: MATCHED (session 18, s18m2), hand/nostrict. From s10 w11's 17w draft (nonmatchings/session10/w11__00192958_17w.c). FLAGGED: five local register variables (plain C, no inline asm): the scissor and xyoffset TI header constants pinned to a1/a3 (`register u128_92958 ks asm("$5")`, `kx asm("$7")`; without them local-alloc gives zbuf/xy/scissor birth order on a live-length tie, 17w), and the scy0 chain split as e (a1, the raw field), t (a3, the s32 truncate) and u (a1, t << 4), so the truncate is untied from its source as in the original and the o->pos argument move issues after the addu. b[] in order b0, b1, b2, b3 (exhaustive order search). Each pin is needed: without e 7w, without kx 12w, `u + oy` 1w. Unlike s18m1's 001f2630 f4 pin, these pinned computed values are not dissolved: a truncate and a shift into a hard register survive cse. */
@@ -341,7 +340,7 @@ void func_00192958(FlareObj *o, s32 a1, s32 frame) {
     b[1] = oy + u;
     b[2] = ox + (((s32) sc->scx1 + 1) << 4);
     b[3] = oy + (((s32) sc->scy1 + 1) << 4);
-    func_002675e0(v, o->pos);
+    PlatVu0FTOI4Vector(v, o->pos);
     sx = o->bC0;
     sy = o->bC1;
     r[0] = v[0] - sx * 8;
@@ -387,7 +386,6 @@ void func_00192958(FlareObj *o, s32 a1, s32 frame) {
 }
 
 /* pppKeLnsLpTDraw (from hand/nostrict/text_00180000_h40.c). */
-void func_00267560(f32 *, PppVec4, f32);
 void pppKeLnsLpTDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
     PppVec4 v;
     PppLnsWork *w;
@@ -405,8 +403,8 @@ void pppKeLnsLpTDraw(PppObject *obj, PppLnsKey *key, PppEntry *e) {
     v[0] = 0.0f;
     v[1] = 0.0f;
     v[2] = 0.0f;
-    func_002672f8(v, D_00615E68->m2[0], v);
-    func_00267560((f32 *) ((u8 *) w + 0xB0), v, one / v[3]);
+    PlatVu0ApplyMatrix(v, D_00615E68->m2[0], v);
+    PlatVu0ScaleVector((f32 *) ((u8 *) w + 0xB0), v, one / v[3]);
     func_00192958(w, 0, 0);
 }
 
@@ -415,7 +413,6 @@ typedef struct {
     s32 unk00, unk04, unk08;
     s32 frame; /* +0x0C */
 } PppObject_92fc8;
-void func_002675a8(PppVec4, f32 *);
 typedef struct {
     s32 frame;
     s32 unk4;
@@ -439,7 +436,7 @@ void pppKeLnsArndTDraw(PppObject_92fc8 *obj, PppLnsKey_92fc8 *key, PppEntry *e) 
     w->col[1] = key->col[1] * D_00615E60->col[1];
     w->col[2] = key->col[2] * D_00615E60->col[2];
     w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
+    PlatVu0CopyVector(w->v, (f32 *) D_003701F0);
     func_00192f78(w, 0, 0);
 }
 
@@ -496,7 +493,7 @@ void pppKeLnsClmTDraw(PppObject_93200 *obj, PppLnsClmKey *key, PppEntry *e) {
     w->col[1] = key->col[1] * D_00615E60->col[1];
     w->col[2] = key->col[2] * D_00615E60->col[2];
     w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
+    PlatVu0CopyVector(w->v, (f32 *) D_003701F0);
     func_001931a8(w, 0, 0);
 }
 #undef func_001931a8
@@ -527,7 +524,7 @@ void pppKeLnsCrnTDraw(PppObject_934c0 *obj, PppLnsClmKey *key, PppEntry *e) {
     w->col[1] = key->col[1] * D_00615E60->col[1];
     w->col[2] = key->col[2] * D_00615E60->col[2];
     w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
+    PlatVu0CopyVector(w->v, (f32 *) D_003701F0);
     func_00193408(w, 0, 0);
 }
 
@@ -558,7 +555,7 @@ void pppKeLnsFlsTDraw(PppObject_93748 *obj, PppLnsClmKey *key, PppEntry *e) {
     w->col[1] = key->col[1] * D_00615E60->col[1];
     w->col[2] = key->col[2] * D_00615E60->col[2];
     w->col[3] = key->col[3] * D_00615E60->col[3];
-    func_002675a8(w->v, (f32 *) D_003701F0);
+    PlatVu0CopyVector(w->v, (f32 *) D_003701F0);
     func_001936c0(w, 0, 0);
 }
 
