@@ -31,18 +31,10 @@
 #include "data/pieces/D_003DD230.h"
 #include "data/pieces/D_003DD258.h"
 #include "data/pieces/D_003DD28C.h"
+#include "list/listmenu.h"
 
 /* A choice list (func_0010f558): fn gets the index picked. */
 typedef struct { s32 a; s32 n; void (*fn)(); s32 d; } ListCb;
-/* The list menu D_003DC498 (func_002329a0): n entries, their text, the
- * title, and four GS words.  0x684 bytes, as the other files declare it. */
-typedef struct {
-    s32 n;
-    char str[50][32];
-    char last[32];          /* 0x644: the title */
-    s32 a, b, c, d;         /* 0x664 */
-    u8 pad674[0x10];
-} ListMenu;
 
 extern VmMgr D_00389C90;
 extern volatile s32 D_002C5958;

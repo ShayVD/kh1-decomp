@@ -8,16 +8,6 @@ typedef struct { s32 pad[2]; s32 x; s32 y; } G4A20;
 extern s32 D_00440994;
 extern G4A20 D_00454A20;
 
-f32 func_00236970(u32 *arg0) {
-    *arg0 = (u64)*arg0 * 0x41C64E6D + 12345;
-    return (f32)*arg0 * 2.3283064365386963e-10f;
-}
-
-f32 func_002369e8(u32 arg0) {
-    arg0 = (u64)arg0 * 0x41C64E6D + 12345;
-    return (f32)arg0 * 2.3283064365386963e-10f;
-}
-
 s32 func_00236e40(u32 *p) {
     if (p[2] > 0xFFFF28) return 1;
     if (p[0] > 0xFFFF) return 1;

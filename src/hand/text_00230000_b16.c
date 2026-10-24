@@ -123,86 +123,6 @@ void func_002476a0(Clk *o) {
 
 /* needs make: uses rodata */
 
-s32 func_00270f00(s32, s32, s32, s32);
-void func_00271070(s32);
-s32 func_002713b0(s32, s32, s32);
-s32 func_002715a0(s32, s32, s32 *);
-extern s32 D_00425C10;
-extern s32 D_00425C14;
-extern s32 D_00647FB0;
-extern s32 D_00647FB4;
-extern s32 D_00647FC4;
-extern s32 D_00647FC8;
-extern s32 D_00647FD4;
-extern s32 D_00647FD8;
-extern s32 D_00648014;
-extern s32 D_00648020;
-extern s32 D_00648028;
-extern s32 D_0064802C;
-extern s32 D_00648030;
-extern void (*D_00648034)(s32);
-
-void func_00236190(void) {
-
-    switch (D_00647FB4) {
-    case 0:
-        func_00270f00(D_00425C10, D_00425C14, D_00648020, 2);
-        D_00647FB4++;
-        break;
-    case 1:
-        if (func_002715a0(1, 0, &D_00647FC8)) D_00647FB4++;
-        break;
-    case 2: {
-        s32 v = D_00647FC8;
-        if (v >= 0) {
-            D_00648030 = v;
-            D_00647FB4++;
-            break;
-        }
-        if (v == -2) D_00648014 = 1;
-        else if (v == -3) D_00648014 = 2;
-        else if (v == -4) D_00648014 = 3;
-        else if (v == -5) D_00648014 = 4;
-        else if (v == -7) D_00648014 = 5;
-        else D_00648014 = 7;
-        goto common; }
-    case 3:
-        func_002713b0(D_00648030, D_00648028, D_0064802C);
-        D_00647FB4++;
-        break;
-    case 4:
-        if (func_002715a0(1, 0, &D_00647FC8)) D_00647FB4++;
-        break;
-    case 5: {
-        s32 v = D_00647FC8;
-        if (v >= 0) {
-            if (v == D_0064802C) D_00648014 = 0;
-            else D_00648014 = 6;
-        } else {
-            if (v == -2) D_00648014 = 1;
-            else if (v == -3) D_00648014 = 2;
-            else if (v == -4) D_00648014 = 5;
-            else if (v == -5) D_00648014 = 4;
-            else if (v == -8) D_00648014 = 6;
-            else D_00648014 = 7;
-        }
-        D_00647FB4++;
-        break; }
-    case 6:
-        func_00271070(D_00648030);
-        D_00647FB4++;
-        break;
-    case 7:
-        if (func_002715a0(1, 0, &D_00647FC8)) {
-        common:
-            D_00647FB0 = 0;
-            D_00647FD8 = D_00647FD4;
-            if (D_00648034) D_00648034(D_00647FC4);
-        }
-        break;
-    }
-}
-
 typedef struct { u8 pad[8]; s32 on; s32 mode; s32 a; s32 b; } Sc;
 #include "data/pieces/D_00467408.h"
 int sprintf(char *, const char *, ...);
@@ -258,5 +178,3 @@ void func_00247cf8(Sc *p) {
         break;
     }
 }
-#include "data/pieces/D_00425C10.h"
-#include "data/pieces/D_00425C14.h"

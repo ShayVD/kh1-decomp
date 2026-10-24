@@ -1,20 +1,6 @@
 #include "common.h"
 #include "data/bss_0065.h"
 
-extern s32 D_00648038[];
-
-s32 func_002366d8(s32 i, s32 n) {
-    s32 v = ((s64)D_00648038[i] * 0x41C64E6D + 12345) & 0x7FFFFFFF;
-    D_00648038[i] = v;
-    return ((v / 65536) * n + ((s64)(v & 0xFFFF) * n) / 65536) / 32768;
-}
-
-s32 func_002367f8(s32 *p, s32 n) {
-    s32 v = ((s64)*p * 0x41C64E6D + 12345) & 0x7FFFFFFF;
-    *p = v;
-    return ((v / 65536) * n + ((s64)(v & 0xFFFF) * n) / 65536) / 32768;
-}
-
 typedef int u128 __attribute__((mode(TI)));
 s32 func_00266c08(s32);
 void func_00266f38(s32, u32);
@@ -43,7 +29,6 @@ void func_00237018(u128 *p, s32 n, s32 wait) {
     }
 }
 
-
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 void func_002672f8(V4 *, void *, V4 *);
 void func_002674d0(V4 *, V4 *, f32);
@@ -59,7 +44,6 @@ void func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
     func_002674d0(&v[2], &v[2], v[2].w);
     func_00267ef0(&v[0], &v[1], &v[2]);
 }
-
 
 typedef struct { s32 x, y, z, w; } I4;
 

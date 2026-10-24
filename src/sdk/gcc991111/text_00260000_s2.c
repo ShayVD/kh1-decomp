@@ -6,7 +6,7 @@ s32 sceCdSearchFile(void *, const char *, s32);
 s32 func_0025fd10(s32);
 s64 func_00272c38(const char *, char **, s32);
 s32 func_00260a20(s32);
-s32 func_00270f00(s32 a, s32 b, const char *name, s32 d);
+s32 sceMcOpen(s32 a, s32 b, const char *name, s32 d);
 s32 func_00260458(s32, s32, s32, s32, s32, s32, s32);
 char *strcpy(char *, const char *);
 s32 GetMemorySize(void);
@@ -177,7 +177,7 @@ typedef struct { u64 tag[10]; u64 tag2; } GsLoadImage;
 void exit(s32);
 s32 sceSifInitRpc(s32);
 s32 sceSifBindRpc(void *, u32, s32);
-s32 func_002715a0(s32 mode, s32 *cmd, s32 *result);
+s32 sceMcSync(s32 mode, s32 *cmd, s32 *result);
 s32 sceDbcSetWorkAddr(s32 addr);
 s32 func_0026a070(s32);
 void func_00269830(void);
@@ -1174,7 +1174,7 @@ s32 sceMcInit(void) {
         p.option = 0;
         D_0046E094 = CreateSema(&p);
     }
-    func_002715a0(0, 0, 0);
+    sceMcSync(0, 0, 0);
     WaitSema(D_0046E094);
     sceSifInitRpc(0);
     while (1) {
@@ -1219,7 +1219,7 @@ s32 func_00270d88(s32 a) {
     return r;
 }
 
-s32 func_00270e40(s32 a) {
+s32 sceMcGetSlotMax(s32 a) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1236,7 +1236,7 @@ s32 func_00270e40(s32 a) {
     return D_00674BC0[0];
 }
 
-s32 func_00270f00(s32 a, s32 b, const char *name, s32 d) {
+s32 sceMcOpen(s32 a, s32 b, const char *name, s32 d) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1258,13 +1258,13 @@ s32 func_00270f00(s32 a, s32 b, const char *name, s32 d) {
     return r;
 }
 
-s32 func_00271038(s32 a, s32 b, const char *c) {
-    s32 r = func_00270f00(a, b, c, 64);
+s32 sceMcMkdir(s32 a, s32 b, const char *c) {
+    s32 r = sceMcOpen(a, b, c, 64);
     if (r == 0) D_0046E090 = 11;
     return r;
 }
 
-s32 func_00271070(s32 a) {
+s32 sceMcClose(s32 a) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1308,7 +1308,7 @@ void func_00271200(u32 a) {
     }
 }
 
-s32 func_00271290(s32 a, void *buf, s32 size) {
+s32 sceMcRead(s32 a, void *buf, s32 size) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1327,7 +1327,7 @@ s32 func_00271290(s32 a, void *buf, s32 size) {
     return r;
 }
 
-s32 func_002713b0(s32 a, u8 *buf, s32 size) {
+s32 sceMcWrite(s32 a, u8 *buf, s32 size) {
     s32 r;
     u32 i;
     s32 n;
@@ -1364,7 +1364,7 @@ s32 func_00271530(s32 a, s32 b, s32 sema) {
     __asm__ volatile("sync.l; ei");
 }
 
-s32 func_002715a0(s32 mode, s32 *cmd, s32 *result) {
+s32 sceMcSync(s32 mode, s32 *cmd, s32 *result) {
     s32 r;
     if (D_0046E090 == 0) return -1;
     r = func_0025a750(&D_00673600);
@@ -1389,7 +1389,7 @@ void func_00271680(u32 a) {
     if (D_00673630) *D_00673630 = p[36];
 }
 
-s32 func_002716d8(s32 a, s32 b, s32 *c, s32 *d, s32 *e) {
+s32 sceMcGetInfo(s32 a, s32 b, s32 *c, s32 *d, s32 *e) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1424,7 +1424,7 @@ s32 func_00271860(void) {
     return D_00674BC0[0];
 }
 
-s32 func_002718d0(s32 a, s32 b, const char *name, s32 d, s32 n, void *buf) {
+s32 sceMcGetDir(s32 a, s32 b, const char *name, s32 d, s32 n, void *buf) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1459,7 +1459,7 @@ void func_00271a28(char *dst) {
     dst[n] = 0;
 }
 
-s32 func_00271ab0(s32 a, s32 b, const char *name, void *d) {
+s32 sceMcChdir(s32 a, s32 b, const char *name, void *d) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1482,7 +1482,7 @@ s32 func_00271ab0(s32 a, s32 b, const char *name, void *d) {
     return r;
 }
 
-s32 func_00271c00(s32 a, s32 b) {
+s32 sceMcFormat(s32 a, s32 b) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1497,7 +1497,7 @@ s32 func_00271c00(s32 a, s32 b) {
     return r;
 }
 
-s32 func_00271cc8(s32 a, s32 b, const char *name) {
+s32 sceMcDelete(s32 a, s32 b, const char *name) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1559,7 +1559,7 @@ s32 func_00271ea8(s32 a, s32 b, const char *name, Blk64 *d, s32 e) {
     return r;
 }
 
-s32 func_00272080(s32 a, s32 b, const char *name, const char *name2) {
+s32 sceMcRename(s32 a, s32 b, const char *name, const char *name2) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {
@@ -1585,7 +1585,7 @@ s32 func_00272080(s32 a, s32 b, const char *name, const char *name2) {
     return r;
 }
 
-s32 func_002721e8(s32 a, s32 b) {
+s32 sceMcUnformat(s32 a, s32 b) {
     s32 r;
     if (PollSema(D_0046E094) < 0) return -200;
     if (D_00673600.server == 0) {

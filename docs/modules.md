@@ -1342,6 +1342,77 @@ and new files, and the m12 float build with float_covered.txt,
 float_reach.txt, the loaded bytes and the symbols the same as the base.  At
 the end `make report` 6979 at 100% and `make test` passes.
 
+## Session 44: the list menu, the save files, the pad's stand-ins, the memory card queue, random numbers, 0x002327b0-0x00236a58
+
+Session 44 moved 89 functions in six commits (plus one that names libmc).  No
+Mac: static checks only.  From 0x00232de0 on the code is the save system's
+own: the save files' names and head, the card check, then the memory card
+request queue the save and load screens use, which is the first platform
+wrapper candidate of the module plan (docs/portability.md rule 2).
+
+| module | files | range | functions |
+|---|---|---|---|
+| the list menu: opener func_002329a0(menu, on_cursor, on_choice) (D_003F7EC4, task func_00232960, the window D_003F7EA0 sized from the menu's corners), the list func_002327b0, the close func_00232aa8, an empty func_00232ac8 (gamedata.c calls it); src/list/list.c fills D_003DC498 (ListMenu, now in include/list/listmenu.h) | src/list/listmenu.c | 0x002327b0-0x00232ad0 | 5 |
+| the save image's seven blocks in D_003F8380 (0x16c00 bytes: 0xc00, 0x1000, 0x400, 0x400, 0x14000, 0x400, 0x400): clear one or all func_00232ad0, get one func_00232cc0, copy to and from the backup D_0040EF80 func_00232d60 / func_00232da0 | src/game/saveimage.c | 0x00232ad0-0x00232de0 | 4 |
+| the save files: the names "BISLPS-25198-NN" and its system.bin, icon.sys, mc_icon.bin, mc_copy.bin, mc_del.bin with NN written in (func_00232f88 ... func_00233118), the head D_00425B80 (magic "KHSQ" 0x5153484B / 0x01317F14, level, munny, play time, name; func_00232de0 / func_00232e08 also the icon title D_003F7ED0), the card check task func_00233168 over both ports (D_003F8370[port]: 0 a save, 1 room for one, 2 no room, 3 not formatted, 4 no card) | src/save/savefile.c | 0x00232de0-0x002335d8 | 11 |
+| an overlay run in place: "xs_dh_break.x" (D_00425BC0[i]) loaded to 0x00F20000 and called; no C caller | src/game/xsload.c | 0x002335d8-0x00233610 | 1 |
+| the pad's stand-ins: D_00425BC8 points at the real pad D_002C5AD0 or at D_00647710, which func_002336f8 fills each frame from a recording (func_00233650), a replay (func_00233680) or a script of (button, frames) pairs (func_002336b0); D_006477A4 counts idle frames (most likely the title's demo timer) | src/pad/padrec.c | 0x00233610-0x00233a80 | 10 |
+| the memory card request queue: sceMcInit and the reset (func_00233a80 / func_00233ac8), the waits func_00233d08 / func_00233db0, the card-changed flags, the automatic card-info poll, the 13 request kinds queued into D_006477B0[64] (func_00234018 ... func_002347e0) and their answer codes (func_00234840 ... func_00234900) | src/memcard/mcqueue.c | 0x00233a80-0x00234910 | 31 |
+| the steps: func_002365e0 runs D_00425BD0[kind] (now defined here as function pointers), func_00234910 takes the next request, one step function per kind calls libmc through include/platform/mc.h and maps its answer | src/memcard/mcstep.c | 0x00234910-0x00236618 | 15 |
+| random numbers: five LCG seeds D_00648038 (x * 0x41C64E6D + 12345; textwin.c's window styles use seed 4), five float seeds D_00648050, and two float generators on a caller's seed (journal_s3.nofill.c) | src/util/rand.c (8), rand.nostrict_nofill.c (2), rand.nofill.c (2) | 0x00236618-0x00236a58 | 12 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x002327b0-0x00232ad0 | f80d40f | include/data/types/text_00220000_h48.h (Win is ListMenuDesc in listmenu.h) |
+| 0x00232ad0-0x00232de0 | f2bae36 | (nothing) |
+| 0x00232de0-0x002335d8 | 2e1c68c | s8_w7, s8_w8, auto text_00230000_9 |
+| 0x002335d8-0x00233a80 | a6e8514 | c2 |
+| 0x00233a80-0x00236618 | f4ad322 | h48, s6_23, sw, b15 |
+| libmc names, include/platform/mc.h | 36e0845 | (nothing) |
+| 0x00236618-0x00236a58 | d6fab88 | auto text_00230000_4 |
+
+objdiff units 772 -> 773.  The names come from what the code reads; none is proved by a boot.  The
+save file names are the strings at D_003F8298 ... D_003F8350 and the
+overlay's at D_00491390.  **libmc is named** (functions.tsv, docs/sdk.md
+"Session 44") from each function's mcserv RPC number and arguments.
+
+**Types.**  ListMenu (include/list/listmenu.h) is list.c's type with its
+corners `u32` (func_002329a0 shifts them unsigned; list.c only stores
+constants).  McCmd (include/memcard/mcreq.h) is the queue entry both views
+agreed on (`id` / `x4`).  The memory card globals keep `s32` except
+D_00648020 / D_00648024 (`char *`, names) and D_00648028 (`void *`), cast
+where the dispatcher copies them out of McCmd.a[].
+
+**Data moved with its users**: D_006477A0 (b15) into padrec.c, D_00425BD0
+(the step table, auto text_00230000_11) into mcstep.c, **D_003F71C8 (h48's
+pointer table of the load screen's five windows) into src/menu/loadframe.c**:
+h48 had no load-screen function left; the first build after removing h48
+would have lost it (grep for definitions before deleting, as in session 43).
+
+**Traps.**
+- **A pointer type moves an address into a saved register**: listmenu.c
+  keeps `extern void *D_0064770C`; as `TextWin *` func_002329a0 computes
+  &D_0064770C into s1 before the call to func_001f31a8 (40 words).
+- **An old-style declaration of sceMcInit**: mcqueue.c's func_00233a80
+  matches with `int sceMcInit(void)` / `s32 sceMcInit()` but not with `void
+  sceMcInit()` (v0/v1 swap in the clear loop).
+- **An implicit declaration on purpose** (as sw.c had): func_00265b28 stays
+  undeclared in mcqueue.c; a prototype changes func_00233db0 by 2 words.
+- The six step functions that `return` libmc's first answer stay `s32`
+  (a `void` changes the code); the table casts them (`Step`).
+- mod.py leaves multi-name `extern` lines and duplicate prototypes behind:
+  h73 kept a block of memory card declarations nothing used (removed by
+  hand).
+- `checkfile.py -v` shows only relocations for the moved functions that
+  still FAIL there (jump tables, strings, data defined in the same file).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings in the edited
+and new files, and the m12 float build with float_covered.txt (as a set),
+float_reach.txt and the loaded bytes the same as the base; the symbols the
+same except, from the libmc commit on, the 14 renamed libmc functions (same
+addresses).  At the end `make report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1438,7 +1509,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 43, after each step)
+## Verification (sessions 30 to 44, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1454,20 +1525,18 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x002327b0 on.**  The menus up to the synthesis menu are done (session
-  43).  Next: func_002327b0 (s6_23, a list on D_006476F8 ...) with its
-  opener func_002329a0 (h48, D_003F7EC4, task func_00232960) and
-  func_00232aa8 / func_00232ac8; then func_00232ad0 ... func_00232da0 (h73,
-  h25: clear D_003F8380 (the 0x16c00-byte buffer the load screen reads a
-  save into) or one of its parts D_003F8F80 ... D_0040EF80 by number,
-  most likely the save data's image) and on from 0x00232de0 (the memory
-  card requests func_00233d08 ... func_002348d0 the save and load windows
-  call: a memcard wrapper candidate, docs/portability.md).  Old files there:
-  s6_23, h25, h48, h73, b15, c2, s8_w7, s8_w8, sw, auto text_00230000*;
-  `python3 -I tools/shift/s37move/refs.py 002327b0 00236000` lists them.
-  Split by the openers (a func_0011ef10 call) as in session 43.
-- What is left of s6_23, h25, h48, h73 and b15 after that (s6_22, c16,
-  h72, h24, h47, h71, c15, cc are gone).
+- **0x00236a58 on.**  Done up to the random numbers (session 44).  Next:
+  the menu models' camera func_00236a58 (h73, the camera D_00425F70 that
+  src/menu/journalmdl.c steps; VU0 matrix calls and atan2f, float-sensitive)
+  with func_00236c68 ... func_00236de8 (auto text_00230000_6 / 7 / 8: matrix
+  builders from three angles) and the range checks func_00236e40 /
+  func_00236e80 (h25 nofill); then func_00236f00 / func_00236f18 (a table of
+  overlay entry points?) and from 0x00237018 the GS packet senders (h48 / h73
+  nostrict_nofill, FlushCache / sceGsSyncPath: include/platform/gs.h
+  candidates).  `python3 -I tools/shift/s37move/refs.py 00236a58 00238000`
+  lists them.
+- What is left of h25, h73 and b16 (s6_23, h48, b15, s6_22, c16, h72,
+  h24, h47, h71, c15, cc are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
   the old files (bodies plus every declaration they use, views side by side)

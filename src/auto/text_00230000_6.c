@@ -6,7 +6,6 @@ M2C_UNK FlushCache(M2C_UNK);
 M2C_UNK func_0011d768(M2C_UNK);
 M2C_UNK func_0011d7c0(M2C_UNK);
 M2C_UNK func_00141348(s32 *, void *);
-M2C_UNK func_001f3840(s32);
 M2C_UNK func_00237018(M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_002370c8(M2C_UNK *);
 M2C_UNK func_00238a70();
@@ -24,18 +23,9 @@ M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 #include "data/pieces/D_00425CE0.h"
 extern M2C_UNK D_006480D0; /* src/data/bss_0064.c: u64 D_006480D0[0x2c] */
 extern M2C_UNK D_00648230; /* src/data/bss_0064.c: Slot32 D_00648230[0xc] */
-extern s32 D_0064770C; /* src/data/bss_0064.c: void *D_0064770C */
 extern s32 D_00651E50[];
 f32 func_0011d790(M2C_UNK, s32);
 s32 func_00122ff8(s32);
-
-void func_00232aa8(void) {
-    func_001f3840(D_0064770C);
-}
-
-void func_00232ac8(void) {
-
-}
 
 void func_00236c68(s32 arg0, s32 arg1, s32 arg2, s32 arg3, void *arg4) {
     s32 sp[28];
