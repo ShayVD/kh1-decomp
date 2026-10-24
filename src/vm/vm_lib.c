@@ -13,6 +13,7 @@
  * (src/camera/, 32), the message windows (src/msgwin/, 30) and 154 functions
  * after 0x001dcad0 (0x001ddc78-0x001ec678). */
 #include "common.h"
+#include "platform/vu.h"
 #include "save/save1.h"
 #include "vm/vm_obj.h"
 #include "data/types/vm_rec.h"
@@ -1575,15 +1576,9 @@ void func_001e1418(s32, s32);
 void func_001e1438(s32, s32);
 void func_00131c28(struct VmObj *, f32);
 void func_001e9fe8(f32 *, f32 *);
-void sceVu0UnitMatrix(f32 (*)[4]);
-void func_00267768(f32 (*)[4], f32 (*)[4], f32);
-void func_00267810(f32 (*)[4], f32 (*)[4], f32);
-void func_002672f8(V4 *, f32 (*)[4], V4 *);
 void func_001315c0(struct VmObj *, s32, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
 void func_0014f9b0(struct VmObj *, void *, f32);
 void func_0014fa38(struct VmObj *, f32);
-void func_002673b8(f32 *, f32 *);
 void func_00111d90(s32);
 void func_00111ef0(s32, void (*)(void));
 void func_00111f58(void);
@@ -1740,12 +1735,12 @@ s32 func_001d2958(VmRec *vm) {
         rot[1] = vm->stk[vm->sp - 1] * 3.1415928f / 180.0f + vm->obj->f3c;
         rot[2] = 0.0f;
         func_001e9fe8(out, rot);
-        sceVu0UnitMatrix(m);
-        func_00267768(m, m, out[0]);
-        func_00267810(m, m, out[1]);
-        func_002672f8(&v, m, &v);
+        PlatVu0UnitMatrix(m);
+        PlatVu0RotMatrixX(m, m, out[0]);
+        PlatVu0RotMatrixY(m, m, out[1]);
+        PlatVu0ApplyMatrix(&v, m, &v);
         func_001315c0(vm->obj, 0, t, 0.0f);
-        func_00267518(v.x, t, v.x);
+        PlatVu0AddVector(v.x, t, v.x);
         func_0014f9b0(vm->obj, &v, vm->stk[vm->sp] * 2.0f);
     }
 end:
@@ -1841,7 +1836,7 @@ s32 func_001d2c68(VmRec *vm) {
     v[1] = 0.0f;
     v[2] = -(vm->obj->pos[2] - (f32)vm->stk[vm->sp]);
     v[3] = 1.0f;
-    func_002673b8(v, v);
+    PlatVu0Normalize(v, v);
     m.x = v[0] = v[0] * s;
     m.z = v[2] = v[2] * s;
     func_001c4640((VmMsg *)&m);

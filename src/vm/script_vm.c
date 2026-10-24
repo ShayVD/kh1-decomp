@@ -14,6 +14,7 @@
  * script_vm.nosi.c; func_001c1980, func_001c3770, func_001c4808 and
  * func_001c48c8 in script_vm.nostrict.c. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/vm_rec.h"
 #include "vm/script_vm.h"
 #include "vm/vm_mgr.h"
@@ -97,7 +98,6 @@ void func_001dcea8(VmRec *);
 void func_001dcfd0(VmRec *);
 void func_001dd1f0(s32, s32);
 s32 func_001ee200(void);
-void func_002675a8(void *, void *);
 void srand(u32);
 
 /* op 0: nop */
@@ -579,7 +579,7 @@ s32 func_001c1e30(void) {
     f32 mn[4], mx[4], p[4];
     s32 i;
     if (D_002E26A0[0] == 0) return 0;
-    func_002675a8(p, D_002E26A0[0]->pos);
+    PlatVu0CopyVector(p, D_002E26A0[0]->pos);
     for (i = 0; i < D_00389C90.nbox; i++) {
         mn[0] = D_00389C90.box[i].c[0] - D_00389C90.box[i].s[0] * 0.5f;
         mn[1] = D_00389C90.box[i].c[1] - D_00389C90.box[i].s[1] * 0.5f;
