@@ -19,34 +19,11 @@ s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
 extern u128 D_00351E10[];
-extern s32 D_00648038[5]; /* src/data/bss_0064.c: s32 D_00648038[0x6] */
-extern f32 D_00648050[5];
 u128 D_00648070[0x6] ALIGNED(16);
 extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-void func_00236618(void) {
-    D_00648038[0] = 1484;
-    D_00648038[1] = 12345;
-    D_00648038[2] = 54321;
-    D_00648038[3] = 765;
-    D_00648038[4] = 9999;
-    D_00648050[0] = 1.234f;
-    D_00648050[1] = 2.345f;
-    D_00648050[2] = 3.456f;
-    D_00648050[3] = 4.567f;
-    D_00648050[4] = 5.678f;
-}
-
-void func_002367a0(s32 arg0) {
-    D_00648038[arg0] = ((s64)D_00648038[arg0] * 0x41C64E6D + 12345) & 0x7FFFFFFF;
-}
-
-void func_002368b0(s32 *arg0) {
-    *arg0 = ((s64)*arg0 * 0x41C64E6D + 12345) & 0x7FFFFFFF;
-}
 
 void func_00238440(u8 *items, s32 count, s32 arg2) {
     s32 i;

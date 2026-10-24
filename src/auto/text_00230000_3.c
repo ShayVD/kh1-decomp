@@ -12,8 +12,6 @@ M2C_UNK memset(M2C_UNK *, M2C_UNK, M2C_UNK);
 extern M2C_UNK D_0044A800;
 extern M2C_UNK D_0044A810;
 extern M2C_UNK D_0044A820;
-extern M2C_UNK D_00648038; /* src/data/bss_0064.c: s32 D_00648038[0x6] */
-extern M2C_UNK D_00648050; /* src/data/bss_0064.c: f32 D_00648050[5] */
 extern M2C_UNK D_00651310; /* src/data/bss_0065.c: Slot D_00651310[10] */
 extern M2C_UNK D_00651BD8; /* src/data/bss_0065.c: void *D_00651BD8[0x4] */
 extern M2C_UNK D_00651BE8; /* src/data/bss_0065.c: void *D_00651BE8[0x6] */
@@ -23,22 +21,6 @@ s32 func_0011ef38(M2C_UNK *);
 s32 func_00237600(s32);
 s32 func_0023f0d8(s32, s32);
 s32 func_0023f250(s32, s32);
-
-void func_002366a8(s32 arg0, s32 arg1) {
-    *(M2C_UNK *)((s8 *)&D_00648038 + (arg0 * 4)) = arg1;
-}
-
-s32 func_002366c0(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&D_00648038 + (arg0 * 4));
-}
-
-void func_002368f8(s32 arg0, f32 fparg0) {
-    *(f32 *)((s8 *)&D_00648050 + (arg0 * 4)) = fparg0;
-}
-
-f32 func_00236910(s32 arg0) {
-    return *(f32 *)((s8 *)&D_00648050 + (arg0 * 4));
-}
 
 void func_00237660(s32 arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(arg0, s32 *, 4) = arg1;
