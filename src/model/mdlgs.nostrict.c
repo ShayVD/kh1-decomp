@@ -105,7 +105,7 @@ void func_0015ec68(void) {
     D_0055BDE0 = D_00559DC0;
     func_0011ef10(0x9C40, func_0015eb78)->h2 = -1;
     func_0011ef10(0x27CB8, func_0015eea0)->h2 = -1;
-    (*(void **)&D_00351BC8) = FlushCache;
+    (*(void **)&D_00351BC8) = PlatFlushCacheFn;
 }
 #undef D_00551D90
 #undef D_00559DB0

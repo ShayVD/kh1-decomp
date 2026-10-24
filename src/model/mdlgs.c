@@ -76,9 +76,9 @@ s32 func_0015efc0(void)
 {
     void **p = ((void **)&D_00351BC8);
 
-    *p = iFlushCache;
+    *p = PlatIFlushCacheFn;
     func_0015ea98();
-    *p = FlushCache;
+    *p = PlatFlushCacheFn;
     __asm__ volatile("sync\n\tei");
     return 0;
 }
