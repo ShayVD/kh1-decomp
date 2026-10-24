@@ -1,19 +1,10 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK *func_001ba9d8(s32);
-M2C_UNK func_001ba108(M2C_UNK *, s32);
-M2C_UNK func_001bcd10(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_001bd880(M2C_UNK *);
-extern M2C_UNK D_00621320; /* src/data/bss_0062.c: CdEnt D_00621320 */
-extern M2C_UNK D_00622290; /* src/data/bss_0062.c: CdEnt D_00622290 */
 s32 func_001ba3f0(M2C_UNK);
 s32 func_001ba980();
 s32 func_001ba9a8(void);
 s32 func_001baad0();
-s32 func_001bc4a8();
-s32 func_001bc4b8(s32);
 
 s32 func_001b9e88(void) {
     s32 var_v0;
@@ -44,14 +35,4 @@ void func_001baa58(s32 arg0) {
         var_a1 += 1;
         *temp_a0 = temp_v1;
     } while (var_a1 < 8);
-}
-
-void func_001bd7f8(s32 arg0) {
-    if (arg0 >= func_001bc4a8()) {
-        func_001bcd10(&D_00622290, func_001ba9d8(arg0 - func_001bc4a8(arg0)));
-    } else {
-        func_001ba108(&D_00621320, func_001bc4b8(arg0));
-        func_001bcd10(&D_00622290, &D_00621320);
-    }
-    func_001bd880(&D_00622290);
 }

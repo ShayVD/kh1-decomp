@@ -3,17 +3,11 @@
 #include "m2c.h"
 
 extern M2C_UNK D_00009C00;
-M2C_UNK D_00623200[0x4] ALIGNED(16);
-extern M2C_UNK D_00625648; /* src/data/bss_0062.c: s32 D_00625648[0x40] */
-extern s32 D_0037A150;
-extern s32 D_0037A154;
 extern s8 D_002C5AD0;
-extern u32 D_0037A148;
 s32 func_001ba958(s32);
 s32 func_001ba9d8();
 s32 func_001baf08(s32);
 s32 func_001bb260();
-s32 func_001bb780(s32, s32);
 s32 func_00232cc0(s32);
 void func_001b9ec0(void);
 
@@ -61,36 +55,5 @@ s32 func_001bb3f8(void) {
         return 1;
     }
     return 0;
-}
-
-void func_001bb480(void) {
-    *(M2C_UNK *)((s8 *)&D_00623200 + (D_0037A154 * 4)) = D_0037A150;
-    D_0037A154 += 1;
-}
-
-void func_001bb4b0(void) {
-    s32 temp_v0;
-
-    temp_v0 = D_0037A154 - 1;
-    D_0037A154 = temp_v0;
-    D_0037A150 = *(M2C_UNK *)((s8 *)&D_00623200 + (temp_v0 * 4));
-}
-
-s32 func_001bb500(s32 arg0, s32 arg1) {
-    s32 temp_v0;
-    s32 temp_v0_2;
-
-    temp_v0_2 = D_0037A150 - arg0;
-    D_0037A150 = temp_v0_2;
-    temp_v0 = func_001bb780(temp_v0_2, arg1);
-    D_0037A150 = temp_v0;
-    if ((u32) temp_v0 < (u32) D_0037A148) {
-        D_0037A148 = (u32) temp_v0;
-    }
-    return temp_v0;
-}
-
-s32 func_001bc4b8(s32 arg0) {
-    return *(M2C_UNK *)((s8 *)&D_00625648 + (arg0 * 4));
 }
 #include "data/data_0037.h"

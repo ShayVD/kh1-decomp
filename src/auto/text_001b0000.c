@@ -5,10 +5,8 @@
 M2C_UNK func_001b9b30();
 M2C_UNK func_001bb558();
 M2C_UNK func_001bb740();
-M2C_UNK func_001bd470();
 M2C_UNK func_001efaf0();
 extern s32 D_003772D0;
-extern s32 D_00625640;
 s32 func_001be5c8(s32);
 s32 func_001be5d0(s32);
 s32 func_001efbb8(s32);
@@ -72,14 +70,6 @@ s32 func_001bb198(s32 arg0) {
 s32 func_001bb1d8(s32 arg0) {
     func_001b9b30();
     return func_00232cc0(4) + (arg0 << 6) + 0xA420;
-}
-
-s32 func_001bc4a8(void) {
-    return D_00625640;
-}
-
-void func_001be5b0(void) {
-    func_001bd470();
 }
 #include "data/bss_0062_mixed.h"
 #include "data/data_0037.h"

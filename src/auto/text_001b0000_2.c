@@ -2,26 +2,8 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0062.h"
-
-extern M2C_UNK D_00623230; /* src/data/bss_0062.c: Ent D_00623230[0xc0] */
-extern M2C_UNK D_00623E40;
-extern M2C_UNK D_00625750; /* src/data/bss_0062.c: IdCnt D_00625750[0x10] */
-extern s32 *D_00623210;
-#include "data/pieces/D_002BC140.h"
-#include "data/pieces/D_002BC144.h"
 extern s32 D_0037A128;
-extern s32 D_0037A148;
-extern s32 D_0037A150;
-extern s32 D_0037A158;
 s32 D_00621318 ALIGNED(8);
-extern s32 D_00623214;
-extern s32 D_00623218;
-extern s32 D_00623220;
-extern s32 D_00623224;
-extern s32 D_00623228;
-extern s32 D_00623E30;
-extern s32 D_00625748;
-extern s32 D_006257D0; /* src/data/bss_0062.c: u8 *D_006257D0 */
 s32 func_001ba458(s32);
 s32 func_001ba9a8();
 
@@ -66,75 +48,5 @@ s32 func_001ba920(void) {
 
 void func_001bb428(s32 arg0) {
     D_0037A128 = arg0;
-}
-
-s32 func_001bb4e0(void) {
-    return D_0037A150;
-}
-
-s32 func_001bb4f0(void) {
-    return D_0037A148 - 0x400;
-}
-
-s32 func_001bb720(void) {
-    return D_00623214;
-}
-
-s32 func_001bb730(void) {
-    return D_00623218;
-}
-
-s32 func_001bb740(void) {
-    return *D_00623210;
-}
-
-void func_001bb7b0(s32 arg0) {
-    D_00623224 = arg0;
-    D_00623220 = 0;
-}
-
-s32 func_001bb848(void) {
-    return D_00623220;
-}
-
-void func_001bb858(s32 arg0, s32 arg1) {
-    D_002BC140 = arg0;
-    D_002BC144 = arg1;
-}
-
-void func_001bb870(s32 arg0) {
-    D_006257D0 = arg0;
-}
-
-M2C_UNK *func_001bc4d0(void) {
-    return &D_00623230;
-}
-
-M2C_UNK *func_001bc4e0(void) {
-    return &D_00623E40;
-}
-
-M2C_UNK *func_001bc4f0(void) {
-    return &D_00625750;
-}
-
-s32 func_001bc500(void) {
-    return D_00623228;
-}
-
-s32 func_001bc510(void) {
-    return D_00623E30;
-}
-
-s32 func_001bc520(void) {
-    return D_00625748;
-}
-
-s32 func_001be660(void) {
-    return D_0037A158;
-}
-
-void func_001be670(s32 arg0) {
-    D_0037A158 = arg0;
 }
 #include "data/data_0037.h"
