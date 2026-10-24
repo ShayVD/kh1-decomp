@@ -206,6 +206,75 @@ succeeds and answers "done" or "nothing there", PlatCdDiskReady 2, PlatSifSearch
 several ppp files share); generate the 94 bss definitions and the memory map; then a first `-m32` link
 (`ld -m elf_i386` with a main() that calls the game's entry) and the run to the first PlatCdRead.
 
+### 5.1a Session 61: every game file compiles; the link census at 109
+
+All 512 game files now compile on the host with gcc 13 (clang 18: 507), and the link census is down from
+561 undefined symbols to 109. The PS2 build stayed byte-identical at every commit: the original `__asm__`
+stays under `#ifdef KH1_PS2` and the C equivalent goes in the `#else`.
+
+**What made the 39 files compile:**
+
+- **opdma.c**: the two 96-bit u128 literals are a `#ifdef KH1_PS2` pair (the `#else` builds the kh1_s128
+  from its four words), the lq / sq copies are struct copies, and the R seed goes through PlatVu0RXor.
+- **include/platform/vu.h** has an off-EE section of C helpers that mirror the VU0 macro-mode sequences the
+  game repeats: PlatVu0Rand (the R register LFSR, five `vrxor -1` then `vrnext`, minus 1.0: `VU0_RAND`),
+  Add4 / Sub4 / Scale4 / Scale3W / ScaleXYZ, Dot3, Cross3 and Normalize3 (w = 0), Dist3 / DistSq3, Length3,
+  PlatVu0Sqrt (vsqrt takes |x|), Apply (d = m0 x + m1 y + m2 z + m3 w, alias-safe), Ftoi0 (truncates and
+  saturates) / Ftoi4, SubFlags (the MAC flags after vsub, `cfc2 vi17`), ClipW (vclipw's six bits),
+  ScreenFlags (the sticky 0x40 / 0x80 status test of x, y, w-1, 4096-x, 4096-y) and RotRows (microprogram
+  P21, `vcallms 0`: rows of Rx*Ry*Rz, docs/renderer-spec.md).
+- **The register-file model** (PlatVu0Regs PlatVu0 in host/port/vu0.c: vf[32], ACC, Q, MAC, status, clip;
+  vf0 stays (0,0,0,1)) for the long sequences that are not worth hand translation: PlatVu0Fmac(op, d, mask,
+  s, t, bc) covers vadd / vsub / vmul / vmadd / vmsub / vmax / vmini with every broadcast and ACC form, plus
+  Opmula / Opmsub, Move, Ftoi / Itof, Div / SqrtQ, Lq / Sq, Qmtc2 / Qmfc2. Masks are x=8 y=4 z=2 w=1, the MAC
+  flags Z in bits 0-3 and S in 4-7 (w lowest), as on the VU.
+- **tools/host/vu2c.py** translates one asm statement to calls on that model (`python3 -I tools/host/vu2c.py
+  FILE LINE [--reg '$6=p']`): the VU0 subset, the GPR subset the sequences mix in (lui / ori / dsll / addi /
+  add / and / move / li / lb / lw), labels and branches as gotos (with the delay slot under `.set noreorder`;
+  in reorder mode GAS puts a nop after a likely branch itself, so the next line is not a delay slot), "m"
+  operands and cfc2 / ctc2 on vi16 / 17 / 18 / 22. kemdl and keshpdtt went through it unedited.
+- **By hand**: all 33 leaf functions of src/hand/vu0.c, ryjshipoly's spline solver and evaluator, ryjmb's
+  matrix chains, the keshptail / keshptailx macro sets (V3_* on a static register array), colobj / mapcoll
+  (VSUB_MAC), mdlgs / mdldraw, eiwind, the ryjmb filters and about twenty files with one or two sequences.
+- **PLAT_UNCACHED(p)** (include/platform/dma.h) replaces the 13 `| 0x20000000` uncached-mirror addresses in
+  mdlgs, mdldraw and texspot: the EE's uncached alias on the PS2, the plain address elsewhere.
+
+**Stale registers.** A few sequences read a VU register that the same asm block never writes, so on the PS2
+they see whatever an earlier block left there. The C cannot know the leftover, so it picks a value and
+says so in a comment: func_001a9080's stored $vf31 and func_001a9218's $vf31 z / w (src/hand/vu0.c), the
+$vf15 w that ryjshipoly stores (0 in the C) and the $vf9 w in eiwind's v[3]. They matter only if a boot
+shows a difference.
+
+**Clang** fails 5 files on code gcc accepts: K&R prototype mismatches in gumisave.c and vecutil.nofill.c,
+nested functions in keshptail / keshptailx, an `auto` storage class in kethdraw. Fine while the port builds
+with gcc; the Vita toolchain is gcc too.
+
+**Link census** (545 objects: 512 game, 29 data, 4 null platform / port), 109 undefined:
+
+| count | kind | next step |
+| --- | --- | --- |
+| 39 | libc / libm / compiler, plus `__builtin_args_info` | the host libc; task.nostrict.c needs va_list (§5.1) |
+| 20 | func_ in the SDK segment (func_0024f318 ... func_0026b9c0) | name each and map it to libc or the platform |
+| 20 | defined in src/asm/ (func_001001d8, func_00121f6c ... func_0024ef88) | C rewrites (§2) |
+| 13 | D_ below 0x100000 (D_00009B38 ... D_0000AC20) | kernel / scratchpad offsets: look at each |
+| 8 | D_ in the fixed memory map (D_006A0000 ... D_12000000) | src/host/memmap.c (§4) |
+| 7 | game func_ in no host object (the unmatched) | their drafts |
+| 2 | sceIpuInit / sceIpuSync (dkmovie.c) | the movie decision (§3) |
+
+What resolved since session 60:
+
+- **host_defs()** in census.py generates out/host/defs_host.c, which removes the 94 symbols.ld-only names
+  and more. Every undefined D_ between 0x100000 and 0x6A0000 becomes a byte array sized to the next known
+  address (symbols.ld's PROVIDEs and data.tsv) and aligned to its address's low bits. That is 110 names;
+  the 7 below .bss take their initial bytes from the user's ELF, read at build time and never committed.
+- **host/port/libvu0.c** defines the 36 sceVu0 routines and sceVpu0Reset in C, checked against
+  include/sce/libvu0.h. sceVu0InversMatrix is the rigid inverse (transpose plus -R^T t), as the library is.
+
+**Next for the host build**: a first `-m32` link with a main() that calls the game's entry, against the
+host libc. That needs src/host/memmap.c for the 8 fixed addresses, a decision for the 13 low D_, C for
+the 20 src/asm functions (or stubs to start), the 20 SDK func_ named, and task.nostrict.c's
+`__builtin_args_info` rewritten. Then run to the first PlatCdRead.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
