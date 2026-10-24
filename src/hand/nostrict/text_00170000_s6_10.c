@@ -408,115 +408,26 @@ void func_0017f580(f32 t, f32 a, f32 b, f32 c, s32 flag) {
 
 /* ---- fb98 ---- */
 #include "data/pieces/D_00364130.h"
-typedef Sub80_364130 Sub80;
 typedef E0C0_364130 E0C0;
 
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_001827f0(E0C0 *);
 
-void func_0017fb98(s32 key) {
-    s32 i;
-    s32 off;
-    E0C0 *t;
-    Sub80 *s;
-    off = 0;
-    t = D_00364130.e0C0;
-    i = 0;
-    s = &t->s;
-    for (; i < 256; i++) {
-        if ((s->flags & 1) && s->key == key) {
-            E0C0 *e;
-            if (s->p8c->xfc) func_0011d3c8(s->p8c->xfc, s->xa8, 60);
-            e = (E0C0 *)(off + (u32)t);
-            func_00182788(e);
-            func_001827f0(e);
-            return;
-        }
-        s = (Sub80 *)((u8 *)s + sizeof(E0C0));
-        off += sizeof(E0C0);
-    }
-}
-
 /* ---- fcd8 ---- */
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_00182840(E0C0 *);
-
-void func_0017fcd8(s32 key) {
-    s32 i;
-    s32 off;
-    E0C0 *t;
-    Sub80 *s;
-    off = 0;
-    t = D_00364130.e0C0;
-    i = 0;
-    s = &t->s;
-    for (; i < 256; i++) {
-        if ((s->flags & 1) && s->key == key) {
-            E0C0 *e;
-            if (s->p8c->xfc) func_0011d3c8(s->p8c->xfc, s->xa8, 60);
-            e = (E0C0 *)(off + (u32)t);
-            func_00182788(e);
-            func_00182840(e);
-            return;
-        }
-        s = (Sub80 *)((u8 *)s + sizeof(E0C0));
-        off += sizeof(E0C0);
-    }
-}
 
 /* ---- fd88 ---- */
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_001827f0(E0C0 *);
 
-void func_0017fd88(s32 lo, s32 n) {
-    s32 i;
-    s32 off = 0;
-    E0C0 *t = D_00364130.e0C0;
-    Sub80 *s = &t->s;
-    for (i = 0; i < 256; i++) {
-        if (s->flags & 1) {
-            s32 d = s->x88 - lo;
-            if (d >= 0 && d < n) {
-                E0C0 *e;
-                if (s->p8c->xfc) func_0011d3c8(s->p8c->xfc, s->xa8, 60);
-                e = (E0C0 *)(off + (u32)t);
-                func_00182788(e);
-                func_001827f0(e);
-            }
-        }
-        s = (Sub80 *)((u8 *)s + sizeof(E0C0));
-        off += sizeof(E0C0);
-    }
-}
-
 /* ---- fe60 ---- */
 void func_0011d3c8(s32, s32, s32);
 void func_00182788(E0C0 *);
 void func_00182840(E0C0 *);
-
-void func_0017fe60(s32 lo, s32 n) {
-    s32 i;
-    s32 off = 0;
-    E0C0 *t = D_00364130.e0C0;
-    Sub80 *s = &t->s;
-    for (i = 0; i < 256; i++) {
-        if (s->flags & 1) {
-            s32 d = s->x88 - lo;
-            if (d >= 0 && d < n) {
-                E0C0 *e;
-                if (s->p8c->xfc) func_0011d3c8(s->p8c->xfc, s->xa8, 60);
-                e = (E0C0 *)(off + (u32)t);
-                func_00182788(e);
-                func_00182840(e);
-            }
-        }
-        s = (Sub80 *)((u8 *)s + sizeof(E0C0));
-        off += sizeof(E0C0);
-    }
-}
 
 /* ---- ff38 ---- */
 #define D_00364130 D_00364130_ff38
@@ -531,21 +442,6 @@ typedef struct E0C0 {
     u8 padb8[0xc0 - 0xb8];
 } E0C0;
 extern E0C0 D_00364130[256] __asm__("D_00364130");
-
-void func_0017ff38(s32 on) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if (D_00364130[i].flags & 1) {
-            if (on) {
-                D_00364130[i].xb7 = 1;
-                D_00364130[i].xb1 |= 0x80;
-            } else {
-                D_00364130[i].xb7 = 0;
-                D_00364130[i].xb1 &= 0x7f;
-            }
-        }
-    }
-}
 #undef D_00364130
 #undef E0C0
 

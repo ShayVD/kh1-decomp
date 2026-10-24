@@ -11,10 +11,6 @@ M2C_UNK func_00176c60(M2C_UNK);
 M2C_UNK func_00176cc8(M2C_UNK);
 M2C_UNK func_001784c8();
 M2C_UNK func_0017f178();
-M2C_UNK func_001a9e70();
-M2C_UNK func_001a9eb8();
-M2C_UNK func_001a9f88();
-M2C_UNK func_001aa858();
 M2C_UNK func_00267370(s32, s32, s32);
 M2C_UNK func_00267530(void *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_002675a8(s32, s32);
@@ -107,13 +103,6 @@ void func_00178d90(void) {
 
 void func_0017dee0(void) {
     memset(&D_005759B0, 0, 0x50);
-}
-
-void func_0017f9a8(void) {
-    func_001a9e70();
-    func_001a9eb8();
-    func_001a9f88();
-    func_001aa858();
 }
 #include "data/data_0035.h"
 #include "data/data_0036.h"

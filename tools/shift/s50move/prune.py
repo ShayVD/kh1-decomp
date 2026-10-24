@@ -25,7 +25,8 @@ while True:
             blocks.append((i,j,names[-1:] ))
             i=j+1; continue
         s=strip(l).strip()
-        if l.startswith(('extern ','void ','s32 ','f32 ','u32 ','s8 ','u8 ','M2C_UNK ','int ')) and s.endswith(';') and '{' not in s:
+        if '__asm__' in s: pass  # an alias under a rename macro (`#define D_X D_X_<addr>`): kept
+        elif l.startswith(('extern ','void ','s32 ','f32 ','u32 ','s8 ','u8 ','M2C_UNK ','int ')) and s.endswith(';') and '{' not in s:
             if '(' in s and not s.startswith('extern'):
                 m=re.search(r'(\w+)\s*\(',s); names=[m.group(1)] if m else []
             else:

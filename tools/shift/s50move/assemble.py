@@ -111,6 +111,9 @@ def classify(t, k, name):
         return 'typedef', n
     m = re.match(r'(struct|union|enum)\s+(\w+)\s*(\{.*\})?\s*;$', s2, flags=re.S)
     if m: return 'tag', [m.group(2) + '#tag']  # the tag namespace
+    m = re.match(r'([^(]*?)\b(\w+)\s*(\[[^\]]*\]\s*)*__asm__\s*\(', s2, flags=re.S)
+    if m:  # `extern T D_X __asm__("D_X");` under `#define D_X D_X_<addr>`: a renamed alias
+        return 'asmvar', [m.group(2) + '#asm']
     m = re.match(r'[^(]*?\b(\w+)\s*\(', re.sub(r'\{.*\}', '', s2, flags=re.S))
     if m and m.group(1) not in KW:  # the first '(' follows a name: a prototype
         return 'proto', [m.group(1)]
@@ -275,7 +278,7 @@ def main(out, funcs, onto=False):
             if kind == 'var':
                 for nm, d in var_decls(t):
                     if not re.match(r'\s*(extern|static)\b', d) and '=' not in d:
-                        d = 'extern ' + no_attr(d).strip()  # a definition stays in its file: declare it
+                        d = 'extern ' + re.sub(r'\s+;', ';', no_attr(d).strip())  # a definition stays in its file: declare it
                     scope[nm] = (order, 'var', d)
                 continue
             if kind == 'func':
@@ -302,7 +305,7 @@ def main(out, funcs, onto=False):
         while changed:
             changed = False
             for x0 in list(used):
-                for x in (x0, x0 + '#tag'):
+                for x in (x0, x0 + '#tag', x0 + '#asm'):
                     if x in scope and x not in need and x != f:
                         if scope[x][1] == 'ctx' and x in inmod: continue
                         need[x] = scope[x]; used |= idents(scope[x][2]); changed = True
@@ -325,6 +328,7 @@ def main(out, funcs, onto=False):
         for nm, v in pl[3]:
             if v[1] == 'var' and shape(nm, v[2])[1] == 'array' and nm not in arrays: arrays[nm] = v[2]
     emitted = {}  # name -> (kind, norm text)
+    emac = {}     # name -> the macro naming it when its declaration was emitted
     macros = {}   # active macro name -> norm text
     lines = ['/* TODO: what this module is (docs/modules.md). */']
     seen_inc = set()
@@ -410,10 +414,17 @@ def main(out, funcs, onto=False):
         for nm, kind, t in items:
             r = nm.split('#')[0]
             t2 = cur(t); n2 = ren.get(r, r) + nm[len(r):]
+            r0 = n2.split('#')[0]
+            if kind == 'asmvar':  # emitted as it is, once per text and rename macro
+                key = '%s@%s@%s' % (n2, norm(t2), macros.get(r0))
+                if emitted.get(key): continue
+                emitted[key] = (kind, norm(t2)); sec.append(t2); continue
             if kind in ('typedef', 'tag', 'inline', 'ctx'):
-                if n2 in emitted and emitted[n2][1] == norm(t2): continue
-                if n2 in macros: sec.append('#undef ' + n2); macros.pop(n2)
-                emitted[n2] = (kind, norm(t2)); sec.append(t2); continue
+                # under this function's own `#define NAME NAME_<addr>` the
+                # declaration names another identifier: emit it again
+                if n2 in emitted and emitted[n2][1] == norm(t2) and emac.get(n2) == macros.get(r0): continue
+                if r0 in macros and r0 not in mine: sec.append('#undef ' + r0); macros.pop(r0)
+                emitted[n2] = (kind, norm(t2)); emac[n2] = macros.get(r0); sec.append(t2); continue
             if kind == 'var':
                 if nm in macros: sec.append('#undef ' + nm); macros.pop(nm)
                 if nm not in emitted:

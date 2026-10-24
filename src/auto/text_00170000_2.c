@@ -2,11 +2,8 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "data/bss_0057.h"
-extern M2C_UNK *D_0061622C; /* src/data/bss_0061.c: s32 D_0061622C */
-M2C_UNK D_00575E40[0x8000] ALIGNED(64);
 extern s32 D_003626B0;
 extern s32 D_00574FB4;
-extern s32 D_00616230;
 #include "data/pieces/D_00362438.h"
 
 s32 func_00170e30(s32 arg0) {
@@ -35,15 +32,5 @@ void func_0017d1e0(void) {
     if (!(M2C_FIELD(D_00362438, s32 *, 0x18) & 0x10)) {
         D_003626B0 = 1;
     }
-}
-
-void func_0017f910(M2C_UNK *arg0, s32 arg1) {
-    if (arg0 != NULL) {
-        D_0061622C = arg0;
-        D_00616230 = arg1;
-        return;
-    }
-    D_0061622C = &D_00575E40;
-    D_00616230 = 0x20000;
 }
 #include "data/data_0036.h"

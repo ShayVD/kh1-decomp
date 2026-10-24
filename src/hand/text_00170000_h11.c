@@ -18,8 +18,6 @@ typedef struct Actor {
 } Actor;
 
 /* --- 256 entries of 0xC0 bytes at D_00364130 --- */
-#include "data/pieces/D_00364130.h"
-typedef E0C0_364130_2 E0C0;
 
 #include "data/types/text_00170000_h11.h"
 
@@ -251,77 +249,6 @@ void func_0017f078(s32 i) {
     D_00362660[3] = D_00362640[i].y;
     D_00362670[1] = D_00362640[i].z;
     func_0017f178();
-}
-
-void func_0011d3c8(s32, s32, s32);
-void func_00182788(E0C0 *);
-void func_001827f0(E0C0 *);
-void func_0017f9d8(void) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        E0C0 *e = &D_00364130.e0C0_2[i];
-        if (e->flags & 1) {
-            if (e->p8c && e->p8c->xfc) func_0011d3c8(e->p8c->xfc, e->xa8, 60);
-            func_00182788(e);
-            func_001827f0(e);
-        }
-    }
-}
-
-void func_0017fa68(void) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if (D_00364130.e0C0_2[i].flags & 1) D_00364130.e0C0_2[i].flags |= 0x20;
-    }
-}
-
-void func_0017faa8(void) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if (D_00364130.e0C0_2[i].flags & 1) D_00364130.e0C0_2[i].flags &= ~0x20;
-    }
-}
-
-void func_0017fae8(s32 key) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if ((D_00364130.e0C0_2[i].flags & 1) && D_00364130.e0C0_2[i].key == key) {
-            D_00364130.e0C0_2[i].flags |= 0x20;
-            return;
-        }
-    }
-}
-
-void func_0017fb40(s32 key) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if ((D_00364130.e0C0_2[i].flags & 1) && D_00364130.e0C0_2[i].key == key) {
-            D_00364130.e0C0_2[i].flags &= ~0x20;
-            return;
-        }
-    }
-}
-
-void func_00182840(E0C0 *);
-void func_0017fc48(void) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        E0C0 *e = &D_00364130.e0C0_2[i];
-        if (e->flags & 1) {
-            if (e->p8c && e->p8c->xfc) func_0011d3c8(e->p8c->xfc, e->xa8, 60);
-            func_00182788(e);
-            func_00182840(e);
-        }
-    }
-}
-
-typedef struct { u8 pad[0x104]; s32 x104; } S104;
-s32 func_0017ff98(s32 key) {
-    s32 i;
-    for (i = 0; i < 256; i++) {
-        if (D_00364130.e0C0_2[i].key == key) return ((S104 *)D_00364130.e0C0_2[i].p8c)->x104;
-    }
-    return -2;
 }
 #if 2 == 1
 #define TBL ((void *)0x370200)
