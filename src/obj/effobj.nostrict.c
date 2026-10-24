@@ -26,7 +26,7 @@
 /* func_00147b08 (from hand/nostrict/text_00140000_h33.c). */
 typedef struct { s16 h0; s16 h2; } Prc;
 typedef struct { f32 m[4][4]; u8 buf[0x3C]; s32 w7c; s32 w80; s32 w84; } MdlBlk;
-extern u8 D_0054C160[0x50];
+u8 D_0054C160[0x50] ALIGNED(32);  /* moved from hand/nostrict/text_00140000_h33.c (session 53) */
 Prc *func_0011ef10(s32, void (*)(void));
 void *func_00176488(s32, u8 *, s32, s32);
 s32 func_001765f8(void *);

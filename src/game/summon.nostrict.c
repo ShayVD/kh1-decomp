@@ -109,7 +109,7 @@ typedef struct Actor_3b238 {
 typedef struct { s32 x0, x4, x8, xc, x10, x14, x18; } W55Hdr;
 extern u32 D_002C5958;
 extern u32 D_002C5978;
-extern f32 D_0052AE40[4];
+f32 D_0052AE40[4] ALIGNED(16);  /* moved from hand/nostrict/text_00130000_h55.c (session 53) */
 extern W55Hdr *D_0052AE58;
 W55Ob *func_001230a0(W55Ob *p);
 void func_00123438(W55Ob *p, u32 f);
@@ -334,7 +334,7 @@ typedef struct Actor_3b740 {
     s32 x48c;
 } W55Ob_3b740;
 typedef struct { s32 x0, x4, x8, xc, x10; } W55Hd5;
-extern W55Ob_3b740 *D_0052AE3C;
+W55Ob_3b740 *D_0052AE3C ALIGNED(4);  /* moved from hand/nostrict/text_00130000_h55.c (session 53) */
 extern s32 D_0052AE54;
 extern W55Hd5 *D_0052AE5C;
 void D_00F20000(s32 a, void *b);

@@ -1,7 +1,8 @@
 /* Object classes 9, 0xA and 0xB: the handlers func_00141138 registers in the
  * class table D_00350D88 (func_0014f830(9 / 0xA / 0xB, ...)) that lie in
  * 0x00140000-0x00141200, and their helpers (class 9's and 0xA's first two
- * handlers, 0x0013fd10-0x0013fd60, are still in src/auto). Flag mode:
+ * handlers, 0x0013fd10-0x0013fd60, are in src/obj/class09.c
+ * with the helpers these handlers call). Flag mode:
  * nostrict (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
@@ -153,7 +154,7 @@ f32 fmodf(f32 x, f32 y);
 f32 atan2f(f32 y, f32 x);
 #define func_0015bcb8 ((s32 (*)(W55Ob_401d8 *o, f32 *r)) func_0015bcb8)
 /* uses rodata. func_001401d8 only matches with func_0013fe28 defined above it. */
-/* CONTEXT_ONLY copy of func_0013fe28 (still in hand/nostrict/text_00130000_h55.c). */
+/* CONTEXT_ONLY copy of func_0013fe28 (defined in class09.nostrict.c). */
 f32 func_0013fe10();
 CONTEXT_ONLY s32 func_0013fe28(W55Ob_401d8 *o) {
     f32 t = func_0013fe10(o);

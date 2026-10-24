@@ -210,7 +210,7 @@ void func_001371f0(W32Kind *o) {
 /* func_001372a0 (from auto/text_00130000_4.c). */
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_00529800[0x240];
+M2C_UNK D_00529800[0x240] ALIGNED(64);  /* moved from auto/text_00130000_4.c (session 53) */
 s32 func_0011ef38(M2C_UNK *);
 #define D_0052A100 (*(M2C_UNK (*)) &D_0052A100)
 void func_001372a0(void) {

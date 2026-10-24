@@ -380,7 +380,7 @@ typedef struct {
     s32 a;
     s32 b;
 } W6Pair;
-extern W6Pair D_0052A110[0x8];
+W6Pair D_0052A110[0x8] ALIGNED(16);  /* moved from hand/text_00130000_h6.c (session 53) */
 W6Pair *func_001357b8(void) {
     s32 v = D_0052A150;
     D_0052A150 = (v + 1) % 8;

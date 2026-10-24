@@ -1,8 +1,7 @@
 /* Whether an object is drawn: its bounding box corners (func_00135a68), the
  * on-screen test func_00135bb0, the distance fade curve func_00135ca0
  * (D_002BC0F0, D_002BC120, D_002BC124) and its colour fade (func_00135d38,
- * func_00135df0; a CONTEXT_ONLY copy of func_00135d38 stays in
- * hand/text_00130000_h32.c for func_00136bc0). Flag mode: default (the other
+ * func_00135df0). Flag mode: default (the other
  * modes are in the sibling files). Read from the code, not proved by a boot
  * (docs/modules.md "Session 53"). */
 #include "m2c.h"

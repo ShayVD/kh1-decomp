@@ -327,7 +327,7 @@ s32 func_00138718(void) {
 
 /* func_00138738 (from auto/text_00130000_17.c). */
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
-extern M2C_UNK D_0052A158[0x240];
+M2C_UNK D_0052A158[0x240] ALIGNED(8);  /* moved from auto/text_00130000_17.c (session 53) */
 extern M2C_UNK D_0052ACF0;
 void func_00138258();
 s32 func_0011ef38(M2C_UNK *);

@@ -115,7 +115,7 @@ typedef struct {
     u8 pad02[0x10 - 0x2];
     f32 x10;
 } W32Fade;
-extern W32Spr *D_0052AD00;
+W32Spr *D_0052AD00 ALIGNED(16);  /* D_0052AD00, D_00304B40 and D_00304B44 moved from hand/text_00130000_h32.c (session 53) */
 W32Spr *func_001226f0(s32 a, s32 b, s32 c);
 void func_00122768(W32Spr *s);
 void func_00100ae0(void);
@@ -138,14 +138,14 @@ s32 func_0013ab30(W32Fade *f) {
 /* func_0013abf8 (from hand/text_00130000_b03.c). */
 extern f32 D_00304B20[4];
 extern f32 D_00304B30[4];
-extern f32 D_0052AD04;
-extern f32 D_0052AD08;
-extern f32 D_0052AD0C;
-extern f32 D_0052AD10[4];
-extern f32 D_0052AD20[4];
-extern f32 D_0052AD30[4];
-extern f32 D_0052AD40[4];
-extern f32 D_0052AD50;
+f32 D_0052AD04 ALIGNED(4);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD08 ALIGNED(8);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD0C ALIGNED(4);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD10[4] ALIGNED(16);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD20[4] ALIGNED(16);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD30[4] ALIGNED(16);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD40[4] ALIGNED(16);  /* moved from hand/text_00130000_b03.c (session 53) */
+f32 D_0052AD50 ALIGNED(16);  /* moved from hand/text_00130000_b03.c (session 53) */
 extern u8 *D_0052AE38;
 f32 atan2f(f32, f32);
 f32 cosf(f32);
@@ -252,8 +252,10 @@ void func_0013b1a0(void) {
 
 /* func_0013b3d0 (from hand/text_00130000_h32.c). */
 extern s32 D_00304B00[];
-extern s32 D_00304B40;
-extern s32 D_00304B44;
+extern u8 D_0048DCA0[];
+s32 D_00304B40 ALIGNED(16) = (s32)D_0048DCA0;
+extern u8 D_0048DCA8[];
+s32 D_00304B44 ALIGNED(4) = (s32)D_0048DCA8;
 extern char D_0048DCB0[];
 void D_00F20000(s32 a, s32 b);
 s32 func_001ecfd8(void);
@@ -293,7 +295,7 @@ s32 func_0013b8f0(void) {
 #undef D_00F20000
 
 /* func_0013b958 (from hand/text_00130000_h6.c). */
-extern u8 D_0052AD58[0x10];
+u8 D_0052AD58[0x10] ALIGNED(8);  /* moved from hand/text_00130000_h6.c (session 53) */
 extern u8 D_00304B48[];
 void func_0013bde8();
 void func_0011f130(void *a, s32 b);

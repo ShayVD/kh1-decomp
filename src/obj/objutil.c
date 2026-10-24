@@ -67,7 +67,7 @@ s32 func_00137450(struct Actor *id) {
 }
 
 /* func_001374a8 (from hand/text_00130000_h32.c). */
-extern s32 D_0052ABF0[2][32];
+s32 D_0052ABF0[2][32] ALIGNED(16);  /* moved from hand/text_00130000_h32.c (session 53) */
 extern s32 D_0052ACF0[2];
 void func_001337e0(s32 a, s32 b, s32 c);
 void func_001374a8(s32 id) {

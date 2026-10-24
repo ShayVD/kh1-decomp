@@ -1,7 +1,8 @@
 /* Object classes 9, 0xA and 0xB: the handlers func_00141138 registers in the
  * class table D_00350D88 (func_0014f830(9 / 0xA / 0xB, ...)) that lie in
  * 0x00140000-0x00141200, and their helpers (class 9's and 0xA's first two
- * handlers, 0x0013fd10-0x0013fd60, are still in src/auto). Flag mode:
+ * handlers, 0x0013fd10-0x0013fd60, are in src/obj/class09.c
+ * with the helpers these handlers call). Flag mode:
  * default (the other modes are in the sibling files). Read from the code,
  * not proved by a boot (docs/modules.md "Session 53"). */
 #include "m2c.h"

@@ -409,7 +409,7 @@ s32 func_001474a0(void) {
 
 /* func_00147628 (from hand/nostrict/text_00140000_h33.c). */
 typedef struct { s16 h0; s16 h2; } Prc;
-extern u8 D_00531F80[0xc00];
+u8 D_00531F80[0xc00] ALIGNED(64);  /* moved from hand/nostrict/text_00140000_h33.c (session 53) */
 void func_00146928(s32);
 void func_0011efa8(u8 *, u8 *, s32, s32);
 s32 func_0011ef38(void (*)(void));
