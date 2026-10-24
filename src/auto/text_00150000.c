@@ -2,8 +2,6 @@
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
 #include "actor.h"
-
-M2C_UNK func_0011f090(s32, s32, s32);
 M2C_UNK func_001247e8(s32);
 M2C_UNK func_001358b8(s32, M2C_UNK);
 M2C_UNK func_00137318();
@@ -20,13 +18,9 @@ M2C_UNK func_001575b0(s8);
 M2C_UNK func_00157910();
 M2C_UNK func_001586a8(M2C_UNK);
 M2C_UNK func_0015d1d0();
-M2C_UNK func_00216180();
-M2C_UNK func_00232ad0(M2C_UNK);
 extern f32 D_002BBDFC;
 #include "data/pieces/D_00304BE8.h"
 extern s32 D_00551600; /* src/data/bss_0055.c: u8 *D_00551600 */
-extern s32 D_00559DB0;
-extern s32 D_0055BDE0;
 s32 func_001320a8();
 s32 func_0013db30();
 s32 func_00155a90();
@@ -125,22 +119,5 @@ void func_0015a3d8(s32 arg0) {
 s32 func_0015d540(void) {
     func_0015d1d0();
     return 0;
-}
-
-void func_0015ed80(s32 arg0, s32 arg1) {
-    func_0011f090(D_00559DB0, arg0, arg1);
-}
-
-void func_0015ee78(s32 arg0, s32 arg1) {
-    func_0011f090(D_0055BDE0, arg0, arg1);
-}
-
-void func_0015f010(void) {
-
-}
-
-void func_0015f108(void) {
-    func_00232ad0(6);
-    func_00216180();
 }
 #include "data/pieces/D_002BBDFC.h"

@@ -14,7 +14,6 @@ typedef struct { u8 pad[0x10]; Dat684 *w10; Dat684 *w14; Ent67F e[4]; } Obj67F;
 typedef struct { u8 pad[8]; s32 w8; } Arg67F;
 
 extern Dat684 *func_001684e0(s32);
-#include "data/pieces/D_00351BC8.h"
 
 /* inline copy of func_001677e0 */
 static inline Ent677 *inl_001677e0(Obj677 *o, u32 key) {
@@ -69,97 +68,6 @@ extern Res30 *func_001477c8(s32);
 extern void func_001412f8(Obj144 *, s32);
 
 /* ---- functions ---- */
-
-Key16 *func_001676f8(Obj677 *o, u32 key, s32 *idx, f32 lo, f32 hi) {
-    Ent677 *e = inl_001677e0(o, key);
-    s32 i;
-    if (e == 0) return 0;
-    for (i = *idx; i < e->n; i++) {
-        if (lo <= e->keys[i].t && e->keys[i].t < hi) {
-            *idx = i;
-            return &e->keys[i];
-        }
-    }
-    return 0;
-}
-
-s32 func_00167840(Obj67F *o, Arg67F *a, u32 id) {
-    Dat684 *d, *d2;
-    s32 k;
-    s32 j;
-    s32 m;
-    d = inl_get684(o, a);
-    k = -1;
-    if (d != 0) {
-        k = id - 0x400;
-        if (id < 0x400) k = d->map[id] - 1;
-    }
-    if (k < 0) return 0;
-    d2 = inl_get684(o, a);
-    if (d2 == 0) return 0;
-    if (!((u32)k < d2->n)) return 0;
-    j = *d2->list[k];
-    if (o->e[j].w10 == 0 || (m = *o->e[j].w10 & 0xF) == 2) return 1;
-    if (o->e[j].w4 == 0 && m == 3) return 1;
-    return 0;
-}
-
-void func_00167c40(Obj67F *o, Arg67F *a, u32 id) {
-    Dat684 *d, *d2;
-    s32 k;
-    d = inl_get684(o, a);
-    k = -1;
-    if (d != 0) {
-        k = id - 0x400;
-        if (id < 0x400) k = d->map[id] - 1;
-    }
-    if (k < 0) return;
-    d2 = inl_get684(o, a);
-    if (d2 == 0) return;
-    if (!((u32)k < d2->n)) return;
-    if (o->e[*d2->list[k]].b0 == k) {
-        o->e[*d2->list[k]].w4 = 0;
-        o->e[*d2->list[k]].w10 = 0;
-    }
-}
-
-void func_00167fd0(Obj67F *o, Arg67F *a, u32 id) {
-    Dat684 *d, *d2;
-    s32 k;
-    d = inl_get684(o, a);
-    k = -1;
-    if (d != 0) {
-        k = id - 0x400;
-        if (id < 0x400) k = d->map[id] - 1;
-    }
-    if (k < 0) return;
-    d2 = inl_get684(o, a);
-    if (d2 == 0) return;
-    if (!((u32)k < d2->n)) return;
-    if (o->e[*d2->list[k]].b0 == k) o->e[*d2->list[k]].w4 = 0;
-}
-
-void func_001680d8(s32 id) {
-    Dat684 *d = func_001684e0(id);
-    u32 i;
-    if (d != 0) {
-        d->w10 = (u32)d + d->w10;
-        d->list1 = (u32 *)((u32)d + (u32)d->list1);
-        for (i = 0; i < d->n1; i++) d->list1[i] = (u32)d + d->list1[i];
-        d->list = (s8 **)((u32)d + (u32)d->list);
-        for (i = 0; i < d->n; i++) d->list[i] = (s8 *)((u32)d + (u32)d->list[i]);
-        d->map = (u8 *)((u32)d + (u32)d->map);
-    }
-    D_00351BC8(0);
-}
-
-u32 *func_001683b0(u32 *p) {
-    if (inl_00168318(p)) {
-        u32 *q = (u32 *)((u8 *)p + p[1] + 8);
-        if (inl_00168318(q)) return q;
-    }
-    return 0;
-}
 
 /* needs make: uses rodata */
 #include "data/data_002E.h"

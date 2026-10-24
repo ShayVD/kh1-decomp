@@ -50,8 +50,6 @@ extern s32 D_00351AC0;
 #include "data/pieces/D_002C58A0.h"
 extern f32 D_002BBDFC;
 extern f32 D_00551D74;
-#include "data/pieces/D_002BBDF8.h"
-extern volatile s32 D_00559DB4;
 
 /* ---- callees ---- */
 s32 D_00F20000(); /* code at a fixed address (overlay) */
@@ -94,9 +92,6 @@ void func_0015dac0(void);
 void func_00118548(void *);
 void func_00121fc4(f32 *, f32 *);
 f32 func_00121b08(void *, f32);
-s32 sceGsSyncPath(s32, u16);
-s32 DisableDmac(s32);
-s32 func_001684e0(s32);
 
 s32 func_00157560(A157560 *a) {
     E551670 *e = &D_00551670[a->p6C->idx];
@@ -346,58 +341,6 @@ void func_0015e9c8(ObjE9 *a, void *b) {
         f = a->f3CC = (f + D_002BBDFC * 0.5f < 18.0f) ? f + D_002BBDFC * 0.5f : 18.0f;
     }
     func_00267560(b, a->pos, f * D_002BBDFC);
-}
-
-void func_0015ef60(void) {
-    D_002BBDF8;
-    while (D_00559DB4) ;
-    sceGsSyncPath(0, 0);
-    DisableDmac(1);
-    DisableDmac(2);
-}
-
-typedef struct { s32 a, b, c, d; } V16;
-typedef struct { u8 pad[8]; V16 *tbl; } Obj623;
-void func_001623f8(Obj623 *o, s32 i, V16 *out) {
-    *out = o->tbl[i];
-}
-
-typedef union { s32 w; struct { u16 lo, hi; } h; } Key677;
-typedef struct { Key677 k; u8 pad[8]; } Ent677;
-typedef struct { u8 pad[0x3C]; Ent677 *tbl; } Obj677;
-Ent677 *func_001677e0(Obj677 *o, u32 key) {
-    Ent677 *e = o->tbl;
-    u32 hi = key >> 16;
-    key &= 0xFFFF;
-    for (; e->k.w != -1; e++) {
-        if (e->k.h.hi == hi && (key == 0xFFFF || e->k.h.lo == key)) return e;
-    }
-    return 0;
-}
-
-typedef struct { u8 b0; u8 b1; u8 pad[2]; s32 w4; u8 pad8[8]; s32 w10; } Ent67F;
-typedef struct { u8 pad[0x10]; s32 w10; u8 pad14[4]; Ent67F e[4]; } Obj67F;
-void func_00167f68(Obj67F *o, s32 a) {
-    s32 i;
-    o->w10 = func_001684e0(a);
-    for (i = 0; i < 4; i++) {
-        o->e[i].b1 = 0;
-        o->e[i].w4 = 0;
-        o->e[i].w10 = 0;
-    }
-}
-
-s32 func_00168318(u32 *p) {
-    switch (*p) {
-    case 0x4A424F4D:
-    case 0x41584554:
-    case 0x454E4F42:
-    case 0x4E544D4D:
-    case 0x4C535255:
-    case 0x564E454D:
-        return 1;
-    }
-    return 0;
 }
 #include "data/bss_0055_mixed.h"
 #include "data/bss_0061_mixed.h"

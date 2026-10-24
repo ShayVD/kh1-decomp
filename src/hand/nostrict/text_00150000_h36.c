@@ -81,40 +81,19 @@ void func_00121fc4(f32 *, f32 *);
 void func_00156260(void *, f32 *);
 f32 atan2f(f32, f32);
 s32 func_001375d8(void *);
-s32 sceGsSyncPath(s32, u16);
 typedef struct GsTask { u16 h0; u8 pad2[6]; struct GsTask *next; s32 (*cb)(struct GsTask *); } GsTask;
 extern GsTask *D_00551D80;
 extern volatile s32 D_00559DB8;
 extern volatile s32 D_00559DB4;
-typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
-extern GsBuf D_00551D90[]; /* src/data/bss_0055.c: Beb78 D_00551D90[0x2] */
 GsBuf2 D_00559DC0[0x2] ALIGNED(64);
-extern GsBuf2 *D_0055BDE0; /* src/data/bss_0055.c: s32 D_0055BDE0 */
-extern GsBuf *D_00559DB0; /* src/data/bss_0055.c: s32 D_00559DB0 */
-extern s32 D_00351BD0;
 extern volatile s32 D_00559DBC;
-#include "data/pieces/D_00351BC8.h"
 s32 func_0015ea98(void);
-s32 FlushCache(s32);
 s32 DisableDmac(s32);
 s32 EnableDmac(s32);
-void func_0011efa8(void *, void *, s32, s32);
-s32 func_0015eea0();
 #include "data/types/nostrict_text_00150000_h36.h"
-DmaChcr *func_00266c08(s32);
-void func_00266f38(void *, void *);
-extern u8 D_00278680[], D_00272C70[];
-void func_00162500(void);
-extern u64 D_00573E40[];
 #include "data/pieces/D_002BC0F0.h"
 typedef S2BC0F0_2BC0F0_2 S2BC0F0;
-extern DmaChcr *D_0055C644;
-extern DmaChcr *D_0055C640;
-typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
-extern GifTag8 *volatile D_0055C648;
-extern u8 D_00573AC0[];
-void func_0015f8c8(void);
 void func_0015f128(void);
 typedef struct { u32 w0; u8 pad[396]; } E56A0F0;
 extern E56A0F0 D_0056A0F0[];
@@ -122,29 +101,8 @@ extern u32 D_005739F8[];
 extern u8 D_0055C698[];
 void *memset(void *, s32, u32);
 s32 func_00160370();
-void sceVu0CopyMatrix(void *, void *);
-f32 func_00162c20(f32 *);
-void func_002673f8(void *, void *);
-void func_002674d0(f32 *, f32 *, f32);
-void sceVu0UnitMatrix(void *);
-typedef struct { u8 pad[0x2C]; u32 x2C; } Bone48;
-typedef struct { u8 pad[4]; Bone48 *bones; } SkelHdr;
-typedef struct { SkelHdr **skel; u8 pad4[0x14C]; f32 (*m150)[4][4]; f32 (*m154)[4][4]; } SkelObj;
-void func_00162848(f32 *, void *, f32 *);
-void func_00267e60(f32 *, f32 *, f32 *, f32);
-typedef struct { f32 t; u8 pad[12]; } AnimKey;
-typedef struct { union { s32 w; struct { u16 lo, hi; } h; } id; s32 n; AnimKey *keys; } AnimTrk;
-typedef struct { u8 pad[0x3C]; AnimTrk *trk; } AnimObj;
-void func_00267768(void *, void *, f32);
-void func_00267810(void *, void *, f32);
-void func_002676c0(void *, void *, f32);
 extern u8 D_00277E40[], D_00278210[];
 extern void *D_00351BE0[];
-extern u32 D_00272DA4[], D_00272D94[], D_00272DE4[], D_00272CF0[];
-typedef struct { u8 pad[4]; u32 *data; } S798b;
-typedef struct { u8 pad[0x10]; S798b *x10; u8 pad14[0xC]; u32 x20, x24, x28, x2C; u8 pad30[0xC]; u32 x3C; u8 pad40[8]; s8 x48; } S798e;
-typedef struct { S798e *e; u32 w4; } S798a;
-typedef struct { u8 pad[0x10]; S798a *x10; } S798;
 
 Tr700 *func_00159ea8(ObjP *obj, void *a, void *b) {
     D_00551700.obj = obj;
@@ -596,218 +554,6 @@ void func_0015e8d8(CylObj *o, f32 *v) {
         return;
     }
     func_00130398(o, 126, 16.0f);
-}
-
-s32 func_0015eb78(void);
-
-void func_0015ec68(void) {
-    s32 i;
-    for (i = 0; i < 2; i++) {
-        func_0011efa8(&D_00551D90[i], D_00551D90[i].pad + 16, 32, 512);
-        func_0011efa8(&D_00559DC0[i], D_00559DC0[i].data, 32, 128);
-    }
-    D_00559DB0 = D_00551D90;
-    D_00351BD0 = 0;
-    D_0055BDE0 = D_00559DC0;
-    func_0011ef10(0x9C40, func_0015eb78)->h2 = -1;
-    func_0011ef10(0x27CB8, func_0015eea0)->h2 = -1;
-    (*(void **)&D_00351BC8) = FlushCache;
-}
-
-s32 func_0015eea0(void) {
-    GsTask *t = D_0055BDE0->x8;
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    while (t) {
-        if (!(t->cb(t) & 0x20)) {
-            t->h0 = 0;
-            t = t->next;
-        }
-        sceGsSyncPath(0, 0);
-    }
-    D_0055BDE0->x8 = 0;
-    D_0055BDE0->xC = 0;
-    D_0055BDE0 = &D_00559DC0[D_00351BD0];
-    return 0;
-}
-
-void func_0015f018(void) {
-    DmaChcr *c;
-    sceGsSyncPath(0, 0);
-    *(volatile u32 *)0x10003820 = 6;
-    c = func_00266c08(0);
-    c->dir = 1;
-    c->mod = 1;
-    c->asp = 0;
-    c->tte = 1;
-    c->tie = 0;
-    func_00266f38(c, D_00278680);
-    *(volatile u32 *)0x10003C20 = 6;
-    c = func_00266c08(1);
-    c->dir = 1;
-    c->mod = 1;
-    c->asp = 0;
-    c->tte = 1;
-    c->tie = 0;
-    func_00266f38(c, D_00272C70);
-    sceGsSyncPath(0, 0);
-    func_00162500();
-}
-
-s32 func_0015f388(void) {
-    u64 *p;
-    __asm__ volatile("sync");
-    p = (u64 *)((u32)D_00573E40 | 0x20000000);
-    p[12] = 0x5080B;
-    p[14] = (128LL << 32) | 0x2A;
-    p[18] = (s64)D_002BC0F0.s2BC0F0_2.x10 | ((s64)D_002BC0F0.s2BC0F0_2.x14 << 8) | ((s64)D_002BC0F0.s2BC0F0_2.x18 << 16);
-    p[16] = 0x31000070;
-    p[20] = 0x800D0;
-    p[22] = 5;
-    __asm__ volatile("sync");
-    D_0055C644->mod = 1;
-    D_0055C644->asp = 0;
-    D_0055C644->tte = 0;
-    D_0055C644->tie = 0;
-    __asm__ volatile("sync");
-    func_00266f38((void *)D_0055C644, &D_00573E40[2]);
-    return 2;
-}
-
-void func_0015f798(S798 *o) {
-    S798e *e = o->x10->e;
-    u32 *d;
-    if (e->x48 & 1) {
-        u32 *s = e->x10->data;
-        s32 i;
-        d = (u32 *)((u32)D_00272DA4 | 0x20000000);
-        for (i = 0; i < 16; i++) *d++ = *s++;
-    } else {
-        d = (u32 *)((u32)D_00272D94 | 0x20000000);
-        d[0] = e->x20;
-        d[1] = e->x24;
-        d[2] = e->x28;
-        d[3] = e->x2C;
-    }
-    d = (u32 *)((u32)D_00272DE4 | 0x20000000);
-    d[3] = e->x3C;
-    __asm__ volatile("sync");
-    D_0055C640->dir = 1;
-    D_0055C640->mod = 1;
-    D_0055C640->asp = 0;
-    D_0055C640->tte = 1;
-    D_0055C640->tie = 0;
-    __asm__ volatile("sync");
-    func_00266f38((void *)D_0055C640, D_00272CF0);
-}
-
-void func_00162428(void) {
-    __asm__ volatile("sync");
-    D_0055C648 = (GifTag8 *)((u32)D_00573AC0 | 0x20000000);
-    func_0015f8c8();
-    D_0055C648->b3 = 0x70;
-    D_0055C648->w4 = 0;
-    D_0055C648->h0 = 0;
-    __asm__ volatile("sync");
-    D_0055C644->mod = 1;
-    D_0055C644->asp = 0;
-    D_0055C644->tte = 0;
-    D_0055C644->tie = 0;
-    __asm__ volatile("sync");
-    func_00266f38(D_0055C644, D_00573AC0);
-}
-
-void func_001625c8(f32 (*src)[4], f32 (*dst)[4]) {
-    f32 sx, sy, sz;
-    f32 v[4];
-    f32 z;
-    sceVu0CopyMatrix(dst, src);
-    sx = func_00162c20(dst[0]);
-    sy = func_00162c20(dst[1]);
-    sz = func_00162c20(dst[2]);
-    func_002673f8(dst, dst);
-    dst[0][3] = dst[1][3] = dst[2][3] = dst[3][0] = dst[3][1] = dst[3][2] = 0.0f;
-    dst[3][3] = 1.0f;
-    func_002674d0(dst[0], dst[0], sx);
-    func_002674d0(dst[1], dst[1], sy);
-    func_002674d0(dst[2], dst[2], sz);
-    func_002672f8(v, dst, src[3]);
-    dst[3][0] = -v[0];
-    dst[3][1] = -v[1];
-    dst[3][2] = -v[2];
-}
-
-void func_001626f0(f32 *scale, f32 *rot, f32 *trans, f32 (*m)[4]) {
-    s32 i;
-    f32 z;
-    sceVu0UnitMatrix(m);
-    for (i = 0; i < 3; i++) m[i][i] = scale[i];
-    if (rot[0] != 0.0f) func_00267768(m, m, rot[0]);
-    if (rot[1] != 0.0f) func_00267810(m, m, rot[1]);
-    if (rot[2] != 0.0f) func_002676c0(m, m, rot[2]);
-    m[3][0] = trans[0];
-    m[3][1] = trans[1];
-    m[3][2] = trans[2];
-}
-
-void func_001628a0(f32 (*dst)[4], f32 (*src)[4], f32 *out) {
-    sceVu0CopyMatrix(dst, src);
-    out[0] = PlatSqrtf(func_00267390(dst[0], dst[0]));
-    out[1] = PlatSqrtf(func_00267390(dst[1], dst[1]));
-    out[2] = PlatSqrtf(func_00267390(dst[2], dst[2]));
-    func_002674d0(dst[0], dst[0], out[0]);
-    func_002674d0(dst[1], dst[1], out[1]);
-    func_002674d0(dst[2], dst[2], out[2]);
-}
-
-AnimKey *func_00164e00(AnimObj *o, u32 key, f32 t) {
-    AnimTrk *e = o->trk;
-    AnimTrk *f;
-    u32 lo = key & 0xFFFF;
-    u32 hi = key >> 16;
-    AnimKey *k;
-    s32 a, b, r;
-    for (; e->id.w != -1; e++) {
-        if (e->id.h.hi == hi && (lo == 0xFFFF || e->id.h.lo == lo)) {
-            f = e;
-            goto found;
-        }
-    }
-    f = 0;
-found:
-    if (f == 0) return 0;
-    k = f->keys;
-    a = 0;
-    r = -1;
-    b = f->n - 1;
-    if (!(t < k[0].t)) {
-        if (k[b].t <= t) {
-            r = b;
-        } else {
-            while (b - a >= 2) {
-                s32 m = (a + b) / 2;
-                if (t < k[m].t) b = m;
-                else if (k[m].t < t) a = m;
-                else { r = m; goto done; }
-            }
-            r = a;
-        }
-    }
-done:
-    if (r < 0) return 0;
-    return &k[r];
-}
-
-s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
-    f32 v[4];
-    s32 par = (*o->skel)->bones[idx].x2C & 0x3FF;
-    if (par == 0x3FF && t == 1.0f) {
-        func_002675a8(out, o->m154[idx][3]);
-        return -1;
-    }
-    func_00162848(v, o->m154[par], o->m150[idx][3]);
-    func_00267e60(out, v, o->m154[par][3], t);
-    return ((*o->skel)->bones[par].x2C >> 30) & 1 ? -1 : 0;
 }
 #include "data/data_002C.h"
 #include "data/data_0035.h"

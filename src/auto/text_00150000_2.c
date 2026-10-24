@@ -7,14 +7,9 @@ M2C_UNK func_0012cc38(M2C_UNK, M2C_UNK);
 M2C_UNK func_0012ccb0(M2C_UNK);
 M2C_UNK func_00157818(s32, s32);
 M2C_UNK func_00176310(s32);
-M2C_UNK func_00258d10(M2C_UNK);
-extern M2C_UNK func_0015efc0;
 extern f32 D_00551D74;
 extern s32 D_002C5958;
 #include "data/pieces/D_002E26A0.h"
-extern s32 D_00351BC0;
-extern s32 D_00351BC4;
-s32 AddDmacHandler(M2C_UNK, M2C_UNK *, M2C_UNK);
 s32 func_0013c6a8(s16);
 s32 func_00157560();
 
@@ -100,12 +95,3 @@ void func_0015e7f8(s32 arg0) {
         D_00551D74 = 30.0f;
     }
 }
-
-void func_0015eda8(void) {
-    func_00258d10(1);
-    func_00258d10(2);
-    D_00351BC0 = AddDmacHandler(1, &func_0015efc0, 0);
-    D_00351BC4 = AddDmacHandler(2, &func_0015efc0, 0);
-}
-#include "data/pieces/D_00351BC0.h"
-#include "data/pieces/D_00351BC4.h"

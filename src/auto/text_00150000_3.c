@@ -3,13 +3,10 @@
 #include "m2c.h"
 #include "actor.h"
 #include "data/bss_0055.h"
-
-M2C_UNK RemoveDmacHandler(M2C_UNK, s32);
 M2C_UNK func_0011efa8(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK);
 M2C_UNK func_00148768(s32, M2C_UNK, s32 *, M2C_UNK, f32);
 M2C_UNK func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_00176310(s32);
-M2C_UNK func_00258d10(M2C_UNK);
 M2C_UNK func_002673b8(s32, void *);
 M2C_UNK func_002674f0(s32, void *, s32, f32);
 M2C_UNK func_002675a8(s32, M2C_UNK *);
@@ -34,8 +31,6 @@ extern s32 D_005516E8;
 extern s8 D_00550400; /* src/data/bss_0055.c: E550400 D_00550400[0x34] */
 extern s8 D_00FE0000;
 extern u8 D_002E3190;
-extern volatile s32 D_00351BC0;
-extern volatile s32 D_00351BC4;
 f32 func_00267560(void *, s32, f32);
 f32 func_0026b9a8(f32, f32);
 s32 *func_0013daf8();
@@ -269,16 +264,5 @@ void func_0015de88(s32 arg0) {
         M2C_FIELD(arg0, f32 *, 0x150) = func_0026b9a8(M2C_FIELD(arg0, f32 *, 0x20), M2C_FIELD(arg0, f32 *, 0x28));
     }
 }
-
-void func_0015ee10(void) {
-    func_00258d10(1);
-    func_00258d10(2);
-    RemoveDmacHandler(1, D_00351BC0);
-    RemoveDmacHandler(2, D_00351BC4);
-    D_00351BC0 = -1;
-    D_00351BC4 = -1;
-}
 #include "data/data_0035.h"
 #include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_00351BC0.h"
-#include "data/pieces/D_00351BC4.h"

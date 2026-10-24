@@ -171,7 +171,7 @@ def shape(name, decl):
     return s, ('scalar' if words and words <= INTS else 'other')
 
 
-def view(name, decl, base, addr=False):
+def view(name, decl, base, addr=False, sfx=None):
     """A view of D_X as this function declared it, given the first declaration
     `base`.  Scalars (pointers, integers) are cast by value and arrays by
     address, so the access stays a direct one: an access through `*(T *)&D_X`
@@ -181,9 +181,16 @@ def view(name, decl, base, addr=False):
     s0, k0 = shape(name, base)
     def wide(t):  # a 64-bit integer (a pointer has a '*')
         return '*' not in t and bool(re.search(r'\b(u64|s64|long\s+long)\b', t))
-    if k == 'scalar' and k0 == 'scalar' and not addr and wide(s) == wide(s0):  # (&D_X needs an lvalue;
+    vol = lambda t: bool(re.search(r'\bvolatile\b', t)) and '*' not in t  # a volatile scalar (session 52:
+    # a value cast drops the volatile and reorders the accesses: view it in memory)
+    if k == 'scalar' and k0 == 'scalar' and not addr and wide(s) == wide(s0) and vol(s) == vol(s0):  # (&D_X needs an lvalue;
         # a value cast of a 32-bit base to u64 would load 32 bits)
         return '#define %s ((%s) %s)' % (name, sub(s, name, ''), name)
+    if k == 'array' and sfx:
+        # an array: an `__asm__` alias with this function's type (session 52: a
+        # cast view `((T *) D_X)` changed the address folding of D_00573F10,
+        # D_00575528, D_00575328 and D_002E26A0)
+        return 'extern %s __asm__("%s");\n#define %s %s_%s' % (sub(s, name, name + '_' + sfx), name, name, name, sfx)
     if k == 'array':
         el = re.sub(r'\[[^\]]*\]', '', sub(s, name, '(*)'), count=1)
         el = re.sub(r'\(\*\)\s*$', '*', el.strip()) if el.strip().endswith('(*)') else el
@@ -451,7 +458,7 @@ def main(out, funcs, onto=False):
                     if b != t2 and not known: b = t2
                     emitted[nm] = ('var', norm(b), b); sec.append(b)
                 if emitted[nm][1] != norm(t2) and nm not in owndefs:  # (the function's own macro views it)
-                    views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None))
+                    views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None, f.split('_')[-1]))
                 continue
             if kind == 'proto' and nm in inmod and emitted.get(nm, ('',))[0] in ('', 'proto', 'kr') \
                     and unnamed(t2) != unnamed(defhead[nm]):
@@ -495,7 +502,7 @@ def main(out, funcs, onto=False):
         emitted[f] = ('def', norm(b.split('{')[0]))
         sec.append(b.rstrip('\n'))
         for v in views:
-            sec.append('#undef ' + re.match(r'#define (\w+)', v).group(1))
+            sec.append('#undef ' + re.search(r'^#define (\w+)', v, flags=re.M).group(1))
         nxt = {}  # the next later definition of each macro (kept if it is the same)
         for pl in plan[idx + 1:]:
             for nm, v in pl[3]:
