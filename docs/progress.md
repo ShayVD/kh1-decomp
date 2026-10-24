@@ -4,7 +4,7 @@ Regenerate with `make progress-update` at the end of each session and commit the
 A function counts as matched only when its rebuilt bytes are identical to the original
 and objdiff reports 100% for it.
 
-_Last updated 2026-10-23._
+_Last updated 2026-10-24._
 
 ## Overall
 
@@ -25,21 +25,23 @@ _Last updated 2026-10-23._
 |---|---|---|---|---|
 | dir:src/anon | 7 / 7 | 100.00% | 100.00% | 0 |
 | dir:src/asm | 33 / 33 | 100.00% | 100.00% | 0 |
-| dir:src/auto | 1757 / 1757 | 100.00% | 100.00% | 0 |
+| dir:src/auto | 1716 / 1716 | 100.00% | 100.00% | 0 |
 | dir:src/camera | 55 / 55 | 100.00% | 100.00% | 0 |
 | dir:src/event | 129 / 129 | 100.00% | 100.00% | 0 |
-| dir:src/game | 113 / 113 | 100.00% | 100.00% | 0 |
-| dir:src/hand | 2214 / 2214 | 100.00% | 100.00% | 0 |
-| dir:src/list | 56 / 56 | 100.00% | 100.00% | 0 |
+| dir:src/game | 118 / 118 | 100.00% | 100.00% | 0 |
+| dir:src/hand | 2157 / 2157 | 100.00% | 100.00% | 0 |
+| dir:src/list | 61 / 61 | 100.00% | 100.00% | 0 |
+| dir:src/memcard | 55 / 55 | 100.00% | 100.00% | 0 |
 | dir:src/menu | 516 / 516 | 100.00% | 100.00% | 0 |
 | dir:src/msgwin | 44 / 44 | 100.00% | 100.00% | 0 |
-| dir:src/save | 58 / 58 | 100.00% | 100.00% | 0 |
+| dir:src/pad | 10 / 10 | 100.00% | 100.00% | 0 |
+| dir:src/save | 69 / 69 | 100.00% | 100.00% | 0 |
 | dir:src/screen | 44 / 44 | 100.00% | 100.00% | 0 |
 | dir:src/sdk | 721 / 721 | 100.00% | 100.00% | 0 |
 | dir:src/shop | 92 / 92 | 100.00% | 100.00% | 0 |
 | dir:src/sound | 49 / 49 | 100.00% | 100.00% | 0 |
 | dir:src/text | 397 / 397 | 100.00% | 100.00% | 0 |
-| dir:src/util | 7 / 7 | 100.00% | 100.00% | 0 |
+| dir:src/util | 19 / 19 | 100.00% | 100.00% | 0 |
 | dir:src/vm | 687 / 687 | 100.00% | 100.00% | 0 |
 
 ## History

@@ -15,7 +15,9 @@ rewrite matched code.
    start with `Plat`. On the PS2 build a wrapper is a macro or `static inline`
    for the SCE call, so it compiles to exactly the original instructions. On
    the Vita build the same names are implemented with vitasdk.
-   `include/platform/pad.h` is the template.
+   `include/platform/pad.h` is the template. `include/platform/mc.h` (session 44)
+   wraps libmc for src/memcard/, the only code that calls it; the save and
+   load screens queue requests (include/memcard/mcreq.h) and never touch libmc.
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under

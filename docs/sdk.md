@@ -300,3 +300,31 @@ None of these are ported. The Vita layer replaces each library behind the
 - func_0025b2f0 (file I/O init): D_0066DAC0 is the `{ void (*func)(int); int arg; }` Hook that
   func_0025b2c0 takes; with that type the two field stores get different alias sets and the
   prologue save order matches (src/sdk/gcc991111/text_00250000_s10_w6.c).
+
+## Session 44: libmc
+
+libmc's calls are named in functions.tsv from the mcserv RPC number each passes to sceSifCallRpc (the
+`li $a1,N` before the call), the last-command number it stores in D_0046E090 for sceMcSync, and its arguments
+(src/sdk/gcc991111/text_00260000_s2.c already had their bodies matched):
+
+| address | name | evidence |
+|---|---|---|
+| 0x00270e40 | sceMcGetSlotMax | RPC 21, waits and returns the answer (port) |
+| 0x00270f00 | sceMcOpen | RPC 2 (port, slot, name, mode); the game opens with 1, 2, 0x203 |
+| 0x00271038 | sceMcMkdir | sceMcOpen(port, slot, name, 0x40) |
+| 0x00271070 | sceMcClose | RPC 3 (fd) |
+| 0x00271290 | sceMcRead | RPC 5 (fd, buf, size) |
+| 0x002713b0 | sceMcWrite | RPC 6 (fd, buf, size), FlushCache first |
+| 0x002715a0 | sceMcSync | no RPC (mode, cmd, result); session 5 named it in this file |
+| 0x002716d8 | sceMcGetInfo | RPC 1 (port, slot, type, free, format) |
+| 0x002718d0 | sceMcGetDir | RPC 13 (port, slot, name, mode, maxent, table) |
+| 0x00271ab0 | sceMcChdir | RPC 12 (port, slot, name, current) |
+| 0x00271c00 | sceMcFormat | RPC 16 (port, slot) |
+| 0x00271cc8 | sceMcDelete | RPC 15 (port, slot, name) |
+| 0x00272080 | sceMcRename | RPC 14 (set file info) with valid 0x10 and last command 19 (port, slot, name, new name) |
+| 0x002721e8 | sceMcUnformat | RPC 17 (port, slot) |
+
+func_00270d88 (RPC 20, one argument; most likely sceMcChangeThreadPriority) and func_002722b0 are not
+called by the game and keep their placeholder names. include/sce/libmc.h has the public signatures and
+include/platform/mc.h the PlatMc wrappers (docs/portability.md).
+
