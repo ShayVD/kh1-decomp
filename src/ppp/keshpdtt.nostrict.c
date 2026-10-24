@@ -101,7 +101,7 @@ void func_001a99e8(S99e8 *s) {
 }
 
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 
 typedef struct {
     f32 v[4];

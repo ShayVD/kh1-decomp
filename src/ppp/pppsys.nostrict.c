@@ -28,7 +28,7 @@
 #include "data/pieces/D_003701D0.h"
 
 /* func_00180280 (from hand/nostrict/text_00180000_c2.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef union { V4 v; u128 q; } V4A;
 void func_00182870();
 extern V4A D_00615FC0[4];
@@ -359,7 +359,7 @@ void func_00181738(void) {
 #define D_00616200 D_00616200_2058
 #define D_0061621C D_0061621C_2058
 #define D_00616220 D_00616220_2058
-typedef unsigned int u128_82058 __attribute__((mode(TI)));
+typedef kh1_u128 u128_82058;
 typedef struct { u8 pad[0x10]; void *x10; void *x14; void *x18; } Pmgr;
 extern V4 D_00616200 __asm__("D_00616200");
 typedef struct E0C0_82058 {

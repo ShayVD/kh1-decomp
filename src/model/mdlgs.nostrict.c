@@ -156,7 +156,7 @@ void func_0015f018(void) {
 }
 
 /* func_0015f128 (from hand/nostrict/text_00140000_s6_07.c). */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct {
     u64 NLOOP : 15;
     u64 EOP : 1;

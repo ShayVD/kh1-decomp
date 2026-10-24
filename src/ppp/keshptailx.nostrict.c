@@ -1165,7 +1165,7 @@ extern f32 D_003732D0[];
         "vsub.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
-typedef unsigned int T3Q __attribute__((mode(TI)));
+typedef kh1_u128 T3Q;
 typedef struct {
     s32 frame;
     s32 id;       /* +0x4 */

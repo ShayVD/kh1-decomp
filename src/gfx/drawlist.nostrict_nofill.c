@@ -22,7 +22,7 @@
 #include "gfx/drawlist.h"
 #include "gfx/gspkt.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 typedef struct { s32 x, y, z, w; } __attribute__((aligned(16))) I4b;
 typedef I4b I4;

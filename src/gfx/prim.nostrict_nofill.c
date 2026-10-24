@@ -6,7 +6,7 @@
 #include "common.h"
 #include "gfx/gspkt.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_002386c0(u128 *src, s32 n, u128 *buf) {
     s32 k = 2;

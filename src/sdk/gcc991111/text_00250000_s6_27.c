@@ -123,7 +123,7 @@ s32 func_00260458(s32 cid, u32 mode, SifCmdPkt *pkt, u32 size, void *src, void *
     return sceSifSetDma(dma, n);
 }
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 s32 scePrintf(const char *, ...);
 extern char D_00492B30[];
 typedef struct {

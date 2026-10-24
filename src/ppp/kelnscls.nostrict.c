@@ -17,7 +17,7 @@
 #include "data/bss_0061.h"
 #include "data/types/nostrict_text_00180000_h40.h"
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef union {
     f32 f[4];
     u128 q;
@@ -246,7 +246,7 @@ void pppKeLnsFlsDraw(PppObject_92788 *obj, PppLnsClmKey *key, PppEntry *e) {
 #undef D_00616040
 
 /* func_00192958 (from hand/nostrict/text_00190000_s18_s18m2.c). */
-typedef int u128_92958 __attribute__((mode(TI)));
+typedef kh1_s128 u128_92958;
 typedef struct { u64 fbp:9, pad0:7, fbw:6, pad1:2, psm:6, pad2:2, fbmsk:32; } GsFrame;
 typedef struct { u64 zbp:9, pad3:15, psmz:4, pad4:4, zmsk:1, pad5:31; } GsZbuf;
 typedef struct { u64 ofx:16, pad6:16, ofy:16, pad7:16; } GsXyoff;

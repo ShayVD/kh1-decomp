@@ -400,7 +400,7 @@ void func_00180ea0(SEA0 *s) {
 }
 
 /* func_00180f18 (from hand/text_00180000_b07.c). */
-typedef int u128_80f18 __attribute__((mode(TI)));
+typedef kh1_s128 u128_80f18;
 typedef struct {
     s32 key;
     s32 mask;

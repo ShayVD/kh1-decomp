@@ -308,7 +308,7 @@ void func_0011a818(s32 *a0, s32 *a1, u16 *a2, s32 a3) {
 }
 
 /* func_0011a868 (from hand/text_00110000_s6_03.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { f32 x, y, z; } V3;
 typedef struct {
     u128 *x0;

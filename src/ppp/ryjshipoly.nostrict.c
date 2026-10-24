@@ -18,7 +18,7 @@
 #include "data/pieces/D_003701F0.h"
 #include "data/pieces/D_003701D0.h"
 #include "data/pieces/D_003701E0.h"
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 extern u128 D_00372710;
 void func_001996d0(u128 *a, s32 n, u128 *b) {
     u128 buf[32];

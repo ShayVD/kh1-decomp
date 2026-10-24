@@ -8,7 +8,7 @@
 #include "common.h"
 #include "platform/vu.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 V4f[4] __attribute__((aligned(16)));
 typedef struct { u128 q[7]; } Ent70;
 void func_00237018(u128 *, s32, s32);

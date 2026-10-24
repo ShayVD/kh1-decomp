@@ -17,7 +17,7 @@
 
 /* pppKeThFrame (from hand/nostrict/text_00180000_c05.c). */
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-typedef int u128_8bee0 __attribute__((mode(TI)));
+typedef kh1_s128 u128_8bee0;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 typedef struct {
     s32 unk0;

@@ -9,7 +9,7 @@
  * image to the backup D_0040EF80 and back. */
 #include "common.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 extern u128 D_003F8380[];
 extern u128 D_003F8F80[];

@@ -6,7 +6,7 @@
 #include "common.h"
 #include "gfx/drawlist.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_00237680(DrawList *h, DrawNode *node, s32 idx) {
     s32 max = 1 << h->bits;

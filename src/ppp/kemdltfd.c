@@ -8,7 +8,7 @@
 #include "common.h"
 #include "platform/vu.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) GV4;
 extern u128 D_00372770[2];
 extern s8 D_00372790[];

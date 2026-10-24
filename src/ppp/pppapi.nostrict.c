@@ -12,7 +12,7 @@
 #include "data/types/nostrict_text_00170000_h61.h"
 
 /* func_00175be0 (from hand/nostrict/text_00160000_s6_09.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef struct { s32 x0; void *x4; s32 x8; void *xc; u8 pad10[4]; s32 x14; u8 pad18[4]; void *x1c; u8 pad20[0xC]; u8 *x2c; u8 pad30[0xC]; } Ent5B;
 typedef struct { s32 x0; void *x4; void *x8; Ent5B ent[64]; s32 idx[64]; u8 pad[4]; f32 vec[64][4]; } W5B;
 typedef struct { s32 id; s32 x4; s32 key; u8 padc[4]; f32 v10[4]; u128 q20; f32 v30[4]; f32 v40[4]; } It5B;

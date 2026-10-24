@@ -1,5 +1,5 @@
 #include "common.h"
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct { u64 SBP:14, p0:2, SBW:6, p1:2, SPSM:6, p2:34; } TBitblt;
 typedef struct { u64 RRW:12, p0:20, RRH:12, p1:20; } TTrxreg;
 typedef struct {

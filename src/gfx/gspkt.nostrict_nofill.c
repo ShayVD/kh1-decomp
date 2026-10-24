@@ -9,7 +9,7 @@
 #include "platform/gs.h"
 #include "platform/dma.h"
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 
 void func_00237018(u128 *p, s32 n, s32 wait) {
     PlatDmaChan *ch;

@@ -14,7 +14,7 @@
 #include "data/pieces/D_002BCAF0.h"
 
 /* func_0010a5d0 (from hand/nostrict/text_00100000_s7_w5.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 extern u64 D_002B70B0[];
 extern s32 D_00495250;
 void func_0010a4d8(u64 *, s32, s32, s32, s32, s32, s32);

@@ -11,7 +11,7 @@
 #include "platform/vu.h"
 #include "ppp.h"
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
 typedef struct {

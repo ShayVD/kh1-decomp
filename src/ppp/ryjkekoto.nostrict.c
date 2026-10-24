@@ -60,7 +60,7 @@ void func_001a1158(UvSrc *s, FV4 *v) {
     v[0].x = u0;
 }
 
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 typedef f32 KkV4[4] __attribute__((aligned(16)));
 typedef f32 KkMtx[4][4] __attribute__((aligned(16)));
 

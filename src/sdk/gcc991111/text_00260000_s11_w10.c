@@ -1,5 +1,5 @@
 #include "common.h"
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 s32 EIntr(void);
 s32 isceSifSetDChain(void);
 typedef struct { void (*func)(void *, void *); void *data; } SifCmdEnt;

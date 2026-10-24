@@ -79,7 +79,7 @@ void pppMatrixSclFrame(void *obj, void *key, PppEntry *e) {
 }
 
 /* pppDrawMatrixWoodFrame (from hand/nostrict/text_00180000_h39.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 extern f32 D_006160C0[4][4];
 extern f32 D_00616080[4][4];
 void pppDrawMatrixWoodFrame(void) {

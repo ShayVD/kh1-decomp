@@ -75,7 +75,7 @@ void func_00110068(void) {
 }
 
 /* func_001100a8 (from hand/text_00110000_h29.c). */
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 typedef struct { u64 d, a; } W29Ad;
 typedef struct {
     union {

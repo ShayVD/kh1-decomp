@@ -5,7 +5,7 @@
 #include "m2c.h"
 #include "ppp.h"
 
-typedef unsigned int u128 __attribute__((mode(TI)));
+typedef kh1_u128 u128;
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
 s32 func_001a1158(s32, s32);

@@ -2202,7 +2202,7 @@ zero:
 }
 
 /* func_001198c8 (from hand/text_00110000_cc.c). */
-typedef int u128 __attribute__((mode(TI)));
+typedef kh1_s128 u128;
 extern u128 D_002C12F0;
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
     __asm__ volatile(
