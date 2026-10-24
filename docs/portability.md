@@ -216,6 +216,34 @@ rewrite matched code.
     (func_00111130's did func_001111b0's), so only change the ones a caller
     reads.
 
+11. **No EE-only argument order or return class** (session 64). The EE passes integer
+    arguments in a0-a7 and float ones in $f12-$f19, each its own sequence, and a 64-bit value in
+    one register; a float comes back in $f0, an integer in v0. So a prototype or m2c cast that
+    puts an f32 before an int the definition has after it (`f(s32, f32, s32)` for `f(s32, s32,
+    f32)`), passes an s32 where the definition takes a u64, or declares `void` / `s32` for a
+    function that returns f32, still works on the EE. Off the EE every argument has one place
+    in one sequence and a 64-bit one takes two (the callee reads the wrong values), and on x86 a
+    float return the caller does not take leaves the x87 stack unbalanced (and one it takes from
+    a void function pops nothing). `python3 -I tools/host/abicheck.py` lists them (each
+    prototype and cast against the definition, by class: 32-bit integer, 64-bit integer, f32,
+    f64, 128-bit). Give the declaration the definition's types and order and reorder the call's
+    arguments. When the reorder changes the PS2 code (gcc 2.96 evaluates the arguments in
+    another order), keep the EE's declaration in an `#ifdef KH1_PS2` branch and give the host
+    the definition's order plus a macro that reorders the calls:
+
+        #ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
+        void func_001315c0(void *, s32, f32, void *);
+        #else
+        void func_001315c0(void *, s32, void *, f32);
+        #define func_001315c0(a1, a2, a3, a4) (func_001315c0)(a1, a2, a4, a3)
+        #endif
+
+    abicheck skips the `KH1_PS2` branch. Session 64 fixed all 146 hits (every PS2 object the
+    same): 72 return types; the 64-bit arguments (func_0011fb38's register number and
+    func_0011fb78's a1 are s32 in their definitions now, which settles 9 callers, and 5 callers
+    declare the u64 they pass); 12 declarations reordered with their calls and 13 host-order
+    branches; class19.c's extra argument to func_00121b08 (which takes the f32 only).
+
 ## Known absolute addresses in matched code
 
 - func_00171078 (src/hand/text_00170000_s9_w9.c) reads `((s32 *)0x35BD40)[i]`: the original

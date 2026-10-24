@@ -401,9 +401,7 @@ polling.
 
 **A layout dependency found**: func_001a9f88 (src/gfx/opdma.c) links 288 GS tags from D_0061EEA0 on,
 across D_0061EEA0 (16 heads, bss_0061.c), D_0061EFA0 (the pool of 256) and D_0061FFA0 (16 heads,
-opdma.c): one array at 0x61EEA0 in the original. Off the EE the three are one array in
-host/port/memmap.c (`#ifdef KH1_PS2` around the two C definitions). The shiftable build keeps them in
-that order only because the link does; phase 4 should make them one definition.
+opdma.c): one array at 0x61EEA0 in the original. Session 64 made them one definition (5.1d).
 
 **The run** on tests/host/fake_disc.py's image (no game data: SYSTEM.CNF, a one-entry KINGDOM.IDX):
 the boot reads SYSTEM.CNF and KINGDOM.IDX, sets up the sound RPC, func_001094f0 starts the ppp and
@@ -412,6 +410,45 @@ more reads. **Next, with the user's ISO** (the Mac session; ask once, never copy
 `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` and record where it stops. Expected: the first
 overlay call, D_00F20000(0, 0) after dktitle.x is read into the overlay area, jumps into data on the
 host (the overlays need a native build, 5.2), and the GS / VU stubs draw nothing.
+
+### 5.1d Session 64: the value uses read, opdma's one array, argument classes (rule 11)
+
+Static only (the Mac was away). Every PS2 object stayed the same except the four of the opdma
+change, and kh1.elf is byte-identical.
+
+**The 6 value uses** (5.1c "Left"): 3 are benign and in argcheck's BENIGN table, which now takes an
+optional third name (the caller) so one entry covers one wrapper: func_00150bf8 is class 0x1A's
+handler at D_00350D88 +0xC, which only func_0013e558 (plctl.c) calls, as a statement;
+pppRyjDrawKekotoFrame is a ppp frame callback, and pppsys.nostrict.c's dispatchers call those as
+statements; func_002066b0's 39 main-ELF calls are all statements (recheck against the overlays).
+**3 are left** for the overlay check: func_001ffaf0 (winmenu.c), func_002040a0 and func_00206710
+(winpart.c) have no jal, no pointer in the ELF's data and no caller in src/. Reading those call
+sites found a passthrough argcheck cannot see: func_0013e558 called the +0xC handler as `fn()` with
+the actor still in a0 (the handlers take it); it passes `fn(arg0)` now. objse.c's func_001570d0
+calls its +0x10 callback with no arguments and a0 is whatever func_001ecfd8 left: no handler can
+rely on it, left as is.
+
+**opdma's tag lists are one definition**: `GsTag D_0061EEA0[0x10 + 0x100 + 0x30]` in
+src/gfx/opdma.c, with D_0061EFA0 / D_0061FFA0 as `#define` views (+0x10, +0x110 tags);
+bss_0061.c's definition and host/port/memmap.c's copy are gone, and vu0_render_1.s /
+vu0_render_2.s reach the pool as `D_0061EEA0+0x100` (`.reloc` with an addend: the REL addend goes
+in the instruction field, the linked words are the same). The shift build: M0 OK (two fewer D_
+names), and the m12 float ELF's loaded bytes are unchanged (fcheck: only the name D_0061FFA0 left
+float_covered / float_reach).
+
+**Argument and return classes** (portability.md rule 11, new tools/host/abicheck.py). An LTO link
+of the host build (`-flto -Wlto-type-mismatch`) showed declarations that order f32 and integer
+parameters differently from the definition, or pass s32 for u64: both work on the EE, where floats
+have their own registers and a u64 fits one. abicheck compares every prototype and m2c cast in src/
+with the definition, by class: 146 hits, all fixed (72 return types, 9 callers through 64-bit
+definitions, 12 reorders, 13 host-order `#ifdef KH1_PS2` branches where gcc 2.96 orders the
+arguments' evaluation differently, one extra argument). On x86 a float return nobody pops leaves the
+x87 stack unbalanced; that was 50 of the hits.
+
+**The fake-disc run under valgrind** (`valgrind --track-origins=yes out/host/kh1-host`, needs
+libc6-dbg:i386): it found func_0010c378 reading the SemaParam PlatIReferSemaStatus did not write
+(the null platform fills it now: no thread waits) and func_0011fb78 reading a u64 its callers
+passed as s32 (the abicheck class above). After the fixes 60 frames run with **0 errors**.
 
 ### 5.2 Session 60: overlays, dktitle.x
 
