@@ -43,3 +43,122 @@ void PlatVu0RotRows(f32 (*out)[4], const f32 *rot) {
         out[i][3] = 0.0f;
     }
 }
+
+/* The VU0 register file (vu.h, tools/host/vu2c.py). */
+PlatVu0Regs PlatVu0 = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+static void vu0_set(int d, int mask, const f32 *r) {
+    u32 mac = 0, st = 0;
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (!(mask & (8 >> i)))
+            continue;
+        if (r[i] == 0.0f)
+            mac |= 8 >> i;
+        if (PlatVu0Bits(r[i]) & 0x80000000)
+            mac |= 0x80 >> i;
+        if (d == PLAT_VU0_ACC)
+            PlatVu0.acc[i] = r[i];
+        else if (d != 0)
+            PlatVu0.vf[d][i] = r[i];
+    }
+    if (mac & 0x0f)
+        st |= 1;
+    if (mac & 0xf0)
+        st |= 2;
+    PlatVu0.mac = mac;
+    PlatVu0.stat = (PlatVu0.stat & ~3u) | st | (st << 6);
+}
+
+void PlatVu0Fmac(int op, int d, int mask, int s, int t, int bc) {
+    f32 r[4], a, b;
+    int i;
+    for (i = 0; i < 4; i++) {
+        a = PlatVu0.vf[s][i];
+        b = bc < 0 ? PlatVu0.vf[t][i] : bc == PLAT_VU0_BC_Q ? PlatVu0.q : PlatVu0.vf[t][bc];
+        switch (op) {
+        case PLAT_VU0_ADD: r[i] = a + b; break;
+        case PLAT_VU0_SUB: r[i] = a - b; break;
+        case PLAT_VU0_MUL: r[i] = a * b; break;
+        case PLAT_VU0_MADD: r[i] = PlatVu0.acc[i] + a * b; break;
+        case PLAT_VU0_MSUB: r[i] = PlatVu0.acc[i] - a * b; break;
+        case PLAT_VU0_MAX: r[i] = a > b ? a : b; break;
+        default: r[i] = a < b ? a : b; break;
+        }
+    }
+    if (op == PLAT_VU0_MAX || op == PLAT_VU0_MINI) {
+        /* no flags */
+        for (i = 0; i < 4; i++)
+            if ((mask & (8 >> i)) && d > 0)
+                PlatVu0.vf[d][i] = r[i];
+        return;
+    }
+    vu0_set(d, mask, r);
+}
+
+/* ACC.xyz = (s.y t.z, s.z t.x, s.x t.y); d.xyz = ACC - (s.y t.z, s.z t.x, s.x t.y) */
+void PlatVu0Opmula(int s, int t) {
+    f32 *a = PlatVu0.vf[s], *b = PlatVu0.vf[t], r[4];
+    r[0] = a[1] * b[2];
+    r[1] = a[2] * b[0];
+    r[2] = a[0] * b[1];
+    r[3] = 0.0f;
+    vu0_set(PLAT_VU0_ACC, 0xe, r);
+}
+void PlatVu0Opmsub(int d, int s, int t) {
+    f32 *a = PlatVu0.vf[s], *b = PlatVu0.vf[t], r[4];
+    r[0] = PlatVu0.acc[0] - a[1] * b[2];
+    r[1] = PlatVu0.acc[1] - a[2] * b[0];
+    r[2] = PlatVu0.acc[2] - a[0] * b[1];
+    r[3] = 0.0f;
+    vu0_set(d, 0xe, r);
+}
+
+void PlatVu0Move(int d, int mask, int s) {
+    f32 r[4];
+    int i;
+    __builtin_memcpy(r, PlatVu0.vf[s], 16);
+    for (i = 0; i < 4; i++)
+        if ((mask & (8 >> i)) && d != 0)
+            PlatVu0.vf[d][i] = r[i];
+}
+
+void PlatVu0Ftoi(int d, int mask, int s, int frac) {
+    f32 r[4];
+    int i;
+    for (i = 0; i < 4; i++)
+        r[i] = PlatVu0Float((u32)PlatVu0Ftoi0(PlatVu0.vf[s][i] * (f32)(1 << frac)));
+    for (i = 0; i < 4; i++)
+        if ((mask & (8 >> i)) && d != 0)
+            PlatVu0.vf[d][i] = r[i];
+}
+
+void PlatVu0Itof(int d, int mask, int s, int frac) {
+    f32 r[4];
+    int i;
+    for (i = 0; i < 4; i++)
+        r[i] = (f32)(s32)PlatVu0Bits(PlatVu0.vf[s][i]) / (f32)(1 << frac);
+    for (i = 0; i < 4; i++)
+        if ((mask & (8 >> i)) && d != 0)
+            PlatVu0.vf[d][i] = r[i];
+}
+
+void PlatVu0Div(int s, int sf, int t, int tf) { PlatVu0.q = PlatVu0.vf[s][sf] / PlatVu0.vf[t][tf]; }
+void PlatVu0SqrtQ(int t, int tf) { PlatVu0.q = PlatVu0Sqrt(PlatVu0.vf[t][tf]); }
+void PlatVu0Lq(int n, const void *p) {
+    if (n != 0)
+        __builtin_memcpy(PlatVu0.vf[n], p, 16);
+}
+void PlatVu0Sq(int n, void *p) { __builtin_memcpy(p, PlatVu0.vf[n], 16); }
+/* the GPR's upper 64 bits are not modelled: z and w 0 */
+void PlatVu0Qmtc2(int n, u64 v) {
+    if (n == 0)
+        return;
+    PlatVu0.vf[n][0] = PlatVu0Float((u32)v);
+    PlatVu0.vf[n][1] = PlatVu0Float((u32)(v >> 32));
+    PlatVu0.vf[n][2] = 0.0f;
+    PlatVu0.vf[n][3] = 0.0f;
+}
+u64 PlatVu0Qmfc2(int n) {
+    return PlatVu0Bits(PlatVu0.vf[n][0]) | (u64)PlatVu0Bits(PlatVu0.vf[n][1]) << 32;
+}

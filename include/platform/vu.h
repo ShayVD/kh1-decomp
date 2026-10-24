@@ -229,6 +229,36 @@ static __inline__ u32 PlatVu0ScreenFlags(const f32 *v) {
  * radians (host/port/vu0.c). */
 void PlatVu0RotRows(f32 (*out)[4], const f32 *rot);
 
+/* The VU0 register file, for VU0 code translated instruction by instruction
+ * (tools/host/vu2c.py: the long hand-written routines, whose registers also
+ * carry values from one asm statement to the next).  host/port/vu0.c has the
+ * operations; vf[0] is (0, 0, 0, 1) and writes to it are dropped.  Field
+ * masks are the VU's: x 8, y 4, z 2, w 1. */
+typedef struct {
+    f32 vf[32][4];
+    f32 acc[4];
+    f32 q;
+    u32 mac, stat, clip;
+} PlatVu0Regs;
+extern PlatVu0Regs PlatVu0;
+enum { PLAT_VU0_ADD, PLAT_VU0_SUB, PLAT_VU0_MUL, PLAT_VU0_MADD, PLAT_VU0_MSUB, PLAT_VU0_MAX, PLAT_VU0_MINI };
+#define PLAT_VU0_ACC (-1) /* destination: ACC */
+#define PLAT_VU0_BC_Q 4   /* broadcast: Q */
+/* fd (or ACC) = fs op ft (ft's field bc, or Q, or the vector when bc < 0);
+ * MADD / MSUB: ACC + / - fs * ft.  Sets the MAC and status flags. */
+void PlatVu0Fmac(int op, int d, int mask, int s, int t, int bc);
+void PlatVu0Opmula(int s, int t);
+void PlatVu0Opmsub(int d, int s, int t);
+void PlatVu0Move(int d, int mask, int s);
+void PlatVu0Ftoi(int d, int mask, int s, int frac);
+void PlatVu0Itof(int d, int mask, int s, int frac);
+void PlatVu0Div(int s, int sf, int t, int tf);
+void PlatVu0SqrtQ(int t, int tf);
+void PlatVu0Lq(int n, const void *p);
+void PlatVu0Sq(int n, void *p);
+void PlatVu0Qmtc2(int n, u64 v);
+u64 PlatVu0Qmfc2(int n);
+
 /* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
 static __inline__ s32 PlatVu0Ftoi0(f32 x) {
     if (x >= 2147483648.0f)
