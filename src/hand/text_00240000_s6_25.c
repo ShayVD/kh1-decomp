@@ -36,33 +36,9 @@ void func_00241948(s32 i, s32 k) {
 }
 
 /* 2433e8 */
-extern s32 D_00458548, D_0045854C;
-extern s32 D_006560E0;
 s32 func_001f0638(s32, s32, s32, s32, s32, s32);
-void func_002433e8(s32 x, s32 y, s32 a2, s32 sel, f32 f) {
-    u8 col[4];
-    u8 *p;
-    if (sel) {
-        p = col; *p++ = 0x73; *p++ = 0x73; *p++ = 0x73;
-        *p = (u32)(f * 128.0f);
-    } else {
-        p = col; *p++ = 0xe6; *p++ = 0xe6; *p++ = 0xe6;
-        *p = (u32)(f * 128.0f);
-    }
-    D_006560E0 = func_001f0638(D_006560E0, 1, *(s32 *)col,
-        ((((x + D_00458548) << 4) + 0x7000) >> 4) - 0x700,
-        ((((y + D_0045854C) << 4) + 0x7400) >> 4) - 0x740, a2);
-}
 
 /* 243bd8 */
-typedef struct { s32 on; u8 pad[0x10]; u8 x14[1]; } S61D0;
-extern S61D0 D_006561D0;
-s32 func_00243278(void *, void *);
-s32 func_00243bd8(void) {
-    s32 buf[4];
-    if (D_006561D0.on) return 1;
-    return func_00243278(D_006561D0.x14, buf) != 0;
-}
 
 /* 243da0 */
 typedef struct { s32 r, g, b; } C3;

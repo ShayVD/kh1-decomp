@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK free(void *);
-M2C_UNK func_002431b8(M2C_UNK *, void *);
 M2C_UNK func_00248678(M2C_UNK *, void *);
 M2C_UNK func_0024ae00(s32);
 M2C_UNK func_0024af00(s32);
@@ -24,7 +23,6 @@ extern M2C_UNK D_0046A058[];
 extern M2C_UNK D_00491840;
 extern M2C_UNK D_004919A8;
 extern M2C_UNK D_004919C8;
-extern M2C_UNK D_006561E4;
 extern M2C_UNK D_00669714;
 extern M2C_UNK D_00669A18; /* src/data/bss_0066.c: s32 D_00669A18[8] */
 extern s32 D_0046A5D8;
@@ -48,20 +46,6 @@ void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00243168(s32 arg0, s32 arg1, s32 arg2) {
-    memset(arg0, 0, 0x10);
-    M2C_FIELD(arg0, s32 *, 0) = arg1;
-    M2C_FIELD(arg0, s32 *, 4) = arg2;
-}
-
-void func_00243630(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    M2C_FIELD(sp, s32 *, 0x4) = arg1;
-    M2C_FIELD(sp, s32 *, 0x0) = arg0;
-    M2C_FIELD(sp, f32 *, 0x8) = 1.0f;
-    func_002431b8(&D_006561E4, sp);
 }
 
 void func_002452c8(void) {

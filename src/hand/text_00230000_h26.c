@@ -83,25 +83,6 @@ typedef struct {
     s32 unk10;
     Vec12Queue q;   /* +0x14 */
 } Vec12Mgr;
-extern Vec12Mgr D_006561D0;
-s32 func_00243208(Vec12Queue *, Vec12 *);
-s32 func_00243278(Vec12Queue *, Vec12 *);
-void func_00243690(Vec12 *);
-void func_002436c0(s32);
-
-s32 func_00243a20(void) {
-    Vec12 v;
-    s32 r = 0;
-    Vec12Mgr *s = &D_006561D0;
-    if (s->on == 0) {
-        if (!func_00243208(&s->q, &v)) return 0;
-        func_00243690(&v);
-    } else {
-        r = func_00243278(&s->q, &v) != 0;
-    }
-    func_002436c0(r);
-    return 0;
-}
 
 void func_0024ae00(void *);
 void func_0024af00(void *);

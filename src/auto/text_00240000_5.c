@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 M2C_UNK func_0011ef10(M2C_UNK, M2C_UNK *);
-M2C_UNK func_002432c8(s32 *);
 M2C_UNK func_00248788(s32 *);
 M2C_UNK func_0024aac8(M2C_UNK *);
 M2C_UNK func_0024af40(M2C_UNK *, void *, M2C_UNK *);
@@ -19,14 +18,8 @@ extern M2C_UNK D_0045E1C8;
 extern M2C_UNK D_0045E1E0;
 extern M2C_UNK D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
 extern M2C_UNK func_00246aa8;
-extern s32 D_006561D0;
 extern s32 D_00669700;
 s32 func_0011ef38(M2C_UNK *);
-
-void func_00243668(void) {
-    D_006561D0 = 0;
-    func_002432c8((s8 *)&D_006561D0 + 0x14);
-}
 
 void func_00246bc8(void) {
     memset(&D_00668370, 0, 0xAB0);

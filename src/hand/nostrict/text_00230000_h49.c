@@ -129,26 +129,8 @@ void func_00241a38(s32 i) {
 }
 typedef struct { s32 x, y, z, w; } I4;
 typedef struct { u8 pad[0x60]; I4 c[4]; I4 p[4]; } Pkt;
-Pkt D_006560F0 ALIGNED(16);
-extern s32 D_006560E0;
 void func_0024aa48(s32, Pkt *, s32);
 s32 func_002388b8(Pkt *, s32, s32);
-
-void func_002432d8(s32 a0, s32 a1, s32 x, s32 y) {
-    s32 i;
-    s32 *p;
-    s32 dx, dy;
-    func_0024aa48(a0, &D_006560F0, a1);
-    dx = x * 16;
-    dy = y * 16;
-    p = &D_006560F0.p[0].y;
-    for (i = 0; i < 4; i++) {
-        p[-1] += dx;
-        *p += dy;
-        p += 4;
-    }
-    D_006560E0 = func_002388b8(&D_006560F0, 1, D_006560E0);
-}
 typedef struct { s32 unk0; s32 unk4; s32 unk8; s32 unkC; s32 unk10; } Hp2;
 extern Hp2 D_00454A20;
 #include "data/pieces/D_00451040.h"
@@ -177,31 +159,6 @@ void func_00241c60(s32 b, s32 i) {
         func_00241a38(i);
         e->unkA2C = 0;
         e->unkA30 = 0;
-    }
-}
-void func_00243380(s32, u8 *, s32, s32, s32);
-u16 *func_00147840(s32);
-s32 func_00147808(u16);
-void func_0024ac08(u8 *, s32 *);
-void func_002433e8(s32, s32, s32, s32, f32);
-
-void func_00243508(s32 a0, u8 *p, s32 c0, s32 c1, s32 x, s32 y, s32 id, s32 k, f32 f) {
-    s32 i;
-    u8 *q = p;
-    s32 v;
-    s32 d[4];
-    for (i = 0; i < 7; i++) {
-        func_00243380(a0, p, c0, x, y);
-        p += 0xC0;
-    }
-    for (i = 0; i < 2; i++) {
-        func_00243380(a0, p, c1, x, y);
-        p += 0xC0;
-    }
-    if (id != 0) {
-        v = func_00147808(*func_00147840(id));
-        func_0024ac08(q, d);
-        func_002433e8(x + d[0], y + d[1], v, k, f);
     }
 }
 Pkt D_00656430 ALIGNED(16);
