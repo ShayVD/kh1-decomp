@@ -55,9 +55,9 @@ void func_00124d08(void) {
 #undef func_00124c68
 
 /* func_00124d28 (from auto/text_00120000.c). */
-M2C_UNK func_0026b9a8(f32, f32);
-void func_00124d28(void *arg0, void *arg1) {
-    func_0026b9a8(M2C_FIELD(arg0, f32 *, 0) - M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg0, f32 *, 8) - M2C_FIELD(arg1, f32 *, 8));
+f32 func_0026b9a8(f32, f32);
+f32 func_00124d28(void *arg0, void *arg1) {
+    return func_0026b9a8(M2C_FIELD(arg0, f32 *, 0) - M2C_FIELD(arg1, f32 *, 0), M2C_FIELD(arg0, f32 *, 8) - M2C_FIELD(arg1, f32 *, 8));
 }
 
 /* func_00124d58 (from auto/text_00120000_8.c). */

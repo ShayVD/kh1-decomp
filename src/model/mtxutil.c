@@ -13,9 +13,9 @@ f32 func_00162978(s32 arg0, s32 arg1) {
 }
 
 /* func_001629b0 (from auto/text_00160000_5.c). */
-void func_001629b0(s32 arg0, s32 arg1) {
+f32 func_001629b0(s32 arg0, s32 arg1) {
     s32 sp[4];
     PlatVu0SubVector(sp, arg0, arg1);
-    PlatVu0InnerProduct(sp, sp);
+    return PlatVu0InnerProduct(sp, sp);
 }
 

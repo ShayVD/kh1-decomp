@@ -237,10 +237,10 @@ f32 func_00121748(f32 *a, f32 *b) {
 #undef func_00120bf8
 
 /* func_00121840 (from auto/text_00120000.c). */
-M2C_UNK func_0026b978(f32);
+f32 func_0026b978(f32);
 #define func_00121748 ((f32 (*)()) func_00121748)
-void func_00121840(f32 *a, f32 *b) {
-    func_0026b978(func_00121748(a, b));
+f32 func_00121840(f32 *a, f32 *b) {
+    return func_0026b978(func_00121748(a, b));
 }
 #undef func_00121748
 
@@ -301,14 +301,14 @@ f32 func_00121b08(f32 fparg0) {
 }
 
 /* func_00121b38 (from auto/text_00120000_8.c). */
-#define func_00121748 ((M2C_UNK (*)(M2C_UNK *, M2C_UNK *)) func_00121748)
-void func_00121b38(s32 arg0, s32 arg1) {
+#define func_00121748 ((f32 (*)(M2C_UNK *, M2C_UNK *)) func_00121748)
+f32 func_00121b38(s32 arg0, s32 arg1) {
     s32 sp[8];
     PlatVu0CopyVector(sp, arg0);
     PlatVu0CopyVector(&M2C_FIELD(sp, M2C_UNK *, 0x10), arg1);
     M2C_FIELD(sp, s32 *, 0x4) = 0;
     M2C_FIELD(sp, s32 *, 0x14) = 0;
-    func_00121748(sp, &M2C_FIELD(sp, M2C_UNK *, 0x10));
+    return func_00121748(sp, &M2C_FIELD(sp, M2C_UNK *, 0x10));
 }
 #undef func_00121748
 

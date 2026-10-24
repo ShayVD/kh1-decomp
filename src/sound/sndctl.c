@@ -1069,8 +1069,8 @@ s32 func_0011e248(s32 a0) {
 /* func_0011e340 (from auto/text_00110000.c). */
 extern s32 D_002C1394;
 #define func_0011e248 ((s32 (*)()) func_0011e248)
-void func_0011e340(s32 a0) {
-    D_002C1394 = func_0011e248(a0);
+s32 func_0011e340(s32 a0) {
+    return D_002C1394 = func_0011e248(a0);
 }
 #undef func_0011e248
 

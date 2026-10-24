@@ -66,12 +66,12 @@ s32 func_00120170(u32 a, u32 *b) {
 }
 
 /* func_00120190 (from auto/text_00120000_9.c). */
-M2C_UNK func_0024f318(s32, M2C_UNK *, s32, M2C_UNK, M2C_UNK *);
+void *func_0024f318(s32, M2C_UNK *, s32, M2C_UNK, M2C_UNK *);
 extern M2C_UNK D_004E4A00;
 extern s32 D_002C5C30;
 #define func_001200f8 ((s32 (*)()) func_001200f8)
-void func_00120190(s32 arg0) {
-    func_0024f318(func_001200f8(arg0), &D_004E4A00, D_002C5C30, 0x10, &func_00120170);
+void *func_00120190(s32 arg0) {
+    return func_0024f318(func_001200f8(arg0), &D_004E4A00, D_002C5C30, 0x10, &func_00120170);
 }
 #undef func_001200f8
 

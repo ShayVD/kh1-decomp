@@ -81,22 +81,22 @@ s32 func_00111090(void) {
 
 /* func_001110d0 (from auto/text_00110000_1.c). */
 #define D_00F20000 ((M2C_UNK (*)(M2C_UNK, M2C_UNK)) D_00F20000)
-void func_001110d0(void) {
-    D_00F20000(3, 0);
+s32 func_001110d0(void) {
+    return D_00F20000(3, 0);
 }
 #undef D_00F20000
 
 /* func_001110f0 (from auto/text_00110000_1.c). */
 #define D_00F20000 ((M2C_UNK (*)(M2C_UNK, M2C_UNK)) D_00F20000)
-void func_001110f0(void) {
-    D_00F20000(8, 0);
+s32 func_001110f0(void) {
+    return D_00F20000(8, 0);
 }
 #undef D_00F20000
 
 /* func_00111110 (from auto/text_00110000_1.c). */
 #define D_00F20000 ((M2C_UNK (*)(M2C_UNK, M2C_UNK)) D_00F20000)
-void func_00111110(void) {
-    D_00F20000(9, 0);
+s32 func_00111110(void) {
+    return D_00F20000(9, 0);
 }
 #undef D_00F20000
 
@@ -109,8 +109,8 @@ void func_00111130(void) {
 
 /* func_00111150 (from auto/text_00110000_11.c). */
 #define D_00F20000 ((M2C_UNK (*)(M2C_UNK, M2C_UNK)) D_00F20000)
-void func_00111150(void) {
-    D_00F20000(5, 0);
+s32 func_00111150(void) {
+    return D_00F20000(5, 0);
 }
 #undef D_00F20000
 

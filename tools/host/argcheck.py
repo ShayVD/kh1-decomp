@@ -26,13 +26,37 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DEF_RX = re.compile(r"^(?!\s)(?:static\s+)?(?:const\s+)?([A-Za-z_][\w \t\*]*?)\b(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s*\(([^;{)]*)\)\s*(?:\{|$)", re.M)
+DEF_RX = re.compile(r"^(?!\s)(?:static\s+)?(?:const\s+)?(KH1_V0\(\w+\)\s*|[A-Za-z_][\w \t\*]*?)\b(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s*\(([^;{)]*)\)\s*(?:\{|$)", re.M)
 CALL_RX = re.compile(r"\b(func_[0-9a-f]{8})\s*\(")
 
 # Hits read by hand and left as they are (file, callee): the reason.
 BENIGN = {
     ("src/game/dkmovie.c", "func_0024b138"):
         "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
+    # Value uses whose value nobody reads (session 63): the caller returns it, and
+    # every caller of that caller drops it.
+    ("src/menu/loadmenu.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/party.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/savemenu.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/choice.c", "func_00205938"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/choice2.c", "func_00205938"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/journal_s0.c", "func_0010edb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/journal_s1.c", "func_0010edb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/game/trinity.nostrict.c", "func_00158af0"):
+        "returned by func_00158b88 (plctl.nostrict.c), whose callers call it as a statement",
+    ("src/obj/areabox.c", "func_00142058"):
+        "returned by func_0014f1b8 (roomobj.c), whose callers call it as a statement",
+    ("src/obj/roomobj.nostrict.c", "func_0013b9c8"):
+        "returned by func_001323a0 (actor.nostrict.c), whose callers call it as a statement",
+    ("src/obj/class1b.nostrict.c", "func_001337e0"):
+        "returned by func_001519c0 (plctl.nostrict.c), whose callers call it as a statement",
 }
 
 
@@ -159,6 +183,8 @@ def main():
                     continue  # a prototype
                 if before.endswith("return") and enclosing_ret(s, m.start()) == "void":
                     continue  # `return f();` in a void function passes nothing on
+                if (f, name) in BENIGN:
+                    continue
                 rows.append(("ret", f, s.count("\n", 0, m.start()) + 1, name, "value used", "void", defs[name][3]))
     for r in rows:
         print("\t".join(str(x) for x in r))

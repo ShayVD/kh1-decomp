@@ -541,10 +541,10 @@ void func_00181280(s32 arg0, void *arg1) {
 /* func_001812d0 (from auto/text_00180000_5.c). */
 M2C_UNK func_0024edf0(void *, s32);
 extern M2C_UNK D_00615E70;
-void func_001812d0(void *arg0) {
+s32 func_001812d0(void *arg0) {
     s32 sp[16];
     PlatVu0MulMatrix(sp, (M2C_UNK *)&D_002BBFA0, &D_00615E70);
-    func_0024edf0(sp, M2C_FIELD(arg0, s32 *, 0x8C));
+    return func_0024edf0(sp, M2C_FIELD(arg0, s32 *, 0x8C));
 }
 
 /* func_00181318 (from auto/text_00180000_3.c). */

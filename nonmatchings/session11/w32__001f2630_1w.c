@@ -71,7 +71,7 @@ s32 sceGsSyncPath(s32, u16);
 void func_001220b8(void *);
 extern u8 D_003F2270[];
 
-void func_001f2630(s32 mode, u32 a1, s32 x, s32 y, u8 *str, s32 sc) {
+KH1_V0(s32) func_001f2630(s32 mode, u32 a1, s32 x, s32 y, u8 *str, s32 sc) {
     u64 *d;
     Q *buf;
     void *dma;
@@ -152,4 +152,5 @@ done:
     func_001220b8(buf);
     D_0063F74C = (cx - 0x7000) >> 4;
     D_0063F750 = (cy - 0x7400) >> 4;
+    KH1_V0_RETURN(D_0063F74C);
 }
