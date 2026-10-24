@@ -7,20 +7,6 @@
 /* ---- shared types ---- */
 
 /* 0x730-byte pool node (D_004F8310[64]). */
-typedef struct Node {
-    union {
-        u64 flags;
-        struct { s32 w0; s32 f4; } w;
-    };
-    s32 f8;
-    s32 *cur;
-    s32 *f10;
-    u8 pad014[0xc];
-    s32 l20[0x100];
-    s32 l420[0xc0];
-    struct Node *next;
-    s16 h724[6];
-} Node;
 
 /* 0x38-byte menu cursor block (D_002E2FD8[7]); D_002E3170 is a stack of them. */
 #include "data/pieces/D_002E3170.h"
@@ -59,7 +45,6 @@ typedef struct Actor {
 typedef S31b0_2e31b0 V8;
 
 /* ---- data ---- */
-extern Node D_004F8310[64];
 extern Q8 D_002E2FD8[7];
 extern Q8 **D_00524F40; /* src/data/bss_0052.c: void **D_00524F40 */
 #include "data/pieces/D_002E31A0.h"
@@ -84,30 +69,6 @@ extern void func_0017eff8(void);
 extern void func_0012fc20(void);
 extern void func_00123030(Ent *, s32, s32);
 extern float fabsf(float);
-
-Node *func_0012b7a8(s32 a) {
-    Node *n = D_004F8310;
-    s32 i;
-    for (i = 0; i < 64; i++, n++) {
-        if (!(n->flags & 1)) {
-            n->w.w0 = 0;
-            n->flags |= 1;
-            n->flags |= 2;
-            n->f8 = a;
-            n->w.f4 = a;
-            n->cur = n->l20;
-            *n->cur++ = 0;
-            *n->cur++ = 0;
-            *n->cur++ = 0;
-            *n->cur++ = 0;
-            n->f10 = n->l420;
-            n->next = 0;
-            { s32 j; for (j = 0; j < 5; j++) n->h724[j] = 0; }
-            break;
-        }
-    }
-    return n;
-}
 
 CONTEXT_ONLY s32 func_0012cc38(s32 i, s32 v) {
     u32 *p = &D_00524F44;

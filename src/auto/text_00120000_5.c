@@ -42,20 +42,3 @@ void func_001224c8(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
     func_002675a8((s32) (temp_v0 + 0x20), arg0 + 0x30);
     func_002675a8((s32) (temp_v0 + 0x30), arg1);
 }
-
-void func_0012bd00(void *arg0, void *arg1) {
-    f32 temp_f0;
-    void *temp_a1;
-    void *temp_v0;
-
-    if (arg0 != NULL) {
-        temp_a1 = M2C_FIELD(arg1, void **, 0x6C);
-        if (temp_a1 != NULL) {
-            temp_v0 = M2C_FIELD(arg0, void **, 0x24);
-            temp_f0 = M2C_FIELD(temp_a1, f32 *, 0x64);
-            M2C_FIELD(temp_v0, f32 *, 8) = temp_f0;
-            M2C_FIELD(temp_v0, f32 *, 4) = temp_f0;
-            M2C_FIELD(temp_v0, f32 *, 0) = temp_f0;
-        }
-    }
-}

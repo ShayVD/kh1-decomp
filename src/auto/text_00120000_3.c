@@ -33,7 +33,6 @@ s32 func_00128c60(s32, s32);
 s32 func_001334b8(s32, s32, s32, s32, s32);
 void func_00122bd8(void);
 void func_001252f8(void);
-void func_0012bbc8(s32, s32, s32, s32, s32);
 
 void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     func_0025ed48(func_00120930(), arg1, arg2, arg3);
@@ -197,10 +196,6 @@ void func_00129cf0(void *arg0) {
 
 void func_0012ac98(void *arg0) {
     M2C_FIELD(arg0, s32 *, 0) = func_001334b8(M2C_FIELD(arg0, s32 *, 0), M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(arg0, s32 *, 8), M2C_FIELD(arg0, s32 *, 0xC), M2C_FIELD(arg0, s32 *, 0x10));
-}
-
-void func_0012bce0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    func_0012bbc8(arg0, (s32) M2C_FIELD(((arg1 * 2) + arg0), u16 *, 0x724), arg2, arg3, arg4);
 }
 #include "data/bss_0052_mixed.h"
 #include "data/data_002E.h"

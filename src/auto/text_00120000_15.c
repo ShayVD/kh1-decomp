@@ -1,28 +1,20 @@
 /* Matched automatically from m2c output (tools/autodecomp.py); not yet
  * cleaned up. Offsets in M2C_FIELD are struct fields still to be named. */
 #include "m2c.h"
-
-M2C_UNK func_0012eba0(s32, M2C_UNK, M2C_UNK, M2C_UNK, s32);
 M2C_UNK func_00138a78(s32, void *);
 M2C_UNK func_00138c30(s32, void *);
 M2C_UNK func_00138e58(s32, void *);
 M2C_UNK func_00139170(s32, void *);
 M2C_UNK func_00139240(s32, void *, s32, f32, f32, f32);
-extern M2C_UNK D_002E2FCF;
 extern M2C_UNK D_004F82D0; /* src/data/bss_004F.c: u8 D_004F82D0[0x40] */
-extern M2C_UNK func_0012c0e8;
-#include "data/pieces/D_00350CE0.h"
 #include "data/pieces/D_002E26A0.h"
 extern void *D_00514F10; /* src/data/bss_0051.c: s32 D_00514F10 */
 f32 func_0012ed88(s32, s32, s32, s32);
 s32 func_00121de0(s32);
-s32 func_00121e28(M2C_UNK, void *);
 s32 func_00122ff8(s32);
 s32 func_0012b930(s32, s32);
 s32 func_00142388(s32, s32);
-s32 func_00147ed8(s32, u8, M2C_UNK, s32);
 s32 func_002675a8(s32, s32);
-void *func_00147d18(M2C_UNK *);
 void func_00127960(void *, void *, s32);
 void func_00127b18(void *, void *, s32);
 void func_0012ba30(s32, s32, s32);
@@ -31,7 +23,6 @@ void func_00142470(s32, s32);
 void func_00157a30(s32, s32, s32);
 void func_001ea498(s32);
 void func_00267328(void *, M2C_UNK *, s32);
-void func_00267530(s32, s32, s32);
 
 void func_00121f30(s32 arg0, s32 arg1) {
     s32 temp_v0;
@@ -146,19 +137,5 @@ void func_0012b358(s32 arg0) {
     *temp_a3 |= 4;
     func_00157a30(*(s32 *)D_002E26A0, 2, 0);
     func_001ea498(*(M2C_UNK *)arg0);
-}
-
-void func_0012c180(s32 arg0, s32 arg1) {
-    s32 temp_s0;
-    s32 temp_v0_2;
-    void *temp_v0;
-
-    temp_v0 = func_00147d18(&func_0012c0e8);
-    M2C_FIELD(temp_v0, s32 *, 0x10) = arg1;
-    temp_v0_2 = func_00121e28(0x40, temp_v0 + 0x20);
-    temp_s0 = temp_v0_2 + 0x10;
-    func_0012eba0(arg1, 1, -1, 0, temp_s0);
-    func_00267530(temp_v0_2 + 0x20, temp_s0, arg1 + 0x50);
-    M2C_FIELD(temp_v0, s32 *, 0x14) = func_00147ed8(D_00350CE0, *(M2C_UNK *)((s8 *)(s8 *)&D_002E2FCF + arg0), 0x4E20, temp_s0);
 }
 #include "data/data_002E.h"

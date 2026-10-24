@@ -13,8 +13,6 @@ typedef struct { u8 pad[0x10]; volatile s32 n; } Q14;
 extern s32 func_00122ff8(void *);
 extern f32 func_0012ec60(struct Actor *, s32, f32 *);
 extern void func_00267530(void *, void *, void *);
-extern void func_002675a8(void *, void *);
-extern void func_0012bd98(void *, s32, u32, f32 *);
 extern f32 func_00120c88(f32);
 extern void func_0011ef10(s32, void *);
 extern f32 func_00121748(f32 *, f32 *);
@@ -158,61 +156,6 @@ void func_0012b450(L9 **pp) {
     D_002BC0A0 = p->f18;
     D_002BC0A4 = p->f1c;
     D_002BBE04 = 1;
-}
-
-typedef struct { u8 pad[0x14]; u8 *f14; } N2;
-extern u8 D_00524F20[32];
-extern u8 D_00514F20[];
-extern N2 *func_0012b7a8();
-extern void *memset(void *, s32, u32);
-
-N2 *func_0012b888(void) {
-    N2 *n = func_0012b7a8();
-    s32 i;
-    u8 *p;
-    for (i = 0; i < 32; i++) {
-        if (D_00524F20[i] == 0) break;
-    }
-    D_00524F20[i] = 1;
-    p = D_00514F20 + i * 2048;
-    memset(p, 0, 2048);
-    n->f14 = p;
-    return n;
-}
-
-typedef struct { u32 f0; u8 pad[0x15c - 4]; s32 f15c; u8 pad160[0x324 - 0x160]; f32 f324; u8 pad328[0x39e - 0x328]; u8 f39e; } E10;
-extern s32 func_001232f0(E10 *);
-extern s32 func_0012bd30(E10 *);
-extern void func_00162218(s32, s32, f32 *, f32);
-
-void func_0012c010(E10 *e, s32 bit, s32 b) {
-    f32 v[4];
-    if (func_001232f0(e) && func_0012bd30(e)) {
-        func_00162218(e->f15c, b, v, 1.0f);
-        if ((u8)(e->f39e - 10) < 3 && !(e->f0 & 0x400000)) v[1] = e->f324;
-        func_0012bd98(e, e->f39e, (1 << (bit % 8)) | (0x80000000 >> (bit / 8)), v);
-    }
-}
-
-typedef struct { u8 pad[0x50]; f32 f50[4]; u8 pad60[0x10]; s32 f70; u8 pad74[0x2d4 - 0x74]; f32 f2d4; u8 pad2d8[0x39e - 0x2d8]; u8 f39e; } E12;
-extern void func_00146c98(E12 *, s32);
-
-void func_0012c698(E12 *e) {
-    f32 v[4];
-    if ((u8)(e->f39e - 11) < 2) {
-        func_002675a8(v, e->f50);
-        v[1] = e->f2d4;
-        switch (e->f70) {
-        case 2: case 3: case 4: case 5:
-            func_0012bd98(e, e->f39e, 0x80000008, v);
-            func_00146c98(e, 10);
-            break;
-        case 10:
-        case 13:
-            func_0012bd98(e, 10, 0x8000008, v);
-            break;
-        }
-    }
 }
 extern void func_0012cb40(Q14 *, s32, s32);
 

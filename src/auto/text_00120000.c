@@ -9,7 +9,6 @@ M2C_UNK func_001247e8(s32);
 M2C_UNK func_00124c68();
 M2C_UNK func_00127340();
 M2C_UNK func_00132e38();
-M2C_UNK func_0013cec8(s32);
 M2C_UNK func_0013cfe8(s32, M2C_UNK, s32);
 M2C_UNK func_0013f2c0();
 M2C_UNK func_001478e0();
@@ -492,10 +491,6 @@ void func_0012b530(void) {
 
 void func_0012b680(s32 *arg0) {
     *arg0 = D_00350D7C;
-}
-
-void func_0012ba30(s32 arg0) {
-    func_0013cec8(arg0 + 8);
 }
 #include "data/bss_0051_mixed.h"
 #include "data/data_0029.h"

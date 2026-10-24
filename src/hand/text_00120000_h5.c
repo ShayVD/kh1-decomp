@@ -50,12 +50,6 @@ extern s32 D_004F82C0;
 extern s32 D_004F82C4;
 #include "data/pieces/D_002C58B0.h"
 #include "data/pieces/D_002E31A8.h"
-extern Node D_004F8310[64];
-extern u8 D_002E2F20[];
-extern u8 D_00524F20[32];
-extern union { Node *p; u64 x; } D_00514F10;
-extern Node *D_00514F14; /* src/data/bss_0051.c: s32 D_00514F14 */
-extern u8 D_00514F20[];
 extern V8 *D_00525288;
 extern s32 D_0052528C;
 extern V8 D_00524F80[];
@@ -68,7 +62,6 @@ extern void func_001247e8(Ent *);
 extern s32 func_00130030(void *);
 extern void func_002675a8(void *, void *);
 extern void func_002672f8(void *, void *, void *);
-extern void func_00267518(void *, void *, void *);
 extern void func_00267e90(void *, void *, f32);
 extern void sceVu0MulMatrix(f32 (*)[4], f32 (*)[4], f32 (*)[4]);
 extern void func_001149e8(f32 (*)[4], s32, s32, void *);
@@ -89,10 +82,6 @@ extern void func_002414a8(s32, s32);
 extern void func_00153d88(void *);
 extern s32 func_0013a440(s32, s32, f32, s32);
 extern void func_00176c60(s32);
-extern Node *func_0012b7a8(s32);
-extern void func_00121eb0(void *);
-extern s32 func_00122ff8(void *);
-extern void func_00176310(void *);
 
 /* Count entities whose 2-bit state (f370 bits 37-38) is 2. */
 s32 func_00123298(void) {
@@ -381,124 +370,6 @@ void func_0012b690(s32 *out) {
     *out = n;
 }
 
-void func_0012b738(void) {
-    s32 i;
-    u8 *q;
-    Node *n = D_004F8310;
-    for (i = 0; i < 64; i++, n++) {
-        n->flags &= ~1ULL;
-        n->f18 = D_002E2F20;
-    }
-    q = D_00524F20;
-    q += 31;
-    for (i = 31; i >= 0; i--) *q-- = 0;
-    D_00514F10.p = 0;
-}
-
 /* Allocate a node and append it to a's chain. */
-Node *func_0012b930(Node *a, s32 b) {
-    Node *n = func_0012b7a8(b);
-    Node *t;
-    n->flags |= 4;
-    n->f14 = a->f14;
-    for (t = a; t->next; t = t->next);
-    t->next = n;
-    return n;
-}
-
-void func_0012b9b0(Node *a) {
-    if (a->flags & 4) {
-        a->flags &= ~2ULL;
-        return;
-    }
-    D_00524F20[((u8 *)a->f14 - D_00514F20) / 2048] = 0;
-    do {
-        a->flags &= ~1ULL;
-        a = a->next;
-    } while (a);
-}
-
-s32 func_0013cfe8(void *, s32, Node *);
-s32 func_0012ba48(Node *n) {
-    Node *t = D_00514F14;
-    s32 r;
-    D_00514F14 = n;
-    r = func_0013cfe8((u8 *)n + 8, 0, n);
-    D_00514F14 = t;
-    return r;
-}
-
-s32 func_0012ba98(Node *a) {
-    Node *save = D_00514F10.p;
-    Node *n, *prev;
-    s32 cnt;
-    D_00514F10.p = a;
-    if ((a->flags & 2) && func_0012ba48(a) < 0) a->flags &= ~2;
-    prev = a;
-    cnt = 0;
-    for (n = a->next; n; n = n->next) {
-        if (!(n->flags & 2)) {
-            n->flags &= ~1;
-            prev->next = n->next;
-        } else {
-            if ((n->flags & 8) || func_0012ba48(n) < 0) n->flags |= 8;
-            else cnt++;
-            prev = n;
-        }
-    }
-    D_00514F10.p = save;
-    if (!(a->flags & 2) && cnt == 0) {
-        func_0012b9b0(a);
-        return -1;
-    }
-    return 0;
-}
-
-typedef struct E4 {
-    s32 w0;
-    u8 pad[0x39e - 4];
-    u8 f39e;
-    u8 pad39f[0x3d4 - 0x39f];
-    f32 f3d4;
-} E4;
-s32 func_0012bd30(E4 *e) {
-    switch (e->f39e) {
-    case 0:
-        return 1;
-    case 10:
-    case 11:
-    case 12:
-        if (e->w0 & 0x400000) return 1;
-        break;
-    }
-    if (10.0f < e->f3d4) return 0;
-    return 1;
-}
-
-typedef struct C14 { void *f0; u8 pad[0x10]; s32 f14; } C14;
-typedef struct C10 { u8 pad[0x50]; u8 f50[16]; } C10;
-typedef struct C20 { u8 pad[0x10]; u8 f10[16]; u8 f20[16]; } C20;
-typedef struct C0 { u8 pad[0x10]; C10 *f10; C14 *f14; u8 pad18[8]; C20 *f20; } C0;
-s32 func_0012c0e8(C0 *a) {
-    C20 *s = a->f20;
-    if (a->f14 == 0 || (a->f14->f14 & 3) != 1) {
-        func_00121eb0(s);
-        return 4;
-    }
-    if (func_00122ff8(a->f10)) {
-        func_002675a8(a->f14->f0, s->f10);
-        func_00267518(s->f10, a->f10->f50, s->f20);
-    }
-    return 0;
-}
-
-typedef struct S14c { u8 pad[0x14]; Arg f14; u8 pad18[4]; Arg f1c; Arg f20; Arg f24; } S14c;
-typedef struct E5 { u8 pad[0x14c]; S14c *f14c; } E5;
-void func_0012c880(E5 *a, s32 b) {
-    if (a->f14c->f1c.p) func_00176310(a->f14c->f1c.p);
-    a->f14c->f1c.p = 0;
-    a->f14c->f20.i = a->f14c->f14.i;
-    a->f14c->f24.i = b | 0x40000000;
-}
 #include "data/bss_004F_typed.h"
 #include "data/data_002E.h"
