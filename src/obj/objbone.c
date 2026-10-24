@@ -146,7 +146,7 @@ typedef struct {
 typedef struct { f32 a[4]; V4 pos; } Tm9;
 extern Bn9 *func_0015c960(Ob9 *, s32, s32, s32);
 extern void func_0015bad0(Ob9 *, s32, Tm9 *);
-extern void func_0012ec88(Ob9 *, V4 *);
+extern f32 func_0012ec88(Ob9 *, V4 *);
 extern void func_00162218(s32, s32, V4 *, f32);
 #define func_00131558 ((s32 (*)(Ob9 *, s32)) func_00131558)
 void func_001315c0(Ob9 *o, s32 id, V4 *out, f32 t) {

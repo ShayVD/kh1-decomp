@@ -144,7 +144,12 @@ typedef struct {
 } C3S;
 s32 func_00122ff8(C3Ob *);
 void func_00121eb0(C3D *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_001315c0(s32, s32, f32, f32 *);
+#else
+void func_001315c0(s32, s32, f32 *, f32);
+#define func_001315c0(a1, a2, a3, a4) (func_001315c0)(a1, a2, a4, a3)
+#endif
 void func_001318e8(C3Ob *, u32, f32 *);
 #define func_00176310 ((void (*)(C3Lk *)) func_00176310)
 #define func_00147e08 ((void (*)(C3Lk *, f32 *)) func_00147e08)

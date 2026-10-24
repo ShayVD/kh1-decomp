@@ -151,7 +151,7 @@ void func_001542f8(Obj1542f8 *a, Arg1542f8 *b) {
 /* func_001543f8 (from hand/nostrict/text_00150000_h35.c). */
 typedef struct { u8 pad[0x10]; u8 x10[0x10]; } Arg1543f8;
 typedef struct { u8 pad[0x30]; u8 x30[0x390]; u8 x3C0[4]; } Obj1543f8;
-void func_0014cce0(void *, f32);
+f32 func_0014cce0(void *, f32);
 void func_00154258(Obj1543f8 *, Arg1543f8 *, void *);
 /* ---- func_001543f8 / func_001544a0 ---- */
 void func_001543f8(Obj1543f8 *a, Arg1543f8 *b) {

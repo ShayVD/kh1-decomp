@@ -131,7 +131,7 @@ typedef struct {
     void (*cb)(W32Col *o);
 } W32Job;
 extern u32 D_002C5958;
-void func_00120ef0(f32 *a, void *b, f32 *c);
+f32 func_00120ef0(f32 *a, void *b, f32 *c);
 /* func_00135d38 moved to src/obj/objvis.c (session 53); this CONTEXT_ONLY copy keeps
    func_00136bc0 below matching (without it 3 words differ). */
 s32 func_00136bc0(W32Job *j) {

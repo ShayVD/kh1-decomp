@@ -39,7 +39,7 @@ void func_00135a68(f32 (*v)[4], f32 r, f32 h) {
 typedef union { u64 x; struct { u32 lo; u32 x32:13; u32 b45:1; u32 x46:3; u32 b49:1; u32 hi:14; } b; } F370e;
 typedef struct { u8 p0[0x40]; f32 sx, sy, sz; u8 p4c[4]; f32 f50[4]; u8 p60[0xd0-0x60]; f32 fd0[4][4]; u8 p110[0x370-0x110]; F370e f370; } Ob9;
 extern s32 func_0012f040(Ob9 *, s32);
-extern void func_0012ec88(Ob9 *, f32 *);
+extern f32 func_0012ec88(Ob9 *, f32 *);
 extern s32 func_0024edf0(f32 (*)[4], void *);
 CONTEXT_ONLY void func_00135b88(Ob9 *o, void *b) { func_00135a68(b, *(f32 *)((u8 *)o + 0x410), *(f32 *)((u8 *)o + 0x414)); }
 /* ---- func_00135bb0 ---- */

@@ -61,7 +61,7 @@ typedef struct Actor_2cd10 {
 void func_00121fc4(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 f32 func_00120bf8(f32 *);
-void func_0012ec88(E15 *, f32 *);
+f32 func_0012ec88(E15 *, f32 *);
 /* func_0012cf48 only matches with its callee func_0012cd10 defined above it. */
 s32 func_0012cd10(E15 *o, E15 *t) {
     f32 d[4];

@@ -22,7 +22,7 @@
 #include "data/types/text_00110000_h53_p.h"
 
 /* func_0011fb38 (from auto/text_00110000.c). */
-void *func_0011fb38(s64 arg0, s64 arg1, void *arg2) {
+void *func_0011fb38(s32 arg0, s64 arg1, void *arg2) {
     M2C_FIELD(arg2, s64 *, 0) = arg1;
     M2C_FIELD(arg2, s64 *, 8) = arg0;
     return arg2 + 0x10;
@@ -36,8 +36,8 @@ void func_0011fb48(s32 arg0, s32 arg1, s32 arg2) {
 
 /* func_0011fb78 (from hand/text_00110000_h4.c). */
 typedef struct { u64 a, b; } Q128;
-void func_0011fb78(Q128 *p, u64 a1, Q128 *end) {
-    u64 v = (end - p - 1) | (a1 << 28);
+void func_0011fb78(Q128 *p, s32 a1, Q128 *end) {
+    u64 v = (end - p - 1) | ((u64)a1 << 28);
     if ((u32)end > 0x6fffffff) v |= 0x8000000000000000;
     *(u64 *)p = v;
 }

@@ -20,13 +20,13 @@
 M2C_UNK func_001452a0(void *);
 extern M2C_UNK D_00350D94;
 f32 func_001216d8(f32, f32, f32);
-f32 func_00137688(void *, f32);
+void func_00137688(void *, f32);
 void func_0013e558(void *arg0) {
     M2C_UNK (*temp_v0)();
 
     temp_v0 = *(M2C_UNK *)((s8 *)(s8 *)&D_00350D94 + (M2C_FIELD(arg0, s32 *, 0x70) << 5));
     if (temp_v0 != NULL) {
-        temp_v0();
+        temp_v0(arg0);
     }
     if (M2C_FIELD(arg0, s32 *, 0x70) == 4) {
         PlatVu0CopyVector(arg0 + 0x3C0, ((M2C_UNK *)&D_002C58A0));
@@ -42,7 +42,7 @@ void func_0013e558(void *arg0) {
 
 /* func_0013ecf8 (from auto/text_00130000_3.c). */
 f32 func_0012ec60(s32, s32, void *);
-M2C_UNK func_001376e8(s32, void *);
+f32 func_001376e8(s32, void *);
 void func_0013ecf8(s32 arg0, void *arg1, void *arg2) {
     s32 temp_v0;
 

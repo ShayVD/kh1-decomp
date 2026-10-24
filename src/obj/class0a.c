@@ -62,7 +62,7 @@ s32 func_00140f88(void *o, void *v) {
 }
 
 /* func_00140fa8 (from hand/text_00130000_h7.c). */
-void func_0014cc88(W7Ob *o, f32 f);
+f32 func_0014cc88(W7Ob *o, f32 f);
 extern f32 D_002C5970;
 void func_00140fa8(W7Ob *o) {
     func_0014cc88(o, 0.0f);
@@ -114,7 +114,7 @@ void func_001406d0();
 void func_00140960();
 void func_0014f778();
 void func_0014f828();
-f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK *);
+void func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_00141138(void) {
     func_0014f830(9, 0x101, &func_0013fd10, &func_0013fd20, &func_001406d0, NULL, NULL, 0, NULL);
     func_0014f830(0xA, 0x101, &func_0013fd38, &func_0013fd60, &func_00140960, &func_00140ee0, &func_00140f08, 0, &func_00140f88);

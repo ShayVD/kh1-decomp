@@ -120,7 +120,7 @@ C01Snd *func_00130340(C01Act3 *, s32, f32);
 void func_00135800(C01Act3 *, f32, f32);
 void func_00171f58(C01Act3 *);
 void func_00153d88(C01Act3 *);
-void func_0014cce0(C01Act3 *, f32);
+f32 func_0014cce0(C01Act3 *, f32);
 void func_00133978(C01Act3 *, s32);
 void func_00133a00(C01Act3 *);
 void func_00135df0(C01Act3 *, f32 *);

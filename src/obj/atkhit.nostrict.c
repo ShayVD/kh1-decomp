@@ -49,7 +49,7 @@ typedef struct {
 s32 func_00147ed8(s32, s32, s32, f32 *);
 typedef struct { u8 pad[0x28]; s32 x28; } W8Z5c;
 typedef struct { u8 pad[8]; s32 x8; u8 padc[0x5c - 0xc]; W8Z5c *x5c; } W8Z;
-s32 func_00176578(s32, s32, s32, s32);
+s32 func_00176578(s32, s32, s32, u64);
 void *func_0014a1b0(Hm *m, s32 b, f32 *c) {
     W8Z *z = (W8Z *)m;
     s32 r;
@@ -125,7 +125,12 @@ extern u32 D_0054F440;
 B4P *func_0014a450(void);
 s32 func_0013c318(s32);
 s32 func_002408d8(s32);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_001315c0(void *, s32, f32, void *);
+#else
+void func_001315c0(void *, s32, void *, f32);
+#define func_001315c0(a1, a2, a3, a4) (func_001315c0)(a1, a2, a4, a3)
+#endif
 extern B4Ent *D_002E26A0_4a4a8[3] __asm__("D_002E26A0");
 #define D_002E26A0 D_002E26A0_4a4a8
 B4P *func_0014a4a8(B4Ent *e, u32 m, B4D *d) {

@@ -78,7 +78,7 @@ void func_0015d7b8(s32 arg0, s32 arg1) {
 typedef struct { u8 pad[0x10]; f32 f10; } Sub6C;
 typedef struct { u8 pad[0x6C]; Sub6C *p6C; u8 pad70[0xD8]; u8 *p148; } ObjDA;
 typedef struct { u8 pad[4]; union { f32 f; void *p; } f4; } RetDA;
-void func_0014cce0(void *, f32);
+f32 func_0014cce0(void *, f32);
 RetDA *func_0014cb90(void *);
 RetDA *func_0015da70(ObjDA *a) {
     RetDA *r = func_0014cb90(a);
@@ -106,7 +106,7 @@ void func_0015db80(u32 *a) {
 /* func_0015dbf8 (from auto/text_00150000_10.c). */
 void func_0014f828();
 void func_0015d848();
-f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK *);
+void func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK *, M2C_UNK, M2C_UNK *);
 void func_0015dbf8(void) {
     func_0014f830(0x12, 0, &func_0015d5c0, &func_0015d5d0, &func_0015d848, 0, &func_0014f828, 0, &func_0015da70);
 }

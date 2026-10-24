@@ -57,6 +57,13 @@ BENIGN = {
         "returned by func_001323a0 (actor.nostrict.c), whose callers call it as a statement",
     ("src/obj/class1b.nostrict.c", "func_001337e0"):
         "returned by func_001519c0 (plctl.nostrict.c), whose callers call it as a statement",
+    # Session 64: a key with a third name (the caller) covers that caller only.
+    ("src/obj/class1a.c", "func_00130398", "func_00150bf8"):
+        "returned by class 0x1A's handler at D_00350D88 +0xC, which func_0013e558 (plctl.c) calls as a statement",
+    ("src/ppp/ryjkekoto.c", "func_001a1158"):
+        "returned by a ppp frame callback, and pppsys.nostrict.c's dispatchers call frame callbacks as statements",
+    ("src/text/winpart.c", "func_00206370", "func_002066b0"):
+        "returned by func_002066b0, whose 39 main-ELF calls are all statements (recheck against the overlays, 5.2)",
 }
 
 
@@ -108,11 +115,17 @@ def call_args(s, i):
     return None
 
 
-def enclosing_ret(s, pos):
-    """The return type of the function definition that contains pos (None if not found)."""
+def enclosing(s, pos):
+    """The DEF_RX match of the function definition that contains pos (None if not found)."""
     last = None
     for m in DEF_RX.finditer(s, 0, pos):
         last = m
+    return last
+
+
+def enclosing_ret(s, pos):
+    """The return type of the function definition that contains pos (None if not found)."""
+    last = enclosing(s, pos)
     return last.group(1).strip() if last else None
 
 
@@ -183,7 +196,8 @@ def main():
                     continue  # a prototype
                 if before.endswith("return") and enclosing_ret(s, m.start()) == "void":
                     continue  # `return f();` in a void function passes nothing on
-                if (f, name) in BENIGN:
+                encl = enclosing(s, m.start())
+                if (f, name) in BENIGN or (encl and (f, name, encl.group(2)) in BENIGN):
                     continue
                 rows.append(("ret", f, s.count("\n", 0, m.start()) + 1, name, "value used", "void", defs[name][3]))
     for r in rows:

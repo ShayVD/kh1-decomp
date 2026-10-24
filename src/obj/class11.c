@@ -85,7 +85,7 @@ f32 func_00144378(Actor *arg0) {
 }
 
 /* func_001447a0 (from hand/text_00130000_h7.c). */
-void func_0014cc88(W7Ob *o, f32 f);
+f32 func_0014cc88(W7Ob *o, f32 f);
 extern f32 D_002C5970;
 void func_001447a0(W7Ob *o) {
     func_0014cc88(o, 0.0f);

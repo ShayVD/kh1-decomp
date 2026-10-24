@@ -38,7 +38,7 @@ void func_0024ae00(void *);
 void func_0024af00(void *);
 void func_001315c0(s32, s32, void *, f32);
 s32 func_00249580(void *);
-void func_00237a48(XY *, void *, void *, s32);
+f32 func_00237a48(XY *, void *, void *, s32);
 void func_00249558(XY *, XY *);
 void func_0024afc0(void *, void *, void *);
 s32 func_001375d8(s32);

@@ -22,7 +22,12 @@ extern s32 D_00656420;
 extern C3 D_00459D30[], D_00459D20[];
 void func_0024ae00(void *);
 void func_0024af00(void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00243c10(void *, s32, s32, s32, f32, s32);
+#else
+void func_00243c10(void *, s32, s32, s32, s32, f32);
+#define func_00243c10(a1, a2, a3, a4, a5, a6) (func_00243c10)(a1, a2, a3, a4, a6, a5)
+#endif
 void func_0024ac08(void *, s32 *);
 s32 func_001f0638(s32, s32, s32, s32, s32, s32);
 s32 func_001f0868(s32, s32, s32, s32, s32, s32, s32, s32);

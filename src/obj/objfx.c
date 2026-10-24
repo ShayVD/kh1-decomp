@@ -85,7 +85,7 @@ s32 func_0012c0e8(C0 *a) {
 }
 
 /* func_0012c180 (from auto/text_00120000_15.c). */
-M2C_UNK func_0012eba0(s32, M2C_UNK, M2C_UNK, M2C_UNK, s32);
+f32 func_0012eba0(s32, M2C_UNK, M2C_UNK, M2C_UNK, s32);
 extern M2C_UNK D_002E2FCF;
 s32 func_00121e28(M2C_UNK, void *);
 s32 func_00147ed8(s32, u8, M2C_UNK, s32);

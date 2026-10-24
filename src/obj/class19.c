@@ -31,10 +31,10 @@ void func_0015e820(s32 arg0) {
 typedef union { u8 b; u32 w; } U2E3190;
 extern U2E3190 D_002E3190;
 void func_0014f658(void *, s32);
-f32 func_00121b08(void *, f32);
+f32 func_00121b08(f32);
 void func_0015e840(void *a) {
     if (D_002E3190.w & 0x18000000) D_00551D74 = 30.0f;
-    D_00551D74 = func_00121b08(a, D_00551D74);
+    D_00551D74 = func_00121b08(D_00551D74);
     if (D_00551D74 == 0.0f) func_0014f658(a, 24);
 }
 

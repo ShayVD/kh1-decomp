@@ -632,7 +632,7 @@ typedef struct {
     u8 pad39f[0x3C4 - 0x39F];
     f32 f3c4;
 } ObjF3_40db8;
-void func_0014cc88(ObjF3_40db8 *, f32);
+f32 func_0014cc88(ObjF3_40db8 *, f32);
 #define func_00130578 ((void (*)(ObjF3_40db8 *, s32, f32)) func_00130578)
 #define func_00130398 ((void (*)(ObjF3_40db8 *, s32, f32)) func_00130398)
 void func_00140db8(ObjF3_40db8 *o, V4f *v) {

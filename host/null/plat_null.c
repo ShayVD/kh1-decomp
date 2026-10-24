@@ -192,7 +192,15 @@ int PlatWaitSema(int id) {
 }
 int PlatSignalSema(int id) { return 0; }
 int PlatISignalSema(int id) { return 0; }
-int PlatIReferSemaStatus(int id, void *param) { return 0; }
+/* The kernel's SemaParam: currentCount, maxCount, initCount, numWaitThreads, attr, option.  No
+ * thread ever waits (src/util/thread.c func_0010c378 signals only when one does). */
+int PlatIReferSemaStatus(int id, void *param) {
+    int *p = param;
+    int i;
+    for (i = 0; i < 6; i++)
+        p[i] = 0;
+    return id;
+}
 int PlatAddDmacHandler(int ch, int (*handler)(int), int next) { return 0; }
 int PlatRemoveDmacHandler(int ch, int id) { return 0; }
 int PlatEnableDmac(int ch) { return 0; }

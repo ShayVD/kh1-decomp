@@ -43,7 +43,7 @@ extern T16 D_004546C0[];
 extern T16 D_00454700[];
 extern s32 D_00454A24;
 
-f32 func_0011d790(s32, s32);
+void func_0011d790(s32, s32);
 s32 func_0011d7c0(s32);
 s32 func_0011ef10(s32, s32 (*)(void));
 s32 func_0011ef38(s32 (*)(void));

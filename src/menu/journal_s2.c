@@ -84,7 +84,12 @@ void func_002072e0(s32);
 void func_00207428(void *, s32, s32);
 void func_00207560(void *, s32, s32);
 void func_0021af38(void *);
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_0021b1b0(f32, f32, s32, s32);
+#else
+void func_0021b1b0(s32, s32, f32, f32);
+#define func_0021b1b0(a1, a2, a3, a4) (func_0021b1b0)(a3, a4, a1, a2)
+#endif
 s32 func_0021b800(s32);
 void func_0021b820(void);
 void func_0021c4f8(void *);

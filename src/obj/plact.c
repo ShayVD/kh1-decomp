@@ -212,8 +212,8 @@ typedef struct { s8 k, a, b; } Tr25;
 Prm25 *func_0013dc10(Obj25 *, u32);
 void func_0014db78(Obj25 *, f32 *);
 void func_00121fc4(f32 *, f32 *);
-void func_0014cce0(Obj25 *, f32);
-void func_001376e8(Obj25 *, f32 *);
+f32 func_0014cce0(Obj25 *, f32);
+f32 func_001376e8(Obj25 *, f32 *);
 void func_001586a8(s32);
 void func_00148a40(Obj25 *, s32);
 void func_00148768(s32, s32, Obj25 *, s32, f32);
@@ -304,7 +304,7 @@ void func_00125dc8(Obj25 *o, u32 mode, f32 *v) {
 #define FLD(T, p, off) (*(T *)((u8 *)(p) + (off)))
 typedef struct { s16 id; u8 pad[18]; } E7810;
 extern E7810 *D_004F7810;
-#define func_0012ec60 ((void (*)(s32, s32, V53 *)) func_0012ec60)
+#define func_0012ec60 ((f32 (*)(s32, s32, V53 *)) func_0012ec60)
 s32 func_00126838(u8 *o, s32 *a, V53 *v) {
     s32 t[68];
     s32 i;

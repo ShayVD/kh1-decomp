@@ -9,34 +9,36 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
-If this session starts before then (sessions 49 to 63 ran without it), do not ask for the Mac or wait on it: skip items 1
-and 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
+If this session starts before then (sessions 49 to 64 ran without it), do not ask for the Mac or wait on it: skip items 1
+to 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
 on, ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make item 1 the first
-thing**: six float builds are waiting for a boot. Items 3 and 4 also need the Mac: the overlay files are in
-Downloads/kh1-test/ovl, and the user's ISO is there for the host run.
+thing**: six float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO is in Downloads for the host
+run, and the overlay files are in Downloads/kh1-test/ovl.
 
-## Where we stopped (end of session 63, 2026-10-24)
+## Where we stopped (end of session 64, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-63.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-64.
 - **Six default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
-  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; sessions 60 to 63 kept every PS2 object
-  byte-identical)**. docs/float-untested.md lists every change since the last booted build (KH1_F29_N) and the
-  switch that undoes each. Session 59 released 4 names (`--no-fmt-read`, low risk); session 34 released 19 (bisect
-  order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`).
-- **Register passthrough** (portability.md rule 10; vita-port-plan.md §5.1c): `python3 -I tools/host/argcheck.py`
-  is down to **0 short calls and 6 value uses** (session 63 fixed 126 calls, 64 of them same-file calls argcheck
-  had skipped, and 117 value uses; every object bit-identical). New: `KH1_V0(type)` / `KH1_V0_RETURN(x)` in
-  common.h for a function that matches only as void but whose callers read its v0, and argcheck's BENIGN table
-  (hits read by hand and left, with the reason). The 6 left are callers with no caller in the main ELF or called
-  through tables: check them against the overlays' calls into the main ELF (§5.2) before calling them benign.
+  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; sessions 60 to 64 kept the float ELF's
+  loaded bytes the same: 64's fcheck showed only the name D_0061FFA0 gone)**. docs/float-untested.md lists every
+  change since the last booted build (KH1_F29_N) and the switch that undoes each. Session 59 released 4 names
+  (`--no-fmt-read`, low risk); session 34 released 19 (bisect order `--no-hix-join`, `--no-widen-heads`,
+  `--no-likely-slot`).
+- **Register passthrough** (portability.md rule 10; vita-port-plan.md §5.1c, §5.1d): argcheck lists **0 short
+  calls and 3 value uses**: func_001ffaf0 (winmenu.c), func_002040a0 and func_00206710 (winpart.c) have no
+  caller in the main ELF; check them against dktitle.x's calls into the main ELF. BENIGN keys may name the
+  caller (a third field). func_0013e558 now passes the actor to its class handler (it was only in a0).
+- **Argument classes** (portability.md rule 11, new): `python3 -I tools/host/abicheck.py` compares every
+  prototype / m2c cast with the definition (32-bit int, 64-bit int, f32, f64, 128-bit): **0 left** (session 64
+  fixed 146; where reordering a call changed the PS2 code, an `#ifdef KH1_PS2` branch keeps the EE's declaration
+  and the host gets the definition's order plus a reordering macro). Run it after any new declaration.
 - **Host build (phase 5)**: `make host-census` links out/host/kh1-host (all 512 game files + the 8 drafts).
   `KH1_HOST_ISO=PATH out/host/kh1-host` reads the user's own disc image by sector (host/port/cd_image.c;
-  `KH1_HOST_TRACE=1` prints the searches and reads, `KH1_HOST_FRAMES=N` caps the run, default 600). PlatGsSyncV
-  and PlatWaitSema run the game's vblank handler once (a frame). On tests/host/fake_disc.py's game-data-free
-  image the boot reads SYSTEM.CNF and KINGDOM.IDX, sets up the sound RPC and the main loop runs its frames.
-  **Not yet run on the real ISO** (it is on the Mac). Found and fixed for the host: opdma.c's three GS tag lists
-  are one array at 0x61EEA0 (func_001a9f88 links 288 tags across them; host/port/memmap.c); phase 4 should make
-  them one definition. Without KH1_HOST_ISO the runner still stops at the first read.
+  `KH1_HOST_TRACE=1` prints the searches and reads, `KH1_HOST_FRAMES=N` caps the run, default 600). On
+  tests/host/fake_disc.py's image the boot reads SYSTEM.CNF and KINGDOM.IDX and the main loop runs its frames;
+  **under valgrind 60 frames show 0 errors** (`apt-get install valgrind libc6-dbg:i386`; `valgrind
+  --track-origins=yes out/host/kh1-host`). **Not yet run on the real ISO** (it is on the Mac). opdma.c's three
+  GS tag lists are one definition now (D_0061EEA0[0x140]; memmap.c's copy is gone).
 - **dktitle.x**: tools/ovl/inventory.py is ready (functions, main-ELF calls and data, code / data split;
   `--selftest` on the main ELF finds every layout.tsv start). Not run: the file is on the Mac. §5.2 has the plan
   to decompile it (toolchain check on 5-8 leaves first).
@@ -53,9 +55,9 @@ Downloads/kh1-test/ovl, and the user's ISO is there for the host run.
   `python3 -I tools/host/census.py --exe`), then `out/host/kh1-host` (gdb works: objects have -g; `gdb -batch -ex
   "break kh1_host_vblank if frames >= N" -ex run -ex bt out/host/kh1-host` shows where frame N is); `--files
   CAUSE` / `--show FILE`; out/host/undefined.txt. `python3 -I tools/host/argcheck.py --tsv out/host/argcheck.tsv`
-  lists the passthrough calls. `python3 -I tools/host/vu2c.py FILE LINE` turns one VU0 asm statement into PlatVu0
+  lists the passthrough calls, `python3 -I tools/host/abicheck.py` the argument-class mismatches. `python3 -I tools/host/vu2c.py FILE LINE` turns one VU0 asm statement into PlatVu0
   calls. A quick "did any object change" check: `find out/build -name '*.o' | sort | xargs sha1sum` before the
-  first edit and after (sessions 62 and 63 did this: all 677 the same), or build origin/main in a `git worktree`
+  first edit and after (sessions 62 to 64 did this), or build origin/main in a `git worktree`
   (symlink tools/toolchain, copy the ELF) and `cmp` every out/build .o.
   **`git fetch origin main` first**: the container's origin/main can be stale. A fresh container needs `apt-get
   install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu gcc-multilib gdb` (after `dpkg --add-architecture
@@ -69,11 +71,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 64 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 65 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s64 and /mnt/project-files/kh1-runtime/s64, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s65 and /mnt/project-files/kh1-runtime/s65, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -89,18 +91,19 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Without the Mac: skip.
 2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
    not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), run
-   `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` and record in vita-port-plan §5.1c how far the boot gets
-   and where it stops (expected: the first overlay call D_00F20000(0, 0), which needs §5.2's native overlay
-   build). Fix host-only causes the way session 63 did (platform answers, layout dependencies in host/port, the
-   PS2 objects bit-identical).
+   `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` (and once under valgrind) and record in vita-port-plan
+   how far the boot gets and where it stops (expected: the first overlay call D_00F20000(0, 0), which needs §5.2's
+   native overlay build). Fix host-only causes the way sessions 63 and 64 did (platform answers, layout
+   dependencies in host/port, the PS2 objects bit-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
    `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
-   in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Check the 6 value uses argcheck
-   still lists against dktitle.x's calls into the main ELF. Without the Mac: skip.
-4. **Static, without the Mac**: the 6 value uses (read the table callers' call sites: D_00350D88's object-class
-   callbacks, the ppp program's Frame callbacks); then phase 4's one definition for opdma.c's three tag lists
-   (keep the PS2 build byte-identical; the shift build must link them in order); then the next host-only gap
-   the fake-disc run shows (e.g. PlatIReferSemaStatus leaving its result unwritten for func_0010c378).
+   in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Check argcheck's 3 value uses and
+   func_002066b0's BENIGN entry against dktitle.x's calls into the main ELF. Without the Mac: skip.
+4. **Static, without the Mac**: other passthroughs the text checks cannot see: calls through function pointers
+   (tables and struct fields: `fn()` with fewer arguments than the handlers take, like func_0013e558's; list the
+   indirect calls with no arguments and read what their targets take), then the remaining null-platform answers
+   that leave out parameters unwritten (PlatMcGetInfo / PlatMcSync / PlatPadRead: what the game reads back), then
+   abicheck's blind spots (struct typedefs it skips, unprototyped `()` declarations of float functions).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=64`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=65`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).

@@ -113,7 +113,7 @@ s32 func_0013f510(ObjF3 *o, s32 a) {
 }
 
 /* func_0013f770 (from hand/nostrict/text_00140000_h33.c). */
-void func_0014cc88(ObjF3 *, f32);
+f32 func_0014cc88(ObjF3 *, f32);
 void func_0013f770(ObjF3 *o, V4f *v) {
     V4f t;
     f32 s;

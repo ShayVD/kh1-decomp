@@ -74,7 +74,7 @@ s32 func_0015dd50(void *vo, f32 *v) {
 }
 
 /* func_0015dff8 (from hand/nostrict/text_00150000_h36.c). */
-void func_0014cc88(void *, f32);
+f32 func_0014cc88(void *, f32);
 void func_00121fc4(f32 *, f32 *);
 void func_00156260(void *, f32 *);
 s32 func_0015dff8(CylObj *o, s32 flag) {

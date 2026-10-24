@@ -102,7 +102,7 @@ void func_00145008(Ah *, s32);
 f32 func_00120c88(f32);
 void func_00147138(Ah *, s32);
 s32 func_00105c18(s32, u16);
-#define func_001315c0 ((void (*)(Ah *, s32, f32, f32 *)) func_001315c0)
+#define func_001315c0 ((void (*)(Ah *, s32, f32 *, f32)) func_001315c0)
 /* func_00152928 (hand/nostrict) */
 void func_00152928(Ah *a) {
     P144 *p;
@@ -125,7 +125,7 @@ void func_00152928(Ah *a) {
         func_00152880(a);
         return;
     set:
-        func_001315c0(a, 0x8003, 0.0f, a->x144->x40->v10);
+        func_001315c0(a, 0x8003, a->x144->x40->v10, 0.0f);
         a->x144->x40->f.b.b2 = 1;
         p = a->x144;
     } else if (a->x130->x4c == 204 && a->x8) {
@@ -342,7 +342,7 @@ void func_00153418(Obj153418 *a, Msg153418 *m) {
 /* func_00153668 (from hand/nostrict/text_00150000_h58.c). */
 typedef struct Actor_53668 { ACT_BODY(S144) } Act_53668;
 s32 func_0012cc38(s32, s32);
-void func_0012ec60(struct Actor_53668 *, s32, void *);
+f32 func_0012ec60(struct Actor_53668 *, s32, void *);
 void func_00130340(void *, s32, f32);
 void *func_00130578(void *, s32, f32);
 void func_0013dfa0(void *);

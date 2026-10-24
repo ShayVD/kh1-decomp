@@ -54,7 +54,7 @@ void func_0015cac0(void *arg0, s32 arg1, void *arg2, s32 arg3) {
 
 /* func_0015d1d0 (from hand/text_00150000_h10.c). */
 void func_00130398(void *, s32, f32);
-void func_0014cc88(void *, f32);
+f32 func_0014cc88(void *, f32);
 typedef struct { u32 flags; u8 pad[0x2C]; f32 pos[4]; } ObjD1;
 void func_0015d1d0(ObjD1 *a, f32 *v) {
     PlatVu0SubVector(v, (*(f32 (*)[0x4])&D_002C58A0), a->pos);
@@ -104,7 +104,7 @@ s32 func_0015d540(ObjD1 *a, f32 *v) {
 
 /* func_0015d560 (from auto/text_00150000_7.c). */
 void func_0015d3b8();
-f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
+void func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 void func_0015d560(void) {
     func_0014f830(0xF, 1, &func_0015ca90, &func_0015caa8, &func_0015d3b8, &func_0015d518, &func_0015d538, &func_0015d4e0, &func_0015d540);
 }

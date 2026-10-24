@@ -54,7 +54,7 @@ void func_00157f70();
 void func_00158100();
 void func_001581d8();
 void func_001584c0();
-f32 func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
+void func_0014f830(M2C_UNK, M2C_UNK, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *, M2C_UNK *);
 void func_00158648(void) {
     func_0014f830(0x1D, 0x1E, &func_00157f70, &func_00158050, &func_001581d8, &func_001584c0, &func_0014f828, &func_00158068, &func_00158100);
 }

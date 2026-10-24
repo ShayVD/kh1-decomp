@@ -64,7 +64,7 @@ typedef struct { u64 tag, ad; u64 d2, d3; u64 d4, d5; s32 x0, y0, z0, w0; s32 x1
 extern u16 D_003F2BD8[][16];
 
 f32 sinf(f32);
-u64 *func_0011fb38(s32, s32, u64 *);
+u64 *func_0011fb38(s32, u64, u64 *);
 u64 *func_00122048(s32, s32);
 void func_001220b8(void *);
 u32 func_001edd88(u32, s32);

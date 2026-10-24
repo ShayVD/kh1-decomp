@@ -379,7 +379,7 @@ void func_001399a8(W32Act *o, W32Hit *h) {
 #undef func_00130578
 
 /* func_00139a90 (from hand/text_00130000_h32.c). */
-void func_0014cce0(W32Act *o, f32 f);
+f32 func_0014cce0(W32Act *o, f32 f);
 #define func_00130340 ((s32 (*)(W32Act *o, u32 f, f32 x)) func_00130340)
 #define func_00130578 ((void *(*)(void *o, s32 k, f32 f)) func_00130578)
 void func_00139a90(W32Act *o, W32Hit *h) {

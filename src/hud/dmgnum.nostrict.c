@@ -23,7 +23,7 @@ void func_00237018(void *, s32, s32);
 void func_0024aa48(void *, Pkt *, void *);
 s32 func_002388b8(Pkt *, s32, s32);
 s32 func_00249580(void *);
-void func_00237a48(V4 *, void *, void *, s32);
+f32 func_00237a48(V4 *, void *, void *, s32);
 void func_00249558(V4 *, V4 *);
 void func_0024ae00(void *);
 void func_0024af00(void *);

@@ -218,7 +218,7 @@ typedef struct {
     s32 x3d0;
 } E30o;
 extern f32 D_002BBDFC;
-void func_0014cce0(E30o *o, f32 f);
+f32 func_0014cce0(E30o *o, f32 f);
 void func_00130398(E30o *o, s32 k, f32 f);
 void func_0014f658(E30o *o, s32 k);
 typedef struct {

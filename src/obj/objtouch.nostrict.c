@@ -132,7 +132,7 @@ void *func_001354b8(Oad08 *, s32);
 f32 func_00120c88(f32);
 void func_00142388(f32 *, f32 *);
 void func_00142470(Aad08 *, f32 *);
-#define func_001315c0 ((void (*)(Aad08 *, s32, f32, f32 *)) func_001315c0)
+#define func_001315c0 ((void (*)(Aad08 *, s32, f32 *, f32)) func_001315c0)
 void func_0015ad08(Aad08 *a) {
     f32 v[4];
     f32 w[4];
@@ -140,7 +140,7 @@ void func_0015ad08(Aad08 *a) {
     f32 z;
 
     z = 0.0f;
-    func_001315c0(a, 0x8003, z, v);
+    func_001315c0(a, 0x8003, v, z);
     if (a->x144 == 0) {
         a->x144 = func_00121e28(4, &a->x144);
         a->x4a0 = func_0015ace0;

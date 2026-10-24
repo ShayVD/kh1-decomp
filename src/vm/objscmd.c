@@ -295,7 +295,12 @@ void func_00129210(Arg *p) {
 }
 
 /* func_00129240 (from hand/text_00120000_h5.c). */
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 extern void func_0014e668(s32, s32, f32, f32, s32);
+#else
+extern void func_0014e668(s32, s32, s32, f32, f32);
+#define func_0014e668(a1, a2, a3, a4, a5) (func_0014e668)(a1, a2, a5, a3, a4)
+#endif
 void func_00129240(Arg *p) {
     func_0014e668(p[0].i, 0, p[1].f, p[2].f, p[3].i);
 }
@@ -365,7 +370,12 @@ void func_00129428(void *arg0) {
 }
 
 /* func_00129460 (from hand/text_00120000_h5.c). */
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 extern void func_001315c0(void *, s32, f32, void *);
+#else
+extern void func_001315c0(void *, s32, void *, f32);
+#define func_001315c0(a1, a2, a3, a4) (func_001315c0)(a1, a2, a4, a3)
+#endif
 void func_00129460(Arg *p) {
     func_001315c0(p[0].p, p[1].i, p[2].f, p[3].p);
 }
@@ -383,7 +393,7 @@ void func_001294c0(s32 *arg0) {
 }
 
 /* func_001294f0 (from auto/text_00120000_8.c). */
-M2C_UNK func_0012ec88(s32, s32);
+f32 func_0012ec88(s32, s32);
 void func_001294f0(void *arg0) {
     func_0012ec88(M2C_FIELD(arg0, s32 *, 0), M2C_FIELD(arg0, s32 *, 4));
 }
@@ -437,7 +447,12 @@ void func_00129638(void *arg0) {
 }
 
 /* func_00129668 (from hand/text_00120000_h5.c). */
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 extern void func_00138a20(s32, f32, s32);
+#else
+extern void func_00138a20(s32, s32, f32);
+#define func_00138a20(a1, a2, a3) (func_00138a20)(a1, a3, a2)
+#endif
 void func_00129668(Arg *p) {
     func_00138a20(p[0].i, p[1].f, p[2].i);
 }
@@ -592,7 +607,12 @@ void func_00129a20(void *arg0) {
 }
 
 /* func_00129a48 (from auto/text_00120000_8.c). */
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 M2C_UNK func_00148d50(s32, s32, s32, f32, f32);
+#else
+M2C_UNK func_00148d50(s32, f32, f32, s32, s32);
+#define func_00148d50(a1, a2, a3, a4, a5) (func_00148d50)(a1, a4, a5, a2, a3)
+#endif
 void func_00129a48(void *arg0) {
     func_00148d50(M2C_FIELD(arg0, s32 *, 0), M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(arg0, s32 *, 8), M2C_FIELD(arg0, f32 *, 0xC), M2C_FIELD(arg0, f32 *, 0x10));
 }
@@ -678,7 +698,7 @@ void func_00129c38(void *arg0) {
 }
 
 /* func_00129c60 (from auto/text_00120000_8.c). */
-M2C_UNK func_0012ec60(s32, s32, s32);
+f32 func_0012ec60(s32, s32, s32);
 void func_00129c60(void *arg0) {
     func_0012ec60(M2C_FIELD(arg0, s32 *, 0), M2C_FIELD(arg0, s32 *, 4), M2C_FIELD(arg0, s32 *, 8));
 }
@@ -1091,7 +1111,7 @@ void func_0012a5a8(void *arg0) {
 }
 
 /* func_0012a5c8 (from auto/text_00120000_8.c). */
-M2C_UNK func_00120ef0(s32, void *, s32);
+f32 func_00120ef0(s32, void *, s32);
 void func_0012a5c8(void *arg0) {
     s32 sp[16];
     PlatVu0InversMatrix(sp, ((M2C_UNK *)&D_002E2700));

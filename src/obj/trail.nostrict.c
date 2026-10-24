@@ -114,7 +114,12 @@ typedef struct { s32 w0; Act_59cd8 *obj; s32 pad[2]; V4 a; V4 b; f32 f30; f32 f3
 typedef struct { union { u64 d; s32 w; } h; u8 pad8[0x208]; V4 v210; V4 v220; } Trail;
 extern Tr700 D_00551700;
 extern s32 D_002E27A8;
+#ifdef KH1_PS2 /* portability rule 11: the EE passes the floats in their own registers */
 void func_00159c10(f32, V4 *);
+#else
+void func_00159c10(V4 *, f32);
+#define func_00159c10(a1, a2) (func_00159c10)(a2, a1)
+#endif
 void func_00124c68(f32);
 #define D_00551740 (*(Trail (*)) &D_00551740)
 #define func_00159b48 ((void (*)(V4 *)) func_00159b48)
@@ -193,13 +198,13 @@ typedef struct {
     u8 pad378[0x39e - 0x378]; u8 x39e; u8 pad39f[0x440 - 0x39f]; u64 x440;
 } B4E9;
 extern s32 D_002C5C54;
-void func_001376e8(B4E9 *, f32 *);
+f32 func_001376e8(B4E9 *, f32 *);
 void func_00130398(B4E9 *, s32, f32);
 s32 func_00131b08(B4E9 *);
 void func_00146c98(B4E9 *, s32);
 s32 func_00130010(B4E9 *);
 void func_0012bd98(B4E9 *, s32, s32, f32 *);
-#define func_001315c0 ((void (*)(void *, s32, f32, void *)) func_001315c0)
+#define func_001315c0 ((void (*)(void *, s32, void *, f32)) func_001315c0)
 #define D_002C5958 (*(u32 (*)) &D_002C5958)
 void func_00159f78(B4E9 *e, f32 *v, s32 n) {
     f32 tmp[4];
@@ -228,9 +233,9 @@ void func_00159f78(B4E9 *e, f32 *v, s32 n) {
         if (e->x88 & 0x80) v[3] = e->x20[3] = e->x6c->x4;
         k = (v[3] < e->x6c->x8) ? n + 1 : n + 2;
         if (e->x164 == n && !func_00130010(e)) {
-            func_001315c0(e, 41, 1.0f, tmp);
+            func_001315c0(e, 41, tmp, 1.0f);
             func_0012bd98(e, e->x39e, 0x80000002, tmp);
-            func_001315c0(e, 40, 1.0f, tmp);
+            func_001315c0(e, 40, tmp, 1.0f);
             func_0012bd98(e, e->x39e, 0x80000002, tmp);
         }
         func_00130398(e, k, 8.0f);
