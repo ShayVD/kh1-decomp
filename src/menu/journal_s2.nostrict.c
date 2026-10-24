@@ -61,7 +61,7 @@ u64 *func_00122048(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(Wnd *);
 s32 func_001f45e0(Wnd *);
-s32 func_001f42b8(void);
+s32 func_001f42b8(Wnd *);
 void func_0021e538(void);
 void func_0011d768(s32);
 void func_0021b5c8(s32, s32, s32, s32, f32);
@@ -194,7 +194,7 @@ void func_0021e8d8(Wnd *o) {
     s32 ch, n, k;
     Eff *p;
     s32 t;
-    if (func_001f42b8()) {
+    if (func_001f42b8(o)) {
         func_0021e538();
         if (o->x28 == 0) {
             if (D_00425BC8->x8 & PAD_CROSS) {

@@ -29,6 +29,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DEF_RX = re.compile(r"^(?!\s)(?:static\s+)?(?:const\s+)?([A-Za-z_][\w \t\*]*?)\b(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s*\(([^;{)]*)\)\s*(?:\{|$)", re.M)
 CALL_RX = re.compile(r"\b(func_[0-9a-f]{8})\s*\(")
 
+# Hits read by hand and left as they are (file, callee): the reason.
+BENIGN = {
+    ("src/game/dkmovie.c", "func_0024b138"):
+        "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
+}
+
 
 def files():
     out = []
@@ -113,6 +119,11 @@ def main():
             line_start = s.rfind("\n", 0, m.start()) + 1
             line = s[line_start:s.find("\n", m.start())]
             if re.match(r"\s*(#define|extern\b|[A-Za-z_][\w \t\*]*\b" + name + r"\s*\(\s*\)\s*;)", line):
+                continue
+            # a prototype at file level (`void f(void);`, `void f(), g();`): only the calls matter
+            if re.match(r"[A-Za-z_][^=]*;\s*$", line) and not re.match(r"(return|else|do)\b", line):
+                continue
+            if (f, name) in BENIGN:
                 continue
             n = call_args(s, m.end() - 1)
             pn, var, ret, df = defs[name]

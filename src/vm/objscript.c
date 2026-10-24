@@ -95,9 +95,9 @@ void func_0012b9b0(Node *a) {
 }
 
 /* func_0012ba30 (from auto/text_00120000.c). */
-M2C_UNK func_0013cec8(s32);
-void func_0012ba30(s32 arg0) {
-    func_0013cec8(arg0 + 8);
+void func_0013cec8(s32, void *, s32);
+void func_0012ba30(s32 arg0, void *src, s32 n) {
+    func_0013cec8(arg0 + 8, src, n);
 }
 
 /* func_0012ba48 (from hand/text_00120000_h5.c). */

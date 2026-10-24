@@ -300,11 +300,10 @@ void func_00157910(s32 arg0, s32 arg1, s32 arg2) {
 /* func_00157978 (from auto/text_00150000_15.c). */
 extern u32 D_002C5958;
 #define D_00551670 (*(M2C_UNK (*)) &D_00551670)
-#define func_00157648 ((void (*)(s32, f32, f32, f32, f32, f32, f32, f32, f32)) func_00157648)
-void func_00157978(s32 arg0, s32 arg1, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
+void func_00157978(s32 arg0, s32 arg1, f32 fparg0) {
     void *temp_v0;
 
-    func_00157648(arg0, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
+    func_00157648((void *)arg0);
     if (!(((u32) D_002C5958 >> 0x14) & 1)) {
         temp_v0 = (s8 *)&D_00551670 + (M2C_FIELD(M2C_FIELD(arg0, void **, 0x6C), s8 *, 0xBD) * 0x14);
         M2C_FIELD(temp_v0, s8 *, 0) = 1;
@@ -314,5 +313,4 @@ void func_00157978(s32 arg0, s32 arg1, f32 fparg0, f32 fparg1, f32 fparg2, f32 f
     }
 }
 #undef D_00551670
-#undef func_00157648
 

@@ -45,7 +45,7 @@ void func_001f4058(void *, s32);
 void func_001f40a0(void *, s32);
 s32 func_001f40c8(void);
 s32 func_001f42b8(void *);
-s32 func_001f4390(void);
+s32 func_001f4390(void *);
 void func_001f82b0(void);
 void func_001f9010(s32);
 s32 func_001f9438(void *, s32, s32, s32, s32, s32, u32);
@@ -247,8 +247,8 @@ void func_0022bac0(PtWin *arg0) {
     func_00205938(arg0, 0x64000000);
 }
 
-void func_0022bb00(void) {
-    if (func_001f4390() != 0 && (D_00425BC8->x8 & 8)) {
+void func_0022bb00(void *a0) {
+    if (func_001f4390(a0) != 0 && (D_00425BC8->x8 & 8)) {
         func_0011d768(4);
     }
 }

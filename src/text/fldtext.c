@@ -406,11 +406,11 @@ typedef struct {
     f32 v;
 } E16;
 typedef struct { u16 n; u16 pad; f32 a; f32 b; u8 pad2[4]; E16 e[1]; } Acc;
-void func_0010cf38(Acc *);
-s32 func_0010d0c0(Acc *p) {
+void func_0010cf38(Acc *, void *);
+s32 func_0010d0c0(Acc *p, void *a) {
     s32 i;
     f32 sum, lim;
-    func_0010cf38(p);
+    func_0010cf38(p, a);
     lim = p->b;
     if (p->a <= lim) return p->n;
     sum = 0.0f;

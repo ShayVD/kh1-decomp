@@ -17,12 +17,12 @@ extern s32 D_00641C04;
 void func_00149f10(s32, void (*)(void));
 void func_001ef830(void);
 void func_001f36b8(void *);
-s32 func_001f4390(void);
+s32 func_001f4390(void *);
 void func_00211718(void);
 
 void func_00211738(void *a0) {
     s32 n;
-    if (func_001f4390() == 0) return;
+    if (func_001f4390(a0) == 0) return;
     if (D_00641C04 != 0) return;
     if (D_00641BE0[n = D_00641BA8] != D_00641BF0[n]) {
         D_00641C04 = 1;

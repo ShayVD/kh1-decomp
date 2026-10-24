@@ -81,9 +81,9 @@ void func_00141858(s32 arg0, s32 arg1) {
 }
 
 /* func_00141898 (from auto/text_00140000.c). */
-M2C_UNK func_0013c458(u16);
-void func_00141898(void *arg0) {
-    func_0013c458(M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C));
+s32 func_0013c458(s32, s32);
+s32 func_00141898(void *arg0, s32 n) {
+    return func_0013c458(M2C_FIELD(M2C_FIELD(arg0, void **, 0x130), u16 *, 0x4C), n);
 }
 
 /* func_00141a40 (from hand/text_00130000_h7.c). */

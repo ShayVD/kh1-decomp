@@ -85,12 +85,12 @@ void func_00131438(W6Obj *o) {
 }
 
 /* func_00131498 (from hand/text_00130000_h6.c). */
-void func_001321a0(W6Slot *s);
-void func_00131498(W6Obj *o) {
+void func_001321a0(W6Slot *s, void *a);
+void func_00131498(W6Obj *o, void *a) {
     if (o->s1e0.a == 0) {
         o->s1e0 = o->s1d0;
     }
-    func_001321a0(&o->s1d0);
+    func_001321a0(&o->s1d0, a);
     o->u160.f.b5 = 1;
 }
 

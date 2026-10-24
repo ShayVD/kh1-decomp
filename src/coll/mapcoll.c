@@ -1401,7 +1401,7 @@ void func_001178d0(Obj178 *a) {
 /* func_00117948 (from hand/text_00110000_h52.c). */
 typedef struct { u16 poly; u16 i0; u16 i1; } Edge52;
 s32 func_00104a90(s32, s32 *);
-void func_0011a818(s32 *, s32 *, Edge52 *);
+void func_0011a818(s32 *, s32 *, Edge52 *, s32);
 s32 func_0011a7c0(s32, s32, s32 *);
 #define func_0011ab38 ((Bf52 *(*)()) func_0011ab38)
 s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
@@ -1428,7 +1428,7 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
         }
         return 1;
     }
-    func_0011a818(&a, &b, e);
+    func_0011a818(&a, &b, e, grp);
     for (i = 0; i < n; i++) {
         id = list[i];
         g = (u32 *)func_0011ab38(grp, id, grp);
