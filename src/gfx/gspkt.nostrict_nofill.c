@@ -13,12 +13,12 @@ typedef int u128 __attribute__((mode(TI)));
 
 void func_00237018(u128 *p, s32 n, s32 wait) {
     PlatDmaChan *ch;
-    u32 hi = 0x80000000;
+    u32 hi = PLAT_DMA_SPR;
     n--;
     if (n > 0) {
         *p = 0;
         *(s32 *)p = n | 0x70000000;
-        if ((u32)p < 0x70000000) {
+        if ((u32)p < PLAT_SPR_BASE) {
             hi = 0;
         }
         ch = PlatDmaGetChan(2);
