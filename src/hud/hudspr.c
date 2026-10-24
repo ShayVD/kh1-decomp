@@ -1,5 +1,14 @@
+/* The HUD's drawing helpers (docs/modules.md "Session 46"), default flags part.
+ * func_00239778 draws a sprite and its optional second layer (func_0024ae00 /
+ * func_0024af00 step them, func_00239630 draws them) at (e, g).
+ * func_00239e30 draws a vertical list of entries (22 pixels apart, the
+ * current one skipped and drawn large at the end with a selection frame chosen
+ * by mode 0..3): one sprite and one glyph per entry.  Most likely the battle
+ * command menu (entries m->id, the last cursor per mode in D_00449908); not
+ * proved by a boot. */
 #include "common.h"
 #include "data/bss_0065.h"
+#include "data/pieces/D_00449908.h"
 
 typedef struct { u8 b[192]; } Spr17;
 typedef struct {
@@ -9,13 +18,18 @@ typedef struct {
     u8 pad38[0x1c0 - 0x38]; void *x1c0;
 } Ob17;
 typedef struct { s32 x0; s32 x4; s32 x8; s32 cur; s32 n; u8 id[16]; u8 col[16]; } Mn17;
+
 extern f32 D_00650DD0;
 extern f32 D_00650DD4;
 extern s32 D_00449900;
-#include "data/pieces/D_00449908.h"
 void func_0024ae00(void *);
 void func_0024af00(void *);
 void func_00239630(void *, void *, s32, s32, f32);
+void func_002399f0(s32, void *, void *, s32, s32, s32 *, f32);
+void func_0024ac08(void *, s32 *);
+void func_0024ac68(void *, s32 *);
+void func_00239558(s32, s32, s32, s32);
+
 void func_00239778(s32 a, void *b, void *c, void *d, s32 e, s32 g, f32 h) {
     if (a != 0) {
         func_0024ae00(b);
@@ -32,10 +46,6 @@ void func_00239778(s32 a, void *b, void *c, void *d, s32 e, s32 g, f32 h) {
         func_00239630(c, d, e, g, h);
     }
 }
-void func_002399f0(s32, void *, void *, s32, s32, s32 *, f32);
-void func_0024ac08(void *, s32 *);
-void func_0024ac68(void *, s32 *);
-void func_00239558(s32, s32, s32, s32);
 
 void func_00239e30(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f32 f) {
     s32 pos[4];
@@ -103,4 +113,4 @@ void func_00239e30(s32 mode, Mn17 *m, s32 big, s32 on, Ob17 *o, s32 x, s32 y, f3
         (*(struct { s32 a; s32 t[4]; }(*))&D_00449908).t[mode] = m->cur;
     }
 }
-#include "data/data_0044.h"
+

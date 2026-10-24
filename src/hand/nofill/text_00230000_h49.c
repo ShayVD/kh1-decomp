@@ -2,33 +2,6 @@
 #include "common.h"
 #include "data/bss_0064.h"
 
-void func_00239860(s32, s32, s32, s32, f32, s32, s32, s32);
-void func_00239b90(s32, s32, s32, s32, f32, s32, s32, s32);
-void func_0024ae00(s32);
-void func_0024af00(s32);
-
-void func_00239a80(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, f32 f) {
-    if (a0 != 0) {
-        func_0024ae00(a1);
-        if (a2 != 0) func_0024ae00(a2);
-    }
-    func_0024af00(a1);
-    if (a2 != 0) func_0024af00(a2);
-    func_00239860(a1, a3, a4, a5, f, 0, a6, 0);
-    if (a2 != 0) func_00239860(a1, a3, a4, a5, f, 0, a6, 0);
-}
-
-void func_00239d20(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, f32 f) {
-    if (a0 != 0) {
-        func_0024ae00(a1);
-        if (a2 != 0) func_0024ae00(a2);
-    }
-    func_0024af00(a1);
-    if (a2 != 0) func_0024af00(a2);
-    func_00239b90(a1, a3, a4, a5, f, 0, a6, 0);
-    if (a2 != 0) func_00239b90(a1, a3, a4, a5, f, 0, a6, 0);
-}
-
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 Q D_00648790 ALIGNED(16);
 extern u8 D_00351E10[];

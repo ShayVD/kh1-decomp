@@ -5,74 +5,11 @@
 
 typedef struct { s32 x, y, z, w; } I4b;
 typedef struct { u8 pad[0x60]; s32 c[4][4]; I4b p[4]; } Spr6;
-extern Spr6 D_00648900;
 extern s32 D_006488F0;
 extern f32 D_00650DD0;
 extern f32 D_00650DD4;
 void func_0024aa48(void *, Spr6 *, void *);
 s32 func_002388b8(Spr6 *, s32, s32);
-
-void func_00239630(void *a0, void *a1, s32 dx, s32 dy, f32 s) {
-    s32 i, j;
-    s32 *q;
-    func_0024aa48(a0, &D_00648900, a1);
-    for (i = 0; i < 4; i++) {
-        q = &D_00648900.p[i].y;
-        q[-1] += dx * 16;
-        q[0] += dy * 16;
-    }
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 3; j++) {
-            D_00648900.c[i][j] = D_00648900.c[i][j] * s;
-        }
-    }
-    for (i = 0; i < 4; i++) {
-        D_00648900.c[i][3] = D_00648900.c[i][3] * D_00650DD4;
-    }
-    D_006488F0 = func_002388b8(&D_00648900, 1, D_006488F0);
-}
-
-void func_00239860(void *a0, void *a1, s32 dx, s32 dy, f32 s, s32 scale, s32 *src, s32 all) {
-    s32 i, j;
-    s32 *q;
-    func_0024aa48(a0, &D_00648900, a1);
-    for (i = 0; i < 4; i++) {
-        q = &D_00648900.p[i].y;
-        q[-1] += dx * 16;
-        q[0] += dy * 16;
-    }
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
-            if (all || j != 3) D_00648900.c[i][j] = src[j];
-            if (scale) D_00648900.c[i][j] = D_00648900.c[i][j] * s;
-        }
-    }
-    for (i = 0; i < 4; i++) {
-        D_00648900.c[i][3] = D_00648900.c[i][3] * D_00650DD4;
-    }
-    D_006488F0 = func_002388b8(&D_00648900, 1, D_006488F0);
-}
-
-void func_00239b90(void *a0, void *a1, s32 dx, s32 dy, f32 s, s32 scale, s32 (*src)[4], s32 all) {
-    s32 i, j;
-    s32 *q;
-    func_0024aa48(a0, &D_00648900, a1);
-    for (i = 0; i < 4; i++) {
-        q = &D_00648900.p[i].y;
-        q[-1] += dx * 16;
-        q[0] += dy * 16;
-    }
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
-            if (all || j != 3) D_00648900.c[i][j] = src[i][j];
-            if (scale) D_00648900.c[i][j] = D_00648900.c[i][j] * s;
-        }
-    }
-    for (i = 0; i < 4; i++) {
-        D_00648900.c[i][3] = D_00648900.c[i][3] * D_00650DD4;
-    }
-    D_006488F0 = func_002388b8(&D_00648900, 1, D_006488F0);
-}
 
 typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0-0x68]; u64 unkE0; u8 tail[0x160 - 0xE8]; } Q;
 Q D_00648630 ALIGNED(16);
@@ -107,6 +44,7 @@ extern u8 D_0064FD60[];
 #include "data/pieces/D_004267F0.h"
 void func_0024ac08(void *, s32 *);
 void func_00239558(s32, s32, s32, s32);
+void func_00239630(void *, void *, s32, s32, f32);
 
 void func_0023a490(s32 a0, Btn *b, s32 x, s32 y, f32 f) {
     s32 pos[2];
