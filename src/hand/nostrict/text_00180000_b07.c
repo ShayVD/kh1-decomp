@@ -441,7 +441,6 @@ void sceVu0CopyMatrix(void *, void *);
 void func_002672f8(void *, void *, void *);
 void func_001a90f8(void *, void *, void *);
 
-
 /* --- pppKeBornRnd4: born-at-random plus spawn at vertices --- */
 typedef struct {
     s32 frame;
@@ -930,82 +929,4 @@ void pppKeTkFadeDraw(PppObject *obj, PppTkFadeKey *key, PppEntry *e) {
 }
 
 /* --- pppDrawMdlTs3Draw --- */
-typedef struct {
-    u32 flags;  /* +0x0 */
-    u8 pad04[0x12];
-    u16 unk16;  /* +0x16 */
-} Ts3Mdl;
-
-typedef struct {
-    s32 frame;
-    s32 slot;     /* +0x4 */
-    u8 pad8[0x18];
-    u8 flags;     /* +0x20 */
-    u8 f21, f22, f23, f24, f25;
-} PppTs3Key;
-
-void pppDrawMdlTs3Draw(PppObject *obj, PppTs3Key *key, PppEntry *e) {
-    PppMdlDraw p;
-    PppMtx mtx;
-    PppColWork *w;
-    f32 *t = PPP_WORK(f32, obj, e, 2);
-    PppMdlRes *s;
-    Ts3Mdl *m;
-
-    if (key->slot == 0xFFFF)
-        return;
-    w = PPP_WORK(PppColWork, obj, e, 0);
-    p.col[3] = w->col[3];
-    if (p.col[3] == 0)
-        return;
-    s = &D_00615E64->res[key->slot];
-    m = (Ts3Mdl *) s->mdl;
-    p.flags = 0;
-    if (key->flags & 2) {
-        p.flags = 4;
-        if (!(m->flags & 1))
-            p.flags |= 8;
-    } else {
-        if (key->flags & 1)
-            p.flags = 128;
-        if (!(m->flags & 1))
-            p.flags |= 8;
-    }
-    if (!(m->flags & 2))
-        p.flags |= 16;
-    if (key->f21)
-        p.flags |= 0x200;
-    if (key->f23)
-        p.flags |= 0x100;
-    if (key->f22) {
-        p.flags |= 0x2000;
-        p.mtx = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
-    }
-    if (key->f24)
-        p.i44 = PPP_WORK(u8, obj, e, 3);
-    else
-        p.i44 = 0;
-    p.h08 = m->unk16;
-    p.b0A = 0;
-    p.i1C = 0;
-    p.i38 = D_00615E68->unk90;
-    p.i3C = D_00615E68->unk94;
-    p.i0C = 0;
-    p.p04 = D_00616240;
-    p.u = t[0] * 65536.0f;
-    p.v = t[3] * 65536.0f;
-    p.i40 = 0;
-    p.col[0] = w->col[0];
-    p.col[1] = w->col[1];
-    p.col[2] = w->col[2];
-    p.m2 = D_00615E68->m2;
-    p.p24 = D_00616140;
-    p.p28 = D_00616100;
-    p.m = D_00615E68->m;
-    p.i34 = D_00616224;
-    p.b4D = key->f25;
-    p.b4C = 0;
-    D_00616224 = func_001aaf88((s32 *) m, &p, s->arg);
-}
 #include "data/data_0037.h"

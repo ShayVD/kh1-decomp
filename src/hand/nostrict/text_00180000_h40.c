@@ -530,50 +530,6 @@ void pppKeMatPhtFrame(PppObject *obj, void *key, PppEntry *e) {
 extern PppMtx D_0061E780;
 #include "data/pieces/D_003701F0.h"
 
-typedef struct {
-    s32 frame;
-    s32 pad4;
-    f32 d[6]; /* +0x8 */
-} PppTs2Key;
-
-void pppDrawMdlTs2Frame(PppObject *obj, PppTs2Key *key, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w[1] += w[2];
-    w[4] += w[5];
-    w[0] += w[1];
-    w[3] += w[4];
-    if (key->frame != obj->frame)
-        return;
-    w[0] += key->d[0];
-    w[1] += key->d[1];
-    w[2] += key->d[2];
-    w[3] += key->d[3];
-    w[4] += key->d[4];
-    w[5] += key->d[5];
-}
-
-void pppDrawMdlTs3Frame(PppObject *obj, PppTs2Key *key, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w[1] += w[2];
-    w[4] += w[5];
-    w[0] += w[1];
-    w[3] += w[4];
-    if (key->frame != obj->frame)
-        return;
-    w[0] += key->d[0];
-    w[1] += key->d[1];
-    w[2] += key->d[2];
-    w[3] += key->d[3];
-    w[4] += key->d[4];
-    w[5] += key->d[5];
-}
-
 /* A shape animation: frames of 8 bytes from +0x10. */
 
 #include "data/pieces/D_003701D0.h"

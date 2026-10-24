@@ -99,25 +99,7 @@ void pppKeMdlTfdUvCon(void *obj, PppEntry *e) {
     w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
 }
 
-void pppDrawMdlTs2Con(void *obj, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
-}
-
-void pppDrawMdlTs3Con(void *obj, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
-}
-
 void pppKeMdlTfdUv2Con(void *obj, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
-}
-
-void pppKeMdlTfdUv3Con(void *obj, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 2);
 
     w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
