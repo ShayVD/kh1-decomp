@@ -17,6 +17,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004F.h"
 #include "data/types/text_00110000_h30.h"
@@ -861,26 +862,24 @@ void func_0011dcf0(void *a0, s32 *a1, s32 *a2) {
 #undef D_004E3A30
 
 /* func_0011ddd0 (from hand/text_00110000_h30.c). */
-void func_002672f8(f32 *, V4 *, f32 *);
 extern V4 D_002C1340;
 extern V4 D_002C1320;
 extern V4 D_002C1330;
 extern V4 D_002C1350;
-void func_00267440(V4 *, s32);
 extern V4 D_004E3A20_0011ddd0 __asm__("D_004E3A20");
 #define D_004E3A20 D_004E3A20_0011ddd0
 extern V4 D_004E3A30_0011ddd0 __asm__("D_004E3A30");
 #define D_004E3A30 D_004E3A30_0011ddd0
 void func_0011ddd0(void) {
     V4 m[4];
-    func_00267440(m, D_002BC140);
+    PlatVu0InversMatrix(m, D_002BC140);
     if (D_002BBDE0 == 3) {
-        func_002672f8(D_004E3A30, m, D_002C1350);
-        func_002672f8(D_004E3A20, m, D_002C1340);
+        PlatVu0ApplyMatrix(D_004E3A30, m, D_002C1350);
+        PlatVu0ApplyMatrix(D_004E3A20, m, D_002C1340);
         return;
     }
-    func_002672f8(D_004E3A30, m, D_002C1330);
-    func_002672f8(D_004E3A20, m, D_002C1320);
+    PlatVu0ApplyMatrix(D_004E3A30, m, D_002C1330);
+    PlatVu0ApplyMatrix(D_004E3A20, m, D_002C1320);
     D_004E3A20[2] = D_004E3A30[2] = 1000.0f;
 }
 #undef D_004E3A20
