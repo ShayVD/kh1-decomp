@@ -27,7 +27,10 @@
 /* func_00147b08 (from hand/nostrict/text_00140000_h33.c). */
 typedef struct { s16 h0; s16 h2; } Prc;
 typedef struct { f32 m[4][4]; u8 buf[0x3C]; s32 w7c; s32 w80; s32 w84; } MdlBlk;
-u8 D_0054C160[0x50] ALIGNED(32);  /* moved from hand/nostrict/text_00140000_h33.c (session 53) */
+/* The effect model D_0054C120 (effobj.c W8Mdl: the matrix, then the object at +0x40 that func_00176488 sets
+ * up, to D_0054C1B0) is one definition (vita-port-plan 5.1i); D_0054C160 (its +0x40) was its own variable. */
+u8 D_0054C120_mdl[0x90] __asm__("D_0054C120") ALIGNED(32);
+#define D_0054C160 (D_0054C120_mdl + 0x40)
 Prc *func_0011ef10(s32, void (*)(void));
 void *func_00176488(s32, u8 *, s32, s32);
 s32 func_001765f8(void *);

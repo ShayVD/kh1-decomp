@@ -89,7 +89,9 @@ void func_00159978(Act *a, V4 *o) {
 typedef struct { f32 x, y, z, w; } Vec154768;
 typedef struct { s32 w0; s32 idx; u8 pad8[8]; Vec154768 e[32]; } S551740;
 extern S551740 D_00551740;
-f32 D_00551734 ALIGNED(4);
+/* The trail record D_00551700 (Tr700 below, 0x38 bytes; D_00551734 is its f34). One definition (vita-port-plan 5.1i). */
+u8 D_00551700_rec[0x38] __asm__("D_00551700") ALIGNED(16);
+extern f32 D_00551734;
 f32 func_00120bf8(void *);
 /* ---- func_00159b48 ---- */
 void func_00159b48(Vec154768 *p) {

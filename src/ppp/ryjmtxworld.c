@@ -85,7 +85,8 @@ typedef struct {
     u8 unk9D;  /* +0x9D */
 } PppObject;
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-extern PppQv D_00616010[3];
+extern PppQv D_00616000_rows[4] __asm__("D_00616000");
+#define D_00616010 (D_00616000_rows + 1)
 extern PppMtx D_006160C0;
 #define D_00616040 ((PppQv *) &D_00616040)
 void pppRyjDrawMatrixWorldWoodCon(PppObject *obj, PppEntry *e) {

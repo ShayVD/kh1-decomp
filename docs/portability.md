@@ -261,6 +261,26 @@ rewrite matched code.
     m2c cast at a call, and an f32 an unprototyped call promotes to double. Run both after a new
     declaration (indcheck prints only the rows to act on: SHORT, ABI, PROMO, CLANG).
 
+12. **One object, one definition** (session 69). On the PS2 every data name sits at its original
+    address, so a matched file may define the fields of one object as variables of their own (the
+    rows of a matrix, the text of a window record, the last word of a struct) or leave the object
+    with no definition at all, and the code still reaches across. On the host each definition is
+    its own object, so the code runs over whatever follows. `python3 -I tools/host/layoutcheck.py`
+    (after `make shift` and `make host-census`) lists every access that leaves its host
+    definition; keep it at 0. The fix is one definition of the whole object, in the file that owns
+    it, sized to the original's extent:
+
+        u8 D_0054C120_mdl[0x90] __asm__("D_0054C120") ALIGNED(32); /* the whole model */
+        #define D_0054C160 (D_0054C120_mdl + 0x40)                /* a field: a view */
+
+    or, simplest, the whole object defined and the field's own definition removed (`extern f32
+    D_00551734;`): the PS2 link takes the field from symbols.ld (`PROVIDE`), the host from
+    out/host/aliases.ld (census.py `.set`s a name inside a C definition into it), the shift build
+    follows the object when it floats (shift_ld.py). kh1.elf stays byte-identical; the float
+    build's layout changes (docs/float-untested.md). census.py also keeps the names with no C
+    definition at their PS2 distances (one block between two C definitions), so only names a C
+    file defines need this.
+
 ## Known absolute addresses in matched code
 
 - func_00171078 (src/hand/text_00170000_s9_w9.c) reads `((s32 *)0x35BD40)[i]`: the original

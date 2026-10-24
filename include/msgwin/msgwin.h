@@ -36,7 +36,7 @@ typedef struct {
 
 extern MsgWin D_006298F0[];     /* the 8 templates */
 extern MsgWin D_00629E70[4];    /* the open windows (src/data/bss_0062.c) */
-extern MsgWin D_0062A130;       /* src/data/bss_0062.c: u8 D_0062A130[0xb0] */
+extern MsgWin D_0062A130;       /* D_00629E70[4] (src/data/bss_0062.c: Ent176 D_00629E70[5]) */
 
 /* Reset the templates (called at script load, src/vm/script_vm.c). */
 void func_001cab48(void);

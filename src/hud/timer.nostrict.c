@@ -33,9 +33,9 @@ typedef struct { s32 on; MgHud *c; } MgSlot;
 typedef struct { s32 v[4]; } C4;
 typedef struct { s32 x0, y0, x1, y1, u0, v0, u1, v1; C4 c[4]; u8 pad60[0x40]; u64 unkA0; } Spr2;
 
-u64 D_006692D8 ALIGNED(8);
-u64 D_00669308 ALIGNED(8);
-u64 D_00669338 ALIGNED(8);
+extern u64 D_006692D8; /* D_006692C0 + 0x18 (timer.c) */
+extern u64 D_00669308; /* D_006692F0 + 0x18 */
+extern u64 D_00669338; /* D_00669320 + 0x18 */
 extern Spr2 D_006693F0;
 extern u64 D_00491820;
 extern u64 D_00669490;

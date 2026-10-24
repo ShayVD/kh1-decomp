@@ -500,7 +500,9 @@ typedef struct {
     u8 pad68[0x70 - 0x68]; s32 x70; u8 pad74[0xd0 - 0x74]; f32 xd0[4][4];
 } ActB_78a98;
 s32 func_00118b58(void *);
-f32 D_005758F8 ALIGNED(8);
+/* D_005758F0 (S58F0, cleared as 0x10 bytes by func_00177a98; D_005758F8 is its x8). One definition (vita-port-plan 5.1i). */
+f32 D_005758F0_v[4] __asm__("D_005758F0") ALIGNED(16);
+extern f32 D_005758F8;
 extern f32 D_003624C8;
 extern f32 D_003624CC;
 extern f32 D_003624D0;
@@ -569,7 +571,9 @@ void func_00178d90(void) {
 
 /* func_00178e10 (from hand/text_00170000_h38.c). */
 typedef struct { u32 x0; u32 x4; } Pad;
-f32 D_0057590C ALIGNED(4);
+/* The shake record D_00575900 (fieldcam.nostrict.c S5900, 0x18 bytes; D_0057590C is its xc). One definition (vita-port-plan 5.1i). */
+f32 D_00575900_s[6] __asm__("D_00575900") ALIGNED(16);
+extern f32 D_0057590C;
 extern Pad D_002C5BB0;
 s32 func_001375d8(Actor *);
 #define D_00575894 ((Actor *) D_00575894)

@@ -11,7 +11,9 @@
 typedef struct { s32 id; s32 arg; s32 on; f32 t; s32 unk10; s32 unk14; } Req;
 
 extern Req D_006627B0;
-s32 D_006627B8 ALIGNED(8);
+/* The request D_006627B0 (Req, 0x18 bytes, cleared whole by func_002456e8; D_006627B8 is its on). One definition (vita-port-plan 5.1i). */
+Req D_006627B0 ALIGNED(16);
+extern s32 D_006627B8;
 
 void func_00245238(s32 id, s32 arg) {
     Req *r = &D_006627B0;

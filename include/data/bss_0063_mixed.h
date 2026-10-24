@@ -7,7 +7,8 @@
 #include "common.h"
 
 extern u8 D_006303B0[];
-extern u8 D_006304E0[];
+extern u8 D_00630460_rec[] __asm__("D_00630460"); /* a window record of 0xb0 bytes (MsgWin) */
+#define D_006304E0 (D_00630460_rec + 0x80) /* its text, MsgWin.f80 */
 extern u8 D_00630510[];
 extern s32 D_006305CC;
 extern char D_006307C8[];

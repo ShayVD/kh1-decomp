@@ -618,13 +618,17 @@ def cmd_gen(a) -> int:
     def in_floated(addr: int):
         i = bisect.bisect_right(fl_ranges, (addr, 1 << 40, "")) - 1
         return fl_ranges[i][2] if i >= 0 and addr < fl_ranges[i][1] else None
-    for line in tail:
+    # Session 69: a name no object defines that lies inside a floated variable (a field the C code reaches by its
+    # own name, D_00551734 in trail.nostrict.c's D_00551700) follows the variable.
+    fl_addr = {v.name: v.addr for v in variables if v.name in floating}
+    for i, line in enumerate(tail):
         m = re.match(r"(\S+) = D_(BLOB|BSS) ([+-]) 0x([0-9a-f]+);", line)
         if m:
             base = blob_start if m.group(2) == "BLOB" else bss_start
             ad = base + (int(m.group(4), 16) if m.group(3) == "+" else -int(m.group(4), 16))
             if in_floated(ad):
-                errors.append(f"--float-vars: {m.group(1)} (0x{ad:08x}) points inside {in_floated(ad)}")
+                c = in_floated(ad)
+                tail[i] = f"{m.group(1)} = {c} + 0x{ad - fl_addr[c]:x};  /* inside {c}, which floats */"
     # Data relocations (data_relocs.tsv): pointers in the blob become `.word sym+addend`.
     # Code targets get a label at their function (__dr_XXXXXXXX = function start).
     drel, drel_err = load_data_relocs(Path(a.data_relocs), a.reloc_tier,

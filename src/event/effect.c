@@ -730,7 +730,7 @@ s32 func_001df890(VmRec *vm) {
 }
 
 /* D_0062A428[0].f8 (its scale), as h20 named it. */
-f32 *D_0062A430 ALIGNED(16);
+extern f32 *D_0062A430; /* D_0062A428[0].f8 (src/data/bss_0062.c) */
 
 /* Scale D_0062A428[0] to stk[sp-2..sp] percent. */
 s32 func_001df940(VmRec *vm) {

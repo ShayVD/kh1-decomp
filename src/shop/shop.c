@@ -38,8 +38,9 @@ extern s32 D_002C5BB8;
 extern volatile s32 D_002C5958;
 extern MsgWin D_0062F6E0;
 extern MsgWin D_0062F790;
+extern u8 D_0062F790_rec[] __asm__("D_0062F790");
+#define D_0062F810 (D_0062F790_rec + 0x80) /* D_0062F790.f80 */
 extern MsgWin D_0062F840;  /* src/data/bss_0062.c: u8 D_0062F840[0xb0] */
-extern u8 D_0062F810[];    /* D_0062F790.f80 */
 extern ShopCb D_0062F8F0;  /* src/data/bss_0062.c: Cb20 D_0062F8F0 */
 extern u8 D_0062FA00[];
 extern s32 D_0062FB00[];

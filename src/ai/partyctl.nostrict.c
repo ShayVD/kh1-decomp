@@ -2625,7 +2625,7 @@ void func_0016f548(void) {
 extern s32 D_002BC128;
 extern s32 D_002BC130;
 extern s32 D_00575010;
-s32 D_00575014 ALIGNED(4);
+extern s32 D_00575014; /* D_00575010[1] (src/data/bss_0057.c) */
 s32 func_0011ef38(s32 (*)());
 s32 func_001383d8(s32, s32 (*)());
 void func_00170e30(s32);

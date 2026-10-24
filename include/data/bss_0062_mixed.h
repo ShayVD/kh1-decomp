@@ -16,13 +16,14 @@ extern u8 *D_006257D0;
 extern s32 D_006297F0;
 extern s32 D_006297F4;
 extern u8 D_006297F8[];
-extern u8 D_0062A130[];
+extern u8 D_0062A130[]; /* D_00629E70[4] (bss_0062.c) */
 extern s32 D_0062A220;
 extern s32 D_0062A224;
 extern char D_0062A328[];
 extern u8 D_0062A428[];
 extern u8 D_0062A630[];
-extern u8 D_0062F810[];
+extern u8 D_0062F790_rec[] __asm__("D_0062F790"); /* a window record of 0xb0 bytes (MsgWin) */
+#define D_0062F810 (D_0062F790_rec + 0x80) /* its text, MsgWin.f80 */
 extern u8 D_0062F840[];
 extern u8 D_0062FA00[];
 extern s32 D_0062FB00[];

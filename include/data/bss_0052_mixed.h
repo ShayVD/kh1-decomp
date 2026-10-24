@@ -17,7 +17,7 @@ extern s32 D_00525288;
 extern s32 D_00525354;
 extern s32 D_00525360;
 extern s32 D_00525364;
-extern M2C_UNK D_00525368;
+extern M2C_UNK D_00525368[];
 extern u8 D_00525A30[];
 extern u8 D_0052A100[];
 extern u8 D_0052AA58[];

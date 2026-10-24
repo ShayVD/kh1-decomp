@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-extern u8 D_00494320[];
+extern u8 D_00494320[]; /* D_00494310[0] + 0x10 (src/game/field.c) */
 extern s32 D_00494410[2];
 extern u8 D_004945E0[];
 extern u8 D_00494878[];

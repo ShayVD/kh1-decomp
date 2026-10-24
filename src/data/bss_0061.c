@@ -26,7 +26,10 @@ H39Mtx D_00616180 ALIGNED(64);
 PppHookFn *D_00616220 ALIGNED(16);
 PppLight *D_0061E310[256] ALIGNED(16);
 PppMtx D_0061E7C0 ALIGNED(64);
-PppQv D_00616010[3] ALIGNED(16);
+/* The matrix D_00616000 (drawmdl / ryjmbmodel multiply by it): pppsys.nostrict.c / ryjmtxworld.c write its rows
+ * as D_00616010[-1..2], and D_00616010 was a variable of 3 rows with D_00616000 undefined. One definition
+ * (vita-port-plan 5.1i). */
+PppQv D_00616000_rows[4] __asm__("D_00616000") ALIGNED(16);
 PppMtx D_0061E780 ALIGNED(64);
 u8 D_0061E730[0x50] ALIGNED(16);
 s32 D_00615E68 ALIGNED(8);

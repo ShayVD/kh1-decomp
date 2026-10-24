@@ -45,7 +45,8 @@ extern MsgWin D_00630300;
 extern MsgWin D_006303B0;   /* src/data/bss_0063.c: u8 D_006303B0[0xb0] */
 extern MsgWin D_00630460;
 extern MsgWin D_00630510;   /* src/data/bss_0063.c: u8 D_00630510[0xb0] */
-extern u8 D_006304E0[];     /* D_00630460.f80 */
+extern u8 D_00630460_rec[] __asm__("D_00630460");
+#define D_006304E0 (D_00630460_rec + 0x80) /* D_00630460.f80 */
 extern ListCb D_006305C0;
 extern s32 D_006305CC;
 extern char D_006305D0[][10];
