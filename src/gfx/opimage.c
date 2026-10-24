@@ -3,9 +3,10 @@
  * size's TW / TH), func_001aa0e0 loads a TIM2 picture's image and CLUT
  * into GS memory (D_003727F0 maps the TIM2 image types to PSMs),
  * func_001aa388 loads one image from a texture header, func_001aa420 hands a
- * header to the hand asm func_001aa1f8 (src/asm/text_001aa1f8.s).  GS calls
- * still by their SDK names (sceGsSetDefLoadImage / sceGsExecLoadImage), not
- * yet behind a platform wrapper.  Read from the code, not proved by a boot. */
+ * header to the hand asm func_001aa1f8 (src/asm/text_001aa1f8.s).  The GS
+ * loads go through platform/gs.h (session 58: func_001aa388's typed pointer
+ * views of libgraph were not needed, the prototype's short arguments give
+ * the same code).  Read from the code, not proved by a boot. */
 #include "m2c.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
@@ -81,17 +82,12 @@ void func_001aa0e0(Tm2 *t) {
     }
 }
 
-/* The argument types decide the extensions: this caller's view of
- * sceGsSetDefLoadImage. */
-typedef M2C_UNK (*LoadImg388)(void *, s32, u32, u8, s32, s32, s16, s16);
-typedef M2C_UNK (*ExecImg388)(void *, s32);
-
 void func_001aa388(void *arg0, s32 arg1) {
     s32 sp[24];
-    ((LoadImg388)sceGsSetDefLoadImage)(sp, M2C_FIELD(arg0, u16 *, 0) & 0x3FFF, (u8) M2C_FIELD(arg0, u8 *, 0xA) >> 2, M2C_FIELD(arg0, u8 *, 0x18), M2C_FIELD(arg0, u8 *, 8) * 0x10, M2C_FIELD(arg0, u8 *, 9) * 0x10, M2C_FIELD(arg0, s16 *, 0xC), M2C_FIELD(arg0, s16 *, 0xE));
+    PlatGsSetDefLoadImage(sp, M2C_FIELD(arg0, u16 *, 0) & 0x3FFF, (u8) M2C_FIELD(arg0, u8 *, 0xA) >> 2, M2C_FIELD(arg0, u8 *, 0x18), M2C_FIELD(arg0, u8 *, 8) * 0x10, M2C_FIELD(arg0, u8 *, 9) * 0x10, M2C_FIELD(arg0, s16 *, 0xC), M2C_FIELD(arg0, s16 *, 0xE));
     PlatGsSyncPath(0, 0);
     PlatFlushCache(0);
-    ((ExecImg388)sceGsExecLoadImage)(sp, M2C_FIELD(arg0, s32 *, 0x14));
+    PlatGsExecLoadImage(sp, M2C_FIELD(arg0, s32 *, 0x14));
     if (arg1 != 0) {
         PlatGsSyncPath(0, 0);
     }
