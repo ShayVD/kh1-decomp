@@ -4,6 +4,7 @@
  * and func_001fb428 a number (D_003E8CD0 the minus sign, D_003E8CD8 the
  * digits), scaled like func_001f94f0 (wintext.nostrict.c). */
 #include "common.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003F2270.h"
@@ -28,8 +29,6 @@ s32 func_001eff50(s32);
 s32 func_001f0340(u8 *, s32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 s32 sceGsSyncPath(s32, s32);
 
 void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
@@ -52,7 +51,7 @@ void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     f32 fa, fb, t0, t1, t2, t3;
 
 
-    func_00266f38(func_00266c08(2), &D_003F2270);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
     q = base + 2;
@@ -159,7 +158,7 @@ void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
             ((GP *)q)->w[5] = t1;
         }
         xx += wp;
-        func_00266f38(func_00266c08(2), (void *)tag);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
         sceGsSyncPath(0, 0);
         continue;
     }
@@ -193,7 +192,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
 
 
 
-    func_00266f38(func_00266c08(2), &D_003F2270);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     x16 = x * 16;
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
@@ -285,7 +284,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
             ((GP *)q)->w[13] = t3;
         }
         xx += wp;
-        func_00266f38(func_00266c08(2), (void *)tag);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
         sceGsSyncPath(0, 0);
     }
 done:
@@ -320,7 +319,7 @@ void func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val,
     s32 x0, x1, y1;
     f32 fa, fb, t0, t1, t2, t3;
 
-    func_00266f38(func_00266c08(2), &D_003F2270);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -470,7 +469,7 @@ void func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val,
     hdr[0] = ((((s32)p - (s32)start) >> 4) / 5) | 0x8000 | 0x50ab400000000000;
     hdr[1] = 0x4343e;
     base[0] = (((s32)p - (s32)base) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)tag);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
     sceGsSyncPath(0, 0);
     func_001220b8(base);
     D_003F2BD0 = (val - ox) >> 4;

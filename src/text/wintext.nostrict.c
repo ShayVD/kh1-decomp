@@ -7,6 +7,7 @@
  * func_001fcdc8 an icon of the sprite table D_003E9138 (in a window, rotated,
  * on the screen).  Each builds a GIF packet and sends it through path 2. */
 #include "common.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003E8E28.h"
 #include "data/pieces/D_003E8E08.h"
@@ -56,13 +57,11 @@ s32 func_001fb428(TextWin *, s32, s32, s32, s32, s32, s32, s32, u32);
 void func_001fd070(TextWin *, s32, s32);
 void func_00201460(TextWin *, s32, s32, s32, s32, s32, s32, u8 *, s32);
 void func_00208280(TextWin *, s32, s32, s32, s32, s32);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 s32 sceGsSyncPath(s32, s32);
 
 /* rodata: func_001f94f0 (s12w16), hand/nostrict, jump table at RO=00490D90 (lchkro_s10 0 words, table bytes equal), natural.
    Sibling of func_001f0148 (same if (*s < 21) switch shape). Mode switch with `case 0: default:` first;
-   case 15 uses a GNU case range `case 2 ... 28:`; case 15/0 does `cx += 1440` after the func_00266f38 call;
+   case 15 uses a GNU case range `case 2 ... 28:`; case 15/0 does `cx += 1440` after the PlatDmaSend call;
    header and glyph store order hill-climbed (clb6_s12); `f32 fy, fx;` order gives fy f20. */
 s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     u64 *base;
@@ -80,7 +79,7 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
     s32 c, k, r;
     Glyph *g;
 
-    func_00266f38(func_00266c08(2), &D_003F2270);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
     sz16 = sz << 4;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -213,17 +212,17 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 switch (k) {
                 case 0:
                     func_00201460(o, 2, 2, (cx - ox) >> 4, (y - oy) >> 4, 90, ((cx - ox) >> 4) + 45, D_003F2C54, func_001efc10(43));
-                    func_00266f38(func_00266c08(2), &D_003F2270);
+                    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
                     cx += 1440;
                     break;
                 case 1:
                     func_001fd070(o, (cx - ox) >> 4, (y - oy) >> 4);
                     cx += 576;
-                    func_00266f38(func_00266c08(2), &D_003F2270);
+                    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
                     break;
                 case 2 ... 28:
                     func_00208280(o, (cx - ox) >> 4, (y - oy) >> 4, 0, k + 25, 128);
-                    func_00266f38(func_00266c08(2), &D_003F2270);
+                    PlatDmaSend(PlatDmaGetChan(2), &D_003F2270);
                     cx += 288;
                     break;
                 }
@@ -301,7 +300,7 @@ s32 func_001f94f0(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, u32 col) {
                 ((GP4 *)p)->w[13] = (s32)(ay + (y1 - ay) * fy);
             }
             cx += adv;
-            func_00266f38(func_00266c08(2), (void *)tag);
+            PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
             sceGsSyncPath(0, 0);
         }
     }
@@ -322,7 +321,7 @@ void func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     s32 gu, gv, ww, z;
     u64 tex;
     s32 k = 22;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F2270));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F2270));
     buf = func_00122048(1024, 128);
     p = (Pkt *)(buf + 2);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -379,7 +378,7 @@ void func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
         p->g.y1 = fy + (f32)(p->g.y1 - cy) * sy;
     }
     buf[0] = (((s32)(p + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     D_003F2BD0 = (X + b - ox) >> 4;
@@ -408,7 +407,7 @@ s32 func_001fbcd8(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, 
     s32 gh, gw;
     s32 x3, y3, u3;
 
-    func_00266f38(func_00266c08(2), &D_003F1E70);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F1E70);
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;
@@ -549,7 +548,7 @@ s32 func_001fbcd8(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, 
     hdr[1] = 0x4343;
     hdr[0] = ((((s32)p - (s32)start) >> 4) / 4) | 0x8000 | 0x40ab400000000000;
     base[0] = (((s32)p - (s32)base) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)tag);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)tag);
     sceGsSyncPath(0, 0);
     func_001220b8(base);
     return (xx - ox) >> 4;
@@ -565,7 +564,7 @@ s32 func_001fc330(TextWin *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0
     s32 one, z;
     s32 cx, cy, nx, ny, nx2, ny2;
     f32 fx, fy, sx, sy;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -641,7 +640,7 @@ s32 func_001fc330(TextWin *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0
         ((Vx *)p)[3].y = ((Vx *)p)[2].y = ny2;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);
@@ -656,7 +655,7 @@ s32 func_001fc750(TextWin *o, s32 x, s32 y, SprPrm *pr) {
     s32 X, Y, W, H, al;
     s32 cx, cy;
     f32 fx, fy, sx, sy;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -808,7 +807,7 @@ s32 func_001fc750(TextWin *o, s32 x, s32 y, SprPrm *pr) {
         ((Vx *)p)[3].y = fy + (f32)(((Vx *)p)[3].y - cy) * sy;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);
@@ -821,7 +820,7 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
     Spr *t;
     s32 X, Y, W, H;
     func_001f8270();
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -876,7 +875,7 @@ s32 func_001fcdc8(s32 x, s32 y, s32 w, s32 h, s32 idx, s32 a, s32 c0, s32 c1) {
     ((Vx *)p)[3].z = 0x100000;
     ((Vx *)p)[3].f = 0;
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);

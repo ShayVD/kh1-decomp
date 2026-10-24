@@ -10,6 +10,7 @@
  * journal.c, loads six files and counts six sections); not proved by a
  * boot. */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
 #include "data/data_003F.h"
@@ -91,8 +92,6 @@ void func_00167d70(s32, f32);
 void func_00176310(void *);
 s32 func_001efcb0(s32, s32);
 void func_00236a58(void);
-void func_00266f38(s32, void *);
-s32 func_00266c08(s32);
 void func_00267578(void *, void *, void *);
 void func_002675a8(s32, void *);
 void func_002678b8(void *, void *, void *);
@@ -411,7 +410,7 @@ s32 func_0021b800(s32 arg0) {
 }
 
 void func_0021b820(void) {
-    func_00266f38(func_00266c08(2), &D_00642EB0);
-    func_00266f38(func_00266c08(2), &D_00642F60);
+    PlatDmaSend(PlatDmaGetChan(2), &D_00642EB0);
+    PlatDmaSend(PlatDmaGetChan(2), &D_00642F60);
 }
 

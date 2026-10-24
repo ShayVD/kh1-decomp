@@ -5,6 +5,7 @@
  * "MENV" map environment in place), func_00161de8, func_00162218,
  * func_00162428.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/dma.h"
 #include "platform/math.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002E26A0.h"
@@ -701,7 +702,6 @@ s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
 }
 
 /* func_00162428 (from hand/nostrict/text_00150000_h36.c). */
-void func_00266f38(void *, void *);
 extern DmaChcr *D_0055C644;
 typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
 extern GifTag8 *volatile D_0055C648;
@@ -720,6 +720,6 @@ void func_00162428(void) {
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
     __asm__ volatile("sync");
-    func_00266f38(D_0055C644, D_00573AC0);
+    PlatDmaSend(D_0055C644, D_00573AC0);
 }
 

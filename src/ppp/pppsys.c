@@ -16,6 +16,7 @@
  * Each section names the file its code came from.  Read from the code, not
  * proved by a boot. */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/types/text_00170000_h38.h"
 #include "data/types/text_00170000_h38_p.h"
 #include "data/pieces/D_002C58D0.h"
@@ -671,7 +672,7 @@ PObj *D_00575A10[0x10c] ALIGNED(16);
 extern PCur D_003701B0;
 extern u8 D_00370140[];
 extern u8 D_00370170[];
-extern s32 D_00372908;
+extern PlatDmaChan *D_00372908;
 extern s32 D_0061621C;
 extern s32 D_00616224;
 extern s32 D_00616228;
@@ -684,7 +685,6 @@ void *func_00122048(s32, s32);
 void func_0017f948(void);
 s32 func_00181608(PObj **);
 void func_00180280(PObj *);
-void func_00266f38(s32, void *);
 s32 func_00183878();
 void func_001827f0();
 void func_0017f970(void);
@@ -736,7 +736,7 @@ void func_00181b30(void) {
                 func_00180e10(D_00370130);
                 FlushCache(0);
                 sceGsSyncPath(0, 0);
-                func_00266f38(D_00372908, D_00370140);
+                PlatDmaSend(D_00372908, D_00370140);
             }
             if (!e->x90 && !e->xb0.b[7] && e->x91) {
                 func_00181238(&tmp, e);
@@ -746,7 +746,7 @@ void func_00181b30(void) {
                 if (e->xa0.d & 0xFFFFFFFF00000000) {
                     FlushCache(0);
                     sceGsSyncPath(0, 0);
-                    func_00266f38(D_00372908, D_00370140);
+                    PlatDmaSend(D_00372908, D_00370140);
                 }
             } else {
                 e->xa0.s.a4 = 0;
@@ -781,7 +781,7 @@ void func_00181b30(void) {
     }
     FlushCache(0);
     sceGsSyncPath(0, 0);
-    func_00266f38(D_00372908, D_00370170);
+    PlatDmaSend(D_00372908, D_00370170);
     func_001220b8(h);
 }
 #undef func_00183878

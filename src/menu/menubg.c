@@ -7,6 +7,7 @@
  * func_0020b338 loads the two images of D_00641080 / D_00641130 and
  * func_0020b3d8 draws them as a sprite at a window's text origin. */
 #include "common.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 
 typedef struct { u8 si[2][0x70]; u32 px[2][0x40]; } StoreBuf;
@@ -27,8 +28,6 @@ u32 func_001edf40(u32, u32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
 s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 
 #include "data/pieces/D_003F34B0.h"
 #include "data/pieces/D_003F1A70.h"

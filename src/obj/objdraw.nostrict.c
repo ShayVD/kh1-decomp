@@ -6,6 +6,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/bss_0052.h"
 #include "data/types/nostrict_text_00120000_b02.h"
 #include "data/pieces/D_002BC0F0.h"
@@ -73,8 +74,6 @@ C02Q *func_0011fbb0(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6, u32 
 s32 func_001623e8(void *r);
 void func_001623f8(void *r, s32 i, C02Tex *t);
 void func_00162428(s32 a, s32 b);
-s32 func_00266c08(s32 ch);
-void func_00266f38(s32 ch, C02Q *buf);
 s32 sceGsSyncPath(s32 mode, u16 timeout);
 
 s32 func_00135ed0(C02Img *img, C02Src *src)
@@ -141,7 +140,7 @@ s32 func_00135ed0(C02Img *img, C02Src *src)
     func_0011fb48(gt, 1, p);
     func_0011fb78(dt, 7, p);
     D_00351BC8(0);
-    func_00266f38(func_00266c08(2), buf);
+    PlatDmaSend(PlatDmaGetChan(2), buf);
     sceGsSyncPath(0, 0);
     func_00162428(img->x10, 1);
     sceGsSyncPath(0, 0);
@@ -187,7 +186,7 @@ s32 func_00135ed0(C02Img *img, C02Src *src)
     func_0011fb48(gt, 1, p);
     func_0011fb78(dt, 7, p);
     D_00351BC8(0);
-    func_00266f38(func_00266c08(2), buf);
+    PlatDmaSend(PlatDmaGetChan(2), buf);
     sceGsSyncPath(0, 0);
     return 0;
 }

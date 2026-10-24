@@ -18,13 +18,12 @@
  * draw routine for a model from its flags (bit 2, bits 8-9, bit 7).
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#include "platform/dma.h"
 #include "data/types/text_001a0000_h13.h"
 #include "data/types/text_001a0000_h13_p.h"
 
 s32 sceGsSyncPath(s32, s32);
 void FlushCache(s32);
-s32 func_00266c08(M2C_UNK);
-void func_00266f38(s32, void *);
 s32 func_00265bc0(s32, s32);
 s32 rand(void);
 void func_001a9e90(void);
@@ -37,7 +36,7 @@ extern u128 D_0061E8B0;  /* sized: cover_check sizes D_0061EEA0 after it */
 extern GsTag D_0061EEA0[];  /* 16 priority list heads (followed by the tag pool) */
 extern GsTag D_0061EFA0[];  /* 256 priority list heads */
 GsTag D_0061FFA0[0x30] ALIGNED(32);
-extern s32 D_00372908;
+extern PlatDmaChan *D_00372908;
 extern M2C_UNK D_00372F34;
 extern f32 D_002BC120;
 extern f32 D_002BC124;
@@ -48,7 +47,7 @@ void func_001a9e70(void) {
 }
 
 void func_001a9e90(void) {
-    D_00372908 = func_00266c08(2);
+    D_00372908 = PlatDmaGetChan(2);
 }
 
 void func_001a9eb8(void) {
@@ -102,7 +101,7 @@ void func_001aa008(void) {
     *p = 0x70000006;
     sceGsSyncPath(0, 0);
     FlushCache(0);
-    func_00266f38(D_00372908, p);
+    PlatDmaSend(D_00372908, p);
     sceGsSyncPath(0, 0);
     *p = save;
 }
@@ -122,7 +121,7 @@ void func_001aa650(void) {
     sceGsSyncPath(0, 0);
     FlushCache(0);
     sceGsSyncPath(0, 0);
-    func_00266f38(D_00372908, p);
+    PlatDmaSend(D_00372908, p);
     sceGsSyncPath(0, 0);
 }
 
@@ -312,12 +311,12 @@ extern u8 D_00373000[], D_00373030[];
 
 void func_001aaed0(void) {
     func_00265bc0(0, 0);
-    func_00266f38(D_00372908, &D_00373000);
+    PlatDmaSend(D_00372908, &D_00373000);
 }
 
 void func_001aaf00(void) {
     func_00265bc0(0, 0);
-    func_00266f38(D_00372908, &D_00373030);
+    PlatDmaSend(D_00372908, &D_00373030);
 }
 
 typedef struct { u8 pad[0x60]; u64 a; u64 b; } Gs800;
@@ -329,7 +328,7 @@ void func_001aaf30(void) {
     d->a = D_0061E800_g.a;
     d->b = D_0061E800_g.b;
     sceGsSyncPath(0, 0);
-    func_00266f38(D_00372908, d);
+    PlatDmaSend(D_00372908, d);
 }
 
 s32 func_001b6910(DMdl *, DParam *);

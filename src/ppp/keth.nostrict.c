@@ -7,6 +7,7 @@
  * kethdraw.nostrict.c's func_001a7718 on DMA channel 2 (pppKeThDraw).
  * Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/dma.h"
 
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 Vec[4] __attribute__((aligned(16)));
@@ -496,15 +497,13 @@ void func_001a8ae8(NdArg *a) {
 typedef struct TNd { struct TNd *next; } TNd;
 typedef union { u128 q; struct { u16 qwc; u8 b2; u8 id; } s; } Tag;
 typedef struct { s32 a; TNd *n; u8 *end; s32 c; s32 b; u64 *flag; s64 d; s64 e; } Ctx;
-s32 func_00266c08(s32);
 s32 sceGsSyncPath(s32, s32);
 void FlushCache(s32);
-void func_00266f38(s32, void *);
 s32 func_001a7718(Ctx *);
 
 void func_001a8c40(TNd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
     Ctx x;
-    s32 ch = func_00266c08(2);
+    PlatDmaChan *ch = PlatDmaGetChan(2);
     TNd *n = *list;
     Tag *t;
     x.c = c;
@@ -523,7 +522,7 @@ void func_001a8c40(TNd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
             *x.flag |= 0x8000;
             t->s.qwc = (u32)(x.end - *buf) / 16 - 1;
             FlushCache(0);
-            func_00266f38(ch, t);
+            PlatDmaSend(ch, t);
             sceGsSyncPath(0, 0);
         }
     }

@@ -5,6 +5,7 @@
  * Each builds a GS packet and sends it with sceGsSyncPath (a platform call;
  * the Vita layer replaces it). */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/bss_0064.h"
 #include "data/pieces/D_003F4CF0.h"
 
@@ -13,8 +14,6 @@ typedef struct { s32 u, v; u64 pad; u64 rgba, q; s32 x, y, z, f; } Vx;
 typedef Spr_3f4cf0 Spr;
 typedef struct { s32 x, y, w, h, idx; u32 col; f32 sc, ang; } Prm;
 
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
 s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
@@ -107,7 +106,7 @@ s32 func_0021b860(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx) {
         ((Vx *)p)[3].y = ((Vx *)p)[2].y = ny2;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);
@@ -197,7 +196,7 @@ s32 func_0021bbe0(Wnd *o, s32 x, s32 y, s32 w, s32 h, s32 idx, s32 col) {
         ((Vx *)p)[3].y = ((Vx *)p)[2].y = ny2;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);
@@ -307,7 +306,7 @@ s32 func_0021bf68(Wnd *o, Prm *a) {
         ((Vx *)p)[3].y = fy + (f32)(((Vx *)p)[3].y - cy) * sy;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
+    PlatDmaSend(PlatDmaGetChan(2), u);
     sceGsSyncPath(0, 0);
     func_001220b8(buf);
     return x + (W >> 4);

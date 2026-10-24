@@ -4,6 +4,7 @@
  * func_00102070) and the set ups func_00101e70 / func_00102978. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
 #include "data/pieces/D_002BC0A8.h"
@@ -84,13 +85,12 @@ void func_00101970(s32 sel, DmaHdr *q, s32 x) {
 }
 
 /* func_001019c8 (from auto/text_00100000_13.c). */
-extern s32 D_002A6B84;
+extern PlatDmaChan *D_002A6B84;
 void func_00121eb0(s32);
-void func_00266f38(s32, s32);
 void iFlushCache(M2C_UNK);
 s32 func_001019c8(void *arg0) {
     iFlushCache(0);
-    func_00266f38(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
+    PlatDmaSend(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x10));
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x14));
     return 2;
@@ -206,7 +206,7 @@ void func_00101f10(void) {
 /* func_00101f30 (from auto/text_00100000_13.c). */
 s32 func_00101f30(void *arg0) {
     iFlushCache(0);
-    func_00266f38(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
+    PlatDmaSend(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x10));
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x14));
     return 2;
@@ -215,7 +215,7 @@ s32 func_00101f30(void *arg0) {
 /* func_00101f80 (from auto/text_00100000_13.c). */
 s32 func_00101f80(void *arg0) {
     iFlushCache(0);
-    func_00266f38(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
+    PlatDmaSend(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
     func_00121eb0(M2C_FIELD(arg0, s32 *, 0x10));
     return 2;
 }

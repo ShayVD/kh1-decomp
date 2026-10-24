@@ -15,6 +15,7 @@
  * the main ELF (overlays, most likely); func_00237a48 is the HUD's and the
  * sprites' projection.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/dma.h"
 #include "gfx/drawlist.h"
 #include "gfx/gspkt.h"
 
@@ -31,8 +32,6 @@ typedef struct { u64 a, b; } U64x2;
 typedef struct { u128 tag; V4 v[3]; V4 nrm[3]; U64x2 col; V4 uv[3]; } ObjC;
 typedef struct Nd { struct Nd *next; s32 type; u8 pad8[8]; u128 v[3]; u128 n[3]; u64 t0, t1; u128 c[3]; } Nd;
 
-s32 *func_00266c08(s32);
-void func_00266f38(s32 *, s32 *);
 void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
 void sceVu0ApplyMatrix(V4 *, void *, V4 *);
@@ -267,11 +266,11 @@ void func_00237f20(DrawList *h, s32 *b0, s32 *b1, s32 a3, void *m) {
                 else if (p->kind == 4) r = (s32 *)func_00237ec0((u128 *)p, (u128 *)buf, 0);
                 if (r != buf) {
                     *r |= 0x70000000;
-                    q = func_00266c08(2);
+                    q = PlatDmaGetChanAs(s32 *, 2);
                     *q |= 0x40;
                     FlushCache(0);
                     sceGsSyncPath(0, 0);
-                    func_00266f38(q, buf);
+                    PlatDmaSend(q, buf);
                     buf = (buf == b0) ? b1 : b0;
                 }
                 if (p->next == 0) break;
@@ -308,11 +307,11 @@ void func_002380c0(DrawList *h, s32 *b0, s32 *b1, s32 a3, void *m) {
             } while (1);
             if (r != buf) {
                 *last |= 0x70000000;
-                q = func_00266c08(2);
+                q = PlatDmaGetChanAs(s32 *, 2);
                 *q |= 0x40;
                 FlushCache(0);
                 sceGsSyncPath(0, 0);
-                func_00266f38(q, buf);
+                PlatDmaSend(q, buf);
                 buf = (buf == b0) ? b1 : b0;
             }
         }

@@ -8,6 +8,7 @@
  * above moves a store into a branch delay slot), and screen.c has its own
  * copy of func_001e0608 (func_001e14e0). */
 #include "common.h"
+#include "platform/dma.h"
 #include "data/data_003D.h"
 #include "data/pieces/D_003DABD0.h"
 #include "data/pieces/D_003DAD3C.h"
@@ -21,17 +22,15 @@ s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 s32 sceGsExecLoadImage(void *, void *);
 s32 func_002583e0(s32);
 s32 func_00265bc0(s32, s32);
-s32 func_00266f38(s32, s32);
-s32 func_00266c08(s32);
 
 /* Send the packet list to path 2. */
 void func_001e05a8(void *arg0) {
     s32 temp_s0;
 
-    temp_s0 = func_00266c08(2);
+    temp_s0 = PlatDmaGetChan(2);
     func_002583e0(0);
     func_00265bc0(0, 0);
-    func_00266f38(temp_s0, (s32)arg0);
+    PlatDmaSend(temp_s0, (s32)arg0);
     func_00265bc0(0, 0);
 }
 
