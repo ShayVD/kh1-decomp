@@ -119,6 +119,8 @@ def classify(t, k, name):
         return 'asmvar', [m.group(2) + '#asm']
     m = re.match(r'[^(]*?\b(\w+)\s*\(', re.sub(r'\{.*\}', '', s2, flags=re.S))
     if m and m.group(1) not in KW:  # the first '(' follows a name: a prototype
+        if '{' not in s2:  # `void f(), g();` declares both (session 52)
+            return 'proto', [n for n, d in proto_decls(s2)]
         return 'proto', [m.group(1)]
     names = []
     body = re.sub(r'=.*$', '', s2.rstrip(';'), flags=re.S)
@@ -138,6 +140,19 @@ def split_top(s):
         if ch == ',' and d == 0: out.append(cur); cur = ''
         else: cur += ch
     out.append(cur)
+    return out
+
+
+def proto_decls(t):
+    """split `extern void f(), g(int);` into one prototype per name: [(name, decl)]."""
+    s = re.sub(r'^\s*extern\s+', '', no_attr(strip(t)).strip().rstrip(';'))
+    parts = split_top(s)
+    m = re.match(r'(.*?)\b(\w+)\s*\(', parts[0], flags=re.S)
+    if not m: return []
+    out = [(m.group(2), parts[0].strip() + ';')]
+    for p in parts[1:]:
+        m2 = re.match(r'\s*\**\s*(\w+)\s*\(', p)
+        if m2: out.append((m2.group(1), m.group(1) + p.strip() + ';'))
     return out
 
 
@@ -179,6 +194,12 @@ def view(name, decl, base, addr=False, sfx=None):
     Anything else is `(*(T (*)) &D_X)`."""
     s, k = shape(name, decl)
     s0, k0 = shape(name, base)
+    if sfx and not addr:
+        # an `__asm__` alias with this function's type: the access is the old
+        # file's own (session 52: cast views changed the address folding of
+        # arrays, and an assignment through a value-cast view of a pointer
+        # changed func_00151808)
+        return 'extern %s __asm__("%s");\n#define %s %s_%s' % (sub(s, name, name + '_' + sfx), name, name, name, sfx)
     def wide(t):  # a 64-bit integer (a pointer has a '*')
         return '*' not in t and bool(re.search(r'\b(u64|s64|long\s+long)\b', t))
     vol = lambda t: bool(re.search(r'\bvolatile\b', t)) and '*' not in t  # a volatile scalar (session 52:
@@ -253,10 +274,27 @@ def defret(proto):
     return m.group(1).strip() if m else 'int'
 
 
+def called(name, body):
+    """the body calls `name` (a function only taken by address, `&f`, needs no
+    view: a cast view is not an lvalue; session 52)"""
+    return re.search(r'\b' + re.escape(name) + r'\s*\(', strip(body)) is not None
+
+
 def fview(name, proto):
     """call `name` through this prototype: #define NAME ((RET (*)(ARGS)) NAME)."""
     s = no_attr(strip(proto)).strip().rstrip(';')
     s = re.sub(r'^\s*extern\s+', '', s)
+    parts, depth, cur = [], 0, ''
+    for ch in s:  # `void f(), g();` declares several: keep the one of `name` (session 52)
+        depth += (ch == '(') - (ch == ')')
+        if ch == ',' and depth == 0: parts.append(cur); cur = ''
+        else: cur += ch
+    parts.append(cur)
+    if len(parts) > 1:
+        m = re.match(r'(.*?)\b\w+\s*\(', parts[0], flags=re.S)
+        mine = [x for x in parts if re.search(r'\b' + re.escape(name) + r'\b', x)]
+        s = (m.group(1) if m else 'int ') + (mine[0].strip() if mine else parts[0].strip())
+        if mine and mine[0] is parts[0]: s = parts[0]
     return '#define %s ((%s) %s)' % (name, sub(s, name, '(*)'), name)
 
 
@@ -299,6 +337,9 @@ def main(out, funcs, onto=False):
                 continue
             if kind == 'func':
                 continue  # a real definition above: not copied (see the docstring)
+            if kind == 'proto' and len(names) > 1:
+                for nm, d in proto_decls(t): scope[nm] = (order, 'proto', d)
+                continue
             for x in names:  # a macro has its own key: `#define D_X (*(T *)&D_X)` needs D_X's extern too
                 scope[x + '#def' if kind == 'define' else x] = (order, kind, t.strip('\n'))
         if body is None:  # a macro-generated definition: MACRO(f, ...)
@@ -470,18 +511,18 @@ def main(out, funcs, onto=False):
                     rt = defret(defhead[nm])
                     if not all(x in emitted or x in KW or x in INTS for x in idents(rt)): rt = defret(t2)
                     sec.append('%s %s();' % (rt, nm)); emitted[nm] = ('kr', '')
-                if sig(t2) and sig(t2)[1]: views.append(fview(nm, t2))
+                if sig(t2) and sig(t2)[1]: views.append(fview(nm, t2)) if called(nm, body) else None
                 continue
             if kind == 'proto':
                 if nm in emitted:
                     if emitted[nm][1] != norm(t2):
                         if risky(emitted[nm][1], norm(t2)):
-                            views.append(fview(nm, t2))
+                            views.append(fview(nm, t2)) if called(nm, body) else None
                             conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
                         elif emitted[nm][0] != 'kr' and unnamed(emitted[nm][1]) != unnamed(t2) and sig(t2):
                             # other pointer types: the function's own types
                             # (a member of the result, a struct argument)
-                            views.append(fview(nm, t2))
+                            views.append(fview(nm, t2)) if called(nm, body) else None
                             conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
                         else:
                             conflicts.append('%s: %s  vs  %s' % (f, norm(t2), emitted[nm][1]))

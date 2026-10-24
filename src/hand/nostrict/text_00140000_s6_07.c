@@ -80,71 +80,6 @@ B7P *func_0014b768(B7P *a, f32 *p0, f32 *p1) {
     return a;
 }
 
-typedef struct { u8 pad[4]; s32 x4; u8 pad8[8]; f32 v10[4]; } B3360;
-typedef struct { u8 pad[0x30]; s32 x30; f32 x34; s32 x38; u8 pad3c[0x370 - 0x3c]; union { u64 x370; struct { u64 lo:44; u64 b44:1; u64 hi:19; } b370; }; } A3360;
-s32 func_00152688(A3360 *, s32, s32);
-f32 atan2f(f32, f32);
-void func_00152d50(A3360 *, s32, f32 *);
-
-void func_00153360(A3360 *a, B3360 *b) {
-    func_00152688(a, b->x4, 17);
-    a->x370 = 0x100000000000ULL | a->x370;
-    a->x30 = 0;
-    a->x34 = atan2f(b->v10[0], b->v10[2]);
-    a->x38 = 0;
-    func_00152d50(a, 3, b->v10);
-}
-
-typedef struct { u64 x0; u8 pad8[8]; f32 x10[4]; } Oad08;
-typedef struct {
-    u8 pad0[8];
-    s32 x8;
-    u8 padc[0x38 - 0xc];
-    f32 x38;
-    u8 pad3c[0x144 - 0x3c];
-    f32 *x144;
-    u8 pad148[0x4a0 - 0x148];
-    void *x4a0;
-} Aad08;
-extern f32 D_002BBDFC;
-void func_001315c0(Aad08 *, s32, f32, f32 *);
-void *func_00121e28(s32, void *);
-void func_0015ace0(void);
-s32 func_001477e0(s32);
-Oad08 *func_0014a4a8(Aad08 *, s32, s32);
-void * func_001354b8(Oad08 *, s32);
-f32 func_00120c88(f32);
-void func_00142388(f32 *, f32 *);
-void func_00142470(Aad08 *, f32 *);
-
-void func_0015ad08(Aad08 *a) {
-    f32 v[4];
-    f32 w[4];
-    Oad08 *o;
-    f32 z;
-
-    z = 0.0f;
-    func_001315c0(a, 0x8003, z, v);
-    if (a->x144 == 0) {
-        a->x144 = func_00121e28(4, &a->x144);
-        a->x4a0 = func_0015ace0;
-        *a->x144 = z;
-    }
-    if (z < *a->x144) {
-        *a->x144 -= D_002BBDFC;
-    } else if (a->x8 != 0) {
-        o = func_0014a4a8(a, 0, func_001477e0(26));
-        o->x0 |= 64;
-        func_002675a8(o->x10, v);
-        func_001354b8(o, a->x8);
-        *a->x144 = 30.0f;
-
-    }
-    a->x38 = func_00120c88(a->x38 + D_002BBDFC * 0.008726645261049271f);
-    func_00142388(v, w);
-    func_00142470(a, w);
-}
-
 #include "data/types/nostrict_text_00140000_s6_07.h"
 Nea98 *D_00551D80 ALIGNED(16);
 volatile s32 D_00559DB8 ALIGNED(8);
@@ -198,4 +133,3 @@ static inline void setGif(GifTag *g, s32 nloop, s32 nreg) {
 }
 #include "data/bss_0055_typed.h"
 #include "data/data_0035.h"
-#include "data/pieces/D_002BBDFC.h"

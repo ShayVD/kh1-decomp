@@ -88,7 +88,7 @@ TaskReg *func_0011ef10(s32, void *);
 typedef struct GsTask { u16 h0; u8 pad2[6]; struct GsTask *next; s32 (*cb)(struct GsTask *); } GsTask;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
-extern GsBuf2 D_00559DC0[0x2];
+GsBuf2 D_00559DC0[0x2] ALIGNED(64);
 extern GsBuf2 *D_0055BDE0;
 s32 FlushCache(s32);
 void func_0011efa8(void *, void *, s32, s32);
