@@ -88,30 +88,6 @@ void func_0024ae00(void *);
 
 /* Three rows of five 0xA00-byte cells, with a used count per row. */
 
-typedef struct { s32 id; s32 arg; s32 on; f32 t; s32 unk10; s32 unk14; } Req;
-extern Req D_006627B0;
-void func_00245238(s32 id, s32 arg) {
-    Req *r = &D_006627B0;
-    r->unk10 = 1;
-    if (r->on == 0 || r->id != id) {
-        r->id = id;
-        r->arg = arg;
-        r->on = 1;
-        r->t = 1.0f;
-    }
-}
-void func_00245280(s32 id, s32 arg) {
-    Req *r = &D_006627B0;
-    r->unk10 = 1;
-    r->unk14 = 1;
-    if (r->on == 0 || r->id != id) {
-        r->id = id;
-        r->arg = arg;
-        r->on = 1;
-        r->t = 1.0f;
-    }
-}
-
 /* Ten 0x860-byte channels: a free one, else the oldest. */
 typedef struct { s32 used; s32 age; u8 pad8[0x860 - 8]; } Snd;
 extern Snd D_00662A30[10]; /* src/data/bss_0066.c: E860 D_00662A30[10] */

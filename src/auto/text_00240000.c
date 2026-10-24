@@ -19,7 +19,6 @@ extern s32 D_00469F60;
 extern s32 D_0046A53C;
 extern s32 D_0046A60C;
 extern s32 D_0046A67C;
-s32 D_006627B8 ALIGNED(8);
 extern s32 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
 extern s32 D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 extern s32 D_00669A38;
@@ -81,10 +80,6 @@ void func_00242b38(void) {
     if (temp_v0 != NULL) {
         M2C_FIELD(temp_v0, s32 *, 0x774) = 1;
     }
-}
-
-void func_002452f0(void) {
-    D_006627B8 = 0;
 }
 
 void func_00245798(void *arg0, s32 arg1, s32 arg2) {
