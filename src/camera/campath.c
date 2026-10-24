@@ -87,7 +87,13 @@ void func_0017b740(V4 *out, V4 *in) {
 /* func_0017b7e8 (from hand/text_00170000_h11.c). */
 extern s32 D_00575920;
 extern u64 D_002C5BB0;
-u8 D_005759A4 ALIGNED(4);
+/* The path camera D_00575940 (Cam below; func_0017b0e0 clears 0x70 bytes; campath.nostrict.c, fieldcam.c):
+ * D_00575970 is its +0x30, D_005759A4 its +0x64 and D_005759A6 its +0x66. Those two were their own
+ * variables and D_00575940 had no C definition, so on the host the camera's fields past +0x30 were other
+ * data. One definition (vita-port-plan 5.1i). */
+u8 D_00575940_cam[0x70] __asm__("D_00575940") ALIGNED(16);
+#define D_005759A4 (D_00575940_cam[0x64])
+#define D_005759A6 (D_00575940_cam[0x66])
 s32 func_001770b8(void);
 s32 func_0017b7e8(void) {
     if (!(D_002C5BB0 & 0x300000000000ULL)) {
@@ -190,7 +196,6 @@ typedef struct Actor {
 } Actor;
 typedef struct { s32 x0; f32 x4; u8 pad8[8]; V4 x10; } S920;
 extern Actor *D_00575894;
-u8 D_005759A6 ALIGNED(2);
 void func_0011d768(s32);
 s32 func_001375d8(Actor *);
 void func_0017c550(void);

@@ -256,7 +256,7 @@ void func_00100768(void) {
 #undef D_00494320
 
 /* func_001007b0 (from auto/text_00100000.c). */
-M2C_UNK D_004943A0[0x11] ALIGNED(32);
+extern M2C_UNK D_004943A0[]; /* D_00494310[1] + 0x10 */
 void func_001007b0(void) {
     func_00104480(-1, &D_004943A0);
     M2C_FIELD(&D_004943A0, s32 *, 0x44) = 0;
@@ -272,7 +272,10 @@ void func_001007e8(void) {
 
 /* func_00100818 (from hand/text_00100000_h28.c). */
 typedef struct { u8 pad0[0x54]; f32 rot; u8 pad58[8]; f32 x; s32 y; f32 z; u8 pad6c[0x14]; } Cam80;
-extern Cam80 D_00494310[2];
+/* The two field cameras D_00494310[2] (0x80 each, to D_00494410) are one definition (vita-port-plan 5.1i):
+ * D_00494320 / D_004943A0 (each camera's +0x10, what func_00104480 / func_001044c0 take) and
+ * D_004943E4 (camera 1's rot, func_001008d8) were their own variables and D_00494310 had none. */
+Cam80 D_00494310[2] ALIGNED(16);
 extern f32 D_0029B270;
 extern f32 D_002BBDFC;
 void func_00100818(void) {
@@ -292,7 +295,7 @@ void func_00100818(void) {
 }
 
 /* func_001008d8 (from auto/text_00100000.c). */
-f32 D_004943E4 ALIGNED(4);
+extern f32 D_004943E4; /* D_00494310[1].rot */
 void func_001008d8(f32 fparg0) {
     D_004943E4 = fparg0;
 }

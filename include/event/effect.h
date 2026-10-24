@@ -41,7 +41,7 @@ typedef struct {
 extern u8 D_0062A630[];
 extern void *D_0062A220;   /* the loaded .dpx file (src/data/bss_0062.c: s32) */
 extern void *D_0062A224;   /* the .dpp file, 0x7d000 bytes after it (s32) */
-extern EvFx D_0062A428[];  /* src/data/bss_0062.c: u8 D_0062A428[0x8] */
+extern EvFx D_0062A428[];  /* src/data/bss_0062.c: u8 D_0062A428[0x1e0], 8 of them */
 
 EvTask *func_0011f090(void *list, s32 kind, void *fn);
 EvFx *func_001760b0(s32);

@@ -74,7 +74,9 @@ extern u16 D_003F56A0[];
 extern u16 D_003F5810[];
 extern s32 D_00642EB0;
 extern s32 D_00642F60;
-s32 D_006430EC ALIGNED(4);
+/* The journal model D_00643020 (JMdl, 0xd0 bytes; D_006430EC is its xcc). One definition (vita-port-plan 5.1i). */
+JMdl D_00643020 ALIGNED(16);
+extern s32 D_006430EC;
 
 void func_00131cc8(s32, void *);
 void func_00131d68(s32, JMdl *);

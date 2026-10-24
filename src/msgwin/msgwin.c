@@ -726,7 +726,10 @@ MsgWin func_001ccd30(s32 i) {
  * that template's position x / y.  m2c's code, kept as it matched: it reads
  * through the volatile labels D_00629920 / D_00629924 (D_006298F0[0].v30)
  * and takes the VM as an s32; the VmRec forms tried differ. */
-volatile s32 D_00629920 ALIGNED(16);
+/* The 8 templates are one definition (vita-port-plan 5.1i): D_00629920 was its own variable inside
+ * template 0, and D_006298F0 had none, so on the host func_001cab48's resets ran over other data. */
+MsgWin D_006298F0[8] ALIGNED(16);
+#define D_00629920 (*(volatile s32 *)&D_006298F0[0].v30[0])
 
 s32 func_001ccda8(s32 arg0) {
   void *temp_a1;

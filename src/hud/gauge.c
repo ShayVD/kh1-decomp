@@ -13,7 +13,10 @@
  * and small entry points (func_00242b68 ... func_00242bf0).  D_00652888,
  * D_00652898, D_00654570 and D_00655264 are fields of D_00651E50 defined as
  * their own variables (ent[0].unkA18, ent[0].unkA28, ent[3] and
- * ent[3].unkAA0.unk254); they keep those names. */
+ * ent[3].unkAA0.unk254); they keep those names. Session 69: D_00651E50 is one
+ * definition here (func_00242a38 clears all 0x4130 bytes; on the host the
+ * table had no definition and the three fields were separate objects), the
+ * three names are declared inside it (vita-port-plan 5.1i). */
 #include "common.h"
 #include "hud/gauge.h"
 #include "data/data_0045.h"
@@ -30,11 +33,11 @@
 
 typedef struct { s32 x, y, z, w; } T16;
 
-extern GaugeTbl D_00651E50;
+GaugeTbl D_00651E50 ALIGNED(16);
 extern Gauge D_00651E70[];
-s32 D_00652888[0x4] ALIGNED(8);
-s32 D_00652898 ALIGNED(8);
-s32 D_00654570[0x33d] ALIGNED(16);
+extern s32 D_00652888[0x4]; /* D_00651E50.ent[0].unkA18 */
+extern s32 D_00652898;      /* D_00651E50.ent[0].unkA28 */
+extern s32 D_00654570[0x33d]; /* D_00651E50.ent[3] */
 extern s32 D_00655264;
 extern T16 D_00454600[];
 extern T16 D_00454650[];

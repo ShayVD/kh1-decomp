@@ -34,7 +34,8 @@ void func_00182870();
 extern V4A D_00615FC0[4];
 extern V4A D_00615EB0[4];
 extern V4A D_00615E70[4];
-extern V4A D_00616010[3];
+extern V4A D_00616000_rows[4] __asm__("D_00616000");
+#define D_00616010 (D_00616000_rows + 1)
 extern V4A D_00616040[4];
 extern V4A D_00616080[4];
 extern V4A D_006160C0[4];
@@ -560,9 +561,13 @@ typedef struct {
     u8 pad90[0xb2 - 0x90];
     u8 xb2;
 } MObj;
-V4F D_00615E80 ALIGNED(16);
-V4F D_00615E90 ALIGNED(16);
-V4F D_00615EA0 ALIGNED(16);
+/* The object matrix D_00615E70 (func_00182870 writes all four rows, PlatVu0MulMatrix 0x40 bytes): rows 1-3
+ * were their own variables D_00615E80 / 90 / A0, and D_00615E70 had no C definition, so on the host the
+ * matrix ran over whatever followed its first row. One definition (vita-port-plan 5.1i). */
+V4F D_00615E70_rows[4] __asm__("D_00615E70") ALIGNED(16);
+#define D_00615E80 (D_00615E70_rows[1])
+#define D_00615E90 (D_00615E70_rows[2])
+#define D_00615EA0 (D_00615E70_rows[3])
 extern V4F D_00615F70;
 void func_00183be0(void *, void *);
 void func_00121fc4(void *, void *);

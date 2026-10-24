@@ -14,7 +14,8 @@
 
 extern H39Mtx D_00615F30;
 extern u128 D_00615F80;
-extern PppQv D_00616010[3];
+extern PppQv D_00616000_rows[4] __asm__("D_00616000"); /* the matrix D_00616000 */
+#define D_00616010 (D_00616000_rows + 1) /* its rows 1-3 */
 extern H39Mtx D_00616180;
 extern PppHookFn *D_00616220;
 extern PppLight *D_0061E310[256];

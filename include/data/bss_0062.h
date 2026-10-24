@@ -20,6 +20,7 @@ extern s32 D_0062A210;
 extern s32 D_0062A608[];
 extern s32 D_0062A628;
 extern s32 D_0062F6D0;
-extern u8 D_0062F760[];
+extern u8 D_0062F6E0_rec[] __asm__("D_0062F6E0"); /* a window record of 0xb0 bytes (MsgWin) */
+#define D_0062F760 (D_0062F6E0_rec + 0x80) /* its text, MsgWin.f80 */
 
 #endif /* KH1_DATA_BSS_0062_H */

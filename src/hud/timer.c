@@ -39,9 +39,9 @@ typedef struct { u8 pad[0x60]; u64 unk60; u8 pad68[0xE0 - 0x68]; u64 unkE0; u8 t
 
 Q D_00669070 ALIGNED(16);
 Panel D_006691E0 ALIGNED(32);
-u8 D_006692C0[0x18] ALIGNED(16);
-u8 D_006692F0[0x18] ALIGNED(16);
-u8 D_00669320[0x18] ALIGNED(16);
+u8 D_006692C0[0x20] ALIGNED(16); /* a 0x20-byte sprite set; its last 8 bytes D_006692D8 (timer.nostrict.c) are its tag (func_002474e8 reads it) */
+u8 D_006692F0[0x20] ALIGNED(16); /* tag D_00669308 */
+u8 D_00669320[0x20] ALIGNED(16); /* tag D_00669338 */
 extern MgSlot D_00669350; /* src/data/bss_0066.c: u8 D_00669350[0x8] */
 extern void *D_00669358[]; /* src/data/bss_0066.c: u8 D_00669358[0x30] */
 extern void *D_00669388[2];

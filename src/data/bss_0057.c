@@ -10,7 +10,7 @@ s32 D_0057508C ALIGNED(4);
 f32 D_005758C0 ALIGNED(16);
 s32 D_005739F8[0x32] ALIGNED(8);
 u8 D_00573AC0[0x10] ALIGNED(16);
-s32 D_00575010 ALIGNED(16);
+s32 D_00575010[2] ALIGNED(16); /* partyai.c frees both tasks; [1] is D_00575014 (partyctl.nostrict.c). One definition (vita-port-plan 5.1i) */
 void *D_00575780 ALIGNED(16);
 void *D_00575784 ALIGNED(4);
 u8 D_00575788[8] ALIGNED(8);

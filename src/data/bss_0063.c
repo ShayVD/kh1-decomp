@@ -3,7 +3,7 @@
 #include "data/bss_0063_mixed.h"
 #include "data/bss_0063_typed.h"
 
-u8 D_00630380[0x30] ALIGNED(16);
+u8 D_00630300_rec[0xb0] __asm__("D_00630300") ALIGNED(16); /* a window record (MsgWin), its text D_00630380 at +0x80 */
 s32 D_006314CC ALIGNED(4);
 s32 D_006314D0 ALIGNED(16);
 s32 D_006314D4 ALIGNED(4);
@@ -11,7 +11,7 @@ s32 D_006314D8 ALIGNED(8);
 s32 D_006314DC ALIGNED(4);
 s32 D_00631560 ALIGNED(16);
 u8 D_006303B0[0xb0] ALIGNED(16);
-u8 D_006304E0[0x30] ALIGNED(16);
+u8 D_00630460_rec[0xb0] __asm__("D_00630460") ALIGNED(16); /* a window record (MsgWin), its text D_006304E0 at +0x80 */
 u8 D_00630510[0xb0] ALIGNED(16);
 s32 D_006305CC ALIGNED(4);
 char D_006307C8[0x800] ALIGNED(8);

@@ -18,7 +18,7 @@ extern Ent D_00623230[];
 extern IdCnt D_00625750[];
 extern Msg D_006257E0[256];
 extern Msg D_006277F0[256];
-extern Ent176 D_00629E70[4];
+extern Ent176 D_00629E70[5];
 extern Cb20 D_0062F8F0;
 
 #endif /* KH1_DATA_BSS_0062_TYPED_H */

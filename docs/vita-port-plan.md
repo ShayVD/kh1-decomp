@@ -654,6 +654,59 @@ Two host-only causes found on the way:
   loaded bytes and program headers are the same, float_covered / float_reach swap the three names for D_00656230
   (the float build already kept the four sets together at 0x61D2B0), so there is no row for float-untested.md.
 
+### 5.1i Session 69: every layout dependency found and made one definition
+
+Static only (the Mac was away). kh1.elf is byte-identical; 26 PS2 objects changed (the files below), every
+other out/build object is bit-identical. portability.md rule 12 is the rule.
+
+**tools/host/layoutcheck.py** (new) finds what session 64's opdma and session 68's notice were found by a crash:
+code that reaches past its variable's host definition. It groups the D_ names whose host addresses (nm of
+out/host/kh1-host) keep their PS2 distances into host runs (one C definition, a data piece, a census block)
+and hands them to tools/shift/reach_check.py as its pieces: every load, store, built address, bounded index
+span, memset or argument read from a base in one run to an address outside it is a row. Left out as benign: an
+end pointer one past the base's own definition, string arguments (libc and the disc file names), rows whose
+functions are all in the SDK, and a REVIEWED table read by hand (10 rows: _gp, crt0's clear, three in the
+unmatched drafts or constants, four pointers set by name, eiwind's empty object read only when its range is
+above 0). `--all` adds the unbounded index (idx-next) and uncached-alias rows. At the start: **86 rows from 59
+base names**; now **0**.
+
+Two host-only causes, fixed in tools/host/census.py:
+- Names with no C definition (out/host/defs_host.c) were separate arrays: campath's camera D_00575940 + 0x40
+  is D_00575970 + 0x10, the gauge table D_00651E50 runs to +0x4130, D_0061E800's matrices. Now the names
+  between two C definitions are one block (`kh1_hostblk_XXXXXXXX`) with each name `.set` at its PS2 distance
+  (20 blocks, 50 names).
+- A name inside a C definition (D_00575970 inside the camera, the fields left as `extern`) is now
+  `PROVIDE(name = object + offset)` in out/host/aliases.ld (47 names).
+
+The objects made one definition (kh1.elf byte-identical; the views and removed field definitions produce the
+same code):
+
+| object | was | now (file) |
+| --- | --- | --- |
+| D_00615E70 ppp object matrix | rows 1-3 D_00615E80 / 90 / A0 own variables, row 0 undefined | `V4F [4]` (pppsys.nostrict.c), rows as views |
+| D_00616000 matrix | D_00616010[3] (rows 1-3; written as [-1]) | `PppQv [4]` (bss_0061.c), D_00616010 a view |
+| D_0062F6E0, D_0062F790, D_00630300, D_00630460 window records (MsgWin, 0xb0) | only their text at +0x80 defined | `u8 [0xb0]` (bss_0062.c / bss_0063.c), the text a view |
+| D_006298F0 message window templates | D_00629920 (template 0's v30) | `MsgWin [8]` (msgwin.c) |
+| D_00629E70 open windows | D_0062A130 (entry 4) its own | `Ent176 [5]` (bss_0062.c) |
+| D_00575940 path camera (0x70) | D_005759A4 / A6 own, camera undefined | campath.c |
+| D_00494310 field cameras (2 x 0x80) | D_00494320 / D_004943A0 / D_004943E4 own | field.c |
+| D_00525298 room object table (0x2c) | D_005252A8 (its recs) | bss_0052.c |
+| D_00525368 sound channels (7 x 0x1c) | 4 bytes | bss_0052.c |
+| D_0052EB50 pool header, D_00551700 trail (0x38), D_005758F0 / D_00575900 camera records, D_006627B0 action mark request, D_00643020 journal model, D_0054C120 effect model (0x90) | one field defined each | the whole record |
+| D_00651E50 gauge table (0x4130) | D_00652888 / 98 / D_00654570 own | gauge.c |
+| D_00641250[2], D_00575010[2] | [1] its own | arrays |
+| D_00647FE8[14] memory card words | 13 words own, [0] undefined (func_00233ac8 clears 14) | bss_0064.c |
+| D_006692C0 / F0 / 320 timer sprite sets (0x20) | tag D_006692D8 / 308 / 338 own (timer.nostrict.c) | timer.c |
+| D_0062A428 effect instances (EvFx[8]) | 8 bytes, D_0062A430 own | bss_0062.c |
+| D_004E39F8 sound requests | [4], flags D_004E3A18 / 1C after | `Pair [5]`: func_0011e1c8 writes [4] when all four are taken, over the flags, as the original does |
+| D_0054F438 area groups | D_0054F440 ... 4C and D_0054F450[31] own | `Grp57 [0x20]`: the groups count from 1 (D_0054F438[k]) |
+
+The shift build: shift_ld.py let a name no object defines inside a floated variable fail the link ("points
+inside"); it now follows the variable (`name = variable + offset`). The float build's layout changes (row in
+docs/float-untested.md). The host run on tests/host/fake_disc.py stops where session 68's did (the overlay
+entry, and with `KH1_HOST_OVL=stub:2` func_00132790 on the fake disc's missing room file); valgrind 0 errors
+to the fault. abicheck 0, indcheck and argcheck unchanged.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
