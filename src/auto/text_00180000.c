@@ -7,12 +7,9 @@ M2C_UNK func_00182368();
 M2C_UNK func_00182ec0(s32);
 M2C_UNK func_001837a8(s32);
 M2C_UNK func_00183b20(s32, s32);
-M2C_UNK func_00267328(s32, M2C_UNK *, s32);
-extern M2C_UNK D_00616080; /* src/data/bss_0061.c: u8 D_00616080[0x40] */
 #include "data/pieces/D_00370130.h"
 extern s32 D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
 extern s32 D_00615E64;
-extern s32 D_00615E68;
 s32 func_00180f18(s32, M2C_UNK, void *, u8);
 
 s32 func_001803b8(s32 arg0) {
@@ -195,99 +192,4 @@ s8 func_0018a028(s16 arg0, f32 fparg0) {
 
 s8 func_0018a230(s16 arg0, f32 fparg0) {
     return (s8) (s32) ((f32) arg0 * fparg0);
-}
-
-void pppDrawShapeFieldDraw(void) {
-
-}
-
-void pppDrawShapeFieldCon(void) {
-
-}
-
-void pppDrawShapeFieldDes(void) {
-
-}
-
-void pppDrawMdlSeaDraw(void) {
-
-}
-
-void pppDrawMdlSeaCon(void) {
-
-}
-
-void pppDrawMdlSeaDes(void) {
-
-}
-
-void pppPointLoopCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
-}
-
-void pppPointLoopReset(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-    void *temp_v0;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    temp_v0 = M2C_FIELD(temp_a0_2, void **, 0xC);
-    M2C_FIELD(temp_a0, f32 *, 0xA0) = (f32) (M2C_FIELD(temp_a0, f32 *, 0xA0) - M2C_FIELD(temp_v0, f32 *, 4));
-    M2C_FIELD(temp_a0_2, f32 *, 4) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 4) - M2C_FIELD(temp_v0, f32 *, 8));
-    M2C_FIELD(temp_a0_2, f32 *, 8) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 8) - M2C_FIELD(temp_v0, f32 *, 0xC));
-}
-
-void pppAngleLoopCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
-}
-
-void pppAngleLoopReset(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-    void *temp_a3;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    temp_a3 = M2C_FIELD(temp_a0_2, void **, 0xC);
-    M2C_FIELD(temp_a0, s32 *, 0xA0) = (s32) (M2C_FIELD(temp_a0, s32 *, 0xA0) - M2C_FIELD(temp_a3, s32 *, 4));
-    M2C_FIELD(temp_a0_2, s32 *, 4) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 4) - M2C_FIELD(temp_a3, s32 *, 8));
-    M2C_FIELD(temp_a0_2, s32 *, 8) = (s32) (M2C_FIELD(temp_a0_2, s32 *, 8) - M2C_FIELD(temp_a3, s32 *, 0xC));
-}
-
-void pppScaleLoopCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xAC) = 0;
-}
-
-void pppScaleLoopReset(s32 arg0, PppEntry *arg1) {
-    void *temp_a0;
-    void *temp_a0_2;
-    void *temp_v0;
-
-    temp_a0 = arg0 + arg1->offsets[0];
-    temp_a0_2 = temp_a0 + 0xA0;
-    temp_v0 = M2C_FIELD(temp_a0_2, void **, 0xC);
-    M2C_FIELD(temp_a0, f32 *, 0xA0) = (f32) (M2C_FIELD(temp_a0, f32 *, 0xA0) - M2C_FIELD(temp_v0, f32 *, 4));
-    M2C_FIELD(temp_a0_2, f32 *, 4) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 4) - M2C_FIELD(temp_v0, f32 *, 8));
-    M2C_FIELD(temp_a0_2, f32 *, 8) = (f32) (M2C_FIELD(temp_a0_2, f32 *, 8) - M2C_FIELD(temp_v0, f32 *, 0xC));
-}
-
-void pppDrawMatrixLoopFrame(void) {
-    func_00267328(D_00615E68 + 0x50, &D_00616080, D_00615E68 + 0x10);
-}
-
-void pppDrawMdlLoopCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[2]), s32 *, 0xA0) = 0;
-}
-
-void pppDrawMdlLoopDes(void) {
-
-}
-
-void pppDrawMdlLoopZCon(s32 arg0, PppEntry *arg1) {
-    M2C_FIELD((arg0 + arg1->offsets[2]), s32 *, 0xA0) = 0;
-}
-
-void pppDrawMdlLoopZDes(void) {
-
 }

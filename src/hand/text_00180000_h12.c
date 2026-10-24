@@ -349,22 +349,6 @@ void pppChrYSclXYZMatrixFrame(void *obj, PppYSclKey *k, PppEntry *e) {
     sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
 }
 
-typedef struct {
-    s32 pad[3];
-    PppWord w0;  /* +0x0C */
-    s32 w1;      /* +0x10 */
-    s32 pad2;
-    f32 a, b, c; /* +0x18 */
-} PppWind;
-
-void pppEiWindFunCon(void *obj, PppEntry *e) {
-    PppWind *w = (PppWind *) ((u8 *) obj + e->offsets[0] + 0xA0);
-
-    w->w0.i = 0;
-    w->w1 = 0;
-    w->a = w->b = w->c = w->w0.f;
-}
-
 /* Pointer-valued fields below are typed s32 so that loads and stores
  * through them alias like the original. */
 

@@ -3,60 +3,11 @@
 #include "ppp.h"
 #include "data/bss_0061.h"
 
-#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-
 void sceVu0MulMatrix(void *, void *, void *);
-
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame; /* +0x0C */
-} PppObject;
 
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 
-typedef struct {
-    u8 pad[0x10];
-    PppMtx m;    /* +0x10 */
-    PppMtx m2;   /* +0x50 */
-    s32 unk90, unk94;
-} PppMtxOwner;
-
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-
-extern PppMtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-extern PppMtx D_00615FC0;
-
-typedef struct {
-    s32 init;
-    f32 a, da, dda;  /* +0x4 */
-    f32 b, db, ddb;  /* +0x10 */
-} PppMdlLoop;
-
-typedef struct {
-    s16 x, y, z;
-} VtxS16;
-
-typedef struct {
-    s16 slot;  /* +0x0 */
-    s16 n;     /* +0x2 */
-    u16 *map;  /* +0x4 */
-} VtxMap;
-
-typedef struct {
-    u8 pad[0x10];
-    u32 tex;      /* +0x10 */
-    VtxS16 *vtx;  /* +0x14 */
-    s32 pad18;
-    s32 *mdl;     /* +0x1C */
-    s32 arg;      /* +0x20 */
-} PppMdlRes; /* 0x24 */
-
-typedef struct {
-    u8 pad[0x10];
-    PppMdlRes *res; /* +0x10 */
-    void *p14;
-    VtxMap *maps;   /* +0x18 */
-} PppMdlBank;
 
 typedef struct {
     s32 unk0;
@@ -85,12 +36,6 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
     }
     return i;
 }
-
-extern PppMdlBank *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-extern u8 D_00616240[];
-extern u8 D_00616140[];
-extern u8 D_00616100[];
-extern s32 D_00616224;
 
 /* --- func_00182870: build the object matrix D_00615E70 --- */
 
@@ -213,108 +158,6 @@ void func_00182870(MObj *o) {
 }
 
 /* --- pppDrawMdl* draw callbacks: fill a PppMdlDraw for func_001aaf88 --- */
-typedef struct {
-    u32 flags;     /* +0x00 */
-    void *p04;     /* +0x04 */
-    u16 h08;       /* +0x08 */
-    u8 b0A;
-    s32 i0C;       /* +0x0C */
-    s32 u, v;      /* +0x10 */
-    u8 col[4];     /* +0x18 */
-    s32 i1C;       /* +0x1C */
-    void *m2;      /* +0x20 */
-    void *p24;
-    void *p28;
-    void *m;       /* +0x2C */
-    void *mtx;     /* +0x30 */
-    s32 i34;
-    s32 i38, i3C;  /* +0x38 */
-    s32 i40;
-    void *i44;     /* +0x44 */
-    s32 i48;
-    u8 b4C, b4D;   /* +0x4C */
-    u8 pad4E[0x12];
-} PppMdlDraw;
-
-typedef struct {
-    s32 frame;
-    s32 id;      /* +0x4 */
-    u8 pad8[0x18];
-    union { u8 b; u16 h; } tex; /* +0x20 */
-    u8 mode;     /* +0x22 */
-    u8 f23, f24, f25, f26;
-} PppMdlKey;
-
-typedef struct {
-    u8 pad[8];
-    u8 col[4];
-} PppColWork;
-
-s32 func_001aaf88(s32 *, PppMdlDraw *, s32);
-
-void pppDrawMdlLoopZDraw(PppObject *obj, PppMdlKey *key, PppEntry *e) {
-    PppMdlDraw d;
-    PppMtx mtx;
-    PppMdlLoop *w = PPP_WORK(PppMdlLoop, obj, e, 2);
-    PppColWork *c;
-    s32 *mdl;
-
-    if (key->id == 0xFFFF)
-        return;
-    c = PPP_WORK(PppColWork, obj, e, 0);
-    mdl = D_00615E64->res[key->id].mdl;
-    d.col[0] = c->col[0];
-    d.col[1] = c->col[1];
-    d.col[3] = c->col[3];
-    d.col[2] = c->col[2];
-    if (d.col[3] == 0)
-        return;
-    d.flags = 0;
-    if (key->mode & 2)
-        d.flags = 4;
-    else if (key->mode & 1)
-        d.flags = 0x80;
-    if (!(*mdl & 1))
-        d.flags |= 8;
-    if (!(*mdl & 2))
-        d.flags |= 0x10;
-    if (key->f23)
-        d.flags |= 0x200;
-    if (key->f24)
-        d.flags |= 0x100;
-    if (key->f25) {
-        d.flags = (d.flags & ~0x10) | 0x2000;
-        d.mtx = mtx;
-        sceVu0MulMatrix(mtx, D_00615FC0, D_00615E68->m);
-    } else {
-        d.mtx = 0;
-    }
-    d.p04 = D_00616240;
-    if (key->tex.b == 0xFF)
-        d.h08 = ((u16 *) mdl)[11];
-    else
-        d.h08 = key->tex.h;
-    d.b0A = 0;
-    d.i0C = 0;
-    d.u = w->a * 65536.0f;
-    d.v = w->b * 65536.0f;
-    if (key->f26)
-        d.i44 = PPP_WORK(u8, obj, e, 3);
-    else
-        d.i44 = 0;
-    d.i1C = 0;
-    d.m2 = D_00615E68->m2;
-    d.p24 = D_00616140;
-    d.p28 = D_00616100;
-    d.m = D_00615E68->m;
-    d.i34 = D_00616224;
-    d.i38 = D_00615E68->unk90;
-    d.i3C = D_00615E68->unk94;
-    d.i40 = 0;
-    d.b4C = 0;
-    d.b4D = 0;
-    D_00616224 = func_001aaf88(mdl, &d, D_00615E64->res[key->id].arg);
-}
 
 /* --- pppKeThSft: per-frame shift of a key work area --- */
 

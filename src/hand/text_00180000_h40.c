@@ -4,8 +4,6 @@
 #include "common.h"
 #include "ppp.h"
 
-#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
-
 #include "data/types/shared.h"
 
 /* A 16-byte aligned VU0 vector. */
@@ -25,32 +23,6 @@ typedef struct {
     u64 flags;      /* +0xB0 */
 } PppSystem;
 
-extern s32 D_0061621C;
-extern PppSystem *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-
-typedef struct {
-    s32 unk00, unk04, unk08;
-    s32 frame; /* +0x0C */
-    u8 pad10[0x8D];
-    u8 unk9D;  /* +0x9D */
-} PppObject;
-
-typedef struct { f32 a, b, c; } PppV12;
-
-typedef struct {
-    s32 frame;
-    PppV12 v;    /* +0x4 */
-    f32 x, y;    /* +0x10 */
-    f32 d[3];    /* +0x18 */
-} PppWindKey;
-
-typedef struct {
-    PppV12 v;
-    f32 x, y;    /* +0xC */
-    f32 r;       /* +0x14 */
-    f32 d[3];    /* +0x18 */
-} PppWindWork;
-
 static inline f32 vu0Sqrt(f32 x) {
     f32 r;
     __asm__ volatile(
@@ -65,94 +37,7 @@ static inline f32 vu0Sqrt(f32 x) {
     return r;
 }
 
-void pppEiWindFunFrame(PppObject *obj, PppWindKey *key, PppEntry *e) {
-    PppWindWork *w = PPP_WORK(PppWindWork, obj, e, 0);
-    f32 x, y;
-
-    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
-        w->d[1] += w->d[2];
-        w->d[0] += w->d[1];
-    }
-    if (key->frame != obj->frame)
-        return;
-    w->v = key->v;
-    w->x = x = key->x;
-    w->y = y = key->y;
-    w->r = x / vu0Sqrt(x * x + y * y);
-    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
-        w->d[0] += key->d[0];
-        w->d[1] += key->d[1];
-        w->d[2] += key->d[2];
-    }
-}
-extern s32 D_00616234;
-
 typedef struct { f32 x, y, z; } PppFVec;
-typedef struct { s32 x, y, z; } PppIVec;
-
-typedef struct {
-    s32 frame;
-    PppFVec v; /* +0x4 */
-} PppFVecKey;
-
-typedef struct {
-    s32 frame;
-    PppIVec v; /* +0x4 */
-} PppIVecKey;
-
-void pppMoveLoopFrame(PppObject *obj, PppFVecKey *key, PppEntry *e) {
-    PppFVec *pos = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *vel = PPP_WORK(PppFVec, obj, e, 1);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame == obj->frame) {
-        vel->x += key->v.x;
-        vel->y += key->v.y;
-        vel->z += key->v.z;
-    }
-    if (D_00616234 == 0) {
-        pos->x += vel->x;
-        pos->y += vel->y;
-        pos->z += vel->z;
-    }
-}
-
-void pppAngMoveLoopFrame(PppObject *obj, PppIVecKey *key, PppEntry *e) {
-    PppIVec *pos = PPP_WORK(PppIVec, obj, e, 0);
-    PppIVec *vel = PPP_WORK(PppIVec, obj, e, 1);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame == obj->frame) {
-        vel->x += key->v.x;
-        vel->y += key->v.y;
-        vel->z += key->v.z;
-    }
-    if (D_00616234 == 0) {
-        pos->x += vel->x;
-        pos->y += vel->y;
-        pos->z += vel->z;
-    }
-}
-
-void pppSclMoveLoopFrame(PppObject *obj, PppFVecKey *key, PppEntry *e) {
-    PppFVec *pos = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *vel = PPP_WORK(PppFVec, obj, e, 1);
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    if (key->frame == obj->frame) {
-        vel->x += key->v.x;
-        vel->y += key->v.y;
-        vel->z += key->v.z;
-    }
-    if (D_00616234 == 0) {
-        pos->x += vel->x;
-        pos->y += vel->y;
-        pos->z += vel->z;
-    }
-}
 void func_001a5250(PppMtx, PppFVec *);
 void func_001a5370(PppMtx, PppFVec *);
 void func_001a52e0(PppMtx, PppFVec *);

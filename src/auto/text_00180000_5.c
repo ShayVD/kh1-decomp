@@ -4,9 +4,6 @@
 #include "ppp.h"
 
 M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK pppMoveLoopCon();
-M2C_UNK pppAngMoveLoopCon();
-M2C_UNK pppSclMoveLoopCon();
 M2C_UNK func_0024edf0(void *, s32);
 M2C_UNK func_002672f8(s32, s32, s32);
 M2C_UNK func_00267328(void *, M2C_UNK *, M2C_UNK *);
@@ -60,17 +57,5 @@ void pppDrawMatrixWoodFn14(void) {
 
 void pppSMatrixFrame(s32 arg0, s32 arg1, void *arg2) {
     D_00616214 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC) + 0xA0;
-}
-
-void pppMoveLoopReset(void) {
-    pppMoveLoopCon();
-}
-
-void pppAngMoveLoopReset(void) {
-    pppAngMoveLoopCon();
-}
-
-void pppSclMoveLoopReset(void) {
-    pppSclMoveLoopCon();
 }
 #include "data/bss_0061_mixed.h"

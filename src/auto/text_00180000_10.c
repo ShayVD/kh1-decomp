@@ -5,9 +5,6 @@
 extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern s32 D_0061621C;
 extern void *D_00615E60;
-f32 func_0018ac28(s32, s32);
-f32 func_0018aeb8(s32, s32);
-void func_0018ad70(s32, s32);
 
 void pppPointFrame(void *arg0, void *arg1, void *arg2) {
     void *temp_v0;
@@ -267,60 +264,6 @@ void pppPObjPointFrame(void *arg0, void *arg1, void *arg2) {
         M2C_FIELD(temp_a2, f32 *, 0x0) = (f32) M2C_FIELD(temp_v0_3, f32 *, 0);
         M2C_FIELD(temp_a2, f32 *, 4) = (f32) M2C_FIELD(temp_v0_3, f32 *, 4);
         M2C_FIELD(temp_a2, f32 *, 8) = (f32) M2C_FIELD(temp_v0_3, f32 *, 8);
-    }
-}
-
-void pppPointLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
-    void *temp_s0;
-    void *temp_v0;
-
-    temp_v0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC);
-    temp_s0 = temp_v0 + 0xA0;
-    if ((D_0061621C == 0) && !(M2C_FIELD(D_00615E60, s64 *, 0xB0) & (((s64) 0xFF << 0x20) | 0xFF00))) {
-        if (M2C_FIELD(temp_s0, s32 *, 0xC) == 0) {
-            func_0018ac28(arg1, (s32) temp_s0);
-        }
-        if (M2C_FIELD(arg1, s32 *, 0) == M2C_FIELD(arg0, s32 *, 0xC)) {
-            M2C_FIELD(temp_v0, f32 *, 0xA0) = (f32) (M2C_FIELD(temp_v0, f32 *, 0xA0) + M2C_FIELD(arg1, f32 *, 4));
-            M2C_FIELD(temp_s0, f32 *, 4) = (f32) (M2C_FIELD(temp_s0, f32 *, 4) + M2C_FIELD(arg1, f32 *, 8));
-            M2C_FIELD(temp_s0, f32 *, 8) = (f32) (M2C_FIELD(temp_s0, f32 *, 8) + M2C_FIELD(arg1, f32 *, 0xC));
-        }
-    }
-}
-
-void pppAngleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
-    void *temp_s0;
-    void *temp_v0;
-
-    temp_v0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC);
-    temp_s0 = temp_v0 + 0xA0;
-    if ((D_0061621C == 0) && !(M2C_FIELD(D_00615E60, s64 *, 0xB0) & (((s64) 0xFF << 0x20) | 0xFF00))) {
-        if (M2C_FIELD(temp_s0, s32 *, 0xC) == 0) {
-            func_0018ad70(arg1, (s32) temp_s0);
-        }
-        if (M2C_FIELD(arg1, s32 *, 0) == M2C_FIELD(arg0, s32 *, 0xC)) {
-            M2C_FIELD(temp_v0, s32 *, 0xA0) = (s32) (M2C_FIELD(temp_v0, s32 *, 0xA0) + M2C_FIELD(arg1, s32 *, 4));
-            M2C_FIELD(temp_s0, s32 *, 4) = (s32) (M2C_FIELD(temp_s0, s32 *, 4) + M2C_FIELD(arg1, s32 *, 8));
-            M2C_FIELD(temp_s0, s32 *, 8) = (s32) (M2C_FIELD(temp_s0, s32 *, 8) + M2C_FIELD(arg1, s32 *, 0xC));
-        }
-    }
-}
-
-void pppScaleLoopFrame(s32 arg0, s32 arg1, s32 arg2) {
-    void *temp_s0;
-    void *temp_v0;
-
-    temp_v0 = arg0 + *M2C_FIELD(arg2, s32 **, 0xC);
-    temp_s0 = temp_v0 + 0xA0;
-    if ((D_0061621C == 0) && !(M2C_FIELD(D_00615E60, s64 *, 0xB0) & (((s64) 0xFF << 0x20) | 0xFF00))) {
-        if (M2C_FIELD(temp_s0, s32 *, 0xC) == 0) {
-            func_0018aeb8(arg1, (s32) temp_s0);
-        }
-        if (M2C_FIELD(arg1, s32 *, 0) == M2C_FIELD(arg0, s32 *, 0xC)) {
-            M2C_FIELD(temp_v0, f32 *, 0xA0) = (f32) (M2C_FIELD(temp_v0, f32 *, 0xA0) + M2C_FIELD(arg1, f32 *, 4));
-            M2C_FIELD(temp_s0, f32 *, 4) = (f32) (M2C_FIELD(temp_s0, f32 *, 4) + M2C_FIELD(arg1, f32 *, 8));
-            M2C_FIELD(temp_s0, f32 *, 8) = (f32) (M2C_FIELD(temp_s0, f32 *, 8) + M2C_FIELD(arg1, f32 *, 0xC));
-        }
     }
 }
 #include "data/bss_0061_mixed.h"

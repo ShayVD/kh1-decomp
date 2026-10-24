@@ -167,44 +167,6 @@ typedef struct {
     u8 mode;
 } ThKey;
 
-typedef struct {
-    s32 x0;
-    f32 x4, x8;
-    f32 xC, x10, x14, x18;
-} B030Out;
-typedef struct {
-    u8 pad[8];
-    f32 x8;
-    u8 padC[8];
-    f32 x14;
-} B030In;
-
-void func_0018b030(B030In *a, B030Out *b) {
-    f32 z;
-
-    b->x4 = a->x8;
-    b->x10 = a->x14;
-    z = 0.0f;
-    b->x18 = z;
-    b->x14 = z;
-    b->xC = z;
-    b->x8 = z;
-    b->x0 = (s32)a;
-}
-
-void func_0018b470(B030In *a, B030Out *b) {
-    f32 z;
-
-    b->x4 = a->x8;
-    b->x10 = a->x14;
-    z = 0.0f;
-    b->x18 = z;
-    b->x14 = z;
-    b->xC = z;
-    b->x8 = z;
-    b->x0 = (s32)a;
-}
-
 #include "data/types/nostrict_text_00180000_s6_11.h"
 
 /* VU0 */
