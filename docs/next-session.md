@@ -9,30 +9,32 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
-If this session starts before then (sessions 49 to 59 ran without it), do not ask for the Mac or wait on it: skip item 1, add every float change to docs/float-untested.md as
-untested, and do the static items. **From Monday 2026-10-26 on, ask for the Mac and PCSX2 at the start** (the connect
-card in the Claude desktop app) **and make item 1 the first thing**: six float builds are waiting for a boot.
+If this session starts before then (sessions 49 to 60 ran without it), do not ask for the Mac or wait on it: skip items 1
+and 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
+on, ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make item 1 the first
+thing**: six float builds are waiting for a boot. Item 3 also needs the Mac: the overlay files are in
+Downloads/kh1-test/ovl.
 
-## Where we stopped (end of session 59, 2026-10-24)
+## Where we stopped (end of session 60, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-59.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-60.
 - **Six default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
-  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default)**. docs/float-untested.md lists every change
-  since the last booted build (KH1_F29_N) and the switch that undoes each. **Session 59 released 4 names**
-  (`--no-fmt-read`: libc / libgraph / libcdvd debug message strings, low risk); session 34 released 19 (bisect order
-  `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`).
-- **Session 59 closed reach_check's two "Left" items** (docs/shiftable-plan.md "Session 59: reach_check"): jt-read
-  (an unbounded switch reads its table's words: 8 switches, 86 case entries newly analysed, float set unchanged)
-  and fmt-read (a clean format literal reaches its own bytes to the NUL: the four order-dependent libc strings
-  float, and the float set is now the same in every `--visit-seed 1..8` order). reach_check pins 1,352 names.
-- **Rule 2 is done for phase 4** (portability.md): session 59 added dma.h's scratchpad constants (PLAT_SPR_BASE /
-  END, PLAT_DMA_SPR) for src/util/heap.c and the GIF sender.  What stays direct (dkmovie.c's IPU stub, shadow.c's
-  CHCR bits, func_00262c78, the hand VU0 asm) is replaced whole by the port.
-- **docs/vita-port-plan.md** (new, session 59): phase 5's plan: each include/platform/ header on vitasdk, the
-  renderer (GIF parser, GS memory mirror, VU1 programs as GXM shaders, the VU0 asm rewritten in C), sound, movies
-  (MPEG-2: transcode or a software decoder), **the 12 MIPS overlays that must be decompiled for the port** (dktitle.x
-  first; wm.x and gb.x are large), u128 on 32-bit ARM (50 files), the fixed memory map and the data order pins, and
-  the bring-up order (a `-m32` host build with a null platform first).
+  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; session 60 changed no object: all 677 are
+  bit-identical to session 59's)**. docs/float-untested.md lists every change since the last booted build
+  (KH1_F29_N) and the switch that undoes each. Session 59 released 4 names (`--no-fmt-read`, low risk); session 34
+  released 19 (bisect order `--no-hix-join`, `--no-widen-heads`, `--no-likely-slot`).
+- **Session 60 started phase 5's host build** (docs/vita-port-plan.md §5.1): `make host-census` compiles the 512
+  game C files with `gcc -m32 -malign-double -DKH1_HOST`: **473 compile** (298 at the start; clang 18: 470). The
+  fixes are byte-identical on the PS2 build and are now rules for new C (portability.md rule 9): common.h's
+  `KH1_HOST` target and u64 as long long off the EE, u128 as `typedef kh1_s128 u128;` (a 16-byte struct off the
+  EE) with `KH1_Q(v)` constant stores (the game does no u128 arithmetic), `KH1_REG("$n")`, PlatSync / PlatSyncEi /
+  PlatBreak, lvalue cast defines. **The 39 files left all fail on inline MIPS asm** (118 VU0 macro statements in
+  32 files, 29 of them src/ppp/). `--link` with the data pieces and the null platform host/null/plat_null.c (98
+  stubs) leaves 561 symbols undefined, by kind in §5.1 (308 in the 39 files, 94 bss only symbols.ld defines, 36
+  direct sceVu0 calls ...).
+- **dktitle.x**: tools/ovl/inventory.py is ready (functions, main-ELF calls and data, code / data split;
+  `--selftest` on the main ELF finds every layout.tsv start). Not run: the file is on the Mac. §5.2 has the plan
+  to decompile it (toolchain check on 5-8 leaves first).
 - **Original source names** (docs/elf-notes.md): ttlib/ui_gauge.c, ttlib/ui.c, src/decode.c, src/sa_task.c, with
   their ranges; none below 0x001c08e8 so far.
 - **Helpers:** `python3 -I tools/shift/s50move/group.py src/DIR/NAME LO HI` drafts modules per flag mode,
@@ -42,10 +44,12 @@ card in the Claude desktop app) **and make item 1 the first thing**: six float b
   `tools/shift/s31types/s31_warndiff.py FILES` (compares with HEAD: commit-free check). Data definitions: compare
   `cut -f2 out/gen/data.tsv | sort` with the session's base (saved before the first edit). reach_check alone (40 s,
   no build): `python3 -I tools/shift/reach_check.py --elf SLPS_251.98 --overlays EMPTYDIR --out F.txt` (after a
-  `make shift`; the anchors come from out/shift/kh1-shift.linked.elf).
+  `make shift`; the anchors come from out/shift/kh1-shift.linked.elf). Host census: `make host-census`, then
+  `python3 -I tools/host/census.py --files asm` / `--show FILE`. A quick "did any object change" check: build
+  origin/main in a `git worktree` (symlink tools/toolchain, copy the ELF) and `cmp` every out/build .o.
   **`git fetch origin main` first**: the container's origin/main can be stale. A fresh container needs `apt-get
-  install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu` (after `dpkg --add-architecture i386`), `make
-  toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py before `fcheck.sh base`.
+  install libc6:i386 libstdc++5:i386 binutils-mips-linux-gnu gcc-multilib` (after `dpkg --add-architecture i386`),
+  `make toolchain`, the ELF, a plain `make shift` and tools/shift/data_owners.py before `fcheck.sh base`.
 
 ## What is left (9 functions)
 
@@ -55,11 +59,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 60 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 61 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s60 and /mnt/project-files/kh1-runtime/s60, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s61 and /mnt/project-files/kh1-runtime/s61, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -73,16 +77,14 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    `--no-fmt-read` first, then session 34's. Move what boots into docs/shiftable-plan.md and clear
    docs/float-untested.md. Note what the boot shows about the "(a guess)" modules and rename the ones it settles.
    Without the Mac: skip.
-2. **Phase 5 groundwork (static)**, from docs/vita-port-plan.md §5 step 1, the host build: start a `KH1_HOST`
-   (`-m32`, gcc or clang on Linux) configuration that compiles the game C off the EE without touching the PS2
-   build: a null src/vita/ (or src/host/) platform for every include/platform/ header, u128 as a 16-byte struct
-   under `#ifndef KH1_PS2` (check the 50 files for arithmetic on it), the `__asm__` uses guarded, the src/asm/
-   functions as stubs. Goal for the session: count what fails to compile, by cause, and fix the mechanical
-   causes in headers only (the PS2 build must stay byte-identical: `make check` after each commit). Record the
-   counts in docs/vita-port-plan.md.
-3. **Overlays (static, optional)**: inventory dktitle.x (the title screen overlay, the first one the port needs):
-   its functions, calls into the main ELF, data; plan how to decompile it against the overlay file (the same
-   toolchain? check with a few functions, as in session 1). Never commit overlay bytes.
+2. **Host build (static)**, docs/vita-port-plan.md §5.1 "Next for the host build": the opdma.c 96-bit pair under
+   `#ifdef KH1_PS2`; C equivalents (`#else`) for the VU0 asm, starting with the helpers several src/ppp/ files
+   share (`vcopymatrix`, `VU0_RAND`, the `H39_*` frame macros), each file still byte-identical on the PS2 build
+   (`make` after each edit) and compiling under `make host-census`; then generate host definitions for the 94
+   symbols.ld-only bss names. Record the new counts in §5.1.
+3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
+   `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
+   in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Without the Mac: skip.
 4. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-5. End with `make progress-update SESSION=60`, commit, open a PR, and refresh this prompt (keep the Mac note
+5. End with `make progress-update SESSION=61`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).
