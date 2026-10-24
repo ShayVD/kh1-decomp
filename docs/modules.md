@@ -1992,6 +1992,121 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings; new files
 checked with `-Wimplicit-function-declaration`.
 
+## Session 54: the c02 move, 0x0012, and 0x0011c768-0x00120000
+
+Session 54 moved 598 functions in eight commits.  No Mac: static checks
+only.  After it every C function of 0x0011c768-0x0024f2e0 is in a module
+except the VU0 routines in src/hand/vu0.c and the probes in
+src/anon/session1_probes.c (the hand asm func_00121f6c / func_00121fc4 in
+src/asm/text_0024e0a4.s stays too).  The names are read from the code and
+none is proved by a boot; each file's top comment says what it does and
+marks its guesses.
+
+**The c02 move** (first commit): func_0013cfe8 is a small stack VM (a
+bytecode interpreter: 16-bit ops, push / pop of sized values, int and
+float arithmetic, jumps, frames, and native calls through `vm->nat`), and
+its pushes / pops (func_0013cec8, func_0013cf28, func_0013cf78,
+func_0013cfc0) went with it into src/vm/stackvm.nostrict.c: all five
+match there under nostrict (the old default-flag h7 / auto copies of the
+pops match nostrict too).  With func_0013cfe8 gone, the register swaps of
+sessions 52 and 53 had nothing left to protect: func_00135ed0 and
+func_00136d38 joined src/obj/objdraw.nostrict.c, func_00143180 replaced its
+CONTEXT_ONLY copy in src/obj/objmove.nostrict.c, and func_001550a0 joined
+src/obj/hitreact.nostrict.c, each matching at once (prototype clashes
+handled with `__asm__` aliases and `#define F ((T) F)` views for that one
+function).  hand/nostrict/text_00130000_c02.c, hand/text_00130000_h7.c and
+auto/text_00130000.c are gone; D_0052AE98 is defined in
+src/game/partystat.c.
+
+| module | files | range | functions |
+|---|---|---|---|
+| the stack VM func_0013cfe8 and its stack helpers | src/vm/stackvm.nostrict.c | 0x0013cec8-0x0013daa8 | 5 |
+| the files on the disc: the name-hash table, read requests, loads with callbacks, the path builder, the disc set up at boot; D_004E4500, D_004E4528, D_004F3230, D_004F35B0 defined here | src/io/discfile.c, .nostrict.c | 0x00120000-0x00120bf8 | 24 |
+| vector and angle helpers | src/util/vecutil.c, .nofill.c, .nostrict.c | 0x00120bf8-0x00121b98 | 26 |
+| the main heap D_004F45B0 over D_00820000 and the scratchpad stack D_004F6EB8 at 0x70000000 | src/util/heap.c, .nostrict.c | 0x00121b98-0x001220e8 | 13 |
+| the game's phases: the frame updates, the resets, a room's load | src/game/gamephase.c | 0x001220e8-0x00122430 | 5 |
+| the scene lights D_002C5C80; D_004F6ED0 defined here | src/gfx/light.c, .nostrict.c | 0x00122430-0x00122dc8 | 13 |
+| the actors: the actor lists, lookups by id, the player D_002E26A0, the room's actors; D_004F71D0 defined here | src/obj/actor.c, .nostrict.c | 0x00122dc8-0x00124c68 | 44 |
+| the view and projection matrices, the field of view | src/camera/view.c | 0x00124c68-0x001252f8 | 9 |
+| the player's moves by state (a guess) | src/obj/plact.c, .nofill.c, .nostrict.c | 0x001252f8-0x001274c8 | 19 |
+| projected shadows (docs/renderer-spec.md) | src/gfx/shadow.c, .nostrict.c | 0x001274c8-0x00128c60 | 12 |
+| the object scripts' commands: the table at 0x002E2810 (225 entries) and the current-node helpers | src/vm/objscmd.c | 0x00128c60-0x0012b738 | 226 |
+| the object scripts: 64 nodes D_004F8310 running the stack VM | src/vm/objscript.c, .nostrict.c | 0x0012b738-0x0012bd30 | 11 |
+| effects started on objects through the effect manager D_0029B410 | src/obj/objfx.c, .nostrict.c | 0x0012bd30-0x0012ca38 | 12 |
+| the command menu and the action command (a guess) | src/game/cmdmenu.c, .nostrict.c, .nostrict_nofill.c, .nostrict_norcse.c | 0x0012ca38-0x00130000 | 57 |
+| sound control over the IOP driver: wrappers, the effect slots, the system sound func_0011d768, the music tracks, the banks | src/sound/sndctl.c | 0x0011c768-0x0011ecd8 | 84 |
+| the boot and the frame loop | src/game/mainloop.c, .nofill.c | 0x0011ecd8-0x0011ef10 | 4 |
+| the frame callback lists (func_0011ef10(prio, fn), 154 callers) | src/util/proc.c, .nostrict.c | 0x0011ef10-0x0011f370 | 12 |
+| the pads (platform code: libpad2, libdbc); D_004E44C8 defined here | src/pad/padread.c, .nostrict.c | 0x0011f370-0x0011fb38 | 8 |
+| GIF packet helpers | src/gfx/gifpkt.c | 0x0011fb38-0x0011fd30 | 4 |
+| the disc read queue | src/io/cdqueue.c, .nostrict.c | 0x0011fd30-0x00120000 | 6 |
+
+| chunk | commit |
+|---|---|
+| the c02 move | 06ecb43 |
+| 0x0012ca38-0x00130000 | afaa437 |
+| 0x0012b738-0x0012ca38 | 2a23c49 |
+| 0x00128c60-0x0012b738 | dcfe9b8 |
+| 0x00124c68-0x00128c60 | 1ff2772 |
+| 0x001220e8-0x00124c68 | f2f25da |
+| 0x00120000-0x001220e8 | 65b08c2 |
+| 0x0011c768-0x00120000 | 09af69e |
+
+**Data moved with its users** (8 definitions): seven went with deleted
+files and were put back at their user's extern line with the old ALIGNED
+(D_0052AE98, D_004F71D0, D_004F6ED0, D_004E44C8, D_004E4528, D_004F3230,
+D_004F35B0), and D_004E4500 moved on purpose out of
+hand/text_00110000_h30.c (which keeps other functions) into its user's
+module.  **D_004F71D0 was lost
+with no change to `make`**: the file that defined it went when its last
+function moved, `make` stayed byte-identical, and only the names check of
+out/gen/data.tsv and fcheck.sh (float_covered.txt and float_reach.txt both
+DIFF) caught it.  Run both after every chunk.
+
+**Traps.**
+- **Never `git checkout src` with a chunk in flight.**  It brings back the
+  old files but leaves the new modules (untracked), and `mod.py remove`
+  then reads out/gen/placements.tsv (which names the modules) and deletes
+  the modules' own definitions.  Redo the chunk from a clean tree: `make`
+  first so placements.tsv names the old files again.
+- **actor.h's `struct Actor`**: the auto files include actor.h, so a module
+  that takes auto functions has that `struct Actor`, and assemble.py
+  renames each hand file's own `struct Actor` (`Actor_<addr>`).  A hand
+  function that dereferences `D_002E26A0[0]` or `D_002E31B0.f0` then sees
+  actor.h's fields: cast at the use (`((O16 *)D_002E31B0.f0)->f370`).
+- **Prototypes against a definition above**: an m2c prototype with no
+  arguments (`M2C_UNK func_X();`, `s32 strlen(s32);`) or another return
+  type before the real definition: give the earlier user an `__asm__`
+  alias (`Obj53 *func_00123488_22dc8() __asm__("func_00123488");`) or an
+  unprototyped `extern s32 func_X();` when only the return kind matters.
+  A CONTEXT_ONLY copy must stay a definition: change the earlier
+  declaration, not the copy.
+- **m2c wrappers with no parameters** (`void func_0011c850(void) {
+  func_001ed2d8(); }` forwards a0-a3 unseen): callers below that pass
+  arguments fail with "too many arguments" once the definition is in the
+  same file.  Write the parameters (`void func_0011c850(s32 a, s32 b, s32
+  c)`); the code is the same.
+- **A function view of strlen loses the builtin**: `#define strlen ((u32
+  (*)(const char *)) strlen)` made func_00120930 8 bytes longer; a plain
+  prototype matches (the m2c user with `s32 strlen(s32)` got an alias).
+- **A data definition's alignment changes its users' code**: D_004E4500
+  (`char [0x20] aligned(8)`) as a plain extern changed func_00120930's
+  inline memcpy; the module now defines it with the old attribute.
+- **Local headers dropped again** (FVec4 from data/pieces/D_002C58A0.h in
+  hand/nostrict/text_00120000_h54.c): put the include back above the typedef.
+- The REG_EH_REGION note behind most "needs X defined above it" cases is
+  written up at func_0012e1b0 (src/game/cmdmenu.nostrict_nofill.c): a call
+  to a function defined earlier in the file gets the note, so reorg's live
+  scan continues past the call.
+
+**Nothing was reverted, and nothing new floats.**  After each commit:
+`make` byte-identical (6979 functions), `tools/shift/s37move/fcheck.sh`
+with float_covered.txt, float_reach.txt, the loaded bytes and the program
+headers the same as the base, the names of out/gen/data.tsv the same as at
+the start of the session, `s31_warndiff` 0 new warnings, the new files
+checked with `-Wimplicit-function-declaration` (none), and `make test`
+PASS at the end.
+
 ## Session 53: 0x0013 and 0x0014, the object and party code under the classes, 0x00130000-0x00150000
 
 Session 53 moved 632 functions in six commits.  No Mac: static checks
@@ -2312,27 +2427,26 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **The game segment is in modules from 0x00130000 to 0x0024f2e0** (session
-  53), except the VU0 routines in src/hand/vu0.c, two probes in
+- **The game segment is in modules from 0x0011c768 to 0x0024f2e0** (session
+  54), except the VU0 routines in src/hand/vu0.c, two probes in
   src/anon/session1_probes.c (func_0018ad70, func_001882f8; func_00137418
-  is a probe too), the unmatched func_001636d0 and the nine functions of
-  "Session 53", Left (c02 and the stack pops).  The functions still in
-  src/auto and src/hand lie in 0x001001f8-0x00130000
-  (out/gen/placements.tsv): 471 in 0x0012, 391 in 0x0011, 303 in 0x0010,
-  plus those nine and the VU0 routines.  Next is 0x0012 (from the top
-  down, as sessions 50 to 53 went), and the c02 move: take
-  func_0013cfe8 with func_0013cec8 and its stack pops (func_0013cf28,
-  func_0013cf78, func_0013cfc0) into one module and check whether
-  func_00135ed0, func_00136d38, func_00143180 and func_001550a0 can then
-  join objdraw / objmove / their neighbours (CONTEXT_ONLY copies where
-  the old order matters).  `python3 -I tools/shift/s50move/group.py
+  is a probe too), the unmatched func_001636d0 and the hand asm of
+  src/asm/ (func_00121f6c, func_00121fc4 in text_0024e0a4.s).  The
+  functions still in src/auto and src/hand lie in 0x001001f8-0x0011c768
+  (out/gen/placements.tsv): 273 in 0x0011 and 303 in 0x0010 (plus 2 VU0
+  routines there).  Next is 0x0011 from 0x0011c768 down (0x0011c118 /
+  0x0011c338 use the collision entries D_003044D8; 0x0011c5e8-0x0011c768
+  call the HDD / settings code func_002193b8 and func_0022bcb8, look at
+  them first), then 0x0010.  `python3 -I tools/shift/s50move/group.py
   src/DIR/NAME LO HI` drafts a range per flag mode; check that every new
   file compiled and its NEW DIFF lines, `mod.py remove` the functions,
   `make`, `tools/shift/data_owners.py`, fcheck.sh, compare out/gen/data.tsv's
   names with the base (every deleted file can take data definitions with
-  it), and scan the new files for implicit declarations (Sessions 50 to
-  53, Traps).  Group by what the functions do (`refs.py LO HI`: their
-  calls and data); leave whole-VU0 functions in place
+  it: check the deleted files' definitions with `git show HEAD:FILE`), and
+  scan the new files for implicit declarations (Sessions 50 to 54, Traps).
+  Group by what the functions do (`refs.py LO HI`: their calls and data;
+  inverting a whole-segment `refs.py 00100000 00272c70` gives each
+  function's callers); leave whole-VU0 functions in place
   (docs/matching-tips.md).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from

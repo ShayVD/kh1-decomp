@@ -24,6 +24,12 @@ rewrite matched code.
    with libvu0) and named libvu0 (docs/sdk.md): the next wrappers are
    include/platform/gs.h for func_00237018, FlushCache and sceGsSyncPath, and a
    vector maths header for the sceVu0 calls.
+   Session 54 found more platform code to wrap: src/pad/padread*.c (libpad2
+   and libdbc: scePad2Init, scePad2CreateSocket, scePad2GetButtonProfile,
+   sceDbcInit; scePcStart), src/io/discfile.c and src/io/cdqueue.c
+   (libcdvd: sceCdInit, sceCdRead, sceCdDiskReady, sceCdSearchFile;
+   sceSifInitRpc) for an `iop` / `cd` wrapper, and src/sound/sndctl.c, which
+   only calls src/sound/snd_rpc.c (already the platform file for sound).
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under
