@@ -215,6 +215,14 @@ rewrite matched code.
     callee's return type can change its same-file callers' code
     (func_00111130's did func_001111b0's), so only change the ones a caller
     reads.
+    Session 65: a call through a pointer (`w->cb()`, `D_xxx[i].fn()`) has
+    no name for argcheck to look up. `python3 -I tools/host/indcheck.py`
+    (clang syntax trees) lists them with the targets it can find (data
+    tables, the ELF's words, setters, parameters) and a READ table of the
+    ones read by hand; a call that matches only without the arguments the
+    EE leaves in a0-a3 keeps the EE's call in `#ifdef KH1_PS2` and passes
+    them on the host (objwin.c's close callback). Calls of libc / libm
+    builtins with missing arguments (asin(), nan()) show as CLANG rows.
 
 11. **No EE-only argument order or return class** (session 64). The EE passes integer
     arguments in a0-a7 and float ones in $f12-$f19, each its own sequence, and a 64-bit value in
@@ -243,6 +251,10 @@ rewrite matched code.
     func_0011fb78's a1 are s32 in their definitions now, which settles 9 callers, and 5 callers
     declare the u64 they pass); 12 declarations reordered with their calls and 13 host-order
     branches; class19.c's extra argument to func_00121b08 (which takes the f32 only).
+    abicheck reads the text; indcheck.py (session 65) compares the same classes from clang's syntax
+    trees, so it also sees headers, struct typedefs, `()` declarations, block-scope externs and every
+    m2c cast at a call, and an f32 an unprototyped call promotes to double. Run both after a new
+    declaration (indcheck prints only the rows to act on: SHORT, ABI, PROMO, CLANG).
 
 ## Known absolute addresses in matched code
 

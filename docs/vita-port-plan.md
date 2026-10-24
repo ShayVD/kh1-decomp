@@ -450,6 +450,60 @@ libc6-dbg:i386): it found func_0010c378 reading the SemaParam PlatIReferSemaStat
 (the null platform fills it now: no thread waits) and func_0011fb78 reading a u64 its callers
 passed as s32 (the abicheck class above). After the fixes 60 frames run with **0 errors**.
 
+### 5.1e Session 65: calls through pointers, libm, the null card, classes argcheck could not see
+
+Static only (the Mac was away). Every out/build object is bit-identical to session 64's (sha1 of all 677),
+kh1.elf byte-identical, so the float ELF's loaded bytes are unchanged (no row for float-untested.md).
+
+**tools/host/indcheck.py** (new; needs clang): reads each game file's clang syntax tree (`-ast-dump=json`,
+the census flags) instead of the text, so it sees what the regex tools cannot:
+
+- **Indirect calls** (portability.md rule 10): every call whose callee is not a function name after casts,
+  with the arguments it passes and what its callee expression reads. It resolves the targets from data
+  tables (the `.word` entries of src/data/*.s pieces, C initializers, and the user's ELF for pieces that
+  are `.incbin` bytes: an indexed array reads words from its start while they are functions or 0),
+  assignments of a function to data or to a typed struct field (`Record.field`), and functions passed as
+  arguments, followed through setters and parameters to a fixpoint (`@func#i`). Session 65: **242 rows:
+  74 OK** (every known target takes no more than the call passes), **8 READ** by hand (its READ table
+  says why), **47 OVERLAY** (only an overlay can set the pointer: no writer in src/, or a setter nothing
+  in the main ELF calls; 41 are vm_lib.c's hooks D_0037733C ... D_003773E8, all 0 in the ELF), 7 `?def`
+  (targets in assembly or the SDK: D_00351BC8 is PlatFlushCacheFn, D_00372750 the libvu0 matrix calls),
+  **93 `?`** (targets not resolved: struct callbacks set through code the tool does not follow, e.g. ppp
+  component tables, partyctl's cb44, mdlgs's GsTask list). The `?` rows that pass at least one argument
+  are typed by matched code and lower risk; read them when a host run reaches them.
+- **One real passthrough fixed**: func_0010ba98 (objwin.c, the window task) calls Win.cb at the close
+  (state 5) with nothing; on the EE a0 = a1 = the window, and the close callback that func_0010bd90
+  installs for a message window, msgwin.c's func_001cae20(id, win), frees the slot whose window is its
+  second argument. The host passes `(w, w)` (`#ifdef KH1_PS2` keeps the EE's call, which a `move a0,a1`
+  would change).
+- **Calls clang refuses**: a builtin called with fewer arguments than its prototype. func_001b9bf8
+  (gumisave.c) tail-jumps to asin with the caller's a0: it is `double f(double x) { return asin(x); }`
+  now (same code). func_00121550 (vecutil.nofill.c) called nan() with a0 left over; the SDK's nan
+  takes nothing, glibc's reads a tag string: the host passes `""` (`KH1_NAN_TAG`). The other CLANG rows are
+  files clang cannot parse (gcc nested functions in keshptail(x).nostrict.c and kethdraw.nostrict.c, a
+  draft's `$10` asm register): their indirect calls are not listed.
+- **Classes** (rule 11): every declaration a file sees (headers, struct typedefs, `()` declarations,
+  block-scope externs) and every m2c cast at a call, against the definition; and every f32 an
+  unprototyped call promotes to double where the definition takes f32 (0 found). abicheck.py had 0 left
+  but read definitions as text: `f32 (*pos)[4]` hid func_001655e0's, and casts it could not pair. Fixed
+  (all PS2 objects the same): func_001655e0's f32 3rd (journalmdl.c, partymdl.c, objmotion.nostrict.c's cast;
+  the calls reordered), func_00136428's cast in objdraw.nostrict.c (the f32 is the 5th: `(e, f, e->f394,
+  &v, s)`), the f32 return of void definitions in m2c casts (func_001195d8, func_00113518, func_0011c868,
+  func_0011c7a8: on x86 the caller would pop an empty x87 stack), the void cast of func_001779e8 (an f32
+  nobody pops), and mdlgs.nostrict.c's u64 for func_0015fd20's s32 (an `#ifdef KH1_PS2` cast: the EE's
+  `dsrl` needs the u64). Returns of i64 read as 32 bits are not counted (the low word on x86 and ARM).
+
+**The null platform's answers**: PlatMcSync answered 0 (busy) forever, so a memory-card request never
+ended; it answers 1 now with libmc's "no card detected" (-10) as the result (`cmd` is NULL in every
+call), PlatMcGetInfo writes type / free / format 0, and src/memcard/mcstep.c's steps take the default
+"no card" branch. PlatPadRead fails and leaves no button pressed (PlatPadGetState never answers 1, so
+padread.nostrict.c does not read). The fake-disc run: 120 frames, valgrind 60 frames 0 errors.
+
+**For the overlay session (5.2)**: the OVERLAY rows (the setters func_001c06c0 task.c, func_001468f8
+objreq.c, func_0012cab8 cmdmenu.c, D_00304B6C, vm_lib's hooks) and gumisave.c's two calls of the gummi
+overlay's entry with no arguments (func_001b9c10 / func_001b9c60: a0 is still FlushCache's 2 on the EE
+if the kernel keeps it, a1 what was left): check what each overlay passes and reads.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
