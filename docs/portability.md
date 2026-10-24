@@ -223,6 +223,11 @@ rewrite matched code.
     EE leaves in a0-a3 keeps the EE's call in `#ifdef KH1_PS2` and passes
     them on the host (objwin.c's close callback). Calls of libc / libm
     builtins with missing arguments (asin(), nan()) show as CLANG rows.
+    Session 66: no `?` row is left; a new indirect call that indcheck cannot
+    resolve gets a READ entry (or a RECORD_SETTERS / RECORD_TABLES /
+    FIELD_SAME line) before it is done. When the caller only forwards what it
+    was given, add the parameter and pass it: plctl.c's func_0013e558
+    takes `(o, dir)` because its class handlers read the direction from a1.
 
 11. **No EE-only argument order or return class** (session 64). The EE passes integer
     arguments in a0-a7 and float ones in $f12-$f19, each its own sequence, and a 64-bit value in

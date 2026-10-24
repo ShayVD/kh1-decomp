@@ -141,7 +141,15 @@ int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) {
     *(u32 **)((u8 *)client + 0x24) = null_server;
     return 0;
 }
-int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) { return 0; }
+/* The sound server's answer is word 0 of recv (src/sound/snd_rpc.c), which the game shares
+ * with send: unanswered, a call reads back its own request. The one answer the main ELF
+ * waits on is RPC 0x30 (func_001ed600), the event command func_001e8b50 polling until what
+ * RPC 0x2F (func_001ed5a8) started is ready: with no IOP it is ready at once (1). The other
+ * answers (RPCs 1, 0xF, 0x1F-0x22, 0x27, 30 ...) are not read by any caller. */
+int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) {
+    if (num == 0x30 && recv != 0 && rsize >= 4) *(u32 *)recv = 1;
+    return 0;
+}
 /* iop.h: the reboot and the module loads succeed (module id 1), PlatSifSyncIop 1 */
 int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 1; }
 int PlatSifLoadStartModule(const char *name, int arglen, const char *args, int *result) { return 1; }
@@ -167,6 +175,8 @@ int PlatMcRead(int fd, void *buf, int size) { return 0; }
 int PlatMcWrite(int fd, const void *buf, int size) { return 0; }
 int PlatMcMkdir(int port, int slot, const char *name) { return 0; }
 int PlatMcChdir(int port, int slot, const char *name, char *cur) { return 0; }
+/* the entry count is PlatMcSync's result: -10 here, so mcstep.c's func_00235228 stores
+ * count -1 and error 3 and never reads the table (PlatMcRead's count the same way) */
 int PlatMcGetDir(int port, int slot, const char *name, unsigned int mode, int maxent, void *table) { return 0; }
 int PlatMcDelete(int port, int slot, const char *name) { return 0; }
 int PlatMcFormat(int port, int slot) { return 0; }
@@ -183,7 +193,9 @@ int PlatDbcInit(void) { return 0; }
 int PlatPadInit(int mode) { return 0; }
 int PlatPadCreateSocket(void *param, void *addr) { return 0; }
 int PlatPadGetState(int socket) { return 0; }
-int PlatPadGetButtonProfile(int socket, void *profile) { return 0; }
+/* no pad: no profile (src/pad/padread.nostrict.c skips the read on < 0; PlatPadGetState
+ * never answers 1 anyway, so the profile, D_004E44C8, is not reached) */
+int PlatPadGetButtonProfile(int socket, void *profile) { return -1; }
 /* PlatPadGetState never answers 1 (stable), so src/pad/padread.nostrict.c does not read;
  * should it, the read fails and leaves no button pressed (the buttons are active low). */
 int PlatPadRead(int socket, u8 *data) {
