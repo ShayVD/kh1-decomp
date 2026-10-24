@@ -3,51 +3,6 @@
 #include "data/bss_0064.h"
 #include "data/bss_0065.h"
 
-typedef struct Pk { struct Pk *next; s32 type; } Pk;
-typedef struct { Pk *head; s32 pad; } Bk;
-typedef struct { s32 bits; Bk *tbl; } Ht;
-s32 *func_002378c8(Pk *, s32 *, s32);
-s32 *func_00237790(Pk *, s32 *, s32);
-s32 *func_00237d48(Pk *, s32 *, s32);
-s32 *func_00237ec0(Pk *, s32 *, s32);
-s32 *func_00266c08(s32);
-void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
-void func_00266f38(s32 *, s32 *);
-
-void func_00237f20(Ht *h, s32 *b0, s32 *b1, s32 a3, s32 a4) {
-    s32 *buf = b0;
-    s32 n = 1 << h->bits;
-    Bk *bk = h->tbl;
-    s32 *r, *q;
-    Pk *p;
-    s32 i;
-    for (i = 0; i < n; i++, bk++) {
-        if (bk->head != 0) {
-            p = bk->head;
-            do {
-                r = buf;
-                if (p->type == 2) r = func_002378c8(p, buf, a4);
-                else if (p->type == 1) r = func_00237790(p, buf, a4);
-                else if (p->type == 3) r = func_00237d48(p, buf, a4);
-                else if (p->type == 4) r = func_00237ec0(p, buf, 0);
-                if (r != buf) {
-                    *r |= 0x70000000;
-                    q = func_00266c08(2);
-                    *q |= 0x40;
-                    FlushCache(0);
-                    sceGsSyncPath(0, 0);
-                    func_00266f38(q, buf);
-                    buf = (buf == b0) ? b1 : b0;
-                }
-                if (p->next == 0) break;
-                p = p->next;
-            } while (p != 0);
-        }
-    }
-    sceGsSyncPath(0, 0);
-}
-
 typedef struct { s32 x, y, z, w; } I4b;
 typedef struct { u8 pad[0x60]; s32 c[4][4]; I4b p[4]; } Spr6;
 extern Spr6 D_00648900;
@@ -170,7 +125,6 @@ void func_0023a490(s32 a0, Btn *b, s32 x, s32 y, f32 f) {
         k += 22;
     }
 }
-
 
 typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
 typedef struct { s32 x, y, z, w; } __attribute__((aligned(16))) I4;

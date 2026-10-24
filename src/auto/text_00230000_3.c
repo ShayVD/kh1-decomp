@@ -18,15 +18,8 @@ extern M2C_UNK D_00651BE8; /* src/data/bss_0065.c: void *D_00651BE8[0x6] */
 extern M2C_UNK func_0023ceb0;
 extern s32 D_00454A24;
 s32 func_0011ef38(M2C_UNK *);
-s32 func_00237600(s32);
 s32 func_0023f0d8(s32, s32);
 s32 func_0023f250(s32, s32);
-
-void func_00237660(s32 arg0, s32 arg1, s32 arg2) {
-    M2C_FIELD(arg0, s32 *, 4) = arg1;
-    M2C_FIELD(arg0, s32 *, 0) = arg2;
-    func_00237600(arg0);
-}
 
 void func_0023c5a8(s32 arg0) {
     *(M2C_UNK *)((s8 *)&D_00651310 + (arg0 * 0xE0)) = 0;

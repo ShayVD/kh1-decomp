@@ -3,78 +3,6 @@
 #include "gfx/gspkt.h"
 
 typedef int u128 __attribute__((mode(TI)));
-s32 func_00266c08(s32);
-void func_00266f38(s32, u32);
-void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
-
-typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) V4;
-void func_002672f8(V4 *, void *, V4 *);
-void func_002674d0(V4 *, V4 *, f32);
-s32 func_00267ef0(V4 *, V4 *, V4 *);
-
-void func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
-    V4 v[3];
-    func_002672f8(&v[0], m, a);
-    func_002672f8(&v[1], m, b);
-    func_002672f8(&v[2], m, c);
-    func_002674d0(&v[0], &v[0], v[0].w);
-    func_002674d0(&v[1], &v[1], v[1].w);
-    func_002674d0(&v[2], &v[2], v[2].w);
-    func_00267ef0(&v[0], &v[1], &v[2]);
-}
-
-typedef struct { s32 x, y, z, w; } I4;
-
-f32 func_00237a48(I4 *out, void *m, V4 *in, s32 raw) {
-    V4 v;
-    f32 r;
-    func_002672f8(&v, m, in);
-    r = 1.0f / v.w;
-    v.x *= r;
-    v.y *= r;
-    v.z *= r;
-    if (raw == 0) {
-        out->x = v.x * 16.0f;
-        out->y = v.y * 16.0f;
-        out->z = v.z * 16.0f;
-        out->w = v.w * 16.0f;
-    } else {
-        out->z = v.z;
-        out->x = v.x * 16.0f;
-        out->y = v.y * 16.0f;
-        out->w = v.w;
-    }
-    return r;
-}
-
-typedef struct { u128 q[5]; } Item;
-void func_00267da0(u128 *, void *, u128 *, s32, s32);
-
-u128 *func_00237790(Item *src, u128 *dst, void *m) {
-    u128 out[2];
-    V4 a, b;
-    u128 *h;
-    func_002672f8(&a, m, (V4 *)&src->q[1]);
-    func_002672f8(&b, m, (V4 *)&src->q[2]);
-    func_002674d0(&a, &a, a.w);
-    func_002674d0(&b, &b, b.w);
-    if (func_00267ef0(&a, &b, &b)) {
-        return dst;
-    }
-    h = dst + 1;
-    *h = 0;
-    ((u64 *)h)[0] = 0x4004C00000008001;
-    ((u64 *)h)[1] = 0x5151;
-    func_00267da0(out, m, &src->q[1], 2, 1);
-    dst[2] = src->q[3];
-    dst[3] = out[0];
-    dst[4] = src->q[4];
-    dst[0] = 0;
-    dst[5] = out[1];
-    *(s32 *)dst = 0x10000005;
-    return dst + 6;
-}
 
 void func_002386c0(u128 *src, s32 n, u128 *buf) {
     s32 k = 2;
@@ -159,48 +87,5 @@ void func_00239558(s32 id, s32 x, s32 y, s32 c) {
     col.a = D_00650DD0 * 128.0f;
     D_006488F0 = func_001f0638(D_006488F0, 1, *(s32 *)&col, ((x * 16 + 0x7100) >> 4) - 0x700,
                                ((y * 16 + 0x7420) >> 4) - 0x740, func_00147808(func_001478c8(id)->x4));
-}
-
-typedef struct Pk74 { struct Pk74 *next; s32 type; } Pk74;
-typedef struct { Pk74 *head; s32 pad; } Bk74;
-typedef struct { s32 bits; Bk74 *tbl; } Ht74;
-s32 *func_002378c8(Pk74 *, s32 *, s32);
-s32 *func_00237d48(Pk74 *, s32 *, s32);
-s32 *func_00237ec0(Pk74 *, s32 *, s32);
-
-void func_002380c0(Ht74 *h, s32 *b0, s32 *b1, s32 a3, s32 a4) {
-    s32 *buf = b0;
-    s32 n = 1 << h->bits;
-    Bk74 *bk = h->tbl;
-    s32 *r, *q, *prev, *last;
-    Pk74 *p;
-    s32 i;
-    for (i = 0; i < n; i++, bk++) {
-        last = 0;
-        if (bk->head != 0) {
-            p = bk->head;
-            r = buf;
-            do {
-                prev = r;
-                if (p->type == 2) r = func_002378c8(p, r, a4);
-                else if (p->type == 1) r = (s32 *)func_00237790((Item *)p, (u128 *)r, (void *)a4);
-                else if (p->type == 3) r = func_00237d48(p, r, a4);
-                else if (p->type == 4) r = func_00237ec0(p, r, 0);
-                if (prev != r) last = prev;
-                if (p->next == 0) break;
-                p = p->next;
-            } while (1);
-            if (r != buf) {
-                *last |= 0x70000000;
-                q = (s32 *)func_00266c08(2);
-                *q |= 0x40;
-                FlushCache(0);
-                sceGsSyncPath(0, 0);
-                func_00266f38((s32)q, (u32)buf);
-                buf = (buf == b0) ? b1 : b0;
-            }
-        }
-    }
-    sceGsSyncPath(0, 0);
 }
 #include "data/bss_0064_mixed.h"
