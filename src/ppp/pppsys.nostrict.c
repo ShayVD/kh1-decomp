@@ -42,7 +42,7 @@ extern V4A D_006160C0[4];
  * text_00170000_h38.c; both match without strict aliasing). */
 void func_00180280(void *o) {
     V4A b, a, c;
-    func_00182870();
+    func_00182870(o);
     PlatVu0MulMatrix(D_00615FC0, D_00615EB0, D_00615E70);
     PlatVu0MulMatrix(D_00616080, D_00616040, D_00615FC0);
     a.v.x = D_00615FC0[1].v.x;

@@ -65,7 +65,7 @@ void func_0014c530(W8Act *a) {
 void func_0014c580(void *arg0) {
     void *temp_v0;
 
-    if (func_0014c4a8() != 0) {
+    if (func_0014c4a8(arg0) != 0) {
         temp_v0 = M2C_FIELD(arg0, void **, 0x148);
         M2C_FIELD(temp_v0, s64 *, 0x100) = (s64) (M2C_FIELD(temp_v0, s64 *, 0x100) | ((s64) 0x8000 << 0x11));
     }

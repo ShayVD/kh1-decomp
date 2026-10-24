@@ -210,8 +210,8 @@ typedef struct { u8 pad[0x14]; s32 x14; W34Prm *x18; u8 pad1c[0x14]; s32 x30; } 
 typedef struct { u8 pad[0x40]; f32 x40; u8 pad44[0x14c - 0x44]; W34Eff *x14c; } W34EObj;
 typedef struct { u8 pad[8]; s32 x8; f32 xc; u8 pad10[0x10]; s32 x20; f32 x24; f32 x28; u8 pad2c[0x60 - 0x2c]; s32 *x60; s32 x64; u8 pad68[0x94 - 0x68]; f32 x94; s32 x98; } W34Prt;
 #define func_0014a4a8 ((void *(*)()) func_0014a4a8)
-W34Prt *func_0014a908(W34EObj *o) {
-    W34Prt *r = func_0014a4a8(o);
+W34Prt *func_0014a908(W34EObj *o, u32 m, B4D *d) {
+    W34Prt *r = func_0014a4a8(o, m, d);
     if (o->x14c) {
         if (r->x20 == 48) {
             W34Prm *p = o->x14c->x18;

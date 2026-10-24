@@ -70,8 +70,8 @@ M2C_UNK func_0024f318(s32, M2C_UNK *, s32, M2C_UNK, M2C_UNK *);
 extern M2C_UNK D_004E4A00;
 extern s32 D_002C5C30;
 #define func_001200f8 ((s32 (*)()) func_001200f8)
-void func_00120190(void) {
-    func_0024f318(func_001200f8(), &D_004E4A00, D_002C5C30, 0x10, &func_00120170);
+void func_00120190(s32 arg0) {
+    func_0024f318(func_001200f8(arg0), &D_004E4A00, D_002C5C30, 0x10, &func_00120170);
 }
 #undef func_001200f8
 

@@ -68,8 +68,8 @@ s32 func_00147840(s32 arg0) {
 /* func_00147860 (from auto/text_00140000_1.c). */
 extern s32 D_00547BA4;
 #define func_00147840 ((void *(*)()) func_00147840)
-s32 func_00147860(void) {
-    return D_00547BA4 + (M2C_FIELD(func_00147840(), s16 *, 6) * 0x16);
+s32 func_00147860(s32 arg0) {
+    return D_00547BA4 + (M2C_FIELD(func_00147840(arg0), s16 *, 6) * 0x16);
 }
 #undef func_00147840
 

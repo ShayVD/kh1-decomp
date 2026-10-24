@@ -138,7 +138,7 @@ s32 *func_001804d0(s32 arg0, s32 arg1) {
     s32 var_a0;
     s32 var_a1;
 
-    var_v1 = func_001803b8();
+    var_v1 = func_001803b8(arg0);
     var_a1 = 4;
     do {
         temp_v0 = *var_v1;
@@ -1078,7 +1078,7 @@ extern s32 D_00615E60;
 #define func_00182368 ((M2C_UNK (*)()) func_00182368)
 void func_00183840(s32 arg0) {
     D_00615E60 = arg0;
-    func_00182368();
+    func_00182368(arg0);
     func_001837a8(arg0);
     func_00182ec0(arg0);
 }

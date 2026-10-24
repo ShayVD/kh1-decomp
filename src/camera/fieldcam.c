@@ -313,11 +313,11 @@ void func_00177900(s32 arg0, M2C_UNK *arg1, f32 fparg0) {
 /* func_001779e8 (from auto/text_00170000_12.c). */
 s32 func_00177488(M2C_UNK *, void *, void *);
 #define func_00120bf8 ((M2C_UNK (*)(M2C_UNK *)) func_00120bf8)
-#define func_00177900 ((M2C_UNK (*)()) func_00177900)
+#define func_00177900 ((M2C_UNK (*)(void *, s32, f32)) func_00177900)
 #define D_00362670 (*(M2C_UNK (*)) &D_00362670)
-void func_001779e8(void *arg0, s32 arg1) {
+void func_001779e8(void *arg0, s32 arg1, f32 fparg0) {
     s32 sp[8];
-    func_00177900();
+    func_00177900(arg0, arg1, fparg0);
     PlatVu0CopyVector(sp, &D_00362670);
     M2C_FIELD(sp, f32 *, 0x0) = M2C_FIELD(sp, f32 *, 0x8) = 0.0f;
     PlatVu0ApplyMatrix(sp, (*(s32 *)&D_002E26A0) + 0xD0, sp);

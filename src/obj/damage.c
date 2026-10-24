@@ -446,7 +446,7 @@ void func_001358b8(Actor *arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0->unk15C;
-    func_00167ac0(temp_s0, func_00135888(), arg1 & 0xFFFF);
+    func_00167ac0(temp_s0, func_00135888(arg0, arg1), arg1 & 0xFFFF);
 }
 #undef func_00135888
 
@@ -457,7 +457,7 @@ void func_001358f8(Actor *arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0->unk15C;
-    func_00167fd0(temp_s0, func_00135888(), arg1 & 0xFFFF);
+    func_00167fd0(temp_s0, func_00135888(arg0, arg1), arg1 & 0xFFFF);
 }
 #undef func_00135888
 
@@ -468,7 +468,7 @@ s32 func_00135938(Actor *arg0, s32 arg1) {
     s32 temp_s0;
 
     temp_s0 = arg0->unk15C;
-    return func_00167978(temp_s0, func_00135888(), arg1 & 0xFFFF);
+    return func_00167978(temp_s0, func_00135888(arg0, arg1), arg1 & 0xFFFF);
 }
 #undef func_00135888
 

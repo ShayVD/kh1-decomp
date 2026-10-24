@@ -313,7 +313,7 @@ s32 func_00131b08(void *arg0) {
     s32 var_v0;
 
     var_v0 = 0;
-    if (func_00131ab0() != 0) {
+    if (func_00131ab0(arg0) != 0) {
         var_v0 = M2C_FIELD(arg0, s32 *, 0x178) == 0;
     }
     return var_v0;

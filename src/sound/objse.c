@@ -291,7 +291,7 @@ void func_001577a0(E551670 *e) {
 M2C_UNK func_00157818(s32, s32);
 #define func_00157560 ((s32 (*)()) func_00157560)
 void func_00157910(s32 arg0, s32 arg1, s32 arg2) {
-    if (func_00157560() < arg2) {
+    if (func_00157560(arg0) < arg2) {
         func_00157818(arg0, arg1);
     }
 }

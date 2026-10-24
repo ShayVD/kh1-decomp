@@ -40,10 +40,10 @@ void func_00124c68(f32 fparg0) {
 }
 
 /* func_00124ce0 (from auto/text_00120000.c). */
-#define func_00124c68 ((M2C_UNK (*)()) func_00124c68)
-void func_00124ce0(void) {
+#define func_00124c68 ((M2C_UNK (*)(f32)) func_00124c68)
+void func_00124ce0(f32 fparg0) {
     D_004F77E4 = D_002E27A0;
-    func_00124c68();
+    func_00124c68(fparg0);
 }
 #undef func_00124c68
 

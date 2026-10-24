@@ -445,8 +445,8 @@ s32 func_00138988(W6Unit *u) {
 
 /* func_001389c0 (from auto/text_00130000.c). */
 #define func_00138988 ((s32 (*)()) func_00138988)
-s32 func_001389c0(void) {
-    return func_00138988() == 4;
+s32 func_001389c0(W6Unit *u) {
+    return func_00138988(u) == 4;
 }
 #undef func_00138988
 
@@ -459,7 +459,7 @@ s32 func_001389e8(void *arg0) {
     if (!((u32) (M2C_FIELD(arg0, s32 *, 0x164) - 0x48) >= 0x23U)) {
         return var_v0;
     }
-    var_v0 = func_00138988() != 0;
+    var_v0 = func_00138988(arg0) != 0;
     return var_v0;
 }
 #undef func_00138988

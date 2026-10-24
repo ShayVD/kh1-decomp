@@ -126,7 +126,7 @@ s32 func_00137618(s32 arg0) {
     s32 var_s1;
 
     var_s1 = 0;
-    if (func_001375f0() != 0) {
+    if (func_001375f0(arg0) != 0) {
         var_s1 = func_001375d8(arg0) == 0;
     }
     return var_s1;

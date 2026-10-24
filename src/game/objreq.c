@@ -147,8 +147,8 @@ W8S78 *func_001471e8(s32 a, s32 b) {
 
 /* func_00147240 (from auto/text_00140000_2.c). */
 #define func_001471e8 ((s32 (*)()) func_001471e8)
-s32 func_00147240(void) {
-    return func_001471e8() != 0;
+s32 func_00147240(s32 arg0, s32 arg1) {
+    return func_001471e8(arg0, arg1) != 0;
 }
 #undef func_001471e8
 
@@ -190,7 +190,7 @@ M2C_UNK func_0011d350(s32, s32);
 void func_00147338(s32 arg0, s32 arg1) {
     s32 temp_v0;
 
-    temp_v0 = func_001471e8();
+    temp_v0 = func_001471e8(arg0, arg1);
     if (temp_v0 != 0) {
         func_0011d350(arg0, arg1);
         func_00147260(temp_v0);

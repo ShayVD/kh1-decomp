@@ -239,8 +239,8 @@ f32 func_00121748(f32 *a, f32 *b) {
 /* func_00121840 (from auto/text_00120000.c). */
 M2C_UNK func_0026b978(f32);
 #define func_00121748 ((f32 (*)()) func_00121748)
-void func_00121840(void) {
-    func_0026b978(func_00121748());
+void func_00121840(f32 *a, f32 *b) {
+    func_0026b978(func_00121748(a, b));
 }
 #undef func_00121748
 

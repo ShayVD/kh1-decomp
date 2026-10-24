@@ -158,8 +158,8 @@ s32 func_00130190(s32 arg0, s32 arg1) {
 
 /* func_001301d8 (from auto/text_00130000_13.c). */
 #define func_00130070 ((s32 (*)()) func_00130070)
-s32 func_001301d8(void *arg0) {
-    return *(M2C_UNK *)((s32) (((func_00130070() & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 4)));
+s32 func_001301d8(void *arg0, u32 v, s32 a2, s32 a3) {
+    return *(M2C_UNK *)((s32) (((func_00130070(arg0, v, a2, a3) & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 4)));
 }
 #undef func_00130070
 
@@ -221,11 +221,11 @@ W6Ent *func_001302d0(W6Obj *o, u32 flags, f32 a, f32 b) {
 }
 
 /* func_00130340 (from hand/text_00130000_h6.c). */
-#define func_00130270 ((s32 (*)(W6Obj *o)) func_00130270)
-W6Ent *func_00130340(W6Obj *o, f32 x) {
+#define func_00130270 ((s32 (*)(W6Obj *o, s32)) func_00130270)
+W6Ent *func_00130340(W6Obj *o, s32 arg1, f32 x) {
     W6Ent *e;
     o->count = 0;
-    e = func_001302d0(o, func_00130270(o), 0.0f, x);
+    e = func_001302d0(o, func_00130270(o, arg1), 0.0f, x);
     o->u160.f.b0 = 1;
     return e;
 }

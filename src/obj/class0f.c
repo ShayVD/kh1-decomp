@@ -96,8 +96,8 @@ s32 func_0015d538(void *arg0) {
 
 /* func_0015d540 (from auto/text_00150000.c). */
 #define func_0015d1d0 ((M2C_UNK (*)()) func_0015d1d0)
-s32 func_0015d540(void) {
-    func_0015d1d0();
+s32 func_0015d540(ObjD1 *a, f32 *v) {
+    func_0015d1d0(a, v);
     return 0;
 }
 #undef func_0015d1d0

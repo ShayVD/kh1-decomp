@@ -84,6 +84,14 @@ def call_args(s, i):
     return None
 
 
+def enclosing_ret(s, pos):
+    """The return type of the function definition that contains pos (None if not found)."""
+    last = None
+    for m in DEF_RX.finditer(s, 0, pos):
+        last = m
+    return last.group(1).strip() if last else None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tsv")
@@ -127,7 +135,7 @@ def main():
                 continue
             n = call_args(s, m.end() - 1)
             pn, var, ret, df = defs[name]
-            if n is not None and n < pn and df != f:
+            if n is not None and n < pn:
                 rows.append(("args", f, s.count("\n", 0, m.start()) + 1, name, n, pn, df))
     voids = {n for n, d in defs.items() if d[2] == "void"}
     for f, s in sorted(srcs.items()):
@@ -141,6 +149,16 @@ def main():
                 # `if (f(...))` and `g(f(...))` are uses; `((f(...)` is most likely a cast's
                 if re.search(r"\(\s*\($", before):
                     continue
+                # a statement after `case X:`, `default:` or a label is not a use
+                seg = before[max(before.rfind(";"), before.rfind("{"), before.rfind("}")) + 1:].strip()
+                if re.match(r"(case\b[^?]*|default|[A-Za-z_]\w*)\s*:$", seg):
+                    continue
+                line_start = s.rfind("\n", 0, m.start()) + 1
+                line = s[line_start:s.find("\n", m.start())]
+                if re.match(r"[A-Za-z_][^=]*;\s*$", line) and not re.match(r"(return|else|do)\b", line):
+                    continue  # a prototype
+                if before.endswith("return") and enclosing_ret(s, m.start()) == "void":
+                    continue  # `return f();` in a void function passes nothing on
                 rows.append(("ret", f, s.count("\n", 0, m.start()) + 1, name, "value used", "void", defs[name][3]))
     for r in rows:
         print("\t".join(str(x) for x in r))

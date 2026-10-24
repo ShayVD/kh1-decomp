@@ -342,8 +342,8 @@ r0:
 typedef struct S4c { u8 pad[0x4c]; u16 f4c; } S4c;
 typedef struct S130 { u8 pad[0x130]; S4c *p; } S130;
 #define func_00123488 ((void *(*)()) func_00123488)
-s32 func_00123618(void) {
-    S130 *p = func_00123488();
+s32 func_00123618(u32 id) {
+    S130 *p = func_00123488(id);
     if (p) return p->p->f4c;
     return 255;
 }
@@ -354,7 +354,7 @@ s32 func_00123618(void) {
 void func_00123648(s32 arg0, s32 arg1) {
     s32 *temp_v0;
 
-    temp_v0 = func_00123488();
+    temp_v0 = func_00123488(arg0);
     *temp_v0 |= 1 << arg1;
 }
 #undef func_00123488
@@ -364,7 +364,7 @@ void func_00123648(s32 arg0, s32 arg1) {
 void func_00123680(s32 arg0, s32 arg1) {
     s32 *temp_v0;
 
-    temp_v0 = func_00123488();
+    temp_v0 = func_00123488(arg0);
     *temp_v0 &= ~(1 << arg1);
 }
 #undef func_00123488
@@ -372,7 +372,7 @@ void func_00123680(s32 arg0, s32 arg1) {
 /* func_001236c0 (from auto/text_00120000_3.c). */
 #define func_00123488 ((s32 *(*)()) func_00123488)
 s32 func_001236c0(s32 arg0, s32 arg1) {
-    return *func_00123488() & (1 << arg1);
+    return *func_00123488(arg0) & (1 << arg1);
 }
 #undef func_00123488
 
@@ -398,7 +398,7 @@ void func_001236f8(void *arg0) {
 /* func_00123760 (from auto/text_00120000_4.c). */
 #define func_001236f8 ((M2C_UNK (*)()) func_001236f8)
 void func_00123760(void *arg0) {
-    func_001236f8();
+    func_001236f8(arg0);
     M2C_FIELD(arg0, s32 *, 0) = 0;
     M2C_FIELD(arg0, s32 *, 0x374) = 0;
 }
@@ -549,7 +549,7 @@ void func_001238d0(Act53 *o, V53 *p) {
 #define func_001238d0 ((M2C_UNK (*)(s32, s32)) func_001238d0)
 #define func_00123488 ((s32 (*)()) func_00123488)
 void func_00123a88(s32 arg0, s32 arg1) {
-    func_001238d0(func_00123488(), arg1);
+    func_001238d0(func_00123488(arg0), arg1);
 }
 #undef func_001238d0
 #undef func_00123488
@@ -560,7 +560,7 @@ void func_00123a88(s32 arg0, s32 arg1) {
 void func_00123ab8(s32 arg0, s32 arg1) {
     void *temp_v0;
 
-    temp_v0 = func_00123488();
+    temp_v0 = func_00123488(arg0);
     M2C_FIELD(temp_v0, s64 *, 0x370) = (s64) (M2C_FIELD(temp_v0, s64 *, 0x370) | ((s64) 0x8000 << 0x1D));
     PlatVu0CopyVector(temp_v0 + 0x30, arg1);
     func_00136d38(temp_v0);
@@ -571,7 +571,7 @@ void func_00123ab8(s32 arg0, s32 arg1) {
 /* func_00123b10 (from auto/text_00120000_9.c). */
 #define func_00123488 ((s32 (*)()) func_00123488)
 void func_00123b10(s32 arg0, s32 arg1) {
-    PlatVu0CopyVector(func_00123488() + 0x40, arg1);
+    PlatVu0CopyVector(func_00123488(arg0) + 0x40, arg1);
 }
 #undef func_00123488
 
@@ -621,10 +621,10 @@ void func_001247e8(Obj123 *o) {
 /* func_001248e8 (from auto/text_00120000.c). */
 #define func_001247e8 ((M2C_UNK (*)(s32)) func_001247e8)
 #define func_00123488 ((s32 (*)()) func_00123488)
-void func_001248e8(void) {
+void func_001248e8(u32 id) {
     s32 temp_v0;
 
-    temp_v0 = func_00123488();
+    temp_v0 = func_00123488(id);
     if (temp_v0 != 0) {
         func_001247e8(temp_v0);
     }

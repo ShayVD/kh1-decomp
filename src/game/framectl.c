@@ -149,7 +149,7 @@ M2C_UNK func_00111170(s32);
 s32 func_00111090();
 #define func_0010f658 ((M2C_UNK (*)()) func_0010f658)
 void func_0010f8d0(s32 arg0) {
-    func_0010f658();
+    func_0010f658(arg0);
     if (func_00111090() != 0) {
         func_00111170(arg0);
     }

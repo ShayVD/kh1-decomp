@@ -268,7 +268,7 @@ s32 func_0014ee88(Ob88 *o) {
 s32 func_0014efe0(s32 arg0, s32 arg1) {
     s32 var_v0;
 
-    if (!((arg1 <= 0) || (var_v0 = 1, (((func_0014ee88() >> (arg1 - 1)) & 1) == 0)))) {
+    if (!((arg1 <= 0) || (var_v0 = 1, (((func_0014ee88(arg0) >> (arg1 - 1)) & 1) == 0)))) {
         return var_v0;
     }
     var_v0 = 0;

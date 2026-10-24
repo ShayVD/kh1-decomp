@@ -454,8 +454,8 @@ s32 func_00150cb0(void *arg0) {
 
 /* func_00150cb8 (from auto/text_00150000.c). */
 #define func_00150af0 ((M2C_UNK (*)()) func_00150af0)
-s32 func_00150cb8(void) {
-    func_00150af0();
+s32 func_00150cb8(W9Ent_50af0 *e, f32 *v) {
+    func_00150af0(e, v);
     return 0;
 }
 #undef func_00150af0
