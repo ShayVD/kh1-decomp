@@ -35,12 +35,12 @@ s32 *func_00266c08(s32);
 void func_00266f38(s32 *, s32 *);
 void FlushCache(s32);
 s32 sceGsSyncPath(s32, s32);
-void func_002672f8(V4 *, void *, V4 *);
-void func_002674d0(V4 *, V4 *, f32);
-void func_00267560(V4 *, void *, f32);
-void func_002675f0(V4 *, void *);
-void func_00267da0(void *, void *, u128 *, s32, s32);
-s32 func_00267ef0(V4 *, V4 *, V4 *);
+void sceVu0ApplyMatrix(V4 *, void *, V4 *);
+void sceVu0DivVectorXYZ(V4 *, V4 *, f32);
+void sceVu0ScaleVector(V4 *, void *, f32);
+void sceVu0FTOI0Vector(V4 *, void *);
+void sceVu0RotTransPersN(void *, void *, u128 *, s32, s32);
+s32 sceVu0ClipScreen3(V4 *, V4 *, V4 *);
 /* Two parameters (drawlist.nostrict.c), but func_00237f20 passes a third 0. */
 u128 *func_00237ec0(u128 *src, u128 *dst, s32);
 
@@ -54,13 +54,13 @@ CONTEXT_ONLY void func_00237680(DrawList *h, DrawNode *node, s32 idx) {
 
 s32 func_00237548(V4 *a, V4 *b, V4 *c, void *m) {
     V4 v[3];
-    func_002672f8(&v[0], m, a);
-    func_002672f8(&v[1], m, b);
-    func_002672f8(&v[2], m, c);
-    func_002674d0(&v[0], &v[0], v[0].w);
-    func_002674d0(&v[1], &v[1], v[1].w);
-    func_002674d0(&v[2], &v[2], v[2].w);
-    return func_00267ef0(&v[0], &v[1], &v[2]);
+    sceVu0ApplyMatrix(&v[0], m, a);
+    sceVu0ApplyMatrix(&v[1], m, b);
+    sceVu0ApplyMatrix(&v[2], m, c);
+    sceVu0DivVectorXYZ(&v[0], &v[0], v[0].w);
+    sceVu0DivVectorXYZ(&v[1], &v[1], v[1].w);
+    sceVu0DivVectorXYZ(&v[2], &v[2], v[2].w);
+    return sceVu0ClipScreen3(&v[0], &v[1], &v[2]);
 }
 
 /* An else-if chain in the order 2, 3, 1 with the last arm through a block-local
@@ -81,7 +81,7 @@ s32 func_002376c8(DrawList *h, Node *n, void *m) {
         p = t;
     }
     s = 1 << h->bits;
-    func_002672f8(&v, m, p);
+    sceVu0ApplyMatrix(&v, m, p);
     r = s - v.w / 3000.0f * s;
     func_00237680(h, (DrawNode *)n, r);
     return r;
@@ -91,18 +91,18 @@ u128 *func_00237790(Item *src, u128 *dst, void *m) {
     u128 out[2];
     V4 a, b;
     u128 *h;
-    func_002672f8(&a, m, (V4 *)&src->q[1]);
-    func_002672f8(&b, m, (V4 *)&src->q[2]);
-    func_002674d0(&a, &a, a.w);
-    func_002674d0(&b, &b, b.w);
-    if (func_00267ef0(&a, &b, &b)) {
+    sceVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
+    sceVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
+    sceVu0DivVectorXYZ(&a, &a, a.w);
+    sceVu0DivVectorXYZ(&b, &b, b.w);
+    if (sceVu0ClipScreen3(&a, &b, &b)) {
         return dst;
     }
     h = dst + 1;
     *h = 0;
     ((u64 *)h)[0] = 0x4004C00000008001;
     ((u64 *)h)[1] = 0x5151;
-    func_00267da0(out, m, &src->q[1], 2, 1);
+    sceVu0RotTransPersN(out, m, &src->q[1], 2, 1);
     dst[2] = src->q[3];
     dst[3] = out[0];
     dst[4] = src->q[4];
@@ -116,20 +116,20 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
     Q4 out[3];
     V4 a, b, c;
     u128 *h;
-    func_002672f8(&a, m, (V4 *)&src->q[1]);
-    func_002672f8(&b, m, (V4 *)&src->q[2]);
-    func_002672f8(&c, m, (V4 *)&src->q[3]);
-    func_002674d0(&a, &a, a.w);
-    func_002674d0(&b, &b, b.w);
-    func_002674d0(&c, &c, c.w);
-    if (func_00267ef0(&a, &b, &c)) {
+    sceVu0ApplyMatrix(&a, m, (V4 *)&src->q[1]);
+    sceVu0ApplyMatrix(&b, m, (V4 *)&src->q[2]);
+    sceVu0ApplyMatrix(&c, m, (V4 *)&src->q[3]);
+    sceVu0DivVectorXYZ(&a, &a, a.w);
+    sceVu0DivVectorXYZ(&b, &b, b.w);
+    sceVu0DivVectorXYZ(&c, &c, c.w);
+    if (sceVu0ClipScreen3(&a, &b, &c)) {
         return dst;
     }
     h = dst + 1;
     *h = 0;
     ((u64 *)h)[0] = 0x6025C00000008001;
     ((u64 *)h)[1] = 0x414141;
-    func_00267da0(out, m, &src->q[1], 3, 0);
+    sceVu0RotTransPersN(out, m, &src->q[1], 3, 0);
     out[0].i[3] = 0;
     dst[2] = src->q[4];
     out[1].i[3] = 0;
@@ -147,7 +147,7 @@ u128 *func_002378c8(Item7 *src, u128 *dst, void *m) {
 f32 func_00237a48(I4 *out, void *m, V4 *in, s32 raw) {
     V4 v;
     f32 r;
-    func_002672f8(&v, m, in);
+    sceVu0ApplyMatrix(&v, m, in);
     r = 1.0f / v.w;
     v.x *= r;
     v.y *= r;
@@ -201,8 +201,8 @@ u128 *func_00237b30(ObjB *o, u128 *dst, void *m) {
         pi = iv;
         pf = f;
         for (i = 0; i < 3; i++) {
-            func_00267560(&t1, pu, *pf);
-            func_002675f0(&t2, pn);
+            sceVu0ScaleVector(&t1, pu, *pf);
+            sceVu0FTOI0Vector(&t2, pn);
             pf++; pu++;
             dst[k++] = *(u128 *)&t1;
             dst[k++] = *(u128 *)&t2;
@@ -238,8 +238,8 @@ u128 *func_00237d48(ObjC *o, u128 *dst, void *m) {
     i = 2;
     d = dst + 3;
     for (; i >= 0; i--) {
-        func_00267560(p1, pu++, func_00237a48(&iv, m, pv++, 1));
-        func_002675f0(p2, pn); pn++;
+        sceVu0ScaleVector(p1, pu++, func_00237a48(&iv, m, pv++, 1));
+        sceVu0FTOI0Vector(p2, pn); pn++;
         *d++ = *(u128 *)&t1;
         *d++ = *(u128 *)&t2;
         *d++ = *(u128 *)&iv;
@@ -347,8 +347,8 @@ void func_00238258(DrawList *h, s32 a1, u128 *dst, s32 a3, void *m) {
                     d = o + 1;
                     ((u64 *)o)[1] = p->t1;
                     for (j = 0; j < 3; j++) {
-                        func_00267560((V4 *)&t1, pc, func_00237a48((I4 *)&t0, m, (V4 *)pv, 1));
-                        func_002675f0((V4 *)&t2, pn);
+                        sceVu0ScaleVector((V4 *)&t1, pc, func_00237a48((I4 *)&t0, m, (V4 *)pv, 1));
+                        sceVu0FTOI0Vector((V4 *)&t2, pn);
                         pv++; pc++; pn++;
                         { u128 x = t1, y = t2, z;
                         *d++ = x;

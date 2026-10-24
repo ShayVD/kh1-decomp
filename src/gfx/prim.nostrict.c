@@ -11,10 +11,10 @@ typedef int u128 __attribute__((mode(TI)));
 typedef f32 V4f[4] __attribute__((aligned(16)));
 typedef struct { u128 q[7]; } Ent70;
 void sceVu0CopyMatrix(V4f *, V4f *);
-void func_002672f8(f32 *, V4f *, u128 *);
-void func_002674d0(f32 *, f32 *, f32);
-s32 func_00267ef0(f32 *, f32 *, f32 *);
-void func_00267da0(V4f *, V4f *, u128 *, s32, s32);
+void sceVu0ApplyMatrix(f32 *, V4f *, u128 *);
+void sceVu0DivVectorXYZ(f32 *, f32 *, f32);
+s32 sceVu0ClipScreen3(f32 *, f32 *, f32 *);
+void sceVu0RotTransPersN(V4f *, V4f *, u128 *, s32, s32);
 void func_00237018(u128 *, s32, s32);
 
 void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
@@ -36,15 +36,15 @@ void func_002384e0(u32 srca, s32 n, u128 *buf, V4f *m) {
     ((u64 *)h)[1] = 0x414141;
     k = 2;
     for (i = 0; i < n; i++, src++) {
-        func_002672f8(v1, mat, &src->q[1]);
-        func_002672f8(v2, mat, &src->q[2]);
-        func_002672f8(v3, mat, &src->q[3]);
-        func_002674d0(v1, v1, v1[3]);
-        func_002674d0(v2, v2, v2[3]);
-        func_002674d0(v3, v3, v3[3]);
-        if (func_00267ef0(v1, v2, v3) == 0) {
+        sceVu0ApplyMatrix(v1, mat, &src->q[1]);
+        sceVu0ApplyMatrix(v2, mat, &src->q[2]);
+        sceVu0ApplyMatrix(v3, mat, &src->q[3]);
+        sceVu0DivVectorXYZ(v1, v1, v1[3]);
+        sceVu0DivVectorXYZ(v2, v2, v2[3]);
+        sceVu0DivVectorXYZ(v3, v3, v3[3]);
+        if (sceVu0ClipScreen3(v1, v2, v3) == 0) {
             cnt++;
-            func_00267da0(t, mat, &src->q[1], 3, 0);
+            sceVu0RotTransPersN(t, mat, &src->q[1], 3, 0);
             ((s32 *)t[0])[3] = 0;
             ((s32 *)t[1])[3] = 0;
             ((s32 *)t[2])[3] = 0;

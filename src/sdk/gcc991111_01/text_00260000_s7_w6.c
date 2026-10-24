@@ -1,6 +1,6 @@
 #include "common.h"
 
-void func_00267c10(f32 m[4][4], f32 *n, f32 lx, f32 ly, f32 lz, s32 flag) {
+void sceVu0DropShadowMatrix(f32 m[4][4], f32 *n, f32 lx, f32 ly, f32 lz, s32 flag) {
     if (flag) {
         f32 nx, ny, nz, d;
         nx = n[0];

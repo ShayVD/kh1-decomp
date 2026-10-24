@@ -6,19 +6,19 @@ M2C_UNK Deci2Call(M2C_UNK, void *);
 M2C_UNK RemoveIntcHandler(M2C_UNK, s32);
 M2C_UNK func_00258c40(M2C_UNK);
 M2C_UNK func_00258ca8(M2C_UNK);
-M2C_UNK func_00267370(M2C_UNK *, M2C_UNK *, M2C_UNK *);
-M2C_UNK func_002673b8(M2C_UNK *, M2C_UNK *);
-M2C_UNK func_00267440(s32, M2C_UNK *);
-M2C_UNK func_00267578(M2C_UNK *, M2C_UNK *, s32);
+M2C_UNK sceVu0OuterProduct(M2C_UNK *, M2C_UNK *, M2C_UNK *);
+M2C_UNK sceVu0Normalize(M2C_UNK *, M2C_UNK *);
+M2C_UNK sceVu0InversMatrix(s32, M2C_UNK *);
+M2C_UNK sceVu0TransMatrix(M2C_UNK *, M2C_UNK *, s32);
 M2C_UNK func_00267620(M2C_UNK *);
-M2C_UNK func_002676c0(f32);
-M2C_UNK func_00267768(s32, s32, f32);
-M2C_UNK func_00267810(s32, s32, f32);
+M2C_UNK sceVu0RotMatrixZ(f32);
+M2C_UNK sceVu0RotMatrixX(s32, s32, f32);
+M2C_UNK sceVu0RotMatrixY(s32, s32, f32);
 extern M2C_UNK D_00670040;
 extern s32 D_0046C5D0;
 s32 AddIntcHandler(M2C_UNK, s32, M2C_UNK);
 s32 func_00266ba8(s32);
-s32 func_002675a8(s32, s32);
+s32 sceVu0CopyVector(s32, s32);
 void *func_002654e0();
 void func_00266ab0(void *);
 void func_00266b20(s32, s32, s32);
@@ -158,28 +158,28 @@ s32 func_00267210(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     return 0;
 }
 
-void func_002678b8(s32 arg0, s32 arg1, void *arg2) {
-    func_002676c0(M2C_FIELD(arg2, f32 *, 8));
-    func_00267810(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
-    func_00267768(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
+void sceVu0RotMatrix(s32 arg0, s32 arg1, void *arg2) {
+    sceVu0RotMatrixZ(M2C_FIELD(arg2, f32 *, 8));
+    sceVu0RotMatrixY(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
+    sceVu0RotMatrixX(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
 }
 
-void func_00267930(s32 arg0, s32 arg1, M2C_UNK *arg2, M2C_UNK *arg3) {
+void sceVu0CameraMatrix(s32 arg0, s32 arg1, M2C_UNK *arg2, M2C_UNK *arg3) {
     s32 sp[20];
     func_00267620(sp);
-    func_00267370(&M2C_FIELD(sp, M2C_UNK *, 0x40), arg3, arg2);
-    func_002673b8(sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
-    func_002673b8(&M2C_FIELD(sp, M2C_UNK *, 0x20), arg2);
-    func_00267370(&M2C_FIELD(sp, M2C_UNK *, 0x10), &M2C_FIELD(sp, M2C_UNK *, 0x20), sp);
-    func_00267578(sp, sp, arg1);
-    func_00267440(arg0, sp);
+    sceVu0OuterProduct(&M2C_FIELD(sp, M2C_UNK *, 0x40), arg3, arg2);
+    sceVu0Normalize(sp, &M2C_FIELD(sp, M2C_UNK *, 0x40));
+    sceVu0Normalize(&M2C_FIELD(sp, M2C_UNK *, 0x20), arg2);
+    sceVu0OuterProduct(&M2C_FIELD(sp, M2C_UNK *, 0x10), &M2C_FIELD(sp, M2C_UNK *, 0x20), sp);
+    sceVu0TransMatrix(sp, sp, arg1);
+    sceVu0InversMatrix(arg0, sp);
 }
 
-void func_00267aa0(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
-    func_002675a8(arg0, arg1);
-    func_002675a8(arg0 + 0x10, arg2);
-    func_002675a8(arg0 + 0x20, arg3);
-    func_002675a8(arg0 + 0x30, arg4);
+void sceVu0LightColorMatrix(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
+    sceVu0CopyVector(arg0, arg1);
+    sceVu0CopyVector(arg0 + 0x10, arg2);
+    sceVu0CopyVector(arg0 + 0x20, arg3);
+    sceVu0CopyVector(arg0 + 0x30, arg4);
 }
 
 s32 scePad2Init(void) {

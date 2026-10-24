@@ -743,3 +743,42 @@ quorem	00253f88	# hand: dtoa.c static; (b, S) Bigint quotient digit, calls cmp
 sceVu0MulMatrix	00267328	# hand: libvu0; m0 = m1 x m2, four vmula/vmadd columns (lqc2 m1 rows, loop over m2)
 sceVu0CopyMatrix	002675b8	# hand: libvu0; four lq/sq of 16 bytes
 sceVu0UnitMatrix	00267620	# hand: libvu0; vf0-derived identity (w=1, vmr32 rotations) stored to 4 rows
+sceVu0ApplyMatrix	002672f8	# hand (session 45): libvu0 in the library order; v0 = m0 x v1 (lqc2 the matrix, vmula/vmadd)
+sceVu0OuterProduct	00267370	# hand (session 45): libvu0 in the library order; vopmula / vopmsub, w cleared
+sceVu0InnerProduct	00267390	# hand (session 45): libvu0 in the library order; vmul.xyz, x+y+z returned in f0
+sceVu0Normalize	002673b8	# hand (session 45): libvu0 in the library order; vrsqrt of the sum of squares (c2 0x503bd), xyz scaled
+sceVu0TransposeMatrix	002673f8	# hand (session 45): libvu0 in the library order; pextlw / pextuw / pcpyld / pcpyud of four rows
+sceVu0InversMatrix	00267440	# hand (session 45): libvu0 in the library order; transpose of the rotation, -translation (rigid inverse)
+sceVu0DivVector	002674b0	# hand (session 45): libvu0 in the library order; vdiv Q = 1 / f12, xyzw scaled
+sceVu0DivVectorXYZ	002674d0	# hand (session 45): libvu0 in the library order; vdiv Q = 1 / f12, xyz scaled
+sceVu0InterVector	002674f0	# hand (session 45): libvu0 in the library order; v1 * t + v2 * (1 - t), xyzw
+sceVu0AddVector	00267518	# hand (session 45): libvu0 in the library order; vadd.xyzw
+sceVu0SubVector	00267530	# hand (session 45): libvu0 in the library order; vsub.xyzw
+sceVu0MulVector	00267548	# hand (session 45): libvu0 in the library order; vmul.xyzw
+sceVu0ScaleVector	00267560	# hand (session 45): libvu0 in the library order; vmulx.xyzw by f12
+sceVu0TransMatrix	00267578	# hand (session 45): libvu0 in the library order; copy m1, row 3 += v
+sceVu0CopyVector	002675a8	# hand (session 45): libvu0 in the library order; one lq / sq
+sceVu0FTOI4Vector	002675e0	# hand (session 45): libvu0 in the library order; vftoi4
+sceVu0FTOI0Vector	002675f0	# hand (session 45): libvu0 in the library order; vftoi0
+sceVu0ITOF4Vector	00267600	# hand (session 45): libvu0 in the library order; vitof4
+sceVu0ITOF0Vector	00267610	# hand (session 45): libvu0 in the library order; vitof0
+_sceVu0ecossin	00267648	# hand (session 45): libvu0 in the library order; the sine / cosine series the rotations call (D_0046C580 coefficients)
+sceVu0RotMatrixZ	002676c0	# hand (session 45): libvu0 in the library order; pi/2 - angle into _sceVu0ecossin, rotates the x / y rows
+sceVu0RotMatrixX	00267768	# hand (session 45): libvu0 in the library order; the y / z rows
+sceVu0RotMatrixY	00267810	# hand (session 45): libvu0 in the library order; the x / z rows
+sceVu0RotMatrix	002678b8	# hand (session 45): libvu0 in the library order; RotMatrixZ (rot[2]), RotMatrixY (rot[1]), RotMatrixX (rot[0])
+sceVu0ClampVector	00267908	# hand (session 45): libvu0 in the library order; vmaxx / vminix by f12 / f13
+sceVu0CameraMatrix	00267930	# hand (session 45): libvu0 in the library order; unit, outer products of z and y, normalized, transposed, translated by -p
+sceVu0NormalLightMatrix	002679e0	# hand (session 45): libvu0 in the library order; three light directions scaled by -1 and normalized
+sceVu0LightColorMatrix	00267aa0	# hand (session 45): libvu0 in the library order; four CopyVector calls (c0, c1, c2, ambient)
+sceVu0ViewScreenMatrix	00267b08	# hand (session 45): libvu0 in the library order; the screen distance, aspect and depth range in f12-f19 and a stack float
+sceVu0DropShadowMatrix	00267c10	# hand (session 45): libvu0 in the library order; light vector and plane (a, b, c, d), two modes
+sceVu0RotTransPersN	00267da0	# hand (session 45): libvu0 in the library order; n vertices: m x v, divide by w, vftoi4 (mode: z / w by vftoi0)
+sceVu0RotTransPers	00267df8	# hand (session 45): libvu0 in the library order; the same for one vertex
+sceVu0CopyVectorXYZ	00267e40	# hand (session 45): libvu0 in the library order; three lwc1 / swc1
+sceVu0InterVectorXYZ	00267e60	# hand (session 45): libvu0 in the library order; InterVector with v1's w kept
+sceVu0ScaleVectorXYZ	00267e90	# hand (session 45): libvu0 in the library order; vmulx.xyz by f12
+sceVu0ClipScreen	00267ea8	# hand (session 45): libvu0 in the library order; one vertex against (0, 0) and (4096, 4096) through the clip flags (vi16 & 0xc0)
+sceVu0ClipScreen3	00267ef0	# hand (session 45): libvu0 in the library order; three vertices, the same flags
+sceVu0ClipAll	00267f50	# hand (session 45): libvu0 in the library order; near / far plane clip of a vertex list (min, max, matrix, list, n)
+sceVpu0Reset	00267fe0	# hand (session 45): libvu0; VIF0 registers (0x10003810 ... 0x10003830), FBRST bit 1, VIF0 FIFO
