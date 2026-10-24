@@ -384,3 +384,50 @@ func_00268040 after it is not libvu0 (sceSifCallRpc 0x80000963: another library'
 The game uses them through the menu models' camera (src/menu/mdlcam.c), the draw list and the batch senders
 (src/gfx/), and about 300 other call sites; a `Plat` vector maths header (docs/portability.md rule 4) can wrap them
 by these names.
+
+## Session 56: libdma, the rest of libgraph, and what the game still calls unwrapped
+
+Named from their code, in the library order (functions.tsv; the SDK definitions in src/sdk take the names,
+game files call the include/platform/ wrappers):
+
+| address | name | evidence |
+|---|---|---|
+| 0x00265350 | sceGsResetGraph | (mode, inter, omode, ffmd) as shorts; dispenv.c / display.c call (1, 1, 2, 0) / (0, 1, 2, 0) |
+| 0x002654e0 | sceGsGetGParam | returns the static GParam D_0046C500 |
+| 0x002654f0 | sceGsResetPath | VIF1 FBRST, VU1 reset through vi28 (cfc2 / ctc2), GIF reset (asm, libkernl_asm.s) |
+| 0x00265980 | sceGsPutDispEnv | PMODE, SMODE2, DISPFB, DISPLAY, BGCOLOR to 0x12000000 |
+| 0x00265b28 | sceGsSyncV | the vsync wait; returns the field (CSR bit 13) when interlaced |
+| 0x002660c0 | sceGsSetDefStoreImage | the store packet, TRXDIR 1 (between SetDefLoadImage and ExecLoadImage) |
+| 0x00266c08 | sceDmaGetChan | D_0046C550[id] for id < 10 |
+| 0x00266c30 | sceDmaReset | D_CTRL saved, channel registers cleared, D_STAT reset, a zero env put |
+| 0x00266d10 | sceDmaPutEnv | field checks (-1 ... ), D_CTRL / D_PCR / D_SQWC / D_RBOR / D_RBSR |
+| 0x00266ee8 | sceDmaGetEnv | the 20-byte copy PutEnv keeps (D_0066FAD8) |
+| 0x00266f20 | sceDmaPutStallAddr | swaps D_STADR (0x1000e060) |
+| 0x00266f38 | sceDmaSend | TADR = tag, QWC 0, CHCR chain from memory (0x105) |
+| 0x00266fa0 | sceDmaSendN | MADR / QWC, CHCR normal (0x101) |
+| 0x00267018 | sceDmaSendI | MADR / QWC, CHCR interleave (0x109) |
+| 0x00267090 | sceDmaRecv | chain, to memory |
+| 0x002670d8 | sceDmaRecvN | normal, to memory |
+| 0x00267158 | sceDmaRecvI | interleave, to memory |
+| 0x002671d8 | sceDmaSync | mode 1 returns CHCR.STR, else the "sync timeout" wait |
+| 0x00267210 | sceDmaWatch | mode 1: MADR < addr, else waits for it |
+| 0x00267248 | sceDmaPause | DI, the D_ENABLEW hold bit, STR cleared, old CHCR returned |
+| 0x002672e0 | sceDmaRestart | CHCR written back, old STR returned |
+
+Left unnamed in that range: func_00266a10 (installs a DMAC interrupt handler on cause 2), func_00266ab0 /
+func_00266b20 (the two timeout waits), func_00266ba8 (scratchpad address to its DMA form), func_00266bd0 (a
+byte clear), func_00265558 (reads 256 entries of a file named at D_00492920) and func_002655f8 (syscall 0x80).
+
+**Game calls into the SDK still by func_ address** (session 56 census; the next wrappers; the roles in brackets are guesses from the arguments, not checked): the sifdev file
+calls of src/io/discfile.c, src/gfx/opfile.c and src/game/hdd*.c, func_0025b588 (open: (name, mode)),
+func_0025b810 (close), func_0025b990 (lseek: (fd, off, whence)), func_0025bbc8 (read: (fd, buf, n)),
+func_0025cd70 / func_0025cfa0 / func_0025ce38 (dopen / dread / dclose: hdd.c lists a directory),
+func_0025d880 (mount: (dev, path, flag, arg, len)), func_0025daf0 (umount), func_0025dd48 (devctl-like, 6
+arguments), func_0025db10 (returns s64: a 64-bit lseek), func_0025c448 (6 arguments), func_0025e990
+((name)); libcdvd in src/io/discfile.c / cdqueue.c and src/game/movies.c, dkmovie.c: func_0026aaa0 (no
+arguments, 4 files), func_00269fd0 ((s32), a sync), func_00269da8, func_0026a728, func_0026a9d0,
+func_002696b8 ((s32, void *, s32)), func_0026ab38, func_0026abf0, func_0026aca8 ((void *)), func_00269960
+((void *, s32)); func_0025b550 / func_0025ed28 / func_0025ed48 / func_0025f1f0 / func_0025f228 (discfile.c,
+the IOP module loads and reboot); func_00262c78 (field.c, no arguments) and func_00250360 ((void *, s32,
+s32, void *): cmdmenu / objreact, a libc sort?).  Name each from its code and the library order (as libdma
+above) before wrapping it: the cd / iop wrapper is the next one.

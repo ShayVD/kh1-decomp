@@ -15,7 +15,7 @@ rewrite matched code.
    start with `Plat`. On the PS2 build a wrapper is a macro or `static inline`
    for the SCE call, so it compiles to exactly the original instructions. On
    the Vita build the same names are implemented with vitasdk.
-   `include/platform/pad.h` is the template. `include/platform/mc.h` (session 44)
+   `include/platform/pad.h` is the template (libpad2 since session 56). `include/platform/mc.h` (session 44)
    wraps libmc for src/memcard/, the only code that calls it; the save and
    load screens queue requests (include/memcard/mcreq.h) and never touch libmc.
    Session 45 put the GS packet code in src/gfx/ (gspkt*.c: the drawing
@@ -38,6 +38,39 @@ rewrite matched code.
    sceGsPutDrawEnv, the GS CSR at 0x12001000 / 0x12000000 read and written
    directly), src/screen/capture.c (sceGsExecStoreImage / LoadImage of the
    frame) and src/game/framectl.c's func_0010f658 (the display flip).
+   **Session 56 wrote the wrappers** (each byte-identical, one header per
+   commit): `dma.h` (PlatDmaGetChan / PlatDmaSend, 38 files; libdma named in
+   functions.tsv), `gs.h` (PlatGsSyncPath, image load / store packets and
+   their execution, reset, vsync, display and drawing environments; 58
+   files), `thread.h` (the EE kernel: PlatFlushCache / PlatIFlushCache,
+   threads, semaphores, DMAC handlers, the performance counters; 48 files),
+   `pad.h` (rewritten for libpad2 / libdbc / libvib: the session-1 template
+   wrapped libpad, which the game never links) and `iop.h` (SIF RPC: the
+   sound driver's one client in src/sound/snd_rpc.c, sceSifInitRpc).  The SCE
+   declarations behind them are in include/sce/ (libdma.h, libgraph.h,
+   eekernel.h, libpad2.h, sifrpc.h), hand-written from the public
+   signatures with opaque packet types; the PS2 macros cast the game's own
+   structs.  Still calling the SDK directly: src/io/discfile.c, cdqueue.c and
+   src/game/hdd*.c, src/gfx/opfile.c (libcdvd and the sifdev file calls, most
+   still unnamed func_ addresses: docs/sdk.md "Session 56"),
+   src/game/dkmovie.c's func_00111238 (a keep-alive stub calling sceCdRead,
+   sceIpuInit / sceIpuSync and libcdvd with no arguments; a guess: it keeps
+   them linked for the movie overlay dkmovie.x), src/gfx/opimage.c (two libgraph calls through typed function
+   pointers), src/model/mdlgs*.c (FlushCache / iFlushCache stored as a hook
+   pointer), the GS CSR writes at 0x12000000 / 0x12001000
+   (src/screen/display.c, src/game/framectl.c), the VIF / DMA registers that
+   src/model/mdlgs.nostrict.c and src/gfx/shadow.c poke through the channel
+   (PlatDmaGetChanAs), and the pad masks of src/text/winmenu.c and
+   src/menu/customize.c.
+   **A trap when writing a wrapper:** gcc 2.96 emits different code for
+   `D = f()` (it keeps &D in a saved register over the call) whenever f's
+   return type is not exactly D's type, even a typedef of the same struct
+   or `void *` against a typedef of void.  So PlatDmaChan is a macro, not a
+   typedef; code holding the channel as another type calls
+   `PlatDmaGetChanAs(T, id)` (a typed call); and where the original did
+   convert (func_0011fa88 stores the int socket into a u32) the variable keeps
+   the other type.  A void vs int return can also change registers after a
+   call (sceGsResetGraph is declared void).
 3. **SCE declarations live in `include/sce/`**, written by hand from public
    signatures. Never copy Sony SDK headers or library code into the repo.
    Functions that belong to statically linked SCE libraries are tracked under

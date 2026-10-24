@@ -21,7 +21,7 @@ extern u8 D_00F20000[];     /* the 512x384 RGB frame */
 
 /* Send the packet list to path 2. */
 void func_001e05a8(void *arg0) {
-    s32 temp_s0;
+    PlatDmaChan *temp_s0;
 
     temp_s0 = PlatDmaGetChan(2);
     PlatFlushCache(0);
