@@ -206,7 +206,7 @@ M2C_UNK func_001586a8(M2C_UNK);
 #define func_001525f0 ((M2C_UNK (*)(s32)) func_001525f0)
 #define func_00152648 ((M2C_UNK (*)(s32)) func_00152648)
 void func_00152730(s32 arg0) {
-    func_00152538();
+    func_00152538(arg0);
     func_001525f0(arg0);
     func_00152648(arg0);
     func_001586a8(0x11);

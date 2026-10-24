@@ -31,7 +31,7 @@ s32 func_001f0340(u8 *, s32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
 
-void func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
+KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     u64 *base;
     u32 tag;
     s32 sz16;
@@ -166,6 +166,7 @@ done:
     func_001220b8(base);
     D_003F2BD0 = (xx - ox) >> 4;
     D_003F2BD4 = (yy - org) >> 4;
+    KH1_V0_RETURN(D_003F2BD0);
 }
 
 /* func_001fa8b0 (hand/nostrict_nogcse): s9 w6 12w draft + `cm = c - 32; k = D_003E8D40[cm];` and a FLAGGED dead FP test `if ((f32)cm < (f32)n) a = 0;` after `x40 = xx + a;` (cm read in a later block -> global, so local-alloc no longer gives the c-32 chain v0; flow2 deletes the test). checkfile MATCH. */
@@ -296,7 +297,7 @@ done:
 /* func_001fb428 (s11w9): t (w*sz/18) is one function-level variable shared by the neg block and
    the digit loop (a global pseudo, so local-alloc cannot tie it to x0 + t); x1 is block-local in
    the loop (its own pseudo, v0); neg block statement order hill-climbed. */
-void func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sz, u32 col) {
+KH1_V0(s32) func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val, s32 sz, u32 col) {
     s32 dig[12];
     s32 mode2;
     s32 x2, y2, sz2;
@@ -474,4 +475,5 @@ void func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s32 val,
     func_001220b8(base);
     D_003F2BD0 = (val - ox) >> 4;
     D_003F2BD4 = (yy - oy) >> 4;
+    KH1_V0_RETURN(D_003F2BD0);
 }

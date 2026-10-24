@@ -357,6 +357,62 @@ PlatCdSearchFile "found" with lsn 0 / size 0 (the game retries a failed search f
 (KINGDOM.IDX / IMG from the user's ISO, tools/shift/extract_kingdom.py reads them) to run past the first read
 to the title's logic; then a frame loop that answers vsync (kh1_vsync_cb) so the game's waits return.
 
+### 5.1c Session 63: register passthrough closed, a disc behind the host, frames
+
+**Register passthrough** (portability.md rule 10). argcheck's list is down to **0 short calls and 6
+value uses** (from 62 and 284), every out/build object bit-identical:
+
+- argcheck skipped calls whose callee is defined in the same file; m2c's `#define f ((T (*)()) f)`
+  casts let those compile with missing arguments. It now checks them: **64 more**, in 40 callers,
+  nearly all wrappers whose asm leaves the argument registers untouched (`func_00116130(a0, a1)`
+  tail-jumps to `func_00115940` with a0 = its own a0). Each caller took the callee's parameters and
+  passes them (a script did the first pass, tools/host/argcheck.py names them; the rest by hand). Casts
+  that pass a float must be typed (`(f32)`), or the call promotes it to double.
+- Its value-use pass no longer counts a statement after `case X:` / a label, a prototype, or `return
+  f();` in a void function (284 -> 123), and reads `KH1_V0(type)` definitions.
+- 117 value uses fixed or read as unread: the math helpers return their libm call (func_00124d28
+  atan2f, func_00121840 acosf, func_001629b0 / func_00121b38 / func_0017c110 / func_001779e8 distances),
+  dkmovie.c's overlay-entry wrappers return D_00F20000(cmd, 0), func_00120190 returns its bsearch,
+  func_001812d0 the cull, func_0011e340 the sound status. The text drawers func_001fade0,
+  func_001fb428, func_001f9e48 (and the draft of func_001f2630) match only as void but their callers
+  read the end column they store (D_003F2BD0): `KH1_V0(s32)` + `KH1_V0_RETURN(D_003F2BD0)`.
+  argcheck's BENIGN table lists 11 value uses whose value nobody reads: window callbacks (textwin.c
+  calls them as void) and functions only ever called as statements.
+- **Left (6)**: func_00130398 (class1a.c's func_00150bf8, an object-class callback in D_00350D88's
+  table), func_001a1158 (pppRyjDrawKekotoFrame, a ppp program callback), func_001ff488 (winmenu.c's
+  func_001ffaf0), func_00203a10 (winpart.c's func_002040a0), func_00206370 (func_002066b0 /
+  func_00206710). Their callers have no caller in the main ELF or are called through tables whose
+  call sites were not read; **the overlays call main-ELF functions by address** (dktitle.x: 292 jal),
+  so check them against the overlay inventory (5.2) before calling them benign.
+
+**A disc behind the host** (host/port/cd_image.c). `KH1_HOST_ISO=PATH out/host/kh1-host` reads the
+user's own image by sector (.iso 2048 or raw .bin 2352, as tools/shift/extract_kingdom.py): the game
+asks for ISO paths (`\SYSTEM.CNF;1`, `\KINGDOM.IDX;1`) and then reads absolute sectors (KINGDOM.IMG
+is not in the ISO directory, its files are found through the index), so the image is read as it is,
+not extracted. PlatCdRead copies before it returns (PlatCdSync / PlatCdGetError answer 0). Plain stdio,
+no system headers: the Vita can share it. `KH1_HOST_TRACE=1` prints every search and read.
+
+**Frames**: PlatGsSyncV and PlatWaitSema run the game's vblank handler (func_00110218, installed with
+sceGsSyncVCallback) once and count a frame (`KH1_HOST_FRAMES=N`, default 600, ends the run with a
+summary). There is no other thread, so a wait that would block lets a frame pass: the main loop's frame
+wait is func_0010c348 (src/util/thread.c), a semaphore func_00110218 signals through func_0010c378.
+PlatSifBindRpc marks the client bound (sceSifClientData +0x24) so src/sound/snd_rpc.c's setup stops
+polling.
+
+**A layout dependency found**: func_001a9f88 (src/gfx/opdma.c) links 288 GS tags from D_0061EEA0 on,
+across D_0061EEA0 (16 heads, bss_0061.c), D_0061EFA0 (the pool of 256) and D_0061FFA0 (16 heads,
+opdma.c): one array at 0x61EEA0 in the original. Off the EE the three are one array in
+host/port/memmap.c (`#ifdef KH1_PS2` around the two C definitions). The shiftable build keeps them in
+that order only because the link does; phase 4 should make them one definition.
+
+**The run** on tests/host/fake_disc.py's image (no game data: SYSTEM.CNF, a one-entry KINGDOM.IDX):
+the boot reads SYSTEM.CNF and KINGDOM.IDX, sets up the sound RPC, func_001094f0 starts the ppp and
+opdma lists, and func_00109770's main loop runs its frames (state D_00495160 0, D_002BBDE0 1) with no
+more reads. **Next, with the user's ISO** (the Mac session; ask once, never copy it into the repo): run
+`KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` and record where it stops. Expected: the first
+overlay call, D_00F20000(0, 0) after dktitle.x is read into the overlay area, jumps into data on the
+host (the overlays need a native build, 5.2), and the GS / VU stubs draw nothing.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

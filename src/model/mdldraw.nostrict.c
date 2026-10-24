@@ -651,10 +651,10 @@ typedef struct {
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } Tk62;
 s32 func_0015eea0();
 #define D_0055C698 (*(G698 (*)) &D_0055C698)
-#define func_001606d0 ((void (*)(void)) func_001606d0)
+#define func_001606d0 ((void (*)()) func_001606d0)
 #define func_0015ee78 ((Tk62 *(*)(s32, void *)) func_0015ee78)
 #define func_0015f388 ((s32 (*)(void)) func_0015f388)
-void func_00161de8(void) {
+void func_00161de8(Obj25 *o, M25 m, Prm25 *prm, void *arg) {
     s32 c8 = D_0055C698.x8;
     s32 c4 = D_0055C698.x4;
     s32 cC = D_0055C698.xC;
@@ -662,7 +662,7 @@ void func_00161de8(void) {
     Tk62 *t;
     E44_59 *e;
     Pr59 *p;
-    func_001606d0();
+    func_001606d0(o, m, prm, arg);
     e = &D_0055C698.e[D_0055C698.x0][c8];
     for (i = c8; i < D_0055C698.x8; i++) {
         t = func_0015ee78(0, func_0015ff78);

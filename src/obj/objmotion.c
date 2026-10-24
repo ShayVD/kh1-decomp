@@ -158,8 +158,8 @@ s32 func_00130190(s32 arg0, s32 arg1) {
 
 /* func_001301d8 (from auto/text_00130000_13.c). */
 #define func_00130070 ((s32 (*)()) func_00130070)
-s32 func_001301d8(void *arg0) {
-    return *(M2C_UNK *)((s32) (((func_00130070() & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 4)));
+s32 func_001301d8(void *arg0, u32 v, s32 a2, s32 a3) {
+    return *(M2C_UNK *)((s32) (((func_00130070(arg0, v, a2, a3) & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 4)));
 }
 #undef func_00130070
 
@@ -221,11 +221,11 @@ W6Ent *func_001302d0(W6Obj *o, u32 flags, f32 a, f32 b) {
 }
 
 /* func_00130340 (from hand/text_00130000_h6.c). */
-#define func_00130270 ((s32 (*)(W6Obj *o)) func_00130270)
-W6Ent *func_00130340(W6Obj *o, f32 x) {
+#define func_00130270 ((s32 (*)(W6Obj *o, s32)) func_00130270)
+W6Ent *func_00130340(W6Obj *o, s32 arg1, f32 x) {
     W6Ent *e;
     o->count = 0;
-    e = func_001302d0(o, func_00130270(o), 0.0f, x);
+    e = func_001302d0(o, func_00130270(o, arg1), 0.0f, x);
     o->u160.f.b0 = 1;
     return e;
 }
@@ -333,12 +333,12 @@ void func_00130898(Ob8 *o, Ct8 *c) {
 typedef struct { u32 f0; u8 pad[0x15c - 4]; s32 f15c; u8 pad160[0x324 - 0x160]; f32 f324; u8 pad328[0x39e - 0x328]; u8 f39e; } E10;
 typedef struct { s32 type; u16 a; u16 b; s32 c; s32 d; } Ec28;
 typedef struct { u8 pad0[0x15c]; s32 f15c; u8 pad160[8]; s32 f168; u8 pad16c[0x1d4 - 0x16c]; s32 *f1d4; } Oc28;
-extern s32 func_00164f18(s32, s32, Ec28 *, s32);
+extern s32 func_00164f18(s32, s32, Ec28 *, s32, f32, f32);
 extern void func_00146ff0(Oc28 *, u16, u16, s32);
-void func_00130c28(Oc28 *e) {
+void func_00130c28(Oc28 *e, f32 lo, f32 hi) {
     Ec28 buf[8];
     s32 n, j;
-    n = func_00164f18(e->f15c, e->f1d4[e->f168], buf, 8);
+    n = func_00164f18(e->f15c, e->f1d4[e->f168], buf, 8, lo, hi);
     for (j = 0; j < n; j++) {
         switch (buf[j].type) {
         case 0:

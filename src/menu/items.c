@@ -37,7 +37,7 @@ s32 func_001ba268(s32);
 s32 func_001ba3d8(void);
 s32 func_001ba3f0(s32);
 s32 func_001ee698(s32);
-s32 func_001ee7a8(void);
+u16 func_001ee7a8(s32);
 s32 func_001ee7c8(s32);
 s32 func_001ee7f0(s32);
 s32 func_001ee9b8(s32);
@@ -289,7 +289,7 @@ void func_0020eb98(void) {
 }
 
 s32 func_0020f260(s32 id) {
-    return (func_001ee7a8() << 8) | id;
+    return (func_001ee7a8(id) << 8) | id;
 }
 
 void func_0020f290(s32 *a, s32 l, s32 r) {

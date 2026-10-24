@@ -191,8 +191,8 @@ s32 func_00142b30(u8 *o, f32 *v) {
 #undef func_00118668
 
 /* func_00142c80 (from auto/text_00140000_15.c). */
-#define func_00142b30 ((void (*)(void *, void *)) func_00142b30)
-void func_00142c80(void *arg0, void *arg1) {
+#define func_00142b30 ((s32 (*)(void *, void *)) func_00142b30)
+s32 func_00142c80(void *arg0, void *arg1) {
     s32 sp[4];    void *temp_v0;
 
     PlatVu0Normalize(sp, arg1);
@@ -200,7 +200,7 @@ void func_00142c80(void *arg0, void *arg1) {
     temp_v0 = M2C_FIELD(arg0, void **, 0x6C);
     M2C_FIELD(sp, f32 *, 0x4) = -M2C_FIELD(temp_v0, f32 *, 0x10);
     M2C_FIELD(sp, f32 *, 0xC) = M2C_FIELD(temp_v0, f32 *, 0x10) * 0.7f;
-    func_00142b30(arg0, sp);
+    return func_00142b30(arg0, sp);
 }
 #undef func_00142b30
 

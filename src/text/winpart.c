@@ -63,15 +63,15 @@ s32 func_00206370(TextWin *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s3
 static inline s32 inl_sc(s32 v, s32 c, f32 fc, f32 s) { return fc + (f32)(v - c) * s; }
 
 /* The rows at text size 15. */
-s32 func_00201440(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, s32 id, s32 sz) {
+s32 func_00201440(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, s32 id) {
     return func_002014a0(o, type, mode, px, py, pw, x, cols, id, 15);
 }
 
-s32 func_00201460(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+s32 func_00201460(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s) {
     return func_00201550(o, type, mode, px, py, pw, x, cols, s, 15);
 }
 
-s32 func_00201480(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s, s32 sz) {
+s32 func_00201480(TextWin *o, s32 type, s32 mode, s32 px, s32 py, s32 pw, s32 x, s32 *cols, u8 *s) {
     return func_00201600(o, type, mode, px, py, pw, x, cols, s, 15);
 }
 

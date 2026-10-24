@@ -311,7 +311,7 @@ end:
     return (cx - ox) >> 4;
 }
 
-void func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
+KH1_V0(s32) func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     u64 *buf;
     Pkt *p;
     void *u;
@@ -383,6 +383,7 @@ void func_001fade0(TextWin *o, s32 x, s32 y, s32 idx, s32 sz, s32 col) {
     func_001220b8(buf);
     D_003F2BD0 = (X + b - ox) >> 4;
     D_003F2BD4 = y;
+    KH1_V0_RETURN(D_003F2BD0);
 }
 
 /* 001fbcd8 (hand/nostrict, no context). s11w42 MATCH, FLAGGED dead FP test. From s11w6's 15w draft: ONE v shared by the neg block and the digit loop (no v3), the loop's x2 renamed x3 (separate pseudo), and the dead test `if ((f32)v < 0.0f) i = 0;` at the end of the neg block (i is dead there; flow2 deletes the empty branch). The test keeps v live longer, so global-alloc ranks v below the loop temps (x3-ax temp a1, dig pointer giv a2, v t0). Neg block: the four g-> loads first (u, v, gw, gh, so no p-> store precedes a load under -fno-strict-aliasing), stores in a climbed order. */

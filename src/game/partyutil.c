@@ -47,11 +47,11 @@ s32 func_0013daa8(u32 id) {
 
 /* func_0013daf8 (from auto/text_00130000_13.c). */
 #define func_0013daa8 ((s32 (*)()) func_0013daa8)
-s32 func_0013daf8(void) {
+s32 func_0013daf8(u32 id) {
     s32 temp_v0;
     s32 var_v0;
 
-    temp_v0 = func_0013daa8();
+    temp_v0 = func_0013daa8(id);
     var_v0 = 0;
     if (temp_v0 < 0) {
         return var_v0;

@@ -22,6 +22,16 @@ KH1_REGION(D_00F20000, 0xF20000);  /* the overlay area: every overlay is linked 
 KH1_REGION(D_00FE0000, 0xFE0000);  /* 12 slots of 0x40000 (src/obj/objslot.c) */
 KH1_REGION(D_01CE0000, 0x1CE0000); /* func_00155a50's area, up to the stack */
 
+/* The three GS tag lists of src/gfx/opdma.c in one array, as at 0x61EEA0: func_001a9f88 links
+ * 288 tags from D_0061EEA0 on (16 heads, the pool D_0061EFA0 of 256, 16 heads D_0061FFA0) and
+ * the D_0061FFA0 heads' tails point into it.  The PS2 build defines them apart (bss_0061.c,
+ * opdma.c) and its link keeps them in that order; 0x30 tags from D_0061FFA0 as opdma.c sizes it. */
+u8 kh1_opdma_tags[0x100 + 0x1000 + 0x300] __attribute__((aligned(32)));
+#define KH1_AT(name, base, off) __asm__(".globl " #name "\n\t.set " #name ", " #base " + " #off)
+KH1_AT(D_0061EEA0, kh1_opdma_tags, 0);
+KH1_AT(D_0061EFA0, kh1_opdma_tags, 0x100);
+KH1_AT(D_0061FFA0, kh1_opdma_tags, 0x1100);
+
 /* Offsets, not addresses: src/gummi/gumisave.c adds &D_00009B38 ... &D_0000AC20 to the block
  * func_00232cc0(4) returns (the Gummi part of the save data), so each name is its own value. */
 #define KH1_OFFSET(name, value) __asm__(".globl " #name "\n\t.set " #name ", " #value)

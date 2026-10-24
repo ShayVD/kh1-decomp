@@ -39,22 +39,22 @@ u8 *func_00156628(s32 n) {
 
 /* func_00156678 (from auto/text_00150000.c). */
 #define func_00156628 ((s64 *(*)()) func_00156628)
-void func_00156678(void) {
+void func_00156678(s32 n) {
     s64 *temp_v0;
 
-    temp_v0 = func_00156628();
+    temp_v0 = func_00156628(n);
     *temp_v0 |= 0x10000;
 }
 #undef func_00156628
 
 /* func_001566a8 (from auto/text_00150000_23.c). */
 #define func_00156628 ((s64 *(*)()) func_00156628)
-void func_001566a8(void) {
+void func_001566a8(s32 n) {
   s64 *temp_v0;
   int new_var;
   new_var = 0xFFFEFFFF;
   ;
-  *func_00156628() &= new_var;
+  *func_00156628(n) &= new_var;
 }
 #undef func_00156628
 

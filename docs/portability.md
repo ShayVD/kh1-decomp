@@ -204,7 +204,17 @@ rewrite matched code.
     conversion stops the tail call, so declare it as the callee returns it).
     Both kept every object bit-identical in session 62.
     `python3 -I tools/host/argcheck.py` lists what is left (a heuristic over
-    the text: some hits are benign, e.g. an unused last parameter).
+    the text: some hits are benign, e.g. an unused last parameter; it keeps a
+    BENIGN table of hits read by hand and left, with the reason).
+    Session 63: a call through m2c's `#define f ((T (*)()) f)` cast in the
+    callee's own file misses arguments too (argcheck checks those now); type
+    the cast when a float is passed (an unprototyped call passes a double).
+    A function that matches only when defined void, although its callers read
+    the v0 its last statement leaves, is `KH1_V0(s32) f(...)` and ends with
+    `KH1_V0_RETURN(x);` (common.h: void and nothing in the PS2 build). A
+    callee's return type can change its same-file callers' code
+    (func_00111130's did func_001111b0's), so only change the ones a caller
+    reads.
 
 ## Known absolute addresses in matched code
 

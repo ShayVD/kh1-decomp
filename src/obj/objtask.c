@@ -428,13 +428,11 @@ void func_00138900(Actor *arg0) {
 
 /* func_00138948 (from auto/text_00130000_4.c). */
 s32 func_00148908(s32);
-#define func_00138900 ((void (*)(s32, f32, f32, f32, f32, f32, f32, f32, f32)) func_00138900)
-void func_00138948(Actor *arg0, f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
-    func_00138900(arg0, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
+void func_00138948(Actor *arg0) {
+    func_00138900(arg0);
     arg0->unk088 = (s32) (arg0->unk088 | 2);
     arg0->unk400 = func_00148908(arg0);
 }
-#undef func_00138900
 
 /* func_00138988 (from hand/text_00130000_h6.c). */
 s32 func_00138988(W6Unit *u) {
@@ -447,8 +445,8 @@ s32 func_00138988(W6Unit *u) {
 
 /* func_001389c0 (from auto/text_00130000.c). */
 #define func_00138988 ((s32 (*)()) func_00138988)
-s32 func_001389c0(void) {
-    return func_00138988() == 4;
+s32 func_001389c0(W6Unit *u) {
+    return func_00138988(u) == 4;
 }
 #undef func_00138988
 
@@ -461,7 +459,7 @@ s32 func_001389e8(void *arg0) {
     if (!((u32) (M2C_FIELD(arg0, s32 *, 0x164) - 0x48) >= 0x23U)) {
         return var_v0;
     }
-    var_v0 = func_00138988() != 0;
+    var_v0 = func_00138988(arg0) != 0;
     return var_v0;
 }
 #undef func_00138988

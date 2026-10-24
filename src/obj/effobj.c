@@ -106,7 +106,7 @@ s32 func_00147d18(s32 arg0) {
 s32 *func_00147ed8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 *temp_v0;
 
-    temp_v0 = func_00147c98();
+    temp_v0 = func_00147c98(arg0, arg1, arg2);
     if (temp_v0 != NULL) {
         PlatVu0CopyVector(*temp_v0, arg3);
     }
@@ -232,8 +232,8 @@ void *func_00148600(s32 arg0, s32 arg1, s32 arg2, f32 fparg0) {
 
 /* func_001486b0 (from auto/text_00140000.c). */
 #define func_00148570 ((M2C_UNK (*)()) func_00148570)
-s32 func_001486b0(s32 arg0) {
-    func_00148570();
+s32 func_001486b0(s32 arg0, s32 arg1, s32 arg2) {
+    func_00148570(arg0, arg1, arg2);
     return arg0;
 }
 #undef func_00148570

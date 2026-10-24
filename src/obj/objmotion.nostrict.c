@@ -45,7 +45,7 @@ typedef struct Ob {
     s32 *f1d4;
     u64 pad1d8;
 } Ob;
-extern s32 func_00130190(Ob *);
+extern s32 func_00130190(Ob *, s32);
 extern s32 func_00167698(s32);
 extern s32 func_00130270(Ob *, s32);
 extern s32 func_001302d0(Ob *, s32, f32, f32);
@@ -53,7 +53,7 @@ void func_00130398(Ob *o, s32 a1, f32 t) {
     s32 r, k, v;
     f32 f, a, b;
     o->f178 = 0;
-    r = func_00130190(o);
+    r = func_00130190(o, a1);
     if (!(r & 0x200000) && (r & 0xffff) == o->f168) return;
     if (o->f6 == 3) {
         k = (u16)a1;
@@ -167,7 +167,7 @@ typedef struct {
     f32 f280;
     f32 f284;
 } __attribute__((aligned(8))) O660;
-void func_00166248(C01Mat, s32, s32);
+void func_00166248(C01Mat, s32, s32, f32);
 void func_00165cf8(C01Mat, s32, f32, s32);
 void func_001676d8(s32, f32 *);
 void func_001675c0(s32);
@@ -182,7 +182,7 @@ void func_00130660(C01Obj3 *a, C01Mat m, s32 idx, f32 d, f32 e) {
     s32 s = o->x1d4[idx];
     if (((s32)(o->flags >> 1) & 1) && k < e) {
         if (0.0f < o->f170) {
-            func_00166248(m, o->x15c, s);
+            func_00166248(m, o->x15c, s, d);
         } else {
             PlatVu0CopyMatrix(t, m);
             if ((s32)(o->flags >> 12) & 1) {

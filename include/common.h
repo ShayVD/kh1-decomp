@@ -58,6 +58,19 @@ static __inline__ kh1_s128 kh1_q(unsigned long long v) {
 #define NULL 0
 #endif
 
+/* Portability rule 10 (docs/portability.md): a function that matches only when
+ * defined void, although its callers read the value its last statement leaves
+ * in v0 on the EE. KH1_V0(type) is its return type (void in the PS2 build) and
+ * KH1_V0_RETURN(x) hands that value back off the EE (nothing in the PS2
+ * build). */
+#ifdef KH1_PS2
+#define KH1_V0(type) void
+#define KH1_V0_RETURN(x) ((void)0)
+#else
+#define KH1_V0(type) type
+#define KH1_V0_RETURN(x) return (x)
+#endif
+
 /* CONTEXT_ONLY: a copy of a function whose real definition lives elsewhere
  * (or is not matched yet), defined above its callers only so gcc 2.96 sees
  * its register use while compiling them (the callee-earlier effect,

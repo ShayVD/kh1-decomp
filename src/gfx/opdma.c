@@ -37,7 +37,11 @@ extern u64 D_0061E800[];
 extern u128 D_0061E8B0;  /* sized: cover_check sizes D_0061EEA0 after it */
 extern GsTag D_0061EEA0[];  /* 16 priority list heads (followed by the tag pool) */
 extern GsTag D_0061EFA0[];  /* 256 priority list heads */
+#ifdef KH1_PS2
 GsTag D_0061FFA0[0x30] ALIGNED(32);
+#else /* host/port/memmap.c (func_001a9f88 links all three lists as one) */
+extern GsTag D_0061FFA0[0x30];
+#endif
 extern PlatDmaChan *D_00372908;
 extern M2C_UNK D_00372F34;
 extern f32 D_002BC120;

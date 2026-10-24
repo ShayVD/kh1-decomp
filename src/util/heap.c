@@ -114,11 +114,11 @@ u32 func_00121e28(u32 size, u32 *out) {
 
 /* func_00121eb0 (from auto/text_00120000.c). */
 #define func_00121de0 ((void *(*)()) func_00121de0)
-void func_00121eb0(void) {
+void func_00121eb0(u32 addr) {
     s32 *temp_v1;
     void *temp_v0;
 
-    temp_v0 = func_00121de0();
+    temp_v0 = func_00121de0(addr);
     temp_v1 = M2C_FIELD(temp_v0, s32 **, 0xC);
     if (temp_v1 != NULL) {
         *temp_v1 = 0;

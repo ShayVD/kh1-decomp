@@ -94,10 +94,10 @@ typedef struct Actor_50d30 {
     f32 x490[4];
     void *x4a0;
 } W9Ent;
-s32 func_0013c9e0(W9Ent *e);
+s32 func_0013c9e0(W9Ent *e, u32 who);
 void func_00243630(s32 a, W9Ent *e);
-void func_00150d30(W9Ent *e) {
-    s32 v = func_0013c9e0(e);
+void func_00150d30(W9Ent *e, u32 who) {
+    s32 v = func_0013c9e0(e, who);
     func_00243630(v == 255 ? 2 : v == 12, e);
 }
 

@@ -210,11 +210,11 @@ void func_00114220(void) {
 
 /* func_00114250 (from auto/text_00110000_11.c). */
 extern s32 D_002BBE0C;
-s32 func_0011d768(s32, f32, f32, f32, f32, f32, f32, f32, f32);
-void func_00114250(f32 fparg0, f32 fparg1, f32 fparg2, f32 fparg3, f32 fparg4, f32 fparg5, f32 fparg6, f32 fparg7) {
+void func_0011d768(s32);
+void func_00114250(void) {
     D_002BD114 = 1;
     D_002BBE0C = 0;
-    func_0011d768(6, fparg0, fparg1, fparg2, fparg3, fparg4, fparg5, fparg6, fparg7);
+    func_0011d768(6);
 }
 
 /* func_00114280 (from hand/text_00100000_c00.c). */

@@ -100,7 +100,7 @@ void func_00133920(void *arg0, void *arg1) {
 /* func_00133950 (from auto/text_00130000_4.c). */
 #define func_00133920 ((M2C_UNK (*)()) func_00133920)
 void func_00133950(s32 arg0, s32 arg1) {
-    func_00133920();
+    func_00133920(arg0, arg1);
     func_001c4788((void *) (arg1 + 0x10));
 }
 #undef func_00133920

@@ -658,7 +658,7 @@ void func_001160f0(void *a0, u32 *a1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116130(s32 arg0, s32 *arg1) {
     if (!(*arg1 & 0x106)) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -667,7 +667,7 @@ void func_00116130(s32 arg0, s32 *arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116160(s32 arg0, s32 *arg1) {
     if ((*arg1 & 0x406) == 0x400) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -676,7 +676,7 @@ void func_00116160(s32 arg0, s32 *arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116198(s32 arg0, s32 *arg1) {
     if ((*arg1 & 0xF6) == 0x20) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -685,7 +685,7 @@ void func_00116198(s32 arg0, s32 *arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_001161d0(s32 arg0, s32 *arg1) {
     if (!(*arg1 & 0xE)) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -704,7 +704,7 @@ void func_00116200(s32 arg0, s32 arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116240(s32 arg0, s32 *arg1) {
     if (!(*arg1 & 0x10006)) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -713,7 +713,7 @@ void func_00116240(s32 arg0, s32 *arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116278(s32 arg0, s32 *arg1) {
     if ((*arg1 & 0xF6) == 0x50) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -735,7 +735,7 @@ void func_001162f8(s32 arg0, u8 *arg1) {
     wide = *arg1;
 
     if ((wide >> 4) == 9) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -744,7 +744,7 @@ void func_001162f8(s32 arg0, u8 *arg1) {
 #define func_00115940 ((M2C_UNK (*)()) func_00115940)
 void func_00116330(s32 arg0, u32 *arg1) {
     if (!(((u32) *arg1 >> 0x11) & 1)) {
-        func_00115940();
+        func_00115940(arg0);
     }
 }
 #undef func_00115940
@@ -777,7 +777,7 @@ static inline s32 inside(f32 *mn, f32 *mx, Box_2c1260 *b) {
         && b->mn[2][0] < mn[2] && b->mx[2][0] > mx[2]) return 1;
     return 0;
 }
-#define func_00115d58 ((s32 (*)(void)) func_00115d58)
+#define func_00115d58 ((s32 (*)(void *)) func_00115d58)
 #define func_001158c8 ((void (*)(Out368 *)) func_001158c8)
 void func_00116368(Out368 *o, s32 k) {
     s32 n, i, j;
@@ -788,7 +788,7 @@ void func_00116368(Out368 *o, s32 k) {
     void (*f2)(s32, s32 *);
     s32 id; s32 *fl;
     D_002C12C4 = 0;
-    n = func_00115d58();
+    n = func_00115d58(o);
     p = D_004E0428;
     func_001158c8(o);
     f2 = D_002BD1A8[k];
@@ -1321,7 +1321,7 @@ extern s32 D_002A62E8;
 typedef struct { u8 pad[0x28]; s32 x28; s32 x2c; u8 pad30[4]; f32 x34; u8 pad38[4]; u16 x3c; u8 pad3e[2]; V4_52 x40; u8 pad50[0x18]; f32 x68; } Src52;
 typedef struct { V4_52 p; s32 x10[4]; s32 x20; f32 x24; s32 x28; f32 x2c; V4_52 x30; s32 x40; } Dst52;
 void func_0011aac8(s32, void *, s32);
-#define func_001150d8 ((void (*)(void)) func_001150d8)
+#define func_001150d8 ((void (*)(void *)) func_001150d8)
 #define func_001156f0 ((void (*)(s32, void *)) func_001156f0)
 #define func_0011ab38 ((Bf52 *(*)()) func_0011ab38)
 void func_00117710(Src52 *a, Dst52 *b) {
@@ -1330,7 +1330,7 @@ void func_00117710(Src52 *a, Dst52 *b) {
     s32 k;
     a->x34 = 123456.0f;
     if (a->x28 >= 0) return;
-    if (D_002A62E8) func_001150d8();
+    if (D_002A62E8) func_001150d8(a);
     PlatVu0CopyVector(b->x30, ((V4_52 *)D_002A3F48));
     id = a->x3c;
     a->x28 &= 0x7fffffff;
@@ -1401,7 +1401,7 @@ void func_001178d0(Obj178 *a) {
 /* func_00117948 (from hand/text_00110000_h52.c). */
 typedef struct { u16 poly; u16 i0; u16 i1; } Edge52;
 s32 func_00104a90(s32, s32 *);
-void func_0011a818(s32 *, s32 *, Edge52 *);
+void func_0011a818(s32 *, s32 *, Edge52 *, s32);
 s32 func_0011a7c0(s32, s32, s32 *);
 #define func_0011ab38 ((Bf52 *(*)()) func_0011ab38)
 s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
@@ -1428,7 +1428,7 @@ s32 func_00117948(Edge52 *e, s32 n, s32 *list, s32 grp) {
         }
         return 1;
     }
-    func_0011a818(&a, &b, e);
+    func_0011a818(&a, &b, e, grp);
     for (i = 0; i < n; i++) {
         id = list[i];
         g = (u32 *)func_0011ab38(grp, id, grp);

@@ -201,7 +201,7 @@ typedef struct {
 } W32Dsc;
 extern u32 D_002C5958;
 void func_0012bce0(s32 h, s32 a, s32 b, W32Dsc *d, s32 *r);
-void func_001349d0(W32Fig *o);
+void func_001349d0(W32Fig *o, W32Msg *m);
 void func_00139c28(W32Fig *o, W32Msg *m);
 s32 func_00139cb8(W32Fig *o, W32Msg *m) {
     if ((o->x0 & 0x1000088) || ((s32)(o->x370 >> 51) & 1)) return 0;
@@ -215,7 +215,7 @@ s32 func_00139cb8(W32Fig *o, W32Msg *m) {
         d[0].n = 4;
         func_0012bce0(o->x144, 0, 1, d, 0);
     } else {
-        func_001349d0(o);
+        func_001349d0(o, m);
     }
     func_00139c28(o, m);
     return 1;

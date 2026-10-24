@@ -26,8 +26,38 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DEF_RX = re.compile(r"^(?!\s)(?:static\s+)?(?:const\s+)?([A-Za-z_][\w \t\*]*?)\b(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s*\(([^;{)]*)\)\s*(?:\{|$)", re.M)
+DEF_RX = re.compile(r"^(?!\s)(?:static\s+)?(?:const\s+)?(KH1_V0\(\w+\)\s*|[A-Za-z_][\w \t\*]*?)\b(func_[0-9a-f]{8}|[A-Za-z_]\w*)\s*\(([^;{)]*)\)\s*(?:\{|$)", re.M)
 CALL_RX = re.compile(r"\b(func_[0-9a-f]{8})\s*\(")
+
+# Hits read by hand and left as they are (file, callee): the reason.
+BENIGN = {
+    ("src/game/dkmovie.c", "func_0024b138"):
+        "func_00111238 names the disc / IPU calls and is never called (no jal, j or pointer to it)",
+    # Value uses whose value nobody reads (session 63): the caller returns it, and
+    # every caller of that caller drops it.
+    ("src/menu/loadmenu.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/party.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/savemenu.c", "func_00207bb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/choice.c", "func_00205938"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/choice2.c", "func_00205938"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/journal_s0.c", "func_0010edb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/menu/journal_s1.c", "func_0010edb0"):
+        "a window callback returns it, and src/text/textwin.c calls window callbacks as void",
+    ("src/game/trinity.nostrict.c", "func_00158af0"):
+        "returned by func_00158b88 (plctl.nostrict.c), whose callers call it as a statement",
+    ("src/obj/areabox.c", "func_00142058"):
+        "returned by func_0014f1b8 (roomobj.c), whose callers call it as a statement",
+    ("src/obj/roomobj.nostrict.c", "func_0013b9c8"):
+        "returned by func_001323a0 (actor.nostrict.c), whose callers call it as a statement",
+    ("src/obj/class1b.nostrict.c", "func_001337e0"):
+        "returned by func_001519c0 (plctl.nostrict.c), whose callers call it as a statement",
+}
 
 
 def files():
@@ -78,6 +108,14 @@ def call_args(s, i):
     return None
 
 
+def enclosing_ret(s, pos):
+    """The return type of the function definition that contains pos (None if not found)."""
+    last = None
+    for m in DEF_RX.finditer(s, 0, pos):
+        last = m
+    return last.group(1).strip() if last else None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--tsv")
@@ -114,9 +152,14 @@ def main():
             line = s[line_start:s.find("\n", m.start())]
             if re.match(r"\s*(#define|extern\b|[A-Za-z_][\w \t\*]*\b" + name + r"\s*\(\s*\)\s*;)", line):
                 continue
+            # a prototype at file level (`void f(void);`, `void f(), g();`): only the calls matter
+            if re.match(r"[A-Za-z_][^=]*;\s*$", line) and not re.match(r"(return|else|do)\b", line):
+                continue
+            if (f, name) in BENIGN:
+                continue
             n = call_args(s, m.end() - 1)
             pn, var, ret, df = defs[name]
-            if n is not None and n < pn and df != f:
+            if n is not None and n < pn:
                 rows.append(("args", f, s.count("\n", 0, m.start()) + 1, name, n, pn, df))
     voids = {n for n, d in defs.items() if d[2] == "void"}
     for f, s in sorted(srcs.items()):
@@ -129,6 +172,18 @@ def main():
             if re.search(r"(=|\breturn|[(,!<>+\-*/&|?:])$", before) and not re.search(r"\(\s*\*\s*\)\s*\(\s*\)\s*\)$|\)\s*\($", before):
                 # `if (f(...))` and `g(f(...))` are uses; `((f(...)` is most likely a cast's
                 if re.search(r"\(\s*\($", before):
+                    continue
+                # a statement after `case X:`, `default:` or a label is not a use
+                seg = before[max(before.rfind(";"), before.rfind("{"), before.rfind("}")) + 1:].strip()
+                if re.match(r"(case\b[^?]*|default|[A-Za-z_]\w*)\s*:$", seg):
+                    continue
+                line_start = s.rfind("\n", 0, m.start()) + 1
+                line = s[line_start:s.find("\n", m.start())]
+                if re.match(r"[A-Za-z_][^=]*;\s*$", line) and not re.match(r"(return|else|do)\b", line):
+                    continue  # a prototype
+                if before.endswith("return") and enclosing_ret(s, m.start()) == "void":
+                    continue  # `return f();` in a void function passes nothing on
+                if (f, name) in BENIGN:
                     continue
                 rows.append(("ret", f, s.count("\n", 0, m.start()) + 1, name, "value used", "void", defs[name][3]))
     for r in rows:

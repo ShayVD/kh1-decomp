@@ -57,8 +57,8 @@ s32 func_00111b08(s32 arg0) {
 
 /* func_00111b10 (from auto/text_00110000_6.c). */
 #define func_00111b08 ((u32 (*)()) func_00111b08)
-u32 func_00111b10(void) {
-    return func_00111b08() / 216000U;
+u32 func_00111b10(s32 arg0) {
+    return func_00111b08(arg0) / 216000U;
 }
 #undef func_00111b08
 

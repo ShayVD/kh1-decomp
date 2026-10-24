@@ -70,10 +70,10 @@ void func_0014a238(W34Pos *a, W34Fol *b, f32 *out) {
 /* func_0014a330 (from auto/text_00140000_10.c). */
 M2C_UNK func_0014a1b0(s32, s32, void *);
 #define func_0014a238 ((M2C_UNK (*)(s32, s32, void *)) func_0014a238)
-void func_0014a330(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+s32 func_0014a330(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     s32 sp[4];
     func_0014a238(arg2, arg3, sp);
-    func_0014a1b0(arg0, arg1, sp);
+    return func_0014a1b0(arg0, arg1, sp);
 }
 #undef func_0014a238
 

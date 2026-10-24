@@ -26,8 +26,8 @@ void func_001f3dc0(void *);
 void func_001f3e20(void *, void *);
 void func_001f3e90(void *, void *);
 s32 func_001f40c8(void);
-s32 func_001f4338(void);
-s32 func_001f4400(void);
+s32 func_001f4338(TextWin *);
+s32 func_001f4400(TextWin *);
 void func_001f82b0(void);
 void func_001fade0(void *, s32, s32, s32, s32, s32);
 void func_00205938(void *, s32);
@@ -39,7 +39,7 @@ void func_0022d138(void) {
 void func_0022d140(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[1] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[1] != 0.0f)) {
         temp_f0 = D_006469B8[1] - D_002BBDFC;
         D_006469B8[1] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -52,7 +52,7 @@ void func_0022d140(TextWin *arg0) {
 void func_0022d1b8(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[2] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[2] != 0.0f)) {
         temp_f0 = D_006469B8[2] - D_002BBDFC;
         D_006469B8[2] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -65,7 +65,7 @@ void func_0022d1b8(TextWin *arg0) {
 void func_0022d230(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[3] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[3] != 0.0f)) {
         temp_f0 = D_006469B8[3] - D_002BBDFC;
         D_006469B8[3] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -78,7 +78,7 @@ void func_0022d230(TextWin *arg0) {
 void func_0022d2a8(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[4] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[4] != 0.0f)) {
         temp_f0 = D_006469B8[4] - D_002BBDFC;
         D_006469B8[4] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -91,7 +91,7 @@ void func_0022d2a8(TextWin *arg0) {
 void func_0022d320(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[5] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[5] != 0.0f)) {
         temp_f0 = D_006469B8[5] - D_002BBDFC;
         D_006469B8[5] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -104,7 +104,7 @@ void func_0022d320(TextWin *arg0) {
 void func_0022d398(TextWin *arg0) {
     f32 temp_f0;
 
-    if ((func_001f4400() != 0) && (D_006469B8[0] != 0.0f)) {
+    if ((func_001f4400(arg0) != 0) && (D_006469B8[0] != 0.0f)) {
         temp_f0 = D_006469B8[0] - D_002BBDFC;
         D_006469B8[0] = temp_f0;
         if (temp_f0 <= 0.0f) {
@@ -115,7 +115,7 @@ void func_0022d398(TextWin *arg0) {
 }
 
 void func_0022d400(TextWin *arg0) {
-    if ((func_001f4338() != 0) && (D_00425BC8->x8 & 8)) {
+    if ((func_001f4338(arg0) != 0) && (D_00425BC8->x8 & 8)) {
         func_001f36b8(arg0);
         func_0011d768(3);
         D_006469B8[0] = 1.0f;

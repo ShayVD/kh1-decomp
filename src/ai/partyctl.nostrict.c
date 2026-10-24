@@ -2043,13 +2043,13 @@ s32 func_0016db80(Ent6D *e, Wk6D *w, Arg6D *x, s32 mode) {
         if (w->p90 == 0) return 0;
         if ((s32)w->w38 & 1) return 0;
         if (w->w54 == 0) {
-            if (!func_0016dd30(e, w, x)) return 1;
+            if (!func_0016dd30(e, w, x, mode)) return 1;
             if (w->p74 == x) return 0;
             break;
         }
         f = w->f68;
         if (f <= 0.0f) return 0;
-        if (w->f6C - f >= p->fC * 0.5f && func_0016dd30(e, w, x)) return 0;
+        if (w->f6C - f >= p->fC * 0.5f && func_0016dd30(e, w, x, mode)) return 0;
         break;
     case 2:
         if (w->w54 == 0) {
