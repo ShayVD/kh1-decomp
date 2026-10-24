@@ -1,9 +1,8 @@
 /* Object draw jobs: func_001371f0 queues a draw job on the task list
  * D_0052A100 (func_00136bc0 runs it) with a per-kind draw callback
  * (func_001368e8, func_001369e8, func_00136ab8), func_00136428 draws a model
- * with a colour and alpha, func_001372a0 resets the lists (func_00135ed0 and
- * func_00136d38 of this range stay in hand/nostrict/text_00130000_c02.c with
- * func_0013cfe8). Flag mode: default (the other modes are in the sibling
+ * with a colour and alpha, func_001372a0 resets the lists, func_00135ed0 uploads a texture through
+ * GIF path 3 and func_00136d38 builds an object's matrix with a ground ray. Flag mode: default (the other modes are in the sibling
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "m2c.h"

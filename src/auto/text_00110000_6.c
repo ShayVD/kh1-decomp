@@ -4,35 +4,22 @@
 
 M2C_UNK func_001158a8(M2C_UNK *, s32);
 M2C_UNK func_00115940();
-M2C_UNK func_0011c7a8(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_0011c7c0(M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_0011c838(M2C_UNK, s32, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK func_0011cbe0(M2C_UNK, s32, s32, M2C_UNK *);
-M2C_UNK func_0011e8d0(M2C_UNK, M2C_UNK, M2C_UNK, s32, M2C_UNK, s32);
 M2C_UNK func_00176388(M2C_UNK);
-M2C_UNK sceDbcInit();
-M2C_UNK scePad2Init(M2C_UNK);
-M2C_UNK scePcStart(M2C_UNK, M2C_UNK, M2C_UNK);
 M2C_UNK strcpy(s32, s32);
 extern M2C_UNK D_002BCC28[];
-extern M2C_UNK D_002C5A88;
 extern M2C_UNK D_004E2458;
 M2C_UNK D_004E42C0[0x80] ALIGNED(64);
 extern M2C_UNK func_001129c8;
-extern M2C_UNK func_0011e700;
 extern s32 D_002A62F0;
 extern s32 D_002B6474;
 #include "data/pieces/D_002BCB60.h"
 extern s32 D_002BCDE4;
 extern s32 D_002BCDEC;
 extern s32 D_002C12C0;
-extern s32 D_002C1364;
-extern s32 D_002C1378;
 extern s32 D_003F34A4;
 extern s32 D_003F720C;
 extern s32 D_004D9320;
 extern s32 D_004D9330; /* src/data/bss_004D.c: u32 D_004D9330 */
-extern s32 D_004E44C0; /* src/data/bss_004E.c: s32 D_004E44C0[0x2] */
 extern s8 D_002BCB68;
 #include "data/pieces/D_002C1260.h"
 #include "data/pieces/D_002BBDF4.h"
@@ -42,11 +29,9 @@ s32 func_00110360(void);
 s32 func_0011a868(s32, s32, s32);
 s32 func_0011aa18(s32, s32, s32);
 s32 func_0011b0c0(s32, s32);
-s32 func_0011cfa8(s32, s32, s32, s32, s32);
 s32 func_0011ef10(s32, s32);
 u32 func_00111b08();
 u32 func_00232cc0(M2C_UNK);
-u32 scePad2CreateSocket(M2C_UNK *, M2C_UNK *);
 void func_00104f10(s32, s32);
 void func_00109558(s32);
 void func_00114810(void);
@@ -290,94 +275,6 @@ s32 func_0011c630(void) {
         func_0011c710();
         return 4;
     }
-    return 0;
-}
-
-void func_0011cf88(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s8 arg4, void *arg5, s32 arg6) {
-    M2C_FIELD(arg5, s32 *, 0xC) = arg6;
-    M2C_FIELD(arg5, s32 *, 0) = arg0;
-    M2C_FIELD(arg5, s32 *, 0x10) = arg1;
-    M2C_FIELD(arg5, s32 *, 4) = arg2;
-    M2C_FIELD(arg5, s32 *, 8) = arg3;
-    M2C_FIELD(arg5, s8 *, 0x16) = arg4;
-    M2C_FIELD(arg5, s8 *, 0x15) = 0;
-}
-
-void func_0011d1e0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011cfa8(arg0, arg1, arg2, arg3, 0);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 0x14) = 1;
-    }
-}
-
-void func_0011d210(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011cfa8(arg0, arg1, arg2, arg3, 1);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 0x14) = 2;
-    }
-}
-
-void func_0011d240(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011cfa8(arg0, arg1, arg2, arg3, 2);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 0x14) = 1;
-    }
-}
-
-void func_0011d270(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011cfa8(arg0, arg1, arg2, arg3, 3);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 0x14) = 2;
-    }
-}
-
-void func_0011d2a0(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 temp_v0;
-
-    temp_v0 = func_0011cfa8(arg0, arg1, arg2, arg3, 4);
-    if (temp_v0 != 0) {
-        M2C_FIELD(temp_v0, s8 *, 0x14) = 2;
-    }
-}
-
-void func_0011d768(s32 arg0) {
-    func_0011c838(2, arg0, 0, 0x3FFF, 0x3FFF);
-}
-
-void func_0011e480(void) {
-    func_0011c7c0(0, 0, 0x3C0);
-    func_0011c7a8(1, 0, 0x3000, 0xF0, 0, 0xF0);
-    D_002C1364 = 1;
-}
-
-void func_0011e7c8(s32 arg0, s32 arg1, s32 arg2) {
-    func_0011cbe0(0, arg2, D_002C1378, &func_0011e700);
-}
-
-void func_0011e9a8(s32 arg0, s32 arg1) {
-    func_0011e8d0(0, 0x3000, 0, arg0, 0, arg1);
-}
-
-void func_0011ea10(s32 arg0, s32 arg1) {
-    func_0011e8d0(0, 0x3000, 0, arg0, 1, arg1);
-}
-
-void func_0011fa88(void) {
-    sceDbcInit();
-    scePad2Init(0);
-    D_004E44C0 = scePad2CreateSocket(&D_002C5A88, &D_004E42C0);
-}
-
-s32 func_0011fad0(void) {
-    scePcStart(0x8000F8DE, 0, 0);
     return 0;
 }
 
