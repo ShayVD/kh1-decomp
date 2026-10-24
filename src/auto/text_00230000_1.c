@@ -16,51 +16,6 @@ M2C_UNK func_002485e0();
 M2C_UNK func_00248b00();
 M2C_UNK func_00249240();
 extern s32 D_0044A820;
-extern s32 D_006477A8;
-extern s32 D_00647FEC;
-extern s32 D_00647FF0;
-extern s32 D_00647FF8;
-extern s32 D_00647FFC;
-extern s32 D_00648000;
-extern s32 D_00648014;
-extern s32 D_00648018;
-extern s32 D_0064801C;
-
-s32 func_00233ee8(void) {
-    return D_006477A8;
-}
-
-s32 func_00234840(void) {
-    return D_00647FEC;
-}
-
-s32 func_00234850(void) {
-    return D_00647FF0;
-}
-
-s32 func_00234870(void) {
-    return D_00647FF8;
-}
-
-s32 func_00234880(void) {
-    return D_00647FFC;
-}
-
-s32 func_00234890(void) {
-    return D_00648000;
-}
-
-s32 func_002348e0(void) {
-    return D_00648014;
-}
-
-s32 func_002348f0(void) {
-    return D_00648018;
-}
-
-s32 func_00234900(void) {
-    return D_0064801C;
-}
 
 void func_00236fc0(void) {
 

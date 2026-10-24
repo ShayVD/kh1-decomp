@@ -19,43 +19,10 @@ extern M2C_UNK D_00651BD8; /* src/data/bss_0065.c: void *D_00651BD8[0x4] */
 extern M2C_UNK D_00651BE8; /* src/data/bss_0065.c: void *D_00651BE8[0x6] */
 extern M2C_UNK func_0023ceb0;
 extern s32 D_00454A24;
-#include "data/pieces/D_00425C48.h"
-#include "data/pieces/D_00425C68.h"
-#include "data/pieces/D_00425C88.h"
 s32 func_0011ef38(M2C_UNK *);
 s32 func_00237600(s32);
 s32 func_0023f0d8(s32, s32);
 s32 func_0023f250(s32, s32);
-
-s32 func_00233f40(s32 arg0, s32 arg1) {
-    s32 *temp_a0;
-    s32 temp_v0;
-
-    temp_a0 = ((s8 *)&D_00425C48) + (((arg0 * 4) + arg1) * 4);
-    temp_v0 = *temp_a0;
-    *temp_a0 = 0;
-    return temp_v0;
-}
-
-s32 func_00233f88(s32 arg0, s32 arg1) {
-    s32 *temp_a0;
-    s32 temp_v0;
-
-    temp_a0 = ((s8 *)&D_00425C68) + (((arg0 * 4) + arg1) * 4);
-    temp_v0 = *temp_a0;
-    *temp_a0 = 0;
-    return temp_v0;
-}
-
-s32 func_00233fd0(s32 arg0, s32 arg1) {
-    s32 *temp_a0;
-    s32 temp_v0;
-
-    temp_a0 = ((s8 *)&D_00425C88) + (((arg0 * 4) + arg1) * 4);
-    temp_v0 = *temp_a0;
-    *temp_a0 = 0;
-    return temp_v0;
-}
 
 void func_002366a8(s32 arg0, s32 arg1) {
     *(M2C_UNK *)((s8 *)&D_00648038 + (arg0 * 4)) = arg1;

@@ -308,3 +308,15 @@ void func_0022bd20(void) {
     D_006437D0[0] = 0;
     D_006437D0[1] = 0;
 }
+
+/* The five windows of func_0022bb48's chain (moved from h48 in session 44,
+ * phase 4, tools/shift/define_ptr_tables.py). */
+extern u8 D_003F7090[];
+extern u8 D_003F70C0[];
+extern u8 D_003F7100[];
+extern u8 D_003F7140[];
+extern u8 D_003F7170[];
+void *D_003F71C8[0x6] ALIGNED(8) = {
+    (void *)D_003F7170, (void *)D_003F7140, (void *)D_003F7100, (void *)D_003F70C0,
+    (void *)D_003F7090, 0,
+};

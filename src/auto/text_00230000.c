@@ -7,51 +7,6 @@ M2C_UNK func_0011d790(M2C_UNK, s32);
 M2C_UNK func_00239368();
 M2C_UNK func_0023dd48();
 extern s32 D_0044A820;
-extern s32 D_006477A8;
-extern s32 D_00647FD4;
-extern s32 D_00647FD8;
-extern s32 D_00647FDC;
-extern s32 D_00647FE0;
-extern s32 D_00647FF4;
-extern s32 D_00648004;
-extern s32 D_00648008;
-extern s32 D_0064800C;
-extern s32 D_00648010;
-
-void func_00233ef8(s32 arg0) {
-    D_006477A8 = 1;
-    D_00647FD4 = arg0;
-    D_00647FD8 = 0;
-}
-
-void func_00233f18(void) {
-    D_006477A8 = 0;
-}
-
-void func_00233f28(s32 arg0, s32 arg1) {
-    D_00647FDC = arg0;
-    D_00647FE0 = arg1;
-}
-
-s32 func_00234860(void) {
-    return D_00647FF4;
-}
-
-s32 func_002348a0(void) {
-    return D_00648004;
-}
-
-s32 func_002348b0(void) {
-    return D_00648008;
-}
-
-s32 func_002348c0(void) {
-    return D_0064800C;
-}
-
-s32 func_002348d0(void) {
-    return D_00648010;
-}
 
 void func_00236f00(void) {
     func_00239368();

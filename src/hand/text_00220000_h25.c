@@ -19,15 +19,6 @@ s32 func_00245228(void);
 s32 func_00245f18(void);
 s32 func_002474a8(void);
 extern u128 D_00351E10[];
-extern Cmd D_006477B0[64];
-extern s32 D_00647FB0;
-extern s32 D_00647FB8;
-extern s32 D_00647FC0;
-extern s32 D_00647FC4;
-extern s32 D_00647FD4;
-extern s32 D_00647FD8;
-extern s32 D_0064801C;
-extern s32 (*D_00648034)(s32);
 extern s32 D_00648038[5]; /* src/data/bss_0064.c: s32 D_00648038[0x6] */
 extern f32 D_00648050[5];
 u128 D_00648070[0x6] ALIGNED(16);
@@ -35,104 +26,6 @@ extern Slot D_00651310[10];
 Pkt D_00650F40 ALIGNED(64);
 extern u128 *D_00651200; /* src/data/bss_0065.c: s32 D_00651200 */
 extern u128 *D_00651204; /* src/data/bss_0065.c: u8 *D_00651204 */
-
-s32 func_00234018(s32 arg0, s32 arg1, s32 arg2) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 1;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[2] = arg2;
-    return id;
-}
-
-s32 func_00234210(s32 arg0, s32 arg1, s32 arg2) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 4;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[2] = arg2;
-    return id;
-}
-
-s32 func_00234290(s32 arg0, s32 arg1, s32 arg2) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 5;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[2] = arg2;
-    return id;
-}
-
-s32 func_00234310(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 6;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_006477B0[i].a[2] = arg2;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[3] = arg3;
-    return id;
-}
-
-s32 func_002343a8(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 7;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_006477B0[i].a[2] = arg2;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[3] = arg3;
-    return id;
-}
-
-s32 func_00234508(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 9;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_006477B0[i].a[0] = arg0;
-    D_006477B0[i].a[1] = arg1;
-    D_006477B0[i].a[2] = arg2;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[3] = arg3;
-    return id;
-}
-
-s32 func_002347e0(s32 arg0) {
-    s32 i = D_00647FB8;
-    s32 id = D_00647FC0;
-    D_006477B0[i].type = 13;
-    D_00647FB8 = (i + 1) & 63;
-    D_006477B0[i].id = id;
-    D_00647FC0 = id + 1;
-    D_006477B0[i].a[0] = arg0;
-    return id;
-}
-
-void func_00236598(void) {
-    D_00647FB0 = 0;
-    D_00647FD8 = D_00647FD4;
-    D_0064801C = D_00648034(D_00647FC4);
-}
 
 void func_00236618(void) {
     D_00648038[0] = 1484;
