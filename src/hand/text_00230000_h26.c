@@ -94,38 +94,6 @@ void func_0024ae00(void *);
 
 /* Ten 0x930-byte slots: a free one, else the oldest. */
 #include "data/types/text_00230000_h26.h"
-#include "data/pieces/D_0045FAC0.h"
-
-void func_00247350(void) {
-    s32 i;
-    for (i = 0; i < 10; i++) D_0045FAC0[i].used = 0;
-}
-
-Fx *func_00247388(void) {
-    s32 max = -1;
-    Fx *best = 0;
-    s32 i;
-    Fx *p;
-    for (i = 0; i < 10; i++) {
-        p = &D_0045FAC0[i];
-        if (p->used == 0) return p;
-    }
-    for (i = 0; i < 10; i++) {
-        p = &D_0045FAC0[i];
-        if (max < p->age) {
-            max = p->age;
-            best = p;
-        }
-    }
-    return best;
-}
-
-s32 func_002474a8(void) {
-    s32 i;
-    for (i = 0; i < 10; i++)
-        if (D_0045FAC0[i].used) return 1;
-    return 0;
-}
 
 typedef struct { u8 pad[0x24]; s32 unk24; s32 unk28; } Mdl;
 extern s32 D_006693B0[8];

@@ -1,12 +1,16 @@
 /* Labelled numbers over the field (docs/modules.md "Session 46"),
- * 0x00246cf0-0x00247350, default flags part.  D_0045FAC0 (in .data) holds ten
+ * 0x00246cf0-0x002474e8, default flags part.  D_0045FAC0 (in .data) holds ten
  * of them (LblNum, 0x930 bytes: state, age, position, value, a label, a frame
  * and ten digit sprites).  func_00247228 sets one up with a value at a
  * position; func_00247190 is the draw hook (func_00247258, the set up,
  * registers it and builds the sprites from D_0045E1F0) with its drawing
  * environment D_00668E20 (TEST_1 0x8000000048); func_002470d0 steps one
  * (out when its label's animation ends) and draws it (func_00246ed8).
- * func_00246cf0 splits a value into digits (as counter.c's func_00244b10).
+ * func_00247408 shows a value over an actor (its point 0x8004), func_00247468
+ * over a position; both take a free slot or the oldest (func_00247388).
+ * func_00247350 is the HUD's step (all off), func_002474a8 is 1 while one is
+ * shown.  func_00246cf0 splits a value into digits (as counter.c's
+ * func_00244b10).
  * What the label says is not known (no boot). */
 #include "common.h"
 #include "data/types/text_00240000_h50.h"
@@ -46,6 +50,7 @@ void func_0024af40(void *, void *, void *);
 void func_0024ae00(void *);
 void func_0024af00(void *);
 void sceVu0CopyVector(void *, void *);
+void func_001315c0(s32, s32, void *, f32);
 
 s32 func_00246cf0(s32 v, s32 *d) {
     s32 *p;
@@ -140,4 +145,46 @@ void func_00247258(void) {
     }
     if (func_0011ef38(func_00247190) == 0)
         func_0011ef10(0x28489, func_00247190);
+}
+
+void func_00247350(void) {
+    s32 i;
+    for (i = 0; i < 10; i++) D_0045FAC0[i].state = 0;
+}
+
+LblNum *func_00247388(void) {
+    s32 max = -1;
+    LblNum *best = 0;
+    s32 i;
+    LblNum *p;
+    for (i = 0; i < 10; i++) {
+        p = &D_0045FAC0[i];
+        if (p->state == 0) return p;
+    }
+    for (i = 0; i < 10; i++) {
+        p = &D_0045FAC0[i];
+        if (max < p->cnt) {
+            max = p->cnt;
+            best = p;
+        }
+    }
+    return best;
+}
+
+void func_00247408(s32 actor, s32 value) {
+    s32 pos[4];
+    LblNum *p = func_00247388();
+    func_001315c0(actor, 0x8004, pos, 0.0f);
+    func_00247228(p, value, pos);
+}
+
+void func_00247468(void *pos, s32 value) {
+    func_00247228(func_00247388(), value, pos);
+}
+
+s32 func_002474a8(void) {
+    s32 i;
+    for (i = 0; i < 10; i++)
+        if (D_0045FAC0[i].state) return 1;
+    return 0;
 }

@@ -27,28 +27,16 @@ extern s32 D_0046A5D8;
 extern s32 D_0046A688[];
 s32 D_00654570[0x33d] ALIGNED(16);
 extern volatile s32 D_00668040[];
-s32 func_00247388(void);
 s32 func_0025daf0(M2C_UNK *);
 s32 func_00267f50(M2C_UNK *, M2C_UNK *, M2C_UNK *, void *, M2C_UNK);
 s32 strncmp(s32, s32, s32);
 void *func_00120190(M2C_UNK *);
-void func_001315c0(s32, s32, s32, f32);
-void func_00247228(s32, s32, s32);
 void memset(s32, s32, s32);
 
 void func_00242ba0(void) {
     if (D_00654570[828] == 0) {
         D_00654570[828] = 1;
     }
-}
-
-void func_00247408(s32 arg0, s32 arg1) {
-    s32 sp[4];
-    s32 temp_s1;
-
-    temp_s1 = func_00247388();
-    func_001315c0(arg0, 0x8004, (s32) sp, 0.0f);
-    func_00247228(temp_s1, arg1, (s32) sp);
 }
 
 void func_00248628(s32 arg0, s32 arg1, s32 arg2) {
