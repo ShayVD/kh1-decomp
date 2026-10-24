@@ -9,6 +9,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
 #include "data/bss_004F.h"
@@ -35,11 +36,10 @@ void func_001219c8(f32 *d, f32 *a, f32 *b) {
 /* func_00121a78 (from hand/nostrict/text_00110000_s6_04.c). */
 f32 asinf(f32);
 f32 atan2f(f32, f32);
-void func_002673b8(f32 *, f32 *);
 void func_00121a78(f32 m[4][4], f32 *out) {
     f32 t[4][4];
     s32 i;
-    for (i = 0; i < 3; i++) func_002673b8(t[i], m[i]);
+    for (i = 0; i < 3; i++) PlatVu0Normalize(t[i], m[i]);
     out[0] = atan2f(-t[1][2], t[0][2]);
     out[1] = asinf(-t[2][2]);
     out[2] = atan2f(t[2][1], t[2][0]);

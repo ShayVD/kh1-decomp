@@ -9,6 +9,7 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "platform/math.h"
 #include "data/pieces/D_002BBDE0.h"
 #include "data/types/text_00110000_h4_p.h"
@@ -29,19 +30,15 @@
 #include "data/types/text_00110000_h53_p.h"
 
 /* func_00120bf8 (from hand/text_00110000_h4.c). */
-f32 func_00267390(void *, void *);
 f32 func_00120bf8(void *a) {
-    return PlatSqrtf(func_00267390(a, a));
+    return PlatSqrtf(PlatVu0InnerProduct(a, a));
 }
 
 /* func_00120c38 (from auto/text_00120000_3.c). */
-M2C_UNK func_002676c0(f32);
-M2C_UNK func_00267768(s32, s32, f32);
-M2C_UNK func_00267810(s32, s32, f32);
 void func_00120c38(s32 arg0, s32 arg1, void *arg2) {
-    func_002676c0(M2C_FIELD(arg2, f32 *, 8));
-    func_00267768(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
-    func_00267810(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
+    PlatVu0RotMatrixZ(arg0, arg1, M2C_FIELD(arg2, f32 *, 8));
+    PlatVu0RotMatrixX(arg0, arg0, M2C_FIELD(arg2, f32 *, 0));
+    PlatVu0RotMatrixY(arg0, arg0, M2C_FIELD(arg2, f32 *, 4));
 }
 
 /* func_00120c88 (from hand/text_00110000_h4.c). */
@@ -58,7 +55,6 @@ f32 func_00120c88(f32 a) {
 /* func_00120cf8 (from hand/text_00120000_s12_s12w13.c). */
 f32 sinf(f32);
 f32 cosf(f32);
-void func_00267560(f32 *, f32 *, f32);
 void func_00120cf8(f32 *axis, f32 m[4][4], f32 angle) {
     f32 t[3][4];
     f32 s[4];
@@ -68,9 +64,9 @@ void func_00120cf8(f32 *axis, f32 m[4][4], f32 angle) {
         m[i][3] = m[3][i] = 0.0f;
     }
     m[3][3] = 1.0f;
-    func_00267560(s, axis, sinf(angle));
+    PlatVu0ScaleVector(s, axis, sinf(angle));
     c = cosf(angle);
-    for (i = 0; i < 3; i++) func_00267560(t[i], axis, axis[i]);
+    for (i = 0; i < 3; i++) PlatVu0ScaleVector(t[i], axis, axis[i]);
     for (i = 0; i < 3; i++) {
         n = 3;
         for (j = 0; j < 3; j++) {
@@ -86,21 +82,20 @@ void func_00120cf8(f32 *axis, f32 m[4][4], f32 angle) {
         }
     }
     c = 1.0f - c;
-    for (i = 0; i < 3; i++) func_00267560(t[i], t[i], c);
+    for (i = 0; i < 3; i++) PlatVu0ScaleVector(t[i], t[i], c);
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) m[i][j] += t[i][j];
     }
 }
 
 /* func_00120ef0 (from auto/text_00120000_5.c). */
-M2C_UNK func_002672f8();
 f32 func_00120ef0(f32 *arg0, s32 arg1, void *arg2) {
     f32 *var_v0;
     f32 temp_f20;
     s32 var_v1;
 
     M2C_FIELD(arg2, f32 *, 0xC) = 1.0f;
-    func_002672f8();
+    PlatVu0ApplyMatrix(arg0, arg1, arg2);
     temp_f20 = 1.0f / M2C_FIELD(arg0, f32 *, 0xC);
     var_v0 = arg0;
     var_v1 = 2;
@@ -115,25 +110,22 @@ f32 func_00120ef0(f32 *arg0, s32 arg1, void *arg2) {
 
 /* func_00120f70 (from hand/text_00110000_h4.c). */
 typedef Vec4_2c5c80 Vec4;
-void func_00267530(Vec4 *, Vec4 *, Vec4 *);
-void func_00267370(Vec4 *, Vec4 *, Vec4 *);
 void func_00121fc4(Vec4 *, Vec4 *);
 void func_00120f70(Vec4 *pts, Vec4 *out) {
     Vec4 d[2];
     s32 i;
-    for (i = 0; i < 2; i++) func_00267530(&d[i], &pts[i + 1], &pts[i]);
+    for (i = 0; i < 2; i++) PlatVu0SubVector(&d[i], &pts[i + 1], &pts[i]);
     d[1].w = d[0].w = 1.0f;
-    func_00267370(out, &d[0], &d[1]);
+    PlatVu0OuterProduct(out, &d[0], &d[1]);
     func_00121fc4(out, out);
 }
 
 /* func_00121000 (from hand/text_00110000_h30.c). */
-#define func_002672f8 ((void (*)(f32 *, V4 *, f32 *)) func_002672f8)
 s32 func_00121000(V4 *m, V4 *pts) {
     V4 v;
     s32 i;
     for (i = 0; i < 8; i++) {
-        func_002672f8(v, m, *pts++);
+        PlatVu0ApplyMatrix(v, m, *pts++);
         if (v[3] < 1.0f) return 0;
         v[0] /= v[3];
         v[1] /= v[3];
@@ -141,7 +133,6 @@ s32 func_00121000(V4 *m, V4 *pts) {
     }
     return 1;
 }
-#undef func_002672f8
 
 /* func_001210f0 (from auto/text_00120000_2.c). */
 void func_001210f0(void *arg0, void *arg1, f32 fparg0) {
@@ -152,48 +143,40 @@ void func_001210f0(void *arg0, void *arg1, f32 fparg0) {
 }
 
 /* func_00121120 (from hand/text_00110000_h4.c). */
-s32 func_00267ea8(Vec4 *);
 s32 func_00121120(Vec4 *v) {
     s32 r = 0;
-    if (v->z < 0.0f || func_00267ea8(v)) r = 1;
+    if (v->z < 0.0f || PlatVu0ClipScreen(v)) r = 1;
     return r;
 }
 
 /* func_00121168 (from hand/text_00110000_h53.c). */
-void func_002673b8(void *, void *);
-void func_00267518(V53 *, V53 *, V53 *);
-void func_002674f0(V53 *, V53 *, V53 *, f32);
-#define func_00267560 ((void (*)(void *, void *, f32)) func_00267560)
-#define func_00267530 ((void (*)(V53 *, V53 *, V53 *)) func_00267530)
 #define func_00121fc4 ((void (*)(V53 *, V53 *)) func_00121fc4)
 s32 func_00121168(V53 *out, V53 *a, V53 *b, f32 t) {
     V53 q, d1, d2, x, y;
-    func_00267530(&d1, &a[1], &a[0]);
-    func_00267530(&d2, &b[1], &b[0]);
-    func_00267560(&x, &d1, ((b->y - a->y) + d2.y * (b->x - a->x)) / (d2.x * d1.y - d2.y * d1.x));
-    func_00267518(&x, &x, a);
-    func_00267530(&d1, a, &x);
+    PlatVu0SubVector(&d1, &a[1], &a[0]);
+    PlatVu0SubVector(&d2, &b[1], &b[0]);
+    PlatVu0ScaleVector(&x, &d1, ((b->y - a->y) + d2.y * (b->x - a->x)) / (d2.x * d1.y - d2.y * d1.x));
+    PlatVu0AddVector(&x, &x, a);
+    PlatVu0SubVector(&d1, a, &x);
     func_00121fc4(&d1, &d1);
-    func_00267530(&d2, b, &x);
+    PlatVu0SubVector(&d2, b, &x);
     func_00121fc4(&d2, &d2);
-    func_002674f0(&q, &d2, &d1, t);
-    func_002673b8(&q, &q);
-    func_00267560(&y, &q, d1.w + (d2.w - d1.w) * t);
-    func_00267518(&out[0], &x, &y);
+    PlatVu0InterVector(&q, &d2, &d1, t);
+    PlatVu0Normalize(&q, &q);
+    PlatVu0ScaleVector(&y, &q, d1.w + (d2.w - d1.w) * t);
+    PlatVu0AddVector(&out[0], &x, &y);
     out[0].w = 1.0f;
-    func_00267530(&d1, &a[1], &x);
+    PlatVu0SubVector(&d1, &a[1], &x);
     func_00121fc4(&d1, &d1);
-    func_00267530(&d2, &b[1], &x);
+    PlatVu0SubVector(&d2, &b[1], &x);
     func_00121fc4(&d2, &d2);
-    func_002674f0(&q, &d2, &d1, t);
-    func_002673b8(&q, &q);
-    func_00267560(&y, &q, d1.w + (d2.w - d1.w) * t);
-    func_00267518(&out[1], &x, &y);
+    PlatVu0InterVector(&q, &d2, &d1, t);
+    PlatVu0Normalize(&q, &q);
+    PlatVu0ScaleVector(&y, &q, d1.w + (d2.w - d1.w) * t);
+    PlatVu0AddVector(&out[1], &x, &y);
     out[1].w = 1.0f;
     return 1;
 }
-#undef func_00267560
-#undef func_00267530
 #undef func_00121fc4
 
 /* func_001213a0 (from hand/text_00110000_h30.c). */
@@ -221,11 +204,9 @@ f32 func_001214e0(f32 *a, f32 *b, f32 t) {
 }
 
 /* func_00121620 (from hand/text_00110000_h4.c). */
-void func_00267c10(Vec4 *, void *, s32, f32, f32, f32);
-void func_00267e90(Vec4 *, Vec4 *, f32);
 void func_00121620(Vec4 *m, void *a1, f32 x, f32 y, f32 z, f32 w) {
-    func_00267c10(m, a1, 0, x, y, z);
-    func_00267e90(&m[3], &m[3], w);
+    PlatVu0DropShadowMatrix(m, a1, x, y, z, 0);
+    PlatVu0ScaleVectorXYZ(&m[3], &m[3], w);
 }
 
 /* func_00121668 (from hand/text_00110000_h4.c). */
@@ -247,14 +228,12 @@ f32 func_001216d8(f32 a, f32 b, f32 c) {
 }
 
 /* func_00121748 (from hand/text_00110000_h30.c). */
-#define func_00267390 ((f32 (*)(f32 *, f32 *)) func_00267390)
 #define func_00120bf8 ((f32 (*)(f32 *)) func_00120bf8)
 f32 func_00121748(f32 *a, f32 *b) {
-    if (func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b)) < -1.0f) return -1.0f;
-    if (func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b)) > 1.0f) return 1.0f;
-    return func_00267390(a, b) / (func_00120bf8(a) * func_00120bf8(b));
+    if (PlatVu0InnerProduct(a, b) / (func_00120bf8(a) * func_00120bf8(b)) < -1.0f) return -1.0f;
+    if (PlatVu0InnerProduct(a, b) / (func_00120bf8(a) * func_00120bf8(b)) > 1.0f) return 1.0f;
+    return PlatVu0InnerProduct(a, b) / (func_00120bf8(a) * func_00120bf8(b));
 }
-#undef func_00267390
 #undef func_00120bf8
 
 /* func_00121840 (from auto/text_00120000.c). */
@@ -266,39 +245,32 @@ void func_00121840(void) {
 #undef func_00121748
 
 /* func_00121860 (from hand/text_00110000_h30.c). */
-void func_002675a8(f32 *, f32 *);
-#define func_002672f8 ((void (*)(f32 *, V4 *, f32 *)) func_002672f8)
-#define func_002673b8 ((void (*)(f32 *, f32 *)) func_002673b8)
-#define func_00267370 ((void (*)(f32 *, f32 *, f32 *)) func_00267370)
 #define func_00121840 ((f32 (*)(f32 *, f32 *)) func_00121840)
 #define func_00120cf8 ((void (*)(f32 *, V4 *, f32)) func_00120cf8)
 void func_00121860(f32 *from, f32 *to, f32 *out, f32 rate) {
     V4 a, b, ax;
     V4 m[4];
     f32 ang, lim;
-    func_002673b8(a, from);
-    func_002673b8(b, to);
-    func_00267370(ax, a, b);
-    func_002673b8(ax, ax);
+    PlatVu0Normalize(a, from);
+    PlatVu0Normalize(b, to);
+    PlatVu0OuterProduct(ax, a, b);
+    PlatVu0Normalize(ax, ax);
     ang = func_00121840(a, b);
     rate *= D_002BBDFC;
     if (rate < ang) ang = rate;
     else if (ang < -rate) ang = -rate;
     func_00120cf8(ax, m, ang);
-    func_002675a8(out, a);
+    PlatVu0CopyVector(out, a);
     out[3] = 0;
-    func_002672f8(out, m, out);
+    PlatVu0ApplyMatrix(out, m, out);
 }
-#undef func_002672f8
-#undef func_002673b8
-#undef func_00267370
 #undef func_00121840
 #undef func_00120cf8
 
 /* func_00121958 (from hand/text_00110000_h4.c). */
 void func_00121958(Vec4 *d, Vec4 *s, f32 *k) {
     s32 i;
-    for (i = 0; i < 3; i++) func_00267e90(&d[i], &s[i], *k++);
+    for (i = 0; i < 3; i++) PlatVu0ScaleVectorXYZ(&d[i], &s[i], *k++);
 }
 
 /* func_00121a10 (from auto/text_00120000_2.c). */
@@ -330,15 +302,13 @@ f32 func_00121b08(f32 fparg0) {
 
 /* func_00121b38 (from auto/text_00120000_8.c). */
 #define func_00121748 ((M2C_UNK (*)(M2C_UNK *, M2C_UNK *)) func_00121748)
-#define func_002675a8 ((M2C_UNK (*)(M2C_UNK *, s32)) func_002675a8)
 void func_00121b38(s32 arg0, s32 arg1) {
     s32 sp[8];
-    func_002675a8(sp, arg0);
-    func_002675a8(&M2C_FIELD(sp, M2C_UNK *, 0x10), arg1);
+    PlatVu0CopyVector(sp, arg0);
+    PlatVu0CopyVector(&M2C_FIELD(sp, M2C_UNK *, 0x10), arg1);
     M2C_FIELD(sp, s32 *, 0x4) = 0;
     M2C_FIELD(sp, s32 *, 0x14) = 0;
     func_00121748(sp, &M2C_FIELD(sp, M2C_UNK *, 0x10));
 }
 #undef func_00121748
-#undef func_002675a8
 

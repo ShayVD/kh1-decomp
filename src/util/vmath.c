@@ -26,6 +26,7 @@
  * The libvu0 calls use their names (docs/sdk.md "Session 45").  Read from
  * the code, not proved by a boot. */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/shared.h"
 #include "data/types/fvec.h"
 #include "m2c.h"
@@ -51,16 +52,6 @@ f32 acosf(f32);
 f32 sinf(f32);
 f32 sqrtf(f32);
 f32 cosf(f32);
-void sceVu0ApplyMatrix(f32 *, Mtx, f32 *);
-void sceVu0UnitMatrix(Mtx);
-void sceVu0MulMatrix(Mtx, Mtx, Mtx);
-void sceVu0CopyMatrix(Mtx, Mtx);
-void sceVu0TransMatrix(Mtx, Mtx, f32 *);
-void sceVu0RotMatrix(Mtx, Mtx, f32 *);
-void sceVu0RotMatrixX(Mtx, Mtx, f32);
-void sceVu0RotMatrixY(Mtx, Mtx, f32);
-void sceVu0RotMatrixZ(Mtx, Mtx, f32);
-void sceVu0CameraMatrix(Mtx, f32 *, f32 *, f32 *);
 void func_001be8a8(Mtx, f32 *, f32 *, f32 *, f32 *);
 void func_001bf290(f32 *q);
 
@@ -107,14 +98,14 @@ void func_001be820(u8 *p, u32 n) {
 
 void func_001be8a8(Mtx m, f32 *pos, f32 *zd, f32 *yd, f32 *rot) {
     struct { Mtx r; f32 z[4]; f32 y[4]; f32 p[4]; } t;
-    sceVu0UnitMatrix(t.r);
-    sceVu0RotMatrixX(t.r, t.r, rot[0]);
-    sceVu0RotMatrixY(t.r, t.r, rot[1]);
-    sceVu0RotMatrixZ(t.r, t.r, rot[2]);
-    sceVu0ApplyMatrix(t.z, t.r, zd);
-    sceVu0ApplyMatrix(t.y, t.r, yd);
-    sceVu0ApplyMatrix(t.p, t.r, pos);
-    sceVu0CameraMatrix(m, t.p, t.z, t.y);
+    PlatVu0UnitMatrix(t.r);
+    PlatVu0RotMatrixX(t.r, t.r, rot[0]);
+    PlatVu0RotMatrixY(t.r, t.r, rot[1]);
+    PlatVu0RotMatrixZ(t.r, t.r, rot[2]);
+    PlatVu0ApplyMatrix(t.z, t.r, zd);
+    PlatVu0ApplyMatrix(t.y, t.r, yd);
+    PlatVu0ApplyMatrix(t.p, t.r, pos);
+    PlatVu0CameraMatrix(m, t.p, t.z, t.y);
 }
 
 void func_001be988(f32 *out, f32 *a, f32 *b, s32 num, s32 den) {
@@ -167,15 +158,15 @@ void func_001bea58(f32 *a, f32 *b) {
 
 void func_001bebd0(Mtx *o, Xf *x, Mtx *p) {
     Mtx t, r, s;
-    sceVu0UnitMatrix(t);
-    sceVu0RotMatrix(r, t, x->rot);
-    sceVu0MulMatrix(o[1], p[1], r);
-    sceVu0TransMatrix(t, t, x->pos);
-    sceVu0MulMatrix(r, r, t);
+    PlatVu0UnitMatrix(t);
+    PlatVu0RotMatrix(r, t, x->rot);
+    PlatVu0MulMatrix(o[1], p[1], r);
+    PlatVu0TransMatrix(t, t, x->pos);
+    PlatVu0MulMatrix(r, r, t);
     func_001be8a8(s, x->v[0], x->v[1], x->v[2], x->v[3]);
-    sceVu0MulMatrix(o[2], s, r);
-    sceVu0MulMatrix(o[3], p[0], o[2]);
-    sceVu0CopyMatrix(o[0], p[2]);
+    PlatVu0MulMatrix(o[2], s, r);
+    PlatVu0MulMatrix(o[3], p[0], o[2]);
+    PlatVu0CopyMatrix(o[0], p[2]);
 }
 
 void func_001becb8(f32 (*m)[4], f32 *v, s32 neg) {
@@ -258,7 +249,7 @@ f32 func_001befc8(s32 t, Key *k) {
 
 void func_001bf048(Mtx d, Mtx s) {
     if (d != s) {
-        sceVu0CopyMatrix(d, s);
+        PlatVu0CopyMatrix(d, s);
     }
     d[3][3] = 1.0f;
     d[1][3] = 0.0f;

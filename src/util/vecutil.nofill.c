@@ -9,14 +9,13 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 54"). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/pieces/D_002C5910.h"
 #include "data/pieces/D_002E26A0.h"
 
 /* func_00121550 (from hand/nofill/text_00110000_h30.c). */
 double nan();
-void func_00267560(f32 *, f32 *, f32);
-void func_00267518(f32 *, f32 *, f32 *);
 f32 func_00121550(f32 *out, f32 *p0, f32 *d0, f32 *p1, f32 *d1) {
     f32 a = d1[0];
     f32 b = d1[2];
@@ -24,8 +23,8 @@ f32 func_00121550(f32 *out, f32 *p0, f32 *d0, f32 *p1, f32 *d1) {
     f32 t;
     if (den == 0.0f) return nan();
     t = (a * (p1[2] - p0[2]) + b * (p0[0] - p1[0])) / den;
-    func_00267560(out, d0, t);
-    func_00267518(out, out, p0);
+    PlatVu0ScaleVector(out, d0, t);
+    PlatVu0AddVector(out, out, p0);
     return t;
 }
 
