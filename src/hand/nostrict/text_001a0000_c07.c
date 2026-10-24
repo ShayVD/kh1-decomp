@@ -4,40 +4,13 @@
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 Mtx[4][4] __attribute__((aligned(16)));
 typedef f32 Vec[4] __attribute__((aligned(16)));
-
-typedef struct {
-    Mtx ma;       /* 0x00 */
-    Mtx m;        /* 0x40 */
-    f32 off[3];   /* 0x80 */
-    u8 pad8c[2];
-    u8 b8e;
-    u8 b8f;
-    Vec v90;      /* 0x90 */
-    f32 fa0;
-    f32 fa4;
-    f32 fa8;
-} Obj57c0;
-
-typedef struct {
-    Obj57c0 *o;
-    f32 *v;
-    Mtx *mtx;
-} Arg57c0;
-
-extern Mtx D_00615FC0;
-extern Mtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 void sceVu0CopyMatrix(Mtx, Mtx);
-void sceVu0UnitMatrix(Mtx);
-void sceVu0MulMatrix(Mtx, Mtx, Mtx);
 void func_002672f8(f32 *, Mtx, f32 *);
 void func_00267560(f32 *, f32 *, f32);
 void func_00267530(f32 *, f32 *, f32 *);
 void func_002675a8(f32 *, f32 *);
 void func_002673b8(f32 *, f32 *);
 f32 func_00267390(f32 *, f32 *);
-f32 func_001a9350(f32 *);
-f32 func_001a9388(f32 *);
-
 
 typedef struct {
     u8 pad0[0x10];
@@ -324,7 +297,6 @@ void func_001a3720(Em *e, Pt *p, Sub *s) {
     }
 }
 
-
 void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
     f32 v0[4] __attribute__((aligned(16)));
     f32 v10[4] __attribute__((aligned(16)));
@@ -439,120 +411,6 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
         func_00267518(p->pos, D_00615F70, v20);
         p->pos[3] = 1.0f;
         func_001a3720(e, p, s);
-    }
-}
-
-void func_001a57c0(Arg57c0 *a) {
-    Mtx m0;
-    Mtx m1;
-    Vec v80;
-    Vec v90;
-    Vec va0;
-    Obj57c0 *o;
-
-    f32 d;
-
-    o = a->o;
-    sceVu0CopyMatrix(m1, *a->mtx);
-    if (o->b8f) {
-        sceVu0CopyMatrix(m0, m1);
-        m0[3][0] = 0;
-        m0[3][1] = 0;
-        m0[3][2] = 0;
-        func_002672f8(v80, m0, a->v);
-        func_00267560(v90, m1[3], -1.0f);
-        func_00267530(va0, v90, v80);
-    } else {
-        *(u128 *)v80 = 0;
-        *(u128 *)v90 = 0;
-        v80[3] = 1.0f;
-        v90[3] = 1.0f;
-        sceVu0UnitMatrix(m0);
-        m0[3][0] = D_00615FC0[3][0] + o->off[0];
-        m0[3][1] = D_00615FC0[3][1] + o->off[1];
-        m0[3][2] = D_00615FC0[3][2] + o->off[2];
-        sceVu0MulMatrix(m0, D_00616040, m0);
-        func_002672f8(v80, m0, v80);
-        func_00267560(v80, v80, 1.0f / v80[3]);
-        sceVu0UnitMatrix(m0);
-        func_002675a8(m0[3], D_00615FC0[3]);
-        sceVu0MulMatrix(m0, D_00616040, m0);
-        func_002672f8(v90, m0, v90);
-        func_00267560(v90, v90, 1.0f / v90[3]);
-        func_00267530(va0, v90, v80);
-        va0[2] = 512.0f;
-    }
-    sceVu0UnitMatrix(o->ma);
-    func_002672f8(o->ma[3], m1, a->v);
-    if (va0[0] == 0.0f && va0[1] == 0.0f) {
-        func_002675a8(o->m[3], o->ma[3]);
-    } else {
-        __asm__ volatile(
-        "lqc2 $vf18, 0(%1)\n"
-        "vmul.xy $vf26xy, $vf18xy, $vf18xy\n"
-        "vaddy.x $vf26x, $vf26x, $vf26y\n"
-        "vsqrt Q, $vf26x\n"
-        "vsub.zw $vf22zw, $vf0zw, $vf0zw\n"
-        "vsub.w $vf21w, $vf0w, $vf0w\n"
-        "vsub.xyw $vf20xyw, $vf0xyw, $vf0xyw\n"
-        "vaddw.z $vf20z, $vf0z, $vf0w\n"
-        "sqc2 $vf20, 32(%0)\n"
-        "vwaitq\n"
-        "vaddq.x $vf26x, $vf0x, Q\n"
-        "vdiv Q, $vf0w, $vf26x\n"
-        "lqc2 $vf17, 0(%2)\n"
-        "sqc2 $vf17, 48(%0)\n"
-        "vwaitq\n"
-        "vmulq.xy $vf22xy, $vf18xy, Q\n"
-        "sqc2 $vf22, 0(%0)\n"
-        "vopmula.xyz ACC, $vf22, $vf20\n"
-        "vopmsub.xyz $vf21, $vf20, $vf22\n"
-        "sqc2 $vf21, 16(%0)\n"
-        : : "r"(o->m), "r"(va0), "r"(o->ma[3]) : "memory");
-    }
-    if (o->b8f) {
-        o->m[3][2] = o->ma[3][2] * 0.001953125f;
-    } else {
-        o->m[3][2] = (D_00615FC0[3][2] + o->off[2]) * 0.001953125f;
-    }
-    func_002673b8(va0, va0);
-    o->m[3][0] = va0[0] * o->m[3][2];
-    o->m[3][1] = va0[1] * o->m[3][2];
-    func_00267530(v90, v90, v80);
-    d = func_001a9350(v90);
-    o->fa4 = func_001a9388(v90);
-    func_002673b8(v80, v90);
-    if (o->b8f) {
-        v90[0] = 0;
-        v90[1] = 0;
-        v90[2] = 1.0f;
-        v90[0] = (1.0f - (1.0f - func_00267390(v90, v80)) * 0.5f) / 0.3f;
-        o->m[3][3] = v90[0] > 1.0f ? 0.0f : 1.0f - v90[0];
-        if (o->v90[3] >= 0.0f) {
-            sceVu0CopyMatrix(m0, m1);
-            m0[3][2] = m0[3][1] = m0[3][0] = 0.0f;
-            func_002672f8(v90, m0, v90);
-            v90[0] = (1.0f - func_00267390(o->v90, v80)) * 0.5f;
-            v90[0] = v90[0] / o->v90[3];
-            v90[0] = v90[0] > 1.0f ? 0.0f : 1.0f - v90[0];
-            o->m[3][3] *= v90[0];
-        }
-        v80[0] = o->fa8 - (f32)o->b8e;
-        if (v80[0] > 0.0f) {
-            v80[0] = d / v80[0];
-            d = 0.0f;
-            if (!(v80[0] >= 1.0f)) d = 1.0f - v80[0];
-            o->m[3][3] *= d;
-        } else {
-            o->m[3][3] = 0.0f;
-        }
-    } else {
-        if (o->fa8 > 0.0f) {
-            o->m[3][3] = o->fa4 / o->fa8;
-            o->m[3][3] = o->m[3][3] > 1.0f ? 0.0f : 1.0f - o->m[3][3];
-        } else {
-            o->m[3][3] = 0.0f;
-        }
     }
 }
 

@@ -180,24 +180,6 @@ void func_001a47b0(PGrp *g, PKey *k, s32 a2) {
     if (em > 0) g->cnt = 0;
 }
 
-/* ---- func_001a5fd0 ---- */
-typedef struct { s32 a; f32 r; } Ent8;
-typedef struct { u8 pad[4]; s32 v; u8 n; u8 fl; u8 pad2[6]; Ent8 e[1]; } Rnd;
-void func_001a5688(Ent8 *, s32);
-
-void func_001a5fd0(Rnd *r, s32 v, s32 seed) {
-    s32 i;
-    r->v = v;
-    for (i = 0; i < r->n; i++) func_001a5688(&r->e[i], v);
-    if (!(u8)(r->fl & 1)) {
-        s32 x = seed;
-        for (i = 0; i < r->n; i++) {
-            x = (x * 2061 + 7) & 0xffff;
-            r->e[i].r = (f32)x / 65535.0f;
-        }
-        r->fl |= 1;
-    }
-}
 
 /* ---- func_001a8828 ---- */
 typedef struct Lnk { u8 p0[8]; struct Lnk *next; struct Lnk *pprev; } Lnk;
@@ -255,8 +237,6 @@ void func_001a89f0(Grp10 *g, Pool10 *pl, s32 a, s32 b) {
     h->l.prev = (DL *)g;
     g->next = &h->l;
 }
-
-
 
 void func_001be820(void *, u32);
 

@@ -4,7 +4,6 @@
 #include "ppp.h"
 
 M2C_UNK func_00183b20(s32, s32);
-extern M2C_UNK D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern s32 D_00372760;
 extern s32 D_00615E64;
 
@@ -30,16 +29,6 @@ void pppRyjMegaBirthModelDes(s32 arg0, PppEntry *arg1) {
         func_00183b20(D_00615E64, temp_a1_2);
         M2C_FIELD(temp_s0, s32 *, 0x18) = 0;
     }
-}
-
-void func_001a62a8(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, M2C_UNK **, 0) = &D_00575A00;
-}
-
-void func_001a67a0(void *arg0) {
-    M2C_FIELD(arg0, s32 *, 4) = 0;
-    M2C_FIELD(arg0, M2C_UNK **, 0) = &D_00575A00;
 }
 
 void func_001a8f08(void) {
