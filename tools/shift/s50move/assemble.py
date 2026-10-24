@@ -108,6 +108,8 @@ def classify(t, k, name):
         m = re.search(r'\(\s*\*\s*(\w+)\s*\)', body)
         if m: return 'typedef', [m.group(1)]
         n = re.findall(r'(\w+)\s*(?:\[[^\]]*\]\s*)*[;,]', body)
+        m = re.match(r'typedef\s+(struct|union|enum)\s+(\w+)\s*\{', s2)
+        if m and m.group(2) not in n: n = n + [m.group(2) + '#tag']  # the tag it declares too
         return 'typedef', n
     m = re.match(r'(struct|union|enum)\s+(\w+)\s*(\{.*\})?\s*;$', s2, flags=re.S)
     if m: return 'tag', [m.group(2) + '#tag']  # the tag namespace
@@ -121,7 +123,7 @@ def classify(t, k, name):
     names = []
     body = re.sub(r'=.*$', '', s2.rstrip(';'), flags=re.S)
     for part in split_top(body):
-        m = re.search(r'\(\s*\*+\s*(\w+)\s*\)', part)
+        m = re.search(r'\(\s*\*+\s*(\w+)\s*(\[[^\]]*\]\s*)*\)', part)  # (*f)(...), (*f[n])(...)
         if m: names.append(m.group(1)); continue
         m = re.search(r'(\w+)\s*(\[[^\]]*\]\s*)*$', part.strip())
         if m and m.group(1) not in KW: names.append(m.group(1))
@@ -281,6 +283,9 @@ def main(out, funcs, onto=False):
                 incs.append((order, t.strip())); continue
             if kind == 'var':
                 for nm, d in var_decls(t):
+                    if nm in src and not nm.startswith('D_'):  # m2c's `extern M2C_UNK func_X;` (an address)
+                        scope[nm] = (order, 'proto', '%s %s();' % (defret(defhead[nm]) if nm in defhead else 'void', nm))
+                        continue
                     if not re.match(r'\s*(extern|static)\b', d) and '=' not in d:
                         d = 'extern ' + re.sub(r'\s+;', ';', no_attr(d).strip())  # a definition stays in its file: declare it
                     scope[nm] = (order, 'var', d)
@@ -416,6 +421,7 @@ def main(out, funcs, onto=False):
         views = []
         mine = []
         owndefs = {nm.split('#')[0] for nm, kind, t in items if kind == 'define'}
+        done_txt = set()
         for nm, kind, t in items:
             r = nm.split('#')[0]
             t2 = cur(t); n2 = ren.get(r, r) + nm[len(r):]
@@ -424,12 +430,19 @@ def main(out, funcs, onto=False):
                 key = '%s@%s@%s' % (n2, norm(t2), macros.get(r0))
                 if emitted.get(key): continue
                 emitted[key] = (kind, norm(t2)); sec.append(t2); continue
+            if kind in ('typedef', 'tag', 'inline', 'ctx') and norm(t2) in done_txt:
+                continue  # (a typedef needed by two of its names)
             if kind in ('typedef', 'tag', 'inline', 'ctx'):
+                done_txt.add(norm(t2))
                 # under this function's own `#define NAME NAME_<addr>` the
                 # declaration names another identifier: emit it again
                 if n2 in emitted and emitted[n2][1] == norm(t2) and emac.get(n2) == macros.get(r0): continue
                 if r0 in macros and r0 not in mine: sec.append('#undef ' + r0); macros.pop(r0)
-                emitted[n2] = (kind, norm(t2)); emac[n2] = macros.get(r0); sec.append(t2); continue
+                emitted[n2] = (kind, norm(t2)); emac[n2] = macros.get(r0); sec.append(t2)
+                if kind == 'typedef':  # its other names (a struct tag) are taken too
+                    for x in classify(t2, 'decl', None)[1]:
+                        if x not in emitted: emitted[x] = (kind, norm(t2)); emac[x] = macros.get(x.split('#')[0])
+                continue
             if kind == 'var':
                 if nm in macros and nm not in owndefs: sec.append('#undef ' + nm); macros.pop(nm)
                 if nm not in emitted:
@@ -456,6 +469,11 @@ def main(out, funcs, onto=False):
                 if nm in emitted:
                     if emitted[nm][1] != norm(t2):
                         if risky(emitted[nm][1], norm(t2)):
+                            views.append(fview(nm, t2))
+                            conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
+                        elif emitted[nm][0] != 'kr' and unnamed(emitted[nm][1]) != unnamed(t2) and sig(t2):
+                            # other pointer types: the function's own types
+                            # (a member of the result, a struct argument)
                             views.append(fview(nm, t2))
                             conflicts.append('%s: %s  vs  %s (viewed)' % (f, norm(t2), emitted[nm][1]))
                         else:

@@ -23,7 +23,6 @@ typedef struct { RngId id; f32 f4, f8, fC, f10; } RngB6;
 typedef struct { u8 pad[4]; s32 flags; u8 pad8[4]; RngB6 *rng; } KB6;
 
 extern u32 D_002C5958;
-extern f32 D_002BBDFC;
 extern s32 D_00574FB8;
 extern void *D_00574FC0[20];
 extern s32 func_00122ff8(void *);
@@ -247,8 +246,6 @@ typedef Sub4E3_35BD40 Sub4E3;
 typedef WkE3_35BD40 WkE3;
 typedef ChrE3_35BD40 ChrE3;
 
-
-
 extern V4E3 D_00575060[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
 extern V4E3 D_00575030[2]; /* stays extern: probably the tail of a {3 x vec4} array the other file indexes (D_00575020/D_00575050), so its extent is unsure */
 extern V4E3 D_0035BD20[2];
@@ -361,7 +358,7 @@ void func_0016e3f8(void) {
 }
 
 /* ---- func_001707d0 ---- */
-#include "data/pieces/D_002C58B0.h"
+#include "data/types/fvec.h"
 typedef FVec4 V4D0;
 typedef struct { u8 pad[0x18]; f32 f18; } Sub130D0;
 typedef struct { u8 pad[0x44]; s32 w44; s32 w48; } Sub6CD0;
@@ -381,134 +378,10 @@ typedef struct {
     u8 pad168[0x158]; f32 f2C0, f2C4; u8 pad2C8[0xF8]; V4D0 x3C0;
 } ObjD0;
 
-
-extern s32 func_001375f0(ObjD0 *);
-extern void func_0013f0c0(ObjD0 *, u8 *, V4D0 *);
-extern u32 func_001627e8(s32);
-extern void func_001689d0(ObjD0 *, WkD0 *);
-extern void func_001693c8(ObjD0 *, WkD0 *);
-extern void func_00169f28(ObjD0 *, WkD0 *);
-extern s32 func_0016a3f8(ObjD0 *, WkD0 *);
-extern s32 func_0016abc0(ObjD0 *, WkD0 *);
-extern void func_0016b1f0(ObjD0 *, WkD0 *);
-extern void func_0016f3d0(ObjD0 *, WkD0 *);
-extern s32 func_0016f8b8(ObjD0 *, WkD0 *);
-extern void func_0016fd98(ObjD0 *, WkD0 *);
-extern void func_00170170(ObjD0 *, WkD0 *);
-extern void func_001705c0(ObjD0 *, WkD0 *);
-extern void func_002673b8(V4D0 *, V4D0 *);
-extern void func_00267e90(V4D0 *, V4D0 *, f32);
-
 static inline s32 inl_rng(ObjD0 *o, WkD0 *w) {
     if (o->x164 < 13) { if (o->x164 >= 3) return 1; }
     return o->x164 == w->w4C;
 }
-
-
-void func_001707d0(ObjD0 *o, V4D0 *out) {
-    WkD0 *w = o->p144;
-    V4D0 t;
-    f32 a, b, s1, s2;
-    SubB1 *p;
-    u32 n;
-    s32 i;
-    if (w->f30 <= 0.0f) {
-        w->f20 = w->f28 = w->f2C = 0.0f;
-        w->f24 = -o->f2C4 * 0.5f;
-        w->f34 = o->p130->f18;
-        a = o->f2C0;
-        b = o->f2C4;
-        if (a <= 0.0f && b <= 0.0f) w->f30 = 0.0f;
-        else if (b <= 0.0f) w->f30 = a;
-        else if (a <= 0.0f) w->f30 = b;
-        else {
-            if (!(a < b)) a = b;
-            w->f30 = a;
-        }
-    }
-    if (o->x70 != 2) w->w5C = 0;
-    w->f68 -= D_002BBDFC;
-    func_002675a8(&w->v110, &w->v120);
-    w->b9 = 0;
-    w->b12 = 0;
-    w->b20 = 0;
-    func_002675a8(&w->v120, &D_002C58B0);
-    w->w80.c.m = 0;
-    w->w80.w |= 0x200000000000000ULL;
-    if ((u32)(o->x164 - 71) < 37) w->b1 = 0;
-    if (!inl_rng(o, w)) w->b18 = 0;
-    func_00267530(&t, &o->x10, &w->v100);
-    func_002673b8(&t, &t);
-    if (!w->b7 && (func_00267390(&w->v110, &t) < 0.5f || o->x90 != 0)) w->w58++;
-    if (fabsf(w->fA4) > 600.0f) w->w58 += 20;
-    func_001705c0(o, w);
-    if ((D_002C5958 >> 16) & 1) {
-        w->b2 = 0;
-    } else {
-        if (w->f64 > 0.0f) p = w->pC;
-        else p = w->p8;
-        n = o->p6C->w44 * p->b1;
-
-        if (w->b16) {
-            n *= 2;
-            w->b16 = 0;
-        }
-        if (o->p6C->w48 * (func_001627e8(0x1000) >> 4) < n) w->b2 = 1;
-        else w->b2 = 0;
-    }
-    if (!func_001375f0(o)) {
-        if (w->p48) w->p48(o, w);
-    } else {
-        w->p48 = 0;
-        if (D_002C5958 & 1) {
-            w->b13 = 1;
-            if (!(w->w98 = func_0016f8b8(o, w)) || !func_0016abc0(o, w)) {
-                func_0016fd98(o, w);
-                if (!func_0016a3f8(o, w)) func_0016b1f0(o, w);
-            }
-        } else {
-            if (w->b13) func_0016f3d0(o, w);
-            func_001693c8(o, w);
-        }
-    }
-    if (!w->b12) {
-        f32 c, d;
-        s1 = s2 = 0.0f;
-        for (i = 4; i > 0; i--) {
-            s1 += (w->h1[i] = w->h1[i - 1]);
-            s2 += (w->h2[i] = w->h2[i - 1]);
-        }
-        c = w->v120.y;
-        d = w->v120.w;
-        s1 += c;
-        s2 += d;
-        w->h1[0] = c;
-        w->h2[0] = d;
-        w->v120.y = s1 / 5.0f;
-        w->v120.w = s2 / 5.0f;
-        func_00170170(o, w);
-    }
-    if (func_00267390(&w->v120, &w->v120) != 0.0f) func_002675a8(out, &w->v120);
-    if (w->w80.c.m) {
-        out->w = 0.0f;
-        if (w->w80.c.m != 1) func_0013f0c0(o, &w->w80.c.m, out);
-        else if (w->p74->w4 & 8) {
-            func_002675a8(out, &w->vD0);
-            out->w = 8.0f;
-        }
-    } else {
-        func_00169f28(o, w);
-    }
-    func_001689d0(o, w);
-    if (o->x70 == 8 && w->b9) {
-        func_00267e90(&o->x3C0, out, out->w);
-        o->x3C0.y = out->y;
-        o->x2C = 0;
-
-    }
-    func_002675a8(&w->v100, &o->x10);
-}
 #include "data/bss_0057_mixed.h"
 #include "data/pieces/D_002C5958.h"
-#include "data/pieces/D_002BBDFC.h"
 #include "data/pieces/D_0035BD20.h"
