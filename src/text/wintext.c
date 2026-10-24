@@ -9,6 +9,8 @@
  * 18, or with a one-pixel outline in a second colour (func_001fa318 ...).
  * W16(f) is a window field in 1/16 pixels as pixels, W32(f) half of it. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1A70.h"
 
@@ -28,9 +30,6 @@ u8 *func_001efbb8(s32);
 s32 func_001eff50(s32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-s32 sceGsSyncPath(s32, u16);
 
 void func_001f86e0(TextWin *o, s32 x, s32 y, s32 w, s32 h);
 s32 func_001f9078(TextWin *w, s32 id, s32 sz);
@@ -98,8 +97,8 @@ void func_001f86e0(TextWin *o, s32 x, s32 y, s32 w, s32 h) {
 
         e = func_0011fb38(64, (u64)x0 | ((u64)x1 << 16) | ((u64)y0 << 32) | ((u64)y1 << 48), p + 1);
         buf->a = ((e - buf) - 1) | 0x70000000;
-        func_00266f38(func_00266c08(2), ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), ub);
+        PlatGsSyncPath(0, 0);
         func_001220b8(buf);
     }
 }
@@ -135,8 +134,8 @@ void func_001f8950(TextWin *o, s32 x0, s32 y0, s32 w, s32 h) {
 
         e = func_0011fb38(64, (u64)x0 | ((u64)x1 << 16) | ((u64)y0 << 32) | ((u64)y1 << 48), p + 1);
         buf->a = ((e - buf) - 1) | 0x70000000;
-        func_00266f38(func_00266c08(2), ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), ub);
+        PlatGsSyncPath(0, 0);
         func_001220b8(buf);
     }
 }
@@ -177,8 +176,8 @@ void func_001f8ba8(TextWin *o) {
 
         e = func_0011fb38(64, (u64)x0 | ((u64)x1 << 16) | ((u64)y0 << 32) | ((u64)y1 << 48), p + 1);
         buf->a = ((e - buf) - 1) | 0x70000000;
-        func_00266f38(func_00266c08(2), ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), ub);
+        PlatGsSyncPath(0, 0);
         func_001220b8(buf);
     }
 }
@@ -206,8 +205,8 @@ void func_001f8f30(void) {
     p[0] = 0x1000000000008001;
     p[1] = 0xe;
     buf[0] = ((s32)((u8 *)func_0011fb38(0x40, 0x017F000001FF0000, (Q *)(p + 2)) - (u8 *)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

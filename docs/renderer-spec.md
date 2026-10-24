@@ -53,10 +53,8 @@ The renderer uses all three GS paths:
     `func_00162xxx` that feeds it).
 - **PATH3 (GIF DMA, channel 2)** for 2D: UI, fonts, fades, the end-of-frame
   copy and texture uploads. Static packets go through `func_00106b18`; dynamic
-  ones go straight to `func_00266f38(func_00266c08(2), tag)`. Those two libdma
-  functions are not named in functions.tsv; from their use they are
-  `sceDmaSend` and `sceDmaGetChan` (inferred), and this document uses those
-  names.
+  ones go straight to `PlatDmaSend(PlatDmaGetChan(2), tag)` (include/platform/dma.h;
+  libdma's sceDmaSend / sceDmaGetChan, named from their code in session 56).
 - **PATH2 (VIF1 DIRECT)** was not seen in any static chain.
 
 VU0 runs one micro-mode program (`P21`) for skeleton matrices. The rest of the

@@ -5,6 +5,9 @@
  * "MENV" map environment in place), func_00161de8, func_00162218,
  * func_00162428.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "platform/math.h"
 #include "data/pieces/D_00308CDC.h"
 #include "data/pieces/D_002E26A0.h"
@@ -504,7 +507,6 @@ typedef struct { u16 x0; u16 x2; u32 x4; s32 x8; s32 xc; } B4Mb;
 typedef struct { s32 x0; s32 x4; s32 x8; } B4Mk;
 typedef struct { u8 pad[0x14]; s32 x14; u8 pad18[4]; s32 x1c; u8 pad20[4]; s32 x24; s32 x28; u8 pad2c[4]; s32 x30; u8 pad34[4]; s32 x38; B4Mk *x3c; } B4Mo;
 extern s32 D_005739F8[];
-void FlushCache(s32);
 s32 printf(const char *, ...);
 void func_001680d8(B4Hd *);
 s32 func_001681b8(B4Hd *, u32);
@@ -534,7 +536,7 @@ void func_00161a08(B4Hd *h) {
     c = 0;
     t = 0;
     m = 0;
-    FlushCache(0);
+    PlatFlushCache(0);
     o = D_005739F8;
     switch (h->x0) {
     case 0x4a424f4d:
@@ -637,7 +639,6 @@ typedef struct {
 } G698;
 typedef struct { u8 pad[0x10]; void *x10; s32 x14; } Tk62;
 s32 func_0015eea0();
-s32 sceGsSyncPath(s32, s32);
 #define D_0055C698 (*(G698 (*)) &D_0055C698)
 #define func_001606d0 ((void (*)(void)) func_001606d0)
 #define func_0015ee78 ((Tk62 *(*)(s32, void *)) func_0015ee78)
@@ -660,7 +661,7 @@ void func_00161de8(void) {
     }
     func_0015ee78(0, func_0015f388);
     func_0015eea0();
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     p = &D_0055C698.pr[D_0055C698.x0][cC];
     for (i = cC; i < D_0055C698.xC; i++, p++) {
         if (p->a) {
@@ -701,7 +702,6 @@ s32 func_00162218(SkelObj *o, s32 idx, f32 *out, f32 t) {
 }
 
 /* func_00162428 (from hand/nostrict/text_00150000_h36.c). */
-void func_00266f38(void *, void *);
 extern DmaChcr *D_0055C644;
 typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
 extern GifTag8 *volatile D_0055C648;
@@ -720,6 +720,6 @@ void func_00162428(void) {
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
     __asm__ volatile("sync");
-    func_00266f38(D_0055C644, D_00573AC0);
+    PlatDmaSend(D_0055C644, D_00573AC0);
 }
 

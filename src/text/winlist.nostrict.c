@@ -2,6 +2,8 @@
  * (docs/modules.md "Session 38"): func_00208458 draws a list's frame of n
  * rows in a window (a GIF packet through path 2, scaled like the others). */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
 
@@ -22,10 +24,7 @@ typedef struct {
     S2 s[1];
 } PK;
 
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
@@ -48,7 +47,7 @@ void func_00208458(TextWin *o, s32 x, s32 y, u32 col, s32 n) {
     s32 cx, cy;
     f32 sx, sy, fcx, fcy;
 
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1536, 128);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
     x90 = o->x90;
@@ -179,8 +178,8 @@ void func_00208458(TextWin *o, s32 x, s32 y, u32 col, s32 n) {
         }
     }
     buf[0] = ((((s32)s - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
     func_00206130(o, x + 2, y + 22, n * 79 + 25, 2, 0x80602020);
 }

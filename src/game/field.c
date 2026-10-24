@@ -12,6 +12,8 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "data/pieces/D_0037A378.h"
 #include "data/types/text_00100000_h28.h"
 #include "data/pieces/D_002BC0C0.h"
@@ -47,9 +49,8 @@
 
 /* func_001001f8 (from auto/text_00100000.c). */
 M2C_UNK func_00106c78();
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
 s32 func_001001f8(void) {
-    func_00265bc0(0, 0);
+    PlatGsSyncPath(0, 0);
     func_00106c78();
     return 0;
 }
@@ -64,7 +65,7 @@ void func_00100228(void) {
 
 /* func_00100278 (from hand/text_00100000_h28.c). */
 extern s32 D_002A3F44;
-extern s32 D_002A6B84;
+extern PlatDmaChan *D_002A6B84;
 extern s32 D_002B6474;
 extern s32 D_002B6770;
 extern s32 D_002BC740;
@@ -73,7 +74,6 @@ extern s32 D_002BCDA8;
 extern s32 D_002BCDD8;
 extern s32 D_002BCDDC;
 extern s32 func_00112fd0(s32);
-extern s32 func_00266c08(s32);
 extern void func_00101660(void);
 extern void func_00106900(void);
 extern void func_00106910(void);
@@ -82,7 +82,7 @@ extern void func_00113de0(void);
 extern void func_00114090(void);
 extern void func_00114840(void);
 void func_00100278(void) {
-    D_002A6B84 = func_00266c08(2);
+    D_002A6B84 = PlatDmaGetChan(2);
     D_002B6770 = 0;
     func_00106900();
     func_00106910();

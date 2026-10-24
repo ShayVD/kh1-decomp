@@ -19,7 +19,7 @@ extern s32 D_0046C5D0;
 s32 AddIntcHandler(M2C_UNK, s32, M2C_UNK);
 s32 func_00266ba8(s32);
 s32 sceVu0CopyVector(s32, s32);
-void *func_002654e0();
+void *sceGsGetGParam();
 void func_00266ab0(void *);
 void func_00266b20(s32, s32, s32);
 
@@ -68,7 +68,7 @@ s32 func_00266a10(s32 arg0) {
     s32 temp_s2;
     void *temp_s0;
 
-    temp_s0 = func_002654e0();
+    temp_s0 = sceGsGetGParam();
     temp_s2 = M2C_FIELD(temp_s0, s32 *, 8);
     if (arg0 == 0) {
         func_00258c40(2);
@@ -102,7 +102,7 @@ void func_00266bd0(s8 *arg0, s32 arg1) {
     }
 }
 
-void func_00266f38(void *arg0, s32 arg1) {
+void sceDmaSend(void *arg0, s32 arg1) {
     s32 temp_s1;
 
     temp_s1 = func_00266ba8(arg1);
@@ -114,7 +114,7 @@ void func_00266f38(void *arg0, s32 arg1) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((M2C_FIELD(arg0, s32 *, 0) & ~0xC) | 0x105);
 }
 
-void func_00266fa0(void *arg0, s32 arg1, s32 arg2) {
+void sceDmaSendN(void *arg0, s32 arg1, s32 arg2) {
     s32 temp_s1;
 
     temp_s1 = func_00266ba8(arg1);
@@ -126,7 +126,7 @@ void func_00266fa0(void *arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((M2C_FIELD(arg0, s32 *, 0) & ~0xC) | 0x101);
 }
 
-void func_00267018(void *arg0, s32 arg1, s32 arg2) {
+void sceDmaSendI(void *arg0, s32 arg1, s32 arg2) {
     s32 temp_s1;
 
     temp_s1 = func_00266ba8(arg1);
@@ -138,7 +138,7 @@ void func_00267018(void *arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((M2C_FIELD(arg0, s32 *, 0) & ~0xC) | 0x109);
 }
 
-void func_00267158(void *arg0, s32 arg1, s32 arg2) {
+void sceDmaRecvI(void *arg0, s32 arg1, s32 arg2) {
     s32 temp_s1;
 
     temp_s1 = func_00266ba8(arg1);
@@ -150,7 +150,7 @@ void func_00267158(void *arg0, s32 arg1, s32 arg2) {
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((((M2C_FIELD(arg0, s32 *, 0) & ~0xC) | 8) & ~1) | 0x100);
 }
 
-s32 func_00267210(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+s32 sceDmaWatch(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
     if (arg2 == 1) {
         return (u32) M2C_FIELD(arg0, u32 *, 0x10) < (u32) arg1;
     }

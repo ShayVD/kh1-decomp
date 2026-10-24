@@ -14,6 +14,8 @@
  * after the k6 set came from an exhaustive two-line position search.
  * FLAGGED: four register variables (plain C, no inline asm). */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "data/bss_0064.h"
 
 typedef struct {
@@ -54,10 +56,7 @@ extern u16 D_003F56A0[];
 extern s32 D_003F34F8;
 void func_00205618(Wnd *, s32, s32, s32, s32, s32 *);
 void func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, void *, void *);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 u64 *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 s32 func_001f4570(Wnd *);
 s32 func_001f45e0(Wnd *);
@@ -99,9 +98,9 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
     q = D_003F3510 + D_003F5028[k] * 0x1400;
     func_0011fbb0(0x3600, 2, 19, 0, 0, 64, 64, 256, q, D_00643290);
     func_0011fbb0(0x3680, 1, 0, 0, 0, 16, 16, 64, q + 0x1000, D_00643340);
-    func_00266f38(func_00266c08(2), D_00643290);
+    PlatDmaSend(PlatDmaGetChan(2), D_00643290);
     x <<= 4;
-    func_00266f38(func_00266c08(2), D_00643340);
+    PlatDmaSend(PlatDmaGetChan(2), D_00643340);
     buf = func_00122048(1024, 128);
     p = buf + 2;
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -185,8 +184,8 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
         ((Vx *)p)[3].y = ny2;
     }
     buf[0] = (((s32)((Vx *)p + 4) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

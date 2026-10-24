@@ -8,6 +8,8 @@
  * (func_00203788, func_00203890: message 84 is the slash), and the default
  * colours of the boxes and lines. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
 
@@ -35,10 +37,7 @@ typedef struct { s32 u, v, p0, p1; s32 x, y, z, f; } UX;
 typedef struct { u64 tag, regs; UX s[4]; } P4;
 typedef struct { UQ tag, regs; UX s[2]; } H2;
 
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 UQ *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001220b8(void *);
 u32 func_001edd88(s32, s32);
 u8 *func_001efc10(s32);
@@ -115,7 +114,7 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
     s32 X0, X1, Y0, Y1, Y2, Y3;
     if (o->cc == 0) return;
     if (!(o->ce < o->cc)) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(2048, 128);
     h = (Q *)buf + 1;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -187,8 +186,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
         ((P4 *)q)->s[3].x = X1; ((P4 *)q)->s[3].y = Y3;
     }
     buf[0].d = ((((s32)((P4 *)q + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     xx[0] = ((P4 *)q)->s[0].x;
     xx[1] = ((P4 *)q)->s[1].x;
     ((H2 *)h)->tag.d = 0x4000000000008001;
@@ -207,8 +206,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[0] += 288;
     }
     for (i = b100; i > 0; i--) {
@@ -218,8 +217,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[1] -= 288;
     }
     ((H2 *)h)->s[0].u = 2216; ((H2 *)h)->s[0].v = 1752;
@@ -231,8 +230,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[0] += 160;
     }
     for (i = b10; i > 0; i--) {
@@ -242,8 +241,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[1] -= 160;
     }
     ((H2 *)h)->s[0].u = 2024; ((H2 *)h)->s[0].v = 1336;
@@ -255,8 +254,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[0] += 64;
     }
     for (i = b1; i > 0; i--) {
@@ -266,8 +265,8 @@ void func_00202678(WinUF *o, s32 x, s32 c) {
             ((H2 *)h)->s[0].y = inl_sc(((H2 *)h)->s[0].y, cy, cy, sy);
             ((H2 *)h)->s[1].y = inl_sc(((H2 *)h)->s[1].y, cy, cy, sy);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         ys[1] -= 64;
     }
     func_001220b8(buf);

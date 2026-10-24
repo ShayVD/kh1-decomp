@@ -5,16 +5,15 @@
  * packet sent on PATH 2 (func_001edfb8).  util.nofill.c holds the vector
  * length func_001edc50. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "platform/math.h"
 
 typedef struct { f32 x, y, z; } V3;
 typedef struct { u8 r, g, b, a; } __attribute__((aligned(4))) Col;
 typedef struct { u64 a, b; } Q;
 
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 Q *func_00122048(s32, s32);
-s32 sceGsSyncPath(s32, u16);
 void func_001220b8(void *);
 Q *func_0011fb38(s32 reg, u64 val, Q *p);
 
@@ -103,8 +102,8 @@ void func_001edfb8(s32 x0, s32 y0, s32 w, s32 h) {
 
         e = func_0011fb38(64, (u64)x0 | ((u64)x1 << 16) | ((u64)y0 << 32) | ((u64)y1 << 48), p + 1);
         buf->a = ((e - buf) - 1) | 0x70000000;
-        func_00266f38(func_00266c08(2), ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), ub);
+        PlatGsSyncPath(0, 0);
         func_001220b8(buf);
     }
 }

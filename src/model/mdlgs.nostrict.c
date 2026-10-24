@@ -4,6 +4,9 @@
  * tasks func_0015eb78 and func_0015eea0), the GS uploads through libdma's
  * channels D_0055C640 / D_0055C644 (func_0015f018 ... func_0015ff78).  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "data/pieces/D_002C58A0.h"
 #include "data/types/nostrict_text_00140000_s6_07.h"
 #include "platform/math.h"
@@ -25,11 +28,10 @@
 Nea98 *D_00551D80 ALIGNED(16);
 volatile s32 D_00559DB8 ALIGNED(8);
 extern volatile s32 D_00559DB4;
-s32 func_00265bc0(s32, s32);
 s32 func_0015ea98(void) {
     s32 r;
 
-    while (func_00265bc0(1, 0) != 0) {
+    while (PlatGsSyncPath(1, 0) != 0) {
     }
     while (D_00551D80 != 0) {
         D_00559DB8++;
@@ -51,15 +53,12 @@ extern Beb78 D_00551D90[];
 extern Beb78 * D_00559DB0;
 volatile s32 D_00559DBC ALIGNED(4);
 extern  s32 D_00351BD0;
-void func_002583e0(s32);
-s32 func_00258d10(s32);
-void func_00258d78(s32);
 s32 func_0015eb78(void) {
     s32 idx;
     Beb78 *cur;
     Beb78 *p;
 
-    func_002583e0(0);
+    PlatFlushCache(0);
     D_00551D80 = D_00559DB0->x8;
     idx = D_00351BD0 ^ 1;
     D_00559DB4 = 1;
@@ -69,15 +68,15 @@ s32 func_0015eb78(void) {
     D_00559DB0 = p = &D_00551D90[idx];
     p->x8 = 0;
     p->xc = 0;
-    while (func_00265bc0(1, 0) != 0) {
+    while (PlatGsSyncPath(1, 0) != 0) {
     }
-    func_00258d10(2);
-    func_00258d10(1);
+    PlatDisableDmac(2);
+    PlatDisableDmac(1);
     *(volatile s32 *)0x1000e010 = 6;
 
     if (func_0015ea98()) {
-        func_00258d78(2);
-        func_00258d78(1);
+        PlatEnableDmac(2);
+        PlatEnableDmac(1);
     }
     return 0;
 }
@@ -90,7 +89,6 @@ typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x4000]; } GsBuf;
 typedef struct { u8 pad[8]; GsTask *x8; s32 xC; u8 data[0x1000]; } GsBuf2;
 GsBuf2 D_00559DC0[0x2] ALIGNED(64);
 extern GsBuf2 *D_0055BDE0;
-s32 FlushCache(s32);
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0015eea0();
 extern GsBuf D_00551D90_0015ec68[] __asm__("D_00551D90");
@@ -113,17 +111,16 @@ void func_0015ec68(void) {
 #undef D_00559DB0
 
 /* func_0015eea0 (from hand/nostrict/text_00150000_h36.c). */
-s32 sceGsSyncPath(s32, u16);
 s32 func_0015eea0(void) {
     GsTask *t = D_0055BDE0->x8;
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
     while (t) {
         if (!(t->cb(t) & 0x20)) {
             t->h0 = 0;
             t = t->next;
         }
-        sceGsSyncPath(0, 0);
+        PlatGsSyncPath(0, 0);
     }
     D_0055BDE0->x8 = 0;
     D_0055BDE0->xC = 0;
@@ -132,31 +129,29 @@ s32 func_0015eea0(void) {
 }
 
 /* func_0015f018 (from hand/nostrict/text_00150000_h36.c). */
-DmaChcr *func_00266c08(s32);
-void func_00266f38(void *, void *);
 extern u8 D_00278680[];
 extern u8 D_00272C70[];
 void func_00162500(void);
 void func_0015f018(void) {
     DmaChcr *c;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     *(volatile u32 *)0x10003820 = 6;
-    c = func_00266c08(0);
+    c = PlatDmaGetChanAs(DmaChcr *, 0);
     c->dir = 1;
     c->mod = 1;
     c->asp = 0;
     c->tte = 1;
     c->tie = 0;
-    func_00266f38(c, D_00278680);
+    PlatDmaSend(c, D_00278680);
     *(volatile u32 *)0x10003C20 = 6;
-    c = func_00266c08(1);
+    c = PlatDmaGetChanAs(DmaChcr *, 1);
     c->dir = 1;
     c->mod = 1;
     c->asp = 0;
     c->tte = 1;
     c->tie = 0;
-    func_00266f38(c, D_00272C70);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(c, D_00272C70);
+    PlatGsSyncPath(0, 0);
     func_00162500();
 }
 
@@ -288,7 +283,7 @@ s32 func_0015f388(void) {
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
     __asm__ volatile("sync");
-    func_00266f38((void *)D_0055C644, &D_00573E40[2]);
+    PlatDmaSend((void *)D_0055C644, &D_00573E40[2]);
     return 2;
 }
 
@@ -409,7 +404,7 @@ void func_0015f798(S798 *o) {
     D_0055C640->tte = 1;
     D_0055C640->tie = 0;
     __asm__ volatile("sync");
-    func_00266f38((void *)D_0055C640, D_00272CF0);
+    PlatDmaSend((void *)D_0055C640, D_00272CF0);
 }
 
 /* func_0015f8c8 (from hand/nostrict/text_00150000_h59.c). */
@@ -495,7 +490,7 @@ void func_0015fa20(Tex59 *t) {
     D_0055C644->tte = 0;
     D_0055C644->tie = 0;
     __asm__ volatile("sync");
-    func_00266f38(D_0055C644, D_00573AC0);
+    PlatDmaSend(D_0055C644, D_00573AC0);
 }
 #undef D_0055C648
 
@@ -536,15 +531,15 @@ void func_0015fc00(A0 *a) {
     v = e->o->x48;
     if (fl & 8) {
         if (v & 0x10) {
-            func_00266f38(D_0055C640, D_00277E40);
+            PlatDmaSend(D_0055C640, D_00277E40);
             return;
         }
-        func_00266f38(D_0055C640, D_00278210);
+        PlatDmaSend(D_0055C640, D_00278210);
         return;
     }
     if (!((fl >> 4) & 2)) v &= ~4;
     if ((u8)((fl >> 4) & 1)) v |= 2; else v &= ~2;
-    func_00266f38(D_0055C640, D_00351BE0[v]);
+    PlatDmaSend(D_0055C640, D_00351BE0[v]);
 }
 
 /* func_0015fd20 (from hand/nostrict/text_00150000_h59.c). */
@@ -652,7 +647,6 @@ extern u8 D_00573E40_0015ff78[] __asm__("D_00573E40");
 #define func_0015f798 ((void (*)(B4Dm *)) func_0015f798)
 #define func_0015fc00 ((void (*)(B4Dm *)) func_0015fc00)
 #define func_0015fd20 ((s32 (*)(s32, u32, s32, u64, s32)) func_0015fd20)
-#define func_00266f38 ((void (*)(B4Chcr *, void *)) func_00266f38)
 #define func_0015f8c8 ((void (*)(B4Drw2 *, s32)) func_0015f8c8)
 s32 func_0015ff78(B4Dm *d) {
     B4Drw2 *s;
@@ -698,7 +692,7 @@ s32 func_0015ff78(B4Dm *d) {
             D_0055C644->tte = 0;
             D_0055C644->tie = 0;
             __asm__ volatile("sync");
-            func_00266f38(D_0055C644, D_00351C40);
+            PlatDmaSend(D_0055C644, D_00351C40);
         } else {
             D_0055C648 = (B4Pk *)((u32)D_00573AC0 | 0x20000000);
             func_0015f488((B4Drw *)s);
@@ -712,7 +706,7 @@ s32 func_0015ff78(B4Dm *d) {
             D_0055C644->tte = 0;
             D_0055C644->tie = 0;
             __asm__ volatile("sync");
-            func_00266f38(D_0055C644, D_00573E40);
+            PlatDmaSend(D_0055C644, D_00573E40);
         }
         CALLFD();
         if (s->x0->x40) { d->x14 = 3; st = 3; }
@@ -730,7 +724,7 @@ s32 func_0015ff78(B4Dm *d) {
         D_0055C640->tte = 1;
         D_0055C640->tie = 0;
         __asm__ volatile("sync");
-        func_00266f38(D_0055C640, (void *)((B4Rec2 *)(((u8 *)s)[7] * 4 + tb))->x18);
+        PlatDmaSend(D_0055C640, (void *)((B4Rec2 *)(((u8 *)s)[7] * 4 + tb))->x18);
         d->x14 = 5; st = 5;
         break;
     case 5:
@@ -752,7 +746,6 @@ s32 func_0015ff78(B4Dm *d) {
 #undef func_0015f798
 #undef func_0015fc00
 #undef func_0015fd20
-#undef func_00266f38
 #undef func_0015f8c8
 #undef CALLFD
 

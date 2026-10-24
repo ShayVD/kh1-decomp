@@ -8,6 +8,8 @@
  * the page tabs, func_002040f8 ... the scroll bars, func_002053e8 ...
  * func_00206b70 boxes, lines and sprites. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
 #include "data/pieces/D_003F1A70.h"
@@ -71,9 +73,6 @@ s32 func_001f4378(TextWin *);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
 s32 func_001fd538(TextWin *);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-s32 sceGsSyncPath(s32, s32);
 
 static inline s32 inl_sc(s32 v, s32 c, f32 fc, f32 s) { return fc + (f32)(v - c) * s; }
 static inline s32 inl_sc2(s32 v, s32 c, f32 s) { return (f32)c + (f32)(v - c) * s; }
@@ -118,7 +117,7 @@ void func_00200038(TextWin *o) {
     f32 sx;
     f32 sy;
     if (o->xcc == 0) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     q = (QW *)(buf + 2);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -246,8 +245,8 @@ void func_00200038(TextWin *o) {
         k = (k + 1) % n1;
     }
     buf[0] = (((s32)q - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -259,7 +258,7 @@ void func_00200648(TextWin *o, s32 type, s32 px, s32 py, s32 pw, s32 *cols) {
     u32 ub;
     s32 k, X, Y, W, X1, X2, XR, Y1;
     u32 c0, c1, c2, c3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1536, 128);
     pk = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -525,8 +524,8 @@ void func_00200648(TextWin *o, s32 type, s32 px, s32 py, s32 pw, s32 *cols) {
         ((PQ *)pk)->v[23].x = nXR; ((PQ *)pk)->v[23].y = nY1;
     }
     buf[0] = ((((s32)((PQ *)pk + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -538,7 +537,7 @@ void func_002016b0(TextWin *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;
@@ -593,8 +592,8 @@ void func_002016b0(TextWin *o, s32 x, s32 y, u32 c) {
         s->y1 = fy + (f32)(s->y1 - cy) * b;
     }
     buf[0] = 0x7000000c;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -606,7 +605,7 @@ void func_00201988(TextWin *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;
@@ -661,8 +660,8 @@ void func_00201988(TextWin *o, s32 x, s32 y, u32 c) {
         s->y1 = fy + (f32)(s->y1 - cy) * b;
     }
     buf[0] = 0x7000000c;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -674,7 +673,7 @@ void func_00201c60(TextWin *o, s32 x, s32 y, u32 c) {
     void *u;
     s32 cx, cy, X, Y;
     f32 fx, fy, a, b, d, e;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     q = (Q *)buf + 1;
@@ -729,8 +728,8 @@ void func_00201c60(TextWin *o, s32 x, s32 y, u32 c) {
         s->y1 = fy + (f32)(s->y1 - cy) * b;
     }
     buf[0] = 0x7000000c;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -742,7 +741,7 @@ void func_00201f38(TextWin *o) {
     s32 cx, cy, t, w, c, d, X, Y, xa, ya, k;
     f32 fx, fy, a, b;
     if (o->xcc == 0) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
     s = (Spr2 *)(buf + 2);
@@ -803,8 +802,8 @@ void func_00201f38(TextWin *o) {
     }
     s++;
     buf[0] = (((s32)s - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -815,7 +814,7 @@ void func_00202300(TextWin *w, s32 a1, s32 a2) {
     u32 ub, al;
     s32 x, y, cx, cy, l, t, r, b;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -869,8 +868,8 @@ void func_00202300(TextWin *w, s32 a1, s32 a2) {
         q[44] = t2;
     }
     buf[0] = ((((s32)p - (s32)buf + 192) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -886,7 +885,7 @@ void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
     f32 sx, sy, fcx, fcy;
     s32 X0, Y0, X1, Y2, X4, X5;
     if (o->xd8 < 2) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(2048, 128);
     h = (Q *)buf + 1;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1011,8 +1010,8 @@ void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
         ((P2 *)q)->s[7].x = X5; ((P2 *)q)->s[7].y = Y2;
     }
     buf[0] = ((((s32)((P2 *)q + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     yy[0] = ((P2 *)q)->s[0].y;
     yy[1] = ((P2 *)q)->s[2].y;
     ((H2 *)h)->tag = 0x40ab400000008001;
@@ -1030,8 +1029,8 @@ void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
             ((H2 *)h)->s[0].x = inl_sc(((H2 *)h)->s[0].x, cx, cx, sx);
             ((H2 *)h)->s[1].x = inl_sc(((H2 *)h)->s[1].x, cx, cx, sx);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         xs[0] += 64;
     }
     xs[1] -= 64;
@@ -1042,8 +1041,8 @@ void func_00203028(TextWin *o, s32 x0, s32 y, s32 x1, s32 c) {
             ((H2 *)h)->s[0].x = inl_sc(((H2 *)h)->s[0].x, cx, cx, sx);
             ((H2 *)h)->s[1].x = inl_sc(((H2 *)h)->s[1].x, cx, cx, sx);
         }
-        func_00266f38(func_00266c08(2), (void *)ub);
-        sceGsSyncPath(0, 0);
+        PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+        PlatGsSyncPath(0, 0);
         xs[1] -= 64;
     }
     func_001220b8(buf);
@@ -1063,7 +1062,7 @@ void func_00203a10(TextWin *o, s32 x) {
     s32 X0, X1, X2, X3, Y0, Y1, Y2, Y3, Y4, Y5, Y6, Y7;
     if (o->xcc == 0) return;
     if (!(o->xce < o->xcc)) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
     q = (Q *)buf + 1;
@@ -1158,8 +1157,8 @@ void func_00203a10(TextWin *o, s32 x) {
         ((P *)q)->w[1].x = X3; ((P *)q)->w[1].y = Y7;
     }
     buf[0] = ((((s32)((P *)q + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1173,7 +1172,7 @@ void func_002040f8(TextWin *o) {
     f32 f, sx, sy;
     if (o->xcc == 0) return;
     if (!(o->xce < o->xcc)) return;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1222,8 +1221,8 @@ void func_002040f8(TextWin *o) {
             ((XY *)p)->y = inl_sc2(y + 80, cy, sy);
             ((XY *)p)->z = 0x100000; ((XY *)p)->f = 0; p += 2;
             buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-            func_00266f38(func_00266c08(2), (void *)ub);
-            sceGsSyncPath(0, 0);
+            PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+            PlatGsSyncPath(0, 0);
         }
         if ((o->ud0.s.xd0 >> 4) + o->xce < o->xcc) {
             p = p0;
@@ -1241,8 +1240,8 @@ void func_002040f8(TextWin *o) {
             ((XY *)p)->y = inl_sc2(y2 + 240, cy, sy);
             ((XY *)p)->z = 0x100000; ((XY *)p)->f = 0; p += 2;
             buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-            func_00266f38(func_00266c08(2), (void *)ub);
-            sceGsSyncPath(0, 0);
+            PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+            PlatGsSyncPath(0, 0);
         }
     } else {
         if (o->ud0.s.xd0 >> 4) {
@@ -1255,8 +1254,8 @@ void func_002040f8(TextWin *o) {
             ((XY *)p)->x = col[0][1]; ((XY *)p)->y = col[1][1]; ((XY *)p)->z = col[2][1]; ((XY *)p)->f = al; p += 2;
             ((XY *)p)->x = x + 240; ((XY *)p)->y = y; ((XY *)p)->z = 0x100000; ((XY *)p)->f = 0; p += 2;
             buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-            func_00266f38(func_00266c08(2), (void *)ub);
-            sceGsSyncPath(0, 0);
+            PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+            PlatGsSyncPath(0, 0);
         }
         if ((o->ud0.s.xd0 >> 4) + o->xce < o->xcc) {
             p = p0;
@@ -1269,8 +1268,8 @@ void func_002040f8(TextWin *o) {
             ((XY *)p)->x = col[0][0]; ((XY *)p)->y = col[1][0]; ((XY *)p)->z = col[2][0]; ((XY *)p)->f = al; p += 2;
             ((XY *)p)->x = x; ((XY *)p)->y = y2 + 240; ((XY *)p)->z = 0x100000; ((XY *)p)->f = 0; p += 2;
             buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-            func_00266f38(func_00266c08(2), (void *)ub);
-            sceGsSyncPath(0, 0);
+            PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+            PlatGsSyncPath(0, 0);
         }
     }
     func_001220b8(buf);
@@ -1283,7 +1282,7 @@ void func_00204948(TextWin *w, s32 a1, s32 a2, s32 a3) {
     u32 ub;
     s32 x, y, cx, cy, l, r, t, b;
     f32 f, sx, sy, fcx, fcy;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1343,8 +1342,8 @@ void func_00204948(TextWin *w, s32 a1, s32 a2, s32 a3) {
         ((V4 *)p)->x = l; ((V4 *)p)->y = b; ((V4 *)p)->z = 0x100000; ((V4 *)p)->w = 0; p += 2;
     }
     buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1356,7 +1355,7 @@ void func_00204d80(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4) {
     u32 ub;
     s32 y, cx, cy, d;
     f32 f, sx, sy, fcx, fcy;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = buf + 2;
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1436,8 +1435,8 @@ void func_00204d80(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4) {
         ((XY *)p)->x = xs[1] - 96; ((XY *)p)->y = y + 96; ((XY *)p)->z = 0x100000; ((XY *)p)->f = 0; p += 2;
     }
     buf[0] = ((((s32)p - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1448,7 +1447,7 @@ void func_002053e8(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), &D_003F1A70);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F1A70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -1483,8 +1482,8 @@ void func_002053e8(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
         p->x1 = t2;
     }
     buf->a = 0x70000005;
-    func_00266f38(func_00266c08(2), ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1495,7 +1494,7 @@ void func_00205618(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4, s32 *col) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1549,8 +1548,8 @@ void func_00205618(TextWin *w, s32 a1, s32 a2, s32 a3, s32 a4, s32 *col) {
         p->e[3].v.y = t3;
     }
     buf[0] = ((((s32)p - (s32)buf + 160) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1561,7 +1560,7 @@ void func_00205938(TextWin *o, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), &D_003F1A70);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F1A70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -1596,8 +1595,8 @@ void func_00205938(TextWin *o, s32 col) {
         p->x1 = t2;
     }
     buf->a = 0x70000005;
-    func_00266f38(func_00266c08(2), ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1608,7 +1607,7 @@ void func_00205b30(TextWin *w, s32 *r) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1662,8 +1661,8 @@ void func_00205b30(TextWin *w, s32 *r) {
         p->e[3].v.y = t3;
     }
     buf[0] = ((((s32)p - (s32)buf + 160) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1674,7 +1673,7 @@ void func_00205e30(TextWin *w, s32 *col) {
     u32 ub;
     s32 al, cx, cy, x0, y0, x1, y1, nx0, ny0, nx1, ny1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1A70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1728,8 +1727,8 @@ void func_00205e30(TextWin *w, s32 *col) {
         p->e[3].v.y = t3;
     }
     buf[0] = ((((s32)p - (s32)buf + 160) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1740,7 +1739,7 @@ void func_00206130(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     void *ub;
     s32 a, b, x, y;
     f32 fa, fb, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), &D_003F1E70);
+    PlatDmaSend(PlatDmaGetChan(2), &D_003F1E70);
     buf = (Q3 *)func_00122048(1024, 128);
     p = (Pk *)(buf + 1);
     ub = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
@@ -1775,8 +1774,8 @@ void func_00206130(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
         p->x1 = t2;
     }
     buf->a = ((Q3 *)(p + 1) - buf - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1787,7 +1786,7 @@ void func_00206370(TextWin *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s
     u32 ub;
     s32 al, cx, cy, x, y, x1, y1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk4 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1845,8 +1844,8 @@ void func_00206370(TextWin *w, s32 px, s32 py, s32 pw, s32 ph, s32 k0, s32 k1, s
         p->e[3].v.y = t3;
     }
     buf[0] = ((((s32)p - (s32)buf + 160) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -1858,7 +1857,7 @@ void func_00206748(TextWin *w, s32 f1, s32 f2, s32 px, s32 py, s32 pw, s32 ph) {
     u32 ub, k;
     s32 cx, cy, x0, y0, x1, y1;
     f32 fcx, fcy, sx, sy, t0, t1, t2, t3, t4, t5, t6, t7;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (Pk6 *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -1967,8 +1966,8 @@ void func_00206748(TextWin *w, s32 f1, s32 f2, s32 px, s32 py, s32 pw, s32 ph) {
         p->s[4].v[1].y = t3;
     }
     buf[0] = ((((s32)p - (s32)buf + 256) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -2028,8 +2027,8 @@ void func_00206b70(TextWin *w, Spr *r) {
         q[44] = t2;
     }
     buf[0] = ((((s32)p - (s32)buf + 192) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 

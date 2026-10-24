@@ -11,6 +11,7 @@
  * model through opdma.c's func_001aaf88.  The Con and Des are in
  * ryjmbmodel.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 
@@ -65,7 +66,6 @@ typedef struct {
 
 extern DSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern s32 D_00616224;
-s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_001a9460(f32, s32, s32, void *);
 void func_001aa6b0(void *, s32, s32, s32);
 void func_001a9790(s32, void *, s32, s32, s32, s32, void *);

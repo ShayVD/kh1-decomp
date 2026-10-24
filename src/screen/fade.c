@@ -5,6 +5,7 @@
  * pauses. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/gs.h"
 #include "data/bss_004D.h"
 #include "data/bss_0049.h"
 #include "data/types/text_00100000_h2.h"
@@ -45,7 +46,6 @@ void func_0010f5d0(void);
 s32 func_00106b18(void *);
 u8 *func_001efc10(s32);
 void func_001f1ed8(s32, s32, s32, u8 *, s32);
-s32 sceGsSyncPath(s32, s32);
 void func_001137f8(void) {
     s32 col;
     u64 a, b;
@@ -88,7 +88,7 @@ void func_001137f8(void) {
     func_001f1ed8(col, 278, 54, func_001efc10(8), 18);
     func_001f1ed8(col, 310, 54, func_001efc10(9), 18);
     func_0010f5d0();
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     *(volatile u64 *)0x12000000 = 0xff03;
     *(volatile u64 *)0x12000070 = 0x11b0;
     *(volatile u64 *)0x12000080 = 0x0007f9ff020d227cUL;

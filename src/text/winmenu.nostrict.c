@@ -7,6 +7,8 @@
  * path 2.  With bit 0 of +0x48 the window's points are scaled by +0x74 /
  * +0x78 around its anchor. */
 #include "common.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_003F1E70.h"
 
@@ -26,9 +28,6 @@ u32 func_001eddc0(u32, u32, f32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
 void func_001f8270(void);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
-s32 sceGsSyncPath(s32, s32);
 
 void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e) {
     u32 c[2];
@@ -38,7 +37,7 @@ void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e
     s32 X, Y, cx, cy, t, a;
     f32 fx, fy, sx, sy, k;
     s32 X0, Y0, X1, Y1, X2, X3, Y4, Y5;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     x <<= 4;
     e <<= 4;
     w <<= 4;
@@ -132,8 +131,8 @@ void func_001feff0(TextWin *o, s32 x, s32 y, s32 w, s32 h, u32 ca, u32 cb, s32 e
         s->p9.x = X1; s->p9.y = Y1;
     }
     buf[0] = (((s32)(s + 1) - (s32)buf) >> 4) - 1 | 0x70000000;
-    func_00266f38(func_00266c08(2), u);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), u);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -143,7 +142,7 @@ void func_001ff488(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
     PF *p;
     u32 ub;
     s32 X, Y, R, B, X1, X2, Y1, Y2;
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     buf = func_00122048(1024, 128);
     p = (PF *)(buf + 2);
     ub = ((u32)buf & 0x0fffffff) | 0x80000000;
@@ -357,8 +356,8 @@ void func_001ff488(TextWin *o, s32 px, s32 py, s32 pw, s32 ph, s32 col) {
         p->v[23].x = nR; p->v[23].y = nB;
     }
     buf[0] = ((((s32)(p + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }
 
@@ -369,7 +368,7 @@ void func_001ffb30(s32 px, s32 py, s32 pw, s32 ph, u32 col) {
     u32 ub;
     s32 X, Y, R, B, X1, X2, Y1, Y2;
     func_001f8270();
-    func_00266f38(func_00266c08(2), (*(u8 (*)[0x400])&D_003F1E70));
+    PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1E70));
     p = (PF *)func_00122048(1024, 128);
     buf = (u64 *)p;
     p = (PF *)(buf + 2);
@@ -543,7 +542,7 @@ void func_001ffb30(s32 px, s32 py, s32 pw, s32 ph, u32 col) {
     p->v[23].f = 0;
     p->v[23].z = 0x100000;
     buf[0] = ((((s32)(p + 1) - (s32)buf) >> 4) - 1) | 0x70000000;
-    func_00266f38(func_00266c08(2), (void *)ub);
-    sceGsSyncPath(0, 0);
+    PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
+    PlatGsSyncPath(0, 0);
     func_001220b8(buf);
 }

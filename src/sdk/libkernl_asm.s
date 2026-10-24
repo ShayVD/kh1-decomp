@@ -1,4 +1,4 @@
-/* SCE libkernl / libvu0 hand-written assembly (docs/sdk.md Session 6): func_00260738 cache line loop + sync, func_002607e4 a lone jr ra (addr%8==4, so a .s file), func_00265190 MMI strncpy, func_002654f0 VU0 cfc2/ctc2, func_00260b00 (t9 live across calls). Words with their disassembly (tools/asm_export.py). */
+/* SCE libkernl / libvu0 hand-written assembly (docs/sdk.md Session 6): func_00260738 cache line loop + sync, func_002607e4 a lone jr ra (addr%8==4, so a .s file), func_00265190 MMI strncpy, sceGsResetPath VU0 cfc2/ctc2, func_00260b00 (t9 live across calls). Words with their disassembly (tools/asm_export.py). */
 	.set	noreorder
 	.set	noat
 
@@ -175,10 +175,10 @@ func_00265190:  /* 0x00265190 */
 	.word	0x0100102D  /* 00265348 move $v0,$t0 */
 	.end	func_00265190
 
-	.section	.text.func_002654f0,"ax",@progbits
-	.globl	func_002654f0
-	.ent	func_002654f0
-func_002654f0:  /* 0x002654F0 */
+	.section	.text.sceGsResetPath,"ax",@progbits
+	.globl	sceGsResetPath
+	.ent	sceGsResetPath
+sceGsResetPath:  /* 0x002654F0 */
 	.word	0x3C021000  /* 002654F0 lui $v0,0x1000 */
 	.word	0x24070001  /* 002654F4 li $a3,1 */
 	.word	0x34423C10  /* 002654F8 ori $v0,$v0,0x3c10 */
@@ -207,7 +207,7 @@ func_002654f0:  /* 0x002654F0 */
 	.word	0x7CC20000  /* 0026554C sq $v0,0($a2) */
 	.word	0x03E00008  /* 00265550 jr $ra */
 	.word	0xAC670000  /* 00265554 sw $a3,0($v1) */
-	.end	func_002654f0
+	.end	sceGsResetPath
 
 	.section	.text.func_00260b00,"ax",@progbits
 	.globl	func_00260b00

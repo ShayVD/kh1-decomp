@@ -9,6 +9,8 @@
 #include "data/pieces/D_002A6238.h"
 #include "data/pieces/D_002BC070.h"
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/types/text_00100000_h2.h"
 #include "data/pieces/D_002B677C.h"
 #include "data/pieces/D_002B6778.h"
@@ -47,8 +49,6 @@ void func_0010fea0(void) {
 }
 
 /* func_0010fee8 (from hand/text_00100000_h2.c). */
-void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
 typedef struct {
     u64 q[2];
     u32 w16;
@@ -56,16 +56,14 @@ typedef struct {
     u64 q3[2];
 } DispEnv;
 extern u32 D_004D8EC0[];
-void sceGsDefDispEnv(DispEnv *, s16, s16, s16, s16, s16);
-void func_00265980(DispEnv *);
 #define D_004D8EC0 (*(DispEnv (*)) &D_004D8EC0)
 void func_0010fee8(s32 w, s32 h) {
     D_004D90FC = 0;
-    sceGsDefDispEnv(&D_004D8EC0, 1, w, h, 0, 0);
+    PlatGsDefDispEnv(&D_004D8EC0, 1, w, h, 0, 0);
     D_004D8EC0.w16 &= ~0x1ff;
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    func_00265980(&D_004D8EC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsPutDispEnv(&D_004D8EC0);
 }
 #undef D_004D8EC0
 
@@ -86,12 +84,11 @@ void func_0010ffb8(s32 *arg0, s32 *arg1) {
 }
 
 /* func_0010ffe0 (from hand/text_00100000_h2.c). */
-void func_00265350(s32, s32, s32, s32);
 #define D_004D8EC0 (*(DispEnv (*)) &D_004D8EC0)
 void func_0010ffe0(void) {
-    func_00265350(1, 1, 2, 0);
+    PlatGsResetGraph(1, 1, 2, 0);
     *(volatile u64 *)0x120000d0 = 0;
-    func_00265980(&D_004D8EC0);
+    PlatGsPutDispEnv(&D_004D8EC0);
 }
 #undef D_004D8EC0
 

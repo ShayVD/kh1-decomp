@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "m2c.h"
+#include "platform/dma.h"
 
 extern u8 D_00370140[];
 extern u8 D_00370170[];
@@ -14,7 +15,7 @@ extern u8 D_00372708;
 extern s32 D_00372760;
 extern s8 D_00372790[];
 extern u8 D_003727F0[];
-extern s32 D_00372908;
+extern PlatDmaChan *D_00372908;
 extern s8 D_00372EA0;
 extern s8 D_00372F28;
 extern M2C_UNK D_00372F34;

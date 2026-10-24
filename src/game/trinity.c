@@ -5,6 +5,7 @@
  * D_005516EC (func_001586f0), the calls into the code loaded at D_00F20000
  * (func_00158af0).  The rest is in trinity.nostrict.c.  Read from the code, not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/bss_0055.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
@@ -86,11 +87,10 @@ void func_00158d70(void) {
 #undef func_00158d30
 
 /* func_00158db0 (from auto/text_00150000_1.c). */
-M2C_UNK func_002583e0(M2C_UNK);
 #define func_00158d30 ((s32 (*)()) func_00158d30)
 void func_00158db0(void) {
     if (func_00158d30() != 0) {
-        func_002583e0(2);
+        PlatFlushCache(2);
         D_00351A48 = 3;
         return;
     }

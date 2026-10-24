@@ -8,6 +8,7 @@
  * files). Read from the code, not proved by a boot (docs/modules.md "Session
  * 53"). */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/bss_0052.h"
 #include "data/pieces/D_00304B84.h"
 #include "data/pieces/D_00308CDC.h"
@@ -232,7 +233,6 @@ typedef struct {
 extern s32 D_0052AE54;
 void func_00155be0(void *p);
 void func_001763f0(void *p);
-void FlushCache(s32 mode);
 extern W6Blob *D_0052AE5C_0013b1a0 __asm__("D_0052AE5C");
 #define D_0052AE5C D_0052AE5C_0013b1a0
 void func_0013b1a0(void) {
@@ -245,7 +245,7 @@ void func_0013b1a0(void) {
     if (D_0052AE5C->x10 - D_0052AE5C->xc > 0) {
         func_001763f0((u8 *)D_0052AE5C + D_0052AE5C->xc);
     }
-    FlushCache(2);
+    PlatFlushCache(2);
     D_0052AE54 = 4;
 }
 #undef D_0052AE5C

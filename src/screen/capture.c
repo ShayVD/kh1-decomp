@@ -25,6 +25,8 @@
 #include "data/pieces/D_002BC140.h"
 #include "data/pieces/D_002BC144.h"
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/pieces/D_0037A378.h"
 #include "data/types/text_00100000_h28.h"
 #include "data/pieces/D_002BC0C0.h"
@@ -53,37 +55,31 @@
 #include "data/pieces/D_002B6778.h"
 
 /* func_00109cd0 (from auto/text_00100000_10.c). */
-M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, M2C_UNK *);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern u8 D_002BC1B0[];
 extern u8 D_002BC210[];
 extern M2C_UNK D_00F20000;
 #define D_002BC1B0 (*(M2C_UNK (*)) &D_002BC1B0)
 #define D_002BC210 (*(M2C_UNK (*)) &D_002BC210)
 void func_00109cd0(void) {
-    sceGsSetDefLoadImage(&D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC1B0, &D_00F20000);
-    sceGsSetDefLoadImage(&D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC210, (s8 *)&D_00F20000 + 0x48000);
+    PlatGsSetDefLoadImage(&D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, &D_00F20000);
+    PlatGsSetDefLoadImage(&D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC210, (s8 *)&D_00F20000 + 0x48000);
 }
 #undef D_002BC1B0
 #undef D_002BC210
 
 /* func_00109d98 (from auto/text_00100000_9.c). */
-M2C_UNK func_002660c0(void *, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsExecStoreImage(void *, M2C_UNK *);
 s32 func_00109d98(void) {
     s32 sp[28];
-    func_002660c0(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecStoreImage(sp, &D_00F20000);
+    PlatGsSetDefStoreImage(sp, 0x1A00, 8, 1, 0, 0, 0x200, 0x180);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecStoreImage(sp, &D_00F20000);
     return 4;
 }
 
@@ -133,48 +129,32 @@ void func_00109f48(s32 arg0) {
 }
 
 /* func_00109f88 (from hand/text_00100000_h28.c). */
-#define FlushCache ((s32 (*)(s32)) FlushCache)
-#define sceGsExecLoadImage ((s32 (*)(void *, void *)) sceGsExecLoadImage)
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
-#define sceGsSetDefLoadImage ((void (*)(void *, s32, s32, s32, s32, s32, s32, s32)) sceGsSetDefLoadImage)
 /* func_0010a248 only matches with func_00109f88 defined above it. */
 void func_00109f88(void) {
-    sceGsSetDefLoadImage(D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(D_002BC1B0, (void *)D_002B677C);
-    sceGsSetDefLoadImage(D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(D_002BC210, (void *)(D_002B677C + 0x48000));
+    PlatGsSetDefLoadImage(D_002BC1B0, 0xE00, 8, 1, 0, 0, 0x200, 0xC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(D_002BC1B0, (void *)D_002B677C);
+    PlatGsSetDefLoadImage(D_002BC210, 0x1400, 8, 1, 0, 0, 0x200, 0xC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(D_002BC210, (void *)(D_002B677C + 0x48000));
 }
-#undef FlushCache
-#undef sceGsExecLoadImage
-#undef sceGsSyncPath
-#undef sceGsSetDefLoadImage
 
 /* func_0010a058 (from hand/text_00100000_h2.c). */
 void *func_001559f0(s32, s32);
-#define FlushCache ((void (*)(s32)) FlushCache)
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
-#define func_002660c0 ((void (*)(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16)) func_002660c0)
-#define sceGsExecStoreImage ((s32 (*)(GsImagePacket *, void *)) sceGsExecStoreImage)
 s32 func_0010a058(void) {
     GsImagePacket si;
     void **p;
 
-    func_002660c0(&si, 0x1a00, 8, 1, 0, 0, 512, 384);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatGsSetDefStoreImage(&si, 0x1a00, 8, 1, 0, 0, 512, 384);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
     p = &D_002B677C;
     *p = func_001559f0(62, 2);
-    sceGsExecStoreImage(&si, *p);
+    PlatGsExecStoreImage(&si, *p);
     return 4;
 }
-#undef FlushCache
-#undef sceGsSyncPath
-#undef func_002660c0
-#undef sceGsExecStoreImage
 
 /* func_0010a0d8 (from hand/text_00100000_h2.c). */
 extern s32 D_002B6774;
@@ -258,35 +238,25 @@ void func_0010a3c0(void) {
 /* func_0010a3e8 (from hand/text_00100000_h2.c). */
 void *func_00121e28(s32, void **);
 extern u8 D_002B6760[];
-#define FlushCache ((void (*)(s32)) FlushCache)
-#define sceGsSyncPath ((s32 (*)(s32, s32)) sceGsSyncPath)
-#define func_002660c0 ((void (*)(GsImagePacket *, s16, s16, s16, s16, s16, s16, s16)) func_002660c0)
-#define sceGsExecStoreImage ((s32 (*)(GsImagePacket *, void *)) sceGsExecStoreImage)
 #define func_00106b18 ((void (*)(void *)) func_00106b18)
 void func_0010a3e8(void) {
     GsImagePacket si;
     func_00106b18(D_002B6760);
-    func_002660c0(&si, 0x3600, 4, 1, 0, 0, 256, 192);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
+    PlatGsSetDefStoreImage(&si, 0x3600, 4, 1, 0, 0, 256, 192);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
     (*(void **)&D_002B6778) = func_00121e28(0x24000, ((void **)&D_002B6778));
-    sceGsExecStoreImage(&si, ((void *)D_002B6778));
+    PlatGsExecStoreImage(&si, ((void *)D_002B6778));
 }
-#undef FlushCache
-#undef sceGsSyncPath
-#undef func_002660c0
-#undef sceGsExecStoreImage
 #undef func_00106b18
 
 /* func_0010a470 (from auto/text_00100000_4.c). */
-#define sceGsExecLoadImage ((M2C_UNK (*)(M2C_UNK *, s32)) sceGsExecLoadImage)
 #define D_002BC1B0 (*(M2C_UNK (*)) &D_002BC1B0)
 void func_0010a470(void) {
-    sceGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 1, 0, 0, 0x100, 0xC0);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC1B0, D_002B6778);
+    PlatGsSetDefLoadImage(&D_002BC1B0, 0x3600, 4, 1, 0, 0, 0x100, 0xC0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC1B0, D_002B6778);
 }
-#undef sceGsExecLoadImage
 #undef D_002BC1B0
 

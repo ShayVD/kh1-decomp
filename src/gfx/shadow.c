@@ -10,6 +10,7 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002C5C80.h"
 #include "common.h"
+#include "platform/dma.h"
 #include "data/bss_0051.h"
 #include "data/bss_0052.h"
 #include "data/types/text_00120000_h5.h"
@@ -26,28 +27,22 @@
 #include "data/pieces/D_00351BC8.h"
 
 /* func_001274c8 (from auto/text_00120000.c). */
-M2C_UNK func_00266f38(s32, s32);
-s32 func_00266c08(M2C_UNK);
 s32 func_001274c8(void *arg0) {
-    func_00266f38(func_00266c08(2), M2C_FIELD(arg0, s32 *, 0x10));
+    PlatDmaSend(PlatDmaGetChan(2), M2C_FIELD(arg0, s32 *, 0x10));
     return 2;
 }
 
 /* func_00127500 (from auto/text_00120000_16.c). */
 void func_00121eb0(s32);
-#define func_00266c08 ((s32 (*)(s32)) func_00266c08)
-#define func_00266f38 ((void (*)(s32, s32)) func_00266f38)
 s32 func_00127500(s32 arg0) {
   s32 *temp_v0;
-  temp_v0 = func_00266c08(1);
+  temp_v0 = PlatDmaGetChanAs(s32 *, 1);
   *temp_v0 = ((((*temp_v0) | 1) & (~0xC)) | 4) & (~0x30);
   *temp_v0 = (*temp_v0) & (~0x40);
-  func_00266f38((s32) temp_v0, *((s32 *) (((s8 *) arg0) + 0x10)));
+  PlatDmaSend(temp_v0, *((s32 *) (((s8 *) arg0) + 0x10)));
   func_00121eb0(*((s32 *) (((s8 *) arg0) + 0x10)));
   return 2;
 }
-#undef func_00266c08
-#undef func_00266f38
 
 /* func_00127b18 (from hand/text_00120000_h5.c). */
 extern union { f32 f[4]; s32 i[4]; } D_002E27F0;

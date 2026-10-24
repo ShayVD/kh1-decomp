@@ -11,6 +11,8 @@
 #include "data/pieces/D_002E31B0.h"
 #include "data/pieces/D_00350CE0.h"
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/pieces/D_00304BE8_s.h"
 #include "data/pieces/D_00351A30.h"
 #include "data/pieces/D_00308CDC.h"
@@ -26,27 +28,24 @@ void func_0015ed80(s32 arg0, s32 arg1) {
 }
 
 /* func_0015eda8 (from auto/text_00150000_2.c). */
-M2C_UNK func_00258d10(M2C_UNK);
 s32 func_0015efc0();
 extern s32 D_00351BC0;
 extern s32 D_00351BC4;
-s32 AddDmacHandler(M2C_UNK, M2C_UNK *, M2C_UNK);
 void func_0015eda8(void) {
-    func_00258d10(1);
-    func_00258d10(2);
-    D_00351BC0 = AddDmacHandler(1, &func_0015efc0, 0);
-    D_00351BC4 = AddDmacHandler(2, &func_0015efc0, 0);
+    PlatDisableDmac(1);
+    PlatDisableDmac(2);
+    D_00351BC0 = PlatAddDmacHandler(1, &func_0015efc0, 0);
+    D_00351BC4 = PlatAddDmacHandler(2, &func_0015efc0, 0);
 }
 
 /* func_0015ee10 (from auto/text_00150000_3.c). */
-M2C_UNK RemoveDmacHandler(M2C_UNK, s32);
 #define D_00351BC0 (*(volatile s32 (*)) &D_00351BC0)
 #define D_00351BC4 (*(volatile s32 (*)) &D_00351BC4)
 void func_0015ee10(void) {
-    func_00258d10(1);
-    func_00258d10(2);
-    RemoveDmacHandler(1, D_00351BC0);
-    RemoveDmacHandler(2, D_00351BC4);
+    PlatDisableDmac(1);
+    PlatDisableDmac(2);
+    PlatRemoveDmacHandler(1, D_00351BC0);
+    PlatRemoveDmacHandler(2, D_00351BC4);
     D_00351BC0 = -1;
     D_00351BC4 = -1;
 }
@@ -61,19 +60,15 @@ void func_0015ee78(s32 arg0, s32 arg1) {
 
 /* func_0015ef60 (from hand/text_00150000_h10.c). */
 extern volatile s32 D_00559DB4;
-s32 sceGsSyncPath(s32, u16);
-s32 DisableDmac(s32);
 void func_0015ef60(void) {
     D_002BBDF8;
     while (D_00559DB4) ;
-    sceGsSyncPath(0, 0);
-    DisableDmac(1);
-    DisableDmac(2);
+    PlatGsSyncPath(0, 0);
+    PlatDisableDmac(1);
+    PlatDisableDmac(2);
 }
 
 /* func_0015efc0 (from hand/text_00150000_s6.c). */
-void iFlushCache(s32);
-void FlushCache(s32);
 s32 func_0015ea98(void);
 /* Runs func_0015ea98 with the interrupt-safe cache flush installed in the
  * flush hook, then restores FlushCache and re-enables interrupts. */

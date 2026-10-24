@@ -4,6 +4,8 @@
  * func_0010a550 / func_0010a5d0 / func_0010a780 build its GS packets. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/bss_0049.h"
 #include "data/bss_004D.h"
 #include "data/types/text_00100000_h2.h"
@@ -66,23 +68,19 @@ s32 func_0010a550(u64 *p, s32 a1, s32 a2, s32 a3, s32 a4, s32 idx, s32 a6) {
 }
 
 /* func_0010b030 (from hand/text_00100000_h28.c). */
-extern s32 FlushCache(s32);
-extern s32 sceGsExecLoadImage(void *, void *);
-extern s32 sceGsSyncPath(s32, s32);
 extern u8 D_002BC1B0[];
-extern void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_0010b030(u8 *buf) {
     u8 *clut;
     u8 *p;
     s32 i;
-    sceGsSetDefLoadImage(D_002BC1B0, 0x1800, 4, 27, 0, 0, 256, 128);
+    PlatGsSetDefLoadImage(D_002BC1B0, 0x1800, 4, 27, 0, 0, 256, 128);
     clut = buf + 0x8000;
-    FlushCache(0);
-    sceGsExecLoadImage(D_002BC1B0, buf);
-    sceGsSyncPath(0, 0);
-    sceGsSetDefLoadImage(D_002BC1B0, 0x3FF4, 1, 0, 0, 0, 16, 16);
-    FlushCache(0);
-    sceGsExecLoadImage(D_002BC1B0, clut);
+    PlatFlushCache(0);
+    PlatGsExecLoadImage(D_002BC1B0, buf);
+    PlatGsSyncPath(0, 0);
+    PlatGsSetDefLoadImage(D_002BC1B0, 0x3FF4, 1, 0, 0, 0, 16, 16);
+    PlatFlushCache(0);
+    PlatGsExecLoadImage(D_002BC1B0, clut);
     p = clut;
     for (i = 0; i < 256; i++) {
         *p++ = 0;
@@ -90,11 +88,11 @@ void func_0010b030(u8 *buf) {
         *p = 0;
         p += 2;
     }
-    sceGsSyncPath(0, 0);
-    sceGsSetDefLoadImage(D_002BC1B0, 0x3FF8, 1, 0, 0, 0, 16, 16);
-    FlushCache(0);
-    sceGsExecLoadImage(D_002BC1B0, clut);
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
+    PlatGsSetDefLoadImage(D_002BC1B0, 0x3FF8, 1, 0, 0, 0, 16, 16);
+    PlatFlushCache(0);
+    PlatGsExecLoadImage(D_002BC1B0, clut);
+    PlatGsSyncPath(0, 0);
 }
 
 /* func_0010b170 (from auto/text_00100000_3.c). */

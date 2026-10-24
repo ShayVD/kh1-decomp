@@ -7,6 +7,9 @@
  * func_0020b338 loads the two images of D_00641080 / D_00641130 and
  * func_0020b3d8 draws them as a sprite at a window's text origin. */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 
 typedef struct { u8 si[2][0x70]; u32 px[2][0x40]; } StoreBuf;
@@ -16,9 +19,6 @@ extern s32 D_003F31F0[];
 extern u8 D_00641080[];
 extern u8 D_00641130[];
 
-s32 FlushCache(s32);
-s32 sceGsExecStoreImage(void *, void *);
-s32 sceGsSyncPath(s32, s32);
 s32 func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, s32, void *);   /* s32: as void, func_0020b338 swaps v0 / v1 */
 u64 *func_00122048(s32, s32);
 void func_001220b8(void *);
@@ -26,9 +26,6 @@ u32 func_001edd88(u32, s32);
 u32 func_001edf40(u32, u32);
 s32 func_001f4570(TextWin *);
 s32 func_001f45e0(TextWin *);
-s32 func_002660c0(void *, s32, s32, s32, s32, s32, s32, s32);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 
 #include "data/pieces/D_003F34B0.h"
 #include "data/pieces/D_003F1A70.h"
@@ -36,12 +33,12 @@ void func_00266f38(s32, void *);
 
 void func_0020a8f0(void) {
     StoreBuf b;
-    func_002660c0(b.si[0], 0, 8, 0, 0x100, 4, 0x10, 1);
-    func_002660c0(b.si[1], 0, 8, 0, 0x100, 0x1BB, 0x10, 1);
-    FlushCache(0);
-    sceGsExecStoreImage(b.si[0], b.px[0]);
-    sceGsExecStoreImage(b.si[1], b.px[1]);
-    sceGsSyncPath(0, 0);
+    PlatGsSetDefStoreImage(b.si[0], 0, 8, 0, 0x100, 4, 0x10, 1);
+    PlatGsSetDefStoreImage(b.si[1], 0, 8, 0, 0x100, 0x1BB, 0x10, 1);
+    PlatFlushCache(0);
+    PlatGsExecStoreImage(b.si[0], b.px[0]);
+    PlatGsExecStoreImage(b.si[1], b.px[1]);
+    PlatGsSyncPath(0, 0);
     D_003F34B0[0] = b.px[0][0] & 0xFFFFFF;
     D_003F34B0[1] = b.px[1][0] & 0xFFFFFF;
 }

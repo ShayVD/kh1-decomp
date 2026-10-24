@@ -9,6 +9,7 @@
 
 /* pppKeMdlTfdDraw (from hand/nostrict/text_00190000_h63.c). */
 #include "common.h"
+#include "platform/gs.h"
 #include "ppp.h"
 #include "data/bss_0061.h"
 #define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
@@ -73,7 +74,6 @@ typedef struct {
 typedef struct {
     f32 a, b, c;
 } PppTfd;
-s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_001a9460(f32, s32, s32, void *);
 void func_001aa6b0(void *, s32, s32, s32);
 void func_001a9790(s32, void *, s32, s32, s32, s32, s32);
@@ -100,7 +100,7 @@ void pppKeMdlTfdDraw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w->a, key->u, key->v, q + 0x70);
@@ -187,7 +187,7 @@ void pppKeMdlTfdUvDraw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w[0], key->u, key->v, q + 0x70);
@@ -222,7 +222,7 @@ void pppKeMdlTfd2Draw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w->a, key->u, key->v, q + 0x70);
@@ -287,7 +287,7 @@ void pppKeMdlTfdUv2Draw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
     }
     n = key->page * 4;
     p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    PlatGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
     *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
     q = (u8 *) D_00616224;
     func_001a9460(w[0], key->u, key->v, q + 0x70);

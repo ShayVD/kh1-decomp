@@ -16,6 +16,7 @@
  * Window views: JWin (plain s16 at +0xcc / +0xd2: TextWin's +0xd0 union
  * reorders), JcWin (the list's +0xc) and topmenu.c's N_3f34c4. */
 #include "common.h"
+#include "platform/thread.h"
 #include "vm/script_vm.h"
 #include "data/bss_0064.h"
 #include "data/bss_0064_mixed.h"
@@ -59,7 +60,6 @@ extern u8 D_00642EB0[];
 extern u8 D_00642F60[];
 s32 D_00642E90 ALIGNED(16);
 
-void FlushCache(s32);
 void func_0011d768(s32);
 void *func_0011fbb0(s32, s32, s32, s32, s32, s32, s32, s32, s32, void *);
 void func_00120748(void *, s32, void *, s32);
@@ -372,7 +372,7 @@ void func_0021d348(void *o) {
             }
             break;
         case 14:
-            FlushCache(0);
+            PlatFlushCache(0);
             func_0021b5c8(0xC009B, 0, 128, 128, 5.0f);
             D_00642E94 = 0;
             p = func_001f31a8(D_003F5A90, 0);

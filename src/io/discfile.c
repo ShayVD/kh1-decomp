@@ -14,6 +14,8 @@
 #include "data/bss_004F.h"
 #include "data/pieces/D_002C5C48.h"
 #include "common.h"
+#include "platform/iop.h"
+#include "platform/thread.h"
 #include "platform/math.h"
 #include "data/pieces/D_002BBDE0.h"
 #include "data/types/text_00110000_h4_p.h"
@@ -87,7 +89,6 @@ typedef struct {
     u8 *buf;
     u32 result;
 } CdReq;
-void FlushCache(s32);
 void func_0010c150(void);
 void func_0010c1b8(void (*)(CdReq *));
 u32 func_00120040(u8 *, u32);
@@ -99,7 +100,7 @@ void func_001201d0(CdReq *r) {
         while (func_00269fd0(1)) func_0010c150();
     } while (func_0026aaa0());
     if (r->comp) {
-        FlushCache(0);
+        PlatFlushCache(0);
         res = func_00120040(r->buf, r->size);
     } else {
         res = r->size;
@@ -157,7 +158,7 @@ rd:
     func_0025b810(fd);
     if (err == 0) {
         if (r->comp) {
-            FlushCache(0);
+            PlatFlushCache(0);
             n = func_00120040(r->buf, r->size);
         }
         r->result = n;
@@ -214,18 +215,16 @@ CdReq *func_001204a0(char *name, u8 *buf) {
 
 /* func_00120580 (from auto/text_00120000_8.c). */
 M2C_UNK func_0011fd60(s32, u32, s32);
-#define FlushCache ((M2C_UNK (*)(M2C_UNK)) FlushCache)
 #define func_00120438 ((M2C_UNK (*)(void *, s32)) func_00120438)
 s32 func_00120580(s32 arg0, s32 arg1) {
     s32 sp[12];
     func_00120438(sp, arg0);
     func_0011fd60(M2C_FIELD(sp, M2C_UNK *, 0x0), (u32) (M2C_FIELD(sp, M2C_UNK *, 0x4) + 0x7FF) >> 0xB, arg1);
     D_002C5C48 = M2C_FIELD(sp, M2C_UNK *, 0x4);
-    FlushCache(0);
-    FlushCache(2);
+    PlatFlushCache(0);
+    PlatFlushCache(2);
     return D_002C5C48;
 }
-#undef FlushCache
 #undef func_00120438
 
 /* func_00120678 (from hand/text_00110000_h30.c). */
@@ -239,7 +238,7 @@ typedef struct {
     CdReq *req;
 } LoadTask;
 s32 func_00146878(void);
-void kh1_ovl_flush0(CdReq *); /* shift build only (shift/ovl_fixup.c): overlay fixups + FlushCache(0) */
+void kh1_ovl_flush0(CdReq *); /* shift build only (shift/ovl_fixup.c): overlay fixups + PlatFlushCache(0) */
 #define func_00120038 ((void (*)(CdReq *)) func_00120038)
 s32 func_00120678(LoadTask *t) {
     CdReq *r;
@@ -254,11 +253,11 @@ s32 func_00120678(LoadTask *t) {
     if ((s32)r->result < 0) return 8;
     D_002C5C48 = r->result;
 #ifdef KH1_OVL_FIXUPS
-    kh1_ovl_flush0(r); /* relocate an overlay before it is flushed and run; same size as FlushCache(0) */
+    kh1_ovl_flush0(r); /* relocate an overlay before it is flushed and run; same size as PlatFlushCache(0) */
 #else
-    FlushCache(0);
+    PlatFlushCache(0);
 #endif
-    FlushCache(2);
+    PlatFlushCache(2);
     if (t->cb) t->cb(r->result, t->user, r->buf);
     func_00120038(r);
     return 4;
@@ -398,7 +397,6 @@ void func_00120aa0(void) {
 /* func_00120b10 (from hand/text_00110000_h4.c). */
 extern char D_0048D288[];
 u8 D_004F35B0[0x1000] ALIGNED(16);  /* moved from hand/text_00110000_h4.c (session 54) */
-void sceSifInitRpc(s32);
 void func_0025b550(void);
 s32 sceCdInit(s32);
 void func_0026a728(s32);
@@ -407,14 +405,14 @@ s32 func_0025f1f0(void);
 void func_001101e8(void);
 void func_002696b8(s32, void *, s32);
 void func_00120b10(void) {
-    sceSifInitRpc(0);
+    PlatSifInitRpc(0);
     func_0025b550();
     sceCdInit(0);
     func_0026a728(2);
     while (!func_0025f228(D_0048D288));
     while (!func_0025f1f0());
     func_001101e8();
-    sceSifInitRpc(0);
+    PlatSifInitRpc(0);
     sceCdInit(0);
     func_0026a728(2);
     func_002696b8(0, D_004F35B0, 4096);

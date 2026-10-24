@@ -13,6 +13,7 @@
 #include "data/pieces/D_002BCDAC.h"
 #include "data/pieces/D_002BD118.h"
 #include "common.h"
+#include "platform/gs.h"
 #include "data/pieces/D_002BBE20.h"
 #include "data/pieces/D_002BBE60.h"
 #include "data/pieces/D_002BBEA0.h"
@@ -118,7 +119,6 @@ extern s32 D_003F6E28;
 extern volatile s32 D_002BD114;
 extern s32 D_004D9320;
 s32 func_00112d80(void);
-s32 sceGsSyncPath(s32, s32);
 void func_00121ee0(s32);
 void func_00176388(s32);
 #define func_00102a48 ((s32 (*)(s32, s32)) func_00102a48)
@@ -130,7 +130,7 @@ s32 func_00113fa8(void) {
     }
     D_004D9330 = 0;
     D_002BD114 = 0;
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     func_00121ee0(D_002B6778);
     func_00176388(0);
     D_004D9320 = 0;

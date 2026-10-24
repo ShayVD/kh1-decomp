@@ -1992,6 +1992,15 @@ float_covered.txt, float_reach.txt, the loaded bytes and the program
 headers the same as the base, and `s31_warndiff` 0 new warnings; new files
 checked with `-Wimplicit-function-declaration`.
 
+## Session 56: the session-1 probes
+
+The five compiler probes of src/anon/session1_probes.c went into the modules whose functions surround them
+by address, and src/anon/ is gone: func_0010ef70 (a text object's two words and flags) to the end of
+src/text/fldtext.c, func_00111f70 (clears D_004D925C / D_002BCC24) to src/game/gametimer.c, func_00137418 to
+src/obj/objutil.c, func_001882f8 to src/ppp/ppprand.c, func_0018ad70 to src/ppp/ppploop.c (its caller
+pppAngleLoopFrame keeps an (s32, s32) view through a cast define).  Byte-identical, the float check and the
+data names the same.  The rest of session 56 was the platform wrappers (docs/portability.md rule 2).
+
 ## Session 55: 0x0011 and 0x0010, the end of src/auto and src/hand, 0x001001f8-0x0011c768
 
 Session 55 moved the last 576 functions in four commits and deleted the

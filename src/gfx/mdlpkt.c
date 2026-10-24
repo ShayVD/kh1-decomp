@@ -5,6 +5,8 @@
  * uploads (func_001090e8, func_00109180). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
 #include "data/pieces/D_002BC0A8.h"
@@ -245,12 +247,11 @@ void func_00108cf8(void *p, s32 i, void *q) {
 #undef func_001089f8
 
 /* func_00108d90 (from hand/text_00100000_h2.c). */
-void iFlushCache(s32);
 s32 func_00108d90(void *arg) {
     *(volatile u32 *)0x10009020 = 0;
     *(volatile u32 *)0x10009030 = *(u32 *)((u8 *)arg + 0x10) & 0x0FFFFFFF;
     *(volatile u32 *)0x1000E010 = 2;
-    iFlushCache(0);
+    PlatIFlushCache(0);
     *(volatile u32 *)0x10009000 = 0x145;
     return 2;
 }
@@ -313,16 +314,12 @@ void func_00108fd0(s32 a, s32 b, s32 c, s32 d, s32 e) {
 #undef func_00108cd0
 
 /* func_00109180 (from auto/text_00100000_9.c). */
-M2C_UNK FlushCache(M2C_UNK);
-M2C_UNK sceGsExecLoadImage(M2C_UNK *, s32);
-M2C_UNK sceGsSetDefLoadImage(M2C_UNK *, s16, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
-M2C_UNK sceGsSyncPath(M2C_UNK, M2C_UNK);
 extern M2C_UNK D_002BC210;
 void func_00109180(s32 arg0, s16 arg1) {
-    sceGsSetDefLoadImage(&D_002BC210, arg1, 0, 0, 0, 0, 8, 2);
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsExecLoadImage(&D_002BC210, arg0);
+    PlatGsSetDefLoadImage(&D_002BC210, arg1, 0, 0, 0, 0, 8, 2);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsExecLoadImage(&D_002BC210, arg0);
 }
 
 /* func_001091f8 (from auto/text_00100000_12.c). */

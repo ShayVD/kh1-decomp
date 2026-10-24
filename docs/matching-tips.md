@@ -731,3 +731,13 @@ from dead code. Read the allocation first, then find the source change.
   locals the original declared (001636d0).
 - A partial tail shared between two switch cases is jump2 cross-jumping two identical full copies;
   writing one shared copy in source (goto, merged cases) over-merges (0010d470).
+
+## Session 56 (platform wrappers)
+
+- `D = f()` compiles differently when f's return type is not D's exact type node: with any conversion
+  (a typedef of the same struct, `void *` against `typedef void T; T *`, int against u32) gcc 2.96 keeps
+  &D in a saved register across the call (`lui s0; addiu s0` before the jal, `sw v0, 0(s0)` after) instead
+  of `lui v1; sw v0, %lo(D)(v1)` after it.  Integer typedefs of the same type (s32 / int) are fine.
+  The original sometimes has the conversion (func_0011fa88), sometimes not (func_001a9e90).
+- A callee declared `int` instead of `void` can move the registers chosen after the call even when the
+  result is unused (func_0010ffe0 with sceGsResetGraph).

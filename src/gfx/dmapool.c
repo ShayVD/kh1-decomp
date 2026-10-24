@@ -12,6 +12,9 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
+#include "platform/dma.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/pieces/D_002A6274.h"
 #include "data/types/text_00100000_h1.h"
@@ -43,35 +46,26 @@
 #include "data/pieces/D_002C5968.h"
 
 /* func_00106b18 (from auto/text_00100000.c). */
-M2C_UNK func_002583e0(M2C_UNK);
-M2C_UNK func_00265bc0(M2C_UNK, M2C_UNK);
-M2C_UNK func_00266f38(s32, s32);
-extern s32 D_002A6B84;
+extern PlatDmaChan *D_002A6B84;
 void func_00106b18(s32 arg0) {
-    func_002583e0(0);
-    func_00265bc0(0, 0);
-    func_00266f38(D_002A6B84, arg0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatDmaSend(D_002A6B84, arg0);
 }
 
 /* func_00106b58 (from hand/text_00100000_h1.c). */
-s32 sceGsSyncPath(s32, s32);
-#define func_00266f38 ((void (*)(s32, u32)) func_00266f38)
 void func_00106b58(u32 x) {
     u32 v = x | 0x80000000;
-    sceGsSyncPath(0, 0);
-    func_00266f38(D_002A6B84, v);
+    PlatGsSyncPath(0, 0);
+    PlatDmaSend(D_002A6B84, v);
 }
-#undef func_00266f38
 
 /* func_00106b98 (from auto/text_00100000_9.c). */
-f32 iFlushCache(M2C_UNK);
-#define func_00266f38 ((f32 (*)(s32, s32)) func_00266f38)
 s32 func_00106b98(void *arg0) {
-    iFlushCache(0);
-    func_00266f38(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
+    PlatIFlushCache(0);
+    PlatDmaSend(D_002A6B84, M2C_FIELD(arg0, s32 *, 0x10));
     return 2;
 }
-#undef func_00266f38
 
 /* func_00106bd8 (from auto/text_00100000_10.c). */
 void *func_0015ed80(s32, M2C_UNK *);
@@ -134,14 +128,12 @@ void func_00106d48(s32 arg0) {
 
 /* func_00106db0 (from hand/text_00100000_h1.c). */
 typedef struct { u8 pad[16]; u32 w16; } DmaReq;
-#define iFlushCache ((void (*)(s32)) iFlushCache)
 s32 func_00106db0(DmaReq *r) {
     *(volatile u32 *)0x10009020 = 0;
     *(volatile u32 *)0x10009030 = r->w16 & 0x0fffffff;
     *(volatile u32 *)0x1000e010 = 2;
-    iFlushCache(0);
+    PlatIFlushCache(0);
     *(volatile u32 *)0x10009000 = 0x105;
     return 2;
 }
-#undef iFlushCache
 

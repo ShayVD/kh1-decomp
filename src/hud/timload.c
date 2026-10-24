@@ -10,6 +10,8 @@
  * func_00249da8 tests the "TIM2" magic (D_00491840) and func_00249eb8 takes
  * the 0x40-byte CLUT into a CLUT row (the two halves 0x40 apart). */
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/types/text_00240000_s6_25_p.h"
 
 typedef struct {
@@ -38,10 +40,6 @@ typedef struct { s32 n; s32 a[1]; } Lst;
 
 extern PsmEnt D_00469FB0[];
 extern char D_00491840[];
-void sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
-s32 sceGsExecLoadImage(void *, void *);
-void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
 void func_00237018(void *, s32, s32);
 s32 strncmp(const char *, const char *, u32);
 void func_00249a48(Tim *, s32);
@@ -49,7 +47,7 @@ void func_00249d48(Lst *p);
 
 void func_002499f0(void) {
     u64 pk[6];
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     pk[2] = 0x1000000000008001;
     pk[3] = 14;
     pk[5] = 0x3F;
@@ -66,12 +64,12 @@ void func_00249a48(Tim *t, s32 sync) {
     s16 psm, cpsm; u16 cbp;
     if (p->imageSize) {
         img = t->data;
-        sceGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3FFF), (u16)(p->t.tex0 >> 14 & 0x3F), (u16)((p->t.tex0 & 0x3F00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, img);
+        PlatGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3FFF), (u16)(p->t.tex0 >> 14 & 0x3F), (u16)((p->t.tex0 & 0x3F00000) >> 20), 0, 0, p->w, p->h);
+        PlatFlushCache(0);
+        PlatGsSyncPath(0, 0);
+        PlatGsExecLoadImage(li, img);
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     pk[2] = 0x1000000000008001;
     pk[3] = 14;
     pk[5] = 0x3F;
@@ -83,21 +81,21 @@ void func_00249a48(Tim *t, s32 sync) {
         clut = img + p->imageSize;
         psm = D_00469FB0[p->imageType].psm;
         if (psm == 19) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 16, 16);
+            PlatGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 16, 16);
         } else if (psm == 20) {
-            sceGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 8, 2);
+            PlatGsSetDefLoadImage(li, cbp, 1, cpsm, 0, 0, 8, 2);
         }
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, clut);
+        PlatFlushCache(0);
+        PlatGsSyncPath(0, 0);
+        PlatGsExecLoadImage(li, clut);
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     pk[2] = 0x1000000000008001;
     pk[3] = 14;
     pk[5] = 0x3F;
     pk[4] = 0;
     func_00237018(pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
+    if (sync) PlatGsSyncPath(0, 0);
 }
 
 void func_00249c48(Lst *p) {
@@ -142,18 +140,18 @@ void func_00249dc8(Tim *t, s32 sync) {
     u8 *d = NULL;
     if (p->imageSize) {
         d = t->data;
-        sceGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3fff), (u16)((p->t.tex0 >> 14) & 0x3f), (u16)((p->t.tex0 & 0x3f00000) >> 20), 0, 0, p->w, p->h);
-        FlushCache(0);
-        sceGsSyncPath(0, 0);
-        sceGsExecLoadImage(li, d);
+        PlatGsSetDefLoadImage(li, (u16)(p->t.tex0 & 0x3fff), (u16)((p->t.tex0 >> 14) & 0x3f), (u16)((p->t.tex0 & 0x3f00000) >> 20), 0, 0, p->w, p->h);
+        PlatFlushCache(0);
+        PlatGsSyncPath(0, 0);
+        PlatGsExecLoadImage(li, d);
     }
-    sceGsSyncPath(0, 0);
+    PlatGsSyncPath(0, 0);
     pk[2] = 0x1000000000008001ULL;
     pk[3] = 0xe;
     pk[5] = 0x3f;
     pk[4] = 0;
     func_00237018(pk, 3, 1);
-    if (sync) sceGsSyncPath(0, 0);
+    if (sync) PlatGsSyncPath(0, 0);
 }
 
 void func_00249eb8(u8 *dst, u8 *t) {

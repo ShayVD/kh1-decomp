@@ -14,6 +14,7 @@
  * +0x4; then it frees the windows asked to close and brings the focus list
  * to the front of the open list. */
 #include "common.h"
+#include "platform/dma.h"
 #include "text/textwin.h"
 #include "data/pieces/D_00490AE0.h"
 #include "data/pieces/D_002BBDFC.h"
@@ -32,8 +33,6 @@ void func_001efb78(s32);
 void func_001efb98(s32);
 s32 func_002366d8(s32, s32);
 void func_001fd708(void);
-s32 func_00266c08(s32);
-void func_00266f38(s32, void *);
 void func_001ff488(TextWin *, s32, s32, s32, s32, s32);
 
 TextWin *func_001f31a8(TextWinDesc *a, s32 b);
@@ -1096,8 +1095,8 @@ void func_001f81e8(TextWin *w) {
 }
 
 void func_001f8270(void) {
-    func_00266f38(func_00266c08(2), D_003F2670);
-    func_00266f38(func_00266c08(2), D_003F2720);
+    PlatDmaSend(PlatDmaGetChan(2), D_003F2670);
+    PlatDmaSend(PlatDmaGetChan(2), D_003F2720);
 }
 
 /* rodata: jump tables */

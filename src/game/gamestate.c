@@ -11,6 +11,7 @@
 #include "data/pieces/D_002BC0A8.h"
 #include "data/pieces/D_002A6238.h"
 #include "common.h"
+#include "platform/thread.h"
 #include "data/pieces/D_0037A378.h"
 #include "data/types/text_00100000_h28.h"
 #include "data/pieces/D_002BC0C0.h"
@@ -164,10 +165,9 @@ void func_001095b0(void) {
 /* func_00109630 (from auto/text_00100000.c): the loaded overlay's entry at
  * D_00F20000, called as a function (func_00109770 below loads it there and
  * views the address as data). */
-void func_002583e0(s32);
 void D_00F20000(s32, s32);
 void func_00109630(void) {
-    func_002583e0(2);
+    PlatFlushCache(2);
     D_00F20000(0, 0);
 }
 

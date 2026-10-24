@@ -15,6 +15,8 @@
 #include "data/pieces/D_002BBDE0.h"
 #include "data/pieces/D_002BC070.h"
 #include "common.h"
+#include "platform/thread.h"
+#include "platform/gs.h"
 #include "data/bss_004E.h"
 #include "data/types/text_00110000_h29_p.h"
 #include "data/pieces/D_002BBDF0.h"
@@ -61,12 +63,11 @@ void func_00110020(s32 arg0, s32 arg1) {
 
 /* func_00110068 (from auto/text_00110000_11.c). */
 M2C_UNK func_0010fea0();
-M2C_UNK func_002654f0();
 M2C_UNK func_00266c30(M2C_UNK);
 M2C_UNK func_00267fe0();
 extern f32 D_002BBDEC;
 void func_00110068(void) {
-    func_002654f0();
+    PlatGsResetPath();
     func_00266c30(1);
     func_00267fe0();
     D_002BBDEC = 1.0f;
@@ -98,9 +99,6 @@ W29Env D_004D8EF0 ALIGNED(16);
 extern u64 D_002BC750[];
 extern u64 D_002BC7C0[];
 extern u64 D_002BC830[];
-void FlushCache(s32);
-s32 sceGsSyncPath(s32, s32);
-void sceGsPutDrawEnv(void *);
 void func_001100a8(void) {
     s32 i;
     for (i = 0; i < 13; i++) {
@@ -124,17 +122,16 @@ void func_001100a8(void) {
     D_004D8EF0.r[29].a = 0x49;
     D_004D8EF0.r[30].d = -4;
     D_004D8EF0.r[30].a = 0x44;
-    FlushCache(0);
-    sceGsSyncPath(0, 0);
-    sceGsPutDrawEnv(&D_004D8EF0);
+    PlatFlushCache(0);
+    PlatGsSyncPath(0, 0);
+    PlatGsPutDrawEnv(&D_004D8EF0);
 }
 
 /* func_001101e8 (from auto/text_00110000_11.c). */
 void func_001104c0();
-M2C_UNK func_00265350(M2C_UNK, M2C_UNK, M2C_UNK, M2C_UNK);
 #define func_001100a8 ((M2C_UNK (*)()) func_001100a8)
 void func_001101e8(void) {
-    func_00265350(0, 1, 2, 0);
+    PlatGsResetGraph(0, 1, 2, 0);
     func_001104c0();
     func_001100a8();
 }

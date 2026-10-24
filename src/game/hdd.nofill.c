@@ -9,11 +9,10 @@
  * 1 and, when the modules loaded (func_0024d4a0), signals the thread.  The
  * ioctl numbers' meanings are not known; not proved by a boot. */
 #include "common.h"
+#include "platform/thread.h"
 #include "data/data_0046.h"
 #include "data/pieces/D_002C5968.h"
 
-s32 WaitSema(s32);
-s32 iSignalSema(s32);
 s32 func_0025dd48(const char *, s32, s32, s32, void *, s32);
 s32 func_0025e990(const char *);
 s32 func_0026aca8(void *);
@@ -31,7 +30,7 @@ static inline void pfs_ctl(void) { func_0025dd48("pfs:", 0x5003, 0, 0, 0, 0); }
 void func_0024d618(s32 sema) {
     u8 buf[16];
     for (;;) {
-        WaitSema(sema);
+        PlatWaitSema(sema);
         (*(volatile Sema_2c5968 *)&D_002C5968).mode = 2;
         if (hdd_ok() >= 0) {
             if (hdd_ctl(0x4807) != 3) {
@@ -54,5 +53,5 @@ void func_0024d618(s32 sema) {
 
 void func_0024d7b0(s32 sema) {
     (*(volatile Sema_2c5968 *)&D_002C5968).mode = 1;
-    if (func_0024d4a0()) iSignalSema(sema);
+    if (func_0024d4a0()) PlatISignalSema(sema);
 }
