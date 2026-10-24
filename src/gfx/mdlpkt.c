@@ -6,6 +6,7 @@
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
 #include "platform/vu.h"
+#include "platform/dma.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/pieces/D_002A624C.h"
@@ -249,11 +250,11 @@ void func_00108cf8(void *p, s32 i, void *q) {
 
 /* func_00108d90 (from hand/text_00100000_h2.c). */
 s32 func_00108d90(void *arg) {
-    *(volatile u32 *)0x10009020 = 0;
-    *(volatile u32 *)0x10009030 = *(u32 *)((u8 *)arg + 0x10) & 0x0FFFFFFF;
-    *(volatile u32 *)0x1000E010 = 2;
+    PlatDmaPutVif1Qwc(0);
+    PlatDmaPutVif1Tadr(*(u32 *)((u8 *)arg + 0x10) & 0x0FFFFFFF);
+    PlatDmaPutStat(2);
     PlatIFlushCache(0);
-    *(volatile u32 *)0x10009000 = 0x145;
+    PlatDmaPutVif1Chcr(0x145);
     return 2;
 }
 

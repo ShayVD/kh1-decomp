@@ -129,11 +129,11 @@ void func_00106d48(s32 arg0) {
 /* func_00106db0 (from hand/text_00100000_h1.c). */
 typedef struct { u8 pad[16]; u32 w16; } DmaReq;
 s32 func_00106db0(DmaReq *r) {
-    *(volatile u32 *)0x10009020 = 0;
-    *(volatile u32 *)0x10009030 = r->w16 & 0x0fffffff;
-    *(volatile u32 *)0x1000e010 = 2;
+    PlatDmaPutVif1Qwc(0);
+    PlatDmaPutVif1Tadr(r->w16 & 0x0fffffff);
+    PlatDmaPutStat(2);
     PlatIFlushCache(0);
-    *(volatile u32 *)0x10009000 = 0x105;
+    PlatDmaPutVif1Chcr(0x105);
     return 2;
 }
 

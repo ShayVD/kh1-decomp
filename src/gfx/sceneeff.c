@@ -5,6 +5,7 @@
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
 #include "platform/vu.h"
+#include "platform/dma.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "data/pieces/D_002B6778.h"
@@ -545,11 +546,11 @@ s32 func_00103c48(void) {
     PlatVu0MulMatrix(D_004948F0, D_004949F0, D_004949B0);
     func_00103a70();
     D_0048CAD4 = pkt;
-    *(volatile u32 *)0x10009020 = 0;
-    *(volatile u32 *)0x10009030 = (u32)D_0048C770 & 0x0fffffff;
-    *(volatile u32 *)0x1000e010 = 2;
+    PlatDmaPutVif1Qwc(0);
+    PlatDmaPutVif1Tadr((u32)D_0048C770 & 0x0fffffff);
+    PlatDmaPutStat(2);
     PlatFlushCache(0);
-    *(volatile u32 *)0x10009000 = 0x145;
+    PlatDmaPutVif1Chcr(0x145);
     func_00121ee0(vtx);
     func_00121ee0(uv);
     PlatGsSyncPath(0, 0);

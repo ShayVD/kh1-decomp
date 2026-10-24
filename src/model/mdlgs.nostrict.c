@@ -72,7 +72,7 @@ s32 func_0015eb78(void) {
     }
     PlatDisableDmac(2);
     PlatDisableDmac(1);
-    *(volatile s32 *)0x1000e010 = 6;
+    PlatDmaPutStat(6);
 
     if (func_0015ea98()) {
         PlatEnableDmac(2);
@@ -135,7 +135,7 @@ void func_00162500(void);
 void func_0015f018(void) {
     DmaChcr *c;
     PlatGsSyncPath(0, 0);
-    *(volatile u32 *)0x10003820 = 6;
+    PlatVifPutErr(0, 6);
     c = PlatDmaGetChanAs(DmaChcr *, 0);
     c->dir = 1;
     c->mod = 1;
@@ -143,7 +143,7 @@ void func_0015f018(void) {
     c->tte = 1;
     c->tie = 0;
     PlatDmaSend(c, D_00278680);
-    *(volatile u32 *)0x10003C20 = 6;
+    PlatVifPutErr(1, 6);
     c = PlatDmaGetChanAs(DmaChcr *, 1);
     c->dir = 1;
     c->mod = 1;
@@ -730,7 +730,7 @@ s32 func_0015ff78(B4Dm *d) {
     case 5:
         do {
             do {
-                x = *(volatile u32 *)0x10003c00 & 0x1f000003;
+                x = PlatVif1GetStat() & PLAT_VIF1_STAT_BUSY;
             } while (x);
             __asm__ volatile("cfc2 %0, $vi29" : "=r"(x));
         } while (x & 0x100);
