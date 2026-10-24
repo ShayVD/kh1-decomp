@@ -377,7 +377,11 @@ void func_001636d0(IkObj *o, IkAnim *an)
             }
             break;
         }
+#ifdef KH1_PS2
         __asm__ volatile("sqc2 $vf0, 0(%0)" : : "r"(trow) : "memory");
+#else
+        trow[0] = 0.0f, trow[1] = 0.0f, trow[2] = 0.0f, trow[3] = 1.0f; /* vf0 */
+#endif
         if (o->xC & 0xC) func_00163150(o, i);
     }
 }

@@ -26,16 +26,33 @@ static struct PlatDmaChan null_chan[16];
 int PlatCdInit(int mode) { return 0; }
 int PlatCdInitEeCB(int priority, void *stack, int stacksize) { return 0; }
 void *PlatCdPOffCallback(void (*func)(void *), void *arg) { return 0; }
-int PlatCdSearchFile(void *fp, const char *name) { return 0; }
+/* found, at sector 0 with size 0 (libcdvd's sceCdlFILE: lsn, size, name[16], date[8]): the game
+ * retries a search that fails for ever */
+int PlatCdSearchFile(void *fp, const char *name) {
+    u32 *f = (u32 *)fp;
+    f[0] = 0;
+    f[1] = 0;
+    return 1;
+}
 int PlatCdSync(int mode) { return 0; }
 int PlatCdDiskReady(int mode) { return 2; /* SCECdComplete: the disc is ready */ }
 int PlatCdMmode(int media) { return 0; }
-int PlatCdRead(unsigned int lsn, unsigned int sectors, void *buf, void *mode) { return 0; }
+/* the host runner stops at the first read (host/null/main.c) */
+extern int kh1_host_stop_at_cdread;
+int printf(const char *, ...);
+void exit(int);
+int PlatCdRead(unsigned int lsn, unsigned int sectors, void *buf, void *mode) {
+    if (kh1_host_stop_at_cdread) {
+        printf("kh1-host: first PlatCdRead (lsn %u, %u sectors, buf %p): stop\n", lsn, sectors, buf);
+        exit(0);
+    }
+    return 0;
+}
 int PlatCdSeek(unsigned int lsn) { return 0; }
 int PlatCdGetError(void) { return 0; }
 int PlatCdStatus(void) { return 0; }
 int PlatCdBreak(void) { return 0; }
-int PlatCdPowerOff(int *result) { return 0; }
+int PlatCdPowerOff(int *result) { return 1; }
 
 /* platform/dma.h */
 PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]; }
@@ -84,11 +101,12 @@ u64 PlatGsGetCsr(void) { return 0; }
 void PlatSifInitRpc(unsigned int mode) {}
 int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) { return 0; }
 int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) { return 0; }
-int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 0; }
-int PlatSifLoadStartModule(const char *name, int arglen, const char *args, int *result) { return 0; }
+/* iop.h: the reboot and the module loads succeed (module id 1), PlatSifSyncIop 1 */
+int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 1; }
+int PlatSifLoadStartModule(const char *name, int arglen, const char *args, int *result) { return 1; }
 int PlatSifSearchModuleByName(const char *name) { return -1; /* no IOP module is loaded */ }
-int PlatSifRebootIop(const char *image) { return 0; }
-int PlatSifSyncIop(void) { return 0; }
+int PlatSifRebootIop(const char *image) { return 1; }
+int PlatSifSyncIop(void) { return 1; }
 
 /* platform/mc.h */
 int PlatMcInit(void) { return 0; }

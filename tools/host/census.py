@@ -19,7 +19,13 @@ platform host/null/*.c and the shared port code host/port/*.c, generates
 out/host/defs_host.c (the bss and data D_ names only symbols.ld knows, sized
 to the next known address, with the ELF's bytes where they lie below .bss)
 and counts the symbols the compiled objects still leave undefined, by kind
-(out/host/undefined.txt lists them).
+(out/host/undefined.txt lists them). The near-miss C drafts of the unmatched
+functions (shift/drafts.tsv, the func_ rows) are compiled with the game files
+for the link: the port runs them (vita-port-plan section 3).
+
+--exe (implies --link) then links out/host/kh1-host with the host compiler
+(-m32 -no-pie, the host libc and libm) and host/null/main.c's main(), which
+calls the game's main; `out/host/kh1-host` runs it to the first PlatCdRead.
 """
 import argparse
 import os
@@ -37,7 +43,7 @@ OUT = os.path.join(ROOT, "out", "host")
 # gnu89 + the -Wno-error list: gcc 2.96 C (implicit declarations, int <->
 # pointer conversions) that gcc 14 refuses by default.
 CFLAGS = [
-    "-m32", "-malign-double", "-std=gnu89", "-O1", "-w",
+    "-m32", "-malign-double", "-std=gnu89", "-O1", "-g", "-w",
     "-fno-strict-aliasing", "-fno-pic", "-fno-stack-protector", "-DKH1_HOST", "-Iinclude", "-Isrc",
     "-Wno-error=implicit-function-declaration", "-Wno-error=int-conversion",
     "-Wno-error=incompatible-pointer-types", "-Wno-error=implicit-int",
@@ -70,6 +76,16 @@ def game_files():
             if f.endswith(".c") and not f.startswith("."):
                 out.append(os.path.join(rel, f))
     return sorted(out)
+
+
+def draft_files():
+    """The C drafts of shift/drafts.tsv's game functions (not the SDK's)."""
+    out = []
+    for l in open(os.path.join(ROOT, "shift", "drafts.tsv")):
+        f = l.rstrip("\n").split("\t")
+        if len(f) >= 2 and f[0].startswith("func_"):
+            out.append(f[1])
+    return out
 
 
 def classify(text):
@@ -233,8 +249,19 @@ def link_census(results, cc):
         parts = l.split("\t")
         if len(parts) >= 2 and not l.startswith("#") and parts[1].split():
             alias[parts[0]] = "func_" + parts[1].split()[0].lower()[-8:]
+    # the func_<addr> spelling the data blob and the drafts use for a functions.tsv name: an
+    # alias symbol, so the real link (--exe) resolves it too
+    refs = nm(objs, False)
+    pairs = sorted((alias[n], n) for n in defined if n in alias
+                   and alias[n] in refs and alias[n] not in defined)
+    # (a linker script assignment: an assembler .set to another object's symbol stays undefined)
+    link_census.script = None
+    if pairs:
+        src = os.path.join(OUT, "aliases.ld")
+        open(src, "w").write("".join("PROVIDE(%s = %s);\n" % (f, n) for f, n in pairs))
+        link_census.script = src
     defined |= set(alias[n] for n in defined if n in alias)
-    undefined = nm(objs, False) - defined
+    undefined = refs - defined
     hobj = host_defs(undefined, cc)
     if hobj:
         objs.append(hobj)
@@ -261,6 +288,8 @@ def link_census(results, cc):
                 f.write("%s\t%s\n" % (k, s))
     print("link: %d objects (%d game, %d data, %d null platform / port), %d symbols undefined"
           % (len(objs), len(ok_objs), len(data_objs), len(null_objs), len(undefined)))
+    link_census.objs = objs
+    link_census.undefined = undefined
     small = []
     for k, v in sorted(kinds.items(), key=lambda kv: -len(kv[1])):
         if k.startswith("libc"):
@@ -271,6 +300,24 @@ def link_census(results, cc):
         print("  %5d  libc / libm / compiler: %s" % (len(small), " ".join(sorted(small))))
 
 
+def link_exe(objs, cc):
+    """Link out/host/kh1-host from the census objects against the host libc."""
+    exe = os.path.join(OUT, "kh1-host")
+    extra = [link_census.script] if link_census.script else []
+    p = subprocess.run([cc, "-m32", "-no-pie", "-o", exe] + objs + extra + ["-lm"], cwd=ROOT,
+                       capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
+    if p.returncode:
+        errs = [l for l in p.stderr.splitlines() if "undefined reference" in l or "multiple definition" in l]
+        print("exe: the link fails (%d lines; first: %s)" % (len(p.stderr.splitlines()),
+              (errs or p.stderr.strip().splitlines() or ["?"])[0]))
+        open(os.path.join(OUT, "link.log"), "w").write(p.stderr)
+        return 1
+    if os.path.exists(os.path.join(OUT, "link.log")):
+        os.remove(os.path.join(OUT, "link.log"))
+    print("exe: out/host/kh1-host linked (%d objects)" % len(objs))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cc", default=os.environ.get("HOST_CC", "gcc"))
@@ -278,10 +325,11 @@ def main():
     ap.add_argument("--all-errors", action="store_true", help="count every error line, not one per file")
     ap.add_argument("--show", metavar="FILE", help="print one file's errors")
     ap.add_argument("--link", action="store_true", help="also count the symbols left undefined (see above)")
+    ap.add_argument("--exe", action="store_true", help="also link out/host/kh1-host (see above)")
     ap.add_argument("-j", type=int, default=os.cpu_count() or 4)
     a = ap.parse_args()
 
-    files = [a.show] if a.show else game_files()
+    files = [a.show] if a.show else game_files() + draft_files()
     with ThreadPoolExecutor(a.j) as ex:
         results = list(ex.map(lambda f: compile_one(a.cc, f), files))
 
@@ -312,11 +360,15 @@ def main():
         for path, ok, errs in results:
             f.write("%s\t%d\t%s\t%s\n" % (path, ok, "" if ok else classify(errs[0]),
                                           "" if ok else errs[0].replace("\t", " ")))
-    print("%s: %d / %d game files compile (%d fail)" % (a.cc, nok, len(results), len(results) - nok))
+    nd = sum(1 for r in results if r[0].startswith("nonmatchings/"))
+    print("%s: %d / %d game files compile (%d fail; %d of them drafts of unmatched functions)"
+          % (a.cc, nok, len(results), len(results) - nok, nd))
     for cause, paths in sorted(by_cause.items(), key=lambda kv: -len(kv[1])):
         print("  %5d  %s" % (len(paths), cause))
-    if a.link:
+    if a.link or a.exe:
         link_census(results, a.cc)
+    if a.exe:
+        return link_exe(link_census.objs, a.cc)
     return 0
 
 
