@@ -76,7 +76,13 @@ void func_001c62a0(s32 *p, f32 *add, f32 *set) {
         cpm(&D_0037A380.ent[i].v[8], p); p += 4;
         cpm(&D_0037A380.ent[i].v[9], p); p += 4;
         cpm(&e->v[10], p); p += 4;
-        { register f32 *d asm("$10"); f32 *v; d = &c->e.x; v = (f32 *)(b + 336);
+        {
+#ifdef KH1_PS2
+        register f32 *d asm("$10"); /* the EE's t2 (a register allocation try) */
+#else
+        f32 *d; /* portability: no EE register names off the PS2 (clang refuses them) */
+#endif
+        f32 *v; d = &c->e.x; v = (f32 *)(b + 336);
         for (j = 0; j < 3; j++) {
             *v++ += add[j];
             *d++ = set[j];

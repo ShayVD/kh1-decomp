@@ -9,21 +9,22 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is away until Monday 2026-10-26** (the user said so on 2026-10-23).
-If this session starts before then (sessions 49 to 68 ran without it), do not ask for the Mac or wait on it: skip items 1
+If this session starts before then (sessions 49 to 69 ran without it), do not ask for the Mac or wait on it: skip items 1
 to 3, add every float change to docs/float-untested.md as untested, and do the static items. **From Monday 2026-10-26
 on, ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make item 1 the first
-thing**: six float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO is in Downloads for the host
+thing**: seven float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO is in Downloads for the host
 run, and the overlay files are in Downloads/kh1-test/ovl.
 
-## Where we stopped (end of session 68, 2026-10-24)
+## Where we stopped (end of session 69, 2026-10-24)
 
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-68.
-- **Six default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
-  (2,049, unchanged in 35 to 58) and **59 (2,053, the current default; sessions 60 to 67 kept the float ELF's
-  loaded bytes the same: 64's fcheck showed only the name D_0061FFA0 gone, 65 and 66 changed no PS2 object,
-  67's fcheck: float_covered, float_reach, loaded bytes all the same; 68's: loaded bytes and program headers the
-  same, the notice's three names D_00656254 / 78 / 9C became one D_00656230 at the same place)**. docs/float-untested.md lists every
-  change since the last booted build (KH1_F29_N) and the switch that undoes each. Session 59 released 4 names
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-69.
+- **Seven default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
+  (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68) and **69 (2,043, the current default)**: session
+  69 made 21 objects one definition (vita-port-plan 5.1i), so 10 objects that floated in place as parts of a run
+  now float whole into the float area (the shop / list windows D_0062F6E0 / D_0062F790 / D_00630460, the ppp matrices
+  D_00615E70 / D_00616000, D_0052EB50, D_00551700, D_00575900, the timer sets D_006692F0 / D_00669320) and 20
+  neighbours are pinned; the undo is reverting that commit (float-untested.md row 69). docs/float-untested.md lists
+  every change since the last booted build (KH1_F29_N) and the switch that undoes each. Session 59 released 4 names
   (`--no-fmt-read`, low risk); session 34 released 19 (bisect order `--no-hix-join`, `--no-widen-heads`,
   `--no-likely-slot`).
 - **Register passthrough** (portability.md rule 10; vita-port-plan.md §5.1c-§5.1e): argcheck lists **0 short
@@ -41,7 +42,14 @@ run, and the overlay files are in Downloads/kh1-test/ovl.
   func_001c06c0 / func_001468f8 / func_0012cab8, D_00304B6C, D_002E27D4, D_00616220, func_0011f228, vmath's
   handler stack, gumisave's two overlay entry calls) are for the dktitle.x / overlay check.
 - **Argument classes** (portability.md rule 11): `python3 -I tools/host/abicheck.py` (text) and indcheck
-  (trees) both 0. Run both after any new declaration.
+  (trees) both 0. Run both after any new declaration. indcheck: **0 CLANG** (session 69: the three nested-function
+  files are CLANG-READ, read from their gcc host objects, which have no `call *`).
+- **Layout dependencies** (portability.md rule 12, vita-port-plan.md §5.1i): `python3 -I tools/host/layoutcheck.py`
+  (after `make shift` and `make host-census`) lists code that reaches past its variable's host definition: **0 rows**
+  (86 at the start of session 69; 10 false positives in its REVIEWED table). census.py keeps names with no C
+  definition at their PS2 distances (out/host/defs_host.c blocks) and aliases names inside a C definition into it
+  (out/host/aliases.ld); shift_ld.py lets such a field name follow its floated object. Keep it at 0 after any data
+  change: a new row is a host crash waiting (opdma in 64, the notice in 68 were found by crashing).
 - **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs;
   PlatPadRead leaves no button pressed, PlatPadGetButtonProfile answers -1. PlatSifCallRpc answers RPC 0x30
   with 1 (session 66), and (session 67) keeps the sound status block's address from RPC 0 and, a frame after
@@ -70,7 +78,8 @@ run, and the overlay files are in Downloads/kh1-test/ovl.
   fault (`apt-get install valgrind libc6-dbg:i386`; under valgrind the fault is a SIGILL). **Not yet run on the
   real ISO** (it is on the Mac): it should stop at the same call. opdma.c's three GS tag lists are one
   definition (D_0061EEA0[0x140]); session 68 made the notice's four sprite sets one (src/hud/notice.nostrict.c
-  `D_00656230_sets[4][9]`): func_00243a90's fill ran over D_006561D0 on the host.
+  `D_00656230_sets[4][9]`): func_00243a90's fill ran over D_006561D0 on the host. Session 69 found the rest statically
+  (layoutcheck, 21 more objects one definition); the stub:2 run still ends in func_00132790 on the fake disc.
 - **dktitle.x**: tools/ovl/inventory.py is ready (functions, main-ELF calls and data, code / data split;
   `--selftest` on the main ELF finds every layout.tsv start). Not run: the file is on the Mac. §5.2 has the plan
   to decompile it (toolchain check on 5-8 leaves first).
@@ -103,11 +112,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 69 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 70 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s69 and /mnt/project-files/kh1-runtime/s69, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s70 and /mnt/project-files/kh1-runtime/s70, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities,
    customize, status, config and journal pages with each journal section, changing a config option, using an
    item, equipping a weapon, a save point (save to a card, overwrite a save, change the party), loading a save from
@@ -115,20 +124,21 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    shop, the Moogle's synthesis, the title screen left idle until its demo, a battle with the HUD (the HP / MP
    gauges, command menu, lock-on and the target's gauge, damage numbers, an "obtained" notice: src/hud/notice.c,
    whose sprite sets session 68 made one array), the world map's gauge, a minigame with a timer or score if one is
-   near, a level-up, a Trinity mark if one is near, a summon if one is available, enemy drops picked up, the pause
-   (src/game/pause.c), a game over and its continue (src/game/gameover.c), a room change and a world change
-   (src/game/roomload.c), a movie (src/game/dkmovie.c), and anything using atan: camera, lock-on). If it breaks,
-   bisect with the switches listed there: session 59's `--no-fmt-read` first, then session 34's. Move what boots
-   into docs/shiftable-plan.md and clear docs/float-untested.md. Note what the boot shows about the "(a guess)"
-   modules and rename the ones it settles. Without the Mac: skip.
+   near (session 69 floated the HUD timer's sprite sets), a level-up, a Trinity mark if one is near, a summon if one
+   is available, enemy drops picked up, the pause (src/game/pause.c), a game over and its continue
+   (src/game/gameover.c), a room change and a world change (src/game/roomload.c), a movie (src/game/dkmovie.c), and
+   anything using atan: camera, lock-on). If it breaks, bisect: session 69's commit first (revert it: the
+   one-definition merges), then session 59's `--no-fmt-read`, then session 34's switches. Move what boots into
+   docs/shiftable-plan.md and clear docs/float-untested.md. Note what the boot shows about the "(a guess)" modules
+   and rename the ones it settles. Without the Mac: skip.
 2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
    not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), run
    `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` (and once under valgrind): expected, as on the fake disc,
    SYSTEM.CNF, KINGDOM.IDX and the eight files before dktitle.x, then the fault at D_00F20000(0, 0). Then
    **`KH1_HOST_OVL=stub:2`** on the real disc: the Dive to the Heart files (dh.wdt ... dh01.ard) are there, so the
    room parse (func_00132790) gets real data; record in vita-port-plan how far it gets and where it stops. Fix
-   host-only causes the way sessions 63 to 68 did (platform answers, layout dependencies in host/port or as one
-   definition, the PS2 ELF byte-identical, fcheck's loaded bytes the same).
+   host-only causes the way sessions 63 to 69 did (platform answers, layout dependencies as one definition with
+   layoutcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
    `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
    in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Check argcheck's 3 value uses and
@@ -136,14 +146,15 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (does dktitle.x call the setters func_001c06c0 / func_001468f8 / func_0012cab8 or write vm_lib's hooks? what do
    the targets take?). Does it call func_00109558, and with which states (session 68 guessed 2 = new game)?
    Without the Mac: skip.
-4. **Static, without the Mac**: (a) **more layouts like the notice's**: census.py's host_defs (out/host/defs_host.c)
-   sizes every D_ name with no C definition to the next known name, and a C definition is as large as its type;
-   the code may reach further (session 64's opdma, session 68's notice). List the names whose accesses run past
-   their host size: the shift build's analysis already knows (reach_check's float_reach / cover_check's spans, and
-   the float build keeps such groups together, e.g. the notice's sets as one `A` symbol); compare each with its
-   host size and make the real ones one definition (kh1.elf byte-identical, fcheck's loaded bytes the same).
-   (b) The 13 CLANG rows: read the nested-function files' indirect calls by hand (READ notes). (c) argcheck's 3
-   value uses still wait for dktitle.x. Keep every PS2 object the same except for such one-definition merges.
+4. **Static, without the Mac**: (a) **the unbounded index rows**: `layoutcheck.py --all` adds 733 rows (726
+   idx-next: an index with no bound the analysis can see, from a base to the next host run; 7 uncached DMA
+   buffers). Most are tables indexed within their size, but some are one array split in two the way session 69's
+   D_00629E70 / D_0062A130 was (the open windows indexed to [4]). Sort them by what the next run is (a name with no
+   C definition right after a C array, two arrays in the same file, a struct's last field) and read the likely
+   ones: the C type's count against the loop or compare that bounds the index; make the real ones one definition
+   (kh1.elf byte-identical; float-untested.md row for any float change). Add a REVIEWED-style note for the read
+   ones so the list shrinks. (b) argcheck's 3 value uses still wait for dktitle.x. Keep every PS2 object the same
+   except for such one-definition merges.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=69`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=70`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).

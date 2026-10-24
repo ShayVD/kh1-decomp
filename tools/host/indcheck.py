@@ -43,7 +43,8 @@ typedefs, `()` declarations, block-scope externs) and every m2c cast at a call,
 against the definition (ABI rows), and every f32 an unprototyped call promotes
 to double where the definition takes f32 (PROMO rows). CLANG rows are clang's
 errors: a builtin called with fewer arguments than it takes, or a file clang
-cannot parse (gcc nested functions), whose calls are not listed.
+cannot parse (gcc nested functions), whose calls are not listed; such a file
+whose host object (gcc) has no `call *` is CLANG-READ (session 69).
 
     python3 -I tools/host/indcheck.py [--all] [--tsv out/host/indcheck.tsv]
 
@@ -974,10 +975,22 @@ def main():
                 rows.append(("PROMO", s.path, line, caller, "-", "-", "-", "-", "-", "-", "-",
                              "%s: argument %d is an f32 passed as double (no prototype), defined f32"
                              % (callee, i + 1), "-", ""))
+    # Session 69: a file clang cannot parse because of gcc nested functions is read from its host object
+    # instead (the census compiles it with gcc): no `call *` there means no call through a pointer to miss.
+    nested = ("function definition is not allowed here", "illegal storage class on function")
     for s in scans:
+        verdict, note = "CLANG", ""
+        if s.errors and all(e.split(": error: ", 1)[1].startswith(nested) for e in s.errors):
+            obj = os.path.join(ROOT, "out", "host", s.path + ".o")
+            if os.path.exists(obj):
+                p = subprocess.run(["objdump", "-d", obj], capture_output=True, text=True)
+                if p.returncode == 0 and not re.search(r"\bcall\s+\*", p.stdout):
+                    verdict = "CLANG-READ"
+                    note = ("READ: gcc nested functions clang cannot parse; the host object (gcc) has no call "
+                            "through a pointer, and abicheck reads the file's declarations")
         for e in s.errors:
-            rows.append(("CLANG", s.path, e.split(":")[1], "-", "-", "-", "-", "-", "-", "-", "-",
-                         e.split(": error: ", 1)[1], "-", ""))
+            rows.append((verdict, s.path, e.split(":")[1], "-", "-", "-", "-", "-", "-", "-", "-",
+                         e.split(": error: ", 1)[1], "-", note))
     shown = [r for r in rows if a.all or r[0] in ("SHORT", "SHORT?", "CLANG", "ABI", "PROMO")]
     for r in shown:
         print("\t".join(str(x) for x in r))

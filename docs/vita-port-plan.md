@@ -705,7 +705,14 @@ The shift build: shift_ld.py let a name no object defines inside a floated varia
 inside"); it now follows the variable (`name = variable + offset`). The float build's layout changes (row in
 docs/float-untested.md). The host run on tests/host/fake_disc.py stops where session 68's did (the overlay
 entry, and with `KH1_HOST_OVL=stub:2` func_00132790 on the fake disc's missing room file); valgrind 0 errors
-to the fault. abicheck 0, indcheck and argcheck unchanged.
+to the fault. abicheck 0, argcheck unchanged.
+
+**indcheck: 0 CLANG rows** (241 rows: 117 OK, 42 READ, 70 OVERLAY, 12 CLANG-READ). The 12 rows of keshptail.nostrict.c,
+keshptailx.nostrict.c and kethdraw.nostrict.c are gcc nested functions clang cannot parse; indcheck now reads such a
+file's host object (gcc compiles it): none of the three has a `call *` (47, 48 and 131 direct calls), so there is no
+call through a pointer to miss (CLANG-READ; abicheck reads their declarations as text). The 13th, the func_001c62a0
+draft's `register f32 *d asm("$10")` (an EE register name), is now under `#ifdef KH1_PS2` (the host a plain local),
+and clang parses the draft: no new row.
 
 ### 5.2 Session 60: overlays, dktitle.x
 
