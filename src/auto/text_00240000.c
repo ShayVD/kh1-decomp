@@ -26,7 +26,6 @@ extern s32 D_00669A3C;
 extern u32 D_002C5AD8;
 extern u32 D_002C5AE0;
 extern void *D_0066AA84; /* src/data/bss_0066.c: s32 *D_0066AA84 */
-s32 *func_00245f58();
 s32 func_0023feb8();
 s32 func_0023ff38(void *, s32);
 s32 func_00240170();
@@ -79,15 +78,6 @@ void func_00242b38(void) {
     temp_v0 = func_00240910();
     if (temp_v0 != NULL) {
         M2C_FIELD(temp_v0, s32 *, 0x774) = 1;
-    }
-}
-
-void func_00245ff0(void) {
-    s32 *temp_v0;
-
-    temp_v0 = func_00245f58();
-    if (*temp_v0 != 0) {
-        *temp_v0 = 4;
     }
 }
 

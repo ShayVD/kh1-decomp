@@ -13,12 +13,8 @@ typedef int u128 __attribute__((mode(TI)));
 
 /* Render-packet headers set up before func_00237018 (D_00667DF0, D_006697C0). */
 typedef struct { u8 pad[0x60]; u64 x60; u64 x68; u64 x70; u8 pad2[0x68]; u64 xe0; u8 tail[0x160 - 0xE8]; } S7df0;
-typedef struct { u8 pad[0x4c]; u16 id; } S130;
-typedef struct { u8 pad[0x130]; S130 *p; } SC;
-typedef struct { u8 pad[0xc]; SC *c; } SArg;
 typedef struct { s32 state; s32 cnt; u8 pad[0x28]; u8 sub[1]; } S70d0;
 typedef Fx E930;
-typedef struct { u8 pad[0x180]; B192 b; } L240;
 typedef struct { u32 state; f32 t; s32 x8; s32 xc; s32 x10; u8 pad[0xa8c]; s32 xaa0; } S8370;
 typedef struct { u8 r, g, b, a; } RGBA;
 typedef struct {
@@ -63,15 +59,7 @@ typedef union {
 typedef struct { u8 stat[0x40]; char name[256]; u8 pad[0x10]; } Dirent;
 typedef struct { s32 x0; char *(*name)(void); char *(*pass)(void); s32 xc; s32 mounted; } HddCfg;
 #include "data/pieces/D_00304BE8_s.h"
-Panel D_00667F60 ALIGNED(32);
-Q4 *D_00667F50 ALIGNED(16);
-Q4 *D_00667F54 ALIGNED(4);
-S7df0 D_00667DF0 ALIGNED(16);
 extern Q4 D_00351E10[];
-extern u8 D_00668040[];
-extern u8 D_0045D280[];
-extern u8 D_0045D6D0[];
-extern B192 D_00668060;
 Panel D_00668290 ALIGNED(16);
 extern Q4 *D_00668280;
 extern S8370 D_00668370; /* src/data/bss_0066.c: s32 D_00668370[0x2ac] */
@@ -107,21 +95,15 @@ extern s32 D_002C5C50;
 extern s32 D_0046A6B0[];
 extern s32 D_0066AAA0;
 extern void (*D_0066AA80)(void);
-
-void *memset(void *, s32, u32);
 s32 sprintf(char *, const char *, ...);
 u32 strlen(const char *);
 void func_0011ef10(s32, void *);
 s32 func_0011ef38(void *);
-s32 func_0013c318(u16);
 Q4 *func_001f12c0(Q4 *, s32, s32, s32, s32, s32, s32);
 void func_00237018(void *, s32, s32);
 void func_002370c8(void *);
 Q4 *func_002388b8(void *, s32, Q4 *);
 void func_002393d8(void);
-s32 func_00242bf0(s32);
-void func_00246120(SArg *, s32, f32);
-s32 func_00246320(void);
 void func_00246750(s32, s32, s32, f32);
 void func_00246ed8(s32, S70d0 *);
 void func_00247190(void);
@@ -154,44 +136,6 @@ s32 func_0025ce38(s32);
 s32 strcmp(const char *, const char *);
 s32 func_001560f8(s32, void *);
 void func_0024f1d0(void);
-
-void func_00246038(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
-    s32 i;
-    Panel *d = &D_00667F60;
-    func_0024aa48(a0, d, a1);
-    for (i = 0; i < 4; i++) { s32 *r = &d->r[i].b; r[-1] += dx << 4; r[0] += dy << 4; }
-    for (i = 0; i < 4; i++) {
-        D_00667F60.q[i].d = D_00667F60.q[i].d * s;
-    }
-    D_00667F50 = func_002388b8(&D_00667F60, 1, D_00667F50);
-}
-
-void func_002461f8(SArg *a0, s32 a1, f32 f) {
-    s32 t, k;
-    func_002370c8(&D_00667DF0);
-    D_00667DF0.xe0 = 5;
-    D_00667DF0.x60 = 0x30003;
-    func_00237018(&D_00667DF0, 22, 1);
-    D_00667F54 = D_00351E10;
-    D_00667F50 = D_00351E10 + 1;
-    func_00246120(a0, a1, f);
-    t = func_0013c318(a0->c->p->id);
-    if (t == 1) k = 1;
-    else if (t == 2) k = 2;
-    if (func_00242bf0(k)) {
-        func_00237018(D_00667F54, D_00667F50 - D_00667F54, 1);
-    }
-}
-
-void func_00246438(void) {
-    L240 l;
-    memset(D_00668040, 0, 32);
-    func_0024aac8(D_0045D280);
-    func_0024af40(D_0045D6D0, &l, D_0045D280);
-    D_00668060 = l.b;
-    if (func_0011ef38(func_00246320) == 0)
-        func_0011ef10(0x28489, func_00246320);
-}
 
 void func_00246570(s32 a0, s32 a1, s32 dx, s32 dy, f32 s) {
     s32 i;

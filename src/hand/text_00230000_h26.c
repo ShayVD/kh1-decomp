@@ -89,17 +89,8 @@ void func_0024ae00(void *);
 /* Three rows of five 0xA00-byte cells, with a used count per row. */
 
 /* Ten 0x860-byte channels: a free one, else the oldest. */
-
-typedef struct { u8 pad[0x4C]; u16 unk4C; } Info;
-typedef struct { u8 pad[0x130]; Info *unk130; } Act;
 typedef struct { s32 a, b, c, d; } Q4;
 extern Q4 D_00668040[2]; /* src/data/bss_0066.c: u8 D_00668040[0x20] */
-s32 func_0013daa8(s32);
-
-Q4 *func_00245f58(Act *a) {
-    s32 i = func_0013daa8(a->unk130->unk4C) != 1;
-    return &D_00668040[i];
-}
 
 void func_002464f8(s32 *out) {
     s32 i;

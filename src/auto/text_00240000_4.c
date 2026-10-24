@@ -3,7 +3,6 @@
 #include "m2c.h"
 
 void *func_00241b60(M2C_UNK, s32);
-void *func_00245f58(s32);
 
 void func_00241c00(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     void *temp_v0;
@@ -13,18 +12,6 @@ void func_00241c00(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     M2C_FIELD(temp_v0, s32 *, 0xA8C) = arg1;
     M2C_FIELD(temp_v0, s32 *, 0xA90) = arg2;
     M2C_FIELD(temp_v0, s32 *, 0xA94) = arg3;
-}
-
-void func_00245f90(s32 arg0, s32 arg1) {
-    void *temp_v0;
-
-    temp_v0 = func_00245f58(arg1);
-    if (M2C_FIELD(temp_v0, s32 *, 0) == 0) {
-        M2C_FIELD(temp_v0, s32 *, 8) = arg0;
-        M2C_FIELD(temp_v0, s32 *, 0xC) = arg1;
-        M2C_FIELD(temp_v0, s32 *, 0) = 1;
-        M2C_FIELD(temp_v0, f32 *, 4) = 1.0f;
-    }
 }
 
 s32 func_00246cf0(s32 arg0, s32 *arg1) {
