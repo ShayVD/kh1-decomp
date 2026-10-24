@@ -122,6 +122,7 @@ void func_0019c838(MegaObj *w, MegaKey *key, MegaPart *pt, DColWork *c, f32 *b) 
         }
     }
     pt->grav += key->grav;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 0(%1)\n"
@@ -137,6 +138,11 @@ void func_0019c838(MegaObj *w, MegaKey *key, MegaPart *pt, DColWork *c, f32 *b) 
         "sqc2 $vf1, 0(%0)\n"
         : : "r"(pt->pos), "r"(pt->vel), "r"(&pt->spd), "r"(w->v), "r"(&pt->grav)
         : "$8", "$9", "memory");
+#else
+    pt->pos[0] = pt->pos[0] + pt->vel[0] * pt->spd + w->v[0] * pt->grav;
+    pt->pos[1] = pt->pos[1] + pt->vel[1] * pt->spd + w->v[1] * pt->grav;
+    pt->pos[2] = pt->pos[2] + pt->vel[2] * pt->spd + w->v[2] * pt->grav;
+#endif
     if (key->h22)
         pt->live--;
     pt->n++;
@@ -174,6 +180,7 @@ void func_0019d020(PppMtx a, PppMtx m, ObjD020 *o, PppMtx c, KeyD020 *k, PppMtx 
     PlatVu0AddVector(m[3], m[3], k->pos);
     switch (o->mode) {
     case 0:
+#ifdef KH1_PS2
         __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 16(%0)\n"
@@ -218,8 +225,24 @@ void func_0019d020(PppMtx a, PppMtx m, ObjD020 *o, PppMtx c, KeyD020 *k, PppMtx 
         "sqc2 $vf3, 32(%0)\n"
         "sqc2 $vf4, 48(%0)\n"
         : : "r"(m), "r"(a), "r"(D_00616040), "r"(out), "r"(flag) : "memory");
+#else
+        {
+            /* m's translation by a; out = that if flag; m = each row by D_00616040 */
+            f32 (*M)[4] = (f32 (*)[4])m, (*Y)[4] = (f32 (*)[4])a, (*D)[4] = (f32 (*)[4])D_00616040;
+            f32 r[4][4];
+            int i;
+            for (i = 0; i < 3; i++)
+                __builtin_memcpy(r[i], M[i], 16);
+            PlatVu0Apply(r[3], Y, M[3]);
+            if (flag)
+                __builtin_memcpy(out, r, 64);
+            for (i = 0; i < 4; i++)
+                PlatVu0Apply(M[i], D, r[i]);
+        }
+#endif
         break;
     case 1:
+#ifdef KH1_PS2
         __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 16(%0)\n"
@@ -304,8 +327,30 @@ void func_0019d020(PppMtx a, PppMtx m, ObjD020 *o, PppMtx c, KeyD020 *k, PppMtx 
         "sqc2 $vf3, 32(%0)\n"
         "sqc2 $vf4, 48(%0)\n"
         : : "r"(m), "r"(b), "r"(D_00615EB0), "r"(D_00615E68->m), "r"(D_00616040), "r"(out), "r"(flag) : "memory");
+#else
+        {
+            /* Y = rows of D_00615E68->m by b, then by D_00615EB0; m's translation
+             * by Y; out = that if flag; m = each row by D_00616040 */
+            f32 (*M)[4] = (f32 (*)[4])m, (*D)[4] = (f32 (*)[4])D_00616040;
+            f32 (*E)[4] = (f32 (*)[4])D_00615E68->m, (*V)[4] = (f32 (*)[4])D_00615EB0;
+            f32 Y[4][4], r[4][4];
+            int i;
+            for (i = 0; i < 4; i++) {
+                PlatVu0Apply(Y[i], (f32 (*)[4])b, E[i]);
+                PlatVu0Apply(Y[i], V, Y[i]);
+            }
+            for (i = 0; i < 3; i++)
+                __builtin_memcpy(r[i], M[i], 16);
+            PlatVu0Apply(r[3], Y, M[3]);
+            if (flag)
+                __builtin_memcpy(out, r, 64);
+            for (i = 0; i < 4; i++)
+                PlatVu0Apply(M[i], D, r[i]);
+        }
+#endif
         break;
     case 2:
+#ifdef KH1_PS2
         __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 16(%0)\n"
@@ -390,6 +435,27 @@ void func_0019d020(PppMtx a, PppMtx m, ObjD020 *o, PppMtx c, KeyD020 *k, PppMtx 
         "sqc2 $vf3, 32(%0)\n"
         "sqc2 $vf4, 48(%0)\n"
         : : "r"(m), "r"(b), "r"(D_00615EB0), "r"(c), "r"(D_00616040), "r"(out), "r"(flag) : "memory");
+#else
+        {
+            /* Y = rows of b by c, then by D_00615EB0; m's translation by Y; out =
+             * that if flag; m = each row by D_00616040 */
+            f32 (*M)[4] = (f32 (*)[4])m, (*D)[4] = (f32 (*)[4])D_00616040;
+            f32 (*B)[4] = (f32 (*)[4])b, (*V)[4] = (f32 (*)[4])D_00615EB0;
+            f32 Y[4][4], r[4][4];
+            int i;
+            for (i = 0; i < 4; i++) {
+                PlatVu0Apply(Y[i], (f32 (*)[4])c, B[i]);
+                PlatVu0Apply(Y[i], V, Y[i]);
+            }
+            for (i = 0; i < 3; i++)
+                __builtin_memcpy(r[i], M[i], 16);
+            PlatVu0Apply(r[3], Y, M[3]);
+            if (flag)
+                __builtin_memcpy(out, r, 64);
+            for (i = 0; i < 4; i++)
+                PlatVu0Apply(M[i], D, r[i]);
+        }
+#endif
         break;
     }
 }
