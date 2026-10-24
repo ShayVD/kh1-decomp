@@ -7,6 +7,9 @@
 #include "ppp.h"
 #include "data/pieces/D_00370130.h"
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 
 /* pppPObjPointFrame (from auto/text_00180000_10.c). */
 extern M2C_UNK D_00575A00;
@@ -74,6 +77,7 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
     }
     return i;
 }
+#ifdef KH1_PS2
 #define VU0_RAND(r) __asm__ volatile( \
         "addi $8, $0, -1\n" \
         "qmtc2 $8, $vf2\n" \
@@ -91,6 +95,9 @@ static inline u8 *inl_spawn(PppSystem *sys, s32 id, void *o) {
         "vadd.x $vf1x, $vf1x, $vf2x\n" \
         "qmfc2 %0, $vf1\n" \
         : "=r"(r) : : "$8")
+#else
+#define VU0_RAND(r) ((r) = PlatVu0Rand())
+#endif
 typedef struct {
     s32 frame;
     f32 r;      /* +0x04 */

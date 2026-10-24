@@ -9,6 +9,9 @@
  * sibling files). Read from the code, not proved by a boot (docs/modules.md
  * "Session 54"). */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/math.h"
+#endif
 #include "platform/vu.h"
 #include "data/pieces/D_002C5968.h"
 #include "data/bss_004E.h"
@@ -23,7 +26,11 @@
 f32 func_00120c18(f32 *v) {
     f32 r;
     f32 x = v[0] * v[0] + v[2] * v[2];
+#ifdef KH1_PS2
     __asm__ volatile(".set noreorder\nsqrt.s %0, %1\n.set reorder" : "=f"(r) : "f"(x));
+#else
+    r = PlatSqrtf(x);
+#endif
     return r;
 }
 

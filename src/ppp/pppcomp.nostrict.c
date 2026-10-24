@@ -2,6 +2,9 @@
  * the key's colour step at its frame.  The other component classes are in
  * pppcomp.c.  Read from the code, not proved by a boot. */
 #include "ppp.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "data/types/nostrict_text_00180000_h39.h"
 #include "data/pieces/D_00362730.h"
 
@@ -66,6 +69,7 @@ void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
         w->c[3] += key->d[3];
     }
     /* Widen the four u16 to words, scale by col in VU0, pack to bytes. */
+#ifdef KH1_PS2
     __asm__ volatile(
         "lw $2, 4(%0)\n"
         "pextlw $2, $2, $0\n"
@@ -85,5 +89,15 @@ void pppColorFrame(PppObject *obj, H39ColKey *key, PppEntry *e) {
         :
         : "r"(w), "r"(D_00615E60->col)
         : "$2", "$3", "memory");
+#else
+    {
+        /* each u16 times its colour scale, >> 7, packed to a byte */
+        u32 v = 0;
+        int i;
+        for (i = 0; i < 4; i++)
+            v |= (((u32)PlatVu0Ftoi0((f32)w->c[i] * D_00615E60->col[i]) >> 7) & 0xFF) << (i * 8);
+        w->rgba = v;
+    }
+#endif
 }
 

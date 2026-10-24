@@ -5,6 +5,9 @@
  * pppEiWfacc is in eiwind.nostrict.c.  Read from the code, not proved by a
  * boot. */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "data/pieces/D_00364130.h"
 #include "ppp.h"
 #include "data/types/text_00180000_h12.h"
@@ -70,6 +73,7 @@ typedef struct {
 } PppWindWork;
 static inline f32 vu0Sqrt(f32 x) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "mfc1 $2, %1\n"
         "qmtc2 $2, $vf2\n"
@@ -79,6 +83,9 @@ static inline f32 vu0Sqrt(f32 x) {
         "qmfc2 $2, $vf2\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "f"(x) : "$2");
+#else
+    r = PlatVu0Sqrt(x);
+#endif
     return r;
 }
 void pppEiWindFunFrame(PppObject *obj, PppWindKey *key, PppEntry *e) {

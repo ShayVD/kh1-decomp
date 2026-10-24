@@ -242,6 +242,7 @@ static inline u64 xyz(s32 x, s32 y) {
     return (u64)x | ((u64)y << 16) | 0xFFFFFFFE00000000;
 }
 static inline void scale(void *d, void *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -249,6 +250,12 @@ static inline void scale(void *d, void *s, f32 t) {
         "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
         "sqc2 $vf4, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    ((f32 *)d)[0] = ((f32 *)s)[0] * t;
+    ((f32 *)d)[1] = ((f32 *)s)[1] * t;
+    ((f32 *)d)[2] = ((f32 *)s)[2] * t;
+    ((f32 *)d)[3] = ((f32 *)s)[3];
+#endif
 }
 void func_00104f10(s32 i, f32 *o) {
     s16 *p = &D_002A6250[D_002A6238[i].n].x;

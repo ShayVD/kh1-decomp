@@ -78,4 +78,72 @@
     sceVu0ClipAll((f32 *)(minv), (f32 *)(maxv), (f32 (*)[4])(ms), (f32 *)(vm), (s32)(n))
 #define PlatVpu0Reset() sceVpu0Reset()
 
+/* Off the EE: C equivalents of the VU0 macro-mode sequences the game writes
+ * as inline asm (docs/vita-port-plan.md section 5.1).  The PS2 build keeps
+ * each file's __asm__ (the match depends on it); the file's #else side calls
+ * these.  VU0 maths is IEEE single precision without denormals, NaN or
+ * infinity; these use the host's floats (the same caveat as libvu0 above). */
+#ifndef KH1_PS2
+#include "platform/math.h"
+
+typedef union { f32 f; u32 u; s32 i; } PlatVu0Word;
+
+static __inline__ f32 PlatVu0Float(u32 bits) {
+    PlatVu0Word w;
+    w.u = bits;
+    return w.f;
+}
+static __inline__ u32 PlatVu0Bits(f32 f) {
+    PlatVu0Word w;
+    w.f = f;
+    return w.u;
+}
+
+/* The VU0 random register R (host/port/vu0.c): a 23-bit LFSR kept as the
+ * mantissa of a float in [1, 2).  vrinit / vrxor take a field's bits, vrget
+ * reads R, vrnext steps it first (PCSX2's model of the shift register). */
+extern u32 PlatVu0R;
+static __inline__ void PlatVu0RInit(u32 bits) { PlatVu0R = 0x3F800000 | (bits & 0x7FFFFF); }
+static __inline__ void PlatVu0RXor(u32 bits) { PlatVu0R = 0x3F800000 | ((PlatVu0R ^ bits) & 0x7FFFFF); }
+static __inline__ f32 PlatVu0RGet(void) { return PlatVu0Float(PlatVu0R); }
+static __inline__ f32 PlatVu0RNext(void) {
+    u32 r = PlatVu0R;
+    r = (r << 1) ^ (((r >> 4) ^ (r >> 22)) & 1);
+    PlatVu0R = 0x3F800000 | (r & 0x7FFFFF);
+    return PlatVu0Float(PlatVu0R);
+}
+/* The ppp files' random number in [0, 1): five rounds of `vrxor R, -1;
+ * vrnext`, then minus 1.0 (vitof0 of -1). */
+static __inline__ f32 PlatVu0Rand(void) {
+    f32 r;
+    int i;
+    for (i = 0; i < 5; i++) {
+        PlatVu0RXor(0xFFFFFFFF);
+        r = PlatVu0RNext();
+    }
+    return r - 1.0f;
+}
+
+/* vsqrt Q: the root of the magnitude. */
+static __inline__ f32 PlatVu0Sqrt(f32 x) { return PlatSqrtf(x < 0.0f ? -x : x); }
+
+/* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
+static __inline__ s32 PlatVu0Ftoi0(f32 x) {
+    if (x >= 2147483648.0f)
+        return 0x7FFFFFFF;
+    if (x <= -2147483648.0f)
+        return (s32)0x80000000;
+    return (s32)x;
+}
+static __inline__ s32 PlatVu0Ftoi4(f32 x) { return PlatVu0Ftoi0(x * 16.0f); }
+
+/* `vmulx.xyz` of a row by a scalar: the matrix-scale helper several ppp
+ * files inline (w kept). */
+static __inline__ void PlatVu0ScaleXYZ(f32 *v, f32 s) {
+    v[0] *= s;
+    v[1] *= s;
+    v[2] *= s;
+}
+#endif /* !KH1_PS2 */
+
 #endif /* KH1_PLATFORM_VU_H */

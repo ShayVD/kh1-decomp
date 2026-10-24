@@ -20,6 +20,7 @@ typedef struct {
 extern H39MObj *D_00615E68;
 void func_00183be0(f32 (*)[4], f32 *);
 static inline void h39ScaleRow(f32 *row, f32 s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %1, $vf9\n"
         "lqc2 $vf10, 0(%0)\n"
@@ -27,6 +28,9 @@ static inline void h39ScaleRow(f32 *row, f32 s) {
         "sqc2 $vf10, 0(%0)\n"
         :
         : "r"(row), "r"(s));
+#else
+    PlatVu0ScaleXYZ(row, s);
+#endif
 }
 #define H39_MATRIX_FRAME(name, rot)                                       \
     void name(void *obj, void *key, PppEntry *e) {                        \

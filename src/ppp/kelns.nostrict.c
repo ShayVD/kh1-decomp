@@ -125,6 +125,7 @@ void func_001a57c0(Arg57c0 *a) {
     if (va0[0] == 0.0f && va0[1] == 0.0f) {
         PlatVu0CopyVector(o->m[3], o->ma[3]);
     } else {
+#ifdef KH1_PS2
         __asm__ volatile(
         "lqc2 $vf18, 0(%1)\n"
         "vmul.xy $vf26xy, $vf18xy, $vf18xy\n"
@@ -147,6 +148,18 @@ void func_001a57c0(Arg57c0 *a) {
         "vopmsub.xyz $vf21, $vf20, $vf22\n"
         "sqc2 $vf21, 16(%0)\n"
         : : "r"(o->m), "r"(va0), "r"(o->ma[3]) : "memory");
+#else
+        {
+            /* rows: (x, y, 0, 0) / |xy|, its cross with +z, +z, ma[3] */
+            f32 (*m)[4] = o->m;
+            f32 q = 1.0f / PlatVu0Sqrt(va0[0] * va0[0] + va0[1] * va0[1]);
+            f32 x = va0[0] * q, y = va0[1] * q;
+            m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = 0.0f;
+            m[3][0] = o->ma[3][0]; m[3][1] = o->ma[3][1]; m[3][2] = o->ma[3][2]; m[3][3] = o->ma[3][3];
+            m[0][0] = x; m[0][1] = y; m[0][2] = 0.0f; m[0][3] = 0.0f;
+            m[1][0] = y; m[1][1] = -x; m[1][2] = 0.0f; m[1][3] = 0.0f;
+        }
+#endif
     }
     if (o->b8f) {
         o->m[3][2] = o->ma[3][2] * 0.001953125f;

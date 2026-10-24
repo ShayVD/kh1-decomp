@@ -63,6 +63,7 @@ void *memset(void *, s32, u32);
 CONTEXT_ONLY f32 func_0019baf8(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -82,6 +83,9 @@ CONTEXT_ONLY f32 func_0019baf8(void) {
         : "=&r"(ret)
         :
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 

@@ -153,17 +153,19 @@ def link_census(results, cc):
     ok_objs = [os.path.join(OUT, p + ".o") for p, ok, _ in results if ok]
     data_objs = assemble_data()
     null_objs = []
-    nd = os.path.join(ROOT, "host", "null")
-    for f in sorted(os.listdir(nd)):
-        if f.endswith(".c"):
-            obj = os.path.join(OUT, "null", f + ".o")
-            os.makedirs(os.path.dirname(obj), exist_ok=True)
-            p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, os.path.join("host", "null", f)], cwd=ROOT,
-                               capture_output=True, text=True)
-            if p.returncode:
-                print("null platform: %s does not compile:\n%s" % (f, p.stderr))
-            else:
-                null_objs.append(obj)
+    # host/null: the null platform; host/port: what every port platform shares
+    for d in ("null", "port"):
+        nd = os.path.join(ROOT, "host", d)
+        for f in sorted(os.listdir(nd)):
+            if f.endswith(".c"):
+                obj = os.path.join(OUT, d, f + ".o")
+                os.makedirs(os.path.dirname(obj), exist_ok=True)
+                p = subprocess.run([cc] + CFLAGS + ["-c", "-o", obj, os.path.join("host", d, f)], cwd=ROOT,
+                                   capture_output=True, text=True)
+                if p.returncode:
+                    print("null platform: host/%s/%s does not compile:\n%s" % (d, f, p.stderr))
+                else:
+                    null_objs.append(obj)
     objs = ok_objs + data_objs + null_objs
     defined = nm(objs, True)
     # functions.tsv names: C defines the name, the data blob's .word uses func_<addr>
@@ -193,7 +195,7 @@ def link_census(results, cc):
         for k in sorted(kinds):
             for s in sorted(kinds[k]):
                 f.write("%s\t%s\n" % (k, s))
-    print("link: %d objects (%d game, %d data, %d null platform), %d symbols undefined"
+    print("link: %d objects (%d game, %d data, %d null platform / port), %d symbols undefined"
           % (len(objs), len(ok_objs), len(data_objs), len(null_objs), len(undefined)))
     small = []
     for k, v in sorted(kinds.items(), key=lambda kv: -len(kv[1])):

@@ -72,6 +72,7 @@ void func_001628a0(f32 (*dst)[4], f32 (*src)[4], f32 *out) {
 /* func_001629e8 (from hand/nostrict/text_00150000_s6_08.c). */
 f32 func_001629e8(void) {
     u32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %1, $vf1\n"
         "vrnext.w $vf2w, R\n"
@@ -82,6 +83,9 @@ f32 func_001629e8(void) {
         "qmfc2 %0, $vf1\n"
         : "=r"(r)
         : "r"(30001));
+#else
+    r = (u32)PlatVu0Ftoi0(30001.0f * (PlatVu0RNext() - 1.0f));
+#endif
     return (f32)r / 30000.0f;
 }
 
