@@ -1,20 +1,312 @@
+/* The ppp model texture classes' draws, -fno-strict-aliasing
+ * (docs/modules.md "Session 50"): pppKeMdlTfd / TfdUv and the "2" versions
+ * fade or scroll a model's texture by a value with speed and acceleration in
+ * the work area (a 16x16 page rebuilt with kemdltfd.c's helpers and
+ * uploaded before the model's draw); pppKeMdlDtt draws a model's polygons as
+ * projected sprites.  kemdl.c has the Cons.  Types named NAME_xxxxx are one
+ * function's own view (tools/shift/s50move/assemble.py).  Read from the
+ * code, not proved by a boot. */
+
+/* pppKeMdlTfdDraw (from hand/nostrict/text_00190000_h63.c). */
 #include "common.h"
-/* 0018f268 pppKeMdlDttDraw: MATCH (hand/nostrict). From w11's 47w draft: nostrict load/store order is source order (stack stores vs pointer loads alias), so buf->test before buf->test_a, r = w.scissor before buf->clamp_a, flag = w.flag before buf->cache, then-block use, cache, rd, and w.pkt stored after w.colA (pkt's shorter life lets id win v1). */
 #include "ppp.h"
+#include "data/bss_0061.h"
+#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
+typedef struct {
+    s32 unk0;
+    u8 *inst;   /* +0x4 */
+    s32 time;   /* +0x8 */
+    s32 unkC;
+} PppSlot;
+typedef struct {
+    u8 pad[0x30];
+    f32 col[4];     /* +0x30 */
+    u8 pad40[0x40];
+    PppSlot *slots; /* +0x80 */
+    u8 pad84[0x2C];
+    u64 flags;      /* +0xB0 */
+} PppSystem;
+extern PppSystem *D_00615E60;
+extern s32 D_0061621C;
+typedef struct {
+    s32 unk00, unk04, unk08;
+    s32 frame; /* +0x0C */
+} PppObject;
+typedef struct {
+    u8 pad[0x10];
+    u32 tex;    /* +0x10 */
+    u8 pad14[8];
+    s32 *mdl;   /* +0x1C */
+    s32 arg;    /* +0x20 */
+} PppMdlRes; /* 0x24 */
+typedef struct {
+    s16 unk0;
+    s16 len;    /* +0x2 */
+    s8 flags;   /* +0x4 */
+    u8 pad5[3];
+} PppAnimFrame;
+typedef struct {
+    u8 pad[6];
+    s16 n;      /* +0x6 */
+    u8 pad8[8];
+    PppAnimFrame frames[1]; /* +0x10 */
+} PppAnim;
+typedef struct {
+    PppAnim *anim;
+    s32 unk4;
+} PppAnimRef;
+typedef struct {
+    u8 pad[0x10];
+    PppMdlRes *res; /* +0x10 */
+    PppAnimRef *anims; /* +0x14 */
+} PppMdlBank;
+extern PppMdlBank *D_00615E64;
+extern s32 D_00616224;
+typedef struct {
+    s32 frame;
+    s32 id;       /* +0x4 */
+    f32 da, db, dc; /* +0x8 */
+    s32 u, v;     /* +0x14 */
+    u8 page;      /* +0x1C */
+    u8 mode;      /* +0x1D */
+} PppTfdKey;
+typedef struct {
+    f32 a, b, c;
+} PppTfd;
+s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
+void func_001a9460(f32, s32, s32, void *);
+void func_001aa6b0(void *, s32, s32, s32);
+void func_001a9790(s32, void *, s32, s32, s32, s32, s32);
+void pppKeMdlTfdDraw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
+    PppTfd *w = PPP_WORK(PppTfd, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
 
-typedef struct { u64 ofx:16, pad0:16, ofy:16, pad1:16; } DttXyoff;
-typedef struct { u64 scx0:11, pad0:5, scx1:11, pad1:5, scy0:11, pad2:5, scy1:11, pad3:5; } DttScissor;
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w->b += w->c;
+        w->a += w->b;
+        if (obj->frame == key->frame) {
+            w->a += key->da;
+            w->b += key->db;
+            w->c += key->dc;
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w->a, key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, 0, 0, 1, 0);
+}
 
+/* pppKeMdlTfdUvDraw (from hand/nostrict/text_00180000_b07.c). */
+#include "data/pieces/D_003701F0.h"
+#include "data/pieces/D_003701E0.h"
+#include "data/pieces/D_003701D0.h"
+typedef struct {
+    s16 x, y, z;
+} VtxS16;
+typedef struct {
+    s16 slot;  /* +0x0 */
+    s16 n;     /* +0x2 */
+    u16 *map;  /* +0x4 */
+} VtxMap;
+typedef struct {
+    u8 pad[0x10];
+    u32 tex;      /* +0x10 */
+    VtxS16 *vtx;  /* +0x14 */
+    s32 pad18;
+    s32 *mdl;     /* +0x1C */
+    s32 arg;      /* +0x20 */
+} PppMdlRes_8eaa8; /* 0x24 */
+typedef struct {
+    u8 pad[0x10];
+    PppMdlRes_8eaa8 *res; /* +0x10 */
+    void *p14;
+    VtxMap *maps;   /* +0x18 */
+} PppMdlBank_8eaa8;
+typedef struct {
+    u8 pad[0x80];
+    PppSlot *slots; /* +0x80 */
+    u8 pad84[0x2C];
+    u64 flags;      /* +0xB0 */
+} PppSystem_8eaa8;
+typedef struct {
+    s32 frame;
+    s32 id;         /* +0x4 */
+    f32 d0[3];      /* +0x8 */
+    s32 u, v;       /* +0x14 */
+    u8 page;        /* +0x1C */
+    u8 pad1D[3];
+    f32 d1[3];      /* +0x20 */
+    f32 d2[3];      /* +0x2C */
+    u8 b38;         /* +0x38 */
+} PppTfdUvKey;
+#define D_00615E60 ((PppSystem_8eaa8 *) D_00615E60)
+#define D_00615E64 (*(PppMdlBank_8eaa8 *(*)) &D_00615E64)
+void pppKeMdlTfdUvDraw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w[1] += w[2];
+        w[5] += w[6];
+        w[8] += w[9];
+        w[0] += w[1];
+        w[4] += w[5];
+        w[7] += w[8];
+        if (obj->frame == key->frame) {
+            w[0] += key->d0[0];
+            w[1] += key->d0[1];
+            w[2] += key->d0[2];
+            w[4] += key->d1[0];
+            w[5] += key->d1[1];
+            w[6] += key->d1[2];
+            w[7] += key->d2[0];
+            w[8] += key->d2[1];
+            w[9] += key->d2[2];
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes_8eaa8 *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w[0], key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, w[4], w[7], 1, 0);
+}
+#undef D_00615E60
+#undef D_00615E64
+
+/* pppKeMdlTfd2Draw (from hand/nostrict/text_00190000_h63.c). */
+void pppKeMdlTfd2Draw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
+    PppTfd *w = PPP_WORK(PppTfd, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w->b += w->c;
+        w->a += w->b;
+        if (obj->frame == key->frame) {
+            w->a += key->da;
+            w->b += key->db;
+            w->c += key->dc;
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w->a, key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, 0, 0, key->mode, 0);
+}
+
+/* pppKeMdlTfdUv2Draw (from hand/nostrict/text_00180000_b07.c). */
+typedef struct {
+    u8 pad[0x10];
+    u32 tex;      /* +0x10 */
+    VtxS16 *vtx;  /* +0x14 */
+    s32 pad18;
+    s32 *mdl;     /* +0x1C */
+    s32 arg;      /* +0x20 */
+} PppMdlRes_8ef98; /* 0x24 */
+typedef struct {
+    u8 pad[0x10];
+    PppMdlRes_8ef98 *res; /* +0x10 */
+    void *p14;
+    VtxMap *maps;   /* +0x18 */
+} PppMdlBank_8ef98;
+typedef struct {
+    u8 pad[0x80];
+    PppSlot *slots; /* +0x80 */
+    u8 pad84[0x2C];
+    u64 flags;      /* +0xB0 */
+} PppSystem_8ef98;
+#define D_00615E60 ((PppSystem_8ef98 *) D_00615E60)
+#define D_00615E64 (*(PppMdlBank_8ef98 *(*)) &D_00615E64)
+void pppKeMdlTfdUv2Draw(PppObject *obj, PppTfdUvKey *key, PppEntry *e) {
+    f32 *w = PPP_WORK(f32, obj, e, 2);
+    u32 tex;
+    s32 n;
+    u8 *p, *q;
+
+    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
+        w[1] += w[2];
+        w[5] += w[6];
+        w[8] += w[9];
+        w[0] += w[1];
+        w[4] += w[5];
+        w[7] += w[8];
+        if (obj->frame == key->frame) {
+            w[0] += key->d0[0];
+            w[1] += key->d0[1];
+            w[2] += key->d0[2];
+            w[4] += key->d1[0];
+            w[5] += key->d1[1];
+            w[6] += key->d1[2];
+            w[7] += key->d2[0];
+            w[8] += key->d2[1];
+            w[9] += key->d2[2];
+        }
+    }
+    if (key->id == 0xFFFF)
+        return;
+    {
+        PppMdlRes_8ef98 *r = &D_00615E64->res[key->id];
+        tex = r->tex;
+    }
+    n = key->page * 4;
+    p = (u8 *) D_00616224 + 16;
+    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
+    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
+    q = (u8 *) D_00616224;
+    func_001a9460(w[0], key->u, key->v, q + 0x70);
+    func_001aa6b0((void *) D_00616224, 263, 0, 0);
+    D_00616224 = (s32) (q + 0x1070);
+    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, w[4], w[7], key->b38, 0);
+}
+#undef D_00615E60
+#undef D_00615E64
+
+/* pppKeMdlDttDraw (from hand/nostrict/text_00180000_s8_w15.c). */
 typedef struct {
     f32 x, y;
     union { f32 z; s32 *p; } u;
 } DttW0;
-
 typedef struct {
     u8 pad[8];
     u8 c[4];
 } DttW1;
-
 typedef struct {
     s32 unk0;
     s32 id;      /* +0x4 */
@@ -22,36 +314,30 @@ typedef struct {
     u8 mode;     /* +0x14 */
     u8 b15;      /* +0x15 */
 } DttKey;
-
 typedef struct {
     u8 pad[0x10];
     u8 *tbl;
 } DttSys;
-
 typedef struct {
     u8 pad[0x1C];
     struct DttShape *shape;
 } DttEnt;
-
 typedef struct DttShape {
     s32 unk0;
     s32 prims;  /* +0x4 */
     s32 verts;  /* +0x8 */
 } DttShape;
-
 typedef struct {
     u8 pad0;
     u8 type;    /* +0x1 */
     s16 n;      /* +0x2 */
     u8 pad4[0xC];
 } DttGroup;
-
 typedef struct {
     u8 col[12];
     u16 v[3];   /* +0xC */
     u8 pad12[2];
 } DttPrim;
-
 typedef struct {
     u64 q0, q1;
     u64 test, test_a;  /* +0x10 */
@@ -66,7 +352,6 @@ typedef struct {
     s32 padCC;
     s32 cache;         /* +0xD0 */
 } DttBuf;
-
 typedef struct {
     u64 xyoff;          /* +0x0 */
     u64 test;           /* +0x8 */
@@ -84,22 +369,18 @@ typedef struct {
     s32 use;            /* +0x40 */
     s16 *verts;         /* +0x44 */
 } DttWork;
-
-extern s32 D_0061621C;
 typedef struct { u8 pad[0xB0]; u64 pad_b0; } DttPad;
-extern DttPad *D_00615E60; /* src/data/bss_0061.c: void *D_00615E60 */
-extern DttSys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
 extern struct { u8 pad[0x90]; s16 *verts; } *D_00615E68;
-extern f32 D_00616040[4][4]; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-extern u8 *D_00616224;
+extern f32 D_00616040[4][4];
 extern s32 D_00616228;
-#include "data/pieces/D_003701F0.h"
-
 void func_00267560(f32 *, f32 *, f32);
 void *func_001aa950(s32);
 void func_001aa9d0(s32);
 void func_001aa750(u8 *, s32, s32, s32);
-
+#define D_00615E60 (*(DttPad *(*)) &D_00615E60)
+#define D_00615E64 ((DttSys *) D_00615E64)
+#define D_00616224 ((u8 *) D_00616224)
+/* 0018f268 pppKeMdlDttDraw: MATCH (hand/nostrict). From w11's 47w draft: nostrict load/store order is source order (stack stores vs pointer loads alias), so buf->test before buf->test_a, r = w.scissor before buf->clamp_a, flag = w.flag before buf->cache, then-block use, cache, rd, and w.pkt stored after w.colA (pkt's shorter life lets id win v1). */
 void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
     DttWork w;
     f32 col[4] __attribute__((aligned(16)));
@@ -501,3 +782,7 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
     if (key->mode >= 4 && w0->u.p != 0)
         *w0->u.p = w.cache;
 }
+#undef D_00615E60
+#undef D_00615E64
+#undef D_00616224
+

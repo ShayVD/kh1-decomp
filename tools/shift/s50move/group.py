@@ -7,7 +7,8 @@ docs/modules.md "Session 50").
 Takes every function of out/gen/placements.tsv in [LO, HI) that is still in
 src/auto or src/hand (hand/vu0.c and the hand asm excepted), groups them by
 their file's flag mode (src/hand/<mode>/ or default), writes
-src/ppp/NAME.c, NAME.<mode>.c with assemble.py, prunes them and runs
+src/ppp/NAME.c, NAME.<mode>.c with assemble.py (appending to a file that
+exists), prunes them and runs
 tools/checkfile.py on each.  Prints the function list per file.
 """
 import sys, os, subprocess, re
@@ -50,7 +51,8 @@ for mode, fs in sorted(groups.items()):
     out = base + ('.' + mode if mode else '') + '.c'
     names = [n for a, n in sorted(fs)]
     print('==', out, len(names), ' '.join(names))
-    subprocess.run([sys.executable, '-I', str(HERE / 'assemble.py'), out] + names)
+    onto = ['--onto'] if os.path.exists(out) else []  # an existing module: append
+    subprocess.run([sys.executable, '-I', str(HERE / 'assemble.py')] + onto + [out] + names)
     subprocess.run([sys.executable, '-I', str(HERE / 'prune.py'), out])
     new, txt = diffs(out)
     if not new: print(txt[-3000:]); continue

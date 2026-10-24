@@ -2,6 +2,8 @@
 """Module assembler (phase 4, session 50; docs/modules.md "Session 50").
 
   python3 -I tools/shift/s50move/assemble.py OUT.c func_X ...
+  python3 -I tools/shift/s50move/assemble.py --onto MODULE.c func_X ...
+      (append to an existing module: what it declares counts as emitted)
 
 Writes a module from the functions' current files (out/gen/placements.tsv,
 so run `make` first), in the order given, each preceded by what it saw
@@ -142,7 +144,7 @@ def shape(name, decl):
     return s, ('scalar' if words and words <= INTS else 'other')
 
 
-def view(name, decl, base):
+def view(name, decl, base, addr=False):
     """A view of D_X as this function declared it, given the first declaration
     `base`.  Scalars (pointers, integers) are cast by value and arrays by
     address, so the access stays a direct one: an access through `*(T *)&D_X`
@@ -150,7 +152,7 @@ def view(name, decl, base):
     Anything else is `(*(T (*)) &D_X)`."""
     s, k = shape(name, decl)
     s0, k0 = shape(name, base)
-    if k == 'scalar' and k0 == 'scalar':
+    if k == 'scalar' and k0 == 'scalar' and not addr:  # (&D_X needs an lvalue)
         return '#define %s ((%s) %s)' % (name, sub(s, name, ''), name)
     if k == 'array':
         el = re.sub(r'\[[^\]]*\]', '', sub(s, name, '(*)'), count=1)
@@ -194,7 +196,7 @@ def fview(name, proto):
     return '#define %s ((%s) %s)' % (name, sub(s, name, '(*)'), name)
 
 
-def main(out, funcs):
+def main(out, funcs, onto=False):
     src = placements()
     files = {}
     for f in funcs:
@@ -249,7 +251,24 @@ def main(out, funcs):
     emitted = {}  # name -> (kind, norm text)
     macros = {}   # active macro name -> norm text
     lines = ['/* TODO: what this module is (docs/modules.md). */']
-    seen_inc = set(); trailing = []
+    seen_inc = set()
+    if onto:  # append to an existing module: what it declares counts as emitted
+        old = open(out).read()
+        lines = [old.rstrip('\n')]
+        for t, k, n in ctop.items(old):
+            kind, names = classify(t, k, n)
+            if kind == 'include': seen_inc.add(t.strip())
+            elif kind == 'undef':
+                for x in names: macros.pop(x, None)
+            elif kind == 'define':
+                for x in names: macros[x] = norm(t)
+            elif kind == 'var':
+                for nm, d in var_decls(t): emitted.setdefault(nm, ('var', norm(d), d))
+            elif kind in ('typedef', 'tag', 'inline', 'ctx', 'proto'):
+                for x in names: emitted.setdefault(x, (kind, norm(t)))
+            elif kind == 'func':
+                emitted[n] = ('def', norm(t.split('{')[0]))
+    trailing = []
     conflicts = []
     for idx, (f, addr, path, need, incs, body, tail_incs) in enumerate(plan):
         sec = ['', '/* %s (from %s). */' % (f, path.replace('src/', ''))]
@@ -285,7 +304,7 @@ def main(out, funcs):
                 if nm not in emitted:
                     emitted[nm] = ('var', norm(t2), t2); sec.append(t2)
                 elif emitted[nm][1] != norm(t2):
-                    views.append(view(nm, t2, emitted[nm][2]))
+                    views.append(view(nm, t2, emitted[nm][2], re.search(r'&\s*' + nm + r'\b', strip(body)) is not None))
                 continue
             if kind == 'proto':
                 if nm in emitted:
@@ -330,4 +349,5 @@ def main(out, funcs):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3: sys.exit(__doc__)
-    main(sys.argv[1], sys.argv[2:])
+    if sys.argv[1] == '--onto': main(sys.argv[2], sys.argv[3:], onto=True)
+    else: main(sys.argv[1], sys.argv[2:])

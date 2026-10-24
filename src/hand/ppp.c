@@ -14,11 +14,6 @@ typedef struct {
 } PppS16S8;
 
 typedef struct {
-    u64 a;
-    s32 b;
-} PppU64S32;
-
-typedef struct {
     f32 x, y, z;
 } PppVec3;
 
@@ -31,13 +26,6 @@ void pppVertexApCon(void *obj, PppEntry *e) {
 
 void pppKeBornRnd5Con(void *obj, PppEntry *e) {
     PppS16S8 *w = PPP_WORK(PppS16S8, obj, e, 0);
-
-    w->a = 0;
-    w->b = 0;
-}
-
-void pppKeMdlDttCon(void *obj, PppEntry *e) {
-    PppU64S32 *w = PPP_WORK(PppU64S32, obj, e, 0);
 
     w->a = 0;
     w->b = 0;
@@ -80,16 +68,4 @@ void pppDrawMdlTsCon(void *obj, PppEntry *e) {
     f32 *w = PPP_WORK(f32, obj, e, 2);
 
     w[0] = w[1] = w[2] = w[3] = w[4] = w[5] = 0.0f;
-}
-
-void pppKeMdlTfdUvCon(void *obj, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
-}
-
-void pppKeMdlTfdUv2Con(void *obj, PppEntry *e) {
-    f32 *w = PPP_WORK(f32, obj, e, 2);
-
-    w[0] = w[1] = w[2] = w[4] = w[5] = w[6] = w[7] = w[8] = w[9] = 0.0f;
 }

@@ -96,11 +96,6 @@ typedef struct {
 } PppMdlRes; /* 0x24 */
 
 typedef struct {
-    u8 pad[0x9D];
-    u8 unk9D;  /* +0x9D */
-} PppObjectB;
-
-typedef struct {
     s16 unk0;
     s16 len;    /* +0x2 */
     s8 flags;   /* +0x4 */
@@ -118,9 +113,6 @@ typedef struct {
     PppAnim *anim;
     s32 unk4;
 } PppAnimRef;
-
-extern PppMtx D_00615E70;
-void func_002675a8(PppVec4, f32 *);
 
 typedef struct {
     u8 pad[0x10];
@@ -505,162 +497,6 @@ s32 func_0018e5a8(f32 *v, f32 *out) {
     }
     *out = r;
     return 1;
-}
-
-typedef struct {
-    s32 frame;
-    s32 id;       /* +0x4 */
-    f32 da, db, dc; /* +0x8 */
-    s32 u, v;     /* +0x14 */
-    u8 page;      /* +0x1C */
-    u8 mode;      /* +0x1D */
-} PppTfdKey;
-
-typedef struct {
-    f32 a, b, c;
-} PppTfd;
-
-s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
-void func_001a9460(f32, s32, s32, void *);
-void func_001aa6b0(void *, s32, s32, s32);
-void func_001a9790(s32, void *, s32, s32, s32, s32, s32);
-
-void pppKeMdlTfdDraw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
-    PppTfd *w = PPP_WORK(PppTfd, obj, e, 2);
-    u32 tex;
-    s32 n;
-    u8 *p, *q;
-
-    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
-        w->b += w->c;
-        w->a += w->b;
-        if (obj->frame == key->frame) {
-            w->a += key->da;
-            w->b += key->db;
-            w->c += key->dc;
-        }
-    }
-    if (key->id == 0xFFFF)
-        return;
-    {
-        PppMdlRes *r = &D_00615E64->res[key->id];
-        tex = r->tex;
-    }
-    n = key->page * 4;
-    p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
-    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
-    q = (u8 *) D_00616224;
-    func_001a9460(w->a, key->u, key->v, q + 0x70);
-    func_001aa6b0((void *) D_00616224, 263, 0, 0);
-    D_00616224 = (s32) (q + 0x1070);
-    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, 0, 0, 1, 0);
-}
-
-void pppKeMdlTfd2Draw(PppObject *obj, PppTfdKey *key, PppEntry *e) {
-    PppTfd *w = PPP_WORK(PppTfd, obj, e, 2);
-    u32 tex;
-    s32 n;
-    u8 *p, *q;
-
-    if (D_0061621C == 0 && !(D_00615E60->flags & 0xFF0000FF00ULL)) {
-        w->b += w->c;
-        w->a += w->b;
-        if (obj->frame == key->frame) {
-            w->a += key->da;
-            w->b += key->db;
-            w->c += key->dc;
-        }
-    }
-    if (key->id == 0xFFFF)
-        return;
-    {
-        PppMdlRes *r = &D_00615E64->res[key->id];
-        tex = r->tex;
-    }
-    n = key->page * 4;
-    p = (u8 *) D_00616224 + 16;
-    sceGsSetDefLoadImage(p, ((tex >> 5) & 0x3FFF) + n, 4, (tex >> 19) & 0xF, 0, 0, 16, 16);
-    *(u64 *) (p + 0x50) = 0x0800000000008100ULL;
-    q = (u8 *) D_00616224;
-    func_001a9460(w->a, key->u, key->v, q + 0x70);
-    func_001aa6b0((void *) D_00616224, 263, 0, 0);
-    D_00616224 = (s32) (q + 0x1070);
-    func_001a9790(key->id, PPP_WORK(void, obj, e, 0), n, 0, 0, key->mode, 0);
-}
-
-typedef struct {
-    s32 frame;
-    s32 id;       /* +0x4 */
-    u16 speed;    /* +0x8 */
-    u8 padA[0x14];
-    u8 local;     /* +0x1E */
-} PppShpTailKey;
-
-typedef struct {
-    u8 count;     /* +0x0 */
-    u8 idx;       /* +0x1 */
-    u16 time;     /* +0x2 */
-    u16 frame;    /* +0x4 */
-    u16 prev;     /* +0x6 */
-    u8 pad8[8];
-    PppVec4 v[1]; /* +0x10 */
-} PppShpTail;
-
-void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
-    PppShpTail *w;
-    PppAnim *a;
-    PppAnimFrame *f;
-
-    if (D_0061621C != 0 || (D_00615E60->flags & 0xFF0000FF00ULL))
-        return;
-    w = PPP_WORK(PppShpTail, obj, e, 0);
-    if (obj->frame == 0 && ((PppObjectB *) obj)->unk9D == 0) {
-        PppVec4 v;
-        f32 *p;
-        s32 n;
-
-        if (key->local) {
-            func_002672f8(v, D_00615E70[0], D_00615E68->m[3]);
-            v[3] = 1.0f;
-        } else {
-            func_002675a8(v, D_00615E68->m[3]);
-            v[3] = 1.0f;
-        }
-        p = w->v[0];
-        for (n = w->count; n > 0; n--) {
-            func_002675a8(p, v);
-            p += 4;
-        }
-    }
-    if (w->idx == 0)
-        w->idx = w->count;
-    w->idx--;
-    if (key->local) {
-        func_002672f8(w->v[w->idx], D_00615E70[0], D_00615E68->m[3]);
-        w->v[w->idx][3] = 1.0f;
-    } else {
-        func_001a9098(w->v[w->idx], D_00615E68->m[3]);
-    }
-    {
-        PppAnimRef *r = &D_00615E64->anims[key->id];
-        a = r->anim;
-    }
-    w->time += key->speed;
-    f = &a->frames[w->frame];
-    if (w->time >= f->len) {
-        w->time -= f->len;
-        w->frame++;
-        if (w->frame >= a->n) {
-            if (f->flags & 0x80) {
-                w->frame = 0;
-                w->time = 0;
-            } else {
-                w->time = 0;
-                w->frame--;
-            }
-        }
-    }
 }
 
 void func_00192708(PppObject *, PppLnsClmKey *, PppEntry *);

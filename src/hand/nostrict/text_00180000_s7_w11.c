@@ -4,7 +4,6 @@
    pppKeShpTailXDraw, pppStepPrograms (hand/nostrict). */
 
 /* ---- from pppKeShpTail2Draw.c ---- */
-#define PPP_WORK(T, obj, e, k) ((T *) ((u8 *) (obj) + (e)->offsets[k] + 0xA0))
 
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
 
@@ -16,104 +15,7 @@ typedef struct {
     PppMtx m2;   /* +0x50 */
 } T2MtxOwner;
 
-typedef struct {
-    s16 off;
-    s16 dur;
-    s8 flags;
-    u8 pad5[3];
-} T2Frame;
-
-typedef struct {
-    u8 pad0[0x10];
-    T2Frame f[1];
-} T2Shape;
-
-typedef struct {
-    T2Shape *shape;
-    s32 unk4;
-} T2ShapeEnt;
-
-typedef struct {
-    u8 pad00[0x14];
-    T2ShapeEnt *shapes;
-} T2Sys;
-
-typedef struct {
-    u8 count;     /* +0x0 */
-    u8 idx;       /* +0x1 */
-    u16 time;     /* +0x2 */
-    u16 frame;    /* +0x4 */
-    u16 prev;     /* +0x6 */
-    u8 pad8[8];
-    PppVec4 v[1]; /* +0x10 */
-} T2Work;
-
-extern T2Sys *D_00615E64; /* src/data/bss_0061.c: s32 D_00615E64 */
-
 extern T2MtxOwner *D_00615E68; /* src/data/bss_0061.c: s32 D_00615E68 */
-
-extern s32 D_00616224;
-
-#include "data/pieces/D_003701F0.h"
-
-extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
-
-extern PppMtx D_00615FC0;
-
-extern PppMtx D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
-
-void func_00267530(f32 *, f32 *, f32 *);
-
-void func_002674b0(f32 *, f32 *, f32);
-
-void func_002675a8(f32 *, f32 *);
-
-f32 func_001a9350(f32 *);
-
-void sceVu0CopyMatrix(PppMtx, PppMtx);
-
-void sceVu0UnitMatrix(PppMtx);
-
-s32 func_001b8198(void *, void *, s32);
-
-#define V_FTOI_U8(dst, src) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "vftoi0.xyzw $vf31xyzw, $vf31xyzw\n" \
-        "qmfc2 $2, $vf31\n" \
-        "sb $2, 0(%0)\n" \
-        "mtsab $0, 4\n" \
-        "qfsrv $2, $2, $2\n" \
-        "sb $2, 1(%0)\n" \
-        "qfsrv $2, $2, $2\n" \
-        "sb $2, 2(%0)\n" \
-        "qfsrv $2, $2, $2\n" \
-        "sb $2, 3(%0)\n" \
-        : : "r"(dst), "r"(src) : "$2", "memory")
-
-#define V_SCALE_XYZ(dst, src, s) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "lqc2 $vf29, 0(%0)\n" \
-        "mfc1 $2, %2\n" \
-        "qmtc2 $2, $vf30\n" \
-        "vmulx.xyz $vf29xyz, $vf31xyz, $vf30x\n" \
-        "sqc2 $vf29, 0(%0)\n" \
-        : : "r"(dst), "r"(src), "f"(s) : "$2", "memory")
-
-#define V_APPLY(out, m, v) \
-    __asm__ volatile( \
-        "lqc2 $vf27, 0(%1)\n" \
-        "lqc2 $vf28, 16(%1)\n" \
-        "lqc2 $vf29, 32(%1)\n" \
-        "lqc2 $vf30, 48(%1)\n" \
-        "lqc2 $vf31, 0(%2)\n" \
-        "vmulax.xyzw ACC, $vf27xyzw, $vf31x\n" \
-        "vmadday.xyzw ACC, $vf28xyzw, $vf31y\n" \
-        "vmaddaz.xyzw ACC, $vf29xyzw, $vf31z\n" \
-        "vmaddw.xyzw $vf27xyzw, $vf30xyzw, $vf31w\n" \
-        "sqc2 $vf27, 0(%0)\n" \
-        : : "r"(out), "r"(m), "r"(v))
 
 #define V_MULMTX(out, a, b) \
     __asm__ volatile( \
@@ -146,50 +48,6 @@ s32 func_001b8198(void *, void *, s32);
         "vmaddw.xyzw $vf26xyzw, $vf30xyzw, $vf31w\n" \
         "sqc2 $vf26, 48(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
-
-#define V_SUB(out, a, b) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "lqc2 $vf30, 0(%2)\n" \
-        "vsub.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
-        "sqc2 $vf31, 0(%0)\n" \
-        : : "r"(out), "r"(a), "r"(b))
-
-#define V_ADD(out, a, b) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "lqc2 $vf30, 0(%2)\n" \
-        "vadd.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
-        "sqc2 $vf31, 0(%0)\n" \
-        : : "r"(out), "r"(a), "r"(b))
-
-#define V_SCALE(out, v, s) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "mfc1 $2, %2\n" \
-        "qmtc2 $2, $vf30\n" \
-        "vmulx.xyzw $vf31xyzw, $vf31xyzw, $vf30x\n" \
-        "sqc2 $vf31, 0(%0)\n" \
-        : : "r"(out), "r"(v), "f"(s) : "$2", "memory")
-
-#define V_COPY(dst, src) \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "sqc2 $vf31, 0(%0)\n" \
-        : : "r"(dst), "r"(src))
-
-#define V_LEN(v) ({ f32 _r; \
-    __asm__ volatile( \
-        "lqc2 $vf31, 0(%1)\n" \
-        "vmul.xyz $vf31xyz, $vf31xyz, $vf31xyz\n" \
-        "vaddy.x $vf31x, $vf31x, $vf31y\n" \
-        "vaddz.x $vf31x, $vf31x, $vf31z\n" \
-        "vsqrt Q, $vf31x\n" \
-        "vwaitq\n" \
-        "vaddq.x $vf31x, $vf0x, Q\n" \
-        "qmfc2 $2, $vf31\n" \
-        "mtc1 $2, %0\n" \
-        : "=f"(_r) : "r"(v) : "$2", "memory"); _r; })
 
 static inline void t2Col(f32 *v, u8 *c, f32 a) {
     v[0] = c[0];
@@ -234,38 +92,6 @@ static inline void t2Col(f32 *v, u8 *c, f32 a) {
         "sqc2 $vf26, 48(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
 
-typedef struct {
-    s32 frame;
-    s32 id;       /* +0x4 */
-    u8 pad8[4];
-    s16 c[4];     /* +0xC */
-    f32 size2;    /* +0x14 */
-    f32 len;      /* +0x18 */
-    u16 n;        /* +0x1C */
-    u8 local;     /* +0x1E */
-    u8 b24;       /* +0x1F */
-    u8 b25;       /* +0x20 */
-} T1Key;
-
-typedef struct {
-    u16 unk0;
-    u16 flags;
-    u8 col[4];
-    s32 w8;
-    s16 dC;
-    s16 dE;
-    void *p10;
-    s32 w14;
-    u8 b18;
-    void *p1C;
-    u8 pad20[0x10];
-} T1Param;
-
-typedef struct {
-    u8 pad[8];
-    u8 c[4];
-} T1Col;
-
 static inline void V_MULMTX(void *out, void *a, void *b) { _V_MULMTX(out, a, b); }
 
 static inline void t1Col(f32 *v, u8 r, u8 g, u8 b, u8 a) {
@@ -280,133 +106,6 @@ static inline void t1Pos(f32 *v, s16 *c) {
     v[1] = c[1] >> 7;
     v[2] = c[2] >> 7;
     v[3] = c[3] >> 7;
-}
-
-void pppKeShpTailDraw(void *obj, T1Key *key, PppEntry *e) {
-    PppMtx m0;
-    PppMtx m1;
-    PppVec4 pos;
-    PppVec4 p0;
-    PppVec4 d;
-    PppVec4 p1;
-    PppVec4 col;
-    PppVec4 dcol;
-    T1Param p;
-    s32 i;
-    f32 len;
-    PppVec4 *v;
-    void *src;
-    f32 t;
-    T2Work *w;
-    f32 step;
-    f32 rest;
-    f32 dl;
-    T2ShapeEnt *s;
-    f32 seg;
-    s32 start;
-    s32 last;
-    s32 n;
-    f32 size;
-
-    if (key->id == 0xFFFF)
-        return;
-    n = key->n - 1;
-    seg = n;
-    {
-        T1Col *c = PPP_WORK(T1Col, obj, e, 1);
-        t1Col(col, c->c[0], c->c[1], c->c[2], c->c[3]);
-    }
-    t1Pos(pos, key->c);
-    func_00267530(p0, col, pos);
-    func_002674b0(dcol, p0, seg);
-    w = PPP_WORK(T2Work, obj, e, 0);
-    s = &D_00615E64->shapes[key->id];
-    p.w8 = 0;
-    p.b18 = 0;
-    p.p10 = m1;
-    p.p1C = 0;
-    if (!key->b24)
-        p.flags = 128;
-    else
-        p.flags = 0;
-    if (key->b25 == 1)
-        p.flags |= 0x10;
-    p.dC = 0;
-    p.dE = 0;
-    {
-        T2Shape *sh = s->shape;
-        T2Frame *f = sh->f;
-        src = (u8 *) sh + f[w->prev].off;
-    }
-    sceVu0CopyMatrix(m0, D_00615E68->m);
-    V_SCALE_XYZ(m0[0], m0[0], D_003701F0[0]);
-    V_SCALE_XYZ(m0[1], m0[1], D_003701F0[1]);
-    size = 1.0f;
-    sceVu0UnitMatrix(m1);
-    step = (size - key->size2) / seg;
-    len = key->len;
-    dl = len * step;
-    if (len == 0.0f)
-        n = -1;
-    last = w->count - 1;
-    i = w->idx;
-    v = w->v;
-    start = i;
-    func_002675a8(pos, v[i]);
-    func_002675a8(p0, pos);
-    if (i++ == last) i = 0;
-    func_002675a8(p1, v[i]);
-    func_00267530(d, p1, p0);
-    t = len;
-    rest = func_001a9350(d);
-    seg = rest;
-    for (;;) {
-        V_FTOI_U8(p.col, col);
-        V_SCALE_XYZ(m1[0], m0[0], size);
-        V_SCALE_XYZ(m1[1], m0[1], size);
-        if (key->local)
-            V_APPLY(m1[3], D_00615EB0, pos);
-        else
-            V_APPLY(m1[3], D_00615FC0, pos);
-        V_MULMTX(m1, D_00616040, m1);
-        {
-            s32 *g = &D_00616224;
-            p.w14 = *g;
-            *g = func_001b8198(src, &p, s->unk4);
-        }
-        if (n == 0)
-            return;
-        V_SUB(col, col, dcol);
-        len -= dl;
-        size -= step;
-        if (len <= 0.0f)
-            return;
-        if (len <= rest) {
-            V_SCALE(pos, d, t / seg);
-            V_ADD(pos, p0, pos);
-            t += len;
-            n--;
-            rest -= len;
-        } else {
-        more:
-            if (i++ == last) i = 0;
-            if (i == start)
-                return;
-            V_COPY(p0, p1);
-            V_COPY(p1, (f32 *) (i * 16 + (s32) v));
-            V_SUB(d, p1, p0);
-            t -= seg;
-            seg = V_LEN(d);
-            rest += seg;
-            if (!(len <= rest))
-                goto more;
-            V_SCALE(pos, d, t / seg);
-            V_ADD(pos, p0, pos);
-            t += len;
-            n--;
-            rest -= len;
-        }
-    }
 }
 
 /* ---- from pppKeShpTailXDraw.c ---- */

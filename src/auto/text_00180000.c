@@ -327,19 +327,3 @@ void pppKeBornRnd4Con(s32 arg0, PppEntry *arg1) {
 void pppKeBornPtCmplCon(s32 arg0, PppEntry *arg1) {
     M2C_FIELD((arg0 + arg1->offsets[0]), s32 *, 0xA0) = 0;
 }
-
-void pppKeMdlBmpDraw(void) {
-
-}
-
-void pppKeMdlBmpCon(void) {
-
-}
-
-void pppKeMdlBmpReset(void) {
-
-}
-
-void pppKeAcmSolidFn18(void) {
-
-}
