@@ -110,7 +110,7 @@ M2C_UNK *func_002654e0(void) {
     return &D_0046C500;
 }
 
-s32 func_00266f20(s32 arg0) {
+s32 sceDmaPutStallAddr(s32 arg0) {
     s32 temp_v0;
 
     temp_v0 = *(s32 *)0x1000E060;
@@ -118,7 +118,7 @@ s32 func_00266f20(s32 arg0) {
     return temp_v0;
 }
 
-s32 func_002671d8(u32 *arg0, s32 arg1) {
+s32 sceDmaSync(u32 *arg0, s32 arg1) {
     if (arg1 == 1) {
         return ((u32) *arg0 >> 8) & 1;
     }
@@ -126,7 +126,7 @@ s32 func_002671d8(u32 *arg0, s32 arg1) {
     return 0;
 }
 
-s32 func_002672e0(u32 *arg0, u32 arg1) {
+s32 sceDmaRestart(u32 *arg0, u32 arg1) {
     u32 temp_v0;
 
     temp_v0 = *arg0;

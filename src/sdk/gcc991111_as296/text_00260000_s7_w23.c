@@ -35,7 +35,7 @@ s32 DeleteSema(s32);
 s32 func_00257ee0(u16, void *, s32); /* syscall 0xFC: SetAlarm(time, handler, arg) */
 s32 func_0025a750(void *);
 s32 scePrintf(const char *, ...);
-u32 func_00267248(volatile u32 *);
+u32 sceDmaPause(volatile u32 *);
 void func_00268a78(const char *, ...);
 s32 func_00257e20(s32, void *);
 void func_00260f40(void);
@@ -61,7 +61,7 @@ void func_00266bd0(void *, s32);
 /* libdma environment: stall/drain/MFIFO selectors, cycle count, PCR and SQWC
  * halves, ring buffer address and size. */
 typedef struct { u8 sts, std, mfd, rcyc; u16 express, notify; u16 sqwc, tqwc; void *rbadr; u32 rbmsk; } DmaEnv;
-s32 func_00266d10(DmaEnv *);
+s32 sceDmaPutEnv(DmaEnv *);
 void sceVu0ScaleVector(f32 *, f32 *, f32);
 void sceVu0Normalize(f32 *, f32 *);
 void sceVu0TransposeMatrix(f32 *, f32 *);

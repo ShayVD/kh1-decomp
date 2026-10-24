@@ -782,3 +782,18 @@ sceVu0ClipScreen	00267ea8	# hand (session 45): libvu0 in the library order; one 
 sceVu0ClipScreen3	00267ef0	# hand (session 45): libvu0 in the library order; three vertices, the same flags
 sceVu0ClipAll	00267f50	# hand (session 45): libvu0 in the library order; near / far plane clip of a vertex list (min, max, matrix, list, n)
 sceVpu0Reset	00267fe0	# hand (session 45): libvu0; VIF0 registers (0x10003810 ... 0x10003830), FBRST bit 1, VIF0 FIFO
+sceDmaGetChan	00266c08	# hand (session 56): libdma in the library order; the channel table D_0046C550[id] for id < 10, else 0
+sceDmaReset	00266c30	# hand (session 56): libdma in the library order; D_CTRL bit 0 saved, every channel's CHCR/MADR/TADR/ASR0/ASR1/SADR cleared, D_STAT masks reset, a zero env put
+sceDmaPutEnv	00266d10	# hand (session 56): libdma in the library order; checks the env fields (-1 ... -n), writes D_CTRL / D_PCR / D_SQWC / D_RBOR / D_RBSR, keeps a copy in D_0066FAD8
+sceDmaGetEnv	00266ee8	# hand (session 56): libdma in the library order; copies the 20-byte env kept by PutEnv
+sceDmaPutStallAddr	00266f20	# hand (session 56): libdma in the library order; swaps D_STADR (0x1000e060), returns the old value
+sceDmaSend	00266f38	# hand (session 56): libdma in the library order; TADR = tag, QWC = 0, CHCR mode chain, from memory, start (0x105)
+sceDmaSendN	00266fa0	# hand (session 56): libdma in the library order; MADR = addr, QWC = size, CHCR normal, from memory, start (0x101)
+sceDmaSendI	00267018	# hand (session 56): libdma in the library order; MADR = addr, QWC = size, CHCR interleave, from memory, start (0x109)
+sceDmaRecv	00267090	# hand (session 56): libdma in the library order; QWC = 0, CHCR chain, to memory, start
+sceDmaRecvN	002670d8	# hand (session 56): libdma in the library order; MADR / QWC, CHCR normal, to memory, start
+sceDmaRecvI	00267158	# hand (session 56): libdma in the library order; MADR / QWC, CHCR interleave, to memory, start
+sceDmaSync	002671d8	# hand (session 56): libdma in the library order; mode 1: CHCR.STR; else waits for STR to clear (the "sync timeout" loop)
+sceDmaWatch	00267210	# hand (session 56): libdma in the library order; mode 1: MADR < addr; else waits until MADR reaches addr
+sceDmaPause	00267248	# hand (session 56): libdma in the library order; DI, the DMAC hold bit (D_ENABLEW 0x1000f590), CHCR.STR cleared, returns the old CHCR
+sceDmaRestart	002672e0	# hand (session 56): libdma in the library order; writes CHCR back, returns its old STR bit

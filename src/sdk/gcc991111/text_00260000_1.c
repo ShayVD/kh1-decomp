@@ -4,7 +4,7 @@
 
 void func_00266ab0();
 
-void func_00267090(void *arg0) {
+void sceDmaRecv(void *arg0) {
     func_00266ab0();
     M2C_FIELD(arg0, s32 *, 0x20) = 0;
     M2C_FIELD(arg0, s32 *, 0) = (s32) ((((M2C_FIELD(arg0, s32 *, 0) & ~0xC) | 4) & ~1) | 0x100);

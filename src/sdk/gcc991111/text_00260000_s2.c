@@ -27,7 +27,7 @@ s32 DeleteSema(s32);
 s32 func_00257ee0(u16, void *, s32); /* syscall 0xFC: SetAlarm(time, handler, arg) */
 s32 func_0025a750(void *);
 s32 scePrintf(const char *, ...);
-u32 func_00267248(volatile u32 *);
+u32 sceDmaPause(volatile u32 *);
 void func_00268a78(const char *, ...);
 s32 func_00257e20(s32, void *);
 void func_00260f40(void);
@@ -53,7 +53,7 @@ void func_00266bd0(void *, s32);
 /* libdma environment: stall/drain/MFIFO selectors, cycle count, PCR and SQWC
  * halves, ring buffer address and size. */
 typedef struct { u8 sts, std, mfd, rcyc; u16 express, notify; u16 sqwc, tqwc; void *rbadr; u32 rbmsk; } DmaEnv;
-s32 func_00266d10(DmaEnv *);
+s32 sceDmaPutEnv(DmaEnv *);
 void sceVu0ScaleVector(f32 *, f32 *, f32);
 void sceVu0Normalize(f32 *, f32 *);
 void sceVu0TransposeMatrix(f32 *, f32 *);
@@ -359,7 +359,7 @@ void func_00266ab0(volatile u32 *chcr) {
     while (*chcr & 0x100) {
         if (--n < 0) {
             scePrintf(D_00492E60);
-            func_00267248(chcr);
+            sceDmaPause(chcr);
         }
     }
 }
@@ -377,7 +377,7 @@ void func_00266b20(volatile DmaCh *d, u32 addr, s32 t) {
     while (d->madr < addr) {
         if (--n < 0) {
             scePrintf(D_00492E60);
-            func_00267248(&d->chcr);
+            sceDmaPause(&d->chcr);
         }
     }
 }
@@ -390,12 +390,12 @@ u32 func_00266ba8(u32 a) {
     return a;
 }
 
-u32 func_00266c08(u32 i) {
+u32 sceDmaGetChan(u32 i) {
     if (i < 10) return D_0046C550[i];
     return 0;
 }
 
-s32 func_00266c30(s32 enable) {
+s32 sceDmaReset(s32 enable) {
     u32 env[8];
     s32 old;
     s32 i;
@@ -416,12 +416,12 @@ s32 func_00266c30(s32 enable) {
         *(u32 *)0x1000e010 = *(volatile u32 *)0x1000e010 & 0xff1f0000;
     }
     func_00266bd0(env, 20);
-    func_00266d10((DmaEnv *)env);
+    sceDmaPutEnv((DmaEnv *)env);
     if (enable == 1) D_CTRL |= 1;
     return old;
 }
 
-s32 func_00266d10(DmaEnv *env) {
+s32 sceDmaPutEnv(DmaEnv *env) {
     u32 ctrl, pcr, sqwc, rbor, rbsr;
     ctrl = DREG(0x1000e000);
     pcr = DREG(0x1000e020);
@@ -454,12 +454,12 @@ s32 func_00266d10(DmaEnv *env) {
     return 0;
 }
 
-S20 *func_00266ee8(S20 *d) {
+S20 *sceDmaGetEnv(S20 *d) {
     *d = D_0066FAD8;
     return d;
 }
 
-void func_002670d8(DmaCh *d, u32 addr, u32 qwc) {
+void sceDmaRecvN(DmaCh *d, u32 addr, u32 qwc) {
     u32 a = func_00266ba8(addr);
     func_00266ab0(&d->chcr);
     if (d->madr != 0xffffffff) d->madr = a;
@@ -473,7 +473,7 @@ void func_002670d8(DmaCh *d, u32 addr, u32 qwc) {
     }
 }
 
-u32 func_00267248(volatile u32 *chcr) {
+u32 sceDmaPause(volatile u32 *chcr) {
     s32 e;
     u32 en, old;
     e = DIntr();
