@@ -530,8 +530,6 @@ void pppKeMatPhtFrame(PppObject *obj, void *key, PppEntry *e) {
 extern PppMtx D_0061E780;
 #include "data/pieces/D_003701F0.h"
 
-void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-
 typedef struct {
     s32 frame;
     s32 pad4;
@@ -648,49 +646,12 @@ void pppDrawShapeXFrame(PppObject *obj, PppShapeKey *key, PppEntry *e) {
         w->cur--;
 }
 
-extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
-void func_00267548(f32 *, f32 *, f32 *);
-
-void pppRyjDrawMatrixWorldNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    f32 *w = PPP_WORK(f32, obj, e, 1);
-
-    sceVu0UnitMatrix(m);
-    m[3][0] = w[0];
-    m[3][1] = w[1];
-    m[3][2] = w[2];
-    sceVu0MulMatrix(m, D_00615EB0, m);
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
-    func_00267548(D_00615E68->m2[3], D_00615E68->m[3], &w[4]);
-    D_00615E68->m2[3][0] += m[3][0];
-    D_00615E68->m2[3][1] += m[3][1];
-    D_00615E68->m2[3][2] += m[3][2];
-    sceVu0MulMatrix(D_00615E68->m2, (f32 (*)[4]) D_00616040, D_00615E68->m2);
-}
-
 #include "data/pieces/D_003701D0.h"
 extern PppQv D_00616010[3];
 extern PppMtx D_006160C0;
 
 void func_002675a8(f32 *, f32 *);
 void func_00267370(f32 *, f32 *, f32 *);
-
-void func_00267440(PppMtx, PppMtx);
-
-void pppRyjMatrixNoRotFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_00267440(D_00615E68->m, D_00615EB0);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-}
 
 typedef struct {
     u8 pad[0x16];

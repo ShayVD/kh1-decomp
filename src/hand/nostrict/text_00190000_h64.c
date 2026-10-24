@@ -9,7 +9,6 @@
 typedef int u128 __attribute__((mode(TI)));
 typedef f32 PppMtx[4][4] __attribute__((aligned(16)));
 typedef f32 PppVec4[4] __attribute__((aligned(16)));
-typedef struct { f32 x, y, z; } PppFVec;
 
 typedef struct {
     s32 unk0;
@@ -126,8 +125,6 @@ extern s32 D_00616224;
 extern f32 D_00575A00; /* src/data/bss_0057.c: u8 D_00575A00[0x10] */
 extern PppMtx D_00615FC0, D_00615E70, D_00615EB0, D_00616000, D_00616040;
 #include "data/pieces/D_003701F0.h"
-#include "data/pieces/D_003701D0.h"
-#include "data/pieces/D_003701E0.h"
 
 s32 func_001aaf88(DMdl *, DParam *, s32);
 u8 *func_00182588(PppSystem *, PppSlot *);
@@ -140,13 +137,6 @@ void func_00267518(f32 *, f32 *, f32 *);
 void func_001a90f8(void *, void *, void *);
 void func_002672f8(f32 *, PppMtx, f32 *);
 void sceVu0MulMatrix(PppMtx, PppMtx, PppMtx);
-void func_00183be0(PppMtx, void *);
-void func_001a5250(PppMtx, void *);
-void func_001a5370(PppMtx, void *);
-void func_001a52e0(PppMtx, void *);
-void func_001a5400(PppMtx, void *);
-void func_001a5490(PppMtx, void *);
-void func_00267440(PppMtx, PppMtx);
 s32 sceGsSetDefLoadImage(void *, s32, s32, s32, s32, s32, s32, s32);
 void func_001a9460(f32, s32, s32, void *);
 void func_001aa6b0(void *, s32, s32, s32);
@@ -789,144 +779,6 @@ void pppDrawShapeXDraw(PppObject *obj, DShpXKey *key, PppEntry *e) {
     { PppShapeFrame *f = &sh->f[w->prev]; src = (u8 *) sh + f->off; }
     p.w14 = D_00616224;
     D_00616224 = func_001b8198(src, &p, s->unk4);
-}
-
-void pppRyjMatrixWorldFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_00183be0(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_00183be0(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-}
-
-void pppRyjMatrixWorldXZYFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a5250(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_001a5250(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-}
-
-void pppRyjMatrixWorldYXZFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a5370(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_001a5370(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-}
-
-void pppRyjMatrixWorldYZXFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a52e0(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_001a52e0(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-}
-
-void pppRyjMatrixWorldZXYFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a5400(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_001a5400(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
-}
-
-void pppRyjMatrixWorldZYXFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    PppFVec *t = PPP_WORK(PppFVec, obj, e, 0);
-    PppFVec *r = PPP_WORK(PppFVec, obj, e, 1);
-    f32 (*w)[4] = (f32 (*)[4]) ((u8 *) obj + e->offsets[3] + 0xA0);
-    PppFVec *s = PPP_WORK(PppFVec, obj, e, 2);
-
-    func_001a5490(D_00615E68->m, r);
-    D_00615E68->m[3][0] = t->x;
-    D_00615E68->m[3][1] = t->y;
-    D_00615E68->m[3][2] = t->z;
-    func_001a5490(m, &D_003701E0);
-    m[3][0] = (*(f32 (*)[4])&D_003701D0)[0];
-    m[3][1] = (*(f32 (*)[4])&D_003701D0)[1];
-    m[3][2] = (*(f32 (*)[4])&D_003701D0)[2];
-    func_00267440(m, m);
-    sceVu0MulMatrix(D_00615E68->m, D_00615E68->m, w);
-    sceVu0MulMatrix(D_00615E68->m, m, D_00615E68->m);
-    vu0ScaleRow(D_00615E68->m[0], s->x);
-    vu0ScaleRow(D_00615E68->m[1], s->y);
-    vu0ScaleRow(D_00615E68->m[2], s->z);
 }
 
 /* Hand-written VU0 routine: the asm body addresses its 16-byte work

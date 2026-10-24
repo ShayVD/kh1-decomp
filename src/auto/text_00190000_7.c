@@ -6,7 +6,6 @@ M2C_UNK func_002672f8(s32, M2C_UNK *, s32);
 M2C_UNK func_00267328(M2C_UNK *, M2C_UNK *, M2C_UNK *);
 M2C_UNK func_00267560(s32, s32, f32);
 #include "data/pieces/D_003701F0.h"
-extern M2C_UNK D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 extern M2C_UNK D_00615FC0;
 extern M2C_UNK D_00616040; /* src/data/bss_0061.c: u8 D_00616040[0x40] */
 extern M2C_UNK D_0061E780; /* src/data/bss_0061.c: PppMtx D_0061E780 */
@@ -23,15 +22,4 @@ void pppKeDMatPhtFrame(void) {
     func_002672f8(D_00615E68 + 0x80, &D_00615FC0, D_00615E68 + 0x40);
     temp_a0 = D_00615E68 + 0x50;
     func_00267328(temp_a0, &D_00616040, temp_a0);
-}
-
-void pppRyjDrawMatrixWorldFrame(s32 arg0, s32 arg1, void *arg2) {
-    M2C_UNK *temp_a0;
-    M2C_UNK *temp_a0_2;
-
-    func_00267328(D_00615E68 + 0x50, &D_00615EB0, arg0 + M2C_FIELD(M2C_FIELD(arg2, void **, 0xC), s32 *, 4) + 0xA0);
-    temp_a0 = D_00615E68 + 0x50;
-    func_00267328(temp_a0, &D_00616040, temp_a0);
-    temp_a0_2 = D_00615E68 + 0x50;
-    func_00267328(temp_a0_2, temp_a0_2, D_00615E68 + 0x10);
 }

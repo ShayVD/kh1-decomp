@@ -127,12 +127,34 @@ def var_decls(t):
     return out
 
 
-def view(name, decl):
-    """`extern T *D_X[4];` -> `#define D_X (*(T *(*)[4]) &D_X)`."""
+INTS = set('s8 u8 s16 u16 s32 u32 s64 u64 int char short long unsigned signed M2C_UNK'.split())
+
+
+def shape(name, decl):
+    """(type text without the name, 'array' | 'scalar' | 'other')."""
     s = re.sub(r'^\s*extern\s+', '', strip(decl)).strip().rstrip(';')
     s = re.sub(r'\b(volatile)\b\s*', r'\1 ', s)
-    ty = sub(s, name, '(*)')
-    return '#define %s (*(%s) &%s)' % (name, ty, name)
+    if re.search(r'\b' + re.escape(name) + r'\s*\[', s): return s, 'array'
+    if re.search(r'\*\s*(const\s+|volatile\s+)*' + re.escape(name) + r'\b', s): return s, 'scalar'
+    words = set(re.findall(r'\w+', s)) - {name, 'volatile', 'const'}
+    return s, ('scalar' if words and words <= INTS else 'other')
+
+
+def view(name, decl, base):
+    """A view of D_X as this function declared it, given the first declaration
+    `base`.  Scalars (pointers, integers) are cast by value and arrays by
+    address, so the access stays a direct one: an access through `*(T *)&D_X`
+    loses gcc 2.96's MEM_SCALAR_P and can reorder loads (session 49's trap).
+    Anything else is `(*(T (*)) &D_X)`."""
+    s, k = shape(name, decl)
+    s0, k0 = shape(name, base)
+    if k == 'scalar' and k0 == 'scalar':
+        return '#define %s ((%s) %s)' % (name, sub(s, name, ''), name)
+    if k == 'array':
+        el = re.sub(r'\[[^\]]*\]', '', sub(s, name, '(*)'), count=1)
+        el = re.sub(r'\(\*\)\s*$', '*', el.strip()) if el.strip().endswith('(*)') else el
+        return '#define %s ((%s) %s%s)' % (name, el, '' if k0 == 'array' else '&', name)
+    return '#define %s (*(%s) &%s)' % (name, sub(s, name, '(*)'), name)
 
 
 def main(out, funcs):
@@ -224,9 +246,9 @@ def main(out, funcs):
             if kind == 'var':
                 if nm in macros: sec.append('#undef ' + nm); macros.pop(nm)
                 if nm not in emitted:
-                    emitted[nm] = ('var', norm(t2)); sec.append(t2)
+                    emitted[nm] = ('var', norm(t2), t2); sec.append(t2)
                 elif emitted[nm][1] != norm(t2):
-                    views.append(view(nm, t2))
+                    views.append(view(nm, t2, emitted[nm][2]))
                 continue
             if kind == 'proto':
                 if nm in emitted:

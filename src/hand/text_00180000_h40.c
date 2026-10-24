@@ -219,7 +219,6 @@ typedef struct {
 u8 *func_00182588(PppSystem *, PppSlot *);
 void func_002672f8(PppVec4, f32 *, PppVec4);
 void func_00267530(f32 *, f32 *, f32 *);
-void func_002673b8(PppVec4, PppVec4);
 void func_00267560(f32 *, PppVec4, f32);
 s32 func_001a8f30(void);
 void func_001a5520(PppObject *, PppBornKey *, void *, void *, s16, u8, u8);
@@ -402,8 +401,6 @@ void pppKeMatSNFrame(PppObject *obj, void *key, PppEntry *e) {
 }
 
 extern PppMtx D_0061E7C0;
-
-void sceVu0UnitMatrix(PppMtx);
 void func_002675a8(f32 *, f32 *);
 
 extern PppMtx D_0061E780;
@@ -467,59 +464,9 @@ typedef struct {
     u16 cur;    /* +0x2 */
     u16 prev;   /* +0x4 */
 } PppShapeWork;
-
-extern PppMtx D_00615EB0; /* src/data/bss_0061.c: u8 D_00615EB0[0x40] */
 void func_00267548(f32 *, f32 *, f32 *);
 
-#include "data/pieces/D_003701D0.h"
-extern PppQv D_00616010[3];
-extern PppMtx D_006160C0; /* src/data/bss_0061.c: f32 D_006160C0[4][4] */
-
 void func_002675a8(f32 *, f32 *);
-void func_00267370(f32 *, f32 *, f32 *);
-
-void pppRyjDrawMatrixWorldWoodCon(PppObject *obj, PppEntry *e) {
-    PppQv u, v, c;
-    f32 *w = PPP_WORK(f32, obj, e, 1);
-
-    func_002675a8(w, (*(f32 (*)[4])&D_003701D0));
-    func_002675a8(w + 4, D_003701F0);
-    v.f[0] = D_00615FC0[1].f[0];
-    v.f[1] = D_00615FC0[1].f[1];
-    v.f[2] = D_00615FC0[1].f[2];
-    v.f[3] = 0.0f;
-    func_002673b8(v.f, v.f);
-    D_00616010[0].q = v.q;
-    u.f[0] = v.f[1];
-    u.f[1] = -v.f[0];
-    u.f[2] = 0.0f;
-    u.f[3] = 0.0f;
-    func_002673b8(u.f, u.f);
-    D_00616010[-1].q = u.q;
-    func_00267370(c.f, u.f, v.f);
-    func_002673b8(c.f, c.f);
-    D_00616010[1].q = c.q;
-    D_00616010[2].q = D_00615FC0[3].q;
-    sceVu0MulMatrix(D_006160C0, (f32 (*)[4]) D_00616040, (f32 (*)[4]) &D_00616010[-1]);
-}
-
-void pppRyjDrawMatrixWorldWoodFrame(PppObject *obj, void *key, PppEntry *e) {
-    PppMtx m;
-    f32 *w = PPP_WORK(f32, obj, e, 1);
-
-    sceVu0UnitMatrix(m);
-    m[3][0] = w[0];
-    m[3][1] = w[1];
-    m[3][2] = w[2];
-    sceVu0MulMatrix(m, D_00615EB0, m);
-    sceVu0MulMatrix(m, (f32 (*)[4]) D_00616040, m);
-    func_00267560(D_00615E68->m2[0], D_00615E68->m[0], w[4]);
-    func_00267560(D_00615E68->m2[1], D_00615E68->m[1], w[5]);
-    func_00267560(D_00615E68->m2[2], D_00615E68->m[2], w[6]);
-    *(u128 *) D_00615E68->m2[3] = *(u128 *) D_00615E68->m[3];
-    sceVu0MulMatrix(D_00615E68->m2, D_006160C0, D_00615E68->m2);
-    func_002672f8(D_00615E68->m2[3], (f32 *) m, D_00615E68->m[3]);
-}
 
 void func_00267440(PppMtx, PppMtx);
 
