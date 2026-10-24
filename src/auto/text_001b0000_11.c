@@ -8,7 +8,6 @@ M2C_UNK func_001bcd10(M2C_UNK *, M2C_UNK *);
 M2C_UNK func_001bd880(M2C_UNK *);
 extern M2C_UNK D_00621320; /* src/data/bss_0062.c: CdEnt D_00621320 */
 extern M2C_UNK D_00622290; /* src/data/bss_0062.c: CdEnt D_00622290 */
-extern s32 D_0037A16C;
 s32 func_001ba3f0(M2C_UNK);
 s32 func_001ba980();
 s32 func_001ba9a8(void);
@@ -55,14 +54,4 @@ void func_001bd7f8(s32 arg0) {
         func_001bcd10(&D_00622290, &D_00621320);
     }
     func_001bd880(&D_00622290);
-}
-
-u16 func_001bff70(s32 arg0) {
-    u16 var_v0;
-
-    var_v0 = 0;
-    if (arg0 >= 0) {
-        var_v0 = *(M2C_UNK *)((s32) ((arg0 * 0x30)) + (s32) D_0037A16C);
-    }
-    return var_v0;
 }

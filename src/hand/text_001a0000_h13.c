@@ -519,27 +519,6 @@ f32 func_001befc8(s32 t, Key *k) {
     return 0.0f;
 }
 
-extern u8 *D_0037A16C;
-#include "data/pieces/D_0037A170.h"
-extern s32 D_0037A160;
-extern s32 D_0037A15C;
-extern u8 *D_006257D4;
-void func_001bfcd8(void);
-
-u8 *func_001bfe50(u8 *a) {
-    u8 *r;
-    r = a + 0x16BC00;
-    D_0037A16C = r;
-    r = a + 0x170700;
-    (*(u8 * *)&D_0037A170) = r;
-    D_0037A15C = 0;
-    D_0037A160 = 15;
-    D_006257D4 = a;
-    r = a + 0x171388;
-    func_001bfcd8();
-    return r;
-}
-
 /* needs make: uses rodata */
 
 /* Jump table (jtbl_00490070); checked word-for-word except the table relocs. */

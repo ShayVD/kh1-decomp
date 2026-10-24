@@ -120,13 +120,6 @@ CONTEXT_ONLY void func_001bffa0(s32 i) {
         D_0037A16C[i].h4 = 0;
     }
 }
-void func_001c0010(void) {
-    s32 i;
-    for (i = 1; i < 400; i++) {
-        if (D_0037A16C[i].used != 0) func_001bffa0(i);
-    }
-    func_001bfcd8();
-}
 
 #include "data/pieces/D_003B4DA0.h"
 #include "data/pieces/D_003A7990.h"

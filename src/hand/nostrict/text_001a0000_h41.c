@@ -78,30 +78,3 @@ void func_001a8c40(Nd **list, s32 a, s32 b, s32 c, u8 **buf, s64 d, s64 e) {
         }
     }
 }
-
-/* ---- func_001c00e8 ---- */
-typedef unsigned int u128 __attribute__((mode(TI)));
-typedef union { u128 q; s32 w; } QW;
-typedef struct { u8 pad[208]; QW a; u8 pad2[16]; QW b; } Wk;
-typedef struct { u16 used; u16 id; u8 p4[4]; Wk *wk; s32 w0c; u128 q; u8 p20[16]; } Slot;
-extern Slot *D_0037A16C;
-s32 func_001bfed8(s32);
-
-s32 func_001c00e8(s32 id, s32 b, u128 c) {
-    s32 i;
-    Slot *s;
-    QW t;
-    if (id < 0) id = 0xffff;
-    i = func_001bfed8(0);
-    if (i < 0) return -1;
-    s = D_0037A16C;
-    s[i].used = 1;
-    s[i].id = id;
-    t.q = 0;
-    t.w = s[i].w0c;
-    s[i].wk->a.q = t.q;
-    t.w = b;
-    D_0037A16C[i].wk->b.q = t.q;
-    D_0037A16C[i].q = c;
-    return i;
-}

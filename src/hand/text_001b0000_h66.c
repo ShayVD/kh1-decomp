@@ -11,13 +11,6 @@ typedef FVec4 V4;
 f32 sinf(f32);
 f32 sqrtf(f32);
 void func_001bf290(f32 *q);
-typedef struct { u16 h0, h2, h4, h6; u8 *ctx; u8 *stk; u8 pad[32]; } Task_bfcd8;
-#include "data/pieces/D_0037A170.h"
-typedef RunQ_37a170 RunQ_bfcd8;
-extern Task_bfcd8 *D_0037A16C;
-extern s32 D_0037A164, D_0037A168, D_0037A174;
-extern u8 *D_006257D4;
-void func_001be820(void *p, u32 n);
 #include "data/pieces/D_0039A580.h"
 #include "data/pieces/D_0038D170.h"
 extern u32 D_002C5958;
@@ -121,59 +114,6 @@ void func_001bf888(f32 *q, f32 m[4][4]) {
     q[j] = (m[i][j] + m[j][i]) / t;
     q[k] = (m[i][k] + m[k][i]) / t;
     q[3] = (m[j][k] - m[k][j]) / t;
-}
-
-void func_001bfcd8(void) {
-    u8 *p;
-    Task_bfcd8 *t;
-    s32 i;
-/*P*/
-    D_0037A174 = 1;
-    D_0037A164 = 0;
-    D_0037A168 = 0;
-    p = D_006257D4;
-/*Q*/
-    func_001be820(D_0037A16C, 48);
-    t = D_0037A16C;
-    t->h0 = 1;
-    t->stk = 0;
-    t->h2 = 0;
-    t->h4 = 0;
-    t->h6 = 0;
-    t->ctx = p;
-    p += 448;
-    for (i = 1; i < 16; i++) {
-        func_001be820(&D_0037A16C[i], 48);
-        D_0037A16C[i].ctx = p;
-        p += 0x81b0;
-        D_0037A16C[i].stk = p;
-        p += 16;
-        D_0037A16C[i].h2 = 0;
-        D_0037A16C[i].h4 = 0;
-        D_0037A16C[i].h6 = 0;
-        D_0037A16C[i].h0 = 0;
-
-    }
-    for (i = 0; i < 384; i++) {
-        func_001be820(&D_0037A16C[i + 16], 48);
-        D_0037A16C[i + 16].ctx = p;
-        p += 0x9b0;
-        D_0037A16C[i + 16].stk = p;
-        p += 16;
-        D_0037A16C[i + 16].h2 = 0;
-        D_0037A16C[i + 16].h4 = 0;
-        D_0037A16C[i + 16].h6 = 0;
-        D_0037A16C[i + 16].h0 = 0;
-
-    }
-    {
-        u8 *c = D_0037A16C->ctx;
-        RunQ_bfcd8 *q = D_0037A170;
-        q[1].arg = -1;
-        q->ctx = c;
-        q[1].ctx = 0;
-        q->arg = 0;
-    }
 }
 
 /* func_001c5168, func_001c5b88, func_001c6720 and func_001c6890 are in src/camera/camera.c. */

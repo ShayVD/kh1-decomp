@@ -13,10 +13,6 @@ extern s32 D_0037A128;
 extern s32 D_0037A148;
 extern s32 D_0037A150;
 extern s32 D_0037A158;
-extern s32 D_0037A15C;
-extern s32 D_0037A160;
-extern s32 D_0037A168;
-extern s32 D_0037A16C;
 s32 D_00621318 ALIGNED(8);
 extern s32 D_00623214;
 extern s32 D_00623218;
@@ -192,17 +188,5 @@ void func_001bf698(void *arg0, void *arg1, f32 fparg0) {
     M2C_FIELD(arg0, f32 *, 0) = (f32) (M2C_FIELD(arg1, f32 *, 0) * temp_f0);
     M2C_FIELD(arg0, f32 *, 4) = (f32) (M2C_FIELD(arg1, f32 *, 4) * temp_f0);
     M2C_FIELD(arg0, f32 *, 8) = (f32) (M2C_FIELD(arg1, f32 *, 8) * temp_f0);
-}
-
-void func_001bfc90(s32 arg0) {
-    D_0037A15C = arg0;
-}
-
-void func_001bfca0(s32 arg0) {
-    D_0037A160 = arg0;
-}
-
-s32 func_001bfcb0(void) {
-    return D_0037A16C + (D_0037A168 * 0x30) + 0x10;
 }
 #include "data/data_0037.h"

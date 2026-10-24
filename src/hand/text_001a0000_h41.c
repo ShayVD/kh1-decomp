@@ -646,21 +646,6 @@ void func_001bf2b0(Q *d, Q *a, Q *b) {
     d->w = r.w;
 }
 
-/* ---- func_001c0830 ---- */
-typedef struct { u8 pad[12400]; u64 d12400; } Big;
-extern Big D_00389C90;
-extern u8 D_003C39B0[64];
-extern u8 D_003C39F0[64];
-extern u8 D_003C3A30[64];
-
-void func_001c0830(void) {
-    s32 i;
-    for (i = 0; i < 64; i++) D_003C39B0[i] = 0;
-    for (i = 0; i < 64; i++) D_003C39F0[i] = 0;
-    for (i = 0; i < 64; i++) D_003C3A30[i] = 0;
-    D_00389C90.d12400 &= ~(1ULL << 42);
-}
-
 /* needs make: uses rodata */
 
 /* ---- func_001bade8 ---- */

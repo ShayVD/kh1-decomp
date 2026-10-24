@@ -93,8 +93,4 @@ s32 func_001bb500(s32 arg0, s32 arg1) {
 s32 func_001bc4b8(s32 arg0) {
     return *(M2C_UNK *)((s8 *)&D_00625648 + (arg0 * 4));
 }
-
-s32 func_001bfec8(void) {
-    return 0x171388;
-}
 #include "data/data_0037.h"
