@@ -67,7 +67,10 @@ for f in sys.argv[1:]:
     txt = '\n'.join(out)
     inc = '#include "platform/vu.h"'
     if inc not in txt:
-        m = re.search(r'^#include "common.h"\n', txt, re.M) or re.search(r'^#include .*\n', txt, re.M)
+        m = re.search(r'^#include "common.h"\n', txt, re.M)
+        first = re.search(r'\bPlatVp?u0\w+\(', txt)
+        if not m or (first and first.start() < m.start()):  # a file with code above common.h
+            m = re.search(r'^#include .*\n', txt, re.M)
         if m: txt = txt[:m.end()] + inc + '\n' + txt[m.end():]
         else: txt = inc + '\n' + txt
     p.write_text(txt)
