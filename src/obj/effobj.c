@@ -429,7 +429,7 @@ s32 func_00148df8(void) {
 
 /* func_00148e20 (from auto/text_00140000.c). */
 extern M2C_UNK D_00348CE0;
-extern M2C_UNK D_00547BC0[0x10];
+M2C_UNK D_00547BC0[0x10] ALIGNED(64);  /* moved from auto/text_00140000.c (session 53) */
 #define func_00176488 ((M2C_UNK (*)(M2C_UNK *, M2C_UNK *, M2C_UNK, M2C_UNK)) func_00176488)
 M2C_UNK *func_00148e20(void) {
     func_00176488(&D_00348CE0, &D_00547BC0, 0, 0x4E20);
@@ -469,7 +469,7 @@ void func_00148e98(void) {
 void func_0011efa8(void *, void *, s32, s32);
 s32 func_0011ef38(void (*f)(void));
 void func_0011ef10(s32 a, void (*f)(void));
-extern u8 D_0054B818[0x908];
+u8 D_0054B818[0x908] ALIGNED(8);  /* moved from hand/text_00140000_h34.c (session 53) */
 extern W34Mdl3C D_00547C00_00148f08[256] __asm__("D_00547C00");
 #define D_00547C00 D_00547C00_00148f08
 extern W34Mdl3C *D_0054B800_00148f08 __asm__("D_0054B800");

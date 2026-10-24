@@ -1,10 +1,18 @@
+/* An entity's look-at: func_0014f9b0 / func_0014fa38 start and stop turning
+ * toward a point (x1f0, the bit 33 of x470, its speed x45c), func_0014fab0 /
+ * func_0014fc68 the angle to a bone or object within a limit, func_0014fe48
+ * the per-frame turn. Flag mode: nostrict (the other modes are in the
+ * sibling files). Read from the code, not proved by a boot (docs/modules.md
+ * "Session 53"). */
 #include "common.h"
 #include "platform/math.h"
+#include "data/pieces/D_002E26A0.h"
 
+/* func_0014fe48 (from hand/nostrict/text_00140000_b04.c). */
 typedef struct { u8 pad[0x1c]; f32 x1c; f32 x20; f32 x24; f32 x28; u8 pad2c[0x48 - 0x2c]; s32 x48; s32 x4c; u8 pad50[0x68 - 0x50]; s32 x68; u8 pad6c[0xd4 - 0x6c]; f32 xd4; u8 padd8[4]; f32 xdc; } B4Prm;
 typedef struct { u8 pad[0x48]; s16 x48; s16 x4a; u16 x4c; } B4C130;
 typedef struct { u8 pad[0x170]; union { u64 x; struct { u32 lo; u32 b0:5; u32 b5:1; u32 r:26; } b; } x170; } B4C148;
-typedef struct Actor {
+typedef struct Actor_4fe48 {
     s32 x0; u8 pad4[0x30 - 4]; u8 x30[0x10]; f32 x40; u8 pad44[0x68 - 0x44]; s32 x68; B4Prm *x6c;
     u8 pad70[0x88 - 0x70]; s32 x88; u8 pad8c[0xd0 - 0x8c]; f32 xd0[4][4]; u8 pad110[0x130 - 0x110];
     B4C130 *x130; u8 pad134[0x148 - 0x134]; B4C148 *x148;
@@ -13,16 +21,13 @@ typedef struct Actor {
     u8 pad200[0x370 - 0x200];
     union { u64 x; struct { u32 lo0; u32 lo:5; u32 kind:2; u32 b7:6; u32 b13:1; u32 hi:18; } b; } x370;
     u8 pad378[0x450 - 0x378]; f32 x450[4]; u8 pad460[0x470 - 0x460];
-    union { u64 x; struct { struct Actor *lo; u32 hi; } w; } x470;
+    union { u64 x; struct { struct Actor_4fe48 *lo; u32 hi; } w; } x470;
 } B4Ent;
-#include "data/pieces/D_002E26A0.h"
 void func_001315c0(void *, s32, f32, void *);
 void func_002675a8(void *, void *);
-
 s32 func_00122ff8(B4Ent *);
 extern f32 D_002BBDFC;
 void func_00267560(void *, void *, f32);
-
 f32 cosf(f32);
 f32 acosf(f32);
 f32 func_0014fc68(B4Ent *, B4Ent *, f32 *, f32);
@@ -33,7 +38,6 @@ void func_002673b8(f32 *, f32 *);
 void func_00120cf8(f32 *, f32 (*)[4], f32);
 void func_002672f8(f32 *, f32 (*)[4], f32 *);
 void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-
 void func_0014fe48(B4Ent *e) {
     f32 v[4];
     f32 ax[4];
@@ -98,28 +102,4 @@ void func_0014fe48(B4Ent *e) {
         e->x1cc |= 8;
     }
 }
-#include "data/pieces/D_002E31B0.h"
-f32 D_00551D70 ALIGNED(16);
-f32 func_00121b08(f32);
 
-#include "data/types/nostrict_text_00140000_b04.h"
-typedef struct { u8 pad[0x3c]; f32 x3c; } B4Ky;
-typedef struct { B4Ky *x0; } B4Kyp;
-typedef struct { u8 pad[0x10]; B4Kyp *x10; u8 pad14[0x48 - 0x14]; union { u64 x; struct { u8 b0; s8 x49; } c; } x48; } B4Obj;
-typedef struct B4Ln { struct B4Ln *x0; B4Obj *x4; } B4Ln;
-B4Ln *D_005739F0 ALIGNED(16);
-B4Ln D_005736F0[0x60] ALIGNED(16);
-void func_00267370(f32 *, f32 *, f32 *);
-void func_002673b8(f32 *, f32 *);
-void sceVu0CopyMatrix(f32 (*)[4], f32 (*)[4]);
-
-/* needs make: uses rodata */
-
-/* needs make: uses rodata (jump table jtbl_0048E420) */
-f32 func_00121b08(f32);
-#include "data/bss_0054_mixed.h"
-#include "data/bss_0057_mixed.h"
-#include "data/data_002C.h"
-#include "data/data_0030.h"
-#include "data/data_0035.h"
-#include "data/pieces/D_002BBDFC.h"

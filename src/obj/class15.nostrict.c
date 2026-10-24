@@ -1,5 +1,13 @@
+/* Object class 0x15: the handlers func_0014cb38 registers in the class table
+ * D_00350D88 (func_0014f830(0x15, ...)) and their helpers. Flag mode:
+ * nostrict (the other modes are in the sibling files). Read from the code,
+ * not proved by a boot (docs/modules.md "Session 53"). */
 #include "common.h"
 #include "data/bss_0054.h"
+#include "data/types/nostrict_text_00140000_h57.h"
+#include "data/types/nostrict_text_00140000_h57_p.h"
+
+/* func_0014c850 (from hand/nostrict/text_00140000_h57.c). */
 typedef struct { u8 pad0[0x100]; u64 f100; } Sub57_c850;
 typedef struct {
     u8 pad0[0x30];
@@ -16,16 +24,12 @@ typedef struct {
     u8 pad3d0[4];
     f32 f3d4;
 } Obj57_c850;
-#include "data/types/nostrict_text_00140000_h57.h"
-#include "data/types/nostrict_text_00140000_h57_p.h"
 extern f32 D_002BBDFC;
 extern f32 D_002C5970;
-extern f32 D_0054F444;
 void func_002675a8(f32 *, f32 *);
 f32 func_00120c18(f32 *);
 f32 func_00120bf8(f32 *);
 void func_00267560(f32 *, f32 *, f32);
-
 void func_0014c850(Obj57_c850 *o, f32 *v) {
     f32 d;
     f32 lim;
@@ -62,6 +66,4 @@ void func_0014c850(Obj57_c850 *o, f32 *v) {
     o->v3c0[1] = v[1];
     D_0054F444 = func_00120bf8(v);
 }
-#include "data/bss_0054_typed.h"
-#include "data/pieces/D_002BBDFC.h"
-#include "data/pieces/D_002C5970.h"
+

@@ -347,7 +347,8 @@ void func_00149a88(s32 a, s32 b, W34Hdr *h) {
 /* func_00149b40 (from hand/text_00140000_h8.c). */
 typedef struct { u8 pad[4]; s32 x4; s32 x8; u8 padc[4]; s32 x10; } W8Q;
 extern char D_0048E410[];
-extern s32 D_00350D10;
+extern u8 D_0048E408[];
+s32 D_00350D10 ALIGNED(16) = (s32)D_0048E408;  /* moved from hand/text_00140000_h8.c (session 53) */
 s32 sprintf(char *, const char *, ...);
 void func_00120748(char *, s32, void *, s32);
 void func_00149b40(W8Q *q) {
