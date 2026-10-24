@@ -2,8 +2,8 @@
  * func_0023a608 draws the frame list of func_0023a490 with its own drawing
  * environment D_00648790.  func_0023a720 sets each entry's grey (0x73 when
  * its bit is set or a list follows, 0xE6 otherwise) for every list in
- * D_002E3170; func_0023a7e8 fades them towards it at 32 per second
- * (D_002BBDFC, the frame time).  func_0023b4b8 sets D_00449908's f7c / f80
+ * D_002E3170; func_0023a7e8 fades them towards it by 32 times
+ * D_002BBDFC (the frame step).  func_0023b4b8 sets D_00449908's f7c / f80
  * (a value and its step: 1 / -0.1, 0 / 0.1, 1 / 0, 0 / 0) for states 0-3. */
 #include "common.h"
 #include "data/bss_0064.h"

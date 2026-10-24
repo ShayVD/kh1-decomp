@@ -1,7 +1,7 @@
 /* The command menu (docs/modules.md "Session 46"), default flags part.
  * func_0023a968 is the menu's draw hook (func_0023b570 registers it with
- * func_0011ef10): it moves the menu's slide (D_00449908.f7c by f80 per
- * second unless D_002C5960 bit 0, the pause, is set), picks the menu's
+ * func_0011ef10): it moves the menu's slide (D_00449908.f7c by f80 times
+ * D_002BBDFC, the frame step, unless D_002C5960 bit 0, the pause, is set), picks the menu's
  * sprite set from D_002C5958 bit 0 (func_0023a8d0), fades the entries
  * (func_0023a7e8) and draws each open list of D_002E3170 (the top list at
  * 16, 260, the sub lists beside their parent, no lower than y 348; kind 5,

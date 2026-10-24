@@ -31,16 +31,8 @@ CONTEXT_ONLY void func_00239a80(s32 a, void *b, void *c, void *d, s32 e, s32 g, 
 }
 
 /* ---- hc4.c */
-extern Slot D_00651310[10];
-extern B192 *D_00651300; /* src/data/bss_0065.c: u8 *D_00651300 */
-Slot *func_0023c228(void);
 
 /* ---- c3.c */
-s32 func_0023c4d8(P8 *a0, s32 a1, s32 a2, s32 a3) {
-    Slot *e = func_0023c228();
-    if (e == 0) return -1; { B192 *s = D_00651300; e->x8 = a1; e->blk = *s; } e->xd0 = a2; e->xd4 = a3; e->xd8 = *a0;
-    return e - D_00651310;
-}
 
 /* ---- e4_3.c */
 typedef struct { s32 x, y, z, w; } I4b;
