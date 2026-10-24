@@ -10,6 +10,7 @@
  * 2 pi (func_002498a0), a clamp (func_00249950) and a lerp
  * (func_00249988). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/text_00240000_h50.h"
 #include "data/types/text_00240000_h50_p.h"
 #include "data/types/shared.h"
@@ -25,18 +26,6 @@ typedef struct { Seg s[3]; } Seg3;
 typedef struct { f32 v[4]; } V4f;
 typedef struct { s32 x, y; } XY;
 extern u8 D_00469F90[], D_00469FA0[];
-void sceVu0OuterProduct(V4 *, V4 *, V4 *);
-void sceVu0Normalize(V4 *, V4 *);
-void sceVu0AddVector(void *, void *, void *);
-void sceVu0SubVector(void *, void *, void *);
-void sceVu0TransMatrix(void *, void *, void *);
-void sceVu0CopyVector(void *, void *);
-void sceVu0UnitMatrix(void *);
-void sceVu0RotMatrixZ(void *, void *, f32);
-void sceVu0RotMatrixX(void *, void *, f32);
-void sceVu0RotMatrixY(void *, void *, f32);
-void sceVu0ScaleVectorXYZ(void *, void *, f32);
-s32 sceVu0ClipAll(void *, void *, void *, void *, s32);
 
 void func_002492d0(Fade4 *p, f32 val, f32 speed, f32 a, f32 b) {
     p->val = val;
@@ -63,26 +52,26 @@ s32 func_002492e8(Fade *p, s32 dt) {
 }
 
 void func_00249370(void *out, void *in, V4 *rot) {
-    sceVu0RotMatrixZ(out, in, rot->z);
-    sceVu0RotMatrixX(out, out, rot->x);
-    sceVu0RotMatrixY(out, out, rot->y);
+    PlatVu0RotMatrixZ(out, in, rot->z);
+    PlatVu0RotMatrixX(out, out, rot->x);
+    PlatVu0RotMatrixY(out, out, rot->y);
 }
 
 void func_002493c0(void *out, V4 *pos, V4 *rot) {
     M44 m;
-    sceVu0UnitMatrix(&m);
+    PlatVu0UnitMatrix(&m);
     func_00249370(&m, &m, rot);
-    sceVu0TransMatrix(out, &m, pos);
+    PlatVu0TransMatrix(out, &m, pos);
 }
 
 void func_00249420(M44 *m, V4 *dir) {
     V4 x, y, z, up;
     up = D_00491830;
-    sceVu0Normalize(&z, dir);
-    sceVu0OuterProduct(&x, &up, &z);
-    sceVu0OuterProduct(&y, &z, &x);
-    sceVu0Normalize(&x, &x);
-    sceVu0Normalize(&y, &y);
+    PlatVu0Normalize(&z, dir);
+    PlatVu0OuterProduct(&x, &up, &z);
+    PlatVu0OuterProduct(&y, &z, &x);
+    PlatVu0Normalize(&x, &x);
+    PlatVu0Normalize(&y, &y);
     m->m[0][0] = x.x; m->m[0][1] = x.y; m->m[0][2] = x.z; m->m[0][3] = 0;
     m->m[1][0] = y.x; m->m[1][1] = y.y; m->m[1][2] = y.z; m->m[1][3] = 0;
     m->m[2][0] = z.x; m->m[2][1] = z.y; m->m[2][2] = z.z; m->m[2][3] = 0;
@@ -91,7 +80,7 @@ void func_00249420(M44 *m, V4 *dir) {
 }
 
 void func_00249518(M44 *m, f32 s) {
-    sceVu0UnitMatrix(m);
+    PlatVu0UnitMatrix(m);
     m->m[2][2] = s;
     m->m[1][1] = s;
     m->m[0][0] = s;
@@ -104,8 +93,8 @@ void func_00249558(XY *o, XY *gs) {
 
 s32 func_00249580(V4 *v) {
     V4 t;
-    sceVu0CopyVector(&t, v);
-    return sceVu0ClipAll(D_00469F90, D_00469FA0, D_002E26C0, &t, 1) != 0;
+    PlatVu0CopyVector(&t, v);
+    return PlatVu0ClipAll(D_00469F90, D_00469FA0, D_002E26C0, &t, 1) != 0;
 }
 
 void func_002495c8(Seg *o, f32 p0, f32 p1, f32 t0, f32 t1) {
@@ -131,10 +120,10 @@ void func_00249718(V4f *o, Seg3 *s, f32 t) {
 
 void func_002497b8(V4 *out, V4 *dir, f32 s) {
     V4 t, u;
-    sceVu0CopyVector(&t, dir);
+    PlatVu0CopyVector(&t, dir);
     *(s32 *)&t.w = 0;
-    sceVu0ScaleVectorXYZ(&u, &t, s);
-    sceVu0AddVector(out, out, &u);
+    PlatVu0ScaleVectorXYZ(&u, &t, s);
+    PlatVu0AddVector(out, out, &u);
 }
 
 void func_00249820(s32 *d, s32 *s) {
@@ -146,15 +135,15 @@ void func_00249820(s32 *d, s32 *s) {
 }
 
 void func_00249858(V4 *o, u8 *p) {
-    sceVu0CopyVector(o, p + 0x20);
+    PlatVu0CopyVector(o, p + 0x20);
 }
 
 void func_00249870(V4 *o, V4 *v) {
-    sceVu0CopyVector(o, v);
+    PlatVu0CopyVector(o, v);
 }
 
 void func_00249888(V4 *o, u8 *p) {
-    sceVu0CopyVector(o, p + 0x10);
+    PlatVu0CopyVector(o, p + 0x10);
 }
 
 void func_002498a0(f32 *a) {
@@ -172,9 +161,9 @@ void func_002498a0(f32 *a) {
 
 void func_00249900(V4 *a, V4 *b) {
     V4 t;
-    sceVu0CopyVector(&t, a);
-    sceVu0CopyVector(a, b);
-    sceVu0CopyVector(b, &t);
+    PlatVu0CopyVector(&t, a);
+    PlatVu0CopyVector(a, b);
+    PlatVu0CopyVector(b, &t);
 }
 
 f32 func_00249950(f32 *p, f32 lo, f32 hi) {
@@ -192,7 +181,7 @@ f32 func_00249950(f32 *p, f32 lo, f32 hi) {
 
 void func_00249988(V4 *out, V4 *a, V4 *b, f32 t) {
     V4 d;
-    sceVu0SubVector(&d, b, a);
-    sceVu0ScaleVectorXYZ(&d, &d, t);
-    sceVu0AddVector(out, a, &d);
+    PlatVu0SubVector(&d, b, a);
+    PlatVu0ScaleVectorXYZ(&d, &d, t);
+    PlatVu0AddVector(out, a, &d);
 }

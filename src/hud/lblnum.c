@@ -13,6 +13,7 @@
  * func_00244b10).
  * What the label says is not known (no boot). */
 #include "common.h"
+#include "platform/vu.h"
 #include "data/types/text_00240000_h50.h"
 
 typedef struct {
@@ -49,7 +50,6 @@ void func_0024aac8(void *);
 void func_0024af40(void *, void *, void *);
 void func_0024ae00(void *);
 void func_0024af00(void *);
-void sceVu0CopyVector(void *, void *);
 void func_001315c0(s32, s32, void *, f32);
 
 s32 func_00246cf0(s32 v, s32 *d) {
@@ -129,7 +129,7 @@ void func_00247228(LblNum *p, s32 value, void *pos) {
     p->value = value;
     p->state = 1;
     p->cnt = 0;
-    sceVu0CopyVector(p->pos, pos);
+    PlatVu0CopyVector(p->pos, pos);
 }
 
 void func_00247258(void) {
