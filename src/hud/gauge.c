@@ -167,8 +167,8 @@ void func_002407b0(Gauge *e, s32 k) {
     func_0024ae00(e->unk9C);
 }
 
-void func_002408d8(s32 i) {
-    func_00240810(&D_00651E70[i]);
+s32 func_002408d8(s32 i) {
+    return func_00240810(&D_00651E70[i]);
 }
 
 Gauge *func_00240910(GActor *o) {

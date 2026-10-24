@@ -23,8 +23,8 @@
 /* func_0015ed80 (from auto/text_00150000.c). */
 M2C_UNK func_0011f090(s32, s32, s32);
 extern s32 D_00559DB0;
-void func_0015ed80(s32 arg0, s32 arg1) {
-    func_0011f090(D_00559DB0, arg0, arg1);
+M2C_UNK func_0015ed80(s32 arg0, s32 arg1) {
+    return func_0011f090(D_00559DB0, arg0, arg1);
 }
 
 /* func_0015eda8 (from auto/text_00150000_2.c). */
@@ -54,8 +54,8 @@ void func_0015ee10(void) {
 
 /* func_0015ee78 (from auto/text_00150000.c). */
 extern s32 D_0055BDE0;
-void func_0015ee78(s32 arg0, s32 arg1) {
-    func_0011f090(D_0055BDE0, arg0, arg1);
+M2C_UNK func_0015ee78(s32 arg0, s32 arg1) {
+    return func_0011f090(D_0055BDE0, arg0, arg1);
 }
 
 /* func_0015ef60 (from hand/text_00150000_h10.c). */

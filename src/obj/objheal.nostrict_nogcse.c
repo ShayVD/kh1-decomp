@@ -38,7 +38,7 @@ typedef struct {
     void *x4a0;
 } A6e88;
 void *func_00121e28(s32, void *);
-void * func_00250054(void *, s32, s32);
+void *func_00250054(void *, s32, s32);
 void func_0013c2a0(s32, s32);
 Eff6e88 *func_00147ed8(s32, s32, s32, f32 *);
 void func_00156d88(void);

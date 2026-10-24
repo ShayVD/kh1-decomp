@@ -305,8 +305,8 @@ void func_00120888(s32 arg0) {
 /* func_001208e0 (from auto/text_00120000_8.c). */
 #define func_0011f090 ((M2C_UNK (*)(M2C_UNK *, M2C_UNK, s32)) func_0011f090)
 #define D_004E49E8 (*(M2C_UNK (*)) &D_004E49E8)
-void func_001208e0(s32 arg0) {
-    func_0011f090(&D_004E49E8, 0, arg0);
+M2C_UNK func_001208e0(s32 arg0) {
+    return func_0011f090(&D_004E49E8, 0, arg0);
 }
 #undef func_0011f090
 #undef D_004E49E8
@@ -339,11 +339,11 @@ char *func_00120930(char *name) {
 
 /* func_001209d8 (from auto/text_00120000.c). */
 #define func_00120930 ((s32 (*)()) func_00120930)
-void func_001209d8(void) {
+void func_001209d8(char *name) {
     s32 temp_a0;
     s32 temp_s0;
 
-    temp_s0 = func_00120930();
+    temp_s0 = func_00120930(name);
     temp_a0 = temp_s0;
     do {
 
@@ -353,8 +353,8 @@ void func_001209d8(void) {
 
 /* func_00120a20 (from auto/text_00120000_3.c). */
 #define func_00120930 ((s32 (*)()) func_00120930)
-void func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
-    PlatSifLoadStartModule(func_00120930(), arg1, arg2, arg3);
+s32 func_00120a20(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    return PlatSifLoadStartModule(func_00120930(arg0), arg1, arg2, arg3);
 }
 #undef func_00120930
 

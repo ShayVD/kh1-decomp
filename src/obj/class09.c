@@ -49,9 +49,9 @@ f32 func_0013fd88(f32 a) {
 }
 
 /* func_0013fe10 (from auto/text_00130000.c). */
-#define func_0013fd88 ((M2C_UNK (*)(f32)) func_0013fd88)
-void func_0013fe10(Actor *arg0) {
-    func_0013fd88(arg0->unk014);
+#define func_0013fd88 ((f32 (*)(f32)) func_0013fd88)
+f32 func_0013fe10(Actor *arg0) {
+    return func_0013fd88(arg0->unk014);
 }
 #undef func_0013fd88
 

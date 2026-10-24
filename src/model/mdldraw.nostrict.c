@@ -715,11 +715,11 @@ extern DmaChcr *D_0055C644;
 typedef struct { u16 h0; u8 b2; u8 b3; u32 w4; } GifTag8;
 extern GifTag8 *volatile D_0055C648;
 extern u8 D_00573AC0[];
-void func_0015f8c8(void);
-void func_00162428(void) {
+void func_0015f8c8(void *, s32);
+void func_00162428(void *s, s32 k) {
     PlatSync();
     D_0055C648 = (GifTag8 *)PLAT_UNCACHED(D_00573AC0);
-    func_0015f8c8();
+    func_0015f8c8(s, k);
     D_0055C648->b3 = 0x70;
     D_0055C648->w4 = 0;
     D_0055C648->h0 = 0;

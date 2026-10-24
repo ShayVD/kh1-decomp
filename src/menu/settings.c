@@ -79,8 +79,8 @@ s32 func_002192f8(void) {
     return D_003F34B8->f8;
 }
 
-void func_00219308(void) {
-    func_002192f8();
+s32 func_00219308(void) {
+    return func_002192f8();
 }
 
 void func_00219320(s32 arg0) {

@@ -126,10 +126,10 @@ void func_001094f0(void) {
 extern volatile s32 D_00495160;
 extern volatile s32 D_00495164;
 s32 func_0010a0d8(void);
-void func_00109558(s32 arg0) {
+s32 func_00109558(s32 arg0) {
     D_00495164 = arg0;
     D_00495160 = 2;
-    func_0010a0d8();
+    return func_0010a0d8();
 }
 
 /* func_00109588 (from auto/text_00100000.c). */

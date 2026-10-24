@@ -232,9 +232,9 @@ W6Ent *func_00130340(W6Obj *o, f32 x) {
 #undef func_00130270
 
 /* func_00130578 (from auto/text_00130000_4.c). */
-#define func_001302d0 ((void (*)(s32, s32, f32, f32)) func_001302d0)
-void func_00130578(s32 arg0, s32 arg1, f32 fparg0) {
-    func_001302d0(arg0, arg1, 0.0f, fparg0);
+#define func_001302d0 ((void *(*)(s32, s32, f32, f32)) func_001302d0)
+void *func_00130578(s32 arg0, s32 arg1, f32 fparg0) {
+    return func_001302d0(arg0, arg1, 0.0f, fparg0);
 }
 #undef func_001302d0
 

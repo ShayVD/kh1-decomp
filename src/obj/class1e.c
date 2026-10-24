@@ -13,10 +13,10 @@
 #include "data/pieces/D_002E26A0.h"
 
 /* func_00159148 (from auto/text_00150000.c). */
-M2C_UNK func_0014cce0();
+f32 func_0014cce0(s32, f32);
 M2C_UNK func_0014f658(s32, M2C_UNK);
-void func_00159148(s32 arg0) {
-    func_0014cce0();
+void func_00159148(s32 arg0, f32 f) {
+    func_0014cce0(arg0, f);
     func_0014f658(arg0, 0x1F);
 }
 

@@ -133,14 +133,14 @@ s32 func_00149170(s32 a, u32 b) {
 M2C_UNK func_00141e68(s32);
 s32 func_0013daa8(s32);
 #define func_00149170 ((M2C_UNK (*)(s32, s32)) func_00149170)
-void func_00149600(s32 arg0, s32 arg1) {
+s32 func_00149600(s32 arg0, s32 arg1) {
     s32 temp_v0;
 
     temp_v0 = func_0013daa8(arg1);
     if (temp_v0 >= 0) {
         func_00141e68(*(M2C_UNK *)((s8 *)&D_002E26A0 + (temp_v0 * 4)));
     }
-    func_00149170(arg0, arg1 | 0x10000);
+    return func_00149170(arg0, arg1 | 0x10000);
 }
 #undef func_00149170
 

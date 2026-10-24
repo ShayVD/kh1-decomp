@@ -65,8 +65,8 @@ void func_0017f948(void) {
 
 /* func_0017f958 (from auto/text_00170000.c). */
 M2C_UNK func_00183a48();
-void func_0017f958(void) {
-    func_00183a48();
+void *func_0017f958(void *h, s32 size) {
+    return func_00183a48(h, size);
 }
 
 /* func_0017f970 (from auto/text_00170000.c). */

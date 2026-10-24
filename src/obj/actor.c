@@ -259,7 +259,7 @@ s32 func_001233e8(Actor *arg0) {
     s32 var_s1;
 
     var_s1 = 0;
-    if (func_00123368() != 0) {
+    if (func_00123368(arg0) != 0) {
         var_s1 = (arg0->unk000 & 0x01000080) == 0;
     }
     return var_s1;

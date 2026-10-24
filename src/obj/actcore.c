@@ -286,7 +286,7 @@ s32 func_0014f658(W9Ent_4f658 *e, s32 s) {
 M2C_UNK func_001376e8();
 void func_0014f6f8(s32 arg0, void *arg1) {
     if (M2C_FIELD(arg1, f32 *, 0xC) > 0.0f) {
-        func_001376e8();
+        func_001376e8(arg0, arg1);
     }
     PlatVu0CopyVector(arg0 + 0x20, arg1);
 }

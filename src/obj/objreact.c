@@ -283,7 +283,7 @@ void func_001394e8(Actor *arg0) {
 #define func_0014f5c8 ((s32 (*)()) func_0014f5c8)
 #define func_0014f600 ((s32 (*)(s32)) func_0014f600)
 void func_00139568(s32 arg0, s32 arg1) {
-    if ((func_0014f5c8() != 0) || (func_0014f600(arg0) != 0)) {
+    if ((func_0014f5c8(arg0) != 0) || (func_0014f600(arg0) != 0)) {
         func_001394e8(arg0, arg1);
         return;
     }

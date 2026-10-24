@@ -54,8 +54,8 @@ void func_0012b738(void) {
 typedef struct { u8 pad[0x14]; u8 *f14; } N2;
 extern N2 *func_0012b7a8();
 extern void *memset(void *, s32, u32);
-N2 *func_0012b888(void) {
-    N2 *n = func_0012b7a8();
+N2 *func_0012b888(s32 a) {
+    N2 *n = func_0012b7a8(a);
     s32 i;
     u8 *p;
     for (i = 0; i < 32; i++) {

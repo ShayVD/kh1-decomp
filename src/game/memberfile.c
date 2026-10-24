@@ -39,13 +39,13 @@ void *func_00132f20(s32 arg0) {
 
 /* func_00132f48 (from auto/text_00130000.c). */
 M2C_UNK func_00147808(s32);
-void func_00132f48(s32 arg0) {
-    func_00147808(arg0 + 0x11E);
+s32 func_00132f48(s32 arg0) {
+    return func_00147808(arg0 + 0x11E);
 }
 
 /* func_00132f60 (from auto/text_00130000.c). */
-void func_00132f60(s32 arg0, s32 arg1) {
-    func_00147808((arg0 * 3) + arg1 + 6);
+s32 func_00132f60(s32 arg0, s32 arg1) {
+    return func_00147808((arg0 * 3) + arg1 + 6);
 }
 
 /* func_00132f88 (from auto/text_00130000_4.c). */

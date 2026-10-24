@@ -428,8 +428,8 @@ void func_0013bde8(void *arg0, s32 arg1, s32 arg2) {
 /* func_0013bef0 (from auto/text_00130000_8.c). */
 M2C_UNK func_00137688(s32, f32);
 f32 func_001376e8();
-void func_0013bef0(s32 arg0) {
-    func_00137688(arg0, func_001376e8());
+void func_0013bef0(s32 arg0, void *arg1) {
+    func_00137688(arg0, func_001376e8(arg0, arg1));
 }
 
 /* func_0013bf20 (from hand/text_00130000_h6.c). */

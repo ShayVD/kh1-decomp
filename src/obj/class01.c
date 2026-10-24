@@ -194,11 +194,11 @@ typedef struct Actor_4d180 {
     f32 x490[4];
     void *x4a0;
 } W9Ent;
-s32 func_00137618(void);
+s32 func_00137618(void *);
 s32 func_0014d180(W9Ent *e) {
     s32 r;
     s32 f, g;
-    r = func_00137618();
+    r = func_00137618(e);
     if (r) {
         f = e->flags;
         g = f & 4;
@@ -305,18 +305,18 @@ L:
 /* func_0014d3c8 (from auto/text_00140000_16.c). */
 M2C_UNK func_0014c530();
 M2C_UNK func_0014dcd8();
-s32 func_0014d3c8(void) {
+s32 func_0014d3c8(void *a) {
   unsigned long long new_var;
   if ((D_002C5958 >> 5) & 1)
   {
-    func_0014dcd8();
+    func_0014dcd8(a);
   }
   else
   {
     new_var = (u64) (*(u8 *)&D_002E27C8);
     if ((new_var >> 7) != 0)
     {
-      func_0014c530();
+      func_0014c530(a);
     }
   }
   return 0;

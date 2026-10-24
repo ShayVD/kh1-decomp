@@ -491,8 +491,8 @@ void func_001524a8(void) {
 
 /* func_001524b0 (from auto/text_00150000.c). */
 #define func_00137318 ((M2C_UNK (*)()) func_00137318)
-void func_001524b0(void) {
-    func_00137318();
+void func_001524b0(void *arg0) {
+    func_00137318(arg0);
 }
 #undef func_00137318
 

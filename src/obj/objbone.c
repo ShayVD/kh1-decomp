@@ -291,8 +291,8 @@ void func_00131a30(s32 arg0, s32 arg1, s32 arg2) {
 /* func_00131a68 (from auto/text_00130000_13.c). */
 s32 func_00130190();
 s32 func_00167698(s32);
-f32 func_00131a68(void *arg0) {
-    return (f32) func_00167698(*(M2C_UNK *)((s32) (((func_00130190() & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 0x1D4))));
+f32 func_00131a68(void *arg0, s32 arg1) {
+    return (f32) func_00167698(*(M2C_UNK *)((s32) (((func_00130190(arg0, arg1) & 0xFFFF) * 4)) + (s32) (M2C_FIELD(arg0, s32 *, 0x1D4))));
 }
 
 /* func_00131ab0 (from auto/text_00130000_8.c). */
@@ -356,10 +356,10 @@ void func_00131c28(void *arg0, f32 fparg0) {
 /* func_00131c30 (from auto/text_00130000.c). */
 s32 func_00138858(u16);
 void *func_001320a8();
-s32 func_00131c30(void) {
+s32 func_00131c30(u32 a) {
     void *temp_v0;
 
-    temp_v0 = func_001320a8();
+    temp_v0 = func_001320a8(a);
     if ((u16) M2C_FIELD(temp_v0, u16 *, 0x4C) >= 0x12CU) {
         return func_00138858(M2C_FIELD(temp_v0, u16 *, 0x4C));
     }

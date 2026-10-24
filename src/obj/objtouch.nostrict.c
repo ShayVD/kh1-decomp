@@ -128,7 +128,7 @@ void *func_00121e28(s32, void *);
 void func_0015ace0(void);
 s32 func_001477e0(s32);
 Oad08 *func_0014a4a8(Aad08 *, s32, s32);
-void * func_001354b8(Oad08 *, s32);
+void *func_001354b8(Oad08 *, s32);
 f32 func_00120c88(f32);
 void func_00142388(f32 *, f32 *);
 void func_00142470(Aad08 *, f32 *);
