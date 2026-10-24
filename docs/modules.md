@@ -1413,6 +1413,69 @@ float_reach.txt and the loaded bytes the same as the base; the symbols the
 same except, from the libmc commit on, the 14 renamed libmc functions (same
 addresses).  At the end `make report` 6979 at 100% and `make test` passes.
 
+## Session 45: the menu models' camera, GS packets, the draw list, primitives, the HUD's set up and textures, 0x00236a58-0x00239558
+
+Session 45 moved 43 functions in four commits (plus one that names libvu0).  No
+Mac: static checks only.  From 0x00236f00 on the code is the HUD's (its set up
+func_00236f18 calls one set up per part from 0x0023b570 to 0x00249250 and its
+textures come from "command2/uitex.bin") and the generic GS code it draws
+with: packets, a depth-sorted draw list and batch senders, all on libvu0 and
+the GIF DMA channel (docs/portability.md: the renderer's platform layer).
+
+| module | files | range | functions |
+|---|---|---|---|
+| the menu models' camera func_00236a58 (D_00425F70, Cam_425f70: aims at the target with atan2f or orbits it at `dist`, builds m80 with sceVu0CameraMatrix, mc0, m0 = m40 x m80, the view direction v190; journalmdl.c calls it), a camera matrix from a caller's angles func_00236c68, rotations by three angles func_00236d48 (z, x, y) / func_00236d98 (x, y, z), a scale matrix func_00236de8 | src/menu/mdlcam.c | 0x00236a58-0x00236e40 | 5 |
+| vertex range checks (x, y > 0xFFFF or z > 0xFFFF28 in GS 12.4 coordinates; one vertex, a quad) | src/gfx/gsclip.nofill.c | 0x00236e40-0x00236f00 | 2 |
+| the HUD's set up func_00236f18 (the draw list D_00425F80 with 256 buckets at D_00425F88, 14 part set ups, D_00425F78 = 0), the start-up upload func_00236f00, three empty hooks | src/hud/hud.c | 0x00236f00-0x00236fd8 | 5 |
+| GS packets: a GIFtag for A+D qwords func_00236fd8, one A+D qword func_00237008, the default drawing environment func_002370c8 (FRAME_1 512 wide, ZBUF_1, XYOFFSET_1, SCISSOR_1 512x384, TEST/ALPHA/FBA_1, TEX0/1/2_1, MIPTBP1/2_1, CLAMP_1, PRMODECONT, COLCLAMP; DTHE, DIMX, PABE, TEXA) sent from D_006480D0 by func_002372e0 and a variant by func_00237318; the GIF DMA sender func_00237018 (nostrict_nofill) | src/gfx/gspkt.c, gspkt.nostrict_nofill.c | 0x00236fd8-0x00237548 | 6 |
+| the depth-sorted draw list (include/gfx/drawlist.h: DrawList / DrawBucket / DrawNode): set up func_00237600 / func_00237660; push func_00237680 and the raw packet of a kind 4 node func_00237ec0 (nostrict); the projection of a triangle with libvu0's screen clip func_00237548, the push by depth func_002376c8, the node kinds 1 (line) func_00237790, 2 (flat triangle) func_002378c8, 3 (lit textured triangle) func_00237d48, a fan func_00237b30, the point projection func_00237a48, the flushes func_00237f20 (one send per node), func_002380c0 (one per bucket), func_00238258 (one packet of kind 3 nodes) (nostrict_nofill) | src/gfx/drawlist.c (2), drawlist.nostrict.c (2), drawlist.nostrict_nofill.c (10) | 0x00237548-0x00238440 | 14 |
+| primitives sent at once (draw-list nodes without the list): lines one by one through D_00648070 func_00238440; flat triangles func_002384e0, textured quads func_00238768 (nostrict); lines func_002386c0, textured quads into a caller's buffer func_002388b8 (the HUD's sprites) (nostrict_nofill) | src/gfx/prim.c (1), prim.nostrict.c (2), prim.nostrict_nofill.c (2) | 0x00238440-0x002389f0 | 5 |
+| the HUD's textures: image n of command2/uitex.bin func_002389f0 (nofill), the load and the 21 images' set up func_00238a70 (D_006483B0 defined here; s6_24 nostrict_nofill renamed) | src/hud/hudtex.nofill.c, hudtex.nostrict_nofill.c | 0x002389f0-0x00239368 | 2 |
+| the uploads func_00239368 (the textures and a 16x16 CLUT) / func_002393d8 (the font: text.c's image at 0x3600 and CLUT at 0x3A00), the HUD's step func_00239488, the busy check func_002394f8 (vm_lib.c's func_001da178) | src/hud/hud.c | 0x00239368-0x00239558 | 4 |
+
+| chunk | commit | deleted |
+|---|---|---|
+| 0x00236a58-0x00237548 | ee80d18 | h73, auto text_00230000_8 |
+| 0x00237548-0x00238258 | 642fd46 | h25 nostrict, h73 nostrict_nofill, s8_w1, s9_r2_6, s9_w10, auto text_00230000_5 |
+| 0x00238258-0x002389f0 | e037448 | s7_w27, s8_w6 |
+| 0x002389f0-0x00239558 | d4f4df5 | auto text_00230000_7 (s6_24 nostrict_nofill became hudtex.nostrict_nofill.c) |
+| libvu0 names | e3ce7c9 | (nothing) |
+
+objdiff units 773 -> 774.  The names come from what the code reads (the
+HUD from "command2/uitex.bin" and its set up list); none is proved by a boot.
+
+**Types.**  include/gfx/drawlist.h is h25's / s9_w10's / h74's Hash, Bucket
+and Node (one view; the node kinds read by the flushes).  include/gfx/gspkt.h
+declares the packet functions; only the new modules and h48 include it, the
+other ~25 files keep their own prototypes (`void func_00237018(void *, s32,
+s32)` and variants: switch them one at a time with `make`).
+D_00425F80 / D_00425F88 are typed in hud.c (DrawList, DrawBucket[256]) and
+left data_0042.h, their only C user being hud.c.
+
+**Data moved with its users**: D_00648070 (h25, the line buffer) into prim.c.
+D_006483B0 stays with func_00238a70 (the renamed file).
+
+**Traps.**
+- **A third argument nobody reads**: func_00237f20 and func_002380c0 call
+  func_00237ec0 with a third 0 (`move a2,zero`); the definition takes two.
+  drawlist.nostrict_nofill.c declares it with three (a comment says why).
+- **func_002380c0 needs func_00237790 above it** (one bne / bnel): it was
+  in h48 below 00237790; moved with it into drawlist.nostrict_nofill.c.
+  checkfile showed it only after `make` (NONMATCHING at link time): run
+  `make` after each `mod.py remove`, not only checkfile.
+- func_00237548 was `void` in h48 and `s32` in its callers: as `s32 ...
+  return sceVu0ClipScreen3(...)` it matches and the file needs one type.
+- mod.py's drafts put each old file's types side by side (four V4 / I4 /
+  node views here): merge them by hand.  A V4 with `aligned(16)` did not
+  change func_002376c8 (it was unaligned in s9_w10).
+
+**Nothing was reverted, and nothing new floats.**  After each commit: `make`
+byte-identical (6979 functions), `s31_warndiff` 0 new warnings, and the m12
+float build with float_covered.txt, float_reach.txt, the loaded bytes and the
+symbols the same as the base; the libvu0 commit adds the 39 names (same
+addresses) and drops five func_ aliases nothing references.  At the end `make
+report` 6979 at 100% and `make test` passes.
+
 ## Flags: what a module takes
 
 gcc 2.96 has no per-function flags: `__attribute__((optimize))` and `#pragma GCC
@@ -1509,7 +1572,7 @@ Nothing assumes the src/auto / src/hand names except where noted:
 - Every object depends on every header, so adding a header rebuilds everything
   (about 2-3 minutes at -j2).
 
-## Verification (sessions 30 to 44, after each step)
+## Verification (sessions 30 to 45, after each step)
 
 Session 32's second half ran the same checks after each of its seven commits
 (`make -j4 && make verify`, `s31_warndiff` 0 new warnings, float_covered.txt
@@ -1525,17 +1588,16 @@ and the kh1-shift.elf symbols / loaded sections identical to the base).
 
 ## Next module moves
 
-- **0x00236a58 on.**  Done up to the random numbers (session 44).  Next:
-  the menu models' camera func_00236a58 (h73, the camera D_00425F70 that
-  src/menu/journalmdl.c steps; VU0 matrix calls and atan2f, float-sensitive)
-  with func_00236c68 ... func_00236de8 (auto text_00230000_6 / 7 / 8: matrix
-  builders from three angles) and the range checks func_00236e40 /
-  func_00236e80 (h25 nofill); then func_00236f00 / func_00236f18 (a table of
-  overlay entry points?) and from 0x00237018 the GS packet senders (h48 / h73
-  nostrict_nofill, FlushCache / sceGsSyncPath: include/platform/gs.h
-  candidates).  `python3 -I tools/shift/s37move/refs.py 00236a58 00238000`
-  lists them.
-- What is left of h25, h73 and b16 (s6_23, h48, b15, s6_22, c16, h72,
+- **0x00239558 on.**  Done up to the HUD's step (session 45).  Next: the
+  HUD's drawing helpers func_00239558 (h48 nostrict_nofill: a glyph through
+  text's func_001f0638), func_00239630 / func_00239860 / func_00239b90 (h74:
+  a sprite into D_00648900 sent with func_002388b8), func_00239778 / func_00239e30
+  (c17), func_002399f0 (s6_24 nostrict), func_00239a80 / func_00239d20 (h49
+  nofill), then the HUD parts from 0x0023a318 (h74, h49, b16, c17, h50, h75,
+  s7_w36 ...) up to 0x0024f2e0, each with its set up and step from hud.c's
+  lists.  `python3 -I tools/shift/s37move/refs.py 00239558 0023b000` lists
+  them.  Name the parts from their strings and data (command2/, the gauges).
+- What is left of h25, h48 and b16 (h73, s6_23, b15, s6_22, c16, h72,
   h24, h47, h71, c15, cc are gone).
 - Keep sized externs in .c files: cover_check reads only those (session 35).
 - `tools/shift/s36move/mod.py draft OUT.c func...` writes a draft module from
