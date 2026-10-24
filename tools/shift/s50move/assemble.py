@@ -13,7 +13,10 @@ inline helpers, CONTEXT_ONLY copies), emitted once:
 - a typedef / struct whose name is already taken by a different body is
   renamed for this function (NAME_<addr>), with its users;
 - an extern whose name is already declared with another type becomes a
-  view for this function only: `#define D_X (*(T (*)) &D_X)` ... `#undef`;
+  view for this function only, then `#undef`: a scalar by value
+  `#define D_X ((T) D_X)`, an array by address `#define D_X ((T *) D_X)`,
+  and one whose address is taken by memory `#define D_X (*(T *) &D_X)`
+  (a memory view of a scalar reorders loads in a strict-aliasing file);
 - a macro is #undef'd after the function unless the next function needs
   the same text;
 - a prototype that disagrees with an earlier one (or the definition) is
