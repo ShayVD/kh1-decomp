@@ -431,3 +431,44 @@ func_002696b8 ((s32, void *, s32)), func_0026ab38, func_0026abf0, func_0026aca8 
 the IOP module loads and reboot); func_00262c78 (field.c, no arguments) and func_00250360 ((void *, s32,
 s32, void *): cmdmenu / objreact, a libc sort?).  Name each from its code and the library order (as libdma
 above) before wrapping it: the cd / iop wrapper is the next one.
+
+## Session 57: libcdvd, sifdev, loadfile and the IOP reboot
+
+Named from the RPC numbers, the strings and the library order (functions.tsv; the SDK definitions in src/sdk
+take the names, game files call include/platform/cd.h, file.h and iop.h).  The numbers are the IOP servers'
+own: fileio (IOMAN, 0x80000001) 0 open ... 26 ioctl2, loadfile 0-10, libcdvd's N commands (0x80000593) and
+S commands (0x80000592); `"status called"` at S command 12 and the read retry loop `do { read; sync } while
+(GetError())` in discfile.c / cdqueue.c agree with that numbering.
+
+| address | name | evidence |
+|---|---|---|
+| 0x0025b2f0 | sceFsInit | sceSifInitRpc, binds 0x80000001, RPC 255 (the version) |
+| 0x0025b550 | sceFsReset | clears the bind state D_0046AED8 (discfile.c before the IOP reboot) |
+| 0x0025b588 ... 0x0025be38 | sceOpen, sceClose, sceLseek, sceRead, sceWrite | RPC 0, 1, 4, 2, 3 |
+| 0x0025c0f8 / 0x0025c448 | sceIoctl / sceIoctl2 | RPC 5 / 26 (6 arguments) |
+| 0x0025c7d0, 0x0025c9a0, 0x0025d6c8, 0x0025daf0 | sceRemove, sceRmdir, sceChdir, sceUmount | the name-only helper 0x0025c628 with RPC 6, 8, 18, 21 |
+| 0x0025c7f0 / 0x0025c9c0 | sceMkdir / sceFormat | RPC 7 / 14 |
+| 0x0025cd70 ... 0x0025cfa0 | sceDopen, sceDclose, sceDread | the helper with RPC 9, RPC 10, 11 |
+| 0x0025d0f8 / 0x0025d298 / 0x0025d4d8 / 0x0025d6e8 / 0x0025d880 | sceGetstat, sceChstat, sceRename, sceSync, sceMount | RPC 12, 13, 17, 19, 20 |
+| 0x0025db10 / 0x0025dd48 / 0x0025df80 / 0x0025e160 | sceLseek64, sceDevctl, sceSymlink, sceReadlink | RPC 22 (s64), 23, 24, 25 |
+| 0x0025e4b8 | sceSifLoadFileReset | clears the loadfile bind state D_0046AEEC |
+| 0x0025e6f8 ... 0x0025ea30 | sceSifStopModule, sceSifUnloadModule, sceSifSearchModuleByName, sceSifSearchModuleByAddress | loadfile RPC 7, 8, 9, 10 |
+| 0x0025eac0 / 0x0025eae0 | sceSifLoadModuleBuffer / sceSifLoadStartModuleBuffer | the buffer loader 0x0025e4f0 (RPC 6), a stack result slot / the caller's |
+| 0x0025ed28 / 0x0025ed48 | sceSifLoadModule / sceSifLoadStartModule | the module loader 0x0025eb00 (RPC 0 or 4), the same pair |
+| 0x0025ee70 / 0x0025ee90 | sceSifLoadElfPart / sceSifLoadElf | the ELF loader 0x0025ed68 (RPC 1 or 5); LoadElf passes the section "all" |
+| 0x0025f088 / 0x0025f1c8 / 0x0025f1f0 / 0x0025f228 | sceSifResetIop, sceSifIsAliveIop, sceSifSyncIop, sceSifRebootIop | the reset packet by sceSifSetDma; SMFLAG bits 0x10000 / 0x40000; "rom0:UDNL" |
+| 0x002696b8 / 0x00269960 | sceCdInitEeCB / sceCdPOffCallback | the callback thread ("sceCdCbfunc"); the power-off handler on SIF command 0x80000012 |
+| 0x00269a90 / 0x00269da8 | sceCdLayerSearchFile / sceCdSearchFile | (file, name, layer) on server 0x80000597; the second passes layer 0 (sessions 1-56 called the first sceCdSearchFile) |
+| 0x00269fd0 / 0x0026a070 | sceCdSync / sceCdSyncS | "N cmd wait" / "S cmd wait" |
+| 0x0026a728 / 0x0026a9d0 | sceCdMmode / sceCdSeek | S command 34 / N command 5 |
+| 0x0026aaa0 ... 0x0026aca8 | sceCdGetError, sceCdStatus, sceCdBreak, sceCdPowerOff | S commands 4, 12, 22, 33 |
+| 0x00250360 | qsort | newlib qsort.c (src/sdk said so); cmdmenu / objreact sort 8-byte entries |
+
+Left unnamed: 0x0025cc30 / 0x0025cd50 (fileio RPC 15 with one int, RPC 16 by name: IOMAN's AddDrv / DelDrv by
+the number, a guess; the game never calls them), the iob / semaphore helpers 0x0025a990-0x0025b2c0, the
+loadfile bind 0x0025e328 and version check 0x0025e428, 0x0025eeb8 / 0x0025efa8 (loadfile RPC 3 / 2: the IOP
+memory get / set), 0x00269f38 (N command 14, the disk-ready wait sceCdRead runs first), the libcdvd command
+locks 0x00269dc8 / 0x0026a0e0 and the callback thread 0x002695f8.  The game's census in "Session 56" is now
+all wrapped except dkmovie.c's sceIpuInit / sceIpuSync (libipu) and field.c's func_00262c78 (a once-only call
+of 0x00262bb8 in the libgcc range; not identified).
+
