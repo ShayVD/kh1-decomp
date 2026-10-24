@@ -857,6 +857,7 @@ void func_00182148(H39Mtx *view, H39Mtx *world, u128 *eye, u128 *at) {
 /* func_00182270 (from hand/text_00170000_s6_10.c). */
 void func_00182270(void) {
     f32 f = (f32)D_002BBDF8 * 1.3435446;
+#ifdef KH1_PS2
     __asm__ volatile(
         "mfc1 $3, %0\n"
         "qmtc2 $3, $vf1\n"
@@ -868,6 +869,10 @@ void func_00182270(void) {
         :
         : "f"(f), "r"(-1)
         : "$3", "$8");
+#else
+    PlatVu0RInit(PlatVu0Bits(f));
+    PlatVu0RXor(0xFFFFFFFF);
+#endif
 }
 
 /* func_001822f8 (from hand/text_00180000_h12.c). */

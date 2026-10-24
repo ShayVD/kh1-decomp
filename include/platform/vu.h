@@ -78,4 +78,216 @@
     sceVu0ClipAll((f32 *)(minv), (f32 *)(maxv), (f32 (*)[4])(ms), (f32 *)(vm), (s32)(n))
 #define PlatVpu0Reset() sceVpu0Reset()
 
+/* Off the EE: C equivalents of the VU0 macro-mode sequences the game writes
+ * as inline asm (docs/vita-port-plan.md section 5.1).  The PS2 build keeps
+ * each file's __asm__ (the match depends on it); the file's #else side calls
+ * these.  VU0 maths is IEEE single precision without denormals, NaN or
+ * infinity; these use the host's floats (the same caveat as libvu0 above). */
+#ifndef KH1_PS2
+#include "platform/math.h"
+
+typedef union { f32 f; u32 u; s32 i; } PlatVu0Word;
+
+static __inline__ f32 PlatVu0Float(u32 bits) {
+    PlatVu0Word w;
+    w.u = bits;
+    return w.f;
+}
+static __inline__ u32 PlatVu0Bits(f32 f) {
+    PlatVu0Word w;
+    w.f = f;
+    return w.u;
+}
+
+/* The VU0 random register R (host/port/vu0.c): a 23-bit LFSR kept as the
+ * mantissa of a float in [1, 2).  vrinit / vrxor take a field's bits, vrget
+ * reads R, vrnext steps it first (PCSX2's model of the shift register). */
+extern u32 PlatVu0R;
+static __inline__ void PlatVu0RInit(u32 bits) { PlatVu0R = 0x3F800000 | (bits & 0x7FFFFF); }
+static __inline__ void PlatVu0RXor(u32 bits) { PlatVu0R = 0x3F800000 | ((PlatVu0R ^ bits) & 0x7FFFFF); }
+static __inline__ f32 PlatVu0RGet(void) { return PlatVu0Float(PlatVu0R); }
+static __inline__ f32 PlatVu0RNext(void) {
+    u32 r = PlatVu0R;
+    r = (r << 1) ^ (((r >> 4) ^ (r >> 22)) & 1);
+    PlatVu0R = 0x3F800000 | (r & 0x7FFFFF);
+    return PlatVu0Float(PlatVu0R);
+}
+/* The ppp files' random number in [0, 1): five rounds of `vrxor R, -1;
+ * vrnext`, then minus 1.0 (vitof0 of -1). */
+static __inline__ f32 PlatVu0Rand(void) {
+    f32 r;
+    int i;
+    for (i = 0; i < 5; i++) {
+        PlatVu0RXor(0xFFFFFFFF);
+        r = PlatVu0RNext();
+    }
+    return r - 1.0f;
+}
+
+/* vsqrt Q: the root of the magnitude. */
+static __inline__ f32 PlatVu0Sqrt(f32 x) { return PlatSqrtf(x < 0.0f ? -x : x); }
+
+/* |v| over xyz (vmul.xyz, vaddx.y, vaddy.z, vsqrt) */
+static __inline__ f32 PlatVu0Length3(const f32 *v) {
+    return PlatVu0Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+/* the 4-vector sequences src/coll/ and the ppp files inline (lqc2, one VU
+ * op, sqc2); d may alias a or b */
+static __inline__ void PlatVu0Add4(f32 *d, const f32 *a, const f32 *b) {
+    d[0] = a[0] + b[0]; d[1] = a[1] + b[1]; d[2] = a[2] + b[2]; d[3] = a[3] + b[3];
+}
+static __inline__ void PlatVu0Sub4(f32 *d, const f32 *a, const f32 *b) {
+    d[0] = a[0] - b[0]; d[1] = a[1] - b[1]; d[2] = a[2] - b[2]; d[3] = a[3] - b[3];
+}
+static __inline__ void PlatVu0Scale4(f32 *d, const f32 *v, f32 s) {
+    d[0] = v[0] * s; d[1] = v[1] * s; d[2] = v[2] * s; d[3] = v[3] * s;
+}
+/* vmulx.xyz into a copy of v: w is v's */
+static __inline__ void PlatVu0Scale3W(f32 *d, const f32 *v, f32 s) {
+    d[0] = v[0] * s; d[1] = v[1] * s; d[2] = v[2] * s; d[3] = v[3];
+}
+/* a.x b.x + a.y b.y + a.z b.z (vmul.xyz, vaddy.x, vaddz.x) */
+static __inline__ f32 PlatVu0Dot3(const f32 *a, const f32 *b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+/* |a - b|^2 and |a - b| over xyz */
+static __inline__ f32 PlatVu0DistSq3(const f32 *a, const f32 *b) {
+    f32 x = a[0] - b[0], y = a[1] - b[1], z = a[2] - b[2];
+    return x * x + y * y + z * z;
+}
+static __inline__ f32 PlatVu0Dist3(const f32 *a, const f32 *b) { return PlatVu0Sqrt(PlatVu0DistSq3(a, b)); }
+/* a x b, w 0 (vopmula ACC, a, b; vopmsub d, b, a; vsub.w d, d, d) */
+static __inline__ void PlatVu0Cross3(f32 *d, const f32 *a, const f32 *b) {
+    f32 x = a[1] * b[2] - a[2] * b[1];
+    f32 y = a[2] * b[0] - a[0] * b[2];
+    f32 z = a[0] * b[1] - a[1] * b[0];
+    d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
+}
+/* v / |v| over xyz, w 0 (vsqrt, vdiv Q = 1 / |v|, vmulq.xyz into a cleared
+ * register) */
+static __inline__ void PlatVu0Normalize3(f32 *d, const f32 *v) {
+    f32 q = 1.0f / PlatVu0Length3(v);
+    f32 x = v[0] * q, y = v[1] * q, z = v[2] * q;
+    d[0] = x; d[1] = y; d[2] = z; d[3] = 0.0f;
+}
+/* `vsub.xyzw` then `cfc2 $vi17`: the MAC flags of a - b, Z (bits 0-3) and S
+ * (bits 4-7), w in the low bit of each group, x in the high one (the
+ * underflow / overflow bits stay 0 here) */
+static __inline__ u32 PlatVu0SubFlags(const f32 *a, const f32 *b) {
+    u32 f = 0;
+    int i;
+    for (i = 0; i < 4; i++) {
+        f32 d = a[i] - b[i];
+        if (d == 0.0f)
+            f |= 8 >> i;
+        if (PlatVu0Bits(d) & 0x80000000)
+            f |= 0x80 >> i;
+    }
+    return f;
+}
+
+/* vclipw.xyz v, v.w: the six clip judgments (+x > |w| 1, -x < -|w| 2, then
+ * y 4 / 8 and z 0x10 / 0x20) */
+static __inline__ u32 PlatVu0ClipW(const f32 *v) {
+    f32 w = v[3] < 0.0f ? -v[3] : v[3];
+    u32 f = 0;
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (v[i] > w)
+            f |= 1 << (i * 2);
+        if (v[i] < -w)
+            f |= 2 << (i * 2);
+    }
+    return f;
+}
+
+/* The screen test src/ppp/ inlines after a projection: the sticky zero /
+ * sign status flags (0x40 / 0x80) of x, y, w - 1 and 4096 - x, 4096 - y
+ * (`ctc2 $0, $vi16`, two vsub into $vf0, `cfc2 $vi16` & 0xc0): 0 when
+ * 0 < x, y < 4096 and w > 1. */
+static __inline__ u32 PlatVu0ScreenFlags(const f32 *v) {
+    f32 t[5];
+    u32 f = 0;
+    int i;
+    t[0] = v[0];
+    t[1] = v[1];
+    t[2] = v[3] - 1.0f;
+    t[3] = 4096.0f - v[0];
+    t[4] = 4096.0f - v[1];
+    for (i = 0; i < 5; i++) {
+        if (t[i] == 0.0f)
+            f |= 0x40;
+        if (PlatVu0Bits(t[i]) & 0x80000000)
+            f |= 0x80;
+    }
+    return f;
+}
+
+/* VU0 microprogram P21 (`vcallms 0`, docs/renderer-spec.md): the rotation
+ * rows of Rx * Ry * Rz (row-vector product) for the angles rot[0..2] in
+ * radians (host/port/vu0.c). */
+void PlatVu0RotRows(f32 (*out)[4], const f32 *rot);
+
+/* The VU0 register file, for VU0 code translated instruction by instruction
+ * (tools/host/vu2c.py: the long hand-written routines, whose registers also
+ * carry values from one asm statement to the next).  host/port/vu0.c has the
+ * operations; vf[0] is (0, 0, 0, 1) and writes to it are dropped.  Field
+ * masks are the VU's: x 8, y 4, z 2, w 1. */
+typedef struct {
+    f32 vf[32][4];
+    f32 acc[4];
+    f32 q;
+    u32 mac, stat, clip;
+} PlatVu0Regs;
+extern PlatVu0Regs PlatVu0;
+enum { PLAT_VU0_ADD, PLAT_VU0_SUB, PLAT_VU0_MUL, PLAT_VU0_MADD, PLAT_VU0_MSUB, PLAT_VU0_MAX, PLAT_VU0_MINI };
+#define PLAT_VU0_ACC (-1) /* destination: ACC */
+#define PLAT_VU0_BC_Q 4   /* broadcast: Q */
+/* fd (or ACC) = fs op ft (ft's field bc, or Q, or the vector when bc < 0);
+ * MADD / MSUB: ACC + / - fs * ft.  Sets the MAC and status flags. */
+void PlatVu0Fmac(int op, int d, int mask, int s, int t, int bc);
+void PlatVu0Opmula(int s, int t);
+void PlatVu0Opmsub(int d, int s, int t);
+void PlatVu0Move(int d, int mask, int s);
+void PlatVu0Ftoi(int d, int mask, int s, int frac);
+void PlatVu0Itof(int d, int mask, int s, int frac);
+void PlatVu0Div(int s, int sf, int t, int tf);
+void PlatVu0SqrtQ(int t, int tf);
+void PlatVu0Lq(int n, const void *p);
+void PlatVu0Sq(int n, void *p);
+void PlatVu0Qmtc2(int n, u64 v);
+u64 PlatVu0Qmfc2(int n);
+
+/* vftoi0 / vftoi4: truncate (after scaling by 16 for ftoi4), saturating. */
+static __inline__ s32 PlatVu0Ftoi0(f32 x) {
+    if (x >= 2147483648.0f)
+        return 0x7FFFFFFF;
+    if (x <= -2147483648.0f)
+        return (s32)0x80000000;
+    return (s32)x;
+}
+static __inline__ s32 PlatVu0Ftoi4(f32 x) { return PlatVu0Ftoi0(x * 16.0f); }
+
+/* d = v.x m[0] + v.y m[1] + v.z m[2] + v.w m[3] (vmulax / vmadday / vmaddaz
+ * / vmaddw: what sceVu0ApplyMatrix does); d may be v. */
+static __inline__ void PlatVu0Apply(f32 *d, f32 (*m)[4], const f32 *v) {
+    f32 x = v[0], y = v[1], z = v[2], w = v[3];
+    int i;
+    for (i = 0; i < 4; i++)
+        d[i] = m[0][i] * x + m[1][i] * y + m[2][i] * z + m[3][i] * w;
+}
+
+/* `cfc2 $vi29`: VPU-STAT (0x100: VU1 running). */
+u32 PlatVu0GetVpuStat(void);
+
+/* `vmulx.xyz` of a row by a scalar: the matrix-scale helper several ppp
+ * files inline (w kept). */
+static __inline__ void PlatVu0ScaleXYZ(f32 *v, f32 s) {
+    v[0] *= s;
+    v[1] *= s;
+    v[2] *= s;
+}
+#endif /* !KH1_PS2 */
+
 #endif /* KH1_PLATFORM_VU_H */

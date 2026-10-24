@@ -24,6 +24,7 @@ void func_001996d0(u128 *a, s32 n, u128 *b) {
     u128 buf[32];
     register u128 *c KH1_REG("$2") = &D_00372710;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "addi $9, $5, -1\n"
@@ -133,6 +134,42 @@ void func_001996d0(u128 *a, s32 n, u128 *b) {
         : : "r"(c), "r"(a), "r"(n), "r"(b), "m"(buf[0])
         : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15",
           "$16", "$17", "$18", "$19", "memory");
+#else
+    {
+        /* the spline's second derivatives: buf[i + 1] = a[i + 1] - a[i], then
+         * forward elimination into b and back substitution (c: x, y the
+         * coefficients).  The VU0 code leaves $vf15w stale; 0 here. */
+        f32 (*A)[4] = (f32 (*)[4])a, (*B)[4] = (f32 (*)[4])b, (*T)[4] = (f32 (*)[4])buf;
+        f32 *k = (f32 *)c, r[4];
+        s32 n1 = n - 1, n2 = n - 2, i, j;
+        for (j = 0; j < 4; j++)
+            B[0][j] = B[n1][j] = j == 3 ? 1.0f : 0.0f;
+        for (i = 0; i < n1; i++)
+            for (j = 0; j < 4; j++)
+                T[i + 1][j] = A[i + 1][j] - A[i][j];
+        for (j = 0; j < 4; j++) {
+            B[1][j] = T[2][j] - T[1][j] - B[0][j];
+            T[1][j] = (j == 3 ? 1.0f : 0.0f) + k[0];
+        }
+        for (i = 1; i < n2; i++) {
+            for (j = 0; j < 3; j++)
+                r[j] = 1.0f / T[i][j];
+            r[3] = 0.0f;
+            for (j = 0; j < 4; j++) {
+                B[i + 1][j] = (T[i + 2][j] - T[i + 1][j]) - B[i][j] * r[j];
+                T[i + 1][j] = r[j] * k[1] + k[0];
+            }
+        }
+        for (j = 0; j < 4; j++)
+            B[n2][j] -= B[n1][j];
+        for (i = n2; i > 0; i--) {
+            for (j = 0; j < 3; j++)
+                r[j] = (B[i][j] - B[i + 1][j]) / T[i][j];
+            r[3] = 0.0f;
+            __builtin_memcpy(B[i], r, 16);
+        }
+    }
+#endif
 }
 
 /* func_00199888 (from hand/nostrict/text_00180000_s6_11.c). */
@@ -145,6 +182,7 @@ void func_00199888(u128 *out, u128 *p, u128 *q, f32 t) {
     p += i;
     q += i;
     c->z = t - (f32) i;
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf1, 0(%1)\n"
@@ -167,6 +205,29 @@ void func_00199888(u128 *out, u128 *p, u128 *q, f32 t) {
         "sqc2 $vf10, 0(%0)\n"
         ".set reorder\n"
         : : "r"(out), "r"(p), "r"(q), "r"(c) : "memory");
+#else
+    {
+        /* the spline between p[0], p[1] (second derivatives q[0], q[1]) at
+         * c->z, with c->x, c->y the coefficients */
+        f32 *p0 = (f32 *)p, *p1 = (f32 *)(p + 1), *q0 = (f32 *)q, *q1 = (f32 *)(q + 1), *o = (f32 *)out;
+        f32 t10, t11, t12, t13;
+        int j;
+        for (j = 0; j < 4; j++) {
+            t10 = q1[j] - q0[j];
+            t11 = q0[j] * c->y;
+            t12 = q0[j] * c->x;
+            t13 = p1[j] - p0[j];
+            t10 = t10 * c->z;
+            t11 = t11 + q1[j];
+            t10 = t10 + t12;
+            t13 = t13 - t11;
+            t10 = t10 * c->z;
+            t10 = t10 + t13;
+            t10 = t10 * c->z;
+            o[j] = t10 + p0[j];
+        }
+    }
+#endif
 }
 
 /* func_00199ac8 (from hand/nostrict/text_00190000_s11_w62.c). */
@@ -647,6 +708,7 @@ void func_0019a828(u128 *a, s32 n, u128 *b) {
     u128 buf[128];
     register u128 *c KH1_REG("$2") = &D_00372730;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "addi $9, $5, -1\n"
@@ -756,6 +818,42 @@ void func_0019a828(u128 *a, s32 n, u128 *b) {
         : : "r"(c), "r"(a), "r"(n), "r"(b), "m"(buf[0])
         : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15",
           "$16", "$17", "$18", "$19", "memory");
+#else
+    {
+        /* the spline's second derivatives: buf[i + 1] = a[i + 1] - a[i], then
+         * forward elimination into b and back substitution (c: x, y the
+         * coefficients).  The VU0 code leaves $vf15w stale; 0 here. */
+        f32 (*A)[4] = (f32 (*)[4])a, (*B)[4] = (f32 (*)[4])b, (*T)[4] = (f32 (*)[4])buf;
+        f32 *k = (f32 *)c, r[4];
+        s32 n1 = n - 1, n2 = n - 2, i, j;
+        for (j = 0; j < 4; j++)
+            B[0][j] = B[n1][j] = j == 3 ? 1.0f : 0.0f;
+        for (i = 0; i < n1; i++)
+            for (j = 0; j < 4; j++)
+                T[i + 1][j] = A[i + 1][j] - A[i][j];
+        for (j = 0; j < 4; j++) {
+            B[1][j] = T[2][j] - T[1][j] - B[0][j];
+            T[1][j] = (j == 3 ? 1.0f : 0.0f) + k[0];
+        }
+        for (i = 1; i < n2; i++) {
+            for (j = 0; j < 3; j++)
+                r[j] = 1.0f / T[i][j];
+            r[3] = 0.0f;
+            for (j = 0; j < 4; j++) {
+                B[i + 1][j] = (T[i + 2][j] - T[i + 1][j]) - B[i][j] * r[j];
+                T[i + 1][j] = r[j] * k[1] + k[0];
+            }
+        }
+        for (j = 0; j < 4; j++)
+            B[n2][j] -= B[n1][j];
+        for (i = n2; i > 0; i--) {
+            for (j = 0; j < 3; j++)
+                r[j] = (B[i][j] - B[i + 1][j]) / T[i][j];
+            r[3] = 0.0f;
+            __builtin_memcpy(B[i], r, 16);
+        }
+    }
+#endif
 }
 
 /* func_0019a9e0 (from hand/nostrict/text_00180000_s6_11.c). */
@@ -767,6 +865,7 @@ void func_0019a9e0(u128 *out, u128 *p, u128 *q, f32 t) {
     p += i;
     q += i;
     c->z = t - (f32) i;
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf1, 0(%1)\n"
@@ -789,6 +888,29 @@ void func_0019a9e0(u128 *out, u128 *p, u128 *q, f32 t) {
         "sqc2 $vf10, 0(%0)\n"
         ".set reorder\n"
         : : "r"(out), "r"(p), "r"(q), "r"(c) : "memory");
+#else
+    {
+        /* the spline between p[0], p[1] (second derivatives q[0], q[1]) at
+         * c->z, with c->x, c->y the coefficients */
+        f32 *p0 = (f32 *)p, *p1 = (f32 *)(p + 1), *q0 = (f32 *)q, *q1 = (f32 *)(q + 1), *o = (f32 *)out;
+        f32 t10, t11, t12, t13;
+        int j;
+        for (j = 0; j < 4; j++) {
+            t10 = q1[j] - q0[j];
+            t11 = q0[j] * c->y;
+            t12 = q0[j] * c->x;
+            t13 = p1[j] - p0[j];
+            t10 = t10 * c->z;
+            t11 = t11 + q1[j];
+            t10 = t10 + t12;
+            t13 = t13 - t11;
+            t10 = t10 * c->z;
+            t10 = t10 + t13;
+            t10 = t10 * c->z;
+            o[j] = t10 + p0[j];
+        }
+    }
+#endif
 }
 
 /* func_0019ab38 (from hand/nostrict/text_00190000_s11_w62.c). */

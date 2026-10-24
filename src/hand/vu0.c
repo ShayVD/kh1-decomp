@@ -1,9 +1,13 @@
 /* Game leaf functions that are one VU0 inline-asm block (tools/asm_to_c.py). The arguments are the vectors and matrices the block loads with lqc2; names and types are not known yet. */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 
 s32 func_00107ab8(s32 a0, s32 a1) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "move $8, $0\n"
@@ -108,10 +112,36 @@ s32 func_00107ab8(s32 a0, s32 a1) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1)
         : "$3", "$6", "$8", "memory");
+#else
+    {
+        /* clip the eight corners a1[0..7] by the matrix a0: 2 if all of them
+         * are outside one x / y / -z plane, else 1 if one of the first seven is
+         * beyond +z, else 0 (the eighth corner's +z is not counted) */
+        f32 (*m)[4] = (f32 (*)[4])a0;
+        f32 (*v)[4] = (f32 (*)[4])a1;
+        f32 p[4];
+        u32 all = 63, z = 0, f;
+        int i;
+        for (i = 0; i < 8; i++) {
+            PlatVu0Apply(p, m, v[i]);
+            f = PlatVu0ClipW(p);
+            all &= f;
+            if (i < 7)
+                z += f & 0x10;
+        }
+        if (z == 0)
+            all |= 0x80;
+        if (all & 0x2f)
+            ret = 2;
+        else
+            ret = !(all & 0x80);
+    }
+#endif
     return ret;
 }
 
 void func_0010a4d8(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "move $11, %5\n"
@@ -147,9 +177,40 @@ void func_0010a4d8(s32 a0, s32 a1, s32 a2, s32 a3, s32 a4, s32 a5, s32 a6) {
         : 
         : "r"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a4), "r"(a5), "r"(a6)
         : "$11", "memory");
+#else
+    {
+        /* a4 vertices: (a2 + a5.xy) by the matrix a1, divided by w; out per
+         * vertex (48 bytes at a0): a3's colour / w, ftoi0(a6), ftoi4(xyzw / w) */
+        f32 (*m)[4] = (f32 (*)[4])a1;
+        f32 *v = (f32 *)a2, *c = (f32 *)a3, *o = (f32 *)a5;
+        u8 *d = (u8 *)a0;
+        s32 n = a4, k[4];
+        f32 t[4], p[4], q;
+        int i;
+        for (i = 0; i < 4; i++)
+            k[i] = PlatVu0Ftoi0(((f32 *)a6)[i]);
+        do {
+            t[0] = o[0] + v[0];
+            t[1] = o[1] + v[1];
+            t[2] = v[2];
+            t[3] = v[3];
+            PlatVu0Apply(p, m, t);
+            q = 1.0f / p[3];
+            __builtin_memcpy(d + 16, k, 16);
+            for (i = 0; i < 4; i++) {
+                ((f32 *)d)[i] = c[i] * q;
+                ((s32 *)(d + 32))[i] = PlatVu0Ftoi4(p[i] * q);
+            }
+            v += 4;
+            c += 4;
+            d += 48;
+        } while (--n != 0);
+    }
+#endif
 }
 
 void func_001627d0(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%0)\n"
         "lqc2 $vf4, 0(%1)\n"
@@ -159,11 +220,17 @@ void func_001627d0(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0] * ((f32 *)a2)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1] * ((f32 *)a2)[1];
+    ((f32 *)a0)[2] = ((f32 *)a1)[2] * ((f32 *)a2)[2];
+#endif
 }
 
 s32 func_001627e8(s32 a0) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %1, $vf1\n"
         "vrnext.w $vf2w, R\n"
@@ -175,21 +242,29 @@ s32 func_001627e8(s32 a0) {
         : "=&r"(ret)
         : "r"(a0)
         : "memory");
+#else
+    ret = PlatVu0Ftoi0((f32)a0 * (PlatVu0RNext() - 1.0f));
+#endif
     return ret;
 }
 
 s32 func_00162808(void) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "cfc2 %0, $vi29\n"
         : "=&r"(ret)
         : 
         : "memory");
+#else
+    ret = PlatVu0GetVpuStat();
+#endif
     return ret;
 }
 
 void func_00162818(void) {
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "func_00162818_00162818:\n"
@@ -208,9 +283,13 @@ void func_00162818(void) {
         : 
         : 
         : "memory");
+#else
+    /* waits for the VU0 microprogram to finish: the port runs it inline */
+#endif
 }
 
 void func_00162848(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf8, 0(%2)\n"
@@ -225,9 +304,17 @@ void func_00162848(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    {
+        f32 *v = (f32 *)a2, t[4];
+        t[0] = v[0]; t[1] = v[1]; t[2] = v[2]; t[3] = 1.0f;
+        PlatVu0Apply((f32 *)a0, (f32 (*)[4])a1, t);
+    }
+#endif
 }
 
 void func_00162878(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 16(%1)\n"
@@ -241,11 +328,19 @@ void func_00162878(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    {
+        f32 *v = (f32 *)a2, t[4];
+        t[0] = v[0]; t[1] = v[1]; t[2] = v[2]; t[3] = 0.0f;
+        PlatVu0Apply((f32 *)a0, (f32 (*)[4])a1, t);
+    }
+#endif
 }
 
 f32 func_00162950(s32 a0, s32 a1) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -257,12 +352,16 @@ f32 func_00162950(s32 a0, s32 a1) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    ret = PlatVu0Dot3((f32 *)a0, (f32 *)a1) + ((f32 *)a1)[3];
+#endif
     return ret;
 }
 
 f32 func_00162a58(s32 a0) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf4xyz, $vf4xyz, $vf4xyz\n"
@@ -275,12 +374,16 @@ f32 func_00162a58(s32 a0) {
         : "=&r"(ret)
         : "r"(a0)
         : "memory");
+#else
+    ret = PlatVu0Length3((f32 *)a0);
+#endif
     return ret;
 }
 
 s32 func_00162a88(s32 a0) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf4xyz, $vf4xyz, $vf4xyz\n"
@@ -296,12 +399,20 @@ s32 func_00162a88(s32 a0) {
         : "=&r"(ret)
         : "r"(a0)
         : "memory");
+#else
+    {
+        /* the sign flag of x^2 + z^2 - y^2 */
+        f32 *v = (f32 *)a0;
+        ret = PlatVu0Bits(v[0] * v[0] + v[2] * v[2] - v[1] * v[1]) & 0x80000000 ? 0x80 : 0;
+    }
+#endif
     return ret;
 }
 
 f32 func_00162c20(s32 a0) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
@@ -320,10 +431,21 @@ f32 func_00162c20(s32 a0) {
         : "=&f"(ret)
         : "r"(a0)
         : "$8", "memory");
+#else
+    {
+        f32 *v = (f32 *)a0, q;
+        ret = PlatVu0Length3(v);
+        q = 1.0f / ret;
+        v[0] *= q;
+        v[1] *= q;
+        v[2] *= q;
+    }
+#endif
     return ret;
 }
 
 void func_00162cd0(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "vcallms 0x0\n"
@@ -338,11 +460,22 @@ void func_00162cd0(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "$8", "$9", "memory");
+#else
+    {
+        /* VU0 microprogram P21: rows 0-2 the rotation for the angles a0, row 3
+         * the translation a1 with w 1 */
+        f32 (*m)[4] = (f32 (*)[4])a2;
+        PlatVu0RotRows(m, (f32 *)a0);
+        __builtin_memcpy(m[3], (void *)a1, 16);
+        m[3][3] = 1.0f;
+    }
+#endif
 }
 
 f32 func_00176850(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -362,12 +495,16 @@ f32 func_00176850(void) {
         : "=&r"(ret)
         : 
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 
 f32 func_0019baf8(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -387,12 +524,16 @@ f32 func_0019baf8(void) {
         : "=&r"(ret)
         : 
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 
 f32 func_0019f100(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -412,10 +553,14 @@ f32 func_0019f100(void) {
         : "=&r"(ret)
         : 
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 
 void func_001a9080(s32 a0, s32 a1) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 0(%1)\n"
@@ -424,9 +569,16 @@ void func_001a9080(s32 a0, s32 a1) {
         : 
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    /* the VU0 code stores a stale $vf31 here (after moving a1.xy into a copy of
+     * a0); the copy is what it meant */
+    ((f32 *)a0)[0] = ((f32 *)a1)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1];
+#endif
 }
 
 void func_001a9098(s32 a0, s32 a1) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%0)\n"
         "lqc2 $vf2, 0(%1)\n"
@@ -435,9 +587,15 @@ void func_001a9098(s32 a0, s32 a1) {
         : 
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1];
+    ((f32 *)a0)[2] = ((f32 *)a1)[2];
+#endif
 }
 
 void func_001a90b0(s32 a0, s32 a1, f32 f0) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "swc1 %2, 0(%0)\n"
         "lqc2 $vf1, 0(%0)\n"
@@ -447,9 +605,13 @@ void func_001a90b0(s32 a0, s32 a1, f32 f0) {
         : 
         : "r"(a0), "r"(a1), "f"(f0)
         : "memory");
+#else
+    PlatVu0Scale3W((f32 *)a0, (f32 *)a1, f0);
+#endif
 }
 
 void func_001a90c8(s32 a0, s32 a1, f32 f0) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "swc1 %2, 0(%0)\n"
         "lqc2 $vf1, 0(%0)\n"
@@ -459,9 +621,19 @@ void func_001a90c8(s32 a0, s32 a1, f32 f0) {
         : 
         : "r"(a0), "r"(a1), "f"(f0)
         : "memory");
+#else
+    {
+        f32 *d = (f32 *)a0, *v = (f32 *)a1;
+        d[0] = v[0] * f0;
+        d[1] = v[1] * f0;
+        d[2] = v[2];
+        d[3] = v[3];
+    }
+#endif
 }
 
 void func_001a90e0(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%1)\n"
         "lqc2 $vf2, 0(%2)\n"
@@ -471,9 +643,14 @@ void func_001a90e0(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0] + ((f32 *)a2)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1] + ((f32 *)a2)[1];
+#endif
 }
 
 void func_001a90f8(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%1)\n"
         "lqc2 $vf2, 0(%2)\n"
@@ -483,9 +660,15 @@ void func_001a90f8(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0] - ((f32 *)a2)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1] - ((f32 *)a2)[1];
+    ((f32 *)a0)[2] = ((f32 *)a1)[2] - ((f32 *)a2)[2];
+#endif
 }
 
 void func_001a9110(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%1)\n"
         "lqc2 $vf2, 0(%2)\n"
@@ -495,9 +678,15 @@ void func_001a9110(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0] + ((f32 *)a2)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1] + ((f32 *)a2)[1];
+    ((f32 *)a0)[2] = ((f32 *)a1)[2] + ((f32 *)a2)[2];
+#endif
 }
 
 void func_001a9128(s32 a0, s32 a1, s32 a2) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%1)\n"
         "lqc2 $vf2, 0(%2)\n"
@@ -507,11 +696,16 @@ void func_001a9128(s32 a0, s32 a1, s32 a2) {
         : 
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    ((f32 *)a0)[0] = ((f32 *)a1)[0] - ((f32 *)a2)[0];
+    ((f32 *)a0)[1] = ((f32 *)a1)[1] - ((f32 *)a2)[1];
+#endif
 }
 
 s32 func_001a9140(s32 a0, s32 a1, s32 a2) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf1, 0(%2)\n"
@@ -545,12 +739,34 @@ s32 func_001a9140(s32 a0, s32 a1, s32 a2) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    {
+        /* a1 + a2.xy as a screen vertex at a0: ftoi4 xy, ftoi0 zw; w -32768
+         * when it is off the 4096 x 4096 screen (and then 0x8000 returned) */
+        f32 *v = (f32 *)a1, *b = (f32 *)a2, t[4];
+        s32 *d = (s32 *)a0;
+        t[0] = v[0] + b[0];
+        t[1] = v[1] + b[1];
+        t[2] = v[2];
+        t[3] = v[3];
+        d[0] = PlatVu0Ftoi4(t[0]);
+        d[1] = PlatVu0Ftoi4(t[1]);
+        d[2] = PlatVu0Ftoi0(t[2]);
+        d[3] = PlatVu0Ftoi0(t[3]);
+        ret = 0;
+        if (PlatVu0ScreenFlags(t)) {
+            ret = 0x8000;
+            d[3] = -0x8000;
+        }
+    }
+#endif
     return ret;
 }
 
 s32 func_001a91b0(s32 a0, s32 a1) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf1, 0(%2)\n"
@@ -582,10 +798,26 @@ s32 func_001a91b0(s32 a0, s32 a1) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    {
+        f32 *v = (f32 *)a1;
+        s32 *d = (s32 *)a0;
+        d[0] = PlatVu0Ftoi4(v[0]);
+        d[1] = PlatVu0Ftoi4(v[1]);
+        d[2] = PlatVu0Ftoi0(v[2]);
+        d[3] = PlatVu0Ftoi0(v[3]);
+        ret = 0;
+        if (PlatVu0ScreenFlags(v)) {
+            ret = 0x8000;
+            d[3] = -0x8000;
+        }
+    }
+#endif
     return ret;
 }
 
 void func_001a9218(s32 a0, s32 a1) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%1)\n"
         "vmul.xy $vf31xy, $vf1xy, $vf1xy\n"
@@ -600,11 +832,21 @@ void func_001a9218(s32 a0, s32 a1) {
         : 
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    {
+        /* xy / |xy|; the VU0 code also stores a stale $vf31zw, left as it was */
+        f32 *d = (f32 *)a0, *v = (f32 *)a1;
+        f32 q = 1.0f / PlatVu0Sqrt(v[0] * v[0] + v[1] * v[1]);
+        d[0] = v[0] * q;
+        d[1] = v[1] * q;
+    }
+#endif
 }
 
 s32 func_001a9248(s32 a0, s32 a1, s32 a2) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, 0(%2)\n"
         "lqc2 $vf2, 16(%2)\n"
@@ -639,10 +881,23 @@ s32 func_001a9248(s32 a0, s32 a1, s32 a2) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1), "r"(a2)
         : "memory");
+#else
+    {
+        /* a2 by the matrix a1, xyz divided by w, to a0; the screen flags */
+        f32 *d = (f32 *)a0, q;
+        PlatVu0Apply(d, (f32 (*)[4])a1, (f32 *)a2);
+        q = 1.0f / d[3];
+        d[0] *= q;
+        d[1] *= q;
+        d[2] *= q;
+        ret = PlatVu0ScreenFlags(d);
+    }
+#endif
     return ret;
 }
 
 void func_001a92c8(s32 a0, s32 a1) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vdiv Q, $vf0w, $vf10w\n"
@@ -655,11 +910,22 @@ void func_001a92c8(s32 a0, s32 a1) {
         : 
         : "r"(a0), "r"(a1)
         : "memory");
+#else
+    {
+        f32 *v = (f32 *)a1, q = 1.0f / v[3];
+        s32 *d = (s32 *)a0;
+        d[0] = PlatVu0Ftoi4(v[0] * q);
+        d[1] = PlatVu0Ftoi4(v[1] * q);
+        d[2] = PlatVu0Ftoi0(v[2] * q);
+        d[3] = PlatVu0Ftoi0(v[3]);
+    }
+#endif
 }
 
 f32 func_001a9388(s32 a0) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xy $vf10xy, $vf10xy, $vf10xy\n"
@@ -670,12 +936,19 @@ f32 func_001a9388(s32 a0) {
         : "=&r"(ret)
         : "r"(a0)
         : "memory");
+#else
+    {
+        f32 *v = (f32 *)a0;
+        ret = PlatVu0Sqrt(v[1] * v[1] + v[0] * v[0]);
+    }
+#endif
     return ret;
 }
 
 f32 func_001aae48(f32 f0) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "mfc1 $2, %1\n"
         "lui $3, 0x4000\n"
@@ -697,12 +970,21 @@ f32 func_001aae48(f32 f0) {
         : "=&f"(ret)
         : "f"(f0)
         : "$3", "$4", "$5", "memory");
+#else
+    {
+        /* (2r - 3) f0 for the next R in [1, 2); R reseeded from r - 1.8872 */
+        f32 r = PlatVu0RNext();
+        ret = (r * 2.0f - 3.0f) * f0;
+        PlatVu0RInit(PlatVu0Bits(r - PlatVu0Float(0x3FF19120)));
+    }
+#endif
     return ret;
 }
 
 f32 func_001aae90(f32 f0) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "mfc1 $2, %1\n"
         "lui $3, 0x3f80\n"
@@ -721,12 +1003,21 @@ f32 func_001aae90(f32 f0) {
         : "=&f"(ret)
         : "f"(f0)
         : "$3", "$5", "memory");
+#else
+    {
+        /* (r - 1) f0; R reseeded from r - 1 - 1.8872 */
+        f32 r = PlatVu0RNext() - 1.0f;
+        ret = r * f0;
+        PlatVu0RInit(PlatVu0Bits(r - PlatVu0Float(0x3FF19120)));
+    }
+#endif
     return ret;
 }
 
 s32 func_001b99b8(s32 a0, s32 a1, s32 a2) {
     s32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "move $12, %1\n"
         "move $11, %2\n"
@@ -824,5 +1115,30 @@ s32 func_001b99b8(s32 a0, s32 a1, s32 a2) {
         : "=&r"(ret)
         : "r"(a0), "r"(a1), "r"(a2)
         : "$3", "$7", "$8", "$9", "$10", "$11", "$12", "memory");
+#else
+    {
+        /* the rows of a1 negated, normalized and scaled by their w (w then 0),
+         * transposed: out rows 0-2 = a2's rows 0-2 (xyz) by that, row 3 0 */
+        f32 (*m)[4] = (f32 (*)[4])a1, (*n)[4] = (f32 (*)[4])a2, (*o)[4] = (f32 (*)[4])a0;
+        f32 r[4][4], t[4][4], q;
+        int i, j;
+        for (i = 0; i < 4; i++) {
+            for (j = 0; j < 3; j++)
+                r[i][j] = m[i][j] * -1.0f;
+            q = 1.0f / PlatVu0Length3(r[i]);
+            for (j = 0; j < 3; j++)
+                r[i][j] = r[i][j] * q * m[i][3];
+            r[i][3] = 0.0f;
+        }
+        for (i = 0; i < 4; i++)
+            for (j = 0; j < 4; j++)
+                t[i][j] = r[j][i];
+        ret = PlatVu0Bits(t[0][0]);
+        for (i = 0; i < 3; i++)
+            for (j = 0; j < 4; j++)
+                o[i][j] = t[0][j] * n[i][0] + t[1][j] * n[i][1] + t[2][j] * n[i][2];
+        __builtin_memset(o[3], 0, 16);
+    }
+#endif
     return ret;
 }

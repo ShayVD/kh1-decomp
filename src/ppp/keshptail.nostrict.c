@@ -222,6 +222,7 @@ extern PppMtx D_00615FC0;
 extern PppMtx D_00616040;
 f32 func_001a9350(f32 *);
 s32 func_001b8198(void *, void *, s32);
+#ifdef KH1_PS2
 #define V_FTOI_U8(dst, src) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -236,6 +237,16 @@ s32 func_001b8198(void *, void *, s32);
         "qfsrv $2, $2, $2\n" \
         "sb $2, 3(%0)\n" \
         : : "r"(dst), "r"(src) : "$2", "memory")
+#else
+#define V_FTOI_U8(dst, src) do { \
+    /* the four lanes truncated to bytes */ \
+    u8 *d_ = (u8 *)(dst); \
+    f32 *s_ = (f32 *)(src); \
+    d_[0] = (u8)PlatVu0Ftoi0(s_[0]); d_[1] = (u8)PlatVu0Ftoi0(s_[1]); \
+    d_[2] = (u8)PlatVu0Ftoi0(s_[2]); d_[3] = (u8)PlatVu0Ftoi0(s_[3]); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SCALE_XYZ(dst, src, s) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -245,6 +256,13 @@ s32 func_001b8198(void *, void *, s32);
         "vmulx.xyz $vf29xyz, $vf31xyz, $vf30x\n" \
         "sqc2 $vf29, 0(%0)\n" \
         : : "r"(dst), "r"(src), "f"(s) : "$2", "memory")
+#else
+#define V_SCALE_XYZ(dst, src, s) do { \
+    f32 *d_ = (f32 *)(dst), *s_ = (f32 *)(src); \
+    d_[0] = s_[0] * (s); d_[1] = s_[1] * (s); d_[2] = s_[2] * (s); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_APPLY(out, m, v) \
     __asm__ volatile( \
         "lqc2 $vf27, 0(%1)\n" \
@@ -258,6 +276,10 @@ s32 func_001b8198(void *, void *, s32);
         "vmaddw.xyzw $vf27xyzw, $vf30xyzw, $vf31w\n" \
         "sqc2 $vf27, 0(%0)\n" \
         : : "r"(out), "r"(m), "r"(v))
+#else
+#define V_APPLY(out, m, v) do { PlatVu0Apply((f32 *)(out), (f32 (*)[4])(m), (f32 *)(v)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_MULMTX(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf27, 0(%1)\n" \
@@ -289,6 +311,18 @@ s32 func_001b8198(void *, void *, s32);
         "vmaddw.xyzw $vf26xyzw, $vf30xyzw, $vf31w\n" \
         "sqc2 $vf26, 48(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_MULMTX(out, a, b) do { \
+    /* out row i = b row i times a (a may be out) */ \
+    f32 (*o_)[4] = (f32 (*)[4])(out), (*a_)[4] = (f32 (*)[4])(a), (*b_)[4] = (f32 (*)[4])(b); \
+    f32 t_[4][4]; \
+    int i_; \
+    for (i_ = 0; i_ < 4; i_++) \
+        PlatVu0Apply(t_[i_], a_, b_[i_]); \
+    __builtin_memcpy(o_, t_, sizeof(t_)); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SUB(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -296,6 +330,10 @@ s32 func_001b8198(void *, void *, s32);
         "vsub.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_SUB(out, a, b) do { PlatVu0Sub4((f32 *)(out), (f32 *)(a), (f32 *)(b)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_ADD(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -303,6 +341,10 @@ s32 func_001b8198(void *, void *, s32);
         "vadd.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_ADD(out, a, b) do { PlatVu0Add4((f32 *)(out), (f32 *)(a), (f32 *)(b)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SCALE(out, v, s) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -311,11 +353,19 @@ s32 func_001b8198(void *, void *, s32);
         "vmulx.xyzw $vf31xyzw, $vf31xyzw, $vf30x\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(v), "f"(s) : "$2", "memory")
+#else
+#define V_SCALE(out, v, s) do { PlatVu0Scale4((f32 *)(out), (f32 *)(v), (s)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_COPY(dst, src) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(dst), "r"(src))
+#else
+#define V_COPY(dst, src) __builtin_memcpy((void *)(dst), (void *)(src), 16)
+#endif
+#ifdef KH1_PS2
 #define V_LEN(v) ({ f32 _r; \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -328,6 +378,9 @@ s32 func_001b8198(void *, void *, s32);
         "qmfc2 $2, $vf31\n" \
         "mtc1 $2, %0\n" \
         : "=f"(_r) : "r"(v) : "$2", "memory"); _r; })
+#else
+#define V_LEN(v) PlatVu0Length3((f32 *)(v))
+#endif
 static inline void t2Col(f32 *v, u8 *c, f32 a) {
     v[0] = c[0];
     v[1] = c[1];
@@ -579,6 +632,7 @@ void *func_001aa950(s32);
 void func_001aa9d0(s32);
 extern const f32 D_0048FB68;
 extern f32 D_003732D0[];
+#ifdef KH1_PS2
 #define V_FTOI_U8(dst, src) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -593,6 +647,16 @@ extern f32 D_003732D0[];
         "qfsrv $2, $2, $2\n" \
         "sb $2, 3(%0)\n" \
         : : "r"(dst), "r"(src) : "$2")
+#else
+#define V_FTOI_U8(dst, src) do { \
+    /* the four lanes truncated to bytes */ \
+    u8 *d_ = (u8 *)(dst); \
+    f32 *s_ = (f32 *)(src); \
+    d_[0] = (u8)PlatVu0Ftoi0(s_[0]); d_[1] = (u8)PlatVu0Ftoi0(s_[1]); \
+    d_[2] = (u8)PlatVu0Ftoi0(s_[2]); d_[3] = (u8)PlatVu0Ftoi0(s_[3]); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SUB(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -600,6 +664,9 @@ extern f32 D_003732D0[];
         "vsub.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_SUB(out, a, b) do { PlatVu0Sub4((f32 *)(out), (f32 *)(a), (f32 *)(b)); } while (0)
+#endif
 typedef kh1_u128 T3Q;
 typedef struct {
     s32 frame;
@@ -643,6 +710,7 @@ typedef struct {
     u8 pad8[8];
     T2Frame f[1]; /* +0x10 */
 } T3Shape;
+#ifdef KH1_PS2
 #define V3_SCALE2(out, m, s) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%2)\n" \
@@ -737,6 +805,83 @@ typedef struct {
         "vaddq.x $vf31x, $vf0x, Q\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(t))
+#else
+/* Off the EE: the VU0 registers these macros keep values in between calls
+ * ($vf0 is (0, 0, 0, 1)); each macro is the same VU0 sequence in C. */
+static f32 v3r[32][4] = {{0.0f, 0.0f, 0.0f, 1.0f}};
+#define V3_LD(n, p) __builtin_memcpy(v3r[n], (void *)(p), 16)
+#define V3_ST(n, p) __builtin_memcpy((void *)(p), v3r[n], 16)
+#define V3_SCALE2(out, m, s) do { \
+        V3_LD(31, s); V3_LD(30, (u8 *)(m)); V3_LD(29, (u8 *)(m) + 16); \
+        v3r[28][0] = v3r[30][0] * v3r[31][0]; v3r[28][1] = v3r[30][1] * v3r[31][0]; \
+        v3r[28][2] = v3r[30][2] * v3r[31][0]; \
+        v3r[27][0] = v3r[29][0] * v3r[31][1]; v3r[27][1] = v3r[29][1] * v3r[31][1]; \
+        v3r[27][2] = v3r[29][2] * v3r[31][1]; \
+        V3_ST(28, (u8 *)(out) + 128); V3_ST(27, (u8 *)(out) + 144); \
+    } while (0)
+#define V3_LOAD(b) do { \
+        int i_; \
+        for (i_ = 0; i_ < 8; i_++) \
+            V3_LD(10 + i_, (u8 *)(b) + i_ * 16); \
+        V3_LD(6, (u8 *)(b) + 128); V3_LD(7, (u8 *)(b) + 144); \
+        V3_LD(26, (u8 *)(b) + 256); V3_LD(27, (u8 *)(b) + 272); V3_LD(28, (u8 *)(b) + 288); \
+    } while (0)
+#define V3_INIT(pos, p0, d, p1) do { \
+        V3_LD(29, pos); V3_LD(28, p0); V3_LD(27, d); V3_LD(26, p1); \
+        __builtin_memset(v3r[2], 0, 4 * 16); \
+    } while (0)
+#define V3_SIZE(t) do { \
+        int i_; \
+        V3_LD(31, t); \
+        for (i_ = 0; i_ < 3; i_++) { \
+            v3r[2][i_] = v3r[6][i_] * v3r[31][0]; \
+            v3r[3][i_] = v3r[7][i_] * v3r[31][0]; \
+        } \
+        for (i_ = 0; i_ < 4; i_++) \
+            v3r[5][i_] = v3r[10][i_] * v3r[29][0] + v3r[11][i_] * v3r[29][1] \
+                + v3r[12][i_] * v3r[29][2] + v3r[13][i_] * v3r[0][3]; \
+    } while (0)
+#define V3_ROT(t) do { \
+        int i_; \
+        V3_LD(22, t); \
+        __builtin_memcpy(v3r[23], v3r[2], 16); \
+        for (i_ = 0; i_ < 4; i_++) { \
+            v3r[2][i_] = v3r[2][i_] * v3r[22][1] + v3r[3][i_] * v3r[22][0]; \
+            v3r[3][i_] = v3r[3][i_] * v3r[22][1] - v3r[23][i_] * v3r[22][0]; \
+        } \
+    } while (0)
+#define V3_XFORM() do { \
+        int r_; \
+        for (r_ = 2; r_ < 6; r_++) \
+            PlatVu0Apply(v3r[r_], v3r + 14, v3r[r_]); \
+    } while (0)
+#define V3_SAVE(b) do { \
+        V3_ST(2, (u8 *)(b) + 192); V3_ST(3, (u8 *)(b) + 208); \
+        V3_ST(4, (u8 *)(b) + 224); V3_ST(5, (u8 *)(b) + 240); \
+        V3_ST(26, (u8 *)(b) + 256); V3_ST(27, (u8 *)(b) + 272); V3_ST(28, (u8 *)(b) + 288); \
+    } while (0)
+#define V3_POS(t) do { \
+        int i_; \
+        V3_LD(31, t); \
+        for (i_ = 0; i_ < 4; i_++) \
+            v3r[29][i_] = v3r[28][i_] + v3r[27][i_] * v3r[31][0]; \
+    } while (0)
+#define V3_NEXT(v) do { \
+        int i_; \
+        __builtin_memcpy(v3r[28], v3r[26], 16); \
+        V3_LD(26, v); \
+        for (i_ = 0; i_ < 4; i_++) \
+            v3r[27][i_] = v3r[26][i_] - v3r[28][i_]; \
+    } while (0)
+#define V3_LEN(t) do { \
+        v3r[31][0] = v3r[27][0] * v3r[27][0]; \
+        v3r[31][1] = v3r[27][1] * v3r[27][1]; \
+        v3r[31][2] = v3r[27][2] * v3r[27][2]; \
+        v3r[30][0] = v3r[31][0] + v3r[31][1]; \
+        v3r[31][0] = PlatVu0Sqrt(v3r[30][0] + v3r[31][2]); \
+        V3_ST(31, t); \
+    } while (0)
+#endif
 #define T3CPY(d, s) \
     (d)[0] = ((T3Q *) (s))[0]; \
     (d)[1] = ((T3Q *) (s))[1]; \
@@ -1006,6 +1151,7 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
 }
 
 /* pppKeShpTailDraw (from hand/nostrict/text_00180000_s7_w11.c). */
+#ifdef KH1_PS2
 #define V_FTOI_U8(dst, src) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1020,6 +1166,16 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "qfsrv $2, $2, $2\n" \
         "sb $2, 3(%0)\n" \
         : : "r"(dst), "r"(src) : "$2", "memory")
+#else
+#define V_FTOI_U8(dst, src) do { \
+    /* the four lanes truncated to bytes */ \
+    u8 *d_ = (u8 *)(dst); \
+    f32 *s_ = (f32 *)(src); \
+    d_[0] = (u8)PlatVu0Ftoi0(s_[0]); d_[1] = (u8)PlatVu0Ftoi0(s_[1]); \
+    d_[2] = (u8)PlatVu0Ftoi0(s_[2]); d_[3] = (u8)PlatVu0Ftoi0(s_[3]); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SCALE_XYZ(dst, src, s) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1029,6 +1185,13 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vmulx.xyz $vf29xyz, $vf31xyz, $vf30x\n" \
         "sqc2 $vf29, 0(%0)\n" \
         : : "r"(dst), "r"(src), "f"(s) : "$2", "memory")
+#else
+#define V_SCALE_XYZ(dst, src, s) do { \
+    f32 *d_ = (f32 *)(dst), *s_ = (f32 *)(src); \
+    d_[0] = s_[0] * (s); d_[1] = s_[1] * (s); d_[2] = s_[2] * (s); \
+    } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_APPLY(out, m, v) \
     __asm__ volatile( \
         "lqc2 $vf27, 0(%1)\n" \
@@ -1042,6 +1205,10 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vmaddw.xyzw $vf27xyzw, $vf30xyzw, $vf31w\n" \
         "sqc2 $vf27, 0(%0)\n" \
         : : "r"(out), "r"(m), "r"(v))
+#else
+#define V_APPLY(out, m, v) do { PlatVu0Apply((f32 *)(out), (f32 (*)[4])(m), (f32 *)(v)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SUB(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1049,6 +1216,10 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vsub.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_SUB(out, a, b) do { PlatVu0Sub4((f32 *)(out), (f32 *)(a), (f32 *)(b)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_ADD(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1056,6 +1227,10 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vadd.xyzw $vf31xyzw, $vf31xyzw, $vf30xyzw\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define V_ADD(out, a, b) do { PlatVu0Add4((f32 *)(out), (f32 *)(a), (f32 *)(b)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_SCALE(out, v, s) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1064,11 +1239,19 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vmulx.xyzw $vf31xyzw, $vf31xyzw, $vf30x\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(out), "r"(v), "f"(s) : "$2", "memory")
+#else
+#define V_SCALE(out, v, s) do { PlatVu0Scale4((f32 *)(out), (f32 *)(v), (s)); } while (0)
+#endif
+#ifdef KH1_PS2
 #define V_COPY(dst, src) \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
         "sqc2 $vf31, 0(%0)\n" \
         : : "r"(dst), "r"(src))
+#else
+#define V_COPY(dst, src) __builtin_memcpy((void *)(dst), (void *)(src), 16)
+#endif
+#ifdef KH1_PS2
 #define V_LEN(v) ({ f32 _r; \
     __asm__ volatile( \
         "lqc2 $vf31, 0(%1)\n" \
@@ -1081,6 +1264,10 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "qmfc2 $2, $vf31\n" \
         "mtc1 $2, %0\n" \
         : "=f"(_r) : "r"(v) : "$2", "memory"); _r; })
+#else
+#define V_LEN(v) PlatVu0Length3((f32 *)(v))
+#endif
+#ifdef KH1_PS2
 #define _V_MULMTX(out, a, b) \
     __asm__ volatile( \
         "lqc2 $vf27, 0(%1)\n" \
@@ -1112,6 +1299,17 @@ void pppKeShpTailFrame(PppObject *obj, PppShpTailKey *key, PppEntry *e) {
         "vmaddw.xyzw $vf26xyzw, $vf30xyzw, $vf31w\n" \
         "sqc2 $vf26, 48(%0)\n" \
         : : "r"(out), "r"(a), "r"(b))
+#else
+#define _V_MULMTX(out, a, b) do { \
+    /* out row i = b row i times a (a may be out) */ \
+    f32 (*o_)[4] = (f32 (*)[4])(out), (*a_)[4] = (f32 (*)[4])(a), (*b_)[4] = (f32 (*)[4])(b); \
+    f32 t_[4][4]; \
+    int i_; \
+    for (i_ = 0; i_ < 4; i_++) \
+        PlatVu0Apply(t_[i_], a_, b_[i_]); \
+    __builtin_memcpy(o_, t_, sizeof(t_)); \
+    } while (0)
+#endif
 typedef struct {
     s32 frame;
     s32 id;       /* +0x4 */

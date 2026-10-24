@@ -4,6 +4,9 @@
  * tasks func_0015eb78 and func_0015eea0), the GS uploads through libdma's
  * channels D_0055C640 / D_0055C644 (func_0015f018 ... func_0015ff78).  Read from the code, not proved by a boot. */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -270,7 +273,7 @@ extern DmaChcr *D_0055C644;
 s32 func_0015f388(void) {
     u64 *p;
     PlatSync();
-    p = (u64 *)((u32)D_00573E40 | 0x20000000);
+    p = (u64 *)PLAT_UNCACHED(D_00573E40);
     p[12] = 0x5080B;
     p[14] = (128LL << 32) | 0x2A;
     p[18] = (s64)D_002BC0F0.s2BC0F0_2.x10 | ((s64)D_002BC0F0.s2BC0F0_2.x14 << 8) | ((s64)D_002BC0F0.s2BC0F0_2.x18 << 16);
@@ -339,7 +342,7 @@ void func_0015f488(B4Drw *a) {
     D_0055C648->x3 = 96;
     D_0055C648->x4 = 0;
     D_0055C648->x0 = 0;
-    q = (B4Gs *)((u32)D_00573E40 | 0x20000000);
+    q = (B4Gs *)PLAT_UNCACHED(D_00573E40);
     q->x40 = ((u64)t->x2 << 26) | ((u64)t->x3 << 30) | 0x2006E00401313600ULL;
     k = a->x0->x2c;
     if (a->x5) {
@@ -386,16 +389,16 @@ void func_0015f798(S798 *o) {
     if (e->x48 & 1) {
         u32 *s = e->x10->data;
         s32 i;
-        d = (u32 *)((u32)D_00272DA4 | 0x20000000);
+        d = (u32 *)PLAT_UNCACHED(D_00272DA4);
         for (i = 0; i < 16; i++) *d++ = *s++;
     } else {
-        d = (u32 *)((u32)D_00272D94 | 0x20000000);
+        d = (u32 *)PLAT_UNCACHED(D_00272D94);
         d[0] = e->x20;
         d[1] = e->x24;
         d[2] = e->x28;
         d[3] = e->x2C;
     }
-    d = (u32 *)((u32)D_00272DE4 | 0x20000000);
+    d = (u32 *)PLAT_UNCACHED(D_00272DE4);
     d[3] = e->x3C;
     PlatSync();
     D_0055C640->dir = 1;
@@ -458,7 +461,7 @@ typedef struct { u16 n; u8 pad2[2]; u16 w, h; u32 data; u32 clut; } Tex59;
 #define D_0055C648 (*(Pk59 **)&D_0055C648)
 void func_0015fa20(Tex59 *t) {
     PlatSync();
-    D_0055C648 = (Pk59 *)((u32)D_00573AC0 | 0x20000000);
+    D_0055C648 = (Pk59 *)PLAT_UNCACHED(D_00573AC0);
     D_0055C648->dma.id = 0x10;
     D_0055C648->dma.addr = 0;
     D_0055C648->dma.qwc = 6;
@@ -543,6 +546,7 @@ void func_0015fc00(A0 *a) {
 }
 
 /* func_0015fd20 (from hand/nostrict/text_00150000_h59.c). */
+#ifdef KH1_PS2
 #define QCOPY4(d, s) __asm__ volatile( \
     "lq $8, 0(%1)\n\tlq $9, 16(%1)\n\tlq $10, 32(%1)\n\tlq $11, 48(%1)\n\t" \
     "sq $8, 0(%0)\n\tsq $9, 16(%0)\n\tsq $10, 32(%0)\n\tsq $11, 48(%0)" \
@@ -553,6 +557,10 @@ void func_0015fc00(A0 *a) {
     "lq $9, 64(%1)\n\tlq $10, 80(%1)\n\tlq $11, 96(%1)\n\t" \
     "sq $9, 64(%0)\n\tsq $10, 80(%0)\n\tsq $11, 96(%0)" \
     : : "r"(d), "r"(s) : "$8", "$9", "$10", "$11", "memory")
+#else
+#define QCOPY4(d, s) __builtin_memcpy((void *)(d), (void *)(s), 64)
+#define QCOPY7(d, s) __builtin_memcpy((void *)(d), (void *)(s), 112)
+#endif
 u32 *func_0015fd20(u32 *p, u8 *src, s32 f1, s32 f2, s32 base) {
     p += 4;
     if (f2 & 2) {
@@ -561,7 +569,7 @@ u32 *func_0015fd20(u32 *p, u8 *src, s32 f1, s32 f2, s32 base) {
             case 0: {
                 u32 i = p[1];
                 p += 4;
-                QCOPY4((u32)p | 0x20000000, (i + base) * 64 + (u32)src);
+                QCOPY4(PLAT_UNCACHED(p), (i + base) * 64 + (u32)src);
                 p += 16;
                 break;
             }
@@ -583,7 +591,7 @@ u32 *func_0015fd20(u32 *p, u8 *src, s32 f1, s32 f2, s32 base) {
             case 0: {
                 u32 i = p[1];
                 p += 4;
-                QCOPY7((u32)p | 0x20000000, (i + base) * 128 + (u32)src);
+                QCOPY7(PLAT_UNCACHED(p), (i + base) * 128 + (u32)src);
                 p += 28;
                 break;
             }
@@ -605,7 +613,7 @@ u32 *func_0015fd20(u32 *p, u8 *src, s32 f1, s32 f2, s32 base) {
             case 0: {
                 u32 i = p[1];
                 p += 4;
-                QCOPY4((u32)p | 0x20000000, (i + base) * 64 + (u32)src);
+                QCOPY4(PLAT_UNCACHED(p), (i + base) * 64 + (u32)src);
                 p += 28;
                 break;
             }
@@ -680,7 +688,7 @@ s32 func_0015ff78(B4Dm *d) {
             b = s->x0->x0;
             a = s->x0->x8;
             PlatSync();
-            g = (B4Gp *)((u32)D_00351C40 | 0x20000000);
+            g = (B4Gp *)PLAT_UNCACHED(D_00351C40);
             g->x180 = a;
             g->x3 = 112;
             g->x0 = 24;
@@ -694,7 +702,7 @@ s32 func_0015ff78(B4Dm *d) {
             PlatSync();
             PlatDmaSend(D_0055C644, D_00351C40);
         } else {
-            D_0055C648 = (B4Pk *)((u32)D_00573AC0 | 0x20000000);
+            D_0055C648 = (B4Pk *)PLAT_UNCACHED(D_00573AC0);
             func_0015f488((B4Drw *)s);
             func_0015f8c8(s, 0);
             D_0055C648->x3 = 96;
@@ -732,7 +740,11 @@ s32 func_0015ff78(B4Dm *d) {
             do {
                 x = PlatVif1GetStat() & PLAT_VIF1_STAT_BUSY;
             } while (x);
+#ifdef KH1_PS2
             __asm__ volatile("cfc2 %0, $vi29" : "=r"(x));
+#else
+            x = PlatVu0GetVpuStat();
+#endif
         } while (x & 0x100);
         r = 0;
         d->x14 = 6; st = 6;

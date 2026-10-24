@@ -164,6 +164,7 @@ void func_001150d8(u8 *a) {
 /* func_00115158 (from hand/text_00110000_s6_02.c). */
 typedef f32 V4_52[4] __attribute__((aligned(16)));
 static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -171,9 +172,13 @@ static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline f32 v52_dot(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -183,6 +188,9 @@ static inline f32 v52_dot(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 s32 func_00115158(f32 *a, f32 *b, f32 *n) {
@@ -205,6 +213,7 @@ s32 func_001151a8(s32 id, f32 *n) {
 /* func_00115200 (from hand/text_00110000_h29.c). */
 static inline f32 w29_dot(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -214,9 +223,13 @@ static inline f32 w29_dot(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 static inline void w29_scale(void *d, void *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -224,8 +237,12 @@ static inline void w29_scale(void *d, void *s, f32 t) {
         "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
         "sqc2 $vf4, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    PlatVu0Scale3W((f32 *)d, (f32 *)s, t);
+#endif
 }
 static inline void w29_add(void *d, void *a, void *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -233,6 +250,9 @@ static inline void w29_add(void *d, void *a, void *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Add4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 s32 func_00115200(void *p0, void *dir, void *p1, void *n, void *out) {
     f32 den, t;
@@ -268,6 +288,7 @@ s32 func_001152c8(void *obj, void *p0, void *dir, void *out) {
 s32 func_00104ae0(s32, V4_52 *);
 f32 fabsf(f32);
 static inline void v52_cross(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -277,8 +298,12 @@ static inline void v52_cross(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Cross3((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void v52_normalize(f32 *d, f32 *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
@@ -294,6 +319,9 @@ static inline void v52_normalize(f32 *d, f32 *s) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "memory");
+#else
+    PlatVu0Normalize3((f32 *)d, (f32 *)s);
+#endif
 }
 #define func_00104eb0 ((void (*)(s32, V4_52)) func_00104eb0)
 #define func_00104f10 ((void (*)(s32, V4_52)) func_00104f10)
@@ -324,6 +352,7 @@ void func_00115408(s32 id, f32 *pos, f32 *out, s32 mode) {
 
 /* func_00115600 (from hand/text_00110000_h29.c). */
 static inline void w29_sub(void *d, void *a, void *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -331,8 +360,12 @@ static inline void w29_sub(void *d, void *a, void *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void w29_outer(void *d, void *a, void *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -342,6 +375,9 @@ static inline void w29_outer(void *d, void *a, void *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Cross3((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 extern s32 D_002BD150[];
 extern s32 D_002BD160[];
@@ -378,6 +414,7 @@ void func_001156f0(void *a0, f32 *a1) {
 typedef struct { u8 pad[0x50]; f32 cx; f32 top; f32 cz; u8 pad5c[4]; f32 r; f32 h; u8 pad68[0xc]; s16 id; } Bnd;
 static inline f32 vlen(f32 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf5, 0(%1)\n"
         "lqc2 $vf4, 0(%1)\n"
@@ -390,6 +427,9 @@ static inline f32 vlen(f32 *v) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(v) : "$2");
+#else
+    r = PlatVu0Length3((f32 *)v);
+#endif
     return r;
 }
 /* func_00115758 (hand): from session6 w6_02 draft. Fixes: (maxz + minz) operand order (add.s f1,f7,f1); init copies ordered so cse.c does not swap them (maxx = maxy; minx = miny; maxz = maxy; minz = minx, non-adjacent same-source copies) and miny const first (sched2 picks the first-LUID dependent of the call); b->top = maxy last so maxy stays the cse canonical reg for -1e6 (REGNO_LAST_UID rule). */
@@ -426,8 +466,15 @@ void func_00115758(s32 id, Bnd *b) {
 
 /* func_001158a8 (from hand/text_00110000_h3.c). */
 void func_001158a8(f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile("lwc1 $f0, 0(%1)\nswc1 $f0, 0(%0)\nswc1 $f0, 4(%0)\nswc1 $f0, 8(%0)\nswc1 $f0, 12(%0)\nnop\nnop"
                      : : "r"(a), "r"(b) : "$f0");
+#else
+    {
+        f32 *d_ = (f32 *)a, f_ = *(f32 *)b;
+        d_[0] = f_; d_[1] = f_; d_[2] = f_; d_[3] = f_;
+    }
+#endif
 }
 
 /* func_001158c8 (from auto/text_00110000_6.c). */
@@ -447,6 +494,7 @@ typedef f32 V4_25[4] __attribute__((aligned(16)));
 typedef Ent20_2a6238 Tri25;
 typedef Vec3_2a624c Vtx25;
 extern s32 D_002C12C4;
+#ifdef KH1_PS2
 #define VSUB_MAC(r, a, b) \
     __asm__ volatile( \
         "lqc2 $vf4, 0(%1)\n" \
@@ -459,6 +507,9 @@ extern s32 D_002C12C4;
         "vnop\n" \
         "cfc2 %0, $vi17\n" \
         : "=&r"(r) : "r"(a), "r"(b) : "memory")
+#else
+#define VSUB_MAC(r, a, b) ((r) = PlatVu0SubFlags((f32 *)(a), (f32 *)(b)))
+#endif
 /* kh1-decomp session 7, worker w25: func_00115940 (hand; also matches hand/nostrict).
    VU0 bounding-box cull: C with the vsub/cfc2 MAC-flag test as an inline-asm macro. */
 void func_00115940(s32 id) {
@@ -868,6 +919,7 @@ u64 func_0011b6a0(ColO *, f32 *, s32);
 s32 func_0011bdf8(ColO *, f32 *, s32 *, f32 *);
 static inline f32 colDist(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -882,6 +934,9 @@ static inline f32 colDist(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dist3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 #define func_00104eb0 ((void (*)(s32, f32 *)) func_00104eb0)
@@ -1404,14 +1459,19 @@ typedef struct { V4_52 pts[512]; V4_52 tmp; s32 ids[512]; } Hits52;
 void *func_00122048(s32, s32);
 void func_001220b8(void *);
 static inline void v52_copy(void *d, void *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lq $6, 0(%1)\n"
         "sq $6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "$6", "memory");
+#else
+    __builtin_memcpy((void *)(d), (void *)(s), 16);
+#endif
 }
 static inline f32 v52_dist2(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -1423,6 +1483,9 @@ static inline f32 v52_dist2(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0DistSq3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 #define func_001152c8 ((s32 (*)(s32, void *, void *, void *)) func_001152c8)
@@ -1524,6 +1587,7 @@ void func_001195d8();
 s32 func_0011c338(RayW52 *, Ray52 *, f32 *, f32 *, s32, s32 *);
 static inline f32 v52_dist(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -1538,6 +1602,9 @@ static inline f32 v52_dist(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dist3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 #define func_001195d8 ((void (*)(Ray52 *, RayW52 *)) func_001195d8)
@@ -1912,11 +1979,15 @@ void func_00118d78(s32 arg0) {
 
 /* func_00118db0 (from hand/text_00110000_h29.c). */
 static inline void w29_copy(void *d, void *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lq $6, 0(%1)\n"
         "sq $6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "$6", "memory");
+#else
+    __builtin_memcpy((void *)(d), (void *)(s), 16);
+#endif
 }
 extern W29V4 D_002BD1E0;
 s32 func_00118db0(void *p, W29V4 *v) {
@@ -1938,6 +2009,7 @@ typedef struct { u8 pad[0x10]; V4_01 x10; } Obj01;
 extern V4_01 D_002BD1F0[];
 static inline f32 dot01(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -1947,6 +2019,9 @@ static inline f32 dot01(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 #define func_00115200 ((s32 (*)(Obj01 *, f32 *, V4_01 *, f32 *, f32 *)) func_00115200)
@@ -2205,6 +2280,7 @@ zero:
 typedef kh1_s128 u128;
 extern u128 D_002C12F0;
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -2212,8 +2288,12 @@ static inline void vsubv(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void vcross(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -2223,9 +2303,13 @@ static inline void vcross(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Cross3((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline f32 vdot(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -2235,14 +2319,21 @@ static inline f32 vdot(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 static inline void vcopy(void *d, void *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lq $6, 0(%1)\n"
         "sq $6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "$6", "memory");
+#else
+    __builtin_memcpy((void *)(d), (void *)(s), 16);
+#endif
 }
 #define func_00104ae0 ((s32 (*)(s32, V4 *)) func_00104ae0)
 #define func_0011aa18 ((s32 (*)(s32, s32, V4 *)) func_0011aa18)
@@ -2271,6 +2362,7 @@ s32 func_001198c8(s32 a0, s32 a1, f32 *p) {
 
 /* func_00119a20 (from hand/text_00110000_cc.c). */
 static inline void vscale(f32 *d, f32 *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -2278,6 +2370,9 @@ static inline void vscale(f32 *d, f32 *s, f32 t) {
         "vmulx.xyzw $vf6xyzw, $vf4xyzw, $vf5x\n"
         "sqc2 $vf6, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    PlatVu0Scale4((f32 *)d, (f32 *)s, t);
+#endif
 }
 /* func_00119a20 and func_00119ef8 only match with their callee func_001198c8
  * defined above them. */
@@ -2294,6 +2389,7 @@ s32 func_00119a20(s32 i, f32 *n, f32 *p, f32 *out, f32 *maxd) {
 
 /* func_00119ad8 (from hand/text_00110000_s7_w12.c). */
 static inline void vaddv(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -2301,9 +2397,13 @@ static inline void vaddv(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Add4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline f32 vdist2(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -2315,6 +2415,9 @@ static inline f32 vdist2(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0DistSq3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 extern V4 D_002C12E0;
@@ -2406,6 +2509,7 @@ s32 func_00119ef8(s32 a0, s32 a1, f32 *n, f32 *p, f32 *out, f32 *maxd) {
 
 /* func_00119fc0 (from hand/text_00110000_h29.c). */
 static inline void w29_scale4(void *d, void *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -2413,6 +2517,9 @@ static inline void w29_scale4(void *d, void *s, f32 t) {
         "vmulx.xyzw $vf6xyzw, $vf4xyzw, $vf5x\n"
         "sqc2 $vf6, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    PlatVu0Scale4((f32 *)d, (f32 *)s, t);
+#endif
 }
 #define func_001198c8 ((s32 (*)(s32, s32, void *)) func_001198c8)
 s32 func_00119fc0(s32 i, void *n, void *p, void *out, f32 *maxd) {

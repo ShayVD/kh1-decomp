@@ -9,6 +9,9 @@
  * (hand/nostrict/ppp_rand.c, text_00180000_h39.c / h62.c).  Read from the
  * code, not proved by a boot. */
 #include "ppp.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "data/bss_0061.h"
 #include "data/types/nostrict_text_00180000_h39.h"
 #include "data/pieces/D_00362730.h"
@@ -37,6 +40,7 @@ extern f32 D_00575A00;
 static inline f32 vu0Rand(void) {
     f32 r;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -56,6 +60,9 @@ static inline f32 vu0Rand(void) {
         : "=r"(r)
         :
         : "$8");
+#else
+    r = PlatVu0Rand();
+#endif
     return r;
 }
 void pppRandFloatFrame(PppObject *obj, PppRandKey *key, PppEntry *e) {

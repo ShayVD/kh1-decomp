@@ -74,6 +74,7 @@ typedef struct { u8 pad[124]; f32 p[3]; u8 pad2[20]; f32 r0, r1; } Emit_1a26f0;
 
 static inline f32 vlen3_1a26f0(V4_1a26f0 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -85,6 +86,9 @@ static inline f32 vlen3_1a26f0(V4_1a26f0 *v) {
         "qmfc2 $2, $vf10\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(v) : "$2", "memory");
+#else
+    r = PlatVu0Length3(v);
+#endif
     return r;
 }
 
@@ -173,6 +177,7 @@ s32 func_001a2218();
 
 static inline f32 vlen3_w65(FV4 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -184,6 +189,9 @@ static inline f32 vlen3_w65(FV4 *v) {
         "qmfc2 $2, $vf10\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(v) : "$2", "memory");
+#else
+    r = PlatVu0Length3(v);
+#endif
     return r;
 }
 

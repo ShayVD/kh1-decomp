@@ -96,6 +96,7 @@ extern Mtx D_006161C0;
 f32 func_001a3650(void) {
     f32 ret;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -115,6 +116,9 @@ f32 func_001a3650(void) {
         : "=&r"(ret)
         : 
         : "$8", "memory");
+#else
+    ret = PlatVu0Rand();
+#endif
     return ret;
 }
 s8 func_001a3698(u8);
@@ -344,6 +348,7 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
     PlatVu0SubVector(v0, p->pos, D_00615F70);
     PlatVu0Normalize(v10, v0);
     v10[3] = 1.0f;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -354,6 +359,9 @@ void func_001a4168(s32 a0, Em *e, Pt *p, s32 a3, Sub *s) {
         "vaddq.x $vf10x, $vf0x, Q\n"
         "qmfc2 %0, $vf10\n"
         : "=r"(dist) : "r"(v0) : "memory");
+#else
+    dist = PlatVu0Length3(v0);
+#endif
     p->f7c += p->f84;
     p->f80 += p->f88;
     p->f84 += e->fa0;
@@ -416,6 +424,7 @@ typedef struct { u8 pad0[0x20]; u16 t; u16 idx; u16 prev; u16 alive; u8 pad28[0x
 typedef struct { u8 pad[0x20]; } MbSub;
 static inline f32 vlen3_w65(FV4 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -427,6 +436,9 @@ static inline f32 vlen3_w65(FV4 *v) {
         "qmfc2 $2, $vf10\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(v) : "$2", "memory");
+#else
+    r = PlatVu0Length3(v);
+#endif
     return r;
 }
 

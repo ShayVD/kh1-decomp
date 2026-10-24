@@ -46,6 +46,7 @@ typedef struct {
 } PppWfacc;
 static inline f32 vu0Normalize(f32 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vadd.xyz $vf8xyz, $vf0xyz, $vf10xyz\n"
@@ -62,6 +63,17 @@ static inline f32 vu0Normalize(f32 *v) {
         "vmulq.xyz $vf9xyz, $vf8xyz, Q\n"
         "sqc2 $vf9, 0(%1)\n"
         : "=r"(r) : "r"(v) : "memory");
+#else
+    {
+        f32 x = v[0], y = v[1], z = v[2], q;
+        r = PlatVu0Sqrt(x * x + y * y + z * z);
+        q = 1.0f / r;
+        v[0] = x * q;
+        v[1] = y * q;
+        v[2] = z * q;
+        /* v[3]: the VU0 code stores a stale $vf9w there; kept here */
+    }
+#endif
     return r;
 }
 void pppEiWfaccFrame(PppObject *obj, PppWfaccKey *key, PppEntry *e) {

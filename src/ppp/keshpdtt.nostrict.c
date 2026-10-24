@@ -6,6 +6,9 @@
  * inline VU0 asm; pppKeShpDttDraw calls them.  Read from the code, not
  * proved by a boot. */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 typedef struct { s32 a, b; } W8;
 typedef struct {
     u8 pad0[0x20];
@@ -50,6 +53,7 @@ void func_001a99e8(S99e8 *s) {
     p[15] = 71;
     { u64 a = (u64)s->h50 - 8; ((B16 *)&p[16])->lo = a; }
     { u64 b = (u64)s->h54 - 8; ((B16 *)&p[16])->hi = b; }
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf25, 0(%0)\n"
         "lqc2 $vf27, 16(%0)\n"
@@ -97,6 +101,57 @@ void func_001a99e8(S99e8 *s) {
         "vaddw.z $vf26z, $vf0z, $vf0w\n"
         "vsubw.w $vf30w, $vf0w, $vf0w\n"
         : : "r"(p), "r"(s->p28), "r"(s->p20), "r"(s) : "$2", "memory");
+#else
+    /* tools/host/vu2c.py */
+    {
+        u64 g2;
+        PlatVu0Lq(25, (void *)(p));
+        PlatVu0Lq(27, (u8 *)(p) + 16);
+        PlatVu0Lq(29, (u8 *)(p) + 32);
+        PlatVu0Lq(21, (u8 *)(p) + 48);
+        PlatVu0Lq(14, (u8 *)(p) + 64);
+        PlatVu0Lq(20, (u8 *)(p) + 80);
+        PlatVu0Lq(9, (u8 *)(p) + 96);
+        PlatVu0Lq(3, (u8 *)(p) + 112);
+        PlatVu0Lq(2, (void *)(s->p20));
+        PlatVu0Lq(31, (u8 *)(s->p20) + 16);
+        PlatVu0Fmac(PLAT_VU0_ADD, 2, 4, 0, 31, -1);
+        g2 = (u64)(s64)(s32)0x3a800000;
+        PlatVu0Qmtc2(24, g2);
+        PlatVu0Lq(4, (void *)(s->p28));
+        PlatVu0Lq(5, (u8 *)(s->p28) + 16);
+        PlatVu0Lq(6, (u8 *)(s->p28) + 32);
+        PlatVu0Lq(7, (u8 *)(s->p28) + 48);
+        PlatVu0Lq(11, (u8 *)(p) + 128);
+        PlatVu0Itof(11, 15, 11, 4);
+        PlatVu0Lq(31, (u8 *)(s) + 80);
+        PlatVu0Move(15, 8, 0);
+        PlatVu0Fmac(PLAT_VU0_ADD, 15, 4, 0, 31, 3);
+        PlatVu0Fmac(PLAT_VU0_ADD, 17, 8, 0, 31, 2);
+        PlatVu0Move(17, 4, 0);
+        g2 = (u64)(s64)(s32)0x3f350000;
+        g2 = g2 | 0x4f3;
+        g2 = (u64)g2 << 16;
+        g2 = g2 | 0x3f35;
+        g2 = (u64)g2 << 16;
+        g2 = g2 | 0x4f3;
+        PlatVu0Qmtc2(16, g2);
+        PlatVu0Fmac(PLAT_VU0_MUL, 16, 12, 16, 2, -1);
+        PlatVu0Lq(1, (u8 *)(s) + 48);
+        PlatVu0Fmac(PLAT_VU0_MUL, 1, 12, 2, 1, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 18, 12, 2, 1, 2);
+        PlatVu0Fmac(PLAT_VU0_MUL, 19, 12, 16, 1, 2);
+        PlatVu0Fmac(PLAT_VU0_MUL, 16, 8, 16, 17, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 16, 4, 16, 15, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 15, 4, 15, 2, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 17, 8, 17, 2, -1);
+        g2 = (u64)(s64)(s32)0x45800000;
+        PlatVu0Qmtc2(28, g2);
+        PlatVu0Fmac(PLAT_VU0_ADD, 28, 4, 0, 28, 0);
+        PlatVu0Fmac(PLAT_VU0_ADD, 26, 2, 0, 0, 3);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 1, 0, 0, 3);
+    }
+#endif
     func_001aa9d0(144);
 }
 
@@ -118,6 +173,7 @@ s32 func_001a9c30(W8Dtt *d) {
     register u8 *q KH1_REG("$4") = p->p24;
     register s32 r KH1_REG("$5");
 
+#ifdef KH1_PS2
     __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf8, 0($6)\n"
@@ -255,6 +311,135 @@ s32 func_001a9c30(W8Dtt *d) {
         : "=r"(r), "=m"(buf[0])
         : "r"(p), "r"(q)
         : "$2", "memory");
+#else
+    /* tools/host/vu2c.py */
+    {
+        u64 g2;
+        PlatVu0Lq(8, (void *)(p));
+        PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 15, 4, 8, 0);
+        PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 5, 8, 1);
+        PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 6, 8, 2);
+        PlatVu0Fmac(PLAT_VU0_MADD, 12, 15, 7, 8, 3);
+        PlatVu0Div(0, 3, 12, 3);
+        PlatVu0Fmac(PLAT_VU0_MUL, 12, 14, 12, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_MUL, 15, 4, 15, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_MUL, 16, 12, 16, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_MUL, 17, 8, 17, 0, PLAT_VU0_BC_Q);
+        PlatVu0Move(10, 3, 12);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 8, 12, 17, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 4, 12, 15, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 13, 8, 17, 17, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 13, 4, 15, 15, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 13, 12, 28, 13, -1);
+        PlatVu0.stat = 0;
+        PlatVu0Fmac(PLAT_VU0_SUB, 0, 13, 10, 0, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 13, 10, -1);
+        r = PlatVu0.stat;
+        r = r & 0x80;
+        if (r != 0)
+            goto Lw8a_001A9E40;
+        PlatVu0Fmac(PLAT_VU0_MUL, 22, 12, 18, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_MUL, 23, 12, 19, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 1, 0, PLAT_VU0_BC_Q);
+        PlatVu0Fmac(PLAT_VU0_ADD, 11, 12, 11, 31, -1);
+        PlatVu0Lq(31, (u8 *)(p) + 16);
+        PlatVu0Ftoi(31, 15, 31, 0);
+        PlatVu0Sq(31, (u8 *)(q) + 112);
+        g2 = (u64)(s64)*(s8 *)((u8 *)(p) + 60);
+        g2 = g2 & 0x1;
+        if (g2 != 0)
+            goto Lw8a_001A9CE8;
+        PlatVu0Fmac(PLAT_VU0_SUB, 31, 1, 0, 0, -1);
+    Lw8a_001A9CE8:;
+        PlatVu0Sq(25, (void *)(q));
+        PlatVu0Sq(27, (u8 *)(q) + 16);
+        PlatVu0Sq(29, (u8 *)(q) + 32);
+        PlatVu0Sq(21, (u8 *)(q) + 48);
+        PlatVu0Sq(14, (u8 *)(q) + 64);
+        PlatVu0Sq(20, (u8 *)(q) + 80);
+        PlatVu0Sq(31, (u8 *)(q) + 160);
+        PlatVu0Sq(31, (u8 *)(q) + 208);
+        PlatVu0Sq(31, (u8 *)(q) + 256);
+        PlatVu0Sq(31, (u8 *)(q) + 304);
+        PlatVu0Sq(31, (u8 *)(q) + 352);
+        PlatVu0Sq(31, (u8 *)(q) + 400);
+        PlatVu0Sq(31, (u8 *)(q) + 448);
+        PlatVu0Sq(31, (u8 *)(q) + 496);
+        PlatVu0Sq(31, (u8 *)(q) + 544);
+        PlatVu0Sq(9, (u8 *)(q) + 576);
+        PlatVu0Sq(3, (u8 *)(q) + 592);
+        PlatVu0Ftoi(30, 14, 12, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 128);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 12, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 96);
+        PlatVu0Fmac(PLAT_VU0_ADD, 10, 12, 12, 15, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 176);
+        PlatVu0Sq(30, (u8 *)(q) + 560);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 30, 4, 30, 22, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 144);
+        PlatVu0Sq(26, (u8 *)(q) + 528);
+        PlatVu0Fmac(PLAT_VU0_ADD, 10, 12, 12, 16, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 224);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 30, 12, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 192);
+        PlatVu0Fmac(PLAT_VU0_ADD, 10, 12, 12, 17, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 272);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 30, 8, 30, 22, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 240);
+        PlatVu0Fmac(PLAT_VU0_ADD, 10, 8, 12, 16, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 4, 12, 16, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 320);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 30, 8, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 4, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 288);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 12, 12, 15, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 368);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 4, 30, 22, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 336);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 12, 12, 16, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 416);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 384);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 12, 12, 17, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 464);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 8, 30, 22, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 432);
+        PlatVu0Fmac(PLAT_VU0_SUB, 10, 8, 12, 16, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 10, 4, 12, 16, -1);
+        PlatVu0Ftoi(30, 14, 10, 4);
+        PlatVu0Sq(30, (u8 *)(q) + 512);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 12, 10, 11, -1);
+        PlatVu0Fmac(PLAT_VU0_SUB, 30, 8, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_ADD, 30, 4, 30, 23, -1);
+        PlatVu0Fmac(PLAT_VU0_MUL, 26, 12, 30, 24, 0);
+        PlatVu0Sq(26, (u8 *)(q) + 480);
+        PlatVu0Sq(12, (void *)(buf));
+        r = 0;
+    Lw8a_001A9E40:;
+    }
+#endif
     if (r != 128) {
         s32 t = buf[2];
         p->p24 = q + 608;

@@ -18,6 +18,9 @@
  * draw routine for a model from its flags (bit 2, bits 8-9, bit 7).
  * Read from the code, not proved by a boot. */
 #include "m2c.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
@@ -83,12 +86,20 @@ void func_001a9f88(void) {
     u128 k = KH1_Q(0x20000000);
     s32 i;
     for (i = 0; i < 288; i++) {
+#ifdef KH1_PS2
         __asm__ volatile("sq %0, 0(%1)" : : "r"(k), "r"(p));
+#else
+        p->q = k;
+#endif
         p->s.next = p + 1;
         p->s.tail = p;
         p++;
     }
+#ifdef KH1_PS2
     __asm__ volatile("sq %0, 0(%1)" : : "r"(k), "r"(p));
+#else
+    p->q = k;
+#endif
     p->s.w0 = 0x70000000;
     func_001aa6b0((GsTag *)D_0061E800, 7, 0, 0);
     func_001aa700((GsTag *)&D_0061E8B0, 7, 15, 0);
@@ -109,10 +120,14 @@ void func_001aa008(void) {
 void func_001aa080(void) {
     s32 r;
     r = rand();
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %0, $vf31\n"
         "vrxor R, $vf31x\n"
         : : "r"(r) : "$2");
+#else
+    PlatVu0RXor((u32)r);
+#endif
 }
 
 void func_001aa650(void) {
@@ -130,7 +145,11 @@ void func_001aa650(void) {
  * fourth argument (0) the code does not read. */
 void func_001aa6b0(GsTag *t, s32 qwc, s32 pri, s32 z) {
     GsTag *tail, *n;
+#ifdef KH1_PS2
     __asm__ volatile("sq $0, 0(%0)" : : "r"(t) : "memory");
+#else
+    t->q = KH1_Q(0);
+#endif
     t->s.w0 = (qwc - 1) | 0x20000000;
     __asm__ volatile("" : : : "memory");
     if (pri < 1) pri = 0;
@@ -144,7 +163,11 @@ void func_001aa6b0(GsTag *t, s32 qwc, s32 pri, s32 z) {
 
 void func_001aa700(GsTag *t, s32 qwc, s32 pri, s32 z) {
     GsTag *tail, *n;
+#ifdef KH1_PS2
     __asm__ volatile("sq $0, 0(%0)" : : "r"(t) : "memory");
+#else
+    t->q = KH1_Q(0);
+#endif
     t->s.w0 = (qwc - 1) | 0x20000000;
     __asm__ volatile("" : : : "memory");
     if (pri < 1) pri = 0;
@@ -158,7 +181,11 @@ void func_001aa700(GsTag *t, s32 qwc, s32 pri, s32 z) {
 
 void func_001aa750(GsTag *t, s32 qwc, s32 pri) {
     GsTag *tail, *n;
+#ifdef KH1_PS2
     __asm__ volatile("sq $0, 0(%0)" : : "r"(t) : "memory");
+#else
+    t->q = KH1_Q(0);
+#endif
     t->s.w0 = (qwc - 1) | 0x20000000;
     __asm__ volatile("" : : : "memory");
     if (pri < 1) pri = 0;
@@ -178,16 +205,33 @@ typedef struct {
 } Spr7a;
 
 u8 *func_001aa7a0(p, col, a, b) Spr7a *p; u32 col; u8 a; u8 b; {
+#ifdef KH1_PS2
     u128 c;
+#endif
     p->tag = 0x41A3400000008001ULL;
     p->regs = 0x441E;
+#ifdef KH1_PS2
     __asm__ volatile("sq $0, 32(%0)" : : "r"(p) : "memory");
+#else
+    p->u20.q = KH1_Q(0);
+#endif
     p->u20.s.a = a;
     p->u20.s.b = b;
     p->u20.s.d = 66;
+#ifdef KH1_PS2
+    /* RGBA: each byte of col zero-extended to a 32-bit lane. */
     __asm__ volatile("pextlb %0, $0, %1\n\tpextlh %0, $0, %0\n\tsq %0, 48(%2)" : "=r"(c) : "r"(col), "r"(p) : "memory");
+    /* gcc 2.96 cannot build these from halves: 96-bit literals. */
     p->xy0 = 0xFFFFFFFE0000780000007000;
     p->xy1 = 0xFFFFFFFE0000880000009000;
+#else
+    p->rgba.w[0] = col & 0xFF;
+    p->rgba.w[1] = (col >> 8) & 0xFF;
+    p->rgba.w[2] = (col >> 16) & 0xFF;
+    p->rgba.w[3] = col >> 24;
+    p->xy0.w[0] = 0x7000; p->xy0.w[1] = 0x7800; p->xy0.w[2] = 0xFFFFFFFE; p->xy0.w[3] = 0;
+    p->xy1.w[0] = 0x9000; p->xy1.w[1] = 0x8800; p->xy1.w[2] = 0xFFFFFFFE; p->xy1.w[3] = 0;
+#endif
     func_001aa700((GsTag *)p, 6, 0, 0);
     return (u8 *)p + 96;
 }

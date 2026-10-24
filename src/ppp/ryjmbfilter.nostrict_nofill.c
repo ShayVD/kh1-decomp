@@ -56,6 +56,7 @@ void func_001a2248(E2830 *, P2830 *, f32 *);
 
 static inline f32 vlen3_2830(f32 *v) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -66,6 +67,9 @@ static inline f32 vlen3_2830(f32 *v) {
         "vaddq.x $vf10x, $vf0x, Q\n"
         "qmfc2 %0, $vf10\n"
         : "=r"(r) : "r"(v) : "memory");
+#else
+    r = PlatVu0Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+#endif
     return r;
 }
 

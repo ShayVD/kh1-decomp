@@ -67,12 +67,16 @@ typedef struct {
 } PppMtxOwner_98b50;
 void func_00183be0(PppMtx, void *);
 static inline void vu0ScaleRow(f32 *row, f32 s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "qmtc2 %1, $vf9\n"
         "lqc2 $vf10, 0(%0)\n"
         "vmulx.xyz $vf10xyz, $vf10xyz, $vf9x\n"
         "sqc2 $vf10, 0(%0)\n"
         : : "r"(row), "r"(s));
+#else
+    PlatVu0ScaleXYZ(row, s);
+#endif
 }
 #define D_00615E68 ((PppMtxOwner_98b50 *) D_00615E68)
 void pppRyjMatrixWorldFrame(PppObject *obj, void *key, PppEntry *e) {

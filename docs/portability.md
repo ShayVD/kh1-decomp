@@ -183,8 +183,14 @@ rewrite matched code.
      PlatBreak() (platform/thread.h).
    - Varargs: `__builtin_stdarg_start` is gcc 2.96's; guard it
      (src/text/fldtext.c) or use src/sdk/libc/stdarg.h's va_start.
-   - VU0 macro-mode and other MIPS `__asm__` cannot be guarded mechanically:
-     they need a C equivalent (the 39 files that still fail, vita-port-plan 5.1).
+   - VU0 macro-mode and other MIPS `__asm__`: keep the asm under
+     `#ifdef KH1_PS2` and put a C equivalent in the `#else` (session 61: all
+     512 game files now compile, so a new match without one breaks the host
+     census). Use the PlatVu0* helpers of platform/vu.h for the usual
+     sequences, or tools/host/vu2c.py to translate a long block onto the
+     modelled register file (vita-port-plan 5.1a).
+   - An uncached-mirror address (`(u32)p | 0x20000000`): PLAT_UNCACHED(p)
+     (platform/dma.h).
 
 ## Known absolute addresses in matched code
 

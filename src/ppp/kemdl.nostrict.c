@@ -479,6 +479,7 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
         register void *m1 KH1_REG("$5") = w.mtx1;
         register f32 *ca KH1_REG("$4") = w.colA;
         register f32 *cb KH1_REG("$3") = w.colB;
+#ifdef KH1_PS2
         __asm__ volatile(
         ".set noreorder\n"
         "vsub.xyzw $vf9xyzw, $vf0xyzw, $vf0xyzw\n"
@@ -514,6 +515,42 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
 
         ".set reorder\n"
         : : "m"(w.scale), "r"(m0), "r"(m1), "r"(ca), "r"(cb), "r"(buf) : "$2");
+#else
+        /* tools/host/vu2c.py */
+        {
+            u64 g2;
+            PlatVu0Fmac(PLAT_VU0_SUB, 9, 15, 0, 0, -1);
+            PlatVu0Lq(31, (void *)(m0));
+            PlatVu0Move(1, 8, 31);
+            PlatVu0Lq(31, (u8 *)(m0) + 16);
+            PlatVu0Move(1, 4, 31);
+            PlatVu0Lq(2, (u8 *)(m0) + 32);
+            PlatVu0Lq(31, (u8 *)(m0) + 48);
+            PlatVu0Move(1, 3, 31);
+            PlatVu0Lq(16, (void *)(m1));
+            PlatVu0Lq(17, (u8 *)(m1) + 16);
+            PlatVu0Lq(18, (u8 *)(m1) + 32);
+            PlatVu0Lq(19, (u8 *)(m1) + 48);
+            PlatVu0Lq(29, &(w.scale));
+            PlatVu0Move(13, 8, 1);
+            PlatVu0Move(13, 4, 1);
+            PlatVu0Fmac(PLAT_VU0_MUL, 13, 12, 13, 29, 0);
+            PlatVu0Lq(5, (void *)(buf));
+            PlatVu0Lq(6, (u8 *)(buf) + 16);
+            PlatVu0Lq(8, (u8 *)(buf) + 48);
+            PlatVu0Lq(10, (u8 *)(buf) + 80);
+            g2 = (u64)(s64)(s32)0x3a800000;
+            PlatVu0Qmtc2(31, g2);
+            PlatVu0Fmac(PLAT_VU0_ADD, 4, 2, 0, 31, 0);
+            PlatVu0Lq(12, (u8 *)(buf) + 192);
+            PlatVu0Itof(12, 15, 12, 4);
+            g2 = (u64)(s64)(s32)0x45800000;
+            PlatVu0Qmtc2(31, g2);
+            PlatVu0Fmac(PLAT_VU0_ADD, 4, 12, 0, 31, 0);
+            PlatVu0Lq(23, (void *)(ca));
+            PlatVu0Lq(24, (void *)(cb));
+        }
+#endif
     }
     do {
         pr = (DttPrim *) (g + 1);
@@ -549,6 +586,7 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
             buf->c[10] = pr->col[10];
             buf->c[11] = pr->col[11];
             {
+#ifdef KH1_PS2
                 __asm__ volatile(
         ".set noreorder\n"
         "lqc2 $vf31, 96(%1)\n"
@@ -765,6 +803,196 @@ void pppKeMdlDttDraw(void *obj, DttKey *key, PppEntry *e) {
 
         ".set reorder\n"
                 : "=&r"(res) : "r"(buf), "r"(buf->cache), "r"(use), "r"(rd), "r"(pkt), "r"(flag) : "$2", "memory");
+#else
+                /* tools/host/vu2c.py */
+                {
+                    u64 g2;
+                    PlatVu0Lq(31, (u8 *)(buf) + 96);
+                    PlatVu0Itof(31, 15, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 15, 19, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 16, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 17, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 22, 14, 18, 31, 2);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 3, 1, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 8, 1, 22, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 4, 1, 22, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 11, 15, 2, 22, 2);
+                    PlatVu0Div(0, 3, 11, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 22, 1, 1, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 11, 14, 11, 0, PLAT_VU0_BC_Q);
+                    PlatVu0.stat = 0;
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 1, 11, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 11, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 4, 11, -1);
+                    g2 = PlatVu0.stat;
+                    res = g2 & 0xc0;
+                    if (res != 0)
+                        goto Lw14d_0018FB5C;
+                    PlatVu0Lq(31, (u8 *)(buf) + 112);
+                    PlatVu0Itof(31, 15, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 15, 19, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 16, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 17, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 21, 14, 18, 31, 2);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 3, 1, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 8, 1, 21, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 4, 1, 21, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 25, 15, 2, 21, 2);
+                    PlatVu0Div(0, 3, 25, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 21, 1, 1, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 25, 14, 25, 0, PLAT_VU0_BC_Q);
+                    PlatVu0.stat = 0;
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 1, 25, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 25, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 4, 25, -1);
+                    g2 = PlatVu0.stat;
+                    res = g2 & 0xc0;
+                    if (res != 0)
+                        goto Lw14d_0018FB5C;
+                    PlatVu0Lq(31, (u8 *)(buf) + 128);
+                    PlatVu0Itof(31, 15, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 15, 19, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 16, 31, 0);
+                    PlatVu0Fmac(PLAT_VU0_MADD, PLAT_VU0_ACC, 15, 17, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 20, 14, 18, 31, 2);
+                    PlatVu0Fmac(PLAT_VU0_ADD, PLAT_VU0_ACC, 3, 1, 0, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 8, 1, 20, 0);
+                    PlatVu0Fmac(PLAT_VU0_MUL, PLAT_VU0_ACC, 4, 1, 20, 1);
+                    PlatVu0Fmac(PLAT_VU0_MADD, 26, 15, 2, 20, 2);
+                    PlatVu0Div(0, 3, 26, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 20, 1, 1, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 26, 14, 26, 0, PLAT_VU0_BC_Q);
+                    PlatVu0.stat = 0;
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 1, 26, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 26, 0, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 0, 12, 4, 26, -1);
+                    g2 = PlatVu0.stat;
+                    res = g2 & 0xc0;
+                    if (res != 0)
+                        goto Lw14d_0018FB5C;
+                    PlatVu0Sq(5, (u8 *)(pkt) + 16);
+                    PlatVu0Sq(6, (u8 *)(pkt) + 32);
+                    PlatVu0Sq(8, (u8 *)(pkt) + 48);
+                    PlatVu0Sq(10, (u8 *)(pkt) + 64);
+                    PlatVu0Lq(3, (u8 *)(buf) + 144);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 3, 15, 3, 23, -1);
+                    PlatVu0Ftoi(3, 15, 3, 0);
+                    PlatVu0Sq(3, (u8 *)(pkt) + 96);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 28, 14, 22, 19, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 28, -1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 2);
+                    PlatVu0SqrtQ(31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 14, 8, 0, 11, 2);
+                    PlatVu0Ftoi(9, 14, 11, 4);
+                    PlatVu0Sq(9, (u8 *)(pkt) + 112);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 0, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 12, 2, 0, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Div(0, 3, 12, 2);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 0, PLAT_VU0_BC_Q);
+                    if (flag == 0)
+                        goto Lw14d_0018F9E0;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 31, 2);
+                Lw14d_0018F9E0:;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 13, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 31, 22, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 12, 31, 11, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 31, 12, 31, 12, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 31, 4, 2);
+                    if (use == 0)
+                        goto Lw14d_0018FA14;
+                    if (rd == 0)
+                        goto Lw14d_0018FA10;
+                    PlatVu0Lq(15, (void *)(buf->cache));
+                    goto Lw14d_0018FA14;
+                Lw14d_0018FA10:;
+                    PlatVu0Sq(15, (void *)(buf->cache));
+                Lw14d_0018FA14:;
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 22, 3);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 15, 15, 2);
+                    PlatVu0Sq(15, (u8 *)(pkt) + 80);
+                    PlatVu0Lq(30, (u8 *)(buf) + 160);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 30, 15, 30, 23, -1);
+                    PlatVu0Ftoi(30, 15, 30, 0);
+                    PlatVu0Sq(30, (u8 *)(pkt) + 144);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 28, 14, 21, 19, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 28, -1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 2);
+                    PlatVu0SqrtQ(31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 14, 4, 0, 25, 2);
+                    PlatVu0Ftoi(9, 14, 25, 4);
+                    PlatVu0Sq(9, (u8 *)(pkt) + 160);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 0, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 12, 2, 0, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Div(0, 3, 12, 2);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 0, PLAT_VU0_BC_Q);
+                    if (flag == 0)
+                        goto Lw14d_0018FA74;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 31, 2);
+                Lw14d_0018FA74:;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 13, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 31, 21, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 12, 31, 25, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 31, 12, 31, 12, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 31, 4, 2);
+                    if (use == 0)
+                        goto Lw14d_0018FAA8;
+                    if (rd == 0)
+                        goto Lw14d_0018FAA4;
+                    PlatVu0Lq(15, (u8 *)(buf->cache) + 16);
+                    goto Lw14d_0018FAA8;
+                Lw14d_0018FAA4:;
+                    PlatVu0Sq(15, (u8 *)(buf->cache) + 16);
+                Lw14d_0018FAA8:;
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 21, 3);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 15, 15, 2);
+                    PlatVu0Sq(15, (u8 *)(pkt) + 128);
+                    PlatVu0Lq(30, (u8 *)(buf) + 176);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 30, 15, 30, 23, -1);
+                    PlatVu0Ftoi(30, 15, 30, 0);
+                    PlatVu0Sq(30, (u8 *)(pkt) + 192);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 28, 14, 20, 19, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 28, -1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 1);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 8, 31, 31, 2);
+                    PlatVu0SqrtQ(31, 0);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 14, 2, 0, 26, 2);
+                    PlatVu0Ftoi(9, 14, 26, 4);
+                    PlatVu0Sq(9, (u8 *)(pkt) + 208);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 0, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 12, 2, 0, 0, PLAT_VU0_BC_Q);
+                    PlatVu0Div(0, 3, 12, 2);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 28, 0, PLAT_VU0_BC_Q);
+                    if (flag == 0)
+                        goto Lw14d_0018FB08;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 31, 2);
+                Lw14d_0018FB08:;
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 12, 31, 13, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 31, 14, 31, 20, 3);
+                    PlatVu0Fmac(PLAT_VU0_ADD, 31, 12, 31, 26, -1);
+                    PlatVu0Fmac(PLAT_VU0_SUB, 31, 12, 31, 12, -1);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 31, 4, 2);
+                    if (use == 0)
+                        goto Lw14d_0018FB3C;
+                    if (rd == 0)
+                        goto Lw14d_0018FB38;
+                    PlatVu0Lq(15, (u8 *)(buf->cache) + 32);
+                    goto Lw14d_0018FB3C;
+                Lw14d_0018FB38:;
+                    PlatVu0Sq(15, (u8 *)(buf->cache) + 32);
+                Lw14d_0018FB3C:;
+                    PlatVu0Fmac(PLAT_VU0_ADD, 15, 2, 0, 20, 3);
+                    PlatVu0Fmac(PLAT_VU0_MUL, 15, 12, 15, 15, 2);
+                    PlatVu0Sq(15, (u8 *)(pkt) + 176);
+                    PlatVu0Fmac(PLAT_VU0_MINI, 31, 4, 14, 14, 0);
+                    PlatVu0Fmac(PLAT_VU0_MINI, 31, 2, 14, 31, 1);
+                    PlatVu0Ftoi(31, 15, 31, 4);
+                    PlatVu0Sq(31, (u8 *)(buf) + 192);
+                    res = 0;
+                Lw14d_0018FB5C:;
+                }
+#endif
             }
             if (res == 0) {
                 func_001aa750(pkt, 14, buf->z / 0x3000, 0);

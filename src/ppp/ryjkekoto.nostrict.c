@@ -144,7 +144,11 @@ extern s8 D_00372EA0;
 
 static inline f32 kkSqrt(f32 x) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(".set noreorder\n\tsqrt.s %0, %1\n\t.set reorder" : "=f"(r) : "f"(x));
+#else
+    r = PlatSqrtf(x);
+#endif
     return r;
 }
 

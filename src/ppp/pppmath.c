@@ -20,6 +20,7 @@ typedef struct { f32 x, y, z, w; } __attribute__((aligned(16))) QV;
 
 s32 func_001a8f30(void) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -29,6 +30,10 @@ s32 func_001a8f30(void) {
         "vadd.x $vf1x, $vf1x, $vf2x\n"
         "qmfc2 %0, $vf1\n"
         : "=r"(r) : : "$8");
+#else
+    PlatVu0RXor(0xFFFFFFFF);
+    r = PlatVu0RNext() - 1.0f;
+#endif
     return r * 32768.0f;
 }
 
@@ -68,11 +73,15 @@ f32 func_001a9058(f32 a, f32 b) {
     QV r;
     r.x = a;
     r.y = b;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf1, %1\n"
         "vmaxy.x $vf1x, $vf1x, $vf1y\n"
         "sqc2 $vf1, %0\n"
         : "=m"(r) : "m"(r));
+#else
+    r.x = r.x > r.y ? r.x : r.y;
+#endif
     return r.x;
 }
 
@@ -95,6 +104,7 @@ f32 func_001a9328(f32 a) {
     QV r;
     f32 o;
     r.y = a;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, %1\n"
         "vsqrt Q, $vf10y\n"
@@ -102,11 +112,15 @@ f32 func_001a9328(f32 a) {
         "cfc2 $2, $vi22\n"
         "mtc1 $2, %0\n"
         : "=f"(o) : "m"(r) : "$2");
+#else
+    o = PlatVu0Sqrt(r.y);
+#endif
     return o;
 }
 
 f32 func_001a9350(f32 *v) {
     QV r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf10, 0(%1)\n"
         "vmul.xyz $vf10xyz, $vf10xyz, $vf10xyz\n"
@@ -118,6 +132,12 @@ f32 func_001a9350(f32 *v) {
         "vaddq.x $vf10x, $vf0x, Q\n"
         "sqc2 $vf10, %0\n"
         : "=m"(r) : "r"(v));
+#else
+    r.x = PlatVu0Length3(v);
+    r.y = v[1] * v[1];
+    r.z = v[2] * v[2];
+    r.w = v[3];
+#endif
     return r.x;
 }
 

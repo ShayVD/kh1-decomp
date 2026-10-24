@@ -95,6 +95,7 @@ extern s32 D_0061621C;
 static inline f32 vu0Rand(void) {
     f32 r;
 
+#ifdef KH1_PS2
     __asm__ volatile(
         "addi $8, $0, -1\n"
         "qmtc2 $8, $vf2\n"
@@ -114,6 +115,9 @@ static inline f32 vu0Rand(void) {
         : "=r"(r)
         :
         : "$8");
+#else
+    r = PlatVu0Rand();
+#endif
     return r;
 }
 typedef struct {

@@ -8,6 +8,9 @@
  * collect hits over every object for the map collision of src/coll/mapcoll.c.
  * Read from the code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#ifndef KH1_PS2
+#include "platform/vu.h"
+#endif
 #include "data/bss_004D.h"
 #include "data/bss_004E.h"
 #include "data/pieces/D_002BD250.h"
@@ -71,6 +74,7 @@ s32 func_0011a068(void) {
 typedef struct { f32 min[4]; f32 max[4]; u8 pad[32]; } Box64;
 extern s32 D_003044D0;
 static inline void vapply(void *d, void *m, void *v) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 16(%1)\n"
@@ -84,6 +88,9 @@ static inline void vapply(void *d, void *m, void *v) {
         "sqc2 $vf9, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(m), "r"(v) : "memory");
+#else
+    PlatVu0Apply((f32 *)d, (f32 (*)[4])(m), (f32 *)v);
+#endif
 }
 typedef struct { V4 x0; V4 mn; V4 mx; V4 c[8]; } BoxWork;
 void *func_00122048(s32, s32);
@@ -140,6 +147,7 @@ void func_0011a0a0(void) {
 
 /* func_0011a410 (from hand/text_00110000_s8_lead.c). */
 static inline void vcopymatrix(void *d, void *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lq $6, 0(%1)\n"
         "lq $7, 16(%1)\n"
@@ -151,8 +159,12 @@ static inline void vcopymatrix(void *d, void *s) {
         "sq $9, 48(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "$6", "$7", "$8", "$9", "memory");
+#else
+    __builtin_memcpy((void *)(d), (void *)(s), 64);
+#endif
 }
 static inline void vscalexyz(void *d, void *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -160,8 +172,12 @@ static inline void vscalexyz(void *d, void *s, f32 t) {
         "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
         "sqc2 $vf4, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    PlatVu0Scale3W((f32 *)d, (f32 *)s, t);
+#endif
 }
 static inline void vnormalize(void *d, void *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
@@ -177,6 +193,9 @@ static inline void vnormalize(void *d, void *s) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "memory");
+#else
+    PlatVu0Normalize3((f32 *)d, (f32 *)s);
+#endif
 }
 typedef struct {
     V4 m[4];
@@ -335,7 +354,11 @@ s32 func_0011a868(s32 a0, s32 a1, f32 *a2) {
 
 /* func_0011a978 (from hand/text_00110000_h3.c). */
 static inline void CopyQword(void *dst, void *src) {
+#ifdef KH1_PS2
     __asm__ volatile("lq $6, 0(%1)\nsq $6, 0(%0)\nnop\nnop" : : "r"(dst), "r"(src) : "$6");
+#else
+    __builtin_memcpy((void *)(dst), (void *)(src), 16);
+#endif
 }
 typedef struct {
     u128 *x0;
@@ -368,7 +391,11 @@ void func_0011a9c8(s32 a0, s32 a1, u128 *a2) {
 
 /* func_0011aa18 (from hand/text_00110000_s6_03.c). */
 static inline void CopyQword1(void *dst, void *src) {
+#ifdef KH1_PS2
     __asm__ volatile("lq $6, 0(%1)\nsq $6, 0(%0)\nnop" : : "r"(dst), "r"(src) : "$6");
+#else
+    __builtin_memcpy((void *)(dst), (void *)(src), 16);
+#endif
 }
 s32 func_0011aa18(s32 a0, s32 a1, u128 *a2) {
     Ent2450 *e = &D_004E2450[a0];
@@ -414,6 +441,7 @@ typedef struct {
 } Ent2450b;
 static inline s32 vsubflags(void *a, void *b) {
     s32 f;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -425,6 +453,9 @@ static inline s32 vsubflags(void *a, void *b) {
         "vnop\n"
         "cfc2 %0, $vi17\n"
         : "=&r"(f) : "r"(a), "r"(b));
+#else
+    f = PlatVu0SubFlags((f32 *)a, (f32 *)b);
+#endif
     return f;
 }
 extern Ent2450b D_004E2450_0011ab88[] __asm__("D_004E2450");
@@ -565,6 +596,7 @@ extern s32 D_002BC128;
 extern s32 D_002BC130;
 s32 func_00119ef8(s32, s32, f32 *, f32 *, f32 *, f32 *);
 static inline void vscale2(f32 *d, f32 *v, f32 s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -572,8 +604,12 @@ static inline void vscale2(f32 *d, f32 *v, f32 s) {
         "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
         "sqc2 $vf4, 0(%0)\n"
         : : "r"(d), "r"(v), "r"(&s) : "$8", "memory");
+#else
+    PlatVu0Scale3W((f32 *)d, (f32 *)v, s);
+#endif
 }
 static inline void vadd3(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -581,8 +617,12 @@ static inline void vadd3(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Add4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void vsub3(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -590,8 +630,12 @@ static inline void vsub3(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void vnorm(f32 *d, f32 *a) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
@@ -607,6 +651,9 @@ static inline void vnorm(f32 *d, f32 *a) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a) : "memory");
+#else
+    PlatVu0Normalize3((f32 *)d, (f32 *)a);
+#endif
 }
 extern Ent2458_1b220 D_004E2458_0011b220[] __asm__("D_004E2458");
 #define D_004E2458 D_004E2458_0011b220
@@ -751,6 +798,7 @@ u64 func_0011b6a0(ColObj *o, f32 *pos, s32 a2) {
 extern s32 D_002BD150[];
 extern s32 D_002BD160[];
 static inline void vsubv(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -758,8 +806,12 @@ static inline void vsubv(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void vcross(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -769,6 +821,9 @@ static inline void vcross(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Cross3((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 #define func_0011aa18 ((s32 (*)(s32, s32, V4 *)) func_0011aa18)
 s32 func_0011b908(s32 a0, s32 a1, f32 *a2) {
@@ -793,6 +848,7 @@ s32 func_0011b908(s32 a0, s32 a1, f32 *a2) {
 typedef f32 V4_52[4] __attribute__((aligned(16)));
 f32 fabsf(f32);
 static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -800,8 +856,12 @@ static inline void v52_sub(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Sub4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void v52_cross(f32 *d, f32 *a, f32 *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -811,8 +871,12 @@ static inline void v52_cross(f32 *d, f32 *a, f32 *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Cross3((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 static inline void v52_normalize(f32 *d, f32 *s) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "vmul.xyz $vf5xyz, $vf4xyz, $vf4xyz\n"
@@ -828,9 +892,13 @@ static inline void v52_normalize(f32 *d, f32 *s) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(s) : "memory");
+#else
+    PlatVu0Normalize3((f32 *)d, (f32 *)s);
+#endif
 }
 static inline f32 v52_dot(f32 *a, f32 *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -840,6 +908,9 @@ static inline f32 v52_dot(f32 *a, f32 *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 #define func_0011a9c8 ((void (*)(s32, s32, f32 *)) func_0011a9c8)
@@ -967,6 +1038,7 @@ s32 func_0011bdf8(Obj52 *o, f32 *p, s32 *og, f32 *out) {
 /* func_0011bfc8 (from hand/text_00110000_h53.c). */
 static inline f32 w53_dot(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -976,9 +1048,13 @@ static inline f32 w53_dot(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0Dot3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 static inline void w53_scale(void *d, void *s, f32 t) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lw $8, 0(%2)\n"
@@ -986,8 +1062,12 @@ static inline void w53_scale(void *d, void *s, f32 t) {
         "vmulx.xyz $vf4xyz, $vf4xyz, $vf5x\n"
         "sqc2 $vf4, 0(%0)\n"
         : : "r"(d), "r"(s), "r"(&t) : "$8", "memory");
+#else
+    PlatVu0Scale3W((f32 *)d, (f32 *)s, t);
+#endif
 }
 static inline void w53_add(void *d, void *a, void *b) {
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf4, 0(%1)\n"
         "lqc2 $vf5, 0(%2)\n"
@@ -995,6 +1075,9 @@ static inline void w53_add(void *d, void *a, void *b) {
         "sqc2 $vf6, 0(%0)\n"
         "nop\n"
         : : "r"(d), "r"(a), "r"(b) : "memory");
+#else
+    PlatVu0Add4((f32 *)d, (f32 *)a, (f32 *)b);
+#endif
 }
 #define func_0011a978 ((void (*)(s32, s32, V53 *)) func_0011a978)
 #define func_0011a9c8 ((void (*)(s32, s32, V53 *)) func_0011a9c8)
@@ -1018,6 +1101,7 @@ s32 func_0011bfc8(s32 a0, s32 a1, void *p0, void *dir, void *out) {
 /* func_0011c118 (from hand/text_00110000_s6_03.c). */
 static inline f32 vdist2(void *a, void *b) {
     f32 r;
+#ifdef KH1_PS2
     __asm__ volatile(
         "lqc2 $vf6, 0(%1)\n"
         "lqc2 $vf4, 0(%2)\n"
@@ -1029,6 +1113,9 @@ static inline f32 vdist2(void *a, void *b) {
         "qmfc2 $2, $vf5\n"
         "mtc1 $2, %0\n"
         : "=f"(r) : "r"(a), "r"(b) : "$2");
+#else
+    r = PlatVu0DistSq3((f32 *)a, (f32 *)b);
+#endif
     return r;
 }
 typedef struct { Rec20w *x0; u8 pad[60]; } Ent2458_1c118;
