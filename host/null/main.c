@@ -47,13 +47,15 @@ static int ovl_stub;
 static unsigned long ovl_calls;
 
 unsigned long kh1_host_frame(void) { return frames; }
-extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends; /* host/null/plat_null.c */
+extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits; /* host/null/plat_null.c */
+extern int kh1_host_dmac_defer;
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
-    if (kh1_host_trace >= 5 || kh1_gs_pending_sends)
-        fprintf(stderr, "kh1-host: %u draw / immediate list nodes run, %u main-thread GS calls found the draw list "
-                "pending\n", kh1_gs_list_nodes, kh1_gs_pending_sends);
+    if (kh1_host_trace >= 5 || kh1_gs_pending_sends || kh1_gs_list_waits)
+        fprintf(stderr, "kh1-host: %u draw / immediate list nodes run, %u main-thread GS calls and %u frame-end waits "
+                "found the draw list pending%s\n", kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits,
+                kh1_host_dmac_defer ? " (KH1_HOST_DMAC=defer)" : "");
     if (ovl_stub)
         fprintf(stderr, "kh1-host: %lu overlay calls answered 0 (KH1_HOST_OVL=stub)\n", ovl_calls);
 }
@@ -178,6 +180,10 @@ int main(int argc, char **argv) {
         const char *tr = getenv("KH1_HOST_TRACE");
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
+    }
+    {
+        const char *dmac = getenv("KH1_HOST_DMAC"); /* defer: plat_null.c's replay test (session 84) */
+        kh1_host_dmac_defer = dmac && strcmp(dmac, "defer") == 0;
     }
     {
         const char *ovl = getenv("KH1_HOST_OVL");

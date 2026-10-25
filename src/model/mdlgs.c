@@ -62,7 +62,7 @@ M2C_UNK func_0015ee78(s32 arg0, s32 arg1) {
 extern volatile s32 D_00559DB4;
 void func_0015ef60(void) {
     D_002BBDF8;
-    while (D_00559DB4) ;
+    while (D_00559DB4) PlatGsListWait();
     PlatGsSyncPath(0, 0);
     PlatDisableDmac(1);
     PlatDisableDmac(2);

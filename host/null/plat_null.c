@@ -289,6 +289,10 @@ void PlatIFlushCache(int op) {}
 static int (*null_dmac_fn[16][NULL_DMAC_HANDLERS])(int);
 static u32 null_dmac_stat, null_dmac_mask;
 static int null_dmac_running;
+/* KH1_HOST_DMAC=defer (session 84, vita-port-plan 5.1x; host/null/main.c): a transfer's end and
+ * PlatEnableDmac only set the status / mask, no handler runs there, so the draw list stays pending
+ * after func_0015eb78's hand-over and only kh1_gs_flush_pending replays it: the port's order. */
+int kh1_host_dmac_defer;
 static void null_dmac_run(void) {
     int ch, i;
     u32 due;
@@ -305,7 +309,7 @@ static void null_dmac_run(void) {
 }
 static void null_dmac_done(int ch) {
     null_dmac_stat |= 1u << (ch & 15);
-    null_dmac_run();
+    if (!kh1_host_dmac_defer) null_dmac_run();
 }
 void PlatDmaPutStat(u32 v) { null_dmac_stat &= ~(v & 0xFFFF); }
 /* the id is the handler's slot + 1 (0 would read as "none" to a caller) */
@@ -324,7 +328,7 @@ int PlatRemoveDmacHandler(int ch, int id) {
 }
 int PlatEnableDmac(int ch) {
     null_dmac_mask |= 1u << (ch & 15);
-    null_dmac_run();
+    if (!kh1_host_dmac_defer) null_dmac_run();
     return 0;
 }
 int PlatDisableDmac(int ch) {
@@ -346,7 +350,7 @@ u32 PlatVu0GetVpuStat(void) { return 0; /* VU1 idle */ }
 static int null_node_list = -1;     /* the list whose node's callback is running, -1 none */
 static int null_node_after;         /* a node ran since the last send outside one */
 static unsigned null_node_count[2];
-unsigned kh1_gs_list_nodes, kh1_gs_pending_sends;
+unsigned kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits;
 unsigned long kh1_host_frame(void);
 void PlatGsListNode(int list, void *node) {
     const u32 *n = node;
@@ -384,12 +388,26 @@ static void kh1_gs_flush_pending(const char *what) {
     null_dmac_run();
 }
 /* what: the GS send or sync (0 for a channel that is not the GS's: VIF0); send: a transfer, which
- * prints its own line (dmawalk.c), so the marker goes before it */
+ * prints its own line (dmawalk.c), so the marker goes before it and after the replayed nodes */
 static void null_gs_send(const char *what, int send) {
     if (null_node_list >= 0 || null_dmac_running) return; /* a node's own send, or a handler's */
+    if (what) kh1_gs_flush_pending(what);
     if (send && null_node_after) {
         if (kh1_host_trace >= 5) printf("kh1-host: node main\n");
         null_node_after = 0;
     }
-    if (what) kh1_gs_flush_pending(what);
+}
+/* func_0015ef60's frame-end wait (session 84): the list still pending there (KH1_HOST_DMAC=defer:
+ * nothing replayed it since the hand-over) is replayed now.  A list that stays pending with no
+ * handler due would spin for ever: say so and stop. */
+void PlatGsListWait(void) {
+    if (!D_00559DB4) return;
+    kh1_gs_list_waits++;
+    if (kh1_host_trace >= 5) printf("kh1-host: flush: frame-end wait found the draw list pending (frame %lu)\n",
+                                    kh1_host_frame());
+    null_dmac_run();
+    if (D_00559DB4 && !(null_dmac_stat & null_dmac_mask)) {
+        printf("kh1-host: the draw list is still pending at the frame-end wait, no DMAC handler due\n");
+        exit(3);
+    }
 }

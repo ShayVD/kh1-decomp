@@ -69,12 +69,17 @@ u64 PlatGsGetCsr(void);
  * func_0015eea0; the node's key at +4, callback at +0xC, payload at +0x10), PlatGsListNode(list, 0)
  * after it, and PlatGsListEnd(list) when the list is done.  The port records each node as a command
  * there; the host's null platform traces them.  On the matching PS2 build they are nothing. */
+/* PlatGsListWait (session 84, vita-port-plan.md 5.1x): the body of func_0015ef60's frame-end wait
+ * for the draw list (D_00559DB4); the port replays the pending list there.  On the PS2 the DMAC
+ * interrupts drain it and the loop body stays empty. */
 #ifdef KH1_PS2
 #define PlatGsListNode(list, node) ((void)0)
 #define PlatGsListEnd(list) ((void)0)
+#define PlatGsListWait() ((void)0)
 #else
 void PlatGsListNode(int list, void *node);
 void PlatGsListEnd(int list);
+void PlatGsListWait(void);
 #endif
 #define PLAT_GS_CSR_FIELD 0x2000 /* CSR.FIELD: the field being displayed (interlace) */
 
