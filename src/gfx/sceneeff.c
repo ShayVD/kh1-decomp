@@ -98,6 +98,12 @@ void func_00102a48(s32 c, s32 o) {
     return;
 found:
     D_002A49A0[3] = rgba(c, 0x80);
+#ifndef KH1_PS2
+    /* the first (opaque) copy's corners are data on the PS2 (x 0x6fe0 .. 0x8fe0): a port writes them
+     * with the view's edges like the other eight (renderer-spec 5.4 "Session 99") */
+    D_002A49A0[5] = xyz(PLAT_VIEW_GX0 - 0x20, 0x73e0);
+    D_002A49A0[7] = xyz(PLAT_VIEW_GX1 - 0x20, 0x8be0);
+#endif
     D_002A49A0[9] = D_002A49A0[15] = D_002A49A0[21] = D_002A49A0[27] = rgba(c, 0x40);
     D_002A49A0[33] = D_002A49A0[39] = D_002A49A0[45] = D_002A49A0[51] = rgba(c, 0x20);
     D_002A49A0[11] = xyz(PLAT_VIEW_GX0 - 0x20 - o, 0x73e0 - o);

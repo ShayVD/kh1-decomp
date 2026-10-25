@@ -110,6 +110,12 @@ static int gs_sprite(u32 p, const KH1GsContext *c, int flat) {
     s.xy[0] = vxy[0]; s.xy[1] = vxy[1];
     s.uv[0] = vuv[0]; s.uv[1] = vuv[1];
     s.rgba = vrgba[1];
+    /* session 99: the model's buffers are the PS2's 512 wide with canvas 0 at pixel 0, so a stretched
+     * copy of a buffer laid out like the target (u from the view's left edge, the renderer's) is read
+     * back by the margin here, and every copy in the model reads the same canvas (renderer-spec 5.4
+     * "Session 99"); a capture of its own (KH1_FS_UOWN) starts at its texel 0; the registers and the
+     * trace keep the renderer's u */
+    s.uorg = gs_sw && (gs_swhat & (KH1_FS_U | KH1_FS_UOWN)) == KH1_FS_U ? gs_sx0 : 0;
     return flat ? kh1_gsmem_flat_sprite(&s) : kh1_gsmem_sprite(&s);
 }
 

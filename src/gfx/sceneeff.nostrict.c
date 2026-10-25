@@ -9,6 +9,8 @@ extern s32 D_002A61F8;
 extern s32 D_002A61FC;
 extern u64 D_002A5430[];
 extern u64 D_002A52B0[];
+extern u64 D_002A5250[];
+extern u64 D_002A5320[];
 extern u64 D_002A5620[];
 extern u64 D_002A5A90[];
 extern u64 D_002A5AC0[];
@@ -34,6 +36,16 @@ s32 func_00103058(void) {
     D_002A5430[49] = XYZ(PLAT_VIEW_GX1 - 0x20, 0x8c00, z);
     D_002A5430[53] = XYZ(PLAT_VIEW_GX0, 0x73e0, z);
     D_002A5430[55] = XYZ(PLAT_VIEW_GX1, 0x8be0, z);
+#ifndef KH1_PS2
+    /* data on the PS2 (renderer-spec 5.4 "Session 99", tools/host/fscheck.py): mode 1's alpha fill
+     * D_002A5250 (x 0x7000 .. 0x9000, sent 16 times under the columns) and the half-size capture
+     * D_002A5380 both modes send (D_002A5320[17] / [19]: x 0x7000 .. 0x8000, the view at half size in
+     * a buffer of its own) take the view's edges here, so the sends' rows stretch only u */
+    D_002A5250[4] = XYZ(PLAT_VIEW_GX0, 0x7400, 0xfffffffe);
+    D_002A5250[5] = XYZ(PLAT_VIEW_GX1, 0x8c00, 0xfffffffe);
+    D_002A5320[17] = XYZ(0x7000, 0x7400, 0xfffffffe);
+    D_002A5320[19] = XYZ(0x7000 + PLAT_VIEW_W16 / 2, 0x8000, 0xfffffffe);
+#endif
     if (D_002A61F8 != 0) {
         D_002A52B0[4] = XYZ(PLAT_VIEW_GX0, 0x7400, z);
         D_002A52B0[5] = XYZ(PLAT_VIEW_GX1, 0x8c00, z);

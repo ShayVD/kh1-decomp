@@ -159,4 +159,25 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
 else
   echo "selftest: no gcc -m32, dmawalk_test skipped"
 fi
+# The full-screen packets' table against the ELF and the C (tools/host/fscheck.py, session 99), only with
+# the user's own ELF in the repo root: every full-screen send is a fullscreen.c row, built from the view in C,
+# or exempt; a table missing the stored frame's row fails, and so does the flash's 4:3 literal put back.
+ELF="$ROOT/$(cd "$ROOT" && python3 tools/kh1tool.py config target.elf)"
+if [[ -f "$ELF" ]]; then
+  python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" > "$W/fs.log" || { cat "$W/fs.log"; exit 1; }
+  tail -n 1 "$W/fs.log"
+  sed '/D_002B66B0, KH1_FS_X/d' "$ROOT/host/port/fullscreen.c" > "$W/fullscreen_missing.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --table "$W/fullscreen_missing.c" > "$W/fs_missing.log" ||
+     ! grep -q 'D_002B66B0 .*no KH1_FS_X row' "$W/fs_missing.log"; then
+    echo "selftest: fscheck missed a full-screen send left out of the table" >&2; cat "$W/fs_missing.log" >&2; exit 1
+  fi
+  mkdir -p "$W/fsneg/screen" && cp -r "$ROOT/src/." "$W/fsneg/"
+  sed -i 's/D_002A6970\[11\] = 0x18C000000 | PLAT_VIEW_GX1;/D_002A6970[11] = 0x18C009000;/' "$W/fsneg/screen/brightfade.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg" > "$W/fs_neg.log" ||
+     ! grep -q 'writes D_002A6970\[11\] = 0x18C009000: a 4:3 edge' "$W/fs_neg.log"; then
+    echo "selftest: fscheck missed a full-screen pass written with a 4:3 edge" >&2; cat "$W/fs_neg.log" >&2; exit 1
+  fi
+else
+  echo "selftest: no $(basename "$ELF"), fscheck skipped"
+fi
 echo "selftest: PASS"

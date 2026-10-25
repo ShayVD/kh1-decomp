@@ -7,6 +7,7 @@
 
 extern u8 D_002A6500[], D_002A6890[], D_002A6070[], D_002A61E0[], D_002A5FD0[], D_002A4ED0[];
 extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[], D_002A6110[], D_002B66B0[];
+extern u8 D_002A4DD0[], D_002A4B60[], D_002A5A90[], D_002A5620[], D_002A5AC0[], D_002A6A40[], D_002A6AA0[], D_002B65E0[];
 
 const KH1FullScreen kh1_fullscreen[] = {
     /* brightfade.c: the clear, 16 black sprites of 32 px, x 1792 .. 2304 (each column a sprite) */
@@ -33,6 +34,30 @@ const KH1FullScreen kh1_fullscreen[] = {
      * at 0 .. 512): the stored frame, loaded back into the Z area by func_00109f88 (512 x 384, the port's
      * target size), drawn over the target, u 0 .. 512 at x 1791.5 .. 2303.5, its colour fading */
     { D_002B66B0, KH1_FS_X | KH1_FS_U, "stored frame back" },
+    /* capture.c func_00109e20 (session 99, tools/host/fscheck.py): the stored frame cross-faded, the target
+     * (u 0 .. 512) and the frame func_00109cd0 loaded into the Z area (u 0 .. 512), two sprites 1792 .. 2304 */
+    { D_002B65E0, KH1_FS_X | KH1_FS_U, "stored frame cross-fade" },
+    /* sceneeff.c func_00102a48 (session 99): the menu blur with an empty capture, one black sprite 1792 ..
+     * 2304 (TEX0 the capture, u 0 .. 1: one texel modulated to black) */
+    { D_002A4DD0, KH1_FS_X, "menu blur, no capture" },
+    /* sceneeff.c func_00102a48 (session 99): the menu blur's nine copies of the half-size capture at 0x3600,
+     * u 0 .. 256; their XYZ come from C (PLAT_VIEW_GX0 / GX1, the first copy's too off the PS2), so u only:
+     * the capture holds the view at half size (D_002B6760's KH1_FS_XS), and the stretch is proportional */
+    { D_002A4B60, KH1_FS_U | KH1_FS_UOWN, "menu blur" },
+    /* sceneeff.nostrict.c func_00103058 (session 99): the depth blur's capture, the target (u 0 .. 512) to
+     * 0x3600 at half size (D_002A5380, x 1792 .. 2048), a buffer of its own like the menu capture; sent by
+     * both modes (mode 1 after its alpha mask D_002A5250 / D_002A52B0); every XYZ written from C off the
+     * PS2 (the capture's right edge 0x7000 + PLAT_VIEW_W16 / 2), so u only */
+    { D_002A5A90, KH1_FS_U, "depth blur capture" },
+    { D_002A5620, KH1_FS_U, "depth blur mask and capture" },
+    /* sceneeff.nostrict.c func_00103058 (session 99): the depth blur's nine copies of 0x3600 (u 0 .. 255) in
+     * the 16 columns; XYZ from C (D_002A5430), so u only */
+    { D_002A5AC0, KH1_FS_U | KH1_FS_UOWN, "depth blur" },
+    /* brightfade.c func_00106460 (session 99): the shaped wipe (renderer-spec 3.2's destination-alpha mask), the target's alpha set to 0x80 (FBMSK 0xFFFFFF)
+     * and the black drawn where the alpha says, each one sprite 1792 .. 2304; the centre sprite between
+     * them (D_002A6B70) is placed from C */
+    { D_002A6A40, KH1_FS_X, "wipe mask alpha" },
+    { D_002A6AA0, KH1_FS_X, "wipe mask black" },
     /* dispenv.c func_0010ff60 (session 93): the display cleared to a grey level, one sprite 1792 .. 2304
      * x 1856 .. 2304 under SCISSOR_1 0 .. 511 x 0 .. 447 (the scissor rule's display case) */
     { D_002BC980, KH1_FS_X, "display clear" },

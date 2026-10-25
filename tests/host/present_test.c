@@ -263,23 +263,25 @@ int main(int argc, char **argv) {
             }
 
             /* under KH1_HOST_WIDE the copy is stretched (fullscreen.c's row): X to the view, u from its
-             * left edge, so the model's 512-wide display holds canvas x + margin at its pixel x */
+             * left edge; session 99: the model reads the stretched u back by the margin (gsregs.c), so its
+             * 512-wide display holds canvas x at its pixel x, the target's 0.5 texel scaled by 1.32 */
             kh1_dma_fullscreen(fs, 1, -1325, 8192 + 2 * 1325);
             kh1_gs_view(-1325, 8192 + 2 * 1325);
             kh1_present_wide(1325);
             copy_walk(argv[1], 2, &f);
-            CHECK("wide: the display shifted by the margin", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 100) == tcol(183, 85) &&
-                  kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 4, 4) == tcol(87, 3));
-            /* the present reads it back by the margin: canvas 300 is the target's 300, canvas 0 .. 82.8
-             * (no target pixel there in the model) and the view's sides black */
+            CHECK("wide: the display holds the canvas", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 100) == tcol(100, 85) &&
+                  kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 4, 4) == tcol(4, 3) &&
+                  kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 500, 100) == tcol(500, 85));
+            /* the present reads it as it is: canvas 300 is the target's 300, canvas 40 the target's 40
+             * (session 97's shot left it black: the copy was shifted), the view's sides black */
             if (f) {
                 kh1_canvas_map(&c, 0x7000 + 300 * 16 + 8, 0x7400 + 100 * 16 + 8, &sx, &sy);
                 CHECK("wide: the display shot lined up", pam_at(f, 960, 544, (s32)sx, (s32)sy) == tcol(300, 100));
                 kh1_canvas_map(&c, 0x7000 + 476 * 16 + 8, 0x7400 + 300 * 16 + 8, &sx, &sy);
                 CHECK("wide: its right", pam_at(f, 960, 544, (s32)sx, (s32)sy) == tcol(476, 300));
                 kh1_canvas_map(&c, 0x7000 + 40 * 16 + 8, 0x7400 + 100 * 16 + 8, &sx, &sy);
-                CHECK("wide: left of the margin black", pam_at(f, 960, 544, (s32)sx, (s32)sy) == 0 &&
-                      pam_at(f, 960, 544, 10, 272) == 0);
+                CHECK("wide: left of the margin shown, the sides black", pam_at(f, 960, 544, (s32)sx, (s32)sy) == tcol(40, 100) &&
+                      pam_at(f, 960, 544, 10, 272) == 0 && pam_at(f, 960, 544, 950, 272) == 0);
                 fclose(f);
             }
             /* the target shot under the wide view: the target as it is, the sides black */
@@ -303,6 +305,7 @@ int main(int argc, char **argv) {
         {
             static const KH1FullScreen zfs[1] = { { mem[2], KH1_FS_X | KH1_FS_U, "copy into the Z area" } };
             static const KH1FullScreen sfs[1] = { { mem[2], KH1_FS_X | KH1_FS_U, "spin copy" } };
+            static const KH1FullScreen ofs[1] = { { mem[2], KH1_FS_X | KH1_FS_U | KH1_FS_UOWN, "a capture's copy" } };
             CHECK("zcopy: walk", zcopy_walk() == 0);
             /* the Z area's pixel p holds the target's p + 1.5 (point-sampled: p + 1), rows the same */
             /* x -1.5 .. 510.5 covers pixels 0 .. 510 (the GS's x0 <= x < x1), rows 0 .. 382: the Z area's
@@ -316,13 +319,14 @@ int main(int argc, char **argv) {
             CHECK("zcopy: the strip edges", dx_at(KH1_PSMCT24, 0xE00, 30, 7) == 1 && dx_at(KH1_PSMCT24, 0xE00, 31, 7) == 1 &&
                   dx_at(KH1_PSMCT24, 0xE00, 32, 7) == 1);
             CHECK("zcopy: the target untouched", kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 5, 5) == (0x80000000u | ucol(5, 5)));
-            /* under the wide stretch: X to -84.8 .. 592.8, u 0 .. 677.6, so in the model's 512-wide Z
-             * area pixel p holds the target's p + 82.8 + 1.99: the frame copy's margin shift and the
-             * 1.5 texels scaled by 1.32 */
+            /* under the wide stretch: X to -84.8 .. 592.8, u 0 .. 677.6 (the renderer's, from the view's
+             * left edge); session 98's model held the target's p + 82.8 + 1.99 at pixel p, session 99's
+             * reads u back by the margin, so pixel p holds the target's p + 1.99 (the 1.5 texels scaled
+             * by 1.32), as a view-wide renderer's does */
             kh1_dma_fullscreen(zfs, 1, -1325, 8192 + 2 * 1325);
             CHECK("zcopy wide: walk", zcopy_walk() == 0);
-            CHECK("zcopy wide: the margin shift", dx_at(KH1_PSMCT24, 0xE00, 0, 50) == 84 && dx_at(KH1_PSMCT24, 0xE00, 100, 50) == 84 &&
-                  dx_at(KH1_PSMCT24, 0xE00, 400, 50) == 84 && dy_at(KH1_PSMCT24, 0xE00, 100, 50) == 1);
+            CHECK("zcopy wide: no margin shift", dx_at(KH1_PSMCT24, 0xE00, 0, 50) == 2 && dx_at(KH1_PSMCT24, 0xE00, 100, 50) == 2 &&
+                  dx_at(KH1_PSMCT24, 0xE00, 400, 50) == 2 && dy_at(KH1_PSMCT24, 0xE00, 100, 50) == 1);
 
             /* the spin copy: target pixel (t, r) holds the display's (t + 1, r x 448 / 384) */
             kh1_dma_fullscreen(0, 0, 0, 0);
@@ -333,13 +337,18 @@ int main(int argc, char **argv) {
             CHECK("spin: 448 lines to 384", ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 0)) == 0 &&
                   ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 192)) == 224 &&
                   ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 383)) == 446);
-            /* under the wide stretch the model's target pixel t reads the display's t + 82.8 + 1.32: and
-             * the model's display already holds canvas d + 82.8 (the frame copy's shift), so the margin
-             * counts twice in the model; a renderer's view-wide display gives canvas t + 1.32 */
+            /* under the wide stretch session 98's model read the display's t + 82.8 + 1.32 at target pixel
+             * t, over a display already holding canvas d + 82.8: the margin twice.  Session 99: the
+             * model's display holds canvas d and the copy's u is read back by the margin, so target pixel
+             * t holds the display's t + 1.32, as a renderer's view-wide display gives */
             kh1_dma_fullscreen(sfs, 1, -1325, 8192 + 2 * 1325);
             CHECK("spin wide: walk", spin_walk() == 0);
-            CHECK("spin wide: the margin shift", dx_at(KH1_PSMCT32, 0x1A00, 0, 100) == 84 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 84);
+            CHECK("spin wide: no margin shift", dx_at(KH1_PSMCT32, 0x1A00, 0, 100) == 1 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 1);
             CHECK("spin wide: past the display clamped", dx_at(KH1_PSMCT32, 0x1A00, 511, 100) == 0);
+            /* the same copy flagged as reading a buffer of its own (KH1_FS_UOWN, the blurs' capture): its u
+             * from the buffer's texel 0, not read back, so the model shows session 98's t + 84 */
+            kh1_dma_fullscreen(ofs, 1, -1325, 8192 + 2 * 1325);
+            CHECK("spin wide: a capture of its own not read back", spin_walk() == 0 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 84);
             kh1_dma_fullscreen(0, 0, 0, 0);
         }
     }

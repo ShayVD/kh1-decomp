@@ -1897,6 +1897,38 @@ byte-identical, the float ELF the same, no float-untested row). selftest PASS (p
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1am Session 99: every full-screen send checked, the model's copies on one canvas
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). Three changes under src/, all off
+the PS2 or folding to the original's literal: **all 677 out/build objects bit-identical**, kh1.elf
+byte-identical, the float ELF the same (no float-untested row). selftest PASS (present_test 46 -> 47
+checks, fscheck with two negative cases).
+
+- **tools/host/fscheck.py** (item 4a, renderer-spec 5.4 "Session 99"): every send through `func_00106b18`
+  (37) walked from the ELF; the 21 full-screen ones (a sprite or a column set over the canvas, or a
+  half-size capture) checked against host/port/fullscreen.c and the C's writes of their XYZ words. It found
+  **8 sends with no row** (the stored frame cross-fade `D_002B65E0`, the menu blur's empty-capture
+  `D_002A4DD0` and copies `D_002A4B60`, the depth blur's capture `D_002A5A90`, mask `D_002A5620` and copies
+  `D_002A5AC0`, the shaped wipe's `D_002A6A40` / `D_002A6AA0`) and **3 passes left partly 4:3 in C**: the
+  menu blur's first copy and the depth blur's alpha fill and capture had their corners in data (now written
+  with the view's edges under `#ifndef KH1_PS2`, sceneeff.c / sceneeff.nostrict.c), and brightfade.c's
+  colour over the target used `0x7000 / 0x9000` literals (now `PLAT_VIEW_GX0 / GX1`). 19 rows, 3 exempt (the
+  movie buffer's copy, the system-message band), 0 problems; in the self-test when the ELF is present.
+- **`KH1_FS_UOWN`** (include/platform/fullscreen.h): the blurs' copies read a capture of their own; the
+  renderer's stretch is the same, the host model's read-back (below) skips them.
+- **The model's copies on one canvas** (item 4b, host only): gsregs.c passes the view's x0 as `uorg` to the
+  GS memory model for a stretched copy of a buffer laid out like the target, so the 512-wide model's display
+  holds canvas d at pixel d and the spin copy no longer counts the margin twice (present_test: display, Z
+  area, spin; a `KH1_FS_UOWN` copy not read back). The registers and the trace keep the renderer's u. The
+  present's display shot is no longer shifted (both shots canvas 0 .. 512, the sides black).
+- **A port rule for the capture** (renderer-spec 5.4 "Session 99"): `func_0010a3e8`'s 0x24000-byte block
+  and `func_00102a48`'s 0x9000-word empty-capture scan are the game's sizes (256 x 192 x 3); a port keeps
+  that main-memory copy and scales its own texture to and from it.
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders; and now **a real-disc wide run's `--extents`**: the menu (its blur),
+  an event with the depth blur, a world change (the cross-fade `D_002B65E0`) and the shaped wipe should
+  each show its full-screen sends at -82.8 .. 594.8 (the captures at the view's half).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

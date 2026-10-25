@@ -2477,6 +2477,69 @@ static packets list above), so fullscreen.c now has
 its row (`KH1_FS_X | KH1_FS_U`); the rerun shows it at -83.5 .. 594.1 (the -0.5 scaled) with the view's
 scissor. `--draws --targets --uploads --sends` identical with and without `KH1_HOST_WIDE`.
 
+#### Session 99: every full-screen send checked, the model's copies on one canvas (static + host)
+
+**The scan** (item 4a, `tools/host/fscheck.py`, needs the user's ELF; tests/selftest.sh runs it when the ELF
+is in the repo root, with two negative cases). Every send through `func_00106b18`, from the `lui / addiu`
+pairs before a call (`gs_packets.py --callers`) and from every `func_00106b18(D_x)` in src/ (37 sends), is
+walked; a send whose SPRITEs' X together span the canvas (one sprite, or a set of columns, to within 4 px)
+is full-screen (21), a sprite 1792 .. 2048 over 192 lines is a half-size capture into a buffer of its own.
+Each one's XYZ words are matched against the C's constant-index writes (`D_x[i] = ...`, u64 / u32 arrays):
+data XYZ need an X (half: XS) row in host/port/fullscreen.c, C-written XYZ must name the view
+(`PLAT_VIEW_*`) and have no X row (the stretch would count the view twice), and a copy (textured, u over
+255 texels or more) needs a U row; no row may be stale. **Session 98's list had 11 rows; the scan found 13
+problems:**
+
+| Send | What | Found | Now |
+| --- | --- | --- | --- |
+| `D_002B65E0` | capture.c `func_00109e20`: the stored frame cross-faded, the target and the Z area (where `func_00109cd0` loaded the stored frame) blended, two sprites u 0 .. 512 | no row | X and u |
+| `D_002A4DD0` | sceneeff.c `func_00102a48`: the menu blur with an empty capture, one black sprite (TEX0 the capture, u 0 .. 1) | no row | X |
+| `D_002A4B60` | the menu blur's nine copies of the half-size capture at `0x3600`, u 0 .. 256, in the 16 columns | **the first (opaque) copy's corners are data** (`D_002A49A0[5] / [7]`, x `0x6fe0 .. 0x8fe0`): the other eight came from C with the view's edges, it stayed 4:3; and no u row | C writes `[5] / [7]` off the PS2 (`#ifndef KH1_PS2`); u (`KH1_FS_U \| KH1_FS_UOWN`) |
+| `D_002A5A90` | sceneeff.nostrict.c `func_00103058`: the depth blur's capture, the target (u 0 .. 512) to `0x3600` at half size (`D_002A5380`) | no row | C writes `D_002A5320[17] / [19]` off the PS2 (`0x7000 .. 0x7000 + PLAT_VIEW_W16 / 2`); u |
+| `D_002A5620` | the depth blur's mode 1: the target's alpha set to 128 (`D_002A5250`, in the 16 columns), cleared behind the depth (`D_002A52B0`, C), then the same capture | **the alpha fill's XYZ are data** (x `0x7000 .. 0x9000`), and the capture | C writes `D_002A5250[4] / [5]` off the PS2; u |
+| `D_002A5AC0` | the depth blur's nine copies of `0x3600` (u 0 .. 255; XYZ from C, `D_002A5430`) | no u row | u (`KH1_FS_UOWN`) |
+| `D_002A69D0` | brightfade.c `func_00106000`: the colour over the target before the frame copy (`D_002BC0B0.a != 0`) | **4:3 literals in C** (`D_002A6970[10] / [11] = 0x174007000 / 0x18C009000`, while the flash after the copy used `PLAT_VIEW_GX0 / GX1`) | `0x174000000 \| PLAT_VIEW_GX0`, `0x18C000000 \| PLAT_VIEW_GX1` (the PS2 objects bit-identical) |
+| `D_002A6A40`, `D_002A6AA0` | brightfade.c `func_00106460`: the shaped wipe (3.2's destination-alpha mask), the target's alpha set (FBMSK 0xFFFFFF) and the black drawn where it says, each one sprite; the centre sprite `D_002A6B70` is placed from C | no rows | X |
+
+**Exempt** (fscheck's `EXEMPT`, they stay 4:3 and centred): the frame copy into the 640-wide movie buffer
+`D_002A6960` (`func_00106000` case 2, and its flash's literals in `WRITE_EXEMPT`), and the system-message
+band's `D_002BBC20` / `D_002BBCC0` (4.15: its own 512 x 128 display at `0x3600` on read circuit 1). Today:
+37 sends, 21 full-screen, 19 rows, 3 exempt, 0 problems. **All 677 out/build objects bit-identical**
+(every new C write is `#ifndef KH1_PS2`; the flash's `PLAT_VIEW_GX0 / GX1` fold to the literals), kh1.elf
+byte-identical, so the m12 float ELF is the same bytes (no float-untested row).
+
+**`KH1_FS_UOWN`** (include/platform/fullscreen.h): a U row whose u reads a buffer of its own (the blurs'
+half-size capture at `0x3600`, texel 0 at the view's left edge whatever the layout). For a renderer the
+stretch is the same proportional one (u x w / 8192: 256 -> 338.8 at 960 x 544, the capture's half of the
+view, `D_002B6760`'s `KH1_FS_XS`); only a 512-wide model tells it apart (below).
+
+**Not sends, the same buffers** (capture.c, for a port's renderer): `func_0010a3e8` sends the menu capture
+`D_002B6760` (its row) and stores `0x3600` at 256 x 192 (`PlatGsSetDefStoreImage(.., 0x3600, 4, .., 256,
+192)`) into a 0x24000-byte block (`func_00121e28(0x24000)`: 256 x 192 x 3); `func_0010a470` loads it back the
+same size; `func_00109cd0` / `func_00109f88` load the stored 512 x 384 frame into the Z area in two halves.
+These are platform calls, sized by the port, but **the main-memory sizes are the game's**: `func_00102a48`
+scans the block's first 0x9000 words for a non-zero to tell an empty capture (then it sends `D_002A4DD0`).
+The simplest port rule: keep the PS2's 256 x 192 x 3 bytes in main memory (the port's store downscales the
+view's half to it, its load scales it back into its own texture), so neither constant moves.
+
+**The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
+the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame
+copy's u from the view's left edge), and the spin copy reads that display with the same stretch.
+**Decided: the model reads a stretched copy back by the margin.** host/null/gsregs.c's `gs_sprite` passes
+`uorg` = the view's x0 (-1325 sixteenths) to the model (host/null/gsmem.h `KH1GsSprite.uorg`) for a send
+whose row has `KH1_FS_U` and not `KH1_FS_UOWN`; gsmem.c adds it to both u as it samples (a u left of
+texel 0 reads texel 0: the model has no pixel there). The UV register, the trace and `gsstate.py` keep the
+renderer's u (gsregs_test unchanged). So every copy of a buffer laid out like the target reads the same
+canvas: the display's pixel d holds canvas d + 0.66 -> d, the Z-area copy's pixel p the target's p + 1.99
+-> p + 2, the spin copy's pixel t the display's t + 1.32 -> t + 1, as a view-wide renderer's do; a capture
+of its own (`KH1_FS_UOWN`) is not read back (present_test: session 98's t + 84). The present no longer
+shifts the display shot back (host/null/present.c): both shots show canvas 0 .. 512 as it is, the view's
+sides black ("wide: the view's sides black, the model's buffers are the PS2's 512"). present_test 46 -> 47
+checks. The fake disc's wide run (`KH1_HOST_OVL=stub:2 KH1_HOST_WIDE=1 KH1_HOST_TRACE=5 KH1_HOST_SHOT`):
+`--draws / --targets / --uploads / --sends` identical with and without `KH1_HOST_WIDE`; the clear, the display
+clear, the frame copy (-82.8 .. 594.8) and the stored frame back (-83.5 .. 594.1) with the view's scissor,
+as session 98; the frames still black; the known stop at frame 6.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and

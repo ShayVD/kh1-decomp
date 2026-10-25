@@ -123,8 +123,8 @@ void func_00106000(s32 a) {
     }
     if (D_002BC0B0.a != 0) {
         D_002A6970[9] = rgba(&D_002BC0B0);
-        D_002A6970[10] = 0x174007000;
-        D_002A6970[11] = 0x18C009000;
+        D_002A6970[10] = 0x174000000 | PLAT_VIEW_GX0; /* the colour over the target: the whole view (session 99) */
+        D_002A6970[11] = 0x18C000000 | PLAT_VIEW_GX1;
         func_00106b18(D_002A69D0);
     }
     if (D_002A6208 != 0) {
