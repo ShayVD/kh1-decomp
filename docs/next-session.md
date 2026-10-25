@@ -9,13 +9,26 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 119 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 120 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 119, 2026-10-25)
+## Where we stopped (end of session 120, 2026-10-25)
+
+- **Session 120** (static, vita-port-plan 5.1bh): **the texture function and the sampler state in the shader.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
+  include/platform/texfunc.h / host/port/texfunc.c (renderer-spec 4.13 "Session 120"): TFX MODULATE / DECAL /
+  HIGHLIGHT / HIGHLIGHT2 with TCC on the 0x80 scale, and a shader model (exact when it takes the 8-bit values
+  back, the plain float form within 1). New include/platform/sampler.h / host/port/sampler.c: REPEAT / CLAMP
+  as GPU modes, REGION_CLAMP as a GPU clamp plus the shader's coordinate clamp to MIN + 0.5 .. MAX + 0.5
+  (exact), REGION_REPEAT as the shader's own taps, TEX1 as one filter a draw. The survey (dmawalk.py --state
+  and the C): MODULATE everywhere, DECAL only in texspot's sprite, no HIGHLIGHT; TCC 0 only on CT24 copies;
+  CLAMP, REGION_CLAMP, REPEAT and one REGION_REPEAT; MXL 0 everywhere, MMAG equal to MMIN in every LCM 0
+  value. New tests/host/texfunc_test.c (33 checks, MODULATE / DECAL against the model's sprite) and
+  sampler_test.c (21 checks, every mode pair against the GS's per-tap rule, point REPEAT / CLAMP against the
+  sprite). kh1.elf byte-identical, no float-untested row; selftest PASS.
 
 - **Session 119** (static, vita-port-plan 5.1bg): **the texture formats a port uploads, TEXA in the shader.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -558,7 +571,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 120 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 121 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -580,7 +593,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 119: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 120: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -625,17 +638,18 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
    builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 119): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
+   101's card, still unanswered at session 120): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
    winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **the texture function in the shader** (the next step after 5.1bg): TEX0's
-   TFX (MODULATE, DECAL, HIGHLIGHT, HIGHLIGHT2) and TCC with the vertex colour on the GS's 0x80 scale, as a port
-   function (a host/port/texfunc.c and its header, the fragment shader's model) tested against
-   `kh1_gsmem_sprite`'s MODULATE / DECAL on texfmt's uploads, and the HIGHLIGHT forms from the GS manual's
-   formulas (does the game use them? grep the C and the static packets for TFX 2 / 3 and record it);
-   (c) **the sampler state**: CLAMP's WMS / WMT (REPEAT, CLAMP, REGION_CLAMP, REGION_REPEAT: which the game
-   sets, from the C and the static packets) and TEX1's MMAG / MMIN / LCM / L / K mapped to a GPU sampler or to
-   shader code (REGION_REPEAT has no GPU mode), with point-sampled REPEAT / CLAMP checked against the model's
-   sprite; record which forms the game uses in renderer-spec 4.13 "Session 120".
+   vita-port-plan 5.1 entry); (b) **the blend state** (the next step after 5.1bh): ALPHA's A / B / C / D and
+   FIX as a GPU blend state, as port code (a host/port/blend.c and its header) tested against
+   `kh1_gsmem_sprite`'s ABE blending: the GS's C is As, Ad or FIX on the 0x80 scale, so As above 0x80 is a
+   factor above 1.0 that a GPU blend factor clamps (which equations the game uses, from §3.2's five and the
+   window bevel's subtractive one, and whether any draw's alpha goes past 0x80: the shader can pre-scale the
+   colour, or a second form is needed); COLCLAMP 1 and the written alpha (the source's); FBMSK as the write
+   mask; (c) **the alpha test and destination alpha**: TEST's ATST / AREF / AFAIL as a shader discard and
+   write masks (AFAIL FB_ONLY / ZB_ONLY / RGB_ONLY), DATE / DATM as a stencil, tested on the model's sprite
+   where it models them (extend `kh1_gsmem_sprite` for ATE if needed, the PS2 build untouched); record which
+   forms the game sets in renderer-spec 4.13 "Session 121".
    (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
    callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
@@ -645,10 +659,12 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    cache's line** (loads, fills, the most fills in a frame, uncached draws: 64 slots enough?), **the texture
    cache's line** (stamp hits against hash hits, decodes and texels decoded a frame, texels held: 128 entries
    and 4M texels enough?) and the bytes the slot `0x3600` takes a frame (`--uploads`), into renderer-spec 4.13
-   "Session 117" / "Session 118".
+   "Session 117" / "Session 118"; and (session 120) the draws' TEX0 TFX / TCC (any HIGHLIGHT among the
+   meshes' TEX0_2 or renderer B's per-draw TEX0?), CLAMP_2 and TEX1_2 (`--draws`), for 4.13 "Session 120"'s
+   tables.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=120`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=121`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 121) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 122) with this
    prompt: the user wants each session to start the next one without being asked.
