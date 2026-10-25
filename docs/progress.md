@@ -12,6 +12,21 @@ _Last updated 2026-10-25._
 |---|---|---|---|---|
 | total | 6979 / 6988 | 99.87% | 98.84% | 0 |
 
+<!-- phases -->
+## By project phase (estimate, kept by hand; refresh it at the end of each session)
+
+Session 83 (2026-10-25). Only phase 1 and the main ELF's share of phase 2 are measured; the rest is a judgement
+from the docs named.
+
+| Phase | Done | Basis |
+|---|---|---|
+| 1. Toolchain, repo skeleton, first matches | 100% | ee-gcc 2.96 pinned and checked (docs/toolchain.md), make + objdiff, kh1.elf byte-identical |
+| 2. EE decomp (gameplay, menus, scripting, collision, audio control) | 90% | main ELF 6,979 / 6,988 functions (99.87%); 9 hard functions left; the overlays (dktitle.x, dkmovie.x, wm.x, gb.x, the summons, xl_limit.x) not started (vita-port-plan 5.2) |
+| 3. VU1 microcode and GS usage as a renderer spec | 75% | all 22 VU programs inventoried, renderers A and B and the GS state, memory map, draw order and CLUT animations written up (renderer-spec 2-5); not yet checked against a real-disc host run, open questions in renderer-spec 6 |
+| 4. Shiftable cleanup (no dependence on the original layout) | 70% | code moves (m1 / m12 build), 2,041 data names float; the eight float builds since session 30 are unbooted, data not yet fully owned by src/ (docs/shiftable-plan.md, float-untested.md) |
+| 5. Vita bring-up | 10% | step 1 of 8 (host build) mostly done: all game C links and boots to the first overlay call on a null platform with a GS register and memory model; no vitasdk build, extraction tool, renderer, sound or overlays yet (vita-port-plan 5) |
+<!-- /phases -->
+
 ## By address segment (`[[segment]]` in kh1.toml)
 
 | Group | Matched / functions | % functions | % code bytes | Decompiled, not matching |

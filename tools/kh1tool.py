@@ -1049,11 +1049,18 @@ def write_progress_md(cfg, prog) -> None:
                        f"{pct(v['matched_bytes'], v['bytes'])} | {v['nonmatching']} |")
         return "\n".join(out)
 
+    # The per-phase table is written by hand (an estimate, not measured): kept between its
+    # markers across regenerations.
+    old = (ROOT / "docs" / "progress.md")
+    old = old.read_text() if old.exists() else ""
+    i, j = old.find("<!-- phases -->"), old.find("<!-- /phases -->")
+    phases = old[i:j + len("<!-- /phases -->")] if 0 <= i < j else ""
     md = [f"# Progress: {cfg['target']['elf']}", "",
           "Regenerate with `make progress-update` at the end of each session and commit the result.",
           "A function counts as matched only when its rebuilt bytes are identical to the original",
           "and objdiff reports 100% for it.", "",
           f"_Last updated {today}._", "", "## Overall", "", table(["total"]), "",
+          *([phases, ""] if phases else []),
           "## By address segment (`[[segment]]` in kh1.toml)", "",
           table(sorted(k for k in g if k.startswith("segment:"))), "",
           "## By source directory (decompiled functions only)", "",

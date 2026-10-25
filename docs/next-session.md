@@ -272,5 +272,8 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    argcheck's 3 value uses still wait for dktitle.x. Keep every PS2 object the same (kh1.elf byte-identical;
    a float-untested.md row only when the float ELF's bytes change).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=84`, commit, open a PR, and refresh this prompt (keep the Mac note
-   accurate).
+6. End with `make progress-update SESSION=84`, refresh the per-phase table in docs/progress.md (between its
+   `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
+   Mac note accurate).
+7. **Once the PR is merged, message the coordinator to start the next session** (session 85) with this
+   prompt: the user wants each session to start the next one without being asked.
