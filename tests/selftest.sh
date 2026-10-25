@@ -232,6 +232,25 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
     echo "selftest: fscheck missed a send drawing blocks past the PS2's or over a live buffer" >&2
     cat "$W/fs_neg4.log" >&2; exit 1
   fi
+  # session 109: the render-to-texture sends from the C. With the window font's entries taken out, the eye
+  # overlay (its tags finished by texspot's stores) and, when gcc -m32 builds tools/host/rtsends.c, the
+  # 196 and 256 shadow windows fail; with texspot's tag stores gone the eye overlay is reported unwalked
+  if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
+del f.BLOCK_EXPECTED[("D_004F7820", 0x3D7C)], f.BLOCK_EXPECTED[("D_0035C4A0", 0x3D7C)]
+sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" > "$W/fs_neg5.log" ||
+     ! grep -q 'D_0035C4A0+D_0035C550 .*draws blocks 0x3D7C .. 0x3DFF in window font' "$W/fs_neg5.log" ||
+     { grep -q 'run-time builds' "$W/fs_neg5.log" &&
+       ! { grep -q 'D_004F7820\[1\] .*in window font' "$W/fs_neg5.log" &&
+           grep -q 'D_004F7820\[2\] .*in window font' "$W/fs_neg5.log" &&
+           ! grep -q 'D_004F7820\[0\]' "$W/fs_neg5.log"; }; }; then
+    echo "selftest: fscheck missed a render-to-texture send over the window font" >&2; cat "$W/fs_neg5.log" >&2; exit 1
+  fi
+  mkdir -p "$W/fsneg6" && cp -r "$ROOT/src/." "$W/fsneg6/"
+  sed -i '/D_0035C550\.x3 = 112;/d' "$W/fsneg6/gfx/texspot.nostrict.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg6" > "$W/fs_neg6.log" ||
+     ! grep -q "D_0035C550's tag stores .* not found" "$W/fs_neg6.log"; then
+    echo "selftest: fscheck missed the eye overlay's tag stores gone" >&2; cat "$W/fs_neg6.log" >&2; exit 1
+  fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"
 fi

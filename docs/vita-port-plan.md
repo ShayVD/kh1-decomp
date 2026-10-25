@@ -2278,6 +2278,55 @@ float-untested row. selftest PASS (one new negative case).
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1aw Session 109: the render-to-texture sends from the C, checked by fscheck
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Tool only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (two new negative cases).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **fscheck.py now walks the render-to-texture sends outside its walk** (item 4b, renderer-spec 3.4), with
+  5.1av's block check (blocks against the PS2's and the §3.1 region of their FBP):
+  - **packets the game's C builds at run time**: tools/host/rtsends.c runs the game's own builders under
+    `gcc -m32` (fscheck compiles it with src/gfx/shadow.c, gifpkt.c and src/obj/objdraw.nostrict.c,
+    `--gc-sections`, the way flare_test links its function; `--cc` picks the compiler) and prints the chains:
+    the shadow windows `D_004F7820[i]` / `D_004F7C10[i]` (`func_001284a0` / `func_00128738` for each of
+    `D_002E27E0`'s sizes, read from the ELF: **128, 196, 256**), and the crossfade `func_00135ed0` (its two
+    `PlatDmaSend` chains, the GS state carried from the first to the second) for 64 x 64, 128 x 128, 256 x 128,
+    128 x 256 and 256 x 256 (`CROSSFADE_SIZES`: the model's texture, from the disc at run time). Without
+    `gcc -m32` fscheck says so and skips them (their `BLOCK_EXPECTED` entries are then not stale);
+  - **data packets the C finishes**: the eye overlay `D_0035C4A0` + `D_0035C550` (`RT_DATA`): their tags are
+    zeros in the ELF; texspot.nostrict.c's `.x0` / `.x3` / `.x4` stores (QWC 10 / 16, ID 7 = end, ADDR 0)
+    are read from the C and applied, the two walked as one picture, and the pupil sprite whose XYZ
+    `func_00175600` writes (`p->x68` / `p->x78`) is taken as its whole SCISSOR (0 .. 255);
+  - **a FRAME written from C**: case 2's frame copy `D_002A6960` (`CVARS`) is checked for each display width
+    `func_001110d0` gives (512 and 640): the writes of its words (`D_002A68A0[4]` FRAME, `[22]` / `[23]`) are
+    evaluated with the simple `w = v / 64;` / `x = v * 16;` / `y = x + 0x7000;` lines before them: FBW 8,
+    blocks 0x0000 .. 0x0DFF (the display exactly) and FBW 10, 0x0000 .. 0x117F (the known Z-area overlap);
+  - **SCISSOR**: a sprite the view does not stretch is clipped by its context's SCISSOR when the packets set
+    one (the shadow windows' centred w x w); the 58 sends' results are unchanged by it;
+  - **PACKED registers** (RGBAQ, UV, XYZ) are now read as the GS reads them (y and z in the second and third
+    words); the run-time builders send them so. The 58 sends' results are unchanged by it too.
+- **Result: 12 more sends, 0 problems, 3 new expected entries, all PS2 overlaps**: the off-screen buffer's
+  256 x 256 CT32 (renderer-spec 3.4) runs to block 0x3DFF, **over the window font (0x3D7C .. 0x3DFB) and its
+  CLUT 0x3DFC**; the shadow windows of 196 and 256 clear rows 224 .. 255 there, the eye overlay's copy fills
+  it all, and a crossfade of a texture 256 high does too. On the PS2 the windows re-send the font's uploads
+  (`func_001f82b0` -> `func_001f8270`, renderer-spec 4.12) before they draw, after the list's
+  render-to-texture, so expected; **for the boot**: a window drawn from the font after a shadow, eye overlay or
+  crossfade in the same frame without that re-send would show garbled text. The shadows' copy into the texture
+  slot (`D_004F7C10`, FBW 4 at 0x3600) stays in the slot; the 128 window clears 0x3B20 .. 0x3CDF only.
+  Nothing here stretches under the wide view, so no "wide" entry.
+- **Noticed**: `D_004F7820` / `D_004F7C10` are indexed by an actor's `x370` bits 40-41 (`& 3`) but hold 3
+  entries; with 3 the shadow pointer `&D_004F7820[3]` is `D_004F7C10[0]` (336 x 3 bytes after it) and
+  `D_002E27E0[3]` is 0. Presumably never set; renderer-spec 3.4 notes it.
+- **selftest**: with the window font's entries for `D_004F7820` and `D_0035C4A0` taken out (imported, not
+  edited), the eye overlay and (when `gcc -m32` builds rtsends.c) the 196 and 256 shadow windows, not the
+  128, must be reported; with texspot's `D_0035C550.x3 = 112;` deleted from a copy of src/, the eye
+  overlay must be reported unwalked.
+- **Not covered**: the shadows' Z16S at 0x3800 and the other ZBUFs (FRAME only), the textures these sends
+  read, the HUD's and the draw list's other packets.
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
