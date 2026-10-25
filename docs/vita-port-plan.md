@@ -2654,6 +2654,24 @@ docs only, no float-untested row. selftest PASS (texfmt_test 53 checks).
 - **To check on the Vita**: the P4 nibble order and the linear texture stride (rows padded to 8 texels here).
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bh Session 120: the texture function and the sampler state in the shader
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (texfunc_test 33 checks, sampler_test 21).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The texture function** (item 4b): new include/platform/texfunc.h and host/port/texfunc.c (renderer-spec
+  4.13 "Session 120"): MODULATE, DECAL, HIGHLIGHT and HIGHLIGHT2 with TCC, as the GS manual gives them on the
+  0x80 scale; a shader model that is exact (the 8-bit values taken back) and the plain float form within 1.
+  Checked against the model's sprite for MODULATE / DECAL. The game uses MODULATE everywhere and DECAL in
+  texspot's sprite only; no HIGHLIGHT in the main ELF (the disc's model data still to check).
+- **The sampler state** (item 4c): new include/platform/sampler.h and host/port/sampler.c: REPEAT / CLAMP as GPU
+  modes, REGION_CLAMP as a GPU clamp plus the shader's coordinate clamp (exact), REGION_REPEAT as the shader's
+  own taps; TEX1 as one filter a draw (MMAG equals MMIN in the game's LCM 0 values, LCM 1 with K 0 takes MMAG; MXL 0: no mipmaps). Checked
+  against the GS's per-tap rule over every mode pair and against the model's sprite for point REPEAT / CLAMP.
+- **To check on the real disc**: the meshes' TEX0_2 TFX and CLAMP_2 / TEX1_2 values (`gsstate.py --draws`).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

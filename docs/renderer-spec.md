@@ -1612,6 +1612,52 @@ The `KH1_HOST_TEXDUMP` dump (dmawalk.c `gs_dump_textures`) keeps its own `seen` 
 colours, which depend on TEXA and the CLUT, and the cache's key leaves both out, so keying the dump by it would
 miss a TEXA or palette change.
 
+**Session 120 (vita-port-plan 5.1bh): the texture function and the sampler state in the shader.**
+After texfmt's sample, include/platform/texfunc.h / host/port/texfunc.c is the fragment shader's texture
+function (TEX0's TFX and TCC with the vertex colour, both on the 0x80 scale, each result clamped to 0xFF):
+
+| TFX | RGB | A, TCC 1 | A, TCC 0 | Used by the game |
+|---|---|---|---|---|
+| 0 MODULATE | `Ct x Cv >> 7` | `At x Av >> 7` | Av | every static packet but one (23 TEX0_1 values), every TEX0 the C builds (objdraw's `C02_TEX0`, gauge, the text and window headers, mdlgs' renderer B default) |
+| 1 DECAL | Ct | At | Av | texspot's 64 x 64 PSMT8 sprite (`D_0035C550`, 4.15's eye overlay) only |
+| 2 HIGHLIGHT | `(Ct x Cv >> 7) + Av` | `At + Av` | Av | none in the main ELF |
+| 3 HIGHLIGHT2 | `(Ct x Cv >> 7) + Av` | At | Av | none in the main ELF |
+
+TCC 0 is only on CT24 sources (the target copies: 5 of the 24 static TEX0_1). The survey read the static
+chains (`tools/host/dmawalk.py --state`, the ELF's bytes) and the 64-bit TEX0 values the C writes; the
+meshes' `TEX0_2` and renderer B's per-draw TEX0 come with the disc's model data, so the real-disc run's
+`gsstate.py --draws` has to confirm there is no HIGHLIGHT among them (the port has all four anyway). The
+shader gets UNORM8 inputs: multiplying them in floats (`t x c x 255 / 128`) and writing to an 8-bit target
+rounds where the GS truncates, at most 1 apart; taking the 8-bit values back (`floor(x x 255 + 0.5)`) and
+doing the integer steps is exact. tests/host/texfunc_test.c (33 checks): the four forms on known values, the
+exact shader equal to the GS and the float one within 1 for every pair of 8-bit values, and MODULATE /
+DECAL with TCC 0 / 1 under four vertex colours drawn by the model's sprite from CT32, CT16 and T8 textures
+equal to `kh1_texfunc` of texfmt's sample.
+
+include/platform/sampler.h / host/port/sampler.c map CLAMP and TEX1 to a GPU sampler and the shader's steps:
+
+| WMS / WMT | The GS (each tap's texel c) | The port | Used by the game |
+|---|---|---|---|
+| REPEAT | `c & (n - 1)` | GPU repeat | 72 kicks in the session 15 dump (3.3); CLAMP's reset value |
+| CLAMP | `0 .. n - 1` | GPU clamp to edge | the 2D sends (8 static senders, CLAMP_1 = 5) and renderer B's default |
+| REGION_CLAMP | `MIN .. MAX` | GPU clamp, and the shader clamps the coordinate to `MIN + 0.5 .. MAX + 0.5` texels (a plain clamp when the region is the texture) | texspot's 1 .. 255 (`func_00175600`), the lens grid's 0 .. 510 (sceneeff `func_00103c48`), the atlas windows of 3.3, keshpdtt's rectangle from its data (`func_001a99e8`, ppp) |
+| REGION_REPEAT | `(c & MIN) \| MAX` | the shader's own taps (texelFetch, one or four with the bilinear weights); GPU repeat when the mask keeps `n - 1` and the fix is 0 | one in the dump (mask 255) |
+
+Clamping the coordinate, not the taps, is exact for REGION_CLAMP: inside `MIN + 0.5 .. MAX + 0.5` both
+bilinear taps are in the region, and at its ends the outer tap's weight is 0, which is what the GS's per-tap
+clamp gives. REGION_REPEAT cannot be a coordinate wrap (a tile's seam would blend with the texel beyond it),
+so its taps are computed. A REGION_CLAMP MAX past the texture reads GS memory beyond it on the PS2; the port
+clamps to `n - 1` and counts it (`past`: the lens grid's MAXU 676 under `KH1_HOST_WIDE` is one, 5.4 "Session
+95", where the frame copy's texture is the wide target). **TEX1**: one filter per draw and no mipmaps (MXL 0
+everywhere): MMAG equals MMIN in every LCM 0 value (`0x60` bilinear; `0` point in texanim `func_00102118`,
+brightfade `func_00105f28` and capture `func_00109e20`), and the LCM 1 values fix the LOD at K 0, so MMAG
+rules (`0x61` bilinear, the text fonts; the HUD's `0x21`, MMAG bilinear and MMIN point: bilinear). Both GPU
+filters take that one.
+tests/host/sampler_test.c (21 checks): the game's values and the edge cases decoded, every wrap mode pair
+point and bilinear at every 1/16 texel from 4 texels left of a 16 x 8 texture to 4 past it (the port's
+sample equals the GS's per-tap rule; a broken shader clamp or tap rule fails it), and point-sampled
+REPEAT / CLAMP on each axis against the model's sprite (a 16 x 16 texture drawn 48 x 48).
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

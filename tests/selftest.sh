@@ -192,6 +192,16 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/port/texfmt.c"
   "$W/texfmt_test" > "$W/texfmt.log" || { cat "$W/texfmt.log"; exit 1; }
   tail -n 1 "$W/texfmt.log"
+  # the texture function and the sampler state a port's shader runs (renderer-spec 4.13 "Session 120")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/texfunc_test" \
+      "$ROOT/tests/host/texfunc_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/texfmt.c" \
+      "$ROOT/host/port/texfunc.c"
+  "$W/texfunc_test" > "$W/texfunc.log" || { cat "$W/texfunc.log"; exit 1; }
+  tail -n 1 "$W/texfunc.log"
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/sampler_test" \
+      "$ROOT/tests/host/sampler_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/sampler.c"
+  "$W/sampler_test" > "$W/sampler.log" || { cat "$W/sampler.log"; exit 1; }
+  tail -n 1 "$W/sampler.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
