@@ -1105,6 +1105,34 @@ context 2's state is the boot environment plus six PATH3 A+D packets at draw-lis
 (ZMSK 1, translucent) and 50100 (restore), plus the shadow's; mesh TEX0_2 / CLAMP_2 / batch PRIMs come from the
 disc files (inferred). Corrections to 4.6, 3.3 and 5.1's FOGCOL row.
 
+### 5.1u Session 81: render targets in the memory model, the order between the paths, REGLIST and ADC
+
+Static only (the Mac was away until 2026-10-26). Only host/, tests/, tools/host and docs/ changed: kh1.elf is
+byte-identical, every out/build object bit-identical (sha1 of all 677 before and after), no src/ or shift input
+touched, so the float ELF is the same and there is no float-untested.md row.
+
+**Render targets** (renderer-spec 5.2): host/null/gsmem.c now hears each drawing kick (gsregs.c passes the
+context's FRAME / ZBUF / SCISSOR / TEST) and each VU1 program start on VIF1 (`kh1_gs_path1`: context 2, renderer
+A's), keeps up to 32 targets and, per page, the word bits a draw changed (Z24 / CT24 the low 24, so the message
+font in Z's top byte stays a texture), cleared by uploads. `kh1_gsmem_tex_target` names the target a TEX0 reads;
+a draw state carries it (`KH1GsDraw.target`), `KH1_HOST_TRACE=5` prints `, reads target N` and each send's
+`target` lines, `gsstate.py --targets`, and the texture dump skips them. gsmem_test.c +16 checks. Fake disc
+(stub:2): three targets (the 3D target `0x1A00`, the Z24 buffer `0x0E00`, the display buffer at 0) and two
+draw states reading one: the frame copy `D_002A6890` (3D target) and the capture `D_002B66B0` (the Z area).
+Valgrind 0 errors to the overlay fault (`KH1_HOST_TRACE=5`).
+
+**PATH1 against PATH3, settled** (renderer-spec 4.12, item 4b of the session 81 prompt): the draw-list walk
+`func_0015ea98` waits for `sceGsSyncPath(1, 0)` (ch 1, ch 2, VIF1, VU1, GIF all idle) before each node, so the
+order is the list's, node by node, and the GIF's path arbitration never needs modelling; the immediate list and
+`func_00106b18` wait for the list to drain. **`tools/host/sendorder.py`** (new) lists the tasks that send by
+key: only the in-game menu (`func_0020d2f8`, key `0x270FF`, between the list start and the immediate list)
+sends before it syncs (the window-font uploads, then the window headers). The port replays the draw list, then
+the immediate list, then the main-thread sends in task order.
+
+**REGLIST and ADC** (item 4c): gsregs_test.c +5 checks (renderer-spec 4.10's field text: PRIM as a REGLIST
+register, a glyph tag with no PRE; the list frame's 18-vertex tag with ADC on v6 / v7 / v12 / v13 drawing 12
+triangles; XYZ3 in a fan). gsregs.c already did what the GS does: no change.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

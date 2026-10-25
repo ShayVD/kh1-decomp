@@ -203,6 +203,89 @@ int main(void) {
     image(4);
     CHECK("Z32 upload counted, data taken", st->unsupported == 1 && st->pixels == 12 && st->extra == 0);
 
+    /* render targets (session 81): a 640x224 CT32 frame at FBP 0 and a Z24 buffer at ZBP 0x70
+     * (block 0x0E00); a PSMT4HL font at 0x1000 (page 0x80, inside the Z buffer's 70 pages) sits in
+     * the top byte Z24 leaves alone */
+    kh1_gs_reset();
+    {
+        KH1GsTarget t[4];
+        u32 font = 0x1000 | 4 << 14 | KH1_PSMT4HL << 20 | 8 << 26 | 0u << 30, font_hi = 2;
+        u32 col = 0x0000 | 10 << 14 | KH1_PSMCT32 << 20 | 6 << 26 | 0u << 30, col_hi = 1;
+        u32 zct = 0x1000 | 4 << 14 | KH1_PSMCT32 << 20 | 6 << 26 | 0u << 30, zct_hi = 1;
+        kh1_gs_write(0x4C, 0x00 | 10 << 16 | KH1_PSMCT32 << 24, 0);
+        kh1_gs_write(0x4E, 0x70 | 1 << 24, 0);
+        kh1_gs_write(0x40, 639 << 16, 223 << 16);
+        kh1_gs_write(0x47, 0x30000, 0); /* ZTE 1, ZTST ALWAYS */
+        CHECK("targets: none before a draw", kh1_gsmem_targets(t, 4) == 0 && kh1_gsmem_tex_target(col, col_hi) == 0);
+        s0 = kh1_gsmem_tex_stamp(col, col_hi);
+        kh1_gs_write(0x00, 6, 0);
+        kh1_gs_write(0x05, 0, 0);
+        kh1_gs_write(0x05, 16 << 4 | 16 << 20, 0);
+        CHECK("targets: frame and Z", kh1_gsmem_targets(t, 4) == 2 && t[0].bp == 0 && t[0].bw == 10 &&
+                                      t[0].psm == 0 && t[0].h == 224 && t[0].mask == ~0u && t[0].draws == 1 &&
+                                      t[1].bp == 0x0E00 && t[1].psm == 0x31 && t[1].mask == 0x00FFFFFF);
+        CHECK("targets: a texture in the frame", kh1_gsmem_tex_target(col, col_hi) == 1);
+        CHECK("targets: CT32 in the Z buffer", kh1_gsmem_tex_target(zct, zct_hi) == 2);
+        CHECK("targets: the font in Z24's top byte is not", kh1_gsmem_tex_target(font, font_hi) == 0);
+        CHECK("targets: a draw moves the stamp", kh1_gsmem_tex_stamp(col, col_hi) > s0);
+        CHECK("targets: other memory", kh1_gsmem_tex_target(0x3600 | 8 << 14 | KH1_PSMT4 << 20 | 9 << 26, 2) == 0);
+        /* the draw's state reads its own target: reported in the draw */
+        kh1_gs_clear_draws();
+        kh1_gs_write(0x06, col, col_hi);
+        kh1_gs_write(0x00, 6 | 1 << 4, 0);
+        kh1_gs_write(0x05, 0, 0);
+        kh1_gs_write(0x05, 16 << 4 | 16 << 20, 0);
+        {
+            KH1GsDraw d[2];
+            CHECK("targets: the draw names it", kh1_gs_draws(d, 2) == 1 && d[0].target == 1 && d[0].draws == 1);
+        }
+        CHECK("targets: draws counted", kh1_gsmem_targets(t, 4) == 2 && t[0].draws == 2 && t[1].draws == 2 &&
+                                       st->target_draws == 4);
+        /* an upload over the texture's 64x64 makes it the upload's again */
+        upload(0x0000, 10, KH1_PSMCT32, 0, 0, 64, 64);
+        for (i = 0; i < 64 * 64; i += 256) image(1024);
+        CHECK("targets: uploaded over", kh1_gsmem_tex_target(col, col_hi) == 0 && kh1_gsmem_tex_target(zct, zct_hi) == 2);
+        /* a PSMT4HL upload clears only the top byte's low nibble from the drawn bits of its pages:
+         * a CT32 read there still reads Z */
+        upload(0x1000, 4, KH1_PSMT4HL, 0, 0, 256, 1);
+        image(32);
+        CHECK("targets: HL upload keeps Z's bits", kh1_gsmem_tex_target(zct, zct_hi) == 2);
+        /* FBMSK all ones and ZMSK 1: nothing drawn; FBW 0: no frame */
+        kh1_gs_reset();
+        kh1_gs_write(0x4C, 0xD0 | 10 << 16, 0xFFFFFFFF);
+        kh1_gs_write(0x4E, 0x70 | 1 << 24, 1);
+        kh1_gs_write(0x47, 0x30000, 0);
+        kh1_gs_write(0x00, 6, 0);
+        kh1_gs_write(0x05, 0, 0);
+        kh1_gs_write(0x05, 0, 0);
+        CHECK("targets: masked", kh1_gsmem_targets(t, 4) == 0 && st->target_draws == 0);
+        kh1_gs_write(0x4C, 0, 0);
+        kh1_gs_write(0x4E, 0x70 | 1 << 24, 0);
+        kh1_gs_write(0x05, 0, 0);
+        kh1_gs_write(0x05, 0, 0);
+        CHECK("targets: FBW 0", kh1_gsmem_targets(t, 4) == 0);
+        /* SCISSOR bounds the extent: 64 columns, 32 rows is one page */
+        kh1_gs_write(0x4C, 0xD0 | 10 << 16, 0);
+        kh1_gs_write(0x4E, 0x70 | 1 << 24, 1);
+        kh1_gs_write(0x40, 63 << 16, 31 << 16);
+        kh1_gs_write(0x05, 0, 0);
+        kh1_gs_write(0x05, 0, 0);
+        CHECK("targets: one page", kh1_gsmem_targets(t, 4) == 1 && t[0].h == 32 &&
+                                   kh1_gsmem_tex_target(0x1A00 | 1 << 14 | 6 << 26 | 5u << 30, 0) == 1 &&
+                                   kh1_gsmem_tex_target(0x1A20 | 1 << 14 | 6 << 26 | 5u << 30, 0) == 0);
+        /* a VU1 program start on VIF1 (MSCAL) marks context 2's FRAME_2 / ZBUF_2 */
+        kh1_gs_write(0x4D, 0x100 | 10 << 16, 0);
+        kh1_gs_write(0x41, 639 << 16, 447 << 16);
+        kh1_gs_write(0x48, 0x30000, 0);
+        kh1_gs_write(0x4F, 0x70 | 1 << 24, 0);
+        q(0, 0x70000001, 0, 0, 0);
+        q(1, 0x14000000, 0, 0, 0);
+        CHECK("path1 walk", kh1_dma_walk(1, 0x104, A(0), where) == 0);
+        CHECK("path1: context 2 drawn", kh1_gs_state()->path1 == 1 && kh1_gsmem_targets(t, 4) == 3 &&
+                                        t[1].bp == 0x2000 && t[2].bp == 0x0E00 &&
+                                        kh1_gsmem_tex_target(0x2000 | 10 << 14 | 6 << 26 | 6u << 30, 1) == 2);
+    }
+
     if (fails) { printf("gsmem_test: %d failed\n", fails); return 1; }
     printf("gsmem_test: PASS\n");
     return 0;

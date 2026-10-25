@@ -6,7 +6,8 @@
  * send a header and then their sprites, opdma's set-up packet heads the frame's lists.
  *
  * Only the GIF channel's packets and VIF1 DIRECT (PATH2) reach it: VU1's XGKICK output (renderer
- * A / B meshes, PATH1) is not modelled, nor the order the GIF arbitrates its three paths in, so on
+ * A / B meshes, PATH1) is not modelled (a VU1 program start only marks context 2's FRAME / ZBUF as
+ * drawn, kh1_gs_path1), nor the order the GIF arbitrates its three paths in, so on
  * the host a send's state is what the sends before it left, in send order.  Fed only while
  * KH1_HOST_TRACE >= 2 walks the chains; KH1_HOST_TRACE=5 prints each send's draws. */
 #include "common.h"
@@ -81,6 +82,9 @@ static void gs_kick(int draw) {
             if (!memcmp(&draws[i], &d, (char *)&d.kicks - (char *)&d)) break;
         if (i == ndraws && ndraws < DRAWS) draws[ndraws++] = d;
         cur = i < ndraws ? i : DRAWS;
+        /* a texture in drawn pages (a render target) is not the uploads' (host/null/gsmem.c) */
+        if (cur < DRAWS && p >> 4 & 1 && !draws[cur].target)
+            draws[cur].target = kh1_gsmem_tex_target(d.ctx.tex0.lo, d.ctx.tex0.hi);
     }
     k = cur < DRAWS ? &draws[cur] : 0;
     if (k) k->kicks++;
@@ -90,7 +94,11 @@ static void gs_kick(int draw) {
     if (gs.nvert < need) return;
     /* a full queue: XYZ2 / XYZF2 draw; the lists (POINT, LINE, TRIANGLE, SPRITE) start again,
      * the strips and the fan keep their last vertices */
-    if (draw && k) k->draws++;
+    if (draw) {
+        KH1GsContext *c = &gs.ctx[p >> 9 & 1];
+        if (k) k->draws++;
+        kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
+    }
     i = p & 7;
     if (i == 0 || i == 1 || i == 3 || i == 6) gs.nvert = 0;
 }
@@ -178,6 +186,12 @@ void kh1_gs_packed(u32 desc, const u32 *q) {
     case 0xF: return;
     }
     gs.unknown++; /* 0xB: reserved */
+}
+
+void kh1_gs_path1(void) {
+    KH1GsContext *c = &gs.ctx[1];
+    gs.path1++;
+    kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
 }
 
 void kh1_gs_giftag(int pre, u32 prim) {

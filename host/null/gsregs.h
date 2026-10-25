@@ -25,6 +25,7 @@ typedef struct {
     u32 dropped;                 /* writes to a register 5.1 drops (DTHE, COLCLAMP, TEXFLUSH, ...) */
     u32 unknown;                 /* writes to an address that is no GS register */
     u32 lost;                    /* vertex kicks in draw states past the 256 kh1_gs_draws keeps */
+    u32 path1;                   /* VU1 program starts on VIF1 (kh1_gs_path1) */
 } KH1GsState;
 
 /* a distinct draw state and how often it was drawn: the PRIM attributes in force (type, IIP,
@@ -37,6 +38,8 @@ typedef struct {
     KH1GsReg fogcol, texa;
     u32 kicks; /* vertex kicks (XYZ2 / XYZF2 / XYZ3 / XYZF3) in this state */
     u32 draws; /* drawing kicks: primitives drawn */
+    u32 target; /* with TME: 1 + the render target the texture lies in when a kick in this state
+                 * first found it there (kh1_gsmem_tex_target, session 81), else 0 */
 } KH1GsDraw;
 
 /* back to the state before any write (all registers 0 but PRMODECONT 1) and no draws counted */
@@ -53,6 +56,11 @@ const KH1GsState *kh1_gs_state(void);
  * max and returns the count. */
 int kh1_gs_draws(KH1GsDraw *out, int max);
 void kh1_gs_clear_draws(void);
+/* a VU1 program started on VIF1 (MSCAL / MSCALF / MSCNT): its XGKICK output (PATH1) is not
+ * modelled, but renderer A's meshes draw through context 2 (renderer-spec 4.11), so its FRAME_2 /
+ * ZBUF_2 are told to host/null/gsmem.c as drawn (an inference: the program's own GIF tags choose the
+ * context; session 81) */
+void kh1_gs_path1(void);
 /* the vertices a primitive type (PRIM bits 0-2) needs for its first drawing kick, 0 for 7 */
 u32 kh1_gs_prim_verts(u32 type);
 

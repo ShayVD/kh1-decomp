@@ -29,6 +29,8 @@ Conventions:
 | `KH1_HOST_TRACE=4 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt [--sends]` | the same state list for the chains a host run sends (the run-time ones too: the text windows, the HUD), each named by the host symbol at its start (§4.7). New in session 77 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --draws` | the draw states the host's GS register file (host/null/gsregs.c) counted: each distinct PRIM + context state the vertex kicks drew with, decoded, with kicks, primitives and the chains that kicked them (§4.9, §5.1). New in session 79 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --uploads` | the transfers into the host's GS memory model (host/null/gsmem.c): each destination DBP / DBW / PSM and rectangle, how often, the pixels and the chains that sent them (§5.2). New in session 80 |
+| `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --targets [--draws]` | the render targets the host's GS memory model saw drawn into (each FRAME / ZBUF, its extent, bits and primitives) and, with `--draws`, which draw states read a target as a texture (§5.2). New in session 81 |
+| `python3 -I tools/host/sendorder.py [--all]` | the main loop's tasks that send to the GS, with their key and first sync or send, against the draw list's start (`0x9C40`) and the immediate list's wait (`0x27CB8`): reads only src/ (§4.12). New in session 81 |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -1209,8 +1211,44 @@ MIPTBP / TEX2 / XYOFFSET), the draw states unchanged. §4.6's "context 2's textu
 ELF" has two exceptions (the boot placeholder, the shadow pass). §5.1's `FOGCOL` "rgb (16,112,128) in
 display.c" is only the initial value: display.c:344 rewrites it each frame. §3.3's field-dump "map draws"
 (TEX0 `0x3600` PSMT8, AREF 120) are renderer B's context-1 state (§4.9), not renderer A's (inferred). §2.2's
-qw48 template does not come only from the model header slots (see above). The order between PATH1 (XGKICK)
-and these PATH3 packets is not settled: `func_00106b98` does not wait for the path.
+qw48 template does not come only from the model header slots (see above). ~~The order between PATH1 (XGKICK)
+and these PATH3 packets is not settled: `func_00106b98` does not wait for the path.~~ Settled in §4.12 (session
+81): `func_00106b98` does not wait, but the walk that calls it does, before every node.
+
+### 4.12 The order between the paths (session 81, static)
+
+**Inside the draw list the order is strict, node by node.** `func_0015ea98` (mdlgs.nostrict.c), the walk that
+both the start (`func_0015eb78`, task `0x9C40`) and the DMAC handler (`func_0015efc0`, ch 1 and ch 2) run,
+spins on `sceGsSyncPath(1, 0)` **before each node**. Mode 1 (src/sdk/gcc991111_as296/text_00260000_s8_w10.c)
+is non-zero while D1_CHCR STR, D2_CHCR STR, VIF1_STAT `& 0x1F000003` (VPS, FQC: VIF1 still holds data or is
+waiting on an MSCAL), VU1 running (`vi29` bit 8) or GIF_STAT APATH (bits 10-11) is set. So node N's last VU1
+program has stopped and its XGKICK has left the GIF before node N+1's callback starts: a context-2 state packet
+(`func_00106b98`, §4.11's keys 10010 ... 50100) lands exactly between the mesh nodes its key sits between, and
+renderer B's GIF state (§4.3 step 2) between its own steps. Any DMA end, the list's or another sender's on ch
+2, re-enters the walk, which again waits for every path; a node can start early, never out of order. Renderer
+A's own VIF chains end with `END` and no `FLUSH` (`vif_chain.py 0048c630`, `0046e120`), which is why the wait
+is needed; inside a chain the `FLUSH` before each `DIRECT` (§4.11) orders PATH2 after the PATH1 before it.
+
+**The immediate list waits for the draw list to drain.** `func_0015eea0` (task `0x27CB8`) calls
+`sceGsSyncPath(0, 0)` (blocking) first and between nodes. On the main thread that returns only when the
+draw list is done: between two nodes the handler itself waits and starts the next DMA before it returns,
+so the main thread never sees the paths idle mid-list. The same holds for every send behind
+`func_00106b18` (FlushCache, `sceGsSyncPath(0, 0)`, then the send) and for the HUD's `func_00237018`.
+
+**Main-thread sends, by task key** (`python3 -I tools/host/sendorder.py`: each task registered with a literal
+key whose calls reach a send, and its first sync or send in source order): every sending task before `0x9C40`
+or after `0x27CB8` (the HUD at `0x28489` / `0x29811`, menus at `0x2BFxx`, the field effects at `0x2E6xx`) is
+serial with the list by the waits above. Between the two keys only two tasks send: the particles
+(`func_00175b70`, `0x27100`) sync first; **the in-game menu (`func_0020d2f8`, `0x270FF`, three registrations)
+sends first**: `func_001f82b0` -> `func_001f8270` re-sends the window-font uploads `D_003F2670` / `2720`
+(sceDmaSend waits only for ch 2 itself, func_00266ab0), and each window then sends its header (`D_003F1E70`:
+`TEST_1`, `TEX0_1`, ...) before its own `sceGsSyncPath(0, 0)`. On the console that overlaps the list's tail
+only if the list is still drawing 120,000 task keys later (timing; the uploads touch only the window font's
+blocks, the header context-1 registers renderer B also writes). **What the port must serialise**: replay the
+draw list to its end, then the immediate list, then the main-thread sends in task order; a main-thread send
+made while a list is pending (the menu) runs after that list, which is the console's normal case. The GIF's
+path arbitration (PATH1 over PATH2 over PATH3 at packet ends) never needs modelling. Approximate: sendorder.py
+follows calls by name in source order (not branches) and skips registrations with a non-literal key.
 
 ## 5. Mapping to a modern API
 
@@ -1297,15 +1335,19 @@ when PRMODECONT is 0, which nothing writes), counts the dropped ones, and counts
 against the draw state in force (PRIM's attributes, the context the CTXT bit picks, with TEX0 /
 TEX1 / CLAMP / TEXA left out without TME, ALPHA without ABE, FOGCOL without FGE) and each drawing
 kick by the primitive's vertex count (lists start again, strips and fans keep their vertices,
-XYZ(F)3 queues without drawing). The registers stay across sends, as on the GS. `kh1_gs_state()`
+XYZ(F)3 queues without drawing: a strip's ADC vertices enter the queue and the next XYZ2 draws with
+them, as PCSX2's vertex kick does). The registers stay across sends, as on the GS. `kh1_gs_state()`
 reads them, `kh1_gs_draws()` the states; `KH1_HOST_TRACE=5` prints each send's draw states and
 `tools/host/gsstate.py RUN.txt --draws` lists a run's. tests/host/gsregs_test.c (in `make test`):
 the HUD environment then a sprite in the next send, ZTE 0, PRIM 0 with no vertex, TEX2 changing
-only PSM and the CLUT fields, CTXT 2, strip and list counts, REGLIST, ADC, PRMODE. It does not see
-VU1's XGKICK output (renderer A / B meshes, PATH1) or the GIF's arbitration between paths: on the
-host a send meets the state the sends before it left, in send order.
+only PSM and the CLUT fields, CTXT 2, strip and list counts, REGLIST, ADC, PRMODE; session 81 added
+§4.10's field text (a REGLIST header writing PRIM as a register, a REGLIST glyph tag with no PRE whose
+PRE bit and PRIM field are ignored), the list frame's three ADC-restarted strips in one tag (18 kicks,
+12 triangles) and an XYZ3 in a fan: the model already did what the GS does, nothing changed. It does
+not see VU1's XGKICK output (renderer A / B meshes, PATH1): on the host a send meets the state the
+sends before it left, in send order, which is the console's order too (§4.12).
 
-GS memory itself has to be modelled, not just the uploads: the game reads its own targets back
+GS memory itself has to be modelled, not just the uploads (done in §5.2, the targets since session 81): the game reads its own targets back
 as textures (the 3D target `0x1A00` for the frame copy and post effects, the shadow / texspot
 buffer `0x3A00`, the Z area drawn as colour at `0x0E00`), and packs the message font into the Z
 buffer's top byte (PSMT4HL / HH at `0x1000`). The port maps each FRAME / ZBUF range to a GPU target
@@ -1346,8 +1388,24 @@ pixel storage mode, written by the uploads and read back as RGBA8 for a TEX0.
   `kh1_gsmem_tex_stamp` gives the newest write to any page the texture covers and
   `kh1_gsmem_clut_stamp` the buffer's load count: a decoded-texture cache keyed by TEX0 checks both
   instead of dropping textures on every upload.
+- **Render targets** (session 81, `kh1_gsmem_draw` / `kh1_gsmem_tex_target` / `kh1_gsmem_targets`): every
+  drawing kick tells the model its context's FRAME (unless FBMSK masks every bit) and ZBUF (with TEST.ZTE 1
+  and ZMSK 0); a target is FBP / ZBP with FBW, its PSM and the rows SCISSOR's SCAY1 reaches (the columns to
+  SCAX1). Per 8 KB page the model keeps **the word bits a draw changed** (CT32 `~FBMSK`, CT24 and Z24 the low
+  24, 16-bit formats all) and the target that drew last; an upload or copy clears the bits it writes from each
+  page it touches (CT24 the low 24, T8H the top byte, T4HL / HH a nibble of it; 16-, 8-, 4-bit layouts the
+  whole page). A texture whose pages hold drawn bits it reads is **"target N"**: the GPU target's texture,
+  not a decode. So the message font (PSMT4HL / HH at `0x1000`, inside the Z24 buffer at `0x0E00`) stays a
+  texture while a CT32 / CT24 read of the same pages is the Z buffer. A drawn page's stamp moves once per
+  marking, so the cache treats a target texture as uncacheable. VU1 program starts on VIF1 (MSCAL / MSCALF /
+  MSCNT) mark context 2's FRAME_2 / ZBUF_2 (`kh1_gs_path1`): renderer A's meshes draw there (§4.11; an
+  inference, the program's tags choose the context). A FRAME with FBW 0 (before the boot environment) marks
+  nothing. tests/host/gsmem_test.c: frame and Z targets, the font in Z24's top byte, a draw reading its own
+  target, an upload over a target, an HL upload keeping Z's bits, FBMSK / ZMSK / FBW 0, the SCISSOR extent,
+  an MSCAL marking context 2.
 - **Not modelled**: CT16S, the Z formats' own block orders (an upload in one is counted and its data
-  taken), CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host.
+  taken), CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host, the pixels a draw writes
+  (a target is tracked, not rendered).
 
 `KH1_HOST_TRACE=5` prints each send's uploads (`kh1-host:   upload host dbp ...`) and
 `tools/host/gsstate.py RUN.txt --uploads` lists a run's. On the fake disc (stub:2) the same 86 sends
@@ -1362,11 +1420,16 @@ the GIF reader. Valgrind: 0 errors to the overlay fault.
 
 **`KH1_HOST_TEXDUMP=DIR`** (with `KH1_HOST_TRACE` >= 2) writes each distinct texture a send drew with,
 decoded from the model after the send, to `DIR/tex_TEX0_N.pam` (RGBA, A doubled; once per TEX0 + TEXA +
-page contents + CLUT load for the indexed PSMs). Draws do not write the model, so a texture inside a
-render target comes out as the uploads left it. On the fake disc: the 3D target `0x1A00` and the Z area
-`0x0E00` read as CT24, the latter twice, because **the font uploads at `0x1000` land inside the Z area's
-512x512 at `0x0E00`** (the font is in the Z buffer's top byte, as §3.1 / 5.1 say). From the user's disc:
-the dumps never go in the repo.
+page contents + CLUT load for the indexed PSMs). Since session 81 a texture in a target's drawn bits is not
+decoded: the line reads `kh1-host:   texture TEX0 in target N: not decoded`. On the fake disc (stub:2,
+`KH1_HOST_TRACE=5`, `gsstate.py --targets --draws`) **three targets**: 1 the 3D target (block `0x1A00`, FBW
+8, CT32, 384 rows: `D_002A6500`'s sprites, the capture's `D_002B66B0`, and the renderer A chain `D_00272C70` on
+ch 1 by its MSCAL), 2 the Z24 buffer at `0x0E00` (384 rows), 3 the display buffer (block 0, CT24, 448
+rows: `D_002BC980`, `D_002A6890`); and **two draw states read a target**: the frame copy `D_002A6890`
+(brightfade.c, 80 SPRITE|TME|FST from `0x1A00` CT24 into FBP 0: target 1) and the capture `D_002B66B0`
+(capture.c, 3 sprites from `0x0E00` CT24 into `0x1A00`: target 2, the Z buffer on the fake disc; the capture
+itself writes there as CT24 at run time). The message font is not flagged. From the user's disc: the dumps
+never go in the repo.
 
 ## 6. Open questions
 

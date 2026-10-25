@@ -25,6 +25,7 @@ void *memset(void *, int, __SIZE_TYPE__);
 
 #define VM_BYTES (4u << 20)
 #define LOG 256
+#define TARGETS 32
 
 static u8 vm[VM_BYTES];
 static u16 clut[512];
@@ -33,6 +34,11 @@ static u32 seq, page_seq[512], clut_seq;
 static KH1GsMemStats st;
 static KH1GsUpload log_[LOG];
 static u32 nlog;
+static KH1GsTarget tgt[TARGETS];
+static u32 ntgt, useq, tgt_useq[TARGETS]; /* useq counts uploads, copies and pixel writes; tgt_useq: its
+                                            * value when the target's pages were last marked */
+static u32 page_drawn[512];          /* the word bits a draw changed and no upload wrote since */
+static u8 page_tgt[512];             /* 1 + the target that drew there last */
 
 /* the transfer in progress */
 static struct {
@@ -47,7 +53,10 @@ void kh1_gsmem_reset(void) {
     memset(page_seq, 0, sizeof page_seq);
     memset(&st, 0, sizeof st);
     memset(&trx, 0, sizeof trx);
-    cbp0 = cbp1 = seq = clut_seq = nlog = 0;
+    memset(tgt, 0, sizeof tgt);
+    memset(page_drawn, 0, sizeof page_drawn);
+    memset(page_tgt, 0, sizeof page_tgt);
+    cbp0 = cbp1 = seq = clut_seq = nlog = ntgt = useq = 0;
 }
 
 const KH1GsMemStats *kh1_gsmem_stats(void) { return &st; }
@@ -60,8 +69,10 @@ int kh1_gsmem_log(KH1GsUpload *out, int max) {
 }
 
 void kh1_gsmem_clear_log(void) {
+    u32 i;
     nlog = 0;
     trx.log = 0;
+    for (i = 0; i < ntgt; i++) tgt[i].sent = 0;
 }
 
 /* a pixel inside a CT32 block (x, y 0-7): x0 y0 x1 x2 y1 y2 */
@@ -99,10 +110,12 @@ u32 kh1_gsmem_addr(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
 }
 
 static u32 rd32(u32 w) { const u8 *p = vm + w * 4; return p[0] | p[1] << 8 | p[2] << 16 | (u32)p[3] << 24; }
-static void wr32(u32 w, u32 v) {
+/* bits: the word bits the write stores, no longer a draw's */
+static void wr32(u32 w, u32 v, u32 bits) {
     u8 *p = vm + w * 4;
     p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24;
     page_seq[w >> 11] = seq;
+    page_drawn[w >> 11] &= ~bits;
 }
 
 u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
@@ -123,22 +136,25 @@ u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
 static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     u32 a = kh1_gsmem_addr(psm, bp, bw, x, y);
     switch (psm) {
-    case KH1_PSMCT32: wr32(a, v); return;
-    case KH1_PSMCT24: wr32(a, (rd32(a) & 0xFF000000u) | (v & 0xFFFFFF)); return;
-    case KH1_PSMT8H:  wr32(a, (rd32(a) & 0x00FFFFFF) | v << 24); return;
-    case KH1_PSMT4HL: wr32(a, (rd32(a) & 0xF0FFFFFFu) | (v & 15) << 24); return;
-    case KH1_PSMT4HH: wr32(a, (rd32(a) & 0x0FFFFFFF) | v << 28); return;
-    case KH1_PSMCT16: vm[a * 2] = v; vm[a * 2 + 1] = v >> 8; page_seq[a >> 12] = seq; return;
-    case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; return;
+    case KH1_PSMCT32: wr32(a, v, ~0u); return;
+    case KH1_PSMCT24: wr32(a, (rd32(a) & 0xFF000000u) | (v & 0xFFFFFF), 0x00FFFFFF); return;
+    case KH1_PSMT8H:  wr32(a, (rd32(a) & 0x00FFFFFF) | v << 24, 0xFF000000u); return;
+    case KH1_PSMT4HL: wr32(a, (rd32(a) & 0xF0FFFFFFu) | (v & 15) << 24, 0x0F000000); return;
+    case KH1_PSMT4HH: wr32(a, (rd32(a) & 0x0FFFFFFF) | v << 28, 0xF0000000u); return;
+    /* the 16-, 8- and 4-bit layouts do not share CT32's word: the page is no longer a draw's */
+    case KH1_PSMCT16: vm[a * 2] = v; vm[a * 2 + 1] = v >> 8; page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; return;
+    case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; return;
     case KH1_PSMT4:
         vm[a >> 1] = (vm[a >> 1] & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
         page_seq[a >> 14] = seq;
+        page_drawn[a >> 14] = 0;
         return;
     }
 }
 
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     seq++;
+    useq++;
     put(psm, bp, bw, x, y, v);
 }
 
@@ -166,6 +182,7 @@ void kh1_gsmem_trxdir(u32 dir, u32 bb_lo, u32 bb_hi, u32 pos_lo, u32 pos_hi, u32
     if (dir == 1) { st.unsupported++; return; }
     if (dir == 3) return;
     seq++;
+    useq++;
     if (l) {
         nlog++;
         l->dir = dir; l->bp = dbp; l->bw = dbw; l->psm = dpsm;
@@ -302,14 +319,24 @@ int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     return 0;
 }
 
-u32 kh1_gsmem_tex_stamp(u32 lo, u32 hi) {
+/* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
+ * first page whose drawn bits it reads (1 + its target, 0 for none) */
+static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
-    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, a, page, s = 0;
+    u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, a, page, s = 0, bits;
+    *t = 0;
     switch (psm) {
     case KH1_PSMCT16: bwid = 16; bhgt = 8; break;
     case KH1_PSMT8: bwid = 16; bhgt = 16; break;
     case KH1_PSMT4: bwid = 32; bhgt = 16; break;
     default: if (!known(psm)) return 0; bwid = 8; bhgt = 8; break;
+    }
+    switch (psm) {
+    case KH1_PSMCT24: bits = 0x00FFFFFF; break;
+    case KH1_PSMT8H:  bits = 0xFF000000u; break;
+    case KH1_PSMT4HL: bits = 0x0F000000; break;
+    case KH1_PSMT4HH: bits = 0xF0000000u; break;
+    default: bits = ~0u; break;
     }
     if (tw > 10 || th > 10) return 0;
     /* one address a block: a block never spans two pages */
@@ -318,6 +345,76 @@ u32 kh1_gsmem_tex_stamp(u32 lo, u32 hi) {
             a = kh1_gsmem_addr(psm, tbp, tbw, x, y);
             page = psm == KH1_PSMCT16 ? a >> 12 : psm == KH1_PSMT8 ? a >> 13 : psm == KH1_PSMT4 ? a >> 14 : a >> 11;
             if (page_seq[page] > s) s = page_seq[page];
+            if (!*t && page_drawn[page] & bits) *t = page_tgt[page];
         }
     return s;
+}
+
+u32 kh1_gsmem_tex_stamp(u32 lo, u32 hi) {
+    u32 t;
+    return tex_scan(lo, hi, &t);
+}
+
+u32 kh1_gsmem_tex_target(u32 lo, u32 hi) {
+    u32 t;
+    tex_scan(lo, hi, &t);
+    return t;
+}
+
+int kh1_gsmem_targets(KH1GsTarget *out, int max) {
+    int i;
+    for (i = 0; i < (int)ntgt && i < max; i++) out[i] = tgt[i];
+    return ntgt;
+}
+
+/* one surface drawn: its target found or added, its pages marked (again only after an upload, a copy
+ * or a pixel write, or when the surface grew) */
+static void draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
+    u32 i, r, c, ph = psm == KH1_PSMCT16 || psm == 0x0A || psm == 0x32 || psm == 0x3A ? 64 : 32;
+    KH1GsTarget *t;
+    if (!mask) return;
+    for (i = 0; i < ntgt; i++)
+        if (tgt[i].bp == fbp * 32 && tgt[i].bw == bw && tgt[i].psm == psm) break;
+    if (i == ntgt) {
+        if (ntgt == TARGETS) return;
+        t = &tgt[ntgt++];
+        memset(t, 0, sizeof *t);
+        t->bp = fbp * 32;
+        t->bw = bw;
+        t->psm = psm;
+        tgt_useq[i] = useq - 1;
+    }
+    t = &tgt[i];
+    t->draws++;
+    t->sent++;
+    st.target_draws++;
+    if (tgt_useq[i] == useq && h <= t->h && (mask & ~t->mask) == 0) return;
+    if (h > t->h) t->h = h;
+    t->mask |= mask;
+    seq++;
+    for (r = 0; r < (t->h + ph - 1) / ph; r++)
+        for (c = 0; c < cols; c++) {
+            u32 p = (fbp + r * bw + c) & 511;
+            page_drawn[p] |= t->mask;
+            page_tgt[p] = i + 1;
+            page_seq[p] = seq;
+        }
+    tgt_useq[i] = useq;
+}
+
+void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc_lo, u32 sc_hi, u32 test_lo) {
+    u32 bw = frame_lo >> 16 & 63, psm = frame_lo >> 24 & 63, h = (sc_hi >> 16 & 0x7FF) + 1;
+    u32 cols = ((sc_lo >> 16 & 0x7FF) >> 6) + 1, mask;
+    if (!bw) return; /* no FRAME yet (FBW 0): nothing a draw could reach */
+    if (cols > bw) cols = bw;
+    switch (psm) {
+    case KH1_PSMCT32: mask = ~frame_hi; break;
+    case KH1_PSMCT24: mask = ~frame_hi & 0x00FFFFFF; break;
+    default: mask = (~frame_hi & 0x80F8F8F8) ? ~0u : 0; break; /* CT16 / CT16S: FBMSK in RGBA5551's bits */
+    }
+    draw_into(frame_lo & 0x1FF, bw, psm, cols, h, mask);
+    if (test_lo >> 16 & 1 && !(zbuf_hi & 1)) {
+        psm = 0x30 | (zbuf_lo >> 24 & 15);
+        draw_into(zbuf_lo & 0x1FF, bw, psm, cols, h, psm == 0x31 ? 0x00FFFFFF : ~0u);
+    }
 }
