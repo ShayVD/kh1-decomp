@@ -1586,6 +1586,32 @@ resets its GS memory model must do the same or flush the cache.
 A renderer reading a texture **while an upload is half done** is now a miss as well: each IMAGE piece is a
 write of its own (`kh1_gsmem_image` moves the sequence).
 
+**Session 119 (vita-port-plan 5.1bg): the texture formats a port uploads, and TEXA in the shader.**
+include/platform/texfmt.h / host/port/texfmt.c turn the cache's stored texels into one GPU texture a PSM:
+
+| PSM | Upload | The shader |
+|---|---|---|
+| CT32, Z32 | RGBA8, the word as stored (R in the low byte) | nothing; A is on the GS's scale (0x80 = 1.0: x 255 / 128 where it blends; TCC 0 takes the vertex's A) |
+| CT24, Z24 | RGBA8 with A 0 | A from TEXA: TA0, or 0 for black (RGB 0) with AEM |
+| CT16, CT16S, Z16, Z16S | 16-bit A1B5G5R5, the halfword as stored (GS bits 0-4 R, 5-9 G, 10-14 B, 15 the bit) | each channel back to its 5 bits shifted up 3 (`round(c x 31) x 8`: the GPU widens 31 to 0xFF, the GS to 0xF8); A from TEXA: TA1 with the bit, else TA0, or 0 for black with AEM |
+| T8, T8H | P8, the index | the palette cache's 256 RGBA8 words |
+| T4, T4HL, T4HH | P4, two indices a byte, the even texel in the low nibble (a guess at the GPU's order) | the palette cache's 16 (CSA's) words |
+
+**TEXA is the shader's, at sampling, not the upload's**: it is not in the texture cache's key, so an upload
+that applied it would be wrong for the next draw with another TEXA, and a per-TEXA copy would cost an upload
+at every TEXA change. TA0 / TA1 / AEM are three uniforms a draw; CT16 keeps its 16 bits (half the memory of
+RGBA8) and its bit says TA1 or TA0. An indexed texture's TEXA is already in its palette (a CT16 CLUT's alpha,
+which the palette cache keys). Rows are padded to 8 texels (a guess at the Vita's linear stride: check it on
+the device). tests/host/texfmt_test.c (53 checks): for every PSM above the shader's sample of the upload is
+`kh1_gsmem_read_tex`'s RGBA8 at every texel under three TEXA values (AEM off and on, blacks and CT16 bits
+among the texels; a 4-wide T4 and a 2-wide T4HH for the padding); and (item 4c) a CT16 and a CT24 16 x 16
+texture drawn by the model's sprite under two TEXA values give the same pixels through the texture cache as
+from GS memory, equal to the shader's sample, with one entry each (the second TEXA a stamp hit, no upload).
+
+The `KH1_HOST_TEXDUMP` dump (dmawalk.c `gs_dump_textures`) keeps its own `seen` table: it writes decoded
+colours, which depend on TEXA and the CLUT, and the cache's key leaves both out, so keying the dump by it would
+miss a TEXA or palette change.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

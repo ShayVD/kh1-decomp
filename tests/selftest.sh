@@ -186,6 +186,12 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/texcache_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/texcache.c"
   "$W/texcache_test" > "$W/texcache.log" || { cat "$W/texcache.log"; exit 1; }
   tail -n 1 "$W/texcache.log"
+  # the texture formats a port uploads and TEXA in the shader (renderer-spec 4.13 "Session 119")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/texfmt_test" \
+      "$ROOT/tests/host/texfmt_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/texcache.c" \
+      "$ROOT/host/port/texfmt.c"
+  "$W/texfmt_test" > "$W/texfmt.log" || { cat "$W/texfmt.log"; exit 1; }
+  tail -n 1 "$W/texfmt.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
