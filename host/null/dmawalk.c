@@ -244,6 +244,14 @@ static const char *extent_note(const KH1GsDraw *d) {
     return b;
 }
 
+/* session 93: a SCISSOR the wide view's rule reads as the view's, in canvas sixteenths */
+static const char *view_note(const KH1GsDraw *d) {
+    static char b[48];
+    if (d->vx0 == d->vx1) return "";
+    sprintf(b, ", view scissor %d %d", d->vx0, d->vx1);
+    return b;
+}
+
 /* KH1_HOST_TRACE=5: each draw state the send drew in (host/null/gsregs.c), with the context's
  * FRAME, ZBUF, TEST, ALPHA, TEX0 and CLAMP, and its kicks and primitives */
 static void gs_print_draws(void) {
@@ -251,10 +259,10 @@ static void gs_print_draws(void) {
     int n = kh1_gs_draws(d, 64), i;
     for (i = 0; i < n && i < 64; i++)
         printf("kh1-host:   draw prim %03x frame %08x zbuf %08x test %08x alpha %08x%08x tex0 %08x%08x clamp "
-               "%08x%08x: %u kicks, %u prims%s%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
+               "%08x%08x: %u kicks, %u prims%s%s%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
                d[i].ctx.alpha.hi, d[i].ctx.alpha.lo, d[i].ctx.tex0.hi, d[i].ctx.tex0.lo, d[i].ctx.clamp.hi,
                d[i].ctx.clamp.lo, d[i].kicks, d[i].draws, extent_note(&d[i]),
-               d[i].target ? target_note(d[i].target) : "");
+               d[i].target ? target_note(d[i].target) : "", view_note(&d[i]));
     if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
 }
 
@@ -348,10 +356,33 @@ void kh1_dma_hud_anchors(const KH1HudAnchor *tab, int n, u32 via, u32 via_n, s32
     kh1_gs_xshift(0);
 }
 
-/* a send starts at tadr: a staging send keeps the shift of the environment sent before it (as
- * tools/host/gsstate.py keys its extent), any other send is that environment */
+/* the static full-screen packets' stretch under a wide view (kh1_dma_fullscreen, session 93) */
+static const KH1FullScreen *fs_tab;
+static int fs_n;
+static s32 fs_x0, fs_w;
+
+void kh1_dma_fullscreen(const KH1FullScreen *tab, int n, s32 x0, s32 w) {
+    fs_tab = tab;
+    fs_n = n;
+    fs_x0 = x0;
+    fs_w = w;
+    kh1_gs_xstretch(0, 0, 0);
+}
+
+/* a send starts at tadr: a listed full-screen packet is stretched (session 93); a staging send keeps
+ * the shift of the environment sent before it (as tools/host/gsstate.py keys its extent), any other
+ * send is that environment */
 static void hud_send(u32 tadr) {
     int i;
+    if (fs_n) {
+        u32 what = 0;
+        for (i = 0; i < fs_n; i++)
+            if ((u32)(unsigned long)fs_tab[i].send == tadr) {
+                what = fs_tab[i].what;
+                break;
+            }
+        kh1_gs_xstretch(fs_x0, fs_w, what);
+    }
     if (!hud_n) return;
     if (tadr - hud_via < hud_via_n) {
         kh1_gs_xshift(hud_env_shift);

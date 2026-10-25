@@ -16,6 +16,8 @@
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
+#include "platform/canvas.h"
+#include "platform/fullscreen.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
@@ -28,6 +30,9 @@ static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
 static u32 vxy[3], vuv[3], vrgba[3]; /* the queued vertices' XYZ X / Y, UV and RGBA (session 83: sprites) */
 static s32 gs_xshift; /* added to each XYZ's X (session 92: the HUD's anchors, kh1_gs_xshift) */
+static s32 gs_sx0, gs_sw; /* session 93: a full-screen packet's stretch (kh1_gs_xstretch), gs_sw 0 = none */
+static u32 gs_swhat;
+static s32 gs_vx0, gs_vw = 8192; /* session 93: the view the scissor rule reads (kh1_gs_view) */
 
 /* the state before any write: 0, except PRMODECONT 1 (PRIM's attributes rule), what every
  * environment the game sends writes (renderer-spec 5.1) */
@@ -36,14 +41,34 @@ void kh1_gs_reset(void) {
     gs.prmodecont.lo = 1;
     gs_q = 0x3F800000;
     gs_xshift = 0;
+    gs_sw = 0;
+    gs_vx0 = 0;
+    gs_vw = 8192;
     kh1_gs_clear_draws();
     kh1_gsmem_reset();
 }
 
 void kh1_gs_xshift(s32 sixteenths) { gs_xshift = sixteenths; }
 
-/* XYZ's X (bits 0-15, 12.4) moved by the shift in force, Y left */
-static u32 gs_xs(u32 xy) { return (xy & 0xFFFF0000u) | ((xy + (u32)gs_xshift) & 0xFFFF); }
+void kh1_gs_xstretch(s32 x0, s32 w, u32 what) {
+    gs_sx0 = x0;
+    gs_sw = what ? w : 0;
+    gs_swhat = what;
+}
+
+void kh1_gs_view(s32 x0, s32 w) {
+    gs_vx0 = x0;
+    gs_vw = w;
+}
+
+/* XYZ's X (bits 0-15, 12.4) stretched by a full-screen packet's stretch (session 93) and moved by the
+ * shift in force, Y left */
+static u32 gs_xs(u32 xy) {
+    u32 x = xy;
+    if (gs_sw && gs_swhat & (KH1_FS_X | KH1_FS_XS))
+        x = (u32)kh1_canvas_stretch_x((s32)(xy & 0xFFFF), gs_swhat & KH1_FS_X ? gs_sx0 : 0, gs_sw);
+    return (xy & 0xFFFF0000u) | ((x + (u32)gs_xshift) & 0xFFFF);
+}
 
 void kh1_gs_clear_draws(void) {
     ndraws = 0;
@@ -107,6 +132,10 @@ static void gs_kick(int draw, u32 xy) {
         if (p >> 5 & 1) d.fogcol = gs.fogcol;
         for (i = 0; i < ndraws; i++)
             if (!memcmp(&draws[i], &d, (char *)&d.kicks - (char *)&d)) break;
+        /* session 93: the scissor rule (a full 4:3 SCISSOR or one of the 16 columns is the view's) */
+        if (!kh1_canvas_scissor(d.ctx.scissor.lo, d.ctx.scissor.hi, gs_vx0, gs_vw, &d.vx0, &d.vx1) ||
+            (gs_vx0 == 0 && gs_vw == 8192))
+            d.vx0 = d.vx1 = 0;
         d.x0 = d.y0 = 0x7FFFFFFF;
         d.x1 = d.y1 = -0x7FFFFFFF;
         if (i == ndraws && ndraws < DRAWS) draws[ndraws++] = d;
@@ -162,7 +191,9 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x00: set(&gs.prim, lo & 0x7FF, 0); gs.nvert = 0; return;
     case 0x01: gs.rgbaq.lo = lo; gs.rgbaq.hi = hi; return;
     case 0x02: gs.st.lo = lo; gs.st.hi = hi; return;
-    case 0x03: gs.uv.lo = lo; gs.uv.hi = hi; return;
+    case 0x03: /* UV: a full-screen copy's u stretched with its X (session 93) */
+        if (gs_sw && gs_swhat & KH1_FS_U) lo = (lo & ~0x3FFFu) | ((u32)kh1_canvas_stretch_u(lo & 0x3FFF, gs_sw) & 0x3FFF);
+        gs.uv.lo = lo; gs.uv.hi = hi; return;
     case 0x0A: gs.fog.lo = lo; gs.fog.hi = hi; return;
     case 0x04: case 0x05: gs_kick(1, gs_xs(lo)); return;  /* XYZF2 / XYZ2 */
     case 0x0C: case 0x0D: gs_kick(0, gs_xs(lo)); return;  /* XYZF3 / XYZ3: a vertex, no drawing */

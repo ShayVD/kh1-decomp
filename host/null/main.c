@@ -32,7 +32,10 @@
  *                       docs/renderer-spec.md 5.4); the null platform draws nothing, so a run shows
  *                       it only in what the culls let through.  Session 92: the HUD's anchored parts
  *                       (host/port/hudanchor.c) move by the margin in the GIF path, which the chain
- *                       walk's extents show (KH1_HOST_TRACE=5, gsstate.py --extents).
+ *                       walk's extents show (KH1_HOST_TRACE=5, gsstate.py --extents).  Session 93:
+ *                       the static full-screen packets (host/port/fullscreen.c) stretch to the view
+ *                       and a full 4:3 SCISSOR (or a 32-pixel column) reads as the view's (a draw
+ *                       line's ", view scissor X0 X1", include/platform/canvas.h).
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the

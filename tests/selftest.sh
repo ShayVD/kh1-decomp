@@ -83,21 +83,34 @@ grep -q 'src/counter.c  AddCounter' report.log
 ! grep -q '100.00%  src/counter.c  AddCounter' report.log
 make --no-print-directory progress | tee progress.log
 grep -q 'Functions matched: 4/7' progress.log
+# The HUD's anchor table against the C (tools/host/hudcheck.py, session 93): every environment src/hud
+# sends is an anchor or a marker, and a table missing one fails.
+python3 -I "$ROOT/tools/host/hudcheck.py" > "$W/hud.log" || { cat "$W/hud.log"; exit 1; }
+tail -n 1 "$W/hud.log"
+sed '/D_00669070, -1/d' "$ROOT/host/port/hudanchor.c" > "$W/hudanchor_missing.c"
+if python3 -I "$ROOT/tools/host/hudcheck.py" --table "$W/hudanchor_missing.c" > "$W/hud_missing.log"; then
+  echo "selftest: hudcheck missed a HUD environment left out of the table" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
-     "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" 2> "$W/dmawalk_cc.log"; then
+     "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
   "$W/dmawalk_test" > "$W/dmawalk.log" || { grep -v '^kh1-host:   ' "$W/dmawalk.log"; exit 1; }
   tail -n 1 "$W/dmawalk.log"
   # the GS register file it feeds (host/null/gsregs.c, session 79)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsregs_test" \
-      "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c"
+      "$ROOT/tests/host/gsregs_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsregs_test" > "$W/gsregs.log" || { grep -v '^kh1-host:' "$W/gsregs.log"; exit 1; }
   tail -n 1 "$W/gsregs.log"
   # the GS memory it feeds (host/null/gsmem.c, session 80)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/gsmem_test" \
-      "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c"
+      "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsmem_test" > "$W/gsmem.log" || { grep -v '^kh1-host:' "$W/gsmem.log"; exit 1; }
   tail -n 1 "$W/gsmem.log"
+  # the 2D canvas map and the full-screen rules (host/port/canvas.c, session 93)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/canvas_test" \
+      "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c"
+  "$W/canvas_test" > "$W/canvas.log" || { cat "$W/canvas.log"; exit 1; }
+  tail -n 1 "$W/canvas.log"
   # the null sound server (host/null/sound.c, session 86)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/sound_test" \
       "$ROOT/tests/host/sound_test.c" "$ROOT/host/null/sound.c"

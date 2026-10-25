@@ -3,6 +3,7 @@
 #include "common.h"
 #include "../../host/null/dmawalk.h"
 #include "../../host/null/gsregs.h"
+#include "platform/canvas.h"
 
 int printf(const char *, ...);
 
@@ -227,6 +228,60 @@ int main(void) {
         vert(0x7010, 0x7430); vert(0x7040, 0x7450);
         n = kh1_gs_draws(d, 8);
         CHECK("anchor: X only", n == 1 && d[0].x0 == -0x10 && d[0].x1 == 0x20 && d[0].y0 == 0x30 && d[0].y1 == 0x50);
+        kh1_gs_reset();
+    }
+
+    /* session 93: the static full-screen packets' stretch (kh1_dma_fullscreen) and the scissor rule
+     * (kh1_gs_view).  A send of A+D XYOFFSET_1, SCISSOR_1 0..511 x 0..383, PRIM SPRITE|TME|FST and two
+     * UV + XYZ2 vertices across the canvas (u 0.5 .. 512.5); 960 x 544's view -1325 .. 9517 */
+    {
+        static KH1FullScreen tab[2];
+        static const u32 what[4] = { KH1_FS_X | KH1_FS_U, KH1_FS_XS, 0, 0 };
+        int k;
+        kh1_gs_reset();
+        clear();
+        tab[0].send = mem[0]; tab[0].what = KH1_FS_X | KH1_FS_U; tab[0].name = "copy";
+        tab[1].send = mem[20]; tab[1].what = KH1_FS_XS; tab[1].name = "capture";
+        for (k = 0; k < 3; k++) {
+            int b = k * 20;
+            q(b, 0x70000008, 0, 0, 0);
+            q(b + 1, 7 | 1 << 15, 1 << 28, 0xE, 0);
+            q(b + 2, 0x7000, 0x7400, 0x18, 0);
+            q(b + 3, 0x01FF0000, 0x017F0000, 0x40, 0);
+            q(b + 4, 0x116, 0, 0x00, 0);
+            q(b + 5, 8, 0, 0x03, 0);
+            q(b + 6, 0x7000 | 0x7400 << 16, 0, 0x05, 0);
+            q(b + 7, 0x2008 | 384 << 4 << 16, 0, 0x03, 0);
+            q(b + 8, (k == 1 ? 0x8000 : 0x9000) | 0x8C00 << 16, 0, 0x05, 0);
+        }
+        kh1_dma_fullscreen(tab, 2, -1325, 10842);
+        kh1_gs_view(-1325, 10842);
+        for (k = 0; k < 4; k++) {
+            s32 x1 = k == 0 ? 9517 : k == 1 ? 5421 : 8192;
+            if (k == 3) { kh1_dma_fullscreen(tab, 0, 0, 0); kh1_gs_view(0, 8192); }
+            CHECK("stretch: walk", kh1_dma_walk(2, 0x104, A(k < 3 ? k * 20 : 0), where) == 0);
+            n = kh1_gs_draws(d, 8);
+            CHECK(k == 0 ? "stretch: X and u" : k == 1 ? "stretch: X from the buffer's edge" : k == 2 ?
+                  "stretch: not listed" : "stretch: off",
+                  n == 1 && d[0].draws == 1 && d[0].x0 == (what[k] & KH1_FS_X ? -1325 : 0) && d[0].x1 == x1 &&
+                  d[0].y0 == 0 && d[0].y1 == 384 << 4);
+            CHECK(k == 0 ? "stretch: u stretched" : "stretch: u left",
+                  (s->uv.lo & 0x3FFF) == (u32)(k == 0 ? kh1_canvas_stretch_u(0x2008, 10842) : 0x2008));
+            CHECK(k < 3 ? "scissor rule: the full canvas is the view" : "scissor rule: off at 4:3",
+                  k < 3 ? d[0].vx0 == -1325 && d[0].vx1 == 9517 : d[0].vx0 == 0 && d[0].vx1 == 0);
+        }
+        /* a column of the PS2's texture-cache trick is the view's column; a window is its own */
+        kh1_gs_reset();
+        kh1_gs_view(-1325, 10842);
+        kh1_gs_write(0x18, 0x7000, 0x7400);
+        kh1_gs_write(0x40, 0x003F0020, 0x017F0000);
+        kh1_gs_write(0x00, 6, 0);
+        vert(0x7000, 0x7400); vert(0x9000, 0x8C00);
+        kh1_gs_write(0x40, 0x00FF0010, 0x017F0000);
+        vert(0x7000, 0x7400); vert(0x9000, 0x8C00);
+        n = kh1_gs_draws(d, 8);
+        CHECK("scissor rule: a column, a window", n == 2 && d[0].vx0 == -1325 + 678 && d[0].vx1 == -1325 + 1355 &&
+              d[1].vx0 == 0 && d[1].vx1 == 0);
         kh1_gs_reset();
     }
 

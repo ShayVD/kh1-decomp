@@ -47,6 +47,10 @@ rewrite matched code.
    (sceneeff.c, sceneeff.nostrict.c, brightfade.c, opdma.c), and include/platform/hudanchor.h:
    the HUD's anchor table (port data, host/port/hudanchor.c), keyed by each part's drawing
    environment, which a port's GIF path applies under a wide view.
+   Session 93 added include/platform/fullscreen.h (the static full-screen packets a wide
+   view stretches, keyed by the send, host/port/fullscreen.c) and include/platform/canvas.h
+   (the 2D canvas map onto the screen, the stretch and the scissor rule as pure functions,
+   host/port/canvas.c): port data and maths only, nothing under src/ includes them.
    **Session 56 wrote the wrappers** (each byte-identical, one header per
    commit): `dma.h` (PlatDmaGetChan / PlatDmaSend, 38 files; libdma named in
    functions.tsv), `gs.h` (PlatGsSyncPath, image load / store packets and

@@ -42,6 +42,9 @@ typedef struct {
                  * first found it there (kh1_gsmem_tex_target, session 81), else 0 */
     s32 x0, y0, x1, y1; /* session 91: the kicked vertices' extent in 1/16 pixels of the context's
                          * XYOFFSET (min, max; x1 < x0 when nothing was kicked) */
+    s32 vx0, vx1; /* session 93: under a wide view (kh1_gs_view), a SCISSOR the rule reads as the view's
+                   * (the full 4:3 canvas or a 32-pixel column, include/platform/canvas.h): its x range
+                   * in canvas sixteenths, half-open; 0 0 otherwise */
 } KH1GsDraw;
 
 /* back to the state before any write (all registers 0 but PRMODECONT 1) and no draws counted */
@@ -67,6 +70,14 @@ void kh1_gs_path1(void);
  * 0 = none, kh1_gs_reset's), the way the port's GIF path moves an anchored HUD part under a wide
  * view (include/platform/hudanchor.h, host/null/dmawalk.c kh1_dma_hud_anchors) */
 void kh1_gs_xshift(s32 sixteenths);
+/* session 93: every XYZ's X written from now on is stretched as a static full-screen packet's
+ * (include/platform/fullscreen.h: KH1_FS_X canvas 0 .. 512 to x0 .. x0 + w, KH1_FS_XS 0 .. w only),
+ * and with KH1_FS_U each UV u 0 .. 512 texels to 0 .. w / 16 (sixteenths of canvas pixels; what = 0 is
+ * none, kh1_gs_reset's) */
+void kh1_gs_xstretch(s32 x0, s32 w, u32 what);
+/* session 93: the view the scissor rule reads (KH1GsDraw.vx0 / vx1), in canvas sixteenths: x0 0,
+ * w 8192 (kh1_gs_reset's) is the PS2's 4:3 and turns the rule off */
+void kh1_gs_view(s32 x0, s32 w);
 /* the vertices a primitive type (PRIM bits 0-2) needs for its first drawing kick, 0 for 7 */
 u32 kh1_gs_prim_verts(u32 type);
 

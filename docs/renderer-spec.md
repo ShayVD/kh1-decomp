@@ -1956,7 +1956,8 @@ bars of 117 / 118 pixels.
 1. **First bring-up: 4:3, pillarboxed.** Render the 3D target at 725 x 544 (or any multiple of 512 x
    384 for supersampling), keep the 2D in the same target with one affine map `(X / 16 - 1792) * s,
    (Y / 16 - 1856) * s` in the vertex shader of every GIF-path draw, scissor and full-screen pass, and
-   present it centred in black bars. Nothing in the game code changes; the draw list's order between 2D
+   present it centred in black bars (session 93: `kh1_canvas_fit` / `kh1_canvas_map`, host/port/canvas.c, §5.4
+   "Session 93"). Nothing in the game code changes; the draw list's order between 2D
    and 3D (they share the target and the keys) stays as it is. The glyph and window-font textures are
    small (18-pixel cells, a 256 x 256 sheet): bilinear at 1.42 is soft but readable; a later step can
    swap in a higher-resolution font sheet keyed by the same cells.
@@ -2254,6 +2255,63 @@ lens grid copy into the Z area `D_002A5FD0` (16 strips, x 1790.5 ..), the spin's
 matrix (scrz 512) stay: the sides keep the scene. capture.c's image stores / loads (512 x 384, 256 x 192 for
 the blur) are platform calls (`PlatGsSetDefStoreImage`), sized by the port's target.
 
+#### Session 93: the full-screen packets' stretch and the canvas map on the host (static + host)
+
+**The static full-screen packets as port data** (item 4a): `include/platform/fullscreen.h` and
+`host/port/fullscreen.c` list them beside the HUD's anchors, keyed by the send's start (each is one REFE send
+through `func_00106b18`, read with `gs_packets.py -v`), with what stretches:
+
+| Send | What | Stretch |
+| --- | --- | --- |
+| `D_002A6500` clear (16 sprites of 32 px) | target | X |
+| `D_002A6890` frame copy (16 strips, u 0.5 .. 512.5, to the 512 x 448 display) | display | X and u |
+| `D_002A6070` fade (one sprite) | target | X |
+| `D_002A61E0` letterbox (two bars) | target | X |
+| `D_002A5FD0` the target copied into the Z area (16 strips from x 1790.5) | Z area | X and u |
+| `D_002A4ED0` the spin's display-to-target copy (u 1 .. 513; `SCISSOR_1` the full canvas) | target | X and u |
+| `D_002A4FC0` the spin's turned strip `D_002A4F60` (u 0.5 .. 512.5) | target | u only: its XYZ come from C, already wide (`func_00102cc8`'s `PLAT_VIEW_W`) |
+| `D_002B6760` the menu capture (u 0 .. 512 to x 1792 .. 2048, a half-size buffer of its own) | capture | u, and X scaled from the buffer's left edge without the view's offset (`KH1_FS_XS`) |
+| `D_002BC980` **the display clear** (dispenv.c `func_0010ff60`, a grey level over 512 x 448; not in session 92's list) | display | X |
+
+The rule (`include/platform/canvas.h`): **X** from canvas 0 .. 512 to the view's `x0 .. x0 + w` (in canvas
+sixteenths, `-1325 .. 9517` at 960 x 544: X' = 0x7000 + x0 + (X - 0x7000) w / 8192, rounded half up, so the
+copy's 1790.5 goes to 1709.3 and the centre 2048 stays); **u** (UV, a texel of a copy of the target or the
+display) from 0 .. 512 to 0 .. w / 16, from the view's left edge (session 92's convention for the sway's
+`u1`). A buffer laid out like the target (the display, the Z area) takes the view's offset; the capture is a
+buffer of its own and starts at 0. ST (float) texture coordinates are not stretched: no listed packet uses
+them. The lens grid's `D_002A6110` (`CLAMP_1` REGION U 0 .. 510) and its mesh stay (the centre square), as
+session 92 said; whether its u, read from the copy into the Z area, needs the view's margin added (the copy
+starts at the view's left edge now) is for the renderer bring-up to settle on screen.
+
+**The scissor rule**: a `SCISSOR` equal to the full 4:3 canvas (0 .. 511 x 0 .. 383, every HUD environment's
+and the spin copy's) or to the display's (0 .. 511 x 0 .. 447, the display clear's) reads as the whole view; one
+of the 16 columns `D_002A46D0` .. `D_002A48B0` (x 32k .. 32k + 31 of the target's full height, the sway's
+texture-cache trick) as the view's column k, edges from the same map, so the 16 tile the view without gaps
+(`kh1_canvas_scissor`). The GS register cannot hold a negative x, so the rule is the renderer's.
+
+**Applied in the host's GIF path** (under `KH1_HOST_WIDE`): `kh1_dma_fullscreen` (dmawalk.c) gives a listed
+send's stretch to `kh1_gs_xstretch` (gsregs.c: each XYZ X, and UV u with `KH1_FS_U`), any other send none;
+`kh1_gs_view` sets the view the scissor rule reads, and a draw state the rule applies to gets `vx0 / vx1`
+(a draw line's `, view scissor X0 X1` in canvas sixteenths; `gsstate.py --extents` adds "(scissor: the view
+X0 .. X1)"). **On the fake disc with `KH1_HOST_WIDE=1`** the clear, the display clear and the frame copy
+draw `(-82.8, 0) .. (594.8, 384 / 448)` with the scissor read as the view, and the same run without it
+`(0, 0) .. (512, ...)` as before. gsregs_test.c +17 checks (X and u, the capture's X, a send not listed, the
+switch off, the rule's full canvas, column and window cases).
+
+**The canvas map** (5.3 step 1, item 4c): `kh1_canvas_fit(c, W, H)` gives `s = min(W / 512, H / 384)` and the
+centring offsets (`s` 1.4167, `ox` 117.3, `oy` 0 at 960 x 544; a 4:3 screen no bars; a narrower one
+letterboxed), and the view in canvas sixteenths (`vx0` -1325, `vw` 10842, the HUD's margin: the same 82.8
+as `kh1_view_init`); `kh1_canvas_map` maps GS X / Y to screen pixels, `(X / 16 - 1792) s + ox`, `(Y / 16 -
+1856) s + oy`. One map for the 4:3 and the wide view: the view's edges land on the screen's (to a
+sixteenth). tests/host/canvas_test.c (25 checks) also covers the stretch and the scissor rule.
+
+**The table check** (item 4b): `tools/host/hudcheck.py` reads every environment the C builds
+(`func_002370c8(&D_x)`) or sends (`func_00237018(&D_x, 22, 1)`) and requires each one from src/hud to be in
+`kh1_hud_anchors[]` or in the new `kh1_hud_markers[]` (hudanchor.c: the six marker environments), no table
+row to be stale, and an environment outside src/hud to be a known one (gspkt.c's default `D_006480D0`, an
+overlay's). Today: 17 HUD environments, 11 anchored, 6 markers, 1 other, 0 problems. tests/selftest.sh runs
+it (no build, so CI too) and checks that a table missing the minigame timer fails.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
@@ -2267,8 +2325,11 @@ the blur) are platform calls (`PlatGsSetDefStoreImage`), sized by the port's tar
   there). The main ELF's own other views have no frustum (session 91).
 - `func_00110618` is still a non-match; its C for the port is host/port/view.c (session 91, bit-identical
   maths; tests/selftest.sh runs viewcheck.py when the ELF is in the repo root, session 92).
-- Session 92: the static full-screen packets' stretch (the list above) is the renderer's; the host's null
-  GIF path does not apply it yet (only the HUD's shift).
+- ~~Session 92: the static full-screen packets' stretch (the list above) is the renderer's; the host's null
+  GIF path does not apply it yet (only the HUD's shift).~~ Session 93: applied (above); the real-disc run with
+  `KH1_HOST_WIDE=1` and `--extents` should show every full-screen send at -82.8 .. 594.8 and each HUD part
+  moved by its side.
+- Session 93: the lens grid's u into the copy in the Z area under the wide view (the margin added or not).
 
 ## 6. Open questions
 
