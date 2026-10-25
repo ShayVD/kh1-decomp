@@ -9,13 +9,29 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 122 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 123 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 122, 2026-10-25)
+## Where we stopped (end of session 123, 2026-10-25)
+
+- **Session 123** (static, vita-port-plan 5.1bk): **the whole draw state, the pipeline count, render targets.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
+  include/platform/drawstate.h / host/port/drawstate.c (renderer-spec 4.13 "Session 123"): from a draw's
+  registers, up to two GPU pipelines (fixed-function state + fragment shader variant) and DATE's set-up, the
+  uniforms (AREF, FIX, FOGCOL, TEXA, region bounds, FETCH's ALPHA / PSM, FBMSK), the sampler and the texture
+  binding; `KH1PipeSet` counts them. `KH1_HOST_TRACE=5` ends with `pipelines:` / `pipe N` and `port target` lines
+  (host/null/pipes.c, dmawalk.c's new `kh1_dma_draw_state` hook); tools/host/drawpipes.py counts the static
+  packets (dmawalk.py's Gif records `seq` now; `--state` unchanged) plus the C's states (`C_STATES`) through
+  tools/host/pipecount.c: fake disc 4 pipelines, static 27 (14 shaders), with the C 42 (27 shaders, 3 samplers).
+  New include/platform/target.h / host/port/target.c: one GPU texture per buffer (display, Z area as colour,
+  movie, 3D target, slot capture, off-screen, CLUT pass, other), the wide view on the view-sized ones (half for
+  captures), the main Z24 / shadow Z16S bindings, other Z writes dropped, viewport `((X - OFX) / 16 + margin) x
+  scale`, scissor by canvas.h's rule; the PS2's six shared-block pairs named and kept apart. New
+  tests/host/drawstate_test.c (22 checks), target_test.c (27). kh1.elf byte-identical, no float-untested row;
+  selftest PASS.
 
 - **Session 122** (static, vita-port-plan 5.1bj): **the depth state, fog and the primitive assembly.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -601,7 +617,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 123 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 124 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -623,7 +639,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 122: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 123: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -651,6 +667,12 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart (**session 97**: under `KH1_HOST_WIDE` the display shot starts at canvas x 82.8 by design; compare one `:target` shot; **session 98**: with `--extents`, the stored frame back `D_002B66B0` (capture.c, a fade from a stored frame: the menu or a world change?) should now be at -83.5 .. 594.1; note which scenes send it, and whether the spin copy / strip or the copy into the Z area appear; **session 99**: every full-screen send fscheck.py lists should show at -82.8 .. 594.8 under `KH1_HOST_WIDE`, the half-size captures `D_002B6760` / `D_002A5A90` at the view's half: open the menu (the blur `D_002A4B60` / `D_002A4DD0`), a world change (the cross-fade `D_002B65E0`) and, if reached, an event's depth blur and the shaped wipe `D_002A6A40` / `D_002A6AA0`; the display shot now shows canvas 0 .. 512 unshifted; **session 100**: the menu's backdrop gradient at -82.8 .. 594.8 (menubg's four, built in C; not a send, so in `--draws`), and, in a scene with vm_lib's screen effects (a zoom, cross-fade or tint of the stored frame), `D_003DAE30` / `D_003DAF60` / `D_003DB050` at -82.8 .. 594.8; **session 101**: the image loads now reach the model, so `--uploads` lists them (timload, roombg, objwin, hud, fldtext, opimage, mdlpkt, capture's halves) and `KH1_HOST_TEXDUMP` should show more decoded textures; a store now returns the model's bytes (menubg's backdrop colours, the blur's empty test); in a menu with a full-width rule (top menu, journal, load screen) the rule's flat sprite at -82.8 .. 594.8 in `--draws`; if a lens flare is reached, record its key's e / f (the box `e x 8` by `f x 4`, at most 4096 pixels); **session 102**: a flare's Z24 store of a box the draws wrote now reads 0, so the flare shows at full strength on the host ("all visible"); a flare that is dim or hidden means the Z area held uploaded or copied bytes there: note the scene; session 103's flare_test shows what the count gives for each case; **session 104**: without `KH1_HOST_SHOT` expect the menu to send the empty pass `D_002A4DD0` (the half capture reads zeros) and the backdrop gradient black; note whether a `KH1_HOST_SHOT` run sends the blur `D_002A4B60` instead; **session 105**: it should when the display is not black (storeread_test); under `KH1_HOST_SHOT` + `KH1_HOST_WIDE` the menu blur shows canvas -82.8 .. 429 stretched (5.1as; **session 106**: the fill no longer wraps into blocks 0x3900 .. 0x393F, so a broken texture right after the menu opens is a new bug), and an event's depth blur the whole view (5.1at)). **Session 112**: on the host the HUD's marks and counters now end when their actor goes (`func_001375d8` returned 0 before), a crossfade's second texture loads its CLUT and writes no Z (a crossfade drawing black or wrong colours before 112 was this), and summon.nostrict.c's `x370` bit 52 and objdraw's object flags 45 / 57 are set and cleared (before: neither; `~0` cleared nothing). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
+   **Add (session 123)**: the end-of-run `kh1-host: pipelines:` line and its `pipe N` lines for the title and the
+   room run (`KH1_HOST_TRACE=5`): how many GPU pipelines and fragment shaders the real draws need against
+   drawpipes.py's 42 / 27 (renderer A's TEX0_2 / CLAMP_2 from the disc, the real ZBUF under the 2D packets), into
+   renderer-spec 4.13 "Session 123"; and every `port target` line a known kind (an `OTHER` target or an unknown
+   depth buffer is a new one for host/port/target.c's table).
+
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
    `python3 -I tools/ovl/inventory.py dktitle.x --tsv out/ovl/dktitle.layout.tsv`, record the counts (not the bytes)
    in §5.2, then the toolchain check of §5.2 step 2 on 5-8 small leaf functions. Check argcheck's 3 value uses and
@@ -666,26 +688,23 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
-4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
-   builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 122): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
-   winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **the whole draw state as one port struct** (the next step after 5.1bj):
-   a host/port/drawstate.c and its header that build, from gsregs.c's `KH1GsDraw` (PRIM, the context's
-   registers, FOGCOL, TEXA), one record of what a GPU draw needs: the pipeline key (blend.h's state, atest.h's
-   draws and stencil, depth.h's state, the colour mask, the primitive class from primasm.h, the shader
-   variant: texfmt's sample, texfunc's TFX / TCC, fog on / off, sampler.h's shader steps) and the per-draw
-   uniforms (AREF, FIX, FOGCOL, TEXA, the REGION_CLAMP bounds); count the distinct pipelines and shader
-   variants over the fake disc's draw states (`KH1_HOST_TRACE=5`, as fscheck / gsstate read them) and over
-   the static packets (`dmawalk.py --state`), and record the table in renderer-spec 4.13 "Session 123" (how
-   many GPU pipelines the game needs); (c) **render targets, the viewport and the scissor**: FRAME / ZBUF /
-   SCISSOR / XYOFFSET as a GPU render target (which FBP is which port texture: the 3D target `0x1A00`, the
-   display, `0x3A00`, the `0x3600` slot as a 256-wide target, `0x3E0000`, the Z area as colour), its viewport
-   (XYOFFSET's 2048 centring, the wide view's canvas from platform/canvas.h) and the scissor, as port code
-   tested against gsmem.c's target list (`kh1_gsmem_targets`) for the fake disc's sends and fscheck's
-   render-to-texture rows; note which targets alias each other's blocks on the PS2 (4.13 "Session 116") and
-   how the port keeps them apart. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
-   callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
+   Session 123: if inventory.py finds GIF chains in the overlay, count the pipelines they add with
+   tools/host/drawpipes.py's walk (a `--elf`-style run over the overlay's chains).
+4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the user's
+   answer on the full-width rules** (session 101's card, still unanswered at session 123): "keep them 4:3" means
+   deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session
+   101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the GPU vertex and the vertex shader**
+   (the next step after 5.1bk): a host/port/vertex.c and its header that turn primasm.h's `KH1PaVert` into one
+   GPU vertex layout through target.h's viewport (position in target pixels or NDC, Z through depth.h, F, RGBA
+   on the 0x80 scale, ST / Q or UV normalised by the texture's GS size), with the vertex shader's variants (UV
+   or ST / Q, fog, noperspective colour) counted over the same states as drawpipes.py; test it against
+   gsmem.c's sprite (the same pixels covered, the same texels sampled at 4:3 and at a scale of 1.4167); (c)
+   **batches and draw calls**: a host/port/batch.c that cuts the GS write stream into GPU draws (a batch ends at a
+   pipeline, uniform, texture-binding or target change; primasm's queue carried across), and counts draw calls
+   and state changes per frame over the fake disc (`KH1_HOST_TRACE=5`, beside `pipelines:`) and over the static
+   packets (drawpipes.py `--batches`), so the real-disc run gives a Vita's draw-call budget; (d)
+   `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's senders still wait
+   for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
    every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
    "Session 115", and the ppp effect slots' CLUT blocks (clutupload's `UNRESOLVED`; does any render target
@@ -702,9 +721,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    adds: the ZBUF / TEST pairs in `--draws` (any Z32, Z16 or another ZTST than 4.13 "Session 122"'s table?),
    the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
    range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
+
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=123`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=124`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 124) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 125) with this
    prompt: the user wants each session to start the next one without being asked.

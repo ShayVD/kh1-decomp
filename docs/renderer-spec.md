@@ -1798,6 +1798,93 @@ sprites' coverage against gsmem.c's fill. `kh1_gsmem_sprite` takes Z (`tests` bi
 ZBUF's format, `KH1GsSprite.zbuf_lo` / `z`) and fog (bit 4: `f`, `fogcol`); gsregs.c fills the new fields
 from its queue (each vertex's Z and F now kept) and still passes `tests` 0.
 
+**Session 123 (vita-port-plan 5.1bk): the whole draw state as one record, how many GPU pipelines, and
+the render targets.** include/platform/drawstate.h / host/port/drawstate.c put sessions 119 to 122's pieces
+together: from the registers a draw reads (gsregs.c's `KH1GsDraw`: PRIM, the chosen context's FRAME / ZBUF /
+TEST / ALPHA / TEX0 / TEX1 / CLAMP, FOGCOL, TEXA) `kh1_drawstate_of` gives
+
+- up to two **GPU pipelines** (atest.h's pass and fail draws), each the fixed-function state (primitive
+  class, the blend's equation and destination factor, the colour write mask, the depth compare and
+  write, the stencil test DATE needs) plus the fragment shader's variant, and DATE's set-up pipeline;
+- the **fragment shader's variant** (`KH1ShaderKey`): the texture's upload format and TEXA flag, TFX /
+  TCC, ST or UV, fog, blend.h's pre-scale (pre_a, pre_d, floor / ceil, C), a frame read (a FETCH blend,
+  or a per-bit FBMSK with no blend), the discard and its compare, sampler.h's shader steps, the set-up's
+  DATM;
+- the **uniforms**: AREF, FIX, FOGCOL, TEXA, the REGION_CLAMP / REGION_REPEAT bounds, a FETCH blend's
+  ALPHA byte and frame PSM, FBMSK for a shader merge, each set only where the shader reads it;
+- the **sampler object** (address modes, filter) and the **texture binding** (TEX0 without the CLUT fields:
+  the texture cache's key; the palette is the palette cache's).
+
+Left out of the key on purpose: IIP (primasm.h copies a flat colour into the vertices), AA1, the render
+target and depth format (the pass's, below) and the texture's address. tests/host/drawstate_test.c (22
+checks) rebuilds the blend from the key and uniforms alone and draws what blend.h's state draws for every
+ALPHA byte, four FIX values, ABE 0 / 1, CT32 / CT24 and four FBMSKs, and rebuilds the writes (discard, mask,
+depth write, stencil, the set-up's DATM, AREF) equal to atest.h / depth.h's for every TEST and ZMSK and
+every fragment and stored alpha; a mutation that drops C, DATM or the FETCH uniforms fails it.
+
+*How many pipelines*: `KH1_HOST_TRACE=5` now ends with `kh1-host: pipelines: ...` and one `pipe N` line per
+pipeline (host/null/pipes.c over every send's draw states), and `tools/host/drawpipes.py` walks every
+static send (dmawalk.py's chains and seeds; the registers a send does not write are the drawing
+environment `D_004D8EF0`'s: the 3D target, Z24 with ZMSK 0, TEST `0x5000D`, ALPHA `0x44`, TEX1 `0x60`,
+CLAMP 5, renderer B's slot TEX0) and adds the states the C builds (`C_STATES`: renderer A's grid passes
+with and without FGE and ZMSK, its `0x31001` pass, renderer B's two passes under both ALPHA values, the
+HUD environment's sprites and gauge triangles under `0x44` / `0x48` with PSMT4 / PSMT8, the shadow's
+casters and receivers):
+
+| Source | Draw states | GPU pipelines | Fragment shaders | Samplers |
+|---|---|---|---|---|
+| fake disc, `KH1_HOST_OVL=stub:2` (the boot's clear, frame copy, display clear) | 16 over the sends | 4 | 2 | 1 |
+| static packets (149 sends walked) | 31 distinct | 27 | 14 | 2 |
+| static packets + `C_STATES` | 54 | 42 | 27 | 3 |
+
+So the game needs **about 40 to 60 pipelines and about 30 fragment shaders**, a size a Vita renderer can
+build up front (or cache on first use). Every static state is one GPU draw (none needs AFAIL's second
+draw); brightfade's `func_00106460` is the only one with DATE (a set-up pipeline). The shaders vary in:
+texture format (RGBA8 with or without TEXA, P8, P4, none), MODULATE / DECAL, TCC 0 on the CT24 copies,
+ST / Q only for renderer A / B's meshes, fog only there, the pre-scale (none, Cs x As, Cs x As floored for
+the additive forms), the discard (GREATER, GEQUAL, LESS, NOTEQUAL) and one REGION_CLAMP (the shadow
+receivers). The pipelines split further on the depth write: the environment's ZMSK 0 is assumed for 2D
+packets that set no ZBUF, so some 2D pipelines carry a depth write the real frame's ZBUF may not have
+(the real-disc run's count settles it). Renderer A's meshes' TEX0_2 / CLAMP_2 come from the disc (PSMT8 /
+REPEAT assumed here) and renderer B's FOGCOL / AREF are uniforms, so the disc can add formats and wrap
+modes but not many pipelines; the real-disc run's `pipelines:` line gives the number.
+
+*Render targets, the viewport and the scissor* (include/platform/target.h / host/port/target.c): one GPU
+texture per buffer the game draws into, picked by FRAME's FBP / FBW / PSM:
+
+| Port target | FRAME | Size (GS pixels) | Wide view | Depth bound |
+|---|---|---|---|---|
+| display | FBP `0x00`, FBW 8, CT24 | the view x 448 | the view | none |
+| Z area as colour | FBP `0x70` (block `0x0E00`) | the view x 384 | the view | none (its own texture; the depth buffer at the same blocks kept) |
+| movie frame | FBP `0x8C` (block `0x1180`), FBW 10 | 640 x 448 | no | none |
+| 3D target | FBP `0xD0` (block `0x1A00`), CT32 | the view x 384 | the view | the main Z24 (ZBP `0x70`) when tested or written |
+| slot capture | FBP `0x1B0` (block `0x3600`), FBW 4 / 8 | half the view x 192 | half the view | none: the depth blur's Z write is dropped (`zdrop`, 5.1ax) |
+| off-screen buffer | FBP `0x1D0` (block `0x3A00`) | 256 x 256 | no | the shadow's Z16S (ZBP `0x1C0`) |
+| CLUT pass | FBP `0x1F0` (block `0x3E00`), FBW 1 | 64 x SCISSOR's rows | no | none |
+| other | anything else | FBW x 64 by SCISSOR's rows | no | none |
+
+The viewport is `x = ((X - OFX) / 16 + ox) x scale`, `y = ((Y - OFY) / 16) x scale`: XYOFFSET's centring
+stays in OFX / OFY (the 3D target's 1792 / 1856, the shadow windows' 1920 / 1920), `ox` is the view's margin
+for the wide targets (`-vx0 / 16`, 82.8 at 960 x 544; half that for a capture) and `scale` the resolution
+(1 at the PS2's size, the canvas's 1.4167 for a 960 x 544 3D target; textures sampled from a target are
+addressed by their GS size, so the UVs normalise the same). The scissor is SCISSOR's rectangle with
+canvas.h's rule on the wide targets (the full canvas or one of its 32-pixel columns is the view's), the
+margin added, rounded to whole pixels, clipped to the target. tests/host/target_test.c (27 checks) draws
+the game's eight render-to-texture sends into gsmem.c's model: each of the 10 targets `kh1_gsmem_targets`
+lists (8 colour, 2 depth) is a port target or one of the two depth buffers, each its own (the slot's two
+captures are one buffer), each pass covers its SCISSOR at 4:3, the depth bindings and the dropped Z write
+are as above, and at 960 x 544 the 3D target is 960 x 544 with the view's edges at its edges. The fake
+disc's run lists its targets the same way (`kh1-host:   port target ...`: the 3D target, the main depth, the
+display).
+
+*Shared blocks on the PS2, apart on the port* (`kh1_target_alias`, six pairs): the Z area as colour and the
+main depth; the movie frame and the Z area, the Z area as colour and the 3D target's first blocks; the
+slot's FBW 8 capture and the off-screen buffer; the shadow's Z16S and the slot's upper half. (The window
+font under the off-screen buffer and the message font in the Z buffer's top byte are textures, re-sent or
+untouched, 4.12 / 4.8.) Each is its own GPU texture, so nothing the port draws lands in another's pixels;
+the only read through an overlap the game makes is the depth test against the sway's copied colour bytes
+(4.17), which the port does against the real depth.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

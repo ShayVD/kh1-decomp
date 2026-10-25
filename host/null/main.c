@@ -96,6 +96,10 @@ extern unsigned kh1_snd_commands; /* host/null/sound.c */
 extern int kh1_counts_on; /* host/null/counts.c */
 void kh1_counts_sample(void);
 int kh1_counts_report(void);
+/* session 123: the draw states' GPU pipelines (host/null/pipes.c, KH1_HOST_TRACE=5) */
+void kh1_pipes_report(void);
+extern void (*kh1_dma_draw_state)(); /* host/null/dmawalk.c (a const KH1GsDraw *) */
+void kh1_pipes_draw();
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
@@ -111,6 +115,7 @@ static void summary(void) {
     kh1_counts_report();
     kh1_present_pal_report();
     kh1_present_tex_report();
+    kh1_pipes_report();
     fflush(stdout);
 }
 
@@ -235,6 +240,7 @@ int main(int argc, char **argv) {
         const char *tr = getenv("KH1_HOST_TRACE");
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
+        if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
     }
     {
         const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */
