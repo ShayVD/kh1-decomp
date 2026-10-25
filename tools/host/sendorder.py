@@ -9,6 +9,10 @@ path idle (func_0015ea98).  The immediate list's task 0x27CB8 (func_0015eea0) wa
 sceGsSyncPath(0, 0) first, which on the main thread returns only once the draw list has drained.
 So a task between the two keys that sends (a PlatDmaSend, a VIF1 / GIF CHCR write, a draw
 environment) before any PlatGsSyncPath can reach the GS while the list's meshes still draw.
+Session 84: the frame-end wait func_0015ef60 (spins until D_00559DB4, the list's pending flag, is
+0, then syncs) is task 150000 (func_0011eda8, registered with the list's own tasks by
+func_0011edc8), so the list has drained before any later key runs: RACE needs a key between the
+list's start and the first task that reaches that wait (found from the C, printed as "drained").
 
 This reads src/: every func_0011ef10(KEY, fn) with a literal key, the C call graph from fn (calls
 by name only: a pointer passed to func_0015ed80 / func_0015ee78 / func_00106bd8 / func_0011ef10
@@ -29,6 +33,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LIST, IMMEDIATE = 0x9C40, 0x27CB8
+WAIT = "func_0015ef60"  # the frame-end wait for the draw list (D_00559DB4)
 DEFER = {"func_0015ed80", "func_0015ee78", "func_0011ef10", "func_00106bd8"}
 FN = re.compile(r"^[A-Za-z_][^;{}()=]*?\b(func_[0-9a-f]{8})\s*\([^;{]*\)\s*\{", re.M)
 TOK = re.compile(r"(?<![&\w])(func_[0-9a-f]{8})\s*\(|(PlatGsSyncPath)\s*\(|"
@@ -106,14 +111,25 @@ def main() -> int:
         for m in CALL_SITE.finditer(b):
             if not TASK.match(b, m.start()):
                 unread.add((who, b[m.start():b.find(";", m.start())]))
+    def reaches(n: str, seen: set[str]) -> bool:
+        if n == WAIT:
+            return True
+        if n in seen:
+            return False
+        seen.add(n)
+        return any(m.group(1) and m.group(1) not in DEFER and reaches(m.group(1), seen)
+                   for m in TOK.finditer(body.get(n, "")))
+
+    drained = min([key for key, f, who in tasks if LIST < key < IMMEDIATE and reaches(f, set())],
+                  default=IMMEDIATE)
     races = 0
-    print("# tasks that send (key, task, first event, path; draw list at 0x%x, immediate list at 0x%x)"
-          % (LIST, IMMEDIATE))
+    print("# tasks that send (key, task, first event, path; draw list at 0x%x, drained at 0x%x, immediate "
+          "list at 0x%x)" % (LIST, drained, IMMEDIATE))
     for key, f, who in sorted(tasks):
         if not sends(f, set()):
             continue
         r = first(f, [], set())
-        race = LIST < key < IMMEDIATE and r[0] != "sync"
+        race = LIST < key < drained and r[0] != "sync"
         races += race
         print("%6x %-5s %-14s %-22s %s  (registered by %s)" % (key, "RACE" if race else "", f, r[0],
                                                              " > ".join(r[1][1:]) or "-", who))

@@ -1243,7 +1243,7 @@ key whose calls reach a send, and its first sync or send in source order): every
 or after `0x27CB8` (the HUD at `0x28489` / `0x29811`, menus at `0x2BFxx`, the field effects at `0x2E6xx`) is
 serial with the list by the waits above. Between the two keys only two tasks send: the particles
 (`func_00175b70`, `0x27100`) sync first; **the in-game menu (`func_0020d2f8`, `0x270FF`, three registrations)
-sends first**: `func_001f82b0` -> `func_001f8270` re-sends the window-font uploads `D_003F2670` / `2720`
+sends first** (session 84: but after the frame-end wait, below): `func_001f82b0` -> `func_001f8270` re-sends the window-font uploads `D_003F2670` / `2720`
 (sceDmaSend waits only for ch 2 itself, func_00266ab0), and each window then sends its header (`D_003F1E70`:
 `TEST_1`, `TEX0_1`, ...) before its own `sceGsSyncPath(0, 0)`. On the console that overlaps the list's tail
 only if the list is still drawing 120,000 task keys later (timing; the uploads touch only the window font's
@@ -1257,6 +1257,15 @@ Session 82: the pattern also reads a plain cast on the callback (`(s32) &func_X`
 (brightfade's `func_00106460` at `0x2E646`, after the immediate list, through `func_00106b18`'s sync). Still
 3 RACE rows, all the in-game menu.
 
+**The frame-end wait drains the list first** (session 84). Task **150000 (`0x249F0`)**, `func_0011eda8` ->
+`func_0015ef60`, spins until the list's pending flag `D_00559DB4` is 0 (set by the hand-over, cleared by
+`func_0015ea98` at the list's end), then `sceGsSyncPath(0, 0)`, then masks DMAC channels 1 and 2. It is
+registered by `func_0011edc8` right after `func_0015ec68` registers `0x9C40` / `0x27CB8`, in the same task
+list (`D_004E3A48`, run in key order). So **every task after `0x249F0` runs with the draw list done**,
+the in-game menu at `0x270FF` included: its unsynced sends never overlap the list, on the console or the
+port. No task between `0x9C40` and `0x249F0` sends. sendorder.py finds the wait from the C and counts RACE
+only before it: 0. The port's replay point is that wait (`PlatGsListWait`, vita-port-plan 5.1x).
+
 **The draw list's key map** (session 82, `python3 -I tools/host/drawkeys.py [--tsv OUT]`): every insert into
 the draw list (`func_0015ed80(key, cb)`, `func_00106bd8(packet, key)`, which queues `func_00106b98` sending
 `packet` on the GIF) and the immediate list (`func_0015ee78`), a key that is a wrapper's parameter followed to
@@ -1267,7 +1276,7 @@ because the C writes most of them so:
 
 | Key | Inserted by | Callback / payload | What it is |
 | --- | --- | --- | --- |
-| 10000 + n | texanim.c `func_00101bb8` (n: the running count `D_004945F0`) | `func_001019c8` | texture animation steps, one node each, in the order made |
+| 10000 + n | texanim.c `func_00101bb8` (n: the running count `D_004945F0`) | `func_001019c8` | texture animation steps, one node each, in the order made: GS-to-GS frame copies and scrolls (§4.13 "The texture steps"; n is never reset, so later steps sort after 10010 and up) |
 | 10010 | field.c `func_001008e8`; display.c `func_00110ce0` | `func_00106b98` `D_0029B170` / `D_002BC9F0`; renderer A `func_00108d90` (via `func_00108f18`) | context-2 state packet (§4.11), then the first renderer A objects |
 | 10020 | field.c `func_00100988` | packet `D_0029B1C0`; `func_00108d90` (`func_00100670`), `func_00106db0` (`func_00107d30`), `func_00106e18` (`func_00106e98`: an upload to `0x3600`) | state packet, then the field's renderer A chains |
 | 20499 | mdldraw `func_00160370` | `func_0015f388` | renderer B's GS state reset |
@@ -1306,8 +1315,14 @@ counting up by 10 per shadow model), inside the band that keeps its key; partymd
 through `func_00161de8`, which runs the entries at once on the immediate list at key 0 (the menus' models)
 and never reaches `func_00160370`. `prm->xc` ... `xf` are the model colour (`DObj.x20` ... `x2c`), not keys.
 `func_00160370` then sorts the frame's models by their root matrix's `[3][3]` (`x10->x0 + 0x3C`, a float;
-largest first; with the view-projection already applied this is the clip w, the depth: inferred) and gives
-each its rank `x49` (0 for the farthest); a moved key is `prio + rank`. The rank is at most 77 (78 model
+largest first) and gives each its rank `x49` (0 for the farthest); a moved key is `prio + rank`. **That
+float is the depth** (session 84, from the C): `func_001606d0` stores `m x bone 0` as the model's first
+matrix, and objdraw's `m` is `D_002E26C0`, which camera/view.c `func_00125000` builds as `D_002E2740 x
+D_002E2700`: the view-screen matrix (`D_002BBE20`, the first output of display.c's `func_00110618`; its w row
+is (0, 0, 1, 0) in every draft of that unmatched function, as in libvu0's `sceVu0ViewScreenMatrix`) times
+the camera matrix (`sceVu0CameraMatrix`). So `[3][3]` is the clip w of the model's origin, its camera-space
+z. Shadow models (`func_00127960`, their own matrix) are in the same sort and take ranks too, so an object's
+rank counts them; that only leaves gaps, the objects' order among themselves is still by depth. The rank is at most 77 (78 model
 slots), so the [prio - 500, prio + 499] clamp never bites: **opaque models take 20000 ... 20077 and
 translucent ones 70000 ... 70077, far to near**, just below the resets at 20499 / 70499 (inserted after the
 entries, so they run after every entry of the same key). So the frame's order is: texture animation steps
@@ -1368,6 +1383,32 @@ lag, the console's own. The scratch blocks are free by then: `0x3600` is the fie
 (`func_00106e18` at 10020 / 50000) and `0x3A00` the texspot / shadow buffer (§3.4), both rewritten before
 their next use. A port can do the same on the CPU (the blend on 16 or 256 colours of the room's CLUT copy,
 alpha kept, before the next frame's draws) or draw it, as host/null/gsmem.c now does (§5.2).
+
+**The texture steps** (session 84, texanim.c's first kind, keys `10000 + n`). `func_00101e70` (from roombg.c
+`func_00101048`) registers one `func_00101bb8` task per record of the background file's first table
+(`D_002A3F20` records of 160 bytes, copied to `D_0029B420`). A record: `+0` the frame count `n` (u16), `+4`
+the destination position (DSAX, DSAY), `+8` the speed `spd` (u16), `+0xA` the kind, `+0x10` BITBLTBUF,
+`+0x18` TRXREG (width, height), `+0x20` kind 0's source positions (one word per frame, SSAX | SSAY << 16),
+`+0x2C` / `+0x2E` kinds 1 / 2's source (x, y). Each frame `t += D_002BBDFC / spd` (the frame's time step) and
+the frame is `t / 2`, wrapping to 0 at `n`; when it changes the task inserts **one node at `10000 + n`**
+(`func_001019c8`: send the chain on ch 2, free its two heap blocks, return 2: go on in the interrupt). The
+chain is a REF to a fixed GIF tag (`D_002A4160`: NLOOP 1, NREG 5, A+D, then TEXFLUSH; `D_002A4180`: NREG 9)
+and a REFE to the step's A+D qwords. Every copy is **TRXDIR 2, local -> local**: nothing comes from the EE.
+
+| Kind | Packet | What the GS does |
+| --- | --- | --- |
+| 0 (`func_00101a18`) | BITBLTBUF, TRXPOS (source = frame k's word, destination `+4`), TRXREG, TRXDIR 2 | a flipbook: copies frame k's rectangle from a sheet in GS memory over the displayed texture |
+| 1, 2 (`func_00101a70`, the same code) | two copies: rows `y .. h-1` of the source to the destination's top, rows `0 .. y-1` below them (h = `n`, y = the frame) | a vertical scroll by y rows, wrapping |
+
+At frame 0 both copies of a scroll are 0 rows high (`(h - 0) % h`), so the destination keeps the last
+step's rows for one more step: the console's own small hitch at each wrap (read from the C; a 0-row
+transfer copies nothing in gsmem.c and, as far as known, on the GS). These keys sort before the 10010 state
+packet only for the first ten steps: **`D_004945F0` (n) counts up for the whole session and is never reset**
+(no other write in the main ELF), so later steps land after 10010 / 10020 / 20499 ..., and after about 30,000
+steps (one animation stepping every frame: about 8 minutes) after the room's opaque draws at 40000, which
+then see the new frame one frame late. A port that keeps the C keeps this order; the draws do not depend on
+it beyond that frame of lag. tests/host/gsmem_test.c checks the scroll's copies (`scroll(3, 8)`,
+`scroll(0, 8)`).
 
 ## 5. Mapping to a modern API
 

@@ -1165,7 +1165,8 @@ and every main-thread `PlatDmaSend` on ch 1 / ch 2 / `PlatGsPutDrawEnv` call one
 replays the pending draw list to its end (and, at task `0x27CB8`, the immediate list), then returns; the send
 then goes into the command stream after it. That is what the console does for every synced sender (they wait
 for the list to drain) and what it nearly always does for the in-game menu's unsynced first send (the list
-ends long before task key `0x270FF`; renderer-spec 4.12). The send itself does not wait for the GPU: the
+ends long before task key `0x270FF`; renderer-spec 4.12; session 84: always, the frame-end wait at task
+150000 drains it first, 5.1x). The send itself does not wait for the GPU: the
 flush only orders commands, so the cost is a function call when nothing is pending. Uploads in such a send
 (the window font) go to gsmem.c's model and the texture cache after the replayed draws, so a draw of the
 pending list never samples the upload's data, as on the console. The DMAC handlers the null platform runs
@@ -1206,6 +1207,52 @@ load after the passes reads the blended palette; tests/host/gsmem_test.c 61 -> 6
 (the test and the fake-disc run). For the port: the palette animation must happen (a CPU blend of the room
 CLUT copy, or the same draws into the port's GS memory), and textures that use those CLUTs must be re-read
 each frame or kept as index textures with a palette (renderer-spec 5 "PSMT4/8 + CLUT").
+
+### 5.1x Session 84: the replay on the host, the menu's "race" settled, renderer B's depth, the scroll copies
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). host/, tests/, tools/host, docs/ changed,
+and two src/include lines: **include/platform/gs.h's new `PlatGsListWait()`**, the body of
+src/model/mdlgs.c `func_0015ef60`'s spin (`while (D_00559DB4) PlatGsListWait();`), `((void)0)` on the PS2.
+kh1.elf is byte-identical, **every out/build object bit-identical** (sha1 of all 677 before and after,
+mdlgs.c.o rebuilt), `make shift` M0 OK, so the float ELF is the same and there is no float-untested.md row.
+abicheck, dmacheck, relcheck, layoutcheck, abscheck 0 rows; indcheck the same 241 rows; argcheck the same 3
+value uses.
+
+**The replay** (item 4a): **`KH1_HOST_DMAC=defer`** (host/null/main.c, plat_null.c `kh1_host_dmac_defer`):
+a transfer's end and `PlatEnableDmac` only set the channel's status / mask bit, no DMAC handler runs there,
+so after `func_0015eb78`'s hand-over the draw list stays pending (`D_00559DB4 = 1`) until a main-thread GS
+call's `kh1_gs_flush_pending` or the frame-end wait's **`PlatGsListWait`** replays it (both run the due
+handlers, which walk the list to its end as the interrupts would). The flush now runs before the `node main`
+marker, so a replayed list's lines come before the send that caused it. On the fake disc (stub:2):
+**`gsstate.py --nodes`' command order is the same with and without the switch** (every frame), 13 nodes;
+**0 main-thread sends and 3 frame-end waits found the list pending** (the summary line), one a frame. A list
+still pending at the wait with no handler due would spin for ever: the host says so and exits 3. Valgrind
+0 errors (the plain fake-disc run with the switch; the stub still cannot run under valgrind).
+
+**Why no send found it pending: the in-game menu cannot race the list** (renderer-spec 4.12). Task
+**150000 (`0x249F0`, `func_0011eda8` -> `func_0015ef60`)** is registered with the list's own tasks
+(`func_0011edc8` calls `func_0015ec68` and registers it; one task list `D_004E3A48`, run in key order) and
+spins until `D_00559DB4` is 0, then `sceGsSyncPath(0, 0)`, then masks DMAC channels 1 / 2. It sits between
+the hand-over (`0x9C40`) and the in-game menu (`0x270FF`), so the menu's unsynced sends always come after the
+list has drained. `tools/host/sendorder.py` now finds that wait from the C (the first task between the list
+and the immediate list whose calls reach `func_0015ef60`, printed as "drained at 0x249f0") and counts RACE
+only before it: **0 RACE** (was 3). No task between `0x9C40` and `0x249F0` sends. **For the port:
+`PlatGsListWait` is the one place the draw list has to be replayed** each frame; `kh1_gs_flush_pending` in
+the main-thread sends stays as a guard (it never fires on the console's order).
+
+**The first texture animation kind** (item 4b, renderer-spec 4.13 "The texture steps"): GS-to-GS copies,
+no upload from the EE: kind 0 copies frame k's rectangle from a sheet already in GS memory, kinds 1 / 2
+scroll a rectangle vertically with two copies. tests/host/gsmem_test.c checks the scroll's two copies
+against gsmem.c (65 -> 67 checks; valgrind 0 errors). For the port: a GPU blit (or a sub-rectangle copy
+in the texture cache) before the frame's draws, in the step's list position; textures over the destination
+must be re-read.
+
+**Renderer B's depth key** (item 4c, renderer-spec 4.12): settled from the C. `D_002E26C0` is built in
+src/camera/view.c `func_00125000` as `D_002E2740 x D_002E2700`: the view-screen matrix (`D_002BBE20`, the
+first output of display.c's `func_00110618`, whose w row is (0, 0, 1, 0): w = the camera-space z) times the
+camera matrix (`sceVu0CameraMatrix`). objdraw passes it to `func_001606d0`, which stores `D_002E26C0 x
+bone 0` as the model's first matrix, so `[3][3]` is the clip w of the model's origin, its depth from the
+camera. The sort is far first, as written.
 
 ### 5.2 Session 60: overlays, dktitle.x
 

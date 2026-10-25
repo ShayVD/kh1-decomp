@@ -36,6 +36,23 @@ static void image(u32 n) { u32 i; for (i = 0; i < n; i += 4) kh1_gsmem_image(wor
 
 static u32 tex[64 * 64];
 
+/* texanim.nostrict.c func_00101a70's two local->local copies (renderer-spec 4.13, session 84): a
+ * w x h rectangle at (sx, sy) of 0x2800 to (dx, dy) of 0x2900, rotated up by y rows */
+static void scroll(u32 y, u32 h) {
+    u32 m1 = y % h, m2 = (h - y) % h, k;
+    for (k = 0; k < 2; k++) {
+        kh1_gs_write(0x50, 0x2800 | 1 << 16, 0x2900 | 1 << 16);
+        if (k == 1 && y != 0) {
+            kh1_gs_write(0x51, 0, m2 << 16);
+            kh1_gs_write(0x52, 16, y);
+        } else {
+            kh1_gs_write(0x51, m1 << 16, 0);
+            kh1_gs_write(0x52, 16, m2);
+        }
+        kh1_gs_write(0x53, 2, 0);
+    }
+}
+
 int main(void) {
     const KH1GsMemStats *st = kh1_gsmem_stats();
     u32 i, x, y, ok, s0;
@@ -380,6 +397,17 @@ int main(void) {
         kh1_gs_write(0x05, xy1, 0);
         CHECK("sprite: bilinear is a target", st->sprites == 2 && kh1_gsmem_targets(0, 0) == 1);
     }
+
+    /* texanim's scroll (session 84): row r of the copy is row (r + 3) % 8 of the source; at y 0 both
+     * copies are 0 rows high and the destination keeps the last step's rows */
+    for (y = 0; y < 8; y++)
+        for (x = 0; x < 16; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x2800, 1, x, y, y << 8 | x);
+    scroll(3, 8);
+    for (ok = 1, y = 0; y < 8; y++)
+        for (x = 0; x < 16; x++) ok &= kh1_gsmem_read_pixel(KH1_PSMCT32, 0x2900, 1, x, y) == ((y + 3) % 8 << 8 | x);
+    CHECK("texanim scroll by 3", ok);
+    scroll(0, 8);
+    CHECK("texanim scroll at 0 copies nothing", kh1_gsmem_read_pixel(KH1_PSMCT32, 0x2900, 1, 0, 0) == 3 << 8);
 
     if (fails) { printf("gsmem_test: %d failed\n", fails); return 1; }
     printf("gsmem_test: PASS\n");
