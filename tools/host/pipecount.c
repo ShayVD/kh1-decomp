@@ -11,7 +11,8 @@
  *
  * Session 124: then `vertex shaders: N` with their names (include/platform/vertex.h).  With --batches it
  * reads sends instead (drawpipes.py --batches): `S` starts one, `B <17 words> <scissor lo hi> <primitives>
- * <vertices>` is a run of kicks in one state, `X` a transfer or CLUT load, `E` ends it; for each send it
+ * <vertices> <signature>` is a run of kicks in one state with the same vertices (session 125: the signature
+ * feeds batch.h's column groups), `X` a transfer or CLUT load, `E` ends it; for each send it
  * prints `send N: BATCHES DRAWS PRIMS VERTS` (include/platform/batch.h's cut, the 3D target's 4:3 canvas at
  * scale 1), then the totals and what opened the batches. */
 #include "common.h"
@@ -46,7 +47,7 @@ static int batches(void) {
     static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
     static KH1Batcher b;
     char t[4];
-    u32 w[21], i, n = 0;
+    u32 w[22], i, n = 0;
     KH1DrawRegs r;
     KH1DrawState d;
     KH1RenderPass p;
@@ -60,17 +61,16 @@ static int batches(void) {
             kh1_batch_frame(&b);
             continue;
         }
-        for (i = 0; i < 21; i++)
+        for (i = 0; i < 22; i++)
             if (scanf("%x", &w[i]) != 1) return 1;
         read_regs(w, &r);
         kh1_drawstate_of(&r, &d);
         kh1_target_of(r.frame_lo, r.frame_hi, r.zbuf_lo, r.zbuf_hi, r.test_lo, w[17], w[18], 0, 0, &c43, 1.0f, &p);
-        /* the run's first primitive opens the batch, the rest join it */
-        kh1_batch_prim(&b, &d, &p, w[20] / w[19]);
-        for (i = 1; i < w[19]; i++) kh1_batch_prim(&b, &d, &p, w[20] / w[19]);
+        for (i = 0; i < w[19]; i++) kh1_batch_prim_sig(&b, &d, &p, w[20] / w[19], w[21]);
     }
     printf("batches opened by: %u render passes, %u pipelines, %u textures, %u uniforms, %u scissors, %u transfers\n",
            b.total.passes, b.total.pipes, b.total.textures, b.total.uniforms, b.total.scissors, b.total.breaks);
+    printf("column groups: %u columns merged, %u primitives absorbed\n", b.total.columns, b.total.merged);
     printf("a send at most %u batches, %u draw calls, %u primitives\n", b.max.batches, b.max.draws, b.max.prims);
     return 0;
 }

@@ -8,7 +8,8 @@
  * Session 124 (renderer-spec 4.13 "Session 124"): kh1_pipes_prim, at each drawing kick (gsregs.c's
  * kh1_gs_prim_hook), cuts the run's primitives into GPU batches (include/platform/batch.h) with the
  * registers in force, and kh1_pipes_frame ends a frame (main.c's vblank): the report's `batches:` lines give
- * the draw calls a frame takes.  Not part of the PS2 build. */
+ * the draw calls a frame takes; session 125: with each primitive's vertex signature, so a column copy's repeats
+ * merge (batch.h's column groups).  Not part of the PS2 build. */
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
@@ -17,6 +18,7 @@
 #include "platform/batch.h"
 #include "platform/vertex.h"
 #include "platform/canvas.h"
+#include "platform/ring.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -36,6 +38,16 @@ static int have_last;
 static KH1DrawState last_d;
 static KH1RenderPass last_p;
 
+/* session 125: the primitive's vertex signature for batch.h's column groups (FNV-1a over the type and the
+ * queued vertices; never 0) */
+static u32 prim_sig(u32 prim, const KH1GsVert *v, u32 n) {
+    const u8 *q = (const u8 *)v;
+    u32 h = 2166136261u ^ (prim & 7), i;
+    h *= 16777619u;
+    for (i = 0; i < n * sizeof *v; i++) h = (h ^ q[i]) * 16777619u;
+    return h | 1;
+}
+
 void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     static const KH1Canvas c43 = { 1.0f, 0.0f, 0.0f, 0, 8192 };
     const KH1GsState *gs = kh1_gs_state();
@@ -43,7 +55,6 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
     const KH1GsMemStats *ms = kh1_gsmem_stats();
     u32 xfer = ms->uploads + ms->copies + ms->clut_loads;
     KH1DrawRegs r;
-    (void)v;
     (void)state;
     memset(&r, 0, sizeof r);
     r.prim = prim;
@@ -75,7 +86,7 @@ void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state) {
         last_scissor[1] = c->scissor.hi;
         have_last = 1;
     }
-    kh1_batch_prim(&batcher, &last_d, &last_p, (prim & 7) == 6 ? 6 : n);
+    kh1_batch_prim_sig(&batcher, &last_d, &last_p, (prim & 7) == 6 ? 6 : n, prim_sig(prim, v, n));
 }
 
 void kh1_pipes_frame(void) { kh1_batch_frame(&batcher); }
@@ -133,6 +144,12 @@ static void report_batches(void) {
     printf("kh1-host:   batches opened by: %u render passes, %u pipelines, %u textures, %u uniforms, %u scissors, %u "
            "transfers (a frame at most %u passes, %u pipelines, %u textures)\n", t->passes, t->pipes, t->textures,
            t->uniforms, t->scissors, t->breaks, m->passes, m->pipes, m->textures);
+    printf("kh1-host:   column groups: %u columns merged, %u primitives absorbed (a frame at most %u)\n", t->columns,
+           t->merged, m->merged);
+    /* session 125: the most a frame wrote against include/platform/ring.h's per-frame sizes */
+    printf("kh1-host:   ring: a frame at most %u of %u vertex bytes, %u of %u uniform bytes\n",
+           kh1_ring_vertex_bytes(m->verts), KH1_RING_VERTEX_BYTES, kh1_ring_uniform_bytes(m->batches, m->passes),
+           KH1_RING_UNIFORM_BYTES);
 }
 
 void kh1_pipes_report(void) {

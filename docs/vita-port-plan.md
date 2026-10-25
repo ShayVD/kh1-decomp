@@ -2771,6 +2771,26 @@ and docs only, no float-untested row. selftest PASS (vertex_test 13 checks, batc
   Vita's draw-call budget, and how many render passes a frame opens.
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bm Session 125: the column copies merged, the per-frame rings
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (batch_test 14 checks, ring_test 9).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The column copies' scissors** (item 4b): the sprites are full-screen, not inside their 32-pixel columns
+  (the scissor does the cutting), so "drop a scissor that clips nothing" gains nothing. Instead batch.h's
+  column groups draw a group of primitives repeated under the adjacent column once with the union scissor
+  (exact: disjoint columns, no feedback, no transfer between). Static packets: 148 draw calls to 43, 92
+  scissor-opened batches to 2, at most 3 draw calls a send (renderer-spec 4.13 "Session 125").
+  `drawpipes.py --batches` and pipecount's `B` lines carry each kick's vertex signature; host/null/pipes.c
+  hashes the GS's queued vertices.
+- **The per-frame rings** (item 4c): new include/platform/ring.h / host/port/ring.c: vertex 4 MiB and uniform
+  256 KiB a frame, two frames in flight, a bump allocator with overflow counted; `KH1_HOST_TRACE=5` prints the
+  `ring:` line against the sizes.
+- **To check on the real disc**: the room run's `column groups:` and `ring:` lines (a frame's vertex bytes
+  against 4 MiB with renderers A / B's meshes).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

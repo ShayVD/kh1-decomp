@@ -1933,6 +1933,45 @@ scissor (it clips nothing) and draw each copy in 1 or 2 calls; whether they all 
 draw into three targets); on the Vita's tiled GPU the passes, not the calls, are the cost to watch. The
 real-disc room run's `batches:` line gives the budget with renderers A / B's meshes.
 
+**Session 125 (vita-port-plan 5.1bm): the column copies merged, and the per-frame rings.** *The check*: the
+column copies' sprites are **not inside their columns**. Each of the five sends draws the same full-screen
+primitives 16 times, once under each 32-pixel `SCISSOR_1` (`D_002A5620`'s alpha fill x 0 .. 512, the menu
+blur's nine sprites of `D_002A49A0` at -4 .. 516, `D_002A5AC0`'s nine, `D_002A4FC0`'s strip `D_002A4F60`): the
+REF chains point every column at one block, so the scissor is what cuts each copy into its column. Dropping
+a scissor that clips nothing gains nothing there. *What does*: batch.h's **column groups**. A run of
+primitives under one scissor that is repeated, primitive for primitive (same key but the scissor, same
+vertices), under the horizontally adjacent scissor of the same rows is drawn once with the union scissor;
+column by column the 16 become one. It is exact (each pixel is in one column, so drawing group-major instead
+of column-major changes nothing) as long as no primitive samples the target it draws into (none of the
+five: they read `0x3600`, the display or nothing; batch.c refuses a group whose TEX0 is the pass's target
+or shares its blocks) and no transfer falls between columns (a break ends the group). A repeat that stops
+part way is replayed under its own column. A port holds a group's batches until the group ends, then
+submits them with the union scissor. Under the wide view canvas.h's view columns are adjacent after
+target.c's rounding, and their union is the full scissor's (batch_test). The static packets:
+
+| Static packets | Batches | Draw calls | Opened by a scissor | Columns merged | At most a send |
+|---|---|---|---|---|---|
+| session 124 | 147 | 148 | 92 | - | 33 draw calls (`D_002A5620`) |
+| session 125 (column groups) | 42 | 43 | 2 | 90 (465 primitives absorbed) | 3 draw calls (`D_002A5620`: two states and the copy) |
+
+34 of the 38 drawing sends are now one draw call; the menu blur `D_002A4B60` is 2 (its opaque first copy
+and the eight blended), `D_002A5AC0` 1, `D_002A4FC0` 1. The static walk uses the packets' XYZ, which for
+`D_002A4FC0` / `D_002A5AC0` the C writes at run time, but into the one shared block, so every column still
+gets the same vertices. The fake disc draws no column copy (its counts are unchanged: 5 / 16 draw calls).
+`KH1_HOST_TRACE=5`'s `batches:` lines add `column groups:` (columns merged, primitives absorbed).
+
+*The per-frame rings* (include/platform/ring.h / host/port/ring.c): a vertex ring of **4 MiB a frame**
+(131,072 32-byte vertices, 43,690 independent triangles) and a uniform ring of **256 KiB a frame** (4,096
+64-byte slots: one per batch, KH1DrawUniforms' 52 bytes, and one per render pass), each two slots for two
+frames in flight (8.5 MiB). A bump allocator per slot; a frame end moves to the other slot; an allocation
+that does not fit returns 0 and is counted (nothing wraps into the slot the GPU may read; the port waits for
+the frame that last used a slot). Against the counts: the static packets' worst send 864 vertices (27 KB),
+every static send at once 3,770 (118 KB, 1/34 of the ring), 42 batches and 40 passes; the fake disc at most
+198 vertices (6,336 bytes) and 384 uniform bytes a frame. The real disc's meshes are the unknown:
+`KH1_HOST_TRACE=5` prints `ring: a frame at most V of 4194304 vertex bytes, U of 262144 uniform bytes`, so the
+room run only has to be read against it. tests/host/ring_test.c (9 checks): alignment, overflow, the two
+slots, the sizes.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

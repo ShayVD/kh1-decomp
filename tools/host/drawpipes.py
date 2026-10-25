@@ -20,7 +20,9 @@ Session 124 (renderer-spec 4.13 "Session 124"): --batches cuts each static send'
 the way include/platform/batch.h does (a new batch where the pipelines, texture binding, uniforms, render
 pass or scissor change, or after a transfer or CLUT load) and prints the batches and draw calls per send,
 the totals and the sends that take the most: a send is one GIF chain, so its count is what that draw costs
-a frame on a GPU (C_STATES are not in it: the C draws through the run's `batches:` line).
+a frame on a GPU (C_STATES are not in it: the C draws through the run's `batches:` line).  Session 125:
+each kick carries its vertices' signature, so a column copy's repeated columns merge (batch.h's column
+groups); the XYZ the C writes at run time are the packets' static values here.
 
 Needs the user's ELF (the packets are its data); prints counts, names and decoded keys, never packet bytes.
 """
@@ -30,6 +32,7 @@ import argparse
 import collections
 import subprocess
 import sys
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,20 +102,24 @@ def c_states():
 
 
 def events(seq):
-    """one send's GIF writes as ("kick", prim, registers) at each drawing kick and ("break",) at each
+    """one send's GIF writes as ("kick", prim, registers, vertex signature) at each drawing kick and ("break",) at each
     transfer (TRXDIR) or CLUT load (a TEX0 with CLD); seq: dmawalk.Gif.seq"""
     regs = {1: {}, 2: {}}
     glob = {}
-    prim, n = 0, 0
+    attr = {}
+    prim, n, q = 0, 0, []
     for name, v in seq:
         if name == "PRIM":
-            prim, n = v & 0x7FF, 0
+            prim, n, q = v & 0x7FF, 0, []
             continue
+        if name in ("UV", "RGBAQ", "ST", "FOG"):
+            attr[name] = v
         if name in ("XYZ2", "XYZF2", "XYZ3", "XYZF3"):
             t = prim & 7
             need = NEED[t]
             if not need:
                 continue
+            q = (q + [(v, attr.get("UV"), attr.get("RGBAQ"), attr.get("ST"), attr.get("FOG"))])[-3:]
             n += 1
             if n < need:
                 continue
@@ -120,7 +127,10 @@ def events(seq):
                 n = need - 1 if t in STRIP else 0
                 continue
             c = 2 if prim >> 9 & 1 else 1
-            yield "kick", prim, {**ENV, **{k: glob[k] for k in glob}, **regs[c]}
+            # session 125: the primitive's vertex signature (batch.h's column groups; a fan's is its last
+            # vertices', enough to tell repeats apart)
+            sig = zlib.crc32(repr((prim & 7, q[-need:])).encode()) | 1
+            yield "kick", prim, {**ENV, **{k: glob[k] for k in glob}, **regs[c]}, sig
             n = need - 1 if t in STRIP else 0
             continue
         if name == "TRXDIR" or (name in ("TEX0_1", "TEX0_2", "TEX2_1", "TEX2_2") and v >> 61 & 7):
@@ -177,21 +187,21 @@ def batches(sends) -> int:
         for e in events(seq):
             if e[0] == "break":
                 if run:
-                    out.append("B %s %x %x" % (last, run, nv))
+                    out.append("B %s %x %x %x" % (last[0], run, nv, last[1]))
                     last, run, nv = None, 0, 0
                 out.append("X")
                 continue
-            prim, r = e[1], e[2]
-            w = " ".join("%x" % x for x in state_words(prim, r)) + " %x %x" % (r["SCISSOR"] & 0xFFFFFFFF,
-                                                                            r["SCISSOR"] >> 32)
+            prim, r, sig = e[1], e[2], e[3]
+            w = (" ".join("%x" % x for x in state_words(prim, r)) + " %x %x" % (r["SCISSOR"] & 0xFFFFFFFF,
+                                                                             r["SCISSOR"] >> 32), sig)
             if w != last and run:
-                out.append("B %s %x %x" % (last, run, nv))
+                out.append("B %s %x %x %x" % (last[0], run, nv, last[1]))
                 run, nv = 0, 0
             last = w
             run += 1
             nv += 6 if prim & 7 == 6 else NEED[prim & 7]
         if run:
-            out.append("B %s %x %x" % (last, run, nv))
+            out.append("B %s %x %x %x" % (last[0], run, nv, last[1]))
         lines.append("S\n" + "\n".join(out) + "\nE\n")
     exe = build_counter()
     res = subprocess.run([str(exe), "--batches"], input="".join(lines), capture_output=True, text=True,

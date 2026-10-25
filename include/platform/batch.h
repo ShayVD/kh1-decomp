@@ -25,6 +25,20 @@
  * ALPHA_1 changes between kicks goes on in the next batch).  A batch issues drawstate.h's n draws plus
  * DATE's set-up: that is its draw calls.
  *
+ * Session 125 (renderer-spec 4.13 "Session 125", vita-port-plan 5.1bm): **column groups**.  The PS2's
+ * texture-cache trick (5.4 "Session 93") draws one full-screen copy 16 times, each under a 32-pixel
+ * column SCISSOR: the sprites are not inside their columns (the scissor is what cuts them), so dropping a
+ * scissor that clips nothing gains nothing there.  Instead a run of primitives under one scissor (the
+ * group, at most KH1_BATCH_GROUP) that is repeated, primitive for primitive (the same key but the scissor,
+ * the same vertices: the caller's signature `sig`, 0 for unknown), under the horizontally adjacent
+ * scissor of the same rows is drawn once with the union of the two: the repeat is absorbed (`merged`)
+ * and the group's scissor widened (ux0 .. ux1), and so on column by column.  Exact: each pixel lies in
+ * one column, so the order across columns cannot matter, unless a primitive samples the target it draws
+ * into (kh1_target_id / kh1_target_alias of its TEX0 against the pass: such a group is never merged) or a
+ * transfer falls between columns (a break ends the group).  A repeat that stops part way is replayed as
+ * ordinary primitives under its own column.  A port keeps a group's batches unsubmitted until the group
+ * ends (a primitive that neither joins nor repeats it), then submits them with the union scissor.
+ *
  * Counted per frame (kh1_batch_frame) for a draw-call budget: the batches, draw calls, primitives, GPU
  * vertices (32 bytes each), and what ended each batch.  A draw that samples the target it renders into
  * (a feedback loop) is not detected here: the game's copies go between targets (target.h).  Not part of
@@ -44,7 +58,16 @@ typedef struct {
 typedef struct {
     u32 batches, draws, prims, verts;
     u32 passes, pipes, textures, uniforms, scissors, breaks; /* what opened each batch (one may have several) */
+    u32 merged, columns; /* session 125: primitives absorbed into a column group, columns merged */
 } KH1BatchCount;
+
+#define KH1_BATCH_GROUP 32
+typedef struct {
+    KH1BatchKey k;
+    u32 nv, sig;
+} KH1BatchPrim;
+
+enum { KH1_GRP_NONE, KH1_GRP_RECORD, KH1_GRP_REPEAT, KH1_GRP_DONE };
 
 typedef struct {
     KH1BatchKey cur;
@@ -52,6 +75,12 @@ typedef struct {
     int broken;         /* a transfer since the last primitive */
     u32 frames;
     KH1BatchCount frame, total, max; /* this frame's, every ended frame's sum, the largest of each */
+    /* session 125: the column group */
+    KH1BatchPrim grp[KH1_BATCH_GROUP];
+    u32 ngrp, rep;      /* the group's primitives; how many of them the column being repeated has matched */
+    u8 gstate, gfull;   /* KH1_GRP_*; past KH1_BATCH_GROUP or sampling its own target (never merged) */
+    s32 ux0, ux1;       /* the group's scissor columns so far (its rows are grp[0].k's) */
+    s32 cx0, cx1;       /* the column being repeated */
 } KH1Batcher;
 
 void kh1_batch_reset(KH1Batcher *b);
@@ -59,7 +88,10 @@ void kh1_batch_reset(KH1Batcher *b);
 void kh1_batch_key(const KH1DrawState *d, const KH1RenderPass *p, KH1BatchKey *out);
 /* a primitive of nv GPU vertices drawn in d / p; returns 1 when it opened a batch */
 int kh1_batch_prim(KH1Batcher *b, const KH1DrawState *d, const KH1RenderPass *p, u32 nv);
-/* a transfer or CLUT load: the next primitive opens a new batch */
+/* session 125: the same with the primitive's vertex signature (nonzero, equal for the same vertices) so a
+ * column repeat can be absorbed; returns 1 when it opened a batch, 0 when it joined one or was absorbed */
+int kh1_batch_prim_sig(KH1Batcher *b, const KH1DrawState *d, const KH1RenderPass *p, u32 nv, u32 sig);
+/* a transfer or CLUT load: the next primitive opens a new batch (and the column group ends) */
 void kh1_batch_break(KH1Batcher *b);
 /* the frame ends: its counts into the totals and maxima; the next frame starts with no batch open */
 void kh1_batch_frame(KH1Batcher *b);
