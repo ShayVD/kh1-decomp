@@ -2237,7 +2237,44 @@ float-untested row. selftest PASS (one new negative case).
 - **selftest**: the depth blur capture's C right edge changed to `0x7000 + PLAT_VIEW_W16` (the view's full
   width into its 512-wide buffer) must give `D_002A5A90 ... x 0.0 .. 677.6, FBW x 64 = 512`.
 - **Not covered**: y (the wide view does not stretch it), a buffer's blocks against the memory map inside
-  its FBW (the next static item), sends outside fscheck's walk (the HUD's, the draw list's).
+  its FBW (session 108, 5.1av), sends outside fscheck's walk (the HUD's, the draw list's).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
+### 5.1av Session 108: the blocks each send draws, against the PS2's and the memory map
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Tool only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (one new negative case).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **tools/host/fscheck.py lists the GS memory blocks each send's drawn rectangle covers** (item 4b). Every
+  send in its walk whose packet sets FRAME (full-screen or not: 14 of the 58) gets, per FRAME, the pixel
+  rectangle its sprites draw (x as 5.1au works it out, at the wide margin and at 0 for the PS2; y from the
+  data's XYZ less XYOFFSET's y, default 0x7400, clamped at 0), and from FBP, FBW and the PSM's page and block
+  order (CT32 / CT24 64 x 32 pages of 8 x 8 blocks, CT16 / CT16S 64 x 64 of 16 x 8, GS manual 8.3; x past
+  FBW x 64 runs into the next pages, as on the GS) the 256-byte blocks it covers. Two rules: **the wide
+  view's blocks stay inside the PS2's**, and **inside renderer-spec 3.1's region its FBP is in** (`REGIONS`:
+  display 0x0000, Z area 0x0E00, target 0x1A00, room textures 0x2600, texture slot 0x3600, off-screen buffer
+  0x3A00, window font 0x3D7C, CLUTs 0x3E00), unless (send, region or "wide") is in `BLOCK_EXPECTED`. Frames
+  drawn from before their left edge (stretched over the view: the port sizes that target to the view) and the
+  environment's frame are skipped, as in 5.1au. A stale `BLOCK_EXPECTED` entry is a problem; `-v` prints each
+  frame's blocks at both margins.
+- **Result: 0 problems, 6 expected entries.** On the PS2 too: the depth blur's half capture (`D_002A5620`,
+  `D_002A5A90`: 512 x 192 CT32 at 0x3600) covers 0x3600 .. 0x3C00, over the off-screen buffer's first rows
+  (rewritten before its next use); case 2's frame copy into a 640 x 448 display runs to block 0x1180, over the
+  Z area's first rows (movies). Under the wide view only: the menu capture `D_002B6760` wraps into 0x3900 ..
+  0x392E (5.1as, already `OVER_EXPECTED`), and **the depth blur's capture, at x 0 .. 338.8 inside its FBW 8,
+  now reaches the right halves of its pages that the PS2's 256 left alone**: 0x3680 .. 0x36AE (the menus'
+  CLUT slot 0x3680, uploaded per draw), and the same in each page row down to 0x3B80 .. 0x3BAE (the off-screen
+  buffer, redrawn each frame). Both are scratch at that point as the left halves are on the PS2, so expected;
+  a port that keeps a separate buffer per capture (5.1an) has no such overlap. The menu capture's buffer
+  (0x3600, FBW 4) also covers renderer B's CLUT block 0x3700 on the PS2: same region, not flagged.
+- **selftest**: with `("D_002B6760", "wide")` and `("D_002A5620", 0x3A00)` taken out of `BLOCK_EXPECTED`
+  (imported, not edited), the capture's 0x3900 .. 0x3924 past the PS2's 0x3600 .. 0x38FF and the blur's
+  capture over the off-screen buffer must both be reported.
+- **Not covered**: SCISSOR (the rectangles are the sprites', not clipped), a FRAME written from C (the data's
+  value is used; `-v` says so: case 2's `D_002A6960`), y written from C, and sends outside fscheck's walk (the
+  shadows' `D_004F7820` / `D_004F7C10`, the HUD's, the draw list's).
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 

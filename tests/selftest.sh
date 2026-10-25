@@ -221,6 +221,17 @@ if [[ -f "$ELF" ]]; then
      ! grep -q 'D_002A5A90 .*drawn past its frame.s width .*x 0.0 .. 677.6, FBW x 64 = 512' "$W/fs_neg3.log"; then
     echo "selftest: fscheck missed a send drawn past its frame's width" >&2; cat "$W/fs_neg3.log" >&2; exit 1
   fi
+  # session 108: the blocks each FRAME send draws, against the PS2's and the memory map: with the menu capture's
+  # and the depth blur's entries taken out of BLOCK_EXPECTED, the capture's wrap into 0x3900 and the blur's
+  # capture over the off-screen buffer 0x3A00 both fail
+  if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
+del f.BLOCK_EXPECTED[("D_002B6760", "wide")], f.BLOCK_EXPECTED[("D_002A5620", 0x3A00)]
+sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" > "$W/fs_neg4.log" ||
+     ! grep -q 'D_002B6760 .*draws blocks 0x3900 .. 0x3924, .*past the PS2.s (0x3600 .. 0x38FF)' "$W/fs_neg4.log" ||
+     ! grep -q 'D_002A5620 .*draws blocks 0x3A00 .*in off-screen buffer 0x3A00' "$W/fs_neg4.log"; then
+    echo "selftest: fscheck missed a send drawing blocks past the PS2's or over a live buffer" >&2
+    cat "$W/fs_neg4.log" >&2; exit 1
+  fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"
 fi

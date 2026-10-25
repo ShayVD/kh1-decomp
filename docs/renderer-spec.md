@@ -2531,6 +2531,10 @@ view at half size (x 0 .. 338.8) without wrapping.
 Session 107 (5.1au): tools/host/fscheck.py now finds this kind of overrun itself: a send whose packet sets
 FRAME and that draws from its buffer's left edge past FBW x 64 under the wide view fails selftest unless
 listed (the menu capture is the only one).
+Session 108 (5.1av): it also lists the blocks each FRAME send draws and fails one whose wide-view blocks leave
+the PS2's or its FBP's region of §3.1; on the PS2 itself the depth blur's capture at 0x3600 (FBW 8, 192
+lines) covers 0x3600 .. 0x3C00, over the off-screen buffer 0x3A00's first rows, and the movie frame copy's
+640 x 448 display runs to block 0x1180, over the Z area's first rows.
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame
