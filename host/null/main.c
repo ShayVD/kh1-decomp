@@ -27,6 +27,10 @@
  *                       the boot does next is the main ELF's own (docs/vita-port-plan.md 5.1h).
  *                       KH1_HOST_OVL=stub:N also asks for game state N at the title's entry call.
  *                       Not under valgrind, which runs the overlay's bytes instead of faulting.
+ *   KH1_HOST_WIDE=W:H   (session 91) a hor+ view for a W:H screen (KH1_HOST_WIDE=1: 960:544): the
+ *                       culls' frustum and the markers' / objwin's bounds widen (host/port/view.c,
+ *                       docs/renderer-spec.md 5.4); the null platform draws nothing, so a run shows
+ *                       it only in what the culls let through.
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -42,6 +46,9 @@
 
 void func_00100558(int argc, char **argv);
 int kh1_cd_image_open(const char *path);
+void kh1_view_init(float aspect); /* host/port/view.c */
+extern float kh1_view_wide;
+extern int kh1_view_x0, kh1_view_x1;
 
 int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
@@ -192,6 +199,16 @@ int main(int argc, char **argv) {
     {
         const char *dmac = getenv("KH1_HOST_DMAC"); /* defer: plat_null.c's replay test (session 84) */
         kh1_host_dmac_defer = dmac && strcmp(dmac, "defer") == 0;
+    }
+    {
+        /* KH1_HOST_WIDE (session 91, renderer-spec 5.4): a hor+ view, W:H (1 = the Vita's 960:544) */
+        const char *wide = getenv("KH1_HOST_WIDE");
+        if (wide && *wide) {
+            const char *c = strchr(wide, ':');
+            float aspect = c ? (float)atof(wide) / (float)atof(c + 1) : 960.0f / 544.0f;
+            kh1_view_init(aspect);
+            printf("kh1-host: wide view x %.4f (canvas x %d .. %d)\n", kh1_view_wide, kh1_view_x0, kh1_view_x1);
+        }
     }
     {
         const char *ovl = getenv("KH1_HOST_OVL");

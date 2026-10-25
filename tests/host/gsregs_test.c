@@ -176,6 +176,18 @@ int main(void) {
     n = kh1_gs_draws(d, 8);
     CHECK("fan: XYZ3 kept, no draw", n == 1 && d[0].kicks == 5 && d[0].draws == 2);
 
+    /* session 91: the extent is in 1/16 pixels from the drawing context's XYOFFSET */
+    kh1_gs_clear_draws();
+    kh1_gs_write(0x18, 0x7000, 0x7400);
+    kh1_gs_write(0x00, 6, 0);
+    vert(0x7000 + (16 << 4), 0x7400 + (260 << 4));
+    vert(0x7000 + (116 << 4), 0x7400 + (368 << 4));
+    vert(0x7000 - 16, 0x7400 + 8);
+    vert(0x7000, 0x7400);
+    n = kh1_gs_draws(d, 8);
+    CHECK("extent", n == 1 && d[0].draws == 2 && d[0].x0 == -16 && d[0].y0 == 0 && d[0].x1 == 116 << 4 &&
+          d[0].y1 == 368 << 4);
+
     /* dropped registers are counted, not kept; a non-register is unknown */
     kh1_gs_write(0x45, 0, 0);
     kh1_gs_write(0x46, 1, 0);

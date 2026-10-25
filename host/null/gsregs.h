@@ -40,6 +40,8 @@ typedef struct {
     u32 draws; /* drawing kicks: primitives drawn */
     u32 target; /* with TME: 1 + the render target the texture lies in when a kick in this state
                  * first found it there (kh1_gsmem_tex_target, session 81), else 0 */
+    s32 x0, y0, x1, y1; /* session 91: the kicked vertices' extent in 1/16 pixels of the context's
+                         * XYOFFSET (min, max; x1 < x0 when nothing was kicked) */
 } KH1GsDraw;
 
 /* back to the state before any write (all registers 0 but PRMODECONT 1) and no draws counted */

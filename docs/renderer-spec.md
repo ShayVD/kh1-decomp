@@ -2059,11 +2059,16 @@ z): Sora's 45-59 pixels, the party's 26-35. `D_00454820` ... `D_004549E0` are th
 u, v pairs). `D_00454A20` (`tt_gaugeWorldmap`: mode, barrier, scale, two values) is zero in the ELF.
 
 **What the real-disc run must confirm** (`KH1_HOST_TRACE=5`, a field, a battle with lock-on and a pick-up,
-the world map, a minigame): `gsstate.py --draws` lists draw states, not rectangles; it needs **a per-chain
-vertex extent** (min / max of XYZ2 minus `0x7000 / 0x7400`, >> 4, per sending function: the HUD's sends all
-go from `D_00351E10`, so the key is the drawing environment sent just before: `D_00651C00` gauges,
+the world map, a minigame): **`gsstate.py RUN.txt --extents`** (session 91) lists the drawn rectangle per
+send: host/null/gsregs.c keeps each draw state's vertex extent (XYZ less the context's `XYOFFSET`, in 1/16
+pixels; the draw lines end in `, xy X0 Y0 X1 Y1`), and a send from the HUD's staging buffer `D_00351E10`
+(`--via` for another) is keyed by the drawing environment sent just before it (`D_00651C00` gauges,
 `D_00655F80` notice, `D_006694B0` banner, `D_006562C0` pop-ups, `D_00668120` target gauge, `D_006510A0` sign,
-`D_0065FB30` counter, `D_00669070` timer, `D_006697C0` one-shot, `D_00648790` / cmdmenu's for the menu). Then:
+`D_0065FB30` counter, `D_00669070` timer, `D_006697C0` one-shot, `D_00648790` / `D_00648630` the command
+menu), printed as `D_00651C00 ch2 > D_00351E10 ch2` with its rectangle in target pixels, its frames and the
+anchor 5.3's rule gives it (`full screen` when it covers the target). On the fake disc only the clear
+(`D_002A6500`, 16 sprites a send, 0..512 x 0..384), the frame copy (`D_002A6890`, 512 x 448) and the
+post-copy flash draw; tests/host/gsregs_test.c checks the extent. Then:
 each rectangle above against the drawn one; the party gauges really at the top right (the data say so);
 which frame size Sora's gauge uses early on; what the banner, the sign, kind 3 and the one-shot show; the
 timer's `MgHud` x / y; whether a pop-up column 3 is ever reached; the face pictures' sizes (TIM2 from the
@@ -2146,18 +2151,70 @@ guard box, not the screen. §4.14's "`func_00107ab8` (the camera test, not read 
 box against `D_002BBFE0` (the 4:3 frustum, far plane = fog far), as above. §5.3's "CPU culls that use the clip
 matrix" should read "the 4:3 frustum `D_002BBE60` / `D_002BBEE0`".
 
+#### Session 91: the C twin, the wide switch, the other projections (static + host)
+
+**`func_00110618` in C** (host/port/view.c): the session 12 draft's maths in natural order, two helpers
+in the SDK's forms (`view_screen` = sceVu0ViewScreenMatrix's, `view_clip` = sceVu0ViewClipMatrix's): m2 / m3
+are the fog-far pair, m0 / m1 the far (4e8) pair, m4 the guard box's view -> clip and m5 its clip -> screen
+(`x = scrz ax 2045 / scrz`, `y = scrz ay 360.5 / scrz`, `z = (zmin - zmax) / 2`, translation `(cx, cy,
+(zmax + zmin) / 2)`; session 6's w6_02 leaves scrz out of m5 [0][0], so it is not the base). The host links it in place of the draft (tools/host/census.py `HOST_TWINS`); the PS2
+and shift builds are untouched (the draft stays in shift/drafts.tsv). **Checked against the original's
+code**: `tools/host/viewcheck.py` runs func_00110618's 268 instructions from the user's ELF in a small
+interpreter (GPR moves, the stack, COP1 single-precision ops, `sceVu0UnitMatrix` / `sceVu0MulMatrix` in
+Python) with func_00110a48's arguments, builds view.c with gcc -m32 and compares the 96 floats. With IEEE
+rounding to nearest **every float is bit-identical** for 13 argument sets (scrz 300 / 512 / 700 / 1000 x fog
+far 2000 / 8000 / 30000, and the fake-disc run's first call, scrz 513.456 with fog far 0: the camera not
+yet set); with the EE's round-toward-zero the worst is 2 ulp (m5 [1][1], 302.81992 vs 302.81998). So the
+draft's maths, and now view.c's, are the original's; the non-match is register allocation only (as the
+draft's header says). The divider is assumed to round to nearest.
+
+**`KH1_HOST_WIDE=W:H`** (host/null/main.c; `1` = 960:544) calls `kh1_view_init(W / H)`: `kh1_view_wide =
+(W / H) / (4 / 3)` multiplies the 320 (1.3235 at 960 x 544), so **only `D_002BBE60[0][0]` and
+`D_002BBEE0[0][0]` change** (0.9375 -> 0.7083 at scrz 300; `viewcheck.py --wide 960:544` lists the floats
+that change), and the markers' bounds `D_00469F90.x` / `D_00469FA0.x` become 1709.2 / 2386.8. objwin's
+`func_0010b390` now tests `PLAT_VIEW_X0` / `PLAT_VIEW_X1` (include/platform/view.h: the literals 0 / 512 on
+the PS2, so its object is bit-identical; `kh1_view_x0` / `kh1_view_x1` = -82 / 594 on the host with the
+switch). The null platform draws nothing, so the switch shows only in what the culls let through; the
+fake-disc run ends in `func_00132790` as before with and without it.
+
+**The other projections in the main ELF** (5.4's open item): only the camera path writes the frustums
+(`func_00110a48` from `func_00125000`, view.c; `func_00110ba8` / `func_00110c30` copy and restore them).
+The rest build **view -> screen matrices only, with no clip test**, for things drawn inside the canvas or
+into a texture: the journal's model (journalmdl.c, scrz 512), the party models in the menus (partymdl.c,
+nine views at x offsets `t[i]`, y 1920), objwin.c's window model (`D_00495210`, scrz 512 at the window's
+place), shadow.c's projected shadow (scrz 32768) and sceneeff.c's **lens grid** (`func_00103c48`'s
+`D_004949F0`, scrz 512, ax = ay = 1: a full-screen pass, so it widens with the other full-screen passes of
+5.3 step 2, not through the frustum). None needs the wide constant: the menus stay in the 4:3 canvas.
+**`D_002BC140` / `D_002BC144` are not a frustum** but the world -> view / view -> screen pointer pair the
+ppp effects (`func_00182148`, pppapi.c) and the sound listener (`func_0011ddd0`, sndctl.c) use: the field
+points them at `D_002E2700` / `D_002E2740` (gamestate.c `func_001095b0`), the journal and the top menu at
+their own views, and gummi/ship.c's setter `func_001bb858` has **no main-ELF caller** (the Gummi overlay's).
+The Gummi ship and the world map run in overlay code: whether they call `func_00110a48` (and so get the
+wide frustum) or build their own is for the overlay check.
+
+**Bit 35's readers need the disc's files** (5.4's open item; the plan). The spawn flag is the `flags`
+word (+0x4) of the room's 0x78-byte object records (`W32Rec`: id +0x0, flags +0x4, key +0x4C), which
+roomobj.c's lists `D_00525298` / `D_005252C8` / `D_005252F8` / `D_00525328` hold and `func_001320a8` finds by
+id for `func_00124218` (`a->x130`); they are filled by the room parse `func_00132c70` / `func_00132790`, the
+call the stub:2 run reaches on the fake disc. On the real disc: break after `func_00132c70` in gdb and list
+each list's records with `flags & 0x20000` (their ids give the actors). The script command is **entry 163
+of table 0** (`D_002E2810 + 0x518`: `{func_0012a030, 0x40000001}`: one argument, the result pushed back);
+the object-script VM (`func_0013cfe8`, stackvm.nostrict.c op 11) encodes it as the u16 **`0xA30B`** (index <<
+8, table << 6, 11), so a scan of the room's object scripts for that halfword lists the callers.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
   compare the side cells, props and effects (Traverse Town first district is a good open room).
 - Which actors have spawn flag `0x20000` (motion stepped only while drawn), and which scripts call
-  `func_0012a030`. Both need the spawn / script files.
+  `func_0012a030`. Both need the spawn / script files (session 91's plan above: the records' `flags`, the
+  halfword `0xA30B`).
 - `func_0010b390`'s `f6` meaning (the tail sprites `D_002B7210` ... `D_002B7350`), from a boot that shows an
   object window with its speaker off screen.
-- Overlays and the runtime code at `0x00F20000` were not searched. The Gummi ship (gummi/ship.c sets
-  `D_002BC140`) and the menus' model views may build their own frustum.
-- `func_00110618` is still a non-match. The port needs its C (the session 6 draft is believed right in its
-  maths) to carry the change in step 1.
+- Overlays and the runtime code at `0x00F20000` were not searched (the Gummi ship and the world map are
+  there). The main ELF's own other views have no frustum (session 91).
+- `func_00110618` is still a non-match; its C for the port is host/port/view.c (session 91, bit-identical
+  maths).
 
 ## 6. Open questions
 
