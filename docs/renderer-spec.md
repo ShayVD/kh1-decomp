@@ -25,7 +25,8 @@ Conventions:
 | `python3 -I tools/vu/find_vu1.py SLPS_251.98 --summary N` | opcode histogram of program N and its fixed (`vi00`-based) VU memory accesses |
 | `python3 -I tools/vu/vif_chain.py ADDR...` | walks a static DMA chain and prints its tags and VIF commands (STCYCL, UNPACK layout, MPG, MSCAL/MSCNT, BASE/OFFSET); `--one` decodes a single spliced tag. New in this session |
 | `python3 -I tools/vu/gs_packets.py --callers --layout layout.tsv` | decodes every static GS packet passed to the GIF send wrapper `func_00106b18`, register by register |
-| `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76 |
+| `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76. `--state` (session 77): the state list instead, each register's distinct values decoded with the functions that send each (§4.7) |
+| `KH1_HOST_TRACE=4 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt [--sends]` | the same state list for the chains a host run sends (the run-time ones too: the text windows, the HUD), each named by the host symbol at its start (§4.7). New in session 77 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
@@ -488,8 +489,16 @@ Static packets (`gs_packets.py --callers`), renderer B's template
 | `TRIFAN|IIP|TME|ABE|CTXT2` (+`FGE`) | renderer A clipped polygons (qw48 template) |
 | `TRIFAN|IIP|TME|FGE|ABE` | renderer B clipped polygons (qw8 template) |
 | `SPRITE|TME|FST` (UV) | frame copy, UI, fonts, post effects |
-| `SPRITE` untextured | full-screen fades and flashes |
-| `POINT|ABE` | `func_00106460` (destination-alpha mask, see TEST) |
+| `SPRITE` untextured | full-screen fades and flashes; `func_00106460`'s destination-alpha mask (see TEST) |
+| `SPRITE|ABE` / `SPRITE|ABE|FST` untextured | the additive fade quad (`func_00106000`), `func_001039f8` |
+| `TRISTRIP|IIP` untextured | src/screen/fade.c `func_001137f8` (`D_002BD100`, 18 strips: a gouraud wipe) |
+| `TRISTRIP|TME|ABE|FST` | sceneeff `func_00102da8` (a textured 2D strip) |
+
+Session 77 (`dmawalk.py --state`): the `POINT|ABE` this table listed for `func_00106460` is not
+there; `D_002A6AA0` is an untextured `SPRITE` (one RGBAQ, two XYZ2) under `DATE=1 DATM=1`. The
+one `POINT` (PRIM 0) in a run is opdma's `D_0061E8B0` (`func_001aa008`): two of its five A+D
+qwords are left zero, so they write PRIM 0 with no vertex after them, a state write and no draw (a
+port's GIF parser must take A+D to address 0 with value 0 as harmless).
 
 Renderer A's clipped tags use context 2 (`CTXT=1`), so both contexts are live
 and a port must track `*_1` and `*_2` registers separately.
@@ -500,7 +509,9 @@ and a port must track `*_1` and `*_2` registers separately.
 | --- | --- |
 | `(Cs-Cd)*As + Cd` | normal alpha blend: most packets, renderer B translucent pass (`0x80_00000044`) |
 | `(Cs-0)*As + Cd` | additive (fades/flashes `D_002A6970`, glow) |
-| `(0-0)*FIX + Cs`, FIX=0x80 (`0x80_0000002A`) | renderer B default, i.e. no blending |
+| `(0-0)*FIX + Cs`, FIX=0x80 (`0x80_0000002A`) | renderer B default, i.e. no blending (seen at run time, `D_00573AC0`) |
+| `(Cd-Cs)*As + 0` | `func_00106000` (end of frame), one pass: a subtractive darken |
+| `(Cs-0)*As + Cd`, FIX=0x80 (`0x80_00000048`) | the HUD's numbers: counter, dmgnum, lblnum override the default environment's ALPHA_1 with it (§4.7) |
 
 **TEST**
 
@@ -513,11 +524,22 @@ and a port must track `*_1` and `*_2` registers separately.
 | `ATE ATST=GREATER AREF=0` | cutout sprites (UI) |
 | `ATE ATST=NOTEQUAL AREF=0` | `func_00106460` (PSMT4 UI) |
 | `ATE ATST=NEVER AFAIL=FB_ONLY` | colour-only writes (masks) |
+| `ATE ATST=NEVER AFAIL=ZB_ONLY ZTST=GREATER` | opdma `func_001aaf00` (`D_00373030`): **Z-only writes**, where the new Z is nearer (session 77) |
+| `ATE ATST=GREATER AREF=0 ZTST=GREATER` | opdma's set-up packet `D_0061E8B0` (run time) |
+| `ATE ATST=GREATER AREF=0 ZTST=GEQUAL` | sceneeff `func_00103058`, `func_0010ff60`; `TEST_2` in field.c `func_00100988`, display.c `func_00110ce0` |
+| `TEST_2 ATST=GREATER AREF=16` / `AREF=127` | field.c `func_00100988` / roommdl `func_00114a38` |
+| `ATE ATST=ALWAYS ZTST=ALWAYS` (`0x30003`) | the HUD: every caller of the default environment `func_002370c8` overrides its `TEST_1` with it (§4.7) |
 | `DATE=1 DATM=1` | destination alpha test with `POINT|ABE` (`func_00106460`, `D_002A6AA0`) |
 
 **Frame and Z**: FRAME PSMCT32 (3D) / PSMCT24 (display); `FBMSK=0xFFFFFF`
-(alpha-only writes) appears twice. Z is PSMZ24 throughout; `ZMSK` toggles for
-translucent passes and 2D.
+(alpha-only writes) appears three times (sceneeff `func_00103058`, brightfade `func_00106460`,
+`func_0010f5a8`). Z is PSMZ24 throughout; `ZMSK` toggles for translucent passes and 2D.
+Other targets the static chains set (session 77): FBP `0x1F0` (`0x3E0000`), FBW 64, CT32,
+`FBMSK=0xFF000000` (colour only, alpha kept; texanim `func_00102118`, an 8x2 / 16x16 texture
+area); FBP `0x70` CT24 (**the Z buffer's memory drawn as colour**, sceneeff `func_00103c48`
+`D_002A5FD0`, with `ZBUF ZBP=0 ZMSK=1` meanwhile: a copy of the target into the Z area, read back
+as `TEX0 TBP0=0xE00`); FBP `0x1B0` FBW 256 (pause / capture `func_0010a3e8`: the `0x3600` slot as
+a 256-wide target); FBP `0x8C` FBW 640 (§3.1).
 
 **Textures**
 
@@ -529,9 +551,12 @@ translucent passes and 2D.
 | PSMCT24 / PSMCT32 | the render target sampled for post effects and the frame copy (`TBP0=0x1A00`); a 512x512 CT24 image at `0x0E00` (the Z area, `func_0010a120`/`a248`/`a378`) and at `0x3600` (inferred: movie or still frames drawn while 3D is off) |
 
 Filtering is bilinear (`TEX1 MMAG=1 MMIN=1`) with no mipmaps (`MXL=0`) in
-every packet seen. `CLAMP` is CLAMP/CLAMP for 2D, and `CLAMP_1 = 5`
-(CLAMP, CLAMP) by default in renderer B; per-mesh wrap modes are open
-(question 2). `TEXA TA0=128` (for CT24 sources).
+most packets; **point sampling** (`MMAG=MMIN=0`) in texanim `func_00102118`, brightfade's
+`func_00105f28` and capture `func_00109e20` (session 77). `CLAMP` is CLAMP/CLAMP for 2D, and
+`CLAMP_1 = 5` (CLAMP, CLAMP) by default in renderer B; one static `REGION_CLAMP` (U 0..510,
+sceneeff `func_00103c48`); per-mesh wrap modes come with the mesh (§3.3). `TEXA TA0=128 TA1=0`
+in the static packets (for CT24 sources), `TA0=TA1=128` in the HUD's environment. Most CT24
+sources load with `CLD=4` (the CLUT loads only when CBP changes; no CLUT is used).
 
 **Fog**: per-vertex F from the VU (A: P2/P3/P7; B: from qw6.w bits,
 inferred). `FOGCOL` is set per draw from `a->x0->x30/34/38`
@@ -539,7 +564,9 @@ inferred). `FOGCOL` is set per draw from `a->x0->x30/34/38`
 
 **Dither, colour clamp, PABE, FBA, SCANMSK**: only `SCANMSK=0` is written
 by the static packets (`D_002A65C0`, end of frame). The GS dump (§3.3) shows
-`DTHE=0` and `COLCLAMP=1`: no dithering, colours clamp.
+`DTHE=0` and `COLCLAMP=1`: no dithering, colours clamp. The C agrees (session 77): the HUD's
+default environment `func_002370c8` writes `DTHE=0`, `COLCLAMP=1`, `PABE=0`, `FBA_1=0`,
+`PRMODECONT=1`, `DIMX=-4` (inert with DTHE 0) every time a HUD element draws (§4.7).
 
 ### 3.3 Captured GS state (PCSX2 GS dump, session 15)
 
@@ -856,6 +883,45 @@ temporary packets.
   DIRECTs; a chain that ends inside such a packet is a problem (host: `KH1_DMA_PATH2_SHORT`). No
   static chain and no fake-disc send has a DIRECT; renderer A's mesh chains (from the disc) are the
   likely users.
+
+### 4.7 The state list: every GS state value and who sends it (session 77, static + fake disc)
+
+- **The tools.** `tools/host/dmawalk.py --state` (static chains, the user's ELF) and
+  `KH1_HOST_TRACE=4` + `tools/host/gsstate.py` (any host run: host/null/dmawalk.c keeps each send's
+  distinct state values, `kh1_dma_gs_values`) print one block per GS register: each distinct
+  value, decoded, with its senders (the function, or at run time the chain's host symbol). The
+  output is derived from the user's ELF / disc: never commit it; the counts and the findings below
+  are what the docs keep.
+- **Static (81 chains): 18 registers, 87 distinct values.** `SCISSOR_1` has 19 (sceneeff's 16
+  vertical 32-pixel strips, 512x384, 512x448, 640x448), `TEX0_1` 20, `FRAME_1` 10, `TEST_1` 8,
+  `PRIM` 7, `TEST_2` 4, `ALPHA_1` / `ZBUF_1` 3, `CLAMP_1` / `TEX1_1` / `ZBUF_2` 2, and one each of
+  `TEX1_2`, `ALPHA_2`, `FRAME_2`, `TEXA`, `FOGCOL` (rgb 16,112,128, display.c `func_00110ce0`),
+  `TEXFLUSH`, `SCANMSK`. Against §3.2 this found the corrections now in it: `func_00106460`'s mask
+  is a SPRITE (no POINT), the subtractive `(Cd-Cs)*As` pass, Z-only writes (`AFAIL=ZB_ONLY
+  ZTST=GREATER`), the extra targets (Z area as colour, `0x3E0000`), point sampling, a static
+  `REGION_CLAMP`. Everything else in §3.2's tables is there as written.
+- **The HUD's default environment** (src/gfx/gspkt.c `func_002370c8(p)`, called from 17 files in src/hud (18 jal with `func_002372e0`),
+  each into its own 22-qword bss block, sent by `func_00237018(p, 0x16, 1)`): two A+D GIF packets,
+  15 + 4 registers. Decoded from the C: `FRAME_1` FBP `0xD0` FBW 512 CT32; `ZBUF_1` `0x70` Z24;
+  `XYOFFSET_1` (1792, 1856); `SCISSOR_1` 512x384; `TEST_1` `ATE ATST=ALWAYS ZTE ZTST=GEQUAL`;
+  `ALPHA_1` `(Cs-Cd)*As+Cd` FIX 128; `FBA_1` 0; `TEX0_1` a placeholder (TBP0 2, PSMT8 128x128, CBP 2,
+  CLD 1); `TEX1_1` bilinear; `TEX2_1` PSMT8, CBP 0, CLD 1; `MIPTBP1_1` / `MIPTBP2_1` 0; `CLAMP_1`
+  REPEAT; `PRMODECONT` 1; `COLCLAMP` 1; then `DTHE` 0, `DIMX` -4, `PABE` 0, `TEXA` 128 / 128. 14 of the
+  HUD callers then set `TEST_1 = 0x30003` (ATST ALWAYS, ZTST ALWAYS: the HUD ignores Z) and
+  `CLAMP_1 = 5` (CLAMP); counter, dmgnum and lblnum also set `ALPHA_1` additive (`0x80_00000048`).
+  §3.3's dump (DTHE 0, COLCLAMP 1, PABE 0, PRMODECONT 1, TEXA 128 / 128 among others) matches.
+  `func_002372e0` (sends the default from `D_006480D0`) and `func_00237318` (a 3D variant: TEST
+  `GREATER` / `GEQUAL`, ALPHA FIX 0, CLAMP) have **no caller in the main ELF** (0 jal, 0 pointer
+  words): dktitle.x or another overlay, or dead.
+- **The fake-disc run** (`KH1_HOST_OVL=stub:2 KH1_HOST_TRACE=4`, 86 sends, 21 chains): 32 registers,
+  53 distinct values. The HUD's seven environments (`D_00650DE0`, `D_00650F40`, `D_00651C00`,
+  `D_006562C0`, `D_0065FB30`, `D_006627E0`, `D_00668E20`) carry exactly the values above; renderer
+  B's draw state at `D_00573AC0+0x390` (`TEX0_1` `0x3600` PSMT8 128x128 CBP `0x3700`, `ALPHA_1`
+  `(0-0)*FIX+Cs` FIX 128, `TEST_1 ATST=GEQUAL AREF=128 ZTST=GEQUAL`, `FOGCOL` 0) matches §3.2 / §3.3;
+  the image uploads on the stack (`func_001ef950`) write `BITBLTBUF` (DBP `0x3FFC` CT32, `0x1000`
+  PSMT4HL / PSMT4HH: the font halves), `TRXPOS` 0,0, `TRXREG` 16x16 / 256x256, `TRXDIR` host->local.
+  Not yet seen: the text windows' chains (they are drawn after the title, which the fake disc does
+  not reach): the real disc's run (next-session item 2) gives them.
 
 ## 5. Mapping to a modern API
 

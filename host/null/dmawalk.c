@@ -12,7 +12,12 @@
  * the same without the codes VIF0 lacks).  A chain
  * that ends inside a GIF packet or a VIF code's data, or a word that is no VIF code, is a
  * problem; each data block that starts inside a packet is counted (an IMAGE's REF data after
- * the cnt that holds its GIFtag does). */
+ * the cnt that holds its GIFtag does).
+ *
+ * KH1_HOST_TRACE=4 (session 77) prints, after each send's line, every distinct GS state
+ * register value the send writes (one "gs REG VALUE" line each, in the order first written;
+ * vertex registers left out), without the tags: tools/host/gsstate.py turns a run's lines into
+ * the renderer's state list, the run-time twin of tools/host/dmawalk.py --state. */
 #include "common.h"
 #include "dmawalk.h"
 
@@ -39,8 +44,36 @@ typedef struct {
     GifStream gif; /* PATH2: every DIRECT's data, one stream of GIF packets */
 } VifStream;
 
+/* the state values the current walk wrote, distinct (KH1_HOST_TRACE=4, kh1_dma_gs_values) */
+#define GS_VALUES 512
+static struct { u32 reg, lo, hi; } gs_val[GS_VALUES];
+static u32 gs_nval;
+
 static void gif_set(GifStream *g, u32 reg) {
     if (reg < 128) g->set[reg >> 5] |= 1u << (reg & 31);
+}
+
+/* reg written with the 64-bit value at v (vertex registers are not state) */
+static void gif_value(GifStream *g, u32 reg, const u32 *v) {
+    u32 i;
+    gif_set(g, reg);
+    if (reg >= 128 || (reg >= 1 && reg <= 5) || reg == 0xA || reg == 0xC || reg == 0xD || reg == 0xF) return;
+    for (i = 0; i < gs_nval; i++)
+        if (gs_val[i].reg == reg && gs_val[i].lo == v[0] && gs_val[i].hi == v[1]) return;
+    if (gs_nval == GS_VALUES) return;
+    gs_val[gs_nval].reg = reg;
+    gs_val[gs_nval].lo = v[0];
+    gs_val[gs_nval++].hi = v[1];
+}
+
+int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max) {
+    int i;
+    for (i = 0; i < (int)gs_nval && i < max; i++) {
+        reg[i] = gs_val[i].reg;
+        lo[i] = gs_val[i].lo;
+        hi[i] = gs_val[i].hi;
+    }
+    return gs_nval;
 }
 
 /* one qword of the GIF stream: a GIFtag, or the next qword of the current packet */
@@ -49,12 +82,14 @@ static void gif_qword(GifStream *g, const u32 *q) {
     if (g->left) {
         if (g->flg == 0) {
             u32 d = g->regs[g->k++ % g->nreg];
-            gif_set(g, d == 0xE ? (q[2] & 0x7F) : d);
+            if (d == 0xE) gif_value(g, q[2] & 0x7F, q);
+            else if (d == 0) { u32 prim[2] = { q[0] & 0x7FF, 0 }; gif_value(g, 0, prim); }
+            else gif_value(g, d, q);
             g->left--;
         } else if (g->flg == 1) {
             for (h = 0; h < 2 && g->left; h++, g->left--) {
                 u32 d = g->regs[g->k++ % g->nreg];
-                if (d != 0xE) gif_set(g, d);
+                if (d != 0xE) gif_value(g, d, q + 2 * h);
             }
         } else {
             g->left--;
@@ -69,7 +104,10 @@ static void gif_qword(GifStream *g, const u32 *q) {
     g->k = 0;
     g->packets++;
     if (q[0] & 0x8000) g->eop++;
-    if (g->flg == 0 && q[1] >> 14 & 1) gif_set(g, 0); /* PRE: PRIM from the tag */
+    if (g->flg == 0 && q[1] >> 14 & 1) { /* PRE: PRIM from the tag */
+        u32 prim[2] = { q[1] >> 15 & 0x7FF, 0 };
+        gif_value(g, 0, prim);
+    }
     if (g->flg == 0) g->left = nloop * g->nreg;
     else if (g->flg == 1) g->left = (nloop * g->nreg + 1) & ~1u;
     else { g->left = nloop; g->image++; }
@@ -182,6 +220,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     VifStream v = { 0 };
     char extra[160], regs[400];
     extra[0] = 0;
+    gs_nval = 0;
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
         if (!where(tag, 16)) { bad = KH1_DMA_TAG_OUTSIDE; break; }
@@ -272,7 +311,10 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
            bad & KH1_DMA_TAG_OUTSIDE ? ": TAG OUTSIDE" : bad & KH1_DMA_DATA_OUTSIDE ? ": DATA OUTSIDE"
            : bad & KH1_DMA_CALL_DEEP ? ": CALL TOO DEEP" : bad & KH1_DMA_NO_END ? ": NO END (4096 tags)" : "",
            extra, regs[0] ? "; regs" : "", regs);
-    if (bad || kh1_host_trace >= 3)
+    if (kh1_host_trace >= 4)
+        for (i = 0; i < (int)gs_nval; i++)
+            printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
+    if (bad || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];
             printf("kh1-host:   %08x %-4s qwc %u addr %08x upper %08x %08x%s\n", tags[i][0], ids[tags[i][1]],

@@ -1,6 +1,6 @@
 /* host/null/dmawalk.c on made-up chains (no game data): tests/selftest.sh builds it with
  * gcc -m32 when that works.  Each case is a chain, the channel and the problem bits the walk
- * must answer. */
+ * must answer (and, for one, the state values it keeps). */
 #include "common.h"
 #include "../../host/null/dmawalk.h"
 
@@ -101,6 +101,28 @@ int main(void) {
     /* 0x6B: vl 3 (5 bits) with vn 2, no code */
     q(1, 0, 0x6B010000, 0, 0);
     expect("vif bad", 1, 0x105, 0, KH1_DMA_VIF_BAD);
+    /* the state values (KH1_HOST_TRACE=4): a PACKED GIFtag with PRE (PRIM SPRITE) and 3 x A+D
+     * (TEST_1 0x30003, an RGBAQ: a vertex register, left out, TEST_1 0x30003 again: kept once),
+     * then a REGLIST of PRIM, TEX0_1 */
+    {
+        u32 reg[8], lo[8], hi[8];
+        int n;
+        for (i = 0; i < 64; i++) q(i, 0, 0, 0, 0);
+        q(0, 0x70000007, 0, 0, 0);
+        q(1, 3 | 1 << 15, 1 << 14 | 6 << 15 | 1 << 28, 0xE, 0);
+        q(2, 0x30003, 0, 0x47, 0);
+        q(3, 0x80, 0, 0x01, 0);
+        q(4, 0x30003, 0, 0x47, 0);
+        q(5, 1 | 1 << 15, 1 << 26 | 2 << 28, 0x60, 0);
+        q(6, 0x5, 0, 0x89ABCDEF, 0x01234567);
+        expect("gs values", 2, 0x104, 0, 0);
+        n = kh1_dma_gs_values(reg, lo, hi, 8);
+        if (n != 4 || reg[0] != 0 || lo[0] != 6 || reg[1] != 0x47 || lo[1] != 0x30003 || reg[2] != 0 ||
+            lo[2] != 5 || reg[3] != 6 || lo[3] != 0x89ABCDEF || hi[3] != 0x01234567) {
+            printf("dmawalk_test: gs values: got %d\n", n);
+            fails++;
+        }
+    }
     if (fails) { printf("dmawalk_test: %d failed\n", fails); return 1; }
     printf("dmawalk_test: PASS\n");
     return 0;
