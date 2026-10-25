@@ -2744,6 +2744,20 @@ D_0046A6A8 and names 0x9A0000 / 0xBA0000 (the load area) itself.
    the file, verified byte-identical like the main ELF.
 4. Its calls into the main ELF are then ordinary calls by name, so the port links it with the rest.
 
+### 5.3 The first Vita build (2026-10-25, after session 122)
+
+Bring-up step 3 (vitasdk skeleton) done ahead of step 2 (the extraction tool, not needed: the Vita reads
+the user's disc image as the host does) and with step 4's software stand-in: **docs/vita-build.md**.
+`make vita` builds out/vita/kh1-decomp.vpk from the host runner's files (519 game files unchanged,
+host/null's GS model, host/port, host/vita: entry, framebuffer present, sceCtrl pad, an ARM ucontext
+switch, sceIo disc reads). The overlay entry's calls (29 in 13 files) are rewritten in the preprocessed
+C to `kh1_ovl_entry` (the host's `KH1_HOST_OVL=stub:2` behaviour). `make vita-armcheck` runs the same
+objects on ARM Linux under qemu-arm: the fake disc's 600 frames at `KH1_HOST_TRACE=5` match the x86 run
+line for line. Not run on a Vita yet. Small changes outside host/vita: census.py's NM / TYPE_PREFIX /
+PLATFORM_DIRS, cd_image.c's sceIo branch (64-bit seeks), memmap.c's page alignment on the Vita (a
+0x40000-aligned .bss made a third load segment, which vita-elf-create refuses), sdk_host.c's `__assert`
+left to newlib, host/null/main.c's `ovl_state` declared off x86 too (it did not compile on ARM).
+
 ## 6. Open questions
 
 - The sound driver's command set and the sequence format (needs the IRX from the disc).

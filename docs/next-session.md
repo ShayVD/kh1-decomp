@@ -17,6 +17,13 @@ items.
 
 ## Where we stopped (end of session 122, 2026-10-25)
 
+- **The first Vita build** (2026-10-25, its own thread, after session 122): `make vita` packs
+  out/vita/kh1-decomp.vpk (docs/vita-build.md, vita-port-plan 5.3): the game's C and the host runner's
+  platform on vitasdk, a software present of the GS model, sceCtrl, sceIo disc reads, the overlay
+  stub going to a new game. **Not run on a Vita yet: with the Mac, install it (or run it in Vita3K)
+  with the ISO at ux0:data/kh1/kh1.iso and bring back ux0:data/kh1/kh1.log.** No title screen
+  (dktitle.x), no 3D, no sound yet. `make vita-armcheck` (qemu-arm) matches the x86 host run.
+
 - **Session 122** (static, vita-port-plan 5.1bj): **the depth state, fog and the primitive assembly.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
   include/platform/depth.h / host/port/depth.c (renderer-spec 4.13 "Session 122"): the port's depth is the

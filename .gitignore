@@ -11,6 +11,10 @@
 /SCPS_*
 *.elf
 *.ELF
+# Vita builds hold bytes of the user's ELF (tools/vita/build.py).
+*.vpk
+*.velf
+eboot.bin
 # Disc images and dumped archives / extracted assets.
 *.iso
 *.ISO

@@ -4,8 +4,10 @@
  * src/io/discfile.c) and then reads absolute sectors (KINGDOM.IMG is not in the ISO directory:
  * its files are found through KINGDOM.IDX, relative to SYSTEM.CNF's sector), so the image is
  * read as it is, not extracted.  2048-byte sectors (.iso) or raw 2352-byte ones (.bin, mode 1
- * or mode 2 form 1), as tools/shift/extract_kingdom.py reads them.  Plain stdio: the Vita
- * platform can share it.  Nothing is written.  Not part of the PS2 build. */
+ * or mode 2 form 1), as tools/shift/extract_kingdom.py reads them.  Plain stdio on the host; on
+ * the Vita (KH1_VITA) the kernel's sceIo calls, whose 64-bit seek reaches past 2 GiB (newlib's
+ * fseek takes a 32-bit long, and the disc is larger).  Nothing is written.  Not part of the PS2
+ * build. */
 #include "common.h"
 
 /* the libc calls, declared here like host/port/sdk_host.c does (no system headers) */
@@ -19,21 +21,40 @@ void *memcpy(void *, const void *, size_t_);
 
 #define SECTOR 2048
 
-static void *img_file;
 static int img_ssize;  /* bytes per sector in the file */
 static int img_off;    /* where the 2048 data bytes start in one */
+
+#ifdef KH1_VITA
+int sceIoOpen(const char *file, int flags, int mode);
+int sceIoClose(int fd);
+int sceIoRead(int fd, void *data, unsigned int size);
+long long sceIoLseek(int fd, long long offset, int whence);
+static int img_fd = -1;
+static void *img_file; /* non-zero while img_fd is open */
+#define img_open(path) ((img_fd = sceIoOpen(path, 1 /* SCE_O_RDONLY */, 0)) >= 0 ? (void *)&img_fd : (void *)0)
+#define img_close() (sceIoClose(img_fd), img_fd = -1)
+static int read_sector(u32 lsn, u8 *buf) {
+    long long at = (long long)lsn * img_ssize + img_off;
+    if (sceIoLseek(img_fd, at, 0) != at) return 0;
+    return sceIoRead(img_fd, buf, SECTOR) == SECTOR;
+}
+#else
+static void *img_file;
+#define img_open(path) fopen(path, "rb")
+#define img_close() fclose(img_file)
 
 /* one sector's 2048 data bytes; 0 if past the end of the image */
 static int read_sector(u32 lsn, u8 *buf) {
     if (fseek(img_file, (long)lsn * img_ssize + img_off, 0) != 0) return 0;
     return fread(buf, 1, SECTOR, img_file) == SECTOR;
 }
+#endif
 
 int kh1_cd_image_open(const char *path) {
     static const struct { int ssize, off; } kinds[] = {{2048, 0}, {2352, 24}, {2352, 16}};
     u8 pvd[SECTOR];
     int i;
-    img_file = fopen(path, "rb");
+    img_file = img_open(path);
     if (!img_file) return 0;
     for (i = 0; i < 3; i++) {
         img_ssize = kinds[i].ssize;
@@ -43,7 +64,7 @@ int kh1_cd_image_open(const char *path) {
             && pvd[4] == '0' && pvd[5] == '1')
             return 1;
     }
-    fclose(img_file);
+    img_close();
     img_file = 0;
     return 0;
 }
