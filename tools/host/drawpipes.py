@@ -172,7 +172,7 @@ def build_counter() -> Path:
     srcs = [ROOT / "tools/host/pipecount.c"] + [ROOT / "host/port" / f for f in
                                                 ("drawstate.c", "blend.c", "atest.c", "depth.c", "sampler.c",
                                                  "texfmt.c", "primasm.c", "batch.c", "target.c", "canvas.c",
-                                                 "vertex.c", "cmdbuf.c", "ring.c")]
+                                                 "vertex.c", "cmdbuf.c", "ring.c", "shadergen.c")]
     if exe.exists() and all(exe.stat().st_mtime >= s.stat().st_mtime for s in srcs) and \
             all(exe.stat().st_mtime >= (ROOT / "include/platform" / h).stat().st_mtime
                 for h in ("drawstate.h", "batch.h", "vertex.h", "target.h", "cmdbuf.h", "ring.h")):

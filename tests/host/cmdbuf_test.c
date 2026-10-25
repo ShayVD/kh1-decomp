@@ -25,6 +25,8 @@
 #include "../../host/null/gsmem.h"
 #include "platform/cmdbuf.h"
 #include "platform/canvas.h"
+#include "platform/palcache.h"
+#include "platform/texcache.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -33,6 +35,9 @@ void *memcpy(void *, const void *, __SIZE_TYPE__);
 void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 void kh1_pipes_frame(void);
 extern void (*kh1_pipes_frame_hook)(const KH1CmdRec *r);
+const KH1CmdRec *kh1_pipes_recorder(void);
+const KH1PalCache *kh1_pipes_palcache(void);
+const KH1TexCache *kh1_pipes_texcache(void);
 
 static int fails, checks;
 #define CHECK(name, cond) do { checks++; if (!(cond)) { printf("cmdbuf_test: %s\n", name); fails++; } } while (0)
@@ -56,6 +61,13 @@ static int edge_in(f32 ax, f32 ay, f32 bx, f32 by, f32 px, f32 py, int ccw, f32 
     return (by - ay) < 0 || ((by - ay) == 0 && (bx - ax) > 0); /* top-left edges keep their pixels */
 }
 
+/* session 127: the image a replayed draw writes and its texture fetch (by default img and texel) */
+static u32 *rt_img = &img[0][0];
+static s32 rt_w = IW, rt_h = IH;
+static u32 texel(f32 s, f32 t);
+static u32 (*fetch)(f32 s, f32 t) = texel;
+#define PX(x, y) rt_img[(y) * rt_w + (x)]
+
 static u32 texel(f32 s, f32 t) {
     s32 tx = (s32)(s * 64 + 0x10000) - 0x10000, ty = (s32)(t * 64 + 0x10000) - 0x10000;
     if (tx < 0) tx = 0;
@@ -75,12 +87,12 @@ static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s
     if (area < 0) area = -area;
     if (sx0 < 0) sx0 = 0;
     if (sy0 < 0) sy0 = 0;
-    if (sx1 > IW) sx1 = IW;
-    if (sy1 > IH) sy1 = IH;
+    if (sx1 > rt_w) sx1 = rt_w;
+    if (sy1 > rt_h) sy1 = rt_h;
     for (y = sy0; y < sy1; y++)
         for (x = sx0; x < sx1; x++) {
             f32 px = x + 0.5f, py = y + 0.5f, e0, e1, e2, l0, l1, l2;
-            u32 cs, d = img[y][x];
+            u32 cs, d = PX(x, y);
             if (!edge_in(b->x, b->y, c->x, c->y, px, py, ccw, &e0) || !edge_in(c->x, c->y, a->x, a->y, px, py, ccw, &e1) ||
                 !edge_in(a->x, a->y, b->x, b->y, px, py, ccw, &e2))
                 continue;
@@ -88,21 +100,24 @@ static void tri(const KH1GpuVert *a, const KH1GpuVert *b, const KH1GpuVert *c, s
             l1 = e1 / area;
             l2 = e2 / area;
             if (tex)
-                cs = texel(l0 * a->s + l1 * b->s + l2 * c->s, l0 * a->t + l1 * b->t + l2 * c->t); /* DECAL, TCC */
+                cs = fetch(l0 * a->s + l1 * b->s + l2 * c->s, l0 * a->t + l1 * b->t + l2 * c->t); /* DECAL, TCC */
             else
                 cs = (u32)c->rgba[0] | (u32)c->rgba[1] << 8 | (u32)c->rgba[2] << 16 | (u32)c->rgba[3] << 24; /* flat */
             if (gs) {
-                img[y][x] = kh1_blend_gs(alpha_lo, 0, cs, d & 0xFFFFFF, KH1_PSMCT32) & 0xFFFFFF;
+                PX(x, y) = kh1_blend_gs(alpha_lo, 0, cs, d & 0xFFFFFF, KH1_PSMCT32) & 0xFFFFFF;
             } else if (st->enable) {
-                img[y][x] = kh1_blend_gpu(st, cs, d);
+                PX(x, y) = kh1_blend_gpu(st, cs, d);
             } else {
-                img[y][x] = (cs & 0xFFFFFF) | kh1_blend_store_alpha(cs >> 24) << 24;
+                PX(x, y) = (cs & 0xFFFFFF) | kh1_blend_store_alpha(cs >> 24) << 24;
             }
         }
 }
 
+static void replay_x(const KH1CmdRec *r);
+static int do_replay;       /* 1 the frame's draws replayed into img; 2 session 127's transfer frame (replay_x) */
 static void replay(const KH1CmdRec *r) {
     u32 i, j;
+    if (do_replay == 2) { replay_x(r); return; }
     for (i = 0; i < r->ncmd; i++) {
         const KH1Cmd *c = &r->cmd[i];
         const KH1GpuVert *v = kh1_cmd_verts(r, c);
@@ -115,15 +130,20 @@ static void replay(const KH1CmdRec *r) {
 /* ---- the frames ---- */
 static KH1CmdRec snap_hdr;  /* the last frame's counts */
 static u32 snap_ncmd, snap_nv, snap_sx0, snap_sx1;
-static int do_replay;
 
 static void hook(const KH1CmdRec *r) {
     u32 i;
-    snap_ncmd = r->ncmd;
-    snap_nv = 0;
-    for (i = 0; i < r->ncmd; i++) snap_nv += r->cmd[i].nv;
-    snap_sx0 = r->ncmd ? (u32)r->cmd[0].k.sx0 : 0;
-    snap_sx1 = r->ncmd ? (u32)r->cmd[r->ncmd - 1].k.sx1 : 0;
+    s32 first = -1, last = -1;
+    snap_ncmd = snap_nv = 0;
+    for (i = 0; i < r->ncmd; i++) /* the draw commands (session 127: the texture decodes are commands too) */
+        if (r->cmd[i].kind == KH1_CMD_DRAW) {
+            snap_ncmd++;
+            snap_nv += r->cmd[i].nv;
+            if (first < 0) first = (s32)i;
+            last = (s32)i;
+        }
+    snap_sx0 = first >= 0 ? (u32)r->cmd[first].k.sx0 : 0;
+    snap_sx1 = last >= 0 ? (u32)r->cmd[last].k.sx1 : 0;
     snap_hdr.frame = r->frame;
     if (do_replay) replay(r);
 }
@@ -191,7 +211,7 @@ static void columns(int partial) {
     if (!partial) {
         CHECK("columns: 2 commands with the union scissor and 12 vertices", snap_ncmd == 2 && snap_nv == 12 &&
               snap_sx0 == 0 && snap_sx1 == IW);
-        CHECK("columns: 7 columns merged", snap_hdr.frame.cmds == 2);
+        CHECK("columns: 7 columns merged", snap_hdr.frame.cmds == 2 + snap_hdr.frame.textures);
         CHECK("columns: the same pixels as gsmem.c's sprites", same_as_gs("columns"));
     } else {
         printf("cmdbuf_test: partial: %u commands, %u vertices\n", snap_ncmd, snap_nv);
@@ -425,6 +445,205 @@ static void passes(void) {
     CHECK("passes: every pass counted once", pr.total.stores + pr.total.discards + pr.total.open == pr.total.passes);
 }
 
+/* ---- session 127: the transfers as commands ----
+ * One frame through gsregs.c and pipes.c with every kind of transfer between the draws, replayed the way a GPU
+ * would run the list (replay_x): the textures from the recorder's texture cache entries the draws name, an
+ * upload into a render target written into that target's image, the CLUT read back from the CLUT pass's
+ * image, a target's texture from its image; the 3D target's pixels against gsmem.c's. */
+#define XW 128
+#define XH 16
+static u32 offimg[64][64], clutimg[16][16];
+static KH1Cmd xc[64];
+static KH1CmdPass xp[16];
+static u32 nxc, nxp, xpal[256], xpal_ok, xpal_bad;
+static const u32 *x_tex, *x_pal;
+static u32 x_tw, x_th, x_psm;
+static u32 (*x_img)[64];
+
+static u32 fetch_tex(f32 s, f32 t) {
+    s32 tx = (s32)(s * x_tw + 0x10000) - 0x10000, ty = (s32)(t * x_th + 0x10000) - 0x10000;
+    u32 v;
+    if (tx < 0) tx = 0;
+    if (ty < 0) ty = 0;
+    if (tx >= (s32)x_tw) tx = (s32)x_tw - 1;
+    if (ty >= (s32)x_th) ty = (s32)x_th - 1;
+    if (x_img) { /* a render target's own texture: the stored alpha back on the GS's scale */
+        v = x_img[ty][tx];
+        return (v & 0xFFFFFF) | kh1_blend_load_alpha(v >> 24) << 24;
+    }
+    v = x_tex[ty * x_tw + (u32)tx];
+    return x_psm == KH1_PSMT8 ? x_pal[v & 0xFF] : v;
+}
+
+static void replay_x(const KH1CmdRec *r) {
+    const KH1TexCache *tc = kh1_pipes_texcache();
+    const KH1PalCache *pc = kh1_pipes_palcache();
+    u32 i, j, e;
+    nxc = r->ncmd < 64 ? r->ncmd : 64;
+    nxp = r->npass < 16 ? r->npass : 16;
+    memcpy(xc, r->cmd, nxc * sizeof *xc);
+    memcpy(xp, r->pass, nxp * sizeof *xp);
+    x_pal = 0;
+    for (i = 0; i < r->ncmd; i++) {
+        const KH1Cmd *c = &r->cmd[i];
+        const KH1GpuVert *v;
+        if (c->kind == KH1_CMD_UPLOAD && c->x.dst) { /* into the off-screen buffer's image */
+            for (j = 0; j < c->x.h; j++)
+                for (e = 0; e < c->x.w; e++) {
+                    u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, c->x.bb_hi & 0x3FFF, c->x.bb_hi >> 16 & 63, c->x.dx + e, c->x.dy + j);
+                    offimg[c->x.dy + j][c->x.dx + e] = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+                }
+            continue;
+        }
+        if (c->kind == KH1_CMD_CLUT) {
+            if (c->x.src) { /* read back from the CLUT pass's image: entries 8-15 / 16-23 of each 32 swapped */
+                for (e = 0; e < 256; e++) {
+                    u32 p = (e & 0xE7) | (e & 8) << 1 | (e & 0x10) >> 1, g = clutimg[p >> 4][p & 15];
+                    xpal[e] = (g & 0xFFFFFF) | kh1_blend_load_alpha(g >> 24) << 24;
+                }
+                x_pal = xpal;
+                xpal_ok = c->x.slot >= 0;
+                xpal_bad = 0;
+                for (e = 0; xpal_ok && e < 256; e++)
+                    if (xpal[e] != pc->slot[c->x.slot].col[e]) xpal_bad++;
+            } else if (c->x.slot >= 0) {
+                x_pal = pc->slot[c->x.slot].col;
+            }
+            continue;
+        }
+        if (c->kind != KH1_CMD_DRAW) continue;
+        /* the target's image */
+        if (c->k.rt == KH1_RT_OFFSCREEN) { rt_img = &offimg[0][0]; rt_w = rt_h = 64; }
+        else if (c->k.rt == KH1_RT_CLUT) { rt_img = &clutimg[0][0]; rt_w = rt_h = 16; }
+        else { rt_img = &img[0][0]; rt_w = IW; rt_h = IH; }
+        x_tw = 1u << (c->d.tex0_lo >> 26 & 15);
+        x_th = 1u << ((c->d.tex0_lo >> 30 | c->d.tex0_hi << 2) & 15);
+        x_psm = c->d.tex0_lo >> 20 & 63;
+        x_img = c->samples ? offimg : 0;
+        x_tex = !c->samples && c->tslot >= 0 ? tc->slot[c->tslot].tex : 0;
+        if (!x_img && !x_tex) continue;
+        fetch = fetch_tex;
+        v = kh1_cmd_verts(r, c);
+        for (j = 0; j + 2 < c->nv; j += 3)
+            tri(&v[j], &v[j + 1], &v[j + 2], c->k.sx0, c->k.sy0, c->k.sx1, c->k.sy1, 1, &c->d.blend, 0, 0);
+    }
+    fetch = texel;
+    rt_img = &img[0][0];
+    rt_w = IW;
+    rt_h = IH;
+}
+
+/* an upload of w x h pixels in psm at block bp, width bw, to (x, y): n words of IMAGE data */
+static void xupload(u32 bp, u32 bw, u32 psm, u32 x, u32 y, u32 w, u32 h, const u32 *data, u32 n) {
+    W(0x50, 0, bp | bw << 16 | psm << 24);
+    W(0x51, 0, x | y << 16);
+    W(0x52, w, h);
+    W(0x53, 0, 0);
+    kh1_gsmem_image(data, n);
+}
+
+static void xsprite(s32 x0, s32 x1) {
+    W(0x00, 0x116, 0); /* SPRITE | TME | FST */
+    W(0x03, 0, 0);
+    W(0x05, x16(x0) | x16(0) << 16, 0);
+    W(0x03, 16 * 16 | (16u * 16) << 16, 0);
+    W(0x05, x16(x1) | x16(16) << 16, 0);
+}
+
+#define TEX16(bp, bw, psm) ((bp) | (bw) << 14 | (psm) << 20 | 4u << 26 | 0u << 30)
+#define TEX16_HI (1 | 1 << 2 | 1 << 3) /* TH 4, TCC, DECAL */
+
+static void transfers(void) {
+    static u32 a[256], b[256], cc[64], pal_t[256], idx[64];
+    u32 i, x, y, bad = 0, ntex = 0, ndraw = 0, ups = 0;
+    s32 d1 = -1, d2 = -1, d8 = -1, clut = -1, off_pass = -1, clut_pass = -1;
+    for (i = 0; i < 256; i++) {
+        a[i] = (0x20 + i % 0x61) << 24 | (i * 3) << 16 | (255 - i) << 8 | (i * 7 & 0xFF);
+        b[i] = (0x80 - i % 0x50) << 24 | (i * 5 & 0xFF) << 16 | (i * 11 & 0xFF) << 8 | (200 - i % 200);
+        pal_t[i] = (i % 0x81) << 24 | (i * 13 & 0xFF) << 16 | (i ^ 0x5A) << 8 | (i * 29 & 0xFF);
+    }
+    for (i = 0; i < 64; i++) cc[i] = 0x7F000000u | (i * 4) << 16 | 0x40 << 8 | (i * 3);
+    for (i = 0; i < 64; i++) /* 256 indices, bytes */
+        idx[i] = ((i * 4 + 0) * 37 & 0xFF) | ((i * 4 + 1) * 37 & 0xFF) << 8 | ((i * 4 + 2) * 37 & 0xFF) << 16 |
+                 (u32)((i * 4 + 3) * 37 & 0xFF) << 24;
+    kh1_gsmem_reset();
+    memset(img, 0, sizeof img);
+    memset(offimg, 0, sizeof offimg);
+    memset(clutimg, 0, sizeof clutimg);
+    env();
+    W(0x08, 5, 0); /* CLAMP_1: CLAMP */
+    xupload(0x2800, 1, KH1_PSMCT32, 0, 0, 16, 16, a, 256);       /* texture A */
+    W(0x06, TEX16(0x2800, 1, KH1_PSMCT32), TEX16_HI);
+    xsprite(0, 16);                                                /* the 3D target from A */
+    xupload(0x2800, 1, KH1_PSMCT32, 0, 0, 16, 16, b, 256);       /* the same place: B */
+    xsprite(16, 32);                                               /* from B */
+    W(0x4C, 0x1D0 | 4 << 16, 0);                                   /* the off-screen buffer 0x3A00 */
+    W(0x40, 255u << 16, 255u << 16);
+    xsprite(0, 16);                                                /* B into it */
+    W(0x4C, 0xD0 | 8 << 16, 0);
+    W(0x40, 511u << 16, 383u << 16);
+    W(0x06, TEX16(0x3A00, 4, KH1_PSMCT32), TEX16_HI);
+    xsprite(32, 48);                                               /* the 3D target samples it */
+    xupload(0x3A00, 4, KH1_PSMCT32, 4, 4, 8, 8, cc, 64);         /* an upload into the off-screen buffer */
+    xsprite(48, 64);                                               /* sampled again */
+    xupload(0x2900, 1, KH1_PSMCT32, 0, 0, 16, 16, pal_t, 256);   /* the CLUT pass's source */
+    W(0x4C, 0x1F0 | 1 << 16, 0);                                   /* the CLUT pass 0x3E00 */
+    W(0x40, 15u << 16, 15u << 16);
+    W(0x06, TEX16(0x2900, 1, KH1_PSMCT32), TEX16_HI);
+    xsprite(0, 16);
+    xupload(0x2A00, 2, KH1_PSMT8, 0, 0, 16, 16, idx, 64);        /* an 8-bit texture */
+    W(0x4C, 0xD0 | 8 << 16, 0);
+    W(0x40, 511u << 16, 383u << 16);
+    W(0x06, TEX16(0x2A00, 2, KH1_PSMT8), TEX16_HI | 0x3E00u << 5 | 1u << 29); /* CBP 0x3E00, CT32, CLD 1: a load */
+    xsprite(64, 80);
+    do_replay = 2;
+    kh1_pipes_frame();
+    do_replay = 0;
+    for (i = 0; i < nxc; i++) {
+        const KH1Cmd *c = &xc[i];
+        printf("cmdbuf_test: transfers: %2u %s\n", i + 1, kh1_cmd_str(kh1_pipes_recorder(), c));
+        if (c->kind == KH1_CMD_TEXTURE) ntex++;
+        if (c->kind == KH1_CMD_UPLOAD) ups++;
+        if (c->kind == KH1_CMD_CLUT) clut = (s32)i;
+        if (c->kind != KH1_CMD_DRAW) continue;
+        ndraw++;
+        if (c->k.rt == KH1_RT_MAIN && d1 < 0) d1 = (s32)i;
+        else if (c->k.rt == KH1_RT_MAIN && d2 < 0) d2 = (s32)i;
+        if (c->k.rt == KH1_RT_MAIN) d8 = (s32)i;
+        if (c->k.rt == KH1_RT_OFFSCREEN) off_pass = (s32)c->pass;
+        if (c->k.rt == KH1_RT_CLUT) clut_pass = (s32)c->pass;
+    }
+    for (i = 0; i < nxp; i++) printf("cmdbuf_test: transfers: pass %u: %s\n", i + 1, kh1_cmd_pass_str(&xp[i]));
+    CHECK("transfers: 7 draws, 5 uploads, one CLUT load", ndraw == 7 && ups == 5 && clut >= 0);
+    CHECK("transfers: A and B are two texture entries, each decoded by a TEXTURE command before its draw",
+          d1 >= 1 && d2 > d1 && xc[d1].tslot >= 0 && xc[d2].tslot >= 0 && xc[d1].tslot != xc[d2].tslot &&
+          xc[d1 - 1].kind == KH1_CMD_TEXTURE && xc[d1 - 1].x.slot == xc[d1].tslot && xc[d2 - 1].kind == KH1_CMD_TEXTURE &&
+          xc[d2 - 1].x.slot == xc[d2].tslot);
+    CHECK("transfers: the off-screen buffer is stored (sampled, then written by an upload)", off_pass >= 0 &&
+          xp[off_pass].store == KH1_STORE_STORE && xp[off_pass].why == (KH1_WHY_SAMPLED | KH1_WHY_REDRAWN));
+    CHECK("transfers: the CLUT load reads the CLUT pass back (stored for it), filling a palette slot",
+          clut >= 0 && xc[clut].x.src && xc[clut].x.fill && xc[clut].x.slot >= 0 && clut_pass >= 0 &&
+          xp[clut_pass].store == KH1_STORE_STORE && xp[clut_pass].why == KH1_WHY_SAMPLED);
+    CHECK("transfers: the indexed draw binds the loaded palette", d8 > clut && xc[d8].pslot == xc[clut].x.slot);
+    CHECK("transfers: the palette read back from the CLUT pass is the palette cache's (gsmem.c's CLUT)", xpal_ok &&
+          !xpal_bad);
+    CHECK("transfers: counted (5 uploads, 1 CLUT load and fill, 1 target read, 1 target write, 1 split scene)",
+          snap_hdr.frame.uploads == 5 && snap_hdr.frame.cluts == 1 && snap_hdr.frame.pal_fills == 1 &&
+          snap_hdr.frame.tgt_reads == 1 && snap_hdr.frame.tgt_writes == 1 && snap_hdr.frame.splits == 1 &&
+          snap_hdr.frame.textures == ntex);
+    for (y = 0; y < XH; y++)
+        for (x = 0; x < 80; x++) {
+            u32 g = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, x, y), c = img[y][x];
+            g = (g & 0xFFFFFF) | kh1_blend_store_alpha(g >> 24) << 24;
+            if (g != c) {
+                if (!bad) printf("cmdbuf_test: transfers: pixel (%u, %u) GS %08x, commands %08x\n", x, y, g, c);
+                bad++;
+            }
+        }
+    CHECK("transfers: the list replayed gives gsmem.c's pixels (A, B, the target before and after the upload, the "
+          "CLUT pass's palette)", !bad);
+}
+
 int main(void) {
     kh1_gs_reset();
     kh1_gsmem_reset();
@@ -435,6 +654,7 @@ int main(void) {
     held();
     bevel();
     passes();
+    transfers();
     printf("cmdbuf_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }

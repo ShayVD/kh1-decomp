@@ -2817,6 +2817,33 @@ and docs only, no float-untested row. selftest PASS (batch_test 14 checks, cmdbu
   modes), and whether a scene per pass entry fits the frame budget.
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bo Session 127: the transfers in the command list, the shaders as Cg source
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (cmdbuf_test 29 checks, shadergen_test 13, batch_test 14).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **Transfers as commands** (item 4b): cmdbuf.h's UPLOAD, COPY, CLUT and TEXTURE commands between the draws;
+  each draw names its texture entry and palette slot; a transfer on a render target splits the scene, stores
+  the target before and loads it after. gsmem.c's `kh1_gsmem_xfer_hook` / `kh1_gsmem_clut_hook`; pipes.c's own
+  texture and palette caches; a `transfers:` report line. tests/host/cmdbuf_test.c replays a frame with two
+  uploads at one address, an upload into `0x3A00` between two reads of it and a CLUT read back from the CLUT
+  pass: gsmem.c's pixels (renderer-spec 4.13 "Session 127").
+- **The shaders as Cg** (item 4c): new include/platform/shadergen.h / host/port/shadergen.c write every
+  fragment and vertex variant as Cg from one table of statement forms and read it back with a CPU
+  interpreter; tests/host/shadergen_test.c runs the text against texfunc / fog / blend / atest / texfmt /
+  sampler. 26 of the static set's 27 fragment shaders generate; the one not is the shadow casters' 1-bit
+  FBMSK (a frame read). Command uniform slots now hold the 16 floats the shaders read. `KH1_HOST_SHADERS=DIR`
+  writes a run's shaders.
+- **For PR #131's Vita build**: shadergen.c is plain C (memset only, no libm); cmdbuf.c now calls it, so the
+  host/port/*.c glob covers both. The .cg files are what the Vita build compiles (psp2cgc, or SceShaccCg at
+  boot); nothing is compiled here yet.
+- **To check on the real disc**: the `transfers:` line (uploads into targets, CLUT loads from the CLUT pass,
+  decodes a frame), the room run's split scenes, `Cg:` (any shader past the static 27, any not generated).
+- **To check on the Vita**: the Cg compiles (WPOS, clip, the forms), f32 or fp16 varyings, the shadow casters'
+  1-bit mask (drop it or programmable blending).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
