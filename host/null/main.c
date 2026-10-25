@@ -11,7 +11,8 @@
  *   KH1_HOST_TRACE=1    print every search and read
  *   KH1_HOST_TRACE=2    also walk every DMA chain a send starts (host/null/plat_null.c):
  *                       one line per send, each tag when the chain leaves host memory;
- *                       3 prints every tag
+ *                       3 prints every tag; 4 (not the tags) each GS state value a send
+ *                       writes (tools/host/gsstate.py makes the state list of a run)
  *   KH1_HOST_OVL=stub   a test switch: a call of the overlay entry D_00F20000 returns 0 instead
  *                       of faulting, so the run goes on past it (each call's two arguments are
  *                       printed).  No overlay code runs: what

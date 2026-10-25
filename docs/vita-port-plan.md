@@ -986,6 +986,33 @@ Valgrind with TRACE=2: 0 errors up to the overlay entry (23 sends). The stub:2 r
 (func_00132790). layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck and argcheck unchanged (3
 value uses, waiting for dktitle.x).
 
+### 5.1q Session 77: the GS state values, the HUD's environment, the run-time census
+
+Static only (the Mac was away until 2026-10-26). Only tools/, host/ and tests/ changed: kh1.elf is byte-identical,
+every out/build object bit-identical (sha1 of all 677 before and after), and the float ELF the same (fcheck.sh:
+float_covered, float_reach, loadhash, phdr all the same), so there is no float-untested.md row.
+
+**`dmawalk.py --state`**: the renderer's state list from the 81 static chains, each register's distinct values
+decoded with the functions that send each (18 registers, 87 values). Checked against renderer-spec 3.2, which it
+corrects in five places (func_00106460's destination-alpha mask is a SPRITE, not `POINT|ABE`; a subtractive
+`(Cd-Cs)*As` pass in func_00106000; Z-only writes in opdma, `AFAIL=ZB_ONLY ZTST=GREATER`; targets in the Z area
+and at 0x3E0000; point sampling in three packets and a static REGION_CLAMP). renderer-spec 4.7.
+
+**The HUD's environment read from the C**: func_002370c8 (src/gfx/gspkt.c) is the 22-qword default context-1
+environment every HUD element sends before it draws (17 files in src/hud); its values, decoded in renderer-spec
+4.7, agree with the session 15 GS dump (DTHE 0, COLCLAMP 1, PABE 0, PRMODECONT 1). The HUD overrides TEST_1 to
+ignore Z and CLAMP_1 to CLAMP; the numbers also switch to additive blending. func_002372e0 and func_00237318 (the
+default and a 3D variant, sent from D_006480D0) have no caller in the main ELF: check dktitle.x.
+
+**`KH1_HOST_TRACE=4`** (host/null/dmawalk.c): after each send's line, every distinct GS state value it writes
+(`kh1-host:   gs REG VALUE`; vertex registers left out; the tags only at 3 now). `kh1_dma_gs_values()` hands
+them to a caller (tests/host/dmawalk_test.c checks PRE, A+D, a vertex write left out, a repeat kept once and
+REGLIST: 17 cases). **`tools/host/gsstate.py RUN.txt [--sends]`** turns a run into the same state list as
+`dmawalk.py --state`, each chain named by the host symbol at its start. Fake disc, stub:2: 86 sends, 21 chains, 32
+registers, 53 values (the HUD's seven environments, renderer B's draw state, the font uploads); opdma's
+D_0061E8B0 writes PRIM 0 from two zero A+D qwords (a state write, not a draw: the GIF parser must allow it).
+Valgrind with TRACE=4: 0 errors up to the overlay entry. The text windows' chains wait for the real disc.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

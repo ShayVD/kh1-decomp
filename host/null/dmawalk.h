@@ -10,6 +10,11 @@ typedef const char *(*KH1DmaWhere)(u32 addr, u32 n);
  * problem or with KH1_HOST_TRACE=3).  Returns 0, or the problem bits below. */
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where);
 
+/* The distinct GS state values (register address, 64-bit value) the last walk's GIF or PATH2
+ * stream wrote, in the order first written (vertex registers left out; at most 512 kept).
+ * Fills up to max of each array and returns the count.  KH1_HOST_TRACE=4 prints them. */
+int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max);
+
 #define KH1_DMA_TAG_OUTSIDE   0x01
 #define KH1_DMA_DATA_OUTSIDE  0x02
 #define KH1_DMA_CALL_DEEP     0x04

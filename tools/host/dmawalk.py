@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Walk the static DMA chains offline, over the PS2 ELF's bytes (phase 5, docs/vita-port-plan.md 5.1p).
 
-  python3 -I tools/host/dmawalk.py [--elf SLPS_251.98] [--float ELF] [--regs] [-v] [--tsv out/host/dmawalk.tsv]
+  python3 -I tools/host/dmawalk.py [--elf SLPS_251.98] [--float ELF] [--regs] [-v] [--state] [--tsv out/host/dmawalk.tsv]
 
 The Python twin of host/null/dmawalk.c (KH1_HOST_TRACE=2, docs/renderer-spec.md
 4.4-4.6) for the sends whose chain is a name: dmacheck.py --list's "static data"
@@ -29,7 +29,9 @@ difference is a row: the shiftable build would send another chain.
 
 --regs: the GS registers each send's PACKED / REGLIST / A+D writes touch (the
 renderer's state census, renderer-spec 3.2 / 4.6); -v adds each value decoded
-(tools/vu/gs_packets.py's fields).  Prints names, counts and decoded fields, never
+(tools/vu/gs_packets.py's fields).  --state (session 77): the renderer's state list instead
+of the sends: each register's distinct values, decoded, and the functions that send each
+(tools/host/gsstate.py makes the same list from a KH1_HOST_TRACE=4 run).  Prints names, counts and decoded fields, never
 raw bytes; the output is derived from the user's ELF at run time: do not commit it.
 """
 from __future__ import annotations
@@ -475,14 +477,30 @@ def same_chain(a_img, a_names, a_tags, b_img, b_names, b_start):
     return diffs
 
 
+def print_state(state):
+    """state: register name -> value -> {sender: None}; one block per register (GS address order),
+    each distinct value decoded with its sender count and senders (most senders first)"""
+    import gs_packets
+    num = {nm: r for r, nm in gs_packets.GSREG.items()}
+    for n in sorted(state, key=lambda n: (num.get(n, 0x100), n)):
+        print("%s: %d values" % (n, len(state[n])))
+        for v, fns in sorted(state[n].items(), key=lambda kv: (-len(kv[1]), kv[0])):
+            dec = gs_packets.decode(num[n], v) if n in num else "%#x" % v
+            print("\t%-60s %2d  %s" % (dec, len(fns), " ".join(sorted(fns))))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--elf", type=Path, default=ROOT / "SLPS_251.98")
     ap.add_argument("--float", type=Path, help="a float ELF with symbols: check each chain moved whole")
     ap.add_argument("--regs", action="store_true", help="the GS registers each send writes")
     ap.add_argument("-v", action="store_true", help="with --regs: each value decoded")
+    ap.add_argument("--state", action="store_true",
+                    help="the renderer's state list: each distinct GS state value and the functions that send it")
     ap.add_argument("--tsv", type=Path)
     a = ap.parse_args()
+    if a.state:
+        a.regs = True
     if not (ROOT / "out/gen/data.tsv").exists():
         sys.exit("dmawalk: out/gen/data.tsv is missing: run make first")
     img, names = Image(a.elf), Names.ps2()
@@ -491,6 +509,7 @@ def main() -> int:
     rows, tsv, total = [], [], collections.Counter()
     walked = {}
     counts = collections.Counter()
+    state = collections.defaultdict(dict)   # register -> value -> {function: None}
     for call, fn, ch, tte, starts, kind in static_sends(img, names):
         if ch is None:
             rows.append((call, fn, "?", "channel not found"))
@@ -545,6 +564,13 @@ def main() -> int:
                         vx = sum(g.writes[n] for n in g.writes if n in VERTEX)
                         if vx:
                             note += " + %d vertex words" % vx
+            if a.state and status == "whole":
+                rx = walked[(start, ch, tte)][2]
+                g = rx if isinstance(rx, Gif) else rx.gif
+                for n, v in g.values:
+                    state[n].setdefault(v, {})[fn] = None
+            if a.state:
+                continue
             print("%s\t%s\tch %d%s\t%s\t%s\t%s" % (call, fn, ch, " tte" if tte else "", sname, status, note))
             tsv.append((call, fn, str(ch), "tte" if tte else "", sname, status, note))
             if a.regs and a.v and status == "whole":
@@ -557,7 +583,9 @@ def main() -> int:
                     except StopIteration:
                         dec = ""
                     print("\t\t%-10s %s" % (n, dec))
-    if a.regs:
+    if a.state:
+        print_state(state)
+    elif a.regs:
         print("# registers written, all sends: " + ", ".join("%s %d" % kv for kv in sorted(total.items())))
     for r in rows:
         print("ROW\t" + "\t".join(r))
