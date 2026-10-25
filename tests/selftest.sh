@@ -108,6 +108,16 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/pad_test.c" "$ROOT/host/null/pad.c"
   "$W/pad_test" "$W" > "$W/pad.log" 2>&1 || { cat "$W/pad.log"; exit 1; }
   tail -n 1 "$W/pad.log"
+  # the camera matrices' C twin (host/port/view.c) against the original's func_00110618
+  # (tools/host/viewcheck.py, session 91), only with the user's own ELF in the repo root
+  ELF="$ROOT/$(cd "$ROOT" && python3 tools/kh1tool.py config target.elf)"
+  if [[ -f "$ELF" ]]; then
+    python3 -I "$ROOT/tools/host/viewcheck.py" --elf "$ELF" --round nearest > "$W/view.log" || { cat "$W/view.log"; exit 1; }
+    grep -q 'worst 0 ulp$' "$W/view.log" || { echo "selftest: view.c is not bit-identical to func_00110618" >&2; cat "$W/view.log"; exit 1; }
+    tail -n 1 "$W/view.log"
+  else
+    echo "selftest: no $(basename "$ELF"), viewcheck skipped"
+  fi
 else
   echo "selftest: no gcc -m32, dmawalk_test skipped"
 fi

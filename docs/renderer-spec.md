@@ -2202,6 +2202,58 @@ of table 0** (`D_002E2810 + 0x518`: `{func_0012a030, 0x40000001}`: one argument,
 the object-script VM (`func_0013cfe8`, stackvm.nostrict.c op 11) encodes it as the u16 **`0xA30B`** (index <<
 8, table << 6, 11), so a scan of the room's object scripts for that halfword lists the callers.
 
+#### Session 92: the HUD's anchors in the GIF path, the full-screen passes (static + host)
+
+**The anchor table as port data** (5.3 step 2, 5.3.1): `include/platform/hudanchor.h` and
+`host/port/hudanchor.c` (every port) list each gameplay HUD part's **drawing environment** and its side:
+`D_00651C00` gauges right; `D_00648790` / `D_00648630` command menu, `D_006562C0` pop-ups, `D_00668120`
+target gauge, `D_006510A0` sign, `D_0065FB30` counter, `D_00669070` minigame timer left; `D_00655F80` notice
+and `D_006694B0` banner centre; `D_006697C0` the one-shot **left (a guess**: the rule says centre; it sits next to
+the command menu). The key is the one `gsstate.py --extents` uses: each part sends its environment
+(`func_002370c8` then `func_00237018(env)`), then its sprites from the staging buffer `D_00351E10` (0x9070
+bytes), so a staging send belongs to the environment sent before it. **Markers over 3D are not in it**: they send
+their own environments (marker.c `D_00650F40`, marker.nofill.c `D_00650DE0`, actmark `D_00662560`, dmgnum
+`D_006627E0`, lblnum `D_00668E20`, partymark `D_00667DF0`; read from the C) before their staging sends, or go
+through the draw list (`func_002388b8`), so they keep no shift and come out of the wide projection in place.
+
+**Applied in the GIF path** (host/null, under `KH1_HOST_WIDE`): `kh1_dma_hud_anchors` (dmawalk.c) sets, per
+send, an x shift of `side x margin` (margin = `256 (k - 1)` canvas pixels, 82.8 = 1325 sixteenths at 960 x
+544) for an environment in the table and for the staging sends after it, and none for any other send;
+`kh1_gs_xshift` (gsregs.c) adds it to every XYZ2 / XYZF2 / XYZ3 / XYZF3 X written (16 bits, as the GS wraps;
+Y untouched). So the draw states' extents (`gsstate.py --extents`) show the moved rectangles. The PS2 build is
+untouched (host only); gsregs_test.c checks left, right, an environment not listed, the switch off and X-only
+(+5 checks). On the fake disc no HUD part draws (the clear, frame copy and flash are not in the table and stay).
+**A real renderer must also widen the HUD environment's `SCISSOR_1`** (`func_002370c8`'s 0..511 x 0..383, sent
+with every part): a part moved left of canvas 0 or right of 511 is otherwise clipped. The port's rule: a
+scissor equal to the full 4:3 canvas means the whole view (the GS cannot hold a negative window x, so this is
+a renderer rule, not a game change).
+
+**The full-screen passes' 512-wide constants** (5.3 step 2's list). Built in C, now through
+`include/platform/view.h` (`PLAT_VIEW_W` = 512, `PLAT_VIEW_GX0` / `PLAT_VIEW_GX1` = `0x7000` / `0x9000` on the
+PS2, where every use folds to the original's literal: **all 677 out/build objects bit-identical**):
+
+| Pass | Function | Constant | Under the wide view |
+| --- | --- | --- | --- |
+| Menu blur, nine copies | sceneeff.c `func_00102a48` | x `0x6fe0 +- o` .. `0x8fe0 +- o` (the -2 px base) | `PLAT_VIEW_GX0 - 0x20 +- o` .. `PLAT_VIEW_GX1 - 0x20 +- o` |
+| Spin, the turned quad | sceneeff.c `func_00102cc8` | half width `4096` (256 px) about the centre | `PLAT_VIEW_W * 8`; the centre (256, `func_00102d20`'s `4096.0f`) stays |
+| Sway, the stretched copy | sceneeff.c `func_001032b0` | XYZ x `0x7000` / `0x9000`; texel `u1 = 0x2000 - u0` | `PLAT_VIEW_GX0 / GX1`; `u1 = PLAT_VIEW_W * 16 - u0` (texels from the view's left edge) |
+| Depth blur, nine copies and the mode 1 mask | sceneeff.nostrict.c `func_00103058` | x `0x6fc0` / `0x6fe0` / `0x7000` .. `0x8fc0` / `0x8fe0` / `0x9000` | `PLAT_VIEW_GX0 / GX1` less 0x40 / 0x20 / 0 |
+| Flash after the frame copy (cases 0 / 1) | brightfade.c `func_00106000` | `D_002A6970[10 / 11]` x `0x7000` / `0x9000` | `PLAT_VIEW_GX0 / GX1`; case 2 (the 640-wide movie buffer) stays 4:3 |
+| A full-width colour band, y 64-320 | opdma.c `func_001aa7a0` (no main-ELF caller: an overlay's) | x `0x7000` / `0x9000` (96-bit literals on the PS2) | `PLAT_VIEW_GX0 / GX1` (the non-PS2 branch) |
+
+**Static packets** (data, read with `tools/vu/gs_packets.py -v`): these hold the 4:3 constants as words, so
+the port's renderer stretches them, X (and a texel u into a copy of the target) from 0 .. 512 to the view's
+`X0 .. X1`, the same list keyed by the send the way the anchors are: the clear `D_002A6500` (16 sprites of 32
+px, x 1792 .. 2304), the frame copy `D_002A6890` (16 strips, u 0.5 .. 512.5, to the 512 x 448 display), the
+fade `D_002A6070` (one sprite 1792 .. 2304), the letterbox `D_002A61E0` (two bars 1792 .. 2304), the sway /
+lens grid copy into the Z area `D_002A5FD0` (16 strips, x 1790.5 ..), the spin's display-to-target copy
+`D_002A4ED0` (u 1 .. 513) and its strip `D_002A4F60` (u 0.5 .. 512.5; XYZ from C), the lens grid's
+`D_002A6110` (`CLAMP` REGION U 0 .. 510), the menu capture `D_002B6760`, the 16 scissor columns
+`D_002A46D0` .. `D_002A48B0` (a PS2 texture-cache trick: one draw in a port) and the full scissor
+`D_002A48D0`. The lens grid's mesh (x -192 .. 192, u 64 .. 448: the centre square) and its view -> screen
+matrix (scrz 512) stay: the sides keep the scene. capture.c's image stores / loads (512 x 384, 256 x 192 for
+the blur) are platform calls (`PlatGsSetDefStoreImage`), sized by the port's target.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
@@ -2214,7 +2266,9 @@ the object-script VM (`func_0013cfe8`, stackvm.nostrict.c op 11) encodes it as t
 - Overlays and the runtime code at `0x00F20000` were not searched (the Gummi ship and the world map are
   there). The main ELF's own other views have no frustum (session 91).
 - `func_00110618` is still a non-match; its C for the port is host/port/view.c (session 91, bit-identical
-  maths).
+  maths; tests/selftest.sh runs viewcheck.py when the ELF is in the repo root, session 92).
+- Session 92: the static full-screen packets' stretch (the list above) is the renderer's; the host's null
+  GIF path does not apply it yet (only the HUD's shift).
 
 ## 6. Open questions
 

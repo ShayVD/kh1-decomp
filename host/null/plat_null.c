@@ -367,3 +367,10 @@ void PlatGsListWait(void) {
         exit(3);
     }
 }
+
+/* KH1_HOST_WIDE (session 92, host/null/main.c): the HUD's anchored parts move by the view's margin
+ * past each 4:3 edge in the GIF path (include/platform/hudanchor.h, host/null/dmawalk.c) */
+void kh1_null_hud_wide(f32 margin) {
+    kh1_dma_hud_anchors(kh1_hud_anchors, kh1_hud_nanchors, (u32)(unsigned long)kh1_hud_staging,
+                        kh1_hud_staging_size, (s32)(margin * 16.0f + 0.5f));
+}

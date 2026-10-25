@@ -27,6 +27,7 @@
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
+#include "platform/view.h"
 #include "data/types/text_001a0000_h13.h"
 #include "data/types/text_001a0000_h13_p.h"
 
@@ -236,8 +237,8 @@ u8 *func_001aa7a0(p, col, a, b) Spr7a *p; u32 col; u8 a; u8 b; {
     p->rgba.w[1] = (col >> 8) & 0xFF;
     p->rgba.w[2] = (col >> 16) & 0xFF;
     p->rgba.w[3] = col >> 24;
-    p->xy0.w[0] = 0x7000; p->xy0.w[1] = 0x7800; p->xy0.w[2] = 0xFFFFFFFE; p->xy0.w[3] = 0;
-    p->xy1.w[0] = 0x9000; p->xy1.w[1] = 0x8800; p->xy1.w[2] = 0xFFFFFFFE; p->xy1.w[3] = 0;
+    p->xy0.w[0] = PLAT_VIEW_GX0; p->xy0.w[1] = 0x7800; /* the whole view's width (platform/view.h) */ p->xy0.w[2] = 0xFFFFFFFE; p->xy0.w[3] = 0;
+    p->xy1.w[0] = PLAT_VIEW_GX1; p->xy1.w[1] = 0x8800; p->xy1.w[2] = 0xFFFFFFFE; p->xy1.w[3] = 0;
 #endif
     func_001aa700((GsTag *)p, 6, 0, 0);
     return (u8 *)p + 96;

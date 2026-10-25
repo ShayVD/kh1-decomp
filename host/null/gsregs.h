@@ -63,6 +63,10 @@ void kh1_gs_clear_draws(void);
  * ZBUF_2 are told to host/null/gsmem.c as drawn (an inference: the program's own GIF tags choose the
  * context; session 81) */
 void kh1_gs_path1(void);
+/* session 92: every XYZ's X written from now on is moved by sixteenths (1/16 pixels, the GS's 12.4;
+ * 0 = none, kh1_gs_reset's), the way the port's GIF path moves an anchored HUD part under a wide
+ * view (include/platform/hudanchor.h, host/null/dmawalk.c kh1_dma_hud_anchors) */
+void kh1_gs_xshift(s32 sixteenths);
 /* the vertices a primitive type (PRIM bits 0-2) needs for its first drawing kick, 0 for 7 */
 u32 kh1_gs_prim_verts(u32 type);
 

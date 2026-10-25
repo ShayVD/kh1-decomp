@@ -2,6 +2,8 @@
 #ifndef KH1_HOST_DMAWALK_H
 #define KH1_HOST_DMAWALK_H
 
+#include "platform/hudanchor.h"
+
 /* where(addr, n): a name for the memory n bytes at addr lie in ("image", "spr", ...), 0 when
  * the host does not own it */
 typedef const char *(*KH1DmaWhere)(u32 addr, u32 n);
@@ -23,6 +25,12 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max);
 #define KH1_DMA_VIF_SHORT     0x20 /* the chain ends inside a VIF code's data */
 #define KH1_DMA_VIF_BAD       0x40 /* a word that is no VIF code */
 #define KH1_DMA_PATH2_SHORT   0x80 /* the DIRECT data ends inside a GIF packet (PATH2) */
+
+/* Session 92 (KH1_HOST_WIDE, docs/renderer-spec.md 5.3.1): moves the HUD's anchored parts.  A send
+ * whose start is an entry's env sets that entry's x shift (side * margin, 1/16 pixels) for its own
+ * vertices and for the sends from the staging buffer [via, via + via_n) after it; any other send
+ * sets none.  n = 0 turns it off (the default).  The table is the port's (host/port/hudanchor.c). */
+void kh1_dma_hud_anchors(const KH1HudAnchor *tab, int n, u32 via, u32 via_n, s32 margin);
 
 /* a GIF packet of qwc qwords sent in normal mode (no chain), read and printed like a walk's */
 void kh1_dma_gif_direct(const u32 *q, u32 qwc);
