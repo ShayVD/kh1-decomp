@@ -751,6 +751,47 @@ The float build floats 2,041 names (2 newly pinned: D_00642C70, D_00650DD0; floa
 stops where session 69's did (the overlay entry; with `KH1_HOST_OVL=stub:2`, func_00132790 on the missing room file,
 reached from func_001136a8 through the sound and file queue); valgrind 0 errors to the fault.
 
+### 5.1k Session 71: relcheck reads the PS2 objects and the unlinked drafts; the uncached buffers
+
+Static only (the Mac was away). kh1.elf is byte-identical; one PS2 object changed (bss_0057.c), every other
+out/build object is bit-identical, and the default float ELF (`make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, no
+overlays) loads the same bytes as before (fcheck: float_covered, float_reach, loadhash, phdr all the same), so
+there is no float-untested.md row.
+
+**relcheck, two more sources** (`--no-ps2`, `--no-drafts` to skip them; a row now names its source):
+- **The PS2 objects** (out/build, 541 game objects; src/sdk and src/asm left out): a MIPS HI16 and the LO16s after
+  it give `name + k`, an R_MIPS_32 word its addend. **0 rows, and nothing the host did not already show.** ee-gcc
+  2.96 -O2 keeps an offset out of the relocation: it builds `lui/addiu %hi/%lo(name)` and puts the offset in the
+  load's displacement (counter.c's loop end, list.c's `a[i - 1]`, wave.c's strip loop all have addend 0 on the PS2;
+  3,244 of 22,124 D_ references carry an addend, all inside their definitions). So the host's -O1 folds are the
+  ones to look at, and the PS2's displacements are what layoutcheck (reach_check on the linked ELF) reads.
+- **The unlinked drafts** (nonmatchings/, the 169 C drafts that shift/drafts.tsv does not link, SDK drafts left
+  out): compiled with census.py's flags into out/host/relcheck-drafts (retried with `-include common.h`, for drafts
+  pasted without it). 140 compile; the 29 that do not use TImode (`unable to emulate 'TI'`, 11) or include
+  scratch headers that are gone. 6 rows, all func_0010d470 drafts' width table end (D_00495280 + 0x42160, as the
+  linked draft), now REVIEWED_DRAFTS by function, linked or not.
+
+**layoutcheck `--all`'s 7 uncached rows** (a name whose uncached alias is built: a DMA buffer with no declared size):
+- D_00272D94 / D_00272DA4 / D_00272DE4 (func_0015f798's GIF packet words in data_0027.s), D_00351C40
+  (func_0015ff78's 0x1d0 packet, data_0035.s) and D_0035C550 (func_00175600, data_0035.s): each sits inside a
+  data piece whose host distances are the PS2's, so the packet and the names after it stay together. No change.
+- **D_00573AC0** (the packet area, 0x380 since session 70) and **D_00573E40** (Pk2: a call tag to D_00573AC0, an
+  end tag, a GIF tag and 18 A+D words; no C definition, a census block): mdlgs.nostrict.c's view D_00573AD0 is
+  7 Pk1 of 0x80 from +0x10, so the 7th runs 0x10 into D_00573E40 (its "pad" is packet 6's ref tag and the next
+  tag). Every packet is 0x80 (Pk59: a DMA tag, a GIF tag, 4 A+D, the image GIF tag, a ref tag). The chains:
+  func_0015fa20 2 packets + end (+0x110); func_00162428 func_0015f8c8's `s->n & 7` packets + end (up to +0x390,
+  over D_00573E40's call tag); func_0015ff78 (case 2) func_0015f488's 2 + func_0015f8c8's + ret, sent from
+  D_00573E40, so on the PS2 it must stay below +0x380 (Src59 has 4 texture slots: up to +0x310). D_00573E40's
+  writers (func_0015f128, func_0015f388, func_0015f488) stay inside its 0xc0. **One definition**:
+  `u8 D_00573AC0[0x450]` (bss_0057.c), D_00573AD0 and D_00573E40 views. The last 0x10 (0x00573F00, after Pk2) is
+  where motion.nostrict.c's `D_00573F10[n2C - 1][3]` and func_001636d0's `D_00573F10[s1 - 1][3]` fold to (bone
+  numbers counted from 1); with D_00573E40 out of the census block before D_00573F10 they became rows (relcheck 2,
+  layoutcheck 1) and are REVIEWED.
+
+layoutcheck 0, relcheck 0 (`--all`: the same 38 end rows), abicheck 0, indcheck unchanged (241), argcheck
+unchanged (3 value uses). The fake-disc host run stops where session 70's did (the overlay entry; with
+`KH1_HOST_OVL=stub:2`, func_00132790 from func_001136a8).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

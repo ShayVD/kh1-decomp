@@ -52,6 +52,8 @@ REVIEWED = {
     ("D_0052AE98", "D_0052CB18"): "partystat.c compares with D_0052AE98 + 32, its own end",
     ("D_0054B800", "D_00547C00"): "effobj.c resets the pointer to D_00547C00 by name",
     ("D_00575528", "D_00575784"): "session 33 idx-span: not reached",
+    ("D_00573F10", "D_00573AC0"): "func_001636d0 (unmatched, its draft runs): D_00573F10[s1 - 1] for a bone number "
+                                  "counted from 1, folded to 0x00573F00 (D_00573AC0's last 0x10 since session 71)",
     ("D_00575A00", "D_00575A10"): "eiwind.nostrict.c reads the empty object as a PppWfacc: its min (+0x14) only when "
                                   "len < range, and range (+0xC) is 0",
 }

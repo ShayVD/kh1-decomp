@@ -4,7 +4,7 @@ Regenerate with `make progress-update` at the end of each session and commit the
 A function counts as matched only when its rebuilt bytes are identical to the original
 and objdiff reports 100% for it.
 
-_Last updated 2026-10-24._
+_Last updated 2026-10-25._
 
 ## Overall
 
