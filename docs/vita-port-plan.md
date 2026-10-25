@@ -2494,6 +2494,33 @@ no float-untested row. selftest PASS (two new negative cases).
 - **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
   of prim.c's four senders.
 
+### 5.1bb Session 114: the 2D palette table, and the HUD's TEX0 pairs as a tool check
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; tools and docs only,
+no float-untested row. selftest PASS (one new negative case with three breaks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The 2D palette table** (item 4b): `clutcheck.py --table` prints every (CBP, CPSM, PSM, CSA) the 2D C
+  reads with its readers; renderer-spec 4.9 "Session 114" is the table with each CLUT's source and size. Ten
+  rows: the window font's `0x3DFC` (ELF), the message font's `0x3FFC` (disc), the menus' `0x3640` / `0x3680` /
+  `0x3700`, the faces' `0x3C00`, the timer's `0x3A00`, the HUD descriptors' (run time), the field text's
+  `0x3FDC` .. `0x3FF3` pairs and gspkt.c's placeholder `0x0002` (a load a port can drop). CPSM is CT32
+  throughout, so **a Vita palette cache is keyed by (CBP, CSA) plus the upload** (the same blocks are uploaded
+  again per draw).
+- **clutcheck's blind spots** (item 4c), now tool checks: (1) **ui.c's pair builder** `func_0024aa48` (the HUD
+  sprites: two TEX0_1 from one descriptor, the first forced to PSMT8 CSA 0 CLD 1): each call is a load of all
+  16 slots and a read of the same CLUT, whatever the descriptor; the builder's shape (`PAIR_SHAPE`, with
+  `func_0024a6b8`'s two words) is checked, 18 calls. (2) **TEX values stored with no register number next to
+  them**: a named word must be a reviewed descriptor (`DESCRIPTORS`: the timer's `D_006692D8` / `D_00669308` /
+  `D_00669338`, each the +0x18 of a descriptor that must reach a pair caller, `func_002474e8` here) and a
+  pointer store must load what it reads (CLD 1 to 3 at a constant CSA: the field text's glyph TEX0,
+  `func_0010c5c8`, which the session 113 heuristic missed: REGLIST, no register number); anything else is a
+  problem. Result: 66 pictures, 179 loads, 228 reads, 18 pair calls, 4 self-loading stores, 3 descriptors, 0
+  problems. The selftest breaks the pair's CLD, renames a timer word and takes the glyph's CLD away.
+- **Still waiting for the Mac**: the HUD descriptors' values and the timer's `0x3A00` upload (host run,
+  `--draws --uploads`), the message font's layers (`KH1_HOST_TEXDUMP`), `KH1_HOST_DMAC=defer` as the default,
+  argcheck's 3 value uses, the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

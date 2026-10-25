@@ -32,7 +32,7 @@ Conventions:
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --targets [--draws]` | the render targets the host's GS memory model saw drawn into (each FRAME / ZBUF, its extent, bits and primitives) and, with `--draws`, which draw states read a target as a texture (§5.2). New in session 81 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --nodes [--frame N]` | the draw / immediate list nodes as the walks ran them (`PlatGsListNode`): one frame's command order (nodes and the main-thread sends between them) with each node's callback, payload, sends, kicks and uploads, then every distinct node checked against `drawkeys.py`'s key map (§4.12). New in session 83 |
 | `python3 -I tools/host/sendorder.py [--all]` | the main loop's tasks that send to the GS, with their key and first sync or send, against the draw list's start (`0x9C40`) and the immediate list's wait (`0x27CB8`): reads only src/ (§4.12). New in session 81 |
-| `python3 -I tools/host/clutcheck.py [-v]` | the CLUT each window, text, menu and HUD sprite reads, from the C's per-draw packets: loaded in its own picture (header and packet) or listed in `CLUT_EXPECTED` with who loads it; no ELF needed (§4.9 "Session 113"). New in session 113 |
+| `python3 -I tools/host/clutcheck.py [-v]` | the CLUT each window, text, menu and HUD sprite reads, from the C's per-draw packets: loaded in its own picture (header and packet) or listed in `CLUT_EXPECTED` with who loads it; no ELF needed (§4.9 "Session 113"). New in session 113; session 114: the HUD's TEX0 pairs, stored TEX0s (`DESCRIPTORS`, self-loading CLD 1) and `--table` (§4.9 "Session 114") |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -1125,6 +1125,36 @@ temporary packets.
   before them too. **For a port**: no window, text, menu or HUD sprite depends on what another draw left in
   the CLUT buffer, so a palette can be looked up by (CBP, CPSM, CSA) alone (a 4-bit sprite's palette is the
   16 entries at `CSA x 16` of the 256-entry CLUT at CBP).
+
+- **Session 114 (vita-port-plan 5.1bb): the 2D palette table** (`python3 -I tools/host/clutcheck.py --table`,
+  from the C; counts and addresses only). Every CLUT the window, text, menu and HUD sprites read, as a port's
+  palette cache would key it. CPSM is CT32 (0) in every row, so the key is (CBP, CSA): an 8-bit read takes all
+  256 entries at CBP, a 4-bit read the 16 at `CSA x 16` of them. "Readers" counts sending functions (one
+  picture each) whose packets read the row.
+
+  | CBP | PSM read | CSA | The CLUT's source, size | Loaded by | Readers |
+  |---|---|---|---|---|---|
+  | `0x3DFC` | PSMT4 | 0 (20), 3 (1), 4 (3), variable (5: the window colour) | the window font's, in the ELF (`D_003F1660`, uploaded with the font by `D_003F2670` / `D_003F2720`); 256 entries (16 palettes) | the parts' TEX2 PSMT8 CLD 2 (all 16) or the §4.8 header's TEX0 CLD 1 (palette 0) | 20 (src/text, src/menu, framectl.c `func_0010f658`) |
+  | `0x3FFC` | PSMT8 (CSA 0), PSMT4HL, PSMT4HH (§4.9: chosen per glyph, variable in the C) | 0, 1 | the message font's, from the disc (`D_00490940`, `func_001ef950`); 256 entries | the head's TEX2 PSMT8 CLD 2 before each glyph | 13 (text, wintext, the HUD's text) |
+  | `0x3640` | PSMT8 | 0 | menubg's image (104 x 56), from its menu file; 256 entries | its own TEX0 CLD 1 | 1 (`func_0020b3d8`) |
+  | `0x3680` | PSMT8 | 0 | config's image (138 x 88) and journal's 64 x 64, from their files; 256 entries | own TEX0 CLD 1 | 2 (`func_00219598`, `func_0021e120`) |
+  | `0x3700` | PSMT8 | 0 | journal's 256 x 256 image; 256 entries | own TEX0 CLD 1 | 3 (journalfx.nostrict.c) |
+  | `0x3C00` | PSMT8 | 0 | the face pictures: the actor's image (`GImg` + 16), uploaded per draw as 16 x 16 CT32 with DBW 0 (§4.10); 256 entries | own TEX0 CLD 1 | 3 (`func_00242c08` / `func_00242ef8`, and `func_002416a8` through them) |
+  | `0x3A00` | PSMT4 | 0, 2, 6 | the minigame timer's three fonts (timer.nostrict.c `func_00248400` stores the TEX0s into its descriptors `D_006692C0` / `D_006692F0` / `D_00669320` + 0x18, CLD 0); who uploads the CLUT at `0x3A00` is not traced from the C | the HUD pair's forced first word (below) | 1 |
+  | a HUD descriptor's | the descriptor's | the descriptor's | the HUD sprite files' TIM2 headers, at run time (ui.c `func_0024aa48`'s third argument) | **the pair**: two TEX0_1 from one descriptor, the first forced to PSMT8 CSA 0 CLD 1 (all 256 entries from the descriptor's own CBP), copied in front of every quad by `func_002388b8` | 18 pair calls in 25 pictures |
+  | `0x3FDC` .. `0x3FF3` (by PSM, `+1` for modes 1 / 3) | PSMT4 | 0 | the field text's CLUT pairs, built by `func_0010e610` (CBP n a texel's low 2 bits, n + 1 its high 2 bits, §4.10); 16 entries each | each glyph's own TEX0 CLD 1 (fldtext.c `func_0010c5c8`, a REGLIST packet: self-loading whatever the CBP) | 1 builder |
+  | `0x0002` | PSMT8 | 0 | none: gspkt.c `func_002370c8`'s reset header carries a placeholder `TEX0_1` (TBP0 and CBP 2, CLD 1), so each send of it loads a CLUT from block 2 (the display buffer) | the header | 17 |
+
+  **For the port**: the table is closed (every read in the 2D C is loaded in its own picture, clutcheck's
+  check), so a Vita renderer can decode a palette when its load is seen and look it up by (CBP, CSA), with no
+  state carried between pictures. The `0x0002` row is a placeholder each picture's own TEX0 replaces before its
+  first sprite; a port can drop the load. `0x3C00`, `0x3640` .. `0x3700` and the field text's CLUTs are
+  uploaded again per draw over shared blocks (§4.10's last paragraph), so the cache entry is keyed by the
+  upload too, not only the address. The static packets' CLUTs (the selector's and the field text icons'
+  PSMT8H `0x3FF4`, the icons' PSMT4 `0x3C00`, renderer B's `0x3700`) are fscheck.py's, from the ELF. **The
+  message font's four layers** (§4.9: PSMT4HL / HH, 2 bits a layer, CSA 0 / 1) stay an inference until the
+  host run decodes the disc's `0x3FFC` CLUT (`KH1_HOST_TEXDUMP`); the HUD descriptors' (CBP, PSM, CSA) and the
+  timer's `0x3A00` upload come from the same run (`gsstate.py --draws --uploads`).
 
 ### 4.10 The builders giftags.py misses: lists, the field text, the selector, the HUD gauges (session 80, static)
 

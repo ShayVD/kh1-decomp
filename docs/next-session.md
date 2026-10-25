@@ -9,13 +9,24 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 113 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 114 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 113, 2026-10-25)
+## Where we stopped (end of session 114, 2026-10-25)
+
+- **Session 114** (static, vita-port-plan 5.1bb): **the 2D palette table, and clutcheck's blind spots closed.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again).
+  `clutcheck.py --table` prints every (CBP, CPSM, PSM, CSA) the 2D C reads; renderer-spec 4.9 "Session 114"
+  is the table (ten rows, CPSM CT32 throughout: a port keys palettes by (CBP, CSA) plus the upload). clutcheck
+  now models ui.c's HUD TEX0 pair `func_0024aa48` (its shape checked; 18 calls, each self-loading whatever
+  the descriptor), checks TEX values stored with no register number (`DESCRIPTORS`: the timer's three words,
+  each reaching `func_002474e8`; pointer stores must be CLD 1 to 3: the field text's glyph TEX0
+  `func_0010c5c8`, missed before) and reports anything else. 0 problems; a new selftest case breaks all three.
+  Left for the host run: the HUD descriptors' values, who uploads the timer's `0x3A00` CLUT, the message
+  font's layers. kh1.elf byte-identical, no float-untested row; selftest PASS.
 
 - **Session 113** (static, vita-port-plan 5.1ba): **the windows' and text's CLUTs checked from the C.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -486,7 +497,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 114 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 115 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -553,19 +564,18 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
    builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 113): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
+   101's card, still unanswered at session 114): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
    winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **the 2D palette table for the port** (the next step after 5.1ba): from
-   `clutcheck.py -v`, list every (CBP, CPSM, PSM, CSA) the window, text, menu and HUD sprites read, with the
-   CLUT's source (the ELF's `D_003F1660` for the window font, the disc's `D_00490940` for the message font, a
-   menu or HUD file) and its size, as a renderer-spec table a Vita renderer's palette cache is keyed by (counts
-   and addresses only, never colours); note which palettes a 4-bit read takes (CSA x 16) and the message
-   font's four-layer inference (4.9) that the table would settle once the disc's CLUT is decoded on the host
-   run; (c) **clutcheck's blind spots**: teach it the HUD's `func_0024aa48` pair (a TEX0 copied into a UiPkt and
-   its first forced to PSMT8 CLD 1) and TEX values stored into named packet words with the register set
-   elsewhere (the timer's `D_006692D8` style), or list them as reviewed, so the hand check of 5.1ba is a tool
-   check. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's
-   senders still wait for the Mac.
+   vita-port-plan 5.1 entry); (b) **the 3D side's palette table** (the next step after 5.1bb): the room's
+   CLUTs (`0x3E00 + i`, roombg.c `func_00101048`), renderer B's `0x3700` (`func_0015f488` / `func_0015f8c8`,
+   per draw) and the texture animations that cross-fade CLUTs in place (renderer-spec 4.13): list which
+   palettes change contents during a frame or between frames, as a port's palette-cache invalidation list
+   (counts and addresses only); (c) **the timer's `0x3A00` CLUT**: from the C, find the send that uploads a
+   CLUT to block `0x3A00` before the minigame timer draws (renderer-spec 4.9 "Session 114"'s open row; the
+   face pictures upload a PSMT8 image there too, so note whether they can overlap in one frame). (d)
+   `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's senders still
+   wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws`, record the HUD descriptors'
+   TEX0 (CBP, PSM, CSA) and the `0x3A00` upload for renderer-spec 4.9 "Session 114"'s table.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
 6. End with `make progress-update SESSION=114`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
