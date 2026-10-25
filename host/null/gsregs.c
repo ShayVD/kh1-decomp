@@ -27,6 +27,7 @@ static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
 static u32 vxy[3], vuv[3], vrgba[3]; /* the queued vertices' XYZ X / Y, UV and RGBA (session 83: sprites) */
+static s32 gs_xshift; /* added to each XYZ's X (session 92: the HUD's anchors, kh1_gs_xshift) */
 
 /* the state before any write: 0, except PRMODECONT 1 (PRIM's attributes rule), what every
  * environment the game sends writes (renderer-spec 5.1) */
@@ -34,9 +35,15 @@ void kh1_gs_reset(void) {
     memset(&gs, 0, sizeof gs);
     gs.prmodecont.lo = 1;
     gs_q = 0x3F800000;
+    gs_xshift = 0;
     kh1_gs_clear_draws();
     kh1_gsmem_reset();
 }
+
+void kh1_gs_xshift(s32 sixteenths) { gs_xshift = sixteenths; }
+
+/* XYZ's X (bits 0-15, 12.4) moved by the shift in force, Y left */
+static u32 gs_xs(u32 xy) { return (xy & 0xFFFF0000u) | ((xy + (u32)gs_xshift) & 0xFFFF); }
 
 void kh1_gs_clear_draws(void) {
     ndraws = 0;
@@ -157,8 +164,8 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x02: gs.st.lo = lo; gs.st.hi = hi; return;
     case 0x03: gs.uv.lo = lo; gs.uv.hi = hi; return;
     case 0x0A: gs.fog.lo = lo; gs.fog.hi = hi; return;
-    case 0x04: case 0x05: gs_kick(1, lo); return;  /* XYZF2 / XYZ2 */
-    case 0x0C: case 0x0D: gs_kick(0, lo); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
+    case 0x04: case 0x05: gs_kick(1, gs_xs(lo)); return;  /* XYZF2 / XYZ2 */
+    case 0x0C: case 0x0D: gs_kick(0, gs_xs(lo)); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
     case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); kh1_gsmem_tex0(lo, hi); return;
     case 0x08: case 0x09: set(&gs.ctx[reg - 8].clamp, lo, hi); return;
     case 0x14: case 0x15: set(&c->tex1, lo, hi); return;

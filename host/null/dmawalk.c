@@ -332,6 +332,40 @@ static void gs_dump_textures(void) {
     }
 }
 
+/* the HUD's anchors under a wide view (kh1_dma_hud_anchors, session 92) */
+static const KH1HudAnchor *hud_tab;
+static int hud_n;
+static u32 hud_via, hud_via_n;
+static s32 hud_margin, hud_env_shift;
+
+void kh1_dma_hud_anchors(const KH1HudAnchor *tab, int n, u32 via, u32 via_n, s32 margin) {
+    hud_tab = tab;
+    hud_n = n;
+    hud_via = via;
+    hud_via_n = via_n;
+    hud_margin = margin;
+    hud_env_shift = 0;
+    kh1_gs_xshift(0);
+}
+
+/* a send starts at tadr: a staging send keeps the shift of the environment sent before it (as
+ * tools/host/gsstate.py keys its extent), any other send is that environment */
+static void hud_send(u32 tadr) {
+    int i;
+    if (!hud_n) return;
+    if (tadr - hud_via < hud_via_n) {
+        kh1_gs_xshift(hud_env_shift);
+        return;
+    }
+    hud_env_shift = 0;
+    for (i = 0; i < hud_n; i++)
+        if ((u32)(unsigned long)hud_tab[i].env == tadr) {
+            hud_env_shift = hud_tab[i].side * hud_margin;
+            break;
+        }
+    kh1_gs_xshift(hud_env_shift);
+}
+
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
@@ -343,6 +377,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     char extra[160], regs[400];
     extra[0] = 0;
     gs_nval = 0;
+    hud_send(tadr);
     kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
     kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
     while (!done && !bad && ntags < 4096) {
@@ -464,6 +499,7 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
     char regs[400];
     int i;
     gs_nval = 0;
+    hud_send((u32)(unsigned long)q);
     kh1_gs_clear_draws();
     kh1_gsmem_clear_log();
     gif_block(&g, q, qwc);

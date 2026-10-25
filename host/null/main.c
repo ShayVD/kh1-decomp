@@ -30,7 +30,9 @@
  *   KH1_HOST_WIDE=W:H   (session 91) a hor+ view for a W:H screen (KH1_HOST_WIDE=1: 960:544): the
  *                       culls' frustum and the markers' / objwin's bounds widen (host/port/view.c,
  *                       docs/renderer-spec.md 5.4); the null platform draws nothing, so a run shows
- *                       it only in what the culls let through.
+ *                       it only in what the culls let through.  Session 92: the HUD's anchored parts
+ *                       (host/port/hudanchor.c) move by the margin in the GIF path, which the chain
+ *                       walk's extents show (KH1_HOST_TRACE=5, gsstate.py --extents).
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -49,6 +51,7 @@ int kh1_cd_image_open(const char *path);
 void kh1_view_init(float aspect); /* host/port/view.c */
 extern float kh1_view_wide;
 extern int kh1_view_x0, kh1_view_x1;
+void kh1_null_hud_wide(float margin); /* host/null/plat_null.c */
 
 int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
@@ -208,6 +211,8 @@ int main(int argc, char **argv) {
             float aspect = c ? (float)atof(wide) / (float)atof(c + 1) : 960.0f / 544.0f;
             kh1_view_init(aspect);
             printf("kh1-host: wide view x %.4f (canvas x %d .. %d)\n", kh1_view_wide, kh1_view_x0, kh1_view_x1);
+            /* session 92: the HUD's anchored parts move to the wide edges (renderer-spec 5.3.1) */
+            kh1_null_hud_wide(256.0f * (kh1_view_wide - 1.0f));
         }
     }
     {

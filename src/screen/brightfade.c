@@ -5,6 +5,7 @@
  * running, func_00105f28 / func_00106000 draw the fade's sprite. Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
+#include "platform/view.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
 #include "data/pieces/D_002BC0A8.h"
@@ -154,8 +155,8 @@ void func_00106000(s32 a) {
         }
         if (D_002A6B80 != 0) {
             D_002A6970[9] = 0x180FEFEFE;
-            D_002A6970[10] = 0x174007000;
-            D_002A6970[11] = 0x190009000;
+            D_002A6970[10] = 0x174000000 | PLAT_VIEW_GX0; /* the whole view (renderer-spec 5.4 "Session 92") */
+            D_002A6970[11] = 0x190000000 | PLAT_VIEW_GX1;
             func_00106b18(D_002A69D0);
         }
         break;

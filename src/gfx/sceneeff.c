@@ -8,6 +8,7 @@
 #include "platform/dma.h"
 #include "platform/thread.h"
 #include "platform/gs.h"
+#include "platform/view.h"
 #include "data/pieces/D_002B6778.h"
 #include "data/pieces/D_002A624C.h"
 #include "data/bss_0049.h"
@@ -99,22 +100,22 @@ found:
     D_002A49A0[3] = rgba(c, 0x80);
     D_002A49A0[9] = D_002A49A0[15] = D_002A49A0[21] = D_002A49A0[27] = rgba(c, 0x40);
     D_002A49A0[33] = D_002A49A0[39] = D_002A49A0[45] = D_002A49A0[51] = rgba(c, 0x20);
-    D_002A49A0[11] = xyz(0x6fe0 - o, 0x73e0 - o);
-    D_002A49A0[13] = xyz(0x8fe0 - o, 0x8be0 - o);
-    D_002A49A0[17] = xyz(0x6fe0 + o, 0x73e0 + o);
-    D_002A49A0[19] = xyz(0x8fe0 + o, 0x8be0 + o);
-    D_002A49A0[23] = xyz(0x6fe0 - o, 0x73e0 + o);
-    D_002A49A0[25] = xyz(0x8fe0 - o, 0x8be0 + o);
-    D_002A49A0[29] = xyz(0x6fe0 + o, 0x73e0 - o);
-    D_002A49A0[31] = xyz(0x8fe0 + o, 0x8be0 - o);
-    D_002A49A0[35] = xyz(0x6fe0, 0x73e0 - o);
-    D_002A49A0[37] = xyz(0x8fe0, 0x8be0 - o);
-    D_002A49A0[41] = xyz(0x6fe0 - o, 0x73e0);
-    D_002A49A0[43] = xyz(0x8fe0 - o, 0x8be0);
-    D_002A49A0[47] = xyz(0x6fe0, 0x73e0 + o);
-    D_002A49A0[49] = xyz(0x8fe0, 0x8be0 + o);
-    D_002A49A0[53] = xyz(0x6fe0 + o, 0x73e0);
-    D_002A49A0[55] = xyz(0x8fe0 + o, 0x8be0);
+    D_002A49A0[11] = xyz(PLAT_VIEW_GX0 - 0x20 - o, 0x73e0 - o);
+    D_002A49A0[13] = xyz(PLAT_VIEW_GX1 - 0x20 - o, 0x8be0 - o);
+    D_002A49A0[17] = xyz(PLAT_VIEW_GX0 - 0x20 + o, 0x73e0 + o);
+    D_002A49A0[19] = xyz(PLAT_VIEW_GX1 - 0x20 + o, 0x8be0 + o);
+    D_002A49A0[23] = xyz(PLAT_VIEW_GX0 - 0x20 - o, 0x73e0 + o);
+    D_002A49A0[25] = xyz(PLAT_VIEW_GX1 - 0x20 - o, 0x8be0 + o);
+    D_002A49A0[29] = xyz(PLAT_VIEW_GX0 - 0x20 + o, 0x73e0 - o);
+    D_002A49A0[31] = xyz(PLAT_VIEW_GX1 - 0x20 + o, 0x8be0 - o);
+    D_002A49A0[35] = xyz(PLAT_VIEW_GX0 - 0x20, 0x73e0 - o);
+    D_002A49A0[37] = xyz(PLAT_VIEW_GX1 - 0x20, 0x8be0 - o);
+    D_002A49A0[41] = xyz(PLAT_VIEW_GX0 - 0x20 - o, 0x73e0);
+    D_002A49A0[43] = xyz(PLAT_VIEW_GX1 - 0x20 - o, 0x8be0);
+    D_002A49A0[47] = xyz(PLAT_VIEW_GX0 - 0x20, 0x73e0 + o);
+    D_002A49A0[49] = xyz(PLAT_VIEW_GX1 - 0x20, 0x8be0 + o);
+    D_002A49A0[53] = xyz(PLAT_VIEW_GX0 - 0x20 + o, 0x73e0);
+    D_002A49A0[55] = xyz(PLAT_VIEW_GX1 - 0x20 + o, 0x8be0);
     func_00106b18(D_002A4B60);
 }
 #undef rgba
@@ -128,7 +129,8 @@ extern s32 D_002BC0A0;
 void func_00102cc8(s32 *x0, s32 *x1, s32 *y0, s32 *y1) {
     s32 ox = D_002BC0A0, cx = D_002BC090, oy = D_002BC0A4, cy = D_002BC094;
     s32 x = (cx + ox) * 16, y = (cy + oy) * 16;
-    *x0 = x - 4096; *x1 = x + 4096; *y0 = y - 3072; *y1 = y + 3072;
+    /* the view's half width (4096 on the PS2), the 4:3 half height */
+    *x0 = x - PLAT_VIEW_W * 8; *x1 = x + PLAT_VIEW_W * 8; *y0 = y - 3072; *y1 = y + 3072;
 }
 
 /* func_00102d20 (from auto/text_00100000_2.c). */
@@ -258,7 +260,7 @@ s32 func_001032b0(void) {
     if (*a < -3.1415928f) *a += 6.2831855f;
     u0 = (s32)(cosf(*a) * 48.0f + 64.0f);
     v0 = (s32)(sinf(*a) * 48.0f + 64.0f);
-    u1 = 0x2000 - u0;
+    u1 = PLAT_VIEW_W * 16 - u0; /* the target copy's width (renderer-spec 5.4 "Session 92") */
     v1 = 0x1800 - v0;
     p = func_00106ca8(6);
     p[0] = 0xA400000000008001;
@@ -269,10 +271,10 @@ s32 func_001032b0(void) {
     p[6] = u1 | ((u64)v0 << 16);
     p[8] = u1 | ((u64)v1 << 16);
     p[10] = u0 | ((u64)v1 << 16);
-    p[5] = 0xFFFFFFFE74007000;
-    p[7] = 0xFFFFFFFE74009000;
-    p[9] = 0xFFFFFFFE8C009000;
-    p[11] = 0xFFFFFFFE8C007000;
+    p[5] = 0xFFFFFFFE74000000 | (u16)PLAT_VIEW_GX0;
+    p[7] = 0xFFFFFFFE74000000 | (u16)PLAT_VIEW_GX1;
+    p[9] = 0xFFFFFFFE8C000000 | (u16)PLAT_VIEW_GX1;
+    p[11] = 0xFFFFFFFE8C000000 | (u16)PLAT_VIEW_GX0;
     func_00106cd0(D_002A46D0, 2); func_00106cd0(p, 6);
     func_00106cd0(D_002A46F0, 2); func_00106cd0(p, 6);
     func_00106cd0(D_002A4710, 2); func_00106cd0(p, 6);

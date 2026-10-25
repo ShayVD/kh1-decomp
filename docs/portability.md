@@ -42,6 +42,11 @@ rewrite matched code.
    pixels (`PLAT_VIEW_X0` / `PLAT_VIEW_X1`, the literals 0 / 512 on the PS2), for code
    that hides a 2D part off the 4:3 screen (objwin.nostrict.c); a port with a wide screen
    sets it with kh1_view_init (host/port/view.c, docs/renderer-spec.md 5.4).
+   Session 92 added `PLAT_VIEW_W` / `PLAT_VIEW_GX0` / `PLAT_VIEW_GX1` (the view's width, its
+   edges in GS units: 512, 0x7000, 0x9000 on the PS2) for the full-screen passes built in C
+   (sceneeff.c, sceneeff.nostrict.c, brightfade.c, opdma.c), and include/platform/hudanchor.h:
+   the HUD's anchor table (port data, host/port/hudanchor.c), keyed by each part's drawing
+   environment, which a port's GIF path applies under a wide view.
    **Session 56 wrote the wrappers** (each byte-identical, one header per
    commit): `dma.h` (PlatDmaGetChan / PlatDmaSend, 38 files; libdma named in
    functions.tsv), `gs.h` (PlatGsSyncPath, image load / store packets and

@@ -1729,6 +1729,29 @@ walkcheck and countcheck 0; indcheck as before (241 rows: 117 OK, 42 READ, 70 OV
   `func_0012a030`). objcmd2.c's comment on the `0x40000000` flag corrected (the result is pushed back; not a
   float flag).
 
+### 5.1af Session 92: the HUD's anchors in the GIF path, the full-screen passes in C
+
+Static and host only (Sunday 2026-10-25; the Mac is back from 2026-10-26). kh1.elf byte-identical, **all 677
+out/build objects bit-identical** (the new `include/platform/view.h` macros fold to the original's literals on
+the PS2), the shift M0 check as before, so the float ELF is the same (no float-untested row). selftest PASS
+(with viewcheck); abicheck, relcheck, walkcheck, countcheck and layoutcheck 0; indcheck as before (241 rows:
+117 OK, 42 READ, 70 OVERLAY, 12 CLANG-READ).
+
+- **The HUD anchor table as port data** (item 4a, renderer-spec 5.4 "Session 92"): `include/platform/hudanchor.h`,
+  `host/port/hudanchor.c` (each HUD part's drawing environment and side; markers are not in it). Under
+  `KH1_HOST_WIDE` the null platform's chain walk shifts every XYZ X of a listed environment's send and of the
+  staging sends (`D_00351E10`) after it by the view's margin (`kh1_dma_hud_anchors`, `kh1_gs_xshift`), so
+  `gsstate.py --extents` shows the moved rectangles. gsregs_test.c +5 checks. A renderer must also read the
+  HUD environment's full-canvas `SCISSOR_1` as the whole view.
+- **The full-screen passes** (item 4b): the menu blur, spin, sway, depth blur, the post-copy flash and
+  opdma's full-width band build their x from `PLAT_VIEW_W` / `PLAT_VIEW_GX0` / `PLAT_VIEW_GX1` (512 / `0x7000` /
+  `0x9000` on the PS2); the static packets (clear, frame copy, fade, letterbox, the copies into the Z area,
+  the spin's copy, the scissor columns) are listed for the renderer's stretch.
+- **viewcheck in the self-test** (item 4c): tests/selftest.sh runs `viewcheck.py --round nearest` when the
+  ELF is in the repo root and requires 0 ulp; it prints "viewcheck skipped" without it (CI's public runs).
+- **Waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default (the room run's `--nodes` with it
+  first) and argcheck's 3 value uses (dktitle.x's calls).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

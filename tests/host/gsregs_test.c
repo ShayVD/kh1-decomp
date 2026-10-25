@@ -188,6 +188,48 @@ int main(void) {
     CHECK("extent", n == 1 && d[0].draws == 2 && d[0].x0 == -16 && d[0].y0 == 0 && d[0].x1 == 116 << 4 &&
           d[0].y1 == 368 << 4);
 
+    /* session 92: the HUD's anchors (kh1_dma_hud_anchors).  An environment send (A+D XYOFFSET_1) then
+     * a sprite (16, 260)-(116, 280) from the staging buffer: a left part moves by -margin, a right one
+     * by +margin, an environment not in the table and the switch off leave it */
+    {
+        static KH1HudAnchor tab[2];
+        static const s32 envq[3] = { 0, 20, 10 }, side[3] = { -1, 1, 0 };
+        int k;
+        tab[0].env = mem[0]; tab[0].side = -1; tab[0].name = "left";
+        tab[1].env = mem[20]; tab[1].side = 1; tab[1].name = "right";
+        kh1_gs_reset();
+        clear();
+        for (k = 0; k < 3; k++) {
+            q(envq[k], 0x70000002, 0, 0, 0);
+            q(envq[k] + 1, 1 | 1 << 15, 1 << 28, 0xE, 0);
+            q(envq[k] + 2, 0x7000, 0x7400, 0x18, 0);
+        }
+        q(40, 0x70000003, 0, 0, 0);
+        q(41, 2 | 1 << 15, 1 << 14 | 6 << 15 | 1 << 28, 0x5, 0);
+        q(42, 0x7000 + (16 << 4), 0x7400 + (260 << 4), 0, 0);
+        q(43, 0x7000 + (116 << 4), 0x7400 + (280 << 4), 0, 0);
+        kh1_dma_hud_anchors(tab, 2, A(40), 24 * 16, 1325); /* 82.8 pixels: 960 x 544 */
+        for (k = 0; k < 4; k++) {
+            s32 sh = k < 3 ? side[k] * 1325 : 0;
+            if (k == 3) kh1_dma_hud_anchors(tab, 0, 0, 0, 0);
+            CHECK("anchor: environment walk", kh1_dma_walk(2, 0x104, A(envq[k < 3 ? k : 0]), where) == 0);
+            CHECK("anchor: staging walk", kh1_dma_walk(2, 0x104, A(40), where) == 0);
+            n = kh1_gs_draws(d, 8);
+            CHECK(k == 0 ? "anchor: left" : k == 1 ? "anchor: right" : k == 2 ? "anchor: not listed" : "anchor: off",
+                  n == 1 && d[0].draws == 1 && d[0].x0 == (16 << 4) + sh && d[0].x1 == (116 << 4) + sh &&
+                  d[0].y0 == 260 << 4 && d[0].y1 == 280 << 4);
+        }
+        /* X's 16 bits only: a shift left of XYOFFSET is a negative extent, Y stays */
+        kh1_gs_reset();
+        kh1_gs_write(0x18, 0x7000, 0x7400);
+        kh1_gs_xshift(-0x20);
+        kh1_gs_write(0x00, 6, 0);
+        vert(0x7010, 0x7430); vert(0x7040, 0x7450);
+        n = kh1_gs_draws(d, 8);
+        CHECK("anchor: X only", n == 1 && d[0].x0 == -0x10 && d[0].x1 == 0x20 && d[0].y0 == 0x30 && d[0].y1 == 0x50);
+        kh1_gs_reset();
+    }
+
     /* dropped registers are counted, not kept; a non-register is unknown */
     kh1_gs_write(0x45, 0, 0);
     kh1_gs_write(0x46, 1, 0);
