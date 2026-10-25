@@ -144,6 +144,18 @@ if python3 -I "$ROOT/tools/host/clutcheck.py" --src "$W/clutneg2/src" > "$W/clut
    ! grep -q 'func_0010c5c8 .*stored into p with no register' "$W/clut_neg2.log"; then
   echo "selftest: clutcheck missed a broken HUD TEX0 pair, an unlisted stored TEX0 or a glyph TEX0 that no longer loads" >&2; cat "$W/clut_neg2.log" >&2; exit 1
 fi
+# session 115: every CLUT the C uploads into GS memory, and when (tools/host/clutupload.py); a CLUT upload in a
+# function REVIEWED does not list, and a listed one whose upload is gone, fail
+python3 -I "$ROOT/tools/host/clutupload.py" > "$W/clutup.log" || { cat "$W/clutup.log"; exit 1; }
+tail -n 1 "$W/clutup.log"
+mkdir -p "$W/clutupneg/src" && cp -r "$ROOT/src/hud" "$W/clutupneg/src/"
+sed -i 's/^void func_002393d8(void) {/void func_002393d0(void) {/' "$W/clutupneg/src/hud/hud.c"
+sed -i 's/PlatGsSetDefLoadImage(&li, 0x3FD8, 1, 0, 0, 0, 16, 16);/PlatGsSetDefLoadImage(\&li, 0x3FD8, 1, 0, 0, 0, 64, 16);/' "$W/clutupneg/src/hud/hud.c"
+if python3 -I "$ROOT/tools/host/clutupload.py" --src "$W/clutupneg/src" > "$W/clutup_neg.log" ||
+   ! grep -q 'func_002393d0 (hud/hud.c): uploads a CLUT but is not in REVIEWED' "$W/clutup_neg.log" ||
+   ! grep -q 'func_00239368: in REVIEWED but no CLUT upload found' "$W/clutup_neg.log"; then
+  echo "selftest: clutupload missed an unlisted CLUT upload or a listed one taken away" >&2; cat "$W/clutup_neg.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
