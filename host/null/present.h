@@ -3,6 +3,7 @@
 #define KH1_HOST_PRESENT_H
 
 #include "platform/palcache.h"
+#include "platform/texcache.h"
 
 /* the GS memory model's buffer (bp, bw, psm: CT32 / CT24 / CT16 / CT16S) of `lines` rows (448 for the
  * display, 384 for the target) as w x h RGB bytes through the canvas map, black outside it; 0, or -1
@@ -22,5 +23,12 @@ void kh1_present_wide(s32 side16);
 void kh1_present_pal(int on);
 const KH1PalCache *kh1_present_pal_cache(void);
 void kh1_present_pal_report(void);
+
+/* session 118: the port's texture cache (host/port/texcache.c) for the model's textured sprites, the
+ * same way (KH1_HOST_SHOT and KH1_HOST_COUNTS=1 turn it on; 0 turns it off); the cache (0 when off),
+ * and the counts' line */
+void kh1_present_tex(int on);
+const KH1TexCache *kh1_present_tex_cache(void);
+void kh1_present_tex_report(void);
 
 #endif

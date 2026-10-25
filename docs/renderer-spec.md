@@ -1554,6 +1554,38 @@ upload, and only new bytes are decoded. The slot `0x3600` (and `0x3A00` / `0x3C0
 then cost one hash a draw, the room and boot textures nothing. The real-disc run's `--uploads` says how many
 bytes the slot takes a frame.
 
+**Session 118 (vita-port-plan 5.1bf): the texture cache as port code, and render targets in it.**
+include/platform/texcache.h / host/port/texcache.c is the `both` key: entries keyed by TEX0's TBP0, TBW, PSM, TW
+and TH and the page stamp; a stamp hit reads nothing, a stamp miss reads and hashes the texels (FNV-1a, then a
+byte compare) and an entry of the same layout with the same bytes takes the new stamp (a hash hit); only new
+bytes are kept (a decode: one GPU upload), 128 entries and at most 4M texels, the least recently drawn entry
+no draw of this frame reads dropped first. An entry holds the **stored** texels (the index for the indexed
+PSMs, the stored value for CT32 / CT24 / CT16), so neither the CLUT (the palette cache's) nor TEXA (CT24 /
+CT16's alpha, applied when sampled) is in the key. host/null/present.c runs the model's textured sprites through
+it (gsmem.c's new hook `kh1_gsmem_texels`, beside `kh1_gsmem_palette`); `KH1_HOST_COUNTS=1` prints draws, stamp
+hits, hash hits, decodes, render targets, texels hashed and decoded (with the most in a frame).
+tests/host/texcache_test.c gives `both`'s counts on session 117's three cases; tests/host/present_test.c the
+same display pixels with the cache as without (with and without the palette cache).
+
+**Render targets are never kept.** A texture `kh1_gsmem_tex_target` names (a draw wrote the bits it reads and
+no upload has since) is the GPU target's own: the cache returns nothing and counts it. It has to: the model
+marks a target's pages (and so moves their stamp) only when an upload, a copy or a pixel write came between
+two draws, so the windows' 256 x 256 pass at `0x3A00` drawn twice in a row keeps one stamp, and an entry kept
+at the first read-back would be stale at the second (texcache_test's case 3). After a 64 x 64 upload into the
+slot's corner that texture is the upload's (kept) while the 256 x 256 is still the target's; the first picture
+uploaded back whole is a hash hit on the entry from before the draws. The message font (PSMT4HL at `0x1000`)
+in the Z24 buffer's top byte is never a target (the Z draws do not touch its bits), and each Z draw after an
+upload moves its stamp: one decode, then hash hits. The fake disc's run under `KH1_HOST_SHOT` (120 frames):
+1888 textured draws, all the frame copy's 16 strips reading the 3D target, all render targets, no decode.
+
+**A stamp must outlive a GS memory reset**: `kh1_gsmem_reset` had restarted the write sequence at 0, so a
+texture written after a reset could carry the stamp an entry had from before it and hit stale (present_test's
+Z-area copy read the previous test's target). The sequence now goes on counting across resets; a port that
+resets its GS memory model must do the same or flush the cache.
+
+A renderer reading a texture **while an upload is half done** is now a miss as well: each IMAGE piece is a
+write of its own (`kh1_gsmem_image` moves the sequence).
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

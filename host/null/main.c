@@ -51,7 +51,9 @@
  *                       send and list end and printed at the end against each array's size
  *                       (host/null/counts.c).  Session 117: also the port's palette cache's hits,
  *                       fills and fills a frame (host/null/present.c; with KH1_HOST_TRACE >= 2 or
- *                       KH1_HOST_SHOT, which feed the GS memory model)
+ *                       KH1_HOST_SHOT, which feed the GS memory model).  Session 118: and the
+ *                       texture cache's stamp hits, hash hits, decodes, render targets and the
+ *                       texels hashed / decoded a frame (host/port/texcache.c)
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -75,6 +77,8 @@ int kh1_present_init(int w, int h, int target, const char *dir, const void *send
 void kh1_present_wide(int side16);
 void kh1_present_pal(int on); /* session 117: the palette cache's counts */
 void kh1_present_pal_report(void);
+void kh1_present_tex(int on); /* session 118: the texture cache's counts */
+void kh1_present_tex_report(void);
 extern unsigned char D_002A6890[]; /* brightfade.c's frame copy (renderer-spec 5.4 "Session 93") */
 
 int kh1_host_stop_at_cdread = 1;
@@ -106,6 +110,7 @@ static void summary(void) {
     fflush(stderr);
     kh1_counts_report();
     kh1_present_pal_report();
+    kh1_present_tex_report();
     fflush(stdout);
 }
 
@@ -235,6 +240,7 @@ int main(int argc, char **argv) {
         const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */
         kh1_counts_on = counts && *counts && strcmp(counts, "0") != 0;
         if (kh1_counts_on) kh1_present_pal(1); /* session 117: fed by the chain walk (KH1_HOST_TRACE >= 2) */
+        if (kh1_counts_on) kh1_present_tex(1); /* session 118: the texture cache likewise */
     }
     {
         const char *dmac = getenv("KH1_HOST_DMAC"); /* defer: plat_null.c's replay test (session 84) */

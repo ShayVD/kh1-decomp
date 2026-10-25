@@ -13,9 +13,16 @@
  * (host/port/palcache.c), so the CLUT is not in the key.  Two cases: renderer-spec 3.1's texture slot
  * `0x3600` rewritten per draw (the minigame timer's font and its icon, §4.9 "Session 115": hud.c
  * func_002393d8 uploads the font again at every timer draw), and a room texture under texanim's
- * scroll (§4.13 "The texture steps", gsmem_test's `scroll`) with a second texture in the same page. */
+ * scroll (§4.13 "The texture steps", gsmem_test's `scroll`) with a second texture in the same page.
+ *
+ * Session 118 (renderer-spec 4.13 "Session 118", vita-port-plan 5.1bf): the port's cache
+ * (host/port/texcache.c, the `both` key as port code) runs beside the three on the same cases and
+ * must give `both`'s counts; then render targets: the windows' 256 x 256 pass at 0x3A00 drawn and read
+ * back as a texture (the GPU target's, never kept), an upload into the slot after it, and the message
+ * font in the Z24 buffer's top byte (no target: a hash hit when the Z draws move its stamp). */
 #include "common.h"
 #include "../../host/null/gsmem.h"
+#include "platform/texcache.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -24,9 +31,10 @@ static int fails, checks;
 #define CHECK(name, cond) do { checks++; if (!(cond)) { printf("texcache_test: %s\n", name); fails++; } } while (0)
 
 #define ENTRIES 32
-#define TEXELS (64 * 64)
+#define TEXELS (256 * 256) /* session 118: the 0x3A00 pass */
 enum { KEY_STAMP, KEY_BYTES, KEY_BOTH, KEYS };
 static const char *key_name[KEYS] = { "stamp", "bytes", "both" };
+static KH1TexCache port;
 
 typedef struct {
     u32 used, lo, hi, stamp, hash, age;
@@ -87,22 +95,42 @@ static const u32 *draw_tex(int k, u32 lo, u32 hi) {
     return c->e[hit].tex;
 }
 
-/* every key's draw, each checked against the fresh read */
-static int stale;
+static void port_read(u32 lo, u32 hi, u32 *out, void *ctx) {
+    (void)ctx;
+    read_texels(lo, hi, out);
+}
+
+/* every key's draw, each checked against the fresh read; the port's too (0 for a render target's
+ * texture: nothing to check, counted in port_target) */
+static int stale, port_stale, port_target;
 static void draw(u32 lo, u32 hi) {
-    int k;
+    int k, decoded;
     u32 n = tex_w(lo) * tex_h(lo, hi), i;
+    const u32 *t;
     for (k = 0; k < KEYS; k++) {
-        const u32 *t = draw_tex(k, lo, hi);
+        t = draw_tex(k, lo, hi);
         for (i = 0; i < n; i++)
             if (t[i] != fresh[i]) { stale++; break; }
     }
+    t = kh1_texcache_get(&port, lo, hi, kh1_gsmem_tex_stamp(lo, hi), kh1_gsmem_tex_target(lo, hi), port_read, 0,
+                         &decoded);
+    if (!t) { port_target++; return; }
+    for (i = 0; i < n; i++)
+        if (t[i] != fresh[i]) { port_stale++; break; }
 }
 
 static void reset(void) {
     memset(cache, 0, sizeof cache);
-    stale = 0;
+    stale = port_stale = port_target = 0;
+    kh1_texcache_init(&port);
     kh1_gsmem_reset();
+}
+
+/* the port's counts are the `both` key's */
+static int port_as_both(void) {
+    return port_stale == 0 && port_target == 0 && port.decodes == cache[KEY_BOTH].decodes &&
+           port.hashed == cache[KEY_BOTH].hashed && port.draws == cache[KEY_BOTH].draws &&
+           port.stamp_hits + port.hash_hits + port.decodes == port.draws;
 }
 
 /* an upload of w x h pixels in psm at block bp (BW bw), texel (x, y) = f(x, y, seed) */
@@ -136,6 +164,9 @@ static void report(const char *name) {
     for (k = 0; k < KEYS; k++)
         printf("texcache_test: %s, %s key: %u draws, %u decodes, %u texels hashed\n", name, key_name[k],
                cache[k].draws, cache[k].decodes, cache[k].hashed);
+    printf("texcache_test: %s, port cache: %u draws, %u stamp hits, %u hash hits, %u decodes, %u targets, "
+           "%u texels hashed, %u decoded\n", name, port.draws, port.stamp_hits, port.hash_hits, port.decodes,
+           port.targets, port.hashed, port.decoded);
 }
 
 #define TEX0(bp, bw, psm, tw, th) ((u32)(bp) | (u32)(bw) << 14 | (u32)(psm) << 20 | (u32)(tw) << 26 | (u32)(th) << 30)
@@ -160,6 +191,7 @@ int main(void) {
           cache[KEY_BYTES].hashed == 3 * (64 * 64 + 32 * 32));
     CHECK("slot: both: the bytes' decodes, a hash every draw", cache[KEY_BOTH].decodes == 2 &&
           cache[KEY_BOTH].hashed == cache[KEY_BYTES].hashed);
+    CHECK("slot: the port cache is `both`", port_as_both() && port.hash_hits == 4);
 
     /* (1b) the same slot drawn twice per upload (the timer's three fonts: one upload, CSA 0 / 2 / 6) */
     reset();
@@ -174,6 +206,7 @@ int main(void) {
     CHECK("slot x3: the stamp decodes once an upload", cache[KEY_STAMP].decodes == 3);
     CHECK("slot x3: both: one decode, a hash an upload", cache[KEY_BOTH].decodes == 1 &&
           cache[KEY_BOTH].hashed == 3 * 64 * 64 && cache[KEY_BYTES].hashed == 9 * 64 * 64);
+    CHECK("slot x3: the port cache is `both`", port_as_both() && port.stamp_hits == 6 && port.hash_hits == 2);
 
     /* (2) texanim's scroll: the 16 x 8 destination at 0x2900 and a 16 x 8 room texture at 0x2902 (the
      * same page, other blocks), both drawn each step, two cycles of 8 steps (y 1 .. 7, 0) */
@@ -198,7 +231,69 @@ int main(void) {
           cache[KEY_BYTES].hashed == 32 * 16 * 8);
     CHECK("scroll: both: the bytes' decodes, hashing only after a write", cache[KEY_BOTH].decodes == 8 &&
           cache[KEY_BOTH].hashed == 28 * 16 * 8);
+    CHECK("scroll: the port cache is `both`", port_as_both() && port.stamp_hits == 4 && port.hash_hits == 20);
 
+    /* (3) session 118, render targets: the windows' shadow / crossfade pass at 0x3A00 (renderer-spec
+     * 4.9: 256 x 256 CT32, FBP 0x1D0, FBW 4), first a picture uploaded there and drawn as a texture
+     * (kept), then the pass drawn into it and read back (the GPU target's: not kept, whatever the
+     * stamp), drawn into again with no upload between (the model does not mark the pages again, so the
+     * stamp stays: an entry kept at the first read would now be stale), then a 64 x 64 upload into the
+     * slot's corner (that texture the upload's: kept; the 256 x 256 still the target's), and the first
+     * picture uploaded back whole (a hash hit on the entry from before the draws: no decode) */
+    reset();
+    {
+        u32 big = TEX0(0x3A00, 4, KH1_PSMCT32, 8, 8), big_hi = TEX0_HI(8), small = TEX0(0x3A00, 4, KH1_PSMCT32, 6, 6);
+        u32 fr = 0x1D0 | 4 << 16 | KH1_PSMCT32 << 24, sc_lo = 255 << 16, sc_hi = 255 << 16, st0, st1, i;
+        static u32 pic[256 * 256];
+        for (i = 0; i < 256 * 256; i++) pic[i] = i * 2654435761u | 0x80000000u;
+        kh1_gsmem_trxdir(0, 0, 0x3A00 | 4 << 16 | KH1_PSMCT32 << 24, 0, 0, 256, 256);
+        for (i = 0; i < 256 * 256; i += 4) kh1_gsmem_image(pic + i, 4);
+        draw(big, big_hi);
+        CHECK("target: the uploaded picture kept", port.decodes == 1 && port_target == 0);
+        kh1_gsmem_draw(fr, 0, 0, 1, sc_lo, sc_hi, 0);
+        st0 = kh1_gsmem_tex_stamp(big, big_hi);
+        draw(big, big_hi);
+        CHECK("target: read back after the draw, not kept", port.targets == 1 && port.decodes == 1 && port_target == 1);
+        kh1_gsmem_draw(fr, 0, 0, 1, sc_lo, sc_hi, 0);
+        st1 = kh1_gsmem_tex_stamp(big, big_hi);
+        draw(big, big_hi);
+        CHECK("target: a second draw keeps the stamp (why a target is never kept)", st1 == st0);
+        CHECK("target: the second read not kept either", port.targets == 2 && port.decodes == 1);
+        upload(KH1_PSMCT32, 0x3A00, 4, 64, 64, 5);
+        draw(small, TEX0_HI(6));
+        CHECK("target: the upload's corner kept", port.decodes == 2 && port_stale == 0 && port.targets == 2);
+        draw(big, big_hi);
+        CHECK("target: the rest still drawn", port.targets == 3);
+        kh1_gsmem_trxdir(0, 0, 0x3A00 | 4 << 16 | KH1_PSMCT32 << 24, 0, 0, 256, 256);
+        for (i = 0; i < 256 * 256; i += 4) kh1_gsmem_image(pic + i, 4);
+        draw(big, big_hi);
+        CHECK("target: the picture back is a hash hit", port.decodes == 2 && port.hash_hits == 1 && port_stale == 0);
+    }
+    report("render target at 0x3A00");
+    CHECK("target: no stale texture", port_stale == 0);
+
+    /* (4) the message font (PSMT4HL 0x1000, TBW 4, 256 x 256) in a Z24 buffer's top byte (ZBP 0x70,
+     * block 0x0E00, as gsmem_test's targets): the Z draws do not touch its bits, so it is never a
+     * target; each Z draw after an upload marks the pages and moves the stamp, and the font is a hash
+     * hit (no decode) */
+    reset();
+    {
+        u32 font = TEX0(0x1000, 4, KH1_PSMT4HL, 8, 8), font_hi = TEX0_HI(8);
+        u32 fr = 0x00 | 10 << 16 | KH1_PSMCT32 << 24, zb = 0x70 | 1 << 24, sc_lo = 639 << 16, sc_hi = 223 << 16;
+        u32 x, y;
+        for (y = 0; y < 256; y++)
+            for (x = 0; x < 256; x++) kh1_gsmem_write_pixel(KH1_PSMT4HL, 0x1000, 4, x, y, (x ^ y) & 15);
+        for (f = 0; f < 3; f++) {
+            kh1_gsmem_draw(fr, 0, zb, 0, sc_lo, sc_hi, 0x30000); /* ZTE 1, ZTST ALWAYS, ZMSK 0 */
+            draw(font, font_hi);
+            upload(KH1_PSMCT32, 0x3600, 1, 8, 8, f); /* an upload somewhere else: the next Z draw marks again */
+        }
+        CHECK("font: never a target", port.targets == 0 && port_target == 0 && kh1_gsmem_tex_target(font, font_hi) == 0);
+        CHECK("font: one decode, then hash hits", port.decodes == 1 && port.hash_hits == 2 && port_stale == 0);
+    }
+    report("font under Z24");
+
+    kh1_texcache_free(&port);
     if (fails) { printf("texcache_test: %d of %d failed\n", fails, checks); return 1; }
     printf("texcache_test: PASS (%d checks)\n", checks);
     return 0;
