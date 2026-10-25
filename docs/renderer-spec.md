@@ -2569,7 +2569,7 @@ decimal `28672 / 36864` as edges. What it found:
   `func_002078f0(.., 200, 512, 1)`): window-relative (`o->xb0 + px * 16`), so they belong to the menu's
   window and stay in the centred canvas with it (5.3 step 2). With the backdrop now view-wide they end at
   the 4:3 edges; a renderer that wants them to the view's edges can widen a rule whose window sits at
-  canvas 0 and whose width is 512 (a port choice, not a game change; no row: they are not static).
+  canvas 0 and whose width is 512 (a port choice, not a game change; no row: they are not static). *Session 101: widened in `func_00206130` off the PS2 (below).*
 - **The wave transition** (wave.c, `D_00631620`): its 100 lines run x 136 .. 376 px (`(v + 1928) << 4 ..
   (v + 2168) << 4`), a window's band, not full-screen.
 - **opdma's colour band** (`func_001aa7a0`): already `PLAT_VIEW_GX0 / GX1` off the PS2 (session 92); the
@@ -2591,6 +2591,19 @@ put back).
 **The 4:3 note of 5.3 step 2 changes for the backdrop**: a full-screen menu now draws its gradient over the
 whole view (the blur under it was already view-wide, session 99), so the sides show the backdrop, not the
 3D; the menu's windows, text and rules stay in the centred canvas.
+
+#### Session 101: the menus' full-width rules (static)
+
+The rules session 100 left at the 4:3 edges (`func_00206130(win, 0, y, 512, h, col)`: topmenu.c 315 / 340,
+journal.c 409 / 418, page7.c 322 / 331, loadframe.c 235 / 241, nameentry.c's five) now run to the view's
+edges off the PS2: winpart.nostrict.c's `func_00206130` sets `x0 / x1` to `PLAT_VIEW_GX0 / GX1` when the
+rule's x is canvas 0 (`o->xb0 + px x 16 == 0x7000`) and its width is 512, inside `#ifndef KH1_PS2` (all 677
+objects bit-identical). It is in the C, not a renderer rule: the renderer would have to guess which 512-wide
+flat sprite is a rule. The window's zoom (`o->u48 & 1`) is applied after it, so an opening window still
+scales its rules about its centre. A rule in a window that is not at canvas 0, or narrower, stays where it
+was. Not covered: nameentry.nofill.c's `func_002078f0(.., 200, 512, 1)` (a textured row through
+`func_00201440`). The user's choice was pending when this was written (session 101's card, recommended
+"widen"); vita-port-plan 5.1ao says how to undo it.
 
 #### Open (need the real disc or a boot)
 
