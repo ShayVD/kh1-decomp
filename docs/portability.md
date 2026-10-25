@@ -301,7 +301,10 @@ rewrite matched code.
     two stacks started at a literal 0x70000000 / 0x70004000: the ppp effects' packets would have
     been written there on the host). Each expands to the PS2's own tokens, so the objects stay
     bit-identical. `python3 -I tools/host/dmacheck.py` lists what is left (keep it at 0; `--list`
-    lists every PlatDmaSend and where its chain comes from).
+    lists every PlatDmaSend and where its chain comes from). Since session 76, after a change to a static packet or a
+    data piece that holds one, run `python3 -I tools/host/dmawalk.py --float
+    out/shift/m12-float/kh1-shift.linked.elf` (after a float `make shift` or fcheck.sh): every
+    chain that is a name must walk whole and be the same chain in the float build (0 rows).
 14. **No PS2 address as a number outside the PS2 build** (session 73). Matched code that must
     read memory through a literal address (to match) keeps the name for every other target:
     `#if defined(KH1_SHIFTABLE) || !defined(KH1_PS2)` around the named form. `python3 -I

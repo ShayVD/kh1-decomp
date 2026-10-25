@@ -67,6 +67,18 @@ int main(void) {
     expect("vif direct", 1, 0x145, 0, 0);
     q(0, 0x70000001, 0, 0x00000000, 0x50000002);
     expect("vif direct short", 1, 0x145, 0, KH1_DMA_VIF_SHORT);
+    /* PATH2: DIRECT 3 holding a GIFtag of 1 x 2 regs (A+D, A+D) and its 2 qwords */
+    q(0, 0x70000004, 0, 0x00000000, 0x50000003);
+    gt(1, 1, 1, 0, 2);
+    mem[1][2] = 0xEE;
+    q(2, 0, 0, 0x4C, 0);
+    q(3, 0, 0, 0x47, 0);
+    q(4, 0, 0, 0, 0);
+    expect("vif direct path2", 1, 0x145, 0, 0);
+    /* the same DIRECT one qword short of the packet: the VIF stream is whole, PATH2 is not */
+    q(0, 0x70000003, 0, 0x00000000, 0x50000002);
+    expect("vif direct path2 short", 1, 0x145, 0, KH1_DMA_PATH2_SHORT);
+    for (i = 0; i < 64; i++) q(i, 0, 0, 0, 0);
     /* without TTE: STCYCL 1,1; UNPACK V4-32 num 2 (8 words); MSCAL; NOP */
     q(0, 0x70000003, 0, 0, 0);
     q(1, 0x01000101, 0x6C020000, 0, 0);
