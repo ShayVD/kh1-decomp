@@ -202,6 +202,15 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/sampler_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/sampler.c"
   "$W/sampler_test" > "$W/sampler.log" || { cat "$W/sampler.log"; exit 1; }
   tail -n 1 "$W/sampler.log"
+  # the blend state, alpha test and destination alpha a port's GPU runs (renderer-spec 4.13 "Session 121")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/blend_test" \
+      "$ROOT/tests/host/blend_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/blend.c"
+  "$W/blend_test" > "$W/blend.log" || { cat "$W/blend.log"; exit 1; }
+  tail -n 1 "$W/blend.log"
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/atest_test" \
+      "$ROOT/tests/host/atest_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c"
+  "$W/atest_test" > "$W/atest.log" || { cat "$W/atest.log"; exit 1; }
+  tail -n 1 "$W/atest.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
