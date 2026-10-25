@@ -2084,6 +2084,30 @@ no float-untested row. selftest PASS (gsimage_test: 21 checks), the host links (
 - **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1aq Session 103: the lens flare's count tested on the host
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). No change under src/: kh1.elf byte-identical,
+no float-untested row. selftest PASS (new flare_test: 14 checks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so the "widen" block in
+  winpart.nostrict.c's `func_00206130` stays; "keep them 4:3" still means deleting it (5.1ao).
+- **The flare's count on the null platform** (item 4b): tests/host/flare_test.c links the game's own
+  kelnscls.nostrict.c (host-compiled: `func_00192958` and its neighbours, their other callees and data
+  stubbed) with gsimage.c, gsmem.c and host/port/libvu0.c, and runs `func_00192958` on a made-up `FlareObj`
+  (light at screen 256, 192, Z24 0x100000, the box `bC0 x bC1` pixels) under the wide view:
+  a Z buffer only the 3D draw wrote (`kh1_gsmem_draw` over an older nearer upload) reads 0 and `f7C` stays
+  1.0 (`fAC` 1.0; the store hands back 16 x 16 x 3 zero bytes after the 96-byte header and nothing past
+  them); the box's left half uploaded nearer than the light gives 0.5; a skipped frame (`b8D` 1, odd frame)
+  multiplies by `fAC` again (0.25, no store); a quarter at the light's own depth in the largest box (64 x 64,
+  4096 pixels, ending exactly at the scratch's 0x3060 bytes) gives 0.75 (equal depth is not visible: the
+  test is `z < thr`); a box at the screen's left edge is clipped to the scissor (8 of 16 columns seen, 0.5:
+  the count divides by the whole box); off screen sets `f7C` and `fAC` to 0. With session 102's "drawn
+  reads 0" line reverted, the first three checks fail, so the test holds that answer.
+- **A container's host tests need `gcc-multilib`** (`gcc -m32` links): without it selftest skips every host
+  C test silently (build.yml installs no multilib, so in CI they run only if the runner image has it).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
