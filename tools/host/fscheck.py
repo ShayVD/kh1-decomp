@@ -24,7 +24,12 @@ checks:
     rectangle in C that keeps the canvas: it should name the view (PLAT_VIEW_GX0 / GX1) or be in LIT_EXEMPT;
   - (session 107) no send whose packet sets FRAME draws from its buffer's left edge past FBW x 64 under the
     wide view (--side16, 960 x 544's margin by default: data XYZ by the row's stretch, C-written XYZ by
-    their PLAT_VIEW_* edges), or it is in OVER_EXPECTED (the menu capture: 5.1as / 5.1at).
+    their PLAT_VIEW_* edges), or it is in OVER_EXPECTED (the menu capture: 5.1as / 5.1at);
+  - (session 108) the GS memory blocks each such send's drawn rectangle covers (FBP, FBW and the PSM's page
+    and block order, y included; sends stretched over the view and the environment's frame skipped, as
+    above) stay inside the blocks it covers on the PS2 (side 0) and inside the renderer-spec 3.1 region
+    its FBP is in, or the send and region are in BLOCK_EXPECTED: a capture or copy landing on a live buffer
+    (the texture slot, the Z area, the display) fails even inside its FBW.
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -71,6 +76,47 @@ OVER_EXPECTED = {
     "D_002B6760": "capture.c: the menu capture, KH1_FS_XS into the PS2's 256-wide buffer at 0x3600 (FBW 4); a "
                   "port's buffer is the view's half wide (5.1an), the host's fill clips at FBW x 64 (5.1at)",
 }
+
+# (session 108) renderer-spec 3.1's memory map as block ranges [lo, hi) of 256 bytes: (lo, hi, name)
+REGIONS = (
+    (0x0000, 0x0E00, "display (CT24 512 x 448)"),
+    (0x0E00, 0x1A00, "Z area (Z24 512 x 384; the message font at 0x1000, PSMT8H at 0x1800, the 640-wide buffer "
+                     "at 0x1180)"),
+    (0x1A00, 0x2600, "3D target (CT32 512 x 384)"),
+    (0x2600, 0x3600, "room background textures"),
+    (0x3600, 0x3A00, "texture slot 0x3600 (field uploads, fonts, menu images, renderer B CLUT 0x3700)"),
+    (0x3A00, 0x3D7C, "off-screen buffer 0x3A00 (shadows, texspot, crossfade; face CLUT 0x3C00)"),
+    (0x3D7C, 0x3E00, "window font and its CLUT 0x3DFC"),
+    (0x3E00, 0x4000, "room and UI CLUTs"),
+)
+# sends whose drawn blocks leave their FBP's region or the PS2's footprint on purpose: (send, region's
+# first block, or "wide" for blocks past the PS2's footprint) -> reason
+BLOCK_EXPECTED = {
+    ("D_002A5620", 0x3A00): "sceneeff.c: the depth blur's half-size capture, 512 x 192 CT32 at 0x3600 spans "
+                            "0x3600 .. 0x3C00 on the PS2 too (over the off-screen buffer, rewritten before its "
+                            "next use)",
+    ("D_002A5A90", 0x3A00): "the depth blur's capture, as D_002A5620's (the same buffer)",
+    ("D_002A5620", "wide"): "the depth blur's capture at the view's half (x 0 .. 338.8) stays inside its FBW 8 but "
+                            "reaches the right halves of its pages the PS2's 256 leave alone: 0x3680 .. (the "
+                            "menus' CLUT 0x3680, uploaded per draw) and 0x3A80 .. (the off-screen buffer, redrawn "
+                            "each frame); scratch there as the left halves are on the PS2 (5.1at, 5.1av)",
+    ("D_002A5A90", "wide"): "the depth blur's capture, as D_002A5620's",
+    ("D_002A6960", 0x0E00): "brightfade.c case 2: the frame copy into the display as 640 x 448 CT24 runs to "
+                            "block 0x1180 over the Z area's first rows on the PS2 too (movies, 4:3)",
+    ("D_002B6760", "wide"): "capture.c: the menu capture stretched into its 256-wide buffer (OVER_EXPECTED) "
+                            "wraps into blocks 0x3900 .. 0x393F; a port's buffer is the view's half (5.1an)",
+}
+# the block order inside a page: CT32 / CT24 (8 x 4 blocks of 8 x 8, a 64 x 32 page) and CT16 / CT16S
+# (4 x 8 blocks of 16 x 8, a 64 x 64 page), GS manual 8.3
+BLOCKS32 = ((0, 1, 4, 5, 16, 17, 20, 21), (2, 3, 6, 7, 18, 19, 22, 23),
+            (8, 9, 12, 13, 24, 25, 28, 29), (10, 11, 14, 15, 26, 27, 30, 31))
+BLOCKS16 = ((0, 2, 8, 10), (1, 3, 9, 11), (4, 6, 12, 14), (5, 7, 13, 15),
+            (16, 18, 24, 26), (17, 19, 25, 27), (20, 22, 28, 30), (21, 23, 29, 31))
+BLOCKS16S = ((0, 2, 16, 18), (1, 3, 17, 19), (8, 10, 24, 26), (9, 11, 25, 27),
+             (4, 6, 20, 22), (5, 7, 21, 23), (12, 14, 28, 30), (13, 15, 29, 31))
+# PSM -> (block width, block height, the page's block order)
+PSM_BLOCKS = {0x00: (8, 8, BLOCKS32), 0x01: (8, 8, BLOCKS32), 0x02: (16, 8, BLOCKS16),
+              0x0A: (16, 8, BLOCKS16S)}
 
 # functions whose C writes both 4:3 edges on purpose (none today): "file:function" -> reason
 LIT_EXEMPT = {}
@@ -251,11 +297,12 @@ def regs(img, head):
 
 def sprites(img, head):
     """each SPRITE a send draws: (x0, x1, y0, y1 in sixteenths, u span in texels, textured, XYZ addresses,
-    the two vertices' x, the FRAME and XYOFFSET its context's packet set (None: the environment's))"""
-    out, prim, vx, uv, env = [], 0, [], [], {}
+    the two vertices' x, the FRAME and XYOFFSET its context's packet set (None: the environment's), the
+    FRAME's address)"""
+    out, prim, vx, uv, env, at = [], 0, [], [], {}, {}
     for r, v, a in regs(img, head):
         if r in (0x18, 0x19, 0x4C, 0x4D):
-            env[r] = v
+            env[r], at[r] = v, a
         elif r == 0x00:
             prim, vx, uv = v & 0x7FF, [], []
         elif r == 0x03:
@@ -267,7 +314,7 @@ def sprites(img, head):
                 du = abs(uv[-1] - uv[-2]) if len(uv) >= 2 else 0
                 ctx = prim >> 9 & 1
                 out.append((min(xa, xb), max(xa, xb), min(ya, yb), max(ya, yb), du, bool(prim & 0x10), (aa, ab),
-                            (xa, xb), env.get(0x4C + ctx), env.get(0x18 + ctx)))
+                            (xa, xb), env.get(0x4C + ctx), env.get(0x18 + ctx), at.get(0x4C + ctx)))
                 vx, uv = [], []
     return out
 
@@ -383,6 +430,98 @@ def overrun(sp, flags, writes, side16):
     return None
 
 
+def frame_rects(sp, flags, writes, side16):
+    """(session 108) the pixel rectangle each FRAME the sprites set is drawn over: {FRAME: (x0, x1, y0, y1)},
+    x under the wide view at side16 (0: the PS2); a frame drawn from before its left edge (stretched over
+    the view: the port's target is the view's size) or a C write that does not evaluate is left out"""
+    by = {}
+    for p in sp:
+        if p[8] is None:
+            continue
+        xr = wide_x(p, flags, writes, side16)
+        if xr is None:
+            continue
+        xo = gp.bits(p[9], 0, 16) if p[9] is not None else X0
+        yo = gp.bits(p[9], 32, 16) if p[9] is not None else 0x7400
+        by.setdefault(p[8] & 0xFFFFFFFF, []).append(((xr[0] - xo) / 16, (xr[1] - xo) / 16,
+                                                     (p[2] - yo) / 16, (p[3] - yo) / 16))
+    out = {}
+    for frame, rs in by.items():
+        x0, x1 = min(r[0] for r in rs), max(r[1] for r in rs)
+        if x0 < -2:
+            continue
+        out[frame] = (max(0, x0), x1, max(0, min(r[2] for r in rs)), max(r[3] for r in rs))
+    return out
+
+
+def blocks(frame, rect):
+    """the GS memory blocks (256 bytes each) the pixel rectangle covers in the frame (FBP, FBW, PSM): x past
+    FBW x 64 runs into the next pages as on the GS; None for a PSM not in PSM_BLOCKS"""
+    fbp, fbw, psm = gp.bits(frame, 0, 9) * 32, gp.bits(frame, 16, 6), gp.bits(frame, 24, 6)
+    if psm not in PSM_BLOCKS:
+        return None
+    bw, bh, order = PSM_BLOCKS[psm]
+    pw, ph = bw * len(order[0]), bh * len(order)
+    x0, x1, y0, y1 = int(rect[0]), int(-(-rect[1] // 1)), int(rect[2]), int(-(-rect[3] // 1))
+    out = set()
+    for y in range(y0 - y0 % bh, y1, bh):
+        for x in range(x0 - x0 % bw, x1, bw):
+            page = (y // ph) * max(fbw, 1) + x // pw
+            out.add((fbp + page * 32 + order[y % ph // bh][x % pw // bw]) & 0x3FFF)
+    return out
+
+
+def region(b):
+    return next((r for r in REGIONS if r[0] <= b < r[1]), None)
+
+
+def spans(bs):
+    """sorted blocks as 'lo .. hi' ranges (hi inclusive)"""
+    out, run = [], None
+    for b in sorted(bs):
+        if run and b == run[1] + 1:
+            run[1] = b
+        else:
+            run = [b, b]
+            out.append(run)
+    return ", ".join("0x%04X" % a if a == z else "0x%04X .. 0x%04X" % (a, z) for a, z in out)
+
+
+def block_check(s, fn, sp, flags, writes, side16, verbose):
+    """(session 108) the problems of one send's drawn blocks, and the BLOCK_EXPECTED keys it used"""
+    problems, used = [], set()
+    ps2, wide = frame_rects(sp, flags, writes, 0), frame_rects(sp, flags, writes, side16)
+    cfr = {p[8] & 0xFFFFFFFF for p in sp if p[8] is not None and p[10] in writes}
+    for frame in sorted(wide):
+        bw, bp = blocks(frame, wide[frame]), blocks(frame, ps2.get(frame, wide[frame]))
+        if bw is None:
+            problems.append("%s (%s): FRAME PSM 0x%02X has no block order in PSM_BLOCKS" % (
+                s, fn, gp.bits(frame, 24, 6)))
+            continue
+        own = region(gp.bits(frame, 0, 9) * 32)
+        if verbose:
+            print("%s (%s): FRAME FBP 0x%04X FBW %d PSM 0x%02X%s, blocks %s under the wide view (PS2: %s)" % (
+                s, fn, gp.bits(frame, 0, 9) * 32, gp.bits(frame, 16, 6), gp.bits(frame, 24, 6),
+                " (written from C: the data's value)" if frame in cfr else "", spans(bw), spans(bp)))
+        out = bw - bp
+        if out:
+            if (s, "wide") in BLOCK_EXPECTED:
+                used.add((s, "wide"))
+            else:
+                problems.append("%s (%s): under the wide view draws blocks %s, past the PS2's (%s): size its "
+                                "buffer to the view or add (send, \"wide\") to BLOCK_EXPECTED" % (
+                                    s, fn, spans(out), spans(bp)))
+        for r in sorted({region(b) for b in bw} - {own}, key=lambda r: r[0] if r else -1):
+            if r and (s, r[0]) in BLOCK_EXPECTED:
+                used.add((s, r[0]))
+                continue
+            hit = {b for b in bw if region(b) == r}
+            problems.append("%s (%s): its frame at 0x%04X (%s) draws blocks %s in %s: a live buffer, or add it "
+                            "to BLOCK_EXPECTED" % (s, fn, gp.bits(frame, 0, 9) * 32, own[2] if own else "?",
+                                                   spans(hit), r[2] if r else "no region"))
+    return problems, used
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--elf", default=os.path.join(ROOT, "SLPS_251.98"))
@@ -406,12 +545,18 @@ def main():
             if img.ok(a):
                 sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
-    problems, nfull, overs = [], 0, set()
+    problems, nfull, overs, bused, nframed = [], 0, set(), set(), 0
     for s in sorted(sends):
         a = int(s[2:], 16)
         if not img.ok(a):
             continue
-        kind, sp = classify(sprites(img, a))
+        allsp = sprites(img, a)
+        kind, sp = classify(allsp)
+        if any(p[8] is not None for p in allsp):
+            nframed += 1
+            bp, bu = block_check(s, sends[s], allsp, rows.get(s, (set(), None))[0], writes, args.side16, args.v)
+            problems += bp
+            bused |= bu
         if not kind:
             continue
         nfull += 1
@@ -476,6 +621,10 @@ def main():
     for s in OVER_EXPECTED:
         if s not in overs:
             problems.append("%s: in OVER_EXPECTED, but no longer drawn past its frame's width" % s)
+    for k in BLOCK_EXPECTED:
+        if k not in bused:
+            problems.append("%s: in BLOCK_EXPECTED for %s, but no longer drawn there" % (
+                k[0], "0x%04X" % k[1] if k[1] != "wide" else "the wide view"))
     for s in EXEMPT:
         if s not in sends:
             problems.append("%s: in EXEMPT, but no send of it" % s)
@@ -494,8 +643,10 @@ def main():
     for p in problems:
         print("fscheck: " + p)
     print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
-          "%d drawn past their frame's width (%d expected), %d problems" % (
-              len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)), len(problems)))
+          "%d drawn past their frame's width (%d expected), %d sends setting FRAME (%d block overlaps "
+          "expected), %d problems" % (
+              len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)),
+              nframed, len(bused), len(problems)))
     sys.exit(1 if problems else 0)
 
 

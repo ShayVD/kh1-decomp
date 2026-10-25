@@ -9,13 +9,24 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 107 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 108 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 107, 2026-10-25)
+## Where we stopped (end of session 108, 2026-10-25)
+
+- **Session 108** (static, vita-port-plan 5.1av): **the GS blocks each send draws, checked by a tool.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again).
+  tools/host/fscheck.py now lists, for every send in its walk whose packet sets FRAME (14), the 256-byte
+  blocks its drawn rectangle covers (FBP, FBW, the PSM's page and block order, y included) at the wide margin
+  and at 0, and fails a send whose wide blocks leave the PS2's or the renderer-spec 3.1 region its FBP is in
+  (`REGIONS`) unless it is in `BLOCK_EXPECTED`. 0 problems, 6 expected: on the PS2 the depth blur's capture
+  covers 0x3600 .. 0x3C00 (over the off-screen buffer 0x3A00) and the movie copy's 640-wide display runs to
+  0x1180 (over the Z area); under the wide view the menu capture wraps into 0x3900 .. 0x392E and the depth
+  blur's capture reaches its pages' right halves (0x3680 .., 0x3A80 ..: scratch there). selftest has a
+  negative case (two entries taken out). Tool only: kh1.elf byte-identical, no float-untested row; selftest PASS.
 
 - **Session 107** (static, vita-port-plan 5.1au): **a tool check for sends drawn past their frame's width.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again).
@@ -409,7 +420,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 108 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 109 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -431,7 +442,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 107: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 108: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -475,19 +486,22 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests are skipped): (a) **the
-   user's answer on the full-width rules** (session 101's card, still unanswered at session 107): "keep them
+   user's answer on the full-width rules** (session 101's card, still unanswered at session 108): "keep them
    4:3" means deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's `func_00206130` and renderer-spec
-   5.4 "Session 101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the buffers' blocks under the wide
-   view** (the next step after 5.1au): in tools/host/fscheck.py, for each send whose packet sets FRAME, list
-   the blocks its drawn rectangle covers under the wide view (FBP, FBW and PSM's page order, y included) and
-   check them against renderer-spec 3.1's memory map, so a capture or copy that lands on a live buffer (the
-   shared texture slot 0x3900 .., the Z area, the display) shows in selftest even inside its FBW (the depth
-   blur's capture spans 0x3600 .. 0x3C00 over the texture slot on the PS2 too: note it as known); (c)
+   5.4 "Session 101"'s paragraph (say so in a new vita-port-plan 5.1 entry); (b) **the render-to-texture sends outside fscheck's walk** (the next step after 5.1av):
+   the shadows' `D_004F7820[size]` (built at run time by `func_001284a0`, so from the C, not the ELF's data: FRAME 0x3A00 FBW 4, Z16S at
+   block 0x3800, a centred w x w SCISSOR)
+   and `D_004F7C10[size]` (the window copied into the texture slot 0x3600), the crossfade `func_00135ed0` and
+   the eye overlay `D_0035C4A0` / `D_0035C550` (renderer-spec 3.4): add them to fscheck.py's walk (by name,
+   like `csends`) so the block check covers them, clip each rectangle by the packet's SCISSOR when it sets
+   one, and evaluate a FRAME written from C (case 2's `D_002A68A0[4]`, 512 or 640 wide) instead of the data's
+   value; these do not stretch under the wide view, so expect 0 new problems and note any PS2 overlap as known;
+   (c)
    `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's senders still
    wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=108`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=109`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 109) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 110) with this
    prompt: the user wants each session to start the next one without being asked.
