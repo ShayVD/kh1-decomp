@@ -87,15 +87,100 @@ int PlatCdPowerOff(int *result) { return 1; }
  * D_STAT bit) is set then and cleared by a PlatDmaPutStat of that bit (write 1 to clear), and an
  * enabled channel with a handler (PlatAddDmacHandler) runs it (null_dmac_run below). */
 static void null_dmac_done(int ch);
+static void null_dma_walk(int ch, u32 chcr, u32 tadr);
 PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]; }
-void PlatDmaSend(PlatDmaChan *ch, void *tag) { null_dmac_done((struct PlatDmaChan *)ch - null_chan); }
+void PlatDmaSend(PlatDmaChan *ch, void *tag) {
+    int n = (struct PlatDmaChan *)ch - null_chan;
+    if (kh1_host_trace >= 2) null_dma_walk(n, ch->words[0], (u32)(unsigned long)tag);
+    null_dmac_done(n);
+}
 void PlatDmaPutStat(u32 v);
-/* CHCR's STR (0x100) starts channel 1 (VIF1) */
+/* CHCR's STR (0x100) starts channel 1 (VIF1); MOD 1 (bits 2-3) walks the chain at TADR */
+static u32 null_vif1_tadr;
 void PlatDmaPutVif1Chcr(u32 v) {
-    if (v & 0x100) null_dmac_done(1);
+    if (!(v & 0x100)) return;
+    if (kh1_host_trace >= 2 && (v >> 2 & 3) == 1) null_dma_walk(1, v, null_vif1_tadr);
+    null_dmac_done(1);
 }
 void PlatDmaPutVif1Qwc(u32 v) {}
-void PlatDmaPutVif1Tadr(u32 v) {}
+void PlatDmaPutVif1Tadr(u32 v) { null_vif1_tadr = v; }
+
+/* KH1_HOST_TRACE=2: walk each chain a send starts, tag by tag, the way the DMAC's source chain
+ * mode does (docs/renderer-spec.md 4.4), and print one line per send; a chain that reaches
+ * memory the host does not own (outside the executable's data and bss, the scratchpad and the
+ * stack), a tag with a bad id, a call past the two-deep stack or a chain that does not end
+ * prints each tag.  KH1_HOST_TRACE=3 prints every tag.  Only reads: nothing is transferred. */
+extern char __executable_start[], end[];
+static const char *null_dma_where(u32 a, u32 n) {
+    char local;
+    unsigned long p = a, e = (unsigned long)a + n;
+    if (p >= (unsigned long)__executable_start && e <= (unsigned long)end) return "image";
+    if (p >= (unsigned long)PlatSpr && e <= (unsigned long)PlatSpr + sizeof PlatSpr) return "spr";
+    if (p - (unsigned long)&local < 0x1000000) return "stack";
+    return 0;
+}
+static void null_dma_walk(int ch, u32 chcr, u32 tadr) {
+    static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
+    static u32 tags[4096][2];
+    u32 tag = tadr, asr[2], qwords = 0, ntags = 0;
+    int asp = 0, bad = 0, done = 0, i;
+    const char *last = "?";
+    while (!done && !bad && ntags < 4096) {
+        u32 w0, qwc, id, addr, next = tag + 16;
+        if (!null_dma_where(tag, 16)) { bad = 1; break; }
+        w0 = ((u32 *)(unsigned long)tag)[0];
+        addr = ((u32 *)(unsigned long)tag)[1];
+        qwc = w0 & 0xFFFF;
+        id = w0 >> 28 & 7;
+        tags[ntags][0] = tag;
+        tags[ntags++][1] = id;
+        last = ids[id];
+        qwords += qwc;
+        switch (id) {
+        case 0: /* refe: the data at ADDR, then end */
+            if (qwc && !null_dma_where(addr, qwc * 16)) bad = 2;
+            done = 1;
+            break;
+        case 1: /* cnt: the data after the tag, then the tag after it */
+            next = tag + 16 + qwc * 16;
+            break;
+        case 2: /* next: the data after the tag, then the tag at ADDR */
+            next = addr;
+            break;
+        case 3: case 4: /* ref / refs: the data at ADDR, then the next qword */
+            if (qwc && !null_dma_where(addr, qwc * 16)) bad = 2;
+            break;
+        case 5: /* call: the data after the tag, push its end, go to ADDR */
+            if (asp == 2) { bad = 3; break; }
+            asr[asp++] = tag + 16 + qwc * 16;
+            next = addr;
+            break;
+        case 6: /* ret: the data after the tag, pop (an empty stack ends the chain) */
+            if (asp) next = asr[--asp];
+            else done = 1;
+            break;
+        case 7: /* end: the data after the tag, then stop */
+            done = 1;
+            break;
+        }
+        if (!bad && (id == 1 || id == 2 || id == 5 || id == 6 || id == 7) && qwc &&
+            !null_dma_where(tag + 16, qwc * 16))
+            bad = 2;
+        tag = next;
+    }
+    if (!done && !bad) bad = 4;
+    printf("kh1-host: dma ch %d chcr %08x tadr %08x: %u tags, %u qwords, ends with %s%s\n", ch, chcr,
+           tadr, ntags, qwords, last,
+           bad == 1 ? ": TAG OUTSIDE" : bad == 2 ? ": DATA OUTSIDE" : bad == 3 ? ": CALL TOO DEEP"
+           : bad == 4 ? ": NO END (4096 tags)" : "");
+    if (bad || kh1_host_trace >= 3)
+        for (i = 0; i < (int)ntags; i++) {
+            u32 *t = (u32 *)(unsigned long)tags[i][0];
+            printf("kh1-host:   %08x %-4s qwc %u addr %08x%s\n", tags[i][0], ids[tags[i][1]],
+                   t[0] & 0xFFFF, t[1], (chcr & 0x40) ? " (TTE)" : "");
+        }
+    if (bad == 1) printf("kh1-host:   tag at %08x outside\n", tag);
+}
 void PlatVifPutErr(int n, u32 v) {}
 u32 PlatVif1GetStat(void) { return 0; }
 

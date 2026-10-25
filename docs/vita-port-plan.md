@@ -126,7 +126,9 @@ Nothing in the port needs the PS2 addresses, but these still assume them (docs/s
 - **Absolute addresses in data**: pointer tables in .data hold PS2 addresses as words where the shift tools
   could not prove a relocation (shiftable-plan "Session 13: reloc review", the "ambiguous" items). Each must be
   a symbol in C before the Vita build links; the M12 shifted build boots (session 29) only because the shift
-  tools patch the rest.
+  tools patch the rest. **Session 74 (5.1n): none left.** data_relocs.tsv has no tier-3 row since session 13
+  (every word accepted, as a `.word sym` relocation in src/data/*.s, or rejected with a reason), and abscheck's
+  data rows (a host data word with no relocation that is a .text address or a variable's start) are 0.
 - **func_00171078**'s `((s32 *)0x35BD40)[i]` (portability.md "Known absolute addresses"): `D_0035BD40` on the
   Vita and the host since session 73 (`!defined(KH1_PS2)`, as the KH1_SHIFTABLE variant; 5.1m).
 
@@ -884,6 +886,39 @@ clears TTE on VIF1 (renderer-spec §2.1 has the VIF1 cases); the Vita chain walk
 layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged (241), argcheck unchanged (3
 value uses). The fake-disc host run stops where session 72's did (the overlay entry; with `KH1_HOST_OVL=stub:2`,
 func_00132790 from func_00132c70). **Valgrind: 0 errors** up to the overlay entry (the SIGILL).
+
+### 5.1n Session 74: the PS2 addresses as numbers in data, the chain walk
+
+Static only (the Mac was away). Only tools/ and host/ changed: kh1.elf is byte-identical, every out/build object is
+bit-identical, and the float ELF the same (fcheck), so there is no float-untested.md row.
+
+**abscheck reads the host data too** (`data` rows; portability.md rule 14). On the host a pointer word in data
+is a relocation (`R_386_32`, from a `.word sym` in a piece or a C initializer); the pieces' other words are the
+user's original bytes. A row is a 4-byte word of a game object's `.data*` / `.rodata*` (not the string sections)
+with no relocation that is a 4-aligned address in the PS2 .text (0x100000-0x272c70) or exactly the start of a
+PS2 variable. Words data_relocs.tsv rejected with a reason, and words inside the embedded resource files
+(0x308CE0-0x350CE0, `resfile`), are decided, not rows (`--all` prints them). **0 rows**; 1,108 words decided:
+resfile 553 (offsets and numbers in the model / motion files), into-func 527 (u16 / s16 pairs such as
+D_00351530's 512 flags and the RGBA table D_003E8E30), override-x 13, payload 9, script 4, spawn-tmpl 1, kcode
+1. One new REVIEWED_DATA entry: **D_0048CC10**'s 8 words are func_00100670's PS2 jump table (`lui/lw
+jtbl_0048CC10; jr`), a compiled rodata block census.py copies into defs_host.c because D_0048CAD4 names it;
+the host's switch has its own table, so nothing on the host jumps through it. C data objects: 0 rows (their
+initializers are relocations). Left out by design: data words in the hardware, scratchpad and memory-map ranges
+(about 3,900 VIF codes, DMA end tags 0x7000xxxx, GS values such as texanim's 0x017F0000): too many s16 pairs
+fall in those ranges for a word test, and code that reads such an address is abscheck's `mem` row.
+
+**The chain walk** (renderer-spec 4.4): under `KH1_HOST_TRACE=2` the null platform's PlatDmaSend and
+PlatDmaPutVif1Chcr (STR with MOD 1, from the TADR PlatDmaPutVif1Tadr kept) walk the chain the way the DMAC's
+source chain mode does and print one line per send (channel, CHCR word 0, tags, qwords, the last id); a tag or
+data outside the executable's data / bss, the scratchpad and the stack, a bad id, a call past two deep or 4,096
+tags with no end prints each tag. `KH1_HOST_TRACE=3` prints every tag. On the fake disc with
+`KH1_HOST_OVL=stub:2`: 86 sends, all GIF (channel 2), 1-3 tags each, none outside; the run ends where it did
+(func_00132790 from func_00132c70). Valgrind with TRACE=2: 0 errors up to the overlay entry (23 sends there).
+sceDmaSend (func_00266f38) keeps CHCR's other bits and sets `| 0x105` (chain, from memory, start), so TTE is
+whatever the last writer of word 0 left: drawlist leaves it set on the GIF channel (renderer-spec 4.4).
+
+layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged, argcheck unchanged (3 value
+uses, waiting for dktitle.x).
 
 ### 5.2 Session 60: overlays, dktitle.x
 

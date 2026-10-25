@@ -308,7 +308,9 @@ rewrite matched code.
     tools/host/abscheck.py` (after `make host-census`) reads the host objects, where a name is a
     relocation and a number is not, and lists any memory operand at a PS2 address (main memory,
     the hardware registers, the scratchpad) and any immediate that is exactly a PS2 symbol's
-    address. Keep it at 0.
+    address. Since session 74 it also lists any data word (a piece's original bytes, a C
+    table) with no relocation that is a PS2 .text address or a variable's start, unless
+    data_relocs.tsv rejected it with a reason. Keep it at 0.
 
 ## Known absolute addresses in matched code
 

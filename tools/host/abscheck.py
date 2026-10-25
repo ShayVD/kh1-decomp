@@ -19,8 +19,16 @@ Rows (exit 1 when there are any):
   imm   an immediate (mov / push / lea / cmp) with no relocation that is
         exactly the start of a function or variable of the linked PS2 ELF
         (out/shift/kh1-shift.linked.elf): an address passed as a number.
+  data  a 4-byte word of a data section (.data* / .rodata*, not the string
+        sections) with no relocation that is a 4-aligned address inside the
+        PS2 .text or exactly the start of a PS2 variable: a pointer the data
+        pieces carry as original bytes (session 74).  A word data_relocs.tsv
+        rejected with a reason (into-func, payload, script, the reviewed
+        overrides...) or inside the resource files it counts (resfile) is
+        decided, not a row; --all prints those too.
 Other immediates in those ranges are DMA tags, GS registers, masks and
-colours, and are not rows.  REVIEWED holds the compiler patterns read by hand
+colours, and are not rows; so are the data words in the hardware, scratchpad
+and memory-map ranges (VIF codes, DMA end tags 0x7000xxxx, GS values).  REVIEWED holds the compiler patterns read by hand
 (index arithmetic folded into a displacement, a tag word built with lea, a
 heap carved at fixed offsets); --all prints them too.  Only names and
 instruction text are printed, no game bytes."""
@@ -28,14 +36,22 @@ from __future__ import annotations
 
 import argparse
 import re
+import struct
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+from elf32 import Elf, SHT_NOBITS  # noqa: E402
+
 HOST = ROOT / "out" / "host"
 GAME_DIRS = ("src", "nonmatchings", "data")
 PS2_ELF = ROOT / "out" / "shift" / "kh1-shift.linked.elf"
+DATA_RELOCS = ROOT / "data_relocs.tsv"
+D_BLOB = 0x00272C70  # data_relocs.tsv's offsets are from here
+RESFILE = (0x00308CE0, 0x00350CE0)  # the embedded resource files (counted, not listed, in data_relocs.tsv)
+TEXT_END = 0x00272C70
 
 # (function, displacement) -> why: read by hand, not an address
 REVIEWED = {
@@ -43,6 +59,11 @@ REVIEWED = {
     ("func_001bfe50", 0x16BC00): "the task heap's offsets from its base (func_001bfec8's 0x171388 bytes)",
     ("func_001bfe50", 0x170700): "the task heap's offsets from its base",
     ("func_001bfe50", 0x171388): "the task heap's end",
+}
+# (variable, word offset) -> why: data words read by hand, not pointers the host follows
+REVIEWED_DATA = {
+    ("D_0048CC10", off): "func_00100670's PS2 jump table (lui/lw jtbl_0048CC10): the host's switch has its own"
+    for off in range(0, 0x20, 4)
 }
 NOT_ADDRESSES = {"_ftext"}  # 0x100000 is also a GS value (the windows' 0x100000 words)
 
@@ -73,6 +94,59 @@ def ps2_symbols():
             if 0x00100000 <= v < 0x02000000:
                 syms.setdefault(v, p[2])
     return syms
+
+
+def data_symbols():
+    """The starts of the PS2 variables (data and bss)."""
+    return {v: n for v, n in ps2_symbols().items() if v >= TEXT_END}
+
+
+def data_decisions():
+    """PS2 address -> data_relocs.tsv's reason for the words it rejected (tier x)."""
+    out = {}
+    if not DATA_RELOCS.exists():
+        return out
+    for ln in DATA_RELOCS.read_text().splitlines():
+        p = ln.split("\t")
+        if ln.startswith("#") or len(p) < 6 or p[4] != "x":
+            continue
+        out[D_BLOB + int(p[0], 16)] = p[5]
+    return out
+
+
+NAME = re.compile(r"D_([0-9A-F]{8})")
+
+
+def scan_data(obj, dsyms, decided):
+    """(variable, offset, value, decision or None) for the data rows of one object."""
+    e = Elf.load(obj)
+    anchors = {}
+    for sym in e.symbols():
+        m = NAME.fullmatch(sym.name)
+        if m and 0 < sym.shndx < len(e.sections):
+            anchors.setdefault(sym.shndx, []).append((sym.value, int(m.group(1), 16), sym.name))
+    for sec in e.sections:
+        if (not sec.name.startswith((".data", ".rodata")) or sec.name.startswith(".rodata.str")
+                or sec.type == SHT_NOBITS or not sec.size):
+            continue
+        rel = {r[0] for r in e.relocations(sec)}
+        raw = e.section_bytes(sec)
+        names = sorted(anchors.get(sec.index, []))
+        for off in range(0, len(raw) - 3, 4):
+            if off in rel:
+                continue
+            v = struct.unpack_from("<I", raw, off)[0]
+            if not ((0x00100000 <= v < TEXT_END and v % 4 == 0) or v in dsyms):
+                continue
+            base = max((n for n in names if n[0] <= off), default=None)
+            if base is None:
+                yield sec.name, off, v, None
+                continue
+            addr = base[1] + off - base[0]
+            why = decided.get(addr)
+            if why is None and RESFILE[0] <= addr < RESFILE[1]:
+                why = "resfile"
+            yield "%s+0x%x" % (base[2], off - base[0]), (base[2], off - base[0]), v, why
 
 
 def objects():
@@ -123,7 +197,9 @@ def main():
     syms = ps2_symbols()
     if not syms:
         print("# abscheck: no out/shift/kh1-shift.linked.elf (run `make shift`): imm rows skipped", file=sys.stderr)
-    rows, reviewed, nobj = [], [], 0
+    dsyms, decided = data_symbols(), data_decisions()
+    allsyms = ps2_symbols()
+    rows, reviewed, nobj, ndecided = [], [], 0, 0
     for obj in objects():
         nobj += 1
         rel = str(obj.relative_to(HOST))
@@ -131,6 +207,16 @@ def main():
             row = (rel, fn, kind, "0x%x" % (v & 0xFFFFFFFF), text)
             if (fn, v & 0xFFFFFFFF) in REVIEWED:
                 reviewed.append(row + (REVIEWED[(fn, v & 0xFFFFFFFF)],))
+            else:
+                rows.append(row)
+        for where, key, v, why in scan_data(obj, dsyms, decided):
+            row = (rel, where, "data", "0x%x" % v, allsyms.get(v, "in .text"))
+            if key in REVIEWED_DATA:
+                reviewed.append(row + (REVIEWED_DATA[key],))
+            elif why:
+                ndecided += 1
+                if a.all:
+                    reviewed.append(row + ("data_relocs.tsv: " + why,))
             else:
                 rows.append(row)
     rows = sorted(set(rows))
@@ -141,8 +227,8 @@ def main():
             print("REVIEWED\t" + "\t".join(r))
     if a.tsv:
         Path(a.tsv).write_text("".join("\t".join(r) + "\n" for r in rows))
-    print("# %d host objects; %d rows (PS2 addresses as numbers); %d reviewed patterns left out"
-          % (nobj, len(rows), len(set(reviewed))))
+    print("# %d host objects; %d rows (PS2 addresses as numbers); %d reviewed patterns left out; "
+          "%d data words decided by data_relocs.tsv" % (nobj, len(rows), len(set(reviewed)) - (ndecided if a.all else 0), ndecided))
     return 1 if rows else 0
 
 
