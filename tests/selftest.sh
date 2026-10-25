@@ -131,6 +131,19 @@ if python3 -I "$ROOT/tools/host/clutcheck.py" --src "$W/clutneg/src" > "$W/clut_
    ! grep -q 'func_00202300 .*reads the CLUT 0x3DFC (CSA 4)' "$W/clut_neg.log"; then
   echo "selftest: clutcheck missed a window part's CLUT load taken away" >&2; cat "$W/clut_neg.log" >&2; exit 1
 fi
+# session 114: the HUD's TEX0 pair whose first word no longer loads (CLD 0), and a timer TEX0 stored into a word
+# DESCRIPTORS does not list, and a field-text glyph TEX0 whose CLD 1 is taken away, fail
+mkdir -p "$W/clutneg2/src" && cp -r "$ROOT/src/hud" "$ROOT/src/text" "$W/clutneg2/src/"
+sed -i 's/case 0: \*p = (u64)tbp << 37 | 0x2000000665423600;/case 0: *p = (u64)tbp << 37 | 0x0000000665423600;/' "$W/clutneg2/src/text/fldtext.c"
+sed -i 's/t->f61 = 1;/t->f61 = 0;/' "$W/clutneg2/src/hud/ui.c"
+sed -i 's/D_00669338 = 0x0607400621413600;/D_00669340 = 0x0607400621413600;/' "$W/clutneg2/src/hud/timer.nostrict.c"
+if python3 -I "$ROOT/tools/host/clutcheck.py" --src "$W/clutneg2/src" > "$W/clut_neg2.log" ||
+   ! grep -q 'func_0024aa48 .*no longer matches' "$W/clut_neg2.log" ||
+   ! grep -q 'stored into D_00669340 with no register' "$W/clut_neg2.log" ||
+   ! grep -q 'D_00669338: in DESCRIPTORS, but no TEX value' "$W/clut_neg2.log" ||
+   ! grep -q 'func_0010c5c8 .*stored into p with no register' "$W/clut_neg2.log"; then
+  echo "selftest: clutcheck missed a broken HUD TEX0 pair, an unlisted stored TEX0 or a glyph TEX0 that no longer loads" >&2; cat "$W/clut_neg2.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
