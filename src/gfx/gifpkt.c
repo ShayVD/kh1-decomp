@@ -16,6 +16,7 @@
 #include "data/pieces/D_002A3F50.h"
 #include "common.h"
 #include "platform/math.h"
+#include "platform/dma.h"
 #include "data/pieces/D_002BBDE0.h"
 #include "data/types/text_00110000_h4_p.h"
 #include "data/bss_004F.h"
@@ -38,7 +39,7 @@ void func_0011fb48(s32 arg0, s32 arg1, s32 arg2) {
 typedef struct { u64 a, b; } Q128;
 void func_0011fb78(Q128 *p, s32 a1, Q128 *end) {
     u64 v = (end - p - 1) | ((u64)a1 << 28);
-    if ((u32)end > 0x6fffffff) v |= 0x8000000000000000;
+    if ((u32)end > 0x6fffffff) v |= (u64)PLAT_DMA_SPR << 32; /* the tag's SPR bit (scratchpad) */
     *(u64 *)p = v;
 }
 

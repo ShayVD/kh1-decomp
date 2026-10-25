@@ -293,6 +293,15 @@ rewrite matched code.
     C type (D_00573AC0 holds the packet chain and the Pk2 that calls it, vita-port-plan 5.1k). A
     separate `s32 [5]` at an address that is 4 but not 8 aligned does not link: ee-gcc pads it to 8;
     merge it with the name before it instead (bss_0064.c's D_00642C70).
+13. **DMA addresses through platform/dma.h** (session 72). A DMA tag address is a PS2 address:
+    the scratchpad's is `(p & 0x0fffffff) | 0x80000000` and main memory's (VIF1 TADR) `p &
+    0x0fffffff`. On the host and the Vita a pointer is not a PS2 address and the masks cut it, so
+    write PLAT_DMA_SPR_ADDR(p), PLAT_DMA_ADDR(p), `| PLAT_DMA_SPR` (and `(u64)PLAT_DMA_SPR << 32`
+    for the SPR bit in a tag), and PLAT_SPR_BASE / PLAT_SPR_END for the scratchpad's bounds (opdma.c's
+    two stacks started at a literal 0x70000000 / 0x70004000: the ppp effects' packets would have
+    been written there on the host). Each expands to the PS2's own tokens, so the objects stay
+    bit-identical. `python3 -I tools/host/dmacheck.py` lists what is left (keep it at 0; `--list`
+    lists every PlatDmaSend and where its chain comes from).
 
 ## Known absolute addresses in matched code
 

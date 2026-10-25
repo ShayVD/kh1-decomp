@@ -316,7 +316,7 @@ void pppRyjDrawKekotoDraw(u8 *obj, KkKey *key, PppEntry *e)
     p = (KkPkt *) kkPush(0x800);
     p->gif = 0x3000000000000001ULL;
     tag = &p->gif2;
-    dma = ((s32) p & 0x0FFFFFFF) | 0x80000000;
+    dma = PLAT_DMA_SPR_ADDR(p);
     p->regs = 0xEEE;
     p->tex0[0] = tx->w8;
     p->tex0[1] = tx->wC;

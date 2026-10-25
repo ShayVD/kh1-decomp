@@ -251,7 +251,7 @@ void func_00108cf8(void *p, s32 i, void *q) {
 /* func_00108d90 (from hand/text_00100000_h2.c). */
 s32 func_00108d90(void *arg) {
     PlatDmaPutVif1Qwc(0);
-    PlatDmaPutVif1Tadr(*(u32 *)((u8 *)arg + 0x10) & 0x0FFFFFFF);
+    PlatDmaPutVif1Tadr(PLAT_DMA_ADDR(*(u32 *)((u8 *)arg + 0x10)));
     PlatDmaPutStat(2);
     PlatIFlushCache(0);
     PlatDmaPutVif1Chcr(0x145);

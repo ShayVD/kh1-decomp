@@ -104,7 +104,7 @@ void func_0021e120(Wnd *o, s32 x, s32 y, s32 k) {
     PlatDmaSend(PlatDmaGetChan(2), D_00643340);
     buf = func_00122048(1024, 128);
     p = buf + 2;
-    u = (void *)(((u32)buf & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(buf);
     t1 = 0xEEEEE;
     k0 = 0x5000000000008001;
     k5 = 63;

@@ -675,7 +675,7 @@ void func_001fea38(TextWin *o) {
     PlatDmaSend(PlatDmaGetChan(2), (*(u8 (*)[0x400])&D_003F1A70));
     p = func_00122048(0x400, 0x80);
     q = p + 2;
-    u = (void *)(((u32)p & 0x0fffffff) | 0x80000000);
+    u = (void *)PLAT_DMA_SPR_ADDR(p);
     q[0] = 0x1000000000008001;
     q[1] = 0xe;
     q = func_0011fb38(0x42, 0x48, q + 2);

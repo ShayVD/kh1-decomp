@@ -547,7 +547,7 @@ s32 func_00103c48(void) {
     func_00103a70();
     D_0048CAD4 = pkt;
     PlatDmaPutVif1Qwc(0);
-    PlatDmaPutVif1Tadr((u32)D_0048C770 & 0x0fffffff);
+    PlatDmaPutVif1Tadr(PLAT_DMA_ADDR(D_0048C770));
     PlatDmaPutStat(2);
     PlatFlushCache(0);
     PlatDmaPutVif1Chcr(0x145);

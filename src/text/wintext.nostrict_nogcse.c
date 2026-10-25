@@ -55,7 +55,7 @@ KH1_V0(s32) func_001f9e48(TextWin *o, s32 mode, s32 x, s32 y, u8 *s, s32 sz, s32
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
     q = base + 2;
-    tag = ((u32)base & 0x0fffffff) | 0x80000000;
+    tag = PLAT_DMA_SPR_ADDR(base);
     q[0] = 0x4000000000000001;
     q[1] = 0xeeee;
     q[3] = 63;
@@ -198,7 +198,7 @@ void func_001fa8b0(TextWin *o, s32 x, s32 y, u8 *s, s32 sz, s32 col) {
     sz16 = sz * 16;
     base = func_00122048(1024, 128);
     q = base + 2;
-    tag = ((u32)base & 0x0fffffff) | 0x80000000;
+    tag = PLAT_DMA_SPR_ADDR(base);
     q[0] = 0x4000000000000001;
     q[1] = 0xeeee;
     q[3] = 63;
@@ -324,7 +324,7 @@ KH1_V0(s32) func_001fb428(TextWin *o, s32 mode, u32 nd, s32 pad, s32 x, s32 y, s
     neg = 0;
     base = func_00122048(1024, 128);
     p = base + 2;
-    tag = ((u32)base & 0x0fffffff) | 0x80000000;
+    tag = PLAT_DMA_SPR_ADDR(base);
     p[0] = 0x4000000000000001;
     p[2] = 0;
     p[1] = 0xeeee;
