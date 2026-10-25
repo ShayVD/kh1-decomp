@@ -227,21 +227,7 @@ int PlatMcSync(int mode, int *cmd, int *result) {
     return 1;
 }
 
-/* platform/pad.h */
-int PlatDbcInit(void) { return 0; }
-int PlatPadInit(int mode) { return 0; }
-int PlatPadCreateSocket(void *param, void *addr) { return 0; }
-int PlatPadGetState(int socket) { return 0; }
-/* no pad: no profile (src/pad/padread.nostrict.c skips the read on < 0; PlatPadGetState
- * never answers 1 anyway, so the profile, D_004E44C8, is not reached) */
-int PlatPadGetButtonProfile(int socket, void *profile) { return -1; }
-/* PlatPadGetState never answers 1 (stable), so src/pad/padread.nostrict.c does not read;
- * should it, the read fails and leaves no button pressed (the buttons are active low). */
-int PlatPadRead(int socket, u8 *data) {
-    data[0] = data[1] = 0xFF;
-    return -1;
-}
-int PlatVibSetActParam(int socket, int psize, u8 *profile, int dsize, void *data) { return 0; }
+/* platform/pad.h: host/null/pad.c (session 87) */
 
 /* platform/thread.h */
 void PlatFlushCache(int op) {}

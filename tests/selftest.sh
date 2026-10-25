@@ -103,6 +103,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/sound_test.c" "$ROOT/host/null/sound.c"
   "$W/sound_test" > "$W/sound.log" || { cat "$W/sound.log"; exit 1; }
   tail -n 1 "$W/sound.log"
+  # the null pad and its script (host/null/pad.c, session 87)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/pad_test" \
+      "$ROOT/tests/host/pad_test.c" "$ROOT/host/null/pad.c"
+  "$W/pad_test" "$W" > "$W/pad.log" 2>&1 || { cat "$W/pad.log"; exit 1; }
+  tail -n 1 "$W/pad.log"
 else
   echo "selftest: no gcc -m32, dmawalk_test skipped"
 fi

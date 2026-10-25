@@ -303,8 +303,10 @@ rewrite matched code.
     24, 0x118 bytes past the status block (docs/sound-spec.md 3). `python3 -I tools/host/walkcheck.py`
     (session 86, clang's tree, no build needed) lists each pointer a loop steps (`p++`, `p += n`,
     `p = p + n`) that a later loop reads with no assignment in between, leaving out loops in other
-    branches of one `if` and loops a `return` follows; keep its WALK rows at 0 (17 REVIEWED: the
-    status block, CLUT fills, packet and file walks read in order). A piece that cannot hold the
+    branches of one `if` and loops a `return` follows; since session 87 also each integer a loop
+    steps that a later loop indexes with (`for (; i < m; i++) a[i]`), and each pointer a builder
+    returns that a later loop steps on; keep its WALK rows at 0 (42 REVIEWED: the status block,
+    CLUT fills, packet and file walks read in order, lists that share one count). A piece that cannot hold the
     whole reach (MIPS gas pads a section aligned to 16 or more to 16) gets zero bytes after it on
     the host only, census.py's HOST_TAIL (D_0063D640: 0x18).
 13. **DMA addresses through platform/dma.h** (session 72). A DMA tag address is a PS2 address:

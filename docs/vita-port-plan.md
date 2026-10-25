@@ -1331,6 +1331,55 @@ from `0x118000` (`func_00106000` case 2) has no main-ELF selector (no store of 2
 overlay check. Item 4d (`KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses) still waits for
 the Mac.
 
+### 5.1aa Session 87: index walks and builder results, a scripted pad, the script's screen spin
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only tools/host, host/, tests/ and docs/
+changed: kh1.elf byte-identical, **every out/build object bit-identical**, the float ELF the same (no
+float-untested row).
+
+**walkcheck's two siblings** (item 4a, portability rule 12): tools/host/walkcheck.py now also lists
+**index walks** (`idx`: an integer a loop steps and a later loop uses as an array index, `a[i]` or
+`p + i`, with no assignment between: `for (i = 0; i < n; i++) ...; for (; i < m; i++) a[i]`) and
+**builder results** (`call`: a pointer assigned the result of a builder, a function that returns a pointer
+one of its loops stepped or another builder's result, and then stepped by a later loop, also inside the
+loop that holds the call). 88 builders. New rows, all read: **21 idx** (IDX_REVIEWED: the Gummi block
+table's held / empty runs, checked against the disc's ELF: 64 held, 64 empty, 32 more of 160; the
+garage's preset and saved ship lists, up to `D_00623E40[58]` of 64; the journal's three lists on one
+count, `D_003F50E0[184]`; the journal grid's 99 cells; the number formatters' `dig[12]`; the message
+number's 22 of 32 bytes; the text window list's 24; two CLUT fills that index a 32-entry table with
+`i & 0x1F`) and **4 call** (CALL_REVIEWED: pppsys's four section readers after `func_001803c0`'s skip,
+the ppp file format). 42 rows, **0 WALK**. Two things to check later: wintext's message code 11 passes a
+byte of the message as the digit count (`dig[12]`: more than 12 overruns on the PS2 too; read the real
+disc's messages), and:
+
+**The save menu's party fill leaves a byte unset** (savemenu.c `func_00228588`, checked in kh1.elf: the
+loop adds 2 to `j`): after keeping the members 1 and 2 (`buf[1..]`), `for (; j < 4; j += 2) buf[j] = -1`
+leaves `buf[3]` unset when one member is kept and `buf[2]` unset when none is, and `func_0013c778` writes
+a value < 10 into the party. On the PS2 the byte is whatever the stack held (most likely the same every
+time); on the host and the Vita it is another stack. Not changed (matching code); the port's fix, if a
+boot shows a party member appearing after this save-point choice, is to start `buf` at `0xFF` in a
+port-only build.
+
+**The null pad and a scripted controller** (item 4b): host/null/pad.c takes platform/pad.h from
+plat_null.c. **The pad is now connected** (state 1, a DualShock 2 profile, nothing pressed, the sticks
+centred): before, `PlatPadGetState` never answered 1, so from frame 32 every host run sat in
+`func_0010f918`'s "no controller" loop (`D_002C5968.b0`, renderer-spec 4.15; on the fake disc 400 frames:
+`func_0010f5f8` once, `func_0010f918` 32 times with no pad, 399 with one). `KH1_HOST_PAD=none` keeps the
+old answer; **`KH1_HOST_PAD=FILE`** plays a script, `FRAME BUTTONS [RX RY LX LY]` lines held until the
+next (`START`, `CIRCLE+UP`, `0x4000`, `-`, `out`), and `KH1_HOST_TRACE=1` prints `kh1-host: pad FRAME
+BUTTONS` at each change. Checked on the fake disc under gdb: START reaches `D_002C5AD0.x4` (the menus'
+`D_00425BC8` pad) at the scripted frame, `out` for 60 frames raises `D_002C5968.b0` after 31 and clears it
+when the pad is back. tests/host/pad_test.c (18 checks) in tests/selftest.sh. The stub:2 run still ends
+in func_00132790; valgrind 0 errors to the overlay fault. Found on the way: `D_002C5BB0` (the decoded pad)
+is not the PAD_* bits but **actions** through the 30-entry table `D_002C5990` (func_0011f628: circle and
+R3 to 1, cross to 2 and 4, ...); START and SELECT have no action and are read from the raw pad.
+
+**The script's screen spin** (item 4c, renderer-spec 4.16): `D_002BBE04` 1 / 4 (objscmd.c `func_0012b450`,
+vm_lib.c `func_001cde38`; vm_lib's `func_001cdea8` makes 1 into 4) draw the frame last shown, turned by
+an angle that ramps over a number of frames, blended into the target before the frame copy: a feedback
+trail over the live scene (1) or over the frozen last frame (4). A negative angle is used at once; a
+record with 0 frames divides by 0 (the EE's `FLT_MAX` vs IEEE's NaN for one frame: clamp in the port).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

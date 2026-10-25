@@ -18,6 +18,9 @@
  *                       each draw / immediate list node as it starts (plat_null.c, session 83)
  *   KH1_HOST_SND=trace  print each sound command and RPC (host/null/sound.c, session 86; also at
  *                       KH1_HOST_TRACE=6); tools/host/sndlog.py summarises them
+ *   KH1_HOST_PAD=FILE   a scripted controller, "FRAME BUTTONS [RX RY LX LY]" lines (host/null/pad.c,
+ *                       session 87); without it one pad is connected with nothing pressed, and
+ *                       KH1_HOST_PAD=none has no pad (the "no controller" band from frame 32)
  *   KH1_HOST_OVL=stub   a test switch: a call of the overlay entry D_00F20000 returns 0 instead
  *                       of faulting, so the run goes on past it (each call's two arguments are
  *                       printed).  No overlay code runs: what
