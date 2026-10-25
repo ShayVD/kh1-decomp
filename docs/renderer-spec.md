@@ -28,6 +28,7 @@ Conventions:
 | `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76. `--state` (session 77): the state list instead, each register's distinct values decoded with the functions that send each (§4.7). Session 78: `SEEDS` writes the 17 chains init code builds from constants over the ELF's bytes first (68 more sends walked; `--no-seeds` turns it off, §4.8) |
 | `KH1_HOST_TRACE=4 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt [--sends]` | the same state list for the chains a host run sends (the run-time ones too: the text windows, the HUD), each named by the host symbol at its start (§4.7). New in session 77 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --draws` | the draw states the host's GS register file (host/null/gsregs.c) counted: each distinct PRIM + context state the vertex kicks drew with, decoded, with kicks, primitives and the chains that kicked them (§4.9, §5.1). New in session 79 |
+| `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --uploads` | the transfers into the host's GS memory model (host/null/gsmem.c): each destination DBP / DBW / PSM and rectangle, how often, the pixels and the chains that sent them (§5.2). New in session 80 |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -1232,6 +1233,14 @@ load; on the fake disc the pixels are zeros). tests/host/gsmem_test.c (36 checks
 read back per PSM, CT24 packing, the font's halves over a Z pattern, 4- and 8-bit CLUT loads with CLD 0 /
 1 / 2 / 4, the glyphs' CSA 1 read of an 8-bit CLUT, TEXA, a local copy, the cache stamp, IMAGE through
 the GIF reader. Valgrind: 0 errors to the overlay fault.
+
+**`KH1_HOST_TEXDUMP=DIR`** (with `KH1_HOST_TRACE` >= 2) writes each distinct texture a send drew with,
+decoded from the model after the send, to `DIR/tex_TEX0_N.pam` (RGBA, A doubled; once per TEX0 + TEXA +
+page contents + CLUT load for the indexed PSMs). Draws do not write the model, so a texture inside a
+render target comes out as the uploads left it. On the fake disc: the 3D target `0x1A00` and the Z area
+`0x0E00` read as CT24, the latter twice, because **the font uploads at `0x1000` land inside the Z area's
+512x512 at `0x0E00`** (the font is in the Z buffer's top byte, as §3.1 / 5.1 say). From the user's disc:
+the dumps never go in the repo.
 
 ## 6. Open questions
 

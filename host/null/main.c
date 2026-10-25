@@ -39,6 +39,7 @@ int kh1_cd_image_open(const char *path);
 
 int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
+extern const char *kh1_host_texdump; /* host/null/dmawalk.c */
 unsigned int kh1_host_cd_reads, kh1_host_cd_sectors;
 static unsigned long frames, max_frames = 600;
 static int ovl_stub;
@@ -169,6 +170,7 @@ int main(int argc, char **argv) {
     {
         const char *tr = getenv("KH1_HOST_TRACE");
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
+        kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
     }
     {
         const char *ovl = getenv("KH1_HOST_OVL");

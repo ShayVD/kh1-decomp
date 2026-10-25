@@ -25,5 +25,6 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max);
 #define KH1_DMA_PATH2_SHORT   0x80 /* the DIRECT data ends inside a GIF packet (PATH2) */
 
 extern int kh1_host_trace;
+extern const char *kh1_host_texdump;
 
 #endif

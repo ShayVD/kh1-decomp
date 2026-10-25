@@ -31,6 +31,12 @@
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
 __SIZE_TYPE__ strlen(const char *);
+void *fopen(const char *, const char *);
+__SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, void *);
+int fprintf(void *, const char *, ...);
+int fclose(void *);
+
+const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 
 typedef struct {
     u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
@@ -244,6 +250,54 @@ static void gs_print_uploads(void) {
     if (n > 64) printf("kh1-host:   upload ... %d in all\n", n);
 }
 
+/* KH1_HOST_TEXDUMP=DIR (session 80): each distinct texture a send drew with, decoded from the GS memory
+ * model (host/null/gsmem.c) as it stands after the send, written once per TEX0 + TEXA + contents to
+ * DIR/tex_TEX0_N.pam (RGBA, A doubled from the GS's 0-0x80 scale).  Draws do not write the model, so a
+ * texture inside a render target (the 3D target 0x1A00, the Z area 0x0E00) comes out as the uploads
+ * left it.  From the user's disc: never commit them. */
+static void gs_dump_textures(void) {
+    static KH1GsDraw d[256];
+    static u32 seen[1024][5], nseen, pix[1024 * 1024];
+    static unsigned char row[1024 * 4];
+    int n = kh1_gs_draws(d, 256), i;
+    u32 j, k, w, h, x, y;
+    char path[512];
+    void *f;
+    for (i = 0; i < n && i < 256; i++) {
+        u32 key[5];
+        if (!(d[i].prim >> 4 & 1)) continue;
+        key[0] = d[i].ctx.tex0.lo;
+        key[1] = d[i].ctx.tex0.hi & ~0xE0000000u; /* CLD is when, not what */
+        key[2] = d[i].texa.lo ^ d[i].texa.hi << 16;
+        key[3] = kh1_gsmem_tex_stamp(key[0], key[1]);
+        k = key[0] >> 20 & 63; /* the CLUT only for the indexed PSMs */
+        key[4] = k == KH1_PSMT8 || k == KH1_PSMT8H || k == KH1_PSMT4 || k == KH1_PSMT4HL || k == KH1_PSMT4HH
+                     ? kh1_gsmem_clut_stamp() : 0;
+        for (j = 0; j < nseen; j++) {
+            for (k = 0; k < 5 && seen[j][k] == key[k]; k++) ;
+            if (k == 5) break;
+        }
+        if (j < nseen || nseen == 1024) continue;
+        for (k = 0; k < 5; k++) seen[nseen][k] = key[k];
+        if (kh1_gsmem_read_tex(key[0], key[1], d[i].texa.lo, d[i].texa.hi, pix)) continue;
+        w = 1u << (key[0] >> 26 & 15);
+        h = 1u << ((key[0] >> 30 | key[1] << 2) & 15);
+        sprintf(path, "%.400s/tex_%08x%08x_%u.pam", kh1_host_texdump, key[1], key[0], nseen++);
+        f = fopen(path, "wb");
+        if (!f) continue;
+        fprintf(f, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", w, h);
+        for (y = 0; y < h; y++) {
+            for (x = 0; x < w; x++) {
+                u32 v = pix[y * w + x], a = (v >> 24) * 2;
+                row[x * 4] = v; row[x * 4 + 1] = v >> 8; row[x * 4 + 2] = v >> 16; row[x * 4 + 3] = a > 255 ? 255 : a;
+            }
+            fwrite(row, 4, w, f);
+        }
+        fclose(f);
+        printf("kh1-host:   texture %s\n", path);
+    }
+}
+
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
@@ -354,6 +408,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
         gs_print_draws();
         gs_print_uploads();
     }
+    if (kh1_host_texdump) gs_dump_textures();
     if (bad || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];
