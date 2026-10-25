@@ -28,7 +28,8 @@ static KH1GsState gs = { { 0, 0 }, { 1, 0 } };
 static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF tag */
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
-static u32 vxy[3], vuv[3], vrgba[3]; /* the queued vertices' XYZ X / Y, UV and RGBA (session 83: sprites) */
+static KH1GsVert vq[3]; /* the queued vertices (session 83: sprites; session 122: every field, the hook) */
+void (*kh1_gs_prim_hook)(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 static s32 gs_xshift; /* added to each XYZ's X (session 92: the HUD's anchors, kh1_gs_xshift) */
 static s32 gs_sx0, gs_sw; /* session 93: a full-screen packet's stretch (kh1_gs_xstretch), gs_sw 0 = none */
 static u32 gs_swhat;
@@ -107,10 +108,11 @@ static int gs_sprite(u32 p, const KH1GsContext *c, int flat) {
     s.xyoffset_lo = c->xyoffset.lo; s.xyoffset_hi = c->xyoffset.hi;
     s.scissor_lo = c->scissor.lo; s.scissor_hi = c->scissor.hi;
     s.texa_lo = gs.texa.lo; s.texa_hi = gs.texa.hi;
-    s.xy[0] = vxy[0]; s.xy[1] = vxy[1];
-    s.uv[0] = vuv[0]; s.uv[1] = vuv[1];
-    s.rgba = vrgba[1];
+    s.xy[0] = vq[0].xy; s.xy[1] = vq[1].xy;
+    s.uv[0] = vq[0].uv; s.uv[1] = vq[1].uv;
+    s.rgba = vq[1].rgba;
     s.tests = 0;
+    s.zbuf_lo = c->zbuf.lo; s.z = vq[1].z; s.f = vq[1].f; s.fogcol = gs.fogcol.lo;
     /* session 99: the model's buffers are the PS2's 512 wide with canvas 0 at pixel 0, so a stretched
      * copy of a buffer laid out like the target (u from the view's left edge, the renderer's) is read
      * back by the margin here, and every copy in the model reads the same canvas (renderer-spec 5.4
@@ -120,7 +122,7 @@ static int gs_sprite(u32 p, const KH1GsContext *c, int flat) {
     return flat ? kh1_gsmem_flat_sprite(&s) : kh1_gsmem_sprite(&s);
 }
 
-static void gs_kick(int draw, u32 xy) {
+static void gs_kick(int draw, u32 xy, u32 z, u32 f) {
     u32 p = gs_prim(), need = kh1_gs_prim_verts(p), i;
     KH1GsDraw d, *k;
     if (cur == ~0u) {
@@ -167,14 +169,20 @@ static void gs_kick(int draw, u32 xy) {
     }
     if (gs.nvert < need) {
         i = gs.nvert++;
-    } else { /* a strip or fan's next vertex: the queue moves up */
-        for (i = 1; i < need; i++) { vxy[i - 1] = vxy[i]; vuv[i - 1] = vuv[i]; vrgba[i - 1] = vrgba[i]; }
+    } else { /* a strip's next vertex: the queue moves up; session 122: a fan keeps its first vertex */
+        for (i = (p & 7) == 5 ? 2 : 1; i < need; i++) vq[i - 1] = vq[i];
         i = need - 1;
     }
-    vxy[i] = xy;
-    vuv[i] = gs.uv.lo;
-    vrgba[i] = gs.rgbaq.lo;
+    vq[i].xy = xy;
+    vq[i].z = z;
+    vq[i].f = f;
+    vq[i].uv = gs.uv.lo;
+    vq[i].rgba = gs.rgbaq.lo;
+    vq[i].q = gs.rgbaq.hi;
+    vq[i].s = gs.st.lo;
+    vq[i].t = gs.st.hi;
     if (gs.nvert < need) return;
+    if (draw && kh1_gs_prim_hook) kh1_gs_prim_hook(p, vq, need, cur);
     /* a full queue: XYZ2 / XYZF2 draw; the lists (POINT, LINE, TRIANGLE, SPRITE) start again,
      * the strips and the fan keep their last vertices */
     if (draw) {
@@ -205,8 +213,12 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
         if (gs_sw && gs_swhat & KH1_FS_U) lo = (lo & ~0x3FFFu) | ((u32)kh1_canvas_stretch_u(lo & 0x3FFF, gs_sw) & 0x3FFF);
         gs.uv.lo = lo; gs.uv.hi = hi; return;
     case 0x0A: gs.fog.lo = lo; gs.fog.hi = hi; return;
-    case 0x04: case 0x05: gs_kick(1, gs_xs(lo)); return;  /* XYZF2 / XYZ2 */
-    case 0x0C: case 0x0D: gs_kick(0, gs_xs(lo)); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
+    /* XYZF2 / XYZ2, XYZF3 / XYZ3 (a vertex, no drawing): XYZF's Z is 24 bits and its F the top byte,
+     * XYZ's Z 32 bits with the FOG register's F */
+    case 0x04: gs_kick(1, gs_xs(lo), hi & 0xFFFFFF, hi >> 24); return;
+    case 0x05: gs_kick(1, gs_xs(lo), hi, gs.fog.hi >> 24); return;
+    case 0x0C: gs_kick(0, gs_xs(lo), hi & 0xFFFFFF, hi >> 24); return;
+    case 0x0D: gs_kick(0, gs_xs(lo), hi, gs.fog.hi >> 24); return;
     case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); kh1_gsmem_tex0(lo, hi); return;
     case 0x08: case 0x09: /* session 94: the lens grid's REGION over a copy of the view's width */
         if (gs_sw && gs_swhat & KH1_FS_CLAMP) lo = kh1_canvas_stretch_clamp(lo, gs_sw);

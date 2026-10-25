@@ -211,6 +211,21 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/atest_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c"
   "$W/atest_test" > "$W/atest.log" || { cat "$W/atest.log"; exit 1; }
   tail -n 1 "$W/atest.log"
+  # the depth state, fog and primitive assembly a port's GPU runs (renderer-spec 4.13 "Session 122")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/depth_test" \
+      "$ROOT/tests/host/depth_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/depth.c" "$ROOT/host/port/atest.c"
+  "$W/depth_test" > "$W/depth.log" || { cat "$W/depth.log"; exit 1; }
+  tail -n 1 "$W/depth.log"
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/fog_test" \
+      "$ROOT/tests/host/fog_test.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/fog.c" "$ROOT/host/port/blend.c" \
+      "$ROOT/host/port/texfunc.c"
+  "$W/fog_test" > "$W/fog.log" || { cat "$W/fog.log"; exit 1; }
+  tail -n 1 "$W/fog.log"
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/primasm_test" \
+      "$ROOT/tests/host/primasm_test.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" \
+      "$ROOT/host/port/primasm.c"
+  "$W/primasm_test" > "$W/primasm.log" || { cat "$W/primasm.log"; exit 1; }
+  tail -n 1 "$W/primasm.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \

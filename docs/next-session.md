@@ -9,13 +9,28 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 121 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 122 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 121, 2026-10-25)
+## Where we stopped (end of session 122, 2026-10-25)
+
+- **Session 122** (static, vita-port-plan 5.1bj): **the depth state, fog and the primitive assembly.**
+  Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
+  include/platform/depth.h / host/port/depth.c (renderer-spec 4.13 "Session 122"): the port's depth is the
+  GS's Z scaled (`Z x 2^-24` for Z24, `2^-16` for Z16 / Z16S) in a float buffer with GEQUAL / GREATER as ZTST
+  says, exact for every 24-bit Z (no reversed Z); vertex Zs clamp to the format; a D24 unorm buffer with
+  `Z / 0xFFFFFF` also round-trips. New include/platform/fog.h / host/port/fog.c: the GS's fog as the shader's
+  integer step (exact; a float mix is within 2). New include/platform/primasm.h / host/port/primasm.c: the
+  GIF's vertex queue as independent GPU lists, flat colour copied from the last vertex, sprites as two
+  triangles, the queue kept across a state change (the bevel), positions plus half a pixel. gsregs.c's fan
+  now keeps its first vertex (a host-model bug, no trace change), keeps each vertex's Z / F and has a test hook
+  `kh1_gs_prim_hook`; `kh1_gsmem_sprite` takes Z (`tests` bit 2) and fog (bit 4). New tests/host/depth_test.c
+  (23 checks), fog_test.c (10), primasm_test.c (5). The game's forms: Z24 GEQUAL / GREATER / ALWAYS, Z16S for
+  shadows; TRISTRIP, TRIFAN, TRIANGLE, SPRITE, LINE, no LINESTRIP. kh1.elf byte-identical, no float-untested
+  row; selftest PASS.
 
 - **Session 121** (static, vita-port-plan 5.1bi): **the blend state, the alpha test and the destination alpha.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again). New
@@ -586,7 +601,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 122 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 123 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -608,7 +623,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 121: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 122: nothing new to see on the PS2 (the float ELF is the same; session 112 withdrew session 110's crossfade flicker check: a host-only bug)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -653,22 +668,23 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests, fscheck's run-time
    builds and longcheck's `--cc` are skipped): (a) **the user's answer on the full-width rules** (session
-   101's card, still unanswered at session 121): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
+   101's card, still unanswered at session 122): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in
    winpart.nostrict.c's `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new
-   vita-port-plan 5.1 entry); (b) **the depth state** (the next step after 5.1bi): ZBUF / TEST's ZTE / ZTST /
-   ZMSK and XYZ2's Z as a GPU depth state, as port code (a host/port/depth.c and its header): Z24 and Z16S
-   as a depth format (the integer Z on the GS against a GPU's float or 24-bit depth: GEQUAL with Z growing
-   toward the viewer, the exact compare of equal Zs, the far / near range renderer A / B send), ZMSK as the
-   depth write, the Z buffer drawn as colour (sceneeff `func_00103c48`, renderer-spec 3.2) and read back as a
-   texture (TBP0 0xE00), tested on the GS model where it models Z (extend it if needed, the PS2 build
-   untouched); and **fog** (PRIM's FGE, the vertex FOG, FOGCOL): the GS's `(F x C + (0xFF - F) x FOGCOL) >> 8`
-   after the texture function, before the alpha test and blend, as a shader step, exact on 8-bit values;
-   (c) **the primitive assembly**: the GIF's vertex queue as GPU primitives (POINT, LINE, LINESTRIP,
-   TRIANGLE, TRISTRIP, TRIFAN, SPRITE as two triangles; IIP 0's flat colour from the last vertex: a GPU's
-   provoking vertex; a register write inside a strip splitting it with the last two vertices kept, the
-   bevel's case), tested against gsregs.c's queue; record which forms the game sends in renderer-spec 4.13
-   "Session 122".
-   (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
+   vita-port-plan 5.1 entry); (b) **the whole draw state as one port struct** (the next step after 5.1bj):
+   a host/port/drawstate.c and its header that build, from gsregs.c's `KH1GsDraw` (PRIM, the context's
+   registers, FOGCOL, TEXA), one record of what a GPU draw needs: the pipeline key (blend.h's state, atest.h's
+   draws and stencil, depth.h's state, the colour mask, the primitive class from primasm.h, the shader
+   variant: texfmt's sample, texfunc's TFX / TCC, fog on / off, sampler.h's shader steps) and the per-draw
+   uniforms (AREF, FIX, FOGCOL, TEXA, the REGION_CLAMP bounds); count the distinct pipelines and shader
+   variants over the fake disc's draw states (`KH1_HOST_TRACE=5`, as fscheck / gsstate read them) and over
+   the static packets (`dmawalk.py --state`), and record the table in renderer-spec 4.13 "Session 123" (how
+   many GPU pipelines the game needs); (c) **render targets, the viewport and the scissor**: FRAME / ZBUF /
+   SCISSOR / XYOFFSET as a GPU render target (which FBP is which port texture: the 3D target `0x1A00`, the
+   display, `0x3A00`, the `0x3600` slot as a 256-wide target, `0x3E0000`, the Z area as colour), its viewport
+   (XYOFFSET's 2048 centring, the wide view's canvas from platform/canvas.h) and the scissor, as port code
+   tested against gsmem.c's target list (`kh1_gsmem_targets`) for the fake disc's sends and fscheck's
+   render-to-texture rows; note which targets alias each other's blocks on the PS2 (4.13 "Session 116") and
+   how the port keeps them apart. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
    callers of prim.c's senders still wait for the Mac. **Add to item 2's host run**: with `gsstate.py --draws
    --uploads`, record the HUD descriptors' TEX0 (CBP, PSM, CSA) for renderer-spec 4.9 "Session 114"'s table,
    every CLUT upload not in clutupload's list (renderer A's PATH2 uploads from the disc's chains) for 4.13
@@ -682,10 +698,13 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    tables; and (session 121) **the blend's As**: count the `0x44` (normal blend) draws whose As can pass 0x80
    (a texel alpha above 0x80 under MODULATE, or a vertex alpha above it: renderer A / B's meshes), and any
    render target sampled with TCC 1 whose stored alpha went past 0x80, for 4.13 "Session 121" (if either is
-   not 0, those draws need the shader's frame read).
+   not 0, those draws need the shader's frame read); and (session 122) the depth and primitive forms the disc
+   adds: the ZBUF / TEST pairs in `--draws` (any Z32, Z16 or another ZTST than 4.13 "Session 122"'s table?),
+   the shadow pass's Zs against Z16S's 0xFFFF (a clamp would flatten them), the FGE draws' FOGCOL and F
+   range, and the PRIM types of the meshes' tags (any LINESTRIP or POINT drawn?).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=122`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=123`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 123) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 124) with this
    prompt: the user wants each session to start the next one without being asked.
