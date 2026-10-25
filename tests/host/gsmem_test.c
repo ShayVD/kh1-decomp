@@ -1,7 +1,7 @@
 /* host/null/gsmem.c on made-up pixels (no game data): tests/selftest.sh builds it with gcc -m32 when
  * that works, fed through host/null/gsregs.c's registers and host/null/dmawalk.c's IMAGE reader the
  * way the host run feeds it.  The fixed addresses below were checked against PCSX2's swizzle tables
- * (session 80, outside the repo). */
+ * (session 80, outside the repo; CT16S and the Z formats in session 82). */
 #include "common.h"
 #include "../../host/null/dmawalk.h"
 #include "../../host/null/gsregs.h"
@@ -57,7 +57,21 @@ int main(void) {
                                    kh1_gsmem_addr(KH1_PSMT4, 0, 2, 32, 0) == 1024 &&
                                    kh1_gsmem_addr(KH1_PSMT4, 0, 2, 8, 0) == 2);
     CHECK("T4HL shares CT32", kh1_gsmem_addr(KH1_PSMT4HL, 0, 1, 3, 5) == 39);
-    CHECK("Z32 not modelled", kh1_gsmem_addr(0x30, 0, 1, 0, 0) == ~0u);
+    /* session 82: CT16S's block order, and the Z formats as their colour twin with the block XOR 0x18 */
+    CHECK("CT16S (16,0) (32,0) (0,32)", kh1_gsmem_addr(KH1_PSMCT16S, 0, 1, 16, 0) == 256 &&
+                                        kh1_gsmem_addr(KH1_PSMCT16S, 0, 1, 32, 0) == 2048 &&
+                                        kh1_gsmem_addr(KH1_PSMCT16S, 0, 1, 0, 32) == 512);
+    CHECK("Z32 (0,0) (8,0)", kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 0, 0) == 1536 &&
+                             kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 8, 0) == 1600);
+    CHECK("Z32 = CT32 of the swapped block", kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 3, 5) == kh1_gsmem_addr(KH1_PSMCT32, 0, 1, 35, 21) &&
+                                             kh1_gsmem_addr(KH1_PSMZ32, 0x0E00, 10, 35, 21) == kh1_gsmem_addr(KH1_PSMCT32, 0x0E00, 10, 3, 5));
+    CHECK("Z32 page by BW", kh1_gsmem_addr(KH1_PSMZ32, 0, 2, 64, 32) == 6144 + 1536);
+    CHECK("Z32 XOR on the final block", kh1_gsmem_addr(KH1_PSMZ32, 5, 1, 0, 0) == 29 * 64);
+    CHECK("Z24 shares Z32", kh1_gsmem_addr(KH1_PSMZ24, 0, 1, 3, 5) == kh1_gsmem_addr(KH1_PSMZ32, 0, 1, 3, 5));
+    CHECK("Z16 = CT16 of the swapped block", kh1_gsmem_addr(KH1_PSMZ16, 0, 1, 0, 0) == 3072 &&
+                                             kh1_gsmem_addr(KH1_PSMZ16, 0, 1, 5, 3) == kh1_gsmem_addr(KH1_PSMCT16, 0, 1, 37, 35));
+    CHECK("Z16S (0,0) (32,0)", kh1_gsmem_addr(KH1_PSMZ16S, 0, 1, 0, 0) == 3072 &&
+                               kh1_gsmem_addr(KH1_PSMZ16S, 0, 1, 32, 0) == 1024);
 
     /* an upload per PSM, read back pixel by pixel */
     kh1_gs_reset();
@@ -199,9 +213,23 @@ int main(void) {
                             u[0].h == 2 && u[0].pixels == 8 && u[0].dir == 0);
     }
     CHECK("unsupported", st->unsupported == 0);
-    upload(0x3200, 1, 0x30, 0, 0, 4, 1);
+    /* a Z24 upload (3 bytes a pixel) lands where a CT24 read of the same buffer sees another block,
+     * as the capture's CT24 read of the Z area does (renderer-spec 5.2) */
+    upload(0x3200, 1, KH1_PSMZ24, 0, 0, 4, 1);
+    words[0] = 0x00ABCDEF; words[1] = 0; words[2] = 0;
     image(4);
-    CHECK("Z32 upload counted, data taken", st->unsupported == 1 && st->pixels == 12 && st->extra == 0);
+    CHECK("Z24 upload", st->unsupported == 0 && st->pixels == 12 && st->extra == 0 &&
+                        kh1_gsmem_read_pixel(KH1_PSMZ24, 0x3200, 1, 0, 0) == 0xABCDEF &&
+                        kh1_gsmem_read_pixel(KH1_PSMCT24, 0x3200, 1, 32, 16) == 0xABCDEF &&
+                        kh1_gsmem_read_pixel(KH1_PSMCT24, 0x3200, 1, 0, 0) == 0);
+    upload(0x3200, 1, KH1_PSMZ16S, 0, 0, 2, 1);
+    words[0] = 0x80001234;
+    image(4);
+    CHECK("Z16S upload", kh1_gsmem_read_pixel(KH1_PSMZ16S, 0x3200, 1, 1, 0) == 0x8000 &&
+                         kh1_gsmem_read_pixel(KH1_PSMCT16S, 0x3200, 1, 32, 16) == 0x1234);
+    upload(0x3200, 1, 0x35, 0, 0, 4, 1); /* no such PSM */
+    image(4);
+    CHECK("unknown PSM upload counted", st->unsupported == 1);
 
     /* render targets (session 81): a 640x224 CT32 frame at FBP 0 and a Z24 buffer at ZBP 0x70
      * (block 0x0E00); a PSMT4HL font at 0x1000 (page 0x80, inside the Z buffer's 70 pages) sits in

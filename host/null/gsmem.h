@@ -6,19 +6,24 @@
 #define KH1_PSMCT32  0x00
 #define KH1_PSMCT24  0x01
 #define KH1_PSMCT16  0x02
+#define KH1_PSMCT16S 0x0A
 #define KH1_PSMT8    0x13
 #define KH1_PSMT4    0x14
 #define KH1_PSMT8H   0x1B
 #define KH1_PSMT4HL  0x24
 #define KH1_PSMT4HH  0x2C
+#define KH1_PSMZ32   0x30
+#define KH1_PSMZ24   0x31
+#define KH1_PSMZ16   0x32
+#define KH1_PSMZ16S  0x3A
 
 typedef struct {
     u32 uploads;     /* host->local transfers started (TRXDIR 0) */
     u32 copies;      /* local->local transfers done (TRXDIR 2) */
     u32 pixels;      /* pixels written by uploads */
     u32 extra;       /* IMAGE qwords with no transfer left to take them */
-    u32 unsupported; /* transfers, CLUT loads or reads in a PSM the model does not have (CT16S,
-                      * the Z formats), TRXDIR 1, CSM 1 (TEXCLUT) */
+    u32 unsupported; /* transfers, CLUT loads or reads in a PSM the model does not have, TRXDIR 1,
+                      * CSM 1 (TEXCLUT) */
     u32 clut_loads;  /* CLUT buffer loads (TEX0 / TEX2 with CLD 1-5 that load) */
     u32 target_draws; /* primitives drawn into a render target (kh1_gsmem_draw, session 81) */
 } KH1GsMemStats;
@@ -35,11 +40,12 @@ void kh1_gsmem_image(const u32 *w, u32 n);
 void kh1_gsmem_tex0(u32 lo, u32 hi);
 
 /* the address of pixel (x, y) of a buffer at block bp, width bw (64-pixel units) in psm, in units
- * of the PSM's pixel size (CT32 / CT24 / T8H / T4HL / T4HH: words, CT16: halfwords, T8: bytes,
- * T4: nibbles); ~0 for a PSM the model does not have */
+ * of the PSM's pixel size (CT32 / CT24 / T8H / T4HL / T4HH / Z32 / Z24: words, CT16 / CT16S / Z16 /
+ * Z16S: halfwords, T8: bytes, T4: nibbles); ~0 for a PSM the model does not have.  The Z formats are
+ * their colour twin's layout with the block number XORed with 0x18 (session 82) */
 u32 kh1_gsmem_addr(u32 psm, u32 bp, u32 bw, u32 x, u32 y);
 /* reads / writes one pixel's stored bits (a CT32 word's top byte for T8H, its nibble for T4HL /
- * T4HH; the low 24 bits for CT24, the top byte kept) */
+ * T4HH; the low 24 bits for CT24 / Z24, the top byte kept) */
 u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y);
 void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v);
 

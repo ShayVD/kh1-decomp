@@ -15,7 +15,8 @@ by name only: a pointer passed to func_0015ed80 / func_0015ee78 / func_00106bd8 
 is deferred work, not a call), and, walking the calls in source order (branches not followed
 apart), the first PlatGsSyncPath or send.  It prints each task that can reach a send, its first
 event and the call path to it; RACE marks a task between the two keys whose first event is a
-send.  --all also lists the tasks whose registration key is not a literal (not decided here).
+send.  --all also lists the tasks whose registration key is not a literal (not decided here; none
+in session 82: all 168 registrations have one) and any registration the pattern cannot read.
 
 Static and approximate (source order, not run order); it reads only the repo's C, no game data.
 """
@@ -32,7 +33,11 @@ DEFER = {"func_0015ed80", "func_0015ee78", "func_0011ef10", "func_00106bd8"}
 FN = re.compile(r"^[A-Za-z_][^;{}()=]*?\b(func_[0-9a-f]{8})\s*\([^;{]*\)\s*\{", re.M)
 TOK = re.compile(r"(?<![&\w])(func_[0-9a-f]{8})\s*\(|(PlatGsSyncPath)\s*\(|"
                  r"(PlatDmaSend\w*|PlatDmaPutVif1Chcr|PlatDmaPutGifChcr|PlatGsPutDrawEnv)\s*\(")
-TASK = re.compile(r"func_0011ef10\(\s*([^,()]+?)\s*,\s*(?:\(\s*\w+\s*\(\s*\*\s*\)\s*\([^)]*\)\s*\)\s*)?&?(func_[0-9a-f]{8})")
+# the callback may carry a function-pointer cast or a plain one (`(s32) &func_X`, session 82: four
+# registrations, among them light.c's 0xEA60 and brightfade's 0x2E646, were missed before)
+CALL_SITE = re.compile(r"(?<![\w&])func_0011ef10\s*\(")
+TASK = re.compile(r"func_0011ef10\(\s*([^,()]+?)\s*,\s*(?:\(\s*\w+\s*(?:\(\s*\*\s*\)\s*\([^)]*\)\s*)?\)\s*)?&?"
+                  r"(func_[0-9a-f]{8})")
 
 
 def bodies() -> dict[str, str]:
@@ -91,12 +96,16 @@ def main() -> int:
 
     tasks = set()
     other = set()
+    unread = set()  # registrations TASK cannot read (a callback that is not a func_ name)
     for who, b in body.items():
         for m in TASK.finditer(b):
             try:
                 tasks.add((int(m.group(1), 0), m.group(2), who))
             except ValueError:
                 other.add((m.group(1), m.group(2), who))
+        for m in CALL_SITE.finditer(b):
+            if not TASK.match(b, m.start()):
+                unread.add((who, b[m.start():b.find(";", m.start())]))
     races = 0
     print("# tasks that send (key, task, first event, path; draw list at 0x%x, immediate list at 0x%x)"
           % (LIST, IMMEDIATE))
@@ -109,6 +118,9 @@ def main() -> int:
         print("%6x %-5s %-14s %-22s %s  (registered by %s)" % (key, "RACE" if race else "", f, r[0],
                                                              " > ".join(r[1][1:]) or "-", who))
     if a.all:
+        print("# registrations not read (callback not a func_ name)")
+        for who, text in sorted(unread):
+            print("  %s: %s" % (who, " ".join(text.split())))
         print("# registered with a non-literal key")
         for key, f, who in sorted(other):
             if sends(f, set()):
