@@ -1380,6 +1380,110 @@ an angle that ramps over a number of frames, blended into the target before the 
 trail over the live scene (1) or over the frozen last frame (4). A negative angle is used at once; a
 record with 0 frames divides by 0 (the EE's `FLT_MAX` vs IEEE's NaN for one frame: clamp in the port).
 
+### 5.1ab Session 88: the other full-screen effects, the input layer, counts kept across functions
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only docs/, tools/host/, tests/host/ and
+one comment in src/gfx/sceneeff.c changed: kh1.elf byte-identical, **every out/build object bit-identical**,
+the float ELF the same (no float-untested row).
+
+**The other full-screen effects** (item 4a, renderer-spec 4.17): sceneeff.c's effects read from the C and the
+static packets. `func_00102a48` is the **menu blur** (the frame captured at half size when a field menu
+opens, drawn back as nine blended copies 1 then 2 px apart; the old "rings of glow" was wrong);
+`func_00103058` a **depth blur** (an event's depth-of-field: mode 0 blurs what lies behind a Z value,
+mode 1 the near part through an alpha mask); `func_001032b0` a **sway and colour pulse** (the room table's
+flag or an event: the picture zoomed by 0.3-3.6 % on two out-of-phase axes, about 4 s a period);
+`func_00103c48` VU1 P8's **lens grid** (a 25 x 25 mesh over a copy of the target, bulging toward the
+camera); `func_001039f8` the **fades** to black / white (alpha to 255, so the visible fade is half the
+count); and the **letterbox** bars of events (`D_002A6208`). Two things for the port: the sway and the
+grid copy the target into the Z buffer's memory, so depth tests after them in that frame read colour
+(keep a separate texture and depth); and the white fade-in's countdown runs in frames while the fade
+runs in time steps, which at 60 fps turns the end of the fade dark (rule 7: tie the two together).
+The block `0x1800` PSMT8H rows of §3.1 / §3.2 named `func_00103058` by mistake (it is `func_0010b6c0` /
+`func_0010f0d0`).
+
+**The input layer** (item 4b, for the Vita's platform/pad.h). Read from src/pad/, the 50 files that read the
+pad (`D_002C5AD0`, `D_00425BC8`, `D_002C5BB0`) and the action table in the ELF.
+- **The read** (padread.nostrict.c `func_0011f668`, once a frame from framectl.c `func_0010fd40`): only
+  socket 0 is read (the loop stops at `i <= 0`; `D_004E4280` picks which of the two records it fills), so
+  the Vita needs one pad. Bytes 0-1 (active low) become the PAD_* bits; when the profile's byte 2 has its
+  low four bits set (analog), `func_0011f370` adds the stick directions and vectors. The vibration word
+  (`p->b2` / `b3`) goes out every frame unless the config turns it off (`func_00219348`) or
+  `D_002C597A & 1`. 31 frames without a stable pad raise the "no controller" band (renderer-spec 4.15).
+- **A pad record** (`D_002C5AD0[2]`, 0x70 bytes; `D_00425BC8` points at the one the menus read, padrec.c):
+  +4 held, +8 pressed, +0xC released, **+0x10 repeat** (the press, then after `D_002C5C24` = 30 time steps
+  every `D_002C5C28` = 4: 0.5 s, then 15 a second), +0x14 a second repeat (the press, then every frame after
+  30 steps; **no reader in the main ELF**), +0x30 / +0x40 the right / left stick scaled (x, y, 0, length),
+  +0x50 / +0x60 their unit directions. `D_002C5C2C` = 32 is set and never read in the main ELF.
+- **The sticks**: each axis `v - 127.5`, a dead zone of `D_002C5C20` = 60 each side (47 % of the half
+  range, square), then `(|v| - 60) / 67.5`, the vector's length clamped to 1; a direction bit (right stick
+  bits 20-23, left 28-31) once an axis is past the dead zone. **The left stick moves the player**
+  (view.c `func_00124e08`: the unit direction at +0x60 and the length at +0x4C, turned by the camera; in the movement
+  modes 2 and 11 the left stick's x turns instead, 3 degrees a step); the first-person view pitches with the left stick's y
+  (fieldcam.c, 3 degrees a step x y, -80 to +60 degrees). The Vita's sticks report the same 0-255 with 128
+  in the middle and 0 up: pass them through; the large dead zone covers their drift.
+- **Actions** (`D_002C5BB0`, the same record): `func_0011f628` maps pad 0's held bits through the 30-entry
+  table `D_002C5990` (`{mask, action}`, all bits of the mask held), and the press / repeat run on the
+  actions. Zero while `D_002C5960.b` (input off); an event masks held and pressed with `D_00389C90.x3148`
+  and clears the sticks (script_vm.c); vm_lib.c pushes the held actions, the raw held bits and the pressed
+  actions to the script (`func_001d1478` / `func_001d14a0` / `func_001d14c8`). **Session 87's note was half wrong: SELECT has an action
+  (0x8000); START has none** and is read raw.
+
+| Button | Action bits | What reads them (main ELF) |
+| --- | --- | --- |
+| CIRCLE | 0x1, 0x10000, 0x80000 | 0x1 advances text (fldtext.c, selector.c); 0x10000 picks the command menu's entry (cmdmenu.nostrict.c mask); 0x80000 shortcut 1 while L1 is held |
+| R3 | 0x1, 0x10000 | the same as CIRCLE (no reader of its own) |
+| CROSS | 0x2, 0x4 | 0x2 backs out of a list, a shop, the command menu; 0x4 pressed: the jump command (`D_002E3190` 0x1000000), held 0x8000000 in some states; class11.nostrict.c keeps a rise going while 0x4 is held (a jump height, a guess) |
+| TRIANGLE | 0x8, 0x100000 | 0x8 the action command (`D_002E3168 \|= 1`); 0x100000 shortcut 2 |
+| SQUARE | 0x10, 0x200000, 0x800000 | 0x10 a command (`0x4000000` pressed, `0x10000000` held; the guard / dodge, a guess); 0x200000 shortcut 3; 0x800000 no reader found; also raw held 0x8000 in plctl.nostrict.c |
+| D-pad, right stick | 0x20 up, 0x40 down, 0x80 left, 0x100 right | the command menu's cursor (0x100 opens a submenu, 0x80 backs out) |
+| L1 | 0x40000 | held: the shortcut menu |
+| R1 | 0x400 | lock-on on / off (cmdmenu.nostrict_nofill.c `func_0012f700`; config: hold or toggle, `func_002192c0`) |
+| L2 | 0x2000, 0x800, 0x400000 | 0x2000 held turns the camera; 0x800 the next lock-on target; 0x400000 (L2 or R2) ends the lock-on state 4 of the command menu early (cmdmenu.nostrict.c: after 90 steps or on the press) and is read by view.c's movement mode 11 |
+| R2 | 0x1000, 0x20000, 0x400000 | 0x1000 held turns the camera the other way; 0x20000 the previous target |
+| L2 + R2 | 0x200 | the camera back behind the player (fieldcam.c `func_001784c8`); leaves the first-person view |
+| SELECT | 0x8000 | the first-person view (fieldcam.c `func_00176f08(2)`, when `D_002C5958` bit 13 allows) |
+| START, L3 | none | START raw: the pause (pause.c), skipping a movie (gamestate.c state 18; state 13 skips on any button), the menus' close (equip, topmenu, loadframe, textfade); L3 is read nowhere |
+
+The menus (`D_00425BC8`, 30 files under src/menu/, src/shop/, src/text/) read raw bits only: pressed CIRCLE
+confirms, pressed CROSS cancels, the d-pad and left stick as `PAD_DIR` through the repeat word (a move on
+each repeat; the wrap to the other end only on a fresh press), L1 / R1 page (winmenu.c, journal), TRIANGLE
+in the journal; the journal map also reads both sticks' held directions. The name entry folds the left
+stick into the d-pad (`press | (press >> 24 & 0xF0)`). **padrec.c's recorder, replay, button script and
+idle timer** (`func_00233650` ... `func_002336e8`) have no main-ELF caller: the title overlay's (the demo),
+for the dktitle.x check.
+
+**The Vita mapping** (the PlatPad* wrappers fill the libpad2 buffer from `sceCtrlPeekBufferPositive`; the
+game above them stays as it is): CROSS, CIRCLE, SQUARE, TRIANGLE, the d-pad, START and SELECT one to one;
+L to L1, R to R1; both sticks as bytes 2-5 (right x, y, left x, y); a DualShock 2 profile (byte 2 low
+nibble `0xF`) so the sticks are read. The handheld has no L2 / R2 / L3 / R3: **L2 and R2 on the rear touch
+pad's left and right halves** (held while touched; both = the camera reset), R3 not needed (it doubles
+CIRCLE), L3 unused. A PS TV with a DualShock 3 / 4 reports L2 / R2 / L3 / R3 itself
+(`sceCtrlPeekBufferPositiveExt2`): use them when present. Options for the port's menu, outside the game
+code: swap CIRCLE / CROSS (the Western layout: the swap in the wrapper changes menus and battle alike, as
+the Western releases did), and a "right stick turns the camera" mode that turns the right stick's x past
+the dead zone into L2 / R2 and drops its d-pad bits (the journal map then loses its right-stick pan).
+Vibration: `sceCtrlSetActuator` on a PS TV pad, nothing on the handheld (`PlatVibSetActParam` returns 0).
+
+**`KH1_HOST_PAD` for the title**: tests/host/pads/title.txt (START at frame 600, CIRCLE at 660 and 720;
+the frames are guesses until a real-disc run, since the title is dktitle.x's code). On the fake disc with
+`KH1_HOST_OVL=stub` the null pad plays it as written (`kh1-host: pad 600 START` ...).
+
+**Counts kept across functions** (item 4c, portability rule 12): **`tools/host/countcheck.py`** (new, clang
+syntax trees like walkcheck): a global one function steps (`G++`, `G += k`, `G[k]++`, a field `G.f++`) and
+another indexes an array with (directly or through a local assigned from it), with the array's size and the
+largest constant it is compared with. **37 rows from 16 counters, all read** (REVIEWED, keyed by counter and
+file). Bounded by the code: the lock-on ring (distinct targets only), the paged list, the customize cursor,
+the Gummi kinds (160 into 192), the journal's lists, the name entry, the party models. **Bounded only by the
+disc's data, no check, the PS2 the same**: the collision candidate list `D_002BD250[2048]`, renderer A's
+grid lists (about 1020 cells), **renderer B's per-frame lists** (`D_0055C698`: 72 models, 78 objects, 480
+part draws), **the message pointer table `D_00388480[273]`** (an event file's messages plus those the script
+adds; layoutcheck does not see it) and the script's 10 trigger boxes. Two small things: with no party
+model loaded, partymdl.c reads `D_003F31D0[-1]` (unused); customize's member lists 0 and 4 are empty
+(a NULL `p`: crashes the host, not the PS2, if member 4 ever reaches the customize page). Against
+layoutcheck `--all`'s idx-next rows: 12 of the 16 arrays are there as unbounded indexes; the message table,
+the trigger boxes and the window lists (inside `D_00389C90`) and `D_003F31D0` are new. Next: count the
+DATA rows' high-water marks on the real-disc run (a host-only hook, or gdb watchpoints).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -1,7 +1,7 @@
-/* Full-screen effects (a guess at the name), 0x00102a48-0x00104528: rings
- * of glow around the screen's centre (func_00102a48), a zoom toward a
- * point (func_00102da8), a colour pulse with cosf (func_001032b0), a
- * 25x25 warp grid (func_00103c48), and their start / stop tasks. Read from the
+/* Full-screen effects (a guess at the name), 0x00102a48-0x00104528: the menu
+ * blur (func_00102a48), the screen spin (func_00102da8), a depth blur
+ * (func_00103058), a sway and colour pulse (func_001032b0), a 25x25 lens grid
+ * (func_00103c48), fades, the letterbox, their tasks (renderer-spec 4.16, 4.17). Read from the
  * code, not proved by a boot (docs/modules.md "Session 55"). */
 #include "common.h"
 #include "platform/vu.h"

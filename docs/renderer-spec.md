@@ -393,8 +393,8 @@ in that frame.
 
 - **P8** (`func_00103c48`, a scheduler task at key `0x280A4`, returns 4): a
   25x25 vertex grid (`-192..+192`, 16-unit steps) whose z comes from a
-  sine-table sum, i.e. a waving height field (inferred: an effect or test
-  screen). The chain is `CNT` (MPG) -> `NEXT` (4x `UNPACK V4-32 4` = 4
+  sine-table sum: the event script's lens bulge over a copy of the frame
+  (session 88, §4.17). The chain is `CNT` (MPG) -> `NEXT` (4x `UNPACK V4-32 4` = 4
   matrices at VU 0-15, `MSCAL 0`, `BASE 0`, `OFFSET 512`) -> `REFE` to a
   packet built in a heap buffer. Per strip: `UNPACK V4-32 (3n+1) +TOPS`, a GIF
   tag `NLOOP=n, EOP, PRE, PRIM=TRISTRIP|IIP|TME`, REGS `0x412` (ST, RGBAQ,
@@ -455,7 +455,7 @@ in that frame.
 | block `0x1000` (`0x100000`) | **the message font, in the Z buffer's top byte**: two 256x256 4-bit halves uploaded as PSMT4HH and PSMT4HL (`func_001ef950`, CLUT block `0x3FFC`); text.c's draws read the PSMT4HL half (`D_003F2270`) | session 78 (§4.8) |
 | block `0x3D7C`, CLUT `0x3DFC` | the window font, PSMT4 256x256 from the ELF (`D_003E9660`, CLUT `D_003F1660`), uploaded by `D_003F2670` / `D_003F2720` | session 78 (§4.8) |
 | blocks `0x3600`-`0x3700` | also the menus' images: menubg (PSMT8 104x56 + CLUT `0x3640`), config (PSMT8 138x88 + CLUT `0x3680`), journal (PSMT8 256x256 + CLUT `0x3700`; 64x64 + `0x3680`) | session 78 (§4.8) |
-| `0x180000` (block `0x1800`) | PSMT8H texture (8-bit indices in the top byte of 32-bit pixels, overlapping the Z area) | `func_00103058`, `func_0010b6c0` |
+| `0x180000` (block `0x1800`) | PSMT8H texture (8-bit indices in the top byte of 32-bit pixels, overlapping the Z area) | `func_0010b6c0`, `func_0010f0d0` (session 88: not `func_00103058`, §4.17) |
 
 - Drawing offset: the 512 x 384 target is centred at (2048, 2048),
   `XYOFFSET = (1792, 1856)` (static sprite coordinates `0x7000/0x7400`, and
@@ -562,7 +562,7 @@ a 256-wide target); FBP `0x8C` FBW 640 (§3.1).
 | --- | --- |
 | PSMT8 + PSMCT32 CLUT (`CLD=1`, CSM1) | renderer B, uploaded per draw by `func_0015f8c8` (`BITBLTBUF/TRXPOS/TRXREG/TRXDIR` + IMAGE). Default `TEX0_1 = 0x2006E005DD313600` (128x128, `TCC=1`, `TFX=MODULATE`) |
 | PSMT4 + CT32 CLUT | UI (`func_00106460`) |
-| PSMT8H + CT32 CLUT | block `0x1800`, CLUT `0x3FF4`/`0x3FF8` (`func_00103058`, `func_0010b6c0`) |
+| PSMT8H + CT32 CLUT | block `0x1800`, CLUT `0x3FF4`/`0x3FF8` (`func_0010b6c0`, `func_0010f0d0`; session 88: not `func_00103058`) |
 | PSMCT24 / PSMCT32 | the render target sampled for post effects and the frame copy (`TBP0=0x1A00`); a 512x512 CT24 image at `0x0E00` (the Z area, `func_0010a120`/`a248`/`a378`) and at `0x3600` (inferred: movie or still frames drawn while 3D is off) |
 
 Filtering is bilinear (`TEX1 MMAG=1 MMIN=1`) with no mipmaps (`MXL=0`) in
@@ -1598,6 +1598,121 @@ blend `SRC_ALPHA, ONE_MINUS_SRC_ALPHA` with alpha `a / 128`, depth test off; the
 frame 0 is unturned and frame 1 is at the end angle; IEEE gives `0 x inf = NaN` for frame 0 (a NaN quad).
 The two defaults (vm_lib 1 frame) never divide by 0; an object script record with `+0x24 = 0` would, so
 clamp the count to at least 1 (or compute the step the EE way) in the port.
+
+### 4.17 The other full-screen effects: the menu blur, depth blur, sway, lens grid, fades, letterbox (session 88, static)
+
+Read from the C (src/gfx/sceneeff.c / sceneeff.nostrict.c, src/game/pause.c, src/game/field.c, src/game/roomload.c,
+src/screen/brightfade.c, src/screen/display.c, src/vm/vm_lib.c / vm_lib.nofill.c) and the static packets
+(`gs_packets.py -v 0x2a4b60 0x2a4dd0 0x2a5620 0x2a5a90 0x2a5ac0 0x2a5fd0 0x2a6110 0x2a6070 0x2a61e0 0x2b6760`); not
+checked on a console or a host run. The names are guesses from the code. **Session 88 corrects three older
+readings**: `func_00102a48` is not "rings of glow" but the field menus' blur, `func_00103058` uses no PSMT8H
+texture (the block `0x1800` rows of §3.1 / §3.2 are `func_0010b6c0`'s and `func_0010ea70`'s), and P8's grid (§2.4)
+is a script effect, not a test screen.
+
+**Where they run.** Field init (`func_00100360`, field.c) registers `func_001039f8` (the fade) at task key
+`0x280A3` for good and sets the sway speed `D_002A6200 = 0.05`. The field's per-frame task `func_00100448`
+(key `0x1D4C0`) re-registers the others for one run each frame while their flag is set: `D_002A61F4` ->
+`func_00103058` (depth blur, `0x280A2`), `D_002BC734` -> `func_001032b0` (sway, `0x280A4`), `D_002BC738` ->
+`func_00103c48` (lens grid, `0x280A4`); each returns 4 (dropped after the run). So they draw after the immediate
+list (`0x27CB8`) and before renderer B's build (`0x2E630`), into the 3D target, with the previous frame's draw
+list finished (`func_00106b18`'s sync, §4.12). **The depth blur reads the Z buffer and runs first; the sway and
+the grid then overwrite the Z buffer's memory with a colour copy** (`D_002A5CE0`: the target `0x1A00` copied as
+PSMCT24 to FBP `0x70` = block `0xE00`, `ZBUF ZMSK=1` meanwhile), so every depth-tested draw later in that frame
+(keys above `0x280A4`, for example a text window sent with flag `0x10`, `ZTST GEQUAL`, §3.2) tests against colour bytes. A port
+copies the target to a separate texture instead and keeps its depth buffer; check on a boot whether anything
+drawn after them looks wrong in the rooms that use them. `func_001103a0` (display.c, the state reset) clears
+`D_002A61F4`, `D_002BC738`, the fade and the letterbox (`D_002A6204`, `D_002A61F0`, `D_002A6208`), not
+`D_002BC734` (the room load sets that one).
+
+**The menu blur** (`func_00102a48(c, o)`, pause.c). When a field menu opens (`func_00114280`, state 1 -> 2;
+the menu `D_002BD118` picks: the in-game menu `func_0020d6c8` and four others) the task
+`func_00113f60` (key `0x2E644`) captures the frame: `func_0010a3e8` draws the display buffer (block 0, read as
+CT32, 512 x 448) at half size into block `0x3600` (FBP `0x1B0`, FBW 256, bilinear, `D_002B6760`) and stores that
+256 x 192 PSMCT24 image to a heap buffer (`D_002B6778`, `0x24000` bytes, `PlatGsExecStoreImage`). Each call of
+`func_00102a48` loads it back to `0x3600` (`func_0010a470`: the slot is shared, §3.1), scans the buffer for any
+non-zero word (`0x9000` words, CPU) and, if all are zero, draws one opaque black sprite (`D_002A4DD0`); otherwise
+`D_002A4B60` draws **nine sprites of the half-size image over the whole target** (512 x 384, bilinear, CLAMP, ZTST
+ALWAYS, `ZMSK=1`; under the 16 scissor columns of §4.16): one opaque at (-2, -2) px, then four at alpha 64 at
+(+-o, +-o) (order (-,-), (+,+), (-,+), (+,-)), then four at alpha 32 at (0, -o), (-o, 0), (0, +o), (+o, 0), each
+blended `(Cs-Cd)*As>>7+Cd` (alpha 64 = half, 32 = a quarter), colour `c` (128 = 1.0; every caller passes 128).
+`o` is in 1/16 pixel: the pause steps it 1 px (`0x10`, the capture frame and the next, `func_00113f18` at
+`0x2E643`), then 2 px (`0x20`, `func_00113ee0` at key `0x2903` each frame while `D_004D9330 == 4`, the menu
+open); closing steps back 1 px (`func_00114028`, `0x2E645`) and 0 (`func_00113fa8`, `0x2E643`, which frees the
+buffer). `func_00114068` (2 px) has no main-ELF caller (overlay check). The sequential blends give the copies
+the weights 0.0198 (the opaque one and the first diagonal), 0.0396, 0.0791, 0.158 (the diagonals in order) and
+0.105, 0.141, 0.188, 0.25 (the sides): not a symmetric kernel (its centre is about 0.2 o right of the opaque
+copy). **For the port**: keep the captured frame as a 256 x 192 texture (any size: it is shown bilinear-scaled)
+and draw the same nine blended quads, or one pass with those nine weights; skip the CPU zero scan (a black
+capture blurs to black anyway, the scan only saves the draws).
+
+**The depth blur** (`func_00103058`, flag `D_002A61F4`). Event script commands (vm_lib.c): `func_001d1400` on,
+`func_001d1418` off, `func_001d1428` the mode `D_002A61F8`, `func_001d1450` the depth `D_002A61FC` (a raw Z24
+value, the packets' default 40000; larger Z is nearer, §3.2). The packets write `z` into every vertex, then:
+- **Mode 0** (`D_002A5A90`, then `D_002A5AC0`): the target is drawn at half size into block `0x3600` (CT32,
+  bilinear, FBW 512); then the nine-copy blur of the menu (fixed o = 2 px, alphas 128 / 64 / 32, base (-2, -2)
+  px) is drawn back over the target at depth `z` with `ZTST GEQUAL`, `ZMSK=1`, `ATST GREATER 0` (always true: the
+  texture is read as CT24, alpha from the vertex): **only pixels at or behind the depth are replaced by the
+  blurred copy**, a hard-edged background blur (depth of field).
+- **Mode 1** (`D_002A5620`, then `D_002A5AC0`): first the target's **alpha only** (`FBMSK=0xFFFFFF`) is set to 128
+  everywhere (`D_002A5250`), then to 0 where `z` passes `GEQUAL` (`D_002A52B0`: behind the depth); the half-size
+  copy then keeps that mask (CT32), and the blur reads it as texture alpha (`TCC=1`, `ZTST ALWAYS`): **the near
+  part is blurred**, with its blurred edge spilling over the far pixels, and the far part stays sharp.
+- Port: mode 0 = a depth-tested composite of a blurred half-size copy (depth >= threshold in GS terms = farther
+  than the threshold); mode 1 = a mask from the depth buffer (near = 1), blurred with the image, used as the
+  blend weight. Both need the scene's depth as a texture or a depth test against it at this point of the frame.
+
+**The sway and colour pulse** (`func_001032b0`, flag `D_002BC734`). The room table sets the flag on a room load
+(`func_001124f8`, roomload.c: `D_002BC734 = D_002BCDAC[room].fl.b1`, with `func_00103280(1, 1, 1, 1)`: no
+pulse, and `func_00110e38(1, 0.9, 1, 0.05)`, another colour setting); the event script turns it on with four
+values (`func_001d9780`, each / 100) or off (`func_001d9830`), and `func_001d5f18` sets the sway speed
+(`D_002A6200`, / 100). Each frame: the target is copied into the Z buffer's memory (`D_002A5CE0`, above), then one
+opaque `TRIFAN|TME|FST` quad over the whole target (`ZTST ALWAYS`, `ZMSK=1`, 16 scissor columns, `D_002A48D0`
+restores `SCISSOR` and `ZMSK=0`) reads that copy back (`TEX0 TBP0=0xE00` CT24) from the inset rectangle
+`[u0, 512 - u0] x [v0, 384 - v0]` texels with `u0 = (64 + 48 cos a) / 16`, `v0 = (64 + 48 sin a) / 16` (1 to 7
+texels), `a += D_002A6200` radians a frame (not the time step), wrapped to [-pi, pi]. So **the picture is
+zoomed by 0.3 % to 2.7 % across and 0.5 % to 3.6 % down, the two out of phase**: a slow breathing stretch (a
+126-frame period at 0.05, about 4 s at 30 fps; an underwater room is a guess). The colour is the vertex RGB
+(modulate): with `D_002A6210 = (r, g, b, s)` and `s != 1.0`, each channel's phase `D_002A6220[i] += s` (the three
+start at 0, so they stay equal) and the channel is `(k + (1 - k) cos phase) x 128`, clamped at 0 (`k` the
+channel's value): a pulse between `2k - 1` and 1.0. `s == 1.0` (the room load) means no pulse (128, 128, 128).
+
+**The lens grid** (`func_00103c48`, flag `D_002BC738`, VU1 P8 of §2.4). `func_001d6658` (vm_lib.nofill.c) sets
+the flag, the amplitude `D_00494A70` and the distance `D_00494A74`; `func_001d66b8` clears it. Each frame: the
+target copy into the Z area (`D_002A5FD0`, as the sway), `D_002A6110` (`CLAMP` REGION_CLAMP U 0-510, ZTST
+ALWAYS, `ZMSK=1`), then the P8 chain draws a 25 x 25 grid textured with the copy: positions x, y in -192 ... +192
+(16 apart), UVs u 64 ... 448, v 0 ... 384 texels (the target's centre 384 x 384 square, the sides keep the scene),
+`z = sc x (S[2048 + 81 i] + S[2048 + 81 m])` with `S` = `D_003732D0`, the 4096-entry sine table, so `z = -sc x
+(sin(pi i 81 / 2048) + sin(pi m 81 / 2048))`. The camera (`func_00103b68`: position (0, 0, -512), looking down +z,
+up +y, `D_002A6080`-`D_002A60B0`) and `ViewScreenMatrix(512, 1, 1, 2048, 2048, 1, 16777215, 1, 65536)` make the
+flat grid at distance 0 a 1:1 copy; the world matrix moves it by (0, 0, `D_00494A74`) (farther: smaller). With
+`sc > 0` the middle comes up to 2 sc nearer the camera: **a magnifying bulge**. The shape does not move by
+itself (no time term: the script animates it by changing the values), and it is not symmetric: row and
+column 0 sit at sin 0 but row and column 24 at sin(0.949 pi) = 0.16, so three edges lift a little. A port draws
+the same 25 x 25 mesh (or the same function in a shader) over a copy of the target, keeping the table's indices.
+
+**The fades** (`func_001039f8`, key `0x280A3`, always registered). A full-screen untextured `SPRITE|ABE`
+(`D_002A6070`, ZTST ALWAYS) of black (`D_002A61F0 = 0`) or white (1) with alpha `D_002A6204`, drawn when it is not
+0. The counters run in time steps (`D_002BBDFC`, 2 a frame at 30 fps): `func_001038b0(n)` (task `0x280A2`
+`func_00103838`) takes the alpha from 0 to 255 over `2n` steps and holds it there (fade out), `func_00103988(n)`
+(`func_00103920`) from 255 to 0 (fade in). Script commands: `func_001d5010` / `func_001d4fc0` black out / in,
+`func_001d5118` white out, `func_001d5090` white in **plus a countdown** (`func_001d5060`, key 50000, once a frame,
+not time-stepped) that sets the colour back to black after `n` frames; capture.c's `func_0010a0d8` starts a
+one-frame fade out when the global colour `D_002BC070` is not 128. **The alpha goes to 255, not 128**: with
+`COLCLAMP=1`, `(Cs-Cd)*As>>7+Cd` is already full black / white at 128, so the visible fade is the first half of a
+fade out and the second half of a fade in (`n` steps of `2n`). Port: blend with `min(alpha, 128) / 128`
+(clamping the result as the GS does gives the same picture). Rule 7: at 60 fps (a time step of 1) the white
+fade in's countdown ends half-way through the fade and turns the remaining white overlay black (a dark flash);
+at 30 fps the two end together. Tie the countdown to the fade, not to frames, in a port that runs at 60.
+
+**The letterbox** (`D_002A6208`, drawn by brightfade.c `func_00106000` before the frame copy, `D_002A61E0`): two
+untextured `SPRITE|ABE` bars, y 0-34 and 350-384 of the 384-line target (about 40 of 448 lines each after the
+copy's stretch), blended `(Cd-Cs)*As>>7+0` with black: the destination times `As / 128`, so alpha 128 leaves
+the picture and 0 makes the bars black. `func_00104300(n)` (bars in) sets the flag and adds `func_00104298` to
+the list `D_002BC720`: the alpha goes 128 -> 0 over `2n` steps and stays 0; `func_001043f8(n)` (bars out,
+`func_00104388`) takes it 0 -> 128 and then clears the flag. The event commands `func_001ceee8` (16) /
+`func_001cef20` (n) / `func_001d07a8` (1) put them in and set bit 0 of `D_00389C90.f3078` (an event-mode flag),
+`func_001cef80` / `func_001cefb8` / `func_001d07e0` take them out and clear it. Port: two black quads with alpha
+`1 - a / 128` over the scene, before the HUD (the HUD draws later in the frame, over the bars).
 
 ## 5. Mapping to a modern API
 
