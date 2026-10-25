@@ -2521,6 +2521,41 @@ no float-untested row. selftest PASS (one new negative case with three breaks).
   `--draws --uploads`), the message font's layers (`KH1_HOST_TEXDUMP`), `KH1_HOST_DMAC=defer` as the default,
   argcheck's 3 value uses, the callers of prim.c's four senders.
 
+### 5.1bc Session 115: who writes the CLUT blocks, and the timer's `0x3A00`
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; a tool and docs only,
+no float-untested row. selftest PASS (one new negative case with two breaks).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The palette-cache invalidation list** (item 4b): new **tools/host/clutupload.py** (in `make test`, no ELF)
+  finds every CLUT-shaped upload in src/ (`PlatGsSetDefLoadImage` / gifpkt.c `func_0011fbb0` with a colour
+  PSM and an 8 x 2, 16 x 16 or 16 x n rectangle; a destination that is a parameter followed through the
+  callers, so roombg.c's wrapper reads `0x3E00 + i`) and the CLUTs written another way (`OTHER`: renderer B's
+  and the eye overlay's BITBLTBUF `0x3700` in their DMA lists, texanim's cross-fade sprites). Every writer is in
+  `REVIEWED` with when it writes (boot / load / draw / frame / uncalled); an unlisted writer or a listed one with
+  no upload left is a problem. 54 uploads in 30 functions, 0 problems. renderer-spec 4.13 "Session 115" is the
+  table. **Only the room CLUTs change between frames without a load** (texanim's cross-fade into `0x3E00 + v`);
+  `0x3700`, `0x3A00`, `0x3C00`, `0x3640` / `0x3680` and the ppp fades are rewritten before every draw; `0x3DFC`,
+  `0x3FFC` and `0x3FD8` never change after boot; the field text's pairs, `0x3FF4` / `0x3FF8` and the effect slots
+  only on a load. So a port keys a palette by the bytes uploaded (source and length, or a hash), not by the
+  block, and can cache the boot / load ones by block. Not in the C: renderer A's own CLUTs (PATH2 inside the
+  disc's chains): the host run's `--uploads`.
+- **The timer's `0x3A00` CLUT** (item 4c): **the window font's** (`D_003F1660`, the bytes also at `0x3DFC`).
+  timer.c `func_00248140` calls hud.c `func_002393d8` first in every timer draw: the window font again as PSMT4
+  256 x 256 at `0x3600` and its CLUT 16 x 16 at `0x3A00`; the timer's TEX0s (PSMT4 `0x3600`, CBP `0x3A00`, CSA
+  0 / 2 / 6) read that copy through the HUD pair's CLD 1. **They can overlap in one frame**: the timer's own
+  icon (`func_00248238` -> `func_00247cc8`: a uitex picture at TBP `0x3600` CBP `0x3A00`) overwrites both right
+  after, and the gauges' three uitex pictures (`func_0023d698`), the faces' PSMT8 image (TBP `0x3A00`), the wipe
+  and the field icons write `0x3A00` too; each uploads in its own picture just before it draws, so none reads
+  another's. Corrections: renderer-spec 3.1's "`0x3A00`, `0x3FF4`, `0x3FF8`: UI CLUTs, static packets" (they
+  are uploads from the C), and 4.9's field-text row: `0x3FDC` .. `0x3FEB` are sixteen static CLUTs from the ELF
+  (`func_0010e8d0`), only `0x3FEC` .. `0x3FF3` are built by `func_0010e610`.
+- **Found in passing**: opimage.c's TIM2 loader `func_001aa0e0` has no caller and no stored address in the main
+  ELF (an overlay's, or dead).
+- **Still waiting for the Mac**: the HUD descriptors' TEX0 values (host run, `--draws`), renderer A's CLUT
+  uploads (`--uploads`), the message font's layers (`KH1_HOST_TEXDUMP`), `KH1_HOST_DMAC=defer` as the default,
+  argcheck's 3 value uses, the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

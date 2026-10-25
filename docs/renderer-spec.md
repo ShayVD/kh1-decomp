@@ -452,7 +452,7 @@ in that frame.
 | blocks `0x3E00` + i | **the room's CLUTs** (CT32): 16-colour 8x2 ones at `0x3E00 + i` (i < n0), 256-colour 16x16 ones at every 4th block from n0 to n1, from the room's background file; the texture animations cross-fade some of them in place (§4.13) | roombg.c `func_00101048` (session 83) |
 | blocks `0x2600` + 256 i | the room's background textures: PSMT8 256x256 (BW 4) or PSMT4 512x256 (BW 8) by the file's kind byte (19 / 20), up to 16; and a PSMT8H 256x1024 at block 0 (BW 4: the top byte of the words from block 0, the display buffer's area) | roombg.c `func_00100e80` / `func_00100e08` / `func_00100ef8` (session 83) |
 | block `0x3700` | renderer B CLUT (PSMCT32) | `func_0015f488` |
-| block `0x3A00`, `0x3FF4`, `0x3FF8` | UI CLUTs | static packets |
+| block `0x3A00`, `0x3FF4`, `0x3FF8` | CLUTs: `0x3A00` a per-draw scratch CLUT (the timer, the HUD's TIM2 pictures, the wipe, the field icons) and render target (the faces' image, the crossfade, the shadow windows); `0x3FF4` / `0x3FF8` the object windows' (§4.13 "Session 115") | session 115 (was: static packets) |
 | block `0x1000` (`0x100000`) | **the message font, in the Z buffer's top byte**: two 256x256 4-bit halves uploaded as PSMT4HH and PSMT4HL (`func_001ef950`, CLUT block `0x3FFC`); text.c's draws read the PSMT4HL half (`D_003F2270`) | session 78 (§4.8) |
 | block `0x3D7C`, CLUT `0x3DFC` | the window font, PSMT4 256x256 from the ELF (`D_003E9660`, CLUT `D_003F1660`), uploaded by `D_003F2670` / `D_003F2720` | session 78 (§4.8) |
 | blocks `0x3600`-`0x3700` | also the menus' images: menubg (PSMT8 104x56 + CLUT `0x3640`), config (PSMT8 138x88 + CLUT `0x3680`), journal (PSMT8 256x256 + CLUT `0x3700`; 64x64 + `0x3680`) | session 78 (§4.8) |
@@ -1140,7 +1140,7 @@ temporary packets.
   | `0x3680` | PSMT8 | 0 | config's image (138 x 88) and journal's 64 x 64, from their files; 256 entries | own TEX0 CLD 1 | 2 (`func_00219598`, `func_0021e120`) |
   | `0x3700` | PSMT8 | 0 | journal's 256 x 256 image; 256 entries | own TEX0 CLD 1 | 3 (journalfx.nostrict.c) |
   | `0x3C00` | PSMT8 | 0 | the face pictures: the actor's image (`GImg` + 16), uploaded per draw as 16 x 16 CT32 with DBW 0 (§4.10); 256 entries | own TEX0 CLD 1 | 3 (`func_00242c08` / `func_00242ef8`, and `func_002416a8` through them) |
-  | `0x3A00` | PSMT4 | 0, 2, 6 | the minigame timer's three fonts (timer.nostrict.c `func_00248400` stores the TEX0s into its descriptors `D_006692C0` / `D_006692F0` / `D_00669320` + 0x18, CLD 0); who uploads the CLUT at `0x3A00` is not traced from the C | the HUD pair's forced first word (below) | 1 |
+  | `0x3A00` | PSMT4 | 0, 2, 6 | the minigame timer's three fonts (timer.nostrict.c `func_00248400` stores the TEX0s into its descriptors `D_006692C0` / `D_006692F0` / `D_00669320` + 0x18, CLD 0); the CLUT at `0x3A00` is **the window font's** (`D_003F1660`, the same bytes as `0x3DFC`), uploaded with a second copy of the font at `0x3600` by hud.c `func_002393d8` at the start of every timer draw (timer.c `func_00248140`; session 115) | the HUD pair's forced first word (below) | 1 |
   | a HUD descriptor's | the descriptor's | the descriptor's | the HUD sprite files' TIM2 headers, at run time (ui.c `func_0024aa48`'s third argument) | **the pair**: two TEX0_1 from one descriptor, the first forced to PSMT8 CSA 0 CLD 1 (all 256 entries from the descriptor's own CBP), copied in front of every quad by `func_002388b8` | 18 pair calls in 25 pictures |
   | `0x3FDC` .. `0x3FF3` (by PSM, `+1` for modes 1 / 3) | PSMT4 | 0 | the field text's CLUT pairs, built by `func_0010e610` (CBP n a texel's low 2 bits, n + 1 its high 2 bits, §4.10); 16 entries each | each glyph's own TEX0 CLD 1 (fldtext.c `func_0010c5c8`, a REGLIST packet: self-loading whatever the CBP) | 1 builder |
   | `0x0002` | PSMT8 | 0 | none: gspkt.c `func_002370c8`'s reset header carries a placeholder `TEX0_1` (TBP0 and CBP 2, CLD 1), so each send of it loads a CLUT from block 2 (the display buffer) | the header | 17 |
@@ -1153,8 +1153,11 @@ temporary packets.
   upload too, not only the address. The static packets' CLUTs (the selector's and the field text icons'
   PSMT8H `0x3FF4`, the icons' PSMT4 `0x3C00`, renderer B's `0x3700`) are fscheck.py's, from the ELF. **The
   message font's four layers** (§4.9: PSMT4HL / HH, 2 bits a layer, CSA 0 / 1) stay an inference until the
-  host run decodes the disc's `0x3FFC` CLUT (`KH1_HOST_TEXDUMP`); the HUD descriptors' (CBP, PSM, CSA) and the
-  timer's `0x3A00` upload come from the same run (`gsstate.py --draws --uploads`).
+  host run decodes the disc's `0x3FFC` CLUT (`KH1_HOST_TEXDUMP`); the HUD descriptors' (CBP, PSM, CSA) come from
+  the same run (`gsstate.py --draws --uploads`). **Session 115**: the timer's `0x3A00` upload is found in the C
+  (the row above); the field text's first sixteen CLUTs (`0x3FDC` .. `0x3FEB`) are static ELF colours
+  (`func_0010e8d0`), only `0x3FEC` .. `0x3FF3` are built by `func_0010e610`. Who writes each CLUT block and how
+  often: §4.13 "Session 115".
 
 ### 4.10 The builders giftags.py misses: lists, the field text, the selector, the HUD gauges (session 80, static)
 
@@ -1474,6 +1477,42 @@ steps (one animation stepping every frame: about 8 minutes) after the room's opa
 then see the new frame one frame late. A port that keeps the C keeps this order; the draws do not depend on
 it beyond that frame of lag. tests/host/gsmem_test.c checks the scroll's copies (`scroll(3, 8)`,
 `scroll(0, 8)`).
+
+**Session 115 (vita-port-plan 5.1bc): the palette-cache invalidation list, from the C** (`python3 -I
+tools/host/clutupload.py --table`, in `make test`; counts and addresses only). §4.9 "Session 114" says which
+CLUT each 2D sprite reads; this says who writes the CLUT blocks in GS memory and how often, 2D and 3D, so a
+port that caches decoded palettes by (CBP, CSA) knows when an entry is stale. clutupload finds every
+CLUT-shaped upload in src/ (a colour PSM and an 8 x 2, 16 x 16 or 16 x n rectangle; a destination that is a
+parameter followed to the callers) and the CLUTs written another way (`OTHER`: a BITBLTBUF in a DMA list, a
+sprite drawn into a CLUT); each writer must be reviewed with when it writes. 54 uploads in 30 functions: 3 at
+boot, 6 on a load, 19 before a draw, 1 per frame, 1 uncalled.
+
+| Blocks | Colours | Written by | When | Changes contents |
+|---|---|---|---|---|
+| `0x3E00 + i` (i < n0) / every 4th from n0 to n1 | 16 / 256 | roombg.c `func_00100d18` / `func_00100d90` (from `func_00101048`): the room's background file | room load | **between frames**: texanim.c `func_00102118`'s cross-fade draws into `0x3E00 + v` at keys 90000 + 10 id, after every room draw (the room reads last frame's blend, §4.13). Other entries only on the next room load |
+| `0x3700` | 256 | renderer B `func_0015f488` (the model record's colours, a REF in the upload list), the eye overlay `func_0015fa20`, the crossfade `func_00135ed0` (`D_0055C680.x8`), journal `func_0021d188` | **every draw** | within a frame, per model record: the block is fixed, the source pointer is not. Key by the source (the record's CLUT address), not the block |
+| `0x3A00` | 16 or 256 | the timer `func_002393d8` (the window font's CLUT again, below), the HUD's TIM2 pictures `func_00249a48` (the gauges' three, the timer's icon), the shaped wipe and the field text's icon sheet (`func_00109180` / mdlpkt.c), texanim's palette B (scratch); also **written as an image**: the faces' PSMT8 picture (`func_00242c08` / `func_00242ef8`), the crossfade's and the shadow windows' render targets (CT32 at FBP `0x1D0`, §3.4: 256 x 256 covers `0x3A00 .. 0x3DFF`) | **every draw** | within a frame, many times; every reader uploads it in its own picture just before (clutcheck, §4.9). Never cache |
+| `0x3600` | 16 or 256 | texanim's palette A (scratch, at 90000+); the texture slot otherwise (§3.1) | per frame | a scratch block: no reader keeps it |
+| `0x3C00` | 16 or 256 | the faces' CLUT, the field text's icons (`func_00109230`) | every draw | within a frame; also inside the shadow windows' 256 x 256 render target |
+| `0x3640`, `0x3680` | 256 | menubg `func_0020b338`, config `func_00219500`, journal's pictures `func_0021e120` | every draw (packets built at the menu's set-up, sent before each draw) | per menu page; the same blocks as the texture slot's upper part |
+| `0x3DFC` | 256 | the window font's `D_003F1660`, from the ELF (`func_001f2eb8`'s packets, re-sent before the windows draw, §4.12) | boot, re-sent | **never**: always the same bytes; the shadow windows / crossfade overwrite the block and the re-send repairs it |
+| `0x3FFC` | 256 | the message font's, from the disc (`func_001ef950`) | boot | never |
+| `0x3FD8` | 256 | the HUD's six CLUT rows `D_00648230` (`func_00239368`) | boot (HUD set-up) | never after |
+| `0x3FDC` .. `0x3FEB`, `0x3FEC` .. `0x3FF3` | 16 each | the field text's CLUT pairs: the first sixteen from the ELF (`D_002BB620` ..., `func_0010e8d0`, the field's set-up), the last eight built by `func_0010e610` (`func_0010e750`, room load) | load | only on a load |
+| `0x3FF4`, `0x3FF8` | 256 | the object windows' sheet's CLUT, and the same with RGB cleared (`func_0010b030`, room load) | room load | only on a load |
+| an effect slot's CBP (from `0x3D40` rebased) | 16 / 256 | ppp `func_00180b40` (and `func_00180ab8`'s images) | effect load | when the slot is given to another effect |
+| a ppp model's CBP `+ 4 x page` | 256 | `pppKeMdlTfd*Draw` (six classes): a colour ramp built per draw (kemdltfd.c `func_001a9460`) | **every draw** | per draw: the palette is the animation |
+| the ppp fade's TEX0 CBP | 256 | `pppKeTkFadeDraw`: its ramp per draw | every draw | per draw |
+| a TIM2's CBP | 16 x n | opimage.c `func_001aa0e0` | uncalled | no caller or address in the main ELF |
+
+**For the port.** Since every textured sprite loads its CLUT in its own picture (§4.9), the simplest correct
+cache keys a decoded palette by **the bytes uploaded** (the source pointer and length, or a hash of the 16 /
+256 entries) at the CLD load, never by the block. Blocks that never change after boot (`0x3DFC`, `0x3FFC`,
+`0x3FD8`) or change only on a load (the field text's, `0x3FF4` / `0x3FF8`, effect slots) can be cached by block
+and dropped when the load runs. The room CLUTs are the only palettes that change **between frames without a
+load**: rebuild the animated entries (`0x3E00 + v`) after the cross-fade each frame, on the CPU (§4.13). The
+renderer A meshes' own CLUT uploads (PATH2 DIRECT inside the disc's chains, §4.11) are not in the C: the host
+run's `--uploads` lists them.
 
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
