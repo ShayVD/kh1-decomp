@@ -696,6 +696,14 @@ render-to-texture:
    restores the 3D state and sets `TEX0_1 = 0x3A00` (256x256 CT32,
    `REGION_CLAMP`). Inferred: pupils that follow the camera.
 
+Session 109 (vita-port-plan 5.1aw, `tools/host/fscheck.py`): a 256 x 256 CT32 buffer at block `0x3A00` (FBW 4)
+covers blocks `0x3A00 .. 0x3DFF`, so the shadow windows of size 196 and 256 (`D_002E27E0` = 128, 196, 256),
+the eye overlay's copy and a crossfade of a texture 256 high draw over the window font (`0x3D7C`) and its
+CLUT `0x3DFC`; the windows re-send the font's uploads before they draw (§4.12). The shadow index is
+`x370` bits 40-41 (`& 3`) into 3 entries: 3 would take `D_004F7C10[0]` as the clear packet and size
+`D_002E27E0[3]` = 0 (presumably never set). The eye overlay's tags are zeros in the ELF:
+`func_00175708` stores QWC 10 / 16 and ID 7 (end) when the model loads.
+
 ## 4. Per-frame packet flow
 
 ### 4.1 Schedulers
@@ -2535,6 +2543,11 @@ Session 108 (5.1av): it also lists the blocks each FRAME send draws and fails on
 the PS2's or its FBP's region of §3.1; on the PS2 itself the depth blur's capture at 0x3600 (FBW 8, 192
 lines) covers 0x3600 .. 0x3C00, over the off-screen buffer 0x3A00's first rows, and the movie frame copy's
 640 x 448 display runs to block 0x1180, over the Z area's first rows.
+Session 109 (5.1aw): the render-to-texture sends of §3.4 are checked too (the shadow windows and the
+crossfade built by the game's C on the host, the eye overlay with its tags from texspot's stores, case 2's
+frame copy at both display widths, sprites clipped by their SCISSOR): the off-screen buffer's 256 x 256 runs
+over the window font (0x3D7C) and its CLUT 0x3DFC on the PS2 too, which the windows re-upload before drawing
+(§4.12).
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame
