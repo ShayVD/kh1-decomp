@@ -191,8 +191,11 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     v->codes++;
     if (v->vif0 && (cmd == 0x02 || cmd == 0x03 || cmd == 0x06 || cmd == 0x50 || cmd == 0x51)) cmd = 0x7F;
     switch (cmd) {
+    case 0x14: case 0x15: case 0x17: /* MSCAL / MSCALF / MSCNT: on VIF1 a VU1 program that may XGKICK */
+        if (!v->vif0) kh1_gs_path1();
+        return;
     case 0x00: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
-    case 0x10: case 0x11: case 0x13: case 0x14: case 0x15: case 0x17:
+    case 0x10: case 0x11: case 0x13:
         return;
     case 0x01: /* STCYCL */
         v->cl = imm & 0xFF;
@@ -227,6 +230,12 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     for (i = 0; i < n * 4; i++) vif_word(v, q[i], addr + i * 4);
 }
 
+static const char *target_note(u32 t) {
+    static char b[32];
+    sprintf(b, ", reads target %u", t);
+    return b;
+}
+
 /* KH1_HOST_TRACE=5: each draw state the send drew in (host/null/gsregs.c), with the context's
  * FRAME, ZBUF, TEST, ALPHA, TEX0 and CLAMP, and its kicks and primitives */
 static void gs_print_draws(void) {
@@ -234,10 +243,21 @@ static void gs_print_draws(void) {
     int n = kh1_gs_draws(d, 64), i;
     for (i = 0; i < n && i < 64; i++)
         printf("kh1-host:   draw prim %03x frame %08x zbuf %08x test %08x alpha %08x%08x tex0 %08x%08x clamp "
-               "%08x%08x: %u kicks, %u prims\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
+               "%08x%08x: %u kicks, %u prims%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
                d[i].ctx.alpha.hi, d[i].ctx.alpha.lo, d[i].ctx.tex0.hi, d[i].ctx.tex0.lo, d[i].ctx.clamp.hi,
-               d[i].ctx.clamp.lo, d[i].kicks, d[i].draws);
+               d[i].ctx.clamp.lo, d[i].kicks, d[i].draws, d[i].target ? target_note(d[i].target) : "");
     if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
+}
+
+/* KH1_HOST_TRACE=5 (session 81): the render targets the send drew into (host/null/gsmem.c), with the
+ * extent so far and the send's primitives (a VU1 program start counts one, host/null/gsregs.c) */
+static void gs_print_targets(void) {
+    static KH1GsTarget t[32];
+    int n = kh1_gsmem_targets(t, 32), i;
+    for (i = 0; i < n && i < 32; i++)
+        if (t[i].sent)
+            printf("kh1-host:   target %d bp %04x bw %u psm %02x rows %u mask %08x: %u prims\n", i + 1, t[i].bp,
+                   t[i].bw, t[i].psm, t[i].h, t[i].mask, t[i].sent);
 }
 
 /* KH1_HOST_TRACE=5: each upload / copy into GS memory the send made (host/null/gsmem.c, session 80) */
@@ -252,9 +272,9 @@ static void gs_print_uploads(void) {
 
 /* KH1_HOST_TEXDUMP=DIR (session 80): each distinct texture a send drew with, decoded from the GS memory
  * model (host/null/gsmem.c) as it stands after the send, written once per TEX0 + TEXA + contents to
- * DIR/tex_TEX0_N.pam (RGBA, A doubled from the GS's 0-0x80 scale).  Draws do not write the model, so a
- * texture inside a render target (the 3D target 0x1A00, the Z area 0x0E00) comes out as the uploads
- * left it.  From the user's disc: never commit them. */
+ * DIR/tex_TEX0_N.pam (RGBA, A doubled from the GS's 0-0x80 scale).  Draws do not write the model's
+ * pixels: a texture in a render target's drawn bits (the 3D target 0x1A00, the Z area 0x0E00; session
+ * 81) is not decoded but named ("texture ... in target N").  From the user's disc: never commit them. */
 static void gs_dump_textures(void) {
     static KH1GsDraw d[256];
     static u32 seen[1024][5], nseen, pix[1024 * 1024];
@@ -279,6 +299,11 @@ static void gs_dump_textures(void) {
         }
         if (j < nseen || nseen == 1024) continue;
         for (k = 0; k < 5; k++) seen[nseen][k] = key[k];
+        if (d[i].target) {
+            nseen++;
+            printf("kh1-host:   texture %08x%08x in target %u: not decoded\n", key[1], key[0], d[i].target);
+            continue;
+        }
         if (kh1_gsmem_read_tex(key[0], key[1], d[i].texa.lo, d[i].texa.hi, pix)) continue;
         w = 1u << (key[0] >> 26 & 15);
         h = 1u << ((key[0] >> 30 | key[1] << 2) & 15);
@@ -407,6 +432,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (kh1_host_trace >= 5) {
         gs_print_draws();
         gs_print_uploads();
+        gs_print_targets();
     }
     if (kh1_host_texdump) gs_dump_textures();
     if (bad || kh1_host_trace == 3)
@@ -442,5 +468,6 @@ void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
     if (kh1_host_trace >= 5) {
         gs_print_draws();
         gs_print_uploads();
+        gs_print_targets();
     }
 }

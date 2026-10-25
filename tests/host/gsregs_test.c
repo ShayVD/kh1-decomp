@@ -137,6 +137,45 @@ int main(void) {
     kh1_gs_packed(0x4, v);
     n = kh1_gs_draws(d, 8);
     CHECK("ADC", n == 2 && d[1].kicks == 2 && d[1].draws == 1);
+    /* the field text (renderer-spec 4.10, session 81): a REGLIST header writes PRIM
+     * SPRITE|TME|ABE|FST as a register and RGBAQ; the glyph's REGLIST tag (NREG 6 TEX0_1, RGBAQ, UV,
+     * XYZ2, UV, XYZ2, regs 0x535316) has no PRE and draws with that PRIM; a PRE bit and PRIM field
+     * in a REGLIST tag are ignored (PRE is PACKED's only) */
+    kh1_gs_reset();
+    clear();
+    q(0, 0x70000006, 0, 0, 0);
+    q(1, 1 | 1 << 15, 1 << 26 | 2 << 28, 0x10, 0);
+    q(2, 0x156, 0, 0x80808080, 0x3F800000);
+    q(3, 1 | 1 << 15, 1 << 14 | 3 << 15 | 1 << 26 | 6u << 28, 0x535316, 0);
+    q(4, 0x3600 | 8 << 14 | 0x14 << 20 | 9 << 26 | 1u << 30, 2 | 0x3FDC << 5 | 1 << 29, 0x80808080, 0x3F800000);
+    q(5, 0x00100010, 0, 0x01000100, 0x00FFFFFE);
+    q(6, 0x00200020, 0, 0x02000200, 0x00FFFFFE);
+    CHECK("field text walk", kh1_dma_walk(2, 0x104, A(0), where) == 0);
+    n = kh1_gs_draws(d, 8);
+    CHECK("field text: REGLIST PRIM", n == 1 && d[0].prim == 0x156 && d[0].kicks == 2 && d[0].draws == 1 &&
+          d[0].ctx.tex0.lo == (0x3600 | 8 << 14 | 0x14 << 20 | 9 << 26 | 1u << 30) && s->prim.lo == 0x156);
+    /* the list frame (func_00208458): TRISTRIP|IIP|ABE NLOOP 18 of (A+D RGBAQ, XYZF2), ADC on v6 / v7
+     * and v12 / v13: three 6-vertex strips in one tag, 4 triangles each, none across a restart */
+    kh1_gs_reset();
+    clear();
+    q(0, 0x70000000 | 37, 0, 0, 0);
+    q(1, 18 | 1 << 15, 1 << 14 | 0x4C << 15 | 2u << 28, 0x4E, 0);
+    for (n = 0; n < 18; n++) {
+        q(2 + 2 * n, 0x80808080, 0x3F800000, 0x01, 0);
+        q(3 + 2 * n, n * 16, n & 1 ? 0x100 : 0, 0x1000000, n == 6 || n == 7 || n == 12 || n == 13 ? 0x8000 : 0);
+    }
+    CHECK("list frame walk", kh1_dma_walk(2, 0x104, A(0), where) == 0);
+    n = kh1_gs_draws(d, 8);
+    CHECK("list frame: ADC restarts", n == 1 && d[0].prim == 0x4C && d[0].kicks == 18 && d[0].draws == 12);
+    /* a restart also holds in a TRIFAN (the HUD arcs' kind): ADC vertices draw nothing */
+    kh1_gs_clear_draws();
+    kh1_gs_write(0x00, 5, 0);
+    vert(0, 0); vert(1, 0); vert(1, 1);
+    kh1_gs_write(0x0D, 0, 0);
+    vert(0, 1);
+    n = kh1_gs_draws(d, 8);
+    CHECK("fan: XYZ3 kept, no draw", n == 1 && d[0].kicks == 5 && d[0].draws == 2);
+
     /* dropped registers are counted, not kept; a non-register is unknown */
     kh1_gs_write(0x45, 0, 0);
     kh1_gs_write(0x46, 1, 0);

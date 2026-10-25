@@ -2,7 +2,7 @@
 """The renderer's state list from a host run (phase 5, docs/renderer-spec.md 4.7).
 
   KH1_HOST_TRACE=4 out/host/kh1-host > run.txt     (KH1_HOST_ISO=..., KH1_HOST_OVL=stub:2 ...)
-  python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws] [--uploads]
+  python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws] [--uploads] [--targets]
 
 The run-time twin of `tools/host/dmawalk.py --state`, which reads only the chains the ELF
 holds: KH1_HOST_TRACE=4 (host/null/dmawalk.c) prints after each send's line every distinct GS
@@ -17,7 +17,10 @@ distinct PRIM + FRAME / ZBUF / TEST / ALPHA / TEX0 / CLAMP the vertex kicks drew
 carried over from earlier sends included), decoded, with its kicks, primitives and the chains whose
 data kicked them.  --uploads (KH1_HOST_TRACE=5, session 80) lists the transfers into GS memory
 host/null/gsmem.c took ("kh1-host:   upload ..."): each distinct destination (DBP, DBW, DPSM) and
-rectangle, how often, the pixels written and the chains that sent them.
+rectangle, how often, the pixels written and the chains that sent them.  --targets (session 81)
+lists the render targets ("kh1-host:   target ..."): each FRAME / ZBUF the draws (and VU1 program
+starts, for context 2) wrote through, its extent and primitives; --draws marks a draw state whose
+texture lies in one ("texture in target N").
 
 The values come from the user's disc and ELF at run time: never commit the output.
 """
@@ -40,7 +43,10 @@ from dmawalk import print_state  # noqa: E402
 SEND = re.compile(r"^kh1-host: dma ch (\d+) chcr ([0-9a-f]{8}) tadr ([0-9a-f]{8}):")
 GS = re.compile(r"^kh1-host:   gs ([0-9a-f]{2}) ([0-9a-f]{16})$")
 DRAW = re.compile(r"^kh1-host:   draw prim ([0-9a-f]{3}) frame ([0-9a-f]{8}) zbuf ([0-9a-f]{8}) test ([0-9a-f]{8}) "
-                  r"alpha ([0-9a-f]{16}) tex0 ([0-9a-f]{16}) clamp ([0-9a-f]{16}): (\d+) kicks, (\d+) prims$")
+                  r"alpha ([0-9a-f]{16}) tex0 ([0-9a-f]{16}) clamp ([0-9a-f]{16}): (\d+) kicks, (\d+) prims"
+                  r"(?:, reads target (\d+))?$")
+TARGET = re.compile(r"^kh1-host:   target (\d+) bp ([0-9a-f]{4}) bw (\d+) psm ([0-9a-f]{2}) rows (\d+) "
+                    r"mask ([0-9a-f]{8}): (\d+) prims$")
 UPLOAD = re.compile(r"^kh1-host:   upload (host|copy) dbp ([0-9a-f]{4}) dbw (\d+) dpsm ([0-9a-f]{2}) "
                     r"at (\d+),(\d+) size (\d+)x(\d+): (\d+) pixels$")
 PSM = {0x00: "PSMCT32", 0x01: "PSMCT24", 0x02: "PSMCT16", 0x0A: "PSMCT16S", 0x13: "PSMT8", 0x14: "PSMT4",
@@ -58,11 +64,20 @@ def print_uploads(uploads) -> None:
             kind, dbp, dbw, PSM.get(psm, "psm%02x" % psm), x, y, w, h, n, short, ", ".join(chains)))
 
 
+def print_targets(targets) -> None:
+    """targets: number -> [bp, bw, psm, rows, mask, prims, {chain: None}] (the last line's extent)"""
+    print("# render targets (KH1_HOST_TRACE=5, host/null/gsmem.c): %d" % len(targets))
+    for n, (bp, bw, psm, rows, mask, prims, chains) in sorted(targets.items()):
+        print("\ttarget %d: block 0x%04x (page 0x%03x) FBW %d %s %d rows, bits %08x: %d prims  %s" % (
+            n, bp, bp // 32, bw, PSM.get(psm, "psm%02x" % psm), rows, mask, prims, ", ".join(chains)))
+
+
 def print_draws(draws) -> None:
-    """draws: (prim, frame, zbuf, test, alpha, tex0, clamp) -> [kicks, prims, {chain: None}]"""
+    """draws: (prim, frame, zbuf, test, alpha, tex0, clamp) -> [kicks, prims, {chain: None}, {target: None}]"""
     print("# draw states (KH1_HOST_TRACE=5): %d" % len(draws))
-    for key, (kicks, prims, chains) in sorted(draws.items(), key=lambda kv: -kv[1][0]):
-        print("%6d kicks %6d prims  %s" % (kicks, prims, " ".join(sorted(chains))))
+    for key, (kicks, prims, chains, targets) in sorted(draws.items(), key=lambda kv: -kv[1][0]):
+        reads = "  (texture in target %s)" % ", ".join(map(str, sorted(targets))) if targets else ""
+        print("%6d kicks %6d prims  %s%s" % (kicks, prims, " ".join(sorted(chains)), reads))
         for reg, v in zip(DRAW_REGS, key):
             if reg != 0x00 and not v:
                 continue  # not read by this draw (gsregs.c leaves it 0)
@@ -97,12 +112,14 @@ def main() -> int:
     ap.add_argument("--sends", action="store_true", help="also the number of sends per chain")
     ap.add_argument("--draws", action="store_true", help="also the draw states (a KH1_HOST_TRACE=5 run)")
     ap.add_argument("--uploads", action="store_true", help="also the uploads into GS memory (KH1_HOST_TRACE=5)")
+    ap.add_argument("--targets", action="store_true", help="also the render targets drawn into (KH1_HOST_TRACE=5)")
     a = ap.parse_args()
     syms = Syms(a.exe)
     state = collections.defaultdict(dict)
     sends = collections.Counter()
     draws = {}
     uploads = {}
+    targets = {}
     cur, nsend, nval = None, 0, 0
     for line in a.log.read_text(errors="replace").splitlines():
         m = SEND.match(line)
@@ -121,10 +138,21 @@ def main() -> int:
         m = DRAW.match(line)
         if m and cur:
             key = tuple(int(m.group(i), 16) for i in range(1, 8))
-            d = draws.setdefault(key, [0, 0, {}])
+            d = draws.setdefault(key, [0, 0, {}, {}])
             d[0] += int(m.group(8))
             d[1] += int(m.group(9))
             d[2][cur] = None
+            if m.group(10):
+                d[3][int(m.group(10))] = None
+            continue
+        m = TARGET.match(line)
+        if m and cur:
+            n = int(m.group(1))
+            t = targets.setdefault(n, [0, 0, 0, 0, 0, 0, {}])
+            t[:5] = [int(m.group(2), 16), int(m.group(3)), int(m.group(4), 16), int(m.group(5)),
+                     int(m.group(6), 16)]
+            t[5] += int(m.group(7))
+            t[6][cur] = None
             continue
         m = UPLOAD.match(line)
         if m and cur:
@@ -153,6 +181,10 @@ def main() -> int:
         if not uploads:
             print("gsstate: no upload lines (trace level below 5, or no uploads)", file=sys.stderr)
         print_uploads(uploads)
+    if a.targets:
+        if not targets:
+            print("gsstate: no target lines (trace level below 5, or nothing drawn)", file=sys.stderr)
+        print_targets(targets)
     print("# %d sends, %d chains, %d registers, %d distinct values" % (
         nsend, len(sends), len(state), sum(len(v) for v in state.values())), file=sys.stderr)
     return 0

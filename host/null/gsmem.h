@@ -20,6 +20,7 @@ typedef struct {
     u32 unsupported; /* transfers, CLUT loads or reads in a PSM the model does not have (CT16S,
                       * the Z formats), TRXDIR 1, CSM 1 (TEXCLUT) */
     u32 clut_loads;  /* CLUT buffer loads (TEX0 / TEX2 with CLD 1-5 that load) */
+    u32 target_draws; /* primitives drawn into a render target (kh1_gsmem_draw, session 81) */
 } KH1GsMemStats;
 
 /* clears the 4 MB, the CLUT buffer, the transfer and the counters */
@@ -54,6 +55,34 @@ u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);
 u32 kh1_gsmem_clut_stamp(void);
 
 const KH1GsMemStats *kh1_gsmem_stats(void);
+
+/* render targets (session 81, renderer-spec 5.1's last paragraph): the model is written by uploads
+ * and copies, and also told where each primitive drew, so a texture that lies in drawn pages is known
+ * to be a render's output (the 3D target, the Z buffer, a pass at 0x3A00) the model does not hold:
+ * reported as "target N", not decoded.  A target is a FRAME or a ZBUF the draws wrote through, its
+ * extent FBW pages wide (at most to SCISSOR's SCAX1) and as many page rows as SCISSOR's SCAY1
+ * reaches.  Kept per 8 KB page: the bits of the pixel word a draw changed, so a Z24 buffer leaves a
+ * PSMT4HL / HH font in its top byte a texture (the message font at 0x1000); an upload or copy clears
+ * the bits it writes from each page it touches (page granularity: a partial upload clears the whole
+ * page's bits). */
+typedef struct {
+    u32 bp;    /* the first block: FBP / ZBP x 32 */
+    u32 bw;    /* FBW (64-pixel units; a ZBUF takes its context's FRAME's) */
+    u32 psm;   /* FRAME.PSM, or 0x30 | ZBUF.PSM */
+    u32 h;     /* the rows the draws may reach: the largest SCAY1 + 1 seen */
+    u32 mask;  /* the pixel word's bits the draws may change: ~FBMSK, CT24 / Z24's low 24 bits */
+    u32 draws; /* primitives drawn into it since the reset */
+    u32 sent;  /* ... since the last kh1_gsmem_clear_log (KH1_HOST_TRACE=5 prints a send's) */
+} KH1GsTarget;
+/* a primitive drew with this context's FRAME, ZBUF, SCISSOR and TEST (Z is written with ZTE 1 and
+ * ZMSK 0; FRAME unless FBMSK masks every bit) */
+void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 scissor_lo, u32 scissor_hi,
+                    u32 test_lo);
+/* 0, or 1 + the target that last drew into a page the texture TEX0 names reads, in bits it reads
+ * (the CLUT's own source is not checked) */
+u32 kh1_gsmem_tex_target(u32 tex0_lo, u32 tex0_hi);
+/* fills up to max and returns how many targets there were (at most 32 kept) */
+int kh1_gsmem_targets(KH1GsTarget *out, int max);
 
 /* an upload or copy since the last kh1_gsmem_clear_log (KH1_HOST_TRACE=5 prints them) */
 typedef struct {
