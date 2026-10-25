@@ -2327,6 +2327,57 @@ float-untested row. selftest PASS (two new negative cases).
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1ax Session 110: the Z writes and the texture reads, checked by fscheck
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Tool only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (one new negative case).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **Z writes' blocks** (item 4b): every sprite fscheck block-checks (the 58 sends' FRAME setters, the
+  run-time builds, RT_DATA) whose context's ZBUF is in its packets with ZMSK 0, and whose TEST (the packet's,
+  else assumed on) has ZTE and a ZTST other than NEVER, writes Z: ZBP, the frame's FBW and the Z PSM over the
+  same clipped rectangle, checked against the PS2's blocks and §3.1's regions like the FRAME (`ZBLOCK_EXPECTED`).
+  **Correction to the plan**: the Z formats do not share the colour block order; their block number is the
+  colour one's XOR 24 (host/null/gsmem.c `zxor`, PCSX2's tables), so `PSM_BLOCKS` has 0x30 / 0x31 / 0x32 /
+  0x3A. A ZBUF outside the Z area (0x0E00 .. 0x19FF) now needs an entry too. **Three found, all on the PS2:**
+  - **the crossfade `func_00135ed0` writes Z32 zeros into the display.** Its ZBUF word is 0 (ZBP 0, PSMZ32,
+    ZMSK 0) and TEST_1 is ZTE / ALWAYS (0x30000), so its first sprite writes depth 0 over 64 x 64 .. 256 x 256
+    pixels at the crossfade's FBW from block 0, the display's top rows. The frame copy rewrites the display at
+    frame end, so it is invisible unless the display is scanned out between the two (**for the boot**: a
+    black flicker top left during a texture crossfade). **For a port**: the crossfade writes no depth (its
+    renderer keeps a ZMSK of 1 there, or has no Z for render-to-texture);
+  - **the depth blur's half-size capture into 0x3600 writes Z24 0xFFFFFE** over its 256 x 192 at ZBP 0x0E00,
+    FBW 8 (ZMSK 0, TEST ZTE / ALWAYS), after the 3D. Under the wide view (x 0 .. 338.8) it reaches the same
+    rows' x 256 .. 338 of the 3D Z buffer (blocks 0x0E80 .. past the PS2's): still the Z buffer's own pixels,
+    and the message font at 0x1000 lives in the Z24 words' top byte, which a Z24 write keeps. Expected
+    ("wide"); a port's capture writes no depth either;
+  - **the shadow windows' Z16S at 0x3800** (FBW 4) is in the texture slot's upper half (0x3800 .. 0x39FF at
+    256), as the plan expected; the slot is rewritten per draw (§3.1).
+  The 3D target's Z24 at 0x0E00 is the environment's ZBUF (not in these packets), so not checked here.
+- **Texture reads** (item 4c): for each picture (one send; RT_DATA's chain; a shadow window's copy
+  `D_004F7C10[i]` after its `D_004F7820[i]`, `TEX_AFTER`), each textured sprite whose TEX0 and UV are in the
+  packets reads the blocks of its UV rectangle inside TW x TH (TBP0, TBW, PSM; PSMT8 / PSMT4 / T8H / T4HL /
+  T4HH added to `PSM_BLOCKS`) and of its CLUT (CBP, CPSM; 16 x 16 for 8 bits, 8 x 2 at CSA for 4); a read of a
+  block nothing before it in the picture drew (its PS2 rectangle) or uploaded (BITBLTBUF / TRXPOS / TRXREG,
+  TRXDIR 0 or 2) fails unless `TEX_EXPECTED` names what fills it. **12 reads checked, 187 skipped** (185 by
+  sprites the view stretches: they read the view's own target; 2 with the environment's TEX0). The shadow
+  copies read only what their window drew; the crossfade's first sprite reads the 1 x 1 PSMT8 texel and the
+  CLUT 0x3700 it uploads just before. **5 expected**, each filled outside the packets: case 2's movie frame
+  at 0x1180 (Z area and the 3D target's first blocks; the movie overlay or `func_0010b6c0`), the shaped
+  wipe's image at 0x3600 and its CLUT at 0x3A00 (`func_00106460` calls `func_00106438` -> `func_001091f8`
+  before the send), the eye overlay's image at 0x3600 and CLUT 0x3700 (`func_0015fa20(&D_005757A0)` between
+  its two sends). Nothing read outside what was drawn or uploaded.
+- **Fixed in passing**: fscheck's `EXEMPT` text for `D_002A6960` had the copy backwards (it copies from the
+  0x118000 movie buffer into the display, renderer-spec 4.15).
+- **selftest**: with the depth blur's wide Z entry, the crossfade's display entry and the eye overlay's
+  upload entry taken out (imported, not edited), the blur's Z past the PS2's blocks, the eye overlay's
+  unloaded image and (with `gcc -m32`) the crossfade's ZBUF in the display must all be reported.
+- **Not covered**: the 185 stretched copies' sources (each `KH1_FS_U` row's TEX0 should be a buffer laid out
+  like the target: next step), the 2 environment-TEX0 sprites, CLUT loads' CLD / CSM2, the HUD's and the
+  draw list's other packets.
+- **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
+  of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

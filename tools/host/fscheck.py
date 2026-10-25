@@ -36,6 +36,12 @@ checks:
     D_0035C550 with the tags texspot's C stores (RT_DATA), and case 2's frame copy at each display width
     with its C-written FRAME and XYZ evaluated (CVARS); a sprite the view does not stretch is clipped by
     its SCISSOR, and PACKED RGBAQ / UV / XYZ are read as the GS reads them.
+  - (session 110) the Z buffers the same sends write (ZBUF in the packet with ZMSK 0, TEST's ZTE on and
+    ZTST not NEVER; ZBP, the frame's FBW, the Z PSM's block order: the colour one's XOR 24) get the block
+    check too, and a ZBUF outside the Z area needs a ZBLOCK_EXPECTED entry; and every textured sprite with
+    its TEX0 and UV in the packets (not stretched by the view) reads only blocks (texels in TW x TH, and the
+    CLUT of a PSMT8 / PSMT4) that something before it in its picture drew or uploaded (TRXDIR), else
+    TEX_EXPECTED names what fills them; TEX_AFTER puts the shadow window before its copy.
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -67,8 +73,8 @@ EDGES = {0x7000, 0x9000, 0x6FE0, 0x8FE0, 0x6FC0, 0x8FC0}
 
 # full-screen sends that stay 4:3 on purpose
 EXEMPT = {
-    "D_002A6960": "brightfade.c func_00106000 case 2: the frame copy into the 640-wide movie buffer at 0x118000 "
-                  "(renderer-spec 5.3: movies stay 4:3 and centred)",
+    "D_002A6960": "brightfade.c func_00106000 case 2: the frame copy from the 640-wide movie buffer at 0x118000 "
+                  "into the display (renderer-spec 5.3: movies stay 4:3 and centred)",
     "D_002BBC20": "framectl.c func_0010f580: the system-message band's own 512 x 128 display at 0x3600 "
                   "(renderer-spec 4.15: read circuit 1, stays 4:3 and centred)",
     "D_002BBCC0": "framectl.c func_0010f658: the system-message band's box and its two red lines (4.15, as above)",
@@ -125,6 +131,40 @@ BLOCK_EXPECTED = {
     ("func_00135ed0", 0x3D7C): "objdraw: the crossfade of a texture 256 high (CROSSFADE_SIZES) fills rows 224 .. "
                                "255, the window font's blocks (as D_004F7820's)",
 }
+# (session 110) sends whose Z buffer writes leave its ZBP's region or the PS2's footprint on purpose: as
+# BLOCK_EXPECTED
+# BLOCK_EXPECTED; a Z buffer outside the Z area (Z_REGION) needs (send, its region's first block) here too
+Z_REGION = 0x0E00
+ZBLOCK_EXPECTED = {
+    ("D_002A5620", "wide"): "sceneeff.c: the depth blur's half-size capture into 0x3600 has ZBUF 0x0E00 Z24 with ZMSK 0 "
+                            "under TEST ZTE / ALWAYS, so it writes Z (0xFFFFFE) over its 256 x 192 at FBW 8 on the PS2 "
+                            "too, after the 3D; at the view's half (x 0 .. 338.8) the same rows' x 256 .. 338 of the 3D "
+                            "Z buffer (the message font at 0x1000 lives in the Z24 words' top byte, which a Z24 write "
+                            "keeps). A port's capture writes no depth (5.1ax)",
+    ("func_00135ed0", 0x0000): "objdraw: the crossfade's ZBUF word is 0 (ZBP 0, Z32, ZMSK 0) under TEST_1 ZTE / ALWAYS, "
+                               "so its sprites write Z32 zeros over the display's first blocks (64 x 64 .. 256 x 256 "
+                               "at the crossfade's FBW) on the PS2 too; the frame copy rewrites the display at frame "
+                               "end. A port's crossfade writes no depth (5.1ax; the boot: a black flicker top left "
+                               "during a crossfade?)",
+    ("D_004F7820", 0x3600): "shadow.c func_001284a0: the shadow windows' Z16S at 0x3800 (FBW 4) over their 128 / 196 / "
+                            "256 square, the texture slot's upper half (0x3800 .. 0x39FF at 256) on the PS2 too: the "
+                            "slot is rewritten per draw (renderer-spec 3.1), after the list's render-to-texture",
+}
+# (session 110) sends that read texture blocks nothing before them in their picture drew or uploaded, on
+# purpose (the image is loaded or drawn elsewhere): (send, the region's first block) -> what fills them
+TEX_EXPECTED = {
+    ("D_002A6960", 0x0E00): "brightfade.c case 2: the movie frame at 0x1180 (640 x 448 CT24), drawn there by the movie "
+                            "overlay or func_0010b6c0 (renderer-spec 4.15 \"The 0x118000 area\")",
+    ("D_002A6960", 0x1A00): "case 2's movie frame, as above: 640 x 448 CT24 from 0x1180 runs into the 3D target's "
+                            "first blocks",
+    ("D_002A6B70", 0x3600): "brightfade.c func_00106460: func_00106438 -> func_001091f8 just before the send uploads "
+                            "the wipe's shape D_002C13A0 at 0x3600 (128 x 224, PSMT4)",
+    ("D_002A6B70", 0x3A00): "func_00106460's shape CLUT, uploaded at 0x3A00 by func_001091f8 (func_00109180) with it",
+    ("D_0035C4A0", 0x3600): "texspot func_00175600: func_0015fa20(&D_005757A0) between the two sends uploads the eye "
+                            "image at 0x3600 (PSMT8) and its CLUT at 0x3700 (from the file, func_00175708)",
+}
+# (session 110) a run-time send that reads what another drew just before it: send -> that send (the same variant)
+TEX_AFTER = {"D_004F7C10": "D_004F7820"}
 # (session 109) the render-to-texture sends outside the walk above (renderer-spec 3.4), checked the same way:
 # - packets the game's own C builds at run time (tools/host/rtsends.c runs the builders under gcc -m32): the
 #   shadow windows D_004F7820[i] / D_004F7C10[i] (func_001284a0 / func_00128738, one per size
@@ -150,9 +190,16 @@ BLOCKS16 = ((0, 2, 8, 10), (1, 3, 9, 11), (4, 6, 12, 14), (5, 7, 13, 15),
             (16, 18, 24, 26), (17, 19, 25, 27), (20, 22, 28, 30), (21, 23, 29, 31))
 BLOCKS16S = ((0, 2, 16, 18), (1, 3, 17, 19), (8, 10, 24, 26), (9, 11, 25, 27),
              (4, 6, 20, 22), (5, 7, 21, 23), (12, 14, 28, 30), (13, 15, 29, 31))
+# (session 110) the Z formats' block order is the colour one's with the block number XOR 24 (GS manual 8.3:
+# the Z buffer's blocks start in the page's other half), and the 8 / 4 bit textures use the CT32 / CT16
+# tables over 16 x 16 / 32 x 16 blocks (a 128 x 64 / 128 x 128 page); T8H / T4HL / T4HH live in CT32's bytes
+_Z = lambda t: tuple(tuple(b ^ 24 for b in row) for row in t)  # noqa: E731
 # PSM -> (block width, block height, the page's block order)
 PSM_BLOCKS = {0x00: (8, 8, BLOCKS32), 0x01: (8, 8, BLOCKS32), 0x02: (16, 8, BLOCKS16),
-              0x0A: (16, 8, BLOCKS16S)}
+              0x0A: (16, 8, BLOCKS16S), 0x13: (16, 16, BLOCKS32), 0x14: (32, 16, BLOCKS16),
+              0x1B: (8, 8, BLOCKS32), 0x24: (8, 8, BLOCKS32), 0x2C: (8, 8, BLOCKS32),
+              0x30: (8, 8, _Z(BLOCKS32)), 0x31: (8, 8, _Z(BLOCKS32)), 0x32: (16, 8, _Z(BLOCKS16)),
+              0x3A: (16, 8, _Z(BLOCKS16S))}
 
 # functions whose C writes both 4:3 edges on purpose (none today): "file:function" -> reason
 LIT_EXEMPT = {}
@@ -345,25 +392,44 @@ def sprites(img, head):
 def sprites_of(rl):
     """each SPRITE a register list draws: (x0, x1, y0, y1 in sixteenths, u span in texels, textured, XYZ
     addresses, the two vertices' x, the FRAME and XYOFFSET its context's packet set (None: the
-    environment's), the FRAME's address, the context's SCISSOR (None: the environment's))"""
+    environment's), the FRAME's address, the context's SCISSOR (None: the environment's), (session 110) its
+    context's ZBUF, TEST and TEX0 (None: the environment's), its UV rectangle (u0, u1, v0, v1 in texels;
+    None without two UV), PRIM's FST, its place in the register list)"""
     out, prim, vx, uv, env, at = [], 0, [], [], {}, {}
-    for r, v, a in rl:
-        if r in (0x18, 0x19, 0x4C, 0x4D, 0x40, 0x41):
+    for k, (r, v, a) in enumerate(rl):
+        if r in (0x18, 0x19, 0x4C, 0x4D, 0x40, 0x41, 0x4E, 0x4F, 0x47, 0x48, 0x06, 0x07):
             env[r], at[r] = v, a
         elif r == 0x00:
             prim, vx, uv = v & 0x7FF, [], []
         elif r == 0x03:
-            uv.append(gp.bits(v, 0, 14) / 16)
+            uv.append((gp.bits(v, 0, 14) / 16, gp.bits(v, 16, 14) / 16))
         elif r in XYZ_REGS:
             vx.append((gp.bits(v, 0, 16), gp.bits(v, 16, 16), a))
             if prim & 7 == 6 and len(vx) == 2:
                 (xa, ya, aa), (xb, yb, ab) = vx
-                du = abs(uv[-1] - uv[-2]) if len(uv) >= 2 else 0
+                du = abs(uv[-1][0] - uv[-2][0]) if len(uv) >= 2 else 0
+                uvr = (min(uv[-1][0], uv[-2][0]), max(uv[-1][0], uv[-2][0]), min(uv[-1][1], uv[-2][1]),
+                       max(uv[-1][1], uv[-2][1])) if len(uv) >= 2 else None
                 ctx = prim >> 9 & 1
                 out.append((min(xa, xb), max(xa, xb), min(ya, yb), max(ya, yb), du, bool(prim & 0x10), (aa, ab),
                             (xa, xb), env.get(0x4C + ctx), env.get(0x18 + ctx), at.get(0x4C + ctx),
-                            env.get(0x40 + ctx)))
+                            env.get(0x40 + ctx), env.get(0x4E + ctx), env.get(0x47 + ctx), env.get(0x06 + ctx),
+                            uvr, bool(prim & 0x100), k))
                 vx, uv = [], []
+    return out
+
+
+def uploads_of(rl):
+    """(session 110) each image transfer a register list starts (TRXDIR 0 host -> local, 2 local -> local):
+    (its place in the list, DBP in blocks, DBW, DPSM, the destination's pixel rectangle)"""
+    out, reg = [], {}
+    for k, (r, v, _a) in enumerate(rl):
+        if r in (0x50, 0x51, 0x52):
+            reg[r] = v
+        elif r == 0x53 and gp.bits(v, 0, 2) in (0, 2) and 0x50 in reg and 0x51 in reg and 0x52 in reg:
+            bb, pos, trx = reg[0x50], reg[0x51], reg[0x52]
+            x, y, w, h = gp.bits(pos, 32, 11), gp.bits(pos, 48, 11), gp.bits(trx, 0, 12), gp.bits(trx, 32, 12)
+            out.append((k, gp.bits(bb, 32, 14), gp.bits(bb, 48, 6), gp.bits(bb, 56, 6), (x, x + w, y, y + h)))
     return out
 
 
@@ -478,48 +544,89 @@ def overrun(sp, flags, writes, side16):
     return None
 
 
-def frame_rects(sp, flags, writes, side16, free=frozenset()):
-    """(session 108) the pixel rectangle each FRAME the sprites set is drawn over: {FRAME: (x0, x1, y0, y1)},
-    x under the wide view at side16 (0: the PS2); a frame drawn from before its left edge (stretched over
-    the view: the port's target is the view's size) or a C write that does not evaluate is left out.
-    (session 109) a sprite the view does not stretch is clipped by its context's SCISSOR when the packets
-    set one, and a sprite with an XYZ word in `free` (moved by the C at run time) is its whole SCISSOR"""
+def sprite_rect(p, flags, writes, side16, free=frozenset()):
+    """(session 110, from frame_rects) one sprite's drawn pixel rectangle (x0, x1, y0, y1) in its frame, x
+    under the wide view at side16; None when a C write does not evaluate, the SCISSOR leaves nothing or a
+    moved sprite (`free`) has no SCISSOR"""
+    xr = wide_x(p, flags, writes, side16)
+    if xr is None:
+        return None
+    xo = gp.bits(p[9], 0, 16) if p[9] is not None else X0
+    yo = gp.bits(p[9], 32, 16) if p[9] is not None else 0x7400
+    r = [(xr[0] - xo) / 16, (xr[1] - xo) / 16, (p[2] - yo) / 16, (p[3] - yo) / 16]
+    sc = p[11]
+    stretched = flags & {"KH1_FS_X", "KH1_FS_XS"} or any(
+        "PLAT_VIEW" in e for w in p[6] for _w, e, _at in writes.get(w, ()))
+    if sc is not None and not stretched:
+        s4 = (gp.bits(sc, 0, 11), gp.bits(sc, 16, 11) + 1, gp.bits(sc, 32, 11), gp.bits(sc, 48, 11) + 1)
+        if free & set(p[6]):
+            r = list(s4)
+        r = [max(r[0], s4[0]), min(r[1], s4[1]), max(r[2], s4[2]), min(r[3], s4[3])]
+        if r[0] >= r[1] or r[2] >= r[3]:
+            return None
+    elif free & set(p[6]):
+        return None
+    return tuple(r)
+
+
+def z_writes(p):
+    """(session 110) the sprite writes Z: its packets set its context's ZBUF with ZMSK 0, and its TEST (the
+    packet's, else the environment's, assumed on) has ZTE; ZTST NEVER writes nothing"""
+    if p[12] is None or gp.bits(p[12], 32, 1):
+        return False
+    return p[13] is None or (gp.bits(p[13], 16, 1) and gp.bits(p[13], 17, 2) != 0)
+
+
+def target_rects(sp, flags, writes, side16, free=frozenset(), z=False):
+    """(session 108) the pixel rectangle each FRAME the sprites set is drawn over: {(base, FBW, PSM): (x0, x1,
+    y0, y1)}, x under the wide view at side16 (0: the PS2); a frame drawn from before its left edge
+    (stretched over the view: the port's target is the view's size) or a C write that does not evaluate is
+    left out.  (session 109) a sprite the view does not stretch is clipped by its context's SCISSOR when the
+    packets set one, and a sprite with an XYZ word in `free` (moved by the C at run time) is its whole
+    SCISSOR.  (session 110) z: the Z buffers the sprites write instead (z_writes; ZBP, the frame's FBW, the
+    Z PSM), over the same rectangles"""
     by = {}
     for p in sp:
-        if p[8] is None:
+        if p[8] is None or (z and not z_writes(p)):
             continue
-        xr = wide_x(p, flags, writes, side16)
-        if xr is None:
+        r = sprite_rect(p, flags, writes, side16, free)
+        if r is None:
             continue
-        xo = gp.bits(p[9], 0, 16) if p[9] is not None else X0
-        yo = gp.bits(p[9], 32, 16) if p[9] is not None else 0x7400
-        r = [(xr[0] - xo) / 16, (xr[1] - xo) / 16, (p[2] - yo) / 16, (p[3] - yo) / 16]
-        sc = p[11]
-        stretched = flags & {"KH1_FS_X", "KH1_FS_XS"} or any(
-            "PLAT_VIEW" in e for w in p[6] for _w, e, _at in writes.get(w, ()))
-        if sc is not None and not stretched:
-            s4 = (gp.bits(sc, 0, 11), gp.bits(sc, 16, 11) + 1, gp.bits(sc, 32, 11), gp.bits(sc, 48, 11) + 1)
-            if free & set(p[6]):
-                r = list(s4)
-            r = [max(r[0], s4[0]), min(r[1], s4[1]), max(r[2], s4[2]), min(r[3], s4[3])]
-            if r[0] >= r[1] or r[2] >= r[3]:
-                continue
-        elif free & set(p[6]):
-            continue
-        by.setdefault(p[8] & 0xFFFFFFFF, []).append(tuple(r))
+        key = fmt(p[8]) if not z else (gp.bits(p[12], 0, 9) * 32, gp.bits(p[8], 16, 6), gp.bits(p[12], 24, 4) | 0x30)
+        by.setdefault(key, []).append(r)
     out = {}
-    for frame, rs in by.items():
+    for key, rs in by.items():
         x0, x1 = min(r[0] for r in rs), max(r[1] for r in rs)
         if x0 < -2:
             continue
-        out[frame] = (max(0, x0), x1, max(0, min(r[2] for r in rs)), max(r[3] for r in rs))
+        out[key] = (max(0, x0), x1, max(0, min(r[2] for r in rs)), max(r[3] for r in rs))
     return out
+
+
+def frame_rects(sp, flags, writes, side16, free=frozenset()):
+    """target_rects keyed by the FRAME word (session 108's form)"""
+    out = {}
+    for p in sp:
+        if p[8] is not None:
+            out.setdefault(fmt(p[8]), p[8] & 0xFFFFFFFF)
+    return {out[k]: r for k, r in target_rects(sp, flags, writes, side16, free).items()}
 
 
 def blocks(frame, rect):
     """the GS memory blocks (256 bytes each) the pixel rectangle covers in the frame (FBP, FBW, PSM): x past
     FBW x 64 runs into the next pages as on the GS; None for a PSM not in PSM_BLOCKS"""
-    fbp, fbw, psm = gp.bits(frame, 0, 9) * 32, gp.bits(frame, 16, 6), gp.bits(frame, 24, 6)
+    return blocks_at(fmt(frame), rect)
+
+
+def fmt(frame):
+    """a FRAME word as (base block, width in 64s, PSM)"""
+    return gp.bits(frame, 0, 9) * 32, gp.bits(frame, 16, 6), gp.bits(frame, 24, 6)
+
+
+def blocks_at(where, rect):
+    """(session 110) blocks() for a buffer given as (base block, width in 64s, PSM): a frame, a Z buffer
+    (PSM 0x30 ..), a texture or an upload's destination"""
+    base, fbw, psm = where
     if psm not in PSM_BLOCKS:
         return None
     bw, bh, order = PSM_BLOCKS[psm]
@@ -528,8 +635,8 @@ def blocks(frame, rect):
     out = set()
     for y in range(y0 - y0 % bh, y1, bh):
         for x in range(x0 - x0 % bw, x1, bw):
-            page = (y // ph) * max(fbw, 1) + x // pw
-            out.add((fbp + page * 32 + order[y % ph // bh][x % pw // bw]) & 0x3FFF)
+            page = (y // ph) * max(fbw * 64 // pw, 1) + x // pw
+            out.add((base + page * 32 + order[y % ph // bh][x % pw // bw]) & 0x3FFF)
     return out
 
 
@@ -551,39 +658,133 @@ def spans(bs):
 
 def block_check(s, fn, sp, flags, writes, side16, verbose, free=frozenset(), label=None):
     """(session 108) the problems of one send's drawn blocks, and the BLOCK_EXPECTED keys it used; label
-    names a variant (session 109: a run-time build) in the messages, s stays BLOCK_EXPECTED's key"""
+    names a variant (session 109: a run-time build) in the messages, s stays BLOCK_EXPECTED's key.
+    (session 110) the Z buffers its sprites write get the same check (ZBLOCK_EXPECTED)"""
     problems, used = [], set()
-    ps2, wide = frame_rects(sp, flags, writes, 0, free), frame_rects(sp, flags, writes, side16, free)
     key, s = s, label or s
-    cfr = {p[8] & 0xFFFFFFFF for p in sp if p[8] is not None and p[10] in writes}
-    for frame in sorted(wide):
-        bw, bp = blocks(frame, wide[frame]), blocks(frame, ps2.get(frame, wide[frame]))
-        if bw is None:
-            problems.append("%s (%s): FRAME PSM 0x%02X has no block order in PSM_BLOCKS" % (
-                s, fn, gp.bits(frame, 24, 6)))
-            continue
-        own = region(gp.bits(frame, 0, 9) * 32)
-        if verbose:
-            print("%s (%s): FRAME FBP 0x%04X FBW %d PSM 0x%02X%s, blocks %s under the wide view (PS2: %s)" % (
-                s, fn, gp.bits(frame, 0, 9) * 32, gp.bits(frame, 16, 6), gp.bits(frame, 24, 6),
-                " (written from C: the data's value)" if frame in cfr else "", spans(bw), spans(bp)))
-        out = bw - bp
-        if out:
-            if (key, "wide") in BLOCK_EXPECTED:
-                used.add((key, "wide"))
-            else:
-                problems.append("%s (%s): under the wide view draws blocks %s, past the PS2's (%s): size its "
-                                "buffer to the view or add (send, \"wide\") to BLOCK_EXPECTED" % (
-                                    s, fn, spans(out), spans(bp)))
-        for r in sorted({region(b) for b in bw} - {own}, key=lambda r: r[0] if r else -1):
-            if r and (key, r[0]) in BLOCK_EXPECTED:
-                used.add((key, r[0]))
+    cfr = {fmt(p[8]) for p in sp if p[8] is not None and p[10] in writes}
+    for z, what, expected in ((False, "FRAME", BLOCK_EXPECTED), (True, "ZBUF", ZBLOCK_EXPECTED)):
+        ps2 = target_rects(sp, flags, writes, 0, free, z)
+        wide = target_rects(sp, flags, writes, side16, free, z)
+        for where in sorted(wide):
+            bw, bp = blocks_at(where, wide[where]), blocks_at(where, ps2.get(where, wide[where]))
+            if bw is None:
+                problems.append("%s (%s): %s PSM 0x%02X has no block order in PSM_BLOCKS" % (s, fn, what, where[2]))
                 continue
-            hit = {b for b in bw if region(b) == r}
-            problems.append("%s (%s): its frame at 0x%04X (%s) draws blocks %s in %s: a live buffer, or add it "
-                            "to BLOCK_EXPECTED" % (s, fn, gp.bits(frame, 0, 9) * 32, own[2] if own else "?",
-                                                   spans(hit), r[2] if r else "no region"))
+            own = region(where[0])
+            if z and own and own[0] != Z_REGION:
+                if (key, own[0]) in expected:
+                    used.add((z, key, own[0]))
+                else:
+                    problems.append("%s (%s): its ZBUF at 0x%04X is in %s, not the Z area: a live buffer, or add "
+                                    "it to ZBLOCK_EXPECTED" % (s, fn, where[0], own[2]))
+            if verbose:
+                print("%s (%s): %s 0x%04X FBW %d PSM 0x%02X%s, blocks %s under the wide view (PS2: %s)" % (
+                    s, fn, what, where[0], where[1], where[2],
+                    " (written from C: the data's value)" if not z and where in cfr else "", spans(bw), spans(bp)))
+            out = bw - bp
+            if out:
+                if (key, "wide") in expected:
+                    used.add((z, key, "wide"))
+                else:
+                    problems.append("%s (%s): under the wide view its %s draws blocks %s, past the PS2's (%s): "
+                                    "size its buffer to the view or add (send, \"wide\") to %sBLOCK_EXPECTED" % (
+                                        s, fn, what, spans(out), spans(bp), "Z" if z else ""))
+            for r in sorted({region(b) for b in bw} - {own}, key=lambda r: r[0] if r else -1):
+                if r and (key, r[0]) in expected:
+                    used.add((z, key, r[0]))
+                    continue
+                hit = {b for b in bw if region(b) == r}
+                problems.append("%s (%s): its %s at 0x%04X (%s) draws blocks %s in %s: a live buffer, or add it "
+                                "to %sBLOCK_EXPECTED" % (s, fn, what, where[0], own[2] if own else "?", spans(hit),
+                                                         r[2] if r else "no region", "Z" if z else ""))
     return problems, used
+
+
+def tex_rect(p):
+    """(session 110) the texels a textured sprite reads: (TEX0's (TBP0, TBW, PSM), (u0, u1, v0, v1) inside
+    its TW x TH), or a reason it cannot be read"""
+    if not p[5]:
+        return None, None
+    if p[14] is None:
+        return None, "the environment's TEX0"
+    if not p[16] or p[15] is None:
+        return None, "STQ coordinates"
+    t = p[14]
+    tw, th = 1 << gp.bits(t, 26, 4), 1 << gp.bits(t, 30, 4)
+    u0, u1, v0, v1 = p[15]
+    r = (max(0, int(u0)), min(tw, int(-(-u1 // 1)) or 1), max(0, int(v0)), min(th, int(-(-v1 // 1)) or 1))
+    if r[0] >= r[1] or r[2] >= r[3]:
+        return None, "UV outside its TW x TH"
+    return ((gp.bits(t, 0, 14), gp.bits(t, 14, 6), gp.bits(t, 20, 6)), r), None
+
+
+def clut_rect(t):
+    """(session 110) the CLUT a TEX0 reads (CSM1): ((CBP, 1, CPSM), its rectangle in the 16-wide CLUT
+    buffer: 16 x 16 for PSMT8 / T8H, 8 x 2 at CSA for PSMT4 / T4HL / T4HH), or None"""
+    psm, cbp, cpsm, csa = gp.bits(t, 20, 6), gp.bits(t, 37, 14), gp.bits(t, 51, 4), gp.bits(t, 56, 5)
+    if psm in (0x13, 0x1B):
+        return (cbp, 1, cpsm), (0, 16, 0, 16)
+    if psm in (0x14, 0x24, 0x2C):
+        x, y = (csa & 1) * 8, (csa >> 1) * 2
+        return (cbp, 1, cpsm), (x, x + 8, y, y + 2)
+    return None
+
+
+def tex_check(s, fn, pics, verbose, label=None):
+    """(session 110) the textures one picture's sprites read against the blocks drawn or uploaded before
+    them in it (pics: [(sprites, uploads, flags, writes, free, check)], in send order, the GS state carried;
+    a picture with check False only draws: TEX_AFTER's send before this one); a
+    read outside both is a finding unless (send, region's first block) is in TEX_EXPECTED.  At the PS2's
+    coordinates: a sprite the wide view stretches reads the view's own target.  Returns (problems,
+    TEX_EXPECTED keys used, reads checked, reads skipped)"""
+    problems, used, nread, nskip = [], set(), 0, 0
+    key, s = s, label or s
+    have = set()
+    for sp, ups, flags, writes, free, check in pics:
+        ev = sorted([(p[17], 0, p) for p in sp] + [(u[0], 1, u) for u in ups], key=lambda e: e[:2])
+        for _k, kind, e in ev:
+            if kind == 1:
+                have |= blocks_at(e[1:4], e[4]) or set()
+                continue
+            p = e
+            if p[5] and check:
+                tr, why = tex_rect(p)
+                stretched = flags & {"KH1_FS_X", "KH1_FS_XS"} or any(
+                    "PLAT_VIEW" in x for w in p[6] for _w, x, _at in writes.get(w, ()))
+                if tr is None or stretched:
+                    nskip += 1
+                    if verbose:
+                        print("%s (%s): a textured sprite not checked (%s)" % (s, fn, why or "stretched by the view"))
+                else:
+                    nread += 1
+                    rb = blocks_at(*tr)
+                    cl = clut_rect(p[14])
+                    if rb is not None and cl is not None:
+                        rb |= blocks_at(*cl) or set()
+                    if rb is None:
+                        problems.append("%s (%s): TEX0 PSM 0x%02X has no block order in PSM_BLOCKS" % (
+                            s, fn, tr[0][2]))
+                    else:
+                        miss = rb - have
+                        if verbose:
+                            print("%s (%s): reads TEX0 0x%04X TBW %d PSM 0x%02X texels %g .. %g x %g .. %g%s: blocks "
+                                  "%s%s" % (s, fn, tr[0][0], tr[0][1], tr[0][2], tr[1][0], tr[1][1], tr[1][2],
+                                            tr[1][3], " (CLUT 0x%04X)" % cl[0][0] if cl else "", spans(rb),
+                                            ", not drawn before: " + spans(miss) if miss else ""))
+                        for r in sorted({region(b) for b in miss}, key=lambda r: r[0] if r else -1):
+                            if r and (key, r[0]) in TEX_EXPECTED:
+                                used.add((key, r[0]))
+                                continue
+                            problems.append("%s (%s): reads blocks %s in %s that nothing before it in the picture "
+                                            "drew or uploaded: add (send, region) to TEX_EXPECTED with what fills "
+                                            "them" % (s, fn, spans({b for b in miss if region(b) == r}),
+                                                      r[2] if r else "no region"))
+            if p[8] is not None:
+                r = sprite_rect(p, flags, writes, 0, free)
+                if r is not None:
+                    have |= blocks_at(fmt(p[8]), r) or set()
+    return problems, used, nread, nskip
 
 
 class Overlay:
@@ -734,6 +935,15 @@ def main():
                 sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
     problems, nfull, overs, bused, nframed = [], 0, set(), set(), 0
+    tused, ntex, nskip = set(), 0, 0
+
+    def tex(key, fn, pics, label=None):
+        nonlocal problems, tused, ntex, nskip
+        tp, tu, nr, ns = tex_check(key, fn, pics, args.v, label)
+        problems += tp
+        tused |= tu
+        ntex += nr
+        nskip += ns
     for s in sorted(sends):
         a = int(s[2:], 16)
         if not img.ok(a):
@@ -749,14 +959,20 @@ def main():
                     words, bad = cvar_words(s, var, v, writes, addrs)
                     problems += ["%s (%s): %s does not evaluate with %s = %d" % (s, sends[s], b, var, v) for b in bad]
                     wl = {a: e for a, e in writes.items() if a not in words}
-                    bp, bu = block_check(s, sends[s], sprites(Overlay(img, words), a), rows.get(s, (set(), None))[0],
-                                         wl, args.side16, args.v, label="%s (%s = %d)" % (s, var, v))
+                    rl = regs(Overlay(img, words), a)
+                    lab = "%s (%s = %d)" % (s, var, v)
+                    bp, bu = block_check(s, sends[s], sprites_of(rl), rows.get(s, (set(), None))[0],
+                                         wl, args.side16, args.v, label=lab)
                     problems += bp
                     bused |= bu
+                    tex(s, sends[s], [(sprites_of(rl), uploads_of(rl), rows.get(s, (set(), None))[0], wl,
+                                       frozenset(), True)], lab)
             else:
                 bp, bu = block_check(s, sends[s], allsp, rows.get(s, (set(), None))[0], writes, args.side16, args.v)
                 problems += bp
                 bused |= bu
+                tex(s, sends[s], [(allsp, uploads_of(regs(img, a)), rows.get(s, (set(), None))[0], writes,
+                                   frozenset(), True)])
         if not kind:
             continue
         nfull += 1
@@ -825,24 +1041,34 @@ def main():
         bp, bu = block_check(key, what.split(":")[0], sp, set(), {}, args.side16, args.v, frozenset(free), label)
         problems += bp
         bused |= bu
+        tex(key, what.split(":")[0], [(sp, uploads_of(rl), set(), {}, frozenset(free), True)], label)
     built, note = rt_built(img, args.cc)
     print("fscheck: " + note)
+    byname = {(n, v): rl for n, v, rl in built or ()}
     for name, var, rl in built or ():
         nrt += 1
         bp, bu = block_check(name, "run time", sprites_of(rl), set(), {}, args.side16, args.v,
                              label="%s[%s]" % (name, var))
         problems += bp
         bused |= bu
+        pics = [(sprites_of(r), uploads_of(r), set(), {}, frozenset(), False)
+                for r in [byname.get((TEX_AFTER.get(name), var))] if r is not None]
+        tex(name, "run time", pics + [(sprites_of(rl), uploads_of(rl), set(), {}, frozenset(), True)],
+            "%s[%s]" % (name, var))
     for s, (_f, name) in rows.items():
         if s not in sends:
             problems.append("%s (%s): a row in the table, but no send of it" % (s, name))
     for s in OVER_EXPECTED:
         if s not in overs:
             problems.append("%s: in OVER_EXPECTED, but no longer drawn past its frame's width" % s)
-    for k in BLOCK_EXPECTED:
-        if k not in bused and (built is not None or k[0] not in RT_BUILT):
-            problems.append("%s: in BLOCK_EXPECTED for %s, but no longer drawn there" % (
-                k[0], "0x%04X" % k[1] if k[1] != "wide" else "the wide view"))
+    for z, exp in ((False, BLOCK_EXPECTED), (True, ZBLOCK_EXPECTED)):
+        for k in exp:
+            if (z,) + k not in bused and (built is not None or k[0] not in RT_BUILT):
+                problems.append("%s: in %sBLOCK_EXPECTED for %s, but no longer drawn there" % (
+                    k[0], "Z" if z else "", "0x%04X" % k[1] if k[1] != "wide" else "the wide view"))
+    for k in TEX_EXPECTED:
+        if k not in tused and (built is not None or k[0] not in RT_BUILT):
+            problems.append("%s: in TEX_EXPECTED for 0x%04X, but no longer read there" % k)
     for s in EXEMPT:
         if s not in sends:
             problems.append("%s: in EXEMPT, but no send of it" % s)
@@ -862,9 +1088,10 @@ def main():
         print("fscheck: " + p)
     print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
           "%d drawn past their frame's width (%d expected), %d sends setting FRAME and %d render-to-texture "
-          "sends from the C (%d block overlaps expected), %d problems" % (
+          "sends from the C (%d block overlaps expected), %d texture reads checked (%d skipped, %d from "
+          "outside expected), %d problems" % (
               len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)),
-              nframed, nrt, len(bused), len(problems)))
+              nframed, nrt, len(bused), ntex, nskip, len(tused), len(problems)))
     sys.exit(1 if problems else 0)
 
 
