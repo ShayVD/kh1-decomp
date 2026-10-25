@@ -954,6 +954,38 @@ errors up to the overlay entry (23 sends).
 layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged, argcheck unchanged (3 value
 uses, waiting for dktitle.x).
 
+### 5.1p Session 76: every static chain walked offline, the GS register census, PATH2
+
+Static only (the Mac was away until 2026-10-26). Only tools/, host/ and tests/ changed: kh1.elf is byte-identical,
+every out/build object bit-identical (sha1 of all 677 before and after), and the float ELF the same (no PS2 source
+changed), so there is no float-untested.md row.
+
+**tools/host/dmawalk.py** (new; after `make`, reads the user's ELF and out/gen/data.tsv): the Python twin of
+host/null/dmawalk.c for the sends whose chain is a name: dmacheck `--list`'s "static data" / "static bss" rows (a
+table indexed at run time, `D_00351BE0[v]`, walks each distinct entry) and every call of dmapool's GIF wrappers
+func_00106b18 / func_00106bd8 handed a name (the static GS packets gs_packets.py `--callers` decodes). The channel
+comes from the source (`PlatDmaGetChan(n)`, or the variable it was stored in: D_002A6B84, D_00372908, D_0055C640 /
+644, a local `c`), TTE from `c->tte = 1` before the send. **155 sends: 81 walk whole, 0 rows; 61 are zero in the
+ELF and 13 in bss** (built at run time: the host run reads them). `--float ELF` walks each chain again in the m12
+float build from where its name floated: same tags at the same name + offset, the same ADDR targets by name, the same
+data bytes: **all 81 the same** (every start moved; 264 ADDR words point at moved objects). renderer-spec 4.6 has
+the list and the census.
+
+**The receiver's read now follows VIF1 DIRECT into the GIF** (PATH2, host/null/dmawalk.c and the Python twin): a
+DIRECT's data is one stream of GIF packets across the chain; a send that ends inside one is `KH1_DMA_PATH2_SHORT`
+(0x80). No static chain and no fake-disc send has a DIRECT. tests/host/dmawalk_test.c has two more cases (16).
+
+**The GS register census**: `dmawalk.py --regs [-v]` offline, and `KH1_HOST_TRACE=2` now ends each GIF / PATH2
+send's line with the state registers its PACKED / REGLIST / A+D writes touch. Static chains write context 1's
+FRAME / ZBUF / TEST / ALPHA / TEX0 / TEX1 / CLAMP / SCISSOR, TEXA, TEXFLUSH and SCANMSK, and of context 2 only ALPHA_2
+/ TEST_2 / TEX1_2 / ZBUF_2 / FRAME_2 and FOGCOL; never TEX0_2 / CLAMP_2 (those come from the model data). On the fake
+disc (stub:2, 86 sends, all whole) the HUD's 21-qword func_00237018 packets write the whole context-1 environment
+(DTHE, COLCLAMP, DIMX, PABE, FBA_1, XYOFFSET_1, PRMODECONT, MIPTBP1_1 / 2_1 too): the only sends that set those.
+
+Valgrind with TRACE=2: 0 errors up to the overlay entry (23 sends). The stub:2 run ends where it did
+(func_00132790). layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck and argcheck unchanged (3
+value uses, waiting for dktitle.x).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -21,8 +21,11 @@ int sprintf(char *, const char *, ...);
 __SIZE_TYPE__ strlen(const char *);
 
 typedef struct {
-    u32 left;    /* qwords of the current packet still to come */
+    u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
+    u32 flg, nreg, k;
+    u32 regs[16];
     u32 packets, eop, image, blocks, mid;
+    u32 set[4];  /* the GS registers written (by address, bit per register: PACKED, REGLIST, A+D) */
 } GifStream;
 
 typedef struct {
@@ -32,26 +35,77 @@ typedef struct {
     u32 cl, wl;  /* STCYCL */
     u32 vif0;    /* VIF0 has no OFFSET, BASE, MSKPATH3 or DIRECT */
     u32 codes, unpacks, direct, blocks, mid, bad, bad_word, bad_addr;
+    u32 in_direct, nq, q[4];
+    GifStream gif; /* PATH2: every DIRECT's data, one stream of GIF packets */
 } VifStream;
+
+static void gif_set(GifStream *g, u32 reg) {
+    if (reg < 128) g->set[reg >> 5] |= 1u << (reg & 31);
+}
+
+/* one qword of the GIF stream: a GIFtag, or the next qword of the current packet */
+static void gif_qword(GifStream *g, const u32 *q) {
+    u32 nloop, h;
+    if (g->left) {
+        if (g->flg == 0) {
+            u32 d = g->regs[g->k++ % g->nreg];
+            gif_set(g, d == 0xE ? (q[2] & 0x7F) : d);
+            g->left--;
+        } else if (g->flg == 1) {
+            for (h = 0; h < 2 && g->left; h++, g->left--) {
+                u32 d = g->regs[g->k++ % g->nreg];
+                if (d != 0xE) gif_set(g, d);
+            }
+        } else {
+            g->left--;
+        }
+        return;
+    }
+    nloop = q[0] & 0x7FFF;
+    g->flg = q[1] >> 26 & 3;
+    g->nreg = q[1] >> 28 & 15;
+    if (!g->nreg) g->nreg = 16;
+    for (h = 0; h < g->nreg; h++) g->regs[h] = q[2 + h / 8] >> (h % 8 * 4) & 15;
+    g->k = 0;
+    g->packets++;
+    if (q[0] & 0x8000) g->eop++;
+    if (g->flg == 0 && q[1] >> 14 & 1) gif_set(g, 0); /* PRE: PRIM from the tag */
+    if (g->flg == 0) g->left = nloop * g->nreg;
+    else if (g->flg == 1) g->left = (nloop * g->nreg + 1) & ~1u;
+    else { g->left = nloop; g->image++; }
+}
 
 static void gif_block(GifStream *g, const u32 *q, u32 n) {
     u32 i;
     if (!n) return;
     g->blocks++;
     if (g->left) g->mid++;
-    for (i = 0; i < n; i++, q += 4) {
-        u32 nloop, nreg, flg;
-        if (g->left) { g->left--; continue; }
-        nloop = q[0] & 0x7FFF;
-        flg = q[1] >> 26 & 3;
-        nreg = q[1] >> 28 & 15;
-        if (!nreg) nreg = 16;
-        g->packets++;
-        if (q[0] & 0x8000) g->eop++;
-        if (flg == 0) g->left = nloop * nreg;
-        else if (flg == 1) g->left = (nloop * nreg + 1) / 2;
-        else { g->left = nloop; g->image++; }
+    for (i = 0; i < n; i++, q += 4) gif_qword(g, q);
+}
+
+/* the state registers a stream wrote (not the vertex ones), as names */
+static void gif_regs(const GifStream *g, char *out) {
+    static const struct { u8 reg; const char *name; } names[] = {
+        { 0x00, "PRIM" }, { 0x06, "TEX0_1" }, { 0x07, "TEX0_2" }, { 0x08, "CLAMP_1" }, { 0x09, "CLAMP_2" },
+        { 0x14, "TEX1_1" }, { 0x15, "TEX1_2" }, { 0x16, "TEX2_1" }, { 0x17, "TEX2_2" }, { 0x18, "XYOFFSET_1" },
+        { 0x19, "XYOFFSET_2" }, { 0x1A, "PRMODECONT" }, { 0x1B, "PRMODE" }, { 0x1C, "TEXCLUT" },
+        { 0x22, "SCANMSK" }, { 0x34, "MIPTBP1_1" }, { 0x35, "MIPTBP1_2" }, { 0x36, "MIPTBP2_1" },
+        { 0x37, "MIPTBP2_2" }, { 0x3B, "TEXA" }, { 0x3D, "FOGCOL" }, { 0x3F, "TEXFLUSH" }, { 0x40, "SCISSOR_1" },
+        { 0x41, "SCISSOR_2" }, { 0x42, "ALPHA_1" }, { 0x43, "ALPHA_2" }, { 0x44, "DIMX" }, { 0x45, "DTHE" },
+        { 0x46, "COLCLAMP" }, { 0x47, "TEST_1" }, { 0x48, "TEST_2" }, { 0x49, "PABE" }, { 0x4A, "FBA_1" },
+        { 0x4B, "FBA_2" }, { 0x4C, "FRAME_1" }, { 0x4D, "FRAME_2" }, { 0x4E, "ZBUF_1" }, { 0x4F, "ZBUF_2" },
+        { 0x50, "BITBLTBUF" }, { 0x51, "TRXPOS" }, { 0x52, "TRXREG" }, { 0x53, "TRXDIR" }, { 0x54, "HWREG" }, { 0x60, "SIGNAL" },
+        { 0x61, "FINISH" }, { 0x62, "LABEL" },
+    };
+    u32 i, r, known[4] = { 0x0000F43E, 0, 0, 0 }; /* the vertex registers 1-5, 0xA, 0xC-0xD, A+D, NOP */
+    *out = 0;
+    for (i = 0; i < sizeof names / sizeof names[0]; i++) {
+        r = names[i].reg;
+        known[r >> 5] |= 1u << (r & 31);
+        if (g->set[r >> 5] >> (r & 31) & 1) sprintf(out + strlen(out), " %s", names[i].name);
     }
+    for (r = 0; r < 128; r++)
+        if ((g->set[r >> 5] & ~known[r >> 5]) >> (r & 31) & 1) sprintf(out + strlen(out), " reg%02x", r);
 }
 
 /* the words an UNPACK reads: num vectors written, CL of each WL read when WL > CL */
@@ -70,7 +124,15 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
     u32 cmd = w >> 24 & 0x7F, imm = w & 0xFFFF, num = w >> 16 & 0xFF;
     v->pos = (v->pos + 1) & 3;
     if (v->pad) { v->pad--; return; }
-    if (v->need) { v->need--; return; }
+    if (v->need) {
+        v->need--;
+        if (v->in_direct) {
+            v->q[v->nq++] = w;
+            if (v->nq == 4) { gif_qword(&v->gif, v->q); v->nq = 0; }
+            if (!v->need) v->in_direct = 0;
+        }
+        return;
+    }
     v->codes++;
     if (v->vif0 && (cmd == 0x02 || cmd == 0x03 || cmd == 0x06 || cmd == 0x50 || cmd == 0x51)) cmd = 0x7F;
     switch (cmd) {
@@ -91,6 +153,8 @@ static void vif_word(VifStream *v, u32 w, u32 addr) {
         v->direct++;
         v->pad = (4 - v->pos) & 3;
         v->need = (imm ? imm : 0x10000) * 4;
+        v->in_direct = 1;
+        v->nq = 0;
         return;
     }
     if ((cmd & 0x60) == 0x60) {
@@ -116,7 +180,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     const char *last = "?";
     GifStream g = { 0 };
     VifStream v = { 0 };
-    char extra[160];
+    char extra[160], regs[400];
     extra[0] = 0;
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
@@ -163,6 +227,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     }
     if (!done && !bad) bad = KH1_DMA_NO_END;
     v.vif0 = ch == 0;
+    regs[0] = 0;
     if (!bad && ch <= 2) {
         /* the receiver's stream: each tag's data in chain order */
         for (i = 0; i < (int)ntags; i++) {
@@ -186,21 +251,27 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
             if (g.left) bad |= KH1_DMA_GIF_SHORT;
             sprintf(extra, "; gif %u packets (%u eop, %u image), %u of %u blocks inside one%s", g.packets,
                     g.eop, g.image, g.mid, g.blocks, g.left ? ": ENDS INSIDE A PACKET" : "");
+            gif_regs(&g, regs);
         } else {
             if (v.need || v.pad) bad |= KH1_DMA_VIF_SHORT;
             if (v.bad) bad |= KH1_DMA_VIF_BAD;
+            if (v.gif.left) bad |= KH1_DMA_PATH2_SHORT;
             sprintf(extra, "; vif%d %u codes (%u unpack, %u direct), %u of %u blocks inside one%s%s", ch, v.codes,
                     v.unpacks, v.direct, v.mid, v.blocks, (v.need || v.pad) ? ": ENDS INSIDE A CODE" : "",
                     v.bad ? ": NOT A VIF CODE" : "");
+            if (v.direct)
+                sprintf(extra + strlen(extra), "; path2 %u packets%s", v.gif.packets,
+                        v.gif.left ? ": ENDS INSIDE A PACKET" : "");
+            gif_regs(&v.gif, regs);
         }
         if (tte && tte_hi)
             sprintf(extra + strlen(extra), "; %u tags with upper words (TTE)", tte_hi);
     }
-    printf("kh1-host: dma ch %d chcr %08x tadr %08x: %u tags, %u qwords, ends with %s%s%s\n", ch, chcr,
+    printf("kh1-host: dma ch %d chcr %08x tadr %08x: %u tags, %u qwords, ends with %s%s%s%s%s\n", ch, chcr,
            tadr, ntags, qwords, last,
            bad & KH1_DMA_TAG_OUTSIDE ? ": TAG OUTSIDE" : bad & KH1_DMA_DATA_OUTSIDE ? ": DATA OUTSIDE"
            : bad & KH1_DMA_CALL_DEEP ? ": CALL TOO DEEP" : bad & KH1_DMA_NO_END ? ": NO END (4096 tags)" : "",
-           extra);
+           extra, regs[0] ? "; regs" : "", regs);
     if (bad || kh1_host_trace >= 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];

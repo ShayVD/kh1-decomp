@@ -25,6 +25,7 @@ Conventions:
 | `python3 -I tools/vu/find_vu1.py SLPS_251.98 --summary N` | opcode histogram of program N and its fixed (`vi00`-based) VU memory accesses |
 | `python3 -I tools/vu/vif_chain.py ADDR...` | walks a static DMA chain and prints its tags and VIF commands (STCYCL, UNPACK layout, MPG, MSCAL/MSCNT, BASE/OFFSET); `--one` decodes a single spliced tag. New in this session |
 | `python3 -I tools/vu/gs_packets.py --callers --layout layout.tsv` | decodes every static GS packet passed to the GIF send wrapper `func_00106b18`, register by register |
+| `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
 | `python3 tools/kh1tool.py asm func_X` / `src/` | the EE side; every function cited here is matched C, so the source is the reference |
@@ -809,6 +810,52 @@ temporary packets.
   DIRECT / DIRECTHL data starts on a qword, MPG's on 64 bits; STMASK 1 word,
   STROW / STCOL 4. A send should end on a packet / code boundary: on the
   fake disc every one of the 86 does.
+
+### 4.6 Every static chain read, and the GS registers each send writes (session 76, static)
+
+- **The offline walk** (`tools/host/dmawalk.py`, the Python twin of host/null/dmawalk.c over the
+  user's ELF): the sends whose chain is a name, 155 of them (93 from the PlatDmaSend calls
+  dmacheck `--list` calls static, each of `D_00351BE0`'s 9 distinct chain pointers counted once;
+  62 through dmapool's `func_00106b18` / `func_00106bd8`). **81 walk whole** (67 GIF, 14 VIF: 1
+  VIF0, 13 VIF1), **0 problems**: no chain leaves the ELF, ends inside a GIF packet or a VIF code,
+  or holds a word that is no VIF code. **61 are zero in the ELF** (built at run time: the text
+  windows' 0x400-byte buffers `D_003F1A70` / `D_003F1E70` / `D_003F2270` and textwin's
+  `D_003F2670` / `D_003F2720` / `D_003F27D0`, grideff's `D_002BC270`, mdlgs' `D_00351C40`,
+  texspot's `D_0035C4A0` / `D_0035C550`) and **13 are in bss** (the image uploads, `D_00573AC0` /
+  `D_00573E40`, wave's `D_00631620`): the host run reads those (4.4) when it reaches them.
+- **The VIF chains are microcode and setup**: mdlgs' `func_0015fc00` table (`D_00351BE0`, 24 entries,
+  9 chains) and `D_00277E40` / `D_00278210` are one END tag each holding 1-3 MPG uploads (the VU1
+  programs of §2.1) and a few codes; `func_0015f018`'s VIF0 / VIF1 chains and `func_0015f798`'s
+  `D_00272CF0` carry one UNPACK each. None holds a DIRECT, so no static chain uses PATH2.
+- **The float build sends the same chains.** `--float out/shift/m12-float/kh1-shift.linked.elf`:
+  all 81 start at names the float build moved (so did every one of the 147 named starts), and every tag sits at the same name +
+  offset, every ADDR word (264 point at moved objects) names the same name + offset, every data
+  block holds the same bytes. So the static chains do not depend on the original layout.
+- **GS registers written by the static chains** (`--regs`, register: sends): context 1 `PRIM`
+  (written as a register or the GIFtag's PRE), `FRAME_1` 31, `ZBUF_1` 41, `TEST_1` 51, `ALPHA_1`
+  38, `TEX0_1` 28, `TEX1_1` 26, `CLAMP_1` 12, `SCISSOR_1` 109 (sceneeff's strips: one scissor per
+  strip), `TEXA` 5, `TEXFLUSH` 22, `SCANMSK` 1 (end of frame); context 2 only `ALPHA_2` 4, `TEST_2`
+  6, `TEX1_2` 3, `ZBUF_2` 3 (field.c's and display.c's queued packets, roommdl), `FRAME_2` 1
+  (brightfade's func_00105f28) and `FOGCOL` 1 (display.c's func_00110ce0). **Never written by a
+  static chain**: `TEX0_2`, `CLAMP_2`, `SCISSOR_2`, `TEX2_x`, `XYOFFSET_x`, `PRMODE(CONT)`,
+  `TEXCLUT`, `DIMX`, `DTHE`, `COLCLAMP`, `PABE`, `FBA_x`, `MIPTBP*`, and the transfer registers.
+  So context 2's texture state (§3.3's REGION_CLAMP windows) comes from the model data (the VU
+  GIF tags and the mesh chains in the disc's files), not from the ELF.
+- **The run-time chains** (host, fake disc, `KH1_HOST_OVL=stub:2 KH1_HOST_TRACE=2`, which now
+  prints each send's registers): the HUD's packets through `func_00237018` (src/hud: marker,
+  counter, dmgnum, lblnum, gauge, popup) are 21 qwords that write **the whole context-1
+  environment**, including `TEX2_1`, `XYOFFSET_1`, `PRMODECONT`, `DIMX`, `DTHE`, `COLCLAMP`,
+  `PABE`, `FBA_1`, `MIPTBP1_1` / `MIPTBP2_1`: the only sends in the run that set those (consistent
+  with §3.3's DTHE 0, COLCLAMP 1). func_001ef950's image uploads write `BITBLTBUF` / `TRXPOS` /
+  `TRXREG` / `TRXDIR` + IMAGE; mdlgs' func_0015f388 renderer B's draw state (`TEX0_1`, `CLAMP_1`,
+  `TEX1_1`, `FOGCOL`, `ALPHA_1`, `TEST_1`, `FRAME_1`, `ZBUF_1`, `TEXFLUSH`); shadow's func_001274c8
+  `TEX1_1`, `TEST_1`, `TEST_2`. For the port: the HUD resets every context-1 register before it
+  draws, so a renderer that keeps the GS state as a register file (not per draw) sees the same
+  state the PS2 does.
+- **PATH2** (VIF1 `DIRECT` / `DIRECTHL`): the data is one stream of GIF packets across the chain's
+  DIRECTs; a chain that ends inside such a packet is a problem (host: `KH1_DMA_PATH2_SHORT`). No
+  static chain and no fake-disc send has a DIRECT; renderer A's mesh chains (from the disc) are the
+  likely users.
 
 ## 5. Mapping to a modern API
 

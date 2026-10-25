@@ -17,6 +17,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where);
 #define KH1_DMA_GIF_SHORT     0x10 /* the chain ends inside a GIF packet */
 #define KH1_DMA_VIF_SHORT     0x20 /* the chain ends inside a VIF code's data */
 #define KH1_DMA_VIF_BAD       0x40 /* a word that is no VIF code */
+#define KH1_DMA_PATH2_SHORT   0x80 /* the DIRECT data ends inside a GIF packet (PATH2) */
 
 extern int kh1_host_trace;
 
