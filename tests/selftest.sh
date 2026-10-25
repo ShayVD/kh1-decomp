@@ -252,12 +252,12 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
     echo "selftest: fscheck missed the eye overlay's tag stores gone" >&2; cat "$W/fs_neg6.log" >&2; exit 1
   fi
   # session 110: the Z buffers the sends write and the textures they read. With the depth blur's wide Z entry,
-  # the crossfade's Z-in-the-display entry and the eye overlay's upload entry taken out, the blur's capture
-  # writing Z past the PS2's blocks, the eye overlay reading an image nothing in its picture uploaded and (when
-  # gcc -m32 builds rtsends.c) the crossfade's ZBUF 0 in the display all fail
+  # the crossfade's Z-in-the-display entry and (session 111) renderer B's step-2 upload before the callbacks
+  # taken out, the blur's capture writing Z past the PS2's blocks, the eye overlay reading an image nothing in
+  # its picture uploaded and (when gcc -m32 builds rtsends.c) the crossfade's ZBUF 0 in the display all fail
   if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
 del f.ZBLOCK_EXPECTED[("D_002A5620", "wide")], f.ZBLOCK_EXPECTED[("func_00135ed0", 0x0000)]
-del f.TEX_EXPECTED[("D_0035C4A0", 0x3600)]
+f.STEP2_AFTER.clear()
 sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" > "$W/fs_neg7.log" ||
      ! grep -q 'D_002A5620 .*its ZBUF draws blocks 0x0E80 .*past the PS2.s (0x0E00 .. 0x0E7F' "$W/fs_neg7.log" ||
      ! grep -q 'D_0035C4A0+D_0035C550 .*reads blocks 0x3600 .. 0x360F, 0x3700 .. 0x3703 in texture slot' "$W/fs_neg7.log" ||
@@ -265,6 +265,17 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
        ! grep -q 'func_00135ed0\[64x64\] .*its ZBUF at 0x0000 is in display' "$W/fs_neg7.log"; }; then
     echo "selftest: fscheck missed a Z write past the PS2's blocks or in the display, or an unloaded texture" >&2
     cat "$W/fs_neg7.log" >&2; exit 1
+  fi
+  # session 111: the stretched copies' sources. The menu blur's row without KH1_FS_UOWN (its capture's own
+  # buffer read as a texture), the depth blur capture's with it (the 3D target read as a capture's buffer) and
+  # the frame copy's without KH1_FS_U (its 32-texel strips of the target, under session 99's 255-texel test)
+  sed 's/{ D_002A4B60, KH1_FS_U | KH1_FS_UOWN,/{ D_002A4B60, KH1_FS_U,/; s/{ D_002A5A90, KH1_FS_U,/{ D_002A5A90, KH1_FS_U | KH1_FS_UOWN,/
+       s/{ D_002A6890, KH1_FS_X | KH1_FS_U,/{ D_002A6890, KH1_FS_X,/' "$ROOT/host/port/fullscreen.c" > "$W/fullscreen_src.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --table "$W/fullscreen_src.c" > "$W/fs_neg8.log" ||
+     ! grep -q 'D_002A4B60 .*reads TEX0 0x3600 TBW 4 .*a capture.s own buffer: KH1_FS_UOWN' "$W/fs_neg8.log" ||
+     ! grep -q 'D_002A5A90 .*reads TEX0 0x1A00 .*under KH1_FS_UOWN: no capture.s own buffer (the 3D target)' "$W/fs_neg8.log" ||
+     ! grep -q 'D_002A6890 .*copies the 3D target (u over 32 texels) and its row has no KH1_FS_U' "$W/fs_neg8.log"; then
+    echo "selftest: fscheck missed a stretched copy reading the wrong buffer" >&2; cat "$W/fs_neg8.log" >&2; exit 1
   fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"

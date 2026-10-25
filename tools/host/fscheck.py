@@ -42,6 +42,12 @@ checks:
     its TEX0 and UV in the packets (not stretched by the view) reads only blocks (texels in TW x TH, and the
     CLUT of a PSMT8 / PSMT4) that something before it in its picture drew or uploaded (TRXDIR), else
     TEX_EXPECTED names what fills them; TEX_AFTER puts the shadow window before its copy.
+  - (session 111) every textured sprite of a send with a KH1_FS_U row reads (TEX0 TBP0 / TBW / PSM) a buffer
+    laid out like the target the u-stretch assumes (U_SOURCES at its TBW, CT32 / CT24) or, with KH1_FS_UOWN,
+    a capture's own buffer (a half-size sprite's FRAME); a full-screen copy of one of them without KH1_FS_U
+    fails; TEX_BEFORE gives a send the TEX0 the sends before it leave. Renderer B's step-3 callbacks (the eye
+    overlay, the crossfade) start their picture with step 2's upload and TEX0 (STEP2_AFTER), so their first
+    sprites are checked too.
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -160,11 +166,26 @@ TEX_EXPECTED = {
     ("D_002A6B70", 0x3600): "brightfade.c func_00106460: func_00106438 -> func_001091f8 just before the send uploads "
                             "the wipe's shape D_002C13A0 at 0x3600 (128 x 224, PSMT4)",
     ("D_002A6B70", 0x3A00): "func_00106460's shape CLUT, uploaded at 0x3A00 by func_001091f8 (func_00109180) with it",
-    ("D_0035C4A0", 0x3600): "texspot func_00175600: func_0015fa20(&D_005757A0) between the two sends uploads the eye "
-                            "image at 0x3600 (PSMT8) and its CLUT at 0x3700 (from the file, func_00175708)",
 }
 # (session 110) a run-time send that reads what another drew just before it: send -> that send (the same variant)
 TEX_AFTER = {"D_004F7C10": "D_004F7820"}
+# (session 111) renderer B's step-3 callbacks (renderer-spec 4.3) draw their first sprite from the environment's
+# TEX0: the part's texture step 2 (mdlgs.nostrict.c func_0015f488) just uploaded to 0x3600 (PSMT8, TBW 4) with
+# its CLUT at 0x3700 (CT32 16 x 16) and pointed TEX0_1 at (STEP2_SRC's constants); their picture starts with
+# that upload: send -> the part's size (None: the run-time variant's, "WxH").  The eye overlay's second sprite
+# reads the eye image func_0015fa20(&D_005757A0) uploads between its two sends (64 x 64 PSMT8 at 0x3600, its
+# CLUT at 0x3700, from the file: func_00175708), inside the blocks step 2's 128 x 128 part already covers, so
+# session 110's TEX_EXPECTED entry for it is gone
+STEP2_SRC = ("src/model/mdlgs.nostrict.c", "func_0015f488")
+STEP2_AFTER = {"D_0035C4A0": (128, 128), "func_00135ed0": None}
+# (session 111) the buffers a KH1_FS_U row's stretch assumes (u 0 .. 512 texels over the view's width, laid out
+# like the 512-wide target): TEX0's TBP0 -> (its TBW, what it is); read as CT32 / CT24 (the same block order)
+U_SOURCES = {0x1A00: (8, "the 3D target"), 0x0000: (8, "the display"),
+             0x0E00: (8, "the Z area (a stored frame loaded 512 x 384 like the target)")}
+U_PSMS = (0x00, 0x01)
+# sends whose sprites read the TEX0 the send before them leaves (no TEX0 of their own): send -> the sends
+# that can come before it (each one's last TEX0 of the sprite's context)
+TEX_BEFORE = {"D_002A5AC0": ("D_002A5620", "D_002A5A90")}  # sceneeff.nostrict.c func_00103058, both modes
 # (session 109) the render-to-texture sends outside the walk above (renderer-spec 3.4), checked the same way:
 # - packets the game's own C builds at run time (tools/host/rtsends.c runs the builders under gcc -m32): the
 #   shadow windows D_004F7820[i] / D_004F7C10[i] (func_001284a0 / func_00128738, one per size
@@ -394,7 +415,7 @@ def sprites_of(rl):
     addresses, the two vertices' x, the FRAME and XYOFFSET its context's packet set (None: the
     environment's), the FRAME's address, the context's SCISSOR (None: the environment's), (session 110) its
     context's ZBUF, TEST and TEX0 (None: the environment's), its UV rectangle (u0, u1, v0, v1 in texels;
-    None without two UV), PRIM's FST, its place in the register list)"""
+    None without two UV), PRIM's FST, its place in the register list, (session 111) its context)"""
     out, prim, vx, uv, env, at = [], 0, [], [], {}, {}
     for k, (r, v, a) in enumerate(rl):
         if r in (0x18, 0x19, 0x4C, 0x4D, 0x40, 0x41, 0x4E, 0x4F, 0x47, 0x48, 0x06, 0x07):
@@ -414,7 +435,7 @@ def sprites_of(rl):
                 out.append((min(xa, xb), max(xa, xb), min(ya, yb), max(ya, yb), du, bool(prim & 0x10), (aa, ab),
                             (xa, xb), env.get(0x4C + ctx), env.get(0x18 + ctx), at.get(0x4C + ctx),
                             env.get(0x40 + ctx), env.get(0x4E + ctx), env.get(0x47 + ctx), env.get(0x06 + ctx),
-                            uvr, bool(prim & 0x100), k))
+                            uvr, bool(prim & 0x100), k, ctx))
                 vx, uv = [], []
     return out
 
@@ -787,6 +808,75 @@ def tex_check(s, fn, pics, verbose, label=None):
     return problems, used, nread, nskip
 
 
+def step2_regs(src):
+    """(session 111) renderer B's step 2 (STEP2_SRC) as a register-list builder for a part of w x h: the CLUT
+    and texture uploads and TEX0_1, from the C's constants; (None, a problem) when they are not found"""
+    path, name = STEP2_SRC
+    text = open(os.path.join(src, os.path.relpath(path, "src")), errors="replace").read()
+    m = re.search(r"\b%s\s*\([^)]*\)\s*\{(.*?)\n\}" % name, text, re.S)
+    body = m.group(1) if m else ""
+    bb = [int(v, 16) << int(n) for v, n in re.findall(r"->x20\s*=\s*\(u64\)(0x[0-9a-fA-F]+)\s*<<\s*(\d+)\s*;", body)]
+    t0 = re.search(r"->x40\s*=\s*\(\(u64\)t->x2 << 26\) \| \(\(u64\)t->x3 << 30\) \| (0x[0-9a-fA-F]+)ULL;", body)
+    if len(bb) != 2 or not t0:
+        return None, "%s %s: step 2's uploads / TEX0_1 not found: the callbacks' first sprites are not checked" % (
+            path, name)
+    tex0 = int(t0.group(1), 16)
+
+    def build(w, h):
+        lg = lambda n: max(n - 1, 0).bit_length()  # noqa: E731
+        return [(0x50, bb[0], None), (0x51, 0, None), (0x52, 16 | 16 << 32, None), (0x53, 0, None),
+                (0x50, bb[1], None), (0x51, 0, None), (0x52, w | h << 32, None), (0x53, 0, None),
+                (0x06, tex0 | lg(w) << 26 | lg(h) << 30, None)]
+    return build, None
+
+
+def last_tex0(rl, ctx):
+    """(session 111) the last TEX0 a register list writes for a context, or None"""
+    return next((v for r, v, _a in reversed(rl) if r == 0x06 + ctx), None)
+
+
+def source_check(s, fn, sp, flags, own, before, verbose):
+    """(session 111) the buffers a send's textured sprites read against its fullscreen.c row: with KH1_FS_U each
+    reads a U_SOURCES buffer at its TBW (the u-stretch's 512 texels are the target's width), with KH1_FS_UOWN
+    a capture's own buffer (own: {(block, FBW): the capture}); without KH1_FS_U a full-screen sprite reading
+    one of them over more than a texel is a copy the view does not stretch.  before: the TEX0 per context
+    the sends before leave (TEX_BEFORE: {context: {TEX0}}), for a sprite with the environment's.  Returns (problems, reads)"""
+    problems, n = [], 0
+    for p in sp:
+        if not p[5]:
+            continue
+        ts = {p[14]} if p[14] is not None else set(before.get(p[18], ()))
+        if not ts:
+            if "KH1_FS_U" in flags:
+                problems.append("%s (%s): a stretched sprite with the environment's TEX0: add the sends before it to "
+                                "TEX_BEFORE" % (s, fn))
+            continue
+        for t in ts:
+            tbp, tbw, psm = gp.bits(t, 0, 14), gp.bits(t, 14, 6), gp.bits(t, 20, 6)
+            src = U_SOURCES.get(tbp)
+            cap = own.get((tbp, tbw))
+            if "KH1_FS_U" in flags:
+                n += 1
+                what = "%s (%s): reads TEX0 0x%04X TBW %d PSM 0x%02X" % (s, fn, tbp, tbw, psm)
+                if verbose:
+                    print("%s: %s" % (what, src[1] if src else cap or "?"))
+                if psm not in U_PSMS:
+                    problems.append("%s under KH1_FS_U: not the target's CT32 / CT24 block order" % what)
+                elif "KH1_FS_UOWN" in flags:
+                    if not cap:
+                        problems.append("%s under KH1_FS_UOWN: no capture's own buffer (%s)" % (
+                            what, src[1] if src else (region(tbp) or (0, 0, "no region"))[2]))
+                elif not src:
+                    problems.append("%s under KH1_FS_U: a texture, not a buffer laid out like the target (%s)" % (
+                        what, cap and "a capture's own buffer: KH1_FS_UOWN" or (region(tbp) or (0, 0, "no region"))[2]))
+                elif tbw != src[0]:
+                    problems.append("%s under KH1_FS_U: %s is %d wide (TBW %d)" % (what, src[1], src[0] * 64, src[0]))
+            elif p[4] > 1 and (src and tbw == src[0] or cap) and s not in EXEMPT:
+                problems.append("%s (%s): a full-screen sprite copies %s (u over %g texels) and its row has no "
+                                "KH1_FS_U" % (s, fn, src[1] if src else cap, p[4]))
+    return problems, n
+
+
 class Overlay:
     """(session 109) the ELF's image with run-time state on top: 8-byte words the C stores ({address:
     value}) and buffers it builds ([(address, bytes)]), for regs()"""
@@ -935,7 +1025,18 @@ def main():
                 sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
     problems, nfull, overs, bused, nframed = [], 0, set(), set(), 0
-    tused, ntex, nskip = set(), 0, 0
+    tused, ntex, nskip, nsrc = set(), 0, 0, 0
+    # (session 111) the captures' own buffers: the FRAME of every half-size sprite in the walk
+    own = {}
+    for s in sorted(sends):
+        a = int(s[2:], 16)
+        if img.ok(a):
+            for p, k in classify(sprites(img, a))[1]:
+                if k == "half" and p[8] is not None:
+                    own.setdefault(fmt(p[8])[:2], "%s's buffer" % s)
+    step2, why = step2_regs(args.src)
+    if why:
+        problems.append(why)
 
     def tex(key, fn, pics, label=None):
         nonlocal problems, tused, ntex, nskip
@@ -973,10 +1074,23 @@ def main():
                 bused |= bu
                 tex(s, sends[s], [(allsp, uploads_of(regs(img, a)), rows.get(s, (set(), None))[0], writes,
                                    frozenset(), True)])
+        flags, name = rows.get(s, (set(), None))
+        if "KH1_FS_U" in flags or kind:
+            before = {}
+            for b in TEX_BEFORE.get(s, ()):
+                rb = regs(img, int(b[2:], 16))
+                for c in (0, 1):
+                    if last_tex0(rb, c) is not None:
+                        before.setdefault(c, set()).add(last_tex0(rb, c))
+            if s in TEX_BEFORE and all(p[14] is not None for p in allsp if p[5]):
+                problems.append("%s: in TEX_BEFORE, but its sprites set their own TEX0" % s)
+            sp_ = [p for p in allsp if p[5]] if "KH1_FS_U" in flags else [p for p, _k in sp]
+            sp_p, n = source_check(s, sends[s], sp_, flags, own, before, args.v)
+            problems += sp_p
+            nsrc += n
         if not kind:
             continue
         nfull += 1
-        flags, name = rows.get(s, (set(), None))
         static = [(p, k) for p, k in sp if not any(w in writes for w in p[6])]
         textured = [p for p, _k in sp if p[5] and p[4] >= 255]
         cw = sorted({w for p, _k in sp for w in p[6] if w in writes})
@@ -1041,6 +1155,9 @@ def main():
         bp, bu = block_check(key, what.split(":")[0], sp, set(), {}, args.side16, args.v, frozenset(free), label)
         problems += bp
         bused |= bu
+        if key in STEP2_AFTER and step2:  # (session 111) the part's texture renderer B's step 2 left
+            rl = step2(*STEP2_AFTER[key]) + rl
+            sp = sprites_of(rl)
         tex(key, what.split(":")[0], [(sp, uploads_of(rl), set(), {}, frozenset(free), True)], label)
     built, note = rt_built(img, args.cc)
     print("fscheck: " + note)
@@ -1053,6 +1170,8 @@ def main():
         bused |= bu
         pics = [(sprites_of(r), uploads_of(r), set(), {}, frozenset(), False)
                 for r in [byname.get((TEX_AFTER.get(name), var))] if r is not None]
+        if name in STEP2_AFTER and step2:  # (session 111) as the eye overlay's, at the variant's size
+            rl = step2(*(STEP2_AFTER[name] or map(int, var.split("x")))) + rl
         tex(name, "run time", pics + [(sprites_of(rl), uploads_of(rl), set(), {}, frozenset(), True)],
             "%s[%s]" % (name, var))
     for s, (_f, name) in rows.items():
@@ -1089,9 +1208,9 @@ def main():
     print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
           "%d drawn past their frame's width (%d expected), %d sends setting FRAME and %d render-to-texture "
           "sends from the C (%d block overlaps expected), %d texture reads checked (%d skipped, %d from "
-          "outside expected), %d problems" % (
+          "outside expected), %d stretched reads' sources checked, %d problems" % (
               len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)),
-              nframed, nrt, len(bused), ntex, nskip, len(tused), len(problems)))
+              nframed, nrt, len(bused), ntex, nskip, len(tused), nsrc, len(problems)))
     sys.exit(1 if problems else 0)
 
 

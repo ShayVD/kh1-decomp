@@ -9,13 +9,26 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 110 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 111 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 110, 2026-10-25)
+## Where we stopped (end of session 111, 2026-10-25)
+
+- **Session 111** (static, vita-port-plan 5.1ay): **the stretched copies' sources and the callbacks' first
+  sprites, checked by a tool.** Session 101's card was still unanswered, so "widen" stays (check the session
+  101 thread again). tools/host/fscheck.py now checks every textured sprite of a `KH1_FS_U` send reads a
+  buffer laid out like the target (`U_SOURCES`: the 3D target 0x1A00, the display 0, the Z area 0x0E00, TBW 8,
+  CT32 / CT24) or, with `KH1_FS_UOWN`, a capture's own buffer (a half-size sprite's FRAME), and that a
+  full-screen copy of one of them has a `KH1_FS_U` row (session 99's test missed strip copies);
+  `D_002A5AC0` takes the TEX0 its senders before leave (`TEX_BEFORE`). 475 reads, 0 problems. **Correction**:
+  the 2 environment-TEX0 sprites are the eye overlay's and crossfade's *first* sprites, reading renderer B's
+  step-2 texture (0x3600 PSMT8 TBW 4, CLUT 0x3700), not texspot's 0x3A00 restore; fscheck now starts those
+  pictures with step 2's upload from mdlgs.nostrict.c's constants (`STEP2_AFTER`): 18 reads, 0 problems, the
+  eye image's `TEX_EXPECTED` entry gone. selftest has one new negative case (three wrong rows). Tool only:
+  kh1.elf byte-identical, no float-untested row; selftest PASS.
 
 - **Session 110** (static, vita-port-plan 5.1ax): **the Z writes and the texture reads, checked by a tool.**
   Session 101's card was still unanswered, so "widen" stays (check the session 101 thread again).
@@ -445,7 +458,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 111 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 112 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -467,7 +480,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 109: nothing new to see on the PS2 (the float ELF is the same)**, **session 110: a texture crossfade (a model changing texture, if one is near): a black flicker in the screen's top left would be its Z32 write into the display (renderer-spec 3.4)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 109 and 111: nothing new to see on the PS2 (the float ELF is the same)**, **session 110: a texture crossfade (a model changing texture, if one is near): a black flicker in the screen's top left would be its Z32 write into the display (renderer-spec 3.4)**, **session 109: window text after a shadow, an eye overlay (pupils) or a crossfade in the same frame (the off-screen buffer covers the window font's blocks; garbled text means a missing re-upload)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -512,20 +525,19 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
 4. **Static, without the Mac** (install `gcc-multilib` first, or the host C tests and fscheck's run-time
    builds are skipped): (a) **the user's answer on the full-width rules** (session 101's card, still unanswered
-   at session 110): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's
+   at session 111): "keep them 4:3" means deleting the `#ifndef KH1_PS2` block in winpart.nostrict.c's
    `func_00206130` and renderer-spec 5.4 "Session 101"'s paragraph (say so in a new vita-port-plan 5.1 entry);
-   (b) **the stretched copies' sources** (the next step after 5.1ax: 185 of fscheck's texture reads are
-   skipped because the view stretches them): every send with a `KH1_FS_U` row should read (TEX0 TBP0 / TBW /
-   PSM) a buffer laid out like the target the u-stretch assumes (the 3D target 0x1A00 FBW 8, the display at 0,
-   a capture's own buffer with `KH1_FS_UOWN`); list each row's source and fail a row whose TEX0 is a texture
-   (the slot, a font) or whose TBW differs from the buffer it names, and the reverse (a full-screen u read of
-   the target with no `KH1_FS_U`); (c) the 2 sprites with the environment's TEX0 (the eye overlay's second
-   sprite, the crossfade's second chain): give them the TEX0 the send before leaves (texspot's restore,
-   `0x3A00`), so their reads are checked too. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value
+   (b) **the CLUT loads** (the next step after 5.1ay): every TEX0 fscheck reads with a CLUT (PSMT8 / PSMT4 /
+   T8H / T4HL / T4HH) has a CLD that loads (1 .. 5, with CBP0 / CBP1 for 4 / 5) or the CLUT buffer already
+   holds that CBP from a TEX0 before it in the picture; list each read's CLD and fail one that reads a CLUT
+   nothing loaded (CSM2 too, if any packet sets it); (c) **the step-2 TEX0's TW / TH** (5.1ay took the part's
+   size rounded up): read `func_0015f488`'s image record (`t->x2` / `t->x3` against `t->x4` / `t->x6`) and the
+   crossfade's `func_001623f8` texture record (`tex.x2` / `tex.x3`) to say whether TW / TH are log2 of the
+   size, and fix `step2_regs` if not. (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value
    uses and the callers of prim.c's senders still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=111`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=112`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 112) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 113) with this
    prompt: the user wants each session to start the next one without being asked.
