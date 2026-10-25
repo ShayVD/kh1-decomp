@@ -703,6 +703,12 @@ CLUT `0x3DFC`; the windows re-send the font's uploads before they draw (§4.12).
 `x370` bits 40-41 (`& 3`) into 3 entries: 3 would take `D_004F7C10[0]` as the clear packet and size
 `D_002E27E0[3]` = 0 (presumably never set). The eye overlay's tags are zeros in the ELF:
 `func_00175708` stores QWC 10 / 16 and ID 7 (end) when the model loads.
+Session 110 (vita-port-plan 5.1ax): the crossfade `func_00135ed0` sets ZBUF to 0 (ZBP 0, PSMZ32, ZMSK 0)
+under TEST_1 ZTE / ALWAYS, so its first sprite writes Z32 zeros over the display's first blocks (its
+64 x 64 .. 256 x 256 at the crossfade's FBW); the frame copy rewrites them at frame end. The shadow windows
+write Z16S at `0x3800` (FBW 4), in the texture slot's upper half. Every texture these sends read was drawn
+or uploaded just before (the shadow copy reads what its window drew; the crossfade uploads its 1 x 1 PSMT8
+texel and CLUT `0x3700`; the eye overlay's image comes from `func_0015fa20` between its two sends).
 
 ## 4. Per-frame packet flow
 
@@ -2548,6 +2554,11 @@ crossfade built by the game's C on the host, the eye overlay with its tags from 
 frame copy at both display widths, sprites clipped by their SCISSOR): the off-screen buffer's 256 x 256 runs
 over the window font (0x3D7C) and its CLUT 0x3DFC on the PS2 too, which the windows re-upload before drawing
 (§4.12).
+Session 110 (5.1ax): the Z buffers these sends write are checked the same way (the Z formats' block order is
+the colour one's XOR 24): the depth blur's half-size capture writes Z24 0xFFFFFE over its rectangle of the
+3D Z buffer (after the 3D; under the wide view x 0 .. 338.8 of rows 0 .. 191, the message font in the top
+byte untouched), and the crossfade writes depth into the display (§3.4). A port's captures and crossfade
+write no depth. The textures they read were all drawn or uploaded before them.
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame

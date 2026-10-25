@@ -251,6 +251,21 @@ sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$E
      ! grep -q "D_0035C550's tag stores .* not found" "$W/fs_neg6.log"; then
     echo "selftest: fscheck missed the eye overlay's tag stores gone" >&2; cat "$W/fs_neg6.log" >&2; exit 1
   fi
+  # session 110: the Z buffers the sends write and the textures they read. With the depth blur's wide Z entry,
+  # the crossfade's Z-in-the-display entry and the eye overlay's upload entry taken out, the blur's capture
+  # writing Z past the PS2's blocks, the eye overlay reading an image nothing in its picture uploaded and (when
+  # gcc -m32 builds rtsends.c) the crossfade's ZBUF 0 in the display all fail
+  if python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import fscheck as f
+del f.ZBLOCK_EXPECTED[("D_002A5620", "wide")], f.ZBLOCK_EXPECTED[("func_00135ed0", 0x0000)]
+del f.TEX_EXPECTED[("D_0035C4A0", 0x3600)]
+sys.argv = [sys.argv[0], "--elf", sys.argv[2]]; f.main()' "$ROOT/tools/host" "$ELF" > "$W/fs_neg7.log" ||
+     ! grep -q 'D_002A5620 .*its ZBUF draws blocks 0x0E80 .*past the PS2.s (0x0E00 .. 0x0E7F' "$W/fs_neg7.log" ||
+     ! grep -q 'D_0035C4A0+D_0035C550 .*reads blocks 0x3600 .. 0x360F, 0x3700 .. 0x3703 in texture slot' "$W/fs_neg7.log" ||
+     { grep -q 'run-time builds' "$W/fs_neg7.log" &&
+       ! grep -q 'func_00135ed0\[64x64\] .*its ZBUF at 0x0000 is in display' "$W/fs_neg7.log"; }; then
+    echo "selftest: fscheck missed a Z write past the PS2's blocks or in the display, or an unloaded texture" >&2
+    cat "$W/fs_neg7.log" >&2; exit 1
+  fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"
 fi
