@@ -2528,6 +2528,9 @@ Session 105 (vita-port-plan 5.1as): on the host the copy is only filled with the
 Session 106 (5.1at): the present's fill now stops at FBW x 64, so the model's wide menu capture holds canvas
 -82.8 .. 429 and writes nothing past it; the depth blur's capture `D_002A5380` is FBW 8 and holds the whole
 view at half size (x 0 .. 338.8) without wrapping.
+Session 107 (5.1au): tools/host/fscheck.py now finds this kind of overrun itself: a send whose packet sets
+FRAME and that draws from its buffer's left edge past FBW x 64 under the wide view fails selftest unless
+listed (the menu capture is the only one).
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame

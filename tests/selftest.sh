@@ -213,6 +213,14 @@ if [[ -f "$ELF" ]]; then
      ! grep -q 'func_0020a9b0 writes both 4:3 edges' "$W/fs_neg2.log"; then
     echo "selftest: fscheck missed a full-screen rectangle built in C with the 4:3 edges" >&2; cat "$W/fs_neg2.log" >&2; exit 1
   fi
+  # session 107: a send drawn past its frame's width under the wide view (the depth blur's capture made the
+  # view's full width into its 512-wide buffer)
+  mkdir -p "$W/fsneg3" && cp -r "$ROOT/src/." "$W/fsneg3/"
+  sed -i 's|XYZ(0x7000 + PLAT_VIEW_W16 / 2, 0x8000|XYZ(0x7000 + PLAT_VIEW_W16, 0x8000|' "$W/fsneg3/gfx/sceneeff.nostrict.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg3" > "$W/fs_neg3.log" ||
+     ! grep -q 'D_002A5A90 .*drawn past its frame.s width .*x 0.0 .. 677.6, FBW x 64 = 512' "$W/fs_neg3.log"; then
+    echo "selftest: fscheck missed a send drawn past its frame's width" >&2; cat "$W/fs_neg3.log" >&2; exit 1
+  fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"
 fi

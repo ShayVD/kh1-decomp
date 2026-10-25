@@ -2210,6 +2210,37 @@ float-untested row. selftest PASS (storeread_test: 33 checks, 31 before; one rep
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1au Session 107: sends drawn past their frame's width, checked by a tool
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Tool only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (one new negative case).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The overrun 5.1as found by hand, now found by tools/host/fscheck.py** (item 4b). For each full-screen
+  send it takes the sprites whose packet sets FRAME (context 1 or 2 by PRIM's CTXT bit) and XYOFFSET (else
+  0x7000), works out their x under the wide view (`--side16`, default 1325 = 960 x 544's margin, as
+  host/port/view.c rounds it): XYZ in data by the send's row (`KH1_FS_X` about the canvas, `KH1_FS_XS` from
+  its left edge, neither: unchanged); XYZ written from C by evaluating the x (an `xyz()` / `XYZ()` macro's
+  first argument, else the word's low halfword) with `PLAT_VIEW_SIDE16 / W16 / GX0 / GX1` at the margin; when
+  the expression also names a local (the blurs' offset `o`), the data's x moved by the expression's own
+  change from margin 0 to the margin. The sprites drawn into one frame are taken together (a set of columns
+  is one picture). **A send that keeps its buffer's left edge (pixel x0 >= -2) and draws past FBW x 64 + 1
+  is a problem** unless it is in `OVER_EXPECTED`; a send stretched over the view (its left edge before the
+  buffer's) draws into the view's own target, which a port sizes to the view, and the environment's frame
+  (no FRAME in the packet: the target or the display) is not checked.
+- **Result: 24 full-screen sends, one drawn past its width: the menu capture `D_002B6760`** (x 0 .. 338.8 into
+  FBW 4's 256, `OVER_EXPECTED`: a port's buffer is the view's half wide, 5.1an; the host's fill clips it,
+  5.1at). The depth blur's capture (`D_002A5A90`, and inside `D_002A5620`) draws x 0 .. 338.8 into FBW 8's 512:
+  fits. The clear, frame copy and copy into the Z area (columns, `KH1_FS_X`) start before their buffer's left
+  edge under the stretch, so they are the view's. The summary line now counts "drawn past their frame's
+  width (n expected)"; a stale `OVER_EXPECTED` entry is a problem too.
+- **selftest**: the depth blur capture's C right edge changed to `0x7000 + PLAT_VIEW_W16` (the view's full
+  width into its 512-wide buffer) must give `D_002A5A90 ... x 0.0 .. 677.6, FBW x 64 = 512`.
+- **Not covered**: y (the wide view does not stretch it), a buffer's blocks against the memory map inside
+  its FBW (the next static item), sends outside fscheck's walk (the HUD's, the draw list's).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

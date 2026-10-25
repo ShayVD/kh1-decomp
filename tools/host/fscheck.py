@@ -21,7 +21,10 @@ checks:
     gspkt.c's func_00237018 get the same walk, so a static full-screen packet there needs a row too; and a
     function in src/ that writes both 4:3 edges as literals (a left 0x7000 / 0x6FE0 / 0x6FC0 and a right
     0x9000 / 0x8FE0 / 0x8FC0 halfword, outside `#ifdef KH1_PS2` branches and comments) builds a full-screen
-    rectangle in C that keeps the canvas: it should name the view (PLAT_VIEW_GX0 / GX1) or be in LIT_EXEMPT.
+    rectangle in C that keeps the canvas: it should name the view (PLAT_VIEW_GX0 / GX1) or be in LIT_EXEMPT;
+  - (session 107) no send whose packet sets FRAME draws from its buffer's left edge past FBW x 64 under the
+    wide view (--side16, 960 x 544's margin by default: data XYZ by the row's stretch, C-written XYZ by
+    their PLAT_VIEW_* edges), or it is in OVER_EXPECTED (the menu capture: 5.1as / 5.1at).
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -60,6 +63,13 @@ EXEMPT = {
 WRITE_EXEMPT = {
     ("D_002A6970[10]", "0x174007000"): "brightfade.c case 2's flash over the 640-wide movie buffer (stays 4:3)",
     ("D_002A6970[11]", "(u64)y"): "brightfade.c case 2's flash: its right edge is the movie buffer's width",
+}
+
+# (session 107) full-screen sends drawn from their buffer's left edge past its width under the wide view, on
+# purpose: send -> reason
+OVER_EXPECTED = {
+    "D_002B6760": "capture.c: the menu capture, KH1_FS_XS into the PS2's 256-wide buffer at 0x3600 (FBW 4); a "
+                  "port's buffer is the view's half wide (5.1an), the host's fill clips at FBW x 64 (5.1at)",
 }
 
 # functions whose C writes both 4:3 edges on purpose (none today): "file:function" -> reason
@@ -240,10 +250,13 @@ def regs(img, head):
 
 
 def sprites(img, head):
-    """each SPRITE a send draws: (x0, x1, y0, y1 in sixteenths, u span in texels, textured, XYZ addresses)"""
-    out, prim, vx, uv = [], 0, [], []
+    """each SPRITE a send draws: (x0, x1, y0, y1 in sixteenths, u span in texels, textured, XYZ addresses,
+    the two vertices' x, the FRAME and XYOFFSET its context's packet set (None: the environment's))"""
+    out, prim, vx, uv, env = [], 0, [], [], {}
     for r, v, a in regs(img, head):
-        if r == 0x00:
+        if r in (0x18, 0x19, 0x4C, 0x4D):
+            env[r] = v
+        elif r == 0x00:
             prim, vx, uv = v & 0x7FF, [], []
         elif r == 0x03:
             uv.append(gp.bits(v, 0, 14) / 16)
@@ -252,7 +265,9 @@ def sprites(img, head):
             if prim & 7 == 6 and len(vx) == 2:
                 (xa, ya, aa), (xb, yb, ab) = vx
                 du = abs(uv[-1] - uv[-2]) if len(uv) >= 2 else 0
-                out.append((min(xa, xb), max(xa, xb), min(ya, yb), max(ya, yb), du, bool(prim & 0x10), (aa, ab)))
+                ctx = prim >> 9 & 1
+                out.append((min(xa, xb), max(xa, xb), min(ya, yb), max(ya, yb), du, bool(prim & 0x10), (aa, ab),
+                            (xa, xb), env.get(0x4C + ctx), env.get(0x18 + ctx)))
                 vx, uv = [], []
     return out
 
@@ -286,12 +301,96 @@ def classify(sp):
     return None, []
 
 
+def view_x(expr, side16, x):
+    """a C-written XYZ word's x under the wide view, in sixteenths: its x (an xyz() / XYZ() macro's first
+    argument, else the word's low halfword) with PLAT_VIEW_* at the margin; when it names a local too, the
+    data's x (what the C gives on the PS2) moved by the same at the margin less at 0, the local 0 (it moves
+    both alike); None when it does not evaluate"""
+    if "PLAT_VIEW" not in expr:
+        return x
+    m = re.match(r"\s*(?:xyz|XYZ)\s*\((.*)\)\s*$", expr, re.S)
+    x_expr = m.group(1) if m else expr
+    if m:  # the first argument: up to the first comma at depth 0
+        depth = 0
+        for i, c in enumerate(x_expr):
+            depth += c == "(" or -(c == ")")
+            if c == "," and depth == 0:
+                x_expr = x_expr[:i]
+                break
+    x_expr = re.sub(r"\(\s*(?:u|s)(?:8|16|32|64)\s*\)|\(\s*f32\s*\)", "", x_expr)
+    x_expr = re.sub(r"\b(0x[0-9a-fA-F]+|\d+)[uUlL]+\b", r"\1", x_expr)
+    names = {}
+
+    def val(side):
+        names.update({"PLAT_VIEW_SIDE16": side, "PLAT_VIEW_W16": 8192 + 2 * side, "PLAT_VIEW_GX0": X0 - side,
+                      "PLAT_VIEW_GX1": X1 + side})
+        e = re.sub(r"\b(?!0x)[A-Za-z_]\w*\b", lambda n: str(names.get(n.group(0), 0)), x_expr)
+        if not re.fullmatch(r"[\s\dxa-fA-F()+\-*/|&<>.]*", e):
+            return None
+        try:
+            v = eval(e.replace("/", "//"), {"__builtins__": {}})
+        except (SyntaxError, ZeroDivisionError, TypeError):
+            return None
+        return int(v) & 0xFFFF if not m else int(v)
+
+    a = val(side16)
+    if a is None or not set(re.findall(r"\b(?!0x)[A-Za-z_]\w*\b", x_expr)) <= set(names):
+        b = val(0)
+        return None if a is None or b is None else x + a - b
+    return a
+
+
+def wide_x(p, flags, writes, side16):
+    """a sprite's x range under the wide view, in sixteenths: data XYZ stretched by the send's row (KH1_FS_X
+    about the canvas, KH1_FS_XS from its left edge), C-written XYZ moved by what their PLAT_VIEW_* give;
+    None when a C write does not evaluate"""
+    xs = []
+    for x, w in zip(p[7], p[6]):
+        if w in writes:
+            vs = [view_x(e, side16, x) for _w, e, _at in writes[w]]
+            if None in vs:
+                return None
+            xs += vs
+        elif "KH1_FS_X" in flags:
+            xs.append(X0 - side16 + (x - X0) * (8192 + 2 * side16) / 8192)
+        elif "KH1_FS_XS" in flags:
+            xs.append(X0 + (x - X0) * (8192 + 2 * side16) / 8192)
+        else:
+            xs.append(x)
+    return min(xs), max(xs)
+
+
+def overrun(sp, flags, writes, side16):
+    """(session 107) a send drawn from its buffer's left edge past its FRAME's width (FBW x 64) under the
+    wide view: (pixel x0, x1, FBW x 64) of the sprites drawn into one frame together (a set of columns is one
+    picture), else None.  A send stretched over the view (its left edge before the buffer's) draws into the
+    view's own target, which a port sizes to the view; one that keeps the left edge and grows to the right
+    (a buffer of the PS2's width) runs into the blocks after it (5.1as).  The environment's frame (no FRAME
+    in the packet) is the target or the display: the view's in a port, not checked"""
+    by = {}
+    for p in sp:
+        if p[8] is None:
+            continue
+        xr = wide_x(p, flags, writes, side16)
+        if xr is None:
+            continue
+        off = gp.bits(p[9], 0, 16) if p[9] is not None else X0
+        by.setdefault(p[8] & 0xFFFFFFFF, []).append(((xr[0] - off) / 16, (xr[1] - off) / 16))
+    for frame, rs in sorted(by.items()):
+        px0, px1, width = min(r[0] for r in rs), max(r[1] for r in rs), gp.bits(frame, 16, 6) * 64
+        if px0 >= -2 and px1 > width + 1:
+            return px0, px1, width
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--elf", default=os.path.join(ROOT, "SLPS_251.98"))
     ap.add_argument("--layout", default=os.path.join(ROOT, "layout.tsv"))
     ap.add_argument("--table", default=os.path.join(ROOT, "host", "port", "fullscreen.c"))
     ap.add_argument("--src", default=os.path.join(ROOT, "src"))
+    ap.add_argument("--side16", type=int, default=1325,
+                    help="the wide view's margin in canvas sixteenths (1325: 960 x 544, host/port/view.c)")
     ap.add_argument("-v", action="store_true")
     args = ap.parse_args()
     img = gp.Image(Path(args.elf))
@@ -307,7 +406,7 @@ def main():
             if img.ok(a):
                 sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
-    problems, nfull = [], 0
+    problems, nfull, overs = [], 0, set()
     for s in sorted(sends):
         a = int(s[2:], 16)
         if not img.ok(a):
@@ -324,6 +423,16 @@ def main():
             print("%s %s (%s): %d sprites, %d with data XYZ, %d C-written XYZ words, %d copies; row %s%s" % (
                 s, kind, sends[s], len(sp), len(static), len(cw), len(textured),
                 "|".join(sorted(flags)) or "none", " (exempt)" if s in EXEMPT else ""))
+        o = overrun([p for p, _k in sp], flags, writes, args.side16)
+        if o:
+            overs.add(s)
+            if args.v:
+                print("%s (%s): draws x %.1f .. %.1f under the wide view, past its frame's %d%s" % (
+                    s, sends[s], o[0], o[1], o[2], " (expected)" if s in OVER_EXPECTED else ""))
+            if s not in OVER_EXPECTED:
+                problems.append("%s (%s): drawn past its frame's width under the wide view (x %.1f .. %.1f, "
+                                "FBW x 64 = %d): size its buffer to the view or add it to OVER_EXPECTED" % (
+                                    s, sends[s], o[0], o[1], o[2]))
         if s in EXEMPT:
             if name:
                 problems.append("%s is in EXEMPT and has a row (%s)" % (s, name))
@@ -364,6 +473,9 @@ def main():
     for s, (_f, name) in rows.items():
         if s not in sends:
             problems.append("%s (%s): a row in the table, but no send of it" % (s, name))
+    for s in OVER_EXPECTED:
+        if s not in overs:
+            problems.append("%s: in OVER_EXPECTED, but no longer drawn past its frame's width" % s)
     for s in EXEMPT:
         if s not in sends:
             problems.append("%s: in EXEMPT, but no send of it" % s)
@@ -382,7 +494,8 @@ def main():
     for p in problems:
         print("fscheck: " + p)
     print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
-          "%d problems" % (len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(problems)))
+          "%d drawn past their frame's width (%d expected), %d problems" % (
+              len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)), len(problems)))
     sys.exit(1 if problems else 0)
 
 
