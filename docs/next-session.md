@@ -9,13 +9,30 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 99 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 100 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 99, 2026-10-25)
+## Where we stopped (end of session 100, 2026-10-25)
+
+- **Session 100** (static, vita-port-plan 5.1an, renderer-spec 5.4 "Session 100"): **the full-screen draws
+  that are not `func_00106b18` sends, the captures' `PlatGs` contract.** fscheck.py also walks the static
+  chains of `sceDmaSend`, `func_00237018` and frame.c's `func_001e05a8`, and scans src/ for rectangles
+  built in C with both 4:3 edges (outside `#ifdef KH1_PS2`; array sizes from include/ too; decimal
+  28672 / 36864 count). Found **menubg.nostrict.c's four full-screen backdrop gradients** (now
+  `PLAT_VIEW_GX0 / GX1`) and **the stored frame's three path-2 sends** `D_003DAE30` / `D_003DAF60` /
+  `D_003DB050` (now fullscreen.c rows `X | U`; the zoom's C corners stay in canvas units, and fscheck now
+  requires that for a send with an X row). The menus' full-width rules (`func_00206130(.., 0, y, 512, ..)`)
+  stay with their windows (a reason). `gs_packets.callers(reg=)` drops stale argument addresses and finds
+  delay-slot ones. 58 sends, 24 full-screen, 22 rows, 3 exempt, 0 problems; two more selftest negative
+  cases. **All 677 out/build objects bit-identical**, kh1.elf byte-identical, no float-untested row.
+  **The captures' contract** (vita-port-plan 5.1an): every `PlatGsExecStoreImage` (the target 512 x 384,
+  the half capture 256 x 192, the lens flare's Z box in PSMZ24, menubg's two display pixels) and what a
+  port returns: main memory always the PS2's shape (CPU effects read it: ripple, edge filter, grey tint,
+  row scroll), the view squeezed into it and stretched back on the load; a disc picture loaded into the Z
+  area placed 4:3.
 
 - **Session 99** (static + host, vita-port-plan 5.1am, renderer-spec 5.4 "Session 99"): **every
   full-screen send checked, the model's copies on one canvas.** **tools/host/fscheck.py** (needs the ELF;
@@ -316,11 +333,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 100 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 101 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s100 and /mnt/project-files/kh1-runtime/s100, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s101 and /mnt/project-files/kh1-runtime/s101, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -338,7 +355,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 99: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 100: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -363,7 +380,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    DATA rows** with **`KH1_HOST_COUNTS=1`** on every real-disc run (session 96, host/null/counts.c: printed at the
    end; an "OVER" row is a real overrun, on the PS2 too: write it into countcheck's REVIEWED entry; the collision
    count is a lower bound). **Session 96: the display shot now goes through the frame copy** (the target's
-   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart (**session 97**: under `KH1_HOST_WIDE` the display shot starts at canvas x 82.8 by design; compare one `:target` shot; **session 98**: with `--extents`, the stored frame back `D_002B66B0` (capture.c, a fade from a stored frame: the menu or a world change?) should now be at -83.5 .. 594.1; note which scenes send it, and whether the spin copy / strip or the copy into the Z area appear; **session 99**: every full-screen send fscheck.py lists should show at -82.8 .. 594.8 under `KH1_HOST_WIDE`, the half-size captures `D_002B6760` / `D_002A5A90` at the view's half: open the menu (the blur `D_002A4B60` / `D_002A4DD0`), a world change (the cross-fade `D_002B65E0`) and, if reached, an event's depth blur and the shaped wipe `D_002A6A40` / `D_002A6AA0`; the display shot now shows canvas 0 .. 512 unshifted). Fix host-only causes the way
+   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart (**session 97**: under `KH1_HOST_WIDE` the display shot starts at canvas x 82.8 by design; compare one `:target` shot; **session 98**: with `--extents`, the stored frame back `D_002B66B0` (capture.c, a fade from a stored frame: the menu or a world change?) should now be at -83.5 .. 594.1; note which scenes send it, and whether the spin copy / strip or the copy into the Z area appear; **session 99**: every full-screen send fscheck.py lists should show at -82.8 .. 594.8 under `KH1_HOST_WIDE`, the half-size captures `D_002B6760` / `D_002A5A90` at the view's half: open the menu (the blur `D_002A4B60` / `D_002A4DD0`), a world change (the cross-fade `D_002B65E0`) and, if reached, an event's depth blur and the shaped wipe `D_002A6A40` / `D_002A6AA0`; the display shot now shows canvas 0 .. 512 unshifted; **session 100**: the menu's backdrop gradient at -82.8 .. 594.8 (menubg's four, built in C; not a send, so in `--draws`), and, in a scene with vm_lib's screen effects (a zoom, cross-fade or tint of the stored frame), `D_003DAE30` / `D_003DAF60` / `D_003DB050` at -82.8 .. 594.8). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
@@ -381,19 +398,19 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **the draws that are not sends**: fscheck.py covers `func_00106b18`'s
-   sends; the other GIF paths (the draw list's immediate nodes, gspkt.c's `func_00237018` staging sends,
-   path 3 images, the opdma band) can draw full-screen too: list every one whose rectangle spans the canvas
-   (the C's literals `0x7000` / `0x9000` / `0x8000` beside `0x7400` / `0x8C00` / `0x9000`, a scan like
-   fscheck's write check over src/) and give each a `PLAT_VIEW_*` form, a row or a reason in renderer-spec
-   5.4; extend fscheck.py if it is mechanical; (b) the half-size capture's main-memory copy (renderer-spec
-   5.4 "Session 99"'s port rule): write the platform side of it down as a `PlatGs*` contract in
-   vita-port-plan (what `PlatGsSetDefStoreImage` / `PlatGsExecStoreImage` get for `0x3600` 256 x 192 and for
-   the 512 x 384 frame, and what a port does with each); (c) `KH1_HOST_DMAC=defer` as the default,
-   argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac.
+4. **Static, without the Mac**: (a) **the port side of 5.1an's contract in the host**: the null
+   platform keeps the PS2's GS memory, so add a host check instead: a `KH1_HOST_WIDE` test (like
+   present_test) that stores the target through `PlatGsExecStoreImage` and loads it back, and asserts the
+   shapes 5.1an names (0x90000 bytes, 0x600 a row; 0x24000 for `0x3600`) whatever the view; (b) **the
+   menus' full-width rules**: decide with the user whether a renderer widens a rule whose window is at
+   canvas 0 and 512 wide (renderer-spec 5.4 "Session 100"), and if so write it as a `PLAT_VIEW_*` form in
+   winpart.nostrict.c's `func_00206130` (off the PS2, objects bit-identical) rather than a renderer rule;
+   (c) the lens flare's depth read (5.1an item 4): find the records' `bC0 / bC1` (the flare's key fields)
+   so the box size is known; (d) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
+   callers of prim.c's senders still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=100`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=101`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 101) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 102) with this
    prompt: the user wants each session to start the next one without being asked.

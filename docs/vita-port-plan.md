@@ -1929,6 +1929,88 @@ checks, fscheck with two negative cases).
   an event with the depth blur, a world change (the cross-fade `D_002B65E0`) and the shaped wipe should
   each show its full-screen sends at -82.8 .. 594.8 (the captures at the view's half).
 
+### 5.1an Session 100: the other GIF paths' full-screen draws, the captures' `PlatGs` contract
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). One change under src/ (menubg.nostrict.c,
+folding to the original's literals): **all 677 out/build objects bit-identical**, kh1.elf byte-identical,
+so the m12 float ELF is the same bytes (no float-untested row). selftest PASS (fscheck: two more negative
+cases), the host links (570 objects).
+
+- **The draws that are not `func_00106b18` sends** (item 4a, renderer-spec 5.4 "Session 100"): fscheck.py
+  also walks the static chains sent through `sceDmaSend`, `func_00237018` and frame.c's `func_001e05a8`,
+  and scans src/ for rectangles built in C with both 4:3 edges. Found: **the menu backdrop's four
+  full-screen gradients** (menubg.nostrict.c, now `PLAT_VIEW_GX0 / GX1`: the sides show the backdrop) and
+  **the stored frame's three path-2 sends** (`D_003DAE30`, `D_003DAF60`, `D_003DB050`: now
+  host/port/fullscreen.c rows `KH1_FS_X | KH1_FS_U`; the zoom's corners from C stay in canvas units and the
+  row's linear stretch carries them). The menus' full-width rules, the wave band and the staging sends have
+  reasons, not rows. `gs_packets.callers` drops a stale argument address and finds a delay-slot one.
+  58 sends, 24 full-screen, 22 rows, 3 exempt, 0 problems.
+- **The captures' contract** (item 4b, below).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders, and the wide run's `--extents` (now also the stored frame's three
+  sends at -82.8 .. 594.8 in a scene that uses vm_lib's screen effects, and the menu's backdrop).
+
+#### The image transfers from GS memory to main memory, for a port's `PlatGs*`
+
+On the PS2 `PlatGsSetDefStoreImage(sp, sbp, sbw, psm, x, y, w, h)` + `PlatGsExecStoreImage(sp, dst)` copy
+a rectangle of GS memory into main memory, and `PlatGsSetDefLoadImage` / `PlatGsExecLoadImage` copy it
+back. A port has no GS memory: its `PlatGs*` see the block address and PSM, and map them to its own
+buffers. **The rule: main memory always gets the PS2's format and size**, because game code reads and
+writes those bytes on the CPU (below); the port's store resamples its own buffer into that shape, and its
+load resamples the shape back into its own buffer. Every store in src/ (the loads are the same rectangles
+backwards):
+
+| Store (who) | GS source | PSM, rectangle | Into main memory | Read on the CPU by | Loaded back |
+| --- | --- | --- | --- | --- | --- |
+| capture.c `func_00109d98`, screen.c `func_001e1480` | the 3D target, block `0x1A00`, FBW 8 | CT24 (1), 0, 0, 512 x 384 | `D_00F20000`: **512 x 384 x 3 = 0x90000 bytes, 0x600 a row** | screen.nofill.c's ripple `func_001e1838` (64 x 48 about the centre) and edge filter `func_001e1c20` (rows +-512), screen.c's grey tint `func_001e15a0` (every pixel, `p[2] = p[0] = p[1]`), frame.c's `func_001e06c8(line)` (`+ line x 0x600`: a vertical scroll) | into the Z area as two 512 x 192 halves (`0x0E00`, `0x1400`; `+ 0x48000`): capture.c `func_00109cd0`, frame.c `func_001e0608` / `func_001e06c8`, screen.c `func_001e14e0`; drawn by `D_002B65E0` / `D_003DAE30` / `D_003DAF60` / `D_003DB050` (rows `X \| U`) |
+| capture.c `func_0010a058` | the target `0x1A00` | CT24, 512 x 384 | a block from `func_001559f0(62, 2)` (`D_002B677C`), 0x90000 bytes | (none found) | `func_00109f88`, the two halves into the Z area; drawn by `D_002B66B0` (row `X \| U`) |
+| capture.c `func_0010a3e8` (after the half-size copy `D_002B6760`) | the capture, block `0x3600`, FBW 4 | CT24, 256 x 192 | `func_00121e28(0x24000)` (`D_002B6778`): **256 x 192 x 3 = 0x24000 bytes** | sceneeff.c `func_00102a48`: the first 0x9000 words scanned for a non-zero (all zero = "no capture", then `D_002A4DD0`) | `func_0010a470`, 256 x 192 back to `0x3600`; drawn by the menu blur `D_002A4B60` (`U \| UOWN`) |
+| kelnscls.nostrict.c (the lens flare's occlusion, `pppKeLns*`) | **the Z buffer**, block `zbp << 5`, the frame's FBW | **PSMZ24 (0x31)**, the light's screen box clamped to the scissor, w rounded up to 8, h to 4 | `func_001aa950(0x3060)` + 96 (the scratch stack) | counts the pixels whose 24-bit depth (3 bytes, little-endian) is under the light's; the ratio dims the flare | no |
+| menubg.c `func_0020a8f0` | **the display**, block 0, FBW 8 | CT32 (0), 16 x 1 at (256, 4) and at (256, 443) | a stack buffer | the first pixel of each: `D_003F34B0[0] / [1]`, the backdrop gradient's top / bottom colours (the menu takes its colours from the screen behind it) | no |
+
+What a port's `PlatGs*` do with each (the GS block and PSM tell them apart):
+
+1. **The target, 512 x 384 CT24** (block `0x1A00`). The port's 3D target is the view's size (960 x 544
+   at k = 1.3235; its canvas is 677.6 x 384 target pixels). The store **resamples the whole view into 512
+   x 384** (a horizontal squeeze by k, rows unchanged; RGB, no alpha byte), so the CPU effects keep their
+   sizes and offsets: the ripple and the edge filter then act on the squeezed picture (a ripple drawn
+   1.32 times wider once unsqueezed, accepted), the tint is per pixel, the scroll per row. The load of
+   either 512 x 192 half into `0x0E00 / 0x1400` **stretches it back into a view-wide texture** that the
+   port keeps as "the Z area's picture"; the draws read it with the rows' `KH1_FS_U` (u 0 .. 512 -> 0 ..
+   the view's width), which lines the picture up with the view again. Doing it as one 512 x 384 image is
+   fine: the halves are the PS2's transfer size limit, nothing reads between them.
+2. **A picture from the disc into the Z area** (frame.c `func_001e07a8`: `D_003DABD0[1] + line x 0x600`,
+   the same two halves). It is 4:3 art, not a squeezed view: **the port's load places it in the canvas's
+   4:3 rectangle of the texture, the sides black** (the row's stretch then draws it at its own aspect,
+   pillarboxed). The load tells the two apart by the source: an address the port's own store filled
+   (`D_00F20000`, `D_002B677C`'s block, between the store and the next write to it) is a squeezed view;
+   anything else is 4:3. A simpler first version: always treat the loads into `0x0E00 / 0x1400` from
+   `D_00F20000` / `D_002B677C`'s block as squeezed, every other source as 4:3.
+3. **The half-size capture, 256 x 192 CT24** (block `0x3600`). The port's capture texture is the view's
+   half (338.8 x 192 canvas pixels at 960 x 544, `D_002B6760`'s `KH1_FS_XS`). The store squeezes it to
+   256 x 192 x 3 (session 99's rule), so the 0x24000 block and the 0x9000-word empty test keep their
+   meaning (an all-black capture is still all zero bytes); the load stretches it back into the capture
+   texture, which the blur reads with `KH1_FS_UOWN`.
+4. **The Z buffer, PSMZ24** (the lens flare). The rectangle is in the target's pixels (`ox / oy` from the
+   light's projected XYZ minus XYOFFSET, clamped to `SCISSOR_1`), so in a port it is in **view** pixels
+   once the scissor is the view's (5.4 "Session 92"): the store returns the port's depth for that
+   rectangle, **converted to the PS2's 24-bit integer Z** (the game compares it with `v[2] >> 4`, the
+   light's own Z from the same projection) as 3 bytes a pixel, `w8` to a row. The Vita's GXM cannot read
+   its depth buffer back cheaply: a port can (a) resolve depth to a small colour target over that box only,
+   or (b) answer with an occlusion query and return all-visible / all-hidden bytes in the shape the loop
+   reads (the flare then dims in steps, not smoothly). The box is `bC0` x `bC1` pixels about the light
+   (`r = v -+ bC0 x 8` sixteenths; u8s, so at most 255 x 255; `pppKeLnsLpTDraw` sets them from its key as
+   `e << 3` / `f << 2`, if those are the same fields: read a flare's record before choosing).
+5. **The display, CT32, 16 x 1** (menubg). The display in a port is the presented view. The two rows are
+   display lines 4 and 443 (the 448-line display; the target's 3 and 380 after the copy's 384 -> 448
+   stretch) at **canvas x 256, the view's centre**: the port maps canvas x 256 to its own centre column and
+   the display line l to its row `l x 384 / 448` of the target, and returns 16 CT32 pixels (only the first
+   is read; its alpha byte is masked off). A port that never keeps the presented frame can read its target
+   at the same place before the frame copy (the menu opens over the last frame either way).
+
+Nothing above changes the PS2 build: these are the port's `PlatGs*` (vita-port-plan 5, step 3); the host's
+null platform keeps its GS memory model, where the shapes are the PS2's already.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

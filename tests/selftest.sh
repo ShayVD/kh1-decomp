@@ -162,6 +162,7 @@ fi
 # The full-screen packets' table against the ELF and the C (tools/host/fscheck.py, session 99), only with
 # the user's own ELF in the repo root: every full-screen send is a fullscreen.c row, built from the view in C,
 # or exempt; a table missing the stored frame's row fails, and so does the flash's 4:3 literal put back.
+# Session 100: also the sceDmaSend / func_00237018 chains, and C rectangles holding both 4:3 edges.
 ELF="$ROOT/$(cd "$ROOT" && python3 tools/kh1tool.py config target.elf)"
 if [[ -f "$ELF" ]]; then
   python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" > "$W/fs.log" || { cat "$W/fs.log"; exit 1; }
@@ -176,6 +177,19 @@ if [[ -f "$ELF" ]]; then
   if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg" > "$W/fs_neg.log" ||
      ! grep -q 'writes D_002A6970\[11\] = 0x18C009000: a 4:3 edge' "$W/fs_neg.log"; then
     echo "selftest: fscheck missed a full-screen pass written with a 4:3 edge" >&2; cat "$W/fs_neg.log" >&2; exit 1
+  fi
+  # session 100: the stored frame's path-2 send (frame.c func_001e05a8) left out of the table
+  sed '/D_003DAF60, KH1_FS_X/d' "$ROOT/host/port/fullscreen.c" > "$W/fullscreen_missing2.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --table "$W/fullscreen_missing2.c" > "$W/fs_missing2.log" ||
+     ! grep -q 'D_003DAF60 .*no KH1_FS_X row' "$W/fs_missing2.log"; then
+    echo "selftest: fscheck missed the stored frame's func_001e05a8 send" >&2; cat "$W/fs_missing2.log" >&2; exit 1
+  fi
+  # session 100: a full-screen rectangle built in C with both 4:3 edges (the menu background's gradient put back)
+  mkdir -p "$W/fsneg2" && cp -r "$ROOT/src/." "$W/fsneg2/"
+  sed -i 's/PLAT_VIEW_GX0;/0x7000;/; s/PLAT_VIEW_GX1;/0x9000;/' "$W/fsneg2/menu/menubg.nostrict.c"
+  if python3 -I "$ROOT/tools/host/fscheck.py" --elf "$ELF" --src "$W/fsneg2" > "$W/fs_neg2.log" ||
+     ! grep -q 'func_0020a9b0 writes both 4:3 edges' "$W/fs_neg2.log"; then
+    echo "selftest: fscheck missed a full-screen rectangle built in C with the 4:3 edges" >&2; cat "$W/fs_neg2.log" >&2; exit 1
   fi
 else
   echo "selftest: no $(basename "$ELF"), fscheck skipped"

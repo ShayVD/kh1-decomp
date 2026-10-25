@@ -216,8 +216,9 @@ def walk(img: Image, head: int) -> list[str]:
     return out
 
 
-def callers(img: Image, layout: Path, target: int = 0x00106B18):
-    """(call site, function, tag address) for every jal target whose a0 was built with lui/addiu."""
+def callers(img: Image, layout: Path, target: int = 0x00106B18, reg: int = 4):
+    """(call site, function, tag address) for every jal target whose argument register `reg` (a0 by
+    default; a1 = 5 for sceDmaSend) was built with lui/addiu."""
     rows = []
     for line in layout.read_text().splitlines():
         if line and line[0] not in "#a":
@@ -232,17 +233,24 @@ def callers(img: Image, layout: Path, target: int = 0x00106B18):
             o, rs, rt, im = w >> 26, w >> 21 & 31, w >> 16 & 31, w & 0xFFFF
             if o == 0x0F:
                 hi[rt] = im << 16
+                if rt == reg:
+                    a0 = None
             elif o == 0x09 and rs in hi:
                 v = (hi[rs] + (im - 0x10000 if im & 0x8000 else im)) & 0xFFFFFFFF
-                if rt == 4:
+                if rt == reg:
                     a0 = (a, v)
-            if w in (jal, 2 << 26 | (target >> 2)) and a0:
+            elif (o == 0 and (w >> 11 & 31) == reg and w & 0x3F not in (0x08, 0x09)) or \
+                    (rt == reg and (0x08 <= o <= 0x0E or 0x18 <= o <= 0x19 or 0x20 <= o <= 0x27 or o in (0x1E, 0x37))):
+                # session 100: anything else written to the argument register (a `move a0, v0`) drops the address
+                a0 = None
+            if w in (jal, 2 << 26 | (target >> 2)):
                 # the delay slot may set a0 too
                 d = struct.unpack_from("<I", img.d, a + 4 - 0x100000 + 0x80)[0]
-                if d >> 26 == 0x09 and (d >> 16 & 31) == 4 and (d >> 21 & 31) in hi:
+                if d >> 26 == 0x09 and (d >> 16 & 31) == reg and (d >> 21 & 31) in hi:
                     im = d & 0xFFFF
                     a0 = (a + 4, (hi[d >> 21 & 31] + (im - 0x10000 if im & 0x8000 else im)) & 0xFFFFFFFF)
-                res.append((a, s, a0[1]))
+                if a0:
+                    res.append((a, s, a0[1]))
                 a0 = None
     return res
 

@@ -4,6 +4,7 @@
 #include "platform/thread.h"
 #include "platform/gs.h"
 #include "platform/dma.h"
+#include "platform/view.h"
 #include "text/textwin.h"
 
 typedef struct { u64 rgba; u64 st; s32 x, y, z, w; } V;
@@ -46,23 +47,23 @@ void func_0020a9b0(s32 a) {
     g->b = 0x42;
     g->v[1].rgba = g->v[0].rgba = func_001edd88(D_003F34B0[0] | (a << 24), 64);
     g->v[0].st = 1;
-    g->v[0].x = 0x7000;
+    g->v[0].x = PLAT_VIEW_GX0;
     g->v[0].y = 0x7400;
     g->v[0].z = 0x100000;
     g->v[0].w = 0;
     g->v[1].st = 1;
-    g->v[1].x = 0x9000;
+    g->v[1].x = PLAT_VIEW_GX1;
     g->v[1].y = 0x7400;
     g->v[1].z = 0x100000;
     g->v[1].w = 0;
     g->v[3].rgba = g->v[2].rgba = func_001edd88(D_003F34B0[1] | (a << 24), 64);
     g->v[2].st = 1;
-    g->v[2].x = 0x7000;
+    g->v[2].x = PLAT_VIEW_GX0;
     g->v[2].y = 0x8c00;
     g->v[2].z = 0x100000;
     g->v[2].w = 0;
     g->v[3].st = 1;
-    g->v[3].x = 0x9000;
+    g->v[3].x = PLAT_VIEW_GX1;
     g->v[3].y = 0x8c00;
     g->v[3].z = 0x100000;
     g->v[3].w = 0;
@@ -103,21 +104,21 @@ void func_0020ab88(u32 a) {
     c[2] = D_003F34B0[1] | (a << 24);
     c[1] = func_001edf40(c[0], c[2]);
     p->e[0].u = 3992; p->e[0].v = 1000; p->e[0].rgba = c[0]; p->e[0].q = 1;
-    p->e[0].x = 0x7000; p->e[0].y = 0x7400; p->e[0].z = 0x100000; p->e[0].w = 0;
+    p->e[0].x = PLAT_VIEW_GX0; p->e[0].y = 0x7400; p->e[0].z = 0x100000; p->e[0].w = 0;
     p->e[1].u = 4072; p->e[1].v = 1000; p->e[1].rgba = c[0]; p->e[1].q = 1;
-    p->e[1].x = 0x9000; p->e[1].y = 0x7400; p->e[1].z = 0x100000; p->e[1].w = 0;
+    p->e[1].x = PLAT_VIEW_GX1; p->e[1].y = 0x7400; p->e[1].z = 0x100000; p->e[1].w = 0;
     p->e[2].u = 3992; p->e[2].v = 4072; p->e[2].rgba = c[1]; p->e[2].q = 1;
-    p->e[2].x = 0x7000; p->e[2].y = 0x8000; p->e[2].z = 0x100000; p->e[2].w = 0;
+    p->e[2].x = PLAT_VIEW_GX0; p->e[2].y = 0x8000; p->e[2].z = 0x100000; p->e[2].w = 0;
     p->e[3].u = 4072; p->e[3].v = 4072; p->e[3].rgba = c[1]; p->e[3].q = 1;
-    p->e[3].x = 0x9000; p->e[3].y = 0x8000; p->e[3].z = 0x100000; p->e[3].w = 0;
+    p->e[3].x = PLAT_VIEW_GX1; p->e[3].y = 0x8000; p->e[3].z = 0x100000; p->e[3].w = 0;
     p->e[4].u = 3992; p->e[4].v = 1000; p->e[4].rgba = c[1]; p->e[4].q = 1;
-    p->e[4].x = 0x7000; p->e[4].y = 0x8000; p->e[4].z = 0x100000; p->e[4].w = 0;
+    p->e[4].x = PLAT_VIEW_GX0; p->e[4].y = 0x8000; p->e[4].z = 0x100000; p->e[4].w = 0;
     p->e[5].u = 4072; p->e[5].v = 1000; p->e[5].rgba = c[1]; p->e[5].q = 1;
-    p->e[5].x = 0x9000; p->e[5].y = 0x8000; p->e[5].z = 0x100000; p->e[5].w = 0;
+    p->e[5].x = PLAT_VIEW_GX1; p->e[5].y = 0x8000; p->e[5].z = 0x100000; p->e[5].w = 0;
     p->e[6].u = 3992; p->e[6].v = 4072; p->e[6].rgba = c[2]; p->e[6].q = 1;
-    p->e[6].x = 0x7000; p->e[6].y = 0x8c00; p->e[6].z = 0x100000; p->e[6].w = 0;
+    p->e[6].x = PLAT_VIEW_GX0; p->e[6].y = 0x8c00; p->e[6].z = 0x100000; p->e[6].w = 0;
     p->e[7].u = 4072; p->e[7].v = 4072; p->e[7].rgba = c[2]; p->e[7].q = 1;
-    p->e[7].x = 0x9000; p->e[7].y = 0x8c00; p->e[7].z = 0x100000; p->e[7].w = 0;
+    p->e[7].x = PLAT_VIEW_GX1; p->e[7].y = 0x8c00; p->e[7].z = 0x100000; p->e[7].w = 0;
     buf[0] = ((((s32)p - (s32)buf + 496) >> 4) - 1) | 0x70000000;
     PlatDmaSend(PlatDmaGetChan(2), (void *)ub);
     PlatGsSyncPath(0, 0);
@@ -149,21 +150,21 @@ u64 *func_0020ae98(PkT *p, s32 tex, u32 a) {
     c[2] = D_003F34B0[1] | (al << 24);
     c1 = func_001edf40(c[0], c[2]);
     p->e[0].u = 3992; p->e[0].v = 1000; p->e[0].rgba = c[0]; p->e[0].q = 1;
-    p->e[0].x = 0x7000; p->e[0].y = 0x7400; p->e[0].z = 0x100000; p->e[0].w = 0;
+    p->e[0].x = PLAT_VIEW_GX0; p->e[0].y = 0x7400; p->e[0].z = 0x100000; p->e[0].w = 0;
     p->e[1].u = 4072; p->e[1].v = 1000; p->e[1].rgba = c[0]; p->e[1].q = 1;
-    p->e[1].x = 0x9000; p->e[1].y = 0x7400; p->e[1].z = 0x100000; p->e[1].w = 0;
+    p->e[1].x = PLAT_VIEW_GX1; p->e[1].y = 0x7400; p->e[1].z = 0x100000; p->e[1].w = 0;
     p->e[2].u = 3992; p->e[2].v = 4072; p->e[2].rgba = c1; p->e[2].q = 1;
-    p->e[2].x = 0x7000; p->e[2].y = 0x8000; p->e[2].z = 0x100000; p->e[2].w = 0;
+    p->e[2].x = PLAT_VIEW_GX0; p->e[2].y = 0x8000; p->e[2].z = 0x100000; p->e[2].w = 0;
     p->e[3].u = 4072; p->e[3].v = 4072; p->e[3].rgba = c1; p->e[3].q = 1;
-    p->e[3].x = 0x9000; p->e[3].y = 0x8000; p->e[3].z = 0x100000; p->e[3].w = 0;
+    p->e[3].x = PLAT_VIEW_GX1; p->e[3].y = 0x8000; p->e[3].z = 0x100000; p->e[3].w = 0;
     p->e[4].u = 3992; p->e[4].v = 1000; p->e[4].rgba = c1; p->e[4].q = 1;
-    p->e[4].x = 0x7000; p->e[4].y = 0x8000; p->e[4].z = 0x100000; p->e[4].w = 0;
+    p->e[4].x = PLAT_VIEW_GX0; p->e[4].y = 0x8000; p->e[4].z = 0x100000; p->e[4].w = 0;
     p->e[5].u = 4072; p->e[5].v = 1000; p->e[5].rgba = c1; p->e[5].q = 1;
-    p->e[5].x = 0x9000; p->e[5].y = 0x8000; p->e[5].z = 0x100000; p->e[5].w = 0;
+    p->e[5].x = PLAT_VIEW_GX1; p->e[5].y = 0x8000; p->e[5].z = 0x100000; p->e[5].w = 0;
     p->e[6].u = 3992; p->e[6].v = 4072; p->e[6].rgba = c[2]; p->e[6].q = 1;
-    p->e[6].x = 0x7000; p->e[6].y = 0x8c00; p->e[6].z = 0x100000; p->e[6].w = 0;
+    p->e[6].x = PLAT_VIEW_GX0; p->e[6].y = 0x8c00; p->e[6].z = 0x100000; p->e[6].w = 0;
     p->e[7].u = 4072; p->e[7].v = 4072; p->e[7].rgba = c[2]; p->e[7].q = 1;
-    p->e[7].x = 0x9000; p->e[7].y = 0x8c00; p->e[7].z = 0x100000; p->e[7].w = 0;
+    p->e[7].x = PLAT_VIEW_GX1; p->e[7].y = 0x8c00; p->e[7].z = 0x100000; p->e[7].w = 0;
     return (u64 *)(p + 1);
 }
 
@@ -188,25 +189,25 @@ void func_0020b120(s32 prim, s32 al, u32 c0, u32 c1, u32 c2, u32 c3) {
     g->b = 0x42;
     g->v[0].rgba = c0;
     g->v[0].st = 1;
-    g->v[0].x = 0x7000;
+    g->v[0].x = PLAT_VIEW_GX0;
     g->v[0].y = 0x7400;
     g->v[0].z = 0x100000;
     g->v[0].w = 0;
     g->v[1].rgba = c1;
     g->v[1].st = 1;
-    g->v[1].x = 0x9000;
+    g->v[1].x = PLAT_VIEW_GX1;
     g->v[1].y = 0x7400;
     g->v[1].z = 0x100000;
     g->v[1].w = 0;
     g->v[2].rgba = c2;
     g->v[2].st = 1;
-    g->v[2].x = 0x7000;
+    g->v[2].x = PLAT_VIEW_GX0;
     g->v[2].y = 0x8c00;
     g->v[2].z = 0x100000;
     g->v[2].w = 0;
     g->v[3].rgba = c3;
     g->v[3].st = 1;
-    g->v[3].x = 0x9000;
+    g->v[3].x = PLAT_VIEW_GX1;
     g->v[3].y = 0x8c00;
     g->v[3].z = 0x100000;
     g->v[3].w = 0;

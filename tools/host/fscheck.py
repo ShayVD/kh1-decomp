@@ -16,7 +16,12 @@ checks:
     the view twice), and every such write names the view (PLAT_VIEW_*) or is in WRITE_EXEMPT;
   - a textured full-screen sprite whose u spans 255 texels or more (a copy of the target, the display or a
     capture) is in a row with KH1_FS_U, or the send is in EXEMPT;
-  - every fullscreen.c row is still a send (no stale rows).
+  - every fullscreen.c row is still a send (no stale rows);
+  - (session 100) the other GIF paths: the chains sent through sceDmaSend (PlatDmaSend, the tag in a1) and
+    gspkt.c's func_00237018 get the same walk, so a static full-screen packet there needs a row too; and a
+    function in src/ that writes both 4:3 edges as literals (a left 0x7000 / 0x6FE0 / 0x6FC0 and a right
+    0x9000 / 0x8FE0 / 0x8FC0 halfword, outside `#ifdef KH1_PS2` branches and comments) builds a full-screen
+    rectangle in C that keeps the canvas: it should name the view (PLAT_VIEW_GX0 / GX1) or be in LIT_EXEMPT.
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -35,6 +40,9 @@ sys.path.insert(0, os.path.join(ROOT, "tools", "vu"))
 import gs_packets as gp  # noqa: E402
 
 SEND_FN = 0x00106B18
+# the other GIF senders: (function, the tag's argument register)
+OTHER_SENDERS = ((0x00266F38, 5), (0x00237018, 4), (0x001E05A8, 4))
+# sceDmaSend (a1), gspkt.c func_00237018 (a0), frame.c func_001e05a8 (a0: the stored frame's path-2 sends)
 X0, X1, XH = 0x7000, 0x9000, 0x8000  # the canvas's edges and its half, in sixteenths
 SLACK = 4 * 16
 # a 4:3 edge as a C literal's low halfword: 0x7000 / 0x9000 and the blurs' -2 / -4 px bases
@@ -54,12 +62,26 @@ WRITE_EXEMPT = {
     ("D_002A6970[11]", "(u64)y"): "brightfade.c case 2's flash: its right edge is the movie buffer's width",
 }
 
+# functions whose C writes both 4:3 edges on purpose (none today): "file:function" -> reason
+LIT_EXEMPT = {}
+LEFT, RIGHT = {0x7000, 0x6FE0, 0x6FC0}, {0x9000, 0x8FE0, 0x8FC0}
+FUNC = re.compile(r"^[A-Za-z_][\w \*]*?\b(\w+)\s*\([^;{}]*\)\s*\{", re.M)
+# a literal compared against (a loop bound, a range test) is not a coordinate
+CMP = re.compile(r"[<>]=?\s*$")
+
 SEND_C = re.compile(r"\bfunc_00106b18\s*\(\s*(?:\([^()]*\)\s*)?&?\s*(D_[0-9A-F]{8})\s*\)")
 DECL = re.compile(r"\bextern\s+(u64|s64|u32|s32)\s+(D_[0-9A-F]{8})\s*\[\s*\]")
 WRITE = re.compile(r"\b(D_[0-9A-F]{8})\s*\[\s*(\d+|0x[0-9a-fA-F]+)\s*\]\s*=(?!=)")
 ROW = re.compile(r"\{\s*(D_[0-9A-F]{8})\s*,\s*([A-Z_0-9| ]+?)\s*,\s*\"([^\"]*)\"\s*\}")
 SIZE = {"u64": 8, "s64": 8, "u32": 4, "s32": 4}
 XYZ_REGS = (0x04, 0x05, 0x0C, 0x0D)
+
+
+def edge_literal(expr):
+    """a 4:3 edge in an expression: a hex literal whose low halfword is one, or the decimal 28672 / 36864
+    (the stored frame's float maths)"""
+    return any(int(h, 16) & 0xFFFF in EDGES for h in re.findall(r"0x([0-9a-fA-F]+)", expr)) or \
+        bool(re.search(r"(?<![\w.])(28672|36864)(\.0*f?)?(?![\w.])", expr))
 
 
 def table(path):
@@ -78,15 +100,28 @@ def c_sources(src):
                 yield os.path.join(dp, f)
 
 
-def scan_c(src):
+def header_sizes(inc):
+    """the u64 / u32 arrays the headers declare (session 100: data_003D.h's D_003DAE40)"""
+    sizes = {}
+    for dp, _dn, fn in sorted(os.walk(inc)):
+        for f in sorted(fn):
+            if f.endswith(".h"):
+                for t, n in DECL.findall(open(os.path.join(dp, f), errors="replace").read()):
+                    sizes.setdefault(n, SIZE[t])
+    return sizes
+
+
+def scan_c(src, inc=os.path.join(ROOT, "include")):
     """the sends named in C, and every constant-index write: address -> [(word, expression, file:line)]"""
     sends, writes = {}, {}
+    hsizes = header_sizes(inc)
     for path in c_sources(src):
         text = open(path, errors="replace").read()
         rel = os.path.relpath(path, ROOT)
         for m in SEND_C.finditer(text):
             sends.setdefault(m.group(1), rel)
-        sizes = {n: SIZE[t] for t, n in DECL.findall(text)}
+        sizes = dict(hsizes)
+        sizes.update({n: SIZE[t] for t, n in DECL.findall(text)})
         for m in WRITE.finditer(text):
             sym, idx = m.group(1), int(m.group(2), 0)
             if sym not in sizes:
@@ -99,6 +134,48 @@ def scan_c(src):
             addr = int(sym[2:], 16) + idx * sizes[sym]
             writes.setdefault(addr, []).append(("%s[%d]" % (sym, idx), expr, "%s:%d" % (rel, line)))
     return sends, writes
+
+
+def strip_ps2(text):
+    """the text a port compiles: comments and `#ifdef KH1_PS2` (or `#ifndef`'s else) branches blanked,
+    line numbers kept"""
+    text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
+    text = re.sub(r"//[^\n]*", "", text)
+    out, stack = [], []
+    for line in text.split("\n"):
+        m = re.match(r"\s*#\s*(ifdef|ifndef|if|else|elif|endif)\b\s*(\S*)", line)
+        if m:
+            d, arg = m.groups()
+            if d in ("ifdef", "ifndef", "if"):
+                stack.append([arg == "KH1_PS2" and d != "if", d == "ifdef" and arg == "KH1_PS2"])
+            elif d in ("else", "elif") and stack and stack[-1][0]:
+                stack[-1][1] = not stack[-1][1]
+            elif d == "endif" and stack:
+                stack.pop()
+            out.append("")
+            continue
+        out.append("" if any(drop for _ps2, drop in stack) else line)
+    return "\n".join(out)
+
+
+def literal_rects(src):
+    """functions whose port C holds both a left and a right 4:3 edge literal: (file, function, line, lits)"""
+    found = []
+    for path in c_sources(src):
+        text = strip_ps2(open(path, errors="replace").read())
+        rel = os.path.relpath(path, ROOT) if path.startswith(ROOT) else path
+        heads = [(m.start(), m.group(1)) for m in FUNC.finditer(text)] + [(len(text), None)]
+        for (a, name), (b, _n) in zip(heads, heads[1:]):
+            body = text[a:b]
+            lo, hi = set(), set()
+            for m in re.finditer(r"0x([0-9a-fA-F]+)", body):
+                if CMP.search(body[max(0, m.start() - 4):m.start()]):
+                    continue
+                h = int(m.group(1), 16) & 0xFFFF
+                (lo if h in LEFT else hi if h in RIGHT else set()).add(m.group(0))
+            if lo and hi:
+                found.append((rel, name, text.count("\n", 0, a) + 1, sorted(lo) + sorted(hi)))
+    return found
 
 
 def regs(img, head):
@@ -225,6 +302,10 @@ def main():
         sends.setdefault("D_%08X" % a, "func_%08x" % fn)
     for s, f in csends.items():
         sends.setdefault(s, f)
+    for fn, reg in OTHER_SENDERS:
+        for _site, f, a in gp.callers(img, Path(args.layout), fn, reg):
+            if img.ok(a):
+                sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
     problems, nfull = [], 0
     for s in sorted(sends):
@@ -252,7 +333,7 @@ def main():
             if n and want not in flags:
                 problems.append("%s (%s): %d %s sprite(s) with XYZ in data, and no %s row in %s" % (
                     s, sends[s], n, k, want, os.path.relpath(args.table, ROOT)))
-        if not static and flags & {"KH1_FS_X", "KH1_FS_XS"}:
+        if not static and flags & {"KH1_FS_X", "KH1_FS_XS"}:  # all from C: the C names the view instead
             problems.append("%s (%s): its XYZ are written from C, but its row stretches X too" % (s, sends[s]))
         if textured and "KH1_FS_U" not in flags:
             problems.append("%s (%s): %d copy sprite(s) (u over %g texels) and no KH1_FS_U row" % (
@@ -268,9 +349,16 @@ def main():
                                     "width (PLAT_VIEW_W16 / 2)" % (s, sends[s], ws[0][2]))
                 continue
             for word, expr, where in ws:
+                if flags & {"KH1_FS_X", "KH1_FS_XS"}:
+                    # session 100: a send stretched by its row (static sprites beside C-written ones, the
+                    # stored frame's zoom) keeps canvas units in C; the view there would count twice
+                    if "PLAT_VIEW" in expr:
+                        problems.append("%s (%s) writes %s = %s: the view's edge in a send its row stretches "
+                                        "(canvas units there)" % (where, s, word, expr))
+                    continue
                 if "PLAT_VIEW" in expr or any(kk == word and pp in expr for kk, pp in WRITE_EXEMPT):
                     continue
-                if any(int(h, 16) & 0xFFFF in EDGES for h in re.findall(r"0x([0-9a-fA-F]+)", expr)):
+                if edge_literal(expr):
                     problems.append("%s (%s) writes %s = %s: a 4:3 edge, not the view's (PLAT_VIEW_GX0 / GX1)" % (
                         where, s, word, expr))
     for s, (_f, name) in rows.items():
@@ -279,10 +367,22 @@ def main():
     for s in EXEMPT:
         if s not in sends:
             problems.append("%s: in EXEMPT, but no send of it" % s)
+    lits = literal_rects(args.src)
+    for rel, name, line, ls in lits:
+        key = "%s:%s" % (os.path.basename(rel), name)
+        if args.v:
+            print("%s:%d %s: both 4:3 edges as literals (%s)%s" % (rel, line, name, ", ".join(ls),
+                                                                   " (exempt)" if key in LIT_EXEMPT else ""))
+        if key not in LIT_EXEMPT:
+            problems.append("%s:%d %s writes both 4:3 edges (%s): a full-screen rectangle built in C names the "
+                            "view (PLAT_VIEW_GX0 / GX1) or is in LIT_EXEMPT" % (rel, line, name, ", ".join(ls)))
+    for k in LIT_EXEMPT:
+        if not any("%s:%s" % (os.path.basename(r), n) == k for r, n, _l, _ls in lits):
+            problems.append("%s: in LIT_EXEMPT, but no longer writes both edges" % k)
     for p in problems:
         print("fscheck: " + p)
-    print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d problems" % (
-        len(sends), nfull, len(rows), len(EXEMPT), len(problems)))
+    print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
+          "%d problems" % (len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(problems)))
     sys.exit(1 if problems else 0)
 
 
