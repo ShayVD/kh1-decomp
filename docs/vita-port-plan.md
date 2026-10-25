@@ -1876,6 +1876,27 @@ byte-identical, the float ELF the same, no float-untested row). selftest PASS (p
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1al Session 98: the other copies walked, the stored frame's row
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). **No change under src/** (kh1.elf
+byte-identical, the float ELF the same, no float-untested row). selftest PASS (present_test 30 -> 46 checks).
+
+- **The other copies' shapes** (item 4a): the copy into the Z area `D_002A5FD0`, the spin copy `D_002A4ED0`
+  and the spin strip `D_002A4FC0` read from the ELF (renderer-spec 5.4 "Session 98": v ranges, CLAMP,
+  SCISSOR). The two sprite copies are built in present_test and walked at 4:3 and under the wide stretch:
+  each lands where fullscreen.c's row says for a view-wide renderer; in the 512-wide model the Z-area copy
+  shows the frame copy's margin shift and the spin copy shows it twice (it reads the shifted display). The
+  Z-area copy never writes the Z area's last column and row (x -1.5 .. 510.5). The stretch scales the
+  copies' sub-texel offsets (0.5 / 1.5 / 1 -> 0.66 / 1.99 / 1.32), a third of a texel at most.
+- **Correction**: the frame copy's PRIM `0x116` is SPRITE|TME|FST, not ABE (session 97's note): the copy is
+  opaque. present_test's packet now matches.
+- **The fake-disc wide run** (item 4b): the frame copy's 80 strips, the clear and the display clear at
+  -82.8 .. 594.8 with the view's scissor. **A missed full-screen send**: capture.c's `D_002B66B0` (the stored
+  frame drawn back over the target as it fades) stayed at 0 .. 512; host/port/fullscreen.c has its row now
+  (X and u) and the rerun shows it at the view's width.
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -2272,6 +2272,7 @@ through `func_00106b18`, read with `gs_packets.py -v`), with what stretches:
 | `D_002A4FC0` the spin's turned strip `D_002A4F60` (u 0.5 .. 512.5) | target | u only: its XYZ come from C, already wide (`func_00102cc8`'s `PLAT_VIEW_W16`) |
 | `D_002B6760` the menu capture (u 0 .. 512 to x 1792 .. 2048, a half-size buffer of its own) | capture | u, and X scaled from the buffer's left edge without the view's offset (`KH1_FS_XS`) |
 | `D_002BC980` **the display clear** (dispenv.c `func_0010ff60`, a grey level over 512 x 448; not in session 92's list) | display | X |
+| `D_002B66B0` **the stored frame back** (capture.c, session 98: the frame stored to main memory, loaded into the Z area by `func_00109f88`, drawn over the target fading) | target | X and u |
 
 The rule (`include/platform/canvas.h`): **X** from canvas 0 .. 512 to the view's `x0 .. x0 + w` (in canvas
 sixteenths, `-1325 .. 9517` at 960 x 544: X' = 0x7000 + x0 + (X - 0x7000) w / 8192, rounded half up, so the
@@ -2396,7 +2397,8 @@ and its uploads' sprites through the copy, not the 3D (the model has none). gsme
 **The copy's packet, read from the ELF** (`D_002A6890`, one REFE of 0x2C qwords at `D_002A65D0`): a
 PACKED GIFtag of 6 x A+D (`FRAME_1` the display, FBP 0 FBW 8 CT24; `ZBUF_1` ZMSK 1; `TEX0_1` the target
 `0x1A00` TBW 8 CT24, TW / TH 9, TCC, MODULATE; `TEST_1` ZTE ZTST ALWAYS; `TEX1_1` 0x60, bilinear both ways;
-`ALPHA_1` 0x44, `(Cs - Cd) As + Cd`), a REGLIST of PRIM `0x116` (SPRITE|TME|ABE|FST) and RGBAQ `0x80808080`,
+`ALPHA_1` 0x44, `(Cs - Cd) As + Cd`), a REGLIST of PRIM `0x116` (SPRITE|TME|FST; *session 98: not ABE,
+`0x116` has no bit 6, so the copy is opaque and its ALPHA_1 unused*) and RGBAQ `0x80808080`,
 a REGLIST of 16 x (UV XYZ2 UV XYZ2): strip k is x `0x7000 + 0x200k` .. `+ 0x200` (32 px) over y `0x7400` ..
 `0x9000` (all **448** display lines), u `32k + 0.5` .. `32k + 32.5` and **v 0 .. 384**: the target's 384
 lines stretched to the display's 448 (NTSC's taller pixels, so a port presents the target's 384 rows as the
@@ -2426,6 +2428,54 @@ letterbox are stretched to it (fullscreen.c), and the frame copy reads it whole 
 edge, 677.6 texels at 960 x 544). The PS2's 512-wide target has no pixel there, so the host model cannot
 show the sides; the first picture of them is the renderer's own (vita-port-plan 5, step 3). The HUD is
 drawn after the copy and moves by its anchors (5.3.1), in canvas coordinates, not the shifted ones.
+
+#### Session 98: the other copies' shapes, the stored frame's row (static + host)
+
+**Read from the ELF** (`gs_packets.py -v`, the raw PRIM words checked), the three copies session 93 listed
+beside the frame copy, and one it missed:
+
+| Send | From -> into | Geometry (canvas pixels) | u / v | PRIM | Filter, CLAMP, SCISSOR |
+| --- | --- | --- | --- | --- | --- |
+| `D_002A5FD0` the copy into the Z area (REFE 0x2F qwords at `D_002A5CE0`) | the target `0x1A00` CT24 -> FBP `0x70` CT24 (the Z buffer's memory; `ZBUF ZBP 0 ZMSK 1` meanwhile) | 16 strips of 32, x `32k - 1.5 .. 32k + 30.5`, y `-1.5 .. 382.5` | u `32k .. 32k + 32`, **v 0 .. 384**: one texel a pixel, so pixel p reads texel p + 1.5 (bilinear: the mean of p + 1 and p + 2), across and down | `0x116` SPRITE TME FST, RGBAQ 0x80 | bilinear; CLAMP and SCISSOR the environment's (not in the packet); EOP sets `ZBUF` back (ZMSK 0), `FRAME` the target CT32 and `TEX0` `0x0E00` CT24 for the next draw (the sway / lens grid reads it) |
+| `D_002A4ED0` the spin copy (REFE 12 qwords at `D_002A4E10`) | the display (block 0) CT24, TCC 0 -> the target FBP `0xD0` CT32 | one sprite 0 .. 512 x 0 .. 384 | u 1 .. 513, **v 0 .. 448**: the display's 448 lines shrunk to 384, one texel right | `0x116` | bilinear; `CLAMP_1` CLAMP both ways (u 512 reads 511); `SCISSOR_1` 0 .. 511 x 0 .. 383 |
+| `D_002A4FC0` the spin strip (REF chain: the state, then 16 x (a column `SCISSOR_1` `D_002A46D0` + 0x20k, the strip `D_002A4F60`), then `D_002A48D0`'s full `SCISSOR_1` and `ZBUF` ZMSK 0, END) | the display CT24, TCC 0 -> the target CT32 | the turned quad, XYZ from C (`func_00102cc8`) | u 0.5 .. 512.5, **v 0.5 .. 448.5** (texel centres, the whole display) | `0x154` TRISTRIP TME ABE FST, RGBAQ alpha 16 (C overwrites it) | bilinear; CLAMP both ways; each column x 32k .. 32k + 31 of 384 lines |
+| `D_002B66B0` **the stored frame back** (REFE 12 qwords at `D_002B65F0`; capture.c `func_0010a120` / `func_0010a248` / `func_0010a378`) | the Z area `0x0E00` CT24 (where `func_00109f88` loaded the stored 512 x 384 frame, in two 192-line halves at `0x0E00` / `0x1400`) -> the current FRAME (the target) | one sprite x -0.5 .. 511.5, y -0.5 .. 383.5 | u 0 .. 512, v 0 .. 384 (texel centres) | `0x116`, its RGBAQ from `D_002B6668` (the fade: grey `c` from 128 down to 0, MODULATE) | TEXFLUSH first; `ZBUF` ZMSK 1, then 0; TEST ZTST ALWAYS |
+
+**The Z-area copy leaves the Z area's last column and row alone**: x -1.5 .. 510.5 covers pixels 0 .. 510
+(the GS draws x0 <= x < x1), y 0 .. 382, so 511 x 383 pixels; column 511 and row 383 keep the Z buffer's
+depth bits read as colour. The lens grid's CLAMP REGION U 0 .. 510 (5.4 "Session 94") keeps its reads
+inside. A port's copy (one draw) should do the same: 1.5 texels up-left and the last
+column / row not part of the picture.
+
+**Walked under the wide stretch** (tests/host/present_test.c, a made-up colour per pixel that names its
+texel; the model point-samples, the texel at the pixel's left / top edge, so its offsets are whole):
+
+- **Z-area copy**: at 4:3 pixel p holds the target's p + 1 (+1.5 bilinear), rows the same, 16 strips with no
+  seam. Under `KH1_FS_X | KH1_FS_U` its X goes to -84.8 .. 592.9 and u to 0 .. 677.6, so in the model's
+  512-wide Z area pixel p holds **the target's p + 84** (82.8 + 1.99): the frame copy's margin shift (5.4
+  "Session 97"), plus the 1.5 scaled by the stretch (1.32). In a renderer whose target is the view's width it
+  lands where the row says: view pixel p reads view texel p + 1.99.
+- **Spin copy**: at 4:3 target pixel (t, r) holds the display's (t + 1, r x 448 / 384), the last column
+  clamped (511). Under the stretch the model's target pixel t reads **the display's t + 84** (83 from 428 on,
+  the stretch's rounding), past 512 clamped; and the model's display already holds canvas d + 82.8 (the
+  frame copy's shift), so **in the model the margin counts twice** for the spin. A renderer's view-wide
+  display gives canvas t + 1.32: right, with the one texel scaled.
+- **Spin strip**: a TRISTRIP, not in the GS memory model (no triangles); its u stretch (0.66 .. 678.3) and
+  the 16 columns read as the view's 16 (`kh1_canvas_scissor`, session 93) are the row's whole effect.
+- **The stretch scales the copies' sub-pixel offsets**: frame copy u 0.5 -> 0.66, the Z-area copy's 1.5 ->
+  1.99, the spin copy's 1 -> 1.32 texels. A third of a texel or less of bilinear shift, invisible next to
+  the 448 -> 384 resampling; a renderer drawing its own copies keeps the PS2's offsets (0.5, 1.5, 1) and
+  needs no row at all.
+
+**The fake disc's wide run** (item 4b; `KH1_HOST_OVL=stub:2 KH1_HOST_WIDE=1 KH1_HOST_TRACE=5`, 6 frames to
+the known stop in `func_00132790`, `gsstate.py --extents`): the clear `D_002A6500` (7 sends, 112
+sprites), the display clear `D_002BC980` and **the frame copy `D_002A6890` (5 sends, 80 strips) at -82.8 ..
+594.8**, x 384 / 448, with "(scissor: the view)". One full-screen send stayed at **-0.5 .. 511.5**:
+`D_002B66B0`, the stored frame back (above), which session 93's list missed. It reads a buffer laid out
+like the target (capture.c's image stores and loads are platform calls sized by the port's target, the
+static packets list above), so fullscreen.c now has
+its row (`KH1_FS_X | KH1_FS_U`); the rerun shows it at -83.5 .. 594.1 (the -0.5 scaled) with the view's
+scissor. `--draws --targets --uploads --sends` identical with and without `KH1_HOST_WIDE`.
 
 #### Open (need the real disc or a boot)
 

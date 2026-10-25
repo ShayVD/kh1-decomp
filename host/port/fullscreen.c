@@ -6,7 +6,7 @@
 #include "platform/fullscreen.h"
 
 extern u8 D_002A6500[], D_002A6890[], D_002A6070[], D_002A61E0[], D_002A5FD0[], D_002A4ED0[];
-extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[], D_002A6110[];
+extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[], D_002A6110[], D_002B66B0[];
 
 const KH1FullScreen kh1_fullscreen[] = {
     /* brightfade.c: the clear, 16 black sprites of 32 px, x 1792 .. 2304 (each column a sprite) */
@@ -29,6 +29,10 @@ const KH1FullScreen kh1_fullscreen[] = {
      * 1792 .. 2048 = its pixels 0 .. 256): the buffer is the port's, the view's half wide, so x scales
      * from its left edge without the view's offset */
     { D_002B6760, KH1_FS_XS | KH1_FS_U, "menu capture" },
+    /* capture.c func_0010a120 / func_0010a248 / func_0010a378 (session 98, seen in the fake-disc wide run
+     * at 0 .. 512): the stored frame, loaded back into the Z area by func_00109f88 (512 x 384, the port's
+     * target size), drawn over the target, u 0 .. 512 at x 1791.5 .. 2303.5, its colour fading */
+    { D_002B66B0, KH1_FS_X | KH1_FS_U, "stored frame back" },
     /* dispenv.c func_0010ff60 (session 93): the display cleared to a grey level, one sprite 1792 .. 2304
      * x 1856 .. 2304 under SCISSOR_1 0 .. 511 x 0 .. 447 (the scissor rule's display case) */
     { D_002BC980, KH1_FS_X, "display clear" },
