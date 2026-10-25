@@ -1133,6 +1133,45 @@ the immediate list, then the main-thread sends in task order.
 register, a glyph tag with no PRE; the list frame's 18-vertex tag with ADC on v6 / v7 / v12 / v13 drawing 12
 triangles; XYZ3 in a fan). gsregs.c already did what the GS does: no change.
 
+### 5.1v Session 82: the Z formats in the memory model, the draw list's key map, the replay's flush
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only host/, tests/, tools/host and docs/
+changed: kh1.elf is byte-identical, every out/build object bit-identical (sha1 of all 677 before and after), no
+src/ or shift input touched, so the float ELF is the same and there is no float-untested.md row.
+
+**The Z formats** (renderer-spec 5.2, item 4a): host/null/gsmem.c's `kh1_gsmem_addr` now has PSMZ32 / Z24 /
+Z16 / Z16S (the colour twin's layout with the final block number XORed with `0x18`, as PCSX2 does) and
+PSMCT16S (its own block order), reads and writes them, decodes them as textures, takes CT16S CLUTs, and marks a
+draw's Z target's pages through the same address function. Inside a page a Z32 / Z24 pixel (x, y) is the CT32
+pixel (x ^ 32, y ^ 16); Z16 (x ^ 32, y ^ 32). Checked against PCSX2's tables on 30 M addresses outside the repo;
+gsmem_test.c 52 -> 61 checks (fixed Z / CT16S addresses, CT32 vs Z32 of the same block, a Z24 upload read back
+as CT24 in the swapped quarter, a Z16S upload). For the port: a CT24 sample of a depth buffer (the capture,
+`D_002B66B0`) needs that quarter swap in the shader.
+
+**The draw list's key map** (item 4b): **`tools/host/drawkeys.py`** (new) lists every draw / immediate list
+insert with its key, followed through the wrappers to literal keys; the table is in renderer-spec 4.12 (38 rows;
+renderer B's per-entry keys are the only data-driven ones). The port's command list is this order.
+
+**sendorder.py** (item 4c): its pattern missed a plain cast on the callback (`(s32) &func_X`): 4 more
+registrations (164 -> 168), one sending (brightfade's `func_00106460`, after the immediate list, behind a sync).
+No registration has a non-literal key; `--all` now also lists any call the pattern cannot read (none). Still
+only the in-game menu sends between the draw list's start and the immediate list.
+
+**How the replay flushes a pending list before a main-thread send** (item 4c): on the Vita the draw list is not
+consumed by interrupts; the port records each node as a command and replays them. The rule that keeps the
+console's order: **a list is "pending" from task `0x9C40` (`func_0015eb78` hands it over) until its replay has
+run, and every main-thread GS send first replays whatever is pending.** Concretely, `PlatGsSyncPath` (any mode)
+and every main-thread `PlatDmaSend` on ch 1 / ch 2 / `PlatGsPutDrawEnv` call one `kh1_gs_flush_pending()` that
+replays the pending draw list to its end (and, at task `0x27CB8`, the immediate list), then returns; the send
+then goes into the command stream after it. That is what the console does for every synced sender (they wait
+for the list to drain) and what it nearly always does for the in-game menu's unsynced first send (the list
+ends long before task key `0x270FF`; renderer-spec 4.12). The send itself does not wait for the GPU: the
+flush only orders commands, so the cost is a function call when nothing is pending. Uploads in such a send
+(the window font) go to gsmem.c's model and the texture cache after the replayed draws, so a draw of the
+pending list never samples the upload's data, as on the console. The DMAC handlers the null platform runs
+(5.1h) become this replay: the port's `func_0015ea98` runs the list in one loop, its `sceGsSyncPath(1, 0)`
+answering idle at once.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

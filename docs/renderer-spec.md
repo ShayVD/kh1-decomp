@@ -1249,6 +1249,42 @@ draw list to its end, then the immediate list, then the main-thread sends in tas
 made while a list is pending (the menu) runs after that list, which is the console's normal case. The GIF's
 path arbitration (PATH1 over PATH2 over PATH3 at packet ends) never needs modelling. Approximate: sendorder.py
 follows calls by name in source order (not branches) and skips registrations with a non-literal key.
+Session 82: the pattern also reads a plain cast on the callback (`(s32) &func_X`): four more registrations
+(168 in all, every one with a literal key; `--all` lists any it cannot read: none), one of them sending
+(brightfade's `func_00106460` at `0x2E646`, after the immediate list, through `func_00106b18`'s sync). Still
+3 RACE rows, all the in-game menu.
+
+**The draw list's key map** (session 82, `python3 -I tools/host/drawkeys.py [--tsv OUT]`): every insert into
+the draw list (`func_0015ed80(key, cb)`, `func_00106bd8(packet, key)`, which queues `func_00106b98` sending
+`packet` on the GIF) and the immediate list (`func_0015ee78`), a key that is a wrapper's parameter followed to
+its callers by name (`func_00100670`, `func_00107d30`, `func_001085e8`, `func_00106e98`, `func_00108f18`,
+`func_00108fd0`, `func_00114f50`, `func_00114a38`), a variable assigned once from a literal read as it
+(`D_004F82C4 = 60000`). Draw-list keys are their own space (not task keys). 38 rows, sorted; decimal here
+because the C writes most of them so:
+
+| Key | Inserted by | Callback / payload | What it is |
+| --- | --- | --- | --- |
+| 10000 + n | texanim.c `func_00101bb8` (n: the running count `D_004945F0`) | `func_001019c8` | texture animation steps, one node each, in the order made |
+| 10010 | field.c `func_001008e8`; display.c `func_00110ce0` | `func_00106b98` `D_0029B170` / `D_002BC9F0`; renderer A `func_00108d90` (via `func_00108f18`) | context-2 state packet (§4.11), then the first renderer A objects |
+| 10020 | field.c `func_00100988` | packet `D_0029B1C0`; `func_00108d90` (`func_00100670`), `func_00106db0` (`func_00107d30`), `func_00106e18` (`func_00106e98`: an upload to `0x3600`) | state packet, then the field's renderer A chains |
+| 20499 | mdldraw `func_00160370` | `func_0015f388` | renderer B's GS state reset |
+| 40000 | roommdl.c `func_00114a38` | packet `D_002BD140` (before the first model: equal keys keep insertion order); objdraw `func_001369e8` > `func_00114a38` > `func_00108df8`: `func_00108d90` when `v[3] >= 1.0` | the room / object meshes, opaque |
+| 45499 | shadow.c `func_00128440` | `func_001274c8` (`D_004F8270`) | shadow pass state (per frame; also resets the shadow count) |
+| 50000 | field.c `func_00100988`; grideff `func_00108708` | packet `D_0029B200`; `func_00108d90`, `func_00106db0`, `func_00106e18` | state packet, then the fade groups (§4.11) |
+| 50010 | objdraw `func_001369e8` (`v[3] < 1.0`) | `func_00108d90` | the translucent props |
+| 50100 | field.c `func_00100988` | packet `D_0029B260` | state packet |
+| 60000 + n | shadow.nostrict.c `func_00127568`, `func_00127c20`; shadow.c `func_00127b18` (n: `D_004F82C0`, reset to 0 by `func_00128440`) | `func_00127500` (a heap chain), `func_001274c8`, `func_00108d90` (`func_00114f50`, `func_001149e8` > `func_00108fd0`) | the shadows, in the order cast |
+| 60499 | shadow.c `func_00128440` | `func_001274c8` (`D_004F8270`) | shadow pass end state |
+| 70499 | mdldraw `func_00160370` | `func_0015f388` | renderer B's reset again |
+| 90000 + 10 id + 0 ... 6 | texanim.c `func_00102118` (id: the animation's) | +0 the caller's `fn`, +1 packets `D_002A4310` / `D_002A44E0`, +2 / +5 `func_00101f30`, +3 `func_00101f80`, +4 `D_002A43A0` / `D_002A4570`, +6 `D_002A45C0` | per-animation passes (packets with `FBMSK=0xFF000000` and point sampling, §3.2) |
+| *data* | mdldraw `func_00160370` | `func_0015ff78` (renderer B, one node per entry) | `e->x28`: the model's priority (`p->xe`, `p->x1a`, `prio`) moved by its depth-order index and clamped to [prio - 500, prio + 499], except priorities 59500 ... 60499 (the shadow band) and models flagged `0x10000`, which keep it; flagged `x4 & 8` / `0x20000` entries go to the immediate list |
+
+Immediate list: renderer B's entries at key 0 (`func_00161de8`) and their `e->x28`, and `func_0015f388` at 0
+and `0x7FFFFFFF`. So within a frame the GIF sees: texture animation steps, the 10010 / 10020 state and field
+chains, renderer B's opaque band (priorities around 20000-70000 bracketed by resets at 20499 and 70499), the
+opaque room / objects at 40000, the shadow state, the fade groups and translucent props at 50000-50100, the
+shadows at 60000+, the texture animation passes at 90000+, then the immediate list. Renderer B's priorities
+interleave with all of these by value: a port keeps one sorted list for both renderers, as the console does.
 
 ## 5. Mapping to a modern API
 
@@ -1403,9 +1439,18 @@ pixel storage mode, written by the uploads and read back as RGBA8 for a TEX0.
   nothing. tests/host/gsmem_test.c: frame and Z targets, the font in Z24's top byte, a draw reading its own
   target, an upload over a target, an HL upload keeping Z's bits, FBMSK / ZMSK / FBW 0, the SCISSOR extent,
   an MSCAL marking context 2.
-- **Not modelled**: CT16S, the Z formats' own block orders (an upload in one is counted and its data
-  taken), CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host, the pixels a draw writes
-  (a target is tracked, not rendered).
+- **CT16S and the Z formats** (session 82): CT16S orders a page's 32 blocks y0 x0 y2 y1 x1 (CT16 is y0 x0 y1
+  x1 y2), the columns inside a block as CT16's. PSMZ32 / Z24 / Z16 / Z16S are CT32 / CT32 / CT16 / CT16S with
+  the final block number XORed with `0x18` (PCSX2's swizzle32Z / 16Z / 16SZ), so inside a page **a Z32 / Z24
+  pixel (x, y) is the CT32 / CT24 pixel (x ^ 32, y ^ 16), a Z16 / Z16S one the CT16 / CT16S pixel (x ^ 32,
+  y ^ 32)**: the page's quarters swap diagonally. A CT24 texture read of a Z24 buffer (the capture's
+  `D_002B66B0` reads `0x0E00` CT24, §5.2's targets) therefore sees each page's depth with its 32x16 quarters
+  exchanged. Z uploads and reads now decode; a port that keeps depth in a GPU depth texture and samples it
+  as colour must apply the same swap in the shader (a texel offset per page). Every pixel of a 704x256
+  window at six base blocks (page-aligned and not) and four widths matched PCSX2's tables (30 M addresses,
+  outside the repo). A CLUT in CT16S (the third CPSM) now loads too. gsmem_test.c: 61 checks.
+- **Not modelled**: CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host, the pixels a
+  draw writes (a target is tracked, not rendered).
 
 `KH1_HOST_TRACE=5` prints each send's uploads (`kh1-host:   upload host dbp ...`) and
 `tools/host/gsstate.py RUN.txt --uploads` lists a run's. On the fake disc (stub:2) the same 86 sends
@@ -1413,7 +1458,7 @@ make three uploads, from three chains on the stack built by func_0011fbb0 in **f
 (src/text/text.c, called from func_00109388 at boot, after it loads the file `D_00490940` names into a
 func_001559f0 buffer): **the 16x16 CT32 CLUT at `0x3FFC` from the file's +0x10000, then the message
 font as PSMT4HL (+0) and PSMT4HH (+0x8000), 256x256 each at `0x1000` BW 4** (the CLUT §4.9's headers
-load; on the fake disc the pixels are zeros). tests/host/gsmem_test.c (36 checks, in `make test`): addresses per PSM, an upload and
+load; on the fake disc the pixels are zeros). tests/host/gsmem_test.c (36 checks then, 61 since session 82, in `make test`): addresses per PSM, an upload and
 read back per PSM, CT24 packing, the font's halves over a Z pattern, 4- and 8-bit CLUT loads with CLD 0 /
 1 / 2 / 4, the glyphs' CSA 1 read of an 8-bit CLUT, TEXA, a local copy, the cache stamp, IMAGE through
 the GIF reader. Valgrind: 0 errors to the overlay fault.

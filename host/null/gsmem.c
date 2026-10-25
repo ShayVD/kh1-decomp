@@ -9,14 +9,19 @@
  * every other row pair's halves swapped (the "column" swap of each 4-row group), the byte / nibble in
  * the word from x's bit 3 (and 4) and y's bit 1.  PSMCT24, PSMT8H, PSMT4HL and PSMT4HH share CT32's
  * addresses: CT24 writes the low 24 bits, T8H the top byte, T4HL / T4HH its two nibbles, so the
- * message font in the Z buffer's top byte (renderer-spec 5.1) leaves the Z bits alone.  Not modelled:
- * PSMCT16S, the Z formats (their block orders differ), CSM 1 (TEXCLUT), local->host.
+ * message font in the Z buffer's top byte (renderer-spec 5.1) leaves the Z bits alone.  PSMCT16S
+ * orders a page's blocks y0 x0 y2 y1 x1 (CT16's columns inside each).  The Z formats (session 82)
+ * are their colour twin (Z32 / Z24 CT32's, Z16 CT16's, Z16S CT16S's) with the final block number
+ * XORed with 0x18: a page's four block quarters swap diagonally, so a CT24 read of a Z24 buffer
+ * sees its blocks in another order.  Not modelled: CSM 1 (TEXCLUT), local->host.
  *
  * The CLUT buffer is the GS's: 512 halfwords, a CT32 entry e in halfwords e and e + 256, a CT16 entry
  * in one; a 4-bit CLUT loads 16 entries at CSA * 16 (an 8 x 2 rectangle), an 8-bit one 256 at 0 (16 x
  * 16, entries 8-15 and 16-23 of each 32 swapped; an 8-bit CLUT with CSA not 0 is not modelled); CLD
  * decides at each TEX0 / TEX2 write whether to load.  Checked against PCSX2's swizzle and CLUT
- * tables in session 80 (every pixel of a page in each of the four orders, outside the repo).
+ * tables in session 80 (every pixel of a page in each of the four orders, outside the repo); the
+ * CT16S block order and the Z formats' XOR against PCSX2's GSTables.cpp / GSLocalMemory.h (its
+ * swizzle32Z / 16Z / 16SZ: the colour tables with a block XOR of 0x18) in session 82.
  * Fed, like gsregs.c, only while KH1_HOST_TRACE >= 2 walks the chains. */
 #include "common.h"
 #include "gsmem.h"
@@ -80,6 +85,8 @@ static u32 col32(u32 x, u32 y) { return (x & 1) | (y & 1) << 1 | (x & 6) << 1 | 
 /* a block inside a page, CT32 / T8 (8 x 4 blocks: x0 y0 x1 y1 x2) and CT16 / T4 (4 x 8: y0 x0 y1 x1 y2) */
 static u32 blk32(u32 x, u32 y) { return (x & 1) | (y & 1) << 1 | (x & 2) << 1 | (y & 2) << 2 | (x & 4) << 2; }
 static u32 blk16(u32 x, u32 y) { return (y & 1) | (x & 1) << 1 | (y & 2) << 1 | (x & 2) << 2 | (y & 4) << 2; }
+/* CT16S / Z16S (4 x 8: y0 x0 y2 y1 x1) */
+static u32 blk16s(u32 x, u32 y) { return (y & 1) | (x & 1) << 1 | (y & 4) | (y & 2) << 2 | (x & 2) << 3; }
 
 /* the word of a T8 / T4 block row (by 0-15) and column x (0-7): CT32's order on 8 rows of words,
  * the halves swapped in rows 2-3 of even 4-row groups and 0-1 of odd ones */
@@ -88,16 +95,22 @@ static u32 col8w(u32 x, u32 by) {
     return col32((x & 7) ^ swap << 2, (by >> 2) * 2 + (by & 1));
 }
 
+/* the Z formats' final block XOR (0 for the colour ones) */
+static u32 zxor(u32 psm) { return (psm & 0x30) == 0x30 ? 0x18 : 0; }
+
 u32 kh1_gsmem_addr(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
     u32 b;
     x &= 2047;
     y &= 2047;
     switch (psm) {
     case KH1_PSMCT32: case KH1_PSMCT24: case KH1_PSMT8H: case KH1_PSMT4HL: case KH1_PSMT4HH:
-        b = bp + (y >> 5) * bw * 32 + (x >> 6) * 32 + blk32(x >> 3 & 7, y >> 3 & 3);
+    case KH1_PSMZ32: case KH1_PSMZ24:
+        b = (bp + (y >> 5) * bw * 32 + (x >> 6) * 32 + blk32(x >> 3 & 7, y >> 3 & 3)) ^ zxor(psm);
         return (b & 0x3FFF) * 64 + col32(x & 7, y & 7);
-    case KH1_PSMCT16:
-        b = bp + (y >> 6) * bw * 32 + (x >> 6) * 32 + blk16(x >> 4 & 3, y >> 3 & 7);
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
+        b = bp + (y >> 6) * bw * 32 + (x >> 6) * 32;
+        b += (psm & 8 ? blk16s : blk16)(x >> 4 & 3, y >> 3 & 7);
+        b ^= zxor(psm);
         return (b & 0x3FFF) * 128 + ((x >> 3 & 1) | (x & 1) << 1 | (y & 1) << 2 | (x & 6) << 2 | (y & 6) << 4);
     case KH1_PSMT8:
         b = bp + (y >> 6) * (bw >> 1) * 32 + (x >> 7) * 32 + blk32(x >> 4 & 7, y >> 4 & 3);
@@ -121,12 +134,12 @@ static void wr32(u32 w, u32 v, u32 bits) {
 u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
     u32 a = kh1_gsmem_addr(psm, bp, bw, x, y);
     switch (psm) {
-    case KH1_PSMCT32: return rd32(a);
-    case KH1_PSMCT24: return rd32(a) & 0xFFFFFF;
+    case KH1_PSMCT32: case KH1_PSMZ32: return rd32(a);
+    case KH1_PSMCT24: case KH1_PSMZ24: return rd32(a) & 0xFFFFFF;
     case KH1_PSMT8H:  return rd32(a) >> 24;
     case KH1_PSMT4HL: return rd32(a) >> 24 & 15;
     case KH1_PSMT4HH: return rd32(a) >> 28;
-    case KH1_PSMCT16: return vm[a * 2] | vm[a * 2 + 1] << 8;
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return vm[a * 2] | vm[a * 2 + 1] << 8;
     case KH1_PSMT8:   return vm[a];
     case KH1_PSMT4:   return vm[a >> 1] >> (a & 1) * 4 & 15;
     }
@@ -136,13 +149,14 @@ u32 kh1_gsmem_read_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
 static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     u32 a = kh1_gsmem_addr(psm, bp, bw, x, y);
     switch (psm) {
-    case KH1_PSMCT32: wr32(a, v, ~0u); return;
-    case KH1_PSMCT24: wr32(a, (rd32(a) & 0xFF000000u) | (v & 0xFFFFFF), 0x00FFFFFF); return;
+    case KH1_PSMCT32: case KH1_PSMZ32: wr32(a, v, ~0u); return;
+    case KH1_PSMCT24: case KH1_PSMZ24: wr32(a, (rd32(a) & 0xFF000000u) | (v & 0xFFFFFF), 0x00FFFFFF); return;
     case KH1_PSMT8H:  wr32(a, (rd32(a) & 0x00FFFFFF) | v << 24, 0xFF000000u); return;
     case KH1_PSMT4HL: wr32(a, (rd32(a) & 0xF0FFFFFFu) | (v & 15) << 24, 0x0F000000); return;
     case KH1_PSMT4HH: wr32(a, (rd32(a) & 0x0FFFFFFF) | v << 28, 0xF0000000u); return;
     /* the 16-, 8- and 4-bit layouts do not share CT32's word: the page is no longer a draw's */
-    case KH1_PSMCT16: vm[a * 2] = v; vm[a * 2 + 1] = v >> 8; page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; return;
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
+        vm[a * 2] = v; vm[a * 2 + 1] = v >> 8; page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; return;
     case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; return;
     case KH1_PSMT4:
         vm[a >> 1] = (vm[a >> 1] & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
@@ -159,6 +173,11 @@ void kh1_gsmem_write_pixel(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
 }
 
 static int known(u32 psm) { return kh1_gsmem_addr(psm, 0, 1, 0, 0) != ~0u; }
+static int bits16(u32 psm) { return psm == KH1_PSMCT16 || psm == KH1_PSMCT16S || psm == KH1_PSMZ16 || psm == KH1_PSMZ16S; }
+/* the 8 KB page an address of kh1_gsmem_addr's lies in */
+static u32 page_of(u32 psm, u32 a) {
+    return (bits16(psm) ? a >> 12 : psm == KH1_PSMT8 ? a >> 13 : psm == KH1_PSMT4 ? a >> 14 : a >> 11) & 511;
+}
 
 /* bytes a pixel of an upload takes (0 for 4 bits), the unmodelled formats included so their data
  * is still counted off */
@@ -245,6 +264,8 @@ void kh1_gsmem_image(const u32 *w, u32 n) {
     }
 }
 
+/* the CLUT formats (CPSM): CT32, CT16 and CT16S */
+static int clut_psm(u32 cpsm) { return cpsm == KH1_PSMCT32 || cpsm == KH1_PSMCT16 || cpsm == KH1_PSMCT16S; }
 static int bits8(u32 psm) { return psm == KH1_PSMT8 || psm == KH1_PSMT8H; }
 static int indexed(u32 psm) { return bits8(psm) || psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH; }
 
@@ -259,7 +280,7 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
     case 4: if (cbp == cbp0) return; cbp0 = cbp; break;
     case 5: if (cbp == cbp1) return; cbp1 = cbp; break;
     }
-    if (csm || (cpsm != KH1_PSMCT32 && cpsm != KH1_PSMCT16) || (bits8(psm) && csa)) {
+    if (csm || !clut_psm(cpsm) || (bits8(psm) && csa)) {
         st.unsupported++;
         return;
     }
@@ -296,7 +317,7 @@ int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
     u32 th = (lo >> 30 | hi << 2) & 15, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, w, h, x, y, v, e;
     if (!known(psm) || tw > 10 || th > 10) { st.unsupported++; return -1; }
-    if (indexed(psm) && (hi >> 23 & 1 || (cpsm != KH1_PSMCT32 && cpsm != KH1_PSMCT16) || (bits8(psm) && csa))) {
+    if (indexed(psm) && (hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa))) {
         st.unsupported++;
         return -1;
     }
@@ -306,9 +327,11 @@ int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
         for (x = 0; x < w; x++) {
             v = kh1_gsmem_read_pixel(psm, tbp, tbw, x, y);
             switch (psm) {
-            case KH1_PSMCT32: break;
-            case KH1_PSMCT24: v |= ((texa_lo >> 15 & 1) && !v ? 0 : texa_lo & 0xFF) << 24; break;
-            case KH1_PSMCT16: v = rgba16(v, texa_lo, texa_hi); break;
+            case KH1_PSMCT32: case KH1_PSMZ32: break;
+            case KH1_PSMCT24: case KH1_PSMZ24: v |= ((texa_lo >> 15 & 1) && !v ? 0 : texa_lo & 0xFF) << 24; break;
+            case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
+                v = rgba16(v, texa_lo, texa_hi);
+                break;
             default: /* indexed: 8 bits from entry 0, 4 bits from CSA's 16 */
                 e = bits8(psm) ? v : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + v;
                 v = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
@@ -325,14 +348,11 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
     u32 th = (lo >> 30 | hi << 2) & 15, bwid, bhgt, x, y, a, page, s = 0, bits;
     *t = 0;
+    if (!known(psm)) return 0;
+    bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
+    bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
     switch (psm) {
-    case KH1_PSMCT16: bwid = 16; bhgt = 8; break;
-    case KH1_PSMT8: bwid = 16; bhgt = 16; break;
-    case KH1_PSMT4: bwid = 32; bhgt = 16; break;
-    default: if (!known(psm)) return 0; bwid = 8; bhgt = 8; break;
-    }
-    switch (psm) {
-    case KH1_PSMCT24: bits = 0x00FFFFFF; break;
+    case KH1_PSMCT24: case KH1_PSMZ24: bits = 0x00FFFFFF; break;
     case KH1_PSMT8H:  bits = 0xFF000000u; break;
     case KH1_PSMT4HL: bits = 0x0F000000; break;
     case KH1_PSMT4HH: bits = 0xF0000000u; break;
@@ -343,7 +363,7 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     for (y = 0; y < 1u << th; y += bhgt)
         for (x = 0; x < 1u << tw; x += bwid) {
             a = kh1_gsmem_addr(psm, tbp, tbw, x, y);
-            page = psm == KH1_PSMCT16 ? a >> 12 : psm == KH1_PSMT8 ? a >> 13 : psm == KH1_PSMT4 ? a >> 14 : a >> 11;
+            page = page_of(psm, a);
             if (page_seq[page] > s) s = page_seq[page];
             if (!*t && page_drawn[page] & bits) *t = page_tgt[page];
         }
@@ -370,7 +390,7 @@ int kh1_gsmem_targets(KH1GsTarget *out, int max) {
 /* one surface drawn: its target found or added, its pages marked (again only after an upload, a copy
  * or a pixel write, or when the surface grew) */
 static void draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
-    u32 i, r, c, ph = psm == KH1_PSMCT16 || psm == 0x0A || psm == 0x32 || psm == 0x3A ? 64 : 32;
+    u32 i, r, c, ph = bits16(psm) ? 64 : 32;
     KH1GsTarget *t;
     if (!mask) return;
     for (i = 0; i < ntgt; i++)
@@ -392,9 +412,11 @@ static void draw_into(u32 fbp, u32 bw, u32 psm, u32 cols, u32 h, u32 mask) {
     if (h > t->h) t->h = h;
     t->mask |= mask;
     seq++;
+    /* each page by a pixel in it, through the PSM's own layout (a Z format's block XOR stays inside
+     * the page, so the extent is the colour twin's) */
     for (r = 0; r < (t->h + ph - 1) / ph; r++)
         for (c = 0; c < cols; c++) {
-            u32 p = (fbp + r * bw + c) & 511;
+            u32 p = page_of(psm, kh1_gsmem_addr(psm, fbp * 32, bw, c * 64, r * ph));
             page_drawn[p] |= t->mask;
             page_tgt[p] = i + 1;
             page_seq[p] = seq;
