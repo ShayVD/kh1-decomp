@@ -9,13 +9,34 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 88 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 89 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 88, 2026-10-25)
+## Where we stopped (end of session 89, 2026-10-25)
+
+- **Session 89** (static, vita-port-plan 5.1ac, renderer-spec 5.3): **the 2D layers' space, vibration,
+  the CIRCLE / CROSS swap.** renderer-spec 5.3: every 2D drawer (windows, text, field text, HUD, notices,
+  menus, markers projected from 3D) draws in 1/16 pixels of the 512 x 384 target at `(0x7000, 0x7400)`;
+  outside it only the post-copy flash, the system-message band, fade.c's ending and the 640-wide movie
+  buffer. **The target's pixels are square** (448 lines were NTSC's), so the plan is **4:3 at about
+  725 x 544 (scale 1.4167) between bars first**, one affine map on every GIF-path draw, and later a hor+
+  option (clip matrix `D_002BC020` / viewport `D_002BBF60`, full-screen passes widened, a port-side HUD
+  anchor table, markers not anchored; **renderer A's grid visibility `func_00107548` must be checked
+  first**). winmenu.c's y getter / setter use 0x7000 (no main-ELF caller). vita-port-plan 5.1ac:
+  **vibration**: type-20 patterns, `{time, level}` ramps per motor, small motor on at >= 128, large 0-255,
+  libvib's 3-profile packing; **the ELF's 7 patterns decoded** (hit reactions use 0 / 1 / 5 / 6; 2-4
+  unused in the main ELF), event and object-script patterns from the disc; vm_lib.c `func_001d39b0` was
+  commented as a sound, it starts a vibration (comment fixed); the PS TV wrapper's `SceCtrlActuator`
+  mapping and a zero when the game stops sending. **The swap**: swapping 0x2000 / 0x4000 in
+  `PlatPadRead` moves every confirm / cancel (81 raw cancels in 28 menu files, the window confirm
+  `func_001fe5a0`, the action table, selector, framectl); padrec's replay / script stay right above it.
+  **What does not follow**: the ELF's window font has no face-button icon (only L1 / R1, cells 8 / 9;
+  font sheet decoded), so the message font's button glyphs and the disc's HUD / menu textures need
+  port-side swaps, read from the real disc. Only docs/ and two src comments changed: **every out/build
+  object bit-identical**, the float ELF the same (no float-untested row).
 
 - **Session 88** (static, vita-port-plan 5.1ab, renderer-spec 4.17): **the other full-screen effects, the
   input layer, counts kept across functions.** renderer-spec 4.17: `func_00102a48` is the **menu blur**
@@ -97,25 +118,7 @@ items.
   6.8 answered from the C). Item 4c (defer as default) waits for the real-disc room run. Only docs/ and
   README.md changed: kh1.elf byte-identical, the float ELF the same (no float-untested row).
 
-- **Session 84** (static, vita-port-plan 5.1x, renderer-spec 4.12, 4.13): **the replay on the host, the
-  menu's "race" settled, renderer B's depth key, the texture steps.** **`KH1_HOST_DMAC=defer`** (null
-  platform): transfer ends and PlatEnableDmac no longer run the DMAC handlers, so the draw list stays
-  pending until `kh1_gs_flush_pending` or the new **`PlatGsListWait()`** (include/platform/gs.h, the body of
-  mdlgs.c `func_0015ef60`'s spin, nothing on the PS2) replays it. Fake disc stub:2: `gsstate.py --nodes` the
-  same with and without it; 0 sends and 3 frame-end waits found the list pending. **The in-game menu cannot
-  race the list**: task 150000 (`0x249F0`, `func_0011eda8` -> `func_0015ef60`, same task list) waits for
-  `D_00559DB4` = 0 before the menu's `0x270FF`; sendorder.py finds that wait from the C ("drained at
-  0x249f0"): **0 RACE** (was 3). **Renderer B's depth key settled**: `D_002E26C0` = view-screen
-  (`func_00110618`'s first output, w row (0, 0, 1, 0)) x camera matrix, so the root matrix's `[3][3]` is the
-  model origin's camera-space z (shadow models share the ranks). **The first texture animation kind**
-  (`func_00101bb8`, keys 10000 + n): GS-to-GS copies (TRXDIR 2): kind 0 a flipbook from a sheet in GS memory,
-  kinds 1 / 2 a vertical scroll by two copies (0 rows at frame 0: a one-step hitch at each wrap); the 160-byte
-  record layout in renderer-spec 4.13; `D_004945F0` (n) is never reset, so after ten steps the nodes sort
-  after 10010 and, after about 30,000 steps, after the room's opaque draws. gsmem_test 65 -> 67. Valgrind 0
-  errors. src/ changed only by the one hook: **every out/build object bit-identical**, the float ELF the same
-  (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-88.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-89.
 - **Nine default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043), 70 (2,041; sessions 71 to 85
   left the float ELF's bytes the same) and **86 (2,041, the current default: D_0063F640 inside the floated
@@ -236,11 +239,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 89 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 90 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s89 and /mnt/project-files/kh1-runtime/s89, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s90 and /mnt/project-files/kh1-runtime/s90, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -258,7 +261,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -279,7 +282,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
    the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
    TRIANGLE?; session 88: start from tests/host/pads/title.txt and move its frames to what the run shows). Read the
-   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 88: record the high-water marks of countcheck's
+   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles (`gsstate.py --draws`) for renderer-spec 5.3's anchor table. **Session 88: record the high-water marks of countcheck's
    DATA rows** (gdb watchpoints or a host-only hook: renderer B's `D_0055C698.x4 / .x8 / .xc` against 78 / 480 / 72,
    the collision count `D_002C12C4` against 2048, the message count `D_00389C80` against 273, the trigger boxes). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
@@ -298,20 +301,20 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    `D_002BBE04` (the screen spin)? Session 88: who calls padrec.c's recorder / replay / button script / idle timer
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
-   second repeat word (+0x14) or `D_002C5C2C`? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **The 2D layers on the Vita's screen**: the HUD, text windows, menus and
-   the system-message band are drawn in 512 x 384 target pixels (and stretched to 448 lines by the frame copy);
-   list every 2D drawer's coordinate space (target vs display, renderer-spec 3.1 / 4.9 / 4.10 / 4.15) and write
-   the port's scaling plan for 960 x 544 (4:3 pillarbox vs a wider 3D view with the HUD anchored; what assumes
-   512 wide, e.g. the 16 scissor columns and the copies of 4.16 / 4.17) into renderer-spec 5. (b) **Vibration**:
-   padvib.c's patterns (who starts them, the two motors' values, `func_00176c60` / `func_00176cc8`) for the PS
-   TV's `sceCtrlSetActuator`, in vita-port-plan 5.1ab's terms. (c) **The CIRCLE / CROSS swap**: list every
-   place the confirm / cancel buttons are named outside the pad table (the menus' raw `PAD_CIRCLE` /
-   `PAD_CROSS`, message text that names a button, button icons in the HUD) so the port's swap option knows what
-   else must follow. (d) `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses still wait for the Mac.
+   second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? Without the Mac: skip.
+4. **Static, without the Mac**: (a) **The culls under a wider view** (renderer-spec 5.3 step 2): renderer A's grid
+   visibility (`func_00107548`, grideff.c), renderer B's model visibility, `func_00121000`'s guard-band test,
+   the lock-on and target choice (do they test the 4:3 screen?), the object / effect culls: list each one's
+   frustum source (`D_002BC020`, `D_002BBF60` or its own constants) and what a hor+ projection must change.
+   (b) **The HUD's layout tables in the ELF** (`D_00458548` notices, `D_00469C94` banners, the gauges' and
+   command menu's positions): a first draft of 5.3's anchor table (left / right / centre per element). (c)
+   **Movies on the Vita**: the main ELF's side of the movie player (the 640-wide buffer at `0x118000`, the
+   IPU / MPEG calls, frame pacing, how the dkmovie.x overlay is entered) as an interface for the port's
+   video decoder (vita-port-plan 6's licence question stays open). (d) `KH1_HOST_DMAC=defer` as the default
+   and argcheck's 3 value uses still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=89`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=90`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 90) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 91) with this
    prompt: the user wants each session to start the next one without being asked.

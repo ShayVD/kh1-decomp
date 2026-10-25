@@ -6,7 +6,8 @@
  * func_00176ee0 steps both (its per-frame task, registered by pppapi.c's
  * func_00175980).  padvib.nostrict.c starts a pattern (func_00176ba8) and
  * steps one pad (func_00176cc8).  A platform wrapper (docs/portability.md)
- * belongs around the actuator writes.  Read from the code, not proved by a
+ * belongs around the actuator writes.  The patterns and their starters are
+ * in docs/vita-port-plan.md 5.1ac.  Read from the code, not proved by a
  * boot. */
 #include "common.h"
 #include "m2c.h"
