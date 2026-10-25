@@ -21,6 +21,7 @@
 #include "gsmem.h"
 #include "dmawalk.h"
 #include "platform/canvas.h"
+#include "platform/palcache.h"
 #include "present.h"
 
 void *fopen(const char *, const char *);
@@ -30,6 +31,7 @@ __SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, void *);
 int sprintf(char *, const char *, ...);
 int printf(const char *, ...);
 void *malloc(__SIZE_TYPE__);
+int memcmp(const void *, const void *, __SIZE_TYPE__);
 unsigned long kh1_host_frame(void);
 
 /* a buffer's pixel as RGB (R in bits 0-7): CT32 / CT24 as stored, CT16 / CT16S widened */
@@ -123,5 +125,89 @@ int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send
     shot_send = (u32)(unsigned long)send;
     kh1_dma_after_send = present_after;
     kh1_gsmem_flat(1); /* session 95: the clears, fades and letterbox filled into the model */
+    kh1_present_pal(1); /* session 117: the indexed decodes through the port's palette cache */
     return 0;
+}
+
+/* Session 117 (vita-port-plan 5.1be, renderer-spec 4.13 "Session 117"): the port's palette cache
+ * (host/port/palcache.c) in the present.  At each CLUT load (kh1_gsmem_clut_loaded) the entries the
+ * load's TEX0 reads (kh1_gsmem_clut, with TEXA as the register file holds it) are looked up and the
+ * slot kept as the load's; the model's indexed decodes (kh1_gsmem_palette: the point-sampled sprites
+ * and the present's textured sprites) read the texel's index in the slot's palette: the load's slot
+ * when the draw's entries are the same (no second count), otherwise a lookup of its own (CLD 0 with
+ * another CSA, a TEXA change for a CT16 CLUT).  A slot is a copy of kh1_gsmem_clut's words, so the
+ * pixels are the same with the cache as without (tests/host/present_test.c).  Each frame
+ * (kh1_host_frame) is the cache's frame; the counts are what a Vita renderer would upload: a fill is
+ * one palette upload, a hit none, a full one drawn uncached.  KH1_HOST_SHOT turns it on, and
+ * KH1_HOST_COUNTS=1 (host/null/main.c), whose report prints them at the end. */
+static KH1PalCache pal_c;
+static int pal_on, pal_cur = -1;
+static u32 pal_buf[256], pal_loads, pal_draws, pal_frames, pal_fills_now, pal_fills_max;
+static unsigned long pal_frame, pal_max_at;
+
+/* the fills of the frame pal_frame into the high-water mark */
+static void pal_mark(void) {
+    if (pal_fills_now > pal_fills_max) { pal_fills_max = pal_fills_now; pal_max_at = pal_frame; }
+}
+
+/* a lookup in frame kh1_host_frame(): a new frame for the cache when it moved (pal_frames: frames
+ * with a lookup) */
+static void pal_tick(void) {
+    unsigned long f = kh1_host_frame();
+    if (pal_frames && f == pal_frame) return;
+    if (pal_frames) {
+        pal_mark();
+        kh1_palcache_frame(&pal_c);
+    }
+    pal_fills_now = 0;
+    pal_frame = f;
+    pal_frames++;
+}
+
+static int pal_get(u32 n) {
+    int fill, i = kh1_palcache_get(&pal_c, pal_buf, n, &fill);
+    pal_fills_now += fill;
+    return i;
+}
+
+static void pal_loaded(u32 lo, u32 hi) {
+    const KH1GsState *s = kh1_gs_state();
+    u32 n = (u32)kh1_gsmem_clut(lo, hi, s->texa.lo, s->texa.hi, pal_buf);
+    pal_tick();
+    pal_loads++;
+    pal_cur = n ? pal_get(n) : -1;
+}
+
+static const u32 *pal_for(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi) {
+    u32 n = (u32)kh1_gsmem_clut(lo, hi, texa_lo, texa_hi, pal_buf);
+    const KH1PalSlot *t;
+    if (!n) return 0;
+    pal_tick();
+    t = pal_cur >= 0 ? &pal_c.slot[pal_cur] : 0;
+    if (t && t->n == n && memcmp(t->col, pal_buf, n * 4) == 0) return t->col;
+    pal_draws++;
+    pal_cur = pal_get(n);
+    return pal_cur >= 0 ? pal_c.slot[pal_cur].col : 0;
+}
+
+void kh1_present_pal(int on) {
+    pal_on = on;
+    kh1_gsmem_clut_loaded = on ? pal_loaded : 0;
+    kh1_gsmem_palette = on ? pal_for : 0;
+    if (!on) return;
+    kh1_palcache_init(&pal_c);
+    pal_cur = -1;
+    pal_loads = pal_draws = pal_frames = pal_fills_now = pal_fills_max = 0;
+    pal_frame = pal_max_at = 0;
+}
+
+const KH1PalCache *kh1_present_pal_cache(void) { return pal_on ? &pal_c : 0; }
+
+void kh1_present_pal_report(void) {
+    if (!pal_on) return;
+    pal_mark(); /* the last frame's fills */
+    printf("kh1-host: palette cache: %u CLUT loads and %u other draw lookups in %u frames with one: %u hits, %u fills, "
+           "%u uncached (every slot in use); at most %u fills in a frame (frame %lu), %.2f a frame\n",
+           pal_loads, pal_draws, pal_frames, pal_c.hits, pal_c.misses, pal_c.full, pal_fills_max, pal_max_at,
+           pal_frames ? (double)pal_c.misses / pal_frames : 0.0);
 }

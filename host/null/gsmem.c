@@ -273,6 +273,9 @@ static int clut_psm(u32 cpsm) { return cpsm == KH1_PSMCT32 || cpsm == KH1_PSMCT1
 static int bits8(u32 psm) { return psm == KH1_PSMT8 || psm == KH1_PSMT8H; }
 static int indexed(u32 psm) { return bits8(psm) || psm == KH1_PSMT4 || psm == KH1_PSMT4HL || psm == KH1_PSMT4HH; }
 
+void (*kh1_gsmem_clut_loaded)(u32 lo, u32 hi);
+const u32 *(*kh1_gsmem_palette)(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi);
+
 void kh1_gsmem_tex0(u32 lo, u32 hi) {
     u32 psm = lo >> 20 & 63, cbp = hi >> 5 & 0x3FFF, cpsm = hi >> 19 & 15, csm = hi >> 23 & 1;
     u32 csa = hi >> 24 & 31, cld = hi >> 29 & 7, e, p, v;
@@ -297,17 +300,18 @@ void kh1_gsmem_tex0(u32 lo, u32 hi) {
             clut[e] = v;
             if (cpsm == KH1_PSMCT32) clut[e + 256] = v >> 16;
         }
-        return;
-    }
-    for (e = 0; e < 16; e++) {
-        v = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
-        if (cpsm == KH1_PSMCT32) {
-            clut[(csa & 15) * 16 + e] = v;
-            clut[(csa & 15) * 16 + e + 256] = v >> 16;
-        } else {
-            clut[csa * 16 + e] = v;
+    } else {
+        for (e = 0; e < 16; e++) {
+            v = kh1_gsmem_read_pixel(cpsm, cbp, 1, e & 7, e >> 3);
+            if (cpsm == KH1_PSMCT32) {
+                clut[(csa & 15) * 16 + e] = v;
+                clut[(csa & 15) * 16 + e + 256] = v >> 16;
+            } else {
+                clut[csa * 16 + e] = v;
+            }
         }
     }
+    if (kh1_gsmem_clut_loaded) kh1_gsmem_clut_loaded(lo, hi);
 }
 
 /* a CT16 colour (or CLUT entry) to RGBA8: 5 bits a channel shifted up 3, A from TEXA (TA1 with the
@@ -496,14 +500,22 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     u32 tcc = s->tex0_hi >> 2 & 1, ztst = s->test_lo >> 17 & 3, wms = s->clamp_lo & 3, wmt = s->clamp_lo >> 2 & 3;
     u32 w, h, n = 0, x, y, i, t, d, cv[4], ct[4], cd[4], fbmsk = s->frame_hi, v;
     s32 x0, y0, x1, y1, u0, v0, u1, v1, px0, px1, py0, py1, k, c, col[4], as, ad, f;
+    const u32 *pal;
     if ((p & 7) != 6 || (p & 0x130) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
     if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24) return 0;
     if (!fbw || s->test_lo & 1 || s->test_lo >> 14 & 1) return 0;            /* ATE, DATE */
     if (s->test_lo >> 16 & 1 && !(ztst == 1 && s->zbuf_hi & 1)) return 0;    /* a Z test or write */
     if (tw > 6 || th > 6 || kh1_gsmem_tex_target(s->tex0_lo, s->tex0_hi)) return 0;
-    if (kh1_gsmem_read_tex(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi, tex)) return 0;
     w = 1u << tw;
     h = 1u << th;
+    /* session 117: an indexed texture through the present's palette cache, as kh1_gsmem_flat_sprite */
+    if (tex_ok(s->tex0_lo, s->tex0_hi) && indexed(s->tex0_lo >> 20 & 63) && kh1_gsmem_palette &&
+        (pal = kh1_gsmem_palette(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi)) != 0) {
+        for (y = 0; y < h; y++)
+            for (x = 0; x < w; x++)
+                tex[y * w + x] = pal[kh1_gsmem_read_pixel(s->tex0_lo >> 20 & 63, s->tex0_lo & 0x3FFF, s->tex0_lo >> 14 & 63, x, y)];
+    } else if (kh1_gsmem_read_tex(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi, tex))
+        return 0;
     x0 = (s32)(s->xy[0] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
     y0 = (s32)(s->xy[0] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
     x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
@@ -604,6 +616,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     u32 tpsm = s->tex0_lo >> 20 & 63, tbp = s->tex0_lo & 0x3FFF, tbw = s->tex0_lo >> 14 & 63;
     u32 cpsm = s->tex0_hi >> 19 & 15, csa = s->tex0_hi >> 24 & 31, t, tx, ty;
     s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], cs[4], col[4], ad, f, u0 = 0, v0 = 0, u1 = 0, v1 = 0;
+    const u32 *pal = 0;
     if (!flat_on) return 0;
     if ((p & 7) != 6 || p >> 5 & 1) return 0;                                /* a SPRITE, FGE 0 */
     /* session 96: a textured one the exact model refused (the frame copy D_002A6890: the 3D target,
@@ -643,6 +656,9 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
      * the buffer instead of writing over the next one (blocks 0x3900 .. 0x393F, the shared texture
      * slot); kh1_gsmem_sprite keeps the GS's wrap */
     if (px1 > (s32)fbw * 64) px1 = fbw * 64;
+    /* session 117: an indexed texture's palette from the port's cache (host/null/present.c), the
+     * texel's index looked up in it; 0 (no cache, or every slot in use) decodes from the CLUT buffer */
+    if (tme && indexed(tpsm) && kh1_gsmem_palette) pal = kh1_gsmem_palette(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi);
     flat_raw = 1;
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
@@ -650,7 +666,8 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
                 tx = texel((u32)umax0(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, tw, wms);
                 ty = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, th, wmt);
-                t = texel_rgba(tpsm, tbp, tbw, cpsm, csa, tx, ty, s->texa_lo, s->texa_hi);
+                t = pal ? pal[kh1_gsmem_read_pixel(tpsm, tbp, tbw, tx, ty)]
+                        : texel_rgba(tpsm, tbp, tbw, cpsm, csa, tx, ty, s->texa_lo, s->texa_hi);
                 for (i = 0; i < 3; i++) col[i] = tfx ? (s32)(t >> i * 8 & 0xFF) : clamp255((s32)(t >> i * 8 & 0xFF) * cv[i] >> 7);
                 col[3] = tcc ? (tfx ? (s32)(t >> 24) : clamp255((s32)(t >> 24) * cv[3] >> 7)) : cv[3];
                 if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)col[3], s->test_lo >> 4 & 0xFF)) continue;
