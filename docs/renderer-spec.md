@@ -2522,6 +2522,9 @@ These are platform calls, sized by the port, but **the main-memory sizes are the
 scans the block's first 0x9000 words for a non-zero to tell an empty capture (then it sends `D_002A4DD0`).
 The simplest port rule: keep the PS2's 256 x 192 x 3 bytes in main memory (the port's store downscales the
 view's half to it, its load scales it back into its own texture), so neither constant moves.
+Session 105 (vita-port-plan 5.1as): on the host the copy is only filled with the present's fill on
+(`KH1_HOST_SHOT`), and then the blur is sent as on the PS2; under `KH1_HOST_WIDE` too the stretched copy
+(x 0 .. 338.8) overruns the model's 256-wide buffer into blocks 0x3900 .. 0x393F (host model only).
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame
