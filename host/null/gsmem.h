@@ -30,6 +30,8 @@ typedef struct {
     u32 sprite_pixels;
     u32 flat_sprites; /* untextured sprites filled for the present (kh1_gsmem_flat_sprite, session 95) */
     u32 flat_pixels;
+    u32 tex_sprites;  /* textured sprites point-sampled for the present (the frame copy, session 96) */
+    u32 tex_pixels;
 } KH1GsMemStats;
 
 /* clears the 4 MB, the CLUT buffer, the transfer and the counters */
@@ -114,7 +116,8 @@ typedef struct {
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the
  * present, without marking the pages or moving the other counters: off unless kh1_gsmem_flat(1)
- * (host/null/present.c turns it on).  Returns 1 when handled; the caller still marks the draw. */
+ * (host/null/present.c turns it on).  Session 96: a textured one kh1_gsmem_sprite refused (the frame
+ * copy), point-sampled, the same way.  Returns 1 when handled; the caller still marks the draw. */
 void kh1_gsmem_flat(int on);
 int kh1_gsmem_flat_sprite(const KH1GsSprite *s);
 

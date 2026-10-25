@@ -42,6 +42,11 @@
  *                       (host/null/present.c).  Turns on the chain walk (KH1_HOST_TRACE=2), which
  *                       feeds the model; it holds only what the model can draw (the fake disc's
  *                       frames are black).  From the user's disc: never commit the frames.
+ *   KH1_HOST_COUNTS=1   (session 96) the high-water marks of countcheck.py's DATA rows (renderer
+ *                       B's lists, the collision candidates, the message pointers, the grid cells,
+ *                       the trigger boxes, the windows' message lists), sampled at each vblank, DMA
+ *                       send and list end and printed at the end against each array's size
+ *                       (host/null/counts.c)
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -76,6 +81,9 @@ unsigned long kh1_host_frame(void) { return frames; }
 extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits; /* host/null/plat_null.c */
 extern int kh1_host_dmac_defer;
 extern unsigned kh1_snd_commands; /* host/null/sound.c */
+extern int kh1_counts_on; /* host/null/counts.c */
+void kh1_counts_sample(void);
+int kh1_counts_report(void);
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
@@ -87,6 +95,9 @@ static void summary(void) {
         fprintf(stderr, "kh1-host: %lu overlay calls answered 0 (KH1_HOST_OVL=stub)\n", ovl_calls);
     if (kh1_snd_commands)
         fprintf(stderr, "kh1-host: %u sound commands queued (KH1_HOST_SND=trace prints them)\n", kh1_snd_commands);
+    fflush(stderr);
+    kh1_counts_report();
+    fflush(stdout);
 }
 
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */
@@ -97,6 +108,7 @@ void kh1_host_vblank(void) {
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
+    kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
@@ -209,6 +221,10 @@ int main(int argc, char **argv) {
         const char *tr = getenv("KH1_HOST_TRACE");
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
+    }
+    {
+        const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */
+        kh1_counts_on = counts && *counts && strcmp(counts, "0") != 0;
     }
     {
         const char *dmac = getenv("KH1_HOST_DMAC"); /* defer: plat_null.c's replay test (session 84) */

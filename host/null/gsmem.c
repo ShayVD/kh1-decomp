@@ -317,9 +317,30 @@ static u32 rgba16(u32 v, u32 texa_lo, u32 texa_hi) {
     return (v & 31) << 3 | (v >> 5 & 31) << 11 | (v >> 10 & 31) << 19 | a << 24;
 }
 
+/* one texel (x, y) of a texture as RGBA8, the CLUT buffer's entry for an indexed PSM (checked by the
+ * caller) */
+static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y, u32 texa_lo, u32 texa_hi) {
+    u32 v = kh1_gsmem_read_pixel(psm, tbp, tbw, x, y), e;
+    switch (psm) {
+    case KH1_PSMCT32: case KH1_PSMZ32: return v;
+    case KH1_PSMCT24: case KH1_PSMZ24: return v | ((texa_lo >> 15 & 1) && !v ? 0 : texa_lo & 0xFF) << 24;
+    case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S: return rgba16(v, texa_lo, texa_hi);
+    }
+    /* indexed: 8 bits from entry 0, 4 bits from CSA's 16 */
+    e = bits8(psm) ? v : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + v;
+    return cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
+}
+
+/* the texture TEX0 names can be read (a PSM the model has, an indexed one's CLUT too) */
+static int tex_ok(u32 lo, u32 hi) {
+    u32 psm = lo >> 20 & 63, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31;
+    if (!known(psm) || (lo >> 26 & 15) > 10 || ((lo >> 30 | hi << 2) & 15) > 10) return 0;
+    return !indexed(psm) || !(hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa));
+}
+
 int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     u32 tbp = lo & 0x3FFF, tbw = lo >> 14 & 63, psm = lo >> 20 & 63, tw = lo >> 26 & 15;
-    u32 th = (lo >> 30 | hi << 2) & 15, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, w, h, x, y, v, e;
+    u32 th = (lo >> 30 | hi << 2) & 15, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, w, h, x, y;
     if (!known(psm) || tw > 10 || th > 10) { st.unsupported++; return -1; }
     if (indexed(psm) && (hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa))) {
         st.unsupported++;
@@ -328,21 +349,7 @@ int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     w = 1u << tw;
     h = 1u << th;
     for (y = 0; y < h; y++)
-        for (x = 0; x < w; x++) {
-            v = kh1_gsmem_read_pixel(psm, tbp, tbw, x, y);
-            switch (psm) {
-            case KH1_PSMCT32: case KH1_PSMZ32: break;
-            case KH1_PSMCT24: case KH1_PSMZ24: v |= ((texa_lo >> 15 & 1) && !v ? 0 : texa_lo & 0xFF) << 24; break;
-            case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
-                v = rgba16(v, texa_lo, texa_hi);
-                break;
-            default: /* indexed: 8 bits from entry 0, 4 bits from CSA's 16 */
-                e = bits8(psm) ? v : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + v;
-                v = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
-                break;
-            }
-            out[y * w + x] = v;
-        }
+        for (x = 0; x < w; x++) out[y * w + x] = texel_rgba(psm, tbp, tbw, cpsm, csa, x, y, texa_lo, texa_hi);
     return 0;
 }
 
@@ -530,7 +537,16 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
  * with ABE, FBMSK kept; a CT32 / CT24 / CT16 / CT16S FRAME (CT16: RGBA 5551).  Not drawn (0): fog, a
  * Z test other than ALWAYS (the Z buffer is not written either), DATE, an alpha test that is not
  * decided by the flat alpha alone (ATST on the one value: pass draws, fail with AFAIL KEEP skips, any
- * other AFAIL is not modelled). */
+ * other AFAIL is not modelled).
+ *
+ * Session 96: also a textured SPRITE kh1_gsmem_sprite refused (gs_sprite's flat pass runs only after
+ * it), under the same switch and the same no-mark, no-counter rule: the frame copy D_002A6890 (the 3D
+ * target 0x1A00 CT24, 512 x 512 texels, MMAG 1) is the one that matters, so the display shows what
+ * the target holds.  Point-sampled whatever TEX1 says (the texel at the pixel's left / top edge, as
+ * kh1_gsmem_sprite), the texture read as it is even in a target's pages, MODULATE / DECAL with TCC,
+ * then the alpha test per texel (AFAIL KEEP only) and the blend as above.  Not drawn (0): FST 0
+ * (STQ), TFX HIGHLIGHT(2), CLAMP's region modes, a PSM or CLUT the model has not.  Counted in
+ * tex_sprites / tex_pixels. */
 void kh1_gsmem_flat(int on) { flat_on = on; }
 
 static u32 to16(u32 v) { return (v >> 3 & 0x1F) | (v >> 11 & 0x1F) << 5 | (v >> 19 & 0x1F) << 10 | (v >> 31) << 15; }
@@ -553,15 +569,23 @@ static int atst(u32 m, u32 a, u32 ref) {
 int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
     u32 ztst = s->test_lo >> 17 & 3, n = 0, i, d, cd[4], fbmsk = s->frame_hi, v, c16; /* FBMSK: CT32's bits */
-    s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], col[4], ad, f;
+    u32 tme = p >> 4 & 1, tfx = s->tex0_hi >> 3 & 3, tcc = s->tex0_hi >> 2 & 1, wms = s->clamp_lo & 3;
+    u32 wmt = s->clamp_lo >> 2 & 3, tw = 1u << (s->tex0_lo >> 26 & 15), th = 1u << ((s->tex0_lo >> 30 | s->tex0_hi << 2) & 15);
+    u32 tpsm = s->tex0_lo >> 20 & 63, tbp = s->tex0_lo & 0x3FFF, tbw = s->tex0_lo >> 14 & 63;
+    u32 cpsm = s->tex0_hi >> 19 & 15, csa = s->tex0_hi >> 24 & 31, t, tx, ty;
+    s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], cs[4], col[4], ad, f, u0 = 0, v0 = 0, u1 = 0, v1 = 0;
     if (!flat_on) return 0;
-    if ((p & 7) != 6 || p >> 4 & 1 || p >> 5 & 1) return 0;                  /* a SPRITE, TME 0, FGE 0 */
+    if ((p & 7) != 6 || p >> 5 & 1) return 0;                                /* a SPRITE, FGE 0 */
+    /* session 96: a textured one the exact model refused (the frame copy D_002A6890: the 3D target,
+     * 512 x 512, bilinear), point-sampled: FST 1, MODULATE / DECAL, CLAMP REPEAT / CLAMP */
+    if (tme && (!(p >> 8 & 1) || tfx > 1 || wms > 1 || wmt > 1 || !tex_ok(s->tex0_lo, s->tex0_hi))) return 0;
     c16 = fpsm == KH1_PSMCT16 || fpsm == KH1_PSMCT16S;
     if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24 && !c16) return 0;
     if (!fbw || s->test_lo >> 14 & 1) return 0;                              /* DATE */
     if (s->test_lo >> 16 & 1 && ztst != 1) return 0;                         /* a Z test */
+    if (tme && s->test_lo & 1 && s->test_lo >> 12 & 3) return 0;             /* a per-texel alpha test, AFAIL not KEEP */
     for (i = 0; i < 4; i++) cv[i] = s->rgba >> i * 8 & 0xFF;
-    if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)cv[3], s->test_lo >> 4 & 0xFF)) {
+    if (!tme && s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)cv[3], s->test_lo >> 4 & 0xFF)) {
         if (s->test_lo >> 12 & 3) return 0;                                  /* AFAIL not KEEP */
         return 1;                                                            /* nothing written */
     }
@@ -569,8 +593,13 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     y0 = (s32)(s->xy[0] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
     x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
     y1 = (s32)(s->xy[1] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
-    if (x1 < x0) { k = x0; x0 = x1; x1 = k; }
-    if (y1 < y0) { k = y0; y0 = y1; y1 = k; }
+    if (tme) {
+        u0 = s->uv[0] & 0x3FFF; v0 = s->uv[0] >> 16 & 0x3FFF;
+        u1 = s->uv[1] & 0x3FFF; v1 = s->uv[1] >> 16 & 0x3FFF;
+    }
+    if (x1 < x0) { k = x0; x0 = x1; x1 = k; k = u0; u0 = u1; u1 = k; }
+    if (y1 < y0) { k = y0; y0 = y1; y1 = k; k = v0; v0 = v1; v1 = k; }
+    if (tme && (x1 == x0 || y1 == y0)) return 1;                             /* nothing covered */
     px0 = (x0 + 15) >> 4; px1 = (x1 + 15) >> 4;
     py0 = (y0 + 15) >> 4; py1 = (y1 + 15) >> 4;
     if (px0 < (s32)(s->scissor_lo & 0x7FF)) px0 = s->scissor_lo & 0x7FF;
@@ -581,17 +610,25 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
             for (i = 0; i < 4; i++) col[i] = cv[i];
+            if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
+                tx = texel((u32)(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, tw, wms);
+                ty = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, th, wmt);
+                t = texel_rgba(tpsm, tbp, tbw, cpsm, csa, tx, ty, s->texa_lo, s->texa_hi);
+                for (i = 0; i < 3; i++) col[i] = tfx ? (s32)(t >> i * 8 & 0xFF) : clamp255((s32)(t >> i * 8 & 0xFF) * cv[i] >> 7);
+                col[3] = tcc ? (tfx ? (s32)(t >> 24) : clamp255((s32)(t >> 24) * cv[3] >> 7)) : cv[3];
+                if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)col[3], s->test_lo >> 4 & 0xFF)) continue;
+            }
             d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
             if (c16) d = from16(d);
             if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
-                for (i = 0; i < 4; i++) cd[i] = d >> i * 8 & 0xFF;
+                for (i = 0; i < 4; i++) { cd[i] = d >> i * 8 & 0xFF; cs[i] = col[i]; }
                 ad = fpsm == KH1_PSMCT24 ? 0x80 : cd[3];
                 f = s->alpha_lo >> 4 & 3;
-                f = f == 0 ? cv[3] : f == 1 ? ad : (s32)(s->alpha_hi & 0xFF);
+                f = f == 0 ? cs[3] : f == 1 ? ad : (s32)(s->alpha_hi & 0xFF);
                 for (i = 0; i < 3; i++) {
-                    s32 a = sel(s->alpha_lo & 3, cv[i], cd[i]), b = sel(s->alpha_lo >> 2 & 3, cv[i], cd[i]);
+                    s32 a = sel(s->alpha_lo & 3, cs[i], cd[i]), b = sel(s->alpha_lo >> 2 & 3, cs[i], cd[i]);
                     s32 m = (a - b) * f;
-                    col[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + sel(s->alpha_lo >> 6 & 3, cv[i], cd[i]));
+                    col[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + sel(s->alpha_lo >> 6 & 3, cs[i], cd[i]));
                 }
             }
             v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
@@ -600,7 +637,12 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
             n++;
         }
     flat_raw = 0;
-    st.flat_sprites++;
-    st.flat_pixels += n;
+    if (tme) {
+        st.tex_sprites++;
+        st.tex_pixels += n;
+    } else {
+        st.flat_sprites++;
+        st.flat_pixels += n;
+    }
     return 1;
 }

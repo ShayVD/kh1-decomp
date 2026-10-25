@@ -92,8 +92,10 @@ static void null_dmac_done(int ch);
 static void null_dma_walk(int ch, u32 chcr, u32 tadr);
 static void null_gs_send(const char *what, int send);
 PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]; }
+void kh1_counts_sample(void); /* host/null/counts.c (KH1_HOST_COUNTS, session 96) */
 void PlatDmaSend(PlatDmaChan *ch, void *tag) {
     int n = (struct PlatDmaChan *)ch - null_chan;
+    kh1_counts_sample();
     null_gs_send(n == 1 ? "PlatDmaSend ch 1" : n == 2 ? "PlatDmaSend ch 2" : 0, 1);
     if (kh1_host_trace >= 2) null_dma_walk(n, ch->words[0], (u32)(unsigned long)tag);
     null_dmac_done(n);
@@ -323,6 +325,7 @@ void PlatGsListNode(int list, void *node) {
         printf("kh1-host: node %s %d cb %08x arg %08x\n", list ? "imm" : "draw", (s32)n[1], n[3], n[4]);
 }
 void PlatGsListEnd(int list) {
+    kh1_counts_sample(); /* the frame's lists are full here (host/null/counts.c) */
     if (kh1_host_trace >= 5 && null_node_count[list & 1])
         printf("kh1-host: list %s end: %u nodes, frame %lu\n", list ? "imm" : "draw", null_node_count[list & 1],
                kh1_host_frame());

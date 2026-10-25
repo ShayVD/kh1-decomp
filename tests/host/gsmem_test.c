@@ -453,6 +453,58 @@ int main(void) {
         kh1_gsmem_flat(0);
     }
 
+    /* session 96: the present's frame copy (a textured sprite kh1_gsmem_sprite refuses: 512 x 512
+     * texels of the 3D target, MMAG 1), point-sampled under the same switch: the target 0x1A00 is
+     * cleared to a colour, then copied to the display at 0 with u / v 0.5 .. 512.5 / 448.5 */
+    {
+        u32 on, draws[2], tgt[2], tx[2];
+        for (on = 0; on < 2; on++) {
+            kh1_gs_reset();
+            kh1_gsmem_flat(on);
+            kh1_gs_write(0x18, 0x7000, 0x7400);
+            kh1_gs_write(0x40, 511 << 16, 447 << 16);
+            kh1_gs_write(0x4C, 0xD0 | 8 << 16 | KH1_PSMCT24 << 24, 0); /* the 3D target */
+            kh1_gs_write(0x00, 6, 0);
+            kh1_gs_write(0x01, 0x80405060, 0x3F800000);
+            kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+            kh1_gs_write(0x05, 0x9000 | 0x8C00 << 16, 0); /* 384 lines */
+            /* the copy: MODULATE at 0x80, TCC, TEXA TA0 0x80, (Cs - Cd) As + Cd */
+            kh1_gs_write(0x4C, 0 | 8 << 16 | KH1_PSMCT24 << 24, 0);
+            kh1_gs_write(0x06, 0x1A00 | 8 << 14 | KH1_PSMCT24 << 20 | 9u << 26 | 1u << 30, 2 | 1 << 2);
+            kh1_gs_write(0x14, 1 << 5 | 1 << 6, 0);
+            kh1_gs_write(0x08, 1 | 1 << 2, 0);
+            kh1_gs_write(0x3B, 0x80, 0x80);
+            kh1_gs_write(0x42, 0x44, 0);
+            kh1_gs_write(0x00, 6 | 1 << 4 | 1 << 6 | 1 << 8, 0);
+            kh1_gs_write(0x01, 0x80808080, 0x3F800000);
+            kh1_gs_write(0x03, 8 | 8 << 16, 0);
+            kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+            kh1_gs_write(0x03, (512 * 16 + 8) | (384 * 16 + 8) << 16, 0);
+            kh1_gs_write(0x05, 0x9000 | 0x8C00 << 16, 0);
+            draws[on] = st->target_draws;
+            tgt[on] = kh1_gsmem_targets(0, 0);
+            tx[on] = st->tex_sprites;
+            if (!on) CHECK("copy off: nothing", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 100) == 0 && st->sprites == 0);
+        }
+        CHECK("copy: the target's colour on the display", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 0, 0) == 0x405060 &&
+              kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 511, 383) == 0x405060 &&
+              kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 100, 384) == 0);
+        CHECK("copy: counts", tx[0] == 0 && tx[1] == 1 && st->tex_pixels == 512 * 384 && st->flat_sprites == 1 &&
+              st->sprites == 0);
+        CHECK("copy: the same draws and targets", draws[0] == draws[1] && tgt[0] == tgt[1] && tgt[0] == 2);
+        /* DECAL of a texel row that differs: u 0.5 .. 16.5 over 16 pixels reads texel x */
+        kh1_gsmem_write_pixel(KH1_PSMCT24, 0x1A00, 8, 3, 0, 0x0A0B0C);
+        kh1_gs_write(0x06, 0x1A00 | 8 << 14 | KH1_PSMCT24 << 20 | 9u << 26 | 1u << 30, 2 | 1 << 2 | 1 << 3);
+        kh1_gs_write(0x00, 6 | 1 << 4 | 1 << 8, 0);
+        kh1_gs_write(0x03, 8 | 8 << 16, 0);
+        kh1_gs_write(0x05, 0x7000 | 0x7400 << 16, 0);
+        kh1_gs_write(0x03, (16 * 16 + 8) | (1 * 16 + 8) << 16, 0);
+        kh1_gs_write(0x05, 0x7100 | 0x7410 << 16, 0);
+        CHECK("copy: DECAL point-sampled", kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 3, 0) == 0x0A0B0C &&
+              kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, 4, 0) == 0x405060 && st->tex_sprites == 2);
+        kh1_gsmem_flat(0);
+    }
+
     /* texanim's scroll (session 84): row r of the copy is row (r + 3) % 8 of the source; at y 0 both
      * copies are 0 rows high and the destination keeps the last step's rows */
     for (y = 0; y < 8; y++)
