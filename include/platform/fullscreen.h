@@ -13,10 +13,12 @@
 #define KH1_FS_X 1  /* XYZ X: canvas 0 .. 512 to the view's x0 .. x1 (a buffer laid out like the target) */
 #define KH1_FS_U 2  /* UV u: 0 .. 512 texels to 0 .. the view's width, from its left edge */
 #define KH1_FS_XS 4 /* XYZ X scaled from 0x7000 only: a buffer of its own (the capture) starts at 0 */
+#define KH1_FS_CLAMP 8 /* CLAMP REGION_CLAMP's MAXU grows by the view's added width (session 94: the lens
+                        * grid's copy of the target is the view's width) */
 
 typedef struct {
     const void *send; /* the packet's DMA tag, the send's start */
-    u32 what;         /* KH1_FS_X or KH1_FS_XS, | KH1_FS_U */
+    u32 what;         /* KH1_FS_X or KH1_FS_XS, | KH1_FS_U; or KH1_FS_CLAMP */
     const char *name;
 } KH1FullScreen;
 

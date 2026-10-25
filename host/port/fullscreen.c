@@ -6,7 +6,7 @@
 #include "platform/fullscreen.h"
 
 extern u8 D_002A6500[], D_002A6890[], D_002A6070[], D_002A61E0[], D_002A5FD0[], D_002A4ED0[];
-extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[];
+extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[], D_002A6110[];
 
 const KH1FullScreen kh1_fullscreen[] = {
     /* brightfade.c: the clear, 16 black sprites of 32 px, x 1792 .. 2304 (each column a sprite) */
@@ -32,5 +32,9 @@ const KH1FullScreen kh1_fullscreen[] = {
     /* dispenv.c func_0010ff60 (session 93): the display cleared to a grey level, one sprite 1792 .. 2304
      * x 1856 .. 2304 under SCISSOR_1 0 .. 511 x 0 .. 447 (the scissor rule's display case) */
     { D_002BC980, KH1_FS_X, "display clear" },
+    /* sceneeff.c func_00103c48 (session 94): the lens grid's CLAMP_1 REGION_CLAMP U 0 .. 510 over the
+     * copy into the Z area, which is the view's width now; its mesh stays the centre square and its ST
+     * take the view's margin in C (PLAT_VIEW_SIDE) */
+    { D_002A6110, KH1_FS_CLAMP, "lens grid" },
 };
 const s32 kh1_nfullscreen = sizeof kh1_fullscreen / sizeof kh1_fullscreen[0];

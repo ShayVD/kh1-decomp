@@ -1774,6 +1774,41 @@ the new canvas_test); abicheck, relcheck, walkcheck, countcheck and layoutcheck 
 - **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default (the room run's `--nodes` with
   it first) and argcheck's 3 value uses (dktitle.x's calls).
 
+### 5.1ah Session 94: the lens grid under the wide view, a host present, the staging-send check
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). One change under src/ (sceneeff.c's
+lens grid reads `PLAT_VIEW_SIDE`, `0.0f` on the PS2): **all 677 out/build objects bit-identical**, kh1.elf
+byte-identical, the m12 float ELF the same bytes with and without the change (no float-untested row).
+selftest PASS (with the new present_test and hudcheck's second negative case); abicheck, relcheck, walkcheck,
+countcheck, dmacheck, abscheck and layoutcheck 0, indcheck as before.
+
+- **The lens grid under the wide view** (item 4a, renderer-spec 5.4 "Session 94"): its ST (u 0.125 .. 0.875
+  of TW 512, texels 64 .. 448 of the 4:3 canvas) now take the view's margin, `(64 + PLAT_VIEW_SIDE) / 512`
+  (`include/platform/view.h`: `256 (wide - 1)`, unrounded, as the stretch; 0 on the PS2, folded), because
+  the copy into the Z area it samples starts at the view's left edge; and `D_002A6110`'s `CLAMP_1`
+  REGION_CLAMP MAXU 510 grows by the view's added width (676 at 960 x 544) through a new fullscreen.c row and
+  flag `KH1_FS_CLAMP` (`kh1_canvas_stretch_clamp`, applied by gsregs.c in a listed send). The mesh and its
+  view -> screen matrix stay: the bulge stays the centre square, the sides keep the scene.
+- **A host present** (item 4b): `KH1_HOST_SHOT=W:H[:target][:DIR]` (host/null/present.c, `kh1_present_rgb`):
+  after each frame copy (`D_002A6890`) the GS memory model's display (the copy's FRAME: FBP 0, CT24, 448
+  lines) or the 3D target (its TEX0: 0x1A00) as a W x H PAM `DIR/shot_N.pam`, through `kh1_canvas_unmap`
+  (new, the inverse of the canvas map), point-sampled, pillarboxed, the 448 display lines as the canvas's
+  384. It turns the chain walk on (the model's only feed) through a new hook `kh1_dma_after_send`. **The
+  model draws no 3D, no untextured pass and no copy of a render target**, so the fake disc's 38 frames in 40
+  are black; it is for the real-disc run (what the uploads and the point-sampled sprites leave) and for a
+  renderer's bring-up to compare against. Under `KH1_HOST_WIDE` the view's sides stay black (the model's
+  buffers are 512 wide). tests/host/present_test.c (12 checks: centre, canvas edge, bars, the display's row
+  scale, the target, the hook writing a file).
+- **The staging-send check** (item 4c): `tools/host/hudcheck.py` also finds each staging send in src/hud
+  (`func_00237018(D_x, D_y - D_x, 1)`, and gauge.nostrict.c's `*bp`) and the environment sends that reach it
+  (before it in its function, or before the call in a caller, up to 6 callers up), and fails on a staging
+  send under none or under environments with different sides. **22 staging sends, each under its own
+  part's environment, 0 problems** (the gauges' five through `func_002416a8`, the damage numbers through
+  `func_00245da0`, the labels through `func_00247190`, the minigame timer's two through `func_00248380`).
+  The self-test removes the timer's environment send in a copy of src/hud and expects the failure.
+  `src/gfx/prim.c`'s staging send (`D_00648070`) is outside src/hud and not checked.
+- **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

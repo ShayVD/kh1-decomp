@@ -75,6 +75,25 @@ int main(void) {
           x0 == 0 && x1 == 8192);
     CHECK("scissor: an odd column", kh1_canvas_scissor(0x003F0010, 0x017F0000, -1325, 10842, &x0, &x1) == 0);
 
+    /* session 94: the lens grid's REGION_CLAMP MAXU 510 grows with the view (510 + 166 at 960 x 544);
+     * MINU, WMT and the high bits stay; REPEAT / CLAMP untouched; 1023 at most */
+    {
+        u32 lo = 2 | 2 << 2 | 3 << 4 | 510u << 14 | 1u << 24;
+        CHECK("clamp: wide", kh1_canvas_stretch_clamp(lo, 10842) == ((lo & ~(0x3FFu << 14)) | 676u << 14));
+        CHECK("clamp: 4:3", kh1_canvas_stretch_clamp(lo, 8192) == lo);
+        CHECK("clamp: not a region", kh1_canvas_stretch_clamp(510u << 14 | 1, 10842) == (510u << 14 | 1));
+        CHECK("clamp: at most 1023", (kh1_canvas_stretch_clamp(2 | 1000u << 14, 10842) >> 14 & 0x3FF) == 1023);
+    }
+    /* the inverse map: a screen pixel back to the canvas, and the bars outside 0 .. 512 */
+    kh1_canvas_fit(&c, 960.0f, 544.0f);
+    kh1_canvas_unmap(&c, 480.0f, 272.0f, &x, &y);
+    CHECK("unmap: centre", near(x, 256.0f) && near(y, 192.0f));
+    kh1_canvas_unmap(&c, 0.0f, 0.0f, &x, &y);
+    CHECK("unmap: the left bar", x < -82.7f && x > -82.9f && near(y, 0.0f));
+    kh1_canvas_map(&c, 0x7000 + 100 * 16, 0x7400 + 50 * 16, &x, &y);
+    kh1_canvas_unmap(&c, x, y, &x, &y);
+    CHECK("unmap: round trip", near(x, 100.0f) && near(y, 50.0f));
+
     if (fails) { printf("canvas_test: %d of %d failed\n", fails, checks); return 1; }
     printf("canvas_test: PASS (%d checks)\n", checks);
     return 0;

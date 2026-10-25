@@ -463,7 +463,9 @@ s32 func_00103c48(void) {
     v = 0.0f;
     for (i = 0; i < h; i++) {
         x = -192.0f;
-        u = 0.125f;
+        /* texel 64 of the 4:3 canvas in the copy (TW 512); a wide view's copy starts at its left
+         * edge (renderer-spec 5.4 "Session 94") */
+        u = (64.0f + PLAT_VIEW_SIDE) / 512.0f;
         for (m = 0; m < w; m++) {
             vtx[i * w + m].x = x;
             x += 16.0f;

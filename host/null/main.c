@@ -36,6 +36,12 @@
  *                       the static full-screen packets (host/port/fullscreen.c) stretch to the view
  *                       and a full 4:3 SCISSOR (or a 32-pixel column) reads as the view's (a draw
  *                       line's ", view scissor X0 X1", include/platform/canvas.h).
+ *   KH1_HOST_SHOT=W:H[:target][:DIR]  (session 94) a "present": after each frame copy (D_002A6890)
+ *                       the GS memory model's display (or with "target" the 3D target) as a W x H
+ *                       PAM, DIR/shot_N.pam (default "."), through the canvas map, pillarboxed
+ *                       (host/null/present.c).  Turns on the chain walk (KH1_HOST_TRACE=2), which
+ *                       feeds the model; it holds only what the model can draw (the fake disc's
+ *                       frames are black).  From the user's disc: never commit the frames.
  *
  * A crash prints a backtrace and what the run had read; a fault inside the memory map (a jump
  * into loaded code: the overlay entry D_00F20000 until the overlays build natively) prints the
@@ -55,6 +61,8 @@ void kh1_view_init(float aspect); /* host/port/view.c */
 extern float kh1_view_wide;
 extern int kh1_view_x0, kh1_view_x1;
 void kh1_null_hud_wide(float margin); /* host/null/plat_null.c */
+int kh1_present_init(int w, int h, int target, const char *dir, const void *send); /* host/null/present.c */
+extern unsigned char D_002A6890[]; /* brightfade.c's frame copy (renderer-spec 5.4 "Session 93") */
 
 int kh1_host_stop_at_cdread = 1;
 int kh1_host_trace;
@@ -216,6 +224,28 @@ int main(int argc, char **argv) {
             printf("kh1-host: wide view x %.4f (canvas x %d .. %d)\n", kh1_view_wide, kh1_view_x0, kh1_view_x1);
             /* session 92: the HUD's anchored parts move to the wide edges (renderer-spec 5.3.1) */
             kh1_null_hud_wide(256.0f * (kh1_view_wide - 1.0f));
+        }
+    }
+    {
+        /* KH1_HOST_SHOT=W:H[:target][:DIR] (session 94): the present after each frame copy */
+        const char *shot = getenv("KH1_HOST_SHOT");
+        if (shot && *shot) {
+            const char *c = strchr(shot, ':'), *dir = ".";
+            int w = atoi(shot), h = c ? atoi(c + 1) : 0, target = 0;
+            c = c ? strchr(c + 1, ':') : 0;
+            if (c && strncmp(c + 1, "target", 6) == 0 && (c[7] == 0 || c[7] == ':')) {
+                target = 1;
+                c = c[7] ? c + 7 : 0;
+            }
+            if (c && c[1] == ':') c++; /* W:H::DIR, the source left out */
+            if (c && c[1]) dir = c + 1;
+            if (kh1_present_init(w, h, target, dir, D_002A6890)) {
+                fprintf(stderr, "kh1-host: KH1_HOST_SHOT=%s: want W:H[:target][:DIR]\n", shot);
+                return 2;
+            }
+            if (kh1_host_trace < 2) kh1_host_trace = 2;
+            printf("kh1-host: shot %dx%d of the %s after each frame copy, to %s\n", w, h,
+                   target ? "3D target" : "display", dir);
         }
     }
     {
