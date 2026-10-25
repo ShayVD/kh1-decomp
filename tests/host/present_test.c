@@ -20,19 +20,23 @@ unsigned long kh1_host_frame(void) { return 7; }
 
 static u32 mem[8][4] ALIGNED(16);
 static u32 pkt[48][4] ALIGNED(16); /* session 97: a frame copy's packet, sent by a REFE tag in mem */
+static u32 pkt2[48][4] ALIGNED(16); /* session 98: the Z-area copy's or the spin copy's, a REFE tag at mem[2] */
 static u8 rgb[960 * 544 * 3];
 
 static const char *where(u32 a, u32 n) {
     if (a >= (u32)(unsigned long)pkt && a + n <= (u32)(unsigned long)pkt + sizeof pkt) return "pkt";
+    if (a >= (u32)(unsigned long)pkt2 && a + n <= (u32)(unsigned long)pkt2 + sizeof pkt2) return "pkt2";
     return a >= (u32)(unsigned long)mem && a + n <= (u32)(unsigned long)mem + sizeof mem ? "mem" : 0;
 }
 
 static void q4(int i, u32 a, u32 b, u32 c, u32 d) { pkt[i][0] = a; pkt[i][1] = b; pkt[i][2] = c; pkt[i][3] = d; }
+static void p4(int i, u32 a, u32 b, u32 c, u32 d) { pkt2[i][0] = a; pkt2[i][1] = b; pkt2[i][2] = c; pkt2[i][3] = d; }
 
 /* the frame copy's shape (renderer-spec 4.15 / 5.4 "Session 97", brightfade.c's D_002A6890: one REFE of
  * 0x2C qwords): 6 x A+D (FRAME_1 the display CT24 FBW 8, ZBUF_1 ZMSK, TEX0_1 the target 0x1A00 CT24 512 x
  * 512 TCC MODULATE, TEST_1 ZTST ALWAYS, TEX1_1 bilinear, ALPHA_1 (Cs - Cd) As + Cd), REGLIST PRIM
- * SPRITE|TME|ABE|FST and RGBAQ 0x80, REGLIST 16 x (UV XYZ2 UV XYZ2): strip k is x 32k .. 32k + 32 of
+ * 0x116 SPRITE|TME|FST (session 98: no ABE, so the ALPHA_1 is unused) and RGBAQ 0x80, REGLIST 16 x
+ * (UV XYZ2 UV XYZ2): strip k is x 32k .. 32k + 32 of
  * the 448 display lines, u 32k + 0.5 .. 32k + 32.5 and v 0 .. 384 (the target's lines), then ZBUF_1
  * back with ZMSK 0.  Written as a REFE tag at mem[0] for the chain walk. */
 static int copy_packet(void) {
@@ -45,7 +49,7 @@ static int copy_packet(void) {
     q4(i++, 1 << 5 | 1 << 6, 0, 0x14, 0);
     q4(i++, 0x44, 0, 0x42, 0);
     q4(i++, 1, 1u << 26 | 2u << 28, 0x10, 0);
-    q4(i++, 6 | 1 << 4 | 1 << 6 | 1 << 8, 0, 0x80808080, 0x3F800000);
+    q4(i++, 6 | 1 << 4 | 1 << 8, 0, 0x80808080, 0x3F800000);
     q4(i++, 16, 1u << 26 | 4u << 28, 0x5353, 0);
     for (k = 0; k < 16; k++) {
         q4(i++, (u32)(k * 512 + 8), 0, (u32)(0x7000 + k * 512) | 0x7400u << 16, 0xFFFFFFFE);
@@ -58,6 +62,96 @@ static int copy_packet(void) {
     mem[0][2] = mem[0][3] = 0;
     return i;
 }
+
+/* session 98: the Z-area copy's shape (sceneeff.c's D_002A5FD0: one REFE of 0x2F qwords at D_002A5CE0):
+ * 6 x A+D (ZBUF_1 ZBP 0 ZMSK, FRAME_1 FBP 0x70 FBW 8 CT24: the Z buffer's memory as colour, TEX0_1 the
+ * target 0x1A00 CT24 512 x 512 TCC MODULATE, TEST_1 ZTST ALWAYS, ALPHA_1, TEX1_1 bilinear), REGLIST PRIM
+ * 0x116 and RGBAQ 0x80, REGLIST 16 x (UV XYZ2 UV XYZ2): strip k is x 32k - 1.5 .. 32k + 30.5 over y -1.5
+ * .. 382.5, u 32k .. 32k + 32 and v 0 .. 384 (one texel a pixel, 1.5 texels up and left), then an EOP
+ * ZBUF_1 back (0x70, ZMSK 0) and FRAME_1 the target.  Its tag at mem[2]. */
+static void zcopy_packet(void) {
+    int i = 0, k;
+    p4(i++, 1, 6u << 28, 0xEEEEEE, 0);
+    p4(i++, 0 | 0x31u << 24, 1, 0x4E, 0);
+    p4(i++, 0x70 | 8 << 16 | KH1_PSMCT24 << 24, 0, 0x4C, 0);
+    p4(i++, 0x1A00 | 8 << 14 | KH1_PSMCT24 << 20 | 9u << 26 | 1u << 30, 2 | 1 << 2, 0x06, 0);
+    p4(i++, 1 << 16 | 1 << 17, 0, 0x47, 0);
+    p4(i++, 0x44, 0, 0x42, 0);
+    p4(i++, 1 << 5 | 1 << 6, 0, 0x14, 0);
+    p4(i++, 1, 1u << 26 | 2u << 28, 0x10, 0);
+    p4(i++, 6 | 1 << 4 | 1 << 8, 0, 0x80808080, 0x3F800000);
+    p4(i++, 16, 1u << 26 | 4u << 28, 0x5353, 0);
+    for (k = 0; k < 16; k++) {
+        p4(i++, (u32)(k * 512), 0, (u32)(0x6FE8 + k * 512) | 0x73E8u << 16, 0xFFFFFFFE);
+        p4(i++, (u32)(k * 512 + 512) | 0x1800u << 16, 0, (u32)(0x6FE8 + k * 512 + 512) | 0x8BE8u << 16, 0xFFFFFFFE);
+    }
+    p4(i++, 1 | 1 << 15, 2u << 28, 0xCE, 0);
+    p4(i++, 0x70 | 0x31u << 24, 0, 0x4E, 0);
+    p4(i++, 0xD0 | 8 << 16 | KH1_PSMCT32 << 24, 0, 0x4C, 0);
+    mem[2][0] = (u32)i;
+    mem[2][1] = (u32)(unsigned long)pkt2;
+    mem[2][2] = mem[2][3] = 0;
+}
+
+/* session 98: the spin copy's shape (sceneeff.c func_00102da8's D_002A4ED0: one REFE of 12 qwords at
+ * D_002A4E10): 7 x A+D (FRAME_1 the target 0xD0 CT32, TEX0_1 the display block 0 CT24 512 x 512 TCC 0,
+ * TEST_1 ZTST ALWAYS, TEX1_1 bilinear, ALPHA_1, SCISSOR_1 0 .. 511 x 0 .. 383, CLAMP_1 CLAMP both ways),
+ * then one REGLIST (EOP) PRIM 0x116, RGBAQ 0x80, UV (1, 0) XYZ2 (0, 0), UV (513, 448) XYZ2 (512, 384):
+ * the display's 448 lines shrunk to the target's 384, one texel right.  Its tag at mem[2]. */
+static void spin_packet(void) {
+    int i = 0;
+    p4(i++, 1, 7u << 28, 0xEEEEEEE, 0);
+    p4(i++, 0xD0 | 8 << 16 | KH1_PSMCT32 << 24, 0, 0x4C, 0);
+    p4(i++, 0 | 8 << 14 | KH1_PSMCT24 << 20 | 9u << 26 | 1u << 30, 2, 0x06, 0);
+    p4(i++, 1 << 16 | 1 << 17, 0, 0x47, 0);
+    p4(i++, 1 << 5 | 1 << 6, 0, 0x14, 0);
+    p4(i++, 0x44, 0, 0x42, 0);
+    p4(i++, 511u << 16, 383u << 16, 0x40, 0);
+    p4(i++, 1 | 1 << 2, 0, 0x08, 0);
+    p4(i++, 1 | 1 << 15, 1u << 26 | 6u << 28, 0x535310, 0);
+    p4(i++, 6 | 1 << 4 | 1 << 8, 0, 0x80808080, 0x3F800000);
+    p4(i++, 16, 0, 0x7000 | 0x7400u << 16, 0xFFFFFFFE);
+    p4(i++, 513 * 16 | (448u * 16) << 16, 0, 0x9000 | 0x8C00u << 16, 0xFFFFFFFE);
+    mem[2][0] = (u32)i;
+    mem[2][1] = (u32)(unsigned long)pkt2;
+    mem[2][2] = mem[2][3] = 0;
+}
+
+/* a made-up colour that names its pixel: x in bits 0-8, y in 9-17 (CT24 keeps them) */
+static u32 ucol(s32 x, s32 y) { return (u32)x | (u32)y << 9 | 0x800000; }
+static s32 ucol_x(u32 c) { return (s32)(c & 0x1FF); }
+static s32 ucol_y(u32 c) { return (s32)(c >> 9 & 0x1FF); }
+
+/* the Z-area copy walked: the target filled with ucol, the game's environment (XYOFFSET, SCISSOR the
+ * target's 512 x 384, TEXA TA0 0x80) */
+static int zcopy_walk(void) {
+    s32 x, y;
+    kh1_gs_reset();
+    for (y = 0; y < 384; y++)
+        for (x = 0; x < 512; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x1A00, 8, x, y, 0x80000000u | ucol(x, y));
+    kh1_gs_write(0x18, 0x7000, 0x7400);
+    kh1_gs_write(0x40, 511 << 16, 383 << 16);
+    kh1_gs_write(0x3B, 0x80, 0x80);
+    zcopy_packet();
+    return kh1_dma_walk(2, 0x104, (u32)(unsigned long)mem[2], where);
+}
+
+/* the spin copy walked: the display (CT24, 448 lines) filled with ucol */
+static int spin_walk(void) {
+    s32 x, y;
+    kh1_gs_reset();
+    for (y = 0; y < 448; y++)
+        for (x = 0; x < 512; x++) kh1_gsmem_write_pixel(KH1_PSMCT24, 0, 8, x, y, ucol(x, y));
+    kh1_gs_write(0x18, 0x7000, 0x7400);
+    kh1_gs_write(0x3B, 0x80, 0x80);
+    spin_packet();
+    return kh1_dma_walk(2, 0x104, (u32)(unsigned long)mem[2], where);
+}
+
+/* the source texel x (or y) that pixel (x, y) of a copy's buffer holds, less the pixel's own: the
+ * copy's offset there */
+static s32 dx_at(u32 psm, u32 bp, s32 x, s32 y) { return ucol_x(kh1_gsmem_read_pixel(psm, bp, 8, x, y)) - x; }
+static s32 dy_at(u32 psm, u32 bp, s32 x, s32 y) { return ucol_y(kh1_gsmem_read_pixel(psm, bp, 8, x, y)) - y; }
 
 /* the RGB of a PAM shot's pixel (x, y), w x h, after its header */
 static u32 pam_at(void *f, s32 w, s32 h, s32 x, s32 y) {
@@ -201,6 +295,52 @@ int main(int argc, char **argv) {
                 CHECK("wide target: the sides black", pam_at(f, 960, 544, 10, 272) == 0 && pam_at(f, 960, 544, 950, 272) == 0);
                 fclose(f);
             }
+        }
+
+        /* session 98: the other two copies of the target / display (renderer-spec 5.4 "Session 98"),
+         * walked at 4:3 and under the wide stretch; the model point-samples (the texel at the pixel's
+         * left / top edge) where the GS filters bilinearly, so offsets are whole texels here */
+        {
+            static const KH1FullScreen zfs[1] = { { mem[2], KH1_FS_X | KH1_FS_U, "copy into the Z area" } };
+            static const KH1FullScreen sfs[1] = { { mem[2], KH1_FS_X | KH1_FS_U, "spin copy" } };
+            CHECK("zcopy: walk", zcopy_walk() == 0);
+            /* the Z area's pixel p holds the target's p + 1.5 (point-sampled: p + 1), rows the same */
+            /* x -1.5 .. 510.5 covers pixels 0 .. 510 (the GS's x0 <= x < x1), rows 0 .. 382: the Z area's
+             * last column and row are not written (they keep the Z buffer's depth bits) */
+            CHECK("zcopy: 16 strips, 511 x 383", kh1_gsmem_stats()->tex_sprites == 16 && kh1_gsmem_stats()->tex_pixels == 511 * 383);
+            CHECK("zcopy: column 511 and row 383 not written", kh1_gsmem_read_pixel(KH1_PSMCT24, 0xE00, 8, 511, 100) == 0 &&
+                  kh1_gsmem_read_pixel(KH1_PSMCT24, 0xE00, 8, 100, 383) == 0);
+            CHECK("zcopy: one texel right and down", dx_at(KH1_PSMCT24, 0xE00, 0, 0) == 1 && dx_at(KH1_PSMCT24, 0xE00, 200, 100) == 1 &&
+                  dy_at(KH1_PSMCT24, 0xE00, 200, 100) == 1 && dx_at(KH1_PSMCT24, 0xE00, 479, 300) == 1);
+            /* its strips' edges (x 30 / 31, 31 / 32 of the Z area) one texel apart, no seam */
+            CHECK("zcopy: the strip edges", dx_at(KH1_PSMCT24, 0xE00, 30, 7) == 1 && dx_at(KH1_PSMCT24, 0xE00, 31, 7) == 1 &&
+                  dx_at(KH1_PSMCT24, 0xE00, 32, 7) == 1);
+            CHECK("zcopy: the target untouched", kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 5, 5) == (0x80000000u | ucol(5, 5)));
+            /* under the wide stretch: X to -84.8 .. 592.8, u 0 .. 677.6, so in the model's 512-wide Z
+             * area pixel p holds the target's p + 82.8 + 1.99: the frame copy's margin shift and the
+             * 1.5 texels scaled by 1.32 */
+            kh1_dma_fullscreen(zfs, 1, -1325, 8192 + 2 * 1325);
+            CHECK("zcopy wide: walk", zcopy_walk() == 0);
+            CHECK("zcopy wide: the margin shift", dx_at(KH1_PSMCT24, 0xE00, 0, 50) == 84 && dx_at(KH1_PSMCT24, 0xE00, 100, 50) == 84 &&
+                  dx_at(KH1_PSMCT24, 0xE00, 400, 50) == 84 && dy_at(KH1_PSMCT24, 0xE00, 100, 50) == 1);
+
+            /* the spin copy: target pixel (t, r) holds the display's (t + 1, r x 448 / 384) */
+            kh1_dma_fullscreen(0, 0, 0, 0);
+            CHECK("spin: walk", spin_walk() == 0);
+            CHECK("spin: one sprite", kh1_gsmem_stats()->tex_sprites == 1 && kh1_gsmem_stats()->tex_pixels == 512 * 384);
+            CHECK("spin: one texel right", dx_at(KH1_PSMCT32, 0x1A00, 0, 0) == 1 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 1);
+            CHECK("spin: the last column clamped", dx_at(KH1_PSMCT32, 0x1A00, 511, 100) == 0);
+            CHECK("spin: 448 lines to 384", ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 0)) == 0 &&
+                  ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 192)) == 224 &&
+                  ucol_y(kh1_gsmem_read_pixel(KH1_PSMCT32, 0x1A00, 8, 300, 383)) == 446);
+            /* under the wide stretch the model's target pixel t reads the display's t + 82.8 + 1.32: and
+             * the model's display already holds canvas d + 82.8 (the frame copy's shift), so the margin
+             * counts twice in the model; a renderer's view-wide display gives canvas t + 1.32 */
+            kh1_dma_fullscreen(sfs, 1, -1325, 8192 + 2 * 1325);
+            CHECK("spin wide: walk", spin_walk() == 0);
+            CHECK("spin wide: the margin shift", dx_at(KH1_PSMCT32, 0x1A00, 0, 100) == 84 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 84);
+            CHECK("spin wide: past the display clamped", dx_at(KH1_PSMCT32, 0x1A00, 511, 100) == 0);
+            kh1_dma_fullscreen(0, 0, 0, 0);
         }
     }
 
