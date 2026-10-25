@@ -112,6 +112,8 @@ typedef struct {
     u32 texa_lo, texa_hi;
     u32 xy[2], uv[2];                          /* the two vertices' XYZ2 X / Y (12.4) and UV (10.4) */
     u32 rgba;                                  /* the second vertex's RGBA (a sprite is flat) */
+    s32 uorg;                                  /* session 99: added to both u (10.4) as the model reads them:
+                                                * a wide copy's read-back by the margin (gsregs.c) */
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the

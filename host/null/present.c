@@ -6,9 +6,9 @@
  * (the pillarbox, and under KH1_HOST_WIDE the view's sides: the model's buffers are the PS2's 512
  * wide).  The display's 448 lines are the canvas's 384 (NTSC's taller pixels).  Session 97: under
  * KH1_HOST_WIDE (kh1_present_wide) the shot line says so; the display's copy is stretched (u from the
- * view's left edge, host/port/fullscreen.c), so the display's pixel d holds canvas d + margin and the
- * display shot is read shifted back by it, shown from canvas x margin to 512 (renderer-spec 5.4
- * "Session 97").
+ * view's left edge, host/port/fullscreen.c), and since session 99 the model reads it back by the margin
+ * (host/null/gsregs.c), so the display's pixel d holds canvas d as the target's does and both shots
+ * are read as they are (renderer-spec 5.4 "Session 97" / "Session 99").
  *
  * The model holds what uploads, copies and the point-sampled sprites it can draw (host/null/gsmem.c)
  * wrote, and since session 95 the untextured sprites (the clears, the display clear, fade and
@@ -39,8 +39,8 @@ static u32 rgb_of(u32 psm, u32 v) {
     return v & 0xFFFFFF;
 }
 
-/* the buffer's pixel for canvas x is its column cx - dx, shown while that column is below xmax */
-static int present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines, f32 dx, f32 xmax) {
+/* the buffer's pixel for canvas x is its column x (session 99: also under the wide view) */
+static int present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
     KH1Canvas c;
     s32 x, y;
     f32 cx, cy;
@@ -53,8 +53,7 @@ static int present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines
             u32 v = 0;
             /* the pixel's centre, back to the canvas */
             kh1_canvas_unmap(&c, (f32)x + 0.5f, (f32)y + 0.5f, &cx, &cy);
-            cx -= dx;
-            if (cx >= 0.0f && cx < xmax && cx < (f32)(bw * 64) && cy >= 0.0f && cy < 384.0f)
+            if (cx >= 0.0f && cx < 512.0f && cx < (f32)(bw * 64) && cy >= 0.0f && cy < 384.0f)
                 v = rgb_of(psm, kh1_gsmem_read_pixel(psm, bp, bw, (u32)cx, (u32)(cy * (f32)lines / 384.0f)));
             o[0] = v;
             o[1] = v >> 8;
@@ -64,7 +63,7 @@ static int present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines
 }
 
 int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
-    return present_rgb(rgb, w, h, psm, bp, bw, lines, 0.0f, 512.0f);
+    return present_rgb(rgb, w, h, psm, bp, bw, lines);
 }
 
 static s32 shot_w, shot_h, shot_target, shot_side16;
@@ -77,7 +76,6 @@ static void present_after(u32 tadr) {
     const KH1GsReg *r = shot_target ? &s->ctx[0].tex0 : &s->ctx[0].frame;
     u32 bp, bw, psm;
     char path[512], wide[160];
-    f32 dx = 0.0f, xmax = 512.0f;
     void *f;
     if (tadr != shot_send) return;
     if (shot_target) { /* TEX0: TBP0, TBW, PSM */
@@ -90,16 +88,11 @@ static void present_after(u32 tadr) {
         psm = r->lo >> 24 & 63;
     }
     wide[0] = 0;
-    if (shot_side16 && shot_target) {
-        sprintf(wide, "; wide: the view's sides black, the target is the PS2's 512 (a renderer's come from the wide 3D)");
-    } else if (shot_side16) {
-        /* session 97: the stretched copy read u from the view's left edge, so display pixel d holds
-         * canvas d + margin (texels past 512 are not the target's: not shown) */
-        dx = (f32)shot_side16 / 16.0f;
-        xmax = 512.0f - dx;
-        sprintf(wide, "; wide: shown from canvas x %.4f, the copy's u from the view's left edge (use :target)", dx);
-    }
-    if (present_rgb(shot_rgb, shot_w, shot_h, psm, bp, bw, shot_target ? 384 : 448, dx, xmax)) {
+    /* session 99: the model reads its stretched copies back by the margin (host/null/gsregs.c), so the
+     * display holds canvas 0 at pixel 0 like the target and both shots are read as they are */
+    if (shot_side16)
+        sprintf(wide, "; wide: the view's sides black, the model's buffers are the PS2's 512 (a renderer's come from the wide 3D)");
+    if (present_rgb(shot_rgb, shot_w, shot_h, psm, bp, bw, shot_target ? 384 : 448)) {
         printf("kh1-host: shot frame %lu: psm %02x bw %u not presentable\n", kh1_host_frame(), psm, bw);
         return;
     }

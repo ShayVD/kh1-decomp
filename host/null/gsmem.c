@@ -461,6 +461,9 @@ void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc
 static int clamp255(s32 v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
 static s32 sel(u32 f, s32 cs, s32 cd) { return f == 0 ? cs : f == 1 ? cd : 0; }
 static u32 texel(u32 c, u32 n, u32 wm) { return wm ? (c >= n ? n - 1 : c) : c & (n - 1); }
+/* a u read back by a wide copy's margin can start left of texel 0 (session 99): the model has none there */
+static s32 umax0(s32 u) { return u < 0 ? 0 : u; }
+
 int kh1_gsmem_sprite(const KH1GsSprite *s) {
     static u32 tex[64 * 64];
     u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
@@ -480,8 +483,8 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     y0 = (s32)(s->xy[0] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
     x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
     y1 = (s32)(s->xy[1] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
-    u0 = s->uv[0] & 0x3FFF; v0 = s->uv[0] >> 16 & 0x3FFF;
-    u1 = s->uv[1] & 0x3FFF; v1 = s->uv[1] >> 16 & 0x3FFF;
+    u0 = (s32)(s->uv[0] & 0x3FFF) + s->uorg; v0 = s->uv[0] >> 16 & 0x3FFF;
+    u1 = (s32)(s->uv[1] & 0x3FFF) + s->uorg; v1 = s->uv[1] >> 16 & 0x3FFF;
     if (x1 < x0) { k = x0; x0 = x1; x1 = k; k = u0; u0 = u1; u1 = k; }
     if (y1 < y0) { k = y0; y0 = y1; y1 = k; k = v0; v0 = v1; v1 = k; }
     if (x1 == x0 || y1 == y0) return 1; /* nothing covered */
@@ -497,7 +500,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     useq++;
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
-            x = texel((u32)(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, w, wms);
+            x = texel((u32)umax0(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, w, wms);
             y = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, h, wmt);
             t = tex[y * w + x];
             for (i = 0; i < 4; i++) ct[i] = t >> i * 8 & 0xFF;
@@ -594,8 +597,8 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
     y1 = (s32)(s->xy[1] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
     if (tme) {
-        u0 = s->uv[0] & 0x3FFF; v0 = s->uv[0] >> 16 & 0x3FFF;
-        u1 = s->uv[1] & 0x3FFF; v1 = s->uv[1] >> 16 & 0x3FFF;
+        u0 = (s32)(s->uv[0] & 0x3FFF) + s->uorg; v0 = s->uv[0] >> 16 & 0x3FFF;
+        u1 = (s32)(s->uv[1] & 0x3FFF) + s->uorg; v1 = s->uv[1] >> 16 & 0x3FFF;
     }
     if (x1 < x0) { k = x0; x0 = x1; x1 = k; k = u0; u0 = u1; u1 = k; }
     if (y1 < y0) { k = y0; y0 = y1; y1 = k; k = v0; v0 = v1; v1 = k; }
@@ -611,7 +614,7 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
         for (c = px0; c < px1; c++) {
             for (i = 0; i < 4; i++) col[i] = cv[i];
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
-                tx = texel((u32)(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, tw, wms);
+                tx = texel((u32)umax0(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, tw, wms);
                 ty = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, th, wmt);
                 t = texel_rgba(tpsm, tbp, tbw, cpsm, csa, tx, ty, s->texa_lo, s->texa_hi);
                 for (i = 0; i < 3; i++) col[i] = tfx ? (s32)(t >> i * 8 & 0xFF) : clamp255((s32)(t >> i * 8 & 0xFF) * cv[i] >> 7);

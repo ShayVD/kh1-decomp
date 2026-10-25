@@ -15,10 +15,14 @@
 #define KH1_FS_XS 4 /* XYZ X scaled from 0x7000 only: a buffer of its own (the capture) starts at 0 */
 #define KH1_FS_CLAMP 8 /* CLAMP REGION_CLAMP's MAXU grows by the view's added width (session 94: the lens
                         * grid's copy of the target is the view's width) */
+#define KH1_FS_UOWN 16 /* with KH1_FS_U: the u reads a buffer of its own (session 99: the menu and depth
+                        * blurs' half-size capture at 0x3600, texel 0 at the view's left edge whatever the
+                        * layout); the stretch is the same, only a 512-wide model (the host's) tells the two
+                        * apart, reading a copy of a buffer laid out like the target back by the margin */
 
 typedef struct {
     const void *send; /* the packet's DMA tag, the send's start */
-    u32 what;         /* KH1_FS_X or KH1_FS_XS, | KH1_FS_U; or KH1_FS_CLAMP */
+    u32 what;         /* KH1_FS_X or KH1_FS_XS, | KH1_FS_U (| KH1_FS_UOWN); or KH1_FS_CLAMP */
     const char *name;
 } KH1FullScreen;
 
