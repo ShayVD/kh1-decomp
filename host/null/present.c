@@ -7,9 +7,10 @@
  * wide).  The display's 448 lines are the canvas's 384 (NTSC's taller pixels).
  *
  * The model holds what uploads, copies and the point-sampled sprites it can draw (host/null/gsmem.c)
- * wrote, not the 3D, the untextured passes or the copies of a render target, so on the fake disc a
- * frame is black; the picture is for the real disc's run and for a renderer's bring-up to compare
- * with.  Frames from the user's disc: never commit them.  Not part of the PS2 build. */
+ * wrote, and since session 95 the untextured sprites (the clears, the display clear, fade and
+ * letterbox: kh1_gsmem_flat, turned on here, which leaves every trace counter as it was), not the 3D
+ * or the copies of a render target, so on the fake disc a frame shows the clears' colours only; the
+ * picture is for the real disc's run and for a renderer's bring-up to compare with.  Frames from the user's disc: never commit them.  Not part of the PS2 build. */
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
@@ -89,8 +90,8 @@ static void present_after(u32 tadr) {
     fprintf(f, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 3\nMAXVAL 255\nTUPLTYPE RGB\nENDHDR\n", shot_w, shot_h);
     fwrite(shot_rgb, 3, (__SIZE_TYPE__)shot_w * shot_h, f);
     fclose(f);
-    printf("kh1-host: shot frame %lu: %s (%s bp %04x bw %u psm %02x)\n", kh1_host_frame(), path,
-           shot_target ? "target" : "display", bp, bw, psm);
+    printf("kh1-host: shot frame %lu: %s (%s bp %04x bw %u psm %02x; %u flat sprites so far)\n", kh1_host_frame(),
+           path, shot_target ? "target" : "display", bp, bw, psm, kh1_gsmem_stats()->flat_sprites);
 }
 
 int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send) {
@@ -103,5 +104,6 @@ int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send
     shot_dir = dir;
     shot_send = (u32)(unsigned long)send;
     kh1_dma_after_send = present_after;
+    kh1_gsmem_flat(1); /* session 95: the clears, fades and letterbox filled into the model */
     return 0;
 }

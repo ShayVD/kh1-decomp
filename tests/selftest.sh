@@ -98,6 +98,13 @@ if python3 -I "$ROOT/tools/host/hudcheck.py" --src "$W/hudneg/src" > "$W/hud_neg
    ! grep -q 'D_006691D4 .*follows no environment send' "$W/hud_neg.log"; then
   echo "selftest: hudcheck missed a staging send under no environment" >&2; cat "$W/hud_neg.log" >&2; exit 1
 fi
+# session 95: a staging send outside src/hud that OTHER_STAGES does not name fails (prim.c's buffer renamed)
+mkdir -p "$W/hudneg2/src/gfx" && cp -r "$ROOT/src/hud" "$W/hudneg2/src/"
+sed 's/D_00648070/D_00648080/g' "$ROOT/src/gfx/prim.c" > "$W/hudneg2/src/gfx/prim.c"
+if python3 -I "$ROOT/tools/host/hudcheck.py" --src "$W/hudneg2/src" > "$W/hud_neg2.log" ||
+   ! grep -q 'D_00648080 .*outside src/hud and OTHER_STAGES does not name it' "$W/hud_neg2.log"; then
+  echo "selftest: hudcheck missed a staging send outside src/hud" >&2; cat "$W/hud_neg2.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then
@@ -115,7 +122,7 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
   tail -n 1 "$W/gsmem.log"
   # the 2D canvas map and the full-screen rules (host/port/canvas.c, session 93)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/canvas_test" \
-      "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c"
+      "$ROOT/tests/host/canvas_test.c" "$ROOT/host/port/canvas.c" "$ROOT/host/port/view.c"
   "$W/canvas_test" > "$W/canvas.log" || { cat "$W/canvas.log"; exit 1; }
   tail -n 1 "$W/canvas.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)

@@ -3,6 +3,7 @@
  * it with gcc -m32 when that works. */
 #include "common.h"
 #include "platform/canvas.h"
+#include "platform/view.h"
 
 int printf(const char *, ...);
 
@@ -10,6 +11,11 @@ static int fails, checks;
 #define CHECK(name, cond) do { checks++; if (!(cond)) { printf("canvas_test: %s\n", name); fails++; } } while (0)
 
 static int near(f32 a, f32 b) { return a - b < 0.01f && b - a < 0.01f; }
+
+/* session 95: host/port/view.c is linked too, for kh1_view_init's margin; its matrix code needs these */
+f32 D_00469F90[4], D_00469FA0[4];
+void sceVu0UnitMatrix(f32 m[4][4]) { (void)m; }
+void sceVu0MulMatrix(f32 a[4][4], f32 b[4][4], f32 c[4][4]) { (void)a; (void)b; (void)c; }
 
 int main(void) {
     KH1Canvas c;
@@ -93,6 +99,23 @@ int main(void) {
     kh1_canvas_map(&c, 0x7000 + 100 * 16, 0x7400 + 50 * 16, &x, &y);
     kh1_canvas_unmap(&c, x, y, &x, &y);
     CHECK("unmap: round trip", near(x, 100.0f) && near(y, 50.0f));
+
+    /* session 95: one rounded margin.  The C passes (kh1_view_init, platform/view.h) and the present /
+     * stretch (kh1_canvas_fit) give the same sixteenths, and every view.h form is exact in them */
+    {
+        static const f32 scr[][2] = {{960, 544}, {1920, 1080}, {1280, 720}, {2560, 1080}, {800, 480}, {640, 480}};
+        for (k = 0; k < (s32)(sizeof scr / sizeof scr[0]); k++) {
+            kh1_canvas_fit(&c, scr[k][0], scr[k][1]);
+            kh1_view_init(scr[k][0] / scr[k][1]);
+            CHECK("margin: view.c = canvas.c", kh1_view_side16 == -c.vx0 && PLAT_VIEW_W16 == c.vw);
+            CHECK("margin: GX edges", PLAT_VIEW_GX0 == 0x7000 + c.vx0 && PLAT_VIEW_GX1 == 0x7000 + c.vx0 + c.vw);
+            CHECK("margin: pixel edges", PLAT_VIEW_X0 * 16.0f == (f32)c.vx0 &&
+                  PLAT_VIEW_X1 * 16.0f == (f32)(c.vx0 + c.vw) && PLAT_VIEW_SIDE * 16.0f == (f32)-c.vx0);
+            CHECK("margin: markers", D_00469F90[0] == 1792.0f - PLAT_VIEW_SIDE && D_00469FA0[0] == 2304.0f + PLAT_VIEW_SIDE);
+        }
+        kh1_view_init(960.0f / 544.0f);
+        CHECK("margin: vita 1325", kh1_view_side16 == 1325);
+    }
 
     if (fails) { printf("canvas_test: %d of %d failed\n", fails, checks); return 1; }
     printf("canvas_test: PASS (%d checks)\n", checks);

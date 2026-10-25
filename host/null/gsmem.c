@@ -43,6 +43,7 @@ static KH1GsTarget tgt[TARGETS];
 static u32 ntgt, useq, tgt_useq[TARGETS]; /* useq counts uploads, copies and pixel writes; tgt_useq: its
                                             * value when the target's pages were last marked */
 static u32 page_drawn[512];          /* the word bits a draw changed and no upload wrote since */
+static int flat_on, flat_raw;        /* session 95: kh1_gsmem_flat's switch; a flat sprite's writes in progress */
 static u8 page_tgt[512];             /* 1 + the target that drew there last */
 
 /* the transfer in progress */
@@ -127,6 +128,7 @@ static u32 rd32(u32 w) { const u8 *p = vm + w * 4; return p[0] | p[1] << 8 | p[2
 static void wr32(u32 w, u32 v, u32 bits) {
     u8 *p = vm + w * 4;
     p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24;
+    if (flat_raw) return; /* a flat sprite's pixels stay the draw's (kh1_gsmem_flat_sprite) */
     page_seq[w >> 11] = seq;
     page_drawn[w >> 11] &= ~bits;
 }
@@ -156,7 +158,9 @@ static void put(u32 psm, u32 bp, u32 bw, u32 x, u32 y, u32 v) {
     case KH1_PSMT4HH: wr32(a, (rd32(a) & 0x0FFFFFFF) | v << 28, 0xF0000000u); return;
     /* the 16-, 8- and 4-bit layouts do not share CT32's word: the page is no longer a draw's */
     case KH1_PSMCT16: case KH1_PSMCT16S: case KH1_PSMZ16: case KH1_PSMZ16S:
-        vm[a * 2] = v; vm[a * 2 + 1] = v >> 8; page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; return;
+        vm[a * 2] = v; vm[a * 2 + 1] = v >> 8;
+        if (!flat_raw) { page_seq[a >> 12] = seq; page_drawn[a >> 12] = 0; }
+        return;
     case KH1_PSMT8:   vm[a] = v; page_seq[a >> 13] = seq; page_drawn[a >> 13] = 0; return;
     case KH1_PSMT4:
         vm[a >> 1] = (vm[a >> 1] & (0xF0 >> (a & 1) * 4)) | (v & 15) << (a & 1) * 4;
@@ -512,5 +516,91 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
         }
     st.sprites++;
     st.sprite_pixels += n;
+    return 1;
+}
+
+/* kh1_gsmem_flat_sprite (session 95, docs/renderer-spec.md 5.4 "Session 95"): an untextured SPRITE
+ * (the clears, the display clear, fade, letterbox) filled into the model's pixels, so that
+ * KH1_HOST_SHOT's present (host/null/present.c) shows them.  Off unless kh1_gsmem_flat(1): the present
+ * turns it on.  The fill changes the pixels only: no page is marked as written (the draw stays a
+ * draw, kh1_gsmem_draw marks its target as before, a render target is still one), no counter of the
+ * targets / draws / uploads outputs moves (flat_sprites / flat_pixels are its own), so a run's trace
+ * is the same with the switch on or off.  The GS rules as in kh1_gsmem_sprite: the pixels (X0 - OFX
+ * + 15) >> 4 up to (X1 - OFX + 15) >> 4 inside SCISSOR, the second vertex's RGBA, ALPHA blending
+ * with ABE, FBMSK kept; a CT32 / CT24 / CT16 / CT16S FRAME (CT16: RGBA 5551).  Not drawn (0): fog, a
+ * Z test other than ALWAYS (the Z buffer is not written either), DATE, an alpha test that is not
+ * decided by the flat alpha alone (ATST on the one value: pass draws, fail with AFAIL KEEP skips, any
+ * other AFAIL is not modelled). */
+void kh1_gsmem_flat(int on) { flat_on = on; }
+
+static u32 to16(u32 v) { return (v >> 3 & 0x1F) | (v >> 11 & 0x1F) << 5 | (v >> 19 & 0x1F) << 10 | (v >> 31) << 15; }
+static u32 from16(u32 v) {
+    return (v & 0x1F) << 3 | (v >> 5 & 0x1F) << 11 | (v >> 10 & 0x1F) << 19 | (v & 0x8000 ? 0x80000000u : 0);
+}
+static int atst(u32 m, u32 a, u32 ref) {
+    switch (m) {
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return a < ref;
+    case 3: return a <= ref;
+    case 4: return a == ref;
+    case 5: return a >= ref;
+    case 6: return a > ref;
+    }
+    return a != ref;
+}
+
+int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
+    u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
+    u32 ztst = s->test_lo >> 17 & 3, n = 0, i, d, cd[4], fbmsk = s->frame_hi, v, c16; /* FBMSK: CT32's bits */
+    s32 x0, y0, x1, y1, px0, px1, py0, py1, k, c, cv[4], col[4], ad, f;
+    if (!flat_on) return 0;
+    if ((p & 7) != 6 || p >> 4 & 1 || p >> 5 & 1) return 0;                  /* a SPRITE, TME 0, FGE 0 */
+    c16 = fpsm == KH1_PSMCT16 || fpsm == KH1_PSMCT16S;
+    if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24 && !c16) return 0;
+    if (!fbw || s->test_lo >> 14 & 1) return 0;                              /* DATE */
+    if (s->test_lo >> 16 & 1 && ztst != 1) return 0;                         /* a Z test */
+    for (i = 0; i < 4; i++) cv[i] = s->rgba >> i * 8 & 0xFF;
+    if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)cv[3], s->test_lo >> 4 & 0xFF)) {
+        if (s->test_lo >> 12 & 3) return 0;                                  /* AFAIL not KEEP */
+        return 1;                                                            /* nothing written */
+    }
+    x0 = (s32)(s->xy[0] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
+    y0 = (s32)(s->xy[0] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
+    x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
+    y1 = (s32)(s->xy[1] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
+    if (x1 < x0) { k = x0; x0 = x1; x1 = k; }
+    if (y1 < y0) { k = y0; y0 = y1; y1 = k; }
+    px0 = (x0 + 15) >> 4; px1 = (x1 + 15) >> 4;
+    py0 = (y0 + 15) >> 4; py1 = (y1 + 15) >> 4;
+    if (px0 < (s32)(s->scissor_lo & 0x7FF)) px0 = s->scissor_lo & 0x7FF;
+    if (px1 > (s32)(s->scissor_lo >> 16 & 0x7FF) + 1) px1 = (s->scissor_lo >> 16 & 0x7FF) + 1;
+    if (py0 < (s32)(s->scissor_hi & 0x7FF)) py0 = s->scissor_hi & 0x7FF;
+    if (py1 > (s32)(s->scissor_hi >> 16 & 0x7FF) + 1) py1 = (s->scissor_hi >> 16 & 0x7FF) + 1;
+    flat_raw = 1;
+    for (k = py0; k < py1; k++)
+        for (c = px0; c < px1; c++) {
+            for (i = 0; i < 4; i++) col[i] = cv[i];
+            d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
+            if (c16) d = from16(d);
+            if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
+                for (i = 0; i < 4; i++) cd[i] = d >> i * 8 & 0xFF;
+                ad = fpsm == KH1_PSMCT24 ? 0x80 : cd[3];
+                f = s->alpha_lo >> 4 & 3;
+                f = f == 0 ? cv[3] : f == 1 ? ad : (s32)(s->alpha_hi & 0xFF);
+                for (i = 0; i < 3; i++) {
+                    s32 a = sel(s->alpha_lo & 3, cv[i], cd[i]), b = sel(s->alpha_lo >> 2 & 3, cv[i], cd[i]);
+                    s32 m = (a - b) * f;
+                    col[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + sel(s->alpha_lo >> 6 & 3, cv[i], cd[i]));
+                }
+            }
+            v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
+            v = (d & fbmsk) | (v & ~fbmsk);
+            put(fpsm, fbp, fbw, c, k, c16 ? to16(v) : v);
+            n++;
+        }
+    flat_raw = 0;
+    st.flat_sprites++;
+    st.flat_pixels += n;
     return 1;
 }
