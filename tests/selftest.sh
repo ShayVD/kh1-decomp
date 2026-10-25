@@ -250,9 +250,15 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/batch_test.c" "$ROOT/host/null/pipes.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" \
       "$ROOT/host/port/canvas.c" "$ROOT/host/port/batch.c" "$ROOT/host/port/vertex.c" "$ROOT/host/port/target.c" \
       "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" \
-      "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c"
+      "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c" \
+      "$ROOT/host/port/ring.c"
   "$W/batch_test" > "$W/batch.log" || { cat "$W/batch.log"; exit 1; }
   tail -n 1 "$W/batch.log"
+  # the per-frame vertex and uniform rings (renderer-spec 4.13 "Session 125")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/ring_test" \
+      "$ROOT/tests/host/ring_test.c" "$ROOT/host/port/ring.c"
+  "$W/ring_test" > "$W/ring.log" || { cat "$W/ring.log"; exit 1; }
+  tail -n 1 "$W/ring.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \

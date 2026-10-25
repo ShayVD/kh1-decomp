@@ -9,13 +9,26 @@
  *   breaks    a texture upload between two sprites in one state: two batches, one opened by the transfer;
  *             TEX0 / FOGCOL / SCISSOR / FRAME changes: a texture, a uniform, a scissor, a render pass.
  *   date      a DATE draw: each batch two draw calls (the set-up and the draw).
- *   frames    kh1_batch_frame: five frames, the totals and the largest frame. */
+ *   frames    kh1_batch_frame: five frames, the totals and the largest frame.
+ * Session 125 (batch.h's column groups, renderer-spec 4.13 "Session 125"):
+ *   columns   two full-screen sprites drawn under each of the 16 32-pixel column scissors (the PS2's
+ *             texture-cache trick): one batch, 15 columns merged, 30 primitives absorbed; the full
+ *             SCISSOR after them joins the same batch (the union is the whole canvas).
+ *   partial   column 5's second sprite differs: columns 1-4 merge, column 5's first sprite is replayed
+ *             under its own scissor and starts a new group, column 6 (back to the first pair) is replayed
+ *             in turn, and columns 7-15 merge into it: 3 batches, 13 columns merged.
+ *   feedback  the sprites sample the target they draw into: no column merges.
+ *   transfer  an upload between two columns: no merge across it.
+ *   wide      at 960 x 544 the view's 16 columns are adjacent and their union is the full scissor's
+ *             (target.c's rounding), and a batcher fed them directly merges them into one batch. */
 #include "common.h"
 #include "../../host/null/gsregs.h"
 #include "../../host/null/gsmem.h"
 #include "platform/batch.h"
+#include "platform/canvas.h"
 
 int printf(const char *, ...);
+void *memset(void *, int, __SIZE_TYPE__);
 
 void kh1_pipes_prim(u32 prim, const KH1GsVert *v, u32 n, u32 state);
 void kh1_pipes_frame(void);
@@ -54,6 +67,16 @@ static void upload(void) {
     W(0x53, 0, 0);                        /* TRXDIR 0 */
     kh1_gsmem_image(q, 4);
 }
+
+/* a full-screen sprite, offset by d pixels */
+static void full(s32 d) {
+    W(0x03, 0, 0);
+    W(0x05, x16(d) | x16(d) << 16, 0);
+    W(0x03, 256 * 16 | (192u * 16) << 16, 0);
+    W(0x05, x16(512 + d) | x16(384 + d) << 16, 0);
+}
+
+static void column(u32 k) { W(0x40, 32 * k | (32 * k + 31) << 16, 383u << 16); }
 
 static KH1BatchCount frame(void) {
     KH1BatchCount c;
@@ -140,6 +163,93 @@ int main(void) {
 
     CHECK("frames: five frames, the largest the breaks' 7 batches and the glyphs' 100 primitives",
           b->frames == 5 && c.batches == 7 && c.prims == 100 && b->total.prims == 100 + 8 + 4 + 7 + 2);
+    /* session 125: the column groups */
+    W(0x47, 0, 0);
+    W(0x00, 0x156, 0);
+    for (k = 0; k < 16; k++) {
+        column(k);
+        full(0);
+        full(-2);
+    }
+    c = b->frame;
+    CHECK("columns: 16 columns of two full-screen sprites are one batch, 15 columns merged", c.batches == 1 &&
+          c.prims == 32 && c.columns == 15 && c.merged == 30 && c.verts == 32 * 6);
+    W(0x40, 511u << 16, 383u << 16);
+    full(0);
+    c = b->frame;
+    CHECK("columns: the full scissor after them joins the batch (the union is the whole canvas)", c.batches == 1 &&
+          c.prims == 33);
+    frame();
+
+    for (k = 0; k < 16; k++) {
+        column(k);
+        full(0);
+        full(k == 5 ? -4 : -2);
+    }
+    c = b->frame;
+    printf("batch_test: partial: %u batches, %u columns merged, %u absorbed, %u primitives\n", c.batches, c.columns,
+           c.merged, c.prims);
+    /* columns 0-4: one group, one batch; column 5's first sprite is replayed (a batch under its own scissor)
+     * and its odd sprite joins it, the new group; column 6's second sprite differs from that group's, so column
+     * 6 is replayed too (a third batch) and its pair the group columns 7-15 merge into: 4 + 9 columns */
+    CHECK("partial: columns 1-4 merge, columns 5 and 6 are replayed, 7-15 merge, nothing is lost", c.columns == 13 &&
+          c.merged == 26 && c.prims == 32 && c.batches == 3 && c.verts == 32 * 6);
+    frame();
+
+    W(0x06, 0x1A00 | 8 << 14 | 0 << 20 | 9 << 26 | 9u << 30, 1 << 2); /* TEX0_1: the 3D target itself */
+    for (k = 0; k < 16; k++) {
+        column(k);
+        full(0);
+    }
+    c = b->frame;
+    CHECK("feedback: sprites sampling their own target never merge", c.columns == 0 && c.batches == 16 && c.prims == 16);
+    frame();
+
+    W(0x06, 0x2000 | 1 << 14 | 6 << 26 | 2u << 30, 1 | 1 << 2);
+    for (k = 0; k < 4; k++) {
+        if (k == 2) upload();
+        column(k);
+        full(0);
+    }
+    c = b->frame;
+    CHECK("transfer: an upload between columns 1 and 2 ends the group", c.columns == 2 && c.batches == 2 &&
+          c.breaks == 1 && c.prims == 4);
+    frame();
+
+    {
+        KH1Canvas cv;
+        KH1RenderPass p, pf;
+        KH1DrawRegs r;
+        KH1DrawState d;
+        static KH1Batcher wb;
+        int adj = 1;
+        kh1_canvas_fit(&cv, 960.0f, 544.0f);
+        memset(&r, 0, sizeof r);
+        r.prim = 0x156;
+        r.frame_lo = 0xD0 | 8 << 16;
+        r.zbuf_lo = 0x31000070;
+        r.zbuf_hi = 1;
+        r.alpha_lo = 0x44;
+        r.tex0_lo = 0x2000 | 1 << 14 | 6 << 26 | 2u << 30;
+        r.tex0_hi = 1 | 1 << 2;
+        r.tex1_lo = 0x60;
+        r.clamp_lo = 5;
+        kh1_drawstate_of(&r, &d);
+        kh1_batch_reset(&wb);
+        kh1_target_of(r.frame_lo, 0, r.zbuf_lo, r.zbuf_hi, 0, 511u << 16, 383u << 16, 0x7000, 0x7400, &cv, 1.0f, &pf);
+        for (k = 0; k < 16; k++) {
+            s32 prev = p.sx1;
+            kh1_target_of(r.frame_lo, 0, r.zbuf_lo, r.zbuf_hi, 0, 32 * k | (32 * k + 31) << 16, 383u << 16, 0x7000,
+                          0x7400, &cv, 1.0f, &p);
+            if (k ? p.sx0 != prev : p.sx0 != pf.sx0) adj = 0;
+            kh1_batch_prim_sig(&wb, &d, &p, 6, 0x1234567);
+        }
+        CHECK("wide: the view's 16 columns are adjacent, their union the full scissor's", adj && p.sx1 == pf.sx1 &&
+              pf.sx1 > 512);
+        CHECK("wide: the 16 columns are one batch", wb.frame.batches == 1 && wb.frame.columns == 15 &&
+              wb.cur.sx0 == pf.sx0 && wb.cur.sx1 == pf.sx1);
+    }
+
     printf("batch_test: %s (%d checks)\n", fails ? "FAIL" : "PASS", checks);
     return fails != 0;
 }
