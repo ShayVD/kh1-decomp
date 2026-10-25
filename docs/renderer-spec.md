@@ -2525,6 +2525,9 @@ view's half to it, its load scales it back into its own texture), so neither con
 Session 105 (vita-port-plan 5.1as): on the host the copy is only filled with the present's fill on
 (`KH1_HOST_SHOT`), and then the blur is sent as on the PS2; under `KH1_HOST_WIDE` too the stretched copy
 (x 0 .. 338.8) overruns the model's 256-wide buffer into blocks 0x3900 .. 0x393F (host model only).
+Session 106 (5.1at): the present's fill now stops at FBW x 64, so the model's wide menu capture holds canvas
+-82.8 .. 429 and writes nothing past it; the depth blur's capture `D_002A5380` is FBW 8 and holds the whole
+view at half size (x 0 .. 338.8) without wrapping.
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame
