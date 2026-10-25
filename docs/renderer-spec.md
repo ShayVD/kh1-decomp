@@ -2391,6 +2391,42 @@ changes the model's pixels. Fake disc (stub:2, `KH1_HOST_TRACE=5`): `gsstate.py 
 black (the target holds only the clear, colour 0). The real disc's shots now show the target's flat passes
 and its uploads' sprites through the copy, not the 3D (the model has none). gsmem_test +5 checks.
 
+#### Session 97: the frame copy walked, the wide view's shots (static + host)
+
+**The copy's packet, read from the ELF** (`D_002A6890`, one REFE of 0x2C qwords at `D_002A65D0`): a
+PACKED GIFtag of 6 x A+D (`FRAME_1` the display, FBP 0 FBW 8 CT24; `ZBUF_1` ZMSK 1; `TEX0_1` the target
+`0x1A00` TBW 8 CT24, TW / TH 9, TCC, MODULATE; `TEST_1` ZTE ZTST ALWAYS; `TEX1_1` 0x60, bilinear both ways;
+`ALPHA_1` 0x44, `(Cs - Cd) As + Cd`), a REGLIST of PRIM `0x116` (SPRITE|TME|ABE|FST) and RGBAQ `0x80808080`,
+a REGLIST of 16 x (UV XYZ2 UV XYZ2): strip k is x `0x7000 + 0x200k` .. `+ 0x200` (32 px) over y `0x7400` ..
+`0x9000` (all **448** display lines), u `32k + 0.5` .. `32k + 32.5` and **v 0 .. 384**: the target's 384
+lines stretched to the display's 448 (NTSC's taller pixels, so a port presents the target's 384 rows as the
+4:3 canvas and never needs the 448), Z `0xFFFFFFFE`; then an EOP A+D `ZBUF_1` back with ZMSK 0. TEXA is not
+in the packet (the frame's environment sets it). tests/host/present_test.c builds this shape and walks it
+through the chain walk (`kh1_dma_walk`): with a made-up target the display shot shows each target pixel at
+the canvas map's screen pixel (6 points, strip edges included), the pillarbox black, 16 textured sprites,
+512 x 448 pixels.
+
+**The shots under `KH1_HOST_WIDE`.** The model's buffers are the PS2's 512 wide, with canvas x 0 at pixel
+0. fullscreen.c's row stretches the copy (`KH1_FS_X | KH1_FS_U`): its X to the view, -82.8 .. 594.8, and its
+u from the view's left edge, 0 .. 677.6, which is right for a renderer whose target is the view's width
+(texel 0 at the view's left) but not for the model's 512-wide target. So in the model **the display's
+pixel d holds canvas x d + margin** (checked: display (100, 100) = target (183, 85)), and its last 82.8
+columns read texels past 512 (not the target's). The present (host/null/present.c, `kh1_present_wide`, set
+by main.c from `kh1_view_side16`) now:
+
+- in display mode reads the display back by the margin, so the shot lines up with the canvas map: canvas
+  x margin .. 512 shown, canvas 0 .. margin and the view's sides black; the shot line says "wide: shown from
+  canvas x 82.8125, the copy's u from the view's left edge (use :target)";
+- in target mode shows the target as it is (canvas 0 .. 512 in the centre), the view's sides black, and
+  says "wide: the view's sides black, the target is the PS2's 512 (a renderer's come from the wide 3D)".
+
+**What a renderer draws in the sides.** Nothing comes from the copy: a port's 3D target is the view's width
+(the culls already let the wider frustum's objects through, 5.4 "Session 91"), the clears, fades and
+letterbox are stretched to it (fullscreen.c), and the frame copy reads it whole (u from the view's left
+edge, 677.6 texels at 960 x 544). The PS2's 512-wide target has no pixel there, so the host model cannot
+show the sides; the first picture of them is the renderer's own (vita-port-plan 5, step 3). The HUD is
+drawn after the copy and moves by its anchors (5.3.1), in canvas coordinates, not the shifted ones.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and

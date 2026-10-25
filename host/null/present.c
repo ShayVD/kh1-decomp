@@ -4,7 +4,11 @@
  * copy's TEX0), is written as a W x H PAM through the canvas map (include/platform/canvas.h): the 4:3
  * canvas scaled to the screen's height and centred, point-sampled, black where the model has no pixel
  * (the pillarbox, and under KH1_HOST_WIDE the view's sides: the model's buffers are the PS2's 512
- * wide).  The display's 448 lines are the canvas's 384 (NTSC's taller pixels).
+ * wide).  The display's 448 lines are the canvas's 384 (NTSC's taller pixels).  Session 97: under
+ * KH1_HOST_WIDE (kh1_present_wide) the shot line says so; the display's copy is stretched (u from the
+ * view's left edge, host/port/fullscreen.c), so the display's pixel d holds canvas d + margin and the
+ * display shot is read shifted back by it, shown from canvas x margin to 512 (renderer-spec 5.4
+ * "Session 97").
  *
  * The model holds what uploads, copies and the point-sampled sprites it can draw (host/null/gsmem.c)
  * wrote, and since session 95 the untextured sprites (the clears, the display clear, fade and
@@ -35,7 +39,8 @@ static u32 rgb_of(u32 psm, u32 v) {
     return v & 0xFFFFFF;
 }
 
-int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
+/* the buffer's pixel for canvas x is its column cx - dx, shown while that column is below xmax */
+static int present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines, f32 dx, f32 xmax) {
     KH1Canvas c;
     s32 x, y;
     f32 cx, cy;
@@ -48,7 +53,8 @@ int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
             u32 v = 0;
             /* the pixel's centre, back to the canvas */
             kh1_canvas_unmap(&c, (f32)x + 0.5f, (f32)y + 0.5f, &cx, &cy);
-            if (cx >= 0.0f && cx < 512.0f && cx < (f32)(bw * 64) && cy >= 0.0f && cy < 384.0f)
+            cx -= dx;
+            if (cx >= 0.0f && cx < xmax && cx < (f32)(bw * 64) && cy >= 0.0f && cy < 384.0f)
                 v = rgb_of(psm, kh1_gsmem_read_pixel(psm, bp, bw, (u32)cx, (u32)(cy * (f32)lines / 384.0f)));
             o[0] = v;
             o[1] = v >> 8;
@@ -57,7 +63,11 @@ int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
     return 0;
 }
 
-static s32 shot_w, shot_h, shot_target;
+int kh1_present_rgb(u8 *rgb, s32 w, s32 h, u32 psm, u32 bp, u32 bw, u32 lines) {
+    return present_rgb(rgb, w, h, psm, bp, bw, lines, 0.0f, 512.0f);
+}
+
+static s32 shot_w, shot_h, shot_target, shot_side16;
 static const char *shot_dir;
 static u32 shot_send, shot_n;
 static u8 *shot_rgb;
@@ -66,7 +76,8 @@ static void present_after(u32 tadr) {
     const KH1GsState *s = kh1_gs_state();
     const KH1GsReg *r = shot_target ? &s->ctx[0].tex0 : &s->ctx[0].frame;
     u32 bp, bw, psm;
-    char path[512];
+    char path[512], wide[160];
+    f32 dx = 0.0f, xmax = 512.0f;
     void *f;
     if (tadr != shot_send) return;
     if (shot_target) { /* TEX0: TBP0, TBW, PSM */
@@ -78,7 +89,17 @@ static void present_after(u32 tadr) {
         bw = r->lo >> 16 & 63;
         psm = r->lo >> 24 & 63;
     }
-    if (kh1_present_rgb(shot_rgb, shot_w, shot_h, psm, bp, bw, shot_target ? 384 : 448)) {
+    wide[0] = 0;
+    if (shot_side16 && shot_target) {
+        sprintf(wide, "; wide: the view's sides black, the target is the PS2's 512 (a renderer's come from the wide 3D)");
+    } else if (shot_side16) {
+        /* session 97: the stretched copy read u from the view's left edge, so display pixel d holds
+         * canvas d + margin (texels past 512 are not the target's: not shown) */
+        dx = (f32)shot_side16 / 16.0f;
+        xmax = 512.0f - dx;
+        sprintf(wide, "; wide: shown from canvas x %.4f, the copy's u from the view's left edge (use :target)", dx);
+    }
+    if (present_rgb(shot_rgb, shot_w, shot_h, psm, bp, bw, shot_target ? 384 : 448, dx, xmax)) {
         printf("kh1-host: shot frame %lu: psm %02x bw %u not presentable\n", kh1_host_frame(), psm, bw);
         return;
     }
@@ -91,10 +112,12 @@ static void present_after(u32 tadr) {
     fprintf(f, "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 3\nMAXVAL 255\nTUPLTYPE RGB\nENDHDR\n", shot_w, shot_h);
     fwrite(shot_rgb, 3, (__SIZE_TYPE__)shot_w * shot_h, f);
     fclose(f);
-    printf("kh1-host: shot frame %lu: %s (%s bp %04x bw %u psm %02x; %u flat, %u textured sprites so far)\n",
+    printf("kh1-host: shot frame %lu: %s (%s bp %04x bw %u psm %02x; %u flat, %u textured sprites so far%s)\n",
            kh1_host_frame(), path, shot_target ? "target" : "display", bp, bw, psm, kh1_gsmem_stats()->flat_sprites,
-           kh1_gsmem_stats()->tex_sprites);
+           kh1_gsmem_stats()->tex_sprites, wide);
 }
+
+void kh1_present_wide(s32 side16) { shot_side16 = side16; }
 
 int kh1_present_init(s32 w, s32 h, int target, const char *dir, const void *send) {
     if (w <= 0 || h <= 0 || w > 4096 || h > 4096) return -1;

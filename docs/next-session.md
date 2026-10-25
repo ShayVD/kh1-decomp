@@ -9,13 +9,24 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 96 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 97 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 96, 2026-10-25)
+## Where we stopped (end of session 97, 2026-10-25)
+
+- **Session 97** (static + host, vita-port-plan 5.1ak, renderer-spec 5.4 "Session 97"): **the frame copy
+  walked, the wide view's shots.** No change under src/ (kh1.elf byte-identical, no float-untested row).
+  The frame copy's packet read from the ELF (`D_002A65D0`: 6 x A+D, REGLIST PRIM / RGBAQ, 16 strips of UV
+  XYZ2 UV XYZ2, **v 0 .. 384 over the display's 448 lines**, a ZBUF ZMSK bracket); tests/host/present_test.c
+  builds that shape and walks it (`kh1_dma_walk`) under a made-up target: the display shot shows the target
+  at the canvas map's pixels. **Finding:** under `KH1_HOST_WIDE` the stretched copy reads u from the view's
+  left edge, so the model's 512-wide display holds canvas x d + 82.8 at pixel d (session 96's display shot
+  was shifted). `kh1_present_wide` (set by main.c): the display shot is read back by the margin (canvas
+  82.8 .. 512 shown), the target shot unchanged with black sides; both shot lines say so. Renderer-spec 5.4:
+  the sides are the renderer's own wide 3D target, never the copy. present_test 22 -> 30 checks.
 
 - **Session 96** (host only, vita-port-plan 5.1aj, renderer-spec 5.4 "Session 96"): **the frame copy in the
   present, the counts' high-water marks.** No change under src/ (kh1.elf byte-identical, no float-untested
@@ -278,11 +289,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 97 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 98 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s97 and /mnt/project-files/kh1-runtime/s97, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s98 and /mnt/project-files/kh1-runtime/s98, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -300,7 +311,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 96: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 97: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -325,7 +336,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    DATA rows** with **`KH1_HOST_COUNTS=1`** on every real-disc run (session 96, host/null/counts.c: printed at the
    end; an "OVER" row is a real overrun, on the PS2 too: write it into countcheck's REVIEWED entry; the collision
    count is a lower bound). **Session 96: the display shot now goes through the frame copy** (the target's
-   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart. Fix host-only causes the way
+   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart (**session 97**: under `KH1_HOST_WIDE` the display shot starts at canvas x 82.8 by design; compare one `:target` shot). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
@@ -343,16 +354,17 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **present_test through the copy**: a made-up 3D target and a frame copy
-   send walked by the chain walk (tests/host/present_test.c), the shot showing the target's colours at the
-   canvas map's pixels (session 96 tested the copy in gsmem_test only); (b) **the shot's "target" mode under
-   `KH1_HOST_WIDE`**: the target is the PS2's 512 wide, so the view's sides stay black; write down in
-   renderer-spec 5.4 what a renderer draws there (the sides come from the wide 3D, not the copy) and make the
-   present say so on its shot line; (c) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
-   callers of prim.c's senders still wait for the Mac.
+4. **Static, without the Mac**: (a) **the other copies' shapes**: read the Z-area copy `D_002A5FD0`, the
+   spin copy `D_002A4ED0` and the spin strip `D_002A4FC0` from the ELF the way session 97 read the frame copy
+   (record their v ranges, CLAMP and SCISSOR in renderer-spec 5.4) and walk each in present_test or
+   gsmem_test under the wide stretch: does each land where fullscreen.c's row says, and does the model show
+   the same margin shift (write it down per copy); (b) a fake-disc `KH1_HOST_WIDE=1 KH1_HOST_TRACE=5` run
+   with `gsstate.py --extents`: the frame copy's 16 strips at -82.8 .. 594.8 (the run ends in func_00132790
+   with stub:2, a known fake-disc stop: use stub or a frame count before it); (c) `KH1_HOST_DMAC=defer` as
+   the default, argcheck's 3 value uses and the callers of prim.c's senders still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=97`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=98`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 98) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 99) with this
    prompt: the user wants each session to start the next one without being asked.
