@@ -137,6 +137,13 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/gsimage_test" > "$W/gsimage.log" || { cat "$W/gsimage.log"; exit 1; }
   tail -n 1 "$W/gsimage.log"
+  # the lens flare's visibility count on that store (kelnscls.nostrict.c func_00192958, session 103)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -fno-strict-aliasing -DKH1_HOST -I"$ROOT/include" -I"$ROOT/src" \
+      -o "$W/flare_test" "$ROOT/tests/host/flare_test.c" "$ROOT/src/ppp/kelnscls.nostrict.c" \
+      "$ROOT/host/port/libvu0.c" "$ROOT/host/null/gsimage.c" "$ROOT/host/null/dmawalk.c" \
+      "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" -lm
+  "$W/flare_test" > "$W/flare.log" || { cat "$W/flare.log"; exit 1; }
+  tail -n 1 "$W/flare.log"
   # KH1_HOST_COUNTS's high-water marks (host/null/counts.c, session 96)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/counts_test" \
       "$ROOT/tests/host/counts_test.c" "$ROOT/host/null/counts.c"
