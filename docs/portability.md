@@ -171,7 +171,11 @@ rewrite matched code.
    for constants: `1UL << 61` is bit 61 on the EE and undefined (gcc folds
    it to 0) on the host and the Vita; write `1ULL << n` or `(u64)1 << n` (the same
    EE code). tools/host/longcheck.py (in `make test`) fails any L / UL
-   literal or `(long)` cast shifted by 32 or more (session 112).
+   literal or `(long)` cast shifted by 32 or more (session 112), any
+   `sizeof(long)` and, with `--cc`, gcc's -Woverflow (a constant wider than
+   the 32-bit type it lands in; session 113: none). Truncating a u64 to a
+   32-bit type, u64 bit-fields and 32-bit halves of a 64-bit word behave the
+   same on all three (little-endian, the same bit-field order under -m32).
 6. **Endianness** is little on both platforms; alignment rules differ only for
    128-bit types, which are platform code.
 7. **Floating point is not IEEE on the EE.** The R5900 FPU flushes denormals

@@ -115,6 +115,22 @@ if python3 -I "$ROOT/tools/host/longcheck.py" --src "$W/longneg" > "$W/long_neg.
    ! grep -q 'objdraw.nostrict.c:98: 1UL << 61' "$W/long_neg.log"; then
   echo "selftest: longcheck missed 1UL << 61" >&2; cat "$W/long_neg.log" >&2; exit 1
 fi
+# session 113: sizeof(long) (8 on the EE, 4 on the host) fails too
+mkdir -p "$W/longneg2" && echo 'int f(void) { return sizeof(long); }' > "$W/longneg2/f.c"
+if python3 -I "$ROOT/tools/host/longcheck.py" --src "$W/longneg2" > "$W/long_neg2.log" ||
+   ! grep -q 'f.c:1: sizeof(long)' "$W/long_neg2.log"; then
+  echo "selftest: longcheck missed sizeof(long)" >&2; cat "$W/long_neg2.log" >&2; exit 1
+fi
+# session 113: the CLUTs the windows' and text's packets read, from the C (tools/host/clutcheck.py); a window
+# part whose palette 4 is read after its TEX2's CLD 2 load is taken away fails
+python3 -I "$ROOT/tools/host/clutcheck.py" > "$W/clut.log" || { cat "$W/clut.log"; exit 1; }
+tail -n 1 "$W/clut.log"
+mkdir -p "$W/clutneg/src" && cp -r "$ROOT/src/text" "$W/clutneg/src/"
+sed -i 's/p\[6\] = 0x4007bf8001300000;/p[6] = 0x0007bf8001300000;/' "$W/clutneg/src/text/winpart.nostrict.c"
+if python3 -I "$ROOT/tools/host/clutcheck.py" --src "$W/clutneg/src" > "$W/clut_neg.log" ||
+   ! grep -q 'func_00202300 .*reads the CLUT 0x3DFC (CSA 4)' "$W/clut_neg.log"; then
+  echo "selftest: clutcheck missed a window part's CLUT load taken away" >&2; cat "$W/clut_neg.log" >&2; exit 1
+fi
 # The host's DMA chain walk (host/null/dmawalk.c) on made-up chains, when gcc -m32 works.
 if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/dmawalk_test" \
      "$ROOT/tests/host/dmawalk_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" 2> "$W/dmawalk_cc.log"; then

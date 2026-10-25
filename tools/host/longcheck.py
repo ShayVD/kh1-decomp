@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A `long` literal shifted by 32 or more (phase 5, docs/portability.md rule 5, session 112).
+"""A `long` literal shifted by 32 or more, and other 64-bit `long` assumptions (phase 5, portability.md rule 5).
 
 On the EE `long` is 64-bit, so the game's C writes 64-bit GS words as `1UL << 61` and the PS2 build gets
 bit 61. Under the host's gcc -m32 (and on the Vita) `long` is 32-bit: the shift is undefined (gcc folds a
@@ -14,7 +14,9 @@ src/sdk, host/, include/), comments and `#ifdef KH1_PS2` branches left out. Writ
 
 --cc also compiles each src/ file (but src/sdk) with that compiler under -m32 -fsyntax-only and reports
 gcc's "shift count >= width of type": the shifts of 32-bit variables the text check cannot type (session
-112: objutil.c func_001375d8's `(u32 << 32) >> 32`, which the EE does in a 64-bit register).
+112: objutil.c func_001375d8's `(u32 << 32) >> 32`, which the EE does in a 64-bit register), and (session
+113) its -Woverflow: a constant wider than the 32-bit type it lands in. Session 113 also fails
+`sizeof(long)` (8 on the EE, 4 here).
 
 Exit 1 with one line per hit.
 """
@@ -29,6 +31,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fscheck import strip_ps2  # noqa: E402
 
+# (session 113) sizeof(long): 8 on the EE, 4 on the host and the Vita
+SIZEOF = re.compile(r"\bsizeof\s*\(\s*(?:unsigned\s+|signed\s+)?long(?:\s+int)?\s*\)")
 SHIFT = re.compile(r"(?:\b(?:0[xX][0-9a-fA-F]+|\d+)(?:[uU][lL]|[lL][uU]?)\b|\(\s*(?:unsigned\s+|signed\s+)?long(?:\s+int)?\s*\)\s*"
                    r"(?:\w+|\([^()]*\)))\s*<<\s*(0[xX][0-9a-fA-F]+|\d+)")
 
@@ -56,6 +60,9 @@ def main():
     for path in files((args.src, args.host, args.include)):
         n += 1
         text = strip_ps2(open(path, errors="replace").read())
+        for m in SIZEOF.finditer(text):
+            hits.append("%s:%d: %s: 4 on the host; write sizeof(u64) or sizeof(s64)" % (
+                os.path.relpath(path, ROOT), text.count("\n", 0, m.start()) + 1, m.group(0)))
         for m in SHIFT.finditer(text):
             if int(m.group(1), 0) >= 32:
                 hits.append("%s:%d: %s: a 32-bit long on the host; write ULL or (u64)" % (
@@ -69,14 +76,14 @@ def main():
                                 "-Wno-implicit-function-declaration", "-Wno-int-conversion",
                                 "-Wno-incompatible-pointer-types", "-Wno-implicit-int", path],
                                capture_output=True, text=True, env=dict(os.environ, LC_ALL="C"))
-            return [l for l in p.stderr.splitlines() if "shift count" in l]
+            return [l for l in p.stderr.splitlines() if "shift count" in l or "[-Woverflow]" in l]
         with ThreadPoolExecutor(os.cpu_count() or 4) as ex:
             for ls in ex.map(one, cs):
                 hits += [os.path.relpath(l.split(": warning")[0], ROOT) + ": " + l.split("warning: ")[-1]
                          for l in ls]
     for h in hits:
         print("longcheck: " + h)
-    print("longcheck: %d files, %d shifts of 32 or more%s" % (n, len(hits), " (gcc too)" if args.cc else ""))
+    print("longcheck: %d files, %d shifts of 32 or more, sizeof(long) or overflows%s" % (n, len(hits), " (gcc too)" if args.cc else ""))
     sys.exit(1 if hits else 0)
 
 

@@ -32,6 +32,7 @@ Conventions:
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --targets [--draws]` | the render targets the host's GS memory model saw drawn into (each FRAME / ZBUF, its extent, bits and primitives) and, with `--draws`, which draw states read a target as a texture (§5.2). New in session 81 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --nodes [--frame N]` | the draw / immediate list nodes as the walks ran them (`PlatGsListNode`): one frame's command order (nodes and the main-thread sends between them) with each node's callback, payload, sends, kicks and uploads, then every distinct node checked against `drawkeys.py`'s key map (§4.12). New in session 83 |
 | `python3 -I tools/host/sendorder.py [--all]` | the main loop's tasks that send to the GS, with their key and first sync or send, against the draw list's start (`0x9C40`) and the immediate list's wait (`0x27CB8`): reads only src/ (§4.12). New in session 81 |
+| `python3 -I tools/host/clutcheck.py [-v]` | the CLUT each window, text, menu and HUD sprite reads, from the C's per-draw packets: loaded in its own picture (header and packet) or listed in `CLUT_EXPECTED` with who loads it; no ELF needed (§4.9 "Session 113"). New in session 113 |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -1109,6 +1110,21 @@ temporary packets.
   `SPRITE|TME|FST` copying the 3D target (`TEX0` `0x1A00` CT24 512x512) to the display buffer (FBP
   0), `D_002B66B0` 3 sprites reading the Z area as a CT24 texture (`0xE00`) into the 3D target,
   `D_002BC980` one fill of the display buffer. None has ABE (their ALPHA_1 is set but unused).
+
+- **Session 113 (vita-port-plan 5.1ba): which CLUT each window and text sprite reads, checked from the C**
+  (tools/host/clutcheck.py, in `make test`). Every packet that draws textured sprites loads the CLUT it reads
+  in the same picture (its header send and its own packet): the windows' TEX2 PSMT8 CLD 2 of `0x3DFC` (all 16
+  palettes) before the parts' PSMT4 CSA 0 / 3 / 4, the text's TEX2 PSMT8 CLD 2 of `0x3FFC` before each
+  glyph's PSMT4HL / HH CSA 0 / 1, the menus' images (`0x3640`, `0x3680`, `0x3700`) and the HUD faces
+  (`0x3C00`) with CLD 1. The headers' own TEX0 (CLD 1) load palette 0 only. One picture relies on a re-send:
+  wintext's message draw `func_001f94f0` sends every glyph as the whole chain from its head (QWC 11, the head's
+  TEX2 CLD 2 of `0x3FFC` included), so inline icons drawn between glyphs (control code 15, the window font's
+  `0x3DFC`) do not leave the wrong CLUT. The timer's three TEX0s (`D_006692D8` / `D_00669308` /
+  `D_00669338`: PSMT4 `0x3600`, CBP `0x3A00`, CSA 0 / 2 / 6, CLD 0) are the second TEX0 of ui.c
+  `func_0024aa48`'s pair (§4.10: the first is forced to PSMT8 CSA 0 CLD 1), so they read a CLUT loaded just
+  before them too. **For a port**: no window, text, menu or HUD sprite depends on what another draw left in
+  the CLUT buffer, so a palette can be looked up by (CBP, CPSM, CSA) alone (a 4-bit sprite's palette is the
+  16 entries at `CSA x 16` of the 256-entry CLUT at CBP).
 
 ### 4.10 The builders giftags.py misses: lists, the field text, the selector, the HUD gauges (session 80, static)
 

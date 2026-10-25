@@ -2463,6 +2463,37 @@ cases, one changed).
 - **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
   of prim.c's four senders.
 
+### 5.1ba Session 113: the windows' and text's CLUTs, and the other `long` assumptions
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; tools and docs only,
+no float-untested row. selftest PASS (two new negative cases).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The windows' and text's CLUTs** (item 4b): new **tools/host/clutcheck.py** (in `make test`, no ELF needed)
+  runs fscheck's CLUT model (`clut_load` / `clut_reads`) on the packets the C builds per draw, which fscheck
+  cannot walk: per sending function, in source order, the TEX0 / TEX2 values the C writes (constants, or
+  expressions whose CLUT fields it evaluates with each variable at 0 and 0x1F: a field that changes is
+  "variable"; a variable CSA needs all 16 palettes, a variable PSM is taken as 4-bit), the textured GIF tags,
+  the static headers sent first (their TEX0 read from func_001f2eb8) and the packet builders called (inlined).
+  All of src/ but src/sdk: **66 pictures, 179 CLUT loads, 228 reads (57 at a variable CSA), 0 problems**, one
+  `CLUT_EXPECTED` entry: wintext's message draw `func_001f94f0` re-sends its head (TEX2 CLD 2 of `0x3FFC`) with
+  every glyph, so the inline icons between glyphs (the window font's `0x3DFC`) do not carry over. The timer's
+  CLD 0 TEX0s (CBP `0x3A00`, CSA 0 / 2 / 6), which the text heuristic does not see (no register number next to
+  them), were checked by hand: they are the second TEX0 of ui.c `func_0024aa48`'s pair, whose first is PSMT8
+  CSA 0 CLD 1 (renderer-spec 4.10). **So a port can key every 2D palette by (CBP, CPSM, CSA)**: no window,
+  text, menu or HUD sprite reads a CLUT another draw left (renderer-spec 4.9 "Session 113"). Limits: branches
+  are read in source order, and a TEX value with no register number within 6 lines is not seen (`-v` lists
+  what is).
+- **Other EE-only integer widths** (item 4c): gcc -m32 over src/ (but src/sdk) finds no -Woverflow (a
+  constant wider than its 32-bit type) and no `sizeof(long)`; longcheck now fails both (gcc's -Woverflow with
+  `--cc`). Checked and harmless: the one `long` local (objutil.c `func_001375d8`, holds a u32), sceLseek64's
+  EE-only prototype (the host's PlatFsLseek64 is s64), 28 u64-to-32-bit narrowings under -Wconversion (C
+  truncation, the same on the EE), u64 bit-fields (ui.c's TEX0 `Tag` lays out the same under -m32, checked),
+  and 32-bit halves of GS words (little-endian on all three). Five int-to-pointer casts in vm/objscmd.c are
+  the VM's u16 values, not widths.
+- **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
+  of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
