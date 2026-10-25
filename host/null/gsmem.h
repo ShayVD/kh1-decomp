@@ -65,6 +65,9 @@ int kh1_gsmem_read_tex(u32 tex0_lo, u32 tex0_hi, u32 texa_lo, u32 texa_hi, u32 *
  * w x h texels lie in (0: never written since the reset), and the CLUT buffer's load count */
 u32 kh1_gsmem_tex_stamp(u32 tex0_lo, u32 tex0_hi);
 u32 kh1_gsmem_clut_stamp(void);
+/* session 102: nonzero when a draw changed the bits psm reads at pixel (x, y) and no upload, copy or
+ * pixel write has written its page since: the model does not hold that pixel (a render's output) */
+int kh1_gsmem_drawn(u32 psm, u32 bp, u32 bw, u32 x, u32 y);
 
 const KH1GsMemStats *kh1_gsmem_stats(void);
 

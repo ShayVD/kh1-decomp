@@ -2060,6 +2060,30 @@ is the same bytes (no float-untested row). selftest PASS (gsimage_test: 17 check
 - **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1ap Session 102: the lens flare's depth read on the host, nameentry's row
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). No change under src/: kh1.elf byte-identical,
+no float-untested row. selftest PASS (gsimage_test: 21 checks), the host links (571 objects).
+
+- **The menus' full-width rules** (item 4a): the user had not answered session 101's card when this session
+  ran, so the "widen" block stays; "keep them 4:3" still means deleting it (5.1ao).
+- **nameentry's textured row** (item 4b): `func_002078f0(a0, a1, a2, a3, t0, t1, t2, t3, s0)` calls
+  `func_00201440(a0, a2, a3, t0, t1, t2, t3, &D_003F2C40.s2C40_2[a1], s0)`, so nameentry.nofill.c's
+  `func_002078f0(a, 19, 2, 0, 188, y, 200, 512, 1)` is a list row of type 2 (`func_00200648`'s frame) at
+  window x **188**, **200** wide, with message 1 at x 512 (mode 0). Not a full-width rule: nothing to widen.
+- **The lens flare's depth on the host** (item 4c): gsmem.c marks draws, it does not rasterise them, so a
+  Z24 store from the Z buffer read whatever an upload or copy left there last (zeros when nothing did). Now
+  **`PlatGsExecStoreImage` of a Z format answers 0 for every pixel whose 8 KB page a draw wrote since its
+  last upload / copy / pixel write** (new `kh1_gsmem_drawn`, the same page bits as the texture targets,
+  session 81). 0 is the farthest depth, so kelnscls's count (`z < v[2] >> 4`) sees the whole box and the
+  flare is drawn at full strength: "all visible", the occlusion-query answer (b) of 5.1an item 4 with the
+  query always passing. A Z buffer the model does hold (the stored frame loaded into `0x0E00 / 0x1400`,
+  renderer-spec 4.17's colour in the Z area) still reads its bytes, as on the PS2. Colour stores are
+  unchanged (the model draws sprites into colour targets). gsimage_test checks the drawn box reads 0 and a
+  write gives its page back.
+- **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

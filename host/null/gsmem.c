@@ -353,6 +353,17 @@ int kh1_gsmem_read_tex(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
     return 0;
 }
 
+/* the bits of a page's word mark a PSM reads (all of them for the formats that do not share CT32's word) */
+static u32 psm_bits(u32 psm) {
+    switch (psm) {
+    case KH1_PSMCT24: case KH1_PSMZ24: return 0x00FFFFFF;
+    case KH1_PSMT8H:  return 0xFF000000u;
+    case KH1_PSMT4HL: return 0x0F000000;
+    case KH1_PSMT4HH: return 0xF0000000u;
+    }
+    return ~0u;
+}
+
 /* the pages a texture's w x h texels lie in: the newest write's sequence number, and with *t the
  * first page whose drawn bits it reads (1 + its target, 0 for none) */
 static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
@@ -362,13 +373,7 @@ static u32 tex_scan(u32 lo, u32 hi, u32 *t) {
     if (!known(psm)) return 0;
     bwid = psm == KH1_PSMT4 ? 32 : bits16(psm) || psm == KH1_PSMT8 ? 16 : 8;
     bhgt = psm == KH1_PSMT8 || psm == KH1_PSMT4 ? 16 : 8;
-    switch (psm) {
-    case KH1_PSMCT24: case KH1_PSMZ24: bits = 0x00FFFFFF; break;
-    case KH1_PSMT8H:  bits = 0xFF000000u; break;
-    case KH1_PSMT4HL: bits = 0x0F000000; break;
-    case KH1_PSMT4HH: bits = 0xF0000000u; break;
-    default: bits = ~0u; break;
-    }
+    bits = psm_bits(psm);
     if (tw > 10 || th > 10) return 0;
     /* one address a block: a block never spans two pages */
     for (y = 0; y < 1u << th; y += bhgt)
@@ -390,6 +395,11 @@ u32 kh1_gsmem_tex_target(u32 lo, u32 hi) {
     u32 t;
     tex_scan(lo, hi, &t);
     return t;
+}
+
+int kh1_gsmem_drawn(u32 psm, u32 bp, u32 bw, u32 x, u32 y) {
+    if (!known(psm)) return 0;
+    return (page_drawn[page_of(psm, kh1_gsmem_addr(psm, bp, bw, x, y))] & psm_bits(psm)) != 0;
 }
 
 int kh1_gsmem_targets(KH1GsTarget *out, int max) {

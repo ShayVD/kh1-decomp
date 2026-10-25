@@ -15,7 +15,12 @@
  *   pixel, CT24 / Z24 3, CT16 / Z16 2, T8 1, T4 a nibble, rows w pixels apart, nothing between
  *   them), whatever the view: the null platform keeps the PS2's GS memory, so under KH1_HOST_WIDE
  *   the target is still 512 x 384 and main memory gets 5.1an's shapes (0x90000 bytes, 0x600 a row;
- *   0x24000 for 0x3600).  A port's store resamples its own buffer into the same shape.
+ *   0x24000 for 0x3600).  A port's store resamples its own buffer into the same shape;
+ * - session 102: a Z format's pixel whose page the draws wrote (gsmem.c marks draws, it does not
+ *   rasterise them) reads 0, the farthest depth: the lens flare (kelnscls.nostrict.c func_00192958
+ *   counts the pixels under the light's Z) then sees itself all visible, not a stale upload's bytes.
+ *   A Z buffer the model does hold (an upload or a copy into the Z area since, e.g. the stored frame
+ *   loaded back, renderer-spec 4.17) still reads its bytes, as the PS2 would.
  *
  * tests/host/gsimage_test.c checks both on made-up pixels. */
 #include "common.h"
@@ -101,6 +106,8 @@ int PlatGsExecStoreImage(void *sp, void *dst) {
     for (y = 0; y < h; y++)
         for (x = 0; x < w; x++) {
             u32 v = kh1_gsmem_read_pixel(psm, sbp, sbw, sx + x, sy + y);
+            if ((psm & 0x30) == 0x30 && kh1_gsmem_drawn(psm, sbp, sbw, sx + x, sy + y))
+                v = 0; /* depth the draws wrote: the model has none, so the farthest (session 102) */
             if (!n) { /* 4 bits a pixel, the low nibble first */
                 u32 k = y * w + x;
                 d[k >> 1] = (u8)(k & 1 ? (d[k >> 1] & 15) | (v & 15) << 4 : (d[k >> 1] & 0xF0) | (v & 15));

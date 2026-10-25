@@ -2605,6 +2605,12 @@ was. Not covered: nameentry.nofill.c's `func_002078f0(.., 200, 512, 1)` (a textu
 `func_00201440`). The user's choice was pending when this was written (session 101's card, recommended
 "widen"); vita-port-plan 5.1ao says how to undo it.
 
+#### Session 102: nameentry's row is not a rule
+
+nameentry.nofill.c's `func_002078f0(.., 19, 2, 0, 188, y, 200, 512, 1)` reaches `func_00201440` with px 188
+and pw 200 (the 512 is the text's x): a 200 px list-row frame inside the window, so it stays where it is.
+Every full-width rule goes through `func_00206130`, which session 101 covered.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and
