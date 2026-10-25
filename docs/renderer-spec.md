@@ -1410,6 +1410,63 @@ then see the new frame one frame late. A port that keeps the C keeps this order;
 it beyond that frame of lag. tests/host/gsmem_test.c checks the scroll's copies (`scroll(3, 8)`,
 `scroll(0, 8)`).
 
+### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
+
+Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question
+6.8. The "grid" is the room's cell list from map `.bin` section 1 (`D_002A3F30`, docs/structs.md): +0 the
+cell count (`D_00494BB0`, up to 1024), +4 the offset of a 16-byte entry table. Entry 0 is the chains' GIF
+template tag (below); **entry `i + 1` is cell i: `{w0, w4}` a DMA tag for its first mesh (A) and `{w8,
+w12}` one for its second mesh (B)**, each a `REF` into the section (the address words relocated by
+`func_00106ed0`), 0 when the cell has no such mesh. The per-cell runtime record is `D_00494BA8[i]` (16
+bytes, in chain 0's table area): +8 the cell's **group bit** `1 << t` (t from the cell's 128-byte texture
+record, float at +0x5C), +12 its **state**.
+
+**Six chains, double-buffered by the frame parity `D_00351BD0`.** Each is `ref` record qwc 9 (the 0x90-byte
+matrix record: `D_0048BFD0` at parity 0, `D_0048C300` at parity 1, filled by `func_00107ec0`), `ref` qwc 42
+(`D_0048C060` / `D_0048C390`: VU 8-47 + `MSCAL 0`), a third qword, then a table of `ref` tags the C fills
+each frame and an `end` tag (`D_0047A1D0` / `D_00472150`'s first qword) after the last.
+
+| Case | Chains (parity 0 / 1) | Table filled by | Program, key | Third qword | Draws |
+|---|---|---|---|---|---|
+| 1 | `D_0046E120` / `D_00472160` | `func_00107548`: visible cells of class 1, mesh A | table index 1 = **P2** (fog), 10020 | placeholder `REF 0 -> D_004862A0`, patched by `func_00106ed0` with section 1 entry 0's tag | the opaque cells, fogged |
+| 0 | `D_004761A0` / `D_0047A1E0` | `func_00107548`: visible cells of class 0, mesh A | **P0**, or **P6** when `D_002BC0A8.flags_2.b4` (point light), 10020 | the same placeholder, patched the same | the opaque cells, unfogged |
+| 3 | `D_0047E220` / `D_00482260` | `func_00107c48`: every visible cell with a mesh B | table index 3 = **P3** (env map / UV scroll), **50000** | static **`REF 2 -> D_004862B0`**: `STCYCL 1,1; UNPACK V4-32 1 -> @0 +TOPS` of the GIF tag `TRIFAN|IIP|TME|FGE|ABE|CTXT2` (`0x313EC000`, NLOOP 5, REGS `0x412`), `MSCNT`: the clipped-output template with fog, not the map's | the cells' second layer, translucent |
+
+`func_00107548` (key 10020's setup, every frame) culls the cells: a cell whose group bit is not in
+`D_002BCC98` gets state 0 (hidden); otherwise `func_00107ab8` (the camera test, not read here) gives class 0,
+1 or culled (state 0). A visible cell gets state 2, or 1 once its mesh A tag went into chain 0 or 1.
+**`func_00107c48` (case 3) then walks the same cells: every cell with state non-zero (1 or 2: so a cell with
+no mesh A can still have a B layer) whose entry has a mesh B tag gets state 3 and its B tag in chain 3's
+table**; it returns the count, and `func_00100988` queues the P3 upload and chain 3 at key 50000 only if
+it is non-zero (`D_0029B2F0`). Cases 0 / 1 sort the tags front to back when `D_002BC0A8.flags_3.b2`
+(`func_001072c0` / `func_001073f0` on the cells' camera z); case 3 keeps the cell order.
+
+**Key 50000's order** (draw-list nodes run in insertion order within a key): the state packet `D_0029B200`
+(**`ZBUF_2` ZMSK 1**, `TEST_2 0x5000D`, §4.11), the map texture upload `func_00106e18` if the room has an
+animated frame set, **P3 + chain 3**, then `func_00108708`'s fade groups, then 50100's restore. So mesh B
+is drawn after every opaque draw (10020-40000), blended (ABE), fogged (FGE) and **without Z writes**, with
+P3's texture coordinates: the sphere map from the normal (batch flag `0x11`) or the UV scroll (flag n,
+§2.2.1's table). (Inferred from that: water surfaces, glass, glints and scrolling overlays laid over the
+opaque cells. A boot that hides chain 3 would show which.)
+
+**The fade groups reuse chain 3's head as a template** (`func_00108708`, `func_001081c8`,
+`func_001083d8`). Up to 32 groups k (`D_00494C00[k]`: x the time left, y the intensity, z the rate) fade a
+group of cells in or out: the script starts one with `func_00108650(k, n)` (vm_lib.c: hide the group, fade
+out over 2n), others count up and set the group's bit in `D_002BCC98` at the end (`func_00108180`). For
+each running group the C writes two chains into the parity's case 0 / 1 table area, starting in the table
+of the **shorter** of the two lists at 64 bytes per entry of that list (`D_00476210[n]` / `D_0046E190[n]`
+at parity 0, `D_0047A250[n]` / `D_004721D0[n]` at parity 1: past the list and its end tag): a copy of chain 3's first two qwords with the record replaced by a per-group
+144-byte record (`D_002B2E60[k]` / `D_002B5260[k]`: the object matrix, `D_002BC170` with qw2.w = the
+intensity y), the third qword `D_004862D0` (`REF 2 -> D_004862B0`, the same FGE fan template), then the
+group's cells' **mesh A tags drawn by P7** (the forced `TRISTRIP|IIP|TME|FGE|ABE|CTXT2` PRIM) and a second
+chain with their **mesh B tags drawn by P3**, all at key 50000 after chain 3. A Vita renderer can treat
+chain 3 and the fade groups as one translucent pass over the grid: per cell, layer B with P3's texcoords,
+and the fading groups' A and B layers scaled by y.
+
+**Sizes**: each table is 0x4010 bytes (1025 tags), so 1024 cells and the end tag fit; the fade-group
+chains share the case 0 / 1 tables' tail with the per-frame lists, unbounded by the C (the room data keeps
+it in range on the console; shiftable-plan.md "Session 24" for why these chains are one piece each).
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).
@@ -1691,6 +1748,11 @@ never go in the repo.
    `func_00106ed0` from section 1 of the map `.bin` (its tag table and
    per-texture records), so they carry per-map data (inferred: texture
    state for the map meshes). Case 3 not traced.
+   *Session 85 (§4.14):* traced from the C. The three are the map grid's cell lists from section 1: cases
+   0 / 1 each visible cell's first mesh (P0 / P6 or P2, key 10020, the patched slot is the map's GIF
+   template), case 3 each visible cell's second mesh (P3 env map / UV scroll, key 50000, no Z writes,
+   blended, fogged), and the fade groups reuse case 3's head. What the second meshes are on screen
+   (inferred: water / glass / glint layers) waits for a boot or a real-disc host run.
 9. VSync and frame pacing: the constants in `func_0010fea0`, the 30/60 fps
    switch (`D_002BBDEC`), and where the main loop waits for the vertical
    blank.

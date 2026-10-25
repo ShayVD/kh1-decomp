@@ -9,13 +9,31 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 84 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 85 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: eight float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 84, 2026-10-25)
+## Where we stopped (end of session 85, 2026-10-25)
+
+- **Session 85** (static, vita-port-plan 5.1y, renderer-spec 4.14, new docs/sound-spec.md): **the sound
+  driver's commands as the Vita audio layer's interface, renderer A's grid chains.** docs/sound-spec.md
+  lists snd_rpc.c's transport (RPC 0 bind with mode 0 boot / 1 soft reset / 2 room load; direct calls answer
+  in word 0; 8-word records queued and sent as RPC 30 once a frame), the status block (SE voices +0, streams
+  +0x1800, **disc error +0x1C08**, transfer count +0x1F00) and every command with its arguments, senders and
+  meaning (transfers `0x26` / 3 / 4 / `0xB` / `0x28`, music `0xC` / `0xD` / `0xE` / `0x2F` / `0x30`, SEs 5 /
+  8 / 6 / 7 / 2, voices `0x12` / `0x13` / `0x14`, object SEs `0x29`-`0x2B`, settings `0xF` / `0x23` /
+  `0x24` / `0x27`). Findings: **RPC 30 sends only the first 256 of the queue's 1024 records**;
+  `func_0011d2d0` searches the static SE table, not the live pointer (a 128-slot room's ppp SE switch finds
+  nothing); **`func_001ecb08`'s wildcard loops fall through and read up to 0x114 bytes past the status
+  block** (into `D_0063F640` on the PS2; on the host whatever follows: no layout check sees pointer
+  walks); 16 entry points have no main-ELF caller (for the dktitle.x check). **renderer-spec 4.14**:
+  `func_00107d30` case 3 = each visible cell's second mesh (map section 1 entry `i + 1`'s `{w8, w12}` tag,
+  `func_00107c48`), P3 at key 50000 after the opaque pass, no Z writes, the static FGE fan template
+  `D_004862B0`; cases 0 / 1 the first meshes at 10020; the fade groups reuse chain 3's head (open question
+  6.8 answered from the C). Item 4c (defer as default) waits for the real-disc room run. Only docs/ and
+  README.md changed: kh1.elf byte-identical, the float ELF the same (no float-untested row).
 
 - **Session 84** (static, vita-port-plan 5.1x, renderer-spec 4.12, 4.13): **the replay on the host, the
   menu's "race" settled, renderer B's depth key, the texture steps.** **`KH1_HOST_DMAC=defer`** (null
@@ -84,27 +102,10 @@ items.
   added, gsregs.c already right. Valgrind 0 errors. Only host/, tests/, tools/host and docs/ changed: **every
   out/build object bit-identical**, the float ELF the same (no float-untested row).
 
-- **Session 80** (static, vita-port-plan 5.1t, renderer-spec 4.10, 4.11, 5.2): **GS memory on the host.**
-  `host/null/gsmem.c` (new): 4 MB with the GS's block / page / column layout for CT32, CT24, CT16, T8, T4, T8H,
-  T4HL, T4HH (bit formulas, checked against PCSX2's tables outside the repo), fed by TRXDIR + dmawalk.c's IMAGE
-  qwords (host->local; local->local copies; HWREG), the 512-halfword CLUT buffer loaded at TEX0 / TEX2 by CLD,
-  `kh1_gsmem_read_tex` (a TEX0 to RGBA8) and page stamps for a texture cache; tests/host/gsmem_test.c (36 checks)
-  in `make test`. `KH1_HOST_TRACE=5` prints uploads (`gsstate.py --uploads`), **`KH1_HOST_TEXDUMP=DIR`** writes
-  each drawn texture as .pam (never commit). Fake disc stub:2: func_001ef950 uploads the message font (PSMT4HL /
-  HH 256x256 at `0x1000`, inside the Z area at `0x0E00`) and its CLUT at `0x3FFC`. **The boot draw environment**
-  (func_001100a8 via sceGsPutDrawEnv, both contexts) now reaches gsregs.c through `kh1_dma_gif_direct`: 87 sends,
-  22 chains, 40 registers, 61 values. **renderer-spec 4.10**: lists draw through wintext / winpart; the field text
-  and selector use REGLIST with PRIM as a register write, ZTE 1, their own headers; ADC restarts strips in one tag
-  (`func_00208458`); the HUD gauges are TRIANGLE pairs and a TRIFAN that reload the CLUT with a PSMT8 TEX0.
-  **renderer-spec 4.11**: renderer A's meshes go by XGKICK with no GS write in their chains; context 2 is the boot
-  environment plus PATH3 A+D packets at keys 10010 / 10020 / 40000 / 50000 / 50100 and the shadow's; mesh TEX0_2 /
-  CLAMP_2 come from the disc files (inferred). Only host/, tests/, tools/host and docs/ changed: **every out/build
-  object bit-identical**, the float ELF the same (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-84.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-85.
 - **Eight default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043) and **70 (2,041, the current
-  default; sessions 71 to 84 left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
+  default; sessions 71 to 85 left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
   parts of a run now float whole into the float area (the shop / list windows D_0062F6E0 / D_0062F790 / D_00630460,
   the ppp matrices D_00615E70 / D_00616000, D_0052EB50, D_00551700, D_00575900, the timer sets D_006692F0 /
   D_00669320) and 20 neighbours are pinned. Session 70 made 6 more one definition (5.1j: the command menus
@@ -213,7 +214,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 85 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 86 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
@@ -250,7 +251,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    `KH1_HOST_TRACE=5` room run once more with **`KH1_HOST_DMAC=defer`** and compare `--nodes` (same order
    expected; the summary's pending count should be all frame-end waits, no sends); if the room has texture
    steps (nodes at 10000 + n, `func_001019c8`), check their copies in the `--uploads` list (dir 2, local ->
-   local; renderer-spec 4.13 "The texture steps"). Fix
+   local; renderer-spec 4.13 "The texture steps"). Session 85: in the room's `--nodes`, key 50000 should hold
+   the P3 upload and chain 3 (`func_00106db0`, renderer-spec 4.14) when the room has second-layer cells;
+   with `KH1_HOST_TRACE=2` walk chain 3 (`D_0047E220` / `D_00482260`) and check its tags land in map
+   section 1. Fix
    host-only causes the way sessions 63 to 70 did (platform answers, layout dependencies as one definition with
    layoutcheck and relcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
@@ -261,20 +265,26 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    the targets take?). Does it call func_00109558, and with which states (session 68 guessed 2 = new game)? Does it call drawlist's
    flushes (func_00237f20 / func_002380c0 / func_00238258) or the push func_002376c8 (session 75: nothing in the
    main ELF does; they are what sets TTE on the GIF channel, renderer-spec 4.5)? Does it call func_002372e0 / func_00237318
-   (gspkt.c's default and 3D environments, session 77: no caller in the main ELF)?
+   (gspkt.c's default and 3D environments, session 77: no caller in the main ELF)? Session 85: which of the
+   16 sound entry points with no main-ELF caller (docs/sound-spec.md 3) does it call, and with what?
    Without the Mac: skip.
-4. **Static, without the Mac**: (a) **The sound commands as the Vita audio layer's interface**: list
-   src/sound/snd_rpc.c's commands (RPC server 17, the 8 KiB buffer; vita-port-plan §1 iop.h and §3 "Sound")
-   with each command's number, arguments, who sends it and what the EE expects back (the status block at
-   +0x1F00 / +0x1C08 the null platform already answers), in a new docs/sound-spec.md; no IRX is needed for the
-   EE side. (b) **renderer-spec 6.8's case 3** of `func_00107d30` (the `REFE` chains at `D_0046E120` ...):
-   trace it in the C the way session 16 did cases 0 / 1. (c) **Make `KH1_HOST_DMAC=defer` the null platform's
-   default** only if the real-disc run (item 2) shows the same node order; otherwise note why not. (d)
-   argcheck's 3 value uses still wait for dktitle.x. Keep every PS2 object the same (kh1.elf byte-identical;
-   a float-untested.md row only when the float ELF's bytes change).
+4. **Static, without the Mac**: (a) **The status block read past its end** (sound-spec 3, `func_001ecb08`):
+   on the host make the 0x120 bytes after `D_0063D640` the same as on the PS2 (the message buffer
+   `D_0063F640` right after it: one host definition or an alias in census.py, the way sessions 69 / 70 did
+   layout dependencies), and look for other pointer walks that run past an array (a loop whose pointer
+   survives into a second loop, as here): none of layoutcheck / relcheck follows them. Keep kh1.elf
+   byte-identical; a float-untested row only if the float ELF changes. (b) **A null mixer on the host**:
+   plat_null.c decodes the RPC 30 records (sound-spec 3) into `kh1-host: snd CMD ...` lines at
+   `KH1_HOST_TRACE=6` (or a new switch) and keeps the status block's SE / stream `used` entries (set on a
+   play, cleared on a stop or after a fixed time), so objse's slots and `func_0011e248` see sounds end as on
+   the console; a small tools/host script that summarises a run's commands. This is the Vita audio layer's
+   EE half without the audio. (c) renderer-spec open questions 9 (frame pacing: `func_0010fea0`'s
+   constants, the 30 / 60 fps switch `D_002BBDEC`, where the main loop waits for the vertical blank) and 10
+   (the `0x118000` display area and `func_0010f5f8`'s PMODE / DISPFB1 set-up: which screens use them), from
+   the C. (d) `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=85`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=86`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 86) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 87) with this
    prompt: the user wants each session to start the next one without being asked.
