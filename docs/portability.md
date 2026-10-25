@@ -90,6 +90,10 @@ rewrite matched code.
    and 28-31): winmenu.c, customize.c and every `D_00425BC8->xN & 0xV` test
    (132 in 31 files, tools/shift/s57pad/padmask.py).  No game file calls
    libcdvd, sifdev, loadfile or the IOP reboot by func_ address now.
+   **Session 83**: `gs.h`'s PlatGsListNode / PlatGsListEnd are the one kind of
+   wrapper with nothing behind it on the PS2 (`((void)0)`): hooks at the draw
+   / immediate lists' node boundaries in src/model/mdlgs.nostrict.c, where the
+   port records the node as a command (vita-port-plan.md 5.1w).
    **Session 58 wrapped the vector maths** (each byte-identical, the float
    check and the data names the same; one commit per directory):
    `vu.h` (PlatVu0ApplyMatrix ... PlatVu0ClipAll, PlatVpu0Reset: every

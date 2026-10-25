@@ -440,3 +440,77 @@ void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc
         draw_into(zbuf_lo & 0x1FF, bw, psm, cols, h, psm == 0x31 ? 0x00FFFFFF : ~0u);
     }
 }
+
+/* kh1_gsmem_sprite (session 83): a point-sampled textured sprite drawn into the model, as the GS
+ * draws it: the pixels from (X0 - OFX + 15) >> 4 up to but not including (X1 - OFX + 15) >> 4 (Y
+ * likewise) inside SCISSOR, each texel at U0 + (16 x - X0') (U1 - U0) / (X1 - X0) in 10.4 (no
+ * half-pixel offset), Ct x Cv >> 7 (MODULATE) or Ct (DECAL), alpha At x Av >> 7 / At with TCC else
+ * Av, then ((A - B) x C >> 7) + D with ABE, clamped to 0-255, the written alpha the source's, the
+ * FBMSK bits kept.  The texture animations (renderer-spec 4.13) copy and blend CLUTs this way. */
+static int clamp255(s32 v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+static s32 sel(u32 f, s32 cs, s32 cd) { return f == 0 ? cs : f == 1 ? cd : 0; }
+static u32 texel(u32 c, u32 n, u32 wm) { return wm ? (c >= n ? n - 1 : c) : c & (n - 1); }
+int kh1_gsmem_sprite(const KH1GsSprite *s) {
+    static u32 tex[64 * 64];
+    u32 p = s->prim, fpsm = s->frame_lo >> 24 & 63, fbp = (s->frame_lo & 0x1FF) * 32, fbw = s->frame_lo >> 16 & 63;
+    u32 tw = s->tex0_lo >> 26 & 15, th = (s->tex0_lo >> 30 | s->tex0_hi << 2) & 15, tfx = s->tex0_hi >> 3 & 3;
+    u32 tcc = s->tex0_hi >> 2 & 1, ztst = s->test_lo >> 17 & 3, wms = s->clamp_lo & 3, wmt = s->clamp_lo >> 2 & 3;
+    u32 w, h, n = 0, x, y, i, t, d, cv[4], ct[4], cd[4], fbmsk = s->frame_hi, v;
+    s32 x0, y0, x1, y1, u0, v0, u1, v1, px0, px1, py0, py1, k, c, col[4], as, ad, f;
+    if ((p & 7) != 6 || (p & 0x130) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
+    if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24) return 0;
+    if (!fbw || s->test_lo & 1 || s->test_lo >> 14 & 1) return 0;            /* ATE, DATE */
+    if (s->test_lo >> 16 & 1 && !(ztst == 1 && s->zbuf_hi & 1)) return 0;    /* a Z test or write */
+    if (tw > 6 || th > 6 || kh1_gsmem_tex_target(s->tex0_lo, s->tex0_hi)) return 0;
+    if (kh1_gsmem_read_tex(s->tex0_lo, s->tex0_hi, s->texa_lo, s->texa_hi, tex)) return 0;
+    w = 1u << tw;
+    h = 1u << th;
+    x0 = (s32)(s->xy[0] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
+    y0 = (s32)(s->xy[0] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
+    x1 = (s32)(s->xy[1] & 0xFFFF) - (s32)(s->xyoffset_lo & 0xFFFF);
+    y1 = (s32)(s->xy[1] >> 16) - (s32)(s->xyoffset_hi & 0xFFFF);
+    u0 = s->uv[0] & 0x3FFF; v0 = s->uv[0] >> 16 & 0x3FFF;
+    u1 = s->uv[1] & 0x3FFF; v1 = s->uv[1] >> 16 & 0x3FFF;
+    if (x1 < x0) { k = x0; x0 = x1; x1 = k; k = u0; u0 = u1; u1 = k; }
+    if (y1 < y0) { k = y0; y0 = y1; y1 = k; k = v0; v0 = v1; v1 = k; }
+    if (x1 == x0 || y1 == y0) return 1; /* nothing covered */
+    px0 = (x0 + 15) >> 4; px1 = (x1 + 15) >> 4;
+    py0 = (y0 + 15) >> 4; py1 = (y1 + 15) >> 4;
+    if (px0 < (s32)(s->scissor_lo & 0x7FF)) px0 = s->scissor_lo & 0x7FF;
+    if (px1 > (s32)(s->scissor_lo >> 16 & 0x7FF) + 1) px1 = (s->scissor_lo >> 16 & 0x7FF) + 1;
+    if (py0 < (s32)(s->scissor_hi & 0x7FF)) py0 = s->scissor_hi & 0x7FF;
+    if (py1 > (s32)(s->scissor_hi >> 16 & 0x7FF) + 1) py1 = (s->scissor_hi >> 16 & 0x7FF) + 1;
+    if (px1 > px0 && py1 > py0 && (px1 - px0) * (py1 - py0) > 4096) return 0;
+    for (i = 0; i < 4; i++) cv[i] = s->rgba >> i * 8 & 0xFF;
+    seq++;
+    useq++;
+    for (k = py0; k < py1; k++)
+        for (c = px0; c < px1; c++) {
+            x = texel((u32)(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, w, wms);
+            y = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, h, wmt);
+            t = tex[y * w + x];
+            for (i = 0; i < 4; i++) ct[i] = t >> i * 8 & 0xFF;
+            for (i = 0; i < 3; i++) col[i] = tfx ? ct[i] : clamp255(ct[i] * cv[i] >> 7);
+            col[3] = tcc ? (tfx ? ct[3] : clamp255(ct[3] * cv[3] >> 7)) : cv[3];
+            d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
+            if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
+                for (i = 0; i < 4; i++) cd[i] = d >> i * 8 & 0xFF;
+                as = col[3];
+                ad = fpsm == KH1_PSMCT24 ? 0x80 : cd[3];
+                f = s->alpha_lo >> 4 & 3;
+                f = f == 0 ? as : f == 1 ? ad : (s32)(s->alpha_hi & 0xFF);
+                for (i = 0; i < 3; i++) {
+                    s32 a = sel(s->alpha_lo & 3, col[i], cd[i]), b = sel(s->alpha_lo >> 2 & 3, col[i], cd[i]);
+                    s32 m = (a - b) * f;
+                    col[i] = clamp255((m >= 0 ? m >> 7 : -((-m + 127) >> 7)) + sel(s->alpha_lo >> 6 & 3, col[i], cd[i]));
+                }
+            }
+            v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
+            v = (d & fbmsk) | (v & ~fbmsk);
+            put(fpsm, fbp, fbw, c, k, v);
+            n++;
+        }
+    st.sprites++;
+    st.sprite_pixels += n;
+    return 1;
+}

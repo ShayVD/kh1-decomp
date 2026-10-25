@@ -26,6 +26,8 @@ typedef struct {
                       * CSM 1 (TEXCLUT) */
     u32 clut_loads;  /* CLUT buffer loads (TEX0 / TEX2 with CLD 1-5 that load) */
     u32 target_draws; /* primitives drawn into a render target (kh1_gsmem_draw, session 81) */
+    u32 sprites;      /* point-sampled sprites drawn into the model's pixels (kh1_gsmem_sprite, session 83) */
+    u32 sprite_pixels;
 } KH1GsMemStats;
 
 /* clears the 4 MB, the CLUT buffer, the transfer and the counters */
@@ -89,6 +91,25 @@ void kh1_gsmem_draw(u32 frame_lo, u32 frame_hi, u32 zbuf_lo, u32 zbuf_hi, u32 sc
 u32 kh1_gsmem_tex_target(u32 tex0_lo, u32 tex0_hi);
 /* fills up to max and returns how many targets there were (at most 32 kept) */
 int kh1_gsmem_targets(KH1GsTarget *out, int max);
+
+/* A textured SPRITE the model can draw into its own pixels (session 83, renderer-spec 4.13): FST 1
+ * (UV), point sampling (TEX1 MMAG 0, MMIN 0), TFX MODULATE or DECAL, a texture of at most 64 x 64
+ * texels that no render target drew (CLAMP REPEAT or CLAMP), no fog, no alpha or destination alpha
+ * test, no Z write (ZTE 0, or ZTST ALWAYS with ZMSK 1), into a CT32 / CT24 FRAME (FBMSK kept), with
+ * or without ALPHA blending (COLCLAMP taken as 1), at most 4096 pixels inside SCISSOR.  The texture
+ * animations' CLUT passes are such sprites: drawn here, a later CLUT load reads their result.
+ * Returns 1 when drawn (the pages written are model pixels, not a target's), 0 for anything else,
+ * which the caller marks as a draw (kh1_gsmem_draw). */
+typedef struct {
+    u32 prim;                                  /* PRIM's attributes in force */
+    u32 frame_lo, frame_hi, zbuf_hi, test_lo;  /* the PRIM's context */
+    u32 alpha_lo, alpha_hi, tex0_lo, tex0_hi, tex1_lo, clamp_lo;
+    u32 xyoffset_lo, xyoffset_hi, scissor_lo, scissor_hi;
+    u32 texa_lo, texa_hi;
+    u32 xy[2], uv[2];                          /* the two vertices' XYZ2 X / Y (12.4) and UV (10.4) */
+    u32 rgba;                                  /* the second vertex's RGBA (a sprite is flat) */
+} KH1GsSprite;
+int kh1_gsmem_sprite(const KH1GsSprite *s);
 
 /* an upload or copy since the last kh1_gsmem_clear_log (KH1_HOST_TRACE=5 prints them) */
 typedef struct {

@@ -314,6 +314,73 @@ int main(void) {
                                         kh1_gsmem_tex_target(0x2000 | 10 << 14 | 6 << 26 | 6u << 30, 1) == 2);
     }
 
+    /* session 83: a texture animation's CLUT cross-fade (renderer-spec 4.13), the passes of
+     * src/gfx/texanim.c func_00102118 for a 16-colour CLUT in block 0x3E00 + 5, on made-up colours:
+     * frame A to 0x3600 and frame B to 0x3A00 (8 x 2 CT32), then into FRAME 0x3E00 (FBW 1, FBMSK
+     * 0xFF000000: the CLUT's alphas stay) a sprite of A without blending and one of B with ABE,
+     * (Cs - Cd) x As >> 7 + Cd, the vertex alpha 65 */
+    {
+        static const u32 frame1 = 0x1F0 | 1 << 16, tex_a = 0x3600 | 1 << 14 | 3 << 26 | 1u << 30;
+        u32 a[16], b[16], e, want, got, bad = 0, pass, xy0 = 24 * 16 + 0x7000 | (0 * 16 + 0x7400) << 16;
+        u32 xy1 = 32 * 16 + 0x7000 | (2 * 16 + 0x7400) << 16;
+        kh1_gs_reset();
+        for (e = 0; e < 16; e++) {
+            a[e] = e * 16 | (255 - e * 16) << 8 | 0x20 << 16 | 0x80u << 24;
+            b[e] = (255 - e * 8) | e * 4 << 8 | 0xC0 << 16 | 0x80u << 24;
+            words[e] = e * 3 | 0x40u << 24; /* the room file's CLUT: alpha 0x40 */
+        }
+        upload(0x3E05, 1, KH1_PSMCT32, 0, 0, 8, 2);
+        image(16);
+        for (e = 0; e < 16; e++) words[e] = a[e];
+        upload(0x3600, 1, KH1_PSMCT32, 0, 0, 8, 2);
+        image(16);
+        for (e = 0; e < 16; e++) words[e] = b[e];
+        upload(0x3A00, 1, KH1_PSMCT32, 0, 0, 8, 2);
+        image(16);
+        kh1_gs_write(0x18, 0x7000, 0x7400);
+        kh1_gs_write(0x40, 511 << 16, 383 << 16);
+        for (pass = 0; pass < 2; pass++) {
+            /* the state packet (D_002A4310 / D_002A43A0's registers) */
+            kh1_gs_write(0x4E, 0x70 | 1 << 24, 1);
+            kh1_gs_write(0x4C, frame1, 0xFF000000u);
+            kh1_gs_write(0x47, 0x30000, 0);
+            kh1_gs_write(0x14, 0, 0);
+            kh1_gs_write(0x06, pass ? (tex_a & ~0x3FFFu) | 0x3A00 : tex_a, 1 << 2 | 1 << 29);
+            kh1_gs_write(0x42, 0x44, 0);
+            /* func_00101fc8's sprite */
+            kh1_gs_write(0x00, pass << 6 | 0x116, 0);
+            kh1_gs_write(0x01, 0x808080 | (pass ? 65u : 64u) << 24, 0x3F800000);
+            kh1_gs_write(0x03, 0, 0);
+            kh1_gs_write(0x05, xy0, 0xFFFFFFFE);
+            kh1_gs_write(0x03, 0x80 | 0x20 << 16, 0);
+            kh1_gs_write(0x05, xy1, 0xFFFFFFFE);
+        }
+        for (e = 0; e < 16; e++) {
+            for (want = 0x40u << 24, i = 0; i < 3; i++) {
+                s32 ca = a[e] >> i * 8 & 0xFF, cb = b[e] >> i * 8 & 0xFF, m = (cb - ca) * 65;
+                want |= (u32)(ca + (m >= 0 ? m >> 7 : -((-m + 127) >> 7))) << i * 8;
+            }
+            got = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x3E05, 1, e & 7, e >> 3);
+            if (got != want) { if (!bad) printf("gsmem_test: entry %u %08x, want %08x\n", e, got, want); bad++; }
+        }
+        CHECK("sprite: CLUT cross-fade", !bad && st->sprites == 2 && st->sprite_pixels == 32);
+        CHECK("sprite: not a target", kh1_gsmem_targets(0, 0) == 0);
+        /* a 4-bit texture's CLUT load from block 0x3E05 then reads the blended colours */
+        upload(0x2000, 1, KH1_PSMT4, 0, 0, 16, 1); /* texels 0-15 */
+        words[0] = 0x76543210;
+        words[1] = 0xFEDCBA98;
+        image(4);
+        kh1_gs_write(0x06, 0x2000 | 1 << 14 | KH1_PSMT4 << 20 | 4 << 26, 0x3E05 << 5 | 1 << 29);
+        CHECK("sprite: CLUT load", kh1_gsmem_read_tex(0x2000 | 1 << 14 | KH1_PSMT4 << 20 | 4 << 26, 0x3E05 << 5, 0, 0, tex)
+                                   == 0 && tex[9] == kh1_gsmem_read_pixel(KH1_PSMCT32, 0x3E05, 1, 1, 1));
+        /* bilinear (MMAG 1) or a Z write: not drawn, a target as before */
+        kh1_gs_write(0x14, 1 << 5, 0);
+        kh1_gs_write(0x00, 0x116, 0);
+        kh1_gs_write(0x05, xy0, 0);
+        kh1_gs_write(0x05, xy1, 0);
+        CHECK("sprite: bilinear is a target", st->sprites == 2 && kh1_gsmem_targets(0, 0) == 1);
+    }
+
     if (fails) { printf("gsmem_test: %d failed\n", fails); return 1; }
     printf("gsmem_test: PASS\n");
     return 0;

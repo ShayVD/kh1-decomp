@@ -30,6 +30,7 @@ Conventions:
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --draws` | the draw states the host's GS register file (host/null/gsregs.c) counted: each distinct PRIM + context state the vertex kicks drew with, decoded, with kicks, primitives and the chains that kicked them (§4.9, §5.1). New in session 79 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --uploads` | the transfers into the host's GS memory model (host/null/gsmem.c): each destination DBP / DBW / PSM and rectangle, how often, the pixels and the chains that sent them (§5.2). New in session 80 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --targets [--draws]` | the render targets the host's GS memory model saw drawn into (each FRAME / ZBUF, its extent, bits and primitives) and, with `--draws`, which draw states read a target as a texture (§5.2). New in session 81 |
+| `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --nodes [--frame N]` | the draw / immediate list nodes as the walks ran them (`PlatGsListNode`): one frame's command order (nodes and the main-thread sends between them) with each node's callback, payload, sends, kicks and uploads, then every distinct node checked against `drawkeys.py`'s key map (§4.12). New in session 83 |
 | `python3 -I tools/host/sendorder.py [--all]` | the main loop's tasks that send to the GS, with their key and first sync or send, against the draw list's start (`0x9C40`) and the immediate list's wait (`0x27CB8`): reads only src/ (§4.12). New in session 81 |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
@@ -446,7 +447,9 @@ in that frame.
 | `0x0E0000` | Z buffer, PSMZ24, 512 x 384 | `ZBUF_1/2 ZBP=0x70` everywhere |
 | `0x118000` | 640-wide PSMCT24 buffer (FBP `0x8C`) | drawn by `func_0010b6c0` (`D_002B73E0`), copied to the display by `func_00106000` case 2 (`TEX0 TBP0=0x1180 TBW=640`) |
 | `0x1A0000` | **3D render target**, PSMCT32, FBW 512, **512 x 384** | `FRAME_1/2 FBP=0xD0`; renderer B default `FRAME_1 = 0x800D0` |
-| `0x360000` (block `0x3600`) | texture slot, rewritten per draw (renderer B PSMT8, UI PSMT4/CT24) | `func_0015f488`, `func_00106460` |
+| `0x360000` (block `0x3600`) | texture slot, rewritten per draw (renderer B PSMT8, UI PSMT4/CT24); also the texture animations' frame A (§4.13) | `func_0015f488`, `func_00106460`, `D_002A4230` |
+| blocks `0x3E00` + i | **the room's CLUTs** (CT32): 16-colour 8x2 ones at `0x3E00 + i` (i < n0), 256-colour 16x16 ones at every 4th block from n0 to n1, from the room's background file; the texture animations cross-fade some of them in place (§4.13) | roombg.c `func_00101048` (session 83) |
+| blocks `0x2600` + 256 i | the room's background textures: PSMT8 256x256 (BW 4) or PSMT4 512x256 (BW 8) by the file's kind byte (19 / 20), up to 16; and a PSMT8H 256x1024 at block 0 (BW 4: the top byte of the words from block 0, the display buffer's area) | roombg.c `func_00100e80` / `func_00100e08` / `func_00100ef8` (session 83) |
 | block `0x3700` | renderer B CLUT (PSMCT32) | `func_0015f488` |
 | block `0x3A00`, `0x3FF4`, `0x3FF8` | UI CLUTs | static packets |
 | block `0x1000` (`0x100000`) | **the message font, in the Z buffer's top byte**: two 256x256 4-bit halves uploaded as PSMT4HH and PSMT4HL (`func_001ef950`, CLUT block `0x3FFC`); text.c's draws read the PSMT4HL half (`D_003F2270`) | session 78 (§4.8) |
@@ -1276,8 +1279,8 @@ because the C writes most of them so:
 | 60000 + n | shadow.nostrict.c `func_00127568`, `func_00127c20`; shadow.c `func_00127b18` (n: `D_004F82C0`, reset to 0 by `func_00128440`) | `func_00127500` (a heap chain), `func_001274c8`, `func_00108d90` (`func_00114f50`, `func_001149e8` > `func_00108fd0`) | the shadows, in the order cast |
 | 60499 | shadow.c `func_00128440` | `func_001274c8` (`D_004F8270`) | shadow pass end state |
 | 70499 | mdldraw `func_00160370` | `func_0015f388` | renderer B's reset again |
-| 90000 + 10 id + 0 ... 6 | texanim.c `func_00102118` (id: the animation's) | +0 the caller's `fn`, +1 packets `D_002A4310` / `D_002A44E0`, +2 / +5 `func_00101f30`, +3 `func_00101f80`, +4 `D_002A43A0` / `D_002A4570`, +6 `D_002A45C0` | per-animation passes (packets with `FBMSK=0xFF000000` and point sampling, §3.2) |
-| *data* | mdldraw `func_00160370` | `func_0015ff78` (renderer B, one node per entry) | `e->x28`: the model's priority (`p->xe`, `p->x1a`, `prio`) moved by its depth-order index and clamped to [prio - 500, prio + 499], except priorities 59500 ... 60499 (the shadow band) and models flagged `0x10000`, which keep it; flagged `x4 & 8` / `0x20000` entries go to the immediate list |
+| 90000 + 10 id + 0 ... 6 | texanim.c `func_00102118` (id: the animation's) | +0 `func_00101f80` (an upload chain), +1 packets `D_002A4310` / `D_002A44E0`, +2 / +5 `func_00101f30`, +3 `func_00101f80`, +4 `D_002A43A0` / `D_002A4570`, +6 `D_002A45C0` | per-animation CLUT cross-fade (§4.13) |
+| *data* | mdldraw `func_00160370` | `func_0015ff78` (renderer B, one node per entry) | `e->x28`: the part's priority (session 83, below: 20000 opaque / 70000 translucent, or the caller's own, the shadows' 60000 + n) plus the model's depth rank, clamped to [prio - 500, prio + 499], except priorities 59500 ... 60499 (the shadow band) and models flagged `0x10000` (an explicit priority), which keep it; entries with `f` set (`x4 & 8`) or a model flagged `0x20000` go to the immediate list |
 
 Immediate list: renderer B's entries at key 0 (`func_00161de8`) and their `e->x28`, and `func_0015f388` at 0
 and `0x7FFFFFFF`. So within a frame the GIF sees: texture animation steps, the 10010 / 10020 state and field
@@ -1285,6 +1288,86 @@ chains, renderer B's opaque band (priorities around 20000-70000 bracketed by res
 opaque room / objects at 40000, the shadow state, the fade groups and translucent props at 50000-50100, the
 shadows at 60000+, the texture animation passes at 90000+, then the immediate list. Renderer B's priorities
 interleave with all of these by value: a port keeps one sorted list for both renderers, as the console does.
+
+**Renderer B's keys** (session 83, item 4b; mdldraw.nostrict.c `func_001606d0` and `func_00160370`, read from
+the C). `func_001606d0(obj, matrix, prm, arg)` adds a model's parts to the frame's table with `e->x28 = prio`:
+
+- **opaque pass** (every part not hidden by `prm->x28`'s bit `b1`): `prio = prm->x8` when it is positive,
+  else **20000 when the model colour's alpha `prm->xf` is 0x80 or more** (`(s8) xf < 0`) **and 70000 when it
+  is below** (a fading model). A part whose bit is set in `prm->x2c` gets `f = 1`, which sends it to the
+  immediate list.
+- **translucent pass** (parts with `b0 & 1`, not hidden and not `f`): `prm->x8` when positive, else **70000**.
+- **the attached second model** (`prm->x14`, e.g. an object's extra mesh): the same, its alpha `prm->x1b`.
+
+The callers: objdraw.nostrict.c `func_00136428` (every object model, through `func_001621e0`) passes `x8 =
+-1` and the object colour's alpha (objdraw.c's `v[3]` from `func_00135df0`) as `xf` / `x1b`, so **objects sit at 20000 (opaque) or 70000 (fading, and every
+translucent part)**; shadow.nostrict.c `func_00127960` passes `x8 = D_004F82C4 + D_004F82C0` (60000 + n, n
+counting up by 10 per shadow model), inside the band that keeps its key; partymdl.c / journalmdl.c draw
+through `func_00161de8`, which runs the entries at once on the immediate list at key 0 (the menus' models)
+and never reaches `func_00160370`. `prm->xc` ... `xf` are the model colour (`DObj.x20` ... `x2c`), not keys.
+`func_00160370` then sorts the frame's models by their root matrix's `[3][3]` (`x10->x0 + 0x3C`, a float;
+largest first; with the view-projection already applied this is the clip w, the depth: inferred) and gives
+each its rank `x49` (0 for the farthest); a moved key is `prio + rank`. The rank is at most 77 (78 model
+slots), so the [prio - 500, prio + 499] clamp never bites: **opaque models take 20000 ... 20077 and
+translucent ones 70000 ... 70077, far to near**, just below the resets at 20499 / 70499 (inserted after the
+entries, so they run after every entry of the same key). So the frame's order is: texture animation steps
+(10000+), field state and chains (10010 / 10020), **renderer B's opaque models, back to front**, the reset,
+room / objects of renderer A (40000), shadow state (45499), fades and translucent props (50000-50100),
+shadows (60000+, renderer A's and renderer B's shadow models, cast order), shadow end (60499), **renderer B's
+translucent and fading models, back to front**, the reset (70499), the texture animation passes (90000+),
+then the immediate list. A model flagged `0x20000` (`func_001621f8`, no caller by name: a pointer use or an
+overlay) goes to the immediate list whole.
+
+**The draw list on the host** (session 83, item 4a). src/model/mdlgs.nostrict.c's two walks call
+`PlatGsListNode(list, node)` around each node's callback and `PlatGsListEnd(list)` at the end (include/
+platform/gs.h; on the PS2 build they are nothing: every out/build object is bit-identical). The null
+platform prints `kh1-host: node draw|imm KEY cb CALLBACK arg PAYLOAD` at `KH1_HOST_TRACE=5` before the
+node's sends, `kh1-host: node main` before the next main-thread send, `kh1-host: list ... end` and
+`kh1-host: vblank N`; **`gsstate.py --nodes`** prints a frame's command order and checks every node
+against the key map. Fake disc, stub:2 (6 frames): 13 nodes, **6 distinct, all in the key map**: frame 4's
+list is display.c's state packet at 10010 (`D_002BC9F0`) alone; frames 5 and 6 run 10010, renderer B's
+reset at 20499, the shadow state at 45499 / 60499 (`func_001274c8`, payload `D_004F8270`), the reset at
+70499, and on the immediate list `func_0015f388` at `0x7FFFFFFF`. Between the lists the main thread sends
+`D_0061E8B0` (opdma's ZMSK 0 bracket) and `D_00370170`; before the draw list `D_002A6540`, the frame copy
+`D_002A6890`, `D_002A65C0`, `D_002A6500`; after the immediate list the HUD / window sends. No models or
+texture animations run (no room files on the fake disc). `kh1_gs_flush_pending` (plat_null.c) is called
+by every main-thread `PlatGsSyncPath(0)`, ch 1 / 2 `PlatDmaSend`, `PlatDmaPutVif1Chcr` and
+`PlatGsPutDrawEnv` outside a node and a handler: **0 found the draw list pending** (the null DMAC runs the
+handlers as each transfer ends, so the list is always drained by the time the main thread sends).
+
+### 4.13 The texture animations: CLUT cross-fades (session 83, static)
+
+texanim.c's second task kind (`func_00102978` registers one `func_00102118` task per entry of the room's
+background file, `D_002A3F24` of them, from roombg.c `func_00101048`; the file's tables fill `D_0029BE20`
+(per animation 32 rows of 16 colours) and `D_002A3E20` (per animation `{a, b, c, d}`: the period, **the CLUT
+block offset `v`**, the last frame, the kind)) steps a **palette animation**. Each frame the task updates a
+blend factor `f10 = 64 + 64 D_003732D0[...]` (0 ... 128 if the 4096-entry table is the sine, as its
+use reads: an eased half period over about `a` steps of `D_002BBDFC`) and moves between two
+palettes `p20` / `p24` (kind 0: rows `idx - 1` and `idx`, 16 colours each, ping-ponging between 1 and
+`last`; kind 1: rows 0-15 and 16-31, two 256-colour palettes), then inserts seven draw list nodes at
+`90000 + 10 id`:
+
+| Key | Node | What the GS does |
+| --- | --- | --- |
+| +0 | `func_00101f80`, a 3-tag chain (`D_002A4230` / `D_002A4400` copied to the heap, its REFE pointed at `p20`) | upload palette A as CT32 into block `0x3600` (BW 1): 8x2 (16 colours) or 16x16 (256) |
+| +1 | `func_00106b98` `D_002A4310` / `D_002A44E0` | `FRAME_1` block `0x3E00` FBW 1 CT32 **`FBMSK 0xFF000000`**, `ZBUF` ZMSK 1, `TEST` ZTST ALWAYS, `TEX1` point, TEXFLUSH, `TEX0_1` `0x3600` CT32 8x2 / 16x16 TCC 1 MODULATE, `ALPHA_1` `(Cs - Cd) As >> 7 + Cd` |
+| +2 | `func_00101f30`, `func_00101fc8` / `func_00102070`'s REGLIST packet | **SPRITE TME FST, no ABE**, colour 0x80, at (`D_002A45D0[v % 32]`, `D_002A4650[v % 32] + v / 32 * 32`), 8x2 / 16x16, UV 1:1: copies A's colours over **the CLUT at block `0x3E00 + v`**, its alphas kept |
+| +3 | `func_00101f80` (`D_002A4260` / `D_002A4430`, REFE at `p24`) | upload palette B into block `0x3A00` |
+| +4 | `D_002A43A0` / `D_002A4570` | the same state with `TEX0_1` at `0x3A00` |
+| +5 | `func_00101f30` | the same sprite **with ABE**, vertex alpha `f10 + 1`: `CLUT = A + (B - A) x As >> 7`, `As = At x (f10 + 1) >> 7` |
+| +6 | `D_002A45C0` | back to the 3D target: `FRAME_1` `0x1A00` FBW 8, `ZBUF` ZMSK 0, `TEX1` bilinear |
+
+The two tables `D_002A45D0` / `D_002A4650` are the CT32 block order inside a page (block n of a page at x 0,
+8, 0, 8, 16, 24, ... y 0, 0, 8, 8, ...), so pixel (x, y) of the 64-wide frame at `0x3E00` is exactly block
+`0x3E00 + v`: **`v` names a CLUT block, and the passes rewrite the room CLUT that roombg.c uploaded there**
+(8x2 CT32 at `0x3E00 + i`, or the 16x16 ones at every 4th block from n0 to n1, which is why a 256-colour
+animation's `v` is a multiple of 4). Who reads it: the room's background meshes, whose TEX0 CBP names these
+blocks (the CBPs are in the disc's files: inferred from the upload addresses). Since the passes run at 90000+,
+after every room draw (at most 70499), **the room draws see the CLUT the previous frame blended**: a frame of
+lag, the console's own. The scratch blocks are free by then: `0x3600` is the field's upload slot
+(`func_00106e18` at 10020 / 50000) and `0x3A00` the texspot / shadow buffer (§3.4), both rewritten before
+their next use. A port can do the same on the CPU (the blend on 16 or 256 colours of the room's CLUT copy,
+alpha kept, before the next frame's draws) or draw it, as host/null/gsmem.c now does (§5.2).
 
 ## 5. Mapping to a modern API
 
@@ -1312,7 +1395,7 @@ interrupt-driven executor becomes a plain loop.
 | Renderer B matrix slots and palette | bone matrix UBO/SSBO; skinning in the vertex shader with weights pre-split from the per-bone weighted positions (`p_i = xyz_i / w_i`, weight `w_i`) |
 | B lighting (3 parallel lights + ambient, clamp 255) | vertex-shader lighting with the same clamps (saturate before scaling) |
 | P21 (VU0 Euler -> matrix) | CPU function: `Rz * Ry * Rx`, radians, composition as in §2.4 |
-| PSMT4/8 + CLUT | decode to RGBA8 at load (or use a palette texture + shader lookup if CLUT animation is used: renderer B callback step 3, open question 6) |
+| PSMT4/8 + CLUT | decode to RGBA8 at load, or a palette texture + shader lookup: **the room's CLUTs at `0x3E00` + v are animated every frame (§4.13)**, so either re-decode the textures that use an animated CLUT or keep those as index textures with a palette |
 | per-draw texture upload to block `0x3600` | cache decoded textures by source pointer and CLUT |
 | `ALPHA (Cs-Cd)*As+Cd` | `SRC_ALPHA, ONE_MINUS_SRC_ALPHA` with As scaled ×2 (0x80 = 1.0) |
 | `ALPHA (Cs-0)*As+Cd` | `SRC_ALPHA, ONE` (additive) |
@@ -1450,7 +1533,14 @@ pixel storage mode, written by the uploads and read back as RGBA8 for a TEX0.
   window at six base blocks (page-aligned and not) and four widths matched PCSX2's tables (30 M addresses,
   outside the repo). A CLUT in CT16S (the third CPSM) now loads too. gsmem_test.c: 61 checks.
 - **Not modelled**: CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host, the pixels a
-  draw writes (a target is tracked, not rendered).
+  draw writes (a target is tracked, not rendered), except (session 83) **point-sampled textured sprites**:
+  `kh1_gsmem_sprite` (called by gsregs.c on each SPRITE's drawing kick) draws a SPRITE with FST, TEX1
+  MMAG / MMIN 0, TFX MODULATE or DECAL, a texture of at most 64x64 not in a target, CLAMP REPEAT / CLAMP, no
+  fog, no alpha / destination alpha test, no Z write, into a CT32 / CT24 FRAME (FBMSK, SCISSOR, XYOFFSET,
+  ALPHA's `(A - B) C >> 7 + D` with COLCLAMP taken as 1, the source alpha written), at most 4096 pixels,
+  into the model's pixels: the texture animations' CLUT passes (§4.13). Anything else is a target as
+  before. gsmem_test.c: 65 checks (a 16-colour cross-fade into block `0x3E05` with its alphas kept and
+  read back through a PSMT4 CLUT load; bilinear stays a target).
 
 `KH1_HOST_TRACE=5` prints each send's uploads (`kh1-host:   upload host dbp ...`) and
 `tools/host/gsstate.py RUN.txt --uploads` lists a run's. On the fake disc (stub:2) the same 86 sends

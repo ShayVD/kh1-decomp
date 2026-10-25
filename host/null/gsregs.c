@@ -9,7 +9,10 @@
  * A / B meshes, PATH1) is not modelled (a VU1 program start only marks context 2's FRAME / ZBUF as
  * drawn, kh1_gs_path1), nor the order the GIF arbitrates its three paths in, so on
  * the host a send's state is what the sends before it left, in send order.  Fed only while
- * KH1_HOST_TRACE >= 2 walks the chains; KH1_HOST_TRACE=5 prints each send's draws. */
+ * KH1_HOST_TRACE >= 2 walks the chains; KH1_HOST_TRACE=5 prints each send's draws.
+ * Session 83: a point-sampled textured SPRITE gsmem.c can draw (kh1_gsmem_sprite: the texture
+ * animations' CLUT passes, renderer-spec 4.13) is drawn into the model's pixels instead of only
+ * marking its FRAME as a render target. */
 #include "common.h"
 #include "gsregs.h"
 #include "gsmem.h"
@@ -23,6 +26,7 @@ static KH1GsState gs = { { 0, 0 }, { 1, 0 } };
 static u32 gs_q = 0x3F800000; /* the PACKED Q (ST's third word), 1.0 at each GIF tag */
 static KH1GsDraw draws[DRAWS];
 static u32 ndraws, cur = ~0u; /* cur: the draw state of the last kick, ~0 once the state changes */
+static u32 vxy[3], vuv[3], vrgba[3]; /* the queued vertices' XYZ X / Y, UV and RGBA (session 83: sprites) */
 
 /* the state before any write: 0, except PRMODECONT 1 (PRIM's attributes rule), what every
  * environment the game sends writes (renderer-spec 5.1) */
@@ -60,7 +64,23 @@ static u32 gs_prim(void) {
     return p;
 }
 
-static void gs_kick(int draw) {
+/* a SPRITE drawn into the model's pixels when gsmem.c can (kh1_gsmem_sprite), else 0 */
+static int gs_sprite(u32 p, const KH1GsContext *c) {
+    KH1GsSprite s;
+    s.prim = p;
+    s.frame_lo = c->frame.lo; s.frame_hi = c->frame.hi; s.zbuf_hi = c->zbuf.hi; s.test_lo = c->test.lo;
+    s.alpha_lo = c->alpha.lo; s.alpha_hi = c->alpha.hi; s.tex0_lo = c->tex0.lo; s.tex0_hi = c->tex0.hi;
+    s.tex1_lo = c->tex1.lo; s.clamp_lo = c->clamp.lo;
+    s.xyoffset_lo = c->xyoffset.lo; s.xyoffset_hi = c->xyoffset.hi;
+    s.scissor_lo = c->scissor.lo; s.scissor_hi = c->scissor.hi;
+    s.texa_lo = gs.texa.lo; s.texa_hi = gs.texa.hi;
+    s.xy[0] = vxy[0]; s.xy[1] = vxy[1];
+    s.uv[0] = vuv[0]; s.uv[1] = vuv[1];
+    s.rgba = vrgba[1];
+    return kh1_gsmem_sprite(&s);
+}
+
+static void gs_kick(int draw, u32 xy) {
     u32 p = gs_prim(), need = kh1_gs_prim_verts(p), i;
     KH1GsDraw d, *k;
     if (cur == ~0u) {
@@ -90,14 +110,23 @@ static void gs_kick(int draw) {
     if (k) k->kicks++;
     else gs.lost++;
     if (!need) return;
-    if (gs.nvert < need) gs.nvert++;
+    if (gs.nvert < need) {
+        i = gs.nvert++;
+    } else { /* a strip or fan's next vertex: the queue moves up */
+        for (i = 1; i < need; i++) { vxy[i - 1] = vxy[i]; vuv[i - 1] = vuv[i]; vrgba[i - 1] = vrgba[i]; }
+        i = need - 1;
+    }
+    vxy[i] = xy;
+    vuv[i] = gs.uv.lo;
+    vrgba[i] = gs.rgbaq.lo;
     if (gs.nvert < need) return;
     /* a full queue: XYZ2 / XYZF2 draw; the lists (POINT, LINE, TRIANGLE, SPRITE) start again,
      * the strips and the fan keep their last vertices */
     if (draw) {
         KH1GsContext *c = &gs.ctx[p >> 9 & 1];
         if (k) k->draws++;
-        kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
+        if ((p & 7) != 6 || !gs_sprite(p, c))
+            kh1_gsmem_draw(c->frame.lo, c->frame.hi, c->zbuf.lo, c->zbuf.hi, c->scissor.lo, c->scissor.hi, c->test.lo);
     }
     i = p & 7;
     if (i == 0 || i == 1 || i == 3 || i == 6) gs.nvert = 0;
@@ -117,8 +146,8 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x02: gs.st.lo = lo; gs.st.hi = hi; return;
     case 0x03: gs.uv.lo = lo; gs.uv.hi = hi; return;
     case 0x0A: gs.fog.lo = lo; gs.fog.hi = hi; return;
-    case 0x04: case 0x05: gs_kick(1); return;  /* XYZF2 / XYZ2 */
-    case 0x0C: case 0x0D: gs_kick(0); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
+    case 0x04: case 0x05: gs_kick(1, lo); return;  /* XYZF2 / XYZ2 */
+    case 0x0C: case 0x0D: gs_kick(0, lo); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
     case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); kh1_gsmem_tex0(lo, hi); return;
     case 0x08: case 0x09: set(&gs.ctx[reg - 8].clamp, lo, hi); return;
     case 0x14: case 0x15: set(&c->tex1, lo, hi); return;

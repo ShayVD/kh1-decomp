@@ -63,6 +63,19 @@ void PlatGsPutDisplay1(u64 v);
 void PlatGsPutExtwrite(u64 v);
 u64 PlatGsGetCsr(void);
 #endif
+/* The draw / immediate lists' node boundaries (session 83, docs/renderer-spec.md 4.12,
+ * vita-port-plan.md 5.1w): src/model/mdlgs.nostrict.c's walks call PlatGsListNode(list, node)
+ * before a node's callback (list 0 the draw list func_0015ea98, 1 the immediate list
+ * func_0015eea0; the node's key at +4, callback at +0xC, payload at +0x10), PlatGsListNode(list, 0)
+ * after it, and PlatGsListEnd(list) when the list is done.  The port records each node as a command
+ * there; the host's null platform traces them.  On the matching PS2 build they are nothing. */
+#ifdef KH1_PS2
+#define PlatGsListNode(list, node) ((void)0)
+#define PlatGsListEnd(list) ((void)0)
+#else
+void PlatGsListNode(int list, void *node);
+void PlatGsListEnd(int list);
+#endif
 #define PLAT_GS_CSR_FIELD 0x2000 /* CSR.FIELD: the field being displayed (interlace) */
 
 #endif /* KH1_PLATFORM_GS_H */
