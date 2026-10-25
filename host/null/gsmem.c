@@ -502,6 +502,13 @@ static s32 sel(u32 f, s32 cs, s32 cd) { return f == 0 ? cs : f == 1 ? cd : 0; }
 static u32 texel(u32 c, u32 n, u32 wm) { return wm ? (c >= n ? n - 1 : c) : c & (n - 1); }
 /* a u read back by a wide copy's margin can start left of texel 0 (session 99): the model has none there */
 static s32 umax0(s32 u) { return u < 0 ? 0 : u; }
+/* session 124: a + n x d / m rounded down (the GS's DDA), not toward zero: a reversed u or v (d < 0) took
+ * the next texel up at a boundary (tests/host/vertex_test.c) */
+static s32 lerp_floor(s32 a, s32 n, s32 d, s32 m) {
+    s32 p = n * d, q = p / m;
+    if ((p % m) && ((p < 0) != (m < 0))) q--;
+    return a + q;
+}
 
 static int atst(u32 m, u32 a, u32 ref);
 
@@ -566,8 +573,8 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     useq++;
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
-            x = texel((u32)umax0(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, w, wms);
-            y = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, h, wmt);
+            x = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, w, wms);
+            y = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, h, wmt);
             t = tex[y * w + x];
             for (i = 0; i < 4; i++) ct[i] = t >> i * 8 & 0xFF;
             for (i = 0; i < 3; i++) col[i] = tfx ? ct[i] : clamp255(ct[i] * cv[i] >> 7);
@@ -720,8 +727,8 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
         for (c = px0; c < px1; c++) {
             for (i = 0; i < 4; i++) col[i] = cv[i];
             if (tme) { /* the texel at the pixel's left / top edge, as kh1_gsmem_sprite */
-                tx = texel((u32)umax0(u0 + (c * 16 - x0) * (u1 - u0) / (x1 - x0)) >> 4, tw, wms);
-                ty = texel((u32)(v0 + (k * 16 - y0) * (v1 - v0) / (y1 - y0)) >> 4, th, wmt);
+                tx = texel((u32)umax0(lerp_floor(u0, c * 16 - x0, u1 - u0, x1 - x0)) >> 4, tw, wms);
+                ty = texel((u32)lerp_floor(v0, k * 16 - y0, v1 - v0, y1 - y0) >> 4, th, wmt);
                 t = tt ? tt[ty * tw + tx] : kh1_gsmem_read_pixel(tpsm, tbp, tbw, tx, ty);
                 t = pal ? pal[t] : value_rgba(tpsm, t, cpsm, csa, s->texa_lo, s->texa_hi);
                 for (i = 0; i < 3; i++) col[i] = tfx ? (s32)(t >> i * 8 & 0xFF) : clamp255((s32)(t >> i * 8 & 0xFF) * cv[i] >> 7);

@@ -1885,6 +1885,54 @@ untouched, 4.12 / 4.8.) Each is its own GPU texture, so nothing the port draws l
 the only read through an overlap the game makes is the depth test against the sway's copied colour bytes
 (4.17), which the port does against the real depth.
 
+**Session 124 (vita-port-plan 5.1bl): the GPU vertex, the vertex shaders, and batches.**
+include/platform/vertex.h / host/port/vertex.c turn primasm.h's vertices into **one 32-byte GPU vertex**:
+position in target pixels (target.h's viewport plus half a GS pixel: the GS samples at a pixel's corner, a GPU
+at its centre), Z through depth.h (`kh1_depth_f32`, clamped to the bound buffer's format), S / T / Q (UV
+divided by `16 x 2^TW` / `16 x 2^TH` with Q 1; ST / Q as sent), RGBA and F as UNORM8 bytes (texfunc.h / fog.h's
+shaders take them back; 0x80 stays the GS's 1.0). The vertex shader maps pixels to clip space with one
+per-pass uniform and writes w = 1: the GS has no w (renderers A / B project on the VU), so every attribute
+interpolates linearly in screen space as the GS's do, with no noperspective qualifier, and ST / Q's
+perspective is the fragment shader's divide. **Vertex shader variants**: position only (DATE's set-up),
+position + colour, plus UV or ST / Q, plus F: at most 7; the static packets and `C_STATES` use 5 (`pos`,
+`pos col`, `pos col uv`, `pos col stq`, `pos col stq fog`), the fake disc 2.
+
+tests/host/vertex_test.c (13 checks) draws 8 textured FST sprites (fractional corners, both vertex orders,
+1:1, stretched 2x, shrunk with half-texel UVs, u reversed, one pixel wide) through gsmem.c's sprite and
+through primasm.h + vertex.h + a GPU-style rasteriser (pixel centres, the top-left rule, f32 barycentrics,
+nearest texel `floor(s x 2^TW)`): the same 11,723 pixels covered and the same texel at each, and at a scale of
+1.4167 (960 x 544) the GS's coverage and texel at every pixel centre's GS position (66,248 pixels, no ties).
+It found a host model bug: gsmem.c's sprite interpolated u / v with C's division, which rounds toward zero, so
+a reversed u (a mirrored sprite) took the next texel at a boundary; now rounded down (`lerp_floor`, the GS's
+DDA). Host-only: the PS2 build does not contain gsmem.c.
+
+*Batches* (include/platform/batch.h / host/port/batch.c): a port's GIF parser appends each primitive to the
+open batch and ends it where the call's bindings change: the **render pass** (port target or depth buffer),
+the **pipelines** (drawstate.h's one or two draws and DATE's set-up), the **texture** binding or sampler, the
+**uniforms**, the **scissor**, or after a **transfer** (an upload, copy or CLUT load since the last
+primitive). XYOFFSET does not end one (positions are mapped on the CPU), nor does a state that draws nothing;
+primasm.h's queue carries across the cut. A batch issues `n + setup` draw calls. tests/host/batch_test.c (7
+checks): 100 glyph sprites in one batch, the window bevel's 8 triangles in 4 (3 pipeline changes), XYOFFSET
+moves in one, an upload / TEX0 / fog / FOGCOL / SCISSOR / FRAME change each opening a batch, DATE's two
+draw calls, the frame totals and maxima. `KH1_HOST_TRACE=5` now ends with a `batches:` line and what opened
+them (host/null/pipes.c through gsregs.c's `kh1_gs_prim_hook`, frames ended at the vblank), and
+`tools/host/drawpipes.py --batches` cuts each static send the same way:
+
+| Source | Frames / sends | Batches | Draw calls | Primitives | GPU vertices | At most |
+|---|---|---|---|---|---|---|
+| fake disc (boot) | 3 frames | 5 | 5 | 65 | 390 | 3 draw calls a frame |
+| fake disc, `KH1_HOST_OVL=stub:2` | 7 frames | 16 | 16 | 196 | 1,176 | 3 draw calls a frame |
+| static packets | 149 sends (38 draw) | 147 | 148 | 720 | 3,770 | 33 draw calls a send |
+
+31 of the 38 drawing sends are one draw call. **The cost is the scissor**: 92 of the static batches are
+opened by a SCISSOR change, and the five sends with the most draw calls are the column copies that move
+SCISSOR across the screen (the PS2's texture-cache trick, 5.4 "Session 93"): sceneeff `func_00103058`'s
+`D_002A5620` 33 draw calls, `func_00102a48`'s menu blur `D_002A4B60` 32, `D_002A5AC0` 16 twice,
+`func_00102da8`'s `D_002A4FC0` 16. Where a column's sprites lie inside its scissor, a port can drop the
+scissor (it clips nothing) and draw each copy in 1 or 2 calls; whether they all do is session 125's check. The fake disc's frames are each in a new render pass (the clear, the frame copy and the display clear
+draw into three targets); on the Vita's tiled GPU the passes, not the calls, are the cost to watch. The
+real-disc room run's `batches:` line gives the budget with renderers A / B's meshes.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question
