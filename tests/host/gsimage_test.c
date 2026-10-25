@@ -102,6 +102,23 @@ int main(void) {
     CHECK("Z24 box: the rectangle's own pixels", (u32)(buf[(7 * 24 + 23) * 3] | buf[(7 * 24 + 23) * 3 + 1] << 8 |
                                                        buf[(7 * 24 + 23) * 3 + 2] << 16) == pat(123, 67, 0x123000));
 
+    /* session 102: once a draw has gone through that Z buffer (ZTE on, ZMSK off) the model holds no
+     * depth there: the box reads 0, so the flare's count (z < the light's) sees every pixel */
+    kh1_gsmem_draw(0xD0 | 8 << 16, 0, 0x70 | 1 << 24, 0, 511 << 16, 383 << 16, 1 << 16);
+    CHECK("Z24 drawn: the page is a draw's", kh1_gsmem_drawn(KH1_PSMZ24, 0x0E00, 8, 100, 60));
+    n = store(KH1_PSMZ24, 0x0E00, 8, 100, 60, 24, 8);
+    for (ok = n == 24 * 8 * 3, x = 0; x < n; x++) ok &= buf[x] == 0;
+    CHECK("Z24 drawn: the box reads 0, the farthest", ok);
+    kh1_gsmem_write_pixel(KH1_PSMZ24, 0x0E00, 8, 100, 60, 0x654321);
+    n = store(KH1_PSMZ24, 0x0E00, 8, 100, 60, 24, 8);
+    /* a write gives its page (64 x 32) back to the model: rows 60-63 are the model's, 64-67 still a draw's */
+    CHECK("Z24 written after the draw: the model's bytes again, by page", n == 24 * 8 * 3 &&
+          (u32)(buf[0] | buf[1] << 8 | buf[2] << 16) == 0x654321 &&
+          (u32)(buf[(3 * 24 + 23) * 3] | buf[(3 * 24 + 23) * 3 + 1] << 8 | buf[(3 * 24 + 23) * 3 + 2] << 16) == pat(123, 63, 0x123000) &&
+          (u32)(buf[(4 * 24) * 3] | buf[(4 * 24) * 3 + 1] << 8 | buf[(4 * 24) * 3 + 2] << 16) == 0);
+    /* a colour target the draws wrote keeps the model's bytes (the flat and textured sprites are drawn) */
+    CHECK("CT24 of a drawn page: not zeroed", kh1_gsmem_read_pixel(KH1_PSMCT24, 0x1A00, 8, 5, 5) == pat(5, 5, 0xA00000));
+
     /* menubg func_0020a8f0: the display, CT32, 16 x 1 at (256, 4) */
     fill(KH1_PSMCT32, 0, 8, 512, 8, 0x456000);
     n = store(KH1_PSMCT32, 0, 8, 256, 4, 16, 1);
