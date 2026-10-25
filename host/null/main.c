@@ -100,6 +100,10 @@ int kh1_counts_report(void);
 void kh1_pipes_report(void);
 extern void (*kh1_dma_draw_state)(); /* host/null/dmawalk.c (a const KH1GsDraw *) */
 void kh1_pipes_draw();
+/* session 124: the GPU batches a frame takes (host/null/pipes.c, KH1_HOST_TRACE=5) */
+void kh1_pipes_prim();
+void kh1_pipes_frame(void);
+extern void (*kh1_gs_prim_hook)(); /* host/null/gsregs.c */
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
@@ -129,6 +133,7 @@ void kh1_host_vblank(void) {
     frames++;
     kh1_counts_sample();
     if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
+    if (kh1_host_trace >= 5) kh1_pipes_frame(); /* session 124: the frame's batches */
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     in_vblank = 0;
@@ -241,6 +246,7 @@ int main(int argc, char **argv) {
         kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
         kh1_host_texdump = getenv("KH1_HOST_TEXDUMP"); /* needs KH1_HOST_TRACE >= 2 (the chain walk) */
         if (kh1_host_trace >= 5) kh1_dma_draw_state = kh1_pipes_draw; /* session 123: the GPU pipelines */
+        if (kh1_host_trace >= 5) kh1_gs_prim_hook = kh1_pipes_prim; /* session 124: the batches */
     }
     {
         const char *counts = getenv("KH1_HOST_COUNTS"); /* session 96: countcheck's DATA rows' marks */

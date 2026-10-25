@@ -16,6 +16,12 @@ the HUD's environment, the shadow pass: renderer-spec 3.2 / 4.7 / 4.11), each ma
 compiled here with gcc into out/host/) and the result is the table of GPU pipelines and fragment shaders
 with the senders that use each.  -v lists every state with its pipelines.
 
+Session 124 (renderer-spec 4.13 "Session 124"): --batches cuts each static send's kicks into GPU batches
+the way include/platform/batch.h does (a new batch where the pipelines, texture binding, uniforms, render
+pass or scissor change, or after a transfer or CLUT load) and prints the batches and draw calls per send,
+the totals and the sends that take the most: a send is one GIF chain, so its count is what that draw costs
+a frame on a GPU (C_STATES are not in it: the C draws through the run's `batches:` line).
+
 Needs the user's ELF (the packets are its data); prints counts, names and decoded keys, never packet bytes.
 """
 from __future__ import annotations
@@ -35,10 +41,11 @@ ORDER = ["PRIM", "FRAME", "ZBUF", "TEST", "ALPHA", "TEX0", "TEX1", "CLAMP", "FOG
 # the drawing environment a send's packets start from (renderer-spec 3.1 / 4.7: D_004D8EF0, both contexts):
 # FRAME 0x800D0 (the 3D target, CT32), ZBUF 0x31000070 (Z24, ZMSK 0), TEST 0x5000D (ATST GREATER 0, ZTST
 # GEQUAL), ALPHA 0x44, TEX1 0x60 (bilinear), CLAMP 5 (CLAMP / CLAMP), TEXA TA0 0x80; TEX0 renderer B's
-# default 0x2006E005DD313600 (PSMT8 128 x 128 at 0x3600, CLUT 0x3700)
+# default 0x2006E005DD313600 (PSMT8 128 x 128 at 0x3600, CLUT 0x3700); SCISSOR the 3D target's 512 x 384
+# (session 124's --batches only: not in a draw state's words)
 ENV = {"FRAME": 0x800D0, "ZBUF": 0x31000070, "TEST": 0x5000D, "ALPHA": 0x44, "TEX0": 0x2006E005DD313600,
-       "TEX1": 0x60, "CLAMP": 5, "FOGCOL": 0, "TEXA": 0x80}
-CTX = {"FRAME", "ZBUF", "TEST", "ALPHA", "TEX0", "TEX1", "CLAMP"}
+       "TEX1": 0x60, "CLAMP": 5, "FOGCOL": 0, "TEXA": 0x80, "SCISSOR": 383 << 48 | 511 << 16}
+CTX = {"FRAME", "ZBUF", "TEST", "ALPHA", "TEX0", "TEX1", "CLAMP", "SCISSOR"}
 NEED = [1, 2, 2, 3, 3, 3, 2, 0]   # vertices a PRIM type's first drawing kick needs (7: none)
 STRIP = {2: 1, 4: 2, 5: 2}        # LINESTRIP / TRISTRIP / TRIFAN keep their last 1 / 2 (a fan its first)
 
@@ -91,8 +98,9 @@ def c_states():
     return out
 
 
-def kicks(seq):
-    """the register sets at each drawing kick of one send's GIF writes (seq: dmawalk.Gif.seq)"""
+def events(seq):
+    """one send's GIF writes as ("kick", prim, registers) at each drawing kick and ("break",) at each
+    transfer (TRXDIR) or CLUT load (a TEX0 with CLD); seq: dmawalk.Gif.seq"""
     regs = {1: {}, 2: {}}
     glob = {}
     prim, n = 0, 0
@@ -112,14 +120,23 @@ def kicks(seq):
                 n = need - 1 if t in STRIP else 0
                 continue
             c = 2 if prim >> 9 & 1 else 1
-            yield prim, {**ENV, **{k: glob[k] for k in glob}, **regs[c]}
+            yield "kick", prim, {**ENV, **{k: glob[k] for k in glob}, **regs[c]}
             n = need - 1 if t in STRIP else 0
             continue
+        if name == "TRXDIR" or (name in ("TEX0_1", "TEX0_2", "TEX2_1", "TEX2_2") and v >> 61 & 7):
+            yield ("break",)
         base, _, ctx = name.partition("_")
         if base in CTX and ctx in ("1", "2"):
             regs[int(ctx)][base] = v
         elif name in ("FOGCOL", "TEXA"):
             glob[name] = v
+
+
+def kicks(seq):
+    """the register sets at each drawing kick of one send's GIF writes (seq: dmawalk.Gif.seq)"""
+    for e in events(seq):
+        if e[0] == "kick":
+            yield e[1], e[2]
 
 
 def state_words(prim, r):
@@ -139,9 +156,11 @@ def build_counter() -> Path:
     exe = ROOT / "out" / "host" / "pipecount"
     srcs = [ROOT / "tools/host/pipecount.c"] + [ROOT / "host/port" / f for f in
                                                 ("drawstate.c", "blend.c", "atest.c", "depth.c", "sampler.c",
-                                                 "texfmt.c", "primasm.c")]
+                                                 "texfmt.c", "primasm.c", "batch.c", "target.c", "canvas.c",
+                                                 "vertex.c")]
     if exe.exists() and all(exe.stat().st_mtime >= s.stat().st_mtime for s in srcs) and \
-            exe.stat().st_mtime >= (ROOT / "include/platform/drawstate.h").stat().st_mtime:
+            all(exe.stat().st_mtime >= (ROOT / "include/platform" / h).stat().st_mtime
+                for h in ("drawstate.h", "batch.h", "vertex.h", "target.h")):
         return exe
     exe.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["gcc", "-m32", "-malign-double", "-std=gnu89", "-O1", "-w", "-DKH1_HOST",
@@ -149,11 +168,58 @@ def build_counter() -> Path:
     return exe
 
 
+def batches(sends) -> int:
+    """the batches each send takes (pipecount --batches): runs of kicks with the same registers, breaks"""
+    lines = []
+    for fn, sname, seq in sends:
+        last, run, nv = None, 0, 0
+        out = []
+        for e in events(seq):
+            if e[0] == "break":
+                if run:
+                    out.append("B %s %x %x" % (last, run, nv))
+                    last, run, nv = None, 0, 0
+                out.append("X")
+                continue
+            prim, r = e[1], e[2]
+            w = " ".join("%x" % x for x in state_words(prim, r)) + " %x %x" % (r["SCISSOR"] & 0xFFFFFFFF,
+                                                                            r["SCISSOR"] >> 32)
+            if w != last and run:
+                out.append("B %s %x %x" % (last, run, nv))
+                run, nv = 0, 0
+            last = w
+            run += 1
+            nv += 6 if prim & 7 == 6 else NEED[prim & 7]
+        if run:
+            out.append("B %s %x %x" % (last, run, nv))
+        lines.append("S\n" + "\n".join(out) + "\nE\n")
+    exe = build_counter()
+    res = subprocess.run([str(exe), "--batches"], input="".join(lines), capture_output=True, text=True,
+                         check=True).stdout.splitlines()
+    per = []
+    for (fn, sname, _), line in zip(sends, res):
+        b, d, p, v = (int(x) for x in line.split()[2:6])
+        per.append((d, b, p, v, fn, sname))
+    tot = [sum(x[i] for x in per) for i in range(4)]
+    drawn = [x for x in per if x[2]]
+    print("# %d static sends walked, %d draw: %d batches, %d draw calls, %d primitives, %d GPU vertices" %
+          (len(per), len(drawn), tot[1], tot[0], tot[2], tot[3]))
+    for line in res[len(sends):]:
+        print(line)
+    print("# the sends with the most draw calls (draw calls, batches, primitives, vertices)")
+    for d, b, p, v, fn, sname in sorted(drawn, key=lambda x: (-x[0], -x[2], x[4]))[:15]:
+        print("%4d %4d %5d %6d  %s (%s)" % (d, b, p, v, fn, sname))
+    one = sum(1 for x in drawn if x[0] == 1)
+    print("# %d of the %d drawing sends are one draw call" % (one, len(drawn)))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--elf", type=Path, default=ROOT / "SLPS_251.98")
     ap.add_argument("--no-c", action="store_true", help="the static packets only (no C_STATES)")
     ap.add_argument("-v", action="store_true", help="every draw state with its pipelines")
+    ap.add_argument("--batches", action="store_true", help="the GPU batches and draw calls each static send takes")
     a = ap.parse_args()
     if not (ROOT / "out/gen/data.tsv").exists():
         sys.exit("drawpipes: out/gen/data.tsv is missing: run make first")
@@ -161,6 +227,7 @@ def main() -> int:
     dmawalk.apply_seeds(img, lambda n: names.by_name[n][0] if n in names.by_name else int(n[2:], 16), names)
     states = collections.OrderedDict()   # words -> {sender: None}
     walked, sends = {}, 0
+    batch_sends = []
     for call, fn, ch, tte, starts, kind in dmawalk.static_sends(img, names):
         if ch is None:
             continue
@@ -175,9 +242,13 @@ def main() -> int:
                 continue
             g = rx if isinstance(rx, dmawalk.Gif) else rx.gif
             sends += 1
+            if a.batches:
+                batch_sends.append((fn.split(" via ")[0], sname, g.seq))
             for prim, r in kicks(g.seq):
                 states.setdefault(state_words(prim, r), {})[fn.split(" via ")[0]] = None
     nstatic = len(states)
+    if a.batches:
+        return batches(batch_sends)
     if not a.no_c:
         for who, regs in c_states():
             r = {**ENV, **regs}

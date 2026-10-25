@@ -2748,6 +2748,29 @@ and docs only, no float-untested row. selftest PASS (drawstate_test 22 checks, t
   (an `OTHER` or an unknown depth buffer is a new kind).
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bl Session 124: the GPU vertex, the vertex shaders, batches and draw calls
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (vertex_test 13 checks, batch_test 7).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The GPU vertex and the vertex shader** (item 4b): new include/platform/vertex.h and host/port/vertex.c
+  (renderer-spec 4.13 "Session 124"): one 32-byte vertex (x / y in target pixels with the half-pixel shift,
+  Z through depth.h, S / T / Q with UV normalised by the texture's size, RGBA and F as UNORM8), w = 1 so
+  every attribute is screen-linear like the GS's; up to 7 vertex shader variants, 5 used by the static
+  packets and the C's states. Tested against gsmem.c's textured sprite at 4:3 and at 1.4167: the same
+  pixels and texels. The test found that gsmem.c rounded a reversed sprite's u toward zero (a texel off at
+  boundaries); fixed in the host model (`lerp_floor`).
+- **Batches and draw calls** (item 4c): new include/platform/batch.h and host/port/batch.c: a batch ends at a
+  render pass, pipeline, texture, uniform or scissor change or after a transfer; XYOFFSET does not end one.
+  `KH1_HOST_TRACE=5` prints `batches:` (per frame: average and most draw calls, primitives, vertices; what
+  opened them) and the vertex shaders; `drawpipes.py --batches` counts each static send. Fake disc: 3 draw
+  calls a frame at most; static packets: 148 draw calls over 38 drawing sends, 31 of them one call, the
+  column copies 16 to 33 each because of their 32-pixel scissors.
+- **To check on the real disc**: the room run's `batches:` line (renderer A / B's meshes per frame) for the
+  Vita's draw-call budget, and how many render passes a frame opens.
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

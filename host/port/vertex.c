@@ -1,0 +1,77 @@
+/* The GPU vertex and the vertex shader's variants (include/platform/vertex.h, docs/renderer-spec.md
+ * 4.13 "Session 124"), checked by tests/host/vertex_test.c against host/null/gsmem.c's sprite.  Not part
+ * of the PS2 build (it lives outside src/). */
+#include "common.h"
+#include "platform/vertex.h"
+#include "platform/depth.h"
+
+void kh1_vertex_ctx(KH1VertCtx *c, const KH1RenderPass *pass, u32 zbuf_lo, u32 prim, u32 tex0_lo, u32 tex0_hi) {
+    u32 tw = tex0_lo >> 26 & 15, th = (tex0_lo >> 30 | tex0_hi << 2) & 15;
+    if (tw > 10) tw = 10;
+    if (th > 10) th = 10;
+    c->pass = pass;
+    c->zpsm = 0x30 | (zbuf_lo >> 24 & 15);
+    c->fst = prim >> 8 & 1;
+    c->su = 1.0f / (f32)(16u << tw);
+    c->sv = 1.0f / (f32)(16u << th);
+}
+
+static f32 bits_f32(u32 v) {
+    union { u32 u; f32 f; } x;
+    x.u = v;
+    return x.f;
+}
+
+void kh1_vertex_of(const KH1VertCtx *c, const KH1PaVert *in, u32 n, KH1GpuVert *out) {
+    const KH1RenderPass *p = c->pass;
+    u32 i;
+    for (i = 0; i < n; i++) {
+        const KH1PaVert *v = &in[i];
+        KH1GpuVert *o = &out[i];
+        /* half a GS pixel on: the GS's corner sample at the GPU's pixel centre */
+        o->x = (((s32)(v->xy & 0xFFFF) - p->ofx + 8) / 16.0f + p->ox) * p->scale;
+        o->y = (((s32)(v->xy >> 16) - p->ofy + 8) / 16.0f + p->oy) * p->scale;
+        o->z = kh1_depth_f32(v->z, c->zpsm);
+        if (c->fst) {
+            o->s = (f32)(v->uv & 0x3FFF) * c->su;
+            o->t = (f32)(v->uv >> 16 & 0x3FFF) * c->sv;
+            o->q = 1.0f;
+        } else {
+            o->s = bits_f32(v->s);
+            o->t = bits_f32(v->t);
+            o->q = bits_f32(v->q);
+        }
+        o->rgba[0] = (u8)v->rgba;
+        o->rgba[1] = (u8)(v->rgba >> 8);
+        o->rgba[2] = (u8)(v->rgba >> 16);
+        o->rgba[3] = (u8)(v->rgba >> 24);
+        o->f = (u8)v->f;
+        o->pad[0] = o->pad[1] = o->pad[2] = 0;
+    }
+}
+
+void kh1_vertkey_of(const KH1PipeKey *p, KH1VertKey *out) {
+    out->setup = p->shader.setup;
+    out->tex = p->shader.setup || !p->shader.tex ? KH1_VTX_NONE : p->shader.fst ? KH1_VTX_UV : KH1_VTX_STQ;
+    out->fog = !p->shader.setup && p->shader.fog;
+}
+
+u32 kh1_vertkey_index(const KH1VertKey *k) { return k->setup ? 0 : 1 + k->tex * 2 + k->fog; }
+
+const char *kh1_vertkey_str(u32 index) {
+    static const char *names[] = { "pos", "pos col", "pos col fog", "pos col uv", "pos col uv fog", "pos col stq",
+                                   "pos col stq fog" };
+    return index < 7 ? names[index] : "?";
+}
+
+u32 kh1_vertex_variants(const KH1PipeSet *s, u32 *mask) {
+    u32 i, m = 0, n = 0;
+    KH1VertKey k;
+    for (i = 0; i < s->npipe; i++) {
+        kh1_vertkey_of(&s->pipe[i], &k);
+        m |= 1u << kh1_vertkey_index(&k);
+    }
+    for (i = 0; i < 7; i++) n += m >> i & 1;
+    if (mask) *mask = m;
+    return n;
+}
