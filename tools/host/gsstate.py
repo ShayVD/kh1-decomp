@@ -54,7 +54,8 @@ SEND = re.compile(r"^kh1-host: dma ch (\d+) chcr ([0-9a-f]{8}) tadr ([0-9a-f]{8}
 GS = re.compile(r"^kh1-host:   gs ([0-9a-f]{2}) ([0-9a-f]{16})$")
 DRAW = re.compile(r"^kh1-host:   draw prim ([0-9a-f]{3}) frame ([0-9a-f]{8}) zbuf ([0-9a-f]{8}) test ([0-9a-f]{8}) "
                   r"alpha ([0-9a-f]{16}) tex0 ([0-9a-f]{16}) clamp ([0-9a-f]{16}): (\d+) kicks, (\d+) prims"
-                  r"(?:, xy (-?\d+) (-?\d+) (-?\d+) (-?\d+))?(?:, reads target (\d+))?$")
+                  r"(?:, xy (-?\d+) (-?\d+) (-?\d+) (-?\d+))?(?:, reads target (\d+))?"
+                  r"(?:, view scissor (-?\d+) (-?\d+))?$")
 TARGET = re.compile(r"^kh1-host:   target (\d+) bp ([0-9a-f]{4}) bw (\d+) psm ([0-9a-f]{2}) rows (\d+) "
                     r"mask ([0-9a-f]{8}): (\d+) prims$")
 UPLOAD = re.compile(r"^kh1-host:   upload (host|copy) dbp ([0-9a-f]{4}) dbw (\d+) dpsm ([0-9a-f]{2}) "
@@ -81,14 +82,16 @@ def anchor(x0: float, y0: float, x1: float, y1: float) -> str:
 
 
 def print_extents(extents) -> None:
-    """extents: key -> [sends, prims, x0, y0, x1, y1, {frame: None}] in 1/16 pixels"""
+    """extents: key -> [sends, prims, x0, y0, x1, y1, {frame: None}, view scissor (x0, x1) or None] in 1/16
+    pixels"""
     print("# drawn extents per send (KH1_HOST_TRACE=5; target pixels from XYOFFSET, renderer-spec 5.3.1): %d"
           % len(extents))
-    for key, (n, prims, x0, y0, x1, y1, frames) in sorted(extents.items(), key=lambda kv: (kv[1][3], kv[1][2])):
+    for key, (n, prims, x0, y0, x1, y1, frames, view) in sorted(extents.items(), key=lambda kv: (kv[1][3], kv[1][2])):
         f = sorted(frames)
         r = tuple(v / 16 for v in (x0, y0, x1, y1))
-        print("\t(%7.1f, %7.1f)-(%7.1f, %7.1f)  %-13s %5d sends %6d prims  frames %d-%d  %s" % (
-            r + (anchor(*r), n, prims, f[0], f[-1], key)))
+        sc = "  (scissor: the view %.1f .. %.1f)" % (view[0] / 16, view[1] / 16) if view else ""
+        print("\t(%7.1f, %7.1f)-(%7.1f, %7.1f)  %-13s %5d sends %6d prims  frames %d-%d  %s%s" % (
+            r + (anchor(*r), n, prims, f[0], f[-1], key, sc)))
 
 
 def print_uploads(uploads) -> None:
@@ -300,13 +303,16 @@ def main() -> int:
                 d[3][int(m.group(14))] = None
             if m.group(10) and int(m.group(9)):
                 xy = [int(m.group(i)) for i in range(10, 14)]
-                e = extents.setdefault(ext, [0, 0, xy[0], xy[1], xy[2], xy[3], {}])
+                e = extents.setdefault(ext, [0, 0, xy[0], xy[1], xy[2], xy[3], {}, None])
                 e[0] += ext_new
                 ext_new = False
                 e[1] += int(m.group(9))
                 e[2], e[3] = min(e[2], xy[0]), min(e[3], xy[1])
                 e[4], e[5] = max(e[4], xy[2]), max(e[5], xy[3])
                 e[6][vframe] = None
+                if m.group(15):  # session 93: the scissor the wide view's rule reads as the view's
+                    v = (int(m.group(15)), int(m.group(16)))
+                    e[7] = v if e[7] is None else (min(e[7][0], v[0]), max(e[7][1], v[1]))
             continue
         m = TARGET.match(line)
         if m and cur:

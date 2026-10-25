@@ -15,6 +15,7 @@
 #include "platform/thread.h"
 #include "platform/vu.h"
 #include "dmawalk.h"
+#include "gsregs.h"
 
 /* the 16 KiB scratchpad (dma.h: PLAT_SPR_BASE / PLAT_SPR_END) */
 u8 PlatSpr[0x4000] ALIGNED(16);
@@ -369,8 +370,13 @@ void PlatGsListWait(void) {
 }
 
 /* KH1_HOST_WIDE (session 92, host/null/main.c): the HUD's anchored parts move by the view's margin
- * past each 4:3 edge in the GIF path (include/platform/hudanchor.h, host/null/dmawalk.c) */
+ * past each 4:3 edge in the GIF path (include/platform/hudanchor.h, host/null/dmawalk.c); session 93:
+ * the static full-screen packets stretch to the view (include/platform/fullscreen.h) and the scissor
+ * rule reads the view (host/null/gsregs.c, include/platform/canvas.h) */
 void kh1_null_hud_wide(f32 margin) {
+    s32 m = (s32)(margin * 16.0f + 0.5f);
     kh1_dma_hud_anchors(kh1_hud_anchors, kh1_hud_nanchors, (u32)(unsigned long)kh1_hud_staging,
-                        kh1_hud_staging_size, (s32)(margin * 16.0f + 0.5f));
+                        kh1_hud_staging_size, m);
+    kh1_dma_fullscreen(kh1_fullscreen, kh1_nfullscreen, -m, 8192 + 2 * m);
+    kh1_gs_view(-m, 8192 + 2 * m);
 }

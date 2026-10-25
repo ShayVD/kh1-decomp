@@ -3,6 +3,7 @@
 #define KH1_HOST_DMAWALK_H
 
 #include "platform/hudanchor.h"
+#include "platform/fullscreen.h"
 
 /* where(addr, n): a name for the memory n bytes at addr lie in ("image", "spr", ...), 0 when
  * the host does not own it */
@@ -31,6 +32,12 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max);
  * vertices and for the sends from the staging buffer [via, via + via_n) after it; any other send
  * sets none.  n = 0 turns it off (the default).  The table is the port's (host/port/hudanchor.c). */
 void kh1_dma_hud_anchors(const KH1HudAnchor *tab, int n, u32 via, u32 via_n, s32 margin);
+
+/* Session 93 (KH1_HOST_WIDE, docs/renderer-spec.md 5.4 "Session 93"): stretches the static full-screen
+ * packets.  A send whose start is an entry's send stretches its own vertices (and u, with KH1_FS_U) to
+ * the view x0 .. x0 + w (canvas sixteenths, kh1_gs_xstretch); any other send none.  n = 0 turns it off
+ * (the default).  The table is the port's (host/port/fullscreen.c). */
+void kh1_dma_fullscreen(const KH1FullScreen *tab, int n, s32 x0, s32 w);
 
 /* a GIF packet of qwc qwords sent in normal mode (no chain), read and printed like a walk's */
 void kh1_dma_gif_direct(const u32 *q, u32 qwc);

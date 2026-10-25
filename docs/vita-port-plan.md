@@ -1752,6 +1752,28 @@ the PS2), the shift M0 check as before, so the float ELF is the same (no float-u
 - **Waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default (the room run's `--nodes` with it
   first) and argcheck's 3 value uses (dktitle.x's calls).
 
+### 5.1ag Session 93: the full-screen packets' stretch, the HUD table check, the canvas map
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). **No change under src/**: kh1.elf
+byte-identical, the float ELF the same (no float-untested row). selftest PASS (with viewcheck, hudcheck and
+the new canvas_test); abicheck, relcheck, walkcheck, countcheck and layoutcheck as before.
+
+- **The static full-screen packets' stretch** (item 4a, renderer-spec 5.4 "Session 93"):
+  `include/platform/fullscreen.h` + `host/port/fullscreen.c` (nine sends: clear, frame copy, fade, letterbox,
+  the copy into the Z area, the spin's copy and strip, the menu capture and the display clear `D_002BC980`,
+  new to the list) with X / u / capture-X flags; under `KH1_HOST_WIDE` the chain walk stretches them to the
+  view (`kh1_dma_fullscreen`, `kh1_gs_xstretch`), and the scissor rule (the full 4:3 canvas or the display's,
+  and the 16 columns) reads as the view's (`kh1_gs_view`, a draw line's `, view scissor`). The fake disc's
+  clear, display clear and frame copy draw -82.8 .. 594.8 wide. gsregs_test.c +17 checks.
+- **The table check** (item 4b): `tools/host/hudcheck.py` (no build): every environment src/hud builds or sends
+  is in `kh1_hud_anchors[]` or `kh1_hud_markers[]` (new in hudanchor.c), no stale rows; in the self-test,
+  with a negative case. 17 HUD environments: 11 anchored, 6 markers.
+- **The canvas map** (item 4c): `include/platform/canvas.h` + `host/port/canvas.c`: `kh1_canvas_fit` (scale,
+  pillarbox / letterbox offsets, the view in canvas sixteenths), `kh1_canvas_map`, the stretch and the scissor
+  rule as pure functions for the renderer; tests/host/canvas_test.c (25 checks).
+- **Still waiting for the Mac** (item 4d): `KH1_HOST_DMAC=defer` as the default (the room run's `--nodes` with
+  it first) and argcheck's 3 value uses (dktitle.x's calls).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

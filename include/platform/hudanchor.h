@@ -19,6 +19,14 @@ typedef struct {
 
 extern const KH1HudAnchor kh1_hud_anchors[];
 extern const s32 kh1_hud_nanchors;
+/* session 93: the markers' environments (not moved; tools/host/hudcheck.py checks that every
+ * environment src/hud sends is an anchor or a marker) */
+typedef struct {
+    const void *env;
+    const char *name;
+} KH1HudMarker;
+extern const KH1HudMarker kh1_hud_markers[];
+extern const s32 kh1_hud_nmarkers;
 /* the staging buffer the parts' sprites are sent from, and its size in bytes */
 extern const void *const kh1_hud_staging;
 extern const u32 kh1_hud_staging_size;
