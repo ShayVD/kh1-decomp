@@ -131,6 +131,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
   "$W/present_test" "$W" > "$W/present.log" || { grep -v '^kh1-host:' "$W/present.log"; exit 1; }
   tail -n 1 "$W/present.log"
+  # KH1_HOST_COUNTS's high-water marks (host/null/counts.c, session 96)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/counts_test" \
+      "$ROOT/tests/host/counts_test.c" "$ROOT/host/null/counts.c"
+  "$W/counts_test" > "$W/counts.log" || { cat "$W/counts.log"; exit 1; }
+  tail -n 1 "$W/counts.log"
   # the null sound server (host/null/sound.c, session 86)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/sound_test" \
       "$ROOT/tests/host/sound_test.c" "$ROOT/host/null/sound.c"

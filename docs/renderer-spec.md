@@ -2374,6 +2374,23 @@ overlay's (dktitle.x check). hudcheck.py now also lists the staging sends outsid
 `OTHER_STAGES` does not name (one: `D_00648070`); the self-test renames the buffer in a copy and expects the
 failure.
 
+#### Session 96: the frame copy in the present (host)
+
+**The frame copy is drawn into the model.** `D_002A6890` (SPRITE|TME|FST, 16 strips, the 3D target `0x1A00`
+CT24 as a 512 x 512 texture, TEX1 MMAG 1, MODULATE at 0x80, TCC, `(Cs - Cd) As + Cd`) is refused by the exact
+sprite model (`kh1_gsmem_sprite`: a render target's texture, over 64 x 64, bilinear), so until now the
+present's display shot never showed what the target holds. Under the present's switch only,
+`kh1_gsmem_flat_sprite` now also takes a textured SPRITE the exact model refused, **point-sampled** whatever
+TEX1 says (the texel at the pixel's left / top edge, the exact model's rule), the texture read as it is even
+in a target's pages, then MODULATE / DECAL with TCC, a per-texel alpha test (AFAIL KEEP only) and the blend.
+The session 95 rule holds: no page is marked, no trace counter moves (its own `tex_sprites` / `tex_pixels`;
+the shot line prints both counts). Not drawn: FST 0, HIGHLIGHT, CLAMP's region modes, a PSM or CLUT the
+model has not. Other refused textured sprites (the HUD's bilinear ones) are drawn the same way, which only
+changes the model's pixels. Fake disc (stub:2, `KH1_HOST_TRACE=5`): `gsstate.py --draws --targets --uploads
+--sends` identical with and without `KH1_HOST_SHOT`; 16 to 17 textured sprites a frame; the frames are still
+black (the target holds only the clear, colour 0). The real disc's shots now show the target's flat passes
+and its uploads' sprites through the copy, not the 3D (the model has none). gsmem_test +5 checks.
+
 #### Open (need the real disc or a boot)
 
 - Confirm the pop-in and the fix: boot with `k = 1` and a 960-wide scissor, then with `k = 1.3235`, and

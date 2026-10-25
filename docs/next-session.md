@@ -9,13 +9,25 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 95 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 96 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 95, 2026-10-25)
+## Where we stopped (end of session 96, 2026-10-25)
+
+- **Session 96** (host only, vita-port-plan 5.1aj, renderer-spec 5.4 "Session 96"): **the frame copy in the
+  present, the counts' high-water marks.** No change under src/ (kh1.elf byte-identical, no float-untested
+  row). host/null/gsmem.c's `kh1_gsmem_flat_sprite` also draws a **textured SPRITE the exact model refused**
+  (the frame copy `D_002A6890`: the 3D target `0x1A00` as a 512 x 512 bilinear texture), point-sampled, under
+  the present's switch only, no page marked, no trace counter moved (`tex_sprites` / `tex_pixels`; the shot
+  line prints both): fake disc `--draws / --targets / --uploads / --sends` identical with `KH1_HOST_SHOT`, 17
+  textured sprites a frame, still black. **`KH1_HOST_COUNTS=1`** (host/null/counts.c): countcheck's DATA rows'
+  high-water marks (renderer B's `D_0055C698.x4 / .x8 / .xc` 78 / 480 / 72, collisions `D_002C12C4` 2048 (a
+  lower bound: reset per query), messages `D_00389C80` 273, grid `D_0029B2FC` ~1020, trigger boxes
+  `D_00389C90.nbox` 10, the windows' `D_00389C90.cnt[0..7]` 256), sampled at each vblank, DMA send and list
+  end, printed at the end with "OVER" past a size. tests/host/counts_test.c, gsmem_test +5.
 
 - **Session 95** (static + host, vita-port-plan 5.1ai, renderer-spec 5.4 "Session 95"): **one margin in
   sixteenths, the flat sprites in the present, prim.c's send.** `kh1_view_side16` (host/port/view.c, rounded
@@ -198,7 +210,7 @@ items.
   **`python3 -I tools/host/walkcheck.py`** (session 86, no build needed): pointer walks that run on from one loop
   into the next, which neither check sees, and since session 87 index walks and builder results (0 WALK, 42 REVIEWED); census.py's HOST_TAIL pads a piece on the host only.
   **`python3 -I tools/host/countcheck.py`** (session 88, no build needed): counts kept in a global, stepped in one
-  function and used as an index in another (0 COUNT, 37 REVIEWED; the DATA rows wait for high-water marks).
+  function and used as an index in another (0 COUNT, 37 REVIEWED; the DATA rows wait for high-water marks: `KH1_HOST_COUNTS=1` prints them, session 96).
 - **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs;
   **host/null/pad.c** (session 87): one pad connected, nothing pressed (`KH1_HOST_PAD=none`: no pad,
   `KH1_HOST_PAD=FILE`: a script; vita-port-plan 5.1aa). PlatSifCallRpc hands the sound
@@ -266,11 +278,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 96 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 97 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s95 and /mnt/project-files/kh1-runtime/s95, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s97 and /mnt/project-files/kh1-runtime/s97, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -288,7 +300,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
    sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
    a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
-   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 95: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   camera and target cycling while locked on, L1 shortcuts, R3), **sessions 91 to 96: nothing new to see on the PS2 (the float ELF is the same)**, **session 90: an object window whose speaker is off screen (objwin's tail `f6`), a movie (opening or the title's demo: skip it with a button and with START), the party gauges' place (the data say top right)**, **session 89: a pad that vibrates when the player is hit** (PCSX2's force feedback, if the user's pad has it; renderer-spec 5.3 needs nothing from the boot), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -309,9 +321,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
    the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
    TRIANGLE?; session 88: start from tests/host/pads/title.txt and move its frames to what the run shows). Read the
-   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles for renderer-spec 5.3.1's anchor table (**`gsstate.py RUN.txt --extents`**, session 91: one row per HUD part keyed `ENV > D_00351E10`; check each row of 5.3.1, the kind-3 gauge, the one-shot and the minigame timer's x / y). **Session 91: run the room once with `KH1_HOST_WIDE=1`** (the culls let more through: compare the draw-list node counts with and without it); **session 92: with `KH1_HOST_WIDE=1` and `--extents` each HUD part in host/port/hudanchor.c's table should move by -82.8 / +82.8 px (centre ones and markers not); a part that moves wrong or a HUD environment missing from the table is a table fix**; **session 93: every full-screen send (the clear, display clear, frame copy, fade, letterbox, the copies) at -82.8 .. 594.8 with "(scissor: the view)", and a full-screen send that stays 0 .. 512 is a missing `host/port/fullscreen.c` row**, **session 94: one run with `KH1_HOST_SHOT=960:544:DIR` (DIR in the scratchpad, never committed; look at a few frames: the uploads and 2D sprites the model holds, pillarboxed; session 95: the clears, fades and letterbox now show their colours, and the shot line counts the flat sprites) and, if the lens grid is reached, its `CLAMP_1` MAXU 676 under `KH1_HOST_WIDE=1`**, and **list the actors with spawn flag `0x20000`** (renderer-spec 5.4 "Bit 35's readers": gdb after `func_00132c70`, each of roomobj.c's four lists' 0x78-byte records with `flags & 0x20000`) and scan the room's object scripts for the halfword `0xA30B` (`func_0012a030`). **Session 88: record the high-water marks of countcheck's
-   DATA rows** (gdb watchpoints or a host-only hook: renderer B's `D_0055C698.x4 / .x8 / .xc` against 78 / 480 / 72,
-   the collision count `D_002C12C4` against 2048, the message count `D_00389C80` against 273, the trigger boxes). Fix host-only causes the way
+   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 89: find the message font's button glyph codes** (circle, cross, triangle, square, L1 / R1 ... in the decoded font and the message files) **and the disc's HUD / menu textures that show a button** (`KH1_HOST_TEXDUMP`), for 5.1ac's swap lists; record the HUD draws' rectangles for renderer-spec 5.3.1's anchor table (**`gsstate.py RUN.txt --extents`**, session 91: one row per HUD part keyed `ENV > D_00351E10`; check each row of 5.3.1, the kind-3 gauge, the one-shot and the minigame timer's x / y). **Session 91: run the room once with `KH1_HOST_WIDE=1`** (the culls let more through: compare the draw-list node counts with and without it); **session 92: with `KH1_HOST_WIDE=1` and `--extents` each HUD part in host/port/hudanchor.c's table should move by -82.8 / +82.8 px (centre ones and markers not); a part that moves wrong or a HUD environment missing from the table is a table fix**; **session 93: every full-screen send (the clear, display clear, frame copy, fade, letterbox, the copies) at -82.8 .. 594.8 with "(scissor: the view)", and a full-screen send that stays 0 .. 512 is a missing `host/port/fullscreen.c` row**, **session 94: one run with `KH1_HOST_SHOT=960:544:DIR` (DIR in the scratchpad, never committed; look at a few frames: the uploads and 2D sprites the model holds, pillarboxed; session 95: the clears, fades and letterbox now show their colours, and the shot line counts the flat sprites) and, if the lens grid is reached, its `CLAMP_1` MAXU 676 under `KH1_HOST_WIDE=1`**, and **list the actors with spawn flag `0x20000`** (renderer-spec 5.4 "Bit 35's readers": gdb after `func_00132c70`, each of roomobj.c's four lists' 0x78-byte records with `flags & 0x20000`) and scan the room's object scripts for the halfword `0xA30B` (`func_0012a030`). **Session 88 / 96: record the high-water marks of countcheck's
+   DATA rows** with **`KH1_HOST_COUNTS=1`** on every real-disc run (session 96, host/null/counts.c: printed at the
+   end; an "OVER" row is a real overrun, on the PS2 too: write it into countcheck's REVIEWED entry; the collision
+   count is a lower bound). **Session 96: the display shot now goes through the frame copy** (the target's
+   contents point-sampled): look at a `KH1_HOST_SHOT` frame of the title and of Dive to the Heart. Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
@@ -329,19 +343,16 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
    `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
    second repeat word (+0x14) or `D_002C5C2C`? Session 89: does any overlay start a vibration (`func_00176ba8`, `func_00147790` with patterns 2-4), set bit 16 of `D_002C5978` (vibration off), or call winmenu.c's y getter / setter `func_001fd268` / `func_001fd278` (0x7000, not 0x7400)? **Session 90: dkmovie.x** (the same folder): run inventory.py on it too and check vita-port-plan 5.1ad's "To confirm" list (commands 0-9 and their returns, its stores of 2 to `D_002BBE04` and to `D_002BBE18`, whether n indexes `D_0046A058`, how a title skip is seen, whether it calls `func_001111b0`, sceIpu / sound commands used); does any overlay build its own frustum (5.4 open; session 91: does the Gummi / world map code call `func_00110a48` or `func_001bb858`, and with which matrices)? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **the frame copy in the present**: `D_002A6890` (SPRITE|TME|FST, the 3D
-   target `0x1A00` CT24 to the display, bilinear) is refused by `kh1_gsmem_sprite` (a render target's texture,
-   over 64 x 64, MMAG 1), so the display shot never shows what the target holds; under the present's switch
-   only, copy it point-sampled (the same no-mark, no-counter rule as session 95's flat sprites) and check the
-   fake disc's `--draws / --targets / --uploads / --sends` stay identical; (b) **a host-only high-water hook
-   for countcheck's DATA rows** (`KH1_HOST_COUNTS=1`: renderer B's `D_0055C698.x4 / .x8 / .xc` against 78 /
-   480 / 72, the collision count `D_002C12C4` against 2048, the message count `D_00389C80` against 273, the
-   trigger boxes; read once a frame, maxima printed at exit), so item 2's real-disc run needs no gdb
-   watchpoints; (c) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the callers of prim.c's
-   senders still wait for the Mac.
+4. **Static, without the Mac**: (a) **present_test through the copy**: a made-up 3D target and a frame copy
+   send walked by the chain walk (tests/host/present_test.c), the shot showing the target's colours at the
+   canvas map's pixels (session 96 tested the copy in gsmem_test only); (b) **the shot's "target" mode under
+   `KH1_HOST_WIDE`**: the target is the PS2's 512 wide, so the view's sides stay black; write down in
+   renderer-spec 5.4 what a renderer draws there (the sides come from the wide 3D, not the copy) and make the
+   present say so on its shot line; (c) `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses and the
+   callers of prim.c's senders still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=96`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=97`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 97) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 98) with this
    prompt: the user wants each session to start the next one without being asked.

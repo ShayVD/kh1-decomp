@@ -1834,6 +1834,30 @@ countcheck, dmacheck, abscheck and layoutcheck 0, indcheck as before.
   room run to show the same `--nodes` order), argcheck's 3 value uses (dktitle.x's calls into the main ELF),
   and now the callers of prim.c's four senders (dktitle.x / the other overlays).
 
+### 5.1aj Session 96: the frame copy in the present, the counts' high-water marks
+
+Static and host only (Sunday 2026-10-25, the Mac away until 2026-10-26). **No change under src/** (kh1.elf
+byte-identical, the float ELF the same, no float-untested row). selftest PASS (gsmem_test +5 checks, the new
+counts_test).
+
+- **The frame copy in the present** (item 4a, renderer-spec 5.4 "Session 96"): host/null/gsmem.c's
+  `kh1_gsmem_flat_sprite` also draws a textured SPRITE the exact model refused (the frame copy `D_002A6890`:
+  the 3D target as a 512 x 512 bilinear texture), point-sampled, under the present's switch only and with
+  session 95's no-mark, no-counter rule (`tex_sprites` / `tex_pixels`), so the display shot shows what the
+  model holds in the target. Fake disc: `--draws / --targets / --uploads / --sends` identical with
+  `KH1_HOST_SHOT`. `texel_rgba` / `tex_ok` factored out of `kh1_gsmem_read_tex` (the same reads).
+- **`KH1_HOST_COUNTS=1`** (item 4b, host/null/counts.c): the high-water marks of countcheck.py's DATA rows,
+  sampled at each vblank, each `PlatDmaSend` and each `PlatGsListEnd` (where the frame's lists are full) and
+  printed at the run's end (main.c's summary, also after a crash) against each array's size, "OVER" past it:
+  renderer B's `D_0055C698.x4 / .x8 / .xc` (78 / 480 / 72), the collision candidates `D_002C12C4` (2048; reset
+  per query, so a sample sees what the last query left: a lower bound), the message pointers `D_00389C80`
+  (273), renderer A's grid count `D_0029B2FC` (about 1020), the trigger boxes `D_00389C90.nbox` (10) and the
+  eight window templates' `D_00389C90.cnt[k]` (256). Reads only. Fake disc: all 0 (no room loads). For the
+  real-disc run (next-session item 2) instead of gdb watchpoints; a true per-query collision peak would need
+  a hook inside mapcoll.c's queries (not done: src/ unchanged).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

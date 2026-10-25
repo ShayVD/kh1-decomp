@@ -42,7 +42,8 @@ CMP = ("<", "<=", ">", ">=", "==", "!=")
 
 # (counter, indexing file): what bounds it, read by hand (every indexing function of that file).
 # DATA rows are bounded only by what the disc's files hold, on the PS2 as well: a port-only build
-# can cap them or count the high-water mark on a real-disc run. Session 88 on.
+# can cap them or count the high-water mark on a real-disc run (KH1_HOST_COUNTS=1, host/null/counts.c,
+# session 96). Session 88 on.
 REVIEWED = {
     ("D_002C12C4", "src/coll/mapcoll.c"):
         "DATA: the collision candidate list D_002BD250[2048] (ids / polygon pointers), reset per query "
