@@ -746,6 +746,41 @@ sorted by `x10->x0->x3C` (depth), the sort index is added to the entry key
 `func_0015ed80` (or `func_0015ee78`). It also frees the previous frame's
 temporary packets.
 
+### 4.4 The channel's CHCR and the chain walk (sessions 73-74, static)
+
+- **Word 0 of a channel is its CHCR.** `sceDmaGetChan(n)` returns the
+  channel's register block (`sceDmaChan`: CHCR +0x00, MADR +0x10, QWC +0x20,
+  TADR +0x30); the port's `PlatDmaChan` keeps the same words, and the game
+  writes the first one itself. `sceDmaSend` (func_00266f38) sets
+  `TADR = tag`, `QWC = 0` and `CHCR = (CHCR & ~0xC) | 0x105`: source chain
+  mode, from memory, start. It keeps every other bit the game left there, so
+  **TTE (0x40) is whatever the last writer of word 0 set**.
+- **Who sets what.** drawlist's func_00237f20 / func_002380c0 set TTE on the
+  GIF channel (`*chan |= 0x40`) and nothing clears it again, so once drawlist
+  has run, every later GIF `sceDmaSend` on the PS2 also transfers its tags'
+  upper 64 bits. A port must take TTE from word 0 at each send, not from the
+  call site (what those upper words hold in each GIF chain is not checked
+  yet: an open question for the GIF parser). shadow's func_00127500 sets chain mode and
+  clears TTE on VIF1 before its send (the 224-byte heap chain, 4.3). The
+  direct VIF1 senders write `D1_CHCR` themselves: func_00106db0 `0x105` (no
+  TTE), func_00108d90 `0x145` (TTE: the tag's upper words are VIF codes).
+- **drawlist's end tag** is ORed onto the qword after the last packet
+  (`*r |= 0x70000000`): its qwc bits are whatever was in that qword, sent as
+  data on the PS2 too. A walker reads END's qwc as the tag says.
+- **The walk** (what the Vita's PlatDmaSend does, and what the host's null
+  platform does under `KH1_HOST_TRACE=2`, host/null/plat_null.c): from TADR,
+  tag by tag; id 0 refe (the data at ADDR, then stop), 1 cnt (the data after
+  the tag, then the tag after it), 2 next (the data after the tag, then the
+  tag at ADDR), 3 ref / 4 refs (the data at ADDR, then the next qword), 5 call
+  (push the qword after the data, two deep), 6 ret (pop; an empty stack
+  stops), 7 end (the data after the tag, then stop). With TTE the tag's
+  upper 64 bits go first. An address with bit 31 set reads the scratchpad on
+  the PS2 (dma.h PLAT_DMA_SPR, 0 off the EE: the port's addresses are plain
+  pointers).
+- **Host result** (session 74, fake disc, `KH1_HOST_OVL=stub:2`): 86 sends,
+  all on the GIF channel (none on VIF1 before the run stops), 1-3 tags each (cnt / ref
+  / end and lone refe / end), none leaving host memory, valgrind 0 errors.
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).

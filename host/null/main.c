@@ -9,6 +9,9 @@
  *   KH1_HOST_FRAMES=N   stop after N frames (default 600); a frame is one call of the game's
  *                       vblank handler, which PlatGsSyncV and PlatWaitSema run
  *   KH1_HOST_TRACE=1    print every search and read
+ *   KH1_HOST_TRACE=2    also walk every DMA chain a send starts (host/null/plat_null.c):
+ *                       one line per send, each tag when the chain leaves host memory;
+ *                       3 prints every tag
  *   KH1_HOST_OVL=stub   a test switch: a call of the overlay entry D_00F20000 returns 0 instead
  *                       of faulting, so the run goes on past it (each call's two arguments are
  *                       printed).  No overlay code runs: what
@@ -160,7 +163,10 @@ int main(int argc, char **argv) {
         kh1_host_stop_at_cdread = 0;
     if (nf)
         max_frames = strtoul(nf, 0, 0);
-    kh1_host_trace = getenv("KH1_HOST_TRACE") != 0;
+    {
+        const char *tr = getenv("KH1_HOST_TRACE");
+        kh1_host_trace = tr ? (atoi(tr) > 1 ? atoi(tr) : 1) : 0;
+    }
     {
         const char *ovl = getenv("KH1_HOST_OVL");
         ovl_stub = ovl && strncmp(ovl, "stub", 4) == 0 && (ovl[4] == 0 || ovl[4] == ':');
