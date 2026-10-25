@@ -511,14 +511,22 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
     u32 tw = s->tex0_lo >> 26 & 15, th = (s->tex0_lo >> 30 | s->tex0_hi << 2) & 15, tfx = s->tex0_hi >> 3 & 3;
     u32 tcc = s->tex0_hi >> 2 & 1, ztst = s->test_lo >> 17 & 3, wms = s->clamp_lo & 3, wmt = s->clamp_lo >> 2 & 3;
     u32 w, h, n = 0, x, y, i, t, d, cv[4], ct[4], cd[4], fbmsk = s->frame_hi, v, pmsk;
+    u32 zte = s->test_lo >> 16 & 1, zpsm = 0x30 | (s->zbuf_lo >> 24 & 15), zbp = (s->zbuf_lo & 0x1FF) * 32, z = s->z, zw, zb;
     s32 x0, y0, x1, y1, u0, v0, u1, v1, px0, px1, py0, py1, k, c, col[4], as, ad, f;
     const u32 *pal;
-    if ((p & 7) != 6 || (p & 0x130) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
+    if ((p & 7) != 6 || (p & 0x110) != 0x110 || s->tex1_lo & 0x1E0 || tfx > 1 || wms > 1 || wmt > 1) return 0;
+    if (p >> 5 & 1 && !(s->tests & 4)) return 0;                             /* FGE */
     if (fpsm != KH1_PSMCT32 && fpsm != KH1_PSMCT24) return 0;
     if (!fbw) return 0;
-    if (!s->tests && (s->test_lo & 1 || s->test_lo >> 14 & 1)) return 0;     /* ATE, DATE */
+    if (!(s->tests & 1) && (s->test_lo & 1 || s->test_lo >> 14 & 1)) return 0; /* ATE, DATE */
     if (s->test_lo >> 14 & 1 && fpsm != KH1_PSMCT32) return 0;               /* DATE on a frame with no alpha */
-    if (s->test_lo >> 16 & 1 && !(ztst == 1 && s->zbuf_hi & 1)) return 0;    /* a Z test or write */
+    if (zte && !(ztst == 1 && s->zbuf_hi & 1) && !(s->tests & 2)) return 0;  /* a Z test or write */
+    /* session 122 (tests bit 2): a Z buffer in a Z format, the vertex's Z clamped to it as the GS does */
+    if (zte && s->tests & 2) {
+        if (zpsm != KH1_PSMZ32 && zpsm != KH1_PSMZ24 && zpsm != KH1_PSMZ16 && zpsm != KH1_PSMZ16S) return 0;
+        if (zpsm == KH1_PSMZ24 && z > 0xFFFFFF) z = 0xFFFFFF;
+        if ((zpsm == KH1_PSMZ16 || zpsm == KH1_PSMZ16S) && z > 0xFFFF) z = 0xFFFF;
+    }
     if (tw > 6 || th > 6 || kh1_gsmem_tex_target(s->tex0_lo, s->tex0_hi)) return 0;
     w = 1u << tw;
     h = 1u << th;
@@ -564,15 +572,28 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
             for (i = 0; i < 4; i++) ct[i] = t >> i * 8 & 0xFF;
             for (i = 0; i < 3; i++) col[i] = tfx ? ct[i] : clamp255(ct[i] * cv[i] >> 7);
             col[3] = tcc ? (tfx ? ct[3] : clamp255(ct[3] * cv[3] >> 7)) : cv[3];
+            /* session 122 (tests bit 4): fog after the texture function, the colour only */
+            if (p >> 5 & 1)
+                for (i = 0; i < 3; i++)
+                    col[i] = ((s->f & 0xFF) * (u32)col[i] + (0xFF - (s->f & 0xFF)) * (s->fogcol >> i * 8 & 0xFF)) >> 8;
+            /* session 122 (tests bit 2): the Z test against the Z buffer's pixel; a fail writes nothing */
+            zw = 0;
+            if (zte && s->tests & 2) {
+                zb = kh1_gsmem_read_pixel(zpsm, zbp, fbw, c, k);
+                if (ztst == 0 || (ztst == 2 && z < zb) || (ztst == 3 && z <= zb)) continue;
+                zw = !(s->zbuf_hi & 1);
+            }
             d = kh1_gsmem_read_pixel(fpsm, fbp, fbw, c, k);
             pmsk = fbmsk;
             /* session 121 (s->tests): DATE passes where Ad's bit 7 is DATM; a failed alpha test writes
-             * by AFAIL: KEEP nothing, FB_ONLY the frame, ZB_ONLY the Z buffer (not written here: nothing),
-             * RGB_ONLY the colour without the alpha */
+             * by AFAIL: KEEP nothing, FB_ONLY the frame, ZB_ONLY the Z buffer (session 122: written
+             * with tests bit 2, else nothing), RGB_ONLY the colour without the alpha */
             if (s->test_lo >> 14 & 1 && (d >> 31) != (s->test_lo >> 15 & 1)) continue;
             if (s->test_lo & 1 && !atst(s->test_lo >> 1 & 7, (u32)col[3], s->test_lo >> 4 & 0xFF)) {
                 u32 afail = s->test_lo >> 12 & 3;
+                if (afail == 2 && zw) put(zpsm, zbp, fbw, c, k, z);
                 if (afail == 0 || afail == 2) continue;
+                zw = 0;
                 if (afail == 3) pmsk |= 0xFF000000u;
             }
             if (p >> 6 & 1) { /* ABE: ((A - B) x C >> 7) + D */
@@ -590,6 +611,7 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
             v = col[0] | col[1] << 8 | col[2] << 16 | (u32)col[3] << 24;
             v = (d & pmsk) | (v & ~pmsk);
             put(fpsm, fbp, fbw, c, k, v);
+            if (zw) put(zpsm, zbp, fbw, c, k, z);
             n++;
         }
     st.sprites++;

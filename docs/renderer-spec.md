@@ -1717,6 +1717,87 @@ four frame alphas, the game's values as one draw, and each ATST / AFAIL / DATE /
 sprite. For that, `kh1_gsmem_sprite` takes the alpha test and DATE when the new `KH1GsSprite.tests` is 1;
 gsregs.c passes 0, so a run's model and traces are unchanged.
 
+**Session 122 (vita-port-plan 5.1bj): the depth state, fog and the primitive assembly.**
+include/platform/depth.h / host/port/depth.c turn ZBUF, TEST's ZTE / ZTST / ZMSK and the vertices' Z into a
+GPU depth state; include/platform/fog.h / host/port/fog.c are the shader's fog step; include/platform/
+primasm.h / host/port/primasm.c turn the GIF's vertex queue into GPU points, lines and triangles.
+
+*Depth*: the GS's Z is an unsigned integer growing toward the viewer, each vertex's clamped to the Z
+buffer's largest value (0xFFFFFF in Z24, 0xFFFF in Z16 / Z16S, as PCSX2 does). The port keeps the GS's
+numbers and compares: depth `Z x 2^-24` (Z24) or `Z x 2^-16` (Z16 / Z16S) in a float (D32F) buffer, the
+GPU's compare GEQUAL / GREATER as ZTST says, **no reversal and no projection flip** (§5's row said "reversed
+Z, or flip the projection"; neither is needed when the depth is the GS's Z scaled). Every 24-bit Z is a
+float, so equal Zs compare equal and the order is the GS's, exactly (tested over all 2^24 values). A D24
+unorm buffer works too with `Z / 0xFFFFFF` (stored back as Z for every 24-bit value when the GPU rounds to
+nearest: check the Vita's conversion). Z32 would lose its low 8 bits; the game has none. Inside a
+primitive the GPU interpolates, not the GS (at most a unit apart); what the game relies on is a second pass
+over the same vertices finding the same Zs (renderer B's pass 2: GEQUAL with ZMSK 1; the depth blur's
+constant `z`), which holds on a GPU when the position is invariant (the same vertex program for both).
+ZTE 0 is ALWAYS with no write; ZTST NEVER draws nothing.
+
+| ZBUF / TEST | Where | Port |
+|---|---|---|
+| Z24 ZBP `0x70`, ZTST GEQUAL, ZMSK 0 / 1 | renderers A / B (`0x5080B`), windows with flag `0x10` (`D_003F27D0`), texspot's composite, sceneeff `func_00103058` (the depth blur's `z`), field.c / display.c `TEST_2` | D32F `Z x 2^-24`, GEQUAL, write = !ZMSK |
+| Z24, ZTST GREATER | opdma `func_001aaf00` (Z-only writes: ATST NEVER, AFAIL ZB_ONLY), its set-up packets `D_0061E800` / `D_0061E8B0` | GREATER (atest.h's draw: no colour, Z written) |
+| ZTST ALWAYS (ZTE 1) | 2D, copies, the HUD's `0x30003`, the field text and selector | test off, write = !ZMSK |
+| ZTE 0 | the text headers `0x4000D`, the wave | test off, no write |
+| Z16S at `0x3800` FBW 4 | the shadow pass (3.4, session 110) | a 16-bit depth of its own, `Z x 2^-16`; a vertex Z above 0xFFFF clamps (whether the shadow program's Zs reach that comes with the disc: check on the real-disc run) |
+
+The projection (func_00110618, 5.4) sends zmin 1 .. zmax 16777000, inside Z24. The 2D packets' constant Zs
+(`0x10000`; the needles' -256 and the glyphs' `0xFFFFFFFE` clamp to 0xFFFFFF) are written only where ZTE is 1
+and ZMSK 0. **The Z buffer drawn as colour** (the sway / lens grid's `D_002A5CE0` / `D_002A5FD0`: the 3D target
+copied as CT24 into block `0xE00`, read back as TEX0 TBP0 `0xE00`) stays a separate colour texture on the
+port with the depth buffer kept (4.17); the PS2 then depth-tests later draws against colour bytes, the port
+against the real depth (a boot shows whether anything after them differs). Nothing in the main ELF samples
+the depth itself as a texture; `kh1_depth_bits` gives the GS's bits back if a disc's packet does.
+
+*Fog*: after the texture function, before the alpha test and the blend, the colour only:
+`RGB = (F x C + (0xFF - F) x FOGCOL) >> 8` (F 0xFF gives `C x 255 >> 8`, so 0xFF becomes 0xFE). The shader
+taking its UNORM inputs back to 8 bits and doing that integer step is exact for every C, F and FOGCOL; the
+plain float `mix(FOGCOL, C, F)` is at most 2 off (tested over all 2^24 triples). F is interpolated in screen
+space like Gouraud RGBA (noperspective when the positions carry a w); a sprite's is its second vertex's.
+The game: renderer A (P2 / P3 / P7) and B's `F = clamp(A + B / w)` (2.2), FOGCOL per draw (renderer B
+`func_0015f488` / `func_0015f388`), the grid's fogged blended pass (4.14). The alpha is untouched, so the
+alpha test sees the unfogged alpha (tested).
+
+*Primitive assembly*: a PRIM write empties the vertex queue; each XYZ(F)2 / XYZ(F)3 adds a vertex and an
+XYZ(F)2 that fills the queue draws with the state in force. POINT, LINE, TRIANGLE and SPRITE empty it after
+each primitive; LINESTRIP and TRISTRIP drop the oldest vertex; **TRIFAN drops the second and keeps the first**
+(gsregs.c shifted a fan like a strip until now: only its sprite model read the queue, so no trace moves).
+XYZ(F)3 adds without drawing. Any other register write leaves the queue: the window bevel's `ALPHA_1` writes
+between its strip's kicks change the next triangles' state and the strip goes on, so the port ends its batch
+at the state change and the next batch starts from the queue (the strip's last two vertices). The port emits
+independent lists: IIP 0 copies the last vertex's RGBA into all of the primitive's vertices (the GS's flat
+colour is the vertex that drew; a GPU's provoking vertex is the last in GL and the first in Vulkan / D3D, so
+copying makes either right); a SPRITE is two triangles over its corners, X / U / S from one vertex and Y / V /
+T from the other, RGBA, Z, F and Q the second's. No culling. **Pixel centres**: the GS samples a pixel at
+its integer corner (an edge at 12.4 X first covers pixel `(X + 15) >> 4`), a GPU at the centre, so the port
+adds half a pixel to every position; a GPU's top-left rule then covers exactly the GS's sprite pixels
+(tested on fractional corners, both vertex orders, the shared diagonal once).
+
+| PRIM | IIP | The game's senders | GPU |
+|---|---|---|---|
+| TRISTRIP | 1 | renderer A's batches and P8, the text's gradient frames and bars (13), wintext's icons (4), fade.c's wipe | TRIANGLES |
+| TRISTRIP | 0 | the window bevel (ALPHA_1 inside the strip), winmenu / winpart's textured strips (3), sceneeff `func_00102da8`, the shadow pass | TRIANGLES, colour copied |
+| TRIFAN | 1 | renderer A / B's clipped polygons, the HUD's arcs (`func_0023e160`) | TRIANGLES (first vertex kept) |
+| TRIANGLE | 1 | the HUD gauges' textured pairs (`func_002388b8`, 18 callers) | TRIANGLES |
+| SPRITE | - | the copies, UI, fonts, icons, face pictures, fades, letterbox, `D_002A6AA0` | 2 TRIANGLES |
+| LINE | 1 | the wave (`D_00631620`, 100 lines); prim.c's 3D line (no main-ELF caller) | LINES |
+| POINT | - | PRIM written with no vertex (opdma's zero A+D qwords): nothing drawn | - |
+
+No LINESTRIP. Wide lines and points have no GS equivalent to match (the GS's lines are one pixel); a GPU line
+of width 1 is the port's form, its exact pixels are a check for a boot (the wave). tests/host/depth_test.c
+(23 checks): the game's ZBUF / TEST values decoded, the clamps, every Z24 / Z16 value's depth exact and
+increasing, the D24 round trip, the GPU's compare against the GS's on equal / adjacent / far Zs, and the
+model's sprite over a Z24 and a Z16S buffer for every ZTE / ZTST / ZMSK (a clamped vertex Z included) and
+opdma's Z-only write. tests/host/fog_test.c (10 checks): the formula's ends, the exact and float shaders over
+every triple, and the model's sprite fogged under DECAL / MODULATE, with the blend and with the alpha test.
+tests/host/primasm_test.c (5 checks): a fan, the bevel (8 triangles in 4 batches, the strip carried across),
+20000 random GIF writes against gsregs.c's queue through a new `kh1_gs_prim_hook` (unset in a run), and the
+sprites' coverage against gsmem.c's fill. `kh1_gsmem_sprite` takes Z (`tests` bit 2: ZTE / ZTST / ZMSK on the
+ZBUF's format, `KH1GsSprite.zbuf_lo` / `z`) and fog (bit 4: `f`, `fogcol`); gsregs.c fills the new fields
+from its queue (each vertex's Z and F now kept) and still passes `tests` 0.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question
@@ -2043,7 +2124,7 @@ interrupt-driven executor becomes a plain loop.
 | `FTOI4` + `XYOFFSET` + 512x384 target | render at any resolution; keep a 4:3 projection matching `D_002BBF60` (VU qw 12-15) |
 | ST 1.12 with Q | `vec2 uv = st / 4096.0`, perspective-correct by default |
 | RGBA 0x80 = 1.0, `TFX=MODULATE` | `out = tex * vcol * 2.0` (clamp); alpha the same (`TCC=1`) |
-| Fog F = clamp(A + B/w) | per-vertex fog factor `f = F/255`, `mix(fogColor, color, f)` in the fragment shader |
+| Fog F = clamp(A + B/w) | per-vertex fog factor `f = F/255`, `mix(fogColor, color, f)` in the fragment shader (within 2; the exact integer step in 4.13 "Session 122") |
 | Renderer B matrix slots and palette | bone matrix UBO/SSBO; skinning in the vertex shader with weights pre-split from the per-bone weighted positions (`p_i = xyz_i / w_i`, weight `w_i`) |
 | B lighting (3 parallel lights + ambient, clamp 255) | vertex-shader lighting with the same clamps (saturate before scaling) |
 | P21 (VU0 Euler -> matrix) | CPU function: `Rz * Ry * Rx`, radians, composition as in §2.4 |
@@ -2055,7 +2136,7 @@ interrupt-driven executor becomes a plain loop.
 | `TEST ATST GEQUAL/LESS AREF=k` two-pass | two draws with `discard` in the shader (`a >= k/128` and `a < k/128`), the second with depth writes off and blending on |
 | `ATST NEVER, AFAIL=FB_ONLY` | colour write on, depth write off, no discard |
 | `DATE/DATM` destination alpha | stencil: write a bit where dest alpha is set, test it |
-| `ZTST GEQUAL`, PSMZ24 | depth test `GREATER_OR_EQUAL` on reversed Z, or flip the projection and use `LESS_OR_EQUAL` |
+| `ZTST GEQUAL`, PSMZ24 | depth `Z x 2^-24` in a float buffer, depth test `GREATER_OR_EQUAL`, no reversal (4.13 "Session 122") |
 | `FBMSK=0xFFFFFF` | colour write mask (alpha only) |
 | CTXT1/CTXT2 | no equivalent: they are two state sets; fold into the pipeline state |
 | End-of-frame copy 384 -> 448, fade `D_002BC070`, flashes | final full-screen pass: scale to the window, multiply by the fade colour, add the flash quads |

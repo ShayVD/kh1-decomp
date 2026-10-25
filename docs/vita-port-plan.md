@@ -2693,6 +2693,31 @@ docs only, no float-untested row. selftest PASS (blend_test 32 checks, atest_tes
   and whether anything samples a render target's alpha above 0x80.
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bj Session 122: the depth state, fog and the primitive assembly
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (depth_test 23 checks, fog_test 10, primasm_test 5).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The depth state** (item 4b): new include/platform/depth.h and host/port/depth.c (renderer-spec 4.13 "Session
+  122"). The port's depth is the GS's Z scaled (`Z x 2^-24` for Z24, `2^-16` for Z16 / Z16S) in a float buffer,
+  compared GEQUAL / GREATER as ZTST says: exact for every 24-bit Z, no reversed Z or flipped projection needed
+  (§5's old row). Vertex Zs clamp to the format (the 2D packets' `0xFFFFFFFE` / -256 to 0xFFFFFF). A D24 unorm
+  buffer with `Z / 0xFFFFFF` also round-trips (check the Vita's conversion). Multi-pass draws over the same
+  vertices need an invariant position. The Z area drawn as colour stays a separate texture (4.17).
+- **Fog** (item 4b): new include/platform/fog.h and host/port/fog.c: `(F x C + (0xFF - F) x FOGCOL) >> 8` after the
+  texture function, colour only; the shader's integer step is exact, a float mix is within 2.
+- **The primitive assembly** (item 4c): new include/platform/primasm.h and host/port/primasm.c: the GS's vertex
+  queue as independent GPU lists, flat colour copied from the last vertex (no provoking-vertex dependence),
+  sprites as two triangles, the queue kept across a state change (the bevel's strip), positions plus half a
+  pixel for the GS's pixel corners. gsregs.c's fan now keeps its first vertex (it shifted it out before; only
+  the sprite model read the queue, so no trace changes) and offers `kh1_gs_prim_hook` for the test.
+- **The GS model**: `kh1_gsmem_sprite` takes the Z test / write (`tests` bit 2) and fog (bit 4) for the tests;
+  gsregs.c passes 0.
+- **To check on the real disc / a boot**: the shadow pass's Zs against Z16S's 0xFFFF; the wave's lines'
+  pixels; whatever is drawn after the sway / lens grid (the PS2 tests against colour bytes there).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

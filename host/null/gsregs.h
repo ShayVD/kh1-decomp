@@ -81,4 +81,17 @@ void kh1_gs_view(s32 x0, s32 w);
 /* the vertices a primitive type (PRIM bits 0-2) needs for its first drawing kick, 0 for 7 */
 u32 kh1_gs_prim_verts(u32 type);
 
+/* session 122: a queued vertex as the kick left it: XYZ's X / Y (12.4, X after the shift and stretch
+ * in force), its Z (XYZF's 24 bits, XYZ's 32) and F (XYZF's, or the FOG register's), UV, RGBAQ's RGBA
+ * and Q, ST */
+typedef struct {
+    u32 xy, z, f, uv, rgba, s, t, q;
+} KH1GsVert;
+/* session 122 (renderer-spec 4.13 "Session 122"): when set, called at each drawing kick with the
+ * attributes in force, the primitive's n vertices in the GS's order (POINT 1, LINE / LINESTRIP /
+ * SPRITE 2, a triangle 3: a strip's last three, a fan's first and last two) and the draw state's index
+ * in kh1_gs_draws (256 past them).  tests/host/primasm_test.c checks a port's primitive assembly
+ * (include/platform/primasm.h) against it; a run never sets it */
+extern void (*kh1_gs_prim_hook)(u32 prim, const KH1GsVert *v, u32 n, u32 state);
+
 #endif

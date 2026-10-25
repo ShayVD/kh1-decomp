@@ -136,7 +136,13 @@ typedef struct {
     u32 tests;                                 /* session 121: 1 lets the sprite take TEST's alpha test (every
                                                 * ATST / AFAIL; ZB_ONLY writes nothing, no Z being written) and
                                                 * DATE on a CT32 frame (tests/host/atest_test.c); gsregs.c
-                                                * passes 0, so a run's model and traces are as before */
+                                                * passes 0, so a run's model and traces are as before;
+                                                * session 122: a bit set, 1 the alpha tests, 2 the Z test
+                                                * and write (ZTE / ZTST / ZMSK on ZBUF's Z32 / Z24 / Z16 /
+                                                * Z16S, the FRAME's FBW; z clamped to the format), 4 fog
+                                                * (FGE: f and fogcol after the texture function) */
+    u32 zbuf_lo;                               /* session 122: ZBUF's ZBP and PSM (tests bit 2) */
+    u32 z, f, fogcol;                          /* the second vertex's Z and F, FOGCOL's RGB */
 } KH1GsSprite;
 int kh1_gsmem_sprite(const KH1GsSprite *s);
 /* session 95: an untextured SPRITE (clear, fade, letterbox) filled into the model's pixels for the
