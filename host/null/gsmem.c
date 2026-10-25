@@ -331,6 +331,21 @@ static u32 texel_rgba(u32 psm, u32 tbp, u32 tbw, u32 cpsm, u32 csa, u32 x, u32 y
     return cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
 }
 
+/* session 116: the palette a TEX0 reads from the CLUT buffer the last load left, as RGBA8 words (the
+ * port's palette cache, host/port/palcache.c, takes these): 256 entries for an 8-bit PSM, CSA's 16
+ * for a 4-bit one.  Returns the count, or 0 for a PSM that is not indexed or a CLUT the model does not
+ * have. */
+int kh1_gsmem_clut(u32 lo, u32 hi, u32 texa_lo, u32 texa_hi, u32 *out) {
+    u32 psm = lo >> 20 & 63, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31, n, e, i;
+    if (!indexed(psm) || hi >> 23 & 1 || !clut_psm(cpsm) || (bits8(psm) && csa)) return 0;
+    n = bits8(psm) ? 256 : 16;
+    for (i = 0; i < n; i++) {
+        e = n == 256 ? i : (cpsm == KH1_PSMCT32 ? csa & 15 : csa) * 16 + i;
+        out[i] = cpsm == KH1_PSMCT32 ? clut[e] | (u32)clut[e + 256] << 16 : rgba16(clut[e & 511], texa_lo, texa_hi);
+    }
+    return (int)n;
+}
+
 /* the texture TEX0 names can be read (a PSM the model has, an indexed one's CLUT too) */
 static int tex_ok(u32 lo, u32 hi) {
     u32 psm = lo >> 20 & 63, cpsm = hi >> 19 & 15, csa = hi >> 24 & 31;
