@@ -153,7 +153,11 @@ int PlatGsExecLoadImage(void *lp, void *src) { return 0; }
 int PlatGsExecStoreImage(void *sp, void *dst) { return 0; }
 void PlatGsDefDispEnv(void *disp, short psm, short w, short h, short dx, short dy) {}
 void PlatGsPutDispEnv(void *disp) {}
-void PlatGsPutDrawEnv(void *giftag) {}
+/* the draw environment's GIF packet (tag + NLOOP qwords), read like a chain's data under
+ * KH1_HOST_TRACE >= 2 (session 80: the boot environment sets both contexts, renderer-spec 4.11) */
+void PlatGsPutDrawEnv(void *giftag) {
+    if (kh1_host_trace >= 2) kh1_dma_gif_direct((const u32 *)giftag, (((const u32 *)giftag)[0] & 0x7FFF) + 1);
+}
 void PlatGsPutPmode(u64 v) {}
 void PlatGsPutDispfb1(u64 v) {}
 void PlatGsPutDisplay1(u64 v) {}

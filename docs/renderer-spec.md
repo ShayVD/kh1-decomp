@@ -28,6 +28,7 @@ Conventions:
 | `python3 -I tools/host/dmawalk.py [--regs [-v]] [--float ELF]` | every DMA send whose chain is a name (PlatDmaSend's static rows and dmapool's GIF wrappers): the chain walked, its data read as GIF packets / VIF codes (VIF1 DIRECT data as GIF packets, PATH2), the GS registers each send writes (`-v`: decoded), and with `--float` whether the m12 float build sends the same chain (§4.6). New in session 76. `--state` (session 77): the state list instead, each register's distinct values decoded with the functions that send each (§4.7). Session 78: `SEEDS` writes the 17 chains init code builds from constants over the ELF's bytes first (68 more sends walked; `--no-seeds` turns it off, §4.8) |
 | `KH1_HOST_TRACE=4 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt [--sends]` | the same state list for the chains a host run sends (the run-time ones too: the text windows, the HUD), each named by the host symbol at its start (§4.7). New in session 77 |
 | `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --draws` | the draw states the host's GS register file (host/null/gsregs.c) counted: each distinct PRIM + context state the vertex kicks drew with, decoded, with kicks, primitives and the chains that kicked them (§4.9, §5.1). New in session 79 |
+| `KH1_HOST_TRACE=5 out/host/kh1-host > run.txt`, then `python3 -I tools/host/gsstate.py run.txt --uploads` | the transfers into the host's GS memory model (host/null/gsmem.c): each destination DBP / DBW / PSM and rectangle, how often, the pixels and the chains that sent them (§5.2). New in session 80 |
 | `python3 -I tools/host/giftags.py src/text/*.c` | the GIF tags (with PRE) the C writes as constants, by function: the shape of packets built per draw, which no static walk sees (§4.9). New in session 79 |
 | `python3 -I tools/vu/model_header.py FILE` | structure of a model or map file you extracted (`.mdls`, `MOBJ` chain, map `.bin`, `.ard`, renderer A mesh header); layouts in docs/structs.md. New in session 16 |
 | `python3 -I tools/vu/rb_stream.py FILE --mobj OFF [--ram] [-v]`, `--scan --ram` | decodes and checks renderer B mesh command streams (§2.3 "Input") for every part of a `MOBJ`/`MENV` in a `.mdls`, the ELF, or a PCSX2 `eeMemory.bin` (`--ram`: pointers already relocated); `--scan` finds every chunk. New in session 17 |
@@ -1085,6 +1086,132 @@ temporary packets.
   0), `D_002B66B0` 3 sprites reading the Z area as a CT24 texture (`0xE00`) into the 3D target,
   `D_002BC980` one fill of the display buffer. None has ABE (their ALPHA_1 is set but unused).
 
+### 4.10 The builders giftags.py misses: lists, the field text, the selector, the HUD gauges (session 80, static)
+
+`giftags.py` only sees GIF tags written as one PACKED constant: it reports `func_00208458` (2 of 4
+tags) and the face pictures, and nothing in winrow, winlist.c, selector, fldtext* or the rest of the
+gauges. Read from the C (the two still-assembly functions from their drafts, marked):
+
+- **Menu rows, tabs, titles and lists draw nothing themselves.** winrow.c and winlist.c (`func_00208ea8`
+  ... `func_00209b90`) only call wintext (`func_001f9270`, `func_001f9438`, `func_001f94f0`,
+  `func_001f9e48`, `func_001f9010`, `func_001fc308`, `func_001fb428`) and winpart (`func_00201440` /
+  `460` / `480`, `func_00200648`, `func_002016b0`, `func_00201988`, `func_00201c60`, `func_002053e8`);
+  each list sits between `func_001f8e18` (its SCISSOR_1 via `func_001f86e0`) and `func_001f8f30`. *From
+  the drafts (inferred):* `func_00200e28` re-sends the window-font uploads `D_003F2670` / `2720` and
+  `D_003F1E70`, then 5 A+D (TEXFLUSH, the window TEX0_1, TEX2_1 CLD 2, TEX2_1 CSA 0, ALPHA 0x44) and a
+  `TRISTRIP|IIP|TME|ABE|FST` of 24; `func_001f1fc8` sends `D_003F2270`, 3 A+D (TEXFLUSH, `TEX2_1
+  0x4007FF8001300000`, ALPHA 0x44) and one `SPRITE|TME|ABE|FST` NREG 6 tag a glyph.
+- **The list frame** (winlist.nostrict.c `func_00208458`): `D_003F1E70`, then four PACKED tags in a
+  `func_00122048(1536, 128)` frame: 5 A+D (TEXFLUSH, window font TEX0_1 CLD 0, TEX2_1 PSMT8 `0x3DFC` CLD
+  2, TEX2_1 CSA 3, ALPHA 0x44); `TRISTRIP|IIP|ABE` NLOOP 18 of (A+D RGBAQ, XYZF2) that is **three
+  6-vertex strips in one tag, restarted by ADC on v6 / v7 and v12 / v13** (winlist.nostrict.c:81-89);
+  one window-font cell `SPRITE|TME|ABE|FST`; and `SPRITE|ABE` NLOOP n + 1 with its tag built from parts
+  (`(n+1) | 0x8000 | 0xC08D << 46`, :102): the dividers.
+- **The field text and the value selector use neither §4.8's headers nor PACKED.** They send their own
+  static chains through dmapool's `func_00106b18` (ch 2), draw in offset coordinates, set no SCISSOR:
+  - the field text's header `D_002BBAA0` (REFE to `D_002BBA20`, from `func_0010ea00` / `ea38` / `ea70`,
+    `func_0010ed20`): TEXFLUSH, `ZBUF_1` 0x70 Z24 **ZMSK 1**, ALPHA 0x44, `TEX1_1 0x60`, `TEST_1` ATST
+    GREATER AREF 0 **ZTE 1 ZTST ALWAYS**, then a **REGLIST** tag that writes **PRIM `SPRITE|TME|ABE|FST`
+    as a register** and RGBAQ 128 x 4;
+  - the glyphs (`func_0010c540`, fldtext.c:124): one REGLIST tag, **no PRE, NREG 6 `TEX0_1, RGBAQ, UV,
+    XYZ2, UV, XYZ2`** (`0x535316`), relying on the PRIM the header wrote. Each glyph's TEX0
+    (`func_0010c5c8`) is PSMT4 512x512 at `0x3600` / `0x3800`, CBP `0x3FDC`..`0x3FF3`, **CLD 1 on every
+    glyph**; Z `0xFFFFFFFE`. Icons (id >= 10000) are **PSMT8H at `0x1800`** (the Z buffer's top byte), CBP
+    `0x3FF4`; icons 6-9 PSMT4 at `0x3A00`, CBP `0x3C00`. `func_0010e610` builds each CLUT pair as `a[i] =
+    c[i & 3]`, `b[i] = c[i >> 2]`: **CBP n shows a texel's low 2 bits, n + 1 its high 2 bits** (read from
+    the C; §4.9's message-font layers are the same idea, still inferred there). `func_0010c4b0` uploads
+    the kanji file again before each draw (CT32 256x256 at `0x3600`, pre-arranged PSMT4, inferred);
+  - the selector (`func_0010f0d0`, selector.c:101) patches two XYZ2 words of `D_002BBAF0` and sends
+    `D_002BBB90`: TEXFLUSH, the same TEST_1, `TEX0_1` PSMT8H `0x1800` CBP `0x3FF4` CLD 1, `TEX1_1 0x60`,
+    ALPHA 0x44, then a REGLIST tag writing PRIM `SPRITE|TME|ABE|FST`, RGBAQ, UV, XYZ2, UV, XYZ2 (its
+    tag's PRIM field is ignored: no PRE in REGLIST matters only with FLG 0).
+- **The HUD gauges** (src/hud/gauge*.c), after `func_002416a8`'s environment (§4.7), each built into
+  `D_00351E10` and sent by `func_00237018`:
+  - sprites (`func_0023d700` -> ui.c `func_0024aa48` -> src/gfx/prim.nostrict*.c `func_002388b8`) are
+    **`TRIANGLE|IIP|TME|ABE|FST` pairs** (`0xC0ADC000 << 32`, prim.nostrict.c:98), NREG 12: 3 A+D then 3 x
+    (UV, RGBAQ, XYZF2); each triangle repeats TEXFLUSH, a `TEX0_1` with **PSM forced to PSMT8, CSA 0,
+    CLD 1** (loads the whole CLUT) and then the real TEX0 (CLD 0): the text headers' TEX2 trick done with
+    two TEX0s. The needles (`func_0023d7e8`) the same, Z -256. TEX0s come from TIM2 headers at run time;
+  - arcs (`func_0023e160`, gauge.nostrict.c:297) are a **`TRIFAN|IIP|TME|ABE|FST`** (tag from parts,
+    `0x82BB << 46`, :328) of (UV, XYZ2) after a one-register PACKED RGBAQ tag with no PRE (the colour);
+    the texture state from earlier packets (`func_0023ee80`'s two TEX0s; `func_00240fa0` / `func_002410b8`
+    / `func_00241260`'s one);
+  - fades: `ALPHA_1` additive FIX 128 (`0x80_00000048`) before, back to `0x44` after;
+  - face pictures (`func_00242c08` / `func_00242ef8`, also from shopbuy, shopsell, synth): two
+    `func_0011fbb0` uploads (CLUT 16x16 CT32 to `0x3C00` with **DBW 0**, PSMT8 to `0x3A00`), then
+    `SPRITE|TME|ABE|FST` NREG 8 with TEXFLUSH, `TEX0_1 0x20078005A1313A00` (CLD 1), **`TEX1_1 0`**
+    (nearest), RGBAQ, UV, XYZ2 (ADC), UV, XYZ2.
+
+**Corrections to §4.9** (kept there as written): its "two sends, a §4.8 header then a scratch packet"
+holds for the windows only (not the field text, the selector, the face pictures); "Z constant `0x10000`
+with ZTE 0" for the windows only (the field text and selector have ZTE 1 ZTST ALWAYS, the field text
+ZMSK 1); "PRE on every primitive" fails for the REGLIST packets, where PRIM is a register write; ADC
+also restarts strips inside one tag (`func_00208458`), so a port honours ADC on every XYZ(F)2; "no
+TRIANGLE / TRIFAN" is true of src/text only (the HUD gauges use both). The fonts, icons and pictures
+share `0x3600`..`0x3C00` and are uploaded again per draw: a texture cache keyed by address must check
+contents (§5.2's page stamps).
+
+### 4.11 Renderer A's draw state, from the C (session 80, static)
+
+Renderer A (§2.2) writes **no GS register in its VIF chains** and no GIF tag of its own for the meshes:
+the chains (`D_0048C630` / `C690` templates, the grid chains `D_0046E120` ... `D_00482260`, the program
+chains `D_004941D0` .. `D_004942D0`) hold only REF / END, MPG, STCYCL, UNPACK, MSCAL, BASE, OFFSET and
+MSCNT, sent on VIF1 by `func_00108d90` (CHCR `0x145`) / `func_00106db0` (`0x105`); the meshes reach the GS
+by **XGKICK (PATH1)**. Context 2's state comes from three places:
+
+- **The boot draw environment, both contexts** (`func_001100a8`, display.c:102, once at boot from
+  `func_00120b10` via `func_001101e8`): one 31-A+D packet through `sceGsPutDrawEnv` (ch 2): the 13 values
+  `D_002BC830` to context 1 (`D_002BC750`) **and context 2** (`D_002BC7C0`): FRAME `0x800D0`, ZBUF
+  `0x31000070`, XYOFFSET `(0x7000, 0x7400)`, SCISSOR 512x384, TEST `0x5000D`, ALPHA `0x44`, FBA 0, TEX0
+  `0x20000045DD308002` (a PSMT8 placeholder, CLD 1), TEX1 `0x60`, TEX2 PSMT8 CBP 0 CLD 1, MIPTBP1 / 2 0,
+  CLAMP 5; then PRMODECONT 1, COLCLAMP 1, DTHE 0, PABE 0, DIMX -4. So **FRAME_2, ZBUF_2, XYOFFSET_2 and
+  SCISSOR_2 are the 3D target from boot**; only the shadow pass (`func_00128738`) rewrites them, and
+  restores the same values (§3.4).
+- **Context-2 state packets in the draw list** (`func_00106bd8` -> `func_00106b98` -> `PlatDmaSend` on
+  `D_002A6B84`, ch 2: **PATH3**), each a REFE to one A+D tag, ordered by key (§4.1):
+  - key 10010 `D_0029B170` (`func_001008e8`, field.c:310), just before the P4 map meshes of `.bin`
+    sections 2 / 3: `ALPHA_2 0x44`, **`TEST_2 0x31001`** (ATST NEVER, AFAIL FB_ONLY, ZTE 1, ZTST ALWAYS):
+    no depth test, no Z write, no alpha discard (inferred: a sky / backdrop). This is §3.2's only
+    `NEVER / FB_ONLY` value;
+  - key 10010 `D_002BC9F0` (`func_00110ce0`, display.c:352, every frame): TEXFLUSH, **FOGCOL rewritten each
+    frame** from `D_002BC0F0.camS.b[0..2]` (display.c:344, set by the script, vm_lib.c), `TEX1_2 0x60`,
+    `ALPHA_2 0x44`, `TEST_2 0x5000D`; the same function writes the fog coefficients into `D_002BC170[3]` /
+    `[7]` (VU qw4.w / qw5.w) from `camS.a`;
+  - key 10020 `D_0029B1C0` (`func_00100988`, field.c:337), before the grid's opaque cells: `ALPHA_2 0x44`,
+    **`TEST_2 0x5010D`** (ATST GREATER AREF 16, ZTST GEQUAL), `TEX1_2 0x60` (§3.3's CTXT2 AREF 16);
+  - key 40000 `D_002BD140` (roommdl.c:138), once per opaque prop (objdraw.nostrict.c:374: alpha scale >= 1;
+    below 1 it goes to key 50010): **`TEST_2 0x507FD`** (AREF 127);
+  - key 50000 `D_0029B200`: **`ZBUF_2` ZMSK 1**, `TEST_2 0x5000D`: the translucent pass (P3 cells,
+    `func_00108708`'s fade groups, translucent props at 50010);
+  - key 50100 `D_0029B260`, the restore: `ALPHA_2 0x44`, `TEST_2 0x5000D`, `ZBUF_2` ZMSK 0, `TEX1_2 0x60`;
+  - the shadow's `D_004F8270` (`func_00128b20`, keys `0xB1BB` / `0xEC53`): `TEST_1` / `TEST_2 0x50000`
+    (ATE 0), `TEX1_1 0x60`.
+- **The disc files** (inferred, not read): each batch's GIF tag and the clipper's qw48 fan template
+  (`TRIFAN|IIP|TME|ABE|CTXT2`, with FGE `0x313EC000` from `D_004862B0` statically in the key-50000 grid
+  chains and spliced by `func_001081c8` / `func_001083d8`, without `0x312EC000` from `D_004862E0` for
+  roommdl's `func_00114c18`; the key-10020 grid chains' from map section 1 entry 0, written by
+  `func_00106ed0`; props' from model header +0x80), P7's forced PRIM `0x313E4000`
+  (`TRISTRIP|IIP|TME|FGE|ABE|CTXT2`), and the mesh textures: `FLUSH` + `DIRECT` (PATH2) inside the cell /
+  +0x90 REFs, whose registers beyond the transfers are not read. **TEX0_2 / CLAMP_2 for the meshes come
+  from there.** The only TEX0_2 the C writes is the shadow receivers' (`func_00128738`: CT32 256x256 at
+  `0x3600` CLD 1, CLAMP_2 REGION_CLAMP, `ALPHA_2` FIX 64, `TEX1_2 0x61`; their batches built in
+  shadow.nostrict.c:79-88 with PRIM `0x312E4000`, run by P1). The one C-side upload is the map's
+  (`func_00106e18`, grideff.c:69, keys 10020 / 50000 when record 0 +0x7C != 1.0): CT32 DBW 2 at `0x3600`,
+  128 x 128n from the file's tail, then TEXFLUSH (PATH3).
+
+**Corrections**: §4.6's "never written by a static chain: TEX0_2, CLAMP_2, SCISSOR_2, TEX2_x, XYOFFSET_x,
+PRMODECONT, DIMX, DTHE, COLCLAMP, PABE, FBA_x, MIPTBP*" holds for the DMA chains only: the boot
+`sceGsPutDrawEnv` writes all of them for both contexts. It goes through the SDK, not PlatDmaSend, and the null
+platform's PlatGsPutDrawEnv did nothing; **since session 80 it hands the packet to dmawalk.c's GIF reader**
+(`kh1_dma_gif_direct`, a send line with chcr 0 named `D_004D8EF0`), so the fake disc now shows **87 sends,
+22 chains, 40 registers, 61 values** (was 86 / 21 / 32 / 53: the 8 new registers are context 2's and
+MIPTBP / TEX2 / XYOFFSET), the draw states unchanged. §4.6's "context 2's texture state is not from the
+ELF" has two exceptions (the boot placeholder, the shadow pass). §5.1's `FOGCOL` "rgb (16,112,128) in
+display.c" is only the initial value: display.c:344 rewrites it each frame. §3.3's field-dump "map draws"
+(TEX0 `0x3600` PSMT8, AREF 120) are renderer B's context-1 state (§4.9), not renderer A's (inferred). §2.2's
+qw48 template does not come only from the model header slots (see above). The order between PATH1 (XGKICK)
+and these PATH3 packets is not settled: `func_00106b98` does not wait for the path.
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).
@@ -1142,7 +1269,7 @@ the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
 | `RGBAQ`, `ST`, `UV`, `XYZ(F)2/3`, `FOG` | the vertex being built | | vertex attributes (RGBA 0x80 = 1.0; ST/Q; XY 12.4 minus XYOFFSET) |
 | `FRAME_1` / `FRAME_2` | per context | FBP `0x000` CT24, `0x8C` CT24 640, `0xD0` CT32 (3D target), `0x1B0`, `0x1D0` FBW 256 (off-screen), `0x1F0` FBW 64, `0x70` (Z area as colour); FBMSK 0, `0xFFFFFF`, `0xFF000000` | selects the render target (§3.1's addresses map to GPU targets); FBMSK to the colour write mask |
 | `ZBUF_1` / `ZBUF_2` | per context | ZBP `0x70` Z24 (and `0x0` once); ZMSK 0/1; Z16S `0x380000` in the shadow pass (§3.3) | depth target and depth write |
-| `TEST_1` / `TEST_2` | per context | 11 + 4 values: ATST ALWAYS/NEVER/GEQUAL/GREATER/LESS/NOTEQUAL, AREF 0/16/120/127/128, AFAIL KEEP/FB_ONLY/ZB_ONLY, DATE/DATM, ZTE 0/1, ZTST ALWAYS/GEQUAL/GREATER | alpha test as a shader discard against AREF/128; AFAIL as write masks on the failing fragments (two draws where it is not KEEP); DATE as stencil; ZTST to the depth function (ZTE 0 = ALWAYS) |
+| `TEST_1` / `TEST_2` | per context | renderer A's TEST_2 from the C: `0x31001`, `0x5010D` (AREF 16), `0x507FD` (AREF 127), `0x5000D`, `0x50000` (§4.11); 11 + 4 values: ATST ALWAYS/NEVER/GEQUAL/GREATER/LESS/NOTEQUAL, AREF 0/16/120/127/128, AFAIL KEEP/FB_ONLY/ZB_ONLY, DATE/DATM, ZTE 0/1, ZTST ALWAYS/GEQUAL/GREATER | alpha test as a shader discard against AREF/128; AFAIL as write masks on the failing fragments (two draws where it is not KEEP); DATE as stencil; ZTST to the depth function (ZTE 0 = ALWAYS) |
 | `ALPHA_1` / `ALPHA_2` | per context | five equations (§3.2 ALPHA), FIX 0 / 128; the window bevel's subtractive `(0-Cs)*As+Cd`, written **inside a strip** (§4.9) | blend state (§5's rows); keep A/B/C/D and FIX as a key; a write between a strip's kicks splits the strip |
 | `TEX0_1` / `TEX0_2` | per context | 24 static values (CT32, CT24, PSMT8, PSMT8H, PSMT4, PSMT4HL); `TEX0_2` only from the model data | the texture key (TBP0, TBW, PSM, TW, TH, CBP, CPSM, CSA) into the decoded-texture cache; TCC / TFX to the shader; CLD decides when the CLUT is (re)read |
 | `TEX1_1` / `TEX1_2` | per context | MMAG/MMIN 0 or 1; LCM 0/1; MXL 0 everywhere | sampler filter; no mipmaps (drop LCM, MXL, L, K, MTBA) |
@@ -1150,7 +1277,7 @@ the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
 | `CLAMP_1` / `CLAMP_2` | per context | REPEAT, CLAMP, REGION_CLAMP (U 1..255, 0..510, the atlas windows of §3.3), REGION_REPEAT (mask 255) | sampler wrap for REPEAT / CLAMP; REGION_* in the shader (clamp or mask the texel coordinate) |
 | `XYOFFSET_1` / `XYOFFSET_2` | per context | (1792, 1856) main; (0, 0) texspot's 256 pass; 1920 the shadow pass | subtracted from vertex XY before the viewport transform |
 | `SCISSOR_1` / `SCISSOR_2` | per context | 20 values (512x384, 512x448, 640x448, 256x256, sceneeff's 16 strips); per draw from the windows' clip rectangles (§4.9) | scissor rectangle |
-| `FOGCOL` | one | per draw (renderer B), rgb (16,112,128) in display.c | fog colour uniform |
+| `FOGCOL` | one | per draw (renderer B); renderer A's once a frame at key 10010 from `D_002BC0F0` (§4.11; rgb (16,112,128) is only display.c's initial value) | fog colour uniform |
 | `TEXA` | one | TA0/TA1 128/0, 0/128, 128/128; AEM 0 | the alpha a CT24 (TA0) or CT16 texel gets; apply when decoding or as a uniform |
 | `TEXCLUT` | dropped | never written; CSM 0 everywhere | |
 | `SCANMSK` | dropped | 0 only | |
@@ -1159,7 +1286,7 @@ the fake-disc run (§4.7) and the session 15 dump (§3.3) write:
 | `PABE`, `FBA_1` / `FBA_2` | dropped | 0 | |
 | `MIPTBP1_x` / `MIPTBP2_x` | dropped | 0 (no mipmaps) | |
 | `TEXFLUSH` | dropped | 0, after each upload | the texture cache is invalidated by the upload itself |
-| `BITBLTBUF`, `TRXPOS`, `TRXREG`, `TRXDIR` + IMAGE | one transfer state | host->local only; DBP the slots of §3.1, PSMCT32 / PSMT8 / PSMT4 / PSMT4HH / PSMT4HL | an upload: write the pixels into a 4 MB model of GS memory (swizzled per PSM), and drop the cached textures it overlaps |
+| `BITBLTBUF`, `TRXPOS`, `TRXREG`, `TRXDIR` + IMAGE | one transfer state | host->local only; DBP the slots of §3.1, PSMCT32 / PSMT8 / PSMT4 / PSMT4HH / PSMT4HL | an upload: write the pixels into a 4 MB model of GS memory (swizzled per PSM), and drop the cached textures it overlaps (on the host since session 80: §5.2) |
 | `SIGNAL`, `FINISH`, `LABEL`, `HWREG`, `TRXDIR` local->host | not seen | | |
 
 **On the host** (session 79): host/null/gsregs.c is this table as code. host/null/dmawalk.c's GIF
@@ -1186,6 +1313,60 @@ and resolves a TEX0 that lands in one to that target's texture; any other TEX0 d
 memory model through the cache. Still to confirm on a run: the text windows' sprites (read from the C in §4.9; the run shows the
 values the C computes), renderer A's mesh chains, and whether an overlay writes registers this
 table drops (dktitle.x).
+
+### 5.2 GS memory on the host (session 80)
+
+host/null/gsmem.c is the memory model 5.1's last paragraph asks for, the third step of the port's GIF
+parser after dmawalk.c's reader and gsregs.c's register file: 4 MB laid out the way the GS lays out each
+pixel storage mode, written by the uploads and read back as RGBA8 for a TEX0.
+
+- **Layout** (`kh1_gsmem_addr`): pages of 8 KB (CT32 / CT24 / T8H / T4HL / T4HH 64x32 pixels, CT16 64x64,
+  T8 128x64, T4 128x128), 32 blocks a page (CT32 / T8: 8x4 blocks in the order x0 y0 x1 y1 x2; CT16 /
+  T4: 4x8 in the order y0 x0 y1 x1 y2), pages across by BW (T8 / T4 by BW / 2), the block number added to
+  BP and wrapped at 4 MB. Inside a block: CT32's word from x0 y0 x1 x2 y1 y2; CT16's halfword from x3 x0
+  y0 x1 x2 y1 y2; T8's byte and T4's nibble read CT32's word order on 8 word rows with the halves swapped
+  in rows 2-3 of even 4-row groups and 0-1 of odd ones, the byte from x3 and y1 (T4's nibble from x3 x4
+  and y1). Written as bit formulas, not tables; checked against PCSX2's tables for every pixel of a page
+  in each of the four orders (session 80, outside the repo). CT24 writes a CT32 word's low 24 bits, T8H
+  its top byte, T4HL / T4HH that byte's nibbles: **the message font in the Z buffer's top byte leaves the
+  Z bits alone** (tested).
+- **Uploads**: a TRXDIR write starts the transfer BITBLTBUF / TRXPOS / TRXREG describe; host->local takes
+  the IMAGE data (GIF FLG 2 / 3, and HWREG, never seen) left to right, top to bottom, packed (CT24 3
+  bytes a pixel across words, T4 the low nibble first), and IMAGE data past the rectangle is counted as
+  extra; local->local copies at once in TRXPOS.DIR's pixel order; local->host is counted, not done.
+- **The CLUT buffer** is the GS's 512 halfwords (a CT32 entry in halfwords e and e + 256, CT16 in one). A
+  TEX0 or TEX2 write with an indexed PSM loads it as CLD says (1 always, 2 / 3 also set CBP0 / CBP1, 4 / 5
+  only when CBP differs from CBP0 / CBP1): a 4-bit CLUT 16 entries (8x2) at CSA x 16, an 8-bit one 256
+  (16x16, entries 8-15 and 16-23 of each 32 swapped). So **the windows' glyphs** (4.9: the header loads
+  the 8-bit CLUT at `0x3FFC` with CLD 2, each glyph reads PSMT4HL / HH at CSA 0 / 1 with CLD 0) **read
+  buffer entries 0-15 and 16-31, i.e. the stored 16x16's swizzled first two rows** (tested).
+- **The reader** (`kh1_gsmem_read_tex`): TBP0 / TBW / PSM / TW / TH to `1 << TW` x `1 << TH` RGBA8 words
+  (R in the low byte, A the texel's own 0-0x80 scale; TCC and TFX are the shader's), indexed PSMs through
+  the buffer at CSA (CPSM CT32 or CT16), CT24 / CT16 alpha from TEXA (TA0, AEM, TA1).
+  `kh1_gsmem_tex_stamp` gives the newest write to any page the texture covers and
+  `kh1_gsmem_clut_stamp` the buffer's load count: a decoded-texture cache keyed by TEX0 checks both
+  instead of dropping textures on every upload.
+- **Not modelled**: CT16S, the Z formats' own block orders (an upload in one is counted and its data
+  taken), CSM 1 (TEXCLUT, never written), an 8-bit CLUT at CSA not 0, local->host.
+
+`KH1_HOST_TRACE=5` prints each send's uploads (`kh1-host:   upload host dbp ...`) and
+`tools/host/gsstate.py RUN.txt --uploads` lists a run's. On the fake disc (stub:2) the same 86 sends
+make three uploads, from three chains on the stack built by func_0011fbb0 in **func_001ef950**
+(src/text/text.c, called from func_00109388 at boot, after it loads the file `D_00490940` names into a
+func_001559f0 buffer): **the 16x16 CT32 CLUT at `0x3FFC` from the file's +0x10000, then the message
+font as PSMT4HL (+0) and PSMT4HH (+0x8000), 256x256 each at `0x1000` BW 4** (the CLUT §4.9's headers
+load; on the fake disc the pixels are zeros). tests/host/gsmem_test.c (36 checks, in `make test`): addresses per PSM, an upload and
+read back per PSM, CT24 packing, the font's halves over a Z pattern, 4- and 8-bit CLUT loads with CLD 0 /
+1 / 2 / 4, the glyphs' CSA 1 read of an 8-bit CLUT, TEXA, a local copy, the cache stamp, IMAGE through
+the GIF reader. Valgrind: 0 errors to the overlay fault.
+
+**`KH1_HOST_TEXDUMP=DIR`** (with `KH1_HOST_TRACE` >= 2) writes each distinct texture a send drew with,
+decoded from the model after the send, to `DIR/tex_TEX0_N.pam` (RGBA, A doubled; once per TEX0 + TEXA +
+page contents + CLUT load for the indexed PSMs). Draws do not write the model, so a texture inside a
+render target comes out as the uploads left it. On the fake disc: the 3D target `0x1A00` and the Z area
+`0x0E00` read as CT24, the latter twice, because **the font uploads at `0x1000` land inside the Z area's
+512x512 at `0x0E00`** (the font is in the Z buffer's top byte, as §3.1 / 5.1 say). From the user's disc:
+the dumps never go in the repo.
 
 ## 6. Open questions
 

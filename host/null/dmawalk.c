@@ -21,14 +21,22 @@
  *
  * Every register write also goes to the GS register file (host/null/gsregs.c, session 79), which
  * keeps the state across sends and counts the vertex kicks per draw state; KH1_HOST_TRACE=5
- * prints each send's draw states after its gs lines. */
+ * prints each send's draw states after its gs lines.  The IMAGE data goes to the GS memory model
+ * (host/null/gsmem.c, session 80), and KH1_HOST_TRACE=5 also prints each send's uploads. */
 #include "common.h"
 #include "dmawalk.h"
 #include "gsregs.h"
+#include "gsmem.h"
 
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
 __SIZE_TYPE__ strlen(const char *);
+void *fopen(const char *, const char *);
+__SIZE_TYPE__ fwrite(const void *, __SIZE_TYPE__, __SIZE_TYPE__, void *);
+int fprintf(void *, const char *, ...);
+int fclose(void *);
+
+const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 
 typedef struct {
     u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
@@ -98,7 +106,8 @@ static void gif_qword(GifStream *g, const u32 *q) {
                 if (d != 0xE) gif_value(g, d, q + 2 * h);
                 if (d < 0xE) kh1_gs_write(d, q[2 * h], q[2 * h + 1]);
             }
-        } else {
+        } else { /* IMAGE: the upload's pixels (host/null/gsmem.c) */
+            kh1_gsmem_image(q, 4);
             g->left--;
         }
         return;
@@ -231,6 +240,64 @@ static void gs_print_draws(void) {
     if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
 }
 
+/* KH1_HOST_TRACE=5: each upload / copy into GS memory the send made (host/null/gsmem.c, session 80) */
+static void gs_print_uploads(void) {
+    static KH1GsUpload u[64];
+    int n = kh1_gsmem_log(u, 64), i;
+    for (i = 0; i < n && i < 64; i++)
+        printf("kh1-host:   upload %s dbp %04x dbw %u dpsm %02x at %u,%u size %ux%u: %u pixels\n",
+               u[i].dir ? "copy" : "host", u[i].bp, u[i].bw, u[i].psm, u[i].x, u[i].y, u[i].w, u[i].h, u[i].pixels);
+    if (n > 64) printf("kh1-host:   upload ... %d in all\n", n);
+}
+
+/* KH1_HOST_TEXDUMP=DIR (session 80): each distinct texture a send drew with, decoded from the GS memory
+ * model (host/null/gsmem.c) as it stands after the send, written once per TEX0 + TEXA + contents to
+ * DIR/tex_TEX0_N.pam (RGBA, A doubled from the GS's 0-0x80 scale).  Draws do not write the model, so a
+ * texture inside a render target (the 3D target 0x1A00, the Z area 0x0E00) comes out as the uploads
+ * left it.  From the user's disc: never commit them. */
+static void gs_dump_textures(void) {
+    static KH1GsDraw d[256];
+    static u32 seen[1024][5], nseen, pix[1024 * 1024];
+    static unsigned char row[1024 * 4];
+    int n = kh1_gs_draws(d, 256), i;
+    u32 j, k, w, h, x, y;
+    char path[512];
+    void *f;
+    for (i = 0; i < n && i < 256; i++) {
+        u32 key[5];
+        if (!(d[i].prim >> 4 & 1)) continue;
+        key[0] = d[i].ctx.tex0.lo;
+        key[1] = d[i].ctx.tex0.hi & ~0xE0000000u; /* CLD is when, not what */
+        key[2] = d[i].texa.lo ^ d[i].texa.hi << 16;
+        key[3] = kh1_gsmem_tex_stamp(key[0], key[1]);
+        k = key[0] >> 20 & 63; /* the CLUT only for the indexed PSMs */
+        key[4] = k == KH1_PSMT8 || k == KH1_PSMT8H || k == KH1_PSMT4 || k == KH1_PSMT4HL || k == KH1_PSMT4HH
+                     ? kh1_gsmem_clut_stamp() : 0;
+        for (j = 0; j < nseen; j++) {
+            for (k = 0; k < 5 && seen[j][k] == key[k]; k++) ;
+            if (k == 5) break;
+        }
+        if (j < nseen || nseen == 1024) continue;
+        for (k = 0; k < 5; k++) seen[nseen][k] = key[k];
+        if (kh1_gsmem_read_tex(key[0], key[1], d[i].texa.lo, d[i].texa.hi, pix)) continue;
+        w = 1u << (key[0] >> 26 & 15);
+        h = 1u << ((key[0] >> 30 | key[1] << 2) & 15);
+        sprintf(path, "%.400s/tex_%08x%08x_%u.pam", kh1_host_texdump, key[1], key[0], nseen++);
+        f = fopen(path, "wb");
+        if (!f) continue;
+        fprintf(f, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\nTUPLTYPE RGB_ALPHA\nENDHDR\n", w, h);
+        for (y = 0; y < h; y++) {
+            for (x = 0; x < w; x++) {
+                u32 v = pix[y * w + x], a = (v >> 24) * 2;
+                row[x * 4] = v; row[x * 4 + 1] = v >> 8; row[x * 4 + 2] = v >> 16; row[x * 4 + 3] = a > 255 ? 255 : a;
+            }
+            fwrite(row, 4, w, f);
+        }
+        fclose(f);
+        printf("kh1-host:   texture %s\n", path);
+    }
+}
+
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
@@ -243,6 +310,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     extra[0] = 0;
     gs_nval = 0;
     kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
+    kh1_gsmem_clear_log(); /* and the uploads: GS memory stays */
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
         if (!where(tag, 16)) { bad = KH1_DMA_TAG_OUTSIDE; break; }
@@ -336,7 +404,11 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (kh1_host_trace >= 4)
         for (i = 0; i < (int)gs_nval; i++)
             printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
-    if (kh1_host_trace >= 5) gs_print_draws();
+    if (kh1_host_trace >= 5) {
+        gs_print_draws();
+        gs_print_uploads();
+    }
+    if (kh1_host_texdump) gs_dump_textures();
     if (bad || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];
@@ -347,4 +419,28 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (bad & KH1_DMA_VIF_BAD) printf("kh1-host:   %u words no VIF code, the first %08x at %08x\n", v.bad,
                                      v.bad_word, v.bad_addr);
     return bad;
+}
+
+/* A GIF packet sent without a chain (sceGsPutDrawEnv's normal-mode send: the boot draw environment,
+ * renderer-spec 4.11), read like a walk's GIF stream; the line has a send's shape (chcr 0) so
+ * tools/host/gsstate.py names it by the packet's host symbol.  Session 80. */
+void kh1_dma_gif_direct(const u32 *q, u32 qwc) {
+    GifStream g = { 0 };
+    char regs[400];
+    int i;
+    gs_nval = 0;
+    kh1_gs_clear_draws();
+    kh1_gsmem_clear_log();
+    gif_block(&g, q, qwc);
+    gif_regs(&g, regs);
+    printf("kh1-host: dma ch 2 chcr 00000000 tadr %08x: direct (normal mode), %u qwords; gif %u packets%s%s%s\n",
+           (u32)(unsigned long)q, qwc, g.packets, g.left ? ": ENDS INSIDE A PACKET" : "", regs[0] ? "; regs" : "",
+           regs);
+    if (kh1_host_trace >= 4)
+        for (i = 0; i < (int)gs_nval; i++)
+            printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
+    if (kh1_host_trace >= 5) {
+        gs_print_draws();
+        gs_print_uploads();
+    }
 }

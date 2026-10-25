@@ -24,6 +24,10 @@ int kh1_dma_gs_values(u32 *reg, u32 *lo, u32 *hi, int max);
 #define KH1_DMA_VIF_BAD       0x40 /* a word that is no VIF code */
 #define KH1_DMA_PATH2_SHORT   0x80 /* the DIRECT data ends inside a GIF packet (PATH2) */
 
+/* a GIF packet of qwc qwords sent in normal mode (no chain), read and printed like a walk's */
+void kh1_dma_gif_direct(const u32 *q, u32 qwc);
+
 extern int kh1_host_trace;
+extern const char *kh1_host_texdump;
 
 #endif

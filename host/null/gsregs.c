@@ -11,6 +11,7 @@
  * KH1_HOST_TRACE >= 2 walks the chains; KH1_HOST_TRACE=5 prints each send's draws. */
 #include "common.h"
 #include "gsregs.h"
+#include "gsmem.h"
 
 void *memset(void *, int, __SIZE_TYPE__);
 int memcmp(const void *, const void *, __SIZE_TYPE__);
@@ -29,6 +30,7 @@ void kh1_gs_reset(void) {
     gs.prmodecont.lo = 1;
     gs_q = 0x3F800000;
     kh1_gs_clear_draws();
+    kh1_gsmem_reset();
 }
 
 void kh1_gs_clear_draws(void) {
@@ -109,13 +111,14 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x0A: gs.fog.lo = lo; gs.fog.hi = hi; return;
     case 0x04: case 0x05: gs_kick(1); return;  /* XYZF2 / XYZ2 */
     case 0x0C: case 0x0D: gs_kick(0); return;  /* XYZF3 / XYZ3: a vertex, no drawing */
-    case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); return;
+    case 0x06: case 0x07: set(&gs.ctx[reg - 6].tex0, lo, hi); kh1_gsmem_tex0(lo, hi); return;
     case 0x08: case 0x09: set(&gs.ctx[reg - 8].clamp, lo, hi); return;
     case 0x14: case 0x15: set(&c->tex1, lo, hi); return;
     case 0x16: case 0x17: /* TEX2: PSM and the CLUT fields (CBP, CPSM, CSM, CSA, CLD) of TEX0 */
         c = &gs.ctx[reg - 0x16];
         set(&c->tex0, (c->tex0.lo & ~0x03F00000u) | (lo & 0x03F00000u),
             (c->tex0.hi & 0x1Fu) | (hi & ~0x1Fu));
+        kh1_gsmem_tex0(c->tex0.lo, c->tex0.hi);
         return;
     case 0x18: case 0x19: set(&gs.ctx[reg - 0x18].xyoffset, lo, hi); return;
     case 0x1A: set(&gs.prmodecont, lo, hi); return;
@@ -130,11 +133,24 @@ void kh1_gs_write(u32 reg, u32 lo, u32 hi) {
     case 0x50: gs.bitbltbuf.lo = lo; gs.bitbltbuf.hi = hi; return;
     case 0x51: gs.trxpos.lo = lo; gs.trxpos.hi = hi; return;
     case 0x52: gs.trxreg.lo = lo; gs.trxreg.hi = hi; return;
-    case 0x53: gs.trxdir.lo = lo; gs.trxdir.hi = hi; return;
+    case 0x53: /* starts the transfer (host/null/gsmem.c, session 80) */
+        gs.trxdir.lo = lo;
+        gs.trxdir.hi = hi;
+        kh1_gsmem_trxdir(lo & 3, gs.bitbltbuf.lo, gs.bitbltbuf.hi, gs.trxpos.lo, gs.trxpos.hi, gs.trxreg.lo,
+                         gs.trxreg.hi);
+        return;
+    case 0x54: { /* HWREG: 64 bits of the upload's data (never seen) */
+        u32 w[2];
+        w[0] = lo;
+        w[1] = hi;
+        kh1_gsmem_image(w, 2);
+        gs.dropped++;
+        return;
+    }
     /* dropped (5.1): TEXCLUT, SCANMSK, MIPTBP1/2, TEXFLUSH, DIMX, DTHE, COLCLAMP, PABE, FBA,
-     * HWREG, SIGNAL, FINISH, LABEL */
+     * SIGNAL, FINISH, LABEL */
     case 0x1C: case 0x22: case 0x34: case 0x35: case 0x36: case 0x37: case 0x3F: case 0x44:
-    case 0x45: case 0x46: case 0x49: case 0x4A: case 0x4B: case 0x54: case 0x60: case 0x61: case 0x62:
+    case 0x45: case 0x46: case 0x49: case 0x4A: case 0x4B: case 0x60: case 0x61: case 0x62:
         gs.dropped++;
         return;
     }
