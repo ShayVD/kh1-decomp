@@ -2181,6 +2181,35 @@ byte-identical, no float-untested row. selftest PASS (storeread_test: 31 checks,
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1at Session 106: the present's fill kept inside its buffer
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Host only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (storeread_test: 33 checks, 31 before; one replaced, two new).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The wide copy's overrun in the model** (item 4b, 5.1as). **Decided: the present's fill clips at the
+  frame's width.** host/null/gsmem.c `kh1_gsmem_flat_sprite` now stops a sprite's columns at FBW x 64
+  after the scissor, instead of letting the GS's addressing wrap them into the next page row. Only a wide
+  stretch into a buffer of the PS2's width reaches past it (the menu capture `D_002B6760`'s `KH1_FS_XS`
+  row: x 0 .. 338.8 into FBW 4); the fill is the present's picture, a port's capture buffer holds the
+  view's half whole (5.1an), and the wrapped columns had landed in the shared texture slot (blocks 0x3900 ..
+  0x393F). Done in the model, not gsregs.c, because the model knows FBW and the rule holds for every fill;
+  `kh1_gsmem_sprite` (the exact path the texture animations use, at most 4096 pixels) keeps the GS's wrap.
+  storeread_test's wide copy check is now "nothing written past the capture's 256 columns", plus a check
+  that the capture holds canvas -82.8 .. 429 (pixel x reads the display's 2x - 82.8, texel 0 left of it).
+  So on a `KH1_HOST_SHOT` + `KH1_HOST_WIDE` run the menu blur shows the left 3/4 of the view at full width
+  (host model only; the PS2 path and a port are unchanged).
+- **The depth blur's capture `D_002A5380`** (read from the ELF: FRAME_1 `0x000801B0`, block 0x3600 **FBW 8**,
+  TEX0_1 TBP0 0x1A00 the 3D target, UV 512 x 384, XYZ2 0x7000 .. 0x8000; off the PS2 its right edge is
+  0x7000 + `PLAT_VIEW_W16` / 2 from C, row `D_002A5A90` u only). **It does not have the menu capture's
+  problem**: its buffer is 512 wide, so under the wide view x 0 .. 338.8 fits; nothing wraps or is clipped,
+  and pixel x holds the target's 2x - 82.8 (canvas -82.8 .. 594.8, the whole view), read back by the nine
+  copies `D_002A5AC0` (u stretched). storeread_test sends a packet with its registers the same way and
+  checks both. On the PS2 its 256 x 192 already spans blocks 0x3600 .. 0x3C00 in FBW 8's page order, over the
+  shared texture slot, and the wide one adds page columns 4 and 5 in the same range (transient, both).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

@@ -18,7 +18,9 @@
  * present (kh1_gsmem_flat(1), KH1_HOST_SHOT), and the wide view (KH1_HOST_WIDE), which none of them
  * sees: the null platform keeps the PS2's GS memory.
  * Session 105: the menu capture's copy itself (a made-up packet with D_002B6760's registers) sent
- * through the GIF path (dmawalk.c -> gsregs.c -> gsmem.c), with and without the present's fill. */
+ * through the GIF path (dmawalk.c -> gsregs.c -> gsmem.c), with and without the present's fill.
+ * Session 106: under the wide view the present's fill no longer wraps past the capture's width, and the
+ * depth blur's capture (D_002A5380's registers, a 512-wide buffer) is sent the same way. */
 #include "common.h"
 #include "platform/gs.h"
 #include "../../host/null/gsregs.h"
@@ -82,6 +84,8 @@ static void copy_context(void) {
     kh1_gs_write(0x40, 511 << 16, 447 << 16);
 }
 static const KH1FullScreen copy_fs[1] = { { D_002B6760, KH1_FS_XS | KH1_FS_U, "menu capture" } };
+/* the depth blur capture's row (fullscreen.c D_002A5A90), keyed to the same tag here */
+static const KH1FullScreen dblur_fs[1] = { { D_002B6760, KH1_FS_U, "depth blur capture" } };
 
 /* the whole 4 MB, as 1024 x 1024 CT32 words */
 static u32 snap[1024 * 1024];
@@ -118,6 +122,41 @@ static void upload_display(int plain, u32 c) {
     u32 x, y;
     for (y = 0; y < 448; y++)
         for (x = 0; x < 512; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0, 8, x, y, plain ? c : disp_px(x, y));
+}
+
+static u8 dblur[512 * 192 * 3];
+/* the wide copies' contents (session 106): pixel x of row y (pitch bytes a row, RGB) holds the source's
+ * texel 2x - 82.8 (u from the view's left edge, -1325 sixteenths, 2 texels a pixel), texel 0 left of
+ * it and 511 right of it (CLAMP); checked every 3rd column, every 7th row, a texel's rounding either way */
+static int half_canvas(const u8 *b, u32 pitch, u32 w) {
+    u32 x, y, v;
+    s32 t;
+    int ok = 1;
+    for (y = 0; y < 192; y += 7)
+        for (x = 0; x < w; x += 3) {
+            const u8 *p = b + y * pitch + x * 3;
+            v = p[0] | p[1] << 8 | p[2] << 16;
+            t = ((s32)x * 32 - 1325) >> 4;
+            if (t < 0) t = 0;
+            if (t > 510) t = 510; /* CLAMP: the right edge reads texel 511 (the +1 below) */
+            ok &= v == (disp_px((u32)t, y * (pitch == 0x300 ? 448 : 384) / 192) & 0xFFFFFF) ||
+                  v == (disp_px((u32)t + 1, y * (pitch == 0x300 ? 448 : 384) / 192) & 0xFFFFFF) ||
+                  (t > 0 && v == (disp_px((u32)t - 1, y * (pitch == 0x300 ? 448 : 384) / 192) & 0xFFFFFF));
+        }
+    return ok;
+}
+/* nothing changed since take_snap outside the depth blur capture's w x 192 of block 0x3600 FBW 8 */
+static int dblur_untouched(u32 w) {
+    static u8 inside[1024 * 1024];
+    u32 x, y;
+    memset(inside, 0, sizeof inside);
+    for (y = 0; y < 192; y++)
+        for (x = 0; x < w; x++) inside[kh1_gsmem_addr(KH1_PSMCT32, 0x3600, 8, x, y)] = 1;
+    for (y = 0; y < 1024; y++)
+        for (x = 0; x < 1024; x++)
+            if (!inside[kh1_gsmem_addr(KH1_PSMCT32, 0, 16, x, y)] &&
+                kh1_gsmem_read_pixel(KH1_PSMCT32, 0, 16, x, y) != snap[y * 1024 + x]) return 0;
+    return 1;
 }
 
 static u8 half[0x24000 + 64] __attribute__((aligned(16)));
@@ -304,12 +343,42 @@ int main(void) {
     take_snap();
     CHECK("copy, wide, present fill: the blur sees the frame", blur() == D_002A4B60);
     kh1_gsmem_flat(0);
-    /* the 83 columns past x 256 wrap into the next page row (the GS's own addressing, FBW 4): rows
-     * 0 .. 159's land inside and are drawn over by the later rows, rows 160 .. 191's land in rows
-     * 192 .. 223, blocks 0x3900 .. 0x393F (the shared texture slot, renderer-spec 3.1): 83 x 32 words */
-    x = changed_outside();
-    CHECK("copy, wide, present fill: 83 x 32 words past the capture, in blocks 0x3900 .. 0x393F",
-          x == 83 * 32 && out_b0 >= 0x3900 && out_b1 <= 0x393F);
+    /* session 105 saw the 83 columns past x 256 wrap into the next page row (the GS's own addressing,
+     * FBW 4) and land in blocks 0x3900 .. 0x393F (the shared texture slot); session 106: the present's
+     * fill stops at the frame's width, so nothing outside, and the capture holds canvas -82.8 .. 429
+     * (pixel x reads the display's 2x - 82.8, the left 41 clamped to texel 0) */
+    CHECK("copy, wide, present fill: nothing written past the capture's 256 columns", changed_outside() == 0);
+    CHECK("copy, wide, present fill: the half capture holds canvas -82.8 .. 429", half_canvas(half, 0x300, 256));
+    kh1_dma_fullscreen(0, 0, 0, 0);
+
+    /* the depth blur's capture (sceneeff.nostrict.c func_00103058, D_002A5320 / D_002A5380 from the ELF):
+     * the same sprite, but FRAME_1 0x000801B0 (block 0x3600, FBW 8), TEX0_1 TBP0 0x1A00 (the 3D target),
+     * UV (512, 384), and off the PS2 its right edge 0x7000 + PLAT_VIEW_W16 / 2 from C, so its row
+     * D_002A5A90 stretches u only: under the wide view x 0 .. 338.8 fits the 512-wide buffer, nothing
+     * wraps or is clipped, and pixel x reads the target's 2x - 82.8 */
+    copy_pkt[4] = 0x000801B0;                      /* FRAME_1 */
+    copy_pkt[20] = 0x64021A00;                     /* TEX0_1 */
+    copy_pkt[36] = 0x18002000;                     /* UV (512, 384) */
+    copy_pkt[38] = (0x7000 + 10842 / 2) | 0x80000000u; /* XYZ2 (0x7000 + 5421, 0x8000) */
+    kh1_gs_reset();
+    view(1);
+    kh1_dma_fullscreen(dblur_fs, 1, -1325, 10842);
+    copy_context();
+    for (y = 0; y < 384; y++)
+        for (x = 0; x < 512; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x1A00, 8, x, y, disp_px(x, y));
+    take_snap();
+    kh1_gsmem_flat(1);
+    nsent = 0;
+    func_00106b18(D_002B6760);
+    kh1_gsmem_flat(0);
+    for (y = 0; y < 192; y++) /* read it back the way the depth blur's copies do: FBW 8 */
+        for (x = 0; x < 512; x++) {
+            u32 v = kh1_gsmem_read_pixel(KH1_PSMCT32, 0x3600, 8, x, y);
+            u8 *p = dblur + (y * 512 + x) * 3;
+            p[0] = v; p[1] = v >> 8; p[2] = v >> 16;
+        }
+    CHECK("depth blur capture, wide, present fill: x 0 .. 338 hold canvas -82.8 .. 594.8, nothing else written",
+          half_canvas(dblur, 512 * 3, 339) && dblur_untouched(339));
     kh1_dma_fullscreen(0, 0, 0, 0);
     walk_copy = 0;
 

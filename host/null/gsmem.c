@@ -559,7 +559,9 @@ int kh1_gsmem_sprite(const KH1GsSprite *s) {
  * kh1_gsmem_sprite), the texture read as it is even in a target's pages, MODULATE / DECAL with TCC,
  * then the alpha test per texel (AFAIL KEEP only) and the blend as above.  Not drawn (0): FST 0
  * (STQ), TFX HIGHLIGHT(2), CLAMP's region modes, a PSM or CLUT the model has not.  Counted in
- * tex_sprites / tex_pixels. */
+ * tex_sprites / tex_pixels.
+ *
+ * Session 106: the fill stops at the frame's width (FBW x 64) instead of wrapping (below). */
 void kh1_gsmem_flat(int on) { flat_on = on; }
 
 static u32 to16(u32 v) { return (v >> 3 & 0x1F) | (v >> 11 & 0x1F) << 5 | (v >> 19 & 0x1F) << 10 | (v >> 31) << 15; }
@@ -619,6 +621,13 @@ int kh1_gsmem_flat_sprite(const KH1GsSprite *s) {
     if (px1 > (s32)(s->scissor_lo >> 16 & 0x7FF) + 1) px1 = (s->scissor_lo >> 16 & 0x7FF) + 1;
     if (py0 < (s32)(s->scissor_hi & 0x7FF)) py0 = s->scissor_hi & 0x7FF;
     if (py1 > (s32)(s->scissor_hi >> 16 & 0x7FF) + 1) py1 = (s->scissor_hi >> 16 & 0x7FF) + 1;
+    /* session 106 (vita-port-plan 5.1at): and inside the frame's width.  The GS would wrap a column
+     * past FBW x 64 into the next page row; no 4:3 send reaches there, only a wide view's stretch into
+     * a buffer of the PS2's width (the menu capture D_002B6760's KH1_FS_XS row, x 0 .. 338.8 into FBW
+     * 4), which a port's own buffer holds whole.  The fill is the present's picture, so it keeps to
+     * the buffer instead of writing over the next one (blocks 0x3900 .. 0x393F, the shared texture
+     * slot); kh1_gsmem_sprite keeps the GS's wrap */
+    if (px1 > (s32)fbw * 64) px1 = fbw * 64;
     flat_raw = 1;
     for (k = py0; k < py1; k++)
         for (c = px0; c < px1; c++) {
