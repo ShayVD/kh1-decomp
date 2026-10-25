@@ -226,6 +226,19 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/host/port/primasm.c"
   "$W/primasm_test" > "$W/primasm.log" || { cat "$W/primasm.log"; exit 1; }
   tail -n 1 "$W/primasm.log"
+  # the whole draw state as GPU pipelines, shaders and uniforms (renderer-spec 4.13 "Session 123")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/drawstate_test" \
+      "$ROOT/tests/host/drawstate_test.c" "$ROOT/host/port/drawstate.c" "$ROOT/host/port/blend.c" \
+      "$ROOT/host/port/atest.c" "$ROOT/host/port/depth.c" "$ROOT/host/port/sampler.c" "$ROOT/host/port/texfmt.c" \
+      "$ROOT/host/port/texfunc.c" "$ROOT/host/port/primasm.c"
+  "$W/drawstate_test" > "$W/drawstate.log" || { cat "$W/drawstate.log"; exit 1; }
+  tail -n 1 "$W/drawstate.log"
+  # render targets, the viewport and the scissor (renderer-spec 4.13 "Session 123")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/target_test" \
+      "$ROOT/tests/host/target_test.c" "$ROOT/host/port/target.c" "$ROOT/host/port/canvas.c" \
+      "$ROOT/host/null/gsmem.c"
+  "$W/target_test" > "$W/target.log" || { cat "$W/target.log"; exit 1; }
+  tail -n 1 "$W/target.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \

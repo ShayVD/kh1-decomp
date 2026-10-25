@@ -260,6 +260,8 @@ class Gif:
         self.unknown = False   # a GIFtag in bytes not in the ELF
         self.writes = collections.Counter()
         self.values = []       # (register, 64-bit value) for -v
+        self.seq = []          # (register, 64-bit value) for every write in order, vertex ones too, a PACKED
+                               # XYZ(F)2 with ADC as XYZ(F)3 (session 123: tools/host/drawpipes.py's kicks)
 
     def qword(self, q: bytes | None):
         if self.unknown:
@@ -308,15 +310,16 @@ class Gif:
         if d == 0xE:
             self._write("A+D", q[0:8], q[8] & 0x7F)
         else:
-            self._write(DESC.get(d), q[0:8])
+            self._write(DESC.get(d), q[0:8], adc=d in (4, 5) and q[13] >> 7 & 1)
 
-    def _write(self, name, v: bytes, reg: int | None = None):
+    def _write(self, name, v: bytes, reg: int | None = None, adc: bool = False):
         if name is None:
             return
         if name == "A+D":
             import gs_packets
             name = gs_packets.GSREG.get(reg, "reg%#x" % reg)
         self.writes[name] += 1
+        self.seq.append((name[:-1] + "3" if adc else name, struct.unpack("<Q", v)[0]))
         if name not in VERTEX:
             self.values.append((name, struct.unpack("<Q", v)[0]))
 

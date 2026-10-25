@@ -2718,6 +2718,36 @@ docs only, no float-untested row. selftest PASS (depth_test 23 checks, fog_test 
   pixels; whatever is drawn after the sway / lens grid (the PS2 tests against colour bytes there).
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bk Session 123: the whole draw state, the pipeline count, render targets
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (drawstate_test 22 checks, target_test 27).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The whole draw state** (item 4b): new include/platform/drawstate.h and host/port/drawstate.c (renderer-spec
+  4.13 "Session 123"): from a draw's registers, up to two GPU pipelines (fixed-function state + fragment shader
+  variant) and DATE's set-up, the per-draw uniforms (AREF, FIX, FOGCOL, TEXA, region bounds, a FETCH blend's
+  ALPHA / PSM, FBMSK), the sampler object and the texture binding. Keys are u8-only records compared with memcmp;
+  `KH1PipeSet` counts distinct pipelines, shaders and samplers. The test rebuilds the blend and the writes from the
+  key and uniforms alone and checks them against blend.h / atest.h / depth.h over every ALPHA and TEST.
+- **How many pipelines**: `KH1_HOST_TRACE=5` prints `pipelines:` and one line per pipeline at the end
+  (host/null/pipes.c, through a new `kh1_dma_draw_state` hook in dmawalk.c's per-send draw print);
+  `tools/host/drawpipes.py` walks every static send (dmawalk.py's Gif now records its writes in order, `seq`, with
+  a PACKED XYZ(F)2's ADC as XYZ(F)3; `--state`'s output unchanged) and adds the C's draw states (`C_STATES`),
+  counting through tools/host/pipecount.c (built with the port files into out/host/). Fake disc: 4 pipelines;
+  static packets: 27 pipelines, 14 shaders; with the C's states: 42 pipelines, 27 shaders, 3 samplers.
+- **Render targets, viewport, scissor** (item 4c): new include/platform/target.h and host/port/target.c: one GPU
+  texture per buffer (display, Z area as colour, movie frame, 3D target, slot capture, off-screen buffer, CLUT
+  pass, other), the wide view on the 3D target / display / Z-colour copy (the view) and the captures (half the
+  view), the main Z24 bound with the 3D target and the shadow's Z16S with the off-screen buffer, other Z writes
+  dropped; the viewport `((X - OFX) / 16 + margin) x scale`, the scissor by canvas.h's rule plus the margin.
+  Tested against gsmem.c's target list for the game's eight render-to-texture sends; the PS2's six shared-block
+  pairs named (`kh1_target_alias`) and kept apart. The fake disc's run lists its targets as port targets.
+- **To check on the real disc**: the `pipelines:` line of a room run (renderer A's TEX0_2 / CLAMP_2 and the real
+  ZBUF the 2D packets draw under can add or fold pipelines), and that every `port target` line names a known one
+  (an `OTHER` or an unknown depth buffer is a new kind).
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

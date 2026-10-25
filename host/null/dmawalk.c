@@ -38,6 +38,7 @@ int fclose(void *);
 
 const char *kh1_host_texdump; /* KH1_HOST_TEXDUMP: a directory for the decoded textures (main.c) */
 void (*kh1_dma_after_send)(u32 tadr); /* session 94: KH1_HOST_SHOT's present (host/null/present.c) */
+void (*kh1_dma_draw_state)(const KH1GsDraw *d); /* session 123: each send's draw states (KH1_HOST_TRACE=5) */
 
 typedef struct {
     u32 left;    /* qwords (REGLIST: 64-bit words) of the current packet still to come */
@@ -256,8 +257,10 @@ static const char *view_note(const KH1GsDraw *d) {
 /* KH1_HOST_TRACE=5: each draw state the send drew in (host/null/gsregs.c), with the context's
  * FRAME, ZBUF, TEST, ALPHA, TEX0 and CLAMP, and its kicks and primitives */
 static void gs_print_draws(void) {
-    static KH1GsDraw d[64];
-    int n = kh1_gs_draws(d, 64), i;
+    static KH1GsDraw d[256];
+    int n = kh1_gs_draws(d, 256), i;
+    if (kh1_dma_draw_state) /* session 123: host/null/pipes.c's count of GPU pipelines */
+        for (i = 0; i < n && i < 256; i++) kh1_dma_draw_state(&d[i]);
     for (i = 0; i < n && i < 64; i++)
         printf("kh1-host:   draw prim %03x frame %08x zbuf %08x test %08x alpha %08x%08x tex0 %08x%08x clamp "
                "%08x%08x: %u kicks, %u prims%s%s%s\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
