@@ -16,11 +16,14 @@
  * Each from a frame an upload left (the model holds it), one only the draws wrote (it does not: the
  * null platform reads what was there before, zeros after a reset), one a flat sprite filled for the
  * present (kh1_gsmem_flat(1), KH1_HOST_SHOT), and the wide view (KH1_HOST_WIDE), which none of them
- * sees: the null platform keeps the PS2's GS memory. */
+ * sees: the null platform keeps the PS2's GS memory.
+ * Session 105: the menu capture's copy itself (a made-up packet with D_002B6760's registers) sent
+ * through the GIF path (dmawalk.c -> gsregs.c -> gsmem.c), with and without the present's fill. */
 #include "common.h"
 #include "platform/gs.h"
 #include "../../host/null/gsregs.h"
 #include "../../host/null/gsmem.h"
+#include "../../host/null/dmawalk.h"
 
 int printf(const char *, ...);
 void *memset(void *, int, __SIZE_TYPE__);
@@ -34,14 +37,88 @@ u32 D_003F34B0[2];
 u8 D_00F20000[0x90000 + 64] __attribute__((aligned(16)));
 u8 D_002BC1B0[0x60] __attribute__((aligned(16))); /* capture.c's load packet */
 u64 D_002A49A0[56] __attribute__((aligned(16)));  /* the blur's packet: colours and corners */
-u8 D_002A4B60[16], D_002A4DD0[16], D_002B6760[16];
+u8 D_002A4B60[16], D_002A4DD0[16];
+u32 D_002B6760[4] __attribute__((aligned(16))); /* the menu capture's DMA tag: a refe of copy_pkt */
 s32 D_002B6778; /* the half capture's buffer (a pointer kept in an s32, as on the PS2) */
 void PlatFlushCache(int op) {}
 int PlatGsSyncPath(int mode, unsigned short timeout) { return 0; }
 
 static void *sent[8];
-static int nsent;
-void func_00106b18(void *pkt) { if (nsent < 8) sent[nsent] = pkt; nsent++; }
+static int nsent, walk_copy;
+static const char *where(u32 addr, u32 n) { return "test"; }
+/* the send: recorded; with walk_copy, the menu capture's chain also goes through the GIF path
+ * (host/null/dmawalk.c -> gsregs.c -> gsmem.c), as KH1_HOST_TRACE >= 2 sends it (session 105) */
+void func_00106b18(void *pkt) {
+    if (nsent < 8) sent[nsent] = pkt;
+    nsent++;
+    if (walk_copy && pkt == (void *)D_002B6760) kh1_dma_walk(2, 0x104, (u32)(unsigned long)pkt, where);
+}
+
+/* A made-up packet with the menu capture's registers (renderer-spec 4.17, session 105 item 4b):
+ * one PACKED A+D tag for FRAME_1 (FBP 0x1B0 = block 0x3600, FBW 4, CT32), TEST_1 (ZTE, ZTST
+ * ALWAYS), TEX1_1 (MMAG / MMIN bilinear), CLAMP_1 (CLAMP, CLAMP) and TEX0_1 (TBP0 0, TBW 8, CT32,
+ * 512 x 512, TCC 1, MODULATE), then a REGLIST tag (EOP) for one SPRITE: PRIM TME FST, RGBAQ 0x80
+ * each, UV (0, 0) at XYZ2 (0x7000, 0x7400), UV (512, 448) at XYZ2 (0x8000, 0x8000): the display
+ * buffer, 512 x 448, drawn 256 x 192 into the half capture.  XYOFFSET_1 and SCISSOR_1 are what the
+ * send finds in force. */
+static u32 copy_pkt[40] __attribute__((aligned(16)));
+static void copy_setup(void) {
+    static const u32 q[40] = {
+        0x00000001, 0x50000000, 0x000EEEEE, 0,  0x000401B0, 0, 0x4C, 0,
+        0x00030000, 0, 0x47, 0,                0x00000060, 0, 0x14, 0,
+        0x00000005, 0, 0x08, 0,                0x64020000, 0x80000006, 0x06, 0,
+        0x00008001, 0x64000000, 0x00535310, 0, 0x00000116, 0, 0x80808080, 1,
+        0, 0, 0x74007000, 0,                   0x1C002000, 0, 0x80008000, 0,
+    };
+    u32 i;
+    for (i = 0; i < 40; i++) copy_pkt[i] = q[i];
+    D_002B6760[0] = 10; /* refe (id 0), 10 qwords */
+    D_002B6760[1] = (u32)(unsigned long)copy_pkt;
+    D_002B6760[2] = D_002B6760[3] = 0;
+}
+/* the context the copy finds: XYOFFSET_1 (0x7000, 0x7400), SCISSOR_1 the frame's 512 x 448 */
+static void copy_context(void) {
+    kh1_gs_write(0x18, 0x7000, 0x7400);
+    kh1_gs_write(0x40, 511 << 16, 447 << 16);
+}
+static const KH1FullScreen copy_fs[1] = { { D_002B6760, KH1_FS_XS | KH1_FS_U, "menu capture" } };
+
+/* the whole 4 MB, as 1024 x 1024 CT32 words */
+static u32 snap[1024 * 1024];
+static void take_snap(void) {
+    u32 x, y;
+    for (y = 0; y < 1024; y++)
+        for (x = 0; x < 1024; x++) snap[y * 1024 + x] = kh1_gsmem_read_pixel(KH1_PSMCT32, 0, 16, x, y);
+}
+/* words changed since take_snap outside the half capture (block 0x3600, FBW 4, 256 x 192), and the
+ * blocks they lie in */
+static u32 out_b0, out_b1;
+static u32 changed_outside(void) {
+    static u8 inside[1024 * 1024];
+    u32 x, y, n = 0;
+    memset(inside, 0, sizeof inside);
+    out_b0 = ~0u;
+    out_b1 = 0;
+    for (y = 0; y < 192; y++)
+        for (x = 0; x < 256; x++) inside[kh1_gsmem_addr(KH1_PSMCT32, 0x3600, 4, x, y)] = 1;
+    for (y = 0; y < 1024; y++)
+        for (x = 0; x < 1024; x++)
+            if (!inside[kh1_gsmem_addr(KH1_PSMCT32, 0, 16, x, y)] &&
+                kh1_gsmem_read_pixel(KH1_PSMCT32, 0, 16, x, y) != snap[y * 1024 + x]) {
+                u32 b = kh1_gsmem_addr(KH1_PSMCT32, 0, 16, x, y) / 64;
+                if (b < out_b0) out_b0 = b;
+                if (b > out_b1) out_b1 = b;
+                n++;
+            }
+    return n;
+}
+/* the display buffer (block 0, FBW 8, 512 x 448) uploaded: pixel x of each row c(x) */
+static u32 disp_px(u32 x, u32 y) { return 0x80000000u | (x < 256 ? 0x203040 : 0x605040) | (x & 0xFF) << 0; }
+static void upload_display(int plain, u32 c) {
+    u32 x, y;
+    for (y = 0; y < 448; y++)
+        for (x = 0; x < 512; x++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0, 8, x, y, plain ? c : disp_px(x, y));
+}
 
 static u8 half[0x24000 + 64] __attribute__((aligned(16)));
 static s32 half_n;
@@ -184,6 +261,57 @@ int main(void) {
     view(1);
     draw(0x3600, 4, 256, 192);
     CHECK("blur: a capture only the draws wrote sends the empty pass on the host", blur() == D_002A4DD0);
+
+    /* session 105 (item 4b): the copy itself through the GIF path.  Without kh1_gsmem_flat the model
+     * only marks 0x3600 as drawn (the bilinear 512 x 512 texture is past kh1_gsmem_sprite), so a
+     * frame the model holds still gives the empty pass; with it (KH1_HOST_SHOT's present) the copy is
+     * point-sampled and the blur sees the frame, as the PS2 does */
+    copy_setup();
+    walk_copy = 1;
+    kh1_gs_reset();
+    copy_context();
+    upload_display(0, 0);
+    CHECK("copy, no present fill: the display's frame still gives the empty pass", blur() == D_002A4DD0);
+    kh1_gs_reset();
+    copy_context();
+    upload_display(0, 0);
+    kh1_gsmem_flat(1);
+    take_snap();
+    CHECK("copy, present fill: the blur sees the frame", blur() == D_002A4B60);
+    kh1_gsmem_flat(0);
+    CHECK("copy, present fill: the 4:3 copy writes only the half capture", changed_outside() == 0);
+    for (ok = 1, y = 0; y < 192; y += 7)
+        for (x = 0; x < 256; x += 3) { /* pixel (x, y) reads texel (2x, 448 y / 192), CT24 */
+            const u8 *p = half + y * 0x300 + x * 3;
+            ok &= (u32)(p[0] | p[1] << 8 | p[2] << 16) == (disp_px(2 * x, y * 448 / 192) & 0xFFFFFF);
+        }
+    CHECK("copy, present fill: the half capture holds the display at half size", ok);
+    /* a black frame (the present's clear when nothing else is filled): the CT24 store drops its alpha */
+    kh1_gs_reset();
+    copy_context();
+    upload_display(1, 0x80000000u);
+    kh1_gsmem_flat(1);
+    CHECK("copy, present fill: a black display still gives the empty pass", blur() == D_002A4DD0);
+    kh1_gsmem_flat(0);
+    /* the wide view: fullscreen.c's KH1_FS_XS | KH1_FS_U row stretches the copy to the view's half,
+     * x 0 .. 338.8 into the PS2's 256-wide buffer */
+    kh1_gs_reset();
+    view(1);
+    kh1_dma_fullscreen(copy_fs, 1, -1325, 10842);
+    copy_context();
+    upload_display(0, 0);
+    kh1_gsmem_flat(1);
+    take_snap();
+    CHECK("copy, wide, present fill: the blur sees the frame", blur() == D_002A4B60);
+    kh1_gsmem_flat(0);
+    /* the 83 columns past x 256 wrap into the next page row (the GS's own addressing, FBW 4): rows
+     * 0 .. 159's land inside and are drawn over by the later rows, rows 160 .. 191's land in rows
+     * 192 .. 223, blocks 0x3900 .. 0x393F (the shared texture slot, renderer-spec 3.1): 83 x 32 words */
+    x = changed_outside();
+    CHECK("copy, wide, present fill: 83 x 32 words past the capture, in blocks 0x3900 .. 0x393F",
+          x == 83 * 32 && out_b0 >= 0x3900 && out_b1 <= 0x393F);
+    kh1_dma_fullscreen(0, 0, 0, 0);
+    walk_copy = 0;
 
     /* screen.c func_001e1480: vm_lib's capture of the target into D_00F20000 */
     for (wide = 0; wide < 2; wide++) {

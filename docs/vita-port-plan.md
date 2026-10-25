@@ -2141,6 +2141,46 @@ store rectangle): kh1.elf byte-identical, no float-untested row. selftest PASS (
 - **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
   the callers of prim.c's four senders.
 
+### 5.1as Session 105: the half capture filled by the present
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). No change under src/ or host/: kh1.elf
+byte-identical, no float-untested row. selftest PASS (storeread_test: 31 checks, 7 new).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **Does the present fill the half capture?** (item 4b) **Yes, the model does not refuse it.**
+  storeread_test now sends the menu capture itself: `D_002B6760` as a refe tag to a made-up 10-qword packet
+  with its registers (read from the ELF's data, written in the test as constants: FRAME_1 `0x000401B0`
+  (block 0x3600, FBW 4, CT32), TEST_1 ZTE + ZTST ALWAYS, TEX1_1 bilinear, CLAMP_1 CLAMP, TEX0_1 `0x80000006_64020000`
+  (TBP0 0, TBW 8, CT32, 512 x 512, TCC, MODULATE), one SPRITE (PRIM `0x116`, RGBAQ 0x80 each) UV (0, 0) ..
+  (512, 448) at XYZ2 (0x7000, 0x7400) .. (0x8000, 0x8000)), through `kh1_dma_walk` -> gsregs.c -> gsmem.c,
+  with XYOFFSET_1 (0x7000, 0x7400) and SCISSOR_1 512 x 448 in force (an assumption: what the frame's
+  environment leaves). **Note the source is the display buffer at block 0** (TBP0 0, as renderer-spec 4.17
+  says), not the 3D target 0x1A00 the session 105 plan named.
+  - Without `kh1_gsmem_flat` the bilinear 512 x 512 texture is past `kh1_gsmem_sprite`, so the copy only
+    marks 0x3600 as drawn: a display the model holds still gives the empty pass `D_002A4DD0` (session 104).
+  - With `kh1_gsmem_flat(1)` (what `KH1_HOST_SHOT`'s present turns on) the copy is point-sampled into
+    0x3600 (pixel (x, y) = texel (2x, 448y / 192)), the store reads it and **the blur `D_002A4B60` is sent:
+    the PS2's path**. A 4:3 copy writes nothing outside the 256 x 192 capture.
+  - **A black display still gives the empty pass even then**: the CT24 store drops the alpha byte. On the
+    host the display holds what the present filled (the clears, fades, 2D sprites; VU1's meshes are not
+    drawn), so a `KH1_HOST_SHOT` run whose 3D clear is black opens the menu with the empty pass. Nothing to
+    change: on the PS2 and a port the display holds the rendered frame.
+  - **Decided: the null platform does not need to answer drawn colour pixels from the present's fill**; the
+    fill already writes the model's pixels, and without `KH1_HOST_SHOT` the empty pass is the expected
+    host answer (5.1ar).
+  - **New, the wide view in the model**: fullscreen.c's `KH1_FS_XS | KH1_FS_U` row stretches the copy to
+    x 0 .. 338.8, but the model's buffer is the PS2's 256 wide (FBW 4). The 83 columns past x 256 wrap to
+    the next page row (the GS's own addressing): rows 0 .. 159's land inside the capture and are drawn over
+    by the later rows, rows 160 .. 191's land in rows 192 .. 223, **83 x 32 words in blocks 0x3900 ..
+    0x393F**, the shared texture slot (renderer-spec 3.1, rewritten per draw). The store reads x 0 .. 255,
+    the view's canvas -82.8 .. 429 (the left 41 pixels clamped to texel 0). Host-model only and only with
+    `KH1_HOST_SHOT` and `KH1_HOST_WIDE` together; a port's capture buffer is the view's half wide (5.1an),
+    so nothing changes for the Vita. The test holds the count and the block range, so a change to the
+    model's wide copies shows there. If a wide shot run shows a broken texture right after a menu opens,
+    this is the first suspect (clip an `KH1_FS_XS` fill at FBW x 64 in gsregs.c's flat pass).
+- **Still waiting for the Mac** (item 4c): `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses,
+  the callers of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
