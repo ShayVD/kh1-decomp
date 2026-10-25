@@ -2378,6 +2378,42 @@ float-untested row. selftest PASS (one new negative case).
 - **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
   of prim.c's four senders.
 
+### 5.1ay Session 111: the stretched copies' sources and the callbacks' first sprites, checked by fscheck
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). Tool only: kh1.elf byte-identical, no
+float-untested row. selftest PASS (one new negative case, one changed).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The stretched copies' sources** (item 4b): a `KH1_FS_U` row stretches every UV in its send (host/null/gsregs.c),
+  so each textured sprite there must read a buffer laid out like the 512-wide target the stretch assumes.
+  fscheck's `source_check` takes each one's TEX0 (TBP0, TBW, PSM) and requires, under `KH1_FS_U`, one of
+  `U_SOURCES` at its own width (the 3D target 0x1A00, the display 0, the Z area 0x0E00 where a stored frame
+  is loaded 512 x 384: all TBW 8) read as CT32 / CT24, or under `KH1_FS_UOWN` a capture's own buffer (the
+  FRAME (block, FBW) of a half-size sprite in the walk: the menu capture's 0x3600 FBW 4, the depth blur's 0x3600
+  FBW 8). The reverse: a full-screen sprite of a send without `KH1_FS_U` that copies one of those buffers over
+  more than one texel fails (session 99's test only caught u spans of 255 and up, so a strip copy like the frame
+  copy's 32-texel strips was unchecked). `D_002A5AC0` (the depth blur's nine copies) has no TEX0 of its own: it
+  reads what `D_002A5620` / `D_002A5A90` leave (0x3600 TBW 8, CT32 / CT24; `TEX_BEFORE`). **475 reads checked,
+  0 problems**: every row reads what its flags say (the frame copy, the Z-area copy and the depth blur captures
+  the target; the spin copy and the menu capture the display; the stored frame's five the Z area, two of them
+  with the target; the menu blur and the depth blur their capture's own buffer).
+- **The callbacks' first sprites** (item 4c): **correction to the plan**: the 2 sprites with the environment's
+  TEX0 are the *first* sprites of the eye overlay `D_0035C4A0` and of the crossfade `func_00135ed0`, and the TEX0
+  they read is not texspot's restore (0x3A00 is what both leave for the part's mesh) but renderer B's step 2
+  (renderer-spec 4.3, mdlgs.nostrict.c `func_0015f488`): the part's texture uploaded to 0x3600 (PSMT8, TBW 4)
+  with its CLUT at 0x3700 (CT32 16 x 16), TEX0_1 pointed at it, then the step-3 callback. fscheck now starts
+  those two pictures with that upload and TEX0, built from the C's constants (`STEP2_SRC`, `STEP2_AFTER`: the
+  eye part 128 x 128, the crossfade at each of its 5 sizes). **6 more reads checked (18), 0 problems**; the eye
+  image `func_0015fa20` uploads between the eye overlay's two sends lands inside the part's blocks, so session
+  110's `TEX_EXPECTED` entry for it is gone (4 expected now).
+- **selftest**: the menu blur's row without `KH1_FS_UOWN`, the depth blur capture's with it and the frame copy's
+  without `KH1_FS_U` must each be reported; session 110's case now clears `STEP2_AFTER` (instead of deleting the
+  eye overlay's entry) to see the eye image read unloaded.
+- **Not covered**: CLUT loads' CLD / CSM2, the HUD's and the draw list's other packets, the step-2 TEX0's TW /
+  TH (taken as the part's size rounded up to a power of two; the real header's `x2` / `x3`).
+- **Still waiting for the Mac**: `KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses, the callers
+  of prim.c's four senders.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

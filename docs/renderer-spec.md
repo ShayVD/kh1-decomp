@@ -709,6 +709,10 @@ under TEST_1 ZTE / ALWAYS, so its first sprite writes Z32 zeros over the display
 write Z16S at `0x3800` (FBW 4), in the texture slot's upper half. Every texture these sends read was drawn
 or uploaded just before (the shadow copy reads what its window drew; the crossfade uploads its 1 x 1 PSMT8
 texel and CLUT `0x3700`; the eye overlay's image comes from `func_0015fa20` between its two sends).
+Session 111 (vita-port-plan 5.1ay): both callbacks' first sprite carries no TEX0: it reads the part's texture
+through the TEX0_1 renderer B's step 2 left (`0x3600` PSMT8 TBW 4, CLUT `0x3700` CT32, TCC 1; `func_0015f488`'s
+`0x2006E00401313600` with the image's TW / TH), uploaded just before, so the copy into `0x3A0000` is the part's
+own texture; the `0x3A00` TEX0 each callback sets at its end is for the part's mesh after it.
 
 ## 4. Per-frame packet flow
 
