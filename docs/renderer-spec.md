@@ -1933,6 +1933,97 @@ scissor (it clips nothing) and draw each copy in 1 or 2 calls; whether they all 
 draw into three targets); on the Vita's tiled GPU the passes, not the calls, are the cost to watch. The
 real-disc room run's `batches:` line gives the budget with renderers A / B's meshes.
 
+**Session 125 (vita-port-plan 5.1bm): the column copies merged, and the per-frame rings.** *The check*: the
+column copies' sprites are **not inside their columns**. Each of the five sends draws the same full-screen
+primitives 16 times, once under each 32-pixel `SCISSOR_1` (`D_002A5620`'s alpha fill x 0 .. 512, the menu
+blur's nine sprites of `D_002A49A0` at -4 .. 516, `D_002A5AC0`'s nine, `D_002A4FC0`'s strip `D_002A4F60`): the
+REF chains point every column at one block, so the scissor is what cuts each copy into its column. Dropping
+a scissor that clips nothing gains nothing there. *What does*: batch.h's **column groups**. A run of
+primitives under one scissor that is repeated, primitive for primitive (same key but the scissor, same
+vertices), under the horizontally adjacent scissor of the same rows is drawn once with the union scissor;
+column by column the 16 become one. It is exact (each pixel is in one column, so drawing group-major instead
+of column-major changes nothing) as long as no primitive samples the target it draws into (none of the
+five: they read `0x3600`, the display or nothing; batch.c refuses a group whose TEX0 is the pass's target
+or shares its blocks) and no transfer falls between columns (a break ends the group). A repeat that stops
+part way is replayed under its own column. A port holds a group's batches until the group ends, then
+submits them with the union scissor. Under the wide view canvas.h's view columns are adjacent after
+target.c's rounding, and their union is the full scissor's (batch_test). The static packets:
+
+| Static packets | Batches | Draw calls | Opened by a scissor | Columns merged | At most a send |
+|---|---|---|---|---|---|
+| session 124 | 147 | 148 | 92 | - | 33 draw calls (`D_002A5620`) |
+| session 125 (column groups) | 42 | 43 | 2 | 90 (465 primitives absorbed) | 3 draw calls (`D_002A5620`: two states and the copy) |
+
+34 of the 38 drawing sends are now one draw call; the menu blur `D_002A4B60` is 2 (its opaque first copy
+and the eight blended), `D_002A5AC0` 1, `D_002A4FC0` 1. The static walk uses the packets' XYZ, which for
+`D_002A4FC0` / `D_002A5AC0` the C writes at run time, but into the one shared block, so every column still
+gets the same vertices. The fake disc draws no column copy (its counts are unchanged: 5 / 16 draw calls).
+`KH1_HOST_TRACE=5`'s `batches:` lines add `column groups:` (columns merged, primitives absorbed).
+
+*The per-frame rings* (include/platform/ring.h / host/port/ring.c): a vertex ring of **4 MiB a frame**
+(131,072 32-byte vertices, 43,690 independent triangles) and a uniform ring of **256 KiB a frame** (4,096
+64-byte slots: one per batch, KH1DrawUniforms' 52 bytes, and one per render pass), each two slots for two
+frames in flight (8.5 MiB). A bump allocator per slot; a frame end moves to the other slot; an allocation
+that does not fit returns 0 and is counted (nothing wraps into the slot the GPU may read; the port waits for
+the frame that last used a slot). Against the counts: the static packets' worst send 864 vertices (27 KB),
+every static send at once 3,770 (118 KB, 1/34 of the ring), 42 batches and 40 passes; the fake disc at most
+198 vertices (6,336 bytes) and 384 uniform bytes a frame. The real disc's meshes are the unknown:
+`KH1_HOST_TRACE=5` prints `ring: a frame at most V of 4194304 vertex bytes, U of 262144 uniform bytes`, so the
+room run only has to be read against it. tests/host/ring_test.c (9 checks): alignment, overflow, the two
+slots, the sizes.
+
+**Session 126 (vita-port-plan 5.1bn): the draw list as GPU commands, and each pass's load / store.**
+*The recorder* (include/platform/cmdbuf.h / host/port/cmdbuf.c): batch.h's batcher now reports what it decides
+as events (OPEN a batch, PRIM a primitive joins it, ABSORB a column repeat, REC a group primitive, GROUP a
+column group starts, WIDEN its scissor grows, END it ends; `KH1Batcher.ev`, no change to its counts), and the
+recorder turns them into a frame's command list: **scenes** (render passes), each a run of **commands**, each
+one batch with its key (pipelines, texture, sampler, uniforms, scissor, target), the KH1DrawState that opened
+it, a contiguous range of 32-byte vertices in ring.h's vertex ring and a 64-byte uniform slot (each scene takes
+one more for the pixel-to-clip vec4). A column group's commands are **held** from GROUP to END
+(`kh1_cmd_ready` stops before them): WIDEN rewrites every held command's scissor to the union; a repeat cut
+short is replayed by the batcher and the recorder appends it from the vertices it kept at REC. A scene is
+batch.h's pass except that a change of the depth binding alone does not end it (a draw with no Z test or
+write draws the same with the depth buffer bound): one such join in the static packets (`D_002A5620`).
+host/null/pipes.c's kick hook now feeds the recorder each kick's GPU vertices (primasm.h + vertex.h);
+`KH1_HOST_TRACE=5` prints each distinct frame's pass list and a `commands:` / `passes:` / `depth:` summary;
+`drawpipes.py --passes` runs the static sends through it (tools/host/pipecount.c `--passes`).
+
+*The check* (tests/host/cmdbuf_test.c, 21 checks, made-up texels): 8 columns of an opaque and an additive
+DECAL copy (texel alpha 0x40 .. 0x80) record as **2 commands with the union scissor and 12 vertices**, and
+replaying them through a GPU-style rasteriser (pixel centres, top-left rule, nearest texel, blend.h's GPU
+blend) gives **the same RGB as gsmem.c's sprites drawn column by column**; a column broken part way is
+appended and still matches; the bevel's flat strip drawn twice with ALPHA_1 changes (additive / subtractive,
+As 0x90) is 16 triangles in 6 commands whose replay equals each triangle drawn in the GS's order with the GS's
+formula. Two deliberate breaks (no WIDEN; replayed columns given the wrong vertices) both fail it.
+
+*Load / store, decided at the frame end* (cmdbuf.h): **load** LOAD when the target was drawn before (this
+frame or an earlier one) and the scene does not start by covering it: the GS has no clear, so `cleared` means
+the scene's leading draws that read nothing of the target (no blend, all channels, no fetch, no DATE), as
+sprites under their final scissors, cover every 8 x 8 cell (the game clears in 32-pixel strips, which a
+first-sprite test missed); **store** STORE when a later scene this frame samples the target (TEX0 on it) or
+loads it, when the next frame does either before covering it, or when it is the display; else DISCARD (a
+frame's last scene on a target stays OPEN until the next frame says). **Depth** the same with the Z test: LOAD
+when a draw tests Z written earlier and the scene has not covered the buffer with ALWAYS writes first; STORE
+when a later scene tests it.
+
+| Source | Scenes | Load | Store | Depth |
+|---|---|---|---|---|
+| fake disc, frame 2 | 3D target, display, 3D target | all DONT_CARE (each cleared by 16 strips / a full sprite) | 3D target 1 DISCARD (cleared again before any read), display STORE (scanned out), 3D target 2 STORE (frame 3's copy samples it) | cleared, DISCARD (never tested across scenes) |
+| fake disc, frame 3 | display (the frame copy, 16 strips sampling the 3D target), 3D target | DONT_CARE | display STORE, 3D target OPEN at the run's end | DISCARD / OPEN |
+| static sends (each alone) | 149 sends, 39 scenes; 38 sends one scene | (no vertices passed: LOAD) | one send with two: `D_002A5620`'s 3D-target scene STORE, sampled by its slot capture | - |
+
+So the steady state a port sets from data: the 3D target and the display are each cleared by the game's own
+strips (load DONT_CARE), the 3D target is stored because the frame copy samples it, the display because it is
+scanned out, and the depth buffer is discarded at the scene's end unless a later scene in the frame tests it
+(on the fake disc none does). The real disc's scenes are the open part: a room's 3D scene, then the captures
+(menu blur, depth blur, shadows into `0x3A00`, the crossfade) each a scene that samples the one before it, and
+the 2D layers back on the 3D target: each return to the 3D target after a capture **must LOAD** colour and,
+when renderer A / B draw after it, depth, so their earlier scene must STORE both. `KH1_HOST_TRACE=5`'s pass
+lists on the room run give the counts. On the Vita, a scene per entry of the list; GXM's depth / stencil
+surface has force-load and force-store modes (vitasdk `sceGxmDepthStencilSurfaceSetForceLoadMode` /
+`SetForceStoreMode`) to set from `dload` / `dstore`; how a colour surface's load is skipped is to check on the
+Vita (5.1bn).
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

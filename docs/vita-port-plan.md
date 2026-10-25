@@ -2771,6 +2771,52 @@ and docs only, no float-untested row. selftest PASS (vertex_test 13 checks, batc
   Vita's draw-call budget, and how many render passes a frame opens.
 - **Still waiting for the Mac**: as 5.1bf.
 
+### 5.1bm Session 125: the column copies merged, the per-frame rings
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (batch_test 14 checks, ring_test 9).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The column copies' scissors** (item 4b): the sprites are full-screen, not inside their 32-pixel columns
+  (the scissor does the cutting), so "drop a scissor that clips nothing" gains nothing. Instead batch.h's
+  column groups draw a group of primitives repeated under the adjacent column once with the union scissor
+  (exact: disjoint columns, no feedback, no transfer between). Static packets: 148 draw calls to 43, 92
+  scissor-opened batches to 2, at most 3 draw calls a send (renderer-spec 4.13 "Session 125").
+  `drawpipes.py --batches` and pipecount's `B` lines carry each kick's vertex signature; host/null/pipes.c
+  hashes the GS's queued vertices.
+- **The per-frame rings** (item 4c): new include/platform/ring.h / host/port/ring.c: vertex 4 MiB and uniform
+  256 KiB a frame, two frames in flight, a bump allocator with overflow counted; `KH1_HOST_TRACE=5` prints the
+  `ring:` line against the sizes.
+- **To check on the real disc**: the room run's `column groups:` and `ring:` lines (a frame's vertex bytes
+  against 4 MiB with renderers A / B's meshes).
+- **Still waiting for the Mac**: as 5.1bf.
+
+### 5.1bn Session 126: the draw list as GPU commands, render pass load / store
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host, tool and test code
+and docs only, no float-untested row. selftest PASS (batch_test 14 checks, cmdbuf_test 21).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The command recorder** (item 4b): new include/platform/cmdbuf.h / host/port/cmdbuf.c. batch.c reports its
+  decisions as events (`KH1Batcher.ev`); the recorder keeps a frame's scenes and commands (key, draw state,
+  vertex range in the vertex ring, uniform slot), holds a column group's commands until it ends and widens
+  their scissor, and appends a broken column's replay from the vertices it kept. host/null/pipes.c feeds it each
+  kick's GPU vertices; tests/host/cmdbuf_test.c replays recorded frames through a software rasteriser: the
+  column copies equal gsmem.c's sprites and the bevel equals the GS's per-triangle order (renderer-spec 4.13
+  "Session 126").
+- **Render pass ordering on a tiled GPU** (item 4c): each scene's colour and depth load / store from data
+  (cleared by the game's strips, sampled later, drawn again, read next frame, scanned out). Fake disc: every
+  scene DONT_CARE, the 3D target stored for the frame copy, the display for scan-out, depth discarded; static
+  sends: one send with two scenes (`D_002A5620`). `KH1_HOST_TRACE=5` prints each distinct frame's pass list;
+  `drawpipes.py --passes` the static sends'.
+- **For PR #131's Vita build**: cmdbuf.c is plain C with no platform calls, so the host/port/*.c glob builds
+  it; pipes.c allocates the recorder's rings only at `KH1_HOST_TRACE=5`.
+- **To check on the real disc**: the room run's pass lists (captures between 3D-target scenes: each return
+  must LOAD, and STORE before), the `commands:` line's held count and lost count.
+- **To check on the Vita**: how GXM skips a colour surface's load (depth / stencil have force load / store
+  modes), and whether a scene per pass entry fits the frame budget.
+- **Still waiting for the Mac**: as 5.1bf.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
