@@ -104,7 +104,13 @@ s32 func_001375d8(void *arg0) {
   s8 *new_var;
   new_var = (s8 *) arg0;
   new_var2 = (new_var3 = *((u32 *) (new_var + 0x444)));
+#ifdef KH1_PS2
   return ((new_var2 << 0x20) >> 0x20) & 1;
+#else
+  /* the EE shifts the u32 in a 64-bit register (dsll32 / dsra32): bit 0 kept; a 32-bit shift by 32 is
+   * undefined off the EE (gcc folds it to 0), session 112 */
+  return new_var2 & 1;
+#endif
 }
 
 /* func_001375f0 (from hand/text_00130000_h6.c). */

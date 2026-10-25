@@ -32,7 +32,17 @@ s32 D_002E27E0[4];
 static void nop(s32 a) {}
 void (*D_00351BC8)(s32) = nop;
 s32 func_001623e8(void *r) { return 0; }
-void func_001623f8(void *r, s32 i, s32 *t) { t[0] = t[1] = t[2] = t[3] = 0; }
+/* (session 112) the crossfade's second texture record (the model's table at x154, a 16-byte record as
+ * func_0015f488's and func_0015fa20's: u16 QWC, u8 TW, u8 TH, u16 w, u16 h, data, CLUT): func_00135ed0
+ * uploads it 1 << TW by 1 << TH and draws it over the part's w x h, so it is taken at the part's size
+ * (cur_w x cur_h, powers of two); the data and CLUT addresses stay 0 (nothing from the disc) */
+static int cur_w, cur_h;
+static int lg2(int n) { int k = 0; while ((1 << k) < n) k++; return k; }
+void func_001623f8(void *r, s32 i, s32 *t) {
+    t[0] = (cur_w * cur_h / 16) | lg2(cur_w) << 16 | lg2(cur_h) << 24;
+    t[1] = cur_w | cur_h << 16;
+    t[2] = t[3] = 0;
+}
 void func_00162428(s32 a, s32 b) {}
 int PlatGsSyncPath(int mode, unsigned short timeout) { return 0; }
 struct PlatDmaChan { int x; };
@@ -78,6 +88,7 @@ int main(int argc, char **argv) {
         memset(&img, 0, sizeof img);
         img.x0 = 0x3600, img.x2 = 4, img.x3 = 0x13; /* the slot's PSMT8 upload, as step 2 leaves it */
         img.x4 = atoi(argv[i]), img.x6 = atoi(argv[i + 1]), img.x8 = 0x3700;
+        cur_w = img.x4, cur_h = img.x6;
         res.x154 = &res;
         src.res = &res, src.x4 = 64;
         cur_send = "func_00135ed0";

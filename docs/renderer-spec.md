@@ -703,12 +703,13 @@ CLUT `0x3DFC`; the windows re-send the font's uploads before they draw (§4.12).
 `x370` bits 40-41 (`& 3`) into 3 entries: 3 would take `D_004F7C10[0]` as the clear packet and size
 `D_002E27E0[3]` = 0 (presumably never set). The eye overlay's tags are zeros in the ELF:
 `func_00175708` stores QWC 10 / 16 and ID 7 (end) when the model loads.
-Session 110 (vita-port-plan 5.1ax): the crossfade `func_00135ed0` sets ZBUF to 0 (ZBP 0, PSMZ32, ZMSK 0)
-under TEST_1 ZTE / ALWAYS, so its first sprite writes Z32 zeros over the display's first blocks (its
-64 x 64 .. 256 x 256 at the crossfade's FBW); the frame copy rewrites them at frame end. The shadow windows
-write Z16S at `0x3800` (FBW 4), in the texture slot's upper half. Every texture these sends read was drawn
-or uploaded just before (the shadow copy reads what its window drew; the crossfade uploads its 1 x 1 PSMT8
-texel and CLUT `0x3700`; the eye overlay's image comes from `func_0015fa20` between its two sends).
+Session 110 (vita-port-plan 5.1ax): the shadow windows write Z16S at `0x3800` (FBW 4), in the texture slot's
+upper half. Every texture these sends read was drawn or uploaded just before (the shadow copy reads what its
+window drew; the crossfade uploads its second texture and CLUT `0x3700`; the eye overlay's image comes from
+`func_0015fa20` between its two sends). **Session 112 (5.1az) corrects 5.1ax**: the crossfade's ZBUF is
+`1 << 32` (ZMSK 1: no depth written) and its second TEX0 has CLD 1; session 110 read both as 0 because the
+C's `1UL << 32` / `1UL << 61` are 0 under the host's 32-bit `long`. Its second texture is `1 << TW` by
+`1 << TH` from the model's texture record (TW / TH log2 of the size), drawn over the part's size.
 Session 111 (vita-port-plan 5.1ay): both callbacks' first sprite carries no TEX0: it reads the part's texture
 through the TEX0_1 renderer B's step 2 left (`0x3600` PSMT8 TBW 4, CLUT `0x3700` CT32, TCC 1; `func_0015f488`'s
 `0x2006E00401313600` with the image's TW / TH), uploaded just before, so the copy into `0x3A0000` is the part's
@@ -2561,8 +2562,9 @@ over the window font (0x3D7C) and its CLUT 0x3DFC on the PS2 too, which the wind
 Session 110 (5.1ax): the Z buffers these sends write are checked the same way (the Z formats' block order is
 the colour one's XOR 24): the depth blur's half-size capture writes Z24 0xFFFFFE over its rectangle of the
 3D Z buffer (after the 3D; under the wide view x 0 .. 338.8 of rows 0 .. 191, the message font in the top
-byte untouched), and the crossfade writes depth into the display (§3.4). A port's captures and crossfade
-write no depth. The textures they read were all drawn or uploaded before them.
+byte untouched); session 110 also had the crossfade writing depth into the display, a host-only bug
+(session 112: its `1UL << 32` ZMSK, §3.4). A port's captures write no depth. The textures they read were all
+drawn or uploaded before them, and (session 112) every CLUT they read is loaded in their picture.
 
 **The model's copies on one canvas** (item 4b, host only). Session 98 found the margin counted twice in
 the model for the spin copy: the 512-wide model held canvas x d + margin at the display's pixel d (the frame

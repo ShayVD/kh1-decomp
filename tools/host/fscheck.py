@@ -48,6 +48,10 @@ checks:
     fails; TEX_BEFORE gives a send the TEX0 the sends before it leave. Renderer B's step-3 callbacks (the eye
     overlay, the crossfade) start their picture with step 2's upload and TEX0 (STEP2_AFTER), so their first
     sprites are checked too.
+  - (session 112) the CLUT buffer: each TEX0 / TEX2 write in a picture loads it by its CLD (1 .. 5, CBP0 /
+    CBP1 for 4 / 5), reading its CLUT's blocks then, from CBP's origin (CSA is the buffer's slot); every
+    sprite with an indexed PSM (PSMT8 / PSMT4 / T8H / T4HL / T4HH) reads slots loaded in its picture from its
+    own CBP / CPSM, else CLUT_EXPECTED names who loads them; a CSM2 load is reported (not modelled).
 
 Needs the user's ELF (the packets are its data); prints names and coordinates, never packet bytes.
 
@@ -147,11 +151,6 @@ ZBLOCK_EXPECTED = {
                             "too, after the 3D; at the view's half (x 0 .. 338.8) the same rows' x 256 .. 338 of the 3D "
                             "Z buffer (the message font at 0x1000 lives in the Z24 words' top byte, which a Z24 write "
                             "keeps). A port's capture writes no depth (5.1ax)",
-    ("func_00135ed0", 0x0000): "objdraw: the crossfade's ZBUF word is 0 (ZBP 0, Z32, ZMSK 0) under TEST_1 ZTE / ALWAYS, "
-                               "so its sprites write Z32 zeros over the display's first blocks (64 x 64 .. 256 x 256 "
-                               "at the crossfade's FBW) on the PS2 too; the frame copy rewrites the display at frame "
-                               "end. A port's crossfade writes no depth (5.1ax; the boot: a black flicker top left "
-                               "during a crossfade?)",
     ("D_004F7820", 0x3600): "shadow.c func_001284a0: the shadow windows' Z16S at 0x3800 (FBW 4) over their 128 / 196 / "
                             "256 square, the texture slot's upper half (0x3800 .. 0x39FF at 256) on the PS2 too: the "
                             "slot is rewritten per draw (renderer-spec 3.1), after the list's render-to-texture",
@@ -221,6 +220,14 @@ PSM_BLOCKS = {0x00: (8, 8, BLOCKS32), 0x01: (8, 8, BLOCKS32), 0x02: (16, 8, BLOC
               0x1B: (8, 8, BLOCKS32), 0x24: (8, 8, BLOCKS32), 0x2C: (8, 8, BLOCKS32),
               0x30: (8, 8, _Z(BLOCKS32)), 0x31: (8, 8, _Z(BLOCKS32)), 0x32: (16, 8, _Z(BLOCKS16)),
               0x3A: (16, 8, _Z(BLOCKS16S))}
+
+# (session 112) the CLUT buffer (GS manual 3.4.6 / 4.3.4): TEX2's fields, the indexed PSMs (8 and 4 bit) and
+# the 16 slots of 16 CT32 entries a load fills (an 8-bit CLUT all of them from CSA, a 4-bit one slot CSA)
+TEX2_MASK = (0x3F << 20) | (0x3FFF << 37) | (0xF << 51) | (1 << 55) | (0x1F << 56) | (0x7 << 61)
+PSM8, PSM4 = (0x13, 0x1B), (0x14, 0x24, 0x2C)
+# sends whose sprites read a CLUT that no TEX0 / TEX2 in their picture loads, on purpose (the buffer holds it
+# from another send's load): (send, the CLUT's CBP) -> who loads it
+CLUT_EXPECTED = {}
 
 # functions whose C writes both 4:3 edges on purpose (none today): "file:function" -> reason
 LIT_EXEMPT = {}
@@ -420,6 +427,8 @@ def sprites_of(rl):
     for k, (r, v, a) in enumerate(rl):
         if r in (0x18, 0x19, 0x4C, 0x4D, 0x40, 0x41, 0x4E, 0x4F, 0x47, 0x48, 0x06, 0x07):
             env[r], at[r] = v, a
+        elif r in (0x16, 0x17) and env.get(r - 0x10) is not None:  # (session 112) TEX2: TEX0's CLUT fields
+            env[r - 0x10] = tex2_merge(env[r - 0x10], v)
         elif r == 0x00:
             prim, vx, uv = v & 0x7FF, [], []
         elif r == 0x03:
@@ -438,6 +447,17 @@ def sprites_of(rl):
                             uvr, bool(prim & 0x100), k, ctx))
                 vx, uv = [], []
     return out
+
+
+def tex2_merge(t, v):
+    """(session 112) a TEX0 with a TEX2 write's fields (PSM, CBP, CPSM, CSM, CSA, CLD) in place of its own"""
+    return t & ~TEX2_MASK | v & TEX2_MASK
+
+
+def loads_of(rl):
+    """(session 112) the writes that can load the CLUT buffer: (its place in the list, the register (TEX0_1 /
+    TEX0_2 / TEX2_1 / TEX2_2), its value)"""
+    return [(k, r, v) for k, (r, v, _a) in enumerate(rl) if r in (0x06, 0x07, 0x16, 0x17)]
 
 
 def uploads_of(rl):
@@ -741,38 +761,119 @@ def tex_rect(p):
 
 
 def clut_rect(t):
-    """(session 110) the CLUT a TEX0 reads (CSM1): ((CBP, 1, CPSM), its rectangle in the 16-wide CLUT
-    buffer: 16 x 16 for PSMT8 / T8H, 8 x 2 at CSA for PSMT4 / T4HL / T4HH), or None"""
-    psm, cbp, cpsm, csa = gp.bits(t, 20, 6), gp.bits(t, 37, 14), gp.bits(t, 51, 4), gp.bits(t, 56, 5)
-    if psm in (0x13, 0x1B):
+    """(session 110) the CLUT a TEX0 loads (CSM1): ((CBP, 1, CPSM), its rectangle in the CLUT's 16-wide
+    buffer: 16 x 16 for PSMT8 / T8H, 8 x 2 for PSMT4 / T4HL / T4HH; session 112: from CBP's origin, CSA places
+    it in the CLUT buffer, not in memory), or None"""
+    psm, cbp, cpsm = gp.bits(t, 20, 6), gp.bits(t, 37, 14), gp.bits(t, 51, 4)
+    if psm in PSM8:
         return (cbp, 1, cpsm), (0, 16, 0, 16)
-    if psm in (0x14, 0x24, 0x2C):
-        x, y = (csa & 1) * 8, (csa >> 1) * 2
-        return (cbp, 1, cpsm), (x, x + 8, y, y + 2)
+    if psm in PSM4:
+        return (cbp, 1, cpsm), (0, 8, 0, 2)
     return None
+
+
+def clut_load(t, cbp01):
+    """(session 112) what a TEX0 / TEX2 write does to the CLUT buffer (GS manual: CLD 1 loads, 2 / 3 load and
+    copy CBP to CBP0 / CBP1, 4 / 5 load only when CBP differs from CBP0 / CBP1, then copy): the slots it
+    fills ([] when it loads nothing), cbp01 updated in place (None: not known in this picture, taken as a
+    load)"""
+    psm, cbp, cld, csa = gp.bits(t, 20, 6), gp.bits(t, 37, 14), gp.bits(t, 61, 3), gp.bits(t, 56, 5)
+    if psm not in PSM8 + PSM4 or cld == 0 or cld > 5:
+        return []
+    if cld in (4, 5) and cbp01[cld - 4] == cbp:
+        return []
+    if cld in (2, 3, 4, 5):
+        cbp01[(cld - 2) % 2] = cbp
+    return [(csa + i) % 16 for i in range(16)] if psm in PSM8 else [csa % 16]
+
+
+def clut_reads(t):
+    """(session 112) the CLUT buffer slots a sprite with this TEX0 reads, or [] for a PSM without a CLUT"""
+    psm, csa = gp.bits(t, 20, 6), gp.bits(t, 56, 5)
+    return [(csa + i) % 16 for i in range(16)] if psm in PSM8 else [csa % 16] if psm in PSM4 else []
 
 
 def tex_check(s, fn, pics, verbose, label=None):
     """(session 110) the textures one picture's sprites read against the blocks drawn or uploaded before
-    them in it (pics: [(sprites, uploads, flags, writes, free, check)], in send order, the GS state carried;
-    a picture with check False only draws: TEX_AFTER's send before this one); a
-    read outside both is a finding unless (send, region's first block) is in TEX_EXPECTED.  At the PS2's
-    coordinates: a sprite the wide view stretches reads the view's own target.  Returns (problems,
-    TEX_EXPECTED keys used, reads checked, reads skipped)"""
-    problems, used, nread, nskip = [], set(), 0, 0
+    them in it (pics: [(sprites, uploads, flags, writes, free, check, loads)], in send order, the GS state
+    carried; a picture with check False only draws: TEX_AFTER's send before this one); a read outside both
+    is a finding unless (send, region's first block) is in TEX_EXPECTED.  At the PS2's coordinates: a
+    sprite the wide view stretches reads the view's own target.  (session 112) The CLUT: each TEX0 / TEX2
+    write (loads) that loads the CLUT buffer (clut_load) reads its CLUT's blocks then (against what is drawn
+    or uploaded before it), and each sprite with an indexed PSM needs its slots loaded in the picture from
+    its own CBP / CPSM (CSM1), else (send, CBP) is in CLUT_EXPECTED; a load with CSM2 is reported (not
+    modelled).  Returns (problems, TEX_EXPECTED keys used, reads checked, reads skipped, CLUT reads checked,
+    CLUT_EXPECTED keys used)"""
+    problems, used, nread, nskip, nclut, cused = [], set(), 0, 0, 0, set()
     key, s = s, label or s
-    have = set()
-    for sp, ups, flags, writes, free, check in pics:
-        ev = sorted([(p[17], 0, p) for p in sp] + [(u[0], 1, u) for u in ups], key=lambda e: e[:2])
+    have, slots, cbp01 = set(), [None] * 16, [None, None]
+    ctx_t = {}
+
+    def missing(miss, what):
+        for r in sorted({region(b) for b in miss}, key=lambda r: r[0] if r else -1):
+            if r and (key, r[0]) in TEX_EXPECTED:
+                used.add((key, r[0]))
+                continue
+            problems.append("%s (%s): %s blocks %s in %s that nothing before it in the picture drew or uploaded: "
+                            "add (send, region) to TEX_EXPECTED with what fills them" % (
+                                s, fn, what, spans({b for b in miss if region(b) == r}), r[2] if r else "no region"))
+
+    for pic in pics:
+        sp, ups, flags, writes, free, check = pic[:6]
+        lds = pic[6] if len(pic) > 6 else []
+        ev = sorted([(p[17], 0, p) for p in sp] + [(u[0], 1, u) for u in ups] + [(l[0], 2, l) for l in lds],
+                    key=lambda e: e[:2])
         for _k, kind, e in ev:
             if kind == 1:
                 have |= blocks_at(e[1:4], e[4]) or set()
+                continue
+            if kind == 2:
+                _k, r, v = e
+                c = r & 1
+                t = v if r < 0x10 else tex2_merge(ctx_t[c], v) if ctx_t.get(c) is not None else v
+                if r < 0x10:
+                    ctx_t[c] = v
+                elif ctx_t.get(c) is not None:
+                    ctx_t[c] = t
+                fill = clut_load(t, cbp01)
+                if not fill:
+                    continue
+                cl = clut_rect(t)
+                if gp.bits(t, 55, 1):
+                    problems.append("%s (%s): a CLUT load with CSM2 (CBP 0x%04X): not modelled" % (s, fn, cl[0][0]))
+                    continue
+                if verbose:
+                    print("%s (%s): %s loads the CLUT from 0x%04X (CPSM 0x%X, CLD %d, slots %s)" % (
+                        s, fn, "TEX0_%d" % (c + 1) if r < 0x10 else "TEX2_%d" % (c + 1), cl[0][0], cl[0][2],
+                        gp.bits(t, 61, 3), "all" if len(fill) == 16 else fill[0]))
+                if check:
+                    missing((blocks_at(*cl) or set()) - have, "its CLUT load reads")
+                for i in fill:
+                    slots[i] = (cl[0][0], cl[0][2])
                 continue
             p = e
             if p[5] and check:
                 tr, why = tex_rect(p)
                 stretched = flags & {"KH1_FS_X", "KH1_FS_XS"} or any(
                     "PLAT_VIEW" in x for w in p[6] for _w, x, _at in writes.get(w, ()))
+                if p[14] is not None and clut_reads(p[14]):
+                    nclut += 1
+                    t = p[14]
+                    want = (gp.bits(t, 37, 14), gp.bits(t, 51, 4))
+                    bad = [i for i in clut_reads(t) if slots[i] != want]
+                    if verbose:
+                        print("%s (%s): reads the CLUT 0x%04X CPSM 0x%X (CSA %d, its TEX0's CLD %d)%s" % (
+                            s, fn, want[0], want[1], gp.bits(t, 56, 5), gp.bits(t, 61, 3),
+                            ", not loaded in the picture" if bad else ""))
+                    if bad:
+                        if (key, want[0]) in CLUT_EXPECTED:
+                            cused.add((key, want[0]))
+                        else:
+                            problems.append("%s (%s): a sprite reads the CLUT 0x%04X (CSA %d) that no TEX0 / TEX2 "
+                                            "in its picture loads (slots %s hold %s): add (send, CBP) to "
+                                            "CLUT_EXPECTED with who loads it" % (
+                                                s, fn, want[0], gp.bits(t, 56, 5), bad[0],
+                                                "0x%04X" % slots[bad[0]][0] if slots[bad[0]] else "nothing"))
                 if tr is None or stretched:
                     nskip += 1
                     if verbose:
@@ -780,32 +881,21 @@ def tex_check(s, fn, pics, verbose, label=None):
                 else:
                     nread += 1
                     rb = blocks_at(*tr)
-                    cl = clut_rect(p[14])
-                    if rb is not None and cl is not None:
-                        rb |= blocks_at(*cl) or set()
                     if rb is None:
                         problems.append("%s (%s): TEX0 PSM 0x%02X has no block order in PSM_BLOCKS" % (
                             s, fn, tr[0][2]))
                     else:
                         miss = rb - have
                         if verbose:
-                            print("%s (%s): reads TEX0 0x%04X TBW %d PSM 0x%02X texels %g .. %g x %g .. %g%s: blocks "
+                            print("%s (%s): reads TEX0 0x%04X TBW %d PSM 0x%02X texels %g .. %g x %g .. %g: blocks "
                                   "%s%s" % (s, fn, tr[0][0], tr[0][1], tr[0][2], tr[1][0], tr[1][1], tr[1][2],
-                                            tr[1][3], " (CLUT 0x%04X)" % cl[0][0] if cl else "", spans(rb),
-                                            ", not drawn before: " + spans(miss) if miss else ""))
-                        for r in sorted({region(b) for b in miss}, key=lambda r: r[0] if r else -1):
-                            if r and (key, r[0]) in TEX_EXPECTED:
-                                used.add((key, r[0]))
-                                continue
-                            problems.append("%s (%s): reads blocks %s in %s that nothing before it in the picture "
-                                            "drew or uploaded: add (send, region) to TEX_EXPECTED with what fills "
-                                            "them" % (s, fn, spans({b for b in miss if region(b) == r}),
-                                                      r[2] if r else "no region"))
+                                            tr[1][3], spans(rb), ", not drawn before: " + spans(miss) if miss else ""))
+                        missing(miss, "reads")
             if p[8] is not None:
                 r = sprite_rect(p, flags, writes, 0, free)
                 if r is not None:
                     have |= blocks_at(fmt(p[8]), r) or set()
-    return problems, used, nread, nskip
+    return problems, used, nread, nskip, nclut, cused
 
 
 def step2_regs(src):
@@ -1025,7 +1115,7 @@ def main():
                 sends.setdefault("D_%08X" % a, "func_%08x" % f)
 
     problems, nfull, overs, bused, nframed = [], 0, set(), set(), 0
-    tused, ntex, nskip, nsrc = set(), 0, 0, 0
+    tused, ntex, nskip, nsrc, nclut, cused = set(), 0, 0, 0, 0, set()
     # (session 111) the captures' own buffers: the FRAME of every half-size sprite in the walk
     own = {}
     for s in sorted(sends):
@@ -1039,12 +1129,14 @@ def main():
         problems.append(why)
 
     def tex(key, fn, pics, label=None):
-        nonlocal problems, tused, ntex, nskip
-        tp, tu, nr, ns = tex_check(key, fn, pics, args.v, label)
+        nonlocal problems, tused, ntex, nskip, nclut, cused
+        tp, tu, nr, ns, nc, cu = tex_check(key, fn, pics, args.v, label)
         problems += tp
         tused |= tu
         ntex += nr
         nskip += ns
+        nclut += nc
+        cused |= cu
     for s in sorted(sends):
         a = int(s[2:], 16)
         if not img.ok(a):
@@ -1067,13 +1159,14 @@ def main():
                     problems += bp
                     bused |= bu
                     tex(s, sends[s], [(sprites_of(rl), uploads_of(rl), rows.get(s, (set(), None))[0], wl,
-                                       frozenset(), True)], lab)
+                                       frozenset(), True, loads_of(rl))], lab)
             else:
                 bp, bu = block_check(s, sends[s], allsp, rows.get(s, (set(), None))[0], writes, args.side16, args.v)
                 problems += bp
                 bused |= bu
-                tex(s, sends[s], [(allsp, uploads_of(regs(img, a)), rows.get(s, (set(), None))[0], writes,
-                                   frozenset(), True)])
+                rl = regs(img, a)
+                tex(s, sends[s], [(allsp, uploads_of(rl), rows.get(s, (set(), None))[0], writes,
+                                   frozenset(), True, loads_of(rl))])
         flags, name = rows.get(s, (set(), None))
         if "KH1_FS_U" in flags or kind:
             before = {}
@@ -1158,7 +1251,7 @@ def main():
         if key in STEP2_AFTER and step2:  # (session 111) the part's texture renderer B's step 2 left
             rl = step2(*STEP2_AFTER[key]) + rl
             sp = sprites_of(rl)
-        tex(key, what.split(":")[0], [(sp, uploads_of(rl), set(), {}, frozenset(free), True)], label)
+        tex(key, what.split(":")[0], [(sp, uploads_of(rl), set(), {}, frozenset(free), True, loads_of(rl))], label)
     built, note = rt_built(img, args.cc)
     print("fscheck: " + note)
     byname = {(n, v): rl for n, v, rl in built or ()}
@@ -1168,11 +1261,11 @@ def main():
                              label="%s[%s]" % (name, var))
         problems += bp
         bused |= bu
-        pics = [(sprites_of(r), uploads_of(r), set(), {}, frozenset(), False)
+        pics = [(sprites_of(r), uploads_of(r), set(), {}, frozenset(), False, loads_of(r))
                 for r in [byname.get((TEX_AFTER.get(name), var))] if r is not None]
         if name in STEP2_AFTER and step2:  # (session 111) as the eye overlay's, at the variant's size
             rl = step2(*(STEP2_AFTER[name] or map(int, var.split("x")))) + rl
-        tex(name, "run time", pics + [(sprites_of(rl), uploads_of(rl), set(), {}, frozenset(), True)],
+        tex(name, "run time", pics + [(sprites_of(rl), uploads_of(rl), set(), {}, frozenset(), True, loads_of(rl))],
             "%s[%s]" % (name, var))
     for s, (_f, name) in rows.items():
         if s not in sends:
@@ -1188,6 +1281,9 @@ def main():
     for k in TEX_EXPECTED:
         if k not in tused and (built is not None or k[0] not in RT_BUILT):
             problems.append("%s: in TEX_EXPECTED for 0x%04X, but no longer read there" % k)
+    for k in CLUT_EXPECTED:
+        if k not in cused and (built is not None or k[0] not in RT_BUILT):
+            problems.append("%s: in CLUT_EXPECTED for 0x%04X, but its CLUT is now loaded in the picture" % k)
     for s in EXEMPT:
         if s not in sends:
             problems.append("%s: in EXEMPT, but no send of it" % s)
@@ -1208,9 +1304,10 @@ def main():
     print("fscheck: %d sends, %d full-screen (%d rows, %d exempt), %d C rectangles with both 4:3 edges, "
           "%d drawn past their frame's width (%d expected), %d sends setting FRAME and %d render-to-texture "
           "sends from the C (%d block overlaps expected), %d texture reads checked (%d skipped, %d from "
-          "outside expected), %d stretched reads' sources checked, %d problems" % (
+          "outside expected), %d stretched reads' sources checked, %d CLUT reads checked (%d loaded elsewhere), "
+          "%d problems" % (
               len(sends), nfull, len(rows), len(EXEMPT), len(lits), len(overs), len(overs & set(OVER_EXPECTED)),
-              nframed, nrt, len(bused), ntex, nskip, len(tused), nsrc, len(problems)))
+              nframed, nrt, len(bused), ntex, nskip, len(tused), nsrc, nclut, len(cused), len(problems)))
     sys.exit(1 if problems else 0)
 
 

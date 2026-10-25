@@ -167,7 +167,11 @@ rewrite matched code.
 5. **Sizes and layout**: use `u32`/`s16`/etc. from `include/common.h` for
    anything that mirrors file formats or saved data. On the EE `long` is
    64-bit, on the Vita it is 32-bit, so never use plain `long` for
-   on-disk/in-memory structures that must keep their layout.
+   on-disk/in-memory structures that must keep their layout. The same goes
+   for constants: `1UL << 61` is bit 61 on the EE and undefined (gcc folds
+   it to 0) on the host and the Vita; write `1ULL << n` or `(u64)1 << n` (the same
+   EE code). tools/host/longcheck.py (in `make test`) fails any L / UL
+   literal or `(long)` cast shifted by 32 or more (session 112).
 6. **Endianness** is little on both platforms; alignment rules differ only for
    128-bit types, which are platform code.
 7. **Floating point is not IEEE on the EE.** The R5900 FPU flushes denormals
