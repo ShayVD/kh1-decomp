@@ -17,9 +17,14 @@
  * KH1_HOST_TRACE=4 (session 77) prints, after each send's line, every distinct GS state
  * register value the send writes (one "gs REG VALUE" line each, in the order first written;
  * vertex registers left out), without the tags: tools/host/gsstate.py turns a run's lines into
- * the renderer's state list, the run-time twin of tools/host/dmawalk.py --state. */
+ * the renderer's state list, the run-time twin of tools/host/dmawalk.py --state.
+ *
+ * Every register write also goes to the GS register file (host/null/gsregs.c, session 79), which
+ * keeps the state across sends and counts the vertex kicks per draw state; KH1_HOST_TRACE=5
+ * prints each send's draw states after its gs lines. */
 #include "common.h"
 #include "dmawalk.h"
+#include "gsregs.h"
 
 int printf(const char *, ...);
 int sprintf(char *, const char *, ...);
@@ -85,11 +90,13 @@ static void gif_qword(GifStream *g, const u32 *q) {
             if (d == 0xE) gif_value(g, q[2] & 0x7F, q);
             else if (d == 0) { u32 prim[2] = { q[0] & 0x7FF, 0 }; gif_value(g, 0, prim); }
             else gif_value(g, d, q);
+            kh1_gs_packed(d, q);
             g->left--;
         } else if (g->flg == 1) {
             for (h = 0; h < 2 && g->left; h++, g->left--) {
                 u32 d = g->regs[g->k++ % g->nreg];
                 if (d != 0xE) gif_value(g, d, q + 2 * h);
+                if (d < 0xE) kh1_gs_write(d, q[2 * h], q[2 * h + 1]);
             }
         } else {
             g->left--;
@@ -108,6 +115,7 @@ static void gif_qword(GifStream *g, const u32 *q) {
         u32 prim[2] = { q[1] >> 15 & 0x7FF, 0 };
         gif_value(g, 0, prim);
     }
+    kh1_gs_giftag(g->flg == 0 && q[1] >> 14 & 1, q[1] >> 15 & 0x7FF);
     if (g->flg == 0) g->left = nloop * g->nreg;
     else if (g->flg == 1) g->left = (nloop * g->nreg + 1) & ~1u;
     else { g->left = nloop; g->image++; }
@@ -210,6 +218,19 @@ static void vif_block(VifStream *v, const u32 *q, u32 n, u32 addr) {
     for (i = 0; i < n * 4; i++) vif_word(v, q[i], addr + i * 4);
 }
 
+/* KH1_HOST_TRACE=5: each draw state the send drew in (host/null/gsregs.c), with the context's
+ * FRAME, ZBUF, TEST, ALPHA, TEX0 and CLAMP, and its kicks and primitives */
+static void gs_print_draws(void) {
+    static KH1GsDraw d[64];
+    int n = kh1_gs_draws(d, 64), i;
+    for (i = 0; i < n && i < 64; i++)
+        printf("kh1-host:   draw prim %03x frame %08x zbuf %08x test %08x alpha %08x%08x tex0 %08x%08x clamp "
+               "%08x%08x: %u kicks, %u prims\n", d[i].prim, d[i].ctx.frame.lo, d[i].ctx.zbuf.lo, d[i].ctx.test.lo,
+               d[i].ctx.alpha.hi, d[i].ctx.alpha.lo, d[i].ctx.tex0.hi, d[i].ctx.tex0.lo, d[i].ctx.clamp.hi,
+               d[i].ctx.clamp.lo, d[i].kicks, d[i].draws);
+    if (n > 64) printf("kh1-host:   draw ... %d states in all\n", n);
+}
+
 int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     static const char *const ids[8] = { "refe", "cnt", "next", "ref", "refs", "call", "ret", "end" };
     static u32 tags[4096][2];
@@ -221,6 +242,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     char extra[160], regs[400];
     extra[0] = 0;
     gs_nval = 0;
+    kh1_gs_clear_draws(); /* kh1_gs_draws: this send's; the registers stay */
     while (!done && !bad && ntags < 4096) {
         u32 w0, qwc, id, addr, next = tag + 16;
         if (!where(tag, 16)) { bad = KH1_DMA_TAG_OUTSIDE; break; }
@@ -314,6 +336,7 @@ int kh1_dma_walk(int ch, u32 chcr, u32 tadr, KH1DmaWhere where) {
     if (kh1_host_trace >= 4)
         for (i = 0; i < (int)gs_nval; i++)
             printf("kh1-host:   gs %02x %08x%08x\n", gs_val[i].reg, gs_val[i].hi, gs_val[i].lo);
+    if (kh1_host_trace >= 5) gs_print_draws();
     if (bad || kh1_host_trace == 3)
         for (i = 0; i < (int)ntags; i++) {
             u32 *t = (u32 *)(unsigned long)tags[i][0];

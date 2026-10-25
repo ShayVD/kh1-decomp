@@ -1045,6 +1045,34 @@ drops (PRMODE, TEXCLUT, SCANMSK, DTHE / DIMX, COLCLAMP, PABE, FBA, MIPTBP: one v
 which the upload itself replaces),
 and that GS memory itself must be modelled (targets read back as textures, the font in the Z buffer's top byte).
 
+### 5.1s Session 79: the GS register file on the host, the windows' packets and renderer B's state from the C
+
+Static only (the Mac was away until 2026-10-26). Only host/, tests/, tools/ and docs/ changed: kh1.elf is
+byte-identical, every out/build object bit-identical (sha1 of all 677 before and after), and the float ELF the same
+(fcheck.sh), so there is no float-untested.md row.
+
+**host/null/gsregs.c** (new; renderer-spec 5.1, "On the host"): the first piece of the Vita renderer that runs.
+dmawalk.c's GIF reader feeds it every A+D / PACKED / REGLIST write and each tag's PRE; it keeps 5.1's registers per
+context (TEX2 into TEX0's PSM and CLUT fields), keeps them across sends, and counts vertex and drawing kicks per draw
+state. `KH1_HOST_TRACE=5` prints each send's draw states; `tools/host/gsstate.py RUN.txt --draws` lists a run's.
+tests/host/gsregs_test.c (19 checks, in `make test` with dmawalk_test). Fake disc, stub:2: 86 sends as before, **4
+draw states, 392 kicks, 196 sprites** (the 3D target's clear and its copy to the display buffer, the Z area read as
+CT24, one fill), none blended. Valgrind 0 errors (to the overlay fault).
+
+**The text windows' per-draw packets** (renderer-spec 4.9, from the C; `tools/host/giftags.py` lists the GIF tag
+constants of 43 functions): a static header (4.8) then a scratch-frame packet that relies on the header's state;
+only SPRITE and TRISTRIP, always ABE, FST when textured; windows clip with a per-draw SCISSOR_1. **The message
+font's PSMT4HH half is drawn by every glyph whose table entry has `f7 >> 4 = 1`**: each glyph sprite carries its own
+TEX2_1 (PSMT4HL / PSMT4HH by `D_003E8D00`, CSA 0 / 1, CLD 0) after the header's TEX2 loaded the whole 256-entry CLUT
+(CLD 2); the 784 default glyphs are 196 cells x 4 layers. The window bevel (`func_00206748`) changes ALPHA_1
+between additive and **subtractive** inside one TRISTRIP: the Vita renderer splits a strip at a state change.
+
+**Renderer B's draw state** (renderer-spec 4.9): func_0015f128's 9-A+D template `D_00573E40` behind a CALL to the
+upload list `D_00573AC0`; func_0015f488 per draw (TEX0 `0x3600` PSMT8 / CLUT `0x3700`, the opaque pass `ATST GEQUAL
+AREF<=120` with Z written and the model's fog colour, the translucent pass `ATST LESS` with ZMSK 1, both blended
+`(Cs-Cd)*As+Cd`); func_0015f8c8's sub-rectangle uploads (texture animation); func_0015f388's reset (blending off,
+`ATST GEQUAL AREF 128`), placed in the draw list at four keys. 5.1's table has these values without a run.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
