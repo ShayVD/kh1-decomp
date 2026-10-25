@@ -81,7 +81,25 @@ typedef struct {
     u8 gstate, gfull;   /* KH1_GRP_*; past KH1_BATCH_GROUP or sampling its own target (never merged) */
     s32 ux0, ux1;       /* the group's scissor columns so far (its rows are grp[0].k's) */
     s32 cx0, cx1;       /* the column being repeated */
+    /* session 126: a command recorder's events (include/platform/cmdbuf.h, KH1_BEV_*); 0 for none.  Set
+     * after kh1_batch_reset (which clears it) */
+    void (*ev)(void *ctx, u32 what, const KH1BatchKey *k, u32 arg);
+    void *ev_ctx;
 } KH1Batcher;
+
+/* session 126: the events a recorder sees (renderer-spec 4.13 "Session 126"), in the order the batcher
+ * decides them:
+ *   OPEN    a batch opens with key k (before its first PRIM)
+ *   PRIM    a primitive joins the open batch: arg KH1_BEV_NEW for the one being added, else the column
+ *           group's primitive arg replayed under its own column (k: the key it is drawn with)
+ *   ABSORB  the primitive being added repeats the group under the next column: nothing is drawn for it
+ *   REC     the primitive being added is the group's primitive arg (a recorder keeps its vertices)
+ *   GROUP   a column group starts at the open batch; arg 1 when it can still merge (its batches must be
+ *           held), 0 when not (it shares a batch with what came before)
+ *   WIDEN   the column completed: every batch since the group's GROUP draws up to x arg (the union)
+ *   END     the group ends or can no longer merge: its batches may be submitted */
+enum { KH1_BEV_OPEN, KH1_BEV_PRIM, KH1_BEV_ABSORB, KH1_BEV_REC, KH1_BEV_GROUP, KH1_BEV_WIDEN, KH1_BEV_END };
+#define KH1_BEV_NEW 0xFFFFFFFFu
 
 void kh1_batch_reset(KH1Batcher *b);
 /* the batch key of a draw state and its render pass */

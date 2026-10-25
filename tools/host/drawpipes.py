@@ -24,6 +24,11 @@ a frame on a GPU (C_STATES are not in it: the C draws through the run's `batches
 each kick carries its vertices' signature, so a column copy's repeated columns merge (batch.h's column
 groups); the XYZ the C writes at run time are the packets' static values here.
 
+Session 126 (renderer-spec 4.13 "Session 126"): --passes runs the same sends through include/platform/cmdbuf.h's
+recorder and prints each send that opens more than one render pass with its passes in order and their load /
+store needs (a STORE here is a later pass of the same send sampling or drawing on the target), and the one-pass
+sends counted by target.
+
 Needs the user's ELF (the packets are its data); prints counts, names and decoded keys, never packet bytes.
 """
 from __future__ import annotations
@@ -167,10 +172,10 @@ def build_counter() -> Path:
     srcs = [ROOT / "tools/host/pipecount.c"] + [ROOT / "host/port" / f for f in
                                                 ("drawstate.c", "blend.c", "atest.c", "depth.c", "sampler.c",
                                                  "texfmt.c", "primasm.c", "batch.c", "target.c", "canvas.c",
-                                                 "vertex.c")]
+                                                 "vertex.c", "cmdbuf.c", "ring.c")]
     if exe.exists() and all(exe.stat().st_mtime >= s.stat().st_mtime for s in srcs) and \
             all(exe.stat().st_mtime >= (ROOT / "include/platform" / h).stat().st_mtime
-                for h in ("drawstate.h", "batch.h", "vertex.h", "target.h")):
+                for h in ("drawstate.h", "batch.h", "vertex.h", "target.h", "cmdbuf.h", "ring.h")):
         return exe
     exe.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["gcc", "-m32", "-malign-double", "-std=gnu89", "-O1", "-w", "-DKH1_HOST",
@@ -178,8 +183,8 @@ def build_counter() -> Path:
     return exe
 
 
-def batches(sends) -> int:
-    """the batches each send takes (pipecount --batches): runs of kicks with the same registers, breaks"""
+def send_lines(sends):
+    """each send's runs of kicks as pipecount's input (S, B ..., X, E)"""
     lines = []
     for fn, sname, seq in sends:
         last, run, nv = None, 0, 0
@@ -203,6 +208,39 @@ def batches(sends) -> int:
         if run:
             out.append("B %s %x %x %x" % (last[0], run, nv, last[1]))
         lines.append("S\n" + "\n".join(out) + "\nE\n")
+    return lines
+
+
+def passes(sends) -> int:
+    """session 126: each static send's render passes and their load / store needs (pipecount --passes)"""
+    exe = build_counter()
+    res = subprocess.run([str(exe), "--passes"], input="".join(send_lines(sends)), capture_output=True, text=True,
+                         check=True).stdout.splitlines()
+    per, cur = [], None
+    for line in res:
+        if line.startswith("send "):
+            cur = [line, []]
+            per.append(cur)
+        elif line.startswith("pass ") and cur:
+            cur[1].append(line)
+    print("# %d static sends walked; each send alone, every target taken as drawn before it (no clears seen: the"
+          " vertices are not passed)" % len(sends))
+    for (fn, sname, _), (head, ps) in zip(sends, per):
+        if len(ps) > 1:
+            print("%s (%s): %s" % (fn, sname, head.split(": ", 1)[1]))
+            for p in ps:
+                print("    " + p)
+    one = collections.Counter(p[0].split(": ", 1)[1].split(":")[0] for _, p in per if len(p) == 1)
+    print("# one-pass sends by target: " + ", ".join("%s %d" % kv for kv in sorted(one.items())))
+    for line in res:
+        if line.startswith("total:"):
+            print(line)
+    return 0
+
+
+def batches(sends) -> int:
+    """the batches each send takes (pipecount --batches): runs of kicks with the same registers, breaks"""
+    lines = send_lines(sends)
     exe = build_counter()
     res = subprocess.run([str(exe), "--batches"], input="".join(lines), capture_output=True, text=True,
                          check=True).stdout.splitlines()
@@ -230,6 +268,7 @@ def main() -> int:
     ap.add_argument("--no-c", action="store_true", help="the static packets only (no C_STATES)")
     ap.add_argument("-v", action="store_true", help="every draw state with its pipelines")
     ap.add_argument("--batches", action="store_true", help="the GPU batches and draw calls each static send takes")
+    ap.add_argument("--passes", action="store_true", help="each static send's render passes and load / store needs")
     a = ap.parse_args()
     if not (ROOT / "out/gen/data.tsv").exists():
         sys.exit("drawpipes: out/gen/data.tsv is missing: run make first")
@@ -252,11 +291,13 @@ def main() -> int:
                 continue
             g = rx if isinstance(rx, dmawalk.Gif) else rx.gif
             sends += 1
-            if a.batches:
+            if a.batches or a.passes:
                 batch_sends.append((fn.split(" via ")[0], sname, g.seq))
             for prim, r in kicks(g.seq):
                 states.setdefault(state_words(prim, r), {})[fn.split(" via ")[0]] = None
     nstatic = len(states)
+    if a.passes:
+        return passes(batch_sends)
     if a.batches:
         return batches(batch_sends)
     if not a.no_c:
