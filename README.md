@@ -89,7 +89,8 @@ nonmatchings/     work in progress (not built)
 include/          headers; platform/ wrappers, sce/ hand-written SDK declarations
 tools/            kh1tool.py (build helper), setup_toolchain.sh, self-tests
 docs/             findings: toolchain, versions, ELF, SDK, structs, workflow, portability, progress,
-                  vita-port-plan (phase 5)
+                  vita-port-plan (phase 5), renderer-spec (phase 3), sound-spec (the sound driver's
+                  commands)
 tests/selftest/   synthetic ELF used by `make test`
 ```
 

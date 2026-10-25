@@ -89,7 +89,8 @@ list them (`grep -rln __asm__ src --include=*.c | grep -v ^src/sdk`).
   effect slots, 4 streams, the BGM sequences, volumes) and plays them with `sceAudioOut` through a small
   mixer: VAG ADPCM for the banks, the sequence format still to document (a session of its own: the IOP
   module's command handler, read from the disc's IRX). The status block D_0063D640 the IOP wrote by DMA is
-  written by the mixer.
+  written by the mixer. **docs/sound-spec.md** (session 85) lists every command (number, arguments,
+  senders, meaning) and the status words the EE waits on.
 - **Movies**: the PSS files are MPEG-2 video for the IPU. The Vita's `sceAvPlayer` plays H.264 MP4, so either
   the extraction tool transcodes them (needs a host ffmpeg: the user's own data, never shipped) or the port
   links a software MPEG-2 decoder (libmpeg2, GPL: check the licence against ours first).
@@ -1253,6 +1254,40 @@ first output of display.c's `func_00110618`, whose w row is (0, 0, 1, 0): w = th
 camera matrix (`sceVu0CameraMatrix`). objdraw passes it to `func_001606d0`, which stores `D_002E26C0 x
 bone 0` as the model's first matrix, so `[3][3]` is the clip w of the model's origin, its depth from the
 camera. The sort is far first, as written.
+
+### 5.1y Session 85: the sound commands as an interface, renderer A's grid chains
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). Only docs/ and README.md changed: kh1.elf
+byte-identical, no object rebuilt, the float ELF the same (no float-untested.md row).
+
+**The sound driver's interface** (item 4a, new **docs/sound-spec.md**): snd_rpc.c's 51 functions sorted
+into transport (RPC 0 bind with the status / message block addresses and a mode 0 boot / 1 soft reset / 2
+room load; direct calls answer in word 0 of the shared buffer; queued 8-word records flushed as RPC 30
+once a frame), the status block (SE voices at +0, four streams at +0x1800, **the disc-error word at
++0x1C08** that io/cdqueue.c turns into the disc-error state after 30 frames, the transfer count at +0x1F00)
+and the commands: transfers (`0x26` free, 3 wave, 4 SE tables, `0xB` sequence, `0x28` voice bank), music
+(`0xC` start, `0xD` stop, `0xE` fade, `0x2F` / `0x30` the one polled answer), SEs (5 play, 8 volume, 6 stop,
+7 fade out, 2), streams (`0x12` voice from a VAG in EE memory, pitch = rate x 4096 / 48000; `0x13`, `0x14`;
+object SEs `0x29`, `0x2A`, `0x2B`), settings (`0xF` pause, `0x23` stereo / mono, `0x24` around movies,
+`0x27` per room). Two findings for the port: **RPC 30 sends only 0x2000 bytes, the first 256 of the
+queue's 1024 records** (the rest are dropped by the refill), and **`func_0011d2d0` searches the static SE
+table `D_004E3458`**, not the live pointer, so in a 128-slot room ppp's SE switch finds no slot (a console
+quirk to keep), and **`func_001ecb08`'s wildcard loops fall through** into a second pass that reads
+24 more 0xB4-byte "entries", up to 0x114 bytes past the 0x2000-byte status block (sound-spec 3: keep the
+bytes after the block readable; no layout check follows pointer walks, so none listed it). 16 entry
+points have no caller in the main ELF (RPCs 1, `0x16`-`0x19`, `0x1B`, `0x1D`, `0x1F`-`0x22`, `0x32`,
+commands 9 and `0x15`, the readers `func_001eced0` / `func_001ecf40`): for the dktitle.x / overlay check
+(5.2).
+
+**Renderer A's grid chains** (item 4b, renderer-spec 4.14, open question 6.8): `func_00107d30`'s case 3 is
+each visible map cell's second mesh (section 1 entry `i + 1`'s `{w8, w12}` tag), collected by
+`func_00107c48`, drawn by P3 at key 50000 after the opaque pass with no Z writes and a static FGE fan
+template; cases 0 / 1 are the cells' first meshes at 10020 (P0 / P6 and P2). The fade groups reuse chain
+3's head. For the port: one translucent grid pass after the opaque draws.
+
+**Item 4c (make `KH1_HOST_DMAC=defer` the default)**: not done. It waits for the real-disc room run (item
+2): the fake disc's stub:2 run has 13 nodes and no room, so it cannot show that the order holds with real
+draw lists. **Item 4d** (argcheck's 3 value uses) still waits for dktitle.x.
 
 ### 5.2 Session 60: overlays, dktitle.x
 
