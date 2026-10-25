@@ -302,9 +302,17 @@ rewrite matched code.
     been written there on the host). Each expands to the PS2's own tokens, so the objects stay
     bit-identical. `python3 -I tools/host/dmacheck.py` lists what is left (keep it at 0; `--list`
     lists every PlatDmaSend and where its chain comes from).
+14. **No PS2 address as a number outside the PS2 build** (session 73). Matched code that must
+    read memory through a literal address (to match) keeps the name for every other target:
+    `#if defined(KH1_SHIFTABLE) || !defined(KH1_PS2)` around the named form. `python3 -I
+    tools/host/abscheck.py` (after `make host-census`) reads the host objects, where a name is a
+    relocation and a number is not, and lists any memory operand at a PS2 address (main memory,
+    the hardware registers, the scratchpad) and any immediate that is exactly a PS2 symbol's
+    address. Keep it at 0.
 
 ## Known absolute addresses in matched code
 
-- func_00171078 (src/hand/text_00170000_s9_w9.c) reads `((s32 *)0x35BD40)[i]`: the original
-  used a hard-coded address (the delay-slot fill proves it). Phase 4 must turn it back into
-  `D_0035BD40`.
+- func_00171078 (src/ai/partyai.c) reads `((s32 *)0x35BD40)[i]`: the original used a
+  hard-coded address (the delay-slot fill proves it). The shiftable build (KH1_SHIFTABLE) and,
+  since session 73, the host and the Vita read `D_0035BD40.i_2[i]` instead; until then the host
+  object read PS2 address 0x35BD40 (abscheck found it). No other one: abscheck is at 0.

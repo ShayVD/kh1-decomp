@@ -158,9 +158,10 @@ void func_00170fa8(s32 arg0, s32 arg1, s32 arg2, s32 arg3, f32 fparg0) {
    the symbol the %lo fixup stops gas from filling the slot (nop).
    KH1_SHIFTABLE (the shiftable build, tools/shift/variants.py): use the
    symbol so the table can move; 4 bytes longer (the nop), which still fits
-   before func_00171098. */
+   before func_00171098.  The host and the Vita always use the symbol: the
+   literal read PS2 address 0x35BD40 there (session 73, tools/host/abscheck.py). */
 s32 func_00171078(s32 a, s32 *b) {
-#ifdef KH1_SHIFTABLE
+#if defined(KH1_SHIFTABLE) || !defined(KH1_PS2)
     return D_0035BD40.i_2[*b ^ 3];
 #else
     return ((s32 *)0x35BD40)[*b ^ 3];

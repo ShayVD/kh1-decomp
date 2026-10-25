@@ -128,7 +128,7 @@ Nothing in the port needs the PS2 addresses, but these still assume them (docs/s
   a symbol in C before the Vita build links; the M12 shifted build boots (session 29) only because the shift
   tools patch the rest.
 - **func_00171078**'s `((s32 *)0x35BD40)[i]` (portability.md "Known absolute addresses"): `D_0035BD40` on the
-  Vita (the KH1_SHIFTABLE variant already does it).
+  Vita and the host since session 73 (`!defined(KH1_PS2)`, as the KH1_SHIFTABLE variant; 5.1m).
 
 ## 5. Bring-up order
 
@@ -835,6 +835,55 @@ scratch headers that are gone. No change.
 layoutcheck 0, relcheck 0, abicheck 0, indcheck unchanged (241), argcheck unchanged (3 value uses), dmacheck 0.
 The fake-disc host run stops where session 71's did (the overlay entry; with `KH1_HOST_OVL=stub:2`,
 func_00132790 from func_00132c70). Valgrind was not run (not installed in this container).
+
+### 5.1m Session 73: the pointer DMA sends and the PS2 addresses as numbers
+
+Static only (the Mac was away). kh1.elf is byte-identical and **every out/build object is bit-identical**; the
+default float ELF loads the same bytes (fcheck: all same), so there is no float-untested.md row.
+
+**Found: func_00171078 read PS2 address 0x35BD40 on the host** (src/ai/partyai.c, the party AI's table lookup).
+The matched form is `((s32 *)0x35BD40)[*b ^ 3]` (portability.md "Known absolute addresses"); only the shiftable
+build used the name, so the host object read `mov 0x35bd40(,%eax,4)`: the first party AI step would have crashed.
+Now `#if defined(KH1_SHIFTABLE) || !defined(KH1_PS2)` (portability.md rule 14). The host reads D_0035BD40.
+
+**tools/host/abscheck.py** (new; after `make host-census`): `objdump -dr` of the 550 game objects under out/host
+(src, the drafts, data; not the null platform or the port). On the host a name is a relocation and a number is
+not, so any memory operand with no relocation whose displacement is a PS2 address (main memory 0x00100000 up,
+also through the 0x2 / 0x3 mirrors; the hardware registers 0x1000xxxx-0x1200xxxx; the scratchpad) is a row, and
+so is an immediate (mov / push / lea / cmp) that is exactly the address of a PS2 symbol (out/shift's linked ELF;
+0x100000 left out: _ftext is also the windows' GS word). **0 rows** after the fix; REVIEWED holds 4 patterns:
+objwin's end tag `cnt * 13 + 0x70000001` built with lea, and func_001bfe50's task heap offsets (0x16BC00,
+0x170700, 0x171388 from its base). Other immediates in those ranges are tags, GS words, masks (`& 0x7fffff`) and
+colours. The source-side search (`0x1000xxxx` / `0x1100xxxx` / `0x1200xxxx` outside src/sdk and include/platform)
+finds only DMA tags (sceneeff, drawlist, wave) and pad masks (padrec, selector): no register access outside the
+wrappers.
+
+**The 21 pointer sends** (dmacheck `--list`, "pointer"), each followed to its builder:
+
+| send | chain | checked |
+| --- | --- | --- |
+| dmapool func_00106b18 (arg0) | static packets (fldtext, selector, framectl, objwin) and objwin's func_00121e28 buffer | objwin kind 1: `((w + 2) * (h + 2) * 13 + 2) * 16` bytes, func_0010a780 mode 1 writes the tag, the GIF tag and cnt * 13 qwords: exact |
+| dmapool func_00106b98 (+0x10) | func_00106bd8's argument: field.c's D_0029B170 / 1C0 / 200 / 260, texanim's D_002A4310 / 43A0 / 44E0 / 4570 | static data |
+| texanim func_001019c8 (+0x10) | func_00101970's 32-byte header: a ref to D_002A4160 / D_002A4180 (2 qwords) then a refe of 4 / 8 qwords at the +0x14 buffer (64 / 128 bytes) | exact |
+| texanim func_00101f30 / func_00101f80 | a 16-byte refe of 4 qwords to the 64-byte func_00101fc8 / func_00102070 packet (8 u64); a 48-byte copy of D_002A4230 / 4260 / 4400 / 4430 with word 9 pointing at the frame's image (D_0029BE20) | exact; the image address is a name |
+| shadow func_001274c8 | D_004F8270, D_004F7820[k], D_004F7C10[k] | bss |
+| shadow func_00127500 | func_00127568's `n * 224 + 16` buffer: 48 bytes a vertex, 32 a batch header, 16 a batch end | a lone front-facing quad needs 256 bytes of 240; func_00121e28 rounds to 128, so 256: fits (on both builds) |
+| drawlist func_00237f20 / func_002380c0 | the caller's two buffers, packets from func_002378c8 / 7790 / 7d48 / 7ec0 | the end tag is `*r \|= 0x70000000` on the qword after the last packet (its qwc bits are whatever was there, sent as data on the PS2 too); both set TTE (`*chan \|= 0x40`, word 0 of the channel is CHCR) |
+| gspkt func_00237018 | the caller's packet, an end tag of n - 1 | `(u32)p < PLAT_SPR_BASE` picks the SPR bit: the host's PlatSpr, PLAT_DMA_SPR 0 |
+| opdma func_001aa008 / 1aa650 / 1aaf30 | D_0061EEA0's priority lists (one definition since session 68) | as 5.1l |
+| mdlgs func_0015ff78 | the model file's mesh chain (`table[byte7].x18`), relocated at load by adding the base | fits a 32-bit pointer (host, Vita) |
+| objdraw func_00135ed0 (two) | `C02Q buf[128]` on the stack | about 40 and 20 qwords |
+| keth func_001a8c40 | `*buf` (D_00616224's cursor), an end tag of the node's packet | the packet's extent is func_001a7718's |
+| frame func_001e05a8 | D_003DAE30, D_003DAF60, D_003DB050 | static data |
+| text func_001ef950 (three) | `u128 a[11]` / b on the stack: func_0011fbb0's 11 qwords | as 5.1l |
+
+**For the renderer**: word 0 of a PlatDmaChan is the game's CHCR. drawlist sets TTE on the GIF channel and
+nothing clears it (libdma's sceDmaSend keeps the struct's bits), shadow's func_00127500 sets chain mode and
+clears TTE on VIF1 (renderer-spec §2.1 has the VIF1 cases); the Vita chain walker reads TTE from there.
+
+layoutcheck 0, relcheck 0, abicheck 0, dmacheck 0, abscheck 0, indcheck unchanged (241), argcheck unchanged (3
+value uses). The fake-disc host run stops where session 72's did (the overlay entry; with `KH1_HOST_OVL=stub:2`,
+func_00132790 from func_00132c70). **Valgrind: 0 errors** up to the overlay entry (the SIGILL).
 
 ### 5.2 Session 60: overlays, dktitle.x
 
