@@ -286,7 +286,11 @@ rewrite matched code.
     D_00650120's end on the host). `python3 -I tools/host/relcheck.py` (session 70, after `make
     host-census`) reads the host objects' relocations, where the C name and its offset are kept,
     and lists each `name + offset` outside the host definition holding the name; keep it at 0 too
-    (`--all` adds references exactly at an end: loop ends and C's `&a[N]`, read in session 70). A
+    (`--all` adds references exactly at an end: loop ends and C's `&a[N]`, read in session 70).
+    Since session 71 it also reads the PS2 objects' HI16 / LO16 pairs (ee-gcc keeps offsets in
+    the load displacement, so these add nothing so far) and compiles the unlinked drafts in
+    nonmatchings/ for the host; a DMA buffer's extent is the packets written into it, not its
+    C type (D_00573AC0 holds the packet chain and the Pk2 that calls it, vita-port-plan 5.1k). A
     separate `s32 [5]` at an address that is 4 but not 8 aligned does not link: ee-gcc pads it to 8;
     merge it with the name before it instead (bss_0064.c's D_00642C70).
 
