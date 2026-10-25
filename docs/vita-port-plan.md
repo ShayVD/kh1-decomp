@@ -1289,6 +1289,48 @@ template; cases 0 / 1 are the cells' first meshes at 10020 (P0 / P6 and P2). The
 2): the fake disc's stub:2 run has 13 nodes and no room, so it cannot show that the order holds with real
 draw lists. **Item 4d** (argcheck's 3 value uses) still waits for dktitle.x.
 
+### 5.1z Session 86: the status block read past its end, pointer walks, the null sound server, frame pacing
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). kh1.elf byte-identical; two PS2 objects
+changed (src/data/data_0063.s, bss_0063.c), every other out/build object bit-identical; the float ELF
+changed (float-untested.md row 86).
+
+**The status block's tail** (item 4a, sound-spec 3): the piece `D_0063D640` (src/data/data_0063.s) now runs
+to 0x0063F740 and holds the IOP's message buffer `D_0063F640` at +0x2000 (its C definition in bss_0063.c
+removed; RPC 0 sends both addresses, the IOP writes both). `func_001ecb08`'s fall-through reads to +0x2118;
+the last 0x18 bytes (entry 47: the text words `D_0063F744` ... `D_0063F754`) cannot join the piece, since
+MIPS gas pads a section aligned to 16 or more to 16 and 0x2118 would run into `D_0063F758`; on the PS2
+entry 47 cannot match (`D_0063F754` is never written: no `0xF754` displacement in the ELF), so the host
+gives the piece 0x18 zero bytes (census.py `HOST_TAIL`, applied to the x86 copy of the piece only).
+layoutcheck 0, relcheck 0, abscheck 0.
+
+**tools/host/walkcheck.py** (new, portability rule 12): every pointer a loop steps (`p++`, `p += n`,
+`p = p + n`) that a later loop reads with no assignment between, from clang's tree of every game file and
+draft (indcheck's flags, 23 s); loops in other branches of one `if` and loops followed by a `return` are
+left out, and `p = p->next`, `p = next(p)` and a packet builder's `p = put(..., p)` are not steps. 17
+rows, all read (REVIEWED): func_001ecb08's three (the fix above), cmdmenu's sprite index list, the
+notice's 9 sprites, two 256-entry CLUT fills (kemat, kemdltfd: entries 0..n-1 then n..255), pppapi's
+relocation header, fldtext's 16-word output, task.c's context carving (0x163C00 bytes below the task
+table at +0x16BC00), the memset and the strcat in vmath.c. 0 WALK.
+
+**The null sound server** (item 4b, sound-spec 5): host/null/sound.c takes plat_null.c's sound RPCs. It
+keeps the SE and stream entries of the status block (`used` set on a play, cleared on a stop, after a
+fade, or by time: 60 frames for an SE, the VAG length for a voice), the transfer count (now with
+command `0x28`, which session 67's answer left out), and prints each command at `KH1_HOST_SND=trace`;
+**tools/host/sndlog.py** sums a run up; tests/host/sound_test.c (18 checks) runs in tests/selftest.sh. The
+fake disc's stub:2 run: 43 commands, then func_00132790 as before; valgrind 0 errors to the overlay fault
+(the plain run, 23 commands).
+
+**Frame pacing and the system-message band** (item 4c, renderer-spec 4.15, open questions 9 and 10):
+the frame end waits for one field and then `D_002BBE0C` more (30 fps in the field, 60 in the pause, game
+over and reset); `D_002BBDFC`, the game's time step, is fields x `D_002BBDEC` x the script speed, capped at
+5; `D_002BBDEC` is 1.0 (written once) and `func_0010fea0`'s constants are the 100-hour play-time cap at 60
+/ 50 Hz. `func_0010f5f8` is a 512 x 128 band on read circuit 1 from block `0x3600`, opaque over the frozen
+frame: no controller, the disc error, a read error and its retry, and the pause's strings. The movie copy
+from `0x118000` (`func_00106000` case 2) has no main-ELF selector (no store of 2 to `D_002BBE04`): for the
+overlay check. Item 4d (`KH1_HOST_DMAC=defer` as the default, argcheck's 3 value uses) still waits for
+the Mac.
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

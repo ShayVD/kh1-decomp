@@ -1467,6 +1467,79 @@ and the fading groups' A and B layers scaled by y.
 chains share the case 0 / 1 tables' tail with the per-frame lists, unbounded by the C (the room data keeps
 it in range on the console; shiftable-plan.md "Session 24" for why these chains are one piece each).
 
+### 4.15 Frame pacing and the system-message band (session 86, static)
+
+Read from the C; not checked on a console or a host run. Answers open questions 9 and 10.
+
+**The vertical blank** (`func_00110218`, display.c) is the game's `sceGsSyncVCallback` handler, set by
+`func_00110458` (`func_00266a10`). Each field it reads CSR.FIELD into `D_002BBDE8`, counts the
+frame counters (`D_002BBDF0` the scene clock, held while `D_002BD114` (a system message, below) or
+`D_002BCC24` is set; `D_002BBDF4` the play time; `D_002BBDF8` free-running; **`D_004D90F4` the fields
+since the last frame end**) and calls `func_0010c378`, which signals semaphore `D_00495258` if
+anything waits on it (`PlatIReferSemaStatus`, `PlatISignalSema`).
+
+**The frame end** (`func_001104e0`; every main-loop state calls it once a frame, gamestate.c's state
+macro, framectl.c, pause.c, the boot, the sound waits): `func_0010c348` signals the worker thread
+(`D_00495260`: util/thread.c runs up to two queued callbacks, `D_002B75A0`) and waits for the next
+field (`D_00495258`). Then, if fewer than `D_002BBE0C + 1` fields have passed, it waits
+`D_002BBE0C` more. So **`D_002BBE0C` is the frame interval minus one**: 1 (30 fps: two fields a
+frame) from a room's start (roomload.c `func_00113558`), the movie / title states (gamestate.c) and
+the pause's resume; 0 (60 fps) in the pause (`func_00114250`), the game over and the reset
+(`func_00110458`). A frame that already took longer does not wait more (no catch-up).
+
+**The time step** `D_002BBDFC` = fields passed x `D_002BBDEC` x `D_002BBE00`: `D_002BBE00` the
+script's game speed (vm_lib.c: percent / 100; objscmd.c sets it; 1.0 at a state reset); x 2 when
+`D_002BBE10` (only ever cleared: no writer in the main ELF); capped at 5.0, or 128.0 while
+`D_002BC740 == 1` (`D_0037A378.b0`, the field's flag that also makes the frame copy black:
+`func_00106000`). 98 places in src/ read it: the game's per-frame delta in 1/60 s units. Then
+`D_004D90F4` = 0.
+
+**`D_002BBDEC` is not a 30 / 60 switch**: it is the time a field is worth in 1/60 s, written once,
+1.0, by `func_00110068` (the only store in the main ELF). `func_0010fea0` sets the play-time cap
+`D_004D90F0` from it: **`0x14996C4`** (21,600,964 fields: 100 hours at 60 Hz, plus 964) at 1.0,
+**`0x112A84E`** (18,000,974: 100 hours at 50 Hz) otherwise, so the else is a 50 Hz build's value
+(1.2: inferred, never set in this NTSC-J build). The vblank counts `D_002BBDF4` up to the cap; at it,
+while the save's lap count (`D_002BCB60->w15c`, `func_00111798`) is below 3 it runs on 60 more fields,
+then adds a lap (`func_001117b8`) and starts again from 0; from the third lap it holds at the cap.
+playtime.c reads `D_002BBDF4 x D_002BBDEC` as hours (216,000) / minutes / seconds.
+
+For the port: run the frame loop off the display's vertical blank with the same two numbers: wait one
+field, then up to `D_002BBE0C` more, and feed the elapsed field count into the same formula. On a 60 Hz
+Vita display with vsync the 30 fps states keep their pacing. The field parity `D_002BBDE8` is written
+by the handler and read by nothing in the main ELF (the overlay check).
+
+**The system-message band** (`func_0010f5f8`; the same writes in screen/fade.c `func_001137f8`):
+`PMODE = 0xFF03` turns on both read circuits with circuit 1 on top at fixed alpha 0xFF (MMOD 0, ALP
+0xFF: opaque); `DISPFB1 = 0x11B0` is FBP `0x1B0` = **block `0x3600`**, FBW 8 (512 pixels), PSMCT32;
+`DISPLAY1 = 0x0007F9FF020D227C` is DX 636, DY 210, MAGH 4 (5 clocks a pixel), DW 2559 (512 pixels),
+DH 127: **a 512 x 128 band** in the middle of the screen. Circuit 2 keeps showing the last game frame.
+The band's pixels are drawn into the texture slot at block `0x3600` by `func_0010f580` / `func_0010f5a8`
+/ `func_0010f5d0` (the static packets `D_002BBC20`, `D_002BBCF0`, `D_002BBD30`) and the message font
+(`func_001fd100`, `func_001f1ed8` with the strings `func_001efc10(n)`). `func_0010f658(0)` ends it:
+`PMODE = 0x22` (circuit 2 only, MMOD 1). Who shows it: `func_0010f918` (framectl.c), each frame from the
+main loop, runs a loop of its own while any of `D_002C5968`'s three flags is up, with the game frozen
+(`D_002BD114` = 1: the scene clock stops) but the pads, the sound and the frame end running:
+- b0, **no controller** for 31 frames (pad/padread.nostrict.c): message 1;
+- b1, **the disc error** (io/cdqueue.c, from the sound status block's +0x1C08 for more than 30 frames,
+  docs/sound-spec.md 2): message 2;
+- b2, **a read error** (io/discfile.c, which waits on the loader thread until it is cleared): message 3,
+  then message 4 once pad 2's `0x2000` button is seen (`D_004D5B0C`), and the flag is cleared;
+- and screen/fade.c's `func_001137f8` (the pause's colour overlay) draws five strings, `func_001efc10(5)`
+  to `(9)`, 32 pixels apart at y 54 into the same band (inferred: the pause's title).
+The pause screen (pause.c `func_00113e28`) is started with the flags (`fl`) when the loop starts and
+ended with 0. For the port: one 512 x 128 overlay composited opaque over the frozen frame at the
+DISPLAY1 rectangle (scaled with the frame), cleared when PMODE goes back to 0x22.
+
+**The `0x118000` area** (open question 10's other half): `func_00106000` case 2 copies a 512- or
+640-wide frame from `TBP0 0x1180` (`0x118000`) to the display (`func_001110d0` = the movie overlay's
+`entry(3, 0)`, the movie's width) and sets the display to that width (`func_0010fee8(v, 448)`). Case 2 is
+`D_002BBE04 == 2`, and **no code in the main ELF stores 2** (its writers store 0, 1, 3 and 4: the
+script's screen effects 1 / 4 (objscmd.c `func_0012b450`, vm_lib.c), 3 after a movie (dkmovie.c
+`func_001111b0`, gamestate.c's state macro), whose case 3 clears to black and goes back to 0). So the
+movie frames reach the screen through `0x118000` and case 2 only when the movie overlay dkmovie.x sets it
+(inferred; for the overlay check, vita-port-plan 5.2). `func_0010b6c0` (objwin.nostrict.c) also draws
+there (§3.1).
+
 ## 5. Mapping to a modern API
 
 For a Vulkan/GL-class backend (the Vita's GXM has the same concepts).
@@ -1753,10 +1826,17 @@ never go in the repo.
    template), case 3 each visible cell's second mesh (P3 env map / UV scroll, key 50000, no Z writes,
    blended, fogged), and the fade groups reuse case 3's head. What the second meshes are on screen
    (inferred: water / glass / glint layers) waits for a boot or a real-disc host run.
-9. VSync and frame pacing: the constants in `func_0010fea0`, the 30/60 fps
+9. ~~VSync and frame pacing: the constants in `func_0010fea0`, the 30/60 fps
    switch (`D_002BBDEC`), and where the main loop waits for the vertical
-   blank.
-10. `0x118000` display area and the special `PMODE/DISPFB1` setup of
-    `func_0010f5f8`: which screens use them.
+   blank.~~ *Session 86 (§4.15):* read from the C. The frame end `func_001104e0` waits for one field
+   and then `D_002BBE0C` more (1 = 30 fps in the field, 0 = 60 fps in the pause, game over and reset);
+   `D_002BBDEC` is the 60 Hz field's worth in 1/60 s (1.0, written once), and `func_0010fea0`'s two
+   constants are the play-time cap, 100 hours at 60 Hz / 50 Hz. Not checked on a console.
+10. ~~`0x118000` display area and the special `PMODE/DISPFB1` setup of
+    `func_0010f5f8`: which screens use them.~~ *Session 86 (§4.15):* `func_0010f5f8` is the
+    system-message band (512 x 128 from block `0x3600` on circuit 1, opaque over the frozen frame): no
+    controller, the disc error, a read error and its retry, and the pause's strings. `0x118000` is the
+    movie copy's source (`func_00106000` case 2), which only the movie overlay can select (no main-ELF
+    store of 2: the overlay check).
 11. The runtime-loaded code at `0x00F20000` (docs/elf-notes.md) may draw;
     it is not covered here.

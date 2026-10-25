@@ -98,6 +98,11 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/gsmem_test.c" "$ROOT/host/null/dmawalk.c" "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c"
   "$W/gsmem_test" > "$W/gsmem.log" || { grep -v '^kh1-host:' "$W/gsmem.log"; exit 1; }
   tail -n 1 "$W/gsmem.log"
+  # the null sound server (host/null/sound.c, session 86)
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/sound_test" \
+      "$ROOT/tests/host/sound_test.c" "$ROOT/host/null/sound.c"
+  "$W/sound_test" > "$W/sound.log" || { cat "$W/sound.log"; exit 1; }
+  tail -n 1 "$W/sound.log"
 else
   echo "selftest: no gcc -m32, dmawalk_test skipped"
 fi

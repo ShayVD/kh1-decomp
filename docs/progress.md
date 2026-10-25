@@ -15,16 +15,16 @@ _Last updated 2026-10-25._
 <!-- phases -->
 ## By project phase (estimate, kept by hand; refresh it at the end of each session)
 
-Session 85 (2026-10-25). Only phase 1 and the main ELF's share of phase 2 are measured; the rest is a judgement
+Session 86 (2026-10-25). Only phase 1 and the main ELF's share of phase 2 are measured; the rest is a judgement
 from the docs named.
 
 | Phase | Done | Basis |
 |---|---|---|
 | 1. Toolchain, repo skeleton, first matches | 100% | ee-gcc 2.96 pinned and checked (docs/toolchain.md), make + objdiff, kh1.elf byte-identical |
 | 2. EE decomp (gameplay, menus, scripting, collision, audio control) | 90% | main ELF 6,979 / 6,988 functions (99.87%); 9 hard functions left; the overlays (dktitle.x, dkmovie.x, wm.x, gb.x, the summons, xl_limit.x) not started (vita-port-plan 5.2) |
-| 3. VU1 microcode and GS usage as a renderer spec | 78% | all 22 VU programs inventoried, renderers A and B and the GS state, memory map, draw order (renderer B's depth key settled), both texture animation kinds and the map grid's three chains written up (renderer-spec 2-5, 4.14); not yet checked against a real-disc host run, open questions in renderer-spec 6 |
+| 3. VU1 microcode and GS usage as a renderer spec | 80% | all 22 VU programs inventoried, renderers A and B and the GS state, memory map, draw order (renderer B's depth key settled), both texture animation kinds, the map grid's three chains, frame pacing and the system-message display written up (renderer-spec 2-5, 4.14, 4.15); not yet checked against a real-disc host run, open questions in renderer-spec 6 |
 | 4. Shiftable cleanup (no dependence on the original layout) | 70% | code moves (m1 / m12 build), 2,041 data names float; the eight float builds since session 30 are unbooted, data not yet fully owned by src/ (docs/shiftable-plan.md, float-untested.md) |
-| 5. Vita bring-up | 11% | step 1 of 8 (host build) mostly done: all game C links and boots to the first overlay call on a null platform with a GS register and memory model; the draw list's replay point found (the frame-end wait, 5.1x); the sound driver's commands written up as the audio layer's interface (docs/sound-spec.md); no vitasdk build, extraction tool, renderer, sound or overlays yet (vita-port-plan 5) |
+| 5. Vita bring-up | 12% | step 1 of 8 (host build) mostly done: all game C links and boots to the first overlay call on a null platform with a GS register and memory model; the draw list's replay point found (the frame-end wait, 5.1x); the sound driver's commands written up as the audio layer's interface (docs/sound-spec.md) and kept by a null sound server on the host (5.1z); no vitasdk build, extraction tool, renderer, sound or overlays yet (vita-port-plan 5) |
 <!-- /phases -->
 
 ## By address segment (`[[segment]]` in kh1.toml)

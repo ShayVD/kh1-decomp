@@ -58,7 +58,8 @@ and the IOP's copy of the block replaces the word once it has the queue, countin
 finishes (inferred). Boot (`func_0011cd20`) spins until it is non-zero after flushing; the bank task
 `func_0011cba0`, the object sounds (objse.c, objse.nostrict.c), the summons (summon.c), the object loads
 (objreq.c) and the soft reset wait for it to be 0. The null platform (host/null/plat_null.c) takes the sent
-transfers off it a frame later; a Vita layer has to do the same once the data is copied, or every bank load
+transfers off it a frame later (session 86: command `0x28` too, which it had left out: a party voice
+bank's count would never have come back, not yet reached on the fake disc); a Vita layer has to do the same once the data is copied, or every bank load
 hangs.
 
 **The message buffer** `D_0063F640` (256 bytes): `func_001ecf40(dst)` copies a string the IOP left there
@@ -122,9 +123,11 @@ fall through**: after one finds nothing, the exact-match loop runs on with the p
 entries, so it reads "entries" 24-47 at the same 0xB4 stride (+0x10E0 to +0x2114: the stream area, the
 words at +0x1C08 / +0x1F00, and 0x114 bytes past the block, into the message buffer `D_0063F640` and what
 follows it). A match there needs a negative id or sub stored at the right place, so it answers 0 in
-practice, but a port must keep 0x120 readable bytes after the block (the host build defines the block and
-the message buffer apart: the read lands on whatever the host linker put next; none of the layout checks
-lists it, they do not follow pointer walks). Quirk to keep:
+practice, but a port must keep 0x118 readable bytes after the block. Since session 86 the block's piece
+(src/data/data_0063.s) holds the message buffer too (0x2100 bytes, as on the PS2), and the host adds 0x18
+zero bytes after it (census.py HOST_TAIL) for entry 47, which on the PS2 reads the text words
+`D_0063F744` ... `D_0063F754` and cannot match (`D_0063F754` is never written, so a match needs id 0 and a
+negative sub against the pointer `D_0063F748`). tools/host/walkcheck.py finds such walks. Quirk to keep:
 `func_0011d2d0` (cmd 2) searches the static table `D_004E3458`, not the live pointer `D_004E3450`, so in a
 room that uses the 128 heap slots (roombg.c `func_0011c898(1)`) it finds stale or no slots.
 
@@ -168,3 +171,28 @@ loads on it.
 Open: the meaning of `0xC`'s last three words, cmd 2's value, RPC `0x24` / `0x27`, the slot numbers -1 /
 -3 ... -9, and every command with no caller in the main ELF; the file formats behind commands 3, 4 and
 `0xB`. The IOP module (on the disc, the user's own copy) settles all of these.
+
+## 5. The null server on the host (session 86)
+
+host/null/sound.c is the EE half of the Vita audio layer without the audio: plat_null.c's
+`PlatSifCallRpc` hands it every call. It keeps the status block as section 4 asks (the transfer count; command
+5 takes the first free of the 24 SE entries, 6 / 7 free it (7 after its frames), an SE ends by itself
+after 60 frames since its length is in the wave bank; `0x12` takes a free stream for the VAG's length,
+size / 16 x 28 samples at pitch x 48000 / 4096 Hz, `0x29` for 60 frames; `0x13` / `0x2B` stop them;
+the bind (RPC 0) ends every voice), so objse's slots, `func_0011e248` and the event scripts' SE waits
+see sounds end as on the console (before, every `used` read 0: everything ended at once). Bank -100
+matches every bank and a negative id or sub any (from the init's `(-100, -1, -1)` and
+`func_001ecb08`'s wildcards: inferred). With 24 voices in use a new SE is dropped (the IOP's choice is
+not known). `KH1_HOST_SND=trace` (or `KH1_HOST_TRACE=6`) prints each record and RPC:
+
+    kh1-host: snd FRAME q 0x05 se-play bank=2 id=12 sub=0 left=16383 right=16383
+    kh1-host: snd FRAME rpc 0x27 room-setting 10 0 ...
+    kh1-host: snd FRAME end se bank=2 id=12 sub=0
+
+and `python3 -I tools/host/sndlog.py RUN.txt [--frames]` sums them up (commands, RPCs, transfers by
+kind and slot, music starts, SEs by (bank, id), voices, the most records one frame sent).
+tests/host/sound_test.c (tests/selftest.sh) checks the server on made-up queues (18 checks). On the
+fake disc's boot (`KH1_HOST_OVL=stub:2`): 43 commands to the room load (38 `0x26` frees, a wave and an
+SE-table transfer to slot 2, two music stops, an SE stop) and the RPCs bind x2, `0x27` x2, pause x1; no
+SE plays before the fault.
+

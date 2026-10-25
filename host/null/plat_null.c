@@ -181,43 +181,13 @@ int PlatSifBindRpc(void *client, unsigned int num, unsigned int mode) {
     *(u32 **)((u8 *)client + 0x24) = null_server;
     return 0;
 }
-/* The sound server's answer is word 0 of recv (src/sound/snd_rpc.c), which the game shares
- * with send: unanswered, a call reads back its own request. The one answer the main ELF
- * waits on is RPC 0x30 (func_001ed600), the event command func_001e8b50 polling until what
- * RPC 0x2F (func_001ed5a8) started is ready: with no IOP it is ready at once (1). The other
- * answers (RPCs 1, 0xF, 0x1F-0x22, 0x27, 30 ...) are not read by any caller.
- *
- * The status block (RPC 0's word 0, D_0063D640) is the IOP's to write, and one word of it
- * the game waits on: +0x1F00 (D_0063F540, func_001ecfd8) counts the bank transfers not yet
- * done. The EE adds one for each transfer it queues (commands 3, 4 and 0xB: func_001ed658,
- * func_001ed220, func_001ed460) and the IOP's copy takes over once it has them. Boot
- * (func_0011cd20) waits for the count to be non-zero after sending the queue (RPC 30); the
- * sound objects (objse.c), the summons (summon.c), the bank task func_0011cba0 and the soft
- * reset (func_00109658) wait for it to be 0 again. Unanswered it stayed at 2 from boot on. With
- * no IOP, the transfers a sent queue holds are done at the next frame (null_iop_frame). */
-#define NULL_SND_PENDING 0x1F00
-static u8 *null_snd_status;
-static s32 null_snd_landing;
+/* The sound server (17, src/sound/snd_rpc.c) is host/null/sound.c's null server: it keeps the
+ * status block the game polls (the bank transfer count, the SE voices and streams) and, with
+ * KH1_HOST_SND=trace, prints each command (docs/sound-spec.md). No other server is bound. */
+void kh1_null_snd_rpc(unsigned num, void *send, int ssize, void *recv, int rsize);
 int PlatSifCallRpc(void *client, unsigned int num, unsigned int mode, void *send, int ssize, void *recv, int rsize, void (*end)(void *), void *param) {
-    if (num == 0 && send != 0 && ssize >= 4) null_snd_status = (u8 *)(unsigned long)((u32 *)send)[0];
-    if (num == 30 && send != 0) {
-        /* the queue: 8-word commands, unused slots -1 (func_001ed000, func_001edba0) */
-        s32 *q = send;
-        s32 i;
-        for (i = 0; i < ssize / 32 && q[i * 8] != -1; i++)
-            if (q[i * 8] == 3 || q[i * 8] == 4 || q[i * 8] == 0xB) null_snd_landing++;
-    }
-    if (num == 0x30 && recv != 0 && rsize >= 4) *(u32 *)recv = 1;
+    kh1_null_snd_rpc(num, send, ssize, recv, rsize);
     return 0;
-}
-/* a frame (kh1_host_vblank): the transfers sent before it are done */
-void kh1_null_iop_frame(void) {
-    s32 *pending;
-    if (null_snd_status == 0 || null_snd_landing == 0) return;
-    pending = (s32 *)(null_snd_status + NULL_SND_PENDING);
-    *pending -= null_snd_landing;
-    if (*pending < 0) *pending = 0;
-    null_snd_landing = 0;
 }
 /* iop.h: the reboot and the module loads succeed (module id 1), PlatSifSyncIop 1 */
 int PlatSifLoadModule(const char *name, int arglen, const char *args) { return 1; }
