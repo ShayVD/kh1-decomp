@@ -113,6 +113,15 @@ def compile_one(cc, path):
     return path, False, errs
 
 
+# Zero bytes after a data piece on the host only (session 86): code that reads past the piece onto the
+# PS2's next variable, where the piece cannot hold it. snd_rpc.c's func_001ecb08 reads the status block
+# D_0063D640 to +0x2118 (docs/sound-spec.md 3); the piece holds 0x2100 (MIPS gas pads a section aligned
+# to 16 or more to 16, and 0x2118 would run into D_0063F758). The PS2's last 0x18 bytes (entry 47: the
+# text words D_0063F744 ... D_0063F754) cannot match the search (D_0063F754 is never written, so a match
+# needs id 0 and a negative sub against the pointer D_0063F748); zeros cannot either (`used` 0).
+HOST_TAIL = {"D_0063D640": 0x18}
+
+
 def assemble_data():
     objs = []
     d = os.path.join(OUT, "data")
@@ -122,6 +131,8 @@ def assemble_data():
             continue
         src = open(os.path.join(ROOT, "src", "data", f)).read()
         src = re.sub(r"^(\s*)\.word\b", r"\1.long", src, flags=re.M)
+        for name, n in HOST_TAIL.items():
+            src = re.sub(r"^(\s*PIECE_END %s,.*)$" % name, r"\1\n\t.space 0x%x" % n, src, flags=re.M)
         tmp = os.path.join(d, f)
         open(tmp, "w").write(src)
         obj = tmp[:-2] + ".o"

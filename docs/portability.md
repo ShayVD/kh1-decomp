@@ -297,6 +297,16 @@ rewrite matched code.
     C type (D_00573AC0 holds the packet chain and the Pk2 that calls it, vita-port-plan 5.1k). A
     separate `s32 [5]` at an address that is 4 but not 8 aligned does not link: ee-gcc pads it to 8;
     merge it with the name before it instead (bss_0064.c's D_00642C70).
+
+    Neither check follows a pointer a loop moves: snd_rpc.c's func_001ecb08 steps `p` over the
+    24 SE entries in a wildcard loop and, finding nothing, runs its exact-match loop on from entry
+    24, 0x118 bytes past the status block (docs/sound-spec.md 3). `python3 -I tools/host/walkcheck.py`
+    (session 86, clang's tree, no build needed) lists each pointer a loop steps (`p++`, `p += n`,
+    `p = p + n`) that a later loop reads with no assignment in between, leaving out loops in other
+    branches of one `if` and loops a `return` follows; keep its WALK rows at 0 (17 REVIEWED: the
+    status block, CLUT fills, packet and file walks read in order). A piece that cannot hold the
+    whole reach (MIPS gas pads a section aligned to 16 or more to 16) gets zero bytes after it on
+    the host only, census.py's HOST_TAIL (D_0063D640: 0x18).
 13. **DMA addresses through platform/dma.h** (session 72). A DMA tag address is a PS2 address:
     the scratchpad's is `(p & 0x0fffffff) | 0x80000000` and main memory's (VIF1 TADR) `p &
     0x0fffffff`. On the host and the Vita a pointer is not a PS2 address and the masks cut it, so

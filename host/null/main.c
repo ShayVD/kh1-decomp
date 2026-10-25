@@ -16,6 +16,8 @@
  *                       each draw state the send drew in, from the GS register file
  *                       (host/null/gsregs.c, kept across sends) with its kick count, and
  *                       each draw / immediate list node as it starts (plat_null.c, session 83)
+ *   KH1_HOST_SND=trace  print each sound command and RPC (host/null/sound.c, session 86; also at
+ *                       KH1_HOST_TRACE=6); tools/host/sndlog.py summarises them
  *   KH1_HOST_OVL=stub   a test switch: a call of the overlay entry D_00F20000 returns 0 instead
  *                       of faulting, so the run goes on past it (each call's two arguments are
  *                       printed).  No overlay code runs: what
@@ -49,6 +51,7 @@ static unsigned long ovl_calls;
 unsigned long kh1_host_frame(void) { return frames; }
 extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends, kh1_gs_list_waits; /* host/null/plat_null.c */
 extern int kh1_host_dmac_defer;
+extern unsigned kh1_snd_commands; /* host/null/sound.c */
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
@@ -58,6 +61,8 @@ static void summary(void) {
                 kh1_host_dmac_defer ? " (KH1_HOST_DMAC=defer)" : "");
     if (ovl_stub)
         fprintf(stderr, "kh1-host: %lu overlay calls answered 0 (KH1_HOST_OVL=stub)\n", ovl_calls);
+    if (kh1_snd_commands)
+        fprintf(stderr, "kh1-host: %u sound commands queued (KH1_HOST_SND=trace prints them)\n", kh1_snd_commands);
 }
 
 /* sceGsSyncVCallback's handler (host/port/sdk_host.c), an INTC handler: int (*)(int cause) */

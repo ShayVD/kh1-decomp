@@ -31,7 +31,7 @@ extern SndSe D_0063D640[];
 extern SndStream D_0063EE40[4];
 extern s32 D_0063F248;  /* src/data/data_0063.s: inside the IOP block D_0063D640 */
 extern s32 D_0063F540;
-/* The IOP's message buffer (src/data/bss_0063.c: u8 D_0063F640[256]); read signed. */
+/* The IOP's message buffer (src/data/data_0063.s: D_0063D640 + 0x2000, 256 bytes); read signed. */
 extern s8 D_0063F640[256];
 extern char D_00490910[];
 extern char D_00490928[];
