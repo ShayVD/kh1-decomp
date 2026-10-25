@@ -9,13 +9,31 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 and 78 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 79 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: eight float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 78, 2026-10-25)
+## Where we stopped (end of session 79, 2026-10-25)
+
+- **Session 79** (static, vita-port-plan 5.1s, renderer-spec 4.9 + 5.1 "On the host"): **the GS register file
+  on the host.** `host/null/gsregs.c` (new) keeps renderer-spec 5.1's registers per context, fed by dmawalk.c's
+  GIF reader (A+D, PACKED with each descriptor's format, REGLIST, PRE; Q 1.0 at each tag; TEX2 into TEX0's PSM and
+  CLUT fields; state kept across sends) and counts vertex / drawing kicks per draw state (only what the draw
+  reads: no texture registers without TME, no ALPHA without ABE). `kh1_gs_state()`, `kh1_gs_draws()`;
+  **`KH1_HOST_TRACE=5`** prints each send's draw states (`kh1-host:   draw prim ...`), **`gsstate.py RUN.txt
+  --draws`** lists a run's; tests/host/gsregs_test.c (19 checks) in `make test`. Fake disc stub:2: 4 draw states,
+  392 kicks, 196 sprites. Valgrind 0 errors. **The text windows' packets from the C** (renderer-spec 4.9,
+  `tools/host/giftags.py` lists the GIF tag constants by function, 43 in src/text + util.c): header send then a
+  scratch packet relying on it; only SPRITE / TRISTRIP, always ABE; per-draw SCISSOR_1 clipping. **The PSMT4HH
+  half is drawn by every glyph with `f7 >> 4 = 1`**: each glyph sprite carries a TEX2_1 (PSMT4HL / HH, CSA 0 / 1,
+  CLD 0); the 784 default glyphs are 196 cells x 4 layers (2 bits a layer is an inference: the CLUT is on the
+  disc). The bevel `func_00206748` switches ALPHA_1 additive / **subtractive** inside one strip. **Renderer B's
+  state from the C** (func_0015f128 / func_0015f488 / func_0015f8c8 / func_0015f388): opaque pass ATST GEQUAL
+  AREF<=120 + Z write + model fog, translucent ATST LESS + ZMSK 1, both `(Cs-Cd)*As+Cd`; sub-rectangle texture
+  uploads; the reset (blending off) at four draw-list keys. Only host/, tests/, tools/ and docs/ changed:
+  **every out/build object bit-identical**, the float ELF the same (no float-untested row).
 
 - **Session 78** (static, vita-port-plan 5.1r, renderer-spec 4.8 + 5.1): **the chains the C builds from
   constants.** `tools/host/dmawalk.py` has a `SEEDS` table: 17 chains that init code writes once from constants
@@ -61,24 +79,10 @@ items.
   DIMX, PABE, FBA_1, XYOFFSET_1, PRMODECONT, MIPTBP). Only tools/, host/ and tests/ changed: **every out/build
   object bit-identical**, the float ELF the same (no float-untested row). Valgrind 0 errors.
 
-- **Session 75** (static, vita-port-plan 5.1o, renderer-spec 4.5): **the GIF tags' upper 64 bits are 0** (the
-  builders clear the qword first: func_00237018, drawlist), except func_0011fbb0's image uploads on the caller's
-  stack (text.c), where they are stack garbage. **Nothing in the main ELF calls drawlist's flushes**
-  (func_00237f20 / func_002380c0 / func_00238258, nor the push func_002376c8: 0 jal, 0 pointer words), so the
-  main ELF alone never sets TTE on the GIF channel (every GIF send: CHCR 0 or 4); if an overlay does, the tag
-  can not reach the GIF (as a GIFtag it would swallow 16 x qwc qwords), so **the GIF parser drops every tag on
-  channel 2** (inference). **The chain walk moved to host/null/dmawalk.c and now reads each send's data as its
-  receiver would** (one stream of GIF packets on channel 2, VIF codes on VIF0 / VIF1 with TTE's upper words
-  first): a send ending inside a packet or a code's data, or a word that is no VIF code, is a problem.
-  tests/host/dmawalk_test.c (14 made-up chains) runs in `make test` when gcc -m32 works. Fake disc, stub:2: 86
-  sends, every one whole; **one VIF0 and one VIF1 send** (func_0015f018, mdlgs: TTE, upper words FLUSHE / FLUSHA
-  + STCYCL 4,4), which corrects session 74's "all GIF". Valgrind 0 errors. Only host/ and tests/ changed:
-  **every out/build object bit-identical**, the float ELF the same (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-78.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-79.
 - **Eight default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043) and **70 (2,041, the current
-  default; sessions 71 to 78 left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
+  default; sessions 71 to 79 left the float ELF's bytes the same)**. Session 69 made 21 objects one definition (vita-port-plan 5.1i): 10 objects that floated in place as
   parts of a run now float whole into the float area (the shop / list windows D_0062F6E0 / D_0062F790 / D_00630460,
   the ppp matrices D_00615E70 / D_00616000, D_0052EB50, D_00551700, D_00575900, the timer sets D_006692F0 /
   D_00669320) and 20 neighbours are pinned. Session 70 made 6 more one definition (5.1j: the command menus
@@ -140,7 +144,7 @@ items.
   a load's result stayed -1 for ever).
 - **Host build (phase 5)**: `make host-census` links out/host/kh1-host (all 512 game files + the 8 drafts).
   `KH1_HOST_ISO=PATH out/host/kh1-host` reads the user's own disc image by sector (host/port/cd_image.c;
-  `KH1_HOST_TRACE=1` prints the searches and reads, `=4` (session 77) each send's GS state values for `tools/host/gsstate.py`, `=2` also walks each DMA chain and reads its data as GIF packets / VIF codes / PATH2, with each send's GS registers (sessions 74-76, host/null/dmawalk.c; `tools/host/dmawalk.py` is the offline twin for the static chains), `KH1_HOST_FRAMES=N` caps the run, default 600). On
+  `KH1_HOST_TRACE=1` prints the searches and reads, `=4` (session 77) each send's GS state values for `tools/host/gsstate.py`, `=5` (session 79) also each send's draw states from host/null/gsregs.c (`gsstate.py --draws`), `=2` also walks each DMA chain and reads its data as GIF packets / VIF codes / PATH2, with each send's GS registers (sessions 74-76, host/null/dmawalk.c; `tools/host/dmawalk.py` is the offline twin for the static chains), `KH1_HOST_FRAMES=N` caps the run, default 600). On
   tests/host/fake_disc.py's image (now with a one-sector "dktitle.x" in KINGDOM.IDX) the boot reads SYSTEM.CNF,
   KINGDOM.IDX and dktitle.x (frame 2, on the loader thread) and calls D_00F20000(0, 0), which faults:
   main.c prints "fault at PS2 0x00f20000 in the memory map" and the caller. **`KH1_HOST_OVL=stub`** (session
@@ -187,11 +191,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 79 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 80 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s79 and /mnt/project-files/kh1-runtime/s79, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s80 and /mnt/project-files/kh1-runtime/s80, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party),
@@ -208,7 +212,7 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **Host run on the real disc (with the Mac)**: ask once for the user's ISO (Downloads; the unpatched original,
    not KH1_BIG.iso) to be copied into the container's scratchpad (never into the repo or project files), run
    `KH1_HOST_ISO=... KH1_HOST_TRACE=1 out/host/kh1-host` (and once under valgrind; `KH1_HOST_TRACE=2` shows the
-   DMA chains and reads their data, a chain leaving host memory or ending inside a GIF packet / VIF code / PATH2 packet is a bug to fix; each line ends with the GS registers the send writes, renderer-spec 4.6: the window headers are now in the static walk (session 78's seeds): record the windows' per-draw sprite packets (func_00122048's scratch buffers) and anything the seeds got wrong; and once with `KH1_HOST_TRACE=4`, then `python3 -I tools/host/gsstate.py RUN.txt --sends`: compare the run-time state list with renderer-spec 3.2 / 4.7 / 4.8 and 5.1's register table, and add what is new): expected, as on the fake disc,
+   DMA chains and reads their data, a chain leaving host memory or ending inside a GIF packet / VIF code / PATH2 packet is a bug to fix; each line ends with the GS registers the send writes, renderer-spec 4.6: the window headers are now in the static walk (session 78's seeds): record the windows' per-draw packets (func_00122048's scratch buffers, read from the C in renderer-spec 4.9) and anything the seeds got wrong; and once with `KH1_HOST_TRACE=5`, then `python3 -I tools/host/gsstate.py RUN.txt --sends --draws`: compare the run-time state list with renderer-spec 3.2 / 4.7 / 4.8 / 4.9 and 5.1's register table, and add what is new; check 4.9's reading of the C against the windows' draw states: glyph TEX2s with PSMT4HH / CSA 1, the windows' SCISSOR_1, the bevel's ALPHA change inside a strip, renderer B's two passes): expected, as on the fake disc,
    SYSTEM.CNF, KINGDOM.IDX and the eight files before dktitle.x, then the fault at D_00F20000(0, 0). Then
    **`KH1_HOST_OVL=stub:2`** on the real disc: the Dive to the Heart files (dh.wdt ... dh01.ard) are there, so the
    room parse (func_00132790) gets real data; record in vita-port-plan how far it gets and where it stops. Fix
@@ -224,17 +228,18 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    main ELF does; they are what sets TTE on the GIF channel, renderer-spec 4.5)? Does it call func_002372e0 / func_00237318
    (gspkt.c's default and 3D environments, session 77: no caller in the main ELF)?
    Without the Mac: skip.
-4. **Static, without the Mac**: (a) **A GS register file on the host** (renderer-spec 5.1, the first piece of
-   the Vita renderer that can be tested now): host/null/gsregs.c keeping the registers 5.1 keeps (per context,
-   PRIM's CTXT bit choosing), fed by host/null/dmawalk.c's GIF parser (A+D, PACKED, REGLIST, PRE), with a
-   `kh1_gs_state()` reader and a count of vertex kicks per distinct state; tests in tests/host (a HUD environment
-   then a sprite, ZTE=0, a PRIM 0 with no vertex, TEX2 changing only the CLUT fields). `KH1_HOST_TRACE=5` could
-   print the state at each kick. (b) The text windows' per-draw sprite packets (func_00122048's scratch buffers,
-   textwin / winpart / winmenu / wintext): their GIF tags and PRIM from the C, like session 77's func_002370c8; and
-   who draws the message font's PSMT4HH half (func_001ef950 uploads it; the static headers read only PSMT4HL).
-   (c) Renderer B's draw state D_00573AC0 (func_0015f388 / func_0015f488) from the C, so 5.1's table has its
-   values without a run. (d) argcheck's 3 value uses still wait for dktitle.x. Keep every PS2 object the same
-   (kh1.elf byte-identical; run fcheck.sh: a float-untested.md row only when the float ELF's bytes change).
+4. **Static, without the Mac**: (a) **A GS memory model on the host** (renderer-spec 5.1's last paragraph, the next
+   piece after gsregs.c): host/null/gsmem.c, 4 MB of GS local memory with the PS2's block / page swizzle for the
+   PSMs the game uploads (PSMCT32, PSMCT24, PSMT8, PSMT4, PSMT4HL / PSMT4HH into a CT32 word's top byte), fed by
+   gsregs.c's BITBLTBUF / TRXPOS / TRXREG / TRXDIR and dmawalk.c's IMAGE packets (host->local), with a reader that
+   decodes a TEX0 (+ CLUT, CSM 0 / CSA) to RGBA8: the texture cache the Vita renderer needs. Tests in tests/host with
+   made-up pixels (an upload then a read back per PSM, the font's HL / HH halves not touching the Z bits, a CLUT
+   upload read as CSA 0 / 1). (b) Read the window and menu builders giftags.py does not catch (tags built from parts
+   or field by field: winrow.c, winlist.c, selector.c, fldtext*, the HUD's gauge.nostrict.c) and add them to 4.9.
+   (c) Renderer A's GS state (renderer-spec 2.2: which A+D its chains or callers send, as 4.9 did for B) so 5.1's
+   table covers both renderers without a run. (d) argcheck's 3 value uses still wait for dktitle.x. Keep every PS2
+   object the same (kh1.elf byte-identical; run fcheck.sh: a float-untested.md row only when the float ELF's bytes
+   change).
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=79`, commit, open a PR, and refresh this prompt (keep the Mac note
+6. End with `make progress-update SESSION=80`, commit, open a PR, and refresh this prompt (keep the Mac note
    accurate).
