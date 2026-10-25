@@ -181,10 +181,16 @@ if gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W
       "$ROOT/tests/host/palcache_test.c" "$ROOT/host/port/palcache.c" "$ROOT/host/null/gsmem.c"
   "$W/palcache_test" > "$W/palcache.log" || { cat "$W/palcache.log"; exit 1; }
   tail -n 1 "$W/palcache.log"
+  # a decoded-texture cache's key: page stamps against the bytes (renderer-spec 4.13 "Session 117")
+  gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/texcache_test" \
+      "$ROOT/tests/host/texcache_test.c" "$ROOT/host/null/gsmem.c"
+  "$W/texcache_test" > "$W/texcache.log" || { cat "$W/texcache.log"; exit 1; }
+  tail -n 1 "$W/texcache.log"
   # the host "present" (host/null/present.c, KH1_HOST_SHOT, session 94)
   gcc -m32 -malign-double -std=gnu89 -O1 -w -DKH1_HOST -I"$ROOT/include" -o "$W/present_test" \
       "$ROOT/tests/host/present_test.c" "$ROOT/host/null/present.c" "$ROOT/host/null/dmawalk.c" \
-      "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c"
+      "$ROOT/host/null/gsregs.c" "$ROOT/host/null/gsmem.c" "$ROOT/host/port/canvas.c" \
+      "$ROOT/host/port/palcache.c"
   "$W/present_test" "$W" > "$W/present.log" || { grep -v '^kh1-host:' "$W/present.log"; exit 1; }
   tail -n 1 "$W/present.log"
   # the image loads and stores (host/null/gsimage.c, session 101): 5.1an's shapes under a wide view

@@ -1523,6 +1523,37 @@ overlaps are the shadow window of 256, the eye overlay's copy and a 256-high cro
 CLUTs, `0x3FD8`, `0x3FFC`, the field text's pairs or `0x3FF4` / `0x3FF8`. The ppp effect slots' CLUT blocks come
 from the effect files (the host run's `--uploads`).
 
+**Session 117 (vita-port-plan 5.1be): the palette cache in the host's present, and a texture cache's key.**
+The present's indexed decodes (the model's point-sampled sprites and the present's textured sprites,
+host/null/gsmem.c) now read the texel's index in a palette from host/port/palcache.c: host/null/present.c looks
+the entries up at each CLD load (`kh1_gsmem_clut_loaded`, TEXA as the register file holds it) and a draw uses
+that slot when its own entries are the same (otherwise a lookup of its own: CLD 0 with another CSA). A slot holds
+`kh1_gsmem_clut`'s words, so a shot's pixels are the same with the cache as without (tests/host/present_test.c,
+three indexed sprites drawn both ways). `KH1_HOST_COUNTS=1` prints the loads, hits, fills (a fill is one GPU
+palette upload), uncached draws and the most fills in a frame at the end of a run (with `KH1_HOST_TRACE >= 2` or
+`KH1_HOST_SHOT`, which feed the model): the real-disc run measures what a Vita renderer would upload. The fake
+disc gives 52 loads, 1 fill (gspkt.c's `0x0002` placeholder, the same bytes every time).
+
+**A decoded-texture cache's key** (tests/host/texcache_test.c, made-up texels; the stored texels, indices for
+PSMT4 / PSMT8, with the palette left to the palette cache, so the CLUT is not in the key). Three keys on the same
+cache, each checked against a fresh read at every draw (no stale texture in any case):
+
+| Case | Draws | `stamp` (TEX0 + `kh1_gsmem_tex_stamp`): decodes, texels hashed | `bytes` (TEX0 + a hash of the texels) | `both` (the stamp, then the hash on a stamp miss) |
+|---|---|---|---|---|
+| §3.1's slot `0x3600`: the timer's font (PSMT4 64 x 64) uploaded and drawn, then its icon (32 x 32) over it, 3 frames | 6 | 6, 0 | 2, 15,360 | 2, 15,360 |
+| the same slot, one upload drawn 3 times (the timer's three fonts, CSA 0 / 2 / 6), 3 frames | 9 | 3, 0 | 1, 36,864 | 1, 12,288 |
+| texanim's scroll (16 x 8 CT32 at `0x2900`) and a room texture in the same page (`0x2902`), 16 steps | 32 | 28, 0 | 8, 4,096 | 8, 3,584 |
+
+The page stamp is exact but coarse: every re-upload of the same bytes is a miss (the slot's font every timer
+draw), and a write anywhere in an 8 KB page invalidates every texture in it (the scroll's neighbour, 14 needless
+decodes). A 0-row copy (the scroll's step 0) writes no page and keeps the stamp. The bytes key decodes each
+picture once but reads and hashes every texel of every draw. **For the port: `both`**: key by (TBP0, TBW, PSM,
+TW, TH) and the page stamp, and only on a stamp miss hash the texels and look the hash up before decoding, so a
+draw whose pages were not written costs nothing, a re-upload of the same bytes costs a hash and no decode or GPU
+upload, and only new bytes are decoded. The slot `0x3600` (and `0x3A00` / `0x3C00`, rewritten per draw, §4.9)
+then cost one hash a draw, the room and boot textures nothing. The real-disc run's `--uploads` says how many
+bytes the slot takes a frame.
+
 ### 4.14 The grid's three chains: `func_00107d30` cases 0 / 1 / 3 (session 85, static)
 
 Read from the C (src/gfx/grideff.c, grideff.nostrict.c, src/game/field.c `func_00100988`); open question

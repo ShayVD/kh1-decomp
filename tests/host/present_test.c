@@ -191,6 +191,43 @@ static void copy_walk(const char *dir, u32 n, void **f) {
     CHECK("copy: the shot written", *f != 0);
 }
 
+/* session 117: an indexed scene drawn through the model with the port's palette cache on or off
+ * (host/null/present.c, kh1_present_pal): a 16 x 16 PSMT4 texture at 0x2000 drawn 32 x 32 (the
+ * model's exact sprite) with CSA 0 loaded, again with CSA 1 and CLD 0 (no load: a draw lookup), and a
+ * 128 x 128 PSMT8 at 0x2400 drawn 128 x 128 (the present's textured sprite), both CLUTs CT32 (0x3700
+ * and 0x3A00, made-up colours); the display's 512 x 448 pixels are kept in out */
+static u32 scene_px[512 * 448];
+static void scene_sprite(u32 tex0_lo, u32 tex0_hi, s32 x, s32 y, s32 w, s32 h, u32 tw) {
+    kh1_gs_write(0x06, tex0_lo, tex0_hi);
+    kh1_gs_write(0x00, 6 | 1 << 4 | 1 << 8, 0);
+    kh1_gs_write(0x01, 0x80808080, 0x3F800000);
+    kh1_gs_write(0x03, 0, 0);
+    kh1_gs_write(0x05, (u32)(0x7000 + x * 16) | (u32)(0x7400 + y * 16) << 16, 0);
+    kh1_gs_write(0x03, tw * 16 | tw * 16 << 16, 0);
+    kh1_gs_write(0x05, (u32)(0x7000 + (x + w) * 16) | (u32)(0x7400 + (y + h) * 16) << 16, 0);
+}
+static void scene(int cache, u32 *out) {
+    u32 x, y, i;
+    kh1_gsmem_reset();
+    kh1_gs_reset();
+    kh1_present_pal(cache);
+    for (y = 0; y < 16; y++)
+        for (x = 0; x < 16; x++) kh1_gsmem_write_pixel(KH1_PSMT4, 0x2000, 1, x, y, (x + y * 3) & 15);
+    for (y = 0; y < 128; y++)
+        for (x = 0; x < 128; x++) kh1_gsmem_write_pixel(KH1_PSMT8, 0x2400, 2, x, y, (x * 7 + y * 3) & 0xFF);
+    for (i = 0; i < 32; i++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x3700, 1, i & 7, i >> 3, 0x80000000u | (i * 0x070B0D + 0x203040));
+    for (i = 0; i < 256; i++) kh1_gsmem_write_pixel(KH1_PSMCT32, 0x3A00, 1, i & 15, i >> 4, 0x80000000u | (i * 0x030507 + 0x102030));
+    kh1_gs_write(0x4C, 0 | 8 << 16 | KH1_PSMCT24 << 24, 0); /* FRAME_1: the display */
+    kh1_gs_write(0x18, 0x7000, 0x7400);
+    kh1_gs_write(0x40, 511 << 16, 447 << 16);
+    /* TEX0: TBP0, TBW, PSM, TW / TH 4 (16) or 7 (128); hi: TCC, CBP, CPSM CT32, CSA, CLD */
+    scene_sprite(0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 29, 10, 20, 32, 32, 16);
+    scene_sprite(0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 24, 50, 20, 32, 32, 16);
+    scene_sprite(0x2400 | 2 << 14 | (u32)KH1_PSMT8 << 20 | 7u << 26 | 3u << 30, 1 | 1 << 2 | 0x3A00 << 5 | 1u << 29, 100, 100, 128, 128, 128);
+    for (y = 0; y < 448; y++)
+        for (x = 0; x < 512; x++) out[y * 512 + x] = kh1_gsmem_read_pixel(KH1_PSMCT24, 0, 8, x, y);
+}
+
 int main(int argc, char **argv) {
     KH1Canvas c;
     f32 sx, sy;
@@ -351,6 +388,30 @@ int main(int argc, char **argv) {
             CHECK("spin wide: a capture of its own not read back", spin_walk() == 0 && dx_at(KH1_PSMCT32, 0x1A00, 300, 100) == 84);
             kh1_dma_fullscreen(0, 0, 0, 0);
         }
+    }
+
+    if (argc > 1) {
+        /* session 117: the same pixels with the palette cache as without, and its counts */
+        static u32 with_px[512 * 448];
+        const KH1PalCache *pc;
+        u32 i, same = 1;
+        scene(1, with_px);
+        pc = kh1_present_pal_cache();
+        CHECK("palcache: drawn", kh1_gsmem_stats()->sprites == 2 && kh1_gsmem_stats()->tex_sprites == 1 &&
+              with_px[30 * 512 + 15] != 0 && with_px[110 * 512 + 110] != 0);
+        CHECK("palcache: two loads two fills, the CSA 1 draw its own", pc && pc->misses == 3 && pc->hits == 0 && pc->full == 0);
+        CHECK("palcache: the T4's CSA 1 a palette of its own", with_px[30 * 512 + 15] != with_px[30 * 512 + 55]);
+        scene(0, scene_px);
+        CHECK("palcache: off", kh1_present_pal_cache() == 0 && kh1_gsmem_stats()->sprites == 2);
+        for (i = 0; i < 512 * 448; i++)
+            if (with_px[i] != scene_px[i]) same = 0;
+        CHECK("palcache: the shot's pixels the same", same);
+        /* the same scene twice with the cache: the second frame's loads hit (one frame here) */
+        scene(1, with_px);
+        kh1_gs_write(0x06, 0x2000 | 1 << 14 | (u32)KH1_PSMT4 << 20 | 4u << 26, 0 | 1 << 2 | 0x3700 << 5 | 1u << 29);
+        pc = kh1_present_pal_cache();
+        CHECK("palcache: a reload hits", pc && pc->hits == 1 && pc->misses == 3);
+        kh1_present_pal(1);
     }
 
     if (fails) { printf("present_test: %d of %d failed\n", fails, checks); return 1; }

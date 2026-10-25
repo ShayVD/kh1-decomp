@@ -2587,6 +2587,31 @@ tool check and docs only, no float-untested row. selftest PASS (one new host tes
   to `0x3D00`) must fail.
 - **Still waiting for the Mac**: as 5.1bc, plus the ppp effect slots' CLUT blocks.
 
+### 5.1be Session 117: the palette cache in the host's present, and a texture cache's key
+
+Static only (Sunday 2026-10-25, the Mac away until 2026-10-26). kh1.elf byte-identical; host and test code and
+docs only, no float-untested row. selftest PASS (one new host test, present_test extended).
+
+- **The menus' full-width rules** (item 4a): session 101's card was still unanswered, so "widen" stays (5.1ao).
+- **The palette cache in the present** (item 4b): host/null/gsmem.c has two hooks, `kh1_gsmem_clut_loaded` (after
+  each CLUT buffer load) and `kh1_gsmem_palette` (the indexed decodes of `kh1_gsmem_sprite` and
+  `kh1_gsmem_flat_sprite` read the texel's index in the palette it returns; 0 decodes from the CLUT buffer as
+  before). host/null/present.c sets both (`kh1_present_pal`, on with `KH1_HOST_SHOT` and `KH1_HOST_COUNTS=1`):
+  each load's entries (`kh1_gsmem_clut`) go through host/port/palcache.c, a draw reuses the load's slot when its
+  entries are the same, the host frame is the cache's frame, and `kh1_present_pal_report` prints loads, hits,
+  fills, uncached draws and the most fills in a frame at the end of the run. tests/host/present_test.c (53
+  checks): three indexed sprites (a PSMT4 drawn by the exact model with CSA 0 loaded and CSA 1 with CLD 0, a
+  128 x 128 PSMT8 by the present's sprite) give the same display pixels with the cache and without, 3 fills, and
+  a reload hits. The fake disc's run: 52 loads, 1 fill.
+- **A texture cache's key** (item 4c): new tests/host/texcache_test.c (11 checks, in `make test`) compares
+  keying decoded textures by the page stamp, by a hash of the texels, and both (the stamp, then the hash on a
+  stamp miss) on the slot `0x3600` (the timer's font and icon, re-uploaded per draw) and texanim's scroll with a
+  neighbour in the same page; none is ever stale. **Result: `both`** (renderer-spec 4.13 "Session 117"'s table):
+  the stamp alone re-decodes every re-upload and every texture sharing a written page; the bytes alone hash
+  every texel of every draw.
+- **Still waiting for the Mac**: as 5.1bd; the real-disc run's palette counts (`KH1_HOST_COUNTS=1`) and the
+  slot's bytes a frame (`--uploads`).
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory
