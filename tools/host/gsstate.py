@@ -3,6 +3,7 @@
 
   KH1_HOST_TRACE=4 out/host/kh1-host > run.txt     (KH1_HOST_ISO=..., KH1_HOST_OVL=stub:2 ...)
   python3 -I tools/host/gsstate.py run.txt [--exe out/host/kh1-host] [--sends] [--draws] [--uploads] [--targets]
+                                           [--nodes [--frame N]]
 
 The run-time twin of `tools/host/dmawalk.py --state`, which reads only the chains the ELF
 holds: KH1_HOST_TRACE=4 (host/null/dmawalk.c) prints after each send's line every distinct GS
@@ -20,7 +21,12 @@ host/null/gsmem.c took ("kh1-host:   upload ..."): each distinct destination (DB
 rectangle, how often, the pixels written and the chains that sent them.  --targets (session 81)
 lists the render targets ("kh1-host:   target ..."): each FRAME / ZBUF the draws (and VU1 program
 starts, for context 2) wrote through, its extent and primitives; --draws marks a draw state whose
-texture lies in one ("texture in target N").
+texture lies in one ("texture in target N").  --nodes (session 83) lists the draw / immediate
+list nodes ("kh1-host: node ..." lines, src/model/mdlgs.nostrict.c's PlatGsListNode): one frame's
+command order (the last frame with a draw list, or --frame N) with each node's callback, payload,
+sends, kicks and uploads, then every distinct node of the run, each checked against
+tools/host/drawkeys.py's key map (a node whose list, callback and key no insert in src/ explains
+is marked NOT IN THE KEY MAP).
 
 The values come from the user's disc and ELF at run time: never commit the output.
 """
@@ -53,6 +59,11 @@ PSM = {0x00: "PSMCT32", 0x01: "PSMCT24", 0x02: "PSMCT16", 0x0A: "PSMCT16S", 0x13
        0x1B: "PSMT8H", 0x24: "PSMT4HL", 0x2C: "PSMT4HH", 0x30: "PSMZ32", 0x31: "PSMZ24", 0x32: "PSMZ16",
        0x3A: "PSMZ16S"}
 DRAW_REGS = (0x00, 0x4C, 0x4E, 0x47, 0x42, 0x06, 0x08)
+NODE = re.compile(r"^kh1-host: node (draw|imm) (-?\d+) cb ([0-9a-f]{8}) arg ([0-9a-f]{8})$")
+NODE_MAIN = "kh1-host: node main"
+VBLANK = re.compile(r"^kh1-host: vblank (\d+)$")
+LIST_END = re.compile(r"^kh1-host: list (draw|imm) end: (\d+) nodes, frame (\d+)$")
+KICKS = re.compile(r"^kh1-host:   draw prim .*: (\d+) kicks, (\d+) prims")
 
 
 def print_uploads(uploads) -> None:
@@ -85,12 +96,12 @@ def print_draws(draws) -> None:
 
 
 class Syms:
-    def __init__(self, exe: Path):
+    def __init__(self, exe: Path, kinds: str = "bBdDrR"):
         out = subprocess.run(["nm", "-n", str(exe)], capture_output=True, text=True, check=True).stdout
         rows = []
         for line in out.splitlines():
             f = line.split()
-            if len(f) == 3 and f[1] in "bBdDrR" and not f[2].startswith("."):
+            if len(f) == 3 and f[1] in kinds and not f[2].startswith("."):
                 rows.append((int(f[0], 16), f[2]))
         self.addr = [a for a, _ in rows]
         self.name = [n for _, n in rows]
@@ -105,6 +116,78 @@ class Syms:
         return self.name[i] + ("+%#x" % off if off else "")
 
 
+def key_map() -> list[tuple]:
+    """tools/host/drawkeys.py's rows: (list, key, var, callback, payload)"""
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        tsv = Path(d) / "keys.tsv"
+        subprocess.run([sys.executable, "-I", str(ROOT / "tools/host/drawkeys.py"), "--tsv", str(tsv)],
+                       capture_output=True, text=True, check=True)
+        rows = []
+        for line in tsv.read_text().splitlines()[1:]:
+            f = line.split("\t")
+            rows.append(("imm" if f[2] == "immediate" else "draw", int(f[0], 16), f[1], f[3], f[4]))
+    return rows
+
+
+def explain(rows, lst: str, key: int, cb: str, arg: str) -> str:
+    """the drawkeys row that explains a node, or ''"""
+    if cb == "func_0015ff78":
+        return "renderer B entry (e->x28, data-driven)"
+    ok = [r for r in rows if r[0] == lst and r[3] in (cb, "fn") and (not r[4] or r[4] == arg)]
+    for rl, rk, var, rcb, payload in ok:  # a literal key first
+        if (var.startswith(" ") or not var) and key == rk:
+            return "0x%X%s" % (rk, var)
+    for rl, rk, var, rcb, payload in ok:  # literal + a variable (a running count, texanim's 10 id)
+        if var and not var.startswith(" ") and key >= rk:
+            return "0x%X+%s" % (rk, var)
+    return ""
+
+
+def print_nodes(nodes, events, frame, fns: Syms, data: Syms) -> None:
+    """nodes: list of dicts in run order; events: frame -> [node dict or a main-thread send's chain]"""
+    if frame is None:
+        frame = max((f for f, ev in events.items() if any(isinstance(e, dict) and e["list"] == "draw" for e in ev)),
+                    default=None)
+    print("# draw / immediate list nodes (KH1_HOST_TRACE=5): %d run" % len(nodes))
+    if frame is not None and frame in events:
+        print("# frame %d's command order (list, key, callback, payload: sends, kicks, prims, uploads; main = "
+              "main-thread sends outside the lists)" % frame)
+        ev = events[frame]
+        i = 0
+        while i < len(ev):
+            n = ev[i]
+            if not isinstance(n, dict):
+                j = i
+                while j < len(ev) and not isinstance(ev[j], dict):
+                    j += 1
+                chains = list(dict.fromkeys(ev[i:j]))
+                print("\tmain %2d sends: %s%s" % (j - i, ", ".join(chains[:6]), " ..." if len(chains) > 6 else ""))
+                i = j
+                continue
+            print("\t%-4s %10d  0x%-8X %-15s %-14s %2d sends %5d kicks %5d prims %2d uploads%s" % (
+                n["list"], n["key"], n["key"] & 0xFFFFFFFF, fns.at(n["cb"]), data.at(n["arg"]) if n["arg"] else "-",
+                n["sends"], n["kicks"], n["prims"], n["uploads"], "" if n["why"] else "  NOT IN THE KEY MAP"))
+            i += 1
+    else:
+        print("# no frame with a draw list%s" % ("" if frame is None else " (frame %d)" % frame))
+    seen = {}
+    for n in nodes:
+        k = (n["list"], n["key"], n["cb"], n["arg"])
+        d = seen.setdefault(k, [0, 0, 0, 0, n["why"]])
+        d[0] += 1
+        d[1] += n["sends"]
+        d[2] += n["kicks"]
+        d[3] += n["uploads"]
+    print("# distinct nodes (list, key, callback, payload: runs, sends, kicks, uploads; the key map row)")
+    bad = 0
+    for (lst, key, cb, arg), (runs, sends, kicks, ups, why) in sorted(seen.items(), key=lambda kv: (kv[0][0] != "draw", kv[0][1])):
+        bad += not why
+        print("\t%-4s %10d  %-15s %-14s %4d runs %5d sends %6d kicks %4d uploads  %s" % (
+            lst, key, fns.at(cb), data.at(arg) if arg else "-", runs, sends, kicks, ups, why or "NOT IN THE KEY MAP"))
+    print("# %d distinct nodes, %d not in the key map" % (len(seen), bad))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("log", type=Path, help="a KH1_HOST_TRACE=4 run's output")
@@ -113,6 +196,8 @@ def main() -> int:
     ap.add_argument("--draws", action="store_true", help="also the draw states (a KH1_HOST_TRACE=5 run)")
     ap.add_argument("--uploads", action="store_true", help="also the uploads into GS memory (KH1_HOST_TRACE=5)")
     ap.add_argument("--targets", action="store_true", help="also the render targets drawn into (KH1_HOST_TRACE=5)")
+    ap.add_argument("--nodes", action="store_true", help="also the draw / immediate list nodes (KH1_HOST_TRACE=5)")
+    ap.add_argument("--frame", type=int, help="with --nodes: the frame whose command order to print")
     a = ap.parse_args()
     syms = Syms(a.exe)
     state = collections.defaultdict(dict)
@@ -120,6 +205,8 @@ def main() -> int:
     draws = {}
     uploads = {}
     targets = {}
+    nodes, events, vframe = [], {}, 0  # events: frame -> nodes and main-thread sends, in run order
+    node = None  # the node whose sends these are
     cur, nsend, nval = None, 0, 0
     for line in a.log.read_text(errors="replace").splitlines():
         m = SEND.match(line)
@@ -128,7 +215,36 @@ def main() -> int:
             cur = "%s ch%d" % (syms.at(tadr), ch)
             sends[cur] += 1
             nsend += 1
+            if node is not None:
+                node["sends"] += 1
+            else:
+                events.setdefault(vframe, []).append(cur)
             continue
+        m = VBLANK.match(line)
+        if m:
+            vframe, node, cur = int(m.group(1)), None, None
+            continue
+        m = NODE.match(line)
+        if m:
+            node = {"list": m.group(1), "key": int(m.group(2)), "cb": int(m.group(3), 16), "arg": int(m.group(4), 16),
+                    "sends": 0, "kicks": 0, "prims": 0, "uploads": 0}
+            nodes.append(node)
+            events.setdefault(vframe, []).append(node)
+            cur = None
+            continue
+        if line == NODE_MAIN:
+            node, cur = None, None
+            continue
+        if LIST_END.match(line):
+            node, cur = None, None
+            continue
+        if node is not None and cur:
+            k = KICKS.match(line)
+            if k:
+                node["kicks"] += int(k.group(1))
+                node["prims"] += int(k.group(2))
+            elif UPLOAD.match(line):
+                node["uploads"] += 1
         m = GS.match(line)
         if m and cur:
             reg, v = int(m.group(1), 16), int(m.group(2), 16)
@@ -185,6 +301,14 @@ def main() -> int:
         if not targets:
             print("gsstate: no target lines (trace level below 5, or nothing drawn)", file=sys.stderr)
         print_targets(targets)
+    if a.nodes:
+        if not nodes:
+            print("gsstate: no node lines (trace level below 5, or no list ran)", file=sys.stderr)
+        rows = key_map()
+        fns = Syms(a.exe, "tTwW")
+        for n in nodes:
+            n["why"] = explain(rows, n["list"], n["key"], fns.at(n["cb"]), syms.at(n["arg"]) if n["arg"] else "")
+        print_nodes(nodes, events, a.frame, fns, syms)
     print("# %d sends, %d chains, %d registers, %d distinct values" % (
         nsend, len(sends), len(state), sum(len(v) for v in state.values())), file=sys.stderr)
     return 0

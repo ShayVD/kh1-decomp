@@ -89,9 +89,11 @@ int PlatCdPowerOff(int *result) { return 1; }
  * enabled channel with a handler (PlatAddDmacHandler) runs it (null_dmac_run below). */
 static void null_dmac_done(int ch);
 static void null_dma_walk(int ch, u32 chcr, u32 tadr);
+static void null_gs_send(const char *what, int send);
 PlatDmaChan * PlatDmaGetChan(int id) { return (PlatDmaChan *)&null_chan[id & 15]; }
 void PlatDmaSend(PlatDmaChan *ch, void *tag) {
     int n = (struct PlatDmaChan *)ch - null_chan;
+    null_gs_send(n == 1 ? "PlatDmaSend ch 1" : n == 2 ? "PlatDmaSend ch 2" : 0, 1);
     if (kh1_host_trace >= 2) null_dma_walk(n, ch->words[0], (u32)(unsigned long)tag);
     null_dmac_done(n);
 }
@@ -100,6 +102,7 @@ void PlatDmaPutStat(u32 v);
 static u32 null_vif1_tadr;
 void PlatDmaPutVif1Chcr(u32 v) {
     if (!(v & 0x100)) return;
+    null_gs_send("PlatDmaPutVif1Chcr", 1);
     if (kh1_host_trace >= 2 && (v >> 2 & 3) == 1) null_dma_walk(1, v, null_vif1_tadr);
     null_dmac_done(1);
 }
@@ -146,7 +149,11 @@ int PlatGsSyncV(int mode) {
     kh1_host_vblank();
     return 0;
 }
-int PlatGsSyncPath(int mode, unsigned short timeout) { return 0; }
+/* mode 1 is only the draw list's own wait (func_0015ea98, func_0015eb78), not a main-thread sync */
+int PlatGsSyncPath(int mode, unsigned short timeout) {
+    if (mode == 0) null_gs_send("PlatGsSyncPath(0)", 0);
+    return 0;
+}
 int PlatGsSetDefLoadImage(void *lp, short dbp, short dbw, short psm, short x, short y, short w, short h) { return 0; }
 int PlatGsSetDefStoreImage(void *sp, short sbp, short sbw, short psm, short x, short y, short w, short h) { return 0; }
 int PlatGsExecLoadImage(void *lp, void *src) { return 0; }
@@ -156,6 +163,7 @@ void PlatGsPutDispEnv(void *disp) {}
 /* the draw environment's GIF packet (tag + NLOOP qwords), read like a chain's data under
  * KH1_HOST_TRACE >= 2 (session 80: the boot environment sets both contexts, renderer-spec 4.11) */
 void PlatGsPutDrawEnv(void *giftag) {
+    null_gs_send("PlatGsPutDrawEnv", 1);
     if (kh1_host_trace >= 2) kh1_dma_gif_direct((const u32 *)giftag, (((const u32 *)giftag)[0] & 0x7FFF) + 1);
 }
 void PlatGsPutPmode(u64 v) {}
@@ -280,12 +288,12 @@ void PlatIFlushCache(int op) {}
 #define NULL_DMAC_HANDLERS 4
 static int (*null_dmac_fn[16][NULL_DMAC_HANDLERS])(int);
 static u32 null_dmac_stat, null_dmac_mask;
+static int null_dmac_running;
 static void null_dmac_run(void) {
-    static int running;
     int ch, i;
     u32 due;
-    if (running) return;
-    running = 1;
+    if (null_dmac_running) return;
+    null_dmac_running = 1;
     while ((due = null_dmac_stat & null_dmac_mask) != 0) {
         for (ch = 0; !(due & (1u << ch)); ch++)
             ;
@@ -293,7 +301,7 @@ static void null_dmac_run(void) {
         for (i = 0; i < NULL_DMAC_HANDLERS; i++)
             if (null_dmac_fn[ch][i]) null_dmac_fn[ch][i](ch);
     }
-    running = 0;
+    null_dmac_running = 0;
 }
 static void null_dmac_done(int ch) {
     null_dmac_stat |= 1u << (ch & 15);
@@ -328,3 +336,60 @@ void PlatPcStop(void) {}
 
 /* platform/vu.h (off-EE helpers) */
 u32 PlatVu0GetVpuStat(void) { return 0; /* VU1 idle */ }
+
+/* The draw / immediate lists' nodes (session 83, platform/gs.h PlatGsListNode; renderer-spec 4.12,
+ * vita-port-plan 5.1w).  KH1_HOST_TRACE=5 prints each node as it starts, before its sends' lines:
+ *   kh1-host: node draw|imm KEY cb CALLBACK arg PAYLOAD   (KEY decimal; host addresses)
+ * "kh1-host: node main" before the first send made outside a node after one, and
+ *   kh1-host: list draw|imm end: N nodes, frame F
+ * when a list is done (tools/host/gsstate.py --nodes reads them). */
+static int null_node_list = -1;     /* the list whose node's callback is running, -1 none */
+static int null_node_after;         /* a node ran since the last send outside one */
+static unsigned null_node_count[2];
+unsigned kh1_gs_list_nodes, kh1_gs_pending_sends;
+unsigned long kh1_host_frame(void);
+void PlatGsListNode(int list, void *node) {
+    const u32 *n = node;
+    if (!n) {
+        null_node_list = -1;
+        return;
+    }
+    null_node_list = list & 1;
+    null_node_after = 1;
+    null_node_count[list & 1]++;
+    kh1_gs_list_nodes++;
+    if (kh1_host_trace >= 5)
+        printf("kh1-host: node %s %d cb %08x arg %08x\n", list ? "imm" : "draw", (s32)n[1], n[3], n[4]);
+}
+void PlatGsListEnd(int list) {
+    if (kh1_host_trace >= 5 && null_node_count[list & 1])
+        printf("kh1-host: list %s end: %u nodes, frame %lu\n", list ? "imm" : "draw", null_node_count[list & 1],
+               kh1_host_frame());
+    null_node_count[list & 1] = 0;
+    null_node_list = -1;
+}
+
+/* vita-port-plan 5.1v's rule: a main-thread GS send (or sync) first replays any pending draw list.
+ * The draw list is pending from func_0015eb78's hand-over (D_00559DB4 = 1) until func_0015ea98
+ * reaches its end (D_00559DB4 = 0).  Here the list runs from the DMAC handlers as each transfer
+ * ends (null_dmac_run), so a send outside a node and outside a handler should never find it
+ * pending; one that does is counted (kh1_gs_pending_sends, printed at the run's end) and replays
+ * what the DMAC owes (the due handlers) before it goes on: kh1_gs_flush_pending is the port's hook. */
+extern volatile s32 D_00559DB4;
+static void kh1_gs_flush_pending(const char *what) {
+    if (!D_00559DB4) return;
+    kh1_gs_pending_sends++;
+    if (kh1_host_trace >= 5)
+        printf("kh1-host: flush: %s found the draw list pending (frame %lu)\n", what, kh1_host_frame());
+    null_dmac_run();
+}
+/* what: the GS send or sync (0 for a channel that is not the GS's: VIF0); send: a transfer, which
+ * prints its own line (dmawalk.c), so the marker goes before it */
+static void null_gs_send(const char *what, int send) {
+    if (null_node_list >= 0 || null_dmac_running) return; /* a node's own send, or a handler's */
+    if (send && null_node_after) {
+        if (kh1_host_trace >= 5) printf("kh1-host: node main\n");
+        null_node_after = 0;
+    }
+    if (what) kh1_gs_flush_pending(what);
+}

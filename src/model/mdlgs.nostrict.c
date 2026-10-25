@@ -38,7 +38,9 @@ s32 func_0015ea98(void) {
     }
     while (D_00551D80 != 0) {
         D_00559DB8++;
+        PlatGsListNode(0, D_00551D80);
         r = D_00551D80->xc(D_00551D80);
+        PlatGsListNode(0, 0);
         if (!(r & 0x20)) {
             D_00551D80->x0 = 0;
             D_00551D80 = D_00551D80->x8;
@@ -47,6 +49,7 @@ s32 func_0015ea98(void) {
         }
         if (r & 2) return 1;
     }
+    PlatGsListEnd(0);
     D_00559DB4 = 0;
     return 0;
 }
@@ -119,12 +122,15 @@ s32 func_0015eea0(void) {
     PlatFlushCache(0);
     PlatGsSyncPath(0, 0);
     while (t) {
+        PlatGsListNode(1, t);
         if (!(t->cb(t) & 0x20)) {
             t->h0 = 0;
             t = t->next;
         }
+        PlatGsListNode(1, 0);
         PlatGsSyncPath(0, 0);
     }
+    PlatGsListEnd(1);
     D_0055BDE0->x8 = 0;
     D_0055BDE0->xC = 0;
     D_0055BDE0 = &D_00559DC0[D_00351BD0];

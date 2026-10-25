@@ -1172,6 +1172,41 @@ pending list never samples the upload's data, as on the console. The DMAC handle
 (5.1h) become this replay: the port's `func_0015ea98` runs the list in one loop, its `sceGsSyncPath(1, 0)`
 answering idle at once.
 
+### 5.1w Session 83: the draw list's nodes as commands, renderer B's keys, the CLUT animations
+
+Static only (Sunday 2026-10-25; the Mac is back from 2026-10-26). host/, tests/, tools/host, docs/ changed,
+and two src/include lines: **include/platform/gs.h's new `PlatGsListNode(list, node)` / `PlatGsListEnd(list)`**,
+called by src/model/mdlgs.nostrict.c's walks (`func_0015ea98`, `func_0015eea0`) around each node's callback
+and at the list's end. On the PS2 build they are `((void)0)`: kh1.elf is byte-identical, **every out/build
+object bit-identical** (sha1 of all 677 before and after, mdlgs.nostrict.c.o rebuilt), `make shift` M0 OK, so
+the float ELF is the same and there is no float-untested.md row. abicheck, dmacheck, relcheck, layoutcheck,
+abscheck 0 rows; indcheck the same 241 rows as before the change.
+
+**The draw list as commands** (item 4a, renderer-spec 4.12 "The draw list on the host"): this is the hook
+5.1v asked for. The port records each node (key at +4, callback at +0xC, payload at +0x10) as a command at
+`PlatGsListNode` and replays the list; the null platform prints it at `KH1_HOST_TRACE=5` (`kh1-host: node
+...`, `node main`, `list ... end`, `vblank N`) and **`gsstate.py --nodes [--frame N]`** prints a frame's
+command order and checks every node against drawkeys.py's map (fake disc stub:2: 13 nodes, 6 distinct, 0
+outside the map). **`kh1_gs_flush_pending`** (plat_null.c) is 5.1v's rule on the null platform: every
+main-thread `PlatGsSyncPath(0)`, ch 1 / 2 `PlatDmaSend`, `PlatDmaPutVif1Chcr` and `PlatGsPutDrawEnv` (outside
+a node and a DMAC handler) checks whether the draw list is pending (`D_00559DB4`), counts it and runs the due
+DMAC handlers; the run's summary prints the count at `KH1_HOST_TRACE=5`: 0 on the fake disc, as expected
+(the null DMAC drains the list as each transfer ends). Mode 1 syncs are the walk's own and not counted.
+
+**Renderer B's keys** (item 4b, renderer-spec 4.12): objects are 20000 (opaque) or 70000 (alpha below 0x80,
+and every translucent part) plus their depth rank (0-77, far first), shadows 60000 + 10 n, the menus' models
+the immediate list at 0. The key map is now complete: no data-driven key left that the C does not explain.
+
+**The texture animations are CLUT cross-fades** (item 4c, renderer-spec 4.13): seven nodes per animation at
+90000 + 10 id upload two palette frames to `0x3600` / `0x3A00` and draw them as point-sampled sprites over
+the room CLUT at block `0x3E00 + v` (a copy, then a blend by `f10 + 1`), FBMSK keeping the CLUT's alphas;
+the room's draws read it the next frame. host/null/gsmem.c's **`kh1_gsmem_sprite`** now draws such sprites
+into the model (gsregs.c calls it for each SPRITE; anything it cannot draw is a target as before), so a CLUT
+load after the passes reads the blended palette; tests/host/gsmem_test.c 61 -> 65 checks, valgrind 0 errors
+(the test and the fake-disc run). For the port: the palette animation must happen (a CPU blend of the room
+CLUT copy, or the same draws into the port's GS memory), and textures that use those CLUTs must be re-read
+each frame or kept as index textures with a palette (renderer-spec 5 "PSMT4/8 + CLUT").
+
 ### 5.2 Session 60: overlays, dktitle.x
 
 The overlay files are on the user's Mac (Downloads/kh1-test/ovl), not in the container, so the inventory

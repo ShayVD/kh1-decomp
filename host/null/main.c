@@ -14,7 +14,8 @@
  *                       3 prints every tag; 4 (not the tags) each GS state value a send
  *                       writes (tools/host/gsstate.py makes the state list of a run); 5 also
  *                       each draw state the send drew in, from the GS register file
- *                       (host/null/gsregs.c, kept across sends) with its kick count
+ *                       (host/null/gsregs.c, kept across sends) with its kick count, and
+ *                       each draw / immediate list node as it starts (plat_null.c, session 83)
  *   KH1_HOST_OVL=stub   a test switch: a call of the overlay entry D_00F20000 returns 0 instead
  *                       of faulting, so the run goes on past it (each call's two arguments are
  *                       printed).  No overlay code runs: what
@@ -45,9 +46,14 @@ static unsigned long frames, max_frames = 600;
 static int ovl_stub;
 static unsigned long ovl_calls;
 
+unsigned long kh1_host_frame(void) { return frames; }
+extern unsigned kh1_gs_list_nodes, kh1_gs_pending_sends; /* host/null/plat_null.c */
 static void summary(void) {
     fprintf(stderr, "kh1-host: %lu frames, %u disc reads (%u sectors)\n", frames, kh1_host_cd_reads,
             kh1_host_cd_sectors);
+    if (kh1_host_trace >= 5 || kh1_gs_pending_sends)
+        fprintf(stderr, "kh1-host: %u draw / immediate list nodes run, %u main-thread GS calls found the draw list "
+                "pending\n", kh1_gs_list_nodes, kh1_gs_pending_sends);
     if (ovl_stub)
         fprintf(stderr, "kh1-host: %lu overlay calls answered 0 (KH1_HOST_OVL=stub)\n", ovl_calls);
 }
@@ -60,6 +66,7 @@ void kh1_host_vblank(void) {
     if (in_vblank) return;
     in_vblank = 1;
     frames++;
+    if (kh1_host_trace >= 5) printf("kh1-host: vblank %lu\n", frames); /* gsstate.py --nodes' frames */
     kh1_null_iop_frame();
     if (kh1_vsync_cb) ((int (*)(int))kh1_vsync_cb)(2);
     in_vblank = 0;
