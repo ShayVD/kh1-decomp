@@ -1981,7 +1981,8 @@ bars of 117 / 118 pixels.
      the right third right, the rest centred (the HP / MP gauges, the command menu, the party gauges, the
      notices' layout tables). The real-disc run's draws (`gsstate.py --draws`) list the rectangles;
    - the **menus and text windows** stay in the centred canvas (a full-screen menu shows the 3D's wide
-     sides behind its background, or the port dims the bars), and the system-message band and movies stay
+     sides behind its background, or the port dims the bars; *session 100: the backdrop gradient is
+     drawn over the whole view now, 5.4 "Session 100"*), and the system-message band and movies stay
      4:3 and centred.
 3. Rule 7 (frame-time) and the PS2's overscan: the original HUD sits inside a TV's safe area, so on the
    Vita's fully visible screen it looks inset; the anchoring of step 2 is the place to move it outward if
@@ -2539,6 +2540,57 @@ checks. The fake disc's wide run (`KH1_HOST_OVL=stub:2 KH1_HOST_WIDE=1 KH1_HOST_
 `--draws / --targets / --uploads / --sends` identical with and without `KH1_HOST_WIDE`; the clear, the display
 clear, the frame copy (-82.8 .. 594.8) and the stored frame back (-83.5 .. 594.1) with the view's scissor,
 as session 98; the frames still black; the known stop at frame 6.
+
+#### Session 100: the full-screen draws that are not `func_00106b18` sends (static)
+
+**The other GIF paths** (item 4a). fscheck.py now walks three more senders' static chains with the same
+sprite test: `sceDmaSend` (`PlatDmaSend`, the tag in a1), gspkt.c's `func_00237018` and frame.c's
+`func_001e05a8` (the stored frame's path-2 sends). `gs_packets.callers` takes the argument register,
+drops an address when anything else writes that register before the call (dmgnum's `move a0, v0` had
+left a stale `lui / addiu` address on `func_00237018`'s run-time staging send, and 3 `func_00106b18` calls
+in objwin's `func_0010b6c0` that send a stack pointer had been given a packet), and takes an address the
+call's delay slot builds after a `lui` of the same register even when nothing was pending (the old scan
+skipped those: its `func_00106b18` sends from the ELF go 26 -> 37, every one already named in C or not
+full-screen, so session 99's table did not change). 37 -> **58 sends**, 21 -> **24 full-screen**. And it scans src/ for **rectangles built in C
+with both 4:3 edges** (a left `0x7000 / 0x6FE0 / 0x6FC0` and a right `0x9000 / 0x8FE0 / 0x8FC0` low
+halfword in one function, outside `#ifdef KH1_PS2` branches and comments, not a comparison's bound), and
+reads the arrays' sizes from include/ too (`D_003DAE40` is declared in data_003D.h), and counts the
+decimal `28672 / 36864` as edges. What it found:
+
+| Draw | Path | Found | Now |
+| --- | --- | --- | --- |
+| menubg.nostrict.c `func_0020a9b0` (the two-colour gradient), `func_0020b120` (the four-colour one, `D_003F31F0[prim]` blend), `func_0020ab88` / `func_0020ae98` (the textured gradient: 4 sprites, u 249.5 .. 254.5 of the menu texture, so X does not move the texels) | `PlatDmaSend` of a scratch chain (`func_00122048`), built in C | **x `0x7000 .. 0x9000`** over y `0x7400 .. 0x8C00`: the menu's backdrop covered only the 4:3 canvas | `PLAT_VIEW_GX0 / GX1` (they fold to the literals: all 677 objects bit-identical) |
+| frame.c `func_001e0898` `D_003DAE30` (the stored frame drawn as it is), `func_001e08d8` and screen.c's cross-fades `D_003DAF60` (the target's sprite `[17] / [19]` in data, the frame's `[33] / [35]` from C: zoomed by `D_003DACB0 / B4` about the centre, moved by `D_003DACB8 / BC`), `func_001e15a0` `D_003DB050` (the grey tint) | `func_001e05a8` (path 2) | no rows: the stored frame (D_00F20000 loaded into the Z area, like `D_002B66B0`) stayed 4:3 | rows `KH1_FS_X \| KH1_FS_U`; the C's corners stay in canvas units (`(f32)(ox + 0x7000) + (4096 - sx 4096)`, `sx 8192 / 2 - 4096 + 36864 + ox`): the row's stretch is linear, so the zoom and the offset come out right in the view. fscheck's rule for a send with an X row is now the reverse: its C writes **must not** name the view (it would count twice) |
+
+**Checked and left as they are** (reasons, not rows):
+
+- **The full-width rules of the menus** (`func_00206130(win, 0, y, 512, h, col)`: topmenu.c 315 / 340,
+  journal.c 409 / 418, page7.c 322 / 331, loadframe.c 235 / 241, nameentry.c's five; nameentry.nofill.c's
+  `func_002078f0(.., 200, 512, 1)`): window-relative (`o->xb0 + px * 16`), so they belong to the menu's
+  window and stay in the centred canvas with it (5.3 step 2). With the backdrop now view-wide they end at
+  the 4:3 edges; a renderer that wants them to the view's edges can widen a rule whose window sits at
+  canvas 0 and whose width is 512 (a port choice, not a game change; no row: they are not static).
+- **The wave transition** (wave.c, `D_00631620`): its 100 lines run x 136 .. 376 px (`(v + 1928) << 4 ..
+  (v + 2168) << 4`), a window's band, not full-screen.
+- **opdma's colour band** (`func_001aa7a0`): already `PLAT_VIEW_GX0 / GX1` off the PS2 (session 92); the
+  literals the scan sees are in the `#ifdef KH1_PS2` branch.
+- **The depth blur's capture** (`D_002A5320[17]`, `0x7000` alone) and **the menu blur's loop bound**
+  (`0x9000` words, sceneeff.c `func_00102a48`): one edge each, not a rectangle.
+- **The staging sends** (`func_00237018`: the HUD parts, markers, numbers) are built at run time from
+  pixel positions plus `0x7000 / 0x7400`, never with both edges; the HUD's anchors move them (5.3.1).
+- **The draw list's immediate nodes** go through `func_002388b8` with packets the C fills from 3D or from
+  the HUD's positions; no static full-screen packet in them (the scan found none in their tags).
+- **Path 3 images** (`PlatGsExecLoadImage`) are uploads, not draws; the ones that hold a picture of the
+  screen are the captures (vita-port-plan 5.1an's contract).
+- `func_0010fee8(512, 447)` (dispenv.c): the display's size, the present's (5.4 "Session 96").
+
+Today: **58 sends, 24 full-screen (22 rows, 3 exempt), 0 C rectangles with both 4:3 edges, 0 problems**;
+tests/selftest.sh has two more negative cases (the stored frame's row removed; the backdrop's literals
+put back).
+
+**The 4:3 note of 5.3 step 2 changes for the backdrop**: a full-screen menu now draws its gradient over the
+whole view (the blur under it was already view-wide, session 99), so the sides show the backdrop, not the
+3D; the menu's windows, text and rules stay in the centred canvas.
 
 #### Open (need the real disc or a boot)
 

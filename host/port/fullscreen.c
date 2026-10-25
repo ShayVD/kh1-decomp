@@ -1,6 +1,6 @@
 /* The static full-screen packets a wide view stretches (include/platform/fullscreen.h,
- * docs/renderer-spec.md 5.4 "Session 93"), read with tools/vu/gs_packets.py -v: each is one REFE send
- * through func_00106b18.  Port data for every platform; the host's null GIF path applies it under
+ * docs/renderer-spec.md 5.4 "Session 93"), read with tools/vu/gs_packets.py -v: each is one send
+ * through func_00106b18 (session 100: or frame.c's path-2 func_001e05a8), checked by tools/host/fscheck.py.  Port data for every platform; the host's null GIF path applies it under
  * KH1_HOST_WIDE (host/null/dmawalk.c, kh1_dma_fullscreen).  Not part of the PS2 build. */
 #include "common.h"
 #include "platform/fullscreen.h"
@@ -8,6 +8,7 @@
 extern u8 D_002A6500[], D_002A6890[], D_002A6070[], D_002A61E0[], D_002A5FD0[], D_002A4ED0[];
 extern u8 D_002A4FC0[], D_002B6760[], D_002BC980[], D_002A6110[], D_002B66B0[];
 extern u8 D_002A4DD0[], D_002A4B60[], D_002A5A90[], D_002A5620[], D_002A5AC0[], D_002A6A40[], D_002A6AA0[], D_002B65E0[];
+extern u8 D_003DAE30[], D_003DAF60[], D_003DB050[];
 
 const KH1FullScreen kh1_fullscreen[] = {
     /* brightfade.c: the clear, 16 black sprites of 32 px, x 1792 .. 2304 (each column a sprite) */
@@ -58,6 +59,15 @@ const KH1FullScreen kh1_fullscreen[] = {
      * them (D_002A6B70) is placed from C */
     { D_002A6A40, KH1_FS_X, "wipe mask alpha" },
     { D_002A6AA0, KH1_FS_X, "wipe mask black" },
+    /* frame.c / screen.c (session 100, fscheck's func_001e05a8 sends): the stored frame D_00F20000, loaded
+     * into the Z area (0x0E00 / 0x1400, like D_002B66B0), drawn back over the target, u 0 .. 512: as it is
+     * (func_001e0898), cross-faded with the target (func_001e08d8 and screen.c's fades: the second sprite's
+     * corners D_003DAE40[33] / [35] come from C, zoomed by D_003DACB0 / B4 and moved by D_003DACB8 / BC in
+     * canvas units, which the row's stretch carries to the view like the static first sprite) and
+     * tinted (func_001e15a0) */
+    { D_003DAE30, KH1_FS_X | KH1_FS_U, "stored frame" },
+    { D_003DAF60, KH1_FS_X | KH1_FS_U, "stored frame zoom / cross-fade" },
+    { D_003DB050, KH1_FS_X | KH1_FS_U, "stored frame tint" },
     /* dispenv.c func_0010ff60 (session 93): the display cleared to a grey level, one sprite 1792 .. 2304
      * x 1856 .. 2304 under SCISSOR_1 0 .. 511 x 0 .. 447 (the scissor rule's display case) */
     { D_002BC980, KH1_FS_X, "display clear" },
