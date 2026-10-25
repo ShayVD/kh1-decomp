@@ -2017,7 +2017,7 @@ each file's top comment says what it does and marks its guesses.
 | the field's set up and frame, the sky and background draws (a guess) | src/game/field.c | 0x001001f8-0x00100b18 | 18 |
 | the room's background files and textures (a guess) | src/game/roombg.c | 0x00100b18-0x00101970 | 18 |
 | texture animations (a guess) | src/gfx/texanim.c, .nostrict.c | 0x00101970-0x00102a48 | 14 |
-| full-screen effects: glow rings, a zoom, a colour pulse, a warp grid (a guess) | src/gfx/sceneeff.c, .nostrict.c | 0x00102a48-0x00104528 | 29 |
+| full-screen effects: the menu blur, the screen spin, a depth blur, a sway, a lens grid, fades, the letterbox (session 88, renderer-spec 4.16-4.17; a guess) | src/gfx/sceneeff.c, .nostrict.c | 0x00102a48-0x00104528 | 29 |
 | the map collision file's tables and triangle accessors | src/coll/mapdata.c, .nostrict.c | 0x00104528-0x00105f28 | 37 |
 | the screen's brightness fades D_002BC070 (a guess) | src/screen/brightfade.c | 0x00105f28-0x00106b18 | 20 |
 | DMA sends and the packet buffers (platform code) | src/gfx/dmapool.c | 0x00106b18-0x00106e18 | 10 |

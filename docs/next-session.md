@@ -9,13 +9,35 @@ Continue kh1-decomp, the matching decomp of Kingdom Hearts Final Mix (PS2), reta
 ## The Mac
 
 **The Mac is back from Monday 2026-10-26** (the user said on 2026-10-23 it was away until then; sessions 49 to 76
-ran without it; sessions 77 to 87 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
+ran without it; sessions 77 to 88 ran on Sunday 2026-10-25, still without it). **Ask for the Mac and PCSX2 at the start** (the connect card in the Claude desktop app) **and make
 item 1 the first thing**: nine float builds are waiting for a boot. Items 2 and 3 also need the Mac: the user's ISO
 is in Downloads for the host run, and the overlay files are in Downloads/kh1-test/ovl. If the user says the Mac is
 still away, skip items 1 to 3, add every float change to docs/float-untested.md as untested, and do the static
 items.
 
-## Where we stopped (end of session 87, 2026-10-25)
+## Where we stopped (end of session 88, 2026-10-25)
+
+- **Session 88** (static, vita-port-plan 5.1ab, renderer-spec 4.17): **the other full-screen effects, the
+  input layer, counts kept across functions.** renderer-spec 4.17: `func_00102a48` is the **menu blur**
+  (the frame captured at half size when a field menu opens, nine blended copies 1 then 2 px apart; not
+  "glow rings"), `func_00103058` a **depth blur** (event commands; mode 0 blurs behind a Z value, mode 1
+  the near part), `func_001032b0` a **sway / colour pulse** (room table flag or event: a 0.3-3.6 % zoom on
+  two out-of-phase axes), `func_00103c48` VU1 P8's **lens grid** (25 x 25 bulge over a copy of the
+  target), the **fades** (alpha to 255: the visible fade is half the count; the white fade-in's countdown
+  runs in frames, dark at 60 fps), the event **letterbox** `D_002A6208`; **the sway and the grid copy the
+  target into the Z buffer's memory** (later depth tests that frame read colour); the PSMT8H rows of 3.1 /
+  3.2 named `func_00103058` by mistake. vita-port-plan 5.1ab: the pad record (repeat 30 then 4 steps, a
+  47 % square stick dead zone), only socket 0 read, **the 30-entry action table** decoded (SELECT 0x8000 =
+  first person; START has none: session 87 said both), what reads each button, the menus' raw reads, and
+  **the Vita mapping** (L / R to L1 / R1, **L2 / R2 on the rear touch halves**, R3 doubles CIRCLE, L3
+  unused; PS TV pads native; options: CIRCLE / CROSS swap, right stick camera). tests/host/pads/title.txt
+  (a `KH1_HOST_PAD` title script, frames guessed). **tools/host/countcheck.py** (new): globals one function
+  steps and another indexes with: **37 rows, 16 counters, all REVIEWED**; DATA-bounded only (no check, the
+  PS2 the same): the collision list `D_002BD250[2048]`, renderer A's grid lists, **renderer B's per-frame
+  lists** (`D_0055C698`: 72 / 78 / 480), **the message table `D_00388480[273]`** (layoutcheck misses it),
+  the 10 trigger boxes. Only docs/, tools/host/, tests/host/ and a sceneeff.c comment changed: **every
+  out/build object bit-identical**, the float ELF the same (no float-untested row). layoutcheck / relcheck
+  / walkcheck 0.
 
 - **Session 87** (static, vita-port-plan 5.1aa, renderer-spec 4.16): **index walks and builder results,
   a scripted pad, the script's screen spin.** **walkcheck.py** now also lists `idx` rows (an integer a
@@ -93,23 +115,7 @@ items.
   errors. src/ changed only by the one hook: **every out/build object bit-identical**, the float ELF the same
   (no float-untested row).
 
-- **Session 83** (static, vita-port-plan 5.1w, renderer-spec 4.12, 4.13, 5.2): **the draw list as commands,
-  renderer B's keys, the CLUT animations.** include/platform/gs.h's new **`PlatGsListNode(list, node)` /
-  `PlatGsListEnd(list)`** (nothing on the PS2) are called by mdlgs.nostrict.c's walks around each node's
-  callback; the null platform prints `kh1-host: node draw|imm KEY cb CB arg PAYLOAD` / `node main` / `list
-  ... end` / `vblank N` at `KH1_HOST_TRACE=5`, and **`gsstate.py --nodes [--frame N]`** prints a frame's
-  command order and checks each node against drawkeys.py (fake disc stub:2: 13 nodes, 6 distinct, all in
-  the map). `kh1_gs_flush_pending` (plat_null.c) counts main-thread GS calls that find the draw list
-  pending (0: the null DMAC drains it). **Renderer B's keys** from the C: objects 20000 (opaque) / 70000
-  (alpha < 0x80 and translucent parts) + depth rank 0-77 far first, shadows 60000 + 10 n, menu models on
-  the immediate list at 0. **The texture animations (90000 + 10 id) are CLUT cross-fades**: palette frames
-  to `0x3600` / `0x3A00`, then two point-sampled sprites over the room CLUT at block `0x3E00 + v` (FBMSK
-  keeps its alphas); room draws see it a frame later. host/null/gsmem.c's **`kh1_gsmem_sprite`** draws such
-  sprites into the model (gsmem_test 61 -> 65). renderer-spec 3.1 has the room CLUTs (`0x3E00 + i`) and
-  background textures (`0x2600 + 256 i`). Valgrind 0 errors. src/ changed only by the two hooks:
-  **every out/build object bit-identical**, the float ELF the same (no float-untested row).
-
-- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-87.
+- **6,979 / 6,988 functions matched** (docs/progress.md). No matching work in sessions 27-88.
 - **Nine default float builds are unbooted**: sessions 30 (2,100 float), 31 (2,047), 32 (2,043), 33 (2,032), 34
   (2,049, unchanged in 35 to 58), 59 (2,053, unchanged in 60 to 68), 69 (2,043), 70 (2,041; sessions 71 to 85
   left the float ELF's bytes the same) and **86 (2,041, the current default: D_0063F640 inside the floated
@@ -161,6 +167,8 @@ items.
   An `s32 [5]` at a 4- but not 8-aligned address fails the link (ee-gcc pads it): merge with the name before.
   **`python3 -I tools/host/walkcheck.py`** (session 86, no build needed): pointer walks that run on from one loop
   into the next, which neither check sees, and since session 87 index walks and builder results (0 WALK, 42 REVIEWED); census.py's HOST_TAIL pads a piece on the host only.
+  **`python3 -I tools/host/countcheck.py`** (session 88, no build needed): counts kept in a global, stepped in one
+  function and used as an index in another (0 COUNT, 37 REVIEWED; the DATA rows wait for high-water marks).
 - **Null platform**: PlatMcSync answers done with "no card" (-10) and PlatMcGetInfo writes its outputs;
   **host/null/pad.c** (session 87): one pad connected, nothing pressed (`KH1_HOST_PAD=none`: no pad,
   `KH1_HOST_PAD=FILE`: a script; vita-port-plan 5.1aa). PlatSifCallRpc hands the sound
@@ -212,7 +220,7 @@ items.
   "break kh1_host_vblank if frames >= N" -ex run -ex bt out/host/kh1-host` shows where frame N is); `--files
   CAUSE` / `--show FILE`; out/host/undefined.txt. `python3 -I tools/host/argcheck.py --tsv out/host/argcheck.tsv`
   lists the passthrough calls, `python3 -I tools/host/abicheck.py` the argument-class mismatches. `python3 -I tools/host/vu2c.py FILE LINE` turns one VU0 asm statement into PlatVu0
-  calls. `python3 -I tools/host/walkcheck.py` lists pointer walks across loops, `python3 -I tools/host/sndlog.py
+  calls. `python3 -I tools/host/walkcheck.py` lists pointer walks across loops, `tools/host/countcheck.py` counts across functions, `python3 -I tools/host/sndlog.py
   RUN.txt` a run's sound commands (with `KH1_HOST_SND=trace`). A quick "did any object change" check: `find out/build -name '*.o' | sort | xargs sha1sum` before the
   first edit and after (sessions 62 to 66 did this), or build origin/main in a `git worktree`
   (symlink tools/toolchain, copy the ELF) and `cmp` every out/build .o.
@@ -228,11 +236,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
 2. **15-24 words**: 001c62a0 (15), 00200e28 (24).
 3. **Large**: 00110618 (93, FP register permutation), 0010d470 (170, jump2 cross-jumping), 001636d0 (394, gcse build).
 
-## Session 88 plan (at most 3 workers, docs/workflow.md "Resource limit")
+## Session 89 plan (at most 3 workers, docs/workflow.md "Resource limit")
 
 1. **Boot test (only with the Mac, from Monday 2026-10-26)**: run a plain `make shift`, tools/shift/data_owners.py,
    stage out/overlays from Downloads/kh1-test/ovl, `make shift SHIFT_MODE=m12 SHIFT_FLOAT=1`, copy the ELF to
-   Downloads/kh1-test/s88 and /mnt/project-files/kh1-runtime/s88, patch KH1_BIG.iso, and run the route in
+   Downloads/kh1-test/s89 and /mnt/project-files/kh1-runtime/s89, patch KH1_BIG.iso, and run the route in
    docs/float-untested.md (include a shop, the in-game menu: the top menu, the item, equipment, abilities (session 70
    merged its counts), customize, status, config and journal pages with each journal section, changing a config
    option, using an item, equipping a weapon, a save point (save to a card, overwrite a save, change the party:
@@ -246,8 +254,11 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    available, enemy drops picked up, the pause, a game over and its continue, a room change and a world change, a
    movie, music and sound effects throughout (session 86 moved the sound status block's message buffer), a
    controller pulled out for a second (the system-message band, renderer-spec 4.15), a scene with the screen
-   spin if one is near (renderer-spec 4.16: the picture turning into itself), and anything using atan: camera,
-   lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
+   spin if one is near (renderer-spec 4.16: the picture turning into itself), **session 88's effects** (renderer-spec
+   4.17: the blur when the menu opens and closes, an event's letterbox bars and fades to black and white, a room that
+   sways (underwater is a guess) and whether anything drawn after it looks wrong (the Z buffer holds colour then),
+   a depth blur or lens bulge if one is near), **the controls of 5.1ab's table** (SELECT's first person, L2 / R2
+   camera and target cycling while locked on, L1 shortcuts, R3), and anything using atan: camera, lock-on). If it breaks, bisect: session 86's commit first (revert its data_0063.s / bss_0063.c change), then
    session 70's (revert it), then session 69's (the one-definition merges), then session 59's `--no-fmt-read`, then
    session 34's switches. Move what boots into docs/shiftable-plan.md and clear docs/float-untested.md. Note what
    the boot shows about the "(a guess)" modules and rename the ones it settles. Without the Mac: skip.
@@ -267,7 +278,10 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    frame near 256 records; the transfer count back to 0). **Session 87: the pad is connected by default now**;
    compare one run with `KH1_HOST_PAD=none` (it should sit in the "no controller" band from frame 32), and once
    the room run gets further, try a `KH1_HOST_PAD` script (START at the title, CIRCLE, the menu with
-   TRIANGLE?). Read the message files' code 11 digit counts (`dig[12]`, 5.1aa). Fix host-only causes the way
+   TRIANGLE?; session 88: start from tests/host/pads/title.txt and move its frames to what the run shows). Read the
+   message files' code 11 digit counts (`dig[12]`, 5.1aa). **Session 88: record the high-water marks of countcheck's
+   DATA rows** (gdb watchpoints or a host-only hook: renderer B's `D_0055C698.x4 / .x8 / .xc` against 78 / 480 / 72,
+   the collision count `D_002C12C4` against 2048, the message count `D_00389C80` against 273, the trigger boxes). Fix host-only causes the way
    sessions 63 to 70 did (platform answers, layout dependencies as one definition with layoutcheck, relcheck and
    walkcheck at 0, the PS2 ELF byte-identical).
 3. **dktitle.x (with the Mac)**: copy Downloads/kh1-test/ovl/dktitle.x into the container (never commit it), run
@@ -281,21 +295,23 @@ Best drafts are in nonmatchings/session23-match/ and older (table in its NOTES.m
    Does dkmovie.x (the same folder) store 2 to `D_002BBE04` (the movie copy from `0x118000`, renderer-spec 4.15),
    and does any overlay read the field parity `D_002BBDE8`? Session 87: does any overlay call func_001fb3e0 /
    func_001fbb50 (wintext's number draws with no main-ELF caller) and with which digit counts, or store 1 / 4 to
-   `D_002BBE04` (the screen spin)? Without the Mac: skip.
-4. **Static, without the Mac**: (a) **The other full-screen effects** (sceneeff.c, renderer-spec): the glow rings
-   `func_00102a48`, the colour pulse `func_001032b0`, the 25 x 25 warp grid `func_00103c48` and `func_001039f8`
-   (their packets with `gs_packets.py -v`, who starts them, what a port draws), as 4.17. (b) **The Vita input
-   layer**: from the C, every reader of the raw pad (`D_00425BC8`, `D_002C5AD0`) and of the action bits
-   (`D_002C5BB0` through `D_002C5990`'s 30 entries): which buttons each screen reads, the repeat timings
-   `D_002C5C20`-`D_002C5C2C`, the stick dead zone, padrec.c's replay and demo script; write the Vita's
-   sceCtrl-to-libpad2 mapping into vita-port-plan (portability: platform/pad.h) and add a `KH1_HOST_PAD` example
-   for the title. (c) **A count kept across functions**: walkcheck's idx rows stay inside one function; list the
-   globals a loop counts up (`D_00643200[k]++`, `n = D_x++`) that another function indexes an array with, and read
-   each against the array's size (layoutcheck's idx-next rows may overlap: compare). (d) `KH1_HOST_DMAC=defer` as
-   the default and argcheck's 3 value uses still wait for the Mac.
+   `D_002BBE04` (the screen spin)? Session 88: who calls padrec.c's recorder / replay / button script / idle timer
+   (`func_00233650` ... `func_002336e8`: the title's demo?), memstack.c's push / pop (`func_001bb480` /
+   `func_001bb4b0`, depth 4), pause.c's `func_00114068` (the 2 px menu blur), and does anything read the pad's
+   second repeat word (+0x14) or `D_002C5C2C`? Without the Mac: skip.
+4. **Static, without the Mac**: (a) **The 2D layers on the Vita's screen**: the HUD, text windows, menus and
+   the system-message band are drawn in 512 x 384 target pixels (and stretched to 448 lines by the frame copy);
+   list every 2D drawer's coordinate space (target vs display, renderer-spec 3.1 / 4.9 / 4.10 / 4.15) and write
+   the port's scaling plan for 960 x 544 (4:3 pillarbox vs a wider 3D view with the HUD anchored; what assumes
+   512 wide, e.g. the 16 scissor columns and the copies of 4.16 / 4.17) into renderer-spec 5. (b) **Vibration**:
+   padvib.c's patterns (who starts them, the two motors' values, `func_00176c60` / `func_00176cc8`) for the PS
+   TV's `sceCtrlSetActuator`, in vita-port-plan 5.1ab's terms. (c) **The CIRCLE / CROSS swap**: list every
+   place the confirm / cancel buttons are named outside the pad table (the menus' raw `PAD_CIRCLE` /
+   `PAD_CROSS`, message text that names a button, button icons in the HUD) so the port's swap option knows what
+   else must follow. (d) `KH1_HOST_DMAC=defer` as the default and argcheck's 3 value uses still wait for the Mac.
 5. **Matching (optional, 1 worker)**: only with a new idea (001c62a0 or the nofill pair).
-6. End with `make progress-update SESSION=88`, refresh the per-phase table in docs/progress.md (between its
+6. End with `make progress-update SESSION=89`, refresh the per-phase table in docs/progress.md (between its
    `<!-- phases -->` markers; the generator keeps it), commit, open a PR, and refresh this prompt (keep the
    Mac note accurate).
-7. **Once the PR is merged, message the coordinator to start the next session** (session 89) with this
+7. **Once the PR is merged, message the coordinator to start the next session** (session 90) with this
    prompt: the user wants each session to start the next one without being asked.

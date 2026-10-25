@@ -306,7 +306,10 @@ rewrite matched code.
     branches of one `if` and loops a `return` follows; since session 87 also each integer a loop
     steps that a later loop indexes with (`for (; i < m; i++) a[i]`), and each pointer a builder
     returns that a later loop steps on; keep its WALK rows at 0 (42 REVIEWED: the status block,
-    CLUT fills, packet and file walks read in order, lists that share one count). A piece that cannot hold the
+    CLUT fills, packet and file walks read in order, lists that share one count). `python3 -I tools/host/countcheck.py`
+    (session 88) does the same for a count kept in a global: one function steps it, another indexes
+    with it; keep its COUNT rows at 0 (37 REVIEWED; the DATA ones are bounded only by the disc's
+    files, on the PS2 too). A piece that cannot hold the
     whole reach (MIPS gas pads a section aligned to 16 or more to 16) gets zero bytes after it on
     the host only, census.py's HOST_TAIL (D_0063D640: 0x18).
 13. **DMA addresses through platform/dma.h** (session 72). A DMA tag address is a PS2 address:
